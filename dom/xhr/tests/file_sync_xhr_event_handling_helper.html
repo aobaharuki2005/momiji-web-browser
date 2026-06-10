@@ -25,6 +25,7 @@
         // so that we can dispatch key event in the parent to test
         // InputTaskManager properly
         SpecialPowers.loadChromeScript(() => {
+          /* eslint-env mozilla/chrome-script */
           var win = Services.wm.getMostRecentBrowserWindow();
           EventUtils.synthesizeKey("a", {}, win);
           EventUtils.synthesizeKey("b", {}, win);

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,16 +42,13 @@ class VideoProcessorD3D11 {
 
   struct InputTextureInfo {
     InputTextureInfo(gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
-                     gfx::TransferFunction aTransferFunction, uint32_t aIndex,
-                     ID3D11Texture2D* aTexture)
+                     uint32_t aIndex, ID3D11Texture2D* aTexture)
         : mColorSpace(aColorSpace),
           mColorRange(aColorRange),
-          mTransferFunction(aTransferFunction),
           mIndex(aIndex),
           mTexture(aTexture) {}
     const gfx::ColorSpace2 mColorSpace;
     const gfx::ColorRange mColorRange;
-    const gfx::TransferFunction mTransferFunction;
     const uint32_t mIndex;
     ID3D11Texture2D* mTexture;
   };

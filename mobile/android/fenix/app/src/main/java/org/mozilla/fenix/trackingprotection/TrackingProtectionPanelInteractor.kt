@@ -8,7 +8,6 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,7 +31,7 @@ class TrackingProtectionPanelInteractor(
     private val context: Context,
     private val fragment: Fragment,
     private val store: ProtectionsStore,
-    private val scope: CoroutineScope,
+    private val ioScope: CoroutineScope,
     private val cookieBannersStorage: CookieBannersStorage,
     private val navController: () -> NavController,
     private val openTrackingProtectionSettings: () -> Unit,
@@ -40,8 +39,6 @@ class TrackingProtectionPanelInteractor(
     internal var sitePermissions: SitePermissions?,
     private val gravity: Int,
     private val getCurrentTab: () -> SessionState?,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : TrackingProtectionPanelViewInteractor {
 
     override fun openDetails(category: TrackingProtectionCategory, categoryBlocked: Boolean) {
@@ -72,16 +69,13 @@ class TrackingProtectionPanelInteractor(
      */
     @VisibleForTesting
     internal fun handleNavigationAfterCheck(tab: SessionState, containsException: Boolean) {
-        scope.launch {
-            val cookieBannerUIMode = withContext(ioDispatcher) {
-                cookieBannersStorage.getCookieBannerUIMode(
-                    tab = tab,
-                    isFeatureEnabledInPrivateMode = context.settings().shouldUseCookieBannerPrivateMode,
-                    publicSuffixList = context.components.publicSuffixList,
-                )
-            }
-
-            withContext(mainDispatcher) {
+        ioScope.launch {
+            val cookieBannerUIMode = cookieBannersStorage.getCookieBannerUIMode(
+                tab = tab,
+                isFeatureEnabledInPrivateMode = context.settings().shouldUseCookieBannerPrivateMode,
+                publicSuffixList = context.components.publicSuffixList,
+            )
+            withContext(Dispatchers.Main) {
                 fragment.runIfFragmentIsAttached {
                     navController().popBackStack()
                     val isTrackingProtectionEnabled =

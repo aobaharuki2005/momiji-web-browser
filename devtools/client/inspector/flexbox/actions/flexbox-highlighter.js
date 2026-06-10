@@ -29,7 +29,7 @@ module.exports = {
   toggleFlexboxHighlighter(nodeFront, reason) {
     return async thunkOptions => {
       const { inspector } = thunkOptions;
-      if (!inspector || inspector.isDestroyed()) {
+      if (!inspector || inspector._destroyed) {
         return;
       }
 

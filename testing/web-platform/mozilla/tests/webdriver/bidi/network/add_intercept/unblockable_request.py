@@ -1,4 +1,5 @@
 import pytest
+from tests.bidi import wait_for_bidi_events
 from tests.bidi.network import (
     BEFORE_REQUEST_SENT_EVENT,
     IMAGE_RESPONSE_BODY,
@@ -11,9 +12,8 @@ from tests.bidi.network import (
     get_next_event_for_url,
 )
 
-pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.asyncio
 async def test_data_uri(
     bidi_session,
     add_intercept,
@@ -54,26 +54,24 @@ async def test_data_uri(
     # Checked the events have the expected isBlocked flag set to false.
     assert_before_request_sent_event(
         before_request_sent_event,
-        expected_event={"isBlocked": False, "request": {"url": data_url}},
+        is_blocked=False,
+        expected_request={"url": data_url},
     )
     assert_response_event(
         response_started_event,
-        expected_event={
-            "isBlocked": False,
-            "request": {"url": data_url},
-            "response": {"url": data_url},
-        },
+        is_blocked=False,
+        expected_request={"url": data_url},
+        expected_response={"url": data_url},
     )
     assert_response_event(
         response_completed_event,
-        expected_event={
-            "isBlocked": False,
-            "request": {"url": data_url},
-            "response": {"url": data_url},
-        },
+        is_blocked=False,
+        expected_request={"url": data_url},
+        expected_response={"url": data_url},
     )
 
 
+@pytest.mark.asyncio
 async def test_cached_resources(
     bidi_session,
     add_intercept,
@@ -82,7 +80,6 @@ async def test_cached_resources(
     inline,
     setup_network_test,
     wait_for_event,
-    wait_for_bidi_events,
     wait_for_future_safe,
     fetch,
 ):
@@ -111,9 +108,7 @@ async def test_cached_resources(
 
     # Expect two events, one for the document, one for the stylesheet.
     await wait_for_bidi_events(
-        network_events[RESPONSE_COMPLETED_EVENT],
-        3,
-        timeout=2,
+        bidi_session, network_events[RESPONSE_COMPLETED_EVENT], 3, timeout=2
     )
 
     # Add an intercept for the cached stylesheet and image.
@@ -133,9 +128,7 @@ async def test_cached_resources(
 
     # Expect two events after reload, for the document and the stylesheet.
     await wait_for_bidi_events(
-        network_events[RESPONSE_COMPLETED_EVENT],
-        6,
-        timeout=2,
+        bidi_session, network_events[RESPONSE_COMPLETED_EVENT], 6, timeout=2
     )
 
     # Assert only cached events after reload.
@@ -147,25 +140,25 @@ async def test_cached_resources(
     # isBlocked flag set to false.
     assert_before_request_sent_event(
         get_next_event_for_url(beforerequestsent_events, cached_link_css_url),
-        expected_event={"isBlocked": False},
+        is_blocked=False,
     )
     assert_before_request_sent_event(
         get_next_event_for_url(beforerequestsent_events, cached_image_url),
-        expected_event={"isBlocked": False},
+        is_blocked=False,
     )
     assert_response_event(
         get_next_event_for_url(responsestarted_events, cached_link_css_url),
-        expected_event={"isBlocked": False},
+        is_blocked=False,
     )
     assert_response_event(
         get_next_event_for_url(responsestarted_events, cached_image_url),
-        expected_event={"isBlocked": False},
+        is_blocked=False,
     )
     assert_response_event(
         get_next_event_for_url(responsecompleted_events, cached_link_css_url),
-        expected_event={"isBlocked": False},
+        is_blocked=False,
     )
     assert_response_event(
         get_next_event_for_url(responsecompleted_events, cached_image_url),
-        expected_event={"isBlocked": False},
+        is_blocked=False,
     )

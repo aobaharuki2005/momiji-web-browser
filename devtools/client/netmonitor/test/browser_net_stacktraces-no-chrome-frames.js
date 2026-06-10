@@ -22,7 +22,7 @@ add_task(async function () {
 
   info("Starting test...");
 
-  await reloadSelectedTab();
+  await reloadBrowser();
 
   await waitUntil(() =>
     document.querySelector(".requests-list-file[title*='favicon.ico']")

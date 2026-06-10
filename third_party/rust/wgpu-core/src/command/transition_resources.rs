@@ -108,11 +108,12 @@ pub enum TransitionResourcesError {
 
 impl WebGpuError for TransitionResourcesError {
     fn webgpu_error_type(&self) -> ErrorType {
-        match self {
-            Self::Device(e) => e.webgpu_error_type(),
-            Self::EncoderState(e) => e.webgpu_error_type(),
-            Self::InvalidResource(e) => e.webgpu_error_type(),
-            Self::ResourceUsage(e) => e.webgpu_error_type(),
-        }
+        let e: &dyn WebGpuError = match self {
+            Self::Device(e) => e,
+            Self::EncoderState(e) => e,
+            Self::InvalidResource(e) => e,
+            Self::ResourceUsage(e) => e,
+        };
+        e.webgpu_error_type()
     }
 }

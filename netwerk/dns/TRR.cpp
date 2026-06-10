@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=4 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -47,18 +49,7 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS_INHERITED(TRR, Runnable, nsIStreamListener, nsITimerCallback,
-                            nsIRunnablePriority)
-
-NS_IMETHODIMP
-TRR::GetPriority(uint32_t* aPriority) {
-  if (StaticPrefs::network_trr_high_priority_events()) {
-    *aPriority = nsIRunnablePriority::PRIORITY_MEDIUMHIGH;
-  } else {
-    *aPriority = nsIRunnablePriority::PRIORITY_NORMAL;
-  }
-  return NS_OK;
-}
+NS_IMPL_ISUPPORTS_INHERITED(TRR, Runnable, nsIStreamListener, nsITimerCallback)
 
 // when firing off a normal A or AAAA query
 TRR::TRR(AHostResolver* aResolver, nsHostRecord* aRec, enum TrrType aType)
@@ -189,7 +180,7 @@ bool TRR::MaybeBlockRequest() {
       return true;
     }
 
-    if (TRRService::Get()->IsExcludedFromTRR(mHost, mRec->mEffectiveTRRMode)) {
+    if (TRRService::Get()->IsExcludedFromTRR(mHost)) {
       RecordReason(TRRSkippedReason::TRR_EXCLUDED);
       return true;
     }
@@ -402,7 +393,7 @@ nsresult TRR::SendHTTPRequest() {
       mTimeoutMs ? mTimeoutMs : TRRService::Get()->GetRequestTimeout(),
       nsITimer::TYPE_ONE_SHOT);
 
-  mChannel = std::move(channel);
+  mChannel = channel;
   return NS_OK;
 }
 
@@ -517,7 +508,7 @@ void TRR::SaveAdditionalRecords(
         mRec->originSuffix, getter_AddRefs(hostRecord));
     if (NS_FAILED(rv)) {
       LOG(("Failed to get host record for additional record %s",
-           PromiseFlatCString(recordEntry.GetKey()).get()));
+           nsCString(recordEntry.GetKey()).get()));
       continue;
     }
     RefPtr<AddrInfo> ai(
@@ -534,7 +525,7 @@ void TRR::SaveAdditionalRecords(
     hostRecord->mEffectiveTRRMode =
         static_cast<nsIRequest::TRRMode>(mRec->mEffectiveTRRMode);
     LOG(("Completing lookup for additional: %s",
-         PromiseFlatCString(recordEntry.GetKey()).get()));
+         nsCString(recordEntry.GetKey()).get()));
     (void)mHostResolver->CompleteLookup(hostRecord, NS_OK, ai, mPB,
                                         mOriginSuffix, TRRSkippedReason::TRR_OK,
                                         this);
@@ -630,6 +621,28 @@ nsresult TRR::ReturnData(nsIChannel* aChannel) {
                                               mTRRSkippedReason, mTTL, mPB);
   }
 
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    nsAutoCString version;
+    if (NS_SUCCEEDED(httpChannel->GetProtocolVersion(version))) {
+      nsAutoCString key("h1"_ns);
+      if (version.Equals("h3"_ns)) {
+        key.Assign("h3"_ns);
+      } else if (version.Equals("h2"_ns)) {
+        key.Assign("h2"_ns);
+      }
+
+      if (trrFetchDuration) {
+        glean::networking::trr_fetch_duration.Get(key).AccumulateRawDuration(
+            *trrFetchDuration);
+      }
+      if (trrFetchDurationNetworkOnly) {
+        key.Append("_network_only"_ns);
+        glean::networking::trr_fetch_duration.Get(key).AccumulateRawDuration(
+            *trrFetchDurationNetworkOnly);
+      }
+    }
+  }
   return NS_OK;
 }
 

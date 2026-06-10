@@ -69,11 +69,11 @@ info: |
     b. If IsCallable(method) is true, then
       i. Let result be ? Call(method, O).
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var sample = new Int8Array(1);
   var valueOf = 0;
   var toString = 0;
@@ -89,7 +89,7 @@ testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
   };
 
   assert.throws(Test262Error, function() {
-    new TA(makeCtorArg([8n, sample]));
+    new TA([8n, sample]);
   }, "abrupt completion from ToBigInt(sample)");
 
   assert.sameValue(valueOf, 1, "valueOf called once");

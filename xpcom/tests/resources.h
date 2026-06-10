@@ -1,8 +1,9 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef resources_h_
-#define resources_h_
+#ifndef resources_h___
+#define resources_h___
 
 #define TIMER_1SECOND 40000
 #define TIMER_5SECOND 40001
@@ -15,4 +16,4 @@
 #define TIMER_CANCEL 40006
 #define TIMER_EXIT 40010
 
-#endif /* resources_h_ */
+#endif /* resources_h___ */

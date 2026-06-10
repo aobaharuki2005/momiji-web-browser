@@ -16,8 +16,9 @@ rtc_library("resource_adaptation_api") {
   ]
   deps = [
     "..:ref_count",
-    "..:scoped_refptr",
+    "../../api:scoped_refptr",
     "../../rtc_base:checks",
+    "../../rtc_base:refcount",
     "../../rtc_base/system:rtc_export",
   ]
 }

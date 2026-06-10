@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -7,11 +9,7 @@
 #include <array>
 #include <cmath>
 
-#include "AOMDecoder.h"
-#include "MediaCapabilities.h"
-#include "MediaInfo.h"
 #include "MediaMIMETypes.h"
-#include "VPXDecoder.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Logging.h"
@@ -40,9 +38,6 @@ using dom::VideoConfiguration;
 static nsAutoCString GetMIMEDebugString(const MediaConfiguration& aConfig);
 static bool IsContainerType(const MediaExtendedMIMEType& aMime);
 static bool IsSingleCodecType(const MediaExtendedMIMEType& aMime);
-static bool ValidateMatchingCodecColorSpace(
-    const MediaExtendedMIMEType& aMime, const Maybe<dom::ColorGamut>& aGamut,
-    const Maybe<dom::TransferFunction>& aTransfer);
 
 // If encodingOrDecodingType is webrtc (MediaEncodingType) or webrtc
 // (MediaDecodingType) and mimeType is not one that is used with RTP
@@ -59,80 +54,30 @@ static const std::array kSingleWebRTCCodecTypes = {
     "video/vp9"_ns,
 };
 
-static const std::array kContainerTypes = {
-    "video/mkv"_ns, "video/mp4"_ns, "video/webm"_ns, "video/mpeg"_ns,
-    "audio/ogg"_ns, "audio/mp4"_ns, "audio/webm"_ns, "audio/mpeg"_ns};
+static const std::array kContainerTypes = {"video/mkv"_ns,  "video/mp4"_ns,
+                                           "video/webm"_ns, "audio/ogg"_ns,
+                                           "audio/mp4"_ns,  "audio/webm"_ns};
 
 // https://w3c.github.io/media-capabilities/#check-mime-type-support
-ValidationResult CheckMIMETypeSupport(
-    const MediaExtendedMIMEType& aMime,
-    const MediaType& aEncodingOrDecodingType,
-    const Maybe<dom::ColorGamut>& aColorGamut,
-    const Maybe<dom::TransferFunction>& aTransferFunction,
-    const BehaviorConfig& aBehavior) {
+ValidationResult CheckMIMETypeSupport(const MediaExtendedMIMEType& aMime,
+                                      const AVType& aAVType,
+                                      const MediaType& aMediaType) {
   // Step 1: If encodingOrDecodingType is webrtc (MediaEncodingType) or
   // webrtc (MediaDecodingType) and mimeType is not one that is used with
   // RTP (as defined in the specifications of the corresponding RTP payload
   // formats [IANA-MEDIA-TYPES] [RFC6838]), return unsupported.
-  if (IsMediaTypeWebRTC(aEncodingOrDecodingType) && !IsSingleCodecType(aMime)) {
-    ValidationResult err = Err(ValidationError::InvalidMIMEType);
-    LOG(
-        ("[CheckMIMETypeSupport (encodingOrDecodingType is webrtc, "
-         "but MIME type is not one used with RTP, %s) #1] Rejecting '%s'\n",
-         EnumValueToString(err.unwrapErr()), aMime.OriginalString().get()));
-    return err;
-  }
+  // TODO bug 1825286
 
   // Step 2: If colorGamut is present and is not valid for mimeType, return
   // unsupported.
-  // Step 3: If transferFunction is present and is not valid for
-  // mimeType, return unsupported.
-  if ((aColorGamut || aTransferFunction) && !aBehavior.mLegacy) {
-    // colorGamut and transferFunction are video-only properties
-    MOZ_ASSERT_IF(aMime.Type().HasAudioMajorType(), !aColorGamut);
-    MOZ_ASSERT_IF(aMime.Type().HasAudioMajorType(), !aTransferFunction);
-    // colorGamut and transferFunction are only applicable for decoding
-    if (!aEncodingOrDecodingType.is<MediaDecodingType>()) {
-      ValidationResult err = Err(ValidationError::InapplicableMember);
-      LOG(
-          ("[CheckMIMETypeSupport (colorGamut/transferFunction are decode "
-           "only, %s), #2, #3] Rejecting '%s'\n",
-           EnumValueToString(err.unwrapErr()), aMime.OriginalString().get()));
-      return err;
-    }
-    const MediaDecodingType& dType =
-        aEncodingOrDecodingType.as<MediaDecodingType>();
-    // colorGamut and transferFunction only applicable for media-source, file
-    if (dType != MediaDecodingType::Media_source &&
-        dType != MediaDecodingType::File) {
-      ValidationResult err = Err(ValidationError::InapplicableMember);
-      LOG(
-          ("[CheckMIMETypeSupport #3 (colorGamut/transferFunction only for "
-           "media-source, file; got %s, %s), #2, #3] Rejecting '%s'\n",
-           GetEnumString(dType).get(), EnumValueToString(err.unwrapErr()),
-           aMime.OriginalString().get()));
-      return err;
-    }
-    if (!ValidateMatchingCodecColorSpace(aMime, aColorGamut,
-                                         aTransferFunction)) {
-      ValidationResult err = Err(ValidationError::InvalidVideoType);
-      LOG(
-          ("[CheckMIMETypeSupport #3 (color coding space does not match, %s), "
-           "#2, #3] Rejecting '%s'\n",
-           EnumValueToString(err.unwrapErr()), aMime.OriginalString().get()));
-      return err;
-    }
-  }
-  // Step 4: If mimeType is not supported by the user agent, return
-  // unsupported. (Handled in MediaCapabilities.cpp when executing support
-  // promises, added later in this stack.)
-
-  // Step 5: Return supported
+  // TODO bug 1825286
   return Ok();
 }
 
 // Checks MIME type validity as per:
 // https://w3c.github.io/media-capabilities/#check-mime-type-validity
+// NOTE: Open issue, https://github.com/w3c/media-capabilities/issues/238
+// "Do WebRTC encoding/decoding types have the single-codec restrictions?"
 static ValidationResult CheckMIMETypeValidity(
     const MediaExtendedMIMEType& aMime, const AVType& aAVType,
     const MediaType& aMediaType) {
@@ -178,21 +123,13 @@ static ValidationResult CheckMIMETypeValidity(
   //         single media codec and the parameters member of mimeType is not
   //         empty, return false.
   //
-  // NOTE: WebRTC single-codec types (e.g. video/h264, audio/opus) commonly
-  // carry fmtp attributes as MIME parameters (e.g. profile-level-id,
-  // packetization-mode). The older (≈2024) spec text and WPT examples both
-  // treat these as valid, and Chrome accepts them. We therefore skip this
-  // rejection for WebRTC types and only enforce it for non-WebRTC types
-  // (file, media-source) where such parameters have no defined semantics.
-  // See: bug 2024767, https://github.com/w3c/media-capabilities/issues/235, and
-  // https://github.com/w3c/media-capabilities/issues/238.
+  // (NOTE: WEBRTC EXCEPTION, SEE ISSUE)
+  // https://github.com/w3c/media-capabilities/issues/238
+  // TODO bug 1825286 (WebRTC)
   const size_t numParams = aMime.GetParameterCount();
-  if (IsSingleCodecType(aMime) && numParams != 0 &&
-      !IsMediaTypeWebRTC(aMediaType)) {
+  if (IsSingleCodecType(aMime) && numParams != 0) {
     ValidationResult err = Err(ValidationError::SingleCodecHasParams);
-    LOG(
-        ("[Invalid MIME Validity #2, %s] Rejecting '%s' (single codec type "
-         "has params)",
+    LOG(("[Invalid MIME Validity #2, %s] Rejecting '%s'",
          EnumValueToString(err.unwrapErr()), aMime.OriginalString().get()));
     return err;
   }
@@ -254,8 +191,7 @@ ValidationResult IsValidAudioConfiguration(const AudioConfiguration& aConfig,
 // configuration, the following steps MUST be run...
 template <typename CodingType>
 ValidationResult IsValidVideoConfiguration(const VideoConfiguration& aConfig,
-                                           const CodingType& aType,
-                                           const BehaviorConfig& aBehavior) {
+                                           const CodingType& aType) {
   static_assert(std::is_same_v<std::decay_t<CodingType>, MediaEncodingType> ||
                     std::is_same_v<CodingType, MediaDecodingType>,
                 "tType must be MediaEncodingType or MediaDecodingType");
@@ -267,17 +203,6 @@ ValidationResult IsValidVideoConfiguration(const VideoConfiguration& aConfig,
     LOG(("[Invalid VideoConfiguration (Framerate, %s) #1] Rejecting '%s'\n",
          EnumValueToString(err.unwrapErr()),
          NS_ConvertUTF16toUTF8(aConfig.mContentType).get()));
-    return err;
-  }
-
-  if (aConfig.mWidth <= 0 || aConfig.mHeight <= 0) {
-    ValidationResult err = Err(ValidationError::InvalidVideoConfiguration);
-    LOG(
-        ("[Invalid VideoConfiguration (Dimensions, %s) #1] Rejecting '%s' "
-         "(width=%u, height=%u)\n",
-         EnumValueToString(err.unwrapErr()),
-         NS_ConvertUTF16toUTF8(aConfig.mContentType).get(), aConfig.mWidth,
-         aConfig.mHeight));
     return err;
   }
 
@@ -322,39 +247,9 @@ ValidationResult IsValidVideoConfiguration(const VideoConfiguration& aConfig,
     }
   }
 
-  if constexpr (std::is_same_v<CodingType, MediaEncodingType>) {
-    // ScalabilityMode is only applicable to MediaEncodingConfiguration for
-    // type webrtc, and we reject it for webrtc too until bug 1571470 lands.
-    // Legacy mode still accepts it for non-webrtc.
-    if (aConfig.mScalabilityMode.WasPassed() &&
-        (aType == MediaEncodingType::Webrtc || !aBehavior.mLegacy)) {
-      ValidationResult err = Err(ValidationError::InapplicableMember);
-      LOG(
-          ("[Invalid VideoConfiguration (Scalability Mode, %s) #2] Rejecting "
-           "'%s'\n",
-           EnumValueToString(err.unwrapErr()),
-           NS_ConvertUTF16toUTF8(aConfig.mContentType).get()));
-      return err;
-    }
-    // colorGamut is only applicable to MediaDecodingConfiguration
-    if (aConfig.mColorGamut.WasPassed() && !aBehavior.mLegacy) {
-      ValidationResult err = Err(ValidationError::InapplicableMember);
-      LOG(("[Invalid VideoConfiguration (Color Gamut, %s) #2] Rejecting '%s'\n",
-           EnumValueToString(err.unwrapErr()),
-           NS_ConvertUTF16toUTF8(aConfig.mContentType).get()));
-      return err;
-    }
-    // transferFunction is only applicable to MediaDecodingConfiguration
-    if (aConfig.mTransferFunction.WasPassed() && !aBehavior.mLegacy) {
-      ValidationResult err = Err(ValidationError::InapplicableMember);
-      LOG(
-          ("[Invalid VideoConfiguration (Transfer Function, %s) #2] Rejecting "
-           "'%s'\n",
-           EnumValueToString(err.unwrapErr()),
-           NS_ConvertUTF16toUTF8(aConfig.mContentType).get()));
-      return err;
-    }
-  }
+  // ScalabilityMode is only applicable to MediaEncodingConfiguration
+  // for type webrtc.
+  // TODO bug 1825286
 
   // Step 3: Let mimeType be the result of running parse a MIME type with
   // configuration’s contentType.
@@ -376,26 +271,24 @@ ValidationResult IsValidVideoConfiguration(const VideoConfiguration& aConfig,
 }
 
 template ValidationResult IsValidVideoConfiguration<MediaEncodingType>(
-    const VideoConfiguration&, const MediaEncodingType&, const BehaviorConfig&);
+    const VideoConfiguration&, const MediaEncodingType&);
 template ValidationResult IsValidVideoConfiguration<MediaDecodingType>(
-    const VideoConfiguration&, const MediaDecodingType&, const BehaviorConfig&);
+    const VideoConfiguration&, const MediaDecodingType&);
 
 ValidationResult IsValidVideoConfiguration(const VideoConfiguration& aConfig,
-                                           const MediaType& aType,
-                                           const BehaviorConfig& aBehavior) {
+                                           const MediaType& aType) {
   return aType.match(
       [&](const MediaEncodingType& t) {
-        return IsValidVideoConfiguration(aConfig, t, aBehavior);
+        return IsValidVideoConfiguration(aConfig, t);
       },
       [&](const MediaDecodingType& t) {
-        return IsValidVideoConfiguration(aConfig, t, aBehavior);
+        return IsValidVideoConfiguration(aConfig, t);
       });
 }
 
 // https://w3c.github.io/media-capabilities/#mediaconfiguration
 ValidationResult IsValidMediaConfiguration(const MediaConfiguration& aConfig,
-                                           const MediaType& aType,
-                                           const BehaviorConfig& aBehavior) {
+                                           const MediaType& aType) {
   // Step 1: audio and/or video MUST exist.
   if (!aConfig.mVideo.WasPassed() && !aConfig.mAudio.WasPassed()) {
     ValidationResult err = Err(ValidationError::MissingType);
@@ -418,8 +311,7 @@ ValidationResult IsValidMediaConfiguration(const MediaConfiguration& aConfig,
 
   // Step 3: video MUST be a valid video configuration if it exists.
   if (aConfig.mVideo.WasPassed()) {
-    auto rv =
-        IsValidVideoConfiguration(aConfig.mVideo.Value(), aType, aBehavior);
+    auto rv = IsValidVideoConfiguration(aConfig.mVideo.Value(), aType);
     if (rv.isErr()) {
       LOG(("[Invalid Media Configuration (Invalid Video, %s) #3] '%s'",
            EnumValueToString(rv.unwrapErr()),
@@ -432,22 +324,18 @@ ValidationResult IsValidMediaConfiguration(const MediaConfiguration& aConfig,
 
 // No specific validation steps in the spec...
 ValidationResult IsValidMediaEncodingConfiguration(
-    const MediaEncodingConfiguration& aConfig,
-    const BehaviorConfig& aBehavior) {
-  return IsValidMediaConfiguration(aConfig, AsVariant(aConfig.mType),
-                                   aBehavior);
+    const MediaEncodingConfiguration& aConfig) {
+  return IsValidMediaConfiguration(aConfig, AsVariant(aConfig.mType));
 }
 
 // https://w3c.github.io/media-capabilities/#mediaconfiguration
 ValidationResult IsValidMediaDecodingConfiguration(
-    const MediaDecodingConfiguration& aConfig,
-    const BehaviorConfig& aBehavior) {
+    const MediaDecodingConfiguration& aConfig) {
   // For a MediaDecodingConfiguration to be a valid MediaDecodingConfiguration,
   // all of the following conditions MUST be true:
 
   // Step 1: It MUST be a valid MediaConfiguration.
-  auto base =
-      IsValidMediaConfiguration(aConfig, AsVariant(aConfig.mType), aBehavior);
+  auto base = IsValidMediaConfiguration(aConfig, AsVariant(aConfig.mType));
   if (base.isErr()) {
     LOG(
         ("[Invalid MediaDecodingConfiguration (Invalid MediaConfiguration, %s) "
@@ -485,133 +373,6 @@ ValidationResult IsValidMediaDecodingConfiguration(
     }
   }
   return Ok();
-}
-
-// Validates colorGamut and transferFunction against the codec string's color
-// space info per spec steps 2-3 of "check MIME type support". Each parameter
-// is validated independently: if provided, it must match the codec's color
-// info; if not provided, it's ignored.
-//
-// Returns false if colorGamut or transferFunction is provided but doesn't
-// match. Returns true if parameters match, weren't provided, or if no color
-// info could be parsed from the codec (permissive default for H.264 etc).
-//
-// Maps VideoInfo (gfx) color enums to Media Capabilities API enums.
-//
-// Codec support:
-// - AV1 codec strings include color space info per
-//   https://aomediacodec.github.io/av1-isobmff/#codecsparam
-// - VP8/VP9 codec strings include color space info per
-//   https://www.webmproject.org/vp9/mp4/#codecs-parameter-string
-// - H.264/H.265 codec strings do NOT include color space info. RFC 6381
-//   (https://datatracker.ietf.org/doc/html/rfc6381) only specifies
-//   profile/constraint/level. These codecs will always use the permissive
-//   default, returning true regardless of color parameters provided.
-// This is a fundamental limitation of the H.264/H.265 codec string formats,
-// not a Firefox implementation gap.
-static bool ValidateMatchingCodecColorSpace(
-    const MediaExtendedMIMEType& aMime, const Maybe<dom::ColorGamut>& aGamut,
-    const Maybe<dom::TransferFunction>& aTransfer) {
-  // No color info? Nothing to mismatch.
-  if (!aGamut && !aTransfer) {
-    return true;
-  }
-
-  // Iterate through codecs in the MIME type to find color space info
-  for (const auto& codec : aMime.Codecs().Range()) {
-    if (codec.IsEmpty()) {
-      continue;
-    }
-    VideoInfo vi;
-    bool parsed = false;
-    // Only AV1 and VPX codec strings contain color space information.
-    // Other codecs (H.264, H.265, etc.) will not be parsed here and will
-    // fall through to the permissive default at the end of this function.
-    //
-    // Try parsing with AV1 decoder
-#ifdef MOZ_AV1
-    if (!parsed && AOMDecoder::SetVideoInfo(&vi, codec)) {
-      parsed = true;
-    }
-#endif
-    // Try parsing with VPX decoder (VP8, VP9)
-    if (!parsed && VPXDecoder::SetVideoInfo(&vi, codec)) {
-      parsed = true;
-    }
-    // Nothing found - try next codec.
-    if (!parsed) {
-      continue;
-    }
-    // Map VideoInfo (gfx) color primaries to DOM ColorGamut
-    Maybe<dom::ColorGamut> gotGamut;
-    if (vi.mColorPrimaries) {
-      switch (*vi.mColorPrimaries) {
-        case gfx::ColorSpace2::SRGB:
-        case gfx::ColorSpace2::BT709:
-        case gfx::ColorSpace2::BT601_525:
-          gotGamut = Some(dom::ColorGamut::Srgb);
-          break;
-        case gfx::ColorSpace2::DISPLAY_P3:
-          gotGamut = Some(dom::ColorGamut::P3);
-          break;
-        case gfx::ColorSpace2::BT2020:
-          gotGamut = Some(dom::ColorGamut::Rec2020);
-          break;
-        default:
-          break;
-      }
-    }
-    // Not spec-mandated, but if primaries are unrecognized we infer from
-    // BT.2020 matrix coefficients to avoid false rejections when colorGamut
-    // is provided. BT.2020 matrix is not used with non-BT.2020 primaries
-    // in practice.
-    // Spec issue filed: https://github.com/w3c/media-capabilities/issues/256
-    if (!gotGamut && vi.mColorSpace) {
-      switch (*vi.mColorSpace) {
-        case gfx::YUVColorSpace::BT2020:
-          gotGamut = Some(dom::ColorGamut::Rec2020);
-          break;
-        default:
-          break;
-      }
-    }
-    // Map VideoInfo transfer function to DOM TransferFunction.
-    // BT.709 and sRGB have different gamma curves but the spec only defines
-    // srgb/pq/hlg; we map BT.709 to srgb as the closest match.
-    // Spec issue filed: https://github.com/w3c/media-capabilities/issues/256
-    Maybe<dom::TransferFunction> gotTF;
-    if (vi.mTransferFunction) {
-      switch (*vi.mTransferFunction) {
-        case gfx::TransferFunction::SRGB:
-        case gfx::TransferFunction::BT709:
-          gotTF = Some(dom::TransferFunction::Srgb);
-          break;
-        case gfx::TransferFunction::PQ:
-          gotTF = Some(dom::TransferFunction::Pq);
-          break;
-        case gfx::TransferFunction::HLG:
-          gotTF = Some(dom::TransferFunction::Hlg);
-          break;
-        default:
-          break;
-      }
-    }
-    // Each parameter is OK if not provided, or if provided and matches.
-    const bool gamutOK = !aGamut || (gotGamut && *aGamut == *gotGamut);
-    const bool transferOK = !aTransfer || (gotTF && *aTransfer == *gotTF);
-    return gamutOK && transferOK;
-  }
-
-  // No parseable color info found in any codec string.
-  // This happens for:
-  // - Codecs that don't embed color space info (H.264, H.265, etc.)
-  // - Codec strings we don't have parsers for
-  // - Malformed codec strings that failed to parse
-  //
-  // Permissive default: assume compatibility rather than rejecting.
-  // This means color parameters cannot be validated for codecs like H.264/H.265
-  // where the codec string format doesn't include this information.
-  return true;
 }
 
 /////////////////////////////////
@@ -709,16 +470,6 @@ static bool IsContainerType(const MediaExtendedMIMEType& aMime) {
 }
 static bool IsSingleCodecType(const MediaExtendedMIMEType& aMime) {
   return MimePrefixStartsWith(aMime, kSingleWebRTCCodecTypes);
-}
-
-bool IsMediaTypeWebRTC(const MediaType& aType) {
-  return aType.match(
-      [&](const MediaEncodingType& aType) {
-        return aType == MediaEncodingType::Webrtc;
-      },
-      [&](const MediaDecodingType& aType) {
-        return aType == MediaDecodingType::Webrtc;
-      });
 }
 
 static nsAutoCString GetMIMEDebugString(const MediaConfiguration& aConfig) {

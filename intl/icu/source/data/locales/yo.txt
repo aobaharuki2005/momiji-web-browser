@@ -318,7 +318,6 @@ yo{
             }
             eras{
                 abbreviated{
-                    0{"BCE"}
                     1{"AD"}
                 }
                 abbreviated%variant{

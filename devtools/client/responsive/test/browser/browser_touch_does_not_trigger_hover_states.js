@@ -34,7 +34,7 @@ async function testButtonHoverState(ui, expected) {
       const { expected: contentExpected } = args;
 
       info("Move mouse into the button element.");
-      EventUtils.synthesizeMouseAtCenter(
+      await EventUtils.synthesizeMouseAtCenter(
         button,
         { type: "mousemove", isSynthesized: false },
         content
@@ -59,7 +59,7 @@ async function testDropDownHoverState(ui, expected) {
       const { expected: contentExpected } = args;
 
       info("Move mouse into the drop down menu.");
-      EventUtils.synthesizeMouseAtCenter(
+      await EventUtils.synthesizeMouseAtCenter(
         dropDownMenu,
         { type: "mousemove", isSynthesized: false },
         content

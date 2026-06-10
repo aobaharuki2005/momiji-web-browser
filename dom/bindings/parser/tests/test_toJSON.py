@@ -155,78 +155,79 @@ def WebIDLTest(parser, harness):
 
     for type in JsonTypes:
         doTest(
-            f"interface Test {{ {type} toJSON(); }};",
+            "interface Test { %s toJSON(); };" % type,
             False,
-            f"{type} should be a JSON type",
+            "%s should be a JSON type" % type,
         )
 
         doTest(
-            f"interface Test {{ sequence<{type}> toJSON(); }};",
+            "interface Test { sequence<%s> toJSON(); };" % type,
             False,
-            f"sequence<{type}> should be a JSON type",
+            "sequence<%s> should be a JSON type" % type,
         )
 
         doTest(
-            f"dictionary Foo {{ {type} foo; }}; interface Test {{ Foo toJSON(); }}; ",
+            "dictionary Foo { %s foo; }; interface Test { Foo toJSON(); }; " % type,
             False,
-            f"dictionary containing only JSON type ({type}) should be a JSON type",
+            "dictionary containing only JSON type (%s) should be a JSON type" % type,
         )
 
         doTest(
-            f"dictionary Foo {{ {type} foo; }}; dictionary Bar : Foo {{ }}; "
-            "interface Test { Bar toJSON(); }; ",
+            "dictionary Foo { %s foo; }; dictionary Bar : Foo { }; "
+            "interface Test { Bar toJSON(); }; " % type,
             False,
             "dictionary whose ancestors only contain JSON types should be a JSON type",
         )
 
         doTest(
-            f"dictionary Foo {{ any foo; }}; dictionary Bar : Foo {{ {type} bar; }};"
-            "interface Test { Bar toJSON(); };",
+            "dictionary Foo { any foo; }; dictionary Bar : Foo { %s bar; };"
+            "interface Test { Bar toJSON(); };" % type,
             True,
             "dictionary whose ancestors contain non-JSON types should not be a JSON type",
         )
 
         doTest(
-            f"interface Test {{ record<DOMString, {type}> toJSON(); }};",
+            "interface Test { record<DOMString, %s> toJSON(); };" % type,
             False,
-            f"record<DOMString, {type}> should be a JSON type",
+            "record<DOMString, %s> should be a JSON type" % type,
         )
 
         doTest(
-            f"interface Test {{ record<ByteString, {type}> toJSON(); }};",
+            "interface Test { record<ByteString, %s> toJSON(); };" % type,
             False,
-            f"record<ByteString, {type}> should be a JSON type",
+            "record<ByteString, %s> should be a JSON type" % type,
         )
 
         doTest(
-            f"interface Test {{ record<UTF8String, {type}> toJSON(); }};",
+            "interface Test { record<UTF8String, %s> toJSON(); };" % type,
             False,
-            f"record<UTF8String, {type}> should be a JSON type",
+            "record<UTF8String, %s> should be a JSON type" % type,
         )
 
         doTest(
-            f"interface Test {{ record<USVString, {type}> toJSON(); }};",
+            "interface Test { record<USVString, %s> toJSON(); };" % type,
             False,
-            f"record<USVString, {type}> should be a JSON type",
+            "record<USVString, %s> should be a JSON type" % type,
         )
 
         otherUnionType = "Foo" if type != "object" else "long"
         doTest(
             "interface Foo { object toJSON(); };"
-            f"interface Test {{ ({otherUnionType} or {type}) toJSON(); }};",
+            "interface Test { (%s or %s) toJSON(); };" % (otherUnionType, type),
             False,
-            f"union containing only JSON types ({otherUnionType} or {type}) should be a JSON type",
+            "union containing only JSON types (%s or %s) should be a JSON type"
+            % (otherUnionType, type),
         )
 
         doTest(
-            f"interface test {{ {type}? toJSON(); }};",
+            "interface test { %s? toJSON(); };" % type,
             False,
-            f"Nullable type ({type}) should be a JSON type",
+            "Nullable type (%s) should be a JSON type" % type,
         )
 
         doTest(
-            f"interface Foo : InterfaceWithoutToJSON {{ {type} toJSON(); }};"
-            "interface Test { Foo toJSON(); };",
+            "interface Foo : InterfaceWithoutToJSON { %s toJSON(); };"
+            "interface Test { Foo toJSON(); };" % type,
             False,
             "interface with toJSON should be a JSON type",
         )
@@ -239,60 +240,62 @@ def WebIDLTest(parser, harness):
 
     for type in nonJsonTypes:
         doTest(
-            f"interface Test {{ {type} toJSON(); }};",
+            "interface Test { %s toJSON(); };" % type,
             True,
-            f"{type} should not be a JSON type",
+            "%s should not be a JSON type" % type,
         )
 
         doTest(
-            f"interface Test {{ sequence<{type}> toJSON(); }};",
+            "interface Test { sequence<%s> toJSON(); };" % type,
             True,
-            f"sequence<{type}> should not be a JSON type",
+            "sequence<%s> should not be a JSON type" % type,
         )
 
         doTest(
-            f"dictionary Foo {{ {type} foo; }}; interface Test {{ Foo toJSON(); }}; ",
+            "dictionary Foo { %s foo; }; interface Test { Foo toJSON(); }; " % type,
             True,
-            f"Dictionary containing a non-JSON type ({type}) should not be a JSON type",
+            "Dictionary containing a non-JSON type (%s) should not be a JSON type"
+            % type,
         )
 
         doTest(
-            f"dictionary Foo {{ {type} foo; }}; dictionary Bar : Foo {{ }}; "
-            "interface Test { Bar toJSON(); }; ",
+            "dictionary Foo { %s foo; }; dictionary Bar : Foo { }; "
+            "interface Test { Bar toJSON(); }; " % type,
             True,
             "dictionary whose ancestors only contain non-JSON types should not be a JSON type",
         )
 
         doTest(
-            f"interface Test {{ record<DOMString, {type}> toJSON(); }};",
+            "interface Test { record<DOMString, %s> toJSON(); };" % type,
             True,
-            f"record<DOMString, {type}> should not be a JSON type",
+            "record<DOMString, %s> should not be a JSON type" % type,
         )
 
         doTest(
-            f"interface Test {{ record<ByteString, {type}> toJSON(); }};",
+            "interface Test { record<ByteString, %s> toJSON(); };" % type,
             True,
-            f"record<ByteString, {type}> should not be a JSON type",
+            "record<ByteString, %s> should not be a JSON type" % type,
         )
 
         doTest(
-            f"interface Test {{ record<USVString, {type}> toJSON(); }};",
+            "interface Test { record<USVString, %s> toJSON(); };" % type,
             True,
-            f"record<USVString, {type}> should not be a JSON type",
+            "record<USVString, %s> should not be a JSON type" % type,
         )
 
         if type != "any":
             doTest(
                 "interface Foo { object toJSON(); }; "
-                f"interface Test {{ (Foo or {type}) toJSON(); }};",
+                "interface Test { (Foo or %s) toJSON(); };" % type,
                 True,
-                f"union containing a non-JSON type ({type}) should not be a JSON type",
+                "union containing a non-JSON type (%s) should not be a JSON type"
+                % type,
             )
 
             doTest(
-                f"interface test {{ {type}? toJSON(); }};",
+                "interface test { %s? toJSON(); };" % type,
                 True,
-                f"Nullable type ({type}) should not be a JSON type",
+                "Nullable type (%s) should not be a JSON type" % type,
             )
 
     doTest(

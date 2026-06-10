@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-*/
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,7 +27,6 @@ class AudioContext;
 class AbstractThread;
 class ThreadSharedFloatArrayBufferList;
 class AudioNodeEngine;
-class AudioNodeExternalInputTrack;
 
 typedef AlignedAutoTArray<float, GUESS_AUDIO_CHANNELS * WEBAUDIO_BLOCK_SIZE, 16>
     DownmixBufferType;
@@ -172,10 +172,6 @@ class AudioNodeTrack : public ProcessedMediaTrack {
    * schedules a call to CheckForInactive() after track processing.
    */
   void ScheduleCheckForInactive();
-
-  virtual AudioNodeExternalInputTrack* AsAudioNodeExternalInputTrack() {
-    return nullptr;
-  }
 
  protected:
   void OnGraphThreadDone() override;

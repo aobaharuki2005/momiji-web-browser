@@ -11,21 +11,18 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runTest
-import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.HistoryMetadataAction
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.feature.tabs.TabsUseCases
-import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -35,9 +32,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.share.ShareSource
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
-import org.mozilla.fenix.components.usecases.ShareUseCases
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixGleanTestRule
@@ -48,8 +43,6 @@ import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentDir
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentStore
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
-import kotlin.test.assertNotNull
 import org.mozilla.fenix.GleanMetrics.History as GleanHistory
 
 @RunWith(RobolectricTestRunner::class)
@@ -57,17 +50,19 @@ class HistoryMetadataGroupControllerTest {
 
     @get:Rule
     val gleanTestRule = FenixGleanTestRule(testContext)
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
+
     private val activity: HomeActivity = mockk(relaxed = true)
     private val context: Context = mockk(relaxed = true)
     private val store: HistoryMetadataGroupFragmentStore = mockk(relaxed = true)
-    private val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-
-    private val browserStore = BrowserStore(middleware = listOf(captureActionsMiddleware))
+    private val browserStore: BrowserStore = mockk(relaxed = true)
     private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase = mockk(relaxed = true)
     private val fenixBrowserUseCases: FenixBrowserUseCases = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
-    private val shareUseCases: ShareUseCases = mockk(relaxed = true)
     private val historyStorage: PlacesHistoryStorage = mockk(relaxed = true)
 
     private val appStore: AppStore = AppStore()
@@ -94,7 +89,6 @@ class HistoryMetadataGroupControllerTest {
     )
 
     private lateinit var controller: DefaultHistoryMetadataGroupController
-    private val testDispatcher = StandardTestDispatcher()
 
     private fun getMetadataItemsList() =
         listOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem)
@@ -189,29 +183,32 @@ class HistoryMetadataGroupControllerTest {
     }
 
     @Test
-    fun `WHEN handleShare is invoked THEN share use case is called with the selected items`() {
-        val expected = listOf(
-            ShareData(url = mozillaHistoryMetadataItem.url, title = mozillaHistoryMetadataItem.title),
-            ShareData(url = firefoxHistoryMetadataItem.url, title = firefoxHistoryMetadataItem.title),
-        )
-
+    fun handleShare() {
         controller.handleShare(setOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem))
 
+        val data = arrayOf(
+            ShareData(
+                title = mozillaHistoryMetadataItem.title,
+                url = mozillaHistoryMetadataItem.url,
+            ),
+            ShareData(
+                title = firefoxHistoryMetadataItem.title,
+                url = firefoxHistoryMetadataItem.url,
+            ),
+        )
+
         verify {
-            shareUseCases.shareItems(
-                items = expected,
-                source = ShareSource.HISTORY_METADATA_GROUP,
-                navigateToShareFragment = any(),
+            navController.navigate(
+                directionsEq(HistoryMetadataGroupFragmentDirections.actionGlobalShareFragment(data)),
             )
         }
     }
 
     @Test
-    fun handleDeleteSingle() = runTest(testDispatcher) {
+    fun handleDeleteSingle() = runTestOnMain {
         assertNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
 
         controller.handleDelete(setOf(mozillaHistoryMetadataItem))
-        testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify {
             store.dispatch(HistoryMetadataGroupFragmentAction.Delete(mozillaHistoryMetadataItem))
@@ -228,14 +225,17 @@ class HistoryMetadataGroupControllerTest {
         )
         // Here we don't expect the action to be dispatched, because items inside the store
         // we provided by getMetadataItemsList(), but only one item has been removed
-        captureActionsMiddleware.assertNotDispatched(HistoryMetadataAction.DisbandSearchGroupAction::class)
+        verify(exactly = 0) {
+            browserStore.dispatch(
+                HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = searchTerm),
+            )
+        }
     }
 
     @Test
-    fun handleDeleteMultiple() = runTest(testDispatcher) {
+    fun handleDeleteMultiple() = runTestOnMain {
         assertNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
         controller.handleDelete(getMetadataItemsList().toSet())
-        testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify {
             getMetadataItemsList().forEach {
@@ -250,13 +250,15 @@ class HistoryMetadataGroupControllerTest {
         )
         // Here we expect the action to be dispatched, because both deleted items and items inside
         // the store were provided by the same method getMetadataItemsList()
-        captureActionsMiddleware.assertFirstAction(HistoryMetadataAction.DisbandSearchGroupAction::class) { action ->
-            assertEquals(searchTerm, action.searchTerm)
+        verify {
+            browserStore.dispatch(
+                HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = searchTerm),
+            )
         }
     }
 
     @Test
-    fun handleDeleteAbnormal() = runTest(testDispatcher) {
+    fun handleDeleteAbnormal() = runTestOnMain {
         val abnormalList = listOf(
             mozillaHistoryMetadataItem,
             firefoxHistoryMetadataItem,
@@ -270,8 +272,6 @@ class HistoryMetadataGroupControllerTest {
         assertNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
 
         controller.handleDelete(abnormalList.toSet())
-        testDispatcher.scheduler.advanceUntilIdle()
-
         coVerify {
             getMetadataItemsList().forEach {
                 store.dispatch(HistoryMetadataGroupFragmentAction.Delete(it))
@@ -297,13 +297,15 @@ class HistoryMetadataGroupControllerTest {
         // Here we expect the action to be dispatched, because deleted items include the items
         // provided by getMetadataItemsList(), so that the store becomes empty and the event
         // should be sent
-        captureActionsMiddleware.assertFirstAction(HistoryMetadataAction.DisbandSearchGroupAction::class) { action ->
-            assertEquals(searchTerm, action.searchTerm)
+        verify {
+            browserStore.dispatch(
+                HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = searchTerm),
+            )
         }
     }
 
     @Test
-    fun handleDeleteAll() = runTest(testDispatcher) {
+    fun handleDeleteAll() = runTestOnMain {
         var promptDeleteAllInvoked = false
         val controller = createController(
             promptDeleteAll = {
@@ -311,17 +313,14 @@ class HistoryMetadataGroupControllerTest {
             },
         )
         controller.handleDeleteAll()
-        testDispatcher.scheduler.advanceUntilIdle()
-
         assertTrue(promptDeleteAllInvoked)
     }
 
     @Test
-    fun handleDeleteAllConfirmed() = runTest(testDispatcher) {
+    fun handleDeleteAllConfirmed() = runTestOnMain {
         assertNull(GleanHistory.searchTermGroupRemoveAll.testGetValue())
 
         controller.handleDeleteAllConfirmed()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify {
             store.dispatch(HistoryMetadataGroupFragmentAction.DeleteAll)
@@ -349,7 +348,7 @@ class HistoryMetadataGroupControllerTest {
             undo: suspend (Set<History.Metadata>) -> Unit,
             delete: (Set<History.Metadata>) -> suspend (context: Context) -> Unit,
         ) -> Unit = { items, _, delete ->
-            TestScope(testDispatcher).launch {
+            scope.launch {
                 delete(items).invoke(context)
             }
         },
@@ -365,8 +364,7 @@ class HistoryMetadataGroupControllerTest {
             fenixBrowserUseCases = fenixBrowserUseCases,
             navController = navController,
             settings = settings,
-            shareUseCases = shareUseCases,
-            scope = TestScope(testDispatcher),
+            scope = scope,
             searchTerm = searchTerm,
             deleteSnackbar = deleteSnackbar,
             promptDeleteAll = promptDeleteAll,

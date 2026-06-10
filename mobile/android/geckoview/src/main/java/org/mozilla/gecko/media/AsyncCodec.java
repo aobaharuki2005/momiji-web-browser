@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
 // A wrapper interface that mimics the new {@link android.media.MediaCodec} asynchronous mode API.
 public interface AsyncCodec {
   static AsyncCodec create(final String name) throws IOException {
-    return new AsyncCodecImpl(name);
+    return new LollipopAsyncCodec(name);
   }
 
   interface Callbacks {

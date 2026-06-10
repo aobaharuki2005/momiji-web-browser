@@ -4,6 +4,7 @@
 
 //! `list` computed values.
 
+#[cfg(feature = "gecko")]
 pub use crate::values::specified::list::ListStyleType;
 pub use crate::values::specified::list::Quotes;
 

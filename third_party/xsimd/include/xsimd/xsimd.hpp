@@ -12,12 +12,6 @@
 #ifndef XSIMD_HPP
 #define XSIMD_HPP
 
-#if defined(__FAST_MATH__)
-#define XSIMD_NO_DENORMALS
-#define XSIMD_NO_INFINITIES
-#define XSIMD_NO_NANS
-#endif
-
 #if defined(__has_cpp_attribute)
 // if this check passes, then the compiler supports feature test macros
 #if __has_cpp_attribute(nodiscard) >= 201603L
@@ -63,16 +57,7 @@
 #include "memory/xsimd_aligned_allocator.hpp"
 
 #if defined(XSIMD_NO_SUPPORTED_ARCHITECTURE)
-// no type definition or anything apart from scalar definition and aligned allocator
-namespace xsimd
-{
-    template <class T, class A = void>
-    class batch
-    {
-        static constexpr bool supported_architecture = sizeof(A*) == 0; // type-dependant but always false
-        static_assert(supported_architecture, "No SIMD architecture detected, cannot instantiate a batch");
-    };
-}
+// to type definition or anything appart from scalar definition and aligned allocator
 #else
 #include "types/xsimd_batch.hpp"
 #include "types/xsimd_batch_constant.hpp"

@@ -28,7 +28,7 @@ Template ``moz.yaml`` file
 ==========================
 
 .. literalinclude:: template.yaml
-  :language: text
+  :language: YAML
 
 Common Vendoring Operations
 ===========================

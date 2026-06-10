@@ -76,8 +76,7 @@ public:
      *  The SkPngChunkReader handles unknown chunks in PNGs.
      *  See SkCodec.h for more details.
      */
-    static std::unique_ptr<SkAndroidCodec> MakeFromData(sk_sp<const SkData>,
-                                                        SkPngChunkReader* = nullptr);
+    static std::unique_ptr<SkAndroidCodec> MakeFromData(sk_sp<SkData>, SkPngChunkReader* = nullptr);
 
     virtual ~SkAndroidCodec();
 
@@ -286,7 +285,7 @@ public:
                            std::unique_ptr<SkStream>* outGainmapImageStream);
 
 protected:
-    explicit SkAndroidCodec(SkCodec*);
+    SkAndroidCodec(SkCodec*);
 
     virtual SkISize onGetSampledDimensions(int sampleSize) const = 0;
 

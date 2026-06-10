@@ -8,7 +8,7 @@ var MockFilePicker = SpecialPowers.MockFilePicker;
  * <https://bugzilla.mozilla.org/show_bug.cgi?id=564387>
  */
 async function testSaveVideo(isUsingHeader = true) {
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
   var fileName;
 
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);

@@ -33,7 +33,7 @@ namespace SkImageGeneratorNDK {
  *  API like SkCodecImageGenerator::getScaledDimensions() to report which
  *  dimensions are supported?
  */
-SK_API std::unique_ptr<SkImageGenerator> MakeFromEncodedNDK(sk_sp<const SkData>);
+SK_API std::unique_ptr<SkImageGenerator> MakeFromEncodedNDK(sk_sp<SkData>);
 }
 
 #endif // SK_ENABLE_NDK_IMAGES

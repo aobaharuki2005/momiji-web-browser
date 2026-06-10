@@ -9,13 +9,7 @@ enum FullscreenNavigationUI {
   "hide"
 };
 
-enum FullscreenKeyboardLock {
-  "browser",
-  "none"
-};
-
 dictionary FullscreenOptions {
-  FullscreenKeyboardLock keyboardLock = "none";
   FullscreenNavigationUI navigationUI = "auto";
 };
 

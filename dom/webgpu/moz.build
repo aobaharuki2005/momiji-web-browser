@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -6,7 +8,6 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Graphics: WebGPU")
 
 MOCHITEST_MANIFESTS += [
-    "tests/mochitest/mochitest-disabled.toml",
     "tests/mochitest/mochitest-no-pref.toml",
     "tests/mochitest/mochitest-resistfingerprinting.toml",
     "tests/mochitest/mochitest.toml",
@@ -39,7 +40,6 @@ h_and_cpp = [
     "OutOfMemoryError",
     "PipelineError",
     "PipelineLayout",
-    "PromiseHelpers",
     "QuerySet",
     "Queue",
     "RenderBundle",
@@ -107,14 +107,8 @@ if CONFIG["MOZ_DXCOMPILER"] and not CONFIG["MOZ_ARTIFACT_BUILDS"]:
     ]
 
 if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
-    # Errors on all implicit int conversion except 64-to-32.
-    COMPILE_FLAGS["WARNINGS_CXXFLAGS"] += [
-        "-Werror=implicit-int-conversion",
-        "-Wno-shorten-64-to-32",
-    ]
-    COMPILE_FLAGS["WARNINGS_CXXFLAGS"] += [
-        "-Werror=switch",
-    ]
+    CXXFLAGS += ["-Werror=implicit-int-conversion", "-Wno-shorten-64-to-32"]
+    CXXFLAGS += ["-Werror=switch"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 

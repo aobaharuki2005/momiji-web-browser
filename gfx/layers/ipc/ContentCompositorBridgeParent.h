@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,10 +26,8 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   friend class CompositorBridgeParent;
 
  public:
-  explicit ContentCompositorBridgeParent(CompositorManagerParent* aManager,
-                                         uint32_t aNamespace)
-      : CompositorBridgeParentBase(aManager, aNamespace),
-        mDestroyCalled(false) {}
+  explicit ContentCompositorBridgeParent(CompositorManagerParent* aManager)
+      : CompositorBridgeParentBase(aManager), mDestroyCalled(false) {}
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -83,9 +83,6 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   mozilla::ipc::IPCResult RecvCheckContentOnlyTDR(
       const uint32_t& sequenceNum, bool* isContentOnlyTDR) override;
 
-  mozilla::ipc::IPCResult RecvCheckAndClearWRDidRasterize(
-      const LayersId& aId, bool* aDidRasterize) override;
-
   mozilla::ipc::IPCResult RecvDynamicToolbarOffsetChanged(
       const int32_t& aOffset) override {
     return IPC_FAIL_NO_REASON(this);
@@ -130,11 +127,13 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   void DidCompositeLocked(LayersId aId, const VsyncId& aVsyncId,
                           TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
-  already_AddRefed<PTextureParent> AllocPTextureParent(
+  PTextureParent* AllocPTextureParent(
       const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
-      const uint64_t& aSerial,
+      const LayersId& aId, const uint64_t& aSerial,
       const wr::MaybeExternalImageId& aExternalImageId) override;
+
+  bool DeallocPTextureParent(PTextureParent* actor) override;
 
   bool IsSameProcess() const override;
 
@@ -144,26 +143,21 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
     return nullptr;
   }
 
-  already_AddRefed<PAPZCTreeManagerParent> AllocPAPZCTreeManagerParent(
+  PAPZCTreeManagerParent* AllocPAPZCTreeManagerParent(
       const LayersId& aLayersId) override;
+  bool DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aActor) override;
 
-  already_AddRefed<PAPZParent> AllocPAPZParent(
-      const LayersId& aLayersId) override;
+  PAPZParent* AllocPAPZParent(const LayersId& aLayersId) override;
+  bool DeallocPAPZParent(PAPZParent* aActor) override;
 
-  already_AddRefed<PWebRenderBridgeParent> AllocPWebRenderBridgeParent(
+  PWebRenderBridgeParent* AllocPWebRenderBridgeParent(
       const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize& aSize,
       const WindowKind& aWindowKind) override;
-  // Nothing to do as content WebRenderBridgeParents are fully initialized at
-  // construction time.
-  void EnsureWebRenderBridgeParentInitialized() override {}
+  bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
 
   void ObserveLayersUpdate(LayersId aLayersId, bool aActive) override;
 
   bool IsRemote() const override { return true; }
-
-  void ScheduleRenderOnCompositorThread(wr::RenderReasons aReasons) override {
-    MOZ_ASSERT_UNREACHABLE("Unused for content!");
-  }
 
  private:
   // Private destructor, to discourage deletion outside of Release():

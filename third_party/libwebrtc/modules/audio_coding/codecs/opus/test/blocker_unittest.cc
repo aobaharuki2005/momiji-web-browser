@@ -18,12 +18,10 @@
 #include "common_audio/channel_buffer.h"
 #include "test/gtest.h"
 
-namespace webrtc {
-
 namespace {
 
 // Callback Function to add 3 to every sample in the signal.
-class PlusThreeBlockerCallback : public BlockerCallback {
+class PlusThreeBlockerCallback : public webrtc::BlockerCallback {
  public:
   void ProcessBlock(const float* const* input,
                     size_t num_frames,
@@ -39,7 +37,7 @@ class PlusThreeBlockerCallback : public BlockerCallback {
 };
 
 // No-op Callback Function.
-class CopyBlockerCallback : public BlockerCallback {
+class CopyBlockerCallback : public webrtc::BlockerCallback {
  public:
   void ProcessBlock(const float* const* input,
                     size_t num_frames,
@@ -55,6 +53,8 @@ class CopyBlockerCallback : public BlockerCallback {
 };
 
 }  // namespace
+
+namespace webrtc {
 
 // Tests blocking with a window that multiplies the signal by 2, a callback
 // that adds 3 to each sample in the signal, and different combinations of chunk

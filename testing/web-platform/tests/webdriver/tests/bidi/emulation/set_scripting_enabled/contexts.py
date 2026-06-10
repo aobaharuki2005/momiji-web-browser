@@ -56,7 +56,6 @@ async def test_iframe(
         is_scripting_enabled,
         domain,
         inline,
-        iframe
 ):
     # Disable scripting
     await bidi_session.emulation.set_scripting_enabled(
@@ -66,7 +65,8 @@ async def test_iframe(
     # Assert scripting is disabled in the required context.
     assert await is_scripting_enabled(new_tab) is False
 
-    page_url = inline(iframe("<div id='in-iframe'>foo</div>", domain=domain))
+    iframe_url = inline("<div id='in-iframe'>foo</div>", domain=domain)
+    page_url = inline(f"<iframe src='{iframe_url}'></iframe>")
 
     # Load the page with iframes.
     await bidi_session.browsing_context.navigate(

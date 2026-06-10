@@ -7,31 +7,24 @@
 
 use crate::backend::c;
 use crate::backend::conv::{by_mut, c_uint, ret, socklen_t};
-#[cfg(all(target_os = "linux", feature = "time"))]
-use crate::clockid::ClockId;
 use crate::fd::BorrowedFd;
 #[cfg(feature = "alloc")]
 use crate::ffi::CStr;
 use crate::io;
-use crate::net::sockopt::{Ipv4PathMtuDiscovery, Ipv6PathMtuDiscovery, Timeout};
+use crate::net::sockopt::Timeout;
 #[cfg(target_os = "linux")]
 use crate::net::xdp::{XdpMmapOffsets, XdpOptionsFlags, XdpRingOffset, XdpStatistics, XdpUmemReg};
-#[cfg(all(target_os = "linux", feature = "time"))]
-use crate::net::TxTimeFlags;
 use crate::net::{
-    AddressFamily, Ipv4Addr, Ipv6Addr, Protocol, RawProtocol, SocketAddrBuf, SocketAddrV4,
-    SocketAddrV6, SocketType, UCred,
+    AddressFamily, Ipv4Addr, Ipv6Addr, Protocol, RawProtocol, SocketAddrAny, SocketAddrStorage,
+    SocketAddrV4, SocketAddrV6, SocketType, UCred,
 };
 #[cfg(feature = "alloc")]
-use alloc::borrow::ToOwned as _;
+use alloc::borrow::ToOwned;
 #[cfg(feature = "alloc")]
 use alloc::string::String;
-use core::mem::{size_of, MaybeUninit};
+use core::mem::MaybeUninit;
 use core::time::Duration;
 use linux_raw_sys::general::{__kernel_old_timeval, __kernel_sock_timeval};
-use linux_raw_sys::net::{
-    IPV6_MTU, IPV6_MTU_DISCOVER, IPV6_MULTICAST_IF, IP_MTU, IP_MTU_DISCOVER, IP_MULTICAST_IF,
-};
 #[cfg(target_os = "linux")]
 use linux_raw_sys::xdp::{xdp_mmap_offsets, xdp_statistics, xdp_statistics_v1};
 #[cfg(target_arch = "x86")]
@@ -43,9 +36,9 @@ use {
 
 #[inline]
 fn getsockopt<T: Copy>(fd: BorrowedFd<'_>, level: u32, optname: u32) -> io::Result<T> {
-    let mut optlen: c::socklen_t = size_of::<T>().try_into().unwrap();
+    let mut optlen: c::socklen_t = core::mem::size_of::<T>().try_into().unwrap();
     debug_assert!(
-        optlen as usize >= size_of::<c::c_int>(),
+        optlen as usize >= core::mem::size_of::<c::c_int>(),
         "Socket APIs don't ever use `bool` directly"
     );
 
@@ -54,7 +47,7 @@ fn getsockopt<T: Copy>(fd: BorrowedFd<'_>, level: u32, optname: u32) -> io::Resu
 
     assert_eq!(
         optlen as usize,
-        size_of::<T>(),
+        core::mem::size_of::<T>(),
         "unexpected getsockopt size"
     );
 
@@ -98,9 +91,9 @@ fn getsockopt_raw<T>(
 
 #[inline]
 fn setsockopt<T: Copy>(fd: BorrowedFd<'_>, level: u32, optname: u32, value: T) -> io::Result<()> {
-    let optlen = size_of::<T>().try_into().unwrap();
+    let optlen = core::mem::size_of::<T>().try_into().unwrap();
     debug_assert!(
-        optlen as usize >= size_of::<c::c_int>(),
+        optlen as usize >= core::mem::size_of::<c::c_int>(),
         "Socket APIs don't ever use `bool` directly"
     );
     setsockopt_raw(fd, level, optname, &value, optlen)
@@ -142,7 +135,7 @@ fn setsockopt_raw<T>(
 }
 
 #[inline]
-pub(crate) fn socket_type(fd: BorrowedFd<'_>) -> io::Result<SocketType> {
+pub(crate) fn get_socket_type(fd: BorrowedFd<'_>) -> io::Result<SocketType> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_TYPE)
 }
 
@@ -152,7 +145,7 @@ pub(crate) fn set_socket_reuseaddr(fd: BorrowedFd<'_>, reuseaddr: bool) -> io::R
 }
 
 #[inline]
-pub(crate) fn socket_reuseaddr(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_socket_reuseaddr(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_REUSEADDR).map(to_bool)
 }
 
@@ -162,7 +155,7 @@ pub(crate) fn set_socket_broadcast(fd: BorrowedFd<'_>, broadcast: bool) -> io::R
 }
 
 #[inline]
-pub(crate) fn socket_broadcast(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_socket_broadcast(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_BROADCAST).map(to_bool)
 }
 
@@ -182,7 +175,7 @@ pub(crate) fn set_socket_linger(fd: BorrowedFd<'_>, linger: Option<Duration>) ->
 }
 
 #[inline]
-pub(crate) fn socket_linger(fd: BorrowedFd<'_>) -> io::Result<Option<Duration>> {
+pub(crate) fn get_socket_linger(fd: BorrowedFd<'_>) -> io::Result<Option<Duration>> {
     let linger: c::linger = getsockopt(fd, c::SOL_SOCKET, c::SO_LINGER)?;
     Ok((linger.l_onoff != 0).then(|| Duration::from_secs(linger.l_linger as u64)))
 }
@@ -193,7 +186,7 @@ pub(crate) fn set_socket_passcred(fd: BorrowedFd<'_>, passcred: bool) -> io::Res
 }
 
 #[inline]
-pub(crate) fn socket_passcred(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_socket_passcred(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_PASSCRED).map(to_bool)
 }
 
@@ -232,14 +225,14 @@ fn set_socket_timeout_old(
 }
 
 #[inline]
-pub(crate) fn socket_timeout(fd: BorrowedFd<'_>, id: Timeout) -> io::Result<Option<Duration>> {
+pub(crate) fn get_socket_timeout(fd: BorrowedFd<'_>, id: Timeout) -> io::Result<Option<Duration>> {
     let optname = match id {
         Timeout::Recv => c::SO_RCVTIMEO_NEW,
         Timeout::Send => c::SO_SNDTIMEO_NEW,
     };
     let time: __kernel_sock_timeval = match getsockopt(fd, c::SOL_SOCKET, optname) {
         Err(io::Errno::NOPROTOOPT) if c::SO_RCVTIMEO_NEW != c::SO_RCVTIMEO_OLD => {
-            return socket_timeout_old(fd, id)
+            return get_socket_timeout_old(fd, id)
         }
         otherwise => otherwise?,
     };
@@ -248,7 +241,7 @@ pub(crate) fn socket_timeout(fd: BorrowedFd<'_>, id: Timeout) -> io::Result<Opti
 
 /// Same as `get_socket_timeout` but uses `__kernel_old_timeval` instead of
 /// `__kernel_sock_timeval` and `_OLD` constants instead of `_NEW`.
-fn socket_timeout_old(fd: BorrowedFd<'_>, id: Timeout) -> io::Result<Option<Duration>> {
+fn get_socket_timeout_old(fd: BorrowedFd<'_>, id: Timeout) -> io::Result<Option<Duration>> {
     let optname = match id {
         Timeout::Recv => c::SO_RCVTIMEO_OLD,
         Timeout::Send => c::SO_SNDTIMEO_OLD,
@@ -267,7 +260,7 @@ fn duration_from_linux_sock_timeval(time: __kernel_sock_timeval) -> Option<Durat
     }
 }
 
-/// Like `duration_from_linux_sock_timeval` but uses Linux's old 32-bit
+/// Like `duration_from_linux` but uses Linux's old 32-bit
 /// `__kernel_old_timeval`.
 fn duration_from_linux_old_timeval(time: __kernel_old_timeval) -> Option<Duration> {
     if time.tv_sec == 0 && time.tv_usec == 0 {
@@ -303,7 +296,7 @@ fn duration_to_linux_sock_timeval(timeout: Option<Duration>) -> io::Result<__ker
     })
 }
 
-/// Like `duration_to_linux_sock_timeval` but uses Linux's old 32-bit
+/// Like `duration_to_linux` but uses Linux's old 32-bit
 /// `__kernel_old_timeval`.
 fn duration_to_linux_old_timeval(timeout: Option<Duration>) -> io::Result<__kernel_old_timeval> {
     Ok(match timeout {
@@ -331,7 +324,7 @@ fn duration_to_linux_old_timeval(timeout: Option<Duration>) -> io::Result<__kern
 }
 
 #[inline]
-pub(crate) fn socket_error(fd: BorrowedFd<'_>) -> io::Result<Result<(), io::Errno>> {
+pub(crate) fn get_socket_error(fd: BorrowedFd<'_>) -> io::Result<Result<(), io::Errno>> {
     let err: c::c_int = getsockopt(fd, c::SOL_SOCKET, c::SO_ERROR)?;
     Ok(if err == 0 {
         Ok(())
@@ -346,7 +339,7 @@ pub(crate) fn set_socket_keepalive(fd: BorrowedFd<'_>, keepalive: bool) -> io::R
 }
 
 #[inline]
-pub(crate) fn socket_keepalive(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_socket_keepalive(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_KEEPALIVE).map(to_bool)
 }
 
@@ -363,7 +356,7 @@ pub(crate) fn set_socket_recv_buffer_size_force(fd: BorrowedFd<'_>, size: usize)
 }
 
 #[inline]
-pub(crate) fn socket_recv_buffer_size(fd: BorrowedFd<'_>) -> io::Result<usize> {
+pub(crate) fn get_socket_recv_buffer_size(fd: BorrowedFd<'_>) -> io::Result<usize> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_RCVBUF).map(|size: u32| size as usize)
 }
 
@@ -374,18 +367,12 @@ pub(crate) fn set_socket_send_buffer_size(fd: BorrowedFd<'_>, size: usize) -> io
 }
 
 #[inline]
-pub(crate) fn set_socket_send_buffer_size_force(fd: BorrowedFd<'_>, size: usize) -> io::Result<()> {
-    let size: c::c_int = size.try_into().map_err(|_| io::Errno::INVAL)?;
-    setsockopt(fd, c::SOL_SOCKET, c::SO_SNDBUFFORCE, size)
-}
-
-#[inline]
-pub(crate) fn socket_send_buffer_size(fd: BorrowedFd<'_>) -> io::Result<usize> {
+pub(crate) fn get_socket_send_buffer_size(fd: BorrowedFd<'_>) -> io::Result<usize> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_SNDBUF).map(|size: u32| size as usize)
 }
 
 #[inline]
-pub(crate) fn socket_domain(fd: BorrowedFd<'_>) -> io::Result<AddressFamily> {
+pub(crate) fn get_socket_domain(fd: BorrowedFd<'_>) -> io::Result<AddressFamily> {
     let domain: c::c_int = getsockopt(fd, c::SOL_SOCKET, c::SO_DOMAIN)?;
     Ok(AddressFamily(
         domain.try_into().map_err(|_| io::Errno::OPNOTSUPP)?,
@@ -393,7 +380,7 @@ pub(crate) fn socket_domain(fd: BorrowedFd<'_>) -> io::Result<AddressFamily> {
 }
 
 #[inline]
-pub(crate) fn socket_acceptconn(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_socket_acceptconn(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_ACCEPTCONN).map(to_bool)
 }
 
@@ -403,7 +390,7 @@ pub(crate) fn set_socket_oobinline(fd: BorrowedFd<'_>, value: bool) -> io::Resul
 }
 
 #[inline]
-pub(crate) fn socket_oobinline(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_socket_oobinline(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_OOBINLINE).map(to_bool)
 }
 
@@ -413,23 +400,23 @@ pub(crate) fn set_socket_reuseport(fd: BorrowedFd<'_>, value: bool) -> io::Resul
 }
 
 #[inline]
-pub(crate) fn socket_reuseport(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_socket_reuseport(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_REUSEPORT).map(to_bool)
 }
 
 #[inline]
-pub(crate) fn socket_protocol(fd: BorrowedFd<'_>) -> io::Result<Option<Protocol>> {
+pub(crate) fn get_socket_protocol(fd: BorrowedFd<'_>) -> io::Result<Option<Protocol>> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_PROTOCOL)
         .map(|raw: u32| RawProtocol::new(raw).map(Protocol::from_raw))
 }
 
 #[inline]
-pub(crate) fn socket_cookie(fd: BorrowedFd<'_>) -> io::Result<u64> {
+pub(crate) fn get_socket_cookie(fd: BorrowedFd<'_>) -> io::Result<u64> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_COOKIE)
 }
 
 #[inline]
-pub(crate) fn socket_incoming_cpu(fd: BorrowedFd<'_>) -> io::Result<u32> {
+pub(crate) fn get_socket_incoming_cpu(fd: BorrowedFd<'_>) -> io::Result<u32> {
     getsockopt(fd, c::SOL_SOCKET, c::SO_INCOMING_CPU)
 }
 
@@ -444,7 +431,7 @@ pub(crate) fn set_ip_ttl(fd: BorrowedFd<'_>, ttl: u32) -> io::Result<()> {
 }
 
 #[inline]
-pub(crate) fn ip_ttl(fd: BorrowedFd<'_>) -> io::Result<u32> {
+pub(crate) fn get_ip_ttl(fd: BorrowedFd<'_>) -> io::Result<u32> {
     getsockopt(fd, c::IPPROTO_IP, c::IP_TTL)
 }
 
@@ -454,75 +441,8 @@ pub(crate) fn set_ipv6_v6only(fd: BorrowedFd<'_>, only_v6: bool) -> io::Result<(
 }
 
 #[inline]
-pub(crate) fn ipv6_v6only(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_ipv6_v6only(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::IPPROTO_IPV6, c::IPV6_V6ONLY).map(to_bool)
-}
-
-#[inline]
-pub(crate) fn ip_mtu(fd: BorrowedFd<'_>) -> io::Result<u32> {
-    getsockopt(fd, c::IPPROTO_IP, IP_MTU)
-}
-
-#[inline]
-pub(crate) fn ipv6_mtu(fd: BorrowedFd<'_>) -> io::Result<u32> {
-    getsockopt(fd, c::IPPROTO_IPV6, IPV6_MTU)
-}
-
-#[inline]
-pub(crate) fn set_ip_mtu_discover(
-    fd: BorrowedFd<'_>,
-    value: Ipv4PathMtuDiscovery,
-) -> io::Result<()> {
-    setsockopt(fd, c::IPPROTO_IP, IP_MTU_DISCOVER, value)
-}
-
-#[inline]
-pub(crate) fn ip_mtu_discover(fd: BorrowedFd<'_>) -> io::Result<Ipv4PathMtuDiscovery> {
-    getsockopt(fd, c::IPPROTO_IP, IP_MTU_DISCOVER)
-}
-
-#[inline]
-pub(crate) fn set_ipv6_mtu_discover(
-    fd: BorrowedFd<'_>,
-    value: Ipv6PathMtuDiscovery,
-) -> io::Result<()> {
-    setsockopt(fd, c::IPPROTO_IPV6, IPV6_MTU_DISCOVER, value)
-}
-
-#[inline]
-pub(crate) fn ipv6_mtu_discover(fd: BorrowedFd<'_>) -> io::Result<Ipv6PathMtuDiscovery> {
-    getsockopt(fd, c::IPPROTO_IPV6, IPV6_MTU_DISCOVER)
-}
-
-#[inline]
-pub(crate) fn set_ip_multicast_if_with_ifindex(
-    fd: BorrowedFd<'_>,
-    multiaddr: &Ipv4Addr,
-    address: &Ipv4Addr,
-    ifindex: u32,
-) -> io::Result<()> {
-    let mreqn = to_ip_mreqn(multiaddr, address, ifindex as i32);
-    setsockopt(fd, c::IPPROTO_IP, IP_MULTICAST_IF, mreqn)
-}
-
-#[inline]
-pub(crate) fn set_ip_multicast_if(fd: BorrowedFd<'_>, value: &Ipv4Addr) -> io::Result<()> {
-    setsockopt(fd, c::IPPROTO_IP, IP_MULTICAST_IF, to_imr_addr(value))
-}
-
-#[inline]
-pub(crate) fn ip_multicast_if(fd: BorrowedFd<'_>) -> io::Result<Ipv4Addr> {
-    getsockopt(fd, c::IPPROTO_IP, IP_MULTICAST_IF).map(from_in_addr)
-}
-
-#[inline]
-pub(crate) fn set_ipv6_multicast_if(fd: BorrowedFd<'_>, value: u32) -> io::Result<()> {
-    setsockopt(fd, c::IPPROTO_IPV6, IPV6_MULTICAST_IF, value as c::c_int)
-}
-
-#[inline]
-pub(crate) fn ipv6_multicast_if(fd: BorrowedFd<'_>) -> io::Result<u32> {
-    getsockopt(fd, c::IPPROTO_IPV6, IPV6_MULTICAST_IF)
 }
 
 #[inline]
@@ -536,7 +456,7 @@ pub(crate) fn set_ip_multicast_loop(fd: BorrowedFd<'_>, multicast_loop: bool) ->
 }
 
 #[inline]
-pub(crate) fn ip_multicast_loop(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_ip_multicast_loop(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::IPPROTO_IP, c::IP_MULTICAST_LOOP).map(to_bool)
 }
 
@@ -546,7 +466,7 @@ pub(crate) fn set_ip_multicast_ttl(fd: BorrowedFd<'_>, multicast_ttl: u32) -> io
 }
 
 #[inline]
-pub(crate) fn ip_multicast_ttl(fd: BorrowedFd<'_>) -> io::Result<u32> {
+pub(crate) fn get_ip_multicast_ttl(fd: BorrowedFd<'_>) -> io::Result<u32> {
     getsockopt(fd, c::IPPROTO_IP, c::IP_MULTICAST_TTL)
 }
 
@@ -561,7 +481,7 @@ pub(crate) fn set_ipv6_multicast_loop(fd: BorrowedFd<'_>, multicast_loop: bool) 
 }
 
 #[inline]
-pub(crate) fn ipv6_multicast_loop(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_ipv6_multicast_loop(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::IPPROTO_IPV6, c::IPV6_MULTICAST_LOOP).map(to_bool)
 }
 
@@ -571,7 +491,7 @@ pub(crate) fn set_ipv6_multicast_hops(fd: BorrowedFd<'_>, multicast_hops: u32) -
 }
 
 #[inline]
-pub(crate) fn ipv6_multicast_hops(fd: BorrowedFd<'_>) -> io::Result<u32> {
+pub(crate) fn get_ipv6_multicast_hops(fd: BorrowedFd<'_>) -> io::Result<u32> {
     getsockopt(fd, c::IPPROTO_IP, c::IPV6_MULTICAST_HOPS)
 }
 
@@ -590,9 +510,9 @@ pub(crate) fn set_ip_add_membership_with_ifindex(
     fd: BorrowedFd<'_>,
     multiaddr: &Ipv4Addr,
     address: &Ipv4Addr,
-    ifindex: u32,
+    ifindex: i32,
 ) -> io::Result<()> {
-    let mreqn = to_ip_mreqn(multiaddr, address, ifindex as i32);
+    let mreqn = to_ip_mreqn(multiaddr, address, ifindex);
     setsockopt(fd, c::IPPROTO_IP, c::IP_ADD_MEMBERSHIP, mreqn)
 }
 
@@ -643,9 +563,9 @@ pub(crate) fn set_ip_drop_membership_with_ifindex(
     fd: BorrowedFd<'_>,
     multiaddr: &Ipv4Addr,
     address: &Ipv4Addr,
-    ifindex: u32,
+    ifindex: i32,
 ) -> io::Result<()> {
-    let mreqn = to_ip_mreqn(multiaddr, address, ifindex as i32);
+    let mreqn = to_ip_mreqn(multiaddr, address, ifindex);
     setsockopt(fd, c::IPPROTO_IP, c::IP_DROP_MEMBERSHIP, mreqn)
 }
 
@@ -660,7 +580,7 @@ pub(crate) fn set_ipv6_drop_membership(
 }
 
 #[inline]
-pub(crate) fn ipv6_unicast_hops(fd: BorrowedFd<'_>) -> io::Result<u8> {
+pub(crate) fn get_ipv6_unicast_hops(fd: BorrowedFd<'_>) -> io::Result<u8> {
     getsockopt(fd, c::IPPROTO_IPV6, c::IPV6_UNICAST_HOPS).map(|hops: c::c_int| hops as u8)
 }
 
@@ -679,7 +599,7 @@ pub(crate) fn set_ip_tos(fd: BorrowedFd<'_>, value: u8) -> io::Result<()> {
 }
 
 #[inline]
-pub(crate) fn ip_tos(fd: BorrowedFd<'_>) -> io::Result<u8> {
+pub(crate) fn get_ip_tos(fd: BorrowedFd<'_>) -> io::Result<u8> {
     let value: i32 = getsockopt(fd, c::IPPROTO_IP, c::IP_TOS)?;
     Ok(value as u8)
 }
@@ -690,7 +610,7 @@ pub(crate) fn set_ip_recvtos(fd: BorrowedFd<'_>, value: bool) -> io::Result<()> 
 }
 
 #[inline]
-pub(crate) fn ip_recvtos(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_ip_recvtos(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::IPPROTO_IP, c::IP_RECVTOS).map(to_bool)
 }
 
@@ -700,7 +620,7 @@ pub(crate) fn set_ipv6_recvtclass(fd: BorrowedFd<'_>, value: bool) -> io::Result
 }
 
 #[inline]
-pub(crate) fn ipv6_recvtclass(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_ipv6_recvtclass(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::IPPROTO_IPV6, c::IPV6_RECVTCLASS).map(to_bool)
 }
 
@@ -710,7 +630,7 @@ pub(crate) fn set_ip_freebind(fd: BorrowedFd<'_>, value: bool) -> io::Result<()>
 }
 
 #[inline]
-pub(crate) fn ip_freebind(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_ip_freebind(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::IPPROTO_IP, c::IP_FREEBIND).map(to_bool)
 }
 
@@ -720,30 +640,40 @@ pub(crate) fn set_ipv6_freebind(fd: BorrowedFd<'_>, value: bool) -> io::Result<(
 }
 
 #[inline]
-pub(crate) fn ipv6_freebind(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_ipv6_freebind(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::IPPROTO_IPV6, c::IPV6_FREEBIND).map(to_bool)
 }
 
 #[inline]
-pub(crate) fn ip_original_dst(fd: BorrowedFd<'_>) -> io::Result<SocketAddrV4> {
+pub(crate) fn get_ip_original_dst(fd: BorrowedFd<'_>) -> io::Result<SocketAddrV4> {
     let level = c::IPPROTO_IP;
     let optname = c::SO_ORIGINAL_DST;
-    let mut addr = SocketAddrBuf::new();
+    let mut value = MaybeUninit::<SocketAddrStorage>::uninit();
+    let mut optlen = core::mem::size_of_val(&value).try_into().unwrap();
 
-    getsockopt_raw(fd, level, optname, &mut addr.storage, &mut addr.len)?;
+    getsockopt_raw(fd, level, optname, &mut value, &mut optlen)?;
 
-    Ok(unsafe { addr.into_any() }.try_into().unwrap())
+    let any = unsafe { SocketAddrAny::read(value.as_ptr(), optlen as usize)? };
+    match any {
+        SocketAddrAny::V4(v4) => Ok(v4),
+        _ => unreachable!(),
+    }
 }
 
 #[inline]
-pub(crate) fn ipv6_original_dst(fd: BorrowedFd<'_>) -> io::Result<SocketAddrV6> {
+pub(crate) fn get_ipv6_original_dst(fd: BorrowedFd<'_>) -> io::Result<SocketAddrV6> {
     let level = c::IPPROTO_IPV6;
     let optname = c::IP6T_SO_ORIGINAL_DST;
-    let mut addr = SocketAddrBuf::new();
+    let mut value = MaybeUninit::<SocketAddrStorage>::uninit();
+    let mut optlen = core::mem::size_of_val(&value).try_into().unwrap();
 
-    getsockopt_raw(fd, level, optname, &mut addr.storage, &mut addr.len)?;
+    getsockopt_raw(fd, level, optname, &mut value, &mut optlen)?;
 
-    Ok(unsafe { addr.into_any() }.try_into().unwrap())
+    let any = unsafe { SocketAddrAny::read(value.as_ptr(), optlen as usize)? };
+    match any {
+        SocketAddrAny::V6(v6) => Ok(v6),
+        _ => unreachable!(),
+    }
 }
 
 #[inline]
@@ -752,7 +682,7 @@ pub(crate) fn set_ipv6_tclass(fd: BorrowedFd<'_>, value: u32) -> io::Result<()> 
 }
 
 #[inline]
-pub(crate) fn ipv6_tclass(fd: BorrowedFd<'_>) -> io::Result<u32> {
+pub(crate) fn get_ipv6_tclass(fd: BorrowedFd<'_>) -> io::Result<u32> {
     getsockopt(fd, c::IPPROTO_IPV6, c::IPV6_TCLASS)
 }
 
@@ -762,7 +692,7 @@ pub(crate) fn set_tcp_nodelay(fd: BorrowedFd<'_>, nodelay: bool) -> io::Result<(
 }
 
 #[inline]
-pub(crate) fn tcp_nodelay(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_tcp_nodelay(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::IPPROTO_TCP, c::TCP_NODELAY).map(to_bool)
 }
 
@@ -772,7 +702,7 @@ pub(crate) fn set_tcp_keepcnt(fd: BorrowedFd<'_>, count: u32) -> io::Result<()> 
 }
 
 #[inline]
-pub(crate) fn tcp_keepcnt(fd: BorrowedFd<'_>) -> io::Result<u32> {
+pub(crate) fn get_tcp_keepcnt(fd: BorrowedFd<'_>) -> io::Result<u32> {
     getsockopt(fd, c::IPPROTO_TCP, c::TCP_KEEPCNT)
 }
 
@@ -783,7 +713,7 @@ pub(crate) fn set_tcp_keepidle(fd: BorrowedFd<'_>, duration: Duration) -> io::Re
 }
 
 #[inline]
-pub(crate) fn tcp_keepidle(fd: BorrowedFd<'_>) -> io::Result<Duration> {
+pub(crate) fn get_tcp_keepidle(fd: BorrowedFd<'_>) -> io::Result<Duration> {
     let secs: c::c_uint = getsockopt(fd, c::IPPROTO_TCP, c::TCP_KEEPIDLE)?;
     Ok(Duration::from_secs(secs.into()))
 }
@@ -795,7 +725,7 @@ pub(crate) fn set_tcp_keepintvl(fd: BorrowedFd<'_>, duration: Duration) -> io::R
 }
 
 #[inline]
-pub(crate) fn tcp_keepintvl(fd: BorrowedFd<'_>) -> io::Result<Duration> {
+pub(crate) fn get_tcp_keepintvl(fd: BorrowedFd<'_>) -> io::Result<Duration> {
     let secs: c::c_uint = getsockopt(fd, c::IPPROTO_TCP, c::TCP_KEEPINTVL)?;
     Ok(Duration::from_secs(secs.into()))
 }
@@ -806,7 +736,7 @@ pub(crate) fn set_tcp_user_timeout(fd: BorrowedFd<'_>, value: u32) -> io::Result
 }
 
 #[inline]
-pub(crate) fn tcp_user_timeout(fd: BorrowedFd<'_>) -> io::Result<u32> {
+pub(crate) fn get_tcp_user_timeout(fd: BorrowedFd<'_>) -> io::Result<u32> {
     getsockopt(fd, c::IPPROTO_TCP, c::TCP_USER_TIMEOUT)
 }
 
@@ -816,7 +746,7 @@ pub(crate) fn set_tcp_quickack(fd: BorrowedFd<'_>, value: bool) -> io::Result<()
 }
 
 #[inline]
-pub(crate) fn tcp_quickack(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_tcp_quickack(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::IPPROTO_TCP, c::TCP_QUICKACK).map(to_bool)
 }
 
@@ -830,7 +760,7 @@ pub(crate) fn set_tcp_congestion(fd: BorrowedFd<'_>, value: &str) -> io::Result<
 
 #[cfg(feature = "alloc")]
 #[inline]
-pub(crate) fn tcp_congestion(fd: BorrowedFd<'_>) -> io::Result<String> {
+pub(crate) fn get_tcp_congestion(fd: BorrowedFd<'_>) -> io::Result<String> {
     const OPTLEN: c::socklen_t = 16;
 
     let level = c::IPPROTO_TCP;
@@ -841,7 +771,7 @@ pub(crate) fn tcp_congestion(fd: BorrowedFd<'_>) -> io::Result<String> {
     unsafe {
         let value = value.assume_init();
         let slice: &[u8] = core::mem::transmute(&value[..optlen as usize]);
-        assert!(slice.contains(&b'\0'));
+        assert!(slice.iter().any(|b| *b == b'\0'));
         Ok(
             core::str::from_utf8(CStr::from_ptr(slice.as_ptr().cast()).to_bytes())
                 .unwrap()
@@ -861,7 +791,7 @@ pub(crate) fn set_tcp_thin_linear_timeouts(fd: BorrowedFd<'_>, value: bool) -> i
 }
 
 #[inline]
-pub(crate) fn tcp_thin_linear_timeouts(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_tcp_thin_linear_timeouts(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::IPPROTO_TCP, c::TCP_THIN_LINEAR_TIMEOUTS).map(to_bool)
 }
 
@@ -871,42 +801,13 @@ pub(crate) fn set_tcp_cork(fd: BorrowedFd<'_>, value: bool) -> io::Result<()> {
 }
 
 #[inline]
-pub(crate) fn tcp_cork(fd: BorrowedFd<'_>) -> io::Result<bool> {
+pub(crate) fn get_tcp_cork(fd: BorrowedFd<'_>) -> io::Result<bool> {
     getsockopt(fd, c::IPPROTO_TCP, c::TCP_CORK).map(to_bool)
 }
 
 #[inline]
-pub(crate) fn socket_peercred(fd: BorrowedFd<'_>) -> io::Result<UCred> {
+pub(crate) fn get_socket_peercred(fd: BorrowedFd<'_>) -> io::Result<UCred> {
     getsockopt(fd, c::SOL_SOCKET, linux_raw_sys::net::SO_PEERCRED)
-}
-
-#[cfg(all(target_os = "linux", feature = "time"))]
-#[inline]
-pub(crate) fn set_txtime(
-    fd: BorrowedFd<'_>,
-    clockid: ClockId,
-    flags: TxTimeFlags,
-) -> io::Result<()> {
-    setsockopt(
-        fd,
-        c::SOL_SOCKET,
-        c::SO_TXTIME,
-        c::sock_txtime {
-            clockid: clockid as _,
-            flags: flags.bits(),
-        },
-    )
-}
-
-#[cfg(all(target_os = "linux", feature = "time"))]
-#[inline]
-pub(crate) fn get_txtime(fd: BorrowedFd<'_>) -> io::Result<(ClockId, TxTimeFlags)> {
-    let txtime: c::sock_txtime = getsockopt(fd, c::SOL_SOCKET, c::SO_TXTIME)?;
-
-    Ok((
-        txtime.clockid.try_into().map_err(|_| io::Errno::RANGE)?,
-        TxTimeFlags::from_bits(txtime.flags).ok_or(io::Errno::RANGE)?,
-    ))
 }
 
 #[cfg(target_os = "linux")]
@@ -941,7 +842,7 @@ pub(crate) fn set_xdp_rx_ring_size(fd: BorrowedFd<'_>, value: u32) -> io::Result
 
 #[cfg(target_os = "linux")]
 #[inline]
-pub(crate) fn xdp_mmap_offsets(fd: BorrowedFd<'_>) -> io::Result<XdpMmapOffsets> {
+pub(crate) fn get_xdp_mmap_offsets(fd: BorrowedFd<'_>) -> io::Result<XdpMmapOffsets> {
     // The kernel will write `xdp_mmap_offsets` or `xdp_mmap_offsets_v1` to the
     // supplied pointer, depending on the kernel version. Both structs only
     // contain u64 values. By using the larger of both as the parameter, we can
@@ -950,17 +851,17 @@ pub(crate) fn xdp_mmap_offsets(fd: BorrowedFd<'_>) -> io::Result<XdpMmapOffsets>
     // kernel version. This works because C will layout all struct members one
     // after the other.
 
-    let mut optlen = size_of::<xdp_mmap_offsets>().try_into().unwrap();
+    let mut optlen = core::mem::size_of::<xdp_mmap_offsets>().try_into().unwrap();
     debug_assert!(
-        optlen as usize >= size_of::<c::c_int>(),
+        optlen as usize >= core::mem::size_of::<c::c_int>(),
         "Socket APIs don't ever use `bool` directly"
     );
     let mut value = MaybeUninit::<xdp_mmap_offsets>::zeroed();
     getsockopt_raw(fd, c::SOL_XDP, c::XDP_MMAP_OFFSETS, &mut value, &mut optlen)?;
 
-    if optlen as usize == size_of::<c::xdp_mmap_offsets_v1>() {
-        // SAFETY: All members of xdp_mmap_offsets are `u64` and thus are
-        // correctly initialized by `MaybeUninit::<xdp_statistics>::zeroed()`.
+    if optlen as usize == core::mem::size_of::<c::xdp_mmap_offsets_v1>() {
+        // Safety: All members of xdp_mmap_offsets are u64 and thus are correctly
+        // initialized by `MaybeUninit::<xdp_statistics>::zeroed()`
         let xpd_mmap_offsets = unsafe { value.assume_init() };
         Ok(XdpMmapOffsets {
             rx: XdpRingOffset {
@@ -991,11 +892,11 @@ pub(crate) fn xdp_mmap_offsets(fd: BorrowedFd<'_>) -> io::Result<XdpMmapOffsets>
     } else {
         assert_eq!(
             optlen as usize,
-            size_of::<xdp_mmap_offsets>(),
+            core::mem::size_of::<xdp_mmap_offsets>(),
             "unexpected getsockopt size"
         );
-        // SAFETY: All members of xdp_mmap_offsets are `u64` and thus are
-        // correctly initialized by `MaybeUninit::<xdp_statistics>::zeroed()`.
+        // Safety: All members of xdp_mmap_offsets are u64 and thus are correctly
+        // initialized by `MaybeUninit::<xdp_statistics>::zeroed()`
         let xpd_mmap_offsets = unsafe { value.assume_init() };
         Ok(XdpMmapOffsets {
             rx: XdpRingOffset {
@@ -1028,18 +929,18 @@ pub(crate) fn xdp_mmap_offsets(fd: BorrowedFd<'_>) -> io::Result<XdpMmapOffsets>
 
 #[cfg(target_os = "linux")]
 #[inline]
-pub(crate) fn xdp_statistics(fd: BorrowedFd<'_>) -> io::Result<XdpStatistics> {
-    let mut optlen = size_of::<xdp_statistics>().try_into().unwrap();
+pub(crate) fn get_xdp_statistics(fd: BorrowedFd<'_>) -> io::Result<XdpStatistics> {
+    let mut optlen = core::mem::size_of::<xdp_statistics>().try_into().unwrap();
     debug_assert!(
-        optlen as usize >= size_of::<c::c_int>(),
+        optlen as usize >= core::mem::size_of::<c::c_int>(),
         "Socket APIs don't ever use `bool` directly"
     );
     let mut value = MaybeUninit::<xdp_statistics>::zeroed();
     getsockopt_raw(fd, c::SOL_XDP, c::XDP_STATISTICS, &mut value, &mut optlen)?;
 
-    if optlen as usize == size_of::<xdp_statistics_v1>() {
-        // SAFETY: All members of xdp_statistics are `u64` and thus are
-        // correctly initialized by `MaybeUninit::<xdp_statistics>::zeroed()`.
+    if optlen as usize == core::mem::size_of::<xdp_statistics_v1>() {
+        // Safety: All members of xdp_statistics are u64 and thus are correctly
+        // initialized by `MaybeUninit::<xdp_statistics>::zeroed()`
         let xdp_statistics = unsafe { value.assume_init() };
         Ok(XdpStatistics {
             rx_dropped: xdp_statistics.rx_dropped,
@@ -1052,11 +953,11 @@ pub(crate) fn xdp_statistics(fd: BorrowedFd<'_>) -> io::Result<XdpStatistics> {
     } else {
         assert_eq!(
             optlen as usize,
-            size_of::<xdp_statistics>(),
+            core::mem::size_of::<xdp_statistics>(),
             "unexpected getsockopt size"
         );
-        // SAFETY: All members of xdp_statistics are `u64` and thus are
-        // correctly initialized by `MaybeUninit::<xdp_statistics>::zeroed()`.
+        // Safety: All members of xdp_statistics are u64 and thus are correctly
+        // initialized by `MaybeUninit::<xdp_statistics>::zeroed()`
         let xdp_statistics = unsafe { value.assume_init() };
         Ok(XdpStatistics {
             rx_dropped: xdp_statistics.rx_dropped,
@@ -1071,13 +972,8 @@ pub(crate) fn xdp_statistics(fd: BorrowedFd<'_>) -> io::Result<XdpStatistics> {
 
 #[cfg(target_os = "linux")]
 #[inline]
-pub(crate) fn xdp_options(fd: BorrowedFd<'_>) -> io::Result<XdpOptionsFlags> {
+pub(crate) fn get_xdp_options(fd: BorrowedFd<'_>) -> io::Result<XdpOptionsFlags> {
     getsockopt(fd, c::SOL_XDP, c::XDP_OPTIONS)
-}
-
-#[inline]
-fn from_in_addr(in_addr: c::in_addr) -> Ipv4Addr {
-    Ipv4Addr::from(in_addr.s_addr.to_ne_bytes())
 }
 
 #[inline]

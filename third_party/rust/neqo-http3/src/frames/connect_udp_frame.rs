@@ -5,7 +5,7 @@
 // except according to those terms.
 
 use super::hframe::HFrameType;
-use crate::{Res, frames::reader::FrameDecoder};
+use crate::{frames::reader::FrameDecoder, Res};
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum Frame {
@@ -26,6 +26,7 @@ impl FrameDecoder<Self> for Frame {
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use super::*;
+    use crate::frames::reader::FrameDecoder;
 
     const DATAGRAM: HFrameType = HFrameType(0x0);
 

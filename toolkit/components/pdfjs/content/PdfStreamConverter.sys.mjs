@@ -621,19 +621,20 @@ class ChromeActions {
    */
   updateEditorStates({ details }) {
     const doc = this.domWindow.document;
-    doc.pdfStates ||= {
-      isEditing: false,
-      isEmpty: true,
-      hasSomethingToUndo: false,
-      hasSomethingToRedo: false,
-      hasSelectedEditor: false,
-      hasSelectedText: false,
-      hasSelectedPages: false,
-    };
-    const { pdfStates } = doc;
+    if (!doc.editorStates) {
+      doc.editorStates = {
+        isEditing: false,
+        isEmpty: true,
+        hasSomethingToUndo: false,
+        hasSomethingToRedo: false,
+        hasSelectedEditor: false,
+        hasSelectedText: false,
+      };
+    }
+    const { editorStates } = doc;
     for (const [key, value] of Object.entries(details)) {
-      if (typeof value === "boolean" && key in pdfStates) {
-        pdfStates[key] = value;
+      if (typeof value === "boolean" && key in editorStates) {
+        editorStates[key] = value;
       }
     }
   }

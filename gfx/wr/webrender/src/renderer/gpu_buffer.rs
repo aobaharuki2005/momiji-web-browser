@@ -10,13 +10,12 @@
 use std::i32;
 
 use crate::gpu_types::UvRectKind;
-use crate::internal_types::{FrameId, FrameMemory, FrameVec, TextureSource, TextureSourceExternal};
+use crate::internal_types::{FrameId, FrameMemory, FrameVec};
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use crate::util::ScaleOffset;
 use api::units::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceRect, LayoutRect, PictureRect};
 use api::{PremultipliedColorF, ImageFormat};
 use crate::device::Texel;
-use crate::render_task::{RenderTaskLocation, StaticRenderTaskSurface};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 
 pub struct GpuBufferBuilder {
@@ -89,7 +88,7 @@ pub struct GpuBufferHandle(u32);
 
 impl GpuBufferHandle {
     pub const INVALID: GpuBufferHandle = GpuBufferHandle(u32::MAX - 1);
-    const EPOCH_MASK: u32 = 0xFC000000; // Leading 6 bits
+    const EPOCH_MASK: u32 = 0xFF000000;
 
     fn new(addr: u32, epoch: u32) -> Self {
         Self(addr | epoch)
@@ -103,7 +102,7 @@ impl GpuBufferHandle {
 impl std::fmt::Debug for GpuBufferHandle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let addr = self.0 & !Self::EPOCH_MASK;
-        let epoch = (self.0 & Self::EPOCH_MASK) >> 26;
+        let epoch = (self.0 & Self::EPOCH_MASK) >> 24;
         write!(f, "#{addr}@{epoch}")
     }
 }
@@ -112,7 +111,7 @@ impl std::fmt::Debug for GpuBufferHandle {
 //           In the future, we can change the PrimitiveInstanceData struct
 //           to use 2x u16 for the vertex attribute instead of an i32.
 #[repr(transparent)]
-#[derive(Copy, Clone, MallocSizeOf, Eq, PartialEq)]
+#[derive(Copy, Debug, Clone, MallocSizeOf, Eq, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuBufferAddress(u32);
@@ -150,16 +149,6 @@ impl GpuBufferAddress {
     }
 
     pub const INVALID: GpuBufferAddress = GpuBufferAddress(u32::MAX - 1);
-}
-
-impl std::fmt::Debug for GpuBufferAddress {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        if *self == Self::INVALID {
-            write!(f, "<invalid>")
-        } else {
-            write!(f, "#{}", self.0)
-        }
-    }
 }
 
 impl GpuBufferBlockF {
@@ -374,7 +363,6 @@ impl<'a, T> GpuBufferWriter<'a, T> where T: Texel {
     /// Close this writer, returning the GPU address of this set of block(s).
     pub fn finish_with_handle(self) -> GpuBufferHandle {
         assert!(self.buffer.len() <= self.index + self.max_block_count);
-        assert_eq!(self.index & (GpuBufferHandle::EPOCH_MASK as usize), 0);
 
         GpuBufferHandle::new(self.index as u32, self.epoch)
     }
@@ -415,7 +403,7 @@ impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRec
     pub fn new(memory: &FrameMemory, capacity: usize, frame_id: FrameId) -> Self {
         // Pick the first 8 bits of the frame id and store them in the upper bits
         // of the handles.
-        let epoch = ((frame_id.as_u64() % 62) as u32 + 1) << 26;
+        let epoch = ((frame_id.as_u64() % 254) as u32 + 1) << 24;
         GpuBufferBuilderImpl {
             data: memory.new_vec_with_capacity(capacity),
             deferred: Vec::new(),
@@ -424,7 +412,7 @@ impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRec
     }
 
     #[allow(dead_code)]
-    pub fn push_blocks(
+    pub fn push(
         &mut self,
         blocks: &[T],
     ) -> GpuBufferAddress {
@@ -487,45 +475,9 @@ impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRec
         // query the location of any dynamic (render target) or static (texture cache)
         // task. This allows us to patch the UV rects in to the GPU buffer before upload
         // to the GPU.
-        let mut deferred_uv_copies = Vec::new();
         for block in self.deferred.drain(..) {
             let render_task = &render_tasks[block.task_id];
-
-            // External images (for example Android SurfaceTexture sources) only have
-            // their uv rect resolved by the renderer, and it may be Y-flipped. The
-            // target rect computed below does not capture that, so instead defer copying
-            // the resolved uv rect (written by update_deferred_resolves into the task's
-            // uv_rect_handle block) into this segment block. See `apply_deferred_uv_copies`.
-            if let RenderTaskLocation::Static {
-                surface: StaticRenderTaskSurface::ReadOnly {
-                    source: TextureSource::External(TextureSourceExternal { normalized_uvs, .. }),
-                },
-                ..
-            } = render_task.location {
-                // The gpu buffer stores uv rects in device pixels, but the renderer
-                // writes normalized uvs for external images that use them. Scale by the
-                // image size (the external image task's target rect) during the copy.
-                let uv_scale = if normalized_uvs {
-                    let size = render_task.get_target_rect().size();
-                    [size.width as f32, size.height as f32]
-                } else {
-                    [1.0, 1.0]
-                };
-                deferred_uv_copies.push(DeferredUvCopy {
-                    src: render_task.get_texture_address().as_u32(),
-                    dst: block.index as u32,
-                    uv_scale,
-                });
-                continue;
-            }
-
-            let mut target_rect = render_task.get_target_rect();
-            if block.task_id.has_sub_rect() {
-                let sub = &render_tasks.sub_rects[block.task_id.sub_rect_index as usize];
-                target_rect = sub.sub_rect
-                    .translate(target_rect.min.to_vector())
-                    .intersection_unchecked(&target_rect);
-            }
+            let target_rect = render_task.get_target_rect();
 
             let uv_rect = match render_task.uv_rect_kind() {
                 UvRectKind::Rect => {
@@ -554,7 +506,6 @@ impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRec
             data: self.data,
             size: DeviceIntSize::new(MAX_VERTEX_TEXTURE_WIDTH as i32, (len / MAX_VERTEX_TEXTURE_WIDTH) as i32),
             format: T::image_format(),
-            deferred_uv_copies,
             epoch: self.epoch,
         }
     }
@@ -581,28 +532,6 @@ impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRec
     }
 }
 
-impl GpuBufferBuilderF {
-    pub fn push<D>(&mut self, data: &D) -> GpuBufferAddress
-        where D: GpuBufferDataF
-    {
-        let mut writer = self.write_blocks(D::NUM_BLOCKS);
-        data.write(&mut writer);
-
-        writer.finish()
-    }
-}
-
-impl GpuBufferBuilderI {
-    pub fn push<D>(&mut self, data: &D) -> GpuBufferAddress
-        where D: GpuBufferDataI
-    {
-        let mut writer = self.write_blocks(D::NUM_BLOCKS);
-        data.write(&mut writer);
-
-        writer.finish()
-    }
-}
-
 fn ensure_row_capacity<T: Default>(data: &mut FrameVec<T>, cap: usize) {
     if (data.len() % MAX_VERTEX_TEXTURE_WIDTH) + cap > MAX_VERTEX_TEXTURE_WIDTH {
         finish_row(data);
@@ -616,54 +545,13 @@ fn finish_row<T: Default>(data: &mut FrameVec<T>) {
     }
 }
 
-/// Records that the uv rect block at `dst` must be overwritten with the block at
-/// `src` once the renderer has resolved external images.
-///
-/// TODO: This is a hack. At the end of frame building we resolve UVs from the
-/// render task graph, however this is too early to resolve the real UVs for
-/// external images (happens on the renderer thread). So this is an even-more-
-/// deferred step on top of the already deferred blocks.
-/// It would be cleaner to move the existing deferred mechanism later and avoid
-/// stacking another one on top, but the better fix would be to not write UV
-/// rects in the gpu buffer and pass render task handles to the quad shaders.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug)]
-pub struct DeferredUvCopy {
-    pub src: u32,
-    pub dst: u32,
-    /// Per-axis scale applied to the copied uv rect. Used to convert the
-    /// renderer's normalized uvs (for external images that use them) into the
-    /// device pixels that the quad shaders expect. `[1.0, 1.0]` for uvs that
-    /// are already in device pixels.
-    pub uv_scale: [f32; 2],
-}
-
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuBuffer<T> {
     pub data: FrameVec<T>,
     pub size: DeviceIntSize,
     pub format: ImageFormat,
-    pub deferred_uv_copies: Vec<DeferredUvCopy>,
     epoch: u32,
-}
-
-impl GpuBuffer<GpuBufferBlockF> {
-    /// Apply the uv rect copies deferred during `finalize`. Must be called after the
-    /// renderer has resolved external images into the gpu buffer.
-    pub fn apply_deferred_uv_copies(&mut self) {
-        for i in 0 .. self.deferred_uv_copies.len() {
-            let copy = self.deferred_uv_copies[i];
-            // The uv rect is stored as [p0.x, p0.y, p1.x, p1.y].
-            let mut uv = self.data[copy.src as usize].data;
-            uv[0] *= copy.uv_scale[0];
-            uv[1] *= copy.uv_scale[1];
-            uv[2] *= copy.uv_scale[0];
-            uv[3] *= copy.uv_scale[1];
-            self.data[copy.dst as usize] = uv.into();
-        }
-    }
 }
 
 impl<T> GpuBuffer<T> {
@@ -690,10 +578,10 @@ fn test_gpu_buffer_sizing_push() {
     let mut builder = GpuBufferBuilderF::new(&frame_memory, 0, FrameId::first());
 
     let row = vec![GpuBufferBlockF::EMPTY; MAX_VERTEX_TEXTURE_WIDTH];
-    builder.push_blocks(&row);
+    builder.push(&row);
 
-    builder.push_blocks(&[GpuBufferBlockF::EMPTY]);
-    builder.push_blocks(&[GpuBufferBlockF::EMPTY]);
+    builder.push(&[GpuBufferBlockF::EMPTY]);
+    builder.push(&[GpuBufferBlockF::EMPTY]);
 
     let buffer = builder.finalize(&render_task_graph);
     assert_eq!(buffer.data.len(), MAX_VERTEX_TEXTURE_WIDTH * 2);

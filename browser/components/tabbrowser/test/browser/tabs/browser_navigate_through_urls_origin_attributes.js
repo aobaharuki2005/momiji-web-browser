@@ -25,7 +25,7 @@ function handleEventLocal(aEvent) {
     return;
   }
   // Ignore <browser> element in about:preferences and any other special pages
-  if ("gBrowser" in aEvent.target.documentGlobal) {
+  if ("gBrowser" in aEvent.target.ownerGlobal) {
     xulFrameLoaderCreatedCounter.numCalledSoFar++;
   }
 }
@@ -44,26 +44,22 @@ add_setup(async function () {
     ],
   });
 
-  requestLongerTimeout(8);
+  requestLongerTimeout(4);
 });
 
-function setupRemoteTypes(isolateEverything) {
+function setupRemoteTypes() {
   gPrevRemoteTypeRegularTab = null;
   gPrevRemoteTypeContainerTab = {};
   gPrevRemoteTypePrivateTab = null;
 
   remoteTypes = getExpectedRemoteTypes(
-    isolateEverything,
+    gFissionBrowser,
     NUM_PAGES_OPEN_FOR_EACH_TEST_CASE
   );
 }
 
-async function testNavigateCommon(isolateEverything) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["fission.webContentIsolationStrategy", isolateEverything ? 1 : 0]],
-  });
-  setupRemoteTypes(isolateEverything);
-
+add_task(async function testNavigate() {
+  setupRemoteTypes();
   /**
    * Open a regular tab, 3 container tabs and a private window, load about:blank or about:privatebrowsing
    * For each test case
@@ -129,7 +125,7 @@ async function testNavigateCommon(isolateEverything) {
   });
   BrowserTestUtils.removeTab(regularPage.tab);
   BrowserTestUtils.removeTab(privatePage.tab);
-}
+});
 
 async function loadURIAndCheckRemoteType(
   aBrowser,
@@ -139,9 +135,7 @@ async function loadURIAndCheckRemoteType(
 ) {
   let expectedCurr = remoteTypes.shift();
   initXulFrameLoaderCreatedCounter(xulFrameLoaderCreatedCounter);
-  let wasInitial =
-    aBrowser.browsingContext.currentWindowGlobal.isInitialDocument;
-  aBrowser.documentGlobal.gBrowser.addEventListener(
+  aBrowser.ownerGlobal.gBrowser.addEventListener(
     "XULFrameLoaderCreated",
     handleEventLocal
   );
@@ -161,34 +155,24 @@ async function loadURIAndCheckRemoteType(
   info(
     `XULFrameLoaderCreated was fired ${xulFrameLoaderCreatedCounter.numCalledSoFar} time(s) for ${aURI} ${aText}`
   );
-
-  // With BFCache in the parent we'll get a XULFrameLoaderCreated even if
-  // expectedCurr == aPrevRemoteType, because we store the old frameloader in
-  // the BFCache. We have to make an exception for loads in the parent process
-  // (which have a null aPrevRemoteType/expectedCurr) because BFCache in the
-  // parent disables caching for those loads. BFCache will also not cache the
-  // initial about:blank document.
   var numExpected =
-    expectedCurr == aPrevRemoteType && (wasInitial || !expectedCurr) ? 0 : 1;
+    expectedCurr == aPrevRemoteType &&
+    // With BFCache in the parent we'll get a XULFrameLoaderCreated even if
+    // expectedCurr == aPrevRemoteType, because we store the old frameloader
+    // in the BFCache. We have to make an exception for loads in the parent
+    // process (which have a null aPrevRemoteType/expectedCurr) because
+    // BFCache in the parent disables caching for those loads.
+    (!SpecialPowers.Services.appinfo.sessionHistoryInParent || !expectedCurr)
+      ? 0
+      : 1;
   is(
     xulFrameLoaderCreatedCounter.numCalledSoFar,
     numExpected,
     `XULFrameLoaderCreated fired correct number of times for ${aURI} ${aText} 
     prev=${aPrevRemoteType} curr =${aBrowser.remoteType}`
   );
-  aBrowser.documentGlobal.gBrowser.removeEventListener(
+  aBrowser.ownerGlobal.gBrowser.removeEventListener(
     "XULFrameLoaderCreated",
     handleEventLocal
   );
 }
-
-if (gFissionBrowser) {
-  // This will have no impact if fission is disabled, so we skip this test.
-  add_task(async function testNavigateIsolateEverything() {
-    await testNavigateCommon(/* isolateEverything */ true);
-  });
-}
-
-add_task(async function testNavigateIsolateNothing() {
-  await testNavigateCommon(/* isolateEverything */ false);
-});

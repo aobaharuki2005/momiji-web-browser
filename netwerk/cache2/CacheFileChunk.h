@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef CacheFileChunk_h_
-#define CacheFileChunk_h_
+#ifndef CacheFileChunk__h__
+#define CacheFileChunk__h__
 
 #include "CacheFileIOManager.h"
 #include "CacheStorageService.h"

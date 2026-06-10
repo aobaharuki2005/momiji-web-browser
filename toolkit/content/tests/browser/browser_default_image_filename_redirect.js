@@ -13,7 +13,7 @@ add_setup(async function () {
 });
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init();
+MockFilePicker.init(window.browsingContext);
 add_task(async function () {
   // This URL will redirect to doggy.png.
   const URL_FIREBIRD =

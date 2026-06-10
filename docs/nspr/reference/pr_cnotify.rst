@@ -27,9 +27,9 @@ The function has the following parameter:
 Returns
 ~~~~~~~
 
- - ``PR_SUCCESS`` indicates that the calling thread is the holder of the
+ - :ref:`PR_SUCCESS` indicates that the calling thread is the holder of the
    mutex for the monitor referred to by the address parameter.
- - ``PR_FAILURE`` indicates that the monitor has not been entered by the
+ - :ref:`PR_FAILURE` indicates that the monitor has not been entered by the
    calling thread.
 
 

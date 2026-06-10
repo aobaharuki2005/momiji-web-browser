@@ -14,14 +14,9 @@ class AllowList {
     this._id = id;
   }
 
-  setShims(matchEntries, notHosts) {
-    this._shimEntries = (matchEntries || []).map(entry => ({
-      types: entry.types,
-      matcher: new MatchPatternSet(entry.patterns),
-    }));
-    this._shimMatcher = new MatchPatternSet(
-      matchEntries?.flatMap(e => e.patterns) || []
-    );
+  setShims(patterns, notHosts) {
+    this._shimPatterns = patterns;
+    this._shimMatcher = new MatchPatternSet(patterns || []);
     this._shimNotHosts = notHosts || [];
     return this;
   }
@@ -33,17 +28,9 @@ class AllowList {
     return this;
   }
 
-  // requestType may be undefined on older Firefox versions that don't expose
-  // the underlying channel on nsIUrlClassifierBlockedChannel (Bug 2024904)
-  shims(url, topHost, requestType) {
+  shims(url, topHost) {
     return (
-      this._shimMatcher?.matches(url) &&
-      !this._shimNotHosts?.includes(topHost) &&
-      this._shimEntries.some(
-        entry =>
-          (!requestType || entry.types.includes(requestType)) &&
-          entry.matcher.matches(url)
-      )
+      this._shimMatcher?.matches(url) && !this._shimNotHosts?.includes(topHost)
     );
   }
 
@@ -102,9 +89,6 @@ class Manager {
           );
           const isPrivateMode = subject.isPrivateBrowsing;
           const { channelId, url } = channel;
-          const requestType = channel.channel
-            ? ChannelWrapper.get(channel.channel).type
-            : undefined;
           let topHost;
           try {
             topHost = new URL(channel.topLevelUrl).hostname;
@@ -131,7 +115,7 @@ class Manager {
           }
           // otherwise, if any allowlist shims the request we say it's replaced
           for (const allowList of activeAllowLists.values()) {
-            if (allowList.shims(url, topHost, requestType)) {
+            if (allowList.shims(url, topHost)) {
               activeUnblockedChannelIds.add(channelId);
               channel.replace();
               return;
@@ -171,12 +155,9 @@ class Manager {
     this._getAllowList(allowListId, isPrivateMode).setAllows(patterns, hosts);
   }
 
-  shim(allowListId, matchEntries, isPrivateMode, notHosts) {
+  shim(allowListId, patterns, isPrivateMode, notHosts) {
     this._ensureStarted();
-    this._getAllowList(allowListId, isPrivateMode).setShims(
-      matchEntries,
-      notHosts
-    );
+    this._getAllowList(allowListId, isPrivateMode).setShims(patterns, notHosts);
   }
 
   revoke(allowListId) {
@@ -320,7 +301,7 @@ this.trackingProtection = class extends ExtensionAPI {
           let win = tabManager.get(tabId).window;
           let document = win.document;
 
-          let { gProtectionsHandler } = win.gBrowser.documentGlobal;
+          let { gProtectionsHandler } = win.gBrowser.ownerGlobal;
           let { displayName } = gProtectionsHandler.smartblockEmbedInfo.find(
             element => element.shimId == shimId
           );
@@ -338,9 +319,6 @@ this.trackingProtection = class extends ExtensionAPI {
             {
               id: "smartblock-placeholder-button-text",
               args: { websitehost: websiteHost },
-            },
-            {
-              id: "smartblock-placeholder-content-header",
             },
           ];
 

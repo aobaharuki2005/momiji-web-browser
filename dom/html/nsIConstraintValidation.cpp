@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -64,7 +66,7 @@ bool nsIConstraintValidation::ReportValidity() {
   invalidElements.AppendElement(element);
 
   AutoJSAPI jsapi;
-  if (!jsapi.Init(element->GetRelevantGlobal())) {
+  if (!jsapi.Init(element->GetOwnerGlobal())) {
     return false;
   }
   JS::Rooted<JS::Value> detail(jsapi.cx());
@@ -99,7 +101,7 @@ void nsIConstraintValidation::SetValidityState(ValidityStateType aState,
     nsCOMPtr<nsIFormControl> formCtrl = do_QueryInterface(this);
     NS_ASSERTION(formCtrl, "This interface should be used by form elements!");
 
-    if (HTMLFormElement* form = formCtrl->GetFormInternal()) {
+    if (HTMLFormElement* form = formCtrl->GetForm()) {
       form->UpdateValidity(IsValid());
     }
     if (HTMLFieldSetElement* fieldSet = formCtrl->GetFieldSet()) {
@@ -122,7 +124,7 @@ void nsIConstraintValidation::SetBarredFromConstraintValidation(bool aBarred) {
     // If the element is going to be barred from constraint validation, we can
     // inform the form and fieldset that we are now valid. Otherwise, we are now
     // invalid.
-    if (HTMLFormElement* form = formCtrl->GetFormInternal()) {
+    if (HTMLFormElement* form = formCtrl->GetForm()) {
       form->UpdateValidity(aBarred);
     }
     HTMLFieldSetElement* fieldSet = formCtrl->GetFieldSet();

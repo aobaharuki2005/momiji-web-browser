@@ -1,6 +1,4 @@
 #[cfg(linux_kernel)]
-use crate::ffi;
-#[cfg(linux_kernel)]
 use core::marker::PhantomData;
 #[cfg(not(any(apple, target_os = "wasi")))]
 use {crate::backend::c, bitflags::bitflags};
@@ -20,7 +18,6 @@ bitflags! {
             solarish,
             target_os = "espidf",
             target_os = "haiku",
-            target_os = "horizon",
             target_os = "hurd",
             target_os = "nto",
             target_os = "openbsd",
@@ -46,7 +43,7 @@ bitflags! {
     /// [`tee`]: crate::pipe::tee
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct SpliceFlags: ffi::c_uint {
+    pub struct SpliceFlags: c::c_uint {
         /// `SPLICE_F_MOVE`
         const MOVE = c::SPLICE_F_MOVE;
         /// `SPLICE_F_NONBLOCK`
@@ -82,7 +79,7 @@ impl<'a> IoSliceRaw<'a> {
     pub fn from_slice(buf: &'a [u8]) -> Self {
         IoSliceRaw {
             _buf: c::iovec {
-                iov_base: (buf.as_ptr() as *mut u8).cast::<c::c_void>(),
+                iov_base: buf.as_ptr() as *mut u8 as *mut c::c_void,
                 iov_len: buf.len() as _,
             },
             _lifetime: PhantomData,
@@ -93,7 +90,7 @@ impl<'a> IoSliceRaw<'a> {
     pub fn from_slice_mut(buf: &'a mut [u8]) -> Self {
         IoSliceRaw {
             _buf: c::iovec {
-                iov_base: buf.as_mut_ptr().cast::<c::c_void>(),
+                iov_base: buf.as_mut_ptr() as *mut c::c_void,
                 iov_len: buf.len() as _,
             },
             _lifetime: PhantomData,
@@ -101,17 +98,11 @@ impl<'a> IoSliceRaw<'a> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    #[allow(unused_imports)]
-    use super::*;
+#[cfg(not(any(apple, target_os = "wasi")))]
+#[test]
+fn test_types() {
+    assert_eq_size!(PipeFlags, c::c_int);
 
-    #[cfg(not(any(apple, target_os = "wasi")))]
-    #[test]
-    fn test_types() {
-        assert_eq_size!(PipeFlags, c::c_int);
-
-        #[cfg(linux_kernel)]
-        assert_eq_size!(SpliceFlags, c::c_int);
-    }
+    #[cfg(linux_kernel)]
+    assert_eq_size!(SpliceFlags, c::c_int);
 }

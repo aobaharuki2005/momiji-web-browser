@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -84,8 +85,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInlineStyleSetter final
    * See comments in the definition what this does.
    */
   Result<EditorRawDOMRange, nsresult> ExtendOrShrinkRangeToApplyTheStyle(
-      const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange,
-      const Element& aEditingHost) const;
+      const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange) const;
 
   /**
    * Returns next/previous sibling of aContent or an ancestor of it if it's
@@ -741,8 +741,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInsertParagraphHandler final {
    */
   [[nodiscard]] EditorDOMPoint GetBetterPointToSplitParagraph(
       const Element& aBlockElementToSplit,
-      const EditorDOMPoint& aCandidatePointToSplit,
-      const Element& aEditingHost);
+      const EditorDOMPoint& aCandidatePointToSplit);
 
   enum class IgnoreBlockBoundaries : bool { No, Yes };
 
@@ -878,8 +877,6 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
       const Element& aEditingHost);
 
  private:
-  enum class ComputeRangeFor : bool { GetTargetRanges, ToDeleteTheRange };
-
   [[nodiscard]] bool IsHandlingRecursively() const {
     return mParent != nullptr;
   }
@@ -1042,9 +1039,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
   [[nodiscard]] Result<EditorRawDOMRange, nsresult> ExtendOrShrinkRangeToDelete(
       const HTMLEditor& aHTMLEditor,
       const LimitersAndCaretData& aLimitersAndCaretData,
-      const EditorDOMRangeType& aRangeToDelete,
-      SelectionWasCollapsed aSelectionWasCollapsed,
-      ComputeRangeFor aComputeRangeFor, const Element& aEditingHost) const;
+      const EditorDOMRangeType& aRangeToDelete) const;
 
   /**
    * Extend the start boundary of aRangeToDelete to contain ancestor inline
@@ -1075,8 +1070,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
    */
   [[nodiscard]] static EditorRawDOMRange
   GetRangeToAvoidDeletingAllListItemsIfSelectingAllOverListElements(
-      const EditorRawDOMRange& aRangeToDelete,
-      ComputeRangeFor aComputeRangeFor);
+      const EditorRawDOMRange& aRangeToDelete);
 
   /**
    * DeleteUnnecessaryNodes() removes unnecessary nodes around aRange.
@@ -1352,6 +1346,7 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner final {
                         nsIEditor::EDirection aDirectionAndAmount,
                         const EditorDOMPoint& aCaretPoint,
                         const Element& aEditingHost);
+  enum class ComputeRangeFor : bool { GetTargetRanges, ToDeleteTheRange };
   nsresult ComputeRangeToDeleteLineBreak(
       const HTMLEditor& aHTMLEditor, nsRange& aRangeToDelete,
       const Element& aEditingHost, ComputeRangeFor aComputeRangeFor) const;
@@ -1408,7 +1403,12 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner final {
       HTMLEditor& aHTMLEditor,
       const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContent,
       PutCaretTo aPutCaretTo);
-  [[nodiscard]] bool NeedsToJoinNodesAfterDeleteNodesEntirelyInRange() const;
+  [[nodiscard]] bool
+  NeedsToJoinNodesAfterDeleteNodesEntirelyInRangeButKeepTableStructure(
+      const HTMLEditor& aHTMLEditor,
+      const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
+      AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed)
+      const;
   Result<bool, nsresult>
   ComputeRangeToDeleteNodesEntirelyInRangeButKeepTableStructure(
       const HTMLEditor& aHTMLEditor, nsRange& aRange,
@@ -1550,9 +1550,9 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler::
    * boundaries between joining blocks.  If they won't be joined, this
    * collapses the range to aCaretPoint.
    */
-  [[nodiscard]] nsresult ComputeRangeToDelete(
-      const HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint,
-      nsRange& aRangeToDelete, const Element& aEditingHost) const;
+  [[nodiscard]] nsresult ComputeRangeToDelete(const HTMLEditor& aHTMLEditor,
+                                              const EditorDOMPoint& aCaretPoint,
+                                              nsRange& aRangeToDelete) const;
 
   /**
    * Join inclusive ancestor block elements which are found by preceding

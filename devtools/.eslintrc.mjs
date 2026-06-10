@@ -40,13 +40,7 @@ export default [
       "react/sort-comp": [
         "error",
         {
-          order: [
-            "static-methods",
-            "instance-variables",
-            "lifecycle",
-            "everything-else",
-            "render",
-          ],
+          order: ["static-methods", "lifecycle", "everything-else", "render"],
           groups: {
             lifecycle: [
               "displayName",

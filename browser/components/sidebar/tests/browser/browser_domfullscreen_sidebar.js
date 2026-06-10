@@ -9,7 +9,7 @@ add_setup(async () => {
     set: [[VERTICAL_TABS_PREF, true]],
   });
   DOMFullscreenTestUtils.init(this, window);
-  await SidebarTestUtils.waitForTabstripOrientation(window, "vertical");
+  await waitForTabstripOrientation("vertical");
 });
 
 add_task(async function test_dom_fullscreen() {
@@ -32,12 +32,6 @@ add_task(async function test_dom_fullscreen() {
   );
   ok(sidebarMain.expanded, "Sidebar main is expanded");
 
-  const tabbox = window.document.getElementById("tabbrowser-tabbox");
-  ok(
-    tabbox.hasAttribute("sidebar-shown"),
-    "tabbrowser-tabbox has sidebar-shown attribute"
-  );
-
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async browser => {
     // the newly opened tab should have focus
     await DOMFullscreenTestUtils.changeFullscreen(browser, true);
@@ -47,10 +41,6 @@ add_task(async function test_dom_fullscreen() {
       BrowserTestUtils.isHidden(sidebarMain),
       "Sidebar main is hidden in DOMFullscreen"
     );
-    ok(
-      !tabbox.hasAttribute("sidebar-shown"),
-      "tabbrowser-tabbox does not have sidebar-shown attribute in DOMFullscreen"
-    );
 
     await DOMFullscreenTestUtils.changeFullscreen(browser, false);
     ok(
@@ -58,9 +48,5 @@ add_task(async function test_dom_fullscreen() {
       "Sidebar main becomes visible when we exit DOMFullscreen"
     );
     ok(sidebarMain.expanded, "Sidebar main is still expanded");
-    ok(
-      tabbox.hasAttribute("sidebar-shown"),
-      "tabbrowser-tabbox has sidebar-shown attribute after exiting DOMFullscreen"
-    );
   });
 });

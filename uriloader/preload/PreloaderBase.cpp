@@ -27,6 +27,7 @@ PreloaderBase::UsageTimer::UsageTimer(PreloaderBase* aPreload,
 class PreloaderBase::RedirectSink final : public nsIInterfaceRequestor,
                                           public nsIChannelEventSink,
                                           public nsIRedirectResultListener {
+  RedirectSink() = delete;
   virtual ~RedirectSink();
 
  public:
@@ -36,7 +37,6 @@ class PreloaderBase::RedirectSink final : public nsIInterfaceRequestor,
   NS_DECL_NSIREDIRECTRESULTLISTENER
 
   RedirectSink(PreloaderBase* aPreloader, nsIInterfaceRequestor* aCallbacks);
-  RedirectSink() = delete;
 
  private:
   MainThreadWeakPtr<PreloaderBase> mPreloader;
@@ -334,10 +334,11 @@ nsresult PreloaderBase::AsyncConsume(nsIStreamListener* aListener) {
 
 // PreloaderBase::RedirectRecord
 
-already_AddRefed<nsIURI> PreloaderBase::RedirectRecord::URINoFragment() const {
+nsCString PreloaderBase::RedirectRecord::Spec() const {
   nsCOMPtr<nsIURI> noFragment;
-  MOZ_ALWAYS_SUCCEEDS(NS_GetURIWithoutRef(mURI, getter_AddRefs(noFragment)));
-  return noFragment.forget();
+  NS_GetURIWithoutRef(mURI, getter_AddRefs(noFragment));
+  MOZ_ASSERT(noFragment);
+  return noFragment->GetSpecOrDefault();
 }
 
 nsCString PreloaderBase::RedirectRecord::Fragment() const {
@@ -377,7 +378,7 @@ NS_IMETHODIMP PreloaderBase::UsageTimer::Notify(nsITimer* aTimer) {
   NS_GetSanitizedURIStringFromURI(uri, spec);
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, "DOM"_ns, mDocument,
-      PropertiesFile::DOM_PROPERTIES, "UnusedLinkPreloadPending",
+      nsContentUtils::eDOM_PROPERTIES, "UnusedLinkPreloadPending",
       nsTArray<nsString>({NS_ConvertUTF8toUTF16(spec)}));
   return NS_OK;
 }

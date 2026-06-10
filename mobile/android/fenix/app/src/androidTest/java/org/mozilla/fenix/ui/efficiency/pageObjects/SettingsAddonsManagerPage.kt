@@ -36,14 +36,6 @@ class SettingsAddonsManagerPage(composeRule: AndroidComposeTestRule<HomeActivity
                 // Click the add-on to be able to open the details
             ),
         )
-
-        NavigationRegistry.register(
-            from = pageName,
-            to = "HomePage",
-            steps = listOf(
-                NavigationStep.Click(SettingsAddonsManagerSelectors.NAVIGATE_BACK_TOOLBAR_BUTTON),
-            ),
-        )
     }
 
     override fun mozGetSelectorsByGroup(group: String): List<Selector> {

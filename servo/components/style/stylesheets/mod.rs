@@ -4,7 +4,6 @@
 
 //! Style sheets and their CSS rules.
 
-mod appearance_base_rule;
 pub mod container_rule;
 mod counter_style_rule;
 mod document_rule;
@@ -31,7 +30,6 @@ mod starting_style_rule;
 mod style_rule;
 mod stylesheet;
 pub mod supports_rule;
-pub mod view_transition_rule;
 
 use crate::derives::*;
 #[cfg(feature = "gecko")]
@@ -53,7 +51,6 @@ use std::mem::{self, ManuallyDrop};
 use style_traits::{CssStringWriter, ParsingMode};
 use to_shmem::{SharedMemoryBuilder, ToShmem};
 
-pub use self::appearance_base_rule::AppearanceBaseRule;
 pub use self::container_rule::ContainerRule;
 pub use self::counter_style_rule::CounterStyleRule;
 pub use self::document_rule::DocumentRule;
@@ -85,9 +82,8 @@ pub use self::starting_style_rule::StartingStyleRule;
 pub use self::style_rule::StyleRule;
 pub use self::stylesheet::{AllowImportRules, SanitizationData, SanitizationKind};
 pub use self::stylesheet::{DocumentStyleSheet, Namespaces, Stylesheet};
-pub use self::stylesheet::{StylesheetContents, StylesheetInDocument};
+pub use self::stylesheet::{StylesheetContents, StylesheetInDocument, UserAgentStylesheets};
 pub use self::supports_rule::SupportsRule;
-pub use self::view_transition_rule::{NavigationType, ViewTransitionRule};
 
 /// The CORS mode used for a CSS load.
 #[repr(u8)]
@@ -354,10 +350,8 @@ pub enum CssRule {
     LayerStatement(Arc<LayerStatementRule>),
     Scope(Arc<ScopeRule>),
     StartingStyle(Arc<StartingStyleRule>),
-    AppearanceBase(Arc<AppearanceBaseRule>),
     PositionTry(Arc<Locked<PositionTryRule>>),
     NestedDeclarations(Arc<Locked<NestedDeclarationsRule>>),
-    ViewTransition(Arc<ViewTransitionRule>),
 }
 
 impl CssRule {
@@ -409,9 +403,6 @@ impl CssRule {
             CssRule::StartingStyle(ref arc) => {
                 arc.unconditional_shallow_size_of(ops) + arc.size_of(guard, ops)
             },
-            CssRule::AppearanceBase(ref arc) => {
-                arc.unconditional_shallow_size_of(ops) + arc.size_of(guard, ops)
-            },
             // TODO(emilio): Add memory reporting for these rules.
             CssRule::LayerBlock(_) | CssRule::LayerStatement(_) => 0,
             CssRule::Scope(ref rule) => {
@@ -423,11 +414,6 @@ impl CssRule {
             CssRule::NestedDeclarations(ref lock) => {
                 lock.unconditional_shallow_size_of(ops) + lock.read_with(guard).size_of(guard, ops)
             },
-            CssRule::ViewTransition(ref rule) => {
-                use malloc_size_of::MallocSizeOf;
-
-                rule.unconditional_shallow_size_of(ops) + rule.size_of(ops)
-            },
         }
     }
 
@@ -437,53 +423,6 @@ impl CssRule {
                 lock.read_with(guard).block.read_with(guard).is_empty()
             },
             _ => false,
-        }
-    }
-
-    /// Returns the children rules of this rule, if any.
-    pub fn children<'a>(&'a self, guard: &'a SharedRwLockReadGuard) -> &'a [CssRule] {
-        match *self {
-            CssRule::Namespace(_)
-            | CssRule::FontFace(_)
-            | CssRule::CounterStyle(_)
-            | CssRule::CustomMedia(_)
-            | CssRule::Keyframes(_)
-            | CssRule::Margin(_)
-            | CssRule::Property(_)
-            | CssRule::LayerStatement(_)
-            | CssRule::FontFeatureValues(_)
-            | CssRule::FontPaletteValues(_)
-            | CssRule::NestedDeclarations(_)
-            | CssRule::PositionTry(_)
-            | CssRule::ViewTransition(_) => &[],
-            CssRule::Page(ref page_rule) => {
-                let page_rule = page_rule.read_with(guard);
-                let rules = page_rule.rules.read_with(guard);
-                rules.0.as_slice()
-            },
-            CssRule::Style(ref style_rule) => {
-                let style_rule = style_rule.read_with(guard);
-                match style_rule.rules.as_ref() {
-                    Some(r) => r.read_with(guard).0.as_slice(),
-                    None => &[],
-                }
-            },
-            CssRule::Import(ref import_rule) => {
-                let import_rule = import_rule.read_with(guard);
-                import_rule.stylesheet.rules(guard)
-            },
-            CssRule::Document(ref doc_rule) => doc_rule.rules.read_with(guard).0.as_slice(),
-            CssRule::Container(ref container_rule) => {
-                container_rule.rules.read_with(guard).0.as_slice()
-            },
-            CssRule::Media(ref media_rule) => media_rule.rules.read_with(guard).0.as_slice(),
-            CssRule::Supports(ref supports_rule) => {
-                supports_rule.rules.read_with(guard).0.as_slice()
-            },
-            CssRule::LayerBlock(ref layer_rule) => layer_rule.rules.read_with(guard).0.as_slice(),
-            CssRule::Scope(ref rule) => rule.rules.read_with(guard).0.as_slice(),
-            CssRule::StartingStyle(ref rule) => rule.rules.read_with(guard).0.as_slice(),
-            CssRule::AppearanceBase(ref rule) => rule.rules.read_with(guard).0.as_slice(),
         }
     }
 }
@@ -530,10 +469,8 @@ pub enum CssRuleRef<'a> {
     LayerStatement(&'a LayerStatementRule),
     Scope(&'a ScopeRule),
     StartingStyle(&'a StartingStyleRule),
-    AppearanceBase(&'a AppearanceBaseRule),
     PositionTry(&'a LockedPositionTryRule),
     NestedDeclarations(&'a LockedNestedDeclarationsRule),
-    ViewTransition(&'a ViewTransitionRule),
 }
 
 impl<'a> From<&'a CssRule> for CssRuleRef<'a> {
@@ -559,10 +496,8 @@ impl<'a> From<&'a CssRule> for CssRuleRef<'a> {
             CssRule::LayerStatement(r) => CssRuleRef::LayerStatement(r.as_ref()),
             CssRule::Scope(r) => CssRuleRef::Scope(r.as_ref()),
             CssRule::StartingStyle(r) => CssRuleRef::StartingStyle(r.as_ref()),
-            CssRule::AppearanceBase(r) => CssRuleRef::AppearanceBase(r.as_ref()),
             CssRule::PositionTry(r) => CssRuleRef::PositionTry(r.as_ref()),
             CssRule::NestedDeclarations(r) => CssRuleRef::NestedDeclarations(r.as_ref()),
-            CssRule::ViewTransition(r) => CssRuleRef::ViewTransition(r.as_ref()),
         }
     }
 }
@@ -609,10 +544,6 @@ pub enum CssRuleType {
     // https://drafts.csswg.org/css-nesting-1/#nested-declarations-rule
     NestedDeclarations = 24,
     CustomMedia = 25,
-    // Internal rule for UA stylesheet appearance-dependent styles.
-    AppearanceBase = 26,
-    // https://drafts.csswg.org/css-view-transitions-2/#view-transition-rule
-    ViewTransition = 27,
 }
 
 impl CssRuleType {
@@ -707,10 +638,8 @@ impl CssRule {
             CssRule::Container(_) => CssRuleType::Container,
             CssRule::Scope(_) => CssRuleType::Scope,
             CssRule::StartingStyle(_) => CssRuleType::StartingStyle,
-            CssRule::AppearanceBase(_) => CssRuleType::AppearanceBase,
             CssRule::PositionTry(_) => CssRuleType::PositionTry,
             CssRule::NestedDeclarations(_) => CssRuleType::NestedDeclarations,
-            CssRule::ViewTransition(_) => CssRuleType::ViewTransition,
         }
     }
 
@@ -736,7 +665,6 @@ impl CssRule {
             Cow::Borrowed(&*namespaces),
             None,
             None,
-            /* attr_taint */ Default::default(),
         );
         // Override the nesting context with existing data.
         context.nesting_context = NestingContext::new(
@@ -860,9 +788,6 @@ impl DeepCloneWithLock for CssRule {
             CssRule::StartingStyle(ref arc) => {
                 CssRule::StartingStyle(Arc::new(arc.deep_clone_with_lock(lock, guard)))
             },
-            CssRule::AppearanceBase(ref arc) => {
-                CssRule::AppearanceBase(Arc::new(arc.deep_clone_with_lock(lock, guard)))
-            },
             CssRule::PositionTry(ref arc) => {
                 let rule = arc.read_with(guard);
                 CssRule::PositionTry(Arc::new(lock.wrap(rule.deep_clone_with_lock(lock, guard))))
@@ -870,9 +795,6 @@ impl DeepCloneWithLock for CssRule {
             CssRule::NestedDeclarations(ref arc) => {
                 let decls = arc.read_with(guard);
                 CssRule::NestedDeclarations(Arc::new(lock.wrap(decls.clone())))
-            },
-            CssRule::ViewTransition(ref arc) => {
-                CssRule::ViewTransition(Arc::new(arc.deep_clone_with_lock(lock, guard)))
             },
         }
     }
@@ -902,10 +824,8 @@ impl ToCssWithGuard for CssRule {
             CssRule::Container(ref rule) => rule.to_css(guard, dest),
             CssRule::Scope(ref rule) => rule.to_css(guard, dest),
             CssRule::StartingStyle(ref rule) => rule.to_css(guard, dest),
-            CssRule::AppearanceBase(ref rule) => rule.to_css(guard, dest),
             CssRule::PositionTry(ref lock) => lock.read_with(guard).to_css(guard, dest),
             CssRule::NestedDeclarations(ref lock) => lock.read_with(guard).to_css(guard, dest),
-            CssRule::ViewTransition(ref rule) => rule.to_css(guard, dest),
         }
     }
 }

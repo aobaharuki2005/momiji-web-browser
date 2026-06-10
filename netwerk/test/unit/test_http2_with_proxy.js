@@ -41,6 +41,7 @@ add_setup(async function setup() {
 
   Services.prefs.setBoolPref("network.http.http2.enabled", true);
   Services.prefs.setBoolPref("network.http.altsvc.enabled", true);
+  Services.prefs.setBoolPref("network.http.altsvc.oe", true);
   Services.prefs.setCharPref(
     "network.dns.localDomains",
     "foo.example.com, bar.example.com"
@@ -67,6 +68,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
   Services.prefs.clearUserPref("network.http.http2.enabled");
   Services.prefs.clearUserPref("network.http.altsvc.enabled");
+  Services.prefs.clearUserPref("network.http.altsvc.oe");
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref(
     "network.cookieJarSettings.unblocked_for_testing"
@@ -233,12 +235,6 @@ add_task(async function do_test_http2_folded_header() {
 add_task(async function do_test_http2_empty_data() {
   const { httpProxyConnectResponseCode } =
     await test_http2_empty_data(serverPort);
-  Assert.equal(httpProxyConnectResponseCode, 200);
-});
-
-add_task(async function do_test_http2_continuation_stream_zero() {
-  const { httpProxyConnectResponseCode } =
-    await test_http2_continuation_stream_zero(serverPort);
   Assert.equal(httpProxyConnectResponseCode, 200);
 });
 

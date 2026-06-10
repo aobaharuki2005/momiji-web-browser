@@ -21,7 +21,7 @@ async function runAutocompletionTest(toolbox, inspector, view) {
   await selectNode("h1", inspector);
 
   info("Focusing the new property editable field");
-  const ruleEditor = getRuleViewRuleEditorAt(view, 0);
+  const ruleEditor = getRuleViewRuleEditor(view, 0);
   const editor = await focusNewRuleViewProperty(ruleEditor);
 
   info('Sending "background" to the editable field');
@@ -43,7 +43,7 @@ async function runAutocompletionTest(toolbox, inspector, view) {
   editor.popup.selectedIndex = itemIndex;
 
   const node = editor.popup.list.childNodes[itemIndex];
-  EventUtils.synthesizeMouseAtCenter(node, {}, node.documentGlobal);
+  EventUtils.synthesizeMouseAtCenter(node, {}, node.ownerGlobal);
 
   is(editor.input.value, "background-color", "Correct value is autocompleted");
 }

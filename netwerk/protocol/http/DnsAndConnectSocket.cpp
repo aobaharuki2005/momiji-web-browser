@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,7 +22,6 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/glean/NetwerkProtocolHttpMetrics.h"
 #include "nsHttpHandler.h"
-#include "nsHttpConnectionMgr.h"
 #include "ConnectionEntry.h"
 #include "HttpConnectionUDP.h"
 #include "NullHttpTransaction.h"
@@ -38,8 +38,8 @@ namespace mozilla {
 namespace net {
 
 //////////////////////// DnsAndConnectSocket
-NS_IMPL_ADDREF_INHERITED(DnsAndConnectSocket, ConnectionAttempt)
-NS_IMPL_RELEASE_INHERITED(DnsAndConnectSocket, ConnectionAttempt)
+NS_IMPL_ADDREF(DnsAndConnectSocket)
+NS_IMPL_RELEASE(DnsAndConnectSocket)
 
 NS_INTERFACE_MAP_BEGIN(DnsAndConnectSocket)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -65,7 +65,11 @@ DnsAndConnectSocket::DnsAndConnectSocket(nsHttpConnectionInfo* ci,
                                          nsAHttpTransaction* trans,
                                          uint32_t caps, bool speculative,
                                          bool urgentStart)
-    : ConnectionAttempt(ci, trans, caps, speculative, urgentStart) {
+    : mTransaction(trans),
+      mCaps(caps),
+      mSpeculative(speculative),
+      mUrgentStart(urgentStart),
+      mConnInfo(ci) {
   MOZ_ASSERT(ci && trans, "constructor with null arguments");
   LOG(("Creating DnsAndConnectSocket [this=%p trans=%p ent=%s key=%s]\n", this,
        trans, mConnInfo->Origin(), mConnInfo->HashKey().get()));
@@ -297,7 +301,7 @@ nsresult DnsAndConnectSocket::SetupEvent(SetupEvents event) {
     RefPtr<ConnectionEntry> ent =
         gHttpHandler->ConnMgr()->FindConnectionEntry(mConnInfo);
     if (ent) {
-      ent->RemoveConnectionAttempt(this, false);
+      ent->RemoveDnsAndConnectSocket(this, false);
     }
     return rv;
   }
@@ -608,10 +612,7 @@ nsresult DnsAndConnectSocket::SetupConn(bool isPrimary, nsresult status) {
 
   // This half-open socket has created a connection.  This flag excludes it
   // from counter of actual connections used for checking limits.
-  if (!mHasConnected) {
-    mHasConnected = true;
-    ent->OnConnectionAttemptConnected();
-  }
+  mHasConnected = true;
 
   // if this is still in the pending list, remove it and dispatch it
   RefPtr<PendingTransactionInfo> pendingTransInfo =
@@ -689,8 +690,8 @@ nsresult DnsAndConnectSocket::SetupConn(bool isPrimary, nsresult status) {
     // therefore we need to use a Nulltransaction.
     // Ensure that the fallback transacion is always dispatched.
     if (!connTCP || ent->mConnInfo->GetFallbackConnection() ||
-        (ent->mConnInfo->FirstHopSSL() && ent->UrgentStartQueueIsEmpty() &&
-         ent->PendingQueueIsEmpty() && !ent->mConnInfo->UsingConnect())) {
+        (ent->mConnInfo->FirstHopSSL() && !ent->UrgentStartQueueLength() &&
+         !ent->PendingQueueLength() && !ent->mConnInfo->UsingConnect())) {
       LOG(
           ("DnsAndConnectSocket::SetupConn null transaction will "
            "be used to finish SSL handshake on conn %p\n",
@@ -758,41 +759,6 @@ DnsAndConnectSocket::OnTransportStatus(nsITransport* trans, nsresult status,
                                        int64_t progress, int64_t progressMax) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  if (status == NS_NET_STATUS_CONNECTED_TO) {
-    TransportSetup* transport =
-        IsPrimary(trans) ? static_cast<TransportSetup*>(&mPrimaryTransport)
-                         : static_cast<TransportSetup*>(&mBackupTransport);
-
-    // Early LNA check: close socket before TLS handshake can send SNI.
-    // This is called synchronously from nsSocketTransport::OnSocketConnected,
-    // which runs after TCP connect but before TRANSFERRING-mode polling.
-    // Local (loopback) targets are always checked here. For Private targets
-    // on HTTPS, the check is deferred to after the TLS handshake succeeds
-    // (see nsHttpConnection::HandshakeDoneInternal) when
-    // network.lna.defer_https_check is set; this avoids spurious prompts
-    // when DNS misdirects a public hostname to a private address.
-    if (mConnInfo->FirstHopSSL() && !mConnInfo->UsingProxy() &&
-        StaticPrefs::network_lna_blocking()) {
-      NetAddr peerAddr;
-      if (NS_SUCCEEDED(transport->mSocketTransport->GetPeerAddr(&peerAddr))) {
-        auto addrSpace = peerAddr.GetIpAddressSpace();
-        bool deferPrivate = addrSpace == nsILoadInfo::IPAddressSpace::Private &&
-                            StaticPrefs::network_lna_defer_https_check();
-        bool checkNow = addrSpace == nsILoadInfo::IPAddressSpace::Local ||
-                        (addrSpace == nsILoadInfo::IPAddressSpace::Private &&
-                         !deferPrivate);
-        if (checkNow && mTransaction &&
-            !mTransaction->AllowedToConnectToIpAddressSpace(addrSpace)) {
-          transport->mSocketTransport->Close(
-              NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED);
-          return NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED;
-        }
-      }
-    }
-
-    transport->mConnectedOK = true;
-  }
-
   MOZ_ASSERT(IsPrimary(trans) || IsBackup(trans));
   if (mTransaction) {
     if (IsPrimary(trans) ||
@@ -809,6 +775,14 @@ DnsAndConnectSocket::OnTransportStatus(nsITransport* trans, nsresult status,
       // mBackupTransport must be connected before mSocketTransport(e.g.
       // mPrimaryTransport.mSocketTransport != nullpttr).
       mTransaction->OnTransportStatus(trans, status, progress);
+    }
+  }
+
+  if (status == NS_NET_STATUS_CONNECTED_TO) {
+    if (IsPrimary(trans)) {
+      mPrimaryTransport.mConnectedOK = true;
+    } else {
+      mBackupTransport.mConnectedOK = true;
     }
   }
 
@@ -877,9 +851,13 @@ DnsAndConnectSocket::GetInterface(const nsIID& iid, void** result) {
   return NS_ERROR_NO_INTERFACE;
 }
 
-// newTransaction is not used here. It's only used for
-// HappyEyeballsConnectionAttempt.
-bool DnsAndConnectSocket::Claim(nsHttpTransaction* newTransaction) {
+bool DnsAndConnectSocket::AcceptsTransaction(nsHttpTransaction* trans) {
+  // When marked as urgent start, only accept urgent start marked transactions.
+  // Otherwise, accept any kind of transaction.
+  return !mUrgentStart || (trans->Caps() & nsIClassOfService::UrgentStart);
+}
+
+bool DnsAndConnectSocket::Claim() {
   if (mSpeculative) {
     mSpeculative = false;
     mAllow1918 = true;
@@ -922,12 +900,20 @@ bool DnsAndConnectSocket::Claim(nsHttpTransaction* newTransaction) {
   return false;
 }
 
-void DnsAndConnectSocket::OnTimeout() {
+void DnsAndConnectSocket::Unclaim() {
+  MOZ_ASSERT(!mSpeculative && !mFreeToUse);
+  // We will keep the backup-timer running. Most probably this halfOpen will
+  // be used by a transaction from which this transaction took the halfOpen.
+  // (this is happening because of the transaction priority.)
+  mFreeToUse = true;
+}
+
+void DnsAndConnectSocket::CloseTransports(nsresult error) {
   if (mPrimaryTransport.mSocketTransport) {
-    mPrimaryTransport.mSocketTransport->Close(NS_ERROR_NET_TIMEOUT);
+    mPrimaryTransport.mSocketTransport->Close(error);
   }
   if (mBackupTransport.mSocketTransport) {
-    mBackupTransport.mSocketTransport->Close(NS_ERROR_NET_TIMEOUT);
+    mBackupTransport.mSocketTransport->Close(error);
   }
 }
 
@@ -1255,8 +1241,7 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
     tmpFlags |= nsISocketTransport::NO_PERMANENT_STORAGE;
   }
 
-  (void)socketTransport->SetOriginAttributes(ci->GetOriginAttributes());
-  (void)socketTransport->SetIsTRRConnection(ci->GetIsTrrServiceChannel());
+  (void)socketTransport->SetIsPrivate(ci->GetPrivate());
 
   if (dnsAndSock->mCaps & NS_HTTP_DISALLOW_ECH) {
     tmpFlags |= nsISocketTransport::DONT_TRY_ECH;
@@ -1312,6 +1297,12 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
 
   socketTransport->SetConnectionFlags(tmpFlags);
   socketTransport->SetTlsFlags(ci->GetTlsFlags());
+
+  const OriginAttributes& originAttributes =
+      dnsAndSock->mConnInfo->GetOriginAttributes();
+  if (originAttributes != OriginAttributes()) {
+    socketTransport->SetOriginAttributes(originAttributes);
+  }
 
   socketTransport->SetQoSBits(gHttpHandler->GetQoSBits());
 

@@ -4,7 +4,11 @@
 
 use thiserror::Error;
 
-use crate::{errors::IPCError, messages::MessageError, platform::PlatformError, IPCListenerError};
+use crate::{
+    errors::{IPCError, SystemError},
+    messages::MessageError,
+    IPCListenerError,
+};
 
 /*****************************************************************************
  * Error definitions                                                         *
@@ -13,11 +17,13 @@ use crate::{errors::IPCError, messages::MessageError, platform::PlatformError, I
 #[derive(Debug, Error)]
 pub enum IPCQueueError {
     #[error("Could not create queue: {0}")]
-    CreationFailure(PlatformError),
+    CreationFailure(SystemError),
     #[error("Could not register with queue: {0}")]
-    RegistrationFailure(PlatformError),
+    RegistrationFailure(SystemError),
+    #[error("Could not post an event on the queue: {0}")]
+    PostEventFailure(SystemError),
     #[error("Could not wait for events: {0}")]
-    WaitError(PlatformError),
+    WaitError(SystemError),
     #[error("Underlying IPC connector error: {0}")]
     IPCError(#[from] IPCError),
     #[error("Underlying IPC listener error: {0}")]
@@ -40,18 +46,8 @@ pub(crate) mod windows;
  * Android, macOS & Linux                                                    *
  *****************************************************************************/
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
 pub use unix::IPCQueue;
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
 pub(crate) mod unix;
-
-/*****************************************************************************
- * macOS & iOS                                                               *
- *****************************************************************************/
-
-#[cfg(any(target_os = "ios", target_os = "macos"))]
-pub use mach::IPCQueue;
-
-#[cfg(any(target_os = "ios", target_os = "macos"))]
-pub(crate) mod mach;

@@ -66,7 +66,6 @@ extern "C" {
             target_os = "ios",
             target_os = "tvos",
             target_os = "watchos",
-            target_os = "visionos",
             target_os = "freebsd"
         ),
         link_name = "__error"
@@ -75,10 +74,9 @@ extern "C" {
         any(
             target_os = "openbsd",
             target_os = "netbsd",
+            target_os = "bitrig",
             target_os = "android",
             target_os = "espidf",
-            target_os = "vxworks",
-            target_os = "cygwin",
             target_env = "newlib"
         ),
         link_name = "__errno"
@@ -93,8 +91,7 @@ extern "C" {
             target_os = "linux",
             target_os = "hurd",
             target_os = "redox",
-            target_os = "dragonfly",
-            target_os = "emscripten",
+            target_os = "dragonfly"
         ),
         link_name = "__errno_location"
     )]

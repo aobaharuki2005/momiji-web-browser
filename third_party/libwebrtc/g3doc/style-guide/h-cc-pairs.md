@@ -1,5 +1,5 @@
 <!-- go/cmark -->
-<!--* freshness: {owner: 'danilchap' reviewed: '2026-04-02'} *-->
+<!--* freshness: {owner: 'danilchap' reviewed: '2025-09-24'} *-->
 
 # `.h` and `.cc` files come in pairs
 

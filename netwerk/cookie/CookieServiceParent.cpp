@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -308,18 +309,20 @@ void CookieServiceParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 IPCResult CookieServiceParent::RecvSetCookies(
     const nsCString& aBaseDomain, const OriginAttributes& aOriginAttributes,
-    nsIURI* aHost, bool aIsThirdParty, const nsTArray<CookieStruct>& aCookies) {
+    nsIURI* aHost, bool aFromHttp, bool aIsThirdParty,
+    const nsTArray<CookieStruct>& aCookies) {
   if (!ContentProcessHasCookie(aBaseDomain, aOriginAttributes)) {
     return IPC_FAIL(this, "Invalid set-cookie request from content process");
   }
 
-  return SetCookies(aBaseDomain, aOriginAttributes, aHost, aIsThirdParty,
-                    aCookies);
+  return SetCookies(aBaseDomain, aOriginAttributes, aHost, aFromHttp,
+                    aIsThirdParty, aCookies);
 }
 
 IPCResult CookieServiceParent::SetCookies(
     const nsCString& aBaseDomain, const OriginAttributes& aOriginAttributes,
-    nsIURI* aHost, bool aIsThirdParty, const nsTArray<CookieStruct>& aCookies,
+    nsIURI* aHost, bool aFromHttp, bool aIsThirdParty,
+    const nsTArray<CookieStruct>& aCookies,
     dom::BrowsingContext* aBrowsingContext) {
   if (!mCookieService) {
     return IPC_OK();
@@ -337,7 +340,7 @@ IPCResult CookieServiceParent::SetCookies(
 
   nsICookieValidation::ValidationError error =
       mCookieService->SetCookiesFromIPC(aBaseDomain, aOriginAttributes, aHost,
-                                        aIsThirdParty, aCookies,
+                                        aFromHttp, aIsThirdParty, aCookies,
                                         aBrowsingContext);
   MOZ_DIAGNOSTIC_ASSERT(error == nsICookieValidation::eOK);
 

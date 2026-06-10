@@ -1,4 +1,4 @@
-.. _localized-builds:
+.. _localization:
 
 ================
 Localized Builds
@@ -186,7 +186,7 @@ localization ecosystem at Mozilla, and `the documentation about the
 file format <http://moz-l10n-config.readthedocs.io/en/latest/fileformat.html>`_
 explains how to set them up, and what the entries mean. In short, you find
 
-.. code-block:: text
+.. code-block:: toml
 
    [paths]
    reference = browser/locales/en-US/**

@@ -40,7 +40,7 @@ add_setup(async function () {
     },
   ]);
   await SearchTestUtils.initXPCShellAddonManager();
-  await SearchService.init();
+  await Services.search.init();
 
   extensionInfo = {
     startupReason: "ADDON_INSTALL",
@@ -77,7 +77,7 @@ add_setup(async function () {
 add_task(async function update_allowlist_and_addon() {
   await extension.startup();
 
-  let result = await SearchService.maybeSetAndOverrideDefault(extensionInfo);
+  let result = await Services.search.maybeSetAndOverrideDefault(extensionInfo);
 
   Assert.equal(
     result.canChangeToConfigEngine,
@@ -85,7 +85,7 @@ add_task(async function update_allowlist_and_addon() {
     "Should have returned the correct value for allowing switch to default or not."
   );
 
-  let engine = await SearchService.getEngineByName(ENGINE_NAME);
+  let engine = await Services.search.getEngineByName(ENGINE_NAME);
   let submission = engine.getSubmission("{searchTerms}");
   Assert.equal(
     decodeURI(submission.uri.spec),
@@ -113,7 +113,7 @@ add_task(async function update_allowlist_and_addon() {
 
   // Confirm that search engine from the add-on is still the default.
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     engine.name,
     "Engine should still be default."
   );

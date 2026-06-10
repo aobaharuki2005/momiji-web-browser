@@ -1,3 +1,4 @@
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
 "use strict";
@@ -280,11 +281,9 @@ function run_test() {
   add_resumption_tests();
   // Enable external session cache and reset the status.
   add_test(function () {
-    do_timeout(3000, function () {
-      Services.prefs.setBoolPref("network.ssl_tokens_cache_enabled", true);
-      certdb.clearOCSPCache();
-      run_next_test();
-    });
+    Services.prefs.setBoolPref("network.ssl_tokens_cache_enabled", true);
+    certdb.clearOCSPCache();
+    run_next_test();
   });
   // Do tests again.
   add_resumption_tests();

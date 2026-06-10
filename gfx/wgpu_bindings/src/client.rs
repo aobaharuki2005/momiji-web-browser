@@ -25,9 +25,7 @@ use std::array;
 use std::fmt::Write;
 use std::{borrow::Cow, ptr};
 
-use self::render_pass::{
-    FfiOption, FfiRenderPassColorAttachment, RenderPassDepthStencilAttachment,
-};
+use self::render_pass::{FfiRenderPassColorAttachment, RenderPassDepthStencilAttachment};
 
 pub mod render_pass;
 
@@ -84,19 +82,17 @@ pub struct VertexBufferLayout<'a> {
 #[repr(C)]
 pub struct VertexState<'a> {
     stage: ProgrammableStageDescriptor<'a>,
-    buffers: FfiSlice<'a, FfiOption<VertexBufferLayout<'a>>>,
+    buffers: FfiSlice<'a, VertexBufferLayout<'a>>,
 }
 
 impl VertexState<'_> {
     fn to_wgpu(&self) -> wgc::pipeline::VertexState<'_> {
         let buffer_layouts = unsafe { self.buffers.as_slice() }
             .iter()
-            .map(|vb| {
-                vb.as_ref().map(|vb| wgc::pipeline::VertexBufferLayout {
-                    array_stride: vb.array_stride,
-                    step_mode: vb.step_mode,
-                    attributes: Cow::Borrowed(unsafe { vb.attributes.as_slice() }),
-                })
+            .map(|vb| wgc::pipeline::VertexBufferLayout {
+                array_stride: vb.array_stride,
+                step_mode: vb.step_mode,
+                attributes: Cow::Borrowed(unsafe { vb.attributes.as_slice() }),
             })
             .collect();
         wgc::pipeline::VertexState {
@@ -107,26 +103,26 @@ impl VertexState<'_> {
 }
 
 #[repr(C)]
-pub struct ColorTargetState {
+pub struct ColorTargetState<'a> {
     format: wgt::TextureFormat,
-    blend: FfiOption<wgt::BlendState>,
+    blend: Option<&'a wgt::BlendState>,
     write_mask: wgt::ColorWrites,
 }
 
 #[repr(C)]
 pub struct FragmentState<'a> {
     stage: ProgrammableStageDescriptor<'a>,
-    targets: FfiSlice<'a, FfiOption<ColorTargetState>>,
+    targets: FfiSlice<'a, ColorTargetState<'a>>,
 }
 
 impl FragmentState<'_> {
     fn to_wgpu(&self) -> wgc::pipeline::FragmentState<'_> {
         let color_targets = unsafe { self.targets.as_slice() }
             .iter()
-            .map(|ct_opt| {
-                ct_opt.as_ref().map(|ct| wgt::ColorTargetState {
+            .map(|ct| {
+                Some(wgt::ColorTargetState {
                     format: ct.format,
-                    blend: ct.blend.to_std(),
+                    blend: ct.blend.cloned(),
                     write_mask: ct.write_mask,
                 })
             })
@@ -163,34 +159,13 @@ impl PrimitiveState<'_> {
 }
 
 #[repr(C)]
-pub struct DepthStencilState {
-    format: wgt::TextureFormat,
-    depth_write_enabled: FfiOption<bool>,
-    depth_compare: FfiOption<wgt::CompareFunction>,
-    stencil: wgt::StencilState,
-    bias: wgt::DepthBiasState,
-}
-
-impl DepthStencilState {
-    fn to_wgpu(&self) -> wgt::DepthStencilState {
-        wgt::DepthStencilState {
-            format: self.format,
-            depth_write_enabled: self.depth_write_enabled.to_std(),
-            depth_compare: self.depth_compare.to_std(),
-            stencil: self.stencil.clone(),
-            bias: self.bias,
-        }
-    }
-}
-
-#[repr(C)]
 pub struct RenderPipelineDescriptor<'a> {
     label: Option<&'a nsACString>,
     layout: Option<id::PipelineLayoutId>,
     vertex: &'a VertexState<'a>,
     primitive: PrimitiveState<'a>,
     fragment: Option<&'a FragmentState<'a>>,
-    depth_stencil: Option<&'a DepthStencilState>,
+    depth_stencil: Option<&'a wgt::DepthStencilState>,
     multisample: wgt::MultisampleState,
 }
 
@@ -214,22 +189,8 @@ pub enum RawBindingType {
     WriteonlyStorageTexture,
     ReadWriteStorageTexture,
     ExternalTexture,
-    Error,
 }
 
-/// A [`BindGroupLayoutEntry::error_case`], specified when [`BindGroupLayoutEntry::ty`] is set to
-/// [`RawBindingType::Error`].
-#[derive(Clone, Copy)]
-#[repr(C)]
-pub enum BindingTypeError {
-    NoneSpecified,
-    MultipleSpecified,
-}
-
-/// An FFI-friendly representation of a [`wgt::BindGroupLayoutEntry`].
-///
-/// This is implemented using a "poor person's tagged union". Most fields are expected to be set
-/// only with a specific variant of [`Self::ty`], but all are present at all times.
 #[repr(C)]
 pub struct BindGroupLayoutEntry<'a> {
     binding: u32,
@@ -243,8 +204,6 @@ pub struct BindGroupLayoutEntry<'a> {
     storage_texture_format: Option<&'a wgt::TextureFormat>,
     sampler_filter: bool,
     sampler_compare: bool,
-    /// The error case, for when [`Self::ty`] is set to [`RawBindingType::Error`].
-    error_case: BindingTypeError,
 }
 
 #[repr(C)]
@@ -282,7 +241,7 @@ pub struct BindGroupDescriptor<'a> {
 #[repr(C)]
 pub struct PipelineLayoutDescriptor<'a> {
     label: Option<&'a nsACString>,
-    bind_group_layouts: FfiSlice<'a, Option<id::BindGroupLayoutId>>,
+    bind_group_layouts: FfiSlice<'a, id::BindGroupLayoutId>,
 }
 
 #[repr(C)]
@@ -301,7 +260,7 @@ pub struct SamplerDescriptor<'a> {
 #[repr(C)]
 pub struct RenderBundleEncoderDescriptor<'a> {
     label: Option<&'a nsACString>,
-    color_formats: FfiSlice<'a, FfiOption<wgt::TextureFormat>>,
+    color_formats: FfiSlice<'a, wgt::TextureFormat>,
     depth_stencil_format: Option<&'a wgt::TextureFormat>,
     depth_read_only: bool,
     stencil_read_only: bool,
@@ -918,15 +877,8 @@ pub extern "C" fn wgpu_client_create_shader_module(
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_client_on_submitted_work_done(
-    client: &Client,
-    device_id: id::DeviceId,
-    queue_id: id::QueueId,
-) {
-    let message = Message::QueueOnSubmittedWorkDone {
-        device_id,
-        queue_id,
-    };
+pub extern "C" fn wgpu_client_on_submitted_work_done(client: &Client, queue_id: id::QueueId) {
+    let message = Message::QueueOnSubmittedWorkDone(queue_id);
     client.queue_message(&message);
 }
 
@@ -1129,7 +1081,7 @@ pub extern "C" fn wgpu_client_create_texture_view(
             base_array_layer: desc.base_array_layer,
             array_layer_count: desc.array_layer_count.map(|ptr| *ptr),
         },
-        usage: Some(desc.usage),
+        usage: None,
     };
 
     let action = TextureAction::CreateView(id, wgpu_desc);
@@ -1244,7 +1196,7 @@ pub extern "C" fn wgpu_device_create_render_bundle_encoder(
 
     let color_formats: Vec<_> = unsafe { desc.color_formats.as_slice() }
         .iter()
-        .map(|format_opt| format_opt.to_std())
+        .map(|format| Some(format.clone()))
         .collect();
     let descriptor = wgc::command::RenderBundleEncoderDescriptor {
         label,
@@ -1259,7 +1211,7 @@ pub extern "C" fn wgpu_device_create_render_bundle_encoder(
         sample_count: desc.sample_count,
         multiview: None,
     };
-    match wgc::command::RenderBundleEncoder::new(&descriptor, None, device_id) {
+    match wgc::command::RenderBundleEncoder::new(&descriptor, device_id) {
         Ok(encoder) => Box::into_raw(Box::new(encoder)),
         Err(e) => {
             let message = format!("Error in `Device::create_render_bundle_encoder`: {}", e);
@@ -1422,7 +1374,7 @@ pub unsafe extern "C" fn wgpu_compute_pass_destroy(pass: *mut crate::command::Re
 #[repr(C)]
 pub struct RenderPassDescriptor<'a> {
     pub label: Option<&'a nsACString>,
-    pub color_attachments: FfiSlice<'a, FfiOption<FfiRenderPassColorAttachment>>,
+    pub color_attachments: FfiSlice<'a, FfiRenderPassColorAttachment>,
     pub depth_stencil_attachment: Option<&'a RenderPassDepthStencilAttachment>,
     pub timestamp_writes: Option<&'a PassTimestampWrites<'a>>,
     pub occlusion_query_set: Option<wgc::id::QuerySetId>,
@@ -1460,7 +1412,7 @@ pub unsafe extern "C" fn wgpu_command_encoder_begin_render_pass(
     let color_attachments: Vec<_> = color_attachments
         .as_slice()
         .iter()
-        .map(|att_opt| att_opt.as_ref().map(|att| att.clone().to_wgpu()))
+        .map(|color_attachment| Some(color_attachment.clone().to_wgpu()))
         .collect();
     let depth_stencil_attachment = depth_stencil_attachment.cloned().map(|dsa| dsa.to_wgpu());
     let pass = crate::command::RecordedRenderPass::new(
@@ -1504,9 +1456,8 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group_layout(
         .entries
         .as_slice()
         .iter()
-        .enumerate()
-        .map(|(idx, entry)| {
-            Ok(wgt::BindGroupLayoutEntry {
+        .map(|entry| {
+            wgt::BindGroupLayoutEntry {
                 binding: entry.binding,
                 visibility: entry.visibility,
                 count: None,
@@ -1569,40 +1520,16 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group_layout(
                         format: *entry.storage_texture_format.unwrap(),
                     },
                     RawBindingType::ExternalTexture => wgt::BindingType::ExternalTexture,
-                    RawBindingType::Error => return Err((idx, entry.error_case)),
                 },
-            })
-        })
-        .collect::<Result<_, _>>();
-
-    let action = match entries {
-        Ok(entries) => {
-            let wgpu_desc = wgc::binding_model::BindGroupLayoutDescriptor {
-                label,
-                entries: Cow::Owned(entries),
-            };
-            DeviceAction::CreateBindGroupLayout(id, wgpu_desc)
-        }
-        Err((idx, error_case)) => {
-            let initial_msg = match error_case {
-                BindingTypeError::NoneSpecified => "no type specified",
-                BindingTypeError::MultipleSpecified => "multiple types specified",
-            };
-            let mut message = format!("{initial_msg} for entry {idx} of bind group layout");
-            if let Some(label) = label.as_deref() {
-                write!(&mut message, "\"{label}\"").unwrap();
             }
-
-            client.queue_message(&Message::Device(
-                device_id,
-                DeviceAction::Error {
-                    message,
-                    r#type: wgt::error::ErrorType::Validation,
-                },
-            ));
-            DeviceAction::CreateBindGroupLayoutError(id, label)
-        }
+        })
+        .collect();
+    let wgpu_desc = wgc::binding_model::BindGroupLayoutDescriptor {
+        label,
+        entries: Cow::Owned(entries),
     };
+
+    let action = DeviceAction::CreateBindGroupLayout(id, wgpu_desc);
     let message = Message::Device(device_id, action);
     client.queue_message(&message);
     id
@@ -1750,7 +1677,7 @@ pub unsafe extern "C" fn wgpu_client_create_render_pipeline(
         vertex: desc.vertex.to_wgpu(),
         fragment: desc.fragment.map(FragmentState::to_wgpu),
         primitive: desc.primitive.to_wgpu(),
-        depth_stencil: desc.depth_stencil.map(DepthStencilState::to_wgpu),
+        depth_stencil: desc.depth_stencil.cloned(),
         multisample: desc.multisample.clone(),
         multiview_mask: None,
         cache: None,
@@ -2114,7 +2041,7 @@ pub extern "C" fn wgpu_render_bundle_set_pipeline(
 pub extern "C" fn wgpu_render_bundle_set_vertex_buffer(
     bundle: &mut RenderBundleEncoder,
     slot: u32,
-    buffer_id: Option<id::BufferId>,
+    buffer_id: id::BufferId,
     offset: BufferAddress,
     size: Option<&BufferSize>,
 ) {

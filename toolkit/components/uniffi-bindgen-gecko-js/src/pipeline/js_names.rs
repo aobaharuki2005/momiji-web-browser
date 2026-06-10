@@ -38,9 +38,7 @@ pub fn pass(root: &mut Root) -> Result<()> {
             }
         }
     });
-    root.visit_mut(|namespace: &mut Namespace| {
-        namespace.js_name = format_module_name(&namespace.name)
-    });
+    root.visit_mut(|module: &mut Module| module.js_name = format_module_name(&module.name));
     root.visit_mut(|ty: &mut Type| match ty {
         Type::Record {
             module_name, name, ..
@@ -63,7 +61,7 @@ pub fn pass(root: &mut Root) -> Result<()> {
         _ => (),
     });
     root.visit_mut(|ext: &mut ExternalType| {
-        ext.namespace = format_module_name(&ext.namespace);
+        ext.module_name = format_module_name(&ext.module_name);
         ext.name = ext.name.to_upper_camel_case();
     });
     Ok(())

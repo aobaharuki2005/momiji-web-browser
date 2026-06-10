@@ -15,17 +15,6 @@ interface AccountEventsObserver {
 typealias OuterDeviceCommandIncoming = DeviceCommandIncoming
 
 /**
- * Privacy mode for tabs.
- */
-enum class TabPrivacy {
-    /** A private browsing tab */
-    Private,
-
-    /** A normal (non-private) tab */
-    Normal,
-}
-
-/**
  * Incoming account events.
  */
 sealed class AccountEvent {
@@ -67,7 +56,7 @@ sealed class DeviceCommandIncoming {
  */
 sealed class DeviceCommandOutgoing {
     /** A command to open a tab on another device */
-    class SendTab(val title: String, val url: String, val privacy: TabPrivacy) : DeviceCommandOutgoing()
+    class SendTab(val title: String, val url: String) : DeviceCommandOutgoing()
 
     /** A command to close one or more tabs that are open on another device */
     class CloseTab(val urls: List<String>) : DeviceCommandOutgoing(), DeviceCommandQueue.Type.RemoteTabs
@@ -79,5 +68,4 @@ sealed class DeviceCommandOutgoing {
 data class TabData(
     val title: String,
     val url: String,
-    val privacy: TabPrivacy,
 )

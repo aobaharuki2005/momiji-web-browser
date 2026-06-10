@@ -40,7 +40,7 @@ add_task(async function testNormalBrowsing() {
     browser: tab.linkedBrowser,
     uriString: TEST_PAGE,
   });
-  testWhitelistedPage(tab.documentGlobal);
+  testWhitelistedPage(tab.ownerGlobal);
 
   info("Load a test page that's no longer whitelisted");
   Services.prefs.setCharPref(PREF_WHITELISTED_HOSTNAMES, "");
@@ -54,5 +54,5 @@ add_task(async function testNormalBrowsing() {
   );
   BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, TEST_PAGE);
   await blockedLoaded;
-  testBlockedPage(tab.documentGlobal);
+  testBlockedPage(tab.ownerGlobal);
 });

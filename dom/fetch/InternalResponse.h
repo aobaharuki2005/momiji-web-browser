@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -48,10 +50,8 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
       const ParentToParentInternalResponse& aIPCResponse);
 
   void ToChildToParentInternalResponse(
-      ChildToParentInternalResponse* aIPCResponse);
-
-  void SerializeChildToParentInternalResponseBody(
-      ChildToParentInternalResponse* aIPCResponse);
+      ChildToParentInternalResponse* aIPCResponse,
+      mozilla::ipc::PBackgroundChild* aManager);
 
   ParentToParentInternalResponse ToParentToParentInternalResponse();
 
@@ -97,38 +97,42 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
   bool IsError() const { return Type() == ResponseType::Error; }
   // GetUrl should return last fetch URL in response's url list and null if
   // response's url list is the empty list.
-  nsIURI* GetURL() const {
+  const nsCString& GetURL() const {
     // Empty urlList when response is a synthetic response.
     if (mURLList.IsEmpty()) {
-      return nullptr;
+      return EmptyCString();
     }
     return mURLList.LastElement();
   }
-  const nsTArray<NotNull<RefPtr<nsIURI>>>& GetURLList() const {
-    return mURLList;
+  void GetURLList(nsTArray<nsCString>& aURLList) const {
+    aURLList.Assign(mURLList);
   }
-  nsIURI* GetUnfilteredURL() const {
+  const nsCString& GetUnfilteredURL() const {
     if (mWrappedResponse) {
       return mWrappedResponse->GetURL();
     }
     return GetURL();
   }
-  const nsTArray<NotNull<RefPtr<nsIURI>>>& GetUnfilteredURLList() const {
+  void GetUnfilteredURLList(nsTArray<nsCString>& aURLList) const {
     if (mWrappedResponse) {
-      return mWrappedResponse->GetURLList();
+      return mWrappedResponse->GetURLList(aURLList);
     }
 
-    return GetURLList();
+    return GetURLList(aURLList);
   }
 
-  void SetURLList(const nsTArray<NotNull<RefPtr<nsIURI>>>& aURLList) {
+  nsTArray<nsCString> GetUnfilteredURLList() const {
+    nsTArray<nsCString> list;
+    GetUnfilteredURLList(list);
+    return list;
+  }
+
+  void SetURLList(const nsTArray<nsCString>& aURLList) {
     mURLList.Assign(aURLList);
 
 #ifdef DEBUG
-    for (auto& url : mURLList) {
-      bool hasRef = false;
-      url->GetHasRef(&hasRef);
-      MOZ_ASSERT(!hasRef);
+    for (uint32_t i = 0; i < mURLList.Length(); ++i) {
+      MOZ_ASSERT(mURLList[i].Find("#"_ns) == kNotFound);
     }
 #endif
   }
@@ -189,13 +193,15 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
     GetUnfilteredBody(aStream, aBodySize);
   }
 
-  void SetBodyBlobImpl(BlobImpl* aBlobImpl) { mBodyBlobImpl = aBlobImpl; }
+  void SetBodyBlobURISpec(nsACString& aBlobURISpec) {
+    mBodyBlobURISpec = aBlobURISpec;
+  }
 
-  BlobImpl* BodyBlobImpl() const {
+  const nsACString& BodyBlobURISpec() const {
     if (mWrappedResponse) {
-      return mWrappedResponse->BodyBlobImpl();
+      return mWrappedResponse->BodyBlobURISpec();
     }
-    return mBodyBlobImpl;
+    return mBodyBlobURISpec;
   }
 
   void SetBodyLocalPath(nsAString& aLocalPath) { mBodyLocalPath = aLocalPath; }
@@ -345,10 +351,10 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
 
   ~InternalResponse();
 
+ private:
   explicit InternalResponse(const InternalResponse& aOther) = delete;
   InternalResponse& operator=(const InternalResponse&) = delete;
 
- private:
   // Returns an instance of InternalResponse which is a copy of this
   // InternalResponse, except headers, body and wrapped response (if any) which
   // are left uninitialized. Used for cloning and filtering.
@@ -361,12 +367,12 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
   // A response has an associated url list (a list of zero or more fetch URLs).
   // Unless stated otherwise, it is the empty list. The current url is the last
   // element in mURLlist
-  nsTArray<NotNull<RefPtr<nsIURI>>> mURLList;
+  nsTArray<nsCString> mURLList;
   const uint16_t mStatus;
   const nsCString mStatusText;
   RefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBody;
-  RefPtr<BlobImpl> mBodyBlobImpl;
+  nsCString mBodyBlobURISpec;
   nsString mBodyLocalPath;
   int64_t mBodySize;
   // It's used to passed to the CacheResponse to generate padding size. Once, we

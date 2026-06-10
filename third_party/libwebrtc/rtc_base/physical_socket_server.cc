@@ -9,15 +9,11 @@
  */
 #include "rtc_base/physical_socket_server.h"
 
-#include <stdio.h>
-
-#include <algorithm>
 #include <array>
 #include <cerrno>
 #include <cstdint>
 #include <cstring>
 #include <memory>
-#include <span>
 #include <utility>
 
 #include "api/async_dns_resolver.h"
@@ -27,6 +23,7 @@
 #include "rtc_base/async_dns_resolver.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
+#include "rtc_base/event.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/net_helpers.h"
@@ -34,8 +31,8 @@
 #include "rtc_base/socket.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/system/system_time.h"
 #include "rtc_base/thread_annotations.h"
+#include "rtc_base/time_utils.h"
 
 #ifdef MEMORY_SANITIZER
 #include <sanitizer/msan_interface.h>
@@ -51,6 +48,7 @@
 #elif defined(WEBRTC_USE_POLL)
 #include <poll.h>
 #endif
+#include <sys/ioctl.h>
 #include <sys/select.h>
 #include <unistd.h>
 #endif
@@ -65,6 +63,7 @@
 
 #if defined(WEBRTC_LINUX)
 #include <asm-generic/socket.h>
+#include <linux/sockios.h>
 #include <sys/epoll.h>
 #endif
 
@@ -78,6 +77,27 @@
 #define IP_MTU 14  // Until this is integrated from linux/in.h to netinet/in.h
 typedef void* SockOptArg;
 #endif  // WEBRTC_POSIX
+
+#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC) && !defined(WEBRTC_BSD)
+#if defined(WEBRTC_LINUX)
+#include <linux/sockios.h>
+#endif
+int64_t GetSocketRecvTimestamp(int socket) {
+  struct timeval tv_ioctl;
+  int ret = ioctl(socket, SIOCGSTAMP, &tv_ioctl);
+  if (ret != 0)
+    return -1;
+  int64_t timestamp =
+      webrtc::kNumMicrosecsPerSec * static_cast<int64_t>(tv_ioctl.tv_sec) +
+      static_cast<int64_t>(tv_ioctl.tv_usec);
+  return timestamp;
+}
+
+#else
+int64_t GetSocketRecvTimestamp(int /* socket */) {
+  return -1;
+}
+#endif
 
 #if defined(WEBRTC_WIN)
 typedef char* SockOptArg;
@@ -93,8 +113,6 @@ typedef char* SockOptArg;
 #endif  // !defined(EPOLLRDHUP)
 #endif  // defined(WEBRTC_LINUX)
 
-namespace webrtc {
-
 namespace {
 
 // RFC-3168, Section 5. ECN is the two least significant bits.
@@ -102,7 +120,7 @@ constexpr uint8_t kEcnMask = 0x03;
 
 #if defined(WEBRTC_POSIX)
 
-EcnMarking EcnFromDs(uint8_t ds) {
+webrtc::EcnMarking EcnFromDs(uint8_t ds) {
   // RFC-3168, Section 5.
   constexpr uint8_t ECN_ECT1 = 0x01;
   constexpr uint8_t ECN_ECT0 = 0x02;
@@ -110,15 +128,15 @@ EcnMarking EcnFromDs(uint8_t ds) {
   const uint8_t ecn = ds & kEcnMask;
 
   if (ecn == ECN_ECT1) {
-    return EcnMarking::kEct1;
+    return webrtc::EcnMarking::kEct1;
   }
   if (ecn == ECN_ECT0) {
-    return EcnMarking::kEct0;
+    return webrtc::EcnMarking::kEct0;
   }
   if (ecn == ECN_CE) {
-    return EcnMarking::kCe;
+    return webrtc::EcnMarking::kCe;
   }
-  return EcnMarking::kNotEct;
+  return webrtc::EcnMarking::kNotEct;
 }
 
 #endif
@@ -135,74 +153,9 @@ class ScopedSetTrue {
   bool* value_;
 };
 
-// Tracks time until given 'timeout' pass.
-// Converts timeout into platform-specfic time delta representation.
-template <typename TimeType>
-class DeadlineTracker {
- public:
-  // Memorizes time to wait until and converts 'timeout' into platform-specific
-  // representation saving result into output variable 'wait_time'.
-  DeadlineTracker(TimeDelta timeout, TimeType& wait_time)
-      : deadline_(SetInitialTimeout(timeout, wait_time)) {}
-
-  // Returns non-negative remaining time until `timeout`.
-  TimeType WaitTime() {
-    if (deadline_ == Timestamp::PlusInfinity()) {
-      return Infinite();
-    }
-    if (deadline_ == Timestamp::MinusInfinity()) {
-      return Finite(TimeDelta::Zero());
-    }
-    TimeDelta remaining = std::max(deadline_ - SystemTime(), TimeDelta::Zero());
-    return Finite(remaining.RoundUpTo(TimeDelta::Millis(1)));
-  }
-
- private:
-  Timestamp SetInitialTimeout(TimeDelta timeout, TimeType& wait_time) {
-    if (timeout == TimeDelta::PlusInfinity()) {
-      wait_time = Infinite();
-      return Timestamp::PlusInfinity();
-    }
-    if (timeout <= TimeDelta::Zero()) {
-      wait_time = Finite(TimeDelta::Zero());
-      return Timestamp::MinusInfinity();
-    }
-    wait_time = Finite(timeout);
-    return SystemTime() + timeout;
-  }
-
-#if defined(WEBRTC_WIN)
-  DWORD Infinite() { return WSA_INFINITE; }
-  DWORD Finite(TimeDelta t) { return t.ms<DWORD>(); }
-#else
-  TimeType Infinite() {
-    if constexpr (std::is_same_v<TimeType, int>) {
-      return -1;
-    }
-    if constexpr (std::is_same_v<TimeType, timeval*>) {
-      return nullptr;
-    }
-  }
-
-  TimeType Finite(TimeDelta t) {
-    if constexpr (std::is_same_v<TimeType, int>) {
-      return t.ms<int>();
-    }
-    if constexpr (std::is_same_v<TimeType, timeval*>) {
-      wait_time_.tv_sec = t.us() / TimeDelta::Seconds(1).us();
-      wait_time_.tv_usec = t.us() % TimeDelta::Seconds(1).us();
-      return &wait_time_;
-    }
-  }
-
-  timeval wait_time_;
-#endif
-
-  const Timestamp deadline_;
-};
-
 }  // namespace
 
+namespace webrtc {
 
 PhysicalSocket::PhysicalSocket(PhysicalSocketServer* ss, SOCKET s)
     : ss_(ss),
@@ -306,7 +259,7 @@ int PhysicalSocket::Bind(const SocketAddress& bind_addr) {
   sockaddr* addr = reinterpret_cast<sockaddr*>(&addr_storage);
   int err = ::bind(s_, addr, static_cast<int>(len));
   UpdateLastError();
-#if RTC_DCHECK_IS_ON
+#if !defined(NDEBUG)
   if (0 == err) {
     dbg_addr_ = "Bound @ ";
     dbg_addr_.append(GetLocalAddress().ToString());
@@ -417,10 +370,10 @@ int PhysicalSocket::SetOption(Option opt, int value) {
     // IP DiffServ  consists of DSCP 6 most significant, ECN 2 least
     // significant.
     dscp_ = value << 2;
-    value = dscp_ + (ecn_send_options_ & kEcnMask);
+    value = dscp_ + (ecn_ & kEcnMask);
   } else if (opt == OPT_SEND_ECN) {
-    ecn_send_options_ = value;
-    value = dscp_ + (ecn_send_options_ & kEcnMask);
+    ecn_ = value;
+    value = dscp_ + (ecn_ & kEcnMask);
   }
 #if defined(WEBRTC_POSIX)
   if (sopt == IPV6_TCLASS) {
@@ -435,10 +388,6 @@ int PhysicalSocket::SetOption(Option opt, int value) {
   if (result != 0) {
     UpdateLastError();
   }
-  if (opt == OPT_RECV_ECN) {
-    read_ecn_ = value == 1;
-  }
-
   return result;
 }
 
@@ -541,14 +490,11 @@ int PhysicalSocket::RecvFrom(ReceiveBuffer& buffer) {
   int64_t timestamp = -1;
   static constexpr int BUF_SIZE = 64 * 1024;
   buffer.payload.EnsureCapacity(BUF_SIZE);
-  int received;
-  buffer.payload.SetData(BUF_SIZE, [&](std::span<uint8_t> payload) {
-    received =
-        DoReadFromSocket(payload.data(), payload.size(), &buffer.source_address,
-                         &timestamp, read_ecn_ ? &buffer.ecn : nullptr);
-    // return 0 if received is -1, indicating error.
-    return std::max(received, 0);
-  });
+
+  int received = DoReadFromSocket(
+      buffer.payload.data(), buffer.payload.capacity(), &buffer.source_address,
+      &timestamp, ecn_ ? &buffer.ecn : nullptr);
+  buffer.payload.SetSize(received > 0 ? received : 0);
   if (received > 0 && timestamp != -1) {
     buffer.arrival_time = Timestamp::Micros(timestamp);
   }
@@ -610,9 +556,8 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
       if (timestamp && cmsg->cmsg_type == SCM_TIMESTAMP) {
         timeval ts;
         std::memcpy(static_cast<void*>(&ts), CMSG_DATA(cmsg), sizeof(ts));
-        *timestamp =
-            (Timestamp::Seconds(ts.tv_sec) + TimeDelta::Micros(ts.tv_usec))
-                .us();
+        *timestamp = kNumMicrosecsPerSec * static_cast<int64_t>(ts.tv_sec) +
+                     static_cast<int64_t>(ts.tv_usec);
       }
     }
   }
@@ -644,7 +589,7 @@ int PhysicalSocket::Listen(int backlog) {
   if (err == 0) {
     state_ = CS_CONNECTING;
     EnableEvents(DE_ACCEPT);
-#if RTC_DCHECK_IS_ON
+#if !defined(NDEBUG)
     dbg_addr_ = "Listening @ ";
     dbg_addr_.append(GetLocalAddress().ToString());
 #endif
@@ -716,7 +661,7 @@ void PhysicalSocket::OnResolveResult(const AsyncDnsResolverResult& result) {
 
   if (error) {
     SetError(error);
-    NotifyCloseEvent(this, error);
+    SignalCloseEvent(this, error);
   }
 }
 
@@ -953,7 +898,7 @@ bool SocketDispatcher::CheckSignalClose() {
 
   state_ = CS_CLOSED;
   signal_close_ = false;
-  NotifyCloseEvent(this, signal_err_);
+  SignalCloseEvent(this, signal_err_);
   return true;
 }
 
@@ -1044,23 +989,23 @@ void SocketDispatcher::OnEvent(uint32_t ff, int err) {
     if (ff != DE_CONNECT)
       RTC_LOG(LS_VERBOSE) << "Signalled with DE_CONNECT: " << ff;
     DisableEvents(DE_CONNECT);
-#if RTC_DCHECK_IS_ON
+#if !defined(NDEBUG)
     dbg_addr_ = "Connected @ ";
     dbg_addr_.append(GetRemoteAddress().ToString());
 #endif
-    NotifyConnectEvent(this);
+    SignalConnectEvent(this);
   }
   if (((ff & DE_ACCEPT) != 0) && (id_ == cache_id)) {
     DisableEvents(DE_ACCEPT);
-    NotifyReadEvent(this);
+    SignalReadEvent(this);
   }
   if ((ff & DE_READ) != 0) {
     DisableEvents(DE_READ);
-    NotifyReadEvent(this);
+    SignalReadEvent(this);
   }
   if (((ff & DE_WRITE) != 0) && (id_ == cache_id)) {
     DisableEvents(DE_WRITE);
-    NotifyWriteEvent(this);
+    SignalWriteEvent(this);
   }
   if (((ff & DE_CLOSE) != 0) && (id_ == cache_id)) {
     signal_close_ = true;
@@ -1089,24 +1034,24 @@ void SocketDispatcher::OnEvent(uint32_t ff, int err) {
   // something like a READ followed by a CONNECT, which would be odd.
   if ((ff & DE_CONNECT) != 0) {
     DisableEvents(DE_CONNECT);
-    NotifyConnectEvent(this);
+    SignalConnectEvent(this);
   }
   if ((ff & DE_ACCEPT) != 0) {
     DisableEvents(DE_ACCEPT);
-    NotifyReadEvent(this);
+    SignalReadEvent(this);
   }
   if ((ff & DE_READ) != 0) {
     DisableEvents(DE_READ);
-    NotifyReadEvent(this);
+    SignalReadEvent(this);
   }
   if ((ff & DE_WRITE) != 0) {
     DisableEvents(DE_WRITE);
-    NotifyWriteEvent(this);
+    SignalWriteEvent(this);
   }
   if ((ff & DE_CLOSE) != 0) {
     // The socket is now dead to us, so stop checking it.
     SetEnabledEvents(0);
-    NotifyCloseEvent(this, err);
+    SignalCloseEvent(this, err);
   }
 #if defined(WEBRTC_USE_EPOLL)
   FinishBatchedEventUpdates();
@@ -1422,27 +1367,34 @@ void PhysicalSocketServer::Update([[maybe_unused]] Dispatcher* pdispatcher) {
 #endif
 }
 
+int PhysicalSocketServer::ToCmsWait(TimeDelta max_wait_duration) {
+  return max_wait_duration == Event::kForever
+             ? kForeverMs
+             : max_wait_duration.RoundUpTo(TimeDelta::Millis(1)).ms();
+}
+
 #if defined(WEBRTC_POSIX)
 
 bool PhysicalSocketServer::Wait(TimeDelta max_wait_duration, bool process_io) {
   // We don't support reentrant waiting.
   RTC_DCHECK(!waiting_);
   ScopedSetTrue s(&waiting_);
+  const int cmsWait = ToCmsWait(max_wait_duration);
 
 #if defined(WEBRTC_USE_POLL)
-  return WaitPoll(max_wait_duration, process_io);
+  return WaitPoll(cmsWait, process_io);
 #else
 #if defined(WEBRTC_USE_EPOLL)
   // We don't keep a dedicated "epoll" descriptor containing only the non-IO
   // (i.e. signaling) dispatcher, so "poll" will be used instead of the default
   // "select" to support sockets larger than FD_SETSIZE.
   if (!process_io) {
-    return WaitPollOneDispatcher(max_wait_duration, signal_wakeup_);
+    return WaitPollOneDispatcher(cmsWait, signal_wakeup_);
   } else if (epoll_fd_ != INVALID_SOCKET) {
-    return WaitEpoll(max_wait_duration);
+    return WaitEpoll(cmsWait);
   }
 #endif
-  return WaitSelect(max_wait_duration, process_io);
+  return WaitSelect(cmsWait, process_io);
 #endif
 }
 
@@ -1549,10 +1501,21 @@ static pollfd DispatcherToPollfd(Dispatcher* dispatcher) {
 }
 #endif  // WEBRTC_USE_POLL || WEBRTC_USE_EPOLL
 
-bool PhysicalSocketServer::WaitSelect(TimeDelta timeout, bool process_io) {
+bool PhysicalSocketServer::WaitSelect(int cmsWait, bool process_io) {
   // Calculate timing information
-  timeval* wait_time = nullptr;
-  DeadlineTracker<timeval*> deadline(timeout, wait_time);
+
+  struct timeval* ptvWait = nullptr;
+  struct timeval tvWait;
+  int64_t stop_us;
+  if (cmsWait != kForeverMs) {
+    // Calculate wait timeval
+    tvWait.tv_sec = cmsWait / 1000;
+    tvWait.tv_usec = (cmsWait % 1000) * 1000;
+    ptvWait = &tvWait;
+
+    // Calculate when to return
+    stop_us = TimeMicros() + cmsWait * 1000;
+  }
 
   fd_set fdsRead;
   fd_set fdsWrite;
@@ -1601,7 +1564,7 @@ bool PhysicalSocketServer::WaitSelect(TimeDelta timeout, bool process_io) {
     // < 0 means error
     // 0 means timeout
     // > 0 means count of descriptors ready
-    int n = select(fdmax + 1, &fdsRead, &fdsWrite, nullptr, wait_time);
+    int n = select(fdmax + 1, &fdsRead, &fdsWrite, nullptr, ptvWait);
 
     // If error, return error.
     if (n < 0) {
@@ -1647,7 +1610,15 @@ bool PhysicalSocketServer::WaitSelect(TimeDelta timeout, bool process_io) {
 
     // Recalc the time remaining to wait. Doing it here means it doesn't get
     // calced twice the first time through the loop
-    wait_time = deadline.WaitTime();
+    if (ptvWait) {
+      ptvWait->tv_sec = 0;
+      ptvWait->tv_usec = 0;
+      int64_t time_left_us = stop_us - TimeMicros();
+      if (time_left_us > 0) {
+        ptvWait->tv_sec = time_left_us / kNumMicrosecsPerSec;
+        ptvWait->tv_usec = time_left_us % kNumMicrosecsPerSec;
+      }
+    }
   }
 
   return true;
@@ -1728,10 +1699,14 @@ void PhysicalSocketServer::UpdateEpoll(Dispatcher* pdispatcher, uint64_t key) {
   }
 }
 
-bool PhysicalSocketServer::WaitEpoll(TimeDelta timeout) {
+bool PhysicalSocketServer::WaitEpoll(int cmsWait) {
   RTC_DCHECK(epoll_fd_ != INVALID_SOCKET);
-  int wait_time_ms = -1;
-  DeadlineTracker<int> deadline(timeout, wait_time_ms);
+  int64_t msWait = -1;
+  int64_t msStop = -1;
+  if (cmsWait != kForeverMs) {
+    msWait = cmsWait;
+    msStop = TimeAfter(cmsWait);
+  }
 
   fWait_ = true;
   while (fWait_) {
@@ -1740,7 +1715,7 @@ bool PhysicalSocketServer::WaitEpoll(TimeDelta timeout) {
     // 0 means timeout
     // > 0 means count of descriptors ready
     int n = epoll_wait(epoll_fd_, epoll_events_.data(), epoll_events_.size(),
-                       wait_time_ms);
+                       static_cast<int>(msWait));
     if (n < 0) {
       if (errno != EINTR) {
         RTC_LOG_E(LS_ERROR, EN, errno) << "epoll";
@@ -1773,22 +1748,27 @@ bool PhysicalSocketServer::WaitEpoll(TimeDelta timeout) {
       }
     }
 
-    wait_time_ms = deadline.WaitTime();
-    if (wait_time_ms == 0) {
-      // Return success on timeout.
-      return true;
+    if (cmsWait != kForeverMs) {
+      msWait = TimeDiff(msStop, TimeMillis());
+      if (msWait <= 0) {
+        // Return success on timeout.
+        return true;
+      }
     }
   }
 
   return true;
 }
 
-bool PhysicalSocketServer::WaitPollOneDispatcher(TimeDelta timeout,
+bool PhysicalSocketServer::WaitPollOneDispatcher(int cmsWait,
                                                  Dispatcher* dispatcher) {
   RTC_DCHECK(dispatcher);
-
-  int wait_time_ms = -1;
-  DeadlineTracker<int> deadline(timeout, wait_time_ms);
+  int64_t msWait = -1;
+  int64_t msStop = -1;
+  if (cmsWait != kForeverMs) {
+    msWait = cmsWait;
+    msStop = TimeAfter(cmsWait);
+  }
 
   fWait_ = true;
   const int fd = dispatcher->GetDescriptor();
@@ -1800,7 +1780,7 @@ bool PhysicalSocketServer::WaitPollOneDispatcher(TimeDelta timeout,
     // < 0 means error
     // 0 means timeout
     // > 0 means count of descriptors ready
-    int n = poll(&fds, 1, wait_time_ms);
+    int n = poll(&fds, 1, static_cast<int>(msWait));
     if (n < 0) {
       if (errno != EINTR) {
         RTC_LOG_E(LS_ERROR, EN, errno) << "poll";
@@ -1820,10 +1800,12 @@ bool PhysicalSocketServer::WaitPollOneDispatcher(TimeDelta timeout,
       ProcessPollEvents(dispatcher, fds);
     }
 
-    wait_time_ms = deadline.WaitTime();
-    if (wait_time_ms == 0) {
-      // Return success on timeout.
-      return true;
+    if (cmsWait != kForeverMs) {
+      msWait = TimeDiff(msStop, TimeMillis());
+      if (msWait < 0) {
+        // Return success on timeout.
+        return true;
+      }
     }
   }
 
@@ -1832,9 +1814,13 @@ bool PhysicalSocketServer::WaitPollOneDispatcher(TimeDelta timeout,
 
 #elif defined(WEBRTC_USE_POLL)
 
-bool PhysicalSocketServer::WaitPoll(TimeDelta timeout, bool process_io) {
-  int wait_time_ms = -1;
-  DeadlineTracker<int> deadline(timeout, wait_time_ms);
+bool PhysicalSocketServer::WaitPoll(int cmsWait, bool process_io) {
+  int64_t msWait = -1;
+  int64_t msStop = -1;
+  if (cmsWait != kForeverMs) {
+    msWait = cmsWait;
+    msStop = TimeAfter(cmsWait);
+  }
 
   std::vector<pollfd> pollfds;
   fWait_ = true;
@@ -1860,7 +1846,7 @@ bool PhysicalSocketServer::WaitPoll(TimeDelta timeout, bool process_io) {
     // < 0 means error
     // 0 means timeout
     // > 0 means count of descriptors ready
-    int n = poll(pollfds.data(), pollfds.size(), wait_time_ms);
+    int n = poll(pollfds.data(), pollfds.size(), static_cast<int>(msWait));
     if (n < 0) {
       if (errno != EINTR) {
         RTC_LOG_E(LS_ERROR, EN, errno) << "poll";
@@ -1887,10 +1873,12 @@ bool PhysicalSocketServer::WaitPoll(TimeDelta timeout, bool process_io) {
       }
     }
 
-    wait_time_ms = deadline.WaitTime();
-    if (wait_time_ms == 0) {
-      // Return success on timeout.
-      return true;
+    if (cmsWait != kForeverMs) {
+      msWait = TimeDiff(msStop, TimeMillis());
+      if (msWait < 0) {
+        // Return success on timeout.
+        return true;
+      }
     }
   }
 
@@ -1907,8 +1895,10 @@ bool PhysicalSocketServer::Wait(TimeDelta max_wait_duration, bool process_io) {
   RTC_DCHECK(!waiting_);
   ScopedSetTrue set(&waiting_);
 
-  DWORD wait_time_ms = 0;
-  DeadlineTracker<DWORD> deadline(max_wait_duration, wait_time_ms);
+  int cmsWait = ToCmsWait(max_wait_duration);
+  int64_t cmsTotal = cmsWait;
+  int64_t cmsElapsed = 0;
+  int64_t msStart = Time();
 
   fWait_ = true;
   while (fWait_) {
@@ -1949,9 +1939,19 @@ bool PhysicalSocketServer::Wait(TimeDelta max_wait_duration, bool process_io) {
       }
     }
 
+    // Which is shorter, the delay wait or the asked wait?
+
+    int64_t cmsNext;
+    if (cmsWait == kForeverMs) {
+      cmsNext = cmsWait;
+    } else {
+      cmsNext = std::max<int64_t>(0, cmsTotal - cmsElapsed);
+    }
+
     // Wait for one of the events to signal
-    DWORD dw = WSAWaitForMultipleEvents(static_cast<DWORD>(events.size()),
-                                        &events[0], false, wait_time_ms, false);
+    DWORD dw =
+        WSAWaitForMultipleEvents(static_cast<DWORD>(events.size()), &events[0],
+                                 false, static_cast<DWORD>(cmsNext), false);
 
     if (dw == WSA_WAIT_FAILED) {
       // Failed?
@@ -2057,11 +2057,9 @@ bool PhysicalSocketServer::Wait(TimeDelta max_wait_duration, bool process_io) {
     // Break?
     if (!fWait_)
       break;
-
-    wait_time_ms = deadline.WaitTime();
-    if (wait_time_ms == 0) {
-      // Return success on timeout.
-      return true;
+    cmsElapsed = TimeSince(msStart);
+    if ((cmsWait != kForeverMs) && (cmsElapsed >= cmsWait)) {
+      break;
     }
   }
 

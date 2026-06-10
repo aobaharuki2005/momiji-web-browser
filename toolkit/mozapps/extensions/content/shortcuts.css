@@ -24,7 +24,7 @@
 
 .card-heading {
   display: flex;
-  font-weight: var(--font-weight-heading);
+  font-weight: var(--heading-font-weight);
 }
 
 .shortcut-row {
@@ -55,12 +55,9 @@
   margin: 8px 0 0;
 
   &[warning]:not(:focus) {
-    --warning-outline-color: var(--color-yellow-30);
-    --warning-shadow-color: oklch(from var(--warning-outline-color) l c h / 30%);
-
-    outline: 2px solid var(--warning-outline-color);
+    outline: 2px solid var(--yellow-60);
     outline-offset: -1px;
-    box-shadow: 0 0 0 4px var(--warning-shadow-color);
+    box-shadow: 0 0 0 4px var(--yellow-60-a30);
   }
 }
 
@@ -75,9 +72,9 @@
 }
 
 .error-message {
-  --error-background: var(--color-red-60);
-  --warning-background: var(--color-yellow-20);
-  --warning-text-color: var(--color-yellow-100);
+  --error-background: var(--red-60);
+  --warning-background: var(--yellow-50);
+  --warning-text-color: var(--yellow-90);
   color: white;
   display: flex;
   flex-direction: column;

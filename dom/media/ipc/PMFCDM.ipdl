@@ -108,6 +108,7 @@ struct MFCDMSessionClosedResult {
   MediaKeySessionClosedReason reason;
 };
 
+[ManualDealloc]
 async protocol PMFCDM
 {
   manager PRemoteMediaManager;

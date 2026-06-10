@@ -1044,8 +1044,9 @@ add_task(async function testPrivateBrowsingExtension() {
 
 add_task(async function testInvalidExtension() {
   let win = await open_manager("addons://detail/foo");
+  let categoryUtils = new CategoryUtilities(win);
   is(
-    AboutAddonsTestUtils.getSidebarSelectedCategory(win),
+    categoryUtils.selectedCategory,
     "discover",
     "Should fall back to the discovery pane"
   );
@@ -1061,8 +1062,9 @@ add_task(async function testInvalidExtensionNoDiscover() {
   });
 
   let win = await open_manager("addons://detail/foo");
+  let categoryUtils = new CategoryUtilities(win);
   is(
-    AboutAddonsTestUtils.getSidebarSelectedCategory(win),
+    categoryUtils.selectedCategory,
     "extension",
     "Should fall back to the extension list if discover is disabled"
   );
@@ -1322,9 +1324,7 @@ add_task(async function testGoBackButtonIsDisabledAfterBrowserBackButton() {
   await assertBackButtonIsDisabled(win);
 
   // Navigate to the extensions list.
-  let viewLoaded = wait_for_view_load(win);
-  AboutAddonsTestUtils.clickCategoryButton(win, "extension");
-  await viewLoaded;
+  await new CategoryUtilities(win).openType("extension");
 
   // Click on the browser back button.
   gBrowser.goBack();
@@ -1580,7 +1580,7 @@ add_task(async function testQuarantinedDomainsUserAllowedUI() {
 
   info("Switch to theme list view");
   loaded = waitForViewLoad(win);
-  AboutAddonsTestUtils.clickCategoryButton(win, "theme");
+  doc.querySelector("#categories > [name=theme]").click();
   await loaded;
 
   info("Test quarantineIgnoredByUser UI on a non extension addon type (theme)");
@@ -1597,7 +1597,7 @@ add_task(async function testQuarantinedDomainsUserAllowedUI() {
 
   info("Switch to extension list view");
   loaded = waitForViewLoad(win);
-  AboutAddonsTestUtils.clickCategoryButton(win, "extension");
+  doc.querySelector("#categories > [name=extension]").click();
   await loaded;
 
   loaded = waitForViewLoad(win);
@@ -1622,7 +1622,7 @@ add_task(async function testQuarantinedDomainsUserAllowedUI() {
 
   info("Switch to extension list view");
   loaded = waitForViewLoad(win);
-  AboutAddonsTestUtils.clickCategoryButton(win, "extension");
+  doc.querySelector("#categories > [name=extension]").click();
   await loaded;
 
   loaded = waitForViewLoad(win);

@@ -551,20 +551,23 @@ add_task(async function () {
   });
 
   info("change default engine");
-  let originalTestEngine = SearchService.getEngineByName(
+  let originalTestEngine = Services.search.getEngineByName(
     SUGGESTIONS_ENGINE_NAME
   );
   await SearchTestUtils.installSearchExtension({
     name: "AliasEngine",
     keyword: "alias",
   });
-  let engine2 = SearchService.getEngineByName("AliasEngine");
+  let engine2 = Services.search.getEngineByName("AliasEngine");
   Assert.notEqual(
-    SearchService.defaultEngine,
+    Services.search.defaultEngine,
     engine2,
     "New engine shouldn't be the current engine yet"
   );
-  await SearchService.setDefault(engine2, SearchService.CHANGE_REASON.UNKNOWN);
+  await Services.search.setDefault(
+    engine2,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   query = "toronto";
   context = createContext(query, { isPrivate: false });
   await check_results({
@@ -576,15 +579,15 @@ add_task(async function () {
       }),
     ],
   });
-  await SearchService.setDefault(
+  await Services.search.setDefault(
     originalTestEngine,
-    SearchService.CHANGE_REASON.UNKNOWN
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   info(
     "Leading search-mode restriction tokens are removed from the search result."
   );
-  for (let token of UrlbarShared.SEARCH_MODE_RESTRICT) {
+  for (let token of UrlbarTokenizer.SEARCH_MODE_RESTRICT) {
     for (let spaces of TEST_SPACES) {
       query = token + spaces + "query";
       info("Testing: " + JSON.stringify({ query, spaces: codePoints(spaces) }));
@@ -597,7 +600,7 @@ add_task(async function () {
         query: expectedQuery,
         alias: token,
       };
-      if (token == UrlbarShared.RESTRICT_TOKENS.SEARCH) {
+      if (token == UrlbarTokenizer.RESTRICT.SEARCH) {
         payload.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
         payload.engineName = SUGGESTIONS_ENGINE_NAME;
       }
@@ -612,7 +615,7 @@ add_task(async function () {
     "Leading search-mode restriction tokens are removed from the search result with keyword.enabled = false."
   );
   Services.prefs.setBoolPref("keyword.enabled", false);
-  for (let token of UrlbarShared.SEARCH_MODE_RESTRICT) {
+  for (let token of UrlbarTokenizer.SEARCH_MODE_RESTRICT) {
     for (let spaces of TEST_SPACES) {
       query = token + spaces + "query";
       info("Testing: " + JSON.stringify({ query, spaces: codePoints(spaces) }));
@@ -625,7 +628,7 @@ add_task(async function () {
         query: expectedQuery,
         alias: token,
       };
-      if (token == UrlbarShared.RESTRICT_TOKENS.SEARCH) {
+      if (token == UrlbarTokenizer.RESTRICT.SEARCH) {
         payload.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
         payload.engineName = SUGGESTIONS_ENGINE_NAME;
       }
@@ -640,8 +643,8 @@ add_task(async function () {
   info(
     "Leading non-search-mode restriction tokens are not removed from the search result."
   );
-  for (let token of Object.values(UrlbarShared.RESTRICT_TOKENS)) {
-    if (UrlbarShared.SEARCH_MODE_RESTRICT.has(token)) {
+  for (let token of Object.values(UrlbarTokenizer.RESTRICT)) {
+    if (UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(token)) {
       continue;
     }
     for (let spaces of TEST_SPACES) {

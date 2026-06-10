@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -57,13 +59,14 @@ class StorageAccessPermissionStatusSink final : public PermissionStatusSink {
       nsPIDOMWindowInner* aInnerWindow) override {
     NS_ENSURE_TRUE(aInnerWindow, false);
 
+    if (!mPermissionStatus) {
+      return false;
+    }
+
     nsCOMPtr<nsPIDOMWindowInner> ownerWindow;
 
     if (mSerialEventTarget->IsOnCurrentThread()) {
-      if (!GetPermissionStatus()) {
-        return false;
-      }
-      ownerWindow = GetPermissionStatus()->GetOwnerWindow();
+      ownerWindow = mPermissionStatus->GetOwnerWindow();
     } else {
       MutexAutoLock lock(mWorkerRefMutex);
 
@@ -86,12 +89,12 @@ class StorageAccessPermissionStatusSink final : public PermissionStatusSink {
 
   RefPtr<PermissionStatePromise> ComputeStateOnMainThread() override {
     if (mSerialEventTarget->IsOnCurrentThread()) {
-      if (!GetPermissionStatus()) {
+      if (!mPermissionStatus) {
         return PermissionStatePromise::CreateAndReject(NS_ERROR_FAILURE,
                                                        __func__);
       }
 
-      nsGlobalWindowInner* window = GetPermissionStatus()->GetOwnerWindow();
+      nsGlobalWindowInner* window = mPermissionStatus->GetOwnerWindow();
       if (NS_WARN_IF(!window)) {
         return PermissionStatePromise::CreateAndReject(NS_ERROR_FAILURE,
                                                        __func__);
@@ -128,7 +131,7 @@ class StorageAccessPermissionStatusSink final : public PermissionStatusSink {
 
     // For workers we already have the correct value in workerPrivate.
     return InvokeAsync(mSerialEventTarget, __func__, [self = RefPtr(this)] {
-      if (!self->GetPermissionStatus()) {
+      if (!self->mPermissionStatus) {
         return PermissionStatePromise::CreateAndReject(NS_ERROR_FAILURE,
                                                        __func__);
       }

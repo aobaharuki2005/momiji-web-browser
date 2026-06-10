@@ -9,10 +9,6 @@ const {
   NimbusMigrations,
 } = ChromeUtils.importESModule("resource://nimbus/lib/Migrations.sys.mjs");
 
-const { FirstStartup } = ChromeUtils.importESModule(
-  "resource://gre/modules/FirstStartup.sys.mjs"
-);
-
 const { NimbusTelemetry } = ChromeUtils.importESModule(
   "resource://nimbus/lib/Telemetry.sys.mjs"
 );
@@ -44,24 +40,6 @@ function mockLabsRecipes(targeting = "true") {
 
 function getEnabledPrefForFeature(featureId) {
   return NimbusFeatures[featureId].manifest.variables.enabled.setPref.pref;
-}
-
-function getMigrationEvents() {
-  return (Glean.nimbusEvents.migration.testGetValue("events") ?? []).map(
-    (event, idx) => {
-      const { duration, ...extra } = event.extra;
-      const parsedDuration = JSON.parse(duration);
-
-      Assert.ok(
-        typeof parsedDuration === "number" &&
-          Number.isInteger(parsedDuration) &&
-          parsedDuration >= 0,
-        `event ${idx} has a non-negative integer duration (${JSON.stringify(duration)})`
-      );
-
-      return extra;
-    }
-  );
 }
 
 add_setup(async function setup() {
@@ -102,12 +80,13 @@ async function setupTest({
     );
   }
 
-  const ctx = await NimbusTestUtils.setupTest({
+  const { initExperimentAPI, ...ctx } = await NimbusTestUtils.setupTest({
     init: false,
     clearTelemetry: true,
-    migrationState: NimbusTestUtils.migrationState.UNMIGRATED,
     ...args,
   });
+
+  const { sandbox } = ctx;
 
   if (typeof legacyMigrationState !== "undefined") {
     Services.prefs.setIntPref(
@@ -126,11 +105,13 @@ async function setupTest({
       migrations
     );
 
-    ctx.sandbox.stub(NimbusMigrations, "MIGRATIONS").get(() => migrationsStub);
+    sandbox.stub(NimbusMigrations, "MIGRATIONS").get(() => migrationsStub);
   }
 
   if (init) {
-    await ExperimentAPI.init();
+    await initExperimentAPI();
+  } else {
+    ctx.initExperimentAPI = initExperimentAPI;
   }
 
   return ctx;
@@ -218,33 +199,31 @@ add_task(async function test_migration_unset() {
     "Migration pref should be updated"
   );
 
-  Assert.deepEqual(getMigrationEvents(), [
-    {
-      success: "true",
-      migration_id: startupMigrations[0].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "true",
-      migration_id: startupMigrations[1].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "true",
-      migration_id: storeMigrations[0].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "true",
-      migration_id: storeMigrations[1].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "true",
-      migration_id: updateMigrations[0].name,
-      is_first_startup: "false",
-    },
-  ]);
+  Assert.deepEqual(
+    Glean.nimbusEvents.migration.testGetValue().map(event => event.extra),
+    [
+      {
+        success: "true",
+        migration_id: startupMigrations[0].name,
+      },
+      {
+        success: "true",
+        migration_id: startupMigrations[1].name,
+      },
+      {
+        success: "true",
+        migration_id: storeMigrations[0].name,
+      },
+      {
+        success: "true",
+        migration_id: storeMigrations[1].name,
+      },
+      {
+        success: "true",
+        migration_id: updateMigrations[0].name,
+      },
+    ]
+  );
 
   await cleanup();
 });
@@ -304,23 +283,23 @@ add_task(async function test_migration_partially_done() {
     `${updateMigrations[1].name} should be called once`
   );
 
-  Assert.deepEqual(getMigrationEvents(), [
-    {
-      success: "true",
-      migration_id: startupMigrations[1].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "true",
-      migration_id: storeMigrations[1].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "true",
-      migration_id: updateMigrations[1].name,
-      is_first_startup: "false",
-    },
-  ]);
+  Assert.deepEqual(
+    Glean.nimbusEvents.migration.testGetValue().map(event => event.extra),
+    [
+      {
+        success: "true",
+        migration_id: startupMigrations[1].name,
+      },
+      {
+        success: "true",
+        migration_id: storeMigrations[1].name,
+      },
+      {
+        success: "true",
+        migration_id: updateMigrations[1].name,
+      },
+    ]
+  );
 
   await cleanup();
 });
@@ -422,41 +401,38 @@ add_task(async function test_migration_throws() {
     "Migration pref should only be set to 0"
   );
 
-  Assert.deepEqual(getMigrationEvents(), [
-    {
-      success: "true",
-      migration_id: startupMigrations[0].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "false",
-      migration_id: startupMigrations[1].name,
-      error_reason: MigrationError.Reason.UNKNOWN,
-      is_first_startup: "false",
-    },
-    {
-      success: "true",
-      migration_id: storeMigrations[0].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "false",
-      migration_id: storeMigrations[1].name,
-      error_reason: MigrationError.Reason.UNKNOWN,
-      is_first_startup: "false",
-    },
-    {
-      success: "true",
-      migration_id: updateMigrations[0].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "false",
-      migration_id: updateMigrations[1].name,
-      error_reason: MigrationError.Reason.UNKNOWN,
-      is_first_startup: "false",
-    },
-  ]);
+  Assert.deepEqual(
+    Glean.nimbusEvents.migration.testGetValue().map(event => event.extra),
+    [
+      {
+        success: "true",
+        migration_id: startupMigrations[0].name,
+      },
+      {
+        success: "false",
+        migration_id: startupMigrations[1].name,
+        error_reason: MigrationError.Reason.UNKNOWN,
+      },
+      {
+        success: "true",
+        migration_id: storeMigrations[0].name,
+      },
+      {
+        success: "false",
+        migration_id: storeMigrations[1].name,
+        error_reason: MigrationError.Reason.UNKNOWN,
+      },
+      {
+        success: "true",
+        migration_id: updateMigrations[0].name,
+      },
+      {
+        success: "false",
+        migration_id: updateMigrations[1].name,
+        error_reason: MigrationError.Reason.UNKNOWN,
+      },
+    ]
+  );
 
   await cleanup();
 });
@@ -554,41 +530,38 @@ add_task(async function test_migration_throws_MigrationError() {
     "Migration pref should only be set to 0"
   );
 
-  Assert.deepEqual(getMigrationEvents(), [
-    {
-      success: "true",
-      migration_id: startupMigrations[0].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "false",
-      migration_id: startupMigrations[1].name,
-      error_reason: "bogus",
-      is_first_startup: "false",
-    },
-    {
-      success: "true",
-      migration_id: storeMigrations[0].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "false",
-      migration_id: storeMigrations[1].name,
-      error_reason: "bogus",
-      is_first_startup: "false",
-    },
-    {
-      success: "true",
-      migration_id: updateMigrations[0].name,
-      is_first_startup: "false",
-    },
-    {
-      success: "false",
-      migration_id: updateMigrations[1].name,
-      error_reason: "bogus",
-      is_first_startup: "false",
-    },
-  ]);
+  Assert.deepEqual(
+    Glean.nimbusEvents.migration.testGetValue().map(event => event.extra),
+    [
+      {
+        success: "true",
+        migration_id: startupMigrations[0].name,
+      },
+      {
+        success: "false",
+        migration_id: startupMigrations[1].name,
+        error_reason: "bogus",
+      },
+      {
+        success: "true",
+        migration_id: storeMigrations[0].name,
+      },
+      {
+        success: "false",
+        migration_id: storeMigrations[1].name,
+        error_reason: "bogus",
+      },
+      {
+        success: "true",
+        migration_id: updateMigrations[0].name,
+      },
+      {
+        success: "false",
+        migration_id: updateMigrations[1].name,
+        error_reason: "bogus",
+      },
+    ]
+  );
 
   await cleanup();
 });
@@ -759,8 +732,8 @@ add_task(async function test_migration_firefoxLabsEnrollments() {
 
     Assert.deepEqual(
       await manager
-        .getAvailableOptIns()
-        .then(optIns => optIns.map(({ recipe }) => recipe.slug).toSorted()),
+        .getAllOptInRecipes()
+        .then(recipes => recipes.map(recipe => recipe.slug).toSorted()),
       Object.values(LABS_MIGRATION_FEATURE_MAP).toSorted(),
       "The labs recipes should be available"
     );
@@ -800,13 +773,15 @@ add_task(async function test_migration_firefoxLabsEnrollments() {
       }
     }
 
-    Assert.deepEqual(getMigrationEvents(), [
-      {
-        success: "true",
-        migration_id: "firefox-labs-enrollments",
-        is_first_startup: "false",
-      },
-    ]);
+    Assert.deepEqual(
+      Glean.nimbusEvents.migration.testGetValue().map(event => event.extra),
+      [
+        {
+          success: "true",
+          migration_id: "firefox-labs-enrollments",
+        },
+      ]
+    );
 
     await cleanup();
   }
@@ -843,7 +818,7 @@ add_task(async function test_migration_firefoxLabsEnrollments_falseTargeting() {
   });
 
   Assert.deepEqual(
-    await manager.getAvailableOptIns(),
+    await manager.getAllOptInRecipes(),
     [],
     "There should be no opt-in recipes"
   );
@@ -865,13 +840,15 @@ add_task(async function test_migration_firefoxLabsEnrollments_falseTargeting() {
     );
   }
 
-  Assert.deepEqual(getMigrationEvents(), [
-    {
-      success: "true",
-      migration_id: "firefox-labs-enrollments",
-      is_first_startup: "false",
-    },
-  ]);
+  Assert.deepEqual(
+    Glean.nimbusEvents.migration.testGetValue().map(event => event.extra),
+    [
+      {
+        success: "true",
+        migration_id: "firefox-labs-enrollments",
+      },
+    ]
+  );
 
   await cleanup();
 });
@@ -927,13 +904,15 @@ add_task(async function test_migration_firefoxLabsEnrollments_idempotent() {
     0,
     "Migration pref updated"
   );
-  Assert.deepEqual(getMigrationEvents(), [
-    {
-      migration_id: "firefox-labs-enrollments",
-      success: "true",
-      is_first_startup: "false",
-    },
-  ]);
+  Assert.deepEqual(
+    Glean.nimbusEvents.migration.testGetValue().map(ev => ev.extra),
+    [
+      {
+        migration_id: "firefox-labs-enrollments",
+        success: "true",
+      },
+    ]
+  );
 
   for (const { slug } of recipes) {
     manager.unenroll(slug);
@@ -950,7 +929,7 @@ const IMPORT_TO_SQL_MIGRATION = NimbusMigrations.MIGRATIONS[
   NimbusMigrations.Phase.AFTER_STORE_INITIALIZED
 ].find(m => m.name === "import-enrollments-to-sql");
 
-add_task(async function testMigrateEnrollmentsToSql() {
+async function testMigrateEnrollmentsToSql(primary = "jsonfile") {
   const PREFFLIPS_EXPERIMENT_VALUE = {
     prefs: {
       "foo.bar.baz": {
@@ -1592,7 +1571,7 @@ add_task(async function testMigrateEnrollmentsToSql() {
         db_active_count: "7",
         store_active_count: "7",
         trigger: "migration",
-        primary: "database",
+        primary,
       },
     ]
   );
@@ -1628,6 +1607,15 @@ add_task(async function testMigrateEnrollmentsToSql() {
     "nimbus.qa.pref-2 restored"
   );
   Services.prefs.deleteBranch("foo.bar.baz");
+}
+
+add_task(testMigrateEnrollmentsToSql);
+add_task(async function testMigrateEnrollmentsToSqlDb() {
+  const resetNimbusEnrollmentPrefs = NimbusTestUtils.enableNimbusEnrollments({
+    read: true,
+  });
+  await testMigrateEnrollmentsToSql("database");
+  resetNimbusEnrollmentPrefs();
 });
 
 add_task(async function testGraduateFirefoxLabsAutoPip() {
@@ -1641,36 +1629,27 @@ add_task(async function testGraduateFirefoxLabsAutoPip() {
     },
     {
       isFirefoxLabsOptIn: true,
-      isRollout: true,
+      firefoxLabsTitle: "experimental-features-auto-pip",
+      firefoxLabsDescription: "experimental-features-auto-pip-description",
+      firefoxLabsDescriptionLink: null,
+      firefoxLabsGroup: "experimental-features-group-productivity",
+      requiresRestart: false,
     }
   );
 
   const ENABLED_PREF = getEnabledPrefForFeature("auto-pip");
 
+  Services.fog.applyServerKnobsConfig(
+    JSON.stringify({
+      metrics_enabled: {
+        "nimbus_events.enrollment_status": true,
+      },
+    })
+  );
+
   Services.prefs.setBoolPref(ENABLED_PREF, true);
 
-  const { cleanup, manager } = await NimbusTestUtils.setupTest({
-    clearTelemetry: true,
-    init: false,
-    storePath: await NimbusTestUtils.createStoreWith(store => {
-      NimbusTestUtils.addEnrollmentForRecipe(recipe, {
-        store,
-        extra: {
-          prefs: [
-            {
-              name: ENABLED_PREF,
-              featureId: "auto-pip",
-              variable: "enabled",
-              branch: "user",
-              originalValue: false,
-            },
-          ],
-        },
-      });
-    }),
-    migrationState: NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
-  });
-
+  let cleanup, manager;
   await GleanPings.nimbusTargetingContext.testSubmission(
     () => {
       Assert.deepEqual(
@@ -1679,7 +1658,7 @@ add_task(async function testGraduateFirefoxLabsAutoPip() {
           .map(event => event.extra),
         [
           {
-            slug: SLUG,
+            slug: "firefox-labs-auto-pip",
             branch: "control",
             status: "WasEnrolled",
             reason: "Migration",
@@ -1688,7 +1667,27 @@ add_task(async function testGraduateFirefoxLabsAutoPip() {
         ]
       );
     },
-    () => ExperimentAPI.init()
+    async () =>
+      ({ cleanup, manager } = await NimbusTestUtils.setupTest({
+        storePath: await NimbusTestUtils.createStoreWith(store => {
+          NimbusTestUtils.addEnrollmentForRecipe(recipe, {
+            store,
+            extra: {
+              prefs: [
+                {
+                  name: ENABLED_PREF,
+                  featureId: "auto-pip",
+                  variable: "enabled",
+                  branch: "user",
+                  originalValue: false,
+                },
+              ],
+            },
+          });
+        }),
+        migrationState:
+          NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+      }))
   );
 
   const enrollment = manager.store.get(SLUG);
@@ -1703,23 +1702,15 @@ add_task(async function testGraduateFirefoxLabsAutoPip() {
     "Pref is still set"
   );
 
-  Assert.deepEqual(getMigrationEvents(), [
-    {
-      migration_id: "separate-rollout-opt-out",
-      success: "true",
-      is_first_startup: "false",
-    },
-    {
-      migration_id: "graduate-firefox-labs-auto-pip",
-      success: "true",
-      is_first_startup: "false",
-    },
-    {
-      migration_id: "graduate-firefox-labs-jpeg-xl",
-      success: "true",
-      is_first_startup: "false",
-    },
-  ]);
+  Assert.deepEqual(
+    Glean.nimbusEvents.migration.testGetValue().map(event => event.extra),
+    [
+      {
+        success: "true",
+        migration_id: "graduate-firefox-labs-auto-pip",
+      },
+    ]
+  );
 
   Assert.deepEqual(
     Glean.nimbusEvents.unenrollment
@@ -1727,7 +1718,7 @@ add_task(async function testGraduateFirefoxLabsAutoPip() {
       .map(event => event.extra),
     [
       {
-        experiment: SLUG,
+        experiment: "firefox-labs-auto-pip",
         branch: "control",
         reason: "migration",
         migration: "graduate-firefox-labs-auto-pip",
@@ -1737,223 +1728,6 @@ add_task(async function testGraduateFirefoxLabsAutoPip() {
 
   Services.prefs.setBoolPref(ENABLED_PREF, false);
   await cleanup();
-});
 
-add_task(async function testSeparateRolloutOptOut() {
-  const STUDIES_PREF = "app.shield.optoutstudies.enabled";
-  const TELEMETRY_PREF = "datareporting.healthreport.uploadEnabled";
-  const ROLLOUT_PREF = "nimbus.rollouts.enabled";
-
-  const rollout = NimbusTestUtils.factories.recipe.withFeatureConfig(
-    "test-rollout",
-    { featureId: "no-feature-firefox-desktop" },
-    { isRollout: true }
-  );
-
-  for (const studiesEnabled of [true, false]) {
-    for (const telemetryEnabled of [true, false]) {
-      info(
-        `testSeparateRolloutOptOut: studiesEnabled=${studiesEnabled} telemetryEnabled=${telemetryEnabled}\n`
-      );
-      Services.prefs.setBoolPref(STUDIES_PREF, studiesEnabled);
-      Services.prefs.setBoolPref(TELEMETRY_PREF, telemetryEnabled);
-
-      const { manager, cleanup } = await NimbusTestUtils.setupTest({
-        migrationState:
-          NimbusTestUtils.migrationState.GRADUATED_FIREFOX_LABS_AUTO_PIP,
-        experiments: [rollout],
-        clearTelemetry: true,
-      });
-
-      Assert.deepEqual(getMigrationEvents(), [
-        {
-          migration_id: "separate-rollout-opt-out",
-          success: "true",
-          is_first_startup: "false",
-        },
-        {
-          migration_id: "graduate-firefox-labs-jpeg-xl",
-          success: "true",
-          is_first_startup: "false",
-        },
-      ]);
-
-      Assert.equal(
-        Services.prefs.getBoolPref(ROLLOUT_PREF),
-        studiesEnabled,
-        "Rollout pref matches expected value"
-      );
-      Assert.equal(
-        ExperimentAPI.rolloutsEnabled,
-        studiesEnabled,
-        "Rollouts enable status correct"
-      );
-
-      const activeEnrollments = manager.store
-        .getAll()
-        .filter(e => e.active)
-        .map(e => e.slug);
-
-      if (studiesEnabled) {
-        Assert.deepEqual(
-          activeEnrollments,
-          ["test-rollout"],
-          "Should have enrolled in rollout"
-        );
-        manager.unenroll("test-rollout", "test-cleanup");
-      } else {
-        Assert.deepEqual(
-          activeEnrollments,
-          [],
-          "Should not have enrolled in rollout"
-        );
-      }
-
-      await cleanup();
-    }
-
-    Services.prefs.clearUserPref(STUDIES_PREF);
-    Services.prefs.clearUserPref(TELEMETRY_PREF);
-    Services.prefs.clearUserPref(ROLLOUT_PREF);
-  }
-});
-
-add_task(async function testGraduateFirefoxLabsJPEGXL() {
-  const SLUG = "firefox-labs-jpeg-xl";
-
-  const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
-    SLUG,
-    {
-      featureId: "jpeg-xl",
-      value: { enabled: true },
-    },
-    {
-      isFirefoxLabsOptIn: true,
-      isRollout: true,
-    }
-  );
-
-  const ENABLED_PREF = getEnabledPrefForFeature("jpeg-xl");
-
-  Services.prefs.setBoolPref(ENABLED_PREF, true);
-
-  const { cleanup, manager } = await NimbusTestUtils.setupTest({
-    clearTelemetry: true,
-    init: false,
-    storePath: await NimbusTestUtils.createStoreWith(store => {
-      NimbusTestUtils.addEnrollmentForRecipe(recipe, {
-        store,
-        extra: {
-          prefs: [
-            {
-              name: ENABLED_PREF,
-              featureId: "jpeg-xl",
-              variable: "enabled",
-              branch: "user",
-              originalValue: false,
-            },
-          ],
-        },
-      });
-    }),
-    migrationState: NimbusTestUtils.migrationState.SEPARATE_ROLLOUT_OPT_OUT,
-  });
-
-  await GleanPings.nimbusTargetingContext.testSubmission(
-    () => {
-      Assert.deepEqual(
-        Glean.nimbusEvents.enrollmentStatus
-          .testGetValue("nimbus-targeting-context")
-          .map(event => event.extra),
-        [
-          {
-            slug: SLUG,
-            branch: "control",
-            status: "WasEnrolled",
-            reason: "Migration",
-            migration: "graduate-firefox-labs-jpeg-xl",
-          },
-        ]
-      );
-    },
-    () => ExperimentAPI.init()
-  );
-
-  const enrollment = manager.store.get(SLUG);
-
-  Assert.ok(!enrollment.active, "Enrollment is not active");
-  Assert.deepEqual(enrollment.featureIds, ["jpeg-xl"]);
-  Assert.equal(enrollment.unenrollReason, "migration");
-
-  Assert.equal(
-    Services.prefs.getBoolPref(ENABLED_PREF),
-    true,
-    "Pref is still set"
-  );
-
-  Assert.deepEqual(getMigrationEvents(), [
-    {
-      migration_id: "graduate-firefox-labs-jpeg-xl",
-      success: "true",
-      is_first_startup: "false",
-    },
-  ]);
-  Assert.deepEqual(
-    Glean.nimbusEvents.unenrollment
-      .testGetValue("events")
-      .map(event => event.extra),
-    [
-      {
-        experiment: SLUG,
-        branch: "control",
-        reason: "migration",
-        migration: "graduate-firefox-labs-jpeg-xl",
-      },
-    ]
-  );
-
-  Services.prefs.setBoolPref(ENABLED_PREF, false);
-  await cleanup();
-});
-
-add_task(async function testFirstStartup() {
-  const { Phase } = NimbusMigrations;
-
-  FirstStartup._state = FirstStartup.IN_PROGRESS;
-
-  const { cleanup } = await setupTest({
-    migrations: {
-      [Phase.INIT_STARTED]: makeMigrations(Phase.INIT_STARTED, 1),
-      [Phase.AFTER_STORE_INITIALIZED]: makeMigrations(
-        Phase.AFTER_STORE_INITIALIZED,
-        1
-      ),
-      [Phase.AFTER_REMOTE_SETTINGS_UPDATE]: makeMigrations(
-        Phase.AFTER_REMOTE_SETTINGS_UPDATE,
-        1
-      ),
-    },
-  });
-
-  Assert.deepEqual(getMigrationEvents(), [
-    {
-      migration_id: "test-migration-init-started-0",
-      success: "true",
-      is_first_startup: "true",
-    },
-    {
-      migration_id: "test-migration-after-store-initialized-0",
-      success: "true",
-      is_first_startup: "true",
-    },
-    {
-      migration_id: "test-migration-after-remote-settings-update-0",
-      success: "true",
-      is_first_startup: "true",
-    },
-  ]);
-
-  await cleanup();
-
-  FirstStartup.resetForTesting();
+  Services.fog.testResetFOG();
 });

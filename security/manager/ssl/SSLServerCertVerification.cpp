@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -98,6 +99,7 @@
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
 #include "NSSSocketControl.h"
+#include "PSMRunnable.h"
 #include "RootCertificateTelemetryUtils.h"
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
@@ -499,7 +501,7 @@ void GatherCertificateTransparencyTelemetry(
   glean::ssl::scts_per_connection.AccumulateSingleSample(sctsCount);
 
   uint32_t sctsFromTiledLogs = 0;
-  for (const auto& verifiedSCT : info.verifyResult.verifiedScts) {
+  for (auto verifiedSCT : info.verifyResult.verifiedScts) {
     if (verifiedSCT.logFormat == ct::CTLogFormat::Tiled) {
       sctsFromTiledLogs++;
     }
@@ -899,8 +901,8 @@ SECStatus AuthCertificateHookInternal(
   }
 
   uint64_t addr = reinterpret_cast<uintptr_t>(aPtrForLogging);
-  RefPtr resultTask =
-      MakeRefPtr<SSLServerCertVerificationResult>(socketControl);
+  RefPtr<SSLServerCertVerificationResult> resultTask =
+      new SSLServerCertVerificationResult(socketControl);
 
   if (XRE_IsSocketProcess()) {
     return RemoteProcessCertVerification(
@@ -1077,9 +1079,7 @@ SSLServerCertVerificationResult::SSLServerCertVerificationResult(
       mFinalError(0),
       mOverridableErrorCategory(
           nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET),
-      mIsBuiltCertChainRootBuiltInRoot(false),
-      mProviderFlags(0),
-      mMadeOCSPRequests(false) {}
+      mProviderFlags(0) {}
 
 nsresult SSLServerCertVerificationResult::Dispatch(
     nsTArray<nsTArray<uint8_t>>&& aBuiltChain,

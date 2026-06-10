@@ -87,14 +87,6 @@ export default class TurnOnScheduledBackups extends MozLitElement {
       reflect: true,
       attribute: "turn-on-backup-cancel-btn-l10n-id",
     },
-    // Identifier of the message, surface, or code path that hosted this
-    // widget. Forwarded to BackupService.setScheduledBackups so that
-    // browser.backup.scheduler_toggle_source can attribute the enable.
-    source: {
-      type: String,
-      reflect: true,
-      attribute: "source",
-    },
 
     // internal state
     _newIconURL: { type: String, state: true },
@@ -134,19 +126,6 @@ export default class TurnOnScheduledBackups extends MozLitElement {
     this._passwordsMatch = false;
     this.enableBackupErrorCode = 0;
     this.disableSubmit = false;
-  }
-
-  /**
-   * Whether the default backup location should be shown, i.e. the user hasn't
-   * chosen a custom path and there's no persisted path from a previous screen.
-   *
-   * @returns {boolean}
-   */
-  get showDefaultFilePath() {
-    return (
-      !this._newPath &&
-      !this.backupServiceState?.embeddedComponentPersistentData?.path
-    );
   }
 
   connectedCallback() {
@@ -228,7 +207,6 @@ export default class TurnOnScheduledBackups extends MozLitElement {
   handleConfirm() {
     let detail = {
       parentDirPath: this._newPath || this.defaultPath,
-      source: this.source,
     };
 
     if (this._showPasswordOptions && this._passwordsMatch) {
@@ -374,27 +352,25 @@ export default class TurnOnScheduledBackups extends MozLitElement {
   }
 
   allOptionsTemplate() {
-    let locationInputId = this.showDefaultFilePath
-      ? "backup-location-filepicker-input-default"
-      : "backup-location-filepicker-input-custom";
     return html`
       <fieldset id="all-controls">
         <div id="backup-location-controls">
           <label
             id="backup-location-label"
-            for=${locationInputId}
+            for="backup-location-filepicker-input"
             data-l10n-id=${this.filePathLabelL10nId ||
             "turn-on-scheduled-backups-location-label"}
           ></label>
           <div id="backup-location-filepicker">
-            ${this.showDefaultFilePath
+            ${!this._newPath &&
+            !this.backupServiceState?.embeddedComponentPersistentData?.path
               ? this.defaultFilePathInputTemplate()
               : this.customFilePathInputTemplate()}
             <moz-button
               id="backup-location-filepicker-button"
               @click=${this.handleChooseLocation}
               data-l10n-id="turn-on-scheduled-backups-location-choose-button"
-              aria-controls=${locationInputId}
+              aria-controls="backup-location-filepicker-input"
             ></moz-button>
           </div>
         </div>

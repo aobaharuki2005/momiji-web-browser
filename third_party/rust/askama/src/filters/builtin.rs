@@ -5,7 +5,8 @@ use core::ops::Deref;
 use core::pin::Pin;
 
 use super::MAX_LEN;
-use crate::{Error, FastWritable, Result, Values};
+use super::escape::FastWritable;
+use crate::{Error, Result};
 
 /// Limit string length, appends '...' if truncated
 ///
@@ -49,13 +50,9 @@ impl<S: fmt::Display> fmt::Display for TruncateFilter<S> {
 
 impl<S: FastWritable> FastWritable for TruncateFilter<S> {
     #[inline]
-    fn write_into<W: fmt::Write + ?Sized>(
-        &self,
-        dest: &mut W,
-        values: &dyn Values,
-    ) -> crate::Result<()> {
+    fn write_into<W: fmt::Write + ?Sized>(&self, dest: &mut W) -> crate::Result<()> {
         self.source
-            .write_into(&mut TruncateWriter::new(dest, self.remaining), values)
+            .write_into(&mut TruncateWriter::new(dest, self.remaining))
     }
 }
 
@@ -443,14 +440,10 @@ impl<S: fmt::Display, P: fmt::Display> fmt::Display for Pluralize<S, P> {
 
 impl<S: FastWritable, P: FastWritable> FastWritable for Pluralize<S, P> {
     #[inline]
-    fn write_into<W: fmt::Write + ?Sized>(
-        &self,
-        dest: &mut W,
-        values: &dyn Values,
-    ) -> crate::Result<()> {
+    fn write_into<W: fmt::Write + ?Sized>(&self, dest: &mut W) -> crate::Result<()> {
         match self {
-            Pluralize::Singular(value) => value.write_into(dest, values),
-            Pluralize::Plural(value) => value.write_into(dest, values),
+            Pluralize::Singular(value) => value.write_into(dest),
+            Pluralize::Plural(value) => value.write_into(dest),
         }
     }
 }

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -19,8 +21,8 @@
 
 namespace js {
 namespace gc {
-JS_PUBLIC_API void TraceRealmRoot(JSTracer* trc, JS::Realm* realm,
-                                  const char* name);
+JS_PUBLIC_API void TraceRealm(JSTracer* trc, JS::Realm* realm,
+                              const char* name);
 }  // namespace gc
 }  // namespace js
 
@@ -32,7 +34,7 @@ template <>
 struct GCPolicy<Realm*> : public NonGCPointerPolicy<Realm*> {
   static void trace(JSTracer* trc, Realm** vp, const char* name) {
     if (*vp) {
-      ::js::gc::TraceRealmRoot(trc, *vp, name);
+      ::js::gc::TraceRealm(trc, *vp, name);
     }
   }
 };

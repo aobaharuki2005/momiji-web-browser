@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsmacshellservice_h_
-#define nsmacshellservice_h_
+#ifndef nsmacshellservice_h____
+#define nsmacshellservice_h____
 
 #include "nsToolkitShellService.h"
 #include "nsIMacShellService.h"
@@ -29,4 +30,4 @@ class nsMacShellService : public nsIMacShellService,
   nsCOMPtr<nsIFile> mBackgroundFile;
 };
 
-#endif  // nsmacshellservice_h_
+#endif  // nsmacshellservice_h____

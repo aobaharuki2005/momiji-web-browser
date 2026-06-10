@@ -659,7 +659,9 @@ impl<'i: 't, 't> Parser<'i, 't> {
             .input
             .cached_token
             .as_ref()
-            .is_some_and(|cached_token| cached_token.start_position == token_start_position);
+            .map_or(false, |cached_token| {
+                cached_token.start_position == token_start_position
+            });
         let token = if using_cached_token {
             let cached_token = self.input.cached_token.as_ref().unwrap();
             self.input.tokenizer.reset(&cached_token.end_state);

@@ -30,7 +30,6 @@ FLAVORS = (
     "xpcshell",
     "webpagetest",
     "mochitest",
-    "eval-mochitest",
     "custom-script",
     "alert",
 )

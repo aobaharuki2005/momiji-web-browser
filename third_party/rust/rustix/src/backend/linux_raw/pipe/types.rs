@@ -1,5 +1,4 @@
 use crate::backend::c;
-use crate::ffi;
 use bitflags::bitflags;
 use core::marker::PhantomData;
 
@@ -9,7 +8,7 @@ bitflags! {
     /// [`pipe_with`]: crate::pipe::pipe_with
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct PipeFlags: ffi::c_uint {
+    pub struct PipeFlags: c::c_uint {
         /// `O_CLOEXEC`
         const CLOEXEC = linux_raw_sys::general::O_CLOEXEC;
         /// `O_DIRECT`
@@ -31,7 +30,7 @@ bitflags! {
     /// [`tee`]: crate::pipe::tee
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct SpliceFlags: ffi::c_uint {
+    pub struct SpliceFlags: c::c_uint {
         /// `SPLICE_F_MOVE`
         const MOVE = linux_raw_sys::general::SPLICE_F_MOVE;
         /// `SPLICE_F_NONBLOCK`
@@ -65,7 +64,7 @@ impl<'a> IoSliceRaw<'a> {
     pub fn from_slice(buf: &'a [u8]) -> Self {
         IoSliceRaw {
             _buf: c::iovec {
-                iov_base: (buf.as_ptr() as *mut u8).cast::<ffi::c_void>(),
+                iov_base: (buf.as_ptr() as *mut u8).cast::<c::c_void>(),
                 iov_len: buf.len() as _,
             },
             _lifetime: PhantomData,
@@ -76,7 +75,7 @@ impl<'a> IoSliceRaw<'a> {
     pub fn from_slice_mut(buf: &'a mut [u8]) -> Self {
         IoSliceRaw {
             _buf: c::iovec {
-                iov_base: buf.as_mut_ptr().cast::<ffi::c_void>(),
+                iov_base: buf.as_mut_ptr().cast::<c::c_void>(),
                 iov_len: buf.len() as _,
             },
             _lifetime: PhantomData,

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,7 +15,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/Context.h"
 #include "mozilla/dom/cache/DBAction.h"
@@ -656,8 +657,7 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
 
     // If we entered shutdown on the main thread while we were doing IO,
     // bail out now.
-    if (IsCanceled() ||
-        AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownQM)) {
+    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownQM)) {
       if (stream) {
         stream->Close();
       }
@@ -733,8 +733,7 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
 
       // If we entered shutdown on the main thread while we were doing IO,
       // bail out now.
-      if (IsCanceled() ||
-          AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownQM)) {
+      if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownQM)) {
         if (stream) {
           stream->Close();
         }
@@ -929,14 +928,6 @@ class Manager::CachePutAllAction final : public DBAction {
         if (e.mResponseStream) {
           // Gerenate padding size for opaque response if needed.
           if (e.mResponse.type() == ResponseType::Opaque) {
-            // Validate padding size from content process.
-            // Valid values: UNKNOWN_PADDING_SIZE (-1) or non-negative.
-            // Reject any other negative values as invalid.
-            QM_TRY(OkIf(e.mResponse.paddingSize() ==
-                            InternalResponse::UNKNOWN_PADDING_SIZE ||
-                        e.mResponse.paddingSize() >= 0),
-                   NS_ERROR_UNEXPECTED);
-
             // It'll generate padding if we've not set it yet.
             QM_TRY(MOZ_TO_RESULT(BodyMaybeUpdatePaddingSize(
                 *mDirectoryMetadata, *mDBDir, e.mResponseBodyId,
@@ -1297,8 +1288,7 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
 
       // If we entered shutdown on the main thread while we were doing IO,
       // bail out now.
-      if (IsCanceled() ||
-          AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownQM)) {
+      if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownQM)) {
         if (stream) {
           stream->Close();
         }
@@ -1377,8 +1367,7 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
 
     // If we entered shutdown on the main thread while we were doing IO,
     // bail out now.
-    if (IsCanceled() ||
-        AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownQM)) {
+    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownQM)) {
       if (stream) {
         stream->Close();
       }

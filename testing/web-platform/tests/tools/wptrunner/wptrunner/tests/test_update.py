@@ -1562,10 +1562,7 @@ def test_update_lsan_0():
              ("path/to/__dir__", [dir_id], None, b"")]
 
     log_0 = suite_log([("lsan_leak", {"scope": "path/to/",
-                                      "frames": ["foo", "bar"],
-                                      "kind": "Direct",
-                                      "bytes": 100,
-                                      "objects": 1})])
+                                      "frames": ["foo", "bar"]})])
 
 
     updated = update(tests, log_0)
@@ -1582,15 +1579,9 @@ def test_update_lsan_1():
 lsan-allowed: [foo]""")]
 
     log_0 = suite_log([("lsan_leak", {"scope": "path/to/",
-                                      "frames": ["foo", "bar"],
-                                      "kind": "Direct",
-                                      "bytes": 100,
-                                      "objects": 1}),
+                                      "frames": ["foo", "bar"]}),
                        ("lsan_leak", {"scope": "path/to/",
-                                      "frames": ["baz", "foobar"],
-                                      "kind": "Direct",
-                                      "bytes": 100,
-                                      "objects": 1})])
+                                      "frames": ["baz", "foobar"]})])
 
 
     updated = update(tests, log_0)
@@ -1609,15 +1600,9 @@ lsan-allowed: [foo]"""),
 
     log_0 = suite_log([("lsan_leak", {"scope": "path/to/",
                                       "frames": ["foo", "bar"],
-                                      "kind": "Direct",
-                                      "bytes": 100,
-                                      "objects": 1,
                                       "allowed_match": ["foo"]}),
                        ("lsan_leak", {"scope": "path/to/",
-                                      "frames": ["baz", "foobar"],
-                                      "kind": "Direct",
-                                      "bytes": 100,
-                                      "objects": 1})])
+                                      "frames": ["baz", "foobar"]})])
 
 
     updated = update(tests, log_0)
@@ -1633,17 +1618,11 @@ def test_update_lsan_3():
              ("path/to/__dir__", [dir_id], None, b"")]
 
     log_0 = suite_log([("lsan_leak", {"scope": "path/to/",
-                                      "frames": ["foo", "bar"],
-                                      "kind": "Direct",
-                                      "bytes": 100,
-                                      "objects": 1})],
+                                      "frames": ["foo", "bar"]})],
                       run_info={"os": "win"})
 
     log_1 = suite_log([("lsan_leak", {"scope": "path/to/",
-                                      "frames": ["baz", "foobar"],
-                                      "kind": "Direct",
-                                      "bytes": 100,
-                                      "objects": 1})],
+                                      "frames": ["baz", "foobar"]})],
                       run_info={"os": "linux"})
 
 
@@ -1763,10 +1742,7 @@ leak-total: 110""")]
 
     log_0 = suite_log([
         ("lsan_leak", {"scope": "path/to/",
-                       "frames": ["foo", "bar"],
-                       "kind": "Direct",
-                       "bytes": 100,
-                       "objects": 1}),
+                       "frames": ["foo", "bar"]}),
         ("mozleak_total", {"scope": "path/to/",
                            "process": "default",
                            "bytes": 100,

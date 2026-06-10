@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -116,11 +118,11 @@ nsresult nsWindowRoot::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return NS_OK;
 }
 
-nsGlobalWindowInner* nsWindowRoot::GetInnerWindow() {
-  return nsGlobalWindowInner::Cast(mWindow->GetCurrentInnerWindow());
+nsPIDOMWindowOuter* nsWindowRoot::GetOwnerGlobalForBindingsInternal() {
+  return mWindow;
 }
 
-nsIGlobalObject* nsWindowRoot::GetRelevantGlobal() const {
+nsIGlobalObject* nsWindowRoot::GetOwnerGlobal() const {
   nsCOMPtr<nsIGlobalObject> global =
       do_QueryInterface(mWindow->GetCurrentInnerWindow());
   // We're still holding a ref to it, so returning the raw pointer is ok...

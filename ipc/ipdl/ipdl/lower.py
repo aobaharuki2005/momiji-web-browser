@@ -4085,26 +4085,26 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 )
             )
 
-            if hasReply:
-                ondeadactor = [StmtReturn(_Result.Dropped)]
-            else:
-                ondeadactor = [
-                    self.logMessage(
-                        None, ExprAddrOf(msgvar), "Ignored message for dead actor"
-                    ),
-                    StmtReturn(_Result.Processed),
-                ]
-
-            method.addcode(
-                """
-                if (!CanSend()) {
-                    $*{ondeadactor}
-                }
-                """,
-                ondeadactor=ondeadactor,
-            )
+            if not switch:
+                method.addcode(
+                    """
+                    MOZ_ASSERT_UNREACHABLE("message protocol not supported");
+                    return MsgNotKnown;
+                    """
+                )
+                return method
 
             if dispatches:
+                if hasReply:
+                    ondeadactor = [StmtReturn(_Result.Dropped)]
+                else:
+                    ondeadactor = [
+                        self.logMessage(
+                            None, ExprAddrOf(msgvar), "Ignored message for dead actor"
+                        ),
+                        StmtReturn(_Result.Processed),
+                    ]
+
                 method.addcode(
                     """
                     IPC::Message::routeid_t route__ = ${msgvar}.routing_id();
@@ -4125,15 +4125,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     name=name,
                     args=[p.name for p in params],
                 )
-
-            if not switch:
-                method.addcode(
-                    """
-                    MOZ_ASSERT_UNREACHABLE("message protocol not supported");
-                    return MsgNotKnown;
-                    """
-                )
-                return method
 
             # bug 509581: don't generate the switch stmt if there
             # is only the default case; MSVC doesn't like that
@@ -4577,8 +4568,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         return method
 
-    def bindManagedActor(self, actordecl, errfn=ExprLiteral.NULL):
+    def bindManagedActor(self, actordecl, errfn=ExprLiteral.NULL, idexpr=None):
         actorproto = actordecl.ipdltype.protocol
+
+        if idexpr is None:
+            setManagerArgs = [ExprVar.THIS]
+        else:
+            setManagerArgs = [ExprVar.THIS, idexpr]
 
         return [
             StmtCode(
@@ -4588,7 +4584,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     return ${errfn};
                 }
 
-                if (!${actor}->SetManagerAndRegister(this)) {
+                if (!${actor}->SetManagerAndRegister($,{setManagerArgs})) {
                     NS_WARNING("Failed to bind ${actorname} actor");
                     return ${errfn};
                 }
@@ -4596,6 +4592,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 actor=actordecl.var(),
                 actorname=actorproto.name() + self.side.capitalize(),
                 errfn=errfn,
+                setManagerArgs=setManagerArgs,
                 container=self.protocol.managedVar(actorproto, self.side),
             )
         ]
@@ -4747,37 +4744,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             md, self.side, errfnRecv, errfnSent=errfnSentinel(_Result.ValuError)
         )
 
-        allocAndBind = StmtCode(
-            """
-            // Ensure the ID which was sent to us is valid, and reserve a spot
-            // in the table for the new actor before we bother to alloc it.
-            if (!ToplevelProtocol()->TryReserve(${idexpr})) {
-                NS_WARNING("Failed to reserve ActorId for constructor");
-                return MsgValueError;
-            }
-
-            ${allocActor}
-            if (!${actor}) {
-                NS_WARNING("Alloc function returned null");
-                // Clean up the reservation taken above if this fails, to avoid
-                // leaving zombie entries in the map.
-                ToplevelProtocol()->ClearReservation(${idexpr});
-                return MsgValueError;
-            }
-
-            // NOTE: SetManagerAndRegister unconditionally consumes the
-            // reservation taken by TryReserve, so we don't need to clear it on
-            // failure.
-            if (!${actor}->SetManagerAndRegister(this, ${idexpr})) {
-                NS_WARNING("Failed to set manager for constructor");
-                return MsgValueError;
-            }
-            """,
-            idexpr=self.actoridvar,
-            allocActor=self.callAllocActor(md, retsems="in", side=self.side),
-            actor=md.actorDecl().var()
-        )
-
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
@@ -4785,7 +4751,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtDecl(Decl(r.bareType(self.side), r.var().name), initargs=[])
                 for r in md.returns
             ]
-            + [allocAndBind]
+            # alloc the actor, register it under the foreign ID
+            + [self.callAllocActor(md, retsems="in", side=self.side)]
+            + self.bindManagedActor(
+                md.actorDecl(), errfn=_Result.ValuError, idexpr=self.actoridvar
+            )
+            + [Whitespace.NL]
             + saveIdStmts
             + self.invokeRecvHandler(md)
             + self.makeReply(md, errfnRecv, idvar)
@@ -4809,7 +4780,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtDecl(Decl(r.bareType(self.side), r.var().name), initargs=[])
                 for r in md.returns
             ]
-            + [StmtExpr(ExprCall(ExprVar("DoomSubtree")))]
             + self.invokeRecvHandler(md)
             + [Whitespace.NL]
             + saveIdStmts

@@ -12,9 +12,9 @@ const {
 } = require("resource://devtools/shared/commands/commands-factory.js");
 
 // Always log packets when running tests.
-Services.prefs.setIntPref("logging.devtools_rdp", 5);
+Services.prefs.setBoolPref("devtools.debugger.log", true);
 SimpleTest.registerCleanupFunction(function () {
-  Services.prefs.clearUserPref("logging.devtools_rdp");
+  Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
 if (!DevToolsServer.initialized) {

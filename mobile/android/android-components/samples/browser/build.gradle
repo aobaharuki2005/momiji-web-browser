@@ -2,10 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import static org.mozilla.conventions.BuildConfigKt.updateExtensionVersion
-
 plugins {
-    alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
@@ -64,17 +61,11 @@ android {
 }
 
 tasks.register("updateBorderifyExtensionVersion", Copy) { task ->
-    updateExtensionVersion(task, 'src/main/assets/extensions/borderify', rootProject.ext.config.componentsVersion)
+    updateExtensionVersion(task, 'src/main/assets/extensions/borderify')
 }
 
 tasks.register("updateTestExtensionVersion", Copy) { task ->
-    updateExtensionVersion(task, 'src/main/assets/extensions/test', rootProject.ext.config.componentsVersion)
-}
-
-// Make sure DAGP asset-source exploding happens after ExtensionVersion tasks
-tasks.matching { it.name.startsWith("explodeAssetSource") }.configureEach { t ->
-    t.dependsOn(tasks.named("updateBorderifyExtensionVersion"))
-    t.dependsOn(tasks.named("updateTestExtensionVersion"))
+    updateExtensionVersion(task, 'src/main/assets/extensions/test')
 }
 
 dependencies {
@@ -149,6 +140,7 @@ dependencies {
     implementation libs.androidx.compose.ui.tooling
     implementation libs.androidx.constraintlayout
     implementation libs.androidx.core.ktx
+    implementation libs.androidx.localbroadcastmanager
     implementation libs.androidx.swiperefreshlayout
     implementation libs.google.material
     implementation libs.mozilla.glean
@@ -171,14 +163,7 @@ dependencies {
     androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.androidx.test.uiautomator
     androidTestImplementation libs.leakcanary.instrumentation
-    androidTestImplementation libs.okhttp
-    androidTestRuntimeOnly libs.okio
-    constraints {
-        // Various AndroidX dependencies pull in 1.1.1 transitively; OkHttp 5 requires 1.2.0.
-        implementation(libs.androidx.startup.runtime)
-        // okhttp is test-only; prevents older releases being resolved on the main classpath.
-        implementation(libs.okio)
-    }
+    androidTestImplementation libs.mockwebserver
 }
 
 preBuild.dependsOn updateBorderifyExtensionVersion

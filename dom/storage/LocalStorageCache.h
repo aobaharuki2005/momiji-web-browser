@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -29,7 +31,7 @@ class LocalStorageCacheBridge {
 
   // The origin of the cache, result is concatenation of OriginNoSuffix() and
   // OriginSuffix(), see below.
-  virtual nsCString Origin() const = 0;
+  virtual const nsCString Origin() const = 0;
 
   // The origin attributes suffix alone, this is usually passed as an
   // |aOriginSuffix| argument to various methods
@@ -138,7 +140,7 @@ class LocalStorageCache : public LocalStorageCacheBridge {
 
   // LocalStorageCacheBridge
 
-  nsCString Origin() const override;
+  const nsCString Origin() const override;
   const nsCString& OriginNoSuffix() const override { return mOriginNoSuffix; }
   const nsCString& OriginSuffix() const override { return mOriginSuffix; }
   bool Loaded() override { return mLoaded; }

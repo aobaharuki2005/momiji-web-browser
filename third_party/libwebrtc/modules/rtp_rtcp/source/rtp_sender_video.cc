@@ -15,18 +15,17 @@
 #include <cstring>
 #include <memory>
 #include <optional>
-#include <span>
 #include <utility>
 #include <variant>
 #include <vector>
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
+#include "api/array_view.h"
 #include "api/crypto/frame_encryptor_interface.h"
 #include "api/field_trials_view.h"
 #include "api/make_ref_counted.h"
 #include "api/media_types.h"
-#include "api/task_queue/task_queue_factory.h"
 #include "api/transport/rtp/corruption_detection_message.h"
 #include "api/transport/rtp/dependency_descriptor.h"
 #include "api/units/data_rate.h"
@@ -69,8 +68,6 @@
 namespace webrtc {
 
 namespace {
-using PacketizationFormat = RtpPacketizer::PacketizationFormat;
-
 constexpr size_t kRedForFecHeaderLength = 1;
 constexpr TimeDelta kMaxUnretransmittableFrameInterval =
     TimeDelta::Millis(33 * 4);
@@ -158,28 +155,6 @@ bool PacketWillLikelyBeRequestedForRestransmissionIfLost(
                : false);
 }
 
-PacketizationFormat GetPacketizationFormat(const VideoCodecType codec_type,
-                                           bool raw_packetization) {
-  if (raw_packetization) {
-    return PacketizationFormat::kRaw;
-  }
-
-  switch (codec_type) {
-    case kVideoCodecH264:
-      return PacketizationFormat::kH264;
-    case kVideoCodecVP8:
-      return PacketizationFormat::kVP8;
-    case kVideoCodecVP9:
-      return PacketizationFormat::kVP9;
-    case kVideoCodecAV1:
-      return PacketizationFormat::kAV1;
-    case kVideoCodecH265:
-      return PacketizationFormat::kH265;
-    case kVideoCodecGeneric:
-      return PacketizationFormat::kGeneric;
-  }
-}
-
 }  // namespace
 
 RTPSenderVideo::RTPSenderVideo(const Config& config)
@@ -211,11 +186,7 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
                     config.frame_transformer,
                     rtp_sender_->SSRC(),
                     rtp_sender_->Rid(),
-                    config.task_queue_factory,
-                    config.field_trials->IsEnabled(
-                        "WebRTC-MediaTaskQueuePriorities")
-                        ? TaskQueueFactory::Priority::kVideo
-                        : TaskQueueFactory::Priority::kNormal)
+                    config.task_queue_factory)
               : nullptr) {
   if (frame_transformer_delegate_)
     frame_transformer_delegate_->Init();
@@ -519,15 +490,18 @@ void RTPSenderVideo::AddRtpHeaderExtensions(const RTPVideoHeader& video_header,
 }
 
 bool RTPSenderVideo::SendVideo(int payload_type,
-                               VideoCodecType codec_type,
+                               std::optional<VideoCodecType> codec_type,
                                uint32_t rtp_timestamp,
                                Timestamp capture_time,
-                               std::span<const uint8_t> payload,
+                               ArrayView<const uint8_t> payload,
                                size_t encoder_output_size,
                                RTPVideoHeader video_header,
                                TimeDelta expected_retransmission_time,
                                std::vector<uint32_t> csrcs) {
   RTC_CHECK_RUNS_SERIALIZED(&send_checker_);
+
+  // TODO(b/446768451): Add a check that Codec type can only be absent when
+  // using raw packetization once downstream projects have been updated.
 
   if (video_header.frame_type == VideoFrameType::kEmptyFrame)
     return true;
@@ -704,9 +678,9 @@ bool RTPSenderVideo::SendVideo(int payload_type,
            "one is required since require_frame_encryptor is set";
   }
 
-  std::unique_ptr<RtpPacketizer> packetizer = RtpPacketizer::Create(
-      GetPacketizationFormat(codec_type, raw_packetization_), payload, limits,
-      video_header);
+  std::unique_ptr<RtpPacketizer> packetizer =
+      RtpPacketizer::Create(raw_packetization_ ? std::nullopt : codec_type,
+                            payload, limits, video_header);
 
   const size_t num_packets = packetizer->NumPackets();
 
@@ -810,7 +784,7 @@ bool RTPSenderVideo::SendVideo(int payload_type,
 }
 
 bool RTPSenderVideo::SendEncodedImage(int payload_type,
-                                      VideoCodecType codec_type,
+                                      std::optional<VideoCodecType> codec_type,
                                       uint32_t rtp_timestamp,
                                       const EncodedImage& encoded_image,
                                       RTPVideoHeader video_header,

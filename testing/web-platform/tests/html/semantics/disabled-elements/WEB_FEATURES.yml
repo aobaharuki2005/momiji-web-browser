@@ -2,6 +2,3 @@ features:
 - name: fieldset
   files:
   - fieldset-event-propagation.tentative.html
-- name: keyboard-events
-  files:
-  - event-propagate-disabled-keyboard.tentative.html

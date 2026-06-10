@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -301,19 +303,19 @@ bool addContinuation(nsTArray<Continuation>& aArray, uint32_t aIndex,
                      const char* aValue, uint32_t aLength,
                      bool aNeedsPercentDecoding, bool aWasQuotedString) {
   if (aIndex < aArray.Length() && aArray[aIndex].value) {
-    NS_WARNING("duplicate RC2231 continuation segment #");
+    NS_WARNING("duplicate RC2231 continuation segment #\n");
     return false;
   }
 
   if (aIndex > MAX_CONTINUATIONS) {
-    NS_WARNING("RC2231 continuation segment # exceeds limit");
+    NS_WARNING("RC2231 continuation segment # exceeds limit\n");
     return false;
   }
 
   if (aNeedsPercentDecoding && aWasQuotedString) {
     NS_WARNING(
         "RC2231 continuation segment can't use percent encoding and quoted "
-        "string form at the same time");
+        "string form at the same time\n");
     return false;
   }
 
@@ -330,12 +332,12 @@ bool addContinuation(nsTArray<Continuation>& aArray, uint32_t aIndex,
 // parse a segment number; return -1 on error
 int32_t parseSegmentNumber(const char* aValue, int32_t aLen) {
   if (aLen < 1) {
-    NS_WARNING("segment number missing");
+    NS_WARNING("segment number missing\n");
     return -1;
   }
 
   if (aLen > 1 && aValue[0] == '0') {
-    NS_WARNING("leading '0' not allowed in segment number");
+    NS_WARNING("leading '0' not allowed in segment number\n");
     return -1;
   }
 
@@ -343,14 +345,14 @@ int32_t parseSegmentNumber(const char* aValue, int32_t aLen) {
 
   for (int32_t i = 0; i < aLen; i++) {
     if (!(aValue[i] >= '0' && aValue[i] <= '9')) {
-      NS_WARNING("invalid characters in segment number");
+      NS_WARNING("invalid characters in segment number\n");
       return -1;
     }
 
     segmentNumber *= 10;
     segmentNumber += aValue[i] - '0';
     if (segmentNumber > MAX_CONTINUATIONS) {
-      NS_WARNING("Segment number exceeds sane size");
+      NS_WARNING("Segment number exceeds sane size\n");
       return -1;
     }
   }
@@ -373,7 +375,7 @@ bool IsValidOctetSequenceForCharset(const nsACString& aCharset,
     // is broken (illegal or incomplete octet sequence contained)
     NS_WARNING(
         "RFC2231/5987 parameter value does not decode according to specified "
-        "charset");
+        "charset\n");
     return false;
   }
 
@@ -611,7 +613,7 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
         // absence of charset and lang.
         if (!sQuote1 || !sQuote2) {
           NS_WARNING(
-              "Mandatory two single quotes are missing in header parameter");
+              "Mandatory two single quotes are missing in header parameter\n");
         }
 
         const char* charsetStart = nullptr;
@@ -755,10 +757,14 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
   if (*aResult) {
     // then return charset and lang as well
     if (aLang && !lang.IsEmpty()) {
-      *aLang = ToNewCString(lang);
+      uint32_t len = lang.Length();
+      *aLang = (char*)moz_xmemdup(lang.BeginReading(), len + 1);
+      *(*aLang + len) = 0;
     }
     if (aCharset && !charset.IsEmpty()) {
-      *aCharset = ToNewCString(charset);
+      uint32_t len = charset.Length();
+      *aCharset = (char*)moz_xmemdup(charset.BeginReading(), len + 1);
+      *(*aCharset + len) = 0;
     }
   }
 

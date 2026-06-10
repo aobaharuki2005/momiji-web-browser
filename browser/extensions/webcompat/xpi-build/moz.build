@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -18,13 +20,9 @@ FINAL_TARGET_FILES += [
     "../manifest.json",
 ]
 
-include("../preprocessed_intervention_files.mozbuild")
-
-GenerateWebCompatAddonFiles(preprocessed_intervention_files, "../")
-
-FINAL_TARGET_FILES += ["!run.js"]
-for file in preprocessed_intervention_files:
-    FINAL_TARGET_FILES.injections.generated += ["!injections/generated/%s" % file]
+FINAL_TARGET_PP_FILES += [
+    "../run.js",
+]
 
 FINAL_TARGET_FILES["about-compat"] += [
     "../about-compat/**",

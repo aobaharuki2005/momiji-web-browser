@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty('Intl'))
+
 if (typeof getDefaultLocale === "undefined") {
     var getDefaultLocale = SpecialPowers.Cu.getJSTestingFunctions().getDefaultLocale;
 }

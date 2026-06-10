@@ -10,9 +10,7 @@
 
 #include "logging/rtc_event_log/events/rtc_event_rtp_packet_outgoing.h"
 
-#include <cstdint>
 #include <memory>
-#include <optional>
 
 #include "absl/memory/memory.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
@@ -21,11 +19,8 @@ namespace webrtc {
 
 RtcEventRtpPacketOutgoing::RtcEventRtpPacketOutgoing(
     const RtpPacketToSend& packet,
-    int probe_cluster_id,
-    std::optional<uint16_t> rtx_original_sequence_number)
-    : packet_(packet),
-      probe_cluster_id_(probe_cluster_id),
-      rtx_original_sequence_number_(rtx_original_sequence_number) {}
+    int probe_cluster_id)
+    : packet_(packet), probe_cluster_id_(probe_cluster_id) {}
 
 RtcEventRtpPacketOutgoing::~RtcEventRtpPacketOutgoing() = default;
 

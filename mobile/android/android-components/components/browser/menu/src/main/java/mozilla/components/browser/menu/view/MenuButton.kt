@@ -262,9 +262,9 @@ class MenuButton @JvmOverloads constructor(
      * Check the current [BrowserMenuBuilder], if exists, for highlight effect
      * and apply it.
      */
-    fun setHighlightStatus(mainDispatcher: CoroutineDispatcher = Dispatchers.Main) {
+    fun setHighlightStatus() {
         if (menuBuilder != null) {
-            observeAndDebounceSetHighlightStatusRequests(mainDispatcher)
+            observeAndDebounceSetHighlightStatusRequests()
             highlightStatusTrigger.tryEmit(Unit)
         }
     }
@@ -279,7 +279,7 @@ class MenuButton @JvmOverloads constructor(
      * See [https://bugzilla.mozilla.org/show_bug.cgi?id=1947534](https://bugzilla.mozilla.org/show_bug.cgi?id=1947534)
      * for more.
      */
-    private fun observeAndDebounceSetHighlightStatusRequests(mainDispatcher: CoroutineDispatcher) {
+    private fun observeAndDebounceSetHighlightStatusRequests() {
         if (isObservingHighlightStatusTrigger) return
         isObservingHighlightStatusTrigger = true
 
@@ -290,7 +290,7 @@ class MenuButton @JvmOverloads constructor(
                 .map { menuBuilder?.items?.getHighlight() }
                 .flowOn(backgroundTaskDispatcher)
                 .collectLatest { highlights ->
-                    withContext(mainDispatcher) {
+                    withContext(Dispatchers.Main) {
                         setHighlight(highlights)
                     }
                 }

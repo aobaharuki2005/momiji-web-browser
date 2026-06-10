@@ -3,8 +3,6 @@
 
 "use strict";
 
-requestLongerTimeout(1);
-
 const { PlacesTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PlacesTestUtils.sys.mjs"
 );
@@ -29,7 +27,6 @@ add_setup(async () => {
 
 registerCleanupFunction(async () => {
   await PlacesUtils.history.clear();
-  Services.prefs.clearUserPref("sidebar.history.sortOption");
 });
 
 // TO DO - move below helper into universal helper with Places Bug 1954843
@@ -241,7 +238,12 @@ add_task(async function test_history_search() {
   }, "There are no matching search results.");
 
   info("Clear the search query.");
-  let clearButton = SpecialPowers.getInputButton(searchTextbox.inputEl);
+  let inputChildren = SpecialPowers.InspectorUtils.getChildrenForNode(
+    searchTextbox.inputEl,
+    true,
+    false
+  );
+  let clearButton = inputChildren.find(e => e.localName == "button");
   EventUtils.synthesizeMouseAtCenter(clearButton, {}, contentWindow);
   await TestUtils.waitForCondition(
     () => !component.lists[0].emptyState,
@@ -271,7 +273,11 @@ add_task(async function test_history_sort() {
   );
   ok(true, "There is a card for each site.");
 
-  ok(sortBySiteButton.hasAttribute("checked"), "Sort by site is checked.");
+  Assert.equal(
+    sortBySiteButton.getAttribute("checked"),
+    "true",
+    "Sort by site is checked."
+  );
   for (const card of component.cards) {
     Assert.equal(card.expanded, true, "All cards are expanded.");
   }
@@ -287,7 +293,11 @@ add_task(async function test_history_sort() {
     () => component.lists.length === dates.length
   );
   ok(true, "There is a card for each date.");
-  ok(sortByDateButton.hasAttribute("checked"), "Sort by date is checked.");
+  Assert.equal(
+    sortByDateButton.getAttribute("checked"),
+    "true",
+    "Sort by date is checked."
+  );
   for (const [i, card] of component.cards.entries()) {
     Assert.equal(
       card.expanded,
@@ -310,8 +320,9 @@ add_task(async function test_history_sort() {
     true,
     "There is a card for each date, and a nested card for each site."
   );
-  ok(
-    sortByDateSiteButton.hasAttribute("checked"),
+  Assert.equal(
+    sortByDateSiteButton.getAttribute("checked"),
+    "true",
     "Sort by date and site is checked."
   );
   const outerCards = [...component.cards].filter(
@@ -340,148 +351,11 @@ add_task(async function test_history_sort() {
     URLs.length,
     "There is a single card with a row for each site."
   );
-  ok(
-    sortByLastVisitedButton.hasAttribute("checked"),
+  Assert.equal(
+    sortByLastVisitedButton.getAttribute("checked"),
+    "true",
     "Sort by last visited is checked."
   );
-
-  SidebarController.hide();
-  Services.prefs.clearUserPref("sidebar.history.sortOption");
-});
-
-add_task(async function test_history_sort_persists() {
-  let { component, contentWindow } = await showHistorySidebar();
-  let {
-    _menu: sortMenu,
-    menuButton: sortMenuButton,
-    _menuSortByDateSite: sortByDateSiteOption,
-  } = component;
-
-  info("Sort history by date and site.");
-  const promiseMenuShown = BrowserTestUtils.waitForEvent(
-    sortMenu,
-    "popupshown"
-  );
-  EventUtils.synthesizeMouseAtCenter(sortMenuButton, {}, contentWindow);
-  await promiseMenuShown;
-  sortMenu.activateItem(sortByDateSiteOption);
-  await TestUtils.waitForTick();
-
-  info("Close the sidebar.");
-  SidebarController.hide();
-
-  info("Reopen the sidebar and verify that sort order has not changed.");
-  component = (await showHistorySidebar()).component;
-  sortByDateSiteOption = component._menuSortByDateSite;
-  await BrowserTestUtils.waitForMutationCondition(
-    sortByDateSiteOption,
-    { attributes: true, attributeFilter: ["checked"] },
-    () => sortByDateSiteOption.hasAttribute("checked")
-  );
-
-  SidebarController.hide();
-  Services.prefs.clearUserPref("sidebar.history.sortOption");
-});
-
-add_task(async function test_history_auxclick() {
-  const { component, contentWindow } = await showHistorySidebar();
-  const { lists } = component;
-  await BrowserTestUtils.waitForMutationCondition(
-    component.shadowRoot,
-    { childList: true, subtree: true },
-    () => !!lists.length
-  );
-  await BrowserTestUtils.waitForMutationCondition(
-    lists[0].shadowRoot,
-    { subtree: true, childList: true },
-    () => lists[0].rowEls.length === URLs.length
-  );
-  ok(true, "History rows are shown.");
-  const rows = lists[0].rowEls;
-
-  info("Open the first link with auxclick.");
-
-  {
-    const tabPromise = BrowserTestUtils.waitForNewTab(
-      gBrowser,
-      "http://mochi.test:8888/browser/",
-      true
-    );
-
-    // See the comment in test_history_hover_buttons.
-    AccessibilityUtils.setEnv({ focusableRule: false });
-    EventUtils.synthesizeMouseAtCenter(
-      rows[0].mainEl,
-      {
-        button: 1,
-        shiftKey: false,
-      },
-      contentWindow
-    );
-    AccessibilityUtils.resetEnv();
-
-    const tab = await tabPromise;
-
-    is(gBrowser.selectedTab, tab, "The opened tab should be selected");
-
-    BrowserTestUtils.removeTab(tab);
-  }
-
-  {
-    const selectedTabAtStart = gBrowser.selectedTab;
-
-    const tabPromise = BrowserTestUtils.waitForNewTab(
-      gBrowser,
-      "http://mochi.test:8888/browser/",
-      true
-    );
-
-    AccessibilityUtils.setEnv({ focusableRule: false });
-    EventUtils.synthesizeMouseAtCenter(
-      rows[0].mainEl,
-      {
-        button: 1,
-        shiftKey: true,
-      },
-      contentWindow
-    );
-    AccessibilityUtils.resetEnv();
-
-    const tab = await tabPromise;
-
-    is(
-      gBrowser.selectedTab,
-      selectedTabAtStart,
-      "The opened tab should not be selected"
-    );
-
-    Assert.notEqual(
-      gBrowser.selectedTab,
-      tab,
-      "The opened tab should not be selected"
-    );
-
-    BrowserTestUtils.removeTab(tab);
-  }
-
-  {
-    const selectedTabAtStart = gBrowser.selectedTab;
-    const tabsLengthAtStart = gBrowser.tabs.length;
-
-    AccessibilityUtils.setEnv({ focusableRule: false });
-    EventUtils.synthesizeMouseAtCenter(
-      rows[0].mainEl,
-      {
-        button: 2,
-      },
-      contentWindow
-    );
-    AccessibilityUtils.resetEnv();
-
-    is(gBrowser.selectedTab, selectedTabAtStart, "No tab is opened");
-
-    is(gBrowser.tabs.length, tabsLengthAtStart, "No tab is opened");
-  }
 
   SidebarController.hide();
 });
@@ -559,7 +433,7 @@ add_task(async function test_history_context_menu() {
   );
   await promiseRemoved;
   await TestUtils.waitForCondition(
-    () => rows[0].mainEl.href !== site,
+    () => () => rows[0].mainEl.href !== site,
     "The removed entry should no longer be visible."
   );
 
@@ -596,21 +470,20 @@ add_task(async function test_history_context_menu() {
   );
 
   info("Open link in new tab.");
-  const newTabPromise = BrowserTestUtils.waitForNewTab(
-    window.gBrowser,
-    url,
-    true
+  const promiseTabOpen = BrowserTestUtils.waitForEvent(
+    window.gBrowser.tabContainer,
+    "TabOpen"
   );
   await openAndWaitForContextMenu(contextMenu, rows[0].mainEl, () =>
     contextMenu.activateItem(getItem("open-in-tab"))
   );
-  const newTab = await newTabPromise;
-  is(
-    window.gBrowser.tabs[window.gBrowser.tabs.length - 1],
-    newTab,
-    "New tab opened in background"
+  await promiseTabOpen;
+  await BrowserTestUtils.browserLoaded(
+    window.gBrowser,
+    false,
+    rows[0].mainEl.href
   );
-  BrowserTestUtils.removeTab(newTab);
+  is(window.gBrowser.currentURI.spec, rows[0].mainEl.href, "New tab opened");
 
   info("Clear all data from website");
   let dialogOpened = BrowserTestUtils.promiseAlertDialogOpen(
@@ -666,7 +539,7 @@ add_task(async function test_history_context_menu() {
   EventUtils.synthesizeMouseAtCenter(
     rows[0].mainEl,
     eventDetails,
-    // eslint-disable-next-line mozilla/use-documentGlobal
+    // eslint-disable-next-line mozilla/use-ownerGlobal
     rows[0].mainEl.ownerDocument.defaultView
   );
   await shown;
@@ -701,7 +574,7 @@ add_task(async function test_history_context_menu() {
       EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
     }
   );
-  await SidebarTestUtils.showPanel(window, "viewBookmarksSidebar");
+  await toggleSidebarPanel(window, "viewBookmarksSidebar");
   let tree =
     SidebarController.browser.contentDocument.getElementById("bookmarks-view");
   let toolbarKey = tree._view._nodeDetails
@@ -756,25 +629,12 @@ add_task(async function test_select_and_remove() {
   }
 
   info("Press Enter key.");
-  const anchorUrl = rows[1].url;
-  const loaded = BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    false,
-    anchorUrl
-  );
   EventUtils.synthesizeKey("KEY_Enter", {}, contentWindow);
-  await loaded;
   Assert.equal(
-    gBrowser.selectedBrowser.currentURI.spec,
-    anchorUrl,
-    "Enter key opens the anchor row URL during multi-selection."
+    gBrowser.tabs.length,
+    1,
+    "Enter key does not open pages during multi-selection."
   );
-
-  info("Re-select all pages.");
-  component.lists[0].selectAll();
-  for (let i = 0; i < rows.length; i++) {
-    await promiseRowSelected(i);
-  }
 
   info("Delete from history.");
   const contextMenu = SidebarController.currentContextMenu;
@@ -791,7 +651,6 @@ add_task(async function test_select_and_remove() {
     "The selected pages were removed."
   );
 
-  cleanUpExtraTabs();
   SidebarController.hide();
 });
 

@@ -12,6 +12,7 @@ import androidx.navigation.fragment.NavHostFragment
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.customtabs.ExternalAppBrowserFragment
 import org.mozilla.fenix.home.HomeFragment
+import org.mozilla.fenix.search.SearchDialogFragment
 
 /**
  * Uses the [ThemeManager] to set the status bar color based on the current fragment.
@@ -39,5 +40,5 @@ class StatusBarColorManager(
     }
 
     private fun isTabStripRelatedFragment(fragment: Fragment) =
-        fragment is HomeFragment || fragment is BrowserFragment
+        fragment is HomeFragment || fragment is BrowserFragment || fragment is SearchDialogFragment
 }

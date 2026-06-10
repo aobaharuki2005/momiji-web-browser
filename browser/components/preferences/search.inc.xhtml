@@ -7,25 +7,29 @@
     <hbox id="searchCategory"
           class="subcategory"
           hidden="true"
-          data-category="paneSearch"
-          data-srd-groupid="defaultEngine">
-      <html:h1 data-l10n-id="pane-search-title2"/>
+          data-category="paneSearch">
+      <html:h1 data-l10n-id="pane-search-title"/>
     </hbox>
 
     <!-- Default Search Engine -->
-    <html:setting-group groupid="defaultEngine" data-srd-migrated="" data-category="paneSearch" hidden="true"/>
+    <groupbox id="defaultEngineGroup" data-category="paneSearch" hidden="true">
+      <html:setting-group groupid="defaultEngine" />
+     </groupbox>
 
 
     <!-- Search Suggestions -->
-    <html:setting-group groupid="searchSuggestions" data-srd-migrated="" data-category="paneSearch" hidden="true" />
+    <groupbox id="searchSuggestionsGroup" data-category="paneSearch" hidden="true">
+      <html:setting-group groupid="searchSuggestions" />
+    </groupbox>
 
     <!-- Firefox Suggest / Address Bar -->
-    <html:setting-group groupid="firefoxSuggest" data-category="paneSearch" hidden="true" data-subcategory="locationBar" data-srd-migrated=""/>
+    <html:setting-group groupid="firefoxSuggest" data-category="paneSearch" hidden="true" data-subcategory="locationBar" />
 
     <!-- Search Shortcuts -->
-    <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch" hidden="true" data-srd-groupid="searchShortcuts">
+    <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch" hidden="true">
       <label><html:h2 data-l10n-id="search-one-click-header2" /></label>
       <description class="description-deemphasized" data-l10n-id="search-one-click-desc" />
+
       <tree id="engineList" flex="1" rows="11" hidecolumnpicker="true" editable="true"
             seltype="single" allowunderflowscroll="true">
         <treechildren id="engineChildren" flex="1"/>

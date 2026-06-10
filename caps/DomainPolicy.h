@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DomainPolicy_h_
-#define DomainPolicy_h_
+#ifndef DomainPolicy_h__
+#define DomainPolicy_h__
 
 #include "nsIDomainPolicy.h"
 #include "nsTHashSet.h"
@@ -37,7 +39,7 @@ class DomainSet final : public nsIDomainSet {
   void CloneSet(nsTArray<RefPtr<nsIURI>>* aDomains);
 
  protected:
-  virtual ~DomainSet() = default;
+  virtual ~DomainSet() {}
   nsTHashSet<nsURIHashKey> mHashTable;
   DomainSetType mType;
 };
@@ -59,4 +61,4 @@ class DomainPolicy final : public nsIDomainPolicy {
 
 } /* namespace mozilla */
 
-#endif /* DomainPolicy_h_ */
+#endif /* DomainPolicy_h__ */

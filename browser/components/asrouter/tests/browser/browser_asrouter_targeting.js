@@ -21,17 +21,14 @@ ChromeUtils.defineESModuleGetters(this, {
   NimbusTestUtils: "resource://testing-common/NimbusTestUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   QueryCache: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SelectableProfileService:
     "resource:///modules/profiles/SelectableProfileService.sys.mjs",
   ShellService: "moz-src:///browser/components/shell/ShellService.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
   Spotlight: "resource:///modules/asrouter/Spotlight.sys.mjs",
-  TabNotes: "moz-src:///browser/components/tabnotes/TabNotes.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
   TaskbarTabs: "resource:///modules/taskbartabs/TaskbarTabs.sys.mjs",
   TaskbarTabsPin: "resource:///modules/taskbartabs/TaskbarTabsPin.sys.mjs",
@@ -81,24 +78,6 @@ const testFeatureCallout = {
   targeting: "true",
   trigger: { id: "defaultBrowserCheck" },
 };
-
-const testCrashDumpFiles = [
-  {
-    path: "/path/to/crash1.dmp",
-    id: "crash1",
-    date: new Date(2026, 1, 1).getTime(), // Feb 1, 2026
-  },
-  {
-    path: "/path/to/crash2.dmp",
-    id: "crash2",
-    date: new Date(2026, 2, 1).getTime(), // Mar 1, 2026
-  },
-  {
-    path: "/path/to/crash3.dmp",
-    id: "crash3",
-    date: new Date(new Date().getTime() - 10 * 24 * 60 * 60 * 1000), // 10 days before current date
-  },
-];
 
 function sendFormAutofillMessage(name, data) {
   let actor =
@@ -524,16 +503,10 @@ add_task(async function check_needsUpdate() {
 
 add_task(async function checksearchEngines() {
   const result = await ASRouterTargeting.Environment.searchEngines;
-  const appProvidedEngines = await SearchService.getAppProvidedEngines();
-  const expectedInstalled = appProvidedEngines
+  const expectedInstalled = (await Services.search.getAppProvidedEngines())
     .map(engine => engine.id)
     .sort()
     .join(",");
-  const expectedHasEnteredSearchMode = {};
-  for (let engine of appProvidedEngines) {
-    expectedHasEnteredSearchMode[engine.id] = engine.hasBeenUsed;
-  }
-
   ok(
     result.installed.length,
     "searchEngines.installed should be a non-empty array"
@@ -549,19 +522,14 @@ add_task(async function checksearchEngines() {
   );
   is(
     result.current,
-    (await SearchService.getDefault()).id,
+    (await Services.search.getDefault()).id,
     "searchEngines.current should be the current engine name"
-  );
-  Assert.deepEqual(
-    result.hasEnteredSearchMode,
-    expectedHasEnteredSearchMode,
-    "searchEngines.hasEnteredSearchmode should map engine ids to hasBeenUsed values"
   );
 
   const message = {
     id: "foo",
     targeting: `searchEngines[.current == ${
-      (await SearchService.getDefault()).id
+      (await Services.search.getDefault()).id
     }]`,
   };
   is(
@@ -569,26 +537,17 @@ add_task(async function checksearchEngines() {
     message,
     "should select correct item by searchEngines.current"
   );
-  const [firstEngine] = appProvidedEngines;
 
   const message2 = {
     id: "foo",
-    targeting: `searchEngines[${firstEngine.id} in .installed]`,
+    targeting: `searchEngines[${
+      (await Services.search.getAppProvidedEngines())[0].id
+    } in .installed]`,
   };
   is(
     await ASRouterTargeting.findMatchingMessage({ messages: [message2] }),
     message2,
     "should select correct item by searchEngines.installed"
-  );
-
-  const message3 = {
-    id: "foo",
-    targeting: `searchEngines[.hasEnteredSearchMode.${firstEngine.id} == ${firstEngine.hasBeenUsed}]`,
-  };
-  is(
-    await ASRouterTargeting.findMatchingMessage({ messages: [message3] }),
-    message3,
-    "should select correct item by searchEngines.hasEnteredSearchMode"
   );
 });
 
@@ -610,53 +569,6 @@ add_task(async function checkisDefaultBrowser() {
     message,
     "should select correct item by isDefaultBrowser"
   );
-});
-
-add_task(async function checkisPrivateWindow_false() {
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-  const expected = PrivateBrowsingUtils.isWindowPrivate(win);
-  const result = await ASRouterTargeting.Environment.isPrivateWindow;
-  is(typeof result, "boolean", "isPrivateWindow should be a boolean value");
-  is(
-    result,
-    expected,
-    "isPrivateWindow should be equal to PrivateBrowsingUtils.isWindowPrivate()"
-  );
-  const message = {
-    id: "foo",
-    targeting: `isPrivateWindow == ${expected.toString()}`,
-  };
-  is(
-    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
-    message,
-    "should select correct item by isPrivateWindow"
-  );
-  await BrowserTestUtils.closeWindow(win);
-});
-
-add_task(async function checkisPrivateWindow_true() {
-  // Open a new private window
-  const privateWin = await BrowserTestUtils.openNewBrowserWindow({
-    private: true,
-  });
-  const expected = PrivateBrowsingUtils.isWindowPrivate(privateWin);
-  const result = await ASRouterTargeting.Environment.isPrivateWindow;
-  is(typeof result, "boolean", "isPrivateWindow should be a boolean value");
-  is(
-    result,
-    expected,
-    "isPrivateWindow should be equal to PrivateBrowsingUtils.isWindowPrivate()"
-  );
-  const message = {
-    id: "foo",
-    targeting: `isPrivateWindow == ${expected.toString()}`,
-  };
-  is(
-    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
-    message,
-    "should select correct item by isPrivateWindow"
-  );
-  await BrowserTestUtils.closeWindow(privateWin);
 });
 
 add_task(async function checkdevToolsOpenedCount() {
@@ -1117,51 +1029,6 @@ add_task(async function check_current_tab_installed_as_web_app() {
   sandbox.restore();
 });
 
-add_task(async function check_installed_web_apps_count() {
-  const sandbox = sinon.createSandbox();
-  sandbox.stub(TaskbarTabsPin, "pinTaskbarTab");
-  sandbox.stub(TaskbarTabsPin, "unpinTaskbarTab");
-
-  const kUri1 = "https://example.com";
-  const kUri2 = "https://example.org";
-
-  is(
-    await ASRouterTargeting.Environment.installedWebAppsCount,
-    0,
-    "should be 0 with no Taskbar Tabs"
-  );
-
-  const { taskbarTab: tab1 } = await TaskbarTabs.findOrCreateTaskbarTab(
-    Services.io.newURI(kUri1),
-    0
-  );
-  is(
-    await ASRouterTargeting.Environment.installedWebAppsCount,
-    1,
-    "should be 1 after pinning one site"
-  );
-
-  const { taskbarTab: tab2 } = await TaskbarTabs.findOrCreateTaskbarTab(
-    Services.io.newURI(kUri2),
-    0
-  );
-  is(
-    await ASRouterTargeting.Environment.installedWebAppsCount,
-    2,
-    "should be 2 after pinning a second site"
-  );
-
-  await TaskbarTabs.removeTaskbarTab(tab1.id);
-  await TaskbarTabs.removeTaskbarTab(tab2.id);
-  is(
-    await ASRouterTargeting.Environment.installedWebAppsCount,
-    0,
-    "should be 0 after removing all Taskbar Tabs"
-  );
-
-  sandbox.restore();
-});
-
 add_task(async function check_pinned_tabs() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
@@ -1184,88 +1051,6 @@ add_task(async function check_pinned_tabs() {
       gBrowser.unpinTab(tab);
     }
   );
-});
-
-add_task(async function check_tabsOpenInTopWindow() {
-  const baseline = await ASRouterTargeting.Environment.tabsOpenInTopWindow;
-
-  const tab1 = BrowserTestUtils.addTab(gBrowser, "about:blank");
-  is(
-    await ASRouterTargeting.Environment.tabsOpenInTopWindow,
-    baseline + 1,
-    "Should count one additional tab"
-  );
-
-  const tab2 = BrowserTestUtils.addTab(gBrowser, "about:blank");
-  is(
-    await ASRouterTargeting.Environment.tabsOpenInTopWindow,
-    baseline + 2,
-    "Should count two additional tabs"
-  );
-
-  BrowserTestUtils.removeTab(tab2);
-  BrowserTestUtils.removeTab(tab1);
-  is(
-    await ASRouterTargeting.Environment.tabsOpenInTopWindow,
-    baseline,
-    "Should return to baseline after closing tabs"
-  );
-});
-
-class FakeTabWithNote extends EventTarget {
-  /**
-   * @param {string} canonicalUrl
-   */
-  constructor(canonicalUrl) {
-    super();
-    this.canonicalUrl = canonicalUrl;
-  }
-}
-
-add_task(async function check_tabNotesCount() {
-  const tab1 = new FakeTabWithNote("https://www.example.com/1");
-  const tab2 = new FakeTabWithNote("https://www.example.com/2");
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.notes.enabled", true]],
-  });
-  await TabNotes.init();
-
-  Assert.equal(
-    await ASRouterTargeting.Environment.tabNotesCount,
-    0,
-    "No tab notes yet"
-  );
-
-  await TabNotes.set(tab1, "Test note 1");
-  Assert.equal(
-    await ASRouterTargeting.Environment.tabNotesCount,
-    1,
-    "One tab note"
-  );
-
-  await TabNotes.set(tab2, "Test note 2");
-  Assert.equal(
-    await ASRouterTargeting.Environment.tabNotesCount,
-    2,
-    "Two tab notes"
-  );
-
-  await TabNotes.delete(tab2);
-  Assert.equal(
-    await ASRouterTargeting.Environment.tabNotesCount,
-    1,
-    "One tab note again"
-  );
-
-  await TabNotes.reset();
-  Assert.equal(
-    await ASRouterTargeting.Environment.tabNotesCount,
-    0,
-    "No tab notes again"
-  );
-
-  await TabNotes.deinit();
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function check_hasAccessedFxAPanel() {
@@ -1374,6 +1159,53 @@ add_task(async function checkPatternsValid() {
   for (const message of messages) {
     Assert.ok(new MatchPatternSet(message.trigger.patterns));
   }
+});
+
+add_task(async function check_isChinaRepack() {
+  const prefDefaultBranch = Services.prefs.getDefaultBranch("distribution.");
+  const messages = [
+    { id: "msg_for_china_repack", targeting: "isChinaRepack == true" },
+    { id: "msg_for_everyone_else", targeting: "isChinaRepack == false" },
+  ];
+
+  is(
+    await ASRouterTargeting.Environment.isChinaRepack,
+    false,
+    "Fx w/o partner repack info set is not China repack"
+  );
+  is(
+    (await ASRouterTargeting.findMatchingMessage({ messages })).id,
+    "msg_for_everyone_else",
+    "should select the message for non China repack users"
+  );
+
+  prefDefaultBranch.setCharPref("id", "MozillaOnline");
+
+  is(
+    await ASRouterTargeting.Environment.isChinaRepack,
+    true,
+    "Fx with `distribution.id` set to `MozillaOnline` is China repack"
+  );
+  is(
+    (await ASRouterTargeting.findMatchingMessage({ messages })).id,
+    "msg_for_china_repack",
+    "should select the message for China repack users"
+  );
+
+  prefDefaultBranch.setCharPref("id", "Example");
+
+  is(
+    await ASRouterTargeting.Environment.isChinaRepack,
+    false,
+    "Fx with `distribution.id` set to other string is not China repack"
+  );
+  is(
+    (await ASRouterTargeting.findMatchingMessage({ messages })).id,
+    "msg_for_everyone_else",
+    "should select the message for non China repack users"
+  );
+
+  prefDefaultBranch.deleteBranch("");
 });
 
 add_task(async function check_userId() {
@@ -1632,29 +1464,22 @@ add_task(async function check_userPrefersReducedMotion() {
 });
 
 add_task(async function test_distributionId() {
-  let expectedDefault = Services.prefs
-    .getDefaultBranch(null)
-    .getCharPref("distribution.id", "");
   is(
     ASRouterTargeting.Environment.distributionId,
-    expectedDefault,
-    "Should return the expected default distribution Id"
+    "",
+    "Should return an empty distribution Id"
   );
 
   Services.prefs.getDefaultBranch(null).setCharPref("distribution.id", "test");
+
   is(
     ASRouterTargeting.Environment.distributionId,
     "test",
     "Should return the correct distribution Id"
   );
 
-  if (expectedDefault) {
-    Services.prefs
-      .getDefaultBranch(null)
-      .setCharPref("distribution.id", expectedDefault);
-  } else {
-    Services.prefs.getDefaultBranch(null).deleteBranch("distribution.id");
-  }
+  // clean up default branch distribution.id
+  Services.prefs.getDefaultBranch(null).deleteBranch("distribution.id");
 });
 
 add_task(async function test_fxViewButtonAreaType_default() {
@@ -1738,10 +1563,15 @@ add_task(async function test_creditCardsSaved() {
         gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
           "FormAutofill"
         ),
-        "getRecords"
+        "receiveMessage"
       )
-      .withArgs(sandbox.match({ collectionName: "creditCards" }))
-      .resolves([creditcard])
+      .withArgs(
+        sandbox.match({
+          name: "FormAutofill:GetRecords",
+          data: { collectionName: "creditCards" },
+        })
+      )
+      .resolves({ records: [creditcard] })
       .callThrough();
 
     is(
@@ -1750,8 +1580,8 @@ add_task(async function test_creditCardsSaved() {
       "Should return 1 when 1 credit card is saved"
     );
     ok(
-      stub.calledWithMatch({ collectionName: "creditCards" }),
-      "Targeting called getRecords"
+      stub.calledWithMatch({ name: "FormAutofill:GetRecords" }),
+      "Targeting called FormAutofill:GetRecords"
     );
 
     sandbox.restore();
@@ -2708,7 +2538,10 @@ add_task(async function check_backupArchiveEnabled() {
   const sandbox = sinon.createSandbox();
   registerCleanupFunction(() => sandbox.restore());
 
-  await pushPrefs(["browser.backup.archive.enabled", true]);
+  await pushPrefs(
+    ["browser.backup.archive.enabled", true],
+    ["browser.backup.archive.overridePlatformCheck", true]
+  );
 
   is(
     await ASRouterTargeting.Environment.backupArchiveEnabled,
@@ -2720,7 +2553,10 @@ add_task(async function check_backupArchiveEnabled() {
     featureId: "backupService",
     value: { archiveKillswitch: true },
   });
-  await pushPrefs(["browser.backup.archive.enabled", true]);
+  await pushPrefs(
+    ["browser.backup.archive.enabled", true],
+    ["browser.backup.archive.overridePlatformCheck", false]
+  );
 
   is(
     await ASRouterTargeting.Environment.backupArchiveEnabled,
@@ -2737,7 +2573,10 @@ add_task(async function check_backupRestoreEnabled() {
   const sandbox = sinon.createSandbox();
   registerCleanupFunction(() => sandbox.restore());
 
-  await pushPrefs(["browser.backup.restore.enabled", true]);
+  await pushPrefs(
+    ["browser.backup.restore.enabled", true],
+    ["browser.backup.restore.overridePlatformCheck", true]
+  );
 
   is(
     await ASRouterTargeting.Environment.backupRestoreEnabled,
@@ -2745,7 +2584,10 @@ add_task(async function check_backupRestoreEnabled() {
     "should return true if the killswitch is not on"
   );
   await SpecialPowers.popPrefEnv();
-  await pushPrefs(["browser.backup.restore.enabled", true]);
+  await pushPrefs(
+    ["browser.backup.restore.enabled", true],
+    ["browser.backup.restore.overridePlatformCheck", false]
+  );
 
   const restoreExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
     featureId: "backupService",
@@ -2761,188 +2603,4 @@ add_task(async function check_backupRestoreEnabled() {
   // End the experiment.
   await restoreExperiment();
   await SpecialPowers.popPrefEnv();
-});
-
-add_task(
-  async function check_userWeekdaysActiveInLastMonth_counts_only_weekdays() {
-    const sandbox = sinon.createSandbox();
-    try {
-      QueryCache.queries.UserMonthlyActivity.expire();
-      sandbox
-        .stub(NewTabUtils.activityStreamProvider, "getUserMonthlyActivity")
-        .resolves([
-          [50, "2024-01-08"], // Monday, 50 visits
-          [30, "2024-01-09"], // Tue
-          [10, "2024-01-13"], // Sat
-          [5, "2024-01-14"], // Sun
-        ]);
-      is(
-        await ASRouterTargeting.Environment.userWeekdaysActiveInLastMonth,
-        2,
-        "should count only weekday entries(2)"
-      );
-    } finally {
-      sandbox.restore();
-    }
-  }
-);
-
-add_task(async function check_userWeekdaysActiveInLastMonth_all_weekends() {
-  const sandbox = sinon.createSandbox();
-  try {
-    QueryCache.queries.UserMonthlyActivity.expire();
-    sandbox
-      .stub(NewTabUtils.activityStreamProvider, "getUserMonthlyActivity")
-      .resolves([
-        [20, "2024-01-13"], // Sat
-        [20, "2024-01-14"], // Sun
-      ]);
-    is(
-      await ASRouterTargeting.Environment.userWeekdaysActiveInLastMonth,
-      0,
-      "should return 0 when all activity is on weekends"
-    );
-  } finally {
-    sandbox.restore();
-  }
-});
-
-add_task(async function check_userWeekdaysActiveInLastMonth_emptyActivity() {
-  const sandbox = sinon.createSandbox();
-  try {
-    QueryCache.queries.UserMonthlyActivity.expire();
-    sandbox
-      .stub(NewTabUtils.activityStreamProvider, "getUserMonthlyActivity")
-      .resolves([]);
-    is(
-      await ASRouterTargeting.Environment.userWeekdaysActiveInLastMonth,
-      0,
-      "should return 0 for empty activity"
-    );
-  } finally {
-    sandbox.restore();
-  }
-});
-
-add_task(
-  async function check_userActiveDaysWithHundredPlusSites_countsDaysAtOrAbove100() {
-    const sandbox = sinon.createSandbox();
-    try {
-      QueryCache.queries.UserMonthlyActivity.expire();
-      sandbox
-        .stub(NewTabUtils.activityStreamProvider, "getUserMonthlyActivity")
-        .resolves([
-          [150, "2024-01-08"],
-          [99, "2024-01-09"],
-          [100, "2024-01-10"],
-          [50, "2024-01-11"],
-        ]);
-      is(
-        await ASRouterTargeting.Environment.userActiveDaysWithHundredPlusSites,
-        2,
-        "should count days with >= 100 URL visits"
-      );
-    } finally {
-      sandbox.restore();
-    }
-  }
-);
-
-add_task(async function check_userActiveDaysWithHundredPlusSites_none() {
-  const sandbox = sinon.createSandbox();
-  try {
-    QueryCache.queries.UserMonthlyActivity.expire();
-    sandbox
-      .stub(NewTabUtils.activityStreamProvider, "getUserMonthlyActivity")
-      .resolves([
-        [10, "2024-01-08"],
-        [99, "2024-01-09"],
-      ]);
-    is(
-      await ASRouterTargeting.Environment.userActiveDaysWithHundredPlusSites,
-      0,
-      "should return 0 when no days reach 100 visits"
-    );
-  } finally {
-    sandbox.restore();
-  }
-});
-
-add_task(
-  async function check_userActiveDaysWithHundredPlusSites_emptyActivityReturnsZero() {
-    const sandbox = sinon.createSandbox();
-    try {
-      QueryCache.queries.UserMonthlyActivity.expire();
-      sandbox
-        .stub(NewTabUtils.activityStreamProvider, "getUserMonthlyActivity")
-        .resolves([]);
-      is(
-        await ASRouterTargeting.Environment.userActiveDaysWithHundredPlusSites,
-        0,
-        "should return 0 for empty activity"
-      );
-    } finally {
-      sandbox.restore();
-    }
-  }
-);
-
-add_task(async function check_crashCount_noCrashesReturnsZero() {
-  const sandbox = sinon.createSandbox();
-  try {
-    sandbox.stub(QueryCache.getters.crashData, "get").resolves([]);
-    is(
-      await ASRouterTargeting.Environment.crashCount,
-      0,
-      "should return 0 for empty crash dumps"
-    );
-  } finally {
-    sandbox.restore();
-  }
-});
-
-add_task(async function check_crashCount_returnsNumberOfCrashes() {
-  const sandbox = sinon.createSandbox();
-  try {
-    sandbox
-      .stub(QueryCache.getters.crashData, "get")
-      .resolves(testCrashDumpFiles);
-    is(
-      await ASRouterTargeting.Environment.crashCount,
-      3,
-      "should return 3 for three crash dumps"
-    );
-  } finally {
-    sandbox.restore();
-  }
-});
-
-add_task(async function check_daysSinceLastCrash_noCrashesReturnsNull() {
-  const sandbox = sinon.createSandbox();
-  try {
-    sandbox.stub(QueryCache.getters.crashData, "get").resolves([]);
-    is(
-      await ASRouterTargeting.Environment.daysSinceLastCrash,
-      null,
-      "should return null for no crashes"
-    );
-  } finally {
-    sandbox.restore();
-  }
-});
-
-add_task(async function check_daysSinceLastCrash_returnsDaysSinceLastCrash() {
-  const sandbox = sinon.createSandbox();
-  try {
-    sandbox
-      .stub(QueryCache.getters.crashData, "get")
-      .resolves(testCrashDumpFiles);
-    is(
-      await ASRouterTargeting.Environment.daysSinceLastCrash,
-      10,
-      "should return 10 for most recent crash from 10 days ago"
-    );
-  } finally {
-    sandbox.restore();
-  }
 });

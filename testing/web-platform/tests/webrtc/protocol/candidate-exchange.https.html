@@ -2,8 +2,6 @@
 <html>
 <head>
 <title>Candidate exchange</title>
-<meta name="variant" content="?interop-2026">
-<meta name="variant" content="?rest">
 <meta name=timeout content=long>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -11,8 +9,6 @@
 </head>
 <body>
 <script>
-const rest = !new URLSearchParams(location.search).has("interop-2026");
-const interop2026 = !new URLSearchParams(location.search).has("rest");
 
 class StateLogger {
   constructor(source, eventname, field) {
@@ -29,7 +25,6 @@ class IceStateLogger extends StateLogger {
   }
 }
 
-if (rest) {
 promise_test(async t => {
   const pc1 = new RTCPeerConnection();
   const pc2 = new RTCPeerConnection();
@@ -46,9 +41,7 @@ promise_test(async t => {
   assert_array_equals(pc1IceStates.events, ['new', 'checking', 'connected']);
   assert_array_equals(pc2IceStates.events, ['new', 'checking', 'connected']);
 }, 'Two way ICE exchange works');
-}
 
-if (interop2026) {
 promise_test(async t => {
   const pc1 = new RTCPeerConnection();
   const pc2 = new RTCPeerConnection();
@@ -192,9 +185,7 @@ promise_test(async t => {
   assert_array_equals(pc1IceStates.events, ['new', 'checking', 'connected']);
   assert_array_equals(pc2IceStates.events, ['new', 'checking', 'connected']);
 }, 'Explicit offer/answer exchange gives a connection');
-}
 
-if (rest) {
 promise_test(async t => {
   const pc1 = new RTCPeerConnection();
   t.add_cleanup(() => pc1.close());
@@ -221,7 +212,6 @@ promise_test(async t => {
     pc2.onicecandidate = resolve;
   });
 }, 'Candidates always arrive after setLocalDescription(answer) resolves');
-}
 
 </script>
 </body>

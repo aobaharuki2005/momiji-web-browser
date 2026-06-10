@@ -31,13 +31,11 @@ datetime-millisecond =
 datetime-dayperiod =
     .aria-label = AM/PM
 
-## Date/time picker buttons
+## Calendar button for input type=date
 
-# These labels are used by screenreaders and other assistive technology
-# to indicate the purpose of a toggle button inside of the input field that
-# opens/closes a date and/or time picker panel
+# This label is used by screenreaders and other assistive technology
+# to indicate the purpose of a toggle button inside of the <input type="date">
+# field that opens/closes a date picker calendar dialog
 
 datetime-calendar =
     .aria-label = Calendar
-datetime-time =
-    .aria-label = Time

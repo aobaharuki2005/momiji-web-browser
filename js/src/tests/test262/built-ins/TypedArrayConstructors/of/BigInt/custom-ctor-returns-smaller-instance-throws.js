@@ -12,13 +12,13 @@ info: |
   ...
   5. Let newObj be ? TypedArrayCreate(C, « len »).
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var ctor = function() {
-    return new TA(makeCtorArg(1));
+    return new TA(1);
   };
 
   assert.throws(TypeError, function() {

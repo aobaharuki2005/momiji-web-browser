@@ -6,7 +6,7 @@
 const TEST_URI = "<h1>Top level header</h1>";
 
 function getMenuItems(toolbox) {
-  const menuDoc = toolbox.doc.defaultView.windowRoot.window.document;
+  const menuDoc = toolbox.doc.defaultView.windowRoot.ownerGlobal.document;
   const menu = menuDoc.getElementById("accessibility-row-contextmenu");
   return {
     menu,
@@ -17,18 +17,16 @@ function getMenuItems(toolbox) {
 async function newTabSelected(tab) {
   info("Waiting for the JSON viewer tab.");
   await BrowserTestUtils.waitForCondition(
-    () =>
-      gBrowser.selectedTab !== tab &&
-      gBrowser.selectedTab.linkedBrowser.currentURI.spec !== "about:blank",
+    () => gBrowser.selectedTab !== tab,
     "Current tab updated."
   );
   return gBrowser.selectedTab;
 }
 
 function parseSnapshotFromTabURI(tab) {
-  const { spec } = tab.linkedBrowser.currentURI;
-  const snapshot = spec.split("data:application/json;charset=UTF-8,")[1];
-  return JSON.parse(decodeURIComponent(snapshot));
+  let snapshot = tab.label.split("data:application/json;charset=UTF-8,")[1];
+  snapshot = decodeURIComponent(snapshot);
+  return JSON.parse(snapshot);
 }
 
 async function checkJSONSnapshotForRow({ doc, tab, toolbox }, index, expected) {

@@ -10,7 +10,6 @@ use crate::backend::conv::ret_usize_infallible;
 use crate::ugid::{Gid, Uid};
 
 #[inline]
-#[must_use]
 pub(crate) fn getuid() -> Uid {
     #[cfg(any(target_arch = "arm", target_arch = "sparc", target_arch = "x86"))]
     unsafe {
@@ -25,7 +24,6 @@ pub(crate) fn getuid() -> Uid {
 }
 
 #[inline]
-#[must_use]
 pub(crate) fn geteuid() -> Uid {
     #[cfg(any(target_arch = "arm", target_arch = "sparc", target_arch = "x86"))]
     unsafe {
@@ -40,7 +38,6 @@ pub(crate) fn geteuid() -> Uid {
 }
 
 #[inline]
-#[must_use]
 pub(crate) fn getgid() -> Gid {
     #[cfg(any(target_arch = "arm", target_arch = "sparc", target_arch = "x86"))]
     unsafe {
@@ -55,7 +52,6 @@ pub(crate) fn getgid() -> Gid {
 }
 
 #[inline]
-#[must_use]
 pub(crate) fn getegid() -> Gid {
     #[cfg(any(target_arch = "arm", target_arch = "sparc", target_arch = "x86"))]
     unsafe {

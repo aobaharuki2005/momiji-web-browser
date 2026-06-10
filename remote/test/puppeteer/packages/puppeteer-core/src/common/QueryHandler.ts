@@ -8,11 +8,10 @@ import type {ElementHandle} from '../api/ElementHandle.js';
 import {_isElementHandle} from '../api/ElementHandleSymbol.js';
 import type {Frame} from '../api/Frame.js';
 import type {WaitForSelectorOptions} from '../api/Page.js';
-import type {PuppeteerInjectedUtil} from '../injected/injected.js';
+import type PuppeteerUtil from '../injected/injected.js';
 import {isErrorLike} from '../util/ErrorLike.js';
 import {interpolateFunction, stringifyFunction} from '../util/Function.js';
 
-import {TimeoutError} from './Errors.js';
 import {transposeIterableHandle} from './HandleIterator.js';
 import {LazyArg} from './LazyArg.js';
 import type {Awaitable, AwaitableIterable} from './types.js';
@@ -23,7 +22,7 @@ import type {Awaitable, AwaitableIterable} from './types.js';
 export type QuerySelectorAll = (
   node: Node,
   selector: string,
-  PuppeteerUtil: PuppeteerInjectedUtil,
+  PuppeteerUtil: PuppeteerUtil,
 ) => AwaitableIterable<Node>;
 
 /**
@@ -32,7 +31,7 @@ export type QuerySelectorAll = (
 export type QuerySelector = (
   node: Node,
   selector: string,
-  PuppeteerUtil: PuppeteerInjectedUtil,
+  PuppeteerUtil: PuppeteerUtil,
 ) => Awaitable<Node | null>;
 
 /**
@@ -210,11 +209,8 @@ export class QueryHandler {
       if (error.name === 'AbortError') {
         throw error;
       }
-      const waitForSelectorError = new (
-        error instanceof TimeoutError ? TimeoutError : Error
-      )(`Waiting for selector \`${selector}\` failed`);
-      waitForSelectorError.cause = error;
-      throw waitForSelectorError;
+      error.message = `Waiting for selector \`${selector}\` failed: ${error.message}`;
+      throw error;
     }
   }
 }

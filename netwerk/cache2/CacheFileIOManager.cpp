@@ -655,15 +655,54 @@ class ShutdownEvent : public Runnable, nsITimerCallback {
 
 NS_IMPL_ISUPPORTS_INHERITED(ShutdownEvent, Runnable, nsITimerCallback)
 
-class OpenFileEvent : public Runnable {
+// Class responsible for reporting IO performance stats
+class IOPerfReportEvent {
+ public:
+  explicit IOPerfReportEvent(CacheFileUtils::CachePerfStats::EDataType aType)
+      : mType(aType), mEventCounter(0) {}
+
+  void Start(CacheIOThread* aIOThread) {
+    mStartTime = TimeStamp::Now();
+    mEventCounter = aIOThread->EventCounter();
+  }
+
+  void Report(CacheIOThread* aIOThread) {
+    if (mStartTime.IsNull()) {
+      return;
+    }
+
+    // Single IO operations can take less than 1ms. So we use microseconds to
+    // keep a good resolution of data.
+    uint32_t duration = (TimeStamp::Now() - mStartTime).ToMicroseconds();
+
+    // This is a simple prefiltering of values that might differ a lot from the
+    // average value. Do not add the value to the filtered stats when the event
+    // had to wait in a long queue.
+    uint32_t eventCounter = aIOThread->EventCounter();
+    bool shortOnly = eventCounter - mEventCounter >= 5;
+
+    CacheFileUtils::CachePerfStats::AddValue(mType, duration, shortOnly);
+  }
+
+ protected:
+  CacheFileUtils::CachePerfStats::EDataType mType;
+  TimeStamp mStartTime;
+  uint32_t mEventCounter;
+};
+
+class OpenFileEvent : public Runnable, public IOPerfReportEvent {
  public:
   OpenFileEvent(const nsACString& aKey, uint32_t aFlags,
                 CacheFileIOListener* aCallback)
       : Runnable("net::OpenFileEvent"),
+        IOPerfReportEvent(CacheFileUtils::CachePerfStats::IO_OPEN),
         mFlags(aFlags),
         mCallback(aCallback),
         mKey(aKey) {
     mIOMan = CacheFileIOManager::gInstance;
+    if (!(mFlags & CacheFileIOManager::SPECIAL_FILE)) {
+      Start(mIOMan->mIOThread);
+    }
   }
 
  protected:
@@ -688,6 +727,9 @@ class OpenFileEvent : public Runnable {
       } else {
         rv = mIOMan->OpenFileInternal(&mHash, mKey, mFlags,
                                       getter_AddRefs(mHandle));
+        if (NS_SUCCEEDED(rv)) {
+          Report(mIOMan->mIOThread);
+        }
       }
       mIOMan = nullptr;
       if (mHandle) {
@@ -710,16 +752,21 @@ class OpenFileEvent : public Runnable {
   nsCString mKey;
 };
 
-class ReadEvent : public Runnable {
+class ReadEvent : public Runnable, public IOPerfReportEvent {
  public:
   ReadEvent(CacheFileHandle* aHandle, int64_t aOffset, char* aBuf,
             int32_t aCount, CacheFileIOListener* aCallback)
       : Runnable("net::ReadEvent"),
+        IOPerfReportEvent(CacheFileUtils::CachePerfStats::IO_READ),
         mHandle(aHandle),
         mOffset(aOffset),
         mBuf(aBuf),
         mCount(aCount),
-        mCallback(aCallback) {}
+        mCallback(aCallback) {
+    if (!mHandle->IsSpecialFile()) {
+      Start(CacheFileIOManager::gInstance->mIOThread);
+    }
+  }
 
  protected:
   ~ReadEvent() = default;
@@ -735,14 +782,16 @@ class ReadEvent : public Runnable {
     } else {
       rv = CacheFileIOManager::gInstance->ReadInternal(mHandle, mOffset, mBuf,
                                                        mCount, this);
-#if defined(MOZ_CACHE_ASYNC_IO)
       if (NS_SUCCEEDED(rv)) {
+#if !defined(MOZ_CACHE_ASYNC_IO)
+        Report(CacheFileIOManager::gInstance->mIOThread);
+#else
         /* The request has been performed asynchronously. It should
          * complete later.
          */
         return NS_OK;
-      }
 #endif
+      }
     }
 
 #if defined(MOZ_CACHE_ASYNC_IO)
@@ -768,9 +817,15 @@ class ReadEvent : public Runnable {
 
 #if defined(MOZ_CACHE_ASYNC_IO)
   nsresult OnComplete(nsresult aStatus) {
+    nsresult result = aStatus;
+
+    if (NS_SUCCEEDED(result)) {
+      Report(CacheFileIOManager::gInstance->mIOThread);
+    }
+
     // Prevent calling back twice
     nsCOMPtr<CacheFileIOListener> cb = std::move(mCallback);
-    cb->OnDataRead(mHandle, mBuf, aStatus);
+    cb->OnDataRead(mHandle, mBuf, result);
     mHandle->EndAsyncOperation();
     return NS_OK;
   }
@@ -784,19 +839,24 @@ class ReadEvent : public Runnable {
   nsCOMPtr<CacheFileIOListener> mCallback;
 };
 
-class WriteEvent : public Runnable {
+class WriteEvent : public Runnable, public IOPerfReportEvent {
  public:
   WriteEvent(CacheFileHandle* aHandle, int64_t aOffset, const char* aBuf,
              int32_t aCount, bool aValidate, bool aTruncate,
              CacheFileIOListener* aCallback)
       : Runnable("net::WriteEvent"),
+        IOPerfReportEvent(CacheFileUtils::CachePerfStats::IO_WRITE),
         mHandle(aHandle),
         mOffset(aOffset),
         mBuf(aBuf),
         mCount(aCount),
         mValidate(aValidate),
         mTruncate(aTruncate),
-        mCallback(aCallback) {}
+        mCallback(aCallback) {
+    if (!mHandle->IsSpecialFile()) {
+      Start(CacheFileIOManager::gInstance->mIOThread);
+    }
+  }
 
  protected:
   ~WriteEvent() {
@@ -821,6 +881,9 @@ class WriteEvent : public Runnable {
     } else {
       rv = CacheFileIOManager::gInstance->WriteInternal(
           mHandle, mOffset, mBuf, mCount, mValidate, mTruncate);
+      if (NS_SUCCEEDED(rv)) {
+        Report(CacheFileIOManager::gInstance->mIOThread);
+      }
       if (NS_FAILED(rv) && !mCallback) {
         // No listener is going to handle the error, doom the file
         CacheFileIOManager::gInstance->DoomFileInternal(mHandle);
@@ -1231,6 +1294,8 @@ nsresult CacheFileIOManager::Shutdown() {
   if (!gInstance) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+
+  auto shutdownTimer = glean::network::disk_cache_shutdown_v2.Measure();
 
   CacheIndex::PreShutdown();
 
@@ -3864,7 +3929,7 @@ nsresult CacheFileIOManager::FindTrashDirToRemove() {
     LOG(("CacheFileIOManager::FindTrashDirToRemove() - Returning directory %s",
          leafName.get()));
 
-    mTrashDir = std::move(file);
+    mTrashDir = file;
     return NS_OK;
   }
 
@@ -4402,9 +4467,9 @@ void CacheFileIOManager::SyncRemoveAllCacheFiles() {
 
       PRExplodedTime now;
       PR_ExplodeTime(PR_Now(), PR_GMTParameters, &now);
-      leafName.AppendPrintf("%04d-%02d-%02d-%02d-%02d-%02d", now.tm_year,
-                            now.tm_month + 1, now.tm_mday, now.tm_hour,
-                            now.tm_min, now.tm_sec);
+      leafName.Append(nsPrintfCString(
+          "%04d-%02d-%02d-%02d-%02d-%02d", now.tm_year, now.tm_month + 1,
+          now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec));
       leafName.Append(kPurgeExtension);
 
       nsAutoCString secondsToWait;

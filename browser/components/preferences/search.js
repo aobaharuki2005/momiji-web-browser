@@ -5,38 +5,563 @@
 /* import-globals-from extensionControlled.js */
 /* import-globals-from preferences.js */
 
-ChromeUtils.importESModule(
-  "chrome://browser/content/preferences/config/search.mjs",
-  { global: "current" }
-);
+const lazy = {};
 
-const lazy = XPCOMUtils.declareLazy({
+ChromeUtils.defineESModuleGetters(lazy, {
   AddonSearchEngine:
     "moz-src:///toolkit/components/search/AddonSearchEngine.sys.mjs",
-  AppProvidedConfigEngine:
-    "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
+  CustomizableUI:
+    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
+  QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
   SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
-  separatePrivateDefaultEnabledPrefValue: {
-    pref: "browser.search.separatePrivateDefault.ui.enabled",
-    default: false,
-    onUpdate: () => window.gSearchPane._engineStore.notifyRebuildViews(),
-  },
-  separatePrivateDefaultPrefValue: {
-    pref: "browser.search.separatePrivateDefault",
-    default: false,
-    onUpdate: () => window.gSearchPane._engineStore.notifyRebuildViews(),
-  },
+  SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
   UserSearchEngine:
     "moz-src:///toolkit/components/search/UserSearchEngine.sys.mjs",
 });
 
+Preferences.addAll([
+  { id: "browser.search.suggest.enabled", type: "bool" },
+  { id: "browser.urlbar.suggest.searches", type: "bool" },
+  { id: "browser.search.suggest.enabled.private", type: "bool" },
+  { id: "browser.urlbar.showSearchSuggestionsFirst", type: "bool" },
+  { id: "browser.urlbar.showSearchTerms.enabled", type: "bool" },
+  { id: "browser.urlbar.showSearchTerms.featureGate", type: "bool" },
+  { id: "browser.search.separatePrivateDefault", type: "bool" },
+  { id: "browser.search.separatePrivateDefault.ui.enabled", type: "bool" },
+  { id: "browser.urlbar.suggest.trending", type: "bool" },
+  { id: "browser.urlbar.trending.featureGate", type: "bool" },
+  { id: "browser.urlbar.recentsearches.featureGate", type: "bool" },
+  { id: "browser.urlbar.suggest.recentsearches", type: "bool" },
+  { id: "browser.urlbar.scotchBonnet.enableOverride", type: "bool" },
+
+  // Suggest Section.
+  { id: "browser.urlbar.suggest.bookmark", type: "bool" },
+  { id: "browser.urlbar.suggest.clipboard", type: "bool" },
+  { id: "browser.urlbar.clipboard.featureGate", type: "bool" },
+  { id: "browser.urlbar.suggest.history", type: "bool" },
+  { id: "browser.urlbar.suggest.openpage", type: "bool" },
+  { id: "browser.urlbar.suggest.topsites", type: "bool" },
+  { id: "browser.urlbar.suggest.engines", type: "bool" },
+  { id: "browser.urlbar.quickactions.showPrefs", type: "bool" },
+  { id: "browser.urlbar.suggest.quickactions", type: "bool" },
+  { id: "browser.urlbar.quicksuggest.settingsUi", type: "int" },
+  { id: "browser.urlbar.quicksuggest.enabled", type: "bool" },
+  { id: "browser.urlbar.suggest.quicksuggest.all", type: "bool" },
+  { id: "browser.urlbar.suggest.quicksuggest.sponsored", type: "bool" },
+  { id: "browser.urlbar.quicksuggest.online.enabled", type: "bool" },
+]);
+
 /**
- * @import { SearchEngine } from "moz-src:///toolkit/components/search/SearchEngine.sys.mjs"
+ * Generates the config needed to populate the dropdowns for the user's
+ * default search engine and separate private default search engine.
+ *
+ * @param {object} options
+ *   Options for creating the config.
+ * @param {string} options.settingId
+ *   The id for the particular setting.
+ * @param {() => Promise<nsISearchEngine>} options.getEngine
+ *   The method used to get the engine from the Search Service.
+ * @param {(id: string) => Promise<void>} options.setEngine
+ *   The method used to set a new engine.
+ * @returns {PreferencesSettingsConfig}
  */
+function createSearchEngineConfig({ settingId, getEngine, setEngine }) {
+  return class extends Preferences.AsyncSetting {
+    static id = settingId;
+    ENGINE_MODIFIED = "browser-search-engine-modified";
+    iconMap = new Map();
+
+    /** @type {{options: PreferencesSettingsConfig[]}} */
+    defaultGetControlConfig = { options: [] };
+
+    async get() {
+      let engine = await getEngine();
+      return engine.id;
+    }
+
+    async set(id) {
+      await setEngine(id);
+    }
+
+    async getControlConfig() {
+      let engines = await Services.search.getVisibleEngines();
+      await Promise.allSettled(engines.map(e => this.loadEngineIcon(e)));
+      return {
+        options: engines.map(engine => ({
+          value: engine.id,
+          iconSrc: this.getEngineIcon(engine),
+          controlAttrs: {
+            label: engine.name,
+          },
+        })),
+      };
+    }
+
+    getEngineIcon(engine) {
+      return this.iconMap.get(engine.id);
+    }
+
+    getPlaceholderIcon() {
+      return window.devicePixelRatio > 1
+        ? "chrome://browser/skin/search-engine-placeholder@2x.png"
+        : "chrome://browser/skin/search-engine-placeholder.png";
+    }
+
+    async loadEngineIcon(engine) {
+      try {
+        let iconURL = await engine.getIconURL();
+        let url = iconURL ?? this.getPlaceholderIcon();
+        this.iconMap.set(engine.id, url);
+        return url;
+      } catch (error) {
+        console.warn(`Failed to load icon for engine ${engine.name}:`, error);
+        let placeholderIcon = this.getPlaceholderIcon();
+        this.iconMap.set(engine.id, placeholderIcon);
+        return placeholderIcon;
+      }
+    }
+
+    setup() {
+      Services.obs.addObserver(this, this.ENGINE_MODIFIED);
+      return () => Services.obs.removeObserver(this, this.ENGINE_MODIFIED);
+    }
+
+    observe(subject, topic, data) {
+      if (topic == this.ENGINE_MODIFIED) {
+        let engine = subject.QueryInterface(Ci.nsISearchEngine);
+
+        // Clean up cache for removed engines.
+        if (data == "engine-removed") {
+          this.iconMap.delete(engine.id);
+        }
+
+        // Always emit change for any change that could affect the engine list
+        // or default.
+        this.emitChange();
+      }
+    }
+  };
+}
+
+Preferences.addSetting(
+  createSearchEngineConfig({
+    settingId: "defaultEngineNormal",
+    getEngine: () => Services.search.getDefault(),
+    setEngine: id =>
+      Services.search.setDefault(
+        Services.search.getEngineById(id),
+        Ci.nsISearchService.CHANGE_REASON_USER
+      ),
+  })
+);
+
+Preferences.addSetting({
+  id: "scotchBonnetEnabled",
+  pref: "browser.urlbar.scotchBonnet.enableOverride",
+});
+
+Preferences.addSetting({
+  id: "showSearchTermsFeatureGate",
+  pref: "browser.urlbar.showSearchTerms.featureGate",
+});
+
+Preferences.addSetting({
+  id: "searchShowSearchTermCheckbox",
+  pref: "browser.urlbar.showSearchTerms.enabled",
+  deps: ["scotchBonnetEnabled", "showSearchTermsFeatureGate"],
+  visible: ({ scotchBonnetEnabled, showSearchTermsFeatureGate }) => {
+    if (lazy.CustomizableUI.getPlacementOfWidget("search-container")) {
+      return false;
+    }
+    return showSearchTermsFeatureGate.value || scotchBonnetEnabled.value;
+  },
+  setup: onChange => {
+    // Add observer of CustomizableUI as showSearchTerms checkbox should be
+    // hidden while searchbar is enabled.
+    let customizableUIListener = {
+      onWidgetAfterDOMChange: node => {
+        if (node.id == "search-container") {
+          onChange();
+        }
+      },
+    };
+    lazy.CustomizableUI.addListener(customizableUIListener);
+    return () => lazy.CustomizableUI.removeListener(customizableUIListener);
+  },
+});
+
+Preferences.addSetting({
+  id: "separatePrivateDefaultUI",
+  pref: "browser.search.separatePrivateDefault.ui.enabled",
+  onUserChange: () => {
+    gSearchPane._engineStore.notifyRebuildViews();
+  },
+});
+
+Preferences.addSetting({
+  id: "browserSeparateDefaultEngine",
+  pref: "browser.search.separatePrivateDefault",
+  deps: ["separatePrivateDefaultUI"],
+  visible: ({ separatePrivateDefaultUI }) => {
+    return separatePrivateDefaultUI.value;
+  },
+  onUserChange: () => {
+    gSearchPane._engineStore.notifyRebuildViews();
+  },
+});
+
+Preferences.addSetting(
+  createSearchEngineConfig({
+    settingId: "defaultPrivateEngine",
+    getEngine: () => Services.search.getDefaultPrivate(),
+    setEngine: id =>
+      Services.search.setDefaultPrivate(
+        Services.search.getEngineById(id),
+        Ci.nsISearchService.CHANGE_REASON_USER
+      ),
+  })
+);
+
+Preferences.addSetting({
+  id: "searchSuggestionsEnabledPref",
+  pref: "browser.search.suggest.enabled",
+});
+
+Preferences.addSetting({
+  id: "permanentPBEnabledPref",
+  pref: "browser.privatebrowsing.autostart",
+});
+
+Preferences.addSetting({
+  id: "urlbarSuggestionsEnabledPref",
+  pref: "browser.urlbar.suggest.searches",
+});
+
+Preferences.addSetting({
+  id: "trendingFeaturegatePref",
+  pref: "browser.urlbar.trending.featureGate",
+});
+
+// The show search suggestion box behaves differently depending on whether the
+// separate search bar is shown. When the separate search bar is shown, it
+// controls just the search suggestion preference, and the
+// `urlBarSuggestionCheckbox` handles the urlbar suggestions. When the separate
+// search bar is not shown, this checkbox toggles both preferences to ensure
+// that the urlbar suggestion preference is set correctly, since that will be
+// the only bar visible.
+Preferences.addSetting({
+  id: "suggestionsInSearchFieldsCheckbox",
+  deps: ["searchSuggestionsEnabledPref", "urlbarSuggestionsEnabledPref"],
+  get(_, deps) {
+    let searchBarVisible =
+      !!lazy.CustomizableUI.getPlacementOfWidget("search-container");
+    return (
+      deps.searchSuggestionsEnabledPref.value &&
+      (searchBarVisible || deps.urlbarSuggestionsEnabledPref.value)
+    );
+  },
+  set(newCheckedValue, deps) {
+    let searchBarVisible =
+      !!lazy.CustomizableUI.getPlacementOfWidget("search-container");
+    if (!searchBarVisible) {
+      deps.urlbarSuggestionsEnabledPref.value = newCheckedValue;
+    }
+    deps.searchSuggestionsEnabledPref.value = newCheckedValue;
+    return newCheckedValue;
+  },
+});
+
+Preferences.addSetting({
+  id: "urlBarSuggestionCheckbox",
+  deps: [
+    "urlbarSuggestionsEnabledPref",
+    "suggestionsInSearchFieldsCheckbox",
+    "searchSuggestionsEnabledPref",
+    "permanentPBEnabledPref",
+  ],
+  get: (_, deps) => {
+    let searchBarVisible =
+      !!lazy.CustomizableUI.getPlacementOfWidget("search-container");
+    if (
+      deps.suggestionsInSearchFieldsCheckbox.value &&
+      searchBarVisible &&
+      deps.urlbarSuggestionsEnabledPref.value
+    ) {
+      return true;
+    }
+    return false;
+  },
+  set: (newCheckedValue, deps, setting) => {
+    if (setting.disabled) {
+      deps.urlbarSuggestionsEnabledPref.value = false;
+      return false;
+    }
+
+    let searchBarVisible =
+      !!lazy.CustomizableUI.getPlacementOfWidget("search-container");
+    if (deps.suggestionsInSearchFieldsCheckbox.value && searchBarVisible) {
+      deps.urlbarSuggestionsEnabledPref.value = newCheckedValue;
+    }
+    return newCheckedValue;
+  },
+  setup: onChange => {
+    // Add observer of CustomizableUI as checkbox should be hidden while
+    // searchbar is enabled.
+    let customizableUIListener = {
+      onWidgetAfterDOMChange: node => {
+        if (node.id == "search-container") {
+          onChange();
+        }
+      },
+    };
+    lazy.CustomizableUI.addListener(customizableUIListener);
+    return () => lazy.CustomizableUI.removeListener(customizableUIListener);
+  },
+  disabled: deps => {
+    return (
+      !deps.searchSuggestionsEnabledPref.value ||
+      deps.permanentPBEnabledPref.value
+    );
+  },
+  visible: () => {
+    let searchBarVisible =
+      !!lazy.CustomizableUI.getPlacementOfWidget("search-container");
+    return searchBarVisible;
+  },
+});
+
+Preferences.addSetting({
+  id: "showSearchSuggestionsFirstCheckbox",
+  pref: "browser.urlbar.showSearchSuggestionsFirst",
+  deps: [
+    "suggestionsInSearchFieldsCheckbox",
+    "urlbarSuggestionsEnabledPref",
+    "searchSuggestionsEnabledPref",
+    "permanentPBEnabledPref",
+  ],
+  get: (newCheckedValue, deps) => {
+    if (!deps.searchSuggestionsEnabledPref.value) {
+      return false;
+    }
+    return deps.urlbarSuggestionsEnabledPref.value ? newCheckedValue : false;
+  },
+  disabled: deps => {
+    return (
+      !deps.suggestionsInSearchFieldsCheckbox.value ||
+      !deps.urlbarSuggestionsEnabledPref.value ||
+      deps.permanentPBEnabledPref.value
+    );
+  },
+});
+
+Preferences.addSetting({
+  id: "showSearchSuggestionsPrivateWindowsCheckbox",
+  pref: "browser.search.suggest.enabled.private",
+  deps: ["searchSuggestionsEnabledPref"],
+  disabled: deps => {
+    return !deps.searchSuggestionsEnabledPref.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "showTrendingSuggestionsCheckbox",
+  pref: "browser.urlbar.suggest.trending",
+  deps: [
+    "searchSuggestionsEnabledPref",
+    "permanentPBEnabledPref",
+    // Required to dynamically update the disabled state when the default engine is changed.
+    "defaultEngineNormal",
+    "trendingFeaturegatePref",
+  ],
+  visible: deps => deps.trendingFeaturegatePref.value,
+  disabled: deps => {
+    let trendingSupported = Services.search.defaultEngine.supportsResponseType(
+      lazy.SearchUtils.URL_TYPE.TRENDING_JSON
+    );
+    return (
+      !deps.searchSuggestionsEnabledPref.value ||
+      deps.permanentPBEnabledPref.value ||
+      !trendingSupported
+    );
+  },
+});
+
+Preferences.addSetting({
+  id: "urlBarSuggestionPermanentPBMessage",
+  deps: ["urlBarSuggestionCheckbox", "permanentPBEnabledPref"],
+  visible: deps => {
+    return (
+      deps.urlBarSuggestionCheckbox.visible && deps.permanentPBEnabledPref.value
+    );
+  },
+});
+
+Preferences.addSetting({
+  id: "quickSuggestEnabledPref",
+  pref: "browser.urlbar.quicksuggest.enabled",
+});
+
+Preferences.addSetting({
+  id: "quickSuggestSettingsUiPref",
+  pref: "browser.urlbar.quicksuggest.settingsUi",
+});
+
+Preferences.addSetting({
+  id: "nimbusListener",
+  setup(onChange) {
+    NimbusFeatures.urlbar.onUpdate(onChange);
+    return () => NimbusFeatures.urlbar.offUpdate(onChange);
+  },
+});
+
+Preferences.addSetting({
+  id: "locationBarGroupHeader",
+  deps: [
+    "quickSuggestEnabledPref",
+    "quickSuggestSettingsUiPref",
+    "nimbusListener",
+  ],
+  getControlConfig(config) {
+    let l10nId =
+      lazy.UrlbarPrefs.get("quickSuggestEnabled") &&
+      lazy.UrlbarPrefs.get("quickSuggestSettingsUi") !=
+        lazy.QuickSuggest.SETTINGS_UI.NONE
+        ? "addressbar-header-firefox-suggest-2"
+        : "addressbar-header-1";
+
+    return { ...config, l10nId };
+  },
+});
+
+Preferences.addSetting({
+  id: "historySuggestion",
+  pref: "browser.urlbar.suggest.history",
+});
+
+Preferences.addSetting({
+  id: "bookmarkSuggestion",
+  pref: "browser.urlbar.suggest.bookmark",
+});
+
+Preferences.addSetting({
+  id: "clipboardFeaturegate",
+  pref: "browser.urlbar.clipboard.featureGate",
+});
+
+Preferences.addSetting({
+  id: "clipboardSuggestion",
+  pref: "browser.urlbar.suggest.clipboard",
+  deps: ["clipboardFeaturegate"],
+  visible: deps => {
+    return deps.clipboardFeaturegate.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "openpageSuggestion",
+  pref: "browser.urlbar.suggest.openpage",
+});
+
+Preferences.addSetting({
+  id: "topSitesSuggestion",
+  pref: "browser.urlbar.suggest.topsites",
+});
+
+Preferences.addSetting({
+  id: "enableRecentSearchesFeatureGate",
+  pref: "browser.urlbar.recentsearches.featureGate",
+});
+
+Preferences.addSetting({
+  id: "enableRecentSearches",
+  pref: "browser.urlbar.suggest.recentsearches",
+  deps: ["enableRecentSearchesFeatureGate"],
+  visible: deps => {
+    return deps.enableRecentSearchesFeatureGate.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "enginesSuggestion",
+  pref: "browser.urlbar.suggest.engines",
+});
+
+Preferences.addSetting({
+  id: "quickActionsShowPrefs",
+  pref: "browser.urlbar.quickactions.showPrefs",
+});
+
+Preferences.addSetting({
+  id: "enableQuickActions",
+  pref: "browser.urlbar.suggest.quickactions",
+  deps: ["quickActionsShowPrefs", "scotchBonnetEnabled"],
+  visible: deps => {
+    return deps.quickActionsShowPrefs.value || deps.scotchBonnetEnabled.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "firefoxSuggestAll",
+  pref: "browser.urlbar.suggest.quicksuggest.all",
+});
+
+Preferences.addSetting({
+  id: "firefoxSuggestSponsored",
+  pref: "browser.urlbar.suggest.quicksuggest.sponsored",
+  deps: ["firefoxSuggestAll"],
+  disabled: deps => {
+    return !deps.firefoxSuggestAll.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "firefoxSuggestOnlineEnabledToggle",
+  pref: "browser.urlbar.quicksuggest.online.enabled",
+  deps: [
+    "firefoxSuggestAll",
+    "quickSuggestEnabledPref",
+    "quickSuggestSettingsUiPref",
+    "nimbusListener",
+  ],
+  visible: () => {
+    return (
+      lazy.UrlbarPrefs.get("quickSuggestSettingsUi") ==
+      lazy.QuickSuggest.SETTINGS_UI.FULL
+    );
+  },
+  disabled: deps => {
+    return !deps.firefoxSuggestAll.value;
+  },
+});
+
+Preferences.addSetting(
+  class extends Preferences.AsyncSetting {
+    static id = "restoreDismissedSuggestions";
+    setup() {
+      Services.obs.addObserver(
+        this.emitChange,
+        "quicksuggest-dismissals-changed"
+      );
+      return () => {
+        Services.obs.removeObserver(
+          this.emitChange,
+          "quicksuggest-dismissals-changed"
+        );
+      };
+    }
+    async disabled() {
+      return !(await lazy.QuickSuggest.canClearDismissedSuggestions());
+    }
+    onUserClick() {
+      lazy.QuickSuggest.clearDismissedSuggestions();
+    }
+  }
+);
+
+Preferences.addSetting({
+  id: "dismissedSuggestionsDescription",
+});
 
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
 const SEARCH_TYPE = "default_search";
@@ -74,10 +599,6 @@ var gSearchPane = {
       Services.obs.removeObserver(this, "browser-search-engine-modified");
       Services.obs.removeObserver(this, "intl:app-locales-changed");
     });
-
-    // Access the lazy preferences so that updates will be observed.
-    lazy.separatePrivateDefaultEnabledPrefValue;
-    lazy.separatePrivateDefaultPrefValue;
   },
 
   // ADDRESS BAR
@@ -120,10 +641,16 @@ var gSearchPane = {
         break;
       }
       case "browser-search-engine-modified": {
-        this._engineStore.browserSearchEngineModified(
-          subject.wrappedJSObject,
-          data
-        );
+        let engine = subject.QueryInterface(Ci.nsISearchEngine);
+        switch (data) {
+          case "engine-default": {
+            // Pass through to the engine store to handle updates.
+            this._engineStore.browserSearchEngineModified(engine, data);
+            break;
+          }
+          default:
+            this._engineStore.browserSearchEngineModified(engine, data);
+        }
         break;
       }
     }
@@ -134,10 +661,9 @@ var gSearchPane = {
   },
 
   async setDefaultEngine() {
-    await lazy.SearchService.setDefault(
-      document.getElementById("defaultEngine").selectedItem.engine
-        .originalEngine,
-      lazy.SearchService.CHANGE_REASON.USER
+    await Services.search.setDefault(
+      document.getElementById("defaultEngine").selectedItem.engine,
+      Ci.nsISearchService.CHANGE_REASON_USER
     );
     if (ExtensionSettingsStore.getSetting(SEARCH_TYPE, SEARCH_KEY) !== null) {
       ExtensionSettingsStore.select(
@@ -149,10 +675,9 @@ var gSearchPane = {
   },
 
   async setDefaultPrivateEngine() {
-    await lazy.SearchService.setDefaultPrivate(
-      document.getElementById("defaultPrivateEngine").selectedItem.engine
-        .originalEngine,
-      lazy.SearchService.CHANGE_REASON.USER
+    await Services.search.setDefaultPrivate(
+      document.getElementById("defaultPrivateEngine").selectedItem.engine,
+      Ci.nsISearchService.CHANGE_REASON_USER
     );
   },
 };
@@ -176,7 +701,7 @@ class EngineStore {
   #listeners = [];
 
   async init() {
-    let engines = await lazy.SearchService.getEngines();
+    let engines = await Services.search.getEngines();
 
     let visibleEngines = engines.filter(e => !e.hidden);
     for (let engine of visibleEngines) {
@@ -185,7 +710,7 @@ class EngineStore {
     this.notifyRowCountChanged(0, visibleEngines.length);
 
     gSearchPane.showRestoreDefaults(
-      engines.some(e => e instanceof lazy.AppProvidedConfigEngine && e.hidden)
+      engines.some(e => e.isAppProvided && e.hidden)
     );
   }
 
@@ -257,10 +782,10 @@ class EngineStore {
   }
 
   /**
-   * Converts an SearchEngine object into an Engine Store
+   * Converts an nsISearchEngine object into an Engine Store
    * search engine object.
    *
-   * @param {SearchEngine} aEngine
+   * @param {nsISearchEngine} aEngine
    *   The search engine to convert.
    * @returns {object}
    *   The EngineStore search engine object.
@@ -269,12 +794,13 @@ class EngineStore {
     var clonedObj = {
       iconURL: null,
     };
-    for (let i of ["id", "name", "alias", "hidden"]) {
+    for (let i of ["id", "name", "alias", "hidden", "isAppProvided"]) {
       clonedObj[i] = aEngine[i];
     }
-    clonedObj.isAddonEngine = aEngine instanceof lazy.AddonSearchEngine;
-    clonedObj.isAppProvided = aEngine instanceof lazy.AppProvidedConfigEngine;
-    clonedObj.isUserEngine = aEngine instanceof lazy.UserSearchEngine;
+    clonedObj.isAddonEngine =
+      aEngine.wrappedJSObject instanceof lazy.AddonSearchEngine;
+    clonedObj.isUserEngine =
+      aEngine.wrappedJSObject instanceof lazy.UserSearchEngine;
     clonedObj.originalEngine = aEngine;
 
     // Trigger getting the iconURL for this engine.
@@ -330,18 +856,14 @@ class EngineStore {
     var removedEngine = this.engines.splice(index, 1)[0];
     this.engines.splice(aNewIndex, 0, removedEngine);
 
-    return lazy.SearchService.moveEngine(
-      aEngine.originalEngine,
-      aNewIndex,
-      true
-    );
+    return Services.search.moveEngine(aEngine.originalEngine, aNewIndex);
   }
 
   /**
    * Called when a search engine is removed.
    *
-   * @param {SearchEngine} aEngine
-   *   The Engine being removed. Note that this is an SearchEngine object.
+   * @param {nsISearchEngine} aEngine
+   *   The Engine being removed. Note that this is an nsISearchEngine object.
    */
   removeEngine(aEngine) {
     if (this.engines.length == 1) {
@@ -357,7 +879,7 @@ class EngineStore {
 
     this.engines.splice(index, 1)[0];
 
-    if (aEngine instanceof lazy.AppProvidedConfigEngine) {
+    if (aEngine.isAppProvided) {
       gSearchPane.showRestoreDefaults(true);
     }
 
@@ -370,10 +892,11 @@ class EngineStore {
    * Update the default engine UI and engine tree view as appropriate when engine changes
    * or locale changes occur.
    *
-   * @param {SearchEngine} engine
+   * @param {nsISearchEngine} engine
    * @param {string} data
    */
   browserSearchEngineModified(engine, data) {
+    engine.QueryInterface(Ci.nsISearchEngine);
     switch (data) {
       case "engine-added":
         this.addEngine(engine);
@@ -401,7 +924,7 @@ class EngineStore {
     // _cloneEngine is necessary here because all functions in
     // this file work on EngineStore search engine objects.
     let appProvidedEngines = (
-      await lazy.SearchService.getAppProvidedEngines()
+      await Services.search.getAppProvidedEngines()
     ).map(this._cloneEngine, this);
 
     for (var i = 0; i < appProvidedEngines.length; ++i) {
@@ -420,7 +943,7 @@ class EngineStore {
         this.engines.splice(i, 0, e);
         let engine = e.originalEngine;
         engine.hidden = false;
-        await lazy.SearchService.moveEngine(engine, i, true);
+        await Services.search.moveEngine(engine, i);
         added++;
       }
     }
@@ -430,12 +953,12 @@ class EngineStore {
     let policyRemovedEngineNames =
       Services.policies.getActivePolicies()?.SearchEngines?.Remove || [];
     for (let engineName of policyRemovedEngineNames) {
-      let engine = lazy.SearchService.getEngineByName(engineName);
+      let engine = Services.search.getEngineByName(engineName);
       if (engine) {
         try {
-          await lazy.SearchService.removeEngine(
+          await Services.search.removeEngine(
             engine,
-            lazy.SearchService.CHANGE_REASON.ENTERPRISE
+            Ci.nsISearchService.CHANGE_REASON_ENTERPRISE
           );
         } catch (ex) {
           // Engine might not exist
@@ -443,7 +966,7 @@ class EngineStore {
       }
     }
 
-    lazy.SearchService.resetToAppDefaultEngine();
+    Services.search.resetToAppDefaultEngine();
     gSearchPane.showRestoreDefaults(false);
     this.notifyRebuildViews();
     return added;
@@ -490,8 +1013,8 @@ class EngineView {
     this._localShortcutL10nNames = new Map();
 
     let getIDs = (suffix = "") =>
-      lazy.UrlbarUtils.LOCAL_SEARCH_MODES.map(mode => {
-        let name = lazy.UrlbarUtils.getResultSourceName(mode.source);
+      UrlbarUtils.LOCAL_SEARCH_MODES.map(mode => {
+        let name = UrlbarUtils.getResultSourceName(mode.source);
         return { id: `urlbar-search-mode-${name}${suffix}` };
       });
 
@@ -505,7 +1028,7 @@ class EngineView {
       let localizedNames = await document.l10n.formatValues(localizedIDs);
       let englishNames = await englishSearchStrings.formatValues(englishIDs);
 
-      lazy.UrlbarUtils.LOCAL_SEARCH_MODES.forEach(({ source }, index) => {
+      UrlbarUtils.LOCAL_SEARCH_MODES.forEach(({ source }, index) => {
         let localizedName = localizedNames[index];
         let englishName = englishNames[index];
 
@@ -594,8 +1117,8 @@ class EngineView {
   }
 
   isEngineSelectedAndRemovable() {
-    let defaultEngine = lazy.SearchService.defaultEngine;
-    let defaultPrivateEngine = lazy.SearchService.defaultPrivateEngine;
+    let defaultEngine = Services.search.defaultEngine;
+    let defaultPrivateEngine = Services.search.defaultPrivateEngine;
     // We don't allow the last remaining engine to be removed, thus the
     // `this.lastEngineIndex != 0` check.
     // We don't allow the default engine to be removed.
@@ -620,9 +1143,9 @@ class EngineView {
    */
   async promptAndRemoveEngine(engine) {
     if (engine.isAppProvided) {
-      lazy.SearchService.removeEngine(
+      Services.search.removeEngine(
         this.selectedEngine.originalEngine,
-        lazy.SearchService.CHANGE_REASON.USER
+        Ci.nsISearchService.CHANGE_REASON_USER
       );
       return;
     }
@@ -656,9 +1179,9 @@ class EngineView {
 
     // Button 0 is the remove button.
     if (button == 0) {
-      lazy.SearchService.removeEngine(
+      Services.search.removeEngine(
         this.selectedEngine.originalEngine,
-        lazy.SearchService.CHANGE_REASON.USER
+        Ci.nsISearchService.CHANGE_REASON_USER
       );
     }
   }
@@ -677,7 +1200,7 @@ class EngineView {
     if (index < engineCount) {
       return null;
     }
-    return lazy.UrlbarUtils.LOCAL_SEARCH_MODES[index - engineCount];
+    return UrlbarUtils.LOCAL_SEARCH_MODES[index - engineCount];
   }
 
   /**
@@ -740,7 +1263,7 @@ class EngineView {
             break;
           case "editEngineButton":
             if (this.selectedEngine.isUserEngine) {
-              let engine = this.selectedEngine.originalEngine;
+              let engine = this.selectedEngine.originalEngine.wrappedJSObject;
               gSubDialog.open(
                 "chrome://browser/content/search/addEngine.xhtml",
                 { features: "resizable=no, modal=yes" },
@@ -887,10 +1410,10 @@ class EngineView {
 
   // nsITreeView
   get rowCount() {
-    let localModes = lazy.UrlbarUtils.LOCAL_SEARCH_MODES;
+    let localModes = UrlbarUtils.LOCAL_SEARCH_MODES;
     if (!lazy.UrlbarPrefs.get("scotchBonnet.enableOverride")) {
       localModes = localModes.filter(
-        mode => mode.source != lazy.UrlbarUtils.RESULT_SOURCE.ACTIONS
+        mode => mode.source != UrlbarUtils.RESULT_SOURCE.ACTIONS
       );
     }
     return this._engineStore.engines.length + localModes.length;
@@ -991,7 +1514,7 @@ class EngineView {
       // the icons in CSS.
       let shortcut = this._getLocalShortcut(index);
       if (shortcut) {
-        return lazy.UrlbarUtils.getResultSourceName(shortcut.source);
+        return UrlbarUtils.getResultSourceName(shortcut.source);
       }
     }
     return "";
@@ -1087,10 +1610,9 @@ class EngineView {
   async #changeKeyword(aEngine, aNewKeyword) {
     let keyword = aNewKeyword.trim();
     if (keyword) {
-      let isBookmarkDuplicate =
-        !!(await lazy.PlacesUtils.keywords.fetch(keyword));
+      let isBookmarkDuplicate = !!(await PlacesUtils.keywords.fetch(keyword));
 
-      let dupEngine = await lazy.SearchService.getEngineByAlias(keyword);
+      let dupEngine = await Services.search.getEngineByAlias(keyword);
       let isEngineDuplicate = dupEngine !== null && dupEngine.id != aEngine.id;
 
       // Notify the user if they have chosen an existing engine/bookmark keyword
@@ -1128,7 +1650,7 @@ class EngineView {
    *   Resolves to true if the name was changed.
    */
   async #changeName(aEngine, aNewName) {
-    let valid = aEngine.originalEngine.rename(aNewName);
+    let valid = aEngine.originalEngine.wrappedJSObject.rename(aNewName);
     if (!valid) {
       let msg = await document.l10n.formatValue(
         "edit-engine-name-warning-duplicate",

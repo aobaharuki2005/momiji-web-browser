@@ -5,7 +5,6 @@
 #ifndef mozilla_net_StunAddrsRequestParent_h
 #define mozilla_net_StunAddrsRequestParent_h
 
-#include "mozilla/media/MediaUtils.h"  // ShutdownWatcher
 #include "mozilla/net/PStunAddrsRequestParent.h"
 
 struct MDNSService;
@@ -16,9 +15,10 @@ class StunAddrsRequestParent : public PStunAddrsRequestParent {
   friend class PStunAddrsRequestParent;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(StunAddrsRequestParent, override);
-
   StunAddrsRequestParent();
+
+  NS_IMETHOD_(MozExternalRefCountType) AddRef();
+  NS_IMETHOD_(MozExternalRefCountType) Release();
 
   mozilla::ipc::IPCResult Recv__delete__() override;
 
@@ -37,45 +37,44 @@ class StunAddrsRequestParent : public PStunAddrsRequestParent {
       const nsACString& hostname) override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
+  nsCOMPtr<nsIThread> mMainThread;
   nsCOMPtr<nsISerialEventTarget> mSTSThread;
 
-  void SendStunAddrs(const NrIceStunAddrArray& addrs);
+  void GetStunAddrs_s();
+  void SendStunAddrs_m(const NrIceStunAddrArray& addrs);
+
+  void OnQueryComplete_m(const nsACString& hostname,
+                         const Maybe<nsCString>& address);
+
+  ThreadSafeAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
 
  private:
   bool mIPCClosed;  // true if IPDL channel has been closed (child crash)
 
-  class MDNSServiceWrapper : public media::ShutdownConsumer {
+  class MDNSServiceWrapper {
    public:
+    explicit MDNSServiceWrapper(const std::string& ifaddr);
     void RegisterHostname(const char* hostname, const char* address);
-    void QueryHostname(StunAddrsRequestParent* parent, const char* hostname);
+    void QueryHostname(void* data, const char* hostname);
     void UnregisterHostname(const char* hostname);
 
-    void OnQueryComplete(uintptr_t aQueryId, const nsCString& aHostname,
-                         const Maybe<nsCString>& aAddress);
+    NS_IMETHOD_(MozExternalRefCountType) AddRef();
+    NS_IMETHOD_(MozExternalRefCountType) Release();
 
-    NS_INLINE_DECL_REFCOUNTING(MDNSServiceWrapper);
-    static RefPtr<MDNSServiceWrapper> EnsureInstance(
-        const std::string& aAddrsString);
-    static RefPtr<MDNSServiceWrapper> Instance();
-    void OnShutdown() override;
+   protected:
+    ThreadSafeAutoRefCnt mRefCnt;
+    NS_DECL_OWNINGTHREAD
 
    private:
-    explicit MDNSServiceWrapper(const std::string& aAddr);
     virtual ~MDNSServiceWrapper();
     void StartIfRequired();
-    void Init();
-    static void mdns_service_resolved(void* aCb, const char* aHostname,
-                                      const char* aAddr);
-    static void mdns_service_timedout(void* aCb, const char* aHostname);
 
-    std::string mAddrsString;
+    std::string ifaddr;
     MDNSService* mMDNSService = nullptr;
-    RefPtr<media::ShutdownWatcher> mShutdownWatcher;
-    std::map<uintptr_t, RefPtr<StunAddrsRequestParent>> sOutstandingQueries;
-    uintptr_t mQueryId = 1;
-
-    static StaticRefPtr<MDNSServiceWrapper> mSharedMDNSService;
   };
+
+  static StaticRefPtr<MDNSServiceWrapper> mSharedMDNSService;
 };
 
 }  // namespace mozilla::net

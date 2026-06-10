@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_UDPSocketParent_h_
-#define mozilla_dom_UDPSocketParent_h_
+#ifndef mozilla_dom_UDPSocketParent_h__
+#define mozilla_dom_UDPSocketParent_h__
 
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/net/PUDPSocketParent.h"
@@ -33,9 +35,8 @@ class UDPSocketParent : public mozilla::net::PUDPSocketParent,
                                    const bool& aAddressReuse,
                                    const bool& aLoopback,
                                    const uint32_t& recvBufferSize,
-                                   const uint32_t& sendBufferSize) override;
-  mozilla::ipc::IPCResult RecvConnect(
-      const UDPAddressInfo& aAddressInfo) override;
+                                   const uint32_t& sendBufferSize);
+  mozilla::ipc::IPCResult RecvConnect(const UDPAddressInfo& aAddressInfo);
   void DoSendConnectResponse(const UDPAddressInfo& aAddressInfo);
   void SendConnectResponse(const nsCOMPtr<nsIEventTarget>& aThread,
                            const UDPAddressInfo& aAddressInfo);
@@ -44,16 +45,14 @@ class UDPSocketParent : public mozilla::net::PUDPSocketParent,
                  const UDPAddressInfo& aAddressInfo);
 
   mozilla::ipc::IPCResult RecvOutgoingData(const UDPData& aData,
-                                           const UDPSocketAddr& aAddr) override;
+                                           const UDPSocketAddr& aAddr);
 
-  mozilla::ipc::IPCResult RecvClose() override;
-  mozilla::ipc::IPCResult RecvRequestDelete() override;
-  mozilla::ipc::IPCResult RecvJoinMulticast(
-      const nsACString& aMulticastAddress,
-      const nsACString& aInterface) override;
-  mozilla::ipc::IPCResult RecvLeaveMulticast(
-      const nsACString& aMulticastAddress,
-      const nsACString& aInterface) override;
+  mozilla::ipc::IPCResult RecvClose();
+  mozilla::ipc::IPCResult RecvRequestDelete();
+  mozilla::ipc::IPCResult RecvJoinMulticast(const nsCString& aMulticastAddress,
+                                            const nsCString& aInterface);
+  mozilla::ipc::IPCResult RecvLeaveMulticast(const nsCString& aMulticastAddress,
+                                             const nsCString& aInterface);
 
  private:
   virtual ~UDPSocketParent();
@@ -65,8 +64,7 @@ class UDPSocketParent : public mozilla::net::PUDPSocketParent,
                         const bool& aAddressReuse, const bool& aLoopback,
                         const uint32_t& recvBufferSize,
                         const uint32_t& sendBufferSize);
-  nsresult ConnectInternal(const nsCOMPtr<nsIUDPSocket>& aSocket,
-                           const nsCString& aHost, const uint16_t& aPort);
+  nsresult ConnectInternal(const nsCString& aHost, const uint16_t& aPort);
   void FireInternalError(uint32_t aLineNo);
   void SendInternalError(const nsCOMPtr<nsIEventTarget>& aThread,
                          uint32_t aLineNo);
@@ -83,4 +81,4 @@ class UDPSocketParent : public mozilla::net::PUDPSocketParent,
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // !defined(mozilla_dom_UDPSocketParent_h_)
+#endif  // !defined(mozilla_dom_UDPSocketParent_h__)

@@ -14,7 +14,7 @@ add_task(async function () {
   });
 
   const wait = waitForNetworkEvents(monitor, 2);
-  await reloadSelectedTab();
+  await reloadBrowser();
   await wait;
 
   const { store } = monitor.panelWin;

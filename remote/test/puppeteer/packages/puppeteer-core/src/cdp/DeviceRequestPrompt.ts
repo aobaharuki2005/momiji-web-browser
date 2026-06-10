@@ -7,17 +7,59 @@
 import type Protocol from 'devtools-protocol';
 
 import type {CDPSession} from '../api/CDPSession.js';
-import {DeviceRequestPrompt} from '../api/DeviceRequestPrompt.js';
-import type {DeviceRequestPromptDevice} from '../api/DeviceRequestPrompt.js';
 import type {WaitTimeoutOptions} from '../api/Page.js';
 import type {TimeoutSettings} from '../common/TimeoutSettings.js';
 import {assert} from '../util/assert.js';
 import {Deferred} from '../util/Deferred.js';
 
 /**
- * @internal
+ * Device in a request prompt.
+ *
+ * @public
  */
-export class CdpDeviceRequestPrompt extends DeviceRequestPrompt {
+export class DeviceRequestPromptDevice {
+  /**
+   * Device id during a prompt.
+   */
+  id: string;
+
+  /**
+   * Device name as it appears in a prompt.
+   */
+  name: string;
+
+  /**
+   * @internal
+   */
+  constructor(id: string, name: string) {
+    this.id = id;
+    this.name = name;
+  }
+}
+
+/**
+ * Device request prompts let you respond to the page requesting for a device
+ * through an API like WebBluetooth.
+ *
+ * @remarks
+ * `DeviceRequestPrompt` instances are returned via the
+ * {@link Page.waitForDevicePrompt} method.
+ *
+ * @example
+ *
+ * ```ts
+ * const [devicePrompt] = Promise.all([
+ *   page.waitForDevicePrompt(),
+ *   page.click('#connect-bluetooth'),
+ * ]);
+ * await devicePrompt.select(
+ *   await devicePrompt.waitForDevice(({name}) => name.includes('My Device')),
+ * );
+ * ```
+ *
+ * @public
+ */
+export class DeviceRequestPrompt {
   #client: CDPSession | null;
   #timeoutSettings: TimeoutSettings;
   #id: string;
@@ -28,12 +70,19 @@ export class CdpDeviceRequestPrompt extends DeviceRequestPrompt {
     promise: Deferred<DeviceRequestPromptDevice>;
   }>();
 
+  /**
+   * Current list of selectable devices.
+   */
+  devices: DeviceRequestPromptDevice[] = [];
+
+  /**
+   * @internal
+   */
   constructor(
     client: CDPSession,
     timeoutSettings: TimeoutSettings,
     firstEvent: Protocol.DeviceAccess.DeviceRequestPromptedEvent,
   ) {
-    super();
     this.#client = client;
     this.#timeoutSettings = timeoutSettings;
     this.#id = firstEvent.id;
@@ -63,7 +112,10 @@ export class CdpDeviceRequestPrompt extends DeviceRequestPrompt {
         continue;
       }
 
-      const newDevice = {id: rawDevice.id, name: rawDevice.name};
+      const newDevice = new DeviceRequestPromptDevice(
+        rawDevice.id,
+        rawDevice.name,
+      );
       this.devices.push(newDevice);
 
       for (const waitForDevicePromise of this.#waitForDevicePromises) {
@@ -74,6 +126,9 @@ export class CdpDeviceRequestPrompt extends DeviceRequestPrompt {
     }
   }
 
+  /**
+   * Resolve to the first device in the prompt matching a filter.
+   */
   async waitForDevice(
     filter: (device: DeviceRequestPromptDevice) => boolean,
     options: WaitTimeoutOptions = {},
@@ -109,6 +164,9 @@ export class CdpDeviceRequestPrompt extends DeviceRequestPrompt {
     }
   }
 
+  /**
+   * Select a device in the prompt's list.
+   */
   async select(device: DeviceRequestPromptDevice): Promise<void> {
     assert(
       this.#client !== null,
@@ -130,6 +188,9 @@ export class CdpDeviceRequestPrompt extends DeviceRequestPrompt {
     });
   }
 
+  /**
+   * Cancel the prompt.
+   */
   async cancel(): Promise<void> {
     assert(
       this.#client !== null,
@@ -151,11 +212,14 @@ export class CdpDeviceRequestPrompt extends DeviceRequestPrompt {
 /**
  * @internal
  */
-export class CdpDeviceRequestPromptManager {
+export class DeviceRequestPromptManager {
   #client: CDPSession | null;
   #timeoutSettings: TimeoutSettings;
   #deviceRequestPromptDeferreds = new Set<Deferred<DeviceRequestPrompt>>();
 
+  /**
+   * @internal
+   */
   constructor(client: CDPSession, timeoutSettings: TimeoutSettings) {
     this.#client = client;
     this.#timeoutSettings = timeoutSettings;
@@ -168,6 +232,10 @@ export class CdpDeviceRequestPromptManager {
     });
   }
 
+  /**
+   * Wait for device prompt created by an action like calling WebBluetooth's
+   * requestDevice.
+   */
   async waitForDevicePrompt(
     options: WaitTimeoutOptions = {},
   ): Promise<DeviceRequestPrompt> {
@@ -209,6 +277,9 @@ export class CdpDeviceRequestPromptManager {
     }
   }
 
+  /**
+   * @internal
+   */
   #onDeviceRequestPrompted(
     event: Protocol.DeviceAccess.DeviceRequestPromptedEvent,
   ) {
@@ -217,7 +288,7 @@ export class CdpDeviceRequestPromptManager {
     }
 
     assert(this.#client !== null);
-    const devicePrompt = new CdpDeviceRequestPrompt(
+    const devicePrompt = new DeviceRequestPrompt(
       this.#client,
       this.#timeoutSettings,
       event,

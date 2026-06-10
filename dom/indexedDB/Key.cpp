@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,7 +11,6 @@
 #include <algorithm>
 #include <cstdint>
 
-#include "IDBTransaction.h"
 #include "ReportInternalError.h"
 #include "js/Array.h"  // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,NewArrayBuffer{,WithContents}}
@@ -26,7 +27,6 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/indexedDB/IDBResult.h"
 #include "mozilla/dom/indexedDB/Key.h"
@@ -41,11 +41,11 @@ namespace mozilla::dom::indexedDB {
 
 namespace {
 // Implementation of the array branch of step 3 of
-// https://w3c.github.io/IndexedDB/#convert-a-value-to-a-key
+// https://w3c.github.io/IndexedDB/#convert-value-to-key
 template <typename ArrayConversionPolicy>
-IDBResult<Ok, IDBSpecialValue::InvalidType, IDBSpecialValue::InvalidValue>
-ConvertArrayValueToKey(JSContext* const aCx, JS::Handle<JSObject*> aObject,
-                       ArrayConversionPolicy&& aPolicy) {
+IDBResult<Ok, IDBSpecialValue::Invalid> ConvertArrayValueToKey(
+    JSContext* const aCx, JS::Handle<JSObject*> aObject,
+    ArrayConversionPolicy&& aPolicy) {
   // 1. Let `len` be ? ToLength( ? Get(`input`, "length")).
   uint32_t len;
   if (!JS::GetArrayLength(aCx, aObject, &len)) {
@@ -74,9 +74,9 @@ ConvertArrayValueToKey(JSContext* const aCx, JS::Handle<JSObject*> aObject,
       return Err(IDBException(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
     }
 
-    // 2. If `hop` is false, return "invalid value".
+    // 2. If `hop` is false, return invalid.
     if (!hop) {
-      return Err(IDBError(SpecialValues::InvalidValue));
+      return Err(IDBError(SpecialValues::Invalid));
     }
 
     // 3. Let `entry` be ? Get(`input`, `index`).
@@ -88,16 +88,10 @@ ConvertArrayValueToKey(JSContext* const aCx, JS::Handle<JSObject*> aObject,
     // 4. Let `key` be the result of running the steps to convert a value to a
     //    key with arguments `entry` and `seen`.
     // 5. ReturnIfAbrupt(`key`).
-    // 6. If `key` is "invalid value" or "invalid type" abort these steps and
-    // return "invalid value".
+    // 6. If `key` is invalid abort these steps and return invalid.
     // 7. Append `key` to `keys`.
     auto result = aPolicy.ConvertSubkey(aCx, entry, index);
     if (result.isErr()) {
-      // As noted for step 6, we need to convert "invalid type" to "invalid
-      // value"
-      if (result.inspectErr().Is((SpecialValues::InvalidType))) {
-        return Err(IDBError(SpecialValues::InvalidValue));
-      }
       return result;
     }
 
@@ -208,21 +202,18 @@ Result<Ok, nsresult> Key::SetFromString(const nsAString& aString) {
 uint32_t Key::LengthOfEncodedBinary(const EncodedDataType* aPos,
                                     const EncodedDataType* aEnd) {
   MOZ_ASSERT(*aPos % Key::eMaxType == Key::eBinary, "Don't call me!");
-  MOZ_DIAGNOSTIC_ASSERT(aPos < aEnd);
 
-  const EncodedDataType* const begin = aPos + 1;
-  const EncodedDataType* encodedSectionEnd = nullptr;
+  const auto* iter = aPos + 1;
+  for (; iter < aEnd && *iter != eTerminator; ++iter) {
+    if (*iter & 0x80) {
+      ++iter;
+      // XXX if iter == aEnd now, we got a bad enconding, should we report that
+      // also in non-debug builds?
+      MOZ_ASSERT(iter < aEnd);
+    }
+  }
 
-  // Stops at aEnd if the terminator is trimmed and correctly reports end
-  (void)CalcDecodedStringySize<uint8_t>(begin, aEnd, &encodedSectionEnd);
-
-  MOZ_DIAGNOSTIC_ASSERT(encodedSectionEnd && encodedSectionEnd >= begin &&
-                        encodedSectionEnd <= aEnd);
-  MOZ_DIAGNOSTIC_ASSERT(
-      encodedSectionEnd == aEnd ||
-      (encodedSectionEnd < aEnd && *encodedSectionEnd == eTerminator));
-
-  return AssertedCast<uint32_t>(encodedSectionEnd - begin);
+  return iter - aPos - 1;
 }
 
 Result<Key, nsresult> Key::ToLocaleAwareKey(const nsCString& aLocale) const {
@@ -358,9 +349,9 @@ class MOZ_STACK_CLASS Key::ArrayValueEncoder final {
     MOZ_ASSERT(mTypeOffset < eMaxType * kMaxArrayCollapse);
   }
 
-  IDBResult<Ok, IDBSpecialValue::InvalidType, IDBSpecialValue::InvalidValue>
-  ConvertSubkey(JSContext* const aCx, JS::Handle<JS::Value> aEntry,
-                const uint32_t aIndex) {
+  IDBResult<Ok, IDBSpecialValue::Invalid> ConvertSubkey(
+      JSContext* const aCx, JS::Handle<JS::Value> aEntry,
+      const uint32_t aIndex) {
     auto result =
         mKey.EncodeJSValInternal(aCx, aEntry, mTypeOffset, mRecursionDepth);
     mTypeOffset = 0;
@@ -377,16 +368,16 @@ class MOZ_STACK_CLASS Key::ArrayValueEncoder final {
 
 // Implements the following algorithm:
 // https://w3c.github.io/IndexedDB/#convert-a-value-to-a-key
-IDBResult<Ok, IDBSpecialValue::InvalidType, IDBSpecialValue::InvalidValue>
-Key::EncodeJSValInternal(JSContext* const aCx, JS::Handle<JS::Value> aVal,
-                         uint8_t aTypeOffset, const uint16_t aRecursionDepth) {
+IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
+    JSContext* const aCx, JS::Handle<JS::Value> aVal, uint8_t aTypeOffset,
+    const uint16_t aRecursionDepth) {
   static_assert(eMaxType * kMaxArrayCollapse < 256, "Unable to encode jsvals.");
 
   // 1. If `seen` was not given, let `seen` be a new empty set.
-  // 2. If `seen` contains `input`, then return "invalid value".
+  // 2. If `input` is in `seen` return invalid.
   // Note: we replace this check with a simple recursion depth check.
   if (NS_WARN_IF(aRecursionDepth == kMaxRecursionDepth)) {
-    return Err(IDBError(SpecialValues::InvalidValue));
+    return Err(IDBError(SpecialValues::Invalid));
   }
 
   // 3. Jump to the appropriate step below:
@@ -397,9 +388,9 @@ Key::EncodeJSValInternal(JSContext* const aCx, JS::Handle<JS::Value> aVal,
   if (aVal.isNumber()) {
     const auto number = aVal.toNumber();
 
-    // 1. If `input` is NaN then return "invalid value".
+    // 1. If `input` is NaN then return invalid.
     if (std::isnan(number)) {
-      return Err(IDBError(SpecialValues::InvalidValue));
+      return Err(IDBError(SpecialValues::Invalid));
     }
 
     // 2. Otherwise, return a new key with type `number` and value `input`.
@@ -435,9 +426,9 @@ Key::EncodeJSValInternal(JSContext* const aCx, JS::Handle<JS::Value> aVal,
         return Err(IDBException(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
       }
 
-      // 2. If `ms` is NaN then return "invalid value".
+      // 2. If `ms` is NaN then return invalid.
       if (std::isnan(ms)) {
-        return Err(IDBError(SpecialValues::InvalidValue));
+        return Err(IDBError(SpecialValues::Invalid));
       }
 
       // 3. Otherwise, return a new key with type `date` and value `ms`.
@@ -458,8 +449,8 @@ Key::EncodeJSValInternal(JSContext* const aCx, JS::Handle<JS::Value> aVal,
   }
 
   // Otherwise
-  // Return "invalid type".
-  return Err(IDBError(SpecialValues::InvalidType));
+  // Return invalid.
+  return Err(IDBError(SpecialValues::Invalid));
 }
 
 // static
@@ -550,9 +541,8 @@ nsresult Key::DecodeJSValInternal(const EncodedDataType*& aPos,
 #define TWO_BYTE_ADJUST (-0x7F)
 #define THREE_BYTE_SHIFT 6
 
-IDBResult<Ok, IDBSpecialValue::InvalidType, IDBSpecialValue::InvalidValue>
-Key::EncodeJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal,
-                 uint8_t aTypeOffset) {
+IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeJSVal(
+    JSContext* aCx, JS::Handle<JS::Value> aVal, uint8_t aTypeOffset) {
   return EncodeJSValInternal(aCx, aVal, aTypeOffset, 0);
 }
 
@@ -595,34 +585,19 @@ void Key::ReserveAutoIncrementKey(bool aFirstOfArray) {
   mozilla::BigEndian::writeUint64(buffer, UINT64_MAX);
 }
 
-Result<Ok, nsresult> Key::MaybeUpdateAutoIncrementKey(int64_t aKey) {
+void Key::MaybeUpdateAutoIncrementKey(int64_t aKey) {
   if (mAutoIncrementKeyOffsets.IsEmpty()) {
-    return Ok{};
+    return;
   }
 
-  static constexpr auto maxOffset =
-      KEY_MAXIMUM_BUFFER_LENGTH - sizeof(double) - 1;
-
   for (uint32_t offset : mAutoIncrementKeyOffsets) {
-    if (offset > maxOffset) {
-      return Err(NS_ERROR_DOM_INDEXEDDB_KEY_ERR);
-    }
-
     char* buffer;
-    const auto capacity = mBuffer.GetMutableData(&buffer);
-    MOZ_ALWAYS_TRUE(capacity);
-
-    if (offset + sizeof(double) > capacity) {
-      return Err(NS_ERROR_DOM_INDEXEDDB_KEY_ERR);
-    }
-
+    MOZ_ALWAYS_TRUE(mBuffer.GetMutableData(&buffer));
     buffer += offset;
     WriteDoubleToUint64(buffer, double(aKey));
   }
 
   TrimBuffer();
-
-  return Ok{};
 }
 
 void Key::WriteDoubleToUint64(char* aBuffer, double aValue) {
@@ -731,7 +706,29 @@ Result<Ok, nsresult> Key::EncodeAsString(const Span<const T> aInput,
 Result<Ok, nsresult> Key::EncodeLocaleString(const nsAString& aString,
                                              uint8_t aTypeOffset,
                                              const nsCString& aLocale) {
-  return Err(NS_ERROR_FAILURE);
+  const int length = aString.Length();
+  if (length == 0) {
+    return Ok();
+  }
+
+  auto collResult = intl::Collator::TryCreate(aLocale.get());
+  if (collResult.isErr()) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  auto collator = collResult.unwrap();
+  MOZ_ASSERT(collator);
+
+  AutoTArray<uint8_t, 128> keyBuffer;
+  MOZ_TRY(collator->GetSortKey(Span{aString}, keyBuffer)
+              .mapErr([](intl::ICUError icuError) {
+                return icuError == intl::ICUError::OutOfMemory
+                           ? NS_ERROR_OUT_OF_MEMORY
+                           : NS_ERROR_FAILURE;
+              }));
+
+  size_t sortKeyLength = keyBuffer.Length();
+  return EncodeString(Span{keyBuffer}.AsConst().First(sortKeyLength),
+                      aTypeOffset);
 }
 
 // static
@@ -928,12 +925,6 @@ Result<Ok, nsresult> Key::EncodeBinary(
     return Err(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
   }
 
-  JSObject* obj = aArrayBufferOrView.asObjectUnbarriered();
-  if (JS::IsSharedArrayBufferObject(obj) ||
-      (JS_IsArrayBufferViewObject(obj) && JS::IsArrayBufferViewShared(obj))) {
-    return Err(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-  }
-
   // 1. Let aData be the result of getting the bytes held by the buffer source
   //    input.
   // 2. Return a new key with type binary and value aData.
@@ -1004,9 +995,8 @@ nsresult Key::SetFromValueArray(mozIStorageValueArray* aValues,
   return SetFromSource(aValues, aIndex);
 }
 
-IDBResult<Ok, IDBSpecialValue::InvalidType, IDBSpecialValue::InvalidValue>
-Key::SetFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal,
-                  mozilla::dom::IDBTransaction* aTransaction) {
+IDBResult<Ok, IDBSpecialValue::Invalid> Key::SetFromJSVal(
+    JSContext* aCx, JS::Handle<JS::Value> aVal) {
   mBuffer.Truncate();
 
   if (aVal.isNull() || aVal.isUndefined()) {
@@ -1014,26 +1004,11 @@ Key::SetFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal,
     return Ok();
   }
 
-  const bool shouldInactivate = aTransaction && aTransaction->IsActive();
-  if (shouldInactivate) {
-    aTransaction->TransitionToInactive();
-  }
-  auto guard = MakeScopeExit([&]() {
-    if (shouldInactivate && !aTransaction->IsAborted()) {
-      aTransaction->TransitionToActive();
-    }
-  });
-
   auto result = EncodeJSVal(aCx, aVal, 0);
   if (result.isErr()) {
     Unset();
     return result;
   }
-
-  if (aTransaction && aTransaction->IsAborted()) {
-    return Err(IDBException(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR));
-  }
-
   TrimBuffer();
   return Ok();
 }
@@ -1064,9 +1039,8 @@ nsresult Key::ToJSVal(JSContext* aCx, JS::Heap<JS::Value>& aVal) const {
   return rv;
 }
 
-IDBResult<Ok, IDBSpecialValue::InvalidType, IDBSpecialValue::InvalidValue>
-Key::AppendItem(JSContext* aCx, bool aFirstOfArray,
-                JS::Handle<JS::Value> aVal) {
+IDBResult<Ok, IDBSpecialValue::Invalid> Key::AppendItem(
+    JSContext* aCx, bool aFirstOfArray, JS::Handle<JS::Value> aVal) {
   auto result = EncodeJSVal(aCx, aVal, aFirstOfArray ? eMaxType : 0);
   if (result.isErr()) {
     Unset();

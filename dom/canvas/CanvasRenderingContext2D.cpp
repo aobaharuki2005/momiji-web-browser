@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -12,7 +13,6 @@
 #include "ImageEncoder.h"
 #include "ImageRegion.h"
 #include "LayerUserData.h"
-#include "PseudoStyleType.h"
 #include "Units.h"
 #include "WindowRenderer.h"
 #include "gfxBlur.h"
@@ -40,7 +40,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/SVGImageContext.h"
@@ -90,6 +89,7 @@
 #include "mozilla/layers/WebRenderUserData.h"
 #include "nsBidiPresUtils.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsCSSPseudoElements.h"
 #include "nsCSSValue.h"
 #include "nsColor.h"
 #include "nsComputedDOMStyle.h"
@@ -1017,8 +1017,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(CanvasRenderingContext2D)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(CanvasRenderingContext2D)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CanvasRenderingContext2D)
-  tmp->RemoveShutdownObserver();
-  tmp->OnShutdown();
   // Make sure we remove ourselves from the list of demotable contexts (raw
   // pointers), since we're logically destructed at this point.
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCanvasElement)
@@ -1749,18 +1747,17 @@ bool CanvasRenderingContext2D::EnsureTarget(ErrorResult& aError,
     return true;
   }
 
-  if (mWidth < 0 || mHeight < 0) {
+  // Check that the dimensions are sane
+  if (mWidth > StaticPrefs::gfx_canvas_max_size() ||
+      mHeight > StaticPrefs::gfx_canvas_max_size()) {
     SetErrorState();
-    aError.ThrowInvalidStateError("Canvas has invalid size.");
+    aError.ThrowInvalidStateError("Canvas exceeds max size.");
     return false;
   }
 
-  // Check that the dimensions are sane
-  if (mWidth > StaticPrefs::gfx_canvas_max_size() ||
-      mHeight > StaticPrefs::gfx_canvas_max_size() ||
-      size_t(mWidth) * size_t(mHeight) > StaticPrefs::gfx_canvas_max_area()) {
+  if (mWidth < 0 || mHeight < 0) {
     SetErrorState();
-    aError.ThrowInvalidStateError("Canvas exceeds max size.");
+    aError.ThrowInvalidStateError("Canvas has invalid size.");
     return false;
   }
 
@@ -1908,7 +1905,7 @@ void CanvasRenderingContext2D::RegisterAllocation() {
   // FIXME: Disable the reporter for now, see bug 1241865
   if (!registered && false) {
     registered = true;
-    RegisterStrongMemoryReporter(MakeAndAddRef<Canvas2dPixelsReporter>());
+    RegisterStrongMemoryReporter(new Canvas2dPixelsReporter());
   }
 }
 
@@ -2377,7 +2374,7 @@ Matrix CanvasRenderingContext2D::GetCurrentTransform() const {
 }
 
 void CanvasRenderingContext2D::Save() {
-  if (HasErrorState() || mStyleStack.IsEmpty()) [[unlikely]] {
+  if (MOZ_UNLIKELY(HasErrorState() || mStyleStack.IsEmpty())) {
     SetErrorState();
     return;
   }
@@ -2393,7 +2390,7 @@ void CanvasRenderingContext2D::Save() {
 }
 
 void CanvasRenderingContext2D::Restore() {
-  if (mStyleStack.Length() < 2 || HasErrorState()) [[unlikely]] {
+  if (MOZ_UNLIKELY(mStyleStack.Length() < 2 || HasErrorState())) {
     return;
   }
 
@@ -3030,12 +3027,8 @@ void CanvasRenderingContext2D::GetLetterSpacing(nsACString& aLetterSpacing) {
 
 void CanvasRenderingContext2D::SetLetterSpacing(
     const nsACString& aLetterSpacing) {
-  nsAutoCString normalized;
-  Maybe<float> value = ParseSpacing(aLetterSpacing, normalized);
-  if (value) {
-    CurrentState().letterSpacing = *value;
-    CurrentState().letterSpacingStr = normalized;
-  }
+  ParseSpacing(aLetterSpacing, &CurrentState().letterSpacing,
+               CurrentState().letterSpacingStr);
 }
 
 void CanvasRenderingContext2D::GetWordSpacing(nsACString& aWordSpacing) {
@@ -3047,12 +3040,8 @@ void CanvasRenderingContext2D::GetWordSpacing(nsACString& aWordSpacing) {
 }
 
 void CanvasRenderingContext2D::SetWordSpacing(const nsACString& aWordSpacing) {
-  nsAutoCString normalized;
-  Maybe<float> value = ParseSpacing(aWordSpacing, normalized);
-  if (value) {
-    CurrentState().wordSpacing = *value;
-    CurrentState().wordSpacingStr = normalized;
-  }
+  ParseSpacing(aWordSpacing, &CurrentState().wordSpacing,
+               CurrentState().wordSpacingStr);
 }
 
 static GeckoFontMetrics GetFontMetricsFromCanvas(void* aContext) {
@@ -3083,8 +3072,9 @@ static GeckoFontMetrics GetFontMetricsFromCanvas(void* aContext) {
           0.0f};
 }
 
-Maybe<float> CanvasRenderingContext2D::ParseSpacing(const nsACString& aSpacing,
-                                                    nsACString& aNormalized) {
+void CanvasRenderingContext2D::ParseSpacing(const nsACString& aSpacing,
+                                            float* aValue,
+                                            nsACString& aNormalized) {
   // Normalize whitespace in the string before trying to parse it, as we want
   // to store it in normalized form, and this allows a simple check against the
   // 'normal' keyword, which is not accepted.
@@ -3092,28 +3082,28 @@ Maybe<float> CanvasRenderingContext2D::ParseSpacing(const nsACString& aSpacing,
   normalized.CompressWhitespace(true, true);
   ToLowerCase(normalized);
   if (normalized.EqualsLiteral("normal")) {
-    return Nothing();
+    return;
   }
   float value;
   if (!Servo_ParseLengthWithoutStyleContext(&normalized, &value,
                                             GetFontMetricsFromCanvas, this)) {
     if (!GetPresShell()) {
-      return Nothing();
+      return;
     }
     // This will parse aSpacing as a <length-percentage>...
     RefPtr<const ComputedStyle> style =
         ResolveStyleForProperty(eCSSProperty_letter_spacing, aSpacing);
     if (!style) {
-      return Nothing();
+      return;
     }
     // ...but only <length> is allowed according to the canvas spec.
     if (!style->StyleText()->mLetterSpacing.IsLength()) {
-      return Nothing();
+      return;
     }
     value = style->StyleText()->mLetterSpacing.AsLength().ToCSSPixels();
   }
   aNormalized = normalized;
-  return Some(value);
+  *aValue = value;
 }
 
 class CanvasUserSpaceMetrics final : public UserSpaceMetricsWithSize {
@@ -3257,7 +3247,7 @@ void CanvasRenderingContext2D::UpdateFilter(bool aFlushIfNeeded) {
       presShell->FlushPendingNotifications(FlushType::Frames);
     }
 
-    if (presShell->IsDestroying()) [[unlikely]] {
+    if (MOZ_UNLIKELY(presShell->IsDestroying())) {
       return;
     }
 
@@ -3594,11 +3584,6 @@ void CanvasRenderingContext2D::StrokeImpl(const gfx::Path& aPath) {
     return;
   }
 
-  const bool needBounds = NeedToCalculateBounds();
-  if (!IsTargetValid()) {
-    return;
-  }
-
   const ContextState* state = &CurrentState();
   StrokeOptions strokeOptions(state->lineWidth, CanvasToGfx(state->lineJoin),
                               CanvasToGfx(state->lineCap), state->miterLimit,
@@ -3606,6 +3591,10 @@ void CanvasRenderingContext2D::StrokeImpl(const gfx::Path& aPath) {
                               state->dashOffset);
   state = nullptr;
 
+  const bool needBounds = NeedToCalculateBounds();
+  if (!IsTargetValid()) {
+    return;
+  }
   gfx::Rect bounds;
   if (needBounds) {
     bounds = aPath.GetStrokedBounds(strokeOptions, mTarget->GetTransform());
@@ -4179,10 +4168,6 @@ void CanvasRenderingContext2D::SetFont(const nsACString& aFont,
                                        ErrorResult& aError) {
   mFeatureUsage |= CanvasFeatureUsage::SetFont;
 
-  if (ResolveFontLang()) {
-    CurrentState().fontGroup = nullptr;
-  }
-
   SetFontInternal(aFont, aError);
   if (aError.Failed()) {
     return;
@@ -4219,8 +4204,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   }
 
   nsPresContext* c = presShell->GetPresContext();
-  FontStyleCacheKey key{aFont, CurrentState().resolvedFontLang,
-                        c->RestyleManager()->GetRestyleGeneration()};
+  FontStyleCacheKey key{aFont, c->RestyleManager()->GetRestyleGeneration()};
   auto entry = mFontStyleCache.Lookup(key);
   if (!entry) {
     FontStyleData newData;
@@ -4309,22 +4293,22 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
       // Leave whatever the shorthand set.
       break;
     case CanvasFontVariantCaps::Small_caps:
-      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_SMALL_CAPS;
+      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_SMALLCAPS;
       break;
     case CanvasFontVariantCaps::All_small_caps:
-      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_ALL_SMALL_CAPS;
+      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_ALLSMALL;
       break;
     case CanvasFontVariantCaps::Petite_caps:
-      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_PETITE_CAPS;
+      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_PETITECAPS;
       break;
     case CanvasFontVariantCaps::All_petite_caps:
-      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_ALL_PETITE_CAPS;
+      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_ALLPETITE;
       break;
     case CanvasFontVariantCaps::Unicase:
       resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_UNICASE;
       break;
     case CanvasFontVariantCaps::Titling_caps:
-      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_TITLING_CAPS;
+      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_TITLING;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unknown caps value");
@@ -4334,8 +4318,8 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   c->Document()->FlushUserFontSet();
 
   nsFontMetrics::Params params;
-  params.language = CurrentState().resolvedFontLang;
-  params.explicitLanguage = CurrentState().explicitLang;
+  params.language = fontStyle->mLanguage;
+  params.explicitLanguage = fontStyle->mExplicitLanguage;
   params.userFontSet = c->GetUserFontSet();
   params.textPerf = c->GetTextPerfMetrics();
 #ifdef XP_WIN
@@ -4385,7 +4369,7 @@ static void SerializeFontForCanvas(const StyleFontFamilyList& aList,
     aUsedFont.Append(" ");
   }
 
-  if (aStyle.variantCaps == NS_FONT_VARIANT_CAPS_SMALL_CAPS) {
+  if (aStyle.variantCaps == NS_FONT_VARIANT_CAPS_SMALLCAPS) {
     aUsedFont.Append("small-caps ");
   }
 
@@ -4480,26 +4464,26 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
   // the available values); see https://github.com/whatwg/html/issues/8103.
   switch (CurrentState().fontVariantCaps) {
     case CanvasFontVariantCaps::Normal:
-      fontStyle.variantCaps = smallCaps ? NS_FONT_VARIANT_CAPS_SMALL_CAPS
+      fontStyle.variantCaps = smallCaps ? NS_FONT_VARIANT_CAPS_SMALLCAPS
                                         : NS_FONT_VARIANT_CAPS_NORMAL;
       break;
     case CanvasFontVariantCaps::Small_caps:
-      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_SMALL_CAPS;
+      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_SMALLCAPS;
       break;
     case CanvasFontVariantCaps::All_small_caps:
-      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_ALL_SMALL_CAPS;
+      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_ALLSMALL;
       break;
     case CanvasFontVariantCaps::Petite_caps:
-      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_PETITE_CAPS;
+      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_PETITECAPS;
       break;
     case CanvasFontVariantCaps::All_petite_caps:
-      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_ALL_PETITE_CAPS;
+      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_ALLPETITE;
       break;
     case CanvasFontVariantCaps::Unicase:
       fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_UNICASE;
       break;
     case CanvasFontVariantCaps::Titling_caps:
-      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_TITLING_CAPS;
+      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_TITLING;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unknown caps value");
@@ -4525,16 +4509,33 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
       break;
   }
 
+  // If we have a canvas element, get its lang (if known).
+  RefPtr<nsAtom> language;
+  bool explicitLanguage = false;
+  if (mCanvasElement) {
+    language = mCanvasElement->FragmentOrElement::GetLang();
+    if (language) {
+      explicitLanguage = true;
+    } else {
+      language = mCanvasElement->OwnerDoc()->GetLanguageForStyle();
+    }
+  } else {
+    // Pass the OS default language, to behave similarly to HTML or canvas-
+    // element content with no language tag.
+    language = nsLanguageAtomService::GetService()->GetLocaleLanguage();
+  }
+
   // TODO: Cache fontGroups in the Worker (use an nsFontCache?)
-  gfxFontGroup* fontGroup = new gfxFontGroup(
-      mOffscreenCanvas,  // aFontVisibilityProvider
-      list,              // aFontFamilyList
-      &fontStyle,        // aStyle
-      CurrentState().resolvedFontLang, CurrentState().explicitLang,
-      nullptr,          // aTextPerf
-      fontFaceSetImpl,  // aUserFontSet
-      1.0,              // aDevToCssSize
-      StyleFontVariantEmoji::Normal);
+  gfxFontGroup* fontGroup =
+      new gfxFontGroup(mOffscreenCanvas,  // aFontVisibilityProvider
+                       list,              // aFontFamilyList
+                       &fontStyle,        // aStyle
+                       language,          // aLanguage
+                       explicitLanguage,  // aExplicitLanguage
+                       nullptr,           // aTextPerf
+                       fontFaceSetImpl,   // aUserFontSet
+                       1.0,               // aDevToCssSize
+                       StyleFontVariantEmoji::Normal);
   auto& state = CurrentState();
   state.fontGroup = fontGroup;
   SerializeFontForCanvas(list, fontStyle, state.font);
@@ -4546,7 +4547,7 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
 }
 
 void CanvasRenderingContext2D::UpdateSpacing() {
-  const auto& state = CurrentState();
+  auto state = CurrentState();
   if (!state.letterSpacingStr.IsEmpty()) {
     SetLetterSpacing(state.letterSpacingStr);
   }
@@ -4887,7 +4888,6 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     }
 
     mCtx->EnsureTarget();
-    const bool needBounds = mCtx->NeedToCalculateBounds();
     if (!mCtx->IsTargetValid()) {
       return;
     }
@@ -4902,7 +4902,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     const ContextState& state = mCtx->CurrentState();
 
     gfx::Rect bounds;
-    if (needBounds) {
+    if (mCtx->NeedToCalculateBounds()) {
       bounds = ToRect(mBoundingBox);
       bounds.MoveBy(mPt / mAppUnitsPerDevPixel);
       if (style == Style::STROKE) {
@@ -5050,9 +5050,6 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
     canvasStyle = nsComputedDOMStyle::GetComputedStyle(mCanvasElement);
   }
 
-  // This is only needed to know if we can know the drawing bounding box easily.
-  const bool doCalculateBounds = NeedToCalculateBounds();
-
   // Get text direction, either from the property or inherited from context.
   const ContextState& state = CurrentState();
   bool isRTL;
@@ -5078,6 +5075,8 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
       MOZ_CRASH("unknown direction!");
   }
 
+  // This is only needed to know if we can know the drawing bounding box easily.
+  const bool doCalculateBounds = NeedToCalculateBounds();
   if (presShell && presShell->IsDestroying()) {
     aError = NS_ERROR_FAILURE;
     return nullptr;
@@ -5169,20 +5168,13 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
     }
   }
 
-  gfx::ShapedTextFlags runOrientation =
-      (processor.mTextRunFlags & gfx::ShapedTextFlags::TEXT_ORIENT_MASK);
-  nsFontMetrics::FontOrientation fontOrientation =
-      (runOrientation == gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED ||
-       runOrientation == gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT)
-          ? nsFontMetrics::eVertical
-          : nsFontMetrics::eHorizontal;
-
   nscoord totalWidthCoord;
 
   processor.mFontgrp
       ->UpdateUserFonts();  // ensure user font generation is current
   RefPtr<gfxFont> font = processor.mFontgrp->GetFirstValidFont();
-  const gfxFont::Metrics& fontMetrics = font->GetMetrics(fontOrientation);
+  const gfxFont::Metrics& fontMetrics =
+      font->GetMetrics(nsFontMetrics::eHorizontal);
 
   // calls bidi algo twice since it needs the full text width and the
   // bounding boxes before rendering anything
@@ -5220,12 +5212,20 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
   float offsetX = anchorX * totalWidth;
   processor.mPt.x -= offsetX;
 
+  gfx::ShapedTextFlags runOrientation =
+      (processor.mTextRunFlags & gfx::ShapedTextFlags::TEXT_ORIENT_MASK);
+  nsFontMetrics::FontOrientation fontOrientation =
+      (runOrientation == gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED ||
+       runOrientation == gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT)
+          ? nsFontMetrics::eVertical
+          : nsFontMetrics::eHorizontal;
+
   // offset pt.y (or pt.x, for vertical text) based on text baseline
   gfxFloat baselineAnchor;
 
   switch (state.textBaseline) {
     case CanvasTextBaseline::Hanging:
-      baselineAnchor = font->GetBaseline(gfxFont::kHanging, fontOrientation);
+      baselineAnchor = font->GetBaselines(fontOrientation).mHanging;
       break;
     case CanvasTextBaseline::Top:
       baselineAnchor = fontMetrics.emAscent;
@@ -5234,11 +5234,10 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
       baselineAnchor = (fontMetrics.emAscent - fontMetrics.emDescent) * .5f;
       break;
     case CanvasTextBaseline::Alphabetic:
-      baselineAnchor = font->GetBaseline(gfxFont::kAlphabetic, fontOrientation);
+      baselineAnchor = font->GetBaselines(fontOrientation).mAlphabetic;
       break;
     case CanvasTextBaseline::Ideographic:
-      baselineAnchor =
-          font->GetBaseline(gfxFont::kIdeographicUnder, fontOrientation);
+      baselineAnchor = font->GetBaselines(fontOrientation).mIdeographic;
       break;
     case CanvasTextBaseline::Bottom:
       baselineAnchor = -fontMetrics.emDescent;
@@ -5250,6 +5249,11 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
   // We can't query the textRun directly, as it may not have been created yet;
   // so instead we check the flags that will be used to initialize it.
   if (runOrientation != gfx::ShapedTextFlags::TEXT_ORIENT_HORIZONTAL) {
+    if (fontOrientation == nsFontMetrics::eVertical) {
+      // Adjust to account for mTextRun being shaped using center baseline
+      // rather than alphabetic.
+      baselineAnchor -= (fontMetrics.emAscent - fontMetrics.emDescent) * .5f;
+    }
     processor.mPt.x -= baselineAnchor;
   } else {
     processor.mPt.y += baselineAnchor;
@@ -5266,6 +5270,7 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
         -processor.mBoundingBox.Y() - baselineAnchor;
     double actualBoundingBoxDescent =
         processor.mBoundingBox.YMost() + baselineAnchor;
+    auto baselines = font->GetBaselines(fontOrientation);
     return MakeUnique<TextMetrics>(
         totalWidth, actualBoundingBoxLeft, actualBoundingBoxRight,
         fontMetrics.maxAscent - baselineAnchor,   // fontBBAscent
@@ -5273,11 +5278,9 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
         actualBoundingBoxAscent, actualBoundingBoxDescent,
         fontMetrics.emAscent - baselineAnchor,   // emHeightAscent
         fontMetrics.emDescent + baselineAnchor,  // emHeightDescent
-        font->GetBaseline(gfxFont::kHanging, fontOrientation) - baselineAnchor,
-        font->GetBaseline(gfxFont::kAlphabetic, fontOrientation) -
-            baselineAnchor,
-        font->GetBaseline(gfxFont::kIdeographicUnder, fontOrientation) -
-            baselineAnchor);
+        baselines.mHanging - baselineAnchor,
+        baselines.mAlphabetic - baselineAnchor,
+        baselines.mIdeographic - baselineAnchor);
   }
 
   // If we did not actually calculate bounds, set up a simple bounding box
@@ -5346,65 +5349,6 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
   return nullptr;
 }
 
-// Resolve CurrentState().lang to .resolvedFontLang, returning true if the
-// resolved value changed.
-bool CanvasRenderingContext2D::ResolveFontLang() {
-  bool explicitLang = false;
-  RefPtr resolvedLang = [&]() {
-    nsAtom* lang = CurrentState().lang;
-    if (!lang->IsEmpty() && lang != nsGkAtoms::inherit) {
-      explicitLang = true;
-      return do_AddRef(lang);
-    }
-
-    if (mCanvasElement) {
-      // If we have a canvas element, get its lang (if known).
-      if (nsAtom* lang = mCanvasElement->FragmentOrElement::GetLang()) {
-        explicitLang = true;
-        return do_AddRef(lang);
-      }
-      return do_AddRef(mCanvasElement->OwnerDoc()->GetLanguageForStyle());
-    }
-
-    if (RefPtr presShell = GetPresShell()) {
-      // Try to inherit 'lang' from the presShell's document, if any.
-      return do_AddRef(presShell->GetDocument()->GetLanguageForStyle());
-    }
-
-    if (mOffscreenCanvas) {
-      // If the offscreen canvas has a value transferred from a canvas element,
-      // we use that.
-      if (nsAtom* lang = mOffscreenCanvas->GetLang()) {
-        explicitLang = true;
-        return do_AddRef(lang);
-      }
-      if (auto* window = mOffscreenCanvas->GetOwnerWindow()) {
-        if (auto* doc = window->GetExtantDoc()) {
-          // Why doesn't doc->GetLanguageForStyle() work here? Get 'lang'
-          // from the root element by hand.
-          if (auto* root = doc->GetRootElement()) {
-            nsAutoString lang;
-            root->GetLang(lang);
-            if (!lang.IsEmpty()) {
-              return NS_Atomize(lang);
-            }
-          }
-        }
-      }
-    }
-    // Fall back to the OS default language, to behave similarly to HTML or
-    // canvas-element content with no language tag.
-    return do_AddRef(nsLanguageAtomService::GetService()->GetLocaleLanguage());
-  }();
-
-  CurrentState().explicitLang = explicitLang;
-  if (resolvedLang == CurrentState().resolvedFontLang) {
-    return false;
-  }
-  CurrentState().resolvedFontLang = resolvedLang;
-  return true;
-}
-
 gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
   // Use lazy (re)initialization for the fontGroup since it's rather expensive.
 
@@ -5419,58 +5363,50 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
     visProvider = mOffscreenCanvas;
   }
 
-  if (ResolveFontLang()) {
-    // If lang has changed, any cached fontGroup needs to be replaced.
-    CurrentState().fontGroup = nullptr;
-  } else {
-    // If there is a cached fontGroup, check if visibility setting matches;
-    // if not, we can't use it and will have to re-create it.
-    RefPtr<gfxFontGroup>& fontGroup = CurrentState().fontGroup;
-    if (fontGroup && fontGroup->GetFontVisibilityProvider() != visProvider) {
+  // If we have a cached fontGroup, check that it is valid for the current
+  // prescontext or canvas; if not, we need to discard and re-create it.
+  RefPtr<gfxFontGroup>& fontGroup = CurrentState().fontGroup;
+  if (fontGroup) {
+    if (fontGroup->GetFontVisibilityProvider() != visProvider) {
       fontGroup = nullptr;
     }
-    if (fontGroup) {
-      return fontGroup;
+  }
+
+  if (!fontGroup) {
+    ErrorResult err;
+    constexpr auto kDefaultFontStyle = "10px sans-serif"_ns;
+    const float kDefaultFontSize = 10.0;
+    // If the font has already been set, we're re-creating the fontGroup
+    // and should re-use the existing font attribute; if not, we initialize
+    // it to the canvas default.
+    const nsCString& currentFont = CurrentState().font;
+    bool fontUpdated = SetFontInternal(
+        currentFont.IsEmpty() ? kDefaultFontStyle : currentFont, err);
+    if (err.Failed() || !fontUpdated) {
+      err.SuppressException();
+      // XXX Should we get a default lang from the prescontext or something?
+      nsAtom* language = nsGkAtoms::x_western;
+      bool explicitLanguage = false;
+      gfxFontStyle style;
+      style.size = kDefaultFontSize;
+      int32_t perDevPixel, perCSSPixel;
+      GetAppUnitsValues(&perDevPixel, &perCSSPixel);
+      gfxFloat devToCssSize = gfxFloat(perDevPixel) / gfxFloat(perCSSPixel);
+      const auto* sans =
+          Servo_FontFamily_Generic(StyleGenericFontFamily::SansSerif);
+      fontGroup = new gfxFontGroup(
+          visProvider, sans->families, &style, language, explicitLanguage,
+          presContext ? presContext->GetTextPerfMetrics() : nullptr, nullptr,
+          devToCssSize, StyleFontVariantEmoji::Normal);
+      if (fontGroup) {
+        CurrentState().font = kDefaultFontStyle;
+      } else {
+        NS_ERROR("Default canvas font is invalid");
+      }
     }
   }
 
-  ErrorResult err;
-  constexpr auto kDefaultFontStyle = "10px sans-serif"_ns;
-  const float kDefaultFontSize = 10.0;
-  // If the font has already been set, we're re-creating the fontGroup
-  // and should re-use the existing font attribute; if not, we initialize
-  // it to the canvas default.
-  // We make a local copy of CurrentState().font because SetFontInternal
-  // may cause a flush and could invalidate any reference to the string in
-  // the CurrentState() record.
-  nsAutoCString currentFont(CurrentState().font);
-  if (currentFont.IsEmpty()) {
-    currentFont = kDefaultFontStyle;
-  }
-  if (!SetFontInternal(currentFont, err) || err.Failed()) {
-    err.SuppressException();
-    // XXX Should we get a default lang from the prescontext or something?
-    nsAtom* language = nsGkAtoms::x_western;
-    bool explicitLanguage = false;
-    gfxFontStyle style;
-    style.size = kDefaultFontSize;
-    int32_t perDevPixel, perCSSPixel;
-    GetAppUnitsValues(&perDevPixel, &perCSSPixel);
-    gfxFloat devToCssSize = gfxFloat(perDevPixel) / gfxFloat(perCSSPixel);
-    const auto* sans =
-        Servo_FontFamily_Generic(StyleGenericFontFamily::SansSerif);
-    CurrentState().fontGroup = new gfxFontGroup(
-        visProvider, sans->families, &style, language, explicitLanguage,
-        presContext ? presContext->GetTextPerfMetrics() : nullptr, nullptr,
-        devToCssSize, StyleFontVariantEmoji::Normal);
-    if (CurrentState().fontGroup) {
-      CurrentState().font = kDefaultFontStyle;
-    } else {
-      NS_ERROR("Default canvas font is invalid");
-    }
-  }
-
-  return CurrentState().fontGroup;
+  return fontGroup;
 }
 
 //
@@ -5976,7 +5912,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
         HTMLVideoElement* video = HTMLVideoElement::FromNodeOrNull(element);
         if (video && mBufferProvider->IsAccelerated() &&
             mTarget->IsRecording() &&
-            !(NeedToApplyFilter() || NeedToDrawShadow())) {
+            !(!NeedToApplyFilter() && NeedToDrawShadow())) {
           res = nsLayoutUtils::SurfaceFromElement(
               video, sfeFlags, mTarget, /* aOptimizeSourceSurface */ false);
           surfaceDescriptor = MaybeGetSurfaceDescriptorForRemoteCanvas(res);

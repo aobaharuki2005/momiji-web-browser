@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,6 +14,9 @@
 #include "nsString.h"
 
 namespace mozilla::dom {
+
+class ContentChild;
+class ContentParent;
 
 /**
  * `PushDispatcher` is a base class used to forward observer notifications and
@@ -29,6 +34,20 @@ class MOZ_STACK_CLASS PushDispatcher {
 
   // A convenience method that calls `NotifyObservers` and `NotifyWorkers`.
   nsresult NotifyObserversAndWorkers();
+
+  // Sends an IPDL message to fire an observer notification in the parent
+  // process. This method is only called from the content process, and only
+  // if e10s is enabled.
+  virtual bool SendToParent(ContentChild* aParentActor) = 0;
+
+  // Sends an IPDL message to fire an observer notification and a service worker
+  // event in the content process. This method is only called from the parent,
+  // and only if e10s is enabled.
+  virtual bool SendToChild(ContentParent* aContentActor) = 0;
+
+  // An optional method, called from the parent if e10s is enabled and there
+  // are no active content processes. The default behavior is a no-op.
+  virtual nsresult HandleNoChildProcesses();
 
   nsIPrincipal* GetPrincipal() { return mPrincipal; }
 
@@ -55,14 +74,14 @@ class MOZ_STACK_CLASS PushDispatcher {
  */
 class PushNotifier final : public nsIPushNotifier {
  public:
-  PushNotifier() = default;
+  PushNotifier();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PushNotifier, nsIPushNotifier)
   NS_DECL_NSIPUSHNOTIFIER
 
  private:
-  ~PushNotifier() = default;
+  ~PushNotifier();
 
   nsresult Dispatch(PushDispatcher& aDispatcher);
 };
@@ -117,6 +136,8 @@ class PushMessageDispatcher final : public PushDispatcher {
 
   nsresult NotifyObservers() override;
   nsresult NotifyWorkers() override;
+  bool SendToParent(ContentChild* aParentActor) override;
+  bool SendToChild(ContentParent* aContentActor) override;
 
  private:
   const nsString mMessageId;
@@ -132,6 +153,8 @@ class PushSubscriptionChangeDispatcher final : public PushDispatcher {
 
   nsresult NotifyObservers() override;
   nsresult NotifyWorkers() override;
+  bool SendToParent(ContentChild* aParentActor) override;
+  bool SendToChild(ContentParent* aContentActor) override;
 
  private:
   nsCOMPtr<nsIPushSubscription> mOldSubscription;
@@ -145,6 +168,8 @@ class PushSubscriptionModifiedDispatcher : public PushDispatcher {
 
   nsresult NotifyObservers() override;
   nsresult NotifyWorkers() override;
+  bool SendToParent(ContentChild* aParentActor) override;
+  bool SendToChild(ContentParent* aContentActor) override;
 };
 
 class PushErrorDispatcher final : public PushDispatcher {
@@ -155,8 +180,12 @@ class PushErrorDispatcher final : public PushDispatcher {
 
   nsresult NotifyObservers() override;
   nsresult NotifyWorkers() override;
+  bool SendToParent(ContentChild* aParentActor) override;
+  bool SendToChild(ContentParent* aContentActor) override;
 
  private:
+  nsresult HandleNoChildProcesses() override;
+
   const nsString mMessage;
   uint32_t mFlags;
 };

@@ -26,9 +26,9 @@ async function rightClickOpenInNewTabAndReturnContent(selector) {
   );
   await loaded;
 
-  const generatedBlobURL = await SpecialPowers.spawn(
+  const generatedBlobURL = await ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [{ selector }],
+    { selector },
     async args => {
       return content.document.getElementById(args.selector).href;
     }
@@ -69,9 +69,9 @@ async function rightClickOpenInNewTabAndReturnContent(selector) {
 
   await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[1]);
 
-  let blobDataFromContent = await SpecialPowers.spawn(
+  let blobDataFromContent = await ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [],
+    null,
     async function () {
       while (!content.document.querySelector("body pre")) {
         await new Promise(resolve =>
@@ -106,9 +106,9 @@ async function openInNewTabAndReturnContent(selector) {
   );
   await loaded;
 
-  const generatedBlobURL = await SpecialPowers.spawn(
+  const generatedBlobURL = await ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [{ selector }],
+    { selector },
     async args => {
       return content.document.getElementById(args.selector).href;
     }
@@ -119,9 +119,9 @@ async function openInNewTabAndReturnContent(selector) {
     generatedBlobURL
   );
 
-  let blobDataFromContent = await SpecialPowers.spawn(
+  let blobDataFromContent = await ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [],
+    null,
     async function () {
       while (!content.document.querySelector("body pre")) {
         await new Promise(resolve =>

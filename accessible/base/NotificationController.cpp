@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -974,7 +975,16 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   // mutation is done.
   mDocument->ProcessInvalidationList();
 
-  ProcessRelocations();
+  // Process relocation list.
+  for (uint32_t idx = 0; idx < mRelocations.Length(); idx++) {
+    // owner should be in a document and have na associated DOM node (docs
+    // sometimes don't)
+    if (mRelocations[idx]->IsInDocument() &&
+        mRelocations[idx]->HasOwnContent()) {
+      mDocument->DoARIAOwnsRelocation(mRelocations[idx]);
+    }
+  }
+  mRelocations.Clear();
 
   // Process only currently queued generic notifications.
   // These are used for processing aria-activedescendant, DOMMenuItemActive,
@@ -1116,18 +1126,6 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       mPresShell->RemoveRefreshObserver(this, FlushType::Display)) {
     mObservingState = eNotObservingRefresh;
   }
-}
-
-void NotificationController::ProcessRelocations() {
-  for (uint32_t idx = 0; idx < mRelocations.Length(); idx++) {
-    // owner should be in a document and have na associated DOM node (docs
-    // sometimes don't)
-    if (mRelocations[idx]->IsInDocument() &&
-        mRelocations[idx]->HasOwnContent()) {
-      mDocument->DoARIAOwnsRelocation(mRelocations[idx]);
-    }
-  }
-  mRelocations.Clear();
 }
 
 void NotificationController::EventMap::PutEvent(AccTreeMutationEvent* aEvent) {

@@ -379,11 +379,7 @@ struct hb_hashmap_t
 
   void clear ()
   {
-    /* Early-out on already-empty.  Protects the Null singleton
-     * (zero-initialized) from any writes.  Any non-empty hashmap
-     * is a real heap instance with writable items, so clearing
-     * under !successful is safe. */
-    if (!population && !occupancy) return;
+    if (unlikely (!successful)) return;
 
     for (auto &_ : hb_iter (items, size ()))
     {
@@ -496,16 +492,16 @@ struct hb_hashmap_t
   hb_hashmap_t& operator << (const hb_pair_t<K, V>& v)
   { set (v.first, v.second); return *this; }
   template <typename V2 = V,
-	    hb_enable_if (!hb_is_trivially_copyable (V2))>
+	    hb_enable_if (!std::is_trivially_copyable<V2>::value)>
   hb_hashmap_t& operator << (const hb_pair_t<K, V&&>& v)
   { set (v.first, std::move (v.second)); return *this; }
   template <typename K2 = K,
-	    hb_enable_if (!hb_is_trivially_copyable (K2))>
+	    hb_enable_if (!std::is_trivially_copyable<K2>::value)>
   hb_hashmap_t& operator << (const hb_pair_t<K&&, V>& v)
   { set (std::move (v.first), v.second); return *this; }
   template <typename K2 = K, typename V2 = V,
-	    hb_enable_if (!hb_is_trivially_copyable (K2) &&
-			  !hb_is_trivially_copyable (V2))>
+	    hb_enable_if (!std::is_trivially_copyable<K2>::value &&
+			  !std::is_trivially_copyable<V2>::value)>
   hb_hashmap_t& operator << (const hb_pair_t<K&&, V&&>& v)
   { set (std::move (v.first), std::move (v.second)); return *this; }
 

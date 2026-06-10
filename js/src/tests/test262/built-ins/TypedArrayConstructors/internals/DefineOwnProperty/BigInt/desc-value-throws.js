@@ -33,7 +33,7 @@ info: |
 
   Return NormalCompletion(undefined).
 
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
@@ -43,12 +43,12 @@ var obj = {
   }
 };
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg([42n]));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA([42n]);
 
   assert.throws(Test262Error, function() {
     Object.defineProperty(sample, "0", {value: obj});
   });
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

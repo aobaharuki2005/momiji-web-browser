@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_lazyidlethread_h_
-#define mozilla_lazyidlethread_h_
+#ifndef mozilla_lazyidlethread_h__
+#define mozilla_lazyidlethread_h__
 
 #ifndef MOZILLA_INTERNAL_API
 #  error "This header is only usable from within libxul (MOZILLA_INTERNAL_API)."
@@ -38,7 +40,7 @@ class LazyIdleThread final : public nsISerialEventTarget, public nsIObserver {
    * Create a new LazyIdleThread that will destroy its thread after the given
    * number of milliseconds.
    */
-  LazyIdleThread(uint32_t aIdleTimeoutMS, StaticString aName,
+  LazyIdleThread(uint32_t aIdleTimeoutMS, const char* aName,
                  ShutdownMethod aShutdownMethod = AutomaticShutdown);
 
   /**
@@ -88,4 +90,4 @@ class LazyIdleThread final : public nsISerialEventTarget, public nsIObserver {
 
 }  // namespace mozilla
 
-#endif  // mozilla_lazyidlethread_h_
+#endif  // mozilla_lazyidlethread_h__

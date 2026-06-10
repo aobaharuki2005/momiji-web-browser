@@ -1,4 +1,4 @@
-// esline-disable @puppeteer/check-license
+// esline-disable rulesdir/check-license
 export {
   bufferCount,
   catchError,
@@ -9,13 +9,12 @@ export {
   defaultIfEmpty,
   defer,
   delay,
-  delayWhen,
-  distinctUntilChanged,
   EMPTY,
   filter,
   first,
   firstValueFrom,
   forkJoin,
+  delayWhen,
   from,
   fromEvent,
   identity,

@@ -14,7 +14,6 @@ export class GeckoViewContent extends GeckoViewModule {
       "GeckoView:HasCookieBannerRuleForBrowsingContextTree",
       "GeckoView:RestoreState",
       "GeckoView:ContainsFormData",
-      "GeckoView:ProcessBackPressed",
       "GeckoView:ScrollBy",
       "GeckoView:ScrollTo",
       "GeckoView:SetActive",
@@ -291,9 +290,6 @@ export class GeckoViewContent extends GeckoViewModule {
       case "GeckoView:HasCookieBannerRuleForBrowsingContextTree":
         this._hasCookieBannerRuleForBrowsingContextTree(aCallback);
         break;
-      case "GeckoView:ProcessBackPressed":
-        this._processBackPressed(aCallback);
-        break;
     }
   }
 
@@ -309,12 +305,14 @@ export class GeckoViewContent extends GeckoViewModule {
         if (this.browser.hasAttribute("primary")) {
           return;
         }
-        this.eventDispatcher.sendRequest("GeckoView:FocusRequest");
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:FocusRequest",
+        });
         aEvent.preventDefault();
         break;
       case "MozDOMFullscreen:Entered":
         if (this.browser == aEvent.target) {
-          const chromeWindow = this.browser.documentGlobal;
+          const chromeWindow = this.browser.ownerGlobal;
           const requestOrigin =
             chromeWindow.browsingContext?.fullscreenRequestOrigin?.get();
           if (!requestOrigin) {
@@ -330,7 +328,8 @@ export class GeckoViewContent extends GeckoViewModule {
         this.#sendExitDOMFullScreenEvent();
         break;
       case "pagetitlechanged":
-        this.eventDispatcher.sendRequest("GeckoView:PageTitleChanged", {
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:PageTitleChanged",
           title: this.browser.contentTitle,
         });
         break;
@@ -340,22 +339,27 @@ export class GeckoViewContent extends GeckoViewModule {
         // here Gecko will close it immediately.
         aEvent.preventDefault();
 
-        this.eventDispatcher.sendRequest("GeckoView:DOMWindowClose");
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:DOMWindowClose",
+        });
         break;
       case "pageinfo":
         if (aEvent.detail.previewImageURL) {
-          this.eventDispatcher.sendRequest("GeckoView:PreviewImage", {
+          this.eventDispatcher.sendRequest({
+            type: "GeckoView:PreviewImage",
             previewImageUrl: aEvent.detail.previewImageURL,
           });
         }
         break;
       case "cookiebannerdetected":
-        this.eventDispatcher.sendRequest(
-          "GeckoView:CookieBannerEvent:Detected"
-        );
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:CookieBannerEvent:Detected",
+        });
         break;
       case "cookiebannerhandled":
-        this.eventDispatcher.sendRequest("GeckoView:CookieBannerEvent:Handled");
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:CookieBannerEvent:Handled",
+        });
         break;
     }
   }
@@ -373,9 +377,13 @@ export class GeckoViewContent extends GeckoViewModule {
         }
         this.window.setTimeout(() => {
           if (this._contentCrashed) {
-            this.eventDispatcher.sendRequest("GeckoView:ContentCrash");
+            this.eventDispatcher.sendRequest({
+              type: "GeckoView:ContentCrash",
+            });
           } else {
-            this.eventDispatcher.sendRequest("GeckoView:ContentKill");
+            this.eventDispatcher.sendRequest({
+              type: "GeckoView:ContentKill",
+            });
           }
         }, 250);
         break;
@@ -623,15 +631,6 @@ export class GeckoViewContent extends GeckoViewModule {
     }
     const linksOnly = this._finderListener.response.linksOnly;
     finder.highlight(true, finder.searchString, linksOnly, !!aData.drawOutline);
-  }
-
-  _processBackPressed(aCallback) {
-    if (!this.browser?.hasActiveCloseWatcher) {
-      aCallback.onSuccess(false);
-      return;
-    }
-    this.browser.processCloseRequest();
-    aCallback.onSuccess(true);
   }
 }
 

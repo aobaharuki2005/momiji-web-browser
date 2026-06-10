@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <optional>
 #include <utility>  // pair
 
 #include "api/audio_codecs/audio_format.h"
@@ -302,8 +303,8 @@ TEST(RedPayloadSplitter, CheckRedPayloads) {
   // Use a real DecoderDatabase object here instead of a mock, since it is
   // easier to just register the payload types and let the actual implementation
   // do its job.
-  DecoderDatabase decoder_database(env,
-                                   make_ref_counted<MockAudioDecoderFactory>());
+  DecoderDatabase decoder_database(
+      env, make_ref_counted<MockAudioDecoderFactory>(), std::nullopt);
   decoder_database.RegisterPayload(0, SdpAudioFormat("cn", 8000, 1));
   decoder_database.RegisterPayload(1, SdpAudioFormat("pcmu", 8000, 1));
   decoder_database.RegisterPayload(2,
@@ -338,8 +339,8 @@ TEST(RedPayloadSplitter, CheckRedPayloadsRecursiveRed) {
   // Use a real DecoderDatabase object here instead of a mock, since it is
   // easier to just register the payload types and let the actual implementation
   // do its job.
-  DecoderDatabase decoder_database(env,
-                                   make_ref_counted<MockAudioDecoderFactory>());
+  DecoderDatabase decoder_database(
+      env, make_ref_counted<MockAudioDecoderFactory>(), std::nullopt);
   decoder_database.RegisterPayload(kRedPayloadType,
                                    SdpAudioFormat("red", 8000, 1));
 

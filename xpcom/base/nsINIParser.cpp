@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,10 +14,10 @@
 
 using namespace mozilla;
 
-nsresult nsINIParser::Init(nsIFile* aFile, bool* aContainedErrors) {
+nsresult nsINIParser::Init(nsIFile* aFile) {
   nsCString result = MOZ_TRY(URLPreloader::ReadFile(aFile));
 
-  return InitFromString(result, aContainedErrors);
+  return InitFromString(result);
 }
 
 static const char kNL[] = "\r\n";
@@ -23,14 +25,9 @@ static const char kEquals[] = "=";
 static const char kWhitespace[] = " \t";
 static const char kRBracket[] = "]";
 
-nsresult nsINIParser::InitFromString(const nsCString& aStr,
-                                     bool* aContainedErrors) {
+nsresult nsINIParser::InitFromString(const nsCString& aStr) {
   nsCString fileContents;
   char* buffer;
-
-  if (aContainedErrors) {
-    *aContainedErrors = false;
-  }
 
   if (StringHead(aStr, 3) == "\xEF\xBB\xBF") {
     // Someone set us up the Utf-8 BOM
@@ -76,9 +73,6 @@ nsresult nsINIParser::InitFromString(const nsCString& aStr,
         // here and stop, but we won't... keep going, looking for
         // a well-formed [section] to continue working with
         currSection = nullptr;
-        if (aContainedErrors) {
-          *aContainedErrors = true;
-        }
       }
 
       continue;
@@ -87,27 +81,16 @@ nsresult nsINIParser::InitFromString(const nsCString& aStr,
     if (!currSection) {
       // If we haven't found a section header (or we found a malformed
       // section header), don't bother parsing this line.
-
-      if (aContainedErrors) {
-        *aContainedErrors = true;
-      }
-
       continue;
     }
 
     char* key = token;
     char* e = NS_strtok(kEquals, &token);
     if (!e || !token) {
-      if (aContainedErrors) {
-        *aContainedErrors = true;
-      }
-
       continue;
     }
 
-    if (NS_FAILED(SetString(currSection, key, token)) && aContainedErrors) {
-      *aContainedErrors = true;
-    }
+    SetString(currSection, key, token);
   }
 
   return NS_OK;

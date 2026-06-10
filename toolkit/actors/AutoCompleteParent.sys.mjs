@@ -197,7 +197,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
     }
   }
 
-  showPopupWithResults({ rect, dir, results, selectedIndex }) {
+  showPopupWithResults({ rect, dir, results }) {
     if (!results.length || this.openedPopup) {
       // We shouldn't ever be showing an empty popup, and if we
       // already have a popup open, the old one needs to close before
@@ -205,16 +205,15 @@ export class AutoCompleteParent extends JSWindowActorParent {
       return;
     }
 
-    if (!this.browsingContext.canOpenModalPicker) {
-      return;
-    }
-
     let browser = this.browsingContext.top.embedderElement;
-
-    let tabbrowser = browser.getTabBrowser();
-    if (tabbrowser && tabbrowser.selectedBrowser != browser) {
-      // Overly cautious check, because AsyncTabSwitcher might delay
-      // deactivating our browser.
+    let window = browser.ownerGlobal;
+    // Also check window top in case this is a sidebar.
+    if (
+      Services.focus.activeWindow !== window.top &&
+      Services.focus.focusedWindow.top !== window.top
+    ) {
+      // We were sent a message from a window or tab that went into the
+      // background, so we'll ignore it for now.
       return;
     }
 
@@ -235,6 +234,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
     AutoCompleteResultView.setResults(this, results);
 
     this.openedPopup.view = AutoCompleteResultView;
+    this.openedPopup.selectedIndex = -1;
 
     // Reset fields that were set from the last time the search popup was open
     this.openedPopup.mInput = AutoCompleteResultView;
@@ -260,7 +260,6 @@ export class AutoCompleteParent extends JSWindowActorParent {
       false
     );
     this.openedPopup.invalidate();
-    this.openedPopup.selectedIndex = selectedIndex;
     this._maybeRecordTelemetryEvents(results);
 
     // This is a temporary solution. We should replace it with
@@ -407,14 +406,8 @@ export class AutoCompleteParent extends JSWindowActorParent {
       }
 
       case "AutoComplete:MaybeOpenPopup": {
-        let {
-          results,
-          rect,
-          dir,
-          inputElementIdentifier,
-          formOrigin,
-          selectedIndex,
-        } = message.data;
+        let { results, rect, dir, inputElementIdentifier, formOrigin } =
+          message.data;
         if (AppConstants.MOZ_GECKOVIEW) {
           lazy.GeckoViewAutocomplete.delegateSelection({
             browsingContext: this.browsingContext,
@@ -423,12 +416,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
             formOrigin,
           });
         } else {
-          this.showPopupWithResults({
-            results,
-            rect,
-            dir,
-            selectedIndex,
-          });
+          this.showPopupWithResults({ results, rect, dir });
           this.notifyListeners();
 
           this.notifyAutoCompletePopupOpened(
@@ -500,7 +488,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
   }
 
   notifyListeners() {
-    let window = this.browsingContext.top.embedderElement.documentGlobal;
+    let window = this.browsingContext.top.embedderElement.ownerGlobal;
     for (let listener of autoCompleteListeners) {
       try {
         listener(window);
@@ -529,10 +517,8 @@ export class AutoCompleteParent extends JSWindowActorParent {
   }
 
   // This defines the supported autocomplete providers and the prioity to show the autocomplete
-  // entry. LoginManager is prioritized to handle potential username fields first,
-  // allowing FormAutofill to safely support single email fields without
-  // manual exclusions.
-  #AUTOCOMPLETE_PROVIDERS = ["LoginManager", "FormAutofill", "FormHistory"];
+  // entry.
+  #AUTOCOMPLETE_PROVIDERS = ["FormAutofill", "LoginManager", "FormHistory"];
 
   /**
    * Search across multiple module to gather autocomplete entries for a given search string.

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -90,7 +92,7 @@ class Event : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS(Event)
 
-  nsIGlobalObject* GetParentObject() const { return mGlobal; }
+  nsIGlobalObject* GetParentObject() const { return mOwner; }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
@@ -404,7 +406,7 @@ class Event : public nsISupports, public nsWrapperCache {
  protected:
   // Internal helper functions
   void SetEventType(const nsAString& aEventTypeArg);
-  nsIContent* GetExplicitTargetFromFrame();
+  nsIContent* GetTargetFromFrame();
 
   friend class EventMessageAutoOverride;
   friend class PopupBlocker;
@@ -435,7 +437,7 @@ class Event : public nsISupports, public nsWrapperCache {
   // mPresContext until destroyed.
   WeakPtr<nsPresContext> mPresContext;
   nsCOMPtr<EventTarget> mExplicitOriginalTarget;
-  nsCOMPtr<nsIGlobalObject> mGlobal;
+  nsCOMPtr<nsIGlobalObject> mOwner;
   bool mEventIsInternal;
   bool mPrivateDataDuplicated;
   bool mIsMainThreadEvent;

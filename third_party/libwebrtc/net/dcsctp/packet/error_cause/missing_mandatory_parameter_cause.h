@@ -13,10 +13,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <span>
 #include <string>
 #include <vector>
 
+#include "api/array_view.h"
 #include "net/dcsctp/packet/parameter/parameter.h"
 #include "net/dcsctp/packet/tlv_trait.h"
 
@@ -36,17 +36,17 @@ class MissingMandatoryParameterCause
   static constexpr int kType = MissingMandatoryParameterCauseConfig::kType;
 
   explicit MissingMandatoryParameterCause(
-      std::span<const uint16_t> missing_parameter_types)
+      webrtc::ArrayView<const uint16_t> missing_parameter_types)
       : missing_parameter_types_(missing_parameter_types.begin(),
                                  missing_parameter_types.end()) {}
 
   static std::optional<MissingMandatoryParameterCause> Parse(
-      std::span<const uint8_t> data);
+      webrtc::ArrayView<const uint8_t> data);
 
   void SerializeTo(std::vector<uint8_t>& out) const override;
   std::string ToString() const override;
 
-  std::span<const uint16_t> missing_parameter_types() const {
+  webrtc::ArrayView<const uint16_t> missing_parameter_types() const {
     return missing_parameter_types_;
   }
 

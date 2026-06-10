@@ -45,7 +45,7 @@ from .client_exceptions import (
     InvalidURL,
     ServerFingerprintMismatch,
 )
-from .compression_utils import HAS_BROTLI, HAS_ZSTD
+from .compression_utils import HAS_BROTLI
 from .formdata import FormData
 from .helpers import (
     _SENTINEL,
@@ -53,9 +53,10 @@ from .helpers import (
     BasicAuth,
     HeadersMixin,
     TimerNoop,
+    basicauth_from_netrc,
+    netrc_from_env,
     noop,
     reify,
-    sentinel,
     set_exception,
     set_result,
 )
@@ -103,15 +104,7 @@ json_re = re.compile(r"^application/(?:[\w.+-]+?\+)?json")
 
 
 def _gen_default_accept_encoding() -> str:
-    encodings = [
-        "gzip",
-        "deflate",
-    ]
-    if HAS_BROTLI:
-        encodings.append("br")
-    if HAS_ZSTD:
-        encodings.append("zstd")
-    return ", ".join(encodings)
+    return "gzip, deflate, br" if HAS_BROTLI else "gzip, deflate"
 
 
 @attr.s(auto_attribs=True, frozen=True, slots=True)
@@ -135,14 +128,14 @@ class RequestInfo(_RequestInfo):
         url: URL,
         method: str,
         headers: "CIMultiDictProxy[str]",
-        real_url: Union[URL, _SENTINEL] = sentinel,
+        real_url: URL = _SENTINEL,  # type: ignore[assignment]
     ) -> "RequestInfo":
         """Create a new RequestInfo instance.
 
         For backwards compatibility, the real_url parameter is optional.
         """
         return tuple.__new__(
-            cls, (url, method, headers, url if real_url is sentinel else real_url)
+            cls, (url, method, headers, url if real_url is _SENTINEL else real_url)
         )
 
 
@@ -1162,6 +1155,10 @@ class ClientRequest:
         """Set basic auth."""
         if auth is None:
             auth = self.auth
+        if auth is None and trust_env and self.url.host is not None:
+            netrc_obj = netrc_from_env()
+            with contextlib.suppress(LookupError):
+                auth = basicauth_from_netrc(netrc_obj, self.url.host)
         if auth is None:
             return
 
@@ -1329,7 +1326,7 @@ class ClientRequest:
         self,
         writer: AbstractStreamWriter,
         conn: "Connection",
-        content_length: Optional[int] = None,
+        content_length: Optional[int],
     ) -> None:
         """
         Write the request body to the connection stream.

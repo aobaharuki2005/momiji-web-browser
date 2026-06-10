@@ -37,6 +37,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DocumentPictureInPicture)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(DocumentPictureInPicture, DOMEventTargetHelper)
@@ -51,17 +52,15 @@ DocumentPictureInPicture::DocumentPictureInPicture(nsPIDOMWindowInner* aWindow)
     : DOMEventTargetHelper(aWindow) {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   NS_ENSURE_TRUE_VOID(os);
-  MOZ_ALWAYS_SUCCEEDS(os->AddObserver(this, "domwindowclosed", false));
-  MOZ_ALWAYS_SUCCEEDS(
-      os->AddObserver(this, "docshell-position-size-changed", false));
+  DebugOnly<nsresult> rv = os->AddObserver(this, "domwindowclosed", false);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 DocumentPictureInPicture::~DocumentPictureInPicture() {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   NS_ENSURE_TRUE_VOID(os);
-  MOZ_ALWAYS_SUCCEEDS(os->RemoveObserver(this, "domwindowclosed"));
-  MOZ_ALWAYS_SUCCEEDS(
-      os->RemoveObserver(this, "docshell-position-size-changed"));
+  DebugOnly<nsresult> rv = os->RemoveObserver(this, "domwindowclosed");
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void DocumentPictureInPicture::OnPiPResized() {
@@ -89,20 +88,16 @@ void DocumentPictureInPicture::OnPiPClosed() {
     return;
   }
 
+  RefPtr<nsGlobalWindowInner> pipInnerWindow =
+      nsGlobalWindowInner::Cast(mLastOpenedWindow);
+  pipInnerWindow->RemoveSystemEventListener(u"resize"_ns, this, true);
+
   MOZ_LOG(gDPIPLog, LogLevel::Debug, ("PiP was closed"));
 
   mLastOpenedWindow = nullptr;
-
-  if (RefPtr<nsPIDOMWindowInner> ownerWin = GetOwnerWindow()) {
-    if (BrowsingContext* bc = ownerWin->GetBrowsingContext()) {
-      MOZ_ASSERT(bc->GetControlsDocumentPiP());
-      DebugOnly<nsresult> rv = bc->SetControlsDocumentPiP(false);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-  }
 }
 
-nsGlobalWindowInner* DocumentPictureInPicture::GetWindow() const {
+nsGlobalWindowInner* DocumentPictureInPicture::GetWindow() {
   if (mLastOpenedWindow && mLastOpenedWindow->GetOuterWindow() &&
       !mLastOpenedWindow->GetOuterWindow()->Closed()) {
     return nsGlobalWindowInner::Cast(mLastOpenedWindow);
@@ -110,13 +105,13 @@ nsGlobalWindowInner* DocumentPictureInPicture::GetWindow() const {
   return nullptr;
 }
 
-// Some sane default.
-const CSSIntSize DocumentPictureInPicture::sDefaultSize = {400, 300};
+// Some sane default. Maybe we should come up with an heuristic based on screen
+// size.
+const CSSIntSize DocumentPictureInPicture::sDefaultSize = {700, 650};
 const CSSIntSize DocumentPictureInPicture::sMinSize = {240, 50};
 
 static nsresult OpenPiPWindowUtility(nsPIDOMWindowOuter* aParent,
                                      const CSSIntRect& aExtent, bool aPrivate,
-                                     bool aDisallowReturnToOpener,
                                      mozilla::dom::BrowsingContext** aRet) {
   MOZ_DIAGNOSTIC_ASSERT(aParent);
 
@@ -135,13 +130,9 @@ static nsresult OpenPiPWindowUtility(nsPIDOMWindowOuter* aParent,
   RefPtr<nsDocShellLoadState> loadState =
       nsWindowWatcher::CreateLoadState(uri, aParent);
 
-  // pictureinpicture, disallow_return_to_oopener are non-standard window
-  // features not available from JS
+  // pictureinpicture is a non-standard window feature not available from JS
   nsPrintfCString features("pictureinpicture,top=%d,left=%d,width=%d,height=%d",
                            aExtent.y, aExtent.x, aExtent.width, aExtent.height);
-  if (aDisallowReturnToOpener) {
-    features += ",disallow_return_to_opener";
-  }
 
   rv = pww->OpenWindow2(aParent, uri, "_blank"_ns, features,
                         mozilla::dom::UserActivation::Modifiers::None(), false,
@@ -172,70 +163,55 @@ Maybe<CSSIntRect> DocumentPictureInPicture::GetScreenRect(
 }
 
 // Place window in the bottom right of the opener window's screen
-static CSSIntRect CalcInitialExtent(const CSSIntRect& aScreen,
-                                    const CSSIntSize& aSize) {
+static CSSIntPoint CalcInitialPos(const CSSIntRect& screen,
+                                  const CSSIntSize& aSize) {
   // aSize is the inner size not including browser UI. But we need the outer
   // size for calculating where the top left corner of the PiP should be
   // initially. For now use a guess of ~80px for the browser UI?
-  const CSSIntPoint pos = {
-      std::max(aScreen.X(), aScreen.XMost() - aSize.width - 100),
-      std::max(aScreen.Y(), aScreen.YMost() - aSize.height - 100 - 80)};
-  return CSSIntRect(pos, aSize);
+  return {std::max(screen.X(), screen.XMost() - aSize.width - 100),
+          std::max(screen.Y(), screen.YMost() - aSize.height - 100 - 80)};
 }
 
 /* static */
 CSSIntSize DocumentPictureInPicture::CalcMaxDimensions(
-    const CSSIntRect& aScreen) {
+    const CSSIntRect& screen) {
   // Limit PIP size to 80% (arbitrary number) of screen size
   // https://wicg.github.io/document-picture-in-picture/#maximum-size
   CSSIntSize size =
-      RoundedToInt(aScreen.Size() * gfx::ScaleFactor<CSSPixel, CSSPixel>(0.8));
+      RoundedToInt(screen.Size() * gfx::ScaleFactor<CSSPixel, CSSPixel>(0.8));
   size.width = std::max(size.width, sMinSize.width);
   size.height = std::max(size.height, sMinSize.height);
   return size;
 }
 
 CSSIntRect DocumentPictureInPicture::DetermineExtent(
-    bool aPreferInitialWindowPlacement, const CSSIntSize& aRequestedSize,
-    const CSSIntRect& aScreen) {
-  // The user agent may use the previous position and size.
-  // https://wicg.github.io/document-picture-in-picture/#example-prefer-initial-window-placement
-
-  // If no width/height was specified (it's 0), consider it unchanged too.
-  const bool emptyRequest = aRequestedSize == CSSIntSize(0, 0);
-  const bool requestChanged =
-      !emptyRequest &&
-      (mLastRequestedSize.isNothing() || *mLastRequestedSize != aRequestedSize);
-
-  if (!emptyRequest) {
-    mLastRequestedSize = Some(aRequestedSize);
-  }
-
+    bool aPreferInitialWindowPlacement, int aRequestedWidth,
+    int aRequestedHeight, const CSSIntRect& screen) {
   // If we remembered an extent, don't preferInitialWindowPlacement, and the
   // requested size didn't change, then restore the remembered extent.
-  const bool reusePreviousExtent = mPreviousExtent.isSome() &&
-                                   !aPreferInitialWindowPlacement &&
-                                   !requestChanged;
-
-  MOZ_LOG_FMT(gDPIPLog, LogLevel::Debug,
-              "{} reuse previous extent (hasPrevious={}, preferInitial={}, "
-              "requestChanged={})",
-              reusePreviousExtent ? "Will" : "Won't", mPreviousExtent.isSome(),
-              aPreferInitialWindowPlacement, requestChanged);
+  const bool shouldUseInitialPlacement =
+      !mPreviousExtent.isSome() || aPreferInitialWindowPlacement ||
+      (mLastRequestedSize.isSome() &&
+       (mLastRequestedSize->Width() != aRequestedWidth ||
+        mLastRequestedSize->Height() != aRequestedHeight));
 
   CSSIntRect extent;
-  if (reusePreviousExtent) {
-    extent = mPreviousExtent.value();
-  } else {
-    extent = CalcInitialExtent(aScreen,
-                               emptyRequest ? sDefaultSize : aRequestedSize);
+  if (shouldUseInitialPlacement) {
+    CSSIntSize size = sDefaultSize;
+    if (aRequestedWidth > 0 && aRequestedHeight > 0) {
+      size = CSSIntSize(aRequestedWidth, aRequestedHeight);
+    }
+    CSSIntPoint initialPos = CalcInitialPos(screen, size);
+    extent = CSSIntRect(initialPos, size);
 
     MOZ_LOG(gDPIPLog, LogLevel::Debug,
             ("Calculated initial PiP rect %s", ToString(extent).c_str()));
+  } else {
+    extent = mPreviousExtent.value();
   }
 
   // https://wicg.github.io/document-picture-in-picture/#maximum-size
-  CSSIntSize maxSize = CalcMaxDimensions(aScreen);
+  CSSIntSize maxSize = CalcMaxDimensions(screen);
   extent.width = std::clamp(extent.width, sMinSize.width, maxSize.width);
   extent.height = std::clamp(extent.height, sMinSize.height, maxSize.height);
 
@@ -296,10 +272,11 @@ already_AddRefed<Promise> DocumentPictureInPicture::RequestWindow(
   }
 
   // 13-15. Determine PiP extent
-  const CSSIntSize requestedSize = {SaturatingCast<int>(aOptions.mWidth),
-                                    SaturatingCast<int>(aOptions.mHeight)};
+  const int requestedWidth = SaturatingCast<int>(aOptions.mWidth),
+            requestedHeight = SaturatingCast<int>(aOptions.mHeight);
   CSSIntRect extent = DetermineExtent(aOptions.mPreferInitialWindowPlacement,
-                                      requestedSize, screen);
+                                      requestedWidth, requestedHeight, screen);
+  mLastRequestedSize = Some(CSSIntSize(requestedWidth, requestedHeight));
 
   MOZ_LOG(gDPIPLog, LogLevel::Debug,
           ("Will place PiP at rect %s", ToString(extent).c_str()));
@@ -307,13 +284,16 @@ already_AddRefed<Promise> DocumentPictureInPicture::RequestWindow(
   // 9. Optionally, close any existing PIP windows
   // I think it's useful to have multiple PiP windows from different top pages.
 
-  // 10. Create a new top-level traversable for target _blank
   // 15. aOptions.mDisallowReturnToOpener
+  // I think this button is redundant with close and the webpage won't know
+  // whether close or return was pressed. So let's not have that button at all.
+
+  // 10. Create a new top-level traversable for target _blank
   // 16. Configure PIP to float on top via window features
   RefPtr<BrowsingContext> pipTraversable;
-  nsresult rv = OpenPiPWindowUtility(
-      ownerWin->GetOuterWindow(), extent, bc->UsePrivateBrowsing(),
-      aOptions.mDisallowReturnToOpener, getter_AddRefs(pipTraversable));
+  nsresult rv = OpenPiPWindowUtility(ownerWin->GetOuterWindow(), extent,
+                                     bc->UsePrivateBrowsing(),
+                                     getter_AddRefs(pipTraversable));
   if (NS_FAILED(rv)) {
     aRv.ThrowUnknownError("Failed to create PIP window");
     return nullptr;
@@ -327,18 +307,19 @@ already_AddRefed<Promise> DocumentPictureInPicture::RequestWindow(
   rv = pipTraversable->SetIsDocumentPiP(true);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  MOZ_ASSERT(!bc->GetControlsDocumentPiP());
-  rv = bc->SetControlsDocumentPiP(true);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
   // 16. Set mLastOpenedWindow
   mLastOpenedWindow = pipTraversable->GetDOMWindow()->GetCurrentInnerWindow();
   MOZ_ASSERT(mLastOpenedWindow);
 
+  // Keep track of resizes to update mPreviousExtent
+  RefPtr<nsGlobalWindowInner> pipInnerWindow =
+      nsGlobalWindowInner::Cast(mLastOpenedWindow);
+  pipInnerWindow->AddSystemEventListener(u"resize"_ns, this, true, false);
+
   // 17. Queue a task to fire a DocumentPictureInPictureEvent named "enter" on
   // this with pipTraversable as it's window attribute
   DocumentPictureInPictureEventInit eventInit;
-  eventInit.mWindow = nsGlobalWindowInner::Cast(mLastOpenedWindow);
+  eventInit.mWindow = pipInnerWindow;
   RefPtr<Event> event =
       DocumentPictureInPictureEvent::Constructor(this, u"enter"_ns, eventInit);
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
@@ -346,40 +327,33 @@ already_AddRefed<Promise> DocumentPictureInPicture::RequestWindow(
   asyncDispatcher->PostDOMEvent();
 
   // 18. Return pipTraversable
-  RefPtr<Promise> promise = Promise::CreateInfallible(GetRelevantGlobal());
-  promise->MaybeResolve(nsGlobalWindowInner::Cast(mLastOpenedWindow));
+  RefPtr<Promise> promise = Promise::CreateInfallible(GetOwnerGlobal());
+  promise->MaybeResolve(pipInnerWindow);
   return promise.forget();
+}
+
+NS_IMETHODIMP
+DocumentPictureInPicture::HandleEvent(Event* aEvent) {
+  nsAutoString type;
+  aEvent->GetType(type);
+
+  if (type.EqualsLiteral("resize")) {
+    OnPiPResized();
+    return NS_OK;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP DocumentPictureInPicture::Observe(nsISupports* aSubject,
                                                 const char* aTopic,
                                                 const char16_t* aData) {
-  if (!mLastOpenedWindow) {
-    return NS_OK;
-  }
-
   if (nsCRT::strcmp(aTopic, "domwindowclosed") == 0) {
     nsCOMPtr<nsPIDOMWindowOuter> subjectWin = do_QueryInterface(aSubject);
     NS_ENSURE_TRUE(!!subjectWin, NS_OK);
 
     if (subjectWin->GetCurrentInnerWindow() == mLastOpenedWindow) {
       OnPiPClosed();
-    }
-  } else if (nsCRT::strcmp(aTopic, "docshell-position-size-changed") == 0) {
-    nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(aSubject);
-    NS_ENSURE_TRUE(!!docshell, NS_OK);
-    BrowsingContext* bc = docshell->GetBrowsingContext();
-
-    if (!bc || !bc->GetIsDocumentPiP()) {
-      return NS_OK;
-    }
-
-    if (bc == mLastOpenedWindow->GetBrowsingContext()) {
-      // Async invocation due to MOZ_CAN_RUN_SCRIPT
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "DocumentPictureInPicture::OnPiPResized",
-          [_self = RefPtr(this)]()
-              MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA { _self->OnPiPResized(); }));
     }
   }
   return NS_OK;

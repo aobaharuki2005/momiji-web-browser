@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsBaseContentStream_h_
-#define nsBaseContentStream_h_
+#ifndef nsBaseContentStream_h__
+#define nsBaseContentStream_h__
 
 #include "nsIAsyncInputStream.h"
 #include "nsIEventTarget.h"
@@ -75,4 +76,4 @@ class nsBaseContentStream : public nsIAsyncInputStream {
   bool mNonBlocking;
 };
 
-#endif  // nsBaseContentStream_h_
+#endif  // nsBaseContentStream_h__

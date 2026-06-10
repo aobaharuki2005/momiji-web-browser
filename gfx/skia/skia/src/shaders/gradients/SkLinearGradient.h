@@ -20,7 +20,7 @@ class SkWriteBuffer;
 
 class SkLinearGradient final : public SkGradientBaseShader {
 public:
-    SkLinearGradient(const SkPoint pts[2], const SkGradient&);
+    SkLinearGradient(const SkPoint pts[2], const Descriptor&);
 
     GradientType asGradient(GradientInfo* info, SkMatrix* localMatrix) const override;
 

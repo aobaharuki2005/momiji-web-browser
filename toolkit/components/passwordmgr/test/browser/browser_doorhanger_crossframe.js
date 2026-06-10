@@ -9,7 +9,7 @@ async function acceptPasswordSave() {
     "LoginStats:NewSavedPassword",
     (subject, _topic, _data) => subject == gBrowser.selectedBrowser
   );
-  await clickDoorhangerButton(notif, REMEMBER_BUTTON);
+  clickDoorhangerButton(notif, REMEMBER_BUTTON);
   await promiseNewSavedPassword;
 }
 

@@ -150,14 +150,15 @@ CSRCS = \
 	pqg.c \
 	dsa.c \
 	rsa.c \
+	rsa_blind.c \
 	rsapkcs.c \
 	shvfy.c \
 	tlsprfalg.c \
 	jpake.c \
 	secmpi.c \
 	kyber.c \
-	ml_dsa.c \
-	$(KYBER_PQCRYSTALS) \
+        ml_dsa.c \
+        $(KYBER_PQCRYSTALS) \
 	$(MPI_SRCS) \
 	$(MPCPU_SRCS) \
 	$(ECL_SRCS) \

@@ -4,9 +4,10 @@ use crate::backend::c;
 use crate::backend::conv::{c_str, ret, ret_owned_fd};
 use crate::fd::OwnedFd;
 use crate::fs::Mode;
-use crate::{io, shm};
+use crate::io;
+use crate::shm::ShmOFlags;
 
-pub(crate) fn shm_open(name: &CStr, oflags: shm::OFlags, mode: Mode) -> io::Result<OwnedFd> {
+pub(crate) fn shm_open(name: &CStr, oflags: ShmOFlags, mode: Mode) -> io::Result<OwnedFd> {
     // On this platforms, `mode_t` is `u16` and can't be passed directly to a
     // variadic function.
     #[cfg(apple)]

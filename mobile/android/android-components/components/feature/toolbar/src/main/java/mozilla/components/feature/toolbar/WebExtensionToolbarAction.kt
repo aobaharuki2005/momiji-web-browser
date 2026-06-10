@@ -12,10 +12,9 @@ import android.widget.TextView
 import androidx.core.graphics.drawable.toDrawable
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
@@ -33,7 +32,6 @@ import mozilla.components.ui.icons.R as iconsR
 open class WebExtensionToolbarAction(
     internal var action: WebExtensionBrowserAction,
     internal val padding: Padding? = null,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
     internal val iconJobDispatcher: CoroutineDispatcher,
     internal val listener: () -> Unit,
 ) : Toolbar.Action {
@@ -73,17 +71,16 @@ open class WebExtensionToolbarAction(
             try {
                 val icon = action.loadIcon?.invoke(imageView.measuredHeight)
                 icon?.let {
-                    withContext(mainDispatcher) {
+                    MainScope().launch {
                         imageView.setImageDrawable(it.toDrawable(view.context.resources))
                     }
                 }
             } catch (throwable: Throwable) {
-                withContext(mainDispatcher) {
+                MainScope().launch {
                     imageView.setImageResource(
-                        iconsR.drawable.mozac_ic_extension_fill_24,
+                        iconsR.drawable.mozac_ic_web_extension_default_icon,
                     )
                 }
-
                 Log.log(
                     Log.Priority.ERROR,
                     "mozac-webextensions",

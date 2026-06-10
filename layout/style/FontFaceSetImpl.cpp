@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -91,12 +93,10 @@ void FontFaceSetImpl::DestroyLoaders() {
     return;
   }
   if (NS_IsMainThread()) {
-    // Move mLoaders to a local, because Cancel() calls RemoveLoader() which
-    // would otherwise mutate the table during the iteration.
-    auto loaders = std::move(mLoaders);
-    for (const auto& key : loaders.Keys()) {
+    for (const auto& key : mLoaders.Keys()) {
       key->Cancel();
     }
+    mLoaders.Clear();
     return;
   }
 
@@ -458,7 +458,7 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
           face->mSourceType = gfxFontFaceSrc::eSourceType_URL;
           const StyleCssUrl* url = component.AsUrl();
           nsIURI* uri = url->GetURI();
-          face->mURI = uri ? MakeRefPtr<gfxFontSrcURI>(uri) : nullptr;
+          face->mURI = uri ? new gfxFontSrcURI(uri) : nullptr;
           const URLExtraData& extraData = url->ExtraData();
           face->mReferrerInfo = extraData.ReferrerInfo();
 
@@ -469,7 +469,7 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
           if (aOrigin == StyleOrigin::User ||
               aOrigin == StyleOrigin::UserAgent) {
             face->mUseOriginPrincipal = true;
-            face->mOriginPrincipal = MakeRefPtr<gfxFontSrcPrincipal>(
+            face->mOriginPrincipal = new gfxFontSrcPrincipal(
                 extraData.Principal(), extraData.Principal());
           }
 
@@ -747,6 +747,21 @@ void FontFaceSetImpl::OnFontFaceStatusChanged(FontFaceImpl* aFontFace) {
 }
 
 void FontFaceSetImpl::DispatchCheckLoadingFinishedAfterDelay() {
+  gfxFontUtils::AssertSafeThreadOrServoFontMetricsLocked();
+
+  if (ServoStyleSet* set = gfxFontUtils::CurrentServoStyleSet()) {
+    // See comments in Gecko_GetFontMetrics.
+    //
+    // We can't just dispatch the runnable below if we're not on the main
+    // thread, since it needs to take a strong reference to the FontFaceSet,
+    // and being a DOM object, FontFaceSet doesn't support thread-safe
+    // refcounting.
+    set->AppendTask(
+        PostTraversalTask::DispatchFontFaceSetCheckLoadingFinishedAfterDelay(
+            this));
+    return;
+  }
+
   DispatchToOwningThread(
       "FontFaceSetImpl::DispatchCheckLoadingFinishedAfterDelay",
       [self = RefPtr{this}]() { self->CheckLoadingFinishedAfterDelay(); });
@@ -783,7 +798,7 @@ void FontFaceSetImpl::CheckLoadingStarted() {
                          [self = RefPtr{this}]() { self->OnLoadingStarted(); });
 }
 
-void FontFaceSetImpl::DispatchLoadingEventAndReplaceReadyPromise() {
+void FontFaceSetImpl::OnLoadingStarted() {
   RecursiveMutexAutoLock lock(mMutex);
   if (mOwner) {
     mOwner->DispatchLoadingEventAndReplaceReadyPromise();
@@ -886,8 +901,9 @@ void FontFaceSetImpl::DoRebuildUserFontSet() { MarkUserFontSetDirty(); }
 already_AddRefed<gfxUserFontEntry> FontFaceSetImpl::CreateUserFontEntry(
     nsTArray<gfxFontFaceSrc>&& aFontFaceSrcList,
     gfxUserFontAttributes&& aAttr) {
-  return MakeAndAddRef<FontFaceImpl::Entry>(this, std::move(aFontFaceSrcList),
-                                            std::move(aAttr));
+  RefPtr<gfxUserFontEntry> entry = new FontFaceImpl::Entry(
+      this, std::move(aFontFaceSrcList), std::move(aAttr));
+  return entry.forget();
 }
 
 void FontFaceSetImpl::ForgetLocalFaces() {

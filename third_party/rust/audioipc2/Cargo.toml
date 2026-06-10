@@ -17,7 +17,7 @@ authors = [
     "Matthew Gregan <kinetik@flim.org>",
     "Dan Glastonbury <dan.glastonbury@gmail.com>",
 ]
-build = false
+build = "build.rs"
 autolib = false
 autobins = false
 autoexamples = false
@@ -41,7 +41,7 @@ bincode = "1.3"
 byteorder = "1"
 bytes = "1"
 crossbeam-queue = "0.3"
-cubeb = "0.32"
+cubeb = "0.30.1"
 log = "0.4"
 scopeguard = "1.1.0"
 serde = "1"
@@ -64,11 +64,14 @@ env_logger = "0.9"
 version = "0.3"
 features = ["html_reports"]
 
+[build-dependencies]
+cc = "1.0"
+
 [target.'cfg(target_os = "android")'.dependencies]
 ashmem = "0.1.2"
 
 [target.'cfg(target_os = "linux")'.dependencies.audio_thread_priority]
-version = "0.35"
+version = "0.34"
 default-features = false
 
 [target."cfg(unix)".dependencies]
@@ -78,7 +81,7 @@ libc = "0.2"
 memmap2 = "0.9"
 
 [target."cfg(windows)".dependencies.windows-sys]
-version = "0.61"
+version = "0.52"
 features = [
     "Win32_Foundation",
     "Win32_Security",

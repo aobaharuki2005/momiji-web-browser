@@ -11,6 +11,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -24,7 +25,6 @@ import org.mozilla.focus.input.InputToolbarIntegration
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.AppStore
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class InputToolbarIntegrationTest {

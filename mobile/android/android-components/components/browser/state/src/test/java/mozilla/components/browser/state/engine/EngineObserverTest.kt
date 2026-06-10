@@ -8,6 +8,8 @@ import android.content.Intent
 import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
@@ -19,7 +21,9 @@ import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.AppIntentState
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.MediaSessionState
 import mozilla.components.browser.state.state.SecurityInfo
 import mozilla.components.browser.state.state.content.FindResultState
@@ -46,16 +50,20 @@ import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Response
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import kotlin.test.assertNotNull
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class EngineObserverTest {
     // TO DO: add tests for product URL after a test endpoint is implemented in desktop (Bug 1846341)
@@ -119,7 +127,6 @@ class EngineObserverTest {
             }
             override fun requestPdfToDownload() = Unit
             override fun requestPrintContent() = Unit
-            override fun processBackPressed(onResult: (Boolean) -> Unit) {}
             override fun loadUrl(
                 url: String,
                 parent: EngineSession?,
@@ -141,14 +148,14 @@ class EngineObserverTest {
         engineSession.register(createEngineObserver(store = store, scope = this))
         engineSession.loadUrl("http://mozilla.org")
         engineSession.toggleDesktopMode(true)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals("http://mozilla.org", store.state.selectedTab?.content?.url)
         assertEquals(100, store.state.selectedTab?.content?.progress)
         assertEquals(true, store.state.selectedTab?.content?.loading)
 
         val tab = store.state.findTab("mozilla")
-        assertNotNull(tab)
+        assertNotNull(tab!!)
         assertTrue(tab.content.canGoForward)
         assertTrue(tab.content.canGoBack)
     }
@@ -206,7 +213,6 @@ class EngineObserverTest {
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun requestPdfToDownload() = Unit
             override fun requestPrintContent() = Unit
-            override fun processBackPressed(onResult: (Boolean) -> Unit) {}
             override fun loadUrl(
                 url: String,
                 parent: EngineSession?,
@@ -234,12 +240,12 @@ class EngineObserverTest {
         engineSession.register(createEngineObserver(store = store, scope = this))
 
         engineSession.loadUrl("http://mozilla.org")
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(SecurityInfo.Insecure(), store.state.tabs[0].content.securityInfo)
 
         engineSession.loadUrl("https://mozilla.org")
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(SecurityInfo.Secure("host", "issuer"), store.state.tabs[0].content.securityInfo)
     }
@@ -305,7 +311,6 @@ class EngineObserverTest {
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
             override fun purgeHistory() {}
-            override fun processBackPressed(onResult: (Boolean) -> Unit) {}
         }
         val store = BrowserStore(
             initialState = BrowserState(
@@ -321,12 +326,12 @@ class EngineObserverTest {
         val tracker2 = Tracker("tracker2", emptyList())
 
         observer.onTrackerBlocked(tracker1)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(listOf(tracker1), store.state.tabs[0].trackingProtection.blockedTrackers)
 
         observer.onTrackerBlocked(tracker2)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(listOf(tracker1, tracker2), store.state.tabs[0].trackingProtection.blockedTrackers)
     }
@@ -384,7 +389,6 @@ class EngineObserverTest {
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun requestPdfToDownload() = Unit
             override fun requestPrintContent() = Unit
-            override fun processBackPressed(onResult: (Boolean) -> Unit) {}
             override fun loadUrl(
                 url: String,
                 parent: EngineSession?,
@@ -411,7 +415,7 @@ class EngineObserverTest {
 
         engineSession.loadUrl("https://mozilla.org")
 
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(true, store.state.translationsInitialized)
     }
@@ -469,7 +473,6 @@ class EngineObserverTest {
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun requestPdfToDownload() = Unit
             override fun requestPrintContent() = Unit
-            override fun processBackPressed(onResult: (Boolean) -> Unit) {}
             override fun loadUrl(
                 url: String,
                 parent: EngineSession?,
@@ -501,121 +504,126 @@ class EngineObserverTest {
 
     @Test
     fun `Do not initialize the translations flow if the page load is not complete`() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store: BrowserStore = mock()
         val state: BrowserState = mock()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
-        `when`(state.translationsInitialized).thenReturn(false)
+        `when`(store.state).thenReturn(state)
+        `when`(store.state.translationsInitialized).thenReturn(false)
 
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onProgress(80)
 
-        captureActionsMiddleware.assertNotDispatched(TranslationsAction.InitTranslationsBrowserState::class)
+        verify(store, never()).dispatch(
+            TranslationsAction.InitTranslationsBrowserState,
+        )
     }
 
     @Test
     fun `Initialize the translations flow if page load is complete and it is not yet initialized`() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val state = BrowserState(translationsInitialized = false)
-        val store = BrowserStore(state, middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
+        val state: BrowserState = mock()
+        `when`(store.state).thenReturn(state)
+        `when`(store.state.translationsInitialized).thenReturn(false)
 
         val observer = createEngineObserver(store = store, scope = this)
 
-        observer.onProgress(PAGE_LOAD_COMPLETION_PROGRESS)
-        testScheduler.advanceUntilIdle()
+        observer.onProgress(100)
+        advanceUntilIdle()
 
-        captureActionsMiddleware.findFirstAction(TranslationsAction.InitTranslationsBrowserState::class)
+        verify(store).dispatch(
+            TranslationsAction.InitTranslationsBrowserState,
+        )
     }
 
     @Test
     fun `Do not initialize the translations flow if it is already initialized`() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store: BrowserStore = mock()
         val state: BrowserState = mock()
-        val store = BrowserStore(state, middleware = listOf(captureActionsMiddleware))
-        `when`(state.translationsInitialized).thenReturn(true)
+        `when`(store.state).thenReturn(state)
+        `when`(store.state.translationsInitialized).thenReturn(true)
 
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onProgress(100)
 
-        captureActionsMiddleware.assertNotDispatched(TranslationsAction.InitTranslationsBrowserState::class)
+        verify(store, never()).dispatch(
+            TranslationsAction.InitTranslationsBrowserState,
+        )
     }
 
     @Test
     fun engineSessionObserverExcludedOnTrackingProtection() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onExcludedOnTrackingProtectionChange(true)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(TrackingProtectionAction.ToggleExclusionListAction::class) { action ->
-            assertEquals("mozilla", action.tabId)
-            assertTrue(action.excluded)
-        }
+        verify(store).dispatch(
+            TrackingProtectionAction.ToggleExclusionListAction(
+                "mozilla",
+                true,
+            ),
+        )
     }
 
     @Test
     fun `WHEN onCookieBannerChange is called THEN dispatch an CookieBannerAction UpdateStatusAction`() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onCookieBannerChange(HANDLED)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(CookieBannerAction.UpdateStatusAction::class) { action ->
-            assertEquals("mozilla", action.tabId)
-            assertEquals(HANDLED, action.status)
-        }
+        verify(store).dispatch(
+            CookieBannerAction.UpdateStatusAction(
+                "mozilla",
+                HANDLED,
+            ),
+        )
     }
 
     @Test
     fun `WHEN onTranslatePageChange is called THEN dispatch a TranslationsAction SetTranslateProcessingAction`() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onTranslatePageChange()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(TranslationsAction.SetTranslateProcessingAction::class) { action ->
-            assertEquals("mozilla", action.tabId)
-            assertFalse(action.isProcessing)
-        }
+        verify(store).dispatch(
+            TranslationsAction.SetTranslateProcessingAction(
+                "mozilla",
+                false,
+            ),
+        )
     }
 
     @Test
     fun `WHEN onTranslateComplete is called THEN dispatch a TranslationsAction TranslateSuccessAction`() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onTranslateComplete(operation = TranslationOperation.TRANSLATE)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(TranslationsAction.TranslateSuccessAction::class) { action ->
-            assertEquals("mozilla", action.tabId)
-            assertEquals(TranslationOperation.TRANSLATE, action.operation)
-        }
+        verify(store).dispatch(
+            TranslationsAction.TranslateSuccessAction("mozilla", operation = TranslationOperation.TRANSLATE),
+        )
     }
 
     @Test
     fun `WHEN onTranslateException is called THEN dispatch a TranslationsAction TranslateExceptionAction`() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = createEngineObserver(store = store, scope = this)
         val exception = TranslationError.UnknownError(Exception())
 
         observer.onTranslateException(operation = TranslationOperation.TRANSLATE, exception)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(TranslationsAction.TranslateExceptionAction::class) { action ->
-            assertEquals("mozilla", action.tabId)
-            assertEquals(exception, action.translationError)
-            assertEquals(TranslationOperation.TRANSLATE, action.operation)
-        }
+        verify(store).dispatch(
+            TranslationsAction.TranslateExceptionAction("mozilla", operation = TranslationOperation.TRANSLATE, exception),
+        )
     }
 
     @Test
@@ -634,12 +642,12 @@ class EngineObserverTest {
 
         val observer = createEngineObserver(store = store, scope = this)
         observer.onTitleChange("Mozilla")
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals("Mozilla", store.state.tabs[0].content.title)
 
         observer.onLocationChange("https://getpocket.com", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals("", store.state.tabs[0].content.title)
     }
@@ -661,12 +669,12 @@ class EngineObserverTest {
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onTitleChange("Mozilla")
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals("Mozilla", store.state.tabs[0].content.title)
 
         observer.onLocationChange("https://www.mozilla.org", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals("Mozilla", store.state.tabs[0].content.title)
     }
@@ -688,12 +696,12 @@ class EngineObserverTest {
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onTitleChange("Mozilla")
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals("Mozilla", store.state.tabs[0].content.title)
 
         observer.onLocationChange("https://www.mozilla.org/#something", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals("Mozilla", store.state.tabs[0].content.title)
     }
@@ -715,12 +723,12 @@ class EngineObserverTest {
 
         val observer = createEngineObserver(store = store, scope = this)
         observer.onPreviewImageChange(previewImageUrl)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
 
         observer.onLocationChange("https://getpocket.com", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertNull(store.state.tabs[0].content.previewImageUrl)
     }
@@ -743,17 +751,17 @@ class EngineObserverTest {
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onPreviewImageChange(previewImageUrl)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
 
         observer.onLocationChange("https://www.mozilla.org", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
 
         observer.onLocationChange("https://www.mozilla.org/#something", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
     }
@@ -778,12 +786,12 @@ class EngineObserverTest {
 
         observer.onTrackerBlocked(tracker1)
         observer.onTrackerBlocked(tracker2)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(listOf(tracker1, tracker2), store.state.tabs[0].trackingProtection.blockedTrackers)
 
         observer.onLoadingStateChange(true)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(emptyList<String>(), store.state.tabs[0].trackingProtection.blockedTrackers)
     }
@@ -808,12 +816,12 @@ class EngineObserverTest {
 
         observer.onTrackerLoaded(tracker1)
         observer.onTrackerLoaded(tracker2)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(listOf(tracker1, tracker2), store.state.tabs[0].trackingProtection.loadedTrackers)
 
         observer.onLoadingStateChange(true)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(emptyList<String>(), store.state.tabs[0].trackingProtection.loadedTrackers)
     }
@@ -836,12 +844,12 @@ class EngineObserverTest {
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onWebAppManifestLoaded(manifest)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(manifest, store.state.tabs[0].content.webAppManifest)
 
         observer.onLocationChange("https://getpocket.com", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertNull(store.state.tabs[0].content.webAppManifest)
     }
@@ -864,12 +872,12 @@ class EngineObserverTest {
         val request: PermissionRequest = mock()
 
         store.dispatch(ContentAction.UpdatePermissionsRequest("mozilla", request))
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(listOf(request), store.state.tabs[0].content.permissionRequestsList)
 
         observer.onLocationChange("https://getpocket.com", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(emptyList<PermissionRequest>(), store.state.tabs[0].content.permissionRequestsList)
     }
@@ -918,7 +926,7 @@ class EngineObserverTest {
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onWebAppManifestLoaded(manifest)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(manifest, store.state.tabs[0].content.webAppManifest)
 
@@ -949,17 +957,17 @@ class EngineObserverTest {
         val observer = createEngineObserver(store = store, scope = this)
 
         observer.onWebAppManifestLoaded(manifest)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(manifest, store.state.tabs[0].content.webAppManifest)
 
         observer.onLocationChange("https://www.mozilla.org/hello/page2.html", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(manifest, store.state.tabs[0].content.webAppManifest)
 
         observer.onLocationChange("https://www.mozilla.org/hello.html", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertNull(store.state.tabs[0].content.webAppManifest)
     }
@@ -982,7 +990,7 @@ class EngineObserverTest {
         val hitResult = HitResult.UNKNOWN("data://foobar")
 
         observer.onLongPress(hitResult)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(hitResult, store.state.tabs[0].content.hitResult)
     }
@@ -996,14 +1004,14 @@ class EngineObserverTest {
         val observer = createEngineObserver(tabId = "tab", store = store, scope = this)
 
         observer.onFindResult(0, 1, false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         middleware.assertFirstAction(ContentAction.AddFindResultAction::class) { action ->
             assertEquals("tab", action.sessionId)
             assertEquals(FindResultState(0, 1, false), action.findResult)
         }
 
         observer.onFind("mozilla")
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         middleware.assertLastAction(ContentAction.ClearFindResultsAction::class) { action ->
             assertEquals("tab", action.sessionId)
         }
@@ -1018,21 +1026,21 @@ class EngineObserverTest {
         val observer = createEngineObserver(tabId = "tab-id", store = store, scope = this)
 
         observer.onFindResult(0, 1, false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         middleware.assertFirstAction(ContentAction.AddFindResultAction::class) { action ->
             assertEquals("tab-id", action.sessionId)
             assertEquals(FindResultState(0, 1, false), action.findResult)
         }
 
         observer.onFindResult(1, 2, true)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         middleware.assertLastAction(ContentAction.AddFindResultAction::class) { action ->
             assertEquals("tab-id", action.sessionId)
             assertEquals(FindResultState(1, 2, true), action.findResult)
         }
 
         observer.onLoadingStateChange(true)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         middleware.assertLastAction(ContentAction.ClearFindResultsAction::class) { action ->
             assertEquals("tab-id", action.sessionId)
         }
@@ -1051,14 +1059,14 @@ class EngineObserverTest {
         )
 
         observer.onRepostPromptCancelled()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         middleware.assertFirstAction(ContentAction.UpdateRefreshCanceledStateAction::class) { action ->
             assertEquals("tab-id", action.sessionId)
             assertTrue(action.refreshCanceled)
         }
 
         observer.onLoadingStateChange(true)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         middleware.assertLastAction(ContentAction.UpdateRefreshCanceledStateAction::class) { action ->
             assertEquals("tab-id", action.sessionId)
             assertFalse(action.refreshCanceled)
@@ -1067,8 +1075,7 @@ class EngineObserverTest {
 
     @Test
     fun engineObserverHandlesOnRepostPromptCancelled() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = EngineObserver(
             tabId = "tab-id",
             store = store,
@@ -1076,18 +1083,14 @@ class EngineObserverTest {
         )
 
         observer.onRepostPromptCancelled()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateRefreshCanceledStateAction::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertTrue(action.refreshCanceled)
-        }
+        verify(store).dispatch(ContentAction.UpdateRefreshCanceledStateAction("tab-id", true))
     }
 
     @Test
     fun engineObserverHandlesOnBeforeUnloadDenied() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = EngineObserver(
             tabId = "tab-id",
             store = store,
@@ -1095,16 +1098,8 @@ class EngineObserverTest {
         )
 
         observer.onBeforeUnloadPromptDenied()
-        testScheduler.advanceUntilIdle()
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateRefreshCanceledStateAction::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertTrue(action.refreshCanceled)
-        }
-
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateRefreshCanceledStateAction::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertTrue(action.refreshCanceled)
-        }
+        advanceUntilIdle()
+        verify(store).dispatch(ContentAction.UpdateRefreshCanceledStateAction("tab-id", true))
     }
 
     @Test
@@ -1120,14 +1115,14 @@ class EngineObserverTest {
         )
 
         observer.onFullScreenChange(true)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         middleware.assertFirstAction(ContentAction.FullScreenChangedAction::class) { action ->
             assertEquals("tab-id", action.sessionId)
             assertTrue(action.fullScreenEnabled)
         }
 
         observer.onFullScreenChange(false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         middleware.assertLastAction(ContentAction.FullScreenChangedAction::class) { action ->
             assertEquals("tab-id", action.sessionId)
             assertFalse(action.fullScreenEnabled)
@@ -1147,14 +1142,14 @@ class EngineObserverTest {
         )
 
         observer.onDesktopModeChange(true)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         middleware.assertFirstAction(ContentAction.UpdateTabDesktopMode::class) { action ->
             assertEquals("tab-id", action.sessionId)
             assertTrue(action.enabled)
         }
 
         observer.onDesktopModeChange(false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         middleware.assertLastAction(ContentAction.UpdateTabDesktopMode::class) { action ->
             assertEquals("tab-id", action.sessionId)
             assertFalse(action.enabled)
@@ -1174,7 +1169,7 @@ class EngineObserverTest {
         )
 
         observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertFirstAction(ContentAction.ViewportFitChangedAction::class) { action ->
             assertEquals("tab-id", action.sessionId)
@@ -1185,7 +1180,7 @@ class EngineObserverTest {
         }
 
         observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertLastAction(ContentAction.ViewportFitChangedAction::class) { action ->
             assertEquals("tab-id", action.sessionId)
@@ -1196,7 +1191,7 @@ class EngineObserverTest {
         }
 
         observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertLastAction(ContentAction.ViewportFitChangedAction::class) { action ->
             assertEquals("tab-id", action.sessionId)
@@ -1207,7 +1202,7 @@ class EngineObserverTest {
         }
 
         observer.onMetaViewportFitChanged(123)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertLastAction(ContentAction.ViewportFitChangedAction::class) { action ->
             assertEquals("tab-id", action.sessionId)
@@ -1235,16 +1230,15 @@ class EngineObserverTest {
         )
 
         observer.onWebAppManifestLoaded(manifest)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         assertEquals(manifest, store.state.tabs[0].content.webAppManifest)
     }
 
     @Test
     fun engineSessionObserverWithContentPermissionRequests() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val permissionRequest: PermissionRequest = mock()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = EngineObserver(
             tabId = "tab-id",
             store = store,
@@ -1255,19 +1249,15 @@ class EngineObserverTest {
             permissionRequest,
         )
         observer.onContentPermissionRequest(permissionRequest)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdatePermissionsRequest::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertEquals(permissionRequest, action.permissionRequest)
-        }
+        verify(store).dispatch(action)
     }
 
     @Test
     fun engineSessionObserverWithAppPermissionRequests() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val permissionRequest: PermissionRequest = mock()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = EngineObserver(
             tabId = "tab-id",
             store = store,
@@ -1279,19 +1269,15 @@ class EngineObserverTest {
         )
 
         observer.onAppPermissionRequest(permissionRequest)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateAppPermissionsRequest::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertEquals(permissionRequest, action.appPermissionRequest)
-        }
+        verify(store).dispatch(action)
     }
 
     @Test
     fun engineObserverHandlesPromptRequest() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val promptRequest: PromptRequest = mock<PromptRequest.SingleChoice>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = EngineObserver(
             tabId = "tab-id",
             store = store,
@@ -1299,19 +1285,20 @@ class EngineObserverTest {
         )
 
         observer.onPromptRequest(promptRequest)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdatePromptRequestAction::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertEquals(promptRequest, action.promptRequest)
-        }
+        verify(store).dispatch(
+            ContentAction.UpdatePromptRequestAction(
+                "tab-id",
+                promptRequest,
+            ),
+        )
     }
 
     @Test
     fun engineObserverHandlesOnPromptUpdate() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val promptRequest: PromptRequest = mock<PromptRequest.SingleChoice>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = EngineObserver(
             tabId = "tab-id",
             store = store,
@@ -1320,21 +1307,22 @@ class EngineObserverTest {
         val previousPromptUID = "prompt-uid"
 
         observer.onPromptUpdate(previousPromptUID, promptRequest)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.ReplacePromptRequestAction::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertEquals(previousPromptUID, action.previousPromptUid)
-            assertEquals(promptRequest, action.promptRequest)
-        }
+        verify(store).dispatch(
+            ContentAction.ReplacePromptRequestAction(
+                "tab-id",
+                previousPromptUID,
+                promptRequest,
+            ),
+        )
     }
 
     @Test
     fun engineObserverHandlesWindowRequest() = runTest {
         val windowRequest: WindowRequest = mock()
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
-
+        val store: BrowserStore = mock()
+        whenever(store.state).thenReturn(mock())
         val observer = EngineObserver(
             tabId = "tab-id",
             store = store,
@@ -1342,18 +1330,20 @@ class EngineObserverTest {
         )
 
         observer.onWindowRequest(windowRequest)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateWindowRequestAction::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertEquals(windowRequest, action.windowRequest)
-        }
+        verify(store).dispatch(
+            ContentAction.UpdateWindowRequestAction(
+                "tab-id",
+                windowRequest,
+            ),
+        )
     }
 
     @Test
     fun engineObserverHandlesFirstContentfulPaint() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
+        whenever(store.state).thenReturn(mock())
         val observer = createEngineObserver(
             tabId = "tab-id",
             store = store,
@@ -1361,18 +1351,20 @@ class EngineObserverTest {
         )
 
         observer.onFirstContentfulPaint()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateFirstContentfulPaintStateAction::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertTrue(action.firstContentfulPaint)
-        }
+        verify(store).dispatch(
+            ContentAction.UpdateFirstContentfulPaintStateAction(
+                "tab-id",
+                true,
+            ),
+        )
     }
 
     @Test
     fun engineObserverHandlesPaintStatusReset() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
+        whenever(store.state).thenReturn(mock())
         val observer = EngineObserver(
             tabId = "tab-id",
             store = store,
@@ -1380,18 +1372,19 @@ class EngineObserverTest {
         )
 
         observer.onPaintStatusReset()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateFirstContentfulPaintStateAction::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertFalse(action.firstContentfulPaint)
-        }
+        verify(store).dispatch(
+            ContentAction.UpdateFirstContentfulPaintStateAction(
+                "tab-id",
+                false,
+            ),
+        )
     }
 
     @Test
     fun engineObserverHandlesOnShowDynamicToolbar() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = EngineObserver(
             tabId = "tab-id",
             store = store,
@@ -1399,12 +1392,9 @@ class EngineObserverTest {
         )
 
         observer.onShowDynamicToolbar()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateExpandedToolbarStateAction::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertTrue(action.expanded)
-        }
+        verify(store).dispatch(ContentAction.UpdateExpandedToolbarStateAction("tab-id", true))
     }
 
     @Test
@@ -1430,11 +1420,11 @@ class EngineObserverTest {
         assertNull(store.state.tabs[0].mediaSessionState)
 
         observer.onMediaActivated(mediaSessionController)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         val observedMediaSessionState = store.state.tabs[0].mediaSessionState
         assertNotNull(observedMediaSessionState)
-        assertEquals(mediaSessionController, observedMediaSessionState.controller)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
     }
 
     @Test
@@ -1458,7 +1448,7 @@ class EngineObserverTest {
         assertNotNull(store.state.findTab("mozilla")?.mediaSessionState)
 
         observer.onMediaDeactivated()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         val observedMediaSessionState = store.state.findTab("mozilla")?.mediaSessionState
         assertNull(observedMediaSessionState)
@@ -1486,12 +1476,12 @@ class EngineObserverTest {
 
         observer.onMediaActivated(mediaSessionController)
         observer.onMediaMetadataChanged(metaData)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         val observedMediaSessionState = store.state.findTab("mozilla")?.mediaSessionState
         assertNotNull(observedMediaSessionState)
-        assertEquals(mediaSessionController, observedMediaSessionState.controller)
-        assertEquals(metaData, observedMediaSessionState.metadata)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(metaData, observedMediaSessionState?.metadata)
     }
 
     @Test
@@ -1516,12 +1506,12 @@ class EngineObserverTest {
 
         observer.onMediaActivated(mediaSessionController)
         observer.onMediaPlaybackStateChanged(playbackState)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         val observedMediaSessionState = store.state.findTab("mozilla")?.mediaSessionState
         assertNotNull(observedMediaSessionState)
-        assertEquals(mediaSessionController, observedMediaSessionState.controller)
-        assertEquals(playbackState, observedMediaSessionState.playbackState)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(playbackState, observedMediaSessionState?.playbackState)
     }
 
     @Test
@@ -1546,12 +1536,12 @@ class EngineObserverTest {
 
         observer.onMediaActivated(mediaSessionController)
         observer.onMediaFeatureChanged(playFeature)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         val observedMediaSessionState = store.state.findTab("mozilla")?.mediaSessionState
         assertNotNull(observedMediaSessionState)
-        assertEquals(mediaSessionController, observedMediaSessionState.controller)
-        assertEquals(playFeature, observedMediaSessionState.features)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(playFeature, observedMediaSessionState?.features)
     }
 
     @Test
@@ -1576,12 +1566,12 @@ class EngineObserverTest {
 
         observer.onMediaActivated(mediaSessionController)
         observer.onMediaPositionStateChanged(positionState)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         val observedMediaSessionState = store.state.findTab("mozilla")?.mediaSessionState
         assertNotNull(observedMediaSessionState)
-        assertEquals(mediaSessionController, observedMediaSessionState.controller)
-        assertEquals(positionState, observedMediaSessionState.positionState)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(positionState, observedMediaSessionState?.positionState)
     }
 
     @Test
@@ -1605,12 +1595,12 @@ class EngineObserverTest {
 
         observer.onMediaActivated(mediaSessionController)
         observer.onMediaMuteChanged(true)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         val observedMediaSessionState = store.state.findTab("mozilla")?.mediaSessionState
         assertNotNull(observedMediaSessionState)
-        assertEquals(mediaSessionController, observedMediaSessionState.controller)
-        assertEquals(true, observedMediaSessionState.muted)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(true, observedMediaSessionState?.muted)
     }
 
     @Test
@@ -1635,13 +1625,13 @@ class EngineObserverTest {
 
         observer.onMediaActivated(mediaSessionController)
         observer.onMediaFullscreenChanged(true, elementMetadata)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         val observedMediaSessionState = store.state.findTab("mozilla")?.mediaSessionState
         assertNotNull(observedMediaSessionState)
-        assertEquals(mediaSessionController, observedMediaSessionState.controller)
-        assertEquals(true, observedMediaSessionState.fullscreen)
-        assertEquals(elementMetadata, observedMediaSessionState.elementMetadata)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(true, observedMediaSessionState?.fullscreen)
+        assertEquals(elementMetadata, observedMediaSessionState?.elementMetadata)
     }
 
     @Test
@@ -1699,7 +1689,7 @@ class EngineObserverTest {
             contentLength = 100L,
             response = response,
         )
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         val tab = store.state.findTab("mozilla")!!
 
@@ -1744,8 +1734,7 @@ class EngineObserverTest {
 
     @Test
     fun `onCrashStateChanged will update session and notify observer`() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = createEngineObserver(
             tabId = "test-id",
             store = store,
@@ -1753,11 +1742,13 @@ class EngineObserverTest {
         )
 
         observer.onCrash()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(CrashAction.SessionCrashedAction::class) { action ->
-            assertEquals("test-id", action.tabId)
-        }
+        verify(store).dispatch(
+            CrashAction.SessionCrashedAction(
+                "test-id",
+            ),
+        )
     }
 
     @Test
@@ -1773,7 +1764,7 @@ class EngineObserverTest {
             scope = this,
         )
         observer.onLocationChange("https://www.mozilla.org/en-US/", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertNotDispatched(ContentAction.UpdateSearchTermsAction::class)
     }
@@ -1793,7 +1784,7 @@ class EngineObserverTest {
             scope = this,
         )
         observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = true)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
             assertEquals("", action.searchTerms)
@@ -1805,8 +1796,7 @@ class EngineObserverTest {
     @Suppress("DEPRECATION") // Session observable is deprecated
     fun `onLoadRequest notifies session observers`() = runTest {
         val url = "https://www.mozilla.org"
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
 
         val observer = createEngineObserver(
             tabId = "test-id",
@@ -1814,14 +1804,15 @@ class EngineObserverTest {
             scope = this,
         )
         observer.onLoadRequest(url = url, triggeredByRedirect = true, triggeredByWebContent = false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateLoadRequestAction::class) { action ->
-            assertEquals("test-id", action.sessionId)
-            assertEquals(url, action.loadRequest.url)
-            assertFalse(action.loadRequest.triggeredByUser)
-            assertTrue(action.loadRequest.triggeredByRedirect)
-        }
+        verify(store)
+            .dispatch(
+                ContentAction.UpdateLoadRequestAction(
+                    "test-id",
+                    LoadRequestState(url, triggeredByRedirect = true, triggeredByUser = false),
+                ),
+            )
     }
 
     @Test
@@ -1839,7 +1830,7 @@ class EngineObserverTest {
             scope = this,
         )
         observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertNotDispatched(ContentAction.UpdateSearchTermsAction::class)
     }
@@ -1847,9 +1838,8 @@ class EngineObserverTest {
     @Test
     fun `onLaunchIntentRequest dispatches UpdateAppIntentAction`() = runTest {
         val url = "https://www.mozilla.org"
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
 
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = createEngineObserver(
             tabId = "test-id",
             store = store,
@@ -1857,15 +1847,9 @@ class EngineObserverTest {
         )
         val intent: Intent = mock()
         observer.onLaunchIntentRequest(url = url, appIntent = intent, fallbackUrl = null, appName = null)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateAppIntentAction::class) { action ->
-            assertEquals("test-id", action.sessionId)
-            assertEquals(url, action.appIntent.url)
-            assertEquals(intent, action.appIntent.appIntent)
-            assertNull(action.appIntent.appName)
-            assertNull(action.appIntent.fallbackUrl)
-        }
+        verify(store).dispatch(ContentAction.UpdateAppIntentAction("test-id", AppIntentState(url, intent, null, null)))
     }
 
     @Test
@@ -1881,7 +1865,7 @@ class EngineObserverTest {
             scope = this,
         )
         observer.onNavigateBack()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
             assertEquals("", action.searchTerms)
@@ -1902,7 +1886,7 @@ class EngineObserverTest {
             scope = this,
         )
         observer.onNavigateForward()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
             assertEquals("", action.searchTerms)
@@ -1923,7 +1907,7 @@ class EngineObserverTest {
             scope = this,
         )
         observer.onGotoHistoryIndex()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
             assertEquals("", action.searchTerms)
@@ -1944,7 +1928,7 @@ class EngineObserverTest {
             scope = this,
         )
         observer.onLoadData()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
             assertEquals("", action.searchTerms)
@@ -1972,7 +1956,7 @@ class EngineObserverTest {
             scope = this,
         )
         observer.onLoadUrl()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertLastAction(ContentAction.UpdateSearchTermsAction::class) { action ->
             assertEquals("", action.searchTerms)
@@ -2000,7 +1984,7 @@ class EngineObserverTest {
             scope = this,
         )
         observer.onLoadUrl()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertLastAction(ContentAction.UpdateIsSearchAction::class) { action ->
             assertEquals(false, action.isSearch)
@@ -2028,15 +2012,14 @@ class EngineObserverTest {
             scope = this,
         )
         observer.onLocationChange("testUrl", false)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         middleware.assertNotDispatched(ContentAction.UpdateSearchTermsAction::class)
     }
 
     @Test
     fun `onHistoryStateChanged dispatches UpdateHistoryStateAction`() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
         val observer = createEngineObserver(
             tabId = "test-id",
             store = store,
@@ -2044,13 +2027,15 @@ class EngineObserverTest {
         )
 
         observer.onHistoryStateChanged(emptyList(), 0)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateHistoryStateAction::class) { action ->
-            assertEquals("test-id", action.sessionId)
-            assertTrue(action.historyList.isEmpty())
-            assertEquals(0, action.currentIndex)
-        }
+        verify(store).dispatch(
+            ContentAction.UpdateHistoryStateAction(
+                "test-id",
+                emptyList(),
+                currentIndex = 0,
+            ),
+        )
 
         observer.onHistoryStateChanged(
             listOf(
@@ -2059,25 +2044,24 @@ class EngineObserverTest {
             ),
             1,
         )
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertLastAction(ContentAction.UpdateHistoryStateAction::class) { action ->
-            assertEquals("test-id", action.sessionId)
-            assertEquals(1, action.currentIndex)
-            assertEquals(
+        verify(store).dispatch(
+            ContentAction.UpdateHistoryStateAction(
+                "test-id",
                 listOf(
                     HistoryItem("Firefox", "https://firefox.com"),
                     HistoryItem("Mozilla", "http://mozilla.org"),
                 ),
-                action.historyList,
-            )
-        }
+                currentIndex = 1,
+            ),
+        )
     }
 
     @Test
     fun `onScrollChange dispatches UpdateReaderScrollYAction`() = runTest {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
+        val store: BrowserStore = mock()
+        whenever(store.state).thenReturn(mock())
         val observer = createEngineObserver(
             tabId = "tab-id",
             store = store,
@@ -2085,12 +2069,14 @@ class EngineObserverTest {
         )
 
         observer.onScrollChange(4321, 1234)
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        captureActionsMiddleware.assertFirstAction(ReaderAction.UpdateReaderScrollYAction::class) { action ->
-            assertEquals("tab-id", action.tabId)
-            assertEquals(1234, action.scrollY)
-        }
+        verify(store).dispatch(
+            ReaderAction.UpdateReaderScrollYAction(
+                "tab-id",
+                1234,
+            ),
+        )
     }
 
     @Test

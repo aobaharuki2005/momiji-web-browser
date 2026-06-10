@@ -3,10 +3,10 @@
  * Copyright 2024 Google Inc.
  * SPDX-License-Identifier: Apache-2.0
  */
-import {mkdir, readFile, readdir, writeFile} from 'node:fs/promises';
+import {mkdir, readFile, readdir, writeFile} from 'fs/promises';
 import Module from 'node:module';
-import path from 'node:path';
-import posixPath from 'node:path/posix';
+import path from 'path';
+import posixPath from 'path/posix';
 
 import esbuild from 'esbuild';
 import {execa} from 'execa';
@@ -14,27 +14,28 @@ import {task} from 'hereby';
 
 const require = Module.createRequire(import.meta.url);
 
-export const updateVersionTask = task({
-  name: 'update:version',
+export const generateVersionTask = task({
+  name: 'generate:version',
   run: async () => {
-    // x-release-please-start-version
-    const version = '24.35.0';
-    // x-release-please-end
-
-    // We only want to do this once we are trying to publish
-    // a new version
-    if (!process.env['PUBLISH']) {
-      return;
-    }
-
-    const fileContent = await readFile('../../versions.json', {
-      encoding: 'utf-8',
-    });
-
+    const {version} = JSON.parse(await readFile('package.json', 'utf8'));
+    await mkdir('src/generated', {recursive: true});
     await writeFile(
-      '../../versions.json',
-      fileContent.replace(`"NEXT"`, `"v${version}"`),
+      'src/generated/version.ts',
+      (await readFile('src/templates/version.ts.tmpl', 'utf8')).replace(
+        'PACKAGE_VERSION',
+        version,
+      ),
     );
+    if (process.env['PUBLISH']) {
+      await writeFile(
+        '../../versions.json',
+        (
+          await readFile('../../versions.json', {
+            encoding: 'utf-8',
+          })
+        ).replace(`"NEXT"`, `"v${version}"`),
+      );
+    }
   },
 });
 
@@ -72,9 +73,9 @@ export const generatePackageJsonTask = task({
 export const generateTask = task({
   name: 'generate',
   dependencies: [
+    generateVersionTask,
     generateInjectedTask,
     generatePackageJsonTask,
-    updateVersionTask,
   ],
 });
 

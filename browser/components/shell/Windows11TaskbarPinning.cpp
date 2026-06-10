@@ -1,10 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Windows11TaskbarPinning.h"
+#include "Windows11LimitedAccessFeatures.h"
 
-#include "nsILimitedAccessFeature.h"
 #include "nsWindowsHelpers.h"
 #include "MainThreadUtils.h"
 #include "nsThreadUtils.h"
@@ -13,7 +14,6 @@
 
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
-#include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "mozilla/widget/WinTaskbar.h"
 #include "WinUtils.h"
@@ -68,39 +68,24 @@ using namespace ABI::Windows::UI::Shell;
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::ApplicationModel;
 
-static Win11PinToTaskBarResult UnlockTaskbarPinFeature() {
-  nsCOMPtr<nsILimitedAccessFeatureService> lafService =
-      do_GetService("@mozilla.org/limited-access-feature-service;1");
-
-  nsAutoCString pinFeatureId;
-  nsresult rv = lafService->GetTaskbarPinFeatureId(pinFeatureId);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return {E_FAIL, Win11PinToTaskBarResultStatus::NotSupported};
+static Win11PinToTaskBarResult UnlockLimitedAccessFeature(
+    Win11LimitedAccessFeatureType featureType) {
+  RefPtr<Win11LimitedAccessFeaturesInterface> limitedAccessFeatures =
+      CreateWin11LimitedAccessFeaturesInterface();
+  auto result = limitedAccessFeatures->Unlock(featureType);
+  if (result.isErr()) {
+    auto hr = result.unwrapErr();
+    TASKBAR_PINNING_LOG(LogLevel::Debug,
+                        "Taskbar unlock: Error. HRESULT = 0x%lx", hr);
+    return {hr, Win11PinToTaskBarResultStatus::NotSupported};
   }
 
-  nsCOMPtr<nsILimitedAccessFeature> feature;
-  rv = lafService->GenerateLimitedAccessFeature(pinFeatureId,
-                                                getter_AddRefs(feature));
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return {E_FAIL, Win11PinToTaskBarResultStatus::NotSupported};
-  }
-
-  bool unlocked = false;
-  rv = feature->Unlock(&unlocked);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return {E_FAIL, Win11PinToTaskBarResultStatus::NotSupported};
-  }
-
-  if (!unlocked) {
+  if (result.unwrap() == false) {
     TASKBAR_PINNING_LOG(
         LogLevel::Debug,
         "Taskbar unlock: failed. Not supported on this version of Windows.");
     return {S_OK, Win11PinToTaskBarResultStatus::NotSupported};
   }
-
   return {S_OK, Win11PinToTaskBarResultStatus::Success};
 }
 
@@ -191,25 +176,16 @@ static Win11PinToTaskBarResultStatus IsTaskbarPinningAllowed(
 }
 
 Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
-    bool aCheckOnly, const nsAString& aAppUserModelId,
-    const bool aFireAndForget) {
+    bool aCheckOnly, const nsAString& aAppUserModelId) {
   MOZ_DIAGNOSTIC_ASSERT(!NS_IsMainThread(),
                         "PinCurrentAppToTaskbarWin11 should be called off main "
                         "thread only. It blocks, waiting on things to execute "
                         "asynchronously on the main thread.");
 
-  Win11PinToTaskBarResult unlockStatus = UnlockTaskbarPinFeature();
+  Win11PinToTaskBarResult unlockStatus =
+      UnlockLimitedAccessFeature(Win11LimitedAccessFeatureType::Taskbar);
   if (unlockStatus.result != Win11PinToTaskBarResultStatus::Success) {
-    // Limited Access Feature no longer necessary for Windows 11 26200 Build
-    // 7840, and possibly other channels.
-    if (!IsWin11OrLater()) {
-      return unlockStatus;
-    }
-
-    TASKBAR_PINNING_LOG(
-        LogLevel::Warning,
-        "Limited Access Feature failed to unlock, attempting to use Taskbar "
-        "Pinning API assuming LAF is no longer necessary.");
+    return unlockStatus;
   }
 
   HRESULT hr;
@@ -221,9 +197,8 @@ Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
   // Everything related to the taskbar and pinning must be done on the main /
   // user interface thread or Windows will cause them to fail.
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "PinCurrentAppToTaskbarWin11",
-      [&event, &hr, &resultStatus, aCheckOnly, aFireAndForget,
-       aumid = nsString(aAppUserModelId)] {
+      "PinCurrentAppToTaskbarWin11", [&event, &hr, &resultStatus, aCheckOnly,
+                                      aumid = nsString(aAppUserModelId)] {
         // We eventualy want to call SetCurrentProcessExplicitAppUserModelID()
         // on the main thread as it is not thread safe and pinning is called
         // numerous times in many different places. This is a hack used
@@ -288,9 +263,9 @@ Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
         // references.
         auto isPinnedCallback = Callback<IAsyncOperationCompletedHandler<
             bool>>([taskbar, &event, &resultStatus, &hr,
-                    primaryAumid = nsString(primaryAumid),
-                    aFireAndForget](IAsyncOperation<bool>* asyncInfo,
-                                    AsyncStatus status) mutable -> HRESULT {
+                    primaryAumid = nsString(primaryAumid)](
+                       IAsyncOperation<bool>* asyncInfo,
+                       AsyncStatus status) mutable -> HRESULT {
           auto CompletedOperations =
               [&event, &resultStatus,
                primaryAumid](Win11PinToTaskBarResultStatus status) -> HRESULT {
@@ -344,8 +319,6 @@ Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
                 "HRESULT = 0x%lx",
                 hr);
             return CompletedOperations(Win11PinToTaskBarResultStatus::Failed);
-          } else if (aFireAndForget) {
-            return CompletedOperations(Win11PinToTaskBarResultStatus::Success);
           }
 
           auto pinAppCallback = Callback<IAsyncOperationCompletedHandler<
@@ -423,25 +396,17 @@ Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
   return {hr, resultStatus};
 }
 
-Win11PinToTaskBarResult IsCurrentAppPinnedToTaskbarWin11() {
+Win11PinToTaskBarResult IsCurrentAppPinnedToTaskbarWin11(bool aCheckOnly) {
   MOZ_DIAGNOSTIC_ASSERT(
       !NS_IsMainThread(),
       "IsCurrentAppPinnedToTaskbarWin11 should be called off main "
       "thread only. It blocks, waiting on things to execute "
       "asynchronously on the main thread.");
 
-  Win11PinToTaskBarResult unlockStatus = UnlockTaskbarPinFeature();
+  Win11PinToTaskBarResult unlockStatus =
+      UnlockLimitedAccessFeature(Win11LimitedAccessFeatureType::Taskbar);
   if (unlockStatus.result != Win11PinToTaskBarResultStatus::Success) {
-    // Limited Access Feature no longer necessary for Windows 11 26200 Build
-    // 7840, and possibly other channels.
-    if (!IsWin11OrLater()) {
-      return unlockStatus;
-    }
-
-    TASKBAR_PINNING_LOG(
-        LogLevel::Warning,
-        "Limited Access Feature failed to unlock, attempting to use Taskbar "
-        "Pinning API assuming LAF is no longer necessary.");
+    return unlockStatus;
   }
 
   HRESULT hr;
@@ -453,21 +418,22 @@ Win11PinToTaskBarResult IsCurrentAppPinnedToTaskbarWin11() {
   // Everything related to the taskbar and pinning must be done on the main /
   // user interface thread or Windows will cause them to fail.
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "IsCurrentAppPinnedToTaskbarWin11", [&event, &hr, &resultStatus] {
+      "IsCurrentAppPinnedToTaskbarWin11",
+      [&event, &hr, &resultStatus, aCheckOnly] {
         auto CompletedOperations =
             [&event, &resultStatus](Win11PinToTaskBarResultStatus status) {
               resultStatus = status;
               event.Set();
             };
 
-        auto result = InitializeTaskbar();
-        if (result.isErr()) {
-          hr = result.unwrapErr();
-          return CompletedOperations(
-              Win11PinToTaskBarResultStatus::NotSupported);
+        ComPtr<ITaskbarManager> taskbar;
+        Win11PinToTaskBarResultStatus allowed =
+            IsTaskbarPinningAllowed(aCheckOnly, taskbar);
+        if ((aCheckOnly && allowed == Win11PinToTaskBarResultStatus::Success) ||
+            allowed != Win11PinToTaskBarResultStatus::Success) {
+          return CompletedOperations(allowed);
         }
 
-        ComPtr<ITaskbarManager> taskbar = result.unwrap();
         ComPtr<IAsyncOperation<bool>> isPinnedOperation = nullptr;
         hr = taskbar->IsCurrentAppPinnedAsync(&isPinnedOperation);
         if (FAILED(hr)) {
@@ -550,12 +516,11 @@ Win11PinToTaskBarResult IsCurrentAppPinnedToTaskbarWin11() {
 #else  // MINGW32 implementation below
 
 Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
-    bool aCheckOnly, const nsAString& aAppUserModelId,
-    const bool aFireAndForget) {
+    bool aCheckOnly, const nsAString& aAppUserModelId) {
   return {S_OK, Win11PinToTaskBarResultStatus::NotSupported};
 }
 
-Win11PinToTaskBarResult IsCurrentAppPinnedToTaskbarWin11() {
+Win11PinToTaskBarResult IsCurrentAppPinnedToTaskbarWin11(bool aCheckOnly) {
   return {S_OK, Win11PinToTaskBarResultStatus::NotSupported};
 }
 

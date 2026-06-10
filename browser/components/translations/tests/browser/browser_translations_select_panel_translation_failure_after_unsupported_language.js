@@ -12,7 +12,11 @@ add_task(
     const { cleanup, runInPage, resolveDownloads, rejectDownloads } =
       await loadTestPage({
         page: SELECT_TEST_PAGE_URL,
-        languagePairs: LANGUAGE_PAIRS_WITHOUT_SPANISH,
+        languagePairs: [
+          // Do not include Spanish.
+          { fromLang: "fr", toLang: "en" },
+          { fromLang: "en", toLang: "fr" },
+        ],
         prefs: [["browser.translations.select.enable", true]],
       });
 

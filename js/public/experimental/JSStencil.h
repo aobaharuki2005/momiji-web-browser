@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -22,10 +24,8 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::InstantiateOptions, JS::ReadOnlyDecodeOptions
-#include "js/RootingAPI.h"   // JS::MutableHandle
 #include "js/SourceText.h"   // JS::SourceText
 #include "js/Transcoding.h"  // JS::TranscodeBuffer, JS::TranscodeRange
-#include "js/Value.h"        // JS::Value
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSTracer;
@@ -223,30 +223,17 @@ DecodeStencil(JS::FrontendContext* fc, const ReadOnlyDecodeOptions& options,
 //   Collect delazifications
 // ************************************************************************
 
-enum class CollectDelazificationsResult {
-  // The collection wasn't ongoing, and it's newly started.
-  // The caller is responsible for either finishing or aborting later.
-  NewlyStarted,
-
-  // The collection has already started by other consumer.
-  // The caller doesn't own the collection.
-  AlreadyStarted,
-
-  // The target script is not supported and the collection is not started.
-  NotSupported,
-};
-
 // Start collecting delazifications for given script or module's source object.
 //
-// On successful case, this sets the result out-parameter to one of the above
-// CollectDelazificationsResult and returns true, and returns false otherwise.
+// If the source object is already collecting delazifications, alreadyStarted is
+// set to true and returns true. alreadyStarted is set to false otherwise.
 extern JS_PUBLIC_API bool StartCollectingDelazifications(
     JSContext* cx, JS::Handle<JSScript*> script, Stencil* stencil,
-    CollectDelazificationsResult& result);
+    bool& alreadyStarted);
 
 extern JS_PUBLIC_API bool StartCollectingDelazifications(
     JSContext* cx, JS::Handle<JSObject*> module, Stencil* stencil,
-    CollectDelazificationsResult& result);
+    bool& alreadyStarted);
 
 // Finish collecting delazifications and retrieve the result as a JS::Stencil
 // that reflects the delazification from the execution.
@@ -260,8 +247,10 @@ extern JS_PUBLIC_API bool FinishCollectingDelazifications(
 extern JS_PUBLIC_API bool FinishCollectingDelazifications(
     JSContext* cx, Handle<JSObject*> module, JS::Stencil** stencilOut);
 
-extern JS_PUBLIC_API void AbortCollectingDelazifications(JSScript* script);
-extern JS_PUBLIC_API void AbortCollectingDelazifications(JSObject* module);
+extern JS_PUBLIC_API void AbortCollectingDelazifications(
+    Handle<JSScript*> script);
+extern JS_PUBLIC_API void AbortCollectingDelazifications(
+    Handle<JSObject*> module);
 
 // ************************************************************************
 //   Cache
@@ -278,13 +267,6 @@ extern JS_PUBLIC_API bool IsStencilCacheable(JS::Stencil* stencil);
 // Returns the uncompressed source text length of given stencil.
 // Returns 0 if the source is discarded or somehow not accessible.
 extern JS_PUBLIC_API size_t GetScriptSourceLength(JS::Stencil* stencil);
-
-// Returns the uncompressed source text of given stencil, to the `result` out
-// parameter, as a string value either in Latin1 or char16.
-// `result` is set to undefined if the source is discarded or somehow not
-// accessible.
-extern JS_PUBLIC_API bool GetScriptSourceText(
-    JSContext* cx, JS::Stencil* stencil, JS::MutableHandle<JS::Value> result);
 
 }  // namespace JS
 

@@ -26,12 +26,6 @@ function stringToArrayBuffer(str) {
   return bytes;
 }
 
-/**
- * A qualified website authentication certificate, or QWAC, is a special type
- * of certificate issued according to the European Union eIDAS regulation. It
- * is essentially an EV certificate (EU's version). The primary document
- * describing its implementation and use is ETSI TS 119 411-5.
- */
 export var QWACs = {
   fromBase64URLEncoding(base64URLEncoded) {
     return atob(base64URLEncoded.replaceAll("-", "+").replaceAll("_", "/"));
@@ -422,11 +416,7 @@ export var QWACs = {
    *   use, if any, and null otherwise.
    */
   async determineQWACStatus(secInfo, uri, browsingContext) {
-    if (
-      !Services.prefs.getBoolPref("security.qwacs.enabled") ||
-      !secInfo ||
-      !secInfo.serverCert
-    ) {
+    if (!secInfo || !secInfo.serverCert) {
       return null;
     }
 

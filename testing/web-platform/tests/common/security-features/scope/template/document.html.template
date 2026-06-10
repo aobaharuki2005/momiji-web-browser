@@ -2,9 +2,7 @@
 <html>
   <head>
     %(meta)s
-    <script src="%(scriptOrigin)s/common/security-features/resources/common.sub.js"></script>
-    <script src="%(scriptOrigin)s/resources/testharness.js"></script>
-    <script src="%(scriptOrigin)s/resources/testharnessreport.js"></script>
+    <script src="/common/security-features/resources/common.sub.js"></script>
     <script>
     // Receive a message from the parent and start the test.
     function onMessageFromParent(event) {

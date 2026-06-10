@@ -41,16 +41,18 @@
 #include <string>
 
 class AffEntry {
+ private:
+  AffEntry(const AffEntry&);
+  AffEntry& operator=(const AffEntry&);
+
  public:
   AffEntry()
-      : numconds(0)
-      , opts(0)
-      , aflag(0)
-      , morphcode(nullptr)
-      , contclass(nullptr)
-      , contclasslen(0) {}
-  AffEntry(const AffEntry&) = delete;
-  AffEntry& operator=(const AffEntry&) = delete;
+      : numconds(0),
+        opts(0),
+        aflag(0),
+        morphcode(0),
+        contclass(NULL),
+        contclasslen(0) {}
   virtual ~AffEntry();
   std::string appnd;
   std::string strip;
@@ -66,7 +68,7 @@ class AffEntry {
   } c;
   char* morphcode;
   unsigned short* contclass;
-  unsigned short contclasslen;
+  short contclasslen;
 };
 
 #endif

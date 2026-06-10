@@ -112,7 +112,7 @@ class NetworkEventContentWatcher {
     });
   };
 
-  httpOnResourceCacheResponse = (subject, topic, memoryCacheKey) => {
+  httpOnResourceCacheResponse = (subject, topic) => {
     if (
       topic != "http-on-resource-cache-response" ||
       !(subject instanceof Ci.nsIHttpChannel)
@@ -150,7 +150,6 @@ class NetworkEventContentWatcher {
 
     this.onNetworkEventAvailable(channel, {
       fromCache: true,
-      memoryCacheKey,
       networkEventOptions: {},
       type: RESOURCE_TYPES.CACHED,
     });
@@ -189,10 +188,7 @@ class NetworkEventContentWatcher {
     });
   };
 
-  onNetworkEventAvailable(
-    channel,
-    { fromCache, memoryCacheKey, networkEventOptions, type }
-  ) {
+  onNetworkEventAvailable(channel, { fromCache, networkEventOptions, type }) {
     const networkEventActor = new NetworkEventActor(
       this.targetActor.conn,
       this.targetActor.sessionContext,
@@ -232,9 +228,6 @@ class NetworkEventContentWatcher {
 
     this.onAvailable([resource]);
 
-    if (memoryCacheKey) {
-      networkEventActor.addMemoryCacheData(channel, memoryCacheKey);
-    }
     networkEventActor.addCacheDetails({ fromCache });
     if (type == RESOURCE_TYPES.BLOCKED) {
       lazy.NetworkUtils.setEventAsAvailable(networkEvent.resourceUpdates, [
@@ -298,9 +291,7 @@ class NetworkEventContentWatcher {
         break;
       }
       case NETWORK_EVENT_TYPES.RESPONSE_CONTENT:
-        if (updateResource.contentSize !== undefined) {
-          resourceUpdates.contentSize = updateResource.contentSize;
-        }
+        resourceUpdates.contentSize = updateResource.contentSize;
         resourceUpdates.mimeType = updateResource.mimeType;
         resourceUpdates.transferredSize = updateResource.transferredSize;
         break;

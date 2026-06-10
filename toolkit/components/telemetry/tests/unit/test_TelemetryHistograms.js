@@ -187,9 +187,10 @@ add_task(async function test_getHistogramById() {
     Telemetry.getHistogramById("nonexistent");
     do_throw("This can't happen");
   } catch (e) {}
-  var h = Telemetry.getHistogramById("TELEMETRY_TEST_EXPONENTIAL");
+  var h = Telemetry.getHistogramById("CYCLE_COLLECTOR");
   var s = h.snapshot();
   Assert.equal(s.histogram_type, Telemetry.HISTOGRAM_EXPONENTIAL);
+  Assert.deepEqual(s.range, [1, 10000]);
 });
 
 add_task(async function test_getSlowSQL() {

@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -9,6 +11,9 @@ with Files("docs/**"):
 
 if CONFIG["MOZ_BUILD_APP"] == "browser":
     DEFINES["MOZ_BUILD_APP_IS_BROWSER"] = True
+
+if CONFIG["MOZ_BUILD_APP"] == "mobile/android":
+    DEFINES["MOZ_GECKOVIEW"] = True
 
 DIRS += [
     "internal",
@@ -49,10 +54,6 @@ elif CONFIG["MOZ_BUILD_APP"] == "mobile/android":
         "!%s" % built_in_addons,
     ]
 elif CONFIG["MOZ_BUILD_APP"] == "comm/mail":
-    manifest.flags = [
-        "--builtin-addons=chrome/messenger/builtin-addons",
-    ]
-
     # NOTE: used by Thunderbird to auto-install the default en-US dictionary.
     FINAL_TARGET_FILES.chrome.browser.content += [
         "!%s" % built_in_addons,

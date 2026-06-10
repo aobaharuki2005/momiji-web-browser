@@ -8,23 +8,21 @@ import mozilla.components.support.test.assertUnused
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.experiments.nimbus.NimbusMessagingHelperInterface
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.nimbus.FakeNimbusEventStore
-import org.mozilla.fenix.nimbus.RecordEventMode.CompleteSuccessfully
-import org.mozilla.fenix.nimbus.RecordEventMode.ThrowException
 import org.mozilla.fenix.reviewprompt.ReviewPromptState.Eligible.Type
-import kotlin.test.assertIs
 
 class ReviewPromptMiddlewareTest {
 
     private val eventStore = FakeNimbusEventStore()
 
-    private var shouldUseNewTriggerCriteria = true
-    private var shouldShowCustomPrompt = true
+    private var isFeatureFlagEnabled = true
+    private var isTelemetryEnabled = true
     private lateinit var mainCriteria: Sequence<Boolean>
     private lateinit var subCriteria: Sequence<Boolean>
     private lateinit var legacyCriteria: Sequence<Boolean>
@@ -32,13 +30,11 @@ class ReviewPromptMiddlewareTest {
     private val store = AppStore(
         middlewares = listOf(
             ReviewPromptMiddleware(
-                shouldUseNewTriggerCriteria = { shouldUseNewTriggerCriteria },
-                shouldShowCustomPrompt = { shouldShowCustomPrompt },
-                disableCustomPrompt = { shouldShowCustomPrompt = false },
+                isReviewPromptFeatureEnabled = { isFeatureFlagEnabled },
+                isTelemetryEnabled = { isTelemetryEnabled },
                 createJexlHelper = {
                     object : NimbusMessagingHelperInterface {
                         override fun evalJexl(expression: String) = assertUnused()
-                        override fun evalJexlDebug(expression: String) = assertUnused()
                         override fun getUuid(template: String) = assertUnused()
                         override fun stringFormat(template: String, uuid: String?) = assertUnused()
                     }
@@ -52,8 +48,8 @@ class ReviewPromptMiddlewareTest {
     )
 
     @Test
-    fun `GIVEN new criteria are enabled WHEN check requested THEN main and sub-criteria are checked`() {
-        shouldUseNewTriggerCriteria = true
+    fun `GIVEN feature flag is enabled WHEN check requested THEN main and sub-criteria are checked`() {
+        isFeatureFlagEnabled = true
 
         var mainCriteriaChecked = false
         var subCriteriaChecked = false
@@ -79,8 +75,8 @@ class ReviewPromptMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN new criteria are disabled WHEN check requested THEN legacy criteria are checked`() {
-        shouldUseNewTriggerCriteria = false
+    fun `GIVEN feature flag is disabled WHEN check requested THEN legacy criteria are checked`() {
+        isFeatureFlagEnabled = false
 
         var mainCriteriaChecked = false
         var subCriteriaChecked = false
@@ -112,7 +108,7 @@ class ReviewPromptMiddlewareTest {
 
         store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
-        assertIs<ReviewPromptState.Eligible>(store.state.reviewPrompt)
+        assertTrue(store.state.reviewPrompt is ReviewPromptState.Eligible)
     }
 
     @Test
@@ -137,7 +133,7 @@ class ReviewPromptMiddlewareTest {
 
         store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
-        assertIs<ReviewPromptState.Eligible>(store.state.reviewPrompt)
+        assertTrue(store.state.reviewPrompt is ReviewPromptState.Eligible)
     }
 
     @Test
@@ -221,21 +217,9 @@ class ReviewPromptMiddlewareTest {
 
     @Test
     fun `WHEN review prompt shown THEN an event is recorded`() {
-        eventStore.recordEventMode = CompleteSuccessfully
-
         store.dispatch(ReviewPromptAction.ReviewPromptShown)
 
-        eventStore.assertRecorded("review_prompt_shown")
-    }
-
-    @Test
-    fun `WHEN recordEvent fails THEN disables custom prompt`() {
-        shouldShowCustomPrompt = true
-        eventStore.recordEventMode = ThrowException
-
-        store.dispatch(ReviewPromptAction.ReviewPromptShown)
-
-        assertFalse(shouldShowCustomPrompt)
+        eventStore.assertSingleEventEquals("review_prompt_shown")
     }
 
     @Test
@@ -253,9 +237,10 @@ class ReviewPromptMiddlewareTest {
         assertNoOp(ReviewPromptAction.ShowPlayStorePrompt)
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=2001801")
     @Test
-    fun `GIVEN custom prompt enabled AND criteria satisfied WHEN check requested THEN sets eligible for Custom prompt`() {
-        shouldShowCustomPrompt = true
+    fun `GIVEN telemetry enabled AND criteria satisfied WHEN check requested THEN sets eligible for Custom prompt`() {
+        isTelemetryEnabled = true
         mainCriteria = sequenceOf(true)
         subCriteria = sequenceOf(true)
 
@@ -268,8 +253,8 @@ class ReviewPromptMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN custom prompt disabled AND criteria satisfied WHEN check requested THEN sets eligible for Play Store prompt`() {
-        shouldShowCustomPrompt = false
+    fun `GIVEN telemetry disabled AND criteria satisfied WHEN check requested THEN sets eligible for Play Store prompt`() {
+        isTelemetryEnabled = false
         mainCriteria = sequenceOf(true)
         subCriteria = sequenceOf(true)
 
@@ -281,10 +266,11 @@ class ReviewPromptMiddlewareTest {
         )
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=2001801")
     @Test
-    fun `GIVEN new criteria are disabled AND custom prompt enabled AND criteria satisfied WHEN check requested THEN sets eligible for Custom prompt`() {
-        shouldUseNewTriggerCriteria = false
-        shouldShowCustomPrompt = true
+    fun `GIVEN feature flag disabled AND telemetry enabled AND criteria satisfied WHEN check requested THEN sets eligible for Custom prompt`() {
+        isFeatureFlagEnabled = false
+        isTelemetryEnabled = true
         legacyCriteria = sequenceOf(true)
 
         store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
@@ -296,9 +282,9 @@ class ReviewPromptMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN new criteria are disabled AND custom prompt disabled AND criteria satisfied WHEN check requested THEN sets eligible for Play Store prompt`() {
-        shouldUseNewTriggerCriteria = false
-        shouldShowCustomPrompt = false
+    fun `GIVEN feature flag disabled AND telemetry disabled AND criteria satisfied WHEN check requested THEN sets eligible for Play Store prompt`() {
+        isFeatureFlagEnabled = false
+        isTelemetryEnabled = false
         legacyCriteria = sequenceOf(true)
 
         store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
@@ -307,6 +293,78 @@ class ReviewPromptMiddlewareTest {
             AppState(reviewPrompt = ReviewPromptState.Eligible(Type.PlayStore)),
             store.state,
         )
+    }
+
+    @Test
+    fun `WHEN evalJexl returns false THEN createdAtLeastOneBookmark returns false`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = false)
+
+        val result = createdAtLeastOneBookmark(jexlHelper)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `WHEN evalJexl returns true THEN createdAtLeastOneBookmark returns true`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = true)
+
+        val result = createdAtLeastOneBookmark(jexlHelper)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `WHEN evalJexl returns false THEN isDefaultBrowser returns false`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = false)
+
+        val result = isDefaultBrowser(jexlHelper)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `WHEN evalJexl returns true THEN isDefaultBrowser returns true`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = true)
+
+        val result = isDefaultBrowser(jexlHelper)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `WHEN evalJexl returns false THEN usedAppOnAtLeastFourOfLastSevenDays returns false`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = false)
+
+        val result = usedAppOnAtLeastFourOfLastSevenDays(jexlHelper)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `WHEN evalJexl returns true THEN usedAppOnAtLeastFourOfLastSevenDays returns true`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = true)
+
+        val result = usedAppOnAtLeastFourOfLastSevenDays(jexlHelper)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `WHEN evalJexl returns false THEN hasNotBeenPromptedLastFourMonths returns false`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = false)
+
+        val result = hasNotBeenPromptedLastFourMonths(jexlHelper)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `WHEN evalJexl returns true THEN hasNotBeenPromptedLastFourMonths returns true`() {
+        val jexlHelper = FakeNimbusMessagingHelperInterface(evalJexlValue = true)
+
+        val result = hasNotBeenPromptedLastFourMonths(jexlHelper)
+
+        assertTrue(result)
     }
 
     private fun assertNoOp(action: ReviewPromptAction) {
@@ -320,5 +378,12 @@ class ReviewPromptMiddlewareTest {
             expectedState,
             store.state,
         )
+    }
+
+    private class FakeNimbusMessagingHelperInterface(val evalJexlValue: Boolean) :
+        NimbusMessagingHelperInterface {
+        override fun evalJexl(expression: String): Boolean = evalJexlValue
+        override fun getUuid(template: String): String? = null
+        override fun stringFormat(template: String, uuid: String?): String = ""
     }
 }

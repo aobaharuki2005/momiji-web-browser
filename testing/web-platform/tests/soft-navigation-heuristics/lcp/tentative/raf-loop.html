@@ -28,7 +28,7 @@
     let smallLcpIssued = false;
 
     new PerformanceObserver((list, observer) => {
-      if (list.getEntries().some((e) => e.largestContentfulPaint?.id === "small-lcp")) {
+      if (list.getEntries().some((e) => e.id === "small-lcp")) {
         smallLcpIssued = true;
         observer.disconnect();
       }
@@ -70,32 +70,32 @@
     if (test_driver) {
       test_driver.click(document.getElementById("click-target"));
     }
-    const [softNavigationEntries, icpEntries] = await promise;
+    const [softNavigationEntries, softLcpEntries] = await promise;
     assert_equals(
       softNavigationEntries.length,
       1,
       "There should be only one soft navigation entry",
     );
-    assert_equals(icpEntries.length, 2, "There should be two ICP entries");
+    assert_equals(softLcpEntries.length, 2, "There should be two soft LCP entries");
     assert_equals(
-      icpEntries[0].largestContentfulPaint.id,
+      softLcpEntries[0].id,
       "small-lcp",
       "The first soft LCP entry should be the small text",
     );
     assert_equals(
-      icpEntries[1].largestContentfulPaint.id,
+      softLcpEntries[1].id,
       "large-lcp",
       "The second soft LCP entry should be the large text",
     );
     assert_equals(
       softNavigationEntries[0].navigationId,
-      icpEntries[0].navigationId,
-      "The soft navigation entry should have the same navigation ID as the first ICP entry",
+      softLcpEntries[0].navigationId,
+      "The soft navigation entry should have the same navigation ID as the first soft LCP entry",
     );
     assert_equals(
       softNavigationEntries[0].navigationId,
-      icpEntries[1].navigationId,
-      "The soft navigation entry should have the same navigation ID as the second ICP entry",
+      softLcpEntries[1].navigationId,
+      "The soft navigation entry should have the same navigation ID as the second soft LCP entry",
     );
     assert_not_equals(
       lcpEntries[0].navigationId,

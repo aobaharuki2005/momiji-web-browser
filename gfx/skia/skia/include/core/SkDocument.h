@@ -62,7 +62,7 @@ public:
     void abort();
 
 protected:
-    explicit SkDocument(SkWStream*);
+    SkDocument(SkWStream*);
 
     // note: subclasses must call close() in their destructor, as the base class
     // cannot do this for them.

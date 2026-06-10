@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,12 +9,12 @@
 #ifndef mozilla_UniquePtrExtensions_h
 #define mozilla_UniquePtrExtensions_h
 
-#include <cstdlib>
 #include <type_traits>
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/fallible.h"
-#include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 
 #ifdef XP_WIN
@@ -20,11 +22,6 @@
 #endif
 #if defined(XP_DARWIN)
 #  include <mach/mach.h>
-#  include "mozilla/Assertions.h"
-#  include "mozilla/DebugOnly.h"
-#endif
-#if defined(XP_UNIX) && (defined(DEBUG) || defined(FUZZING))
-#  include "mozilla/Assertions.h"
 #endif
 
 namespace mozilla {
@@ -228,18 +225,9 @@ using UniqueFileHandle =
 
 #ifndef __wasm__
 // WASI does not have `dup`
-// On Unix, these set the close-on-exec flag for the new fd.
 MFBT_API UniqueFileHandle DuplicateFileHandle(detail::FileHandleType aFile);
 inline UniqueFileHandle DuplicateFileHandle(const UniqueFileHandle& aFile) {
   return DuplicateFileHandle(aFile.get());
-}
-#endif  // not wasm
-
-#ifdef XP_UNIX
-// For systems that don't have the full set of POSIX atomic cloexec APIs.
-MFBT_API void SetCloseOnExec(detail::FileHandleType aFile);
-inline void SetCloseOnExec(const UniqueFileHandle& aFile) {
-  SetCloseOnExec(aFile.get());
 }
 #endif
 

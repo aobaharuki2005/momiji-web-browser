@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -32,7 +35,7 @@ using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
 namespace mozilla {
 namespace layers {
 
-[ParentImpl=virtual]
+[ManualDealloc, ParentImpl=virtual]
 sync protocol PWebRenderBridge
 {
   manager PCompositorBridge;
@@ -75,7 +78,7 @@ parent:
 
   // Start capturing each frame to disk. See
   // nsIDOMWindowUtils::wrStartCaptureSequence for documentation.
-  async StartCaptureSequence(uint32_t aFlags);
+  async StartCaptureSequence(nsCString aPath, uint32_t aFlags);
 
   // Stop the captures started by StartCaptureSequence. See
   // nsIDOMWindowUtils::wrStopCaptureSequence for documentation.

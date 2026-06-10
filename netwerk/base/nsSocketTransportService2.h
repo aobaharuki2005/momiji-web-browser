@@ -1,9 +1,10 @@
+/* vim:set ts=4 sw=2 sts=2 ci et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsSocketTransportService2_h_
-#define nsSocketTransportService2_h_
+#ifndef nsSocketTransportService2_h__
+#define nsSocketTransportService2_h__
 
 #include "PollableEvent.h"
 #include "mozilla/Atomics.h"
@@ -11,9 +12,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/RWLock.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Queue.h"
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/net/DashboardTypes.h"
@@ -154,12 +153,6 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   // Same as above, but return mThread as a nsIDirectTaskDispatcher
   already_AddRefed<nsIDirectTaskDispatcher> GetDirectTaskDispatcherSafely();
 
- public:
-  // Public accessor for the socket thread. Returns the socket thread in a
-  // thread-safe manner.
-  already_AddRefed<nsIThread> GetSocketThread() { return GetThreadSafely(); }
-
- private:
   //-------------------------------------------------------------------------
   // initialization and shutdown (any thread)
   //-------------------------------------------------------------------------
@@ -274,12 +267,6 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   //-------------------------------------------------------------------------
   AutoCleanLinkedList<LinkedRunnableEvent> mPendingSocketQueue;
 
-  //-------------------------------------------------------------------------
-  // priority event queue - processed before normal event queue
-  //-------------------------------------------------------------------------
-  Queue<RefPtr<nsIRunnable>> mPriorityEventQueue MOZ_GUARDED_BY(mQueueLock);
-  RWLock mQueueLock{"nsSocketTransportService::mQueueLock"};
-
   // Preference Monitor for SendBufferSize and Keepalive prefs.
   nsresult UpdatePrefs();
   static void UpdatePrefs(const char* aPref, void* aSelf);
@@ -292,7 +279,7 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   // Number of keepalive probes to send.
   int32_t mKeepaliveProbeCount{kDefaultTCPKeepCount};
   // True if TCP keepalive is enabled globally.
-  Atomic<bool, Relaxed> mKeepaliveEnabledPref{false};
+  bool mKeepaliveEnabledPref{false};
   // Timeout of pollable event signalling.
   TimeDuration mPollableEventTimeout MOZ_GUARDED_BY(mLock);
 

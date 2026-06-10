@@ -47,17 +47,13 @@ add_test(function test_attributes() {
 });
 
 /**
- * Verify that a proxy auth redirect doesn't break us.
+ * Verify that a proxy auth redirect doesn't break us. This has to be the first
+ * request made in the file!
  */
 add_task(async function test_proxy_auth_redirect() {
-  let pacFetchedResolve;
-  let pacFetchedPromise = new Promise(resolve => {
-    pacFetchedResolve = resolve;
-  });
   let pacFetched = false;
   function pacHandler(metadata, response) {
     pacFetched = true;
-    pacFetchedResolve();
     let body = 'function FindProxyForURL(url, host) { return "DIRECT"; }';
     response.setStatusLine(metadata.httpVersion, 200, "OK");
     response.setHeader(
@@ -84,7 +80,7 @@ add_task(async function test_proxy_auth_redirect() {
   installFakePAC();
 
   let req = new RESTRequest(server.baseURI + "/original");
-  await Promise.all([req.get(), pacFetchedPromise]);
+  await req.get();
 
   Assert.ok(pacFetched);
   Assert.ok(fetched);

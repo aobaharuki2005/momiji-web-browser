@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -47,11 +49,11 @@ Compartment::Compartment(Zone* zone, bool invisibleToDebugger)
 #ifdef JSGC_HASH_TABLE_CHECKS
 
 void Compartment::checkObjectWrappersAfterMovingGC() {
-  for (auto iter = objectWrapperMappings(); !iter.done(); iter.next()) {
-    auto key = iter.get().key();
+  for (ObjectWrapperEnum e(this); !e.empty(); e.popFront()) {
+    auto key = e.front().key();
     CheckGCThingAfterMovingGC(key.get());  // Keys may be in a different zone.
-    CheckGCThingAfterMovingGC(iter.get().value().unbarrieredGet(), zone());
-    CheckTableEntryAfterMovingGC(crossCompartmentObjectWrappers, iter, key);
+    CheckGCThingAfterMovingGC(e.front().value().unbarrieredGet(), zone());
+    CheckTableEntryAfterMovingGC(crossCompartmentObjectWrappers, e, key);
   }
 }
 
@@ -481,14 +483,14 @@ void Compartment::traceWrapperTargetsInCollectedZones(JSTracer* trc,
   MOZ_ASSERT(!zone()->isCollectingFromAnyThread() ||
              trc->runtime()->gc.isHeapCompacting());
 
-  for (auto c = wrappedObjectCompartments(); !c.done(); c.next()) {
-    Zone* zone = c.get()->zone();
+  for (WrappedObjectCompartmentEnum c(this); !c.empty(); c.popFront()) {
+    Zone* zone = c.front()->zone();
     if (!zone->isCollectingFromAnyThread()) {
       continue;
     }
 
-    for (auto iter = objectWrapperMappingsTo(c); !iter.done(); iter.next()) {
-      JSObject* obj = iter.get().value().unbarrieredGet();
+    for (ObjectWrapperEnum e(this, c); !e.empty(); e.popFront()) {
+      JSObject* obj = e.front().value().unbarrieredGet();
       ProxyObject* wrapper = &obj->as<ProxyObject>();
       if (ShouldTraceWrapper(wrapper, whichEdges)) {
         ProxyObject::traceEdgeToTarget(trc, wrapper);

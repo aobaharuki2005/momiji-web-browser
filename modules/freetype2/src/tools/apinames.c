@@ -101,7 +101,7 @@ names_add( const char*   name,
   {
     nm = the_names + nn;
 
-    if ( nm->hash                      == h &&
+    if ( (int)nm->hash                 == h &&
          memcmp( name, nm->name, len ) == 0 &&
          nm->name[len]                 == 0 )
       return;

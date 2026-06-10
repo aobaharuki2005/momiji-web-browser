@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -301,12 +303,8 @@ struct UserTimingMarker : public BaseMarkerType<UserTimingMarker> {
 
   using MS = MarkerSchema;
   static constexpr MS::PayloadField PayloadFields[] = {
-      {
-          "name",
-          MS::InputType::String,
-          "User Marker Name",
-          MS::Format::String,
-      },
+      {"name", MS::InputType::String, "User Marker Name", MS::Format::String,
+       MS::PayloadFlags::Searchable},
       {"entryType", MS::InputType::Boolean, "Entry Type"},
       {"startMark", MS::InputType::String, "Start Mark"},
       {"endMark", MS::InputType::String, "End Mark"}};
@@ -878,7 +876,7 @@ void Performance::ClearMeasures(const Optional<nsAString>& aName) {
 void Performance::LogEntry(PerformanceEntry* aEntry,
                            const nsACString& aOwner) const {
   PERFLOG("Performance Entry: %s|%s|%s|%f|%f|%" PRIu64 "\n",
-          PromiseFlatCString(aOwner).get(),
+          aOwner.BeginReading(),
           NS_ConvertUTF16toUTF8(aEntry->GetEntryType()->GetUTF16String()).get(),
           NS_ConvertUTF16toUTF8(aEntry->GetName()->GetUTF16String()).get(),
           aEntry->StartTime(), aEntry->Duration(),
@@ -1120,7 +1118,7 @@ void Performance::RunNotificationObserversTask() {
   mPendingNotificationObserversTask = true;
   nsCOMPtr<nsIRunnable> task = new NotifyObserversTask(this);
   nsresult rv;
-  if (nsIGlobalObject* global = GetRelevantGlobal()) {
+  if (nsIGlobalObject* global = GetOwnerGlobal()) {
     rv = global->Dispatch(task.forget());
   } else {
     rv = NS_DispatchToCurrentThread(task.forget());

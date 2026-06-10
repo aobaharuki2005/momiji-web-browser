@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -23,10 +24,14 @@ const CSSPositionTryRule* CSSPositionTryRuleDeclaration::Rule() const {
 }
 
 CSSPositionTryRuleDeclaration::CSSPositionTryRuleDeclaration(
-    already_AddRefed<Block> aDecls)
-    : mDecls(aDecls) {}
+    already_AddRefed<StyleLockedDeclarationBlock> aDecls)
+    : mDecls(new DeclarationBlock(std::move(aDecls))) {
+  mDecls->SetOwningRule(Rule());
+}
 
-CSSPositionTryRuleDeclaration::~CSSPositionTryRuleDeclaration() = default;
+CSSPositionTryRuleDeclaration::~CSSPositionTryRuleDeclaration() {
+  mDecls->SetOwningRule(nullptr);
+}
 
 NS_INTERFACE_MAP_BEGIN(CSSPositionTryRuleDeclaration)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
@@ -56,9 +61,8 @@ JSObject* CSSPositionTryRuleDeclaration::WrapObject(
   return CSSPositionTryDescriptors_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-StyleLockedDeclarationBlock*
-CSSPositionTryRuleDeclaration::GetOrCreateCSSDeclaration(Operation aOperation,
-                                                         Block** aCreated) {
+DeclarationBlock* CSSPositionTryRuleDeclaration::GetOrCreateCSSDeclaration(
+    Operation aOperation, DeclarationBlock** aCreated) {
   if (aOperation != Operation::Read) {
     if (StyleSheet* sheet = Rule()->GetStyleSheet()) {
       sheet->WillDirty();
@@ -68,19 +72,22 @@ CSSPositionTryRuleDeclaration::GetOrCreateCSSDeclaration(Operation aOperation,
 }
 
 void CSSPositionTryRuleDeclaration::SetRawAfterClone(
-    RefPtr<Block> aDeclarationBlock) {
-  mDecls = std::move(aDeclarationBlock);
+    RefPtr<StyleLockedDeclarationBlock> aDeclarationBlock) {
+  mDecls->SetOwningRule(nullptr);
+  mDecls = new DeclarationBlock(aDeclarationBlock.forget());
+  mDecls->SetOwningRule(Rule());
 }
 
 nsresult CSSPositionTryRuleDeclaration::SetCSSDeclaration(
-    Block* aDecl, MutationClosureData* aClosureData) {
+    DeclarationBlock* aDecl, MutationClosureData* aClosureData) {
   MOZ_ASSERT(aDecl, "must be non-null");
   CSSPositionTryRule* rule = Rule();
-  RefPtr<Block> oldDecls;
+  RefPtr<DeclarationBlock> oldDecls;
   if (aDecl != mDecls) {
-    oldDecls = std::move(mDecls);
-    Servo_PositionTryRule_SetStyle(rule->Raw(), aDecl);
+    mDecls->SetOwningRule(nullptr);
+    Servo_PositionTryRule_SetStyle(rule->Raw(), aDecl->Raw());
     mDecls = aDecl;
+    mDecls->SetOwningRule(rule);
   }
 
   if (StyleSheet* sheet = rule->GetStyleSheet()) {
@@ -128,6 +135,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSPositionTryRule)
   //
   // Note that this has to happen before unlinking css::Rule.
   tmp->UnlinkDeclarationWrapper(tmp->mDecls);
+  tmp->mDecls.mDecls->SetOwningRule(nullptr);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSPositionTryRule, css::Rule)
@@ -184,7 +192,7 @@ JSObject* CSSPositionTryRule::WrapObject(JSContext* aCx,
 }
 
 const StyleLockedDeclarationBlock* CSSPositionTryRule::RawStyle() const {
-  return mDecls.mDecls.get();
+  return mDecls.mDecls->Raw();
 }
 
 }  // namespace mozilla::dom

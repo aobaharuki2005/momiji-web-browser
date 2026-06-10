@@ -422,7 +422,6 @@ async function runTest(enabled) {
     : "-CanvasRandomization,-EfficientCanvasRandomization";
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.baselineFingerprintingProtection", false],
       ["privacy.fingerprintingProtection", true],
       ["privacy.fingerprintingProtection.pbmode", true],
       ["privacy.fingerprintingProtection.overrides", RFPOverrides],
@@ -539,7 +538,6 @@ add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["test.wait300msAfterTabSwitch", true],
-      ["privacy.baselineFingerprintingProtection", false],
       ["privacy.fingerprintingProtection", false],
       ["privacy.fingerprintingProtection.pbmode", false],
       ["privacy.resistFingerprinting", false],

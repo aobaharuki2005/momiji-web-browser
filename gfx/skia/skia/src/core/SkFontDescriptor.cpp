@@ -27,12 +27,10 @@ enum {
     kPostscriptName = 0x06, // int length, data[length]
     kWeight         = 0x10, // scalar (1 - 1000)
     kWidth          = 0x11, // scalar (percentage, 100 is 'normal')
-    kSlant          = 0x12, // scalar (ccw angle, -10 is a normal right leaning oblique)
+    kSlant          = 0x12, // scalar (cw angle, 14 is a normal right leaning oblique)
     kItalic         = 0x13, // scalar (0 is Roman, 1 is fully Italic)
 
     // Related to font data. Can also be used with a requested font.
-    kSyntheticBold  = 0xF6, // no data
-    kSyntheticOblique = 0xF7, // no data
     kPaletteIndex   = 0xF8, // int
     kPaletteEntryOverrides = 0xF9, // int count, (int, u32)[count]
     kFontVariation  = 0xFA, // int count, (u32, scalar)[count]
@@ -45,23 +43,33 @@ enum {
 
 SkFontDescriptor::SkFontDescriptor() { }
 
-static bool write_id(SkWStream* stream, uint32_t id) {
-    return stream->writePackedUInt(id);
+[[nodiscard]] static bool read_string(SkStream* stream, SkString* string) {
+    size_t length;
+    if (!stream->readPackedUInt(&length)) { return false; }
+    if (length > 0) {
+        if (StreamRemainingLengthIsBelow(stream, length)) {
+            return false;
+        }
+        string->resize(length);
+        if (stream->read(string->data(), length) != length) { return false; }
+    }
+    return true;
 }
+
 static bool write_string(SkWStream* stream, const SkString& string, uint32_t id) {
     if (string.isEmpty()) { return true; }
-    return write_id(stream, id) &&
+    return stream->writePackedUInt(id) &&
            stream->writePackedUInt(string.size()) &&
            stream->write(string.c_str(), string.size());
 }
 
 static bool write_uint(SkWStream* stream, size_t n, uint32_t id) {
-    return write_id(stream, id) &&
+    return stream->writePackedUInt(id) &&
            stream->writePackedUInt(n);
 }
 
 static bool write_scalar(SkWStream* stream, SkScalar n, uint32_t id) {
-    return write_id(stream, id) &&
+    return stream->writePackedUInt(id) &&
            stream->writeScalar(n);
 }
 
@@ -69,19 +77,6 @@ static bool write_scalar(SkWStream* stream, SkScalar n, uint32_t id) {
     size_t i;
     if (!stream->readPackedUInt(&i)) { return kInvalid; }
     return i;
-}
-
-[[nodiscard]] static bool read_string(SkStream* stream, SkString* string) {
-    size_t length;
-    if (!stream->readPackedUInt(&length)) { return false; }
-    if (length > 0) {
-        if (SkStreamPriv::RemainingLengthIsBelow(stream, length)) {
-            return false;
-        }
-        string->resize(length);
-        if (stream->read(string->data(), length) != length) { return false; }
-    }
-    return true;
 }
 
 static constexpr SkScalar usWidths[9] {
@@ -112,8 +107,8 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
     size_t paletteEntryOverrideIndex;
     using PaletteEntryOverrideIndexType = decltype(result->fPaletteEntryOverrides[0].index);
 
-    SkScalar weight = 400;
-    SkScalar width = 100;
+    SkScalar weight = SkFontStyle::kNormal_Weight;
+    SkScalar width = SkFontStyle::kNormal_Width;
     SkScalar slant = 0;
     SkScalar italic = 0;
 
@@ -121,7 +116,7 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
     if (!stream->readPackedUInt(&styleBits)) { return false; }
     weight = ((styleBits >> 16) & 0xFFFF);
     width  = ((styleBits >>  8) & 0x000F)[width_for_usWidth];
-    slant  = ((styleBits >>  0) & 0x000F) != SkFontStyle::kUpright_Slant ? -20 : 0;
+    slant  = ((styleBits >>  0) & 0x000F) != SkFontStyle::kUpright_Slant ? 14 : 0;
     italic = ((styleBits >>  0) & 0x000F) == SkFontStyle::kItalic_Slant ? 1 : 0;
 
     for (size_t id; (id = read_id(stream)) != kSentinel;) {
@@ -150,7 +145,7 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
             case kFontVariation:
                 if (!stream->readPackedUInt(&coordinateCount)) { return false; }
                 if (!SkTFitsIn<CoordinateCountType>(coordinateCount)) { return false; }
-                if (SkStreamPriv::RemainingLengthIsBelow(stream, coordinateCount)) {
+                if (StreamRemainingLengthIsBelow(stream, coordinateCount)) {
                     return false;
                 }
                 result->fCoordinateCount = SkTo<CoordinateCountType>(coordinateCount);
@@ -176,7 +171,7 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
                 if (!SkTFitsIn<PaletteEntryOverrideCountType>(paletteEntryOverrideCount)) {
                     return false;
                 }
-                if (SkStreamPriv::RemainingLengthIsBelow(stream, paletteEntryOverrideCount)) {
+                if (StreamRemainingLengthIsBelow(stream, paletteEntryOverrideCount)) {
                     return false;
                 }
                 result->fPaletteEntryOverrideCount =
@@ -194,12 +189,6 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
                         return false;
                     }
                 }
-                break;
-            case kSyntheticBold:
-                result->fSyntheticBold = true;
-                break;
-            case kSyntheticOblique:
-                result->fSyntheticOblique = true;
                 break;
             case kFactoryId:
                 if (!stream->readPackedUInt(&factoryId)) { return false; }
@@ -221,7 +210,7 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
     size_t length;
     if (!stream->readPackedUInt(&length)) { return false; }
     if (length > 0) {
-        if (SkStreamPriv::RemainingLengthIsBelow(stream, length)) {
+        if (StreamRemainingLengthIsBelow(stream, length)) {
             return false;
         }
         sk_sp<SkData> data(SkData::MakeUninitialized(length));
@@ -234,62 +223,52 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
     return true;
 }
 
-bool SkFontDescriptor::serialize(SkWStream* stream) const {
+void SkFontDescriptor::serialize(SkWStream* stream) const {
     uint32_t styleBits = (fStyle.weight() << 16) | (fStyle.width() << 8) | (fStyle.slant());
-    if (!stream->writePackedUInt(styleBits)) { return false; }
+    stream->writePackedUInt(styleBits);
 
-    if (!write_string(stream, fFamilyName, kFontFamilyName)) { return false; }
-    if (!write_string(stream, fFullName, kFullName)) { return false; }
-    if (!write_string(stream, fPostscriptName, kPostscriptName)) { return false; }
+    write_string(stream, fFamilyName, kFontFamilyName);
+    write_string(stream, fFullName, kFullName);
+    write_string(stream, fPostscriptName, kPostscriptName);
 
-    if (!write_scalar(stream, fStyle.weight(), kWeight)) { return false; }
-    if (!write_scalar(stream, fStyle.width()[width_for_usWidth], kWidth)) { return false; }
-    SkScalar slant = fStyle.slant() == SkFontStyle::kUpright_Slant ? 0 : -20;
-    if (!write_scalar(stream, slant, kSlant)) { return false; }
-    SkScalar italic = fStyle.slant() == SkFontStyle::kItalic_Slant ? 1 : 0;
-    if (!write_scalar(stream, italic, kItalic)) { return false; }
+    write_scalar(stream, fStyle.weight(), kWeight);
+    write_scalar(stream, fStyle.width()[width_for_usWidth], kWidth);
+    write_scalar(stream, fStyle.slant() == SkFontStyle::kUpright_Slant ? 0 : 14, kSlant);
+    write_scalar(stream, fStyle.slant() == SkFontStyle::kItalic_Slant ? 1 : 0, kItalic);
 
     if (fCollectionIndex > 0) {
-        if (!write_uint(stream, fCollectionIndex, kFontIndex)) { return false; }
+        write_uint(stream, fCollectionIndex, kFontIndex);
     }
     if (fPaletteIndex > 0) {
-        if (!write_uint(stream, fPaletteIndex, kPaletteIndex)) { return false; }
+        write_uint(stream, fPaletteIndex, kPaletteIndex);
     }
     if (fCoordinateCount > 0) {
-        if (!write_uint(stream, fCoordinateCount, kFontVariation)) { return false; }
+        write_uint(stream, fCoordinateCount, kFontVariation);
         for (int i = 0; i < fCoordinateCount; ++i) {
-            if (!stream->write32(fVariation[i].axis)) { return false; }
-            if (!stream->writeScalar(fVariation[i].value)) { return false; }
+            stream->write32(fVariation[i].axis);
+            stream->writeScalar(fVariation[i].value);
         }
     }
     if (fPaletteEntryOverrideCount > 0) {
-        if (!write_uint(stream, fPaletteEntryOverrideCount, kPaletteEntryOverrides)) {return false;}
+        write_uint(stream, fPaletteEntryOverrideCount, kPaletteEntryOverrides);
         for (int i = 0; i < fPaletteEntryOverrideCount; ++i) {
-            if (!stream->writePackedUInt(fPaletteEntryOverrides[i].index)) { return false; }
-            if (!stream->write32(fPaletteEntryOverrides[i].color)) { return false; }
+            stream->writePackedUInt(fPaletteEntryOverrides[i].index);
+            stream->write32(fPaletteEntryOverrides[i].color);
         }
     }
-    if (fSyntheticBold) {
-        if (!write_id(stream, kSyntheticBold)) { return false; }
-    }
-    if (fSyntheticOblique) {
-        if (!write_id(stream, kSyntheticOblique)) { return false; }
-    }
 
-    if (!write_uint(stream, fFactoryId, kFactoryId)) { return false; }
+    write_uint(stream, fFactoryId, kFactoryId);
 
-    if (!stream->writePackedUInt(kSentinel)) { return false; }
+    stream->writePackedUInt(kSentinel);
 
     if (fStream) {
         std::unique_ptr<SkStreamAsset> fontStream = fStream->duplicate();
         size_t length = fontStream->getLength();
-        if (!stream->writePackedUInt(length)) { return false; }
-        if (!stream->writeStream(fontStream.get(), length)) { return false; }
+        stream->writePackedUInt(length);
+        stream->writeStream(fontStream.get(), length);
     } else {
-        if (!stream->writePackedUInt(0)) { return false; }
+        stream->writePackedUInt(0);
     }
-
-    return true;
 }
 
 SkFontStyle::Width SkFontDescriptor::SkFontStyleWidthForWidthAxisValue(SkScalar width) {

@@ -46,7 +46,7 @@ export var GeckoViewClipboardPermission = {
 
       const mouseXInCSSPixels = {};
       const mouseYInCSSPixels = {};
-      const windowUtils = document.documentGlobal.windowUtils;
+      const windowUtils = document.ownerGlobal.windowUtils;
       windowUtils.getLastOverWindowPointerLocationInCSSPixels(
         mouseXInCSSPixels,
         mouseYInCSSPixels
@@ -61,15 +61,13 @@ export var GeckoViewClipboardPermission = {
       debug`confirmUserPaste (${screenRect.x}, ${screenRect.y})`;
 
       document.addEventListener("pointerdown", this);
-      document.documentGlobal.WindowEventDispatcher.sendRequestForResult(
-        "GeckoView:ClipboardPermissionRequest",
-        {
-          screenPoint: {
-            x: screenRect.x,
-            y: screenRect.y,
-          },
-        }
-      ).then(
+      document.ownerGlobal.WindowEventDispatcher.sendRequestForResult({
+        type: "GeckoView:ClipboardPermissionRequest",
+        screenPoint: {
+          x: screenRect.x,
+          y: screenRect.y,
+        },
+      }).then(
         allowOrDeny => {
           const propBag = lazy.PromptUtils.objectToPropBag({ ok: allowOrDeny });
           this._pendingRequest.resolve(propBag);
@@ -91,9 +89,9 @@ export var GeckoViewClipboardPermission = {
     debug`handleEvent: ${aEvent.type}`;
     switch (aEvent.type) {
       case "pointerdown": {
-        aEvent.target.documentGlobal.WindowEventDispatcher.sendRequestForResult(
-          "GeckoView:DismissClipboardPermissionRequest"
-        );
+        aEvent.target.ownerGlobal.WindowEventDispatcher.sendRequestForResult({
+          type: "GeckoView:DismissClipboardPermissionRequest",
+        });
         break;
       }
     }

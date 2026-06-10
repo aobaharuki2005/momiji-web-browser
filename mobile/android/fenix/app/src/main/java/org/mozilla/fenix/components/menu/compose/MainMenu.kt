@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -42,9 +44,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.theme.surfaceDimVariant
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.displayName
 import mozilla.components.feature.addons.ui.summary
@@ -57,13 +61,9 @@ import org.mozilla.fenix.components.menu.MenuDialogTestTag.DESKTOP_SITE_OFF
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.DESKTOP_SITE_ON
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.MORE_OPTION_CHEVRON
 import org.mozilla.fenix.components.menu.compose.header.MozillaAccountMenuItem
-import org.mozilla.fenix.components.menu.store.IPProtectionMenuState
 import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
-import org.mozilla.fenix.theme.ThemedValue
-import org.mozilla.fenix.theme.ThemedValueProvider
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -93,8 +93,6 @@ import mozilla.components.ui.icons.R as iconsR
  * @param showBanner Whether or not the default browser banner should be shown.
  * @param isDownloadHighlighted `true` if the downloads menu item should be visually highlighted.
  * @param webExtensionMenuCount The number of web extensions.
- * @param showIPProtection Whether to show the IP Protection menu item.
- * @param ipProtectionMenuState The current [IPProtectionMenuState] for the IP protection item.
  * @param onMoreMenuClick Invoked when the user clicks on the more menu item.
  * @param onCustomizeReaderViewMenuClick Invoked when the user clicks on the Customize Reader View button.
  * @param onMozillaAccountButtonClick Invoked when the user clicks on Mozilla account button.
@@ -116,8 +114,6 @@ import mozilla.components.ui.icons.R as iconsR
  * @param onForwardButtonClick Invoked when the user clicks on the forward button.
  * @param onRefreshButtonClick Invoked when the user clicks on the refresh button.
  * @param onStopButtonClick Invoked when the user clicks on the stop button.
- * @param onIPProtectionClick Invoked when the user taps the IP Protection toggle.
- * @param onIPProtectionNavigate Invoked when the user taps the chevron to open IP Protection settings.
  * @param onShareButtonClick Invoked when the user clicks on the share button.
  * @param extensionsMenuItemDescription The label of extensions menu item description.
  * @param moreSettingsSubmenu The content of more menu item.
@@ -149,8 +145,6 @@ fun MainMenu(
     showBanner: Boolean,
     isDownloadHighlighted: Boolean,
     webExtensionMenuCount: Int,
-    showIPProtection: Boolean,
-    ipProtectionMenuState: IPProtectionMenuState,
     onMoreMenuClick: () -> Unit,
     onCustomizeReaderViewMenuClick: () -> Unit,
     onMozillaAccountButtonClick: () -> Unit,
@@ -171,8 +165,6 @@ fun MainMenu(
     onForwardButtonClick: (longPress: Boolean) -> Unit,
     onRefreshButtonClick: (longPress: Boolean) -> Unit,
     onStopButtonClick: () -> Unit,
-    onIPProtectionClick: () -> Unit,
-    onIPProtectionNavigate: () -> Unit,
     onShareButtonClick: () -> Unit,
     extensionsMenuItemDescription: String?,
     moreSettingsSubmenu: @Composable () -> Unit,
@@ -259,16 +251,6 @@ fun MainMenu(
                     onBannerClick()
                 },
             )
-        }
-
-        if (showIPProtection) {
-            MenuGroup {
-                IPProtectionMenuItem(
-                    state = ipProtectionMenuState,
-                    onToggle = onIPProtectionClick,
-                    onNavigate = onIPProtectionNavigate,
-                )
-            }
         }
 
         if (accessPoint == MenuAccessPoint.Home) {
@@ -386,12 +368,15 @@ private fun ToolsAndActionsMenuGroup(
         val labelId = R.string.browser_menu_desktop_site
         val badgeText: String
         val menuItemState: MenuItemState
+        val badgeBackgroundColor: Color
 
         if (isDesktopMode) {
             badgeText = stringResource(id = R.string.browser_feature_desktop_site_on)
+            badgeBackgroundColor = MaterialTheme.colorScheme.primaryContainer
             menuItemState = if (isPdf) MenuItemState.DISABLED else MenuItemState.ACTIVE
         } else {
             badgeText = stringResource(id = R.string.browser_feature_desktop_site_off)
+            badgeBackgroundColor = MaterialTheme.colorScheme.surfaceContainerHighest
             menuItemState = if (isPdf) MenuItemState.DISABLED else MenuItemState.ENABLED
         }
 
@@ -437,6 +422,7 @@ private fun ToolsAndActionsMenuGroup(
             Badge(
                 badgeText = badgeText,
                 state = menuItemState,
+                badgeBackgroundColor = badgeBackgroundColor,
             )
         }
 
@@ -481,8 +467,8 @@ private fun MoreMenuButtonGroup(
         Row(
             modifier = Modifier
                 .background(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    shape = RoundedCornerShape(16.dp),
                 )
                 .padding(2.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -511,15 +497,21 @@ private fun LibraryMenuGroup(
     onPasswordsMenuClick: () -> Unit,
 ) {
     val spacerWidth = 2.dp
+    val innerRounding = 4.dp
+    val outerRounding = 28.dp
 
-    val leftShape = MaterialTheme.shapes.extraLarge.copy(
-        topEnd = MaterialTheme.shapes.extraSmall.topEnd,
-        bottomEnd = MaterialTheme.shapes.extraSmall.bottomEnd,
+    val leftShape = RoundedCornerShape(
+        topStart = outerRounding,
+        topEnd = innerRounding,
+        bottomStart = outerRounding,
+        bottomEnd = innerRounding,
     )
-    val middleShape = MaterialTheme.shapes.extraSmall
-    val rightShape = MaterialTheme.shapes.extraLarge.copy(
-        topStart = MaterialTheme.shapes.extraSmall.topStart,
-        bottomStart = MaterialTheme.shapes.extraSmall.bottomStart,
+    val middleShape = RoundedCornerShape(innerRounding)
+    val rightShape = RoundedCornerShape(
+        topStart = innerRounding,
+        topEnd = outerRounding,
+        bottomStart = innerRounding,
+        bottomEnd = outerRounding,
     )
 
     Row(
@@ -703,9 +695,9 @@ private fun MoreExtensionsMenuItem(
                 contentDescription = label
             }
             .wrapContentSize()
-            .clip(shape = MaterialTheme.shapes.extraSmall)
+            .clip(shape = RoundedCornerShape(4.dp))
             .background(
-                color = MaterialTheme.colorScheme.surfaceBright,
+                color = MaterialTheme.colorScheme.surfaceDimVariant,
             ),
     ) {
         MenuTextItem(
@@ -716,12 +708,10 @@ private fun MoreExtensionsMenuItem(
     }
 }
 
-@Preview
+@PreviewLightDark
 @Composable
-private fun MenuDialogPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
-) {
-    FirefoxTheme(theme) {
+private fun MenuDialogPreview() {
+    FirefoxTheme {
         Column(
             modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.surface),
@@ -751,8 +741,6 @@ private fun MenuDialogPreview(
                 showBanner = true,
                 isDownloadHighlighted = true,
                 webExtensionMenuCount = 1,
-                showIPProtection = true,
-                ipProtectionMenuState = IPProtectionMenuState(),
                 onMoreMenuClick = {},
                 onCustomizeReaderViewMenuClick = {},
                 onMozillaAccountButtonClick = {},
@@ -774,8 +762,6 @@ private fun MenuDialogPreview(
                 onRefreshButtonClick = {},
                 onStopButtonClick = {},
                 onShareButtonClick = {},
-                onIPProtectionClick = {},
-                onIPProtectionNavigate = {},
                 moreSettingsSubmenu = {},
                 extensionSubmenu = {},
             )
@@ -787,9 +773,9 @@ private fun MenuDialogPreview(
 @Preview
 @Composable
 private fun MenuDialogPrivatePreview(
-    @PreviewParameter(SiteLoadingPreviewParameterProvider::class) state: ThemedValue<Boolean>,
+    @PreviewParameter(SiteLoadingPreviewParameterProvider::class) isSiteLoading: Boolean,
 ) {
-    FirefoxTheme(theme = state.theme) {
+    FirefoxTheme(theme = Theme.Private) {
         Column(
             modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.surface),
@@ -802,7 +788,7 @@ private fun MenuDialogPrivatePreview(
                 showQuitMenu = true,
                 isBottomToolbar = true,
                 isExpandedToolbarEnabled = false,
-                isSiteLoading = state.value,
+                isSiteLoading = isSiteLoading,
                 isExtensionsExpanded = true,
                 isMoreMenuExpanded = true,
                 isBookmarked = false,
@@ -840,10 +826,6 @@ private fun MenuDialogPrivatePreview(
                 onRefreshButtonClick = {},
                 onStopButtonClick = {},
                 onShareButtonClick = {},
-                showIPProtection = false,
-                ipProtectionMenuState = IPProtectionMenuState(),
-                onIPProtectionClick = {},
-                onIPProtectionNavigate = {},
                 moreSettingsSubmenu = {},
                 extensionSubmenu = {
                     Addons(
@@ -880,6 +862,6 @@ private fun MenuDialogPrivatePreview(
  * A [PreviewParameterProvider] implementation that provides boolean values
  * representing the loading state of a site.
  */
-class SiteLoadingPreviewParameterProvider : ThemedValueProvider<Boolean>(
-    sequenceOf(true, false),
-)
+class SiteLoadingPreviewParameterProvider : PreviewParameterProvider<Boolean> {
+    override val values = sequenceOf(true, false)
+}

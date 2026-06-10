@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sts=2 sw=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -175,8 +177,8 @@ void IMEContext::Clear() {
 
 static UINT sWM_MSIME_MOUSE = 0;  // mouse message for MSIME 98/2000
 
-constinit WritingMode IMMHandler::sWritingModeOfCompositionFont;
-constinit nsString IMMHandler::sIMEName;
+MOZ_RUNINIT WritingMode IMMHandler::sWritingModeOfCompositionFont;
+MOZ_RUNINIT nsString IMMHandler::sIMEName;
 UINT IMMHandler::sCodePage = 0;
 DWORD IMMHandler::sIMEProperty = 0;
 DWORD IMMHandler::sIMEUIProperty = 0;
@@ -342,8 +344,9 @@ UINT IMMHandler::GetKeyboardCodePage() { return sCodePage; }
 
 // static
 IMENotificationRequests IMMHandler::GetIMENotificationRequests() {
-  return {IMENotificationRequest::PositionChange,
-          IMENotificationRequest::MouseEventOnChar};
+  return IMENotificationRequests(
+      IMENotificationRequests::NOTIFY_POSITION_CHANGE |
+      IMENotificationRequests::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR);
 }
 
 // used for checking the lParam of WM_IME_COMPOSITION
@@ -355,7 +358,10 @@ IMENotificationRequests IMMHandler::GetIMENotificationRequests() {
 #define NO_IME_CARET -1
 
 IMMHandler::IMMHandler()
-    : mCursorPosition(NO_IME_CARET), mCompositionStart(0), mIsComposing(false) {
+    : mComposingWindow(nullptr),
+      mCursorPosition(NO_IME_CARET),
+      mCompositionStart(0),
+      mIsComposing(false) {
   MOZ_LOG(gIMELog, LogLevel::Debug, ("IMMHandler::IMMHandler is created"));
 }
 
@@ -386,7 +392,7 @@ void IMMHandler::CommitComposition(nsWindow* aWindow, bool aForce) {
           ("IMMHandler::CommitComposition, aForce=%s, aWindow=%p, hWnd=%p, "
            "mComposingWindow=%p%s",
            TrueOrFalse(aForce), aWindow, aWindow->GetWindowHandle(),
-           gIMMHandler ? gIMMHandler->mComposingWindow.get() : nullptr,
+           gIMMHandler ? gIMMHandler->mComposingWindow : nullptr,
            gIMMHandler && gIMMHandler->mComposingWindow
                ? IsComposingOnOurEditor() ? " (composing on editor)"
                                           : " (composing on plug-in)"
@@ -417,7 +423,7 @@ void IMMHandler::CancelComposition(nsWindow* aWindow, bool aForce) {
           ("IMMHandler::CancelComposition, aForce=%s, aWindow=%p, hWnd=%p, "
            "mComposingWindow=%p%s",
            TrueOrFalse(aForce), aWindow, aWindow->GetWindowHandle(),
-           gIMMHandler ? gIMMHandler->mComposingWindow.get() : nullptr,
+           gIMMHandler ? gIMMHandler->mComposingWindow : nullptr,
            gIMMHandler && gIMMHandler->mComposingWindow
                ? IsComposingOnOurEditor() ? " (composing on editor)"
                                           : " (composing on plug-in)"
@@ -438,21 +444,6 @@ void IMMHandler::CancelComposition(nsWindow* aWindow, bool aForce) {
 
   if (associated) {
     context.Disassociate();
-  }
-}
-
-// static
-void IMMHandler::OnDestroyWindow(nsWindow* aWindow) {
-  if (!gIMMHandler || gIMMHandler->mComposingWindow != aWindow) {
-    return;
-  }
-  MOZ_LOG(gIMELog, LogLevel::Warning,
-          ("IMMHandler::OnDestroyWindow(aWindow=%p), sHasFocus=%s", aWindow,
-           TrueOrFalse(sHasFocus)));
-  RefPtr window(aWindow);
-  OnFocusChange(false, window);
-  if (gIMMHandler && gIMMHandler->mComposingWindow == window) {
-    gIMMHandler->ClearComposingData();
   }
 }
 
@@ -971,14 +962,6 @@ void IMMHandler::HandleStartComposition(nsWindow* aWindow,
              "TextEventDispatcher::BeginNativeInputTransaction() failure"));
     return;
   }
-
-  // The composition may end during a call of
-  // TextEventDispatcher::StartComposition() so that let's set the active
-  // composition data before calling it.
-  mIsComposing = true;
-  mComposingWindow = aWindow;
-  mDispatcher = dispatcher;
-
   WidgetEventTime eventTime = aWindow->CurrentMessageWidgetEventTime();
   nsEventStatus status;
   rv = dispatcher->StartComposition(status, &eventTime);
@@ -988,6 +971,10 @@ void IMMHandler::HandleStartComposition(nsWindow* aWindow,
              "TextEventDispatcher::StartComposition() failure"));
     return;
   }
+
+  mIsComposing = true;
+  mComposingWindow = aWindow;
+  mDispatcher = dispatcher;
 
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("IMMHandler::HandleStartComposition, START composition, "
@@ -1260,7 +1247,10 @@ void IMMHandler::HandleEndComposition(nsWindow* aWindow,
              "TextEventDispatcher::CommitComposition() failure"));
     return;
   }
-  ClearComposingData();
+  mIsComposing = false;
+  // XXX aWindow and mComposingWindow are always same??
+  mComposingWindow = nullptr;
+  mDispatcher = nullptr;
 }
 
 bool IMMHandler::HandleReconvert(nsWindow* aWindow, LPARAM lParam,
@@ -2162,6 +2152,7 @@ void IMMHandler::AdjustCompositionFont(nsWindow* aWindow,
       aForceUpdate ||
       (!sCompositionFontsInitialized && !sCompositionFont.IsEmpty());
 
+  static WritingMode sCurrentWritingMode;
   static nsString sCurrentIMEName;
   if (!setCompositionFontForcibly &&
       sWritingModeOfCompositionFont == aWritingMode &&

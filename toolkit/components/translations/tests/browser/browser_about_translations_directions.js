@@ -22,7 +22,6 @@ add_task(
 
     await aboutTranslationsTestUtils.assertSourceTextArea({
       scriptDirection: "ltr",
-      languageTag: null,
       showsPlaceholder: true,
     });
 
@@ -33,14 +32,12 @@ add_task(
 
     await aboutTranslationsTestUtils.assertTargetTextArea({
       scriptDirection: "ltr",
-      languageTag: null,
       showsPlaceholder: true,
     });
 
     await aboutTranslationsTestUtils.setSourceLanguageSelectorValue("en");
     await aboutTranslationsTestUtils.assertSourceTextArea({
       scriptDirection: "ltr",
-      languageTag: null,
       showsPlaceholder: true,
     });
 
@@ -48,17 +45,12 @@ add_task(
     await aboutTranslationsTestUtils.assertTargetTextArea({
       // Even though we've switch to "ar", it is still displaying an English placeholder.
       scriptDirection: "ltr",
-      languageTag: null,
       showsPlaceholder: true,
     });
 
     await aboutTranslationsTestUtils.assertEvents(
       {
         expected: [
-          [
-            AboutTranslationsTestUtils.Events.SourceTextInputDebounced,
-            { sourceText: "Hello world" },
-          ],
           [
             AboutTranslationsTestUtils.Events.TranslationRequested,
             { translationId: 1 },
@@ -74,7 +66,6 @@ add_task(
 
     await aboutTranslationsTestUtils.assertTargetTextArea({
       scriptDirection: "ltr",
-      languageTag: Services.locale.appLocaleAsBCP47,
       value: "Translating…",
     });
 
@@ -100,13 +91,11 @@ add_task(
 
     await aboutTranslationsTestUtils.assertSourceTextArea({
       scriptDirection: "ltr",
-      languageTag: "en",
       value: "Hello world",
     });
 
     await aboutTranslationsTestUtils.assertTargetTextArea({
       scriptDirection: "rtl",
-      languageTag: "ar",
       value: "HELLO WORLD [en to ar]",
     });
 
@@ -119,24 +108,19 @@ add_task(
           ],
           [AboutTranslationsTestUtils.Events.ShowTranslatingPlaceholder],
         ],
-        unexpected: [
-          AboutTranslationsTestUtils.Events.TranslationComplete,
-          AboutTranslationsTestUtils.Events.SourceTextInputDebounced,
-        ],
+        unexpected: [AboutTranslationsTestUtils.Events.TranslationComplete],
       },
       async () => {
         info("Swap languages to Arabic source and English target");
-        await aboutTranslationsTestUtils.invokeSwapLanguagesButton();
+        await aboutTranslationsTestUtils.clickSwapLanguagesButton();
         await aboutTranslationsTestUtils.assertSourceTextArea({
           // The source textarea should already be in RTL even though translation has not completed.
           scriptDirection: "rtl",
-          languageTag: "ar",
           value: "HELLO WORLD [en to ar]",
         });
         await aboutTranslationsTestUtils.assertTargetTextArea({
           // Even though the target language is RTL, the translating placeholder is still LTR.
           scriptDirection: "ltr",
-          languageTag: Services.locale.appLocaleAsBCP47,
           value: "Translating…",
         });
       }
@@ -165,7 +149,6 @@ add_task(
 
     await aboutTranslationsTestUtils.assertTargetTextArea({
       scriptDirection: "ltr",
-      languageTag: "en",
       value: "HELLO WORLD [EN TO AR] [ar to en]",
     });
 
@@ -197,13 +180,11 @@ add_task(
 
     await aboutTranslationsTestUtils.assertSourceTextArea({
       scriptDirection: "ltr",
-      languageTag: null,
       showsPlaceholder: true,
     });
 
     await aboutTranslationsTestUtils.assertTargetTextArea({
       scriptDirection: "ltr",
-      languageTag: null,
       showsPlaceholder: true,
     });
 
@@ -213,7 +194,6 @@ add_task(
     });
     await aboutTranslationsTestUtils.assertSourceTextArea({
       scriptDirection: "ltr",
-      languageTag: null,
       showsPlaceholder: true,
     });
 
@@ -224,11 +204,10 @@ add_task(
     await aboutTranslationsTestUtils.assertTargetTextArea({
       // Even though we've switch to "ar", it is still displaying an English placeholder.
       scriptDirection: "ltr",
-      languageTag: null,
       showsPlaceholder: true,
     });
 
-    await aboutTranslationsTestUtils.invokeSwapLanguagesButton();
+    await aboutTranslationsTestUtils.clickSwapLanguagesButton();
 
     await aboutTranslationsTestUtils.assertSourceLanguageSelector({
       value: "ar",
@@ -236,7 +215,6 @@ add_task(
     await aboutTranslationsTestUtils.assertSourceTextArea({
       // Even though we've switch to "ar", it is still displaying an English placeholder.
       scriptDirection: "ltr",
-      languageTag: null,
       showsPlaceholder: true,
     });
 
@@ -245,7 +223,6 @@ add_task(
     });
     await aboutTranslationsTestUtils.assertTargetTextArea({
       scriptDirection: "ltr",
-      languageTag: null,
       showsPlaceholder: true,
     });
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,9 +36,6 @@ nsMenuGroupOwnerX::nsMenuGroupOwnerX(mozilla::dom::Element* aElement,
 nsMenuGroupOwnerX::~nsMenuGroupOwnerX() {
   MOZ_ASSERT(mContentToObserverTable.Count() == 0,
              "have outstanding mutation observers!\n");
-  if (mObservingMutationsOnRoot && mContent) {
-    mContent->RemoveMutationObserver(this);
-  }
   [mRepresentedObject setMenuGroupOwner:nullptr];
   [mRepresentedObject release];
 }
@@ -72,7 +70,6 @@ void nsMenuGroupOwnerX::CharacterDataChanged(nsIContent* aContent,
 
 void nsMenuGroupOwnerX::ContentAppended(nsIContent* aFirstNewContent,
                                         const ContentAppendInfo& aInfo) {
-  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   for (nsIContent* cur = aFirstNewContent; cur; cur = cur->GetNextSibling()) {
     ContentInserted(cur, aInfo);
   }
@@ -130,7 +127,7 @@ void nsMenuGroupOwnerX::ContentInserted(nsIContent* aChild,
   if (obs) {
     obs->ObserveContentInserted(aChild->OwnerDoc(), container, aChild);
   } else if (container != mContent) {
-    // We do a lookup on the parent container in case things were inserted
+    // We do a lookup on the parent container in case things were removed
     // under a "menupopup" item. That is basically a wrapper for the contents
     // of a "menu" node.
     nsCOMPtr<nsIContent> parent = container->GetParent();
@@ -167,7 +164,7 @@ void nsMenuGroupOwnerX::RegisterForContentChanges(
     // If aContent is outside mContent's subtree, for example if it's a
     // <command> element, we need to add a mutation observer.
     // Anything in mContent's subtree is already covered by the mutation
-    // observer we add with InstallOrUninstallRootMutationObserver().
+    // observer we add in the nsMenuGroupOwnerX constructor.
     aContent->AddMutationObserver(this);
   }
 
@@ -260,9 +257,6 @@ nsMenuItemX* nsMenuGroupOwnerX::GetMenuItemForCommandID(uint32_t aCommandID) {
 
 - (id)initWithMenuGroupOwner:(nsMenuGroupOwnerX*)aMenuGroupOwner {
   self = [super init];
-  if (!self) {
-    return nil;
-  }
   mMenuGroupOwner = aMenuGroupOwner;
   return self;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-undef */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -7,7 +8,7 @@ const saveButton = "button.save";
 const prettifyButton = "button.prettyprint";
 
 const { MockFilePicker } = SpecialPowers;
-MockFilePicker.init();
+MockFilePicker.init(window.browsingContext);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
 Services.scriptloader.loadSubScript(

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -6,7 +8,6 @@
 
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Try.h"
-#include "mozilla/Variant.h"
 
 #include <algorithm>
 
@@ -189,8 +190,8 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
 
 #ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_WarpSnapshots)) {
-    AutoJitSpewMessage msg(JitSpew_WarpSnapshots);
-    snapshot->dump(msg.printer());
+    Fprinter& out = JitSpewPrinter();
+    snapshot->dump(out);
   }
 #endif
 
@@ -526,6 +527,14 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::GetElem:
       case JSOp::SetProp:
       case JSOp::StrictSetProp:
+      case JSOp::Call:
+      case JSOp::CallContent:
+      case JSOp::CallIgnoresRv:
+      case JSOp::CallIter:
+      case JSOp::CallContentIter:
+      case JSOp::New:
+      case JSOp::NewContent:
+      case JSOp::SuperCall:
       case JSOp::SpreadCall:
       case JSOp::SpreadNew:
       case JSOp::SpreadSuperCall:
@@ -595,19 +604,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::OptimizeGetIterator:
         MOZ_TRY(maybeInlineIC(opSnapshots, loc));
         break;
-      case JSOp::Call:
-      case JSOp::CallContent:
-      case JSOp::CallIgnoresRv:
-      case JSOp::CallIter:
-      case JSOp::CallContentIter:
-      case JSOp::New:
-      case JSOp::NewContent:
-      case JSOp::SuperCall:
-        if (MOZ_UNLIKELY(loc.getCallArgc() > JIT_ARGS_LENGTH_MAX)) {
-          return abort(AbortReason::Disable, "Call with too many arguments");
-        }
-        MOZ_TRY(maybeInlineIC(opSnapshots, loc));
-        break;
+
       case JSOp::Nop:
       case JSOp::NopDestructuring:
       case JSOp::NopIsAssignOp:
@@ -657,6 +654,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::DynamicImport:
       case JSOp::ToString:
       case JSOp::GlobalOrEvalDeclInstantiation:
+      case JSOp::BindVar:
       case JSOp::MutateProto:
       case JSOp::Callee:
       case JSOp::ToAsyncIter:
@@ -828,41 +826,48 @@ struct RealmFuseDependency final : public CompilationDependency {
   }
 };
 
-bool WarpOracle::addFuseDependency(RealmFuses::FuseIndex fuseIndex) {
-  MOZ_ASSERT(RealmFuses::isInvalidatingFuse(fuseIndex));
-
-  auto addDep = [&](const auto& dep) {
-    MOZ_ASSERT(dep.checkDependency(cx_));
+bool WarpOracle::addFuseDependency(RealmFuses::FuseIndex fuseIndex,
+                                   bool* stillValid) {
+  auto addIfStillValid = [&](const auto& dep) {
+    if (!dep.checkDependency(cx_)) {
+      *stillValid = false;
+      return true;
+    }
+    *stillValid = true;
     return mirGen().tracker.addDependency(alloc_, dep);
   };
 
+  // Register a compilation dependency for all invalidating fuses that are still
+  // valid.
   switch (fuseIndex) {
-    case RealmFuses::FuseIndex::OptimizeGetIteratorBytecodeFuse: {
+    case RealmFuses::FuseIndex::OptimizeGetIteratorFuse: {
       using Dependency =
-          RealmFuseDependency<&RealmFuses::optimizeGetIteratorBytecodeFuse,
-                              CompilationDependency::Type::GetIteratorBytecode>;
-      return addDep(Dependency());
+          RealmFuseDependency<&RealmFuses::optimizeGetIteratorFuse,
+                              CompilationDependency::Type::GetIterator>;
+      return addIfStillValid(Dependency());
     }
     case RealmFuses::FuseIndex::OptimizeArraySpeciesFuse: {
       using Dependency =
           RealmFuseDependency<&RealmFuses::optimizeArraySpeciesFuse,
                               CompilationDependency::Type::ArraySpecies>;
-      return addDep(Dependency());
+      return addIfStillValid(Dependency());
     }
     case RealmFuses::FuseIndex::OptimizeTypedArraySpeciesFuse: {
       using Dependency =
           RealmFuseDependency<&RealmFuses::optimizeTypedArraySpeciesFuse,
                               CompilationDependency::Type::TypedArraySpecies>;
-      return addDep(Dependency());
+      return addIfStillValid(Dependency());
     }
     case RealmFuses::FuseIndex::OptimizeRegExpPrototypeFuse: {
       using Dependency =
           RealmFuseDependency<&RealmFuses::optimizeRegExpPrototypeFuse,
                               CompilationDependency::Type::RegExpPrototype>;
-      return addDep(Dependency());
+      return addIfStillValid(Dependency());
     }
     default:
-      MOZ_CRASH("Unexpected invalidating fuse");
+      MOZ_ASSERT(!RealmFuses::isInvalidatingFuse(fuseIndex));
+      *stillValid = true;
+      return true;
   }
 }
 
@@ -893,12 +898,17 @@ struct RuntimeFuseDependency final : public CompilationDependency {
   }
 };
 
-bool WarpOracle::addFuseDependency(RuntimeFuses::FuseIndex fuseIndex) {
+bool WarpOracle::addFuseDependency(RuntimeFuses::FuseIndex fuseIndex,
+                                   bool* stillValid) {
   MOZ_ASSERT(RuntimeFuses::isInvalidatingFuse(fuseIndex),
              "All current runtime fuses are invalidating");
 
-  auto addDep = [&](const auto& dep) {
-    MOZ_ASSERT(dep.checkDependency(cx_));
+  auto addIfStillValid = [&](const auto& dep) {
+    if (!dep.checkDependency(cx_)) {
+      *stillValid = false;
+      return true;
+    }
+    *stillValid = true;
     return mirGen().tracker.addDependency(alloc_, dep);
   };
 
@@ -908,19 +918,19 @@ bool WarpOracle::addFuseDependency(RuntimeFuses::FuseIndex fuseIndex) {
       using Dependency = RuntimeFuseDependency<
           &RuntimeFuses::hasSeenObjectEmulateUndefinedFuse,
           CompilationDependency::Type::EmulatesUndefined>;
-      return addDep(Dependency());
+      return addIfStillValid(Dependency());
     }
     case RuntimeFuses::FuseIndex::HasSeenArrayExceedsInt32LengthFuse: {
       using Dependency = RuntimeFuseDependency<
           &RuntimeFuses::hasSeenArrayExceedsInt32LengthFuse,
           CompilationDependency::Type::ArrayExceedsInt32Length>;
-      return addDep(Dependency());
+      return addIfStillValid(Dependency());
     }
     case RuntimeFuses::FuseIndex::DefaultLocaleHasDefaultCaseMappingFuse: {
       using Dependency = RuntimeFuseDependency<
           &RuntimeFuses::defaultLocaleHasDefaultCaseMappingFuse,
           CompilationDependency::Type::DefaultCaseMapping>;
-      return addDep(Dependency());
+      return addIfStillValid(Dependency());
     }
     case RuntimeFuses::FuseIndex::LastFuseIndex:
       break;
@@ -969,12 +979,6 @@ class ObjectPropertyFuseDependency final : public CompilationDependency {
            propSlot_ == other.propSlot_;
   }
 };
-
-bool WarpOracle::addFuseDependency(const ObjectFuseInfo& info) {
-  ObjectPropertyFuseDependency dep(info.fuse, info.generation, info.propSlot);
-  MOZ_ASSERT(dep.checkDependency(cx_));
-  return mirGen().tracker.addDependency(alloc_, dep);
-}
 
 AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
                                                   BytecodeLocation loc) {
@@ -1104,11 +1108,6 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   mozilla::Maybe<ShapeListSnapshot> shapeList;
   mozilla::Maybe<ShapeListWithOffsetsSnapshot> shapeListWithOffsets;
 
-  using PendingFuseDependency =
-      mozilla::Variant<RealmFuses::FuseIndex, RuntimeFuses::FuseIndex,
-                       ObjectFuseInfo>;
-  Vector<PendingFuseDependency, 4, SystemAllocPolicy> pendingFuseDeps;
-
   // Only create a snapshot if all opcodes are supported by the transpiler.
   CacheIRReader reader(stubInfo);
   bool hasInvalidFuseGuard = false;
@@ -1168,26 +1167,22 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
         break;
       case CacheOp::GuardFuse: {
         auto [fuseIndex] = reader.argsForGuardFuse();
-        if (!RealmFuses::isInvalidatingFuse(fuseIndex)) {
-          break;
+        bool stillValid;
+        if (!oracle_->addFuseDependency(fuseIndex, &stillValid)) {
+          return abort(AbortReason::Alloc);
         }
-        if (cx_->realm()->realmFuses.getFuseByIndex(fuseIndex)->intact()) {
-          if (!pendingFuseDeps.emplaceBack(fuseIndex)) {
-            return abort(AbortReason::Alloc);
-          }
-        } else {
+        if (!stillValid) {
           hasInvalidFuseGuard = true;
         }
         break;
       }
       case CacheOp::GuardRuntimeFuse: {
         auto [fuseIndex] = reader.argsForGuardRuntimeFuse();
-        JSRuntime* rt = cx_->runtime();
-        if (rt->runtimeFuses.ref().getFuseByIndex(fuseIndex)->intact()) {
-          if (!pendingFuseDeps.emplaceBack(fuseIndex)) {
-            return abort(AbortReason::Alloc);
-          }
-        } else {
+        bool stillValid;
+        if (!oracle_->addFuseDependency(fuseIndex, &stillValid)) {
+          return abort(AbortReason::Alloc);
+        }
+        if (!stillValid) {
           hasInvalidFuseGuard = true;
         }
         break;
@@ -1204,9 +1199,9 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
             stubInfo->getStubRawInt32(stubData, args.propMaskOffset);
         uint32_t propSlot =
             ObjectFuse::propertySlotFromIndexAndMask(propIndex, propMask);
-        if (fuse->checkPropertyIsConstant(generation, propSlot)) {
-          ObjectFuseInfo info{fuse, generation, propSlot};
-          if (!pendingFuseDeps.emplaceBack(info)) {
+        ObjectPropertyFuseDependency dep(fuse, generation, propSlot);
+        if (dep.checkDependency(cx_)) {
+          if (!oracle_->mirGen().tracker.addDependency(alloc_, dep)) {
             return abort(AbortReason::Alloc);
           }
         } else {
@@ -1285,15 +1280,6 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     }
   }
 
-  for (auto& pending : pendingFuseDeps) {
-    auto addDep = [&](const auto& dep) {
-      return oracle_->addFuseDependency(dep);
-    };
-    if (!pending.match(addDep)) {
-      return abort(AbortReason::Alloc);
-    }
-  }
-
   JitCode* jitCode = stub->jitCode();
 
   if (fallbackStub->trialInliningState() == TrialInliningState::Inlined ||
@@ -1356,13 +1342,6 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
   MOZ_ASSERT_IF(!isTrialInlined, fallbackStub->trialInliningState() ==
                                      TrialInliningState::MonomorphicInlined);
 
-  if (isTrialInlined && inlineData->icScript->warmUpCount() ==
-                            JitOptions.trialInliningInitialWarmUpCount) {
-    // If we tried trial inlining, but never hit the call site again
-    // after inlining, fall back to monomorphic inlining.
-    isTrialInlined = false;
-  }
-
   ICScript* icScript = nullptr;
   if (isTrialInlined) {
     icScript = inlineData->icScript;
@@ -1418,7 +1397,7 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
 
   // Read barrier for weak stub data copied into the snapshot.
   Zone* zone = jitCode->zone();
-  if (zone->needsMarkingBarrier()) {
+  if (zone->needsIncrementalBarrier()) {
     TraceWeakCacheIRStub(zone->barrierTracer(), stub, stub->stubInfo());
   }
 
@@ -1588,7 +1567,6 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
     switch (fieldType) {
       case StubField::Type::RawInt32:
       case StubField::Type::RawPointer:
-      case StubField::Type::ICScript:
       case StubField::Type::RawInt64:
       case StubField::Type::Double:
         break;

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui
 
 import android.util.Log
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -13,40 +14,35 @@ import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.Constants.defaultTopSitesList
 import org.mozilla.fenix.helpers.DataGenerationHelper.getSponsoredShortcutTitle
-import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MockBrowserDataHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.loremIpsumAsset
 import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
 /**
  * Tests Sponsored shortcuts functionality
  */
 
-class SponsoredShortcutsTest {
+class SponsoredShortcutsTest : TestSetup() {
     private lateinit var sponsoredShortcutTitle: String
     private lateinit var sponsoredShortcutTitle2: String
 
-    @get:Rule(order = 0)
-    val fenixTestRule: FenixTestRule = FenixTestRule()
-
-    private val mockWebServer get() = fenixTestRule.mockWebServer
-
-    @get:Rule(order = 1)
-    val composeTestRule = AndroidComposeTestRuleV2(
+    @get:Rule
+    val composeTestRule = AndroidComposeTestRule(
         HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true),
     ) { it.activity }
 
-    @get:Rule(order = 2)
-    val memoryLeaksRule = DetectMemoryLeaksRule(composeTestRule = { composeTestRule })
+    @get:Rule
+    val memoryLeaksRule = DetectMemoryLeaksRule()
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         // Workaround to make sure the Top sites list displayed before starting the tests.
         for (i in 1..RETRY_COUNT) {
             Log.i(TAG, "setUp: Started try #$i")

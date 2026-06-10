@@ -96,9 +96,8 @@ pub const SUPPORTED_EXTENSIONS: &[&str] = &[
     "SPV_EXT_descriptor_indexing",
     "SPV_EXT_shader_atomic_float_add",
     "SPV_KHR_16bit_storage",
-    "SPV_KHR_non_semantic_info",
-    "SPV_KHR_fragment_shader_barycentric",
 ];
+pub const SUPPORTED_EXT_SETS: &[&str] = &["GLSL.std.450"];
 
 #[derive(Copy, Clone)]
 pub struct Instruction {
@@ -189,8 +188,6 @@ bitflags::bitflags! {
     struct DecorationFlags: u32 {
         const NON_READABLE = 0x1;
         const NON_WRITABLE = 0x2;
-        const COHERENT = 0x4;
-        const VOLATILE = 0x8;
     }
 }
 
@@ -205,17 +202,6 @@ impl DecorationFlags {
         }
         access
     }
-
-    fn to_memory_decorations(self) -> crate::MemoryDecorations {
-        let mut decorations = crate::MemoryDecorations::empty();
-        if self.contains(DecorationFlags::COHERENT) {
-            decorations |= crate::MemoryDecorations::COHERENT;
-        }
-        if self.contains(DecorationFlags::VOLATILE) {
-            decorations |= crate::MemoryDecorations::VOLATILE;
-        }
-        decorations
-    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -229,7 +215,6 @@ struct Decoration {
     name: Option<String>,
     built_in: Option<spirv::Word>,
     location: Option<spirv::Word>,
-    index: Option<spirv::Word>,
     desc_set: Option<spirv::Word>,
     desc_index: Option<spirv::Word>,
     specialization_constant_id: Option<spirv::Word>,
@@ -245,7 +230,7 @@ struct Decoration {
 }
 
 impl Decoration {
-    const fn debug_name(&self) -> &str {
+    fn debug_name(&self) -> &str {
         match self.name {
             Some(ref name) => name.as_str(),
             None => "?",
@@ -271,18 +256,6 @@ impl Decoration {
                 invariant,
                 ..
             } => Ok(crate::Binding::BuiltIn(map_builtin(built_in, invariant)?)),
-            Decoration {
-                built_in: None,
-                location: Some(location),
-                index: Some(index),
-                ..
-            } => Ok(crate::Binding::Location {
-                location,
-                interpolation: None,
-                sampling: None,
-                blend_src: Some(index),
-                per_primitive: false,
-            }),
             Decoration {
                 built_in: None,
                 location: Some(location),
@@ -615,7 +588,6 @@ pub struct Frontend<I> {
     layouter: Layouter,
     temp_bytes: Vec<u8>,
     ext_glsl_id: Option<spirv::Word>,
-    ext_non_semantic_id: Option<spirv::Word>,
     future_decor: FastHashMap<spirv::Word, Decoration>,
     future_member_decor: FastHashMap<(spirv::Word, MemberIndex), Decoration>,
     lookup_member: FastHashMap<(Handle<crate::Type>, MemberIndex), LookupMember>,
@@ -683,7 +655,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
             layouter: Layouter::default(),
             temp_bytes: Vec::new(),
             ext_glsl_id: None,
-            ext_non_semantic_id: None,
             future_decor: FastHashMap::default(),
             future_member_decor: FastHashMap::default(),
             handle_sampling: FastHashMap::default(),
@@ -775,10 +746,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                 inst.expect(base_words + 2)?;
                 dec.location = Some(self.next()?);
             }
-            spirv::Decoration::Index => {
-                inst.expect(base_words + 2)?;
-                dec.index = Some(self.next()?);
-            }
             spirv::Decoration::DescriptorSet => {
                 inst.expect(base_words + 2)?;
                 dec.desc_set = Some(self.next()?);
@@ -811,9 +778,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
             spirv::Decoration::Flat => {
                 dec.interpolation = Some(crate::Interpolation::Flat);
             }
-            spirv::Decoration::PerVertexKHR => {
-                dec.interpolation = Some(crate::Interpolation::PerVertex);
-            }
             spirv::Decoration::Centroid => {
                 dec.sampling = Some(crate::Sampling::Centroid);
             }
@@ -825,12 +789,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
             }
             spirv::Decoration::NonWritable => {
                 dec.flags |= DecorationFlags::NON_WRITABLE;
-            }
-            spirv::Decoration::Coherent => {
-                dec.flags |= DecorationFlags::COHERENT;
-            }
-            spirv::Decoration::Volatile => {
-                dec.flags |= DecorationFlags::VOLATILE;
             }
             spirv::Decoration::ColMajor => {
                 dec.matrix_major = Some(Majority::Column);
@@ -1529,7 +1487,10 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         overrides: &Arena<crate::Override>,
     ) -> Arena<crate::Expression> {
         let mut expressions = Arena::new();
-        assert!(self.lookup_expression.is_empty());
+        #[allow(clippy::panic)]
+        {
+            assert!(self.lookup_expression.is_empty());
+        }
         // register global variables
         for (&id, var) in self.lookup_variable.iter() {
             let span = globals.get_span(var.handle);
@@ -1631,8 +1592,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                 | S::RayQuery { .. }
                 | S::SubgroupBallot { .. }
                 | S::SubgroupCollectiveOperation { .. }
-                | S::SubgroupGather { .. }
-                | S::RayPipelineFunction(..) => {}
+                | S::SubgroupGather { .. } => {}
                 S::Call {
                     function: ref mut callee,
                     ref arguments,
@@ -1781,21 +1741,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     inst.expect(5)?;
                     self.parse_function(&mut module)
                 }
-                Op::ExtInst => {
-                    // Ignore the result type and result id
-                    let _ = self.next()?;
-                    let _ = self.next()?;
-                    let set_id = self.next()?;
-                    if Some(set_id) == self.ext_non_semantic_id {
-                        // We've already skipped the instruction byte, result type, result id, and instruction set id
-                        for _ in 0..inst.wc - 4 {
-                            self.next()?;
-                        }
-                        Ok(())
-                    } else {
-                        return Err(Error::UnsupportedInstruction(self.state, inst.op));
-                    }
-                }
                 _ => Err(Error::UnsupportedInstruction(self.state, inst.op)), //TODO
             }?;
         }
@@ -1899,17 +1844,10 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         if left != 0 {
             return Err(Error::InvalidOperand);
         }
-        if &name == "GLSL.std.450" {
-            self.ext_glsl_id = Some(result_id);
-        } else if &name == "NonSemantic.Shader.DebugInfo.100" {
-            // We completely ignore this extension. All related instructions are
-            // non-semantic and only for debug purposes, and the spec says they
-            // are ignorable. Many compilers (dxc, slang, etc) will emit these
-            // instructions depending on configuration.
-            self.ext_non_semantic_id = Some(result_id);
-        } else {
+        if !SUPPORTED_EXT_SETS.contains(&name.as_str()) {
             return Err(Error::UnsupportedExtSet(name));
         }
+        self.ext_glsl_id = Some(result_id);
         Ok(())
     }
 
@@ -2660,31 +2598,15 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
 
         let inner = crate::TypeInner::Image {
             class: if is_depth == 1 {
-                if is_sampled == 2 {
-                    return Err(Error::InvalidImageDepthStorage);
-                }
-
                 crate::ImageClass::Depth { multi: is_msaa }
-            }
-            // If we have an unknown format and storage texture, this is
-            // StorageRead/WriteWithoutFormat. We don't currently support
-            // this.
-            else if is_sampled == 2 && format == 0 {
-                return Err(Error::InvalidStorageImageWithoutFormat);
-            }
-            // If we have explicit class information (is_sampled = 2 = Storage), use it.
-            //
-            // If we have unknown class information (is_sampled = 0 = Unknown), infer the
-            // class from the presence of an explicit format.
-            else if format != 0 && (is_sampled == 0 || is_sampled == 2) {
+            } else if format != 0 {
                 crate::ImageClass::Storage {
                     format: map_image_format(format)?,
                     access: crate::StorageAccess::default(),
                 }
-            }
-            // We will hit this case either when sampled is 1, or if we have unknown
-            // sampling information or when sampled is 0 and we have no explicit format.
-            else {
+            } else if is_sampled == 2 {
+                return Err(Error::InvalidImageWriteType);
+            } else {
                 crate::ImageClass::Sampled {
                     kind,
                     multi: is_msaa,
@@ -3026,7 +2948,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     space,
                     ty,
                     init,
-                    memory_decorations: dec.flags.to_memory_decorations(),
                 };
                 (Variable::Global, var)
             }
@@ -3051,12 +2972,10 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                             size: crate::VectorSize::Tri,
                             scalar: crate::Scalar::U32,
                         }),
-                        crate::BuiltIn::Barycentric { perspective: false } => {
-                            Some(crate::TypeInner::Vector {
-                                size: crate::VectorSize::Tri,
-                                scalar: crate::Scalar::F32,
-                            })
-                        }
+                        crate::BuiltIn::Barycentric => Some(crate::TypeInner::Vector {
+                            size: crate::VectorSize::Tri,
+                            scalar: crate::Scalar::F32,
+                        }),
                         _ => None,
                     };
                     if let (Some(inner), Some(crate::ScalarKind::Sint)) =
@@ -3074,7 +2993,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     binding: None,
                     ty,
                     init: None,
-                    memory_decorations: crate::MemoryDecorations::empty(),
                 };
 
                 let inner = Variable::Input(crate::FunctionArgument {
@@ -3135,7 +3053,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     binding: None,
                     ty,
                     init,
-                    memory_decorations: crate::MemoryDecorations::empty(),
                 };
                 let inner = Variable::Output(crate::FunctionResult { ty, binding });
                 (inner, var)
@@ -3229,7 +3146,7 @@ fn resolve_constant(gctx: crate::proc::GlobalCtx, constant: &Constant) -> Option
 }
 
 pub fn parse_u8_slice(data: &[u8], options: &Options) -> Result<crate::Module, Error> {
-    if !data.len().is_multiple_of(4) {
+    if data.len() % 4 != 0 {
         return Err(Error::IncompleteData);
     }
 

@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -15,7 +16,6 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/gfx/Logging.h"
-#include "mozilla/EndianUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
@@ -26,7 +26,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsWindowsHelpers.h"
 
 #include "../2d/AutoHelpersWin.h"
 #include "gfxRect.h"
@@ -386,10 +385,7 @@ gfxFontEntry* gfxDWriteFontEntry::Clone() const {
   return fe;
 }
 
-gfxDWriteFontEntry::~gfxDWriteFontEntry() {
-  auto* cache = mFontTableCache.exchange(nullptr);
-  delete cache;
-}
+gfxDWriteFontEntry::~gfxDWriteFontEntry() {}
 
 static bool UsingArabicOrHebrewScriptSystemLocale() {
   LANGID langid = PRIMARYLANGID(::GetSystemDefaultLangID());
@@ -515,18 +511,6 @@ hb_blob_t* gfxDWriteFontEntry::GetFontTable(uint32_t aTag) {
   }
 
   return nullptr;
-}
-
-gfxFontEntry::FontTableCache* gfxDWriteFontEntry::GetFontTableCache(
-    bool aCreate) {
-  // Create the cache if it does not yet exist.
-  if (!mFontTableCache && aCreate) {
-    auto* cache = new FontTableCache();
-    if (!mFontTableCache.compareExchange(nullptr, cache)) {
-      delete cache;
-    }
-  }
-  return mFontTableCache;
 }
 
 nsresult gfxDWriteFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
@@ -1108,7 +1092,9 @@ gfxFontEntry* gfxDWriteFontList::CreateFontEntry(
       UINT32 index;
       BOOL exists;
       NS_ConvertUTF8toUTF16 name16(familyName);
-      HRESULT hr = collection->FindFamilyName(name16.getW(), &index, &exists);
+      HRESULT hr = collection->FindFamilyName(
+          reinterpret_cast<const WCHAR*>(name16.BeginReading()), &index,
+          &exists);
       if (FAILED(hr) || !exists || index == UINT_MAX ||
           FAILED(collection->GetFontFamily(index, getter_AddRefs(family))) ||
           !family) {
@@ -1613,7 +1599,7 @@ void gfxDWriteFontList::InitSharedFontListForPlatform() {
   if (FAILED(hr)) {
     glean::fontlist::dwritefont_init_problem.AccumulateSingleSample(
         uint32_t(errGDIInterop));
-    delete mSharedFontList.exchange(nullptr);
+    mSharedFontList.reset(nullptr);
     return;
   }
 
@@ -1622,7 +1608,7 @@ void gfxDWriteFontList::InitSharedFontListForPlatform() {
   if (!mSystemFonts) {
     glean::fontlist::dwritefont_init_problem.AccumulateSingleSample(
         uint32_t(errSystemFontCollection));
-    delete mSharedFontList.exchange(nullptr);
+    mSharedFontList.reset(nullptr);
     return;
   }
 #ifdef MOZ_BUNDLED_FONTS
@@ -1990,7 +1976,7 @@ nsresult gfxDWriteFontList::GetFontSubstitutes() {
     AddSubstitute(substituteName, actualFontName, true);
   }
 
-  std::unique_ptr<HKEY, RegCloseKeyDeleter> hKey;
+  HKEY hKey;
   DWORD i, rv, lenAlias, lenActual, valueType;
   WCHAR aliasName[MAX_VALUE_NAME];
   WCHAR actualName[MAX_VALUE_DATA];
@@ -1998,7 +1984,7 @@ nsresult gfxDWriteFontList::GetFontSubstitutes() {
   if (RegOpenKeyExW(
           HKEY_LOCAL_MACHINE,
           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes",
-          0, KEY_READ, getter_Transfers(hKey)) != ERROR_SUCCESS) {
+          0, KEY_READ, &hKey) != ERROR_SUCCESS) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2007,7 +1993,7 @@ nsresult gfxDWriteFontList::GetFontSubstitutes() {
     lenAlias = std::size(aliasName);
     actualName[0] = 0;
     lenActual = sizeof(actualName);
-    rv = RegEnumValueW(hKey.get(), i, aliasName, &lenAlias, nullptr, &valueType,
+    rv = RegEnumValueW(hKey, i, aliasName, &lenAlias, nullptr, &valueType,
                        (LPBYTE)actualName, &lenActual);
 
     if (rv != ERROR_SUCCESS || valueType != REG_SZ || lenAlias == 0) {

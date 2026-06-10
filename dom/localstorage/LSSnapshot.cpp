@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -298,7 +300,7 @@ nsresult LSSnapshot::GetItem(const nsAString& aKey, nsAString& aResult) {
     return rv;
   }
 
-  aResult = std::move(result);
+  aResult = result;
   return NS_OK;
 }
 
@@ -423,7 +425,7 @@ nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
   }
 
   aNotifyInfo.changed() = changed;
-  aNotifyInfo.oldValue() = std::move(oldValue);
+  aNotifyInfo.oldValue() = oldValue;
 
   return NS_OK;
 }
@@ -495,7 +497,7 @@ nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
   }
 
   aNotifyInfo.changed() = changed;
-  aNotifyInfo.oldValue() = std::move(oldValue);
+  aNotifyInfo.oldValue() = oldValue;
 
   return NS_OK;
 }
@@ -805,7 +807,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
       MOZ_CRASH("Bad state!");
   }
 
-  aResult = std::move(result);
+  aResult = result;
   return NS_OK;
 }
 
@@ -828,7 +830,7 @@ nsresult LSSnapshot::EnsureAllKeys() {
 
   nsTHashMap<nsStringHashKey, nsString> newValues;
 
-  for (const auto& key : keys) {
+  for (auto key : keys) {
     newValues.InsertOrUpdate(key, VoidString());
   }
 
@@ -903,7 +905,7 @@ nsresult LSSnapshot::EnsureAllKeys() {
   for (auto iter = newValues.Iter(); !iter.Done(); iter.Next()) {
     nsString value;
     if (mValues.Get(iter.Key(), &value)) {
-      iter.Data() = std::move(value);
+      iter.Data() = value;
     }
   }
 

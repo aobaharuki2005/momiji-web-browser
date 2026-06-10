@@ -80,7 +80,6 @@ add_task(
 
     // Track whether firstStartupNewProfile was called
     let sandbox = sinon.createSandbox();
-
     let firstStartupNewProfileSpy = sandbox.spy(
       AboutNewTabResourceMapping,
       "firstStartupNewProfile"

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,8 +13,8 @@
 namespace mozilla {
 namespace gfx {
 
-class VRLayerParent final : public PVRLayerParent {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRLayerParent, final)
+class VRLayerParent : public PVRLayerParent {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRLayerParent)
 
  public:
   VRLayerParent(uint32_t aVRDisplayID, const uint32_t aGroup);
@@ -23,8 +25,12 @@ class VRLayerParent final : public PVRLayerParent {
   uint32_t GetGroup() const { return mGroup; }
 
  protected:
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+
   virtual ~VRLayerParent();
   void Destroy();
+
+  bool mIPCOpen;
 
   bool mDestroyed;
   gfx::Rect mLeftEyeRect;

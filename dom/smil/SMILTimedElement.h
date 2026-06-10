@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 #define DOM_SMIL_SMILTIMEDELEMENT_H_
 
 #include <limits>
-#include <memory>
 #include <utility>
 
 #include "mozilla/EventForwards.h"
@@ -16,6 +17,7 @@
 #include "mozilla/SMILRepeatCount.h"
 #include "mozilla/SMILTimeValueSpec.h"
 #include "mozilla/SMILTypes.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAttrValue.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
@@ -347,9 +349,9 @@ class SMILTimedElement {
 
  protected:
   // Typedefs
-  using TimeValueSpecList = nsTArray<std::unique_ptr<SMILTimeValueSpec>>;
+  using TimeValueSpecList = nsTArray<UniquePtr<SMILTimeValueSpec>>;
   using InstanceTimeList = nsTArray<RefPtr<SMILInstanceTime>>;
-  using IntervalList = nsTArray<std::unique_ptr<SMILInterval>>;
+  using IntervalList = nsTArray<UniquePtr<SMILInterval>>;
   using TimeValueSpecPtrKey = nsPtrHashKey<SMILTimeValueSpec>;
   using TimeValueSpecHashSet = nsTHashtable<TimeValueSpecPtrKey>;
 
@@ -550,22 +552,51 @@ class SMILTimedElement {
   //
   // Members
   //
-  dom::SVGAnimationElement* mAnimationElement = nullptr;  // [weak] won't
-                                                          // outlive owner
-  SMILAnimationFunction* mClient = nullptr;
-  std::unique_ptr<SMILInterval> mCurrentInterval;
-  TimeValueSpecList mBeginSpecs;  // [strong]
-  TimeValueSpecList mEndSpecs;    // [strong]
+  mozilla::dom::SVGAnimationElement* mAnimationElement;  // [weak] won't outlive
+                                                         // owner
+  TimeValueSpecList mBeginSpecs;                         // [strong]
+  TimeValueSpecList mEndSpecs;                           // [strong]
 
   SMILTimeValue mSimpleDur;
 
   SMILRepeatCount mRepeatCount;
   SMILTimeValue mRepeatDur;
 
-  SMILTimeValue mMin = SMILTimeValue::Zero();
+  SMILTimeValue mMin;
   SMILTimeValue mMax;
 
-  SMILMilestone mPrevRegisteredMilestone = sMaxMilestone;
+  enum SMILFillMode : uint8_t { FILL_REMOVE, FILL_FREEZE };
+  SMILFillMode mFillMode;
+  static constexpr nsAttrValue::EnumTableEntry sFillModeTable[] = {
+      {"remove", FILL_REMOVE},
+      {"freeze", FILL_FREEZE},
+  };
+
+  enum SMILRestartMode : uint8_t {
+    RESTART_ALWAYS,
+    RESTART_WHENNOTACTIVE,
+    RESTART_NEVER
+  };
+  SMILRestartMode mRestartMode;
+  static constexpr nsAttrValue::EnumTableEntry sRestartModeTable[] = {
+      {"always", RESTART_ALWAYS},
+      {"whenNotActive", RESTART_WHENNOTACTIVE},
+      {"never", RESTART_NEVER},
+  };
+
+  InstanceTimeList mBeginInstances;
+  InstanceTimeList mEndInstances;
+  uint32_t mInstanceSerialIndex;
+
+  SMILAnimationFunction* mClient;
+  UniquePtr<SMILInterval> mCurrentInterval;
+  IntervalList mOldIntervals;
+  uint32_t mCurrentRepeatIteration;
+  SMILMilestone mPrevRegisteredMilestone;
+  static constexpr SMILMilestone sMaxMilestone = {
+      std::numeric_limits<SMILTime>::max(), false};
+  static const uint8_t sMaxNumIntervals;
+  static const uint8_t sMaxNumInstanceTimes;
 
   // Set of dependent time value specs to be notified when establishing a new
   // current interval. Change notifications and delete notifications are handled
@@ -575,76 +606,41 @@ class SMILTimedElement {
   // on destruction. Likewise, we notify them when we are destroyed.
   TimeValueSpecHashSet mTimeDependents;
 
-  InstanceTimeList mBeginInstances;
-  InstanceTimeList mEndInstances;
-  IntervalList mOldIntervals;
-  uint32_t mInstanceSerialIndex = 0;
-
-  uint32_t mCurrentRepeatIteration = 0;
-  static constexpr SMILMilestone sMaxMilestone = {
-      std::numeric_limits<SMILTime>::max(), false};
-
-  // The thresholds at which point we start filtering intervals and instance
-  // times indiscriminately. See FilterIntervals and FilterInstanceTimes.
-  static constexpr uint8_t sMaxNumIntervals = 20;
-  static constexpr uint8_t sMaxNumInstanceTimes = 100;
-
-  enum class SMILFillMode : uint8_t { Remove, Freeze };
-  SMILFillMode mFillMode = SMILFillMode::Remove;
-  static constexpr nsAttrValue::EnumTableEntry sFillModeTable[] = {
-      {"remove", SMILFillMode::Remove},
-      {"freeze", SMILFillMode::Freeze},
-  };
-
-  enum class SMILRestartMode : uint8_t { Always, WhenNotActive, Never };
-  SMILRestartMode mRestartMode = SMILRestartMode::Always;
-  static constexpr nsAttrValue::EnumTableEntry sRestartModeTable[] = {
-      {"always", SMILRestartMode::Always},
-      {"whenNotActive", SMILRestartMode::WhenNotActive},
-      {"never", SMILRestartMode::Never},
-  };
-
   /**
    * The state of the element in its life-cycle. These states are based on the
    * element life-cycle described in SMILANIM 3.6.8
    */
-  enum class SMILElementState : uint8_t {
-    Startup,
-    Waiting,
-    Active,
-    PostActive
+  enum SMILElementState {
+    STATE_STARTUP,
+    STATE_WAITING,
+    STATE_ACTIVE,
+    STATE_POSTACTIVE
   };
-  SMILElementState mElementState = SMILElementState::Startup;
+  SMILElementState mElementState;
 
-  enum class SMILSeekState : uint8_t {
-    NotSeeking,
-    ForwardFromActive,
-    ForwardFromInactive,
-    BackwardFromActive,
-    BackwardFromInactive
+  enum SMILSeekState {
+    SEEK_NOT_SEEKING,
+    SEEK_FORWARD_FROM_ACTIVE,
+    SEEK_FORWARD_FROM_INACTIVE,
+    SEEK_BACKWARD_FROM_ACTIVE,
+    SEEK_BACKWARD_FROM_INACTIVE
   };
-  SMILSeekState mSeekState = SMILSeekState::NotSeeking;
+  SMILSeekState mSeekState;
 
   // Used to batch updates to the timing model
   class AutoIntervalUpdateBatcher;
-  bool mDeferIntervalUpdates : 1 = false;
-
-  /**
-   * Set if an update to the current interval was requested while
-   * mDeferIntervalUpdates was set.
-   */
-  bool mDoDeferredUpdate : 1 = false;
-  bool mIsDisabled : 1 = false;
+  bool mDeferIntervalUpdates;
+  bool mDoDeferredUpdate;  // Set if an update to the current interval was
+                           // requested while mDeferIntervalUpdates was set
+  bool mIsDisabled;
 
   // Stack-based helper class to call UpdateCurrentInterval when it is destroyed
   class AutoIntervalUpdater;
 
   // Recursion depth checking
-  uint8_t mDeleteCount = 0;
-  uint8_t mUpdateIntervalRecursionDepth = 0;
-  // Detect if we arrive in some sort of undetected recursive syncbase
-  // dependency relationship
-  static constexpr uint8_t sMaxUpdateIntervalRecursionDepth = 20;
+  uint8_t mDeleteCount;
+  uint8_t mUpdateIntervalRecursionDepth;
+  static const uint8_t sMaxUpdateIntervalRecursionDepth;
 };
 
 inline void ImplCycleCollectionUnlink(SMILTimedElement& aField) {

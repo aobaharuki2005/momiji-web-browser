@@ -106,8 +106,7 @@ void Plot::AppendTimeSeriesIfNotEmpty(TimeSeries&& time_series) {
   }
 }
 
-void Plot::PrintPythonCode(bool show_grid,
-                           absl::string_view figure_output_path) const {
+void Plot::PrintPythonCode(absl::string_view figure_output_path) const {
   // Write python commands to stdout. Intended program usage is
   // ./event_log_visualizer event_log160330.dump | python
 
@@ -232,9 +231,6 @@ void Plot::PrintPythonCode(bool show_grid,
   printf("plt.xlabel(\'%s\')\n", xaxis_label_.c_str());
   printf("plt.ylabel(\'%s\')\n", yaxis_label_.c_str());
   printf("plt.title(\'%s\')\n", title_.c_str());
-  if (show_grid) {
-    printf("plt.grid(True)\n");
-  }
   printf("fig = plt.gcf()\n");
   printf("fig.canvas.manager.set_window_title(\'%s\')\n", id_.c_str());
   if (!yaxis_tick_labels_.empty()) {
@@ -312,7 +308,6 @@ void Plot::ExportProtobuf(analytics::Chart* chart) const {
 
 void PlotCollection::PrintPythonCode(
     bool shared_xaxis,
-    bool show_grid_on_all_plots,
     absl::string_view figure_output_path) const {
   printf("import matplotlib.pyplot as plt\n");
   printf("plt.rcParams.update({'figure.max_open_warning': 0})\n");
@@ -331,7 +326,7 @@ void PlotCollection::PrintPythonCode(
         printf("plt.subplot(111, sharex=axis0)\n");
       }
     }
-    plots_[i]->PrintPythonCode(show_grid_on_all_plots, figure_output_path);
+    plots_[i]->PrintPythonCode(figure_output_path);
   }
   if (figure_output_path.empty()) {
     printf("plt.show()\n");

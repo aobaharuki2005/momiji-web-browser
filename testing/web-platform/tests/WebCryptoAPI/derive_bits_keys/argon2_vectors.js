@@ -2,6 +2,7 @@ function getTestData() {
   // Test vectors from RFC 9106
   // https://www.rfc-editor.org/rfc/rfc9106
 
+  // Test vectors from RFC 9106
   var testVectors = [
     // Argon2d test vector
     {

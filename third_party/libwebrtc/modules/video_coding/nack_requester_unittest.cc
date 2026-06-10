@@ -20,6 +20,7 @@
 #include "api/units/time_delta.h"
 #include "modules/include/module_common_types.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/thread.h"
 #include "system_wrappers/include/clock.h"
 #include "test/create_test_field_trials.h"
 #include "test/gtest.h"
@@ -93,7 +94,7 @@ class TestNackRequester : public ::testing::Test,
   }
 
   static constexpr int64_t kDefaultRttMs = 20;
-  test::RunLoop main_thread_;
+  AutoThread main_thread_;
   test::RunLoop loop_;
   std::unique_ptr<SimulatedClock> clock_;
   std::unique_ptr<NackPeriodicProcessor> nack_periodic_processor_;
@@ -286,7 +287,7 @@ class TestNackRequesterWithFieldTrial : public ::testing::Test,
 
   void RequestKeyFrame() override { ++keyframes_requested_; }
 
-  test::RunLoop main_thread_;
+  AutoThread main_thread_;
   std::unique_ptr<SimulatedClock> clock_;
   NackPeriodicProcessor nack_periodic_processor_;
   NackRequester nack_module_;

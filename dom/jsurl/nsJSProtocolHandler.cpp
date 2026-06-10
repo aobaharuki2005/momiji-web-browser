@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=4 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -49,7 +51,6 @@
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
-#include "nsQueryObject.h"
 #include "nsReadableUtils.h"
 #include "nsSandboxFlags.h"
 #include "nsString.h"
@@ -920,9 +921,8 @@ void nsJSChannel::EvaluateScript() {
 }
 
 void nsJSChannel::NotifyListener() {
-  nsCOMPtr<nsIStreamListener> listener = mListener;
-  listener->OnStartRequest(this);
-  listener->OnStopRequest(this, mStatus);
+  mListener->OnStartRequest(this);
+  mListener->OnStopRequest(this, mStatus);
 
   CleanupStrongRefs();
 }
@@ -1130,8 +1130,7 @@ NS_IMETHODIMP
 nsJSChannel::OnStartRequest(nsIRequest* aRequest) {
   NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIStreamListener> listener = mListener;
-  return listener->OnStartRequest(this);
+  return mListener->OnStartRequest(this);
 }
 
 NS_IMETHODIMP
@@ -1139,8 +1138,7 @@ nsJSChannel::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
                              uint64_t aOffset, uint32_t aCount) {
   NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIStreamListener> listener = mListener;
-  return listener->OnDataAvailable(this, aInputStream, aOffset, aCount);
+  return mListener->OnDataAvailable(this, aInputStream, aOffset, aCount);
 }
 
 NS_IMETHODIMP
@@ -1326,6 +1324,8 @@ nsJSProtocolHandler::AllowPort(int32_t port, const char* scheme,
 
 ////////////////////////////////////////////////////////////
 // nsJSURI implementation
+static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
+                     NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsJSURI, mozilla::net::nsSimpleURI)
 NS_IMPL_RELEASE_INHERITED(nsJSURI, mozilla::net::nsSimpleURI)
@@ -1335,16 +1335,16 @@ NS_IMPL_CLASSINFO(nsJSURI, nullptr, nsIClassInfo::THREADSAFE, NS_JSURI_CID);
 NS_IMPL_CI_INTERFACE_GETTER0(nsJSURI)
 
 NS_INTERFACE_MAP_BEGIN(nsJSURI)
-  if (aIID.Equals(NS_GET_IID(nsSimpleURI))) {
+  if (aIID.Equals(kJSURICID))
+    foundInterface = static_cast<nsIURI*>(this);
+  else if (aIID.Equals(kThisSimpleURIImplementationCID)) {
     // Need to return explicitly here, because if we just set foundInterface
     // to null the NS_INTERFACE_MAP_END_INHERITING will end up calling into
-    // nsSimpleURI::QueryInterface and finding something for this CID.
+    // nsSimplURI::QueryInterface and finding something for this CID.
     *aInstancePtr = nullptr;
     return NS_NOINTERFACE;
-  }
-
-  NS_IMPL_QUERY_CLASSINFO(nsJSURI)
-  NS_INTERFACE_MAP_ENTRY_CONCRETE(nsJSURI)
+  } else
+    NS_IMPL_QUERY_CLASSINFO(nsJSURI)
 NS_INTERFACE_MAP_END_INHERITING(mozilla::net::nsSimpleURI)
 
 // nsISerializable methods:
@@ -1389,7 +1389,7 @@ nsJSURI::Write(nsIObjectOutputStream* aStream) {
   return NS_OK;
 }
 
-void nsJSURI::Serialize(mozilla::ipc::URIParams& aParams) {
+NS_IMETHODIMP_(void) nsJSURI::Serialize(mozilla::ipc::URIParams& aParams) {
   using namespace mozilla::ipc;
 
   JSURIParams jsParams;
@@ -1455,8 +1455,9 @@ nsresult nsJSURI::EqualsInternal(
   NS_ENSURE_ARG_POINTER(aOther);
   MOZ_ASSERT(aResult, "null pointer for outparam");
 
-  RefPtr<nsJSURI> otherJSURI = do_QueryObject(aOther);
-  if (!otherJSURI) {
+  RefPtr<nsJSURI> otherJSURI;
+  nsresult rv = aOther->QueryInterface(kJSURICID, getter_AddRefs(otherJSURI));
+  if (NS_FAILED(rv)) {
     *aResult = false;  // aOther is not a nsJSURI --> not equal.
     return NS_OK;
   }

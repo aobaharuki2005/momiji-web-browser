@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -56,12 +58,12 @@ nsresult nsProgressFrame::CreateAnonymousContent(
 
   if (StaticPrefs::layout_css_modern_range_pseudos_enabled()) {
     // TODO(emilio): Create also a slider-track pseudo-element.
-    mBarDiv->SetPseudoElementType(PseudoStyleType::SliderFill);
+    mBarDiv->SetPseudoElementType(PseudoStyleType::sliderFill);
   } else {
     // Associate ::-moz-{progress,meter}-bar pseudo-element to the anon child.
     mBarDiv->SetPseudoElementType(mType == Type::Progress
-                                      ? PseudoStyleType::MozProgressBar
-                                      : PseudoStyleType::MozMeterBar);
+                                      ? PseudoStyleType::mozProgressBar
+                                      : PseudoStyleType::mozMeterBar);
   }
 
   // XXX(Bug 1631371) Check if this should use a fallible operation as it
@@ -235,6 +237,6 @@ nscoord nsProgressFrame::IntrinsicISize(const IntrinsicSizeInput& aInput,
 }
 
 bool nsProgressFrame::ShouldUseNativeStyle() const {
-  return StyleDisplay()->HasNativeAppearance() &&
+  return StyleDisplay()->HasAppearance() &&
          !Style()->HasAuthorSpecifiedBorderOrBackground();
 }

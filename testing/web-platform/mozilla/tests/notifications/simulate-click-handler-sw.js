@@ -2,6 +2,8 @@
 // http://creativecommons.org/publicdomain/zero/1.0/
 //
 
+/* eslint-env serviceworker */
+
 onnotificationclick = (e) => {
   const {
     notification: {

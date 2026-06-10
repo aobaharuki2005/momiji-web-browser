@@ -12,9 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -32,15 +31,16 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.BottomSheetHandle
 import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.BottomSheetHandle
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 private const val BOTTOM_SHEET_HANDLE_WIDTH_PERCENT = 0.1f
+private val bottomSheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
 
 /**
  * The microsurvey bottom sheet.
@@ -112,10 +112,7 @@ fun MicrosurveyBottomSheet(
             modifier = Modifier
                 .wrapContentHeight()
                 .padding(innerPadding),
-            shape = MaterialTheme.shapes.large.copy(
-                bottomStart = CornerSize(0.dp),
-                bottomEnd = CornerSize(0.dp),
-            ),
+            shape = bottomSheetShape,
         ) {
             if (isSubmitted) {
                 MicrosurveyCompleted()
@@ -139,7 +136,7 @@ fun MicrosurveyBottomSheet(
 )
 @Composable
 private fun MicrosurveyBottomSheetPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         MicrosurveyBottomSheet(

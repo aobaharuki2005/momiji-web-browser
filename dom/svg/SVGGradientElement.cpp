@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -65,8 +67,10 @@ SVGGradientElement::GradientUnits() {
 
 already_AddRefed<DOMSVGAnimatedTransformList>
 SVGGradientElement::GradientTransform() {
+  // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
+  // to allocate the DOMSVGAnimatedTransformList if it hasn't already done so:
   return DOMSVGAnimatedTransformList::GetDOMWrapper(
-      GetOrCreateAnimatedTransformList(), this);
+      GetAnimatedTransformList(DO_ALLOCATE), this);
 }
 
 already_AddRefed<DOMSVGAnimatedEnumeration> SVGGradientElement::SpreadMethod() {
@@ -89,13 +93,13 @@ JSObject* SVGLinearGradientElement::WrapNode(
 
 SVGElement::LengthInfo SVGLinearGradientElement::sLengthInfo[4] = {
     {nsGkAtoms::x1, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::y1, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::Y},
+     SVGContentUtils::Y},
     {nsGkAtoms::x2, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::y2, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::Y},
+     SVGContentUtils::Y},
 };
 
 //----------------------------------------------------------------------
@@ -131,10 +135,10 @@ already_AddRefed<DOMSVGAnimatedLength> SVGLinearGradientElement::Y2() {
 //----------------------------------------------------------------------
 // SVGElement methods
 
-SVGAnimatedTransformList*
-SVGGradientElement::GetOrCreateAnimatedTransformList() {
-  if (!mGradientTransform) {
-    mGradientTransform = std::make_unique<SVGAnimatedTransformList>();
+SVGAnimatedTransformList* SVGGradientElement::GetAnimatedTransformList(
+    uint32_t aFlags) {
+  if (!mGradientTransform && (aFlags & DO_ALLOCATE)) {
+    mGradientTransform = MakeUnique<SVGAnimatedTransformList>();
   }
   return mGradientTransform.get();
 }
@@ -153,17 +157,17 @@ JSObject* SVGRadialGradientElement::WrapNode(
 
 SVGElement::LengthInfo SVGRadialGradientElement::sLengthInfo[6] = {
     {nsGkAtoms::cx, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::cy, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::Y},
+     SVGContentUtils::Y},
     {nsGkAtoms::r, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::XY},
+     SVGContentUtils::XY},
     {nsGkAtoms::fx, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::fy, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::Y},
+     SVGContentUtils::Y},
     {nsGkAtoms::fr, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::XY},
+     SVGContentUtils::XY},
 };
 
 //----------------------------------------------------------------------

@@ -31,8 +31,7 @@ function getNextEntry(type) {
     new PerformanceObserver((list, observer) => {
       const entries = list.getEntries();
       observer.disconnect();
-      // Some entry types may return a list each time (e.g. 'event' entries).
-      // We return the [0]'th value always.
+      assert_equals(entries.length, 1, 'Only one entry.');
       resolve(entries[0]);
     }).observe({ type });
   });
@@ -50,62 +49,42 @@ function getBufferedEntries(type) {
   });
 }
 
-function getElementTiming(id) {
-  return new Promise(resolve => {
-    new PerformanceObserver((list, observer) => {
-      const entries = list.getEntries().filter(e => e.identifier === id);
-      if (entries.length > 0) {
-        observer.disconnect();
-        resolve(entries[0]);
-      }
-    }).observe({ type: 'element', buffered: true });
-  });
-}
-
 /**
  * Helpers somewhat specific to these test types, "exported" and used by tests.
  */
 
-function assignRandomIdAndElementTiming(el) {
-  el.id = `${el.nodeName}-${Math.random().toString(36).substr(2, 9)}`;
-  el.setAttribute('elementtiming', el.id);
-}
-
-async function addImageToMain(url = DEFAULTIMG) {
+async function addImageToMain(url = DEFAULTIMG, id = 'imagelcp') {
   const main = document.getElementById('main');
   const img = new Image();
-  assignRandomIdAndElementTiming(img);
-  img.src = url + '?' + img.id;
+  img.src = url + '?' + Math.random();
+  img.id = id;
+  img.setAttribute('elementtiming', id);
   main.appendChild(img);
-  await getElementTiming(img.id);
   return img;
 }
 
-async function addTextParagraphToMain(text = 'Lorem Ipsum') {
+function addTextParagraphToMain(text, element_timing = '') {
   const main = document.getElementById('main');
   const p = document.createElement('p');
-  assignRandomIdAndElementTiming(p);
   const textNode = document.createTextNode(text);
+  p.setAttribute('elementtiming', element_timing);
   p.style = 'font-size: 3em';
   p.appendChild(textNode);
   main.appendChild(p);
-  await getElementTiming(p.id);
   return p;
 }
 
-async function addTextToDivOnMain() {
+function addTextToDivOnMain() {
   const main = document.getElementById('main');
   const prevDiv = document.getElementsByTagName('div')[0];
   if (prevDiv) {
     main.removeChild(prevDiv);
   }
   const div = document.createElement('div');
-  assignRandomIdAndElementTiming(div);
   const text = document.createTextNode('Lorem Ipsum');
   div.style = 'font-size: 3em';
   div.appendChild(text);
   main.appendChild(div);
-  await getElementTiming(div.id);
   return div;
 }
 
@@ -336,15 +315,13 @@ async function validateIcpEntries(t, softNavEntries, lcps, icps, lcps_after) {
     assert_true(icpsByNavId.has(navId),
       `An ICP entry should be present for navigationId ${navId}`);
 
-    const validIcps = icpsByNavId.get(navId).filter(i => !!i.largestContentfulPaint);
-    if (validIcps.length === 0) {
-      continue;
-    }
-    const icp = validIcps.at(-1);
+    // Get the largest ICP entry for this specific navigation.
+    // TODO: validate multiple candidates (i.e. each is newer + larger).
+    const icp = icpsByNavId.get(navId).at(-1);
 
-    assert_not_equals(lcp.size, icp.largestContentfulPaint.size,
+    assert_not_equals(lcp.size, icp.size,
       `LCP element should not have identical size to ICP element for navigationId ${navId}.`);
-    assert_not_equals(lcp.startTime, icp.largestContentfulPaint.startTime,
+    assert_not_equals(lcp.startTime, icp.startTime,
       `LCP element should not have identical startTime to ICP element for navigationId ${navId}.`);
   }
 }
@@ -363,49 +340,47 @@ function checkImage(entry, expectedUrl, expectedID, expectedSize, timeLowerBound
   assert_equals(entry.name, '', "Entry name should be the empty string");
   assert_equals(entry.entryType, 'interaction-contentful-paint',
     "Entry type should be interaction-contentful-paint");
-
-  const lcp = entry.largestContentfulPaint;
-  assert_true(!!lcp, "largestContentfulPaint attribute should exist");
-
+  assert_equals(entry.duration, 0, "Entry duration should be 0");
   // The entry's url can be truncated.
-  assert_equals(expectedUrl.substr(0, 100), lcp.url.substr(0, 100),
-    `Expected URL ${expectedUrl} should at least start with the entry's URL ${lcp.url}`);
-  assert_equals(lcp.id, expectedID, "Entry ID matches expected one");
-  assert_equals(lcp.element, document.getElementById(expectedID),
+  assert_equals(expectedUrl.substr(0, 100), entry.url.substr(0, 100),
+    `Expected URL ${expectedUrl} should at least start with the entry's URL ${entry.url}`);
+  assert_equals(entry.id, expectedID, "Entry ID matches expected one");
+  assert_equals(entry.element, document.getElementById(expectedID),
     "Entry element is expected one");
   if (options.includes('skip')) {
     return;
   }
-  assert_greater_than_equal(performance.now(), lcp.renderTime,
+  assert_greater_than_equal(performance.now(), entry.renderTime,
     'renderTime should occur before the entry is dispatched to the observer.');
+  assert_approx_equals(entry.startTime, entry.renderTime, 0.001,
+    'startTime should be equal to renderTime to the precision of 1 millisecond.');
   if (options.includes('sizeLowerBound')) {
-    assert_greater_than(lcp.size, expectedSize);
+    assert_greater_than(entry.size, expectedSize);
   } else if (options.includes('approximateSize')) {
-    assert_approx_equals(lcp.size, expectedSize, 1);
+    assert_approx_equals(entry.size, expectedSize, 1);
   } else {
-    assert_equals(lcp.size, expectedSize);
+    assert_equals(entry.size, expectedSize);
   }
 
-  assert_true("paintTime" in lcp, "paintTime attribute should exist");
-  assert_greater_than_equal(lcp.paintTime, timeLowerBound,
+  assert_greater_than_equal(entry.paintTime, timeLowerBound,
     'paintTime should represent the time when the UA started painting');
 
   // PaintTimingMixin
-  if ("presentationTime" in lcp && lcp.presentationTime !== null) {
-    assert_greater_than(lcp.presentationTime, lcp.paintTime);
-    assert_equals(lcp.presentationTime, lcp.renderTime);
+  if ("presentationTime" in entry && entry.presentationTime !== null) {
+    assert_greater_than(entry.presentationTime, entry.paintTime);
+    assert_equals(entry.presentationTime, entry.renderTime);
   } else {
-    assert_equals(lcp.renderTime, lcp.paintTime);
+    assert_equals(entry.renderTime, entry.paintTime);
   }
 
   if (options.includes('animated')) {
-    assert_less_than(lcp.renderTime, image_delay,
+    assert_less_than(entry.renderTime, image_delay,
       'renderTime should be smaller than the delay applied to the second frame');
-    assert_greater_than(lcp.renderTime, 0,
+    assert_greater_than(entry.renderTime, 0,
       'renderTime should be larger than 0');
   }
   else {
-    assert_between_inclusive(lcp.loadTime, timeLowerBound, lcp.renderTime,
+    assert_between_inclusive(entry.loadTime, timeLowerBound, entry.renderTime,
       'loadTime should occur between the lower bound and the renderTime');
   }
 }

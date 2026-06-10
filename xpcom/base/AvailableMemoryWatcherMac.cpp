@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -314,7 +316,7 @@ already_AddRefed<nsAvailableMemoryWatcherBase> CreateAvailableMemoryWatcher() {
 // level crash report annotations.
 void nsAvailableMemoryWatcher::UpdateParentAnnotations() {
   // Generate a string representation of the current Unix time.
-  time_t timeChanged = time(nullptr);
+  time_t timeChanged = time(NULL);
   nsAutoCString timeChangedString;
   timeChangedString =
       nsPrintfCString("%" PRIu64, static_cast<uint64_t>(timeChanged));
@@ -365,8 +367,8 @@ void nsAvailableMemoryWatcher::ReadSysctls() {
   // Pressure level
   uint32_t level;
   size_t size = sizeof(level);
-  if (sysctlbyname("kern.memorystatus_vm_pressure_level", &level, &size,
-                   nullptr, 0) == -1) {
+  if (sysctlbyname("kern.memorystatus_vm_pressure_level", &level, &size, NULL,
+                   0) == -1) {
     MP_LOG("Failure reading memory pressure sysctl");
     NS_WARNING("Failure reading memory pressure sysctl");
     level = kSysctlLevelNormal;
@@ -376,8 +378,8 @@ void nsAvailableMemoryWatcher::ReadSysctls() {
   // Available memory percent
   int availPercent;
   size = sizeof(availPercent);
-  if (sysctlbyname("kern.memorystatus_level", &availPercent, &size, nullptr,
-                   0) == -1) {
+  if (sysctlbyname("kern.memorystatus_level", &availPercent, &size, NULL, 0) ==
+      -1) {
     MP_LOG("Failure reading available memory level");
     NS_WARNING("Failure reading available memory level");
     availPercent = 50;

@@ -244,11 +244,10 @@ function enableNextButton() {
 function onFinish(event) {
   var profileName = document.getElementById("profileName").value;
   var profile;
-  let source = window.arguments[2];
 
   // Create profile named profileName in profileRoot.
   try {
-    profile = gProfileService.createProfile(gProfileRoot, profileName, source);
+    profile = gProfileService.createProfile(gProfileRoot, profileName);
   } catch (e) {
     var profileCreationFailed = gProfileManagerBundle.getString(
       "profileCreationFailed"

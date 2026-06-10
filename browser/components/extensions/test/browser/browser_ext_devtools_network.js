@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 loadTestSubscript("head_devtools.js");
@@ -6,10 +8,6 @@ loadTestSubscript("head_devtools.js");
 // has already verified the details that were relevant for that test case.
 PromiseTestUtils.allowMatchingRejectionsGlobally(
   /can't be sent as the connection just closed/
-);
-// Also ignore REDUX_MIDDLEWARE_IGNORED_REDUX_ACTION (bug 2013040).
-PromiseTestUtils.allowMatchingRejectionsGlobally(
-  /Dispatching '.*' action after panel's closing/
 );
 
 function background() {

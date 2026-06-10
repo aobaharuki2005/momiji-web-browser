@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,7 +17,6 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "mozilla/dom/CSSTransition.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Element.h"
@@ -178,7 +179,7 @@ static Keyframe& AppendKeyframe(double aOffset, const CSSPropertyId& aProperty,
                                 AnimationValue&& aValue,
                                 nsTArray<Keyframe>& aKeyframes) {
   Keyframe& frame = *aKeyframes.AppendElement();
-  frame.mOffset.emplace(Keyframe::OffsetType::PercentageOffset(aOffset));
+  frame.mOffset.emplace(aOffset);
   MOZ_ASSERT(aValue.mServo);
   RefPtr<StyleLockedDeclarationBlock> decl =
       Servo_AnimationValue_Uncompute(aValue.mServo).Consume();
@@ -245,7 +246,7 @@ static Maybe<ReplacedTransitionProperties> GetReplacedTransitionProperties(
       keyframeEffect->Properties()[0].mSegments[0];
 
   result.emplace(ReplacedTransitionProperties(
-      {startTime.Value(), aTransition.PlaybackRateInternal(),
+      {startTime.Value(), aTransition.PlaybackRate(),
        keyframeEffect->SpecifiedTiming(), segment.mTimingFunction,
        segment.mFromValue, segment.mToValue}));
 
@@ -490,7 +491,7 @@ already_AddRefed<CSSTransition> nsTransitionManager::DoCreateTransition(
   keyframeEffect->SetKeyframes(
       GetTransitionKeyframes(aProperty, std::move(aStartValue),
                              std::move(aEndValue)),
-      &aNewStyle, timeline, nullptr /* No AnimationRange for transitions */);
+      &aNewStyle, timeline);
 
   if (NS_WARN_IF(MOZ_UNLIKELY(!keyframeEffect->IsValidTransition()))) {
     return nullptr;
@@ -499,7 +500,7 @@ already_AddRefed<CSSTransition> nsTransitionManager::DoCreateTransition(
   auto animation = MakeRefPtr<CSSTransition>(
       mPresContext->Document()->GetScopeObject(), aProperty);
   animation->SetOwningElement(OwningElementRef(*aElement, aPseudoRequest));
-  animation->SetTimelineNoUpdate(timeline, nullptr);
+  animation->SetTimelineNoUpdate(timeline);
   animation->SetCreationSequence(
       mPresContext->RestyleManager()->GetAnimationGeneration());
   animation->SetEffectFromStyle(keyframeEffect);

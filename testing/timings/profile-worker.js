@@ -11,12 +11,7 @@ const zlib = require("zlib");
 function normalizeMessage(message) {
   return message
     ?.replace(/task_\d+/g, "task_id")
-    .replace(/\nRejection date: [^\n]+/g, "")
-    .replace(/Test ran for \d+s/g, "Test ran for Xs");
-}
-
-function formatTaskMessage(taskId, message) {
-  return `      Task ${taskId}: ${message}`;
+    .replace(/\nRejection date: [^\n]+/g, "");
 }
 
 // Extract parallel execution time ranges from markers
@@ -222,10 +217,6 @@ function extractTestTimings(profile) {
       if (status === "FAIL" && data.color === "green") {
         status = "EXPECTED-FAIL";
       }
-      // Check if this is an unexpected pass (PASS status with expected field present)
-      else if (status === "PASS" && data.expected && data.expected !== "PASS") {
-        status = "UNEXPECTED-PASS";
-      }
       // Add execution context suffix to timeout, fail, and pass statuses
       else if (
         ["TIMEOUT", "FAIL", "PASS"].includes(status) &&
@@ -272,8 +263,7 @@ function extractTestTimings(profile) {
       continue;
     }
 
-    // Filter out non-test paths (allow common test file extensions)
-    if (!testPath || !/\.(js|html|xhtml)$/.test(testPath)) {
+    if (!testPath || !testPath.endsWith(".js")) {
       continue;
     }
 
@@ -337,85 +327,49 @@ async function fetchResourceProfile(taskId, retryId = 0) {
 
   const url = `${workerData.taskclusterBaseUrl}/api/queue/v1/task/${taskId}/runs/${retryId}/artifacts/public/test_info/profile_resource-usage.json`;
 
-  let response;
   try {
-    response = await fetch(url);
-  } catch (error) {
-    // Network error (timeout, connection refused, etc.)
-    let message = error.message;
-    if (error.cause) {
-      message += ` (${error.cause.code || error.cause.message})`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      return null;
     }
-    console.error(formatTaskMessage(taskId, `Network error - ${message}`));
-    return { error: "network_error" };
-  }
 
-  if (!response.ok) {
-    const errorType = response.status === 404 ? "not_found" : "http_error";
-    console.error(
-      formatTaskMessage(
-        taskId,
-        `HTTP error ${response.status} ${response.statusText}`
-      )
-    );
-    return { error: errorType };
-  }
+    const profile = await response.json();
 
-  let profile;
-  try {
-    profile = await response.json();
+    // Cache the profile for future use (gzipped)
+    try {
+      const compressed = zlib.gzipSync(JSON.stringify(profile));
+      fs.writeFileSync(cacheFileGz, compressed);
+    } catch (error) {
+      console.warn(`Error caching profile ${taskId}: ${error.message}`);
+    }
+
+    return profile;
   } catch (error) {
-    console.error(
-      formatTaskMessage(taskId, `JSON parse error - ${error.message}`)
-    );
-    return { error: "parse_error" };
+    console.error(`Error fetching profile for task ${taskId}:`, error.message);
+    return null;
   }
-
-  // Cache the profile for future use (gzipped)
-  try {
-    const compressed = zlib.gzipSync(JSON.stringify(profile));
-    fs.writeFileSync(cacheFileGz, compressed);
-  } catch (error) {
-    console.warn(
-      formatTaskMessage(taskId, `Error caching profile - ${error.message}`)
-    );
-  }
-
-  return profile;
 }
 
 // Process a single job to extract test timings
 async function processJob(job) {
-  // Parse task field: "<task_id>.<retry_id>" or just "<task_id>"
-  const parts = job.task.split(".");
-  const taskId = parts[0];
-  const retryId = parts.length === 2 ? parseInt(parts[1], 10) : 0;
+  const taskId = job.task_id;
+  const retryId = job.retry_id || 0;
   const jobName = job.name;
 
   if (!taskId) {
-    console.error(`      Job has no task ID: ${JSON.stringify(job)}`);
-    return { error: "invalid_job" };
+    return null;
   }
+
+  // Processing job silently to avoid mixed output with main thread
 
   const profile = await fetchResourceProfile(taskId, retryId);
   if (!profile) {
-    console.error(
-      formatTaskMessage(taskId, "No profile returned (unexpected null)")
-    );
-    return { error: "no_profile" };
-  }
-
-  // Check if profile is an error object
-  if (profile.error) {
-    return { error: profile.error };
+    return null;
   }
 
   const timings = extractTestTimings(profile);
   if (timings.length === 0) {
-    console.warn(
-      formatTaskMessage(taskId, "No test timings extracted from profile")
-    );
-    return { error: "no_timings" };
+    return null;
   }
 
   const resourceUsage = extractResourceUsage(profile);

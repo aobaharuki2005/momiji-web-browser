@@ -1,9 +1,11 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:expandtab:shiftwidth=2:tabstop=2:cin:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsDBusHandlerAppImpl_h_
-#define _nsDBusHandlerAppImpl_h_
+#ifndef __nsDBusHandlerAppImpl_h__
+#define __nsDBusHandlerAppImpl_h__
 
 #include "nsString.h"
 #include "nsIMIMEInfo.h"
@@ -14,10 +16,10 @@ class nsDBusHandlerApp : public nsIDBusHandlerApp {
   NS_DECL_NSIHANDLERAPP
   NS_DECL_NSIDBUSHANDLERAPP
 
-  nsDBusHandlerApp() = default;
+  nsDBusHandlerApp() {}
 
  protected:
-  virtual ~nsDBusHandlerApp() = default;
+  virtual ~nsDBusHandlerApp() {}
 
   nsString mName;
   nsString mDetailedDescription;

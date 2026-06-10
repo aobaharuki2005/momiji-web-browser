@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef txOwningArray_h_
-#define txOwningArray_h_
+#ifndef txOwningArray_h__
+#define txOwningArray_h__
 
 // Class acting like a nsTArray except that it deletes its objects
 // on destruction. It does not however delete its objects on operations
@@ -24,4 +26,4 @@ class txOwningArray : public nsTArray<E*> {
   }
 };
 
-#endif  // txOwningArray_h_
+#endif  // txOwningArray_h__

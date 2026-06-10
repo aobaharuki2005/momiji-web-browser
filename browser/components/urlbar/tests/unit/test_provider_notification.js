@@ -50,13 +50,12 @@ add_setup(async function () {
     providers: [firstProvider.name, secondProvider.name],
   });
 
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(firstProvider);
-  providersManager.registerProvider(secondProvider);
+  UrlbarProvidersManager.registerProvider(firstProvider);
+  UrlbarProvidersManager.registerProvider(secondProvider);
 
   registerCleanupFunction(() => {
-    providersManager.unregisterProvider(firstProvider);
-    providersManager.unregisterProvider(secondProvider);
+    UrlbarProvidersManager.unregisterProvider(firstProvider);
+    UrlbarProvidersManager.unregisterProvider(secondProvider);
     sinon.restore();
   });
 });
@@ -91,7 +90,7 @@ add_task(async function testOnEngagementNotification() {
     },
   });
 
-  await ProvidersManager.getInstanceForSap("urlbar").notifyEngagementChange(
+  await UrlbarProvidersManager.notifyEngagementChange(
     "engagement",
     context,
     {
@@ -135,7 +134,7 @@ add_task(async function testOnAbandonmentNotification() {
     },
   });
 
-  await ProvidersManager.getInstanceForSap("urlbar").notifyEngagementChange(
+  await UrlbarProvidersManager.notifyEngagementChange(
     "abandonment",
     context,
     {},
@@ -179,8 +178,7 @@ add_task(async function testOnImpressionNotification() {
     },
   });
 
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  await providersManager.notifyEngagementChange(
+  await UrlbarProvidersManager.notifyEngagementChange(
     "engagement",
     context,
     {
@@ -196,7 +194,7 @@ add_task(async function testOnImpressionNotification() {
     "onImpression called for first provider after an engagement event"
   );
 
-  await providersManager.notifyEngagementChange(
+  await UrlbarProvidersManager.notifyEngagementChange(
     "abandonment",
     context,
     {
@@ -246,8 +244,7 @@ add_task(async function testOnSearchSessionEndNotification() {
     },
   });
 
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  await providersManager.notifyEngagementChange(
+  await UrlbarProvidersManager.notifyEngagementChange(
     "engagement",
     context,
     {
@@ -263,7 +260,7 @@ add_task(async function testOnSearchSessionEndNotification() {
     "onSearchSessionEnd called for first provider after an engagement event"
   );
 
-  await providersManager.notifyEngagementChange(
+  await UrlbarProvidersManager.notifyEngagementChange(
     "abandonment",
     context,
     {
@@ -288,10 +285,9 @@ add_task(async function testProviderPresenceInMap() {
     "onSearchSessionEnd",
   ];
 
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
   for (const method of notificationMethods) {
     const providersForMethod =
-      providersManager.providersByNotificationType[method];
+      UrlbarProvidersManager.providersByNotificationType[method];
 
     const isFirstProviderPresent = providersForMethod.has(firstProvider);
     const isSecondProviderPresent = providersForMethod.has(secondProvider);
@@ -306,11 +302,11 @@ add_task(async function testProviderPresenceInMap() {
     );
   }
 
-  providersManager.unregisterProvider(firstProvider);
+  UrlbarProvidersManager.unregisterProvider(firstProvider);
 
   for (const method of notificationMethods) {
     const providersForMethod =
-      providersManager.providersByNotificationType[method];
+      UrlbarProvidersManager.providersByNotificationType[method];
     const isPresent = providersForMethod.has(firstProvider);
     Assert.ok(
       !isPresent,

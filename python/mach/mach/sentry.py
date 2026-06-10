@@ -3,8 +3,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import abc
+import re
 import sys
 from pathlib import Path
+from threading import Thread
+
+import sentry_sdk
+from mozversioncontrol import (
+    InvalidRepoPath,
+    MissingUpstreamRepo,
+    MissingVCSTool,
+    get_repository_object,
+)
+
+from mach.telemetry import is_telemetry_enabled
+from mach.util import get_state_dir
 
 # https://sentry.io/organizations/mozilla/projects/mach/
 _SENTRY_DSN = (
@@ -22,8 +35,6 @@ class SentryErrorReporter(ErrorReporter):
     """Reports errors using Sentry."""
 
     def report_exception(self, exception):
-        import sentry_sdk
-
         return sentry_sdk.capture_exception(exception)
 
 
@@ -39,12 +50,6 @@ class NoopErrorReporter(ErrorReporter):
 
 
 def register_sentry(argv, settings, topsrcdir: Path):
-    from threading import Thread
-
-    import sentry_sdk
-
-    from mach.telemetry import is_telemetry_enabled
-
     if not is_telemetry_enabled(settings):
         return NoopErrorReporter()
 
@@ -57,9 +62,7 @@ def register_sentry(argv, settings, topsrcdir: Path):
     _is_unmodified_mach_core_thread.start()
 
     sentry_sdk.init(
-        _SENTRY_DSN,
-        before_send=lambda event, _: _process_event(event, topsrcdir),
-        auto_enabling_integrations=False,
+        _SENTRY_DSN, before_send=lambda event, _: _process_event(event, topsrcdir)
     )
     sentry_sdk.add_breadcrumb(message="./mach {}".format(" ".join(argv)))
     return SentryErrorReporter()
@@ -102,8 +105,6 @@ def _settle_mach_module_id(sentry_event, _):
     # This function replaces that generated id with the static string "<generated>"
     # so that grouping behaves as expected
 
-    import re
-
     stacktrace_frames = sentry_event["exception"]["values"][0]["stacktrace"]["frames"]
     for frame in stacktrace_frames:
         module = frame.get("module")
@@ -139,10 +140,6 @@ def _patch_absolute_paths(sentry_event, topsrcdir: Path):
             return needle.sub(replacement, value)
         else:
             return value
-
-    import re
-
-    from mach.util import get_state_dir
 
     for target_path, replacement in (
         (get_state_dir(), "<statedir>"),
@@ -192,8 +189,6 @@ def _delete_server_name(sentry_event, _):
 
 
 def _get_repository_object(topsrcdir: Path):
-    from mozversioncontrol import InvalidRepoPath, MissingVCSTool, get_repository_object
-
     try:
         return get_repository_object(str(topsrcdir))
     except (InvalidRepoPath, MissingVCSTool) as e:
@@ -214,8 +209,6 @@ def _is_unmodified_mach_core(topsrcdir: Path):
     pretty confident that the Mach behaviour that caused the exception
     also exists in the public tree.
     """
-    from mozversioncontrol import MissingUpstreamRepo
-
     global _is_unmodified_mach_core_result
 
     repo = _get_repository_object(topsrcdir)

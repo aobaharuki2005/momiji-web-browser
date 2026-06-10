@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env node */
+
 "use strict";
 
 const fs = require("fs");
 const path = require("path");
-const rollouts = process.env.STYLELINT_SKIP_ROLLOUTS
-  ? []
-  : require("./stylelint-rollouts.config");
+const rollouts = require("./stylelint-rollouts.config");
 
 function readFile(filePath) {
   return fs
@@ -273,14 +273,10 @@ module.exports = {
     // stylelint fixes for the use-logical rule will be addressed in Bug 1996168
     // Remove this line setting `csscontrols/use-logical` to null after implementing fixes
     "csstools/use-logical": null,
-    // Use our fork that recognises -moz-pref(...) as valid (bug 2038250).
-    // Upstream's ignoreFunctions option short-circuits the entire
-    // query when -moz-pref appears anywhere in it, which would mask
-    // unrelated errors in the same query.
-    "media-query-no-invalid": null,
-    "stylelint-plugin-mozilla/media-query-no-invalid": true,
     "stylelint-plugin-mozilla/no-base-design-tokens": true,
     "stylelint-plugin-mozilla/use-design-tokens": true,
+    "stylelint-plugin-mozilla/no-non-semantic-token-usage": true,
+    "stylelint-plugin-mozilla/use-size-tokens": true,
   },
 
   overrides: [
@@ -288,13 +284,6 @@ module.exports = {
       files: "*.scss",
       customSyntax: "postcss-scss",
       extends: "stylelint-config-recommended-scss",
-      rules: {
-        // stylelint-config-recommended-scss disables the upstream
-        // `media-query-no-invalid` rule for SCSS; mirror that for our
-        // fork (bug 2038250) since SCSS variables/interpolations would
-        // otherwise be flagged as invalid features.
-        "stylelint-plugin-mozilla/media-query-no-invalid": null,
-      },
     },
     {
       files: [
@@ -451,6 +440,8 @@ module.exports = {
       ],
       rules: {
         "stylelint-plugin-mozilla/use-design-tokens": null,
+        "stylelint-plugin-mozilla/no-non-semantic-token-usage": null,
+        "stylelint-plugin-mozilla/use-size-tokens": null,
       },
     },
     {
@@ -461,6 +452,8 @@ module.exports = {
       ],
       rules: {
         "stylelint-plugin-mozilla/use-design-tokens": true,
+        "stylelint-plugin-mozilla/no-non-semantic-token-usage": true,
+        "stylelint-plugin-mozilla/use-size-tokens": true,
       },
     },
     {

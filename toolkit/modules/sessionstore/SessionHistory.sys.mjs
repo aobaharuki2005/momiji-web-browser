@@ -24,6 +24,13 @@ export var SessionHistory = Object.freeze({
     return SessionHistoryInternal.isEmpty(docShell);
   },
 
+  collect(docShell, aFromIdx = -1) {
+    if (Services.appinfo.sessionHistoryInParent) {
+      throw new Error("Use SessionHistory.collectFromParent instead");
+    }
+    return SessionHistoryInternal.collect(docShell, aFromIdx);
+  },
+
   collectFromParent(uri, documentHasChildNodes, history, aFromIdx = -1) {
     return SessionHistoryInternal.collectCommon(
       uri,
@@ -33,9 +40,20 @@ export var SessionHistory = Object.freeze({
     );
   },
 
-  collectNonWebControlledLoadingSession(browsingContext) {
-    return SessionHistoryInternal.collectNonWebControlledLoadingSession(
+  collectNonWebControlledBlankLoadingSession(browsingContext) {
+    return SessionHistoryInternal.collectNonWebControlledBlankLoadingSession(
       browsingContext
+    );
+  },
+
+  restore(docShell, tabData) {
+    if (Services.appinfo.sessionHistoryInParent) {
+      throw new Error("Use SessionHistory.restoreFromParent instead");
+    }
+    return SessionHistoryInternal.restore(
+      docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory
+        .legacySHistory,
+      tabData
     );
   },
 
@@ -67,6 +85,28 @@ var SessionHistoryInternal = {
     }
     let uri = webNavigation.currentURI.spec;
     return uri == "about:blank" && history.count == 0;
+  },
+
+  /**
+   * Collects session history data for a given docShell.
+   *
+   * @param docShell
+   *        The docShell that owns the session history.
+   * @param aFromIdx
+   *        The starting local index to collect the history from.
+   * @return An object reprereseting a partial global history update.
+   */
+  collect(docShell, aFromIdx = -1) {
+    let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
+    let uri = webNavigation.currentURI.displaySpec;
+    let body = webNavigation.document.body;
+    let history = webNavigation.sessionHistory;
+    return this.collectCommon(
+      uri,
+      body && body.hasChildNodes(),
+      history.legacySHistory,
+      aFromIdx
+    );
   },
 
   collectCommon(uri, documentHasChildNodes, shistory, aFromIdx) {
@@ -121,10 +161,10 @@ var SessionHistoryInternal = {
     return data;
   },
 
-  collectNonWebControlledLoadingSession(browsingContext) {
+  collectNonWebControlledBlankLoadingSession(browsingContext) {
     if (
       browsingContext.sessionHistory?.count === 0 &&
-      browsingContext.nonWebControlledLoadingURI &&
+      browsingContext.nonWebControlledBlankURI &&
       browsingContext.mostRecentLoadingSessionHistoryEntry
     ) {
       return {
@@ -380,7 +420,7 @@ var SessionHistoryInternal = {
    *        Hash for ensuring unique frame IDs
    * @param docIdentMap
    *        Hash to ensure reuse of BFCache entries
-   * @returns {nsISHEntry}
+   * @returns nsISHEntry
    */
   deserializeEntry(entry, idMap, docIdentMap, shistory) {
     var shEntry = shistory.createEntry();

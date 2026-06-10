@@ -47,31 +47,38 @@
         testRelation(aHostID, aHostRelation, null);
     }
 
-    async function insertRelated(aHostRelAttr, aDependentID, aInsertHostFirst,
-                                 aHostRelation, aDependentRelation) {
-      let hostNode;
-      let dependentNode;
-      let reordered = waitForEvent(EVENT_REORDER, document);
+    function insertRelated(aHostRelAttr, aDependentID, aInsertHostFirst,
+                           aHostRelation, aDependentRelation) {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, document),
+      ];
 
-      hostNode = document.createElement("div");
-      hostNode.setAttribute(aHostRelAttr, aDependentID);
+      this.invoke = function insertRelated_invoke() {
+        this.hostNode = document.createElement("div");
+        this.hostNode.setAttribute(aHostRelAttr, aDependentID);
 
-      dependentNode = document.createElement("div");
-      dependentNode.setAttribute("id", aDependentID);
+        this.dependentNode = document.createElement("div");
+        this.dependentNode.setAttribute("id", aDependentID);
 
-      if (aInsertHostFirst) {
-        document.body.appendChild(hostNode);
-        document.body.appendChild(dependentNode);
-      } else {
-        document.body.appendChild(dependentNode);
-        document.body.appendChild(hostNode);
-      }
+        if (aInsertHostFirst) {
+          document.body.appendChild(this.hostNode);
+          document.body.appendChild(this.dependentNode);
+        } else {
+          document.body.appendChild(this.dependentNode);
+          document.body.appendChild(this.hostNode);
+        }
+      };
 
-      await reordered;
+      this.finalCheck = function insertRelated_finalCheck() {
+        testRelation(this.dependentNode, aDependentRelation, this.hostNode);
+        if (aHostRelation)
+          testRelation(this.hostNode, aHostRelation, this.dependentNode);
+      };
 
-      testRelation(dependentNode, aDependentRelation, hostNode);
-      if (aHostRelation)
-        testRelation(hostNode, aHostRelation, dependentNode);
+      this.getID = function insertRelated_getID() {
+        return "Insert " + aHostRelAttr + "='" + aDependentID + "' node" +
+          (aInsertHostFirst ? " before" : "after") + " dependent node";
+      };
     }
 
     /**
@@ -80,25 +87,37 @@
      * tree due to changes in layout module. It can be changed on any case
      * when accessibles are recreated.
      */
-    async function recreateRelatives(aContainerID, aLabelID, aElmID) {
-      const containerNode = getNode(aContainerID);
-      const container = getAccessible(containerNode);
+    function recreateRelatives(aContainerID, aLabelID, aElmID) {
+      this.containerNode = getNode(aContainerID);
+      this.container = getNode(this.containerNode);
 
-      testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
-      testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, this.container),
+        new invokerChecker(EVENT_SHOW, this.containerNode),
+      ];
 
-      let events = waitForEvents([
-        [EVENT_HIDE, container],
-        [EVENT_SHOW, containerNode],
-      ]);
-      containerNode.setAttribute('role', 'group');
-      await events;
+      this.invoke = function recreateRelatives_invoke() {
+        testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
+        testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
 
-      testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
-      testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
+        this.containerNode.setAttribute('role', 'group');
+      };
+
+      this.finalCheck = function recreateRelatives_finalCheck() {
+        testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
+        testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
+      };
+
+      this.getID = function recreateRelatives_getID() {
+        return "recreate relatives ";
+      };
     }
 
-    async function doTest() {
+    // gA11yEventDumpToConsole = true; // debug
+
+    var gQueue = null;
+
+    function doTest() {
       // Relation updates on ARIA attribute changes.
       testRelated("aria-labelledby",
                   RELATION_LABELLED_BY, RELATION_LABEL_FOR,
@@ -122,34 +141,35 @@
                   document, "body", "dependent1", "dependent2");
 
       // Insert related accessibles into tree.
-      await insertRelated("aria-labelledby", "dependent3", true,
-                          RELATION_LABELLED_BY, RELATION_LABEL_FOR);
-      await insertRelated("aria-labelledby", "dependent4", false,
-                          RELATION_LABELLED_BY, RELATION_LABEL_FOR);
+      gQueue = new eventQueue();
+      gQueue.push(new insertRelated("aria-labelledby", "dependent3", true,
+                                    RELATION_LABELLED_BY, RELATION_LABEL_FOR));
+      gQueue.push(new insertRelated("aria-labelledby", "dependent4", false,
+                                    RELATION_LABELLED_BY, RELATION_LABEL_FOR));
 
-      await insertRelated("aria-describedby", "dependent5", true,
-                          RELATION_DESCRIBED_BY,
-                          RELATION_DESCRIPTION_FOR);
-      await insertRelated("aria-describedby", "dependent6", false,
-                          RELATION_DESCRIBED_BY,
-                          RELATION_DESCRIPTION_FOR);
+      gQueue.push(new insertRelated("aria-describedby", "dependent5", true,
+                                    RELATION_DESCRIBED_BY,
+                                    RELATION_DESCRIPTION_FOR));
+      gQueue.push(new insertRelated("aria-describedby", "dependent6", false,
+                                    RELATION_DESCRIBED_BY,
+                                    RELATION_DESCRIPTION_FOR));
 
-      await insertRelated("aria-controls", "dependent9", true,
-                          RELATION_CONTROLLER_FOR,
-                          RELATION_CONTROLLED_BY);
-      await insertRelated("aria-controls", "dependent10", false,
-                          RELATION_CONTROLLER_FOR,
-                          RELATION_CONTROLLED_BY);
+      gQueue.push(new insertRelated("aria-controls", "dependent9", true,
+                                    RELATION_CONTROLLER_FOR,
+                                    RELATION_CONTROLLED_BY));
+      gQueue.push(new insertRelated("aria-controls", "dependent10", false,
+                                    RELATION_CONTROLLER_FOR,
+                                    RELATION_CONTROLLED_BY));
 
-      await insertRelated("aria-flowto", "dependent11", true,
-                          RELATION_FLOWS_TO, RELATION_FLOWS_FROM);
-      await insertRelated("aria-flowto", "dependent12", false,
-                          RELATION_FLOWS_TO, RELATION_FLOWS_FROM);
+      gQueue.push(new insertRelated("aria-flowto", "dependent11", true,
+                                    RELATION_FLOWS_TO, RELATION_FLOWS_FROM));
+      gQueue.push(new insertRelated("aria-flowto", "dependent12", false,
+                                    RELATION_FLOWS_TO, RELATION_FLOWS_FROM));
 
       // Update relations when accessibles are recreated
-      await recreateRelatives("container", "label", "input");
+      gQueue.push(new recreateRelatives("container", "label", "input"));
 
-      SimpleTest.finish();
+      gQueue.invoke(); // will call SimpleTest.finish()
     }
 
     SimpleTest.waitForExplicitFinish();

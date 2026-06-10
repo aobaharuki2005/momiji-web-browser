@@ -22,12 +22,9 @@ nsStreamListenerTee::OnStartRequest(nsIRequest* request) {
     mIsMultiPart = true;
   }
 
-  nsCOMPtr<nsIStreamListener> listener = mListener;
-  nsresult rv1 = listener->OnStartRequest(request);
+  nsresult rv1 = mListener->OnStartRequest(request);
   nsresult rv2 = NS_OK;
-  if (nsCOMPtr<nsIRequestObserver> observer = mObserver) {
-    rv2 = observer->OnStartRequest(request);
-  }
+  if (mObserver) rv2 = mObserver->OnStartRequest(request);
 
   // Preserve NS_SUCCESS_XXX in rv1 in case mObserver didn't throw
   return (NS_FAILED(rv2) && NS_SUCCEEDED(rv1)) ? rv2 : rv1;
@@ -35,7 +32,6 @@ nsStreamListenerTee::OnStartRequest(nsIRequest* request) {
 
 NS_IMETHODIMP
 nsStreamListenerTee::OnStopRequest(nsIRequest* request, nsresult status) {
-  nsresult rv;
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
   // it is critical that we close out the input stream tee
   if (mInputTee) {
@@ -53,15 +49,12 @@ nsStreamListenerTee::OnStopRequest(nsIRequest* request, nsresult status) {
     }
   }
 
-  {
-    nsCOMPtr<nsIStreamListener> listener = mListener;
-    rv = listener->OnStopRequest(request, status);
-    if (!mIsMultiPart) {
-      mListener = nullptr;
-    }
+  nsresult rv = mListener->OnStopRequest(request, status);
+  if (!mIsMultiPart) {
+    mListener = nullptr;
   }
-  if (nsCOMPtr<nsIRequestObserver> observer = mObserver) {
-    observer->OnStopRequest(request, status);
+  if (mObserver) {
+    mObserver->OnStopRequest(request, status);
     if (!mIsMultiPart) {
       mObserver = nullptr;
     }
@@ -97,8 +90,7 @@ nsStreamListenerTee::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
     tee = mInputTee;
   }
 
-  nsCOMPtr<nsIStreamListener> listener = mListener;
-  return listener->OnDataAvailable(request, tee, offset, count);
+  return mListener->OnDataAvailable(request, tee, offset, count);
 }
 
 NS_IMETHODIMP

@@ -14,10 +14,8 @@
 #import "RTCNativeVideoDecoder.h"
 #import "RTCNativeVideoDecoderBuilder+Native.h"
 #import "RTCVideoDecoderAV1.h"
-#import "api/peerconnection/RTCVideoCodecInfo+Private.h"
 #import "sdk/objc/base/RTCMacros.h"
 
-#include "api/video_codecs/sdp_video_format.h"
 #include "modules/video_coding/codecs/av1/dav1d_decoder.h"
 
 @interface RTC_OBJC_TYPE (RTCVideoDecoderAV1Builder)
@@ -27,13 +25,7 @@
     @implementation RTC_OBJC_TYPE (RTCVideoDecoderAV1Builder)
 
     - (std::unique_ptr<webrtc::VideoDecoder>)build:
-        (const webrtc::Environment &)env {
-      return webrtc::CreateDav1dDecoder(env);
-    }
-
-    - (std::unique_ptr<webrtc::VideoDecoder>)
-        buildWithEnvironment:(const webrtc::Environment &)env
-                      format:(const webrtc::SdpVideoFormat &)format {
+        (const webrtc::Environment&)env {
       return webrtc::CreateDav1dDecoder(env);
     }
 
@@ -43,11 +35,6 @@
 
     + (id<RTC_OBJC_TYPE(RTCVideoDecoder)>)av1Decoder {
       return [[RTC_OBJC_TYPE(RTCVideoDecoderAV1Builder) alloc] init];
-    }
-
-    + (NSArray<RTC_OBJC_TYPE(RTCVideoCodecInfo) *> *)supportedCodecs {
-      return @[ [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc]
-          initWithNativeSdpVideoFormat:webrtc::SdpVideoFormat::AV1Profile0()] ];
     }
 
     @end

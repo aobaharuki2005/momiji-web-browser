@@ -89,7 +89,7 @@ pub mod subtags;
 pub mod preferences;
 pub mod zerovec;
 
-#[cfg(all(feature = "alloc", feature = "serde"))]
+#[cfg(feature = "serde")]
 mod serde;
 
 #[cfg(feature = "databake")]

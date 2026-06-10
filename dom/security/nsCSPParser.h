@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCSPParser_h_
-#define nsCSPParser_h_
+#ifndef nsCSPParser_h___
+#define nsCSPParser_h___
 
 #include "PolicyTokenizer.h"
 #include "nsCSPContext.h"
@@ -39,7 +41,7 @@ const char16_t ATSYMBOL     = '@';
 class nsCSPParser {
  public:
   /**
-   * The CSP parser only has one main publicly accessible function, which is
+   * The CSP parser only has one publicly accessible function, which is
    * parseContentSecurityPolicy. Internally the input string is separated into
    * string tokens and policy() is called, which starts parsing the policy. The
    * parser calls one function after the other according the the source-list
@@ -53,12 +55,6 @@ class nsCSPParser {
                                                  nsCSPContext* aCSPContext,
                                                  bool aDeliveredViaMetaTag,
                                                  bool aSuppressLogMessages);
-
-  /**
-   * Check if given string is valid base64 as per CSP spec.
-   * https://w3c.github.io/webappsec-csp/#grammardef-base64-value
-   */
-  static bool isValidBase64Value(const nsAString& aValue);
 
  private:
   nsCSPParser(policyTokens& aTokens, nsIURI* aSelfURI,
@@ -227,4 +223,4 @@ class nsCSPParser {
   bool mSuppressLogMessages;
 };
 
-#endif /* nsCSPParser_h_ */
+#endif /* nsCSPParser_h___ */

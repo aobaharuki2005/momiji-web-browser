@@ -48,30 +48,23 @@
 //! let bv = s.into_bit_vec();
 //! assert!(bv[3]);
 //! ```
-#![doc(html_root_url = "https://docs.rs/bit-set/0.10.0/bit_set/")]
-#![deny(clippy::shadow_reuse)]
-#![deny(clippy::shadow_same)]
-#![deny(clippy::shadow_unrelated)]
+#![doc(html_root_url = "https://docs.rs/bit-set/0.8.0")]
 #![no_std]
+
+extern crate bit_vec;
+
+#[cfg(feature = "serde")]
+extern crate serde;
 
 #[cfg(any(test, feature = "std"))]
 extern crate std;
 
-pub use bit_vec::BitBlock;
-
-use bit_vec::{BitVec, Blocks};
+use bit_vec::{BitBlock, BitVec, Blocks};
 use core::cmp;
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash;
 use core::iter::{self, Chain, Enumerate, FromIterator, Repeat, Skip, Take};
-
-#[cfg(feature = "nanoserde")]
-extern crate alloc;
-#[cfg(feature = "nanoserde")]
-use alloc::vec::Vec;
-#[cfg(feature = "nanoserde")]
-use nanoserde::{DeBin, DeJson, DeRon, SerBin, SerJson, SerRon};
 
 type MatchWords<'a, B> = Chain<Enumerate<Blocks<'a, B>>, Skip<Take<Enumerate<Repeat<B>>>>>;
 
@@ -125,18 +118,6 @@ fn match_words<'a, 'b, B: BitBlock>(
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-#[cfg_attr(
-    feature = "borsh",
-    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
-)]
-#[cfg_attr(
-    feature = "miniserde",
-    derive(miniserde::Deserialize, miniserde::Serialize)
-)]
-#[cfg_attr(
-    feature = "nanoserde",
-    derive(DeBin, DeJson, DeRon, SerBin, SerJson, SerRon)
-)]
 pub struct BitSet<B = u32> {
     bit_vec: BitVec<B>,
 }
@@ -239,15 +220,20 @@ impl BitSet<u32> {
     /// # Examples
     ///
     /// ```
-    /// use bit_vec::BitVec;
-    /// use bit_set::BitSet;
+    /// extern crate bit_vec;
+    /// extern crate bit_set;
     ///
-    /// let bv = BitVec::from_bytes(&[0b01100000]);
-    /// let s = BitSet::from_bit_vec(bv);
+    /// fn main() {
+    ///     use bit_vec::BitVec;
+    ///     use bit_set::BitSet;
     ///
-    /// // Print 1, 2 in arbitrary order
-    /// for x in s.iter() {
-    ///     println!("{}", x);
+    ///     let bv = BitVec::from_bytes(&[0b01100000]);
+    ///     let s = BitSet::from_bit_vec(bv);
+    ///
+    ///     // Print 1, 2 in arbitrary order
+    ///     for x in s.iter() {
+    ///         println!("{}", x);
+    ///     }
     /// }
     /// ```
     #[inline]
@@ -263,64 +249,6 @@ impl BitSet<u32> {
 }
 
 impl<B: BitBlock> BitSet<B> {
-    /// Creates a new empty `BitSet`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bit_set::BitSet;
-    ///
-    /// let mut s = <BitSet>::new_general();
-    /// ```
-    #[inline]
-    pub fn new_general() -> Self {
-        Self::default()
-    }
-
-    /// Creates a new `BitSet` with initially no contents, able to
-    /// hold `nbits` elements without resizing.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bit_set::BitSet;
-    ///
-    /// let mut s = <BitSet>::with_capacity_general(100);
-    /// assert!(s.capacity() >= 100);
-    /// ```
-    #[inline]
-    pub fn with_capacity_general(nbits: usize) -> Self {
-        let bit_vec = BitVec::from_elem_general(nbits, false);
-        Self::from_bit_vec_general(bit_vec)
-    }
-
-    /// Creates a new `BitSet` from the given bit vector.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bit_vec::BitVec;
-    /// use bit_set::BitSet;
-    ///
-    /// let bv: BitVec<u64> = BitVec::from_bytes_general(&[0b01100000]);
-    /// let s = BitSet::from_bit_vec_general(bv);
-    ///
-    /// // Print 1, 2 in arbitrary order
-    /// for x in s.iter() {
-    ///     println!("{}", x);
-    /// }
-    /// ```
-    #[inline]
-    pub fn from_bit_vec_general(bit_vec: BitVec<B>) -> Self {
-        BitSet { bit_vec }
-    }
-
-    pub fn from_bytes_general(bytes: &[u8]) -> Self {
-        BitSet {
-            bit_vec: BitVec::from_bytes_general(bytes),
-        }
-    }
-
     /// Returns the capacity in bits for this bit vector. Inserting any
     /// element less than this amount will not trigger a resizing.
     ///
@@ -536,7 +464,7 @@ impl<B: BitBlock> BitSet<B> {
     /// }
     /// ```
     #[inline]
-    pub fn iter(&self) -> Iter<'_, B> {
+    pub fn iter(&self) -> Iter<B> {
         Iter(BlockIter::from_blocks(self.bit_vec.blocks()))
     }
 
@@ -857,21 +785,10 @@ impl<B: BitBlock> BitSet<B> {
         }
     */
 
-    /// Counts the number of set bits in this set.
-    ///
-    /// Note that this function scans the set to calculate the number.
+    /// Returns the number of set bits in this set.
     #[inline]
-    pub fn count(&self) -> usize {
-        self.bit_vec.blocks().fold(0, |acc, n| acc + n.count_ones())
-    }
-
-    /// Counts the number of set bits in this set.
-    ///
-    /// Note that this function scans the set to calculate the number.
-    #[inline]
-    #[deprecated = "use BitSet::count() instead"]
     pub fn len(&self) -> usize {
-        self.count()
+        self.bit_vec.blocks().fold(0, |acc, n| acc + n.count_ones())
     }
 
     /// Returns whether there are no bits set in this set
@@ -880,31 +797,10 @@ impl<B: BitBlock> BitSet<B> {
         self.bit_vec.none()
     }
 
-    /// Removes all elements of this set.
-    ///
-    /// Different from [`reset`] only in that the capacity is preserved.
-    ///
-    /// [`reset`]: Self::reset
-    #[inline]
-    pub fn make_empty(&mut self) {
-        self.bit_vec.fill(false);
-    }
-
-    /// Resets this set to an empty state.
-    ///
-    /// Different from [`make_empty`] only in that the capacity may NOT be preserved.
-    ///
-    /// [`make_empty`]: Self::make_empty
-    #[inline]
-    pub fn reset(&mut self) {
-        self.bit_vec.remove_all();
-    }
-
     /// Clears all bits in this set
-    #[deprecated(since = "0.9.0", note = "please use `fn make_empty` instead")]
     #[inline]
     pub fn clear(&mut self) {
-        self.make_empty();
+        self.bit_vec.clear();
     }
 
     /// Returns `true` if this set contains the specified integer.
@@ -976,14 +872,6 @@ impl<B: BitBlock> BitSet<B> {
 }
 
 impl<B: BitBlock> fmt::Debug for BitSet<B> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("BitSet")
-            .field("bit_vec", &self.bit_vec)
-            .finish()
-    }
-}
-
-impl<B: BitBlock> fmt::Display for BitSet<B> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_set().entries(self).finish()
     }
@@ -1084,7 +972,7 @@ where
     }
 }
 
-impl<B: BitBlock> Iterator for TwoBitPositions<'_, B> {
+impl<'a, B: BitBlock> Iterator for TwoBitPositions<'a, B> {
     type Item = B;
 
     fn next(&mut self) -> Option<B> {
@@ -1098,20 +986,19 @@ impl<B: BitBlock> Iterator for TwoBitPositions<'_, B> {
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let (first_lower_bound, first_upper_bound) = self.set.size_hint();
-        let (second_lower_bound, second_upper_bound) = self.other.size_hint();
+        let (a, au) = self.set.size_hint();
+        let (b, bu) = self.other.size_hint();
 
-        let upper_bound = first_upper_bound.zip(second_upper_bound);
+        let upper = match (au, bu) {
+            (Some(au), Some(bu)) => Some(cmp::max(au, bu)),
+            _ => None,
+        };
 
-        let get_max = |(a, b)| cmp::max(a, b);
-        (
-            cmp::max(first_lower_bound, second_lower_bound),
-            upper_bound.map(get_max),
-        )
+        (cmp::max(a, b), upper)
     }
 }
 
-impl<B: BitBlock> Iterator for Iter<'_, B> {
+impl<'a, B: BitBlock> Iterator for Iter<'a, B> {
     type Item = usize;
 
     #[inline]
@@ -1128,7 +1015,7 @@ impl<B: BitBlock> Iterator for Iter<'_, B> {
     }
 }
 
-impl<B: BitBlock> Iterator for Union<'_, B> {
+impl<'a, B: BitBlock> Iterator for Union<'a, B> {
     type Item = usize;
 
     #[inline]
@@ -1145,7 +1032,7 @@ impl<B: BitBlock> Iterator for Union<'_, B> {
     }
 }
 
-impl<B: BitBlock> Iterator for Intersection<'_, B> {
+impl<'a, B: BitBlock> Iterator for Intersection<'a, B> {
     type Item = usize;
 
     #[inline]
@@ -1172,7 +1059,7 @@ impl<B: BitBlock> Iterator for Intersection<'_, B> {
     }
 }
 
-impl<B: BitBlock> Iterator for Difference<'_, B> {
+impl<'a, B: BitBlock> Iterator for Difference<'a, B> {
     type Item = usize;
 
     #[inline]
@@ -1189,7 +1076,7 @@ impl<B: BitBlock> Iterator for Difference<'_, B> {
     }
 }
 
-impl<B: BitBlock> Iterator for SymmetricDifference<'_, B> {
+impl<'a, B: BitBlock> Iterator for SymmetricDifference<'a, B> {
     type Item = usize;
 
     #[inline]
@@ -1217,10 +1104,6 @@ impl<'a, B: BitBlock> IntoIterator for &'a BitSet<B> {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::shadow_reuse)]
-    #![allow(clippy::shadow_same)]
-    #![allow(clippy::shadow_unrelated)]
-
     use super::BitSet;
     use bit_vec::BitVec;
     use std::cmp::Ordering::{Equal, Greater, Less};
@@ -1228,27 +1111,13 @@ mod tests {
     use std::{format, vec};
 
     #[test]
-    fn test_bit_set_display() {
+    fn test_bit_set_show() {
         let mut s = BitSet::new();
         s.insert(1);
         s.insert(10);
         s.insert(50);
         s.insert(2);
-        assert_eq!("{1, 2, 10, 50}", format!("{}", s));
-    }
-
-    #[test]
-    fn test_bit_set_debug() {
-        let mut s = BitSet::new();
-        s.insert(1);
-        s.insert(10);
-        s.insert(50);
-        s.insert(2);
-        let expected = "BitSet { bit_vec: BitVec { storage: \
-        \"01100000001000000000000000000000 \
-        0000000000000000001\", nbits: 51 } }";
-        let actual = format!("{:?}", s);
-        assert_eq!(expected, actual);
+        assert_eq!("{1, 2, 10, 50}", format!("{:?}", s));
     }
 
     #[test]
@@ -1318,7 +1187,7 @@ mod tests {
         assert!(b.insert(400));
         assert!(!b.insert(400));
         assert!(b.contains(400));
-        assert_eq!(b.count(), 3);
+        assert_eq!(b.len(), 3);
     }
 
     #[test]
@@ -1474,8 +1343,8 @@ mod tests {
         let c = a.clone();
         a.union_with(&b);
         b.union_with(&c);
-        assert_eq!(a.count(), 4);
-        assert_eq!(b.count(), 4);
+        assert_eq!(a.len(), 4);
+        assert_eq!(b.len(), 4);
     }
 
     #[test]
@@ -1504,8 +1373,8 @@ mod tests {
         let c = a.clone();
         a.intersect_with(&b);
         b.intersect_with(&c);
-        assert_eq!(a.count(), 2);
-        assert_eq!(b.count(), 2);
+        assert_eq!(a.len(), 2);
+        assert_eq!(b.len(), 2);
     }
 
     #[test]
@@ -1528,8 +1397,8 @@ mod tests {
         let c = a.clone();
         a.difference_with(&b);
         b.difference_with(&c);
-        assert_eq!(a.count(), 1);
-        assert_eq!(b.count(), 1);
+        assert_eq!(a.len(), 1);
+        assert_eq!(b.len(), 1);
     }
 
     #[test]
@@ -1557,8 +1426,8 @@ mod tests {
         let c = a.clone();
         a.symmetric_difference_with(&b);
         b.symmetric_difference_with(&c);
-        assert_eq!(a.count(), 2);
-        assert_eq!(b.count(), 2);
+        assert_eq!(a.len(), 2);
+        assert_eq!(b.len(), 2);
     }
 
     #[test]
@@ -1595,31 +1464,31 @@ mod tests {
         // and this would end up actually growing the array in a way
         // that (safely corrupted the state).
         let mut a = BitSet::new();
-        assert_eq!(a.count(), 0);
+        assert_eq!(a.len(), 0);
         assert_eq!(a.capacity(), 0);
         a.shrink_to_fit();
-        assert_eq!(a.count(), 0);
+        assert_eq!(a.len(), 0);
         assert_eq!(a.capacity(), 0);
         assert!(!a.contains(1));
         a.insert(3);
         assert!(a.contains(3));
-        assert_eq!(a.count(), 1);
+        assert_eq!(a.len(), 1);
         assert!(a.capacity() > 0);
         a.shrink_to_fit();
         assert!(a.contains(3));
-        assert_eq!(a.count(), 1);
+        assert_eq!(a.len(), 1);
         assert!(a.capacity() > 0);
     }
 
     #[test]
     fn test_bit_set_shrink_to_fit() {
         let mut a = BitSet::new();
-        assert_eq!(a.count(), 0);
+        assert_eq!(a.len(), 0);
         assert_eq!(a.capacity(), 0);
         a.insert(259);
         a.insert(98);
         a.insert(3);
-        assert_eq!(a.count(), 3);
+        assert_eq!(a.len(), 3);
         assert!(a.capacity() > 0);
         assert!(!a.contains(1));
         assert!(a.contains(259));
@@ -1631,7 +1500,7 @@ mod tests {
         assert!(a.contains(259));
         assert!(a.contains(98));
         assert!(a.contains(3));
-        assert_eq!(a.count(), 3);
+        assert_eq!(a.len(), 3);
         assert!(a.capacity() > 0);
 
         let old_cap = a.capacity();
@@ -1642,12 +1511,12 @@ mod tests {
         assert!(!a.contains(259));
         assert!(a.contains(98));
         assert!(a.contains(3));
-        assert_eq!(a.count(), 2);
+        assert_eq!(a.len(), 2);
 
         let old_cap2 = a.capacity();
-        a.make_empty();
+        a.clear();
         assert_eq!(a.capacity(), old_cap2);
-        assert_eq!(a.count(), 0);
+        assert_eq!(a.len(), 0);
         assert!(!a.contains(1));
         assert!(!a.contains(259));
         assert!(!a.contains(98));
@@ -1655,7 +1524,7 @@ mod tests {
 
         a.insert(512);
         assert!(a.capacity() > 0);
-        assert_eq!(a.count(), 1);
+        assert_eq!(a.len(), 1);
         assert!(a.contains(512));
         assert!(!a.contains(1));
         assert!(!a.contains(259));
@@ -1665,7 +1534,7 @@ mod tests {
         a.remove(512);
         a.shrink_to_fit();
         assert_eq!(a.capacity(), 0);
-        assert_eq!(a.count(), 0);
+        assert_eq!(a.len(), 0);
         assert!(!a.contains(512));
         assert!(!a.contains(1));
         assert!(!a.contains(259));
@@ -1716,20 +1585,20 @@ mod tests {
         s.truncate(5 * 8);
 
         assert_eq!(s, BitSet::from_bytes(&bytes[..5]));
-        assert_eq!(s.count(), 5 * 8);
+        assert_eq!(s.len(), 5 * 8);
         s.truncate(4 * 8);
         assert_eq!(s, BitSet::from_bytes(&bytes[..4]));
-        assert_eq!(s.count(), 4 * 8);
+        assert_eq!(s.len(), 4 * 8);
         // Truncating to a size > s.len() should be a noop
         s.truncate(5 * 8);
         assert_eq!(s, BitSet::from_bytes(&bytes[..4]));
-        assert_eq!(s.count(), 4 * 8);
+        assert_eq!(s.len(), 4 * 8);
         s.truncate(8);
         assert_eq!(s, BitSet::from_bytes(&bytes[..1]));
-        assert_eq!(s.count(), 8);
+        assert_eq!(s.len(), 8);
         s.truncate(0);
         assert_eq!(s, BitSet::from_bytes(&[]));
-        assert_eq!(s.count(), 0);
+        assert_eq!(s.len(), 0);
     }
 
     #[cfg(feature = "serde")]
@@ -1744,53 +1613,6 @@ mod tests {
         let bset: BitSet = elems.iter().map(|n| *n).collect();
         let serialized = serde_json::to_string(&bset).unwrap();
         let unserialized = serde_json::from_str(&serialized).unwrap();
-        assert_eq!(bset, unserialized);
-    }
-
-    #[cfg(feature = "miniserde")]
-    #[test]
-    fn test_miniserde_serialization() {
-        let bset: BitSet = BitSet::new();
-        let serialized = miniserde::json::to_string(&bset);
-        let unserialized: BitSet = miniserde::json::from_str(&serialized[..]).unwrap();
-        assert_eq!(bset, unserialized);
-
-        let elems: Vec<usize> = vec![11, 42, 100, 101];
-        let bset: BitSet = elems.iter().map(|n| *n).collect();
-        let serialized = miniserde::json::to_string(&bset);
-        let unserialized = miniserde::json::from_str(&serialized[..]).unwrap();
-        assert_eq!(bset, unserialized);
-    }
-
-    #[cfg(feature = "nanoserde")]
-    #[test]
-    fn test_nanoserde_json_serialization() {
-        use nanoserde::{DeJson, SerJson};
-
-        let bset: BitSet = BitSet::new();
-        let serialized = bset.serialize_json();
-        let unserialized: BitSet = BitSet::deserialize_json(&serialized[..]).unwrap();
-        assert_eq!(bset, unserialized);
-
-        let elems: Vec<usize> = vec![11, 42, 100, 101];
-        let bset: BitSet = elems.iter().map(|n| *n).collect();
-        let serialized = bset.serialize_json();
-        let unserialized = BitSet::deserialize_json(&serialized[..]).unwrap();
-        assert_eq!(bset, unserialized);
-    }
-
-    #[cfg(feature = "borsh")]
-    #[test]
-    fn test_borsh_serialization() {
-        let bset: BitSet = BitSet::new();
-        let serialized = borsh::to_vec(&bset).unwrap();
-        let unserialized: BitSet = borsh::from_slice(&serialized[..]).unwrap();
-        assert_eq!(bset, unserialized);
-
-        let elems: Vec<usize> = vec![11, 42, 100, 101];
-        let bset: BitSet = elems.iter().map(|n| *n).collect();
-        let serialized = borsh::to_vec(&bset).unwrap();
-        let unserialized = borsh::from_slice(&serialized[..]).unwrap();
         assert_eq!(bset, unserialized);
     }
 

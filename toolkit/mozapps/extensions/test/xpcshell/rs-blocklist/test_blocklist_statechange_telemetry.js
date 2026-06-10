@@ -19,6 +19,10 @@ const { Downloader } = ChromeUtils.importESModule(
   "resource://services-settings/Attachments.sys.mjs"
 );
 
+const { TelemetryController } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryController.sys.mjs"
+);
+
 const ExtensionBlocklistMLBF = getExtensionBlocklistMLBF();
 
 const EXT_ID = "maybeblockme@tests.mozilla.org";
@@ -124,6 +128,7 @@ add_setup(async function setup() {
     // FOG needs to be initialized in order for data to flow.
     Services.fog.initializeFOG();
   }
+  await TelemetryController.testSetup();
 
   // Disable the packaged record and attachment to make sure that the test
   // will not fall back to the packaged attachments.

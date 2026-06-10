@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import functools
 import os
 import re
 import sys
@@ -11,6 +10,7 @@ from urllib.parse import quote, urlencode, urlunparse
 
 import requests
 import requests_unixsocket
+from mozbuild.util import memoize
 from taskgraph.util import json
 from taskgraph.util.yaml import load_yaml
 
@@ -166,7 +166,7 @@ def image_path(name):
     return os.path.join(IMAGE_DIR, name)
 
 
-@functools.cache
+@memoize
 def parse_volumes(image):
     """Parse VOLUME entries from a Dockerfile for an image."""
     volumes = set()

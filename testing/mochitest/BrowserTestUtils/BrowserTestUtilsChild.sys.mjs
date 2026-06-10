@@ -1,3 +1,4 @@
+/* vim: set ts=2 sw=2 sts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -322,7 +323,7 @@ export class BrowserTestUtilsChild extends JSWindowActorChild {
         // Account for nodes found in iframes.
         let cur = target;
         do {
-          // eslint-disable-next-line mozilla/use-documentGlobal
+          // eslint-disable-next-line mozilla/use-ownerGlobal
           let frame = cur.ownerDocument.defaultView.frameElement;
           let rect = frame.getBoundingClientRect();
 
@@ -346,12 +347,6 @@ export class BrowserTestUtilsChild extends JSWindowActorChild {
         left += rect.width / 2;
         top += rect.height / 2;
       }
-    } else {
-      dump(
-        `Target not found for selector ${data.target} ` +
-          `and targetFn ${data.targetFn} ` +
-          `in document ${this.document.documentURI}\n`
-      );
     }
 
     let result;
@@ -380,7 +375,7 @@ export class BrowserTestUtilsChild extends JSWindowActorChild {
         // Account for nodes found in iframes.
         let cur = target;
         do {
-          cur = cur.documentGlobal.frameElement;
+          cur = cur.ownerGlobal.frameElement;
         } while (cur && cur.ownerDocument !== this.document);
 
         // node must be in this document tree.

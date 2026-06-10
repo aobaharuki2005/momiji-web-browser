@@ -38,7 +38,7 @@ add_setup(function () {
 
 add_task(async function test_ignoreList() {
   Assert.ok(
-    !SearchService.isInitialized,
+    !Services.search.isInitialized,
     "Search service should not be initialized to begin with."
   );
 
@@ -73,7 +73,7 @@ add_task(async function test_ignoreList() {
     kSearchEngineID3,
   ]) {
     Assert.ok(
-      await SearchService.getEngineByName(engineName),
+      await Services.search.getEngineByName(engineName),
       `Engine ${engineName} should be present`
     );
   }
@@ -86,7 +86,7 @@ add_task(async function test_ignoreList() {
     kSearchEngineID3,
   ]) {
     Assert.equal(
-      await SearchService.getEngineByName(engineName),
+      await Services.search.getEngineByName(engineName),
       null,
       `Engine ${engineName} should not be present`
     );
@@ -94,8 +94,8 @@ add_task(async function test_ignoreList() {
 });
 
 add_task(async function test_correct_default_engine_change_reason() {
-  SearchService.reset();
-  await Promise.all([SearchService.init(), promiseAfterSettings()]);
+  Services.search.wrappedJSObject.reset();
+  await Promise.all([Services.search.init(), promiseAfterSettings()]);
 
   await SearchTestUtils.installSearchExtension(
     {
@@ -105,11 +105,11 @@ add_task(async function test_correct_default_engine_change_reason() {
     { setAsDefault: true }
   );
   Assert.ok(
-    await SearchService.getEngineByName(kSearchEngineID1),
+    await Services.search.getEngineByName(kSearchEngineID1),
     "Engine ignorelist_test_engine1 should be present"
   );
   Assert.equal(
-    await SearchService.getDefaultEngineInfo().defaultSearchEngine,
+    await Services.search.getDefaultEngineInfo().defaultSearchEngine,
     `other-${kSearchEngineID1}`,
     "Engine ignorelist_test_engine1 should be the default search engine"
   );
@@ -120,7 +120,7 @@ add_task(async function test_correct_default_engine_change_reason() {
 
   await simulateIgnoreListUpdate();
   Assert.equal(
-    await SearchService.getEngineByName(kSearchEngineID1),
+    await Services.search.getEngineByName(kSearchEngineID1),
     null,
     "Engine ignorelist_test_engine1 should not be present"
   );

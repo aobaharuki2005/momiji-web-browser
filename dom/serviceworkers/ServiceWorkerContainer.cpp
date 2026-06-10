@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -124,11 +126,12 @@ using mozilla::dom::ipc::StructuredCloneData;
 // incoming messages and as an interface to DispatchMessage().
 struct MOZ_HEAP_CLASS ServiceWorkerContainer::ReceivedMessage {
   explicit ReceivedMessage(const ClientPostMessageArgs& aArgs)
-      : mServiceWorker(aArgs.serviceWorker()),
-        mClonedData(aArgs.clonedData()) {}
+      : mServiceWorker(aArgs.serviceWorker()) {
+    mClonedData.CopyFromClonedMessageData(aArgs.clonedData());
+  }
 
   ServiceWorkerDescriptor mServiceWorker;
-  NotNull<RefPtr<StructuredCloneData>> mClonedData;
+  StructuredCloneData mClonedData;
 
   NS_INLINE_DECL_REFCOUNTING(ReceivedMessage)
 
@@ -289,7 +292,7 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
     AutoTArray<nsString, 1> param;
     CopyUTF8toUTF16(cleanedScopeURL, *param.AppendElement());
     aGlobal->ReportToConsole(nsIScriptError::errorFlag, "Service Workers"_ns,
-                             PropertiesFile::DOM_PROPERTIES,
+                             nsContentUtils::eDOM_PROPERTIES,
                              "ServiceWorkerRegisterStorageError"_ns, param);
   });
 
@@ -364,7 +367,7 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistrations(
     ErrorResult& aRv) {
   nsIGlobalObject* global = GetGlobalIfValid(aRv, [](nsIGlobalObject* aGlobal) {
     aGlobal->ReportToConsole(nsIScriptError::errorFlag, "Service Workers"_ns,
-                             PropertiesFile::DOM_PROPERTIES,
+                             nsContentUtils::eDOM_PROPERTIES,
                              "ServiceWorkerGetRegistrationStorageError"_ns);
   });
   if (aRv.Failed()) {
@@ -449,7 +452,7 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistration(
     const nsAString& aURL, ErrorResult& aRv) {
   nsIGlobalObject* global = GetGlobalIfValid(aRv, [](nsIGlobalObject* aGlobal) {
     aGlobal->ReportToConsole(nsIScriptError::errorFlag, "Service Workers"_ns,
-                             PropertiesFile::DOM_PROPERTIES,
+                             nsContentUtils::eDOM_PROPERTIES,
                              "ServiceWorkerGetRegistrationStorageError"_ns);
   });
   if (aRv.Failed()) {
@@ -615,7 +618,7 @@ Promise* ServiceWorkerContainer::GetReady(ErrorResult& aRv) {
 nsIGlobalObject* ServiceWorkerContainer::GetGlobalIfValid(
     ErrorResult& aRv,
     const std::function<void(nsIGlobalObject*)>&& aStorageFailureCB) const {
-  nsIGlobalObject* global = GetRelevantGlobal();
+  nsIGlobalObject* global = GetOwnerGlobal();
   if (NS_WARN_IF(!global)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -657,7 +660,7 @@ void ServiceWorkerContainer::EnqueueReceivedMessageDispatch(
 
 template <typename F>
 void ServiceWorkerContainer::RunWithJSContext(F&& aCallable) {
-  nsCOMPtr<nsIGlobalObject> globalObject = GetRelevantGlobal();
+  nsCOMPtr<nsIGlobalObject> globalObject = GetOwnerGlobal();
 
   // If AutoJSAPI::Init() fails then either global is nullptr or not
   // in a usable state.
@@ -681,17 +684,19 @@ void ServiceWorkerContainer::DispatchMessage(RefPtr<ReceivedMessage> aMessage) {
   // not, we'd fail to initialize the JS API and exit.
   RunWithJSContext([this, message = std::move(aMessage)](
                        JSContext* const aCx, nsIGlobalObject* const aGlobal) {
+    ErrorResult result;
     bool deserializationFailed = false;
     RootedDictionary<MessageEventInit> init(aCx);
-    auto res = FillInMessageEventInit(aCx, aGlobal, *message, init);
+    auto res = FillInMessageEventInit(aCx, aGlobal, *message, init, result);
     if (res.isErr()) {
       deserializationFailed = res.unwrapErr();
       MOZ_ASSERT_IF(deserializationFailed, init.mData.isNull());
       MOZ_ASSERT_IF(deserializationFailed, init.mPorts.IsEmpty());
       MOZ_ASSERT_IF(deserializationFailed, !init.mOrigin.IsEmpty());
       MOZ_ASSERT_IF(deserializationFailed, !init.mSource.IsNull());
+      result.SuppressException();
 
-      if (!deserializationFailed) {
+      if (!deserializationFailed && result.MaybeSetPendingException(aCx)) {
         return;
       }
     }
@@ -700,7 +705,11 @@ void ServiceWorkerContainer::DispatchMessage(RefPtr<ReceivedMessage> aMessage) {
         this, deserializationFailed ? u"messageerror"_ns : u"message"_ns, init);
     event->SetTrusted(true);
 
-    DispatchEvent(*event, IgnoreErrors());
+    result = NS_OK;
+    DispatchEvent(*event, result);
+    if (result.Failed()) {
+      result.SuppressException();
+    }
   });
 }
 
@@ -732,7 +741,7 @@ nsresult FillInOriginNoSuffix(const ServiceWorkerDescriptor& aServiceWorker,
 
 Result<Ok, bool> ServiceWorkerContainer::FillInMessageEventInit(
     JSContext* const aCx, nsIGlobalObject* const aGlobal,
-    ReceivedMessage& aMessage, MessageEventInit& aInit) {
+    ReceivedMessage& aMessage, MessageEventInit& aInit, ErrorResult& aRv) {
   // Determining the source and origin should preceed attempting deserialization
   // because on a "messageerror" event (i.e. when deserialization fails), the
   // dispatched message needs to contain such an origin and source, per spec:
@@ -754,16 +763,15 @@ Result<Ok, bool> ServiceWorkerContainer::FillInMessageEventInit(
     return Err(false);
   }
 
-  IgnoredErrorResult readError;
   JS::Rooted<JS::Value> messageData(aCx);
-  aMessage.mClonedData->Read(aCx, &messageData, readError);
-  if (readError.Failed()) {
+  aMessage.mClonedData.Read(aCx, &messageData, aRv);
+  if (aRv.Failed()) {
     return Err(true);
   }
 
   aInit.mData = messageData;
 
-  if (!aMessage.mClonedData->TakeTransferredPortsAsSequence(aInit.mPorts)) {
+  if (!aMessage.mClonedData.TakeTransferredPortsAsSequence(aInit.mPorts)) {
     xpc::Throw(aCx, NS_ERROR_OUT_OF_MEMORY);
     return Err(false);
   }

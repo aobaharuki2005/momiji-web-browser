@@ -31,33 +31,36 @@ export class ContentDelegateParent extends GeckoViewActorParent {
       }
 
       case "GeckoView:DOMMetaViewportFit": {
-        return this.eventDispatcher.sendRequest(
-          "GeckoView:DOMMetaViewportFit",
-          { viewportfit: aMsg.data }
-        );
+        return this.eventDispatcher.sendRequest({
+          viewportfit: aMsg.data,
+          type: "GeckoView:DOMMetaViewportFit",
+        });
       }
 
       case "GeckoView:ContextMenu": {
-        return this.eventDispatcher.sendRequest(
-          "GeckoView:ContextMenu",
-          aMsg.data
-        );
+        return this.eventDispatcher.sendRequest({
+          ...aMsg.data,
+          type: "GeckoView:ContextMenu",
+        });
       }
 
       case "GeckoView:WebAppManifest": {
-        return this.eventDispatcher.sendRequest("GeckoView:WebAppManifest", {
+        return this.eventDispatcher.sendRequest({
           manifest: aMsg.data,
+          type: "GeckoView:WebAppManifest",
         });
       }
 
       case "GeckoView:FirstContentfulPaint": {
-        return this.eventDispatcher.sendRequest(
-          "GeckoView:FirstContentfulPaint"
-        );
+        return this.eventDispatcher.sendRequest({
+          type: "GeckoView:FirstContentfulPaint",
+        });
       }
 
       case "GeckoView:PaintStatusReset": {
-        return this.eventDispatcher.sendRequest("GeckoView:PaintStatusReset");
+        return this.eventDispatcher.sendRequest({
+          type: "GeckoView:PaintStatusReset",
+        });
       }
     }
 

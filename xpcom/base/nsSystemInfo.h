@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NSSYSTEMINFO_H_
-#define NSSYSTEMINFO_H_
+#ifndef _NSSYSTEMINFO_H_
+#define _NSSYSTEMINFO_H_
 
 #include "nsHashPropertyBag.h"
 #include "nsISystemInfo.h"
@@ -124,4 +126,4 @@ class nsSystemInfo final : public nsISystemInfo, public nsHashPropertyBag {
 #define NS_SYSTEMINFO_CID \
   {0xd962398a, 0x99e5, 0x49b2, {0x85, 0x7a, 0xc1, 0x59, 0x04, 0x9c, 0x7f, 0x6c}}
 
-#endif /* NSSYSTEMINFO_H_ */
+#endif /* _NSSYSTEMINFO_H_ */

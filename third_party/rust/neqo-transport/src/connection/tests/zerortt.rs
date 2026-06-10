@@ -7,16 +7,16 @@
 use std::{cell::RefCell, rc::Rc, time::Duration};
 
 use neqo_common::{event::Provider as _, qdebug};
-use nss::{AllowZeroRtt, AntiReplay};
+use neqo_crypto::{AllowZeroRtt, AntiReplay};
 use test_fixture::{assertions, now};
 
 use super::{
-    super::Connection, CountingConnectionIdGenerator, Output, connect, default_client,
-    default_server, exchange_ticket, new_server, resumed_server,
+    super::Connection, connect, default_client, default_server, exchange_ticket, new_server,
+    resumed_server, CountingConnectionIdGenerator, Output,
 };
 use crate::{
-    ConnectionParameters, Error, MIN_INITIAL_PACKET_SIZE, StreamType, Version,
-    events::ConnectionEvent,
+    events::ConnectionEvent, ConnectionParameters, Error, StreamType, Version,
+    MIN_INITIAL_PACKET_SIZE,
 };
 
 #[test]

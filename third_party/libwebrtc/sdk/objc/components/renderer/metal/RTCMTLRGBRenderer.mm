@@ -57,7 +57,7 @@ static NSString *const shaderSource = MTL_STRINGIFY(
       return out;
     });
 
-@implementation RTC_OBJC_TYPE (RTCMTLRGBRenderer) {
+@implementation RTCMTLRGBRenderer {
   // Textures.
   CVMetalTextureCacheRef _textureCache;
   id<MTLTexture> _texture;

@@ -15,9 +15,11 @@
 
 #include <cstddef>
 #include <memory>
-#include <span>
+#include <optional>
 #include <vector>
 
+#include "api/array_view.h"
+#include "api/video/video_codec_type.h"
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 
 namespace webrtc {
@@ -34,18 +36,10 @@ class RtpPacketizer {
     int single_packet_reduction_len = 0;
   };
 
-  enum class PacketizationFormat {
-    kGeneric,
-    kRaw,
-    kH264,
-    kH265,
-    kVP8,
-    kVP9,
-    kAV1,
-  };
+  // If type is not set, returns a raw packetizer.
   static std::unique_ptr<RtpPacketizer> Create(
-      PacketizationFormat format,
-      std::span<const uint8_t> payload,
+      std::optional<VideoCodecType> type,
+      ArrayView<const uint8_t> payload,
       PayloadSizeLimits limits,
       // Codec-specific details.
       const RTPVideoHeader& rtp_video_header);

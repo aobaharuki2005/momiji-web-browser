@@ -13,7 +13,7 @@ info: |
     ...
     c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray, array-find-from-last]
 ---*/
 
@@ -21,8 +21,8 @@ var predicate = function() {
   throw new Test262Error();
 };
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg(1));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA(1);
   assert.throws(Test262Error, function() {
     sample.findLastIndex(predicate);
   });

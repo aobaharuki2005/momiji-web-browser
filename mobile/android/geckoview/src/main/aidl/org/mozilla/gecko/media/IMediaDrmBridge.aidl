@@ -24,6 +24,4 @@ interface IMediaDrmBridge {
     oneway void release();
 
     void setServerCertificate(in byte[] cert);
-
-    void setOriginID(String originID);
 }

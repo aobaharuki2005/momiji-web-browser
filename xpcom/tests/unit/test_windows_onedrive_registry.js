@@ -1,3 +1,6 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,15 +9,11 @@
 // Each "test suite" is a set of tests run on a specific registry
 // configuration.
 // NB: None of these files will actually exist.
-const customerId = "12345";
-
 const testSuites = [
   {
     registryMap: {
       "HKEY_CURRENT_USER\\Software\\Microsoft\\OneDrive\\Accounts\\Personal\\UserFolder":
         "Q:\\Me\\OneDrive",
-      "HKEY_CURRENT_USER\\Software\\Microsoft\\OneDrive\\Accounts\\Personal\\cid":
-        customerId,
     },
     personalFolder: "Q:\\Me\\OneDrive",
     businessFolders: [],
@@ -31,8 +30,6 @@ const testSuites = [
     registryMap: {
       "HKEY_CURRENT_USER\\Software\\Microsoft\\OneDrive\\Accounts\\Personal\\UserFolder":
         "Q:\\Me\\OneDrive - Personal",
-      "HKEY_CURRENT_USER\\Software\\Microsoft\\OneDrive\\Accounts\\Personal\\cid":
-        customerId,
       "HKEY_CURRENT_USER\\Software\\Microsoft\\OneDrive\\Accounts\\Business5\\UserFolder":
         "Q:\\Me\\OneDrive - Org1",
       "HKEY_CURRENT_USER\\Software\\Microsoft\\OneDrive\\Accounts\\Business6\\UserFolder":
@@ -75,8 +72,7 @@ let mockRegistry = {
     currentRegistryPath = "HKEY_CURRENT_USER\\" + path;
   },
   hasValue: value => {
-    const allowedKeys = new Set(["UserFolder", "cid"]);
-    Assert.ok(allowedKeys.has(value), `value is ${value}`);
+    Assert.equal(value, "UserFolder", "value is UserFolder");
     return currentRegistryPath + "\\" + value in currentRegistryContents;
   },
   readStringValue: value => {

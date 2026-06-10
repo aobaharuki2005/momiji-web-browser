@@ -73,7 +73,7 @@ else
   hg revert -C third_party/libwebrtc/README.mozilla.last-vendor &> /dev/null
 fi
 
-# check for a resume situation from fast_forward_libwebrtc.py
+# check for a resume situation from fast-forward-libwebrtc.sh
 RESUME_FILE=$STATE_DIR/fast_forward.resume
 RESUME=""
 if [ -f $RESUME_FILE ]; then
@@ -114,7 +114,7 @@ in bash:
 You may resume running this script with the following command:
     bash $SCRIPT_DIR/loop-ff.sh
 "
-# if we're not in the resume situation from fast_forward_libwebrtc.py
+# if we're not in the resume situation from fast-forward-libwebrtc.sh
 if [ "x$RESUME" = "x" ]; then
   # start off by verifying the vendoring process to make sure no changes have
   # been added to elm to fix bugs.
@@ -145,28 +145,8 @@ echo_log "Commits remaining: $COMMITS_REMAINING"
 
 echo "Before revert detection, SKIP_NEXT_REVERT_CHK: '$SKIP_NEXT_REVERT_CHK'" 2>&1| tee -a $LOOP_OUTPUT_LOG
 echo "Before revert detection, RESUME: '$RESUME'" 2>&1| tee -a $LOOP_OUTPUT_LOG
-if [ "x$MOZ_REPO" == "xgit" ]; then
-  CLEANUP_CMDS="git restore --staged third_party/libwebrtc && git restore third_party/libwebrtc && git clean -f third_party/libwebrtc"
-else
-  CLEANUP_CMDS="hg revert third_party/libwebrtc && hg purge third_party/libwebrtc"
-fi
 ERROR_HELP=$"Some portion of the detection and/or fixing of upstream revert commits
-has failed.  This is usually a result of too many changes in the same file
-between the original commit and the upstream revert commit.  There are two
-common ways forward:
-  1: Fix the state of the libwebrtc repo so that it matches the expected
-     patch stack.  For more information what to expect for the patch stack,
-     please see https://searchfox.org/firefox-main/rev/9233846aa396b6974783199e1bfe3a38473fc518/dom/media/webrtc/third_party_build/make_upstream_revert_noop.sh#3-21
-     The libwebrtc repo is here: $MOZ_LIBWEBRTC_SRC
-  2: Run the following commands to revert the state of the libwebrtc repo
-     and temporarily disable the upstream revert commit processing:
-     $CLEANUP_CMDS ; \\
-     (source dom/media/webrtc/third_party_build/use_config_env.sh ; \\
-      rm \$STATE_DIR/*.resume ; \\
-      ./mach python \$SCRIPT_DIR/restore_patch_stack.py \\
-                    --repo-path \$MOZ_LIBWEBRTC_SRC && \\
-      MOZ_ADVANCE_ONE_COMMIT=1 SKIP_NEXT_REVERT_CHK=1 bash \$SCRIPT_DIR/loop-ff.sh \\
-     )
+has failed.  Please fix the state of the git hub repo at: $MOZ_LIBWEBRTC_SRC.
 When fixed, please resume this script with the following command:
     bash $SCRIPT_DIR/loop-ff.sh
 "
@@ -186,17 +166,7 @@ if [ -f $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
 fi
 
 echo_log "Moving from moz-libwebrtc commit $MOZ_LIBWEBRTC_BASE to $MOZ_LIBWEBRTC_NEXT_BASE"
-./mach python $SCRIPT_DIR/fast_forward_libwebrtc.py \
-    --commit-bug-number $MOZ_FASTFORWARD_BUG \
-    --branch $MOZ_LIBWEBRTC_BRANCH \
-    --log-path $LOG_DIR \
-    --target-branch-head $MOZ_TARGET_UPSTREAM_BRANCH_HEAD \
-    --repo-path $MOZ_LIBWEBRTC_SRC \
-    --state-path $STATE_DIR \
-    --tmp-path $TMP_DIR \
-    --script-path $SCRIPT_DIR \
-    --target-path third_party/libwebrtc 2>&1| tee -a $LOOP_OUTPUT_LOG
-
+bash $SCRIPT_DIR/fast-forward-libwebrtc.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 
 if [ "x$MOZ_REPO" == "xgit" ]; then
   MOZ_CHANGED=`git show --format='' --name-status \

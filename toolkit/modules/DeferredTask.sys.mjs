@@ -1,3 +1,5 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80 filetype=javascript: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -78,10 +80,6 @@ const Timer = Components.Constructor(
  *   saveDeferredTask.disarm();
  *   saveDeferredTask.finalize().then(() => OS.File.remove(...))
  *                              .then(null, Components.utils.reportError);
- *
- * When the caller is in a window global (inferred from the global to which the
- * task callback belongs to), the task silently stops running when that
- * window unloads.
  */
 export class DeferredTask {
   /**
@@ -116,14 +114,6 @@ export class DeferredTask {
       { captureStack: true },
       markerString
     );
-
-    let win = Cu.getGlobalForObject(taskFn);
-    if (Window.isInstance(win)) {
-      // Store the window global when the caller is a window global, to enable
-      // us to use window-specific timers and task queues. This enables the
-      // task to automatically be canceled upon unload of its document.
-      this.#windowGlobalWeakRef = Cu.getWeakReference(win);
-    }
   }
 
   /**
@@ -147,29 +137,6 @@ export class DeferredTask {
    * The name of the caller that created the deferred task.
    */
   #caller;
-
-  /**
-   * A weak reference to the window global of #taskFn, if any. Constant after
-   * assignment in the constructor. This enables consistent window-specific
-   * logic across the lifetime of the class (without falling back to non-window
-   * task scheduling), even if the weak reference is unexpectedly cleared.
-   *
-   * Since the global is derived from #taskFn, and that function's closure
-   * includes the window global, we expect this weak reference to remain valid
-   * for the lifetime of this class instance, until finalize() is called.
-   *
-   * @type {nsIWeakReference|undefined}
-   */
-  #windowGlobalWeakRef;
-
-  /**
-   * The window associated with the task, if the caller is in a window.
-   *
-   * @type {Window|undefined|null}
-   */
-  get #windowGlobal() {
-    return this.#windowGlobalWeakRef?.get();
-  }
 
   /**
    * Indicates whether the task is currently requested to start again later,
@@ -203,9 +170,7 @@ export class DeferredTask {
    * nsITimer used for triggering the task after a delay, or null in case the
    * task is running or there is no task scheduled for execution.
    *
-   * Or the return value of #windowGlobal.setTimeout, if #windowGlobal is set.
-   *
-   * @type {nsITimer|number|null}
+   * @type {nsITimer|null}
    */
   #timer = null;
 
@@ -229,14 +194,7 @@ export class DeferredTask {
         }, this._idleTimeoutMs);
       };
     }
-    if (this.#windowGlobalWeakRef) {
-      // #windowGlobal is not expected to be null, but if it is, we prefer to
-      // throw an error over falling back to nsITimer or ignoring it silently.
-      // When the window unloads, the timer is automatically canceled.
-      timer = this.#windowGlobal.setTimeout(callback, this.#delayMs);
-    } else {
-      timer = new Timer(callback, this.#delayMs, Ci.nsITimer.TYPE_ONE_SHOT);
-    }
+    timer = new Timer(callback, this.#delayMs, Ci.nsITimer.TYPE_ONE_SHOT);
     this.#timer = timer;
   }
 
@@ -247,13 +205,7 @@ export class DeferredTask {
    * @param {number} timeout
    */
   _startIdleDispatch(callback, timeout) {
-    if (this.#windowGlobalWeakRef) {
-      // We use #windowGlobal.requestIdleCallback to make sure that upon window
-      // unload, the callback is automatically canceled.
-      this.#windowGlobal.requestIdleCallback(callback, { timeout });
-    } else {
-      ChromeUtils.idleDispatch(callback, { timeout });
-    }
+    ChromeUtils.idleDispatch(callback, { timeout });
   }
 
   /**
@@ -299,14 +251,10 @@ export class DeferredTask {
   disarm() {
     this.#armed = false;
     if (this.#timer) {
-      if (this.#windowGlobalWeakRef) {
-        this.#windowGlobal.clearTimeout(this.#timer);
-      } else {
-        // Calling the "cancel" method and discarding the timer reference makes
-        // sure that the timer callback will not be called later, even if the
-        // timer thread has already posted the timer event on the main thread.
-        this.#timer.cancel();
-      }
+      // Calling the "cancel" method and discarding the timer reference makes
+      // sure that the timer callback will not be called later, even if the
+      // timer thread has already posted the timer event on the main thread.
+      this.#timer.cancel();
       this.#timer = null;
     }
   }
@@ -345,10 +293,8 @@ export class DeferredTask {
 
     // Wait for the operation to be completed, or resolve immediately.
     if (this._runningPromise) {
-      this._runningPromise.then(() => this.#releaseTaskCallback());
       return this._runningPromise;
     }
-    this.#releaseTaskCallback();
     return Promise.resolve();
   }
   #finalized = false;
@@ -417,12 +363,5 @@ export class DeferredTask {
         this.#caller
       );
     }
-  }
-
-  #releaseTaskCallback() {
-    this.#taskFn = null;
-    // Note: #windowGlobalWeakRef is not cleared. It is a weak ref anyway, and
-    // keeping the object guarantees that we will never inadvertently fall back
-    // to the non-window-specific task scheduling implementation.
   }
 }

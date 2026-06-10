@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et ft=cpp : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -91,13 +93,9 @@ CamerasChild* GetCamerasChild() {
   return CamerasSingleton::Child();
 }
 
-void CamerasChild::RemoveCallbackIfExists(int capture_id) {
-  // Lock order: CamerasSingleton::Mutex -> mCallbackMutex (same as
-  // GetChildAndCall -> StartCapture -> AddCallback).
+CamerasChild* GetCamerasChildIfExists() {
   OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
-  if (CamerasChild* child = CamerasSingleton::Child()) {
-    child->RemoveCallback(capture_id);
-  }
+  return CamerasSingleton::Child();
 }
 
 mozilla::ipc::IPCResult CamerasChild::RecvReplyFailure(void) {
@@ -398,11 +396,6 @@ void CamerasChild::RemoveCallback(const int capture_id) {
   }
 }
 
-void CamerasChild::ClearAllCallbacks() {
-  MutexAutoLock lock(mCallbackMutex);
-  mCallbacks.Clear();
-}
-
 int CamerasChild::StartCapture(CaptureEngine aCapEngine, const int capture_id,
                                const webrtc::VideoCaptureCapability& webrtcCaps,
                                const NormalizedConstraints& constraints,
@@ -410,9 +403,9 @@ int CamerasChild::StartCapture(CaptureEngine aCapEngine, const int capture_id,
                                FrameRelay* cb) {
   LOG(("%s", __PRETTY_FUNCTION__));
   AddCallback(capture_id, cb);
-  VideoCaptureCapability capCap(webrtcCaps.width, webrtcCaps.height,
-                                webrtcCaps.maxFPS, webrtcCaps.videoType,
-                                webrtcCaps.interlaced);
+  VideoCaptureCapability capCap(
+      webrtcCaps.width, webrtcCaps.height, webrtcCaps.maxFPS,
+      static_cast<int>(webrtcCaps.videoType), webrtcCaps.interlaced);
   nsCOMPtr<nsIRunnable> runnable =
       mozilla::NewRunnableMethod<CaptureEngine, int, VideoCaptureCapability,
                                  NormalizedConstraints,
@@ -422,9 +415,6 @@ int CamerasChild::StartCapture(CaptureEngine aCapEngine, const int capture_id,
           constraints, resize_mode);
   LockAndDispatch<> dispatcher(this, __func__, runnable, kError, kIpcError,
                                kSuccess);
-  if (!dispatcher.Success()) {
-    RemoveCallback(capture_id);
-  }
   return dispatcher.ReturnValue();
 }
 
@@ -485,7 +475,6 @@ void Shutdown(void) {
     LOG(("Shutdown when already shut down"));
     return;
   }
-  child->ClearAllCallbacks();
   if (CamerasSingleton::Thread()) {
     LOG(("PBackground thread exists, dispatching close"));
     // The IPC thread is shut down on the main thread after the

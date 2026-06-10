@@ -6,11 +6,11 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 #[cfg(not(target_os = "hermit"))]
-use std::os::fd::RawFd;
+use std::os::fd::{AsRawFd, RawFd};
 // TODO: once <https://github.com/rust-lang/rust/issues/126198> is fixed this
 // can use `std::os::fd` and be merged with the above.
 #[cfg(target_os = "hermit")]
-use std::os::hermit::io::RawFd;
+use std::os::hermit::io::{AsRawFd, RawFd};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
@@ -61,7 +61,6 @@ impl Selector {
         self.state.register_internal(fd, token, interests)
     }
 
-    cfg_any_os_ext! {
     pub fn reregister(&self, fd: RawFd, token: Token, interests: Interest) -> io::Result<()> {
         self.state.reregister(fd, token, interests)
     }
@@ -69,9 +68,7 @@ impl Selector {
     pub fn deregister(&self, fd: RawFd) -> io::Result<()> {
         self.state.deregister(fd)
     }
-    }
 
-    #[cfg(not(target_os = "wasi"))]
     pub fn wake(&self, token: Token) -> io::Result<()> {
         self.state.wake(token)
     }
@@ -168,15 +165,11 @@ impl SelectorState {
 
         Ok(Self {
             fds: Mutex::new(Fds {
-                poll_fds: if let Some(fd) = notify_waker.fd() {
-                    vec![PollFd(libc::pollfd {
-                        fd,
-                        events: libc::POLLIN,
-                        revents: 0,
-                    })]
-                } else {
-                    Vec::new()
-                },
+                poll_fds: vec![PollFd(libc::pollfd {
+                    fd: notify_waker.as_raw_fd(),
+                    events: libc::POLLIN,
+                    revents: 0,
+                })],
                 fd_data: HashMap::new(),
             }),
             pending_removal: Mutex::new(Vec::new()),
@@ -189,7 +182,7 @@ impl SelectorState {
         })
     }
 
-    pub fn select(&self, events: &mut Events, mut timeout: Option<Duration>) -> io::Result<()> {
+    pub fn select(&self, events: &mut Events, timeout: Option<Duration>) -> io::Result<()> {
         events.clear();
 
         let mut fds = self.fds.lock().unwrap();
@@ -210,10 +203,6 @@ impl SelectorState {
                 fds = self.operations_complete.wait(fds).unwrap();
             }
 
-            if self.notify_waker.woken() {
-                timeout = Some(Duration::from_secs(0))
-            }
-
             // Perform the poll.
             trace!("Polling on {:?}", &fds);
             let num_events = poll(&mut fds.poll_fds, timeout)?;
@@ -223,18 +212,9 @@ impl SelectorState {
                 return Ok(());
             }
 
-            let waker_events;
-            let notified;
-            let mut num_fd_events;
-            if self.notify_waker.fd().is_some() {
-                waker_events = fds.poll_fds[0].0.revents;
-                notified = waker_events != 0;
-                num_fd_events = if notified { num_events - 1 } else { num_events }
-            } else {
-                waker_events = 0;
-                notified = self.notify_waker.woken();
-                num_fd_events = num_events;
-            };
+            let waker_events = fds.poll_fds[0].0.revents;
+            let notified = waker_events != 0;
+            let mut num_fd_events = if notified { num_events - 1 } else { num_events };
 
             let pending_wake_token = self.pending_wake_token.lock().unwrap().take();
 
@@ -321,8 +301,8 @@ impl SelectorState {
         token: Token,
         interests: Interest,
     ) -> io::Result<Arc<RegistrationRecord>> {
-        #[cfg(all(debug_assertions, not(target_os = "wasi")))]
-        if Some(fd) == self.notify_waker.fd() {
+        #[cfg(debug_assertions)]
+        if fd == self.notify_waker.as_raw_fd() {
             return Err(io::Error::from(io::ErrorKind::InvalidInput));
         }
 
@@ -374,7 +354,6 @@ impl SelectorState {
         })
     }
 
-    cfg_any_os_ext! {
     pub fn reregister(&self, fd: RawFd, token: Token, interests: Interest) -> io::Result<()> {
         self.modify_fds(|fds| {
             let data = fds.fd_data.get_mut(&fd).ok_or(io::ErrorKind::NotFound)?;
@@ -390,7 +369,6 @@ impl SelectorState {
         self.deregister_all(&[fd])
             .map_err(|_| io::ErrorKind::NotFound)?;
         Ok(())
-    }
     }
 
     /// Perform a modification on `fds`, interrupting the current caller of `wait` if it's running.
@@ -455,7 +433,6 @@ impl SelectorState {
         })
     }
 
-    #[cfg(not(target_os = "wasi"))]
     pub fn wake(&self, token: Token) -> io::Result<()> {
         self.pending_wake_token.lock().unwrap().replace(token);
         self.notify_waker.wake()
@@ -495,26 +472,11 @@ const POLLRDHUP: libc::c_short = libc::POLLRDHUP;
 #[cfg(not(target_os = "linux"))]
 const POLLRDHUP: libc::c_short = 0;
 
-#[cfg(not(target_os = "wasi"))]
-const POLLPRI: libc::c_short = libc::POLLPRI;
-#[cfg(target_os = "wasi")]
-const POLLPRI: libc::c_short = 0;
-
-#[cfg(not(target_os = "wasi"))]
-const POLLRDBAND: libc::c_short = libc::POLLRDBAND;
-#[cfg(target_os = "wasi")]
-const POLLRDBAND: libc::c_short = 0;
-
-#[cfg(not(target_os = "wasi"))]
-const POLLWRBAND: libc::c_short = libc::POLLWRBAND;
-#[cfg(target_os = "wasi")]
-const POLLWRBAND: libc::c_short = 0;
-
 const READ_EVENTS: libc::c_short = libc::POLLIN | POLLRDHUP;
 
 const WRITE_EVENTS: libc::c_short = libc::POLLOUT;
 
-const PRIORITY_EVENTS: libc::c_short = POLLPRI;
+const PRIORITY_EVENTS: libc::c_short = libc::POLLPRI;
 
 /// Get the input poll events for the given event.
 fn interests_to_poll(interest: Interest) -> libc::c_short {
@@ -589,14 +551,14 @@ pub mod event {
     use crate::sys::Event;
     use crate::Token;
 
-    use super::{POLLPRI, POLLRDHUP};
+    use super::POLLRDHUP;
 
     pub fn token(event: &Event) -> Token {
         event.token
     }
 
     pub fn is_readable(event: &Event) -> bool {
-        (event.events & libc::POLLIN) != 0 || (event.events & POLLPRI) != 0
+        (event.events & libc::POLLIN) != 0 || (event.events & libc::POLLPRI) != 0
     }
 
     pub fn is_writable(event: &Event) -> bool {
@@ -624,7 +586,7 @@ pub mod event {
     }
 
     pub fn is_priority(event: &Event) -> bool {
-        (event.events & POLLPRI) != 0
+        (event.events & libc::POLLPRI) != 0
     }
 
     pub fn is_aio(_: &Event) -> bool {
@@ -646,12 +608,12 @@ pub mod event {
             EventsDetails(libc::c_short),
             check_events,
             libc::POLLIN,
-            super::POLLPRI,
+            libc::POLLPRI,
             libc::POLLOUT,
             libc::POLLRDNORM,
-            super::POLLRDBAND,
+            libc::POLLRDBAND,
             libc::POLLWRNORM,
-            super::POLLWRBAND,
+            libc::POLLWRBAND,
             libc::POLLERR,
             libc::POLLHUP,
         );
@@ -663,14 +625,12 @@ pub mod event {
     }
 }
 
-#[cfg(not(target_os = "wasi"))]
 #[derive(Debug)]
 pub(crate) struct Waker {
     selector: Selector,
     token: Token,
 }
 
-#[cfg(not(target_os = "wasi"))]
 impl Waker {
     pub(crate) fn new(selector: &Selector, token: Token) -> io::Result<Waker> {
         Ok(Waker {

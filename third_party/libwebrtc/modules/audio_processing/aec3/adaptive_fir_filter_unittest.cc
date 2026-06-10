@@ -16,11 +16,11 @@
 #include <memory>
 #include <numeric>
 #include <optional>
-#include <span>
 #include <string>
 #include <tuple>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/audio/echo_canceller3_config.h"
 #include "api/environment/environment_factory.h"
 #include "modules/audio_processing/aec3/adaptive_fir_filter_erl.h"
@@ -52,6 +52,7 @@
 #endif
 
 namespace webrtc {
+namespace aec3 {
 namespace {
 
 std::string ProduceDebugText(size_t num_render_channels, size_t delay) {
@@ -167,7 +168,7 @@ TEST_P(AdaptiveFirFilterOneTwoFourEightRenderChannels,
       }
     }
 
-    ComputeFrequencyResponse_C(num_partitions, H, &H2);
+    ComputeFrequencyResponse(num_partitions, H, &H2);
     ComputeFrequencyResponse_Neon(num_partitions, H, &H2_Neon);
 
     for (size_t p = 0; p < num_partitions; ++p) {
@@ -347,7 +348,7 @@ TEST_P(AdaptiveFirFilterOneTwoFourEightRenderChannels,
         }
       }
 
-      ComputeFrequencyResponse_C(num_partitions, H, &H2);
+      ComputeFrequencyResponse(num_partitions, H, &H2);
       ComputeFrequencyResponse_Sse2(num_partitions, H, &H2_Sse2);
 
       for (size_t p = 0; p < num_partitions; ++p) {
@@ -382,7 +383,7 @@ TEST_P(AdaptiveFirFilterOneTwoFourEightRenderChannels,
         }
       }
 
-      ComputeFrequencyResponse_C(num_partitions, H, &H2);
+      ComputeFrequencyResponse(num_partitions, H, &H2);
       ComputeFrequencyResponse_Avx2(num_partitions, H, &H2_Avx2);
 
       for (size_t p = 0; p < num_partitions; ++p) {
@@ -545,11 +546,11 @@ TEST_P(AdaptiveFirFilterMultiChannel, FilterAndAdapt) {
         num_render_channels);
     for (size_t ch = 0; ch < num_render_channels; ++ch) {
       x_hp_filter[ch] = std::make_unique<CascadedBiQuadFilter>(
-          std::span<const CascadedBiQuadFilter::BiQuadCoefficients>(
+          ArrayView<const CascadedBiQuadFilter::BiQuadCoefficients>(
               kHighPassFilterCoefficients));
     }
     CascadedBiQuadFilter y_hp_filter(
-        (std::span<const CascadedBiQuadFilter::BiQuadCoefficients>(
+        (ArrayView<const CascadedBiQuadFilter::BiQuadCoefficients>(
             kHighPassFilterCoefficients)));
 
     SCOPED_TRACE(ProduceDebugText(num_render_channels, delay_samples));
@@ -619,4 +620,5 @@ TEST_P(AdaptiveFirFilterMultiChannel, FilterAndAdapt) {
   }
 }
 
+}  // namespace aec3
 }  // namespace webrtc

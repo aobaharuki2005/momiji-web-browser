@@ -204,6 +204,7 @@ impl LocaleFallbackIteratorInner<'_> {
                     locale.variant = self.backup_variant.take();
                 }
                 // needed if more fallback is added at the end
+                #[allow(clippy::needless_return)]
                 return;
             } else {
                 // 3. Remove the language and apply the maximized script
@@ -214,6 +215,7 @@ impl LocaleFallbackIteratorInner<'_> {
                     locale.variant = self.backup_variant.take();
                 }
                 // needed if more fallback is added at the end
+                #[allow(clippy::needless_return)]
                 return;
             }
         }

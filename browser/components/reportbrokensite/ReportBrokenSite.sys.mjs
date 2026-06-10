@@ -3,44 +3,53 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const DEFAULT_NEW_REPORT_ENDPOINT = "https://webcompat.com/issues/new";
-const MINIMUM_DESCRIPTION_LENGTH = 10;
+
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  SafeBrowsing: "resource://gre/modules/SafeBrowsing.sys.mjs",
+  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
 });
+
+const gDescriptionCheckRE = /\S/;
 
 export class ViewState {
   #doc;
   #mainView;
-  #detailsView;
   #previewView;
   #reportSentView;
+  #formElement;
+  #reasonOptions;
+  #randomizeReasons = false;
 
-  #reportURL;
-  currentTabURL;
+  currentTabURI;
   currentTabWebcompatDetailsPromise;
 
   constructor(doc) {
     this.#doc = doc;
-    this.#mainView = doc.documentGlobal.PanelMultiView.getViewNode(
+    this.#mainView = doc.ownerGlobal.PanelMultiView.getViewNode(
       this.#doc,
       "report-broken-site-popup-mainView"
     );
-    this.#detailsView = doc.documentGlobal.PanelMultiView.getViewNode(
-      this.#doc,
-      "report-broken-site-popup-detailsView"
-    );
-    this.#previewView = doc.documentGlobal.PanelMultiView.getViewNode(
+    this.#previewView = doc.ownerGlobal.PanelMultiView.getViewNode(
       this.#doc,
       "report-broken-site-popup-previewView"
     );
-    this.#reportSentView = doc.documentGlobal.PanelMultiView.getViewNode(
+    this.#reportSentView = doc.ownerGlobal.PanelMultiView.getViewNode(
       this.#doc,
       "report-broken-site-popup-reportSentView"
     );
+    this.#formElement = doc.ownerGlobal.PanelMultiView.getViewNode(
+      this.#doc,
+      "report-broken-site-panel-form"
+    );
     ViewState.#cache.set(doc, this);
+
+    this.#reasonOptions = Array.from(
+      // Skip the first option ("choose reason"), since it always stays at the top
+      this.reasonInput.querySelectorAll(`option:not(:first-of-type)`)
+    );
   }
 
   static #cache = new WeakMap();
@@ -52,279 +61,182 @@ export class ViewState {
     return this.#mainView;
   }
 
-  get detailsPanelview() {
-    return this.#detailsView;
-  }
-
   get previewPanelview() {
-    return this.#previewView;
+    return this.#mainView;
   }
 
   get reportSentPanelview() {
     return this.#reportSentView;
   }
 
-  /**
-   * Convenience method to set a given Report Broken Site CSS variable.
-   * We use these variables to easily show or hide or disable key elements.
-   * For instance, no-screenshots, which is used to hide the screenshot UI
-   * on both the details and preview panels when we somehow failed to take
-   * a screenshot anyhow.
-   *
-   * @param {string} [cls] The CSS class to change.
-   * @param {bool} [bool] `true` to set, `false` to unset.
-   */
-  #setCSSClass(cls, bool) {
-    for (const view of [this.#mainView, this.#detailsView, this.#previewView]) {
-      view.classList.toggle(cls, bool);
-    }
-  }
-
-  /**
-   * Helper to toggle the wrong-tab-info CSS class for the UI.
-   * Adding the class hides tab-specific information from the report preview
-   * panel, as well as hiding the screenshot and ETP toggles on the details
-   * panel, and the favicon on the URL inputs. This is done if the user
-   * changes the URL's origin, as that implies any tab-specific info is
-   * invalid and should not be sent with the report.
-   */
-  #wrongTabInfo = false;
-  get wrongTabInfo() {
-    return this.#wrongTabInfo;
-  }
-  set wrongTabInfo(_value) {
-    const value = Boolean(_value);
-    this.#wrongTabInfo = value;
-    this.#setCSSClass("wrong-tab-info", value);
-  }
-
-  /**
-   * Helper to toggle the screenshots-disable CSS class for the UI.
-   * Adding the class hides the screenshot and its toggle on the details and
-   * preview panels. It is set when screenshots are disabled by pref.
-   */
-  #screenshotsDisabled = false;
-  get screenshotsDisabled() {
-    return this.#screenshotsDisabled;
-  }
-  set screenshotsDisabled(_value) {
-    const value = Boolean(_value);
-    this.#screenshotsDisabled = value;
-    this.#setCSSClass("screenshots-disabled", value);
-  }
-
-  /**
-   * Helper to toggle the screenshot-opt-out CSS class for the UI.
-   * Adding the class hides the screenshot on the details and preview
-   * panels (but not its toggle on the details panel). This is set when
-   * the user toggles the screenshot option to ensure one is not sent.
-   */
-  #screenshotOptOut = false;
-  get screenshotOptOut() {
-    return this.#screenshotOptOut;
-  }
-  set screenshotOptOut(_value) {
-    const value = Boolean(_value);
-    this.#screenshotOptOut = value;
-    this.#setCSSClass("screenshot-opt-out", value);
-    this.screenshotToggle.pressed = !value;
-  }
-
-  /**
-   * Helper to toggle the no-blocked-trackers CSS class for the UI.
-   * Adding the class hides the blocked tracker info and its toggle on
-   * the details and preview panels. This is used when the report has
-   * no blocked tracker info to send anyway to keep the UI clean.
-   */
-  #noBlockedTrackers = false;
-  get noBlockedTrackers() {
-    return this.#noBlockedTrackers;
-  }
-  set noBlockedTrackers(_value) {
-    const value = Boolean(_value);
-    this.#noBlockedTrackers = !!value;
-    this.#setCSSClass("no-blocked-trackers", value);
-  }
-
-  /**
-   * Helper to toggle the blocked-trackers-opt-out CSS class for the UI.
-   * Adding the class hides the blocked tracker info on the preview panel.
-   * This is set if the user does not toggle the related option to indicate
-   * their willingness to send this info with the report.
-   */
-  #blockedTrackersOptOut = false;
-  get blockedTrackersOptOut() {
-    return this.#blockedTrackersOptOut;
-  }
-  set blockedTrackersOptOut(_value) {
-    const value = Boolean(_value);
-    this.#blockedTrackersOptOut = value;
-    this.#setCSSClass("blocked-trackers-opt-out", value);
-    this.blockedTrackersToggle.pressed = !value;
-  }
-
-  get shouldSendBlockedTrackers() {
-    return (
-      !this.noBlockedTrackers &&
-      !this.blockedTrackersOptOut &&
-      this.blockedTrackersToggle.pressed
-    );
+  get urlInput() {
+    return this.#mainView.querySelector("#report-broken-site-popup-url");
   }
 
   get url() {
-    return this.#reportURL + "";
+    return this.urlInput.value;
   }
 
-  #isURLValid = false;
-
   set url(spec) {
-    const url = URL.parse(spec);
-    this.#isURLValid = url !== null;
-
-    if (url) {
-      this.#reportURL = url;
-      this.wrongTabInfo = url.hostname != this.currentTabURL.hostname;
-    }
-    for (const input of this.urlInputs) {
-      input.url = spec;
-    }
-
-    this.updateProgressDisabledState();
+    this.urlInput.value = spec;
   }
 
   resetURLToCurrentTab() {
-    const { currentURI } = this.#doc.documentGlobal.gBrowser.selectedBrowser;
-    this.url = this.currentTabURL = URL.fromURI(currentURI);
+    const { currentURI } = this.#doc.ownerGlobal.gBrowser.selectedBrowser;
+    this.currentTabURI = currentURI;
+    this.urlInput.value = currentURI.spec;
   }
 
-  focusInput(view, input) {
-    const panelview = this.#doc.documentGlobal.PanelView.forNode(view);
-    panelview.selectedElement = input;
-    panelview.focusSelectedElement(true);
-    // Ignore the next mouse-move to prevent the focus from accidentally being
-    // cleared immediately when the user clicks on "Something else" (see bz2040437).
-    panelview.ignoreMouseMove = true;
-    input.addEventListener("blur", () => (panelview.ignoreMouseMove = false), {
-      once: true,
-    });
-  }
-
-  lastBlurredURLInputSelection;
-
-  focusFirstInvalidInputOnView({ target }) {
-    const panelview = target.closest("panelview");
-    const urlInput = panelview.querySelector("url-input");
-    const description = panelview.querySelector("textarea");
-    if (urlInput && !this.isURLValid) {
-      this.focusInput(panelview, urlInput.input);
-      if (this.lastBlurredURLInputSelection) {
-        urlInput.input.setSelectionRange(...this.lastBlurredURLInputSelection);
-      }
-      return true;
-    } else if (description && !this.isDescriptionValid) {
-      this.focusInput(panelview, description);
-      return true;
-    }
-    return false;
-  }
-
-  updateProgressDisabledState() {
-    const { isURLValid, isDescriptionValid } = this;
-    for (const btn of this.#mainView.querySelectorAll(".progression")) {
-      btn.toggleAttribute("disabled", !isURLValid);
-    }
-    for (const view of [this.#detailsView, this.#previewView]) {
-      for (const btn of view.querySelectorAll(".progression")) {
-        btn.toggleAttribute("disabled", !isURLValid || !isDescriptionValid);
-      }
-    }
-  }
-
-  get descriptionTextArea() {
-    return this.#detailsView.querySelector(
+  get descriptionInput() {
+    return this.#mainView.querySelector(
       "#report-broken-site-popup-description"
     );
   }
 
   get description() {
-    return this.descriptionTextArea.value;
+    return this.descriptionInput.value;
   }
 
   set description(value) {
-    this.descriptionTextArea.value = value.trim();
+    this.descriptionInput.value = value;
   }
 
-  get blockedTrackersToggle() {
-    return this.#detailsView.querySelector(
-      "#report-broken-site-popup-blocked-trackers-toggle"
+  static REASON_CHOICES_ID_PREFIX = "report-broken-site-popup-reason-";
+
+  get blockedTrackersCheckbox() {
+    return this.#mainView.querySelector(
+      "#report-broken-site-popup-blocked-trackers-checkbox"
     );
   }
 
-  get screenshotToggle() {
-    return this.#detailsView.querySelector(
-      "#report-broken-site-popup-screenshot-toggle"
+  get reasonInput() {
+    return this.#mainView.querySelector("#report-broken-site-popup-reason");
+  }
+
+  get reason() {
+    const reason = this.reasonInput.selectedOptions[0].id.replace(
+      ViewState.REASON_CHOICES_ID_PREFIX,
+      ""
     );
+    return reason == "choose" ? undefined : reason;
   }
 
-  set screenshot(dataURI) {
-    this.#setCSSClass("no-screenshot", !dataURI);
-    this.#detailsView.querySelector(
-      "#report-broken-site-popup-screenshot"
-    ).src = dataURI ?? "";
+  get reasonText() {
+    const { reasonInput } = this;
+    if (!reasonInput.selectedIndex) {
+      return "";
+    }
+    return reasonInput.selectedOptions[0]?.label;
   }
 
-  set detailsViewTitle(title) {
-    this.#detailsView.setAttribute("title", title);
+  set reason(value) {
+    this.reasonInput.selectedIndex = this.#mainView.querySelector(
+      `#${ViewState.REASON_CHOICES_ID_PREFIX}${value}`
+    ).index;
   }
 
-  get detailsViewInstructions() {
-    return this.#detailsView.querySelector(
-      "#report-broken-site-details-instructions"
-    );
+  #randomizeReasonsOrdering() {
+    // As with QuickActionsLoaderDefault, we use the Normandy
+    // randomizationId as our PRNG seed to ensure that the same
+    // user should always get the same sequence.
+    const seed = [...lazy.ClientEnvironment.randomizationId]
+      .map(x => x.charCodeAt(0))
+      .reduce((sum, a) => sum + a, 0);
+
+    const items = [...this.#reasonOptions];
+    this.#shuffleArray(items, seed);
+    items[0].parentNode.append(...items);
   }
 
-  get detailsViewDescriptionError() {
-    return this.#detailsView.querySelector(
-      "#report-broken-site-details-description-error"
-    );
+  #shuffleArray(array, seed) {
+    // We use SplitMix as it is reputed to have a strong distribution of values.
+    const prng = this.#getSplitMix32PRNG(seed);
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(prng() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  // SplitMix32 is a splittable pseudorandom number generator (PRNG).
+  // License: MIT (https://github.com/attilabuti/SimplexNoise)
+  #getSplitMix32PRNG(a) {
+    return () => {
+      a |= 0;
+      a = (a + 0x9e3779b9) | 0;
+      var t = a ^ (a >>> 16);
+      t = Math.imul(t, 0x21f0aaad);
+      t = t ^ (t >>> 15);
+      t = Math.imul(t, 0x735a2d97);
+      return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
+    };
+  }
+
+  #restoreReasonsOrdering() {
+    this.#reasonOptions[0].parentNode.append(...this.#reasonOptions);
+  }
+
+  get form() {
+    return this.#formElement;
   }
 
   reset() {
     this.currentTabWebcompatDetailsPromise = undefined;
-    this.lastBlurredURLInputSelection = undefined;
-
-    this.wrongTabInfo = false;
-    this.screenshot = "";
-    this.noBlockedTrackers = true;
-    this.screenshotOptOut = false;
-    this.blockedTrackersOptOut = true;
-
+    this.form.reset();
+    this.blockedTrackersCheckbox.checked = false;
     delete this.cachedPreviewData;
-
-    this.description = "";
-    this.reason = "";
 
     this.resetURLToCurrentTab();
   }
 
-  get isURLValid() {
-    return this.#isURLValid;
+  ensureReasonOrderingMatchesPref() {
+    const { randomizeReasons } = ReportBrokenSite;
+    if (randomizeReasons != this.#randomizeReasons) {
+      if (randomizeReasons) {
+        this.#randomizeReasonsOrdering();
+      } else {
+        this.#restoreReasonsOrdering();
+      }
+      this.#randomizeReasons = randomizeReasons;
+    }
   }
 
-  get descriptionIsOptional() {
-    return this.reason != "other";
+  get isURLValid() {
+    return this.urlInput.checkValidity();
+  }
+
+  get isReasonValid() {
+    const { reasonEnabled, reasonIsOptional } = ReportBrokenSite;
+    return (
+      !reasonEnabled || reasonIsOptional || this.reasonInput.checkValidity()
+    );
   }
 
   get isDescriptionValid() {
-    const { value } = this.descriptionTextArea;
-    if (value) {
-      return value.trim().length >= MINIMUM_DESCRIPTION_LENGTH;
-    }
-    return this.descriptionIsOptional;
+    return (
+      ReportBrokenSite.descriptionIsOptional ||
+      gDescriptionCheckRE.test(this.descriptionInput.value)
+    );
   }
 
   createElement(name) {
     return this.#doc.createElement(name);
+  }
+
+  #focusMainViewElement(toFocus) {
+    const panelview = this.#doc.ownerGlobal.PanelView.forNode(this.#mainView);
+    panelview.selectedElement = toFocus;
+    panelview.focusSelectedElement();
+  }
+
+  focusFirstInvalidElement() {
+    if (!this.isURLValid) {
+      this.#focusMainViewElement(this.urlInput);
+    } else if (!this.isReasonValid) {
+      this.#focusMainViewElement(this.reasonInput);
+      this.reasonInput.showPicker();
+    } else if (!this.isDescriptionValid) {
+      this.#focusMainViewElement(this.descriptionInput);
+    }
   }
 
   get learnMoreLink() {
@@ -333,37 +245,46 @@ export class ViewState {
     );
   }
 
-  get sendMoreInfoButton() {
-    return this.#detailsView.querySelector(
-      "#report-broken-site-popup-send-more-info-button"
+  get sendMoreInfoLink() {
+    return this.#mainView.querySelector(
+      "#report-broken-site-popup-send-more-info-link"
     );
   }
 
-  get reasonButtons() {
-    return this.#mainView.querySelectorAll(".reason-button");
+  get reasonLabelRequired() {
+    return this.#mainView.querySelector(
+      "#report-broken-site-popup-reason-label"
+    );
   }
 
-  get urlInputs() {
-    return [
-      ...this.#mainView.querySelectorAll("url-input"),
-      ...this.#detailsView.querySelectorAll("url-input"),
-    ];
+  get reasonLabelOptional() {
+    return this.#mainView.querySelector(
+      "#report-broken-site-popup-reason-optional-label"
+    );
   }
 
-  get cancelButtons() {
-    return [
-      ...this.#detailsView.querySelectorAll(".cancel-button"),
-      ...this.#previewView.querySelectorAll(".cancel-button"),
-    ];
+  get descriptionLabelRequired() {
+    return this.#mainView.querySelector(
+      "#report-broken-site-popup-description-label"
+    );
   }
 
-  get sendButtons() {
-    return [
-      this.#detailsView.querySelector("#report-broken-site-popup-send-button"),
-      this.#previewView.querySelector(
-        "#report-broken-site-popup-preview-send-button"
-      ),
-    ];
+  get descriptionLabelOptional() {
+    return this.#mainView.querySelector(
+      "#report-broken-site-popup-description-optional-label"
+    );
+  }
+
+  get sendButton() {
+    return this.#mainView.querySelector(
+      "#report-broken-site-popup-send-button"
+    );
+  }
+
+  get cancelButton() {
+    return this.#mainView.querySelector(
+      "#report-broken-site-popup-cancel-button"
+    );
   }
 
   get mainView() {
@@ -380,6 +301,18 @@ export class ViewState {
     );
   }
 
+  get previewCancelButton() {
+    return this.#previewView.querySelector(
+      "#report-broken-site-popup-preview-cancel-button"
+    );
+  }
+
+  get previewSendButton() {
+    return this.#previewView.querySelector(
+      "#report-broken-site-popup-preview-send-button"
+    );
+  }
+
   get previewBox() {
     return this.#previewView.querySelector(
       "#report-broken-site-panel-preview-items"
@@ -387,13 +320,19 @@ export class ViewState {
   }
 
   get previewButton() {
-    return this.#detailsView.querySelector(
+    return this.#mainView.querySelector(
       "#report-broken-site-popup-preview-button"
     );
   }
 }
 
 export var ReportBrokenSite = new (class ReportBrokenSite {
+  #newReportEndpoint = undefined;
+
+  get sendMoreInfoEndpoint() {
+    return this.#newReportEndpoint || DEFAULT_NEW_REPORT_ENDPOINT;
+  }
+
   static WEBCOMPAT_REPORTER_CONFIG = {
     src: "desktop-reporter",
     utm_campaign: "report-broken-site",
@@ -403,23 +342,70 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
   static DATAREPORTING_PREF = "datareporting.healthreport.uploadEnabled";
   static REPORTER_ENABLED_PREF = "ui.new-webcompat-reporter.enabled";
 
-  static SCREENSHOTS_ENABLED_PREF =
-    "ui.new-webcompat-reporter.screenshots.enabled";
+  static REASON_PREF = "ui.new-webcompat-reporter.reason-dropdown";
+  static REASON_PREF_VALUES = {
+    0: "disabled",
+    1: "optional",
+    2: "required",
+  };
+  static REASON_RANDOMIZED_PREF =
+    "ui.new-webcompat-reporter.reason-dropdown.randomized";
   static SEND_MORE_INFO_PREF = "ui.new-webcompat-reporter.send-more-info-link";
   static NEW_REPORT_ENDPOINT_PREF =
     "ui.new-webcompat-reporter.new-report-endpoint";
 
   static MAIN_PANELVIEW_ID = "report-broken-site-popup-mainView";
   static SENT_PANELVIEW_ID = "report-broken-site-popup-reportSentView";
-  static DETAILS_PANELVIEW_ID = "report-broken-site-popup-detailsView";
   static PREVIEW_PANELVIEW_ID = "report-broken-site-popup-previewView";
 
+  #_enabled = false;
   get enabled() {
-    return (
-      Services.policies.isAllowed("feedbackCommands") &&
-      Services.prefs.getBoolPref(ReportBrokenSite.DATAREPORTING_PREF, false) &&
-      Services.prefs.getBoolPref(ReportBrokenSite.REPORTER_ENABLED_PREF, true)
-    );
+    return this.#_enabled;
+  }
+
+  #reasonEnabled = false;
+  #reasonIsOptional = true;
+  #randomizeReasons = false;
+  #descriptionIsOptional = true;
+  #sendMoreInfoEnabled = true;
+
+  get reasonEnabled() {
+    return this.#reasonEnabled;
+  }
+
+  get reasonIsOptional() {
+    return this.#reasonIsOptional;
+  }
+
+  get randomizeReasons() {
+    return this.#randomizeReasons;
+  }
+
+  get descriptionIsOptional() {
+    return this.#descriptionIsOptional;
+  }
+
+  constructor() {
+    for (const [name, [pref, dflt]] of Object.entries({
+      dataReportingPref: [ReportBrokenSite.DATAREPORTING_PREF, false],
+      reasonPref: [ReportBrokenSite.REASON_PREF, 0],
+      reasonRandomizedPref: [ReportBrokenSite.REASON_RANDOMIZED_PREF, false],
+      sendMoreInfoPref: [ReportBrokenSite.SEND_MORE_INFO_PREF, false],
+      newReportEndpointPref: [
+        ReportBrokenSite.NEW_REPORT_ENDPOINT_PREF,
+        DEFAULT_NEW_REPORT_ENDPOINT,
+      ],
+      enabledPref: [ReportBrokenSite.REPORTER_ENABLED_PREF, true],
+    })) {
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        name,
+        pref,
+        dflt,
+        this.#checkPrefs.bind(this)
+      );
+    }
+    this.#checkPrefs();
   }
 
   canReportURI(uri) {
@@ -434,7 +420,7 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     // We need to make sure that the Report Broken Site menu item
     // is disabled if the tab's location changes to a non-reportable
     // one while the menu is open.
-    const tabbrowser = event.target.documentGlobal.gBrowser;
+    const tabbrowser = event.target.ownerGlobal.gBrowser;
     this.enableOrDisableMenuitems(tabbrowser.selectedBrowser);
 
     tabbrowser.addTabsProgressListener(this);
@@ -447,212 +433,72 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     );
   }
 
-  #OBSERVED_PREFS = {
-    [ReportBrokenSite.SCREENSHOTS_ENABLED_PREF]: "onScreenshotsPrefChanged",
-    [ReportBrokenSite.SEND_MORE_INFO_PREF]: "onSendMoreInfoPrefChanged",
-  };
-
-  constructor() {
-    for (const pref of Object.keys(this.#OBSERVED_PREFS)) {
-      Services.prefs.addObserver(pref, this);
-    }
-  }
-
-  #windows = new Set();
-
-  #onNewWindow(win) {
-    for (const pref of Object.keys(this.#OBSERVED_PREFS)) {
-      if (!this.#windows.size) {
-        Services.prefs.addObserver(pref, this);
-      }
-      this.observe(null, null, pref, [win]);
-    }
-    this.#windows.add(win);
-  }
-
-  #onWindowClosed(win) {
-    this.#windows.delete(win);
-    if (!this.#windows.size) {
-      for (const pref of Object.keys(this.#OBSERVED_PREFS)) {
-        Services.prefs.removeObserver(pref, this);
-      }
-    }
-  }
-
-  observe(_, __, pref, windows = this.#windows) {
-    const prefValue = Services.prefs.getBoolPref(pref, false);
-    const checkFn = this[this.#OBSERVED_PREFS[pref]];
-    for (const { document } of windows) {
-      const state = ViewState.get(document);
-      checkFn(prefValue, state);
-    }
-  }
-
-  onScreenshotsPrefChanged(prefValue, state) {
-    state.screenshotsDisabled = !prefValue;
-  }
-
-  onSendMoreInfoPrefChanged(prefValue, state) {
-    state.sendMoreInfoButton.toggleAttribute("hidden", !prefValue);
-  }
-
-  uninit(win) {
-    this.#onWindowClosed(win);
-  }
-
-  /**
-   * Loads the reportbrokensite custom element script
-   * into a given window.
-   *
-   * Called on RequestBrokenSite.init for a new browser window.
-   *
-   * @param {Window} window
-   */
-  static REGISTER_CUSTOM_ELEMENTS_SCRIPT =
-    "chrome://browser/content/reportbrokensite/components/register.js";
-
-  static #hasCustomElements = new WeakSet();
-
-  static #loadCustomElements(window) {
-    if (ReportBrokenSite.#hasCustomElements.has(window)) {
-      // Don't add the elements again for the same window.
-      return;
-    }
-    Services.scriptloader.loadSubScriptWithOptions(
-      ReportBrokenSite.REGISTER_CUSTOM_ELEMENTS_SCRIPT,
-      {
-        target: window,
-        async: true,
-      }
-    );
-    ReportBrokenSite.#hasCustomElements.add(window);
-  }
-
-  #descriptionErrorTextPromise;
-
   init(win) {
     // Called in browser-init.js via the category manager registration
     // in BrowserComponents.manifest
-    ReportBrokenSite.#loadCustomElements(win);
-
-    this.#onNewWindow(win);
-
     const { document } = win;
 
     const state = ViewState.get(document);
 
-    document.l10n.setAttributes(
-      state.detailsViewDescriptionError,
-      "report-broken-site-panel-invalid-description-label",
-      { minLength: MINIMUM_DESCRIPTION_LENGTH }
-    );
-
-    // use Promise.resolve to avoid leaking document until shutdown
-    this.#descriptionErrorTextPromise ??= Promise.resolve(
-      document.l10n
-        .formatMessages([
-          {
-            id: "report-broken-site-panel-invalid-description-label",
-            args: { minLength: MINIMUM_DESCRIPTION_LENGTH },
-          },
-        ])
-        .then(result => result[0].value)
-    );
+    this.#initMainView(state);
+    this.#initPreviewView(state);
+    this.#initReportSentView(state);
 
     for (const id of ["menu_HelpPopup", "appMenu-popup"]) {
       document
         .getElementById(id)
-        .addEventListener("popupshown", e => this.updateParentMenu(e));
+        .addEventListener("popupshown", this.updateParentMenu.bind(this));
     }
 
-    // The panelview code will close on Escape, but if the focus is on our
-    // URL input, we want to blur that instead of closing the panelview.
-    document.addEventListener(
-      "keydown",
-      e => this.#resetURLInputsOrCloseOnEscapePress(e),
-      true
-    );
-
-    for (const btn of state.reasonButtons) {
-      btn.addEventListener("click", e => this.#reasonButtonHandler(e));
-    }
-
-    for (const sendButton of state.sendButtons) {
-      sendButton.addEventListener("command", e => this.#sendButtonHandler(e));
-    }
-
-    state.sendMoreInfoButton.addEventListener("command", e =>
-      this.#sendMoreInfoButtonHandler(e)
-    );
-
-    state.previewButton.addEventListener("command", e =>
-      this.#previewButtonHandler(e)
-    );
-
-    state.learnMoreLink.addEventListener("click", e =>
-      this.#learnMoreLinkHandler(e)
-    );
-
-    state.descriptionTextArea.addEventListener("input", e =>
-      this.updateDescriptionValidity(e)
-    );
-
-    state.okayButton.addEventListener("command", ({ target }) => {
-      target.documentGlobal.CustomizableUI.hidePanelForNode(target);
+    state.mainPanelview.addEventListener("ViewShowing", ({ target }) => {
+      const { selectedBrowser } = target.ownerGlobal.gBrowser;
+      let source = "helpMenu";
+      switch (target.closest("panelmultiview")?.id) {
+        case "appMenu-multiView":
+          source = "hamburgerMenu";
+          break;
+        case "protections-popup-multiView":
+          source = "ETPShieldIconMenu";
+          break;
+      }
+      this.#onMainViewShown(source, selectedBrowser);
     });
 
-    for (const btn of state.cancelButtons) {
-      btn.addEventListener("command", e => this.#cancelButtonHandler(e));
-    }
-
-    state.blockedTrackersToggle.addEventListener("toggle", ({ target }) => {
-      state.blockedTrackersOptOut = !target.pressed;
+    // Make sure the URL input is focused when the main view pops up.
+    state.mainPanelview.addEventListener("ViewShown", () => {
+      const panelview = win.PanelView.forNode(state.mainPanelview);
+      panelview.selectedElement = state.urlInput;
+      panelview.focusSelectedElement();
+      Services.focus
+        .getFocusedElementForWindow(win, true, {})
+        ?.setSelectionRange(0, 0);
     });
 
-    state.screenshotToggle.addEventListener("toggle", ({ target }) => {
-      state.screenshotOptOut = !target.pressed;
+    // Make sure the Okay button is focused when the report sent view pops up.
+    state.reportSentPanelview.addEventListener("ViewShown", () => {
+      const panelview = win.PanelView.forNode(state.reportSentPanelview);
+      panelview.selectedElement = state.okayButton;
+      panelview.focusSelectedElement();
     });
-
-    for (const input of state.urlInputs) {
-      input.addEventListener("input", e => this.#onURLEdited(e));
-      input.addEventListener("reset", e => this.#onURLInputReset(e));
-      input.addEventListener("change", e => this.#onURLInputChanged(e));
-      input.addEventListener("blur", e => this.#saveURLInputSelectionRange(e));
-    }
-
-    state.mainPanelview.addEventListener("ViewShowing", e =>
-      this.#onMainViewShowing(e)
-    );
-    state.mainPanelview.addEventListener("ViewShown", e => {
-      this.#focusFirstInvalidInputOnView(e);
-    });
-    state.detailsPanelview.addEventListener(
-      "ViewShown",
-      () => {
-        // We do this because ViewShowing events are not fired on the main panel
-        // when a back button is clicked (unlike the other views).
-        state.detailsPanelview
-          .querySelector(".subviewbutton-back")
-          .addEventListener("click", () => {
-            state.updateProgressDisabledState();
-          });
-      },
-      { once: true }
-    );
-
-    state.detailsPanelview.addEventListener("ViewShowing", e =>
-      this.#onDetailsViewShowing(e)
-    );
-    state.detailsPanelview.addEventListener("ViewShown", e => {
-      this.#focusFirstInvalidInputOnView(e);
-    });
-    state.reportSentPanelview.addEventListener("ViewShown", e =>
-      this.#onReportSentViewShown(e)
-    );
 
     win.document
       .getElementById("cmd_reportBrokenSite")
-      .addEventListener("command", e => this.#onReportBrokenSiteHandler(e));
+      .addEventListener("command", e => {
+        if (this.enabled) {
+          this.open(e);
+        } else {
+          const tabbrowser = e.target.ownerGlobal.gBrowser;
+          state.resetURLToCurrentTab();
+          this.promiseWebCompatInfo(state, tabbrowser.selectedBrowser);
+          this.#openWebCompatTab(tabbrowser)
+            .catch(err => {
+              console.error("Report Broken Site: unexpected error", err);
+            })
+            .finally(() => {
+              state.reset();
+            });
+        }
+      });
   }
 
   enableOrDisableMenuitems(selectedbrowser) {
@@ -661,14 +507,16 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
 
     const canReportUrl = this.canReportURI(selectedbrowser.currentURI);
 
-    const { document } = selectedbrowser.documentGlobal;
+    const { document } = selectedbrowser.ownerGlobal;
 
     // Altering the disabled attribute on the command does not propagate
     // the change to the related menuitems (see bug 805653), so we change them all.
     const cmd = document.getElementById("cmd_reportBrokenSite");
-    const allowedByPolicy = Services.policies.isAllowed("feedbackCommands");
+    const allowedByPolicy = Services.policies.isAllowed(
+      "DisableFeedbackCommands"
+    );
     cmd.toggleAttribute("hidden", !allowedByPolicy);
-    const app = document.documentGlobal.PanelMultiView.getViewNode(
+    const app = document.ownerGlobal.PanelMultiView.getViewNode(
       document,
       "appMenu-report-broken-site-button"
     );
@@ -696,295 +544,196 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     }
   }
 
-  updateDescriptionValidity(event) {
-    const { target } = event;
-    const state = ViewState.get(target.documentGlobal.document);
-    const { descriptionTextArea, isDescriptionValid } = state;
-    this.#descriptionErrorTextPromise.then(errorText =>
-      descriptionTextArea.setCustomValidity(isDescriptionValid ? "" : errorText)
-    );
-    state.updateProgressDisabledState();
-    return isDescriptionValid;
+  #checkPrefs(whichChanged) {
+    // No breakage reports can be sent by Glean if it's disabled, so we also
+    // disable the broken site reporter. We also have our own pref.
+    this.#_enabled =
+      Services.policies.isAllowed("feedbackCommands") &&
+      this.dataReportingPref &&
+      this.enabledPref;
+
+    this.#reasonEnabled = this.reasonPref == 1 || this.reasonPref == 2;
+    this.#reasonIsOptional = this.reasonPref == 1;
+    if (!whichChanged || whichChanged == ReportBrokenSite.REASON_PREF) {
+      const setting = ReportBrokenSite.REASON_PREF_VALUES[this.reasonPref];
+      this.#recordGleanEvent("reasonDropdown", { setting });
+    }
+
+    this.#sendMoreInfoEnabled = this.sendMoreInfoPref;
+    this.#newReportEndpoint = this.newReportEndpointPref;
+
+    this.#randomizeReasons = this.reasonRandomizedPref;
   }
 
-  #focusFirstInvalidInputOnView(event) {
-    const state = ViewState.get(event.target.documentGlobal.document);
-    state.focusFirstInvalidInputOnView(event);
-  }
+  #initMainView(state) {
+    state.sendButton.addEventListener("command", () => {
+      state.form.requestSubmit();
+    });
 
-  #onReportBrokenSiteHandler(event) {
-    if (this.enabled) {
-      this.open(event);
-    } else {
-      const { documentGlobal } = event.target;
-      const { document, gBrowser } = documentGlobal;
-      const { selectedBrowser } = gBrowser;
-      const state = ViewState.get(document);
-      state.resetURLToCurrentTab();
-      this.promiseWebCompatInfo(state, selectedBrowser);
-      this.#openWebCompatTab(gBrowser)
-        .catch(err => {
-          console.error(
-            "Report Broken Site: unexpected error opening tab to webcompat.com",
-            err
+    state.form.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!state.form.checkValidity()) {
+        state.focusFirstInvalidElement();
+        return;
+      }
+      const multiview = event.target.closest("panelmultiview");
+      this.#recordGleanEvent("send", {
+        sent_with_blocked_trackers: !!state.blockedTrackersCheckbox.checked,
+      });
+      await this.#sendReportAsGleanPing(state);
+      multiview.showSubView("report-broken-site-popup-reportSentView");
+      state.reset();
+    });
+
+    state.cancelButton.addEventListener("command", ({ target }) => {
+      target.ownerGlobal.CustomizableUI.hidePanelForNode(target);
+      state.reset();
+    });
+
+    state.sendMoreInfoLink.addEventListener("click", async event => {
+      event.preventDefault();
+      const tabbrowser = event.target.ownerGlobal.gBrowser;
+      this.#recordGleanEvent("sendMoreInfo");
+      event.target.ownerGlobal.CustomizableUI.hidePanelForNode(event.target);
+      await this.#openWebCompatTab(tabbrowser);
+      state.reset();
+    });
+
+    state.learnMoreLink.addEventListener("click", async event => {
+      this.#recordGleanEvent("learnMore");
+      event.target.ownerGlobal.requestAnimationFrame(() => {
+        event.target.ownerGlobal.CustomizableUI.hidePanelForNode(event.target);
+      });
+    });
+
+    state.previewButton.addEventListener("click", event => {
+      state.currentTabWebcompatDetailsPromise
+        ?.catch(_ => {})
+        .then(info => {
+          this.generatePreviewMarkup(state, info);
+
+          // Update the live data on the preview which the user can edit in the reporter.
+          const { description, previewBox, reasonText } = state;
+          if (state.cachedPreviewData) {
+            state.cachedPreviewData.basic.description = description;
+            state.cachedPreviewData.basic.reason = reasonText;
+          }
+          previewBox.querySelector(
+            ".preview_description"
+          ).nextSibling.innerText = JSON.stringify(description);
+          previewBox.querySelector(".preview_reason").nextSibling.innerText =
+            JSON.stringify(reasonText ?? "");
+
+          const multiview = event.target.closest("panelmultiview");
+          multiview.showSubView(
+            ReportBrokenSite.PREVIEW_PANELVIEW_ID,
+            event.target
           );
-        })
-        .finally(() => {
-          state.reset();
+          this.#recordGleanEvent("previewed");
         });
-    }
-  }
-
-  #onURLInputReset(event) {
-    event.preventDefault();
-    const { document } = event.target.documentGlobal;
-    const state = ViewState.get(document);
-    state.url = state.currentTabURL;
-  }
-
-  #onURLEdited({ target }) {
-    const state = ViewState.get(target.documentGlobal.document);
-    state.url = target.input.value;
-  }
-
-  #onURLInputChanged({ target, detail }) {
-    const state = ViewState.get(target.documentGlobal.document);
-    state.url = detail.newValue;
-  }
-
-  #saveURLInputSelectionRange({ target }) {
-    const state = ViewState.get(target.documentGlobal.document);
-    state.lastBlurredURLInputSelection = [
-      target.input.selectionStart,
-      target.input.selectionEnd,
-    ];
-  }
-
-  #resetURLInputsOrCloseOnEscapePress(event) {
-    const { document } = event.target.documentGlobal;
-    const { activeElement } = document;
-
-    if (event.key != "Escape" || activeElement?.nodeName != "html:url-input") {
-      return;
-    }
-
-    event.stopImmediatePropagation();
-
-    const state = ViewState.get(document);
-    state.url = state.currentTabURL;
-
-    // We need to ask the URL input component to blur.
-    activeElement.requestBlur();
-  }
-
-  async #reasonButtonHandler(event) {
-    const { target } = event;
-    const state = ViewState.get(target.documentGlobal.document);
-
-    if (state.focusFirstInvalidInputOnView(event)) {
-      return;
-    }
-
-    if (target.matches("#report-broken-site-popup-reason-deceptive")) {
-      target.documentGlobal.CustomizableUI.hidePanelForNode(target);
-
-      // Remove the query and hash to avoid including potentially sensitive data
-      const url = URL.parse(state.url);
-      url.search = url.hash = "";
-      const safebrowsingUrl = lazy.SafeBrowsing.getReportURL("Phish", {
-        uri: url.href,
-      });
-
-      target.documentGlobal.gBrowser.addTab(safebrowsingUrl, {
-        inBackground: false,
-        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-          {}
-        ),
-      });
-
-      return;
-    }
-
-    const reason = target.id?.replace("report-broken-site-popup-reason-", "");
-    if (!reason) {
-      return;
-    }
-    state.reason = reason;
-    state.detailsViewTitle = target.textContent;
-
-    state.detailsViewInstructions.setAttribute(
-      "data-l10n-id",
-      `report-broken-site-panel-instructions-other${state.descriptionIsOptional ? "-optional" : ""}`
-    );
-
-    const multiview = target.closest("panelmultiview");
-    multiview.showSubView(ReportBrokenSite.DETAILS_PANELVIEW_ID, target);
-  }
-
-  async #sendButtonHandler(event) {
-    const { target } = event;
-    const state = ViewState.get(target.documentGlobal.document);
-
-    if (state.focusFirstInvalidInputOnView(event)) {
-      return;
-    }
-
-    const multiview = target.closest("panelmultiview");
-    this.#recordGleanEvent("send", {
-      sent_with_blocked_trackers: state.shouldSendBlockedTrackers,
-    });
-    await this.#sendReportAsGleanPing(state);
-    multiview.showSubView("report-broken-site-popup-reportSentView");
-    state.reset();
-  }
-
-  #learnMoreLinkHandler({ target }) {
-    this.#recordGleanEvent("learnMore");
-    target.documentGlobal.requestAnimationFrame(() => {
-      target.documentGlobal.CustomizableUI.hidePanelForNode(target);
     });
   }
 
-  async #sendMoreInfoButtonHandler(event) {
-    const { target } = event;
-    const state = ViewState.get(target.documentGlobal.document);
-    event.preventDefault();
-    const tabbrowser = target.documentGlobal.gBrowser;
-    this.#recordGleanEvent("sendMoreInfo");
-    event.target.documentGlobal.CustomizableUI.hidePanelForNode(target);
-    await this.#openWebCompatTab(tabbrowser);
-    state.reset();
+  #initPreviewView(state) {
+    state.previewSendButton.addEventListener("command", event => {
+      // If the user has not entered a reason yet, then the form's validity
+      // check will bring up the reason dropdown, despite it being out of view
+      // (since we're looking at the preview panel, not the main one). This is
+      // confusing, so we instead go back to the main view first if there is a
+      // validity check failure (we also have to be careful to avoid possibly
+      // racing with the user if they close the popup during this sequence, so
+      // we don't leak any event listeners and world with them).
+      if (!state.form.checkValidity()) {
+        const view = event.target.closest("panelview").panelMultiView;
+        const { document } = event.target.ownerGlobal;
+        const listener = event => {
+          document.removeEventListener("popuphiding", listener);
+          view.removeEventListener("ViewShown", listener);
+          if (event.type == "ViewShown") {
+            state.form.requestSubmit();
+          }
+        };
+        document.addEventListener("popuphiding", listener);
+        view.addEventListener("ViewShown", listener);
+        view.goBack();
+      } else {
+        state.form.requestSubmit();
+      }
+    });
+
+    state.previewCancelButton.addEventListener("command", ({ target }) => {
+      target.ownerGlobal.CustomizableUI.hidePanelForNode(target);
+      state.reset();
+    });
   }
 
-  #previewButtonHandler(event) {
-    const { target } = event;
-    const state = ViewState.get(target.documentGlobal.document);
-
-    if (state.focusFirstInvalidInputOnView(event)) {
-      return;
-    }
-
-    state.currentTabWebcompatDetailsPromise
-      ?.catch(_ => {})
-      .then(info => {
-        this.generatePreviewMarkup(state, info);
-
-        // Update the live data on the preview which the user can edit in the reporter.
-        const { description, previewBox, reason, url } = state;
-        if (state.cachedPreviewData) {
-          state.cachedPreviewData.basic.description = description;
-          state.cachedPreviewData.basic.reason = reason;
-          state.cachedPreviewData.basic.url = url;
-        }
-        previewBox.querySelector(".preview-description > .value").innerText =
-          JSON.stringify(description);
-        previewBox.querySelector(".preview-reason > .value").innerText =
-          JSON.stringify(reason);
-        previewBox.querySelector(".preview-url > .value").innerText =
-          JSON.stringify(url);
-
-        const multiview = target.closest("panelmultiview");
-        multiview.showSubView(ReportBrokenSite.PREVIEW_PANELVIEW_ID, target);
-        this.#recordGleanEvent("previewed");
-      });
+  #initReportSentView(state) {
+    state.okayButton.addEventListener("command", ({ target }) => {
+      target.ownerGlobal.CustomizableUI.hidePanelForNode(target);
+    });
   }
 
-  #cancelButtonHandler({ target }) {
-    const state = ViewState.get(target.documentGlobal.document);
-    target.documentGlobal.CustomizableUI.hidePanelForNode(target);
-    state.reset();
-  }
-
-  async #onMainViewShowing({ target }) {
-    const { selectedBrowser } = target.documentGlobal.gBrowser;
-    let source = "helpMenu";
-    switch (target.closest("panelmultiview")?.id) {
-      case "appMenu-multiView":
-        source = "hamburgerMenu";
-        break;
-      case "protections-popup-multiView":
-        source = "ETPShieldIconMenu";
-        break;
-    }
+  async #onMainViewShown(source, selectedBrowser) {
+    const { document } = selectedBrowser.ownerGlobal;
 
     let didReset = false;
-    const state = ViewState.get(selectedBrowser.documentGlobal.document);
-    const url = selectedBrowser.currentURI.spec;
-    if (!state.isURLValid) {
+    const state = ViewState.get(document);
+    const uri = selectedBrowser.currentURI;
+    if (!state.isURLValid && !state.isDescriptionValid) {
       state.reset();
       didReset = true;
-    } else if (url != state.currentTabURL) {
+    } else if (!state.currentTabURI || !uri.equals(state.currentTabURI)) {
       state.reset();
       didReset = true;
-    } else if (!state.currentTabURL) {
+    } else if (!state.url) {
       state.resetURLToCurrentTab();
     }
+
+    const { sendMoreInfoLink } = state;
+    const { sendMoreInfoEndpoint } = this;
+    if (sendMoreInfoLink.href !== sendMoreInfoEndpoint) {
+      sendMoreInfoLink.href = sendMoreInfoEndpoint;
+    }
+    sendMoreInfoLink.hidden = !this.#sendMoreInfoEnabled;
+
+    state.reasonInput.hidden = !this.#reasonEnabled;
+    state.reasonInput.required = this.#reasonEnabled && !this.#reasonIsOptional;
+
+    state.ensureReasonOrderingMatchesPref();
+
+    state.reasonLabelRequired.hidden =
+      !this.#reasonEnabled || this.#reasonIsOptional;
+    state.reasonLabelOptional.hidden =
+      !this.#reasonEnabled || !this.#reasonIsOptional;
+
+    state.descriptionLabelRequired.hidden = this.#descriptionIsOptional;
+    state.descriptionLabelOptional.hidden = !this.#descriptionIsOptional;
 
     this.#recordGleanEvent("opened", { source });
 
     if (didReset || !state.currentTabWebcompatDetailsPromise) {
       this.promiseWebCompatInfo(state, selectedBrowser);
     }
-
-    state.updateProgressDisabledState();
-  }
-
-  #onDetailsViewShowing(event) {
-    const { target } = event;
-    const panelview = target.closest("panelview");
-    const state = ViewState.get(target.documentGlobal.document);
-    if (!this.updateDescriptionValidity(event)) {
-      panelview.addEventListener(
-        "ViewShown",
-        () => state.focusInput(target, state.descriptionTextArea),
-        { once: true }
-      );
-    }
-    state.updateProgressDisabledState();
-  }
-
-  #onReportSentViewShown({ target: { documentGlobal } }) {
-    // Make sure the Okay button is focused when the report sent view pops up.
-    const state = ViewState.get(documentGlobal.document);
-    const panelview = documentGlobal.PanelView.forNode(
-      state.reportSentPanelview
-    );
-    panelview.selectedElement = state.okayButton;
-    panelview.focusSelectedElement();
   }
 
   promiseWebCompatInfo(state, selectedBrowser) {
-    const actor = this.#getActor(selectedBrowser);
-    state.currentTabWebcompatDetailsPromise = actor
-      .getBrokenSiteReport()
-      .then(info => {
-        state.screenshot = info.tabInfo?.screenshot?.value;
-        state.noBlockedTrackers =
-          !info?.antitracking?.blockedOrigins?.value?.length;
-        const faviconDataURL = info?.tabInfo?.favicon?.value ?? "";
-        for (const input of state.urlInputs) {
-          input.favicon = faviconDataURL;
-        }
-        return info;
-      })
-      ?.catch(err => {
-        console.error(
-          "Report Broken Site: unexpected error gathering info",
-          err
-        );
-        state.screenshot = "";
-        state.noBlockedTrackers = true;
-        state.currentTabWebcompatDetailsPromise = undefined;
-      });
+    state.currentTabWebcompatDetailsPromise = this.#queryActor(
+      "GetBrokenSiteReport",
+      undefined,
+      selectedBrowser
+    ).catch(err => {
+      console.error("Report Broken Site: unexpected error", err);
+      state.currentTabWebcompatDetailsPromise = undefined;
+    });
   }
 
   cachePreviewData(state, brokenSiteReportData) {
-    const { description, reason, url } = state;
+    const { blockedTrackersCheckbox, description, reasonText, url } = state;
 
     const previewData = Object.assign({
       basic: {
         description,
-        reason,
+        reason: reasonText,
         url,
       },
     });
@@ -994,13 +743,13 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
         previewData[category] = Object.fromEntries(
           Object.entries(values)
             .filter(([_, { do_not_preview }]) => !do_not_preview)
-            .map(([name, value]) => [name, value])
+            .map(([name, { value }]) => [name, value])
         );
       }
+    }
 
-      // The screenshot is tabInfo, but we want to present it as the last item in the
-      // basic section because that is the first section and is expanded by default.
-      previewData.basic.screenshot = brokenSiteReportData.tabInfo.screenshot;
+    if (!blockedTrackersCheckbox.checked && previewData.antitracking) {
+      delete previewData.antitracking.blockedOrigins;
     }
 
     state.cachedPreviewData = previewData;
@@ -1009,49 +758,32 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
 
   generatePreviewMarkup(state, reportData) {
     // If we have already cached preview data, we have already generated the markup as well.
-    if (state.cachedPreviewData) {
+    if (this.cachedPreviewData) {
       return;
     }
     const previewData = this.cachePreviewData(state, reportData);
     const preview = state.previewBox;
     preview.innerHTML = "";
-    for (const [name, values] of Object.entries(previewData)) {
+    for (const [name, value] of Object.entries(previewData)) {
       const details = state.createElement("details");
-      details.className = `preview-${name}`;
 
       const summary = state.createElement("summary");
       summary.innerText = name;
+      summary.dataset.capturesFocus = "true";
       details.appendChild(summary);
 
       const info = state.createElement("div");
-      // text-link so it gets focus, but without the weird behavior of data-captures-focus.
-      info.className = "data text-link";
-      for (const [k, v] of Object.entries(values)) {
-        if (k == "isTabSpecific") {
-          details.classList.add("tab-specific-data");
-          continue;
-        }
-        const { value, isTabSpecific } = v;
+      info.className = "data";
+      for (const [k, v] of Object.entries(value)) {
         const div = state.createElement("div");
-        div.classList.add("entry");
-        div.classList.add(`preview-${k}`);
-        if (isTabSpecific) {
-          div.classList.add("tab-specific-data");
-        }
+        div.className = "entry";
         const span_name = state.createElement("span");
         const span_value = state.createElement("span");
-        span_value.className = "value";
+        span_name.className = `preview_${k}`;
         span_name.innerText = `${k}:`;
-        if (typeof value === "string" && value.startsWith("data:image/")) {
-          const img = state.createElement("img");
-          img.src = value;
-          span_value.appendChild(img);
-        } else {
-          // Add some extra word-wrapping opportunities to the data by adding spaces,
-          // so users don't have to horizontally scroll as much.
-          span_value.innerText =
-            JSON.stringify(value)?.replace(/[,:]/g, "$& ") ?? "";
-        }
+        // Add some extra word-wrapping opportunities to the data by adding spaces,
+        // so users don't have to horizontally scroll as much.
+        span_value.innerText = JSON.stringify(v)?.replace(/[,:]/g, "$& ") ?? "";
         div.append(span_name, span_value);
         info.appendChild(div);
       }
@@ -1065,10 +797,10 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     }
   }
 
-  #getActor(browser) {
-    return browser.browsingContext.currentWindowGlobal.getActor(
-      "ReportBrokenSite"
-    );
+  async #queryActor(msg, params, browser) {
+    const actor =
+      browser.browsingContext.currentWindowGlobal.getActor("ReportBrokenSite");
+    return actor.sendQuery(msg, params);
   }
 
   async #loadTab(tabbrowser, url, triggeringPrincipal) {
@@ -1095,47 +827,34 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
   }
 
   async #openWebCompatTab(tabbrowser) {
-    const { document } = tabbrowser.selectedBrowser.documentGlobal;
-    const { description, reason, url, currentTabWebcompatDetailsPromise } =
-      ViewState.get(document);
-    const webcompatInfo = await currentTabWebcompatDetailsPromise;
-
-    const endpointUrl =
-      Services.prefs.getStringPref(
-        ReportBrokenSite.NEW_REPORT_ENDPOINT_PREF,
-        ""
-      ) || DEFAULT_NEW_REPORT_ENDPOINT;
-
+    const endpointUrl = this.sendMoreInfoEndpoint;
     const principal = Services.scriptSecurityManager.createNullPrincipal({});
     const tab = await this.#loadTab(tabbrowser, endpointUrl, principal);
+    const { document } = tabbrowser.selectedBrowser.ownerGlobal;
+    const { description, reason, url, currentTabWebcompatDetailsPromise } =
+      ViewState.get(document);
 
-    const actor = this.#getActor(tabbrowser.selectedBrowser);
-    return actor
-      .sendQuery(
-        "SendDataToWebcompatCom",
-        {
-          reason,
-          description,
-          endpointUrl,
-          reportUrl: url,
-          reporterConfig: ReportBrokenSite.WEBCOMPAT_REPORTER_CONFIG,
-          webcompatInfo,
-        },
-        tab.linkedBrowser
-      )
-      .catch(err => {
-        console.error(
-          "Report Broken Site: error opening tab to webcompat.com",
-          err
-        );
-      });
+    return this.#queryActor(
+      "SendDataToWebcompatCom",
+      {
+        reason,
+        description,
+        endpointUrl,
+        reportUrl: url,
+        reporterConfig: ReportBrokenSite.WEBCOMPAT_REPORTER_CONFIG,
+        webcompatInfo: await currentTabWebcompatDetailsPromise,
+      },
+      tab.linkedBrowser
+    ).catch(err => {
+      console.error("Report Broken Site: unexpected error", err);
+    });
   }
 
   async #sendReportAsGleanPing({
+    blockedTrackersCheckbox,
     currentTabWebcompatDetailsPromise,
     description,
     reason,
-    shouldSendBlockedTrackers,
     url,
   }) {
     const gBase = Glean.brokenSiteReport;
@@ -1154,7 +873,7 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       return;
     }
 
-    if (!shouldSendBlockedTrackers) {
+    if (!blockedTrackersCheckbox.checked) {
       delete details.antitracking.blockedOrigins;
     }
 
@@ -1185,13 +904,13 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
 
   open(event) {
     const { target } = event.sourceEvent;
-    const { selectedBrowser } = target.documentGlobal.gBrowser;
-    const { documentGlobal } = selectedBrowser;
-    const { document } = documentGlobal;
+    const { selectedBrowser } = target.ownerGlobal.gBrowser;
+    const { ownerGlobal } = selectedBrowser;
+    const { document } = ownerGlobal;
 
     switch (target.id) {
       case "appMenu-report-broken-site-button":
-        documentGlobal.PanelUI.showSubView(
+        ownerGlobal.PanelUI.showSubView(
           ReportBrokenSite.MAIN_PANELVIEW_ID,
           target
         );
@@ -1206,9 +925,9 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
         const appMenuPopup = document.getElementById("appMenu-popup");
         appMenuPopup?.hidePopup();
 
-        documentGlobal.PanelUI.showSubView(
+        ownerGlobal.PanelUI.showSubView(
           ReportBrokenSite.MAIN_PANELVIEW_ID,
-          documentGlobal.PanelUI.menuButton
+          ownerGlobal.PanelUI.menuButton
         );
         break;
       }

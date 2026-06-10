@@ -7,11 +7,8 @@ const CONDITIONS_MAP = {
   test: globalThis.ConditionTest,
   or: globalThis.ConditionOr,
   cookie: globalThis.ConditionCookie,
-  date: globalThis.ConditionDate,
   not: globalThis.ConditionNot,
-  region: globalThis.ConditionRegion,
   url: globalThis.ConditionUrl,
-  vpn: globalThis.ConditionVPN,
 };
 
 /**
@@ -23,6 +20,17 @@ class ConditionFactory {
 
   constructor(context = {}) {
     this.#context = context || {};
+  }
+
+  static async run(conditionDesc, context = {}) {
+    if (conditionDesc === undefined) {
+      return true;
+    }
+
+    const factory = new ConditionFactory(context);
+    const condition = await factory.create(conditionDesc);
+    await condition.init();
+    return condition.check();
   }
 
   create(conditionDesc) {

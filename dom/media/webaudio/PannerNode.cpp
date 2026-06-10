@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -351,29 +353,37 @@ void PannerNode::SetPanningModel(PanningModelType aPanningModel) {
   SendInt32ParameterToTrack(PANNING_MODEL, int32_t(mPanningModel));
 }
 
-void PannerNode::SetPosition(float aX, float aY, float aZ, ErrorResult& aRv) {
-  mPositionX->SetValue(aX, aRv);
-  if (aRv.Failed()) {
-    return;
+static bool SetParamFromDouble(AudioParam* aParam, double aValue,
+                               const char (&aParamName)[2], ErrorResult& aRv) {
+  float value = static_cast<float>(aValue);
+  if (!std::isfinite(value)) {
+    aRv.ThrowTypeError<MSG_NOT_FINITE>(aParamName);
+    return false;
   }
-  mPositionY->SetValue(aY, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  mPositionZ->SetValue(aZ, aRv);
+  aParam->SetValue(value, aRv);
+  return !aRv.Failed();
 }
 
-void PannerNode::SetOrientation(float aX, float aY, float aZ,
+void PannerNode::SetPosition(double aX, double aY, double aZ,
+                             ErrorResult& aRv) {
+  if (!SetParamFromDouble(mPositionX, aX, "x", aRv)) {
+    return;
+  }
+  if (!SetParamFromDouble(mPositionY, aY, "y", aRv)) {
+    return;
+  }
+  SetParamFromDouble(mPositionZ, aZ, "z", aRv);
+}
+
+void PannerNode::SetOrientation(double aX, double aY, double aZ,
                                 ErrorResult& aRv) {
-  mOrientationX->SetValue(aX, aRv);
-  if (aRv.Failed()) {
+  if (!SetParamFromDouble(mOrientationX, aX, "x", aRv)) {
     return;
   }
-  mOrientationY->SetValue(aY, aRv);
-  if (aRv.Failed()) {
+  if (!SetParamFromDouble(mOrientationY, aY, "y", aRv)) {
     return;
   }
-  mOrientationZ->SetValue(aZ, aRv);
+  SetParamFromDouble(mOrientationZ, aZ, "z", aRv);
 }
 
 size_t PannerNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
@@ -392,9 +402,6 @@ JSObject* PannerNode::WrapObject(JSContext* aCx,
 // Those three functions are described in the spec.
 float PannerNodeEngine::LinearGainFunction(double aDistance) {
   double clampedRollof = std::clamp(mRolloffFactor, 0.0, 1.0);
-  if (mMaxDistance <= mRefDistance) {
-    return AssertedCast<float>(1.0 - clampedRollof);
-  }
   return AssertedCast<float>(
       1.0 - clampedRollof *
                 (std::max(std::min(aDistance, mMaxDistance), mRefDistance) -
@@ -435,9 +442,6 @@ void PannerNodeEngine::HRTFPanningFunction(const AudioBlock& aInput,
   input.mVolume *=
       ComputeConeGain(position, orientation) * ComputeDistanceGain(position);
 
-  if (mDestination->Graph()->IsNonRealtime()) {
-    mHRTFPanner->DatabaseLoader()->waitForLoaderThreadCompletion();
-  }
   mHRTFPanner->pan(azimuth, elevation, &input, aOutput);
 }
 
@@ -626,11 +630,7 @@ void PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
   }
 }
 
-// With infinite precision, this would be equivalent to the algorithm in
-// https://webaudio.github.io/web-audio-api/#azimuth-elevation.
-// atan2() is used in place of acos() because the precision of acos(x)
-// degrades rapidly as x approaches 1 or -1.
-// acos() amplifies small errors in x when x is near 1 or -1.
+// This algorithm is specified in the webaudio spec.
 void PannerNodeEngine::ComputeAzimuthAndElevation(const ThreeDPoint& position,
                                                   float& aAzimuth,
                                                   float& aElevation) {
@@ -641,40 +641,46 @@ void PannerNodeEngine::ComputeAzimuthAndElevation(const ThreeDPoint& position,
     return;
   }
 
+  sourceListener.Normalize();
+
+  // Project the source-listener vector on the x-z plane.
   const ThreeDPoint& listenerFront = mListenerEngine->FrontVector();
   const ThreeDPoint& listenerRight = mListenerEngine->RightVector();
-  ThreeDPoint listenerUp = listenerRight.CrossProduct(listenerFront);
-  // Project source - listener vector onto each listener axis.
-  double frontProjection = sourceListener.DotProduct(listenerFront);
-  double rightProjection = sourceListener.DotProduct(listenerRight);
-  double upProjection = sourceListener.DotProduct(listenerUp);
-  // Magnitude of source - listener vector projected onto the front-right plane
-  double planeMagnitude = fdlibm_hypot(frontProjection, rightProjection);
-  // Up is elevation 90; down is -90; right-front plane is zero.
-  // Divide by M_PI before multiplying by 180 so that integer power of two
-  // factors of pi convert exactly.
-  aElevation = fdlibm_atan2(upProjection, planeMagnitude) / M_PI * 180;
-  WebAudioUtils::FixNaN(aElevation);
-  MOZ_ASSERT(aElevation <= 90);
-  MOZ_ASSERT(aElevation >= -90);
+  ThreeDPoint up = listenerRight.CrossProduct(listenerFront);
 
-  if (planeMagnitude == 0.0) {
+  double upProjection = sourceListener.DotProduct(up);
+  aElevation = 90 - 180 * fdlibm_acos(upProjection) / M_PI;
+
+  if (aElevation > 90) {
+    aElevation = 180 - aElevation;
+  } else if (aElevation < -90) {
+    aElevation = -180 - aElevation;
+  }
+
+  ThreeDPoint projectedSource = sourceListener - up * upProjection;
+  if (projectedSource.IsZero()) {
     // source - listener direction is up or down.
     aAzimuth = 0.0;
     return;
   }
+  projectedSource.Normalize();
 
-  // Compute the azimuth, and convert to degrees.
-  // Right is 90, left is -90; front is zero.
-  aAzimuth = fdlibm_atan2(rightProjection, frontProjection) / M_PI * 180;
-  // Back is 180, even when rightProjection is -0.
-  if (aAzimuth == -180) {
-    aAzimuth = 180;
-  } else {
-    WebAudioUtils::FixNaN(aAzimuth);
+  // Actually compute the angle, and convert to degrees
+  double projection = projectedSource.DotProduct(listenerRight);
+  aAzimuth = 180 * fdlibm_acos(projection) / M_PI;
+
+  // Compute whether the source is in front or behind the listener.
+  double frontBack = projectedSource.DotProduct(listenerFront);
+  if (frontBack < 0) {
+    aAzimuth = 360 - aAzimuth;
   }
-  MOZ_ASSERT(aAzimuth <= 180);
-  MOZ_ASSERT(aAzimuth > -180);
+  // Rotate the azimuth so it is relative to the listener front vector instead
+  // of the right vector.
+  if ((aAzimuth >= 0) && (aAzimuth <= 270)) {
+    aAzimuth = 90 - aAzimuth;
+  } else {
+    aAzimuth = 450 - aAzimuth;
+  }
 }
 
 // This algorithm is described in the WebAudio spec.

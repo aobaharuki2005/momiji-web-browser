@@ -123,11 +123,6 @@ function extensionAllowedToInspectPrincipal(
   principal,
   location
 ) {
-  // Access to devtools.inspectedWindow.eval is gated on the "devtools" permission,
-  // having the "Extend developer tools to access your data in open tabs" warning.
-  // This supersedes the need for host permissions, so `extensionPolicy.canAccessURI`
-  // cannot be used here. Instead, we perform checks to verify what an extension with
-  // maximal permissions is allowed to access.
   if (principal.isNullPrincipal) {
     if (location.protocol === "view-source:") {
       // Don't fall back to the precursor, we never want extensions to be able
@@ -170,7 +165,7 @@ function extensionAllowedToInspectPrincipal(
   }
 
   if (principalURI.schemeIs("file")) {
-    return extensionPolicy.fileSchemeAllowed;
+    return true;
   }
 
   return false;

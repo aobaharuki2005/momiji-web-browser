@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -187,9 +188,9 @@ dictionary ReceiveMessageArgument
    */
   any json = null;
 
-  required sequence<MessagePort> ports;
+  sequence<MessagePort> ports;
 
-  FrameLoader? targetFrameLoader = null;
+  FrameLoader targetFrameLoader;
 };
 
 [Exposed=Window]
@@ -243,10 +244,31 @@ interface mixin MessageListenerManagerMixin
   /**
    * Undo an |addMessageListener| call -- that is, calling this causes us to no
    * longer invoke |listener| when |messageName| is received.
+   *
+   * removeMessageListener does not remove a message listener added via
+   * addWeakMessageListener; use removeWeakMessageListener for that.
    */
   [Throws]
   undefined removeMessageListener(DOMString messageName,
                                   MessageListener listener);
+
+  /**
+   * This is just like addMessageListener, except the message manager holds a
+   * weak ref to |listener|.
+   *
+   * If you have two weak message listeners for the same message, they may be
+   * called in any order.
+   */
+  [Throws]
+  undefined addWeakMessageListener(DOMString messageName,
+                                   MessageListener listener);
+
+  /**
+   * This undoes an |addWeakMessageListener| call.
+   */
+  [Throws]
+  undefined removeWeakMessageListener(DOMString messageName,
+                                      MessageListener listener);
 };
 
 /**

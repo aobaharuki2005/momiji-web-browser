@@ -75,7 +75,7 @@ add_task(async function () {
   );
 
   const onReloaded = inspector.once("reloaded");
-  await reloadSelectedTab();
+  await reloadBrowser();
   info("Wait for inspector to be reloaded after page reload");
   await onReloaded;
 

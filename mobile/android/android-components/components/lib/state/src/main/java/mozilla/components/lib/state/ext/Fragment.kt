@@ -10,8 +10,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.flowWithLifecycle
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
@@ -31,15 +29,11 @@ import mozilla.components.support.ktx.android.view.toScope
  * [Store].
  */
 @MainThread
-fun <S : State, A : Action> Fragment.consumeFrom(
-    store: Store<S, A>,
-    mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
-    block: (S) -> Unit,
-) {
+fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) -> Unit) {
     val fragment = this
     val view = checkNotNull(view) { "Fragment has no view yet. Call from onViewCreated()." }
 
-    val scope = view.toScope(mainDispatcher = mainDispatcher)
+    val scope = view.toScope()
     val channel = store.channel(owner = this)
 
     scope.launch {
@@ -91,7 +85,6 @@ fun <S : State, A : Action> Fragment.consumeFrom(
 fun <S : State, A : Action> Fragment.consumeFlow(
     from: Store<S, A>,
     owner: LifecycleOwner? = this,
-    mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
     block: suspend (Flow<S>) -> Unit,
 ) {
     val fragment = this
@@ -105,7 +98,7 @@ fun <S : State, A : Action> Fragment.consumeFlow(
         minActiveState = Lifecycle.State.STARTED,
     )
 
-    val viewBoundScope = view.toScope(mainDispatcher = mainDispatcher)
+    val viewBoundScope = view.toScope()
 
     viewBoundScope.launch {
         val filteredFlow = viewLifecycleAwareFlow.filter {

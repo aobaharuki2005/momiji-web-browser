@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,10 +18,10 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PrivateAttribution, mGlobal)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PrivateAttribution, mOwner)
 
 PrivateAttribution::PrivateAttribution(nsIGlobalObject* aGlobal)
-    : mGlobal(aGlobal) {
+    : mOwner(aGlobal) {
   MOZ_ASSERT(aGlobal);
 }
 
@@ -41,8 +43,8 @@ bool PrivateAttribution::ShouldRecord() {
 
 bool PrivateAttribution::GetSourceHostIfNonPrivate(nsACString& aSourceHost,
                                                    ErrorResult& aRv) {
-  MOZ_ASSERT(mGlobal);
-  nsIPrincipal* prin = mGlobal->PrincipalOrNull();
+  MOZ_ASSERT(mOwner);
+  nsIPrincipal* prin = mOwner->PrincipalOrNull();
   if (!prin || NS_FAILED(prin->GetHost(aSourceHost))) {
     aRv.ThrowInvalidStateError("Couldn't get source host");
     return false;

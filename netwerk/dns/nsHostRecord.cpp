@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,6 +9,7 @@
 #include "DNSLogging.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/glean/NetwerkDnsMetrics.h"
+#include "mozilla/ThreadSafety.h"
 #include "TRRService.h"
 #include "mozilla/ProfilerMarkers.h"
 
@@ -49,8 +51,10 @@ struct HostResolverMarker {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.SetTableLabel("{marker.data.host}");
-    schema.AddKeyFormat("host", MS::Format::SanitizedString);
-    schema.AddKeyFormat("originSuffix", MS::Format::SanitizedString);
+    schema.AddKeyFormat("host", MS::Format::SanitizedString,
+                        MS::PayloadFlags::Searchable);
+    schema.AddKeyFormat("originSuffix", MS::Format::SanitizedString,
+                        MS::PayloadFlags::Searchable);
     schema.AddKeyFormat("qtype", MS::Format::Integer);
     schema.AddKeyFormat("flags", MS::Format::String);
     return schema;
@@ -187,7 +191,10 @@ NS_IMPL_ISUPPORTS_INHERITED(AddrHostRecord, nsHostRecord, AddrHostRecord)
 
 AddrHostRecord::AddrHostRecord(const nsHostKey& key) : nsHostRecord(key) {}
 
-AddrHostRecord::~AddrHostRecord() { mCallbacks.clear(); }
+AddrHostRecord::~AddrHostRecord() {
+  mCallbacks.clear();
+  glean::dns::blocklist_count.AccumulateSingleSample(mUnusableCount);
+}
 
 bool AddrHostRecord::Blocklisted(const NetAddr* aQuery) {
   addr_info_lock.AssertCurrentThreadOwns();
@@ -222,13 +229,15 @@ void AddrHostRecord::ReportUnusable(const NetAddr* aAddress) {
        "used trr=%d\n",
        host.get(), this, mTRRSuccess));
 
-  nsCString item;
-  if (aAddress->ToString(item)) {
+  ++mUnusableCount;
+
+  char buf[kIPv6CStrBufSize];
+  if (aAddress->ToStringBuffer(buf, sizeof(buf))) {
     LOG(
         ("Successfully adding address [%s] to blocklist for host "
          "[%s].\n",
-         item.get(), host.get()));
-    mUnusableItems.AppendElement(item);
+         buf, host.get()));
+    mUnusableItems.AppendElement(nsCString(buf));
   }
 }
 
@@ -244,15 +253,13 @@ size_t AddrHostRecord::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
 
   n += nsHostKey::SizeOfExcludingThis(mallocSizeOf);
   n += SizeOfResolveHostCallbackListExcludingHead(mCallbacks, mallocSizeOf);
+
+  n += addr_info ? addr_info->SizeOfIncludingThis(mallocSizeOf) : 0;
   n += mallocSizeOf(addr.get());
 
-  {
-    MutexAutoLock lock(addr_info_lock);
-    n += addr_info ? addr_info->SizeOfIncludingThis(mallocSizeOf) : 0;
-    n += mUnusableItems.ShallowSizeOfExcludingThis(mallocSizeOf);
-    for (size_t i = 0; i < mUnusableItems.Length(); i++) {
-      n += mUnusableItems[i].SizeOfExcludingThisIfUnshared(mallocSizeOf);
-    }
+  n += mUnusableItems.ShallowSizeOfExcludingThis(mallocSizeOf);
+  for (size_t i = 0; i < mUnusableItems.Length(); i++) {
+    n += mUnusableItems[i].SizeOfExcludingThisIfUnshared(mallocSizeOf);
   }
   return n;
 }
@@ -272,7 +279,6 @@ bool AddrHostRecord::HasUsableResultInternal(
     return true;
   }
 
-  MutexAutoLock lock(addr_info_lock);
   return addr_info || addr;
 }
 
@@ -508,8 +514,10 @@ bool TypeHostRecord::HasUsableResultInternal(
     return true;
   }
 
-  MutexAutoLock lock(mResultsLock);
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
+  // To avoid locking in a const method
   return !mResults.is<Nothing>();
+  MOZ_POP_THREAD_SAFETY
 }
 
 bool TypeHostRecord::RefreshForNegativeResponse() const { return false; }

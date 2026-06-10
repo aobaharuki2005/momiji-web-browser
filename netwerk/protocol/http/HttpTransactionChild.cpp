@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,12 +16,9 @@
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "nsHttpResponseHead.h"
 #include "nsInputStreamPump.h"
-#include "nsISocketTransport.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsHttpHandler.h"
-#include "nsHttpTransaction.h"
 #include "nsNetUtil.h"
 #include "nsProxyInfo.h"
 #include "nsProxyRelease.h"
@@ -67,9 +66,9 @@ nsresult HttpTransactionChild::InitInternal(
     uint32_t caps, const HttpConnectionInfoCloneArgs& infoArgs,
     nsHttpRequestHead* requestHead, nsIInputStream* requestBody,
     uint64_t requestContentLength, bool requestBodyHasHeaders,
-    uint64_t browserId, HttpTrafficCategory httpTrafficCategory,
-    uint64_t requestContextID, ClassOfService classOfService,
-    uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
+    uint64_t browserId, uint8_t httpTrafficCategory, uint64_t requestContextID,
+    ClassOfService classOfService, uint32_t initialRwin,
+    bool responseTimeoutEnabled, uint64_t channelId,
     bool aHasTransactionObserver,
     const nsILoadInfo::IPAddressSpace& aParentIPAddressSpace,
     const LNAPerms& aLnaPermissionStatus) {
@@ -93,9 +92,9 @@ nsresult HttpTransactionChild::InitInternal(
       caps, cinfo, requestHead, requestBody, requestContentLength,
       requestBodyHasHeaders, GetCurrentSerialEventTarget(),
       nullptr,  // TODO: security callback, fix in bug 1512479.
-      this, browserId, httpTrafficCategory, rc, classOfService, initialRwin,
-      responseTimeoutEnabled, channelId, std::move(observer),
-      aParentIPAddressSpace, aLnaPermissionStatus);
+      this, browserId, static_cast<HttpTrafficCategory>(httpTrafficCategory),
+      rc, classOfService, initialRwin, responseTimeoutEnabled, channelId,
+      std::move(observer), aParentIPAddressSpace, aLnaPermissionStatus);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mTransaction = nullptr;
     return rv;
@@ -145,10 +144,10 @@ mozilla::ipc::IPCResult HttpTransactionChild::RecvInit(
     const nsHttpRequestHead& aReqHeaders, const Maybe<IPCStream>& aRequestBody,
     const uint64_t& aReqContentLength, const bool& aReqBodyIncludesHeaders,
     const uint64_t& aTopLevelOuterContentWindowId,
-    const HttpTrafficCategory& aHttpTrafficCategory,
-    const uint64_t& aRequestContextID, const ClassOfService& aClassOfService,
-    const uint32_t& aInitialRwin, const bool& aResponseTimeoutEnabled,
-    const uint64_t& aChannelId, const bool& aHasTransactionObserver,
+    const uint8_t& aHttpTrafficCategory, const uint64_t& aRequestContextID,
+    const ClassOfService& aClassOfService, const uint32_t& aInitialRwin,
+    const bool& aResponseTimeoutEnabled, const uint64_t& aChannelId,
+    const bool& aHasTransactionObserver,
     const mozilla::Maybe<PInputChannelThrottleQueueChild*>& aThrottleQueue,
     const bool& aIsDocumentLoad,
     const nsILoadInfo::IPAddressSpace& aParentIPAddressSpace,
@@ -253,7 +252,8 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
     nsHttp::SendFunc<nsCString> sendFunc =
         [self = UnsafePtr<HttpTransactionChild>(this)](
             const nsCString& aData, uint64_t aOffset, uint32_t aCount) {
-          return self->SendOnDataAvailable(aData, aOffset, TimeStamp::Now());
+          return self->SendOnDataAvailable(aData, aOffset, aCount,
+                                           TimeStamp::Now());
         };
 
     LOG(("  ODA to parent process"));
@@ -274,7 +274,7 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
           const nsDependentCSubstring& aData, uint64_t aOffset,
           uint32_t aCount) {
         return self->mDataBridgeParent->SendOnTransportAndData(
-            aOffset, aData, TimeStamp::Now());
+            aOffset, aCount, aData, TimeStamp::Now());
       };
 
   LOG(("  ODA to content process"));
@@ -294,7 +294,7 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
             nsHttp::SendFunc<nsCString> sendFunc =
                 [self](const nsCString& aData, uint64_t aOffset,
                        uint32_t aCount) {
-                  return self->SendOnDataAvailable(aData, aOffset,
+                  return self->SendOnDataAvailable(aData, aOffset, aCount,
                                                    TimeStamp::Now());
                 };
 
@@ -357,26 +357,6 @@ bool HttpTransactionChild::CanSendODAToContentProcessDirectly(
   // UnknownDecoder could be used in parent process, so we can't send ODA to
   // content process.
   if (!aHead->HasContentType()) {
-    return false;
-  }
-
-  nsAutoCString contentEncoding;
-  if (NS_SUCCEEDED(
-          aHead->GetHeader(nsHttp::Content_Encoding, contentEncoding)) &&
-      !contentEncoding.IsEmpty()) {
-    // Content-Encoding is "encoding[,encoding]*" roughly.  Searching for the
-    // string dcb or dcz could match things that aren't strictly dcb or dcz --
-    // but there aren't any other valid encodings that would trigger this,
-    // and at worst we'd just avoid sending it directly
-    if (contentEncoding.LowerCaseFindASCII("dcb") != -1 ||
-        contentEncoding.LowerCaseFindASCII("dcz") != -1) {
-      return false;
-    }
-  }
-
-  nsAutoCString useAsDict;
-  if (NS_SUCCEEDED(aHead->GetHeader(nsHttp::Use_As_Dictionary, useAsDict)) &&
-      !useAsDict.IsEmpty()) {
     return false;
   }
 
@@ -465,8 +445,8 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
-  Maybe<nsHttpResponseHead> proxyConnectResponseHead =
-      mTransaction->GetProxyConnectResponseHead();
+  int32_t proxyConnectResponseCode =
+      mTransaction->GetProxyConnectResponseCode();
 
   nsIRequest::TRRMode mode = nsIRequest::TRR_DEFAULT_MODE;
   TRRSkippedReason reason = nsITRRSkipReason::TRR_UNSET;
@@ -487,12 +467,11 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
   (void)SendOnStartRequest(
       status, std::move(optionalHead), securityInfo,
       mTransaction->ProxyConnectFailed(),
-      ToTimingStructArgs(mTransaction->Timings()),
-      std::move(proxyConnectResponseHead), dataForSniffer, optionalAltSvcUsed,
-      !!mDataBridgeParent, mTransaction->TakeRestartedState(),
-      mTransaction->HTTPSSVCReceivedStage(), mTransaction->GetSupportsHTTP3(),
-      mode, reason, mTransaction->Caps(), TimeStamp::Now(), infoArgs,
-      mTransaction->GetTargetIPAddressSpace());
+      ToTimingStructArgs(mTransaction->Timings()), proxyConnectResponseCode,
+      dataForSniffer, optionalAltSvcUsed, !!mDataBridgeParent,
+      mTransaction->TakeRestartedState(), mTransaction->HTTPSSVCReceivedStage(),
+      mTransaction->GetSupportsHTTP3(), mode, reason, mTransaction->Caps(),
+      TimeStamp::Now(), infoArgs, mTransaction->GetTargetIPAddressSpace());
   return NS_OK;
 }
 

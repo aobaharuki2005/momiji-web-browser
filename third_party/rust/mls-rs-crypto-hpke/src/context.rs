@@ -7,7 +7,6 @@ use mls_rs_core::{
     error::IntoAnyError,
 };
 use mls_rs_crypto_traits::{AeadType, KdfType};
-use zeroize::Zeroizing;
 
 use crate::{hpke::HpkeError, kdf::HpkeKdf};
 
@@ -25,6 +24,10 @@ pub(super) struct Context<KDF: KdfType, AEAD: AeadType> {
 impl<KDF: KdfType + Debug, AEAD: AeadType + Debug> Debug for Context<KDF, AEAD> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Context")
+            .field(
+                "exporter_secret",
+                &mls_rs_core::debug::pretty_bytes(&self.exporter_secret),
+            )
             .field("encryption_context", &self.encryption_context)
             .field("kdf", &self.kdf)
             .finish()
@@ -86,12 +89,8 @@ pub struct ContextS<KDF: KdfType, AEAD: AeadType>(pub(super) Context<KDF, AEAD>)
 impl<KDF: KdfType, AEAD: AeadType> HpkeContextS for ContextS<KDF, AEAD> {
     type Error = HpkeError;
 
-    async fn export(
-        &self,
-        exporter_context: &[u8],
-        len: usize,
-    ) -> Result<Zeroizing<Vec<u8>>, Self::Error> {
-        self.0.export(exporter_context, len).await.map(Into::into)
+    async fn export(&self, exporter_context: &[u8], len: usize) -> Result<Vec<u8>, Self::Error> {
+        self.0.export(exporter_context, len).await
     }
 
     /// # Errors
@@ -116,12 +115,8 @@ pub struct ContextR<KDF: KdfType, AEAD: AeadType>(pub(super) Context<KDF, AEAD>)
 impl<KDF: KdfType, AEAD: AeadType> HpkeContextR for ContextR<KDF, AEAD> {
     type Error = HpkeError;
 
-    async fn export(
-        &self,
-        exporter_context: &[u8],
-        len: usize,
-    ) -> Result<Zeroizing<Vec<u8>>, Self::Error> {
-        self.0.export(exporter_context, len).await.map(Into::into)
+    async fn export(&self, exporter_context: &[u8], len: usize) -> Result<Vec<u8>, Self::Error> {
+        self.0.export(exporter_context, len).await
     }
 
     /// # Errors
@@ -136,8 +131,8 @@ impl<KDF: KdfType, AEAD: AeadType> HpkeContextR for ContextR<KDF, AEAD> {
         &mut self,
         aad: Option<&[u8]>,
         ciphertext: &[u8],
-    ) -> Result<Zeroizing<Vec<u8>>, Self::Error> {
-        self.0.open(aad, ciphertext).await.map(Into::into)
+    ) -> Result<Vec<u8>, Self::Error> {
+        self.0.open(aad, ciphertext).await
     }
 }
 
@@ -158,6 +153,10 @@ impl<AEAD: AeadType + Debug> Debug for EncryptionContext<AEAD> {
             )
             .field("seq_number", &self.seq_number)
             .field("aead", &self.aead)
+            .field(
+                "aead_key",
+                &mls_rs_core::debug::pretty_bytes(&self.aead_key),
+            )
             .finish()
     }
 }

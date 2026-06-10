@@ -231,9 +231,10 @@ RefPtr<FetchServicePromises> FetchService::FetchInstance::Fetch() {
 
   nsAutoCString principalSpec;
   MOZ_ALWAYS_SUCCEEDS(mPrincipal->GetAsciiSpec(principalSpec));
-  nsCOMPtr<nsIURI> requestURL = mRequest->GetURL();
+  nsAutoCString requestURL;
+  mRequest->GetURL(requestURL);
   FETCH_LOG(("FetchInstance::Fetch [%p], mRequest URL: %s mPrincipal: %s", this,
-             requestURL->GetSpecOrDefault().get(), principalSpec.get()));
+             requestURL.BeginReading(), principalSpec.BeginReading()));
 
   nsresult rv;
 
@@ -269,7 +270,8 @@ RefPtr<FetchServicePromises> FetchService::FetchInstance::Fetch() {
   if (mArgsType == FetchArgsType::WorkerFetch) {
     auto& args = mArgs.as<WorkerFetchArgs>();
     mFetchDriver->SetWorkerScript(args.mWorkerScript);
-    mFetchDriver->SetClientInfo(args.mClientInfo);
+    MOZ_ASSERT(args.mClientInfo.isSome());
+    mFetchDriver->SetClientInfo(args.mClientInfo.ref());
     mFetchDriver->SetController(args.mController);
     if (args.mCSPEventListener) {
       mFetchDriver->SetCSPEventListener(args.mCSPEventListener);
@@ -282,7 +284,6 @@ RefPtr<FetchServicePromises> FetchService::FetchInstance::Fetch() {
 
   if (mArgsType == FetchArgsType::MainThreadFetch) {
     auto& args = mArgs.as<MainThreadFetchArgs>();
-    mFetchDriver->SetClientInfo(args.mClientInfo);
     mFetchDriver->SetAssociatedBrowsingContextID(
         args.mAssociatedBrowsingContextID);
     mFetchDriver->SetIsThirdPartyContext(Some(args.mIsThirdPartyContext));

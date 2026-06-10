@@ -36,8 +36,6 @@ const OBSERVER_TOPIC_RESOURCE_CACHE_RESPONSE =
  *    following object as payload:
  *      - {nsIHttpChannel} channel
  *            The channel for which the observer notification was emitted.
- *      - {string?} memoryCacheKey
- *            The cache key of the in-memory cached response.
  */
 
 export class CachedResourceListener {
@@ -61,7 +59,7 @@ export class CachedResourceListener {
     this.stopListening();
   }
 
-  observe(subject, topic, memoryCacheKey) {
+  observe(subject, topic) {
     switch (topic) {
       case OBSERVER_TOPIC_RESOURCE_CACHE_RESPONSE: {
         // file channels are not supported:
@@ -78,7 +76,6 @@ export class CachedResourceListener {
         if (browsingContext === this.#context) {
           this.emit("cached-resource-sent", {
             channel,
-            memoryCacheKey,
           });
         }
         break;

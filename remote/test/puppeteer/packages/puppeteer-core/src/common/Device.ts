@@ -1738,12 +1738,14 @@ for (const device of knownDevices) {
  * import {KnownDevices} from 'puppeteer';
  * const iPhone = KnownDevices['iPhone 15 Pro'];
  *
- * const browser = await puppeteer.launch();
- * const page = await browser.newPage();
- * await page.emulate(iPhone);
- * await page.goto('https://www.google.com');
- * // other actions...
- * await browser.close();
+ * (async () => {
+ *   const browser = await puppeteer.launch();
+ *   const page = await browser.newPage();
+ *   await page.emulate(iPhone);
+ *   await page.goto('https://www.google.com');
+ *   // other actions...
+ *   await browser.close();
+ * })();
  * ```
  *
  * @public

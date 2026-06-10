@@ -8,6 +8,7 @@ from libc.string cimport memcpy
 from multidict import istr
 
 DEF BUF_SIZE = 16 * 1024  # 16KiB
+cdef char BUFFER[BUF_SIZE]
 
 cdef object _istr = istr
 
@@ -18,17 +19,16 @@ cdef struct Writer:
     char *buf
     Py_ssize_t size
     Py_ssize_t pos
-    bint heap_allocated
 
-cdef inline void _init_writer(Writer* writer, char *buf):
-    writer.buf = buf
+
+cdef inline void _init_writer(Writer* writer):
+    writer.buf = &BUFFER[0]
     writer.size = BUF_SIZE
     writer.pos = 0
-    writer.heap_allocated = 0
 
 
 cdef inline void _release_writer(Writer* writer):
-    if writer.heap_allocated:
+    if writer.buf != BUFFER:
         PyMem_Free(writer.buf)
 
 
@@ -39,7 +39,7 @@ cdef inline int _write_byte(Writer* writer, uint8_t ch):
     if writer.pos == writer.size:
         # reallocate
         size = writer.size + BUF_SIZE
-        if not writer.heap_allocated:
+        if writer.buf == BUFFER:
             buf = <char*>PyMem_Malloc(size)
             if buf == NULL:
                 PyErr_NoMemory()
@@ -52,7 +52,6 @@ cdef inline int _write_byte(Writer* writer, uint8_t ch):
                 return -1
         writer.buf = buf
         writer.size = size
-        writer.heap_allocated = 1
     writer.buf[writer.pos] = <char>ch
     writer.pos += 1
     return 0
@@ -126,9 +125,8 @@ def _serialize_headers(str status_line, headers):
     cdef Writer writer
     cdef object key
     cdef object val
-    cdef char buf[BUF_SIZE]
 
-    _init_writer(&writer, buf)
+    _init_writer(&writer)
 
     try:
         if _write_str(&writer, status_line) < 0:

@@ -79,6 +79,13 @@ add_task(async function test_load_serps_and_click_related_searches() {
       // Tab 1 - Visit a SERP, clicks a related search without ads.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -99,6 +106,13 @@ add_task(async function test_load_serps_and_click_related_searches() {
       // Tab 2 - Visits a SERP, clicks a related SERP with ads.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -119,6 +133,13 @@ add_task(async function test_load_serps_and_click_related_searches() {
       // Tab 3 - Visit a SERP, clicks a related SERP without ads.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -140,6 +161,13 @@ add_task(async function test_load_serps_and_click_related_searches() {
       // with ads.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -154,6 +182,13 @@ add_task(async function test_load_serps_and_click_related_searches() {
       // without ads.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -174,6 +209,13 @@ add_task(async function test_load_serps_and_click_related_searches() {
       // Tab 3 - Visit a SERP without ads, clicks a related SERP without ads.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -187,6 +229,13 @@ add_task(async function test_load_serps_and_click_related_searches() {
       // Tab 1 - Visit a related SERP with ads.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -201,6 +250,13 @@ add_task(async function test_load_serps_and_click_related_searches() {
       // Tab 2 - Visit a related SERP without ads.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [],
     },
@@ -208,6 +264,13 @@ add_task(async function test_load_serps_and_click_related_searches() {
       // Tab 3 - Visit a related SERP without ads.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [],
     },
@@ -257,6 +320,13 @@ add_task(async function test_different_sources_click_ad() {
       // Tab 1 - Visit a SERP.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -271,6 +341,13 @@ add_task(async function test_different_sources_click_ad() {
       // Tab 2 - Visit a SERP, click a related SERP with ads.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -291,6 +368,13 @@ add_task(async function test_different_sources_click_ad() {
       // Tab 2 - Visit a SERP, click back button.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -308,7 +392,13 @@ add_task(async function test_different_sources_click_ad() {
       // Tab 2 - Visit a SERP, click ad button.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
         source: "tabhistory",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -367,6 +457,13 @@ add_task(async function test_different_sources_click_redirect_ad_in_new_tab() {
       // Tab 1 - Visit a SERP.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -381,6 +478,13 @@ add_task(async function test_different_sources_click_redirect_ad_in_new_tab() {
       // Tab 2 - Visit a SERP, click a related SERP with ads.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -401,6 +505,13 @@ add_task(async function test_different_sources_click_redirect_ad_in_new_tab() {
       // Tab 2 - Visit a SERP, click back button.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -418,7 +529,13 @@ add_task(async function test_different_sources_click_redirect_ad_in_new_tab() {
       // Tab 2 - Visit a SERP, click ad button.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
         source: "tabhistory",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -468,6 +585,13 @@ add_task(async function test_update_query_params_after_search() {
       // Tab 1 - Visit a SERP, click on a related SERP.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -488,6 +612,13 @@ add_task(async function test_update_query_params_after_search() {
       // Tab 1 - Visit a related SERP.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -502,6 +633,13 @@ add_task(async function test_update_query_params_after_search() {
       // Tab 2 - Visit a SERP, click on an ad.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -549,6 +687,13 @@ add_task(async function test_update_query_params() {
       // Tab 1 - Visit a SERP, clicked a related SERP.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -569,6 +714,13 @@ add_task(async function test_update_query_params() {
       // Tab 1 - Visit a related SERP.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -583,6 +735,13 @@ add_task(async function test_update_query_params() {
       // Tab 2 - Visit a SERP, click ad opening in a new window.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -637,6 +796,13 @@ add_task(async function test_update_query_params_multiple_related() {
       // Tab 1 - Visit a SERP, clicked a related SERP.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -657,6 +823,13 @@ add_task(async function test_update_query_params_multiple_related() {
       // Tab 1 - Visit a related SERP.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -671,6 +844,13 @@ add_task(async function test_update_query_params_multiple_related() {
       // Tab 2 - Visit a SERP, clicked a related SERP.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -691,6 +871,13 @@ add_task(async function test_update_query_params_multiple_related() {
       // Tab 2 - Visit a related SERP. Click on ad that opens in a new window.
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {

@@ -1,4 +1,4 @@
-// META: global=window,dedicatedworker
+// META: global=window,dedicatedworker,shadowrealm
 
 /**
  * btoa() as defined by the HTML5 spec, which mostly just references RFC4648.

@@ -11,11 +11,12 @@ function arrivingHereIsBad(aResult) {
 }
 
 function expectNotAllowedError(aResult) {
-  is(aResult.name, "NotAllowedError", "Expecting a NotAllowedError");
+  let expected = "NotAllowedError";
+  is(aResult.slice(0, expected.length), expected, `Expecting a ${expected}`);
 }
 
 function promiseMakeCredential(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
+  return ContentTask.spawn(tab.linkedBrowser, null, async function () {
     const cose_alg_ECDSA_w_SHA256 = -7;
 
     let publicKey = {
@@ -36,7 +37,7 @@ function promiseMakeCredential(tab) {
 }
 
 function promiseGetAssertion(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
+  return ContentTask.spawn(tab.linkedBrowser, null, async function () {
     let newCredential = {
       type: "public-key",
       id: content.crypto.getRandomValues(new Uint8Array(16)),

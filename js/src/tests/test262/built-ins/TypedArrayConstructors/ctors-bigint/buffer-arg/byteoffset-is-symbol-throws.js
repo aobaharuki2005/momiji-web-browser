@@ -14,7 +14,7 @@ info: |
   ...
   7. Let offset be ? ToInteger(byteOffset).
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Symbol, TypedArray]
 ---*/
 
@@ -25,6 +25,6 @@ testWithBigIntTypedArrayConstructors(function(TA) {
   assert.throws(TypeError, function() {
     new TA(buffer, byteOffset);
   });
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

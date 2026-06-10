@@ -4,7 +4,6 @@
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
-import { SyncHelpers } from "chrome://browser/content/preferences/config/account-sync.mjs";
 
 window.MozXULElement.insertFTLIfNeeded("browser/preferences/preferences.ftl");
 
@@ -103,11 +102,10 @@ class SyncEnginesList extends MozLitElement {
   }
 
   emptyStateTemplate() {
-    return html`<moz-box-button
-      class="empty-state"
-      data-l10n-id="sync-syncing-across-devices-empty-state2"
-      @click=${() => SyncHelpers._chooseWhatToSync(true, "manageSyncSettings")}
-    ></moz-box-button>`;
+    return html`<placeholder-message
+      data-l10n-id="sync-syncing-across-devices-empty-state"
+      imageSrc="chrome://global/skin/illustrations/security-error.svg"
+    ></placeholder-message>`;
   }
 
   render() {

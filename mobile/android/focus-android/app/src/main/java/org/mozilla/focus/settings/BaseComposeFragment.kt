@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -27,9 +28,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import mozilla.components.compose.base.button.IconButton
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.hideToolbar
+import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.ui.theme.focusColors
 import mozilla.components.ui.icons.R as iconsR
@@ -58,7 +60,7 @@ abstract class BaseComposeFragment : Fragment() {
      * Callback for the up navigation button shown in toolbar.
      */
     open fun onNavigateUp(): () -> Unit = {
-        activity?.onBackPressedDispatcher?.onBackPressed()
+        requireComponents.appStore.dispatch(AppAction.NavigateUp())
     }
 
     /**
@@ -138,11 +140,10 @@ private fun FocusTopAppBar(
         navigationIcon = {
             IconButton(
                 onClick = onNavigateUpClick,
-                contentDescription = stringResource(R.string.go_back),
             ) {
                 Icon(
-                    painter = painterResource(id = iconsR.drawable.mozac_ic_back_24),
-                    contentDescription = null,
+                    painterResource(id = iconsR.drawable.mozac_ic_back_24),
+                    stringResource(R.string.go_back),
                 )
             }
         },

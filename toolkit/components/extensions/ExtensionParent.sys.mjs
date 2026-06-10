@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -761,7 +763,7 @@ class ExtensionPageContextParent extends ProxyContextParent {
 
   // The window that contains this context. This may change due to moving tabs.
   get appWindow() {
-    let win = this.xulBrowser.documentGlobal;
+    let win = this.xulBrowser.ownerGlobal;
     return win.browsingContext.topChromeWindow;
   }
 
@@ -774,18 +776,16 @@ class ExtensionPageContextParent extends ProxyContextParent {
 
   get tabId() {
     let { tabTracker } = apiManager.global;
-    const xulBrowser = this.xulBrowser;
-    const tab = xulBrowser && tabTracker.getTabForBrowser(xulBrowser);
-    if (tab) {
-      return tabTracker.getId(tab);
+    let data = tabTracker.getBrowserData(this.xulBrowser);
+    if (data.tabId >= 0) {
+      return data.tabId;
     }
     return undefined;
   }
 
   toExtensionContext() {
     const { tabTracker } = apiManager.global;
-    const xulBrowser = this.xulBrowser;
-    const browserData = xulBrowser && tabTracker.getBrowserData(xulBrowser);
+    const { tabId, windowId } = tabTracker.getBrowserDataForContext(this);
     const windowContext = this.browsingContext?.currentWindowContext;
     return {
       // NOTE: the contextId property in the final set of properties returned to
@@ -805,8 +805,8 @@ class ExtensionPageContextParent extends ProxyContextParent {
       documentUrl: windowContext?.documentURI.spec,
       incognito: this.incognito,
       frameId: this.frameId,
-      tabId: browserData ? browserData.tabId : -1,
-      windowId: browserData ? browserData.windowId : -1,
+      tabId,
+      windowId,
       // TODO: File followup to also add a Firefox-only userContextId?
     };
   }
@@ -1486,7 +1486,7 @@ class HiddenXULWindow {
 
     let awaitFrameLoader;
 
-    if (browser.hasAttribute("remote")) {
+    if (browser.getAttribute("remote") === "true") {
       awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
     }
 

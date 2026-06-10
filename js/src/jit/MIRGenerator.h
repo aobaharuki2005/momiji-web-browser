@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -186,14 +188,6 @@ class MIRGenerator final {
   void spewBeginWasmFunction(unsigned funcIndex);
   void spewPass(const char* name, BacktrackingAllocator* ra = nullptr);
   void spewEndFunction();
-
-  // Explicitly reset compilation dependencies and perf spewer debug info.
-  // This must be called to correctly free compilation dependencies, which may
-  // have virtual destructors.
-  void cleanup() {
-    tracker.reset();
-    perfSpewer().reset();
-  }
 
   CompilationDependencyTracker tracker;
 };

@@ -172,7 +172,7 @@ Password.prototype = {
    *
    * @return nothing
    */
-  async Remove() {
+  Remove() {
     let login = new nsLoginInfo(
       this.props.hostname,
       this.props.submitURL,
@@ -182,6 +182,6 @@ Password.prototype = {
       this.props.usernameField,
       this.props.passwordField
     );
-    await Services.logins.removeLoginAsync(login);
+    Services.logins.removeLogin(login);
   },
 };

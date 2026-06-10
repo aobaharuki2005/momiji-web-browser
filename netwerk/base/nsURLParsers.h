@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsURLParsers_h_
-#define nsURLParsers_h_
+#ifndef nsURLParsers_h__
+#define nsURLParsers_h__
 
 #include "nsIURLParser.h"
 
@@ -114,4 +115,4 @@ class nsStdURLParser : public nsAuthURLParser {
                         int32_t* pathLen) override;
 };
 
-#endif  // nsURLParsers_h_
+#endif  // nsURLParsers_h__

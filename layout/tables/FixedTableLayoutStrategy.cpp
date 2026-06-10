@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:ts=2:et:sw=2:
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,7 +14,6 @@
 #include <algorithm>
 
 #include "WritingModes.h"
-#include "mozilla/ReflowInput.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 #include "nsTableCellFrame.h"
@@ -235,7 +236,7 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
           float pct = styleISize->ToPercentage();
           colISize = NSToCoordFloor(pct * float(tableISize));
 
-          if (cellStylePos->mBoxSizing == StyleBoxSizing::ContentBox) {
+          if (cellStylePos->mBoxSizing == StyleBoxSizing::Content) {
             nsIFrame::IntrinsicSizeOffsetData offsets =
                 cellFrame->IntrinsicISizeOffsets();
             colISize += offsets.padding + offsets.border;

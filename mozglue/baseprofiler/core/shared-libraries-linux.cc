@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -55,7 +57,7 @@ extern "C" MOZ_EXPORT __attribute__((weak)) int dl_iterate_phdr(
 // libc functions, and is thus safer to use in a crashed environment.
 class MemoryRange {
  public:
-  MemoryRange() : data_(nullptr), length_(0) {}
+  MemoryRange() : data_(NULL), length_(0) {}
 
   MemoryRange(const void* data, size_t length) { Set(data, length); }
 
@@ -67,7 +69,7 @@ class MemoryRange {
 
   // Resets to an empty range.
   void Reset() {
-    data_ = nullptr;
+    data_ = NULL;
     length_ = 0;
   }
 
@@ -93,7 +95,7 @@ class MemoryRange {
   // |sub_offset| bytes of this memory range, or NULL if the subrange
   // is out of bounds.
   const void* GetData(size_t sub_offset, size_t sub_length) const {
-    return Covers(sub_offset, sub_length) ? (data_ + sub_offset) : nullptr;
+    return Covers(sub_offset, sub_length) ? (data_ + sub_offset) : NULL;
   }
 
   // Same as the two-argument version of GetData() but uses sizeof(DataType)
@@ -153,7 +155,7 @@ class MemoryRange {
 // directly making system calls for open, close, mmap, and munmap.
 class MemoryMappedFile {
  public:
-  MemoryMappedFile() = default;
+  MemoryMappedFile() {}
 
   // Constructor that calls Map() to map a file at |path| into memory.
   // If Map() fails, the object behaves as if it is default constructed.
@@ -201,7 +203,7 @@ class MemoryMappedFile {
       return true;
     }
 
-    void* data = mmap(nullptr, file_len, PROT_READ, MAP_PRIVATE, fd, offset);
+    void* data = mmap(NULL, file_len, PROT_READ, MAP_PRIVATE, fd, offset);
     close(fd);
     if (data == MAP_FAILED) {
       return false;
@@ -216,7 +218,7 @@ class MemoryMappedFile {
   void Unmap() {
     if (content_.data()) {
       munmap(const_cast<uint8_t*>(content_.data()), content_.length());
-      content_.Set(nullptr, 0);
+      content_.Set(NULL, 0);
     }
   }
 
@@ -259,7 +261,7 @@ const size_t kMDGUIDSize = sizeof(MDGUID);
 class FileID {
  public:
   explicit FileID(const char* path) : path_(path) {}
-  ~FileID() = default;
+  ~FileID() {}
 
   // Load the identifier for the elf file path specified in the constructor into
   // |identifier|.
@@ -319,11 +321,11 @@ class FileID {
       const typename ElfClass::Shdr* sections, const char* section_names,
       const char* names_end, int nsection) {
     if (!name || !sections || nsection == 0) {
-      return nullptr;
+      return NULL;
     }
 
     int name_len = strlen(name);
-    if (name_len == 0) return nullptr;
+    if (name_len == 0) return NULL;
 
     for (int i = 0; i < nsection; ++i) {
       const char* section_name = section_names + sections[i].sh_name;
@@ -333,7 +335,7 @@ class FileID {
         return sections + i;
       }
     }
-    return nullptr;
+    return NULL;
   }
 
   struct ElfSegment {
@@ -423,7 +425,7 @@ class FileID {
         FindElfSectionByName<ElfClass>(section_name, section_type, sections,
                                        names, names_end, elf_header->e_shnum);
 
-    if (section != nullptr && section->sh_size > 0) {
+    if (section != NULL && section->sh_size > 0) {
       *section_start = elf_base + section->sh_offset;
       *section_size = section->sh_size;
     }
@@ -485,7 +487,7 @@ class FileID {
       return false;
     }
 
-    *section_start = nullptr;
+    *section_start = NULL;
     *section_size = 0;
 
     if (!IsValidElf(elf_mapped_base)) return false;
@@ -497,12 +499,12 @@ class FileID {
       return FindElfClassSection<ElfClass32>(elf_base, section_name,
                                              section_type, section_start,
                                              section_size) &&
-             *section_start != nullptr;
+             *section_start != NULL;
     } else if (cls == ELFCLASS64) {
       return FindElfClassSection<ElfClass64>(elf_base, section_name,
                                              section_type, section_start,
                                              section_size) &&
-             *section_start != nullptr;
+             *section_start != NULL;
     }
 
     return false;

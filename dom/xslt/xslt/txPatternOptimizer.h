@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef txPatternOptimizer_h_
-#define txPatternOptimizer_h_
+#ifndef txPatternOptimizer_h__
+#define txPatternOptimizer_h__
 
 #include "txXPathOptimizer.h"
 
@@ -26,4 +27,4 @@ class txPatternOptimizer {
   txXPathOptimizer mXPathOptimizer;
 };
 
-#endif  // txPatternOptimizer_h_
+#endif  // txPatternOptimizer_h__

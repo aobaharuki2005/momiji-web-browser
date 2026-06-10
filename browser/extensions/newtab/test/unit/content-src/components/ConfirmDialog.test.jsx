@@ -74,7 +74,7 @@ describe("<ConfirmDialog>", () => {
         <ConfirmDialog dispatch={dispatch} {...ConfirmDialogProps} />
       );
 
-      let doneLabel = wrapper.find("moz-button[type='destructive']");
+      let doneLabel = wrapper.find("moz-button[type='primary']");
       assert.ok(doneLabel.exists());
       assert.equal(
         doneLabel.prop("data-l10n-id"),
@@ -115,7 +115,7 @@ describe("<ConfirmDialog>", () => {
     it("should emit AlsoToMain DIALOG_CANCEL on cancel", () => {
       let cancelButton = wrapper
         .find("moz-button")
-        .filterWhere(n => n.prop("type") === "ghost");
+        .filterWhere(n => !n.prop("type"));
 
       assert.ok(cancelButton);
       cancelButton.simulate("click");
@@ -128,7 +128,7 @@ describe("<ConfirmDialog>", () => {
     it("should emit UserEvent DIALOG_CANCEL on cancel", () => {
       let cancelButton = wrapper
         .find("moz-button")
-        .filterWhere(n => n.prop("type") === "ghost");
+        .filterWhere(n => !n.prop("type"));
 
       assert.ok(cancelButton);
       cancelButton.simulate("click");
@@ -152,7 +152,7 @@ describe("<ConfirmDialog>", () => {
       wrapper = shallow(
         <ConfirmDialog dispatch={dispatch} {...ConfirmDialogProps} />
       );
-      let doneButton = wrapper.find("moz-button[type='destructive']");
+      let doneButton = wrapper.find("moz-button[type='primary']");
 
       assert.ok(doneButton);
       doneButton.simulate("click");
@@ -174,7 +174,7 @@ describe("<ConfirmDialog>", () => {
       wrapper = shallow(
         <ConfirmDialog dispatch={dispatch} {...ConfirmDialogProps} />
       );
-      let doneButton = wrapper.find("moz-button[type='destructive']");
+      let doneButton = wrapper.find("moz-button[type='primary']");
 
       assert.ok(doneButton);
       doneButton.simulate("click");

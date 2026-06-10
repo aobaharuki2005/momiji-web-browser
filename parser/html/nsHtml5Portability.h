@@ -59,7 +59,7 @@ class nsHtml5Portability {
   static nsHtml5String newStringFromBuffer(char16_t* buf, int32_t offset,
                                            int32_t length,
                                            nsHtml5TreeBuilder* treeBuilder,
-                                           nsHtml5AtomTable* interner);
+                                           bool maybeAtomize);
   static nsHtml5String newEmptyString();
   static nsHtml5String newStringFromLiteral(const char* literal);
   static nsHtml5String newStringFromString(nsHtml5String string);
@@ -74,8 +74,6 @@ class nsHtml5Portability {
   static bool stringEqualsString(nsHtml5String one, nsHtml5String other);
   static void initializeStatics();
   static void releaseStatics();
-
-#include "nsHtml5PortabilityHSupplement.h"
 };
 
 #endif

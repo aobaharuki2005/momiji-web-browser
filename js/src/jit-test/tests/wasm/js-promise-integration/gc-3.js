@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmJSPromiseIntegrationEnabled()
-
 // Test with suspended stack and promises references are lost.
 
 let s;

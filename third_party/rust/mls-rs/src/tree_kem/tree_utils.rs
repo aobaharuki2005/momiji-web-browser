@@ -37,7 +37,7 @@ pub(crate) fn build_tree(
         Ok(parent) => parent
             .unmerged_leaves
             .iter()
-            .map(|leaf_idx| format!("{}", **leaf_idx))
+            .map(|leaf_idx| format!("{}", leaf_idx.0))
             .collect(),
         Err(_) => {
             // Empty parent nodes throw `NotParent` error when borrow as Parent

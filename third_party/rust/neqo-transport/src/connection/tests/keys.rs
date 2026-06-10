@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use neqo_common::{Datagram, qdebug};
+use neqo_common::{qdebug, Datagram};
 use test_fixture::{
     assertions::{is_handshake, is_initial},
     now, split_datagram,
@@ -15,13 +15,12 @@ use super::{
         super::{CloseReason, ERROR_AEAD_LIMIT_REACHED},
         Connection, ConnectionParameters, Error, Output, State, StreamType,
     },
-    AT_LEAST_PTO, connect, connect_force_idle, default_client, default_server, maybe_authenticate,
-    send_and_receive, send_something,
+    connect, connect_force_idle, default_client, default_server, maybe_authenticate,
+    send_and_receive, send_something, AT_LEAST_PTO,
 };
 use crate::{
-    MIN_INITIAL_PACKET_SIZE,
     crypto::{OVERWRITE_INVOCATIONS, UPDATE_WRITE_KEYS_AT},
-    packet,
+    packet, MIN_INITIAL_PACKET_SIZE,
 };
 
 fn check_discarded(

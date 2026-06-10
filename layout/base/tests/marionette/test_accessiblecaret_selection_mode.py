@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -151,18 +152,15 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
         self.marionette.execute_script(
             """
-            window.synthesizeTouchEvent('touchstart', [{
-                identifier: 0,
-                offsetX: arguments[0],
-                offsetY: arguments[1],
-            }], 0, { toWindow: true });
+            let utils = window.windowUtils;
+            utils.sendTouchEventToWindow('touchstart', [0],
+                                         [arguments[0]], [arguments[1]],
+                                         [1], [1], [0], [1], [0], [0], [0], 0);
             window.synthesizeMouseEvent('mouselongtap', arguments[0], arguments[1],
                                         {}, { toWindow: true });
-            window.synthesizeTouchEvent('touchend', [{
-                identifier: 0,
-                offsetX: arguments[0],
-                offsetY: arguments[1],
-            }], 0, { toWindow: true });
+            utils.sendTouchEventToWindow('touchend', [0],
+                                         [arguments[0]], [arguments[1]],
+                                         [1], [1], [0], [1], [0], [0], [0], 0);
             """,
             script_args=[target_x, target_y],
             sandbox="system",

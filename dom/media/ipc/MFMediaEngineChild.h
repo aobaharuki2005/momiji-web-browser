@@ -24,13 +24,13 @@ class MFMediaEngineWrapper;
  */
 class MFMediaEngineChild final : public PMFMediaEngineChild {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFMediaEngineChild, final);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFMediaEngineChild);
 
   MFMediaEngineChild(MFMediaEngineWrapper* aOwner,
                      FrameStatistics* aFrameStats);
 
   void OwnerDestroyed();
-  void ActorDestroy(ActorDestroyReason aWhy) override;
+  void IPDLActorDestroyed();
 
   RefPtr<GenericNonExclusivePromise> Init(
       const MediaInfo& aInfo,
@@ -43,11 +43,8 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
   mozilla::ipc::IPCResult RecvUpdateCurrentTime(double aCurrentTimeInSecond);
   mozilla::ipc::IPCResult RecvNotifyEvent(MFMediaEngineEvent aEvent);
   mozilla::ipc::IPCResult RecvNotifyError(const MediaResult& aError);
-  mozilla::ipc::IPCResult RecvNotifyHardwareReset();
-  mozilla::ipc::IPCResult RecvNotifyWaitingForKey();
   mozilla::ipc::IPCResult RecvUpdateStatisticData(const StatisticData& aData);
   mozilla::ipc::IPCResult RecvNotifyResizing(uint32_t aWidth, uint32_t aHeight);
-  mozilla::ipc::IPCResult RecvNotifyFrameServerMode();
 
   nsISerialEventTarget* ManagerThread() const { return mManagerThread; }
   void AssertOnManagerThread() const {
@@ -72,6 +69,8 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
   // remote process.
   // Modified on the manager thread, and read on other threads.
   Atomic<uint64_t> mMediaEngineId;
+
+  RefPtr<MFMediaEngineChild> mIPDLSelfRef;
 
   MozPromiseHolder<GenericNonExclusivePromise> mInitPromiseHolder;
   MozPromiseRequestHolder<InitMediaEnginePromise> mInitEngineRequest;
@@ -128,11 +127,6 @@ class MFMediaEngineWrapper final : public ExternalPlaybackEngine {
   void UpdateCurrentTime(double aCurrentTimeInSecond);
   void NotifyEvent(ExternalEngineEvent aEvent);
   void NotifyError(const MediaResult& aError);
-  void NotifyHardwareReset();
-  void NotifyWaitingForKey();
-#ifdef MOZ_WMF_CDM
-  void NotifyFrameServerMode();
-#endif
 
   const RefPtr<MFMediaEngineChild> mEngine;
 

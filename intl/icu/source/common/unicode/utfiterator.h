@@ -557,11 +557,9 @@ class UTFImpl<
 public:
     // Handle ill-formed UTF-8
     U_FORCE_INLINE static CP32 sub() {
-        if constexpr (behavior == UTF_BEHAVIOR_NEGATIVE) {
-            return U_SENTINEL;
-        } else {
-            static_assert(behavior == UTF_BEHAVIOR_FFFD);
-            return 0xfffd;
+        switch (behavior) {
+            case UTF_BEHAVIOR_NEGATIVE: return U_SENTINEL;
+            case UTF_BEHAVIOR_FFFD: return 0xfffd;
         }
     }
 
@@ -738,13 +736,10 @@ class UTFImpl<
 public:
     // Handle ill-formed UTF-16: One unpaired surrogate.
     U_FORCE_INLINE static CP32 sub(CP32 surrogate) {
-        if constexpr (behavior == UTF_BEHAVIOR_NEGATIVE) {
-            return U_SENTINEL;
-        } else if constexpr (behavior == UTF_BEHAVIOR_FFFD) {
-            return 0xfffd;
-        } else {
-            static_assert(behavior == UTF_BEHAVIOR_SURROGATE);
-            return surrogate;
+        switch (behavior) {
+            case UTF_BEHAVIOR_NEGATIVE: return U_SENTINEL;
+            case UTF_BEHAVIOR_FFFD: return 0xfffd;
+            case UTF_BEHAVIOR_SURROGATE: return surrogate;
         }
     }
 
@@ -827,13 +822,10 @@ class UTFImpl<
 public:
     // Handle ill-formed UTF-32
     U_FORCE_INLINE static CP32 sub(bool forSurrogate, CP32 surrogate) {
-        if constexpr (behavior == UTF_BEHAVIOR_NEGATIVE) {
-            return U_SENTINEL;
-        } else if constexpr (behavior == UTF_BEHAVIOR_FFFD) {
-            return 0xfffd;
-        } else {
-            static_assert(behavior == UTF_BEHAVIOR_SURROGATE);
-            return forSurrogate ? surrogate : 0xfffd;
+        switch (behavior) {
+            case UTF_BEHAVIOR_NEGATIVE: return U_SENTINEL;
+            case UTF_BEHAVIOR_FFFD: return 0xfffd;
+            case UTF_BEHAVIOR_SURROGATE: return forSurrogate ? surrogate : 0xfffd;
         }
     }
 

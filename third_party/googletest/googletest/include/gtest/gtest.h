@@ -57,7 +57,6 @@
 #include <set>
 #include <sstream>
 #include <string>
-#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -139,10 +138,6 @@ GTEST_DECLARE_int32_(repeat);
 // only torn down once, for the last.
 GTEST_DECLARE_bool_(recreate_environments_when_repeating);
 
-// Together these flags determine which tests are run if the test is sharded.
-GTEST_DECLARE_int32_(shard_index);
-GTEST_DECLARE_int32_(total_shards);
-
 // This flag controls whether Google Test includes Google Test internal
 // stack frames in failure stack traces.
 GTEST_DECLARE_bool_(show_internal_stack_frames);
@@ -200,7 +195,7 @@ std::set<std::string>* GetIgnoredParameterizedTestSuites();
 // A base class that prevents subclasses from being copyable.
 // We do this instead of using '= delete' so as to avoid triggering warnings
 // inside user code regarding any of our declarations.
-class [[nodiscard]] GTestNonCopyable {
+class GTestNonCopyable {
  public:
   GTestNonCopyable() = default;
   GTestNonCopyable(const GTestNonCopyable&) = delete;
@@ -213,15 +208,15 @@ class [[nodiscard]] GTestNonCopyable {
 // The friend relationship of some of these classes is cyclic.
 // If we don't forward declare them the compiler might confuse the classes
 // in friendship clauses with same named classes on the scope.
-class [[nodiscard]] Test;
-class [[nodiscard]] TestSuite;
+class Test;
+class TestSuite;
 
 // Old API is still available but deprecated
 #ifndef GTEST_REMOVE_LEGACY_TEST_CASEAPI_
 using TestCase = TestSuite;
 #endif
-class [[nodiscard]] TestInfo;
-class [[nodiscard]] UnitTest;
+class TestInfo;
+class UnitTest;
 
 // The abstract class that all tests inherit from.
 //
@@ -246,7 +241,7 @@ class [[nodiscard]] UnitTest;
 //   TEST_F(FooTest, Baz) { ... }
 //
 // Test is not copyable.
-class GTEST_API_ [[nodiscard]] Test {
+class GTEST_API_ Test {
  public:
   friend class TestInfo;
 
@@ -373,7 +368,7 @@ typedef internal::TimeInMillis TimeInMillis;
 // output as a key/value string pair.
 //
 // Don't inherit from TestProperty as its destructor is not virtual.
-class [[nodiscard]] TestProperty {
+class TestProperty {
  public:
   // C'tor.  TestProperty does NOT have a default constructor.
   // Always use this constructor (with parameters) to create a
@@ -403,7 +398,7 @@ class [[nodiscard]] TestProperty {
 // the Test.
 //
 // TestResult is not copyable.
-class GTEST_API_ [[nodiscard]] TestResult {
+class GTEST_API_ TestResult {
  public:
   // Creates an empty TestResult.
   TestResult();
@@ -537,7 +532,7 @@ class GTEST_API_ [[nodiscard]] TestResult {
 // The constructor of TestInfo registers itself with the UnitTest
 // singleton such that the RUN_ALL_TESTS() macro knows which tests to
 // run.
-class GTEST_API_ [[nodiscard]] TestInfo {
+class GTEST_API_ TestInfo {
  public:
   // Destructs a TestInfo object.  This function is not virtual, so
   // don't inherit from TestInfo.
@@ -676,7 +671,7 @@ class GTEST_API_ [[nodiscard]] TestInfo {
 // A test suite, which consists of a vector of TestInfos.
 //
 // TestSuite is not copyable.
-class GTEST_API_ [[nodiscard]] TestSuite {
+class GTEST_API_ TestSuite {
  public:
   // Creates a TestSuite with the given name.
   //
@@ -897,7 +892,7 @@ class GTEST_API_ [[nodiscard]] TestSuite {
 //      available.
 //   2. You cannot use ASSERT_* directly in a constructor or
 //      destructor.
-class [[nodiscard]] Environment {
+class Environment {
  public:
   // The d'tor is virtual as we need to subclass Environment.
   virtual ~Environment() = default;
@@ -918,7 +913,7 @@ class [[nodiscard]] Environment {
 #if GTEST_HAS_EXCEPTIONS
 
 // Exception which can be thrown from TestEventListener::OnTestPartResult.
-class GTEST_API_ [[nodiscard]] AssertionException
+class GTEST_API_ AssertionException
     : public internal::GoogleTestFailureException {
  public:
   explicit AssertionException(const TestPartResult& result)
@@ -929,7 +924,7 @@ class GTEST_API_ [[nodiscard]] AssertionException
 
 // The interface for tracing execution of tests. The methods are organized in
 // the order the corresponding events are fired.
-class [[nodiscard]] TestEventListener {
+class TestEventListener {
  public:
   virtual ~TestEventListener() = default;
 
@@ -996,7 +991,7 @@ class [[nodiscard]] TestEventListener {
 // the methods they override will not be caught during the build.  For
 // comments about each method please see the definition of TestEventListener
 // above.
-class [[nodiscard]] EmptyTestEventListener : public TestEventListener {
+class EmptyTestEventListener : public TestEventListener {
  public:
   void OnTestProgramStart(const UnitTest& /*unit_test*/) override {}
   void OnTestIterationStart(const UnitTest& /*unit_test*/,
@@ -1026,7 +1021,7 @@ class [[nodiscard]] EmptyTestEventListener : public TestEventListener {
 };
 
 // TestEventListeners lets users add listeners to track events in Google Test.
-class GTEST_API_ [[nodiscard]] TestEventListeners {
+class GTEST_API_ TestEventListeners {
  public:
   TestEventListeners();
   ~TestEventListeners();
@@ -1117,7 +1112,7 @@ class GTEST_API_ [[nodiscard]] TestEventListeners {
 //
 // This class is thread-safe as long as the methods are called
 // according to their specification.
-class GTEST_API_ [[nodiscard]] UnitTest {
+class GTEST_API_ UnitTest {
  public:
   // Gets the singleton UnitTest object.  The first time this method
   // is called, a UnitTest object is constructed and returned.
@@ -1253,7 +1248,7 @@ class GTEST_API_ [[nodiscard]] UnitTest {
   // eventually call this to report their results.  The user code
   // should use the assertion macros instead of calling this directly.
   void AddTestPartResult(TestPartResult::Type result_type,
-                         std::string_view file_name, int line_number,
+                         const char* file_name, int line_number,
                          const std::string& message,
                          const std::string& os_stack_trace)
       GTEST_LOCK_EXCLUDED_(mutex_);
@@ -1405,7 +1400,7 @@ AssertionResult CmpHelperEQ(const char* lhs_expression,
   return CmpHelperEQFailure(lhs_expression, rhs_expression, lhs, rhs);
 }
 
-class [[nodiscard]] EqHelper {
+class EqHelper {
  public:
   // This templatized version is for the general case.
   template <
@@ -1621,13 +1616,11 @@ using GoogleTest_NotSupported_OnFunctionReturningNonVoid = void;
 
 // INTERNAL IMPLEMENTATION - DO NOT USE IN USER CODE.
 // A class that enables one to stream messages to assertion macros
-class GTEST_API_ [[nodiscard]] AssertHelper {
+class GTEST_API_ AssertHelper {
  public:
   // Constructor.
   AssertHelper(TestPartResult::Type type, const char* file, int line,
                const char* message);
-  AssertHelper(TestPartResult::Type type, std::string_view file, int line,
-               std::string_view message);
   ~AssertHelper();
 
   // Message assignment is a semantic trick to enable assertion
@@ -1641,12 +1634,12 @@ class GTEST_API_ [[nodiscard]] AssertHelper {
   // re-using stack space even for temporary variables, so every EXPECT_EQ
   // reserves stack space for another AssertHelper.
   struct AssertHelperData {
-    AssertHelperData(TestPartResult::Type t, std::string_view srcfile,
-                     int line_num, std::string_view msg)
+    AssertHelperData(TestPartResult::Type t, const char* srcfile, int line_num,
+                     const char* msg)
         : type(t), file(srcfile), line(line_num), message(msg) {}
 
     TestPartResult::Type const type;
-    const std::string_view file;
+    const char* const file;
     int const line;
     std::string const message;
 
@@ -1698,7 +1691,7 @@ class GTEST_API_ [[nodiscard]] AssertHelper {
 // INSTANTIATE_TEST_SUITE_P(OneToTenRange, FooTest, ::testing::Range(1, 10));
 
 template <typename T>
-class [[nodiscard]] WithParamInterface {
+class WithParamInterface {
  public:
   typedef T ParamType;
   virtual ~WithParamInterface() = default;
@@ -1732,8 +1725,7 @@ const T* WithParamInterface<T>::parameter_ = nullptr;
 // WithParamInterface, and can just inherit from ::testing::TestWithParam.
 
 template <typename T>
-class [[nodiscard]] TestWithParam : public Test,
-                                    public WithParamInterface<T> {};
+class TestWithParam : public Test, public WithParamInterface<T> {};
 
 // Macros for indicating success/failure in test code.
 
@@ -2081,7 +2073,7 @@ GTEST_API_ AssertionResult DoubleLE(const char* expr1, const char* expr2,
 // Example:
 //   testing::ScopedTrace trace("file.cc", 123, "message");
 //
-class GTEST_API_ [[nodiscard]] ScopedTrace {
+class GTEST_API_ ScopedTrace {
  public:
   // The c'tor pushes the given source file location and message onto
   // a trace stack maintained by Google Test.

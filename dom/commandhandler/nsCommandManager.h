@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCommandManager_h_
-#define nsCommandManager_h_
+#ifndef nsCommandManager_h__
+#define nsCommandManager_h__
 
 #include "nsClassHashtable.h"
 #include "nsCycleCollectionParticipant.h"
@@ -63,4 +65,4 @@ const nsCommandManager* nsICommandManager::AsCommandManager() const {
   return static_cast<const nsCommandManager*>(this);
 }
 
-#endif  // nsCommandManager_h_
+#endif  // nsCommandManager_h__

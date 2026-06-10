@@ -4,7 +4,6 @@
 
 
 import unittest
-from unittest.mock import patch
 
 from mozunit import main
 
@@ -44,12 +43,12 @@ def test_get_changed_files(responses):
 
 class TestCheck(unittest.TestCase):
     def setUp(self):
-        patcher = patch(
-            "gecko_taskgraph.files_changed.get_changed_files",
-            return_value=FILES_CHANGED,
-        )
-        self.mock_get_changed_files = patcher.start()
-        self.addCleanup(patcher.stop)
+        files_changed.get_changed_files[
+            PARAMS["head_repository"], PARAMS["head_rev"]
+        ] = FILES_CHANGED
+
+    def tearDown(self):
+        files_changed.get_changed_files.clear()
 
     def test_check_no_params(self):
         self.assertTrue(files_changed.check({}, ["ignored"]))

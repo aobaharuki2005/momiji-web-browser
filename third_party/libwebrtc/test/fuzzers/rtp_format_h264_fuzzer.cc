@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "api/array_view.h"
 #include "modules/rtp_rtcp/source/rtp_format.h"
 #include "modules/rtp_rtcp/source/rtp_format_h264.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
@@ -17,19 +18,21 @@
 #include "test/fuzzers/utils/validate_rtp_packetizer.h"
 
 namespace webrtc {
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
-  RtpPacketizer::PayloadSizeLimits limits = ReadPayloadSizeLimits(fuzz_data);
+void FuzzOneInput(const uint8_t* data, size_t size) {
+  test::FuzzDataHelper fuzz_input(MakeArrayView(data, size));
+
+  RtpPacketizer::PayloadSizeLimits limits = ReadPayloadSizeLimits(fuzz_input);
 
   const H264PacketizationMode kPacketizationModes[] = {
       H264PacketizationMode::NonInterleaved,
       H264PacketizationMode::SingleNalUnit};
 
   H264PacketizationMode packetization_mode =
-      fuzz_data.SelectOneOf(kPacketizationModes);
+      fuzz_input.SelectOneOf(kPacketizationModes);
 
   // Main function under test: RtpPacketizerH264's constructor.
-  RtpPacketizerH264 packetizer(fuzz_data.ReadRemaining(), limits,
-                               packetization_mode);
+  RtpPacketizerH264 packetizer(fuzz_input.ReadByteArray(fuzz_input.BytesLeft()),
+                               limits, packetization_mode);
 
   ValidateRtpPacketizer(limits, packetizer);
 }

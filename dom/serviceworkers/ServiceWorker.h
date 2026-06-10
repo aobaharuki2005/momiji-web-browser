@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_serviceworker_h_
-#define mozilla_dom_serviceworker_h_
+#ifndef mozilla_dom_serviceworker_h__
+#define mozilla_dom_serviceworker_h__
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -19,6 +21,7 @@ class nsIGlobalObject;
 namespace mozilla::dom {
 
 class ServiceWorkerChild;
+class ServiceWorkerCloneData;
 struct StructuredSerializeOptions;
 
 #define NS_DOM_SERVICEWORKER_IID \
@@ -34,7 +37,7 @@ class ServiceWorker final : public DOMEventTargetHelper {
   IMPL_EVENT_HANDLER(error)
 
   static already_AddRefed<ServiceWorker> Create(
-      nsIGlobalObject* aGlobal, const ServiceWorkerDescriptor& aDescriptor);
+      nsIGlobalObject* aOwner, const ServiceWorkerDescriptor& aDescriptor);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -82,4 +85,4 @@ class ServiceWorker final : public DOMEventTargetHelper {
 
 }  // namespace mozilla::dom
 
-#endif  // mozilla_dom_serviceworker_h_
+#endif  // mozilla_dom_serviceworker_h__

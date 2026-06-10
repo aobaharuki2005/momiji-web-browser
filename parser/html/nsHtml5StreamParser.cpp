@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,7 +21,6 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_html5.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/TextUtils.h"
@@ -314,12 +315,17 @@ nsHtml5StreamParser::GuessEncoding(bool aInitial) {
                         ? kCharsetFromFinalAutoDetectionFile
                         : kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic));
   if (source == kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic) {
-    if (!mDetectorHasSeenNonAscii) {
+    if (encoding == ISO_2022_JP_ENCODING) {
+      if (EncodingDetector::TldMayAffectGuess(mTLD)) {
+        source = kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content;
+      }
+    } else if (!mDetectorHasSeenNonAscii) {
       source = kCharsetFromInitialAutoDetectionASCII;  // deliberately Initial
     } else if (ifHadBeenForced == UTF_8_ENCODING) {
       MOZ_ASSERT(mCharsetSource == kCharsetFromInitialAutoDetectionASCII ||
                  mCharsetSource ==
-                     kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8);
+                     kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8 ||
+                 mEncoding == ISO_2022_JP_ENCODING);
       source = kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII;
     } else if (encoding != ifHadBeenForced) {
       if (mCharsetSource == kCharsetFromInitialAutoDetectionASCII) {
@@ -342,7 +348,11 @@ nsHtml5StreamParser::GuessEncoding(bool aInitial) {
     }
   } else if (source ==
              kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic) {
-    if (!mDetectorHasSeenNonAscii) {
+    if (encoding == ISO_2022_JP_ENCODING) {
+      if (EncodingDetector::TldMayAffectGuess(mTLD)) {
+        source = kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content;
+      }
+    } else if (!mDetectorHasSeenNonAscii) {
       source = kCharsetFromInitialAutoDetectionASCII;
     } else if (ifHadBeenForced == UTF_8_ENCODING) {
       source = kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8;
@@ -1049,7 +1059,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   auto detectorCreator = MakeScopeExit([&] {
     if ((mForceAutoDetection || mCharsetSource < kCharsetFromParentFrame) ||
         !(mMode == LOAD_AS_DATA || mMode == VIEW_SOURCE_XML)) {
-      mDetector = mozilla::EncodingDetector::Create(false);
+      mDetector = mozilla::EncodingDetector::Create();
     }
   });
 
@@ -1751,7 +1761,8 @@ bool nsHtml5StreamParser::internalEncodingDeclaration(nsHtml5String aEncoding) {
                                             mTokenizer->getLineNumber());
   }
 
-  if (mForceAutoDetection && encoding->IsAsciiCompatible()) {
+  if (mForceAutoDetection &&
+      (encoding->IsAsciiCompatible() || encoding == ISO_2022_JP_ENCODING)) {
     return false;
   }
 
@@ -2144,7 +2155,8 @@ bool nsHtml5StreamParser::ProcessLookingForMetaCharset(bool aEof) {
         encoding = xmldecl_parse(contiguous.begin(), contiguous.length());
       }
       if (encoding) {
-        if (!(mForceAutoDetection && encoding->IsAsciiCompatible())) {
+        if (!(mForceAutoDetection && (encoding->IsAsciiCompatible() ||
+                                      encoding == ISO_2022_JP_ENCODING))) {
           mForceAutoDetection = false;
           mNeedsEncodingSwitchTo = encoding;
           mEncodingSwitchSource = kCharsetFromXmlDeclaration;
@@ -2658,7 +2670,7 @@ void nsHtml5StreamParser::ContinueAfterScriptsOrEncodingCommitment(
 
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, "DOM Events"_ns,
-          mExecutor->GetDocument(), PropertiesFile::DOM_PROPERTIES,
+          mExecutor->GetDocument(), nsContentUtils::eDOM_PROPERTIES,
           "SpeculationFailed2", nsTArray<nsString>(),
           SourceLocation(mExecutor->GetDocument()->GetDocumentURI(),
                          speculation->GetStartLineNumber(),

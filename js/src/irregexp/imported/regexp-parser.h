@@ -13,24 +13,22 @@ namespace internal {
 class String;
 class Zone;
 
-namespace regexp {
+struct RegExpCompileData;
 
-struct CompileData;
-
-class V8_EXPORT_PRIVATE Parser : public AllStatic {
+class V8_EXPORT_PRIVATE RegExpParser : public AllStatic {
  public:
   static bool ParseRegExpFromHeapString(Isolate* isolate, Zone* zone,
-                                        DirectHandle<String> input, Flags flags,
-                                        CompileData* result);
+                                        DirectHandle<String> input,
+                                        RegExpFlags flags,
+                                        RegExpCompileData* result);
 
   template <class CharT>
   static bool VerifyRegExpSyntax(Zone* zone, uintptr_t stack_limit,
                                  const CharT* input, int input_length,
-                                 Flags flags, CompileData* result,
+                                 RegExpFlags flags, RegExpCompileData* result,
                                  const DisallowGarbageCollection& no_gc);
 };
 
-}  // namespace regexp
 }  // namespace internal
 }  // namespace v8
 

@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef CANVASUTILS_H_
-#define CANVASUTILS_H_
+#ifndef _CANVASUTILS_H_
+#define _CANVASUTILS_H_
 
 #include "CanvasRenderingContextHelper.h"
 #include "js/Array.h"               // JS::GetArrayLength
@@ -212,4 +213,4 @@ bool CheckWriteOnlySecurity(bool aCORSUsed, nsIPrincipal* aPrincipal,
 }  // namespace CanvasUtils
 }  // namespace mozilla
 
-#endif /* CANVASUTILS_H_ */
+#endif /* _CANVASUTILS_H_ */

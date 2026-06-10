@@ -3,13 +3,11 @@
 <!--
 This page is opened in a new window by test_storage_copied.html.
 We need to return the sessionStorage value for the item "test-item",
-by way of postMessage to the opener.
+by way of postMessage.
 -->
 <head>
 <body>Opened!</body>
 <script>
-  let target = window.opener || window.parent;
-  target.postMessage(
-    window.sessionStorage.getItem("test-item"), "*");
+  window.postMessage(window.sessionStorage.getItem("test-item"), "*");
 </script>
 </html>

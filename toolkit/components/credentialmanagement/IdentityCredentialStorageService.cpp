@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -67,31 +69,15 @@ NS_IMETHODIMP IdentityCredentialStorageService::GetName(nsAString& aName) {
 NS_IMETHODIMP IdentityCredentialStorageService::BlockShutdown(
     nsIAsyncShutdownClient* aClient) {
   MOZ_ASSERT(NS_IsMainThread());
-
-  // Always close the memory connection if it exists, even if initialization
-  // failed. The memory connection may have been successfully created before
-  // the disk connection failed during async initialization.
-  {
-    MonitorAutoLock lock(mMonitor);
-    mShuttingDown.Flip();
-
-    if (mMemoryDatabaseConnection) {
-      (void)mMemoryDatabaseConnection->Close();
-      mMemoryDatabaseConnection = nullptr;
-    }
-  }
-
   nsresult rv = WaitForInitialization();
-  if (NS_FAILED(rv)) {
-    // Initialization failed, but we've already closed any open connections
-    // above. If the background thread exists, dispatch the finalization to it;
-    // otherwise just remove the blocker directly.
-    if (!mBackgroundThread) {
-      DebugOnly<nsresult> removeRv = aClient->RemoveBlocker(this);
-      MOZ_ASSERT(NS_SUCCEEDED(removeRv));
-      return NS_OK;
-    }
-    // Fall through to dispatch finalization on background thread
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MonitorAutoLock lock(mMonitor);
+  mShuttingDown.Flip();
+
+  if (mMemoryDatabaseConnection) {
+    (void)mMemoryDatabaseConnection->Close();
+    mMemoryDatabaseConnection = nullptr;
   }
 
   RefPtr<IdentityCredentialStorageService> self = this;
@@ -647,9 +633,7 @@ NS_IMETHODIMP IdentityCredentialStorageService::SetState(
   nsCString credentialID(aCredentialID);
   mBackgroundThread->Dispatch(
       NS_NewRunnableFunction("IdentityCredentialStorageService::Init",
-                             [self, rpPrincipal = std::move(rpPrincipal),
-                              idpPrincipal = std::move(idpPrincipal),
-                              credentialID = std::move(credentialID),
+                             [self, rpPrincipal, idpPrincipal, credentialID,
                               aRegistered, aAllowLogout]() {
                                nsresult rv = UpsertData(
                                    self->mDiskDatabaseConnection, rpPrincipal,
@@ -740,9 +724,7 @@ NS_IMETHODIMP IdentityCredentialStorageService::Delete(
   nsCString credentialID(aCredentialID);
   mBackgroundThread->Dispatch(
       NS_NewRunnableFunction("IdentityCredentialStorageService::Init",
-                             [self, rpPrincipal = std::move(rpPrincipal),
-                              idpPrincipal = std::move(idpPrincipal),
-                              credentialID = std::move(credentialID)]() {
+                             [self, rpPrincipal, idpPrincipal, credentialID]() {
                                nsresult rv = DeleteData(
                                    self->mDiskDatabaseConnection, rpPrincipal,
                                    idpPrincipal, credentialID);
@@ -881,7 +863,7 @@ IdentityCredentialStorageService::DeleteFromOriginAttributesPattern(
   mBackgroundThread->Dispatch(
       NS_NewRunnableFunction(
           "IdentityCredentialStorageService::Init",
-          [self, oaPattern = std::move(oaPattern)]() {
+          [self, oaPattern]() {
             nsresult rv = DeleteDataFromOriginAttributesPattern(
                 self->mDiskDatabaseConnection, oaPattern);
             self->DecrementPendingWrites();
@@ -953,7 +935,7 @@ NS_IMETHODIMP IdentityCredentialStorageService::DeleteFromBaseDomain(
   nsCString baseDomain(aBaseDomain);
   mBackgroundThread->Dispatch(
       NS_NewRunnableFunction("IdentityCredentialStorageService::Init",
-                             [self, baseDomain = std::move(baseDomain)]() {
+                             [self, baseDomain]() {
                                nsresult rv = DeleteDataFromBaseDomain(
                                    self->mDiskDatabaseConnection, baseDomain);
                                self->DecrementPendingWrites();

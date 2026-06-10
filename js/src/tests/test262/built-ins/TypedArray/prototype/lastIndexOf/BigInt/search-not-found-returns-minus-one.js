@@ -21,14 +21,14 @@ info: |
   7. Repeat, while k ≥ 0
     ...
   8. Return -1.
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var sample;
 
-  sample = new TA(makeCtorArg([42n, 43n, 42n, 41n]));
+  sample = new TA([42n, 43n, 42n, 41n]);
   assert.sameValue(sample.lastIndexOf(44n), -1, "lastIndexOf(44)");
   assert.sameValue(sample.lastIndexOf(44n, -4), -1, "lastIndexOf(44, -4)");
   assert.sameValue(sample.lastIndexOf(44n, -5), -1, "lastIndexOf(44, -5)");

@@ -36,7 +36,7 @@ class FakeVp8Encoder : public FakeEncoder {
  public:
   explicit FakeVp8Encoder(const Environment& env);
   [[deprecated]] explicit FakeVp8Encoder(Clock* clock);
-  ~FakeVp8Encoder() override = default;
+  virtual ~FakeVp8Encoder() = default;
 
   int32_t InitEncode(const VideoCodec* config,
                      const Settings& settings) override;

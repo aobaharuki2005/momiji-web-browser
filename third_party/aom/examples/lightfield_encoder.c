@@ -434,6 +434,7 @@ int main(int argc, char **argv) {
   // lf_blocksize X lf_blocksize images will all use the reference image
   // in the middle of the block of images.
   int lf_blocksize;
+  aom_codec_ctx_t codec;
   aom_codec_enc_cfg_t cfg;
   aom_image_t raw;
   aom_image_t raw_shift;
@@ -484,8 +485,7 @@ int main(int argc, char **argv) {
 
   // Configuration
   res = aom_codec_enc_config_default(encoder, &cfg, 0);
-  if (res)
-    die("Failed to get default codec config: %s", aom_codec_err_to_string(res));
+  if (res) die_codec(&codec, "Failed to get default codec config.");
 
   cfg.g_w = w;
   cfg.g_h = h;

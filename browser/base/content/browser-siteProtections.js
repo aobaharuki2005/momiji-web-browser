@@ -750,7 +750,7 @@ let ThirdPartyCookies =
         // of the Preferences UI.
         Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, // Block all third-party cookies
         Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, // Block third-party cookies from trackers
-        Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN, // Partition all third-party cookies
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN, // Block trackers and patition third-party trackers
         Ci.nsICookieService.BEHAVIOR_REJECT, // Block all cookies
       ];
 
@@ -788,7 +788,7 @@ let ThirdPartyCookies =
 
       if (
         [
-          Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN,
+          Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
           Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
           Ci.nsICookieService.BEHAVIOR_ACCEPT,
         ].includes(this.behaviorPref)
@@ -828,7 +828,8 @@ let ThirdPartyCookies =
             l10nId = "content-blocking-cookies-blocking-unvisited-label";
             break;
           case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
-          case Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN:
+          case Ci.nsICookieService
+            .BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
             l10nId = "content-blocking-cookies-blocking-trackers-label";
             break;
           default:
@@ -965,7 +966,7 @@ let ThirdPartyCookies =
           }
           break;
         case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
-        case Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN:
+        case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
           l10nId = siteException
             ? "protections-not-blocking-cross-site-tracking-cookies"
             : "protections-blocking-cookies-trackers";
@@ -1208,7 +1209,7 @@ let SocialTracking =
         val =>
           [
             Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
-            Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN,
+            Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
           ].includes(val)
       );
     }
@@ -1510,8 +1511,8 @@ var gProtectionsHandler = {
     },
     {
       matchPatterns: ["https://www.tiktok.com/*"],
-      shimId: "TikTokEmbed",
-      displayName: "TikTok",
+      shimId: "TiktokEmbed",
+      displayName: "Tiktok",
     },
     {
       matchPatterns: ["https://platform.twitter.com/*"],
@@ -2457,7 +2458,6 @@ var gProtectionsHandler = {
 
     if (this._milestoneTextSet && !expired) {
       this._protectionsPopup.setAttribute("milestone", this.milestonePref);
-      NimbusFeatures.privacySecurityMessaging.recordExposureEvent();
     } else {
       this._protectionsPopup.removeAttribute("milestone");
     }
@@ -2998,7 +2998,7 @@ var gProtectionsHandler = {
           where: message.content.cta_where || "tabshifted",
         },
       },
-      window.gBrowser.selectedBrowser
+      window.browser
     );
 
     // Only send telemetry for non private browsing windows

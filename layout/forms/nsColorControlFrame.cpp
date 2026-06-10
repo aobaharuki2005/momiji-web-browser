@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,10 +13,6 @@
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
-
-#ifdef ACCESSIBILITY
-#  include "nsAccessibilityService.h"
-#endif
 
 using namespace mozilla;
 using mozilla::dom::CallerType;
@@ -34,7 +32,6 @@ NS_IMPL_FRAMEARENA_HELPERS(nsColorControlFrame)
 
 NS_QUERYFRAME_HEAD(nsColorControlFrame)
   NS_QUERYFRAME_ENTRY(nsColorControlFrame)
-  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(ButtonControlFrame)
 
 void nsColorControlFrame::Destroy(DestroyContext& aContext) {
@@ -47,7 +44,7 @@ void nsColorControlFrame::Destroy(DestroyContext& aContext) {
 nsresult nsColorControlFrame::CreateAnonymousContent(
     nsTArray<ContentInfo>& aElements) {
   mColorContent = mContent->OwnerDoc()->CreateHTMLElement(nsGkAtoms::div);
-  mColorContent->SetPseudoElementType(PseudoStyleType::MozColorSwatch);
+  mColorContent->SetPseudoElementType(PseudoStyleType::mozColorSwatch);
   // Mark the element to be native anonymous before setting any attributes.
   mColorContent->SetIsNativeAnonymousRoot();
   UpdateColor();
@@ -85,9 +82,9 @@ void nsColorControlFrame::UpdateColor() {
     return;
   }
 
-  // Set the color CSS property of the swatch element to this color.
+  // Set the background-color CSS property of the swatch element to this color.
   mColorContent->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
-                         u"color:"_ns + color,
+                         u"background-color:"_ns + color,
                          /* aNotify */ true);
 }
 
@@ -103,11 +100,6 @@ nsresult nsColorControlFrame::AttributeChanged(int32_t aNameSpaceID,
           FormControlType::InputColor &&
       aNameSpaceID == kNameSpaceID_None && nsGkAtoms::value == aAttribute) {
     UpdateColor();
-#ifdef ACCESSIBILITY
-    if (nsAccessibilityService* accService = GetAccService()) {
-      accService->ColorValueChanged(PresShell(), mContent);
-    }
-#endif
   }
   return ButtonControlFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                               aModType);

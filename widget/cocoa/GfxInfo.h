@@ -1,10 +1,12 @@
-/*
+/* vim: se cin sw=2 ts=2 et : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _mozilla_widget_GfxInfo_h_
-#define _mozilla_widget_GfxInfo_h_
+#ifndef __mozilla_widget_GfxInfo_h__
+#define __mozilla_widget_GfxInfo_h__
 
 #include "GfxInfoBase.h"
 
@@ -64,7 +66,7 @@ class GfxInfo : public GfxInfoBase {
                               uint32_t aRevision) override;
 #endif
 
-  virtual uint32_t OperatingSystemVersion() override { return mMacOSVersion; }
+  virtual uint32_t OperatingSystemVersion() override { return mOSXVersion; }
 
  protected:
   virtual ~GfxInfo() {}
@@ -78,28 +80,26 @@ class GfxInfo : public GfxInfoBase {
   virtual const nsTArray<RefPtr<GfxDriverInfo>>& GetGfxDriverInfo() override;
 
  private:
-  static constexpr uint32_t kMaxGPUs = 2;
-
   void GetDeviceInfo();
   void GetSelectedCityInfo();
   void AddCrashReportAnnotations();
 
   uint32_t mNumGPUsDetected;
 
-  uint32_t mAdapterRAM[kMaxGPUs];
-  nsString mDeviceID[kMaxGPUs];
-  nsString mDriverVersion[kMaxGPUs];
-  nsString mDriverDate[kMaxGPUs];
-  nsString mDeviceKey[kMaxGPUs];
+  uint32_t mAdapterRAM[2];
+  nsString mDeviceID[2];
+  nsString mDriverVersion[2];
+  nsString mDriverDate[2];
+  nsString mDeviceKey[2];
 
-  nsString mAdapterVendorID[kMaxGPUs];
-  nsString mAdapterDeviceID[kMaxGPUs];
+  nsString mAdapterVendorID[2];
+  nsString mAdapterDeviceID[2];
 
-  GfxVersionEx mMacOSVersionEx;
-  uint32_t mMacOSVersion;
+  GfxVersionEx mOSXVersionEx;
+  uint32_t mOSXVersion;
 };
 
 }  // namespace widget
 }  // namespace mozilla
 
-#endif /* _mozilla_widget_GfxInfo_h_ */
+#endif /* __mozilla_widget_GfxInfo_h__ */

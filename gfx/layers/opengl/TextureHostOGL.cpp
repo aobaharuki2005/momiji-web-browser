@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -80,11 +82,6 @@ already_AddRefed<TextureHost> CreateTextureHostOGL(
 #endif
 
     case SurfaceDescriptor::TEGLImageDescriptor: {
-      if (aDeallocator && !aDeallocator->IsSameProcess()) {
-        gfxCriticalError()
-            << "EGLImageDescriptor must only be used in same process";
-        return nullptr;
-      }
       const EGLImageDescriptor& desc = aDesc.get_EGLImageDescriptor();
       result = new EGLImageTextureHost(aFlags, (EGLImage)desc.image(),
                                        (EGLSync)desc.fence(), desc.size(),
@@ -113,11 +110,6 @@ already_AddRefed<TextureHost> CreateTextureHostOGL(
 #endif
 
     case SurfaceDescriptor::TSurfaceDescriptorSharedGLTexture: {
-      if (aDeallocator && !aDeallocator->IsSameProcess()) {
-        gfxCriticalError() << "SurfaceDescriptorSharedGLTexture must only be "
-                              "used in same process";
-        return nullptr;
-      }
       const auto& desc = aDesc.get_SurfaceDescriptorSharedGLTexture();
       result =
           new GLTextureHost(aFlags, desc.texture(), desc.target(),
@@ -329,7 +321,7 @@ DirectMapTextureSource::DirectMapTextureSource(gl::GLContext* aContext,
                                                gfx::DataSourceSurface* aSurface)
     : GLTextureSource(aContext, 0, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                       aSurface->GetSize(), aSurface->GetFormat()),
-      mSync(nullptr) {
+      mSync(0) {
   MOZ_ASSERT(aSurface);
 
   UpdateInternal(aSurface, nullptr, nullptr, true);
@@ -345,7 +337,7 @@ DirectMapTextureSource::~DirectMapTextureSource() {
   }
 
   gl()->fDeleteSync(mSync);
-  mSync = nullptr;
+  mSync = 0;
 }
 
 bool DirectMapTextureSource::Update(gfx::DataSourceSurface* aSurface,
@@ -433,7 +425,7 @@ bool DirectMapTextureSource::UpdateInternal(gfx::DataSourceSurface* aSurface,
 
   if (mSync) {
     gl()->fDeleteSync(mSync);
-    mSync = nullptr;
+    mSync = 0;
   }
 
   gl()->fPixelStorei(LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE, LOCAL_GL_FALSE);
@@ -549,9 +541,10 @@ void SurfaceTextureHost::CreateRenderTexture(
   MOZ_ASSERT(mExternalImageId.isSome());
 
   bool isRemoteTexture = !!(mFlags & TextureFlags::REMOTE_TEXTURE);
-  RefPtr texture = MakeRefPtr<wr::RenderAndroidSurfaceTextureHost>(
-      mSurfTex, mSize, mFormat, mContinuousUpdate, mTransformOverride,
-      isRemoteTexture);
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderAndroidSurfaceTextureHost(
+          mSurfTex, mSize, mFormat, mContinuousUpdate, mTransformOverride,
+          isRemoteTexture);
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
@@ -591,10 +584,7 @@ void SurfaceTextureHost::PushResourceUpdates(
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8: {
-      if (aImageKeys.length() != 1) {
-        MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 1);
 
       // XXX Add RGBA handling. Temporary hack to avoid crash
       // With BGRA format setting, rendering works without problem.
@@ -628,10 +618,7 @@ void SurfaceTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
     case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8A8:
     case gfx::SurfaceFormat::B8G8R8X8: {
-      if (aImageKeys.length() != 1) {
-        MOZ_ASSERT_UNREACHABLE("unexpected key length");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 1);
       aBuilder.PushImage(aBounds, aClip, true, false, aFilter, aImageKeys[0],
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                          wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
@@ -794,7 +781,8 @@ AndroidHardwareBufferTextureHost::Create(
   if (!buffer) {
     return nullptr;
   }
-  RefPtr host = MakeRefPtr<AndroidHardwareBufferTextureHost>(aFlags, buffer);
+  RefPtr<AndroidHardwareBufferTextureHost> host =
+      new AndroidHardwareBufferTextureHost(aFlags, buffer);
   return host.forget();
 }
 
@@ -880,10 +868,7 @@ void AndroidHardwareBufferTextureHost::PushResourceUpdates(
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8: {
-      if (aImageKeys.length() != 1) {
-        MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 1);
 
       // XXX Add RGBA handling. Temporary hack to avoid crash
       // With BGRA format setting, rendering works without problem.
@@ -915,10 +900,7 @@ void AndroidHardwareBufferTextureHost::PushDisplayItems(
     case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8A8:
     case gfx::SurfaceFormat::B8G8R8X8: {
-      if (aImageKeys.length() != 1) {
-        MOZ_ASSERT_UNREACHABLE("unexpected key length");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 1);
       aBuilder.PushImage(aBounds, aClip, true, false, aFilter, aImageKeys[0],
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                          wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
@@ -1019,8 +1001,8 @@ void EGLImageTextureHost::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   MOZ_ASSERT(mExternalImageId.isSome());
 
-  RefPtr texture = MakeRefPtr<wr::RenderEGLImageTextureHost>(
-      mImage, mSync, mSize, GetFormat());
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderEGLImageTextureHost(mImage, mSync, mSize, GetFormat());
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
@@ -1044,11 +1026,7 @@ void EGLImageTextureHost::PushResourceUpdates(
 
   gfx::SurfaceFormat format = GetFormat();
 
-  if (aImageKeys.length() != 1) {
-    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    return;
-  }
-
+  MOZ_ASSERT(aImageKeys.length() == 1);
   // XXX Add RGBA handling. Temporary hack to avoid crash
   // With BGRA format setting, rendering works without problem.
   auto formatTmp = format == gfx::SurfaceFormat::R8G8B8A8
@@ -1068,10 +1046,7 @@ void EGLImageTextureHost::PushDisplayItems(
   bool supportsExternalCompositing =
       SupportsExternalCompositing(aBuilder.GetBackendType());
 
-  if (aImageKeys.length() != 1) {
-    MOZ_ASSERT_UNREACHABLE("unexpected key length");
-    return;
-  }
+  MOZ_ASSERT(aImageKeys.length() == 1);
   aBuilder.PushImage(aBounds, aClip, true, false, aFilter, aImageKeys[0],
                      !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                      wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},

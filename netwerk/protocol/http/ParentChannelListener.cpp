@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -83,8 +85,7 @@ ParentChannelListener::OnStartRequest(nsIRequest* aRequest) {
   }
 
   LOG(("ParentChannelListener::OnStartRequest [this=%p]\n", this));
-  nsCOMPtr<nsIStreamListener> nextListener = mNextListener;
-  return nextListener->OnStartRequest(aRequest);
+  return mNextListener->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP
@@ -94,8 +95,7 @@ ParentChannelListener::OnStopRequest(nsIRequest* aRequest,
 
   LOG(("ParentChannelListener::OnStopRequest: [this=%p status=%" PRIu32 "]\n",
        this, static_cast<uint32_t>(aStatusCode)));
-  nsCOMPtr<nsIStreamListener> nextListener = mNextListener;
-  nsresult rv = nextListener->OnStopRequest(aRequest, aStatusCode);
+  nsresult rv = mNextListener->OnStopRequest(aRequest, aStatusCode);
 
   if (!mIsMultiPart) {
     mNextListener = nullptr;
@@ -114,8 +114,8 @@ ParentChannelListener::OnDataAvailable(nsIRequest* aRequest,
   if (!mNextListener) return NS_ERROR_UNEXPECTED;
 
   LOG(("ParentChannelListener::OnDataAvailable [this=%p]\n", this));
-  nsCOMPtr<nsIStreamListener> nextListener = mNextListener;
-  return nextListener->OnDataAvailable(aRequest, aInputStream, aOffset, aCount);
+  return mNextListener->OnDataAvailable(aRequest, aInputStream, aOffset,
+                                        aCount);
 }
 
 NS_IMETHODIMP

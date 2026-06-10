@@ -109,7 +109,7 @@ void *dav1d_malloc(const enum AllocationType type, const size_t sz) {
 void *dav1d_alloc_aligned(const enum AllocationType type,
                           const size_t sz, const size_t align)
 {
-    void *const ptr = dav1d_alloc_aligned_internal(sz + align, align);
+    void *const ptr = dav1d_alloc_aligned_internal(align, sz + align);
     return track_alloc(type, ptr, sz, align);
 }
 
@@ -221,9 +221,8 @@ static COLD void mem_pool_destroy(Dav1dMemPool *const pool) {
     dav1d_free(pool);
 }
 
-void dav1d_mem_pool_push(Dav1dMemPool *const pool, void *const ptr) {
+void dav1d_mem_pool_push(Dav1dMemPool *const pool, Dav1dMemPoolBuffer *const buf) {
     pthread_mutex_lock(&pool->lock);
-    Dav1dMemPoolBuffer *const buf = (Dav1dMemPoolBuffer*)((uintptr_t)ptr - 64);
     const int ref_cnt = --pool->ref_cnt;
     if (!pool->end) {
         buf->next = pool->buf;
@@ -232,22 +231,24 @@ void dav1d_mem_pool_push(Dav1dMemPool *const pool, void *const ptr) {
         assert(ref_cnt > 0);
     } else {
         pthread_mutex_unlock(&pool->lock);
-        dav1d_free_aligned(buf);
+        dav1d_free_aligned(buf->data);
         if (!ref_cnt) mem_pool_destroy(pool);
     }
 }
 
-void *dav1d_mem_pool_pop(Dav1dMemPool *const pool, const size_t size) {
+Dav1dMemPoolBuffer *dav1d_mem_pool_pop(Dav1dMemPool *const pool, const size_t size) {
+    assert(!(size & (sizeof(void*) - 1)));
     pthread_mutex_lock(&pool->lock);
     Dav1dMemPoolBuffer *buf = pool->buf;
     pool->ref_cnt++;
-
+    uint8_t *data;
     if (buf) {
         pool->buf = buf->next;
         pthread_mutex_unlock(&pool->lock);
-        if (buf->size != size) {
+        data = buf->data;
+        if ((uintptr_t)buf - (uintptr_t)data != size) {
             /* Reallocate if the size has changed */
-            dav1d_free_aligned(buf);
+            dav1d_free_aligned(data);
             goto alloc;
         }
 #if TRACK_HEAP_ALLOCATIONS
@@ -256,18 +257,20 @@ void *dav1d_mem_pool_pop(Dav1dMemPool *const pool, const size_t size) {
     } else {
         pthread_mutex_unlock(&pool->lock);
 alloc:
-        buf = dav1d_alloc_aligned(pool->type, size + 64, 64);
-        if (!buf) {
+        data = dav1d_alloc_aligned(pool->type,
+                                   size + sizeof(Dav1dMemPoolBuffer), 64);
+        if (!data) {
             pthread_mutex_lock(&pool->lock);
             const int ref_cnt = --pool->ref_cnt;
             pthread_mutex_unlock(&pool->lock);
             if (!ref_cnt) mem_pool_destroy(pool);
             return NULL;
         }
-        buf->size = size;
+        buf = (Dav1dMemPoolBuffer*)(data + size);
+        buf->data = data;
     }
 
-    return (void*)((uintptr_t)buf + 64);
+    return buf;
 }
 
 COLD int dav1d_mem_pool_init(const enum AllocationType type,
@@ -302,9 +305,9 @@ COLD void dav1d_mem_pool_end(Dav1dMemPool *const pool) {
         pthread_mutex_unlock(&pool->lock);
 
         while (buf) {
-            void *const ptr = buf;
+            void *const data = buf->data;
             buf = buf->next;
-            dav1d_free_aligned(ptr);
+            dav1d_free_aligned(data);
         }
         if (!ref_cnt) mem_pool_destroy(pool);
     }

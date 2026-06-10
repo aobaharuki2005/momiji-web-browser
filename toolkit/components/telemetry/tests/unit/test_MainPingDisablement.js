@@ -34,15 +34,14 @@ add_task(async function test_scalarDisablement() {
   const URI_COUNT_SCALAR =
     "browser.engagement.total_uri_count_normal_and_private_mode";
   const ACTIVE_TICKS_SCALAR = "browser.engagement.active_ticks";
-  const FILTERABLE_SCALAR =
-    "browser.engagement.bookmarks_toolbar_bookmark_added";
+  const LAST_SHUTDOWN_SCALAR = "browser.timings.last_shutdown";
 
   // Ensure there's data to be snapshotted.
   // Both some that shouldn't be filtered...
   Glean.browserEngagement.uriCount.add(1);
   Glean.browserEngagement.activeTicks.add(1);
   // ...and some that should be.
-  Glean.browserEngagement.bookmarksToolbarBookmarkAdded.add(1);
+  Glean.browserTimings.lastShutdown.set(42);
 
   info("1. Ensure things begin by storing and reporting as expected.");
   let payload = TelemetrySession.getPayload(
@@ -52,7 +51,7 @@ add_task(async function test_scalarDisablement() {
 
   Assert.greater(payload.processes.parent.scalars[URI_COUNT_SCALAR], 0);
   Assert.greater(payload.processes.parent.scalars[ACTIVE_TICKS_SCALAR], 0);
-  Assert.greater(payload.processes.parent.scalars[FILTERABLE_SCALAR], 0);
+  Assert.greater(payload.processes.parent.scalars[LAST_SHUTDOWN_SCALAR], 0);
 
   info("2. Ensure we can disable scalars, leaving important ones intact.");
   const { cleanup } = await NimbusTestUtils.setupTest();
@@ -71,7 +70,7 @@ add_task(async function test_scalarDisablement() {
 
   Assert.greater(filtered.processes.parent.scalars[URI_COUNT_SCALAR], 0);
   Assert.greater(filtered.processes.parent.scalars[ACTIVE_TICKS_SCALAR], 0);
-  Assert.ok(!(FILTERABLE_SCALAR in filtered.processes.parent.scalars));
+  Assert.ok(!(LAST_SHUTDOWN_SCALAR in filtered.processes.parent.scalars));
 
   await nimbusCleanup();
   await cleanup();

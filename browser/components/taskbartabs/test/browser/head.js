@@ -17,24 +17,26 @@ ChromeUtils.defineESModuleGetters(this, {
  *
  * @param {Tab} aTab
  *        The tab that the web app should open with
- * @param {{userContextId:number}} [aOptions]
- *        Options to use when creating the web app
  * @returns {Promise}
  *        The web app window object.
  */
-async function openTaskbarTabWindow(aTab = null, aOptions = null) {
+async function openTaskbarTabWindow(aTab = null) {
   const url = Services.io.newURI("https://example.com");
-  const userContextId = aOptions?.userContextId ?? 0;
+  const userContextId = 0;
 
   const registry = new TaskbarTabsRegistry();
   const taskbarTab = createTaskbarTab(registry, url, userContextId);
   const windowManager = new TaskbarTabsWindowManager();
 
+  const windowPromise = BrowserTestUtils.waitForNewWindow();
+
   if (aTab) {
-    return await windowManager.replaceTabWithWindow(taskbarTab, aTab);
+    windowManager.replaceTabWithWindow(taskbarTab, aTab);
+  } else {
+    windowManager.openWindow(taskbarTab);
   }
 
-  return await windowManager.openWindow(taskbarTab);
+  return await windowPromise;
 }
 
 /**

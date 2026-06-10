@@ -8,11 +8,9 @@
 const ICONS = {
   active: "chrome://browser/skin/trust-icon-active.svg",
   insecure: "chrome://browser/skin/trust-icon-insecure.svg",
-  warning: "chrome://browser/skin/trust-icon-warning.svg",
+  file: "chrome://global/skin/icons/page-portrait.svg",
   secure: "chrome://global/skin/icons/security.svg",
-  secureCustomRoot: "chrome://global/skin/icons/security-custom-root.svg",
   broken: "chrome://global/skin/icons/security-broken.svg",
-  failure: "chrome://global/skin/icons/info.svg",
 };
 
 const TESTS = [
@@ -25,7 +23,7 @@ const TESTS = [
   {
     url: "https://example.com",
     icon: ICONS.active,
-    connectionIcon: ICONS.secureCustomRoot,
+    connectionIcon: ICONS.secure,
     descriptionSection: "trustpanel-header-enabled",
   },
   {
@@ -34,19 +32,6 @@ const TESTS = [
     icon: ICONS.insecure,
     connectionIcon: ICONS.broken,
     descriptionSection: "trustpanel-header-enabled-insecure",
-  },
-  {
-    url: "https://self-signed.example.com",
-    icon: ICONS.insecure,
-    connectionIcon: ICONS.broken,
-    descriptionSection: "trustpanel-header-enabled-insecure",
-    isErrorPage: true,
-  },
-  {
-    url: "about:neterror",
-    icon: ICONS.warning,
-    connectionIcon: ICONS.failure,
-    descriptionSection: "trustpanel-header-enabled",
   },
 ];
 
@@ -58,6 +43,10 @@ let fetchIconUrl = (doc, id) => {
 };
 
 add_task(async function () {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.trustPanel.featureGate", true]],
+  });
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       web_accessible_resources: ["test_page.html"],
@@ -79,33 +68,22 @@ add_task(async function () {
   for (let testData of TESTS) {
     info(`Testing state of for ${testData.url}`);
 
-    let pageLoaded;
-    let tab = await BrowserTestUtils.openNewForegroundTab(
+    const tab = await BrowserTestUtils.openNewForegroundTab({
       gBrowser,
-      () => {
-        gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, testData.url);
-        let browser = gBrowser.selectedBrowser;
-        if (testData.isErrorPage) {
-          pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
-        } else {
-          pageLoaded = BrowserTestUtils.browserLoaded(browser);
-        }
-      },
-      false
-    );
-    await pageLoaded;
+      opening: testData.url,
+    });
 
     Assert.equal(
       fetchIconUrl(tab.ownerDocument, "trust-icon"),
       testData.icon,
-      `Trustpanel urlbar icon is correct for ${testData.url}`
+      "Trustpanel urlbar icon is correct"
     );
 
     await UrlbarTestUtils.openTrustPanel(window);
     Assert.equal(
       fetchIconUrl(tab.ownerDocument, "trustpanel-connection-icon"),
       testData.connectionIcon,
-      `Trustpanel connection icon is correct for ${testData.url}`
+      "Trustpanel connection icon is correct"
     );
 
     Assert.ok(

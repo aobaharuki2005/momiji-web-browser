@@ -57,7 +57,7 @@ async function waitForDialogAndDragNDropURL(crossDomain) {
   // assistive technology and keyboards, therefore this test can be excluded
   // from the accessibility tests.
   AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
-  EventUtils.synthesizeMouseAtCenter(urlBarContainer, {});
+  urlBarContainer.click();
   AccessibilityUtils.resetEnv();
   // trigger a drag event in the gUrlBar
   urlbar.dispatchEvent(urlEvent);

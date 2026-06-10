@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // Test all "timeZoneName" options with various locales when formatting a
 // date-time range.
 

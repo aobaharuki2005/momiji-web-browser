@@ -8,8 +8,6 @@ import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import { useIntersectionObserver } from "../../../lib/utils";
 
 const PREF_PROMO_CARD_DISMISSED = "discoverystream.promoCard.visible";
-const PROMO_CARD_IMAGE_SRC =
-  "chrome://newtab/content/data/content/assets/firefox-mascot-prop-paintbucket-rgb.svg";
 
 /**
  * The PromoCard component displays a promotional message.
@@ -25,8 +23,6 @@ const PromoCard = () => {
         type: at.PROMO_CARD_CLICK,
       })
     );
-    dispatch({ type: at.SHOW_PERSONALIZE });
-    dispatch(ac.UserEvent({ event: "SHOW_PERSONALIZE" }));
   }, [dispatch]);
 
   const onDismissClick = useCallback(() => {
@@ -67,30 +63,28 @@ const PromoCard = () => {
       </div>
       <div className="promo-card-inner">
         <div className="img-wrapper">
-          <img src={PROMO_CARD_IMAGE_SRC} alt="" />
+          <img
+            src="chrome://newtab/content/data/content/assets/puzzle-fox.svg"
+            alt=""
+          />
         </div>
-        <div className="promo-card-content">
-          <div className="promo-card-copy">
-            <div className="promo-card-title-wrapper">
-              <span
-                className="promo-card-title"
-                data-l10n-id="newtab-promo-card-title-addons"
-              />
-            </div>
-            <p
-              className="promo-card-body"
-              data-l10n-id="newtab-promo-card-body-addons"
-            />
-          </div>
-          <div className="promo-card-cta-wrapper">
-            <moz-button
-              className="promo-card-cta"
-              type="default"
-              data-l10n-id="newtab-promo-card-cta-addons"
-              onClick={onCtaClick}
-            />
-          </div>
-        </div>
+        <span
+          className="promo-card-title"
+          data-l10n-id="newtab-promo-card-title"
+        />
+        <span
+          className="promo-card-body"
+          data-l10n-id="newtab-promo-card-body"
+        />
+        <span className="promo-card-cta-wrapper">
+          <a
+            href="https://support.mozilla.org/kb/sponsor-privacy"
+            data-l10n-id="newtab-promo-card-cta"
+            target="_blank"
+            rel="noreferrer"
+            onClick={onCtaClick}
+          ></a>
+        </span>
       </div>
     </div>
   );

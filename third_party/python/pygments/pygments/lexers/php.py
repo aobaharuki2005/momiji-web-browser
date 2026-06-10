@@ -4,7 +4,7 @@
 
     Lexers for PHP and related languages.
 
-    :copyright: Copyright 2006-present by the Pygments team, see AUTHORS.
+    :copyright: Copyright 2006-2025 by the Pygments team, see AUTHORS.
     :license: BSD, see LICENSE for details.
 """
 
@@ -211,7 +211,6 @@ class PhpLexer(RegexLexer):
              bygroups(Keyword, Text, Operator, Text), 'functionname'),
             (r'(const)(\s+)(' + _ident_inner + ')',
              bygroups(Keyword, Text, Name.Constant)),
-            # source: https://www.php.net/manual/en/reserved.keywords.php
             (r'(and|E_PARSE|old_function|E_ERROR|or|as|E_WARNING|parent|'
              r'eval|PHP_OS|break|exit|case|extends|PHP_VERSION|cfunction|'
              r'FALSE|print|for|require|continue|foreach|require_once|'
@@ -221,8 +220,8 @@ class PhpLexer(RegexLexer):
              r'endif|list|endswitch|new|endwhile|not|'
              r'array|E_ALL|NULL|final|php_user_filter|interface|'
              r'implements|public|private|protected|abstract|clone|try|'
-             r'catch|throw|this|use|namespace|trait|yield( from)?|'
-             r'finally|match|readonly)\b', Keyword),
+             r'catch|throw|this|use|namespace|trait|yield|'
+             r'finally|match)\b', Keyword),
             (r'(true|false|null)\b', Keyword.Constant),
             include('magicconstants'),
             (r'\$\{', Name.Variable, 'variablevariable'),
@@ -251,10 +250,10 @@ class PhpLexer(RegexLexer):
              Name.Function.Magic),
         ],
         'magicconstants': [
-            # source: https://www.php.net/manual/en/language.constants.magic.php
+            # source: http://php.net/manual/en/language.constants.predefined.php
             (words((
                 '__LINE__', '__FILE__', '__DIR__', '__FUNCTION__', '__CLASS__',
-                '__TRAIT__', '__METHOD__', '__NAMESPACE__', '__PROPERTY__',),
+                '__TRAIT__', '__METHOD__', '__NAMESPACE__',),
                 suffix=r'\b'),
              Name.Constant),
         ],

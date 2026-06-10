@@ -52,7 +52,8 @@ var gNumDiscards = 0;
 window.onload = function() {
   // Enable discarding for the test.
   SpecialPowers.pushPrefEnv({
-    'set':[['image.mem.discardable',true]]
+    'set':[['image.mem.discardable',true],
+           ['image.avif.sequence.enabled',true]]
   }, runTest);
 }
 

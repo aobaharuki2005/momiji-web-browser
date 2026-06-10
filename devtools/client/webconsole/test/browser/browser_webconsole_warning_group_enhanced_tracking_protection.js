@@ -31,10 +31,16 @@ const COOKIE_BEHAVIORS = {
   REJECT_TRACKER: 4,
 };
 
-add_setup(async function () {
-  await setupUrlClassifierTest();
-  await pushPref("devtools.webconsole.groupSimilarMessages", true);
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
+);
+UrlClassifierTestUtils.addTestTrackers();
+registerCleanupFunction(function () {
+  UrlClassifierTestUtils.cleanupTestTrackers();
 });
+
+pushPref("privacy.trackingprotection.enabled", true);
+pushPref("devtools.webconsole.groupSimilarMessages", true);
 
 async function cleanUp() {
   await new Promise(resolve => {
@@ -43,6 +49,7 @@ async function cleanUp() {
     );
   });
 }
+
 add_task(cleanUp);
 
 add_task(async function testEnhancedTrackingProtectionMessage() {

@@ -246,6 +246,7 @@ var chromeScript;
 
 function runTests(flag, prefs, trackingResource) {
   chromeScript = SpecialPowers.loadChromeScript(_ => {
+    /* eslint-env mozilla/chrome-script */
     function onExamResp(subject) {
       let channel = subject.QueryInterface(Ci.nsIHttpChannel);
       let classifiedChannel = subject.QueryInterface(Ci.nsIClassifiedChannel);

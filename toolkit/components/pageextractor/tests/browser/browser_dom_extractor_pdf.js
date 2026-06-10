@@ -7,7 +7,7 @@ add_task(async function test_dom_extractor_pdf() {
   const { cleanup, getPageExtractor } = await openSupportFile("page.pdf");
 
   is(
-    (await getPageExtractor().getText()).text,
+    await getPageExtractor().getText(),
     [
       "Etymology of Mochitests",
       'It\'s interesting that inside of Mozilla most people call mochitests "mohkee tests". I believe this is because it is',

@@ -169,10 +169,7 @@ async function webdriverClickElement(el, a11y) {
 
   // step 7
   let rects = containerEl.getClientRects();
-  let clickPoint = lazy.dom.getInViewCentrePoint(
-    lazy.dom.getFirstNonZeroRect(rects),
-    win
-  );
+  let clickPoint = lazy.dom.getInViewCentrePoint(rects[0], win);
 
   if (lazy.dom.isObscured(containerEl)) {
     throw new lazy.error.ElementClickInterceptedError(
@@ -279,10 +276,7 @@ async function seleniumClickElement(el, a11y) {
     interaction.selectOption(el);
   } else {
     let rects = el.getClientRects();
-    let centre = lazy.dom.getInViewCentrePoint(
-      lazy.dom.getFirstNonZeroRect(rects),
-      win
-    );
+    let centre = lazy.dom.getInViewCentrePoint(rects[0], win);
     let opts = {};
     await lazy.event.synthesizeMouseAtPoint(centre.x, centre.y, opts, win);
   }
@@ -445,7 +439,7 @@ function clearResettableElement(el) {
  *     or a 500 ms timeout is reached.
  */
 interaction.flushEventLoop = async function (el) {
-  const win = el.documentGlobal;
+  const win = el.ownerGlobal;
   let unloadEv, clickEv;
 
   let spinEventLoop = resolve => {
@@ -819,6 +813,6 @@ interaction.isElementSelected = function (el, strict = false) {
 };
 
 function getWindow(el) {
-  // eslint-disable-next-line mozilla/use-documentGlobal
+  // eslint-disable-next-line mozilla/use-ownerGlobal
   return el.ownerDocument.defaultView;
 }

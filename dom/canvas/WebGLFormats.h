@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -274,6 +275,8 @@ struct FormatInfo {
 
   //////
 
+  std::map<UnsizedFormat, const FormatInfo*> copyDecayFormats;
+
   const FormatInfo* GetCopyDecayFormat(UnsizedFormat) const;
 
   bool IsColorFormat() const {
@@ -300,9 +303,7 @@ const FormatInfo* GetFormat(EffectiveFormat format);
 
 inline uint8_t BytesPerPixel(const PackingInfo& packing) {
   const auto pii = PackingInfoInfo::For(packing);
-  if (pii) [[likely]] {
-    return pii->BytesPerPixel();
-  }
+  if (MOZ_LIKELY(pii)) return pii->BytesPerPixel();
 
   gfxCriticalError() << "Bad BytesPerPixel(" << packing << ")";
   MOZ_CRASH("Bad `packing`.");

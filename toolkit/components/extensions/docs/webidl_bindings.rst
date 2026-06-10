@@ -52,8 +52,11 @@ restricted to the WebExtensions background service worker through the
 ``mozilla::extensions::ExtensionAPIAllowed`` helper function.
 
 See ``ExtensionBrowser`` and ``ExtensionGlobalsMixin`` interfaces defined from
-:searchfox:`ExtensionBrowser.webidl <dom/webidl/ExtensionBrowser.webidl>` and ``mozilla::extensions::ExtensionAPIAllowed`` defined in
-:searchfox:`ExtensionBrowser.cpp <toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp>`.
+ExtensionBrowser.webidl_ and ``mozilla::extensions::ExtensionAPIAllowed`` defined in
+ExtensionBrowser.cpp_.
+
+.. _ExtensionBrowser.webidl: https://searchfox.org/mozilla-central/source/dom/webidl/ExtensionBrowser.webidl
+.. _ExtensionBrowser.cpp: https://searchfox.org/mozilla-central/source/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp
 
 Why do all the webidl interfaces for WebExtensions API use LegacyNoInterfaceObject?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -4,9 +4,8 @@ from webdriver.bidi.modules.script import ContextTarget
 
 from ... import recursive_compare
 
-pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.asyncio
 async def test_context(
     bidi_session,
     test_alt_origin,

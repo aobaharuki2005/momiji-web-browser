@@ -17,8 +17,8 @@ import mozilla.telemetry.glean.testing.GleanTestLocalServer
 import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
@@ -33,7 +33,6 @@ import org.mozilla.fenix.helpers.MockWebServerHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.test.assertNotNull
 
 class ApplicationExitInfoMetricsTest {
 
@@ -47,11 +46,6 @@ class ApplicationExitInfoMetricsTest {
 
     private lateinit var appContext: Context
     private lateinit var activityManager: ActivityManager
-
-    @After
-    fun tearDown() {
-        server.close()
-    }
 
     @Before
     fun setup() {
@@ -99,8 +93,8 @@ class ApplicationExitInfoMetricsTest {
 
         ApplicationExitInfoMetrics.recordProcessExits(appContext)
 
-        val recordedEvents = AppExitInfo.processExited.testGetValue()
-        assertNotNull(recordedEvents)
+        assertNotNull(AppExitInfo.processExited.testGetValue())
+        val recordedEvents = AppExitInfo.processExited.testGetValue()!!
         assertThat(recordedEvents[0].extra!!["process_type"], anyOf(`is`("content"), `is`("gpu")))
         assertThat(recordedEvents[1].extra!!["process_type"], anyOf(`is`("content"), `is`("gpu")))
         assertEquals(getLastHandledTime(appContext).toSimpleDateFormat(), recordedEvents[0].extra!!["date"])
@@ -122,8 +116,8 @@ class ApplicationExitInfoMetricsTest {
 
         ApplicationExitInfoMetrics.recordProcessExits(appContext)
 
-        val recordedEvents = AppExitInfo.processExited.testGetValue()
-        assertNotNull(recordedEvents)
+        assertNotNull(AppExitInfo.processExited.testGetValue())
+        val recordedEvents = AppExitInfo.processExited.testGetValue()!!
         assertEquals(historicalProcessExits.size, recordedEvents.size)
     }
 

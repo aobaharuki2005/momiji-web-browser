@@ -6,7 +6,6 @@ package mozilla.components.browser.storage.sync
 
 import android.content.Context
 import androidx.work.WorkerParameters
-import mozilla.components.concept.storage.StorageMaintenanceWorker
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -15,7 +14,7 @@ import mozilla.components.support.base.log.logger.Logger
  * If there is a failure or the worker constraints are no longer met during execution,
  * active write operations on [PlacesStorage] are cancelled.
  *
- * See also [mozilla.components.concept.storage.StorageMaintenanceWorker].
+ * See also [StorageMaintenanceWorker].
  */
 internal class PlacesHistoryStorageWorker(context: Context, params: WorkerParameters) :
     StorageMaintenanceWorker(context, params) {

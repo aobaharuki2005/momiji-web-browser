@@ -9,7 +9,6 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  EMBEDDING_TYPE: "chrome://global/content/ml/EmbeddingsGenerator.sys.mjs",
   EmbeddingsGenerator: "chrome://global/content/ml/EmbeddingsGenerator.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
@@ -45,7 +44,7 @@ async function setup() {
 }
 
 add_task(async function test_EmbeddingsGenerator_for_minimum_physical_memory() {
-  let embeddingsGenerator = EmbeddingsGenerator.forGeneral();
+  let embeddingsGenerator = new EmbeddingsGenerator();
   Assert.ok(
     embeddingsGenerator.isEnoughPhysicalMemoryAvailable(),
     "Physical Memory size < 7GiB."
@@ -53,7 +52,7 @@ add_task(async function test_EmbeddingsGenerator_for_minimum_physical_memory() {
 });
 
 add_task(async function test_EmbeddingsGenerator_for_minimum_cpu_cores() {
-  let embeddingsGenerator = EmbeddingsGenerator.forGeneral();
+  let embeddingsGenerator = new EmbeddingsGenerator();
   Assert.ok(
     embeddingsGenerator.isEnoughCpuCoresAvailable(),
     "Number CPU cores < 2."
@@ -61,13 +60,8 @@ add_task(async function test_EmbeddingsGenerator_for_minimum_cpu_cores() {
 });
 
 class MockMLEngineForEmbedMany {
-  constructor(is_static_embedding = false) {
-    this.is_static_embedding = is_static_embedding;
-  }
-
   async run(request) {
-    // Contextual embedding engine has an additional array wrapping
-    let texts = this.is_static_embedding ? request.args : request.args[0];
+    const texts = request.args;
     return texts.map(text => {
       if (typeof text !== "string" || text.trim() === "") {
         throw new Error("Invalid input: text must be a non-empty string");
@@ -79,11 +73,11 @@ class MockMLEngineForEmbedMany {
 }
 
 add_task(async function test_embedMany_valid_inputs() {
-  const embeddingsGenerator = EmbeddingsGenerator.forPlaces();
+  const embeddingsGenerator = new EmbeddingsGenerator();
   sinon.stub(embeddingsGenerator, "createEngineIfNotPresent").callsFake(() => {
-    return new MockMLEngineForEmbedMany(true);
+    return new MockMLEngineForEmbedMany();
   });
-  embeddingsGenerator.setEngine(new MockMLEngineForEmbedMany(true));
+  embeddingsGenerator.setEngine(new MockMLEngineForEmbedMany());
 
   const texts = ["mdn documentation", "jira board"];
   const result = await embeddingsGenerator.embedMany(texts);
@@ -98,7 +92,7 @@ add_task(async function test_embedMany_valid_inputs() {
 });
 
 add_task(async function test_embedMany_empty_array_input() {
-  const embeddingsGenerator = EmbeddingsGenerator.forGeneral();
+  const embeddingsGenerator = new EmbeddingsGenerator();
   sinon.stub(embeddingsGenerator, "createEngineIfNotPresent").callsFake(() => {
     return new MockMLEngineForEmbedMany();
   });
@@ -120,7 +114,7 @@ add_task(async function test_embedMany_empty_array_input() {
 });
 
 add_task(async function test_embedMany_invalid_input_null() {
-  const embeddingsGenerator = EmbeddingsGenerator.forGeneral();
+  const embeddingsGenerator = new EmbeddingsGenerator();
   sinon.stub(embeddingsGenerator, "createEngineIfNotPresent").callsFake(() => {
     return new MockMLEngineForEmbedMany();
   });
@@ -139,7 +133,7 @@ add_task(async function test_embedMany_invalid_input_null() {
 });
 
 add_task(async function test_embedMany_invalid_input_nonstring() {
-  const embeddingsGenerator = EmbeddingsGenerator.forGeneral();
+  const embeddingsGenerator = new EmbeddingsGenerator();
   sinon.stub(embeddingsGenerator, "createEngineIfNotPresent").callsFake(() => {
     return new MockMLEngineForEmbedMany();
   });
@@ -174,7 +168,7 @@ class MockMLEngineForEmbed {
 }
 
 add_task(async function test_embed_valid_input() {
-  const embeddingsGenerator = EmbeddingsGenerator.forGeneral();
+  const embeddingsGenerator = new EmbeddingsGenerator();
   sinon.stub(embeddingsGenerator, "createEngineIfNotPresent").callsFake(() => {
     return new MockMLEngineForEmbed();
   });
@@ -189,7 +183,7 @@ add_task(async function test_embed_valid_input() {
 });
 
 add_task(async function test_embed_invalid_input_empty_string() {
-  const embeddingsGenerator = EmbeddingsGenerator.forGeneral();
+  const embeddingsGenerator = new EmbeddingsGenerator();
   sinon.stub(embeddingsGenerator, "createEngineIfNotPresent").callsFake(() => {
     return new MockMLEngineForEmbed();
   });
@@ -210,9 +204,20 @@ add_task(async function test_embed_invalid_input_empty_string() {
   sinon.restore();
 });
 
+add_task(async function test_default_backend_is_static_emebddings() {
+  const embeddingsGenerator = new EmbeddingsGenerator();
+
+  Assert.equal(
+    embeddingsGenerator.options.backend,
+    "static-embeddings",
+    "Check default backend"
+  );
+});
+
 add_task(async function test_onnx() {
-  const embeddingsGenerator = EmbeddingsGenerator.forTest({
-    type: EMBEDDING_TYPE.CONTEXTUAL,
+  const embeddingsGenerator = new EmbeddingsGenerator({
+    backend: "onnx-native",
+    embeddingSize: 384,
   });
 
   Assert.equal(
@@ -220,140 +225,4 @@ add_task(async function test_onnx() {
     "onnx-native",
     "Check other backend"
   );
-  Assert.equal(
-    embeddingsGenerator.embeddingSize,
-    384,
-    "Default contextual dim comes from the engine's preferredDimension"
-  );
-});
-
-add_task(async function test_forPlaces_prefDrivesContextual() {
-  // forPlaces() reads `places.semanticHistory.embeddingType`. Setting it to
-  // "contextual" must pick the onnx-native engine; the default ("static")
-  // must pick static-embeddings.
-  await SpecialPowers.pushPrefEnv({
-    set: [["places.semanticHistory.embeddingType", "contextual"]],
-  });
-  try {
-    const contextual = EmbeddingsGenerator.forPlaces();
-    Assert.equal(
-      contextual.options.backend,
-      "onnx-native",
-      "forPlaces + 'contextual' pref resolves to onnx-native"
-    );
-    Assert.equal(
-      contextual.embeddingSize,
-      384,
-      "Contextual dim defaults to 384 when no override pref is set"
-    );
-  } finally {
-    await SpecialPowers.popPrefEnv();
-  }
-
-  // With the pref cleared (back to the default "static"), forPlaces should
-  // fall back to the static engine.
-  const staticGen = EmbeddingsGenerator.forPlaces();
-  Assert.equal(
-    staticGen.options.backend,
-    "static-embeddings",
-    "forPlaces + default pref resolves to static-embeddings"
-  );
-});
-
-add_task(async function test_forGeneral_returnsContextualEmbeddings() {
-  const eg = EmbeddingsGenerator.forGeneral();
-  Assert.ok(
-    ["onnx-native", "onnx-wasm"].includes(eg.options.backend),
-    `backend should be one of onnx-native or onnx-wasm, got ${eg.options.backend}`
-  );
-  Assert.equal(
-    eg.options.embeddingDimension,
-    384,
-    "forGeneral uses the contextual (384)"
-  );
-});
-
-add_task(async function test_forPlaces_defaultIsStatic() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["places.semanticHistory.embeddingType", "static"]],
-  });
-  try {
-    const eg = EmbeddingsGenerator.forPlaces();
-    Assert.equal(
-      eg.options.backend,
-      "static-embeddings",
-      "forPlaces with embeddingType=static resolves to the static engine"
-    );
-    Assert.equal(
-      eg.options.embeddingDimension,
-      512,
-      "forPlaces static path uses the engine's preferredDimension (512)"
-    );
-  } finally {
-    await SpecialPowers.popPrefEnv();
-  }
-});
-
-add_task(
-  async function test_ensureEngine_all_concurrent_callers_reject_on_failure() {
-    const embeddingsGenerator = EmbeddingsGenerator.forGeneral();
-
-    sinon
-      .stub(embeddingsGenerator, "createEngineIfNotPresent")
-      .callsFake(async () => {
-        throw new Error("Engine init failed");
-      });
-
-    const p1 = embeddingsGenerator.ensureEngine();
-    const p2 = embeddingsGenerator.ensureEngine();
-    const p3 = embeddingsGenerator.ensureEngine();
-
-    const [r1, r2, r3] = await Promise.allSettled([p1, p2, p3]);
-
-    for (const result of [r1, r2, r3]) {
-      Assert.equal(
-        result.status,
-        "rejected",
-        "All callers should reject on failure"
-      );
-      Assert.ok(
-        result.reason.message.includes("Engine init failed"),
-        "All callers should receive the original error"
-      );
-    }
-
-    sinon.restore();
-  }
-);
-
-add_task(async function test_ensureEngine_allows_retry_after_failure() {
-  const embeddingsGenerator = EmbeddingsGenerator.forGeneral();
-
-  let callCount = 0;
-  sinon
-    .stub(embeddingsGenerator, "createEngineIfNotPresent")
-    .callsFake(async () => {
-      callCount++;
-      if (callCount === 1) {
-        throw new Error("Engine init failed");
-      }
-    });
-
-  let threw = false;
-  try {
-    await embeddingsGenerator.ensureEngine();
-  } catch (e) {
-    threw = true;
-  }
-  Assert.ok(threw, "First call should reject on failure");
-  Assert.equal(callCount, 1, "createEngineIfNotPresent was called once");
-
-  await embeddingsGenerator.ensureEngine();
-  Assert.equal(
-    callCount,
-    2,
-    "createEngineIfNotPresent should be retried after failure"
-  );
-
-  sinon.restore();
 });

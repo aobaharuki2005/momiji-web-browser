@@ -4,10 +4,6 @@
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-plugins {
-    alias(libs.plugins.dependency.analysis)
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
@@ -49,6 +45,7 @@ dependencies {
     implementation libs.androidx.constraintlayout
     implementation libs.androidx.core.ktx
     implementation libs.androidx.lifecycle.livedata
+    implementation libs.androidx.localbroadcastmanager
     implementation libs.androidx.paging
     implementation libs.androidx.recyclerview
     implementation libs.androidx.room.runtime
@@ -63,12 +60,10 @@ dependencies {
     testFixturesImplementation libs.kotlinx.coroutines.core
     testImplementation libs.androidx.test.core
     testImplementation libs.androidx.test.junit
-    testImplementation libs.kotlin.test
     testImplementation libs.kotlinx.coroutines.test
     testImplementation libs.robolectric
 
     androidTestImplementation project(':components:support-android-test')
-    testImplementation testFixtures(project(':components:support-utils'))
 
     androidTestImplementation libs.androidx.arch.core.testing
     androidTestImplementation libs.androidx.room.testing
@@ -76,8 +71,6 @@ dependencies {
     androidTestImplementation libs.androidx.test.rules
     androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.kotlinx.coroutines.test
-
-    androidTestRuntimeOnly libs.okhttp
 }
 
 apply from: '../../../common-config.gradle'

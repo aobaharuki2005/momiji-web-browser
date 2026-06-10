@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsLoadGroup_h_
-#define nsLoadGroup_h_
+#ifndef nsLoadGroup_h__
+#define nsLoadGroup_h__
 
 #include "nsILoadGroup.h"
 #include "nsILoadGroupChild.h"
@@ -11,7 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsISupportsPriority.h"
-#include "nsTHashSet.h"
+#include "PLDHashTable.h"
 #include "mozilla/TimeStamp.h"
 
 class nsIRequestContext;
@@ -98,7 +99,7 @@ class nsLoadGroup : public nsILoadGroup,
   nsCOMPtr<nsIRequestContextService> mRequestContextService;
 
   nsCOMPtr<nsIRequest> mDefaultLoadRequest;
-  nsTHashSet<RefPtr<nsIRequest>> mRequests;
+  PLDHashTable mRequests;
 
   nsWeakPtr mObserver;
   nsWeakPtr mParentLoadGroup;
@@ -125,4 +126,4 @@ class nsLoadGroup : public nsILoadGroup,
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // nsLoadGroup_h_
+#endif  // nsLoadGroup_h__

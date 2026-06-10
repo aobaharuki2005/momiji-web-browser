@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -240,17 +241,16 @@ class WhiteSpaceVisibilityKeeper final {
    * @param aInsertTextTo       Whether forcibly creates a new `Text` node in
    *                            specific condition or use existing `Text` if
    *                            available.
-   * @param aEditingHost        The editing host at aPointToInsert.
    */
   template <typename EditorDOMPointType>
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<InsertTextResult, nsresult>
   InsertText(HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
              const EditorDOMPointType& aPointToInsert,
-             InsertTextTo aInsertTextTo, const Element& aEditingHost) {
+             InsertTextTo aInsertTextTo) {
     return WhiteSpaceVisibilityKeeper::
         InsertTextOrInsertOrUpdateCompositionString(
             aHTMLEditor, aStringToInsert, EditorDOMRange(aPointToInsert),
-            aInsertTextTo, InsertTextFor::NormalText, aEditingHost);
+            aInsertTextTo, InsertTextFor::NormalText);
   }
 
   /**
@@ -265,19 +265,16 @@ class WhiteSpaceVisibilityKeeper final {
    *                            If there is old composition string, this should
    *                            cover all of it.  Otherwise, this should be
    *                            collapsed and indicate the insertion point.
-   * @param aEditingHost        The editing host at aCompositionStringRange.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<InsertTextResult, nsresult>
   InsertOrUpdateCompositionString(HTMLEditor& aHTMLEditor,
                                   const nsAString& aCompositionString,
                                   const EditorDOMRange& aCompositionStringRange,
-                                  InsertTextFor aPurpose,
-                                  const Element& aEditingHost) {
+                                  InsertTextFor aPurpose) {
     MOZ_ASSERT(EditorBase::InsertingTextForComposition(aPurpose));
     return InsertTextOrInsertOrUpdateCompositionString(
         aHTMLEditor, aCompositionString, aCompositionStringRange,
-        HTMLEditor::InsertTextTo::ExistingTextNodeIfAvailable, aPurpose,
-        aEditingHost);
+        HTMLEditor::InsertTextTo::ExistingTextNodeIfAvailable, aPurpose);
   }
 
   /**
@@ -393,13 +390,12 @@ class WhiteSpaceVisibilityKeeper final {
    *                            available.
    * @param aPurpose            Whether it's handling normal text input or
    *                            updating composition.
-   * @param aEditingHost        The editing host at aRangeToBeReplaced.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<InsertTextResult, nsresult>
   InsertTextOrInsertOrUpdateCompositionString(
       HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
       const EditorDOMRange& aRangeToBeReplaced, InsertTextTo aInsertTextTo,
-      InsertTextFor aPurpose, const Element& aEditingHost);
+      InsertTextFor aPurpose);
 };
 
 }  // namespace mozilla

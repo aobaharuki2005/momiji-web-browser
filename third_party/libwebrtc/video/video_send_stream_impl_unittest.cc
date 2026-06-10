@@ -16,12 +16,12 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/call/bitrate_allocation.h"
 #include "api/environment/environment_factory.h"
 #include "api/field_trials.h"
@@ -36,7 +36,6 @@
 #include "api/video/encoded_image.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video/video_layers_allocation.h"
-#include "api/video_codecs/spatial_layer.h"
 #include "api/video_codecs/video_encoder.h"
 #include "call/bitrate_allocator.h"
 #include "call/rtp_config.h"
@@ -77,6 +76,7 @@ using ::testing::AnyNumber;
 using ::testing::ElementsAreArray;
 using ::testing::Eq;
 using ::testing::Field;
+using ::testing::Invoke;
 using ::testing::Mock;
 using ::testing::NiceMock;
 using ::testing::Return;
@@ -103,7 +103,7 @@ class MockRtpVideoSender : public RtpVideoSenderInterface {
               GetRtpPayloadStates,
               (),
               (const, override));
-  MOCK_METHOD(void, DeliverRtcp, (std::span<const uint8_t>), (override));
+  MOCK_METHOD(void, DeliverRtcp, (ArrayView<const uint8_t>), (override));
   MOCK_METHOD(void,
               OnBitrateAllocationUpdated,
               (const VideoBitrateAllocation&),
@@ -116,12 +116,6 @@ class MockRtpVideoSender : public RtpVideoSenderInterface {
               OnEncodedImage,
               (const EncodedImage&, const CodecSpecificInfo*),
               (override));
-  MOCK_METHOD(void,
-              OnFrameDropped,
-              (uint32_t rtp_timestamp,
-               int spatial_id,
-               bool is_end_of_temporal_unit),
-              (override));
   MOCK_METHOD(void, OnTransportOverheadChanged, (size_t), (override));
   MOCK_METHOD(void,
               OnBitrateUpdated,
@@ -130,10 +124,10 @@ class MockRtpVideoSender : public RtpVideoSenderInterface {
   MOCK_METHOD(uint32_t, GetPayloadBitrateBps, (), (const, override));
   MOCK_METHOD(uint32_t, GetProtectionBitrateBps, (), (const, override));
   MOCK_METHOD(void, SetEncodingData, (size_t, size_t, size_t), (override));
-  MOCK_METHOD(void, SetCsrcs, (std::span<const uint32_t> csrcs), (override));
+  MOCK_METHOD(void, SetCsrcs, (ArrayView<const uint32_t> csrcs), (override));
   MOCK_METHOD(std::vector<RtpSequenceNumberMap::Info>,
               GetSentRtpPacketInfos,
-              (uint32_t ssrc, std::span<const uint16_t> sequence_numbers),
+              (uint32_t ssrc, ArrayView<const uint16_t> sequence_numbers),
               (const, override));
 
   MOCK_METHOD(void, SetFecAllowed, (bool fec_allowed), (override));
@@ -158,7 +152,7 @@ class VideoSendStreamImplTest : public ::testing::Test {
         send_delay_stats_(time_controller_.GetClock()),
         encoder_queue_(time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
             "encoder_queue",
-            TaskQueueFactory::Priority::kNormal)),
+            TaskQueueFactory::Priority::NORMAL)),
         stats_proxy_(time_controller_.GetClock(),
                      config_,
                      VideoEncoderConfig::ContentType::kRealtimeVideo,
@@ -170,9 +164,9 @@ class VideoSendStreamImplTest : public ::testing::Test {
         .WillRepeatedly(Return(&packet_router_));
     EXPECT_CALL(transport_controller_, CreateRtpVideoSender)
         .WillRepeatedly(Return(&rtp_video_sender_));
-    ON_CALL(rtp_video_sender_, IsActive()).WillByDefault([&]() {
+    ON_CALL(rtp_video_sender_, IsActive()).WillByDefault(Invoke([&]() {
       return rtp_sending_;
-    });
+    }));
     ON_CALL(rtp_video_sender_, SetSending)
         .WillByDefault(SaveArg<0>(&rtp_sending_));
   }
@@ -190,8 +184,6 @@ class VideoSendStreamImplTest : public ::testing::Test {
     encoder_config.simulcast_layers.push_back(VideoStream());
     encoder_config.simulcast_layers.back().active = true;
     encoder_config.simulcast_layers.back().bitrate_priority = 1.0;
-    encoder_config.simulcast_layers.back().width = 640;
-    encoder_config.simulcast_layers.back().height = 360;
     return encoder_config;
   }
 
@@ -216,9 +208,7 @@ class VideoSendStreamImplTest : public ::testing::Test {
         /*metronome=*/nullptr, &bitrate_allocator_, &send_delay_stats_,
         config_.Copy(), std::move(encoder_config), suspended_ssrcs,
         suspended_payload_states,
-        /*fec_controller=*/nullptr,
-        /*encoder_switch_request_callback=*/nullptr,
-        std::move(video_stream_encoder));
+        /*fec_controller=*/nullptr, std::move(video_stream_encoder));
 
     // The call to GetStartBitrate() executes asynchronously on the tq.
     // Ensure all tasks get to run.
@@ -300,7 +290,7 @@ TEST_F(VideoSendStreamImplTest,
        MaxBitrateCorrectIfActiveEncodingUpdatedAfterCreation) {
   VideoEncoderConfig one_active_encoding = TestVideoEncoderConfig();
   ASSERT_THAT(one_active_encoding.simulcast_layers, SizeIs(1));
-  one_active_encoding.max_bitrate_bps = 2'500'000;
+  one_active_encoding.max_bitrate_bps = 10'000'000;
   one_active_encoding.simulcast_layers[0].max_bitrate_bps = 2'000'000;
   VideoEncoderConfig no_active_encodings = one_active_encoding.Copy();
   no_active_encodings.simulcast_layers[0].active = false;
@@ -316,12 +306,12 @@ TEST_F(VideoSendStreamImplTest,
   time_controller_.AdvanceTime(TimeDelta::Zero());
 
   Sequence s;
-  // Expect zero max bitrate before the encoder has notified about the actual
-  // send streams.
-  EXPECT_CALL(
-      bitrate_allocator_,
-      AddObserver(vss_impl.get(),
-                  Field(&MediaStreamAllocationConfig::max_bitrate_bps, Eq(0))))
+  // Expect codec max bitrate as max needed bitrate before the encoder has
+  // notifed about the actual send streams.
+  EXPECT_CALL(bitrate_allocator_,
+              AddObserver(vss_impl.get(),
+                          Field(&MediaStreamAllocationConfig::max_bitrate_bps,
+                                Eq(one_active_encoding.max_bitrate_bps))))
       .InSequence(s);
 
   // Expect the sum of active encodings as max needed bitrate after
@@ -341,183 +331,6 @@ TEST_F(VideoSendStreamImplTest,
         ->OnEncoderConfigurationChanged(
             one_active_encoding.simulcast_layers, false,
             VideoEncoderConfig::ContentType::kRealtimeVideo,
-            /*min_transmit_bitrate_bps*/ 30000);
-  });
-  time_controller_.AdvanceTime(TimeDelta::Zero());
-
-  EXPECT_CALL(bitrate_allocator_, RemoveObserver(vss_impl.get())).InSequence(s);
-  vss_impl->Stop();
-}
-
-TEST_F(VideoSendStreamImplTest,
-       MaxBitrateFromGlobalConfigIfSimulcastLayersMissingBitrate) {
-  VideoEncoderConfig encoder_config = TestVideoEncoderConfig();
-  ASSERT_THAT(encoder_config.simulcast_layers, SizeIs(1));
-  encoder_config.max_bitrate_bps = 2500000;
-  encoder_config.simulcast_layers[0].max_bitrate_bps = 0;
-
-  auto vss_impl = CreateVideoSendStreamImpl(encoder_config.Copy());
-
-  Sequence s;
-  // Expect global max bitrate before the encoder has notified about the stream.
-  EXPECT_CALL(bitrate_allocator_,
-              AddObserver(vss_impl.get(),
-                          Field(&MediaStreamAllocationConfig::max_bitrate_bps,
-                                Eq(encoder_config.max_bitrate_bps))))
-      .InSequence(s);
-
-  vss_impl->Start();
-  time_controller_.AdvanceTime(TimeDelta::Zero());
-
-  // Trigger configuration change with stream still having 0 max bitrate.
-  std::vector<VideoStream> streams = encoder_config.simulcast_layers;
-  streams[0].max_bitrate_bps = 0;
-
-  // Expect that the global max bitrate is still used because the stream
-  // doesn't provide a max bitrate.
-  EXPECT_CALL(bitrate_allocator_,
-              AddObserver(vss_impl.get(),
-                          Field(&MediaStreamAllocationConfig::max_bitrate_bps,
-                                Eq(encoder_config.max_bitrate_bps))))
-      .InSequence(s);
-
-  encoder_queue_->PostTask([&] {
-    static_cast<VideoStreamEncoderInterface::EncoderSink*>(vss_impl.get())
-        ->OnEncoderConfigurationChanged(
-            streams, false, VideoEncoderConfig::ContentType::kRealtimeVideo,
-            /*min_transmit_bitrate_bps*/ 30000);
-  });
-  time_controller_.AdvanceTime(TimeDelta::Zero());
-
-  EXPECT_CALL(bitrate_allocator_, RemoveObserver(vss_impl.get())).InSequence(s);
-  vss_impl->Stop();
-}
-
-TEST_F(VideoSendStreamImplTest, MaxBitrateZeroIfNoMaxSetAnywhere) {
-  VideoEncoderConfig encoder_config = TestVideoEncoderConfig();
-  ASSERT_THAT(encoder_config.simulcast_layers, SizeIs(1));
-  encoder_config.max_bitrate_bps = 0;
-  encoder_config.simulcast_layers[0].max_bitrate_bps = 0;
-
-  auto vss_impl = CreateVideoSendStreamImpl(encoder_config.Copy());
-
-  Sequence s;
-  EXPECT_CALL(
-      bitrate_allocator_,
-      AddObserver(vss_impl.get(),
-                  Field(&MediaStreamAllocationConfig::max_bitrate_bps, Eq(0))))
-      .InSequence(s);
-
-  vss_impl->Start();
-  time_controller_.AdvanceTime(TimeDelta::Zero());
-
-  std::vector<VideoStream> streams = encoder_config.simulcast_layers;
-  streams[0].max_bitrate_bps = 0;
-
-  EXPECT_CALL(
-      bitrate_allocator_,
-      AddObserver(vss_impl.get(),
-                  Field(&MediaStreamAllocationConfig::max_bitrate_bps, Eq(0))))
-      .InSequence(s);
-
-  encoder_queue_->PostTask([&] {
-    static_cast<VideoStreamEncoderInterface::EncoderSink*>(vss_impl.get())
-        ->OnEncoderConfigurationChanged(
-            streams, false, VideoEncoderConfig::ContentType::kRealtimeVideo,
-            /*min_transmit_bitrate_bps*/ 30000);
-  });
-  time_controller_.AdvanceTime(TimeDelta::Zero());
-
-  EXPECT_CALL(bitrate_allocator_, RemoveObserver(vss_impl.get())).InSequence(s);
-  vss_impl->Stop();
-}
-
-TEST_F(VideoSendStreamImplTest,
-       MaxBitrateFromGlobalConfigIfSpatialLayersMissingBitrate) {
-  VideoEncoderConfig encoder_config = TestVideoEncoderConfig();
-  encoder_config.max_bitrate_bps = 2500000;
-
-  encoder_config.simulcast_layers.clear();
-  SpatialLayer layer;
-  layer.active = true;
-  layer.maxBitrate = 0;
-  encoder_config.spatial_layers.push_back(layer);
-  encoder_config.number_of_streams = 1;
-
-  auto vss_impl = CreateVideoSendStreamImpl(encoder_config.Copy());
-
-  Sequence s;
-  EXPECT_CALL(bitrate_allocator_,
-              AddObserver(vss_impl.get(),
-                          Field(&MediaStreamAllocationConfig::max_bitrate_bps,
-                                Eq(encoder_config.max_bitrate_bps))))
-      .InSequence(s);
-
-  vss_impl->Start();
-  time_controller_.AdvanceTime(TimeDelta::Zero());
-
-  std::vector<VideoStream> streams;
-  VideoStream stream;
-  stream.active = true;
-  stream.max_bitrate_bps = 0;
-  stream.bitrate_priority = 1.0;
-  streams.push_back(stream);
-
-  EXPECT_CALL(bitrate_allocator_,
-              AddObserver(vss_impl.get(),
-                          Field(&MediaStreamAllocationConfig::max_bitrate_bps,
-                                Eq(encoder_config.max_bitrate_bps))))
-      .InSequence(s);
-
-  encoder_queue_->PostTask([&] {
-    static_cast<VideoStreamEncoderInterface::EncoderSink*>(vss_impl.get())
-        ->OnEncoderConfigurationChanged(
-            streams, false, VideoEncoderConfig::ContentType::kRealtimeVideo,
-            /*min_transmit_bitrate_bps*/ 30000);
-  });
-  time_controller_.AdvanceTime(TimeDelta::Zero());
-
-  EXPECT_CALL(bitrate_allocator_, RemoveObserver(vss_impl.get())).InSequence(s);
-  vss_impl->Stop();
-}
-
-TEST_F(VideoSendStreamImplTest,
-       MaxBitrateUpdatedOnReconfigurationIfSimulcastLayersMissingBitrate) {
-  VideoEncoderConfig encoder_config = TestVideoEncoderConfig();
-  ASSERT_THAT(encoder_config.simulcast_layers, SizeIs(1));
-  encoder_config.max_bitrate_bps = 2500000;
-  encoder_config.simulcast_layers[0].max_bitrate_bps = 0;
-
-  auto vss_impl = CreateVideoSendStreamImpl(encoder_config.Copy());
-
-  Sequence s;
-  EXPECT_CALL(bitrate_allocator_,
-              AddObserver(vss_impl.get(),
-                          Field(&MediaStreamAllocationConfig::max_bitrate_bps,
-                                Eq(encoder_config.max_bitrate_bps))))
-      .InSequence(s);
-
-  vss_impl->Start();
-  time_controller_.AdvanceTime(TimeDelta::Zero());
-
-  VideoEncoderConfig new_config = encoder_config.Copy();
-  new_config.max_bitrate_bps = 3500000;
-
-  vss_impl->ReconfigureVideoEncoder(new_config.Copy());
-
-  std::vector<VideoStream> streams = new_config.simulcast_layers;
-  streams[0].max_bitrate_bps = 0;
-
-  EXPECT_CALL(bitrate_allocator_,
-              AddObserver(vss_impl.get(),
-                          Field(&MediaStreamAllocationConfig::max_bitrate_bps,
-                                Eq(new_config.max_bitrate_bps))))
-      .InSequence(s);
-
-  encoder_queue_->PostTask([&] {
-    static_cast<VideoStreamEncoderInterface::EncoderSink*>(vss_impl.get())
-        ->OnEncoderConfigurationChanged(
-            streams, false, VideoEncoderConfig::ContentType::kRealtimeVideo,
             /*min_transmit_bitrate_bps*/ 30000);
   });
   time_controller_.AdvanceTime(TimeDelta::Zero());
@@ -613,7 +426,7 @@ TEST_F(VideoSendStreamImplTest, UpdatesObserverOnConfigurationChange) {
   int min_transmit_bitrate_bps = 30000;
 
   EXPECT_CALL(bitrate_allocator_, AddObserver(vss_impl.get(), _))
-      .WillRepeatedly(
+      .WillRepeatedly(Invoke(
           [&](BitrateAllocatorObserver*, MediaStreamAllocationConfig config) {
             EXPECT_EQ(config.min_bitrate_bps,
                       static_cast<uint32_t>(min_transmit_bitrate_bps));
@@ -626,7 +439,7 @@ TEST_F(VideoSendStreamImplTest, UpdatesObserverOnConfigurationChange) {
                                               vga_stream.min_bitrate_bps));
             }
             EXPECT_EQ(config.enforce_min_bitrate, !kSuspend);
-          });
+          }));
 
   encoder_queue_->PostTask([&] {
     static_cast<VideoStreamEncoderInterface::EncoderSink*>(vss_impl.get())
@@ -680,7 +493,7 @@ TEST_F(VideoSendStreamImplTest, UpdatesObserverOnConfigurationChangeWithAlr) {
   int min_transmit_bitrate_bps = 400000;
 
   EXPECT_CALL(bitrate_allocator_, AddObserver(vss_impl.get(), _))
-      .WillRepeatedly(
+      .WillRepeatedly(Invoke(
           [&](BitrateAllocatorObserver*, MediaStreamAllocationConfig config) {
             EXPECT_EQ(config.min_bitrate_bps,
                       static_cast<uint32_t>(low_stream.min_bitrate_bps));
@@ -692,7 +505,7 @@ TEST_F(VideoSendStreamImplTest, UpdatesObserverOnConfigurationChangeWithAlr) {
                         static_cast<uint32_t>(min_transmit_bitrate_bps));
             }
             EXPECT_EQ(config.enforce_min_bitrate, !kSuspend);
-          });
+          }));
   encoder_queue_->PostTask([&] {
     static_cast<VideoStreamEncoderInterface::EncoderSink*>(vss_impl.get())
         ->OnEncoderConfigurationChanged(
@@ -736,8 +549,8 @@ TEST_F(VideoSendStreamImplTest,
   high_stream.bitrate_priority = 1;
 
   EXPECT_CALL(bitrate_allocator_, AddObserver(vss_impl.get(), _))
-      .WillRepeatedly([&](BitrateAllocatorObserver*,
-                          MediaStreamAllocationConfig config) {
+      .WillRepeatedly(Invoke([&](BitrateAllocatorObserver*,
+                                 MediaStreamAllocationConfig config) {
         EXPECT_EQ(config.min_bitrate_bps,
                   static_cast<uint32_t>(low_stream.min_bitrate_bps));
         EXPECT_EQ(config.max_bitrate_bps,
@@ -748,7 +561,7 @@ TEST_F(VideoSendStreamImplTest,
                     static_cast<uint32_t>(low_stream.target_bitrate_bps +
                                           1.25 * high_stream.min_bitrate_bps));
         }
-      });
+      }));
 
   encoder_queue_->PostTask([&] {
     static_cast<VideoStreamEncoderInterface::EncoderSink*>(vss_impl.get())
@@ -1216,13 +1029,14 @@ TEST_F(VideoSendStreamImplTest, DisablesPaddingOnPausedEncoder) {
 
   // Capture padding bitrate for testing.
   EXPECT_CALL(bitrate_allocator_, AddObserver(vss_impl.get(), _))
-      .WillRepeatedly(
+      .WillRepeatedly(Invoke(
           [&](BitrateAllocatorObserver*, MediaStreamAllocationConfig config) {
             padding_bitrate = config.pad_up_bitrate_bps;
-          });
+          }));
   // If observer is removed, no padding will be sent.
   EXPECT_CALL(bitrate_allocator_, RemoveObserver(vss_impl.get()))
-      .WillRepeatedly([&](BitrateAllocatorObserver*) { padding_bitrate = 0; });
+      .WillRepeatedly(
+          Invoke([&](BitrateAllocatorObserver*) { padding_bitrate = 0; }));
 
   EXPECT_CALL(rtp_video_sender_, OnEncodedImage)
       .WillRepeatedly(Return(
@@ -1287,7 +1101,7 @@ TEST_F(VideoSendStreamImplTest, DisablesPaddingOnPausedEncoder) {
   vss_impl->Stop();
 }
 
-TEST_F(VideoSendStreamImplTest, KeepAliveOnFrameDropped) {
+TEST_F(VideoSendStreamImplTest, KeepAliveOnDroppedFrame) {
   auto vss_impl = CreateVideoSendStreamImpl(TestVideoEncoderConfig());
   EXPECT_CALL(bitrate_allocator_, RemoveObserver(vss_impl.get())).Times(0);
   vss_impl->Start();
@@ -1300,8 +1114,7 @@ TEST_F(VideoSendStreamImplTest, KeepAliveOnFrameDropped) {
   encoder_queue_->PostTask([&] {
     // Keep the stream from deallocating by dropping a frame.
     static_cast<EncodedImageCallback*>(vss_impl.get())
-        ->OnFrameDropped(/*rtp_timestamp=*/0, /*spatial_id=*/0,
-                         /*is_end_of_temporal_unit=*/true);
+        ->OnDroppedFrame(EncodedImageCallback::DropReason::kDroppedByEncoder);
   });
   time_controller_.AdvanceTime(TimeDelta::Seconds(2));
   testing::Mock::VerifyAndClearExpectations(&bitrate_allocator_);
@@ -1319,9 +1132,7 @@ TEST_F(VideoSendStreamImplTest, ConfiguresBitratesForSvc) {
   for (bool screenshare : {false, true}) {
     for (bool alr : {false, true}) {
       for (int min_padding : {0, 400000}) {
-        test_variants.push_back({.screenshare = screenshare,
-                                 .alr = alr,
-                                 .min_padding_bitrate_bps = min_padding});
+        test_variants.push_back({screenshare, alr, min_padding});
       }
     }
   }

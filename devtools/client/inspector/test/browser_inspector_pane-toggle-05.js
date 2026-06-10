@@ -15,7 +15,7 @@ add_task(async function () {
 
   const { inspector } = await openInspectorForURL("about:blank");
 
-  await inspector.sidebar.select("changesview");
+  inspector.sidebar.select("changesview");
 
   is(
     inspector.sidebar.getCurrentTabID(),
@@ -49,7 +49,7 @@ add_task(async function () {
 
   const { inspector } = await openInspectorForURL("about:blank");
 
-  await inspector.sidebar.select("changesview");
+  inspector.sidebar.select("changesview");
 
   is(
     inspector.sidebar.getCurrentTabID(),
@@ -74,7 +74,7 @@ add_task(async function () {
 
   const { inspector } = await openInspectorForURL("about:blank");
 
-  await inspector.sidebar.select("ruleview");
+  inspector.sidebar.select("ruleview");
 
   is(
     inspector.sidebar.getCurrentTabID(),

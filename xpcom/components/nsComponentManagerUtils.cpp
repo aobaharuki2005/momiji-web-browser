@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -154,7 +156,7 @@ nsresult nsCreateInstanceByCID::operator()(const nsIID& aIID,
                                            void** aInstancePtr) const {
   nsresult status = CallCreateInstance(mCID, aIID, aInstancePtr);
   if (NS_FAILED(status)) {
-    *aInstancePtr = nullptr;
+    *aInstancePtr = 0;
   }
   if (mErrorPtr) {
     *mErrorPtr = status;
@@ -166,7 +168,7 @@ nsresult nsCreateInstanceByContractID::operator()(const nsIID& aIID,
                                                   void** aInstancePtr) const {
   nsresult status = CallCreateInstance(mContractID, aIID, aInstancePtr);
   if (NS_FAILED(status)) {
-    *aInstancePtr = nullptr;
+    *aInstancePtr = 0;
   }
   if (mErrorPtr) {
     *mErrorPtr = status;
@@ -178,7 +180,7 @@ nsresult nsCreateInstanceFromFactory::operator()(const nsIID& aIID,
                                                  void** aInstancePtr) const {
   nsresult status = mFactory->CreateInstance(aIID, aInstancePtr);
   if (NS_FAILED(status)) {
-    *aInstancePtr = nullptr;
+    *aInstancePtr = 0;
   }
   if (mErrorPtr) {
     *mErrorPtr = status;
@@ -190,7 +192,7 @@ nsresult nsGetClassObjectByCID::operator()(const nsIID& aIID,
                                            void** aInstancePtr) const {
   nsresult status = CallGetClassObject(mCID, aIID, aInstancePtr);
   if (NS_FAILED(status)) {
-    *aInstancePtr = nullptr;
+    *aInstancePtr = 0;
   }
   if (mErrorPtr) {
     *mErrorPtr = status;
@@ -202,7 +204,7 @@ nsresult nsGetClassObjectByContractID::operator()(const nsIID& aIID,
                                                   void** aInstancePtr) const {
   nsresult status = CallGetClassObject(mContractID, aIID, aInstancePtr);
   if (NS_FAILED(status)) {
-    *aInstancePtr = nullptr;
+    *aInstancePtr = 0;
   }
   if (mErrorPtr) {
     *mErrorPtr = status;
@@ -214,7 +216,7 @@ nsresult nsGetServiceByCID::operator()(const nsIID& aIID,
                                        void** aInstancePtr) const {
   nsresult status = CallGetService(mCID, aIID, aInstancePtr);
   if (NS_FAILED(status)) {
-    *aInstancePtr = nullptr;
+    *aInstancePtr = 0;
   }
 
   return status;
@@ -224,7 +226,7 @@ nsresult nsGetServiceByCIDWithError::operator()(const nsIID& aIID,
                                                 void** aInstancePtr) const {
   nsresult status = CallGetService(mCID, aIID, aInstancePtr);
   if (NS_FAILED(status)) {
-    *aInstancePtr = nullptr;
+    *aInstancePtr = 0;
   }
 
   if (mErrorPtr) {
@@ -237,7 +239,7 @@ nsresult nsGetServiceByContractID::operator()(const nsIID& aIID,
                                               void** aInstancePtr) const {
   nsresult status = CallGetService(mContractID, aIID, aInstancePtr);
   if (NS_FAILED(status)) {
-    *aInstancePtr = nullptr;
+    *aInstancePtr = 0;
   }
 
   return status;
@@ -247,7 +249,7 @@ nsresult nsGetServiceByContractIDWithError::operator()(
     const nsIID& aIID, void** aInstancePtr) const {
   nsresult status = CallGetService(mContractID, aIID, aInstancePtr);
   if (NS_FAILED(status)) {
-    *aInstancePtr = nullptr;
+    *aInstancePtr = 0;
   }
 
   if (mErrorPtr) {

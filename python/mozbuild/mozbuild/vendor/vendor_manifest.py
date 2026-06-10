@@ -284,7 +284,7 @@ class VendorManifest(MozbuildObject):
         elif "patches" in self.manifest["vendoring"] and not self.new_files_only:
             # Remind the user
             self.log(
-                logging.WARNING,
+                logging.CRITICAL,
                 "vendor",
                 {},
                 "Patches present in manifest!!! Please run "

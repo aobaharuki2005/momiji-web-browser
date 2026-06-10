@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -71,7 +73,7 @@ static int SetNonBlocking(int fd) {
 }
 
 MessagePumpLibevent::FileDescriptorWatcher::FileDescriptorWatcher()
-    : is_persistent_(false), event_(nullptr) {}
+    : is_persistent_(false), event_(NULL) {}
 
 MessagePumpLibevent::FileDescriptorWatcher::~FileDescriptorWatcher() {
   if (event_) {
@@ -82,7 +84,7 @@ MessagePumpLibevent::FileDescriptorWatcher::~FileDescriptorWatcher() {
 void MessagePumpLibevent::FileDescriptorWatcher::Init(event* e,
                                                       bool is_persistent) {
   DCHECK(e);
-  DCHECK(event_ == nullptr);
+  DCHECK(event_ == NULL);
 
   is_persistent_ = is_persistent;
   event_ = e;
@@ -90,13 +92,13 @@ void MessagePumpLibevent::FileDescriptorWatcher::Init(event* e,
 
 event* MessagePumpLibevent::FileDescriptorWatcher::ReleaseEvent() {
   struct event* e = event_;
-  event_ = nullptr;
+  event_ = NULL;
   return e;
 }
 
 bool MessagePumpLibevent::FileDescriptorWatcher::StopWatchingFileDescriptor() {
   event* e = ReleaseEvent();
-  if (e == nullptr) return true;
+  if (e == NULL) return true;
 
   // event_del() is a no-op if the event isn't active.
   int rv = event_del(e);
@@ -158,7 +160,7 @@ bool MessagePumpLibevent::Init() {
             this);
   event_base_set(event_base_, wakeup_event_);
 
-  if (event_add(wakeup_event_, nullptr)) return false;
+  if (event_add(wakeup_event_, 0)) return false;
   return true;
 }
 
@@ -195,7 +197,7 @@ bool MessagePumpLibevent::WatchFileDescriptor(int fd, bool persistent,
   // tell libevent to clean it up via event_delete() before returning.
   bool should_delete_event = true;
   mozilla::UniquePtr<event> evt(controller->ReleaseEvent());
-  if (evt.get() == nullptr) {
+  if (evt.get() == NULL) {
     should_delete_event = false;
     // Ownership is transferred to the controller.
     evt = mozilla::MakeUnique<event>();
@@ -230,7 +232,7 @@ bool MessagePumpLibevent::WatchFileDescriptor(int fd, bool persistent,
   }
 
   // Add this socket to the list of monitored sockets.
-  if (event_add(evt.get(), nullptr) != 0) {
+  if (event_add(evt.get(), NULL) != 0) {
     if (should_delete_event) {
       event_del(evt.get());
     }

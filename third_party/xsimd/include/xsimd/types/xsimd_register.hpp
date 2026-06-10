@@ -14,8 +14,6 @@
 
 #include <type_traits>
 
-#include "../config/xsimd_inline.hpp"
-
 namespace xsimd
 {
     namespace types
@@ -85,7 +83,7 @@ namespace xsimd
     {
         template <class A>
         // makes requires_arch equal to A const&, using type_traits functions
-        using requires_arch = std::add_lvalue_reference_t<std::add_const_t<A>>;
+        using requires_arch = typename std::add_lvalue_reference<typename std::add_const<A>::type>::type;
         template <class T>
         struct convert
         {

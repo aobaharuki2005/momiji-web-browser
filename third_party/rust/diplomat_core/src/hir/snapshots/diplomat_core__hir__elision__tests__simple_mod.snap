@@ -1,5 +1,6 @@
 ---
 source: core/src/hir/elision.rs
+assertion_line: 473
 expression: tcx
 ---
 TypeContext {
@@ -39,7 +40,6 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
-                        deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
                             pattern: None,
@@ -49,7 +49,6 @@ TypeContext {
                         },
                         special_method: None,
                         custom_errors: false,
-                        default: false,
                         demo_attrs: DemoInfo {
                             generate: false,
                             default_constructor: false,
@@ -60,8 +59,6 @@ TypeContext {
                                 default_value: "",
                             },
                         },
-                        generate_mocking_interface: false,
-                        abi_compatible: false,
                     },
                 },
             ],
@@ -101,7 +98,6 @@ TypeContext {
                             ),
                             attrs: Attrs {
                                 disable: false,
-                                deprecated: None,
                                 namespace: None,
                                 rename: RenameAttr {
                                     pattern: None,
@@ -111,7 +107,6 @@ TypeContext {
                                 },
                                 special_method: None,
                                 custom_errors: false,
-                                default: false,
                                 demo_attrs: DemoInfo {
                                     generate: false,
                                     default_constructor: false,
@@ -122,8 +117,6 @@ TypeContext {
                                         default_value: "",
                                     },
                                 },
-                                generate_mocking_interface: false,
-                                abi_compatible: false,
                             },
                         },
                     ],
@@ -144,7 +137,6 @@ TypeContext {
                                         tcx_id: OutStructId(
                                             0,
                                         ),
-                                        owner: Own,
                                     },
                                 ),
                             ),
@@ -152,7 +144,6 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
-                        deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
                             pattern: None,
@@ -162,7 +153,6 @@ TypeContext {
                         },
                         special_method: None,
                         custom_errors: false,
-                        default: false,
                         demo_attrs: DemoInfo {
                             generate: false,
                             default_constructor: false,
@@ -173,14 +163,11 @@ TypeContext {
                                 default_value: "",
                             },
                         },
-                        generate_mocking_interface: false,
-                        abi_compatible: false,
                     },
                 },
             ],
             attrs: Attrs {
                 disable: false,
-                deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
                     pattern: None,
@@ -190,7 +177,6 @@ TypeContext {
                 },
                 special_method: None,
                 custom_errors: false,
-                default: false,
                 demo_attrs: DemoInfo {
                     generate: false,
                     default_constructor: false,
@@ -201,8 +187,6 @@ TypeContext {
                         default_value: "",
                     },
                 },
-                generate_mocking_interface: false,
-                abi_compatible: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -249,7 +233,6 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
-                        deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
                             pattern: None,
@@ -259,7 +242,6 @@ TypeContext {
                         },
                         special_method: None,
                         custom_errors: false,
-                        default: false,
                         demo_attrs: DemoInfo {
                             generate: false,
                             default_constructor: false,
@@ -270,8 +252,6 @@ TypeContext {
                                 default_value: "",
                             },
                         },
-                        generate_mocking_interface: false,
-                        abi_compatible: false,
                     },
                 },
             ],
@@ -309,12 +289,10 @@ TypeContext {
                                     tcx_id: StructId(
                                         0,
                                     ),
-                                    owner: Own,
                                 },
                             ),
                             attrs: Attrs {
                                 disable: false,
-                                deprecated: None,
                                 namespace: None,
                                 rename: RenameAttr {
                                     pattern: None,
@@ -324,7 +302,6 @@ TypeContext {
                                 },
                                 special_method: None,
                                 custom_errors: false,
-                                default: false,
                                 demo_attrs: DemoInfo {
                                     generate: false,
                                     default_constructor: false,
@@ -335,8 +312,6 @@ TypeContext {
                                         default_value: "",
                                     },
                                 },
-                                generate_mocking_interface: false,
-                                abi_compatible: false,
                             },
                         },
                     ),
@@ -357,7 +332,6 @@ TypeContext {
                             ),
                             attrs: Attrs {
                                 disable: false,
-                                deprecated: None,
                                 namespace: None,
                                 rename: RenameAttr {
                                     pattern: None,
@@ -367,7 +341,6 @@ TypeContext {
                                 },
                                 special_method: None,
                                 custom_errors: false,
-                                default: false,
                                 demo_attrs: DemoInfo {
                                     generate: false,
                                     default_constructor: false,
@@ -378,8 +351,6 @@ TypeContext {
                                         default_value: "",
                                     },
                                 },
-                                generate_mocking_interface: false,
-                                abi_compatible: false,
                             },
                         },
                     ],
@@ -401,7 +372,6 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
-                        deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
                             pattern: None,
@@ -411,7 +381,6 @@ TypeContext {
                         },
                         special_method: None,
                         custom_errors: false,
-                        default: false,
                         demo_attrs: DemoInfo {
                             generate: false,
                             default_constructor: false,
@@ -422,14 +391,11 @@ TypeContext {
                                 default_value: "",
                             },
                         },
-                        generate_mocking_interface: false,
-                        abi_compatible: false,
                     },
                 },
             ],
             attrs: Attrs {
                 disable: false,
-                deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
                     pattern: None,
@@ -439,7 +405,6 @@ TypeContext {
                 },
                 special_method: None,
                 custom_errors: false,
-                default: false,
                 demo_attrs: DemoInfo {
                     generate: false,
                     default_constructor: false,
@@ -450,8 +415,6 @@ TypeContext {
                         default_value: "",
                     },
                 },
-                generate_mocking_interface: false,
-                abi_compatible: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -480,7 +443,6 @@ TypeContext {
             methods: [],
             attrs: Attrs {
                 disable: false,
-                deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
                     pattern: None,
@@ -490,7 +452,6 @@ TypeContext {
                 },
                 special_method: None,
                 custom_errors: false,
-                default: false,
                 demo_attrs: DemoInfo {
                     generate: false,
                     default_constructor: false,
@@ -501,8 +462,6 @@ TypeContext {
                         default_value: "",
                     },
                 },
-                generate_mocking_interface: false,
-                abi_compatible: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -524,5 +483,4 @@ TypeContext {
     ],
     enums: [],
     traits: [],
-    functions: [],
 }

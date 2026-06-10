@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -523,7 +525,6 @@ void Loader::DeregisterFromSheetCache() {
 }
 
 void Loader::DropDocumentReference() {
-  MOZ_ASSERT(NS_IsMainThread());
   // Flush out pending datas just so we don't leak by accident.
   if (mSheets) {
     DeregisterFromSheetCache();
@@ -731,15 +732,21 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
   nsAutoCString contentType;
   aChannel->GetContentType(contentType);
 
-  // In standards mode, a style sheet must have one of these MIME types to be
-  // processed at all.  In quirks mode, we accept any MIME type, but only if the
-  // style sheet is same-origin with the requesting document + parent stylesheet
-  // (and didn't have any cross-origin redirects).  See bug 524223.
+  // In standards mode, a style sheet must have one of these MIME
+  // types to be processed at all.  In quirks mode, we accept any
+  // MIME type, but only if the style sheet is same-origin with the
+  // requesting document or parent sheet.  See bug 524223.
+
   const bool validType = contentType.EqualsLiteral("text/css") ||
                          contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE) ||
                          contentType.IsEmpty();
+
   if (!validType) {
-    const bool sameOrigin = mSheet->IsOriginClean();
+    // FIXME(emilio, bug 1995647): This should arguably use IsOriginClean(),
+    // though test_css_cross_domain_no_orb.html tests precisely this behavior
+    // intentionally, and this is quirks-only...
+    const bool sameOrigin =
+        mLoader->LoaderPrincipal()->Subsumes(mSheet->Principal());
     const auto flag = sameOrigin && mCompatMode == eCompatibility_NavQuirks
                           ? nsIScriptError::warningFlag
                           : nsIScriptError::errorFlag;
@@ -754,7 +761,7 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
       referrer->GetSpec(referrerSpec);
     }
     mLoader->mReporter->AddConsoleReport(
-        flag, "CSS Loader"_ns, PropertiesFile::CSS_PROPERTIES, referrerSpec, 0,
+        flag, "CSS Loader"_ns, nsContentUtils::eCSS_PROPERTIES, referrerSpec, 0,
         0, errorMessage, {sheetUri, contentType16});
     if (flag == nsIScriptError::errorFlag) {
       LOG_WARN(
@@ -1061,6 +1068,7 @@ void Loader::InsertChildSheet(StyleSheet& aSheet, StyleSheet& aParentSheet) {
 }
 
 nsresult Loader::NewStyleSheetChannel(SheetLoadData& aLoadData,
+                                      CORSMode aCorsMode,
                                       UsePreload aUsePreload,
                                       UseLoadGroup aUseLoadGroup,
                                       nsIChannel** aOutChannel) {
@@ -1084,8 +1092,7 @@ nsresult Loader::NewStyleSheetChannel(SheetLoadData& aLoadData,
     triggeringClassificationFlags = mDocument->GetScriptTrackingFlags();
   }
 
-  nsSecurityFlags securityFlags =
-      ComputeSecurityFlags(aLoadData.mSheet->GetCORSMode());
+  nsSecurityFlags securityFlags = ComputeSecurityFlags(aCorsMode);
 
   nsContentPolicyType contentPolicyType =
       ComputeContentPolicyType(aLoadData.mPreloadKind);
@@ -1146,9 +1153,12 @@ nsresult Loader::LoadSheetSyncInternal(SheetLoadData& aLoadData,
   // channel to make error recovery simpler.
   auto streamLoader = MakeRefPtr<StreamLoader>(aLoadData);
 
+  // Synchronous loads should only be used internally. Therefore no CORS
+  // policy is needed.
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NewStyleSheetChannel(aLoadData, UsePreload::Yes,
-                                     UseLoadGroup::No, getter_AddRefs(channel));
+  nsresult rv =
+      NewStyleSheetChannel(aLoadData, CORSMode::CORS_NONE, UsePreload::Yes,
+                           UseLoadGroup::No, getter_AddRefs(channel));
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Failed to create channel"));
     streamLoader->ChannelOpenFailed(rv);
@@ -1364,8 +1374,9 @@ nsresult Loader::LoadSheetAsyncInternal(SheetLoadData& aLoadData,
 #endif
 
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NewStyleSheetChannel(
-      aLoadData, UsePreload::No, UseLoadGroup::Yes, getter_AddRefs(channel));
+  nsresult rv = NewStyleSheetChannel(aLoadData, aLoadData.mSheet->GetCORSMode(),
+                                     UsePreload::No, UseLoadGroup::Yes,
+                                     getter_AddRefs(channel));
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Failed to create channel"));
     SheetComplete(aLoadData, rv);
@@ -1587,8 +1598,7 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
       observer->StyleSheetLoaded(aData.mSheet, aData.ShouldDefer(), aStatus);
     }
 
-    for (const auto& obsRef : mObservers.ForwardRange()) {
-      nsCOMPtr<nsICSSLoaderObserver> obs{obsRef};
+    for (nsCOMPtr<nsICSSLoaderObserver> obs : mObservers.ForwardRange()) {
       LOG(("  Notifying global observer %p for data %p.  deferred: %d",
            obs.get(), &aData, aData.ShouldDefer()));
       obs->StyleSheetLoaded(aData.mSheet, aData.ShouldDefer(), aStatus);
@@ -1933,10 +1943,10 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
     // load.
     if (aInfo.mContent && !mDocument->IsLoadedAsData()) {
       // Fire an async error event on it.
-      auto loadBlockingAsyncDispatcher =
-          MakeRefPtr<LoadBlockingAsyncEventDispatcher>(
-              aInfo.mContent, u"error"_ns, CanBubble::eNo,
-              ChromeOnlyDispatch::eNo);
+      RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
+          new LoadBlockingAsyncEventDispatcher(aInfo.mContent, u"error"_ns,
+                                               CanBubble::eNo,
+                                               ChromeOnlyDispatch::eNo);
       loadBlockingAsyncDispatcher->PostDOMEvent();
     }
     return Err(rv);
@@ -2144,7 +2154,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheetSync(
     nsIURI* aURL, SheetParsingMode aParsingMode,
     UseSystemPrincipal aUseSystemPrincipal) {
   LOG(("css::Loader::LoadSheetSync"));
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = MakeAndAddRef<ReferrerInfo>(nullptr);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   return InternalLoadNonDocumentSheet(
       aURL, StylePreloadKind::None, aParsingMode, aUseSystemPrincipal, nullptr,
       referrerInfo, nullptr, CORS_NONE, u""_ns, u""_ns, 0, FetchPriority::Auto);
@@ -2153,7 +2163,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheetSync(
 Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
     nsIURI* aURI, SheetParsingMode aParsingMode,
     UseSystemPrincipal aUseSystemPrincipal, nsICSSLoaderObserver* aObserver) {
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = MakeAndAddRef<ReferrerInfo>(nullptr);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   return InternalLoadNonDocumentSheet(
       aURI, StylePreloadKind::None, aParsingMode, aUseSystemPrincipal, nullptr,
       referrerInfo, aObserver, CORS_NONE, u""_ns, u""_ns, 0,
@@ -2261,8 +2271,9 @@ void Loader::NotifyObserversForCachedSheet(SheetLoadData& aLoadData) {
   }
 
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NewStyleSheetChannel(aLoadData, UsePreload::No,
-                                     UseLoadGroup::No, getter_AddRefs(channel));
+  nsresult rv = NewStyleSheetChannel(aLoadData, aLoadData.mSheet->GetCORSMode(),
+                                     UsePreload::No, UseLoadGroup::No,
+                                     getter_AddRefs(channel));
   if (NS_FAILED(rv)) {
     return;
   }
@@ -2311,6 +2322,7 @@ void Loader::StartDeferredLoads() {
 NS_IMPL_CYCLE_COLLECTION_CLASS(Loader)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Loader)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSheets);
   for (nsCOMPtr<nsICSSLoaderObserver>& obs : tmp->mObservers.ForwardRange()) {
     ImplCycleCollectionTraverse(cb, obs, "mozilla::css::Loader.mObservers");
   }
@@ -2342,7 +2354,6 @@ size_t Loader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 }
 
 nsIPrincipal* Loader::LoaderPrincipal() const {
-  MOZ_ASSERT(NS_IsMainThread());
   if (mDocument) {
     return mDocument->NodePrincipal();
   }
@@ -2351,12 +2362,10 @@ nsIPrincipal* Loader::LoaderPrincipal() const {
 }
 
 nsIPrincipal* Loader::PartitionedPrincipal() const {
-  MOZ_ASSERT(NS_IsMainThread());
   return mDocument ? mDocument->PartitionedPrincipal() : LoaderPrincipal();
 }
 
 bool Loader::ShouldBypassCache() const {
-  MOZ_ASSERT(NS_IsMainThread());
   return mDocument && nsContentUtils::ShouldBypassSubResourceCache(mDocument);
 }
 
@@ -2374,12 +2383,3 @@ void Loader::UnblockOnload(bool aFireSync) {
 
 }  // namespace css
 }  // namespace mozilla
-#undef LOG_ERROR
-#undef LOG_WARN
-#undef LOG_DEBUG
-#undef LOG
-#undef LOG_ERROR_ENABLED
-#undef LOG_WARN_ENABLED
-#undef LOG_DEBUG_ENABLED
-#undef LOG_ENABLED
-#undef LOG_URI

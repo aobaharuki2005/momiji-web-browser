@@ -39,10 +39,6 @@ function assertMetaInfoEqual(aActual, aExpected) {
   Assert.equal(aActual.timeLastUsed, aExpected.timeLastUsed);
   Assert.equal(aActual.timePasswordChanged, aExpected.timePasswordChanged);
   Assert.equal(aActual.timesUsed, aExpected.timesUsed);
-  Assert.equal(
-    aActual.timeLastBreachAlertDismissed,
-    aExpected.timeLastBreachAlertDismissed
-  );
 }
 
 /**

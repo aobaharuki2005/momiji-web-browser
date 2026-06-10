@@ -56,8 +56,8 @@ add_setup(async function () {
 
   await SearchTestUtils.setRemoteSettingsConfig(CONFIG);
   await SearchTestUtils.initXPCShellAddonManager();
-  SearchService.reset();
-  await SearchService.init();
+  Services.search.wrappedJSObject.reset();
+  await Services.search.init();
 
   registerCleanupFunction(async () => {
     sinon.restore();
@@ -102,7 +102,7 @@ add_task(
     await AddonTestUtils.waitForSearchProviderStartup(ext);
     await promiseAfterSettings();
 
-    let engines = await SearchService.getEngines();
+    let engines = await Services.search.getEngines();
     let overriddenEngine = engines.find(e => e.name == "MozParamsTest2");
 
     Assert.equal(
@@ -112,21 +112,24 @@ add_task(
     );
 
     notificationSpy.resetHistory();
-    SearchService.reset();
-    await SearchService.init();
+    Services.search.wrappedJSObject.reset();
+    await Services.search.init();
     await AddonTestUtils.promiseRestartManager();
     await ext.awaitStartup();
 
-    let engineAfterRestart = SearchService.getEngineByName("MozParamsTest2");
+    let engineAfterRestart = Services.search.getEngineByName("MozParamsTest2");
 
     Assert.equal(
-      engineAfterRestart.getAttr("overriddenBy"),
+      engineAfterRestart.wrappedJSObject.getAttr("overriddenBy"),
       "test@thirdparty.example.com",
       "After restart, the MozParamsTest2 engine should have an 'overriddenBy' property"
     );
 
     Assert.equal(
-      notificationSpy.withArgs(engineAfterRestart, "engine-changed").callCount,
+      notificationSpy.withArgs(
+        engineAfterRestart.wrappedJSObject,
+        "engine-changed"
+      ).callCount,
       0,
       "Should not have sent a new notification after restarting the Search Service"
     );

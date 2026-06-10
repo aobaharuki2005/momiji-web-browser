@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -33,6 +35,7 @@ class nsAttributeTextNode final : public nsTextNode,
                       int32_t aNameSpaceID, nsAtom* aAttrName,
                       nsAtom* aFallback)
       : nsTextNode(std::move(aNodeInfo)),
+        mGrandparent(nullptr),
         mNameSpaceID(aNameSpaceID),
         mAttrName(aAttrName),
         mFallback(aFallback) {
@@ -63,7 +66,7 @@ class nsAttributeTextNode final : public nsTextNode,
 
  private:
   virtual ~nsAttributeTextNode() {
-    NS_ASSERTION(!mOriginatingElement, "We were not unbound!");
+    NS_ASSERTION(!mGrandparent, "We were not unbound!");
   }
 
   // Update our text to our parent's current attr value
@@ -73,7 +76,7 @@ class nsAttributeTextNode final : public nsTextNode,
   // while we're bound to the document tree, and it points to an ancestor
   // so the ancestor must be bound to the document tree the whole time
   // and can't be deleted.
-  Element* mOriginatingElement = nullptr;
+  Element* mGrandparent;
   // What attribute we're showing
   int32_t mNameSpaceID;
   RefPtr<nsAtom> mAttrName;
@@ -98,7 +101,7 @@ already_AddRefed<CharacterData> nsTextNode::CloneDataNode(
   if (aCloneText) {
     it->mBuffer = mBuffer;
   }
-  it->SetFlags(GetFlags() & NS_MAYBE_MASKED);
+
   return it.forget();
 }
 
@@ -180,17 +183,9 @@ nsresult nsAttributeTextNode::BindToTree(BindContext& aContext,
   nsresult rv = nsTextNode::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ASSERTION(!mOriginatingElement, "We were already bound!");
-  Element* elem = aParent.GetParent()->AsElement();
-  while (PseudoStyle::IsPseudoElement(elem->GetPseudoElementType())) {
-    nsINode* node = elem->GetClosestNativeAnonymousSubtreeRootParentOrHost();
-    if (!node || !node->IsElement()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    elem = node->AsElement();
-  }
-  mOriginatingElement = elem;
-  mOriginatingElement->AddMutationObserver(this);
+  NS_ASSERTION(!mGrandparent, "We were already bound!");
+  mGrandparent = aParent.GetParent()->AsElement();
+  mGrandparent->AddMutationObserver(this);
 
   // Note that there is no need to notify here, since we have no
   // frame yet at this point.
@@ -201,12 +196,12 @@ nsresult nsAttributeTextNode::BindToTree(BindContext& aContext,
 
 void nsAttributeTextNode::UnbindFromTree(UnbindContext& aContext) {
   // UnbindFromTree can be called anytime so we have to be safe.
-  if (mOriginatingElement) {
+  if (mGrandparent) {
     // aContext might not be true here, but we want to remove the
     // mutation observer anyway since we only need it while we're
     // in the document.
-    mOriginatingElement->RemoveMutationObserver(this);
-    mOriginatingElement = nullptr;
+    mGrandparent->RemoveMutationObserver(this);
+    mGrandparent = nullptr;
   }
   nsTextNode::UnbindFromTree(aContext);
 }
@@ -216,10 +211,10 @@ void nsAttributeTextNode::AttributeChanged(Element* aElement,
                                            nsAtom* aAttribute, AttrModType,
                                            const nsAttrValue* aOldValue) {
   if (aNameSpaceID == mNameSpaceID && aAttribute == mAttrName &&
-      aElement == mOriginatingElement) {
+      aElement == mGrandparent) {
     // Since UpdateText notifies, do it when it's safe to run script.  Note
     // that if we get unbound while the event is up that's ok -- we'll just
-    // have no originating element when it fires, and will do nothing.
+    // have no grandparent when it fires, and will do nothing.
     void (nsAttributeTextNode::*update)() = &nsAttributeTextNode::UpdateText;
     nsContentUtils::AddScriptRunner(NewRunnableMethod(
         "nsAttributeTextNode::AttributeChanged", this, update));
@@ -227,16 +222,15 @@ void nsAttributeTextNode::AttributeChanged(Element* aElement,
 }
 
 void nsAttributeTextNode::NodeWillBeDestroyed(nsINode* aNode) {
-  NS_ASSERTION(aNode == static_cast<nsINode*>(mOriginatingElement),
-               "Wrong node!");
-  mOriginatingElement = nullptr;
+  NS_ASSERTION(aNode == static_cast<nsINode*>(mGrandparent), "Wrong node!");
+  mGrandparent = nullptr;
 }
 
 void nsAttributeTextNode::UpdateText(bool aNotify) {
-  if (mOriginatingElement) {
+  if (mGrandparent) {
     nsAutoString attrValue;
 
-    if (!mOriginatingElement->GetAttr(mNameSpaceID, mAttrName, attrValue)) {
+    if (!mGrandparent->GetAttr(mNameSpaceID, mAttrName, attrValue)) {
       // Attr value does not exist, use fallback instead
       mFallback->ToString(attrValue);
     }

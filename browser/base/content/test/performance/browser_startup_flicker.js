@@ -27,9 +27,15 @@ add_task(async function () {
     let frame = frames[i],
       previousFrame = frames[i - 1];
     let rects = compareFrames(frame, previousFrame);
-
-    let expectedRects = [];
-    let focusRects = [];
+    if (!alreadyFocused && isLikelyFocusChange(rects, frame)) {
+      todo(
+        false,
+        "bug 1445161 - the window should be focused at first paint, " +
+          rects.toSource()
+      );
+      continue;
+    }
+    alreadyFocused = true;
 
     rects = rects.filter(rect => {
       let width = frame.width;
@@ -71,39 +77,26 @@ add_task(async function () {
       for (let e of exceptions) {
         if (e.condition(rect)) {
           todo(false, e.name + ", " + rectText);
-          expectedRects.push(rect);
           return false;
         }
       }
 
-      if (!alreadyFocused) {
-        focusRects.push(rect);
-      }
+      ok(false, "unexpected changed rect: " + rectText);
       return true;
     });
-
-    if (!alreadyFocused && isLikelyFocusChange(focusRects, frame)) {
-      todo(
-        false,
-        "bug 1445161 - the window should be focused at first paint, " +
-          focusRects.toSource()
-      );
-      continue;
-    }
-    alreadyFocused = true;
-
     if (!rects.length) {
       info("ignoring identical frame");
       continue;
     }
 
-    for (let rect of rects) {
-      let rectText = `${rect.toSource()}, window width: ${frame.width}`;
-      ok(false, "unexpected changed rect: " + rectText);
+    // Before dumping a frame with unexpected differences for the first time,
+    // ensure at least one previous frame has been logged so that it's possible
+    // to see the differences when examining the log.
+    if (!unexpectedRects) {
+      dumpFrame(previousFrame);
     }
-
-    await reportFlickerWithAPNG(previousFrame, frame, i, expectedRects);
     unexpectedRects += rects.length;
+    dumpFrame(frame);
   }
   is(unexpectedRects, 0, "should have 0 unknown flickering areas");
 });

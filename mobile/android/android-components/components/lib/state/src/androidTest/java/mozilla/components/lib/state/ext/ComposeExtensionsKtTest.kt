@@ -4,9 +4,7 @@
 
 package mozilla.components.lib.state.ext
 
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.test.junit4.v2.createComposeRule
-import kotlinx.coroutines.flow.map
+import androidx.compose.ui.test.junit4.createComposeRule
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -66,10 +64,12 @@ class ComposeExtensionsKtTest {
         )
 
         val value = mutableListOf<String>()
-        val mappedFlow = store.stateFlow.map { if (it.counter < 5) loading else content }
 
         rule.setContent {
-            val composeState = mappedFlow.collectAsState(initial = loading)
+            val composeState = store.observeAsState(
+                initialValue = loading,
+                map = { if (it.counter < 5) loading else content },
+            )
             value.add(composeState.value)
         }
 

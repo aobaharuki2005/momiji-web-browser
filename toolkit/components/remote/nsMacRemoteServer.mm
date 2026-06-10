@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -36,7 +39,7 @@ void nsMacRemoteServer::HandleCommandLine(CFDataRef aData) {
     NSDictionary* dict =
         [NSKeyedUnarchiver unarchiveObjectWithData:(NSData*)aData];
     if (dict && [dict isKindOfClass:[NSDictionary class]]) {
-      NSArray* args = [dict objectForKey:@"args"];
+      NSArray* args = dict[@"args"];
       if (!args) {
         NS_ERROR("Wrong parameters passed to the Remote Server");
         return;
@@ -68,7 +71,7 @@ void nsMacRemoteServer::HandleCommandLine(CFDataRef aData) {
       // in the current instance.
       cmdLine->Run();
 
-      NSNumber* raise = [dict objectForKey:@"raise"];
+      NSNumber* raise = dict[@"raise"];
       if (!raise || [raise boolValue]) {
         // Activating the application brings the most recent window to the
         // foreground.

@@ -133,7 +133,7 @@ async function testNodeMutation(
     waitForDispatch(inspector.store, action),
   ]);
   info("Add a new node with issue and another node whose child has the issue");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], contentTaskFunction);
+  await ContentTask.spawn(tab.linkedBrowser, {}, contentTaskFunction);
   info("Wait for changes");
   await onPanelUpdate;
 

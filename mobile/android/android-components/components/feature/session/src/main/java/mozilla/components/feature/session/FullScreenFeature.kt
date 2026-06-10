@@ -4,9 +4,7 @@
 
 package mozilla.components.feature.session
 
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -26,7 +24,6 @@ open class FullScreenFeature(
     private val tabId: String? = null,
     private val viewportFitChanged: (Int) -> Unit = {},
     private val fullScreenChanged: (Boolean) -> Unit,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private var scope: CoroutineScope? = null
     private var observation: Observation = createDefaultObservation()
@@ -41,7 +38,7 @@ open class FullScreenFeature(
      * Starts the feature and a observer to listen for fullscreen changes.
      */
     override fun start() {
-        scope = store.flowScoped(dispatcher = mainDispatcher) { flow ->
+        scope = store.flowScoped { flow ->
             flow.map { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
                 .map { tab -> tab.toObservation() }
                 .distinctUntilChanged()

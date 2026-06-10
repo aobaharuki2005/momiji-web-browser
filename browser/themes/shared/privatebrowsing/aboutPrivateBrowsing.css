@@ -65,10 +65,10 @@ p {
 .logo {
   background: image-set(url("chrome://branding/content/about-logo-private.png"), url("chrome://branding/content/about-logo-private@2x.png") 2x) no-repeat center
     center;
-  background-size: var(--size-image-xxlarge);
+  background-size: 96px;
   display: inline-block;
-  height: var(--size-image-xxlarge);
-  width: var(--size-image-xxlarge);
+  height: 96px;
+  width: 96px;
 }
 
 .wordmark {
@@ -84,9 +84,17 @@ p {
 
 .search-inner-wrapper {
   display: flex;
-  height: 52px;
-  padding: 0;
+  height: var(--size-item-xlarge);
+  padding: 0 22px;
   min-width: 70vw;
+}
+
+/* stylelint-disable-next-line media-query-no-invalid */
+@media -moz-pref("browser.privatebrowsing.felt-privacy-v1") {
+  .search-inner-wrapper {
+    height: 52px;
+    padding: 0;
+  }
 }
 
 .promo-image-large {
@@ -153,16 +161,26 @@ p {
 }
 
 content-search-handoff-ui {
-  --content-search-handoff-ui-background-color: #321c64;
-  --content-search-handoff-ui-color: #fbfbfe;
-  --content-search-handoff-ui-fill: rgb(251, 251, 254);
-  --content-search-handoff-ui-caret-color: #fbfbfe;
-  --content-search-handoff-ui-border-width: 3px;
-  --content-search-handoff-ui-unfocused-border-color: rgb(149, 43, 185);
+  --content-search-handoff-ui-background-color: white;
+  --content-search-handoff-ui-color: rgb(12, 12, 13);
+  --content-search-handoff-ui-fill: rgba(12, 12, 13, 0.4);
+  --content-search-handoff-ui-caret-color: rgb(12, 12, 13);
   --content-search-handoff-ui-fakefocus-border-color: #0060df;
   --content-search-handoff-ui-fakefocus-box-shadow-inner: #0060df;
   --content-search-handoff-ui-fakefocus-box-shadow-outer: rgba(0, 96, 223, 0.3);
-  --content-search-handoff-ui-engine-icon: url(chrome://global/skin/icons/search-glass.svg);
+
+  /* stylelint-disable-next-line media-query-no-invalid */
+  @media -moz-pref("browser.privatebrowsing.felt-privacy-v1") {
+    --content-search-handoff-ui-background-color: #321c64;
+    --content-search-handoff-ui-color: #fbfbfe;
+    --content-search-handoff-ui-fill: rgb(251, 251, 254);
+    --content-search-handoff-ui-caret-color: #fbfbfe;
+    --content-search-handoff-ui-border-width: 3px;
+    --content-search-handoff-ui-unfocused-border-color: rgb(149, 43, 185);
+    --content-search-handoff-ui-fakefocus-border-color: #0060df;
+    --content-search-handoff-ui-fakefocus-box-shadow-inner: #0060df;
+    --content-search-handoff-ui-fakefocus-box-shadow-outer: rgba(0, 96, 223, 0.3);
+  }
 
   @media (forced-colors) {
     --content-search-handoff-ui-background-color: ButtonFace;
@@ -209,6 +227,25 @@ content-search-handoff-ui {
   margin: 4px 0;
 }
 
+.info {
+  margin-top: 64px;
+  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
+  background-color: var(--color-black-alpha-20);
+  background-image: url("chrome://global/skin/icons/indicator-private-browsing.svg");
+  background-position: left 32px top 20px;
+  background-repeat: no-repeat;
+  background-size: 32px;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-small);
+  letter-spacing: -0.2px;
+  padding: 20px;
+  padding-inline-start: 76px;
+}
+
+.info:dir(rtl) {
+  background-position-x: right 32px;
+}
+
 .info h1,
 .promo h1 {
   font-size: 18px;
@@ -221,42 +258,45 @@ content-search-handoff-ui {
   line-height: 1.67;
 }
 
-.info-border {
-  border-radius: var(--border-radius-medium);
-  margin-top: 64px;
-  padding: 17px;
+.info #info-title:not([hidden]) + p {
+  margin-top: 15px;
+}
 
-  @media not (prefers-contrast) {
-    box-shadow: 0 2px 6px 0 rgba(58, 57, 68, 0.2);
-    background: rgba(149, 43, 185, 0.5);
+/* stylelint-disable-next-line media-query-no-invalid */
+@media -moz-pref("browser.privatebrowsing.felt-privacy-v1") {
+  .info-border {
+    border-radius: var(--border-radius-medium);
+    margin-top: 64px;
+    padding: 17px;
+
+    @media not (prefers-contrast) {
+      box-shadow: 0 2px 6px 0 rgba(58, 57, 68, 0.2);
+      background: rgba(149, 43, 185, 0.5);
+    }
   }
-}
 
-.info {
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-  background-color: var(--color-black-alpha-20);
-  background-image: none;
-  border: 1px solid transparent;
-  border-radius: var(--border-radius-small);
-  font-size: 0.93em;
-  letter-spacing: -0.2px;
-  margin: 0;
-  padding: 20px;
-  padding-block-end: 25px;
+  .info {
+    background-image: none;
+    border-radius: var(--border-radius-small);
+    font-size: 0.93em;
+    margin: 0;
+    padding-inline-start: 20px;
+    padding-block-end: 25px;
 
-  @media not (prefers-contrast) {
-    background-color: #321c64;
-    box-shadow: 0 2px 6px 0 rgba(58, 57, 68, 0.2);
+    @media not (prefers-contrast) {
+      background-color: #321c64;
+      box-shadow: 0 2px 6px 0 rgba(58, 57, 68, 0.2);
+    }
   }
-}
 
-#info-title:not([hidden]) + #info-body {
-  margin-block: 0;
-}
+  #info-title:not([hidden]) + #info-body {
+    margin-block: 0;
+  }
 
-#info-title {
-  font-size: 1em;
-  margin-block: 0;
+  #info-title {
+    font-size: 1em;
+    margin-block: 0;
+  }
 }
 
 .search-banner-close-button {
@@ -444,16 +484,19 @@ content-search-handoff-ui {
   margin: 0;
 }
 
-.promo.below-search.promo-visible {
-  margin-block: 0 25px;
+/* stylelint-disable-next-line media-query-no-invalid */
+@media -moz-pref("browser.privatebrowsing.felt-privacy-v1") {
+  .promo.below-search.promo-visible {
+    margin-block: 0 25px;
+
+    @media not (prefers-contrast) {
+      background-color: #321c64;
+    }
+  }
 
   @media not (prefers-contrast) {
-    background-color: #321c64;
-  }
-}
-
-@media not (prefers-contrast) {
-  html.private {
-    background: linear-gradient(45deg, #722291 0%, #45278d 50%, #393473 100%);
+    html.private {
+      background: linear-gradient(45deg, #722291 0%, #45278d 50%, #393473 100%);
+    }
   }
 }

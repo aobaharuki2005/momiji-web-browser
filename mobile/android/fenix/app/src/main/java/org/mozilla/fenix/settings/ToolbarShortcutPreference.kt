@@ -12,6 +12,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.updateLayoutParams
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
@@ -19,7 +20,6 @@ import com.google.android.material.color.MaterialColors
 import org.mozilla.fenix.GleanMetrics.CustomizationSettings
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.isWideWindow
-import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.utils.view.addToRadioGroup
 import com.google.android.material.R as materialR
 
@@ -50,40 +50,37 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
     protected abstract fun readSelectedKey(): String
     protected abstract fun writeSelectedKey(key: String)
     protected abstract fun getToolbarType(): String
-    protected abstract fun getSelectedIconImageView(holder: PreferenceViewHolder): ImageView?
+    protected abstract fun getSelectedIconImageView(holder: PreferenceViewHolder): ImageView
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
 
         configureShortcutPreview(holder)
 
-        getSelectedIconImageView(holder)?.let { imageView ->
-            getSelectedOption().icon?.let { iconResource ->
-                colorTertiary = holder.itemView.getMaterialColor(materialR.attr.colorTertiary)
-                colorOnSurface = holder.itemView.getMaterialColor(materialR.attr.colorOnSurface)
-                colorOnSurfaceVariant = holder.itemView.getMaterialColor(materialR.attr.colorOnSurfaceVariant)
+        val selectedIcon = getSelectedIconImageView(holder)
 
-                imageView.setImageResource(iconResource)
-            }
-        }
+        colorTertiary = holder.itemView.getMaterialColor(materialR.attr.colorTertiary)
+        colorOnSurface = holder.itemView.getMaterialColor(materialR.attr.colorOnSurface)
+        colorOnSurfaceVariant = holder.itemView.getMaterialColor(materialR.attr.colorOnSurfaceVariant)
+
+        selectedIcon.setImageResource(getSelectedOption().icon)
     }
 
     private fun configureShortcutPreview(holder: PreferenceViewHolder) {
         val shortcutPreviewId = when (getToolbarType()) {
             EXPANDED_TOOLBAR_TYPE -> R.id.toolbar_expanded_shortcut_preview
-            NO_SHORTCUT_SIMPLE_TOOLBAR_TYPE -> R.id.toolbar_simple_no_shortcut_preview
             else -> R.id.toolbar_simple_shortcut_preview
         }
-        val shortcutPreview = holder.itemView.findViewById<View>(shortcutPreviewId)
+        val shortcutPreview = holder.itemView.findViewById<ConstraintLayout>(shortcutPreviewId)
 
         shortcutPreview?.updateLayoutParams<LinearLayout.LayoutParams> {
             if (context.isWideWindow()) {
                 gravity = Gravity.NO_GRAVITY
-                marginStart = context.pixelSizeFor(R.dimen.top_bar_alignment_margin_start)
+                marginStart = context.resources.getDimensionPixelSize(R.dimen.top_bar_alignment_margin_start)
                 marginEnd = 0
             } else {
                 gravity = Gravity.CENTER_HORIZONTAL
-                val horizontalMargin = context.pixelSizeFor(
+                val horizontalMargin = context.resources.getDimensionPixelSize(
                     R.dimen.radiobutton_preference_margin_start,
                 )
                 marginStart = horizontalMargin
@@ -124,10 +121,7 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
         onClickListener {
             CustomizationSettings.toolbarShortcutSelection.record(
                 CustomizationSettings.ToolbarShortcutSelectionExtra(
-                    toolbarType = when (getToolbarType()) {
-                        EXPANDED_TOOLBAR_TYPE -> EXPANDED_TOOLBAR_TYPE
-                        else -> SIMPLE_TOOLBAR_TYPE
-                    },
+                    toolbarType = getToolbarType(),
                     item = newOption.key.value,
                 ),
             )

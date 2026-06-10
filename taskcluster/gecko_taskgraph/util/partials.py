@@ -26,6 +26,7 @@ PLATFORM_RENAMES = {
 BALROG_PLATFORM_MAP = {
     "linux64": ["Linux_x86_64-gcc3"],
     "linux64-aarch64": ["Linux_aarch64-gcc3"],
+    "linux64-asan-reporter": ["Linux_x86_64-gcc3-asan"],
     "macosx64": [
         "Darwin_x86_64-gcc3-u-i386-x86_64",
         "Darwin_x86-gcc3-u-i386-x86_64",
@@ -35,6 +36,7 @@ BALROG_PLATFORM_MAP = {
     ],
     "win32": ["WINNT_x86-msvc", "WINNT_x86-msvc-x86", "WINNT_x86-msvc-x64"],
     "win64": ["WINNT_x86_64-msvc", "WINNT_x86_64-msvc-x64"],
+    "win64-asan-reporter": ["WINNT_x86_64-msvc-x64-asan"],
     "win64-aarch64": [
         "WINNT_aarch64-msvc-aarch64",
     ],
@@ -48,6 +50,8 @@ FTP_PLATFORM_MAP = {
     "Darwin_aarch64-gcc3": "mac",
     "Linux_x86_64-gcc3": "linux-x86_64",
     "Linux_aarch64-gcc3": "linux-aarch64",
+    "Linux_x86_64-gcc3-asan": "linux-x86_64-asan-reporter",
+    "WINNT_x86_64-msvc-x64-asan": "win64-asan-reporter",
     "WINNT_x86-msvc": "win32",
     "WINNT_x86-msvc-x64": "win32",
     "WINNT_x86-msvc-x86": "win32",
@@ -85,8 +89,7 @@ def get_partials_artifacts_from_params(release_history, platform, locale):
     platform = _sanitize_platform(platform)
     return [
         (artifact, details.get("previousVersion", None))
-        for artifact, details in release_history
-        .get(platform, {})
+        for artifact, details in release_history.get(platform, {})
         .get(locale, {})
         .items()
     ]
@@ -165,7 +168,7 @@ def _get_balrog_api_root(branch):
         scope = BALROG_SERVER_SCOPES["default"]
 
     if scope == "balrog:server:dep":
-        return "https://stage.balrog.nonprod.webservices.mozgcp.net/api/v1"
+        return "https://stage.balrog.nonprod.cloudops.mozgcp.net/api/v1"
     return "https://aus5.mozilla.org/api/v1"
 
 
@@ -190,32 +193,32 @@ def populate_release_history(
 
 
 def _populate_nightly_history(product, branch, maxbuilds=4, maxsearch=10):
-    """Find relevant releases in Balrog.
-
+    """Find relevant releases in Balrog
     Not all releases have all platforms and locales, due
     to Taskcluster migration.
 
-    Args:
-        product (str): capitalized product name, AKA appName, e.g. Firefox
-        branch (str): branch name (mozilla-central)
-        maxbuilds (int): Maximum number of historical releases to populate
-        maxsearch(int): Traverse at most this many releases, to avoid
-            working through the entire history.
-    Returns:
-        json object based on data from balrog api::
+        Args:
+            product (str): capitalized product name, AKA appName, e.g. Firefox
+            branch (str): branch name (mozilla-central)
+            maxbuilds (int): Maximum number of historical releases to populate
+            maxsearch(int): Traverse at most this many releases, to avoid
+                working through the entire history.
+        Returns:
+            json object based on data from balrog api
 
             results = {
-                "platform1": {
-                    "locale1": {
-                        "buildid1": mar_url,
-                        "buildid2": mar_url,
-                        "buildid3": mar_url,
+                'platform1': {
+                    'locale1': {
+                        'buildid1': mar_url,
+                        'buildid2': mar_url,
+                        'buildid3': mar_url,
                     },
-                    "locale2": {
-                        "target.partial-1.mar": {"buildid1": "mar_url"},
-                    },
+                    'locale2': {
+                        'target.partial-1.mar': {'buildid1': 'mar_url'},
+                    }
                 },
-                "platform2": {},
+                'platform2': {
+                }
             }
     """
     last_releases = get_sorted_releases(product, branch)

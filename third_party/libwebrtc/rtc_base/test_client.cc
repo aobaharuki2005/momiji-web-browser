@@ -41,8 +41,7 @@ TestClient::TestClient(std::unique_ptr<AsyncPacketSocket> socket,
       [&](AsyncPacketSocket* socket, const ReceivedIpPacket& packet) {
         OnPacket(socket, packet);
       });
-  socket_->SubscribeReadyToSend(
-      this, [this](AsyncPacketSocket* socket) { OnReadyToSend(socket); });
+  socket_->SignalReadyToSend.connect(this, &TestClient::OnReadyToSend);
 }
 
 TestClient::~TestClient() {}
@@ -154,13 +153,11 @@ TestClient::Packet::Packet(const ReceivedIpPacket& received_packet)
     : addr(received_packet.source_address()),
       // Copy received_packet payload to a buffer owned by Packet.
       buf(received_packet.payload().data(), received_packet.payload().size()),
-      ecn(received_packet.ecn()),
       packet_time(received_packet.arrival_time()) {}
 
 TestClient::Packet::Packet(const Packet& p)
     : addr(p.addr),
       buf(p.buf.data(), p.buf.size()),
-      ecn(p.ecn),
       packet_time(p.packet_time) {}
 
 }  // namespace webrtc

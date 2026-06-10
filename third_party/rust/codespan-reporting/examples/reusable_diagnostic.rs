@@ -1,30 +1,23 @@
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFile;
-use codespan_reporting::term::{self, Config};
+use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
+use codespan_reporting::term::{self};
 use core::ops::Range;
 
-#[cfg(not(feature = "termcolor"))]
-fn main() {
-    panic!("this example requires termcolor feature");
+#[derive(Debug)]
+pub struct Opts {
+    color: ColorChoice,
 }
 
-#[cfg(feature = "termcolor")]
+fn parse_args() -> Result<Opts, pico_args::Error> {
+    let mut pargs = pico_args::Arguments::from_env();
+    let color = pargs
+        .opt_value_from_str("--color")?
+        .unwrap_or(ColorChoice::Auto);
+    Ok(Opts { color })
+}
+
 fn main() -> anyhow::Result<()> {
-    use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
-
-    #[derive(Debug)]
-    pub struct Opts {
-        color: ColorChoice,
-    }
-
-    fn parse_args() -> Result<Opts, pico_args::Error> {
-        let mut pargs = pico_args::Arguments::from_env();
-        let color = pargs
-            .opt_value_from_str("--color")?
-            .unwrap_or(ColorChoice::Auto);
-        Ok(Opts { color })
-    }
-
     let file = SimpleFile::new(
         "main.rs",
         unindent::unindent(
@@ -46,12 +39,10 @@ fn main() -> anyhow::Result<()> {
     ];
 
     let Opts { color } = parse_args()?;
-
     let writer = StandardStream::stderr(color);
-    let config = Config::default();
-
+    let config = codespan_reporting::term::Config::default();
     for diagnostic in errors.iter().map(Error::report) {
-        term::emit_to_write_style(&mut writer.lock(), &config, &file, &diagnostic)?;
+        term::emit(&mut writer.lock(), &config, &file, &diagnostic)?;
     }
 
     Ok(())

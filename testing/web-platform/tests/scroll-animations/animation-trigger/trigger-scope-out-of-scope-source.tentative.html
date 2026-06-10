@@ -72,24 +72,33 @@
 
     <script>
       promise_test(async() => {
-        assert_element_animation_state(in_scope_target, "paused");
+        await assert_playstate_and_current_time(
+          in_scope_target.id, in_scope_target.getAnimations()[0], "paused");
 
         // The out-of-scope target should be attached to the trigger and
         // paused at time 0.
-        assert_element_animation_state(out_of_scope_target, "paused");
+        await assert_playstate_and_current_time(out_of_scope_target.id,
+                                          out_of_scope_target.getAnimations()[0],
+                                          "paused");
 
-        await runAndWaitForFrameUpdate(() => {
-          source.scrollIntoView({block: "center"});
-        });
+        const scrollend_promise =
+            waitForScrollEndFallbackToDelayWithoutScrollEvent(outerscroller);
+        source.scrollIntoView({block: "center"});
+        await scrollend_promise;
+
+        await waitForCompositorReady();
 
         assert_greater_than(outerscroller.scrollTop, 0, "did scroll");
 
         // There should be no change to the in-scope target.
-        assert_element_animation_state(in_scope_target, "paused");
-
+        await assert_playstate_and_current_time(in_scope_target.id,
+                                          in_scope_target.getAnimations()[0],
+                                          "paused");
         // The out-of-scope target should now be playing as the trigger
         // condition has been met.
-        assert_element_animation_state(out_of_scope_target, "running");
+        await assert_playstate_and_current_time(out_of_scope_target.id,
+                                          out_of_scope_target.getAnimations()[0],
+                                          "running");
       }, "trigger-scope prevents in-scope target from finding trigger " +
          "outside scope; target outside trigger-scope finds trigger");
     </script>

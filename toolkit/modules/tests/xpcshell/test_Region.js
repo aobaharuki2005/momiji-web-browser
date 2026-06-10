@@ -26,10 +26,6 @@ const histogram = Services.telemetry.getHistogramById(
 
 add_setup(async () => {
   Services.prefs.setBoolPref("browser.region.log", true);
-  Services.prefs.setBoolPref("network.dns.disableIPv6", true);
-  registerCleanupFunction(async () => {
-    Services.prefs.clearUserPref("network.dns.disableIPv6");
-  });
 });
 
 // Region.sys.mjs will call init() on being loaded and set a background
@@ -209,7 +205,7 @@ add_task(async function test_update_us() {
 
   // Setting the region to US whilst within a US timezone should work.
   let stub = sinon.stub(Region, "_isUSTimezone").returns(true);
-  Region._setHomeRegion(null, false);
+  Region._home = null;
   RegionTestUtils.setNetworkRegion("US");
   await Region._fetchRegion();
 
@@ -225,7 +221,7 @@ add_task(async function test_update_us() {
 
   // Setting the region to US whilst not within a US timezone should not work.
   stub.returns(false);
-  Region._setHomeRegion(null, false);
+  Region._home = null;
   RegionTestUtils.setNetworkRegion("US");
   await Region._fetchRegion();
 
@@ -236,7 +232,7 @@ add_task(async function test_update_us() {
 });
 
 add_task(async function test_max_retry() {
-  Region._setHomeRegion(null, false);
+  Region._home = null;
   let requestsSeen = 0;
   Services.prefs.setIntPref("browser.region.retry-timeout", RESPONSE_TIMEOUT);
   Services.prefs.setIntPref("browser.region.timeout", RESPONSE_TIMEOUT);
@@ -261,7 +257,7 @@ add_task(async function test_max_retry() {
 });
 
 add_task(async function test_retry() {
-  Region._setHomeRegion(null, false);
+  Region._home = null;
   let requestsSeen = 0;
   Services.prefs.setIntPref("browser.region.retry-timeout", RESPONSE_TIMEOUT);
   Services.prefs.setIntPref("browser.region.timeout", RESPONSE_TIMEOUT);
@@ -333,7 +329,7 @@ function send(res, json) {
 
 async function cleanup(srv = null) {
   Services.prefs.clearUserPref("browser.search.region");
-  Region._setHomeRegion(null, false);
+  Region._home = null;
   if (srv) {
     await new Promise(r => srv.stop(r));
   }

@@ -22,7 +22,6 @@ import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.support.ktx.kotlin.stripDefaultPort
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.R
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -43,11 +42,8 @@ import org.mozilla.fenix.settings.requirePreference
 import org.mozilla.fenix.utils.Settings
 import com.google.android.material.R as materialR
 
-/**
- * Settings screen allowing users to manage the status of all browser permissions.
- */
 @SuppressWarnings("TooManyFunctions")
-class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragment {
+class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     @VisibleForTesting
     internal lateinit var sitePermissions: SitePermissions
 

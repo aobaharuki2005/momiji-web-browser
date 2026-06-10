@@ -25,7 +25,7 @@ class CorruptionScoreCalculator {
 
   virtual void CalculateCorruptionScore(
       const VideoFrame& frame,
-      FrameInstrumentationData frame_instrumentation_data,
+      const FrameInstrumentationData& frame_instrumentation_data,
       VideoContentType content_type) = 0;
 };
 

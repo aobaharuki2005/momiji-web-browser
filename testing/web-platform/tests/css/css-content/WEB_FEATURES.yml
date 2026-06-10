@@ -7,7 +7,3 @@ features:
 - name: quotes
   files:
   - quotes-*
-- name: content
-  files:
-  - content-*
-  - pseudo-element-inline-box.html

@@ -4,14 +4,16 @@
 
 // `data` comes from components/style/properties.mako.rs; see build.rs for more details.
 
-<%! from data import to_camel_case, to_camel_case_lower, Keyword, SYSTEM_FONT_LONGHANDS %>
+<%!
+    from data import to_camel_case, to_camel_case_lower
+    from data import Keyword
+%>
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
 use crate::Atom;
 use crate::logical_geometry::PhysicalSide;
 use crate::computed_value_flags::*;
 use crate::custom_properties::ComputedCustomProperties;
-use crate::device::Device;
 use crate::gecko_bindings::bindings;
 % for style_struct in data.style_structs:
 use crate::gecko_bindings::bindings::Gecko_Construct_Default_${style_struct.gecko_ffi_name};
@@ -21,9 +23,11 @@ use crate::gecko_bindings::bindings::Gecko_Destroy_${style_struct.gecko_ffi_name
 use crate::gecko_bindings::bindings::Gecko_EnsureImageLayersLength;
 use crate::gecko_bindings::bindings::Gecko_nsStyleFont_SetLang;
 use crate::gecko_bindings::bindings::Gecko_nsStyleFont_CopyLangFrom;
-use crate::gecko_bindings::structs::{self, PseudoStyleType};
+use crate::gecko_bindings::structs;
+use crate::gecko_bindings::structs::mozilla::PseudoStyleType;
 use crate::gecko::data::PerDocumentStyleData;
 use crate::logical_geometry::WritingMode;
+use crate::media_queries::Device;
 use crate::properties::longhands;
 use crate::rule_tree::StrongRuleNode;
 use crate::selector_parser::PseudoElement;
@@ -33,7 +37,6 @@ use std::{ops, ptr};
 use crate::values;
 use crate::values::computed::{Time, Zoom};
 use crate::values::computed::font::FontSize;
-use crate::dom::AttributeReferences;
 
 
 pub mod style_structs {
@@ -60,7 +63,6 @@ impl ComputedValues {
     pub fn new(
         pseudo: Option<&PseudoElement>,
         custom_properties: ComputedCustomProperties,
-        attributes_referenced: AttributeReferences,
         writing_mode: WritingMode,
         effective_zoom: Zoom,
         flags: ComputedValueFlags,
@@ -71,9 +73,7 @@ impl ComputedValues {
         % endfor
     ) -> Arc<Self> {
         ComputedValuesInner::new(
-            pseudo,
             custom_properties,
-            attributes_referenced,
             writing_mode,
             effective_zoom,
             flags,
@@ -82,14 +82,12 @@ impl ComputedValues {
             % for style_struct in data.style_structs:
             ${style_struct.ident},
             % endfor
-        ).to_outer()
+        ).to_outer(pseudo)
     }
 
     pub fn default_values(doc: &structs::Document) -> Arc<Self> {
         ComputedValuesInner::new(
-            /* pseudo = */ None,
             ComputedCustomProperties::default(),
-            AttributeReferences::default(),
             WritingMode::empty(), // FIXME(bz): This seems dubious
             Zoom::ONE,
             ComputedValueFlags::empty(),
@@ -98,7 +96,7 @@ impl ComputedValues {
             % for style_struct in data.style_structs:
             style_structs::${style_struct.name}::default(doc),
             % endfor
-        ).to_outer()
+        ).to_outer(None)
     }
 
     /// Converts the computed values to an Arc<> from a reference.
@@ -112,7 +110,7 @@ impl ComputedValues {
 
     #[inline]
     pub fn is_pseudo_style(&self) -> bool {
-        self.pseudo_type != PseudoStyleType::NotPseudo
+        self.0.mPseudoType != PseudoStyleType::NotPseudo
     }
 
     #[inline]
@@ -120,7 +118,7 @@ impl ComputedValues {
         if !self.is_pseudo_style() {
             return None;
         }
-        PseudoElement::from_pseudo_type(self.pseudo_type, None)
+        PseudoElement::from_pseudo_type(self.0.mPseudoType, None)
     }
 
     #[inline]
@@ -141,25 +139,6 @@ impl ComputedValues {
             old_display_style == Display::None &&
             new_display_style != Display::None
         })
-    }
-
-    /// Calls the given function for each cached lazy pseudo-element style.
-    pub fn each_cached_lazy_pseudo<F>(&self, mut f: F)
-    where
-        F: FnMut(&Self),
-    {
-        thin_vec::auto_thin_vec!(let array: [*const structs::ComputedStyle; 4]);
-        unsafe {
-            bindings::Gecko_GetCachedLazyPseudoStyles(
-                self.as_gecko_computed_style(),
-                array.as_mut().as_mut_ptr(),
-            );
-        }
-        for style in array.iter() {
-            // ComputedValues is a newtype around ComputedStyle, so same layout
-            let values: &ComputedValues = unsafe { &*(*style as *const ComputedValues) };
-            f(values);
-        }
     }
 
 }
@@ -190,9 +169,7 @@ impl Drop for ComputedValuesInner {
 
 impl ComputedValuesInner {
     pub fn new(
-        pseudo: Option<&PseudoElement>,
         custom_properties: ComputedCustomProperties,
-        attribute_references: AttributeReferences,
         writing_mode: WritingMode,
         effective_zoom: Zoom,
         flags: ComputedValueFlags,
@@ -202,18 +179,12 @@ impl ComputedValuesInner {
         ${style_struct.ident}: Arc<style_structs::${style_struct.name}>,
         % endfor
     ) -> Self {
-        let pseudo_type = match pseudo {
-            Some(p) => p.pseudo_type(),
-            None => PseudoStyleType::NotPseudo,
-        };
         Self {
             custom_properties,
-            attribute_references,
             writing_mode,
             rules,
-            visited_style: visited_style.map_or(ptr::null(), Arc::into_raw) as *const _,
+            visited_style: visited_style.map_or(ptr::null(), |p| Arc::into_raw(p)) as *const _,
             flags,
-            pseudo_type,
             effective_zoom,
             % for style_struct in data.style_structs:
             ${style_struct.gecko_name}: Arc::into_raw(${style_struct.ident}) as *const _,
@@ -221,33 +192,17 @@ impl ComputedValuesInner {
         }
     }
 
-    // Share ComputedValues but with different flags.
-    pub fn clone_with_flags(&self, flags: ComputedValueFlags, pseudo: Option<&PseudoElement>) -> Arc<ComputedValues> {
-        Self::new(
-            pseudo,
-            self.custom_properties.clone(),
-            self.attribute_references.clone(),
-            self.writing_mode.clone(),
-            self.effective_zoom.clone(),
-            flags,
-            self.rules.clone(),
-            if self.visited_style.is_null() {
-                None
-            } else {
-                Some(unsafe { Arc::from_raw_addrefed(self.visited_style as *const _) })
-            },
-            % for style_struct in data.style_structs:
-            unsafe { Arc::from_raw_addrefed(self.${style_struct.gecko_name} as *const _) },
-            % endfor
-        ).to_outer()
-    }
-
-    fn to_outer(self) -> Arc<ComputedValues> {
+    fn to_outer(self, pseudo: Option<&PseudoElement>) -> Arc<ComputedValues> {
+        let pseudo_ty = match pseudo {
+            Some(p) => p.pseudo_type_and_argument().0,
+            None => structs::PseudoStyleType::NotPseudo,
+        };
         unsafe {
             let mut arc = UniqueArc::<ComputedValues>::new_uninit();
             bindings::Gecko_ComputedStyle_Init(
                 arc.as_mut_ptr() as *mut _,
-                &self
+                &self,
+                pseudo_ty,
             );
             // We're simulating move semantics by having C++ do a memcpy and
             // then forgetting it on this end.
@@ -308,21 +263,6 @@ impl ComputedValuesInner {
     #[allow(non_snake_case)]
     pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
         ${set_gecko_property(gecko_ffi_name, "From::from(v)")}
-    }
-</%def>
-
-<%def name="impl_simple_eq(ident, gecko_ffi_name)">
-    #[allow(non_snake_case)]
-    pub fn ${ident}_equals(&self, other: &Self) -> bool {
-        self.${gecko_ffi_name} == other.${gecko_ffi_name}
-    }
-</%def>
-
-<%def name="impl_fallback_eq(ident)">
-    #[allow(non_snake_case)]
-    pub fn ${ident}_equals(&self, other: &Self) -> bool {
-        // TODO: Could be more efficient
-        self.clone_${ident}() == other.clone_${ident}()
     }
 </%def>
 
@@ -429,14 +369,12 @@ def set_gecko_property(ffi_name, expr):
 <%call expr="impl_keyword_setter(ident, gecko_ffi_name, keyword, cast_type, **kwargs)"></%call>
 <%call expr="impl_simple_copy(ident, gecko_ffi_name, **kwargs)"></%call>
 <%call expr="impl_keyword_clone(ident, gecko_ffi_name, keyword, cast_type)"></%call>
-<%call expr="impl_simple_eq(ident, gecko_ffi_name)"></%call>
 </%def>
 
 <%def name="impl_simple(ident, gecko_ffi_name)">
 <%call expr="impl_simple_setter(ident, gecko_ffi_name)"></%call>
 <%call expr="impl_simple_copy(ident, gecko_ffi_name)"></%call>
 <%call expr="impl_simple_clone(ident, gecko_ffi_name)"></%call>
-<%call expr="impl_simple_eq(ident, gecko_ffi_name)"></%call>
 </%def>
 
 <%def name="impl_border_width(ident, gecko_ffi_name, inherit_from)">
@@ -470,8 +408,6 @@ def set_gecko_property(ffi_name, expr):
     pub fn clone_${ident}(&self) -> Au {
         Au(self.${gecko_ffi_name})
     }
-
-    ${impl_simple_eq(ident, gecko_ffi_name)}
 </%def>
 
 <%def name="impl_style_struct(style_struct)">
@@ -556,8 +492,7 @@ impl Clone for ${style_struct.gecko_struct_name} {
         self.mFont.${gecko_ffi_name}.extend(iter);
     }
 
-    ${impl_simple_copy(ident, "mFont." + gecko_ffi_name)}
-    ${impl_fallback_eq(ident)}
+    <% impl_simple_copy(ident, "mFont." + gecko_ffi_name) %>
 
     pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
         use crate::values::generics::font::{FontSettings, FontTag, ${tag_type}};
@@ -684,10 +619,6 @@ fn static_assert() {
         self.copy_font_size_from(other)
     }
 
-    pub fn font_size_equals(&self, other: &Self) -> bool {
-        self.mSize == other.mSize
-    }
-
     pub fn set_font_size(&mut self, v: FontSize) {
         let computed_size = v.computed_size;
         self.mScriptUnconstrainedSize = computed_size;
@@ -744,13 +675,36 @@ fn static_assert() {
             Atom::from_raw(self.mLanguage.mRawPtr)
         })
     }
-
-    #[allow(non_snake_case)]
-    pub fn _x_lang_equals(&self, other: &Self) -> bool {
-        self.mLanguage.mRawPtr == other.mLanguage.mRawPtr
-    }
 </%self:impl_trait>
 
+<%def name="impl_coordinated_property_copy(type, ident, gecko_ffi_name)">
+    #[allow(non_snake_case)]
+    pub fn copy_${type}_${ident}_from(&mut self, other: &Self) {
+        self.m${to_camel_case(type)}s.ensure_len(other.m${to_camel_case(type)}s.len());
+
+        let count = other.m${to_camel_case(type)}${gecko_ffi_name}Count;
+        self.m${to_camel_case(type)}${gecko_ffi_name}Count = count;
+
+        let iter = self.m${to_camel_case(type)}s.iter_mut().take(count as usize).zip(
+            other.m${to_camel_case(type)}s.iter()
+        );
+
+        for (ours, others) in iter {
+            ours.m${gecko_ffi_name} = others.m${gecko_ffi_name}.clone();
+        }
+    }
+    #[allow(non_snake_case)]
+    pub fn reset_${type}_${ident}(&mut self, other: &Self) {
+        self.copy_${type}_${ident}_from(other)
+    }
+</%def>
+
+<%def name="impl_coordinated_property_count(type, ident, gecko_ffi_name)">
+    #[allow(non_snake_case)]
+    pub fn ${type}_${ident}_count(&self) -> usize {
+        self.m${to_camel_case(type)}${gecko_ffi_name}Count as usize
+    }
+</%def>
 
 <%def name="impl_coordinated_property(type, ident, gecko_ffi_name)">
     #[allow(non_snake_case)]
@@ -774,45 +728,8 @@ fn static_assert() {
         -> longhands::${type}_${ident}::computed_value::SingleComputedValue {
         self.m${to_camel_case(type)}s[index % self.${type}_${ident}_count()].m${gecko_ffi_name}.clone()
     }
-    #[allow(non_snake_case)]
-    pub fn copy_${type}_${ident}_from(&mut self, other: &Self) {
-        self.m${to_camel_case(type)}s.ensure_len(other.m${to_camel_case(type)}s.len());
-
-        let count = other.m${to_camel_case(type)}${gecko_ffi_name}Count;
-        self.m${to_camel_case(type)}${gecko_ffi_name}Count = count;
-
-        let iter = self.m${to_camel_case(type)}s.iter_mut().take(count as usize).zip(
-            other.m${to_camel_case(type)}s.iter()
-        );
-
-        for (ours, others) in iter {
-            ours.m${gecko_ffi_name} = others.m${gecko_ffi_name}.clone();
-        }
-    }
-    #[allow(non_snake_case)]
-    pub fn reset_${type}_${ident}(&mut self, other: &Self) {
-        self.copy_${type}_${ident}_from(other)
-    }
-    #[allow(non_snake_case)]
-    pub fn ${type}_${ident}_count(&self) -> usize {
-        self.m${to_camel_case(type)}${gecko_ffi_name}Count as usize
-    }
-    #[allow(non_snake_case)]
-    pub fn ${type}_${ident}_equals(&self, other: &Self) -> bool {
-        let count = self.${type}_${ident}_count();
-        if count != other.${type}_${ident}_count() {
-            return false;
-        }
-        let iter = self.m${to_camel_case(type)}s.iter().take(count as usize).zip(
-            other.m${to_camel_case(type)}s.iter()
-        );
-        for (ours, others) in iter {
-            if ours.m${gecko_ffi_name} != others.m${gecko_ffi_name} {
-                return false;
-            }
-        }
-        true
-    }
+    ${impl_coordinated_property_copy(type, ident, gecko_ffi_name)}
+    ${impl_coordinated_property_count(type, ident, gecko_ffi_name)}
 </%def>
 
 <% skip_box_longhands= """display contain""" %>
@@ -848,11 +765,6 @@ fn static_assert() {
     }
 
     #[inline]
-    pub fn display_equals(&self, other: &Self) -> bool {
-        self.mDisplay == other.mDisplay
-    }
-
-    #[inline]
     pub fn set_contain(&mut self, v: longhands::contain::computed_value::T) {
         self.mContain = v;
         self.mEffectiveContainment = v;
@@ -871,11 +783,6 @@ fn static_assert() {
     #[inline]
     pub fn clone_contain(&self) -> longhands::contain::computed_value::T {
         self.mContain
-    }
-
-    #[inline]
-    pub fn contain_equals(&self, other: &Self) -> bool {
-        self.mContain == other.mContain
     }
 
     #[inline]
@@ -899,8 +806,8 @@ fn static_assert() {
     %>
 
     pub fn set_${shorthand}_${name}<I>(&mut self, v: I)
-    where I: IntoIterator<Item=longhands::${shorthand}_${name}::computed_value::single_value::T>,
-          I::IntoIter: ExactSizeIterator
+        where I: IntoIterator<Item=longhands::${shorthand}_${name}::computed_value::single_value::T>,
+              I::IntoIter: ExactSizeIterator
     {
         use crate::gecko_bindings::structs::nsStyleImageLayers_LayerType as LayerType;
         let v = v.into_iter();
@@ -917,7 +824,6 @@ fn static_assert() {
             };
         }
     }
-    ${impl_fallback_eq(f"{shorthand}_{name}")}
 </%def>
 
 <%def name="copy_simple_image_array_property(name, shorthand, layers_field_name, field_name)">
@@ -982,17 +888,27 @@ fn static_assert() {
         }
     }
 
-    ${impl_fallback_eq(ident)}
-
     pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
         use crate::properties::longhands::${ident}::single_value::computed_value::T as Keyword;
+
+        % if keyword.needs_cast():
+        % for value in keyword.values_for('gecko'):
+        const ${keyword.casted_constant_name(value, "u8")} : u8 =
+            structs::${keyword.gecko_constant(value)} as u8;
+        % endfor
+        % endif
+
         longhands::${ident}::computed_value::List(
             self.${layer_field_name}.mLayers.iter()
                 .take(self.${layer_field_name}.${field_name}Count as usize)
                 .map(|ref layer| {
                     match layer.${field_name} {
                         % for value in longhand.keyword.values_for("gecko"):
+                        % if keyword.needs_cast():
+                        ${keyword.casted_constant_name(value, "u8")}
+                        % else:
                         structs::${keyword.gecko_constant(value)}
+                        % endif
                             => Keyword::${to_camel_case(value)},
                         % endfor
                         % if keyword.gecko_inexhaustive:
@@ -1097,12 +1013,11 @@ fn static_assert() {
         )
     }
 
-    ${impl_fallback_eq(f"{shorthand}_position_{orientation}")}
-
-    pub fn set_${shorthand}_position_${orientation[0]}<I>(&mut self, v: I)
-    where
-        I: IntoIterator<Item = longhands::${shorthand}_position_${orientation[0]}::computed_value::single_value::T>,
-        I::IntoIter: ExactSizeIterator
+    pub fn set_${shorthand}_position_${orientation[0]}<I>(&mut self,
+                                     v: I)
+        where I: IntoIterator<Item = longhands::${shorthand}_position_${orientation[0]}
+                                              ::computed_value::single_value::T>,
+              I::IntoIter: ExactSizeIterator
     {
         use crate::gecko_bindings::structs::nsStyleImageLayers_LayerType as LayerType;
 
@@ -1154,9 +1069,8 @@ fn static_assert() {
 
     #[allow(unused_variables)]
     pub fn set_${shorthand}_image<I>(&mut self, images: I)
-    where
-        I: IntoIterator<Item = longhands::${shorthand}_image::computed_value::single_value::T>,
-        I::IntoIter: ExactSizeIterator
+        where I: IntoIterator<Item = longhands::${shorthand}_image::computed_value::single_value::T>,
+              I::IntoIter: ExactSizeIterator
     {
         use crate::gecko_bindings::structs::nsStyleImageLayers_LayerType as LayerType;
 
@@ -1171,12 +1085,11 @@ fn static_assert() {
         }
 
         self.${image_layers_field}.mImageCount = images.len() as u32;
-        for (image, geckoimage) in images.zip(self.${image_layers_field}.mLayers.iter_mut()) {
+        for (image, geckoimage) in images.zip(self.${image_layers_field}
+                                                  .mLayers.iter_mut()) {
             geckoimage.mImage = image;
         }
     }
-
-    ${impl_fallback_eq(f"{shorthand}_image")}
 
     pub fn clone_${shorthand}_image(&self) -> longhands::${shorthand}_image::computed_value::T {
         longhands::${shorthand}_image::computed_value::List(
@@ -1283,7 +1196,6 @@ mask-mode mask-repeat mask-clip mask-origin mask-composite mask-position-x mask-
                           animation-direction animation-fill-mode
                           animation-play-state animation-iteration-count
                           animation-timing-function animation-composition animation-timeline
-                          animation-range-start animation-range-end
                           transition-behavior transition-duration transition-delay
                           transition-timing-function transition-property
                           scroll-timeline-name scroll-timeline-axis
@@ -1330,8 +1242,6 @@ mask-mode mask-repeat mask-clip mask-origin mask-composite mask-position-x mask-
             && self.mAnimationTimingFunctionCount == other.mAnimationTimingFunctionCount
             && self.mAnimationCompositionCount == other.mAnimationCompositionCount
             && self.mAnimationTimelineCount == other.mAnimationTimelineCount
-            && self.mAnimationRangeStartCount == other.mAnimationRangeStartCount
-            && self.mAnimationRangeEndCount == other.mAnimationRangeEndCount
             && unsafe { bindings::Gecko_StyleAnimationsEquals(&self.mAnimations, &other.mAnimations) }
     }
 
@@ -1345,8 +1255,6 @@ mask-mode mask-repeat mask-clip mask-origin mask-composite mask-position-x mask-
     ${impl_coordinated_property('animation', 'iteration_count', 'IterationCount')}
     ${impl_coordinated_property('animation', 'timeline', 'Timeline')}
     ${impl_coordinated_property('animation', 'timing_function', 'TimingFunction')}
-    ${impl_coordinated_property('animation', 'range_start', 'RangeStart')}
-    ${impl_coordinated_property('animation', 'range_end', 'RangeEnd')}
 
     ${impl_coordinated_property('scroll_timeline', 'name', 'Name')}
     ${impl_coordinated_property('scroll_timeline', 'axis', 'Axis')}
@@ -1426,115 +1334,3 @@ pub fn assert_initial_values_match(data: &PerDocumentStyleData) {
         % endfor
     }
 }
-
-% if engine == "gecko":
-pub mod system_font {
-    //! We deal with system fonts here
-    //!
-    //! System fonts can only be set as a group via the font shorthand.
-    //! They resolve at compute time (not parse time -- this lets the
-    //! browser respond to changes to the OS font settings).
-    //!
-    //! While Gecko handles these as a separate property and keyword
-    //! values on each property indicating that the font should be picked
-    //! from the -x-system-font property, we avoid this. Instead,
-    //! each font longhand has a special SystemFont variant which contains
-    //! the specified system font. When the cascade function (in helpers)
-    //! detects that a value has a system font, it will resolve it, and
-    //! cache it on the ComputedValues. After this, it can be just fetched
-    //! whenever a font longhand on the same element needs the system font.
-    //!
-    //! When a longhand property is holding a SystemFont, it's serialized
-    //! to an empty string as if its value comes from a shorthand with
-    //! variable reference. We may want to improve this behavior at some
-    //! point. See also https://github.com/w3c/csswg-drafts/issues/1586.
-
-    use crate::properties::longhands;
-    use std::hash::{Hash, Hasher};
-    use crate::values::computed::{ToComputedValue, Context};
-    use crate::values::specified::font::SystemFont;
-    // ComputedValues are compared at times
-    // so we need these impls. We don't want to
-    // add Eq to Number (which contains a float)
-    // so instead we have an eq impl which skips the
-    // cached values
-    impl PartialEq for ComputedSystemFont {
-        fn eq(&self, other: &Self) -> bool {
-            self.system_font == other.system_font
-        }
-    }
-    impl Eq for ComputedSystemFont {}
-
-    impl Hash for ComputedSystemFont {
-        fn hash<H: Hasher>(&self, hasher: &mut H) {
-            self.system_font.hash(hasher)
-        }
-    }
-
-    impl ToComputedValue for SystemFont {
-        type ComputedValue = ComputedSystemFont;
-
-        fn to_computed_value(&self, cx: &Context) -> Self::ComputedValue {
-            use crate::gecko_bindings::bindings;
-            use crate::gecko_bindings::structs::nsFont;
-            use crate::values::computed::font::FontSize;
-            use crate::values::specified::font::KeywordInfo;
-            use crate::values::generics::NonNegative;
-            use std::mem;
-
-            let mut system = mem::MaybeUninit::<nsFont>::uninit();
-            let system = unsafe {
-                bindings::Gecko_nsFont_InitSystem(
-                    system.as_mut_ptr(),
-                    *self,
-                    &**cx.style().get_font(),
-                    cx.device().document()
-                );
-                &mut *system.as_mut_ptr()
-            };
-            let size = NonNegative(cx.maybe_zoom_text(system.size.0));
-            let ret = ComputedSystemFont {
-                font_family: system.family.clone(),
-                font_size: FontSize {
-                    computed_size: size,
-                    used_size: size,
-                    keyword_info: KeywordInfo::none()
-                },
-                font_weight: system.weight,
-                font_stretch: system.stretch,
-                font_style: system.style,
-                system_font: *self,
-            };
-            unsafe { bindings::Gecko_nsFont_Destroy(system); }
-            ret
-        }
-
-        fn from_computed_value(_: &ComputedSystemFont) -> Self {
-            unreachable!()
-        }
-    }
-
-    #[inline]
-    /// Compute and cache a system font
-    ///
-    /// Must be called before attempting to compute a system font
-    /// specified value
-    pub fn resolve_system_font(system: SystemFont, context: &mut Context) {
-        // Checking if context.cached_system_font.is_none() isn't enough,
-        // if animating from one system font to another the cached system font
-        // may change
-        if context.cached_system_font.as_ref().is_none_or(|x| x.system_font != system) {
-            let computed = system.to_computed_value(context);
-            context.cached_system_font = Some(computed);
-        }
-    }
-
-    #[derive(Clone, Debug)]
-    pub struct ComputedSystemFont {
-        % for name in SYSTEM_FONT_LONGHANDS:
-            pub ${name}: longhands::${name}::computed_value::T,
-        % endfor
-        pub system_font: SystemFont,
-    }
-}
-% endif

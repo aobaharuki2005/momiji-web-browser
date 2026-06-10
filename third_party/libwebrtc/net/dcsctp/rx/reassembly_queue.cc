@@ -12,11 +12,11 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <span>
 #include <utility>
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "net/dcsctp/common/internal_types.h"
 #include "net/dcsctp/common/sequence_numbers.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_common.h"
@@ -56,7 +56,8 @@ ReassemblyQueue::ReassemblyQueue(absl::string_view log_prefix,
       watermark_bytes_(max_size_bytes * kHighWatermarkLimit),
       streams_(CreateStreams(
           log_prefix_,
-          [this](std::span<const UnwrappedTSN> tsns, DcSctpMessage message) {
+          [this](webrtc::ArrayView<const UnwrappedTSN> tsns,
+                 DcSctpMessage message) {
             AddReassembledMessage(tsns, std::move(message));
           },
           use_message_interleaving)) {}
@@ -109,7 +110,7 @@ void ReassemblyQueue::Add(TSN tsn, Data data) {
 }
 
 void ReassemblyQueue::ResetStreamsAndLeaveDeferredReset(
-    std::span<const StreamID> stream_ids) {
+    webrtc::ArrayView<const StreamID> stream_ids) {
   RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Resetting streams: ["
                        << webrtc::StrJoin(stream_ids, ",",
                                           [](webrtc::StringBuilder& sb,
@@ -140,8 +141,9 @@ void ReassemblyQueue::ResetStreamsAndLeaveDeferredReset(
   RTC_DCHECK(IsConsistent());
 }
 
-void ReassemblyQueue::EnterDeferredReset(TSN sender_last_assigned_tsn,
-                                         std::span<const StreamID> streams) {
+void ReassemblyQueue::EnterDeferredReset(
+    TSN sender_last_assigned_tsn,
+    webrtc::ArrayView<const StreamID> streams) {
   if (!deferred_reset_streams_.has_value()) {
     RTC_DLOG(LS_VERBOSE) << log_prefix_
                          << "Entering deferred reset; sender_last_assigned_tsn="
@@ -163,8 +165,9 @@ std::optional<DcSctpMessage> ReassemblyQueue::GetNextMessage() {
   return ret;
 }
 
-void ReassemblyQueue::AddReassembledMessage(std::span<const UnwrappedTSN> tsns,
-                                            DcSctpMessage message) {
+void ReassemblyQueue::AddReassembledMessage(
+    webrtc::ArrayView<const UnwrappedTSN> tsns,
+    DcSctpMessage message) {
   RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Assembled message from TSN=["
                        << webrtc::StrJoin(
                               tsns, ",",
@@ -181,7 +184,8 @@ void ReassemblyQueue::AddReassembledMessage(std::span<const UnwrappedTSN> tsns,
 
 void ReassemblyQueue::HandleForwardTsn(
     TSN new_cumulative_tsn,
-    std::span<const AnyForwardTsnChunk::SkippedStream> skipped_streams) {
+    webrtc::ArrayView<const AnyForwardTsnChunk::SkippedStream>
+        skipped_streams) {
   UnwrappedTSN tsn = tsn_unwrapper_.Unwrap(new_cumulative_tsn);
 
   if (deferred_reset_streams_.has_value() &&

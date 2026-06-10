@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,15 +26,20 @@ class NativeFontResourceMac final : public NativeFontResource {
       uint32_t aInstanceDataLength) final;
 
   ~NativeFontResourceMac() {
+    CFRelease(mFontDescRef);
     CFRelease(mFontRef);
   }
 
   static void RegisterMemoryReporter();
 
  private:
-  explicit NativeFontResourceMac(CGFontRef aFontRef, size_t aDataLength)
-      : NativeFontResource(aDataLength), mFontRef(aFontRef) {}
+  explicit NativeFontResourceMac(CTFontDescriptorRef aFontDescRef,
+                                 CGFontRef aFontRef, size_t aDataLength)
+      : NativeFontResource(aDataLength),
+        mFontDescRef(aFontDescRef),
+        mFontRef(aFontRef) {}
 
+  CTFontDescriptorRef mFontDescRef;
   CGFontRef mFontRef;
 };
 

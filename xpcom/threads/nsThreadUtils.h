@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsThreadUtils_h_
-#define nsThreadUtils_h_
+#ifndef nsThreadUtils_h__
+#define nsThreadUtils_h__
 
 #include <type_traits>
 #include <tuple>
@@ -351,12 +353,13 @@ class IdlePeriod : public nsIIdlePeriod {
 
   IdlePeriod() = default;
 
+ protected:
+  virtual ~IdlePeriod() = default;
+
+ private:
   IdlePeriod(const IdlePeriod&) = delete;
   IdlePeriod& operator=(const IdlePeriod&) = delete;
   IdlePeriod& operator=(const IdlePeriod&&) = delete;
-
- protected:
-  virtual ~IdlePeriod() = default;
 };
 
 // Cancelable runnable methods implement nsICancelableRunnable, and
@@ -385,9 +388,6 @@ class Runnable : public nsIRunnable
 #  endif
 
   Runnable() = delete;
-  Runnable(const Runnable&) = delete;
-  Runnable& operator=(const Runnable&) = delete;
-  Runnable& operator=(const Runnable&&) = delete;
 
 #  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   explicit Runnable(const char* aName) : mName(aName) {}
@@ -401,6 +401,11 @@ class Runnable : public nsIRunnable
 #  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   const char* mName = nullptr;
 #  endif
+
+ private:
+  Runnable(const Runnable&) = delete;
+  Runnable& operator=(const Runnable&) = delete;
+  Runnable& operator=(const Runnable&&) = delete;
 };
 
 // This is a base class for tasks that might not be run, such as those that may
@@ -415,14 +420,16 @@ class DiscardableRunnable : public Runnable, public nsIDiscardableRunnable {
   // nsIDiscardableRunnable
   void OnDiscard() override {}
 
-  explicit DiscardableRunnable(const char* aName) : Runnable(aName) {}
   DiscardableRunnable() = delete;
-  DiscardableRunnable(const DiscardableRunnable&) = delete;
-  DiscardableRunnable& operator=(const DiscardableRunnable&) = delete;
-  DiscardableRunnable& operator=(const DiscardableRunnable&&) = delete;
+  explicit DiscardableRunnable(const char* aName) : Runnable(aName) {}
 
  protected:
   virtual ~DiscardableRunnable() = default;
+
+ private:
+  DiscardableRunnable(const DiscardableRunnable&) = delete;
+  DiscardableRunnable& operator=(const DiscardableRunnable&) = delete;
+  DiscardableRunnable& operator=(const DiscardableRunnable&&) = delete;
 };
 
 // This class is designed to be subclassed.
@@ -437,14 +444,16 @@ class CancelableRunnable : public DiscardableRunnable,
   // nsICancelableRunnable
   virtual nsresult Cancel() override = 0;
 
-  explicit CancelableRunnable(const char* aName) : DiscardableRunnable(aName) {}
   CancelableRunnable() = delete;
-  CancelableRunnable(const CancelableRunnable&) = delete;
-  CancelableRunnable& operator=(const CancelableRunnable&) = delete;
-  CancelableRunnable& operator=(const CancelableRunnable&&) = delete;
+  explicit CancelableRunnable(const char* aName) : DiscardableRunnable(aName) {}
 
  protected:
   virtual ~CancelableRunnable() = default;
+
+ private:
+  CancelableRunnable(const CancelableRunnable&) = delete;
+  CancelableRunnable& operator=(const CancelableRunnable&) = delete;
+  CancelableRunnable& operator=(const CancelableRunnable&&) = delete;
 };
 
 // This class is designed to be subclassed.
@@ -453,12 +462,14 @@ class IdleRunnable : public DiscardableRunnable, public nsIIdleRunnable {
   NS_DECL_ISUPPORTS_INHERITED
 
   explicit IdleRunnable(const char* aName) : DiscardableRunnable(aName) {}
-  IdleRunnable(const IdleRunnable&) = delete;
-  IdleRunnable& operator=(const IdleRunnable&) = delete;
-  IdleRunnable& operator=(const IdleRunnable&&) = delete;
 
  protected:
   virtual ~IdleRunnable() = default;
+
+ private:
+  IdleRunnable(const IdleRunnable&) = delete;
+  IdleRunnable& operator=(const IdleRunnable&) = delete;
+  IdleRunnable& operator=(const IdleRunnable&&) = delete;
 };
 
 // This class is designed to be subclassed.
@@ -470,12 +481,14 @@ class CancelableIdleRunnable : public CancelableRunnable,
   CancelableIdleRunnable() : CancelableRunnable("CancelableIdleRunnable") {}
   explicit CancelableIdleRunnable(const char* aName)
       : CancelableRunnable(aName) {}
-  CancelableIdleRunnable(const CancelableIdleRunnable&) = delete;
-  CancelableIdleRunnable& operator=(const CancelableIdleRunnable&) = delete;
-  CancelableIdleRunnable& operator=(const CancelableIdleRunnable&&) = delete;
 
  protected:
   virtual ~CancelableIdleRunnable() = default;
+
+ private:
+  CancelableIdleRunnable(const CancelableIdleRunnable&) = delete;
+  CancelableIdleRunnable& operator=(const CancelableIdleRunnable&) = delete;
+  CancelableIdleRunnable& operator=(const CancelableIdleRunnable&&) = delete;
 };
 
 // This class is designed to be a wrapper of a real runnable to support event
@@ -1546,10 +1559,11 @@ class nsRevocableEventPtr {
   bool IsPending() { return mEvent != nullptr; }
   T* get() { return mEvent; }
 
-  nsRevocableEventPtr(const nsRevocableEventPtr&) = delete;
-  nsRevocableEventPtr& operator=(const nsRevocableEventPtr&) = delete;
-
  private:
+  // Not implemented
+  nsRevocableEventPtr(const nsRevocableEventPtr&);
+  nsRevocableEventPtr& operator=(const nsRevocableEventPtr&);
+
   RefPtr<T> mEvent;
 };
 
@@ -1575,11 +1589,12 @@ class nsThreadPoolNaming {
   nsCString GetNextThreadName(const char (&aPoolName)[LEN]) {
     return GetNextThreadName(nsDependentCString(aPoolName, LEN - 1));
   }
-  nsThreadPoolNaming(const nsThreadPoolNaming&) = delete;
-  void operator=(const nsThreadPoolNaming&) = delete;
 
  private:
   mozilla::Atomic<uint32_t> mCounter{0};
+
+  nsThreadPoolNaming(const nsThreadPoolNaming&) = delete;
+  void operator=(const nsThreadPoolNaming&) = delete;
 };
 
 /**
@@ -1595,7 +1610,7 @@ class MOZ_STACK_CLASS nsAutoLowPriorityIO {
 
  private:
   bool lowIOPrioritySet;
-#if defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(ANDROID))
+#if defined(XP_MACOSX)
   int oldPriority;
 #endif
 };
@@ -1658,7 +1673,7 @@ extern "C" nsresult NS_DispatchBackgroundTask(
  * private thread.
  */
 extern "C" nsresult NS_CreateBackgroundTaskQueue(
-    mozilla::StaticString aName, nsISerialEventTarget** aTarget);
+    const char* aName, nsISerialEventTarget** aTarget);
 
 /**
  * Dispatch the given runnable to the given event target, spinning the current
@@ -1832,4 +1847,4 @@ typedef LogTaskBase<dom::VideoFrameRequestCallback>
 
 }  // namespace mozilla
 
-#endif  // nsThreadUtils_h_
+#endif  // nsThreadUtils_h__

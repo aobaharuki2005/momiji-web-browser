@@ -18,8 +18,6 @@ async function runTest(enabled) {
     ],
   });
 
-  await pushPref("layout.css.custom-media.enabled", true);
-
   await addTab(TEST_URI);
   const { inspector } = await openRuleView();
 

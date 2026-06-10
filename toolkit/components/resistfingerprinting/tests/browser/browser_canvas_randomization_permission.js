@@ -90,7 +90,6 @@ add_setup(async function setup() {
     set: [
       ["test.wait300msAfterTabSwitch", true],
       ["privacy.resistFingerprinting", false],
-      ["privacy.baselineFingerprintingProtection", false],
       ["privacy.fingerprintingProtection", false],
     ],
   });
@@ -123,7 +122,6 @@ async function runTest(permissionGranted, isRFP) {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", isRFP],
-      ["privacy.baselineFingerprintingProtection", false],
       ["privacy.fingerprintingProtection", !isRFP],
       [
         "privacy.fingerprintingProtection.overrides",

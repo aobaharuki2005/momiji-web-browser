@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TlsHandshaker_h_
-#define TlsHandshaker_h_
+#ifndef TlsHandshaker_h__
+#define TlsHandshaker_h__
 
 #include "nsITlsHandshakeListener.h"
 
@@ -59,7 +60,6 @@ class TlsHandshaker : public nsITlsHandshakeCallbackListener {
   void SetNPNComplete() { mNPNComplete = true; }
   void NotifyClose() {
     mTlsHandshakeComplitionPending = false;
-    mNPNComplete = true;
     mOwner = nullptr;
   }
 
@@ -97,4 +97,4 @@ class TlsHandshaker : public nsITlsHandshakeCallbackListener {
 
 }  // namespace mozilla::net
 
-#endif  // TlsHandshaker_h_
+#endif  // TlsHandshaker_h__

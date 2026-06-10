@@ -4,9 +4,9 @@ use core::iter;
 
 use crate::error::InvalidFormatDescription;
 use crate::format_description::parse::{
-    Error, ErrorInner, Location, Spanned, SpannedValue, Unused, attach_location, unused,
+    attach_location, unused, Error, ErrorInner, Location, Spanned, SpannedValue, Unused,
 };
-use crate::format_description::{self, BorrowedFormatItem, Component, modifier};
+use crate::format_description::{self, modifier, BorrowedFormatItem, Component};
 
 /// Parse a sequence of items from the [`strftime` format description][strftime docs].
 ///
@@ -15,7 +15,6 @@ use crate::format_description::{self, BorrowedFormatItem, Component, modifier};
 ///
 /// [strftime docs]: https://man7.org/linux/man-pages/man3/strftime.3.html
 #[doc(alias = "parse_strptime_borrowed")]
-#[inline]
 pub fn parse_strftime_borrowed(
     s: &str,
 ) -> Result<Vec<BorrowedFormatItem<'_>>, InvalidFormatDescription> {
@@ -30,7 +29,6 @@ pub fn parse_strftime_borrowed(
 ///
 /// [strftime docs]: https://man7.org/linux/man-pages/man3/strftime.3.html
 #[doc(alias = "parse_strptime_owned")]
-#[inline]
 pub fn parse_strftime_owned(
     s: &str,
 ) -> Result<format_description::OwnedFormatItem, InvalidFormatDescription> {
@@ -58,7 +56,6 @@ enum Token<'a> {
     },
 }
 
-#[inline]
 fn lex(mut input: &[u8]) -> iter::Peekable<impl Iterator<Item = Result<Token<'_>, Error>>> {
     let mut iter = attach_location(input.iter()).peekable();
 
@@ -118,14 +115,9 @@ fn lex(mut input: &[u8]) -> iter::Peekable<impl Iterator<Item = Result<Token<'_>
     .peekable()
 }
 
-#[inline]
-fn into_items<'iter, 'token, I>(
-    mut tokens: iter::Peekable<I>,
-) -> impl Iterator<Item = Result<BorrowedFormatItem<'token>, Error>> + use<'token, I>
-where
-    'token: 'iter,
-    I: Iterator<Item = Result<Token<'token>, Error>> + 'iter,
-{
+fn into_items<'iter, 'token: 'iter>(
+    mut tokens: iter::Peekable<impl Iterator<Item = Result<Token<'token>, Error>> + 'iter>,
+) -> impl Iterator<Item = Result<BorrowedFormatItem<'token>, Error>> + 'iter {
     iter::from_fn(move || {
         let next = match tokens.next()? {
             Ok(token) => token,
@@ -327,7 +319,7 @@ fn parse_component(
                     context: "",
                     index: component.span.start.byte as usize,
                 },
-            });
+            })
         }
         b'p' => component!(Period {
             is_uppercase: true,
@@ -477,7 +469,7 @@ fn parse_component(
                     context: "",
                     index: component.span.start.byte as usize,
                 },
-            });
+            })
         }
         _ => {
             return Err(Error {
@@ -489,7 +481,7 @@ fn parse_component(
                     name: String::from_utf8_lossy(&[*component]).into_owned(),
                     index: component.span.start.byte as usize,
                 },
-            });
+            })
         }
     })
 }

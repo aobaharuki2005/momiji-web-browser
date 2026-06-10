@@ -322,7 +322,6 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
   /* First round, decompose */
 
   bool all_simple = true;
-  if (buffer->message (font, "start decompose"))
   {
     buffer->clear_output ();
     count = buffer->len;
@@ -365,7 +364,6 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
     }
     while (buffer->idx < count && buffer->successful);
     buffer->sync ();
-    (void) buffer->message (font, "end decompose");
   }
 
 
@@ -422,8 +420,7 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
   if (!all_simple &&
       buffer->successful &&
       (mode == HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS ||
-       mode == HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT) &&
-      buffer->message (font, "start compose"))
+       mode == HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT))
   {
     /* As noted in the comment earlier, we don't try to combine
      * ccc=0 chars with their previous Starter. */
@@ -473,7 +470,6 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
 	starter = buffer->out_len - 1;
     }
     buffer->sync ();
-    (void) buffer->message (font, "end compose");
   }
 }
 

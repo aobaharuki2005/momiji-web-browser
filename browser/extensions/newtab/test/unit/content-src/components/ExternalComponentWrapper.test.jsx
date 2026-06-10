@@ -68,11 +68,8 @@ describe("<ExternalComponentWrapper>", () => {
 
   it("should render a container div", () => {
     const wrapper = mount(
-      <WrapWithProvider state={createStateWithConfig(createMockConfig())}>
-        <TestWrapper
-          {...DEFAULT_PROPS}
-          importModule={sandbox.stub().resolves()}
-        />
+      <WrapWithProvider>
+        <TestWrapper {...DEFAULT_PROPS} />
       </WrapWithProvider>
     );
     assert.ok(wrapper.exists());
@@ -81,11 +78,8 @@ describe("<ExternalComponentWrapper>", () => {
 
   it("should apply className to container div", () => {
     const wrapper = mount(
-      <WrapWithProvider state={createStateWithConfig(createMockConfig())}>
-        <TestWrapper
-          {...DEFAULT_PROPS}
-          importModule={sandbox.stub().resolves()}
-        />
+      <WrapWithProvider>
+        <TestWrapper {...DEFAULT_PROPS} />
       </WrapWithProvider>
     );
     assert.equal(wrapper.find("div.test-wrapper").length, 1);
@@ -108,7 +102,6 @@ describe("<ExternalComponentWrapper>", () => {
   });
 
   it("should not render custom element without configuration", async () => {
-    const consoleWarnStub = sandbox.stub(console, "warn");
     const importModuleStub = sandbox.stub().resolves();
     const wrapper = mount(
       <WrapWithProvider>
@@ -119,10 +112,6 @@ describe("<ExternalComponentWrapper>", () => {
     await flushPromises();
 
     assert.notCalled(importModuleStub);
-    assert.calledWith(
-      consoleWarnStub,
-      "No external component configuration found for type: SEARCH"
-    );
     wrapper.unmount();
   });
 

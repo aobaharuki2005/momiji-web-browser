@@ -30,15 +30,15 @@ namespace test {
 class FakeEncodedFrame : public EncodedFrame {
  public:
   // Always 10ms delay and on time.
-  std::optional<Timestamp> ReceivedTimestamp() const override;
+  int64_t ReceivedTime() const override;
   int64_t RenderTime() const override;
 
   // Setters for protected variables.
-  void SetReceivedTime(Timestamp received_time);
+  void SetReceivedTime(int64_t received_time);
   void SetPayloadType(int payload_type);
 
  private:
-  Timestamp received_time_ = Timestamp::Zero();
+  int64_t received_time_;
 };
 
 MATCHER_P(WithId, id, "") {

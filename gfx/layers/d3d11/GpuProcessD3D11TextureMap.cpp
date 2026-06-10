@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -45,7 +47,7 @@ GpuProcessD3D11TextureMap::~GpuProcessD3D11TextureMap() {}
 void GpuProcessD3D11TextureMap::Register(
     GpuProcessTextureId aTextureId, ID3D11Texture2D* aTexture,
     uint32_t aArrayIndex, const gfx::IntSize& aSize,
-    ZeroCopyUsageInfo* aUsageInfo,
+    RefPtr<ZeroCopyUsageInfo> aUsageInfo,
     RefPtr<gfx::FileHandleWrapper> aSharedHandle) {
   MonitorAutoLock lock(mMonitor);
   Register(lock, aTextureId, aTexture, aArrayIndex, aSize, aUsageInfo,
@@ -54,7 +56,7 @@ void GpuProcessD3D11TextureMap::Register(
 void GpuProcessD3D11TextureMap::Register(
     const MonitorAutoLock& aProofOfLock, GpuProcessTextureId aTextureId,
     ID3D11Texture2D* aTexture, uint32_t aArrayIndex, const gfx::IntSize& aSize,
-    ZeroCopyUsageInfo* aUsageInfo,
+    RefPtr<ZeroCopyUsageInfo> aUsageInfo,
     RefPtr<gfx::FileHandleWrapper> aSharedHandle) {
   MOZ_RELEASE_ASSERT(aTexture);
 
@@ -124,11 +126,8 @@ Maybe<HANDLE> GpuProcessD3D11TextureMap::GetSharedHandle(
     return Nothing();
   }
 
-  D3D11_TEXTURE2D_DESC existingDesc;
-  holder.mTexture->GetDesc(&existingDesc);
-
   CD3D11_TEXTURE2D_DESC newDesc(
-      existingDesc.Format, holder.mSize.width, holder.mSize.height, 1, 1,
+      DXGI_FORMAT_NV12, holder.mSize.width, holder.mSize.height, 1, 1,
       D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
   newDesc.MiscFlags =
       D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED;
@@ -167,8 +166,8 @@ Maybe<HANDLE> GpuProcessD3D11TextureMap::GetSharedHandle(
     return Nothing();
   }
 
-  RefPtr handle =
-      MakeRefPtr<gfx::FileHandleWrapper>(UniqueFileHandle(sharedHandle));
+  RefPtr<gfx::FileHandleWrapper> handle =
+      new gfx::FileHandleWrapper(UniqueFileHandle(sharedHandle));
 
   RefPtr<ID3D11Query> query;
   CD3D11_QUERY_DESC desc(D3D11_QUERY_EVENT);
@@ -343,19 +342,15 @@ RefPtr<ID3D11Texture2D> GpuProcessD3D11TextureMap::UpdateTextureData(
   }
 
   auto size = bufferTexture->GetSize();
-  auto colorDepth = bufferTexture->GetColorDepth();
-  gfx::SurfaceFormat surfaceFormat = colorDepth == gfx::ColorDepth::COLOR_10
-                                         ? gfx::SurfaceFormat::P010
-                                         : gfx::SurfaceFormat::NV12;
 
   RefPtr<ID3D11Texture2D> texture2D =
-      aHolder->mAllocator->CreateOrRecycle(surfaceFormat, size);
+      aHolder->mAllocator->CreateOrRecycle(gfx::SurfaceFormat::NV12, size);
   if (!texture2D) {
     return nullptr;
   }
 
   RefPtr<ID3D11Texture2D> stagingTexture =
-      aHolder->mAllocator->GetStagingTexture();
+      aHolder->mAllocator->GetStagingTextureNV12();
   if (!stagingTexture) {
     return nullptr;
   }
@@ -394,36 +389,19 @@ RefPtr<ID3D11Texture2D> GpuProcessD3D11TextureMap::UpdateTextureData(
   }
 
   const size_t destStride = mappedResource.RowPitch;
+  uint8_t* yDestPlaneStart = reinterpret_cast<uint8_t*>(mappedResource.pData);
+  uint8_t* uvDestPlaneStart = reinterpret_cast<uint8_t*>(mappedResource.pData) +
+                              destStride * size.height;
+  // Convert I420 to NV12,
+  const uint8_t* yChannel = bufferTexture->GetYChannel();
+  const uint8_t* cbChannel = bufferTexture->GetCbChannel();
+  const uint8_t* crChannel = bufferTexture->GetCrChannel();
   int32_t yStride = bufferTexture->GetYStride();
   int32_t cbCrStride = bufferTexture->GetCbCrStride();
 
-  if (colorDepth == gfx::ColorDepth::COLOR_10) {
-    const uint16_t* yChannel = bufferTexture->GetYChannel16();
-    const uint16_t* cbChannel = bufferTexture->GetCbChannel16();
-    const uint16_t* crChannel = bufferTexture->GetCrChannel16();
-    uint16_t* yDestPlaneStart =
-        reinterpret_cast<uint16_t*>(mappedResource.pData);
-    uint16_t* uvDestPlaneStart = reinterpret_cast<uint16_t*>(
-        reinterpret_cast<uint8_t*>(mappedResource.pData) +
-        destStride * size.height);
-
-    libyuv::I010ToP010(yChannel, yStride / 2, cbChannel, cbCrStride / 2,
-                       crChannel, cbCrStride / 2, yDestPlaneStart,
-                       destStride / 2, uvDestPlaneStart, destStride / 2,
-                       size.width, size.height);
-  } else {
-    const uint8_t* yChannel = bufferTexture->GetYChannel();
-    const uint8_t* cbChannel = bufferTexture->GetCbChannel();
-    const uint8_t* crChannel = bufferTexture->GetCrChannel();
-    uint8_t* yDestPlaneStart = reinterpret_cast<uint8_t*>(mappedResource.pData);
-    uint8_t* uvDestPlaneStart =
-        reinterpret_cast<uint8_t*>(mappedResource.pData) +
-        destStride * size.height;
-
-    libyuv::I420ToNV12(yChannel, yStride, cbChannel, cbCrStride, crChannel,
-                       cbCrStride, yDestPlaneStart, destStride,
-                       uvDestPlaneStart, destStride, size.width, size.height);
-  }
+  libyuv::I420ToNV12(yChannel, yStride, cbChannel, cbCrStride, crChannel,
+                     cbCrStride, yDestPlaneStart, destStride, uvDestPlaneStart,
+                     destStride, size.width, size.height);
 
   context->Unmap(stagingTexture, 0);
 
@@ -434,7 +412,8 @@ RefPtr<ID3D11Texture2D> GpuProcessD3D11TextureMap::UpdateTextureData(
 
 GpuProcessD3D11TextureMap::TextureHolder::TextureHolder(
     ID3D11Texture2D* aTexture, uint32_t aArrayIndex, const gfx::IntSize& aSize,
-    ZeroCopyUsageInfo* aUsageInfo, RefPtr<gfx::FileHandleWrapper> aSharedHandle)
+    RefPtr<ZeroCopyUsageInfo> aUsageInfo,
+    RefPtr<gfx::FileHandleWrapper> aSharedHandle)
     : mTexture(aTexture),
       mArrayIndex(aArrayIndex),
       mSize(aSize),

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -130,8 +132,8 @@ gfxRect SVGMaskFrame::GetMaskArea(nsIFrame* aMaskedFrame) {
   gfxRect bbox;
   if (units == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     bbox =
-        SVGUtils::GetBBox(aMaskedFrame, {SVGBBoxFlag::UseFrameBoundsForOuterSVG,
-                                         SVGBBoxFlag::IncludeFillGeometry});
+        SVGUtils::GetBBox(aMaskedFrame, SVGUtils::eUseFrameBoundsForOuterSVG |
+                                            SVGUtils::eBBoxIncludeFillGeometry);
   }
 
   // Bounds in the user space of aMaskedFrame
@@ -175,11 +177,11 @@ gfxMatrix SVGMaskFrame::GetMaskTransform(nsIFrame* aMaskedFrame) {
   SVGAnimatedEnumeration* maskContentUnits =
       &content->mEnumAttributes[SVGMaskElement::MASKCONTENTUNITS];
 
-  SVGBBoxFlags flags = SVGBBoxFlag::IncludeFillGeometry;
-  if (aMaskedFrame->StyleBorder()->mBoxDecorationBreak ==
-      StyleBoxDecorationBreak::Clone) {
-    flags += SVGBBoxFlag::IncludeOnlyCurrentFrameForNonSVGElement;
-  }
+  uint32_t flags = SVGUtils::eBBoxIncludeFillGeometry |
+                   (aMaskedFrame->StyleBorder()->mBoxDecorationBreak ==
+                            StyleBoxDecorationBreak::Clone
+                        ? SVGUtils::eIncludeOnlyCurrentFrameForNonSVGElement
+                        : 0);
 
   return SVGUtils::AdjustMatrixForUnits(gfxMatrix(), maskContentUnits,
                                         aMaskedFrame, flags);

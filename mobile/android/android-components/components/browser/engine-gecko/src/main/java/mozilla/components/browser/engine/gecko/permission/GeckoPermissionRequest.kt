@@ -79,7 +79,7 @@ sealed class GeckoPermissionRequest constructor(
 
         override fun grant(permissions: List<Permission>) {
             if (!isCompleted) {
-                geckoResults.toList().forEach {
+                geckoResults.forEach {
                     it.complete(VALUE_ALLOW)
                 }
             }
@@ -88,7 +88,7 @@ sealed class GeckoPermissionRequest constructor(
 
         override fun reject() {
             if (!isCompleted) {
-                geckoResults.toList().forEach {
+                geckoResults.forEach {
                     it.complete(VALUE_DENY)
                 }
             }
@@ -153,13 +153,13 @@ sealed class GeckoPermissionRequest constructor(
         }
 
         override fun grant(permissions: List<Permission>) {
-            callbacks.toList().forEach {
+            callbacks.forEach {
                 it.grant()
             }
         }
 
         override fun reject() {
-            callbacks.toList().forEach {
+            callbacks.forEach {
                 it.reject()
             }
         }

@@ -41,7 +41,7 @@ function test() {
     this,
     new Proxy({}, {}),
     wrapWithProto({}, null),
-    transplantableObject().object,
+    transplantableObject({proxy: true}).object,
     ccwGlobal.Object(),
 
     // "function"

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,7 +11,6 @@
 
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLLabelElementBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -35,30 +36,14 @@ JSObject* HTMLLabelElement::WrapNode(JSContext* aCx,
 
 NS_IMPL_ELEMENT_CLONE(HTMLLabelElement)
 
-Element* HTMLLabelElement::GetFormForBindings() const {
-  return RetargetReferenceTargetForBindings(GetFormInternal());
-}
-
-HTMLFormElement* HTMLLabelElement::GetFormInternal() const {
+HTMLFormElement* HTMLLabelElement::GetForm() const {
   // Not all labeled things have a form association.  Stick to the ones that do.
-  const auto* formControl =
-      nsIFormControl::FromNodeOrNull(GetLabeledElementInternal());
+  const auto* formControl = nsIFormControl::FromNodeOrNull(GetControl());
   if (!formControl) {
     return nullptr;
   }
 
-  return formControl->GetFormInternal();
-}
-
-nsGenericHTMLElement* HTMLLabelElement::GetControlForBindings() const {
-  nsINode* retargeted =
-      nsContentUtils::Retarget(GetLabeledElementInternal(), this);
-  if (!retargeted) {
-    return nullptr;
-  }
-  Element* element = retargeted->AsElement();
-  MOZ_ASSERT(element);
-  return static_cast<nsGenericHTMLElement*>(element);
+  return formControl->GetForm();
 }
 
 void HTMLLabelElement::Focus(const FocusOptions& aOptions,
@@ -71,7 +56,7 @@ void HTMLLabelElement::Focus(const FocusOptions& aOptions,
     }
   }
 
-  if (RefPtr<Element> elem = GetLabeledElementInternal()) {
+  if (RefPtr<Element> elem = GetLabeledElement()) {
     return elem->Focus(aOptions, aCallerType, aError);
   }
 }
@@ -95,7 +80,7 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   }
 
   // Strong ref because event dispatch is going to happen.
-  RefPtr<Element> content = GetLabeledElementInternal();
+  RefPtr<Element> content = GetLabeledElement();
 
   if (!content || content->IsDisabled()) {
     return NS_OK;
@@ -191,7 +176,7 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 Result<bool, nsresult> HTMLLabelElement::PerformAccesskey(
     bool aKeyCausesActivation, bool aIsTrustedEvent) {
   if (!aKeyCausesActivation) {
-    RefPtr<Element> element = GetLabeledElementInternal();
+    RefPtr<Element> element = GetLabeledElement();
     if (element) {
       return element->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
     }
@@ -213,7 +198,7 @@ Result<bool, nsresult> HTMLLabelElement::PerformAccesskey(
   return true;
 }
 
-nsGenericHTMLElement* HTMLLabelElement::GetLabeledElementInternal() const {
+nsGenericHTMLElement* HTMLLabelElement::GetLabeledElement() const {
   nsAutoString elementId;
 
   if (!GetAttr(nsGkAtoms::_for, elementId)) {
@@ -224,7 +209,17 @@ nsGenericHTMLElement* HTMLLabelElement::GetLabeledElementInternal() const {
 
   // We have a @for. The id has to be linked to an element in the same tree
   // and this element should be a labelable form control.
-  Element* element = GetAttrAssociatedElementInternal(nsGkAtoms::_for);
+  Element* element = nullptr;
+
+  if (ShadowRoot* shadowRoot = GetContainingShadow()) {
+    element = shadowRoot->GetElementById(elementId);
+  } else if (Document* doc = GetUncomposedDoc()) {
+    element = doc->GetElementById(elementId);
+  } else {
+    element =
+        nsContentUtils::MatchElementId(SubtreeRoot()->AsContent(), elementId);
+  }
+
   if (element && element->IsLabelable()) {
     return static_cast<nsGenericHTMLElement*>(element);
   }
@@ -236,11 +231,8 @@ nsGenericHTMLElement* HTMLLabelElement::GetFirstLabelableDescendant() const {
   for (nsIContent* cur = nsINode::GetFirstChild(); cur;
        cur = cur->GetNextNode(this)) {
     Element* element = Element::FromNode(cur);
-    if (element) {
-      Element* referenceTarget = element->ResolveReferenceTarget();
-      if (referenceTarget && referenceTarget->IsLabelable()) {
-        return static_cast<nsGenericHTMLElement*>(referenceTarget);
-      }
+    if (element && element->IsLabelable()) {
+      return static_cast<nsGenericHTMLElement*>(element);
     }
   }
 

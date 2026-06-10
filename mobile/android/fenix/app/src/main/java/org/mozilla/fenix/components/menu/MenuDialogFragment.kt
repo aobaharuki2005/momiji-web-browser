@@ -12,7 +12,6 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,9 +25,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,11 +45,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -61,8 +56,7 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.concept.engine.translate.TranslationSupport
 import mozilla.components.concept.engine.translate.findLanguage
 import mozilla.components.feature.addons.Addon
-import mozilla.components.feature.ipprotection.store.IPProtectionAction
-import mozilla.components.feature.ipprotection.store.state.isEligible
+import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.util.dpToPx
@@ -87,14 +81,11 @@ import org.mozilla.fenix.components.menu.middleware.MenuNavigationMiddleware
 import org.mozilla.fenix.components.menu.middleware.MenuTelemetryMiddleware
 import org.mozilla.fenix.components.menu.store.BrowserMenuState
 import org.mozilla.fenix.components.menu.store.ExtensionMenuState
-import org.mozilla.fenix.components.menu.store.IPProtectionMenuStatus
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
-import org.mozilla.fenix.components.menu.store.SummarizationMenuState
 import org.mozilla.fenix.components.menu.store.TranslationInfo
 import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
-import org.mozilla.fenix.ext.canGoBackInHistoryOrToStories
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.openToBrowser
@@ -110,7 +101,6 @@ import org.mozilla.fenix.settings.deletebrowsingdata.DefaultDeleteBrowsingDataCo
 import org.mozilla.fenix.settings.deletebrowsingdata.DefaultDeleteBrowsingDataController.Stores
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataController
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.translations.TranslationsEnabledSettings
 import org.mozilla.fenix.utils.DELAY_MS_MAIN_MENU
 import org.mozilla.fenix.utils.DELAY_MS_SUB_MENU
 import org.mozilla.fenix.utils.DURATION_MS_MAIN_MENU
@@ -126,6 +116,12 @@ import org.mozilla.fenix.webcompat.middleware.DefaultWebCompatReporterRetrievalS
 import org.mozilla.fenix.webcompat.middleware.WebCompatInfoDeserializer
 import com.google.android.material.R as materialR
 
+// EXPANDED_MIN_RATIO is used for BottomSheetBehavior.halfExpandedRatio().
+// That value needs to be less than the PEEK_HEIGHT.
+// If EXPANDED_MIN_RATIO is greater than the PEEK_HEIGHT, then there will be
+// three states instead of the expected two states required by design.
+private const val PEEK_HEIGHT = 460
+private const val EXPANDED_MIN_RATIO = 0.0001f
 private const val EXPANDED_OFFSET = 56
 private const val HIDING_FRICTION = 0.9f
 private const val PRIVATE_HOME_MENU_BACKGROUND_ALPHA = 100
@@ -143,7 +139,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
     private val args by navArgs<MenuDialogFragmentArgs>()
     private val webExtensionsMenuBinding = ViewBoundFeatureWrapper<WebExtensionsMenuBinding>()
-    private val ipProtectionMenuBinding = ViewBoundFeatureWrapper<IPProtectionMenuBinding>()
     private var bottomSheetBehavior: BottomSheetBehavior<View>? = null
     private var isPrivate: Boolean = false
 
@@ -165,24 +160,14 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
             ),
             engine = requireComponents.core.engine,
             settings = requireComponents.settings,
+            coroutineContext = lifecycleScope.coroutineContext,
         )
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         Events.toolbarMenuVisible.record(NoExtras())
 
-        return object : BottomSheetDialog(requireContext(), theme) {
-            override fun onKeyDown(
-                keyCode: Int,
-                event: KeyEvent,
-            ): Boolean {
-                if (event.action == KeyEvent.ACTION_DOWN && event.keyCode == KeyEvent.KEYCODE_MENU) {
-                    dismiss()
-                    return true
-                }
-                return super.onKeyDown(keyCode, event)
-            }
-        }.apply {
+        return super.onCreateDialog(savedInstanceState).apply {
             setOnShowListener {
                 val safeActivity = activity ?: return@setOnShowListener
                 val appStore = safeActivity.components.appStore
@@ -200,8 +185,12 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                 val bottomSheet = findViewById<View?>(materialR.id.design_bottom_sheet)
                 bottomSheet?.let {
                     ViewCompat.setOnApplyWindowInsetsListener(it) { view, insets ->
-                        val systemBarInsets = insets.getInsets(systemBars())
-                        view.setPadding(0, systemBarInsets.top, 0, systemBarInsets.bottom)
+                        view.setPadding(
+                            0,
+                            insets.getInsets(systemBars()).top,
+                            0,
+                            insets.getInsets(systemBars()).bottom,
+                        )
                         insets
                     }
                 }
@@ -222,7 +211,9 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                 bottomSheetBehavior = bottomSheet?.let {
                     BottomSheetBehavior.from(it).apply {
                         maxWidth = calculateMenuSheetWidth()
-                        peekHeight = resources.displayMetrics.heightPixels
+                        isFitToContents = true
+                        peekHeight = PEEK_HEIGHT.dpToPx(resources.displayMetrics)
+                        halfExpandedRatio = EXPANDED_MIN_RATIO
                         maxHeight = calculateMenuSheetHeight()
                         skipCollapsed = true
                         state = BottomSheetBehavior.STATE_EXPANDED
@@ -313,8 +304,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 appStore = appStore,
                                 addonManager = components.addonManager,
                                 settings = settings,
-                                summarizeMenuSettings = components.core.summarizeFeatureSettings,
-                                summarizationEligibilityChecker = components.core.summarizationEligibilityChecker,
                                 bookmarksStorage = components.core.bookmarksStorage,
                                 pinnedSiteStorage = components.core.pinnedSiteStorage,
                                 appLinksUseCases = appLinksUseCases,
@@ -322,7 +311,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 addPinnedSiteUseCase = components.useCases.topSitesUseCase.addPinnedSites,
                                 removePinnedSitesUseCase = components.useCases.topSitesUseCase.removeTopSites,
                                 requestDesktopSiteUseCase = components.useCases.sessionUseCases.requestDesktopSite,
-                                migratePrivateTabUseCase = components.useCases.tabsUseCases.migratePrivateTabUseCase,
+                                tabsUseCases = components.useCases.tabsUseCases,
                                 materialAlertDialogBuilder = MaterialAlertDialogBuilder(context),
                                 topSitesMaxLimit = components.settings.topSitesMaxLimit,
                                 onDeleteAndQuit = {
@@ -340,7 +329,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     }
                                 },
                                 onSendPendingIntentWithUrl = ::sendPendingIntentWithUrl,
-                                mainDispatcher = Dispatchers.Main,
+                                scope = coroutineScope,
                                 lastSavedFolderCache = context.settings().lastSavedFolderCache,
                             ),
                             MenuNavigationMiddleware(
@@ -349,7 +338,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 openToBrowser = ::openToBrowser,
                                 sessionUseCases = components.useCases.sessionUseCases,
                                 webAppUseCases = webAppUseCases,
-                                shareUseCases = components.useCases.shareUseCases,
                                 settings = settings,
                                 onDismiss = {
                                     withContext(Dispatchers.Main) {
@@ -378,12 +366,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
                 var isExtensionsExpanded by remember { mutableStateOf(false) }
 
-                val isMoreMenuExpanded by remember {
-                    store.stateFlow.map { state -> state.isMoreMenuExpanded }
-                }.collectAsState(initial = false)
-
-                val isTranslationsEnabled = TranslationsEnabledSettings.dataStore(requireContext())
-                    .isEnabled.collectAsState(true)
+                var isMoreMenuExpanded by remember { mutableStateOf(false) }
 
                 MenuDialogBottomSheet(
                     modifier = Modifier
@@ -395,13 +378,10 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                             !settings.shouldUseExpandedToolbar &&
                             (isExtensionsExpanded || isMoreMenuExpanded) &&
                             args.accesspoint == MenuAccessPoint.Browser,
-                    cornerShape = MaterialTheme.shapes.extraLarge.copy(
-                        bottomStart = CornerSize(0.dp),
-                        bottomEnd = CornerSize(0.dp),
-                    ),
-                    menuCfrState = if (settings.shouldShowMenuCFR && settings.cfrPopupsEnabled) {
+                    cornerShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                    menuCfrState = if (settings.shouldShowMenuCFR) {
                         MenuCFRState(
-                            showCFR = settings.shouldShowMenuCFR && settings.cfrPopupsEnabled,
+                            showCFR = settings.shouldShowMenuCFR,
                             titleRes = R.string.menu_cfr_title,
                             messageRes = R.string.menu_cfr_body,
                             orientation = appStore.state.orientation,
@@ -424,19 +404,21 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         browserStore.state.translationEngine.isEngineSupported ?: false
                     val isTranslationSupported =
                         isTranslationEngineSupported &&
-                            FxNimbus.features.translations.value().mainFlowBrowserMenuEnabled &&
-                            isTranslationsEnabled.value
+                            FxNimbus.features.translations.value().mainFlowBrowserMenuEnabled
                     val isPdf = selectedTab?.content?.isPdf ?: false
-                    val isWebCompatEnabled by remember {
-                        store.stateFlow.map { it.isWebCompatEnabled }
-                    }.collectAsState(initial = store.state.isWebCompatEnabled)
+                    val isWebCompatEnabled by store.observeAsState(store.state.isWebCompatEnabled) {
+                        it.isWebCompatEnabled
+                    }
                     val supportedLanguages = components.core.store.state.translationEngine.supportedLanguages
                     val translateLanguageCode = selectedTab?.translationsState?.translationEngineState
                         ?.requestedTranslationPair?.toLanguage
                     val isExtensionsProcessDisabled = browserStore.state.extensionsProcessDisabled
-                    val isDesktopMode by remember {
-                        store.stateFlow.map { state -> state.isDesktopMode }
-                    }.collectAsState(initial = false)
+                    val isWebCompatReporterSupported =
+                        FxNimbus.features.menuRedesign.value().reportSiteIssue
+
+                    val isDesktopMode by store.observeAsState(initialValue = false) { state ->
+                        state.isDesktopMode
+                    }
 
                     webExtensionsMenuBinding.set(
                         feature = WebExtensionsMenuBinding(
@@ -450,70 +432,39 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         view = this,
                     )
 
-                    ipProtectionMenuBinding.set(
-                        feature = IPProtectionMenuBinding(
-                            ipProtectionStore = components.ipProtection.store,
-                            onIPProtectionStatusUpdate = {
-                                store.dispatch(MenuAction.UpdateIPProtectionMenuState(it))
-                            },
-                        ),
-                        owner = this@MenuDialogFragment,
-                        view = this,
-                    )
+                    val recommendedAddons by store.observeAsState(initialValue = emptyList()) { state ->
+                        state.extensionMenuState.recommendedAddons
+                    }
+                    val isBookmarked by store.observeAsState(initialValue = false) { state ->
+                        state.browserMenuState != null && state.browserMenuState.bookmarkState.isBookmarked
+                    }
+                    val isPinned by store.observeAsState(initialValue = false) { state ->
+                        state.browserMenuState != null && state.browserMenuState.isPinned
+                    }
 
-                    val recommendedAddons by remember {
-                        store.stateFlow
-                            .map { state ->
-                                state.extensionMenuState.recommendedAddons
-                            }
-                    }.collectAsState(initial = emptyList())
+                    val isReaderViewActive by store.observeAsState(initialValue = false) { state ->
+                        state.browserMenuState != null && state.browserMenuState.selectedTab.readerState.active
+                    }
 
-                    val isBookmarked by remember {
-                        store.stateFlow
-                            .map { state ->
-                                state.browserMenuState != null &&
-                                    state.browserMenuState.bookmarkState.isBookmarked
-                            }
-                    }.collectAsState(initial = false)
+                    val addonInstallationInProgress by store.observeAsState(initialValue = null) { state ->
+                        state.extensionMenuState.addonInstallationInProgress
+                    }
 
-                    val isPinned by remember {
-                        store.stateFlow
-                            .map { state ->
-                                state.browserMenuState != null &&
-                                    state.browserMenuState.isPinned
-                            }
-                    }.collectAsState(initial = false)
+                    val browserWebExtensionMenuItem by store.observeAsState(initialValue = emptyList()) { state ->
+                        state.extensionMenuState.browserWebExtensionMenuItem
+                    }
 
-                    val isReaderViewActive by remember {
-                        store.stateFlow
-                            .map { state ->
-                                state.browserMenuState != null &&
-                                    state.browserMenuState.selectedTab.readerState.active
-                            }
-                    }.collectAsState(initial = false)
+                    val availableAddons by store.observeAsState(initialValue = emptyList()) { state ->
+                        state.extensionMenuState.availableAddons
+                    }
 
-                    val addonInstallationInProgress by remember {
-                        store.stateFlow
-                            .map { state -> state.extensionMenuState.addonInstallationInProgress }
-                    }.collectAsState(initial = null)
+                    val webExtensionsCount by store.observeAsState(initialValue = 0) { state ->
+                        state.extensionMenuState.webExtensionsCount
+                    }
 
-                    val browserWebExtensionMenuItem by remember {
-                        store.stateFlow
-                            .map { state -> state.extensionMenuState.browserWebExtensionMenuItem }
-                    }.collectAsState(initial = emptyList())
-
-                    val availableAddons by remember {
-                        store.stateFlow.map { state -> state.extensionMenuState.availableAddons }
-                    }.collectAsState(initial = emptyList())
-
-                    val webExtensionsCount by remember {
-                        store.stateFlow.map { state -> state.extensionMenuState.webExtensionsCount }
-                    }.collectAsState(initial = 0)
-
-                    val isAllWebExtensionsDisabled by remember {
-                        store.stateFlow
-                            .map { state -> state.extensionMenuState.allWebExtensionsDisabled }
-                    }.collectAsState(initial = false)
+                    val isAllWebExtensionsDisabled by store.observeAsState(initialValue = false) { state ->
+                        state.extensionMenuState.allWebExtensionsDisabled
+                    }
 
                     val initRoute = when (args.accesspoint) {
                         MenuAccessPoint.Browser,
@@ -545,14 +496,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                             }
                         },
                     )
-
-                    val summarizationMenuState by remember {
-                        store.stateFlow.map { state -> state.summarizationMenuState }
-                    }.collectAsState(initial = SummarizationMenuState.Default)
-
-                    val ipProtectionMenuState by remember {
-                        store.stateFlow.map { state -> state.ipProtectionMenuState }
-                    }.collectAsState(initial = store.state.ipProtectionMenuState)
 
                     val contentState: Route by remember { mutableStateOf(initRoute) }
 
@@ -616,18 +559,13 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                             Route.MainMenu -> {
                                 handlebarContentDescription = descMain
 
-                                val account by remember {
-                                    syncStore.stateFlow
-                                        .map { state -> state.account }
-                                }.collectAsState(initial = null)
-                                val accountState by remember {
-                                    syncStore.stateFlow
-                                        .map { state -> state.accountState }
-                                }.collectAsState(initial = NotAuthenticated)
-                                val isSiteLoading by remember {
-                                    browserStore.stateFlow
-                                        .map { state -> state.selectedTab?.content?.loading == true }
-                                }.collectAsState(initial = false)
+                                val account by syncStore.observeAsState(initialValue = null) { state -> state.account }
+                                val accountState by syncStore.observeAsState(initialValue = NotAuthenticated) { state ->
+                                    state.accountState
+                                }
+                                val isSiteLoading by browserStore.observeAsState(initialValue = false) { state ->
+                                    state.selectedTab?.content?.loading == true
+                                }
 
                                 val appLinksRedirect = if (selectedTab?.content?.url != null) {
                                     appLinksUseCases.appLinkRedirect(selectedTab.content.url)
@@ -635,22 +573,17 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     null
                                 }
 
-                                val isDownloadHighlighted by remember {
-                                    appStore.stateFlow
-                                        .map { state ->
-                                            state.supportedMenuNotifications.contains(
-                                                SupportedMenuNotifications.Downloads,
-                                            )
-                                        }
-                                }.collectAsState(initial = false)
-                                val isOpenInAppMenuHighlighted by remember {
-                                    appStore.stateFlow
-                                        .map { state ->
-                                            state.supportedMenuNotifications.contains(
-                                                SupportedMenuNotifications.OpenInApp,
-                                            )
-                                        }
-                                }.collectAsState(initial = false)
+                                val isDownloadHighlighted by appStore.observeAsState(
+                                    initialValue = false,
+                                ) { state ->
+                                    state.supportedMenuNotifications.contains(SupportedMenuNotifications.Downloads)
+                                }
+
+                                val isOpenInAppMenuHighlighted by appStore.observeAsState(
+                                    initialValue = false,
+                                ) { state ->
+                                    state.supportedMenuNotifications.contains(SupportedMenuNotifications.OpenInApp)
+                                }
 
                                 MainMenu(
                                     accessPoint = args.accesspoint,
@@ -668,9 +601,8 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     isPdf = isPdf,
                                     isPrivate = isPrivate,
                                     isReaderViewActive = isReaderViewActive,
-                                    isMoreMenuHighlighted = isOpenInAppMenuHighlighted ||
-                                            summarizationMenuState.overflowMenuHighlighted,
-                                    canGoBack = browserStore.state.canGoBackInHistoryOrToStories(),
+                                    isMoreMenuHighlighted = isOpenInAppMenuHighlighted,
+                                    canGoBack = selectedTab?.content?.canGoBack ?: true,
                                     canGoForward = selectedTab?.content?.canGoForward ?: true,
                                     extensionsMenuItemDescription = extensionsMenuItemDescription,
                                     scrollState = scrollState,
@@ -678,8 +610,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     isDownloadHighlighted = isDownloadHighlighted,
                                     webExtensionMenuCount = webExtensionsCount,
                                     isAllWebExtensionsDisabled = isAllWebExtensionsDisabled,
-                                    showIPProtection = components.ipProtection.store.state.isEligible,
-                                    ipProtectionMenuState = ipProtectionMenuState,
                                     onMozillaAccountButtonClick = {
                                         store.dispatch(
                                             MenuAction.Navigate.MozillaAccount(
@@ -727,7 +657,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                         }
                                     },
                                     onMoreMenuClick = {
-                                        store.dispatch(MenuAction.OnMoreMenuClicked)
+                                        isMoreMenuExpanded = !isMoreMenuExpanded
                                     },
                                     onBookmarksMenuClick = {
                                         store.dispatch(MenuAction.Navigate.Bookmarks)
@@ -764,42 +694,23 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                             store.dispatch(MenuAction.Navigate.Share)
                                         }
                                     },
-                                    onIPProtectionClick = {
-                                        if (ipProtectionMenuState.status == IPProtectionMenuStatus.AuthRequired) {
-                                            store.dispatch(MenuAction.Navigate.IPProtectionSettings)
-                                        } else {
-                                            components.ipProtection.store.dispatch(IPProtectionAction.Toggle)
-                                        }
-                                    },
-                                    onIPProtectionNavigate = {
-                                        store.dispatch(MenuAction.Navigate.IPProtectionSettings)
-                                    },
                                     moreSettingsSubmenu = {
                                         MoreSettingsSubmenu(
                                             isReaderViewActive = isReaderViewActive,
                                             isWebCompatEnabled = isWebCompatEnabled,
                                             isPinned = isPinned,
-                                            isPrivate = isPrivate,
                                             isInstallable = webAppUseCases.isInstallable(),
                                             isAddToHomeScreenSupported = selectedTab != null &&
                                                     webAppUseCases.isPinningSupported(),
                                             hasExternalApp = appLinksRedirect?.hasExternalApp() ?: false,
                                             externalAppName = appLinksRedirect?.appName ?: "",
+                                            isWebCompatReporterSupported = isWebCompatReporterSupported,
                                             isOpenInAppMenuHighlighted = isOpenInAppMenuHighlighted,
                                             translationInfo = translationInfo,
                                             showShortcuts = settings.showTopSitesFeature,
                                             isAndroidAutomotiveAvailable = context.isAndroidAutomotiveAvailable(),
-                                            summarizationMenuState = summarizationMenuState,
                                             onWebCompatReporterClick = {
                                                 store.dispatch(MenuAction.Navigate.WebCompatReporter)
-                                            },
-                                            onSummarizePageMenuExposed = {
-                                                store.dispatch(
-                                                    MenuAction.OnSummarizationMenuExposed,
-                                                )
-                                            },
-                                            onSummarizePageClick = {
-                                                store.dispatch(MenuAction.Navigate.Summarizer)
                                             },
                                             onShortcutsMenuClick = {
                                                 if (!isPinned) {
@@ -829,9 +740,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                             },
                                             onOpenInAppMenuClick = {
                                                 store.dispatch(MenuAction.OpenInApp)
-                                            },
-                                            onMoveToNonPrivateTabMenuClick = {
-                                                store.dispatch(MenuAction.MoveToNonPrivateTab)
                                             },
                                         )
                                     },
@@ -880,15 +788,9 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                             }
 
                             Route.CustomTabMenu -> {
-                                val isSiteLoading by remember {
-                                    browserStore.stateFlow.map { state ->
-                                        args.customTabSessionId
-                                            ?.let {
-                                                state.findCustomTab(it)?.content?.loading
-                                            }
-                                            ?: false
-                                    }
-                                }.collectAsState(false)
+                                val isSiteLoading by browserStore.observeAsState(false) { state ->
+                                    args.customTabSessionId?.let { state.findCustomTab(it)?.content?.loading } ?: false
+                                }
                                 handlebarContentDescription = descCustom
 
                                 CustomTabMenu(

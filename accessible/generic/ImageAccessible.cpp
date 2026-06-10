@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -47,7 +48,7 @@ ImageAccessible::ImageAccessible(nsIContent* aContent, DocAccessible* aDoc)
   }
 }
 
-ImageAccessible::~ImageAccessible() = default;
+ImageAccessible::~ImageAccessible() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible public
@@ -238,7 +239,7 @@ void ImageAccessible::Notify(imgIRequest* aRequest, int32_t aType,
   if ((status ^ mImageRequestStatus) & imgIRequest::STATUS_SIZE_AVAILABLE) {
     nsIFrame* frame = GetFrame();
     if (frame && !frame->HasAnyStateBits(IMAGE_SIZECONSTRAINED)) {
-      auto event = MakeRefPtr<AccStateChangeEvent>(
+      RefPtr<AccEvent> event = new AccStateChangeEvent(
           this, states::INVISIBLE,
           !(status & imgIRequest::STATUS_SIZE_AVAILABLE));
       mDoc->FireDelayedEvent(event);
@@ -246,7 +247,7 @@ void ImageAccessible::Notify(imgIRequest* aRequest, int32_t aType,
   }
 
   if ((status ^ mImageRequestStatus) & imgIRequest::STATUS_IS_ANIMATED) {
-    auto event = MakeRefPtr<AccStateChangeEvent>(
+    RefPtr<AccEvent> event = new AccStateChangeEvent(
         this, states::ANIMATED, (status & imgIRequest::STATUS_IS_ANIMATED));
     mDoc->FireDelayedEvent(event);
   }

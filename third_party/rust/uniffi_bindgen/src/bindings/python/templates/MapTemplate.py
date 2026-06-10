@@ -1,16 +1,19 @@
-class {{ map.self_type.ffi_converter_name }}(_UniffiConverterRustBuffer):
+{%- let key_ffi_converter = key_type|ffi_converter_name %}
+{%- let value_ffi_converter = value_type|ffi_converter_name %}
+
+class {{ ffi_converter_name }}(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, items):
         for (key, value) in items.items():
-            {{ map.key.ffi_converter_name }}.check_lower(key)
-            {{ map.value.ffi_converter_name }}.check_lower(value)
+            {{ key_ffi_converter }}.check_lower(key)
+            {{ value_ffi_converter }}.check_lower(value)
 
     @classmethod
     def write(cls, items, buf):
         buf.write_i32(len(items))
         for (key, value) in items.items():
-            {{ map.key.ffi_converter_name }}.write(key, buf)
-            {{ map.value.ffi_converter_name }}.write(value, buf)
+            {{ key_ffi_converter }}.write(key, buf)
+            {{ value_ffi_converter }}.write(value, buf)
 
     @classmethod
     def read(cls, buf):
@@ -24,7 +27,7 @@ class {{ map.self_type.ffi_converter_name }}(_UniffiConverterRustBuffer):
         # This loop makes the order explicit: first reading the key, then the value.
         d = {}
         for i in range(count):
-            key = {{ map.key.ffi_converter_name }}.read(buf)
-            val = {{ map.value.ffi_converter_name }}.read(buf)
+            key = {{ key_ffi_converter }}.read(buf)
+            val = {{ value_ffi_converter }}.read(buf)
             d[key] = val
         return d

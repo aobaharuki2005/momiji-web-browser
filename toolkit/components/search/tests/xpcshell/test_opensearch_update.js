@@ -11,7 +11,7 @@ let timerManager;
 add_setup(async function () {
   let server = useHttpServer();
   server.registerContentType("sjs", "sjs");
-  await SearchService.init();
+  await Services.search.init();
 
   timerManager = Cc["@mozilla.org/updates/timer-manager;1"].getService(
     Ci.nsIUpdateTimerManager
@@ -37,7 +37,7 @@ add_task(async function test_installEngine_with_updates_disabled() {
   });
 
   Assert.ok(
-    SearchService.getEngineByName("test engine"),
+    Services.search.getEngineByName("test engine"),
     "Should have added the test engine."
   );
   Assert.ok(
@@ -77,14 +77,14 @@ add_task(async function test_installEngine_with_updates_enabled() {
   );
 
   engine.alias = KEYWORD;
-  await SearchService.moveEngine(engine, 0);
+  await Services.search.moveEngine(engine, 0);
 
   Assert.ok(
-    !!SearchService.getEngineByName("original engine"),
+    !!Services.search.getEngineByName("original engine"),
     "Should be able to get the engine by the original name"
   );
   Assert.ok(
-    !SearchService.getEngineByName("simple"),
+    !Services.search.getEngineByName("simple"),
     "Should not be able to get the engine by the new name"
   );
 
@@ -105,23 +105,27 @@ add_task(async function test_engineUpdate() {
 
   // set last update to 8 days ago, since the default interval is 7, then
   // trigger an update
-  let engine = SearchService.getEngineByName("original engine");
-  engine.setAttr("updateexpir", Date.now() - ONE_DAY_IN_MS * 8);
-  SearchService.QueryInterface(Ci.nsITimerCallback).notify(null);
+  let engine = Services.search.getEngineByName("original engine");
+  engine.wrappedJSObject.setAttr("updateexpir", Date.now() - ONE_DAY_IN_MS * 8);
+  Services.search.QueryInterface(Ci.nsITimerCallback).notify(null);
 
   await promiseUpdate;
 
   Assert.equal(engine.name, "simple", "Should have updated the engine's name");
 
   Assert.equal(engine.alias, KEYWORD, "Should have kept the keyword");
-  Assert.equal(engine.getAttr("order"), 1, "Should have kept the order");
+  Assert.equal(
+    engine.wrappedJSObject.getAttr("order"),
+    1,
+    "Should have kept the order"
+  );
 
   Assert.ok(
-    !!SearchService.getEngineByName("simple"),
+    !!Services.search.getEngineByName("simple"),
     "Should be able to get the engine by the new name"
   );
   Assert.ok(
-    !SearchService.getEngineByName("original engine"),
+    !Services.search.getEngineByName("original engine"),
     "Should not be able to get the engine by the old name"
   );
 

@@ -37,6 +37,7 @@ let chromeScriptHandle = null;
 
 function startListeningForContextmenuEventsInChrome() {
   function chromeScript() {
+    /* eslint-env mozilla/chrome-script */
     let topWin = Services.wm.getMostRecentWindow("navigator:browser");
     if (!topWin) {
       topWin = Services.wm.getMostRecentWindow("navigator:geckoview");

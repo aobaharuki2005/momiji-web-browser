@@ -20,10 +20,10 @@ add_task(async function () {
 
   // Reload the page to get the font request
   const waitForRequests = waitForNetworkEvents(monitor, 3);
-  await reloadSelectedTab();
+  await reloadBrowser();
   await waitForRequests;
 
-  const wait = waitForDOM(
+  const wait = waitForDOMIfNeeded(
     document,
     "#response-panel .response-font[src^='data:']"
   );
@@ -42,11 +42,7 @@ add_task(async function () {
 
   const tabpanel = document.querySelector("#response-panel");
   let image = tabpanel.querySelector(".response-font");
-
-  await waitFor(
-    () => image.complete === true && image.naturalWidth > 0,
-    "Wait for the font preview to load"
-  );
+  await once(image, "load");
 
   ok(
     image.complete && image.naturalHeight !== 0,
@@ -68,11 +64,7 @@ add_task(async function () {
   await waitForDOM(document, "#response-panel .response-font[src^='data:']");
 
   image = tabpanel.querySelector(".response-font");
-
-  await waitFor(
-    () => image.complete === true && image.naturalWidth > 0,
-    "Wait for the font preview to load"
-  );
+  await once(image, "load");
 
   ok(
     image.complete && image.naturalHeight !== 0,

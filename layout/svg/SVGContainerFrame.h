@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,9 +7,8 @@
 #ifndef LAYOUT_SVG_SVGCONTAINERFRAME_H_
 #define LAYOUT_SVG_SVGCONTAINERFRAME_H_
 
-#include <memory>
-
 #include "mozilla/ISVGDisplayableFrame.h"
+#include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
 #include "nsIFrame.h"
 #include "nsQueryFrame.h"
@@ -74,6 +75,7 @@ class SVGContainerFrame : public nsContainerFrame {
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
+  void RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) override;
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override {}
 
@@ -117,6 +119,7 @@ class SVGDisplayContainerFrame : public SVGContainerFrame,
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
+  void RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) override;
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
@@ -132,7 +135,7 @@ class SVGDisplayContainerFrame : public SVGContainerFrame,
   void ReflowSVG() override;
   void NotifySVGChanged(ChangeFlags aFlags) override;
   SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
-                              SVGBBoxFlags aFlags) override;
+                              uint32_t aFlags) override;
   bool IsDisplayContainer() override { return true; }
   gfxMatrix GetCanvasTM() override;
 
@@ -140,7 +143,7 @@ class SVGDisplayContainerFrame : public SVGContainerFrame,
   /**
    * Cached canvasTM value.
    */
-  std::unique_ptr<gfxMatrix> mCanvasTM;
+  UniquePtr<gfxMatrix> mCanvasTM;
 };
 
 }  // namespace mozilla

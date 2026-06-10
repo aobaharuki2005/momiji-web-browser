@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,8 +10,8 @@
  *                           -- Prasad <prasad@medhas.org>
  */
 
-#ifndef nsTextFormatter_h_
-#define nsTextFormatter_h_
+#ifndef nsTextFormatter_h___
+#define nsTextFormatter_h___
 
 /*
  ** API for PR printf like routines. Supports the following formats
@@ -166,4 +168,4 @@ class nsTextFormatter {
                         mozilla::Span<BoxedValue> aValues);
 };
 
-#endif /* nsTextFormatter_h_ */
+#endif /* nsTextFormatter_h___ */

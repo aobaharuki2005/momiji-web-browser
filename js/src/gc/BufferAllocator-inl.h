@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -128,9 +130,14 @@ inline bool IsBufferAllocMarkedBlack(JS::Zone* zone, void* alloc) {
   return zone->bufferAllocator.isMarkedBlack(alloc);
 }
 
-inline void* TraceBufferEdgeInternal(JSTracer* trc, void** bufferp,
-                                     const char* name) {
-  return BufferAllocator::TraceEdge(trc, bufferp, name);
+inline void TraceBufferEdgeInternal(JSTracer* trc, Cell* owner, void** bufferp,
+                                    const char* name) {
+  owner->zoneFromAnyThread()->bufferAllocator.traceEdge(trc, owner, bufferp,
+                                                        name);
+}
+inline void TraceBufferEdgeInternal(JSTracer* trc, JS::Zone* zone,
+                                    void** bufferp, const char* name) {
+  zone->bufferAllocator.traceEdge(trc, nullptr, bufferp, name);
 }
 
 inline void MarkTenuredBuffer(JS::Zone* zone, void* alloc) {

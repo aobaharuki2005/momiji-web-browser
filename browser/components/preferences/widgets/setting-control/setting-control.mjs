@@ -8,7 +8,6 @@ import {
   ifDefined,
   literal,
   ref,
-  repeat,
   staticHtml,
   unsafeStatic,
 } from "chrome://global/content/vendor/lit.all.mjs";
@@ -36,7 +35,6 @@ import MozInputFolder from "chrome://global/content/elements/moz-input-folder.mj
  * @property {any} [value] A value to set on the option.
  * @property {boolean} [disabled] If the option should be disabled.
  * @property {boolean} [hidden] If the option should be hidden.
- * @property {any} [key] A key to identify this option.
  */
 
 /**
@@ -129,12 +127,6 @@ export class SettingControl extends SettingElement {
     /** @type {Ref<LitElement>} */
     this.controlRef = createRef();
 
-    /** @type {Ref<LitElement>} */
-    this.controlledMessageBarRef = createRef();
-
-    /** @type {Ref<LitElement>} */
-    this.enableMessageBarRef = createRef();
-
     /**
      * @type {Preferences['getSetting'] | undefined}
      */
@@ -178,14 +170,6 @@ export class SettingControl extends SettingElement {
     return this.controlRef.value;
   }
 
-  get disabled() {
-    return (
-      this.setting?.disabled ||
-      this.setting?.locked ||
-      this.isDisabledByExtension()
-    );
-  }
-
   async getUpdateComplete() {
     let result = await super.getUpdateComplete();
     await this.controlEl?.updateComplete;
@@ -212,7 +196,6 @@ export class SettingControl extends SettingElement {
     if (!this.setting) {
       throw new SettingNotDefinedError(this.config.id);
     }
-    this.id = `setting-control-${this.config.id}`;
     let prevHidden = this.hidden;
     this.hidden = !this.setting.visible;
     if (prevHidden != this.hidden) {
@@ -249,7 +232,6 @@ export class SettingControl extends SettingElement {
   getCommonPropertyMapping(config) {
     return {
       ...super.getCommonPropertyMapping(config),
-      "data-subcategory": config.subcategory,
       ".setting": this.setting,
       ".control": this,
     };
@@ -278,7 +260,10 @@ export class SettingControl extends SettingElement {
     return {
       ...this.getCommonPropertyMapping(config),
       ".parentDisabled": this.parentDisabled,
-      "?disabled": this.disabled,
+      "?disabled":
+        this.setting.disabled ||
+        this.setting.locked ||
+        this.isControlledByExtension(),
       // Hide moz-message-bar directly to maintain the role=alert functionality.
       // This setting-control will be visually hidden in CSS.
       ".hidden": config.control == "moz-message-bar" && this.hidden,
@@ -330,35 +315,6 @@ export class SettingControl extends SettingElement {
     this.setting.userClick(event);
   }
 
-  /**
-   * Called by our parent when moz-message-bar is dismissed.
-   *
-   * @param {CustomEvent} event
-   */
-  onMessageBarDismiss(event) {
-    this.setting.messageBarDismiss(event);
-  }
-
-  /**
-   * Called by our parent when items are reordered. The reorder event is
-   * a CustomEvent that bubbles from reorderable moz-box-group elements when
-   * items are reordered via drag-and-drop or keyboard shortcuts.
-   *
-   * The detail object of the reorder event contains the following properties:
-   *
-   * - `draggedElement`: The element that was reordered.
-   * - `targetElement`: The element that the dragged element was reordered relative to.
-   * - `position`: The position of the drop relative to the target element. -1
-   *   means before, 0 means after.
-   * - `draggedIndex`: The original index of the element being reordered.
-   * - `targetIndex`: The new index of the draggedElement after reordering.
-   *
-   * @param {CustomEvent} event
-   */
-  onReorder(event) {
-    this.setting.userReorder(event);
-  }
-
   async disableExtension() {
     this.isDisablingExtension = true;
     this.showEnableExtensionMessage = true;
@@ -370,13 +326,6 @@ export class SettingControl extends SettingElement {
     return (
       this.setting.controllingExtensionInfo?.id &&
       this.setting.controllingExtensionInfo?.name
-    );
-  }
-
-  isDisabledByExtension() {
-    return (
-      this.isControlledByExtension() &&
-      !this.setting.controllingExtensionInfo.allowControl
     );
   }
 
@@ -421,9 +370,7 @@ export class SettingControl extends SettingElement {
       setting: this.getSetting(i.id),
     }));
     let control = config.control || "moz-checkbox";
-    return repeat(
-      itemArgs,
-      item => item.config.key || item.config.id,
+    return itemArgs.map(
       item =>
         html`<setting-control
           .config=${item.config}
@@ -447,25 +394,21 @@ export class SettingControl extends SettingElement {
       return [];
     }
     let control = config.control || "moz-checkbox";
-    return repeat(
-      config.options,
-      opt => opt.key,
-      opt => {
-        let optionTag = opt.control
-          ? unsafeStatic(opt.control)
-          : KNOWN_OPTIONS.get(control);
-        let spreadValues = spread(this.getOptionPropertyMapping(opt));
-        let children =
-          "items" in opt ? this.itemsTemplate(opt) : this.optionsTemplate(opt);
-        if (opt.control == "a" && opt.controlAttrs?.is == "moz-support-link") {
-          // The `is` attribute must be set when the element is first added to the
-          // DOM. We need to mark that up manually, since `spread()` uses
-          // `el.setAttribute()` to set attributes it receives.
-          return html`<a is="moz-support-link" ${spreadValues}>${children}</a>`;
-        }
-        return staticHtml`<${optionTag} ${spreadValues}>${children}</${optionTag}>`;
+    return config.options.map(opt => {
+      let optionTag = opt.control
+        ? unsafeStatic(opt.control)
+        : KNOWN_OPTIONS.get(control);
+      let spreadValues = spread(this.getOptionPropertyMapping(opt));
+      let children =
+        "items" in opt ? this.itemsTemplate(opt) : this.optionsTemplate(opt);
+      if (opt.control == "a" && opt.controlAttrs?.is == "moz-support-link") {
+        // The `is` attribute must be set when the element is first added to the
+        // DOM. We need to mark that up manually, since `spread()` uses
+        // `el.setAttribute()` to set attributes it receives.
+        return html`<a is="moz-support-link" ${spreadValues}>${children}</a>`;
       }
-    );
+      return staticHtml`<${optionTag} ${spreadValues}>${children}</${optionTag}>`;
+    });
   }
 
   get extensionSupportPage() {
@@ -497,7 +440,6 @@ export class SettingControl extends SettingElement {
       let supportPage = this.extensionSupportPage;
       messageBar = html`<moz-message-bar
         class="extension-controlled-message-bar"
-        ${ref(this.controlledMessageBarRef)}
         .messageL10nId=${this.extensionMessageId}
         .messageL10nArgs=${args}
       >
@@ -519,7 +461,6 @@ export class SettingControl extends SettingElement {
       messageBar = html`<moz-message-bar
         class="reenable-extensions-message-bar"
         dismissable=""
-        ${ref(this.enableMessageBarRef)}
         @message-bar:user-dismissed=${this.handleEnableExtensionDismiss}
       >
         <span

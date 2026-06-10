@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,10 +16,8 @@
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ScrollContainerFrame.h"
-#include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/ViewTransition.h"
 #include "nsCanvasFrame.h"
 #include "nsGkAtoms.h"
@@ -470,11 +470,9 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
     // height actually changes.
     AbsPosReflowFlags flags{AbsPosReflowFlag::CBWidthChanged,
                             AbsPosReflowFlag::CBHeightChanged};
-    nsReflowStatus absposStatus;
     GetAbsoluteContainingBlock()->Reflow(this, aPresContext, reflowInput,
-                                         absposStatus, cb, flags,
+                                         aStatus, cb, flags,
                                          /* aOverflowAreas = */ nullptr);
-    aStatus.MergeCompletionStatusFrom(absposStatus);
   }
 
   if (mFrames.NotEmpty()) {
@@ -493,6 +491,17 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);
 }
 
+void ViewportFrame::UpdateStyle(ServoRestyleState& aRestyleState) {
+  RefPtr<ComputedStyle> newStyle =
+      aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(
+          Style()->GetPseudoType(), nullptr);
+
+  MOZ_ASSERT(!GetNextContinuation(), "Viewport has continuations?");
+  SetComputedStyle(newStyle);
+
+  UpdateStyleOfOwnedAnonBoxes(aRestyleState);
+}
+
 void ViewportFrame::AppendDirectlyOwnedAnonBoxes(
     nsTArray<OwnedAnonBox>& aResult) {
   if (mFrames.NotEmpty()) {
@@ -505,9 +514,23 @@ nsSize ViewportFrame::AdjustViewportSizeForFixedPosition(
   nsSize result = aViewportRect.Size();
 
   mozilla::PresShell* presShell = PresShell();
-  const nsSize fixedViewportSize = presShell->GetFixedViewportSize();
-  if (result < fixedViewportSize) {
-    result = fixedViewportSize;
+  // Layout fixed position elements to the visual viewport size if and only if
+  // it has been set and it is larger than the computed size, otherwise use the
+  // computed size.
+  if (presShell->IsVisualViewportSizeSet()) {
+    if (presShell->GetDynamicToolbarState() == DynamicToolbarState::Collapsed &&
+        result < presShell->GetVisualViewportSizeUpdatedByDynamicToolbar()) {
+      // We need to use the viewport size updated by the dynamic toolbar in the
+      // case where the dynamic toolbar is completely hidden.
+      result = presShell->GetVisualViewportSizeUpdatedByDynamicToolbar();
+    } else if (result < presShell->GetVisualViewportSize()) {
+      result = presShell->GetVisualViewportSize();
+    }
+  }
+  // Expand the size to the layout viewport size if necessary.
+  const nsSize layoutViewportSize = presShell->GetLayoutViewportSize();
+  if (result < layoutViewportSize) {
+    result = layoutViewportSize;
   }
 
   return result;

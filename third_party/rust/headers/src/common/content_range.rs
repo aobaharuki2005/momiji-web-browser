@@ -1,9 +1,7 @@
 use std::fmt;
 use std::ops::{Bound, RangeBounds};
 
-use http::{HeaderName, HeaderValue};
-
-use crate::{util, Error, Header};
+use {util, HeaderValue};
 
 /// Content-Range, described in [RFC7233](https://tools.ietf.org/html/rfc7233#section-4.2)
 ///
@@ -29,6 +27,7 @@ use crate::{util, Error, Header};
 /// # Example
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::ContentRange;
 ///
 /// // 100 bytes (included byte 199), with a full length of 3,400
@@ -99,12 +98,12 @@ impl ContentRange {
     }
 }
 
-impl Header for ContentRange {
-    fn name() -> &'static HeaderName {
+impl ::Header for ContentRange {
+    fn name() -> &'static ::HeaderName {
         &::http::header::CONTENT_RANGE
     }
 
-    fn decode<'i, I: Iterator<Item = &'i HeaderValue>>(values: &mut I) -> Result<Self, Error> {
+    fn decode<'i, I: Iterator<Item = &'i HeaderValue>>(values: &mut I) -> Result<Self, ::Error> {
         values
             .next()
             .and_then(|v| v.to_str().ok())
@@ -140,13 +139,13 @@ impl Header for ContentRange {
                     complete_length,
                 })
             })
-            .ok_or_else(Error::invalid)
+            .ok_or_else(::Error::invalid)
     }
 
-    fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
+    fn encode<E: Extend<::HeaderValue>>(&self, values: &mut E) {
         struct Adapter<'a>(&'a ContentRange);
 
-        impl fmt::Display for Adapter<'_> {
+        impl<'a> fmt::Display for Adapter<'a> {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 f.write_str("bytes ")?;
 

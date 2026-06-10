@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -36,12 +37,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
-import mozilla.components.compose.base.button.IconButton
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.focus.R
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.ui.theme.focusColors
-import org.mozilla.focus.ui.theme.focusDimensions
 import org.mozilla.focus.ui.theme.focusTypography
 import mozilla.components.ui.icons.R as iconsR
 
@@ -90,7 +89,7 @@ fun PromoteSearchWidgetDialogCompose(
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentHeight()
-                            .padding(top = focusDimensions.paddingSmall, end = focusDimensions.paddingDefault)
+                            .padding(top = 8.dp, end = 16.dp)
                             .constrainAs(closeButton) {
                                 top.linkTo(parent.top)
                                 start.linkTo(parent.start)
@@ -125,7 +124,7 @@ fun PromoteSearchWidgetDialogCompose(
 private fun DialogTitle() {
     Text(
         text = stringResource(id = R.string.promote_search_widget_dialog_title),
-        modifier = Modifier.padding(focusDimensions.paddingDefault),
+        modifier = Modifier.padding(16.dp),
         color = focusColors.dialogTextColor,
         textAlign = TextAlign.Center,
         style = focusTypography.dialogTitle,
@@ -139,11 +138,7 @@ private fun DialogSubtitle() {
             id = R.string.promote_search_widget_dialog_subtitle,
             stringResource(R.string.onboarding_short_app_name),
         ),
-        modifier = Modifier.padding(
-            top = focusDimensions.paddingDefault,
-            start = focusDimensions.paddingDefault,
-            end = focusDimensions.paddingDefault,
-        ),
+        modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
         color = focusColors.dialogTextColor,
         textAlign = TextAlign.Center,
         style = focusTypography.dialogContent,
@@ -157,7 +152,7 @@ private fun DialogImage() {
         contentDescription = stringResource(R.string.promote_search_widget_dialog_picture_content_description),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = focusDimensions.paddingText, end = focusDimensions.paddingText)
+            .padding(start = 10.dp, end = 10.dp)
             .background(
                 colorResource(id = R.color.promote_search_widget_dialog_background),
             ),
@@ -178,7 +173,7 @@ private fun ComponentAddWidgetButton(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(focusDimensions.paddingLarge),
+            .padding(24.dp),
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.textButtonColors(
             containerColor = colorResource(R.color.promote_search_widget_dialog_add_widget_button_background),
@@ -201,18 +196,17 @@ private fun CloseButton(
             onDismiss()
             openState.value = false
         },
-        contentDescription = stringResource(id = R.string.promote_search_widget_dialog_content_description),
         modifier = Modifier
             .background(
                 colorResource(id = R.color.promote_search_widget_dialog_close_button_background),
                 shape = CircleShape,
             )
             .size(48.dp)
-            .padding(focusDimensions.paddingText),
+            .padding(10.dp),
     ) {
         Icon(
             painter = painterResource(iconsR.drawable.mozac_ic_cross_24),
-            contentDescription = null,
+            contentDescription = stringResource(id = R.string.promote_search_widget_dialog_content_description),
             tint = focusColors.closeIcon,
         )
     }

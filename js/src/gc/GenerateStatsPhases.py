@@ -85,12 +85,10 @@ def getPhaseKind(name):
 PhaseKindGraphRoots = [
     addPhaseKind("MUTATOR", "Mutator Running"),
     addPhaseKind("GC_BEGIN", "Begin Callback"),
-    addPhaseKind("WAIT_BACKGROUND_THREAD", "Wait Background Thread"),
     addPhaseKind(
         "EVICT_NURSERY_FOR_MAJOR_GC",
         "Evict Nursery For Major GC",
         [
-            getPhaseKind("WAIT_BACKGROUND_THREAD"),
             addPhaseKind(
                 "MARK_ROOTS",
                 "Mark Roots",
@@ -100,17 +98,10 @@ PhaseKindGraphRoots = [
                     addPhaseKind("MARK_RUNTIME_DATA", "Mark Runtime-wide Data"),
                     addPhaseKind("MARK_EMBEDDING", "Mark Embedding"),
                 ],
-            ),
+            )
         ],
     ),
-    addPhaseKind(
-        "BARRIER",
-        "Barriers",
-        [
-            getPhaseKind("WAIT_BACKGROUND_THREAD"),
-            addPhaseKind("UNMARK_GRAY", "Unmark gray"),
-        ],
-    ),
+    addPhaseKind("WAIT_BACKGROUND_THREAD", "Wait Background Thread"),
     addPhaseKind(
         "PREPARE",
         "Prepare For Collection",
@@ -132,7 +123,6 @@ PhaseKindGraphRoots = [
         "MARK",
         "Mark",
         [
-            getPhaseKind("WAIT_BACKGROUND_THREAD"),
             getPhaseKind("MARK_ROOTS"),
             addPhaseKind("MARK_DELAYED", "Mark Delayed"),
             addPhaseKind(
@@ -201,13 +191,11 @@ PhaseKindGraphRoots = [
                     getPhaseKind("JOIN_PARALLEL_TASKS"),
                 ],
             ),
-            addPhaseKind("SWEEP_SCRIPT_MAPS", "Sweep Script Maps"),
             addPhaseKind("SWEEP_PROP_MAP", "Sweep PropMap Tree"),
             addPhaseKind("FINALIZE_END", "Finalize End Callback"),
             addPhaseKind("DESTROY", "Deallocate"),
             getPhaseKind("JOIN_PARALLEL_TASKS"),
             addPhaseKind("FIND_DEAD_COMPARTMENTS", "Find Dead Compartments"),
-            getPhaseKind("WAIT_BACKGROUND_THREAD"),
         ],
     ),
     addPhaseKind(
@@ -232,7 +220,6 @@ PhaseKindGraphRoots = [
         "MINOR_GC",
         "All Minor GCs",
         [
-            getPhaseKind("WAIT_BACKGROUND_THREAD"),
             getPhaseKind("MARK_ROOTS"),
         ],
     ),
@@ -240,7 +227,6 @@ PhaseKindGraphRoots = [
         "EVICT_NURSERY",
         "Minor GCs to Evict Nursery",
         [
-            getPhaseKind("WAIT_BACKGROUND_THREAD"),
             getPhaseKind("MARK_ROOTS"),
         ],
     ),

@@ -12,12 +12,14 @@
 
 #include <string>
 
+#include "api/array_view.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 
 std::string ToString(DataRate value) {
-  StringBuilder sb;
+  char buf[64];
+  SimpleStringBuilder sb(buf);
   if (value.IsPlusInfinity()) {
     sb << "+inf bps";
   } else if (value.IsMinusInfinity()) {
@@ -29,6 +31,6 @@ std::string ToString(DataRate value) {
       sb << value.kbps() << " kbps";
     }
   }
-  return sb.Release();
+  return sb.str();
 }
 }  // namespace webrtc

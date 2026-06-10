@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,7 +10,6 @@
 
 #include "ImageContainer.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -168,19 +169,18 @@ void nsVideoFrame::Destroy(DestroyContext& aContext) {
   nsContainerFrame::Destroy(aContext);
 }
 
-class DispatchControlsResizeEvent final : public Runnable {
+class DispatchResizeEvent : public Runnable {
  public:
-  explicit DispatchControlsResizeEvent(nsIContent* aContent)
-      : Runnable("DispatchControlsResizeEvent"), mContent(aContent) {}
+  explicit DispatchResizeEvent(nsIContent* aContent,
+                               const nsLiteralString& aName)
+      : Runnable("DispatchResizeEvent"), mContent(aContent), mName(aName) {}
   NS_IMETHOD Run() override {
-    // This is ok-ish because we're dispatching it in the shadow dom so it
-    // doesn't propagate up to the <video>.
-    nsContentUtils::DispatchTrustedEvent(mContent->OwnerDoc(), mContent,
-                                         u"resizevideocontrols"_ns,
+    nsContentUtils::DispatchTrustedEvent(mContent->OwnerDoc(), mContent, mName,
                                          CanBubble::eNo, Cancelable::eNo);
     return NS_OK;
   }
   nsCOMPtr<nsIContent> mContent;
+  const nsLiteralString mName;
 };
 
 bool nsVideoFrame::ReflowFinished() {
@@ -198,31 +198,23 @@ bool nsVideoFrame::ReflowFinished() {
 
   AutoTArray<nsCOMPtr<nsIRunnable>, 2> events;
 
-  bool resizedCaption = false;
   if (auto size = GetSize(mCaptionDiv)) {
     if (*size != mCaptionTrackedSize) {
       mCaptionTrackedSize = *size;
-      resizedCaption = true;
+      events.AppendElement(
+          new DispatchResizeEvent(mCaptionDiv, u"resizecaption"_ns));
     }
   }
-  RefPtr controls = GetVideoControls();
-  bool resizedControls = false;
+  nsIContent* controls = GetVideoControls();
   if (auto size = GetSize(controls)) {
     if (*size != mControlsTrackedSize) {
       mControlsTrackedSize = *size;
-      resizedControls = true;
+      events.AppendElement(
+          new DispatchResizeEvent(controls, u"resizevideocontrols"_ns));
     }
   }
-
-  if (resizedCaption) {
-    RefPtr mediaEl = static_cast<HTMLMediaElement*>(GetContent());
-    mediaEl->SetCuesDirty();
-    mediaEl->UpdateCueDisplay();
-  }
-
-  if (resizedControls) {
-    nsContentUtils::AddScriptRunner(
-        MakeAndAddRef<DispatchControlsResizeEvent>(controls));
+  for (auto& event : events) {
+    nsContentUtils::AddScriptRunner(event.forget());
   }
   return false;
 }
@@ -670,7 +662,7 @@ class nsDisplayVideo final : public nsPaintedDisplayItem {
         preTransform * Matrix::Translation(destGFXRect.x, destGFXRect.y);
 
     AutoLockImage autoLock(container);
-    layers::Image* image = autoLock.GetImage(TimeStamp::Now());
+    Image* image = autoLock.GetImage(TimeStamp::Now());
     if (!image) {
       return;
     }

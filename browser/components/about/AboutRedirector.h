@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef AboutRedirector_h_
-#define AboutRedirector_h_
+#ifndef AboutRedirector_h__
+#define AboutRedirector_h__
 
 #include "nsIAboutModule.h"
 
@@ -15,15 +16,15 @@ class AboutRedirector : public nsIAboutModule {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIABOUTMODULE
 
-  AboutRedirector() = default;
+  AboutRedirector() {}
 
   static nsresult Create(REFNSIID aIID, void** aResult);
 
  protected:
-  virtual ~AboutRedirector() = default;
+  virtual ~AboutRedirector() {}
 };
 
 }  // namespace browser
 }  // namespace mozilla
 
-#endif  // AboutRedirector_h_
+#endif  // AboutRedirector_h__

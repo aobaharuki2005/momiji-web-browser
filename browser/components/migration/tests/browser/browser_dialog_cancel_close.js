@@ -17,8 +17,7 @@ add_task(async function test_cancel_close() {
       'div[name="page-selection"] .cancel-close'
     );
     let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
-    await new Promise(r => prefsWin.requestAnimationFrame(r));
-    EventUtils.synthesizeMouseAtCenter(cancelButton, {}, prefsWin);
+    cancelButton.click();
     await dialogClosed;
     Assert.ok(true, "Clicking the cancel button closed the dialog.");
   });
@@ -50,7 +49,7 @@ add_task(async function test_cancel_close() {
   );
 
   let windowClosed = BrowserTestUtils.windowClosed(win);
-  EventUtils.synthesizeMouseAtCenter(cancelButton, {}, win);
+  cancelButton.click();
   await windowClosed;
   Assert.ok(true, "Window was closed.");
 });

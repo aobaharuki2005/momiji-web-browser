@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -6,7 +7,6 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/net/MozURL.h"
-#include "mozilla/net/URLPatternGlue.h"
 
 namespace mozilla::dom {
 
@@ -25,7 +25,7 @@ JSObject* URLPattern::WrapObject(JSContext* aCx,
   return URLPattern_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void GlueToBindingInit(const UrlPatternInit& aGInit, URLPatternInit& aBInit) {
+void GlueToBindingInit(const UrlpInit& aGInit, URLPatternInit& aBInit) {
   if (aGInit.protocol.valid) {
     aBInit.mProtocol.Construct(aGInit.protocol.string);
   }
@@ -55,7 +55,7 @@ void GlueToBindingInit(const UrlPatternInit& aGInit, URLPatternInit& aBInit) {
   }
 }
 
-void BindingToGlueInit(const URLPatternInit& aBInit, UrlPatternInit& aGInit) {
+void BindingToGlueInit(const URLPatternInit& aBInit, UrlpInit& aGInit) {
   if (aBInit.mProtocol.WasPassed()) {
     aGInit.protocol = net::CreateMaybeString(aBInit.mProtocol.Value(), true);
   }
@@ -90,19 +90,19 @@ already_AddRefed<URLPattern> URLPattern::Constructor(
     const GlobalObject& aGlobal, const UTF8StringOrURLPatternInit& aInput,
     const URLPatternOptions& aOptions, ErrorResult& rv) {
   MOZ_LOG(gUrlPatternLog, LogLevel::Debug,
-          ("URLPattern::Constructor() (without base)"));
-  UrlPatternGlue pattern{};
-  UrlPatternOptions options{};
+          ("UrlPattern::Constructor() (without base)"));
+  UrlpPattern pattern{};
+  UrlpOptions options{};
   options.ignore_case = aOptions.mIgnoreCase;
   if (!aInput.IsURLPatternInit()) {
-    bool res = urlpattern_parse_pattern_from_string(&aInput.GetAsUTF8String(),
-                                                    nullptr, options, &pattern);
+    bool res = urlp_parse_pattern_from_string(&aInput.GetAsUTF8String(),
+                                              nullptr, options, &pattern);
     if (!res) {
       rv.ThrowTypeError("Failed to create URLPattern (from string)");
       return nullptr;
     }
   } else {
-    UrlPatternInit init{};
+    UrlpInit init{};
     URLPatternInit b_init;
     b_init = aInput.GetAsURLPatternInit();
     BindingToGlueInit(b_init, init);
@@ -110,7 +110,7 @@ already_AddRefed<URLPattern> URLPattern::Constructor(
       rv.ThrowTypeError("Should not provide empty base url with init");
       return nullptr;
     }
-    bool res = urlpattern_parse_pattern_from_init(&init, options, &pattern);
+    bool res = urlp_parse_pattern_from_init(&init, options, &pattern);
     if (!res) {
       rv.ThrowTypeError("Failed to create URLPattern (from init)");
       return nullptr;
@@ -128,12 +128,12 @@ already_AddRefed<URLPattern> URLPattern::Constructor(
     ErrorResult& rv) {
   MOZ_LOG(gUrlPatternLog, LogLevel::Debug,
           ("UrlPattern::Constructor() (w base)"));
-  UrlPatternGlue pattern{};
-  UrlPatternOptions options{};
+  UrlpPattern pattern{};
+  UrlpOptions options{};
   options.ignore_case = aOptions.mIgnoreCase;
   if (!aInput.IsURLPatternInit()) {
-    bool res = urlpattern_parse_pattern_from_string(&aInput.GetAsUTF8String(),
-                                                    &aBase, options, &pattern);
+    bool res = urlp_parse_pattern_from_string(&aInput.GetAsUTF8String(), &aBase,
+                                              options, &pattern);
     if (!res) {
       rv.ThrowTypeError(
           "Failed to create URLPattern with base url (from string)");
@@ -144,11 +144,11 @@ already_AddRefed<URLPattern> URLPattern::Constructor(
       rv.ThrowTypeError("Should not provide base url with init");
       return nullptr;
     }
-    UrlPatternInit init{};
+    UrlpInit init{};
     URLPatternInit b_init;
     b_init = aInput.GetAsURLPatternInit();
     BindingToGlueInit(b_init, init);
-    bool res = urlpattern_parse_pattern_from_init(&init, options, &pattern);
+    bool res = urlp_parse_pattern_from_init(&init, options, &pattern);
     if (!res) {
       rv.ThrowTypeError(
           "Failed to create URLPattern with base url (from init)");
@@ -159,16 +159,16 @@ already_AddRefed<URLPattern> URLPattern::Constructor(
                                    aOptions.mIgnoreCase);
 }
 
-URLPattern::~URLPattern() { urlpattern_pattern_free(mPattern); }
+URLPattern::~URLPattern() { urlp_pattern_free(mPattern); }
 
 void ConvertGroupsToRecord(
     const nsTHashMap<nsCStringHashKey, MaybeString>& aGroups,
     Optional<Record<nsCString, OwningUTF8StringOrUndefined>>& aRes) {
   Record<nsCString, OwningUTF8StringOrUndefined> record;
   for (auto iter = aGroups.ConstIter(); !iter.Done(); iter.Next()) {
-    MaybeString s = iter.Data();
     OwningUTF8StringOrUndefined value;
-    value.SetUndefined();  // if capture group doesn't match we leave undefined
+    value.SetUndefined();
+    MaybeString s = iter.Data();
     if (s.valid) {
       value.SetAsUTF8String().Assign(s.string);
     }
@@ -179,20 +179,20 @@ void ConvertGroupsToRecord(
   aRes.Construct(std::move(record));
 }
 
-void GlueToBindingComponent(const net::UrlPatternComponentResult& aGlueCompRes,
+void GlueToBindingComponent(const net::UrlpComponentResult& aGlueCompRes,
                             URLPatternComponentResult& aBindingCompRes) {
   aBindingCompRes.mInput.Construct(aGlueCompRes.mInput);
   ConvertGroupsToRecord(aGlueCompRes.mGroups, aBindingCompRes.mGroups);
 }
 
 void ConvertInputsToSequence(
-    const CopyableTArray<UrlPatternInput>& aInputs,
+    const CopyableTArray<UrlpInput>& aInputs,
     Optional<Sequence<OwningUTF8StringOrURLPatternInit>>& aRes,
     ErrorResult& rv) {
   Sequence<OwningUTF8StringOrURLPatternInit> sequence;
   for (const auto& input : aInputs) {
     OwningUTF8StringOrURLPatternInit variant;
-    if (input.string_or_init_type == UrlPatternStringOrInitType::String) {
+    if (input.string_or_init_type == UrlpStringOrInitType::String) {
       variant.SetAsUTF8String().Assign(input.str);
     } else {
       GlueToBindingInit(input.init, variant.SetAsURLPatternInit());
@@ -207,7 +207,7 @@ void ConvertInputsToSequence(
   aRes.Construct(std::move(sequence));
 }
 
-void GlueToBindingResult(const net::UrlPatternResult& aGlueRes,
+void GlueToBindingResult(const net::UrlpResult& aGlueRes,
                          URLPatternResult& aBindingRes, ErrorResult& rv) {
   if (aGlueRes.mProtocol.isSome()) {
     URLPatternComponentResult tmp;
@@ -255,12 +255,12 @@ void GlueToBindingResult(const net::UrlPatternResult& aGlueRes,
 bool URLPattern::Test(const UTF8StringOrURLPatternInit& aInput,
                       const Optional<nsACString>& aBaseUrl, ErrorResult& rv) {
   MOZ_LOG(gUrlPatternLog, LogLevel::Debug, ("UrlPattern::Test()"));
-  UrlPatternInput input;
+  UrlpInput input;
   Maybe<nsAutoCString> execBaseUrl;
   if (aInput.IsURLPatternInit()) {
-    UrlPatternInit initGlue{};
+    UrlpInit initGlue{};
     BindingToGlueInit(aInput.GetAsURLPatternInit(), initGlue);
-    input = net::CreateUrlPatternInput(initGlue);
+    input = net::CreateUrlpInput(initGlue);
     if (aBaseUrl.WasPassed()) {
       rv.ThrowTypeError(
           "Do not pass baseUrl separately with init, use init's baseURL "
@@ -268,24 +268,24 @@ bool URLPattern::Test(const UTF8StringOrURLPatternInit& aInput,
       return false;
     }
   } else {
-    input = net::CreateUrlPatternInput(aInput.GetAsUTF8String());
+    input = net::CreateUrlpInput(aInput.GetAsUTF8String());
     if (aBaseUrl.WasPassed()) {
       execBaseUrl.emplace(aBaseUrl.Value());
     }
   }
-  return net::UrlPatternTest(mPattern, input, execBaseUrl, mIgnoreCase);
+  return net::UrlpPatternTest(mPattern, input, execBaseUrl, mIgnoreCase);
 }
 
 void URLPattern::Exec(const UTF8StringOrURLPatternInit& aInput,
                       const Optional<nsACString>& aBaseUrl,
                       Nullable<URLPatternResult>& aResult, ErrorResult& rv) {
   MOZ_LOG(gUrlPatternLog, LogLevel::Debug, ("UrlPattern::Exec()"));
-  UrlPatternInput input;
+  UrlpInput input;
   Maybe<nsAutoCString> execBaseUrl;
   if (aInput.IsURLPatternInit()) {
-    UrlPatternInit initGlue{};
+    UrlpInit initGlue{};
     BindingToGlueInit(aInput.GetAsURLPatternInit(), initGlue);
-    input = net::CreateUrlPatternInput(initGlue);
+    input = net::CreateUrlpInput(initGlue);
     if (aBaseUrl.WasPassed()) {
       rv.ThrowTypeError(
           "Do not pass baseUrl separately with init, use init's baseURL "
@@ -293,14 +293,14 @@ void URLPattern::Exec(const UTF8StringOrURLPatternInit& aInput,
       return;
     }
   } else {
-    input = net::CreateUrlPatternInput(aInput.GetAsUTF8String());
+    input = net::CreateUrlpInput(aInput.GetAsUTF8String());
     if (aBaseUrl.WasPassed()) {
       execBaseUrl.emplace(aBaseUrl.Value());
     }
   }
 
-  Maybe<net::UrlPatternResult> patternResult =
-      net::UrlPatternExec(mPattern, input, execBaseUrl, mIgnoreCase);
+  Maybe<net::UrlpResult> patternResult =
+      net::UrlpPatternExec(mPattern, input, execBaseUrl, mIgnoreCase);
   if (patternResult.isSome()) {
     URLPatternResult res;
     GlueToBindingResult(patternResult.value(), res, rv);
@@ -315,39 +315,39 @@ void URLPattern::Exec(const UTF8StringOrURLPatternInit& aInput,
 }
 
 void URLPattern::GetProtocol(nsACString& aProtocol) const {
-  aProtocol.Assign(net::UrlPatternGetProtocol(mPattern));
+  aProtocol.Assign(net::UrlpGetProtocol(mPattern));
 }
 
 void URLPattern::GetUsername(nsACString& aUsername) const {
-  aUsername.Assign(net::UrlPatternGetUsername(mPattern));
+  aUsername.Assign(net::UrlpGetUsername(mPattern));
 }
 
 void URLPattern::GetPassword(nsACString& aPassword) const {
-  aPassword.Assign(net::UrlPatternGetPassword(mPattern));
+  aPassword.Assign(net::UrlpGetPassword(mPattern));
 }
 
 void URLPattern::GetHostname(nsACString& aHostname) const {
-  aHostname.Assign(net::UrlPatternGetHostname(mPattern));
+  aHostname.Assign(net::UrlpGetHostname(mPattern));
 }
 
 void URLPattern::GetPort(nsACString& aPort) const {
-  aPort.Assign(net::UrlPatternGetPort(mPattern));
+  aPort.Assign(net::UrlpGetPort(mPattern));
 }
 
 void URLPattern::GetPathname(nsACString& aPathname) const {
-  aPathname.Assign(net::UrlPatternGetPathname(mPattern));
+  aPathname.Assign(net::UrlpGetPathname(mPattern));
 }
 
 void URLPattern::GetSearch(nsACString& aSearch) const {
-  aSearch.Assign(net::UrlPatternGetSearch(mPattern));
+  aSearch.Assign(net::UrlpGetSearch(mPattern));
 }
 
 void URLPattern::GetHash(nsACString& aHash) const {
-  aHash.Assign(net::UrlPatternGetHash(mPattern));
+  aHash.Assign(net::UrlpGetHash(mPattern));
 }
 
 bool URLPattern::HasRegExpGroups() const {
-  return urlpattern_get_has_regexp_groups(mPattern);
+  return urlp_get_has_regexp_groups(mPattern);
 }
 
 }  // namespace mozilla::dom

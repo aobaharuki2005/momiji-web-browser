@@ -15,8 +15,6 @@ async function runPrefTest(
   });
 
   await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
-    // TODO: Switch to SpecialPowers.spawn
-    // eslint-disable-next-line mozilla/reject-contenttask-spawn
     await ContentTask.spawn(
       browser,
       { aExecuteFromPBM, aDesc, aAssertURLStartsWith },

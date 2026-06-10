@@ -2,6 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
+/* import-globals-from helper-telemetry.js */
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-telemetry.js",
+  this
+);
 
 /**
  * Check that telemetry events are recorded when navigating between different
@@ -11,23 +16,19 @@ add_task(async function () {
   // enable USB devices mocks
   const mocks = new Mocks();
 
-  Services.fog.testResetFOG();
+  setupTelemetryTest();
 
   const { tab, document, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  const sessionId =
-    Glean.devtoolsMain.openAdbgAboutdebugging.testGetValue()[0].extra
-      .session_id;
+  const sessionId = getOpenEventSessionId();
   ok(!isNaN(sessionId), "Open event has a valid session id");
 
-  Services.fog.testResetFOG();
   info("Navigate to 'Connect' page");
   document.location.hash = "#/connect";
   await waitUntil(() => document.querySelector(".qa-connect-page"));
   checkSelectPageEvent("connect", sessionId);
 
-  Services.fog.testResetFOG();
   info("Navigate to 'USB device runtime' page");
   await navigateToUSBRuntime(mocks, document);
   checkSelectPageEvent("runtime", sessionId);
@@ -37,15 +38,17 @@ add_task(async function () {
 });
 
 function checkSelectPageEvent(expectedType, expectedSessionId) {
-  const evts = Glean.devtoolsMain.selectPageAboutdebugging.testGetValue();
+  const evts = readAboutDebuggingEvents().filter(
+    e => e.method === "select_page"
+  );
   is(evts.length, 1, "Exactly one select_page event recorded");
   is(
-    evts[0].extra.page_type,
+    evts[0].extras.page_type,
     expectedType,
     "Select page event has the expected type"
   );
   is(
-    evts[0].extra.session_id,
+    evts[0].extras.session_id,
     expectedSessionId,
     "Select page event has the expected session"
   );

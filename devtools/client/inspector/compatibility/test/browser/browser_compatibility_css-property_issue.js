@@ -15,7 +15,7 @@ const TEST_URI = `
     color: blue;
     text-box-edge: text;
     user-modify: read-only;
-    stroke-color: red;
+    background-repeat-x: repeat;
   }
   div {
     overflow-anchor: auto;
@@ -44,9 +44,10 @@ const TEST_DATA_SELECTED = [
   },
   {
     type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-    property: "stroke-color",
+    property: "background-repeat-x",
     // No MDN url, but a spec one
-    specUrl: "https://drafts.csswg.org/fill-stroke-3/#stroke-color",
+    specUrl:
+      "https://drafts.csswg.org/css-backgrounds-4/#background-repeat-longhands",
     deprecated: false,
     experimental: true,
   },

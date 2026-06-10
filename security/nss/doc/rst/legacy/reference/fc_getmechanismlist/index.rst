@@ -46,6 +46,7 @@ FC_GetMechanismList
    A user may call ``FC_GetMechanismList`` without logging into the token (to assume the NSS User
    role).
 
+.. _return_value:
 
 `Return value <#return_value>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -57,6 +58,9 @@ FC_GetMechanismList
 `Examples <#examples>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. container::
+
+.. _see_also:
 
 `See also <#see_also>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~

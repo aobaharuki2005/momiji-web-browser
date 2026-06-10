@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,13 +26,6 @@ NS_IMETHODIMP
 nsServerTiming::GetDescription(nsACString& aDescription) {
   aDescription.Assign(mDescription);
   return NS_OK;
-}
-
-size_t nsServerTiming::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) {
-  return aMallocSizeOf(this) +
-         mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
-         mDescription.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
 namespace mozilla {
@@ -83,7 +78,11 @@ void ServerTimingParser::Parse() {
       // This is true whether or not the value makes any sense (or, indeed, if
       // there even is a value).
       if (currentName.LowerCaseEqualsASCII("dur") && !foundDuration) {
-        timingHeader->SetDuration(ParseDouble(currentValue));
+        if (currentValue.BeginReading()) {
+          timingHeader->SetDuration(ParseDouble(currentValue));
+        } else {
+          timingHeader->SetDuration(0.0);
+        }
         foundDuration = true;
       } else if (currentName.LowerCaseEqualsASCII("desc") &&
                  !foundDescription) {

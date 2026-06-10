@@ -43,6 +43,7 @@ FC_GetFunctionList
    A user may call ``FC_GetFunctionList`` without logging into the token (to assume the NSS User
    role).
 
+.. _return_value:
 
 `Return value <#return_value>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,6 +69,7 @@ FC_GetFunctionList
 
       /* invoke the FC_XXX function as pFunctionList->C_XXX */
 
+.. _see_also:
 
 `See also <#see_also>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~

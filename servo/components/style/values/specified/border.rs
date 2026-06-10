@@ -6,7 +6,6 @@
 
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
-use crate::typed_om::{ToTyped, TypedValue};
 use crate::values::computed::border::BorderSideWidth as ComputedBorderSideWidth;
 use crate::values::computed::{Context, ToComputedValue};
 use crate::values::generics::border::{
@@ -16,13 +15,13 @@ use crate::values::generics::border::{
 use crate::values::generics::rect::Rect;
 use crate::values::generics::size::Size2D;
 use crate::values::specified::length::{Length, NonNegativeLength, NonNegativeLengthPercentage};
+use crate::values::specified::Color;
 use crate::values::specified::{AllowQuirks, NonNegativeNumber, NonNegativeNumberOrPercentage};
 use crate::Zero;
 use app_units::Au;
 use cssparser::Parser;
 use std::fmt::{self, Write};
-use style_traits::{CssWriter, ParseError, ToCss};
-use thin_vec::ThinVec;
+use style_traits::{values::SequenceWriter, CssWriter, ParseError, ToCss};
 
 /// A specified value for a single side of a `border-style` property.
 ///
@@ -73,46 +72,12 @@ impl BorderStyle {
 /// A specified value for the `border-image-width` property.
 pub type BorderImageWidth = Rect<BorderImageSideWidth>;
 
-impl ToTyped for BorderImageWidth {
-    // Note: The specification does not currently define how border image width
-    // should be reified into Typed OM. The current behavior follows existing
-    // WPT coverage (border-image-width.html). Syncing spec with UA/WPT
-    // behavior tracked in https://github.com/w3c/csswg-drafts/issues/13907
-    fn to_typed(&self, dest: &mut ThinVec<TypedValue>) -> Result<(), ()> {
-        if !self.all_sides_equal() {
-            return Err(());
-        }
-
-        self.0.to_typed(dest)
-    }
-}
-
 /// A specified value for a single side of a `border-image-width` property.
 pub type BorderImageSideWidth =
     GenericBorderImageSideWidth<NonNegativeLengthPercentage, NonNegativeNumber>;
 
 /// A specified value for the `border-image-slice` property.
 pub type BorderImageSlice = GenericBorderImageSlice<NonNegativeNumberOrPercentage>;
-
-impl ToTyped for BorderImageSlice {
-    // Note: The specification does not currently define how border image slice
-    // should be reified into Typed OM. The current behavior follows existing
-    // WPT coverage (border-image-slice.html). Syncing spec with UA/WPT
-    // behavior tracked in https://github.com/w3c/csswg-drafts/issues/13907
-    fn to_typed(&self, dest: &mut ThinVec<TypedValue>) -> Result<(), ()> {
-        if self.fill {
-            return Err(());
-        }
-
-        let offsets = &self.offsets;
-
-        if !offsets.all_sides_equal() {
-            return Err(());
-        }
-
-        offsets.0.to_typed(dest)
-    }
-}
 
 /// A specified value for the `border-radius` property.
 pub type BorderRadius = GenericBorderRadius<NonNegativeLengthPercentage>;
@@ -136,6 +101,7 @@ impl BorderImageSlice {
 
 /// https://drafts.csswg.org/css-backgrounds-3/#typedef-line-width
 #[derive(Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss, ToShmem, ToTyped)]
+#[typed_value(derive_fields)]
 pub enum LineWidth {
     /// `thin`
     Thin,
@@ -204,6 +170,7 @@ impl ToComputedValue for LineWidth {
 /// A specified value for a single side of the `border-width` property. The difference between this
 /// and LineWidth is whether we snap to device pixels or not.
 #[derive(Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss, ToShmem, ToTyped)]
+#[typed_value(derive_fields)]
 pub struct BorderSideWidth(LineWidth);
 
 impl BorderSideWidth {
@@ -271,6 +238,7 @@ impl ToComputedValue for BorderSideWidth {
 #[derive(
     Clone, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem, ToTyped,
 )]
+#[typed_value(derive_fields)]
 pub struct BorderSideOffset(Length);
 
 impl ToComputedValue for BorderSideOffset {
@@ -406,7 +374,6 @@ pub enum BorderImageRepeatKeyword {
     ToTyped,
 )]
 #[repr(C)]
-#[typed(todo_derive_fields)]
 pub struct BorderImageRepeat(pub BorderImageRepeatKeyword, pub BorderImageRepeatKeyword);
 
 impl ToCss for BorderImageRepeat {
@@ -446,4 +413,33 @@ impl Parse for BorderImageRepeat {
             vertical.unwrap_or(horizontal),
         ))
     }
+}
+
+/// Serializes a border shorthand value composed of width/style/color.
+pub fn serialize_directional_border<W>(
+    dest: &mut CssWriter<W>,
+    width: &BorderSideWidth,
+    style: &BorderStyle,
+    color: &Color,
+) -> fmt::Result
+where
+    W: Write,
+{
+    let has_style = *style != BorderStyle::None;
+    let has_color = *color != Color::CurrentColor;
+    let has_width = *width != BorderSideWidth::medium();
+    if !has_style && !has_color && !has_width {
+        return width.to_css(dest);
+    }
+    let mut writer = SequenceWriter::new(dest, " ");
+    if has_width {
+        writer.item(width)?;
+    }
+    if has_style {
+        writer.item(style)?;
+    }
+    if has_color {
+        writer.item(color)?;
+    }
+    Ok(())
 }

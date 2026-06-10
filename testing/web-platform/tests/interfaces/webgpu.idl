@@ -19,7 +19,6 @@ interface GPUSupportedLimits {
     readonly attribute unsigned long maxTextureArrayLayers;
     readonly attribute unsigned long maxBindGroups;
     readonly attribute unsigned long maxBindGroupsPlusVertexBuffers;
-    readonly attribute unsigned long maxImmediateSize;
     readonly attribute unsigned long maxBindingsPerBindGroup;
     readonly attribute unsigned long maxDynamicUniformBuffersPerPipelineLayout;
     readonly attribute unsigned long maxDynamicStorageBuffersPerPipelineLayout;
@@ -259,12 +258,11 @@ enum GPUTextureDimension {
 typedef [EnforceRange] unsigned long GPUTextureUsageFlags;
 [Exposed=(Window, Worker), SecureContext]
 namespace GPUTextureUsage {
-    const GPUFlagsConstant COPY_SRC             = 0x01;
-    const GPUFlagsConstant COPY_DST             = 0x02;
-    const GPUFlagsConstant TEXTURE_BINDING      = 0x04;
-    const GPUFlagsConstant STORAGE_BINDING      = 0x08;
-    const GPUFlagsConstant RENDER_ATTACHMENT    = 0x10;
-    const GPUFlagsConstant TRANSIENT_ATTACHMENT = 0x20;
+    const GPUFlagsConstant COPY_SRC          = 0x01;
+    const GPUFlagsConstant COPY_DST          = 0x02;
+    const GPUFlagsConstant TEXTURE_BINDING   = 0x04;
+    const GPUFlagsConstant STORAGE_BINDING   = 0x08;
+    const GPUFlagsConstant RENDER_ATTACHMENT = 0x10;
 };
 
 [Exposed=(Window, Worker), SecureContext]
@@ -603,7 +601,6 @@ GPUPipelineLayout includes GPUObjectBase;
 dictionary GPUPipelineLayoutDescriptor
          : GPUObjectDescriptorBase {
     required sequence<GPUBindGroupLayout?> bindGroupLayouts;
-    GPUSize32 immediateSize = 0;
 };
 
 [Exposed=(Window, Worker), SecureContext]
@@ -1020,9 +1017,6 @@ interface mixin GPUBindingCommandsMixin {
         [AllowShared] Uint32Array dynamicOffsetsData,
         GPUSize64 dynamicOffsetsDataStart,
         GPUSize32 dynamicOffsetsDataLength);
-
-    undefined setImmediates(GPUSize32 rangeOffset, AllowSharedBufferSource data,
-        optional GPUSize64 dataOffset = 0, optional GPUSize64 dataSize);
 };
 
 interface mixin GPUDebugCommandsMixin {

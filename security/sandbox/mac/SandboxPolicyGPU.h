@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,7 +19,6 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
   (define crashPort (param "CRASH_PORT"))
   (define macosVersion (string->number (param "MAC_OS_VERSION")))
   (define isRosettaTranslated (param "IS_ROSETTA_TRANSLATED"))
-  (define allowRemoteAppleImageIO (param "ALLOW_REMOTE_APPLE_IMAGEIO"))
 
   (define (moz-deny feature)
     (if (string=? shouldLog "TRUE")
@@ -26,47 +26,19 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
       (deny feature (with no-log))))
 
   (moz-deny default)
-  (if (>= macosVersion 1009)  
-    (moz-deny process-info*))
-  ; This isn't available in some older macOS releases.
-  (if (defined? 'nvram*)
-    (moz-deny nvram*))
-  (if (defined? 'iokit-get-properties)
-    (moz-deny iokit-get-properties))
-  (if (defined? 'file-map-executable)
-    (moz-deny file-map-executable))
+  (moz-deny process-info*)
+  (moz-deny nvram*)
+  (moz-deny iokit-get-properties)
+  (moz-deny file-map-executable)
 
-  ;; OS X 10.7 (Lion) compatibility
-  (if (<= macosVersion 1007)
-    (begin
-    (define ipc-posix-shm* ipc-posix-shm)
-    (define ipc-posix-shm-read-data ipc-posix-shm)
-    (define ipc-posix-shm-read* ipc-posix-shm)
-    (define ipc-posix-shm-write-data ipc-posix-shm)))
-
-  ; Needed for things like getpriority()/setpriority()/pthread_setname()
-  (if (>= macosVersion 1009)
-  (begin
-        (allow process-info-pidinfo (target self))
-        (allow process-info-pidinfo process-info-setcontrol (target self))))
-
-  (if (>= macosVersion 1008)
-  (allow user-preference-read))
+  (allow process-info-pidinfo process-info-setcontrol (target self))
+  (allow user-preference-read)
   (allow file-read-metadata (subpath "/"))
-  (if (defined? 'file-map-executable)
-    (begin
-      (if (string=? isRosettaTranslated "TRUE")
-        (allow file-map-executable (subpath "/private/var/db/oah")))
-      (allow file-map-executable file-read*
-        (subpath "/System")
-        (subpath "/usr/lib")
-        (subpath "/Library/GPUBundles")
-        (subpath appPath)))
-    (allow file-read*
-        (subpath "/System")
-        (subpath "/usr/lib")
-        (subpath "/Library/GPUBundles")
-        (subpath appPath)))
+  (allow file-map-executable file-read*
+    (subpath "/System")
+    (subpath "/usr/lib")
+    (subpath "/Library/GPUBundles")
+    (subpath appPath))
 
   (allow signal (target self))
   (allow file-read*
@@ -77,10 +49,6 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
   (if (string? crashPort)
     (allow mach-lookup (global-name crashPort)))
 
-   ; macOS 10.9 does not support the |sysctl-name| predicate, so unfortunately
-   ; we need to allow all sysctl-reads there.
-  (if (<= macosVersion 1009)
-  (allow sysctl-read)
   (allow sysctl-read
     (sysctl-name-regex #"^sysctl\.")
     (sysctl-name "kern.ostype")
@@ -89,7 +57,6 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (sysctl-name "kern.osproductversion")
     (sysctl-name "kern.version")
     (sysctl-name "kern.hostname")
-    (sysctl-name "kern.hv_vmm_present")
     (sysctl-name "hw.machine")
     (sysctl-name "hw.memsize")
     (sysctl-name "hw.model")
@@ -144,7 +111,7 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (sysctl-name "hw.perflevel1.l1dcachesize")
     (sysctl-name "hw.perflevel1.l2cachesize")
     (sysctl-name "hw.perflevel1.cpusperl2")
-    (sysctl-name "hw.perflevel1.name")))
+    (sysctl-name "hw.perflevel1.name"))
 
   (allow mach-lookup
     (global-name "com.apple.system.opendirectoryd.libinfo")
@@ -155,13 +122,10 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (global-name "com.apple.CARenderServer")
     (global-name "com.apple.windowserver.active")
     (global-name "com.apple.MTLCompilerService")
+    (global-name "com.apple.CARenderServer")
     (global-name "com.apple.CoreDisplay.master")
     (global-name "com.apple.CoreDisplay.Notification")
     (global-name "com.apple.cvmsServ"))
-
-  (if (string=? allowRemoteAppleImageIO "TRUE")
-    (allow mach-lookup
-      (global-name "com.apple.ImageIOXPCService")))
 
   ; Allow access to defaults services
   (allow mach-lookup
@@ -184,35 +148,24 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
   (allow file-read* (subpath "/private/var/db/CVMS"))
 
   ; Allow creation of the bundle ID cache directory and files within.
-  (if (not (defined? 'vnode-type))
-    (allow file-write* file-write*
-     (subpath bundleIDCacheDir))
-  ;else
-    (allow file-read* file-write*
-      (require-all
-        (subpath bundleIDCacheDir)
-        (vnode-type SYMLINK))))
+  (allow file-read* file-write*
+    (require-all
+      (require-not (vnode-type SYMLINK))
+      (subpath bundleIDCacheDir)))
 
   ; Allow issuing sandbox extensions for the MTLCompilerService process
   ; to be able to read and write files in the bundle ID cache dir in the
   ; "com.apple.{metalfe,gpuarchiver}" subdirectories. Only observed
   ; to be needed on macOS 14 and earlier versions.
   (if (<= macosVersion 1500)
-  ; Allow creation of the bundle ID cache directory and files within.
-  (if (not (defined? 'vnode-type))
-    (allow file-issue-extension
-     (subpath (string-append bundleIDCacheDir "/com.apple.metalfe"))
-     (subpath (string-append bundleIDCacheDir "/com.apple.gpuarchiver")))
-  ;else
     (allow file-issue-extension
       (require-all
         (extension-class "com.apple.app-sandbox.read-write")
+        (require-not (vnode-type SYMLINK))
         (require-any
           (subpath (string-append bundleIDCacheDir "/com.apple.metalfe"))
-          (subpath (string-append bundleIDCacheDir "/com.apple.gpuarchiver")))))))
+          (subpath (string-append bundleIDCacheDir "/com.apple.gpuarchiver"))))))
 
-
-  (if (defined? 'iokit-get-properties)
   (allow iokit-get-properties
     (iokit-property "board-id")
     (iokit-property "product-id")
@@ -231,7 +184,18 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (iokit-property "IOVARendererID")
     (iokit-property "MetalPluginName")
     (iokit-property "MetalPluginClassName")
-    (iokit-property "gpu-core-count")))
+    (iokit-property "gpu-core-count"))
+
+  (allow iokit-set-properties
+    (require-all
+      (iokit-connection "IODisplay")
+        (require-any
+          (iokit-property "brightness"
+                          "linear-brightness"
+                          "commit"
+                          "rgcs"
+                          "ggcs"
+                          "bgcs"))))
 
   (allow iokit-open
     (iokit-connection "IOAccelerator")
@@ -242,6 +206,7 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (iokit-user-client-class "IOSurfaceSendRight")
     (iokit-user-client-class "IOFramebufferSharedUserClient")
     (iokit-user-client-class "AGPMClient")
+    (iokit-user-client-class "AppleGraphicsControlClient")
     (iokit-user-client-class "IOHIDParamUserClient")
     (iokit-user-client-class "RootDomainUserClient")
     (iokit-user-client-class "AppleMGPUPowerControlClient")
@@ -265,26 +230,6 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
   (allow mach-lookup
     (global-name "com.apple.fonts")
     (global-name "com.apple.FontObjectsServer"))
-  (if (<= macosVersion 1011)
-    (allow mach-lookup (global-name "com.apple.FontServer")))
-
-  ; Fonts
-  ; Workaround for sandbox extensions not being automatically
-  ; issued for fonts on 10.11 and earlier versions (bug 1460917).
-  (if (<= macosVersion 1011)
-   (allow file-read*
-    (regex #"\.[oO][tT][fF]$"          ; otf
-           #"\.[tT][tT][fF]$"          ; ttf
-           #"\.[tT][tT][cC]$"          ; ttc
-           #"\.[oO][tT][cC]$"          ; otc
-           #"\.[dD][fF][oO][nN][tT]$") ; dfont
-    (home-subpath "/Library/FontCollections")
-    (home-subpath "/Library/Application Support/Adobe/CoreSync/plugins/livetype")
-    (home-subpath "/Library/Application Support/FontAgent")
-    (home-subpath "/Library/Extensis/UTC") ; bug 1469657
-    (subpath "/Library/Extensis/UTC")      ; bug 1469657
-    (regex #"\.fontvault/")
-    (home-subpath "/FontExplorer X/Font Library")))
 
   (if (string=? isRosettaTranslated "TRUE")
     (allow file-map-executable (subpath "/private/var/db/oah")))

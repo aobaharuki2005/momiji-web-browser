@@ -1,11 +1,9 @@
 [DEFAULT]
-subsuite = "integration"
-tags = "local os_integration"
+tags = "local"
 
 ["test_default_launcher_visible.py"]
 skip-if = [
-  "asan", # Bug 2010115
-  "tsan", # Bug 2010115
+  "true", # bug 2008998, fails when sidebar.revamp defaults to true.
 ]
 
 ["test_initialize_vertical_tabs.py"]

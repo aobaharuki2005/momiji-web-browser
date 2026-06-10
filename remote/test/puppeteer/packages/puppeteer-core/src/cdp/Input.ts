@@ -554,7 +554,7 @@ export class CdpMouse extends Mouse {
 /**
  * @internal
  */
-export class CdpTouchHandle implements TouchHandle {
+class CdpTouchHandle implements TouchHandle {
   #started = false;
   #touchScreen: CdpTouchscreen;
   #touchPoint: Protocol.Input.TouchPoint;

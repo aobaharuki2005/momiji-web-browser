@@ -1,5 +1,0 @@
-features:
-- name: js-modules
-  files:
-  - script-src-module.tentative.sub.html
-  - script-src-nomodule.tentative.sub.html

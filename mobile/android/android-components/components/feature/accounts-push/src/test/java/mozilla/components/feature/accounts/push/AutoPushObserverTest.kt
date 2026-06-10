@@ -40,6 +40,7 @@ class AutoPushObserverTest {
         testScheduler.advanceUntilIdle()
 
         verify(constellation).processRawEvent("foobar")
+        Unit
     }
 
     @Test
@@ -51,6 +52,7 @@ class AutoPushObserverTest {
 
         verify(constellation, never()).setDevicePushSubscription(any())
         verify(constellation, never()).processRawEvent("foobar")
+        Unit
     }
 
     @Test
@@ -61,6 +63,7 @@ class AutoPushObserverTest {
         testScheduler.advanceUntilIdle()
 
         verify(constellation, never()).processRawEvent(any())
+        Unit
     }
 
     @Test
@@ -81,6 +84,7 @@ class AutoPushObserverTest {
         testScheduler.advanceUntilIdle()
 
         verify(constellation).setDevicePushSubscription(any())
+        Unit
     }
 
     @Test
@@ -93,6 +97,7 @@ class AutoPushObserverTest {
         testScheduler.advanceUntilIdle()
 
         verify(constellation, never()).setDevicePushSubscription(any())
+        Unit
     }
 
     @Test

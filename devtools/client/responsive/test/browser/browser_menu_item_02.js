@@ -9,7 +9,7 @@ const TEST_URL = "data:text/html;charset=utf-8,";
 
 const isMenuCheckedFor = ({ document }) => {
   const menu = document.getElementById("menu_responsiveUI");
-  return menu.hasAttribute("checked");
+  return menu.getAttribute("checked") === "true";
 };
 
 addRDMTask(

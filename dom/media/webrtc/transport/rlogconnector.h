@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -48,8 +50,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    debug purposes on an about:webrtc page or similar.
 */
 
-#ifndef rlogconnector_h_
-#define rlogconnector_h_
+#ifndef rlogconnector_h__
+#define rlogconnector_h__
 
 #include <stdint.h>
 
@@ -121,4 +123,4 @@ class RLogConnector {
 
 }  // namespace mozilla
 
-#endif  // rlogconnector_h_
+#endif  // rlogconnector_h__

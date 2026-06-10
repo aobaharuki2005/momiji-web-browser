@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,7 +13,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
-#include "mozilla/FlowMarkers.h"
 
 #include "js/SourceText.h"
 
@@ -27,6 +28,8 @@ namespace JS::loader {
 //////////////////////////////////////////////////////////////
 // ScriptFetchOptions
 //////////////////////////////////////////////////////////////
+
+NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions, mTriggeringPrincipal)
 
 ScriptFetchOptions::ScriptFetchOptions(
     mozilla::CORSMode aCORSMode, const nsAString& aNonce,
@@ -75,9 +78,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoadRequest)
 // Fields that can be modified by the main thread shouldn't be touched by
 // the cycle collection.
 //
-// NOTE: LoadedScript, nsIURI, and nsIPrincipal don't have to be touched here
-//       because they cannot be a part of cycle.
-NS_IMPL_CYCLE_COLLECTION(ScriptLoadRequest, mLoadContext)
+// NOTE: nsIURI and nsIPrincipal doesn't have to be touched here because
+//       they cannot be a part of cycle.
+NS_IMPL_CYCLE_COLLECTION(ScriptLoadRequest, mLoadedScript, mLoadContext)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
@@ -94,7 +97,6 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
       mHadPostponed_(false),
       mDiskCachingPlan(CachingPlan::Uninitialized),
       mMemoryCachingPlan(CachingPlan::Uninitialized),
-      mIsRetrievedFromMemoryCache(false),
       mIntegrity(aIntegrity),
       mReferrer(aReferrer),
       mLoadContext(aContext),
@@ -104,10 +106,7 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
   }
 }
 
-ScriptLoadRequest::~ScriptLoadRequest() {
-  PROFILER_MARKER("~ScriptLoadRequest", JS, {}, TerminatingFlowMarker,
-                  Flow::FromPointer(this));
-}
+ScriptLoadRequest::~ScriptLoadRequest() {}
 
 void ScriptLoadRequest::SetReady() {
   MOZ_ASSERT(!IsFinished());
@@ -165,34 +164,23 @@ const ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() const {
   return static_cast<const ModuleLoadRequest*>(this);
 }
 
-void ScriptLoadRequest::CacheEntryFound(LoadedScript* aLoadedScript,
-                                        ScriptFetchOptions* aFetchOptions) {
+void ScriptLoadRequest::CacheEntryFound(LoadedScript* aLoadedScript) {
   MOZ_ASSERT(IsCheckingCache());
 
-  SetCacheEntry(aLoadedScript, aFetchOptions);
+  SetCacheEntry(aLoadedScript);
 }
 
 void ScriptLoadRequest::CacheEntryRevived(LoadedScript* aLoadedScript) {
   MOZ_ASSERT(IsFetching());
 
-  SetCacheEntry(aLoadedScript, FetchOptions());
+  SetCacheEntry(aLoadedScript);
 
   // NOTE: The caller should keep using the "fetching" path, with the
   //       cached stencil, and skip the compilation.
   mState = State::Fetching;
 }
 
-void ScriptLoadRequest::SetCacheEntry(LoadedScript* aLoadedScript,
-                                      ScriptFetchOptions* aFetchOptions) {
-  SetStencil(aLoadedScript->GetCachedStencil());
-
-  mFetchInfo =
-      new ScriptFetchInfo(mKind, aLoadedScript->CachedReferrerPolicy(),
-                          aFetchOptions, aLoadedScript->CachedBaseURL());
-
-  MOZ_ASSERT(!IsRetrievedFromMemoryCache());
-  mIsRetrievedFromMemoryCache = true;
-
+void ScriptLoadRequest::SetCacheEntry(LoadedScript* aLoadedScript) {
   switch (mKind) {
     case ScriptKind::eClassic:
       MOZ_ASSERT(aLoadedScript->IsClassicScript());
@@ -210,16 +198,18 @@ void ScriptLoadRequest::SetCacheEntry(LoadedScript* aLoadedScript,
       mState = State::Ready;
       break;
     case ScriptKind::eModule:
+      // NOTE: The cache entry has "module" kind, but it's not ModuleScript
+      //       instance, given ModuleScript has GC pointers.
       MOZ_ASSERT(aLoadedScript->IsModuleScript());
 
-      mLoadedScript = aLoadedScript;
+      mLoadedScript = ModuleScript::FromCache(*aLoadedScript);
 
       // Modules need to wait for fetching dependencies before setting to
       // Ready.
       mState = State::Fetching;
       break;
     case ScriptKind::eEvent:
-      MOZ_ASSERT_UNREACHABLE("eEvent is only for ScriptFetchInfo");
+      MOZ_ASSERT_UNREACHABLE("EventScripts are not using ScriptLoadRequest");
       break;
   }
 }
@@ -228,11 +218,25 @@ void ScriptLoadRequest::NoCacheEntryFound(
     mozilla::dom::ReferrerPolicy aReferrerPolicy,
     ScriptFetchOptions* aFetchOptions, nsIURI* aURI) {
   MOZ_ASSERT(IsCheckingCache());
-  MOZ_ASSERT(mKind != ScriptKind::eEvent, "eEvent is only for ScriptFetchInfo");
-  MOZ_ASSERT(!IsRetrievedFromMemoryCache());
-
-  mFetchInfo = new ScriptFetchInfo(mKind, aReferrerPolicy, aFetchOptions, aURI);
-  mLoadedScript = new LoadedScript(mKind, aURI);
+  // At the time where we check in the cache, the BaseURL() is not set, as this
+  // is resolved by the network. Thus we use the aURI passed by the consumer,
+  // which is the original URI used for the request, for checking the cache
+  // and later replace the BaseURL() using what the Channel->GetURI will
+  // provide.
+  switch (mKind) {
+    case ScriptKind::eClassic:
+      mLoadedScript = new ClassicScript(aReferrerPolicy, aFetchOptions, aURI);
+      break;
+    case ScriptKind::eImportMap:
+      mLoadedScript = new ImportMapScript(aReferrerPolicy, aFetchOptions, aURI);
+      break;
+    case ScriptKind::eModule:
+      mLoadedScript = new ModuleScript(aReferrerPolicy, aFetchOptions, aURI);
+      break;
+    case ScriptKind::eEvent:
+      MOZ_ASSERT_UNREACHABLE("EventScripts are not using ScriptLoadRequest");
+      break;
+  }
   mState = State::Fetching;
 }
 

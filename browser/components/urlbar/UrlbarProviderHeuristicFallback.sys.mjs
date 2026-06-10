@@ -17,10 +17,11 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
+  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
-  UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
+  UrlbarTokenizer:
+    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
   UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
 });
 
@@ -70,8 +71,7 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
     let instance = this.queryInstance;
 
     if (queryContext.sapName != "searchbar") {
-      let result =
-        UrlbarProviderHeuristicFallback.matchUnknownUrl(queryContext);
+      let result = this._matchUnknownUrl(queryContext);
       if (result) {
         addCallback(this, result);
         // Since we can't tell if this is a real URL and whether the user wants
@@ -126,14 +126,16 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
     }
   }
 
-  static matchUnknownUrl(queryContext) {
+  // TODO (bug 1054814): Use visited URLs to inform which scheme to use, if the
+  // scheme isn't specificed.
+  _matchUnknownUrl(queryContext) {
     // The user may have typed something like "word?" to run a search.  We
     // should not convert that to a URL.  We should also never convert actual
     // URLs into URL results when search mode is active or a search mode
     // restriction token was typed.
     if (
       queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH ||
-      lazy.UrlbarShared.SEARCH_MODE_RESTRICT.has(
+      lazy.UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(
         queryContext.restrictToken?.value
       ) ||
       queryContext.searchMode
@@ -238,7 +240,7 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
     }
 
     let firstToken = queryContext.tokens[0].value;
-    if (!lazy.UrlbarShared.SEARCH_MODE_RESTRICT.has(firstToken)) {
+    if (!lazy.UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(firstToken)) {
       return null;
     }
 
@@ -314,7 +316,7 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
     let query = queryContext.searchString;
     if (
       queryContext.tokens[0] &&
-      queryContext.tokens[0].value === lazy.UrlbarShared.RESTRICT_TOKENS.SEARCH
+      queryContext.tokens[0].value === lazy.UrlbarTokenizer.RESTRICT.SEARCH
     ) {
       query = UrlbarUtils.substringAfter(
         query,
@@ -332,6 +334,9 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
         query,
         title: query,
         keyword,
+      },
+      highlights: {
+        engine: UrlbarUtils.HIGHLIGHT.TYPED,
       },
     });
   }

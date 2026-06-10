@@ -31,7 +31,7 @@ add_task(async function () {
   isInInspectorSearchBox(inspector);
 
   info("Switch to the computed view, and click somewhere inside it");
-  await selectComputedView(inspector);
+  selectComputedView(inspector);
   clickInComputedView(inspector);
 
   info("Check that the computed-view search field gets focused");

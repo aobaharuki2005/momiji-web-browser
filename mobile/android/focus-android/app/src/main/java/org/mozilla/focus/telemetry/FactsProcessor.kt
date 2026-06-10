@@ -25,9 +25,6 @@ import org.mozilla.focus.GleanMetrics.CustomTabsToolbar
  * will be collected.
  */
 object FactsProcessor {
-    /**
-     * Initializes the [FactsProcessor] and registers it with the [Facts] system.
-     */
     fun initialize() {
         Facts.registerProcessor(
             object : FactProcessor {

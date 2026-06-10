@@ -88,9 +88,10 @@ const archOptions =
            // The move from x23 to x29 is writing the callee's wasm instance
            // into the frame for debug checks -- see WasmFrame.h.
            prefix: `mov x29, sp
-                    mov x20, sp(
+                    mov x28, sp(
                     str x23, \\[x29, #16\\])?`,
-           suffix: `ldp x29, x30, \\[sp\\], #16`
+           suffix: `ldr x30, \\[sp, #8\\]
+                    ldr x29, \\[sp\\]`
        },
        arm: {
            encoding: `${HEX}{8}\\s+${HEX}{8}`,

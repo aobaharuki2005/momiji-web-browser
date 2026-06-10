@@ -13,9 +13,9 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <span>
 #include <vector>
 
+#include "api/array_view.h"
 #include "modules/audio_processing/aec3/adaptive_fir_filter.h"
 #include "modules/audio_processing/aec3/aec3_common.h"
 #include "modules/audio_processing/aec3/fft_data.h"
@@ -23,6 +23,8 @@
 #include "rtc_base/checks.h"
 
 namespace webrtc {
+
+namespace aec3 {
 
 // Computes and stores the frequency response of the filter.
 void ComputeFrequencyResponse_Avx2(
@@ -61,7 +63,7 @@ void AdaptPartitions_Avx2(const RenderBuffer& render_buffer,
                           const FftData& G,
                           size_t num_partitions,
                           std::vector<std::vector<FftData>>* H) {
-  std::span<const std::vector<FftData>> render_buffer_data =
+  ArrayView<const std::vector<FftData>> render_buffer_data =
       render_buffer.GetFftBuffer();
   const size_t num_render_channels = render_buffer_data[0].size();
   const size_t lim1 = std::min(
@@ -132,7 +134,7 @@ void ApplyFilter_Avx2(const RenderBuffer& render_buffer,
   S->re.fill(0.f);
   S->im.fill(0.f);
 
-  std::span<const std::vector<FftData>> render_buffer_data =
+  ArrayView<const std::vector<FftData>> render_buffer_data =
       render_buffer.GetFftBuffer();
   const size_t num_render_channels = render_buffer_data[0].size();
   const size_t lim1 = std::min(
@@ -191,4 +193,5 @@ void ApplyFilter_Avx2(const RenderBuffer& render_buffer,
   } while (p < lim2);
 }
 
+}  // namespace aec3
 }  // namespace webrtc

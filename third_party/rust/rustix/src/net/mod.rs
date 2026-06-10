@@ -7,7 +7,6 @@
 //! [`wsa_startup`]: https://docs.rs/rustix/*/x86_64-pc-windows-msvc/rustix/net/fn.wsa_startup.html
 //! [`wsa_cleanup`]: https://docs.rs/rustix/*/x86_64-pc-windows-msvc/rustix/net/fn.wsa_cleanup.html
 
-pub mod addr;
 mod send_recv;
 mod socket;
 mod socket_addr_any;
@@ -26,8 +25,7 @@ pub use crate::maybe_polyfill::net::{
 };
 pub use send_recv::*;
 pub use socket::*;
-pub use socket_addr_any::SocketAddrAny;
-pub(crate) use socket_addr_any::SocketAddrBuf;
+pub use socket_addr_any::{SocketAddrAny, SocketAddrStorage};
 #[cfg(not(any(windows, target_os = "wasi")))]
 pub use socketpair::socketpair;
 pub use types::*;

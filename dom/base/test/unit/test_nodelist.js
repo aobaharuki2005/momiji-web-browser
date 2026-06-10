@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 function run_test() {
   test_getElementsByTagName();
   test_getElementsByTagNameNS();

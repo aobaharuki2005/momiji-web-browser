@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -87,8 +90,7 @@ BEGIN_TEST(testWeakMap_setWeakMapEntry_invalid_key) {
   JS::Rooted<JS::Value> exn(cx);
   CHECK(JS_GetPendingException(cx, &exn));
   JS::Rooted<JSObject*> obj(cx, &exn.toObject());
-  JS::BorrowedErrorReport err(cx);
-  CHECK(JS_ErrorFromException(cx, obj, err));
+  JSErrorReport* err = JS_ErrorFromException(cx, obj);
   CHECK(err->exnType == JSEXN_TYPEERR);
 
   JS_ClearPendingException(cx);
@@ -267,7 +269,16 @@ JSObject* newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone) {
 
 JSObject* newDelegate() {
   static const JSClassOps delegateClassOps = {
-      .trace = JS_GlobalObjectTraceHook,
+      nullptr,                   // addProperty
+      nullptr,                   // delProperty
+      nullptr,                   // enumerate
+      nullptr,                   // newEnumerate
+      nullptr,                   // resolve
+      nullptr,                   // mayResolve
+      nullptr,                   // finalize
+      nullptr,                   // call
+      nullptr,                   // construct
+      JS_GlobalObjectTraceHook,  // trace
   };
 
   static const js::ClassExtension delegateClassExtension = {
@@ -298,12 +309,12 @@ JSObject* newDelegate() {
 
 void performIncrementalGC() {
   JSRuntime* rt = cx->runtime();
-  JS::SliceBudget budget(JS::WorkBudget(200));
+  JS::SliceBudget budget(JS::WorkBudget(1000));
   rt->gc.startDebugGC(JS::GCOptions::Normal, budget);
 
-  // Wait until we've started sweeping before finishing the GC
-  // non-incrementally otherwise we'll put all zones into one sweep group.
-  while (rt->gc.state() < gc::State::Sweep) {
+  // Wait until we've started marking before finishing the GC
+  // non-incrementally.
+  while (rt->gc.state() == gc::State::Prepare) {
     rt->gc.debugGCSlice(budget);
   }
   if (JS::IsIncrementalGCInProgress(cx)) {

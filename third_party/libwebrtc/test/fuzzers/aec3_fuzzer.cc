@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <optional>
 
+#include "api/array_view.h"
 #include "api/audio/audio_processing.h"
 #include "api/audio/echo_canceller3_config.h"
 #include "api/environment/environment_factory.h"
@@ -24,7 +25,7 @@ namespace {
 using SampleRate = ::webrtc::AudioProcessing::NativeRate;
 
 void PrepareAudioBuffer(int sample_rate_hz,
-                        FuzzDataHelper* fuzz_data,
+                        test::FuzzDataHelper* fuzz_data,
                         AudioBuffer* buffer) {
   float* const* channels = buffer->channels_f();
   for (size_t i = 0; i < buffer->num_channels(); ++i) {
@@ -40,10 +41,12 @@ void PrepareAudioBuffer(int sample_rate_hz,
 
 }  // namespace
 
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
-  if (fuzz_data.size() > 200'000) {
+void FuzzOneInput(const uint8_t* data, size_t size) {
+  if (size > 200000) {
     return;
   }
+
+  test::FuzzDataHelper fuzz_data(webrtc::ArrayView<const uint8_t>(data, size));
 
   constexpr int kSampleRates[] = {16000, 32000, 48000};
   const int sample_rate_hz =

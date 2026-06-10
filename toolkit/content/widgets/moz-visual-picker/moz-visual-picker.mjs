@@ -49,7 +49,6 @@ customElements.define("moz-visual-picker", MozVisualPicker);
  *  Name of the item, set by the associated moz-visual-picker parent element.
  * @property {string} value - Value of the item.
  * @property {string} label - Visible label for the picker item.
- * @property {string} description - Additional text shown beneath the label.
  * @property {string} ariaLabel - Value for the aria-label attribute.
  * @property {string} imageSrc - Path to an image to display in the picker item.
  * @slot default - The item's content, used for what gets displayed.
@@ -57,15 +56,12 @@ customElements.define("moz-visual-picker", MozVisualPicker);
 export class MozVisualPickerItem extends SelectControlItemMixin(MozLitElement) {
   static properties = {
     label: { type: String, fluent: true },
-    description: { type: String, fluent: true },
     ariaLabel: { type: String, fluent: true, mapped: true },
     imageSrc: { type: String },
   };
 
   static queries = {
     itemEl: ".picker-item",
-    labelEl: ".label",
-    descriptionEl: ".description",
   };
 
   click() {
@@ -124,7 +120,7 @@ export class MozVisualPickerItem extends SelectControlItemMixin(MozLitElement) {
   }
 
   contentTemplate() {
-    if (!this.imageSrc && !this.label && !this.description) {
+    if (!this.imageSrc && !this.label) {
       return html`<slot></slot>`;
     }
 
@@ -132,12 +128,7 @@ export class MozVisualPickerItem extends SelectControlItemMixin(MozLitElement) {
       ${this.imageSrc
         ? html`<img src=${this.imageSrc} role="presentation" part="image" />`
         : nothing}
-      <div class="text-content">
-        ${this.label ? html`<p class="label">${this.label}</p>` : nothing}
-        ${this.description
-          ? html`<p class="description">${this.description}</p>`
-          : nothing}
-      </div>
+      ${this.label ? html`<p class="label">${this.label}</p>` : nothing}
     `;
   }
 

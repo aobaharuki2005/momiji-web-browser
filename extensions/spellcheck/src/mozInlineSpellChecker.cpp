@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 sts=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -48,7 +50,6 @@
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/MouseEvent.h"
-#include "mozilla/dom/NodeList.h"
 #include "mozilla/dom/Selection.h"
 #include "mozInlineSpellWordUtil.h"
 #include "nsCOMPtr.h"
@@ -523,7 +524,7 @@ class mozInlineSpellResume : public Runnable {
 
 // Used as the nsIEditorSpellCheck::InitSpellChecker callback.
 class InitEditorSpellCheckCallback final : public nsIEditorSpellCheckCallback {
-  ~InitEditorSpellCheckCallback() = default;
+  ~InitEditorSpellCheckCallback() {}
 
  public:
   NS_DECL_ISUPPORTS
@@ -554,7 +555,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(mozInlineSpellChecker)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(mozInlineSpellChecker)
 
 NS_IMPL_CYCLE_COLLECTION_WEAK(mozInlineSpellChecker, mEditorBase, mSpellCheck,
-                              mCurrentSelectionAnchorNode, mPendingSpellCheck)
+                              mCurrentSelectionAnchorNode)
 
 mozInlineSpellChecker::SpellCheckingState
     mozInlineSpellChecker::gCanEnableSpellChecking =
@@ -571,7 +572,7 @@ mozInlineSpellChecker::mozInlineSpellChecker()
       mFullSpellCheckScheduled(false),
       mIsListeningToEditSubActions(false) {}
 
-mozInlineSpellChecker::~mozInlineSpellChecker() = default;
+mozInlineSpellChecker::~mozInlineSpellChecker() {}
 
 EditorSpellCheck* mozInlineSpellChecker::GetEditorSpellCheck() {
   return mSpellCheck ? mSpellCheck : mPendingSpellCheck;
@@ -1068,11 +1069,8 @@ nsresult mozInlineSpellChecker::MakeSpellCheckRange(nsINode* aStartNode,
       return rv;
     }
   } else {
-    if (NS_WARN_IF(!aEndNode->IsContent())) {
-      return NS_ERROR_FAILURE;
-    }
     rv = range->SetStartAndEnd(RawRangeBoundary(aStartNode, aStartOffset),
-                               RawRangeBoundary::After(*aEndNode->AsContent()));
+                               RangeUtils::GetRawRangeBoundaryAfter(aEndNode));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1146,8 +1144,10 @@ bool mozInlineSpellChecker::ShouldSpellCheckNode(EditorBase* aEditorBase,
     // Note that because of the previous check, at this point we know that the
     // node is editable.
     if (content->IsInNativeAnonymousSubtree()) {
-      nsIContent* node =
-          content->GetClosestNativeAnonymousSubtreeRootParentOrHost();
+      nsIContent* node = content->GetParent();
+      while (node && node->IsInNativeAnonymousSubtree()) {
+        node = node->GetParent();
+      }
       if (node && node->IsTextControlElement()) {
         return true;
       }
@@ -1408,8 +1408,9 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
   const int32_t originalRangeCount = mSpellCheckSelection.RangeCount();
 
   // set the starting DOM position to be the beginning of our range
-  if (nsresult rv = mWordUtil.SetPositionAndEnd(mStatus->mRange->StartRef(),
-                                                mStatus->mRange->EndRef());
+  if (nsresult rv = mWordUtil.SetPositionAndEnd(
+          mStatus->mRange->GetStartContainer(), mStatus->mRange->StartOffset(),
+          mStatus->mRange->GetEndContainer(), mStatus->mRange->EndOffset());
       NS_FAILED(rv)) {
     // Just bail out and don't try to spell-check this
     return NS_OK;
@@ -2054,7 +2055,7 @@ class UpdateCurrentDictionaryCallback final
   }
 
  private:
-  ~UpdateCurrentDictionaryCallback() = default;
+  ~UpdateCurrentDictionaryCallback() {}
 
   RefPtr<mozInlineSpellChecker> mSpellChecker;
   uint32_t mDisabledAsyncToken;

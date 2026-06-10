@@ -10,24 +10,18 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2021"
+edition = "2018"
 rust-version = "1.63"
 name = "h2"
-version = "0.4.13"
+version = "0.3.26"
 authors = [
     "Carl Lerche <me@carllerche.com>",
     "Sean McArthur <sean@seanmonstar.com>",
 ]
-build = false
 exclude = [
     "fixtures/**",
     "ci/**",
 ]
-autolib = false
-autobins = false
-autoexamples = false
-autotests = false
-autobenches = false
 description = "An HTTP/2 client and server"
 documentation = "https://docs.rs/h2"
 readme = "README.md"
@@ -47,34 +41,6 @@ repository = "https://github.com/hyperium/h2"
 [package.metadata.docs.rs]
 features = ["stream"]
 
-[features]
-stream = []
-unstable = []
-
-[lib]
-name = "h2"
-path = "src/lib.rs"
-
-[[example]]
-name = "akamai"
-path = "examples/akamai.rs"
-
-[[example]]
-name = "client"
-path = "examples/client.rs"
-
-[[example]]
-name = "server"
-path = "examples/server.rs"
-
-[[bench]]
-name = "main"
-path = "benches/main.rs"
-harness = false
-
-[dependencies.atomic-waker]
-version = "1.0.0"
-
 [dependencies.bytes]
 version = "1"
 
@@ -89,8 +55,12 @@ default-features = false
 version = "0.3"
 default-features = false
 
+[dependencies.futures-util]
+version = "0.3"
+default-features = false
+
 [dependencies.http]
-version = "1"
+version = "0.2"
 
 [dependencies.indexmap]
 version = "2"
@@ -145,15 +115,14 @@ features = [
 ]
 
 [dev-dependencies.tokio-rustls]
-version = "0.26"
+version = "0.24"
 
 [dev-dependencies.walkdir]
 version = "2.3.2"
 
 [dev-dependencies.webpki-roots]
-version = "1"
+version = "0.25"
 
-[lints.rust.unexpected_cfgs]
-level = "warn"
-priority = 0
-check-cfg = ["cfg(fuzzing)"]
+[features]
+stream = []
+unstable = []

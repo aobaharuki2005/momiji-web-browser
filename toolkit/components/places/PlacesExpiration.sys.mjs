@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * vim: sw=2 ts=2 sts=2 expandtab
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -810,24 +812,23 @@ nsPlacesExpiration.prototype = {
     await this._dbInitializedPromise;
 
     try {
-      let queriesToRun = [];
-      for (let queryType in EXPIRATION_QUERIES) {
-        let query = EXPIRATION_QUERIES[queryType];
-        if (query.actions & aAction && !query.disabled) {
-          let params = await this._getQueryParams(queryType, aLimit, aAction);
-          queriesToRun.push({ query, params });
-        }
-      }
-
       let notifications = [];
       await lazy.PlacesUtils.withConnectionWrapper(
         "PlacesExpiration.sys.mjs: expire",
         async db => {
           await db.executeTransaction(async () => {
-            for (let { query, params } of queriesToRun) {
-              await db.executeCached(query.sql, params, row => {
-                this._handleQueryResultAndAddNotification(row, notifications);
-              });
+            for (let queryType in EXPIRATION_QUERIES) {
+              let query = EXPIRATION_QUERIES[queryType];
+              if (query.actions & aAction && !query.disabled) {
+                let params = await this._getQueryParams(
+                  queryType,
+                  aLimit,
+                  aAction
+                );
+                await db.executeCached(query.sql, params, row => {
+                  this._handleQueryResultAndAddNotification(row, notifications);
+                });
+              }
             }
           });
         }

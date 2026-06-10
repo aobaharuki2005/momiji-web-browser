@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -46,20 +48,23 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGContainerFrame)
 
 void SVGContainerFrame::AppendFrames(ChildListID aListID,
                                      nsFrameList&& aFrameList) {
-  nsContainerFrame::AppendFrames(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)
-                                     ? FrameChildListID::NoReflowPrincipal
-                                     : aListID,
-                                 std::move(aFrameList));
+  InsertFrames(aListID, mFrames.LastChild(), nullptr, std::move(aFrameList));
 }
 
 void SVGContainerFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                      const nsLineList::iterator* aPrevFrameLine,
                                      nsFrameList&& aFrameList) {
-  nsContainerFrame::InsertFrames(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)
-                                     ? FrameChildListID::NoReflowPrincipal
-                                     : aListID,
-                                 aPrevFrame, aPrevFrameLine,
-                                 std::move(aFrameList));
+  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
+  NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
+               "inserting after sibling frame with different parent");
+
+  mFrames.InsertFrames(this, aPrevFrame, std::move(aFrameList));
+}
+
+void SVGContainerFrame::RemoveFrame(DestroyContext& aContext,
+                                    ChildListID aListID, nsIFrame* aOldFrame) {
+  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
+  mFrames.DestroyFrame(aContext, aOldFrame);
 }
 
 bool SVGContainerFrame::ComputeCustomOverflow(OverflowAreas& aOverflowAreas) {
@@ -172,6 +177,26 @@ void SVGDisplayContainerFrame::InsertFrames(
       }
     }
   }
+}
+
+void SVGDisplayContainerFrame::RemoveFrame(DestroyContext& aContext,
+                                           ChildListID aListID,
+                                           nsIFrame* aOldFrame) {
+  SVGObserverUtils::InvalidateRenderingObservers(aOldFrame);
+
+  // SVGContainerFrame::RemoveFrame doesn't call down into
+  // nsContainerFrame::RemoveFrame, so it doesn't call FrameNeedsReflow. We
+  // need to schedule a repaint and schedule an update to our overflow rects.
+  // TODO(emilio, bug 2008045): It sure looks like it should just call into
+  // nsContainerFrame.
+  SchedulePaint();
+  if (!HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
+    PresContext()->RestyleManager()->PostRestyleEvent(
+        mContent->AsElement(), RestyleHint{0}, nsChangeHint_UpdateOverflow);
+    PresShell()->SynthesizeMouseMove(false);
+  }
+
+  SVGContainerFrame::RemoveFrame(aContext, aListID, aOldFrame);
 }
 
 bool SVGDisplayContainerFrame::DoGetParentSVGTransforms(
@@ -374,7 +399,7 @@ void SVGDisplayContainerFrame::NotifySVGChanged(ChangeFlags aFlags) {
 }
 
 SVGBBox SVGDisplayContainerFrame::GetBBoxContribution(
-    const Matrix& aToBBoxUserspace, SVGBBoxFlags aFlags) {
+    const Matrix& aToBBoxUserspace, uint32_t aFlags) {
   SVGBBox bboxUnion;
 
   for (nsIFrame* kid : mFrames) {
@@ -406,8 +431,8 @@ gfxMatrix SVGDisplayContainerFrame::GetCanvasTM() {
     NS_ASSERTION(GetParent(), "null parent");
     auto* parent = static_cast<SVGContainerFrame*>(GetParent());
     auto* content = static_cast<SVGElement*>(GetContent());
-    mCanvasTM = std::make_unique<gfxMatrix>(
-        content->ChildToUserSpaceTransform() * parent->GetCanvasTM());
+    mCanvasTM = MakeUnique<gfxMatrix>(content->ChildToUserSpaceTransform() *
+                                      parent->GetCanvasTM());
   }
 
   return *mCanvasTM;

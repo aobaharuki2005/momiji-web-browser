@@ -17,7 +17,6 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/functional/any_invocable.h"
-#include "absl/strings/string_view.h"
 #include "api/location.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
@@ -35,7 +34,6 @@ class FakeTaskQueue : public TaskQueueBase {
  public:
   FakeTaskQueue() : task_queue_setter_(this) {}
 
-  absl::string_view queue_name() const override { return "Fake"; }
   void Delete() override {}
   void PostTaskImpl(absl::AnyInvocable<void() &&> task,
                     const PostTaskTraits& traits,

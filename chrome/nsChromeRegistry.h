@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,6 +41,8 @@ class nsChromeRegistry : public nsIToolkitChromeRegistry,
   // nsIXULChromeRegistry methods:
   NS_IMETHOD AllowScriptsForPackage(nsIURI* url, bool* _retval) override;
   NS_IMETHOD AllowContentToAccess(nsIURI* url, bool* _retval) override;
+  NS_IMETHOD CanLoadURLRemotely(nsIURI* url, bool* _retval) override;
+  NS_IMETHOD MustLoadURLRemotely(nsIURI* url, bool* _retval) override;
 
   NS_IMETHOD ConvertChromeURL(nsIURI* aChromeURI, nsIURI** aResult) override;
 
@@ -86,7 +89,7 @@ class nsChromeRegistry : public nsIToolkitChromeRegistry,
                               mozilla::FileLocation& aFile)
         : mType(aType), mFile(aFile) {}
 
-    ~ManifestProcessingContext() = default;
+    ~ManifestProcessingContext() {}
 
     nsIURI* GetManifestURI();
     already_AddRefed<nsIURI> ResolveURI(const char* uri);
@@ -116,6 +119,12 @@ class nsChromeRegistry : public nsIToolkitChromeRegistry,
 
     // Content script may access files in this package
     CONTENT_ACCESSIBLE = 1 << 2,
+
+    // Package may be loaded remotely
+    REMOTE_ALLOWED = 1 << 3,
+
+    // Package must be loaded remotely
+    REMOTE_REQUIRED = 1 << 4,
   };
 
   bool mInitialized;

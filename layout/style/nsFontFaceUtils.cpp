@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,7 +10,6 @@
 #include "gfxUserFontSet.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/ServoStyleSet.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
@@ -47,7 +48,8 @@ static bool IsFontReferenced(const ComputedStyle& aStyle,
 static FontUsageKind StyleFontUsage(nsIFrame* aFrame, ComputedStyle* aStyle,
                                     nsPresContext* aPresContext,
                                     const gfxUserFontEntry* aFont,
-                                    const nsAString& aFamilyName) {
+                                    const nsAString& aFamilyName,
+                                    bool aIsExtraStyle) {
   MOZ_ASSERT(NS_ConvertUTF8toUTF16(aFont->FamilyName()) == aFamilyName);
 
   auto FontIsUsed = [&aFont, &aPresContext,
@@ -77,9 +79,15 @@ static FontUsageKind StyleFontUsage(nsIFrame* aFrame, ComputedStyle* aStyle,
 
   if (aStyle->DependsOnInheritedFontMetrics() &&
       !(usage & FontUsageKind::FontMetrics)) {
-    nsIFrame* provider = nullptr;
-    if (auto* parentStyle = aFrame->GetParentComputedStyle(&provider);
-        parentStyle && FontIsUsed(parentStyle)) {
+    ComputedStyle* parentStyle = nullptr;
+    if (aIsExtraStyle) {
+      parentStyle = aFrame->Style();
+    } else {
+      nsIFrame* provider = nullptr;
+      parentStyle = aFrame->GetParentComputedStyle(&provider);
+    }
+
+    if (parentStyle && FontIsUsed(parentStyle)) {
       usage |= FontUsageKind::FontMetrics;
     }
   }
@@ -92,8 +100,25 @@ static FontUsageKind FrameFontUsage(nsIFrame* aFrame,
                                     const gfxUserFontEntry* aFont,
                                     const nsAString& aFamilyName) {
   // check the style of the frame
-  return StyleFontUsage(aFrame, aFrame->Style(), aPresContext, aFont,
-                        aFamilyName);
+  FontUsageKind kind = StyleFontUsage(aFrame, aFrame->Style(), aPresContext,
+                                      aFont, aFamilyName, /* extra = */ false);
+  if (kind == FontUsageKind::Max) {
+    return kind;
+  }
+
+  // check additional styles
+  int32_t contextIndex = 0;
+  for (ComputedStyle* extraContext;
+       (extraContext = aFrame->GetAdditionalComputedStyle(contextIndex));
+       ++contextIndex) {
+    kind |= StyleFontUsage(aFrame, extraContext, aPresContext, aFont,
+                           aFamilyName, /* extra = */ true);
+    if (kind == FontUsageKind::Max) {
+      break;
+    }
+  }
+
+  return kind;
 }
 
 // TODO(emilio): Can we use the restyle-hint machinery instead of this?

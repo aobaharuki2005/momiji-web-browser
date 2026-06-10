@@ -13,9 +13,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <span>
-
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/rtp_parameters.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_generic_frame_descriptor.h"
@@ -34,10 +33,10 @@ class RtpGenericFrameDescriptorExtension00 {
   }
   static constexpr int kMaxSizeBytes = 16;
 
-  static bool Parse(std::span<const uint8_t> data,
+  static bool Parse(ArrayView<const uint8_t> data,
                     RtpGenericFrameDescriptor* descriptor);
   static size_t ValueSize(const RtpGenericFrameDescriptor& descriptor);
-  static bool Write(std::span<uint8_t> data,
+  static bool Write(ArrayView<uint8_t> data,
                     const RtpGenericFrameDescriptor& descriptor);
 };
 

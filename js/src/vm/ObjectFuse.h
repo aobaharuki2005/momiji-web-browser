@@ -1,13 +1,14 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef vm_ObjectFuse_h
 #define vm_ObjectFuse_h
 
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
-
-#include <bit>
 
 #include "gc/Barrier.h"
 #include "jit/InvalidationScriptSet.h"
@@ -28,7 +29,7 @@
 // property value. In Warp, the guard becomes an invalidation dependency and the
 // property value is a constant in the MIR graph, enabling additional compiler
 // optimizations. ObjectFuse is currently used for the global object, the
-// global lexical environment, prototypes, and certain builtin constructors.
+// global lexical environment, and certain builtin constructors and prototypes.
 //
 // Each ObjectFuse has a generation counter. When the generation is bumped, IC
 // guards will fail and dependent Ion scripts that are affected by the operation
@@ -171,10 +172,6 @@ class ObjectFuse {
   }
 
  public:
-  // Returns whether properties with the given property key are tracked. We
-  // currently don't track indexed properties.
-  static bool tracksPropertyKey(PropertyKey key) { return !key.isInt(); }
-
   uint32_t generationMaybeInvalid() const {
     return generation_.valueMaybeInvalid();
   }
@@ -182,7 +179,7 @@ class ObjectFuse {
     return invalidatedConstantProperty_;
   }
 
-  bool tryOptimizeConstantProperty(PropertyKey key, PropertyInfo prop);
+  bool tryOptimizeConstantProperty(PropertyInfo prop);
 
   // Data needed for guards in IC code. We use a bitmask to check the
   // PropertyState's upper bit isn't set.
@@ -212,9 +209,9 @@ class ObjectFuse {
   // from the index and mask pair stored in an IC stub.
   static uint32_t propertySlotFromIndexAndMask(uint32_t propIndex,
                                                uint32_t propMask) {
-    MOZ_ASSERT(std::has_single_bit(propMask));
+    MOZ_ASSERT(mozilla::CountPopulation32(propMask) == 1);
     uint32_t slot = propIndex * NumPropsPerWord;
-    slot += std::countr_zero(propMask) / NumBitsPerProp;
+    slot += mozilla::CountTrailingZeroes(propMask) / NumBitsPerProp;
     return slot;
   }
 
@@ -229,6 +226,7 @@ class ObjectFuse {
   void handleTeleportingShadowedProperty(JSContext* cx, PropertyInfo prop);
   void handleTeleportingProtoMutation(JSContext* cx);
   void handleShadowedGlobalProperty(JSContext* cx, PropertyInfo prop);
+  void handleObjectSwap(JSContext* cx);
 
   bool addDependency(uint32_t propSlot, const jit::IonScriptKey& ionScript);
 
@@ -252,6 +250,7 @@ class ObjectFuse {
   // We should sweep ObjectFuseMap entries based on the key (the object) but
   // never based on the ObjectFuse. We do need to trace weak pointers in the
   // DependentIonScriptSets.
+  bool needsSweep(JSTracer* trc) const { return false; }
   bool traceWeak(JSTracer* trc) {
     dependencies_.traceWeak(trc);
     return true;
@@ -273,16 +272,9 @@ class ObjectFuseMap {
       GCHashMap<WeakHeapPtr<JSObject*>, UniquePtr<ObjectFuse>,
                 StableCellHasher<WeakHeapPtr<JSObject*>>, SystemAllocPolicy>;
   JS::WeakCache<Map> objectFuses_;
-#ifdef DEBUG
-  JS::Zone* zone_;
-#endif
 
  public:
-  explicit ObjectFuseMap(JS::Zone* zone) : objectFuses_(zone) {
-#ifdef DEBUG
-    zone_ = zone;
-#endif
-  }
+  explicit ObjectFuseMap(JSRuntime* rt) : objectFuses_(rt) {}
 
   ObjectFuse* getOrCreate(JSContext* cx, NativeObject* obj);
   ObjectFuse* get(NativeObject* obj);

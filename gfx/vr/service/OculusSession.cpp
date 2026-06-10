@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -742,7 +744,7 @@ bool OculusSession::StartSession() {
   // ovr_Create can be slow when no HMD is present and we wish
   // to keep the same oculus session when possible, so we detect
   // presence of an HMD with ovr_GetHmdDesc before calling ovr_Create
-  ovrHmdDesc desc = ovr_GetHmdDesc(nullptr);
+  ovrHmdDesc desc = ovr_GetHmdDesc(NULL);
   if (desc.Type == ovrHmd_None) {
     // No HMD connected, destroy any existing session
     if (mSession) {
@@ -764,7 +766,7 @@ bool OculusSession::StartSession() {
   if (orv == ovrSuccess) {
     orv = ovr_SetTrackingOriginType(session, ovrTrackingOrigin_FloorLevel);
     if (orv != ovrSuccess) {
-      NS_WARNING("ovr_SetTrackingOriginType failed.");
+      NS_WARNING("ovr_SetTrackingOriginType failed.\n");
     }
     mSession = session;
     return true;

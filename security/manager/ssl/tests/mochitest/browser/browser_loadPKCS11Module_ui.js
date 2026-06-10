@@ -14,12 +14,7 @@ const gMockPKCS11ModuleDB = {
   expectedModuleName: "",
   throwOnAddModule: false,
 
-  async addModule(
-    moduleName,
-    libraryFullPath,
-    cryptoMechanismFlags,
-    cipherFlags
-  ) {
+  addModule(moduleName, libraryFullPath, cryptoMechanismFlags, cipherFlags) {
     this.addModuleCallCount++;
     Assert.equal(
       moduleName,
@@ -43,12 +38,32 @@ const gMockPKCS11ModuleDB = {
     }
   },
 
-  async deleteModule() {
-    throw new Error("not expecting deleteModule() to be called");
+  deleteModule() {
+    Assert.ok(false, `deleteModule: should not be called`);
   },
 
-  async listModules() {
+  getInternal() {
+    throw new Error("not expecting getInternal() to be called");
+  },
+
+  getInternalFIPS() {
+    throw new Error("not expecting getInternalFIPS() to be called");
+  },
+
+  listModules() {
     throw new Error("not expecting listModules() to be called");
+  },
+
+  get canToggleFIPS() {
+    throw new Error("not expecting get canToggleFIPS() to be called");
+  },
+
+  toggleFIPSMode() {
+    throw new Error("not expecting toggleFIPSMode() to be called");
+  },
+
+  get isFIPSEnabled() {
+    throw new Error("not expecting get isFIPSEnabled() to be called");
   },
 
   QueryInterface: ChromeUtils.generateQI(["nsIPKCS11ModuleDB"]),
@@ -87,7 +102,7 @@ var gMockPromptServiceCID = MockRegistrar.register(
 );
 
 var gMockFilePicker = SpecialPowers.MockFilePicker;
-gMockFilePicker.init();
+gMockFilePicker.init(window.browsingContext);
 
 var gTempFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
 gTempFile.append("browser_loadPKCS11Module_ui-fakeModule");

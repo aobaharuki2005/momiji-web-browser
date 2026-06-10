@@ -1,6 +1,6 @@
 use std::iter;
 
-use super::{Error, Location, Spanned, SpannedValue, Unused, lexer, unused};
+use super::{lexer, unused, Error, Location, Spanned, SpannedValue, Unused};
 
 pub(super) enum Item<'a> {
     Literal(Spanned<&'a [u8]>),
@@ -55,7 +55,7 @@ pub(super) fn parse<
     const VERSION: u8,
 >(
     tokens: &'iter mut lexer::Lexed<I>,
-) -> impl Iterator<Item = Result<Item<'item>, Error>> + use<'item, 'iter, I, VERSION> {
+) -> impl Iterator<Item = Result<Item<'item>, Error>> + 'iter {
     assert!(version!(1..=2));
     parse_inner::<_, false, VERSION>(tokens)
 }
@@ -67,7 +67,7 @@ fn parse_inner<
     const VERSION: u8,
 >(
     tokens: &mut lexer::Lexed<I>,
-) -> impl Iterator<Item = Result<Item<'item>, Error>> + use<'_, 'item, I, NESTED, VERSION> {
+) -> impl Iterator<Item = Result<Item<'item>, Error>> + '_ {
     iter::from_fn(move || {
         if NESTED && tokens.peek_closing_bracket().is_some() {
             return None;

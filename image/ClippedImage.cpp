@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -125,7 +126,7 @@ ClippedImage::ClippedImage(Image* aImage, nsIntRect aClip,
   }
 }
 
-ClippedImage::~ClippedImage() = default;
+ClippedImage::~ClippedImage() {}
 
 bool ClippedImage::ShouldClip() {
   // We need to evaluate the clipping region against the image's width and
@@ -268,9 +269,11 @@ std::pair<ImgDrawResult, RefPtr<SourceSurface>> ClippedImage::GetFrameInternal(
     gfxContext ctx(target);
 
     // Create our callback.
-    auto drawTileCallback = MakeRefPtr<DrawSingleTileCallback>(
-        this, aSize, aSVGContext, aWhichFrame, aFlags, aOpacity);
-    auto drawable = MakeRefPtr<gfxCallbackDrawable>(drawTileCallback, aSize);
+    RefPtr<DrawSingleTileCallback> drawTileCallback =
+        new DrawSingleTileCallback(this, aSize, aSVGContext, aWhichFrame,
+                                   aFlags, aOpacity);
+    RefPtr<gfxDrawable> drawable =
+        new gfxCallbackDrawable(drawTileCallback, aSize);
 
     // Actually draw. The callback will end up invoking DrawSingleTile.
     gfxUtils::DrawPixelSnapped(&ctx, drawable, SizeDouble(aSize),
@@ -354,7 +357,8 @@ ClippedImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
     }
 
     // Create a drawable from that surface.
-    auto drawable = MakeRefPtr<gfxSurfaceDrawable>(surface, aSize);
+    RefPtr<gfxSurfaceDrawable> drawable =
+        new gfxSurfaceDrawable(surface, aSize);
 
     // Draw.
     gfxUtils::DrawPixelSnapped(aContext, drawable, SizeDouble(aSize), aRegion,

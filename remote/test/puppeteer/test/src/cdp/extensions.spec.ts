@@ -11,7 +11,7 @@ import expect from 'expect';
 import {setupSeparateTestBrowserHooks} from '../mocha-utils.js';
 
 const extensionPath = path.join(
-  import.meta.dirname,
+  __dirname,
   '..',
   '..',
   'assets',

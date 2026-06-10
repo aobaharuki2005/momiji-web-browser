@@ -153,7 +153,6 @@ export class _RemoteL10n {
 
   // If `string_id` is present it means we are relying on fluent for translations.
   // Otherwise, we have a vanilla string.
-  // attributes: Fluent arguments to be used in substitutions in the string specified by the string_id
   setString(el, { content, attributes = {} }) {
     if (content && content.string_id) {
       for (let [fluentId, value] of Object.entries(attributes)) {
@@ -217,10 +216,8 @@ export class _RemoteL10n {
         "branding/brand.ftl",
         "browser/defaultBrowserNotification.ftl",
         "browser/newtab/asrouter.ftl",
-        "browser/policy-messages.ftl",
         "browser/profiles.ftl",
         "browser/termsofuse.ftl",
-        "preview/aiWindow.ftl",
         "toolkit/branding/brandings.ftl",
       ],
       false
@@ -249,17 +246,13 @@ export class _RemoteL10n {
    * otherwise return `localizableText` unmodified.
    *
    * @param {object|string} `localizableText` to format.
-   * attributes: Fluent arguments to be used in substitutions in the string specified by the string_id
    * @return {string} formatted text.
    */
-  async formatLocalizableText(localizableText, attributes) {
+  async formatLocalizableText(localizableText) {
     if (typeof localizableText !== "string") {
       // It's more useful to get an error than passing through an object without
       // a `string_id` field.
-      let value = await this.l10n.formatValue(
-        localizableText.string_id,
-        attributes
-      );
+      let value = await this.l10n.formatValue(localizableText.string_id);
       return value;
     }
     return localizableText;

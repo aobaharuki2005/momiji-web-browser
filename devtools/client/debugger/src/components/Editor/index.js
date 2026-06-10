@@ -33,13 +33,12 @@ import {
   getShouldScrollToSelectedLocation,
   getShouldHighlightSelectedLocation,
   getSelectedTraceLocation,
-  getSearchOptions,
 } from "../../selectors/index";
 
 // Redux actions
 import actions from "../../actions/index";
 
-import FileSearch from "./FileSearch";
+import SearchInFileBar from "./SearchInFileBar";
 import HighlightLines from "./HighlightLines";
 import Preview from "./Preview/index";
 import Breakpoints from "./Breakpoints";
@@ -58,14 +57,7 @@ import {
   toSourceLine,
   toEditorPosition,
   onMouseOver,
-  clearSearch as clearSearchEditor,
-  find,
-  findNext,
-  findPrev,
 } from "../../utils/editor/index";
-
-import { searchKeys } from "../../constants";
-import { scrollList } from "../../utils/result-list";
 
 import { updateEditorSizeCssVariables } from "../../utils/ui";
 
@@ -116,13 +108,6 @@ class Editor extends PureComponent {
       isOriginalSourceAndMapScopesEnabled: PropTypes.bool,
       shouldScrollToSelectedLocation: PropTypes.bool,
       setInScopeLines: PropTypes.func,
-      modifiers: PropTypes.object.isRequired,
-      setActiveSearch: PropTypes.func.isRequired,
-      closeFileSearch: PropTypes.func.isRequired,
-      querySearchWorker: PropTypes.func.isRequired,
-      selectLocation: PropTypes.func.isRequired,
-      showEditorContextMenu: PropTypes.func.isRequired,
-      showEditorGutterContextMenu: PropTypes.func.isRequired,
     };
   }
 
@@ -205,7 +190,7 @@ class Editor extends PureComponent {
     }
 
     editor.setUpdateListener(this.onEditorUpdated);
-    editor.enableGutter({
+    editor.setGutterEventListeners({
       click: (event, cm, line) => {
         // Ignore clicks on the code folding button
         if (
@@ -803,49 +788,12 @@ class Editor extends PureComponent {
     );
   }
 
-  renderFileSearch() {
-    const {
-      selectedSource,
-      selectedSourceTextContent,
-      isPaused,
-      searchInFileEnabled,
-      modifiers,
-      setActiveSearch,
-      closeFileSearch,
-      querySearchWorker,
-      selectLocation,
-      searchOptions,
-      setSearchOptions,
-    } = this.props;
-
-    if (!selectedSource) {
+  renderSearchInFileBar() {
+    if (!this.props.selectedSource) {
       return null;
     }
-
-    const textContent =
-      selectedSourceTextContent && isFulfilled(selectedSourceTextContent)
-        ? selectedSourceTextContent.value
-        : null;
-
-    return React.createElement(FileSearch, {
+    return React.createElement(SearchInFileBar, {
       editor: this.state.editor,
-      setActiveSearch,
-      closeFileSearch,
-      querySearchWorker,
-      selectLocation,
-      searchOptions,
-      setSearchOptions,
-      scrollList,
-      createLocation,
-      clearSearchEditor,
-      find,
-      findNext,
-      findPrev,
-      textContent,
-      modifiers,
-      searchInFileEnabled,
-      selectedSource,
-      shouldScroll: !isPaused,
     });
   }
 
@@ -863,7 +811,7 @@ class Editor extends PureComponent {
         className: "editor-mount devtools-monospace",
         style: this.getInlineEditorStyles(),
       }),
-      this.renderFileSearch(),
+      this.renderSearchInFileBar(),
       this.renderItems()
     );
   }
@@ -905,8 +853,6 @@ const mapStateToProps = state => {
     shouldScrollToSelectedLocation: getShouldScrollToSelectedLocation(state),
     shouldHighlightSelectedLocation: getShouldHighlightSelectedLocation(state),
     selectedTraceLocation: getSelectedTraceLocation(state),
-    modifiers: getSearchOptions(state, "file-search"),
-    searchOptions: getSearchOptions(state, searchKeys.FILE_SEARCH),
   };
 };
 
@@ -925,10 +871,6 @@ const mapDispatchToProps = dispatch => ({
       showEditorGutterContextMenu: actions.showEditorGutterContextMenu,
       selectLocation: actions.selectLocation,
       setInScopeLines: actions.setInScopeLines,
-      setActiveSearch: actions.setActiveSearch,
-      closeFileSearch: actions.closeFileSearch,
-      querySearchWorker: actions.querySearchWorker,
-      setSearchOptions: actions.setSearchOptions,
     },
     dispatch
   ),

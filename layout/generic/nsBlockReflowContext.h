@@ -1,11 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* class that a parent frame uses to reflow a block frame */
 
-#ifndef nsBlockReflowContext_h_
-#define nsBlockReflowContext_h_
+#ifndef nsBlockReflowContext_h___
+#define nsBlockReflowContext_h___
 
 #include "mozilla/ReflowOutput.h"
 
@@ -86,4 +88,4 @@ class nsBlockReflowContext {
   mozilla::CollapsingMargin mBStartMargin;
 };
 
-#endif /* nsBlockReflowContext_h_ */
+#endif /* nsBlockReflowContext_h___ */

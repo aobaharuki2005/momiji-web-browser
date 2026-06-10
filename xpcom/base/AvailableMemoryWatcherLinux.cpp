@@ -1,10 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "AvailableMemoryWatcher.h"
 #include "AvailableMemoryWatcherUtils.h"
 #include "mozilla/FileUtils.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "nsAppRunner.h"
@@ -19,10 +20,7 @@
 #include <cstdio>
 #if !defined(ANDROID)
 #  include "nsIPSIProvider.h"
-#  include "mozilla/glean/XpcomMetrics.h"
 #endif
-
-#define NON_OOM_DELAY_SEC 120
 
 namespace mozilla {
 
@@ -85,8 +83,6 @@ static nsresult ReadPSIFile(const char* aPSIPath, PSIInfo& aResult) {
     return NS_ERROR_FAILURE;
   }
 
-  aResult.psi_available = true;
-
   return NS_OK;
 }
 
@@ -116,17 +112,6 @@ class nsAvailableMemoryWatcher final
 
 #if !defined(ANDROID)
   NS_IMETHOD GetCachedPSIInfo(mozilla::PSIInfo& aResult) override;
-
-  void RecordNonOOMPSI(const PSIInfo& aPsi);
-  void StartNonOOMPSISampling() override {
-    MutexAutoLock lock(mMutex);
-
-    // This function is only used for handling OOM killed content
-    // processes. We record the time of the last OOM kill to make sure
-    // non-OOM PSI values are sampled without interference of OOM
-    // kills.
-    mLastOOMTime = TimeStamp::Now();
-  }
 #endif
 
  private:
@@ -145,18 +130,11 @@ class nsAvailableMemoryWatcher final
   bool mUnderMemoryPressure MOZ_GUARDED_BY(mMutex);
   PSIInfo mPSIInfo MOZ_GUARDED_BY(mMutex);
 
-  // Time of the last OOM kill handled
-  TimeStamp mLastOOMTime MOZ_GUARDED_BY(mMutex);
-
   // PSI file path - can be overridden for testing
   nsCString mPSIPath MOZ_GUARDED_BY(mMutex);
 
   // Flag to track if SetPSIPathForTesting has been called
   bool mIsTesting MOZ_GUARDED_BY(mMutex);
-
-  // Flag to track if PSI file reading has failed
-  // (e.g., due to AppArmor denial or kernel not supporting PSI)
-  bool mPSIReadFailed MOZ_GUARDED_BY(mMutex);
 
   // Polling interval to check for low memory. In high memory scenarios,
   // default to 5000 ms between each check.
@@ -178,12 +156,10 @@ nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
     : mPolling(false),
       mUnderMemoryPressure(false),
       mPSIInfo{},
-      mLastOOMTime(),
       mPSIPath(kPSIPath),
-      mIsTesting(false),
-      mPSIReadFailed(false) {}
+      mIsTesting(false) {}
 
-nsAvailableMemoryWatcher::~nsAvailableMemoryWatcher() = default;
+nsAvailableMemoryWatcher::~nsAvailableMemoryWatcher() {}
 
 NS_IMETHODIMP
 nsAvailableMemoryWatcher::GetCachedPSIInfo(mozilla::PSIInfo& aResult) {
@@ -210,21 +186,6 @@ nsresult GetLastPSISnapshot(PSIInfo& aResult) {
   return provider->GetCachedPSIInfo(aResult);
 }
 
-#if !defined(ANDROID)
-void StartNonOOMPSISampling() {
-  RefPtr<nsIAvailableMemoryWatcherBase> watcher =
-      nsAvailableMemoryWatcherBase::GetSingleton();
-  if (!watcher) {
-    return;
-  }
-
-  nsCOMPtr<nsIPSIProvider> provider = do_QueryInterface(watcher);
-  if (provider) {
-    provider->StartNonOOMPSISampling();
-  }
-}
-#endif
-
 nsresult nsAvailableMemoryWatcher::Init() {
   nsresult rv = nsAvailableMemoryWatcherBase::Init();
   if (NS_FAILED(rv)) {
@@ -242,7 +203,7 @@ nsresult nsAvailableMemoryWatcher::Init() {
     // to our memory watcher thread.
     return rv;
   }
-  mThread = std::move(thread);
+  mThread = thread;
 
   // Set the crash annotation to its initial state.
   UpdatePSIInfo(lock);
@@ -396,49 +357,11 @@ void nsAvailableMemoryWatcher::UpdateCrashAnnotation(const MutexAutoLock&)
       CrashReporter::Annotation::LinuxMemoryPSI, psiValues);
 }
 
-#if !defined(ANDROID)
-void nsAvailableMemoryWatcher::RecordNonOOMPSI(const mozilla::PSIInfo& aPsi) {
-  const mozilla::PSIInfo& psi = aPsi;
-
-  // Record Glean event with PSI metrics
-  mozilla::glean::memory_watcher::NonOomSampleExtra extra;
-  extra.psiSomeAvg10 = mozilla::Some(nsPrintfCString("%lu", psi.some_avg10));
-  extra.psiSomeAvg60 = mozilla::Some(nsPrintfCString("%lu", psi.some_avg60));
-  extra.psiFullAvg10 = mozilla::Some(nsPrintfCString("%lu", psi.full_avg10));
-  extra.psiFullAvg60 = mozilla::Some(nsPrintfCString("%lu", psi.full_avg60));
-  mozilla::glean::memory_watcher::non_oom_sample.Record(mozilla::Some(extra));
-}
-#endif
-
 void nsAvailableMemoryWatcher::UpdatePSIInfo(const MutexAutoLock&)
     MOZ_REQUIRES(mMutex) {
-#if !defined(ANDROID)
-  if ((mPSIInfo.full_avg10 || mPSIInfo.full_avg60) && !mLastOOMTime.IsNull() &&
-      (TimeStamp::Now() >
-       mLastOOMTime + TimeDuration::FromSeconds(NON_OOM_DELAY_SEC))) {
-    // Collect non-zero PSI values that doesn't trigger OOM
-    // killer. These enable us to learn the edge of OOM killer in
-    // real world. This is done only if we have seen an OOM kill
-    // recently to avoid collecting too much data.
-    NS_DispatchToMainThread(
-        NS_NewRunnableFunction("nsAvailableMemoryWatcher::RecordNonOOMPSI",
-                               [self = RefPtr{this}, info = mPSIInfo]() {
-                                 self->RecordNonOOMPSI(info);
-                               }));
-    mLastOOMTime = TimeStamp();
-  }
-#endif
-
-  // Skip reading PSI file if it has failed before (e.g., AppArmor denial)
-  // to avoid spamming syslog with repeated access denials
-  if (mPSIReadFailed) {
-    return;
-  }
-
   nsresult rv = ReadPSIFile(mPSIPath.get(), mPSIInfo);
   if (NS_FAILED(rv)) {
     mPSIInfo = {};
-    mPSIReadFailed = true;
   }
 }
 
@@ -520,8 +443,6 @@ NS_IMETHODIMP nsAvailableMemoryWatcher::SetPSIPathForTesting(
   MutexAutoLock lock(mMutex);
   mPSIPath.Assign(aPSIPath);
   mIsTesting = true;
-  // Reset the failed flag when changing PSI path for testing
-  mPSIReadFailed = false;
   return NS_OK;
 }
 

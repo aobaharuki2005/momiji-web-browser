@@ -17,10 +17,11 @@ import mozilla.components.browser.state.store.BrowserStore
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.assertNotNull
+import org.mockito.Mockito.mock
 
 @RunWith(AndroidJUnit4::class)
 class LastAccessMiddlewareTest {
@@ -145,7 +146,7 @@ class LastAccessMiddlewareTest {
 
         val selectedTab = store.state.findTab("456")
         assertNotNull(selectedTab)
-        assertEquals(selectedTab.id, store.state.selectedTabId)
+        assertEquals(selectedTab!!.id, store.state.selectedTabId)
         assertNotEquals(0L, selectedTab.lastAccess)
     }
 
@@ -168,7 +169,7 @@ class LastAccessMiddlewareTest {
         store.dispatch(TabListAction.RemoveTabAction("456"))
         val selectedTab = store.state.findTab("123")
         assertNotNull(selectedTab)
-        assertEquals(selectedTab.id, store.state.selectedTabId)
+        assertEquals(selectedTab!!.id, store.state.selectedTabId)
         assertEquals(0L, selectedTab.lastAccess)
     }
 
@@ -194,7 +195,7 @@ class LastAccessMiddlewareTest {
 
         val selectedTab = store.state.findTab("789")
         assertNotNull(selectedTab)
-        assertEquals(selectedTab.id, store.state.selectedTabId)
+        assertEquals(selectedTab!!.id, store.state.selectedTabId)
         assertNotEquals(0L, selectedTab.lastAccess)
     }
 
@@ -244,7 +245,7 @@ class LastAccessMiddlewareTest {
 
         val selectedTab = store.state.findTab("123")
         assertNotNull(selectedTab)
-        assertEquals(selectedTab.id, store.state.selectedTabId)
+        assertEquals(selectedTab!!.id, store.state.selectedTabId)
         assertEquals(0L, selectedTab.lastAccess)
     }
 
@@ -281,11 +282,11 @@ class LastAccessMiddlewareTest {
         assertNotNull(restoredTab1)
         assertNotNull(restoredTab2)
 
-        assertNotEquals(restoredTab2.lastAccess, lastAccess)
+        assertNotEquals(restoredTab2!!.lastAccess, lastAccess)
         assertTrue(restoredTab2.lastAccess > lastAccess)
         assertTrue(restoredTab2.lastAccess > recentTime)
 
-        assertEquals(restoredTab1.lastAccess, lastAccess)
+        assertEquals(restoredTab1!!.lastAccess, lastAccess)
         assertFalse(restoredTab1.lastAccess > lastAccess)
         assertFalse(restoredTab1.lastAccess > recentTime)
     }

@@ -38,16 +38,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Dropdown
-import mozilla.components.compose.base.LinkText
-import mozilla.components.compose.base.LinkTextState
 import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import mozilla.components.compose.base.button.IconButton
-import mozilla.components.compose.base.button.RadioButton
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.text.Text
 import mozilla.components.compose.base.textfield.TextField
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.LinkText
+import org.mozilla.fenix.compose.LinkTextState
+import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.doh.CustomProviderErrorState
@@ -55,8 +55,8 @@ import org.mozilla.fenix.settings.doh.DohSettingsState
 import org.mozilla.fenix.settings.doh.ProtectionLevel
 import org.mozilla.fenix.settings.doh.Provider
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -533,7 +533,7 @@ private fun ExceptionsRow(onExceptionsClicked: () -> Unit) {
 @FlexibleWindowPreview
 @Composable
 private fun DohScreenDefaultProviderPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         val provider = Provider.BuiltIn(
@@ -564,7 +564,7 @@ private fun DohScreenDefaultProviderPreview(
 @FlexibleWindowPreview
 @Composable
 private fun DohScreenCustomProviderPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         val provider = Provider.Custom(url = "")
@@ -591,7 +591,7 @@ private fun DohScreenCustomProviderPreview(
 @Preview
 @Composable
 private fun AlertDialogAddCustomProviderPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         AlertDialogAddCustomProvider(
@@ -606,7 +606,7 @@ private fun AlertDialogAddCustomProviderPreview(
 @Preview
 @Composable
 private fun AlertDialogAddCustomProviderErrorPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         AlertDialogAddCustomProvider(

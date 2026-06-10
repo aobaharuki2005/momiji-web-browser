@@ -19,7 +19,7 @@ add_task(async function test() {
 
   let options = PlacesUtils.history.getNewQueryOptions();
   let query = PlacesUtils.history.getNewQuery();
-  query.uri = Services.io.newURI(uri);
+  query.uri = NetUtil.newURI(uri);
   options.resultType = options.RESULTS_AS_VISIT;
   let root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;

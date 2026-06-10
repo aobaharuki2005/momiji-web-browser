@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -43,6 +45,7 @@
     SetAttrElements(nsGkAtoms::attr, aElements);                     \
   }
 
+class nsINodeList;
 class nsGenericHTMLElement;
 
 namespace mozilla::dom {
@@ -51,7 +54,6 @@ class DocGroup;
 class HTMLElement;
 class HTMLFieldSetElement;
 class HTMLFormElement;
-class NodeList;
 class ShadowRoot;
 class ValidityState;
 
@@ -75,7 +77,7 @@ class ElementInternals final : public nsIFormControl,
   void SetFormValue(const Nullable<FileOrUSVStringOrFormData>& aValue,
                     const Optional<Nullable<FileOrUSVStringOrFormData>>& aState,
                     ErrorResult& aRv);
-  mozilla::dom::Element* GetFormForBindings(ErrorResult& aRv) const;
+  mozilla::dom::HTMLFormElement* GetForm(ErrorResult& aRv) const;
   void SetValidity(const ValidityStateFlags& aFlags,
                    const Optional<nsAString>& aMessage,
                    const Optional<NonNull<nsGenericHTMLElement>>& aAnchor,
@@ -86,7 +88,7 @@ class ElementInternals final : public nsIFormControl,
                             ErrorResult& aRv) const;
   bool CheckValidity(ErrorResult& aRv);
   bool ReportValidity(ErrorResult& aRv);
-  already_AddRefed<NodeList> GetLabels(ErrorResult& aRv) const;
+  already_AddRefed<nsINodeList> GetLabels(ErrorResult& aRv) const;
   nsGenericHTMLElement* GetValidationAnchor(ErrorResult& aRv) const;
   CustomStateSet* States();
 
@@ -94,10 +96,7 @@ class ElementInternals final : public nsIFormControl,
   mozilla::dom::HTMLFieldSetElement* GetFieldSet() override {
     return mFieldSet;
   }
-  mozilla::dom::Element* GetFormForBindings() const override;
-  mozilla::dom::HTMLFormElement* GetFormInternal() const override {
-    return mForm;
-  }
+  mozilla::dom::HTMLFormElement* GetForm() const override { return mForm; }
   void SetForm(mozilla::dom::HTMLFormElement* aForm) override;
   void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
   NS_IMETHOD Reset() override;
@@ -194,7 +193,7 @@ class ElementInternals final : public nsIFormControl,
 
   nsresult SetAttr(nsAtom* aName, const nsAString& aValue);
 
-  Maybe<nsTArray<RefPtr<Element>>> GetAttrElements(nsAtom* aAttr);
+  bool GetAttrElements(nsAtom* aAttr, nsTArray<Element*>& aElements);
 
   const AttrArray& GetAttrs() const { return mAttrs; }
 

@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: c++; c-basic-offset: 2; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -268,7 +269,7 @@ nsresult WebExecutorSupport::PerformOrQueueOhttpRequest(
     return CreateStreamLoader(aRequest, aFlags, aResult);
   }
 
-  auto request = MakeRefPtr<OhttpHelper::OhttpRequest>();
+  RefPtr<OhttpHelper::OhttpRequest> request = new OhttpHelper::OhttpRequest();
   request->request = aRequest;
   request->flags = aFlags;
   request->result = aResult;
@@ -505,8 +506,8 @@ nsresult WebExecutorSupport::CreateStreamLoader(
   const bool testStreamFailure =
       (aFlags & java::GeckoWebExecutor::FETCH_FLAGS_STREAM_FAILURE_TEST);
 
-  auto listener =
-      MakeRefPtr<LoaderListener>(aResult, allowRedirects, testStreamFailure);
+  RefPtr<LoaderListener> listener =
+      new LoaderListener(aResult, allowRedirects, testStreamFailure);
 
   rv = channel->SetNotificationCallbacks(listener);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -540,7 +541,7 @@ static nsresult ResolveHost(nsCString& host, java::GeckoResult::Param result) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICancelable> cancelable;
-  auto listener = MakeRefPtr<DNSListener>(host, result);
+  RefPtr<DNSListener> listener = new DNSListener(host, result);
   rv = dns->AsyncResolveNative(host, nsIDNSService::RESOLVE_TYPE_DEFAULT,
                                nsIDNSService::RESOLVE_DEFAULT_FLAGS, nullptr,
                                listener, nullptr /* aListenerTarget */,

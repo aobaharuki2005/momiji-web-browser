@@ -10,4 +10,3 @@ Topic Guides <topic-guides/index>
 API References <api/index>
 Developing Rust Components <developing-rust-components/index>
 uniffi-bindgen-gecko-js developers guide <uniffi-bindgen-gecko-js-dev-guide/index>
-```

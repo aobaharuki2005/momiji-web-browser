@@ -4,7 +4,8 @@
 "use strict";
 
 /**
- * Test that TopSites are showing an appropriate Switch-tab status.
+ * Test that TopSites are showing an appropriate Switch-tab status, depending
+ * on the state of the `browser.urlbar.switchTabs.searchAllContainers` pref.
  * When the feature is enabled, in a normal window they should show the
  * tab container, otherwise it's only possible to switch to a tab in the same
  * container.
@@ -40,23 +41,35 @@ add_task(async function test_ignoreRef() {
   info("Add some visits to a URL.");
   await addAsFirstTopSite(REF_TOPSITE_URL);
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    REF_TOPSITE_URL
-  );
-  // Switch back to the originating tab, to check for switch to the current tab.
-  await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[0]);
-  await openAddressBarAndCheckResults(window, TOPSITES_COUNT, new Set());
-  await BrowserTestUtils.removeTab(tab);
-
+  for (let val of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.switchTabs.searchAllContainers", val]],
+    });
+    info("Test with searchAllContainer set to " + val.toString());
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      REF_TOPSITE_URL
+    );
+    // Switch back to the originating tab, to check for switch to the current tab.
+    await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[0]);
+    await openAddressBarAndCheckResults(window, TOPSITES_COUNT, new Set([0]));
+    await BrowserTestUtils.removeTab(tab);
+    await SpecialPowers.popPrefEnv();
+  }
   await PlacesUtils.history.remove(REF_TOPSITE_URL);
 });
 
 add_task(async function test_topSitesTabSwitch() {
   await addAsFirstTopSite(OUR_TOPSITE_URL);
 
-  await doTest();
-
+  for (let val of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.switchTabs.searchAllContainers", val]],
+    });
+    info("Test with searchAllContainer set to " + val.toString());
+    await doTest();
+    await SpecialPowers.popPrefEnv();
+  }
   await PlacesUtils.history.remove(OUR_TOPSITE_URL);
 });
 
@@ -70,7 +83,9 @@ async function doTest() {
   let containerTab = await loadNewForegroundContainerTab(OUR_TOPSITE_URL, 1);
   // Switch back to the originating tab, to check for switch to the current tab.
   await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[0]);
-  let expectedUserContextIds = new Set([0, 1]);
+  let expectedUserContextIds = UrlbarPrefs.get("switchTabs.searchAllContainers")
+    ? new Set([0, 1])
+    : new Set([0]);
   await openAddressBarAndCheckResults(
     window,
     TOPSITES_COUNT + expectedUserContextIds.size - 1,
@@ -88,7 +103,11 @@ async function doTest() {
   await BrowserTestUtils.openNewForegroundTab(pbWin.gBrowser, OUR_TOPSITE_URL);
   // Switch back to the originating tab, to check for switch to the current tab.
   await BrowserTestUtils.switchTab(pbWin.gBrowser, pbWin.gBrowser.tabs[0]);
-  await openAddressBarAndCheckResults(window, TOPSITES_COUNT, new Set([1]));
+  await openAddressBarAndCheckResults(
+    window,
+    TOPSITES_COUNT,
+    UrlbarPrefs.get("switchTabs.searchAllContainers") ? new Set([1]) : new Set()
+  );
   await openAddressBarAndCheckResults(pbWin, TOPSITES_COUNT, new Set([-1]));
 
   // We're done with the private window.
@@ -107,7 +126,11 @@ async function doTest() {
     "about:blank",
     2
   );
-  await openAddressBarAndCheckResults(window, TOPSITES_COUNT, new Set([1]));
+  await openAddressBarAndCheckResults(
+    window,
+    TOPSITES_COUNT,
+    UrlbarPrefs.get("switchTabs.searchAllContainers") ? new Set([1]) : new Set()
+  );
   await BrowserTestUtils.removeTab(blankDiffContainerTab);
 
   await BrowserTestUtils.removeTab(containerTab);
@@ -163,7 +186,6 @@ async function openAddressBarAndCheckResults(
         ${expectedTabSwitchUserContextIds}`
     );
   }
-  Assert.equal(expectedTabSwitchUserContextIds.size, 0);
 }
 
 async function addAsFirstTopSite(url) {

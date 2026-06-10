@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <string>
 
+#include "api/array_view.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
@@ -87,7 +88,8 @@ std::string TimingFrameInfo::ToString() const {
     return "";
   }
 
-  StringBuilder sb;
+  char buf[1024];
+  SimpleStringBuilder sb(buf);
 
   sb << rtp_timestamp << ',' << capture_time_ms << ',' << encode_start_ms << ','
      << encode_finish_ms << ',' << packetization_finish_ms << ','
@@ -97,7 +99,7 @@ std::string TimingFrameInfo::ToString() const {
      << ',' << render_time_ms << ',' << IsOutlier() << ','
      << IsTimerTriggered();
 
-  return sb.Release();
+  return sb.str();
 }
 
 VideoPlayoutDelay::VideoPlayoutDelay(TimeDelta min, TimeDelta max)

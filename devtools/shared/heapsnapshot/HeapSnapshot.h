@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_devtools_HeapSnapshot_
-#define mozilla_devtools_HeapSnapshot_
+#ifndef mozilla_devtools_HeapSnapshot__
+#define mozilla_devtools_HeapSnapshot__
 
 #include "js/HashTable.h"
 #include "mozilla/devtools/DeserializedNode.h"
@@ -97,7 +98,7 @@ class HeapSnapshot final : public nsISupports, public nsWrapperCache {
  protected:
   nsCOMPtr<nsISupports> mParent;
 
-  virtual ~HeapSnapshot() = default;
+  virtual ~HeapSnapshot() {}
 
  public:
   // Create a `HeapSnapshot` from the given buffer that contains a serialized
@@ -169,7 +170,7 @@ class HeapSnapshot final : public nsISupports, public nsWrapperCache {
 // serializes it to disk, or memory, or a socket, etc.
 class CoreDumpWriter {
  public:
-  virtual ~CoreDumpWriter() = default;
+  virtual ~CoreDumpWriter() {};
 
   // Write the given bits of metadata we would like to associate with this core
   // dump.
@@ -209,4 +210,4 @@ MallocSizeOf GetCurrentThreadDebuggerMallocSizeOf();
 }  // namespace devtools
 }  // namespace mozilla
 
-#endif  // mozilla_devtools_HeapSnapshot_
+#endif  // mozilla_devtools_HeapSnapshot__

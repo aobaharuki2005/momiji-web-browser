@@ -52,7 +52,7 @@ generate:
             ./mach doc --outdir docs-out --no-open --no-serve --archive --dump-trees=/builds/worker/artifacts/trees.json
         sparse-profile: sphinx-docs
     optimization:
-        docs: null
+        skip-unless-schedules: [docs]
     fetches:
         toolchain:
             - linux64-node
@@ -109,7 +109,7 @@ upload:
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/gecko-docs-upload
     optimization:
-        docs: null
+        skip-unless-schedules: [docs]
     fetches:
         toolchain:
             - linux64-node

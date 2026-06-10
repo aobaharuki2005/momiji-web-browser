@@ -155,13 +155,13 @@ class SettingsSubMenuLoginsAndPasswordRobot {
             return SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.Transition(composeTestRule)
         }
 
-        fun openSyncLogins(composeTestRule: ComposeTestRule, interact: SettingsSignInToSyncRobot.() -> Unit): SettingsSignInToSyncRobot.Transition {
+        fun openSyncLogins(interact: SettingsTurnOnSyncRobot.() -> Unit): SettingsTurnOnSyncRobot.Transition {
             Log.i(TAG, "openSyncLogins: Trying to click the \"Sync logins across devices\" button")
             syncLoginsButton().click()
             Log.i(TAG, "openSyncLogins: Clicked the \"Sync logins across devices\" button")
 
-            SettingsSignInToSyncRobot().interact()
-            return SettingsSignInToSyncRobot.Transition(composeTestRule)
+            SettingsTurnOnSyncRobot().interact()
+            return SettingsTurnOnSyncRobot.Transition()
         }
 
         fun openSaveLoginsAndPasswordsOptions(interact: SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot.Transition {

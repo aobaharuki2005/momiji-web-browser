@@ -3,14 +3,15 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
 
-use crate::context;
-use crate::operation;
-use crate::util::*;
-use crate::*;
+use context;
+use ffi;
+use operation;
 use std::ffi::CStr;
 use std::mem::{self, forget, MaybeUninit};
 use std::os::raw::{c_int, c_void};
 use std::ptr;
+use util::*;
+use *;
 
 #[derive(Debug)]
 pub struct Stream(*mut ffi::pa_stream);

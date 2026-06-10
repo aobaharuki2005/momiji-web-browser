@@ -1,10 +1,7 @@
 //! RISC-V-specific definitions for 64-bit linux-like values
 
 use crate::prelude::*;
-use crate::{
-    off64_t,
-    off_t,
-};
+use crate::{off64_t, off_t};
 
 pub type wchar_t = c_int;
 
@@ -40,7 +37,7 @@ s! {
         pub st_mtime_nsec: c_long,
         pub st_ctime: crate::time_t,
         pub st_ctime_nsec: c_long,
-        __unused: Padding<[c_int; 2usize]>,
+        __unused: [c_int; 2usize],
     }
 
     pub struct stat64 {
@@ -62,7 +59,7 @@ s! {
         pub st_mtime_nsec: c_long,
         pub st_ctime: crate::time_t,
         pub st_ctime_nsec: c_long,
-        __unused: Padding<[c_int; 2]>,
+        __unused: [c_int; 2],
     }
 
     pub struct statfs {
@@ -162,11 +159,11 @@ s! {
         pub cuid: crate::uid_t,
         pub cgid: crate::gid_t,
         pub mode: c_ushort,
-        __pad1: Padding<c_ushort>,
+        __pad1: c_ushort,
         pub __seq: c_ushort,
-        __pad2: Padding<c_ushort>,
-        __unused1: Padding<c_ulong>,
-        __unused2: Padding<c_ulong>,
+        __pad2: c_ushort,
+        __unused1: c_ulong,
+        __unused2: c_ulong,
     }
 
     pub struct shmid_ds {
@@ -178,8 +175,8 @@ s! {
         pub shm_cpid: crate::pid_t,
         pub shm_lpid: crate::pid_t,
         pub shm_nattch: crate::shmatt_t,
-        __unused5: Padding<c_ulong>,
-        __unused6: Padding<c_ulong>,
+        __unused5: c_ulong,
+        __unused6: c_ulong,
     }
 
     pub struct flock {

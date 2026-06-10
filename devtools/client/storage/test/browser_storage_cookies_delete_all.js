@@ -56,26 +56,26 @@ add_task(async function () {
   // We should not enforce https for tests using this page.
   await pushPref("dom.security.https_first", false);
 
-  await openTabAndSetupStorage(MAIN_URL + "storage-listings.html");
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
   info("test state before delete");
   await checkState([
     [
-      ["cookies", MAIN_ORIGIN],
+      ["cookies", "http://test1.example.org"],
       [
-        getCookieId("c1", MAIN_HOST, "/browser"),
-        getCookieId("c3", MAIN_HOST, "/"),
-        getCookieId("cs2", "." + MAIN_DOMAIN, "/"),
-        getCookieId("c4", "." + MAIN_DOMAIN, "/"),
-        getCookieId("uc1", "." + MAIN_DOMAIN, "/"),
-        getCookieId("uc2", "." + MAIN_DOMAIN, "/"),
+        getCookieId("c1", "test1.example.org", "/browser"),
+        getCookieId("c3", "test1.example.org", "/"),
+        getCookieId("cs2", ".example.org", "/"),
+        getCookieId("c4", ".example.org", "/"),
+        getCookieId("uc1", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/"),
       ],
     ],
     [
-      ["cookies", ALT_ORIGIN_SECURED],
+      ["cookies", "https://sectest1.example.org"],
       [
-        getCookieId("cs2", "." + MAIN_DOMAIN, "/"),
-        getCookieId("c4", "." + MAIN_DOMAIN, "/"),
+        getCookieId("cs2", ".example.org", "/"),
+        getCookieId("c4", ".example.org", "/"),
         getCookieId(
           "sc1",
           "sectest1.example.org",
@@ -86,36 +86,40 @@ add_task(async function () {
           "sectest1.example.org",
           "/browser/devtools/client/storage/test"
         ),
-        getCookieId("uc1", "." + MAIN_DOMAIN, "/"),
-        getCookieId("uc2", "." + MAIN_DOMAIN, "/"),
+        getCookieId("uc1", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/"),
       ],
     ],
   ]);
 
   info("delete all from domain");
   // delete only cookies that match the host exactly
-  let id = getCookieId("c1", MAIN_HOST, "/browser");
-  await performDelete(["cookies", MAIN_ORIGIN], id, "deleteAllFrom");
+  let id = getCookieId("c1", "test1.example.org", "/browser");
+  await performDelete(
+    ["cookies", "http://test1.example.org"],
+    id,
+    "deleteAllFrom"
+  );
 
   info("test state after delete all from domain");
   await checkState([
     // Domain cookies (.example.org) must not be deleted.
     [
-      ["cookies", MAIN_ORIGIN],
+      ["cookies", "http://test1.example.org"],
       [
-        getCookieId("cs2", "." + MAIN_DOMAIN, "/"),
-        getCookieId("c4", "." + MAIN_DOMAIN, "/"),
-        getCookieId("uc1", "." + MAIN_DOMAIN, "/"),
-        getCookieId("uc2", "." + MAIN_DOMAIN, "/"),
+        getCookieId("cs2", ".example.org", "/"),
+        getCookieId("c4", ".example.org", "/"),
+        getCookieId("uc1", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/"),
       ],
     ],
     [
-      ["cookies", ALT_ORIGIN_SECURED],
+      ["cookies", "https://sectest1.example.org"],
       [
-        getCookieId("cs2", "." + MAIN_DOMAIN, "/"),
-        getCookieId("c4", "." + MAIN_DOMAIN, "/"),
-        getCookieId("uc1", "." + MAIN_DOMAIN, "/"),
-        getCookieId("uc2", "." + MAIN_DOMAIN, "/"),
+        getCookieId("cs2", ".example.org", "/"),
+        getCookieId("c4", ".example.org", "/"),
+        getCookieId("uc1", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/"),
         getCookieId(
           "sc1",
           "sectest1.example.org",
@@ -132,24 +136,28 @@ add_task(async function () {
 
   info("delete all session cookies");
   // delete only session cookies
-  id = getCookieId("cs2", "." + MAIN_DOMAIN, "/");
-  await performDelete(["cookies", ALT_ORIGIN], id, "deleteAllSessionCookies");
+  id = getCookieId("cs2", ".example.org", "/");
+  await performDelete(
+    ["cookies", "http://sectest1.example.org"],
+    id,
+    "deleteAllSessionCookies"
+  );
 
   info("test state after delete all session cookies");
   await checkState([
     // Cookies with expiry date must not be deleted.
     [
-      ["cookies", MAIN_ORIGIN],
+      ["cookies", "http://test1.example.org"],
       [
-        getCookieId("c4", "." + MAIN_DOMAIN, "/"),
-        getCookieId("uc2", "." + MAIN_DOMAIN, "/"),
+        getCookieId("c4", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/"),
       ],
     ],
     [
-      ["cookies", ALT_ORIGIN_SECURED],
+      ["cookies", "https://sectest1.example.org"],
       [
-        getCookieId("c4", "." + MAIN_DOMAIN, "/"),
-        getCookieId("uc2", "." + MAIN_DOMAIN, "/"),
+        getCookieId("c4", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/"),
         getCookieId(
           "sc2",
           "sectest1.example.org",
@@ -161,30 +169,34 @@ add_task(async function () {
 
   info("delete all");
   // delete all cookies for host, including domain cookies
-  id = getCookieId("uc2", "." + MAIN_DOMAIN, "/");
-  await performDelete(["cookies", ALT_ORIGIN], id, "deleteAll");
+  id = getCookieId("uc2", ".example.org", "/");
+  await performDelete(
+    ["cookies", "http://sectest1.example.org"],
+    id,
+    "deleteAll"
+  );
 
   info("test state after delete all");
   await checkState([
     // Domain cookies (.example.org) are deleted too, so deleting in sectest1
     // also removes stuff from test1.
-    [["cookies", MAIN_ORIGIN], []],
-    [["cookies", ALT_ORIGIN_SECURED], []],
+    [["cookies", "http://test1.example.org"], []],
+    [["cookies", "https://sectest1.example.org"], []],
   ]);
 });
 
 add_task(async function testDeleteWithDomain() {
   // Test that cookies whose host starts with "." are properly deleted
-  await openTabAndSetupStorage(MAIN_URL + "storage-cookies.html");
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
 
   await checkState([
     [
-      ["cookies", MAIN_ORIGIN],
+      ["cookies", "http://test1.example.org"],
       [
         getCookieId("test1", ".test1.example.org", "/browser"),
-        getCookieId("test2", MAIN_HOST, "/browser"),
+        getCookieId("test2", "test1.example.org", "/browser"),
         getCookieId("test3", ".test1.example.org", "/browser"),
-        getCookieId("test4", MAIN_HOST, "/browser"),
+        getCookieId("test4", "test1.example.org", "/browser"),
         getCookieId("test5", ".test1.example.org", "/browser"),
       ],
     ],
@@ -192,8 +204,8 @@ add_task(async function testDeleteWithDomain() {
 
   // delete all cookies for host, including domain cookies
   const id = getCookieId("test1", ".test1.example.org", "/browser");
-  await performDelete(["cookies", MAIN_ORIGIN], id, "deleteAll");
+  await performDelete(["cookies", "http://test1.example.org"], id, "deleteAll");
 
   info("test state after delete all");
-  await checkState([[["cookies", MAIN_ORIGIN], []]]);
+  await checkState([[["cookies", "http://test1.example.org"], []]]);
 });

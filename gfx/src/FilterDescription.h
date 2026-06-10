@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef FilterDescription_h
-#define FilterDescription_h
+#ifndef __FilterDescription_h
+#define __FilterDescription_h
 
 #include "FilterSupport.h"
 #include "mozilla/Variant.h"
@@ -137,4 +139,4 @@ struct FilterDescription final {
 };
 }  // namespace mozilla::gfx
 
-#endif  // FilterSupport_h
+#endif  // __FilterSupport_h

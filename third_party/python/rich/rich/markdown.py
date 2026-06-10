@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass
-from typing import ClassVar, Iterable, get_args
+from typing import ClassVar, Iterable
 
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
+
+if sys.version_info >= (3, 8):
+    from typing import get_args
+else:
+    from typing_extensions import get_args  # pragma: no cover
 
 from rich.table import Table
 
@@ -15,6 +19,7 @@ from ._stack import Stack
 from .console import Console, ConsoleOptions, JustifyMethod, RenderResult
 from .containers import Renderables
 from .jupyter import JupyterMixin
+from .panel import Panel
 from .rule import Rule
 from .segment import Segment
 from .style import Style, StyleStack
@@ -124,23 +129,8 @@ class Paragraph(TextElement):
         yield self.text
 
 
-@dataclass
-class HeadingFormat:
-    justify: JustifyMethod = "left"
-    style: str = ""
-
-
 class Heading(TextElement):
     """A heading."""
-
-    LEVEL_ALIGN: ClassVar[dict[str, JustifyMethod]] = {
-        "h1": "center",
-        "h2": "left",
-        "h3": "left",
-        "h4": "left",
-        "h5": "left",
-        "h6": "left",
-    }
 
     @classmethod
     def create(cls, markdown: Markdown, token: Token) -> Heading:
@@ -158,10 +148,20 @@ class Heading(TextElement):
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
-        text = self.text.copy()
-        heading_justify = self.LEVEL_ALIGN.get(self.tag, "left")
-        text.justify = heading_justify
-        yield text
+        text = self.text
+        text.justify = "center"
+        if self.tag == "h1":
+            # Draw a border around h1s
+            yield Panel(
+                text,
+                box=box.HEAVY,
+                style="markdown.h1.border",
+            )
+        else:
+            # Styled text for h2 and beyond
+            if self.tag == "h2":
+                yield Text("")
+            yield text
 
 
 class CodeBlock(TextElement):
@@ -224,8 +224,7 @@ class HorizontalRule(MarkdownElement):
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
         style = console.get_style("markdown.hr", default="none")
-        yield Rule(style=style, characters="-")
-        yield Text()
+        yield Rule(style=style)
 
 
 class TableElement(MarkdownElement):
@@ -247,19 +246,11 @@ class TableElement(MarkdownElement):
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
-        table = Table(
-            box=box.SIMPLE,
-            pad_edge=False,
-            style="markdown.table.border",
-            show_edge=True,
-            collapse_padding=True,
-        )
+        table = Table(box=box.SIMPLE_HEAVY)
 
         if self.header is not None and self.header.row is not None:
             for column in self.header.row.cells:
-                heading = column.content.copy()
-                heading.stylize("markdown.table.header")
-                table.add_column(heading)
+                table.add_column(column.content)
 
         if self.body is not None:
             for row in self.body.rows:
@@ -331,10 +322,9 @@ class TableDataElement(MarkdownElement):
         self.justify = justify
 
     def on_text(self, context: MarkdownContext, text: TextType) -> None:
-        if isinstance(text, str):
-            self.content.append(text, context.current_style)
-        else:
-            self.content.append_text(text)
+        text = Text(text) if isinstance(text, str) else text
+        text.stylize(context.current_style)
+        self.content.append_text(text)
 
 
 class ListElement(MarkdownElement):
@@ -616,14 +606,6 @@ class Markdown(JupyterMixin):
                     context.enter_style(link_style)
                 else:
                     context.stack.push(Link.create(self, token))
-            elif node_type == "html_inline":
-                if token.content == "<kbd>":
-                    kbd_style = console.get_style("markdown.kbd", default="bold")
-                    context.enter_style(kbd_style)
-                elif token.content == "</kbd>":
-                    context.leave_style()
-                else:
-                    continue
             elif node_type == "link_close":
                 if self.hyperlinks:
                     context.leave_style()

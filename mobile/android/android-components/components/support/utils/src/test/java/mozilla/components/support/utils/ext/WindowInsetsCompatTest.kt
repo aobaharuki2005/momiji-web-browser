@@ -9,51 +9,74 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.Type.displayCutout
 import androidx.core.view.WindowInsetsCompat.Type.mandatorySystemGestures
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
 class WindowInsetsCompatTest {
     private lateinit var windowInsetsCompat: WindowInsetsCompat
     private lateinit var insets: Insets
     private lateinit var mandatorySystemGestureInsets: Insets
 
+    private var topPixels: Int = 0
+    private var rightPixels: Int = 0
+    private var leftPixels: Int = 0
+    private var bottomPixels: Int = 0
+
     @Before
     fun setUp() {
-        insets = Insets.of(3, 1, 2, 4)
-        mandatorySystemGestureInsets = Insets.of(5, 6, 7, 8)
+        windowInsetsCompat = mock()
 
-        windowInsetsCompat = WindowInsetsCompat.Builder()
-            .setInsetsIgnoringVisibility(systemBars() or displayCutout(), insets)
-            .setInsets(mandatorySystemGestures(), mandatorySystemGestureInsets)
-            .build()
+        topPixels = 1
+        rightPixels = 2
+        leftPixels = 3
+        bottomPixels = 4
+
+        insets = Insets.of(leftPixels, topPixels, rightPixels, bottomPixels)
+        mandatorySystemGestureInsets = Insets.of(leftPixels, topPixels, rightPixels, bottomPixels)
+
+        whenever(windowInsetsCompat.getInsetsIgnoringVisibility(systemBars() or displayCutout())).thenReturn(
+            insets,
+        )
+        whenever(windowInsetsCompat.getInsets(mandatorySystemGestures())).thenReturn(
+            mandatorySystemGestureInsets,
+        )
     }
 
     @Test
     fun testTop() {
-        assertEquals(insets.top, windowInsetsCompat.top())
+        val topInsets = windowInsetsCompat.top()
+
+        assertEquals(topPixels, topInsets)
     }
 
     @Test
     fun testRight() {
-        assertEquals(insets.right, windowInsetsCompat.right())
+        val rightInsets = windowInsetsCompat.right()
+
+        assertEquals(rightPixels, rightInsets)
     }
 
     @Test
     fun testLeft() {
-        assertEquals(insets.left, windowInsetsCompat.left())
+        val leftInsets = windowInsetsCompat.left()
+
+        assertEquals(leftPixels, leftInsets)
     }
 
     @Test
     fun testBottom() {
-        assertEquals(insets.bottom, windowInsetsCompat.bottom())
+        val bottomInsets = windowInsetsCompat.bottom()
+
+        assertEquals(bottomPixels, bottomInsets)
     }
 
     @Test
     fun testMandatorySystemGestureInsets() {
-        assertEquals(mandatorySystemGestureInsets, windowInsetsCompat.mandatorySystemGestureInsets())
+        val mandatorySystemGestureInsets = windowInsetsCompat.mandatorySystemGestureInsets()
+
+        assertEquals(this.mandatorySystemGestureInsets, mandatorySystemGestureInsets)
     }
 }

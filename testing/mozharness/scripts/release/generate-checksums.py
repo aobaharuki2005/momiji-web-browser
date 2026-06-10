@@ -73,7 +73,7 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin):
             require_config_file=False,
             config={
                 "virtualenv_modules": [
-                    "boto3",
+                    "boto",
                 ],
                 "virtualenv_path": "venv",
             },
@@ -140,18 +140,12 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin):
 
     def _get_bucket(self):
         self.activate_virtualenv()
-        import boto3
-        from botocore import UNSIGNED
-        from botocore.client import Config
+        from boto import connect_s3
 
         self.info("Connecting to S3")
-        conn = boto3.resource(
-            "s3",
-            config=Config(signature_version=UNSIGNED),
-            endpoint_url="https://storage.googleapis.com",
-        )
+        conn = connect_s3(anon=True, host="storage.googleapis.com")
         self.info("Connecting to bucket {}".format(self.config["bucket_name"]))
-        self.bucket = conn.Bucket(self.config["bucket_name"])
+        self.bucket = conn.get_bucket(self.config["bucket_name"])
         return self.bucket
 
     def collect_individual_checksums(self):
@@ -166,19 +160,19 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin):
 
         def worker(item):
             self.debug(f"Downloading {item}")
-            response = item.get()
-            raw_checksums.append(response["Body"].read())
+            sums = bucket.get_key(item).get_contents_as_string()
+            raw_checksums.append(sums)
 
         def find_checksums_files():
             self.info("Getting key names from bucket")
             checksum_files = {"beets": [], "checksums": []}
-            for key in bucket.objects.filter(Prefix=self.file_prefix):
+            for key in bucket.list(prefix=self.file_prefix):
                 if key.key.endswith(".checksums"):
                     self.debug(f"Found checksums file: {key.key}")
-                    checksum_files["checksums"].append(key)
+                    checksum_files["checksums"].append(key.key)
                 elif key.key.endswith(".beet"):
                     self.debug(f"Found beet file: {key.key}")
-                    checksum_files["beets"].append(key)
+                    checksum_files["beets"].append(key.key)
                 else:
                     self.debug(f"Ignoring non-checksums file: {key.key}")
             if checksum_files["beets"]:

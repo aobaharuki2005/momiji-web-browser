@@ -7,9 +7,6 @@
  */
 
 import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
-import { BlockListManager } from "chrome://global/content/ml/Utils.sys.mjs";
-import { SensitiveInfoDetector } from "moz-src:///browser/components/aiwindow/models/memories/SensitiveInfoDetector.sys.mjs";
-import { sanitizeUntrustedContent } from "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs";
 
 const MS_PER_DAY = 86_400_000;
 const MICROS_PER_MS = 1_000;
@@ -20,7 +17,6 @@ const SECONDS_PER_DAY = 86_400;
 // History fetch defaults
 const DEFAULT_DAYS = 60;
 const DEFAULT_MAX_RESULTS = 3000;
-const DEFAULT_PAGE_VIEWTIME = 5000;
 
 // Sessionization defaults
 const DEFAULT_GAP_SEC = 900;
@@ -31,8 +27,26 @@ const DEFAULT_HALFLIFE_DAYS = 14;
 const DEFAULT_RECENCY_FLOOR = 0.5;
 const DEFAULT_SESSION_WEIGHT = 1.0;
 
-let _mgr = BlockListManager.initializeFromDefault({ language: "en" });
-let _sensitiveInfoDetector = new SensitiveInfoDetector();
+const SEARCH_ENGINE_DOMAINS = [
+  "google",
+  "bing",
+  "duckduckgo",
+  "search.brave",
+  "yahoo",
+  "startpage",
+  "ecosia",
+  "baidu",
+  "yandex",
+];
+
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const SEARCH_ENGINE_PATTERN = new RegExp(
+  `(^|\\.)(${SEARCH_ENGINE_DOMAINS.map(escapeRe).join("|")})\\.`,
+  "i"
+);
 
 /**
  * Fetch recent browsing history from Places (SQL), aggregate by URL,
@@ -82,11 +96,9 @@ let _sensitiveInfoDetector = new SensitiveInfoDetector();
  *
  * @returns {Promise<Array<{
  *   url: string,
- *   urlHash: number,
  *   title: string,
  *   domain: string,
  *   visitDateMicros: number,
- *   totalViewTimeMs: number,
  *   frequencyPct: number,
  *   domainFrequencyPct: number,
  *   source: 'history'|'search'
@@ -99,7 +111,6 @@ export async function getRecentHistory(opts = {}) {
     sinceMicros = null,
     days = DEFAULT_DAYS,
     maxResults = DEFAULT_MAX_RESULTS,
-    minPageViewtime = DEFAULT_PAGE_VIEWTIME,
   } = opts;
 
   // Places stores visit_date in microseconds since epoch.
@@ -113,133 +124,74 @@ export async function getRecentHistory(opts = {}) {
     );
   }
 
+  const isSearchVisit = urlStr => {
+    try {
+      const { hostname, pathname, search } = new URL(urlStr);
+      const isSearchEngine = SEARCH_ENGINE_PATTERN.test(hostname);
+      const looksLikeSearch =
+        /search|results|query/i.test(pathname) ||
+        /[?&](q|query|p)=/i.test(search);
+      return isSearchEngine && looksLikeSearch;
+    } catch (e) {
+      console.error("isSearchVisit: failed to parse URL", {
+        error: String(e),
+        urlLength: typeof urlStr === "string" ? urlStr.length : -1,
+      });
+      return false;
+    }
+  };
+
   const SQL = `
-    WITH page_visits AS (
-    SELECT
-      p.id                                                 AS place_id,
-      p.url                                                AS url,
-      p.url_hash                                           AS url_hash,
-      o.host                                               AS host,
-      p.title                                              AS title,
-      mpm.created_at * 1000                                AS visit_date,
-      mpm.total_view_time                                  AS total_view_time,
-      NULL                                                 AS search_query,
-      'history'                                            AS source,
-      p.frecency                                           AS frecency,
-      CASE WHEN o.frecency = -1 THEN 1 ELSE o.frecency END AS domain_frecency
-    FROM moz_places_metadata mpm
-    JOIN moz_places  p ON mpm.place_id  = p.id
-    JOIN moz_origins o ON p.origin_id   = o.id
-    WHERE mpm.created_at >= :cutoff / 1000
-      AND p.title IS NOT NULL
-      AND p.frecency IS NOT NULL
-      AND mpm.total_view_time > :viewtime
-    ),
-
-    search_raw AS (
+    WITH visit_info AS (
       SELECT
-        p.id                                                 AS place_id,
-        p.url                                                AS url,
-        p.url_hash                                           AS url_hash,
-        o.host                                               AS host,
-        p.title                                              AS title,
-        v.visit_date                                         AS visit_date,
-        p.frecency                                           AS frecency,
-        CASE WHEN o.frecency = -1 THEN 1 ELSE o.frecency END AS domain_frecency,
-        replace(p.url, '?', '&')                             AS norm_url
-      FROM moz_historyvisits v
-      JOIN moz_places  p ON v.place_id  = p.id
-      JOIN moz_origins o ON p.origin_id = o.id
+        p.id                     AS place_id,
+        p.url                    AS url,
+        o.host                   AS host,
+        p.title                  AS title,
+        v.visit_date             AS visit_date,
+        p.frecency               AS frecency,
+        CASE WHEN o.frecency = -1 THEN 1 ELSE o.frecency END AS domain_frecency
+      FROM moz_places p
+      JOIN moz_historyvisits v ON v.place_id = p.id
+      JOIN moz_origins o       ON p.origin_id = o.id
       WHERE v.visit_date >= :cutoff
-        AND (
-          o.host LIKE '%google.%'     OR
-          o.host LIKE '%bing.%'       OR
-          o.host LIKE '%duckduckgo.%' OR
-          o.host LIKE '%yahoo.%'      OR
-          o.host LIKE '%ecosia.%'     OR
-          o.host LIKE '%startpage.%'  OR
-          o.host LIKE '%brave.com'    OR
-          o.host LIKE '%baidu.%'      OR
-          o.host LIKE '%yandex.%'
-        )
-    ),
-    search_candidates AS (
-      SELECT
-        r.place_id,
-        r.url,
-        r.url_hash,
-        r.host,
-        r.title,
-        r.visit_date,
-        0                                                    AS total_view_time,
-        COALESCE(
-          ih.input,
-          CASE
-            WHEN instr(r.norm_url, '&search_query=') > 0
-              THEN replace(replace(
-                      substr(r.norm_url,
-                            instr(r.norm_url, '&search_query=') + 14,
-                            COALESCE(NULLIF(instr(substr(r.norm_url,
-                              instr(r.norm_url, '&search_query=') + 14), '&'), 0) - 1, 200)),
-                      '+', ' '), '%20', ' ')
-            WHEN instr(r.norm_url, '&q=') > 0
-              THEN replace(replace(
-                      substr(r.norm_url,
-                            instr(r.norm_url, '&q=') + 3,
-                            COALESCE(NULLIF(instr(substr(r.norm_url,
-                              instr(r.norm_url, '&q=') + 3), '&'), 0) - 1, 200)),
-                      '+', ' '), '%20', ' ')
-          END
-        )                                                    AS search_query,
-        'search'                                             AS source,
-        r.frecency                                           AS frecency,
-        r.domain_frecency                                    AS domain_frecency
-      FROM search_raw r
-      LEFT JOIN moz_inputhistory ih ON ih.place_id = r.place_id
+        AND p.title IS NOT NULL
+        AND p.frecency IS NOT NULL
+      ORDER BY v.visit_date DESC
+      LIMIT :limit
     ),
 
-    search_visits AS (
-      SELECT * FROM search_candidates
-      WHERE search_query IS NOT NULL
-        AND length(search_query) > 2
-    ),
-    all_visits AS (
-      SELECT * FROM page_visits
-      UNION ALL
-      SELECT * FROM search_visits
-    ),
+    /* Collapse to one row per place to compute percentiles (like your groupby/place_id mean) */
     per_place AS (
       SELECT
         place_id,
-        MAX(frecency)        AS frecency,
-        MAX(domain_frecency) AS domain_frecency
-      FROM all_visits
+        MAX(frecency)         AS frecency,
+        MAX(domain_frecency)  AS domain_frecency
+      FROM visit_info
       GROUP BY place_id
     ),
 
+    /* Percentiles using window function CUME_DIST() */
     per_place_with_pct AS (
       SELECT
         place_id,
-        ROUND(100.0 * CUME_DIST() OVER (ORDER BY frecency),        2) AS frecency_pct,
+        ROUND(100.0 * CUME_DIST() OVER (ORDER BY frecency), 2) AS frecency_pct,
         ROUND(100.0 * CUME_DIST() OVER (ORDER BY domain_frecency), 2) AS domain_frecency_pct
       FROM per_place
     )
 
+    /* Final rows: original visits + joined percentiles + source label */
     SELECT
-      a.url,
-      a.url_hash,
-      a.host,
-      a.source,
-      a.title,
-      a.visit_date,
-      a.total_view_time,
+      v.url,
+      v.host,
+      v.title,
+      v.visit_date,
       p.frecency_pct,
       p.domain_frecency_pct
-    FROM all_visits a
+    FROM visit_info v
     JOIN per_place_with_pct p USING (place_id)
-    ORDER BY a.visit_date DESC
-    LIMIT :limit
-    `;
+    ORDER BY v.visit_date DESC
+  `;
 
   try {
     const rows = await PlacesUtils.withConnectionWrapper(
@@ -248,48 +200,26 @@ export async function getRecentHistory(opts = {}) {
         const stmt = await db.execute(SQL, {
           cutoff: cutoffMicros,
           limit: maxResults,
-          viewtime: minPageViewtime,
         });
 
         const out = [];
         for (const row of stmt) {
           const url = row.getResultByName("url");
-          const urlHash = row.getResultByName("url_hash");
           const host = row.getResultByName("host");
-          const source = row.getResultByName("source");
-          const onlyTitle = row.getResultByName("title") || "";
-          let title;
-          if (onlyTitle) {
-            const sanitizedTitle = sanitizeTitle(onlyTitle);
-            title = sanitizedTitle + " | " + host;
-          } else {
-            title = onlyTitle;
-          }
-          if (
-            _mgr.matchAtWordBoundary({ text: title.toLowerCase() }) ||
-            _sensitiveInfoDetector.containsSensitiveInfo(title) ||
-            _sensitiveInfoDetector.containsSensitiveInfo(url) ||
-            _sensitiveInfoDetector.containsSensitiveKeywords(title) ||
-            _sensitiveInfoDetector.containsSensitiveKeywords(url)
-          ) {
-            continue;
-          }
+          const title = row.getResultByName("title") || "";
           const visitDateMicros = row.getResultByName("visit_date") || 0;
-          const totalViewTimeMs = row.getResultByName("total_view_time") || 0;
           const frequencyPct = row.getResultByName("frecency_pct") || 0;
           const domainFrequencyPct =
             row.getResultByName("domain_frecency_pct") || 0;
 
           out.push({
             url,
-            urlHash,
             domain: host,
-            title: sanitizeUntrustedContent(title, true),
+            title,
             visitDateMicros,
-            totalViewTimeMs,
             frequencyPct,
             domainFrequencyPct,
-            source,
+            source: isSearchVisit(url) ? "search" : "history",
           });
         }
         return out;
@@ -817,77 +747,4 @@ function getOrInit(mapObj, key, initFn) {
 
 function round2(x) {
   return Math.round(Number(x) * 100) / 100;
-}
-
-/**
- * Sanitize title text to prevent JSON parsing issues in LLM outputs.
- * Removes/replaces characters that commonly cause problems:
- * - Backslashes (replaced with forward slashes)
- * - Control characters (replaced with spaces)
- *
- * @param {string} title - Raw title from Places database
- * @returns {string} - Sanitized title
- */
-function sanitizeTitle(title) {
-  if (typeof title !== "string") {
-    return "";
-  }
-
-  return (
-    title
-      .replace(/\\/g, "/") // Replace backslash with forward slash
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\x00-\x1F\x7F]/g, " ") // Replace control chars (0-31, 127) with space
-      .replace(/\s+/g, " ") // Collapse multiple spaces
-      .trim()
-  );
-}
-
-// for tests only
-export function _setBlockListManagerForTesting(mgr) {
-  _mgr = mgr;
-}
-
-export function _sanitizeTitleForTesting(title) {
-  return sanitizeTitle(title);
-}
-
-/**
- * Return the number of history visits since `days` ago.
- *
- * @param {object} opts
- * @param {number} opts.days - lookback in days (default 60)
- * @returns {Promise<number>} number of visits
- */
-export async function countRecentVisits({ days = DEFAULT_DAYS } = {}) {
-  const cutoffMicros = Math.max(
-    0,
-    (Date.now() - days * MS_PER_DAY) * MICROS_PER_MS
-  );
-
-  const SQL = `
-    SELECT COUNT(*) AS cnt
-    FROM moz_historyvisits v
-    JOIN moz_places p ON v.place_id = p.id
-    WHERE v.visit_date >= :cutoff
-      AND p.title IS NOT NULL
-      AND p.frecency IS NOT NULL
-  `;
-
-  try {
-    const result = await PlacesUtils.withConnectionWrapper(
-      "smartwindow-countRecentVisits",
-      async db => {
-        const stmt = await db.execute(SQL, { cutoff: cutoffMicros });
-        for (const row of stmt) {
-          return row.getResultByName("cnt") || 0;
-        }
-        return 0;
-      }
-    );
-    return Number(result);
-  } catch (e) {
-    console.error("countRecentVisits failed", e);
-    return 0;
-  }
 }

@@ -24,12 +24,12 @@ info: |
   7. If IsConstructor(S) is true, return S.
   8. Throw a TypeError exception.
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Symbol.species, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg(2));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA(2);
 
   sample.constructor = {};
 

@@ -4,34 +4,33 @@
 
 package org.mozilla.fenix.components
 
-import io.mockk.MockKAnnotations
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.impl.annotations.RelaxedMockK
-import io.mockk.mockk
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mock
+import org.mockito.Mockito.mock
+import org.mockito.MockitoAnnotations
 import org.mozilla.fenix.components.fake.FakeMetricController
 import org.mozilla.fenix.components.metrics.MetricServiceType
 
 class MetricsServiceHelperTest {
 
-    @RelaxedMockK
+    @Mock
     private lateinit var mockLogger: Logger
 
-    @MockK
+    @Mock
     private lateinit var mockAnalytics: Analytics
 
     private val fakeMetricController = FakeMetricController()
 
     @Before
     fun setup() {
-        MockKAnnotations.init(this)
-        every { mockAnalytics.metrics } returns fakeMetricController
-        every { mockAnalytics.crashFactCollector } returns mockk(relaxUnitFun = true)
+        MockitoAnnotations.openMocks(this)
+        whenever(mockAnalytics.metrics).thenReturn(fakeMetricController)
+        whenever(mockAnalytics.crashFactCollector).thenReturn(mock())
     }
 
     @Test

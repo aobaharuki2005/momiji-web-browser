@@ -3,14 +3,15 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
  * The outcome of non-recursive canonical decomposition of a character.
  * `second` will be NUL when the decomposition expands to a single character
  * (which may or may not be the original one)
  *
- * See the [Rust documentation for `Decomposed`](https://docs.rs/icu/2.1.1/icu/normalizer/properties/enum.Decomposed.html) for more information.
+ * See the [Rust documentation for `Decomposed`](https://docs.rs/icu/latest/icu/normalizer/properties/enum.Decomposed.html) for more information.
  */
+
+
 export class Decomposed {
     #first;
     get first() {
@@ -49,13 +50,7 @@ export class Decomposed {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
-
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-
-        functionCleanupArena.alloc(buffer);
-
-        return buffer.ptr;
+        return [this.#first, this.#second]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

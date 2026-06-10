@@ -8,19 +8,14 @@ import android.os.Bundle
 import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreferenceCompat
+import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import org.mozilla.fenix.settings.requirePreference
 
-/**
- * Settings screen allowing users to configure what browsing data to automatically delete when
- * choosing the Quit options in the main menu.
- */
-class DeleteBrowsingDataOnQuitFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragment {
+class DeleteBrowsingDataOnQuitFragment : PreferenceFragmentCompat() {
 
     private val checkboxes by lazy {
         val context = requireContext()
@@ -43,7 +38,7 @@ class DeleteBrowsingDataOnQuitFragment : PreferenceFragmentCompat(), SystemInset
         showToolbar(getString(R.string.preferences_delete_browsing_data_on_quit))
 
         // Delete Browsing Data on Quit Switch
-        val deleteOnQuitPref = requirePreference<SwitchPreferenceCompat>(
+        val deleteOnQuitPref = requirePreference<SwitchPreference>(
             R.string.pref_key_delete_browsing_data_on_quit,
         )
         deleteOnQuitPref.apply {

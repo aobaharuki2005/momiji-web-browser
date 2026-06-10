@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * Copyright 2015 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,7 +79,6 @@ ModuleGenerator::ModuleGenerator(const CodeMetadata& codeMeta,
       cancelled_(cancelled),
       codeMeta_(&codeMeta),
       compilerEnv_(&compilerEnv),
-      existingCodeTailMeta_(nullptr),
       featureUsage_(FeatureUsage::None),
       codeBlock_(nullptr),
       linkData_(nullptr),
@@ -86,9 +87,6 @@ ModuleGenerator::ModuleGenerator(const CodeMetadata& codeMeta,
       debugStubCodeOffset_(0),
       requestTierUpStubCodeOffset_(0),
       updateCallRefMetricsStubCodeOffset_(0),
-#ifdef ENABLE_WASM_JSPI
-      contBaseFrameOffset_(0),
-#endif
       lastPatchedCallSite_(0),
       startOfUnpatchedCallsites_(0),
       numCallRefMetrics_(0),
@@ -144,13 +142,8 @@ ModuleGenerator::~ModuleGenerator() {
 }
 
 bool ModuleGenerator::initializeCompleteTier(
-    CodeMetadataForAsmJS* codeMetaForAsmJS,
-    const CodeTailMetadata* existingCodeTailMeta) {
+    CodeMetadataForAsmJS* codeMetaForAsmJS) {
   MOZ_ASSERT(compileState_ != CompileState::LazyTier2);
-
-  MOZ_ASSERT((compileState_ == CompileState::EagerTier2) ==
-             !!existingCodeTailMeta);
-  existingCodeTailMeta_ = existingCodeTailMeta;
 
   // Initialize our task system
   if (!initTasks()) {
@@ -181,7 +174,6 @@ bool ModuleGenerator::initializePartialTier(const Code& code,
 
   MOZ_ASSERT(!partialTieringCode_);
   partialTieringCode_ = &code;
-  existingCodeTailMeta_ = &code.codeTailMeta();
 
   // Initialize our task system and start this partial tier
   return initTasks() && startPartialTier(funcIndex);
@@ -334,12 +326,6 @@ void ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex,
       MOZ_ASSERT(!updateCallRefMetricsStubCodeOffset_);
       updateCallRefMetricsStubCodeOffset_ = codeRange.begin();
       break;
-#ifdef ENABLE_WASM_JSPI
-    case CodeRange::ContBaseFrame:
-      MOZ_ASSERT(!contBaseFrameOffset_);
-      contBaseFrameOffset_ = codeRange.begin();
-      break;
-#endif
     case CodeRange::TrapExit:
       MOZ_ASSERT(!linkData_->trapOffset);
       linkData_->trapOffset = codeRange.begin();
@@ -699,7 +685,10 @@ bool ModuleGenerator::initTasks() {
     numTasks = 2 * GetMaxWasmCompilationThreads();
   }
 
-  const CodeTailMetadata* codeTailMeta = existingCodeTailMeta_;
+  const CodeTailMetadata* codeTailMeta = nullptr;
+  if (partialTieringCode_) {
+    codeTailMeta = &partialTieringCode_->codeTailMeta();
+  }
 
   if (!tasks_.initCapacity(numTasks)) {
     return false;
@@ -984,8 +973,9 @@ bool ModuleGenerator::finishCodeBlock(CodeBlockResult* result) {
     codeLength = codeSource.lengthBytes();
     uint32_t allocationLength;
     codeBlock_->segment = CodeSegment::allocate(codeSource, nullptr,
-                                                /* allowLastDitchGC = */ true,
+                                                /* allowLastDitchGC */ true,
                                                 &codeStart, &allocationLength);
+    // Record the code usage for this tier.
     tierStats_.codeBytesUsed += codeLength;
     tierStats_.codeBytesMapped += allocationLength;
   }
@@ -1409,9 +1399,6 @@ SharedModule ModuleGenerator::finishModule(
   code->setDebugStubOffset(debugStubCodeOffset_);
   code->setRequestTierUpStubOffset(requestTierUpStubCodeOffset_);
   code->setUpdateCallRefMetricsStubOffset(updateCallRefMetricsStubCodeOffset_);
-#ifdef ENABLE_WASM_JSPI
-  code->setContBaseFrameOffset(contBaseFrameOffset_);
-#endif
 
   // All the components are finished, so create the complete Module and start
   // tier-2 compilation if requested.

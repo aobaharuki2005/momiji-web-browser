@@ -52,6 +52,7 @@ function registerEventsActor() {
   try {
     // Register the JSWindowActor pair for events as used by Marionette
     ChromeUtils.registerWindowActor("MarionetteEvents", {
+      kind: "JSWindowActor",
       parent: {
         esModuleURI:
           "chrome://remote/content/marionette/actors/MarionetteEventsParent.sys.mjs",

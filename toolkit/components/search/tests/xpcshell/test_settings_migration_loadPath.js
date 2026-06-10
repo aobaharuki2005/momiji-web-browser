@@ -41,7 +41,7 @@ add_setup(async function () {
   // Setting the enterprise policy starts the search service initialising,
   // so we wait for that to complete before starting the test, we can
   // then also add an extra add-on engine.
-  await SearchService.init();
+  await Services.search.init();
   let settingsFileWritten = promiseAfterSettings();
   await SearchTestUtils.installSearchExtension();
   await settingsFileWritten;
@@ -92,11 +92,11 @@ add_task(async function test_load_and_check_settings() {
  * @param {object} expectedData The expected data for the engine
  */
 async function assertInstalledEngineMatches(expectedData) {
-  let engine = await SearchService.getEngineByName(expectedData.name);
+  let engine = await Services.search.getEngineByName(expectedData.name);
 
   Assert.ok(engine, `Should have found the ${expectedData.type} engine`);
   Assert.equal(
-    engine._loadPath,
+    engine.wrappedJSObject._loadPath,
     expectedData.loadPath,
     "Should have migrated the loadPath"
   );
@@ -105,8 +105,8 @@ async function assertInstalledEngineMatches(expectedData) {
 add_task(async function test_migration_from_pre_ids() {
   const settingsFileWritten = promiseAfterSettings();
 
-  await SearchService.reset();
-  await SearchService.init();
+  await Services.search.wrappedJSObject.reset();
+  await Services.search.init();
 
   await settingsFileWritten;
 

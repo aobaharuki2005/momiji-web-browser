@@ -1,16 +1,10 @@
 features:
-- name: overflow-clip-margin
-  files:
-  - overflow-clip-margin*
 - name: scroll-markers
   files:
   - scroll-markers*
-- name: scroll-buttons
+- name: scrollbar-buttons
   files:
   - scroll-button*
-- name: scroll-target-group
-  files:
-  - scroll-target-group*
 - name: scrollbar-gutter
   files:
   - scrollbar-gutter-*
@@ -18,6 +12,3 @@ features:
   files:
   - line-clamp-*
   - webkit-line-clamp-*
-- name: text-overflow
-  files:
-  - text-overflow-*

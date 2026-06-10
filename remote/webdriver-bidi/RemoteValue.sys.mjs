@@ -461,7 +461,7 @@ function getSharedIdForNode(node, extraOptions) {
     return null;
   }
 
-  const browsingContext = node.documentGlobal.browsingContext;
+  const browsingContext = node.ownerGlobal.browsingContext;
   if (!browsingContext) {
     return null;
   }
@@ -722,7 +722,7 @@ function serializeNode(
 
     const shadowRoot = node.openOrClosedShadowRoot;
     serialized.shadowRoot = null;
-    if (shadowRoot !== null && !shadowRoot.isUAWidget()) {
+    if (shadowRoot !== null) {
       serialized.shadowRoot = serialize(
         shadowRoot,
         serializationOptions,

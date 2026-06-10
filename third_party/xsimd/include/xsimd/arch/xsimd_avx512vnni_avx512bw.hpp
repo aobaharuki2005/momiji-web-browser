@@ -12,6 +12,9 @@
 #ifndef XSIMD_AVX512VNNI_AVX512_BW_HPP
 #define XSIMD_AVX512VNNI_AVX512_BW_HPP
 
+#include <array>
+#include <type_traits>
+
 #include "../types/xsimd_avx512vnni_avx512bw_register.hpp"
 
 #endif

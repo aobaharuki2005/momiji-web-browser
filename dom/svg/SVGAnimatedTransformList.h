@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,9 +7,8 @@
 #ifndef DOM_SVG_SVGANIMATEDTRANSFORMLIST_H_
 #define DOM_SVG_SVGANIMATEDTRANSFORMLIST_H_
 
-#include <memory>
-
 #include "mozilla/SMILAttr.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SVGTransformList.h"
 
 class nsAtom;
@@ -48,7 +49,7 @@ class SVGAnimatedTransformList {
   SVGAnimatedTransformList& operator=(const SVGAnimatedTransformList& aOther) {
     mBaseVal = aOther.mBaseVal;
     if (aOther.mAnimVal) {
-      mAnimVal = std::make_unique<SVGTransformList>(*aOther.mAnimVal);
+      mAnimVal = MakeUnique<SVGTransformList>(*aOther.mAnimVal);
     }
     mIsBaseSet = aOther.mIsBaseSet;
     mCreatedOrRemovedOnLastChange = aOther.mCreatedOrRemovedOnLastChange;
@@ -115,7 +116,7 @@ class SVGAnimatedTransformList {
     return mCreatedOrRemovedOnLastChange;
   }
 
-  std::unique_ptr<SMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement);
+  UniquePtr<SMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement);
 
  private:
   // mAnimVal is a pointer to allow us to determine if we're being animated or
@@ -124,7 +125,7 @@ class SVGAnimatedTransformList {
   // the empty string (<set to="">).
 
   SVGTransformList mBaseVal;
-  std::unique_ptr<SVGTransformList> mAnimVal;
+  UniquePtr<SVGTransformList> mAnimVal;
   bool mIsBaseSet;
   // See documentation for accessor.
   bool mCreatedOrRemovedOnLastChange;

@@ -27,7 +27,7 @@ In this document, we try to list these all tools.
    * - Custom clang checker
      -
      -
-     - :searchfox:`Source <build/clang-plugin>`
+     - `Source <https://searchfox.org/mozilla-central/source/build/clang-plugin>`_
      -
    * - Clang-Tidy
      - Yes
@@ -42,7 +42,7 @@ In this document, we try to list these all tools.
    * - cpp virtual final
      -
      -
-     - :ref:`cpp virtual final <cpp virtual final>`
+     - :ref:`cpp virtual final`
      -
    * - clang-format
      - Yes

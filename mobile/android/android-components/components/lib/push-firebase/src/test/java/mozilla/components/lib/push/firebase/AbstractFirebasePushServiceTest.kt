@@ -15,6 +15,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -26,7 +27,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class AbstractFirebasePushServiceTest {
@@ -101,7 +101,7 @@ class AbstractFirebasePushServiceTest {
                 return mockMessaging
             }
         }
-        assertNotNull(backgroundService.coroutineContext, "Dispatcher should be present")
+        assertNotNull("Dispatcher should be present", backgroundService.coroutineContext)
 
         assertFalse(
             "Default dispatcher should not be a Main dispatcher",

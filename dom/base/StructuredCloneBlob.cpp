@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,10 +15,8 @@
 #include "js/Value.h"
 #include "js/Wrapper.h"
 #include "jsapi.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobImpl.h"
@@ -110,7 +110,7 @@ void StructuredCloneBlob::Deserialize(JSContext* aCx,
   {
     JSAutoRealm ar(aCx, scope);
 
-    mHolder->Read(aCx, aResult, aRv);
+    mHolder->Read(xpc::NativeGlobal(scope), aCx, aResult, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -173,8 +173,7 @@ bool StructuredCloneBlob::Holder::ReadStructuredCloneInternal(
       return false;
     }
 #endif
-    BlobImpls().AppendElements(
-        Span(aHolder->BlobImpls()).Subspan(blobOffset, blobCount));
+    BlobImpls().AppendElements(&aHolder->BlobImpls()[blobOffset], blobCount);
   }
 
   JSStructuredCloneData data(mStructuredCloneScope);
@@ -213,13 +212,8 @@ bool StructuredCloneBlob::WriteStructuredClone(JSContext* aCx,
 bool StructuredCloneBlob::Holder::WriteStructuredClone(
     JSContext* aCx, JSStructuredCloneWriter* aWriter,
     StructuredCloneHolder* aHolder) {
-  const auto& data = mBuffer->data();
-  CheckedUint32 dataSize(data.Size());
-  if (!dataSize.isValid()) {
-    return false;
-  }
-  if (!JS_WriteUint32Pair(aWriter, dataSize.value(),
-                          JS_STRUCTURED_CLONE_VERSION) ||
+  auto& data = mBuffer->data();
+  if (!JS_WriteUint32Pair(aWriter, data.Size(), JS_STRUCTURED_CLONE_VERSION) ||
       !JS_WriteUint32Pair(aWriter, aHolder->BlobImpls().Length(),
                           BlobImpls().Length())) {
     return false;

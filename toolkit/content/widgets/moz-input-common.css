@@ -6,10 +6,11 @@
 
 @layer input-common {
   :host {
+    --input-height: var(--size-item-small);
+    --input-width: var(--size-item-small);
     --input-space-offset: calc(var(--input-width) + var(--space-small));
-    --input-nested-offset: var(--input-space-offset);
     --input-margin-block-adjust: calc((1lh - var(--input-height)) / 2);
-    --input-icon-margin-block-adjust: calc((1lh - var(--icon-size)) / 2);
+    --icon-margin-block-adjust: calc((1lh - var(--icon-size)) / 2);
     --input-margin-inline-start-adjust: calc(-1 * var(--input-space-offset));
   }
 
@@ -19,17 +20,11 @@
 
   :host([inputlayout="block"]) {
     --input-space-offset: 0;
-    --input-nested-offset: var(--space-xlarge);
     --input-margin-block-adjust: var(--space-xsmall) 0;
   }
 
   :host([inputlayout="block"]:not(:state(has-label), :state(has-description))) {
     --input-margin-block-adjust: 0;
-  }
-
-  :host([inputlayout="inline-end"]) {
-    --input-space-offset: 0;
-    --input-nested-offset: var(--space-xlarge);
   }
 
   :host(:not([hidden])) {
@@ -42,24 +37,8 @@
 
   @media (forced-colors) {
     :host(:state(disabled)) {
-      color: var(--text-color-disabled);
+      color: GrayText;
     }
-  }
-
-  /* Inline-end layout */
-
-  :host([inputlayout="inline-end"]) .content-wrapper {
-    display: flex;
-    align-items: center;
-    gap: var(--space-medium);
-
-    > .label-wrapper {
-      flex: 1;
-    }
-  }
-
-  :host([inputlayout="inline-end"]) .description {
-    margin-block-start: var(--space-xxsmall);
   }
 
   /* Label text */
@@ -88,12 +67,6 @@
     width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  /* Undocumented hack for AI controls, do not use, it WILL be removed. (bug 2012250) */
-  h3.text {
-    display: inline-block;
-    margin: 0;
   }
 
   /* Input */
@@ -126,9 +99,7 @@
     vertical-align: top;
     width: var(--icon-size);
     height: var(--icon-size);
-    /* Margin is calculated from line height and icon size. */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-    margin-block: var(--input-icon-margin-block-adjust);
+    margin-block: var(--icon-margin-block-adjust);
     -moz-context-properties: fill, fill-opacity, stroke;
     fill: currentColor;
     stroke: currentColor;
@@ -141,6 +112,7 @@
   /* Description */
 
   :host(:state(has-description)) .description {
+    margin-inline-start: var(--input-space-offset);
     margin-block-start: var(--space-xxsmall);
   }
 
@@ -158,15 +130,15 @@
 
   /* Support link */
 
-  a[is="moz-support-link"]:not([hidden]),
-  ::slotted([slot="support-link"]:not([hidden])) {
+  a[is="moz-support-link"],
+  ::slotted([slot="support-link"]) {
     display: inline-block;
   }
 
   /* Nested fields */
 
   .nested {
-    margin-inline-start: var(--input-nested-offset);
+    margin-inline-start: var(--input-space-offset);
     display: flex;
     flex-direction: column;
   }

@@ -7,19 +7,24 @@ package org.mozilla.fenix.settings.autofill
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.preference.Preference
-import androidx.preference.SwitchPreferenceCompat
+import androidx.preference.SwitchPreference
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
@@ -28,15 +33,18 @@ import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.settings.requirePreference
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class AutofillSettingFragmentTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
     private lateinit var autofillSettingFragment: AutofillSettingFragment
     private val navController: NavController = mockk(relaxed = true)
 
+    @OptIn(ExperimentalCoroutinesApi::class) // advanceUntilIdle
     @Before
-    fun setUp() {
+    fun setUp() = runTestOnMain {
         every { testContext.components.settings } returns mockk(relaxed = true)
         every { testContext.components.core } returns mockk(relaxed = true)
 
@@ -53,10 +61,11 @@ class AutofillSettingFragmentTest {
         activity.supportFragmentManager.beginTransaction()
             .add(autofillSettingFragment, "CreditCardsSettingFragmentTest")
             .commitNow()
+        advanceUntilIdle()
     }
 
     @Test
-    fun `GIVEN the list of credit cards is not empty, WHEN fragment is displayed THEN the manage credit cards pref is 'Manage cards'`() = runTest {
+    fun `GIVEN the list of credit cards is not empty, WHEN fragment is displayed THEN the manage credit cards pref is 'Manage cards'`() = runTestOnMain {
         val preferenceTitle =
             testContext.getString(R.string.preferences_credit_cards_manage_saved_cards_2)
         val manageCardsPreference = autofillSettingFragment.findPreference<Preference>(
@@ -78,7 +87,7 @@ class AutofillSettingFragmentTest {
     }
 
     @Test
-    fun `GIVEN the list of credit cards is empty, WHEN fragment is displayed THEN the manage credit cards pref is 'Add card'`() = runTest {
+    fun `GIVEN the list of credit cards is empty, WHEN fragment is displayed THEN the manage credit cards pref is 'Add card'`() = runTestOnMain {
         val preferenceTitle =
             testContext.getString(R.string.preferences_credit_cards_add_credit_card_2)
         val manageCardsPreference = autofillSettingFragment.findPreference<Preference>(
@@ -98,15 +107,15 @@ class AutofillSettingFragmentTest {
         )
 
         assertNotNull(manageCardsPreference?.icon)
-        assertEquals(preferenceTitle, manageCardsPreference.title)
+        assertEquals(preferenceTitle, manageCardsPreference?.title)
 
-        manageCardsPreference.performClick()
+        manageCardsPreference?.performClick()
 
         verify { navController.navigate(directions) }
     }
 
     @Test
-    fun `GIVEN the list of addresses is not empty WHEN fragment is displayed THEN the manage addresses preference label is 'Manage addresses'`() = runTest {
+    fun `GIVEN the list of addresses is not empty WHEN fragment is displayed THEN the manage addresses preference label is 'Manage addresses'`() = runTestOnMain {
         val preferenceTitle =
             testContext.getString(R.string.preferences_addresses_manage_addresses)
         val manageAddressesPreference = autofillSettingFragment.findPreference<Preference>(
@@ -137,7 +146,7 @@ class AutofillSettingFragmentTest {
     }
 
     @Test
-    fun `GIVEN the list of addresses is empty WHEN fragment is displayed THEN the manage addresses preference label is 'Add address'`() = runTest {
+    fun `GIVEN the list of addresses is empty WHEN fragment is displayed THEN the manage addresses preference label is 'Add address'`() = runTestOnMain {
         val preferenceTitle =
             testContext.getString(R.string.preferences_addresses_add_address)
         val manageAddressesPreference = autofillSettingFragment.findPreference<Preference>(
@@ -153,9 +162,9 @@ class AutofillSettingFragmentTest {
         )
 
         assertNotNull(manageAddressesPreference?.icon)
-        assertEquals(preferenceTitle, manageAddressesPreference.title)
+        assertEquals(preferenceTitle, manageAddressesPreference?.title)
 
-        manageAddressesPreference.performClick()
+        manageAddressesPreference?.performClick()
 
         verify {
             navController.navigate(
@@ -166,21 +175,21 @@ class AutofillSettingFragmentTest {
     }
 
     @Test
-    fun `GIVEN the autofill addresses feature is enabled THEN the addresses switch preference is checked`() = runTest {
+    fun `GIVEN the autofill addresses feature is enabled THEN the addresses switch preference is checked`() = runTestOnMain {
         every { testContext.components.settings.shouldAutofillAddressDetails } returns true
 
-        val autofillAddressesPreference = autofillSettingFragment.findPreference<SwitchPreferenceCompat>(
+        val autofillAddressesPreference = autofillSettingFragment.findPreference<SwitchPreference>(
             autofillSettingFragment.getPreferenceKey(R.string.pref_key_addresses_save_and_autofill_addresses),
         )
 
         autofillSettingFragment.updateSaveAndAutofillAddressesSwitch()
 
         assertNotNull(autofillAddressesPreference)
-        assertTrue(autofillAddressesPreference.isChecked)
+        assertTrue(autofillAddressesPreference?.isChecked!!)
     }
 
     @Test
-    fun `GIVEN the autofill addresses feature & sync are enabled THEN the sync addresses preference is visible`() = runTest {
+    fun `GIVEN the autofill addresses feature & sync are enabled THEN the sync addresses preference is visible`() = runTestOnMain {
         every { testContext.components.settings.isAddressSyncEnabled } returns true
 
         autofillSettingFragment.updateAddressPreference(
@@ -198,7 +207,7 @@ class AutofillSettingFragmentTest {
     }
 
     @Test
-    fun `GIVEN the autofill addresses feature AND sync is not enabled THEN the sync addresses preference is hidden`() = runTest {
+    fun `GIVEN the autofill addresses feature AND sync is not enabled THEN the sync addresses preference is hidden`() = runTestOnMain {
         every { testContext.components.settings.isAddressSyncEnabled } returns false
 
         autofillSettingFragment.updateAddressPreference(
@@ -216,44 +225,44 @@ class AutofillSettingFragmentTest {
     }
 
     @Test
-    fun `GIVEN the autofill addresses feature is disabled THEN the addresses switch preference is NOT checked`() = runTest {
+    fun `GIVEN the autofill addresses feature is disabled THEN the addresses switch preference is NOT checked`() = runTestOnMain {
         every { testContext.components.settings.shouldAutofillAddressDetails } returns false
 
-        val autofillAddressesPreference = autofillSettingFragment.findPreference<SwitchPreferenceCompat>(
+        val autofillAddressesPreference = autofillSettingFragment.findPreference<SwitchPreference>(
             autofillSettingFragment.getPreferenceKey(R.string.pref_key_addresses_save_and_autofill_addresses),
         )
 
         autofillSettingFragment.updateSaveAndAutofillAddressesSwitch()
 
         assertNotNull(autofillAddressesPreference)
-        assertFalse(autofillAddressesPreference.isChecked)
+        assertFalse(autofillAddressesPreference?.isChecked!!)
     }
 
     @Test
-    fun `GIVEN the autofill cards feature is enabled THEN cards the switch preference is checked`() = runTest {
+    fun `GIVEN the autofill cards feature is enabled THEN cards the switch preference is checked`() = runTestOnMain {
         every { testContext.components.settings.shouldAutofillCreditCardDetails } returns true
 
-        val autofillCardsPreference = autofillSettingFragment.findPreference<SwitchPreferenceCompat>(
+        val autofillCardsPreference = autofillSettingFragment.findPreference<SwitchPreference>(
             autofillSettingFragment.getPreferenceKey(R.string.pref_key_credit_cards_save_and_autofill_cards),
         )
 
         autofillSettingFragment.updateSaveAndAutofillCardsSwitch()
 
         assertNotNull(autofillCardsPreference)
-        assertTrue(autofillCardsPreference.isChecked)
+        assertTrue(autofillCardsPreference?.isChecked!!)
     }
 
     @Test
-    fun `GIVEN the autofill cards feature is disabled THEN the cards switch preference is NOT checked`() = runTest {
+    fun `GIVEN the autofill cards feature is disabled THEN the cards switch preference is NOT checked`() = runTestOnMain {
         every { testContext.components.settings.shouldAutofillCreditCardDetails } returns false
 
-        val autofillCardsPreference = autofillSettingFragment.findPreference<SwitchPreferenceCompat>(
+        val autofillCardsPreference = autofillSettingFragment.findPreference<SwitchPreference>(
             autofillSettingFragment.getPreferenceKey(R.string.pref_key_credit_cards_save_and_autofill_cards),
         )
 
         autofillSettingFragment.updateSaveAndAutofillCardsSwitch()
 
         assertNotNull(autofillCardsPreference)
-        assertFalse(autofillCardsPreference.isChecked)
+        assertFalse(autofillCardsPreference?.isChecked!!)
     }
 }

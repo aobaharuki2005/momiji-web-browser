@@ -5,14 +5,12 @@
 package org.mozilla.fenix.reviewprompt
 
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.CancellationException
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Store
 import mozilla.components.service.nimbus.evalJexlSafe
 import mozilla.components.service.nimbus.messaging.use
 import org.mozilla.experiments.nimbus.NimbusEventStore
 import org.mozilla.experiments.nimbus.NimbusMessagingHelperInterface
-import org.mozilla.fenix.GleanMetrics.CustomReviewPrompt
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.CheckIfEligibleForReviewPrompt
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.DoNotShowReviewPrompt
@@ -27,10 +25,8 @@ private const val REVIEW_PROMPT_SHOWN_NIMBUS_EVENT_ID = "review_prompt_shown"
 /**
  * [Middleware] evaluating the triggers to show a review prompt.
  *
- * @param continuousOnboardingInProgress If true then the prompt should not be shown.
- * @param shouldUseNewTriggerCriteria If true uses new main and sub-criteria, if false falls back to legacy criteria.
- * @param shouldShowCustomPrompt If true enables showing custom prompt UI, if false falls back to Play Store prompt.
- * @param disableCustomPrompt Update settings to disable the custom prompt UI.
+ * @param isReviewPromptFeatureEnabled If returns false disables the entire feature and prompt will never be shown.
+ * @param isTelemetryEnabled Returns true if the user allows sending technical and interaction telemetry.
  * @param createJexlHelper Returns a helper for evaluating JEXL expressions.
  * @param buildTriggerMainCriteria Builds a sequence of trigger's main criteria that all need to be true.
  * @param buildTriggerSubCriteria Builds a sequence of trigger's sub-criteria.
@@ -39,10 +35,8 @@ private const val REVIEW_PROMPT_SHOWN_NIMBUS_EVENT_ID = "review_prompt_shown"
  * @param nimbusEventStore [NimbusEventStore] used to record events evaluated in JEXL expressions.
  */
 class ReviewPromptMiddleware(
-    private val continuousOnboardingInProgress: () -> Boolean = { false },
-    private val shouldUseNewTriggerCriteria: () -> Boolean,
-    private val shouldShowCustomPrompt: () -> Boolean,
-    private val disableCustomPrompt: () -> Unit,
+    private val isReviewPromptFeatureEnabled: () -> Boolean,
+    private val isTelemetryEnabled: () -> Boolean,
     private val createJexlHelper: () -> NimbusMessagingHelperInterface,
     private val buildTriggerMainCriteria: (NimbusMessagingHelperInterface) -> Sequence<Boolean> =
         TriggerBuilder::mainCriteria,
@@ -91,7 +85,7 @@ class ReviewPromptMiddleware(
 
         when (action) {
             CheckIfEligibleForReviewPrompt -> handleReviewPromptCheck(store)
-            ReviewPromptShown -> handleReviewPromptShown()
+            ReviewPromptShown -> nimbusEventStore.recordEvent(REVIEW_PROMPT_SHOWN_NIMBUS_EVENT_ID)
             DoNotShowReviewPrompt -> Unit
             ShowCustomReviewPrompt -> Unit
             ShowPlayStorePrompt -> Unit
@@ -102,11 +96,6 @@ class ReviewPromptMiddleware(
 
     @Suppress("CognitiveComplexMethod")
     private fun handleReviewPromptCheck(store: Store<AppState, AppAction>) {
-        // We shouldn't show the review prompt if continuous onboarding is in progress.
-        if (continuousOnboardingInProgress()) {
-            return
-        }
-
         if (store.state.reviewPrompt != ReviewPromptState.Unknown) {
             // We only want to try to show it once to avoid unnecessary disk reads.
             return
@@ -115,7 +104,7 @@ class ReviewPromptMiddleware(
         val shouldShowPrompt: Boolean = createJexlHelper().use { jexlHelper ->
             // Keep the legacy criteria around, but use the nimbus data and jexl to trigger.
             // Leaving the original if-else logic and early return for readability.
-            if (!shouldUseNewTriggerCriteria()) {
+            if (!isReviewPromptFeatureEnabled()) {
                 val legacyCriteriaSatisfied = buildTriggerLegacyCriteria(jexlHelper).all { it }
                 return@use legacyCriteriaSatisfied
             }
@@ -131,39 +120,16 @@ class ReviewPromptMiddleware(
         }
 
         if (shouldShowPrompt) {
-            if (shouldShowCustomPrompt()) {
-                store.dispatch(ShowCustomReviewPrompt)
+            if (isTelemetryEnabled()) {
+                // This is a temporary change while investigating repeated custom review prompts as
+                // filed in https://bugzilla.mozilla.org/show_bug.cgi?id=2001801.
+                store.dispatch(ShowPlayStorePrompt)
             } else {
                 store.dispatch(ShowPlayStorePrompt)
             }
         } else {
             store.dispatch(DoNotShowReviewPrompt)
         }
-    }
-
-    private fun handleReviewPromptShown() {
-        nimbusEventStore.recordEventOrThrow(eventId = REVIEW_PROMPT_SHOWN_NIMBUS_EVENT_ID)
-            .invokeOnCompletion { cause ->
-                when (cause) {
-                    null -> recordResult("success")
-                    is CancellationException -> recordResult("cancelled")
-                    else -> {
-                        // Failed.
-                        disableCustomPrompt()
-                        recordResult("error")
-                    }
-                }
-            }
-    }
-
-    /**
-     * Send telemetry for a result of [NimbusEventStore.recordEventOrThrow].
-     */
-    private fun recordResult(result: String) {
-        CustomReviewPrompt.nimbusEventRecorded.record(
-            CustomReviewPrompt.NimbusEventRecordedExtra(result),
-        )
-        CustomReviewPrompt.recordNimbusEventAttempts[result].add(1)
     }
 }
 
@@ -218,12 +184,10 @@ internal fun usedAppOnAtLeastFourOfLastSevenDays(
 /**
  * Matches logic from ReviewPromptController.shouldShowPrompt, which has been deleted.
  * Kept so we can fall back to it in case the custom review prompt is disabled with a kill-switch.
- *
- * Note: Because Nimbus limits data to 4 calendar years, this will ignore app opens before then.
  */
 @VisibleForTesting
 internal fun hasBeenOpenedSeveralTimes(
     jexlHelper: NimbusMessagingHelperInterface,
 ): Boolean {
-    return jexlHelper.evalJexlSafe("'app_opened'|eventSum('Years', 4, 0) >= 5")
+    return jexlHelper.evalJexlSafe("number_of_app_launches >= 5")
 }

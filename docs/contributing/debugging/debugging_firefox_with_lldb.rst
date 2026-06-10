@@ -7,11 +7,11 @@ Mozilla-specific lldb settings
 ------------------------------
 
 There's an
-``.lldbinit`` :searchfox:`file <.lldbinit>`
+``.lldbinit`` `file <https://searchfox.org/mozilla-central/source/.lldbinit>`_
 in the Mozilla source tree, which applies recommended settings and
 includes a few type summaries and Mozilla-specific debugging commands
 via the lldbutils module (see
-:searchfox:`python/lldbutils/README.txt`).
+`python/lldbutils/README.txt <https://searchfox.org/mozilla-central/source/python/lldbutils/README.txt>`__).
 For information about available features see the links above and the `Using
 LLDB to debug Gecko <http://mcc.id.au/blog/2014/01/lldb-gecko>`__ blog
 post.

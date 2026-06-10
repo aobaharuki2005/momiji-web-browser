@@ -43,10 +43,7 @@ async function onBrowseBtnPress() {
  * @param {object} event
  *        The event causing this handler function to be called.
  */
-async function onDialogAccept(event) {
-  // Prevent the window from closing in case adding the module fails.
-  event.preventDefault();
-
+function onDialogAccept(event) {
   let nameBox = document.getElementById("device_name");
   let pathBox = document.getElementById("device_path");
   let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
@@ -54,10 +51,10 @@ async function onDialogAccept(event) {
   );
 
   try {
-    await pkcs11ModuleDB.addModule(nameBox.value, pathBox.value, 0, 0);
-    window.close();
+    pkcs11ModuleDB.addModule(nameBox.value, pathBox.value, 0, 0);
   } catch (e) {
     addModuleFailure("add-module-failure");
+    event.preventDefault();
   }
 }
 

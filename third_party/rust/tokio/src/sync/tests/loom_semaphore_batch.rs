@@ -164,13 +164,13 @@ fn batch() {
     b.check(|| {
         let semaphore = Arc::new(Semaphore::new(10));
         let active = Arc::new(AtomicUsize::new(0));
-        let mut threads = vec![];
+        let mut ths = vec![];
 
         for _ in 0..2 {
             let semaphore = semaphore.clone();
             let active = active.clone();
 
-            threads.push(thread::spawn(move || {
+            ths.push(thread::spawn(move || {
                 for n in &[4, 10, 8] {
                     block_on(semaphore.acquire(*n)).unwrap();
 
@@ -188,8 +188,8 @@ fn batch() {
             }));
         }
 
-        for thread in threads.into_iter() {
-            thread.join().unwrap();
+        for th in ths.into_iter() {
+            th.join().unwrap();
         }
 
         assert_eq!(10, semaphore.available_permits());

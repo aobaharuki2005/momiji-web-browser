@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IdleTaskRunner.h"
-#include "mozilla/AppShutdown.h"
 #include "mozilla/TaskController.h"
 #include "nsRefreshDriver.h"
 
@@ -136,9 +137,8 @@ void IdleTaskRunner::Run() {
   }
 }
 
-void IdleTaskRunner::TimedOut(nsITimer* aTimer, void* aClosure) {
+static void TimedOut(nsITimer* aTimer, void* aClosure) {
   RefPtr<IdleTaskRunner> runner = static_cast<IdleTaskRunner*>(aClosure);
-  runner->mTimerActive = false;
   runner->Run();
 }
 
@@ -285,15 +285,17 @@ void IdleTaskRunner::ResetTimer(TimeDuration aDelay) {
   if (mTimer) {
     // We rely on timers that target the main thread to be infallible (except
     // for very late shutdown edge cases that should not occur, normally).
-    nsresult rv = mTimer->InitWithNamedFuncCallback(
+    DebugOnly<nsresult> rv = mTimer->InitWithNamedFuncCallback(
         TimedOut, this, aDelay.ToMilliseconds(), nsITimer::TYPE_ONE_SHOT,
         mName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      MOZ_ASSERT(
-          AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads));
-    } else {
-      mTimerActive = true;
+#ifdef DEBUG
+    if (NS_FAILED(rv)) {
+      NS_WARNING(nsCString("Failed to set IdleTaskRunner timer for:"_ns + mName)
+                     .get());
     }
+#endif
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    mTimerActive = true;
   }
 }
 

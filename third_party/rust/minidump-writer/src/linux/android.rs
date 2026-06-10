@@ -1,10 +1,8 @@
-use {
-    super::{
-        maps_reader::MappingInfo, mem_reader::CopyFromProcessError,
-        minidump_writer::MinidumpWriter, Pid,
-    },
-    goblin::elf,
-};
+use crate::errors::AndroidError;
+use crate::maps_reader::MappingInfo;
+use crate::ptrace_dumper::PtraceDumper;
+use crate::Pid;
+use goblin::elf;
 
 cfg_if::cfg_if! {
     if #[cfg(target_pointer_width = "32")] {
@@ -28,20 +26,6 @@ cfg_if::cfg_if! {
 
 type Result<T> = std::result::Result<T, AndroidError>;
 
-#[derive(Debug, thiserror::Error, serde::Serialize)]
-pub enum AndroidError {
-    #[error("Failed to copy memory from process")]
-    CopyFromProcessError(#[from] CopyFromProcessError),
-    #[error("Failed slice conversion")]
-    TryFromSliceError(
-        #[from]
-        #[serde(skip)]
-        std::array::TryFromSliceError,
-    ),
-    #[error("No Android rel found")]
-    NoRelFound,
-}
-
 struct DynVaddresses {
     min_vaddr: usize,
     dyn_vaddr: usize,
@@ -52,7 +36,7 @@ fn has_android_packed_relocations(pid: Pid, load_bias: usize, vaddrs: DynVaddres
     let dyn_addr = load_bias + vaddrs.dyn_vaddr;
     for idx in 0..vaddrs.dyn_count {
         let addr = dyn_addr + SIZEOF_DYN * idx;
-        let dyn_data = MinidumpWriter::copy_from_process(pid, addr, SIZEOF_DYN)?;
+        let dyn_data = PtraceDumper::copy_from_process(pid, addr, SIZEOF_DYN)?;
         // TODO: Couldn't find a nice way to use goblin for that, to avoid the unsafe-block
         let dyn_obj: Dyn;
         unsafe {
@@ -92,7 +76,7 @@ fn parse_loaded_elf_program_headers(
     let mut dyn_vaddr = 0;
     let mut dyn_count = 0;
 
-    let phdr_opt = MinidumpWriter::copy_from_process(
+    let phdr_opt = PtraceDumper::copy_from_process(
         pid,
         phdr_addr,
         elf_header::SIZEOF_EHDR * ehdr.e_phnum as usize,
@@ -130,7 +114,7 @@ pub fn late_process_mappings(pid: Pid, mappings: &mut [MappingInfo]) -> Result<(
         .filter(|m| m.is_executable() && m.name_is_path())
     {
         let ehdr_opt =
-            MinidumpWriter::copy_from_process(pid, map.start_address, elf_header::SIZEOF_EHDR)
+            PtraceDumper::copy_from_process(pid, map.start_address, elf_header::SIZEOF_EHDR)
                 .ok()
                 .and_then(|x| elf_header::Header::parse(&x).ok());
 

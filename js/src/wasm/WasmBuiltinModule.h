@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * Copyright 2021 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +26,6 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCompileArgs.h"
 #include "wasm/WasmConstants.h"
-#include "wasm/WasmModuleTypes.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmTypeDecls.h"
 #include "wasm/WasmTypeDef.h"
@@ -127,17 +128,10 @@ class BuiltinModuleFuncs {
 mozilla::Maybe<BuiltinModuleId> ImportMatchesBuiltinModule(
     mozilla::Span<const char> importName,
     const BuiltinModuleIds& enabledBuiltins);
-mozilla::Maybe<BuiltinModuleId> ImportMatchesBuiltinModule(
-    const Import& import, const BuiltinModuleIds& enabledBuiltins);
-
-// Returns true if the import field matches a definition in the given builtin
-// module for the given definition kind. The out-params matchedFunc and
-// matchedFuncId are only used when kind == DefinitionKind::Function, and may
-// be null if the caller doesn't need them.
-bool ImportFieldMatchesBuiltinModuleDefinition(
-    mozilla::Span<const char> importName, BuiltinModuleId module,
-    DefinitionKind kind, const BuiltinModuleFunc** matchedFunc = nullptr,
-    BuiltinModuleFuncId* matchedFuncId = nullptr);
+bool ImportMatchesBuiltinModuleFunc(mozilla::Span<const char> importName,
+                                    BuiltinModuleId module,
+                                    const BuiltinModuleFunc** matchedFunc,
+                                    BuiltinModuleFuncId* matchedFuncId);
 
 // Compile and return the builtin module for a particular
 // builtin module. The `moduleMemoryImport` can be used if the builtin module

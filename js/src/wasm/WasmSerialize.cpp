@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -682,20 +684,6 @@ CoderResult CodeTypeDef(Coder<mode>& coder, CoderArg<mode, TypeDef> item) {
       MOZ_TRY(CodeArrayType(coder, &item->arrayType_));
       break;
     }
-#ifdef ENABLE_WASM_JSPI
-    case TypeDefKind::Cont: {
-      if constexpr (mode == MODE_DECODE) {
-        uint32_t funcTypeIndex;
-        MOZ_TRY(CodePod(coder, &funcTypeIndex));
-        new (&item->contType_) ContType(&coder.types_->type(funcTypeIndex));
-      } else {
-        uint32_t funcTypeIndex =
-            coder.types_->indexOf(item->contType_.funcTypeDef());
-        MOZ_TRY(CodePod(coder, &funcTypeIndex));
-      }
-      break;
-    }
-#endif
     case TypeDefKind::None: {
       break;
     }
@@ -926,20 +914,13 @@ CoderResult CodeNameSection(Coder<mode>& coder,
 }
 
 template <CoderMode mode>
-CoderResult CodeTableType(Coder<mode>& coder, CoderArg<mode, TableType> type) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TableType, 48);
-  MOZ_TRY(CodeRefType(coder, &type->elemType));
-  MOZ_TRY(CodePod(coder, &type->limits));
-  return Ok();
-}
-
-template <CoderMode mode>
 CoderResult CodeTableDesc(Coder<mode>& coder, CoderArg<mode, TableDesc> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TableDesc, 144);
-  MOZ_TRY(CodeTableType(coder, &item->type));
+  MOZ_TRY(CodeRefType(coder, &item->elemType));
   MOZ_TRY(CodePod(coder, &item->isImported));
   MOZ_TRY(CodePod(coder, &item->isExported));
   MOZ_TRY(CodePod(coder, &item->isAsmJS));
+  MOZ_TRY(CodePod(coder, &item->limits));
   MOZ_TRY(
       (CodeMaybe<mode, InitExpr, &CodeInitExpr<mode>>(coder, &item->initExpr)));
   return Ok();
@@ -963,11 +944,7 @@ CoderResult CodeTrapSitesForKind(Coder<mode>& coder,
 
 template <CoderMode mode>
 CoderResult CodeTrapSites(Coder<mode>& coder, CoderArg<mode, TrapSites> item) {
-#ifdef ENABLE_WASM_JSPI
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TrapSites, 2400);
-#else
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TrapSites, 2240);
-#endif
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TrapSites, 2080);
   for (Trap trap : mozilla::MakeEnumeratedRange(Trap::Limit)) {
     MOZ_TRY(CodeTrapSitesForKind(coder, &item->array_[trap]));
   }
@@ -991,9 +968,9 @@ template <CoderMode mode>
 CoderResult CodeScriptedCaller(Coder<mode>& coder,
                                CoderArg<mode, ScriptedCaller> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::ScriptedCaller, 16);
-  MOZ_TRY((CodeUniqueChars(coder, &item->source)));
+  MOZ_TRY((CodeUniqueChars(coder, &item->filename)));
+  MOZ_TRY((CodePod(coder, &item->filenameIsURL)));
   MOZ_TRY((CodePod(coder, &item->line)));
-  MOZ_TRY((CodePod(coder, &item->kind)));
   return Ok();
 }
 
@@ -1013,7 +990,7 @@ CoderResult CodeBuiltinModuleIds(Coder<mode>& coder,
 template <CoderMode mode>
 CoderResult CodeFeatureArgs(Coder<mode>& coder,
                             CoderArg<mode, FeatureArgs> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(FeatureArgs, 40);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(FeatureArgs, 32);
 #define WASM_FEATURE(NAME, LOWER_NAME, ...) \
   MOZ_TRY(CodePod(coder, &item->LOWER_NAME));
   JS_FOR_WASM_FEATURES(WASM_FEATURE)
@@ -1028,7 +1005,7 @@ CoderResult CodeFeatureArgs(Coder<mode>& coder,
 template <CoderMode mode>
 CoderResult CodeCompileArgs(Coder<mode>& coder,
                             CoderArg<mode, CompileArgs> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::CompileArgs, 80);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::CompileArgs, 72);
   MOZ_TRY((CodeScriptedCaller(coder, &item->scriptedCaller)));
   MOZ_TRY((CodeUniqueChars(coder, &item->sourceMapURL)));
   MOZ_TRY((CodePod(coder, &item->baselineEnabled)));
@@ -1324,11 +1301,7 @@ CoderResult CodeFuncToCodeRangeMap(
 CoderResult CodeCodeBlock(Coder<MODE_DECODE>& coder,
                           wasm::UniqueCodeBlock* item,
                           const wasm::LinkData& linkData) {
-#ifdef ENABLE_WASM_JSPI
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::CodeBlock, 3104);
-#else
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::CodeBlock, 2944);
-#endif
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::CodeBlock, 2784);
   *item = js::MakeUnique<CodeBlock>(CodeBlock::kindFromTier(Tier::Serialized));
   if (!*item) {
     return Err(OutOfMemory());
@@ -1346,7 +1319,7 @@ CoderResult CodeCodeBlock(Coder<MODE_DECODE>& coder,
   uint32_t allocationLength;
   CodeSource codeSource(codeBytes, codeBytesLength, linkData, nullptr);
   (*item)->segment =
-      CodeSegment::allocate(codeSource, nullptr, /* allowLastDitchGC = */ true,
+      CodeSegment::allocate(codeSource, nullptr, /* allowLastDitchGC */ true,
                             &codeStart, &allocationLength);
   if (!(*item)->segment) {
     return Err(OutOfMemory());
@@ -1369,11 +1342,7 @@ template <CoderMode mode>
 CoderResult CodeCodeBlock(Coder<mode>& coder,
                           CoderArg<mode, wasm::CodeBlock> item,
                           const wasm::LinkData& linkData) {
-#ifdef ENABLE_WASM_JSPI
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::CodeBlock, 3104);
-#else
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::CodeBlock, 2944);
-#endif
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::CodeBlock, 2784);
   STATIC_ASSERT_ENCODING_OR_SIZING;
   MOZ_TRY(Magic(coder, Marker::CodeBlock));
 
@@ -1448,12 +1417,6 @@ CoderResult CodeSharedCode(Coder<MODE_DECODE>& coder, wasm::SharedCode* item,
   MOZ_TRY(CodePod(coder, &offsetOfCallRefMetricsStub));
   code->setUpdateCallRefMetricsStubOffset(offsetOfCallRefMetricsStub);
 
-#ifdef ENABLE_WASM_JSPI
-  uint32_t offsetOfContBaseFrame = 0;
-  MOZ_TRY(CodePod(coder, &offsetOfContBaseFrame));
-  code->setContBaseFrameOffset(offsetOfContBaseFrame);
-#endif
-
   *item = code;
   return Ok();
 }
@@ -1486,11 +1449,6 @@ CoderResult CodeSharedCode(Coder<mode>& coder,
   uint32_t offsetOfCallRefMetricsStub =
       (*item)->updateCallRefMetricsStubOffset();
   MOZ_TRY(CodePod(coder, &offsetOfCallRefMetricsStub));
-
-#ifdef ENABLE_WASM_JSPI
-  uint32_t offsetOfContBaseFrame = (*item)->contBaseFrameOffset();
-  MOZ_TRY(CodePod(coder, &offsetOfContBaseFrame));
-#endif
 
   return Ok();
 }

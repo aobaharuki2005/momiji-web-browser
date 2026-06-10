@@ -119,7 +119,7 @@ add_task(async function topSites_otherEmptySearch() {
     Assert.ok(!win.gURLBar.view.isOpen, "View is not open");
     await searchPromise;
     await UrlbarTestUtils.assertSearchMode(win, {
-      engineName: SearchService.defaultEngine.name,
+      engineName: Services.search.defaultEngine.name,
       isGeneralPurposeEngine: true,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       isPreview: false,
@@ -207,8 +207,7 @@ add_task(async function topSites_nonTopSitesResults() {
         }),
       ],
     });
-    let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-    providersManager.registerProvider(provider);
+    UrlbarProvidersManager.registerProvider(provider);
 
     // Open the view. It should open synchronously and the cached top-sites
     // context should be used. The suggested-index result should not be
@@ -243,7 +242,7 @@ add_task(async function topSites_nonTopSitesResults() {
       urls: [suggestedIndexURL, ...TEST_URLS],
     });
 
-    providersManager.unregisterProvider(provider);
+    UrlbarProvidersManager.unregisterProvider(provider);
   });
 });
 

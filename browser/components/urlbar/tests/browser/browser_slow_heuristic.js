@@ -5,15 +5,10 @@
 
 "use strict";
 
-const { UrlbarEventBufferer } = ChromeUtils.importESModule(
-  "chrome://browser/content/urlbar/UrlbarEventBufferer.mjs",
-  { global: "current" }
-);
-
 add_task(async function test_slow_heuristic() {
-  // Must be between chunkResultsDelayMs and DEFERRING_TIMEOUT_MS
+  // Must be between CHUNK_RESULTS_DELAY_MS and DEFERRING_TIMEOUT_MS
   let timeout = 150;
-  Assert.greater(timeout, ProvidersManager.chunkResultsDelayMs);
+  Assert.greater(timeout, UrlbarProvidersManager.CHUNK_RESULTS_DELAY_MS);
   Assert.greater(UrlbarEventBufferer.DEFERRING_TIMEOUT_MS, timeout);
 
   // First, add a provider that adds a heuristic result on a delay.
@@ -29,10 +24,9 @@ add_task(async function test_slow_heuristic() {
     priority: Infinity,
     addTimeout: timeout,
   });
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(heuristicProvider);
+  UrlbarProvidersManager.registerProvider(heuristicProvider);
   registerCleanupFunction(() => {
-    providersManager.unregisterProvider(heuristicProvider);
+    UrlbarProvidersManager.unregisterProvider(heuristicProvider);
   });
 
   // Do a search without waiting for a result.
@@ -52,10 +46,10 @@ add_task(async function test_slow_heuristic() {
 
 add_task(async function test_fast_heuristic() {
   let longTimeoutMs = 1000000;
-  let originalHeuristicTimeout = ProvidersManager.chunkResultsDelayMs;
-  ProvidersManager.chunkResultsDelayMs = longTimeoutMs;
+  let originalHeuristicTimeout = UrlbarProvidersManager.CHUNK_RESULTS_DELAY_MS;
+  UrlbarProvidersManager.CHUNK_RESULTS_DELAY_MS = longTimeoutMs;
   registerCleanupFunction(() => {
-    ProvidersManager.chunkResultsDelayMs = originalHeuristicTimeout;
+    UrlbarProvidersManager.CHUNK_RESULTS_DELAY_MS = originalHeuristicTimeout;
   });
 
   // Add a fast heuristic provider.
@@ -70,10 +64,9 @@ add_task(async function test_fast_heuristic() {
     name: "heuristicProvider",
     priority: Infinity,
   });
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(heuristicProvider);
+  UrlbarProvidersManager.registerProvider(heuristicProvider);
   registerCleanupFunction(() => {
-    providersManager.unregisterProvider(heuristicProvider);
+    UrlbarProvidersManager.unregisterProvider(heuristicProvider);
   });
 
   // Do a search.
@@ -83,7 +76,7 @@ add_task(async function test_fast_heuristic() {
   Assert.greater(
     longTimeoutMs,
     ChromeUtils.now() - startTime,
-    "Heuristic result is returned faster than chunkResultsDelayMs"
+    "Heuristic result is returned faster than CHUNK_RESULTS_DELAY_MS"
   );
 
   await UrlbarTestUtils.promisePopupClose(win);

@@ -4,7 +4,7 @@
 
 package mozilla.components.support.ktx.android.os
 
-import android.os.Bundle
+import androidx.core.os.bundleOf
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.base.crash.Breadcrumb
 import org.junit.Assert.assertFalse
@@ -18,33 +18,33 @@ class BundleTest {
 
     @Test
     fun `bundles with different sizes should not be equals`() {
-        val small = Bundle().apply {
-            putString("hello", "world")
-        }
-        val big = Bundle().apply {
-            putString("hello", "world")
-            putString("foo", "bar")
-        }
+        val small = bundleOf(
+            "hello" to "world",
+        )
+        val big = bundleOf(
+            "hello" to "world",
+            "foo" to "bar",
+        )
         assertFalse(small.contentEquals(big))
     }
 
     @Test
     fun `bundles with arrays should be equal`() {
         val (bundle1, bundle2) = (0..1).map {
-            Bundle().apply {
-                putString("str", "world")
-                putInt("int", 0)
-                putBooleanArray("boolArray", booleanArrayOf(true, false))
-                putByteArray("byteArray", "test".toByteArray())
-                putCharArray("charArray", "test".toCharArray())
-                putDoubleArray("doubleArray", doubleArrayOf(0.0, 1.1))
-                putFloatArray("floatArray", floatArrayOf(1f, 2f))
-                putIntArray("intArray", intArrayOf(0, 1, 2))
-                putLongArray("longArray", longArrayOf(0L, 1L))
-                putShortArray("shortArray", shortArrayOf(1, 2))
-                putStringArray("typedArray", arrayOf("foo", "bar"))
-                putBundle("nestedBundle", Bundle())
-            }
+            bundleOf(
+                "str" to "world",
+                "int" to 0,
+                "boolArray" to booleanArrayOf(true, false),
+                "byteArray" to "test".toByteArray(),
+                "charArray" to "test".toCharArray(),
+                "doubleArray" to doubleArrayOf(0.0, 1.1),
+                "floatArray" to floatArrayOf(1f, 2f),
+                "intArray" to intArrayOf(0, 1, 2),
+                "longArray" to longArrayOf(0L, 1L),
+                "shortArray" to shortArrayOf(1, 2),
+                "typedArray" to arrayOf("foo", "bar"),
+                "nestedBundle" to bundleOf(),
+            )
         }
         assertTrue(bundle1.contentEquals(bundle2))
     }
@@ -53,16 +53,13 @@ class BundleTest {
     fun `bundles with parcelables should be equal`() {
         val date = Date()
         val (bundle1, bundle2) = (0..1).map {
-            Bundle().apply {
-                putParcelable(
-                    "crumbs",
-                    Breadcrumb(
-                        message = "msg",
-                        level = Breadcrumb.Level.DEBUG,
-                        date = date,
-                    ),
-                )
-            }
+            bundleOf(
+                "crumbs" to Breadcrumb(
+                    message = "msg",
+                    level = Breadcrumb.Level.DEBUG,
+                    date = date,
+                ),
+            )
         }
         assertTrue(bundle1.contentEquals(bundle2))
     }

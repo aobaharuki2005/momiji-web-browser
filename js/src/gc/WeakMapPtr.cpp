@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -50,7 +52,7 @@ template <typename K, typename V>
 bool JS::WeakMapPtr<K, V>::init(JSContext* cx) {
   MOZ_ASSERT(!initialized());
   typename WeakMapDetails::Utils<K, V>::PtrType map =
-      cx->new_<typename WeakMapDetails::Utils<K, V>::Type>(cx->zone());
+      cx->new_<typename WeakMapDetails::Utils<K, V>::Type>(cx);
   if (!map) {
     return false;
   }

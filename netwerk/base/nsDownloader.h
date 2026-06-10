@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDownloader_h_
-#define nsDownloader_h_
+#ifndef nsDownloader_h__
+#define nsDownloader_h__
 
 #include "nsIDownloader.h"
 #include "nsCOMPtr.h"
@@ -33,4 +33,4 @@ class nsDownloader : public nsIDownloader {
   bool mLocationIsTemp{false};
 };
 
-#endif  // nsDownloader_h_
+#endif  // nsDownloader_h__

@@ -14,11 +14,9 @@
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <optional>
-#include <span>
 
+#include "api/array_view.h"
 #include "api/call/transport.h"
-#include "api/environment/environment.h"
 #include "api/media_types.h"
 #include "api/rtp_parameters.h"
 #include "api/task_queue/task_queue_base.h"
@@ -28,7 +26,6 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/thread_annotations.h"
-#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -52,21 +49,12 @@ class Demuxer {
 // same task-queue - the one that's passed in via the constructor.
 class DirectTransport : public Transport {
  public:
-  [[deprecated("Use constructor with Environment")]]
   DirectTransport(TaskQueueBase* task_queue,
                   std::unique_ptr<SimulatedPacketReceiverInterface> pipe,
                   Call* send_call,
                   const std::map<uint8_t, MediaType>& payload_type_map,
-                  std::span<const RtpExtension> audio_extensions,
-                  std::span<const RtpExtension> video_extensions);
-
-  DirectTransport(const Environment& env,
-                  TaskQueueBase* task_queue,
-                  std::unique_ptr<SimulatedPacketReceiverInterface> pipe,
-                  Call* send_call,
-                  const std::map<uint8_t, MediaType>& payload_type_map,
-                  std::span<const RtpExtension> audio_extensions,
-                  std::span<const RtpExtension> video_extensions);
+                  ArrayView<const RtpExtension> audio_extensions,
+                  ArrayView<const RtpExtension> video_extensions);
 
   ~DirectTransport() override;
 
@@ -78,9 +66,9 @@ class DirectTransport : public Transport {
   using Transport::SendRtcp;
   using Transport::SendRtp;
 
-  bool SendRtp(std::span<const uint8_t> data,
+  bool SendRtp(ArrayView<const uint8_t> data,
                const PacketOptions& options) override;
-  bool SendRtcp(std::span<const uint8_t> data,
+  bool SendRtcp(ArrayView<const uint8_t> data,
                 const PacketOptions& options) override;
 
   int GetAverageDelayMs();
@@ -90,10 +78,6 @@ class DirectTransport : public Transport {
   void LegacySendPacket(const uint8_t* data, size_t length);
   void Start();
 
-  // TODO(https://issues.webrtc.org/42223992): Make `env_` not optional once the
-  // constructor is updated.
-  std::optional<Environment> env_;
-  Clock& clock_;
   Call* const send_call_;
 
   TaskQueueBase* const task_queue_;

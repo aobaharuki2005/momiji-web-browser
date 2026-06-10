@@ -54,8 +54,7 @@ SharedDesktopFrame::SharedDesktopFrame(scoped_refptr<Core> core)
                    (*core)->stride(),
                    (*core)->pixel_format(),
                    (*core)->data(),
-                   (*core)->shared_memory(),
-                   (*core)->texture()),
+                   (*core)->shared_memory()),
       core_(core) {
   CopyFrameInfoFrom(*(core_->get()));
 }

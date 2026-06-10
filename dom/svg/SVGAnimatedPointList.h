@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,10 +7,9 @@
 #ifndef DOM_SVG_SVGANIMATEDPOINTLIST_H_
 #define DOM_SVG_SVGANIMATEDPOINTLIST_H_
 
-#include <memory>
-
 #include "SVGPointList.h"
 #include "mozilla/SMILAttr.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 
@@ -47,7 +48,7 @@ class SVGAnimatedPointList {
   SVGAnimatedPointList& operator=(const SVGAnimatedPointList& aOther) {
     mBaseVal = aOther.mBaseVal;
     if (aOther.mAnimVal) {
-      mAnimVal = std::make_unique<SVGPointList>(*aOther.mAnimVal);
+      mAnimVal = MakeUnique<SVGPointList>(*aOther.mAnimVal);
     }
     return *this;
   }
@@ -85,7 +86,7 @@ class SVGAnimatedPointList {
 
   bool IsAnimating() const { return !!mAnimVal; }
 
-  std::unique_ptr<SMILAttr> ToSMILAttr(dom::SVGElement* aElement);
+  UniquePtr<SMILAttr> ToSMILAttr(dom::SVGElement* aElement);
 
  private:
   // mAnimVal is a pointer to allow us to determine if we're being animated or
@@ -94,7 +95,7 @@ class SVGAnimatedPointList {
   // the empty string (<set to="">).
 
   SVGPointList mBaseVal;
-  std::unique_ptr<SVGPointList> mAnimVal;
+  UniquePtr<SVGPointList> mAnimVal;
 
   struct SMILAnimatedPointList : public SMILAttr {
    public:

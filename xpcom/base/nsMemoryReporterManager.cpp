@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,7 +20,9 @@
 #include "nsIOService.h"
 #include "nsIGlobalObject.h"
 #include "nsIXPConnect.h"
-#include "GeckoProfilerReporter.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "GeckoProfilerReporter.h"
+#endif
 #if defined(XP_UNIX) || defined(MOZ_DMD)
 #  include "nsMemoryInfoDumper.h"
 #endif
@@ -27,7 +31,6 @@
 #include "VRProcessManager.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs_memory.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/Services.h"
 #include "mozilla/glean/XpcomMetrics.h"
@@ -470,7 +473,7 @@ static bool InSharedRegion(mach_vm_address_t aAddr, cpu_type_t aType) {
 
   cpu_type_t cpu_type;
   size_t len = sizeof(cpu_type);
-  if (sysctlbyname("sysctl.proc_cputype", &cpu_type, &len, nullptr, 0) != 0) {
+  if (sysctlbyname("sysctl.proc_cputype", &cpu_type, &len, NULL, 0) != 0) {
     return NS_ERROR_FAILURE;
   }
 
@@ -577,8 +580,6 @@ static bool InSharedRegion(mach_vm_address_t aAddr, cpu_type_t aType) {
 #  include <windows.h>
 #  include <psapi.h>
 #  include <algorithm>
-
-#  include "nsTHashMap.h"
 
 #  define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
 [[nodiscard]] static nsresult VsizeDistinguishedAmount(int64_t* aN) {
@@ -737,21 +738,43 @@ struct SegmentKind {
   DWORD mType;
   DWORD mProtect;
   int mIsStack;
-
-  PLDHashNumber Hash() const {
-    return mozilla::HashGeneric(mState, mType, mProtect, mIsStack);
-  }
-
-  bool operator==(const SegmentKind& aOther) const {
-    return mState == aOther.mState && mType == aOther.mType &&
-           mProtect == aOther.mProtect && mIsStack == aOther.mIsStack;
-  }
 };
 
-struct SegmentStats {
-  uint32_t mCount = 0;
-  size_t mSize = 0;
+struct SegmentEntry : public PLDHashEntryHdr {
+  static PLDHashNumber HashKey(const void* aKey) {
+    auto kind = static_cast<const SegmentKind*>(aKey);
+    return mozilla::HashGeneric(kind->mState, kind->mType, kind->mProtect,
+                                kind->mIsStack);
+  }
+
+  static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey) {
+    auto kind = static_cast<const SegmentKind*>(aKey);
+    auto entry = static_cast<const SegmentEntry*>(aEntry);
+    return kind->mState == entry->mKind.mState &&
+           kind->mType == entry->mKind.mType &&
+           kind->mProtect == entry->mKind.mProtect &&
+           kind->mIsStack == entry->mKind.mIsStack;
+  }
+
+  static void InitEntry(PLDHashEntryHdr* aEntry, const void* aKey) {
+    auto kind = static_cast<const SegmentKind*>(aKey);
+    auto entry = static_cast<SegmentEntry*>(aEntry);
+    entry->mKind = *kind;
+    entry->mCount = 0;
+    entry->mSize = 0;
+  }
+
+  static const PLDHashTableOps Ops;
+
+  SegmentKind mKind;  // The segment kind.
+  uint32_t mCount;    // The number of segments of this kind.
+  size_t mSize;       // The combined size of segments of this kind.
 };
+
+/* static */ const PLDHashTableOps SegmentEntry::Ops = {
+    SegmentEntry::HashKey, SegmentEntry::MatchEntry,
+    PLDHashTable::MoveEntryStub, PLDHashTable::ClearEntryStub,
+    SegmentEntry::InitEntry};
 
 class WindowsAddressSpaceReporter final : public nsIMemoryReporter {
   ~WindowsAddressSpaceReporter() {}
@@ -765,7 +788,7 @@ class WindowsAddressSpaceReporter final : public nsIMemoryReporter {
     // there were and their aggregate sizes. We use a hash table for this
     // because there are a couple of dozen different kinds possible.
 
-    nsTHashMap<nsGenericHashKey<SegmentKind>, SegmentStats> table;
+    PLDHashTable table(&SegmentEntry::Ops, sizeof(SegmentEntry));
     MEMORY_BASIC_INFORMATION info = {0};
     bool isPrevSegStackGuard = false;
     for (size_t currentAddress = 0;;) {
@@ -785,9 +808,12 @@ class WindowsAddressSpaceReporter final : public nsIMemoryReporter {
                      type == MEM_PRIVATE && protect == PAGE_READWRITE;
 
       SegmentKind kind = {state, type, protect, isStack ? 1 : 0};
-      SegmentStats& stats = table.LookupOrInsert(kind);
-      stats.mCount += 1;
-      stats.mSize += size;
+      auto entry =
+          static_cast<SegmentEntry*>(table.Add(&kind, mozilla::fallible));
+      if (entry) {
+        entry->mCount += 1;
+        entry->mSize += size;
+      }
 
       isPrevSegStackGuard = info.State == MEM_COMMIT &&
                             info.Type == MEM_PRIVATE &&
@@ -805,7 +831,7 @@ class WindowsAddressSpaceReporter final : public nsIMemoryReporter {
     // Then iterate over the hash table and report the details for each segment
     // kind.
 
-    for (auto& entry : table) {
+    for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
       // For each range of pages, we consider one or more of its State, Type
       // and Protect values. These are documented at
       // https://msdn.microsoft.com/en-us/library/windows/desktop/aa366775%28v=vs.85%29.aspx
@@ -817,9 +843,11 @@ class WindowsAddressSpaceReporter final : public nsIMemoryReporter {
       bool doType = false;
       bool doProtect = false;
 
+      auto entry = static_cast<const SegmentEntry*>(iter.Get());
+
       nsCString path("address-space");
 
-      switch (entry.GetKey().mState) {
+      switch (entry->mKind.mState) {
         case MEM_FREE:
           path.AppendLiteral("/free");
           break;
@@ -842,7 +870,7 @@ class WindowsAddressSpaceReporter final : public nsIMemoryReporter {
       }
 
       if (doType) {
-        switch (entry.GetKey().mType) {
+        switch (entry->mKind.mType) {
           case MEM_IMAGE:
             path.AppendLiteral("/image");
             break;
@@ -863,7 +891,7 @@ class WindowsAddressSpaceReporter final : public nsIMemoryReporter {
       }
 
       if (doProtect) {
-        DWORD protect = entry.GetKey().mProtect;
+        DWORD protect = entry->mKind.mProtect;
         // Basic attributes. Exactly one of these should be set.
         if (protect & PAGE_EXECUTE) {
           path.AppendLiteral("/execute");
@@ -902,17 +930,17 @@ class WindowsAddressSpaceReporter final : public nsIMemoryReporter {
         }
 
         // Annotate likely stack segments, too.
-        if (entry.GetKey().mIsStack) {
+        if (entry->mKind.mIsStack) {
           path.AppendLiteral("+stack");
         }
       }
 
       // Append the segment count.
-      path.AppendPrintf("(segments=%" PRIu32 ")", entry.GetData().mCount);
+      path.AppendPrintf("(segments=%u)", entry->mCount);
 
       aHandleReport->Callback(""_ns, path, KIND_OTHER, UNITS_BYTES,
-                              entry.GetData().mSize,
-                              "From MEMORY_BASIC_INFORMATION."_ns, aData);
+                              entry->mSize, "From MEMORY_BASIC_INFORMATION."_ns,
+                              aData);
     }
 
     return NS_OK;
@@ -1755,9 +1783,11 @@ nsMemoryReporterManager::Init() {
     mStrongEternalReporters->AppendElement(new DeadlockDetectorReporter());
 #endif
 
+#ifdef MOZ_GECKO_PROFILER
     // We have to register this here rather than in profiler_init() because
     // profiler_init() runs prior to nsMemoryReporterManager's creation.
     mStrongEternalReporters->AppendElement(new GeckoProfilerReporter());
+#endif
 
 #ifdef MOZ_DMD
     mStrongEternalReporters->AppendElement(new mozilla::dmd::DMDReporter());
@@ -1966,8 +1996,8 @@ nsresult nsMemoryReporterManager::StartGettingReports() {
   if (!s->mChildrenPending.IsEmpty()) {
     nsCOMPtr<nsITimer> timer;
     rv = NS_NewTimerWithFuncCallback(
-        getter_AddRefs(timer), TimeoutCallback, this,
-        StaticPrefs::memory_reporter_timeout(), nsITimer::TYPE_ONE_SHOT,
+        getter_AddRefs(timer), TimeoutCallback, this, kTimeoutLengthMS,
+        nsITimer::TYPE_ONE_SHOT,
         "nsMemoryReporterManager::StartGettingReports"_ns);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       FinishReporting();
@@ -2798,7 +2828,8 @@ class MinimizeMemoryUsageRunnable : public Runnable {
 
 NS_IMETHODIMP
 nsMemoryReporterManager::MinimizeMemoryUsage(nsIRunnable* aCallback) {
-  RefPtr runnable = MakeRefPtr<MinimizeMemoryUsageRunnable>(aCallback);
+  RefPtr<MinimizeMemoryUsageRunnable> runnable =
+      new MinimizeMemoryUsageRunnable(aCallback);
 
   return NS_DispatchToMainThread(runnable);
 }
@@ -2868,15 +2899,17 @@ namespace mozilla {
     return NS_ERROR_FAILURE;                  \
   }
 
-nsresult RegisterStrongMemoryReporter(
-    already_AddRefed<nsIMemoryReporter> aReporter) {
+nsresult RegisterStrongMemoryReporter(nsIMemoryReporter* aReporter) {
+  // Hold a strong reference to the argument to make sure it gets released if
+  // we return early below.
   nsCOMPtr<nsIMemoryReporter> reporter = aReporter;
   GET_MEMORY_REPORTER_MANAGER(mgr)
   return mgr->RegisterStrongReporter(reporter);
 }
 
-nsresult RegisterStrongAsyncMemoryReporter(
-    already_AddRefed<nsIMemoryReporter> aReporter) {
+nsresult RegisterStrongAsyncMemoryReporter(nsIMemoryReporter* aReporter) {
+  // Hold a strong reference to the argument to make sure it gets released if
+  // we return early below.
   nsCOMPtr<nsIMemoryReporter> reporter = aReporter;
   GET_MEMORY_REPORTER_MANAGER(mgr)
   return mgr->RegisterStrongAsyncReporter(reporter);

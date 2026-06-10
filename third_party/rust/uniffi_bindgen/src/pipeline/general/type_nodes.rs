@@ -11,9 +11,9 @@ use indexmap::IndexSet;
 
 use super::*;
 
-pub fn pass(namespace: &mut Namespace) -> Result<()> {
+pub fn pass(module: &mut Module) -> Result<()> {
     let mut used_as_error = IndexSet::<String>::default();
-    namespace.try_visit(|callable: &Callable| {
+    module.try_visit(|callable: &Callable| {
         if let Some(ty) = &callable.throws_type.ty {
             let type_name = match ty.ty.name() {
                 Some(name) => name.to_string(),
@@ -27,13 +27,13 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
     // used as errors in the interface.  See the `FlatInner` error from the `error-types` fixture
     // for an example.  It's not totally clear that this is correct, but this is how things have
     // historically worked.
-    namespace.visit(|en: &Enum| {
+    module.visit(|en: &Enum| {
         if matches!(en.shape, EnumShape::Error { .. }) {
             used_as_error.insert(en.name.clone());
         }
     });
 
-    namespace.visit_mut(|type_node: &mut TypeNode| {
+    module.visit_mut(|type_node: &mut TypeNode| {
         if let Some(name) = type_node.ty.name() {
             type_node.is_used_as_error = used_as_error.contains(name);
         }

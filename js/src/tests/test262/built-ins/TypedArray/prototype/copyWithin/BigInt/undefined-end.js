@@ -22,14 +22,14 @@ info: |
   7. If end is undefined, let relativeEnd be len; else let relativeEnd be ?
   ToInteger(end).
   ...
-includes: [compareArray.js, testTypedArray.js]
+includes: [compareArray.js, testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   assert(
     compareArray(
-      new TA(makeCtorArg([0n, 1n, 2n, 3n])).copyWithin(0, 1, undefined),
+      new TA([0n, 1n, 2n, 3n]).copyWithin(0, 1, undefined),
       [1n, 2n, 3n, 3n]
     ),
     '[0, 1, 2, 3].copyWithin(0, 1, undefined) -> [1, 2, 3]'
@@ -37,7 +37,7 @@ testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
 
   assert(
     compareArray(
-      new TA(makeCtorArg([0n, 1n, 2n, 3n])).copyWithin(0, 1),
+      new TA([0n, 1n, 2n, 3n]).copyWithin(0, 1),
       [1n, 2n, 3n, 3n]
     ),
     '[0, 1, 2, 3].copyWithin(0, 1) -> [1, 2, 3, 3]'

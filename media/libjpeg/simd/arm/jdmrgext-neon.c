@@ -1,5 +1,5 @@
 /*
- * Merged upsampling/color conversion (Arm Neon)
+ * jdmrgext-neon.c - merged upsampling/color conversion (Arm Neon)
  *
  * Copyright (C) 2020, Arm Limited.  All Rights Reserved.
  * Copyright (C) 2020, D. R. Commander.  All Rights Reserved.

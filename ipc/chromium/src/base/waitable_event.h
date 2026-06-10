@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -14,6 +16,8 @@
 #if defined(XP_UNIX)
 #  include <list>
 #  include <utility>
+#  include "base/condition_variable.h"
+#  include "base/lock.h"
 #  include "nsISupportsImpl.h"
 #endif
 
@@ -132,13 +136,11 @@ class WaitableEvent {
    public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WaitableEventKernel)
     WaitableEventKernel(bool manual_reset, bool initially_signaled)
-        : lock_("WaitableEventKernel"),
-          manual_reset_(manual_reset),
-          signaled_(initially_signaled) {}
+        : manual_reset_(manual_reset), signaled_(initially_signaled) {}
 
     bool Dequeue(Waiter* waiter, void* tag);
 
-    mozilla::Mutex lock_;
+    Lock lock_;
     const bool manual_reset_;
     bool signaled_;
     std::list<Waiter*> waiters_;

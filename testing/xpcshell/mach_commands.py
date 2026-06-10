@@ -199,16 +199,9 @@ class AndroidXPCShellRunner(MozbuildObject):
 def get_parser():
     build_obj = MozbuildObject.from_environment(cwd=here)
     if conditions.is_android(build_obj):
-        parser = parser_remote()
+        return parser_remote()
     else:
-        parser = parser_desktop()
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        default=False,
-        help="Force reinstallation of test symlinks even if up to date.",
-    )
-    return parser
+        return parser_desktop()
 
 
 @Command(
@@ -229,9 +222,8 @@ def run_xpcshell_test(command_context, test_objects=None, **params):
         m.tests.extend(test_objects)
         params["manifest"] = m
 
-    force = params.pop("force", False)
     driver = command_context._spawn(BuildDriver)
-    driver.install_tests(force=force)
+    driver.install_tests()
 
     # We should probably have a utility function to ensure the tree is
     # ready to run tests. Until then, we just create the state dir (in
@@ -300,7 +292,7 @@ def run_xpcshell_test(command_context, test_objects=None, **params):
             except KeyError:
                 # .get("tags") may raise KeyError.
                 tags = []
-            if "portal" in tags:
+            if "webextensions" in tags and "portal" in tags:
                 install_portal_test_dependencies = True
         else:
             # When run from "mach xpcshell-test", the manifest is not available
@@ -311,10 +303,11 @@ def run_xpcshell_test(command_context, test_objects=None, **params):
             install_portal_test_dependencies = False
 
         if install_portal_test_dependencies:
-            # Only Linux xpcshell tests that mock D-Bus interfaces need this.
+            dir_relpath = params["manifest"].get("dir_relpath")[0]
+            # Only Linux Native Messaging Portal xpcshell tests need this.
             req = os.path.join(
-                here,
-                "linux_portal_requirements.txt",
+                dir_relpath,
+                "linux_native-messaging-portal_requirements.txt",
             )
             command_context.virtualenv_manager.activate()
             command_context.virtualenv_manager.install_pip_requirements(

@@ -19,16 +19,13 @@ from textwrap import dedent
 import mozpack.path as mozpath
 import requests
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
-from mozbuild.util import set_taskcluster_root_url
+from taskgraph.util import taskcluster
 
 from .tasks import resolve_tests_by_suite
 from .util.ssh import get_ssh_user
 
 here = pathlib.Path(__file__).parent
 build = MozbuildObject.from_environment(cwd=str(here))
-
-# Set from mach settings in mach_commands.init()
-SKIP_ARTIFACT_BUILD_CHECK = False
 
 
 class ParameterConfig:
@@ -111,11 +108,6 @@ class Artifact(TryConfig):
             return {"use-artifact-builds": True, "disable-pgo": True}
 
         if no_artifact:
-            return
-
-        # If 'try.noartifact' is set in mach settings, default to non-artifact
-        # try instead of checking current build environment.
-        if SKIP_ARTIFACT_BUILD_CHECK:
             return
 
         if self.is_artifact_build():
@@ -347,10 +339,6 @@ class ExistingTasks(ParameterConfig):
     ]
 
     def find_decision_task(self, use_existing_tasks):
-        from taskgraph.util import taskcluster
-
-        set_taskcluster_root_url()
-
         branch = "try"
         if use_existing_tasks == "last_try_push":
             # Use existing tasks from user's previous try push.
@@ -377,10 +365,6 @@ class ExistingTasks(ParameterConfig):
     def get_parameters(self, use_existing_tasks, **kwargs):
         if not use_existing_tasks:
             return
-
-        from taskgraph.util import taskcluster
-
-        set_taskcluster_root_url()
 
         if use_existing_tasks.startswith("task-id="):
             tid = use_existing_tasks[len("task-id=") :]
@@ -413,7 +397,7 @@ class Rebuild(TryConfig):
             ["--rebuild"],
             {
                 "action": RangeAction,
-                "min": 1,
+                "min": 2,
                 "max": 20,
                 "default": None,
                 "type": int,
@@ -426,17 +410,16 @@ class Rebuild(TryConfig):
         if not rebuild:
             return
 
-        if not kwargs.get("new_test_config", False):
-            if rebuild == 1:
-                print(
-                    "warning: setting --rebuild to 1 is the same as not specifying it."
-                )
-            elif kwargs.get("full") and rebuild > 3:
-                print(
-                    "warning: limiting --rebuild to 3 when using --full. "
-                    "Use custom push actions to add more."
-                )
-                rebuild = 3
+        if (
+            not kwargs.get("new_test_config", False)
+            and kwargs.get("full")
+            and rebuild > 3
+        ):
+            print(
+                "warning: limiting --rebuild to 3 when using --full. "
+                "Use custom push actions to add more."
+            )
+            rebuild = 3
 
         return {
             "rebuild": rebuild,
@@ -573,23 +556,6 @@ class GeckoProfile(TryConfig):
                 "gecko-profile-threads": gecko_profile_threads,
             }
             return {key: value for key, value in cfg.items() if value is not None}
-
-
-class NativeProfiling(TryConfig):
-    arguments = [
-        [
-            ["--native-profiling"],
-            {
-                "action": "store_true",
-                "default": False,
-                "help": "Use OS-native profilers (Simpleperf for Android and xperf for Windows) when running tests. Only available in raptor-browsertime tests at the moment.",
-            },
-        ],
-    ]
-
-    def try_config(self, native_profiling, **kwargs):
-        if native_profiling:
-            return {"native-profiling": True}
 
 
 class Browsertime(TryConfig):
@@ -812,7 +778,6 @@ all_task_configs = {
     "env": Environment,
     "existing-tasks": ExistingTasks,
     "gecko-profile": GeckoProfile,
-    "native-profiling": NativeProfiling,
     "new-test-config": NewConfig,
     "path": Path,
     "test-tag": Tag,

@@ -47,11 +47,6 @@ private:
 
     shared_ptr_wrapper(std::shared_ptr<T> &&ptr) noexcept : ptr_{std::move(ptr)} {}
 
-    shared_ptr_wrapper(const shared_ptr_wrapper &)            = default;
-    shared_ptr_wrapper &operator=(const shared_ptr_wrapper &) = default;
-    shared_ptr_wrapper(shared_ptr_wrapper &&)                 = default;
-    shared_ptr_wrapper &operator=(shared_ptr_wrapper &&)      = default;
-
     virtual ~shared_ptr_wrapper() {}
 
     virtual void CopyTo(PlacementBuffer &buffer) const noexcept
@@ -103,20 +98,20 @@ public:
             typename std::enable_if<std::is_convertible<U *, pointer>::value>::type * = nullptr>
   shared_ptr(shared_ptr<U> &&other) noexcept
   {
-    std::move(other).wrapper().template MoveTo<T>(buffer_);
+    other.wrapper().template MoveTo<T>(buffer_);
   }
 
   shared_ptr(const shared_ptr &other) noexcept { other.wrapper().CopyTo(buffer_); }
 
   shared_ptr(unique_ptr<T> &&other) noexcept
   {
-    std::shared_ptr<T> ptr_(std::move(other).release());
+    std::shared_ptr<T> ptr_(other.release());
     new (buffer_.data) shared_ptr_wrapper{std::move(ptr_)};
   }
 
   shared_ptr(std::unique_ptr<T> &&other) noexcept
   {
-    std::shared_ptr<T> ptr_(std::move(other).release());
+    std::shared_ptr<T> ptr_(other.release());
     new (buffer_.data) shared_ptr_wrapper{std::move(ptr_)};
   }
 
@@ -124,10 +119,6 @@ public:
 
   shared_ptr &operator=(shared_ptr &&other) noexcept
   {
-    if (this == &other)
-    {
-      return *this;
-    }
     wrapper().~shared_ptr_wrapper();
     other.wrapper().MoveTo(buffer_);
     return *this;
@@ -141,10 +132,6 @@ public:
 
   shared_ptr &operator=(const shared_ptr &other) noexcept
   {
-    if (this == &other)
-    {
-      return *this;
-    }
     wrapper().~shared_ptr_wrapper();
     other.wrapper().CopyTo(buffer_);
     return *this;
@@ -160,15 +147,10 @@ public:
 
   void swap(shared_ptr<T> &other) noexcept
   {
-    if (this == &other)
-    {
-      return;
-    }
+    shared_ptr<T> tmp{std::move(other)};
 
-    // Swap the live wrapper objects (object-level swap), not the raw
-    // PlacementBuffer bytes. This preserves object lifetime correctness and
-    // avoids moving `other` as an object.
-    std::swap(wrapper(), other.wrapper());
+    wrapper().MoveTo(other.buffer_);
+    tmp.wrapper().MoveTo(buffer_);
   }
 
   template <typename U>

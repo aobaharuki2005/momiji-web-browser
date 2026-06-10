@@ -29,7 +29,7 @@ const TEST_RESULTS = [
             {
               name: "menu-command-1-1",
               l10n: {
-                id: "urlbar-result-menu-dismiss-suggestion",
+                id: "firefox-suggest-command-not-relevant",
               },
             },
           ],
@@ -41,13 +41,13 @@ const TEST_RESULTS = [
             {
               name: "menu-command-2-1",
               l10n: {
-                id: "urlbar-result-menu-dismiss-suggestion",
+                id: "firefox-suggest-command-not-relevant",
               },
             },
             {
               name: "menu-command-2-2",
               l10n: {
-                id: "urlbar-result-menu-dismiss-suggestion",
+                id: "firefox-suggest-command-not-relevant",
               },
             },
           ],
@@ -63,19 +63,19 @@ const TEST_RESULTS = [
             {
               name: "menu-command-3-1",
               l10n: {
-                id: "urlbar-result-menu-dismiss-suggestion",
+                id: "firefox-suggest-command-not-relevant",
               },
             },
             {
               name: "menu-command-3-2",
               l10n: {
-                id: "urlbar-result-menu-dismiss-suggestion",
+                id: "firefox-suggest-command-not-relevant",
               },
             },
             {
               name: "menu-command-3-3",
               l10n: {
-                id: "urlbar-result-menu-dismiss-suggestion",
+                id: "firefox-suggest-command-not-relevant",
               },
             },
           ],
@@ -90,10 +90,9 @@ add_setup(async function () {
     results: TEST_RESULTS,
     priority: 1,
   });
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(provider);
+  UrlbarProvidersManager.registerProvider(provider);
   registerCleanupFunction(() => {
-    providersManager.unregisterProvider(provider);
+    UrlbarProvidersManager.unregisterProvider(provider);
     sinon.restore();
   });
 });

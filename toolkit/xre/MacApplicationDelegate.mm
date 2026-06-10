@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,7 +41,6 @@
 #include "nsCommandLine.h"
 #include "nsStandaloneNativeMenu.h"
 #include "nsCocoaUtils.h"
-#include "nsCocoaFeatures.h"
 #include "nsMenuBarX.h"
 #include "mozilla/NeverDestroyed.h"
 
@@ -56,19 +56,10 @@ class AutoAutoreleasePool {
 @interface MacApplicationDelegate : NSObject <NSApplicationDelegate> {
 }
 
-// Standard Edit menu selectors. Setting these as the action on our Edit
-// menu items lets native text fields (e.g. an NSSavePanel sheet's
-// filename field, bug 2036608) handle Cmd+C/V/X/Z/A natively via the
-// responder chain. When no responder handles them, these forwarders
-// route to [nsMenuBarX::sNativeEventTarget menuItemHit:] so the
-// command still reaches Gecko via the normal menu path.
-- (IBAction)undo:(id)aSender;
-- (IBAction)redo:(id)aSender;
-- (IBAction)cut:(id)aSender;
+// This is used as a workaround for bug 1478347 in order to make OS-provided
+// menu items such as the emoji picker available in the Edit menu, especially
+// in multi-language environments.
 - (IBAction)copy:(id)aSender;
-- (IBAction)paste:(id)aSender;
-- (IBAction)delete:(id)aSender;
-- (IBAction)selectAll:(id)aSender;
 
 @end
 
@@ -76,14 +67,10 @@ enum class LaunchStatus {
   Initial,
   DelegateIsSetup,
   CollectingURLs,
-  CollectedURLs,
-  // The main browser event loop is running. URLs received after this point
-  // are handled immediately via nsICommandLineRunner.
-  Running
+  CollectedURLs
 };
 
 static LaunchStatus sLaunchStatus = LaunchStatus::Initial;
-
 
 static nsTArray<nsCString>& StartupURLs() {
   static mozilla::NeverDestroyed<nsTArray<nsCString>> sStartupURLs;
@@ -141,7 +128,8 @@ void SetupMacApplicationDelegate(bool* gRestartedByOS) {
   MOZ_ASSERT(
       sLaunchStatus == LaunchStatus::Initial,
       "Launch status should be in intial state when setting up delegate");
-    sLaunchStatus = LaunchStatus::DelegateIsSetup;
+  sLaunchStatus = LaunchStatus::DelegateIsSetup;
+
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
@@ -151,55 +139,22 @@ void SetupMacApplicationDelegate(bool* gRestartedByOS) {
 // (b) Collect URLs that were provided to the app at open time.
 void InitializeMacApp() {
   if (sLaunchStatus != LaunchStatus::DelegateIsSetup) {
-      // Delegate has not been set up or NSApp has been launched already.
+    // Delegate has not been set up or NSApp has been launched already.
     return;
   }
+
   sLaunchStatus = LaunchStatus::CollectingURLs;
   if (!gfxPlatform::IsHeadless()) {
     [NSApp run];
   }
-  sLaunchStatus = LaunchStatus::CollectedURLs; 
+  sLaunchStatus = LaunchStatus::CollectedURLs;
 }
 
 nsTArray<nsCString> TakeStartupURLs() { return std::move(StartupURLs()); }
 
-void StartupURLCollectionComplete() {
-  MOZ_ASSERT(sLaunchStatus == LaunchStatus::CollectedURLs,
-             "Expected CollectedURLs state when completing startup URL "
-             "collection");
-  if (sLaunchStatus != LaunchStatus::CollectedURLs) {
-    return;
-  }
-  sLaunchStatus = LaunchStatus::Running;
-}
-
 @implementation MacApplicationDelegate
 
-- (IBAction)undo:(id)aSender {
-  [nsMenuBarX::sNativeEventTarget menuItemHit:aSender];
-}
-
-- (IBAction)redo:(id)aSender {
-  [nsMenuBarX::sNativeEventTarget menuItemHit:aSender];
-}
-
-- (IBAction)cut:(id)aSender {
-  [nsMenuBarX::sNativeEventTarget menuItemHit:aSender];
-}
-
 - (IBAction)copy:(id)aSender {
-  [nsMenuBarX::sNativeEventTarget menuItemHit:aSender];
-}
-
-- (IBAction)paste:(id)aSender {
-  [nsMenuBarX::sNativeEventTarget menuItemHit:aSender];
-}
-
-- (IBAction)delete:(id)aSender {
-  [nsMenuBarX::sNativeEventTarget menuItemHit:aSender];
-}
-
-- (IBAction)selectAll:(id)aSender {
   [nsMenuBarX::sNativeEventTarget menuItemHit:aSender];
 }
 
@@ -207,24 +162,6 @@ void StartupURLCollectionComplete() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ((self = [super init])) {
-    if (!nsCocoaFeatures::OnHighSierraOrLater()) {
-      NSAppleEventManager* aeMgr = [NSAppleEventManager sharedAppleEventManager];
-
-      [aeMgr setEventHandler:self
-                 andSelector:@selector(handleAppleEvent:withReplyEvent:)
-               forEventClass:kInternetEventClass
-                  andEventID:kAEGetURL];
-
-      [aeMgr setEventHandler:self
-                 andSelector:@selector(handleAppleEvent:withReplyEvent:)
-               forEventClass:'WWW!'
-                  andEventID:'OURL'];
-
-      [aeMgr setEventHandler:self
-                 andSelector:@selector(handleAppleEvent:withReplyEvent:)
-               forEventClass:kCoreEventClass
-                  andEventID:kAEOpenDocuments];
-   }
     if (![NSApp windowsMenu]) {
       // If the application has a windows menu, it will keep it up to date and
       // prepend the window list to the Dock menu automatically.
@@ -237,23 +174,6 @@ void StartupURLCollectionComplete() {
 
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
-
-- (void)dealloc {
-  if(!nsCocoaFeatures::OnHighSierraOrLater()) {
-    NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-    NSAppleEventManager* aeMgr = [NSAppleEventManager sharedAppleEventManager];
-    [aeMgr removeEventHandlerForEventClass:kInternetEventClass
-                                andEventID:kAEGetURL];
-    [aeMgr removeEventHandlerForEventClass:'WWW!' andEventID:'OURL'];
-    [aeMgr removeEventHandlerForEventClass:kCoreEventClass
-                                andEventID:kAEOpenDocuments];
-    [super dealloc];
-
-    NS_OBJC_END_TRY_IGNORE_BLOCK;
-  }
-}
-
 
 // The method that NSApplication calls upon a request to reopen, such as when
 // the Dock icon is clicked and no windows are open. A "visible" window may be
@@ -412,19 +332,14 @@ void StartupURLCollectionComplete() {
 
 - (BOOL)application:(NSApplication*)application
     continueUserActivity:(NSUserActivity*)userActivity
-#if defined(MAC_OS_X_VERSION_10_14) && \
-    MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_14
       restorationHandler:
           (void (^)(NSArray<id<NSUserActivityRestoring>>*))restorationHandler {
-#else
-      restorationHandler:(void (^)(NSArray*))restorationHandler {
-#endif
-    if (![userActivity.activityType
-            isEqualToString:NSUserActivityTypeBrowsingWeb]) {
-      return NO;
+  if (![userActivity.activityType
+          isEqualToString:NSUserActivityTypeBrowsingWeb]) {
+    return NO;
   }
 
-  return [self openURLs:@[userActivity.webpageURL]];
+  return [self openURLs:@[ userActivity.webpageURL ]];
 }
 
 - (void)application:(NSApplication*)application
@@ -433,61 +348,10 @@ void StartupURLCollectionComplete() {
   NSLog(@"Failed to continue user activity %@: %@", userActivityType, error);
 }
 
-// opened. It will be called once for each selected document.
-- (BOOL)application:(NSApplication*)theApplication
-           openFile:(NSString*)filename {
-  if(nsCocoaFeatures::OnHighSierraOrLater()) {
-    return false; 
-  }
-
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-  return [self openURLs:((NSArray<NSURL*>*) @[filename])];
-  NS_OBJC_END_TRY_BLOCK_RETURN(NO);
-}
-
-- (void)handleAppleEvent:(NSAppleEventDescriptor*)event
-          withReplyEvent:(NSAppleEventDescriptor*)replyEvent {
-  if (!event) return;
-
-  AutoAutoreleasePool pool;
-
-  bool isGetURLEvent = ([event eventClass] == kInternetEventClass &&
-                        [event eventID] == kAEGetURL);
-
-  if (isGetURLEvent ||
-      ([event eventClass] == 'WWW!' && [event eventID] == 'OURL')) {
-    NSString* urlString =
-        [[event paramDescriptorForKeyword:keyDirectObject] stringValue];
-    NSURL* url = [NSURL URLWithString:urlString];
-
-    [self openURLs:@[url]];
-  } else if ([event eventClass] == kCoreEventClass &&
-             [event eventID] == kAEOpenDocuments) {
-    NSAppleEventDescriptor* fileListDescriptor =
-        [event paramDescriptorForKeyword:keyDirectObject];
-    if (!fileListDescriptor) return;
-
-    // Descriptor list indexing is one-based...
-    NSInteger numberOfFiles = [fileListDescriptor numberOfItems];
-    for (NSInteger i = 1; i <= numberOfFiles; i++) {
-      NSString* urlString =
-          [[fileListDescriptor descriptorAtIndex:i] stringValue];
-      if (!urlString) continue;
-
-      // We need a path, not a URL
-      NSURL* url = [NSURL URLWithString:urlString];
-      if (!url) continue;
-
-      [self application:NSApp openFile:[url path]];
-    }
-  }
-}
-
 - (BOOL)openURLs:(NSArray<NSURL*>*)urls {
   nsTArray<const char*> args([urls count] * 2 + 2);
   // Placeholder for unused program name.
   args.AppendElement(nullptr);
-  bool bufferedURLs = false;
 
   for (NSURL* url in urls) {
     if (!url || !url.scheme ||
@@ -496,9 +360,8 @@ void StartupURLCollectionComplete() {
     }
 
     const char* const urlString = [[url absoluteString] UTF8String];
-    if (sLaunchStatus != LaunchStatus::Running) {
+    if (sLaunchStatus == LaunchStatus::CollectingURLs) {
       StartupURLs().AppendElement(urlString);
-      bufferedURLs = true;
       continue;
     }
 
@@ -507,9 +370,8 @@ void StartupURLCollectionComplete() {
   }
 
   if (args.Length() <= 1) {
-    // No URLs were added to the command line for immediate dispatch.
-    // Return YES if URLs were buffered for startup processing.
-    return bufferedURLs ? YES : NO;
+    // No URLs were added to the command line.
+    return NO;
   }
 
   nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
@@ -533,4 +395,5 @@ void StartupURLCollectionComplete() {
 
   return YES;
 }
+
 @end

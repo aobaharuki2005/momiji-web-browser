@@ -14,6 +14,7 @@ transforms:
 kind-dependencies:
     - toolchain
     - repackage
+    - repackage-l10n
 
 only-for-attributes:
     - nightly
@@ -42,13 +43,8 @@ tasks:
             copy-attributes: true
             group-by: single-with-filters
         shipping-phase: promote
-        run-on-projects: ["mozilla-central"]
-        validate-cert:
-            by-project:
-                # don't validate certs on try; this allows generating
-                # dep signed partials with nightly signed `from` MARs
-                try: false
-                default: true
+        # Don't run on CI until we switch to zucchini partials
+        run-on-projects: []
         fetches:
             toolchain:
                 - linux64-zucchini-bin
@@ -61,18 +57,22 @@ tasks:
                   type: directory
                   path: /builds/worker/artifacts
             docker-image:
-                in-tree: "partials-zuc"
+                in-tree: "debian12-base"
             chain-of-trust: true
             max-run-time: 5400
+            env:
+                # Defined in transform
+                MAR_CHANNEL_ID: TBD
+                FROM_MAR_TASK_ID: {"task-reference": "TBD"}
         run:
             using: run-task
-            checkout: false
-            # More parameters to be added in transform
-            # artifact-reference used for to-mar-url parameter
-            command:
-                artifact-reference: >-
-                    export PATH=$PATH:$MOZ_FETCHES_DIR &&
-                    export PATH=$PATH:$MOZ_FETCHES_DIR/mar-tools &&
-                    python3 /builds/worker/bin/make_incremental_zucchini.py
-                    --workdir=/builds/worker/workspace
-                    --to-mar=$MOZ_FETCHES_DIR/target.complete.mar
+            cwd: "{checkout}"
+            # --from_url, --locale, --target and --arch parameters to be added in transform
+            command: >-
+                mkdir -p /builds/worker/artifacts/public/build &&
+                export PATH=$PATH:$MOZ_FETCHES_DIR &&
+                export PATH=$PATH:$MOZ_FETCHES_DIR/mar-tools &&
+                python3
+                tools/update-packaging/make_incremental_zucchini.py
+                --workdir=/builds/worker/workspace
+                --to_mar=$MOZ_FETCHES_DIR/target.complete.mar

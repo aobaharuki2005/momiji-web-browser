@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -31,7 +33,6 @@
 
 #include "debugger/DebugAPI-inl.h"
 #include "gc/GC-inl.h"
-#include "gc/WeakMap-inl.h"
 #include "jit/JitHints-inl.h"
 #include "jit/JitScript-inl.h"
 #include "vm/GeckoProfiler-inl.h"
@@ -279,26 +280,9 @@ static bool DispatchOffThreadBaselineBatchImpl(JSContext* cx, bool isEager) {
   BaselineCompileQueue& queue = cx->realm()->baselineCompileQueue();
   MOZ_ASSERT(queue.numQueued() > 0);
 
-  // We maintain the invariant that there's always room to push an entry into
-  // the queue. This requires code that inserts entries into the queue to call
-  // this function when it fills up, and it requires this function to always
-  // remove at least one entry when the queue is full.
-#ifdef DEBUG
-  auto queueIsNotFullOnExit = mozilla::MakeScopeExit([&]() {
-    MOZ_ASSERT(queue.numQueued() < JitOptions.baselineQueueCapacity);
-  });
-#endif
-
   auto alloc = cx->make_unique<LifoAlloc>(TempAllocator::PreferredLifoChunkSize,
                                           js::BackgroundMallocArena);
   if (!alloc) {
-    // Maintain our invariant; the queue must not be full.
-    if (queue.numQueued() == JitOptions.baselineQueueCapacity) {
-      JSScript* script = queue.pop();
-      if (script->hasJitScript()) {
-        script->jitScript()->clearIsBaselineQueued(script);
-      }
-    }
     ReportOutOfMemory(cx);
     return false;
   }
@@ -469,7 +453,13 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
 
 static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
                                         AbstractFramePtr osrSourceFrame) {
-  if (!CanBaselineCompileScript(cx, script)) {
+  // Skip if the script has been disabled.
+  if (!script->canBaselineCompile()) {
+    return Method_Skipped;
+  }
+
+  if (!IsBaselineJitEnabled(cx)) {
+    script->disableBaselineCompile();
     return Method_CantCompile;
   }
 
@@ -496,6 +486,16 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   if (osrSourceFrame && osrSourceFrame.isDebuggee() &&
       !DebugAPI::ensureExecutionObservabilityOfOsrFrame(cx, osrSourceFrame)) {
     return Method_Error;
+  }
+
+  if (script->length() > BaselineMaxScriptLength) {
+    script->disableBaselineCompile();
+    return Method_CantCompile;
+  }
+
+  if (script->nslots() > BaselineMaxScriptSlots) {
+    script->disableBaselineCompile();
+    return Method_CantCompile;
   }
 
   if (script->hasBaselineScript()) {
@@ -534,6 +534,11 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
     return Method_Error;
   }
 
+  if (script->hasForceInterpreterOp()) {
+    script->disableBaselineCompile();
+    return Method_CantCompile;
+  }
+
   // Frames can be marked as debuggee frames independently of its underlying
   // script being a debuggee script, e.g., when performing
   // Debugger.Frame.prototype.eval.
@@ -561,54 +566,31 @@ bool jit::CanBaselineInterpretScript(JSScript* script) {
   return true;
 }
 
-bool jit::CanBaselineCompileScript(JSContext* cx, JSScript* script) {
-  if (!script->canBaselineCompile()) {
-    return false;
-  }
-  if (!IsBaselineJitEnabled(cx)) {
-    script->disableBaselineCompile();
-    return false;
-  }
-  if (!CanBaselineInterpretScript(script)) {
-    script->disableBaselineCompile();
-    return false;
-  }
-  if (script->length() > BaselineMaxScriptLength) {
-    script->disableBaselineCompile();
-    return false;
-  }
-  MOZ_RELEASE_ASSERT(script->nslots() <= BaselineMaxScriptSlots,
-                     "nslots is checked in CanBaselineInterpretScript");
-  return true;
-}
-
 static bool MaybeCreateBaselineInterpreterEntryScript(JSContext* cx,
                                                       JSScript* script) {
   MOZ_ASSERT(script->hasJitScript());
-
-  Zone* zone = script->zone();
-  EntryTrampolineMap* map =
-      zone->jitZone()->getOrCreateInterpreterEntryMap(zone);
-  if (!map) {
-    return false;
-  }
 
   JitRuntime* jitRuntime = cx->runtime()->jitRuntime();
   if (script->jitCodeRaw() != jitRuntime->baselineInterpreter().codeRaw()) {
     // script already has an updated interpreter trampoline.
 #ifdef DEBUG
-    auto ptr = map->lookup(script);
-    MOZ_ASSERT(ptr);
-    MOZ_ASSERT(ptr->value()->raw() == script->jitCodeRaw());
+    auto p = jitRuntime->getInterpreterEntryMap()->lookup(script);
+    MOZ_ASSERT(p);
+    MOZ_ASSERT(p->value().raw() == script->jitCodeRaw());
 #endif
     return true;
   }
 
-  auto ptr = map->lookupForAdd(script);
-  if (!ptr) {
+  auto p = jitRuntime->getInterpreterEntryMap()->lookupForAdd(script);
+  if (!p) {
     Rooted<JitCode*> code(
         cx, jitRuntime->generateEntryTrampolineForScript(cx, script));
-    if (!code || !map->relookupOrAdd(ptr, script, code)) {
+    if (!code) {
+      return false;
+    }
+
+    EntryTrampoline entry(cx, code);
+    if (!jitRuntime->getInterpreterEntryMap()->add(p, script, entry)) {
       return false;
     }
   }
@@ -646,7 +628,6 @@ static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
 
   if (JitOptions.emitInterpreterEntryTrampoline) {
     if (!MaybeCreateBaselineInterpreterEntryScript(cx, script)) {
-      ReportOutOfMemory(cx);
       return Method_Error;
     }
   }
@@ -739,24 +720,6 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
 
   MOZ_CRASH("Unexpected status");
 }
-
-#ifdef DEBUG
-void BaselineCompileQueue::assertInvariants() const {
-  // The queue always contains |numQueued| JSScript* pointers,
-  // followed by |Capacity - numQueued| null pointers.
-  MOZ_ASSERT(numQueued_ <= JitOptions.baselineQueueCapacity);
-  MOZ_ASSERT(JitOptions.baselineQueueCapacity <= MaxCapacity);
-  for (uint32_t i = 0; i < numQueued_; i++) {
-    MOZ_ASSERT(queue_[i]);
-    if (queue_[i]->hasJitScript()) {
-      MOZ_ASSERT(queue_[i]->jitScript()->isBaselineQueued());
-    }
-  }
-  for (uint32_t i = numQueued_; i < MaxCapacity; i++) {
-    MOZ_ASSERT(!queue_[i]);
-  }
-}
-#endif
 
 void BaselineCompileQueue::trace(JSTracer* trc) {
   assertInvariants();

@@ -19,11 +19,10 @@ import { getRelativePath } from "../../utils/sources-tree/utils";
 import {
   getProjectSearchQuery,
   getNavigateCounter,
-  getSearchOptions,
 } from "../../selectors/index";
 
-import DebuggerImage from "devtools/client/shared/components/DebuggerImage";
-import SearchInput from "devtools/client/shared/components/SearchInput";
+import SearchInput from "../shared/SearchInput";
+import DebuggerImage from "../shared/DebuggerImage";
 
 const { PluralForm } = require("resource://devtools/shared/plural-form.js");
 const classnames = require("resource://devtools/client/shared/classnames.js");
@@ -79,9 +78,6 @@ export class ProjectSearch extends Component {
       query: PropTypes.string.isRequired,
       searchSources: PropTypes.func.isRequired,
       selectSpecificLocationOrSameUrl: PropTypes.func.isRequired,
-      searchOptions: PropTypes.object.isRequired,
-      setSearchOptions: PropTypes.func.isRequired,
-      navigateCounter: PropTypes.number,
     };
   }
 
@@ -410,20 +406,16 @@ export class ProjectSearch extends Component {
       onHistoryScroll: this.onHistoryScroll,
       showClose: false,
       showExcludePatterns: true,
-      showSearchModifiers: true,
       excludePatternsLabel: L10N.getStr(
         "projectTextSearch.excludePatterns.label"
       ),
       excludePatternsPlaceholder: L10N.getStr(
         "projectTextSearch.excludePatterns.placeholder"
       ),
+      ref: "searchInput",
+      showSearchModifiers: true,
       searchKey: searchKeys.PROJECT_SEARCH,
       onToggleSearchModifier: this.doSearch,
-      searchOptions: this.props.searchOptions,
-      setSearchOptions: this.props.setSearchOptions,
-      expanded: false,
-      hasPrefix: false,
-      DebuggerImage,
     });
   }
 
@@ -456,12 +448,10 @@ ProjectSearch.contextTypes = {
 const mapStateToProps = state => ({
   query: getProjectSearchQuery(state),
   navigateCounter: getNavigateCounter(state),
-  searchOptions: getSearchOptions(state, searchKeys.PROJECT_SEARCH),
 });
 
 export default connect(mapStateToProps, {
   searchSources: actions.searchSources,
   selectSpecificLocationOrSameUrl: actions.selectSpecificLocationOrSameUrl,
   doSearchForHighlight: actions.doSearchForHighlight,
-  setSearchOptions: actions.setSearchOptions,
 })(ProjectSearch);

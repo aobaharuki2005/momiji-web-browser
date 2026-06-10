@@ -225,10 +225,8 @@ const TESTS = [
  * @param {string} [expectedAdKey]
  *   The expected key to be logged for the scalar. Omit if no scalar should be
  *   logged.
- * @param {object} browser
- *   The browser object for the request.
  */
-async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey, browser) {
+async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey) {
   info(`Testing Ad URL: ${adUrl}`);
   let channel = NetUtil.newChannel({
     uri: NetUtil.newURI(adUrl),
@@ -237,15 +235,6 @@ async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey, browser) {
       {}
     ),
     loadUsingSystemPrincipal: true,
-  });
-  // ChannelWrapper.get returns a C++ backed object whose browserElement
-  // getter resolves via the channel's load context. In xpcshell there is
-  // no real browsing context, so browserElement is null. Override the
-  // getter on this specific wrapper instance to return our mock browser.
-  let wrapper = ChannelWrapper.get(channel);
-  Object.defineProperty(wrapper, "browserElement", {
-    get: () => browser,
-    configurable: true,
   });
   SearchSERPTelemetry._contentHandler.observeActivity(
     channel,
@@ -289,20 +278,19 @@ add_task(async function test_parsing_search_urls() {
     if (test.setUp) {
       test.setUp();
     }
-    let browser = {
-      getTabBrowser: () => {},
-      // There is no concept of browsing in unit tests, so assume in tests that we
-      // are not in private browsing mode. We have browser tests that check when
-      // private browsing is used.
-      contentPrincipal: {
-        originAttributes: {
-          privateBrowsingId: 0,
+    SearchSERPTelemetry.updateTrackingStatus(
+      {
+        getTabBrowser: () => {},
+        // There is no concept of browsing in unit tests, so assume in tests that we
+        // are not in private browsing mode. We have browser tests that check when
+        // private browsing is used.
+        contentPrincipal: {
+          originAttributes: {
+            privateBrowsingId: 0,
+          },
         },
       },
-    };
-    SearchSERPTelemetry.updateTrackingStatus(
-      browser,
-      Services.io.newURI(test.trackingUrl)
+      test.trackingUrl
     );
     let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
     TelemetryTestUtils.assertKeyedScalar(
@@ -314,15 +302,10 @@ add_task(async function test_parsing_search_urls() {
 
     if ("adUrls" in test) {
       for (const adUrl of test.adUrls) {
-        await testAdUrlClicked(
-          test.trackingUrl,
-          adUrl,
-          test.expectedAdKey,
-          browser
-        );
+        await testAdUrlClicked(test.trackingUrl, adUrl, test.expectedAdKey);
       }
       for (const nonAdUrls of test.nonAdUrls) {
-        await testAdUrlClicked(test.trackingUrl, nonAdUrls, null, browser);
+        await testAdUrlClicked(test.trackingUrl, nonAdUrls);
       }
     }
 

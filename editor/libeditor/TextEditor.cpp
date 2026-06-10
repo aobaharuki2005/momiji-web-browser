@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,8 +10,8 @@
 #include "EditAction.h"
 #include "EditAggregateTransaction.h"
 #include "EditorDOMPoint.h"
-#include "EditorUtils.h"
 #include "HTMLEditor.h"
+#include "HTMLEditUtils.h"
 #include "InternetCiter.h"
 #include "PlaceholderTransaction.h"
 #include "gfxFontUtils.h"
@@ -41,7 +42,7 @@
 #include "nsCaret.h"
 #include "nsCharTraits.h"
 #include "nsComponentManagerUtils.h"
-#include "mozilla/dom/ContentList.h"
+#include "nsContentList.h"
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
 #include "nsError.h"
@@ -87,6 +88,9 @@ static void LogOrWarn(const TextEditor* aTextEditor, LazyLogModule& aLog,
 }
 
 using namespace dom;
+
+using LeafNodeType = HTMLEditUtils::LeafNodeType;
+using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
 
 template EditorDOMPoint TextEditor::FindBetterInsertionPoint(
     const EditorDOMPoint& aPoint) const;
@@ -706,8 +710,7 @@ nsresult TextEditor::HandlePasteAsQuotation(
   }
 
   if (!flavor.EqualsLiteral(kTextMime) &&
-      !flavor.EqualsLiteral(kMozTextInternal) &&
-      !flavor.EqualsLiteral(kURLDataMime)) {
+      !flavor.EqualsLiteral(kMozTextInternal)) {
     return NS_OK;
   }
 
@@ -838,47 +841,46 @@ nsresult TextEditor::OnFocus(const nsINode& aOriginalEventTargetNode) {
           ("%p: OnFocus(aOriginalEventTargetNode=%s)", this,
            ToString(RefPtr{&aOriginalEventTargetNode}).c_str()));
 
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (MOZ_UNLIKELY(!presShell)) {
+    LogOrWarn(this, gTextEditorLog, LogLevel::Error, "!presShell");
+    return NS_ERROR_FAILURE;
+  }
+  // Let's update the layout information right now because there are some
+  // pending notifications and flushing them may cause destroying the editor.
+  presShell->FlushPendingNotifications(FlushType::Layout);
+  if (MOZ_UNLIKELY(!CanKeepHandlingFocusEvent(aOriginalEventTargetNode))) {
+    MOZ_LOG(gTextEditorLog, LogLevel::Debug,
+            ("%p: CanKeepHandlingFocusEvent() returned false", this));
+    return NS_OK;
+  }
+
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (MOZ_UNLIKELY(!editActionData.CanHandle())) {
     LogOrWarn(this, gTextEditorLog, LogLevel::Error,
               "AutoEditActionDataSetter::CanHandle() failed");
     return NS_ERROR_FAILURE;
   }
-  return EditorBase::OnFocus(aOriginalEventTargetNode);
-}
-
-void TextEditor::PostHandleFocusEvent(const nsINode& aFocusEventTargetNode) {
-  MOZ_LOG(gTextEditorLog, LogLevel::Info,
-          ("%p: PostHandleFocusEvent(aFocusEvent={ "
-           "GetOriginalEventTarget()=%s }), %s",
-           this, ToString(RefPtr{&aFocusEventTargetNode}).c_str(),
-           GetFocusedElement() ? "but already lost focus" : "still has focus"));
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (MOZ_UNLIKELY(!editActionData.CanHandle())) {
-    LogOrWarn(this, gTextEditorLog, LogLevel::Error,
-              "AutoEditActionDataSetter::CanHandle() failed");
-    return;
-  }
 
   // Spell check a textarea the first time that it is focused.
   nsresult rv = FlushPendingSpellCheck();
-  if (rv == NS_ERROR_EDITOR_DESTROYED) [[unlikely]] {
+  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
     LogOrWarn(this, gTextEditorLog, LogLevel::Error,
               "EditorBase::FlushPendingSpellCheck() failed");
-    return;
+    return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "EditorBase::FlushPendingSpellCheck() failed, but ignored");
-  if (!CanKeepHandlingFocusEvent(aFocusEventTargetNode)) [[unlikely]] {
+  if (MOZ_UNLIKELY(!CanKeepHandlingFocusEvent(aOriginalEventTargetNode))) {
     MOZ_LOG(gTextEditorLog, LogLevel::Debug,
             ("%p: CanKeepHandlingFocusEvent() returned false after "
              "FlushPendingSpellCheck()",
              this));
-    return;
+    return NS_OK;
   }
-  EditorBase::PostHandleFocusEvent(aFocusEventTargetNode);
+
+  return EditorBase::OnFocus(aOriginalEventTargetNode);
 }
 
 nsresult TextEditor::OnBlur(const EventTarget* aEventTarget) {

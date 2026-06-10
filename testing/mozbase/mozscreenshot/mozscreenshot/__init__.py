@@ -5,7 +5,6 @@
 import os
 import subprocess
 import tempfile
-import time
 
 import mozinfo
 from mozlog.formatters.process import strstatus
@@ -55,47 +54,15 @@ def dump_screen(utilityPath, log, prefix="mozilla-test-fail-screenshot_"):
             prefix=prefix, suffix=".png", dir=parent_dir
         )
         os.close(tmpfd)
-
-        if mozinfo.isMac and mozinfo.processor == "aarch64":
-            # On Apple Silicon, screencapture must run in the GUI login
-            # session to capture window contents. A LaunchAgent
-            # (com.mozilla.screencapture) polls for a trigger file and
-            # performs the capture in the correct context.
-            trigger_file = os.path.expanduser("~/.trigger_screenshot")
-            with open(trigger_file, "w") as f:
-                f.write(imgfilename)
-
-            if is_structured_log:
-                log.process_start(utilityname)
-
-            # Wait up to 5 seconds for the screenshot to appear
-            captured = False
-            for _ in range(10):
-                time.sleep(0.5)
-                try:
-                    if os.path.getsize(imgfilename) > 0:
-                        captured = True
-                        break
-                except OSError:
-                    pass
-
-            if is_structured_log:
-                log.process_exit(utilityname, 0 if captured else 1)
-            else:
-                printstatus(utilityname, 0 if captured else 1)
-
-            if not captured:
-                log.info("Timed out waiting for screenshot from LaunchAgent")
+        if is_structured_log:
+            log.process_start(utilityname)
+        returncode = subprocess.call(utility + [imgfilename])
+        if is_structured_log:
+            log.process_exit(utilityname, returncode)
         else:
-            if is_structured_log:
-                log.process_start(utilityname)
-            returncode = subprocess.call(utility + [imgfilename])
-            if is_structured_log:
-                log.process_exit(utilityname, returncode)
-            else:
-                printstatus(utilityname, returncode)
+            printstatus(utilityname, returncode)
     except OSError as err:
-        log.info(f"Failed to start {utility[0]} for screenshot: {err.strerror}")
+        log.info("Failed to start %s for screenshot: %s" % (utility[0], err.strerror))
 
 
 def dump_device_screen(device, log, prefix="mozilla-test-fail-screenshot_"):
@@ -107,6 +74,7 @@ def dump_device_screen(device, log, prefix="mozilla-test-fail-screenshot_"):
         interface to interact with Android devices.
     :param log: Reference to logger.
     """
+
     utilityname = "screencap"
     is_structured_log = hasattr(log, "process_exit")
 

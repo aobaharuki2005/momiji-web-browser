@@ -136,7 +136,9 @@ test
 #config
 { "elements": ["p"], "replaceWithChildrenElements": ["div"] }
 #document
-| "testptt"
+| "test"
+| "p"
+| "tt"
 | <p>
 |   "div"
 
@@ -434,7 +436,9 @@ TypeError
 <p>comment<!-- hello -->in<!-- </p> -->text</p>
 #document
 | <p>
-|   "commentintext"
+|   "comment"
+|   "in"
+|   "text"
 
 #data
 <p>comment<!-- hello -->in<!-- </p> -->text</p>
@@ -454,7 +458,9 @@ TypeError
 { "comments": false }
 #document
 | <p>
-|   "commentintext"
+|   "comment"
+|   "in"
+|   "text"
 
 #data
 <svg></svg>
@@ -536,15 +542,19 @@ TypeError
   "elements": ["div"]}
 #document
 | <div>
-|   "balabalatest"
-| "tcustom-element"
+|   "balabala"
+|   "test"
+| "t"
+| "custom-element"
 
 #data
 <div>test<div>p</div>tt<p>div</p></div><test>test</test>
 #config
 { "elements": ["p", "test"], "replaceWithChildrenElements": ["div"] }
 #document
-| "testptt"
+| "test"
+| "p"
+| "tt"
 | <p>
 |   "div"
 | <test>
@@ -555,7 +565,9 @@ test<div>p</div>tt<p>div</p><test>test</test>
 #config
 { "elements": ["p", "test"], "replaceWithChildrenElements": ["div"] }
 #document
-| "testptt"
+| "test"
+| "p"
+| "tt"
 | <p>
 |   "div"
 | <test>
@@ -640,13 +652,3 @@ test<div>p</div>tt<p>div</p><test>test</test>
 | <a>
 |   href="about:blank"
 |   "Click."
-
-#data
-<div><b><em><foo><foob><fooc><aside></b></em></div>
-#config
-{ "removeElements": ["em"] }
-#document
-| <div>
-|   <b>
-|   <aside>
-|     <b>

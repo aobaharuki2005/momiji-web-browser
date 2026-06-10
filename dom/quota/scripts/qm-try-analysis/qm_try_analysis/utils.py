@@ -6,14 +6,13 @@ import datetime
 import json
 
 import requests
-from mozfile import json as mozfile_json
 
 from qm_try_analysis.logging import error, info, warning
 
 
 def readJSONFile(FileName):
     f = open(FileName)
-    p = mozfile_json.load(f)
+    p = json.load(f)
     f.close()
     return p
 

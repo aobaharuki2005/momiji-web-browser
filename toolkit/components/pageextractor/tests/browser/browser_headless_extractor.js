@@ -11,8 +11,7 @@ add_task(async function test_headless_extraction() {
   const { PageExtractorParent } = ChromeUtils.importESModule(
     "resource://gre/actors/PageExtractorParent.sys.mjs"
   );
-  const { html } = MLTestUtils.serveHTML();
-  const { url, cleanup } = html`
+  const { url, serverClosed } = serveOnce(`
     <!DOCTYPE html>
     <html>
       <head>
@@ -23,20 +22,16 @@ add_task(async function test_headless_extraction() {
         <div>This is a headless document</div>
       </body>
     </html>
-  `;
+  `);
 
-  const result = await PageExtractorParent.getHeadlessExtractor({
-    urlString: url,
-    callback: async pageExtractor => pageExtractor.getText(),
-  });
-
-  is(
-    result.text,
-    "This is a headless document",
-    "The page's content is extracted"
+  const text = await PageExtractorParent.getHeadlessExtractor(
+    url,
+    async pageExtractor => pageExtractor.getText()
   );
 
-  await cleanup();
+  is(text, "This is a headless document", "The page's content is extracted");
+
+  await serverClosed;
 });
 
 /**
@@ -46,32 +41,34 @@ add_task(async function test_headless_extraction_404() {
   const { PageExtractorParent } = ChromeUtils.importESModule(
     "resource://gre/actors/PageExtractorParent.sys.mjs"
   );
-  const { html } = MLTestUtils.serveHTML({ code: 404 });
-  const { url, cleanup } = html`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>404 not found</title>
-      </head>
-      <body>
-        <div>404 page not found.</div>
-      </body>
-    </html>
-  `;
+  const { url, serverClosed } = serveOnce(
+    `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>404 not found</title>
+        </head>
+        <body>
+          <div>404 page not found.</div>
+        </body>
+      </html>
+    `,
+    404
+  );
 
-  const result = await PageExtractorParent.getHeadlessExtractor({
-    urlString: url,
-    callback: async pageExtractor => pageExtractor.getText(),
-  });
+  const text = await PageExtractorParent.getHeadlessExtractor(
+    url,
+    async pageExtractor => pageExtractor.getText()
+  );
 
   is(
-    result.text,
+    text,
     "404 page not found.",
     "The page's content is extracted even if it's a 404"
   );
 
-  await cleanup();
+  await serverClosed;
 });
 
 /**
@@ -83,11 +80,8 @@ add_task(async function test_headless_extraction_about_blank() {
   );
 
   await Assert.rejects(
-    PageExtractorParent.getHeadlessExtractor({
-      urlString: "about:blank",
-      callback: () => {},
-    }),
-    /Only http: and https: URLs are supported/,
+    PageExtractorParent.getHeadlessExtractor("about:blank", () => {}),
+    /about: pages are not supported/,
     "PageExtractor fails on about: pages."
   );
 });
@@ -101,11 +95,11 @@ add_task(async function test_headless_extraction_about_blank() {
   );
 
   await Assert.rejects(
-    PageExtractorParent.getHeadlessExtractor({
-      urlString: "file:///NeverGonnaGiveYouUp.mp4",
-      callback: () => {},
-    }),
-    /Only http: and https: URLs are supported/,
+    PageExtractorParent.getHeadlessExtractor(
+      "file:///NeverGonnaGiveYouUp.mp4",
+      () => {}
+    ),
+    /file: pages are not supported/,
     "PageExtractor fails on file: URLs."
   );
 });

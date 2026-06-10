@@ -29,6 +29,7 @@ NSS 3.23 release notes
 `New in NSS 3.23 <#new_in_nss_3.23>`__
 --------------------------------------
 
+.. _new_functionality:
 
 `New Functionality <#new_functionality>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -47,6 +48,7 @@ NSS 3.23 release notes
          production use.
 
    .. rubric:: New Functions
+      :name: new_functions
 
    -  *in ssl.h*
 

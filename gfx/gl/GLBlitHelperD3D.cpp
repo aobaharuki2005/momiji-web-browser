@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -37,12 +39,12 @@ static EGLStreamKHR StreamFromD3DTexture(EglDisplay* const egl,
           EGLExtension::NV_stream_consumer_gltexture_yuv) ||
       !egl->IsExtensionSupported(
           EGLExtension::ANGLE_stream_producer_d3d_texture)) {
-    return nullptr;
+    return 0;
   }
 
   const auto stream = egl->fCreateStreamKHR(nullptr);
   MOZ_ASSERT(stream);
-  if (!stream) return nullptr;
+  if (!stream) return 0;
   bool ok = true;
   NOTE_IF_FALSE(ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(
                     stream, nullptr)));
@@ -53,7 +55,7 @@ static EGLStreamKHR StreamFromD3DTexture(EglDisplay* const egl,
   if (ok) return stream;
 
   (void)egl->fDestroyStreamKHR(stream);
-  return nullptr;
+  return 0;
 }
 
 static RefPtr<ID3D11Texture2D> OpenSharedTexture(ID3D11Device* const d3d,
@@ -96,7 +98,7 @@ class BindAnglePlanes final {
         mNumPlanes(numPlanes),
         mMultiTex(mParent.mGL, mNumPlanes, LOCAL_GL_TEXTURE_EXTERNAL),
         mTempTexs{0},
-        mStreams{nullptr},
+        mStreams{0},
         mSuccess(true) {
     MOZ_RELEASE_ASSERT(numPlanes >= 1 && numPlanes <= 3);
 
@@ -168,7 +170,7 @@ ID3D11Device* GLBlitHelper::GetD3D11() const {
 
   const auto& gle = GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
-  EGLDeviceEXT deviceEGL = nullptr;
+  EGLDeviceEXT deviceEGL = 0;
   NOTE_IF_FALSE(egl->fQueryDisplayAttribEXT(LOCAL_EGL_DEVICE_EXT,
                                             (EGLAttrib*)&deviceEGL));
   ID3D11Device* device = nullptr;

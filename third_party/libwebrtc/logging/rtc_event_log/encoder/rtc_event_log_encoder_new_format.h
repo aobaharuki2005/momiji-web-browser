@@ -15,10 +15,10 @@
 #include <deque>
 #include <map>
 #include <memory>
-#include <span>
 #include <string>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/field_trials_view.h"
 #include "api/rtc_event_log/rtc_event.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder.h"
@@ -38,7 +38,6 @@ class RtcEventAudioReceiveStreamConfig;
 class RtcEventAudioSendStreamConfig;
 class RtcEventBweUpdateDelayBased;
 class RtcEventBweUpdateLossBased;
-class RtcEventBweUpdateScream;
 class RtcEventDtlsTransportState;
 class RtcEventDtlsWritableState;
 class RtcEventLoggingStarted;
@@ -57,6 +56,9 @@ class RtcEventIceCandidatePairConfig;
 class RtcEventIceCandidatePair;
 class RtpPacket;
 class RtcEventFrameDecoded;
+class RtcEventGenericAckReceived;
+class RtcEventGenericPacketReceived;
+class RtcEventGenericPacketSent;
 
 class RtcEventLogEncoderNewFormat final : public RtcEventLogEncoder {
  public:
@@ -73,66 +75,70 @@ class RtcEventLogEncoderNewFormat final : public RtcEventLogEncoder {
 
  private:
   // Encoding entry-point for the various RtcEvent subclasses.
-  void EncodeAlrState(std::span<const RtcEventAlrState*> batch,
+  void EncodeAlrState(ArrayView<const RtcEventAlrState*> batch,
                       rtclog2::EventStream* event_stream);
   void EncodeAudioNetworkAdaptation(
-      std::span<const RtcEventAudioNetworkAdaptation*> batch,
+      ArrayView<const RtcEventAudioNetworkAdaptation*> batch,
       rtclog2::EventStream* event_stream);
-  void EncodeAudioPlayout(std::span<const RtcEventAudioPlayout*> batch,
+  void EncodeAudioPlayout(ArrayView<const RtcEventAudioPlayout*> batch,
                           rtclog2::EventStream* event_stream);
   void EncodeAudioRecvStreamConfig(
-      std::span<const RtcEventAudioReceiveStreamConfig*> batch,
+      ArrayView<const RtcEventAudioReceiveStreamConfig*> batch,
       rtclog2::EventStream* event_stream);
   void EncodeAudioSendStreamConfig(
-      std::span<const RtcEventAudioSendStreamConfig*> batch,
+      ArrayView<const RtcEventAudioSendStreamConfig*> batch,
       rtclog2::EventStream* event_stream);
   void EncodeBweUpdateDelayBased(
-      std::span<const RtcEventBweUpdateDelayBased*> batch,
+      ArrayView<const RtcEventBweUpdateDelayBased*> batch,
       rtclog2::EventStream* event_stream);
   void EncodeBweUpdateLossBased(
-      std::span<const RtcEventBweUpdateLossBased*> batch,
+      ArrayView<const RtcEventBweUpdateLossBased*> batch,
       rtclog2::EventStream* event_stream);
-  void EncodeBweUpdateScream(std::span<const RtcEventBweUpdateScream*> batch,
-                             rtclog2::EventStream* event_stream);
   void EncodeDtlsTransportState(
-      std::span<const RtcEventDtlsTransportState*> batch,
+      ArrayView<const RtcEventDtlsTransportState*> batch,
       rtclog2::EventStream* event_stream);
   void EncodeDtlsWritableState(
-      std::span<const RtcEventDtlsWritableState*> batch,
+      ArrayView<const RtcEventDtlsWritableState*> batch,
       rtclog2::EventStream* event_stream);
-  void EncodeFramesDecoded(std::span<const RtcEventFrameDecoded* const> batch,
+  void EncodeFramesDecoded(ArrayView<const RtcEventFrameDecoded* const> batch,
                            rtclog2::EventStream* event_stream);
+  void EncodeGenericPacketsReceived(
+      ArrayView<const RtcEventGenericPacketReceived*> batch,
+      rtclog2::EventStream* event_stream);
+  void EncodeGenericPacketsSent(
+      ArrayView<const RtcEventGenericPacketSent*> batch,
+      rtclog2::EventStream* event_stream);
   void EncodeIceCandidatePairConfig(
-      std::span<const RtcEventIceCandidatePairConfig*> batch,
+      ArrayView<const RtcEventIceCandidatePairConfig*> batch,
       rtclog2::EventStream* event_stream);
   void EncodeIceCandidatePairEvent(
-      std::span<const RtcEventIceCandidatePair*> batch,
+      ArrayView<const RtcEventIceCandidatePair*> batch,
       rtclog2::EventStream* event_stream);
-  void EncodeLoggingStarted(std::span<const RtcEventLoggingStarted*> batch,
+  void EncodeLoggingStarted(ArrayView<const RtcEventLoggingStarted*> batch,
                             rtclog2::EventStream* event_stream);
-  void EncodeLoggingStopped(std::span<const RtcEventLoggingStopped*> batch,
+  void EncodeLoggingStopped(ArrayView<const RtcEventLoggingStopped*> batch,
                             rtclog2::EventStream* event_stream);
   void EncodeNetEqSetMinimumDelay(
-      std::span<const RtcEventNetEqSetMinimumDelay*> batch,
+      ArrayView<const RtcEventNetEqSetMinimumDelay*> batch,
       rtclog2::EventStream* event_stream);
   void EncodeProbeClusterCreated(
-      std::span<const RtcEventProbeClusterCreated*> batch,
+      ArrayView<const RtcEventProbeClusterCreated*> batch,
       rtclog2::EventStream* event_stream);
   void EncodeProbeResultFailure(
-      std::span<const RtcEventProbeResultFailure*> batch,
+      ArrayView<const RtcEventProbeResultFailure*> batch,
       rtclog2::EventStream* event_stream);
   void EncodeProbeResultSuccess(
-      std::span<const RtcEventProbeResultSuccess*> batch,
+      ArrayView<const RtcEventProbeResultSuccess*> batch,
       rtclog2::EventStream* event_stream);
-  void EncodeRouteChange(std::span<const RtcEventRouteChange*> batch,
+  void EncodeRouteChange(ArrayView<const RtcEventRouteChange*> batch,
                          rtclog2::EventStream* event_stream);
-  void EncodeRemoteEstimate(std::span<const RtcEventRemoteEstimate*> batch,
+  void EncodeRemoteEstimate(ArrayView<const RtcEventRemoteEstimate*> batch,
                             rtclog2::EventStream* event_stream);
   void EncodeRtcpPacketIncoming(
-      std::span<const RtcEventRtcpPacketIncoming*> batch,
+      ArrayView<const RtcEventRtcpPacketIncoming*> batch,
       rtclog2::EventStream* event_stream);
   void EncodeRtcpPacketOutgoing(
-      std::span<const RtcEventRtcpPacketOutgoing*> batch,
+      ArrayView<const RtcEventRtcpPacketOutgoing*> batch,
       rtclog2::EventStream* event_stream);
   void EncodeRtpPacketIncoming(
       const std::map<uint32_t, std::vector<const RtcEventRtpPacketIncoming*>>&
@@ -143,15 +149,16 @@ class RtcEventLogEncoderNewFormat final : public RtcEventLogEncoder {
           batch,
       rtclog2::EventStream* event_stream);
   void EncodeVideoRecvStreamConfig(
-      std::span<const RtcEventVideoReceiveStreamConfig*> batch,
+      ArrayView<const RtcEventVideoReceiveStreamConfig*> batch,
       rtclog2::EventStream* event_stream);
   void EncodeVideoSendStreamConfig(
-      std::span<const RtcEventVideoSendStreamConfig*> batch,
+      ArrayView<const RtcEventVideoSendStreamConfig*> batch,
       rtclog2::EventStream* event_stream);
   template <typename Batch, typename ProtoType>
   void EncodeRtpPacket(const Batch& batch, ProtoType* proto_batch);
 
   const bool encode_neteq_set_minimum_delay_kill_switch_;
+  const bool encode_dependency_descriptor_;
 };
 
 }  // namespace webrtc

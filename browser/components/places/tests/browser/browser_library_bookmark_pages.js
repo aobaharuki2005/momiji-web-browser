@@ -12,7 +12,6 @@ const TEST_URIS = ["https://example1.com/", "https://example2.com/"];
 let library;
 
 add_setup(async function () {
-  await PlacesUtils.history.clear();
   await PlacesTestUtils.addVisits(TEST_URIS);
 
   library = await promiseLibrary("History");
@@ -35,7 +34,7 @@ add_task(async function test_bookmark_page() {
         placesContext,
         "popupshown"
       );
-      await synthesizeClickOnSelectedTreeCell(library.ContentTree.view, {
+      synthesizeClickOnSelectedTreeCell(library.ContentTree.view, {
         button: 2,
         type: "contextmenu",
       });
@@ -73,7 +72,7 @@ add_task(async function test_bookmark_pages() {
         placesContext,
         "popupshown"
       );
-      await synthesizeClickOnSelectedTreeCell(library.ContentTree.view, {
+      synthesizeClickOnSelectedTreeCell(library.ContentTree.view, {
         button: 2,
         type: "contextmenu",
       });
@@ -165,7 +164,7 @@ add_task(async function test_bookmark_pages_with_existing_tags() {
         placesContext,
         "popupshown"
       );
-      await synthesizeClickOnSelectedTreeCell(library.ContentTree.view, {
+      synthesizeClickOnSelectedTreeCell(library.ContentTree.view, {
         button: 2,
         type: "contextmenu",
       });

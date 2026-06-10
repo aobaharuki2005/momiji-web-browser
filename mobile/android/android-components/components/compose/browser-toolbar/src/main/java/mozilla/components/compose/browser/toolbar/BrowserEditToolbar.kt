@@ -11,8 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.DividerDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,10 +19,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -36,8 +33,6 @@ import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.ContentDescription.StringResContentDescription
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.Icon.DrawableIcon
-import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_EDIT_MODE
-import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_EDIT_MODE_HORIZONTAL_DIVIDER
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.ToolbarGravity
 import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Bottom
@@ -46,6 +41,8 @@ import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
 import mozilla.components.compose.browser.toolbar.ui.InlineAutocompleteTextField
 import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.ui.icons.R as iconsR
+
+private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(90.dp)
 
 /**
  * Sub-component of the [BrowserToolbar] responsible for allowing the user to edit the current
@@ -57,8 +54,6 @@ import mozilla.components.ui.icons.R as iconsR
  * @param isQueryPrefilled Whether [query] is prefilled and not user entered.
  * @param usePrivateModeQueries Whether queries should be done in private / incognito mode.
  * @param gravity [ToolbarGravity] for where the toolbar is being placed on the screen.
- * @param backgroundColor Color of the background.
- * @param outlineColor Color of the divider.
  * @param editActionsStart List of [Action]s to be displayed at the start of the URL of
  * the edit toolbar.
  * @param editActionsEnd List of [Action]s to be displayed at the end of the URL of
@@ -77,30 +72,25 @@ fun BrowserEditToolbar(
     isQueryPrefilled: Boolean = false,
     usePrivateModeQueries: Boolean = false,
     gravity: ToolbarGravity = Top,
-    backgroundColor: Color = MaterialTheme.colorScheme.surface,
-    outlineColor: Color = DividerDefaults.color,
     editActionsStart: List<Action> = emptyList(),
     editActionsEnd: List<Action> = emptyList(),
     onUrlEdit: (BrowserToolbarQuery) -> Unit = {},
     onUrlCommitted: (String) -> Unit = {},
     onInteraction: (BrowserToolbarEvent) -> Unit,
 ) {
-    Surface(color = backgroundColor) {
+    Surface {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics {
-                    testTag = ADDRESSBAR_EDIT_MODE
-                    testTagsAsResourceId = true
-                },
+                .semantics { testTagsAsResourceId = true },
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(all = 8.dp)
                     .height(48.dp)
-                    .clip(shape = CircleShape)
-                    .background(color = MaterialTheme.colorScheme.surfaceContainerHighest),
+                    .clip(shape = ROUNDED_CORNER_SHAPE)
+                    .background(color = MaterialTheme.colorScheme.surfaceDim),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ActionContainer(
@@ -126,17 +116,12 @@ fun BrowserEditToolbar(
             }
 
             HorizontalDivider(
-                modifier = Modifier
-                    .semantics {
-                        testTag = ADDRESSBAR_EDIT_MODE_HORIZONTAL_DIVIDER
-                    }
-                    .align(
+                modifier = Modifier.align(
                     when (gravity) {
                         Top -> Alignment.BottomCenter
                         Bottom -> Alignment.TopCenter
                     },
                 ),
-                color = outlineColor,
             )
         }
     }

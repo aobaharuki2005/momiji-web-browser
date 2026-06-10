@@ -8,10 +8,10 @@ export class LoadURIDelegateParent extends GeckoViewActorParent {
   async receiveMessage({ name, data }) {
     switch (name) {
       case "GeckoView:OnLoadError": {
-        return this.eventDispatcher.sendRequestForResult(
-          "GeckoView:OnLoadError",
-          data
-        );
+        return this.eventDispatcher.sendRequestForResult({
+          ...data,
+          type: "GeckoView:OnLoadError",
+        });
       }
       default: {
         return super.receiveMessage({ name, data });

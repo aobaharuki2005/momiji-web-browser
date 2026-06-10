@@ -52,7 +52,6 @@
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
-#include "cairo-user-font-private.h"
 #include "cairo-image-surface-inline.h"
 #include "cairo-image-info-private.h"
 #include "cairo-recording-surface-inline.h"
@@ -447,7 +446,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     cairo_pdf_surface_t *surface;
     cairo_status_t status, status_ignored;
 
-    surface = _cairo_calloc (sizeof (cairo_pdf_surface_t));
+    surface = _cairo_malloc (sizeof (cairo_pdf_surface_t));
     if (unlikely (surface == NULL)) {
 	/* destroy stream on behalf of caller */
 	status = _cairo_output_stream_destroy (output);
@@ -1402,7 +1401,7 @@ _cairo_pdf_surface_create_smask_group (cairo_pdf_surface_t	    *surface,
 {
     cairo_pdf_smask_group_t	*group;
 
-    group = _cairo_calloc (sizeof (cairo_pdf_smask_group_t));
+    group = calloc (1, sizeof (cairo_pdf_smask_group_t));
     if (unlikely (group == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
@@ -1766,7 +1765,7 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	         *surface,
 	unique_id_length = 0;
     }
 
-    surface_entry = _cairo_calloc (sizeof (cairo_pdf_source_surface_entry_t));
+    surface_entry = _cairo_malloc (sizeof (cairo_pdf_source_surface_entry_t));
     if (surface_entry == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail1;
@@ -3085,8 +3084,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     unsigned long alpha_size;
     uint32_t *pixel32;
     uint8_t *pixel8;
-    unsigned long i;
-    int x, y, bit, a;
+    int i, x, y, bit, a;
     cairo_image_transparency_t transparency;
 
     /* This is the only image format we support, which simplifies things. */
@@ -3104,10 +3102,10 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     }
 
     if (transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA || transparency == CAIRO_IMAGE_IS_OPAQUE) {
-	alpha_size = (unsigned long) ((image->width + 7) / 8) * image->height;
+	alpha_size = (image->width + 7) / 8 * image->height;
 	alpha = _cairo_malloc_ab ((image->width+7) / 8, image->height);
     } else {
-	alpha_size = (unsigned long) image->height * image->width;
+	alpha_size = image->height * image->width;
 	alpha = _cairo_malloc_ab (image->height, image->width);
     }
 
@@ -3222,8 +3220,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t              *surface,
     char *data;
     unsigned long data_size;
     uint32_t *pixel;
-    unsigned long i;
-    int x, y, bit;
+    int i, x, y, bit;
     cairo_pdf_resource_t smask = {0}; /* squelch bogus compiler warning */
     cairo_bool_t need_smask;
     cairo_image_color_t color;
@@ -3271,16 +3268,16 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t              *surface,
 	case CAIRO_IMAGE_UNKNOWN_COLOR:
 	    ASSERT_NOT_REACHED;
 	case CAIRO_IMAGE_IS_COLOR:
-	    data_size = (unsigned long) image->height * image->width * 3;
+	    data_size = image->height * image->width * 3;
 	    data = _cairo_malloc_abc (image->width, image->height, 3);
 	    break;
 
 	case CAIRO_IMAGE_IS_GRAYSCALE:
-	    data_size = (unsigned long) image->height * image->width;
+	    data_size = image->height * image->width;
 	    data = _cairo_malloc_ab (image->width, image->height);
 	    break;
 	case CAIRO_IMAGE_IS_MONOCHROME:
-	    data_size = (unsigned long) ((image->width + 7) / 8) * image->height;
+	    data_size = (image->width + 7) / 8 * image->height;
 	    data = _cairo_malloc_ab ((image->width+7) / 8, image->height);
 	    break;
     }
@@ -9302,13 +9299,6 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 	if (unlikely (status))
 	    goto cleanup;
 
-	/* User-fonts can use strokes; reset the stroke pattern as well. */
-	if (_cairo_font_face_is_user(scaled_font->font_face)) {
-	    status = _cairo_pdf_surface_select_pattern (surface, source, pattern_res, TRUE);
-	    if (unlikely (status))
-		goto cleanup;
-	}
-
 	/* Each call to show_glyphs() with a transclucent pattern must
 	 * be in a separate text object otherwise overlapping text
 	 * from separate calls to show_glyphs will not composite with
@@ -9399,7 +9389,7 @@ _cairo_pdf_surface_supports_color_glyph (void                  *abstract_surface
     if (glyph_entry)
 	return glyph_entry->supported;
 
-    glyph_entry = _cairo_calloc (sizeof (cairo_pdf_color_glyph_t));
+    glyph_entry = _cairo_malloc (sizeof (cairo_pdf_color_glyph_t));
     if (glyph_entry == NULL) {
 	status = _cairo_surface_set_error (&surface->base,
 					   _cairo_error (CAIRO_STATUS_NO_MEMORY));

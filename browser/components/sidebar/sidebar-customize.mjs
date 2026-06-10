@@ -17,10 +17,10 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const l10nMap = new Map([
   ["viewGenaiChatSidebar", "sidebar-menu-genai-chat-label"],
   ["viewGenaiPageAssistSidebar", "sidebar-menu-genai-page-assist-label"],
+  ["viewGenaiSmartAssistSidebar", "sidebar-menu-genai-smart-assist-label"],
   ["viewHistorySidebar", "sidebar-menu-history-label"],
   ["viewTabsSidebar", "sidebar-menu-synced-tabs-label"],
   ["viewBookmarksSidebar", "sidebar-menu-bookmarks-label"],
-  ["viewOpenTabsSidebar", "sidebar-menu-open-tabs-label"],
   ["viewCPMSidebar", "sidebar-menu-contextual-password-manager-label"],
 ]);
 const VISIBILITY_SETTING_PREF = "sidebar.visibility";
@@ -218,11 +218,12 @@ export class SidebarCustomize extends SidebarPage {
         <sidebar-panel-header data-l10n-id="sidebar-menu-customize-header" data-l10n-attrs="heading" view="viewCustomizeSidebar">
         </sidebar-panel-header>
         <div class="sidebar-panel-scrollable-content">
-          <moz-fieldset class="customize-group no-end-margin" data-l10n-id="sidebar-settings2">
+          <moz-fieldset class="customize-group no-end-margin" data-l10n-id="sidebar-settings">
             <moz-checkbox
               type="checkbox"
               id="vertical-tabs"
               name="verticalTabs"
+              iconsrc="chrome://browser/skin/sidebar-collapsed.svg"
               data-l10n-id="sidebar-vertical-tabs"
               @change=${this.#handleTabDirectionChange}
               ?checked=${this.verticalTabsEnabled}
@@ -271,7 +272,7 @@ export class SidebarCustomize extends SidebarPage {
               ?checked=${!this.isPositionStart}
           ></moz-checkbox>
           </moz-fieldset>
-          <moz-fieldset class="customize-group tools" data-l10n-id="sidebar-customize-firefox-tools-header2">
+          <moz-fieldset class="customize-group tools" data-l10n-id="sidebar-customize-firefox-tools-header">
             ${this.getWindow()
               .SidebarController.getTools()
               .map(tool => this.toolInputTemplate(tool))}
@@ -282,7 +283,7 @@ export class SidebarCustomize extends SidebarPage {
               html`<div class="customize-group">
                 <h4
                   class="customize-extensions-heading"
-                  data-l10n-id="sidebar-customize-extensions-header2"
+                  data-l10n-id="sidebar-customize-extensions-header"
                 ></h4>
                 <div role="list" class="extensions">
                   ${extensions.map(extension =>
@@ -298,23 +299,23 @@ export class SidebarCustomize extends SidebarPage {
                       href="about:addons"
                       @click=${this.manageAddons}
                       @keydown=${this.manageAddons}
-                      data-l10n-id="sidebar-manage-extensions2"
+                      data-l10n-id="sidebar-manage-extensions"
                     >
                     </a>
                   </div>
                 </div>
               </div>`
           )}
-        </div>
-        <div id="manage-settings">
-          <img src="chrome://browser/skin/preferences/category-general.svg" class="icon" role="presentation" />
-          <a
-            href="about:preferences"
-            @click=${this.openFirefoxSettings}
-            @keydown=${this.openFirefoxSettings}
-            data-l10n-id="sidebar-customize-firefox-settings"
-          >
-          </a>
+          <div id="manage-settings">
+            <img src="chrome://browser/skin/preferences/category-general.svg" class="icon" role="presentation" />
+            <a
+              href="about:preferences"
+              @click=${this.openFirefoxSettings}
+              @keydown=${this.openFirefoxSettings}
+              data-l10n-id="sidebar-customize-firefox-settings"
+            >
+            </a>
+          </div>
         </div>
       </div>
     `;

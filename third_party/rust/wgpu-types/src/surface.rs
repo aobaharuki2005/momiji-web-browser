@@ -105,7 +105,7 @@ pub enum PresentMode {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 pub enum CompositeAlphaMode {
-    /// Chooses either `Opaque` or `Inherit` automatically, depending on the
+    /// Chooses either `Opaque` or `Inherit` automatically，depending on the
     /// `alpha_mode` that the current surface can support.
     #[default]
     Auto = 0,
@@ -209,7 +209,7 @@ pub struct SurfaceConfiguration<V> {
     ///   a small amount of GPU work each frame that need low latency, this is a reasonable choice.
     /// * Choose `2` for a balance between latency and throughput. The CPU and GPU both can each use
     ///   a full monitor refresh to do their computations. This is a reasonable default for most applications.
-    /// * Choose `3` or higher to maximize throughput, sacrificing latency when the CPU and GPU
+    /// * Choose `3` or higher to maximize throughput, sacrificing latency when the the CPU and GPU
     ///   are using less than a full monitor refresh each. For applications that use CPU-side pipelining
     ///   of frames this may be a reasonable choice. ⚠️ On 60hz displays the latency can be very noticeable.
     ///
@@ -241,10 +241,7 @@ pub struct SurfaceConfiguration<V> {
 
 impl<V: Clone> SurfaceConfiguration<V> {
     /// Map `view_formats` of the texture descriptor into another.
-    pub fn map_view_formats<'a, M>(
-        &'a self,
-        fun: impl FnOnce(&'a V) -> M,
-    ) -> SurfaceConfiguration<M> {
+    pub fn map_view_formats<M>(&self, fun: impl FnOnce(V) -> M) -> SurfaceConfiguration<M> {
         SurfaceConfiguration {
             usage: self.usage,
             format: self.format,
@@ -253,7 +250,7 @@ impl<V: Clone> SurfaceConfiguration<V> {
             present_mode: self.present_mode,
             desired_maximum_frame_latency: self.desired_maximum_frame_latency,
             alpha_mode: self.alpha_mode,
-            view_formats: fun(&self.view_formats),
+            view_formats: fun(self.view_formats.clone()),
         }
     }
 }
@@ -268,22 +265,13 @@ pub enum SurfaceStatus {
     /// match the surface. A re-configuration is needed.
     Suboptimal,
     /// Unable to get the next frame, timed out.
-    ///
-    /// Try reconfiguring your surface.
     Timeout,
-    /// The window is occluded (e.g. minimized or behind another window).
-    ///
-    /// Try again once the window is no longer occluded.
-    Occluded,
     /// The surface under the swap chain has changed.
-    ///
-    /// Try reconfiguring your surface.
     Outdated,
     /// The surface under the swap chain is lost.
     Lost,
-    /// `Surface::get_current_texture` has hit a validation error which was caught
-    /// by a error scope.
-    Validation,
+    /// The surface status is not known since `Surface::get_current_texture` previously failed.
+    Unknown,
 }
 
 /// Nanosecond timestamp used by the presentation engine.

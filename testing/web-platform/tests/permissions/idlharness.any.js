@@ -10,7 +10,7 @@ idl_test(
   ['html', 'dom'],
   async idl_array => {
     try {
-      self.permissionStatus = await navigator.permissions.query({ name: "notifications" });
+      self.permissionStatus = await navigator.permissions.query({ name: "geolocation" });
     } catch (e) {}
 
     if (self.GLOBAL.isWorker()) {

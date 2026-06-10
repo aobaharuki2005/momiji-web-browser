@@ -12,9 +12,9 @@ MOZ_PROFILER_STARTUP=1 \
   MOZ_PROFILER_SHUTDOWN=/path/to/perf-profile.json \
   ./mach xpcshell-test toolkit/components/url-classifier/tests/performance/perftest_exceptionListLookup.js
 
-# Install the samply tool.
-cargo install samply
+# Install the profiler-symbol-server tool.
+cargo install profiler-symbol-server
 
 # Open the path to the file.
-samply load /path/to/perf-profile.json
+profiler-symbol-server /path/to/perf-profile.json
 ```

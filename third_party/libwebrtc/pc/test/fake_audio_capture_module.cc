@@ -12,8 +12,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <memory>
-#include <utility>
 
 #include "api/audio/audio_device_defines.h"
 #include "api/make_ref_counted.h"
@@ -42,8 +40,7 @@ static const int kTotalDelayMs = 0;
 static const int kClockDriftMs = 0;
 static const uint32_t kMaxVolume = 14392;
 
-FakeAudioCaptureModule::FakeAudioCaptureModule(
-    std::unique_ptr<webrtc::Thread> process_thread)
+FakeAudioCaptureModule::FakeAudioCaptureModule()
     : audio_callback_(nullptr),
       recording_(false),
       playing_(false),
@@ -52,27 +49,18 @@ FakeAudioCaptureModule::FakeAudioCaptureModule(
       current_mic_level_(kMaxVolume),
       started_(false),
       next_frame_time_(0),
-      process_thread_(std::move(process_thread)),
       frames_received_(0) {}
 
 FakeAudioCaptureModule::~FakeAudioCaptureModule() {
   RTC_DCHECK(!initialized_);
 }
 
-webrtc::scoped_refptr<FakeAudioCaptureModule> FakeAudioCaptureModule::Create(
-    std::unique_ptr<webrtc::Thread> process_thread) {
-  auto capture_module = webrtc::make_ref_counted<FakeAudioCaptureModule>(
-      std::move(process_thread));
+webrtc::scoped_refptr<FakeAudioCaptureModule> FakeAudioCaptureModule::Create() {
+  auto capture_module = webrtc::make_ref_counted<FakeAudioCaptureModule>();
   if (!capture_module->Initialize()) {
     return nullptr;
   }
   return capture_module;
-}
-
-webrtc::scoped_refptr<FakeAudioCaptureModule> FakeAudioCaptureModule::Create() {
-  auto thread = webrtc::Thread::Create();
-  thread->Start();
-  return Create(std::move(thread));
 }
 
 int FakeAudioCaptureModule::frames_received() const {
@@ -415,16 +403,24 @@ bool FakeAudioCaptureModule::Initialize() {
 }
 
 void FakeAudioCaptureModule::SetSendBuffer(int value) {
-  send_buffer_.fill(value);
+  Sample* buffer_ptr = reinterpret_cast<Sample*>(send_buffer_);
+  const size_t buffer_size_in_samples =
+      sizeof(send_buffer_) / kNumberBytesPerSample;
+  for (size_t i = 0; i < buffer_size_in_samples; ++i) {
+    buffer_ptr[i] = value;
+  }
 }
 
 void FakeAudioCaptureModule::ResetRecBuffer() {
-  rec_buffer_.fill(0);
+  memset(rec_buffer_, 0, sizeof(rec_buffer_));
 }
 
 bool FakeAudioCaptureModule::CheckRecBuffer(int value) {
-  for (Sample sample : rec_buffer_) {
-    if (sample >= value)
+  const Sample* buffer_ptr = reinterpret_cast<const Sample*>(rec_buffer_);
+  const size_t buffer_size_in_samples =
+      sizeof(rec_buffer_) / kNumberBytesPerSample;
+  for (size_t i = 0; i < buffer_size_in_samples; ++i) {
+    if (buffer_ptr[i] >= value)
       return true;
   }
   return false;
@@ -437,8 +433,19 @@ bool FakeAudioCaptureModule::ShouldStartProcessing() {
 void FakeAudioCaptureModule::UpdateProcessing(bool start) {
   RTC_DCHECK(initialized_);
   if (start) {
-    RTC_DCHECK(process_thread_);
+    if (!process_thread_) {
+      process_thread_ = webrtc::Thread::Create();
+      process_thread_->Start();
+    }
     process_thread_->PostTask([this] { StartProcessP(); });
+  } else {
+    if (process_thread_) {
+      process_thread_->Stop();
+      process_thread_.reset(nullptr);
+      process_thread_checker_.Detach();
+    }
+    webrtc::MutexLock lock(&mutex_);
+    started_ = false;
   }
 }
 
@@ -458,10 +465,6 @@ void FakeAudioCaptureModule::ProcessFrameP() {
   RTC_DCHECK_RUN_ON(&process_thread_checker_);
   {
     webrtc::MutexLock lock(&mutex_);
-    if (!recording_ && !playing_) {
-      started_ = false;
-      return;
-    }
     if (!started_) {
       next_frame_time_ = webrtc::TimeMillis();
       started_ = true;
@@ -495,7 +498,7 @@ void FakeAudioCaptureModule::ReceiveFrameP() {
   int64_t ntp_time_ms = 0;
   if (audio_callback_->NeedMorePlayData(kNumberSamples, kNumberBytesPerSample,
                                         kNumberOfChannels, kSamplesPerSecond,
-                                        rec_buffer_.data(), nSamplesOut,
+                                        rec_buffer_, nSamplesOut,
                                         &elapsed_time_ms, &ntp_time_ms) != 0) {
     RTC_DCHECK_NOTREACHED();
   }
@@ -520,7 +523,7 @@ void FakeAudioCaptureModule::SendFrameP() {
   bool key_pressed = false;
   uint32_t current_mic_level = current_mic_level_;
   if (audio_callback_->RecordedDataIsAvailable(
-          send_buffer_.data(), kNumberSamples, kNumberBytesPerSample,
+          send_buffer_, kNumberSamples, kNumberBytesPerSample,
           kNumberOfChannels, kSamplesPerSecond, kTotalDelayMs, kClockDriftMs,
           current_mic_level, key_pressed, current_mic_level) != 0) {
     RTC_DCHECK_NOTREACHED();

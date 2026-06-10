@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,9 +23,6 @@ class Accessible;
  */
 class xpcAccessibleSelectable : public nsIAccessibleSelectable {
  public:
-  xpcAccessibleSelectable(const xpcAccessibleSelectable&) = delete;
-  xpcAccessibleSelectable& operator=(const xpcAccessibleSelectable&) = delete;
-
   // nsIAccessibleSelectable
   NS_IMETHOD GetSelectedItems(nsIArray** aSelectedItems) final;
   NS_IMETHOD GetSelectedItemCount(uint32_t* aSelectedItemCount) final;
@@ -35,10 +34,13 @@ class xpcAccessibleSelectable : public nsIAccessibleSelectable {
   NS_IMETHOD UnselectAll() final;
 
  protected:
-  xpcAccessibleSelectable() = default;
-  virtual ~xpcAccessibleSelectable() = default;
+  xpcAccessibleSelectable() {}
+  virtual ~xpcAccessibleSelectable() {}
 
  private:
+  xpcAccessibleSelectable(const xpcAccessibleSelectable&) = delete;
+  xpcAccessibleSelectable& operator=(const xpcAccessibleSelectable&) = delete;
+
   Accessible* Intl();
 };
 

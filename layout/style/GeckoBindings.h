@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -22,6 +24,7 @@
 
 class nsAtom;
 class nsIURI;
+class nsSimpleContentList;
 struct nsFont;
 class ServoComputedData;
 
@@ -43,7 +46,6 @@ class LoaderReusableStyleSheets;
 }
 namespace dom {
 enum class CompositeOperationOrAuto : uint8_t;
-class SimpleContentList;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -97,7 +99,8 @@ void Gecko_GetQueryContainerSize(const mozilla::dom::Element*,
                                  nscoord* aOutWidth, nscoord* aOutHeight);
 
 void Gecko_ComputedStyle_Init(mozilla::ComputedStyle* context,
-                              const ServoComputedData* values);
+                              const ServoComputedData* values,
+                              mozilla::PseudoStyleType pseudo_type);
 
 void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle* context);
 
@@ -141,11 +144,6 @@ void Gecko_LoadStyleSheetAsync(
 uint64_t Gecko_ElementState(const mozilla::dom::Element*);
 bool Gecko_IsRootElement(const mozilla::dom::Element*);
 
-// Fills aArray with the cached lazy pseudo styles from aStyle.
-void Gecko_GetCachedLazyPseudoStyles(
-    const mozilla::ComputedStyle* aStyle,
-    nsTArray<const mozilla::ComputedStyle*>* aArray);
-
 bool Gecko_MatchLang(const mozilla::dom::Element*, nsAtom* override_lang,
                      bool has_override_lang, const char16_t* value);
 
@@ -167,8 +165,7 @@ bool Gecko_HasActiveViewTransitionTypes(
   nsAtom* prefix_##LangValue(implementor_ element);
 
 bool Gecko_LookupAttrValue(const mozilla::dom::Element* aElement,
-                           nsAtom& aNamespace, nsAtom& aName,
-                           nsAString& aResult);
+                           const nsAtom& aName, nsAString& aResult);
 bool Gecko_AttrEquals(const nsAttrValue*, const nsAtom*, bool aIgnoreCase);
 bool Gecko_AttrDashEquals(const nsAttrValue*, const nsAtom*, bool aIgnoreCase);
 bool Gecko_AttrIncludes(const nsAttrValue*, const nsAtom*, bool aIgnoreCase);
@@ -191,6 +188,8 @@ SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(
 // Style attributes.
 const mozilla::StyleLockedDeclarationBlock* Gecko_GetStyleAttrDeclarationBlock(
     const mozilla::dom::Element* element);
+
+void Gecko_UnsetDirtyStyleAttr(const mozilla::dom::Element* element);
 
 const mozilla::StyleLockedDeclarationBlock* Gecko_GetViewTransitionDynamicRule(
     const mozilla::dom::Element* element);
@@ -344,20 +343,15 @@ void Gecko_NoteDirtySubtreeForInvalidation(const mozilla::dom::Element*);
 void Gecko_NoteAnimationOnlyDirtyElement(const mozilla::dom::Element*);
 void Gecko_InvalidatePositionTry(const mozilla::dom::Element*);
 
-// Called when a highlight pseudo-element style (::selection, ::highlight,
-// ::target-text) is invalidated. These pseudos need explicit repaint
-// triggering since their styles are resolved lazily during painting.
-void Gecko_NoteHighlightPseudoStyleInvalidated(const mozilla::dom::Document*);
-
 bool Gecko_AnimationNameMayBeReferencedFromStyle(const nsPresContext*,
                                                  nsAtom* name);
 
 float Gecko_GetScrollbarInlineSize(const nsPresContext*);
 
-// Retrieve pseudo type from an element.
+// Retrive pseudo type from an element.
 mozilla::PseudoStyleType Gecko_GetImplementedPseudoType(
     const mozilla::dom::Element*);
-// Retrieve pseudo identifier from an element if any.
+// Retrive pseudo identifier from an element if any.
 nsAtom* Gecko_GetImplementedPseudoIdentifier(const mozilla::dom::Element*);
 
 // We'd like to return `nsChangeHint` here, but bindgen bitfield enums don't
@@ -411,16 +405,6 @@ mozilla::Keyframe* Gecko_GetOrCreateKeyframeAtStart(
     const mozilla::StyleComputedTimingFunction* timingFunction,
     const mozilla::dom::CompositeOperationOrAuto composition);
 
-// The variant of the above method but this is specialized for the keyframe
-// offset with the timeline range name.
-// @param aRangeName The timeline range name to search for.
-mozilla::Keyframe* Gecko_GetOrCreateKeyframeWithRangeName(
-    nsTArray<mozilla::Keyframe>* aKeyframes,
-    const mozilla::StyleTimelineRangeName aRangeName, float aOffset,
-    const mozilla::StyleComputedTimingFunction* aTimingFunction,
-    const mozilla::dom::CompositeOperationOrAuto aComposition,
-    size_t* aMatchedIdx);
-
 // As with Gecko_GetOrCreateKeyframeAtStart except that this method will search
 // from the beginning of |keyframes| for a Keyframe with matching timing
 // function, composition, and an offset of 0.0.
@@ -467,12 +451,6 @@ void Gecko_nsIReferrerInfo_Debug(nsIReferrerInfo* aReferrerInfo,
 
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::URLExtraData, URLExtraData);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsIReferrerInfo, nsIReferrerInfo);
-
-// Returns whether the base URI of `aData` matches a domain in the
-// comma-separated `aList` value, using the same syntax as
-// `nsContentUtils::IsURIInPrefList`.
-bool Gecko_IsURIInList(const mozilla::URLExtraData* aData,
-                       const nsACString* aList);
 
 void Gecko_FillAllImageLayers(nsStyleImageLayers* layers, uint32_t max_len);
 
@@ -555,6 +533,12 @@ bool Gecko_DocumentRule_UseForPresentation(
 // Allocator hinting.
 void Gecko_SetJemallocThreadLocalArena(bool enabled);
 
+// Pseudo-element flags.
+#define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+  const uint32_t SERVO_CSS_PSEUDO_ELEMENT_FLAGS_##name_ = flags_;
+#include "nsCSSPseudoElementList.h"
+#undef CSS_PSEUDO_ELEMENT
+
 bool Gecko_ErrorReportingEnabled(const mozilla::StyleSheet* sheet,
                                  const mozilla::css::Loader* loader,
                                  uint64_t* aOutWindowId);
@@ -566,7 +550,7 @@ void Gecko_ReportUnexpectedCSSError(
     uint32_t selectorsLen, uint32_t lineNumber, uint32_t colNumber);
 
 // DOM APIs.
-void Gecko_ContentList_AppendAll(mozilla::dom::SimpleContentList* aContentList,
+void Gecko_ContentList_AppendAll(nsSimpleContentList* aContentList,
                                  const mozilla::dom::Element** aElements,
                                  size_t aLength);
 
@@ -656,7 +640,6 @@ void Gecko_PrintfStderr(const nsCString*);
 
 bool Gecko_GetAnchorPosOffset(
     const AnchorPosOffsetResolutionParams* aParams, const nsAtom* aAnchorName,
-    const mozilla::StyleCascadeLevel* aTreeScope,
     mozilla::StylePhysicalSide aPropSide,
     mozilla::StyleAnchorSideKeyword aAnchorSideKeyword, float aPercentage,
     mozilla::Length* aOut);
@@ -678,7 +661,6 @@ bool Gecko_GetAnchorPosOffset(
  */
 bool Gecko_GetAnchorPosSize(const AnchorPosResolutionParams* aParams,
                             const nsAtom* aAnchorName,
-                            const mozilla::StyleCascadeLevel* aTreeScope,
                             mozilla::StylePhysicalAxis aPropAxis,
                             mozilla::StyleAnchorSizeKeyword aAnchorSizeKeyword,
                             mozilla::Length* aOut);

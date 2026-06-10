@@ -57,8 +57,6 @@ bitflags::bitflags! {
         const TEXTURE_ATOMICS = 1 << 25;
         /// Image atomics
         const SHADER_BARYCENTRICS = 1 << 26;
-        /// Primitive index builtin
-        const PRIMITIVE_INDEX = 1 << 27;
     }
 }
 
@@ -66,7 +64,7 @@ bitflags::bitflags! {
 /// [`Module`](crate::Module)
 ///
 /// Provides helper methods to check for availability and writing required extensions
-pub(crate) struct FeaturesManager(Features);
+pub struct FeaturesManager(Features);
 
 impl FeaturesManager {
     /// Creates a new [`FeaturesManager`] instance
@@ -80,7 +78,7 @@ impl FeaturesManager {
     }
 
     /// Checks if the list of features [`Features`] contains the specified [`Features`]
-    pub const fn contains(&mut self, features: Features) -> bool {
+    pub fn contains(&mut self, features: Features) -> bool {
         self.0.contains(features)
     }
 
@@ -124,7 +122,7 @@ impl FeaturesManager {
         check_feature!(CLIP_DISTANCE, 130, 300 /* with extension */);
         check_feature!(CULL_DISTANCE, 450, 300 /* with extension */);
         check_feature!(SAMPLE_VARIABLES, 400, 300);
-        check_feature!(DYNAMIC_ARRAY_SIZE, 400 /* with extension */, 310);
+        check_feature!(DYNAMIC_ARRAY_SIZE, 430, 310);
         check_feature!(DUAL_SOURCE_BLENDING, 330, 300 /* with extension */);
         check_feature!(SUBGROUP_OPERATIONS, 430, 310);
         check_feature!(TEXTURE_ATOMICS, 420, 310);
@@ -298,18 +296,6 @@ impl FeaturesManager {
                 out,
                 "#extension GL_EXT_fragment_shader_barycentric : require"
             )?;
-        }
-
-        if self.0.contains(Features::PRIMITIVE_INDEX) {
-            match options.version {
-                Version::Embedded { version, .. } if version < 320 => {
-                    writeln!(out, "#extension GL_OES_geometry_shader : require")?;
-                }
-                Version::Desktop(version) if version < 150 => {
-                    writeln!(out, "#extension GL_ARB_geometry_shader4 : require")?;
-                }
-                _ => (),
-            }
         }
 
         Ok(())
@@ -618,20 +604,17 @@ impl<W> Writer<'_, W> {
         } else if let Some(binding) = binding {
             match *binding {
                 Binding::BuiltIn(built_in) => match built_in {
-                    crate::BuiltIn::ClipDistances => self.features.request(Features::CLIP_DISTANCE),
+                    crate::BuiltIn::ClipDistance => self.features.request(Features::CLIP_DISTANCE),
                     crate::BuiltIn::CullDistance => self.features.request(Features::CULL_DISTANCE),
                     crate::BuiltIn::SampleIndex => {
                         self.features.request(Features::SAMPLE_VARIABLES)
                     }
                     crate::BuiltIn::ViewIndex => self.features.request(Features::MULTI_VIEW),
-                    crate::BuiltIn::InstanceIndex | crate::BuiltIn::DrawIndex => {
+                    crate::BuiltIn::InstanceIndex | crate::BuiltIn::DrawID => {
                         self.features.request(Features::INSTANCE_INDEX)
                     }
-                    crate::BuiltIn::Barycentric { .. } => {
+                    crate::BuiltIn::Barycentric => {
                         self.features.request(Features::SHADER_BARYCENTRICS)
-                    }
-                    crate::BuiltIn::PrimitiveIndex => {
-                        self.features.request(Features::PRIMITIVE_INDEX)
                     }
                     _ => {}
                 },

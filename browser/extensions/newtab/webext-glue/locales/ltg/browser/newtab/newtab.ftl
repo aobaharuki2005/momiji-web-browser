@@ -16,7 +16,7 @@ newtab-search-box-search-button =
     .title = Mekleit
     .aria-label = Mekleit
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = Davīnōt mekleitōji
 newtab-topsites-edit-topsites-header = Maineit lopu topā

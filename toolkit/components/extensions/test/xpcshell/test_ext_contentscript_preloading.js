@@ -408,8 +408,13 @@ add_task(async function test_no_preload_at_blob_url_iframe() {
     manifest: {
       content_scripts: [
         {
-          matches: ["*://example.com/*"],
-          exclude_matches: ["*://example.com/dummy?initial-without_cs"],
+          // Note: match_origin_as_fallback is supposed to only work when
+          // "matches" has a wildcard path. In our implementation, blob:-URLs
+          // have a principal URL that may include a path rather than just the
+          // origin, so we can match blob:-URLs created from specific paths.
+          // This behavior is NOT documented, but relied upon for convenience
+          // here.
+          matches: ["*://example.com/dummy?with_blob_url"],
           match_origin_as_fallback: true,
           all_frames: true,
           js: ["done.js"],
@@ -432,8 +437,8 @@ add_task(async function test_no_preload_at_blob_url_iframe() {
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
     [
-      { matches: ["*://example.com/*"], isPreload: true },
-      { matches: ["*://example.com/*"], isPreload: false },
+      { matches: ["*://example.com/dummy?with_blob_url"], isPreload: true },
+      { matches: ["*://example.com/dummy?with_blob_url"], isPreload: false },
     ],
     "Should have observed preload in initial http document"
   );
@@ -450,7 +455,7 @@ add_task(async function test_no_preload_at_blob_url_iframe() {
     await getSeenContentScriptInjections(extension, contentPage),
     [
       // We don't preload even though we could. See comment at top of file.
-      { matches: ["*://example.com/*"], isPreload: false },
+      { matches: ["*://example.com/dummy?with_blob_url"], isPreload: false },
     ],
     "Preloading is NOT supported in blob:-URLs"
   );

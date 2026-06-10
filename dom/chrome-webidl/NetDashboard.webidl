@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,7 +12,6 @@ dictionary SocketElement {
   DOMString type = "";
   double sent = 0;
   double received = 0;
-  DOMString originAttributesSuffix = "";
 };
 
 [GenerateConversionToJS]
@@ -39,7 +39,6 @@ dictionary HttpConnectionElement {
   sequence<HttpConnInfo> active;
   sequence<HttpConnInfo> idle;
   sequence<DnsAndSockInfoDict> dnsAndSocks;
-  DOMString originAttributesSuffix = "";
 };
 
 [GenerateConversionToJS]
@@ -139,22 +138,21 @@ dictionary ConnStatusDict {
   DOMString status = "";
 };
 
-[GenerateConversionToJS]
-dictionary AltSvcMappingElement {
-  DOMString originHost = "";
-  unsigned long originPort = 0;
-  DOMString alternateHost = "";
-  unsigned long alternatePort = 0;
-  DOMString alpn = "";
-  boolean https = false;
-  boolean validated = false;
-  long ttl = 0;
-  DOMString originAttributesSuffix = "";
+dictionary RcwnPerfStats {
+  unsigned long avgShort = 0;
+  unsigned long avgLong = 0;
+  unsigned long stddevLong = 0;
 };
 
 [GenerateConversionToJS]
-dictionary AltSvcCacheDict {
-  sequence<AltSvcMappingElement> entries;
+dictionary RcwnStatus {
+  unsigned long totalNetworkRequests = 0;
+  unsigned long rcwnCacheWonCount = 0;
+  unsigned long rcwnNetWonCount = 0;
+  unsigned long cacheSlowCount = 0;
+  unsigned long cacheNotSlowCount = 0;
+  // Sequence is indexed by CachePerfStats::EDataType
+  sequence<RcwnPerfStats> perfStats;
 };
 
 dictionary Http3ConnStats {

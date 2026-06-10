@@ -66,7 +66,7 @@ _mesa_shader_stage_to_string(unsigned stage)
    case MESA_SHADER_TESS_EVAL: return "tessellation evaluation";
    }
 
-   UNREACHABLE("Unknown shader stage.");
+   unreachable("Unknown shader stage.");
 }
 
 /**
@@ -86,7 +86,7 @@ _mesa_shader_stage_to_abbrev(unsigned stage)
    case MESA_SHADER_TESS_EVAL: return "TES";
    }
 
-   UNREACHABLE("Unknown shader stage.");
+   unreachable("Unknown shader stage.");
 }
 
 const char *

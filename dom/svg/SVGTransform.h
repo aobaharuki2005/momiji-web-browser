@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -92,18 +94,18 @@ class SVGTransformSMILData {
  public:
   // Number of float-params required in constructor, if constructing one of the
   // 'simple' transform types (all but matrix type)
-  static constexpr uint32_t NUM_SIMPLE_PARAMS = 3;
+  static const uint32_t NUM_SIMPLE_PARAMS = 3;
 
   // Number of float-params required in constructor for matrix type.
   // This is also the number of params we actually store, regardless of type.
-  static constexpr uint32_t NUM_STORED_PARAMS = 6;
+  static const uint32_t NUM_STORED_PARAMS = 6;
 
   explicit SVGTransformSMILData(uint16_t aType) : mTransformType(aType) {
     MOZ_ASSERT(aType >= dom::SVGTransform_Binding::SVG_TRANSFORM_MATRIX &&
                    aType <= dom::SVGTransform_Binding::SVG_TRANSFORM_SKEWY,
                "Unexpected transform type");
-    for (float& mParam : mParams) {
-      mParam = 0.f;
+    for (uint32_t i = 0; i < NUM_STORED_PARAMS; ++i) {
+      mParams[i] = 0.f;
     }
   }
 
@@ -140,8 +142,8 @@ class SVGTransformSMILData {
     return !(*this == aOther);
   }
 
-  float mParams[NUM_STORED_PARAMS];
   uint16_t mTransformType;
+  float mParams[NUM_STORED_PARAMS];
 };
 
 }  // namespace mozilla

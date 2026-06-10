@@ -8,43 +8,30 @@ import type { LocaleParseError } from "./LocaleParseError"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
-
 /**
- * 🚧 This API is experimental and may experience breaking changes outside major releases.
- *
- * See the [Rust documentation for `RegionDisplayNames`](https://docs.rs/icu/2.1.1/icu/experimental/displaynames/struct.RegionDisplayNames.html) for more information.
+ * See the [Rust documentation for `RegionDisplayNames`](https://docs.rs/icu/latest/icu/experimental/displaynames/struct.RegionDisplayNames.html) for more information.
  */
+
+
 export class RegionDisplayNames {
-    /** @internal */
     get ffiValue(): pointer;
 
 
     /**
-     * 🚧 This API is experimental and may experience breaking changes outside major releases.
-     *
      * Creates a new `RegionDisplayNames` from locale data and an options bag using a particular data source.
      *
-     * See the [Rust documentation for `try_new`](https://docs.rs/icu/2.1.1/icu/experimental/displaynames/struct.RegionDisplayNames.html#method.try_new) for more information.
+     * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/experimental/displaynames/struct.RegionDisplayNames.html#method.try_new) for more information.
      */
     static createWithProvider(provider: DataProvider, locale: Locale, options: DisplayNamesOptions_obj): RegionDisplayNames;
 
     /**
-     * 🚧 This API is experimental and may experience breaking changes outside major releases.
-     *
      * Returns the locale specific display name of a region.
      * Note that the function returns an empty string in case the display name for a given
      * region code is not found.
      *
-     * See the [Rust documentation for `of`](https://docs.rs/icu/2.1.1/icu/experimental/displaynames/struct.RegionDisplayNames.html#method.of) for more information.
+     * See the [Rust documentation for `of`](https://docs.rs/icu/latest/icu/experimental/displaynames/struct.RegionDisplayNames.html#method.of) for more information.
      */
     of(region: string): string;
 
-    /**
-     * 🚧 This API is experimental and may experience breaking changes outside major releases.
-     *
-     * Creates a new `RegionDisplayNames` from locale data and an options bag using compiled data.
-     *
-     * See the [Rust documentation for `try_new`](https://docs.rs/icu/2.1.1/icu/experimental/displaynames/struct.RegionDisplayNames.html#method.try_new) for more information.
-     */
     constructor(locale: Locale, options: DisplayNamesOptions_obj);
 }

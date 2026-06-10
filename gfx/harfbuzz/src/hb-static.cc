@@ -24,10 +24,6 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_STATIC_CC
-#define HB_STATIC_CC
-#ifdef HB_STATIC_CC /* Pacify -Wunused-macros. */
-
 #include "hb.hh"
 
 #include "hb-open-type.hh"
@@ -118,6 +114,3 @@ hb_face_t::load_upem () const
 }
 
 #endif
-
-#endif /* HB_STATIC_CC pacify */
-#endif /* HB_STATIC_CC guard */

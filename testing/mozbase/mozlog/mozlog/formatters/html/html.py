@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -6,7 +7,7 @@ import base64
 import json
 import os
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime
 
 from .. import base
 
@@ -239,7 +240,7 @@ class HTMLFormatter(base.BaseFormatter):
         )
 
     def generate_html(self):
-        generated = datetime.now(timezone.utc)
+        generated = datetime.utcnow()
         with open(os.path.join(base_path, "main.js")) as main_f:
             doc = html.html(
                 self.head,

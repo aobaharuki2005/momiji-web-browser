@@ -4,6 +4,7 @@ Worker, as a thread programming model, is introduced to the Web world to use the
 
 Since Worker can be deleted anytime, when developing APIs on the Workers should be careful when handling the shutdown behavior. Otherwise, memory problems, UAF, memory leaking, or shutdown hang, would not be a surprise. In addition, debugging these issues on Workers sometimes is not easy. The crash stack might not provide very useful information. The bug sometimes needs a special sequence to reproduce since it could be a thread interleaving problem. To avoid getting into these troubles, keeping the Worker’s life cycle and how to play with WorkerRefs in mind would be very helpful.
 
+
 ## Worker Life-Cycle
 
 The worker’s life cycle is maintained by a status machine in the WorkerPrivate class. A Worker could be in following status
@@ -17,7 +18,8 @@ The worker’s life cycle is maintained by a status machine in the WorkerPrivate
 
 Following we briefly describe what is done for each status.
 
-### Pending
+
+### Pending:
 
 This is the initial status of a Worker.
 
@@ -42,7 +44,8 @@ When WorkerThreadPrimaryRunnable starts executing on the worker thread, it conti
 4. Initialize the JS context for the Worker.
 5. Call WorkerPrivate::DoRunLoop() to consume the Runnables in the worker thread’s event queue.
 
-### Running
+
+### Running:
 
 This is the status which the Worker starts to execute runnables on the worker thread.
 
@@ -59,7 +62,8 @@ Once the Worker gets into “Running”,
 
 We will talk about WorkerRef, Sync-EventLoop in detail later.
 
-### Closing
+
+### Closing:
 
 This is a special status for DedicatedWorker and SharedWorker when DedicateWorkerGlobalScope.close()/SharedWorkerGlobalScope.close() is called.
 
@@ -70,7 +74,8 @@ When Worker enters into the “Closing” status,
 
 Worker will keep in the “Closing” status until all sync-eventLoops of the Worker are closed.
 
-### Canceling
+
+### Canceling:
 
 When Worker gets into the “Canceling” status, it starts the Worker shutdown steps.
 
@@ -89,7 +94,8 @@ Once all sync-eventLoops are closed,
 
 1. Disconnect the EventTarget/WebTaskScheduler of the WorkerGlobalScope
 
-### Killing
+
+### Killing:
 
 This is the status that starts to destroy the Worker
 
@@ -99,7 +105,8 @@ This is the status that starts to destroy the Worker
 4. Cancel and release the remaining WorkerControlRunnables
 5. Exit the WorkerPrivate::DoRunLoop()
 
-### Dead
+
+### Dead:
 
 The Worker quits the main event loop, it continues the shutdown process
 
@@ -121,6 +128,7 @@ The WorkerPrivate is supposed to be released after its self-reference is nullifi
 
 5. Dispatch FinishedRunnable to the main thread to release the worker thread.
 
+
 ### How to shutdown a Worker
 
 Normally, there are four situations making a Worker get into shutdown.
@@ -135,6 +143,7 @@ Normally, there are four situations making a Worker get into shutdown.
 3. Worker.terminate() is called in its parent’s script.
 
 4. Firefox shutdown.
+
 
 ### Worker Status Flowchart
 
@@ -153,6 +162,7 @@ A “Canceling” Worker switches its status to “Killing” when following req
 
 The status switches from “Killing” to “Dead” automatically.
 
+
 ## WorkerRefs
 
 Since a Worker’s shutdown can happen at any time, knowing when the shutdown starts is important for development, especially for releasing the resources and completing the operation in the Worker shutdown phase. Therefore, WorkerRefs is introduced to get the notification of the Worker’s shutdown. When a Worker enters the “Canceling” status, it notifies the corresponding WorkerRefs to execute the registered callback on the worker thread. The WorkerRefs holder completes its shutdown steps synchronously or asynchronously in the registered callback and then releases the WorkerRef.
@@ -163,6 +173,7 @@ According to the following requirements, four types of WorkerRefs are introduced
 - Should the WorkerRef block cycle-collection on the Worker
 - Should the WorkerRef need to be held on other threads.
 
+
 ### WeakWorkerRef
 
 WeakWorkerRef, as its name, is a “Weak” reference since WeakWorkerRef releases the internal reference to the Worker immediately after WeakWorkerRef’s registered callback execution completes. Therefore, WeakWorkerRef does not block the Worker’s shutdown. In addition, holding a WeakWorkerRef would not block GC/CC the Worker. This means a Worker will be considered to be cycle-collected even if there are WeakWorkerRefs to the Worker.
@@ -170,6 +181,7 @@ WeakWorkerRef, as its name, is a “Weak” reference since WeakWorkerRef releas
 WeakWorkerRef is ref-counted, but not thread-safe.
 
 WeakWorkerRef is designed for just getting the Worker’s shutdown notification and completing shutdown steps synchronously.
+
 
 ### StrongWorkerRef
 
@@ -181,6 +193,7 @@ StrongWorkerRef also blocks the GC/CC a Worker. Once there is a StrongWorkerRef 
 
 StrongWorkerRef is ref-counted, but not thread-safe.
 
+
 ### ThreadSafeWorkerRef
 
 ThreadSafeWorkerRef is an extension of StrongWorkerRef. The difference is ThreadSafeWorkerRef holder can be on another thread. Since it is an extension of StrongWorkerRef, it gives the same characters as StrongWorkerRef. Which means its holder blocks the Worker’s shutdown, and It also blocks GC/CC a Worker.
@@ -188,6 +201,7 @@ ThreadSafeWorkerRef is an extension of StrongWorkerRef. The difference is Thread
 Playing with ThreadSafeWorkerRef, just like StrongWorkerRef, ThreadSafeWorkerRef release timing is important for memory problems. Except the release timing, it should be noticed the callback execution on the worker thread, not on the holder’s owning thread.
 
 ThreadSafeWorkerRef is ref-counted and thread-safe.
+
 
 ### IPCWorkerRef
 
@@ -206,6 +220,7 @@ Following is a table for the comparison between WorkerRefs
 | Callback execution thread | Worker thread |  Worker thread  |    Worker thread    | Worker thread |
 | Block Worker’s shutdown   |       No      |       Yes       |         Yes         |      Yes      |
 | Block GC a Worker         |       No      |       Yes       |         Yes         |       No      |
+
 
 ### WorkerRef Callback
 

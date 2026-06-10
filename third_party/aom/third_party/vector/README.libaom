@@ -1,12 +1,8 @@
 Name: vector
 URL: https://github.com/goldsborough/vector
-Version: N/A
-Update Mechanism: Manual
-Revision: 40efe82
+Version: commit-id: 40efe82
 License: MIT
 License File: LICENSE
-Shipped in Chromium: yes
-Security Critical: yes
 
 Description:
 A feature-complete, generic and customizable resizable

@@ -7,6 +7,7 @@ import json
 import hashlib
 import zipfile
 import time
+from threading import Timer
 
 from ..utils.user_agent_parser import parse_user_agent, abbreviate_browser_name
 from ..utils.serializer import serialize_session
@@ -21,6 +22,7 @@ from ..data.session import COMPLETED
 WAVE_SRC_DIR = "./tools/wave"
 RESULTS_FILE_REGEX = r"^\w\w\d\d\d?\.json$"
 RESULTS_FILE_PATTERN = re.compile(RESULTS_FILE_REGEX)
+SESSION_RESULTS_TIMEOUT = 60*30  # 30min
 
 
 class ResultsManager:
@@ -40,6 +42,7 @@ class ResultsManager:
         self._reports_enabled = reports_enabled
         self._results = {}
         self._persisting_interval = persisting_interval
+        self._timeouts = {}
 
     def create_result(self, token, data):
         result = self.prepare_result(data)
@@ -86,10 +89,10 @@ class ResultsManager:
         if filter_path is not None:
             filter_api = next((p for p in filter_path.split("/")
                                if p is not None), None)
-        cached_results = self._read_from_cache(token)
-        persisted_results = self.load_results(token)
-        results = self._combine_results_by_api(cached_results,
-                                               persisted_results)
+        results = self._read_from_cache(token)
+        if results == []:
+            results = self.load_results(token)
+            self._set_session_cache(token, results)
 
         filtered_results = {}
 
@@ -213,6 +216,7 @@ class ResultsManager:
                         if test in failed_tests[api]:
                             continue
                         failed_tests[api].append(test)
+        return passed_tests
 
     def read_results_wpt_report_uri(self, token, api):
         api_directory = os.path.join(self._results_directory_path, token, api)
@@ -248,8 +252,7 @@ class ResultsManager:
             return
         for api in list(self._results[token].keys())[:]:
             self.save_api_results(token, api)
-            self.create_info_file(session)
-            self._clear_cache_api(token, api)
+        self.create_info_file(session)
         session.recent_completed_count = 0
         self._sessions_manager.update_session(session)
 
@@ -269,7 +272,7 @@ class ResultsManager:
                     continue
                 file_path = os.path.join(api_directory, file_name)
                 data = None
-                with open(file_path, "r") as file:
+                with open(file_path) as file:
                     data = file.read()
                 result = json.loads(data)
                 results[api] = result["results"]
@@ -286,22 +289,28 @@ class ResultsManager:
         if api not in self._results[token]:
             self._results[token][api] = []
         self._results[token][api].append(result)
+        self._set_timeout(token)
+
+    def _set_session_cache(self, token, results):
+        if token is None:
+            return
+        self._results[token] = results
+        self._set_timeout(token)
 
     def _read_from_cache(self, token):
         if token is None:
             return []
         if token not in self._results:
             return []
+        self._set_timeout(token)
         return self._results[token]
 
-    def _clear_cache_api(self, token, api):
+    def _clear_session_cache(self, token):
         if token is None:
             return
         if token not in self._results:
             return
-        if api not in self._results[token]:
-            return
-        del self._results[token][api]
+        del self._results[token]
 
     def _combine_results_by_api(self, result_a, result_b):
         combined_result = {}
@@ -479,7 +488,7 @@ class ResultsManager:
         if not os.path.isfile(file_path):
             return None
 
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             blob = file.read()
             return blob
 
@@ -538,7 +547,7 @@ class ResultsManager:
                 zip.write(file_path, file_name, zipfile.ZIP_DEFLATED)
         zip.close()
 
-        with open(zip_file_name, "rb") as file:
+        with open(zip_file_name) as file:
             blob = file.read()
             os.remove(zip_file_name)
 
@@ -589,7 +598,7 @@ class ResultsManager:
         if not os.path.isfile(info_file_path):
             return None
 
-        with open(info_file_path, "r") as info_file:
+        with open(info_file_path) as info_file:
             data = info_file.read()
             info_file.close()
             info = json.loads(str(data))
@@ -618,7 +627,7 @@ class ResultsManager:
         os.makedirs(destination_path)
         zip.extractall(destination_path)
         self.remove_tmp_files()
-        self.load_results()
+        self.load_results(token)
         return token
 
     def import_results_api_json(self, token, api, blob):
@@ -654,3 +663,12 @@ class ResultsManager:
             if re.match(r"\d{10}\.\d{2}\.zip", file) is None:
                 continue
             os.remove(file)
+
+    def _set_timeout(self, token):
+        if token in self._timeouts:
+            self._timeouts[token].cancel()
+
+        def handler(self, token):
+            self._clear_session_cache(token)
+
+        self._timeouts[token] = Timer(SESSION_RESULTS_TIMEOUT, handler, [self, token])

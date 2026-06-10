@@ -41,20 +41,17 @@ add_task(async () => {
       nativeStack,
       // The following regexes match a string similar to:
       //
-      // "functionA (/gecko/obj/_tests/xpcshell/tools/profiler/tests/xpcshell/test_merged_stacks.js:47:0)[0]"
+      // "functionA (/gecko/obj/_tests/xpcshell/tools/profiler/tests/xpcshell/test_merged_stacks.js:47:0)"
       // or
-      // "functionA (test_merged_stacks.js:47:0)[0]"
-      //
-      // Note: The [N] suffix is the source index in the sources table.
+      // "functionA (test_merged_stacks.js:47:0)"
       //
       //          this matches the script location
       //          |                          match the line number
       //          |                          |   match the column number
-      //          |                          |   |   match source index
-      //          v                          v   v   v
-      /^functionA \(.*test_merged_stacks\.js:\d+:\d+\)\[\d+\]$/,
-      /^functionB \(.*test_merged_stacks\.js:\d+:\d+\)\[\d+\]$/,
-      /^functionC \(.*test_merged_stacks\.js:\d+:\d+\)\[\d+\]$/,
+      //          v                          v   v
+      /^functionA \(.*test_merged_stacks\.js:\d+:\d+\)$/,
+      /^functionB \(.*test_merged_stacks\.js:\d+:\d+\)$/,
+      /^functionC \(.*test_merged_stacks\.js:\d+:\d+\)$/,
       // After the JS frames, then there are a bunch of arbitrary native stack frames
       // that run.
       nativeStack,

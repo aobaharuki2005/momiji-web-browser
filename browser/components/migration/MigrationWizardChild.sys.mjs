@@ -409,8 +409,8 @@ export class MigrationWizardChild extends JSWindowActorChild {
     Cu.waiveXrays(this.#wizardEl).setState(
       Cu.cloneInto(
         state,
-        // documentGlobal doesn't exist in content windows.
-        // eslint-disable-next-line mozilla/use-documentGlobal
+        // ownerGlobal doesn't exist in content windows.
+        // eslint-disable-next-line mozilla/use-ownerGlobal
         this.#wizardEl.ownerDocument.defaultView
       )
     );

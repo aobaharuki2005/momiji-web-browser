@@ -6,13 +6,14 @@ load(libdir + "codegen-test-common.js");
 // End of prologue
 var arm64_prefix = `
 mov     x29, sp
-mov     x20, sp(
+mov     x28, sp(
 str     x23, \\[x29, #16\\])?
 `;
 
 // Start of epilogue
 var arm64_suffix = `
-ldp     x29, x30, \\[sp\\], #16
+ldr     x30, \\[sp, #8\\]
+ldr     x29, \\[sp\\]
 `;
 
 // For when nothing else applies: `module_text` is the complete source text of

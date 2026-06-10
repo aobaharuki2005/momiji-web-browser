@@ -2,15 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozURL_h_
-#define mozURL_h_
+#ifndef mozURL_h__
+#define mozURL_h__
 
-#include "nsIMemoryReporter.h"
 #include "mozilla/net/MozURL_ffi.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
-
-MOZ_DEFINE_MALLOC_SIZE_OF(MozURLMallocSizeOf)
 
 namespace mozilla {
 namespace net {
@@ -39,13 +36,6 @@ namespace net {
 // reflect the actual layout of the type.
 class MozURL final {
  public:
-  // Make it a compile time error for C++ code to ever create, destruct, or copy
-  // MozURL objects. All of these operations will be performed by rust.
-  MozURL() = delete;
-  ~MozURL() = delete;
-  MozURL(const MozURL&) = delete;
-  MozURL& operator=(const MozURL&) = delete;
-
   static nsresult Init(MozURL** aURL, const nsACString& aSpec,
                        const MozURL* aBaseURL = nullptr) {
     return mozurl_new(aURL, &aSpec, aBaseURL);
@@ -92,7 +82,7 @@ class MozURL final {
     return mozurl_relative(this, aOther, aRelative);
   }
 
-  size_t SizeOf() { return mozurl_sizeof(this, MozURLMallocSizeOf); }
+  size_t SizeOf() { return mozurl_sizeof(this); }
 
   class Mutator {
    public:
@@ -224,9 +214,17 @@ class MozURL final {
   // AddRef and Release are non-virtual on this type, and always call into rust.
   void AddRef() { mozurl_addref(this); }
   void Release() { mozurl_release(this); }
+
+ private:
+  // Make it a compile time error for C++ code to ever create, destruct, or copy
+  // MozURL objects. All of these operations will be performed by rust.
+  MozURL();  /* never defined */
+  ~MozURL(); /* never defined */
+  MozURL(const MozURL&) = delete;
+  MozURL& operator=(const MozURL&) = delete;
 };
 
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozURL_h_
+#endif  // mozURL_h__

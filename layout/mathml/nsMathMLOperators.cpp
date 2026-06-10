@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,7 +21,7 @@ using namespace mozilla;
 
 // operator dictionary entry
 struct OperatorData {
-  OperatorData(void) : mLeadingSpace(0.0f), mTrailingSpace(0.0f) {}
+  OperatorData(void) : mFlags(0), mLeadingSpace(0.0f), mTrailingSpace(0.0f) {}
 
   // member data
   nsString mStr;
@@ -54,20 +56,20 @@ static void SetBooleanProperty(OperatorData* aOperatorData, nsString aName) {
   }
 
   if (aName.EqualsLiteral("stretchy") && (1 == aOperatorData->mStr.Length())) {
-    aOperatorData->mFlags.Booleans() += OperatorBoolean::Stretchy;
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY;
   } else if (aName.EqualsLiteral("fence")) {
-    aOperatorData->mFlags.Booleans() += OperatorBoolean::Fence;
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_FENCE;
   } else if (!StaticPrefs::mathml_operator_dictionary_accent_disabled() &&
              aName.EqualsLiteral("accent")) {
-    aOperatorData->mFlags.Booleans() += OperatorBoolean::Accent;
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_ACCENT;
   } else if (aName.EqualsLiteral("largeop")) {
-    aOperatorData->mFlags.Booleans() += OperatorBoolean::LargeOperator;
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_LARGEOP;
   } else if (aName.EqualsLiteral("separator")) {
-    aOperatorData->mFlags.Booleans() += OperatorBoolean::Separator;
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_SEPARATOR;
   } else if (aName.EqualsLiteral("movablelimits")) {
-    aOperatorData->mFlags.Booleans() += OperatorBoolean::MovableLimits;
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_MOVABLELIMITS;
   } else if (aName.EqualsLiteral("symmetric")) {
-    aOperatorData->mFlags.Booleans() += OperatorBoolean::Symmetric;
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_SYMMETRIC;
   }
 }
 
@@ -79,9 +81,9 @@ static void SetProperty(OperatorData* aOperatorData, nsString aName,
 
   if (aName.EqualsLiteral("direction")) {
     if (aValue.EqualsLiteral("vertical")) {
-      aOperatorData->mFlags.SetDirection(OperatorDirection::Vertical);
+      aOperatorData->mFlags |= NS_MATHML_OPERATOR_DIRECTION_VERTICAL;
     } else if (aValue.EqualsLiteral("horizontal")) {
-      aOperatorData->mFlags.SetDirection(OperatorDirection::Horizontal);
+      aOperatorData->mFlags |= NS_MATHML_OPERATOR_DIRECTION_HORIZONTAL;
     } else {
       return;  // invalid value
     }
@@ -110,7 +112,7 @@ static void SetProperty(OperatorData* aOperatorData, nsString aName,
   }
 }
 
-static bool SetOperator(OperatorData* aOperatorData, OperatorForm aForm,
+static bool SetOperator(OperatorData* aOperatorData, nsOperatorFlags aForm,
                         const nsCString& aOperator, nsString& aAttributes)
 
 {
@@ -170,14 +172,14 @@ static bool SetOperator(OperatorData* aOperatorData, OperatorForm aForm,
   // Quick return when the caller doesn't care about the attributes and just
   // wants to know if this is a valid operator (this is the case at the first
   // pass of the parsing of the dictionary in InitOperators())
-  if (aForm == OperatorForm::Unknown) {
+  if (!aForm) {
     return true;
   }
 
   // Add operator to hash table
-  aOperatorData->mFlags.SetForm(aForm);
+  aOperatorData->mFlags |= aForm;
   aOperatorData->mStr.Assign(value);
-  value.AppendInt(static_cast<uint32_t>(aForm), 10);
+  value.AppendInt(aForm, 10);
   gOperatorTable->InsertOrUpdate(value, aOperatorData);
 
 #ifdef DEBUG
@@ -265,15 +267,15 @@ static nsresult InitOperators(void) {
             if ((21 <= name.Length()) && (0 == name.Find("operator.\\u"))) {
               name.Cut(0, 9);  // 9 is the length of "operator.";
               int32_t len = name.Length();
-              OperatorForm form;
+              nsOperatorFlags form = 0;
               if (kNotFound != name.RFind(".infix")) {
-                form = OperatorForm::Infix;
+                form = NS_MATHML_OPERATOR_FORM_INFIX;
                 len -= 6;  // 6 is the length of ".infix";
               } else if (kNotFound != name.RFind(".postfix")) {
-                form = OperatorForm::Postfix;
+                form = NS_MATHML_OPERATOR_FORM_POSTFIX;
                 len -= 8;  // 8 is the length of ".postfix";
               } else if (kNotFound != name.RFind(".prefix")) {
-                form = OperatorForm::Prefix;
+                form = NS_MATHML_OPERATOR_FORM_PREFIX;
                 len -= 7;  // 7 is the length of ".prefix";
               } else {
                 continue;  // input is not applicable
@@ -288,8 +290,7 @@ static nsresult InitOperators(void) {
                 }
                 operatorData = &gOperatorArray[index];
               } else {
-                form = OperatorForm::Unknown;  // to quickly return from
-                                               // SetOperator() at pass 1
+                form = 0;  // to quickly return from SetOperator() at pass 1
               }
               // See if the operator should be retained
               if (SetOperator(operatorData, form, name, attributes)) {
@@ -340,19 +341,19 @@ void nsMathMLOperators::ReleaseTable(void) {
 }
 
 static OperatorData* GetOperatorData(const nsString& aOperator,
-                                     const OperatorForm aForm) {
+                                     const uint8_t aForm) {
   nsAutoString key(aOperator);
-  key.AppendInt(static_cast<uint32_t>(aForm));
+  key.AppendInt(aForm);
   return gOperatorTable->Get(key);
 }
 
 bool nsMathMLOperators::LookupOperator(const nsString& aOperator,
-                                       OperatorForm aForm,
+                                       const uint8_t aForm,
                                        nsOperatorFlags* aFlags,
                                        float* aLeadingSpace,
                                        float* aTrailingSpace) {
   NS_ASSERTION(aFlags && aLeadingSpace && aTrailingSpace, "bad usage");
-  NS_ASSERTION(aForm != OperatorForm::Unknown, "*** invalid call ***");
+  NS_ASSERTION(aForm > 0 && aForm < 4, "*** invalid call ***");
 
   // Operator strings must be of length 1 or 2 in UTF-16.
   // https://w3c.github.io/mathml-core/#dfn-algorithm-to-determine-the-category-of-an-operator
@@ -364,13 +365,13 @@ bool nsMathMLOperators::LookupOperator(const nsString& aOperator,
     // Try and handle Arabic operators.
     // https://w3c.github.io/mathml-core/#dfn-algorithm-to-determine-the-category-of-an-operator
     if (auto codePoint = ToUnicodeCodePoint(aOperator)) {
-      if (aForm == OperatorForm::Postfix &&
+      if (aForm == NS_MATHML_OPERATOR_FORM_POSTFIX &&
           (codePoint == 0x1EEF0 || codePoint == 0x1EEF1)) {
         // Use category I.
         // https://w3c.github.io/mathml-core/#operator-dictionary-categories-values
-        aFlags->SetForm(OperatorForm::Postfix);
-        aFlags->Booleans() = OperatorBoolean::Stretchy;
-        aFlags->SetDirection(OperatorDirection::Horizontal);
+        *aFlags = NS_MATHML_OPERATOR_FORM_POSTFIX |
+                  NS_MATHML_OPERATOR_STRETCHY |
+                  NS_MATHML_OPERATOR_DIRECTION_HORIZONTAL;
         *aLeadingSpace = 0;
         *aTrailingSpace = 0;
         return true;
@@ -405,7 +406,7 @@ bool nsMathMLOperators::LookupOperator(const nsString& aOperator,
 }
 
 bool nsMathMLOperators::LookupOperatorWithFallback(const nsString& aOperator,
-                                                   OperatorForm aForm,
+                                                   const uint8_t aForm,
                                                    nsOperatorFlags* aFlags,
                                                    float* aLeadingSpace,
                                                    float* aTrailingSpace) {
@@ -413,7 +414,8 @@ bool nsMathMLOperators::LookupOperatorWithFallback(const nsString& aOperator,
     return true;
   }
   for (const auto& form :
-       {OperatorForm::Infix, OperatorForm::Postfix, OperatorForm::Prefix}) {
+       {NS_MATHML_OPERATOR_FORM_INFIX, NS_MATHML_OPERATOR_FORM_POSTFIX,
+        NS_MATHML_OPERATOR_FORM_PREFIX}) {
     if (form == aForm) {
       // This form was tried above, skip it.
       continue;
@@ -453,23 +455,24 @@ bool nsMathMLOperators::IsIntegralOperator(const nsString& aOperator) {
 }
 
 /* static */
-StretchDirection nsMathMLOperators::GetStretchyDirection(
+nsStretchDirection nsMathMLOperators::GetStretchyDirection(
     const nsString& aOperator) {
   // Search any entry for that operator and return the corresponding direction.
   // It is assumed that all the forms have same direction.
   for (const auto& form :
-       {OperatorForm::Infix, OperatorForm::Postfix, OperatorForm::Prefix}) {
+       {NS_MATHML_OPERATOR_FORM_INFIX, NS_MATHML_OPERATOR_FORM_POSTFIX,
+        NS_MATHML_OPERATOR_FORM_PREFIX}) {
     nsOperatorFlags flags;
     float dummy;
     if (nsMathMLOperators::LookupOperator(aOperator, form, &flags, &dummy,
                                           &dummy)) {
-      if (flags.Direction() == OperatorDirection::Vertical) {
-        return StretchDirection::Vertical;
+      if (NS_MATHML_OPERATOR_IS_DIRECTION_VERTICAL(flags)) {
+        return NS_STRETCH_DIRECTION_VERTICAL;
       }
-      if (flags.Direction() == OperatorDirection::Horizontal) {
-        return StretchDirection::Horizontal;
+      if (NS_MATHML_OPERATOR_IS_DIRECTION_HORIZONTAL(flags)) {
+        return NS_STRETCH_DIRECTION_HORIZONTAL;
       }
     }
   }
-  return StretchDirection::Unsupported;
+  return NS_STRETCH_DIRECTION_UNSUPPORTED;
 }

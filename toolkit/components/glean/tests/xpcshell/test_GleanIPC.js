@@ -104,8 +104,6 @@ add_task({ skip_if: () => runningInParent }, async function run_child_stuff() {
 
   Glean.testOnlyIpc.anUnorderedLabeledBoolean.aLabel.set(true);
 
-  Glean.testOnlyIpc.anUnorderedQuantity.set(42);
-
   for (let [key, category, value] of KEYED_CATEGORIES) {
     Glean.testOnly.keyedCategories.get(key, category).add(value);
   }
@@ -223,12 +221,6 @@ add_task(
     Assert.ok(
       Glean.testOnlyIpc.anUnorderedLabeledBoolean.aLabel.testGetValue(),
       "IPC works for labeled_boolean metrics that ask for it."
-    );
-
-    Assert.equal(
-      42,
-      Glean.testOnlyIpc.anUnorderedQuantity.testGetValue(),
-      "IPC works for quantity metrics that ask for it."
     );
 
     for (let [key, category, value] of KEYED_CATEGORIES) {

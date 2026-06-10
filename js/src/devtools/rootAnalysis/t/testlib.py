@@ -83,17 +83,12 @@ class Test:
         return json.loads(output)
 
     def run_analysis_script(self, startPhase="gcTypes", upto=None):
-        with open("config.json", "w") as fh:
-            json.dump(
-                {
-                    "analysis_scriptdir": scriptdir,
-                    "sixgill_bin": self.cfg.sixgill_bin,
-                    "source": self.indir,
-                },
-                fh,
-                indent=4,
-            )
-            fh.write("\n")
+        open("defaults.py", "w").write(
+            f"""\
+analysis_scriptdir = '{scriptdir}'
+sixgill_bin = '{self.cfg.sixgill_bin}'
+"""
+        )
         cmd = [
             sys.executable,
             os.path.join(scriptdir, "analyze.py"),
@@ -102,7 +97,8 @@ class Test:
         cmd += ["--first", startPhase]
         if upto:
             cmd += ["--last", upto]
-        cmd.append(f"--js={self.cfg.js}")
+        cmd.append("--source=%s" % self.indir)
+        cmd.append("--js=%s" % self.cfg.js)
         if self.cfg.verbose:
             print("Running " + " ".join(cmd))
         subprocess.check_call(cmd)
@@ -183,10 +179,6 @@ class Test:
                 data.nameToId[unmangled] = id
                 data.mangledToUnmangled[mangled] = unmangled
                 data.unmangledToMangled[unmangled] = mangled
-                return
-
-            if line.startswith("!"):
-                # JSON describing the format and available attributes.
                 return
 
             # Sample lines:

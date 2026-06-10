@@ -1,14 +1,23 @@
 "use strict";
 
-const TEST_PATH = getRootDirectory(gTestPath).replace(
-  "chrome://mochitests/content",
-  "https://example.com"
-);
-
 // Opening non-popup from a popup should open a new tab in the most recent
 // non-popup window.
 add_task(async function test_non_popup_from_popup() {
-  const OPEN_PAGE = TEST_PATH + "file_open_page.html";
+  const BLANK_PAGE = "data:text/html,";
+
+  // A page opened in a new tab.
+  const OPEN_PAGE = "data:text/plain,hello";
+
+  // A page opened in a new popup.
+  // This opens a new non-popup page with OPEN_PAGE,
+  // tha should be opened in a new tab in most recent window.
+  const NON_POPUP_OPENER = btoa(
+    `data:text/html,<script>window.open('${OPEN_PAGE}', '', '')</script>`
+  );
+
+  // A page opened in a new tab.
+  // This opens a popup with NON_POPUP_OPENER.
+  const POPUP_OPENER = `data:text/html,<script>window.open(atob("${NON_POPUP_OPENER}"), "", "width=500");</script>`;
 
   await SpecialPowers.pushPrefEnv({
     set: [["browser.link.open_newwindow", 3]],
@@ -17,20 +26,17 @@ add_task(async function test_non_popup_from_popup() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url: "about:blank",
+      url: BLANK_PAGE,
     },
     async function () {
-      // Wait for a popup opened by file_popup_opener.html.
+      // Wait for a popup opened by POPUP_OPENER.
       const newPopupPromise = BrowserTestUtils.waitForNewWindow();
 
-      // Wait for a new tab opened by file_non_popup_opener.html.
+      // Wait for a new tab opened by NON_POPUP_OPENER.
       const newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, OPEN_PAGE);
 
-      // Open a page that opens a popup, which in turn opens a non-popup.
-      BrowserTestUtils.startLoadingURIString(
-        gBrowser,
-        TEST_PATH + "file_popup_opener.html"
-      );
+      // Open a new tab that opens a popup with NON_POPUP_OPENER.
+      BrowserTestUtils.startLoadingURIString(gBrowser, POPUP_OPENER);
 
       let win = await newPopupPromise;
       Assert.ok(true, "popup is opened");

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_fetchParent_h_
-#define mozilla_dom_fetchParent_h_
+#ifndef mozilla_dom_fetchParent_h__
+#define mozilla_dom_fetchParent_h__
 
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
@@ -68,8 +68,7 @@ class FetchParent final : public PFetchParent {
 
   nsICSPEventListener* GetCSPEventListener();
 
-  void OnCSPViolationEvent(const nsAString& aJSON,
-                           const nsAString& aReportGroupName);
+  void OnCSPViolationEvent(const nsAString& aJSON);
 
   void OnReportPerformanceTiming(const ResponseTiming&& aTiming);
 
@@ -104,7 +103,6 @@ class FetchParent final : public PFetchParent {
 
   Atomic<bool> mIsDone{false};
   Atomic<bool> mActorDestroyed{false};
-  Atomic<bool> mReceivedFetchOp{false};
 
   nsCOMPtr<nsISerialEventTarget> mBackgroundEventTarget;
 };

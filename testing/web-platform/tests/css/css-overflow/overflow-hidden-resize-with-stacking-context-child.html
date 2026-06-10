@@ -22,14 +22,6 @@
   height: 20px;
   background: green;
 }
-.fail {
-  width: 20px;
-  height: 20px;
-  background: red;
-  position: relative;
-  top: -60px;
-  left: 40px;
-}
 </style>
 <p>Test passes if there is a filled green square.</p>
 <div id="container">
@@ -41,7 +33,6 @@
     <div class="content"></div>
   </div>
 </div>
-<div class="fail"></div>
 <script>
 waitForAtLeastOneFrame().then(() => {
   container.style.height = '100px';

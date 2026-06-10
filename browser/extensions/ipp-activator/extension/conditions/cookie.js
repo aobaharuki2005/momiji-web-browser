@@ -10,9 +10,11 @@
 class ConditionCookie extends ConditionBase {
   static STORAGE_KEY = "cookies-";
 
-  async init() {
-    await super.init();
+  constructor(factory, desc) {
+    super(factory, desc);
+  }
 
+  async init() {
     const { domain } = this.desc;
     if (!domain) {
       return;

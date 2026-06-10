@@ -14,7 +14,6 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import androidx.core.net.toUri
-import kotlinx.coroutines.runBlocking
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -28,7 +27,7 @@ class DefaultDistributionProviderCheckerTest {
     private val subject = DefaultDistributionProviderChecker(testContext)
 
     @Test
-    fun `WHEN a content provider exists THEN the provider name is returned`() = runBlocking {
+    fun `WHEN a content provider exists THEN the provider name is returned`() {
         createFakeContentProviderForAdjust(
             otherAppsPackageName = "some.package",
             providerName = "myProvider",
@@ -40,43 +39,41 @@ class DefaultDistributionProviderCheckerTest {
     }
 
     @Test
-    fun `WHEN a content provider does not exists THEN null is returned`() = runBlocking {
+    fun `WHEN a content provider does not exists THEN null is returned`() {
         val provider = subject.queryProvider()
 
         assertEquals(null, provider)
     }
 
     @Test
-    fun `WHEN a content provider exists but does not have the data THEN null is returned`() =
-        runBlocking {
-            createFakeContentProviderForAdjust(
-                otherAppsPackageName = "some.package",
-                columns = listOf(),
-            )
+    fun `WHEN a content provider exists but does not have the data THEN null is returned`() {
+        createFakeContentProviderForAdjust(
+            otherAppsPackageName = "some.package",
+            columns = listOf(),
+        )
 
-            val provider = subject.queryProvider()
+        val provider = subject.queryProvider()
 
-            assertEquals(null, provider)
-        }
-
-    @Test
-    fun `WHEN a content provider exists but does not have the correct package_name THEN null is returned`() =
-        runBlocking {
-            createFakeContentProviderForAdjust(
-                otherAppsPackageName = "some.package",
-                providerName = "myProvider",
-                columns = listOf(
-                    Pair("com.test", Pair("encrypted_data", "{\"provider\": \"provider\"}")),
-                ),
-            )
-
-            val provider = subject.queryProvider()
-
-            assertEquals(null, provider)
-        }
+        assertEquals(null, provider)
+    }
 
     @Test
-    fun `WHEN the encrypted_data column is not json THEN null is returned`() = runBlocking {
+    fun `WHEN a content provider exists but does not have the correct package_name THEN null is returned`() {
+        createFakeContentProviderForAdjust(
+            otherAppsPackageName = "some.package",
+            providerName = "myProvider",
+            columns = listOf(
+                Pair("com.test", Pair("encrypted_data", "{\"provider\": \"provider\"}")),
+            ),
+        )
+
+        val provider = subject.queryProvider()
+
+        assertEquals(null, provider)
+    }
+
+    @Test
+    fun `WHEN the encrypted_data column is not json THEN null is returned`() {
         createFakeContentProviderForAdjust(
             otherAppsPackageName = "some.package",
             columns = listOf(
@@ -90,19 +87,18 @@ class DefaultDistributionProviderCheckerTest {
     }
 
     @Test
-    fun `WHEN the encrypted_data column does not have a provider string THEN null is returned`() =
-        runBlocking {
-            createFakeContentProviderForAdjust(
-                otherAppsPackageName = "some.package",
-                columns = listOf(
-                    Pair("org.mozilla.fenix.debug", Pair("encrypted_data", "{\"test\": \"test\"}")),
-                ),
-            )
+    fun `WHEN the encrypted_data column does not have a provider string THEN null is returned`() {
+        createFakeContentProviderForAdjust(
+            otherAppsPackageName = "some.package",
+            columns = listOf(
+                Pair("org.mozilla.fenix.debug", Pair("encrypted_data", "{\"test\": \"test\"}")),
+            ),
+        )
 
-            val provider = subject.queryProvider()
+        val provider = subject.queryProvider()
 
-            assertEquals(null, provider)
-        }
+        assertEquals(null, provider)
+    }
 
     @Suppress("SameParameterValue")
     private fun createFakeContentProviderForAdjust(

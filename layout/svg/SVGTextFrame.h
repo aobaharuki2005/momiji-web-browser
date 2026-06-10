@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,15 +11,15 @@
 #include "gfxRect.h"
 #include "gfxTextRun.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShellForwards.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGContainerFrame.h"
+#include "mozilla/gfx/2D.h"
+#include "nsIContent.h"  // for GetContent
 #include "nsStubMutationObserver.h"
 #include "nsTextFrame.h"
 
-class nsIContent;
 class gfxContext;
 
 namespace mozilla {
@@ -32,10 +34,10 @@ struct TextRenderedRun;
 class TextRenderedRunIterator;
 
 namespace dom {
+struct DOMPointInit;
 class DOMSVGPoint;
 class SVGRect;
 class SVGGeometryElement;
-class SVGTextContentElement;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -43,17 +45,6 @@ nsIFrame* NS_NewSVGTextFrame(mozilla::PresShell* aPresShell,
                              mozilla::ComputedStyle* aStyle);
 
 namespace mozilla {
-
-enum class SVGTextFrameWhichCachedRange {
-  Before,
-  After,
-};
-
-// Glue to make EnumeratedArray work with SVGTextFrameWhichCachedRange.
-template <>
-struct MaxContiguousEnumValue<SVGTextFrameWhichCachedRange> {
-  static constexpr auto value = SVGTextFrameWhichCachedRange::After;
-};
 
 /**
  * Information about the positioning for a single character in an SVG <text>
@@ -122,6 +113,22 @@ struct CharPosition {
   static gfxPoint UnspecifiedPoint() {
     return gfxPoint(UnspecifiedCoord(), UnspecifiedCoord());
   }
+};
+
+/**
+ * A runnable to mark glyph positions as needing to be recomputed
+ * and to invalid the bounds of the SVGTextFrame frame.
+ */
+class GlyphMetricsUpdater : public Runnable {
+ public:
+  NS_DECL_NSIRUNNABLE
+  explicit GlyphMetricsUpdater(SVGTextFrame* aFrame)
+      : Runnable("GlyphMetricsUpdater"), mFrame(aFrame) {}
+  static void Run(SVGTextFrame* aFrame);
+  void Revoke() { mFrame = nullptr; }
+
+ private:
+  SVGTextFrame* mFrame;
 };
 
 /**
@@ -225,18 +232,18 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   void ReflowSVG() override;
   SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
-                              SVGBBoxFlags aFlags) override;
+                              uint32_t aFlags) override;
 
   // SVG DOM text methods:
-  uint32_t GetNumberOfChars(dom::SVGTextContentElement* aElement);
-  float GetComputedTextLength(dom::SVGTextContentElement* aElement);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SelectSubString(
-      dom::SVGTextContentElement* aElement, uint32_t charnum, uint32_t nchars,
-      ErrorResult& aRv);
+  uint32_t GetNumberOfChars(nsIContent* aContent);
+  float GetComputedTextLength(nsIContent* aContent);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SelectSubString(nsIContent* aContent,
+                                                   uint32_t charnum,
+                                                   uint32_t nchars,
+                                                   ErrorResult& aRv);
   bool RequiresSlowFallbackForSubStringLength();
-  float GetSubStringLengthFastPath(dom::SVGTextContentElement* aElement,
-                                   uint32_t charnum, uint32_t nchars,
-                                   ErrorResult& aRv);
+  float GetSubStringLengthFastPath(nsIContent* aContent, uint32_t charnum,
+                                   uint32_t nchars, ErrorResult& aRv);
   /**
    * This fallback version of GetSubStringLength takes
    * into account glyph positioning and requires us to have flushed layout
@@ -245,24 +252,22 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
    * exception is text in a textPath where we need to ignore characters that
    * fall off the end of the textPath path.
    */
-  float GetSubStringLengthSlowFallback(dom::SVGTextContentElement* aElement,
-                                       uint32_t charnum, uint32_t nchars,
-                                       ErrorResult& aRv);
+  float GetSubStringLengthSlowFallback(nsIContent* aContent, uint32_t charnum,
+                                       uint32_t nchars, ErrorResult& aRv);
 
-  int32_t GetCharNumAtPosition(dom::SVGTextContentElement* aElement,
-                               const gfx::Point& aPoint);
+  int32_t GetCharNumAtPosition(nsIContent* aContent,
+                               const dom::DOMPointInit& aPoint);
 
   already_AddRefed<dom::DOMSVGPoint> GetStartPositionOfChar(
-      dom::SVGTextContentElement* aElement, uint32_t aCharNum,
-      ErrorResult& aRv);
-  already_AddRefed<dom::DOMSVGPoint> GetEndPositionOfChar(
-      dom::SVGTextContentElement* aElement, uint32_t aCharNum,
-      ErrorResult& aRv);
-  already_AddRefed<dom::SVGRect> GetExtentOfChar(
-      dom::SVGTextContentElement* aElement, uint32_t aCharNum,
-      ErrorResult& aRv);
-  float GetRotationOfChar(dom::SVGTextContentElement* aElement,
-                          uint32_t aCharNum, ErrorResult& aRv);
+      nsIContent* aContent, uint32_t aCharNum, ErrorResult& aRv);
+  already_AddRefed<dom::DOMSVGPoint> GetEndPositionOfChar(nsIContent* aContent,
+                                                          uint32_t aCharNum,
+                                                          ErrorResult& aRv);
+  already_AddRefed<dom::SVGRect> GetExtentOfChar(nsIContent* aContent,
+                                                 uint32_t aCharNum,
+                                                 ErrorResult& aRv);
+  float GetRotationOfChar(nsIContent* aContent, uint32_t aCharNum,
+                          ErrorResult& aRv);
 
   // SVGTextFrame methods:
 
@@ -420,14 +425,14 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
    * relative to the specified text child content element.
    *
    * @param aIndex The global character index.
-   * @param aElement The descendant text child content element that
+   * @param aContent The descendant text child content element that
    *   the returned addressable index will be relative to; null
    *   means the same as the <text> element.
    * @return The addressable index, or -1 if the index cannot be
    *   represented as an addressable index relative to aContent.
    */
-  int32_t ConvertTextElementCharIndexToAddressableIndex(
-      int32_t aIndex, dom::SVGTextContentElement* aElement);
+  int32_t ConvertTextElementCharIndexToAddressableIndex(int32_t aIndex,
+                                                        nsIContent* aContent);
 
   /**
    * Recursive helper for ResolvePositions below.
@@ -532,11 +537,6 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
   RefPtr<MutationObserver> mMutationObserver;
 
   /**
-   * Computed position information for each DOM character within the <text>.
-   */
-  nsTArray<CharPosition> mPositions;
-
-  /**
    * The number of characters in the DOM after the final nsTextFrame.  For
    * example, with
    *
@@ -545,6 +545,11 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
    * mTrailingUndisplayedCharacters would be 2.
    */
   uint32_t mTrailingUndisplayedCharacters = 0;
+
+  /**
+   * Computed position information for each DOM character within the <text>.
+   */
+  nsTArray<CharPosition> mPositions;
 
   /**
    * mFontSizeScaleFactor is used to cause the nsTextFrames to create text
@@ -585,20 +590,22 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
 
  public:
   struct CachedMeasuredRange {
-    CachedMeasuredRange() : mAdvance(0) {}
     Range mRange;
     nscoord mAdvance;
   };
 
   void SetCurrentFrameForCaching(const nsTextFrame* aFrame) {
     if (mFrameForCachedRanges != aFrame) {
-      std::fill(mCachedRanges.begin(), mCachedRanges.end(),
-                CachedMeasuredRange());
+      PodArrayZero(mCachedRanges);
       mFrameForCachedRanges = aFrame;
     }
   }
 
-  using WhichRange = SVGTextFrameWhichCachedRange;
+  enum WhichRange {
+    Before,
+    After,
+    CachedRangeCount,
+  };
 
   CachedMeasuredRange& CachedRange(WhichRange aWhichRange) {
     return mCachedRanges[aWhichRange];
@@ -623,7 +630,7 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
 
  private:
   const nsTextFrame* mFrameForCachedRanges = nullptr;
-  EnumeratedArray<WhichRange, CachedMeasuredRange> mCachedRanges;
+  CachedMeasuredRange mCachedRanges[CachedRangeCount];
 
   Maybe<nsTextFrame::PropertyProvider> mCachedProvider;
 };

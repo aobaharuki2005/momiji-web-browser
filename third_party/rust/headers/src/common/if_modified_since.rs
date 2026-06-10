@@ -1,8 +1,8 @@
-use crate::util::HttpDate;
 use std::time::SystemTime;
+use util::HttpDate;
 
 /// `If-Modified-Since` header, defined in
-/// [RFC7232](https://datatracker.ietf.org/doc/html/rfc7232#section-3.3)
+/// [RFC7232](http://tools.ietf.org/html/rfc7232#section-3.3)
 ///
 /// The `If-Modified-Since` header field makes a GET or HEAD request
 /// method conditional on the selected representation's modification date
@@ -22,6 +22,7 @@ use std::time::SystemTime;
 /// # Example
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::IfModifiedSince;
 /// use std::time::{Duration, SystemTime};
 ///

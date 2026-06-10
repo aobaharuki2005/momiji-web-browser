@@ -104,9 +104,8 @@ def WebIDLTest(parser, harness):
         iface.identifier.QName(), "::TestAttr", "Interface has the right QName"
     )
     harness.check(iface.identifier.name, "TestAttr", "Interface has the right name")
-    test_data_count = len(testData)
     harness.check(
-        len(iface.members), test_data_count, f"Expect {test_data_count} members"
+        len(iface.members), len(testData), "Expect %s members" % len(testData)
     )
 
     attrs = iface.members
@@ -126,7 +125,7 @@ def WebIDLTest(parser, harness):
         iface.identifier.name, "TestAttrNullable", "Interface has the right name"
     )
     harness.check(
-        len(iface.members), test_data_count, f"Expect {test_data_count} members"
+        len(iface.members), len(testData), "Expect %s members" % len(testData)
     )
 
     attrs = iface.members

@@ -18,7 +18,6 @@
 #include "media/base/rid_description.h"
 #include "pc/simulcast_description.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/system/plan_b_only.h"
 
 namespace webrtc {
 
@@ -36,14 +35,14 @@ bool ValidateSimulcastLayers(const std::vector<RidDescription>& rids,
 
 }  // namespace
 
-PLAN_B_ONLY void MediaDescriptionOptions::AddAudioSender(
+void MediaDescriptionOptions::AddAudioSender(
     const std::string& track_id,
     const std::vector<std::string>& stream_ids) {
   RTC_DCHECK(type == MediaType::AUDIO);
   AddSenderInternal(track_id, stream_ids, {}, SimulcastLayerList(), 1);
 }
 
-PLAN_B_ONLY void MediaDescriptionOptions::AddVideoSender(
+void MediaDescriptionOptions::AddVideoSender(
     const std::string& track_id,
     const std::vector<std::string>& stream_ids,
     const std::vector<RidDescription>& rids,
@@ -57,7 +56,7 @@ PLAN_B_ONLY void MediaDescriptionOptions::AddVideoSender(
                     num_sim_layers);
 }
 
-PLAN_B_ONLY void MediaDescriptionOptions::AddSenderInternal(
+void MediaDescriptionOptions::AddSenderInternal(
     const std::string& track_id,
     const std::vector<std::string>& stream_ids,
     const std::vector<RidDescription>& rids,

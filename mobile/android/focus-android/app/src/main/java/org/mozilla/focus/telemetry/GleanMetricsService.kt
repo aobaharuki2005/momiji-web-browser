@@ -11,10 +11,12 @@ import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationManagerCompat
 import androidx.preference.PreferenceManager
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.search.SearchEngine
@@ -25,7 +27,6 @@ import mozilla.components.feature.search.telemetry.SerpTelemetryRepository
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.res.readJSONObject
-import mozilla.components.support.utils.Browsers
 import mozilla.telemetry.glean.Glean
 import mozilla.telemetry.glean.config.Configuration
 import org.mozilla.focus.BuildConfig
@@ -51,14 +52,9 @@ import org.mozilla.focus.utils.Settings
  *
  * To track events, use Glean's generated bindings directly.
  */
-class GleanMetricsService(
-    context: Context,
-    mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
-    val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-) : MetricsService {
+class GleanMetricsService(context: Context) : MetricsService {
 
-    private val serviceScope = CoroutineScope(SupervisorJob() + mainDispatcher)
-    private val activationPing = ActivationPing(context, serviceScope, ioDispatcher)
+    private val activationPing = ActivationPing(context)
 
     companion object {
         // collection name to fetch from server for SERP telemetry
@@ -111,6 +107,7 @@ class GleanMetricsService(
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun initialize(context: Context) {
         val components = context.components
         val settings = context.settings
@@ -133,13 +130,18 @@ class GleanMetricsService(
         Glean.registerPings(Pings)
 
         if (telemetryEnabled) {
-            serviceScope.launch {
+            CoroutineScope(Dispatchers.Main).launch {
                 val readJson = { context.assets.readJSONObject("search/search_telemetry_v2.json") }
-                val providerList = withContext(ioDispatcher) {
+                val providerList = withContext(IO) {
                     SerpTelemetryRepository(
+                        rootStorageDirectory = context.filesDir,
                         readJson = readJson,
                         collectionName = COLLECTION_NAME,
-                        remoteSettingsService = context.components.remoteSettingsService,
+                        serverUrl = if (context.settings.useProductionRemoteSettingsServer) {
+                            REMOTE_PROD_ENDPOINT_URL
+                        } else {
+                            REMOTE_STAGE_ENDPOINT_URL
+                        },
                     ).updateProviderList()
                 }
                 installSearchTelemetryExtensions(components, providerList)
@@ -147,9 +149,9 @@ class GleanMetricsService(
         }
 
         // Do this immediately after init.
-        serviceScope.launch {
+        GlobalScope.launch(IO) {
             // Wait for preferences to be collected before we send the activation ping.
-            collectPrefMetrics(components, settings, context)
+            collectPrefMetricsAsync(components, settings, context).await()
 
             components.store.waitForSelectedOrDefaultSearchEngine { searchEngine ->
                 if (searchEngine != null) {
@@ -161,15 +163,15 @@ class GleanMetricsService(
         }
     }
 
-    private suspend fun collectPrefMetrics(
+    private fun collectPrefMetricsAsync(
         components: Components,
         settings: Settings,
         context: Context,
-    ) = withContext(ioDispatcher) {
-        val installedBrowsers = Browsers.all(context)
+    ) = CoroutineScope(IO).async {
+        val installedBrowsers = BrowsersCache.all(context)
         val hasFenixInstalled = FenixProductDetector.getInstalledFenixVersions(context).isNotEmpty()
         val isFenixDefaultBrowser = FenixProductDetector.isFenixDefaultBrowser(installedBrowsers.defaultBrowser)
-        val isFocusDefaultBrowser = Browsers.isDefaultBrowser(context)
+        val isFocusDefaultBrowser = installedBrowsers.isDefaultBrowser
 
         Metrics.searchWidgetInstalled.set(settings.searchWidgetInstalled)
 

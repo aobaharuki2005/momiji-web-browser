@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -145,8 +146,6 @@ class TextEditor final : public EditorBase,
 
   MOZ_CAN_RUN_SCRIPT nsresult
   OnFocus(const nsINode& aOriginalEventTargetNode) final;
-  MOZ_CAN_RUN_SCRIPT void PostHandleFocusEvent(
-      const nsINode& aFocusEventTargetNode) final;
 
   nsresult OnBlur(const dom::EventTarget* aEventTarget) final;
 
@@ -600,17 +599,6 @@ class TextEditor final : public EditorBase,
 
   MOZ_ALWAYS_INLINE bool HasAutoMaskingTimer() const {
     return mPasswordMaskData && mPasswordMaskData->mTimer;
-  }
-
-  void ResetPasswordMaskData() {
-    if (mPasswordMaskData) {
-      mPasswordMaskData->CancelTimer(PasswordMaskData::ReleaseTimer::Yes);
-    }
-    if (IsPasswordEditor()) {
-      mPasswordMaskData = MakeUnique<PasswordMaskData>();
-    } else {
-      mPasswordMaskData = nullptr;
-    }
   }
 
  protected:

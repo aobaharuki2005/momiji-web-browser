@@ -7,7 +7,7 @@
  * Tests if Copy as Fetch works.
  */
 
-add_task(async function testBasicCopyAsFetch() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(HTTPS_CURL_URL, {
     requestCount: 1,
   });
@@ -15,9 +15,7 @@ add_task(async function testBasicCopyAsFetch() {
 
   // GET request, no cookies (first request)
   await performRequest("GET");
-  await testClipboardContent(
-    monitor,
-    `await fetch("https://example.com/browser/devtools/client/netmonitor/test/sjs_simple-test-server.sjs", {
+  await testClipboardContent(`await fetch("https://example.com/browser/devtools/client/netmonitor/test/sjs_simple-test-server.sjs", {
     "credentials": "omit",
     "headers": {
         "User-Agent": "${navigator.userAgent}",
@@ -35,8 +33,7 @@ add_task(async function testBasicCopyAsFetch() {
     "referrer": "https://example.com/browser/devtools/client/netmonitor/test/html_copy-as-curl.html",
     "method": "GET",
     "mode": "cors"
-});`
-  );
+});`);
 
   await teardown(monitor);
 
@@ -57,71 +54,39 @@ add_task(async function testBasicCopyAsFetch() {
     );
     await waitRequest;
   }
-});
 
-/**
- * Tests for Url escaping of copy as Fetch
- */
-add_task(async function testUrlEscapeOfCopyAsFetch() {
-  const { monitor } = await initNetMonitor(HTTPS_CURL_URL, {
-    requestCount: 1,
-  });
-  info("Starting test... ");
+  async function testClipboardContent(expectedResult) {
+    const { document } = monitor.panelWin;
 
-  const waitRequest = waitForNetworkEvents(monitor, 1);
-  await SpecialPowers.spawn(
-    gBrowser.selectedBrowser,
-    ['data:text/html,"+alert(document.domain)+"'],
-    url => {
-      content.fetch(url);
-    }
-  );
-  await waitRequest;
+    const items = document.querySelectorAll(".request-list-item");
+    EventUtils.sendMouseEvent({ type: "mousedown" }, items[items.length - 1]);
+    EventUtils.sendMouseEvent(
+      { type: "contextmenu" },
+      document.querySelectorAll(".request-list-item")[0]
+    );
 
-  await testClipboardContent(
-    monitor,
-    `await fetch("data:text/html,\\"+alert(document.domain)+\\"", {
-    "credentials": "omit",
-    "headers": {},
-    "method": "GET",
-    "mode": "cors"
-});`
-  );
+    /* Ensure that the copy as fetch option is always visible */
+    is(
+      !!getContextMenuItem(monitor, "request-list-context-copy-as-fetch"),
+      true,
+      'The "Copy as Fetch" context menu item should not be hidden.'
+    );
 
-  await teardown(monitor);
-});
-
-async function testClipboardContent(monitor, expectedResult) {
-  const { document } = monitor.panelWin;
-
-  const items = document.querySelectorAll(".request-list-item");
-  EventUtils.sendMouseEvent({ type: "mousedown" }, items[items.length - 1]);
-  EventUtils.sendMouseEvent(
-    { type: "contextmenu" },
-    document.querySelectorAll(".request-list-item")[0]
-  );
-
-  /* Ensure that the copy as fetch option is always visible */
-  is(
-    !!getContextMenuItem(monitor, "request-list-context-copy-as-fetch"),
-    true,
-    'The "Copy as Fetch" context menu item should not be hidden.'
-  );
-
-  await waitForClipboardPromise(
-    async function setup() {
-      await selectContextMenuItem(
-        monitor,
-        "request-list-context-copy-as-fetch"
-      );
-    },
-    function validate(result) {
-      if (typeof result !== "string") {
-        return false;
+    await waitForClipboardPromise(
+      async function setup() {
+        await selectContextMenuItem(
+          monitor,
+          "request-list-context-copy-as-fetch"
+        );
+      },
+      function validate(result) {
+        if (typeof result !== "string") {
+          return false;
+        }
+        return expectedResult === result;
       }
-      return expectedResult === result;
-    }
-  );
+    );
 
-  info("Clipboard contains a fetch command for item " + (items.length - 1));
-}
+    info("Clipboard contains a fetch command for item " + (items.length - 1));
+  }
+});

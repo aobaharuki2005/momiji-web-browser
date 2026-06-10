@@ -17,10 +17,8 @@ add_task(async function test_events_prevented() {
     },
     async browser => {
       let helper = new ScreenshotsHelper(browser);
-      helper.triggerUIFromToolbar();
-      await helper.waitForOverlay();
 
-      let contentBounds = await SpecialPowers.spawn(browser, [], async () => {
+      await ContentTask.spawn(browser, null, async () => {
         let { ScreenshotsComponentChild } = ChromeUtils.importESModule(
           "resource:///actors/ScreenshotsComponentChild.sys.mjs"
         );
@@ -31,21 +29,16 @@ add_task(async function test_events_prevented() {
         content.eventsReceived = [];
 
         function eventListener(event) {
-          let target = event.target?.nodeName ?? "";
-          let relatedTarget = event.relatedTarget?.nodeName ?? "";
-          content.window.eventsReceived.push({
-            type: event.type,
-            target,
-            relatedTarget,
-          });
+          content.window.eventsReceived.push(event.type);
         }
 
         for (let eventName of [...allOverlayEvents, "wheel"]) {
           content.addEventListener(eventName, eventListener, true);
         }
-        return content.document.body.getBoundingClientRect().toJSON();
       });
-      const centerX = contentBounds.width / 2;
+
+      helper.triggerUIFromToolbar();
+      await helper.waitForOverlay();
 
       // key events
       await key.down("s");
@@ -53,41 +46,35 @@ add_task(async function test_events_prevented() {
       await key.press("s");
 
       // touch events
-      await touch.start(centerX + 10, 10);
-      await touch.move(centerX + 20, 20);
-      await touch.end(centerX + 20, 20);
+      await touch.start(10, 10);
+      await touch.move(20, 20);
+      await touch.end(20, 20);
 
       // pointermove/mousemove, pointerdown/mousedown, pointerup/mouseup events
       await helper.clickTestPageElement();
 
       // pointerover/mouseover, pointerout/mouseout
-      await mouse.over(centerX + 100, 100);
-      await mouse.out(centerX + 100, 100);
+      await mouse.over(100, 100);
+      await mouse.out(100, 100);
 
       // click events and contextmenu
-      await mouse.dblclick(centerX + 100, 100);
-      await mouse.auxclick(centerX + 100, 100, { button: 1 });
-      await mouse.click(centerX + 100, 100);
-
-      await mouse.contextmenu(centerX + 100, 100);
-      const menu = document.getElementById("contentAreaContextMenu");
+      await mouse.dblclick(100, 100);
+      await mouse.auxclick(100, 100, { button: 1 });
+      await mouse.click(100, 100);
+      await mouse.contextmenu(100, 100);
 
       let wheelEventPromise = helper.waitForContentEventOnce("wheel");
-      await SpecialPowers.spawn(browser, [], () => {
-        content.dispatchEvent(new content.WheelEvent("wheel", { deltaY: 1 }));
+      await ContentTask.spawn(browser, null, () => {
+        content.dispatchEvent(new content.WheelEvent("wheel"));
       });
       await wheelEventPromise;
 
-      let contentEventsReceived = await SpecialPowers.spawn(
+      let contentEventsReceived = await ContentTask.spawn(
         browser,
-        [],
+        null,
         async () => {
           return content.eventsReceived;
         }
-      );
-      info(
-        "contentEventsReceived: " +
-          JSON.stringify(contentEventsReceived, null, 2)
       );
 
       // Events are synchronous so if we only have 1 wheel at the end,
@@ -98,18 +85,10 @@ add_task(async function test_events_prevented() {
         "Only 1 wheel event should reach the content document because everything else was prevent and stopped propagation"
       );
       is(
-        contentEventsReceived[0].type,
+        contentEventsReceived[0],
         "wheel",
         "Only 1 wheel event should reach the content document because everything else was prevent and stopped propagation"
       );
-
-      // Clean up
-      if (!menu.hidden) {
-        // Close context menu
-        let popuphidden = BrowserTestUtils.waitForPopupEvent(menu, "hidden");
-        menu.hidePopup();
-        await popuphidden;
-      }
     }
   );
 });

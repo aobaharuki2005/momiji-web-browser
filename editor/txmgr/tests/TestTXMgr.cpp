@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,11 +16,11 @@ using mozilla::TransactionManager;
 
 static int32_t sConstructorCount = 0;
 static int32_t sDoCount = 0;
-static int32_t* sDoOrderArr = nullptr;
+static int32_t* sDoOrderArr = 0;
 static int32_t sUndoCount = 0;
-static int32_t* sUndoOrderArr = nullptr;
+static int32_t* sUndoOrderArr = 0;
 static int32_t sRedoCount = 0;
-static int32_t* sRedoOrderArr = nullptr;
+static int32_t* sRedoOrderArr = 0;
 
 int32_t sSimpleTestDoOrderArr[] = {
     1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,
@@ -475,13 +476,13 @@ void reset_globals() {
   sConstructorCount = 0;
 
   sDoCount = 0;
-  sDoOrderArr = nullptr;
+  sDoOrderArr = 0;
 
   sUndoCount = 0;
-  sUndoOrderArr = nullptr;
+  sUndoOrderArr = 0;
 
   sRedoCount = 0;
-  sRedoOrderArr = nullptr;
+  sRedoOrderArr = 0;
 }
 
 /**

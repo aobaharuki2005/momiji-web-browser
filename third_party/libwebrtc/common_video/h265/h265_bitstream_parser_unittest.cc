@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <optional>
 
+#include "api/array_view.h"
 #include "common_video/h265/h265_common.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -194,8 +195,10 @@ TEST(H265BitstreamParserTest, ReportsFirstSliceSegmentInPicFalse) {
 }
 
 TEST(H265BitstreamParserTest, ReportsFirstSliceSegmentInPicParseInvalidSlice) {
-  EXPECT_THAT(H265BitstreamParser::IsFirstSliceSegmentInPic({}),
-              Eq(std::nullopt));
+  ArrayView<const uint8_t> slice_data(kH265SliceChunk);
+  EXPECT_THAT(
+      H265BitstreamParser::IsFirstSliceSegmentInPic(slice_data.subview(50)),
+      Eq(std::nullopt));
 }
 
 }  // namespace webrtc

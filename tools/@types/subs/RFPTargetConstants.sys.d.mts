@@ -82,13 +82,8 @@ export namespace Targets {
     let IsAlwaysEnabledForPrecompute: number;
     let AllTargets: number;
 }
-export namespace DefaultTargetsBaseline {
+export const DefaultTargetsBaseline: {};
+export namespace DefaultTargetsFPP {
     let DESKTOP_DEFAULT: string[];
     let ANDROID_DEFAULT: string[];
-}
-export namespace DefaultTargetsFPP {
-    let DESKTOP_DEFAULT_1: string[];
-    export { DESKTOP_DEFAULT_1 as DESKTOP_DEFAULT };
-    let ANDROID_DEFAULT_1: string[];
-    export { ANDROID_DEFAULT_1 as ANDROID_DEFAULT };
 }

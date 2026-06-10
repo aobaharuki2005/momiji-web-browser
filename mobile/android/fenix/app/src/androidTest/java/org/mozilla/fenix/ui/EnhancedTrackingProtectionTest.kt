@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.pressBack
 import mozilla.components.concept.engine.utils.EngineReleaseChannel
@@ -12,7 +13,6 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.enhancedTrackingProtectionAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
@@ -22,11 +22,12 @@ import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
 /**
  *  Tests for verifying basic UI functionality of Enhanced Tracking Protection
@@ -41,20 +42,15 @@ import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidCompo
  *  - Verifying Enhanced Tracking Protection site exceptions
  */
 
-class EnhancedTrackingProtectionTest {
-    @get:Rule(order = 0)
-    val fenixTestRule: FenixTestRule = FenixTestRule()
-
-    private val mockWebServer get() = fenixTestRule.mockWebServer
-
-    @get:Rule(order = 1)
+class EnhancedTrackingProtectionTest : TestSetup() {
+    @get:Rule
     val composeTestRule =
-        AndroidComposeTestRuleV2(
+        AndroidComposeTestRule(
             HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
         ) { it.activity }
 
-    @get:Rule(order = 2)
-    val memoryLeaksRule = DetectMemoryLeaksRule(composeTestRule = { composeTestRule })
+    @get:Rule
+    val memoryLeaksRule = DetectMemoryLeaksRule()
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/416046
     @Test
@@ -112,7 +108,6 @@ class EnhancedTrackingProtectionTest {
 
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(genericPage.url) {
-            waitForPageToLoad()
         }.openSiteSecuritySheet {
             verifyETPSwitchVisibility(false)
         }.closeSiteSecuritySheet(composeTestRule) {
@@ -138,7 +133,6 @@ class EnhancedTrackingProtectionTest {
 
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(firstPage.url) {
-            waitForPageToLoad(waitingTimeLong)
         }.openSiteSecuritySheet {
         }.toggleEnhancedTrackingProtectionFromSheet {
             verifyEnhancedTrackingProtectionSheetStatus("OFF", false)
@@ -166,7 +160,6 @@ class EnhancedTrackingProtectionTest {
 
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(trackingPage.url) {
-            waitForPageToLoad(waitingTimeLong)
             verifyUrl(trackingPage.url.toString())
         }.openSiteSecuritySheet {
         }.toggleEnhancedTrackingProtectionFromSheet {
@@ -201,9 +194,7 @@ class EnhancedTrackingProtectionTest {
 
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(firstPage.url) {
-            verifyPageContent(firstPage.content)
         }.openSiteSecuritySheet {
-            verifyEnhancedTrackingProtectionSheetStatus("ON", true)
         }.toggleEnhancedTrackingProtectionFromSheet {
             verifyEnhancedTrackingProtectionSheetStatus("OFF", false)
         }.closeSiteSecuritySheet(composeTestRule) {
@@ -226,7 +217,6 @@ class EnhancedTrackingProtectionTest {
         }
         browserScreen(composeTestRule) {
         }.openSiteSecuritySheet {
-            mDevice.waitForIdle()
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
         }
     }
@@ -383,15 +373,12 @@ class EnhancedTrackingProtectionTest {
             // browsing a basic page to allow GV to load on a fresh run
         }.enterURLAndEnterToBrowser(genericWebPage.url) {
             waitForPageToLoad()
-            verifyPageContent(genericWebPage.content)
         }
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(trackingPage.url) {
-            waitForPageToLoad()
             verifyTrackingProtectionWebContent("social not blocked")
             verifyTrackingProtectionWebContent("ads not blocked")
             verifyTrackingProtectionWebContent("analytics not blocked")
-            verifyTrackingProtectionWebContent("Cryptomining blocked")
         }.openSiteSecuritySheet {
         }.openDetails {
             verifyCrossSiteCookiesBlocked(true)
@@ -542,28 +529,6 @@ class EnhancedTrackingProtectionTest {
             verifyCrossOriginCookiesPermissionPrompt(originHost, currentHost)
         }.clickPagePermissionButton(allow = true) {
             verifyPageContent("access granted")
-        }
-    }
-
-    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/4024999
-    @Test
-    fun verifyTheCookiesStoragePermissionLearnMoreLinkTest() {
-        val genericWebPage = mockWebServer.getGenericAsset(1)
-        val testPage = mockWebServer.url("pages/cross-site-cookies.html").toString().toUri()
-        val originHost = "mozilla-mobile.github.io"
-        val currentHost = "localhost"
-
-        navigationToolbar(composeTestRule) {
-        }.enterURLAndEnterToBrowser(genericWebPage.url) {
-            waitForPageToLoad()
-        }
-        navigationToolbar(composeTestRule) {
-        }.enterURLAndEnterToBrowser(testPage) {
-            waitForPageToLoad()
-        }.clickRequestStorageAccessButton {
-            verifyCrossOriginCookiesPermissionPrompt(originHost, currentHost)
-        }.clickLearnMore {
-            verifyCrossOriginStorageLearnMoreURL()
         }
     }
 }

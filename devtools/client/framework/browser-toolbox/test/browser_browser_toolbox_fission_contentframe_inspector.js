@@ -43,11 +43,13 @@ add_task(async function () {
   const testAttribute = await ToolboxTask.spawn(null, async () => {
     /* global gToolbox */
     const inspector = await gToolbox.selectTool("inspector");
-    await inspector.sidebar.select("computedview");
+    const onSidebarSelect = inspector.sidebar.once("select");
+    inspector.sidebar.select("computedview");
+    await onSidebarSelect;
 
     info("Select the test element nested in the remote iframe");
     const nodeFront = await selectNodeInFrames(
-      ["browser[remote][test-tab]", "iframe", "#inside-iframe"],
+      ['browser[remote="true"][test-tab]', "iframe", "#inside-iframe"],
       inspector
     );
 

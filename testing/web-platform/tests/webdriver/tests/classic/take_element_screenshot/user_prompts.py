@@ -2,8 +2,7 @@
 
 import pytest
 
-from tests.support.classic.asserts import assert_dialog_handled, assert_error, assert_success
-from tests.support.asserts import assert_png
+from tests.support.asserts import assert_dialog_handled, assert_error, assert_png, assert_success
 
 
 def take_element_screenshot(session, element_id):

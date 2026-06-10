@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // "stripIfInteger" with fractional digits.
 {
   let nf1 = new Intl.NumberFormat("en", {

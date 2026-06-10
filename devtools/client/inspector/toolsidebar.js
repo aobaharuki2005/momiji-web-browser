@@ -175,12 +175,9 @@ class ToolSidebar extends EventEmitter {
 
   /**
    * Select a specific tab.
-   *
-   * @param {string} id The ID of the tab
-   * @returns {Promise}
    */
   select(id) {
-    return this.#tabbar.select(id);
+    this.#tabbar.select(id);
   }
 
   /**
@@ -211,11 +208,12 @@ class ToolSidebar extends EventEmitter {
     if (this.#destroyed) {
       return;
     }
-    if (id == this.#currentTool) {
-      return;
-    }
 
     const previousTool = this.#currentTool;
+    if (previousTool) {
+      this.emit(previousTool + "-unselected");
+    }
+
     this.#currentTool = id;
 
     this.updateTelemetryOnChange(id, previousTool);

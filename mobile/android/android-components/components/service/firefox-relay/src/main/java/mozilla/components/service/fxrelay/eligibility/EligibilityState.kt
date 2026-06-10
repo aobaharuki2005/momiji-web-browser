@@ -6,7 +6,6 @@ package mozilla.components.service.fxrelay.eligibility
 
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
-import mozilla.components.service.fxrelay.EmailMask
 
 /**
  * Sentinel value indicating that the Relay entitlement cache
@@ -41,9 +40,9 @@ sealed interface Eligible : EligibilityState {
     /**
      * The user has access to the free tier of Firefox Relay.
      *
-     * @property totalMasksUsed The number of free Relay email masks the user has.
+     * @property remaining The number of free Relay email masks the user has left.
      */
-    data class Free(val totalMasksUsed: Int) : Eligible
+    data class Free(val remaining: Int) : Eligible
 
     /**
      * The user has an active Firefox Relay Premium subscription, with
@@ -58,7 +57,6 @@ sealed interface Eligible : EligibilityState {
 data class RelayState(
     val eligibilityState: EligibilityState = Ineligible.FirefoxAccountNotLoggedIn,
     val lastEntitlementCheckMs: Long = NO_ENTITLEMENT_CHECK_YET_MS,
-    val lastUsed: EmailMask? = null,
 ) : State
 
 /**
@@ -83,24 +81,17 @@ sealed interface RelayEligibilityAction : Action {
     data class TtlExpired(val nowMs: Long) : RelayEligibilityAction
 
     /**
-     * The last used email mask provided to the embedder for form autofill.
-     *
-     * @param emailMask the email address.
-     */
-    data class UpdateLastUsed(val emailMask: EmailMask?) : RelayEligibilityAction
-
-    /**
      * Result of a Relay status fetch.
      *
      * @param fetchSucceeded Whether the fetch succeeded.
      * @param relayPlanTier The user’s plan, or NONE if unavailable.
-     * @param totalMasksUsed The number of free Relay email masks the user has.
+     * @param remaining Remaining free aliases for FREE users.
      * @param lastCheckedMs Stores the timestamp for when the last check was performed.
      */
     data class RelayStatusResult(
         val fetchSucceeded: Boolean,
         val relayPlanTier: RelayPlanTier?,
-        val totalMasksUsed: Int,
+        val remaining: Int,
         val lastCheckedMs: Long,
     ) : RelayEligibilityAction
 }

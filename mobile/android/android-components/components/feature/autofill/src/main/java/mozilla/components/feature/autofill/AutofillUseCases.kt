@@ -18,12 +18,12 @@ class AutofillUseCases {
     private val logger = Logger("AutofillUseCases")
 
     /**
-     * Returns true if Autofill is supported by the current device, defaulting to false in the case
-     * of an exception.
+     * Returns true if Autofill is supported by the current device.
      */
-    fun isSupported(context: Context): Boolean = Result.runCatching {
-        context.getSystemService(AutofillManager::class.java).isAutofillSupported
-    }.getOrDefault(false)
+    fun isSupported(context: Context): Boolean {
+        return context.getSystemService(AutofillManager::class.java)
+            .isAutofillSupported
+    }
 
     /**
      * Returns true if this application is providing Autofill services for the current user.

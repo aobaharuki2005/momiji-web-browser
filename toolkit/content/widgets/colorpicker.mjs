@@ -23,16 +23,12 @@ window.addEventListener("message", ev => {
   switch (ev.data.name) {
     case "PickerInit": {
       let { value } = ev.data.detail;
-      const specifiedAlpha = !Number.isNaN(value.alpha);
       picker.rgbFloat = [
         value.component1,
         value.component2,
         value.component3,
-        specifiedAlpha ? value.alpha : 1,
+        1,
       ];
-      if (specifiedAlpha) {
-        picker.enableAlphaPicker();
-      }
       picker.show();
     }
   }

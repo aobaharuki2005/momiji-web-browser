@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -699,7 +701,7 @@ already_AddRefed<Promise> PaymentRequest::CanMakePayment(ErrorResult& aRv) {
     return nullptr;
   }
 
-  nsIGlobalObject* global = GetRelevantGlobal();
+  nsIGlobalObject* global = GetOwnerGlobal();
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -728,7 +730,7 @@ already_AddRefed<Promise> PaymentRequest::Show(
     return nullptr;
   }
 
-  nsIGlobalObject* global = GetRelevantGlobal();
+  nsIGlobalObject* global = GetOwnerGlobal();
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
   Document* doc = win->GetExtantDoc();
 
@@ -846,7 +848,7 @@ already_AddRefed<Promise> PaymentRequest::Abort(ErrorResult& aRv) {
     return nullptr;
   }
 
-  nsIGlobalObject* global = GetRelevantGlobal();
+  nsIGlobalObject* global = GetOwnerGlobal();
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -1162,7 +1164,7 @@ void PaymentRequest::RejectedCallback(JSContext* aCx,
 }
 
 bool PaymentRequest::InFullyActiveDocument() {
-  nsIGlobalObject* global = GetRelevantGlobal();
+  nsIGlobalObject* global = GetOwnerGlobal();
   if (!global) {
     return false;
   }

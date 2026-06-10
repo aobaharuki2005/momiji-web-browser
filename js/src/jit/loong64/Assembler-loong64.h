@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -807,18 +809,19 @@ class Operand {
 };
 
 // int check.
-inline constexpr bool is_intN(int64_t x, unsigned n) {
+inline bool is_intN(int64_t x, unsigned n) {
   MOZ_ASSERT((0 < n) && (n < 64));
   int64_t limit = static_cast<int64_t>(1) << (n - 1);
   return (-limit <= x) && (x < limit);
 }
 
-inline constexpr bool is_uintN(int64_t x, unsigned n) {
-  MOZ_ASSERT((0 < n) && (n < 64));
+inline bool is_uintN(int32_t x, unsigned n) {
+  MOZ_ASSERT((0 < n) && (n < (sizeof(x) * 8)));
   return !(x >> n);
 }
 
-typedef js::jit::AssemblerBuffer<Instruction> LOONGBuffer;
+static constexpr int32_t SliceSize = 1024;
+typedef js::jit::AssemblerBuffer<SliceSize, Instruction> LOONGBuffer;
 
 class LOONGBufferWithExecutableCopy : public LOONGBuffer {
  public:
@@ -826,12 +829,21 @@ class LOONGBufferWithExecutableCopy : public LOONGBuffer {
     if (this->oom()) {
       return;
     }
-    memcpy(buffer, this->data(), this->size());
+
+    for (Slice* cur = head; cur != nullptr; cur = cur->getNext()) {
+      memcpy(buffer, &cur->instructions, cur->length());
+      buffer += cur->length();
+    }
   }
 
   bool appendRawCode(const uint8_t* code, size_t numBytes) {
     if (this->oom()) {
       return false;
+    }
+    while (numBytes > SliceSize) {
+      this->putBytes(SliceSize, code);
+      numBytes -= SliceSize;
+      code += SliceSize;
     }
     this->putBytes(numBytes, code);
     return !this->oom();
@@ -1007,7 +1019,7 @@ class AssemblerLOONG64 : public AssemblerShared {
     if (MOZ_UNLIKELY(printer || JitSpewEnabled(JitSpew_Codegen))) {
       va_list va;
       va_start(va, fmt);
-      spewVA(fmt, va);
+      spew(fmt, va);
       va_end(va);
     }
   }
@@ -1018,7 +1030,7 @@ class AssemblerLOONG64 : public AssemblerShared {
 #endif
 
 #ifdef JS_JITSPEW
-  MOZ_COLD void spewVA(const char* fmt, va_list va) MOZ_FORMAT_PRINTF(2, 0) {
+  MOZ_COLD void spew(const char* fmt, va_list va) MOZ_FORMAT_PRINTF(2, 0) {
     // Buffer to hold the formatted string. Note that this may contain
     // '%' characters, so do not pass it directly to printf functions.
     char buf[200];

@@ -21,14 +21,6 @@ registerCleanupFunction(() =>
   Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck")
 );
 
-ChromeUtils.defineLazyGetter(this, "SidebarTestUtils", () => {
-  const { SidebarTestUtils: utils } = ChromeUtils.importESModule(
-    "resource://testing-common/SidebarTestUtils.sys.mjs"
-  );
-  utils.init(this);
-  return utils;
-});
-
 var { synthesizeDrop, synthesizeMouseAtCenter } = EventUtils;
 
 // As of bug 1960002, this width no longer technically forces overflow.
@@ -215,7 +207,7 @@ function getAreaWidgetIds(areaId) {
 function simulateItemDrag(aToDrag, aTarget, aEvent = {}, aOffset = 2) {
   let ev = aEvent;
   if (ev == "end" || ev == "start") {
-    let win = aTarget.documentGlobal;
+    let win = aTarget.ownerGlobal;
     const dwu = win.windowUtils;
     let bounds = dwu.getBoundsWithoutFlushing(aTarget);
     if (ev == "end") {
@@ -233,12 +225,12 @@ function simulateItemDrag(aToDrag, aTarget, aEvent = {}, aOffset = 2) {
     aTarget,
     null,
     null,
-    aToDrag.documentGlobal,
-    aTarget.documentGlobal,
+    aToDrag.ownerGlobal,
+    aTarget.ownerGlobal,
     ev
   );
   // Ensure dnd suppression is cleared.
-  synthesizeMouseAtCenter(aTarget, { type: "mouseup" }, aTarget.documentGlobal);
+  synthesizeMouseAtCenter(aTarget, { type: "mouseup" }, aTarget.ownerGlobal);
 }
 
 function endCustomizing(aWindow = window) {
@@ -253,20 +245,16 @@ function endCustomizing(aWindow = window) {
   return afterCustomizationPromise;
 }
 
-async function startCustomizing(aWindow = window) {
+function startCustomizing(aWindow = window) {
   if (aWindow.document.documentElement.hasAttribute("customizing")) {
-    return;
+    return null;
   }
   let customizationReadyPromise = BrowserTestUtils.waitForEvent(
     aWindow.gNavToolbox,
     "customizationready"
   );
   aWindow.gCustomizeMode.enter();
-  await customizationReadyPromise;
-
-  if (document.hasPendingL10nMutations) {
-    await BrowserTestUtils.waitForEvent(document, "L10nMutationsFinished");
-  }
+  return customizationReadyPromise;
 }
 
 function promiseObserverNotified(aTopic) {
@@ -338,12 +326,6 @@ function promiseOverflowHidden(win) {
   return promisePanelElementHidden(win, panelEl);
 }
 
-function hideOverflow() {
-  let panelHidePromise = promiseOverflowHidden(window);
-  PanelUI.overflowPanel.hidePopup();
-  return panelHidePromise;
-}
-
 function promisePanelElementHidden(win, aPanel) {
   return new Promise((resolve, reject) => {
     let timeoutId = win.setTimeout(() => {
@@ -369,7 +351,7 @@ function isOverflowOpen() {
 
 function subviewShown(aSubview) {
   return new Promise((resolve, reject) => {
-    let win = aSubview.documentGlobal;
+    let win = aSubview.ownerGlobal;
     let timeoutId = win.setTimeout(() => {
       reject("Subview (" + aSubview.id + ") did not show within 20 seconds.");
     }, 20000);
@@ -384,7 +366,7 @@ function subviewShown(aSubview) {
 
 function subviewHidden(aSubview) {
   return new Promise((resolve, reject) => {
-    let win = aSubview.documentGlobal;
+    let win = aSubview.ownerGlobal;
     let timeoutId = win.setTimeout(() => {
       reject("Subview (" + aSubview.id + ") did not hide within 20 seconds.");
     }, 20000);
@@ -476,8 +458,8 @@ function checkContextMenu(aContextMenu, aExpectedEntries, aWindow = window) {
         ? aWindow.document.getElementById(commandValue)
         : null;
       let menuItemDisabled = relatedCommand
-        ? relatedCommand.hasAttribute("disabled")
-        : menuitem.hasAttribute("disabled");
+        ? relatedCommand.getAttribute("disabled") == "true"
+        : menuitem.getAttribute("disabled") == "true";
       is(
         menuItemDisabled,
         !aExpectedEntries[i][1],
@@ -566,7 +548,6 @@ function ensureToolbarOverflow(aWindow, shouldCleanup = true) {
     0
   );
   CustomizableUI.addWidgetToArea("panic-button", CustomizableUI.AREA_NAVBAR, 0);
-  CustomizableUI.addWidgetToArea("print-button", CustomizableUI.AREA_NAVBAR, 0);
 
   if (shouldCleanup) {
     registerCleanupFunction(() => {
@@ -587,5 +568,4 @@ function unensureToolbarOverflow(aWindow, originalWindowWidth) {
   CustomizableUI.removeWidgetFromArea("history-panelmenu");
   CustomizableUI.removeWidgetFromArea("email-link-button");
   CustomizableUI.removeWidgetFromArea("panic-button");
-  CustomizableUI.removeWidgetFromArea("print-button");
 }

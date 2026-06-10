@@ -1,9 +1,8 @@
 use crate::buf::{limit, Chain, Limit, UninitSlice};
 #[cfg(feature = "std")]
 use crate::buf::{writer, Writer};
-use crate::{panic_advance, panic_does_not_fit, TryGetError};
 
-use core::{mem, ptr};
+use core::{cmp, mem, ptr, usize};
 
 use alloc::{boxed::Box, vec::Vec};
 
@@ -68,10 +67,8 @@ pub unsafe trait BufMut {
     /// The next call to `chunk_mut` will return a slice starting `cnt` bytes
     /// further into the underlying buffer.
     ///
-    /// # Safety
-    ///
-    /// The caller must ensure that the next `cnt` bytes of `chunk` are
-    /// initialized.
+    /// This function is unsafe because there is no guarantee that the bytes
+    /// being advanced past have been initialized.
     ///
     /// # Examples
     ///
@@ -124,7 +121,6 @@ pub unsafe trait BufMut {
     ///
     /// assert!(!buf.has_remaining_mut());
     /// ```
-    #[inline]
     fn has_remaining_mut(&self) -> bool {
         self.remaining_mut() > 0
     }
@@ -165,7 +161,7 @@ pub unsafe trait BufMut {
     ///
     /// # Implementer notes
     ///
-    /// This function should never panic. `chunk_mut()` should return an empty
+    /// This function should never panic. `chunk_mut` should return an empty
     /// slice **if and only if** `remaining_mut()` returns 0. In other words,
     /// `chunk_mut()` returning an empty slice implies that `remaining_mut()` will
     /// return 0 and `remaining_mut()` returning 0 implies that `chunk_mut()` will
@@ -198,28 +194,27 @@ pub unsafe trait BufMut {
     /// # Panics
     ///
     /// Panics if `self` does not have enough capacity to contain `src`.
-    #[inline]
     fn put<T: super::Buf>(&mut self, mut src: T)
     where
         Self: Sized,
     {
-        if self.remaining_mut() < src.remaining() {
-            panic_advance(&TryGetError {
-                requested: src.remaining(),
-                available: self.remaining_mut(),
-            });
-        }
+        assert!(self.remaining_mut() >= src.remaining());
 
         while src.has_remaining() {
-            let s = src.chunk();
-            let d = self.chunk_mut();
-            let cnt = usize::min(s.len(), d.len());
+            let l;
 
-            d[..cnt].copy_from_slice(&s[..cnt]);
+            unsafe {
+                let s = src.chunk();
+                let d = self.chunk_mut();
+                l = cmp::min(s.len(), d.len());
 
-            // SAFETY: We just initialized `cnt` bytes in `self`.
-            unsafe { self.advance_mut(cnt) };
-            src.advance(cnt);
+                ptr::copy_nonoverlapping(s.as_ptr(), d.as_mut_ptr() as *mut u8, l);
+            }
+
+            src.advance(l);
+            unsafe {
+                self.advance_mut(l);
+            }
         }
     }
 
@@ -242,24 +237,31 @@ pub unsafe trait BufMut {
     ///
     /// assert_eq!(b"hello\0", &dst);
     /// ```
-    #[inline]
-    fn put_slice(&mut self, mut src: &[u8]) {
-        if self.remaining_mut() < src.len() {
-            panic_advance(&TryGetError {
-                requested: src.len(),
-                available: self.remaining_mut(),
-            });
-        }
+    fn put_slice(&mut self, src: &[u8]) {
+        let mut off = 0;
 
-        while !src.is_empty() {
-            let dst = self.chunk_mut();
-            let cnt = usize::min(src.len(), dst.len());
+        assert!(
+            self.remaining_mut() >= src.len(),
+            "buffer overflow; remaining = {}; src = {}",
+            self.remaining_mut(),
+            src.len()
+        );
 
-            dst[..cnt].copy_from_slice(&src[..cnt]);
-            src = &src[cnt..];
+        while off < src.len() {
+            let cnt;
 
-            // SAFETY: We just initialized `cnt` bytes in `self`.
-            unsafe { self.advance_mut(cnt) };
+            unsafe {
+                let dst = self.chunk_mut();
+                cnt = cmp::min(dst.len(), src.len() - off);
+
+                ptr::copy_nonoverlapping(src[off..].as_ptr(), dst.as_mut_ptr() as *mut u8, cnt);
+
+                off += cnt;
+            }
+
+            unsafe {
+                self.advance_mut(cnt);
+            }
         }
     }
 
@@ -288,23 +290,9 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
-    fn put_bytes(&mut self, val: u8, mut cnt: usize) {
-        if self.remaining_mut() < cnt {
-            panic_advance(&TryGetError {
-                requested: cnt,
-                available: self.remaining_mut(),
-            })
-        }
-
-        while cnt > 0 {
-            let dst = self.chunk_mut();
-            let dst_len = usize::min(dst.len(), cnt);
-            // SAFETY: The pointer is valid for `dst_len <= dst.len()` bytes.
-            unsafe { core::ptr::write_bytes(dst.as_mut_ptr(), val, dst_len) };
-            // SAFETY: We just initialized `dst_len` bytes in `self`.
-            unsafe { self.advance_mut(dst_len) };
-            cnt -= dst_len;
+    fn put_bytes(&mut self, val: u8, cnt: usize) {
+        for _ in 0..cnt {
+            self.put_u8(val);
         }
     }
 
@@ -326,7 +314,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u8(&mut self, n: u8) {
         let src = [n];
         self.put_slice(&src);
@@ -350,7 +337,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i8(&mut self, n: i8) {
         let src = [n as u8];
         self.put_slice(&src)
@@ -374,7 +360,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u16(&mut self, n: u16) {
         self.put_slice(&n.to_be_bytes())
     }
@@ -397,7 +382,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u16_le(&mut self, n: u16) {
         self.put_slice(&n.to_le_bytes())
     }
@@ -424,7 +408,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u16_ne(&mut self, n: u16) {
         self.put_slice(&n.to_ne_bytes())
     }
@@ -447,7 +430,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i16(&mut self, n: i16) {
         self.put_slice(&n.to_be_bytes())
     }
@@ -470,7 +452,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i16_le(&mut self, n: i16) {
         self.put_slice(&n.to_le_bytes())
     }
@@ -497,7 +478,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i16_ne(&mut self, n: i16) {
         self.put_slice(&n.to_ne_bytes())
     }
@@ -520,7 +500,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u32(&mut self, n: u32) {
         self.put_slice(&n.to_be_bytes())
     }
@@ -543,7 +522,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u32_le(&mut self, n: u32) {
         self.put_slice(&n.to_le_bytes())
     }
@@ -570,7 +548,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u32_ne(&mut self, n: u32) {
         self.put_slice(&n.to_ne_bytes())
     }
@@ -593,7 +570,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i32(&mut self, n: i32) {
         self.put_slice(&n.to_be_bytes())
     }
@@ -616,7 +592,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i32_le(&mut self, n: i32) {
         self.put_slice(&n.to_le_bytes())
     }
@@ -643,7 +618,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i32_ne(&mut self, n: i32) {
         self.put_slice(&n.to_ne_bytes())
     }
@@ -666,7 +640,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u64(&mut self, n: u64) {
         self.put_slice(&n.to_be_bytes())
     }
@@ -689,7 +662,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u64_le(&mut self, n: u64) {
         self.put_slice(&n.to_le_bytes())
     }
@@ -716,7 +688,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u64_ne(&mut self, n: u64) {
         self.put_slice(&n.to_ne_bytes())
     }
@@ -739,7 +710,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i64(&mut self, n: i64) {
         self.put_slice(&n.to_be_bytes())
     }
@@ -762,7 +732,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i64_le(&mut self, n: i64) {
         self.put_slice(&n.to_le_bytes())
     }
@@ -789,7 +758,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i64_ne(&mut self, n: i64) {
         self.put_slice(&n.to_ne_bytes())
     }
@@ -812,7 +780,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u128(&mut self, n: u128) {
         self.put_slice(&n.to_be_bytes())
     }
@@ -835,7 +802,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u128_le(&mut self, n: u128) {
         self.put_slice(&n.to_le_bytes())
     }
@@ -862,7 +828,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_u128_ne(&mut self, n: u128) {
         self.put_slice(&n.to_ne_bytes())
     }
@@ -885,7 +850,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i128(&mut self, n: i128) {
         self.put_slice(&n.to_be_bytes())
     }
@@ -908,7 +872,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i128_le(&mut self, n: i128) {
         self.put_slice(&n.to_le_bytes())
     }
@@ -935,7 +898,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_i128_ne(&mut self, n: i128) {
         self.put_slice(&n.to_ne_bytes())
     }
@@ -957,15 +919,9 @@ pub unsafe trait BufMut {
     /// # Panics
     ///
     /// This function panics if there is not enough remaining capacity in
-    /// `self` or if `nbytes` is greater than 8.
-    #[inline]
+    /// `self`.
     fn put_uint(&mut self, n: u64, nbytes: usize) {
-        let start = match mem::size_of_val(&n).checked_sub(nbytes) {
-            Some(start) => start,
-            None => panic_does_not_fit(nbytes, mem::size_of_val(&n)),
-        };
-
-        self.put_slice(&n.to_be_bytes()[start..]);
+        self.put_slice(&n.to_be_bytes()[mem::size_of_val(&n) - nbytes..]);
     }
 
     /// Writes an unsigned n-byte integer to `self` in the little-endian byte order.
@@ -985,16 +941,9 @@ pub unsafe trait BufMut {
     /// # Panics
     ///
     /// This function panics if there is not enough remaining capacity in
-    /// `self` or if `nbytes` is greater than 8.
-    #[inline]
+    /// `self`.
     fn put_uint_le(&mut self, n: u64, nbytes: usize) {
-        let slice = n.to_le_bytes();
-        let slice = match slice.get(..nbytes) {
-            Some(slice) => slice,
-            None => panic_does_not_fit(nbytes, slice.len()),
-        };
-
-        self.put_slice(slice);
+        self.put_slice(&n.to_le_bytes()[0..nbytes]);
     }
 
     /// Writes an unsigned n-byte integer to `self` in the native-endian byte order.
@@ -1018,8 +967,7 @@ pub unsafe trait BufMut {
     /// # Panics
     ///
     /// This function panics if there is not enough remaining capacity in
-    /// `self` or if `nbytes` is greater than 8.
-    #[inline]
+    /// `self`.
     fn put_uint_ne(&mut self, n: u64, nbytes: usize) {
         if cfg!(target_endian = "big") {
             self.put_uint(n, nbytes)
@@ -1046,14 +994,8 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self` or if `nbytes` is greater than 8.
-    #[inline]
     fn put_int(&mut self, n: i64, nbytes: usize) {
-        let start = match mem::size_of_val(&n).checked_sub(nbytes) {
-            Some(start) => start,
-            None => panic_does_not_fit(nbytes, mem::size_of_val(&n)),
-        };
-
-        self.put_slice(&n.to_be_bytes()[start..]);
+        self.put_slice(&n.to_be_bytes()[mem::size_of_val(&n) - nbytes..]);
     }
 
     /// Writes low `nbytes` of a signed integer to `self` in little-endian byte order.
@@ -1074,15 +1016,8 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self` or if `nbytes` is greater than 8.
-    #[inline]
     fn put_int_le(&mut self, n: i64, nbytes: usize) {
-        let slice = n.to_le_bytes();
-        let slice = match slice.get(..nbytes) {
-            Some(slice) => slice,
-            None => panic_does_not_fit(nbytes, slice.len()),
-        };
-
-        self.put_slice(slice);
+        self.put_slice(&n.to_le_bytes()[0..nbytes]);
     }
 
     /// Writes low `nbytes` of a signed integer to `self` in native-endian byte order.
@@ -1107,7 +1042,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self` or if `nbytes` is greater than 8.
-    #[inline]
     fn put_int_ne(&mut self, n: i64, nbytes: usize) {
         if cfg!(target_endian = "big") {
             self.put_int(n, nbytes)
@@ -1116,7 +1050,7 @@ pub unsafe trait BufMut {
         }
     }
 
-    /// Writes an IEEE754 single-precision (4 bytes) floating point number to
+    /// Writes  an IEEE754 single-precision (4 bytes) floating point number to
     /// `self` in big-endian byte order.
     ///
     /// The current position is advanced by 4.
@@ -1135,12 +1069,11 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_f32(&mut self, n: f32) {
         self.put_u32(n.to_bits());
     }
 
-    /// Writes an IEEE754 single-precision (4 bytes) floating point number to
+    /// Writes  an IEEE754 single-precision (4 bytes) floating point number to
     /// `self` in little-endian byte order.
     ///
     /// The current position is advanced by 4.
@@ -1159,7 +1092,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_f32_le(&mut self, n: f32) {
         self.put_u32_le(n.to_bits());
     }
@@ -1187,12 +1119,11 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_f32_ne(&mut self, n: f32) {
         self.put_u32_ne(n.to_bits());
     }
 
-    /// Writes an IEEE754 double-precision (8 bytes) floating point number to
+    /// Writes  an IEEE754 double-precision (8 bytes) floating point number to
     /// `self` in big-endian byte order.
     ///
     /// The current position is advanced by 8.
@@ -1211,12 +1142,11 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_f64(&mut self, n: f64) {
         self.put_u64(n.to_bits());
     }
 
-    /// Writes an IEEE754 double-precision (8 bytes) floating point number to
+    /// Writes  an IEEE754 double-precision (8 bytes) floating point number to
     /// `self` in little-endian byte order.
     ///
     /// The current position is advanced by 8.
@@ -1235,12 +1165,11 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_f64_le(&mut self, n: f64) {
         self.put_u64_le(n.to_bits());
     }
 
-    /// Writes an IEEE754 double-precision (8 bytes) floating point number to
+    /// Writes  an IEEE754 double-precision (8 bytes) floating point number to
     /// `self` in native-endian byte order.
     ///
     /// The current position is advanced by 8.
@@ -1263,7 +1192,6 @@ pub unsafe trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[inline]
     fn put_f64_ne(&mut self, n: f64) {
         self.put_u64_ne(n.to_bits());
     }
@@ -1281,7 +1209,6 @@ pub unsafe trait BufMut {
     /// let dst = arr.limit(10);
     /// assert_eq!(dst.remaining_mut(), 10);
     /// ```
-    #[inline]
     fn limit(self, limit: usize) -> Limit<Self>
     where
         Self: Sized,
@@ -1313,7 +1240,6 @@ pub unsafe trait BufMut {
     /// ```
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    #[inline]
     fn writer(self) -> Writer<Self>
     where
         Self: Sized,
@@ -1341,7 +1267,6 @@ pub unsafe trait BufMut {
     /// assert_eq!(&a[..], b"hello");
     /// assert_eq!(&b[..], b" world");
     /// ```
-    #[inline]
     fn chain_mut<U: BufMut>(self, next: U) -> Chain<Self, U>
     where
         Self: Sized,
@@ -1352,122 +1277,98 @@ pub unsafe trait BufMut {
 
 macro_rules! deref_forward_bufmut {
     () => {
-        #[inline]
         fn remaining_mut(&self) -> usize {
             (**self).remaining_mut()
         }
 
-        #[inline]
         fn chunk_mut(&mut self) -> &mut UninitSlice {
             (**self).chunk_mut()
         }
 
-        #[inline]
         unsafe fn advance_mut(&mut self, cnt: usize) {
             (**self).advance_mut(cnt)
         }
 
-        #[inline]
         fn put_slice(&mut self, src: &[u8]) {
             (**self).put_slice(src)
         }
 
-        #[inline]
         fn put_u8(&mut self, n: u8) {
             (**self).put_u8(n)
         }
 
-        #[inline]
         fn put_i8(&mut self, n: i8) {
             (**self).put_i8(n)
         }
 
-        #[inline]
         fn put_u16(&mut self, n: u16) {
             (**self).put_u16(n)
         }
 
-        #[inline]
         fn put_u16_le(&mut self, n: u16) {
             (**self).put_u16_le(n)
         }
 
-        #[inline]
         fn put_u16_ne(&mut self, n: u16) {
             (**self).put_u16_ne(n)
         }
 
-        #[inline]
         fn put_i16(&mut self, n: i16) {
             (**self).put_i16(n)
         }
 
-        #[inline]
         fn put_i16_le(&mut self, n: i16) {
             (**self).put_i16_le(n)
         }
 
-        #[inline]
         fn put_i16_ne(&mut self, n: i16) {
             (**self).put_i16_ne(n)
         }
 
-        #[inline]
         fn put_u32(&mut self, n: u32) {
             (**self).put_u32(n)
         }
 
-        #[inline]
         fn put_u32_le(&mut self, n: u32) {
             (**self).put_u32_le(n)
         }
 
-        #[inline]
         fn put_u32_ne(&mut self, n: u32) {
             (**self).put_u32_ne(n)
         }
 
-        #[inline]
         fn put_i32(&mut self, n: i32) {
             (**self).put_i32(n)
         }
 
-        #[inline]
         fn put_i32_le(&mut self, n: i32) {
             (**self).put_i32_le(n)
         }
 
-        #[inline]
         fn put_i32_ne(&mut self, n: i32) {
             (**self).put_i32_ne(n)
         }
 
-        #[inline]
         fn put_u64(&mut self, n: u64) {
             (**self).put_u64(n)
         }
 
-        #[inline]
         fn put_u64_le(&mut self, n: u64) {
             (**self).put_u64_le(n)
         }
 
-        #[inline]
         fn put_u64_ne(&mut self, n: u64) {
             (**self).put_u64_ne(n)
         }
 
-        #[inline]
         fn put_i64(&mut self, n: i64) {
             (**self).put_i64(n)
         }
 
-        #[inline]
         fn put_i64_le(&mut self, n: i64) {
             (**self).put_i64_le(n)
         }
 
-        #[inline]
         fn put_i64_ne(&mut self, n: i64) {
             (**self).put_i64_ne(n)
         }
@@ -1490,107 +1391,29 @@ unsafe impl BufMut for &mut [u8] {
 
     #[inline]
     fn chunk_mut(&mut self) -> &mut UninitSlice {
-        UninitSlice::new(self)
+        // UninitSlice is repr(transparent), so safe to transmute
+        unsafe { &mut *(*self as *mut [u8] as *mut _) }
     }
 
     #[inline]
     unsafe fn advance_mut(&mut self, cnt: usize) {
-        if self.len() < cnt {
-            panic_advance(&TryGetError {
-                requested: cnt,
-                available: self.len(),
-            });
-        }
-
         // Lifetime dance taken from `impl Write for &mut [u8]`.
-        let (_, b) = core::mem::take(self).split_at_mut(cnt);
+        let (_, b) = core::mem::replace(self, &mut []).split_at_mut(cnt);
         *self = b;
     }
 
     #[inline]
     fn put_slice(&mut self, src: &[u8]) {
-        if self.len() < src.len() {
-            panic_advance(&TryGetError {
-                requested: src.len(),
-                available: self.len(),
-            });
-        }
-
         self[..src.len()].copy_from_slice(src);
-        // SAFETY: We just initialized `src.len()` bytes.
-        unsafe { self.advance_mut(src.len()) };
-    }
-
-    #[inline]
-    fn put_bytes(&mut self, val: u8, cnt: usize) {
-        if self.len() < cnt {
-            panic_advance(&TryGetError {
-                requested: cnt,
-                available: self.len(),
-            });
-        }
-
-        // SAFETY: We just checked that the pointer is valid for `cnt` bytes.
         unsafe {
-            ptr::write_bytes(self.as_mut_ptr(), val, cnt);
-            self.advance_mut(cnt);
-        }
-    }
-}
-
-unsafe impl BufMut for &mut [core::mem::MaybeUninit<u8>] {
-    #[inline]
-    fn remaining_mut(&self) -> usize {
-        self.len()
-    }
-
-    #[inline]
-    fn chunk_mut(&mut self) -> &mut UninitSlice {
-        UninitSlice::uninit(self)
-    }
-
-    #[inline]
-    unsafe fn advance_mut(&mut self, cnt: usize) {
-        if self.len() < cnt {
-            panic_advance(&TryGetError {
-                requested: cnt,
-                available: self.len(),
-            });
-        }
-
-        // Lifetime dance taken from `impl Write for &mut [u8]`.
-        let (_, b) = core::mem::take(self).split_at_mut(cnt);
-        *self = b;
-    }
-
-    #[inline]
-    fn put_slice(&mut self, src: &[u8]) {
-        if self.len() < src.len() {
-            panic_advance(&TryGetError {
-                requested: src.len(),
-                available: self.len(),
-            });
-        }
-
-        // SAFETY: We just checked that the pointer is valid for `src.len()` bytes.
-        unsafe {
-            ptr::copy_nonoverlapping(src.as_ptr(), self.as_mut_ptr().cast(), src.len());
             self.advance_mut(src.len());
         }
     }
 
-    #[inline]
     fn put_bytes(&mut self, val: u8, cnt: usize) {
-        if self.len() < cnt {
-            panic_advance(&TryGetError {
-                requested: cnt,
-                available: self.len(),
-            });
-        }
-
-        // SAFETY: We just checked that the pointer is valid for `cnt` bytes.
+        assert!(self.remaining_mut() >= cnt);
         unsafe {
-            ptr::write_bytes(self.as_mut_ptr() as *mut u8, val, cnt);
+            ptr::write_bytes(self.as_mut_ptr(), val, cnt);
             self.advance_mut(cnt);
         }
     }
@@ -1600,7 +1423,7 @@ unsafe impl BufMut for Vec<u8> {
     #[inline]
     fn remaining_mut(&self) -> usize {
         // A vector can never have more than isize::MAX bytes
-        isize::MAX as usize - self.len()
+        core::isize::MAX as usize - self.len()
     }
 
     #[inline]
@@ -1608,14 +1431,13 @@ unsafe impl BufMut for Vec<u8> {
         let len = self.len();
         let remaining = self.capacity() - len;
 
-        if remaining < cnt {
-            panic_advance(&TryGetError {
-                requested: cnt,
-                available: remaining,
-            });
-        }
+        assert!(
+            cnt <= remaining,
+            "cannot advance past `remaining_mut`: {:?} <= {:?}",
+            cnt,
+            remaining
+        );
 
-        // Addition will not overflow since the sum is at most the capacity.
         self.set_len(len + cnt);
     }
 
@@ -1629,26 +1451,28 @@ unsafe impl BufMut for Vec<u8> {
         let len = self.len();
 
         let ptr = self.as_mut_ptr();
-        // SAFETY: Since `ptr` is valid for `cap` bytes, `ptr.add(len)` must be
-        // valid for `cap - len` bytes. The subtraction will not underflow since
-        // `len <= cap`.
-        unsafe { UninitSlice::from_raw_parts_mut(ptr.add(len), cap - len) }
+        unsafe { &mut UninitSlice::from_raw_parts_mut(ptr, cap)[len..] }
     }
 
     // Specialize these methods so they can skip checking `remaining_mut`
     // and `advance_mut`.
-    #[inline]
     fn put<T: super::Buf>(&mut self, mut src: T)
     where
         Self: Sized,
     {
-        // In case the src isn't contiguous, reserve upfront.
+        // In case the src isn't contiguous, reserve upfront
         self.reserve(src.remaining());
 
         while src.has_remaining() {
-            let s = src.chunk();
-            let l = s.len();
-            self.extend_from_slice(s);
+            let l;
+
+            // a block to contain the src.bytes() borrow
+            {
+                let s = src.chunk();
+                l = s.len();
+                self.extend_from_slice(s);
+            }
+
             src.advance(l);
         }
     }
@@ -1658,10 +1482,8 @@ unsafe impl BufMut for Vec<u8> {
         self.extend_from_slice(src);
     }
 
-    #[inline]
     fn put_bytes(&mut self, val: u8, cnt: usize) {
-        // If the addition overflows, then the `resize` will fail.
-        let new_len = self.len().saturating_add(cnt);
+        let new_len = self.len().checked_add(cnt).unwrap();
         self.resize(new_len, val);
     }
 }

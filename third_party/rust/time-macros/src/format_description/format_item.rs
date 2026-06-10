@@ -1,7 +1,7 @@
-use std::num::NonZero;
+use std::num::NonZeroU16;
 use std::str::{self, FromStr};
 
-use super::{Error, Span, Spanned, Unused, ast, unused};
+use super::{ast, unused, Error, Span, Spanned, Unused};
 
 pub(super) fn parse<'a>(
     ast_items: impl Iterator<Item = Result<ast::Item<'a>, Error>>,
@@ -207,16 +207,14 @@ component_definition! {
         Day = "day" {
             padding = "padding": Option<Padding> => padding,
         },
-        End = "end" {
-            trailing_input = "trailing_input": Option<TrailingInput> => trailing_input,
-        },
+        End = "end" {},
         Hour = "hour" {
             padding = "padding": Option<Padding> => padding,
             base = "repr": Option<HourBase> => is_12_hour_clock,
         },
         Ignore = "ignore" {
             #[required]
-            count = "count": Option<#[from_str] NonZero<u16>> => count,
+            count = "count": Option<#[from_str] NonZeroU16> => count,
         },
         Minute = "minute" {
             padding = "padding": Option<Padding> => padding,
@@ -382,12 +380,6 @@ modifier! {
         Nine = b"9",
         #[default]
         OneOrMore = b"1+",
-    }
-
-    enum TrailingInput {
-        #[default]
-        Prohibit = b"prohibit",
-        Discard = b"discard",
     }
 
     enum UnixTimestampPrecision {

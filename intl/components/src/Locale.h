@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <utility>
 
 #include "unicode/uloc.h"
@@ -133,32 +134,32 @@ class LanguageTagSubtag final {
   char mChars[SubtagLength] = {};  // zero initialize
 
  public:
-  constexpr LanguageTagSubtag() = default;
+  LanguageTagSubtag() = default;
 
-  constexpr LanguageTagSubtag(const LanguageTagSubtag& aOther) {
+  LanguageTagSubtag(const LanguageTagSubtag& aOther) {
     std::copy_n(aOther.mChars, SubtagLength, mChars);
     mLength = aOther.mLength;
   }
 
   template <typename CharT>
-  constexpr explicit LanguageTagSubtag(mozilla::Span<const CharT> str) {
+  explicit LanguageTagSubtag(mozilla::Span<const CharT> str) {
     Set(str);
   }
 
-  constexpr LanguageTagSubtag& operator=(const LanguageTagSubtag& aOther) {
+  LanguageTagSubtag& operator=(const LanguageTagSubtag& aOther) {
     std::copy_n(aOther.mChars, SubtagLength, mChars);
     mLength = aOther.mLength;
     return *this;
   }
 
-  constexpr size_t Length() const { return mLength; }
-  constexpr bool Missing() const { return mLength == 0; }
-  constexpr bool Present() const { return mLength > 0; }
+  size_t Length() const { return mLength; }
+  bool Missing() const { return mLength == 0; }
+  bool Present() const { return mLength > 0; }
 
-  constexpr mozilla::Span<const char> Span() const { return {mChars, mLength}; }
+  mozilla::Span<const char> Span() const { return {mChars, mLength}; }
 
   template <typename CharT>
-  constexpr void Set(mozilla::Span<const CharT> str) {
+  void Set(mozilla::Span<const CharT> str) {
     MOZ_ASSERT(str.size() <= SubtagLength);
     std::copy_n(str.data(), str.size(), mChars);
     mLength = str.size();
@@ -180,11 +181,11 @@ class LanguageTagSubtag final {
   void ToTitleCase() { AsciiToTitleCase(mChars, SubtagLength, mChars); }
 
   template <size_t N>
-  constexpr bool EqualTo(const char (&str)[N]) const {
+  bool EqualTo(const char (&str)[N]) const {
     static_assert(N - 1 <= SubtagLength,
                   "subtag literals must not exceed the maximum subtag length");
 
-    return std::equal(mChars, mChars + mLength, str, str + N - 1);
+    return mLength == N - 1 && memcmp(mChars, str, N - 1) == 0;
   }
 };
 

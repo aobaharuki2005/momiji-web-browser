@@ -5,7 +5,6 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsMacUserActivityUpdater.h"
-#include "SDKDeclarations.h"
 
 #include "nsCocoaUtils.h"
 #include "nsIBaseWindow.h"
@@ -23,31 +22,30 @@ nsMacUserActivityUpdater::UpdateLocation(const nsAString& aPageUrl,
     return NS_OK;
   }
 
-  if(@available(macOS 10.10, *)) {
-    BaseWindow* cocoaWin = nsMacUserActivityUpdater::GetCocoaWindow(aWindow);
-    if (!cocoaWin) {
-      return NS_ERROR_FAILURE;
-    }
-
-    NSURL* pageUrl = nsCocoaUtils::ToNSURL(aPageUrl);
-    if (!pageUrl || (![pageUrl.scheme isEqualToString:@"https"] &&
-                     ![pageUrl.scheme isEqualToString:@"http"])) {
-      [cocoaWin.userActivity invalidate];
-      return NS_OK;
-    }
-
-    NSString* pageTitle = nsCocoaUtils::ToNSString(aPageTitle);
-    if (!pageTitle) {
-      pageTitle = pageUrl.absoluteString;
-    }
-
-    NSUserActivity* userActivity = [[NSUserActivity alloc]
-        initWithActivityType:NSUserActivityTypeBrowsingWeb];
-    userActivity.webpageURL = pageUrl;
-    userActivity.title = pageTitle;
-    cocoaWin.userActivity = userActivity;
-    [userActivity release];
+  BaseWindow* cocoaWin = nsMacUserActivityUpdater::GetCocoaWindow(aWindow);
+  if (!cocoaWin) {
+    return NS_ERROR_FAILURE;
   }
+
+  NSURL* pageUrl = nsCocoaUtils::ToNSURL(aPageUrl);
+  if (!pageUrl || (![pageUrl.scheme isEqualToString:@"https"] &&
+                   ![pageUrl.scheme isEqualToString:@"http"])) {
+    [cocoaWin.userActivity invalidate];
+    return NS_OK;
+  }
+
+  NSString* pageTitle = nsCocoaUtils::ToNSString(aPageTitle);
+  if (!pageTitle) {
+    pageTitle = pageUrl.absoluteString;
+  }
+
+  NSUserActivity* userActivity = [[NSUserActivity alloc]
+      initWithActivityType:NSUserActivityTypeBrowsingWeb];
+  userActivity.webpageURL = pageUrl;
+  userActivity.title = pageTitle;
+  cocoaWin.userActivity = userActivity;
+  [userActivity release];
+
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);

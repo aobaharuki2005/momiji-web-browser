@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
-import android.app.Activity
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
@@ -23,6 +22,7 @@ import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.HomeBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentTabs
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.AppStore
@@ -31,9 +31,7 @@ import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.setup.checklist.ChecklistItem
-import org.mozilla.fenix.components.share.ShareSource
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
-import org.mozilla.fenix.components.usecases.ShareUseCases
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentDirections
@@ -95,6 +93,11 @@ interface SessionControlController {
      * @see [CollectionInteractor.onAddTabsToCollectionTapped]
      */
     fun handleCreateCollection()
+
+    /**
+     * @see [CollectionInteractor.onRemoveCollectionsPlaceholder]
+     */
+    fun handleRemoveCollectionsPlaceholder()
 
     /**
      * @see [MessageCardInteractor.onMessageClicked]
@@ -160,7 +163,7 @@ interface SessionControlControllerCallback {
 
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 class DefaultSessionControlController(
-    private val activityRef: WeakReference<Activity>,
+    private val activityRef: WeakReference<HomeActivity>,
     private val settings: Settings,
     private val engine: Engine,
     private val messageController: MessageController,
@@ -174,13 +177,11 @@ class DefaultSessionControlController(
     private val appStore: AppStore,
     private val navControllerRef: WeakReference<NavController>,
     private val viewLifecycleScope: CoroutineScope,
-    private val shareUseCases: ShareUseCases,
     private val showAddSearchWidgetPrompt: () -> Unit,
-    private val requestSetDefaultBrowserPrompt: () -> Unit,
 ) : SessionControlController {
 
     private var callback: SessionControlControllerCallback? = null
-    private val activity: Activity
+    private val activity: HomeActivity
         get() = requireNotNull(activityRef.get())
 
     private val navController: NavController
@@ -305,9 +306,15 @@ class DefaultSessionControlController(
     }
 
     private fun showTabTrayCollectionCreation() {
-        val directions = HomeFragmentDirections.actionGlobalTabManagementFragment(
-            enterMultiselect = true,
-        )
+        val directions = if (settings.tabManagerEnhancementsEnabled) {
+            HomeFragmentDirections.actionGlobalTabManagementFragment(
+                enterMultiselect = true,
+            )
+        } else {
+            HomeFragmentDirections.actionGlobalTabsTrayFragment(
+                enterMultiselect = true,
+            )
+        }
         navController.nav(R.id.homeFragment, directions)
     }
 
@@ -322,7 +329,7 @@ class DefaultSessionControlController(
         callback?.registerCollectionStorageObserver()
 
         val tabIds = store.state
-            .getNormalOrPrivateTabs(private = appStore.state.mode.isPrivate)
+            .getNormalOrPrivateTabs(private = activity.browsingModeManager.mode.isPrivate)
             .map { session -> session.id }
             .toList()
             .toTypedArray()
@@ -339,20 +346,19 @@ class DefaultSessionControlController(
         showTabTrayCollectionCreation()
     }
 
+    override fun handleRemoveCollectionsPlaceholder() {
+        settings.showCollectionsPlaceholderOnHome = false
+        Collections.placeholderCancel.record()
+        appStore.dispatch(AppAction.RemoveCollectionsPlaceholder)
+    }
+
     private fun showShareFragment(shareSubject: String, data: List<ShareData>) {
-        shareUseCases.shareItems(
-            items = data,
-            source = ShareSource.HOME,
-            subject = shareSubject,
-            navigateToShareFragment = {
-                val directions = HomeFragmentDirections.actionGlobalShareFragment(
-                    sessionId = store.state.selectedTabId,
-                    shareSubject = shareSubject,
-                    data = data.toTypedArray(),
-                )
-                navController.nav(R.id.homeFragment, directions)
-            },
+        val directions = HomeFragmentDirections.actionGlobalShareFragment(
+            sessionId = store.state.selectedTabId,
+            shareSubject = shareSubject,
+            data = data.toTypedArray(),
         )
+        navController.nav(R.id.homeFragment, directions)
     }
 
     override fun handleMessageClicked(message: Message) {
@@ -384,7 +390,7 @@ class DefaultSessionControlController(
 
     @VisibleForTesting
     internal fun navigationActionFor(item: ChecklistItem.Task) = when (item.type) {
-        ChecklistItem.Task.Type.SET_AS_DEFAULT -> requestSetDefaultBrowserPrompt()
+        ChecklistItem.Task.Type.SET_AS_DEFAULT -> activity.showSetDefaultBrowserPrompt()
 
         ChecklistItem.Task.Type.SIGN_IN ->
             navigateTo(HomeFragmentDirections.actionGlobalTurnOnSync(FenixFxAEntryPoint.NewUserOnboarding))

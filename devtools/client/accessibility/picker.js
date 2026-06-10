@@ -23,7 +23,7 @@ class Picker {
   }
 
   get toolbox() {
-    return this._panel.toolbox;
+    return this._panel._toolbox;
   }
 
   get accessibilityProxy() {

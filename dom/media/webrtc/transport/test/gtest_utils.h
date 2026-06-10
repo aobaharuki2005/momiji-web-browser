@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,8 +36,10 @@
  */
 
 // Original author: ekr@rtfm.com
-#ifndef gtest_utils_h_
-#define gtest_utils_h_
+#ifndef gtest_utils__h__
+#define gtest_utils__h__
+
+#include <iostream>
 
 #include "nspr.h"
 #include "prinrval.h"
@@ -46,9 +50,12 @@
 #include "gtest_ringbuffer_dumper.h"
 #include "mtransport_test_utils.h"
 #include "nss.h"
-#include "registry.h"
 #include "ssl.h"
+
+extern "C" {
+#include "registry.h"
 #include "transport_addr.h"
+}
 
 // Wait up to timeout seconds for expression to be true
 #define WAIT(expression, timeout)                                   \

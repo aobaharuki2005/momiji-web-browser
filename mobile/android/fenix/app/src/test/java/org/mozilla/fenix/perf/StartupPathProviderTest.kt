@@ -7,10 +7,8 @@ package org.mozilla.fenix.perf
 import android.content.Intent
 import androidx.lifecycle.Lifecycle
 import io.mockk.MockKAnnotations
-import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -48,7 +46,7 @@ class StartupPathProviderTest {
         // "onIntentReceived" so we don't need to duplicate all the tests we run for
         // "onIntentReceived".
         val spyProvider = spyk(provider)
-        every { spyProvider.onIntentReceived(intent) } just Runs
+        every { spyProvider.onIntentReceived(intent) } returns Unit
         spyProvider.attachOnActivityOnCreate(mockk(relaxed = true), intent)
 
         verify { spyProvider.onIntentReceived(intent) }

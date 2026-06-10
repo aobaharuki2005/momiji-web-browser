@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -222,11 +223,7 @@ already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
     return view;
   };
 
-  for (auto& atOrNull : desc.mColorAttachments) {
-    if (atOrNull.IsNull()) {
-      continue;
-    }
-    auto& at = atOrNull.Value();
+  for (auto& at : desc.mColorAttachments) {
     TrackPresentationContext(coerceToViewInPlace(at.mView)->GetTargetContext());
     if (at.mResolveTarget.WasPassed()) {
       TrackPresentationContext(

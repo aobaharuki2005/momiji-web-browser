@@ -8,36 +8,25 @@ gReduceMotionOverride = true;
 
 const AREAS = [
   "keyboard",
-  "menuBar",
-  "tabsBar",
-  "navBar",
-  "bookmarksBar",
-  "appMenu",
-  "tabsContext",
-  "contentContext",
-  "overflowMenu",
-  "pinnedOverflowMenu",
-  "pageactionUrlbar",
-  "pageactionPanel",
+  "menu_bar",
+  "tabs_bar",
+  "nav_bar",
+  "bookmarks_bar",
+  "app_menu",
+  "tabs_context",
+  "content_context",
+  "overflow_menu",
+  "pinned_overflow_menu",
+  "pageaction_urlbar",
+  "pageaction_panel",
 
-  "preferencesPaneAbout",
-  "preferencesPaneAccessibility",
-  "preferencesPaneAi",
-  "preferencesPaneAppearance",
-  "preferencesPaneContainers",
-  "preferencesPaneDownloads",
-  "preferencesPaneExperimental",
-  "preferencesPaneGeneral",
-  "preferencesPaneHome",
-  "preferencesPaneLanguages",
-  "preferencesPaneMoreFromMozilla",
-  "preferencesPanePasswordsAutofill",
-  "preferencesPanePermissionsData",
-  "preferencesPanePrivacy",
-  "preferencesPaneSearch",
-  "preferencesPaneSearchResults",
-  "preferencesPaneSync",
-  "preferencesPaneTabsBrowsing",
+  "preferences_paneHome",
+  "preferences_paneGeneral",
+  "preferences_panePrivacy",
+  "preferences_paneSearch",
+  "preferences_paneSearchResults",
+  "preferences_paneSync",
+  "preferences_paneContainers",
 ];
 
 function resetGleanEvents() {
@@ -46,17 +35,24 @@ function resetGleanEvents() {
 }
 
 // Checks that the correct number of clicks are registered against the correct
-// labels in the labeled_counters. Also runs checks against non-area types
+// keys in the scalars. Also runs keyed scalar checks against non-area types
 // passed in through expectedOther.
-function assertInteractionData(expectedAreas, expectedOther = {}) {
-  let compareSourceWithExpectations = (source, expected = {}) => {
-    const data = Glean.browserUiInteraction[source].testGetValue() ?? {};
+function assertInteractionScalars(expectedAreas, expectedOther = {}) {
+  // Every time this checks Scalars, it clears them. So clear FOG too.
+  resetGleanEvents();
+  let processScalars =
+    Services.telemetry.getSnapshotForKeyedScalars("main", true)?.parent ?? {};
 
-    let expectedKeys = new Set(Object.keys(data).concat(Object.keys(expected)));
+  let compareSourceWithExpectations = (source, expected = {}) => {
+    let scalars = processScalars?.[`browser.ui.interaction.${source}`] ?? {};
+
+    let expectedKeys = new Set(
+      Object.keys(scalars).concat(Object.keys(expected))
+    );
 
     for (let key of expectedKeys) {
       Assert.equal(
-        data[key],
+        scalars[key],
         expected[key],
         `Expected to see the correct value for ${key} in ${source}.`
       );
@@ -70,7 +66,6 @@ function assertInteractionData(expectedAreas, expectedOther = {}) {
   for (let source in expectedOther) {
     compareSourceWithExpectations(source, expectedOther[source]);
   }
-  resetGleanEvents();
 }
 
 const elem = id => document.getElementById(id);
@@ -105,6 +100,7 @@ add_task(async function toolbarButtons() {
       });
     });
 
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
     resetGleanEvents();
     // We want to record events into this ping, so it has to be enabled.
     GleanPings.prototypeNoCodeEvents.setEnabled(true);
@@ -205,23 +201,23 @@ add_task(async function toolbarButtons() {
       ],
       events
     );
-    assertInteractionData(
+    assertInteractionScalars(
       {
-        navBar: {
+        nav_bar: {
           "stop-reload-button": 1,
           "back-button": 2,
           "12foo": 1,
         },
-        tabsBar: {
+        tabs_bar: {
           "alltabs-button": 1,
           "tab-close-button": 1,
         },
-        bookmarksBar: {
+        bookmarks_bar: {
           "bookmark-item": 1,
         },
       },
       {
-        allTabsPanelEntrypoint: {
+        all_tabs_panel_entrypoint: {
           "alltabs-button": 1,
         },
       }
@@ -232,6 +228,7 @@ add_task(async function toolbarButtons() {
 
 add_task(async function contextMenu() {
   await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
     resetGleanEvents();
 
     let tab = gBrowser.getTabForBrowser(browser);
@@ -259,8 +256,8 @@ add_task(async function contextMenu() {
       ],
       events
     );
-    assertInteractionData({
-      tabsContext: {
+    assertInteractionScalars({
+      tabs_context: {
         "context-toggleMuteTab": 1,
       },
     });
@@ -295,128 +292,14 @@ add_task(async function contextMenu() {
       ],
       events
     );
-    assertInteractionData({
-      tabsContext: {
+    assertInteractionScalars({
+      tabs_context: {
         "toolbar-context-selectAllTabs": 1,
       },
     });
     // tidy up:
     gBrowser.clearMultiSelectedTabs();
   });
-});
-
-add_task(async function contextMenu_copyLink() {
-  await BrowserTestUtils.withNewTab("https://example.com", async () => {
-    resetGleanEvents();
-
-    let tab = gBrowser.selectedTab;
-    let context = elem("tabContextMenu");
-    let shown = BrowserTestUtils.waitForEvent(context, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(
-      tab,
-      { type: "contextmenu", button: 2 },
-      window
-    );
-    await shown;
-
-    let hidden = BrowserTestUtils.waitForEvent(context, "popuphidden");
-
-    await BrowserTestUtils.waitForMutationCondition(
-      context,
-      { childList: true },
-      () => context.querySelector(".share-tab-url-item")
-    );
-    let shareMenu = context.querySelector(".share-tab-url-item");
-    let submenuShown = BrowserTestUtils.waitForPopupEvent(
-      shareMenu.menupopup,
-      "shown"
-    );
-    shareMenu.openMenu(true);
-    await submenuShown;
-    shareMenu.menupopup.activateItem(
-      shareMenu.menupopup.querySelector(".share-copy-link")
-    );
-
-    await hidden;
-
-    let events = Glean.browserUsage.interaction
-      .testGetValue()
-      .map(e => [e.extra.source, e.extra.widget_id]);
-    Assert.deepEqual(
-      [
-        ["tabs-context", "context-copy-url"],
-        ["tabs-context-entrypoint", "context-copy-url"],
-      ],
-      events
-    );
-    assertInteractionData({
-      tabsContext: { "context-copy-url": 1 },
-    });
-  });
-});
-
-add_task(async function contextMenu_copyMultipleLinks() {
-  let tab1 = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "https://example.com"
-  );
-  let tab2 = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "https://example.org"
-  );
-
-  let clicked = BrowserTestUtils.waitForEvent(tab1, "click");
-  let multiSelectKey =
-    AppConstants.platform == "macosx" ? { metaKey: true } : { ctrlKey: true };
-  EventUtils.synthesizeMouseAtCenter(tab1, multiSelectKey, window);
-  await clicked;
-
-  resetGleanEvents();
-
-  let context = elem("tabContextMenu");
-  let shown = BrowserTestUtils.waitForEvent(context, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(
-    tab2,
-    { type: "contextmenu", button: 2 },
-    window
-  );
-  await shown;
-
-  let hidden = BrowserTestUtils.waitForEvent(context, "popuphidden");
-
-  await BrowserTestUtils.waitForMutationCondition(
-    context,
-    { childList: true },
-    () => context.querySelector(".share-tab-url-item")
-  );
-  let shareMenu = context.querySelector(".share-tab-url-item");
-  let submenuShown = BrowserTestUtils.waitForPopupEvent(
-    shareMenu.menupopup,
-    "shown"
-  );
-  shareMenu.openMenu(true);
-  await submenuShown;
-  shareMenu.menupopup.activateItem(
-    shareMenu.menupopup.querySelector(".share-copy-link")
-  );
-  await hidden;
-
-  let events = Glean.browserUsage.interaction
-    .testGetValue()
-    .map(e => [e.extra.source, e.extra.widget_id]);
-  Assert.deepEqual(
-    [
-      ["tabs-context", "context-copy-multiple-urls"],
-      ["tabs-context-entrypoint", "context-copy-multiple-urls"],
-    ],
-    events
-  );
-  assertInteractionData({
-    tabsContext: { "context-copy-multiple-urls": 1 },
-  });
-
-  BrowserTestUtils.removeTab(tab1);
-  BrowserTestUtils.removeTab(tab2);
 });
 
 add_task(async function contextMenu_entrypoints() {
@@ -445,14 +328,24 @@ add_task(async function contextMenu_entrypoints() {
     await popupHidden;
   };
 
-  Services.fog.testResetFOG();
+  const TAB_CONTEXTMENU_ENTRYPOINT_SCALAR =
+    "browser.ui.interaction.tabs_context_entrypoint";
+  Services.telemetry.clearScalars();
+
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertScalarUnset(
+    scalars,
+    TAB_CONTEXTMENU_ENTRYPOINT_SCALAR
+  );
 
   await openAndCloseTabContextMenu(gBrowser.selectedTab);
-  Assert.deepEqual(
-    Glean.browserUiInteraction.tabsContextEntrypoint.testGetValue(),
-    { "tabs-bar": 1 }
+  scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    TAB_CONTEXTMENU_ENTRYPOINT_SCALAR,
+    "tabs-bar",
+    1
   );
-  Services.fog.testResetFOG();
 
   gTabsPanel.initElements();
   let allTabsView = document.getElementById("allTabsMenu-allTabsView");
@@ -465,9 +358,12 @@ add_task(async function contextMenu_entrypoints() {
 
   let firstTabItem = gTabsPanel.allTabsViewTabs.children[0];
   await openAndCloseTabContextMenu(firstTabItem);
-  Assert.deepEqual(
-    Glean.browserUiInteraction.tabsContextEntrypoint.testGetValue(),
-    { "alltabs-menu": 1 }
+  scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    TAB_CONTEXTMENU_ENTRYPOINT_SCALAR,
+    "alltabs-menu",
+    1
   );
 
   let allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(
@@ -480,6 +376,7 @@ add_task(async function contextMenu_entrypoints() {
 
 add_task(async function appMenu() {
   await BrowserTestUtils.withNewTab("https://example.com", async () => {
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
     resetGleanEvents();
 
     let shown = BrowserTestUtils.waitForEvent(
@@ -498,11 +395,11 @@ add_task(async function appMenu() {
     click(findButtonID);
     await hidden;
 
-    let expectedData = {
-      navBar: {
+    let expectedScalars = {
+      nav_bar: {
         "PanelUI-menu-button": 1,
       },
-      appMenu: {
+      app_menu: {
         [findButtonID]: 1,
       },
     };
@@ -518,12 +415,13 @@ add_task(async function appMenu() {
       events
     );
 
-    assertInteractionData(expectedData);
+    assertInteractionScalars(expectedScalars);
   });
 });
 
 add_task(async function devtools() {
   await BrowserTestUtils.withNewTab("https://example.com", async () => {
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
     resetGleanEvents();
 
     let shown = BrowserTestUtils.waitForEvent(
@@ -567,11 +465,11 @@ add_task(async function devtools() {
       ],
       events
     );
-    assertInteractionData({
-      navBar: {
+    assertInteractionScalars({
+      nav_bar: {
         "PanelUI-menu-button": 1,
       },
-      appMenu: {
+      app_menu: {
         "appMenu-more-button2": 1,
         "key-viewSource": 1,
       },
@@ -583,6 +481,7 @@ add_task(async function webextension() {
   BrowserUsageTelemetry._resetAddonIds();
 
   await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
     resetGleanEvents();
 
     function background() {
@@ -661,8 +560,8 @@ add_task(async function webextension() {
       [["nav-bar", "addon0"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
-      navBar: {
+    assertInteractionScalars({
+      nav_bar: {
         addon0: 1,
       },
     });
@@ -678,8 +577,8 @@ add_task(async function webextension() {
       [["pageaction-urlbar", "addon0"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
-      pageactionUrlbar: {
+    assertInteractionScalars({
+      pageaction_urlbar: {
         addon0: 1,
       },
     });
@@ -691,7 +590,7 @@ add_task(async function webextension() {
       [["keyboard", "addon0"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
+    assertInteractionScalars({
       keyboard: {
         addon0: 1,
       },
@@ -704,7 +603,7 @@ add_task(async function webextension() {
       [["keyboard", "addon0"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
+    assertInteractionScalars({
       keyboard: {
         addon0: 1,
       },
@@ -748,8 +647,8 @@ add_task(async function webextension() {
       [["nav-bar", "addon1"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
-      navBar: {
+    assertInteractionScalars({
+      nav_bar: {
         addon1: 1,
       },
     });
@@ -765,8 +664,8 @@ add_task(async function webextension() {
       [["pageaction-urlbar", "addon1"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
-      pageactionUrlbar: {
+    assertInteractionScalars({
+      pageaction_urlbar: {
         addon1: 1,
       },
     });
@@ -778,7 +677,7 @@ add_task(async function webextension() {
       [["keyboard", "addon1"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
+    assertInteractionScalars({
       keyboard: {
         addon1: 1,
       },
@@ -791,8 +690,8 @@ add_task(async function webextension() {
       [["nav-bar", "addon0"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
-      navBar: {
+    assertInteractionScalars({
+      nav_bar: {
         addon0: 1,
       },
     });
@@ -804,7 +703,7 @@ add_task(async function webextension() {
       [["keyboard", "addon0"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
+    assertInteractionScalars({
       keyboard: {
         addon0: 1,
       },
@@ -816,8 +715,8 @@ add_task(async function webextension() {
       [["pageaction-urlbar", "addon0"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
-      pageactionUrlbar: {
+    assertInteractionScalars({
+      pageaction_urlbar: {
         addon0: 1,
       },
     });
@@ -839,8 +738,8 @@ add_task(async function webextension() {
       ],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
-      navBar: {
+    assertInteractionScalars({
+      nav_bar: {
         addon1: 2,
       },
     });
@@ -851,8 +750,8 @@ add_task(async function webextension() {
       [["pageaction-urlbar", "addon1"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
-      pageactionUrlbar: {
+    assertInteractionScalars({
+      pageaction_urlbar: {
         addon1: 1,
       },
     });
@@ -864,7 +763,7 @@ add_task(async function webextension() {
       [["keyboard", "addon1"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
+    assertInteractionScalars({
       keyboard: {
         addon1: 1,
       },
@@ -902,8 +801,8 @@ add_task(async function webextension() {
       [["unified-extensions-area", "addon2"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
-      unifiedExtensionsArea: {
+    assertInteractionScalars({
+      unified_extensions_area: {
         addon2: 1,
       },
     });
@@ -927,6 +826,7 @@ add_task(async function mainMenu() {
   BrowserUsageTelemetry._resetAddonIds();
 
   await BrowserTestUtils.withNewTab("https://example.com", async () => {
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
     resetGleanEvents();
 
     CustomizableUI.setToolbarVisibility("toolbar-menubar", true);
@@ -950,8 +850,8 @@ add_task(async function mainMenu() {
       [["menu-bar", "menu-selectAll"]],
       events.map(e => [e.extra.source, e.extra.widget_id])
     );
-    assertInteractionData({
-      menuBar: {
+    assertInteractionScalars({
+      menu_bar: {
         // Note that the _ is replaced with - for telemetry identifiers.
         "menu-selectAll": 1,
       },
@@ -966,100 +866,66 @@ add_task(async function preferences() {
     ? "sync-pane-loaded"
     : "privacy-pane-loaded";
   let finalPrefPaneLoaded = TestUtils.topicObserved(finalPaneEvent, () => true);
-  // In the Settings Redesign, browserRestoreSession moves to paneHome and
-  // contentBlockingLearnMore is no longer a standalone learn-more link.
-  // Branch the click targets and assertions on the active mode so the test
-  // exercises the live widget in each.
-  const srdEnabled = Services.prefs.getBoolPref(
-    "browser.settings-redesign.enabled"
-  );
-  await BrowserTestUtils.withNewTab(
-    srdEnabled ? "about:preferences#home" : "about:preferences",
-    async () => {
-      await finalPrefPaneLoaded;
+  await BrowserTestUtils.withNewTab("about:preferences", async () => {
+    await finalPrefPaneLoaded;
 
-      resetGleanEvents();
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
+    resetGleanEvents();
 
-      await BrowserTestUtils.synthesizeMouseAtCenter(
-        // Until the general pane's markup is removed this id is duplicated.
-        srdEnabled
-          ? "[data-category='paneHome'] #browserRestoreSession"
-          : "#browserRestoreSession",
-        {},
-        gBrowser.selectedBrowser.browsingContext
-      );
-      await BrowserTestUtils.synthesizeMouseAtCenter(
-        "#category-search",
-        {},
-        gBrowser.selectedBrowser.browsingContext
-      );
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#browserRestoreSession",
+      {},
+      gBrowser.selectedBrowser.browsingContext
+    );
 
-      await BrowserTestUtils.synthesizeMouseAtCenter(
-        "#category-privacy",
-        {},
-        gBrowser.selectedBrowser.browsingContext
-      );
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#category-search",
+      {},
+      gBrowser.selectedBrowser.browsingContext
+    );
 
-      // contentBlockingLearnMore was the legacy "Learn more" link on the
-      // privacy pane; the redesign replaces it with the etpStatusAdvancedButton
-      // on the same pane.
-      const privacyClickId = srdEnabled
-        ? "etpStatusAdvancedButton"
-        : "contentBlockingLearnMore";
-      await BrowserTestUtils.waitForCondition(
-        () =>
-          gBrowser.selectedBrowser.contentDocument.getElementById(
-            privacyClickId
-          ),
-        `${privacyClickId} is rendered`
-      );
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#category-privacy",
+      {},
+      gBrowser.selectedBrowser.browsingContext
+    );
+    await BrowserTestUtils.waitForCondition(() =>
+      gBrowser.selectedBrowser.contentDocument.getElementById(
+        "contentBlockingLearnMore"
+      )
+    );
 
-      let openedTabPromise;
-      if (!srdEnabled) {
-        // The legacy contentBlockingLearnMore opens a SUMO tab; the SRD
-        // etpStatusAdvancedButton navigates to a subpane in place.
-        openedTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
-      }
-      gBrowser.selectedBrowser.contentDocument
-        .getElementById(privacyClickId)
-        .scrollIntoView();
-      await BrowserTestUtils.synthesizeMouseAtCenter(
-        `#${privacyClickId}`,
-        {},
-        gBrowser.selectedBrowser.browsingContext
-      );
-      if (openedTabPromise) {
-        await openedTabPromise;
-        gBrowser.removeCurrentTab();
-      }
+    const onLearnMoreOpened = BrowserTestUtils.waitForNewTab(gBrowser);
+    gBrowser.selectedBrowser.contentDocument
+      .getElementById("contentBlockingLearnMore")
+      .scrollIntoView();
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#contentBlockingLearnMore",
+      {},
+      gBrowser.selectedBrowser.browsingContext
+    );
+    await onLearnMoreOpened;
+    gBrowser.removeCurrentTab();
 
-      let events = Glean.browserUsage.interaction
-        .testGetValue()
-        .map(e => [e.extra.source, e.extra.widget_id]);
-      Assert.deepEqual(
-        [
-          [
-            srdEnabled ? "preferences_paneHome" : "preferences_paneGeneral",
-            "browserRestoreSession",
-          ],
-          [
-            "preferences_panePrivacy",
-            srdEnabled ? "etpStatusAdvancedButton" : "contentBlockingLearnMore",
-          ],
-        ],
-        events
-      );
-      assertInteractionData({
-        [srdEnabled ? "preferencesPaneHome" : "preferencesPaneGeneral"]: {
-          browserRestoreSession: 1,
-        },
-        preferencesPanePrivacy: {
-          [srdEnabled ? "etpStatusAdvancedButton" : "contentBlockingLearnMore"]:
-            1,
-        },
-      });
-    }
-  );
+    let events = Glean.browserUsage.interaction
+      .testGetValue()
+      .map(e => [e.extra.source, e.extra.widget_id]);
+    Assert.deepEqual(
+      [
+        ["preferences_paneGeneral", "browserRestoreSession"],
+        ["preferences_panePrivacy", "contentBlockingLearnMore"],
+      ],
+      events
+    );
+    assertInteractionScalars({
+      preferences_paneGeneral: {
+        browserRestoreSession: 1,
+      },
+      preferences_panePrivacy: {
+        contentBlockingLearnMore: 1,
+      },
+    });
+  });
 });
 
 /**
@@ -1108,12 +974,12 @@ async function history_appMenu(useContextClick) {
       EventUtils.synthesizeMouseAtCenter(listItem, {});
     }
 
-    let expectedData = {
-      navBar: {
+    let expectedScalars = {
+      nav_bar: {
         "PanelUI-menu-button": 1,
       },
 
-      appMenu: { "history-item": 1, "appMenu-history-button": 1 },
+      app_menu: { "history-item": 1, "appMenu-history-button": 1 },
     };
     let events = Glean.browserUsage.interaction
       .testGetValue()
@@ -1126,7 +992,7 @@ async function history_appMenu(useContextClick) {
       ],
       events
     );
-    assertInteractionData(expectedData);
+    assertInteractionScalars(expectedScalars);
   });
 }
 
@@ -1165,12 +1031,12 @@ async function bookmarks_appMenu(useContextClick) {
       EventUtils.synthesizeMouseAtCenter(listItem, {});
     }
 
-    let expectedData = {
-      navBar: {
+    let expectedScalars = {
+      nav_bar: {
         "PanelUI-menu-button": 1,
       },
 
-      appMenu: { "bookmark-item": 1, "appMenu-bookmarks-button": 1 },
+      app_menu: { "bookmark-item": 1, "appMenu-bookmarks-button": 1 },
     };
     let events = Glean.browserUsage.interaction
       .testGetValue()
@@ -1183,7 +1049,7 @@ async function bookmarks_appMenu(useContextClick) {
       ],
       events
     );
-    assertInteractionData(expectedData);
+    assertInteractionScalars(expectedScalars);
   });
 }
 
@@ -1217,8 +1083,8 @@ async function bookmarks_library_navbar(useContextClick) {
       EventUtils.synthesizeMouseAtCenter(listItem, {});
     }
 
-    let expectedData = {
-      navBar: {
+    let expectedScalars = {
+      nav_bar: {
         "library-button": 1,
         "bookmark-item": 1,
         "appMenu-library-bookmarks-button": 1,
@@ -1235,7 +1101,7 @@ async function bookmarks_library_navbar(useContextClick) {
       ],
       events
     );
-    assertInteractionData(expectedData);
+    assertInteractionScalars(expectedScalars);
   });
 
   CustomizableUI.removeWidgetFromArea("library-button");
@@ -1275,8 +1141,8 @@ async function history_library_navbar(useContextClick) {
       EventUtils.synthesizeMouseAtCenter(listItem, {});
     }
 
-    let expectedData = {
-      navBar: {
+    let expectedScalars = {
+      nav_bar: {
         "library-button": 1,
         "history-item": 1,
         "appMenu-library-history-button": 1,
@@ -1293,7 +1159,7 @@ async function history_library_navbar(useContextClick) {
       ],
       events
     );
-    assertInteractionData(expectedData);
+    assertInteractionScalars(expectedScalars);
   });
 
   CustomizableUI.removeWidgetFromArea("library-button");

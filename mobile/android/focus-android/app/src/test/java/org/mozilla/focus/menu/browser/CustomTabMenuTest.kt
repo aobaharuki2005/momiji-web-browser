@@ -17,6 +17,7 @@ import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
@@ -24,7 +25,6 @@ import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.eq
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import kotlin.test.assertIs
 
 class CustomTabMenuTest {
 
@@ -63,25 +63,25 @@ class CustomTabMenuTest {
         assertEquals(expectedSize, customTabMenu.menuBuilder.items.size)
 
         // Browser menu
-        assertIs<BrowserMenuItemToolbar>(menuItems[0])
+        assertTrue(menuItems[0] is BrowserMenuItemToolbar)
         // Browser menu divider
-        assertIs<BrowserMenuDivider>(menuItems[1])
+        assertTrue(menuItems[1] is BrowserMenuDivider)
         // Find in page
-        assertIs<BrowserMenuImageText>(menuItems[2])
+        assertTrue(menuItems[2] is BrowserMenuImageText)
         // Desktop mode
-        assertIs<BrowserMenuImageSwitch>(menuItems[3])
+        assertTrue(menuItems[3] is BrowserMenuImageSwitch)
         // Report site issue
-        assertIs<WebExtensionPlaceholderMenuItem>(menuItems[4])
+        assertTrue(menuItems[4] is WebExtensionPlaceholderMenuItem)
         // Browser menu divider
-        assertIs<BrowserMenuDivider>(menuItems[5])
+        assertTrue(menuItems[5] is BrowserMenuDivider)
         // Add to homescreen
-        assertIs<BrowserMenuImageText>(menuItems[6])
+        assertTrue(menuItems[6] is BrowserMenuImageText)
         // Open in Focus
-        assertIs<SimpleBrowserMenuItem>(menuItems[7])
+        assertTrue(menuItems[7] is SimpleBrowserMenuItem)
         // Open in...
-        assertIs<SimpleBrowserMenuItem>(menuItems[8])
+        assertTrue(menuItems[8] is SimpleBrowserMenuItem)
         // Powered by
-        assertIs<BrowserMenuCategory>(menuItems[9])
+        assertTrue(menuItems[9] is BrowserMenuCategory)
     }
 
     @Test
@@ -98,20 +98,20 @@ class CustomTabMenuTest {
         assertEquals(expectedSize, customTabMenu.menuBuilder.items.size)
 
         // Browser menu
-        assertIs<BrowserMenuItemToolbar>(menuItems[0])
+        assertTrue(menuItems[0] is BrowserMenuItemToolbar)
         // Browser menu divider
-        assertIs<BrowserMenuDivider>(menuItems[1])
+        assertTrue(menuItems[1] is BrowserMenuDivider)
         // Find in page
-        assertIs<BrowserMenuImageText>(menuItems[2])
+        assertTrue(menuItems[2] is BrowserMenuImageText)
         // Desktop mode
-        assertIs<BrowserMenuImageSwitch>(menuItems[3])
+        assertTrue(menuItems[3] is BrowserMenuImageSwitch)
         // Report site issue
-        assertIs<WebExtensionPlaceholderMenuItem>(menuItems[4])
+        assertTrue(menuItems[4] is WebExtensionPlaceholderMenuItem)
         // Browser menu divider
-        assertIs<BrowserMenuDivider>(menuItems[5])
+        assertTrue(menuItems[5] is BrowserMenuDivider)
         // Add to homescreen
-        assertIs<BrowserMenuImageText>(menuItems[6])
+        assertTrue(menuItems[6] is BrowserMenuImageText)
         // Powered by
-        assertIs<BrowserMenuCategory>(menuItems[7])
+        assertTrue(menuItems[7] is BrowserMenuCategory)
     }
 }

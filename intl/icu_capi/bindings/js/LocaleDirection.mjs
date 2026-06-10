@@ -3,10 +3,11 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
- * See the [Rust documentation for `Direction`](https://docs.rs/icu/2.1.1/icu/locale/enum.Direction.html) for more information.
+ * See the [Rust documentation for `Direction`](https://docs.rs/icu/latest/icu/locale/enum.Direction.html) for more information.
  */
+
+
 export class LocaleDirection {
     #value = undefined;
 
@@ -45,7 +46,6 @@ export class LocaleDirection {
         throw TypeError(value + " is not a LocaleDirection and does not correspond to any of its enumerator values.");
     }
 
-    /** @internal */
     static fromValue(value) {
         return new LocaleDirection(value);
     }
@@ -54,7 +54,6 @@ export class LocaleDirection {
         return [...LocaleDirection.#values.keys()][this.#value];
     }
 
-    /** @internal */
     get ffiValue(){
         return this.#value;
     }

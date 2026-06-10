@@ -83,9 +83,8 @@ SetGetDelete(undefined);
 SetGetDelete(new Array());
 SetGetDelete([]);
 
-// Non-empty array as property - comma is now valid with relaxed attribute rules.
-SetGetDelete(['a', 'b']);
-// Object as property - "[object Object]" contains space which is still invalid.
+// Non-empty array and object as properties.
+SetExpectException(['a', 'b']);
 SetExpectException({'a':'b'});
 
 // Objects as properties.

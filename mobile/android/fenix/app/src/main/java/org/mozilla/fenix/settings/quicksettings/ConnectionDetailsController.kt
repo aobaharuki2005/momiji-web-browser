@@ -7,7 +7,6 @@ package org.mozilla.fenix.settings.quicksettings
 import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,45 +41,44 @@ interface ConnectionDetailsController {
 class DefaultConnectionDetailsController(
     private val context: Context,
     private val fragment: Fragment,
-    private val scope: CoroutineScope,
+    private val ioScope: CoroutineScope,
     private val cookieBannersStorage: CookieBannersStorage,
     private val navController: () -> NavController,
     internal var sitePermissions: SitePermissions?,
     private val gravity: Int,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val getCurrentTab: () -> SessionState?,
 ) : ConnectionDetailsController {
 
     override fun handleBackPressed() {
         getCurrentTab()?.let { tab ->
             context.components.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
-                scope.launch {
-                    val cookieBannerUIMode = withContext(ioDispatcher) {
-                        cookieBannersStorage.getCookieBannerUIMode(
-                            tab = tab,
-                            isFeatureEnabledInPrivateMode = context.settings().shouldUseCookieBannerPrivateMode,
-                            publicSuffixList = context.components.publicSuffixList,
-                        )
-                    }
-                    fragment.runIfFragmentIsAttached {
-                        navController().popBackStack()
-                        val isTrackingProtectionEnabled =
-                            tab.trackingProtection.enabled && !contains
-                        val directions =
-                            BrowserFragmentDirections.actionGlobalQuickSettingsSheetDialogFragment(
-                                sessionId = tab.id,
-                                url = tab.content.url,
-                                title = tab.content.title,
-                                isLocalPdf = tab.content.url.isContentUrl(),
-                                isSecured = tab.content.securityInfo.isSecure,
-                                sitePermissions = sitePermissions,
-                                gravity = gravity,
-                                certificateName = tab.content.securityInfo.issuer,
-                                permissionHighlights = tab.content.permissionHighlights,
-                                isTrackingProtectionEnabled = isTrackingProtectionEnabled,
-                                cookieBannerUIMode = cookieBannerUIMode,
-                            )
-                        navController().navigate(directions)
+                ioScope.launch {
+                    val cookieBannerUIMode = cookieBannersStorage.getCookieBannerUIMode(
+                        tab = tab,
+                        isFeatureEnabledInPrivateMode = context.settings().shouldUseCookieBannerPrivateMode,
+                        publicSuffixList = context.components.publicSuffixList,
+                    )
+                    withContext(Dispatchers.Main) {
+                        fragment.runIfFragmentIsAttached {
+                            navController().popBackStack()
+                            val isTrackingProtectionEnabled =
+                                tab.trackingProtection.enabled && !contains
+                            val directions =
+                                BrowserFragmentDirections.actionGlobalQuickSettingsSheetDialogFragment(
+                                    sessionId = tab.id,
+                                    url = tab.content.url,
+                                    title = tab.content.title,
+                                    isLocalPdf = tab.content.url.isContentUrl(),
+                                    isSecured = tab.content.securityInfo.isSecure,
+                                    sitePermissions = sitePermissions,
+                                    gravity = gravity,
+                                    certificateName = tab.content.securityInfo.issuer,
+                                    permissionHighlights = tab.content.permissionHighlights,
+                                    isTrackingProtectionEnabled = isTrackingProtectionEnabled,
+                                    cookieBannerUIMode = cookieBannerUIMode,
+                                )
+                            navController().navigate(directions)
+                        }
                     }
                 }
             }

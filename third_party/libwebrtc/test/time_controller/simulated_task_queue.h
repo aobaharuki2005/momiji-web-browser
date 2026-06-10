@@ -12,7 +12,6 @@
 
 #include <deque>
 #include <map>
-#include <string>
 #include <vector>
 
 #include "absl/functional/any_invocable.h"
@@ -23,7 +22,7 @@
 #include "api/units/timestamp.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
-#include "test/time_controller/simulated_time_controller_impl.h"
+#include "test/time_controller/simulated_time_controller.h"
 
 namespace webrtc {
 
@@ -33,7 +32,7 @@ class SimulatedTaskQueue : public TaskQueueBase,
   SimulatedTaskQueue(sim_time_impl::SimulatedTimeControllerImpl* handler,
                      absl::string_view name);
 
-  ~SimulatedTaskQueue() override;
+  ~SimulatedTaskQueue();
 
   void RunReady(Timestamp at_time) override;
 
@@ -44,7 +43,6 @@ class SimulatedTaskQueue : public TaskQueueBase,
   TaskQueueBase* GetAsTaskQueue() override { return this; }
 
   // TaskQueueBase interface
-  absl::string_view queue_name() const override { return name_; }
   void Delete() override;
   void PostTaskImpl(absl::AnyInvocable<void() &&> task,
                     const PostTaskTraits& traits,
@@ -56,7 +54,8 @@ class SimulatedTaskQueue : public TaskQueueBase,
 
  private:
   sim_time_impl::SimulatedTimeControllerImpl* const handler_;
-  const std::string name_;
+  // Using char* to be debugger friendly.
+  char* name_;
 
   mutable Mutex lock_;
 

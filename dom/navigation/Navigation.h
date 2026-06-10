@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_Navigation_h_
-#define mozilla_dom_Navigation_h_
+#ifndef mozilla_dom_Navigation_h___
+#define mozilla_dom_Navigation_h___
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -28,7 +30,6 @@ class NavigationTransition;
 struct NavigationUpdateCurrentEntryOptions;
 struct NavigationReloadOptions;
 struct NavigationResult;
-class PreviousSessionHistoryInfo;
 
 class SessionHistoryInfo;
 
@@ -58,8 +59,6 @@ struct NavigationAPIMethodTracker final : public nsISupports {
 
   Promise* CommittedPromise() { return mCommittedPromise; }
   Promise* FinishedPromise() { return mFinishedPromise; }
-
-  bool IsHandled() const;
 
   RefPtr<Navigation> mNavigationObject;
   Maybe<nsID> mKey;
@@ -137,35 +136,25 @@ class Navigation final : public DOMEventTargetHelper {
 
   // https://html.spec.whatwg.org/multipage/nav-history-apis.html#update-the-navigation-api-entries-for-reactivation
   MOZ_CAN_RUN_SCRIPT
-  void UpdateForReactivation(Span<const SessionHistoryInfo> aNewSHEs,
-                             const SessionHistoryInfo* aReactivatedEntry);
+  void UpdateForReactivation(SessionHistoryInfo* aReactivatedEntry);
 
-  MOZ_CAN_RUN_SCRIPT
+  // https://html.spec.whatwg.org/multipage/nav-history-apis.html#update-the-navigation-api-entries-for-a-same-document-navigation
   void UpdateEntriesForSameDocumentNavigation(
-      SessionHistoryInfo* aDestinationSHE, NavigationType aNavigationType,
-      bool aFiredNavigateEvent = true);
-
-  MOZ_CAN_RUN_SCRIPT void TruncateForwardEntries(uint32_t aNewLength);
-
-  MOZ_CAN_RUN_SCRIPT
-  void RunNavigateEventHandlerSteps(
-      NavigateEvent* aNavigateEvent,
-      NavigationAPIMethodTracker* aAPIMethodTracker);
+      SessionHistoryInfo* aDestinationSHE, NavigationType aNavigationType);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  // The Navigation API is only enabled if the dom.navigation.webidl.enabled
-  // pref is set.
+  // The Navigation API is only enabled if both SessionHistoryInParent and
+  // the dom.navigation.webidl.enabled pref are set.
   static bool IsAPIEnabled(JSContext* /* unused */ = nullptr,
                            JSObject* /* unused */ = nullptr);
 
-  enum class FinalStatus : uint8_t { Continue, Intercept, Prevent };
-
   // Wrapper algorithms for firing the navigate event.
   // https://html.spec.whatwg.org/#navigate-event-firing
+
   MOZ_CAN_RUN_SCRIPT bool FireTraverseNavigateEvent(
-      JSContext* aCx, nsDocShellLoadState* aLoadState,
+      JSContext* aCx, const SessionHistoryInfo& aDestinationSessionHistoryInfo,
       Maybe<UserNavigationInvolvement> aUserInvolvement);
 
   MOZ_CAN_RUN_SCRIPT bool FirePushReplaceReloadNavigateEvent(
@@ -196,15 +185,15 @@ class Navigation final : public DOMEventTargetHelper {
       JSContext* aCx, JS::Handle<JS::Value> aError = JS::UndefinedHandleValue);
 
   MOZ_CAN_RUN_SCRIPT
-  void AbortNavigateEvent(JSContext* aCx, const NavigateEvent* aEvent,
+  void AbortNavigateEvent(JSContext* aCx, NavigateEvent* aEvent,
                           JS::Handle<JS::Value> aReason);
 
   MOZ_CAN_RUN_SCRIPT
   void InformAboutChildNavigableDestruction(JSContext* aCx);
 
   void CreateNavigationActivationFrom(
-      const Maybe<PreviousSessionHistoryInfo>& aPreviousEntryForActivation,
-      Maybe<NavigationType> aNavigationType);
+      SessionHistoryInfo* aPreviousEntryForActivation,
+      NavigationType aNavigationType);
 
   void SetSerializedStateIntoOngoingAPIMethodTracker(
       nsIStructuredCloneContainer* aSerializedState);
@@ -235,13 +224,9 @@ class Navigation final : public DOMEventTargetHelper {
       FormData* aFormDataEntryList,
       nsIStructuredCloneContainer* aClassicHistoryAPIState,
       const nsAString& aDownloadRequestFilename,
-      NavigationAPIMethodTracker* aNavigationAPIMethodTracker = nullptr,
-      nsDocShellLoadState* aLoadState = nullptr);
+      NavigationAPIMethodTracker* aNavigationAPIMethodTracker = nullptr);
 
   NavigationHistoryEntry* FindNavigationHistoryEntry(
-      const SessionHistoryInfo& aSessionHistoryInfo) const;
-
-  Maybe<size_t> GetNavigationEntryIndex(
       const SessionHistoryInfo& aSessionHistoryInfo) const;
 
   RefPtr<NavigationAPIMethodTracker> SetUpNavigateReloadAPIMethodTracker(
@@ -352,4 +337,4 @@ struct fmt::formatter<mozilla::dom::NavigationHistoryBehavior, char>
   }
 };
 
-#endif  // mozilla_dom_Navigation_h_
+#endif  // mozilla_dom_Navigation_h___

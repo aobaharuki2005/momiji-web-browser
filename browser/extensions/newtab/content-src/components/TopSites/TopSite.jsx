@@ -22,7 +22,6 @@ import { TopSiteImpressionWrapper } from "./TopSiteImpressionWrapper";
 import { connect } from "react-redux";
 import { MessageWrapper } from "../MessageWrapper/MessageWrapper";
 import { ShortcutFeatureHighlight } from "../DiscoveryStreamComponents/FeatureHighlight/ShortcutFeatureHighlight";
-import { shouldShowOMCHighlight } from "../../lib/asrouter-message-utils.mjs";
 
 const SPOC_TYPE = "SPOC";
 const NEWTAB_SOURCE = "newtab";
@@ -42,17 +41,17 @@ export class TopSiteLink extends React.PureComponent {
     this.state = { screenshotImage: null };
     this.onDragEvent = this.onDragEvent.bind(this);
     this.onKeyPress = this.onKeyPress.bind(this);
+    this.shouldShowOMCHighlight = this.shouldShowOMCHighlight.bind(this);
   }
 
   /*
    * Helper to determine whether the drop zone should allow a drop. We only allow
    * dropping top sites for now. We don't allow dropping on sponsored top sites
-   * or the add shortcut button as their position is fixed.
+   * as their position is fixed.
    */
   _allowDrop(e) {
     return (
-      (this.dragged ||
-        (!isSponsored(this.props.link) && !this.props.isAddButton)) &&
+      (this.dragged || !isSponsored(this.props.link)) &&
       e.dataTransfer.types.includes("text/topsite-index")
     );
   }
@@ -103,7 +102,18 @@ export class TopSiteLink extends React.PureComponent {
     }
   }
 
-  static getDerivedStateFromProps(nextProps, prevState) {
+  /**
+   * Helper to obtain the next state based on nextProps and prevState.
+   *
+   * NOTE: Rename this method to getDerivedStateFromProps when we update React
+   *       to >= 16.3. We will need to update tests as well. We cannot rename this
+   *       method to getDerivedStateFromProps now because there is a mismatch in
+   *       the React version that we are using for both testing and production.
+   *       (i.e. react-test-render => "16.3.2", react => "16.2.0").
+   *
+   * See https://github.com/airbnb/enzyme/blob/master/packages/enzyme-adapter-react-16/package.json#L43.
+   */
+  static getNextStateFromProps(nextProps, prevState) {
     const { screenshot } = nextProps.link;
     const imageInState = ScreenshotUtils.isRemoteImageLocal(
       prevState.screenshotImage,
@@ -119,6 +129,26 @@ export class TopSiteLink extends React.PureComponent {
     return {
       screenshotImage: ScreenshotUtils.createLocalImageObject(screenshot),
     };
+  }
+
+  // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+  componentWillMount() {
+    const nextState = TopSiteLink.getNextStateFromProps(this.props, this.state);
+    if (nextState) {
+      this.setState(nextState);
+    }
+  }
+
+  // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+  componentWillReceiveProps(nextProps) {
+    const nextState = TopSiteLink.getNextStateFromProps(nextProps, this.state);
+    if (nextState) {
+      this.setState(nextState);
+    }
   }
 
   componentWillUnmount() {
@@ -220,6 +250,14 @@ export class TopSiteLink extends React.PureComponent {
       imageClassName,
       selectedColor,
     };
+  }
+
+  shouldShowOMCHighlight(componentId) {
+    const messageData = this.props.Messages?.messageData;
+    if (!messageData || Object.keys(messageData).length === 0) {
+      return false;
+    }
+    return messageData?.content?.messageType === componentId;
   }
 
   render() {
@@ -358,6 +396,7 @@ export class TopSiteLink extends React.PureComponent {
             {...(link.isPinned && { ...addPinnedTitlel10n })}
             data-l10n-args={JSON.stringify({ title })}
           >
+            {link.isPinned && <div className="icon icon-pin-small" />}
             <div className="tile" aria-hidden={true}>
               <div
                 className={
@@ -378,7 +417,6 @@ export class TopSiteLink extends React.PureComponent {
                 )}
               </div>
             </div>
-            {link.isPinned && <div className="icon icon-pin-small" />}
             <div
               className={`title${link.isPinned ? " has-icon pinned" : ""}${
                 link.type === SPOC_TYPE || link.show_sponsored_label
@@ -394,7 +432,7 @@ export class TopSiteLink extends React.PureComponent {
                 {link.searchTopSite && (
                   <div className="top-site-icon search-topsite" />
                 )}
-                {title}
+                {title || <br />}
               </span>
               <span
                 className="sponsored-label"
@@ -402,23 +440,19 @@ export class TopSiteLink extends React.PureComponent {
               />
             </div>
           </a>
-          {isAddButton &&
-            shouldShowOMCHighlight(
-              this.props.Messages,
-              "ShortcutHighlight"
-            ) && (
-              <MessageWrapper
+          {isAddButton && this.shouldShowOMCHighlight("ShortcutHighlight") && (
+            <MessageWrapper
+              dispatch={this.props.dispatch}
+              onClick={e => e.stopPropagation()}
+            >
+              <ShortcutFeatureHighlight
                 dispatch={this.props.dispatch}
-                onClick={e => e.stopPropagation()}
-              >
-                <ShortcutFeatureHighlight
-                  dispatch={this.props.dispatch}
-                  feature="FEATURE_SHORTCUT_HIGHLIGHT"
-                  position="inset-block-end inset-inline-start"
-                  messageData={this.props.Messages?.messageData}
-                />
-              </MessageWrapper>
-            )}
+                feature="FEATURE_SHORTCUT_HIGHLIGHT"
+                position="inset-block-end inset-inline-start"
+                messageData={this.props.Messages?.messageData}
+              />
+            </MessageWrapper>
+          )}
           {children}
           {impressionStats}
         </div>
@@ -729,10 +763,10 @@ export class _TopSiteList extends React.PureComponent {
     this.onKeyDown = this.onKeyDown.bind(this);
   }
 
-  componentDidUpdate(prevProps) {
+  componentWillReceiveProps(nextProps) {
     if (this.state.draggedSite) {
-      const prevTopSites = prevProps.TopSites && prevProps.TopSites.rows;
-      const newTopSites = this.props.TopSites && this.props.TopSites.rows;
+      const prevTopSites = this.props.TopSites && this.props.TopSites.rows;
+      const newTopSites = nextProps.TopSites && nextProps.TopSites.rows;
       if (
         prevTopSites &&
         prevTopSites[this.state.draggedIndex] &&
@@ -743,7 +777,6 @@ export class _TopSiteList extends React.PureComponent {
             this.state.draggedSite.url)
       ) {
         // We got the new order from the redux store via props. We can clear state now.
-        // eslint-disable-next-line react/no-did-update-set-state
         this.setState(_TopSiteList.DEFAULT_STATE);
       }
     }
@@ -817,36 +850,18 @@ export class _TopSiteList extends React.PureComponent {
   _getTopSites() {
     // Make a copy of the sites to truncate or extend to desired length
     let topSites = this.props.TopSites.rows.slice();
-    topSites.length =
-      (this.props.TopSitesRows ?? 0) *
-      (this.props.topSitesMaxSitesPerRow ?? TOP_SITES_MAX_SITES_PER_ROW);
+    topSites.length = this.props.TopSitesRows * TOP_SITES_MAX_SITES_PER_ROW;
     // if topSites do not fill an entire row add 'Add shortcut' button to array of topSites
     // (there should only be one of these)
-    const addButtonIndex = topSites.findIndex(site => site?.isAddButton);
-
-    // Find the position right after the last regular shortcut
-    let targetPosition = topSites.length - 1;
-    for (let i = topSites.length - 1; i >= 0; i--) {
-      if (topSites[i] && !topSites[i].isAddButton) {
-        targetPosition = i + 1;
-        break;
-      }
+    let firstPlaceholder = topSites.findIndex(Object.is.bind(null, undefined));
+    // make sure placeholder exists and there already isnt a add button
+    if (firstPlaceholder && !topSites.includes(site => site.isAddButton)) {
+      topSites[firstPlaceholder] = { isAddButton: true };
+    } else if (topSites.includes(site => site.isAddButton)) {
+      topSites.push(
+        topSites.splice(topSites.indexOf({ isAddButton: true }), 1)[0]
+      );
     }
-
-    if (addButtonIndex === -1) {
-      // No add button exists yet, insert it at target position if it's within bounds
-      if (targetPosition < topSites.length) {
-        topSites[targetPosition] = { isAddButton: true };
-      }
-    } else if (addButtonIndex !== targetPosition) {
-      // Add button exists but not at the end, move it
-      const [button] = topSites.splice(addButtonIndex, 1);
-      // Adjust target if we removed something before it
-      const adjustedTarget =
-        addButtonIndex < targetPosition ? targetPosition - 1 : targetPosition;
-      topSites[adjustedTarget] = button;
-    }
-
     return topSites;
   }
 
@@ -858,12 +873,10 @@ export class _TopSiteList extends React.PureComponent {
     const topSites = this._getTopSites();
     topSites[this.state.draggedIndex] = null;
     const preview = topSites.map(site =>
-      site && (site.isPinned || isSponsored(site) || site.isAddButton)
-        ? site
-        : null
+      site && (site.isPinned || isSponsored(site)) ? site : null
     );
     const unpinned = topSites.filter(
-      site => site && !site.isPinned && !isSponsored(site) && !site.isAddButton
+      site => site && !site.isPinned && !isSponsored(site)
     );
     const siteToInsert = Object.assign({}, this.state.draggedSite, {
       isPinned: true,
@@ -887,10 +900,7 @@ export class _TopSiteList extends React.PureComponent {
         index > this.state.draggedIndex ? holeIndex < index : holeIndex > index
       ) {
         let nextIndex = holeIndex + shiftingStep;
-        while (
-          preview[nextIndex] &&
-          (isSponsored(preview[nextIndex]) || preview[nextIndex].isAddButton)
-        ) {
+        while (isSponsored(preview[nextIndex])) {
           nextIndex += shiftingStep;
         }
         preview[holeIndex] = preview[nextIndex];
@@ -965,9 +975,7 @@ export class _TopSiteList extends React.PureComponent {
 
     // On narrow viewports, we only show 6 sites per row. We'll mark the rest as
     // .hide-for-narrow to hide in CSS via @media query.
-    const novaEnabled = this.props.Prefs.values["nova.enabled"];
     const maxNarrowVisibleIndex = props.TopSitesRows * 6;
-    const maxSmallVisibleIndex = props.TopSitesRows * 8;
 
     for (let i = 0, l = topSites.length; i < l; i++) {
       const link =
@@ -977,24 +985,14 @@ export class _TopSiteList extends React.PureComponent {
         });
 
       const slotProps = {
-        key: link?.url || `hole-${holeIndex++}`,
+        key: link ? link.url : holeIndex++,
         index: i,
       };
-      // @nova-cleanup(remove-conditional): Remove classic path once Nova ships
-      if (novaEnabled) {
-        if (i >= maxSmallVisibleIndex) {
-          slotProps.className = "nova-hide-for-s";
-        } else if (i >= maxNarrowVisibleIndex) {
-          slotProps.className = "nova-hide-for-xs";
-        }
-      } else if (i >= maxSmallVisibleIndex) {
-        slotProps.className = "hide-for-small";
-      } else if (i >= maxNarrowVisibleIndex) {
+      if (i >= maxNarrowVisibleIndex) {
         slotProps.className = "hide-for-narrow";
       }
-      const { key: slotKey, ...restSlotProps } = slotProps;
 
-      let topSiteLink = null;
+      let topSiteLink;
       // Use a placeholder if the link is empty or it's rendering a sponsored
       // tile for the about:home startup cache.
       if (
@@ -1002,19 +1000,12 @@ export class _TopSiteList extends React.PureComponent {
         (props.App.isForStartupCache.TopSites && isSponsored(link))
       ) {
         if (link) {
-          topSiteLink = (
-            <TopSitePlaceholder
-              key={slotKey}
-              {...restSlotProps}
-              {...commonProps}
-            />
-          );
+          topSiteLink = <TopSitePlaceholder {...slotProps} {...commonProps} />;
         }
       } else if (topSites[i]?.isAddButton) {
         topSiteLink = (
           <TopSiteAddButton
-            key={slotKey}
-            {...restSlotProps}
+            {...slotProps}
             {...commonProps}
             setRef={
               i === this.state.focusedIndex
@@ -1034,11 +1025,10 @@ export class _TopSiteList extends React.PureComponent {
       } else {
         topSiteLink = (
           <TopSite
-            key={slotKey}
             link={link}
             activeIndex={this.state.activeIndex}
             onActivate={this.onActivate}
-            {...restSlotProps}
+            {...slotProps}
             {...commonProps}
             colors={props.colors}
             setRef={
@@ -1057,10 +1047,7 @@ export class _TopSiteList extends React.PureComponent {
         );
       }
 
-      // Skip empty slots — topSiteLink is null when there's no link and no placeholder.
-      if (topSiteLink) {
-        topSitesUI.push(topSiteLink);
-      }
+      topSitesUI.push(topSiteLink);
     }
     return (
       <div className="top-sites-list-wrapper">
@@ -1075,10 +1062,6 @@ export class _TopSiteList extends React.PureComponent {
           className={`top-sites-list${
             this.state.draggedSite ? " dnd-active" : ""
           }`}
-          style={{
-            "--top-sites-max-per-row":
-              this.props.topSitesMaxSitesPerRow ?? TOP_SITES_MAX_SITES_PER_ROW,
-          }}
         >
           {topSitesUI}
         </ul>

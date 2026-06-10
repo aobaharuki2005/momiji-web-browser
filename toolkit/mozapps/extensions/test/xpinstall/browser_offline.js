@@ -55,9 +55,9 @@ function finish_test(count) {
       "DOMContentLoaded",
       true
     ).then(async function () {
-      let url = await SpecialPowers.spawn(
+      let url = await ContentTask.spawn(
         tab.linkedBrowser,
-        [],
+        null,
         async function () {
           return content.document.documentURI;
         }

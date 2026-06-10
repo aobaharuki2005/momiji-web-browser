@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,6 +9,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsContentUtils.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIFrame.h"
@@ -169,13 +172,6 @@ nsIContent* AllChildrenIterator::Get() const {
       return marker;
     }
 
-    case Phase::AtCheckmarkKid: {
-      Element* checkmark = nsLayoutUtils::GetCheckmarkPseudo(Parent());
-      MOZ_ASSERT(checkmark,
-                 "No content checkmark frame at AtCheckmarkKid phase");
-      return checkmark;
-    }
-
     case Phase::AtBeforeKid: {
       Element* before = nsLayoutUtils::GetBeforePseudo(Parent());
       MOZ_ASSERT(before, "No content before frame at AtBeforeKid phase");
@@ -234,13 +230,6 @@ nsIContent* AllChildrenIterator::GetNextChild() {
       }
       [[fallthrough]];
     case Phase::AtMarkerKid:
-      if (Element* checkmarkContent =
-              nsLayoutUtils::GetCheckmarkPseudo(Parent())) {
-        mPhase = Phase::AtCheckmarkKid;
-        return checkmarkContent;
-      }
-      [[fallthrough]];
-    case Phase::AtCheckmarkKid:
       if (Element* beforeContent = nsLayoutUtils::GetBeforePseudo(Parent())) {
         mPhase = Phase::AtBeforeKid;
         return beforeContent;
@@ -317,13 +306,6 @@ nsIContent* AllChildrenIterator::GetPreviousChild() {
       }
       [[fallthrough]];
     case Phase::AtBeforeKid:
-      if (Element* checkmarkContent =
-              nsLayoutUtils::GetCheckmarkPseudo(Parent())) {
-        mPhase = Phase::AtCheckmarkKid;
-        return checkmarkContent;
-      }
-      [[fallthrough]];
-    case Phase::AtCheckmarkKid:
       if (Element* markerContent = nsLayoutUtils::GetMarkerPseudo(Parent())) {
         mPhase = Phase::AtMarkerKid;
         return markerContent;

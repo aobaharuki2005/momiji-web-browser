@@ -144,10 +144,11 @@ using SSEFunc = int64_t (*)(const uint8_t *a, int a_stride, const uint8_t *b,
                             int b_stride, int width, int height);
 
 struct TestSSEFuncs {
-  TestSSEFuncs(SSEFunc ref = nullptr, SSEFunc tst = nullptr)
-      : ref_func(ref), tst_func(tst) {}
+  TestSSEFuncs(SSEFunc ref = nullptr, SSEFunc tst = nullptr, int depth = 0)
+      : ref_func(ref), tst_func(tst), bit_depth(depth) {}
   SSEFunc ref_func;  // Pointer to reference function
   SSEFunc tst_func;  // Pointer to tested function
+  int bit_depth;
 };
 
 using SSETestParam = std::tuple<TestSSEFuncs, int>;

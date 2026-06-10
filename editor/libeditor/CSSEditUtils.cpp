@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -550,7 +551,7 @@ nsresult CSSEditUtils::GetSpecifiedCSSInlinePropertyBase(nsIContent& aContent,
     return NS_ERROR_INVALID_ARG;
   }
 
-  RefPtr decl = element->GetInlineStyleDeclaration();
+  RefPtr<DeclarationBlock> decl = element->GetInlineStyleDeclaration();
   if (!decl) {
     return NS_OK;
   }
@@ -561,7 +562,7 @@ nsresult CSSEditUtils::GetSpecifiedCSSInlinePropertyBase(nsIContent& aContent,
   MOZ_ASSERT(prop != eCSSProperty_UNKNOWN);
 
   nsAutoCString value;
-  Servo_DeclarationBlock_GetPropertyValueByNonCustomId(decl, prop, &value);
+  decl->GetPropertyValueById(prop, value);
   CopyUTF8toUTF16(value, aValue);
   return NS_OK;
 }

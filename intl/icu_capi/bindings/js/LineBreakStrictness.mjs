@@ -3,10 +3,11 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
- * See the [Rust documentation for `LineBreakStrictness`](https://docs.rs/icu/2.1.1/icu/segmenter/options/enum.LineBreakStrictness.html) for more information.
+ * See the [Rust documentation for `LineBreakStrictness`](https://docs.rs/icu/latest/icu/segmenter/options/enum.LineBreakStrictness.html) for more information.
  */
+
+
 export class LineBreakStrictness {
     #value = undefined;
 
@@ -46,7 +47,6 @@ export class LineBreakStrictness {
         throw TypeError(value + " is not a LineBreakStrictness and does not correspond to any of its enumerator values.");
     }
 
-    /** @internal */
     static fromValue(value) {
         return new LineBreakStrictness(value);
     }
@@ -55,7 +55,6 @@ export class LineBreakStrictness {
         return [...LineBreakStrictness.#values.keys()][this.#value];
     }
 
-    /** @internal */
     get ffiValue(){
         return this.#value;
     }

@@ -68,7 +68,7 @@ addRDMTask(TEST_COM_URL, async function ({ ui, browser, tab }) {
   );
 
   info("Check maxTouchPoints override persists after reload");
-  await reloadSelectedTab();
+  await reloadBrowser();
 
   is(
     await getMaxTouchPoints(browser),

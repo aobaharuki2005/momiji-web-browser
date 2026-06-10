@@ -28,12 +28,9 @@ const mockGlobal = {
 };
 const mockController = {
   _box: mockElement,
-  _enableLauncherDragging: sinon.stub(),
-  _disableLauncherDragging: sinon.stub(),
   hide: sinon.stub(),
-  launcherSplitter: { toggleAttribute: sinon.stub() },
   showInitially: sinon.stub(),
-  sidebarContainer: { documentGlobal: mockGlobal },
+  sidebarContainer: { ownerGlobal: mockGlobal },
   sidebarMain: mockLitElement,
   sidebarRevampEnabled: true,
   sidebarRevampVisibility: "always-show",
@@ -45,7 +42,7 @@ const mockController = {
 add_task(async function test_load_legacy_session_restore_data() {
   const sidebarState = new SidebarState(mockController);
 
-  sidebarState.loadCurrentState({
+  sidebarState.loadInitialState({
     width: "300px",
     command: "viewBookmarksSidebar",
     expanded: true,
@@ -65,7 +62,7 @@ add_task(async function test_load_legacy_session_restore_data() {
 add_task(async function test_load_prerevamp_session_restore_data() {
   const sidebarState = new SidebarState(mockController);
 
-  sidebarState.loadCurrentState({
+  sidebarState.loadInitialState({
     command: "viewBookmarksSidebar",
   });
 
@@ -82,7 +79,7 @@ add_task(async function test_load_prerevamp_session_restore_data() {
 add_task(async function test_load_hidden_panel_state() {
   const sidebarState = new SidebarState(mockController);
 
-  sidebarState.loadCurrentState({
+  sidebarState.loadInitialState({
     command: "viewBookmarksSidebar",
     panelOpen: false,
     launcherVisible: true,

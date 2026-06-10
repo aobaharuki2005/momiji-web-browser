@@ -20,8 +20,7 @@
         "returns": {
           "type": "object",
           "properties": {
-            "matches": { "type": "function" },
-            "patterns": { "type": "array", "items": { "type": "string" } }
+            "matches": { "type": "function" }
           }
         }
       }

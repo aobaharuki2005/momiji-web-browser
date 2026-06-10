@@ -106,8 +106,7 @@ enum Type { SK_RECORD_TYPES(ENUM) };
 
 #define ACT_AS_PTR(ptr)                 \
     operator T*() const { return ptr; } \
-    T* operator->() const { return ptr; } \
-    T* data() const { return ptr; }
+    T* operator->() const { return ptr; }
 
 // An Optional doesn't own the pointer's memory, but may need to destroy non-POD data.
 template <typename T>
@@ -335,7 +334,7 @@ RECORD(DrawAtlas, kDraw_Tag|kHasImage_Tag|kHasPaint_Tag|kMultiDraw_Tag,
         PODArray<SkRSXform> xforms;
         PODArray<SkRect> texs;
         PODArray<SkColor> colors;
-        unsigned count;
+        int count;
         SkBlendMode mode;
         SkSamplingOptions sampling;
         Optional<SkRect> cull)

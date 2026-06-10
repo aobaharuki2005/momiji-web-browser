@@ -17,7 +17,7 @@
 class SkScopeExit {
 public:
     SkScopeExit() = default;
-    explicit SkScopeExit(std::function<void()> f) : fFn(std::move(f)) {}
+    SkScopeExit(std::function<void()> f) : fFn(std::move(f)) {}
     SkScopeExit(SkScopeExit&& that) : fFn(std::move(that.fFn)) {}
 
     ~SkScopeExit() {

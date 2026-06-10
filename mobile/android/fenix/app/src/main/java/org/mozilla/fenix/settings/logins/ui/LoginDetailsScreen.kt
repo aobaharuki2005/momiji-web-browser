@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -26,7 +24,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,19 +52,19 @@ import mozilla.components.compose.base.snackbar.Snackbar
 import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.compose.base.text.Text
 import mozilla.components.compose.base.textfield.TextField
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.simplifiedUrl
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 @Composable
 internal fun LoginDetailsScreen(store: LoginsStore) {
-    val state by store.stateFlow.collectAsState()
+    val state by store.observeAsState(store.state) { it }
     val detailState = state.loginsLoginDetailState ?: return
     val snackbarHostState = remember { SnackbarHostState() }
-    val scrollState = rememberScrollState()
+
     val deletionDialogState = state.loginDeletionDialogState
     if (deletionDialogState is LoginDeletionDialogState.Presenting) {
         LoginDeletionDialog(
@@ -96,8 +93,7 @@ internal fun LoginDetailsScreen(store: LoginsStore) {
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .fillMaxWidth()
-                .verticalScroll(scrollState),
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static200))
@@ -134,7 +130,7 @@ private fun LoginDetailTopBar(
         ),
         title = {
             Text(
-                text = loginItem.url.simplifiedUrl(),
+                text = loginItem.getDomainName(),
                 style = FirefoxTheme.typography.headline5,
             )
         },
@@ -287,13 +283,19 @@ private fun LoginDetailsPassword(
     val coroutineScope = rememberCoroutineScope()
     val passwordSnackbarText = stringResource(R.string.logins_password_copied)
 
+    Text(
+        text = stringResource(R.string.preferences_passwords_saved_logins_password),
+        modifier = Modifier
+            .padding(horizontal = FirefoxTheme.layout.space.static200)
+            .width(FirefoxTheme.layout.size.containerMaxWidth),
+    )
+
     TextField(
         value = password,
         onValueChange = {},
         isEnabled = false,
         placeholder = "",
         errorText = "",
-        label = stringResource(R.string.preferences_passwords_saved_logins_password),
         modifier = Modifier
             .padding(horizontal = FirefoxTheme.layout.space.static200)
             .wrapContentHeight()
@@ -310,10 +312,7 @@ private fun LoginDetailsPassword(
                     Text.Resource(R.string.saved_login_reveal_password)
                 },
                 isPasswordVisible = isPasswordVisible,
-                onTrailingIconClick = {
-                    isPasswordVisible = !isPasswordVisible
-                    store.dispatch(DetailLoginAction.PasswordVisibilityChanged(isPasswordVisible))
-                },
+                onTrailingIconClick = { isPasswordVisible = !isPasswordVisible },
             )
 
             IconButton(
@@ -399,7 +398,7 @@ private fun createStore() = LoginsStore(
 @FlexibleWindowPreview
 @Composable
 private fun LoginDetailsScreenPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         LoginDetailsScreen(store = createStore())
@@ -409,7 +408,7 @@ private fun LoginDetailsScreenPreview(
 @Preview
 @Composable
 private fun LoginDeletionDialogPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         LoginDeletionDialog(

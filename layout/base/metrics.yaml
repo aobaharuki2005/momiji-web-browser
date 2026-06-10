@@ -27,6 +27,7 @@ layout:
       - gfx-telemetry-alerts@mozilla.com
       - rhunt@mozilla.com
     expires: never
+    telemetry_mirror: REFRESH_DRIVER_TICK
 
   paint_rasterize_time:
     type: timing_distribution
@@ -44,6 +45,7 @@ layout:
       - gfx-telemetry-alerts@mozilla.com
       - rhunt@mozilla.com
     expires: never
+    telemetry_mirror: PAINT_RASTERIZE_TIME
 
   refresh_driver_chrome_frame_delay:
     type: timing_distribution
@@ -63,6 +65,7 @@ layout:
       - gfx-telemetry-alerts@mozilla.com
       - rhunt@mozilla.com
     expires: never
+    telemetry_mirror: FX_REFRESH_DRIVER_CHROME_FRAME_DELAY_MS
 
   refresh_driver_content_frame_delay:
     type: timing_distribution
@@ -82,6 +85,7 @@ layout:
       - gfx-telemetry-alerts@mozilla.com
       - rhunt@mozilla.com
     expires: never
+    telemetry_mirror: FX_REFRESH_DRIVER_CONTENT_FRAME_DELAY_MS
 
   input_event_response:
     type: timing_distribution
@@ -95,13 +99,14 @@ layout:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1235908
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1511919
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2025565
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1235908
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1511919
     notification_emails:
       - perf-telemetry-alerts@mozilla.com
+      - chutten@mozilla.com
     expires: never
+    telemetry_mirror: INPUT_EVENT_RESPONSE_MS
 
   input_event_response_coalesced:
     type: timing_distribution
@@ -115,13 +120,15 @@ layout:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1357457
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2025565
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1357457
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
     notification_emails:
       - perf-telemetry-alerts@mozilla.com
+      - chutten@mozilla.com
+      - gfritzsche@mozilla.com
     expires: never
+    telemetry_mirror: INPUT_EVENT_RESPONSE_COALESCED_MS
 
   load_input_event_response:
     type: timing_distribution
@@ -134,12 +141,12 @@ layout:
     time_unit: millisecond
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1298101
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2025565
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1298101
     notification_emails:
       - perf-telemetry-alerts@mozilla.com
     expires: never
+    telemetry_mirror: LOAD_INPUT_EVENT_RESPONSE_MS
 
   long_reflow_interruptible:
     type: labeled_counter
@@ -158,6 +165,7 @@ layout:
     notification_emails:
       - perf-telemetry-alerts@mozilla.com
     expires: never
+    telemetry_mirror: h#LONG_REFLOW_INTERRUPTIBLE
 
   time_to_first_interaction:
     type: timing_distribution
@@ -178,6 +186,7 @@ layout:
     notification_emails:
       - perf-telemetry-alerts@mozilla.com
     expires: never
+    telemetry_mirror: TIME_TO_FIRST_INTERACTION_MS
 
   input_event_queued_click:
     type: timing_distribution
@@ -195,6 +204,7 @@ layout:
     notification_emails:
       - bschouten@mozilla.com
     expires: never
+    telemetry_mirror: INPUT_EVENT_QUEUED_CLICK_MS
 
   input_event_queued_keyboard:
     type: timing_distribution
@@ -212,3 +222,4 @@ layout:
     notification_emails:
       - bschouten@mozilla.com
     expires: never
+    telemetry_mirror: INPUT_EVENT_QUEUED_KEYBOARD_MS

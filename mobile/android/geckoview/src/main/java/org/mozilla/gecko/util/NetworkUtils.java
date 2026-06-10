@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -11,7 +12,7 @@ import android.telephony.TelephonyManager;
 public class NetworkUtils {
   /*
    * Keep the below constants in sync with
-   * http://searchfox.org/firefox-main/source/netwerk/base/nsINetworkLinkService.idl
+   * http://searchfox.org/mozilla-central/source/netwerk/base/nsINetworkLinkService.idl
    */
   public enum ConnectionSubType {
     CELL_2G("2g"),
@@ -31,7 +32,7 @@ public class NetworkUtils {
 
   /*
    * Keep the below constants in sync with
-   * http://searchfox.org/firefox-main/source/netwerk/base/nsINetworkLinkService.idl
+   * http://searchfox.org/mozilla-central/source/netwerk/base/nsINetworkLinkService.idl
    */
   public enum NetworkStatus {
     UP("up"),

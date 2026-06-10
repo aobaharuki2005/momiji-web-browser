@@ -74,10 +74,7 @@ class FakeNetworkManager : public NetworkManagerBase {
       std::optional<AdapterType> underlying_vpn_adapter_type = std::nullopt) {
     SocketAddress address(if_name, 0);
     address.SetResolvedIP(iface.ipaddr());
-    ifaces_.push_back(
-        {.socket_address = address,
-         .adapter_type = type,
-         .underlying_vpn_adapter_type = underlying_vpn_adapter_type});
+    ifaces_.push_back({address, type, underlying_vpn_adapter_type});
     DoUpdateNetworks();
   }
 
@@ -103,7 +100,7 @@ class FakeNetworkManager : public NetworkManagerBase {
           SafeTask(safety_flag_, [this] { DoUpdateNetworks(); }));
     } else if (sent_first_update_) {
       network_thread_->PostTask(
-          SafeTask(safety_flag_, [this] { NotifyNetworksChanged(); }));
+          SafeTask(safety_flag_, [this] { SignalNetworksChanged(); }));
     }
   }
 
@@ -148,7 +145,7 @@ class FakeNetworkManager : public NetworkManagerBase {
     bool changed;
     MergeNetworkList(std::move(networks), &changed);
     if (changed || !sent_first_update_) {
-      NotifyNetworksChanged();
+      SignalNetworksChanged();
       sent_first_update_ = true;
     }
   }

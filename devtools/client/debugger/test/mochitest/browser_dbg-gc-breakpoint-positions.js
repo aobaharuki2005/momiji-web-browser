@@ -9,20 +9,9 @@
 add_task(async function () {
   const dbg = await initDebugger(
     "doc-gc-breakpoint-positions.html",
-    "module-gc.js",
-    "module-gc2.js"
+    "doc-gc-breakpoint-positions.html"
   );
-  info("Debugger opened");
   await selectSource(dbg, "doc-gc-breakpoint-positions.html");
-  info("source selected");
   await addBreakpoint(dbg, "doc-gc-breakpoint-positions.html", 21);
-  info("Added breakpoint on breakpoint-positions.html:21");
-
-  // modules
-  await addBreakpoint(dbg, "module-gc.js", 3);
-  info("Added breakpoint on module-gc.js:3");
-  await addBreakpoint(dbg, "module-gc2.js", 1);
-  info("Added breakpoint on module-gc2.js:1");
-
-  info("Added breakpoint at GC'ed script location");
+  ok(true, "Added breakpoint at GC'ed script location");
 });

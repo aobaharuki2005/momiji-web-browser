@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -181,7 +183,6 @@ EXTRA_JS_MODULES += [
     "Integration.sys.mjs",
     "JSONFile.sys.mjs",
     "JsonSchema.sys.mjs",
-    "KeyboardLockUtils.sys.mjs",
     "KeywordUtils.sys.mjs",
     "LayoutUtils.sys.mjs",
     "Log.sys.mjs",
@@ -201,7 +202,6 @@ EXTRA_JS_MODULES += [
     "RemotePageAccessManager.sys.mjs",
     "ResetProfile.sys.mjs",
     "RustSharedRemoteSettingsService.sys.mjs",
-    "ScheduledTask.sys.mjs",
     "SelectionUtils.sys.mjs",
     "ServiceRequest.sys.mjs",
     "ShortcutUtils.sys.mjs",
@@ -217,7 +217,6 @@ EXTRA_JS_MODULES += [
 MOZ_SRC_FILES += [
     "ColorPickerPanel.sys.mjs",
     "DateTimePickerPanel.sys.mjs",
-    "FaviconUtils.sys.mjs",
     "InputPickerPanelCommon.sys.mjs",
 ]
 
@@ -263,11 +262,6 @@ if "Android" != CONFIG["OS_TARGET"]:
         "subprocess",
     ]
 
-if CONFIG["OS_TARGET"] not in ("Android", "WINNT"):
-    DEFINES["MOZ_GOOGLE_LOCATION_SERVICE_API_KEY"] = (
-        CONFIG["MOZ_GOOGLE_LOCATION_SERVICE_API_KEY"] or ""
-    )
-
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXTRA_JS_MODULES += [
         "WindowsLaunchOnLogin.sys.mjs",
@@ -282,6 +276,7 @@ for var in (
     "MOZ_APP_VERSION_DISPLAY",
     "MOZ_BING_API_CLIENTID",
     "MOZ_BING_API_KEY",
+    "MOZ_GOOGLE_LOCATION_SERVICE_API_KEY",
     "MOZ_GOOGLE_SAFEBROWSING_API_KEY",
     "MOZ_MACBUNDLE_ID",
     "MOZ_MACBUNDLE_NAME",
@@ -341,12 +336,14 @@ for var in (
     "MOZ_ALLOW_ADDON_SIDELOAD",
     "MOZ_WEBEXT_WEBIDL_ENABLED",
     "MOZ_GECKOVIEW_HISTORY",
+    "MOZ_GECKO_PROFILER",
     "MOZ_CODE_COVERAGE",
     "ENABLE_WEBDRIVER",
     "MOZ_GLEAN_ANDROID",
     "MOZ_JXL",
     "MOZ_SYSTEM_POLICIES",
     "MOZ_SELECTABLE_PROFILES",
+    "BROWSER_NEWTAB_AS_ADDON",
     "USE_LIBZ_RS",
     "MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS",
 ):
@@ -365,5 +362,4 @@ XPIDL_MODULE = "toolkit_modules"
 
 MOZ_SRC_FILES += [
     "PrefUtils.sys.mjs",
-    "WebAuthnPromptHelper.sys.mjs",
 ]

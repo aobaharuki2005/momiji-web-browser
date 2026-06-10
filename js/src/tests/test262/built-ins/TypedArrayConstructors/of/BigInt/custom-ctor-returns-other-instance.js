@@ -13,13 +13,13 @@ info: |
   ...
   5. Let newObj be ? TypedArrayCreate(C, « len »).
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var result;
-  var custom = new TA(makeCtorArg(3));
+  var custom = new TA(3);
   var ctor = function() {
     return custom;
   };

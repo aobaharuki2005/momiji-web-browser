@@ -23,6 +23,7 @@ NSS 3.15.2 release notes
    -  Source tarballs:
       https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_15_2_RTM/src/
 
+.. _security_advisories:
 
 `Security Advisories <#security_advisories>`__
 ----------------------------------------------
@@ -40,6 +41,7 @@ NSS 3.15.2 release notes
 `New in NSS 3.15.2 <#new_in_nss_3.15.2>`__
 ------------------------------------------
 
+.. _new_functionality:
 
 `New Functionality <#new_functionality>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -55,14 +57,17 @@ NSS 3.15.2 release notes
       -  TLS_RSA_WITH_AES_128_GCM_SHA256
 
    .. rubric:: New Functions
+      :name: new_functions
 
    PK11_CipherFinal has been introduced, which is a simple alias for PK11_DigestFinal.
 
    .. rubric:: New Types
+      :name: new_types
 
    No new types have been introduced.
 
    .. rubric:: New PKCS #11 Mechanisms
+      :name: new_pkcs_11_mechanisms
 
    No new PKCS#11 mechanisms have been introduced
 

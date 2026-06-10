@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,7 +16,10 @@ template <size_t id = 0>
 class WebGLMethodDispatcher
     : public EmptyMethodDispatcher<WebGLMethodDispatcher> {};
 
-#define DEFINE_METHOD_DISPATCHER(_ID, _METHOD, _FLAGS)          \
+template <typename MethodT, MethodT Method>
+size_t IdByMethod();
+
+#define DEFINE_METHOD_DISPATCHER(_ID, _METHOD)                  \
   template <>                                                   \
   class WebGLMethodDispatcher<_ID>                              \
       : public MethodDispatcher<WebGLMethodDispatcher, _ID,     \
@@ -24,14 +28,13 @@ class WebGLMethodDispatcher
     static inline const char* Name() { return #_METHOD; }       \
   };                                                            \
   template <>                                                   \
-  inline WebGLMethodInfo                                        \
-  WebGLMethodInfo::Get<decltype(&_METHOD), &_METHOD>() {        \
-    return {_ID, _FLAGS};                                       \
+  inline size_t IdByMethod<decltype(&_METHOD), &_METHOD>() {    \
+    return _ID;                                                 \
   }
 
 // Defines each method the WebGLMethodDispatcher handles.  The COUNTER value
 // is used as a cross-process ID for each of the methods.
-#define DEFINE_ASYNC(_METHOD) DEFINE_METHOD_DISPATCHER(__COUNTER__, _METHOD, 0)
+#define DEFINE_ASYNC(_METHOD) DEFINE_METHOD_DISPATCHER(__COUNTER__, _METHOD)
 
 DEFINE_ASYNC(HostWebGLContext::CreateBuffer)
 DEFINE_ASYNC(HostWebGLContext::CreateFramebuffer)

@@ -148,9 +148,6 @@ async function jsCacheContentTask(test, item) {
   if (item.sri) {
     script.integrity = item.sri;
   }
-  if (item.nonce) {
-    script.nonce = item.nonce;
-  }
   script.src = item.file;
   content.document.body.appendChild(script);
 
@@ -213,32 +210,6 @@ async function runJSCacheTests(tests) {
           if (item.clearDisk) {
             info("clear disk cache");
             Services.cache2.clear();
-          }
-          if (item.memoryPressureLowMemory) {
-            info("notifying memory pressure low-memory");
-            await SpecialPowers.spawn(browser, [], () => {
-              Services.obs.notifyObservers(
-                null,
-                "memory-pressure",
-                "low-memory"
-              );
-            });
-          }
-          if (item.memoryPressureHeapMinimize) {
-            info("notifying memory pressure heap-minimize");
-            await SpecialPowers.spawn(browser, [], () => {
-              Services.obs.notifyObservers(
-                null,
-                "memory-pressure",
-                "heap-minimize"
-              );
-            });
-          }
-          if (item.memoryPressureStop) {
-            info("notifying memory pressure stop");
-            await SpecialPowers.spawn(browser, [], () => {
-              Services.obs.notifyObservers(null, "memory-pressure-stop");
-            });
           }
           const result = await SpecialPowers.spawn(
             browser,

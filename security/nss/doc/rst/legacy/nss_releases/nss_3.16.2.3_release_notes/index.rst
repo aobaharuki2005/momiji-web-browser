@@ -35,6 +35,7 @@ NSS 3.16.2.3 release notes
    This patch release fixes a bug and contains a backport of the TLS_FALLBACK_SCSV feature, which
    was originally made available in NSS 3.17.1.
 
+.. _new_functionality:
 
 `New Functionality <#new_functionality>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -45,6 +46,7 @@ NSS 3.16.2.3 release notes
       is a signaling cipher suite value that indicates a handshake is the result of TLS version
       fallback.
 
+.. _new_macros:
 
 `New Macros <#new_macros>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

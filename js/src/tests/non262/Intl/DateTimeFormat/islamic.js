@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 function civilDate(options, date) {
     var opts = Object.assign({timeZone: "Asia/Riyadh"}, options);
     return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-civil-nu-latn", opts).format(date);

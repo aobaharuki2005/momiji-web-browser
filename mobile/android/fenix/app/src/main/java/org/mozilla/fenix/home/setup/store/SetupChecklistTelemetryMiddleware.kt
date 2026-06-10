@@ -59,9 +59,7 @@ class DefaultSetupChecklistTelemetryRecorder : SetupChecklistTelemetryRecorder {
      */
     override fun taskClicked(task: ChecklistItem.Task) {
         Onboarding.setupChecklistTaskClicked.record(
-            Onboarding.SetupChecklistTaskClickedExtra(
-                taskId = task.type.telemetryName,
-            ),
+            Onboarding.SetupChecklistTaskClickedExtra(task.type.telemetryName),
         )
     }
 }

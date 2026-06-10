@@ -1,3 +1,4 @@
+// vim: set ts=2 sw=2 sts=2 tw=80:
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -69,7 +70,16 @@ export function playSound(event) {
       return;
   }
 
+  if (soundUrl === "") {
+    return;
+  }
+
   if (soundUrl == "beep") {
     gSound.beep();
+  } else {
+    if (soundUrl == "default") {
+      soundUrl = "chrome://global/content/notfound.wav";
+    }
+    gSound.play(Services.io.newURI(soundUrl));
   }
 }

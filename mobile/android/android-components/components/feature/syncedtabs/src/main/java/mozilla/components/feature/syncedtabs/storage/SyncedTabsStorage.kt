@@ -5,9 +5,7 @@
 package mozilla.components.feature.syncedtabs.storage
 
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.debounce
@@ -43,7 +41,6 @@ class SyncedTabsStorage(
     private val tabsStorage: RemoteTabsStorage,
     private val maxActiveTime: Long,
     private val debounceMillis: Long = 1000L,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : SyncedTabsProvider {
     private var scope: CoroutineScope? = null
 
@@ -52,7 +49,7 @@ class SyncedTabsStorage(
      */
     @OptIn(FlowPreview::class)
     fun start() {
-        scope = store.flowScoped(dispatcher = dispatcher) { flow ->
+        scope = store.flowScoped { flow ->
             flow.distinctUntilChangedBy { it.toSyncTabState() }
                 .map { state ->
                     // TO-DO: https://github.com/mozilla-mobile/android-components/issues/5179

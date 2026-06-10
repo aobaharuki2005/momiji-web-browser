@@ -59,19 +59,19 @@ use std::{fmt, mem, ptr};
 /// use tokio::sync::Mutex;
 /// use std::sync::Arc;
 ///
-/// # #[tokio::main(flavor = "current_thread")]
-/// # async fn main() {
-/// let data1 = Arc::new(Mutex::new(0));
-/// let data2 = Arc::clone(&data1);
+/// #[tokio::main]
+/// async fn main() {
+///     let data1 = Arc::new(Mutex::new(0));
+///     let data2 = Arc::clone(&data1);
 ///
-/// tokio::spawn(async move {
-///     let mut lock = data2.lock().await;
+///     tokio::spawn(async move {
+///         let mut lock = data2.lock().await;
+///         *lock += 1;
+///     });
+///
+///     let mut lock = data1.lock().await;
 ///     *lock += 1;
-/// });
-///
-/// let mut lock = data1.lock().await;
-/// *lock += 1;
-/// # }
+/// }
 /// ```
 ///
 ///
@@ -79,28 +79,28 @@ use std::{fmt, mem, ptr};
 /// use tokio::sync::Mutex;
 /// use std::sync::Arc;
 ///
-/// # #[tokio::main(flavor = "current_thread")]
-/// # async fn main() {
-/// let count = Arc::new(Mutex::new(0));
+/// #[tokio::main]
+/// async fn main() {
+///     let count = Arc::new(Mutex::new(0));
 ///
-/// for i in 0..5 {
-///     let my_count = Arc::clone(&count);
-///     tokio::spawn(async move {
-///         for j in 0..10 {
-///             let mut lock = my_count.lock().await;
-///             *lock += 1;
-///             println!("{} {} {}", i, j, lock);
-///         }
-///     });
-/// }
-///
-/// loop {
-///     if *count.lock().await >= 50 {
-///         break;
+///     for i in 0..5 {
+///         let my_count = Arc::clone(&count);
+///         tokio::spawn(async move {
+///             for j in 0..10 {
+///                 let mut lock = my_count.lock().await;
+///                 *lock += 1;
+///                 println!("{} {} {}", i, j, lock);
+///             }
+///         });
 ///     }
+///
+///     loop {
+///         if *count.lock().await >= 50 {
+///             break;
+///         }
+///     }
+///     println!("Count hit 50.");
 /// }
-/// println!("Count hit 50.");
-/// # }
 /// ```
 /// There are a few things of note here to pay attention to in this example.
 /// 1. The mutex is wrapped in an [`Arc`] to allow it to be shared across
@@ -423,13 +423,13 @@ impl<T: ?Sized> Mutex<T> {
     /// ```
     /// use tokio::sync::Mutex;
     ///
-    /// # #[tokio::main(flavor = "current_thread")]
-    /// # async fn main() {
-    /// let mutex = Mutex::new(1);
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let mutex = Mutex::new(1);
     ///
-    /// let mut n = mutex.lock().await;
-    /// *n = 2;
-    /// # }
+    ///     let mut n = mutex.lock().await;
+    ///     *n = 2;
+    /// }
     /// ```
     pub async fn lock(&self) -> MutexGuard<'_, T> {
         let acquire_fut = async {
@@ -484,8 +484,6 @@ impl<T: ?Sized> Mutex<T> {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(not(target_family = "wasm"))]
-    /// # {
     /// use std::sync::Arc;
     /// use tokio::sync::Mutex;
     ///
@@ -512,7 +510,7 @@ impl<T: ?Sized> Mutex<T> {
     ///     let n = mutex.try_lock().unwrap();
     ///     assert_eq!(*n, 2);
     /// }
-    /// # }
+    ///
     /// ```
     #[track_caller]
     #[cfg(feature = "sync")]
@@ -543,8 +541,6 @@ impl<T: ?Sized> Mutex<T> {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(not(target_family = "wasm"))]
-    /// # {
     /// use std::sync::Arc;
     /// use tokio::sync::Mutex;
     ///
@@ -571,7 +567,7 @@ impl<T: ?Sized> Mutex<T> {
     ///     let n = mutex.try_lock().unwrap();
     ///     assert_eq!(*n, 2);
     /// }
-    /// # }
+    ///
     /// ```
     #[track_caller]
     #[cfg(feature = "sync")]
@@ -605,13 +601,13 @@ impl<T: ?Sized> Mutex<T> {
     /// use tokio::sync::Mutex;
     /// use std::sync::Arc;
     ///
-    /// # #[tokio::main(flavor = "current_thread")]
-    /// # async fn main() {
-    /// let mutex = Arc::new(Mutex::new(1));
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let mutex = Arc::new(Mutex::new(1));
     ///
-    /// let mut n = mutex.clone().lock_owned().await;
-    /// *n = 2;
-    /// # }
+    ///     let mut n = mutex.clone().lock_owned().await;
+    ///     *n = 2;
+    /// }
     /// ```
     ///
     /// [`Arc`]: std::sync::Arc
@@ -720,7 +716,10 @@ impl<T: ?Sized> Mutex<T> {
     /// }
     /// ```
     pub fn get_mut(&mut self) -> &mut T {
-        self.c.get_mut()
+        unsafe {
+            // Safety: This is https://github.com/rust-lang/rust/pull/76936
+            &mut *self.c.get()
+        }
     }
 
     /// Attempts to acquire the lock, and returns [`TryLockError`] if the lock
@@ -776,13 +775,13 @@ impl<T: ?Sized> Mutex<T> {
     /// ```
     /// use tokio::sync::Mutex;
     ///
-    /// # #[tokio::main(flavor = "current_thread")]
-    /// # async fn main() {
-    /// let mutex = Mutex::new(1);
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let mutex = Mutex::new(1);
     ///
-    /// let n = mutex.into_inner();
-    /// assert_eq!(n, 1);
-    /// # }
+    ///     let n = mutex.into_inner();
+    ///     assert_eq!(n, 1);
+    /// }
     /// ```
     pub fn into_inner(self) -> T
     where
@@ -850,7 +849,7 @@ impl<'a, T: ?Sized> MutexGuard<'a, T> {
     /// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     /// struct Foo(u32);
     ///
-    /// # #[tokio::main(flavor = "current_thread")]
+    /// # #[tokio::main]
     /// # async fn main() {
     /// let foo = Mutex::new(Foo(1));
     ///
@@ -898,7 +897,7 @@ impl<'a, T: ?Sized> MutexGuard<'a, T> {
     /// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     /// struct Foo(u32);
     ///
-    /// # #[tokio::main(flavor = "current_thread")]
+    /// # #[tokio::main]
     /// # async fn main() {
     /// let foo = Mutex::new(Foo(1));
     ///
@@ -948,7 +947,7 @@ impl<'a, T: ?Sized> MutexGuard<'a, T> {
     ///     guard
     /// }
     /// #
-    /// # #[tokio::main(flavor = "current_thread")]
+    /// # #[tokio::main]
     /// # async fn main() {
     /// #     let mutex = Mutex::new(0u32);
     /// #     let guard = mutex.lock().await;
@@ -1032,7 +1031,7 @@ impl<T: ?Sized> OwnedMutexGuard<T> {
     /// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     /// struct Foo(u32);
     ///
-    /// # #[tokio::main(flavor = "current_thread")]
+    /// # #[tokio::main]
     /// # async fn main() {
     /// let foo = Arc::new(Mutex::new(Foo(1)));
     ///
@@ -1080,7 +1079,7 @@ impl<T: ?Sized> OwnedMutexGuard<T> {
     /// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     /// struct Foo(u32);
     ///
-    /// # #[tokio::main(flavor = "current_thread")]
+    /// # #[tokio::main]
     /// # async fn main() {
     /// let foo = Arc::new(Mutex::new(Foo(1)));
     ///
@@ -1130,7 +1129,7 @@ impl<T: ?Sized> OwnedMutexGuard<T> {
     ///     guard
     /// }
     /// #
-    /// # #[tokio::main(flavor = "current_thread")]
+    /// # #[tokio::main]
     /// # async fn main() {
     /// #     let mutex = Arc::new(Mutex::new(0u32));
     /// #     let guard = mutex.lock_owned().await;

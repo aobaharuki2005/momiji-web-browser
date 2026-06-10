@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -72,7 +75,7 @@ static bool ConstructCCW(JSContext* cx, const JSClass* globalClasp,
 }
 
 class CCWTestTracer final : public JS::CallbackTracer {
-  bool onChild(JS::GCCellPtr thing, const char* name) override {
+  void onChild(JS::GCCellPtr thing, const char* name) override {
     numberOfThingsTraced++;
 
     printf("*thingp         = %p\n", thing.asCell());
@@ -84,8 +87,6 @@ class CCWTestTracer final : public JS::CallbackTracer {
     if (thing.asCell() != *expectedThingp || thing.kind() != expectedKind) {
       okay = false;
     }
-
-    return true;
   }
 
  public:
@@ -141,7 +142,7 @@ END_TEST(testTracingIncomingCCWs)
 
 static size_t countObjectWrappers(JS::Compartment* comp) {
   size_t count = 0;
-  for (auto iter = comp->objectWrapperMappings(); !iter.done(); iter.next()) {
+  for (JS::Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
     ++count;
   }
   return count;

@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.tabstray.browser
 
-import org.mozilla.fenix.tabstray.data.TabsTrayItem
+import mozilla.components.browser.state.state.TabSessionState
 
 /**
  * Contract for how all user interactions with the Inactive Tabs feature are to be handled.
@@ -14,16 +14,16 @@ interface InactiveTabsController {
     /**
      * Opens the provided inactive tab.
      *
-     * @param tab [TabsTrayItem.Tab] that was clicked.
+     * @param tab [TabSessionState] that was clicked.
      */
-    fun handleInactiveTabClicked(tab: TabsTrayItem.Tab)
+    fun handleInactiveTabClicked(tab: TabSessionState)
 
     /**
      * Closes the provided inactive tab.
      *
-     * @param tab [TabsTrayItem.Tab] that was clicked.
+     * @param tab [TabSessionState] that was clicked.
      */
-    fun handleCloseInactiveTabClicked(tab: TabsTrayItem.Tab)
+    fun handleCloseInactiveTabClicked(tab: TabSessionState)
 
     /**
      * Expands or collapses the inactive tabs section.

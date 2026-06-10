@@ -60,8 +60,6 @@ class HRTFPanner {
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  HRTFDatabaseLoader* DatabaseLoader() const { return m_databaseLoader; }
-
  private:
   // Given an azimuth angle in the range -180 -> +180, returns the corresponding
   // azimuth index for the database, and azimuthBlend which is an interpolation
@@ -69,7 +67,7 @@ class HRTFPanner {
   int calculateDesiredAzimuthIndexAndBlend(double azimuth,
                                            double& azimuthBlend);
 
-  const RefPtr<HRTFDatabaseLoader> m_databaseLoader;
+  RefPtr<HRTFDatabaseLoader> m_databaseLoader;
 
   float m_sampleRate;
 

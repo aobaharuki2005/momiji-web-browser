@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -729,9 +731,6 @@ void StorageDBParent::Init() {
   if (::mozilla::ipc::BackgroundParent::IsOtherProcessActor(actor)) {
     mObserverSink = new ObserverSink(this);
     mObserverSink->Start();
-    // Content processes are not trusted to supply a valid profile path; clear
-    // it so that StorageDBThread::Init derives the correct path itself.
-    mProfilePath.Truncate();
   }
 
   StorageDBThread* storageThread = StorageDBThread::Get(mPrivateBrowsingId);
@@ -817,7 +816,7 @@ class SyncLoadCacheHelper : public LocalStorageCacheBridge {
     *mRv = NS_ERROR_UNEXPECTED;
   }
 
-  virtual nsCString Origin() const override {
+  virtual const nsCString Origin() const override {
     return LocalStorageManager::CreateOrigin(mSuffix, mOrigin);
   }
   virtual const nsCString& OriginNoSuffix() const override { return mOrigin; }
@@ -1089,7 +1088,7 @@ class LoadRunnable : public Runnable {
 
 // StorageDBParent::CacheParentBridge
 
-nsCString StorageDBParent::CacheParentBridge::Origin() const {
+const nsCString StorageDBParent::CacheParentBridge::Origin() const {
   return LocalStorageManager::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
 }
 
@@ -1451,9 +1450,10 @@ BackgroundSessionStorageManager* SessionStorageManagerParent::GetManager()
 
 mozilla::ipc::IPCResult SessionStorageManagerParent::RecvClearStorages(
     const OriginAttributesPattern& aPattern, const nsACString& aOriginScope,
-    const DomainMatchingMode& aMode) {
+    const uint32_t& aMode) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
-  mBackgroundManager->ClearStorages(aPattern, aOriginScope, aMode);
+  mBackgroundManager->ClearStorages(aPattern, aOriginScope,
+                                    static_cast<DomainMatchingMode>(aMode));
   return IPC_OK();
 }
 

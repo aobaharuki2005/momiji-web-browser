@@ -24,6 +24,7 @@
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/transport/network_types.h"
+#include "api/units/data_rate.h"
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -57,6 +58,11 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
 
   ~TaskQueuePacedSender() override;
 
+  // The pacer is allowed to send enqued packets in bursts and can build up a
+  // packet "debt" that correspond to approximately the send rate during
+  // 'burst_interval'.
+  void SetSendBurstInterval(TimeDelta burst_interval);
+
   // A probe may be sent without first waing for a media packet.
   void SetAllowProbeWithoutMediaPacket(bool allow);
 
@@ -86,7 +92,7 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   void SetCongested(bool congested) override;
 
   // Sets the pacing rates. Must be called once before packets can be sent.
-  void SetConfig(const PacerConfig& pacer_config) override;
+  void SetPacingRates(DataRate pacing_rate, DataRate padding_rate) override;
 
   // Currently audio traffic is not accounted for by pacer and passed through.
   // With the introduction of audio BWE, audio traffic will be accounted for

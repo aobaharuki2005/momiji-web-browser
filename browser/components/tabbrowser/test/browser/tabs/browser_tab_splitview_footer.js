@@ -50,16 +50,12 @@ async function setupSplitView() {
 async function activateCommand(panel, command) {
   const footerMenu = document.getElementById("split-view-menu");
   const promiseShown = BrowserTestUtils.waitForPopupEvent(footerMenu, "shown");
-  const footer = panel.querySelector("split-view-footer");
+  const { menuButtonElement } = panel.querySelector("split-view-footer");
   // Only the urlbar menu is focusable, not the footer menu.
   AccessibilityUtils.setEnv({ focusableRule: false });
-  EventUtils.synthesizeMouseAtCenter(footer.menuButtonElement, {});
+  EventUtils.synthesizeMouseAtCenter(menuButtonElement, {});
   AccessibilityUtils.resetEnv();
   await promiseShown;
-  Assert.ok(
-    BrowserTestUtils.isVisible(footer),
-    "Footer remains present within the panel."
-  );
   const item = footerMenu.querySelector(`menuitem[command="${command}"]`);
   footerMenu.activateItem(item);
 }

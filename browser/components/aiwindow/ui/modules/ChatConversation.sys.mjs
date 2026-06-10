@@ -3,24 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import {
-  MODEL_FEATURES,
-  renderPrompt,
-} from "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs";
+import { assistantPrompt } from "moz-src:///browser/components/aiwindow/models/prompts/AssistantPrompts.sys.mjs";
 
 import {
   constructRelevantMemoriesContextMessage,
   constructRealTimeInfoInjectionMessage,
-  sanitizeUntrustedContent,
-  stripUnresolvedUrlTokens,
 } from "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs";
 
-import { getRoleLabel } from "./ChatUtils.sys.mjs";
+import { makeGuid, getRoleLabel } from "./ChatUtils.sys.mjs";
 import {
   CONVERSATION_STATUS,
   MESSAGE_ROLE,
   SYSTEM_PROMPT_TYPE,
-} from "./AIWindowConstants.sys.mjs";
+} from "./ChatConstants.sys.mjs";
 import {
   AssistantRoleOpts,
   ChatMessage,
@@ -28,53 +23,12 @@ import {
   UserRoleOpts,
 } from "./ChatMessage.sys.mjs";
 
-import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
-import {
-  consumeStreamChunk,
-  createParserState,
-  flushTokenRemainder,
-} from "chrome://browser/content/aiwindow/modules/TokenStreamParser.mjs";
-import { SecurityProperties } from "moz-src:///browser/components/aiwindow/models/SecurityProperties.sys.mjs";
-
-const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  ChatStore:
-    "moz-src:///browser/components/aiwindow/ui/modules/ChatStore.sys.mjs",
-  MemoriesManager:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs",
-  loadPrompt:
-    "moz-src:///browser/components/aiwindow/models/PromptLoader.sys.mjs",
-});
-
-ChromeUtils.defineLazyGetter(lazy, "console", function () {
-  return console.createInstance({
-    prefix: "ChatConversation",
-  });
-});
-
 const CHAT_ROLES = [MESSAGE_ROLE.USER, MESSAGE_ROLE.ASSISTANT];
-const RESTORABLE_ROLES = [...CHAT_ROLES, MESSAGE_ROLE.TOOL];
-const TABLES_PREF = "browser.smartwindow.allowTables";
-
-let _savedLoadPromptDescriptor = null;
-export function _setLoadPromptForTesting(fn) {
-  if (fn !== null) {
-    _savedLoadPromptDescriptor = Object.getOwnPropertyDescriptor(
-      lazy,
-      "loadPrompt"
-    );
-    lazy.loadPrompt = fn;
-  } else if (_savedLoadPromptDescriptor) {
-    // eslint-disable-next-line mozilla/valid-lazy
-    Object.defineProperty(lazy, "loadPrompt", _savedLoadPromptDescriptor);
-    _savedLoadPromptDescriptor = null;
-  }
-}
 
 /**
  * A conversation containing messages.
  */
-export class ChatConversation extends EventEmitter {
+export class ChatConversation {
   id;
   title;
   description;
@@ -83,84 +37,8 @@ export class ChatConversation extends EventEmitter {
   createdDate;
   updatedDate;
   status;
-  /** @type {SecurityProperties} */
-  securityProperties;
-  /** @type {ChatMessage[]} */
   #messages;
-  #minNextOrdinal = 0;
   activeBranchTipMessageId;
-
-  /**
-   * A mapping of a URL to its unique URL token. URL tokens are used as shortened
-   * versions of URLs to help the model deal with very long URLs. Very long URLs are
-   * problematic since they are hard for a model to repeat back without making mistakes
-   * or hallucinating details about the URL. There is also additional cost for every
-   * additional token in the context. Long URLs can also contain prompt injections since
-   * they can be of an arbitrary size. URL Tokens help solve all of these issues.
-   *
-   * URL tokens are only generated while a message is "in flight" to and from the language
-   * model. When tool calls are handled, messages rendered, and messages stored they are
-   * all done with the URL tokens expanded into full URLs.
-   *
-   * There are no guarantees that a URL in this list isn't just hallucinated by the model.
-   * Any URL the language model invents can be present in this list. The only guarantee
-   * is that a token maps to some kind of arbitrary URL.
-   *
-   * Example mapping:
-   * https://github.com/mozilla/ -> GITHUB_COM_MOZILLA_1
-   *
-   * @type {Map<string, string>}
-   */
-  urlToToken = new Map();
-
-  /**
-   * The reverse mapping for a token back to its original URL.
-   *
-   * e.g. GITHUB_COM_MOZILLA_1 -> https://github.com/mozilla/
-   *
-   * @type {Map<string, string>}
-   */
-  tokenToUrl = new Map();
-
-  /**
-   * A mapping of the base URL token to how many counts there are for it. It's
-   * used to generate the final number on URL tokens.
-   *
-   * e.g.
-   *
-   * https://github.com/mozilla/                  -> GITHUB_COM_MOZILLA_1
-   * https://github.com/mozilla#not-part-of-token -> GITHUB_COM_MOZILLA_2
-   *
-   * @type {Map<string, number>}
-   */
-  #baseTokenCounts = new Map();
-
-  /**
-   * Language models can generate arbitrary URLs. If a conversation has been exposed
-   * to untrusted content (such as from summarizing a webpage) then it can be prompt
-   * injected to display arbitrary URLs. Language models can also invent plausible URLs
-   * for a conversation that do not exist.
-   *
-   * To mitigate these issues we collect all URLs that have been seen in a conversation
-   * so that we can decide how to show them to users in a safe way. If a URL has not
-   * been seen before, then it's untrusted in different circumstances.
-   *
-   * Initialized from the constructor params (restored from DB) or as an empty Set.
-   *
-   * @type {Set<string>}
-   */
-  seenUrls;
-
-  /**
-   * URLs found in SERP contents from run_search that we are willing to
-   * fetch via a anonymous request even when the conversation has
-   * been exposed to both private and untrusted content.
-   *
-   * Initialized from the constructor params (restored from DB) or as an empty Set.
-   *
-   * @type {Set<string>}
-   */
-  serpUrlsForAnonymousFetch;
 
   /**
    * @param {object} params
@@ -173,11 +51,10 @@ export class ChatConversation extends EventEmitter {
    * @param {number} [params.updatedDate]
    * @param {CONVERSATION_STATUS} [params.status]
    * @param {Array<ChatMessage>} [params.messages]
-   * @param {boolean|null} [params.memoriesToggled]
    */
   constructor(params) {
     const {
-      id = crypto.randomUUID(),
+      id = makeGuid(),
       title,
       description,
       pageUrl,
@@ -185,12 +62,7 @@ export class ChatConversation extends EventEmitter {
       createdDate = Date.now(),
       updatedDate = Date.now(),
       messages = [],
-      seenUrls,
-      serpUrlsForAnonymousFetch,
-      memoriesToggled = null,
     } = params;
-
-    super();
 
     this.id = id;
     this.title = title;
@@ -200,208 +72,9 @@ export class ChatConversation extends EventEmitter {
     this.createdDate = createdDate;
     this.updatedDate = updatedDate;
     this.#messages = messages;
-    this.seenUrls = seenUrls ? new Set(seenUrls) : new Set();
-    this.serpUrlsForAnonymousFetch = serpUrlsForAnonymousFetch
-      ? new Set(serpUrlsForAnonymousFetch)
-      : new Set();
-    this.memoriesToggled = memoriesToggled;
-
-    // transient: tracks the URL the current starter prompts were generated
-    // for. Not persisted only used while conversation is empty
-    this.transientStarterUrl = null;
-
-    // transient: caches the last set of starter prompts generated for this
-    // conversation so a tab switch-back can restore without re-fetching.
-    // Not persisted only meaningful while the conversation is empty.
-    this.transientStarters = null;
 
     // NOTE: Destructuring params.status causes a linter error
     this.status = params.status || CONVERSATION_STATUS.ACTIVE;
-    if (params.securityProperties instanceof SecurityProperties) {
-      this.securityProperties = params.securityProperties;
-    } else if (params.securityProperties != null) {
-      this.securityProperties = SecurityProperties.fromJSON(
-        params.securityProperties
-      );
-    } else {
-      this.securityProperties = new SecurityProperties();
-    }
-  }
-
-  /**
-   * Converts a URL into a token. It first computes a base token from
-   * the hostname and path parts, then appends a monotonically increasing number on the
-   * end to make it unique. This token is cached to the conversation while
-   * the conversation is loaded in memory. This token is in-memory only and not
-   * serialized to storage.
-   *
-   * URL token analysis:
-   * https://docs.google.com/document/d/1kwf2PH1APyUR4wrvv6lJIhA12bkQoNVV5KFwAPtWubw/edit?tab=t.0#heading=h.yhx5pggnwgne
-   *
-   * @param {string} url - The full URL to register
-   * @returns {string} The short token for the URL (e.g. "GITHUB_COM_1")
-   */
-  convertUrlToToken(url) {
-    const seenToken = this.urlToToken.get(url);
-    if (seenToken) {
-      return seenToken;
-    }
-
-    let baseToken = "";
-
-    // Attempt to convert the URL into a base token.
-    const parsedUrl = URL.parse(url);
-    if (parsedUrl) {
-      if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-        // Go ahead and handle URL tokens for more complicated URLs that
-        // aren't probably supported in the chat interface, but would be useful
-        // to disambiguate from the HTTP(s) varieties.
-        baseToken +=
-          // e.g. "ftp:" -> "FTP"
-          parsedUrl.protocol.toUpperCase().replace(":", "");
-      }
-
-      // Convert the hostname into a token.
-      const hostToken = parsedUrl.hostname
-        .replace(/^www\./, "")
-        .toUpperCase()
-        .replace(/[.\-]/g, "_")
-        .substring(0, 100);
-
-      if (hostToken) {
-        baseToken = baseToken ? `${baseToken}_${hostToken}` : hostToken;
-      }
-
-      // Add on the parts of the URL to the token.
-      for (let part of parsedUrl.pathname.split("/")) {
-        if (!part) {
-          continue;
-        }
-        const partToken = part.toUpperCase().replace(/[^A-Z0-9]/g, "_");
-
-        const nextToken = `${baseToken}_${partToken}`;
-        if (nextToken.length > 100) {
-          break;
-        }
-        baseToken = nextToken;
-      }
-    } else {
-      baseToken = "INVALID_URL";
-    }
-
-    let count = this.#baseTokenCounts.get(baseToken) ?? 0;
-    count += 1;
-    this.#baseTokenCounts.set(baseToken, count);
-
-    const tokenFinal = `${baseToken}_${count}`;
-
-    this.urlToToken.set(url, tokenFinal);
-    this.tokenToUrl.set(tokenFinal, url);
-
-    return tokenFinal;
-  }
-
-  /**
-   * @param {any} chunk
-   * @param {any} currentMessage
-   * @param {{
-   *     inToken: boolean,
-   *     tokenBuffer: string,
-   *     tokenCandidate: boolean,
-   *     pendingOpen: boolean
-   * }} parserState
-   */
-  handleChunk(chunk, currentMessage, parserState) {
-    let update = false;
-
-    const { plainText, tokens } = consumeStreamChunk(
-      chunk,
-      parserState,
-      this.tokenToUrl
-    );
-
-    if (plainText) {
-      currentMessage.content.body += plainText;
-      update = true;
-    }
-
-    if (tokens) {
-      currentMessage.addTokens(tokens);
-      update = true;
-    }
-
-    if (update) {
-      this.emit("chat-conversation:message-update", currentMessage);
-
-      lazy.ChatStore.updateConversation(this);
-    }
-  }
-
-  async receiveResponse(stream) {
-    const parserState = createParserState();
-    const currentMessage = this.#getCurrentAssistantResponse();
-
-    if (currentMessage?.content?.body) {
-      currentMessage.content.body += "\n\n";
-    }
-
-    let pendingToolCalls = null;
-    let fullResponseText = "";
-    let usage = null;
-
-    for await (const chunk of stream) {
-      usage = chunk?.usage;
-      if (chunk.text) {
-        fullResponseText += chunk.text;
-        this.handleChunk(chunk.text, currentMessage, parserState);
-      }
-
-      if (chunk?.toolCalls?.length) {
-        pendingToolCalls = chunk.toolCalls;
-      }
-    }
-
-    const remainder = flushTokenRemainder(parserState);
-    if (remainder) {
-      currentMessage.content.body += remainder;
-      this.emit("chat-conversation:message-update", currentMessage);
-    }
-
-    if (currentMessage._pendingMemoryIds?.length) {
-      currentMessage.memoriesApplied =
-        await lazy.MemoriesManager.getMemoriesByID(
-          new Set(currentMessage._pendingMemoryIds)
-        );
-
-      delete currentMessage._pendingMemoryIds;
-
-      this.emit("chat-conversation:message-update", currentMessage);
-    }
-
-    // Post-process the response text by expanding the URL tokens and removing
-    // any hallucinated URL tokens.
-    if (this.urlToToken.size && currentMessage?.content?.body) {
-      let body = stripUnresolvedUrlTokens(currentMessage.content.body);
-      if (body !== currentMessage.content.body) {
-        currentMessage.content.body = body;
-        this.emit("chat-conversation:message-update", currentMessage);
-      }
-    }
-
-    await lazy.ChatStore.updateConversation(this);
-    this.emit("chat-conversation:message-complete", currentMessage);
-
-    return { pendingToolCalls, fullResponseText, usage };
-  }
-
-  #getCurrentAssistantResponse() {
-    return this.messages
-      .filter(
-        message =>
-          message.role === MESSAGE_ROLE.ASSISTANT &&
-          message?.content?.type === "text"
-      )
-      .at(-1);
   }
 
   /**
@@ -411,20 +84,11 @@ export class ChatConversation extends EventEmitter {
    * @returns {Array<ChatMessage>}
    */
   renderState() {
-    return this.#messages.filter(message => {
-      const { role, content } = message;
-      if (!RESTORABLE_ROLES.includes(role)) {
-        return false;
-      }
-      const { type, body } = content ?? {};
-      if (type === "function") {
-        return false;
-      }
-      if (type === "text" && !body) {
-        return false;
-      }
-      return true;
+    const messages = this.#messages.filter(message => {
+      return CHAT_ROLES.includes(message.role);
     });
+
+    return messages;
   }
 
   /**
@@ -446,11 +110,10 @@ export class ChatConversation extends EventEmitter {
    * @param {URL} pageUrl - The current page url when message was submitted
    * @param {number} turnIndex - The current conversation turn/cycle
    * @param {AssistantRoleOpts|ToolRoleOpts|UserRoleOpts} opts - Additional opts for the message
-   * @returns {ChatMessage|null} The newly created message, or null if validation fails
    */
   addMessage(role, content, pageUrl, turnIndex, opts = {}) {
     if (role < 0 || role > MESSAGE_ROLE.TOOL) {
-      return null;
+      return;
     }
 
     if (turnIndex < 0) {
@@ -465,13 +128,9 @@ export class ChatConversation extends EventEmitter {
 
     const convId = this.id;
     const currentMessages = this?.messages || [];
-    const maxOrdinal = Math.max(
-      this.#minNextOrdinal,
-      ...currentMessages.map(m => m.ordinal ?? 0)
-    );
-    const ordinal = maxOrdinal + 1;
+    const ordinal = currentMessages.length ? currentMessages.length + 1 : 1;
 
-    const messageData = {
+    const message_data = {
       parentMessageId,
       content,
       ordinal,
@@ -482,30 +141,9 @@ export class ChatConversation extends EventEmitter {
       ...opts,
     };
 
-    const newMessage = new ChatMessage(messageData);
+    const newMessage = new ChatMessage(message_data);
 
     this.messages.push(newMessage);
-    return newMessage;
-  }
-
-  /**
-   * Gets any URL mentioned in the conversation. These URLs have heightened security
-   * permissions as they have been explicitly added to the conversation by the user.
-   *
-   * @returns {Set<string>}
-   */
-  getAllMentionURLs() {
-    /** @type {Set<string>} */
-    const mentionUrls = new Set();
-    for (const message of this.#messages) {
-      const { contextMentions } = message.content;
-      if (contextMentions) {
-        for (const { url } of contextMentions) {
-          mentionUrls.add(url);
-        }
-      }
-    }
-    return mentionUrls;
   }
 
   /**
@@ -515,82 +153,22 @@ export class ChatConversation extends EventEmitter {
    * Limit/filter out data uris from message data
    *
    * @param {string} contentBody - The user message content
-   * @param {URL?} [pageUrl=null] - The current page url when message was submitted
+   * @param {string?} [pageUrl=""] - The current page url when message was submitted
    * @param {UserRoleOpts} [userOpts=new UserRoleOpts()] - User message options
-   * @param {object} [userContext={}] - Contextual information for the user message, such as real time info and relevant memories
-   * @returns {ChatMessage} The newly created user message
    */
-  addUserMessage(
-    contentBody,
-    pageUrl = null,
-    userOpts = new UserRoleOpts(),
-    userContext = {}
-  ) {
+  addUserMessage(contentBody, pageUrl = "", userOpts = new UserRoleOpts()) {
     const content = {
       type: "text",
       body: contentBody,
-      userContext,
     };
 
-    if (userOpts.contextMentions?.length) {
-      content.contextMentions = userOpts.contextMentions;
-    }
-
-    if (pageUrl) {
-      content.contextPageUrl = pageUrl.href;
-    }
+    let url = URL.parse(pageUrl);
 
     let currentTurn = this.currentTurnIndex();
     const newTurnIndex =
       this.#messages.length === 1 ? currentTurn : currentTurn + 1;
 
-    this.#dismissPendingUndos();
-
-    return this.addMessage(
-      MESSAGE_ROLE.USER,
-      content,
-      pageUrl,
-      newTurnIndex,
-      userOpts
-    );
-  }
-
-  /**
-   * Mark the most recent ai-action-result toolUIData with
-   * properties.undoDismissed: true. Called when a user message
-   * is added, signalling the previous action is no longer available.
-   *
-   * At most one card is non-dismissed at any time, so walk back
-   * and stop on first hit.
-   *
-   * Persistence: emit triggers re-render. The toolUIData mutation
-   * is persisted on the next ChatStore.updateConversation call
-   * which fires when the assistant turn that follows completes.
-   */
-  #dismissPendingUndos() {
-    for (let i = this.messages.length - 1; i >= 0; i--) {
-      const m = this.messages[i];
-      const td = m.toolUIData;
-      if (
-        !td ||
-        td.uiType !== "ai-action-result" ||
-        td.properties?.undoDismissed
-      ) {
-        continue;
-      }
-
-      const operationId = td.properties?.confirmedData?.operationId;
-      if (!operationId) {
-        continue;
-      }
-
-      m.toolUIData = {
-        ...td,
-        properties: { ...td.properties, undoDismissed: true },
-      };
-      this.emit("chat-conversation:message-update", m);
-      break;
-    }
+    this.addMessage(MESSAGE_ROLE.USER, content, url, newTurnIndex, userOpts);
   }
 
   /**
@@ -599,7 +177,6 @@ export class ChatConversation extends EventEmitter {
    * @param {string} type - The assistant message type: text|function
    * @param {string} contentBody - The assistant message content
    * @param {AssistantRoleOpts} [assistantOpts=new AssistantRoleOpts()] - ChatMessage options specific to assistant messages
-   * @returns {ChatMessage} The newly created assistant message
    */
   addAssistantMessage(
     type,
@@ -611,10 +188,10 @@ export class ChatConversation extends EventEmitter {
       body: contentBody,
     };
 
-    return this.addMessage(
+    this.addMessage(
       MESSAGE_ROLE.ASSISTANT,
       content,
-      null,
+      "",
       this.currentTurnIndex(),
       assistantOpts
     );
@@ -625,85 +202,27 @@ export class ChatConversation extends EventEmitter {
    *
    * @param {object} content - The tool call object to be saved as JSON
    * @param {ToolRoleOpts} [toolOpts=new ToolRoleOpts()] - Message opts for a tool role message
-   * @returns {ChatMessage} The newly created tool message
    */
   addToolCallMessage(content, toolOpts = new ToolRoleOpts()) {
-    const message = this.addMessage(
+    this.addMessage(
       MESSAGE_ROLE.TOOL,
       content,
-      null,
+      "",
       this.currentTurnIndex(),
       toolOpts
     );
-    // Emit tool messages so the renderer can display them
-    // in the action log
-    if (message) {
-      this.emit("chat-conversation:message-update", message);
-    }
-    return message;
   }
 
   /**
    * Add a system message to the conversation
    *
-   * @param {string} type - The assistant message type: text|injected_memories|injected_real_time_info
+   * @param {string} type - The assistant message type: text|injected_insights|injected_real_time_info
    * @param {string} contentBody - The system message object to be saved as JSON
-   * @returns {ChatMessage} The newly created system message
    */
   addSystemMessage(type, contentBody) {
     const content = { type, body: contentBody };
 
-    return this.addMessage(
-      MESSAGE_ROLE.SYSTEM,
-      content,
-      null,
-      this.currentTurnIndex()
-    );
-  }
-
-  /**
-   * Loads and renders the system prompt for the current chat model.
-   *
-   * @param {object} [opts]
-   * @param {string} [opts.modelChoiceIdOverride] - Override the user's model-choice pref
-   * @returns {Promise<string>} The rendered system prompt
-   */
-  async #loadSystemPrompt(opts = {}) {
-    const _systemPrompt = await lazy.loadPrompt(MODEL_FEATURES.CHAT, opts);
-    let tableInstructions;
-    if (Services.prefs.getBoolPref(TABLES_PREF, false)) {
-      tableInstructions = await lazy.loadPrompt(
-        MODEL_FEATURES.ENABLE_TABLE_INSTRUCTIONS,
-        opts
-      );
-    } else {
-      tableInstructions = await lazy.loadPrompt(
-        MODEL_FEATURES.DISABLE_TABLE_INSTRUCTIONS,
-        opts
-      );
-    }
-    return renderPrompt(_systemPrompt, { tableInstructions });
-  }
-
-  /**
-   * Updates the main system prompt for a new model.
-   * Used when the model changes mid-conversation.
-   *
-   * @param {string} [modelChoiceIdOverride] - Model choice ID for the new model
-   */
-  async updateSystemPromptForModel(modelChoiceIdOverride) {
-    const systemMessage = this.messages.find(
-      message =>
-        message.role === MESSAGE_ROLE.SYSTEM &&
-        message.content?.type === SYSTEM_PROMPT_TYPE.TEXT
-    );
-    if (!systemMessage) {
-      return;
-    }
-
-    systemMessage.content.body = await this.#loadSystemPrompt({
-      modelChoiceIdOverride,
-    });
+    this.addMessage(MESSAGE_ROLE.SYSTEM, content, "", this.currentTurnIndex());
   }
 
   /**
@@ -711,235 +230,34 @@ export class ChatConversation extends EventEmitter {
    * adding new user prompt to messages.
    *
    * @param {string} prompt - new user prompt
-   * @param {?URL} pageUrl - The URL of the page when prompt was submitted
-   * @param {UserRoleOpts} [userOpts]
-   * @param {boolean} [skipUserDispatch=false] - If true, do not emit the
-   *   message-update event after adding the user message (used for retries
-   *   to avoid duplicate user messages in the child process).
+   * @param {URL} pageUrl - The URL of the page when prompt was submitted
    */
-  async generatePrompt(
-    prompt,
-    pageUrl,
-    userOpts = undefined,
-    skipUserDispatch = false
-  ) {
-    // Remove stale ephemeral messages before adding new user message
-    this.removeSystemTimeMemoriesMessages();
-
-    if (!this.messages.length) {
-      const systemPrompt = await this.#loadSystemPrompt();
-      this.addSystemMessage(SYSTEM_PROMPT_TYPE.TEXT, systemPrompt);
+  async generatePrompt(prompt, pageUrl) {
+    if (!this.#messages.length) {
+      // TODO: Bug 2008865
+      // switch to use remote settings prompt accessed via engine.loadPrompt(feature)
+      this.addSystemMessage(SYSTEM_PROMPT_TYPE.TEXT, assistantPrompt);
     }
 
-    // userContext starts empty so the user message can be added and dispatched
-    // immediately for better perceived performance. The realTimeContext and
-    // memoriesContext properties are set on it by reference below before this
-    // method returns, so the full context is available to getMessagesInOpenAiFormat()
-    // when the LLM call is made.
-    let userContext = {};
-    this.addUserMessage(prompt, pageUrl, userOpts, userContext);
-    if (!skipUserDispatch) {
-      this.emit("chat-conversation:message-update", this.messages.at(-1));
+    const nextConversationTurn = this.currentTurnIndex() + 1;
+
+    const realTime = await constructRealTimeInfoInjectionMessage();
+    if (realTime.content) {
+      this.addSystemMessage(SYSTEM_PROMPT_TYPE.REAL_TIME, realTime.content);
     }
 
-    const realTimeContext = await ChatConversation.getRealTimeInfo({
-      contextMentions: userOpts?.contextMentions,
-      securityProperties: this.securityProperties,
-    });
-    if (realTimeContext) {
-      userContext.realTimeContext = realTimeContext;
+    const insightsContext = await constructRelevantMemoriesContextMessage();
+    if (insightsContext?.content) {
+      this.addSystemMessage(
+        SYSTEM_PROMPT_TYPE.INSIGHTS,
+        insightsContext.content,
+        nextConversationTurn
+      );
     }
 
-    if (userOpts?.memoriesEnabled) {
-      try {
-        const memoriesContext = await this.getMemoriesContext(
-          prompt,
-          undefined,
-          this.securityProperties
-        );
-        if (memoriesContext) {
-          userContext.memoriesContext = memoriesContext;
-        }
-      } catch (memoriesContextError) {
-        lazy.console.error(
-          `Failed to generate memories context message: ${memoriesContextError}`
-        );
-      }
-    }
+    this.addUserMessage(prompt, pageUrl, nextConversationTurn);
 
-    this.securityProperties.commit();
     return this;
-  }
-
-  /**
-   * Removes the given user message and all messages after it from the
-   * in-memory conversation, filtering out ephemeral system messages and
-   * preserving the highest ordinal so future messages never reuse one.
-   * The caller is responsible for deleting the returned messages from
-   * the database and re-generating the response.
-   *
-   * TODO: Bug 2016249 - Rename to something like truncateFromMessage() and
-   * consider moving the chatStore.deleteMessages() call into this method.
-   *
-   * @param {ChatMessage} message
-   *
-   * @returns {Array<ChatMessage>} - Array of messages removed from the conversation
-   */
-  async retryMessage(message) {
-    if (message.role !== MESSAGE_ROLE.USER) {
-      const err = new Error("Not a user message");
-      err.clientReason = "retryInvalidMessage";
-      throw err;
-    }
-
-    // Capture ephemeral system messages before removal so we can return them.
-    const ephemeralMessages = this.#messages.filter(
-      m =>
-        m.role === MESSAGE_ROLE.SYSTEM &&
-        (m.content?.type === SYSTEM_PROMPT_TYPE.REAL_TIME ||
-          m.content?.type === SYSTEM_PROMPT_TYPE.MEMORIES)
-    );
-
-    // Remove ephemeral system messages (they'll be re-added by generatePrompt).
-    this.removeSystemTimeMemoriesMessages();
-
-    // Preserve the highest ordinal so addMessage() never reuses one.
-    this.#minNextOrdinal = Math.max(
-      this.#minNextOrdinal,
-      ...this.#messages.map(m => m.ordinal ?? 0)
-    );
-
-    const retryMessageIndex = this.#messages.findIndex(
-      chatMessage => message.id === chatMessage.id
-    );
-
-    if (retryMessageIndex === -1) {
-      const err = new Error("Unrelated message");
-      err.clientReason = "retryInvalidMessage";
-      throw err;
-    }
-
-    const toDeleteMessages = this.#messages.splice(retryMessageIndex);
-    return [...ephemeralMessages, ...toDeleteMessages];
-  }
-
-  /**
-   * Removes context system messages (real-time context, memories) that should be
-   * regenerated on each turn. These messages contain time-sensitive data that becomes
-   * stale between conversation turns.
-   */
-  removeSystemTimeMemoriesMessages() {
-    this.messages = this.messages.filter(message => {
-      const isRealTimeInjection =
-        message.role === MESSAGE_ROLE.SYSTEM &&
-        message.content?.type === SYSTEM_PROMPT_TYPE.REAL_TIME;
-
-      const isMemoriesInjection =
-        message.role === MESSAGE_ROLE.SYSTEM &&
-        message.content?.type === SYSTEM_PROMPT_TYPE.MEMORIES;
-
-      return !isRealTimeInjection && !isMemoriesInjection;
-    });
-  }
-
-  /**
-   * Gets the real time brower tab data for a new chat message and
-   * adds a system message if the real time data API function
-   * returns content.
-   *
-   * @typedef {
-   *   (contextMentions: Array<ContextWebsite>) => Promise<{url, title, description, locale, timezone, isoTimestamp, todayDate, hasTabInfo}>
-   * } RealTimeApiFunction
-   *
-   * @param {object} [options]
-   * @param {RealTimeApiFunction} [options.getRealTimeMapping=constructRealTimeInfoInjectionMessage]
-   * @param {ContextWebsite[]} [options.contextMentions]
-   *   URLs provided by the user as additional context
-   * @param {SecurityProperties} [options.securityProperties]
-   *
-   * @returns {Promise<string|null>} - Promise that resolves with real time info or null
-   */
-  static async getRealTimeInfo({
-    getRealTimeMapping = constructRealTimeInfoInjectionMessage,
-    contextMentions,
-    securityProperties,
-  } = {}) {
-    const realTimeInfoMapping = await getRealTimeMapping(contextMentions);
-    if (realTimeInfoMapping) {
-      let realTimePromptRaw = await lazy.loadPrompt(
-        MODEL_FEATURES.REAL_TIME_CONTEXT_DATE
-      );
-      if (realTimeInfoMapping.hasTabInfo) {
-        securityProperties.setPrivateData();
-        const realTimeTabPromptRaw = await lazy.loadPrompt(
-          MODEL_FEATURES.REAL_TIME_CONTEXT_TAB
-        );
-        realTimePromptRaw += realTimeTabPromptRaw;
-      } else {
-        delete realTimeInfoMapping.url;
-        delete realTimeInfoMapping.title;
-        delete realTimeInfoMapping.description;
-      }
-      delete realTimeInfoMapping.hasTabInfo;
-
-      if (contextMentions?.length) {
-        const contextUrls = contextMentions
-          .map(
-            mention =>
-              `- URL: ${mention.url}\n  Title: ${sanitizeUntrustedContent(mention.label)}`
-          )
-          .join("\n");
-        realTimeInfoMapping.contextUrls = contextUrls;
-        const contextMentionsPrompt = await lazy.loadPrompt(
-          MODEL_FEATURES.REAL_TIME_CONTEXT_MENTIONS
-        );
-        realTimePromptRaw += contextMentionsPrompt;
-      }
-
-      const realTimePrompt = renderPrompt(
-        realTimePromptRaw,
-        realTimeInfoMapping
-      );
-      return realTimePrompt ?? null;
-    }
-    return null;
-  }
-
-  /**
-   * Gets the memories for a new chat message and adds
-   * a system message if the memories API function returns
-   * content.
-   *
-   * @todo Bug2009434
-   * Rename type and change enum to renamed values
-   *
-   * @typedef {{
-   *    role: string;
-   *    tool_call_id: string;
-   *    content: string;
-   *  }} MemoryApiFunctionReturn
-   *
-   *  @typedef {
-   *    (message: string) => Promise<null | MemoryApiFunctionReturn>
-   *  } MemoriesApiFunction
-   *
-   * @param {message} message
-   * @param {MemoriesApiFunction} [constructMemories=constructRelevantMemoriesContextMessage]
-   * @param {SecurityProperties} [securityProperties]
-   *
-   * @returns {Promise<string|null>} - Promise that resolves with relevant memories or null
-   */
-  async getMemoriesContext(
-    message,
-    constructMemories = constructRelevantMemoriesContextMessage,
-    securityProperties
-  ) {
-    const memoriesContext = await constructMemories(message);
-    if (memoriesContext != null) {
-      securityProperties.setPrivateData();
-      return memoriesContext.content;
-    }
-    return null;
   }
 
   /**
@@ -991,47 +309,18 @@ export class ChatConversation extends EventEmitter {
    * @returns {Array<{ role: string, content: string }>}
    */
   getMessagesInOpenAiFormat() {
-    const filteredMsgs = this.#messages.filter(message => {
-      return !(
-        message.role === MESSAGE_ROLE.ASSISTANT && !message?.content?.body
-      );
-    });
-    const msgsForAPI = filteredMsgs.map(message => {
-      const msg = {
-        role: getRoleLabel(message.role).toLowerCase(),
-        content: message.content?.body ?? message.content,
-      };
-
-      if (msg.content.tool_calls) {
-        msg.tool_calls = msg.content.tool_calls;
-        msg.content = "";
-      }
-
-      if (msg.role === "tool") {
-        msg.tool_call_id = message.content.tool_call_id;
-        msg.name = message.content.name;
-        msg.content = JSON.stringify(message.content.body);
-      }
-
-      return msg;
-    });
-
-    // Inject contextual messages immediately before the last user message, like real time info and relevant memories as USER role messages
-    const lastUserMsgIdx = filteredMsgs.findLastIndex(
-      msg => msg.role == MESSAGE_ROLE.USER
-    );
-
-    if (lastUserMsgIdx > -1) {
-      const contextMsgs = Object.values(
-        filteredMsgs[lastUserMsgIdx].content.userContext
-      ).map(contextMsg => ({
-        role: getRoleLabel(MESSAGE_ROLE.USER).toLowerCase(),
-        content: contextMsg,
-      }));
-      msgsForAPI.splice(lastUserMsgIdx, 0, ...contextMsgs);
-    }
-
-    return msgsForAPI;
+    return this.#messages
+      .filter(message => {
+        return !(
+          message.role === MESSAGE_ROLE.ASSISTANT && !message?.content?.body
+        );
+      })
+      .map(message => {
+        return {
+          role: getRoleLabel(message.role).toLowerCase(),
+          content: message.content?.body ?? message.content,
+        };
+      });
   }
 
   #updateActiveBranchTipMessageId() {
@@ -1048,132 +337,5 @@ export class ChatConversation extends EventEmitter {
 
   get messages() {
     return this.#messages;
-  }
-
-  get messageCount() {
-    return this.#messages.filter(m => CHAT_ROLES.includes(m.role)).length;
-  }
-
-  /**
-   * Efficiently add an iterable of URLs to the seen urls.
-   *
-   * @param {Iterable<string>} urls
-   */
-  addSeenUrls(urls) {
-    for (const url of urls) {
-      this.seenUrls.add(url);
-    }
-    this.emit("chat-conversation:seen-urls-updated", this.seenUrls);
-  }
-
-  /**
-   * Add an iterable of URLs to the serpUrlsForAnonymousFetch ledger
-   *
-   * @param {Iterable<string>} urls
-   */
-  addSerpUrlsForAnonymousFetch(urls) {
-    for (const url of urls) {
-      this.serpUrlsForAnonymousFetch.add(url);
-    }
-  }
-
-  /**
-   * Updates the tool UI data for a message with a new UI state
-   *
-   * @param {ChatMessage} message - The message to update
-   * @param {object} data - The update data containing updateData
-   * @param {string} nextUI - The next UI state to transition to
-   */
-  async updateToolUI(message, data, nextUI) {
-    message.toolUIData = {
-      ...message.toolUIData,
-      uiType: nextUI,
-      properties: {
-        ...message.toolUIData.properties,
-      },
-    };
-
-    // Add specific data based on the UI type
-    if (nextUI === "ai-action-result") {
-      message.toolUIData.properties.confirmedData = data.updateData;
-    }
-
-    // Emit event to trigger re-render
-    this.emit("chat-conversation:message-update", message);
-  }
-
-  /**
-   * Adds UI tool data to the current assistant message.
-   * Handles both initial addition and progressive updates.
-   *
-   * @param {string} toolCallId - The ID of the tool call
-   * @param {object} uiData - The UI data to attach to the message
-   * @returns {object} Result object with success status and message
-   */
-  addUIToolToCurrentMessage(toolCallId, uiData) {
-    // Get the last assistant text message to attach UI to
-    let currentMessage = this.messages
-      .filter(
-        m => m.role === MESSAGE_ROLE.ASSISTANT && m.content?.type === "text"
-      )
-      .at(-1);
-
-    if (!currentMessage) {
-      // Create a synthetic text message if the model only returned a tool call
-      // This ensures the UI has something to attach to
-      currentMessage = this.addAssistantMessage("text", "");
-
-      if (!currentMessage) {
-        return {
-          success: false,
-          message: "Failed to create assistant message for UI attachment",
-          dataAdded: null,
-        };
-      }
-    }
-
-    // Check if this is an update to existing toolUIData
-    const isUpdate =
-      currentMessage.toolUIData &&
-      currentMessage.toolUIData.toolCallId === toolCallId;
-
-    if (isUpdate) {
-      // Merge the new data with existing data for progressive updates
-      currentMessage.toolUIData = {
-        ...currentMessage.toolUIData,
-        ...uiData,
-        // Deep merge properties if they exist in both
-        properties: {
-          ...currentMessage.toolUIData.properties,
-          ...uiData.properties,
-        },
-        updateCount: (currentMessage.toolUIData.updateCount || 0) + 1,
-        lastUpdated: new Date().toISOString(),
-      };
-    } else {
-      // Set toolUIData as a new object (first call)
-      currentMessage.toolUIData = {
-        toolCallId,
-        timestamp: new Date().toISOString(),
-        updateCount: 0,
-        ...uiData,
-      };
-    }
-
-    // Emit update event so UI components react to the change
-    this.emit("chat-conversation:message-update", currentMessage);
-
-    // Re-emit complete event since the message was already marked complete before tool execution
-    // This forces the UI to re-render with the new toolUIData
-    this.emit("chat-conversation:message-complete", currentMessage);
-
-    return {
-      success: true,
-      message: isUpdate
-        ? "Tool UI data updated"
-        : "Tool UI data added to existing assistant message",
-      dataAdded: uiData,
-      isUpdate,
-    };
   }
 }

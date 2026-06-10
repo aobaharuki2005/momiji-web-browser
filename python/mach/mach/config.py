@@ -244,15 +244,11 @@ class ConfigSettings(collections.abc.Mapping):
             meta = self.get_meta(option)
             meta["type_cls"].validate(value)
 
-            if "choices" in meta:
-                choices = meta["choices"]
-                if callable(choices):
-                    choices = tuple(choices())
-                    meta["choices"] = choices
-                if value not in choices:
-                    raise ValueError(
-                        f"Value '{value}' must be one of: {', '.join(sorted(choices))}"
-                    )
+            if "choices" in meta and value not in meta["choices"]:
+                raise ValueError(
+                    "Value '%s' must be one of: %s"
+                    % (value, ", ".join(sorted(meta["choices"])))
+                )
 
         # MutableMapping interface
         def __len__(self):

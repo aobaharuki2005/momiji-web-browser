@@ -7,9 +7,19 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarView: "moz-src:///browser/components/urlbar/UrlbarView.sys.mjs",
+});
+
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.scotchBonnet.enableOverride", false]],
+  });
+
+  // We'll later replace this, so ensure it's restored.
+  let originalRemoveStaleRowsTimeout = UrlbarView.removeStaleRowsTimeout;
+  registerCleanupFunction(() => {
+    UrlbarView.removeStaleRowsTimeout = originalRemoveStaleRowsTimeout;
   });
 });
 
@@ -18,9 +28,7 @@ add_setup(async function () {
 add_task(async function viewContainsStaleRows() {
   // Set the remove-stale-rows timer to a very large value, so there's no
   // possibility it interferes with this test.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.removeStaleRowsTimeout", 10000]],
-  });
+  UrlbarView.removeStaleRowsTimeout = 10000;
 
   // For the test stability we need a slow provider that ensures the search
   // doesn't complete too fast.
@@ -29,10 +37,9 @@ add_task(async function viewContainsStaleRows() {
     name: "emptySlowProvider",
     addTimeout: 1000,
   });
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(slowProvider);
+  UrlbarProvidersManager.registerProvider(slowProvider);
   registerCleanupFunction(() => {
-    providersManager.unregisterProvider(slowProvider);
+    UrlbarProvidersManager.unregisterProvider(slowProvider);
   });
 
   await PlacesUtils.history.clear();
@@ -141,7 +148,7 @@ add_task(async function viewContainsStaleRows() {
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
-  ProvidersManager.getInstanceForSap("urlbar").unregisterProvider(slowProvider);
+  UrlbarProvidersManager.unregisterProvider(slowProvider);
 });
 
 // This tests the case where, before the search finishes, stale results have
@@ -166,9 +173,7 @@ add_task(async function staleReplacedWithFresh() {
   // NB: If this test ends up failing, it may be because the remove-stale-rows
   // timer fires before the history results are added.  i.e., steps 2 and 3
   // above happen out of order.  If that happens, try increasing it.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.removeStaleRowsTimeout", 1000]],
-  });
+  UrlbarView.removeStaleRowsTimeout = 1000;
 
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -181,9 +186,12 @@ add_task(async function staleReplacedWithFresh() {
   let engine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "searchSuggestionEngineSlow.xml",
   });
-  let oldDefaultEngine = await SearchService.getDefault();
-  await SearchService.moveEngine(engine, 0);
-  await SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.moveEngine(engine, 0);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   let maxResults = UrlbarPrefs.get("maxRichResults");
 
@@ -314,8 +322,8 @@ add_task(async function staleReplacedWithFresh() {
     EventUtils.synthesizeKey("KEY_Escape")
   );
   await SpecialPowers.popPrefEnv();
-  await SearchService.setDefault(
+  await Services.search.setDefault(
     oldDefaultEngine,
-    SearchService.CHANGE_REASON.UNKNOWN
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 });

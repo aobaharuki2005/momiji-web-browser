@@ -15,7 +15,6 @@ use crate::{
         proposal::{ExternalInit, Proposal, RemoveProposal},
         EpochSecrets, ExternalPubExt, LeafIndex, LeafNode, MlsError, TreeKemPrivate,
     },
-    time::MlsTime,
     Group, MlsMessage,
 };
 
@@ -28,7 +27,7 @@ use crate::group::{
     message_processor::{EventOrContent, MessageProcessor},
     message_signature::AuthenticatedContent,
     message_verifier::verify_plaintext_authentication,
-    CustomProposal, SignaturePublicKeysContainer,
+    CustomProposal,
 };
 
 use alloc::vec;
@@ -45,6 +44,7 @@ use crate::group::{
 use super::{validate_tree_and_info_joiner, ExportedTree};
 
 /// A builder that aids with the construction of an external commit.
+#[cfg_attr(all(feature = "ffi", not(test)), safer_ffi_gen::ffi_type(opaque))]
 pub struct ExternalCommitBuilder<C: ClientConfig> {
     signer: SignatureSecretKey,
     signing_identity: SigningIdentity,
@@ -59,7 +59,6 @@ pub struct ExternalCommitBuilder<C: ClientConfig> {
     custom_proposals: Vec<Proposal>,
     #[cfg(feature = "custom_proposal")]
     received_custom_proposals: Vec<MlsMessage>,
-    commit_time: Option<MlsTime>,
 }
 
 impl<C: ClientConfig> ExternalCommitBuilder<C> {
@@ -82,7 +81,6 @@ impl<C: ClientConfig> ExternalCommitBuilder<C> {
             custom_proposals: Vec::new(),
             #[cfg(feature = "custom_proposal")]
             received_custom_proposals: Vec::new(),
-            commit_time: None,
         }
     }
 
@@ -154,14 +152,6 @@ impl<C: ClientConfig> ExternalCommitBuilder<C> {
         }
     }
 
-    /// Add a time to associate with the commit creation.
-    pub fn commit_time(self, commit_time: MlsTime) -> Self {
-        Self {
-            commit_time: Some(commit_time),
-            ..self
-        }
-    }
-
     /// Build the external commit using a GroupInfo message provided by an existing group member.
     #[cfg_attr(not(mls_build_async), maybe_async::must_be_sync)]
     pub async fn build(self, group_info: MlsMessage) -> Result<(Group<C>, MlsMessage), MlsError> {
@@ -191,7 +181,6 @@ impl<C: ClientConfig> ExternalCommitBuilder<C> {
             self.tree_data,
             &self.config.identity_provider(),
             &cipher_suite,
-            self.commit_time,
         )
         .await?;
 
@@ -200,7 +189,7 @@ impl<C: ClientConfig> ExternalCommitBuilder<C> {
             self.config.leaf_properties(self.leaf_node_extensions),
             self.signing_identity,
             &self.signer,
-            self.config.lifetime(self.commit_time),
+            self.config.lifetime(),
         )
         .await?;
 
@@ -256,29 +245,16 @@ impl<C: ClientConfig> ExternalCommitBuilder<C> {
             };
 
             let auth_content = AuthenticatedContent::from(plaintext.clone());
-            verify_plaintext_authentication(
-                &cipher_suite,
-                plaintext,
-                None,
-                &group.state.context,
-                SignaturePublicKeysContainer::RatchetTree(&group.state.public_tree),
-            )
-            .await?;
+            verify_plaintext_authentication(&cipher_suite, plaintext, None, &group.state).await?;
 
             group
-                .process_event_or_content(
-                    EventOrContent::Content(auth_content),
-                    true,
-                    #[cfg(all(feature = "export_key_generation", feature = "private_message"))]
-                    None,
-                    None,
-                )
+                .process_event_or_content(EventOrContent::Content(auth_content), true, None)
                 .await?;
         }
 
         if let Some(r) = self.to_remove {
             proposals.push(Proposal::Remove(RemoveProposal {
-                to_remove: LeafIndex::try_from(r)?,
+                to_remove: LeafIndex(r),
             }));
         }
 
@@ -291,7 +267,6 @@ impl<C: ClientConfig> ExternalCommitBuilder<C> {
                 None,
                 None,
                 None,
-                self.commit_time,
             )
             .await?;
 

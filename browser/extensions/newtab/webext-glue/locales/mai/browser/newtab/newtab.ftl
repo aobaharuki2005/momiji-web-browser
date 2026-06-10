@@ -16,7 +16,7 @@ newtab-search-box-search-button =
     .title = खोज
     .aria-label = खोज
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-edit-topsites-header = टॉप साइट संपादित करू
 newtab-topsites-title-label = शीर्षक

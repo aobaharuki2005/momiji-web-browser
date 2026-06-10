@@ -1,12 +1,11 @@
 use std::iter::FromIterator;
 
-use http::{HeaderName, HeaderValue};
-
 use self::sealed::AsConnectionOption;
-use crate::util::FlatCsv;
+use util::FlatCsv;
+use {HeaderName, HeaderValue};
 
 /// `Connection` header, defined in
-/// [RFC7230](https://datatracker.ietf.org/doc/html/rfc7230#section-6.1)
+/// [RFC7230](http://tools.ietf.org/html/rfc7230#section-6.1)
 ///
 /// The `Connection` header field allows the sender to indicate desired
 /// control options for the current connection.  In order to avoid
@@ -29,6 +28,7 @@ use crate::util::FlatCsv;
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::Connection;
 ///
 /// let keep_alive = Connection::keep_alive();
@@ -72,6 +72,7 @@ impl Connection {
     /// # Example
     ///
     /// ```
+    /// # extern crate headers;
     /// extern crate http;
     ///
     /// use http::header::UPGRADE;
@@ -86,7 +87,10 @@ impl Connection {
     /// ```
     pub fn contains(&self, name: impl AsConnectionOption) -> bool {
         let s = name.as_connection_option();
-        self.0.iter().any(|opt| opt.eq_ignore_ascii_case(s))
+        self.0
+            .iter()
+            .find(|&opt| opt.eq_ignore_ascii_case(s))
+            .is_some()
     }
 }
 
@@ -101,34 +105,32 @@ impl FromIterator<HeaderName> for Connection {
 }
 
 mod sealed {
-    use http::HeaderName;
-
     pub trait AsConnectionOption: Sealed {
         fn as_connection_option(&self) -> &str;
     }
     pub trait Sealed {}
 
-    impl AsConnectionOption for &str {
+    impl<'a> AsConnectionOption for &'a str {
         fn as_connection_option(&self) -> &str {
-            self
+            *self
         }
     }
 
-    impl Sealed for &str {}
+    impl<'a> Sealed for &'a str {}
 
-    impl AsConnectionOption for &HeaderName {
-        fn as_connection_option(&self) -> &str {
-            self.as_ref()
-        }
-    }
-
-    impl Sealed for &HeaderName {}
-
-    impl AsConnectionOption for HeaderName {
+    impl<'a> AsConnectionOption for &'a ::HeaderName {
         fn as_connection_option(&self) -> &str {
             self.as_ref()
         }
     }
 
-    impl Sealed for HeaderName {}
+    impl<'a> Sealed for &'a ::HeaderName {}
+
+    impl AsConnectionOption for ::HeaderName {
+        fn as_connection_option(&self) -> &str {
+            self.as_ref()
+        }
+    }
+
+    impl Sealed for ::HeaderName {}
 }

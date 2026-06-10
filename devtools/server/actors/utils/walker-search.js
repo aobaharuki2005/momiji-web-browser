@@ -228,11 +228,6 @@ class WalkerSearch {
 
     let [attributeName, attributeValue] = query.split("=", 2);
 
-    // Remove leading space in attribute name
-    if (attributeName) {
-      attributeName = attributeName.trimStart();
-    }
-
     // Remove leading and trailing quotes
     const isExactMatch =
       attributeValue.startsWith('"') && attributeValue.endsWith('"');
@@ -285,7 +280,7 @@ class WalkerSearch {
     }
 
     // If the query is not a valid selector, bail
-    if (!this.walker.targetActor.window.CSS.supports(`selector(${query})`)) {
+    if (!CSS.supports(`selector(${query})`)) {
       return;
     }
 

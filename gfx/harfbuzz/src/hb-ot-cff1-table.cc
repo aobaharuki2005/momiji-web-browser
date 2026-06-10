@@ -24,10 +24,6 @@
  * Adobe Author(s): Michiharu Ariza
  */
 
-#ifndef HB_OT_CFF1_TABLE_CC
-#define HB_OT_CFF1_TABLE_CC
-#ifdef HB_OT_CFF1_TABLE_CC /* Pacify -Wunused-macros. */
-
 #include "hb.hh"
 
 #ifndef HB_NO_CFF
@@ -613,6 +609,3 @@ bool OT::cff1::accelerator_subset_t::get_seac_components (hb_codepoint_t glyph, 
 
 
 #endif
-
-#endif /* HB_OT_CFF1_TABLE_CC pacify */
-#endif /* HB_OT_CFF1_TABLE_CC guard */

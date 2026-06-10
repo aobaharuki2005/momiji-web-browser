@@ -118,7 +118,7 @@ impl Header {
     }
 
     /// Returns the header name
-    pub fn name(&self) -> Name<'_> {
+    pub fn name(&self) -> Name {
         match *self {
             Header::Field { ref name, .. } => Name::Field(name),
             Header::Authority(..) => Name::Authority,

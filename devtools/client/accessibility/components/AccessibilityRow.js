@@ -106,8 +106,6 @@ class AccessibilityRow extends Component {
     };
   }
 
-  #flashMutationTimer = null;
-
   componentDidMount() {
     const {
       member: { selected, object },
@@ -192,11 +190,11 @@ class AccessibilityRow extends Component {
     const value = row.querySelector(".objectBox");
 
     flashElementOn(value);
-    if (this.#flashMutationTimer) {
-      clearTimeout(this.#flashMutationTimer);
-      this.#flashMutationTimer = null;
+    if (this._flashMutationTimer) {
+      clearTimeout(this._flashMutationTimer);
+      this._flashMutationTimer = null;
     }
-    this.#flashMutationTimer = setTimeout(() => {
+    this._flashMutationTimer = setTimeout(() => {
       flashElementOff(value);
     }, VALUE_FLASHING_DURATION);
   }

@@ -11,7 +11,11 @@ add_task(
   async function test_select_translations_panel_telemetry_unsupported_language_ui() {
     const { cleanup, runInPage, resolveDownloads } = await loadTestPage({
       page: SELECT_TEST_PAGE_URL,
-      languagePairs: LANGUAGE_PAIRS_WITHOUT_SPANISH,
+      languagePairs: [
+        // Do not include Spanish.
+        { fromLang: "fr", toLang: "en" },
+        { fromLang: "en", toLang: "fr" },
+      ],
       prefs: [["browser.translations.select.enable", true]],
     });
 
@@ -30,6 +34,7 @@ add_task(
           document_language: "es",
           from_language: "es",
           to_language: "en",
+          top_preferred_language: "en-US",
           text_source: "selection",
         },
       }
@@ -73,6 +78,7 @@ add_task(
           document_language: "es",
           from_language: "es",
           to_language: "en",
+          top_preferred_language: "en-US",
           text_source: "selection",
         },
       }
@@ -121,6 +127,7 @@ add_task(
           document_language: "es",
           from_language: "fr",
           to_language: "en",
+          top_preferred_language: "en-US",
           request_target: "select",
           auto_translate: false,
           source_text_code_units:

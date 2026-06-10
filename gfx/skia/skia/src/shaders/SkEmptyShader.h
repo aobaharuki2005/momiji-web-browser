@@ -35,7 +35,6 @@ protected:
     }
 
     ShaderType type() const override { return ShaderType::kEmpty; }
-    bool isOpaque() const override { return false; }
 
 private:
     friend void ::SkRegisterEmptyShaderFlattenable();

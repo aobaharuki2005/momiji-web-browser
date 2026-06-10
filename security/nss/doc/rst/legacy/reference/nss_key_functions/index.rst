@@ -14,6 +14,7 @@ NSS Key Functions
    -  `SECKEY_DestroyPrivateKey <#seckey_destroyprivatekey>`__
 
    .. rubric:: SECKEY_GetDefaultKeyDB
+      :name: seckey_getdefaultkeydb
 
    Returns a handle to the default key database opened by NSS_Init.
 
@@ -30,6 +31,7 @@ NSS Key Functions
    for use with NSS. SECKEYKeyDBHandle returns a handle to the key database opened by NSS_Init.
 
    .. rubric:: SECKEY_DestroyPrivateKey
+      :name: seckey_destroyprivatekey
 
    Destroys a private key structure.
 

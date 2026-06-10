@@ -23,8 +23,6 @@ server.registerPathHandler("/getdata", function (request, response) {
   const size = (params.filter(s => s.includes("size="))[0] || "").split("=")[1];
   const body = "A".repeat(size);
 
-  response.setHeader("Content-Type", "text/plain", false);
-
   const gzip = params.some(p => p === "gzip");
   if (gzip) {
     response.processAsync();

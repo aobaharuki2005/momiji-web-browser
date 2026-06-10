@@ -29,59 +29,23 @@ function checkContainerSize(entry, size) {
   assert_equals(entry.size, size);
 }
 
-function checkContainerIntersectionRect(entry, expected, description = '') {
-  assert_equals(
-      entry.intersectionRect.left, expected[0], 'left of rect ' + description);
-  assert_equals(
-      entry.intersectionRect.right, expected[1],
-      'right of rect ' + description);
-  assert_equals(
-      entry.intersectionRect.top, expected[2], 'top of rect ' + description);
-  assert_equals(
-      entry.intersectionRect.bottom, expected[3],
-      'bottom of rect ' + description);
-}
-
-// The test wait methods use ElementTiming if available (that should finish
-// the tests faster), or use a 2 seconds timeout as a fallback.
-
-// To try the non ElementTiming fallback just set this variable to false.
-const is_element_timing_available = !!window.PerformanceElementTiming;
-
-function setupElementTimingWait(func, parent) {
+function onElementTimingEvent(func) {
   const finish_observer = new PerformanceObserver((entryList) => {
     finish_observer.disconnect();
-    requestAnimationFrame(() => {
-      func();
-    });
+    requestAnimationFrame(() => { func(); });
   });
-
-  finish_observer.observe({entryTypes: ['element']});
-
-  const finish_img = document.createElement('img');
-  finish_img.src = '/container-timing/resources/square100.png';
-  finish_img.setAttribute('elementtiming', '');
-  parent.appendChild(finish_img);
+  finish_observer.observe({ entryTypes: ['element'] });
 }
 
-function setupTimeoutWait(t, func) {
-  t.step_timeout(() => {
-    func();
-  }, 2000);
+function finishOnElementTiming(t) {
+  onElementTimingEvent(() => { t.done(); });
 }
 
-function setupWait(t, parent, func) {
-  if (is_element_timing_available) {
-    setupElementTimingWait(func, parent);
-  } else {
-    setupTimeoutWait(t, func);
-  }
-}
-
-function waitAfterTest(t, parent, func) {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setupWait(t, parent, func);
-    });
-  });
+function addPaintingElementTimingAfterDoubleRAF(parent) {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const finish_img = document.createElement('img');
+    finish_img.src = '/container-timing/resources/square100.png';
+    finish_img.setAttribute('elementtiming', '');
+    parent.appendChild(finish_img);
+  }));
 }

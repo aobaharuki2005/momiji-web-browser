@@ -165,10 +165,7 @@ addAccessibleTask(
     // This iframe won't finish loading. Thus, it will get the stale state and
     // won't fire a document load complete event. We use the reorder event on
     // the iframe to know when the document has been created.
-    let reordered = waitForEvent(
-      EVENT_REORDER,
-      event => event.accessible === iframe && event.accessible.firstChild
-    );
+    let reordered = waitForEvent(EVENT_REORDER, iframe);
     await invokeContentTask(browser, [], () => {
       content.document.getElementById("iframe").src =
         `data:text/html,<html><body>hey</body></html>`;
@@ -177,10 +174,7 @@ addAccessibleTask(
     is(iframeDoc.name, null, "Doc should have 'null' name");
     testAbsentAttrs(iframeDoc, { "explicit-name": "true" });
 
-    reordered = waitForEvent(
-      EVENT_REORDER,
-      event => event.accessible === iframe && event.accessible.firstChild
-    );
+    reordered = waitForEvent(EVENT_REORDER, iframe);
     await invokeContentTask(browser, [], () => {
       content.document.getElementById("iframe").src =
         `data:text/html,<html><title>hello</title><body>hey</body></html>`;
@@ -296,56 +290,6 @@ addAccessibleTask(
   async function testInputPlaceHolder(browser, docAcc) {
     const input = findAccessibleChildByID(docAcc, "input");
     testName(input, "title");
-  },
-  { topLevel: true, chrome: true }
-);
-
-/**
- * Test the name of image map areas.
- */
-addAccessibleTask(
-  `
-<map name="map">
-  <area id="noName" href="https://example.com/">
-  <area id="alt" href="https://example.com/" alt="alt">
-  <area id="title" href="https://example.com/" title="title">
-  <area id="altTitle" href="https://example.com/" alt="alt" title="title">
-  <area id="noNameForm" href="https://example.com/" role="form">
-</map>
-<img src="https://example.com/a11y/accessible/tests/mochitest/moz.png" usemap="#map">
-  `,
-  async function testArea(browser, docAcc) {
-    const noName = findAccessibleChildByID(docAcc, "noName");
-    testName(noName, null);
-    const alt = findAccessibleChildByID(docAcc, "alt");
-    testName(alt, "alt");
-    const title = findAccessibleChildByID(docAcc, "title");
-    testName(title, "title");
-    const altTitle = findAccessibleChildByID(docAcc, "altTitle");
-    testName(altTitle, "alt");
-    const noNameForm = findAccessibleChildByID(docAcc, "noNameForm");
-    testName(noNameForm, null);
-  },
-  { chrome: true, topLevel: true }
-);
-
-/**
- * Test the name of an HTML select which becomes the document element. This
- * isn't something that anyone should actually do, but we still need to cope
- * with it.
- */
-addAccessibleTask(
-  `content`,
-  async function testSelectAtRoot(browser, docAcc) {
-    let changed = waitForEvent(EVENT_NAME_CHANGE, docAcc);
-    await invokeContentTask(browser, [], () => {
-      const a = content.document.createElement("select");
-      a.role = "application";
-      content.document.replaceChild(a, content.document.childNodes[1]);
-      content.document.title = "after";
-    });
-    await changed;
-    testName(docAcc, null);
   },
   { topLevel: true, chrome: true }
 );

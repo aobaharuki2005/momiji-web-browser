@@ -19,8 +19,10 @@
 
     async function doTest() {
       test_common();
-      for (let stopAtPunctuation of [true, false]) {
-        await test_per_segmenter(stopAtPunctuation);
+      for (let newSegmenter of [true, false]) {
+        for (let stopAtPunctuation of [true, false]) {
+          await test_per_segmenter(newSegmenter, stopAtPunctuation);
+	}
       }
       SimpleTest.finish();
     }
@@ -84,8 +86,10 @@
       testWords("input_1", ["foo", "bar"]);
     }
 
-    async function test_per_segmenter(aStopAtPunctuation) {
+    async function test_per_segmenter(aNewSegmenter, aStopAtPunctuation) {
+      // If aNewSegmenter is true, use UAX#14/#29 compatible segmenter.
       await SpecialPowers.pushPrefEnv({"set": [
+        ["intl.icu4x.segmenter.enabled", aNewSegmenter],
         ["layout.word_select.stop_at_punctuation", aStopAtPunctuation],
       ]});
 

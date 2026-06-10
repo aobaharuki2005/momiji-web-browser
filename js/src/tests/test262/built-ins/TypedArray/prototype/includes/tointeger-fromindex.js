@@ -35,10 +35,10 @@ var obj = {
   }
 };
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   var sample;
 
-  sample = new TA(makeCtorArg([42, 43]));
+  sample = new TA([42, 43]);
   assert.sameValue(sample.includes(42, "1"), false, "string [0]");
   assert.sameValue(sample.includes(43, "1"), true, "string [1]");
 

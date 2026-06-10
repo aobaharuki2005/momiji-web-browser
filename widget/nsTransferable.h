@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsTransferable_h_
-#define nsTransferable_h_
+#ifndef nsTransferable_h__
+#define nsTransferable_h__
 
 #include "nsICookieJarSettings.h"
 #include "nsIFormatConverter.h"
@@ -29,9 +30,6 @@ struct DataStruct {
   DataStruct(DataStruct&& aRHS);
   ~DataStruct();
 
-  DataStruct(const DataStruct&) = delete;
-  DataStruct& operator=(const DataStruct&) = delete;
-
   const nsCString& GetFlavor() const { return mFlavor; }
   void SetData(nsISupports* aData, bool aIsPrivateData);
   void GetData(nsISupports** aData);
@@ -52,6 +50,10 @@ struct DataStruct {
   nsCOMPtr<nsISupports> mData;  // OWNER - some varient of primitive wrapper
   PRFileDesc* mCacheFD;
   const nsCString mFlavor;
+
+ private:
+  DataStruct(const DataStruct&) = delete;
+  DataStruct& operator=(const DataStruct&) = delete;
 };
 
 /**
@@ -87,4 +89,4 @@ class nsTransferable : public nsITransferable {
 #endif
 };
 
-#endif  // nsTransferable_h_
+#endif  // nsTransferable_h__

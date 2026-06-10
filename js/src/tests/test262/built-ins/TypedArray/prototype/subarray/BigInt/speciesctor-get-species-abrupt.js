@@ -23,12 +23,12 @@ info: |
   ...
   5. Let S be ? Get(C, @@species).
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Symbol.species, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg(2));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA(2);
 
   sample.constructor = {};
 
@@ -41,6 +41,6 @@ testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
   assert.throws(Test262Error, function() {
     sample.subarray(0);
   });
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

@@ -52,10 +52,12 @@ class BrowserToolbarIntegrationTest {
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        store = BrowserStore(
-            initialState = BrowserState(
-                tabs = listOf(selectedTab),
-                selectedTabId = selectedTab.id,
+        store = spy(
+            BrowserStore(
+                initialState = BrowserState(
+                    tabs = listOf(selectedTab),
+                    selectedTabId = selectedTab.id,
+                ),
             ),
         )
 

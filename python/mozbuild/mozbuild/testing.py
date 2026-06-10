@@ -2,14 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import hashlib
 import os
 import sys
 
 import manifestparser
 import mozpack.path as mozpath
 from mozpack.copier import FileCopier
-from mozpack.files import FileFinder
 from mozpack.manifests import InstallManifest
 
 # These definitions provide a single source of truth for modules attempting
@@ -184,75 +182,29 @@ class SupportFilesConverter:
         return info
 
 
-def _pattern_expansion_hash(manifest):
-    """Hash the set of paths expanded from PATTERN_LINK/PATTERN_COPY entries.
-
-    Returns an md5 hex digest of the sorted destination paths, or "" if the
-    manifest contains no pattern entries.
-    """
-    paths = []
-    for e in manifest._dests.values():
-        if e[0] in (InstallManifest.PATTERN_LINK, InstallManifest.PATTERN_COPY):
-            _, base, pattern, dest_dir = e
-            finder = FileFinder(base)
-            for path, _ in finder.find(pattern):
-                paths.append(mozpath.join(dest_dir, path))
-    return hashlib.md5("\n".join(sorted(paths)).encode()).hexdigest() if paths else ""
-
-
-def install_test_files(topsrcdir, topobjdir, tests_root, force=False):
+def install_test_files(topsrcdir, topobjdir, tests_root):
     """Installs the requested test files to the objdir. This is invoked by
     test runners to avoid installing tens of thousands of test files when
     only a few tests need to be run.
     """
 
-    manifests_dir = mozpath.join(topobjdir, "_build_manifests", "install")
-    test_files_manifest = mozpath.join(manifests_dir, "_test_files")
-    harness_files_manifest = mozpath.join(manifests_dir, tests_root)
-    stamp_file = mozpath.join(manifests_dir, ".test_install_stamp")
+    manifest = InstallManifest(
+        mozpath.join(topobjdir, "_build_manifests", "install", "_test_files")
+    )
 
-    manifest = InstallManifest(test_files_manifest)
+    harness_files_manifest = mozpath.join(
+        topobjdir, "_build_manifests", "install", tests_root
+    )
+
     if os.path.isfile(harness_files_manifest):
+        # If the backend has generated an install manifest for test harness
+        # files they are treated as a monolith and installed each time we
+        # run tests. Fortunately there are not very many.
         manifest |= InstallManifest(harness_files_manifest)
-
-    # Skip if manifests haven't changed and pattern expansion is identical.
-    # The pattern hash catches new files added to pattern source directories
-    # without touching the manifest.
-    if not force:
-        try:
-            stamp_mtime = os.path.getmtime(stamp_file)
-            manifest_paths = [test_files_manifest]
-            if os.path.isfile(harness_files_manifest):
-                manifest_paths.append(harness_files_manifest)
-            if all(os.path.getmtime(m) <= stamp_mtime for m in manifest_paths):
-                with open(stamp_file) as f:
-                    stored_hash = f.read().strip()
-                if _pattern_expansion_hash(manifest) == stored_hash:
-                    return True
-        except OSError:
-            pass
 
     copier = FileCopier()
     manifest.populate_registry(copier)
-    dest = mozpath.join(topobjdir, tests_root)
-    copier.copy(dest, remove_unaccounted=False)
-
-    # Only stamp if all entries are symlinks and the filesystem supports them.
-    # Start False: an empty copier or one with only ExistingFile entries
-    # doesn't prove symlink support.
-    all_symlinks = False
-    if all(f.supports_stamp for _, f in copier):
-        # Spot-check one file: symlink support is per-filesystem, one check suffices.
-        for p, f in copier:
-            if f.is_symlink_backed:
-                all_symlinks = os.path.islink(os.path.join(dest, p))
-                break
-
-    if all_symlinks and "MOZ_AUTOMATION" not in os.environ:
-        with open(stamp_file, "w") as f:
-            f.write(_pattern_expansion_hash(manifest))
-
-    return False
+    copier.copy(mozpath.join(topobjdir, tests_root), remove_unaccounted=False)
 
 
 # Convenience methods for test manifest reading.
@@ -299,12 +251,11 @@ def read_wpt_manifest(context, paths):
         import manifest as wptmanifest
     finally:
         sys.path = old_path
-
-    f = context._finder.get(full_path)
-    try:
-        rv = wptmanifest.manifest.load(tests_root, f)
-    except wptmanifest.manifest.ManifestVersionMismatch:
-        # If we accidentially end up with a committed manifest that's the wrong
-        # version, then return an empty manifest here just to not break the build
-        rv = wptmanifest.manifest.Manifest()
-    return rv
+        f = context._finder.get(full_path)
+        try:
+            rv = wptmanifest.manifest.load(tests_root, f)
+        except wptmanifest.manifest.ManifestVersionMismatch:
+            # If we accidentially end up with a committed manifest that's the wrong
+            # version, then return an empty manifest here just to not break the build
+            rv = wptmanifest.manifest.Manifest()
+        return rv

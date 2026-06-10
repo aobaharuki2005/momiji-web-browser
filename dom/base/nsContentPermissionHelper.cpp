@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -42,15 +44,11 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent {
   // @param aIsRequestDelegatedToUnsafeThirdParty see
   // mIsRequestDelegatedToUnsafeThirdParty.
   ContentPermissionRequestParent(
-      Element* aElement, nsIPrincipal* aPrincipal,
-      nsIPrincipal* aTopLevelPrincipal,
+      const nsTArray<PermissionRequest>& aRequests, Element* aElement,
+      nsIPrincipal* aPrincipal, nsIPrincipal* aTopLevelPrincipal,
       const bool aHasValidTransientUserGestureActivation,
-      const bool aIsRequestDelegatedToUnsafeThirdParty,
-      const bool aIgnoreAllowSitePermission = false);
+      const bool aIsRequestDelegatedToUnsafeThirdParty);
   virtual ~ContentPermissionRequestParent();
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void Init(nsTArray<PermissionRequest>&& aRequests);
 
   bool IsBeingDestroyed();
 
@@ -62,45 +60,44 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent {
   // See nsIPermissionDelegateHandler.maybeUnsafePermissionDelegate.
   bool mIsRequestDelegatedToUnsafeThirdParty;
 
-  bool mIgnoreAllowSitePermission;
-
   RefPtr<nsContentPermissionRequestProxy> mProxy;
   nsTArray<PermissionRequest> mRequests;
 
  private:
+  // Not MOZ_CAN_RUN_SCRIPT because we can't annotate the thing we override yet.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  virtual mozilla::ipc::IPCResult Recvprompt() override;
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
 
 ContentPermissionRequestParent::ContentPermissionRequestParent(
-    Element* aElement, nsIPrincipal* aPrincipal,
-    nsIPrincipal* aTopLevelPrincipal,
+    const nsTArray<PermissionRequest>& aRequests, Element* aElement,
+    nsIPrincipal* aPrincipal, nsIPrincipal* aTopLevelPrincipal,
     const bool aHasValidTransientUserGestureActivation,
-    const bool aIsRequestDelegatedToUnsafeThirdParty,
-    const bool aIgnoreAllowSitePermission)
-    : mPrincipal(aPrincipal),
-      mTopLevelPrincipal(aTopLevelPrincipal),
-      mElement(aElement),
-      mHasValidTransientUserGestureActivation(
-          aHasValidTransientUserGestureActivation),
-      mIsRequestDelegatedToUnsafeThirdParty(
-          aIsRequestDelegatedToUnsafeThirdParty),
-      mIgnoreAllowSitePermission(aIgnoreAllowSitePermission) {
+    const bool aIsRequestDelegatedToUnsafeThirdParty) {
   MOZ_COUNT_CTOR(ContentPermissionRequestParent);
+
+  mPrincipal = aPrincipal;
+  mTopLevelPrincipal = aTopLevelPrincipal;
+  mElement = aElement;
+  mRequests = aRequests.Clone();
+  mHasValidTransientUserGestureActivation =
+      aHasValidTransientUserGestureActivation;
+  mIsRequestDelegatedToUnsafeThirdParty = aIsRequestDelegatedToUnsafeThirdParty;
 }
 
 ContentPermissionRequestParent::~ContentPermissionRequestParent() {
   MOZ_COUNT_DTOR(ContentPermissionRequestParent);
 }
 
-void ContentPermissionRequestParent::Init(
-    nsTArray<PermissionRequest>&& aRequests) {
-  mRequests = std::move(aRequests);
+mozilla::ipc::IPCResult ContentPermissionRequestParent::Recvprompt() {
   mProxy = new nsContentPermissionRequestProxy(this);
   if (NS_FAILED(mProxy->Init(mRequests))) {
     RefPtr<nsContentPermissionRequestProxy> proxy(mProxy);
     proxy->Cancel();
   }
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentPermissionRequestParent::RecvDestroy() {
@@ -242,26 +239,17 @@ nsresult nsContentPermissionUtils::CreatePermissionArray(
 /* static */
 PContentPermissionRequestParent*
 nsContentPermissionUtils::CreateContentPermissionRequestParent(
-    Element* aElement, nsIPrincipal* aPrincipal,
-    nsIPrincipal* aTopLevelPrincipal,
+    const nsTArray<PermissionRequest>& aRequests, Element* aElement,
+    nsIPrincipal* aPrincipal, nsIPrincipal* aTopLevelPrincipal,
     const bool aHasValidTransientUserGestureActivation,
-    const bool aIsRequestDelegatedToUnsafeThirdParty, const TabId& aTabId,
-    const bool aIgnoreAllowSitePermission) {
+    const bool aIsRequestDelegatedToUnsafeThirdParty, const TabId& aTabId) {
   PContentPermissionRequestParent* parent = new ContentPermissionRequestParent(
-      aElement, aPrincipal, aTopLevelPrincipal,
+      aRequests, aElement, aPrincipal, aTopLevelPrincipal,
       aHasValidTransientUserGestureActivation,
-      aIsRequestDelegatedToUnsafeThirdParty, aIgnoreAllowSitePermission);
+      aIsRequestDelegatedToUnsafeThirdParty);
   ContentPermissionRequestParentMap()[parent] = aTabId;
 
   return parent;
-}
-
-/* static */
-void nsContentPermissionUtils::InitContentPermissionRequestParent(
-    PContentPermissionRequestParent* aActor,
-    nsTArray<PermissionRequest>&& aRequests) {
-  static_cast<ContentPermissionRequestParent*>(aActor)->Init(
-      std::move(aRequests));
 }
 
 /* static */
@@ -304,20 +292,16 @@ nsresult nsContentPermissionUtils::AskPermission(
         &isRequestDelegatedToUnsafeThirdParty);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool ignoreAllowSitePermission;
-    rv = aRequest->GetIgnoreAllowSitePermission(&ignoreAllowSitePermission);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     req->IPDLAddRef();
     if (!ContentChild::GetSingleton()->SendPContentPermissionRequestConstructor(
             req, permArray, principal, topLevelPrincipal,
             hasValidTransientUserGestureActivation,
-            isRequestDelegatedToUnsafeThirdParty, child->GetTabId(),
-            ignoreAllowSitePermission)) {
+            isRequestDelegatedToUnsafeThirdParty, child->GetTabId())) {
       return NS_ERROR_FAILURE;
     }
     ContentPermissionRequestChildMap()[req.get()] = child->GetTabId();
 
+    req->Sendprompt();
     return NS_OK;
   }
 
@@ -458,13 +442,6 @@ ContentPermissionRequestBase::GetIsRequestDelegatedToUnsafeThirdParty(
     bool* aIsRequestDelegatedToUnsafeThirdParty) {
   *aIsRequestDelegatedToUnsafeThirdParty =
       mIsRequestDelegatedToUnsafeThirdParty;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ContentPermissionRequestBase::GetIgnoreAllowSitePermission(
-    bool* aIgnoreAllowSitePermission) {
-  *aIgnoreAllowSitePermission = false;
   return NS_OK;
 }
 
@@ -649,7 +626,8 @@ nsresult TranslateChoices(
 
       JS::Rooted<JS::Value> val(cx);
 
-      if (!JS_GetProperty(cx, obj, type.get(), &val) || !val.isString()) {
+      if (!JS_GetProperty(cx, obj, type.BeginReading(), &val) ||
+          !val.isString()) {
         // no setting for the permission type, clear exception and skip it
         jsapi.ClearException();
       } else {
@@ -784,17 +762,6 @@ nsContentPermissionRequestProxy::GetIsRequestDelegatedToUnsafeThirdParty(
   }
   *aIsRequestDelegatedToUnsafeThirdParty =
       mParent->mIsRequestDelegatedToUnsafeThirdParty;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentPermissionRequestProxy::GetIgnoreAllowSitePermission(
-    bool* aIgnoreAllowSitePermission) {
-  NS_ENSURE_ARG_POINTER(aIgnoreAllowSitePermission);
-  if (mParent == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
-  *aIgnoreAllowSitePermission = mParent->mIgnoreAllowSitePermission;
   return NS_OK;
 }
 

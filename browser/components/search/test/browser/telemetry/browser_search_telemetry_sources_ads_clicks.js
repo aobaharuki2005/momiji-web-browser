@@ -72,8 +72,14 @@ async function track_ad_click(testOrganic) {
   assertSERPTelemetry([
     {
       impression: {
+        provider: "example",
         tagged,
         partner_code: partnerCode,
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -103,8 +109,14 @@ async function track_ad_click(testOrganic) {
   assertSERPTelemetry([
     {
       impression: {
+        provider: "example",
         tagged,
         partner_code: partnerCode,
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -144,8 +156,14 @@ async function track_ad_click(testOrganic) {
   assertSERPTelemetry([
     {
       impression: {
+        provider: "example",
         tagged,
         partner_code: partnerCode,
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -164,9 +182,14 @@ async function track_ad_click(testOrganic) {
     },
     {
       impression: {
+        provider: "example",
         tagged,
         partner_code: partnerCode,
         source: "tabhistory",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -199,8 +222,14 @@ async function track_ad_click(testOrganic) {
   assertSERPTelemetry([
     {
       impression: {
+        provider: "example",
         tagged,
         partner_code: partnerCode,
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -219,9 +248,14 @@ async function track_ad_click(testOrganic) {
     },
     {
       impression: {
+        provider: "example",
         tagged,
         partner_code: partnerCode,
         source: "tabhistory",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -268,6 +302,16 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
 
   assertSERPTelemetry([
     {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
+      },
       adImpressions: [
         {
           component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
@@ -302,6 +346,16 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
 
   assertSERPTelemetry([
     {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
+      },
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,

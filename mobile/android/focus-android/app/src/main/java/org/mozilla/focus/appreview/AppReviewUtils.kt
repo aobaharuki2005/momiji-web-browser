@@ -15,16 +15,12 @@ import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManagerFactory
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.support.utils.DefaultDateTimeProvider
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.utils.SupportUtils
 import java.util.concurrent.TimeUnit
 
-/**
- * Utility class for handling In-App Review.
- */
 object AppReviewUtils {
     /**
      * Number of app openings until In App Review is triggered.
@@ -95,10 +91,7 @@ object AppReviewUtils {
         }
     }
 
-    private fun shouldShowInAppReview(
-        context: Context,
-        currentTimeProvider: () -> Long = DefaultDateTimeProvider()::currentTimeMillis,
-    ): Boolean {
+    private fun shouldShowInAppReview(context: Context): Boolean {
         val inAppReviewStep = PreferenceManager.getDefaultSharedPreferences(context).getString(
             context.getString(R.string.pref_in_app_review_step),
             AppReviewStep.Pending.name,
@@ -110,7 +103,7 @@ object AppReviewUtils {
 
         return inAppReviewStep == AppReviewStep.ReviewNeeded.name || (
             lastReviewedTime +
-                APP_REVIEW_TIME_TRIGGER <= currentTimeProvider() &&
+                APP_REVIEW_TIME_TRIGGER <= System.currentTimeMillis() &&
                 inAppReviewStep == AppReviewStep.Reviewed.name
             )
     }
@@ -151,15 +144,12 @@ object AppReviewUtils {
             }
     }
 
-    private fun setLastReviewedTime(
-        context: Context,
-        currentTimeProvider: () -> Long = DefaultDateTimeProvider()::currentTimeMillis,
-    ) {
+    private fun setLastReviewedTime(context: Context) {
         PreferenceManager.getDefaultSharedPreferences(context)
             .edit {
                 putLong(
                     context.getString(R.string.pref_in_app_review_time),
-                    currentTimeProvider(),
+                    System.currentTimeMillis(),
                 )
             }
     }

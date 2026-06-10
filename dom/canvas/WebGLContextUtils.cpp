@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -412,13 +413,13 @@ std::string EnumString(const GLenum val) {
   }
 
   const nsPrintfCString hex("<enum 0x%04x>", val);
-  return std::string(hex.View());
+  return hex.BeginReading();
 }
 
 void WebGLContext::ErrorInvalidEnumArg(const char* const argName,
                                        const GLenum val) const {
   const auto info = nsPrintfCString("Bad `%s`", argName);
-  ErrorInvalidEnumInfo(info.get(), val);
+  ErrorInvalidEnumInfo(info.BeginReading(), val);
 }
 
 void WebGLContext::ErrorInvalidEnumInfo(const char* const info,
@@ -431,7 +432,8 @@ void WebGLContext::ErrorInvalidEnumInfo(const char* const info,
     hint = " (Did you typo `gl.SOMETHINGG` and pass `undefined`?)";
   }
 
-  ErrorInvalidEnum("%s: Invalid enum value %s%s", info, name.get(), hint);
+  ErrorInvalidEnum("%s: Invalid enum value %s%s", info, name.BeginReading(),
+                   hint);
 }
 
 #ifdef DEBUG

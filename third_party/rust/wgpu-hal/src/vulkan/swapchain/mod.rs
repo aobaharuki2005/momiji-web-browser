@@ -8,6 +8,11 @@ pub(super) use native::*;
 mod native;
 
 pub(super) trait Surface: Send + Sync + 'static {
+    /// Deletes the surface and associated resources.
+    ///
+    /// The surface must not be in use when it is deleted.
+    unsafe fn delete_surface(self: Box<Self>);
+
     /// Returns the surface capabilities for the given adapter.
     ///
     /// Returns `None` if the surface is not compatible with the adapter.
@@ -32,22 +37,28 @@ pub(super) trait Surface: Send + Sync + 'static {
 pub(super) trait Swapchain: Send + Sync + 'static {
     /// Releases all resources associated with the swapchain, without
     /// destroying the swapchain itself. Must be called before calling
-    /// either [`Surface::create_swapchain`] or dropping the swapchain.
+    /// either [`Surface::create_swapchain`] or [`Swapchain::delete_swapchain`].
     ///
     /// The swapchain must not be in use when this is called.
     unsafe fn release_resources(&mut self, device: &super::Device);
+
+    /// Deletes the swapchain.
+    ///
+    /// The swapchain must not be in use when it is deleted and
+    /// [`Swapchain::release_resources`] must have been called first.
+    unsafe fn delete_swapchain(self: Box<Self>);
 
     /// Acquires the next available surface texture for rendering.
     ///
     /// `timeout` specifies the maximum time to wait for an image to become available.
     /// If `None` is specified, this function will wait indefinitely.
     ///
-    /// Returns `Err(SurfaceError::Timeout)` if the timeout elapsed before an image became available.
+    /// Returns `Ok(None)` if the timeout elapsed before an image became available.
     unsafe fn acquire(
         &mut self,
         timeout: Option<Duration>,
         fence: &super::Fence,
-    ) -> Result<crate::AcquiredSurfaceTexture<crate::api::Vulkan>, crate::SurfaceError>;
+    ) -> Result<Option<crate::AcquiredSurfaceTexture<crate::api::Vulkan>>, crate::SurfaceError>;
 
     /// Tries to discard the acquired texture without presenting it.
     ///

@@ -29,6 +29,13 @@ ChromeUtils.defineESModuleGetters(
 
 const CONTENT_TYPE_REGEXP = /^content-type/i;
 
+const REDIRECT_STATES = [
+  301, // HTTP Moved Permanently
+  302, // HTTP Found
+  303, // HTTP See Other
+  307, // HTTP Temporary Redirect
+];
+
 function isDataChannel(channel) {
   return channel instanceof Ci.nsIDataChannel;
 }
@@ -119,7 +126,6 @@ class NetworkEventActor extends Actor {
     // should be destroyed when a window is destroyed. See network-events.js.
     this._innerWindowId = lazy.NetworkUtils.getChannelInnerWindowId(channel);
     this._isNavigationRequest = lazy.NetworkUtils.isNavigationRequest(channel);
-    this._isRedirect = false;
 
     // Retrieve cookies and headers from the channel
     const { cookies, headers } =
@@ -132,8 +138,6 @@ class NetworkEventActor extends Actor {
     };
 
     this._resource = this._createResource(networkEventOptions, channel);
-
-    this._memoryCacheData = null;
   }
 
   /**
@@ -286,6 +290,7 @@ class NetworkEventActor extends Actor {
       headersSize = this._request.rawHeaders.length;
       rawHeaders = this._createLongStringActor(this._request.rawHeaders);
     }
+
     return {
       headers: this._request.headers.map(header => ({
         name: header.name,
@@ -440,43 +445,7 @@ class NetworkEventActor extends Actor {
    * @return object
    *         The response packet - network response content.
    */
-  async getResponseContent() {
-    if (!this._response.content.text && this._memoryCacheData) {
-      const data = this._memoryCacheData;
-      this._memoryCacheData = null;
-
-      if (data.key.startsWith("SharedScriptCache:")) {
-        // This should be performed on the same process as the
-        // http-on-resource-cache-response observer notification is received, in
-        // order to query on the SharedScriptCache instance that has the
-        // corresponding cache entry.
-        const text = ChromeUtils.getCachedJavaScriptSource(
-          data.key,
-          this._resource.url,
-          data.charset
-        );
-        if (text !== undefined) {
-          this._response.content.text = text;
-        } else {
-          this._discardResponseBody = true;
-        }
-      }
-    }
-
-    if (!this._response.content.text && this._response.content.encodedData) {
-      this._response.content.text =
-        await lazy.NetworkUtils.decodeResponseChunks(
-          this._response.content.encodedData,
-          {
-            charset: this._response.content.contentCharset,
-            compressionEncodings: this._response.content.compressionEncodings,
-            encodedBodySize: this._response.content.encodedBodySize,
-            encoding: this._response.content.encoding,
-          }
-        );
-      delete this._response.content.encodedData;
-    }
-
+  getResponseContent() {
     const content = { ...this._response.content };
     if (this._response.contentLongStringActor) {
       // Remove the old actor from the pool as new actor will be created
@@ -485,16 +454,12 @@ class NetworkEventActor extends Actor {
     }
     this._response.contentLongStringActor = new LongStringActor(
       this.conn,
-      // When trying to fetch content on a previous page load, or a cancelled request,
-      // `response.content` can be an empty object
-      content.text || ""
+      content.text
     );
     // bug 1462561 - Use "json" type and manually manage/marshall actors to workaround
     // protocol.js performance issue
     this.manage(this._response.contentLongStringActor);
-    content.text = this._discardResponseBody
-      ? ""
-      : this._response.contentLongStringActor.form();
+    content.text = this._response.contentLongStringActor.form();
 
     return {
       content,
@@ -529,17 +494,6 @@ class NetworkEventActor extends Actor {
       fromCache,
       fromServiceWorker,
     });
-  }
-
-  addMemoryCacheData(channel, memoryCacheKey) {
-    let charset = "";
-    if (channel instanceof Ci.nsIHttpChannel) {
-      charset = channel.classicScriptHintCharset || "";
-    }
-    this._memoryCacheData = {
-      key: memoryCacheKey,
-      charset,
-    };
   }
 
   addRawHeaders({ channel, rawHeaders }) {
@@ -601,7 +555,6 @@ class NetworkEventActor extends Actor {
     // separate variables here to bring some attention to this issue.
     const { responseStatus, responseStatusText } = channel;
 
-    this._isRedirect = lazy.NetworkUtils.isRedirect(responseStatus);
     fromCache = fromCache || lazy.NetworkUtils.isFromCache(channel);
     const isDataOrFile = isDataChannel(channel) || isFileChannel(channel);
 
@@ -633,7 +586,7 @@ class NetworkEventActor extends Actor {
     }
 
     // Discard the response body for known redirect response statuses.
-    if (this._isRedirect) {
+    if (REDIRECT_STATES.includes(responseStatus)) {
       this._discardResponseBody = true;
     }
 
@@ -671,7 +624,6 @@ class NetworkEventActor extends Actor {
       remotePort: fromCache ? "" : channel.remotePort,
       status: isDataOrFile ? "200" : responseStatus + "",
       statusText: isDataOrFile ? "0K" : responseStatusText,
-      isRedirect: this._isRedirect,
       earlyHintsStatus: earlyHintsResponseRawHeaders ? "103" : "",
       waitingTime,
       isResolvedByTRR: channel.isResolvedByTRR,
@@ -687,7 +639,7 @@ class NetworkEventActor extends Actor {
    * @param object info
    *        The object containing security information.
    */
-  addSecurityInfo(info) {
+  addSecurityInfo(info, isRacing) {
     // Ignore calls when this actor is already destroyed
     if (this.isDestroyed()) {
       return;
@@ -697,6 +649,7 @@ class NetworkEventActor extends Actor {
 
     this._onEventUpdate(lazy.NetworkUtils.NETWORK_EVENT_TYPES.SECURITY_INFO, {
       state: info.state,
+      isRacing,
     });
   }
 

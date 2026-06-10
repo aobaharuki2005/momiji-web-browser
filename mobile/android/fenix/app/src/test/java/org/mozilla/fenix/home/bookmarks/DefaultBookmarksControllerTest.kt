@@ -9,15 +9,16 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.runTest
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
@@ -31,7 +32,6 @@ import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.bookmarks.controller.DefaultBookmarksController
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class DefaultBookmarksControllerTest {
@@ -39,17 +39,20 @@ class DefaultBookmarksControllerTest {
     @get:Rule
     val gleanTestRule = FenixGleanTestRule(testContext)
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     private val navController: NavController = mockk(relaxUnitFun = true)
     private val settings: Settings = mockk(relaxed = true)
     private val fenixBrowserUseCases: FenixBrowserUseCases = mockk(relaxed = true)
     private val selectTabUseCase: TabsUseCases = mockk(relaxed = true)
-    private lateinit var browserStore: BrowserStore
+    private val browserStore: BrowserStore = mockk(relaxed = true)
 
     private lateinit var controller: DefaultBookmarksController
 
     @Before
     fun setup() {
-        browserStore = BrowserStore()
+        every { browserStore.state.tabs }.returns(emptyList())
 
         controller = spyk(
             DefaultBookmarksController(
@@ -87,7 +90,7 @@ class DefaultBookmarksControllerTest {
         assertNull(HomeBookmarks.bookmarkClicked.testGetValue())
 
         val testTab = createTab("https://www.not_example.com")
-        browserStore = BrowserStore(BrowserState(tabs = listOf(testTab)))
+        every { browserStore.state.tabs }.returns(listOf(testTab))
 
         val bookmark = Bookmark(title = null, url = "https://www.example.com")
         controller.handleBookmarkClicked(bookmark)
@@ -110,7 +113,7 @@ class DefaultBookmarksControllerTest {
 
         val testUrl = "https://www.example.com"
         val testTab = createTab(testUrl)
-        browserStore = BrowserStore(BrowserState(tabs = listOf(testTab)))
+        every { browserStore.state.tabs }.returns(listOf(testTab))
 
         val bookmark = Bookmark(title = null, url = testUrl)
         controller.handleBookmarkClicked(bookmark)
@@ -145,7 +148,7 @@ class DefaultBookmarksControllerTest {
     }
 
     @Test
-    fun `WHEN show all bookmarks is clicked THEN the bookmarks root is opened`() = runTest {
+    fun `WHEN show all bookmarks is clicked THEN the bookmarks root is opened`() = runTestOnMain {
         assertNull(HomeBookmarks.showAllBookmarks.testGetValue())
 
         controller.handleShowAllBookmarksClicked()

@@ -15,7 +15,9 @@ const ruleTester = new RuleTester();
 // ------------------------------------------------------------------------------
 
 function invalidError() {
-  return [{ messageId: "rejectScriptableUnicodeConverter" }];
+  return [
+    { messageId: "rejectScriptableUnicodeConverter", type: "MemberExpression" },
+  ];
 }
 
 ruleTester.run("reject-scriptableunicodeconverter", rule, {

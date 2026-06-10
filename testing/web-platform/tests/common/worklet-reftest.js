@@ -25,19 +25,15 @@ async function animationFrames(frames) {
     await new Promise(requestAnimationFrame);
 }
 
-// This ensures that a commit is accepted and drawn by waiting for a
-// composited animation to start.
 /** @private */
 async function workletPainted() {
-  const animation =
-    document.body.animate({ opacity: [0, 1] }, { duration: 1 });
-  return animation.finished;
+    await animationFrames(2);
 }
 
 /**
- * To make sure that we take the snapshot at the right time, we start a
- * composited animation. Once the composited animation runs we know that
- * an updated composited frame has been produced.
+ * To make sure that we take the snapshot at the right time, we do double
+ * requestAnimationFrame. In the second frame, we take a screenshot, that makes
+ * sure that we already have a full frame.
  *
  * @param {Worklet} worklet
  * @param {(Object|string)} code

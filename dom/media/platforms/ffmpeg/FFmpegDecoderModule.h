@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef FFmpegDecoderModule_h_
-#define FFmpegDecoderModule_h_
+#ifndef __FFmpegDecoderModule_h__
+#define __FFmpegDecoderModule_h__
 
 #include "FFmpegAudioDecoder.h"
 #include "FFmpegLibWrapper.h"
@@ -59,9 +61,6 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
         AV_HWDEVICE_TYPE_D3D11VA,
 #  endif
 #  ifdef MOZ_WIDGET_GTK
-#    if LIBAVCODEC_VERSION_MAJOR >= 60
-        AV_HWDEVICE_TYPE_VULKAN,
-#    endif
         AV_HWDEVICE_TYPE_VAAPI,
         AV_HWDEVICE_TYPE_NONE,  // Placeholder for V4L2.
 #  endif
@@ -224,7 +223,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
     if (VPXDecoder::IsVPX(mimeType) && trackInfo.GetAsVideoInfo()->HasAlpha()) {
       MOZ_LOG(sPDMLog, LogLevel::Debug,
               ("FFmpeg decoder rejects requested type '%s'",
-               PromiseFlatCString(mimeType).get()));
+               mimeType.BeginReading()));
       return media::DecodeSupportSet{};
     }
 
@@ -234,7 +233,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
       // (WebRTC).
       MOZ_LOG(sPDMLog, LogLevel::Debug,
               ("FFmpeg decoder rejects requested type '%s' due to low latency",
-               PromiseFlatCString(mimeType).get()));
+               mimeType.BeginReading()));
       return media::DecodeSupportSet{};
     }
 
@@ -243,7 +242,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
           sPDMLog, LogLevel::Debug,
           ("FFmpeg decoder rejects requested type '%s' due to being disabled "
            "by the pref",
-           PromiseFlatCString(mimeType).get()));
+           mimeType.BeginReading()));
       return media::DecodeSupportSet{};
     }
 
@@ -254,7 +253,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
     if (audioCodec == AV_CODEC_ID_NONE && videoCodec == AV_CODEC_ID_NONE) {
       MOZ_LOG(sPDMLog, LogLevel::Debug,
               ("FFmpeg decoder rejects requested type '%s'",
-               PromiseFlatCString(mimeType).get()));
+               mimeType.BeginReading()));
       return media::DecodeSupportSet{};
     }
     AVCodecID codecId =
@@ -295,10 +294,10 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
                   !supports.contains(media::DecodeSupport::SoftwareDecode));
 #endif
 
-    MOZ_LOG(sPDMLog, LogLevel::Debug,
-            ("FFmpeg decoder %s requested type '%s'",
-             supports.isEmpty() ? "rejects" : "supports",
-             PromiseFlatCString(mimeType).get()));
+    MOZ_LOG(
+        sPDMLog, LogLevel::Debug,
+        ("FFmpeg decoder %s requested type '%s'",
+         supports.isEmpty() ? "rejects" : "supports", mimeType.BeginReading()));
     return supports;
   }
 
@@ -336,10 +335,10 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
 
  private:
   const FFmpegLibWrapper* mLib;
-  constinit static inline StaticDataMutex<nsTArray<AVCodecID>>
+  MOZ_RUNINIT static inline StaticDataMutex<nsTArray<AVCodecID>>
       sSupportedHWCodecs{"sSupportedHWCodecs"};
 };
 
 }  // namespace mozilla
 
-#endif  // FFmpegDecoderModule_h_
+#endif  // __FFmpegDecoderModule_h__

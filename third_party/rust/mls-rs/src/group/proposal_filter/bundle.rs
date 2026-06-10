@@ -17,13 +17,6 @@ use crate::{
     ExtensionList,
 };
 
-#[cfg(all(
-    feature = "by_ref_proposal",
-    feature = "custom_proposal",
-    feature = "self_remove_proposal"
-))]
-use crate::group::SelfRemoveProposal;
-
 #[cfg(feature = "by_ref_proposal")]
 use crate::group::{proposal_cache::CachedProposal, LeafIndex, ProposalRef, UpdateProposal};
 
@@ -52,12 +45,6 @@ pub struct ProposalBundle {
     pub(crate) reinitializations: Vec<ProposalInfo<ReInitProposal>>,
     pub(crate) external_initializations: Vec<ProposalInfo<ExternalInit>>,
     pub(crate) group_context_extensions: Vec<ProposalInfo<ExtensionList>>,
-    #[cfg(all(
-        feature = "by_ref_proposal",
-        feature = "custom_proposal",
-        feature = "self_remove_proposal"
-    ))]
-    pub(crate) self_removes: Vec<ProposalInfo<SelfRemoveProposal>>,
     #[cfg(feature = "custom_proposal")]
     pub(crate) custom_proposals: Vec<ProposalInfo<CustomProposal>>,
 }
@@ -104,16 +91,6 @@ impl ProposalBundle {
                     source,
                 })
             }
-            #[cfg(all(
-                feature = "by_ref_proposal",
-                feature = "custom_proposal",
-                feature = "self_remove_proposal"
-            ))]
-            Proposal::SelfRemove(proposal) => self.self_removes.push(ProposalInfo {
-                proposal,
-                sender,
-                source,
-            }),
             #[cfg(feature = "custom_proposal")]
             Proposal::Custom(proposal) => self.custom_proposals.push(ProposalInfo {
                 proposal,
@@ -237,13 +214,6 @@ impl ProposalBundle {
         #[cfg(feature = "custom_proposal")]
         let len = len + self.custom_proposals.len();
 
-        #[cfg(all(
-            feature = "by_ref_proposal",
-            feature = "custom_proposal",
-            feature = "self_remove_proposal"
-        ))]
-        let len = len + self.self_removes.len();
-
         #[cfg(feature = "by_ref_proposal")]
         let len = len + self.updates.len();
 
@@ -269,16 +239,6 @@ impl ProposalBundle {
                     .iter()
                     .map(|p| p.as_ref().map(BorrowedProposal::ReInit)),
             );
-        #[cfg(all(
-            feature = "by_ref_proposal",
-            feature = "custom_proposal",
-            feature = "self_remove_proposal"
-        ))]
-        let res = res.chain(
-            self.self_removes
-                .iter()
-                .map(|p| p.as_ref().map(BorrowedProposal::SelfRemove)),
-        );
 
         #[cfg(feature = "by_ref_proposal")]
         let res = res.chain(
@@ -339,22 +299,6 @@ impl ProposalBundle {
         #[cfg(feature = "by_ref_proposal")]
         let res = res.chain(self.updates.into_iter().map(|p| p.map(Proposal::Update)));
 
-        let group_context_extensions_to_chain = self
-            .group_context_extensions
-            .into_iter()
-            .map(|p| p.map(Proposal::GroupContextExtensions));
-
-        #[cfg(all(
-            feature = "by_ref_proposal",
-            feature = "custom_proposal",
-            feature = "self_remove_proposal"
-        ))]
-        let res = res.chain(
-            self.self_removes
-                .into_iter()
-                .map(|p| p.map(Proposal::SelfRemove)),
-        );
-
         res.chain(
             self.additions
                 .into_iter()
@@ -366,7 +310,11 @@ impl ProposalBundle {
                 .into_iter()
                 .map(|p| p.map(Proposal::ReInit)),
         )
-        .chain(group_context_extensions_to_chain)
+        .chain(
+            self.group_context_extensions
+                .into_iter()
+                .map(|p| p.map(Proposal::GroupContextExtensions)),
+        )
     }
 
     pub(crate) fn proposals_or_refs(&self) -> Vec<ProposalOrRef> {
@@ -423,16 +371,6 @@ impl ProposalBundle {
     /// Group context extension proposals in the bundle.
     pub fn group_context_ext_proposals(&self) -> &[ProposalInfo<ExtensionList>] {
         &self.group_context_extensions
-    }
-
-    /// Self-remove proposals in the bundle.
-    #[cfg(all(
-        feature = "by_ref_proposal",
-        feature = "custom_proposal",
-        feature = "self_remove_proposal"
-    ))]
-    pub fn self_remove_proposals(&self) -> &[ProposalInfo<SelfRemoveProposal>] {
-        &self.self_removes
     }
 
     /// Custom proposals in the bundle.
@@ -541,6 +479,10 @@ impl<'a> FromIterator<&'a (ProposalRef, CachedProposal)> for ProposalBundle {
     }
 }
 
+// #[cfg_attr(
+//     all(feature = "ffi", not(test)),
+//     safer_ffi_gen::ffi_type(clone, opaque)
+// )]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, PartialEq, MlsSize, MlsEncode, MlsDecode)]
 #[repr(u8)]
@@ -551,6 +493,7 @@ pub enum ProposalSource {
     Local = 3u8,
 }
 
+// #[cfg_attr(all(feature = "ffi", not(test)), safer_ffi_gen::ffi_type(opaque))]
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[non_exhaustive]
@@ -592,6 +535,7 @@ impl<T: MlsDecode> MlsDecode for ProposalInfo<T> {
     }
 }
 
+#[cfg_attr(all(feature = "ffi", not(test)), ::safer_ffi_gen::safer_ffi_gen)]
 impl<T> ProposalInfo<T> {
     /// Create a new ProposalInfo.
     ///
@@ -601,6 +545,7 @@ impl<T> ProposalInfo<T> {
     ///
     /// This function is useful when implementing custom
     /// [`MlsRules`](crate::MlsRules).
+    // #[cfg_attr(all(feature = "ffi", not(test)), safer_ffi_gen::safer_ffi_gen_ignore)]
     pub fn new(proposal: T, sender: Sender, can_transmit: bool) -> Self {
         let source = if can_transmit {
             ProposalSource::ByValue
@@ -615,14 +560,17 @@ impl<T> ProposalInfo<T> {
         }
     }
 
+    // #[cfg(all(feature = "ffi", not(test)))]
     pub fn sender(&self) -> &Sender {
         &self.sender
     }
 
+    // #[cfg(all(feature = "ffi", not(test)))]
     pub fn source(&self) -> &ProposalSource {
         &self.source
     }
 
+    // #[cfg_attr(all(feature = "ffi", not(test)), safer_ffi_gen::safer_ffi_gen_ignore)]
     pub fn map<U, F>(self, f: F) -> ProposalInfo<U>
     where
         F: FnOnce(T) -> U,
@@ -634,6 +582,7 @@ impl<T> ProposalInfo<T> {
         }
     }
 
+    // #[cfg_attr(all(feature = "ffi", not(test)), safer_ffi_gen::safer_ffi_gen_ignore)]
     pub fn as_ref(&self) -> ProposalInfo<&T> {
         ProposalInfo {
             proposal: &self.proposal,
@@ -668,6 +617,9 @@ impl<T> ProposalInfo<T> {
         }
     }
 }
+
+// #[cfg(all(feature = "ffi", not(test)))]
+// safer_ffi_gen::specialize!(ProposalInfoFfi = ProposalInfo<Proposal>);
 
 pub trait Proposable: Sized {
     const TYPE: ProposalType;
@@ -712,12 +664,6 @@ impl_proposable!(RemoveProposal, REMOVE, removals);
 impl_proposable!(PreSharedKeyProposal, PSK, psks);
 impl_proposable!(ReInitProposal, RE_INIT, reinitializations);
 impl_proposable!(ExternalInit, EXTERNAL_INIT, external_initializations);
-#[cfg(all(
-    feature = "by_ref_proposal",
-    feature = "custom_proposal",
-    feature = "self_remove_proposal"
-))]
-impl_proposable!(SelfRemoveProposal, SELF_REMOVE, self_removes);
 impl_proposable!(
     ExtensionList,
     GROUP_CONTEXT_EXTENSIONS,

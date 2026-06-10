@@ -17,17 +17,17 @@ info: |
     c. If one of srcType and elementType contains the substring "Big" and the other
        does not, throw a TypeError exception.
 
-includes: [testTypedArray.js, testTypedArray.js]
+includes: [testBigIntTypedArray.js, testTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
 var notBigTypedArray;
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
 
-  notBigTypedArray = new TA(makeCtorArg(16));
+  notBigTypedArray = new TA(16);
 
-  testWithBigIntTypedArrayConstructors(function(BTA, makeCtorArg) {
+  testWithBigIntTypedArrayConstructors(function(BTA) {
     assert.throws(TypeError, function() {
       new BTA(notBigTypedArray);
     });

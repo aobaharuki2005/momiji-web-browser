@@ -1,4 +1,4 @@
-// META: global=window,dedicatedworker
+// META: global=window,dedicatedworker,shadowrealm
 
 test(t => {
   const c = new AbortController(),

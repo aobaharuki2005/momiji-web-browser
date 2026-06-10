@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,11 +7,6 @@
 #include "ReadableStreamTee.h"
 
 #include "ReadIntoRequest.h"
-#include "ReadableByteStreamControllerAbstract.h"
-#include "ReadableStreamAbstract.h"
-#include "ReadableStreamBYOBReaderAbstract.h"
-#include "ReadableStreamDefaultControllerAbstract.h"
-#include "ReadableStreamDefaultReaderAbstract.h"
 #include "TeeState.h"
 #include "js/Exception.h"
 #include "js/TypeDecls.h"
@@ -17,6 +14,11 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
 #include "mozilla/dom/Promise-inl.h"
+#include "mozilla/dom/ReadableByteStreamController.h"
+#include "mozilla/dom/ReadableStream.h"
+#include "mozilla/dom/ReadableStreamBYOBReader.h"
+#include "mozilla/dom/ReadableStreamDefaultController.h"
+#include "mozilla/dom/ReadableStreamDefaultReader.h"
 #include "mozilla/dom/ReadableStreamGenericReader.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
@@ -290,21 +292,13 @@ class ByteStreamTeeSourceAlgorithms final
         return nullptr;
       }
 
-      JS::Rooted<JS::Value> reason1(aCx);
-      mTeeState->GetReason1(aCx, &reason1, aRv);
-      if (aRv.Failed()) {
-        return nullptr;
-      }
+      JS::Rooted<JS::Value> reason1(aCx, mTeeState->Reason1());
       if (!JS_SetElement(aCx, compositeReason, 0, reason1)) {
         aRv.StealExceptionFromJSContext(aCx);
         return nullptr;
       }
 
-      JS::Rooted<JS::Value> reason2(aCx);
-      mTeeState->GetReason2(aCx, &reason2, aRv);
-      if (aRv.Failed()) {
-        return nullptr;
-      }
+      JS::Rooted<JS::Value> reason2(aCx, mTeeState->Reason2());
       if (!JS_SetElement(aCx, compositeReason, 1, reason2)) {
         aRv.StealExceptionFromJSContext(aCx);
         return nullptr;

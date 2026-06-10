@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 function testPunctuation(col, expectedIgnorePunctuation) {
   let ignorePunctuation = col.resolvedOptions().ignorePunctuation;
   assertEq(ignorePunctuation, expectedIgnorePunctuation);

@@ -1,13 +1,13 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MozSrcProtocolHandler_h_
-#define MozSrcProtocolHandler_h_
+#ifndef MozSrcProtocolHandler_h___
+#define MozSrcProtocolHandler_h___
 
 #include "nsIProtocolHandler.h"
 #include "nsISubstitutingProtocolHandler.h"
-#include "mozilla/StaticMutex.h"
 #include "SubstitutingProtocolHandler.h"
 
 namespace mozilla {
@@ -37,9 +37,7 @@ class MozSrcProtocolHandler final : public nsISubstitutingProtocolHandler,
                                                  nsIURI** aResult) override;
 
  private:
-  static mozilla::StaticMutex sMutex;
-  static mozilla::StaticRefPtr<MozSrcProtocolHandler> sSingleton
-      MOZ_GUARDED_BY(sMutex);
+  static mozilla::StaticRefPtr<MozSrcProtocolHandler> sSingleton;
   nsresult Init();
 
   nsCString mGREURI;
@@ -48,4 +46,4 @@ class MozSrcProtocolHandler final : public nsISubstitutingProtocolHandler,
 }  // namespace net
 }  // namespace mozilla
 
-#endif /* MozSrcProtocolHandler_h_ */
+#endif /* MozSrcProtocolHandler_h___ */

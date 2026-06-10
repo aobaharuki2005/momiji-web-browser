@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -52,9 +54,10 @@ class Watchtower {
   static bool watchFreezeOrSealSlow(JSContext* cx, Handle<NativeObject*> obj,
                                     IntegrityLevel level);
   static bool watchProtoChangeSlow(JSContext* cx, HandleObject obj);
+  static bool watchObjectSwapSlow(JSContext* cx, HandleObject a,
+                                  HandleObject b);
   static SetSlotOptimizable canOptimizeSetSlotSlow(JSContext* cx,
                                                    NativeObject* obj,
-                                                   PropertyKey key,
                                                    PropertyInfo prop);
 
  public:
@@ -86,8 +89,15 @@ class Watchtower {
     return obj->hasAnyFlag(
         {ObjectFlag::IsUsedAsPrototype, ObjectFlag::UseWatchtowerTestingLog});
   }
+  static bool watchesObjectSwap(JSObject* a, JSObject* b) {
+    auto watches = [](JSObject* obj) {
+      return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
+                              ObjectFlag::UseWatchtowerTestingLog,
+                              ObjectFlag::HasObjectFuse});
+    };
+    return watches(a) || watches(b);
+  }
   static SetSlotOptimizable canOptimizeSetSlot(JSContext* cx, NativeObject* obj,
-                                               PropertyKey key,
                                                PropertyInfo prop) {
     if (obj->hasAnyFlag({ObjectFlag::HasRealmFuseProperty,
                          ObjectFlag::UseWatchtowerTestingLog})) {
@@ -96,7 +106,7 @@ class Watchtower {
     if (!obj->hasObjectFuse()) {
       return SetSlotOptimizable::Yes;
     }
-    return canOptimizeSetSlotSlow(cx, obj, key, prop);
+    return canOptimizeSetSlotSlow(cx, obj, prop);
   }
 
   static bool watchPropertyAdd(JSContext* cx, Handle<NativeObject*> obj,
@@ -151,6 +161,13 @@ class Watchtower {
       return true;
     }
     return watchProtoChangeSlow(cx, obj);
+  }
+
+  static bool watchObjectSwap(JSContext* cx, HandleObject a, HandleObject b) {
+    if (MOZ_LIKELY(!watchesObjectSwap(a, b))) {
+      return true;
+    }
+    return watchObjectSwapSlow(cx, a, b);
   }
 };
 

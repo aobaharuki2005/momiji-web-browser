@@ -11,9 +11,9 @@ use super::*;
 
 pub fn pass(root: &mut Root) -> Result<()> {
     root.cpp_scaffolding.callback_interfaces =
-        CombinedItems::try_new(root, |namespace, ids, items| {
-            let module_name = namespace.name.clone();
-            let ffi_func_map: HashMap<String, FfiFunctionType> = namespace
+        CombinedItems::try_new(root, |module, ids, items| {
+            let module_name = module.name.clone();
+            let ffi_func_map: HashMap<String, FfiFunctionType> = module
                 .ffi_definitions
                 .iter()
                 .filter_map(|def| match def {
@@ -23,7 +23,7 @@ pub fn pass(root: &mut Root) -> Result<()> {
                 .map(|func_type| (func_type.name.0.clone(), func_type.clone()))
                 .collect();
 
-            namespace.try_visit_mut(|cbi: &mut CallbackInterface| {
+            module.try_visit_mut(|cbi: &mut CallbackInterface| {
                 cbi.vtable.callback_interface_id = ids.new_id();
                 items.push(generate_cpp_callback_interface(
                     &module_name,
@@ -33,7 +33,7 @@ pub fn pass(root: &mut Root) -> Result<()> {
                 Ok(())
             })?;
 
-            namespace.try_visit_mut(|int: &mut Interface| {
+            module.try_visit_mut(|int: &mut Interface| {
                 if let Some(vtable) = &mut int.vtable {
                     vtable.callback_interface_id = ids.new_id();
                     items.push(generate_cpp_callback_interface(
@@ -150,13 +150,9 @@ fn generate_cpp_callback_interface(
         name: interface_name.to_string(),
         // Only generate FFI value class for callback interfaces.  For trait
         // interfaces, we're going to generate one `PointerTypes.cpp` instead.
-        ffi_value_class: vtable.callback_interface.then(|| {
-            format!(
-                "FfiValueObjectHandle{}{}",
-                module_name.to_upper_camel_case(),
-                interface_name.to_upper_camel_case()
-            )
-        }),
+        ffi_value_class: vtable
+            .callback_interface
+            .then(|| format!("FfiValueCallbackInterface{module_name}_{interface_name}")),
         handler_var: format!(
             "gUniffiCallbackHandler{}{}",
             module_name.to_upper_camel_case(),
@@ -171,11 +167,6 @@ fn generate_cpp_callback_interface(
         init_fn: vtable.init_fn.clone(),
         free_fn: format!(
             "callback_free_{}_{}",
-            module_name.to_snake_case(),
-            interface_name.to_snake_case()
-        ),
-        clone_fn: format!(
-            "callback_clone_{}_{}",
             module_name.to_snake_case(),
             interface_name.to_snake_case()
         ),
@@ -214,14 +205,21 @@ pub fn return_handler_class_name(return_ty: Option<&FfiValueReturnType>) -> Resu
             FfiType::Float32 => "CallbackLowerReturnFloat32".to_string(),
             FfiType::Float64 => "CallbackLowerReturnFloat64".to_string(),
             FfiType::RustBuffer(_) => "CallbackLowerReturnRustBuffer".to_string(),
-            FfiType::Handle(HandleKind::TraitInterface {
-                namespace,
+            FfiType::RustArcPtr {
+                module_name,
+                object_name,
+            } => {
+                format!(
+                    "CallbackLowerReturnObject{}{}",
+                    module_name.to_upper_camel_case(),
+                    object_name.to_upper_camel_case(),
+                )
+            }
+            FfiType::Handle(HandleKind::CallbackInterface {
+                module_name,
                 interface_name,
             }) => {
-                format!("CallbackLowerReturnCallbackInterface{namespace}_{interface_name}")
-            }
-            FfiType::Handle(HandleKind::StructInterface { .. }) => {
-                "CallbackLowerReturnUInt8".to_string()
+                format!("CallbackLowerReturnCallbackInterface{module_name}_{interface_name}")
             }
             ty => bail!("Invalid callback return FFI type: {ty:?}"),
         },

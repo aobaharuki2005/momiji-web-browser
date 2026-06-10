@@ -11,3 +11,8 @@ mod media_query;
 
 pub use self::media_list::MediaList;
 pub use self::media_query::{MediaQuery, MediaQueryType, MediaType, Qualifier};
+
+#[cfg(feature = "gecko")]
+pub use crate::gecko::media_queries::Device;
+#[cfg(feature = "servo")]
+pub use crate::servo::media_queries::Device;

@@ -245,29 +245,35 @@ bool IsValidVideoRegion(const gfx::IntSize& aFrame,
 }
 
 already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType) {
-  RefPtr<SharedThreadPool> pool;
+  const char* name;
+  uint32_t threads = 4;
   switch (aType) {
     case MediaThreadType::PLATFORM_DECODER:
-      pool = SharedThreadPool::Get("MediaPDecoder", 4);
+      name = "MediaPDecoder";
       break;
     case MediaThreadType::WEBRTC_CALL_THREAD:
-      pool = SharedThreadPool::Get("WebrtcCallThread", 1);
+      name = "WebrtcCallThread";
+      threads = 1;
       break;
     case MediaThreadType::WEBRTC_WORKER:
-      pool = SharedThreadPool::Get("WebrtcWorker", 4);
+      name = "WebrtcWorker";
       break;
     case MediaThreadType::MDSM:
-      pool = SharedThreadPool::Get("MediaDecoderStateMachine", 1);
+      name = "MediaDecoderStateMachine";
+      threads = 1;
       break;
     case MediaThreadType::PLATFORM_ENCODER:
-      pool = SharedThreadPool::Get("MediaPEncoder", 4);
+      name = "MediaPEncoder";
       break;
     default:
       MOZ_FALLTHROUGH_ASSERT("Unexpected MediaThreadType");
     case MediaThreadType::SUPERVISOR:
-      pool = SharedThreadPool::Get("MediaSupervisor", 4);
+      name = "MediaSupervisor";
       break;
   }
+
+  RefPtr<SharedThreadPool> pool =
+      SharedThreadPool::Get(nsDependentCString(name), threads);
 
   // Ensure a larger stack for platform decoder threads
   bool needsLargerStacks = aType == MediaThreadType::PLATFORM_DECODER;
@@ -971,7 +977,7 @@ nsresult GenerateRandomPathName(nsCString& aOutSalt, uint32_t aLength) {
   return NS_OK;
 }
 
-already_AddRefed<TaskQueue> CreateMediaDecodeTaskQueue(StaticString aName) {
+already_AddRefed<TaskQueue> CreateMediaDecodeTaskQueue(const char* aName) {
   RefPtr<TaskQueue> queue = TaskQueue::Create(
       GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER), aName);
   return queue.forget();
@@ -1049,8 +1055,7 @@ void LogToBrowserConsole(const nsAString& aMsg) {
   if (!NS_IsMainThread()) {
     nsString msg(aMsg);
     nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
-        "LogToBrowserConsole",
-        [msg = std::move(msg)]() { LogToBrowserConsole(msg); });
+        "LogToBrowserConsole", [msg]() { LogToBrowserConsole(msg); });
     SchedulerGroup::Dispatch(task.forget());
     return;
   }

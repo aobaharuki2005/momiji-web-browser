@@ -44,7 +44,7 @@ translate_from_snapshot:: translator \
 ; mkdir -p ../javasrc ; \
   java -jar translator.jar \
     ../javasrc \
-    .. ../../../xpcom/ds/StaticAtoms.py ../../../xpcom/ds/HTMLAtoms.py ../../../dom/base/AtomAttributes.h
+    .. ../../../xpcom/ds/StaticAtoms.py ../../../xpcom/ds/HTMLAtoms.py
 
 named_characters:: translator \
 ; java -cp translator.jar \

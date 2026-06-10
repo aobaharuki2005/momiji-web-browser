@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,7 +11,6 @@
 #include "Tools.h"
 #include "Blur.h"
 #include <map>
-#include <numeric>
 #include "FilterProcessing.h"
 #include "Logging.h"
 #include "mozilla/PodOperations.h"
@@ -441,96 +442,96 @@ already_AddRefed<FilterNode> FilterNodeSoftware::Create(FilterType aType) {
   RefPtr<FilterNodeSoftware> filter;
   switch (aType) {
     case FilterType::BLEND:
-      filter = MakeRefPtr<FilterNodeBlendSoftware>();
+      filter = new FilterNodeBlendSoftware();
       break;
     case FilterType::TRANSFORM:
-      filter = MakeRefPtr<FilterNodeTransformSoftware>();
+      filter = new FilterNodeTransformSoftware();
       break;
     case FilterType::MORPHOLOGY:
-      filter = MakeRefPtr<FilterNodeMorphologySoftware>();
+      filter = new FilterNodeMorphologySoftware();
       break;
     case FilterType::COLOR_MATRIX:
-      filter = MakeRefPtr<FilterNodeColorMatrixSoftware>();
+      filter = new FilterNodeColorMatrixSoftware();
       break;
     case FilterType::FLOOD:
-      filter = MakeRefPtr<FilterNodeFloodSoftware>();
+      filter = new FilterNodeFloodSoftware();
       break;
     case FilterType::TILE:
-      filter = MakeRefPtr<FilterNodeTileSoftware>();
+      filter = new FilterNodeTileSoftware();
       break;
     case FilterType::TABLE_TRANSFER:
-      filter = MakeRefPtr<FilterNodeTableTransferSoftware>();
+      filter = new FilterNodeTableTransferSoftware();
       break;
     case FilterType::DISCRETE_TRANSFER:
-      filter = MakeRefPtr<FilterNodeDiscreteTransferSoftware>();
+      filter = new FilterNodeDiscreteTransferSoftware();
       break;
     case FilterType::LINEAR_TRANSFER:
-      filter = MakeRefPtr<FilterNodeLinearTransferSoftware>();
+      filter = new FilterNodeLinearTransferSoftware();
       break;
     case FilterType::GAMMA_TRANSFER:
-      filter = MakeRefPtr<FilterNodeGammaTransferSoftware>();
+      filter = new FilterNodeGammaTransferSoftware();
       break;
     case FilterType::CONVOLVE_MATRIX:
-      filter = MakeRefPtr<FilterNodeConvolveMatrixSoftware>();
+      filter = new FilterNodeConvolveMatrixSoftware();
       break;
     case FilterType::DISPLACEMENT_MAP:
-      filter = MakeRefPtr<FilterNodeDisplacementMapSoftware>();
+      filter = new FilterNodeDisplacementMapSoftware();
       break;
     case FilterType::TURBULENCE:
-      filter = MakeRefPtr<FilterNodeTurbulenceSoftware>();
+      filter = new FilterNodeTurbulenceSoftware();
       break;
     case FilterType::ARITHMETIC_COMBINE:
-      filter = MakeRefPtr<FilterNodeArithmeticCombineSoftware>();
+      filter = new FilterNodeArithmeticCombineSoftware();
       break;
     case FilterType::COMPOSITE:
-      filter = MakeRefPtr<FilterNodeCompositeSoftware>();
+      filter = new FilterNodeCompositeSoftware();
       break;
     case FilterType::GAUSSIAN_BLUR:
-      filter = MakeRefPtr<FilterNodeGaussianBlurSoftware>();
+      filter = new FilterNodeGaussianBlurSoftware();
       break;
     case FilterType::DIRECTIONAL_BLUR:
-      filter = MakeRefPtr<FilterNodeDirectionalBlurSoftware>();
+      filter = new FilterNodeDirectionalBlurSoftware();
       break;
     case FilterType::CROP:
-      filter = MakeRefPtr<FilterNodeCropSoftware>();
+      filter = new FilterNodeCropSoftware();
       break;
     case FilterType::PREMULTIPLY:
-      filter = MakeRefPtr<FilterNodePremultiplySoftware>();
+      filter = new FilterNodePremultiplySoftware();
       break;
     case FilterType::UNPREMULTIPLY:
-      filter = MakeRefPtr<FilterNodeUnpremultiplySoftware>();
+      filter = new FilterNodeUnpremultiplySoftware();
       break;
     case FilterType::OPACITY:
-      filter = MakeRefPtr<FilterNodeOpacitySoftware>();
+      filter = new FilterNodeOpacitySoftware();
       break;
     case FilterType::POINT_DIFFUSE:
-      filter = MakeRefPtr<FilterNodeLightingSoftware<PointLightSoftware,
-                                                     DiffuseLightingSoftware>>(
+      filter = new FilterNodeLightingSoftware<PointLightSoftware,
+                                              DiffuseLightingSoftware>(
           "FilterNodeLightingSoftware<PointLight, DiffuseLighting>");
       break;
     case FilterType::POINT_SPECULAR:
-      filter = MakeRefPtr<FilterNodeLightingSoftware<PointLightSoftware,
-                                                     SpecularLightingSoftware>>(
+      filter = new FilterNodeLightingSoftware<PointLightSoftware,
+                                              SpecularLightingSoftware>(
           "FilterNodeLightingSoftware<PointLight, SpecularLighting>");
       break;
     case FilterType::SPOT_DIFFUSE:
-      filter = MakeRefPtr<FilterNodeLightingSoftware<SpotLightSoftware,
-                                                     DiffuseLightingSoftware>>(
+      filter = new FilterNodeLightingSoftware<SpotLightSoftware,
+                                              DiffuseLightingSoftware>(
           "FilterNodeLightingSoftware<SpotLight, DiffuseLighting>");
       break;
     case FilterType::SPOT_SPECULAR:
-      filter = MakeRefPtr<FilterNodeLightingSoftware<SpotLightSoftware,
-                                                     SpecularLightingSoftware>>(
+      filter = new FilterNodeLightingSoftware<SpotLightSoftware,
+                                              SpecularLightingSoftware>(
           "FilterNodeLightingSoftware<SpotLight, SpecularLighting>");
       break;
     case FilterType::DISTANT_DIFFUSE:
-      filter = MakeRefPtr<FilterNodeLightingSoftware<DistantLightSoftware,
-                                                     DiffuseLightingSoftware>>(
+      filter = new FilterNodeLightingSoftware<DistantLightSoftware,
+                                              DiffuseLightingSoftware>(
           "FilterNodeLightingSoftware<DistantLight, DiffuseLighting>");
       break;
     case FilterType::DISTANT_SPECULAR:
-      filter = MakeRefPtr<FilterNodeLightingSoftware<DistantLightSoftware,
-                                                     SpecularLightingSoftware>>(
+      filter = new FilterNodeLightingSoftware<DistantLightSoftware,
+                                              SpecularLightingSoftware>(
           "FilterNodeLightingSoftware<DistantLight, SpecularLighting>");
       break;
   }
@@ -811,7 +812,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(
       // to use the Map API yet. We can still read the stride/data
       // values as long as we don't try to dereference them.
       result->Unmap();
-      if (map.mStride != GetAlignedStride<16>(map.mStride, 1).valueOr(0) ||
+      if (map.mStride != GetAlignedStride<16>(map.mStride, 1) ||
           reinterpret_cast<uintptr_t>(map.mData) % 16 != 0) {
         // Align unaligned surface.
         result = CloneAligned(result);
@@ -894,23 +895,27 @@ void FilterNodeSoftware::FilterInvalidated(FilterNodeSoftware* aFilter) {
 void FilterNodeSoftware::Invalidate() {
   mCachedOutput = nullptr;
   mCachedRect = IntRect();
-  std::ranges::for_each(
-      mInvalidationListeners,
-      [&](FilterInvalidationListener* i) { i->FilterInvalidated(this); });
+  for (std::vector<FilterInvalidationListener*>::iterator it =
+           mInvalidationListeners.begin();
+       it != mInvalidationListeners.end(); it++) {
+    (*it)->FilterInvalidated(this);
+  }
 }
 
-FilterNodeSoftware::FilterNodeSoftware() = default;
+FilterNodeSoftware::FilterNodeSoftware() {}
 
 FilterNodeSoftware::~FilterNodeSoftware() {
   MOZ_ASSERT(
       mInvalidationListeners.empty(),
       "All invalidation listeners should have unsubscribed themselves by now!");
 
-  std::ranges::for_each(mInputFilters, [&](RefPtr<FilterNodeSoftware>& i) {
-    if (i) {
-      i->RemoveInvalidationListener(this);
+  for (std::vector<RefPtr<FilterNodeSoftware> >::iterator it =
+           mInputFilters.begin();
+       it != mInputFilters.end(); it++) {
+    if (*it) {
+      (*it)->RemoveInvalidationListener(this);
     }
-  });
+  }
 }
 
 void FilterNodeSoftware::SetInput(uint32_t aIndex, FilterNode* aFilter) {
@@ -1759,17 +1764,20 @@ void FilterNodeComponentTransferSoftware::SetAttribute(uint32_t aIndex,
 }
 
 void FilterNodeComponentTransferSoftware::GenerateLookupTable(
-    ptrdiff_t aComponent, LookupTables& aTables, bool aDisabled) {
-  if (aDisabled || !FillLookupTable(aComponent, aTables[aComponent])) {
-    std::iota(aTables[aComponent].begin(), aTables[aComponent].end(), 0);
+    ptrdiff_t aComponent, uint8_t aTables[4][256], bool aDisabled) {
+  if (aDisabled) {
+    for (int32_t i = 0; i < 256; ++i) {
+      aTables[aComponent][i] = i;
+    }
+  } else {
+    FillLookupTable(aComponent, aTables[aComponent]);
   }
 }
 
 template <uint32_t BytesPerPixel>
 static void TransferComponents(
     DataSourceSurface* aInput, DataSourceSurface* aTarget,
-    const std::array<FilterNodeComponentTransferSoftware::LookupTable,
-                     BytesPerPixel>& aLookupTables) {
+    const uint8_t aLookupTables[BytesPerPixel][256]) {
   MOZ_ASSERT(aInput->GetFormat() == aTarget->GetFormat(), "different formats");
   IntSize size = aInput->GetSize();
 
@@ -1802,10 +1810,13 @@ static void TransferComponents(
   }
 }
 
-static bool IsAllZero(
-    const FilterNodeComponentTransferSoftware::LookupTable& aLookupTable) {
-  return std::all_of(aLookupTable.begin(), aLookupTable.end(),
-                     [](uint8_t i) { return i == 0; });
+static bool IsAllZero(const uint8_t aLookupTable[256]) {
+  for (int32_t i = 0; i < 256; i++) {
+    if (aLookupTable[i] != 0) {
+      return false;
+    }
+  }
+  return true;
 }
 
 already_AddRefed<DataSourceSurface> FilterNodeComponentTransferSoftware::Render(
@@ -1814,7 +1825,7 @@ already_AddRefed<DataSourceSurface> FilterNodeComponentTransferSoftware::Render(
     return GetInputDataSourceSurface(IN_TRANSFER_IN, aRect);
   }
 
-  LookupTables lookupTables;
+  uint8_t lookupTables[4][256];
   GenerateLookupTable(B8G8R8A8_COMPONENT_BYTEOFFSET_R, lookupTables, mDisableR);
   GenerateLookupTable(B8G8R8A8_COMPONENT_BYTEOFFSET_G, lookupTables, mDisableG);
   GenerateLookupTable(B8G8R8A8_COMPONENT_BYTEOFFSET_B, lookupTables, mDisableB);
@@ -1856,12 +1867,8 @@ already_AddRefed<DataSourceSurface> FilterNodeComponentTransferSoftware::Render(
   }
 
   if (format == SurfaceFormat::A8) {
-    // We're calling a 1-dimensional version of TransferComponents,
-    // so we need to pass in a single-member std::array containing
-    // the array lookupTables[B8G8R8A8_COMPONENT_BYTEOFFSET_A].
-    TransferComponents<1>(
-        input, target,
-        std::to_array({lookupTables[B8G8R8A8_COMPONENT_BYTEOFFSET_A]}));
+    TransferComponents<1>(input, target,
+                          &lookupTables[B8G8R8A8_COMPONENT_BYTEOFFSET_A]);
   } else {
     TransferComponents<4>(input, target, lookupTables);
   }
@@ -1903,16 +1910,16 @@ void FilterNodeTableTransferSoftware::SetAttribute(uint32_t aIndex,
   std::vector<Float> table(aFloat, aFloat + aSize);
   switch (aIndex) {
     case ATT_TABLE_TRANSFER_TABLE_R:
-      mTableR = std::move(table);
+      mTableR = table;
       break;
     case ATT_TABLE_TRANSFER_TABLE_G:
-      mTableG = std::move(table);
+      mTableG = table;
       break;
     case ATT_TABLE_TRANSFER_TABLE_B:
-      mTableB = std::move(table);
+      mTableB = table;
       break;
     case ATT_TABLE_TRANSFER_TABLE_A:
-      mTableA = std::move(table);
+      mTableA = table;
       break;
     default:
       MOZ_CRASH("GFX: FilterNodeTableTransferSoftware::SetAttribute");
@@ -1920,31 +1927,35 @@ void FilterNodeTableTransferSoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-bool FilterNodeTableTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
-                                                      LookupTable& aTable) {
+void FilterNodeTableTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
+                                                      uint8_t aTable[256]) {
   switch (aComponent) {
     case B8G8R8A8_COMPONENT_BYTEOFFSET_R:
-      return FillLookupTableImpl(mTableR, aTable);
+      FillLookupTableImpl(mTableR, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_G:
-      return FillLookupTableImpl(mTableG, aTable);
+      FillLookupTableImpl(mTableG, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_B:
-      return FillLookupTableImpl(mTableB, aTable);
+      FillLookupTableImpl(mTableB, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_A:
-      return FillLookupTableImpl(mTableA, aTable);
+      FillLookupTableImpl(mTableA, aTable);
+      break;
     default:
       MOZ_ASSERT(false, "unknown component");
-      return false;
+      break;
   }
 }
 
-bool FilterNodeTableTransferSoftware::FillLookupTableImpl(
-    const std::vector<Float>& aTableValues, LookupTable& aTable) {
+void FilterNodeTableTransferSoftware::FillLookupTableImpl(
+    const std::vector<Float>& aTableValues, uint8_t aTable[256]) {
   uint32_t tvLength = aTableValues.size();
-  if (tvLength < 1) {
-    return false;
+  if (tvLength < 2) {
+    return;
   }
 
-  for (size_t i = 0; i < aTable.size(); i++) {
+  for (size_t i = 0; i < 256; i++) {
     uint32_t k = (i * (tvLength - 1)) / 255;
     Float v1 = aTableValues[k];
     Float v2 = aTableValues[std::min(k + 1, tvLength - 1)];
@@ -1952,7 +1963,6 @@ bool FilterNodeTableTransferSoftware::FillLookupTableImpl(
                                           (tvLength - 1) * (v2 - v1)));
     aTable[i] = std::clamp(val, 0, 255);
   }
-  return true;
 }
 
 void FilterNodeDiscreteTransferSoftware::SetAttribute(uint32_t aIndex,
@@ -1961,16 +1971,16 @@ void FilterNodeDiscreteTransferSoftware::SetAttribute(uint32_t aIndex,
   std::vector<Float> discrete(aFloat, aFloat + aSize);
   switch (aIndex) {
     case ATT_DISCRETE_TRANSFER_TABLE_R:
-      mTableR = std::move(discrete);
+      mTableR = discrete;
       break;
     case ATT_DISCRETE_TRANSFER_TABLE_G:
-      mTableG = std::move(discrete);
+      mTableG = discrete;
       break;
     case ATT_DISCRETE_TRANSFER_TABLE_B:
-      mTableB = std::move(discrete);
+      mTableB = discrete;
       break;
     case ATT_DISCRETE_TRANSFER_TABLE_A:
-      mTableA = std::move(discrete);
+      mTableA = discrete;
       break;
     default:
       MOZ_CRASH("GFX: FilterNodeDiscreteTransferSoftware::SetAttribute");
@@ -1978,38 +1988,41 @@ void FilterNodeDiscreteTransferSoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-bool FilterNodeDiscreteTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
-                                                         LookupTable& aTable) {
+void FilterNodeDiscreteTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
+                                                         uint8_t aTable[256]) {
   switch (aComponent) {
     case B8G8R8A8_COMPONENT_BYTEOFFSET_R:
-      return FillLookupTableImpl(mTableR, aTable);
+      FillLookupTableImpl(mTableR, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_G:
-      return FillLookupTableImpl(mTableG, aTable);
+      FillLookupTableImpl(mTableG, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_B:
-      return FillLookupTableImpl(mTableB, aTable);
+      FillLookupTableImpl(mTableB, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_A:
-      return FillLookupTableImpl(mTableA, aTable);
+      FillLookupTableImpl(mTableA, aTable);
+      break;
     default:
       MOZ_ASSERT(false, "unknown component");
-      return false;
+      break;
   }
 }
 
-bool FilterNodeDiscreteTransferSoftware::FillLookupTableImpl(
-    const std::vector<Float>& aTableValues, LookupTable& aTable) {
+void FilterNodeDiscreteTransferSoftware::FillLookupTableImpl(
+    const std::vector<Float>& aTableValues, uint8_t aTable[256]) {
   uint32_t tvLength = aTableValues.size();
   if (tvLength < 1) {
-    return false;
+    return;
   }
 
-  for (size_t i = 0; i < aTable.size(); i++) {
+  for (size_t i = 0; i < 256; i++) {
     uint32_t k = (i * tvLength) / 255;
     k = std::min(k, tvLength - 1);
     Float v = aTableValues[k];
     int32_t val = NS_lround(255 * v);
     aTable[i] = std::clamp(val, 0, 255);
   }
-  return true;
 }
 
 FilterNodeLinearTransferSoftware::FilterNodeLinearTransferSoftware()
@@ -2055,30 +2068,33 @@ void FilterNodeLinearTransferSoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-bool FilterNodeLinearTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
-                                                       LookupTable& aTable) {
+void FilterNodeLinearTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
+                                                       uint8_t aTable[256]) {
   switch (aComponent) {
     case B8G8R8A8_COMPONENT_BYTEOFFSET_R:
-      return FillLookupTableImpl(mSlopeR, mInterceptR, aTable);
+      FillLookupTableImpl(mSlopeR, mInterceptR, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_G:
-      return FillLookupTableImpl(mSlopeG, mInterceptG, aTable);
+      FillLookupTableImpl(mSlopeG, mInterceptG, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_B:
-      return FillLookupTableImpl(mSlopeB, mInterceptB, aTable);
+      FillLookupTableImpl(mSlopeB, mInterceptB, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_A:
-      return FillLookupTableImpl(mSlopeA, mInterceptA, aTable);
+      FillLookupTableImpl(mSlopeA, mInterceptA, aTable);
+      break;
     default:
       MOZ_ASSERT(false, "unknown component");
-      return false;
+      break;
   }
 }
 
-bool FilterNodeLinearTransferSoftware::FillLookupTableImpl(
-    Float aSlope, Float aIntercept, LookupTable& aTable) {
-  for (size_t i = 0; i < aTable.size(); i++) {
+void FilterNodeLinearTransferSoftware::FillLookupTableImpl(
+    Float aSlope, Float aIntercept, uint8_t aTable[256]) {
+  for (size_t i = 0; i < 256; i++) {
     int32_t val = NS_lround(aSlope * i + 255 * aIntercept);
     aTable[i] = std::clamp(val, 0, 255);
   }
-  return true;
 }
 
 FilterNodeGammaTransferSoftware::FilterNodeGammaTransferSoftware()
@@ -2140,40 +2156,42 @@ void FilterNodeGammaTransferSoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-bool FilterNodeGammaTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
-                                                      LookupTable& aTable) {
+void FilterNodeGammaTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
+                                                      uint8_t aTable[256]) {
   switch (aComponent) {
     case B8G8R8A8_COMPONENT_BYTEOFFSET_R:
-      return FillLookupTableImpl(mAmplitudeR, mExponentR, mOffsetR, aTable);
+      FillLookupTableImpl(mAmplitudeR, mExponentR, mOffsetR, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_G:
-      return FillLookupTableImpl(mAmplitudeG, mExponentG, mOffsetG, aTable);
+      FillLookupTableImpl(mAmplitudeG, mExponentG, mOffsetG, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_B:
-      return FillLookupTableImpl(mAmplitudeB, mExponentB, mOffsetB, aTable);
+      FillLookupTableImpl(mAmplitudeB, mExponentB, mOffsetB, aTable);
+      break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_A:
-      return FillLookupTableImpl(mAmplitudeA, mExponentA, mOffsetA, aTable);
+      FillLookupTableImpl(mAmplitudeA, mExponentA, mOffsetA, aTable);
+      break;
     default:
       MOZ_ASSERT(false, "unknown component");
-      return false;
+      break;
   }
 }
 
-bool FilterNodeGammaTransferSoftware::FillLookupTableImpl(Float aAmplitude,
+void FilterNodeGammaTransferSoftware::FillLookupTableImpl(Float aAmplitude,
                                                           Float aExponent,
                                                           Float aOffset,
-                                                          LookupTable& aTable) {
-  for (size_t i = 0; i < aTable.size(); i++) {
+                                                          uint8_t aTable[256]) {
+  for (size_t i = 0; i < 256; i++) {
     int32_t val =
         NS_lround(255 * (aAmplitude * pow(i / 255.0f, aExponent) + aOffset));
     aTable[i] = std::clamp(val, 0, 255);
   }
-  return true;
 }
 
 FilterNodeConvolveMatrixSoftware::FilterNodeConvolveMatrixSoftware()
     : mDivisor(0),
       mBias(0),
       mEdgeMode(EDGE_MODE_DUPLICATE),
-      mKernelUnitLength(1.0f, 1.0f),
       mPreserveAlpha(false) {}
 
 int32_t FilterNodeConvolveMatrixSoftware::InputIndex(uint32_t aInputEnumIndex) {
@@ -2219,21 +2237,7 @@ void FilterNodeConvolveMatrixSoftware::SetAttribute(
     uint32_t aIndex, const Size& aKernelUnitLength) {
   switch (aIndex) {
     case ATT_CONVOLVE_MATRIX_KERNEL_UNIT_LENGTH:
-      // Spec for feConvolveMatrix:
-      // If the attribute (kernelUnitLength) is not specified, the default value
-      // is one pixel in the offscreen bitmap. If a negative or zero value is
-      // specified the default value will be used instead. The first number is
-      // the x value. The second number is the y value. If the value is not
-      // specified, it defaults to the same value as x.
       mKernelUnitLength = aKernelUnitLength;
-      if (mKernelUnitLength.width <= 0.0f ||
-          !std::isfinite(mKernelUnitLength.width)) {
-        mKernelUnitLength.width = 1.0f;
-      }
-      if (mKernelUnitLength.height <= 0.0f ||
-          !std::isfinite(mKernelUnitLength.height)) {
-        mKernelUnitLength.height = mKernelUnitLength.width;
-      }
       break;
     default:
       MOZ_CRASH("GFX: FilterNodeConvolveMatrixSoftware::SetAttribute");
@@ -2434,26 +2438,20 @@ template <typename CoordType>
 already_AddRefed<DataSourceSurface> FilterNodeConvolveMatrixSoftware::DoRender(
     const IntRect& aRect, CoordType aKernelUnitLengthX,
     CoordType aKernelUnitLengthY) {
-  // Ensure multiply fits in an int32_t so convolve math won't overflow.
-  auto kernelArea = CheckedInt32(mKernelSize.width) * mKernelSize.height;
   if (mKernelSize.width <= 0 || mKernelSize.height <= 0 ||
-      !kernelArea.isValid() ||
-      mKernelMatrix.size() != size_t(kernelArea.value()) ||
+      mKernelMatrix.size() !=
+          uint32_t(mKernelSize.width * mKernelSize.height) ||
       !IntRect(IntPoint(0, 0), mKernelSize).Contains(mTarget) ||
       mDivisor == 0) {
     return Factory::CreateDataSourceSurface(aRect.Size(),
                                             SurfaceFormat::B8G8R8A8, true);
   }
 
-  RectDouble srcRectD(aRect);
-  srcRectD.Inflate(GetInflateSourceMargin());
+  IntRect srcRect = InflatedSourceRect(aRect);
+
   // Inflate the source rect by another pixel because the bilinear filtering in
   // ColorComponentAtPoint may want to access the margins.
-  srcRectD.Inflate(1);
-  if (!RectIsInt32Safe(srcRectD)) {
-    return nullptr;
-  }
-  IntRect srcRect = TruncatedToInt(srcRectD);
+  srcRect.Inflate(1);
 
   RefPtr<DataSourceSurface> input =
       GetInputDataSourceSurface(IN_CONVOLVE_MATRIX_IN, srcRect,
@@ -2501,7 +2499,7 @@ already_AddRefed<DataSourceSurface> FilterNodeConvolveMatrixSoftware::DoRender(
   MOZ_ASSERT(255.0 * maxResultAbs * factorFromShifts <= INT32_MAX / 2.0,
              "badly chosen float-to-int scale");
 
-  auto intKernel = MakeUnique<int32_t[]>(kernel.size());
+  int32_t* intKernel = new int32_t[kernel.size()];
   for (size_t i = 0; i < kernel.size(); i++) {
     intKernel[i] = NS_lround(kernel[i] * factorFromShifts);
   }
@@ -2511,11 +2509,13 @@ already_AddRefed<DataSourceSurface> FilterNodeConvolveMatrixSoftware::DoRender(
     for (int32_t x = 0; x < aRect.Width(); x++) {
       ConvolvePixel(sourceData, targetData, aRect.Width(), aRect.Height(),
                     sourceStride, targetStride, sourceBegin, sourceEnd, x, y,
-                    intKernel.get(), bias, shiftL, shiftR, mPreserveAlpha,
+                    intKernel, bias, shiftL, shiftR, mPreserveAlpha,
                     mKernelSize.width, mKernelSize.height, mTarget.x, mTarget.y,
                     aKernelUnitLengthX, aKernelUnitLengthY);
     }
   }
+  delete[] intKernel;
+
   return target.forget();
 }
 
@@ -2530,26 +2530,23 @@ IntRect FilterNodeConvolveMatrixSoftware::MapRectToSource(
                               aMax, aSourceNode);
 }
 
-MarginDouble FilterNodeConvolveMatrixSoftware::GetInflateSourceMargin() const {
-  double kulX = double(mKernelUnitLength.width);
-  double kulY = double(mKernelUnitLength.height);
-  MarginDouble margin;
-  margin.left = ceil(mTarget.x * kulX);
-  margin.top = ceil(mTarget.y * kulY);
-  margin.right = ceil((mKernelSize.width - mTarget.x - 1) * kulX);
-  margin.bottom = ceil((mKernelSize.height - mTarget.y - 1) * kulY);
-  return margin;
-}
-
 IntRect FilterNodeConvolveMatrixSoftware::InflatedSourceRect(
     const IntRect& aDestRect) {
   if (aDestRect.IsEmpty()) {
     return IntRect();
   }
 
-  RectDouble srcRect(aDestRect);
-  srcRect.Inflate(GetInflateSourceMargin());
-  return RectIsInt32Safe(srcRect) ? TruncatedToInt(srcRect) : aDestRect;
+  IntMargin margin;
+  margin.left = static_cast<int32_t>(ceil(mTarget.x * mKernelUnitLength.width));
+  margin.top = static_cast<int32_t>(ceil(mTarget.y * mKernelUnitLength.height));
+  margin.right = static_cast<int32_t>(
+      ceil((mKernelSize.width - mTarget.x - 1) * mKernelUnitLength.width));
+  margin.bottom = static_cast<int32_t>(
+      ceil((mKernelSize.height - mTarget.y - 1) * mKernelUnitLength.height));
+
+  IntRect srcRect = aDestRect;
+  srcRect.Inflate(margin);
+  return srcRect;
 }
 
 IntRect FilterNodeConvolveMatrixSoftware::InflatedDestRect(
@@ -2558,12 +2555,19 @@ IntRect FilterNodeConvolveMatrixSoftware::InflatedDestRect(
     return IntRect();
   }
 
-  RectDouble destRect(aSourceRect);
-  MarginDouble margin = GetInflateSourceMargin();
-  std::swap(margin.left, margin.right);
-  std::swap(margin.top, margin.bottom);
+  IntMargin margin;
+  margin.left = static_cast<int32_t>(
+      ceil((mKernelSize.width - mTarget.x - 1) * mKernelUnitLength.width));
+  margin.top = static_cast<int32_t>(
+      ceil((mKernelSize.height - mTarget.y - 1) * mKernelUnitLength.height));
+  margin.right =
+      static_cast<int32_t>(ceil(mTarget.x * mKernelUnitLength.width));
+  margin.bottom =
+      static_cast<int32_t>(ceil(mTarget.y * mKernelUnitLength.height));
+
+  IntRect destRect = aSourceRect;
   destRect.Inflate(margin);
-  return RectIsInt32Safe(destRect) ? TruncatedToInt(destRect) : aSourceRect;
+  return destRect;
 }
 
 IntRect FilterNodeConvolveMatrixSoftware::GetOutputRectInRect(
@@ -2601,11 +2605,6 @@ void FilterNodeDisplacementMapSoftware::SetAttribute(uint32_t aIndex,
 
 void FilterNodeDisplacementMapSoftware::SetAttribute(uint32_t aIndex,
                                                      uint32_t aValue) {
-  // Refuse channel values that exceed channel maximum.
-  if (aValue > ColorChannel::COLOR_CHANNEL_MAX) {
-    return;
-  }
-
   switch (aIndex) {
     case ATT_DISPLACEMENT_MAP_X_CHANNEL:
       mChannelX = static_cast<ColorChannel>(aValue);
@@ -2652,7 +2651,7 @@ already_AddRefed<DataSourceSurface> FilterNodeDisplacementMapSoftware::Render(
   uint8_t* targetData = targetMap.GetData();
   int32_t targetStride = targetMap.GetStride();
 
-  static const ptrdiff_t channelMap[COLOR_CHANNEL_MAX + 1] = {
+  static const ptrdiff_t channelMap[4] = {
       B8G8R8A8_COMPONENT_BYTEOFFSET_R, B8G8R8A8_COMPONENT_BYTEOFFSET_G,
       B8G8R8A8_COMPONENT_BYTEOFFSET_B, B8G8R8A8_COMPONENT_BYTEOFFSET_A};
   uint16_t xChannel = channelMap[mChannelX];
@@ -2666,11 +2665,9 @@ already_AddRefed<DataSourceSurface> FilterNodeDisplacementMapSoftware::Render(
       uint32_t mapIndex = y * mapStride + 4 * x;
       uint32_t targIndex = y * targetStride + 4 * x;
       int32_t sourceX =
-          x + int32_t(scaleOver255 * mapData[mapIndex + xChannel] +
-                      scaleAdjustment);
+          x + scaleOver255 * mapData[mapIndex + xChannel] + scaleAdjustment;
       int32_t sourceY =
-          y + int32_t(scaleOver255 * mapData[mapIndex + yChannel] +
-                      scaleAdjustment);
+          y + scaleOver255 * mapData[mapIndex + yChannel] + scaleAdjustment;
       *(uint32_t*)(targetData + targIndex) = ColorAtPoint(
           sourceData, sourceStride, sourceBegin, sourceEnd, sourceX, sourceY);
     }
@@ -3310,8 +3307,7 @@ static inline Point3D Normalized(const Point3D& vec) {
 template <typename LightType, typename LightingType>
 FilterNodeLightingSoftware<LightType, LightingType>::FilterNodeLightingSoftware(
     const char* aTypeName)
-    : mSurfaceScale(0),
-      mKernelUnitLength(1.0f, 1.0f)
+    : mSurfaceScale(0)
 #if defined(MOZILLA_INTERNAL_API) && defined(NS_BUILD_REFCNT_LOGGING)
       ,
       mTypeName(aTypeName)
@@ -3364,23 +3360,6 @@ void FilterNodeLightingSoftware<LightType, LightingType>::SetAttribute(
   switch (aIndex) {
     case ATT_LIGHTING_KERNEL_UNIT_LENGTH:
       mKernelUnitLength = aKernelUnitLength;
-      // Spec for fe*Lighting:
-      // The first number is the <dx> value. The second number is the <dy>
-      // value. If the <dy> value is not specified, it defaults to the same
-      // value as <dx>. If kernelUnitLength is not specified, the dx and dy
-      // values should represent very small deltas relative to a given (x,y)
-      // position, which might be implemented in some cases as one pixel in the
-      // intermediate image offscreen bitmap, which is a pixel-based coordinate
-      // system, and thus potentially not scalable. If a negative or zero value
-      // is specified the default value will be used instead.
-      if (mKernelUnitLength.width <= 0.0f ||
-          !std::isfinite(mKernelUnitLength.width)) {
-        mKernelUnitLength.width = 1.0f;
-      }
-      if (mKernelUnitLength.height <= 0.0f ||
-          !std::isfinite(mKernelUnitLength.height)) {
-        mKernelUnitLength.height = mKernelUnitLength.width;
-      }
       break;
     default:
       MOZ_CRASH("GFX: FilterNodeLightingSoftware::SetAttribute size");
@@ -3423,7 +3402,7 @@ uint32_t PointLightSoftware::GetColor(uint32_t aLightColor,
 void SpotLightSoftware::Prepare() {
   mVectorFromFocusPointToLight = Normalized(mPointsAt - mPosition);
   mLimitingConeCos =
-      std::max<double>(cos(mLimitingConeAngle * kRadPerDegree), 0.0);
+      std::max<double>(cos(mLimitingConeAngle * M_PI / 180.0), 0.0);
   mPowCache.CacheForExponent(mSpecularFocus);
 }
 
@@ -3438,8 +3417,7 @@ uint32_t SpotLightSoftware::GetColor(uint32_t aLightColor,
     uint8_t colorC[4];
   };
 
-  Float dot = std::clamp(
-      -aVectorToLight.DotProduct(mVectorFromFocusPointToLight), 0.0f, 1.0f);
+  Float dot = -aVectorToLight.DotProduct(mVectorFromFocusPointToLight);
   if (!mPowCache.HasPowerTable()) {
     dot *= (dot >= mLimitingConeCos);
     color = aLightColor;
@@ -3448,7 +3426,7 @@ uint32_t SpotLightSoftware::GetColor(uint32_t aLightColor,
     colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_B] *= dot;
   } else {
     color = aLightColor;
-    uint16_t doti = dot * (1 << PowCache::sInputIntPrecisionBits);
+    uint16_t doti = dot * (dot >= 0) * (1 << PowCache::sInputIntPrecisionBits);
     uint32_t tmp = mPowCache.Pow(doti) * (dot >= mLimitingConeCos);
     MOZ_ASSERT(tmp <= (1 << PowCache::sOutputIntPrecisionBits),
                "pow() result must not exceed 1.0");
@@ -3467,11 +3445,10 @@ uint32_t SpotLightSoftware::GetColor(uint32_t aLightColor,
 }
 
 void DistantLightSoftware::Prepare() {
-  mVectorToLight.x =
-      cos(mAzimuth * kRadPerDegree) * cos(mElevation * kRadPerDegree);
-  mVectorToLight.y =
-      sin(mAzimuth * kRadPerDegree) * cos(mElevation * kRadPerDegree);
-  mVectorToLight.z = sin(mElevation * kRadPerDegree);
+  const double radPerDeg = M_PI / 180.0;
+  mVectorToLight.x = cos(mAzimuth * radPerDeg) * cos(mElevation * radPerDeg);
+  mVectorToLight.y = sin(mAzimuth * radPerDeg) * cos(mElevation * radPerDeg);
+  mVectorToLight.z = sin(mElevation * radPerDeg);
 }
 
 Point3D DistantLightSoftware::GetVectorToLight(const Point3D& aTargetPoint) {
@@ -3540,32 +3517,21 @@ FilterNodeLightingSoftware<LightType, LightingType>::Render(
 }
 
 template <typename LightType, typename LightingType>
-MarginDouble FilterNodeLightingSoftware<
-    LightType, LightingType>::GetInflateSourceMargin() const {
-  double kulX = ceil(double(mKernelUnitLength.width));
-  double kulY = ceil(double(mKernelUnitLength.height));
-  return MarginDouble(kulY, kulX, kulY, kulX);
-}
-
-template <typename LightType, typename LightingType>
-IntRect FilterNodeLightingSoftware<LightType, LightingType>::InflatedSourceRect(
-    const IntRect& aDestRect) {
-  RectDouble srcRect(aDestRect);
-  srcRect.Inflate(GetInflateSourceMargin());
-  return RectIsInt32Safe(srcRect) ? TruncatedToInt(srcRect) : aDestRect;
-}
-
-template <typename LightType, typename LightingType>
 void FilterNodeLightingSoftware<
     LightType, LightingType>::RequestFromInputsForRect(const IntRect& aRect) {
-  RequestInputRect(IN_LIGHTING_IN, InflatedSourceRect(aRect));
+  IntRect srcRect = aRect;
+  srcRect.Inflate(ceil(mKernelUnitLength.width),
+                  ceil(mKernelUnitLength.height));
+  RequestInputRect(IN_LIGHTING_IN, srcRect);
 }
 
 template <typename LightType, typename LightingType>
 IntRect FilterNodeLightingSoftware<LightType, LightingType>::MapRectToSource(
     const IntRect& aRect, const IntRect& aMax, FilterNode* aSourceNode) {
-  return MapInputRectToSource(IN_LIGHTING_IN, InflatedSourceRect(aRect), aMax,
-                              aSourceNode);
+  IntRect srcRect = aRect;
+  srcRect.Inflate(ceil(mKernelUnitLength.width),
+                  ceil(mKernelUnitLength.height));
+  return MapInputRectToSource(IN_LIGHTING_IN, srcRect, aMax, aSourceNode);
 }
 
 template <typename LightType, typename LightingType>
@@ -3579,17 +3545,14 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(
   MOZ_ASSERT(aKernelUnitLengthY > 0,
              "aKernelUnitLengthY can be a negative or zero value");
 
-  RectDouble srcRectD(aRect);
-  srcRectD.Inflate(GetInflateSourceMargin());
+  IntRect srcRect = aRect;
+  IntSize size = aRect.Size();
+  srcRect.Inflate(ceil(float(aKernelUnitLengthX)),
+                  ceil(float(aKernelUnitLengthY)));
+
   // Inflate the source rect by another pixel because the bilinear filtering in
   // ColorComponentAtPoint may want to access the margins.
-  srcRectD.Inflate(1);
-  if (!RectIsInt32Safe(srcRectD)) {
-    return nullptr;
-  }
-  IntRect srcRect = TruncatedToInt(srcRectD);
-
-  IntSize size = aRect.Size();
+  srcRect.Inflate(1);
 
   IntRect srcRectInRenderRect = srcRect.Intersect(mRenderRect);
 
@@ -3725,8 +3688,9 @@ uint32_t SpecularLightingSoftware::LightPixel(const Point3D& aNormal,
   if (halfwayLength > 0) {
     halfwayVector /= halfwayLength;
   }
-  Float dotNH = std::clamp(aNormal.DotProduct(halfwayVector), 0.0f, 1.0f);
-  uint16_t dotNHi = uint16_t(dotNH * (1 << PowCache::sInputIntPrecisionBits));
+  Float dotNH = aNormal.DotProduct(halfwayVector);
+  uint16_t dotNHi =
+      uint16_t(dotNH * (dotNH >= 0) * (1 << PowCache::sInputIntPrecisionBits));
   // The exponent for specular is in [1,128] range, so we don't need to check
   // and optimize for the "default power table" scenario here.
   MOZ_ASSERT(mPowCache.HasPowerTable());

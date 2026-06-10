@@ -8,11 +8,6 @@ const TEST_URL_PATH_CC =
 const TEST_URL_PATH =
   "://example.org" + HTTP_TEST_PATH + "autocomplete_basic.html";
 
-const l10n = new Localization(
-  ["branding/brand.ftl", "toolkit/formautofill/formAutofill.ftl"],
-  true
-);
-
 add_task(async function setup_storage() {
   await setStorage(
     TEST_ADDRESS_1,
@@ -49,17 +44,6 @@ add_task(async function test_insecure_form() {
           expectedType,
           `Item should attach with correct binding in "${protocol}"`
         );
-
-        if (expectedType === "insecureWarning") {
-          const expected = await l10n.formatValue(
-            "autofill-insecure-field-warning-description"
-          );
-          is(
-            firstItem.textContent.trim(),
-            expected.trim(),
-            "Insecure warning should be fully localized with the brand name expanded"
-          );
-        }
 
         await closePopup(browser);
       }
@@ -112,7 +96,7 @@ add_task(async function test_click_on_insecure_warning() {
         browser.autoCompletePopup,
         "hidden"
       );
-      EventUtils.synthesizeMouseAtCenter(insecureItem, {});
+      await EventUtils.synthesizeMouseAtCenter(insecureItem, {});
       // Check input's value after popup closed to ensure the completion of autofilling.
       await popupClosePromise;
 

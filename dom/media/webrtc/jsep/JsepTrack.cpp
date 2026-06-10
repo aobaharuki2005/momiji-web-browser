@@ -8,12 +8,8 @@
 
 #include "jsep/JsepCodecDescription.h"
 #include "jsep/JsepTrackEncoding.h"
-#include "transport/logging.h"
 
 namespace mozilla {
-
-MOZ_MTLOG_MODULE("jsep")
-
 void JsepTrack::GetNegotiatedPayloadTypes(
     std::vector<uint16_t>* payloadTypes) const {
   if (!mNegotiatedDetails) {
@@ -37,8 +33,6 @@ void JsepTrack::GetPayloadTypes(
   for (const auto& codec : codecs) {
     uint16_t pt;
     if (!codec->GetPtAsInt(&pt)) {
-      MOZ_MTLOG(ML_ERROR, "Codec " << codec->mName
-                                   << " does not have a valid payload type");
       MOZ_ASSERT(false);
       continue;
     }
@@ -59,45 +53,12 @@ void JsepTrack::EnsureSsrcs(SsrcGenerator& ssrcGenerator, size_t aNumber) {
     uint32_t ssrc, rtxSsrc;
     if (!ssrcGenerator.GenerateSsrc(&ssrc) ||
         !ssrcGenerator.GenerateSsrc(&rtxSsrc)) {
-      MOZ_MTLOG(ML_ERROR, "Unable to generate SSRC");
       return;
     }
     mSsrcs.push_back(ssrc);
     mSsrcToRtxSsrc[ssrc] = rtxSsrc;
-    if (mSsrcs.size() != mSsrcToRtxSsrc.size()) {
-      MOZ_MTLOG(ML_ERROR,
-                "[" << mTrackId
-                    << "]: mSsrcToRtxSsrc has different size than mSsrcs.");
-      MOZ_ASSERT(false);
-      mSsrcs.clear();
-      mSsrcToRtxSsrc.clear();
-    }
+    MOZ_ASSERT(mSsrcs.size() == mSsrcToRtxSsrc.size());
   }
-}
-
-std::vector<uint32_t> JsepTrack::GetRtxSsrcs() const {
-  std::vector<uint32_t> result;
-  if (mRtxIsAllowed &&
-      Preferences::GetBool("media.peerconnection.video.use_rtx", false) &&
-      !mSsrcToRtxSsrc.empty()) {
-    if (mSsrcToRtxSsrc.size() != mSsrcs.size()) {
-      MOZ_MTLOG(ML_ERROR,
-                "[" << mTrackId
-                    << "]: mSsrcToRtxSsrc has different size than mSsrcs.");
-      return {};
-    }
-    for (const auto ssrc : mSsrcs) {
-      auto it = mSsrcToRtxSsrc.find(ssrc);
-      if (it != mSsrcToRtxSsrc.end()) {
-        result.push_back(it->second);
-      } else {
-        MOZ_MTLOG(ML_ERROR,
-                  "[" << mTrackId << "]: No RTX SSRC found for SSRC " << ssrc);
-        return {};
-      }
-    }
-  }
-  return result;
 }
 
 void JsepTrack::PopulateCodecs(
@@ -157,10 +118,7 @@ void JsepTrack::AddToAnswer(const SdpMediaSection& offer,
 }
 
 void JsepTrack::SetRids(const std::vector<std::string>& aRids) {
-  if (!aRids.size()) {
-    MOZ_MTLOG(ML_ERROR, "cannot set empty rids");
-    return;
-  }
+  MOZ_ASSERT(!aRids.empty());
   if (!mRids.empty()) {
     return;
   }
@@ -177,17 +135,9 @@ void JsepTrack::SetMaxEncodings(size_t aMax) {
 void JsepTrack::RecvTrackSetRemote(const Sdp& aSdp,
                                    const SdpMediaSection& aMsection) {
   mInHaveRemote = true;
-  if (mDirection != sdp::kRecv) {
-    MOZ_MTLOG(ML_ERROR, "RecvTrackSetRemote called on non-receive track");
-    MOZ_ASSERT(false);
-    return;
-  }
-  if (aMsection.GetMediaType() == SdpMediaSection::kApplication) {
-    MOZ_MTLOG(ML_ERROR,
-              "RecvTrackSetRemote called on application media section");
-    MOZ_ASSERT(false);
-    return;
-  }
+  MOZ_ASSERT(mDirection == sdp::kRecv);
+  MOZ_ASSERT(aMsection.GetMediaType() !=
+             SdpMediaSection::MediaType::kApplication);
   std::string error;
   SdpHelper helper(&error);
 
@@ -247,11 +197,7 @@ void JsepTrack::RecvTrackSetRemote(const Sdp& aSdp,
 }
 
 void JsepTrack::RecvTrackSetLocal(const SdpMediaSection& aMsection) {
-  if (mDirection != sdp::kRecv) {
-    MOZ_MTLOG(ML_ERROR, "RecvTrackSetLocal called on non-receive track");
-    MOZ_ASSERT(false);
-    return;
-  }
+  MOZ_ASSERT(mDirection == sdp::kRecv);
 
   // TODO: Should more stuff live in here? Anything that needs to happen when we
   // decide we're ready to receive packets should probably go in here.
@@ -323,16 +269,9 @@ void JsepTrack::SendTrackSetRemote(SsrcGenerator& aSsrcGenerator,
 void JsepTrack::AddToMsection(
     const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
     SdpMediaSection* msection) const {
-  if (msection->GetMediaType() != mType) {
-    MOZ_MTLOG(ML_ERROR, "AddToMsection called on wrong media section type");
-    MOZ_ASSERT(false);
-    return;
-  }
-  if (codecs.empty()) {
-    MOZ_MTLOG(ML_ERROR, "AddToMsection called with empty codecs");
-    MOZ_ASSERT(false);
-    return;
-  }
+  MOZ_ASSERT(msection->GetMediaType() == mType);
+  MOZ_ASSERT(!codecs.empty());
+
   for (const auto& codec : codecs) {
     codec->AddToMediaSection(*msection);
   }
@@ -350,16 +289,8 @@ void JsepTrack::AddToMsection(
 }
 
 void JsepTrack::UpdateSsrcs(SsrcGenerator& ssrcGenerator, size_t encodings) {
-  if (mDirection != sdp::kSend) {
-    MOZ_MTLOG(ML_ERROR, "UpdateSsrcs called on non-send track");
-    MOZ_ASSERT(false);
-    return;
-  }
-  if (mType == SdpMediaSection::kApplication) {
-    MOZ_MTLOG(ML_ERROR, "UpdateSsrcs called on application media section");
-    MOZ_ASSERT(false);
-    return;
-  }
+  MOZ_ASSERT(mDirection == sdp::kSend);
+  MOZ_ASSERT(mType != SdpMediaSection::kApplication);
   size_t numSsrcs = std::max<size_t>(encodings, 1U);
 
   EnsureSsrcs(ssrcGenerator, numSsrcs);
@@ -367,10 +298,8 @@ void JsepTrack::UpdateSsrcs(SsrcGenerator& ssrcGenerator, size_t encodings) {
   if (mNegotiatedDetails && mNegotiatedDetails->GetEncodingCount() > numSsrcs) {
     mNegotiatedDetails->TruncateEncodings(numSsrcs);
   }
-  if (mSsrcs.empty()) {
-    MOZ_MTLOG(ML_ERROR, "UpdateSsrcs resulted in empty mSsrcs");
-    MOZ_ASSERT(false);
-  }
+
+  MOZ_ASSERT(!mSsrcs.empty());
 }
 
 void JsepTrack::PruneSsrcs(size_t aNumSsrcs) {
@@ -406,25 +335,25 @@ void JsepTrack::AddToMsection(const std::vector<std::string>& aRids,
                               SsrcGenerator& ssrcGenerator, bool rtxEnabled,
                               SdpMediaSection* msection) {
   if (aRids.size() > 1) {
-    auto simulcast = MakeUnique<SdpSimulcastAttribute>();
-    auto ridAttrs = MakeUnique<SdpRidAttributeList>();
+    UniquePtr<SdpSimulcastAttribute> simulcast(new SdpSimulcastAttribute);
+    UniquePtr<SdpRidAttributeList> ridAttrs(new SdpRidAttributeList);
     for (const std::string& rid : aRids) {
       SdpRidAttributeList::Rid ridAttr;
       ridAttr.id = rid;
       ridAttr.direction = direction;
-      ridAttrs->mRids.push_back(std::move(ridAttr));
+      ridAttrs->mRids.push_back(ridAttr);
 
       SdpSimulcastAttribute::Version version;
       version.choices.push_back(SdpSimulcastAttribute::Encoding(rid, false));
       if (direction == sdp::kSend) {
-        simulcast->sendVersions.push_back(std::move(version));
+        simulcast->sendVersions.push_back(version);
       } else {
-        simulcast->recvVersions.push_back(std::move(version));
+        simulcast->recvVersions.push_back(version);
       }
     }
 
-    msection->GetAttributeList().SetAttribute(std::move(simulcast));
-    msection->GetAttributeList().SetAttribute(std::move(ridAttrs));
+    msection->GetAttributeList().SetAttribute(simulcast.release());
+    msection->GetAttributeList().SetAttribute(ridAttrs.release());
   }
 
   bool requireRtxSsrcs = rtxEnabled && msection->IsSending();
@@ -433,14 +362,9 @@ void JsepTrack::AddToMsection(const std::vector<std::string>& aRids,
     UpdateSsrcs(ssrcGenerator, aRids.size());
 
     if (requireRtxSsrcs) {
-      if (mSsrcs.size() != mSsrcToRtxSsrc.size()) {
-        MOZ_MTLOG(ML_ERROR,
-                  "[" << mTrackId
-                      << "]: mSsrcToRtxSsrc has different size than mSsrcs.");
-        return;
-      }
+      MOZ_ASSERT(mSsrcs.size() == mSsrcToRtxSsrc.size());
       std::vector<uint32_t> allSsrcs;
-      auto group = MakeUnique<SdpSsrcGroupAttributeList>();
+      UniquePtr<SdpSsrcGroupAttributeList> group(new SdpSsrcGroupAttributeList);
       for (const auto& ssrc : mSsrcs) {
         const auto rtxSsrc = mSsrcToRtxSsrc[ssrc];
         allSsrcs.push_back(ssrc);
@@ -448,7 +372,7 @@ void JsepTrack::AddToMsection(const std::vector<std::string>& aRids,
         group->PushEntry(SdpSsrcGroupAttributeList::kFid, {ssrc, rtxSsrc});
       }
       msection->SetSsrcs(allSsrcs, mCNAME);
-      msection->GetAttributeList().SetAttribute(std::move(group));
+      msection->GetAttributeList().SetAttribute(group.release());
     } else {
       msection->SetSsrcs(mSsrcs, mCNAME);
     }
@@ -529,7 +453,7 @@ void JsepTrack::CreateEncodings(
   // For each stream make sure we have an encoding, and configure
   // that encoding appropriately.
   for (size_t i = 0; i < numEncodings; ++i) {
-    auto encoding = MakeUnique<JsepTrackEncoding>();
+    UniquePtr<JsepTrackEncoding> encoding(new JsepTrackEncoding);
     if (mRids.size() > i) {
       encoding->mRid = mRids[i];
     }
@@ -542,7 +466,6 @@ void JsepTrack::CreateEncodings(
 
 std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::GetCodecClones() const {
   std::vector<UniquePtr<JsepCodecDescription>> clones;
-  clones.reserve(mPrototypeCodecs.size());
   for (const auto& codec : mPrototypeCodecs) {
     clones.emplace_back(codec->Clone());
   }

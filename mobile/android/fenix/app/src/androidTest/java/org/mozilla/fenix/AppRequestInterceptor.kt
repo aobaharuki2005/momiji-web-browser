@@ -25,7 +25,6 @@ import java.lang.ref.WeakReference
  */
 class AppRequestInterceptor(
     private val context: Context,
-    private val isPrivateForSession: (EngineSession) -> Boolean = { false },
 ) : RequestInterceptor {
 
     private var navController: WeakReference<NavController>? = null
@@ -79,8 +78,6 @@ class AppRequestInterceptor(
 
         ErrorPage.visitedError.record(ErrorPage.VisitedErrorExtra(improvedErrorType.name))
 
-        val isPrivate = isPrivateForSession(session)
-
         val errorPageUri = ErrorPages.createUrlEncodedErrorPage(
             context = context,
             errorType = improvedErrorType,
@@ -88,7 +85,6 @@ class AppRequestInterceptor(
             htmlResource = riskLevel.htmlRes,
             titleOverride = { type -> getErrorPageTitle(context, type) },
             descriptionOverride = { type -> getErrorPageDescription(context, type) },
-            isPrivate = isPrivate,
         )
 
         return RequestInterceptor.ErrorResponse(errorPageUri)

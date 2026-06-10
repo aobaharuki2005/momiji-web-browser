@@ -27,7 +27,6 @@ var supportedProps = [
   { name: "connection", insecureContext: true },
   { name: "permissions", insecureContext: true },
   "serviceWorker",
-  { name: "serial", android: false },
 ];
 
 self.onmessage = function (event) {

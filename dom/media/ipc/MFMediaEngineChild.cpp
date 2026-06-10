@@ -6,7 +6,6 @@
 
 #include "MFMediaEngineUtils.h"
 #include "RemoteMediaManagerChild.h"
-#include "mozilla/SyncRunnable.h"
 
 #ifdef MOZ_WMF_CDM
 #  include "WMFCDMProxy.h"
@@ -67,12 +66,14 @@ RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
             RefPtr<RemoteMediaManagerChild> manager =
                 RemoteMediaManagerChild::GetSingleton(
                     RemoteMediaIn::UtilityProcess_MFMediaEngineCDM);
-            if (!manager || !manager->CanSend() ||
-                !manager->SendPMFMediaEngineConstructor(this)) {
+            if (!manager || !manager->CanSend()) {
               CLOG("Manager not exists or can't send");
               mInitPromiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
               return;
             }
+
+            mIPDLSelfRef = this;
+            (void)manager->SendPMFMediaEngineConstructor(this);
 
             MediaInfoIPDL mediaInfo(
                 info.HasAudio() ? Some(info.mAudio) : Nothing(),
@@ -148,7 +149,7 @@ mozilla::ipc::IPCResult MFMediaEngineChild::RecvUpdateCurrentTime(
 mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyEvent(
     MFMediaEngineEvent aEvent) {
   AssertOnManagerThread();
-  if (mShutdown || !mOwner) {
+  if (mShutdown) {
     return IPC_OK();
   }
   switch (aEvent) {
@@ -188,28 +189,10 @@ mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyEvent(
 mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyError(
     const MediaResult& aError) {
   AssertOnManagerThread();
-  if (mShutdown || !mOwner) {
+  if (mShutdown) {
     return IPC_OK();
   }
   mOwner->NotifyError(aError);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyHardwareReset() {
-  AssertOnManagerThread();
-  if (mShutdown || !mOwner) {
-    return IPC_OK();
-  }
-  mOwner->NotifyHardwareReset();
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyWaitingForKey() {
-  AssertOnManagerThread();
-  if (mShutdown || !mOwner) {
-    return IPC_OK();
-  }
-  mOwner->NotifyWaitingForKey();
   return IPC_OK();
 }
 
@@ -236,21 +219,10 @@ mozilla::ipc::IPCResult MFMediaEngineChild::RecvUpdateStatisticData(
 mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyResizing(
     uint32_t aWidth, uint32_t aHeight) {
   AssertOnManagerThread();
-  if (mShutdown || !mOwner) {
-    return IPC_OK();
-  }
-  mOwner->NotifyResizing(aWidth, aHeight);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyFrameServerMode() {
-  AssertOnManagerThread();
   if (mShutdown) {
     return IPC_OK();
   }
-#ifdef MOZ_WMF_CDM
-  mOwner->NotifyFrameServerMode();
-#endif
+  mOwner->NotifyResizing(aWidth, aHeight);
   return IPC_OK();
 }
 
@@ -271,30 +243,23 @@ uint64_t MFMediaEngineChild::GetUpdatedDroppedFrames(
 }
 
 void MFMediaEngineChild::OwnerDestroyed() {
-  if (mManagerThread->IsOnCurrentThread()) {
-    mOwner = nullptr;
-    if (CanSend()) {
-      MFMediaEngineChild::Send__delete__(this);
-    }
-    return;
-  }
-  SyncRunnable::DispatchToThread(
-      mManagerThread,
-      NS_NewRunnableFunction("MFMediaEngineChild::OwnerDestroyed",
-                             [self = RefPtr{this}, this] {
-                               mOwner = nullptr;
-                               if (CanSend()) {
-                                 MFMediaEngineChild::Send__delete__(this);
-                               }
-                             }));
+  (void)ManagerThread()->Dispatch(NS_NewRunnableFunction(
+      "MFMediaEngineChild::OwnerDestroy", [self = RefPtr{this}, this] {
+        self->mOwner = nullptr;
+        // Ask to destroy IPDL.
+        if (CanSend()) {
+          MFMediaEngineChild::Send__delete__(this);
+        }
+      }));
 }
 
-void MFMediaEngineChild::ActorDestroy(ActorDestroyReason aWhy) {
+void MFMediaEngineChild::IPDLActorDestroyed() {
   AssertOnManagerThread();
-  if (!mShutdown && mOwner) {
+  if (!mShutdown) {
     CLOG("Destroyed actor without shutdown, remote process has crashed!");
     mOwner->NotifyError(NS_ERROR_DOM_MEDIA_REMOTE_CRASHED_MF_CDM_ERR);
   }
+  mIPDLSelfRef = nullptr;
 }
 
 void MFMediaEngineChild::Shutdown() {
@@ -439,33 +404,11 @@ void MFMediaEngineWrapper::NotifyError(const MediaResult& aError) {
   mOwner->NotifyError(aError);
 }
 
-void MFMediaEngineWrapper::NotifyHardwareReset() {
-  AssertOnManagerThread();
-  WLOG("Received hardware reset");
-  mOwner->NotifyHardwareReset();
-}
-
-void MFMediaEngineWrapper::NotifyWaitingForKey() {
-  AssertOnManagerThread();
-  WLOG("Received waiting for key");
-#ifdef MOZ_WMF_CDM
-  mOwner->NotifyWaitingForKey();
-#endif
-}
-
 void MFMediaEngineWrapper::NotifyResizing(uint32_t aWidth, uint32_t aHeight) {
   AssertOnManagerThread();
   WLOG("Video resizing, new size [%u,%u]", aWidth, aHeight);
   mOwner->NotifyResizing(aWidth, aHeight);
 }
-
-#ifdef MOZ_WMF_CDM
-void MFMediaEngineWrapper::NotifyFrameServerMode() {
-  AssertOnManagerThread();
-  WLOG("Engine switched to frame server mode");
-  mOwner->NotifyFrameServerMode();
-}
-#endif
 
 #undef CLOG
 #undef WLOG

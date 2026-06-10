@@ -14,7 +14,6 @@ function normalizeWhitespace(text) {
 }
 
 add_task(async function test_dom_extractor_reader_mode() {
-  const { html } = await MLTestUtils.serveHTMLInTab({ browser: gBrowser });
   const title = "Etymology of Mochitests";
   const article =
     `It's interesting that inside of Mozilla most people call mochitests "moh` +
@@ -33,34 +32,31 @@ add_task(async function test_dom_extractor_reader_mode() {
 
   const text = `${title} ${article}`;
 
-  /** @type {GetTextOptions} */
-  const forceBoilerplateRemoval = {
-    removeBoilerplate: true,
-    _forceRemoveBoilerplate: true,
-  };
-
   is(
-    normalizeWhitespace((await getPageExtractor().getText()).text),
+    normalizeWhitespace(await getPageExtractor().getText()),
     text,
     "Normal page content supports getText"
   );
 
   is(
-    normalizeWhitespace(
-      (await getPageExtractor(forceBoilerplateRemoval).getText()).text
-    ),
+    normalizeWhitespace(await getPageExtractor().getReaderModeContent()),
     text,
-    "Normal page content supports boilerplate removal through reader mode"
+    "Normal page content supports getReaderModeContent"
   );
 
   await toggleReaderMode();
 
-  {
-    const result = normalizeWhitespace(
-      (await getPageExtractor().getText(forceBoilerplateRemoval)).text
-    );
-    ok(result.includes(text), "about:reader is supported with getText");
-  }
+  is(
+    normalizeWhitespace(await getPageExtractor().getText()),
+    text,
+    "about:reader is supported with getText"
+  );
+
+  is(
+    normalizeWhitespace(await getPageExtractor().getReaderModeContent()),
+    text,
+    "about:reader is supported with getReaderModeContent"
+  );
 
   await cleanup();
 });

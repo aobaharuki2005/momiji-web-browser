@@ -41,8 +41,8 @@ pub struct AdapterContext {
     inner: Arc<Mutex<Inner>>,
 }
 
-#[cfg(send_sync)]
-static_assertions::assert_impl_all!(AdapterContext: Send, Sync);
+unsafe impl Sync for AdapterContext {}
+unsafe impl Send for AdapterContext {}
 
 impl AdapterContext {
     pub fn is_owned(&self) -> bool {
@@ -182,8 +182,8 @@ pub struct Instance {
     inner: Arc<Mutex<Inner>>,
 }
 
-#[cfg(send_sync)]
-static_assertions::assert_impl_all!(Instance: Send, Sync);
+unsafe impl Send for Instance {}
+unsafe impl Sync for Instance {}
 
 fn load_gl_func(name: &str, module: Option<Foundation::HMODULE>) -> *const c_void {
     let addr = CString::new(name.as_bytes()).unwrap();
@@ -563,12 +563,12 @@ impl crate::Instance for Instance {
         })
     }
 
+    #[cfg_attr(target_os = "macos", allow(unused, unused_mut, unreachable_code))]
     unsafe fn create_surface(
         &self,
-        display_handle: RawDisplayHandle,
+        _display_handle: RawDisplayHandle,
         window_handle: RawWindowHandle,
     ) -> Result<Surface, crate::InstanceError> {
-        assert!(matches!(display_handle, RawDisplayHandle::Windows(_)));
         let window = if let RawWindowHandle::Win32(handle) = window_handle {
             handle
         } else {
@@ -873,7 +873,7 @@ impl crate::Surface for Surface {
         &self,
         _timeout_ms: Option<Duration>,
         _fence: &super::Fence,
-    ) -> Result<crate::AcquiredSurfaceTexture<super::Api>, crate::SurfaceError> {
+    ) -> Result<Option<crate::AcquiredSurfaceTexture<super::Api>>, crate::SurfaceError> {
         let swapchain = self.swapchain.read();
         let sc = swapchain.as_ref().unwrap();
         let texture = super::Texture {
@@ -891,10 +891,10 @@ impl crate::Surface for Surface {
                 depth: 1,
             },
         };
-        Ok(crate::AcquiredSurfaceTexture {
+        Ok(Some(crate::AcquiredSurfaceTexture {
             texture,
             suboptimal: false,
-        })
+        }))
     }
     unsafe fn discard_texture(&self, _texture: super::Texture) {}
 }

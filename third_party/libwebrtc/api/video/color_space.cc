@@ -138,7 +138,8 @@ const HdrMetadata* ColorSpace::hdr_metadata() const {
     break;
 
 std::string ColorSpace::AsString() const {
-  StringBuilder ss;
+  char buf[1024];
+  SimpleStringBuilder ss(buf);
   ss << "{primaries:";
   switch (primaries_) {
     PRINT_ENUM_CASE(PrimaryID, kBT709)
@@ -200,7 +201,7 @@ std::string ColorSpace::AsString() const {
     PRINT_ENUM_CASE(RangeID, kDerived)
   }
   ss << "}";
-  return ss.Release();
+  return ss.str();
 }
 
 #undef PRINT_ENUM_CASE

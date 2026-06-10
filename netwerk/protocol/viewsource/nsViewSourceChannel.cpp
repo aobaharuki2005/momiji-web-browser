@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=4 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,7 +13,6 @@
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIIOService.h"
 #include "nsIInputStreamChannel.h"
-#include "nsINestedURI.h"
 #include "nsIReferrerInfo.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
@@ -108,14 +109,6 @@ nsresult nsViewSourceChannel::InitSrcdoc(nsIURI* aURI, nsIURI* aBaseURI,
                                          const nsAString& aSrcdoc,
                                          nsILoadInfo* aLoadInfo) {
   nsresult rv;
-
-  MOZ_ASSERT(aURI->SchemeIs("view-source"));
-  nsCOMPtr<nsINestedURI> nestedURI(do_QueryInterface(aURI));
-  NS_ENSURE_TRUE(nestedURI, NS_ERROR_INVALID_ARG);
-  nsCOMPtr<nsIURI> innerURI;
-  rv = nestedURI->GetInnerURI(getter_AddRefs(innerURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-  MOZ_RELEASE_ASSERT(NS_IsAboutSrcdoc(innerURI));
 
   nsCOMPtr<nsIURI> inStreamURI;
   // Need to strip view-source: from the URI.  Hardcoded to
@@ -708,8 +701,7 @@ nsViewSourceChannel::OnStartRequest(nsIRequest* aRequest) {
     Cancel(rv);
   }
 
-  nsCOMPtr<nsIStreamListener> listener = mListener;
-  return listener->OnStartRequest(static_cast<nsIViewSourceChannel*>(this));
+  return mListener->OnStartRequest(static_cast<nsIViewSourceChannel*>(this));
 }
 
 NS_IMETHODIMP
@@ -724,8 +716,7 @@ nsViewSourceChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     }
   }
 
-  nsCOMPtr<nsIStreamListener> listener = mListener;
-  nsresult rv = listener->OnStopRequest(
+  nsresult rv = mListener->OnStopRequest(
       static_cast<nsIViewSourceChannel*>(this), aStatus);
 
   ReleaseListeners();
@@ -739,9 +730,8 @@ nsViewSourceChannel::OnDataAvailable(nsIRequest* aRequest,
                                      nsIInputStream* aInputStream,
                                      uint64_t aSourceOffset, uint32_t aLength) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIStreamListener> listener = mListener;
-  return listener->OnDataAvailable(static_cast<nsIViewSourceChannel*>(this),
-                                   aInputStream, aSourceOffset, aLength);
+  return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel*>(this),
+                                    aInputStream, aSourceOffset, aLength);
 }
 
 // nsIHttpChannel methods

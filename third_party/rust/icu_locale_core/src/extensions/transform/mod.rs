@@ -117,8 +117,6 @@ impl Transform {
 
     /// A constructor which takes a str slice, parses it and
     /// produces a well-formed [`Transform`].
-    ///
-    /// ✨ *Enabled with the `alloc` Cargo feature.*
     #[inline]
     #[cfg(feature = "alloc")]
     pub fn try_from_str(s: &str) -> Result<Self, ParseError> {
@@ -126,8 +124,6 @@ impl Transform {
     }
 
     /// See [`Self::try_from_str`]
-    ///
-    /// ✨ *Enabled with the `alloc` Cargo feature.*
     #[cfg(feature = "alloc")]
     pub fn try_from_utf8(code_units: &[u8]) -> Result<Self, ParseError> {
         let mut iter = SubtagIterator::new(code_units);
@@ -171,7 +167,7 @@ impl Transform {
         self.fields.clear();
     }
 
-    #[expect(clippy::type_complexity)]
+    #[allow(clippy::type_complexity)]
     pub(crate) fn as_tuple(
         &self,
     ) -> (
@@ -274,7 +270,6 @@ impl Transform {
     }
 }
 
-/// ✨ *Enabled with the `alloc` Cargo feature.*
 #[cfg(feature = "alloc")]
 impl FromStr for Transform {
     type Err = ParseError;
@@ -285,7 +280,7 @@ impl FromStr for Transform {
     }
 }
 
-writeable::impl_display_with_writeable!(Transform, #[cfg(feature = "alloc")]);
+writeable::impl_display_with_writeable!(Transform);
 
 impl writeable::Writeable for Transform {
     fn write_to<W: core::fmt::Write + ?Sized>(&self, sink: &mut W) -> core::fmt::Result {

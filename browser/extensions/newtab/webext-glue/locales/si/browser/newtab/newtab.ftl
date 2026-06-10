@@ -44,7 +44,7 @@ newtab-search-box-input =
     .placeholder = සොයන්න
     .aria-label = සොයන්න
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = සෙවුම් යන්ත්‍රයක් යොදන්න
 newtab-topsites-add-shortcut-header = නව කෙටිමඟ
@@ -235,21 +235,9 @@ newtab-error-fallback-refresh-link = පිටුව නැවුම් කර �
 
 newtab-custom-shortcuts-title = කෙටිමං
 newtab-custom-shortcuts-subtitle = ඔබ සුරකින හෝ ගොඩවදින අඩවි
-#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = කෙටිමං
     .description = ඔබ සුරකින හෝ ගොඩවදින අඩවි
-newtab-custom-shortcuts-nova =
-    .label = කෙටිමං
-# Variables
-#   $num (number) - Number of rows to display
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
-newtab-custom-row-selector2 =
-    .label =
-        { $num ->
-            [one] පේළි { $num }
-           *[other] පේළි { $num }
-        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -269,8 +257,6 @@ newtab-custom-settings = වෙනත් සැකසුම් කළමනා�
 ## New Tab Wallpapers
 
 newtab-wallpaper-title = බිතුපත්
-newtab-wallpaper-toggle-title =
-    .label = බිතුපත්
 
 ## Solid Colors
 

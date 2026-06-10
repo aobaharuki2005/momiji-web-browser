@@ -1150,7 +1150,7 @@ add_task(async function test_dnr_all_rules_disabled_allowed() {
 });
 
 add_task(async function test_static_rules_telemetry() {
-  Services.fog.testResetFOG();
+  resetTelemetryData();
 
   const ruleset1 = [
     getDNRRule({
@@ -1211,9 +1211,13 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
       },
       {
         metric: "evaluateRulesTime",
+        mirroredName: "WEBEXT_DNR_EVALUATE_RULES_MS",
+        mirroredType: "histogram",
       },
     ],
     "before test extension have been loaded"
@@ -1228,6 +1232,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
       },
     ],
     "after test extension loaded with all static rulesets disabled"
@@ -1247,6 +1253,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
         expectedSamplesCount: expectedValidateRulesTimeSamples,
       },
     ],
@@ -1267,6 +1275,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
         expectedSamplesCount: expectedValidateRulesTimeSamples,
       },
     ],
@@ -1279,6 +1289,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
         expectedSamplesCount: expectedValidateRulesTimeSamples,
       },
     ],
@@ -1296,6 +1308,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
         expectedSamplesCount: expectedValidateRulesTimeSamples,
       },
     ],
@@ -1315,6 +1329,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
         expectedSamplesCount: expectedValidateRulesTimeSamples,
       },
     ],
@@ -1333,9 +1349,13 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "evaluateRulesTime",
+        mirroredName: "WEBEXT_DNR_EVALUATE_RULES_MS",
+        mirroredType: "histogram",
       },
       {
         metric: "evaluateRulesCountMax",
+        mirroredName: "extensions.apis.dnr.evaluate_rules_count_max",
+        mirroredType: "scalar",
       },
     ],
     "before any request have been intercepted"
@@ -1351,9 +1371,13 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "evaluateRulesTime",
+        mirroredName: "WEBEXT_DNR_EVALUATE_RULES_MS",
+        mirroredType: "histogram",
       },
       {
         metric: "evaluateRulesCountMax",
+        mirroredName: "extensions.apis.dnr.evaluate_rules_count_max",
+        mirroredType: "scalar",
       },
     ],
     "after restricted request have been intercepted (but no rules evaluated)"
@@ -1380,6 +1404,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "evaluateRulesTime",
+        mirroredName: "WEBEXT_DNR_EVALUATE_RULES_MS",
+        mirroredType: "histogram",
         expectedSamplesCount: expectedEvaluateRulesTimeSamples,
       },
     ],
@@ -1392,6 +1418,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "evaluateRulesCountMax",
+        mirroredName: "extensions.apis.dnr.evaluate_rules_count_max",
+        mirroredType: "scalar",
         expectedGetValue: expectedEvaluateRulesCountMax,
       },
     ],
@@ -1407,6 +1435,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "evaluateRulesTime",
+        mirroredName: "WEBEXT_DNR_EVALUATE_RULES_MS",
+        mirroredType: "histogram",
         expectedSamplesCount: expectedEvaluateRulesTimeSamples,
       },
     ],
@@ -1428,6 +1458,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "evaluateRulesCountMax",
+        mirroredName: "extensions.apis.dnr.evaluate_rules_count_max",
+        mirroredType: "scalar",
         expectedGetValue: expectedEvaluateRulesCountMax,
       },
     ],
@@ -1446,6 +1478,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "evaluateRulesCountMax",
+        mirroredName: "extensions.apis.dnr.evaluate_rules_count_max",
+        mirroredType: "scalar",
         expectedGetValue: expectedEvaluateRulesCountMax,
       },
     ],

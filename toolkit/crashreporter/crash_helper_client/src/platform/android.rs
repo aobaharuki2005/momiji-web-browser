@@ -3,38 +3,25 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use anyhow::Result;
-use crash_helper_common::{
-    messages::ProcessRendezVous, GeckoChildId, IPCConnector, Pid, RawIPCConnector,
-};
-use std::process;
+use crash_helper_common::{IPCConnector, Pid, RawAncillaryData};
 
 use crate::CrashHelperClient;
 
 impl CrashHelperClient {
-    pub(crate) fn new(server_socket: RawIPCConnector) -> Result<CrashHelperClient> {
+    pub(crate) fn new(server_socket: RawAncillaryData) -> Result<CrashHelperClient> {
         // SAFETY: The `server_socket` passed in from the application is valid
-        let connector = unsafe { IPCConnector::from_raw_connector(server_socket)? };
-
-        let rendezvous =
-            Self::prepare_for_minidump(/* crash_helper_pid */ None, /* id */ 0).unwrap();
-        connector.send_message(rendezvous)?;
+        let connector = unsafe {
+          IPCConnector::from_raw_ancillary(server_socket)?
+        };
 
         Ok(CrashHelperClient {
             connector,
             spawner_thread: None,
-            pid: 0, // Unused on Android
         })
     }
 
-    pub(crate) fn prepare_for_minidump(
-        _crash_helper_pid: Option<Pid>,
-        id: GeckoChildId,
-    ) -> Option<ProcessRendezVous> {
-        Some(ProcessRendezVous::new(
-            /* dumpable */ true,
-            process::id() as Pid,
-            id,
-            [],
-        ))
+    pub(crate) fn prepare_for_minidump(_crash_helper_pid: Pid) -> bool {
+        // On Android this is currently a no-op
+        true
     }
 }

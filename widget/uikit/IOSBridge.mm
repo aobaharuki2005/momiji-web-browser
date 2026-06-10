@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: c++; c-basic-offset: 2; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -14,7 +15,8 @@ using namespace mozilla::widget;
 NS_IMPL_ISUPPORTS(nsIOSBridge, nsIGeckoViewEventDispatcher, nsIGeckoViewBridge)
 
 nsIOSBridge::nsIOSBridge() {
-  auto dispatcher = mozilla::MakeRefPtr<mozilla::widget::EventDispatcher>();
+  RefPtr<mozilla::widget::EventDispatcher> dispatcher =
+      new mozilla::widget::EventDispatcher();
   dispatcher->Attach([GetSwiftRuntime() runtimeDispatcher]);
   dispatcher->Activate();
   mEventDispatcher = dispatcher;
@@ -24,7 +26,8 @@ NS_IMETHODIMP
 nsIOSBridge::GetDispatcherByName(const char* aName,
                                  nsIGeckoViewEventDispatcher** aResult) {
   mozilla::AssertIsOnMainThread();
-  auto dispatcher = mozilla::MakeRefPtr<mozilla::widget::EventDispatcher>();
+  RefPtr<mozilla::widget::EventDispatcher> dispatcher =
+      new mozilla::widget::EventDispatcher();
   dispatcher->Attach([GetSwiftRuntime() dispatcherByName:aName]);
   dispatcher->Activate();
   dispatcher.forget(aResult);

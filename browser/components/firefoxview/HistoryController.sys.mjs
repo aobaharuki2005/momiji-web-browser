@@ -11,6 +11,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
+let XPCOMUtils = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+).XPCOMUtils;
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "maxRowsPref",
+  "browser.firefox-view.max-history-rows",
+  -1
+);
+
 const HISTORY_MAP_L10N_IDS = {
   sidebar: {
     "history-date-today": "sidebar-history-date-today",
@@ -56,30 +67,13 @@ export class HistoryController {
   #todaysDate;
   #yesterdaysDate;
 
-  /**
-   * Construct a new HistoryController.
-   *
-   * @param {ReactiveControllerHost} host
-   *   The component that this controller is connected to.
-   * @param {object} [options]
-   * @param {string} [options.sortOption]
-   * @param {number} [options.searchResultsLimit]
-   * @param {string} [options.component]
-   */
-  constructor(
-    host,
-    {
-      sortOption = "date",
-      searchResultsLimit = 300,
-      component = "firefoxview",
-    } = {}
-  ) {
+  constructor(host, options) {
     this.placesQuery = new lazy.PlacesQuery();
     this.searchQuery = "";
-    this.sortOption = sortOption;
-    this.searchResultsLimit = searchResultsLimit;
-    this.component = HISTORY_MAP_L10N_IDS[component]
-      ? component
+    this.sortOption = "date";
+    this.searchResultsLimit = options?.searchResultsLimit || 300;
+    this.component = HISTORY_MAP_L10N_IDS?.[options?.component]
+      ? options?.component
       : "firefoxview";
     this.historyCache = {
       entries: null,
@@ -188,8 +182,6 @@ export class HistoryController {
    */
   #normalizeVisit(visit) {
     visit.time = visit.date.getTime();
-    visit.pageGuid = visit.guid;
-    visit.guid = `${visit.guid}|${visit.time}`;
     visit.title = visit.title || visit.url;
     visit.icon = `page-icon:${visit.url}`;
     visit.primaryL10nId = "fxviewtabrow-tabs-list-tab";
@@ -514,7 +506,7 @@ export class HistoryController {
   async #fetchHistory() {
     return this.placesQuery.getHistory({
       daysOld: 60,
-      limit: -1,
+      limit: lazy.maxRowsPref,
       sortBy: this.sortOption,
     });
   }

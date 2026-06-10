@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type {Protocol} from 'devtools-protocol';
-
 import type {Frame} from '../api/Frame.js';
 import type {JSHandle} from '../api/JSHandle.js';
 
@@ -64,8 +62,6 @@ export class ConsoleMessage {
   #args: JSHandle[];
   #stackTraceLocations: ConsoleMessageLocation[];
   #frame?: Frame;
-  #rawStackTrace?: Protocol.Runtime.StackTrace;
-  #targetId?: string;
 
   /**
    * @internal
@@ -76,16 +72,12 @@ export class ConsoleMessage {
     args: JSHandle[],
     stackTraceLocations: ConsoleMessageLocation[],
     frame?: Frame,
-    rawStackTrace?: Protocol.Runtime.StackTrace,
-    targetId?: string,
   ) {
     this.#type = type;
     this.#text = text;
     this.#args = args;
     this.#stackTraceLocations = stackTraceLocations;
     this.#frame = frame;
-    this.#rawStackTrace = rawStackTrace;
-    this.#targetId = targetId;
   }
 
   /**
@@ -124,23 +116,5 @@ export class ConsoleMessage {
    */
   stackTrace(): ConsoleMessageLocation[] {
     return this.#stackTraceLocations;
-  }
-
-  /**
-   * The underlying protocol stack trace if available.
-   *
-   * @internal
-   */
-  _rawStackTrace(): Protocol.Runtime.StackTrace | undefined {
-    return this.#rawStackTrace;
-  }
-
-  /**
-   * The targetId from which this console message originated.
-   *
-   * @internal
-   */
-  _targetId(): string | undefined {
-    return this.#targetId;
   }
 }

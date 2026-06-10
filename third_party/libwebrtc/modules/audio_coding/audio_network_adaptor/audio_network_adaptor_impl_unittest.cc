@@ -17,19 +17,17 @@
 #include <vector>
 
 #include "api/rtc_event_log/rtc_event.h"
-#include "api/test/time_controller.h"
 #include "api/units/time_delta.h"
-#include "api/units/timestamp.h"
 #include "logging/rtc_event_log/events/rtc_event_audio_network_adaptation.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "modules/audio_coding/audio_network_adaptor/controller.h"
 #include "modules/audio_coding/audio_network_adaptor/mock/mock_controller.h"
 #include "modules/audio_coding/audio_network_adaptor/mock/mock_controller_manager.h"
 #include "modules/audio_coding/audio_network_adaptor/mock/mock_debug_dump_writer.h"
+#include "rtc_base/fake_clock.h"
 #include "test/create_test_environment.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-#include "test/time_controller/simulated_time_controller.h"
 
 namespace webrtc {
 
@@ -57,13 +55,7 @@ MATCHER_P(IsRtcEventAnaConfigEqualTo, config, "") {
     return false;
   }
   auto ana_event = static_cast<RtcEventAudioNetworkAdaptation*>(arg);
-  return ana_event->bitrate_bps() == config.bitrate_bps &&
-         ana_event->frame_length_ms() == config.frame_length_ms &&
-         ana_event->uplink_packet_loss_fraction() ==
-             config.uplink_packet_loss_fraction &&
-         ana_event->enable_fec() == config.enable_fec &&
-         ana_event->enable_dtx() == config.enable_dtx &&
-         ana_event->num_channels() == config.num_channels;
+  return ana_event->config() == config;
 }
 
 MATCHER_P(EncoderRuntimeConfigIs, config, "") {
@@ -83,8 +75,7 @@ struct AudioNetworkAdaptorStates {
   MockDebugDumpWriter* mock_debug_dump_writer;
 };
 
-AudioNetworkAdaptorStates CreateAudioNetworkAdaptor(
-    TimeController* time_controller = nullptr) {
+AudioNetworkAdaptorStates CreateAudioNetworkAdaptor() {
   AudioNetworkAdaptorStates states;
   std::vector<Controller*> controllers;
   for (size_t i = 0; i < kNumControllers; ++i) {
@@ -111,16 +102,10 @@ AudioNetworkAdaptorStates CreateAudioNetworkAdaptor(
   EXPECT_CALL(*debug_dump_writer, Die());
   states.mock_debug_dump_writer = debug_dump_writer.get();
 
-  CreateTestEnvironmentOptions options;
-  options.event_log = states.event_log.get();
-  if (time_controller) {
-    options.time = time_controller;
-  }
-
   // AudioNetworkAdaptorImpl governs the lifetime of controller manager.
   states.audio_network_adaptor = std::make_unique<AudioNetworkAdaptorImpl>(
-      CreateTestEnvironment(std::move(options)), std::move(controller_manager),
-      std::move(debug_dump_writer));
+      CreateTestEnvironment({.event_log = states.event_log.get()}),
+      std::move(controller_manager), std::move(debug_dump_writer));
 
   return states;
 }
@@ -194,9 +179,9 @@ TEST(AudioNetworkAdaptorImplTest,
 
 TEST(AudioNetworkAdaptorImplTest,
      DumpEncoderRuntimeConfigIsCalledOnGetEncoderRuntimeConfig) {
-  GlobalSimulatedTimeController time_controller(
-      Timestamp::Millis(kClockInitialTimeMs));
-  auto states = CreateAudioNetworkAdaptor(&time_controller);
+  ScopedFakeClock fake_clock;
+  fake_clock.AdvanceTime(TimeDelta::Millis(kClockInitialTimeMs));
+  auto states = CreateAudioNetworkAdaptor();
   AudioEncoderRuntimeConfig config;
   config.bitrate_bps = 32000;
   config.enable_fec = true;
@@ -212,10 +197,10 @@ TEST(AudioNetworkAdaptorImplTest,
 
 TEST(AudioNetworkAdaptorImplTest,
      DumpNetworkMetricsIsCalledOnSetNetworkMetrics) {
-  GlobalSimulatedTimeController time_controller(
-      Timestamp::Millis(kClockInitialTimeMs));
+  ScopedFakeClock fake_clock;
+  fake_clock.AdvanceTime(TimeDelta::Millis(kClockInitialTimeMs));
 
-  auto states = CreateAudioNetworkAdaptor(&time_controller);
+  auto states = CreateAudioNetworkAdaptor();
 
   constexpr int kBandwidth = 16000;
   constexpr float kPacketLoss = 0.7f;
@@ -231,31 +216,31 @@ TEST(AudioNetworkAdaptorImplTest,
               DumpNetworkMetrics(NetworkMetricsIs(check), timestamp_check));
   states.audio_network_adaptor->SetUplinkBandwidth(kBandwidth);
 
-  time_controller.AdvanceTime(TimeDelta::Millis(100));
+  fake_clock.AdvanceTime(TimeDelta::Millis(100));
   timestamp_check += 100;
   check.uplink_packet_loss_fraction = kPacketLoss;
   EXPECT_CALL(*states.mock_debug_dump_writer,
               DumpNetworkMetrics(NetworkMetricsIs(check), timestamp_check));
   states.audio_network_adaptor->SetUplinkPacketLossFraction(kPacketLoss);
 
-  time_controller.AdvanceTime(TimeDelta::Millis(50));
+  fake_clock.AdvanceTime(TimeDelta::Millis(50));
   timestamp_check += 50;
 
-  time_controller.AdvanceTime(TimeDelta::Millis(200));
+  fake_clock.AdvanceTime(TimeDelta::Millis(200));
   timestamp_check += 200;
   check.rtt_ms = kRtt;
   EXPECT_CALL(*states.mock_debug_dump_writer,
               DumpNetworkMetrics(NetworkMetricsIs(check), timestamp_check));
   states.audio_network_adaptor->SetRtt(kRtt);
 
-  time_controller.AdvanceTime(TimeDelta::Millis(150));
+  fake_clock.AdvanceTime(TimeDelta::Millis(150));
   timestamp_check += 150;
   check.target_audio_bitrate_bps = kTargetAudioBitrate;
   EXPECT_CALL(*states.mock_debug_dump_writer,
               DumpNetworkMetrics(NetworkMetricsIs(check), timestamp_check));
   states.audio_network_adaptor->SetTargetAudioBitrate(kTargetAudioBitrate);
 
-  time_controller.AdvanceTime(TimeDelta::Millis(50));
+  fake_clock.AdvanceTime(TimeDelta::Millis(50));
   timestamp_check += 50;
   check.overhead_bytes_per_packet = kOverhead;
   EXPECT_CALL(*states.mock_debug_dump_writer,

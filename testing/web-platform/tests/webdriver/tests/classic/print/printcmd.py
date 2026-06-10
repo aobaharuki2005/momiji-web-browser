@@ -3,8 +3,7 @@ from base64 import decodebytes
 
 import pytest
 
-from tests.support.classic.asserts import assert_error, assert_success
-from tests.support.asserts import assert_pdf
+from tests.support.asserts import assert_error, assert_pdf, assert_success
 
 from . import do_print
 
@@ -82,7 +81,7 @@ def test_large_html_document(session, inline):
     (["-5", "2-"], ["Page 1", "Page 2", "Page 3", "Page 4", "Page 5", "Page 6", "Page 7", "Page 8", "Page 9", "Page 10"]),
     ([], ["Page 1", "Page 2", "Page 3", "Page 4", "Page 5", "Page 6", "Page 7", "Page 8", "Page 9", "Page 10"]),
 ])
-def test_page_ranges_document(session, inline, load_pdf_classic, ranges, expected):
+def test_page_ranges_document(session, inline, load_pdf_http, ranges, expected):
     session.url = inline("""
 <style>
 div {page-break-after: always}
@@ -106,7 +105,7 @@ div {page-break-after: always}
     # TODO: Test that the output is reasonable
     assert_pdf(value)
 
-    load_pdf_classic(value)
+    load_pdf_http(value)
     pages = session.execute_async_script("""let callback = arguments[arguments.length - 1];
 window.getText().then(pages => callback(pages));""")
     assert pages == expected

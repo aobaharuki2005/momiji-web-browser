@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -64,8 +66,8 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/nsCSPContext.h"
-#include "mozilla/net/ChannelClassifierUtils.h"
 #include "mozilla/net/DocumentChannel.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/widget/IMEData.h"
 #include "nsChannelClassifier.h"
 #include "nsFocusManager.h"
@@ -209,8 +211,8 @@ already_AddRefed<nsIDocShell> nsObjectLoadingContent::SetupDocShell(
   }
 
   if (!docShell) {
-    RefPtr<nsFrameLoader> loader = std::move(mFrameLoader);
-    loader->Destroy();
+    mFrameLoader->Destroy();
+    mFrameLoader = nullptr;
     return nullptr;
   }
 
@@ -293,8 +295,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
           NS_GetFinalChannelURI(mChannel, getter_AddRefs(mURI)));
     }
 
-    nsCOMPtr<nsIStreamListener> listener = mFinalListener;
-    return listener->OnStartRequest(aRequest);
+    return mFinalListener->OnStartRequest(aRequest);
   }
 
   // Otherwise we should be state loading, and call LoadObject with the channel
@@ -324,7 +325,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
     return NS_ERROR_FAILURE;
   }
 
-  if (ChannelClassifierUtils::IsClassifierBlockingErrorCode(status)) {
+  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(status)) {
     mContentBlockingEnabled = true;
     return NS_ERROR_FAILURE;
   }
@@ -351,7 +352,7 @@ nsObjectLoadingContent::OnStopRequest(nsIRequest* aRequest,
   // fingerprinting, cryptomining, etc.).
   // We make a note of this object node by including it in a dedicated
   // array of blocked tracking nodes under its parent document.
-  if (ChannelClassifierUtils::IsClassifierBlockingErrorCode(aStatusCode)) {
+  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aStatusCode)) {
     nsCOMPtr<nsIContent> thisNode =
         do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
     if (thisNode && thisNode->IsInComposedDoc()) {
@@ -587,8 +588,7 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
   if (NS_FAILED(rv)) {
     return;
   }
-  AutoTArray<nsString, 2> params = {std::move(utf16OldURI),
-                                    std::move(utf16URI)};
+  AutoTArray<nsString, 2> params = {utf16OldURI, utf16URI};
   const char* msgName;
   // If there's no query to rewrite, just notify in the developer console
   // that we're changing the embed.
@@ -598,7 +598,7 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
     msgName = "RewriteYouTubeEmbedPathParams";
   }
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Plugins"_ns,
-                                  doc, PropertiesFile::DOM_PROPERTIES, msgName,
+                                  doc, nsContentUtils::eDOM_PROPERTIES, msgName,
                                   params);
 }
 
@@ -1281,8 +1281,8 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
       nsCOMPtr<nsIURILoader> uriLoader(components::URILoader::Service());
       if (NS_WARN_IF(!uriLoader)) {
         MOZ_ASSERT_UNREACHABLE("Failed to get uriLoader service");
-        RefPtr<nsFrameLoader> loader = std::move(mFrameLoader);
-        loader->Destroy();
+        mFrameLoader->Destroy();
+        mFrameLoader = nullptr;
         break;
       }
 
@@ -1569,7 +1569,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
   rv = chan->AsyncOpen(shim);
   NS_ENSURE_SUCCESS(rv, rv);
   LOG(("OBJLC [%p]: Channel opened", this));
-  mChannel = std::move(chan);
+  mChannel = chan;
   return NS_OK;
 }
 
@@ -1578,6 +1578,11 @@ uint32_t nsObjectLoadingContent::GetCapabilities() const {
 }
 
 void nsObjectLoadingContent::Destroy() {
+  if (mFrameLoader) {
+    mFrameLoader->Destroy();
+    mFrameLoader = nullptr;
+  }
+
   // Reset state so that if the element is re-appended to tree again (e.g.
   // adopting to another document), it will reload resource again.
   UnloadObject();
@@ -1601,8 +1606,8 @@ void nsObjectLoadingContent::Unlink(nsObjectLoadingContent* tmp) {
 
 void nsObjectLoadingContent::UnloadObject(bool aResetState) {
   if (mFrameLoader) {
-    RefPtr<nsFrameLoader> loader = std::move(mFrameLoader);
-    loader->Destroy();
+    mFrameLoader->Destroy();
+    mFrameLoader = nullptr;
   }
 
   if (aResetState) {
@@ -1700,28 +1705,21 @@ void nsObjectLoadingContent::TriggerInnerFallbackLoads() {
   }
   // Do a depth-first traverse of node tree with the current element as root,
   // looking for non-<param> elements.  If we find some then we have an HTML
-  // fallback for this element
-  AutoTArray<RefPtr<nsIContent>, 4> targets;
+  // fallback for this element.
   for (nsIContent* child = el->GetFirstChild(); child;) {
     // <object> and <embed> elements in the fallback need to StartObjectLoad.
     // Their children should be ignored since they are part of those element's
     // fallback.
-    if (child->IsAnyOfHTMLElements(nsGkAtoms::embed, nsGkAtoms::object)) {
-      targets.AppendElement(child);
+    if (auto* embed = HTMLEmbedElement::FromNode(child)) {
+      embed->StartObjectLoad(true, true);
+      // Skip the children
+      child = child->GetNextNonChildNode(el);
+    } else if (auto* object = HTMLObjectElement::FromNode(child)) {
+      object->StartObjectLoad(true, true);
+      // Skip the children
       child = child->GetNextNonChildNode(el);
     } else {
       child = child->GetNextNode(el);
-    }
-  }
-
-  for (RefPtr<nsIContent>& target : targets) {
-    if (!target->IsInclusiveDescendantOf(el)) {
-      continue;
-    }
-    if (auto* embed = HTMLEmbedElement::FromNode(target)) {
-      embed->StartObjectLoad(true, true);
-    } else if (auto* object = HTMLObjectElement::FromNode(target)) {
-      object->StartObjectLoad(true, true);
     }
   }
 }

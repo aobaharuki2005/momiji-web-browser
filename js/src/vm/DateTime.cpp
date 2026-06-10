@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -468,11 +470,16 @@ int32_t js::DateTimeInfo::internalGetOffsetMilliseconds(int64_t milliseconds,
 
 bool js::DateTimeInfo::internalTimeZoneDisplayName(
     TimeZoneDisplayNameVector& result, int64_t utcMilliseconds,
-    LanguageId locale) {
-  MOZ_ASSERT(locale != LanguageId::und());
+    const char* locale) {
+  MOZ_ASSERT(locale != nullptr);
 
   // Clear any previously cached names when the default locale changed.
-  if (locale_ != locale) {
+  if (!locale_ || std::strcmp(locale_.get(), locale) != 0) {
+    locale_ = DuplicateString(locale);
+    if (!locale_) {
+      return false;
+    }
+
     standardName_.reset();
     daylightSavingsName_.reset();
   }
@@ -488,12 +495,9 @@ bool js::DateTimeInfo::internalTimeZoneDisplayName(
                                            : standardName_;
   if (!cachedName) {
     // Retrieve the display name for the given locale.
-    auto localeStr = locale.toString();
 
     intl::FormatBuffer<char16_t, 0, js::SystemAllocPolicy> buffer;
-    if (timeZone()
-            ->GetDisplayName(localeStr.c_str(), daylightSavings, buffer)
-            .isErr()) {
+    if (timeZone()->GetDisplayName(locale, daylightSavings, buffer).isErr()) {
       return false;
     }
 

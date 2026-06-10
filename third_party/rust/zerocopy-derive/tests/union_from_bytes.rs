@@ -6,69 +6,67 @@
 // This file may not be copied, modified, or distributed except according to
 // those terms.
 
-// See comment in `include.rs` for why we disable the prelude.
-#![no_implicit_prelude]
 #![allow(warnings)]
 
-include!("include.rs");
+use std::{marker::PhantomData, option::IntoIter};
 
-// A union is `imp::FromBytes` if:
-// - all fields are `imp::FromBytes`
+use {
+    static_assertions::assert_impl_all,
+    zerocopy::{FromBytes, FromZeroes},
+};
 
-#[derive(Clone, Copy, imp::Immutable, imp::FromBytes)]
+// A union is `FromBytes` if:
+// - all fields are `FromBytes`
+
+#[derive(Clone, Copy, FromZeroes, FromBytes)]
 union Zst {
     a: (),
 }
 
-util_assert_impl_all!(Zst: imp::FromBytes);
-test_trivial_is_bit_valid!(Zst => test_zst_trivial_is_bit_valid);
+assert_impl_all!(Zst: FromBytes);
 
-#[derive(imp::Immutable, imp::FromBytes)]
+#[derive(FromZeroes, FromBytes)]
 union One {
     a: u8,
 }
 
-util_assert_impl_all!(One: imp::FromBytes);
-test_trivial_is_bit_valid!(One => test_one_trivial_is_bit_valid);
+assert_impl_all!(One: FromBytes);
 
-#[derive(imp::Immutable, imp::FromBytes)]
+#[derive(FromZeroes, FromBytes)]
 union Two {
     a: u8,
     b: Zst,
 }
 
-util_assert_impl_all!(Two: imp::FromBytes);
-test_trivial_is_bit_valid!(Two => test_two_trivial_is_bit_valid);
+assert_impl_all!(Two: FromBytes);
 
-#[derive(imp::Immutable, imp::FromBytes)]
-union TypeParams<'a, T: imp::Copy, I: imp::Iterator>
+#[derive(FromZeroes, FromBytes)]
+union TypeParams<'a, T: Copy, I: Iterator>
 where
-    I::Item: imp::Copy,
+    I::Item: Copy,
 {
     a: T,
     c: I::Item,
     d: u8,
-    e: imp::PhantomData<&'a [u8]>,
-    f: imp::PhantomData<&'static str>,
-    g: imp::PhantomData<imp::String>,
+    e: PhantomData<&'a [u8]>,
+    f: PhantomData<&'static str>,
+    g: PhantomData<String>,
 }
 
-util_assert_impl_all!(TypeParams<'static, (), imp::IntoIter<()>>: imp::FromBytes);
-test_trivial_is_bit_valid!(TypeParams<'static, (), imp::IntoIter<()>> => test_type_params_trivial_is_bit_valid);
+assert_impl_all!(TypeParams<'static, (), IntoIter<()>>: FromBytes);
 
-// Deriving `imp::FromBytes` should work if the union has bounded parameters.
+// Deriving `FromBytes` should work if the union has bounded parameters.
 
-#[derive(imp::Immutable, imp::FromBytes)]
+#[derive(FromZeroes, FromBytes)]
 #[repr(C)]
-union WithParams<'a: 'b, 'b: 'a, T: 'a + 'b + imp::FromBytes, const N: usize>
+union WithParams<'a: 'b, 'b: 'a, const N: usize, T: 'a + 'b + FromBytes>
 where
     'a: 'b,
     'b: 'a,
-    T: 'a + 'b + imp::Copy + imp::FromBytes,
+    T: 'a + 'b + Copy + FromBytes,
 {
     a: [T; N],
-    b: imp::PhantomData<&'a &'b ()>,
+    b: PhantomData<&'a &'b ()>,
 }
 
-util_assert_impl_all!(WithParams<'static, 'static, u8, 42>: imp::FromBytes);
-test_trivial_is_bit_valid!(WithParams<'static, 'static, u8, 42> => test_with_params_trivial_is_bit_valid);
+assert_impl_all!(WithParams<'static, 'static, 42, u8>: FromBytes);

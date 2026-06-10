@@ -39,9 +39,6 @@ class AnnexB {
   static mozilla::Result<mozilla::Ok, nsresult> ConvertHVCCSampleToAnnexB(
       mozilla::MediaRawData* aSample, bool aAddSPS = true);
 
-  // Extract extradata from an Annex B sample.
-  static RefPtr<MediaByteBuffer> ExtractExtraData(
-      const Span<const uint8_t>& aSpan);
   // Extract extradata for AVCC from an Annex B sample.
   static RefPtr<MediaByteBuffer> ExtractExtraDataForAVCC(
       const Span<const uint8_t>& aSpan);
@@ -62,8 +59,7 @@ class AnnexB {
 
   // Parse an AVCC extradata and construct the Annex B sample header.
   static already_AddRefed<mozilla::MediaByteBuffer>
-  ConvertAVCCExtraDataToAnnexB(const mozilla::MediaByteBuffer* aExtraData,
-                               size_t* aLength = nullptr);
+  ConvertAVCCExtraDataToAnnexB(const mozilla::MediaByteBuffer* aExtraData);
   // Parse a HVCC extradata and construct the Annex B sample header.
   static already_AddRefed<mozilla::MediaByteBuffer>
   ConvertHVCCExtraDataToAnnexB(const mozilla::MediaByteBuffer* aExtraData);
@@ -84,11 +80,11 @@ class AnnexB {
   static bool FindAllNalTypes(const Span<const uint8_t>& aSpan,
                               const nsTArray<NAL_TYPES>& aTypes);
 
+ private:
   static size_t FindNalType(const Span<const uint8_t>& aSpan,
                             const nsTArray<AnnexB::NALEntry>& aNalEntries,
                             NAL_TYPES aType, size_t aStartIndex);
 
- private:
   // AVCC box parser helper.
   static mozilla::Result<mozilla::Ok, nsresult> ConvertSPSOrPPS(
       mozilla::BufferReader& aReader, uint8_t aCount,

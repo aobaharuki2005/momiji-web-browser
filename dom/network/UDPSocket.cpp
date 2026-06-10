@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -158,11 +160,8 @@ void UDPSocket::CloseWithReason(nsresult aReason) {
     return;
   }
 
-  RefPtr<UDPSocket> kungFuDeathGrip(this);
-
   if (mOpened) {
-    if (mReadyState == SocketReadyState::Opening ||
-        mReadyState == SocketReadyState::Open) {
+    if (mReadyState == SocketReadyState::Opening) {
       // reject openedPromise with AbortError if socket is closed without error
       nsresult openFailedReason =
           NS_FAILED(aReason) ? aReason : NS_ERROR_DOM_ABORT_ERR;
@@ -381,7 +380,7 @@ nsresult UDPSocket::InitLocal(const nsAString& aLocalAddress,
     return rv;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = GetRelevantGlobal();
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   if (!global) {
     return NS_ERROR_FAILURE;
   }
@@ -397,7 +396,8 @@ nsresult UDPSocket::InitLocal(const nsAString& aLocalAddress,
   } else {
     PRNetAddr prAddr;
     PR_InitializeNetAddr(PR_IpAddrAny, aLocalPort, &prAddr);
-    PR_StringToNetAddr(NS_ConvertUTF16toUTF8(aLocalAddress).get(), &prAddr);
+    PR_StringToNetAddr(NS_ConvertUTF16toUTF8(aLocalAddress).BeginReading(),
+                       &prAddr);
     UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__,
                    NS_ConvertUTF16toUTF8(aLocalAddress).get(), aLocalPort));
 
@@ -414,7 +414,7 @@ nsresult UDPSocket::InitLocal(const nsAString& aLocalAddress,
     return rv;
   }
 
-  mSocket = std::move(sock);
+  mSocket = sock;
 
   // Get real local address and local port
   nsCOMPtr<nsINetAddr> localAddr;
@@ -437,15 +437,15 @@ nsresult UDPSocket::InitLocal(const nsAString& aLocalAddress,
   }
   mLocalPort.SetValue(localPort);
 
-  mReadyState = SocketReadyState::Open;
-  rv = DoPendingMcastCommand();
+  mListenerProxy = new ListenerProxy(this);
+
+  rv = mSocket->AsyncListen(mListenerProxy);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  mListenerProxy = new ListenerProxy(this);
-
-  rv = mSocket->AsyncListen(mListenerProxy);
+  mReadyState = SocketReadyState::Open;
+  rv = DoPendingMcastCommand();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -461,7 +461,7 @@ nsresult UDPSocket::InitRemote(const nsAString& aLocalAddress,
 
   mListenerProxy = new ListenerProxy(this);
 
-  nsCOMPtr<nsIGlobalObject> global = GetRelevantGlobal();
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   if (!global) {
     return NS_ERROR_FAILURE;
   }
@@ -494,7 +494,7 @@ nsresult UDPSocket::Init(const nsString& aLocalAddress,
   mAddressReuse = aAddressReuse;
   mLoopback = aLoopback;
 
-  nsCOMPtr<nsIGlobalObject> global = GetRelevantGlobal();
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
 
   ErrorResult rv;
   mOpened = Promise::Create(global, rv);

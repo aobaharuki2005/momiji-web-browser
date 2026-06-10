@@ -43,11 +43,7 @@ class OpenWindowTest : BaseSessionTest() {
         })
     }
 
-    private fun openPageClickNotification(
-        teardownAlertsService: Boolean = false,
-        urlParam: String = "",
-        clickAction: String? = null,
-    ) {
+    private fun openPageClickNotification(teardownAlertsService: Boolean = false, urlParam: String = "") {
         mainSession.loadUri(OPEN_WINDOW_PATH + urlParam)
         sessionRule.waitForPageStop()
         val result = mainSession.waitForJS("Notification.requestPermission()")
@@ -75,11 +71,7 @@ class OpenWindowTest : BaseSessionTest() {
             mainSession.teardownAlertsService()
         }
 
-        if (clickAction != null) {
-            notificationShown!!.click(clickAction)
-        } else {
-            notificationShown!!.click()
-        }
+        notificationShown!!.click()
     }
 
     @Test
@@ -179,13 +171,13 @@ class OpenWindowTest : BaseSessionTest() {
         })
         openPageClickNotification()
         sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
-            @AssertCalled(count = 2, order = [1, 3])
+            @AssertCalled(count = 2, order = [1, 2])
             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
                 assertThat("Should be on the target session", session, equalTo(targetSession))
                 assertThat("URL should match", url, equalTo(forEachCall("about:blank", OPEN_WINDOW_TARGET_PATH)))
             }
 
-            @AssertCalled(count = 1, order = [2])
+            @AssertCalled(count = 1, order = [3])
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 assertThat("Should be on the target session", session, equalTo(targetSession))
                 assertThat("URL should match", request.uri, equalTo(OPEN_WINDOW_TARGET_PATH))
@@ -228,7 +220,7 @@ class OpenWindowTest : BaseSessionTest() {
                 return GeckoResult.fromValue(mainSession)
             }
         })
-        openPageClickNotification(teardownAlertsService = true, urlParam = "?action=foo", clickAction = "foo")
+        openPageClickNotification(teardownAlertsService = true, urlParam = "?action=foo")
         sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {

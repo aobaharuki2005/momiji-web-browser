@@ -52,13 +52,12 @@ add_task(async function test() {
     priority: 10,
   });
 
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(slowProvider);
-  providersManager.registerProvider(firstProvider);
+  UrlbarProvidersManager.registerProvider(slowProvider);
+  UrlbarProvidersManager.registerProvider(firstProvider);
   function cleanup() {
-    providersManager.unregisterProvider(slowProvider);
-    providersManager.unregisterProvider(firstProvider);
-    providersManager.unregisterProvider(secondProvider);
+    UrlbarProvidersManager.unregisterProvider(slowProvider);
+    UrlbarProvidersManager.unregisterProvider(firstProvider);
+    UrlbarProvidersManager.unregisterProvider(secondProvider);
   }
   registerCleanupFunction(cleanup);
 
@@ -70,8 +69,8 @@ add_task(async function test() {
 
   // Now run the second query but don't wait for it to finish, we want to
   // observe the view contents along the way.
-  providersManager.unregisterProvider(firstProvider);
-  providersManager.registerProvider(secondProvider);
+  UrlbarProvidersManager.unregisterProvider(firstProvider);
+  UrlbarProvidersManager.registerProvider(secondProvider);
   let hasAtLeast4Children = BrowserTestUtils.waitForMutationCondition(
     UrlbarTestUtils.getResultsContainer(window),
     { childList: true },

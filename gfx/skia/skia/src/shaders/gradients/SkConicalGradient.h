@@ -59,7 +59,7 @@ public:
                                   SkScalar startRadius,
                                   const SkPoint& end,
                                   SkScalar endRadius,
-                                  const SkGradient&,
+                                  const Descriptor&,
                                   const SkMatrix* localMatrix);
 
     GradientType asGradient(GradientInfo* info, SkMatrix* localMatrix) const override;
@@ -79,7 +79,7 @@ public:
                       SkScalar r0,
                       const SkPoint& c1,
                       SkScalar r1,
-                      const SkGradient&,
+                      const Descriptor&,
                       Type,
                       const SkMatrix&,
                       const FocalData&);

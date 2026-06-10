@@ -104,18 +104,18 @@ add_task(async function test_search_private_window() {
     set: [["browser.search.separatePrivateDefault", true]],
   });
 
-  let engine = SearchService.getEngineByName("MozSearchPrivate");
-  let originalEngine = await SearchService.getDefaultPrivate();
-  await SearchService.setDefaultPrivate(
+  let engine = Services.search.getEngineByName("MozSearchPrivate");
+  let originalEngine = await Services.search.getDefaultPrivate();
+  await Services.search.setDefaultPrivate(
     engine,
-    SearchService.CHANGE_REASON.UNKNOWN
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   registerCleanupFunction(async () => {
     await BrowserTestUtils.closeWindow(win);
-    await SearchService.setDefaultPrivate(
+    await Services.search.setDefaultPrivate(
       originalEngine,
-      SearchService.CHANGE_REASON.UNKNOWN
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
   });
 

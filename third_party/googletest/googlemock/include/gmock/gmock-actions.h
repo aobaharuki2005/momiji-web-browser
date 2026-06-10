@@ -196,7 +196,7 @@ struct BuiltInDefaultValueGetter<T, false> {
 // other type T, the built-in default T value is undefined, and the
 // function will abort the process.
 template <typename T>
-class [[nodiscard]] BuiltInDefaultValue {
+class BuiltInDefaultValue {
  public:
   // This function returns true if and only if type T has a built-in default
   // value.
@@ -211,7 +211,7 @@ class [[nodiscard]] BuiltInDefaultValue {
 // This partial specialization says that we use the same built-in
 // default value for T and const T.
 template <typename T>
-class [[nodiscard]] BuiltInDefaultValue<const T> {
+class BuiltInDefaultValue<const T> {
  public:
   static bool Exists() { return BuiltInDefaultValue<T>::Exists(); }
   static T Get() { return BuiltInDefaultValue<T>::Get(); }
@@ -220,7 +220,7 @@ class [[nodiscard]] BuiltInDefaultValue<const T> {
 // This partial specialization defines the default values for pointer
 // types.
 template <typename T>
-class [[nodiscard]] BuiltInDefaultValue<T*> {
+class BuiltInDefaultValue<T*> {
  public:
   static bool Exists() { return true; }
   static T* Get() { return nullptr; }
@@ -383,7 +383,7 @@ typename std::add_const<T>::type& as_const(T& t) {
 
 // Specialized for function types below.
 template <typename F>
-class [[nodiscard]] OnceAction;
+class OnceAction;
 
 // An action that can only be used once.
 //
@@ -421,7 +421,7 @@ class [[nodiscard]] OnceAction;
 // A less-contrived example would be an action that returns an arbitrary type,
 // whose &&-qualified call operator is capable of dealing with move-only types.
 template <typename Result, typename... Args>
-class [[nodiscard]] OnceAction<Result(Args...)> final {
+class OnceAction<Result(Args...)> final {
  private:
   // True iff we can use the given callable type (or lvalue reference) directly
   // via StdFunctionAdaptor.
@@ -574,7 +574,7 @@ class [[nodiscard]] OnceAction<Result(Args...)> final {
 //   // Sets the default value for type T to be foo.
 //   DefaultValue<T>::Set(foo);
 template <typename T>
-class [[nodiscard]] DefaultValue {
+class DefaultValue {
  public:
   // Sets the default value for type T; requires T to be
   // copy-constructable and have a public destructor.
@@ -651,7 +651,7 @@ class [[nodiscard]] DefaultValue {
 // This partial specialization allows a user to set default values for
 // reference types.
 template <typename T>
-class [[nodiscard]] DefaultValue<T&> {
+class DefaultValue<T&> {
  public:
   // Sets the default value for type T&.
   static void Set(T& x) {  // NOLINT
@@ -685,7 +685,7 @@ class [[nodiscard]] DefaultValue<T&> {
 // This specialization allows DefaultValue<void>::Get() to
 // compile.
 template <>
-class [[nodiscard]] DefaultValue<void> {
+class DefaultValue<void> {
  public:
   static bool Exists() { return true; }
   static void Get() {}
@@ -701,7 +701,7 @@ T* DefaultValue<T&>::address_ = nullptr;
 
 // Implement this interface to define an action for function type F.
 template <typename F>
-class [[nodiscard]] ActionInterface {
+class ActionInterface {
  public:
   typedef typename internal::Function<F>::Result Result;
   typedef typename internal::Function<F>::ArgumentTuple ArgumentTuple;
@@ -721,7 +721,7 @@ class [[nodiscard]] ActionInterface {
 };
 
 template <typename F>
-class [[nodiscard]] Action;
+class Action;
 
 // An Action<R(Args...)> is a copyable and IMMUTABLE (except by assignment)
 // object that represents an action to be taken when a mock function of type
@@ -730,7 +730,7 @@ class [[nodiscard]] Action;
 // can view an object implementing ActionInterface<F> as a concrete action
 // (including its current state), and an Action<F> object as a handle to it.
 template <typename R, typename... Args>
-class [[nodiscard]] Action<R(Args...)> {
+class Action<R(Args...)> {
  private:
   using F = R(Args...);
 
@@ -869,7 +869,7 @@ class [[nodiscard]] Action<R(Args...)> {
 // the definition of Return(void) and SetArgumentPointee<N>(value) for
 // complete examples.
 template <typename Impl>
-class [[nodiscard]] PolymorphicAction {
+class PolymorphicAction {
  public:
   explicit PolymorphicAction(const Impl& impl) : impl_(impl) {}
 
@@ -929,7 +929,7 @@ struct ByMoveWrapper {
 
 // The general implementation of Return(R). Specializations follow below.
 template <typename R>
-class [[nodiscard]] ReturnAction final {
+class ReturnAction final {
  public:
   explicit ReturnAction(R value) : value_(std::move(value)) {}
 
@@ -1095,7 +1095,7 @@ class [[nodiscard]] ReturnAction final {
 // the const call operator, checking at runtime that it isn't called more than
 // once, since the user has declared their intent to do so by using ByMove.
 template <typename T>
-class [[nodiscard]] ReturnAction<ByMoveWrapper<T>> final {
+class ReturnAction<ByMoveWrapper<T>> final {
  public:
   explicit ReturnAction(ByMoveWrapper<T> wrapper)
       : state_(new State(std::move(wrapper.payload))) {}
@@ -1122,7 +1122,7 @@ class [[nodiscard]] ReturnAction<ByMoveWrapper<T>> final {
 };
 
 // Implements the ReturnNull() action.
-class [[nodiscard]] ReturnNullAction {
+class ReturnNullAction {
  public:
   // Allows ReturnNull() to be used in any pointer-returning function. In C++11
   // this is enforced by returning nullptr, and in non-C++11 by asserting a
@@ -1134,7 +1134,7 @@ class [[nodiscard]] ReturnNullAction {
 };
 
 // Implements the Return() action.
-class [[nodiscard]] ReturnVoidAction {
+class ReturnVoidAction {
  public:
   // Allows Return() to be used in any void-returning function.
   template <typename Result, typename ArgumentTuple>
@@ -1147,7 +1147,7 @@ class [[nodiscard]] ReturnVoidAction {
 // in any function that returns a reference to the type of x,
 // regardless of the argument types.
 template <typename T>
-class [[nodiscard]] ReturnRefAction {
+class ReturnRefAction {
  public:
   // Constructs a ReturnRefAction object from the reference to be returned.
   explicit ReturnRefAction(T& ref) : ref_(ref) {}  // NOLINT
@@ -1188,7 +1188,7 @@ class [[nodiscard]] ReturnRefAction {
 // used in any function that returns a reference to the type of x,
 // regardless of the argument types.
 template <typename T>
-class [[nodiscard]] ReturnRefOfCopyAction {
+class ReturnRefOfCopyAction {
  public:
   // Constructs a ReturnRefOfCopyAction object from the reference to
   // be returned.
@@ -1229,7 +1229,7 @@ class [[nodiscard]] ReturnRefOfCopyAction {
 // Implements the polymorphic ReturnRoundRobin(v) action, which can be
 // used in any function that returns the element_type of v.
 template <typename T>
-class [[nodiscard]] ReturnRoundRobinAction {
+class ReturnRoundRobinAction {
  public:
   explicit ReturnRoundRobinAction(std::vector<T> values) {
     GTEST_CHECK_(!values.empty())
@@ -1257,7 +1257,7 @@ class [[nodiscard]] ReturnRoundRobinAction {
 };
 
 // Implements the polymorphic DoDefault() action.
-class [[nodiscard]] DoDefaultAction {
+class DoDefaultAction {
  public:
   // This template type conversion operator allows DoDefault() to be
   // used in any function.
@@ -1270,7 +1270,7 @@ class [[nodiscard]] DoDefaultAction {
 // Implements the Assign action to set a given pointer referent to a
 // particular value.
 template <typename T1, typename T2>
-class [[nodiscard]] AssignAction {
+class AssignAction {
  public:
   AssignAction(T1* ptr, T2 value) : ptr_(ptr), value_(value) {}
 
@@ -1289,7 +1289,7 @@ class [[nodiscard]] AssignAction {
 // Implements the SetErrnoAndReturn action to simulate return from
 // various system calls and libc functions.
 template <typename T>
-class [[nodiscard]] SetErrnoAndReturnAction {
+class SetErrnoAndReturnAction {
  public:
   SetErrnoAndReturnAction(int errno_value, T result)
       : errno_(errno_value), result_(result) {}
@@ -1397,7 +1397,7 @@ class IgnoreResultAction {
 
     void Perform(const ArgumentTuple& args) override {
       // Performs the action and ignores its result.
-      (void)action_.Perform(args);
+      action_.Perform(args);
     }
 
    private:
@@ -1503,11 +1503,11 @@ struct WithArgsAction {
 };
 
 template <typename... Actions>
-class [[nodiscard]] DoAllAction;
+class DoAllAction;
 
 // Base case: only a single action.
 template <typename FinalAction>
-class [[nodiscard]] DoAllAction<FinalAction> {
+class DoAllAction<FinalAction> {
  public:
   struct UserConstructorTag {};
 
@@ -1561,7 +1561,7 @@ class [[nodiscard]] DoAllAction<FinalAction> {
 // Recursive case: support N actions by calling the initial action and then
 // calling through to the base class containing N-1 actions.
 template <typename InitialAction, typename... OtherActions>
-class [[nodiscard]] DoAllAction<InitialAction, OtherActions...>
+class DoAllAction<InitialAction, OtherActions...>
     : private DoAllAction<OtherActions...> {
  private:
   using Base = DoAllAction<OtherActions...>;
@@ -1796,7 +1796,7 @@ struct SetArrayArgumentAction {
 };
 
 template <size_t k>
-class [[nodiscard]] DeleteArgAction {
+class DeleteArgAction {
  public:
   template <typename... Args>
   void operator()(const Args&... args) const {

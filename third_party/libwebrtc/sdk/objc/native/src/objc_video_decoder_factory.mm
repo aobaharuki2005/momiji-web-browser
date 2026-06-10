@@ -106,18 +106,8 @@ std::unique_ptr<VideoDecoder> ObjCVideoDecoderFactory::Create(
 
       if ([decoder conformsToProtocol:@protocol(RTC_OBJC_TYPE(
                                           RTCNativeVideoDecoderBuilder))]) {
-        id<RTC_OBJC_TYPE(RTCNativeVideoDecoderBuilder)> builder =
-            (id<RTC_OBJC_TYPE(RTCNativeVideoDecoderBuilder)>)decoder;
-        if ([builder respondsToSelector:@selector(buildWithEnvironment:
-                                                                format:)]) {
-          return [builder buildWithEnvironment:env format:format];
-        }
-        // TODO(webrtc:496700735): Remove `build:` fallback once upstream
-        // implementations have migrated to `buildWithEnvironment:format:`.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        return [builder build:env];
-#pragma clang diagnostic pop
+        return [((
+            id<RTC_OBJC_TYPE(RTCNativeVideoDecoderBuilder)>)decoder) build:env];
       } else {
         return std::unique_ptr<ObjCVideoDecoder>(new ObjCVideoDecoder(decoder));
       }

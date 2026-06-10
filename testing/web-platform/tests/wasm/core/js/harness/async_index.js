@@ -118,12 +118,6 @@ function reinitializeRegistry() {
         maximum: 20,
         element: "anyfunc"
       }),
-      table64: new WebAssembly.Table({
-        initial: 10,
-        maximum: 20,
-        element: "anyfunc",
-        address: "i64"
-      }),
       memory: new WebAssembly.Memory({ initial: 1, maximum: 2 })
     };
     let handler = {

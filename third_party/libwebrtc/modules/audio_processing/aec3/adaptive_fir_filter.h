@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "modules/audio_processing/aec3/aec3_common.h"
 #include "modules/audio_processing/aec3/aec3_fft.h"
 #include "modules/audio_processing/aec3/fft_data.h"
@@ -25,8 +26,9 @@
 #include "rtc_base/system/arch.h"
 
 namespace webrtc {
+namespace aec3 {
 // Computes and stores the frequency response of the filter.
-void ComputeFrequencyResponse_C(
+void ComputeFrequencyResponse(
     size_t num_partitions,
     const std::vector<std::vector<FftData>>& H,
     std::vector<std::array<float, kFftLengthBy2Plus1>>* H2);
@@ -93,6 +95,8 @@ void ApplyFilter_Avx2(const RenderBuffer& render_buffer,
                       const std::vector<std::vector<FftData>>& H,
                       FftData* S);
 #endif
+
+}  // namespace aec3
 
 // Provides a frequency domain adaptive filter functionality.
 class AdaptiveFirFilter {

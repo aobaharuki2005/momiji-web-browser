@@ -18,6 +18,7 @@ import time
 import uuid
 from datetime import datetime
 
+import six
 import yaml
 from yaml import YAMLError
 
@@ -247,6 +248,7 @@ class BuildOptionParser:
     build_variants = {
         "add-on-devel": path_base + "%s_add-on-devel.py",
         "asan-tc": path_base + "%s_asan_tc.py",
+        "asan-reporter-tc": path_base + "%s_asan_reporter_tc.py",
         "fuzzing-asan-tc": path_base + "%s_fuzzing_asan_tc.py",
         "tsan-tc": path_base + "%s_tsan_tc.py",
         "fuzzing-tsan-tc": path_base + "%s_fuzzing_tsan_tc.py",
@@ -608,6 +610,8 @@ items from that key's value."
             # explicitly
             if c.get("update_channel"):
                 update_channel = c["update_channel"]
+                if six.PY2 and isinstance(update_channel, str):
+                    update_channel = update_channel.encode("utf-8")
                 env["MOZ_UPDATE_CHANNEL"] = update_channel
             else:  # let's just give the generic channel based on branch
                 env["MOZ_UPDATE_CHANNEL"] = "nightly-%s" % (self.branch,)
@@ -640,7 +644,10 @@ items from that key's value."
                 script=self, config=self.config, dirs=dirs
             )
         except MozconfigPathError as e:
-            self.fatal(e.msg)
+            if six.PY2:
+                self.fatal(e.message)
+            else:
+                self.fatal(e.msg)
 
         self.info(f"Use mozconfig: {abs_mozconfig_path}")
 
@@ -879,13 +886,11 @@ items from that key's value."
         )
         self.run_command(
             command=[
-                sys.executable,
-                "mach",
+                "make",
                 "source-package",
-                "--output=source.tar.xz",
-                f"--upload={env['UPLOAD_PATH']}",
+                "source-upload",
             ],
-            cwd=dirs["abs_src_dir"],
+            cwd=dirs["abs_obj_dir"],
             env=env,
             output_timeout=60 * 45,
             halt_on_failure=True,

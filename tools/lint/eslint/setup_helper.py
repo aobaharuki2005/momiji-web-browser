@@ -1,3 +1,5 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -16,7 +18,7 @@ from packaging.version import Version
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
 CARET_VERSION_RANGE_RE = re.compile(r"^\^((\d+)\.\d+\.\d+)$")
 
-_state = {"project_root": None}
+project_root = None
 
 
 def eslint_maybe_setup(package_root=None, package_name=None):
@@ -128,7 +130,7 @@ def eslint_module_needs_setup(package_root, package_name):
         path = os.path.join(node_modules_path, name, "package.json")
 
         if not os.path.exists(path):
-            print(f"{name} v{version_range} needs to be installed locally.")
+            print("%s v%s needs to be installed locally." % (name, version_range))
             has_issues = True
             continue
         data = json.load(open(path, encoding="utf-8"))
@@ -147,7 +149,7 @@ def eslint_module_needs_setup(package_root, package_name):
             continue
 
         if not version_in_range(data["version"], version_range):
-            print("{} v{} should be v{}.".format(name, data["version"], version_range))
+            print("%s v%s should be v%s." % (name, data["version"], version_range))
             has_issues = True
             continue
 
@@ -164,7 +166,7 @@ def version_in_range(version, version_range):
 
     version_match = VERSION_RE.match(version)
     if not version_match:
-        raise RuntimeError(f"mach eslint doesn't understand module version {version}")
+        raise RuntimeError("mach eslint doesn't understand module version %s" % version)
     version = Version(version)
 
     # Caret ranges as specified by npm allow changes that do not modify the left-most non-zero
@@ -176,7 +178,7 @@ def version_in_range(version, version_range):
         range_major = int(range_match.group(2))
 
         range_min = Version(range_version)
-        range_max = Version(f"{range_major + 1}.0.0")
+        range_max = Version("%d.0.0" % (range_major + 1))
 
         return range_min <= version < range_max
 
@@ -190,8 +192,10 @@ def set_project_root(root=None):
     Keyword arguments:
     root - (optional) The path to set the root to.
     """
+    global project_root
+
     if root:
-        _state["project_root"] = root
+        project_root = root
         return
 
     file_found = False
@@ -205,7 +209,7 @@ def set_project_root(root=None):
             folder = os.path.dirname(folder)
 
     if file_found:
-        _state["project_root"] = os.path.abspath(folder)
+        project_root = os.path.abspath(folder)
 
 
 def get_project_root():
@@ -213,10 +217,10 @@ def get_project_root():
     for how this is determined.
     """
 
-    if not _state["project_root"]:
+    if not project_root:
         set_project_root()
 
-    return _state["project_root"]
+    return project_root
 
 
 def get_eslint_module_path():

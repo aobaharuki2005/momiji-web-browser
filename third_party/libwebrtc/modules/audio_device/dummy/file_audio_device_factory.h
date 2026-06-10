@@ -12,10 +12,8 @@
 #define AUDIO_DEVICE_FILE_AUDIO_DEVICE_FACTORY_H_
 
 #include <cstdint>
-#include <memory>
 
 #include "absl/strings/string_view.h"
-#include "api/environment/environment.h"
 
 namespace webrtc {
 
@@ -27,8 +25,7 @@ class FileAudioDevice;
 // intended for test tools which use the audio device module.
 class FileAudioDeviceFactory {
  public:
-  static std::unique_ptr<FileAudioDevice> CreateFileAudioDevice(
-      const Environment& env);
+  static FileAudioDevice* CreateFileAudioDevice();
 
   // The input file must be a readable 48k stereo raw file. The output
   // file must be writable. The strings will be copied.

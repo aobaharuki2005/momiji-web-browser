@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -183,9 +185,9 @@ DOMSVGAnimatedPreserveAspectRatio::~DOMSVGAnimatedPreserveAspectRatio() {
   sSVGAnimatedPAspectRatioTearoffTable.RemoveTearoff(mVal);
 }
 
-std::unique_ptr<SMILAttr> SVGAnimatedPreserveAspectRatio::ToSMILAttr(
+UniquePtr<SMILAttr> SVGAnimatedPreserveAspectRatio::ToSMILAttr(
     SVGElement* aSVGElement) {
-  return std::make_unique<SMILPreserveAspectRatio>(this, aSVGElement);
+  return MakeUnique<SMILPreserveAspectRatio>(this, aSVGElement);
 }
 
 // typedef for inner class, to make function signatures shorter below:
@@ -201,7 +203,7 @@ nsresult SMILPreserveAspectRatio::ValueFromString(
 
   SMILValue val(SMILEnumType::Singleton());
   val.mU.mUint = PackPreserveAspectRatio(par);
-  aValue = std::move(val);
+  aValue = val;
   return NS_OK;
 }
 

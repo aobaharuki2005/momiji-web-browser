@@ -89,13 +89,26 @@ export class InputPickerParentCommon extends JSWindowActorParent {
     let detail = aData.detail;
 
     debug("Opening picker with details: " + JSON.stringify(detail));
-    if (!this.browsingContext.canOpenModalPicker) {
-      debug("Not allowed to open picker");
+    let topBC = this.browsingContext.top;
+    let window = topBC.topChromeWindow;
+    if (Services.focus.activeWindow != window) {
+      debug("Not in the active window");
       return;
     }
 
+    {
+      let browser = topBC.embedderElement;
+      if (
+        browser &&
+        browser.ownerGlobal.gBrowser &&
+        browser.ownerGlobal.gBrowser.selectedBrowser != browser
+      ) {
+        debug("In background tab");
+        return;
+      }
+    }
+
     this.#cleanupPicker();
-    let window = this.browsingContext.top.topChromeWindow;
     let doc = window.document;
     const id = `${this.#namespace}Panel`;
     let panel = doc.getElementById(id);

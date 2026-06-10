@@ -8,12 +8,10 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.os.Environment
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.NotificationManagerCompat
 import mozilla.components.browser.engine.gecko.cookiebanners.GeckoCookieBannersStorage
-import mozilla.components.browser.engine.gecko.util.EngineDownloadDelegate
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.store.BrowserStore
@@ -24,6 +22,8 @@ import mozilla.components.feature.app.links.AppLinksInterceptor
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
+import mozilla.components.feature.downloads.DateTimeProvider
+import mozilla.components.feature.downloads.DefaultDateTimeProvider
 import mozilla.components.feature.downloads.DefaultFileSizeFormatter
 import mozilla.components.feature.downloads.DownloadEstimator
 import mozilla.components.feature.downloads.DownloadMiddleware
@@ -70,9 +70,6 @@ import mozilla.components.support.remotesettings.DefaultRemoteSettingsSyncSchedu
 import mozilla.components.support.remotesettings.RemoteSettingsServer
 import mozilla.components.support.remotesettings.RemoteSettingsService
 import mozilla.components.support.remotesettings.into
-import mozilla.components.support.utils.DateTimeProvider
-import mozilla.components.support.utils.DefaultDateTimeProvider
-import mozilla.components.support.utils.DefaultDownloadFileUtils
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.browser.BlockedTrackersMiddleware
 import org.mozilla.focus.cfr.CfrMiddleware
@@ -143,7 +140,7 @@ class Components(
     val remoteSettingsSyncScheduler by lazy {
         DefaultRemoteSettingsSyncScheduler(
             context,
-            Frequency(2, TimeUnit.HOURS),
+            Frequency(24, TimeUnit.HOURS),
         )
     }
 
@@ -158,14 +155,6 @@ class Components(
             preferredColorScheme = settings.getPreferredColorScheme(),
             cookieBannerHandlingModePrivateBrowsing = settings.getCurrentCookieBannerOptionFromSharePref().mode,
             certificateTransparencyMode = FocusNimbus.features.pki.value().certificateTransparencyMode,
-            downloadDelegate = EngineDownloadDelegate(
-                context = context,
-                downloadLocation = {
-                    Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_DOWNLOADS,
-                    ).absolutePath
-                },
-            ),
         )
     }
 
@@ -202,9 +191,6 @@ class Components(
                     applicationContext = context,
                     downloadServiceClass = DownloadService::class.java,
                     deleteFileFromStorage = { false },
-                    downloadFileUtils = DefaultDownloadFileUtils(
-                        context = context,
-                    ),
                 ),
                 SanityCheckMiddleware(),
                 // We are currently using the default location service. We should consider using
@@ -258,14 +244,7 @@ class Components(
 
     val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(store) }
 
-    val downloadsUseCases: DownloadsUseCases by lazy {
-        DownloadsUseCases(
-            store = store,
-            downloadFileUtils = DefaultDownloadFileUtils(
-                context = context.applicationContext,
-            ),
-        )
-    }
+    val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store, context.applicationContext) }
 
     val appLinksUseCases: AppLinksUseCases by lazy { AppLinksUseCases(context.applicationContext) }
 
@@ -380,9 +359,6 @@ private fun createCrashReporter(context: Context): CrashReporter {
                 appChannel = org.mozilla.geckoview.BuildConfig.MOZ_UPDATE_CHANNEL,
                 appVersion = org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION,
                 appBuildId = org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID,
-                // There's no need to call `CrashReporter.setTelemetryEnabled`: there's no path for the telemetry
-                // setting to change (it is always false).
-                isUploadEnabled = GleanMetricsService.isTelemetryEnabled(context),
             ),
         ),
         promptConfiguration = CrashReporter.PromptConfiguration(

@@ -20,34 +20,13 @@ import org.mozilla.focus.ext.settings
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.AppStore
 
-/**
- * Controller for the onboarding flow.
- */
 interface OnboardingController {
-    /**
-     * Finishes the onboarding flow.
-     */
     fun handleFinishOnBoarding()
-
-    /**
-     * Handles clicking the "Get Started" button.
-     */
     fun handleGetStartedButtonClicked()
-
-    /**
-     * Handles clicking the button to make Focus the default browser.
-     */
     fun handleMakeFocusDefaultBrowserButtonClicked(activityResultLauncher: ActivityResultLauncher<Intent>)
-
-    /**
-     * Handles the [activityResult] from the default browser request.
-     */
     fun handleActivityResultImplementation(activityResult: ActivityResult)
 }
 
-/**
- * Default implementation of the [OnboardingController].
- */
 class DefaultOnboardingController(
     private val onboardingStorage: OnboardingStorage,
     val appStore: AppStore,
@@ -61,7 +40,7 @@ class DefaultOnboardingController(
     }
 
     override fun handleGetStartedButtonClicked() {
-        if (Browsers.isDefaultBrowser(context)) {
+        if (Browsers.all(context).isDefaultBrowser) {
             handleFinishOnBoarding()
         } else {
             navigateToOnBoardingSecondScreen()
@@ -69,7 +48,7 @@ class DefaultOnboardingController(
     }
 
     override fun handleMakeFocusDefaultBrowserButtonClicked(activityResultLauncher: ActivityResultLauncher<Intent>) {
-        val isDefault = Browsers.isDefaultBrowser(context)
+        val isDefault = Browsers.all(context).isDefaultBrowser
         if (isDefault) {
             handleFinishOnBoarding()
         } else {
@@ -78,7 +57,7 @@ class DefaultOnboardingController(
     }
 
     override fun handleActivityResultImplementation(activityResult: ActivityResult) {
-        if (activityResult.resultCode == Activity.RESULT_OK && Browsers.isDefaultBrowser(context)) {
+        if (activityResult.resultCode == Activity.RESULT_OK && Browsers.all(context).isDefaultBrowser) {
             handleFinishOnBoarding()
         }
     }

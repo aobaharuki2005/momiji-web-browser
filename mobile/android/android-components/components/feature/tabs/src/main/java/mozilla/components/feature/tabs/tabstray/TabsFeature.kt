@@ -33,7 +33,7 @@ class TabsFeature(
         store,
         defaultTabsFilter,
         defaultTabPartitionsFilter,
-        closeTabsTray = onCloseTray,
+        onCloseTray,
     )
 
     override fun start() {

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -27,7 +29,7 @@ static StaticRefPtr<CubebDeviceEnumerator> sInstance;
 static StaticMutex sInstanceMutex MOZ_UNANNOTATED;
 
 /* static */
-already_AddRefed<CubebDeviceEnumerator> CubebDeviceEnumerator::GetInstance() {
+CubebDeviceEnumerator* CubebDeviceEnumerator::GetInstance() {
   StaticMutexAutoLock lock(sInstanceMutex);
   if (!sInstance) {
     sInstance = new CubebDeviceEnumerator();
@@ -46,7 +48,7 @@ already_AddRefed<CubebDeviceEnumerator> CubebDeviceEnumerator::GetInstance() {
     }();
     (void)clearOnShutdownSetup;
   }
-  return do_AddRef(sInstance);
+  return sInstance.get();
 }
 
 CubebDeviceEnumerator::CubebDeviceEnumerator()
@@ -227,7 +229,7 @@ static RefPtr<AudioDeviceSet> GetDeviceCollection(Side aSide) {
           if (device.max_channels == 0) {
             continue;
           }
-          RefPtr info = MakeRefPtr<AudioDeviceInfo>(
+          RefPtr<AudioDeviceInfo> info = new AudioDeviceInfo(
               device.devid, NS_ConvertUTF8toUTF16(device.friendly_name),
               NS_ConvertUTF8toUTF16(device.group_id),
               NS_ConvertUTF8toUTF16(device.vendor_name),
@@ -306,7 +308,7 @@ RefPtr<const AudioDeviceSet> CubebDeviceEnumerator::EnumerateAudioDevices(
   // a single channel. All the other values are made up and are not to be used.
   // Bug 1660391: we can't use fluent here yet to get localized strings, so
   // those are hard-coded en_US strings for now.
-  RefPtr info = MakeRefPtr<AudioDeviceInfo>(
+  RefPtr<AudioDeviceInfo> info = new AudioDeviceInfo(
       nullptr, name, u""_ns, u""_ns, type, CUBEB_DEVICE_STATE_ENABLED,
       CUBEB_DEVICE_PREF_ALL, CUBEB_DEVICE_FMT_ALL, CUBEB_DEVICE_FMT_S16NE,
       channels, 44100, 44100, 44100, 441, 128);

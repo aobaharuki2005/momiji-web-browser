@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -88,7 +89,7 @@ class ImageOps::ImageBufferImpl final : public ImageOps::ImageBuffer {
       : mSourceBuffer(aSourceBuffer) {}
 
  protected:
-  ~ImageBufferImpl() override = default;
+  ~ImageBufferImpl() override {}
 
   already_AddRefed<SourceBuffer> GetSourceBuffer() const override {
     RefPtr<SourceBuffer> sourceBuffer = mSourceBuffer;
@@ -170,7 +171,8 @@ nsresult ImageOps::DecodeMetadata(ImageBuffer* aBuffer,
   // Create a decoder.
   DecoderType decoderType =
       DecoderFactory::GetDecoderType(PromiseFlatCString(aMimeType).get());
-  DecoderFlags decoderFlags = DefaultDecoderFlags();
+  DecoderFlags decoderFlags =
+      DecoderFactory::GetDefaultDecoderFlagsForType(decoderType);
   decoderFlags |= DecoderFlags::FIRST_FRAME_ONLY;
   RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousMetadataDecoder(
       decoderType, WrapNotNull(sourceBuffer), decoderFlags);
@@ -208,24 +210,22 @@ nsresult ImageOps::DecodeMetadata(ImageBuffer* aBuffer,
   if (!aBuffer) {
     return nullptr;
   }
-  DecoderType decoderType =
-      DecoderFactory::GetDecoderType(PromiseFlatCString(aMimeType).get());
-  RefPtr<SourceBuffer> buffer = aBuffer->GetSourceBuffer();
-  return DecodeToSurface(buffer, decoderType, aFlags, aSize);
-}
 
-already_AddRefed<gfx::SourceSurface> ImageOps::DecodeToSurface(
-    SourceBuffer* aSourceBuffer, DecoderType aDecoderType, uint32_t aFlags,
-    const Maybe<IntSize>& aSize /* = Nothing() */) {
-  if (NS_WARN_IF(!aSourceBuffer)) {
+  RefPtr<SourceBuffer> sourceBuffer = aBuffer->GetSourceBuffer();
+  if (NS_WARN_IF(!sourceBuffer)) {
     return nullptr;
   }
+
+  // Create a decoder.
+  DecoderType decoderType =
+      DecoderFactory::GetDecoderType(PromiseFlatCString(aMimeType).get());
   RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
-      aDecoderType, WrapNotNull(aSourceBuffer), aSize,
+      decoderType, WrapNotNull(sourceBuffer), aSize,
       DecoderFlags::FIRST_FRAME_ONLY, ToSurfaceFlags(aFlags));
   if (!decoder) {
     return nullptr;
   }
+
   // Run the decoder synchronously.
   RefPtr<IDecodingTask> task =
       new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
@@ -233,12 +233,19 @@ already_AddRefed<gfx::SourceSurface> ImageOps::DecodeToSurface(
   if (!decoder->GetDecodeDone() || decoder->HasError()) {
     return nullptr;
   }
+
   // Pull out the surface.
   RawAccessFrameRef frame = decoder->GetCurrentFrameRef();
   if (!frame) {
     return nullptr;
   }
-  return frame->GetSourceSurface();
+
+  RefPtr<SourceSurface> surface = frame->GetSourceSurface();
+  if (!surface) {
+    return nullptr;
+  }
+
+  return surface.forget();
 }
 
 }  // namespace mozilla::image

@@ -4,6 +4,7 @@ import pytest
 from webdriver.error import TimeoutException
 from webdriver.bidi.modules.script import ContextTarget
 
+from tests.bidi import wait_for_bidi_events
 from ... import int_interval
 from .. import assert_navigation_info
 
@@ -18,7 +19,7 @@ PAGE_REDIRECT_HTTP_EQUIV = (
 PAGE_REDIRECTED_HTML = "/webdriver/tests/bidi/network/support/redirected.html"
 
 
-async def test_unsubscribe(bidi_session, wait_for_bidi_events):
+async def test_unsubscribe(bidi_session):
     await bidi_session.session.subscribe(events=[NAVIGATION_COMMITTED_EVENT])
     await bidi_session.session.unsubscribe(events=[NAVIGATION_COMMITTED_EVENT])
 
@@ -35,7 +36,7 @@ async def test_unsubscribe(bidi_session, wait_for_bidi_events):
     await bidi_session.browsing_context.create(type_hint="tab")
 
     with pytest.raises(TimeoutException):
-        await wait_for_bidi_events(events, 1, timeout=0.5)
+        await wait_for_bidi_events(bidi_session, events, 1, timeout=0.5)
 
     remove_listener()
 
@@ -118,7 +119,7 @@ async def test_basic_auth(
 
 
 async def test_iframe(
-    bidi_session, subscribe_events, top_context, test_page_same_origin_frame, test_page, wait_for_bidi_events
+    bidi_session, subscribe_events, top_context, test_page_same_origin_frame, test_page
 ):
     events = []
 
@@ -136,7 +137,7 @@ async def test_iframe(
     )
 
     # Wait until we receive events for the top context and the iframe.
-    await wait_for_bidi_events(events, 2)
+    await wait_for_bidi_events(bidi_session, events, 2)
 
     contexts = await bidi_session.browsing_context.get_tree(root=top_context["context"])
 
@@ -175,7 +176,6 @@ async def test_nested_iframes(
     test_page_nested_frames,
     test_page_same_origin_frame,
     test_page,
-    wait_for_bidi_events,
 ):
     events = []
 
@@ -193,7 +193,7 @@ async def test_nested_iframes(
     )
 
     # Wait until we receive events for the top context and each of the 2 iframes.
-    await wait_for_bidi_events(events, 3)
+    await wait_for_bidi_events(bidi_session, events, 3)
 
     contexts = await bidi_session.browsing_context.get_tree(root=top_context["context"])
 
@@ -237,7 +237,7 @@ async def test_nested_iframes(
     remove_listener()
 
 
-async def test_same_document(bidi_session, new_tab, url, wait_for_bidi_events, subscribe_events):
+async def test_same_document(bidi_session, new_tab, url, subscribe_events):
     await bidi_session.browsing_context.navigate(
         context=new_tab["context"], url=url(PAGE_EMPTY), wait="complete"
     )
@@ -259,13 +259,13 @@ async def test_same_document(bidi_session, new_tab, url, wait_for_bidi_events, s
     )
 
     with pytest.raises(TimeoutException):
-        await wait_for_bidi_events(events, 1, timeout=0.5)
+        await wait_for_bidi_events(bidi_session, events, 1, timeout=0.5)
 
     remove_listener()
 
 
 @pytest.mark.parametrize("sandbox", [None, "sandbox_1"])
-async def test_document_write(bidi_session, subscribe_events, wait_for_bidi_events, new_tab, sandbox):
+async def test_document_write(bidi_session, subscribe_events, new_tab, sandbox):
     await subscribe_events(events=[NAVIGATION_COMMITTED_EVENT])
 
     # Track all received browsingContext.navigationCommitted events in the events array
@@ -285,7 +285,7 @@ async def test_document_write(bidi_session, subscribe_events, wait_for_bidi_even
     )
 
     with pytest.raises(TimeoutException):
-        await wait_for_bidi_events(events, 1, timeout=0.5)
+        await wait_for_bidi_events(bidi_session, events, 1, timeout=0.5)
 
     remove_listener()
 
@@ -309,7 +309,7 @@ async def test_base_element(
 
 
 async def test_redirect_http_equiv(
-    bidi_session, subscribe_events, top_context, url, wait_for_bidi_events
+    bidi_session, subscribe_events, top_context, url
 ):
     await subscribe_events(events=[NAVIGATION_COMMITTED_EVENT])
 
@@ -335,7 +335,7 @@ async def test_redirect_http_equiv(
 
     # Wait until we receive two events, one for the initial navigation and one
     # for the http-equiv "redirect".
-    await wait_for_bidi_events(events, 2)
+    await wait_for_bidi_events(bidi_session, events, 2)
 
     assert_navigation_info(
         events[0],
@@ -393,7 +393,7 @@ async def test_redirect_navigation(
 
 
 async def test_navigate_history_pushstate(
-    bidi_session, inline, new_tab, subscribe_events, wait_for_event, wait_for_bidi_events, wait_for_future_safe
+    bidi_session, inline, new_tab, subscribe_events, wait_for_event, wait_for_future_safe
 ):
     await subscribe_events([NAVIGATION_COMMITTED_EVENT])
 
@@ -419,7 +419,7 @@ async def test_navigate_history_pushstate(
 
     with pytest.raises(TimeoutException):
         # Assert only a single event is emitted.
-        await wait_for_bidi_events(events, 2, timeout=0.5)
+        await wait_for_bidi_events(bidi_session, events, 2, timeout=0.5)
 
     assert len(events) == 1
     assert events[0]["navigation"] == result["navigation"]
@@ -428,7 +428,7 @@ async def test_navigate_history_pushstate(
 
 
 @pytest.mark.parametrize("type_hint", ["tab", "window"])
-async def test_new_context(bidi_session, subscribe_events, type_hint, wait_for_bidi_events):
+async def test_new_context(bidi_session, subscribe_events, type_hint):
     await subscribe_events(events=[NAVIGATION_COMMITTED_EVENT])
 
     # Track all received browsingContext.navigationCommitted events in the events array
@@ -445,7 +445,7 @@ async def test_new_context(bidi_session, subscribe_events, type_hint, wait_for_b
 
     # In the future we can wait for "browsingContext.contextCreated" event instead.
     with pytest.raises(TimeoutException):
-        await wait_for_bidi_events(events, 1, timeout=0.5)
+        await wait_for_bidi_events(bidi_session, events, 1, timeout=0.5)
 
     remove_listener()
 
@@ -474,7 +474,7 @@ async def test_navigate_to_about_blank(
 
 @pytest.mark.parametrize("url", ["", "about:blank", "about:blank?test"])
 async def test_window_open_with_about_blank(
-    bidi_session, subscribe_events, top_context, url, wait_for_bidi_events
+    bidi_session, subscribe_events, top_context, url
 ):
     await subscribe_events(events=[NAVIGATION_COMMITTED_EVENT])
 
@@ -495,7 +495,7 @@ async def test_window_open_with_about_blank(
     )
 
     with pytest.raises(TimeoutException):
-        await wait_for_bidi_events(events, 1, timeout=0.5)
+        await wait_for_bidi_events(bidi_session, events, 1, timeout=0.5)
 
     remove_listener()
 

@@ -11,9 +11,7 @@
 #ifndef API_TRANSPORT_SCTP_TRANSPORT_FACTORY_INTERFACE_H_
 #define API_TRANSPORT_SCTP_TRANSPORT_FACTORY_INTERFACE_H_
 
-#include <cstdint>
 #include <memory>
-#include <vector>
 
 #include "api/environment/environment.h"
 
@@ -36,10 +34,6 @@ class SctpTransportFactoryInterface {
   virtual std::unique_ptr<SctpTransportInternal> CreateSctpTransport(
       const Environment& env,
       DtlsTransportInternal* channel) = 0;
-
-  // Generate sctp-init token.
-  virtual std::vector<uint8_t> GenerateConnectionToken(
-      const Environment& env) = 0;
 };
 
 }  // namespace webrtc

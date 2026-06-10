@@ -1,9 +1,11 @@
+/* -*- Mode: rust; rust-indent-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use nsstring::nsCString;
 use std::ffi::c_void;
+use thin_vec::ThinVec;
 
 // Note that we use MaybeString throughout the c++/rust ffi boundary functions
 // since having a *nsCString to emulate Option<nsCString> (which has no representation on both rust and C++
@@ -35,27 +37,14 @@ impl MaybeString {
     }
 }
 
-// Used as opaque pointer to urlpattern::UrlPattern<R> (lib.rs, not quirks)
 // this used to hide info of internal urlpattern::url from C++ compiler
 // so cpp compilation doesn't fail since we don't expose url to gecko
-#[repr(transparent)]
-pub struct UrlPatternGlue(pub *mut c_void);
-
-// opaque pointer to urlpattern::component::Component<SpiderMonkeyRegexp>;
-#[repr(transparent)]
-pub struct UrlPatternComponentPtr(pub *mut c_void);
-
-// opaque pointer to urlpattern::matcher::Matcher<SpiderMonkeyRegexp>;
-#[repr(transparent)]
-pub struct UrlPatternMatcherPtr(pub *mut c_void);
-
-// opaque pointer for passing RegExpObjImpl across ffi API
-#[repr(transparent)]
-pub struct RegExpObjWrapper(pub *mut c_void);
+#[repr(C)]
+pub struct UrlpPattern(pub *mut c_void); // structs with unnamed fields
 
 #[derive(Debug, Clone)]
 #[repr(C)]
-pub struct UrlPatternInit {
+pub struct UrlpInit {
     pub protocol: MaybeString,
     pub username: MaybeString,
     pub password: MaybeString,
@@ -67,7 +56,7 @@ pub struct UrlPatternInit {
     pub base_url: MaybeString,
 }
 
-impl UrlPatternInit {
+impl UrlpInit {
     pub fn none() -> Self {
         Self {
             protocol: MaybeString::none(),
@@ -85,7 +74,7 @@ impl UrlPatternInit {
 
 #[derive(Debug)]
 #[repr(C)]
-pub struct UrlPatternMatchInput {
+pub struct UrlpMatchInput {
     pub protocol: nsCString,
     pub username: nsCString,
     pub password: nsCString,
@@ -98,7 +87,7 @@ pub struct UrlPatternMatchInput {
 
 #[derive(Debug)]
 #[repr(C)]
-pub enum UrlPatternStringOrInitType {
+pub enum UrlpStringOrInitType {
     String,
     Init,
 }
@@ -110,22 +99,58 @@ pub enum UrlPatternStringOrInitType {
 // of the ffi boundary
 #[derive(Debug)]
 #[repr(C)]
-pub struct UrlPatternInput {
-    pub string_or_init_type: UrlPatternStringOrInitType,
+pub struct UrlpInput {
+    pub string_or_init_type: UrlpStringOrInitType,
     pub str: nsCString,
-    pub init: UrlPatternInit,
+    pub init: UrlpInit,
     pub base: MaybeString,
 }
 
 #[derive(Debug)]
 #[repr(C)]
-pub struct UrlPatternMatchInputAndInputs {
-    pub input: UrlPatternMatchInput,
-    pub inputs: UrlPatternInput,
+pub struct UrlpMatchInputAndInputs {
+    pub input: UrlpMatchInput,
+    pub inputs: UrlpInput,
 }
 
 #[derive(Debug)]
 #[repr(C)]
-pub struct UrlPatternOptions {
+pub struct UrlpOptions {
     pub ignore_case: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[repr(C)]
+pub enum UrlpInnerMatcherType {
+    Literal,
+    SingleCapture,
+    RegExp,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[repr(C)]
+pub struct UrlpInnerMatcher {
+    pub inner_type: UrlpInnerMatcherType,
+    pub literal: nsCString, // Literal
+    pub allow_empty: bool,  // SingleCapture
+    pub filter_exists: bool,
+    pub filter: char,      // SingleCapture
+    pub regexp: nsCString, // RegExp
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[repr(C)]
+pub struct UrlpMatcher {
+    pub prefix: nsCString,
+    pub suffix: nsCString,
+    pub inner: UrlpInnerMatcher,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[repr(C)]
+pub struct UrlpComponent {
+    pub pattern_string: nsCString,
+    pub regexp_string: nsCString,
+    pub matcher: UrlpMatcher,
+    pub group_name_list: ThinVec<nsCString>,
 }

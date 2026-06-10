@@ -487,7 +487,7 @@ add_task(async function test_adaptive_searchmode() {
     engineName: suggestionsEngine.name,
   });
 
-  await SearchService.removeEngine(suggestionsEngine);
+  await Services.search.removeEngine(suggestionsEngine);
 });
 
 add_task(async function test_ignore_case() {

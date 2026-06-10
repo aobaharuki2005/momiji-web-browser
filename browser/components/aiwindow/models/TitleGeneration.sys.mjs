@@ -9,15 +9,6 @@ import {
   renderPrompt,
   MODEL_FEATURES,
 } from "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs";
-import { sanitizeUntrustedContent } from "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs";
-
-const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  loadCallContext:
-    "moz-src:///browser/components/aiwindow/models/PromptLoader.sys.mjs",
-  loadPrompt:
-    "moz-src:///browser/components/aiwindow/models/PromptLoader.sys.mjs",
-});
 
 /**
  * Generate a default title from the first four words of a message.
@@ -44,39 +35,22 @@ function generateDefaultTitle(message) {
 }
 
 /**
- * Generate a chat title based on the user's message, current tab information,
- * and optionally the first assistant response.
+ * Generate a chat title based on the user's message and current tab information.
  *
  * @param {string} message - The user's message
  * @param {object} current_tab - Object containing current tab information
- * @param {string} [assistantResponse] - The first assistant response
- * @param {string | null} [flowId] - Flow ID for correlating with firefox_ai_runtime telemetry
  * @returns {Promise<string>} The generated chat title
  */
-export async function generateChatTitle(
-  message,
-  current_tab,
-  assistantResponse,
-  flowId = null
-) {
+export async function generateChatTitle(message, current_tab) {
   try {
     // Build the OpenAI engine
-    const [callContext, rawPrompt] = await Promise.all([
-      lazy.loadCallContext(MODEL_FEATURES.TITLE_GENERATION),
-      lazy.loadPrompt(MODEL_FEATURES.TITLE_GENERATION),
-    ]);
-    const engine = await openAIEngine.build({
-      model: callContext.model,
-      serviceType: callContext.serviceType,
-      purpose: callContext.purpose,
-      flowId,
-      feature: MODEL_FEATURES.TITLE_GENERATION,
-    });
+    const engine = await openAIEngine.build(MODEL_FEATURES.TITLE_GENERATION);
 
     const tabInfo = current_tab || { url: "", title: "", description: "" };
-    tabInfo.title = sanitizeUntrustedContent(tabInfo.title);
 
-    const systemPrompt = renderPrompt(rawPrompt, {
+    // Load and render the prompt with actual values
+    const rawPrompt = await engine.loadPrompt(MODEL_FEATURES.TITLE_GENERATION);
+    const systemPrompt = await renderPrompt(rawPrompt, {
       current_tab: JSON.stringify(tabInfo),
     });
 
@@ -86,19 +60,21 @@ export async function generateChatTitle(
       { role: "user", content: message },
     ];
 
-    if (assistantResponse) {
-      messages.push({ role: "assistant", content: assistantResponse });
-    }
+    // Get config for inference parameters if exists
+    const config = engine.getConfig(engine.feature);
+    const inferenceParams = config?.parameters || {};
 
+    // Call the LLM
     const response = await engine.run({
-      args: messages,
+      messages,
       fxAccountToken: await openAIEngine.getFxAccountToken(),
-      ...callContext.parameters,
+      ...inferenceParams,
     });
 
     // Extract the generated title from the response
     const title =
-      response?.finalOutput?.trim() || generateDefaultTitle(message);
+      response?.choices?.[0]?.message?.content?.trim() ||
+      generateDefaultTitle(message);
 
     return title;
   } catch (error) {

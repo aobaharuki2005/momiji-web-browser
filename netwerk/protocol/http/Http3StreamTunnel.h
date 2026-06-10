@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -65,6 +66,7 @@ class Http3TransportLayer final : public nsISocketTransport,
     explicit OutputStreamTunnel(Http3TransportLayer* aTransport);
 
     nsresult OnSocketReady(nsresult condition);
+    void MaybeSetRequestDone(nsIOutputStreamCallback* aCallback);
 
    private:
     friend class Http3TransportLayer;
@@ -106,7 +108,7 @@ class Http3StreamTunnel final : public Http3Stream {
       bool aIsExtendedCONNECT);
 
   void CleanupStream(nsresult aReason);
-
+  void SetRequestDone();
   void HasDataToWrite();
   void HasDataToRead();
 
@@ -116,13 +118,12 @@ class Http3StreamTunnel final : public Http3Stream {
   [[nodiscard]] nsresult OnWriteSegment(char* buf, uint32_t count,
                                         uint32_t* countWritten) override;
 
-  bool Closed() const { return mClosed; }
-
  private:
   virtual ~Http3StreamTunnel();
   nsresult BufferInput();
 
   RefPtr<Http3TransportLayer> mTransport;
+  bool mClosed = false;
   SimpleBuffer mSimpleBuffer;
 };
 

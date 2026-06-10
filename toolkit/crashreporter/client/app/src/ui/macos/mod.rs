@@ -27,10 +27,10 @@ use self::objc::*;
 use super::model::{self, Alignment, Application, Element, TypedElement};
 use crate::data::Property;
 use cocoa::{
-    INSApplication, INSBox, INSButton, INSColor, INSControl, INSEvent, INSFont, INSLayoutAnchor,
+    INSApplication, INSBox, INSButton, INSColor, INSControl, INSFont, INSLayoutAnchor,
     INSLayoutConstraint, INSLayoutDimension, INSMenu, INSMenuItem, INSObject, INSProcessInfo,
     INSProgressIndicator, INSRunLoop, INSScrollView, INSStackView, INSText, INSTextContainer,
-    INSTextField, INSTextView, INSView, INSWindow, NSApplication_NSEvent, NSArray_NSArrayCreation,
+    INSTextField, INSTextView, INSView, INSWindow, NSArray_NSArrayCreation,
     NSAttributedString_NSExtendedAttributedString, NSDictionary_NSDictionaryCreation,
     NSMutableParagraphStyle_, NSRunLoop_NSRunLoopConveniences, NSStackView_NSStackViewGravityAreas,
     NSString_NSStringExtensionMethods, NSTextField_NSTextFieldConvenience,
@@ -262,11 +262,19 @@ objc_class! {
             // Activate the application (bringing windows to the active foreground later)
             unsafe { cocoa::NSApplication::sharedApplication().activateIgnoringOtherApps_(runtime::YES) };
 
+            let mut first = true;
             let mut windows = WindowRenderer::default();
             let app = self.app.take().unwrap();
             windows.rtl = app.rtl;
             for window in app.windows {
-                windows.render(window);
+                let w = windows.render(window);
+                unsafe {
+                    if first {
+                        w.makeKeyAndOrderFront_(self.instance);
+                        w.makeMainWindow();
+                        first = false;
+                    }
+                }
             }
             self.windows = windows.unwrap();
 
@@ -274,15 +282,8 @@ objc_class! {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-enum WindowType {
-    Main { make_main: bool },
-    Normal,
-    Modal,
-}
-
 struct Window {
-    window_type: WindowType,
+    modal: bool,
     title: String,
     style: model::ElementStyle,
 }
@@ -327,49 +328,15 @@ objc_class! {
             self.instance
         }
 
-        #[sel(windowDidBecomeKey:)]
-        fn window_did_become_key(&mut self, _notification: Ptr<cocoa::NSNotification>) {
-            if matches!(self.window_type, WindowType::Main { make_main: true }) {
-                let w = cocoa::NSWindow(self.instance);
-                // In newer versions of macos, makeMainWindow doesn't seem to work reliably when
-                // called from applicationDidFinishLaunching, so we call it here from
-                // windowDidBecomeKey.
-                unsafe {
-                    w.center();
-                    w.setContentSize_(w.minSize());
-                    w.makeMainWindow();
-                }
-                self.window_type = WindowType::Main { make_main: false };
-            }
-        }
-
         #[sel(windowWillClose:)]
         fn window_will_close(&mut self, _notification: Ptr<cocoa::NSNotification>) {
             unsafe {
                 let nsapp = cocoa::NSApplication::sharedApplication();
-                if matches!(self.window_type, WindowType::Modal) {
+                if self.modal {
                     nsapp.stopModal();
-                }
-                // We used to compare with NSApp.mainWindow (or check NSWindow.isMainWindow), but in
-                // newer versions of macos this has become flaky in windowWillClose. We track the
-                // main window ourselves, now.
-                else if matches!(self.window_type, WindowType::Main {..}) {
+                } else if self.instance == nsapp.mainWindow().0 {
                     // Stop the application, causing run_loop to exit.
                     nsapp.stop_(self.instance);
-                    // Send a dummy event to ensure the stop is witnessed. This is necessary because
-                    // we may be closing as a result of an `invoke()` rather than another event.
-                    let event = cocoa::NSEvent::otherEventWithType_location_modifierFlags_timestamp_windowNumber_context_subtype_data1_data2_(
-                        cocoa::NSEventTypeApplicationDefined,
-                        Default::default(),
-                        Default::default(),
-                        Default::default(),
-                        Default::default(),
-                        cocoa::NSGraphicsContext(std::ptr::null_mut()),
-                        Default::default(),
-                        0,
-                        0
-                    );
-                    nsapp.postEvent_atStart_(event, runtime::YES);
                 }
             }
         }
@@ -574,27 +541,14 @@ impl WindowRenderer {
             title,
         } = window.element_type;
 
-        // If there are no windows, the first window is always treated as the main window.
-        let is_main = self.windows_to_retain.is_empty();
-        if is_main {
-            assert!(!modal, "main window cannot be modal");
-        }
-
         let w = Window {
-            window_type: if is_main {
-                WindowType::Main { make_main: true }
-            } else if modal {
-                WindowType::Modal
-            } else {
-                WindowType::Normal
-            },
+            modal,
             title,
             style,
         }
         .into_object();
 
         let nswindow: StrongRef<cocoa::NSWindow> = w.clone().cast();
-        self.windows_to_retain.push(nswindow.clone());
 
         unsafe {
             // Don't release windows when closed: we retain windows at the top-level.
@@ -617,8 +571,8 @@ impl WindowRenderer {
                 content_parent.setTitlePosition_(cocoa::NSNoTitle);
                 content_parent.setTransparent_(runtime::YES);
                 content_parent.setContentViewMargins_(cocoa::NSSize {
-                    width: 8.0,
-                    height: 8.0,
+                    width: 5.0,
+                    height: 5.0,
                 });
                 if ViewRenderer::new_with_selector(self.rtl, *content_parent, sel!(setContentView:))
                     .render(*e)
@@ -683,11 +637,8 @@ impl WindowRenderer {
                     Property::ReadOnly(_) => panic!("window visibility cannot be ReadOnly"),
                 }
             }
-
-            if is_main {
-                nswindow.makeKeyAndOrderFront_(std::ptr::null_mut());
-            }
         }
+        self.windows_to_retain.push(nswindow.clone());
         nswindow
     }
 }
@@ -1088,8 +1039,6 @@ fn render_element(
             unsafe {
                 sv.init();
                 sv.setHasVerticalScroller_(runtime::YES);
-                sv.setBorderType_(cocoa::NSBezelBorder);
-                sv.setDrawsBackground_(runtime::YES);
             }
             if let Some(content) = content {
                 ViewRenderer::new_with_selector(rtl, sv, sel!(setDocumentView:))

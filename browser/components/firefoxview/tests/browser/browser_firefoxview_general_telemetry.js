@@ -1,9 +1,26 @@
-const { PlacesTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/PlacesTestUtils.sys.mjs"
-);
-
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+const CARD_COLLAPSED_EVENT = [
+  ["firefoxview_next", "card_collapsed", "card_container", undefined],
+];
+const CARD_EXPANDED_EVENT = [
+  ["firefoxview_next", "card_expanded", "card_container", undefined],
+];
+let tabSelectedTelemetry = [
+  "firefoxview_next",
+  "tab_selected",
+  "toolbarbutton",
+  undefined,
+  {},
+];
+let enteredTelemetry = [
+  "firefoxview_next",
+  "entered",
+  "firefoxview",
+  undefined,
+  { page: "recentbrowsing" },
+];
 
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
@@ -17,33 +34,25 @@ add_setup(async () => {
 });
 
 add_task(async function firefox_view_entered_telemetry() {
-  Services.fog.testResetFOG();
+  await clearAllParentTelemetryEvents();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    let selectedEvents =
-      Glean.firefoxviewNext.tabSelectedToolbarbutton.testGetValue();
-    Assert.equal(1, selectedEvents.length, "Expected 1 selected event.");
-    let enteredEvents = Glean.firefoxviewNext.enteredFirefoxview.testGetValue();
-    Assert.equal(1, enteredEvents.length, "Expected 1 entered event.");
-    Assert.deepEqual({ page: "recentbrowsing" }, enteredEvents[0].extra);
+    let enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
+    await telemetryEvent(enteredAndTabSelectedEvents);
+
+    enteredTelemetry[4] = { page: "recentlyclosed" };
+    enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
 
     await navigateToViewAndWait(document, "recentlyclosed");
-    Services.fog.testResetFOG();
+    await clearAllParentTelemetryEvents();
     await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
     is(
       gBrowser.selectedBrowser.currentURI.spec,
       "about:robots",
       "The selected tab is about:robots"
     );
-    await switchToFxViewTab(browser.documentGlobal);
-
-    selectedEvents =
-      Glean.firefoxviewNext.tabSelectedToolbarbutton.testGetValue();
-    Assert.equal(1, selectedEvents.length, "Expected 1 selected event.");
-    enteredEvents = Glean.firefoxviewNext.enteredFirefoxview.testGetValue();
-    Assert.equal(1, enteredEvents.length, "Expected 1 entered event.");
-    Assert.deepEqual({ page: "recentlyclosed" }, enteredEvents[0].extra);
-
+    await switchToFxViewTab(browser.ownerGlobal);
+    await telemetryEvent(enteredAndTabSelectedEvents);
     await SpecialPowers.popPrefEnv();
     // clean up extra tabs
     while (gBrowser.tabs.length > 1) {
@@ -61,8 +70,7 @@ add_task(async function test_collapse_and_expand_card() {
       "view-recentlyclosed[slot=recentlyclosed]"
     );
     await TestUtils.waitForCondition(
-      () => recentlyClosedComponent.fullyUpdated,
-      "The recently closed component to be fully updated"
+      () => recentlyClosedComponent.fullyUpdated
     );
     let cardContainer = recentlyClosedComponent.cardEl;
     is(
@@ -70,7 +78,7 @@ add_task(async function test_collapse_and_expand_card() {
       true,
       "The card-container is expanded initially"
     );
-    Services.fog.testResetFOG();
+    await clearAllParentTelemetryEvents();
     // Click the summary to collapse the details disclosure
     EventUtils.synthesizeMouseAtCenter(cardContainer.summaryEl, {}, content);
     is(
@@ -78,11 +86,7 @@ add_task(async function test_collapse_and_expand_card() {
       false,
       "The card-container is collapsed"
     );
-    await Services.fog.testFlushAllChildren();
-    Assert.equal(
-      1,
-      Glean.firefoxviewNext.cardCollapsedCardContainer.testGetValue().length
-    );
+    await telemetryEvent(CARD_COLLAPSED_EVENT);
     // Click the summary again to expand the details disclosure
     EventUtils.synthesizeMouseAtCenter(cardContainer.summaryEl, {}, content);
     is(
@@ -90,26 +94,25 @@ add_task(async function test_collapse_and_expand_card() {
       true,
       "The card-container is expanded"
     );
-    await Services.fog.testFlushAllChildren();
-    Assert.equal(
-      1,
-      Glean.firefoxviewNext.cardExpandedCardContainer.testGetValue().length
-    );
+    await telemetryEvent(CARD_EXPANDED_EVENT);
   });
 });
 
 add_task(async function test_change_page_telemetry() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    Services.fog.testResetFOG();
+    let changePageEvent = [
+      [
+        "firefoxview_next",
+        "change_page",
+        "navigation",
+        undefined,
+        { page: "recentlyclosed", source: "category-navigation" },
+      ],
+    ];
+    await clearAllParentTelemetryEvents();
     await navigateToViewAndWait(document, "recentlyclosed");
-    let changePageEvents =
-      Glean.firefoxviewNext.changePageNavigation.testGetValue();
-    Assert.equal(1, changePageEvents.length, "Expected 1 change page event.");
-    Assert.deepEqual(
-      { page: "recentlyclosed", source: "category-navigation" },
-      changePageEvents[0].extra
-    );
+    await telemetryEvent(changePageEvent);
     await navigateToViewAndWait(document, "recentbrowsing");
 
     let openTabsComponent = document.querySelector(
@@ -118,15 +121,18 @@ add_task(async function test_change_page_telemetry() {
     let cardContainer =
       openTabsComponent.shadowRoot.querySelector("view-opentabs-card").cardEl;
     let viewAllLink = cardContainer.viewAllLink;
-    Services.fog.testResetFOG();
+    changePageEvent = [
+      [
+        "firefoxview_next",
+        "change_page",
+        "navigation",
+        undefined,
+        { page: "opentabs", source: "view-all" },
+      ],
+    ];
+    await clearAllParentTelemetryEvents();
     EventUtils.synthesizeMouseAtCenter(viewAllLink, {}, content);
-    changePageEvents =
-      Glean.firefoxviewNext.changePageNavigation.testGetValue();
-    Assert.equal(1, changePageEvents.length, "Expected 1 change page event.");
-    Assert.deepEqual(
-      { page: "opentabs", source: "view-all" },
-      changePageEvents[0].extra
-    );
+    await telemetryEvent(changePageEvent);
   });
 });
 
@@ -134,15 +140,14 @@ add_task(async function test_browser_context_menu_telemetry() {
   const menu = document.getElementById("contentAreaContextMenu");
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    Services.fog.testResetFOG();
+    await clearAllParentTelemetryEvents();
 
     // Test browser context menu options
     const openTabsComponent = document.querySelector("view-opentabs");
     await TestUtils.waitForCondition(
       () =>
         openTabsComponent.shadowRoot.querySelector("view-opentabs-card").tabList
-          .rowEls.length,
-      "open tabs card tab list to have row elements"
+          .rowEls.length
     );
     const [openTabsRow] =
       openTabsComponent.shadowRoot.querySelector("view-opentabs-card").tabList
@@ -156,18 +161,15 @@ add_task(async function test_browser_context_menu_telemetry() {
     await promisePopup;
     const promiseNewWindow = BrowserTestUtils.waitForNewWindow();
     menu.activateItem(menu.querySelector("#context-openlink"));
-
-    await TestUtils.waitForCondition(
-      () => Glean.firefoxviewNext.browserContextMenuTabs.testGetValue(),
-      "Context-menu event arrives."
-    );
-    const contextEvents =
-      Glean.firefoxviewNext.browserContextMenuTabs.testGetValue();
-    Assert.equal(1, contextEvents.length, "Expected 1 context-menu event.");
-    Assert.deepEqual(
-      { menu_action: "context-openlink", page: "recentbrowsing" },
-      contextEvents[0].extra
-    );
+    await telemetryEvent([
+      [
+        "firefoxview_next",
+        "browser_context_menu",
+        "tabs",
+        null,
+        { menu_action: "context-openlink", page: "recentbrowsing" },
+      ],
+    ]);
 
     // Clean up extra window
     const win = await promiseNewWindow;
@@ -193,13 +195,9 @@ add_task(async function test_context_menu_new_window_telemetry() {
     // Test history context menu options
     await navigateToViewAndWait(document, "history");
     let historyComponent = document.querySelector("view-history");
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
     await TestUtils.waitForCondition(
-      () => historyComponent.fullyUpdated,
-      "The history component to be fully updated"
-    );
-    await TestUtils.waitForCondition(
-      () => historyComponent.lists[0].rowEls.length,
-      "Waiting for the first history list to have row elements"
+      () => historyComponent.lists[0].rowEls.length
     );
     let firstTabList = historyComponent.lists[0];
     let firstItem = firstTabList.rowEls[0];
@@ -210,22 +208,26 @@ add_task(async function test_context_menu_new_window_telemetry() {
       content
     );
     await BrowserTestUtils.waitForEvent(panelList, "shown");
-    Services.fog.testResetFOG();
+    await clearAllParentTelemetryEvents();
     let panelItems = Array.from(panelList.children).filter(
       panelItem => panelItem.nodeName === "PANEL-ITEM"
     );
-    let openInNewWindowOption = panelItems[2];
+    let openInNewWindowOption = panelItems[1];
+    let contextMenuEvent = [
+      [
+        "firefoxview_next",
+        "context_menu",
+        "tabs",
+        undefined,
+        { menu_action: "open-in-new-window", data_type: "history" },
+      ],
+    ];
     let newWindowPromise = BrowserTestUtils.waitForNewWindow({
       url: URLs[0],
     });
     EventUtils.synthesizeMouseAtCenter(openInNewWindowOption, {}, content);
     let win = await newWindowPromise;
-    const contextEvents = Glean.firefoxviewNext.contextMenuTabs.testGetValue();
-    Assert.equal(1, contextEvents.length, "Got one context menu event.");
-    Assert.deepEqual(
-      { menu_action: "open-in-new-window", data_type: "history" },
-      contextEvents[0].extra
-    );
+    await telemetryEvent(contextMenuEvent);
     await BrowserTestUtils.closeWindow(win);
     info("New window closed.");
 
@@ -253,13 +255,9 @@ add_task(async function test_context_menu_private_window_telemetry() {
     // Test history context menu options
     await navigateToViewAndWait(document, "history");
     let historyComponent = document.querySelector("view-history");
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
     await TestUtils.waitForCondition(
-      () => historyComponent.fullyUpdated,
-      "Waiting for the history component to be fully updated"
-    );
-    await TestUtils.waitForCondition(
-      () => historyComponent.lists[0].rowEls.length,
-      "Waiting for the first history list to have row elements"
+      () => historyComponent.lists[0].rowEls.length
     );
     let firstTabList = historyComponent.lists[0];
     let firstItem = firstTabList.rowEls[0];
@@ -270,6 +268,7 @@ add_task(async function test_context_menu_private_window_telemetry() {
       content
     );
     await BrowserTestUtils.waitForEvent(panelList, "shown");
+    await clearAllParentTelemetryEvents();
     let panelItems = Array.from(panelList.children).filter(
       panelItem => panelItem.nodeName === "PANEL-ITEM"
     );
@@ -282,8 +281,17 @@ add_task(async function test_context_menu_private_window_telemetry() {
     info("Context menu button clicked.");
     await BrowserTestUtils.waitForEvent(panelList, "shown");
     info("Context menu shown.");
-    Services.fog.testResetFOG();
-    let openInPrivateWindowOption = panelItems[3];
+    await clearAllParentTelemetryEvents();
+    let openInPrivateWindowOption = panelItems[2];
+    let contextMenuEvent = [
+      [
+        "firefoxview_next",
+        "context_menu",
+        "tabs",
+        undefined,
+        { menu_action: "open-in-private-window", data_type: "history" },
+      ],
+    ];
     let newWindowPromise = BrowserTestUtils.waitForNewWindow({
       url: URLs[0],
     });
@@ -291,12 +299,7 @@ add_task(async function test_context_menu_private_window_telemetry() {
     info("Open in private window context menu option clicked.");
     let win = await newWindowPromise;
     info("New private window opened.");
-    const contextEvents = Glean.firefoxviewNext.contextMenuTabs.testGetValue();
-    Assert.equal(1, contextEvents.length, "Got one context menu event.");
-    Assert.deepEqual(
-      { menu_action: "open-in-private-window", data_type: "history" },
-      contextEvents[0].extra
-    );
+    await telemetryEvent(contextMenuEvent);
     ok(
       PrivateBrowsingUtils.isWindowPrivate(win),
       "Should have opened a private window."
@@ -329,13 +332,9 @@ add_task(async function test_context_menu_delete_from_history_telemetry() {
     // Test history context menu options
     await navigateToViewAndWait(document, "history");
     let historyComponent = document.querySelector("view-history");
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
     await TestUtils.waitForCondition(
-      () => historyComponent.fullyUpdated,
-      "The history component to be fully updated"
-    );
-    await TestUtils.waitForCondition(
-      () => historyComponent.lists[0].rowEls.length,
-      "Waiting for the first history list to have row elements"
+      () => historyComponent.lists[0].rowEls.length
     );
     let firstTabList = historyComponent.lists[0];
     let firstItem = firstTabList.rowEls[0];
@@ -346,6 +345,7 @@ add_task(async function test_context_menu_delete_from_history_telemetry() {
       content
     );
     await BrowserTestUtils.waitForEvent(panelList, "shown");
+    await clearAllParentTelemetryEvents();
     let panelItems = Array.from(panelList.children).filter(
       panelItem => panelItem.nodeName === "PANEL-ITEM"
     );
@@ -358,12 +358,21 @@ add_task(async function test_context_menu_delete_from_history_telemetry() {
     info("Context menu button clicked.");
     await BrowserTestUtils.waitForEvent(panelList, "shown");
     info("Context menu shown.");
-    Services.fog.testResetFOG();
+    await clearAllParentTelemetryEvents();
     let deleteFromHistoryOption = panelItems[0];
     ok(
       deleteFromHistoryOption.textContent.includes("Delete"),
       "Delete from history button is present in the context menu."
     );
+    let contextMenuEvent = [
+      [
+        "firefoxview_next",
+        "context_menu",
+        "tabs",
+        undefined,
+        { menu_action: "delete-from-history", data_type: "history" },
+      ],
+    ];
     EventUtils.synthesizeMouseAtCenter(deleteFromHistoryOption, {}, content);
     info("Delete from history context menu option clicked.");
 
@@ -371,88 +380,10 @@ add_task(async function test_context_menu_delete_from_history_telemetry() {
       () =>
         !historyComponent.paused &&
         historyComponent.fullyUpdated &&
-        !historyComponent.lists.length,
-      "The history component to be fully updated, unpaused, and have no lists"
+        !historyComponent.lists.length
     );
-    const contextEvents = Glean.firefoxviewNext.contextMenuTabs.testGetValue();
-    Assert.equal(1, contextEvents.length, "Got one context menu event.");
-    Assert.deepEqual(
-      { menu_action: "delete-from-history", data_type: "history" },
-      contextEvents[0].extra
-    );
+    await telemetryEvent(contextMenuEvent);
 
-    // clean up extra tabs
-    while (gBrowser.tabs.length > 1) {
-      BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
-    }
-  });
-});
-
-add_task(async function test_context_menu_forget_about_this_site_telemetry() {
-  await PlacesUtils.history.clear();
-  await PlacesUtils.history.insert({
-    url: URLs[0],
-    title: "Example Domain 1",
-    visits: [{ date: new Date() }],
-  });
-  await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
-    is(
-      document.location.href,
-      "about:firefoxview",
-      "The Recent browsing page is showing."
-    );
-    await navigateToViewAndWait(document, "history");
-    let historyComponent = document.querySelector("view-history");
-    await TestUtils.waitForCondition(
-      () => historyComponent.fullyUpdated,
-      "Waiting for the history component to be fully updated"
-    );
-    await TestUtils.waitForCondition(
-      () => historyComponent.lists[0].rowEls.length,
-      "Waiting for the first history list to have row elements"
-    );
-    let firstTabList = historyComponent.lists[0];
-    let firstItem = firstTabList.rowEls[0];
-    let panelList = historyComponent.panelList;
-    EventUtils.synthesizeMouseAtCenter(
-      firstItem.secondaryButtonEl,
-      {},
-      content
-    );
-    info("Context menu button clicked.");
-    await BrowserTestUtils.waitForEvent(panelList, "shown");
-    info("Context menu shown.");
-    Services.fog.testResetFOG();
-    let panelItems = Array.from(panelList.children).filter(
-      panelItem => panelItem.nodeName === "PANEL-ITEM"
-    );
-    let forgetAboutThisSiteOption = panelItems[1];
-    ok(
-      forgetAboutThisSiteOption.textContent.includes("Forget"),
-      "Forget About This Site button is present in the context menu."
-    );
-    let dialogOpened = BrowserTestUtils.promiseAlertDialogOpen(
-      null,
-      "chrome://browser/content/places/clearDataForSite.xhtml",
-      { isSubDialog: true }
-    );
-    EventUtils.synthesizeMouseAtCenter(forgetAboutThisSiteOption, {}, content);
-    info("Forget About This Site context menu option clicked.");
-    let dialog = await dialogOpened;
-    info("Dialog opened.");
-    let removeButton = dialog.document
-      .querySelector("dialog")
-      .getButton("accept");
-    removeButton.click();
-    info("Clear Data button clicked.");
-    await BrowserTestUtils.waitForEvent(dialog, "unload");
-    const contextEvents = Glean.firefoxviewNext.contextMenuTabs.testGetValue();
-    Assert.equal(1, contextEvents.length, "Got one context menu event.");
-    Assert.deepEqual(
-      { menu_action: "forget-about-this-site", data_type: "history" },
-      contextEvents[0].extra
-    );
     // clean up extra tabs
     while (gBrowser.tabs.length > 1) {
       BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));

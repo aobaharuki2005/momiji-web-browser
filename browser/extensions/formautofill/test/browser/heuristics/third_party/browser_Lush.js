@@ -6,7 +6,6 @@ add_heuristic_tests(
   [
     {
       fixturePath: "index.html",
-      useTestYear: 2024,
       expectedResult: [
         {
           default: {

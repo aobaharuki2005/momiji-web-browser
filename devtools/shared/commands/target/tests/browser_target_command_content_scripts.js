@@ -3,11 +3,11 @@
 
 "use strict";
 
-// Test the TargetCommand API for content scripts targets.
+// Test the TargetCommand API around workers
 
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 
-add_task(async function test_contentScript() {
+add_task(async function () {
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
@@ -92,7 +92,7 @@ add_task(async function test_contentScript() {
     "watchTargets reports the same target instance"
   );
 
-  await reloadSelectedTab();
+  await reloadBrowser();
 
   await waitFor(
     () => destroyedTargets.length == 1,
@@ -131,7 +131,7 @@ add_task(async function test_contentScript() {
 
 // Cover the special codepath used by VS.Code which listens to CONTENT SCRIPT targets
 // on a parent process watcher.
-add_task(async function test_contentScript_parentProcess_VSCode() {
+add_task(async function () {
   info(
     "Test TargetCommand against content scripts via multiprocess descriptor"
   );

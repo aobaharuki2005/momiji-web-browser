@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmJSPromiseIntegrationEnabled()
-
 // Test shutting down the program with suspended stack.
 
 const suspending = new WebAssembly.Suspending(() => new Promise(() => {}));

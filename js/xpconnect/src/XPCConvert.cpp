@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1189,15 +1191,15 @@ nsresult XPCConvert::JSValToXPCException(JSContext* cx, MutableHandleValue s,
 
       // If it is an engine Error with an error report then let's
       // extract the report and build an xpcexception from that
-      JS::BorrowedErrorReport report(cx);
-      if (JS_ErrorFromException(cx, obj, report)) {
+      const JSErrorReport* report;
+      if (nullptr != (report = JS_ErrorFromException(cx, obj))) {
         JS::UniqueChars toStringResult;
         RootedString str(cx, ToString(cx, s));
         if (str) {
           toStringResult = JS_EncodeStringToUTF8(cx, str);
         }
         return JSErrorToXPCException(cx, toStringResult.get(), ifaceName,
-                                     methodName, report.get(), exceptn);
+                                     methodName, report, exceptn);
       }
 
       // XXX we should do a check against 'js_ErrorClass' here and

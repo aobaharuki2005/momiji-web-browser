@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // Ensure passing the default numbering system leads to the same result as when
 // no explicit numbering system is present.
 //

@@ -60,7 +60,7 @@ ft_hb_ft_reference_table (hb_face_t *face, hb_tag_t tag, void *user_data)
   error = FT_Load_Sfnt_Table (ft_face, tag, 0, buffer, &length);
   if (error)
   {
-    ft_sfree (buffer);
+    free (buffer);
     return NULL;
   }
 

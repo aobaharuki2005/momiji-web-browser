@@ -165,7 +165,7 @@ h3 > span {
 }
 
 div.fold-trigger {
-  color: var(--color-accent-primary);
+  color: var(--blue-60);
   cursor: pointer;
 }
 

@@ -1,9 +1,10 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WaylandVsyncSource_h_
-#define WaylandVsyncSource_h_
+#ifndef _WaylandVsyncSource_h_
+#define _WaylandVsyncSource_h_
 
 #include "base/thread.h"
 #include "mozilla/RefPtr.h"
@@ -98,8 +99,7 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
 
   TimeDuration mVsyncRate MOZ_GUARDED_BY(mMutex);
   TimeStamp mLastVsyncTimeStamp MOZ_GUARDED_BY(mMutex);
-  uint32_t mLastTime MOZ_GUARDED_BY(mMutex) = 0;
-  bool mLastTimeEmulated MOZ_GUARDED_BY(mMutex) = false;
+  uint32_t mLastFrameTime MOZ_GUARDED_BY(mMutex) = 0;
 
   guint mHiddenWindowTimerID = 0;    // Main thread only.
   const guint mHiddenWindowTimeout;  // Main thread only.
@@ -107,4 +107,4 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
 
 }  // namespace mozilla
 
-#endif  // WaylandVsyncSource_h_
+#endif  // _WaylandVsyncSource_h_

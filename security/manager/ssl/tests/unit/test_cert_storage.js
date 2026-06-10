@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -69,14 +70,14 @@ const certBlocklist = [
   },
   {
     issuerName: "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
-    serialNumber: "ZSuNTV5Ngi1A5RSkCkCRd6fZ3sM=",
+    serialNumber: "AxPrsRjtbFinLUfRzhtR8EeYh4Y=",
   },
   // ... and some good
   // In this case, the issuer name and the valid serialNumber correspond
   // to other-test-ca.pem in bad_certs/ (for testing root revocation)
   {
     issuerName: "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=",
-    serialNumber: "adOFCYMS/nqQ3tCvQzINT8fdE+s=",
+    serialNumber: "VTTv5DQM+fh01nnfm3AoUJt4UIY=",
   },
   // These items correspond to an entry in sample_revocations.txt where:
   // isser name is the base-64 encoded subject DN for the shared Test

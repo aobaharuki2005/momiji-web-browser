@@ -1,4 +1,4 @@
-import { isCompatibilityMode } from '../common/framework/test_config.js';
+import { isCompatibilityDevice } from '../common/framework/test_config.js';
 import { keysOf } from '../common/util/data_tables.js';
 import { assert, unreachable, hasFeature } from '../common/util/util.js';
 
@@ -290,7 +290,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
 
     r16unorm: {
       color: {
-        type: 'unfilterable-float',
+        type: 'float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -304,7 +304,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
     },
     r16snorm: {
       color: {
-        type: 'unfilterable-float',
+        type: 'float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -358,7 +358,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
 
     rg16unorm: {
       color: {
-        type: 'unfilterable-float',
+        type: 'float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -372,7 +372,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
     },
     rg16snorm: {
       color: {
-        type: 'unfilterable-float',
+        type: 'float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -426,7 +426,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
 
     rgba16unorm: {
       color: {
-        type: 'unfilterable-float',
+        type: 'float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -440,7 +440,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
     },
     rgba16snorm: {
       color: {
-        type: 'unfilterable-float',
+        type: 'float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -1853,7 +1853,7 @@ export function isTextureFormatPossiblyUsableWithCopyExternalImageToTexture(
  * Returns true if a texture can be used with copyExternalImageToTexture.
  */
 export function isTextureFormatUsableWithCopyExternalImageToTexture(
-  features: GPUSupportedFeatures,
+  device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
   return (
@@ -1861,7 +1861,7 @@ export function isTextureFormatUsableWithCopyExternalImageToTexture(
     !isSintOrUintFormat(format) &&
     !isCompressedTextureFormat(format) &&
     !isSnormTextureFormat(format) &&
-    isTextureFormatColorRenderable(features, format)
+    isTextureFormatColorRenderable(device, format)
   );
 }
 
@@ -2062,14 +2062,16 @@ export function textureFormatAndDimensionPossiblyCompatible(
  * (defaulting to 2d) and GPUTextureFormat for a GPU device, by spec.
  */
 export function textureDimensionAndFormatCompatibleForDevice(
-  features: GPUSupportedFeatures,
+  device: GPUDevice,
   dimension: undefined | GPUTextureDimension,
   format: GPUTextureFormat
 ): boolean {
   if (
     dimension === '3d' &&
-    ((isBCTextureFormat(format) && hasFeature(features, 'texture-compression-bc-sliced-3d')) ||
-      (isASTCTextureFormat(format) && hasFeature(features, 'texture-compression-astc-sliced-3d')))
+    ((isBCTextureFormat(format) &&
+      hasFeature(device.features, 'texture-compression-bc-sliced-3d')) ||
+      (isASTCTextureFormat(format) &&
+        hasFeature(device.features, 'texture-compression-astc-sliced-3d')))
   ) {
     return true;
   }
@@ -2084,12 +2086,12 @@ export function textureDimensionAndFormatCompatibleForDevice(
  * Returns true iff a texture can be used with the provided GPUTextureViewDimension
  */
 export function textureViewDimensionAndFormatCompatibleForDevice(
-  features: GPUSupportedFeatures,
+  device: GPUDevice,
   dimension: GPUTextureViewDimension,
   format: GPUTextureFormat
 ): boolean {
   return textureDimensionAndFormatCompatibleForDevice(
-    features,
+    device,
     getTextureDimensionFromView(dimension),
     format
   );
@@ -2099,11 +2101,11 @@ export function textureViewDimensionAndFormatCompatibleForDevice(
  * Check if two formats are view format compatible.
  */
 export function textureFormatsAreViewCompatible(
-  features: GPUSupportedFeatures,
+  device: GPUDevice,
   a: GPUTextureFormat,
   b: GPUTextureFormat
 ) {
-  return isCompatibilityMode(features)
+  return isCompatibilityDevice(device)
     ? a === b
     : a === b || a + '-srgb' === b || b + '-srgb' === a;
 }
@@ -2353,30 +2355,30 @@ export function isEncodableTextureFormat(format: GPUTextureFormat) {
  * depth textures and stencil textures are usable with usage RENDER_ATTACHMENT.
  */
 export function isTextureFormatUsableAsRenderAttachment(
-  features: GPUSupportedFeatures,
+  device: GPUDevice,
   format: GPUTextureFormat
-): boolean {
+) {
   if (format === 'rg11b10ufloat') {
-    return hasFeature(features, 'rg11b10ufloat-renderable');
+    return hasFeature(device.features, 'rg11b10ufloat-renderable');
   }
   if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)) {
-    return hasFeature(features, 'texture-formats-tier1');
+    return hasFeature(device.features, 'texture-formats-tier1');
   }
-  return !!(kTextureFormatInfo[format].colorRender ?? isDepthOrStencilTextureFormat(format));
+  return kTextureFormatInfo[format].colorRender || isDepthOrStencilTextureFormat(format);
 }
 
 /**
  * Returns if a texture can be used as a "colorAttachment".
  */
 export function isTextureFormatColorRenderable(
-  features: GPUSupportedFeatures,
+  device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
   if (format === 'rg11b10ufloat') {
-    return hasFeature(features, 'rg11b10ufloat-renderable');
+    return hasFeature(device.features, 'rg11b10ufloat-renderable');
   }
   if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)) {
-    return hasFeature(features, 'texture-formats-tier1');
+    return hasFeature(device.features, 'texture-formats-tier1');
   }
   return !!kAllTextureFormatInfo[format].colorRender;
 }
@@ -2384,42 +2386,17 @@ export function isTextureFormatColorRenderable(
 /**
  * Returns if a texture can be blended.
  */
-export function isTextureFormatBlendable(
-  features: GPUSupportedFeatures,
-  format: GPUTextureFormat
-): boolean {
-  if (!isTextureFormatColorRenderable(features, format)) {
+export function isTextureFormatBlendable(device: GPUDevice, format: GPUTextureFormat): boolean {
+  if (!isTextureFormatColorRenderable(device, format)) {
     return false;
   }
   if (format === 'rg11b10ufloat') {
-    return hasFeature(features, 'rg11b10ufloat-renderable');
+    return hasFeature(device.features, 'rg11b10ufloat-renderable');
   }
   if (is32Float(format)) {
-    return hasFeature(features, 'float32-blendable');
+    return hasFeature(device.features, 'float32-blendable');
   }
   return !!kAllTextureFormatInfo[format].colorRender?.blend;
-}
-
-/**
- * Returns true if a texture can be filtered.
- */
-export function isTextureFormatFilterable(
-  features: GPUSupportedFeatures,
-  format: GPUTextureFormat
-): boolean {
-  const type = getTextureFormatType(format);
-  switch (type) {
-    case 'float':
-      return true;
-    case 'unfilterable-float':
-      if (is32Float(format)) {
-        return hasFeature(features, 'float32-filterable');
-      } else {
-        return false;
-      }
-    default:
-      return false;
-  }
 }
 
 /**
@@ -2560,20 +2537,20 @@ export const kCompatModeUnsupportedStorageTextureFormats: readonly GPUTextureFor
  * a shader @see {@link isTextureFormatUsableAsStorageFormatInCreateShaderModule}
  */
 function isTextureFormatUsableAsWriteOnlyStorageTexture(
-  features: GPUSupportedFeatures,
+  device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
-  if (isCompatibilityMode(features)) {
+  if (isCompatibilityDevice(device)) {
     if (kCompatModeUnsupportedStorageTextureFormats.indexOf(format) >= 0) {
       return false;
     }
   }
-  if (format === 'bgra8unorm' && hasFeature(features, 'bgra8unorm-storage')) {
+  if (format === 'bgra8unorm' && hasFeature(device.features, 'bgra8unorm-storage')) {
     return true;
   }
   if (
     isTextureFormatTier1EnablesStorageReadOnlyWriteOnly(format) &&
-    hasFeature(features, 'texture-formats-tier1')
+    hasFeature(device.features, 'texture-formats-tier1')
   ) {
     return true;
   }
@@ -2590,20 +2567,20 @@ function isTextureFormatUsableAsWriteOnlyStorageTexture(
  * a shader @see {@link isTextureFormatUsableAsStorageFormatInCreateShaderModule}
  */
 export function isTextureFormatUsableWithStorageAccessMode(
-  features: GPUSupportedFeatures,
+  device: GPUDevice,
   format: GPUTextureFormat,
   access: GPUStorageTextureAccess | 'read' | 'write' | 'read_write'
 ) {
   switch (access) {
     case 'read':
     case 'read-only':
-      return isTextureFormatUsableAsReadOnlyStorageTexture(features, format);
+      return isTextureFormatUsableAsReadOnlyStorageTexture(device, format);
     case 'write':
     case 'write-only':
-      return isTextureFormatUsableAsWriteOnlyStorageTexture(features, format);
+      return isTextureFormatUsableAsWriteOnlyStorageTexture(device, format);
     case 'read_write':
     case 'read-write':
-      return isTextureFormatUsableAsReadWriteStorageTexture(features, format);
+      return isTextureFormatUsableAsReadWriteStorageTexture(device, format);
   }
 }
 
@@ -2615,7 +2592,7 @@ export function isTextureFormatUsableWithStorageAccessMode(
  * a shader @see {@link isTextureFormatUsableAsStorageFormatInCreateShaderModule}
  */
 function isTextureFormatUsableAsReadOnlyStorageTexture(
-  features: GPUSupportedFeatures,
+  device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
   // This is the only storage texture format that isn't readable as a storage format.
@@ -2624,7 +2601,7 @@ function isTextureFormatUsableAsReadOnlyStorageTexture(
   }
   // All other formats that can be used as a storage texture can be used as
   // both read-only and write-only.
-  return isTextureFormatUsableAsWriteOnlyStorageTexture(features, format);
+  return isTextureFormatUsableAsWriteOnlyStorageTexture(device, format);
 }
 
 /**
@@ -2637,7 +2614,7 @@ function isTextureFormatUsableAsReadOnlyStorageTexture(
  * is available.
  */
 export function isTextureFormatUsableAsStorageFormatInCreateShaderModule(
-  features: GPUSupportedFeatures,
+  device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
   return kPossibleStorageTextureFormats.includes(
@@ -2646,11 +2623,11 @@ export function isTextureFormatUsableAsStorageFormatInCreateShaderModule(
 }
 
 function isTextureFormatUsableAsReadWriteStorageTexture(
-  features: GPUSupportedFeatures,
+  device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
   if (isTextureFormatTier2EnablesStorageReadWrite(format)) {
-    return hasFeature(features, 'texture-formats-tier2');
+    return hasFeature(device.features, 'texture-formats-tier2');
   }
   return !!kTextureFormatInfo[format].color?.readWriteStorage;
 }
@@ -2699,20 +2676,17 @@ export const kCompatModeUnsupportedMultisampledTextureFormats: readonly GPUTextu
 /**
  * Returns true if you can make a multisampled texture from the given format.
  */
-export function isTextureFormatMultisampled(
-  features: GPUSupportedFeatures,
-  format: GPUTextureFormat
-): boolean {
-  if (isCompatibilityMode(features)) {
+export function isTextureFormatMultisampled(device: GPUDevice, format: GPUTextureFormat): boolean {
+  if (isCompatibilityDevice(device)) {
     if (kCompatModeUnsupportedMultisampledTextureFormats.indexOf(format) >= 0) {
       return false;
     }
   }
   if (format === 'rg11b10ufloat') {
-    return hasFeature(features, 'rg11b10ufloat-renderable');
+    return hasFeature(device.features, 'rg11b10ufloat-renderable');
   }
   if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)) {
-    return hasFeature(features, 'texture-formats-tier1');
+    return hasFeature(device.features, 'texture-formats-tier1');
   }
   return kAllTextureFormatInfo[format].multisample;
 }
@@ -2721,18 +2695,15 @@ export function isTextureFormatMultisampled(
  * Returns true if a texture can be "resolved". uint/sint formats can be multisampled but
  * can not be resolved.
  */
-export function isTextureFormatResolvable(
-  features: GPUSupportedFeatures,
-  format: GPUTextureFormat
-): boolean {
+export function isTextureFormatResolvable(device: GPUDevice, format: GPUTextureFormat): boolean {
   if (format === 'rg11b10ufloat') {
-    return hasFeature(features, 'rg11b10ufloat-renderable');
+    return hasFeature(device.features, 'rg11b10ufloat-renderable');
   }
   if (isTextureFormatTier1EnablesResolve(format)) {
-    return hasFeature(features, 'texture-formats-tier1');
+    return hasFeature(device.features, 'texture-formats-tier1');
   }
   // You can't resolve a non-multisampled format.
-  if (!isTextureFormatMultisampled(features, format)) {
+  if (!isTextureFormatMultisampled(device, format)) {
     return false;
   }
   const info = kAllTextureFormatInfo[format];

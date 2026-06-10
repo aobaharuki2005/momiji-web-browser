@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -153,7 +155,9 @@ nsXPCComponents_Interfaces::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
 
 nsXPCComponents_Interfaces::nsXPCComponents_Interfaces() = default;
 
-nsXPCComponents_Interfaces::~nsXPCComponents_Interfaces() = default;
+nsXPCComponents_Interfaces::~nsXPCComponents_Interfaces() {
+  // empty
+}
 
 NS_IMPL_ISUPPORTS(nsXPCComponents_Interfaces, nsIXPCComponents_Interfaces,
                   nsIXPCScriptable, nsIClassInfo);
@@ -304,7 +308,9 @@ nsXPCComponents_Classes::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
 
 nsXPCComponents_Classes::nsXPCComponents_Classes() = default;
 
-nsXPCComponents_Classes::~nsXPCComponents_Classes() = default;
+nsXPCComponents_Classes::~nsXPCComponents_Classes() {
+  // empty
+}
 
 NS_IMPL_ISUPPORTS(nsXPCComponents_Classes, nsIXPCComponents_Classes,
                   nsIXPCScriptable, nsIClassInfo)
@@ -443,7 +449,9 @@ nsXPCComponents_Results::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
 
 nsXPCComponents_Results::nsXPCComponents_Results() = default;
 
-nsXPCComponents_Results::~nsXPCComponents_Results() = default;
+nsXPCComponents_Results::~nsXPCComponents_Results() {
+  // empty
+}
 
 NS_IMPL_ISUPPORTS(nsXPCComponents_Results, nsIXPCComponents_Results,
                   nsIXPCScriptable, nsIClassInfo)
@@ -582,7 +590,9 @@ nsXPCComponents_ID::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
 
 nsXPCComponents_ID::nsXPCComponents_ID() = default;
 
-nsXPCComponents_ID::~nsXPCComponents_ID() = default;
+nsXPCComponents_ID::~nsXPCComponents_ID() {
+  // empty
+}
 
 NS_IMPL_ISUPPORTS(nsXPCComponents_ID, nsIXPCComponents_ID, nsIXPCScriptable,
                   nsIClassInfo)
@@ -731,7 +741,9 @@ nsXPCComponents_Exception::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
 
 nsXPCComponents_Exception::nsXPCComponents_Exception() = default;
 
-nsXPCComponents_Exception::~nsXPCComponents_Exception() = default;
+nsXPCComponents_Exception::~nsXPCComponents_Exception() {
+  // empty
+}
 
 NS_IMPL_ISUPPORTS(nsXPCComponents_Exception, nsIXPCComponents_Exception,
                   nsIXPCScriptable, nsIClassInfo)
@@ -1022,7 +1034,9 @@ nsXPCComponents_Constructor::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
 
 nsXPCComponents_Constructor::nsXPCComponents_Constructor() = default;
 
-nsXPCComponents_Constructor::~nsXPCComponents_Constructor() = default;
+nsXPCComponents_Constructor::~nsXPCComponents_Constructor() {
+  // empty
+}
 
 NS_IMPL_ISUPPORTS(nsXPCComponents_Constructor, nsIXPCComponents_Constructor,
                   nsIXPCScriptable, nsIClassInfo)
@@ -1392,8 +1406,8 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
     scripterr = CreateScriptError(win, exception, nullptr, nullptr);
   }
 
-  JS::BorrowedErrorReport err(cx);
-  if (errorObj && JS_ErrorFromException(cx, errorObj, err)) {
+  JSErrorReport* err = errorObj ? JS_ErrorFromException(cx, errorObj) : nullptr;
+  if (err) {
     // It's a proper JS Error
     uint32_t flags = err->isWarning() ? nsIScriptError::warningFlag
                                       : nsIScriptError::errorFlag;

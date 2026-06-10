@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.83"
+rust-version = "1.82"
 name = "icu_properties"
-version = "2.1.2"
+version = "2.0.1"
 authors = ["The ICU4X Project Developers"]
 build = false
 include = [
@@ -42,14 +42,10 @@ repository = "https://github.com/unicode-org/icu4x"
 [package.metadata.docs.rs]
 all-features = true
 
-[package.metadata.cargo-semver-checks.lints]
-workspace = true
-
 [features]
 alloc = [
     "zerovec/alloc",
     "icu_collections/alloc",
-    "serde?/alloc",
 ]
 compiled_data = [
     "dep:icu_properties_data",
@@ -58,6 +54,7 @@ compiled_data = [
 datagen = [
     "serde",
     "dep:databake",
+    "potential_utf/databake",
     "zerovec/databake",
     "icu_collections/databake",
     "icu_locale_core/databake",
@@ -68,13 +65,13 @@ default = ["compiled_data"]
 serde = [
     "dep:serde",
     "icu_locale_core/serde",
+    "potential_utf/serde",
     "zerovec/serde",
     "icu_collections/serde",
     "icu_provider/serde",
     "zerotrie/serde",
 ]
 unicode_bidi = ["dep:unicode-bidi"]
-harfbuzz_traits = ["dep:harfbuzz-traits"]
 
 [lib]
 name = "icu_properties"
@@ -86,34 +83,41 @@ features = ["derive"]
 optional = true
 default-features = false
 
+[dependencies.displaydoc]
+version = "0.2.3"
+default-features = false
+
 [dependencies.icu_collections]
-version = "~2.1.1"
+version = "~2.0.0"
 default-features = false
 
 [dependencies.icu_locale_core]
-version = "2.1.1"
+version = "2.0.0"
 features = ["zerovec"]
 default-features = false
 
 [dependencies.icu_properties_data]
-version = "~2.1.2"
+version = "~2.0.0"
 optional = true
 default-features = false
 
 [dependencies.icu_provider]
-version = "2.1.1"
+version = "2.0.0"
+default-features = false
+
+[dependencies.potential_utf]
+version = "0.1.1"
+features = ["zerovec"]
 default-features = false
 
 [dependencies.serde]
-version = "1.0.220"
-features = ["derive"]
+version = "1.0.110"
+features = [
+    "derive",
+    "alloc",
+]
 optional = true
 default-features = false
-
-[dependencies.harfbuzz-traits]
-version = "0.6.0"
-default-features = false
-optional = true
 
 [dependencies.unicode-bidi]
 version = "0.3.11"
@@ -129,7 +133,7 @@ features = [
 default-features = false
 
 [dependencies.zerovec]
-version = "0.11.3"
+version = "0.11.1"
 features = [
     "derive",
     "yoke",

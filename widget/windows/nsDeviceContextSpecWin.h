@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDeviceContextSpecWin_h_
-#define nsDeviceContextSpecWin_h_
+#ifndef nsDeviceContextSpecWin_h___
+#define nsDeviceContextSpecWin_h___
 
 #include "nsCOMPtr.h"
 #include "nsIDeviceContextSpec.h"
@@ -25,8 +26,7 @@ class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
   already_AddRefed<PrintTarget> MakePrintTarget() final;
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,
-                           uint64_t aBrowsingContextId, int32_t aStartPage,
-                           int32_t aEndPage) override {
+                           int32_t aStartPage, int32_t aEndPage) override {
     return NS_OK;
   }
   RefPtr<mozilla::gfx::PrintEndDocumentPromise> EndDocument() override;

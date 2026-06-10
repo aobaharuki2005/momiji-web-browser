@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -12,7 +14,6 @@ EXPORTS += [
     "MediaCodecsSupport.h",
     "MediaTelemetryConstants.h",
     "PDMFactory.h",
-    "PDMFactorySupport.h",
     "PEMFactory.h",
     "PlatformDecoderModule.h",
     "PlatformEncoderModule.h",
@@ -34,7 +35,6 @@ UNIFIED_SOURCES += [
     "EncoderConfig.cpp",
     "MediaCodecsSupport.cpp",
     "PDMFactory.cpp",
-    "PDMFactorySupport.cpp",
     "PEMFactory.cpp",
     "PlatformDecoderModule.cpp",
     "PlatformEncoderModule.cpp",
@@ -62,19 +62,20 @@ if CONFIG["MOZ_FFMPEG"]:
         "ffmpeg",
     ]
 
-EXPORTS += [
-    "agnostic/AOMDecoder.h",
-    "agnostic/DAV1DDecoder.h",
-]
-UNIFIED_SOURCES += [
-    "agnostic/AOMDecoder.cpp",
-    "agnostic/DAV1DDecoder.cpp",
-]
-if CONFIG["MOZ_SYSTEM_AV1"]:
-    CXXFLAGS += CONFIG["MOZ_SYSTEM_LIBAOM_CFLAGS"]
-    CXXFLAGS += CONFIG["MOZ_SYSTEM_LIBDAV1D_CFLAGS"]
-    OS_LIBS += CONFIG["MOZ_SYSTEM_LIBAOM_LIBS"]
-    OS_LIBS += CONFIG["MOZ_SYSTEM_LIBDAV1D_LIBS"]
+if CONFIG["MOZ_AV1"]:
+    EXPORTS += [
+        "agnostic/AOMDecoder.h",
+        "agnostic/DAV1DDecoder.h",
+    ]
+    UNIFIED_SOURCES += [
+        "agnostic/AOMDecoder.cpp",
+        "agnostic/DAV1DDecoder.cpp",
+    ]
+    if CONFIG["MOZ_SYSTEM_AV1"]:
+        CXXFLAGS += CONFIG["MOZ_SYSTEM_LIBAOM_CFLAGS"]
+        CXXFLAGS += CONFIG["MOZ_SYSTEM_LIBDAV1D_CFLAGS"]
+        OS_LIBS += CONFIG["MOZ_SYSTEM_LIBAOM_LIBS"]
+        OS_LIBS += CONFIG["MOZ_SYSTEM_LIBDAV1D_LIBS"]
 
 if CONFIG["MOZ_OMX"]:
     EXPORTS += [
@@ -92,16 +93,11 @@ if CONFIG["MOZ_APPLEMEDIA"]:
     ]
     UNIFIED_SOURCES += [
         "apple/AppleATDecoder.cpp",
-        "apple/AppleCMLinker.cpp",
-        "apple/AppleCVLinker.cpp",
         "apple/AppleDecoderModule.cpp",
         "apple/AppleEncoderModule.cpp",
-        'apple/AppleUtils.cpp',
-        'apple/AppleVDADecoder.cpp',
-        'apple/AppleVDALinker.cpp',
+        "apple/AppleUtils.cpp",
         "apple/AppleVTDecoder.cpp",
         "apple/AppleVTEncoder.cpp",
-        "apple/AppleVTLinker.cpp",
     ]
     LOCAL_INCLUDES += [
         "/media/libyuv/libyuv/include",
@@ -110,14 +106,11 @@ if CONFIG["MOZ_APPLEMEDIA"]:
         "-framework AudioToolbox",
         "-framework CoreMedia",
         "-framework VideoToolbox",
-        "-framework VideoDecodeAcceleration",
         # For some unknown reason, the documented method of using weak_import
         # attribute doesn't work with VideoToolbox's functions.
         # We want to lazily load _VTRegisterSupplementalVideoDecoderIfAvailable
         # symbol as it's only available in macOS 11 and later.
         "-Wl,-U,_VTRegisterSupplementalVideoDecoderIfAvailable",
-        # Same for VTIsHardwareDecodeSupported available from macOS 10.13.
-        "-Wl,-U,_VTIsHardwareDecodeSupported",
     ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

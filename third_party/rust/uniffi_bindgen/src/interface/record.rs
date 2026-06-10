@@ -47,26 +47,20 @@
 use anyhow::Result;
 use uniffi_meta::Checksum;
 
-use super::function::Callable;
-use super::{
-    AsType, Constructor, DefaultValue, FfiFunction, Method, Type, TypeIterator, UniffiTrait,
-    UniffiTraitMethods,
-};
+use super::Literal;
+use super::{AsType, Type, TypeIterator};
 
 /// Represents a "data class" style object, for passing around complex values.
 ///
 /// In the FFI these are represented as a byte buffer, which one side explicitly
 /// serializes the data into and the other serializes it out of. So I guess they're
 /// kind of like "pass by clone" values.
-#[derive(Debug, Clone, Checksum)]
+#[derive(Debug, Clone, PartialEq, Eq, Checksum)]
 pub struct Record {
     pub(super) name: String,
     pub(super) module_path: String,
     pub(super) remote: bool,
     pub(super) fields: Vec<Field>,
-    pub(super) constructors: Vec<Constructor>,
-    pub(super) methods: Vec<Method>,
-    pub uniffi_traits: Vec<UniffiTrait>,
     #[checksum_ignore]
     pub(super) docstring: Option<String>,
 }
@@ -88,70 +82,16 @@ impl Record {
         &self.fields
     }
 
-    pub fn constructors(&self) -> &[Constructor] {
-        &self.constructors
-    }
-
-    pub fn methods(&self) -> &[Method] {
-        &self.methods
-    }
-
     pub fn docstring(&self) -> Option<&str> {
         self.docstring.as_deref()
     }
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
-        Box::new(
-            self.fields
-                .iter()
-                .flat_map(Field::iter_types)
-                .chain(self.constructors.iter().flat_map(Constructor::iter_types))
-                .chain(self.methods.iter().flat_map(Method::iter_types)),
-        )
+        Box::new(self.fields.iter().flat_map(Field::iter_types))
     }
 
     pub fn has_fields(&self) -> bool {
         !self.fields.is_empty()
-    }
-
-    pub fn uniffi_trait_methods(&self) -> UniffiTraitMethods {
-        UniffiTraitMethods::new(&self.uniffi_traits)
-    }
-
-    pub fn add_uniffi_trait(&mut self, t: UniffiTrait) {
-        self.uniffi_traits.push(t);
-    }
-
-    pub fn derive_ffi_funcs(&mut self) -> Result<()> {
-        for c in self.constructors.iter_mut() {
-            c.derive_ffi_func();
-        }
-        for m in self.methods.iter_mut() {
-            m.derive_ffi_func()?;
-        }
-        for ut in self.uniffi_traits.iter_mut() {
-            ut.derive_ffi_func()?;
-        }
-        Ok(())
-    }
-
-    pub fn iter_ffi_function_definitions(&self) -> impl Iterator<Item = &FfiFunction> {
-        self.constructors
-            .iter()
-            .map(|f| &f.ffi_func)
-            .chain(self.methods.iter().map(|f| &f.ffi_func))
-            .chain(
-                self.uniffi_traits
-                    .iter()
-                    .flat_map(|ut| match ut {
-                        UniffiTrait::Display { fmt: m }
-                        | UniffiTrait::Debug { fmt: m }
-                        | UniffiTrait::Hash { hash: m }
-                        | UniffiTrait::Ord { cmp: m } => vec![m],
-                        UniffiTrait::Eq { eq, ne } => vec![eq, ne],
-                    })
-                    .map(|m| &m.ffi_func),
-            )
     }
 }
 
@@ -177,9 +117,6 @@ impl TryFrom<uniffi_meta::RecordMetadata> for Record {
                 .into_iter()
                 .map(TryInto::try_into)
                 .collect::<Result<_>>()?,
-            constructors: vec![],
-            methods: vec![],
-            uniffi_traits: vec![],
             docstring: meta.docstring.clone(),
         })
     }
@@ -190,7 +127,7 @@ impl TryFrom<uniffi_meta::RecordMetadata> for Record {
 pub struct Field {
     pub(super) name: String,
     pub(super) type_: Type,
-    pub(super) default: Option<DefaultValue>,
+    pub(super) default: Option<Literal>,
     #[checksum_ignore]
     pub(super) docstring: Option<String>,
 }
@@ -204,7 +141,7 @@ impl Field {
         self.name = name;
     }
 
-    pub fn default_value(&self) -> Option<&DefaultValue> {
+    pub fn default_value(&self) -> Option<&Literal> {
         self.default.as_ref()
     }
 
@@ -241,8 +178,8 @@ impl TryFrom<uniffi_meta::FieldMetadata> for Field {
 
 #[cfg(test)]
 mod test {
+    use super::super::ComponentInterface;
     use super::*;
-    use crate::interface::{ComponentInterface, Literal};
     use uniffi_meta::Radix;
 
     #[test]
@@ -260,7 +197,7 @@ mod test {
             };
         "#;
         let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
-        assert_eq!(ci.record_definitions().len(), 3);
+        assert_eq!(ci.record_definitions().count(), 3);
 
         let record = ci.get_record_definition("Empty").unwrap();
         assert_eq!(record.name(), "Empty");
@@ -288,11 +225,7 @@ mod test {
         assert_eq!(record.fields()[1].as_type(), Type::UInt32);
         assert!(matches!(
             record.fields()[1].default_value(),
-            Some(DefaultValue::Literal(Literal::UInt(
-                0,
-                Radix::Decimal,
-                Type::UInt32
-            )))
+            Some(Literal::UInt(0, Radix::Decimal, Type::UInt32))
         ));
         assert_eq!(record.fields()[2].name(), "spin");
         assert_eq!(record.fields()[2].as_type(), Type::Boolean);
@@ -309,7 +242,7 @@ mod test {
             };
         "#;
         let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
-        assert_eq!(ci.record_definitions().len(), 1);
+        assert_eq!(ci.record_definitions().count(), 1);
         let record = ci.get_record_definition("Testing").unwrap();
         assert_eq!(record.fields().len(), 2);
         assert_eq!(record.fields()[0].name(), "maybe_name");

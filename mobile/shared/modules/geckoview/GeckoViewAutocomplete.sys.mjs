@@ -290,7 +290,6 @@ export class SelectOption {
     INSECURE_FORM: 1 << 1,
     DUPLICATE_USERNAME: 1 << 2,
     MATCHING_ORIGIN: 1 << 3,
-    FIREFOX_RELAY: 1 << 4,
   };
 
   constructor({ value, hint }) {
@@ -322,10 +321,10 @@ export const GeckoViewAutocomplete = {
   fetchLogins(aDomain = null) {
     debug`fetchLogins for ${aDomain ?? "All domains"}`;
 
-    return lazy.EventDispatcher.instance.sendRequestForResult(
-      "GeckoView:Autocomplete:Fetch:Login",
-      { domain: aDomain }
-    );
+    return lazy.EventDispatcher.instance.sendRequestForResult({
+      type: "GeckoView:Autocomplete:Fetch:Login",
+      domain: aDomain,
+    });
   },
 
   /**
@@ -341,9 +340,9 @@ export const GeckoViewAutocomplete = {
   fetchCreditCards() {
     debug`fetchCreditCards`;
 
-    return lazy.EventDispatcher.instance.sendRequestForResult(
-      "GeckoView:Autocomplete:Fetch:CreditCard"
-    );
+    return lazy.EventDispatcher.instance.sendRequestForResult({
+      type: "GeckoView:Autocomplete:Fetch:CreditCard",
+    });
   },
 
   /**
@@ -361,9 +360,9 @@ export const GeckoViewAutocomplete = {
   fetchAddresses() {
     debug`fetchAddresses`;
 
-    return lazy.EventDispatcher.instance.sendRequestForResult(
-      "GeckoView:Autocomplete:Fetch:Address"
-    );
+    return lazy.EventDispatcher.instance.sendRequestForResult({
+      type: "GeckoView:Autocomplete:Fetch:Address",
+    });
   },
 
   /**
@@ -375,10 +374,10 @@ export const GeckoViewAutocomplete = {
   onCreditCardSave(aCreditCard) {
     debug`onCreditCardSave ${aCreditCard}`;
 
-    lazy.EventDispatcher.instance.sendRequest(
-      "GeckoView:Autocomplete:Save:CreditCard",
-      { creditCard: aCreditCard }
-    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:Autocomplete:Save:CreditCard",
+      creditCard: aCreditCard,
+    });
   },
 
   /**
@@ -390,10 +389,10 @@ export const GeckoViewAutocomplete = {
   onAddressSave(aAddress) {
     debug`onAddressSave ${aAddress}`;
 
-    lazy.EventDispatcher.instance.sendRequest(
-      "GeckoView:Autocomplete:Save:Address",
-      { address: aAddress }
-    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:Autocomplete:Save:Address",
+      address: aAddress,
+    });
   },
 
   /**
@@ -406,10 +405,10 @@ export const GeckoViewAutocomplete = {
   onLoginSave(aLogin) {
     debug`onLoginSave ${aLogin}`;
 
-    lazy.EventDispatcher.instance.sendRequest(
-      "GeckoView:Autocomplete:Save:Login",
-      { login: aLogin }
-    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:Autocomplete:Save:Login",
+      login: aLogin,
+    });
   },
 
   /**
@@ -423,13 +422,11 @@ export const GeckoViewAutocomplete = {
   onLoginPasswordUsed(aLogin) {
     debug`onLoginUsed ${aLogin}`;
 
-    lazy.EventDispatcher.instance.sendRequest(
-      "GeckoView:Autocomplete:Used:Login",
-      {
-        usedFields: UsedField.PASSWORD,
-        login: aLogin,
-      }
-    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:Autocomplete:Used:Login",
+      usedFields: UsedField.PASSWORD,
+      login: aLogin,
+    });
   },
 
   _numActiveSelections: 0,
@@ -452,7 +449,7 @@ export const GeckoViewAutocomplete = {
         return;
       }
 
-      const prompt = new lazy.GeckoViewPrompter(aBrowser.documentGlobal);
+      const prompt = new lazy.GeckoViewPrompter(aBrowser.ownerGlobal);
       prompt.asyncShowPrompt(
         {
           type: "Autocomplete:Select:Login",
@@ -493,7 +490,7 @@ export const GeckoViewAutocomplete = {
         return;
       }
 
-      const prompt = new lazy.GeckoViewPrompter(aBrowser.documentGlobal);
+      const prompt = new lazy.GeckoViewPrompter(aBrowser.ownerGlobal);
       prompt.asyncShowPrompt(
         {
           type: "Autocomplete:Select:CreditCard",
@@ -534,7 +531,7 @@ export const GeckoViewAutocomplete = {
         return;
       }
 
-      const prompt = new lazy.GeckoViewPrompter(aBrowser.documentGlobal);
+      const prompt = new lazy.GeckoViewPrompter(aBrowser.ownerGlobal);
       prompt.asyncShowPrompt(
         {
           type: "Autocomplete:Select:Address",
@@ -644,23 +641,6 @@ export const GeckoViewAutocomplete = {
           }
           break;
         }
-        case "generic": {
-          const { fillMessageName } = JSON.parse(option.comment);
-          if (fillMessageName == "PasswordManager:firefoxRelay") {
-            // The Relay option may be passed along with address autocomplete items.
-            // Only set the selection type if it has not already been set.
-            if (!selectionType) {
-              selectionType = "login";
-            }
-            selectOptions.push(
-              new SelectOption({
-                value: {},
-                hint: SelectOption.Hint.FIREFOX_RELAY | insecureHint,
-              })
-            );
-          }
-          break;
-        }
         default:
           debug`delegateSelection - ignoring unknown option style ${option.style}`;
       }
@@ -708,10 +688,7 @@ export const GeckoViewAutocomplete = {
 
     debug`delegateSelection selected option: ${selectedOption}`;
 
-    if (
-      selectionType === "login" ||
-      SelectOption.Hint.FIREFOX_RELAY & selectedOption.hint
-    ) {
+    if (selectionType === "login") {
       const selectedLogin = selectedOption?.value?.toLoginInfo();
 
       if (!selectedLogin) {

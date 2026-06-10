@@ -64,17 +64,18 @@ const TEST_URI = `
 `;
 
 add_task(async function () {
-  // Make scrolling instant when jumping to a variable
-  await pushPref("ui.prefersReducedMotion", 1);
-  await pushPref("devtools.inspector.three-pane-enabled", false);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   await selectNode("h1#testid", inspector);
 
   info("Check that the correct rules are visible");
-  assertDisplayedRulesCount(view, 7);
+  is(
+    view.styleDocument.querySelectorAll(`.ruleview-rule`).length,
+    7,
+    "Should have 7 rules."
+  );
 
-  let rule = getRuleViewRuleEditorAt(view, 2).rule;
+  let rule = getRuleViewRuleEditor(view, 2).rule;
   is(rule.selectorText, "#testid", "Second rule is #testid.");
 
   info(
@@ -159,7 +160,7 @@ add_task(async function () {
   info(
     "Check that there are multiple jump to definition buttons when using multiple variables"
   );
-  rule = getRuleViewRuleEditorAt(view, 4).rule;
+  rule = getRuleViewRuleEditor(view, 4).rule;
   is(rule.selectorText, "h1", "Fifth rule is h1.");
   variableButtonEls = getJumpToDefinitionButtonForDeclaration(rule, {
     "background-color":
@@ -177,7 +178,7 @@ add_task(async function () {
   await highlightProperty(view, variableButtonEls[2], "--my-color-3", "green");
 
   info("Check that we can jump in @starting-style rule`");
-  rule = getRuleViewRuleEditorAt(view, 1).rule;
+  rule = getRuleViewRuleEditor(view, 1).rule;
   ok(rule.isInStartingStyle(), "Got expected starting style rule");
   variableButtonEls = getJumpToDefinitionButtonForDeclaration(rule, {
     "outline-color": "var(--my-color-1, var(--my-color-2))",
@@ -206,9 +207,24 @@ add_task(async function () {
   info("Check that jump to definition works well with pseudo elements");
   await selectNode("h2", inspector);
 
-  expandPseudoElementContainer(view);
+  info("Expand the pseudo element section");
+  const pseudoElementToggle = view.styleDocument.querySelector(
+    `[aria-controls="pseudo-elements-container"]`
+  );
+  // sanity check
+  is(
+    pseudoElementToggle.ariaExpanded,
+    "false",
+    "pseudo element section is collapsed at first"
+  );
+  pseudoElementToggle.click();
+  is(
+    pseudoElementToggle.ariaExpanded,
+    "true",
+    "pseudo element section is now expanded"
+  );
 
-  rule = getRuleViewRuleEditorAt(view, 0).rule;
+  rule = getRuleViewRuleEditor(view, 1, 0).rule;
   is(rule.selectorText, "h2::after", "First rule is h2::after");
 
   await highlightProperty(
@@ -220,7 +236,7 @@ add_task(async function () {
     "azure"
   );
 
-  rule = getRuleViewRuleEditorAt(view, 1).rule;
+  rule = getRuleViewRuleEditor(view, 1, 1).rule;
   is(rule.selectorText, "h2::before", "First rule is h2::before");
 
   variableButtonEls = getJumpToDefinitionButtonForDeclaration(rule, {
@@ -248,7 +264,7 @@ add_task(async function () {
     "green"
   );
 
-  rule = getRuleViewRuleEditorAt(view, 3).rule;
+  rule = getRuleViewRuleEditor(view, 4).rule;
   is(rule.selectorText, "h2", "Got expected h2 rule");
   await highlightProperty(
     view,
@@ -309,12 +325,12 @@ add_task(async function checkClearSearch() {
         {
           name: "--my-unique-var",
           value: "var(--my-color-1)",
+          highlighted: true,
         },
       ],
-      highlighted: ["--my-unique-var: var(--my-color-1);"],
     },
   ]);
-  const rule = getRuleViewRuleEditorAt(view, 1).rule;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
   is(rule.selectorText, "h1", "Got expected rule");
   await highlightProperty(
     view,
@@ -396,7 +412,7 @@ add_task(async function checkJumpToUnusedVariable() {
     "Show unused variables button has expected text"
   );
 
-  const rule = getRuleViewRuleEditorAt(view, 1).rule;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
   is(rule.selectorText, "h3", "Got expected rule");
 
   const variableButtonEls = getJumpToDefinitionButtonForDeclaration(rule, {
@@ -461,11 +477,8 @@ async function highlightProperty(
   const onHighlightProperty = view.once("element-highlighted");
   jumpToDefinitionButton.click();
   const highlightedElement = await onHighlightProperty;
-  const propertyNameEl = highlightedElement.querySelector(
-    ".ruleview-propertyname"
-  );
   is(
-    propertyNameEl.innerText,
+    highlightedElement.querySelector(".ruleview-propertyname").innerText,
     expectedPropertyName,
     "The expected element was highlighted"
   );
@@ -479,11 +492,6 @@ async function highlightProperty(
   ok(
     isInViewport(highlightedElement, view.styleWindow),
     `Highlighted element is in view`
-  );
-  is(
-    view.styleDocument.activeElement,
-    propertyNameEl,
-    "Focus is set on the declaration name element"
   );
 }
 

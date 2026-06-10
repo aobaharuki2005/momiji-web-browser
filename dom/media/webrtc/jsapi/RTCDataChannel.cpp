@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -124,6 +126,7 @@ nsresult RTCDataChannel::Init() {
           // Also allow ourselves to be GC'ed
           UnsetWorkerNeedsUs();
           DontKeepAliveAnyMore();
+          mWorkerRef = nullptr;
         });
     if (NS_WARN_IF(!strongWorkerRef)) {
       DC_WARN(("%p: Could not get worker ref, breaking cycles", this));
@@ -600,7 +603,8 @@ dom::RTCDataChannelStats RTCDataChannel::GetStats(
 void RTCDataChannel::UnsetWorkerNeedsUs() {
   MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   mWorkerNeedsUs = false;
-  DC_INFO(("%p: Unsetting mWorkerNeedsUs", this));
+  DC_INFO(("%p: Unsetting mWorkerNeedsUs, clearing worker weak ref", this));
+  mWorkerRef = nullptr;
   UpdateMustKeepAlive();
 }
 
@@ -689,8 +693,6 @@ nsresult RTCDataChannel::DoOnMessageAvailable(const nsACString& aData,
     return NS_OK;
   }
 
-  MOZ_ASSERT(mReadyState == RTCDataChannelState::Open);
-
   DC_VERBOSE(("%p: DoOnMessageAvailable%s\n", this,
               aBinary
                   ? ((mBinaryType == RTCDataChannelType::Blob) ? " (blob)"
@@ -716,7 +718,7 @@ nsresult RTCDataChannel::DoOnMessageAvailable(const nsACString& aData,
   if (aBinary) {
     if (mBinaryType == RTCDataChannelType::Blob) {
       RefPtr<Blob> blob =
-          Blob::CreateStringBlob(GetRelevantGlobal(), aData, u""_ns);
+          Blob::CreateStringBlob(GetOwnerGlobal(), aData, u""_ns);
       if (NS_WARN_IF(!blob)) {
         DC_ERROR(("%p: RTCDataChannel::%s: CreateStringBlob failed", this,
                   __func__));
@@ -745,7 +747,7 @@ nsresult RTCDataChannel::DoOnMessageAvailable(const nsACString& aData,
     jsData.setString(jsString);
   }
 
-  RefPtr event = MakeRefPtr<MessageEvent>(this, nullptr, nullptr);
+  RefPtr<MessageEvent> event = new MessageEvent(this, nullptr, nullptr);
 
   event->InitMessageEvent(nullptr, u"message"_ns, CanBubble::eNo,
                           Cancelable::eNo, jsData, mOrigin, u""_ns, nullptr,
@@ -859,15 +861,11 @@ void RTCDataChannel::DontKeepAliveAnyMore() {
   MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   mCheckMustKeepAlive = false;
 
+  mWorkerRef = nullptr;
+
   if (mSelfRef) {
     // Force an eventloop trip to avoid deleting ourselves.
     ReleaseSelf();
-  }
-
-  if (mWorkerRef) {
-    // Release this after we've released mSelfRef
-    NS_ProxyRelease("RTCDataChannel::mWorkerRef", mEventTarget,
-                    mWorkerRef.forget(), true);
   }
 }
 
@@ -875,8 +873,7 @@ void RTCDataChannel::ReleaseSelf() {
   MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
   DC_INFO(("%p: Releasing self-ref", this));
   // release our self-reference (safely) by putting it in an event (always)
-  NS_ProxyRelease("RTCDataChannel::mSelfRef", mEventTarget, mSelfRef.forget(),
-                  true);
+  NS_ProxyRelease("RTCDataChannel::mSelfRef", mEventTarget, mSelfRef.forget());
 }
 
 void RTCDataChannel::EventListenerAdded(nsAtom* aType) {
@@ -914,7 +911,7 @@ nsresult NS_NewDOMDataChannel(already_AddRefed<DataChannel>&& aDataChannel,
                               const nsACString& aProtocol, bool aNegotiated,
                               nsPIDOMWindowInner* aWindow,
                               RTCDataChannel** aDomDataChannel) {
-  RefPtr domdc = MakeRefPtr<RTCDataChannel>(
+  RefPtr<RTCDataChannel> domdc = new RTCDataChannel(
       aLabel, aOrigin, aOrdered, aMaxLifeTime, aMaxRetransmits, aProtocol,
       aNegotiated, aDataChannel, aWindow);
 

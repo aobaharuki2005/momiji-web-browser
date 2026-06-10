@@ -16,7 +16,6 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.utils.PersistStoryUTMRequestInterceptor
 
 /**
  * Component group which encapsulates foreground-friendly services.
@@ -51,9 +50,5 @@ class Services(
             launchFromInterceptor = false,
             store = store,
         )
-    }
-
-    val storyUTMRequestInterceptor by lazyMonitored {
-        PersistStoryUTMRequestInterceptor()
     }
 }

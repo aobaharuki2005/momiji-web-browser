@@ -17,6 +17,9 @@ sslfnc
    .. rubric:: SSL Functions
       :name: SSL_Functions
 
+   --------------
+
+.. _chapter_4_ssl_functions:
 
 `Chapter 4 SSL Functions <#chapter_4_ssl_functions>`__
 ------------------------------------------------------
@@ -66,6 +69,7 @@ sslfnc
    Database files are opened read-only.
 
    .. rubric:: Syntax
+      :name: syntax
 
    .. code::
 
@@ -76,6 +80,7 @@ sslfnc
       SECStatus NSS_Init(char *configdir);
 
    .. rubric:: Parameter
+      :name: parameter
 
    This function has the following parameter:
 
@@ -85,6 +90,7 @@ sslfnc
    +---------------+---------------------------------------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns
 
    The function returns one of these value\ ``s``:
 
@@ -92,6 +98,7 @@ sslfnc
    -  If unsuccessful, ``SECFailure``. Use ``PR_GetError`` to retrieve the error code.
 
    .. rubric:: Description
+      :name: description
 
    ``NSS_Init`` opens the ``cert``\ *N*\ ``.db``, ``key``\ *N*\ ``.db``, and ``secmod.db`` files
    (where\ *N* is a numeric digit) in the specified directory. ``NSS_Init`` is\ *not* idempotent, so
@@ -109,12 +116,9 @@ sslfnc
    Functions <#1098841>`__:
 
    -   ```NSS_SetDomesticPolicy`` <#1228530>`__, ```NSS_SetExportPolicy`` <#1100285>`__, and
-
       ```NSS_SetFrancePolicy`` <#1105952>`__ configure the cipher suites for domestic,
       international, and French versions of software products with encryption features.
-
    -   ```SSL_CipherPolicySet`` <#1104647>`__ sets policy flags for individual cipher suites, one at
-
       a time. This may be helpful if you have an export license that permits more or fewer
       capabilities than those allowed by the other export policy functions.
 
@@ -126,6 +130,7 @@ sslfnc
    database files.
 
    .. rubric:: Syntax
+      :name: syntax_2
 
    .. code::
 
@@ -136,6 +141,7 @@ sslfnc
       SECStatus NSS_InitReadWrite(char *configdir);
 
    .. rubric:: Parameter
+      :name: parameter_2
 
    This function has the following parameter:
 
@@ -145,6 +151,7 @@ sslfnc
    +---------------+---------------------------------------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_2
 
    The function returns one of these value\ ``s``:
 
@@ -152,6 +159,7 @@ sslfnc
    -  If unsuccessful, ``SECFailure``. Use ``PR_GetError`` to retrieve the error code.
 
    .. rubric:: Description
+      :name: description_2
 
    ``NSS_InitReadWrite`` opens the ``cert``\ *N*\ ``.db``, ``key``\ *N*\ ``.db``, and ``secmod.db``
    files (where\ *N* is a numeric digit) with both read and write permission in the specified
@@ -175,6 +183,7 @@ sslfnc
    certificate and key database files be opened.
 
    .. rubric:: Syntax
+      :name: syntax_3
 
    .. code::
 
@@ -194,6 +203,7 @@ sslfnc
    ============ ====================
 
    .. rubric:: Returns
+      :name: returns_3
 
    The function returns one of these value\ ``s``:
 
@@ -201,6 +211,7 @@ sslfnc
    -  If unsuccessful, ``SECFailure``. Use ``PR_GetError`` to retrieve the error code.
 
    .. rubric:: Description
+      :name: description_3
 
    ``NSS_NoDB_Init`` opens only the temporary database and the internal PKCS #112 module. Unlike
    ``NSS_Init``, ``NSS_NoDB_Init`` allows applications that do not have access to storage for
@@ -224,6 +235,7 @@ sslfnc
    ``SSL_OptionSetDefault`` replaces the deprecated function ```SSL_EnableDefault`` <#1206365>`__.
 
    .. rubric:: Syntax
+      :name: syntax_4
 
    .. code::
 
@@ -234,6 +246,7 @@ sslfnc
       SECStatus SSL_OptionSetDefault(PRInt32 option, PRBool on);
 
    .. rubric:: Parameters
+      :name: parameters
 
    This function has the following parameters:
 
@@ -345,6 +358,7 @@ sslfnc
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_4
 
    The function returns one of these values:
 
@@ -354,6 +368,7 @@ sslfnc
       to obtain the error code.
 
    .. rubric:: Description
+      :name: description_4
 
    This function changes the default values for all subsequently opened sockets as long as the
    current application program is running. This function must be called once for each default value
@@ -433,6 +448,7 @@ sslfnc
    ```SSL_OptionSetDefault`` <#1068466>`__.
 
    .. rubric:: Syntax
+      :name: syntax_5
 
    .. code::
 
@@ -443,6 +459,7 @@ sslfnc
       SECStatus SSL_OptionGetDefault(PRInt32 option, PRBool *on)
 
    .. rubric:: Parameters
+      :name: parameters_2
 
    This function has the parameters listed below.
 
@@ -458,6 +475,7 @@ sslfnc
    +------------+------------------------------------------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_5
 
    The function returns one of these value\ ``s``:
 
@@ -467,6 +485,7 @@ sslfnc
       to obtain error code.
 
    .. rubric:: Description
+      :name: description_5
 
    ``SSL_CipherPrefGetDefault`` gets the application default preference for the specified SSL2,
    SSL3, or TLS cipher A cipher suite is used only if the policy allows it and the preference for it
@@ -480,6 +499,7 @@ sslfnc
    This function must be called once for each cipher you want to enable or disable by default.
 
    .. rubric:: Syntax
+      :name: syntax_6
 
    .. code::
 
@@ -490,6 +510,7 @@ sslfnc
       SECStatus SSL_CipherPrefSetDefault(PRInt32 cipher, PRBool enabled);
 
    .. rubric:: Parameters
+      :name: parameters_3
 
    This function has the following parameters:
 
@@ -553,6 +574,7 @@ sslfnc
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_6
 
    The function returns one of these values:
 
@@ -562,6 +584,7 @@ sslfnc
       to obtain the error code.
 
    .. rubric:: Description
+      :name: description_6
 
    The CipherPrefSetDefault function enables or disables individual cipher suites globally. You
    typically call this in response to changes in user-controlled settings. You must call this
@@ -614,6 +637,7 @@ sslfnc
    Gets the current default preference setting for a specified SSL2 or SSL3 cipher suite.
 
    .. rubric:: Syntax
+      :name: syntax_7
 
    .. code::
 
@@ -624,6 +648,7 @@ sslfnc
       SECStatus SSL_CipherPrefSetDefault(PRInt32 cipher, PRBool *enabled);
 
    .. rubric:: Parameters
+      :name: parameters_4
 
    This function has the parameters listed below.
 
@@ -637,6 +662,7 @@ sslfnc
    +---------+---------------------------------------------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_7
 
    The function returns one of these value\ ``s``:
 
@@ -646,6 +672,7 @@ sslfnc
       to obtain error code.
 
    .. rubric:: Description
+      :name: description_7
 
    ``SSL_CipherPrefGetDefault`` performs the complementary function to ``SSL_CipherPrefSetDefault``.
    It returns the application process' current default preference value for the specified cipher
@@ -658,6 +685,7 @@ sslfnc
    Empties the SSL client session ID cache.
 
    .. rubric:: Syntax
+      :name: syntax_8
 
    .. code::
 
@@ -668,6 +696,7 @@ sslfnc
       void SSL_ClearSessionCache(void);
 
    .. rubric:: Description
+      :name: description_8
 
    You must call ``SSL_ClearSessionCache`` after you use one of the `SSL Export Policy
    Functions <#1098841>`__ to change cipher suite policy settings or use
@@ -692,6 +721,7 @@ sslfnc
    Sets up parameters for and opens the server session cache for a single-process application.
 
    .. rubric:: Syntax
+      :name: syntax_9
 
    .. code::
 
@@ -706,6 +736,7 @@ sslfnc
          const char *directory);
 
    .. rubric:: Parameters
+      :name: parameters_5
 
    This function has the parameters listed below.
 
@@ -727,6 +758,7 @@ sslfnc
    +---------------------+---------------------------------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_8
 
    The function returns one of these value\ ``s``:
 
@@ -796,6 +828,7 @@ sslfnc
    Sets up parameters for and opens the server session cache for a multi-process application.
 
    .. rubric:: Syntax
+      :name: syntax_10
 
    .. code::
 
@@ -810,6 +843,7 @@ sslfnc
          const char *directory);
 
    .. rubric:: Parameters
+      :name: parameters_6
 
    This function has the parameters listed below.
 
@@ -831,6 +865,7 @@ sslfnc
    +---------------------+---------------------------------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_9
 
    The function returns one of these value\ ``s``:
 
@@ -874,6 +909,7 @@ sslfnc
    Ensures the inheritance of file descriptors to a child process.
 
    .. rubric:: Syntax
+      :name: syntax_11
 
    .. code::
 
@@ -884,6 +920,7 @@ sslfnc
       SECStatus SSL_InheritMPServerSIDCache (const char *envString);
 
    .. rubric:: Parameters
+      :name: parameters_7
 
    This function has the following parameter:
 
@@ -899,6 +936,7 @@ sslfnc
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_10
 
    The function returns one of these values:
 
@@ -975,6 +1013,7 @@ sslfnc
    software products with encryption features.
 
    .. rubric:: Syntax
+      :name: syntax_12
 
    .. code::
 
@@ -985,6 +1024,7 @@ sslfnc
       extern SECStatus NSS_SetDomesticPolicy(void);
 
    .. rubric:: Returns
+      :name: returns_11
 
    The function returns one of these values:
 
@@ -1031,6 +1071,7 @@ sslfnc
    international software products with encryption features.
 
    .. rubric:: Syntax
+      :name: syntax_13
 
    .. code::
 
@@ -1173,6 +1214,7 @@ sslfnc
       SECStatus SSL_CipherPolicySet(PRInt32 cipher, PRInt32 policy);
 
    .. rubric:: Parameters
+      :name: parameters_8
 
    This function has the following parameters:
 
@@ -1290,6 +1332,7 @@ sslfnc
    session cache and will be used instead of the new settings.
 
    .. rubric:: See Also
+      :name: see_also
 
    Permitting a cipher suite is not necessarily the same as enabling it. For details, see `SSL
    Export Policy Functions <#1098841>`__.
@@ -1317,6 +1360,7 @@ sslfnc
       SECStatus SSL_CipherPolicyGet(PRInt32 cipher, PRInt32 *policy);
 
    .. rubric:: Parameters
+      :name: parameters_9
 
    This function has the following parameters:
 
@@ -1389,6 +1433,7 @@ sslfnc
          PRFileDesc *fd);
 
    .. rubric:: Parameters
+      :name: parameters_10
 
    This function has the following parameters:
 
@@ -1449,6 +1494,7 @@ sslfnc
          PRBool on);
 
    .. rubric:: Parameters
+      :name: parameters_11
 
    This function has the following parameters:
 
@@ -3115,7 +3161,6 @@ sslfnc
    -   ``PR_Accept``
    -   ```SSL_ReHandshake`` <#1232052>`__ (after the first handshake is finished)
    -   ```SSL_ResetHandshake`` <#1058001>`__ (for sockets that were connected or accepted prior to
-
       being imported)
 
    A call to ``SSL_ForceHandshake`` will almost always be preceded by one of those functions.

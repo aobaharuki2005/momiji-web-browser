@@ -14,7 +14,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertIs
 
 @RunWith(RobolectricTestRunner::class)
 class SplashScreenManagerTest {
@@ -82,7 +81,7 @@ class SplashScreenManagerTest {
         assertNull(result)
         testScheduler.advanceUntilIdle()
         assertTrue(operation.disposed)
-        assertIs<SplashScreenManagerResult.OperationFinished>(result)
+        assertTrue(result is SplashScreenManagerResult.OperationFinished)
     }
 
     @Test
@@ -101,7 +100,7 @@ class SplashScreenManagerTest {
 
         assertNull(result)
         testScheduler.advanceUntilIdle()
-        assertIs<SplashScreenManagerResult.OperationFinished>(result)
+        assertTrue(result is SplashScreenManagerResult.OperationFinished)
         assertTrue(operation.disposed)
     }
 

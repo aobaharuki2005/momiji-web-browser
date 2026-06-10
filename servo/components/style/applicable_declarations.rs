@@ -6,7 +6,7 @@
 
 use crate::derives::*;
 use crate::properties::PropertyDeclarationBlock;
-use crate::rule_tree::{CascadeLevel, RuleCascadeFlags, StyleSource};
+use crate::rule_tree::{CascadeLevel, StyleSource};
 use crate::shared_lock::Locked;
 use crate::stylesheets::layer_rule::LayerOrder;
 use servo_arc::Arc;
@@ -40,7 +40,6 @@ const SOURCE_ORDER_MASK: u32 = SOURCE_ORDER_MAX;
 #[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq)]
 pub struct CascadePriority {
     cascade_level: CascadeLevel,
-    flags: RuleCascadeFlags,
     layer_order: LayerOrder,
 }
 
@@ -84,41 +83,13 @@ impl Ord for CascadePriority {
     }
 }
 
-/// The kind of revert that we're applying.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum RevertKind {
-    /// revert
-    Origin,
-    /// revert-layer
-    Layer,
-    /// revert-rule
-    Rule,
-}
-
 impl CascadePriority {
-    /// Construct a new CascadePriority for a given (level, order, flags) triple.
-    pub fn new(
-        cascade_level: CascadeLevel,
-        layer_order: LayerOrder,
-        flags: RuleCascadeFlags,
-    ) -> Self {
+    /// Construct a new CascadePriority for a given (level, order) pair.
+    pub fn new(cascade_level: CascadeLevel, layer_order: LayerOrder) -> Self {
         Self {
             cascade_level,
-            flags,
             layer_order,
         }
-    }
-
-    /// Returns the flags.
-    #[inline]
-    pub fn flags(&self) -> RuleCascadeFlags {
-        self.flags
-    }
-
-    /// Set given flags.
-    #[inline]
-    pub fn set_flags(&mut self, flags: RuleCascadeFlags) {
-        self.flags.insert(flags);
     }
 
     /// Returns the layer order.
@@ -133,47 +104,32 @@ impl CascadePriority {
         self.cascade_level
     }
 
-    /// Whether this declaration should be allowed if `revert` / `revert-layer` / `revert-rule`
+    /// Whether this declaration should be allowed if `revert` or `revert-layer`
     /// have been specified on a given origin.
     ///
-    /// `self` is the priority at which the revert has been specified.
-    pub fn allows_when_reverted(&self, other: &Self, kind: RevertKind) -> bool {
-        match kind {
-            RevertKind::Origin => {
-                other.cascade_level.origin().origin() < self.cascade_level.origin().origin()
-            },
-            RevertKind::Layer => other.unimportant() < self.unimportant(),
-            // Any other declaration for the same property we apply in the cascade needs to come
-            // from another rule effectively.
-            RevertKind::Rule => true,
+    /// `self` is the priority at which the `revert` or `revert-layer` keyword
+    /// have been specified.
+    pub fn allows_when_reverted(&self, other: &Self, origin_revert: bool) -> bool {
+        if origin_revert {
+            other.cascade_level.origin() < self.cascade_level.origin()
+        } else {
+            other.unimportant() < self.unimportant()
         }
     }
 
     /// Convert this priority from "important" to "non-important", if needed.
     pub fn unimportant(&self) -> Self {
-        Self {
-            cascade_level: self.cascade_level.unimportant(),
-            flags: self.flags,
-            layer_order: self.layer_order,
-        }
+        Self::new(self.cascade_level().unimportant(), self.layer_order())
     }
 
     /// Convert this priority from "non-important" to "important", if needed.
     pub fn important(&self) -> Self {
-        Self {
-            cascade_level: self.cascade_level.important(),
-            flags: self.flags,
-            layer_order: self.layer_order,
-        }
+        Self::new(self.cascade_level().important(), self.layer_order())
     }
 
     /// The same tree, in author origin, at the root layer.
     pub fn same_tree_author_normal_at_root_layer() -> Self {
-        Self::new(
-            CascadeLevel::same_tree_author_normal(),
-            LayerOrder::root(),
-            RuleCascadeFlags::empty(),
-        )
+        Self::new(CascadeLevel::same_tree_author_normal(), LayerOrder::root())
     }
 }
 
@@ -257,7 +213,7 @@ impl ApplicableDeclarationBlock {
             source_order: 0,
             specificity: 0,
             scope_proximity: ScopeProximity::infinity(),
-            cascade_priority: CascadePriority::new(level, layer_order, RuleCascadeFlags::empty()),
+            cascade_priority: CascadePriority::new(level, layer_order),
         }
     }
 
@@ -270,14 +226,13 @@ impl ApplicableDeclarationBlock {
         specificity: u32,
         layer_order: LayerOrder,
         scope_proximity: ScopeProximity,
-        flags: RuleCascadeFlags,
     ) -> Self {
         ApplicableDeclarationBlock {
             source,
             source_order: source_order & SOURCE_ORDER_MASK,
             specificity,
             scope_proximity,
-            cascade_priority: CascadePriority::new(level, layer_order, flags),
+            cascade_priority: CascadePriority::new(level, layer_order),
         }
     }
 

@@ -28,7 +28,6 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Compani
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_RESUME
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_TRY_AGAIN
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobState
-import mozilla.components.support.utils.DownloadFileUtils
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
@@ -159,8 +158,7 @@ internal object DownloadNotification {
         downloadState: DownloadState,
         createdTime: Long,
         notificationAccentColor: Int,
-        downloadFileUtils: DownloadFileUtils,
-        contentIntent: PendingIntent = createOpenFilePendingIntent(context, downloadState, downloadFileUtils),
+        contentIntent: PendingIntent = createOpenFilePendingIntent(context, downloadState),
     ): Notification {
         val channelId = ensureChannelExists(context)
 
@@ -175,7 +173,6 @@ internal object DownloadNotification {
             .setColor(ContextCompat.getColor(context, notificationAccentColor))
             .setContentIntent(contentIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setAutoCancel(true)
             .setDeleteIntent(createDismissPendingIntent(context, downloadState.id))
             .setCompatGroup(NOTIFICATION_GROUP_KEY)
             .build()
@@ -259,17 +256,15 @@ internal object DownloadNotification {
         return NOTIFICATION_CHANNEL_ID
     }
 
-    private fun createOpenFilePendingIntent(
-        context: Context,
-        downloadState: DownloadState,
-        downloadFileUtils: DownloadFileUtils,
-    ) =
+    private fun createOpenFilePendingIntent(context: Context, downloadState: DownloadState) =
         PendingIntent.getActivity(
             context,
             0,
-            downloadFileUtils.createOpenFileIntent(
-                fileName = downloadState.fileName,
-                directoryPath = downloadState.directoryPath,
+            AbstractFetchDownloadService.createOpenFileIntent(
+                context = context,
+                packageName = context.packageName,
+                downloadFileName = downloadState.fileName,
+                downloadFilePath = downloadState.filePath,
                 downloadContentType = downloadState.contentType,
             ),
             PendingIntent.FLAG_IMMUTABLE,

@@ -36,7 +36,7 @@ use anyhow::Result;
 use uniffi_meta::Checksum;
 
 use super::ffi::{FfiArgument, FfiFunction, FfiType};
-use super::{AsType, ComponentInterface, DefaultValue, ObjectImpl, Type, TypeIterator};
+use super::{AsType, ComponentInterface, Literal, ObjectImpl, Type, TypeIterator};
 
 /// Represents a standalone function.
 ///
@@ -131,10 +131,6 @@ impl Function {
     pub fn docstring(&self) -> Option<&str> {
         self.docstring.as_deref()
     }
-
-    pub fn checksum_from_metadata(meta: uniffi_meta::FnMetadata) -> u16 {
-        uniffi_meta::checksum(&Self::from(meta))
-    }
 }
 
 impl From<uniffi_meta::FnParamMetadata> for Argument {
@@ -187,7 +183,7 @@ pub struct Argument {
     pub(super) type_: Type,
     pub(super) by_ref: bool,
     pub(super) optional: bool,
-    pub(super) default: Option<DefaultValue>,
+    pub(super) default: Option<Literal>,
 }
 
 impl Argument {
@@ -207,7 +203,7 @@ impl Argument {
         matches!(&self.type_, Type::Object { imp, .. } if *imp == ObjectImpl::Trait)
     }
 
-    pub fn default_value(&self) -> Option<&DefaultValue> {
+    pub fn default_value(&self) -> Option<&Literal> {
         self.default.as_ref()
     }
 
@@ -255,11 +251,9 @@ pub trait Callable {
     fn throws_type(&self) -> Option<&Type>;
     fn is_async(&self) -> bool;
     fn docstring(&self) -> Option<&str>;
-
-    fn self_type(&self) -> Option<Type> {
-        None
+    fn takes_self(&self) -> bool {
+        false
     }
-
     fn result_type(&self) -> ResultType<'_> {
         ResultType {
             return_type: self.return_type(),
@@ -360,8 +354,8 @@ impl<T: Callable> Callable for &T {
         (*self).ffi_func()
     }
 
-    fn self_type(&self) -> Option<Type> {
-        (*self).self_type()
+    fn takes_self(&self) -> bool {
+        (*self).takes_self()
     }
 }
 

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -31,12 +33,9 @@ class ProxyObject : public JSObject {
                   "proxy object size must match GC thing size");
     static_assert(offsetof(ProxyObject, data) == detail::ProxyDataOffset,
                   "proxy object layout must match shadow interface");
-  }
-
-  // The ProxyValueArray is always stored inline immediately after the
-  // ProxyObject header.
-  static constexpr size_t offsetOfProxyValueArray() {
-    return sizeof(ProxyObject);
+    static_assert(offsetof(ProxyObject, data.reservedSlots) ==
+                      offsetof(JS::shadow::Object, slots),
+                  "Proxy reservedSlots must overlay native object slots field");
   }
 
  public:
@@ -44,14 +43,30 @@ class ProxyObject : public JSObject {
                           HandleValue priv, TaggedProto proto_,
                           const JSClass* clasp);
 
-  static void swap(JSContext* cx, JS::Handle<ProxyObject*> a,
-                   JS::Handle<ProxyObject*> b,
-                   AutoEnterOOMUnsafeRegion& oomUnsafe);
-
   void init(const BaseProxyHandler* handler, HandleValue priv, JSContext* cx);
 
+  // Proxies usually store their ProxyValueArray inline in the object.
+  // There's one unfortunate exception: when a proxy is swapped with another
+  // object, and the sizes don't match, we malloc the ProxyValueArray.
+  void* inlineDataStart() const {
+    return (void*)(uintptr_t(this) + sizeof(ProxyObject));
+  }
+  bool usingInlineValueArray() const {
+    return data.values() == inlineDataStart();
+  }
+  void setInlineValueArray() {
+    data.reservedSlots =
+        &reinterpret_cast<detail::ProxyValueArray*>(inlineDataStart())
+             ->reservedSlots;
+  }
+
+  // For use from JSObject::swap.
+  [[nodiscard]] bool prepareForSwap(JSContext* cx,
+                                    MutableHandleValueVector valuesOut);
+  [[nodiscard]] bool fixupAfterSwap(JSContext* cx, HandleValueVector values);
+
   const Value& private_() const { return GetProxyPrivate(this); }
-  JSObject* expando() const { return GetProxyExpando(this); }
+  const Value& expando() const { return GetProxyExpando(this); }
 
   void setExpando(JSObject* expando);
 
@@ -63,20 +78,14 @@ class ProxyObject : public JSObject {
   const BaseProxyHandler* handler() const { return GetProxyHandler(this); }
 
   void setHandler(const BaseProxyHandler* handler) {
-    detail::GetProxyDataLayout(this)->handler = handler;
+    SetProxyHandler(this, handler);
   }
 
-  static constexpr size_t offsetOfHandler() {
+  static size_t offsetOfReservedSlots() {
+    return offsetof(ProxyObject, data.reservedSlots);
+  }
+  static size_t offsetOfHandler() {
     return offsetof(ProxyObject, data.handler);
-  }
-  static constexpr size_t offsetOfPrivateSlot() {
-    return offsetOfProxyValueArray() +
-           offsetof(detail::ProxyValueArray, privateSlot);
-  }
-  static constexpr size_t offsetOfReservedSlot(size_t n) {
-    return offsetOfProxyValueArray() +
-           offsetof(detail::ProxyValueArray, reservedSlots) +
-           n * sizeof(JS::Value);
   }
 
   size_t numReservedSlots() const { return JSCLASS_RESERVED_SLOTS(getClass()); }
@@ -93,7 +102,7 @@ class ProxyObject : public JSObject {
  private:
   GCPtr<Value>* reservedSlotPtr(size_t n) {
     return reinterpret_cast<GCPtr<Value>*>(
-        &detail::GetProxyDataLayout(this)->values()->reservedSlots[n]);
+        &detail::GetProxyDataLayout(this)->reservedSlots->slots[n]);
   }
 
   GCPtr<Value>* slotOfPrivate() {
@@ -101,9 +110,9 @@ class ProxyObject : public JSObject {
         &detail::GetProxyDataLayout(this)->values()->privateSlot);
   }
 
-  GCPtr<JSObject*>* expandoPtr() {
-    return reinterpret_cast<GCPtr<JSObject*>*>(
-        &detail::GetProxyDataLayout(this)->expando);
+  GCPtr<Value>* slotOfExpando() {
+    return reinterpret_cast<GCPtr<Value>*>(
+        &detail::GetProxyDataLayout(this)->values()->expandoSlot);
   }
 
   void setPrivate(const Value& priv);
@@ -127,6 +136,8 @@ class ProxyObject : public JSObject {
   static void trace(JSTracer* trc, JSObject* obj);
 
   static void traceEdgeToTarget(JSTracer* trc, ProxyObject* obj);
+
+  void nurseryProxyTenured(ProxyObject* old);
 
   void nuke();
 };

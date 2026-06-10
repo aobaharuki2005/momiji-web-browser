@@ -22,7 +22,7 @@ macro_rules! declare_component {
                 let component = Ident::new(component, Span::mixed_site());
 
                 quote_append! { ts
-                    Component::#(component)(#S(mts))
+                    ::time::format_description::Component::#(component)(#S(mts))
                 }
             }
         }

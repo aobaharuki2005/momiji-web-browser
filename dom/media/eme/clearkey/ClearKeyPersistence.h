@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ClearKeyPersistence_h_
-#define ClearKeyPersistence_h_
+#ifndef __ClearKeyPersistence_h__
+#define __ClearKeyPersistence_h__
 
 // This include is required in order for content_decryption_module to work
 // on Unix systems.
@@ -58,4 +58,4 @@ class ClearKeyPersistence : public RefCounted {
   void WriteIndex();
 };
 
-#endif  // ClearKeyPersistence_h_
+#endif  // __ClearKeyPersistence_h__

@@ -20,12 +20,13 @@ add_task(async function () {
       await SimpleTest.promiseClipboardChange(url, () => {
         clipboardHelper.copyString(url);
       });
+      let menuitem = await promiseContextualMenuitem("paste-and-go");
       let browserLoadedPromise = BrowserTestUtils.browserLoaded(
         browser,
         false,
         url.replace(/\n/g, "")
       );
-      await UrlbarTestUtils.activateContextMenuItem(window, "paste-and-go");
+      menuitem.closest("menupopup").activateItem(menuitem);
       // Using toSource in order to get the newlines escaped:
       info("Paste and go, loading " + url.toSource());
       await browserLoadedPromise;
@@ -41,12 +42,13 @@ add_task(async function test_invisible_char() {
     await SimpleTest.promiseClipboardChange(url, () => {
       clipboardHelper.copyString(url);
     });
+    let menuitem = await promiseContextualMenuitem("paste-and-go");
     let browserLoadedPromise = BrowserTestUtils.browserLoaded(
       browser,
       false,
       url.replace(/\u2028/g, "")
     );
-    await UrlbarTestUtils.activateContextMenuItem(window, "paste-and-go");
+    menuitem.closest("menupopup").activateItem(menuitem);
     // Using toSource in order to get the newlines escaped:
     info("Paste and go, loading " + url.toSource());
     await browserLoadedPromise;
@@ -64,12 +66,13 @@ add_task(async function test_with_input_and_results() {
   await SimpleTest.promiseClipboardChange(url, () => {
     clipboardHelper.copyString(url);
   });
+  let menuitem = await promiseContextualMenuitem("paste-and-go");
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     false,
     url
   );
-  await UrlbarTestUtils.activateContextMenuItem(window, "paste-and-go");
+  menuitem.closest("menupopup").activateItem(menuitem);
   // Using toSource in order to get the newlines escaped:
   info("Paste and go, loading " + url.toSource());
   await browserLoadedPromise;

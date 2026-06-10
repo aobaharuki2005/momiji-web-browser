@@ -17,13 +17,22 @@
 #ifndef _MATH_PRIVATE_H_
 #define	_MATH_PRIVATE_H_
 
-#include <bit>
 #include <cfloat>
-#include <cmath>
 #include <stdint.h>
 #include <sys/types.h>
 
+#include "mozilla/EndianUtils.h"
+
 #include "fdlibm.h"
+
+/*
+ * Emulate FreeBSD internal double types.
+ * Adapted from https://github.com/freebsd/freebsd-src/search?q=__double_t
+ */
+
+typedef double      __double_t;
+typedef __double_t  double_t;
+typedef float       __float_t;
 
 /*
  * The original fdlibm code used statements like:
@@ -45,17 +54,51 @@
 #define u_int64_t uint64_t
 #endif
 
-/*
- * A union which permits us to convert between a double and two 32 bit
- * ints.
- */
+/* A union which permits us to convert between a long double and
+   four 32 bit ints.  */
 
-namespace detail {
-template <std::endian endianness>
-union ieee_double_shape_type;
+#if MOZ_BIG_ENDIAN()
 
-template <>
-union ieee_double_shape_type<std::endian::big> {
+typedef union
+{
+  long double value;
+  struct {
+    u_int32_t mswhi;
+    u_int32_t mswlo;
+    u_int32_t lswhi;
+    u_int32_t lswlo;
+  } parts32;
+  struct {
+    u_int64_t msw;
+    u_int64_t lsw;
+  } parts64;
+} ieee_quad_shape_type;
+
+#endif
+
+#if MOZ_LITTLE_ENDIAN()
+
+typedef union
+{
+  long double value;
+  struct {
+    u_int32_t lswlo;
+    u_int32_t lswhi;
+    u_int32_t mswlo;
+    u_int32_t mswhi;
+  } parts32;
+  struct {
+    u_int64_t lsw;
+    u_int64_t msw;
+  } parts64;
+} ieee_quad_shape_type;
+
+#endif
+
+#if MOZ_BIG_ENDIAN()
+
+typedef union
+{
   double value;
   struct
   {
@@ -66,10 +109,14 @@ union ieee_double_shape_type<std::endian::big> {
   {
     u_int64_t w;
   } xparts;
-};
+} ieee_double_shape_type;
 
-template <>
-union ieee_double_shape_type<std::endian::little> {
+#endif
+
+#if MOZ_LITTLE_ENDIAN()
+
+typedef union
+{
   double value;
   struct
   {
@@ -80,10 +127,9 @@ union ieee_double_shape_type<std::endian::little> {
   {
     u_int64_t w;
   } xparts;
-};
-}
+} ieee_double_shape_type;
 
-using ieee_double_shape_type = detail::ieee_double_shape_type<std::endian::native>;
+#endif
 
 /* Get two 32 bit ints from a double.  */
 
@@ -561,7 +607,7 @@ CMPLXL(long double x, long double y)
  */
 
 static inline double
-rnint(double_t x)
+rnint(__double_t x)
 {
 	/*
 	 * This casts to double to kill any extra precision.  This depends
@@ -588,9 +634,9 @@ rnint(double_t x)
 #if defined(amd64) || defined(__i386__)
 #define	irint(x)						\
     (sizeof(x) == sizeof(float) &&				\
-    sizeof(float_t) == sizeof(long double) ? irintf(x) :	\
+    sizeof(__float_t) == sizeof(long double) ? irintf(x) :	\
     sizeof(x) == sizeof(double) &&				\
-    sizeof(double_t) == sizeof(long double) ? irintd(x) :	\
+    sizeof(__double_t) == sizeof(long double) ? irintd(x) :	\
     sizeof(x) == sizeof(long double) ? irintl(x) : (int)(x))
 #else
 #define	irint(x)	((int)(x))

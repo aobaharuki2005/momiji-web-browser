@@ -1,3 +1,5 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -130,11 +132,6 @@ class nsMainThreadPtrHolder<
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsMainThreadPtrHolder<Holder>)
 
-  // Copy constructor and operator= not implemented. Once constructed, the
-  // holder is immutable.
-  Holder& operator=(const nsMainThreadPtrHolder& aOther) = delete;
-  nsMainThreadPtrHolder(const nsMainThreadPtrHolder& aOther) = delete;
-
  private:
   // Our holder.
   Holder mHolder;
@@ -142,6 +139,11 @@ class nsMainThreadPtrHolder<
 #ifndef RELEASE_OR_BETA
   const char* mName = nullptr;
 #endif
+
+  // Copy constructor and operator= not implemented. Once constructed, the
+  // holder is immutable.
+  Holder& operator=(const nsMainThreadPtrHolder& aOther) = delete;
+  nsMainThreadPtrHolder(const nsMainThreadPtrHolder& aOther) = delete;
 };
 
 namespace mozilla {
@@ -225,7 +227,7 @@ struct DeviceState {
   // true if mDevice is currently muted.
   // A device that is either muted or disabled is turned off and not capturing.
   // MainThread only.
-  bool mDeviceMuted = false;
+  bool mDeviceMuted;
 
   // true if the application has currently enabled mDevice.
   // MainThread only.
@@ -2177,8 +2179,8 @@ MediaManager::CreateEnumerationParams(dom::MediaSourceEnum aVideoInputType,
         }
       }
     }
-    videoParams = Some(VideoDeviceEnumerationParams(
-        aVideoInputType, type, std::move(videoDev), audioDev));
+    videoParams = Some(VideoDeviceEnumerationParams(aVideoInputType, type,
+                                                    videoDev, audioDev));
   }
   if (MediaEngineSource::IsAudio(aAudioInputType)) {
     nsAutoCString realAudioDev;
@@ -2193,15 +2195,14 @@ MediaManager::CreateEnumerationParams(dom::MediaSourceEnum aVideoInputType,
         if (fakeByPref && audioDev.IsEmpty()) {
           type = DeviceType::Fake;
         } else {
-          realAudioDev = std::move(audioDev);
+          realAudioDev = audioDev;
         }
       }
     }
-    audioParams = Some(DeviceEnumerationParams(aAudioInputType, type,
-                                               std::move(realAudioDev)));
+    audioParams =
+        Some(DeviceEnumerationParams(aAudioInputType, type, realAudioDev));
   }
-  return EnumerationParams(aFlags, std::move(videoParams),
-                           std::move(audioParams));
+  return EnumerationParams(aFlags, videoParams, audioParams);
 }
 
 RefPtr<DeviceSetPromise>
@@ -2465,6 +2466,7 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
   mPrefs.mFPS = MediaEnginePrefs::DEFAULT_VIDEO_FPS;
   mPrefs.mUsePlatformProcessing = false;
   mPrefs.mAecOn = false;
+  mPrefs.mUseAecMobile = false;
   mPrefs.mAgcOn = false;
   mPrefs.mHPFOn = false;
   mPrefs.mNoiseOn = false;
@@ -2581,7 +2583,7 @@ MediaManager* MediaManager::Get() {
         prefs->AddObserver(aPrefName, sSingleton, false);
       });
     }
-    RegisterStrongMemoryReporter(do_AddRef(sSingleton));
+    RegisterStrongMemoryReporter(sSingleton);
 
     // Prepare async shutdown
 
@@ -4538,30 +4540,30 @@ already_AddRefed<DeviceListener> DeviceListener::Clone() const {
         return GenericPromise::CreateAndReject(
             rv, "DeviceListener::Clone failure #2");
       })
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [listener, device,
-           trackSource](GenericPromise::ResolveOrRejectValue&& aValue) {
-            if (aValue.IsReject()) {
-              // Allocating/initializing failed. Stopping the device listener
-              // will destroy the MediaStreamTrackSource's MediaTrack, which
-              // will make the MediaStreamTrack's mTrack MediaTrack auto-end
-              // due to lack of inputs. This makes the MediaStreamTrack's
-              // readyState transition to "ended" as expected.
-              LOG("Allocating clone device %p failed. Stopping.", device.get());
-              listener->Stop();
-              return;
-            }
-            listener->mDeviceState->mAllocated = true;
-            if (listener->mDeviceState->mStopped && !sHasMainThreadShutdown) {
-              MediaManager::Dispatch(NS_NewRunnableFunction(
-                  "DeviceListener::Clone::Stop",
-                  [device = listener->mDeviceState->mDevice]() {
-                    device->Stop();
-                    device->Deallocate();
-                  }));
-            }
-          });
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [listener, device,
+              trackSource](GenericPromise::ResolveOrRejectValue&& aValue) {
+               if (aValue.IsReject()) {
+                 // Allocating/initializing failed. Stopping the device listener
+                 // will destroy the MediaStreamTrackSource's MediaTrack, which
+                 // will make the MediaStreamTrack's mTrack MediaTrack auto-end
+                 // due to lack of inputs. This makes the MediaStreamTrack's
+                 // readyState transition to "ended" as expected.
+                 LOG("Allocating clone device %p failed. Stopping.",
+                     device.get());
+                 listener->Stop();
+                 return;
+               }
+               listener->mDeviceState->mAllocated = true;
+               if (listener->mDeviceState->mStopped) {
+                 MediaManager::Dispatch(NS_NewRunnableFunction(
+                     "DeviceListener::Clone::Stop",
+                     [device = listener->mDeviceState->mDevice]() {
+                       device->Stop();
+                       device->Deallocate();
+                     }));
+               }
+             });
 
   return listener.forget();
 }

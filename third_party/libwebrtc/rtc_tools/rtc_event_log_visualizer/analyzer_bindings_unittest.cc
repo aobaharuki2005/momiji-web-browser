@@ -17,7 +17,6 @@
 #include <string>
 #include <vector>
 
-#include "absl/strings/string_view.h"
 #include "rtc_base/system/file_wrapper.h"
 #include "test/gtest.h"
 #include "test/testsupport/file_utils.h"
@@ -66,8 +65,8 @@ TEST_F(RtcEventLogAnalyzerBindingsTest, OutgoingBitrateChart) {
 
   // Parse output as charts.
   webrtc::analytics::ChartCollection collection;
-  bool success = collection.ParseFromString(
-      absl::string_view(output.data(), static_cast<int>(output_size)));
+  bool success =
+      collection.ParseFromArray(output.data(), static_cast<int>(output_size));
   ASSERT_TRUE(success);
   ASSERT_EQ(collection.charts().size(), 1);
   EXPECT_EQ(collection.charts(0).title(), "Outgoing RTP bitrate");
@@ -88,8 +87,8 @@ TEST_F(RtcEventLogAnalyzerBindingsTest, NetWorkDelayFeedbackChart) {
 
   // Parse output as charts.
   webrtc::analytics::ChartCollection collection;
-  bool success = collection.ParseFromString(
-      absl::string_view(output.data(), static_cast<int>(output_size)));
+  bool success =
+      collection.ParseFromArray(output.data(), static_cast<int>(output_size));
   ASSERT_TRUE(success);
   ASSERT_EQ(collection.charts().size(), 1);
   EXPECT_EQ(collection.charts(0).title(),

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -72,7 +74,6 @@
 #ifndef mozilla_HashTable_h
 #define mozilla_HashTable_h
 
-#include <bit>
 #include <utility>
 #include <type_traits>
 
@@ -80,6 +81,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
@@ -153,14 +155,15 @@ class MOZ_STANDALONE_DEBUG HashMap {
 
     static const Key& getKey(TableEntry& aEntry) { return aEntry.key(); }
 
-    template <typename KeyInput>
-    static void setKey(TableEntry& aEntry, KeyInput&& aKey) {
-      HashPolicy::rekey(aEntry.mutableKey(), std::forward<KeyInput>(aKey));
+    static void setKey(TableEntry& aEntry, Key& aKey) {
+      HashPolicy::rekey(aEntry.mutableKey(), aKey);
     }
   };
 
   using Impl = detail::HashTable<TableEntry, MapHashPolicy, AllocPolicy>;
   Impl mImpl;
+
+  friend class Impl::Enum;
 
  public:
   using Lookup = typename HashPolicy::Lookup;
@@ -168,8 +171,8 @@ class MOZ_STANDALONE_DEBUG HashMap {
 
   // -- Initialization -------------------------------------------------------
 
-  constexpr explicit HashMap(AllocPolicy aAllocPolicy = AllocPolicy(),
-                             uint32_t aLen = Impl::sDefaultLen)
+  explicit HashMap(AllocPolicy aAllocPolicy = AllocPolicy(),
+                   uint32_t aLen = Impl::sDefaultLen)
       : mImpl(std::move(aAllocPolicy), aLen) {}
 
   explicit HashMap(uint32_t aLen) : mImpl(AllocPolicy(), aLen) {}
@@ -374,20 +377,19 @@ class MOZ_STANDALONE_DEBUG HashMap {
 
   // -- Rekeying -------------------------------------------------------------
 
-  // Infallibly rekey one entry, if necessary. Requires Key to be rekeyable (via
-  // to HashPolicy::rekey) from Lookup.
-  void rekeyIfMoved(const Lookup& aOldKey, const Lookup& aNewKeyInput) {
-    if (aOldKey != aNewKeyInput) {
-      rekeyAs(aOldKey, aNewKeyInput, aNewKeyInput);
+  // Infallibly rekey one entry, if necessary. Requires that template
+  // parameters Key and HashPolicy::Lookup are the same type.
+  void rekeyIfMoved(const Key& aOldKey, const Key& aNewKey) {
+    if (aOldKey != aNewKey) {
+      rekeyAs(aOldKey, aNewKey, aNewKey);
     }
   }
 
   // Infallibly rekey one entry if present, and return whether that happened.
-  template <typename KeyInput>
   bool rekeyAs(const Lookup& aOldLookup, const Lookup& aNewLookup,
-               KeyInput&& aNewKey) {
+               const Key& aNewKey) {
     if (Ptr p = lookup(aOldLookup)) {
-      mImpl.rekeyAndMaybeRehash(p, aNewLookup, std::forward<KeyInput>(aNewKey));
+      mImpl.rekeyAndMaybeRehash(p, aNewLookup, aNewKey);
       return true;
     }
     return false;
@@ -418,24 +420,11 @@ class MOZ_STANDALONE_DEBUG HashMap {
   using ModIterator = typename Impl::ModIterator;
   ModIterator modIter() { return mImpl.modIter(); }
 
-  // -- Alloc policy ---------------------------------------------------------
-
-  // Get the alloc policy.
-  const AllocPolicy& allocPolicy() const { return mImpl.allocPolicy(); }
-  AllocPolicy& allocPolicy() { return mImpl.allocPolicy(); }
-
-  // For internal use by allocation policies that provide garbage collected
-  // memory.
-  //
-  // Trace any allocations owned by this object that were made with AllocPolicy.
-  // Call the supplied closure |aTraceFunc| for each of them, passing a double
-  // pointer to the memory held (e.g. a void** pointer).
-  template <typename F>
-  void traceOwnedAllocs(F&& aTraceFunc) {
-    mImpl.traceOwnedAllocs(std::forward<F>(aTraceFunc));
-  }
-
-  // -- Layout information for JIT access ------------------------------------
+  // These are similar to Iterator/ModIterator/iter(), but use different
+  // terminology.
+  using Range = typename Impl::Range;
+  using Enum = typename Impl::Enum;
+  Range all() const { return mImpl.all(); }
 
   static size_t offsetOfHashShift() {
     return offsetof(HashMap, mImpl) + Impl::offsetOfHashShift();
@@ -478,14 +467,13 @@ class HashSet {
 
     static const KeyType& getKey(const T& aT) { return aT; }
 
-    template <typename KeyInput>
-    static void setKey(T& aT, KeyInput&& aKey) {
-      HashPolicy::rekey(aT, std::forward<KeyInput>(aKey));
-    }
+    static void setKey(T& aT, KeyType& aKey) { HashPolicy::rekey(aT, aKey); }
   };
 
   using Impl = detail::HashTable<const T, SetHashPolicy, AllocPolicy>;
   Impl mImpl;
+
+  friend class Impl::Enum;
 
  public:
   using Lookup = typename HashPolicy::Lookup;
@@ -680,20 +668,19 @@ class HashSet {
 
   // -- Rekeying -------------------------------------------------------------
 
-  // Infallibly rekey one entry, if necessary. Requires Key be rekeyable (via
-  // to HashPolicy::rekey) from Lookup.
-  void rekeyIfMoved(const Lookup& aOldValue, const Lookup& aNewValue) {
+  // Infallibly rekey one entry, if present. Requires that template parameters
+  // T and HashPolicy::Lookup are the same type.
+  void rekeyIfMoved(const Lookup& aOldValue, const T& aNewValue) {
     if (aOldValue != aNewValue) {
       rekeyAs(aOldValue, aNewValue, aNewValue);
     }
   }
 
   // Infallibly rekey one entry if present, and return whether that happened.
-  template <typename U>
   bool rekeyAs(const Lookup& aOldLookup, const Lookup& aNewLookup,
-               U&& aNewValue) {
+               const T& aNewValue) {
     if (Ptr p = lookup(aOldLookup)) {
-      mImpl.rekeyAndMaybeRehash(p, aNewLookup, std::forward<U>(aNewValue));
+      mImpl.rekeyAndMaybeRehash(p, aNewLookup, aNewValue);
       return true;
     }
     return false;
@@ -703,12 +690,12 @@ class HashSet {
   // Specifically, both HashPolicy::hash and HashPolicy::match must return
   // identical results for the new and old key when applied against all
   // possible matching values.
-  template <typename U>
-  void replaceKey(Ptr aPtr, const Lookup& aLookup, U&& aNewValue) {
+  void replaceKey(Ptr aPtr, const Lookup& aLookup, const T& aNewValue) {
     MOZ_ASSERT(aPtr.found());
-    MOZ_ASSERT(HashPolicy::match(*aPtr, aLookup));
     MOZ_ASSERT(*aPtr != aNewValue);
-    const_cast<T&>(*aPtr) = std::forward<U>(aNewValue);
+    MOZ_ASSERT(HashPolicy::match(*aPtr, aLookup));
+    MOZ_ASSERT(HashPolicy::match(aNewValue, aLookup));
+    const_cast<T&>(*aPtr) = aNewValue;
     MOZ_ASSERT(*lookup(aLookup) == aNewValue);
   }
   void replaceKey(Ptr aPtr, const T& aNewValue) {
@@ -740,22 +727,11 @@ class HashSet {
   using ModIterator = typename Impl::ModIterator;
   ModIterator modIter() { return mImpl.modIter(); }
 
-  // -- Alloc policy ---------------------------------------------------------
-
-  // Get the alloc policy.
-  const AllocPolicy& allocPolicy() const { return mImpl.allocPolicy(); }
-  AllocPolicy& allocPolicy() { return mImpl.allocPolicy(); }
-
-  // For internal use by allocation policies that provide garbage collected
-  // memory.
-  //
-  // Trace any allocations owned by this object that were made with AllocPolicy.
-  // Call the supplied closure |aTraceFunc| for each of them, passing a double
-  // pointer to the memory held (e.g. a void** pointer).
-  template <typename F>
-  void traceOwnedAllocs(F&& aTraceFunc) {
-    mImpl.traceOwnedAllocs(std::forward<F>(aTraceFunc));
-  }
+  // These are similar to Iterator/ModIterator/iter(), but use different
+  // terminology.
+  using Range = typename Impl::Range;
+  using Enum = typename Impl::Enum;
+  Range all() const { return mImpl.all(); }
 };
 
 //---------------------------------------------------------------------------
@@ -796,8 +772,6 @@ class HashSet {
 // want to assume anything about the alignment of the pointers.
 template <typename Key>
 struct PointerHasher {
-  static_assert(std::is_pointer_v<Key>);
-
   using Lookup = Key;
 
   static HashNumber hash(const Lookup& aLookup) { return HashGeneric(aLookup); }
@@ -864,7 +838,9 @@ struct DefaultHasher<UniquePtr<T, D>> {
     return PtrHasher::match(aKey.get(), aLookup.get());
   }
 
-  static void rekey(Key& aKey, Key&& aNewKey) { aKey = std::move(aNewKey); }
+  static void rekey(UniquePtr<T, D>& aKey, UniquePtr<T, D>&& aNewKey) {
+    aKey = std::move(aNewKey);
+  }
 };
 
 // A DefaultHasher specialization for doubles.
@@ -1137,7 +1113,7 @@ class HashTableEntry {
 
   void destroy() { destroyStoredT(); }
 
-  void swap(HashTableEntry* aOther, bool aOtherIsLive) {
+  void swap(HashTableEntry* aOther, bool aIsLive) {
     // This allows types to use Argument-Dependent-Lookup, and thus use a custom
     // std::swap, which is needed by types like JS::Heap and such.
     using std::swap;
@@ -1145,10 +1121,10 @@ class HashTableEntry {
     if (this == aOther) {
       return;
     }
-    if (aOtherIsLive) {
+    if (aIsLive) {
       swap(*valuePtr(), *aOther->valuePtr());
     } else {
-      new (KnownNotNull, aOther->valuePtr()) NonConstT(std::move(*valuePtr()));
+      *aOther->valuePtr() = std::move(*valuePtr());
       destroy();
     }
   }
@@ -1469,7 +1445,7 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
   };
 
   // A hash table iterator that permits modification, removal and rekeying.
-  // Since rehashing when elements were removed during iteration would be
+  // Since rehashing when elements were removed during enumeration would be
   // bad, it is postponed until the ModIterator is destructed. Since the
   // ModIterator's destructor touches the hash table, the user must ensure
   // that the hash table is still alive when the destructor runs.
@@ -1523,14 +1499,10 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     // Removes the current element and re-inserts it into the table with
     // a new key at the new Lookup position.  |get()| is invalid after
     // this operation until the next call to |next()|.
-    template <typename KeyInput>
-    void rekey(const Lookup& l, KeyInput&& k) {
-      MOZ_ASSERT(
-          static_cast<const void*>(&k) !=
-              static_cast<const void*>(&HashPolicy::getKey(this->mCur.get())),
-          "Don't pass a reference into the table here");
+    void rekey(const Lookup& l, const Key& k) {
+      MOZ_ASSERT(&k != &HashPolicy::getKey(this->mCur.get()));
       Ptr p(this->mCur, mTable);
-      mTable.rekeyWithoutRehash(p, l, std::forward<KeyInput>(k));
+      mTable.rekeyWithoutRehash(p, l, k);
       mRekeyed = true;
 #ifdef DEBUG
       this->mValidEntry = false;
@@ -1538,7 +1510,7 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
 #endif
     }
 
-    void rekey(const Lookup& l) { rekey(l, l); }
+    void rekey(const Key& k) { rekey(k, k); }
 
     // This can rehash the table or resize it if entries were removed.
     //
@@ -1556,6 +1528,56 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
         mTable.shrinkToBestCapacity();
       }
     }
+  };
+
+  // Range is similar to Iterator, but uses different terminology.
+  class Range {
+    friend class HashTable;
+
+    Iterator mIter;
+
+   protected:
+    explicit Range(const HashTable& table) : mIter(table) {}
+
+   public:
+    bool empty() const { return mIter.done(); }
+
+    T& front() const { return mIter.get(); }
+
+    void popFront() { return mIter.next(); }
+  };
+
+  // Enum is similar to ModIterator, but uses different terminology.
+  class Enum {
+    ModIterator mIter;
+
+    // Enum is movable but not copyable.
+    Enum(const Enum&) = delete;
+    void operator=(const Enum&) = delete;
+
+   public:
+    template <class Map>
+    explicit Enum(Map& map) : mIter(map.mImpl) {}
+
+    MOZ_IMPLICIT Enum(Enum&& other) : mIter(std::move(other.mIter)) {}
+
+    bool empty() const { return mIter.done(); }
+
+    T& front() const { return mIter.get(); }
+
+    void popFront() { return mIter.next(); }
+
+    // See the comments on ~ModIterator about table resizing after removing
+    // entries.
+    void removeFront() { mIter.remove(); }
+
+    NonConstT& mutableFront() { return mIter.getMutable(); }
+
+    void rekeyFront(const Lookup& aLookup, const Key& aKey) {
+      mIter.rekey(aLookup, aKey);
+    }
+
+    void rekeyFront(const Key& aKey) { mIter.rekey(aKey); }
   };
 
   // HashTable is movable
@@ -1582,16 +1604,6 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     std::swap(mMutationCount, aOther.mMutationCount);
     std::swap(mEntered, aOther.mEntered);
 #endif
-  }
-
-  AllocPolicy& allocPolicy() { return *this; }
-  const AllocPolicy& allocPolicy() const { return *this; }
-
-  template <typename F>
-  void traceOwnedAllocs(F&& aTraceFunc) {
-    if (mTable) {
-      aTraceFunc(&mTable);
-    }
   }
 
  private:
@@ -1668,7 +1680,7 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     mGenAndHashShift = (mGenAndHashShift & ~sHashShiftMask) | aHashShift;
   }
 
-  constexpr static uint32_t bestCapacity(uint32_t aLen) {
+  static uint32_t bestCapacity(uint32_t aLen) {
     static_assert(
         (sMaxInit * sAlphaDenominator) / sAlphaDenominator == sMaxInit,
         "multiplication in numerator below could overflow");
@@ -1692,7 +1704,7 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     return capacity;
   }
 
-  constexpr static uint32_t hashShiftForLength(uint32_t aLen) {
+  static uint32_t hashShiftForLength(uint32_t aLen) {
     // Reject all lengths whose initial computed capacity would exceed
     // sMaxCapacity. Round that maximum aLen down to the nearest power of two
     // for speedier code.
@@ -1760,7 +1772,7 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
   }
 
  public:
-  constexpr HashTable(AllocPolicy aAllocPolicy, uint32_t aLen)
+  HashTable(AllocPolicy aAllocPolicy, uint32_t aLen)
       : AllocPolicy(std::move(aAllocPolicy)),
         mGenAndHashShift(hashShiftForLength(aLen)),
         mTable(nullptr),
@@ -1903,7 +1915,7 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
 
   RebuildStatus changeTableSize(
       uint32_t newCapacity, FailureBehavior aReportFailure = ReportFailure) {
-    MOZ_ASSERT(std::has_single_bit(newCapacity));
+    MOZ_ASSERT(IsPowerOfTwo(newCapacity));
     MOZ_ASSERT(!!mTable == !!capacity());
 
     // Look, but don't touch, until we succeed in getting new entry store.
@@ -2128,6 +2140,8 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
 
   ModIterator modIter() { return ModIterator(*this); }
 
+  Range all() const { return Range(*this); }
+
   bool empty() const { return mEntryCount == 0; }
 
   uint32_t count() const { return mEntryCount; }
@@ -2315,22 +2329,20 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     shrinkIfUnderloaded();
   }
 
-  template <typename KeyInput>
-  void rekeyWithoutRehash(Ptr aPtr, const Lookup& aLookup, KeyInput&& aKey) {
+  void rekeyWithoutRehash(Ptr aPtr, const Lookup& aLookup, const Key& aKey) {
     MOZ_ASSERT(mTable);
     ReentrancyGuard g(*this);
     MOZ_ASSERT(aPtr.found());
     MOZ_ASSERT(aPtr.mGeneration == generation());
     typename HashTableEntry<T>::NonConstT t(std::move(*aPtr));
-    HashPolicy::setKey(t, std::forward<KeyInput>(aKey));
+    HashPolicy::setKey(t, const_cast<Key&>(aKey));
     remove(aPtr.mSlot);
     HashNumber keyHash = prepareHash(HashPolicy::hash(aLookup));
     putNewInfallibleInternal(keyHash, std::move(t));
   }
 
-  template <typename KeyInput>
-  void rekeyAndMaybeRehash(Ptr aPtr, const Lookup& aLookup, KeyInput&& aKey) {
-    rekeyWithoutRehash(aPtr, aLookup, std::forward<KeyInput>(aKey));
+  void rekeyAndMaybeRehash(Ptr aPtr, const Lookup& aLookup, const Key& aKey) {
+    rekeyWithoutRehash(aPtr, aLookup, aKey);
     infallibleRehashIfOverloaded();
   }
 
@@ -2342,12 +2354,12 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     // same offset as mGenAndHashShift itself. On big-endian platforms,
     // we have to add an additional offset to point to the last byte.
     // (Or we would if we had JIT support for any big-endian platforms.)
-    if constexpr (std::endian::native == std::endian::big) {
-      return offsetof(HashTable, mGenAndHashShift) + sizeof(mGenAndHashShift) -
-             sizeof(uint8_t);
-    } else {
-      return offsetof(HashTable, mGenAndHashShift);
-    }
+#if MOZ_BIG_ENDIAN()
+    return offsetof(HashTable, mGenAndHashShift) + sizeof(mGenAndHashShift) -
+           sizeof(uint8_t);
+#else
+    return offsetof(HashTable, mGenAndHashShift);
+#endif
   }
   static size_t offsetOfTable() { return offsetof(HashTable, mTable); }
   static size_t offsetOfEntryCount() {

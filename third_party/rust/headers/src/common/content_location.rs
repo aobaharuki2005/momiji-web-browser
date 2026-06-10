@@ -1,4 +1,4 @@
-use http::HeaderValue;
+use HeaderValue;
 
 /// `Content-Location` header, defined in
 /// [RFC7231](https://tools.ietf.org/html/rfc7231#section-3.1.4.2)

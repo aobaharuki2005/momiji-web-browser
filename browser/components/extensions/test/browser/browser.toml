@@ -1,7 +1,4 @@
 [DEFAULT]
-skip-if = [
-  "debug && standalone", # Bug 2026593
-]
 tags = "webextensions"
 prefs = [
   "browser.sessionstore.closedTabsFromAllWindows=true",
@@ -55,8 +52,6 @@ support-files = [
 ["browser_ExtensionControlledPopup.js"]
 
 ["browser_browserSetting_vertical_tabs.js"]
-
-["browser_ext_action_openPopup.js"]
 
 ["browser_ext_action_popup_allowed_urls.js"]
 
@@ -166,9 +161,7 @@ https_first_disabled = true
 skip-if = [
   "debug", # The nature of the reduced STR test triggers an unrelated debug assertion in DOM IPC code, see bug 1736590.
   "os == 'win' && os_version == '11.26100' && arch == 'x86' && opt", # Bug 1933435
-  "os == 'win' && os_version == '11.26200' && arch == 'x86' && opt", # Bug 1933435
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && opt", # Bug 1933435
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && opt", # Bug 1933435
 ]
 tags = "bleedover"
 
@@ -222,7 +215,6 @@ skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && asan", # Bug 1697626
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt", # Bug 1697626
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64'", # Bug 1697626
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64'", # Bug 1697626
 ]
 
 ["browser_ext_devtools_network_targetSwitch.js"]
@@ -351,8 +343,6 @@ https_first_disabled = true
 
 ["browser_ext_pageAction_click_types.js"]
 
-["browser_ext_pageAction_color_scheme_svg.js"]
-
 ["browser_ext_pageAction_context.js"]
 https_first_disabled = true
 
@@ -372,8 +362,6 @@ https_first_disabled = true
 ["browser_ext_pageAction_title.js"]
 
 ["browser_ext_persistent_storage_permission_indication.js"]
-
-["browser_ext_popup_after_close.js"]
 
 ["browser_ext_popup_api_injection.js"]
 
@@ -396,7 +384,7 @@ run-if = [
 
 ["browser_ext_popup_select_in_oopif.js"]
 skip-if = [
-  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && tsan && fission && swgl", # high frequency intermittent
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && swgl && fission && tsan", # high frequency intermittent
 ]
 
 ["browser_ext_popup_sendMessage.js"]
@@ -540,9 +528,7 @@ https_first_disabled = true
 ["browser_ext_tabs_events.js"]
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86' && debug", # Bug 1786601
-  "os == 'win' && os_version == '11.26200' && arch == 'x86' && debug", # Bug 1786601
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64'", # Bug 1786601
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64'", # Bug 1786601
 ]
 
 ["browser_ext_tabs_events_order.js"]
@@ -571,8 +557,6 @@ https_first_disabled = true
 
 ["browser_ext_tabs_groupId.js"]
 
-["browser_ext_tabs_group_splitview.js"]
-
 ["browser_ext_tabs_group_ungroup.js"]
 
 ["browser_ext_tabs_group_windowId.js"]
@@ -600,22 +584,13 @@ https_first_disabled = true
 ["browser_ext_tabs_move_array_multiple_windows.js"]
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && ccov", # Bug 1786601
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && ccov", # Bug 1786601
 ]
 
 ["browser_ext_tabs_move_discarded.js"]
 
-["browser_ext_tabs_move_splitview.js"]
-
 ["browser_ext_tabs_move_window.js"]
-skip-if = [
-  "os == 'win' && os_version == '11.26200' && asan", # Bug 2019745
-]
 
 ["browser_ext_tabs_move_window_multiple.js"]
-skip-if = [
-  "os == 'win' && os_version == '11.26200' && asan", # Bug 2019745
-]
 
 ["browser_ext_tabs_move_window_pinned.js"]
 
@@ -657,8 +632,6 @@ https_first_disabled = true
 ["browser_ext_tabs_sharingState.js"]
 https_first_disabled = true
 
-["browser_ext_tabs_splitViewId.js"]
-
 ["browser_ext_tabs_successors.js"]
 
 ["browser_ext_tabs_update.js"]
@@ -676,7 +649,7 @@ https_first_disabled = true
 
 ["browser_ext_topSites.js"]
 skip-if = [
-  "os == 'linux' && display == 'x11' && opt", # Bug 1775583
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt && a11y_checks && swgl", # Bug 1775583
 ]
 
 ["browser_ext_url_overrides_newtab.js"]
@@ -684,15 +657,10 @@ skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11'", # Bug 1651261
   "os == 'mac' && os_version == '14.70' && arch == 'x86_64'", # Bug 1869793
   "os == 'win' && os_version == '11.26100' && arch == 'x86' && debug", # Bug 1797751
-  "os == 'win' && os_version == '11.26200' && arch == 'x86' && debug", # Bug 1797751
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && !opt", # Bug 1797751
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && !opt", # Bug 1797751
 ]
 
 ["browser_ext_user_events.js"]
-
-["browser_ext_webNavigation_bookmark_transitions.js"]
-support-files = ["!/browser/components/places/tests/browser/head.js"]
 
 ["browser_ext_webNavigation_containerIsolation.js"]
 https_first_disabled = true
@@ -737,9 +705,6 @@ tags = "fullscreen"
 ["browser_ext_windows_create_cookieStoreId.js"]
 
 ["browser_ext_windows_create_params.js"]
-skip-if = [
-  "os == 'win' && os_version == '11.26200' && asan", # Bug 2019745
-]
 
 ["browser_ext_windows_create_tabId.js"]
 https_first_disabled = true
@@ -747,9 +712,6 @@ https_first_disabled = true
 ["browser_ext_windows_create_url.js"]
 
 ["browser_ext_windows_events.js"]
-skip-if = [
-  "os == 'win' && os_version == '11.26200' && asan", # Bug 2019745
-]
 
 ["browser_ext_windows_incognito.js"]
 
@@ -768,7 +730,6 @@ skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11'", # Bug 1533982
   "os == 'mac' && os_version == '10.15' && arch == 'x86_64' && debug", # Bug 1780998
   "os == 'mac' && os_version == '14.70' && arch == 'x86_64'", # Bug 1869793
-  "os == 'win' && opt && standalone", # Bug 2028652
 ]
 
 ["browser_toolbar_prefers_color_scheme.js"]

@@ -216,7 +216,8 @@ class FileSaver {
         });
       } else {
         // "Download" or "Open in app" from the pdf.js toolbar.
-        this.#eventDispatcher.sendRequest("GeckoView:SavePdf", {
+        this.#eventDispatcher.sendRequest({
+          type: "GeckoView:SavePdf",
           url: blobUrl,
           filename,
           originalUrl,

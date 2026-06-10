@@ -14,7 +14,6 @@ EXPORTS.mozilla.net += [
 ]
 
 UNIFIED_SOURCES += [
-    "NrIceStunAddrMessageUtils.cpp",
     "StunAddrsRequestChild.cpp",
     "StunAddrsRequestParent.cpp",
     "WebrtcTCPSocket.cpp",

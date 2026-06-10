@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsFrameMessageManager_h_
-#define nsFrameMessageManager_h_
+#ifndef nsFrameMessageManager_h__
+#define nsFrameMessageManager_h__
 
 #include <string.h>
 
@@ -44,13 +46,13 @@ namespace dom {
 
 class ChildProcessMessageManager;
 class ChromeMessageBroadcaster;
+class ClonedMessageData;
 class MessageBroadcaster;
 class MessageListener;
 class MessageListenerManager;
 class MessageManagerReporter;
 class ParentProcessMessageManager;
 class ProcessMessageManager;
-struct ReceiveMessageArgument;
 
 namespace ipc {
 
@@ -67,6 +69,9 @@ enum class MessageManagerFlags {
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MessageManagerFlags);
 
+void UnpackClonedMessageData(const ClonedMessageData& aClonedData,
+                             StructuredCloneData& aData);
+
 }  // namespace ipc
 }  // namespace dom
 }  // namespace mozilla
@@ -76,7 +81,10 @@ struct nsMessageListenerInfo {
     return &aOther == this;
   }
 
-  RefPtr<mozilla::dom::MessageListener> mListener;
+  // If mWeakListener is null then mStrongListener holds a MessageListener.
+  // If mWeakListener is non-null then mStrongListener contains null.
+  RefPtr<mozilla::dom::MessageListener> mStrongListener;
+  nsWeakPtr mWeakListener;
   bool mListenWhenClosed;
 };
 
@@ -109,6 +117,12 @@ class nsFrameMessageManager : public nsIMessageSender {
   void RemoveMessageListener(const nsAString& aMessageName,
                              mozilla::dom::MessageListener& aListener,
                              mozilla::ErrorResult& aError);
+  void AddWeakMessageListener(const nsAString& aMessageName,
+                              mozilla::dom::MessageListener& aListener,
+                              mozilla::ErrorResult& aError);
+  void RemoveWeakMessageListener(const nsAString& aMessageName,
+                                 mozilla::dom::MessageListener& aListener,
+                                 mozilla::ErrorResult& aError);
 
   // MessageSender
   void SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
@@ -139,13 +153,14 @@ class nsFrameMessageManager : public nsIMessageSender {
   static mozilla::dom::ProcessMessageManager* NewProcessMessageManager(
       bool aIsRemote);
 
-  // NOTE: This method is infallible. If an error occurs while receiving a
-  // message, it will be reported, and is not signalled to the caller.
   void ReceiveMessage(
       nsISupports* aTarget, nsFrameLoader* aTargetFrameLoader,
-      const nsAString& aMessage, bool aIsSync,
-      mozilla::NotNull<StructuredCloneData*> aCloneData,
-      nsTArray<mozilla::NotNull<RefPtr<StructuredCloneData>>>* aRetVal);
+      const nsAString& aMessage, bool aIsSync, StructuredCloneData* aCloneData,
+      nsTArray<mozilla::UniquePtr<StructuredCloneData>>* aRetVal,
+      mozilla::ErrorResult& aError) {
+    ReceiveMessage(aTarget, aTargetFrameLoader, mClosed, aMessage, aIsSync,
+                   aCloneData, aRetVal, aError);
+  }
 
   void Disconnect(bool aRemoveFromParent = true);
   void Close();
@@ -154,9 +169,9 @@ class nsFrameMessageManager : public nsIMessageSender {
 
   mozilla::dom::ipc::MessageManagerCallback* GetCallback() { return mCallback; }
 
-  nsresult DispatchAsyncMessageInternal(
-      JSContext* aCx, const nsAString& aMessage,
-      mozilla::NotNull<StructuredCloneData*> aData);
+  nsresult DispatchAsyncMessageInternal(JSContext* aCx,
+                                        const nsAString& aMessage,
+                                        StructuredCloneData& aData);
   bool IsGlobal() { return mGlobal; }
   bool IsBroadcaster() { return mIsBroadcaster; }
   bool IsChrome() { return mChrome; }
@@ -178,7 +193,7 @@ class nsFrameMessageManager : public nsIMessageSender {
 
   static bool GetParamsForMessage(JSContext* aCx, const JS::Value& aValue,
                                   const JS::Value& aTransfer,
-                                  mozilla::NotNull<StructuredCloneData*> aData);
+                                  StructuredCloneData& aData);
 
   void SetInitialProcessData(JS::Handle<JS::Value> aInitialData);
 
@@ -196,6 +211,13 @@ class nsFrameMessageManager : public nsIMessageSender {
                             JS::Handle<JS::Value> aObj,
                             JS::Handle<JS::Value> aTransfers,
                             mozilla::ErrorResult& aError);
+
+  void ReceiveMessage(
+      nsISupports* aTarget, nsFrameLoader* aTargetFrameLoader,
+      bool aTargetClosed, const nsAString& aMessage, bool aIsSync,
+      StructuredCloneData* aCloneData,
+      nsTArray<mozilla::UniquePtr<StructuredCloneData>>* aRetVal,
+      mozilla::ErrorResult& aError);
 
   void LoadScript(const nsAString& aURL, bool aAllowDelayedLoad,
                   bool aRunInGlobalScope, mozilla::ErrorResult& aError);
@@ -259,20 +281,19 @@ class nsSameProcessAsyncMessageBase {
  public:
   using StructuredCloneData = mozilla::dom::ipc::StructuredCloneData;
 
-  nsSameProcessAsyncMessageBase() = default;
-  nsSameProcessAsyncMessageBase(const nsSameProcessAsyncMessageBase&) = delete;
-
-  nsresult Init(const nsAString& aMessage,
-                mozilla::NotNull<StructuredCloneData*> aData);
+  nsSameProcessAsyncMessageBase();
+  nsresult Init(const nsAString& aMessage, StructuredCloneData& aData);
 
   void ReceiveMessage(nsISupports* aTarget, nsFrameLoader* aTargetFrameLoader,
                       nsFrameMessageManager* aManager);
 
  private:
+  nsSameProcessAsyncMessageBase(const nsSameProcessAsyncMessageBase&);
+
   nsString mMessage;
-  RefPtr<StructuredCloneData> mData;
+  StructuredCloneData mData;
 #ifdef DEBUG
-  bool mCalledInit = false;
+  bool mCalledInit;
 #endif
 };
 

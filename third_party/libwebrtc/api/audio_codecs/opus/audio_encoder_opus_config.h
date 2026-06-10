@@ -21,34 +21,33 @@
 namespace webrtc {
 
 struct RTC_EXPORT AudioEncoderOpusConfig {
-  static const int kDefaultLowRateComplexity;
   static constexpr int kDefaultFrameSizeMs = 20;
 
   // Opus API allows a min bitrate of 500bps, but Opus documentation suggests
   // bitrate should be in the range of 6000 to 510000, inclusive.
-  static constexpr int kMinBitrateBps = 6'000;
-  static constexpr int kMaxBitrateBps = 510'000;
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
-  static constexpr int kDefaultComplexity = 5;
-#else
-  static constexpr int kDefaultComplexity = 9;
-#endif
+  static constexpr int kMinBitrateBps = 6000;
+  static constexpr int kMaxBitrateBps = 510000;
+
+  AudioEncoderOpusConfig();
+  AudioEncoderOpusConfig(const AudioEncoderOpusConfig&);
+  ~AudioEncoderOpusConfig();
+  AudioEncoderOpusConfig& operator=(const AudioEncoderOpusConfig&);
 
   bool IsOk() const;  // Checks if the values are currently OK.
 
-  int frame_size_ms = kDefaultFrameSizeMs;
-  int sample_rate_hz = 48'000;
-  size_t num_channels = 1;
+  int frame_size_ms;
+  int sample_rate_hz;
+  size_t num_channels;
   enum class ApplicationMode { kVoip, kAudio };
-  ApplicationMode application = ApplicationMode::kVoip;
+  ApplicationMode application;
 
   // NOTE: This member must always be set.
   // TODO(kwiberg): Turn it into just an int.
-  std::optional<int> bitrate_bps = 32'000;
+  std::optional<int> bitrate_bps;
 
-  bool fec_enabled = false;
-  bool cbr_enabled = false;
-  int max_playback_rate_hz = 48'000;
+  bool fec_enabled;
+  bool cbr_enabled;
+  int max_playback_rate_hz;
 
   // `complexity` is used when the bitrate goes above
   // `complexity_threshold_bps` + `complexity_threshold_window_bps`;
@@ -56,18 +55,18 @@ struct RTC_EXPORT AudioEncoderOpusConfig {
   // `complexity_threshold_bps` - `complexity_threshold_window_bps`. In the
   // interval in the middle, we keep using the most recent of the two
   // complexity settings.
-  int complexity = kDefaultComplexity;
-  int low_rate_complexity = kDefaultLowRateComplexity;
-  int complexity_threshold_bps = 12500;
-  int complexity_threshold_window_bps = 1500;
+  int complexity;
+  int low_rate_complexity;
+  int complexity_threshold_bps;
+  int complexity_threshold_window_bps;
 
-  bool dtx_enabled = false;
+  bool dtx_enabled;
   std::vector<int> supported_frame_lengths_ms;
-  int uplink_bandwidth_update_interval_ms = 200;
+  int uplink_bandwidth_update_interval_ms;
 
   // NOTE: This member isn't necessary, and will soon go away. See
   // https://bugs.chromium.org/p/webrtc/issues/detail?id=7847
-  int payload_type = -1;
+  int payload_type;
 };
 
 }  // namespace webrtc

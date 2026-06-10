@@ -62,6 +62,23 @@
           "optional": true,
           "description": "returns the value of a pref."
         }
+      },
+      {
+        "name": "setPref",
+        "type": "function",
+        "description": "Set a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          },
+          {
+            "name": "value",
+            "type": "any",
+            "description": "The new value"
+          }
+        ]
       }
     ]
   }

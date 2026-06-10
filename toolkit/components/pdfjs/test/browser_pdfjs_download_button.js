@@ -41,7 +41,7 @@ function createPromiseForFilePicker() {
 
 add_setup(async function () {
   tempDir = createTemporarySaveDirectory();
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
   MockFilePicker.returnValue = MockFilePicker.returnOK;
   MockFilePicker.displayDirectory = tempDir;
 

@@ -19,49 +19,90 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
+    let PromEvents = {};
+    Services.scriptloader.loadSubScript(
+      "chrome://mochitests/content/a11y/accessible/tests/mochitest/promisified-events.js",
+      PromEvents);
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function setAttr(aID, aAttr, aValue, aChecker) {
+      this.eventSeq = [ aChecker ];
+      this.invoke = function setAttr_invoke() {
+        getNode(aID).setAttribute(aAttr, aValue);
+      };
+
+      this.getID = function setAttr_getID() {
+        return "set attr '" + aAttr + "', value '" + aValue + "'";
+      };
+    }
 
     // //////////////////////////////////////////////////////////////////////////
     // Do tests
 
-    async function doTests() {
-      let descChanged = waitForEvent(EVENT_DESCRIPTION_CHANGE, "tst1");
-      getNode("tst1").setAttribute("aria-describedby", "display");
-      await descChanged;
+    // gA11yEventDumpToConsole = true; // debuggin
 
-      let unexpected = new UnexpectedEvents([
-        [EVENT_DESCRIPTION_CHANGE, "tst1"],
-      ]);
-      getNode("tst1").setAttribute("title", "title");
-      await unexpected.flush();
-      unexpected.stop();
+    var gQueue = null;
+    async function doTests() {
+      gQueue = new eventQueue();
+      // Later tests use await.
+      let queueFinished = new Promise(resolve => {
+        gQueue.onFinish = function() {
+          resolve();
+          return DO_NOT_FINISH_TEST;
+        };
+      });
+
+      gQueue.push(new setAttr("tst1", "aria-describedby", "display",
+                              new invokerChecker(EVENT_DESCRIPTION_CHANGE, "tst1")));
+      gQueue.push(new setAttr("tst1", "title", "title",
+                              new unexpectedInvokerChecker(EVENT_DESCRIPTION_CHANGE, "tst1")));
 
       // A title has lower priority over text content. There should be no name change event.
-      unexpected = new UnexpectedEvents([[EVENT_NAME_CHANGE, "tst2"]]);
-      getNode("tst2").setAttribute("title", "title");
-      await unexpected.flush();
-      unexpected.stop();
+      gQueue.push(new setAttr("tst2", "title", "title",
+                              new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst2")));
+
+      gQueue.invoke();
+      await queueFinished;
+      // Tests beyond this point use await rather than eventQueue.
 
       const describedBy = getNode("describedBy");
       const description = getNode("description");
-      descChanged = waitForEvent(EVENT_DESCRIPTION_CHANGE, describedBy);
+      let descChanged = PromEvents.waitForEvent(
+        EVENT_DESCRIPTION_CHANGE,
+        describedBy
+      );
       info("Changing text of aria-describedby target");
       description.textContent = "d2";
       await descChanged;
-      descChanged = waitForEvent(EVENT_DESCRIPTION_CHANGE, describedBy);
+      descChanged = PromEvents.waitForEvent(
+        EVENT_DESCRIPTION_CHANGE,
+        describedBy
+      );
       info("Adding node to aria-describedby target");
       description.innerHTML = '<p id="descriptionChild">d3</p>';
       await descChanged;
-      descChanged = waitForEvent(EVENT_DESCRIPTION_CHANGE, describedBy);
+      descChanged = PromEvents.waitForEvent(
+        EVENT_DESCRIPTION_CHANGE,
+        describedBy
+      );
       info("Changing text of aria-describedby target's child");
       getNode("descriptionChild").textContent = "d4";
       await descChanged;
 
       const lateDescribedBy = getNode("lateDescribedBy");
-      descChanged = waitForEvent(EVENT_DESCRIPTION_CHANGE, lateDescribedBy);
+      descChanged = PromEvents.waitForEvent(
+        EVENT_DESCRIPTION_CHANGE,
+        lateDescribedBy
+      );
       info("Setting aria-describedby");
       lateDescribedBy.setAttribute("aria-describedby", "lateDescription");
       await descChanged;
-      descChanged = waitForEvent(EVENT_DESCRIPTION_CHANGE, lateDescribedBy);
+      descChanged = PromEvents.waitForEvent(
+        EVENT_DESCRIPTION_CHANGE,
+        lateDescribedBy
+      );
       info("Changing text of late aria-describedby target's child");
       getNode("lateDescriptionChild").textContent = "d2";
       await descChanged;

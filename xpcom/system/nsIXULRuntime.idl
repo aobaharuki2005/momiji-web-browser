@@ -26,10 +26,16 @@ bool FissionAutostart();
 // Returns whether or not we are currently enrolled in the fission experiment.
 bool FissionExperimentEnrolled();
 
-// Returns true if browser.sessionstore.disable_platform_collection is false.
+// Returns true if FissionAutostart() is true or
+// fission.disableSessionHistoryInParent is false.
+bool SessionHistoryInParent();
+
+// Returns true if SessionHistoryInParent() is true and
+// browser.sessionstore.disable_platform_collection is false.
 bool SessionStorePlatformCollection();
 
-// Returns true if fission.bfcacheInParent is true.
+// Returns true if SessionHistoryInParent() returns true and
+// fission.bfcacheInParent is true.
 bool BFCacheInParent();
 }
 
@@ -79,7 +85,7 @@ interface nsIXULRuntime : nsISupports
     MissingWebRender = 2,
     OperatingSystemNotSupported = 3,
     PrefNotSet = 4,  // no longer used
-    //MissingRemoteWebGL = 5,
+    MissingRemoteWebGL = 5,
     MissingNonNativeTheming = 6,
     DisabledByEnvVar = 7,  // - MOZ_ENABLE_WIN32K is set
     //DisabledBySafeMode = 8,
@@ -152,6 +158,11 @@ interface nsIXULRuntime : nsISupports
    */
   readonly attribute nsIXULRuntime_FissionDecisionStatus fissionDecisionStatus;
   readonly attribute ACString fissionDecisionStatusString;
+
+  /**
+   * Whether session history is stored in the parent process.
+   */
+  readonly attribute boolean sessionHistoryInParent;
 
   /**
    * Whether Gecko code drives session store collection data.

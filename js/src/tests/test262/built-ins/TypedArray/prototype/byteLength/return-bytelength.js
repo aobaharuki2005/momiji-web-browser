@@ -14,12 +14,12 @@ includes: [testTypedArray.js]
 features: [TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   var bytesPerElement = TA.BYTES_PER_ELEMENT;
   var ta1 = new TA();
   assert.sameValue(ta1.byteLength, 0);
 
-  var ta2 = new TA(makeCtorArg(42));
+  var ta2 = new TA(42);
   assert.sameValue(ta2.byteLength, 42 * bytesPerElement);
 });
 

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,7 +41,7 @@ MOZ_RAII class UserFontConfigHelper final {
                        const nsString& aRoamingAppData);
   ~UserFontConfigHelper();
 
-  bool AddRules(sandboxing::SizeTrackingConfig& aConfig) const;
+  void AddRules(sandboxing::SizeTrackingConfig& aConfig) const;
 
   UserFontConfigHelper(const UserFontConfigHelper&) = delete;
   UserFontConfigHelper& operator=(const UserFontConfigHelper&) = delete;

@@ -8,12 +8,10 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from mozdevice import ADBDevice
+
 from mozperftest.layers import Layer
-from mozperftest.utils import (
-    archive_files,
-    extract_tgz_and_find_files,
-    get_adb_device_or_emu,
-)
+from mozperftest.utils import archive_files, extract_tgz_and_find_files
 
 
 class GeckoProfilerError(Exception):
@@ -53,7 +51,7 @@ class GeckoProfilerController:
         cls._package_id = package_id
 
     def __init__(self):
-        self.device = get_adb_device_or_emu()
+        self.device = ADBDevice()
         self.profiling_active = False
         self.package_id = None
         self.config_filename = None
@@ -177,7 +175,7 @@ class GeckoProfiler(Layer):
 
     def __init__(self, env, mach_cmd):
         super().__init__(env, mach_cmd)
-        self.device = get_adb_device_or_emu()
+        self.device = ADBDevice()
         self.output_dir = None
         self.test_name = None
 
@@ -199,21 +197,19 @@ class GeckoProfiler(Layer):
         patterns = ["profile-*.json"]
         self.info(f"geckoview output_dir {self.output_dir} and test {self.test_name}")
 
-        profiles, search_dir, work_dir = extract_tgz_and_find_files(
+        profiles, work_dir = extract_tgz_and_find_files(
             self.output_dir, self.test_name, patterns
         )
-
-        search_dir = search_dir / self.test_name
 
         try:
             if profiles:
                 # Profiles are streamed directly from device and ready to use
+                profiles.sort()
                 archive_files(
                     profiles,
                     self.output_dir,
                     f"profile_{self.test_name}",
-                    sort_key=lambda p: (p.parent.name, int(p.stem.split("-")[-1])),
-                    base_dir=search_dir,
+                    prefix="gecko",
                 )
                 self.info("Archived gecko profiles")
         finally:

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,7 +17,7 @@ namespace mozilla::dom {
 
 // Keeps track of all the existings schedulers that
 // share the same event loop.
-constinit static LinkedList<WebTaskScheduler> gWebTaskSchedulersMainThread;
+MOZ_RUNINIT static LinkedList<WebTaskScheduler> gWebTaskSchedulersMainThread;
 
 static Atomic<uint64_t> gWebTaskEnqueueOrder(0);
 
@@ -226,8 +228,7 @@ inline void ImplCycleCollectionTraverse(
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(WebTaskScheduler, mParent,
-                                               mWebTaskQueues)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebTaskScheduler, mParent, mWebTaskQueues)
 
 /* static */
 already_AddRefed<WebTaskSchedulerMainThread>

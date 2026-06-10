@@ -39,7 +39,7 @@ newtab-search-box-input =
     .placeholder = ওয়েবে অনুসন্ধান করুন
     .aria-label = ওয়েবে অনুসন্ধান করুন
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = অনুসন্ধান ইঞ্জিন যোগ করুন
 newtab-topsites-add-shortcut-header = নতুন শর্টকাট
@@ -236,21 +236,9 @@ newtab-error-fallback-refresh-link = আবার চেষ্টা করত�
 
 newtab-custom-shortcuts-title = শর্টকাট
 newtab-custom-shortcuts-subtitle = আপনার সংরক্ষণ বা পরিদর্শন করা সাইট
-#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = শর্টকাট
     .description = আপনার সংরক্ষণ বা পরিদর্শন করা সাইট
-newtab-custom-shortcuts-nova =
-    .label = শর্টকাট
-# Variables
-#   $num (number) - Number of rows to display
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
-newtab-custom-row-selector2 =
-    .label =
-        { $num ->
-            [one] { $num }টি সারি
-           *[other] { $num }টি সারি
-        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =

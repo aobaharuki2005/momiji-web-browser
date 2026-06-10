@@ -24,103 +24,24 @@ export class SidebarPage extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.documentGlobal.addEventListener("beforeunload", this.clearDocument);
-    this.documentGlobal.addEventListener("unload", this.clearDocument);
+    this.ownerGlobal.addEventListener("beforeunload", this.clearDocument);
+    this.ownerGlobal.addEventListener("unload", this.clearDocument);
 
     this._contextMenu = this.topWindow.SidebarController.currentContextMenu;
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this.documentGlobal.removeEventListener("beforeunload", this.clearDocument);
-    this.documentGlobal.removeEventListener("unload", this.clearDocument);
+    this.ownerGlobal.removeEventListener("beforeunload", this.clearDocument);
+    this.ownerGlobal.removeEventListener("unload", this.clearDocument);
   }
 
   get topWindow() {
-    return this.documentGlobal.top;
+    return this.ownerGlobal.top;
   }
 
   get sidebarController() {
     return this.topWindow.SidebarController;
-  }
-
-  /**
-   * Routes keydown events to the tree view controller.
-   */
-  get keydownHandler() {
-    if (!this._keydownHandler) {
-      this._keydownHandler = e => {
-        this.treeView?.handleKeydown(e);
-        if (e.defaultPrevented) {
-          e.stopPropagation();
-        }
-      };
-    }
-    return this._keydownHandler;
-  }
-
-  /**
-   * Visually ordered nodes for keyboard navigation. Walks the page's shadow
-   * DOM, emitting moz-card summaries and tab-list rows.
-   *
-   * @returns {TreeViewNode[]}
-   */
-  getNodesInOrder() {
-    const nodes = [];
-    this.#collectNodes(this.renderRoot, nodes);
-    return nodes;
-  }
-
-  #collectNodes({ children }, nodes) {
-    for (const el of children) {
-      const isCard = el.localName === "moz-card" && el.type === "accordion";
-      const isTabList = !!el.tabItems;
-
-      if (isCard) {
-        nodes.push({
-          card: el,
-          type: "card-summary",
-          get domNode() {
-            return el.summaryEl;
-          },
-        });
-        if (el.expanded) {
-          this.#collectNodes(el, nodes);
-        }
-      } else if (isTabList) {
-        for (const item of el.tabItems) {
-          nodes.push({
-            list: el,
-            item,
-            type: "row",
-            get domNode() {
-              return el.shadowRoot.querySelector(
-                `[data-guid="${CSS.escape(item.guid)}"]`
-              );
-            },
-          });
-        }
-      } else {
-        this.#collectNodes(el, nodes);
-      }
-    }
-  }
-
-  /**
-   * Toggle the expanded state of a node, if it's expandable. Returns true if
-   * the call had an effect (the node is expandable AND its state changed),
-   * false otherwise.
-   *
-   * @param {TreeViewNode} node
-   * @param {boolean} expanded
-   * @returns {boolean}
-   */
-  setExpanded(node, expanded) {
-    if (node.type === "card-summary" && node.card?.expanded !== expanded) {
-      node.card.expanded = expanded;
-      return true;
-    }
-    return false;
   }
 
   addContextMenuListeners() {
@@ -211,16 +132,8 @@ export class SidebarPage extends MozLitElement {
    *   The event to handle.
    */
   handleCommandEvent(e) {
-    let promise;
     switch (e.target.id) {
       case "sidebar-history-context-open-in-tab":
-        this.topWindow.openTrustedLinkIn(this.triggerNode.url, "tab", {
-          inBackground: Services.prefs.getBoolPref(
-            "browser.tabs.loadInBackground"
-          ),
-        });
-        break;
-      case "sidebar-synced-tabs-context-open-in-tab":
         this.topWindow.openTrustedLinkIn(this.triggerNode.url, "tab");
         break;
       case "sidebar-history-context-forget-site":
@@ -247,21 +160,14 @@ export class SidebarPage extends MozLitElement {
         break;
       case "sidebar-synced-tabs-context-bookmark-tab":
       case "sidebar-history-context-bookmark-page":
-        promise = this.topWindow.PlacesCommandHook.bookmarkLink(
+        this.topWindow.PlacesCommandHook.bookmarkLink(
           this.triggerNode.url,
           this.triggerNode.title
         );
         break;
     }
-    return promise;
   }
 
-  /**
-   * Show the "Clear data for site" dialog.
-   *
-   * @returns {"accept" | "cancel"}
-   *   The dialog's closing button.
-   */
   async forgetAboutThisSite() {
     let host;
     if (PlacesUtils.nodeIsHost(this.triggerNode)) {
@@ -275,17 +181,10 @@ export class SidebarPage extends MozLitElement {
     } catch (e) {
       // If there is no baseDomain we fall back to host
     }
-    let deferred = Promise.withResolvers();
     await this.topWindow.gDialogBox.open(
       "chrome://browser/content/places/clearDataForSite.xhtml",
-      {
-        host,
-        hostOrBaseDomain: baseDomain ?? host,
-        onAccept: () => deferred.resolve("accept"),
-        onCancel: () => deferred.resolve("cancel"),
-      }
+      { host, hostOrBaseDomain: baseDomain ?? host }
     );
-    return deferred.promise;
   }
 
   /**
@@ -293,7 +192,7 @@ export class SidebarPage extends MozLitElement {
    * and all of the custom elements can cleanup.
    */
   clearDocument() {
-    this.documentGlobal.document.body.textContent = "";
+    this.ownerGlobal.document.body.textContent = "";
   }
 
   /**

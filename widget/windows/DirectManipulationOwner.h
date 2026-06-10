@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DirectManipulationOwner_h_
-#define DirectManipulationOwner_h_
+#ifndef DirectManipulationOwner_h__
+#define DirectManipulationOwner_h__
 
 #include <windows.h>
 #include "Units.h"
@@ -50,4 +51,4 @@ class DirectManipulationOwner {
 }  // namespace widget
 }  // namespace mozilla
 
-#endif  // #ifndef DirectManipulationOwner_h_
+#endif  // #ifndef DirectManipulationOwner_h__

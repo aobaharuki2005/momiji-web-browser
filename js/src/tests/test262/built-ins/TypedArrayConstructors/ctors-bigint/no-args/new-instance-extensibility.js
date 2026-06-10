@@ -27,7 +27,7 @@ info: |
   ...
   11. Set the [[Extensible]] internal slot of A to true.
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
@@ -35,6 +35,6 @@ testWithBigIntTypedArrayConstructors(function(TA) {
   var sample = new TA();
 
   assert(Object.isExtensible(sample));
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

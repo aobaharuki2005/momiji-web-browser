@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -259,16 +261,15 @@ struct MemWriter {
 struct MemReader {
   constexpr MemReader(const char* aData, size_t aLen)
       : mData(aData), mEnd(aData + aLen) {}
-  [[nodiscard]] bool read(char* s, std::streamsize n) {
+  void read(char* s, std::streamsize n) {
     if (n <= (mEnd - mData)) {
       memcpy(s, mData, n);
       mData += n;
-      return true;
+    } else {
+      // We've requested more data than is available
+      // set the Reader into an eof state
+      SetIsBad();
     }
-    // We've requested more data than is available
-    // set the Reader into an eof state
-    SetIsBad();
-    return false;
   }
   bool eof() { return mData > mEnd; }
   bool good() { return !eof(); }
@@ -390,7 +391,7 @@ struct MemStream {
 class EventStream {
  public:
   virtual void write(const char* aData, size_t aSize) = 0;
-  [[nodiscard]] virtual bool read(char* aOut, size_t aSize) = 0;
+  virtual void read(char* aOut, size_t aSize) = 0;
   virtual bool good() = 0;
   virtual void SetIsBad() = 0;
 };
@@ -459,7 +460,6 @@ class RecordedEvent {
     OPTIMIZESOURCESURFACE,
     LINK,
     DESTINATION,
-    ACCESSIBLEID,
     LAST,
   };
 
@@ -588,8 +588,8 @@ class RecordedEventArray {
     if (!aStream.good() || !TryAlloc(aSize)) {
       return false;
     }
-    if (!aStream.read(reinterpret_cast<char*>(mData.get()),
-                      sizeof(T) * mSize)) {
+    aStream.read(reinterpret_cast<char*>(mData.get()), sizeof(T) * mSize);
+    if (!aStream.good()) {
       Clear();
       return false;
     }

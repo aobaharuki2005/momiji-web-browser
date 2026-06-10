@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
@@ -5,6 +7,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://gre/modules/ExtensionPreferencesManager.sys.mjs",
   ExtensionSettingsStore:
     "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 const { createAppInfo, promiseShutdownManager, promiseStartupManager } =
@@ -67,17 +70,13 @@ ExtensionPreferencesManager.addSetting("singlePref", SETTINGS.singlePref);
 for (let setting in SETTINGS) {
   setting = SETTINGS[setting];
   for (let i = 0; i < setting.prefNames.length; i++) {
-    Services.prefs.setStringPref(setting.prefNames[i], setting.initalValues[i]);
+    Preferences.set(setting.prefNames[i], setting.initalValues[i]);
   }
 }
 
 function checkPrefs(settingObj, value, msg) {
   for (let pref of settingObj.prefNames) {
-    equal(
-      Services.prefs.getStringPref(pref),
-      settingObj.valueFn(pref, value),
-      msg
-    );
+    equal(Preferences.get(pref), settingObj.valueFn(pref, value), msg);
   }
 }
 
@@ -356,7 +355,7 @@ add_task(async function test_preference_manager() {
     }
     for (let i = 0; i < settingObj.prefNames.length; i++) {
       equal(
-        Services.prefs.getStringPref(settingObj.prefNames[i]),
+        Preferences.get(settingObj.prefNames[i]),
         settingObj.initalValues[i],
         "removeSetting sets the pref(s) to the initial value(s) when removing the last extension."
       );
@@ -397,7 +396,7 @@ add_task(async function test_preference_manager() {
     let settingObj = SETTINGS[setting];
     for (let i = 0; i < settingObj.prefNames.length; i++) {
       equal(
-        Services.prefs.getStringPref(settingObj.prefNames[i]),
+        Preferences.get(settingObj.prefNames[i]),
         settingObj.initalValues[i],
         "disableAll unset the pref."
       );
@@ -426,7 +425,7 @@ add_task(async function test_preference_manager() {
     let settingObj = SETTINGS[setting];
     for (let i = 0; i < settingObj.prefNames.length; i++) {
       equal(
-        Services.prefs.getStringPref(settingObj.prefNames[i]),
+        Preferences.get(settingObj.prefNames[i]),
         settingObj.initalValues[i],
         "removeAll unset the pref."
       );
@@ -456,13 +455,13 @@ add_task(async function test_preference_manager() {
       for (let i = 0; i < prefNames.length; i++) {
         if (i === 0) {
           equal(
-            Services.prefs.getStringPref(prefNames[0]),
+            Preferences.get(prefNames[0]),
             manualValue,
             `${method} did not change a manually set pref.`
           );
         } else {
           equal(
-            Services.prefs.getStringPref(prefNames[i]),
+            Preferences.get(prefNames[i]),
             settingObj.valueFn(prefNames[i], apiValue),
             `${method} did not change another pref when a pref was manually set.`
           );
@@ -471,7 +470,7 @@ add_task(async function test_preference_manager() {
     };
 
     // Manually set the preference to a different value.
-    Services.prefs.setStringPref(settingObj.prefNames[0], manualValue);
+    Preferences.set(settingObj.prefNames[0], manualValue);
 
     await ExtensionPreferencesManager.disableAll(extension.id);
     checkResetPrefs("disableAll");
@@ -488,33 +487,25 @@ add_task(async function test_preference_manager() {
   let settingObj = SETTINGS[setting];
   let pref = settingObj.prefNames[0];
   let newValue = "newValue";
-  Services.prefs.clearUserPref(pref);
+  Preferences.reset(pref);
   await ExtensionPreferencesManager.setSetting(
     extensions[1].id,
     setting,
     newValue
   );
   equal(
-    Services.prefs.getStringPref(pref),
+    Preferences.get(pref),
     settingObj.valueFn(pref, newValue),
     "Uninitialized pref is set."
   );
   await ExtensionPreferencesManager.removeSetting(extensions[1].id, setting);
-  Assert.strictEqual(
-    Services.prefs.getPrefType(pref),
-    Services.prefs.PREF_INVALID,
-    "removeSetting removed the pref."
-  );
+  ok(!Preferences.has(pref), "removeSetting removed the pref.");
 
   // Test levelOfControl with a locked pref.
   setting = "multiple_prefs";
   let prefToLock = SETTINGS[setting].prefNames[0];
-  Services.prefs.setStringPref(prefToLock, "1");
-  Services.prefs.lockPref(prefToLock);
-  ok(
-    Services.prefs.prefIsLocked(prefToLock),
-    `Preference ${prefToLock} is locked.`
-  );
+  Preferences.lock(prefToLock, 1);
+  ok(Preferences.locked(prefToLock), `Preference ${prefToLock} is locked.`);
   let levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
     extensions[1].id,
     setting
@@ -684,11 +675,7 @@ add_task(async function test_preference_default_upgraded() {
     "some-pref"
   );
   ok(prefsChanged, "pref changed on removal of setting.");
-  equal(
-    Services.prefs.getStringPref("bar"),
-    "new default",
-    "default value is correct"
-  );
+  equal(Preferences.get("bar"), "new default", "default value is correct");
 
   await extension.unload();
   await promiseShutdownManager();

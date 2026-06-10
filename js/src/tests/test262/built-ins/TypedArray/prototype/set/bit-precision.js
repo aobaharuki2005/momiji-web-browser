@@ -19,7 +19,7 @@ includes: [nans.js, compareArray.js, testTypedArray.js]
 features: [TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function body(FA) {
+function body(FA) {
   var source = new FA(NaNs);
   var target = new FA(NaNs.length);
   var sourceBytes, targetBytes;
@@ -30,6 +30,8 @@ testWithTypedArrayConstructors(function body(FA) {
   targetBytes = new Uint8Array(target.buffer);
 
   assert(compareArray(sourceBytes, targetBytes))
-}, floatArrayConstructors);
+}
+
+testWithTypedArrayConstructors(body, floatArrayConstructors);
 
 reportCompare(0, 0);

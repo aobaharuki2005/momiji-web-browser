@@ -75,9 +75,6 @@ def lint(paths, config, log, **lintargs):
     if config.get("exclude"):
         args.append(f"--extend-exclude={','.join(config['exclude'])}")
 
-    if lintargs.get("extra_args"):
-        args.extend(lintargs["extra_args"])
-
     warning_rules = set(config.get("warning-rules", []))
     if lintargs.get("fix"):
         # Do a first pass with --fix-only as the json format doesn't return the
@@ -162,7 +159,7 @@ def format(paths, config, log, **lintargs):
         exclude_patterns.extend(config["exclude"])
 
     for exclude in exclude_patterns:
-        args.append(f"--exclude={exclude}")
+        args.extend(["--exclude", exclude])
 
     if lintargs.get("fix"):
         # Do a first pass to fix, as JSON output doesn't include fix counts

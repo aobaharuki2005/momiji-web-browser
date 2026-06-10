@@ -71,11 +71,11 @@
 
 namespace testing {
 template <class MockClass>
-class [[nodiscard]] NiceMock;
+class NiceMock;
 template <class MockClass>
-class [[nodiscard]] NaggyMock;
+class NaggyMock;
 template <class MockClass>
-class [[nodiscard]] StrictMock;
+class StrictMock;
 
 namespace internal {
 template <typename T>
@@ -108,7 +108,7 @@ constexpr bool HasStrictnessModifier() {
 #endif
 
 template <typename Base>
-class [[nodiscard]] NiceMockImpl {
+class NiceMockImpl {
  public:
   NiceMockImpl() {
     ::testing::Mock::AllowUninterestingCalls(reinterpret_cast<uintptr_t>(this));
@@ -120,7 +120,7 @@ class [[nodiscard]] NiceMockImpl {
 };
 
 template <typename Base>
-class [[nodiscard]] NaggyMockImpl {
+class NaggyMockImpl {
  public:
   NaggyMockImpl() {
     ::testing::Mock::WarnUninterestingCalls(reinterpret_cast<uintptr_t>(this));
@@ -132,7 +132,7 @@ class [[nodiscard]] NaggyMockImpl {
 };
 
 template <typename Base>
-class [[nodiscard]] StrictMockImpl {
+class StrictMockImpl {
  public:
   StrictMockImpl() {
     ::testing::Mock::FailUninterestingCalls(reinterpret_cast<uintptr_t>(this));
@@ -146,7 +146,7 @@ class [[nodiscard]] StrictMockImpl {
 }  // namespace internal
 
 template <class MockClass>
-class [[nodiscard]] GTEST_INTERNAL_EMPTY_BASE_CLASS NiceMock
+class GTEST_INTERNAL_EMPTY_BASE_CLASS NiceMock
     : private internal::NiceMockImpl<MockClass>,
       public MockClass {
  public:
@@ -187,7 +187,7 @@ class [[nodiscard]] GTEST_INTERNAL_EMPTY_BASE_CLASS NiceMock
 };
 
 template <class MockClass>
-class [[nodiscard]] GTEST_INTERNAL_EMPTY_BASE_CLASS NaggyMock
+class GTEST_INTERNAL_EMPTY_BASE_CLASS NaggyMock
     : private internal::NaggyMockImpl<MockClass>,
       public MockClass {
   static_assert(!internal::HasStrictnessModifier<MockClass>(),
@@ -229,7 +229,7 @@ class [[nodiscard]] GTEST_INTERNAL_EMPTY_BASE_CLASS NaggyMock
 };
 
 template <class MockClass>
-class [[nodiscard]] GTEST_INTERNAL_EMPTY_BASE_CLASS StrictMock
+class GTEST_INTERNAL_EMPTY_BASE_CLASS StrictMock
     : private internal::StrictMockImpl<MockClass>,
       public MockClass {
  public:

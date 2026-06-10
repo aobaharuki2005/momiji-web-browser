@@ -2,7 +2,7 @@ schema: 1
 
 bugzilla:
   product: Core
-  component: "Machine Learning: On Device"
+  component: Machine Learning
 
 origin:
   name: transformers.js

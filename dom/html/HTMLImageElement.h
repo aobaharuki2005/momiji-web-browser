@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -37,8 +39,6 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
   bool Draggable() const override;
-
-  void MaybeRecomputeAutoSizes(bool aQueueImageTask);
 
   ResponsiveImageSelector* GetResponsiveImageSelector() const {
     return mResponsiveSelector.get();
@@ -201,7 +201,7 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   }
 
 #ifdef DEBUG
-  HTMLFormElement* GetFormInternal() const;
+  HTMLFormElement* GetForm() const;
 #endif
   void SetForm(HTMLFormElement* aForm);
   void ClearForm(bool aRemoveFromForm);
@@ -250,19 +250,13 @@ class HTMLImageElement final : public nsGenericHTMLElement,
       nsAString& aResult);
 
   enum class StartLoad : bool { No, Yes };
-  void StopLazyLoading(StartLoad);
+  void StopLazyLoading(StartLoad = StartLoad::Yes);
 
   // This is used when restyling, for retrieving the extra style from the source
   // element.
   const StyleLockedDeclarationBlock* GetMappedAttributesFromSource() const;
 
   FetchPriority GetFetchPriorityForImage() const override;
-
-  /**
-   * Whether we are lazy loaded with sizes=auto
-   * https://html.spec.whatwg.org/#allows-auto-sizes
-   */
-  bool AllowsAutoSizes() const;
 
  protected:
   virtual ~HTMLImageElement();
@@ -363,9 +357,6 @@ class HTMLImageElement final : public nsGenericHTMLElement,
 
  private:
   bool SourceElementMatches(Element* aSourceElement);
-
-  // Start or stop observing for resizes when sizes=auto
-  void UpdateAutoSizeObserver();
 
   static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
   /**

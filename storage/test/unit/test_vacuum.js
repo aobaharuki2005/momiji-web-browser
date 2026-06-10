@@ -20,8 +20,7 @@ function synthesize_idle_daily() {
 /**
  * Returns a new nsIFile reference for a profile database.
  *
- * @param {string} name
- *   The name for the database, excluding the .sqlite extension.
+ * @param filename for the database, excluded the .sqlite extension.
  */
 function new_db_file(name = "testVacuum") {
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);

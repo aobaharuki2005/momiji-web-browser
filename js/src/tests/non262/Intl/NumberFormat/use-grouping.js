@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 const tests = {
   // minimumGroupingDigits is one for "en" (English).
   "en": {

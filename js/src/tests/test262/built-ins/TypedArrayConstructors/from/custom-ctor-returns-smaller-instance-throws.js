@@ -26,9 +26,9 @@ var sourceObj = {
   length: 2
 };
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   var ctor = function() {
-    return new TA(makeCtorArg(1));
+    return new TA(1);
   };
   assert.throws(TypeError, function() {
     TA.from.call(ctor, sourceItor);

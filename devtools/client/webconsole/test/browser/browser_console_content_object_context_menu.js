@@ -39,9 +39,8 @@ add_task(async function () {
   // |  contentObject: "YAY!"
   // |  ▶︎ deep: Array [ "hello", "world" ]
   // |  ▶︎ <prototype>
-  // |  ▶︎ <global>
 
-  await waitFor(() => oi.querySelectorAll(".node").length === 5);
+  await waitFor(() => oi.querySelectorAll(".node").length === 4);
   ok(true, "The ObjectInspector was expanded");
   oi.scrollIntoView();
 

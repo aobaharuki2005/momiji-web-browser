@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -116,8 +118,6 @@ static const DownMixMatrix gDownMixMatrices[CUSTOM_CHANNEL_LAYOUTS *
  * Given an array of input channels, downmix to aOutputChannelCount, and copy
  * the results to the channel buffers in aOutputChannels.  Don't call this with
  * input count <= output count.
- * Each of aOutputChannels must be non-null.
- * aInputChannels elements may be null.
  */
 template <typename SrcT, typename DstT>
 void AudioChannelsDownMix(Span<const SrcT* const> aInputChannels,
@@ -130,11 +130,7 @@ void AudioChannelsDownMix(Span<const SrcT* const> aInputChannels,
   if (inputChannelCount > 6) {
     // Just drop the unknown channels.
     for (uint32_t o = 0; o < outputChannelCount; ++o) {
-      if (aInputChannels[o]) {
-        ConvertAudioSamples(aInputChannels[o], aOutputChannels[o], aDuration);
-      } else {
-        std::fill_n(aOutputChannels[o], aDuration, static_cast<DstT>(0));
-      }
+      ConvertAudioSamples(aInputChannels[o], aOutputChannels[o], aDuration);
     }
     return;
   }
@@ -153,7 +149,7 @@ void AudioChannelsDownMix(Span<const SrcT* const> aInputChannels,
   }
   for (uint32_t c = 0; c < inputChannelCount; ++c) {
     uint32_t dstIndex = m.mInputDestination[c];
-    if (dstIndex == IGNORE || !aInputChannels[c]) {
+    if (dstIndex == IGNORE) {
       continue;
     }
     AddAudioSamplesWithScale(aInputChannels[c], aOutputChannels[dstIndex],
@@ -162,7 +158,7 @@ void AudioChannelsDownMix(Span<const SrcT* const> aInputChannels,
   // Utilize the fact that in every layout, C is the only channel that may
   // contribute to more than one output channel.
   uint32_t dstIndex = m.mCExtraDestination;
-  if (dstIndex != IGNORE && aInputChannels[SURROUND_C]) {
+  if (dstIndex != IGNORE) {
     AddAudioSamplesWithScale(aInputChannels[SURROUND_C],
                              aOutputChannels[dstIndex], aDuration,
                              m.mInputCoefficient[SURROUND_C]);

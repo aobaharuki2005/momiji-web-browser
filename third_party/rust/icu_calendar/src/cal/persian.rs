@@ -2,46 +2,41 @@
 // called LICENSE at the top level of the ICU4X source tree
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
-use crate::calendar_arithmetic::ArithmeticDate;
-use crate::calendar_arithmetic::DateFieldsResolver;
-use crate::error::{DateError, DateFromFieldsError, EcmaReferenceYearError, UnknownEraError};
-use crate::options::DateFromFieldsOptions;
-use crate::options::{DateAddOptions, DateDifferenceOptions};
-use crate::types::DateFields;
-use crate::{types, Calendar, Date, RangeError};
+//! This module contains types and implementations for the Persian calendar.
+//!
+//! ```rust
+//! use icu::calendar::Date;
+//!
+//! let persian_date = Date::try_new_persian(1348, 10, 11)
+//!     .expect("Failed to initialize Persian Date instance.");
+//!
+//! assert_eq!(persian_date.era_year().year, 1348);
+//! assert_eq!(persian_date.month().ordinal, 10);
+//! assert_eq!(persian_date.day_of_month().0, 11);
+//! ```
+
+use crate::cal::iso::{Iso, IsoDateInner};
+use crate::calendar_arithmetic::{ArithmeticDate, CalendarArithmetic};
+use crate::error::DateError;
+use crate::{types, Calendar, Date, DateDuration, DateDurationUnit, RangeError};
 use ::tinystr::tinystr;
 use calendrical_calculations::helpers::I32CastError;
 use calendrical_calculations::rata_die::RataDie;
 
 /// The [Persian Calendar](https://en.wikipedia.org/wiki/Solar_Hijri_calendar)
 ///
-/// The Persian Calendar is a solar calendar used officially by the countries of Iran and
-/// Afghanistan and many Persian-speaking regions.
+/// The Persian Calendar is a solar calendar used officially by the countries of Iran and Afghanistan and many Persian-speaking regions.
+/// It has 12 months and other similarities to the [`Gregorian`](super::Gregorian) Calendar.
 ///
-/// This implementation extends proleptically for dates before the calendar's creation
-/// in 458 AP (1079 CE).
-///
-/// This corresponds to the `"persian"` [CLDR calendar](https://unicode.org/reports/tr35/#UnicodeCalendarIdentifier).
+/// This type can be used with [`Date`] to represent dates in this calendar.
 ///
 /// # Era codes
 ///
-/// This calendar uses a single era code `ap`, with Anno Persico/Anno Persarum starting the year of the Hijra. Dates before this era use negative years.
+/// This calendar uses a single era code `ap` (aliases `sh`, `hs`), with Anno Persico/Anno Persarum starting the year of the Hijra. Dates before this era use negative years.
 ///
-/// # Months and days
+/// # Month codes
 ///
-/// The 12 months are called Farvardin (`M01`, 31 days), Ordibehesht (`M02`, 31 days),
-/// Khordad (`M03`, 31 days), Tir (`M04`, 31 days), Mordad (`M05`, 31 days), Shahrivar (`M06`, 31 days),
-/// Mehr (`M07`, 30 days), Aban (`M08`, 30 days), Azar (`M09`, 30 days),
-/// Dey (`M10`, 30 days), Bahman (`M11`, 30 days), Esfand (`M12`, 29 days).
-///
-/// In leap years (determined astronomically with respect to the vernal equinox), Esfand gains a 30th day.
-///
-/// Standard years thus have 365 days, and leap years 366.
-///
-/// # Calendar drift
-///
-/// As leap years are determined with respect to the solar year, this calendar stays anchored
-/// to the seasons.
+/// This calendar supports 12 solar month codes (`"M01" - "M12"`)
 #[derive(Copy, Clone, Debug, Default, Hash, Eq, PartialEq, PartialOrd, Ord)]
 #[allow(clippy::exhaustive_structs)]
 pub struct Persian;
@@ -51,14 +46,14 @@ pub struct Persian;
 /// The inner date type used for representing [`Date`]s of [`Persian`]. See [`Date`] and [`Persian`] for more details.
 pub struct PersianDateInner(ArithmeticDate<Persian>);
 
-impl DateFieldsResolver for Persian {
+impl CalendarArithmetic for Persian {
     type YearInfo = i32;
 
     fn days_in_provided_month(year: i32, month: u8) -> u8 {
         match month {
             1..=6 => 31,
             7..=11 => 30,
-            12 if calendrical_calculations::persian::is_leap_year(year) => 30,
+            12 if Self::provided_year_is_leap(year) => 30,
             12 => 29,
             _ => 0,
         }
@@ -68,40 +63,24 @@ impl DateFieldsResolver for Persian {
         12
     }
 
-    #[inline]
-    fn year_info_from_era(
-        &self,
-        era: &[u8],
-        era_year: i32,
-    ) -> Result<Self::YearInfo, UnknownEraError> {
-        match era {
-            b"ap" => Ok(era_year),
-            _ => Err(UnknownEraError),
+    fn provided_year_is_leap(p_year: i32) -> bool {
+        calendrical_calculations::persian::is_leap_year(p_year)
+    }
+
+    fn days_in_provided_year(year: i32) -> u16 {
+        if Self::provided_year_is_leap(year) {
+            366
+        } else {
+            365
         }
     }
 
-    #[inline]
-    fn year_info_from_extended(&self, extended_year: i32) -> Self::YearInfo {
-        extended_year
-    }
-
-    #[inline]
-    fn reference_year_from_month_day(
-        &self,
-        month_code: types::ValidMonthCode,
-        day: u8,
-    ) -> Result<Self::YearInfo, EcmaReferenceYearError> {
-        let (ordinal_month, false) = month_code.to_tuple() else {
-            return Err(EcmaReferenceYearError::MonthCodeNotInCalendar);
-        };
-        // December 31, 1972 occurs on 10th month, 10th day, 1351 AP
-        let persian_year = if ordinal_month < 10 || (ordinal_month == 10 && day <= 10) {
-            1351
+    fn last_month_day_in_provided_year(year: i32) -> (u8, u8) {
+        if Self::provided_year_is_leap(year) {
+            (12, 30)
         } else {
-            // Note: 1350 is a leap year
-            1350
-        };
-        Ok(persian_year)
+            (12, 29)
+        }
     }
 }
 
@@ -109,7 +88,6 @@ impl crate::cal::scaffold::UnstableSealed for Persian {}
 impl Calendar for Persian {
     type DateInner = PersianDateInner;
     type Year = types::EraYear;
-    type DifferenceError = core::convert::Infallible;
 
     fn from_codes(
         &self,
@@ -118,23 +96,19 @@ impl Calendar for Persian {
         month_code: types::MonthCode,
         day: u8,
     ) -> Result<Self::DateInner, DateError> {
-        ArithmeticDate::from_codes(era, year, month_code, day, self).map(PersianDateInner)
-    }
+        let year = match era {
+            Some("ap" | "sh" | "hs") | None => year,
+            Some(_) => return Err(DateError::UnknownEra),
+        };
 
-    #[cfg(feature = "unstable")]
-    fn from_fields(
-        &self,
-        fields: DateFields,
-        options: DateFromFieldsOptions,
-    ) -> Result<Self::DateInner, DateFromFieldsError> {
-        ArithmeticDate::from_fields(fields, options, self).map(PersianDateInner)
+        ArithmeticDate::new_from_codes(self, year, month_code, day).map(PersianDateInner)
     }
 
     fn from_rata_die(&self, rd: RataDie) -> Self::DateInner {
         PersianDateInner(
             match calendrical_calculations::persian::fast_persian_from_fixed(rd) {
-                Err(I32CastError::BelowMin) => ArithmeticDate::new_unchecked(i32::MIN, 1, 1),
-                Err(I32CastError::AboveMax) => ArithmeticDate::new_unchecked(i32::MAX, 12, 29),
+                Err(I32CastError::BelowMin) => ArithmeticDate::min_date(),
+                Err(I32CastError::AboveMax) => ArithmeticDate::max_date(),
                 Ok((year, month, day)) => ArithmeticDate::new_unchecked(year, month, day),
             },
         )
@@ -148,74 +122,69 @@ impl Calendar for Persian {
         )
     }
 
-    fn has_cheap_iso_conversion(&self) -> bool {
-        false
+    fn from_iso(&self, iso: IsoDateInner) -> PersianDateInner {
+        self.from_rata_die(Iso.to_rata_die(&iso))
+    }
+
+    fn to_iso(&self, date: &Self::DateInner) -> IsoDateInner {
+        Iso.from_rata_die(self.to_rata_die(date))
     }
 
     fn months_in_year(&self, date: &Self::DateInner) -> u8 {
-        Self::months_in_provided_year(date.0.year)
+        date.0.months_in_year()
     }
 
     fn days_in_year(&self, date: &Self::DateInner) -> u16 {
-        if self.is_in_leap_year(date) {
-            366
-        } else {
-            365
-        }
+        date.0.days_in_year()
     }
 
     fn days_in_month(&self, date: &Self::DateInner) -> u8 {
-        Self::days_in_provided_month(date.0.year, date.0.month)
+        date.0.days_in_month()
     }
 
-    #[cfg(feature = "unstable")]
-    fn add(
-        &self,
-        date: &Self::DateInner,
-        duration: types::DateDuration,
-        options: DateAddOptions,
-    ) -> Result<Self::DateInner, DateError> {
-        date.0.added(duration, self, options).map(PersianDateInner)
+    fn offset_date(&self, date: &mut Self::DateInner, offset: DateDuration<Self>) {
+        date.0.offset_date(offset, &())
     }
 
-    #[cfg(feature = "unstable")]
+    #[allow(clippy::field_reassign_with_default)]
     fn until(
         &self,
         date1: &Self::DateInner,
         date2: &Self::DateInner,
-        options: DateDifferenceOptions,
-    ) -> Result<types::DateDuration, Self::DifferenceError> {
-        Ok(date1.0.until(&date2.0, self, options))
+        _calendar2: &Self,
+        _largest_unit: DateDurationUnit,
+        _smallest_unit: DateDurationUnit,
+    ) -> DateDuration<Self> {
+        date1.0.until(date2.0, _largest_unit, _smallest_unit)
     }
 
     fn year_info(&self, date: &Self::DateInner) -> Self::Year {
-        let extended_year = date.0.year;
         types::EraYear {
             era: tinystr!(16, "ap"),
             era_index: Some(0),
-            year: extended_year,
-            extended_year,
+            year: self.extended_year(date),
             ambiguity: types::YearAmbiguity::CenturyRequired,
         }
     }
 
+    fn extended_year(&self, date: &Self::DateInner) -> i32 {
+        date.0.extended_year()
+    }
+
     fn is_in_leap_year(&self, date: &Self::DateInner) -> bool {
-        calendrical_calculations::persian::is_leap_year(date.0.year)
+        Self::provided_year_is_leap(date.0.year)
     }
 
     fn month(&self, date: &Self::DateInner) -> types::MonthInfo {
-        types::MonthInfo::non_lunisolar(date.0.month)
+        date.0.month()
     }
 
     fn day_of_month(&self, date: &Self::DateInner) -> types::DayOfMonth {
-        types::DayOfMonth(date.0.day)
+        date.0.day_of_month()
     }
 
     fn day_of_year(&self, date: &Self::DateInner) -> types::DayOfYear {
-        types::DayOfYear(
-            (date.0.month as u16 - 1) * 31 - (date.0.month as u16 - 1).saturating_sub(6)
-                + date.0.day as u16,
-        )
+        date.0.day_of_year()
     }
 
     fn debug_name(&self) -> &'static str {
@@ -250,7 +219,7 @@ impl Date<Persian> {
     /// assert_eq!(date_persian.day_of_month().0, 25);
     /// ```
     pub fn try_new_persian(year: i32, month: u8, day: u8) -> Result<Date<Persian>, RangeError> {
-        ArithmeticDate::try_from_ymd(year, month, day)
+        ArithmeticDate::new_from_ordinals(year, month, day)
             .map(PersianDateInner)
             .map(|inner| Date::from_raw(inner, Persian))
     }
@@ -389,6 +358,15 @@ mod tests {
         },
     ];
 
+    fn days_in_provided_year_core(year: i32) -> u16 {
+        let ny =
+            calendrical_calculations::persian::fixed_from_fast_persian(year, 1, 1).to_i64_date();
+        let next_ny = calendrical_calculations::persian::fixed_from_fast_persian(year + 1, 1, 1)
+            .to_i64_date();
+
+        (next_ny - ny) as u16
+    }
+
     #[test]
     fn test_persian_leap_year() {
         let mut leap_years: [i32; 21] = [0; 21];
@@ -401,11 +379,8 @@ mod tests {
         for (index, case) in CASES.iter().enumerate() {
             leap_years[index] = case.year;
         }
-        for (&year, &is_leap) in leap_years.iter().zip(expected_values.iter()) {
-            assert_eq!(
-                Date::try_new_persian(year, 1, 1).unwrap().is_in_leap_year(),
-                is_leap
-            );
+        for (year, bool) in leap_years.iter().zip(expected_values.iter()) {
+            assert_eq!(Persian::provided_year_is_leap(*year), *bool);
         }
     }
 
@@ -413,12 +388,8 @@ mod tests {
     fn days_in_provided_year_test() {
         for case in CASES.iter() {
             assert_eq!(
-                Date::try_new_persian(case.year, 1, 1)
-                    .unwrap()
-                    .days_in_year(),
-                (calendrical_calculations::persian::fixed_from_fast_persian(case.year + 1, 1, 1)
-                    - calendrical_calculations::persian::fixed_from_fast_persian(case.year, 1, 1))
-                    as u16
+                days_in_provided_year_core(case.year),
+                Persian::days_in_provided_year(case.year)
             );
         }
     }
@@ -743,13 +714,13 @@ mod tests {
 
     #[test]
     fn test_calendar_ut_ac_ir_data() {
-        for &(p_year, leap, iso_year, iso_month, iso_day) in CALENDAR_UT_AC_IR_TEST_DATA.iter() {
-            let persian_date = Date::try_new_persian(p_year, 1, 1).unwrap();
-            assert_eq!(persian_date.is_in_leap_year(), leap);
-            let iso_date = persian_date.to_iso();
-            assert_eq!(iso_date.era_year().year, iso_year);
-            assert_eq!(iso_date.month().ordinal, iso_month);
-            assert_eq!(iso_date.day_of_month().0, iso_day);
+        for (p_year, leap, iso_year, iso_month, iso_day) in CALENDAR_UT_AC_IR_TEST_DATA.iter() {
+            assert_eq!(Persian::provided_year_is_leap(*p_year), *leap);
+            let persian_date = Date::try_new_persian(*p_year, 1, 1).unwrap();
+            let iso_date = persian_date.to_calendar(Iso);
+            assert_eq!(iso_date.era_year().year, *iso_year);
+            assert_eq!(iso_date.month().ordinal, *iso_month);
+            assert_eq!(iso_date.day_of_month().0, *iso_day);
         }
     }
 }

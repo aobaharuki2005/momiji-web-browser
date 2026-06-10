@@ -141,11 +141,8 @@ export class ProfileSelector extends MozLitElement {
         break;
       }
       case "CreateProfile": {
-        let profile = await this.selectableProfileService.createNewProfile(
-          false,
-          null,
-          this.isStartupUI ? "selector-startup" : "selector-runtime"
-        );
+        let profile =
+          await this.selectableProfileService.createNewProfile(false);
         await this.launchProfile(profile, "about:newprofile");
         break;
       }

@@ -15,8 +15,6 @@ task-defaults:
             - grcov
 
 linux64-grcov:
-    attributes:
-        local-toolchain: true
     treeherder:
         symbol: TL(grcov)
     run:
@@ -28,8 +26,6 @@ linux64-grcov:
             - sysroot-x86_64-linux-gnu
 
 macosx64-grcov:
-    attributes:
-        local-toolchain: true
     treeherder:
         symbol: TM(grcov)
     run:
@@ -41,8 +37,6 @@ macosx64-grcov:
             - macosx64-sdk-toolchain
 
 win64-grcov:
-    attributes:
-        local-toolchain: true
     treeherder:
         symbol: TW64(grcov)
     run:

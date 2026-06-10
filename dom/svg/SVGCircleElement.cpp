@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,11 +26,11 @@ JSObject* SVGCircleElement::WrapNode(JSContext* aCx,
 
 SVGElement::LengthInfo SVGCircleElement::sLengthInfo[3] = {
     {nsGkAtoms::cx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::cy, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::Y},
+     SVGContentUtils::Y},
     {nsGkAtoms::r, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::XY}};
+     SVGContentUtils::XY}};
 
 //----------------------------------------------------------------------
 // Implementation
@@ -144,21 +146,6 @@ already_AddRefed<Path> SVGCircleElement::BuildPath(PathBuilder* aBuilder) {
   aBuilder->Arc(Point(x, y), r, 0, Float(2 * M_PI));
 
   return aBuilder->Finish();
-}
-
-Maybe<bool> SVGCircleElement::HasCtxDependentLength() const {
-  bool hasCtxDependentLength = false;
-  if (SVGGeometryProperty::DoForComputedStyle(
-          this, [&](const ComputedStyle* style) {
-            const nsStyleSVGReset* styleSVGReset = style->StyleSVGReset();
-
-            hasCtxDependentLength = styleSVGReset->mCx.HasPercent() ||
-                                    styleSVGReset->mCy.HasPercent() ||
-                                    styleSVGReset->mR.HasPercent();
-          })) {
-    return Some(hasCtxDependentLength);
-  }
-  return Nothing();
 }
 
 bool SVGCircleElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,

@@ -59,11 +59,13 @@ from mozpack import executables
 from mozpack.files import FileFinder, JarFinder, TarFinder
 from mozpack.mozjar import JarReader, JarWriter
 from mozpack.packager.unpack import UnpackFinder
+from taskcluster.exceptions import TaskclusterRestFailure
+from taskgraph.util.taskcluster import find_task_id, get_artifact_url, list_artifacts
 
 from mozbuild.artifact_builds import JOB_CHOICES
 from mozbuild.artifact_cache import ArtifactCache
 from mozbuild.dirutils import ensureParentDir, mkdir
-from mozbuild.util import FileAvoidWrite, get_root_url, get_taskcluster_client
+from mozbuild.util import FileAvoidWrite
 
 # Number of candidate pushheads to cache per parent changeset.
 NUM_PUSHHEADS_TO_QUERY_PER_PARENT = 50
@@ -158,7 +160,6 @@ class ArtifactJob:
         ("bin/GenerateOCSPResponse", ("bin", "bin")),
         ("bin/OCSPStaplingServer", ("bin", "bin")),
         ("bin/SanctionsTestServer", ("bin", "bin")),
-        ("bin/ZeroRttAcceptServer", ("bin", "bin")),
         ("bin/certutil", ("bin", "bin")),
         ("bin/geckodriver", ("bin", "bin")),
         ("bin/pk12util", ("bin", "bin")),
@@ -212,12 +213,11 @@ class ArtifactJob:
         log=None,
         download_tests=True,
         download_symbols=False,
-        artifact_filters=None,
+        download_maven_zip=False,
         override_job_configuration=None,
         substs=None,
         mozbuild=None,
     ):
-        artifact_filters = artifact_filters or []
         if override_job_configuration is not None:
             self.job_configuration = override_job_configuration
 
@@ -227,7 +227,9 @@ class ArtifactJob:
             self._tests_re = re.compile(
                 r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.zst)$"
             )
-        self._artifact_filters = set(artifact_filters)
+        self._maven_zip_re = None
+        if download_maven_zip:
+            self._maven_zip_re = re.compile(r"public/build/target\.maven\.zip$")
         self._log = log
         self._substs = substs
         self._symbols_archive_suffix = None
@@ -245,14 +247,15 @@ class ArtifactJob:
     def find_candidate_artifacts(self, artifacts):
         # TODO: Handle multiple artifacts, taking the latest one.
         tests_artifact = None
-        found_artifact_filters = set()
+        maven_zip_artifact = None
         for artifact in artifacts:
             name = artifact["name"]
-            if self._artifact_filters:
-                if name in self._artifact_filters:
-                    found_artifact_filters.add(name)
+            if self._maven_zip_re:
+                if self._maven_zip_re.match(name):
+                    maven_zip_artifact = name
                     yield name
-                continue
+                else:
+                    continue
             elif self._package_re and self._package_re.match(name):
                 yield name
             elif self._tests_re and self._tests_re.match(name):
@@ -275,12 +278,11 @@ class ArtifactJob:
             raise ValueError(
                 f'Expected tests archive matching "{self._tests_re}", but found none!'
             )
-        if self._artifact_filters:
-            missing_artifacts = self._artifact_filters - found_artifact_filters
-            if missing_artifacts:
-                raise ValueError(
-                    f"Did not find expected artifacts {sorted(missing_artifacts)}. Did find artifacts: {sorted(found_artifact_filters)}"
-                )
+        if self._maven_zip_re and not maven_zip_artifact:
+            raise ValueError(
+                f'Expected Maven zip archive matching "{self._maven_zip_re}", but '
+                "found none!"
+            )
 
     @contextmanager
     def get_writer(self, **kwargs):
@@ -638,7 +640,6 @@ class LinuxArtifactJob(ArtifactJob):
         "{product}/glxtest",
         "{product}/v4l2test",
         "{product}/vaapitest",
-        "{product}/vulkantest",
         "{product}/**/*.so",
         # Preserve signatures when present.
         "{product}/**/*.sig",
@@ -860,7 +861,6 @@ class WinArtifactJob(ArtifactJob):
         ("bin/GenerateOCSPResponse.exe", ("bin", "bin")),
         ("bin/OCSPStaplingServer.exe", ("bin", "bin")),
         ("bin/SanctionsTestServer.exe", ("bin", "bin")),
-        ("bin/ZeroRttAcceptServer.exe", ("bin", "bin")),
         ("bin/certutil.exe", ("bin", "bin")),
         ("bin/geckodriver.exe", ("bin", "bin")),
         ("bin/minidumpwriter.exe", ("bin", "bin")),
@@ -1173,13 +1173,8 @@ class TaskCache(CacheManager):
             {"namespace": namespace},
             "Searching Taskcluster index with namespace: {namespace}",
         )
-
-        from taskcluster.exceptions import TaskclusterRestFailure
-
         try:
-            index = get_taskcluster_client("index")
-            task = index.findTask(namespace)
-            taskId = task["taskId"]
+            taskId = find_task_id(namespace)
         except (KeyError, TaskclusterRestFailure) as e:
             if isinstance(e, TaskclusterRestFailure) and e.status_code != 404:
                 raise
@@ -1188,9 +1183,7 @@ class TaskCache(CacheManager):
             # care about; and even those that do may not have completed yet.
             raise ValueError(f"Task for {namespace} does not exist (yet)!")
 
-        queue = get_taskcluster_client("queue")
-        response = queue.listLatestArtifacts(taskId)
-        return taskId, response["artifacts"]
+        return taskId, list_artifacts(taskId)
 
 
 class Artifacts:
@@ -1211,12 +1204,11 @@ class Artifacts:
         topsrcdir=None,
         download_tests=True,
         download_symbols=False,
-        artifact_filters=None,
+        download_maven_zip=False,
         no_process=False,
         unfiltered_project_package=False,
         mozbuild=None,
     ):
-        artifact_filters = artifact_filters or []
         if (hg and git) or (not hg and not git):
             raise ValueError("Must provide path to exactly one of hg and git")
 
@@ -1255,7 +1247,7 @@ class Artifacts:
                     log=self._log,
                     download_tests=download_tests,
                     download_symbols=download_symbols,
-                    artifact_filters=artifact_filters,
+                    download_maven_zip=download_maven_zip,
                     override_job_configuration=job_configuration,
                     substs=self._substs,
                     mozbuild=mozbuild,
@@ -1270,7 +1262,7 @@ class Artifacts:
                 log=self._log,
                 download_tests=False,
                 download_symbols=False,
-                artifact_filters=[],
+                download_maven_zip=False,
                 override_job_configuration=job_configuration,
                 substs=self._substs,
                 mozbuild=mozbuild,
@@ -1601,9 +1593,7 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
 
         urls = []
         for artifact_name in self._artifact_job.find_candidate_artifacts(artifacts):
-            url = (
-                f"{get_root_url()}/api/queue/v1/task/{taskId}/artifacts/{artifact_name}"
-            )
+            url = get_artifact_url(taskId, artifact_name)
             urls.append(url)
         if urls:
             self.log(
@@ -1819,15 +1809,11 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
         return self._install_from_hg_pushheads(pushheads, distdir)
 
     def install_from_task(self, taskId, distdir):
-        queue = get_taskcluster_client("queue")
-        response = queue.listLatestArtifacts(taskId)
-        artifacts = response["artifacts"]
+        artifacts = list_artifacts(taskId)
 
         urls = []
         for artifact_name in self._artifact_job.find_candidate_artifacts(artifacts):
-            url = (
-                f"{get_root_url()}/api/queue/v1/task/{taskId}/artifacts/{artifact_name}"
-            )
+            url = get_artifact_url(taskId, artifact_name)
             urls.append(url)
         if not urls:
             raise ValueError(f"Task {taskId} existed, but no artifacts found!")

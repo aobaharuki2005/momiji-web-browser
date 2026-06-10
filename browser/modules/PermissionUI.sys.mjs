@@ -76,54 +76,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
-// Lazy getter for site categories from pref
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "siteCategories",
-  "permissions.desktop-notification.telemetry.siteCategories",
-  "{}",
-  null,
-  val => {
-    // Parse the JSON pref into a Map
-    // Format: {"domain1":"category1","domain2":"category2",...}
-    try {
-      let obj = JSON.parse(val);
-      return new Map(Object.entries(obj));
-    } catch (e) {
-      console.error("Failed to parse site categories pref:", e);
-      return new Map();
-    }
-  }
-);
-
-/**
- * Get the site category for telemetry based on the domain.
- *
- * @param {nsIPrincipal} principal - The principal of the requesting site
- * @returns {string} The category name or "other" if not in the known list
- */
-function getSiteCategory(principal) {
-  try {
-    // Check the full host first for specific subdomain matches
-    // (e.g., "mail.google.com" should match before falling back to "google.com")
-    let host = principal.URI.host;
-    if (lazy.siteCategories.has(host)) {
-      return lazy.siteCategories.get(host);
-    }
-
-    // Fall back to baseDomain (eTLD+1) for general domain matches
-    // (e.g., "example.com" from "sub.example.com")
-    let baseDomain = principal.baseDomain;
-    if (lazy.siteCategories.has(baseDomain)) {
-      return lazy.siteCategories.get(baseDomain);
-    }
-
-    return "other";
-  } catch (e) {
-    return "other";
-  }
-}
-
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "IDNService",
@@ -167,20 +119,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "lnaPromptTimeoutMs",
   "network.lna.prompt.timeout",
   300000
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "lnaTemporaryPermissionExpireTimeMs",
-  "network.lna.temporary_permission_expire_time_ms",
-  24 * 3600 * 1000 // 24 hours
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "webserialGated",
-  "dom.webserial.gated",
-  true
 );
 
 /**
@@ -254,14 +192,6 @@ class PermissionPrompt {
    * permissions. If undefined, it defaults to the browser.currentURI.
    */
   get temporaryPermissionURI() {
-    return undefined;
-  }
-
-  /**
-   * Custom expiration time in milliseconds for temporary permissions.
-   * If undefined, uses the default from SitePermissions.temporaryPermissionExpireTime.
-   */
-  get temporaryPermissionExpireTimeMS() {
     return undefined;
   }
 
@@ -497,8 +427,7 @@ class PermissionPrompt {
 
       if (
         state == lazy.SitePermissions.ALLOW &&
-        !this.request.isRequestDelegatedToUnsafeThirdParty &&
-        !this.request.ignoreAllowSitePermission
+        !this.request.isRequestDelegatedToUnsafeThirdParty
       ) {
         this.allow();
         return;
@@ -530,7 +459,7 @@ class PermissionPrompt {
       return;
     }
 
-    let chromeWin = this.browser.documentGlobal;
+    let chromeWin = this.browser.ownerGlobal;
     if (!chromeWin.PopupNotifications) {
       this.cancel();
       return;
@@ -570,8 +499,7 @@ class PermissionPrompt {
                 this.permissionKey,
                 promptAction.action,
                 lazy.SitePermissions.SCOPE_TEMPORARY,
-                this.browser,
-                this.temporaryPermissionExpireTimeMS
+                this.browser
               );
             }
 
@@ -587,21 +515,13 @@ class PermissionPrompt {
               this.permissionKey,
               promptAction.action,
               lazy.SitePermissions.SCOPE_TEMPORARY,
-              this.browser,
-              this.temporaryPermissionExpireTimeMS
+              this.browser
             );
           }
         },
       };
       if (promptAction.dismiss) {
         action.dismiss = promptAction.dismiss;
-      }
-
-      // Deny actions are not a clickjacking target (an attacker has nothing
-      // to gain by tricking a user into denying a permission), so they fire
-      // immediately without the security delay. See bug 2035581.
-      if (promptAction.action === lazy.SitePermissions.BLOCK) {
-        action.disableSecurityDelay = true;
       }
 
       popupNotificationActions.push(action);
@@ -613,7 +533,7 @@ class PermissionPrompt {
   postPrompt() {
     let browser = this.browser;
     let principal = this.principal;
-    let chromeWin = browser.documentGlobal;
+    let chromeWin = browser.ownerGlobal;
     if (!chromeWin.PopupNotifications) {
       return;
     }
@@ -673,7 +593,7 @@ class PermissionPrompt {
   }
 
   #showNotification(actions, postPrompt = false) {
-    let chromeWin = this.browser.documentGlobal;
+    let chromeWin = this.browser.ownerGlobal;
     let mainAction = actions.length ? actions[0] : null;
     let secondaryActions = actions.splice(1);
 
@@ -689,7 +609,7 @@ class PermissionPrompt {
       options.hideClose = true;
     }
 
-    options.eventCallback = (topic, nextRemovalReason, withoutUserResponse) => {
+    options.eventCallback = (topic, nextRemovalReason, isCancel) => {
       // When the docshell of the browser is aboout to be swapped to another one,
       // the "swapping" event is called. Returning true causes the notification
       // to be moved to the new browser.
@@ -710,7 +630,7 @@ class PermissionPrompt {
       // You can remove this restriction if you need it, but be
       // mindful of other consumers.
       if (topic == "removed" && !postPrompt) {
-        if (withoutUserResponse) {
+        if (isCancel) {
           this.cancel();
         }
         this.onAfterShow();
@@ -779,44 +699,6 @@ class PermissionPromptForRequest extends PermissionPrompt {
  * addon install flow.
  */
 class SitePermsAddonInstallRequest extends PermissionPromptForRequest {
-  /**
-   * Triggers the addon install flow and calls the appropriate callback based on the result.
-   * This method encapsulates the common logic for installing a SitePermsAddon and handling
-   * success/failure cases, including error logging.
-   *
-   * @param {Function} onSuccess - Callback to invoke if the addon is installed successfully
-   * @param {Function} onError - Callback to invoke if the addon installation fails
-   */
-  async installSitePermAddon(onSuccess, onError) {
-    try {
-      await lazy.AddonManager.installSitePermsAddonFromWebpage(
-        this.browser,
-        this.principal,
-        this.permName
-      );
-      onSuccess();
-    } catch (err) {
-      onError();
-
-      let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
-      let errorMessage =
-        this.getInstallErrorMessage(err) ||
-        `${this.permName} access was rejected: ${err.message}`;
-
-      let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
-      scriptError.initWithWindowID(
-        errorMessage,
-        null,
-        0,
-        0,
-        0,
-        "content javascript",
-        this.browser.browsingContext.currentWindowGlobal.innerWindowId
-      );
-      Services.console.logMessage(scriptError);
-    }
-  }
-
   prompt() {
     // fallback to regular permission prompt for localhost,
     // or when the SitePermsAddonProvider is not enabled.
@@ -826,12 +708,34 @@ class SitePermsAddonInstallRequest extends PermissionPromptForRequest {
     }
 
     // Otherwise, we'll use the addon install flow.
-    this.installSitePermAddon(
+    lazy.AddonManager.installSitePermsAddonFromWebpage(
+      this.browser,
+      this.principal,
+      this.permName
+    ).then(
       () => {
         this.allow();
       },
-      () => {
+      err => {
         this.cancel();
+
+        // Print an error message in the console to give more information to the developer.
+        let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
+        let errorMessage =
+          this.getInstallErrorMessage(err) ||
+          `${this.permName} access was rejected: ${err.message}`;
+
+        let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
+        scriptError.initWithWindowID(
+          errorMessage,
+          null,
+          0,
+          0,
+          0,
+          "content javascript",
+          this.browser.browsingContext.currentWindowGlobal.innerWindowId
+        );
+        Services.console.logMessage(scriptError);
       }
     );
   }
@@ -888,7 +792,7 @@ class GeolocationPermissionPrompt extends PermissionPromptForRequest {
     // Don't offer "always remember" action in PB mode
     options.checkbox = {
       show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
-        this.browser.documentGlobal
+        this.browser.ownerGlobal
       ),
     };
 
@@ -975,7 +879,7 @@ class GeolocationPermissionPrompt extends PermissionPromptForRequest {
   }
 
   #updateGeoSharing(state) {
-    let gBrowser = this.browser.documentGlobal.gBrowser;
+    let gBrowser = this.browser.ownerGlobal.gBrowser;
     if (gBrowser == null) {
       return;
     }
@@ -1007,10 +911,6 @@ class GeolocationPermissionPrompt extends PermissionPromptForRequest {
   cancel(...args) {
     this.#updateGeoSharing(false);
     super.cancel(...args);
-  }
-
-  ignoreAllowSitePermission() {
-    return this.request.ignoreAllowSitePermission;
   }
 }
 
@@ -1046,7 +946,7 @@ class XRPermissionPrompt extends PermissionPromptForRequest {
     // Don't offer "always remember" action in PB mode
     options.checkbox = {
       show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
-        this.browser.documentGlobal
+        this.browser.ownerGlobal
       ),
     };
 
@@ -1092,7 +992,7 @@ class XRPermissionPrompt extends PermissionPromptForRequest {
   }
 
   #updateXRSharing(state) {
-    let gBrowser = this.browser.documentGlobal.gBrowser;
+    let gBrowser = this.browser.ownerGlobal.gBrowser;
     if (gBrowser == null) {
       return;
     }
@@ -1159,11 +1059,6 @@ class LNAPermissionPromptBase extends PermissionPromptForRequest {
     super.allow(choices);
   }
 
-  get temporaryPermissionExpireTimeMS() {
-    // LNA temporary permissions have a custom expiration time (default 24 hours)
-    return lazy.lnaTemporaryPermissionExpireTimeMs;
-  }
-
   #startTimeoutTimer() {
     this.#clearTimeoutTimer();
 
@@ -1188,7 +1083,7 @@ class LNAPermissionPromptBase extends PermissionPromptForRequest {
   }
 
   #removePrompt() {
-    let chromeWin = this.browser?.documentGlobal;
+    let chromeWin = this.browser?.ownerGlobal;
     let notification = chromeWin?.PopupNotifications.getNotification(
       this.notificationID,
       this.browser
@@ -1213,13 +1108,13 @@ class LNAPermissionPromptBase extends PermissionPromptForRequest {
  * @param request (nsIContentPermissionRequest)
  *        The request for a permission from content.
  */
-class LoopbackNetworkPermissionPrompt extends LNAPermissionPromptBase {
+class LocalHostPermissionPrompt extends LNAPermissionPromptBase {
   get type() {
-    return "loopback-network";
+    return "localhost";
   }
 
   get permissionKey() {
-    return "loopback-network";
+    return "localhost";
   }
 
   get popupOptions() {
@@ -1234,9 +1129,15 @@ class LoopbackNetworkPermissionPrompt extends LNAPermissionPromptBase {
     // Don't offer "always remember" action in PB mode
     options.checkbox = {
       show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
-        this.browser.documentGlobal
+        this.browser.ownerGlobal
       ),
     };
+
+    if (this.request.isRequestDelegatedToUnsafeThirdParty) {
+      // Second name should be the third party origin
+      options.secondName = this.getPrincipalName(this.request.principal);
+      options.checkbox = { show: false };
+    }
 
     if (options.checkbox.show) {
       options.checkbox.label = lazy.gBrowserBundle.GetStringFromName(
@@ -1248,11 +1149,11 @@ class LoopbackNetworkPermissionPrompt extends LNAPermissionPromptBase {
   }
 
   get notificationID() {
-    return "loopback-network";
+    return "localhost";
   }
 
   get anchorID() {
-    return "loopback-network-notification-icon";
+    return "localhost-notification-icon";
   }
 
   get message() {
@@ -1347,9 +1248,6 @@ class DesktopNotificationPermissionPrompt extends PermissionPromptForRequest {
   }
 
   get promptActions() {
-    // Capture the site category now, while this.principal is still valid
-    let siteCategory = getSiteCategory(this.principal);
-
     let actions = [
       {
         label: lazy.gBrowserBundle.GetStringFromName("webNotifications.allow2"),
@@ -1358,13 +1256,6 @@ class DesktopNotificationPermissionPrompt extends PermissionPromptForRequest {
         ),
         action: lazy.SitePermissions.ALLOW,
         scope: lazy.SitePermissions.SCOPE_PERSISTENT,
-        callback: () => {
-          Glean.webNotificationPermission.promptInteraction.record({
-            site_category: siteCategory,
-            action: "allow",
-            is_persistent: true,
-          });
-        },
       },
     ];
     if (this.notNowEnabled) {
@@ -1374,13 +1265,6 @@ class DesktopNotificationPermissionPrompt extends PermissionPromptForRequest {
           "webNotifications.notNow.accesskey"
         ),
         action: lazy.SitePermissions.BLOCK,
-        callback: () => {
-          Glean.webNotificationPermission.promptInteraction.record({
-            site_category: siteCategory,
-            action: "block",
-            is_persistent: false,
-          });
-        },
       });
     }
 
@@ -1402,21 +1286,11 @@ class DesktopNotificationPermissionPrompt extends PermissionPromptForRequest {
       scope: isBrowserPrivate
         ? lazy.SitePermissions.SCOPE_SESSION
         : lazy.SitePermissions.SCOPE_PERSISTENT,
-      callback: () => {
-        Glean.webNotificationPermission.promptInteraction.record({
-          site_category: siteCategory,
-          action: "block",
-          is_persistent: true,
-        });
-      },
     });
     return actions;
   }
 
   get postPromptActions() {
-    // Capture the site category now, while this.principal is still valid
-    let siteCategory = getSiteCategory(this.principal);
-
     let actions = [
       {
         label: lazy.gBrowserBundle.GetStringFromName("webNotifications.allow2"),
@@ -1424,13 +1298,6 @@ class DesktopNotificationPermissionPrompt extends PermissionPromptForRequest {
           "webNotifications.allow2.accesskey"
         ),
         action: lazy.SitePermissions.ALLOW,
-        callback: () => {
-          Glean.webNotificationPermission.promptInteraction.record({
-            site_category: siteCategory,
-            action: "allow",
-            is_persistent: true,
-          });
-        },
       },
     ];
 
@@ -1449,75 +1316,8 @@ class DesktopNotificationPermissionPrompt extends PermissionPromptForRequest {
             "webNotifications.alwaysBlock.accesskey"
           ),
       action: lazy.SitePermissions.BLOCK,
-      callback: () => {
-        Glean.webNotificationPermission.promptInteraction.record({
-          site_category: siteCategory,
-          action: "block",
-          is_persistent: true,
-        });
-      },
     });
     return actions;
-  }
-
-  prompt() {
-    // Capture site category early (before this.principal becomes invalid)
-    let siteCategory = getSiteCategory(this.principal);
-
-    // Determine the blocking reason (check most specific to least specific)
-    let blockReason = null;
-
-    // Only check for pre-existing BLOCK if the parent hasn't already handled this
-    // The parent's prompt() will cancel immediately if state is BLOCK, so we need
-    // to detect this AFTER the parent runs, not before
-
-    // Check for no user gesture (will be blocked by parent)
-    if (
-      this.requiresUserInput &&
-      !this.request.hasValidTransientUserGestureActivation
-    ) {
-      blockReason = "no_user_gesture";
-
-      Glean.webNotificationPermission.promptBlocked.record({
-        site_category: siteCategory,
-        reason: blockReason,
-      });
-    }
-
-    // Call parent prompt()
-    return super.prompt();
-  }
-
-  postPrompt() {
-    Glean.webNotificationPermission.iconShown.record({
-      site_category: getSiteCategory(this.principal),
-    });
-
-    // Call parent postPrompt()
-    return super.postPrompt();
-  }
-
-  onShown() {
-    // Determine if this was triggered by icon click or script
-    // If requiresUserInput is enabled and the request lacks a user gesture,
-    // but we're showing the prompt anyway, it means the user clicked the icon
-    let trigger = "script";
-    if (
-      this.requiresUserInput &&
-      !this.request.hasValidTransientUserGestureActivation
-    ) {
-      trigger = "icon_click";
-
-      // Record icon_clicked telemetry when user clicks the post-prompt icon
-      Glean.webNotificationPermission.iconClicked.record({
-        site_category: getSiteCategory(this.principal),
-      });
-    }
-
-    Glean.webNotificationPermission.promptShown.record({
-      site_category: getSiteCategory(this.principal),
-      trigger,
-    });
   }
 }
 
@@ -1549,9 +1349,15 @@ class LocalNetworkPermissionPrompt extends LNAPermissionPromptBase {
     // Don't offer "always remember" action in PB mode
     options.checkbox = {
       show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
-        this.browser.documentGlobal
+        this.browser.ownerGlobal
       ),
     };
+
+    if (this.request.isRequestDelegatedToUnsafeThirdParty) {
+      // Second name should be the third party origin
+      options.secondName = this.getPrincipalName(this.request.principal);
+      options.checkbox = { show: false };
+    }
 
     if (options.checkbox.show) {
       options.checkbox.label = lazy.gBrowserBundle.GetStringFromName(
@@ -1629,7 +1435,7 @@ class PersistentStoragePermissionPrompt extends PermissionPromptForRequest {
 
     options.checkbox = {
       show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
-        this.browser.documentGlobal
+        this.browser.ownerGlobal
       ),
     };
 
@@ -1720,7 +1526,7 @@ class MIDIPermissionPrompt extends SitePermsAddonInstallRequest {
     // Don't offer "always remember" action in PB mode
     options.checkbox = {
       show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
-        this.browser.documentGlobal
+        this.browser.ownerGlobal
       ),
     };
 
@@ -1792,272 +1598,6 @@ class MIDIPermissionPrompt extends SitePermsAddonInstallRequest {
   }
 }
 
-/**
- * Creates a PermissionPrompt for a nsIContentPermissionRequest for
- * the WebSerial API.
- *
- * @param request (nsIContentPermissionRequest)
- *        The request for a permission from content.
- */
-class SerialPermissionPrompt extends SitePermsAddonInstallRequest {
-  constructor(request) {
-    super();
-    this.request = request;
-    this.permName = "serial";
-  }
-
-  get type() {
-    return "serial";
-  }
-
-  get permissionKey() {
-    return this.permName;
-  }
-
-  get popupOptions() {
-    return {
-      displayURI: false,
-      name: this.getPrincipalName(),
-      // Don't offer "always remember" action
-      checkbox: false,
-    };
-  }
-
-  _populateDeviceList(notification) {
-    let document = notification.browser.ownerDocument;
-    let menulist = document.getElementById("webSerial-selectPort-menulist");
-    let menupopup = document.getElementById("webSerial-selectPort-menupopup");
-    let noPortsMsg = document.getElementById("webSerial-no-ports-available");
-
-    if (!menulist || !menupopup || !noPortsMsg) {
-      console.error("[WebSerial] Failed to find required UI elements");
-      return;
-    }
-
-    // Clear existing items
-    while (menupopup.firstChild) {
-      menupopup.firstChild.remove();
-    }
-
-    // Get port data from the permission request's options array
-    let types = this.request.types.QueryInterface(Ci.nsIArray);
-    let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
-    let options = perm.options.QueryInterface(Ci.nsIArray);
-
-    let ports = [];
-    this._autoselect = false;
-    for (let i = 0; i < options.length; i++) {
-      let optionStr = options.queryElementAt(i, Ci.nsISupportsString).data;
-      let parsed = JSON.parse(optionStr);
-      if (parsed.__autoselect__) {
-        this._autoselect = true;
-        continue;
-      }
-      ports.push(parsed);
-    }
-
-    // Handle no devices case
-    const anyPorts = ports.length !== 0;
-    menulist.hidden = !anyPorts;
-    noPortsMsg.hidden = anyPorts;
-    notification.mainAction.disabled = !anyPorts;
-    if (!anyPorts) {
-      return;
-    }
-
-    // Populate menulist with devices
-    for (let i = 0; i < ports.length; i++) {
-      let menuitem = document.createXULElement("menuitem");
-      let port = ports[i];
-      let label = this._getDeviceDisplayName(port);
-      menuitem.setAttribute("label", label);
-      menuitem.setAttribute("value", i.toString());
-      menupopup.appendChild(menuitem);
-    }
-
-    // Select first item by default
-    menulist.selectedIndex = 0;
-  }
-
-  _getDeviceDisplayName(port) {
-    if (port.friendlyName?.length) {
-      return port.friendlyName;
-    }
-    let path = port.path;
-    let vid = port.usbVendorId;
-    let pid = port.usbProductId;
-
-    // If USB device, show VID/PID
-    if (vid != null && pid != null && vid !== 0 && pid !== 0) {
-      let vidHex = vid.toString(16).padStart(4, "0");
-      let pidHex = pid.toString(16).padStart(4, "0");
-      return `${path} (${vidHex}:${pidHex})`;
-    }
-
-    return path;
-  }
-
-  async prompt() {
-    // For localhost or file or when addon provider is disabled, show device picker directly
-    if (
-      this.principal.isLoopbackHost ||
-      this.principal.schemeIs("file") ||
-      !lazy.sitePermsAddonsProviderEnabled
-    ) {
-      this._showDevicePicker();
-      return;
-    }
-
-    let hasAddon =
-      Services.perms.testPermissionFromPrincipal(
-        this.principal,
-        this.permName
-      ) === Services.perms.ALLOW_ACTION;
-
-    if (hasAddon || !lazy.webserialGated) {
-      // Addon already installed, just show device picker
-      this._showDevicePicker();
-      return;
-    }
-
-    // Need to install addon first
-    this.installSitePermAddon(
-      () => {
-        // Addon installed successfully, now show device picker
-        this._showDevicePicker();
-      },
-      () => {
-        this.cancel();
-      }
-    );
-  }
-
-  _showDevicePicker() {
-    // Show device picker doorhanger
-    try {
-      let selectAction = {
-        label: lazy.gBrowserBundle.GetStringFromName("serial.allow.label"),
-        accessKey: lazy.gBrowserBundle.GetStringFromName(
-          "serial.allow.accesskey"
-        ),
-        callback: () => {
-          // Get selected device index from menulist
-          let document = this.browser.ownerDocument;
-
-          let menulist = document.getElementById(
-            "webSerial-selectPort-menulist"
-          );
-
-          let selectedIndex = menulist.selectedIndex;
-
-          // Call allow with selected device index
-          // TranslateChoices expects the permission type as the key
-          let choices = { serial: selectedIndex.toString() };
-          this.allow(choices);
-        },
-      };
-
-      let cancelAction = {
-        label: lazy.gBrowserBundle.GetStringFromName("serial.block.label"),
-        accessKey: lazy.gBrowserBundle.GetStringFromName(
-          "serial.block.accesskey"
-        ),
-        callback: () => {
-          this.cancel();
-        },
-      };
-
-      let notification;
-      let promptInstance = this;
-      let options = {
-        displayURI: false,
-        name: this.getPrincipalName(),
-        persistent: true,
-        hideClose: true,
-        popupIconURL: "chrome://browser/skin/notification-icons/serial.svg",
-        eventCallback(topic) {
-          if (topic === "showing") {
-            try {
-              promptInstance._populateDeviceList(this);
-
-              // Auto-select first port if testing autoselect is enabled
-              if (promptInstance._autoselect) {
-                // Auto-select first port after short delay to ensure UI is ready
-                lazy.setTimeout(() => {
-                  let document = promptInstance.browser.ownerDocument;
-                  let menulist = document.getElementById(
-                    "webSerial-selectPort-menulist"
-                  );
-                  if (menulist && menulist.itemCount > 0) {
-                    selectAction.callback();
-                  } else {
-                    // No items in list, so auto-cancel
-                    cancelAction.callback();
-                  }
-                  // We're calling these callbacks directly, so remove the notification
-                  notification.remove();
-                }, 100);
-              }
-            } catch (ex) {
-              console.error("[WebSerial] Failed to populate device list:", ex);
-            }
-          } else if (topic === "removed") {
-            // PopupNotifications removes the notification on location change
-            // and other non-user-driven teardown paths. Cancel the underlying
-            // request so the content-process requestPort() promise settles
-            // instead of waiting for the destructor fallback.
-            promptInstance.cancel();
-          }
-        },
-      };
-
-      let chromeWin = this.browser.documentGlobal;
-      notification = chromeWin.PopupNotifications.show(
-        this.browser,
-        this.notificationID,
-        this.message,
-        this.anchorID,
-        selectAction,
-        [cancelAction],
-        options
-      );
-    } catch (ex) {
-      console.error("[WebSerial] Failed to show device picker:", ex);
-      this.cancel();
-    }
-  }
-
-  get notificationID() {
-    return "webSerial-choosePort";
-  }
-
-  get anchorID() {
-    return "serial-notification-icon";
-  }
-
-  get message() {
-    let message;
-    if (this.principal.schemeIs("file")) {
-      message = lazy.gBrowserBundle.GetStringFromName("serial.shareWithFile");
-    } else {
-      message = lazy.gBrowserBundle.formatStringFromName(
-        "serial.shareWithSite",
-        ["<>"]
-      );
-    }
-    return message;
-  }
-
-  /**
-   * @override
-   * @param {Components.Exception} err
-   * @returns {string}
-   */
-  getInstallErrorMessage(err) {
-    return `WebSerial access request was denied: ❝${err.message}❞. See https://developer.mozilla.org/en-US/docs/Web/API/Serial/requestPort for more information`;
-  }
-}
-
 class StorageAccessPermissionPrompt extends PermissionPromptForRequest {
   #permissionKey;
 
@@ -2071,9 +1611,9 @@ class StorageAccessPermissionPrompt extends PermissionPromptForRequest {
     let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
     let options = perm.options.QueryInterface(Ci.nsIArray);
     // If we have an option, the permission request is different in some way.
-    // We may be in a call from a frame-scoped request, which means that the
-    // embedding principal is not the current top-level or the permission key is
-    // different.
+    // We may be in a call from requestStorageAccessUnderSite or a frame-scoped
+    // request, which means that the embedding principal is not the current top-level
+    // or the permission key is different.
     if (options.length != 2) {
       return;
     }
@@ -2199,9 +1739,7 @@ export const PermissionUI = {
   DesktopNotificationPermissionPrompt,
   PersistentStoragePermissionPrompt,
   MIDIPermissionPrompt,
-  SerialPermissionPrompt,
   StorageAccessPermissionPrompt,
-  LoopbackNetworkPermissionPrompt,
+  LocalHostPermissionPrompt,
   LocalNetworkPermissionPrompt,
-  getSiteCategory,
 };

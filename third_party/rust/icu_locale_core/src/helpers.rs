@@ -19,6 +19,7 @@ macro_rules! impl_tinystr_subtag {
         [$bad_example:literal $(, $more_bad_examples:literal)*],
     ) => {
         #[derive(Debug, PartialEq, Eq, Clone, Hash, PartialOrd, Ord, Copy)]
+        #[cfg_attr(feature = "serde", derive(serde::Serialize))]
         #[repr(transparent)]
         $(#[$doc])*
         pub struct $name(tinystr::TinyAsciiStr<$len_end>);
@@ -44,6 +45,7 @@ macro_rules! impl_tinystr_subtag {
             pub const fn try_from_utf8(
                 code_units: &[u8],
             ) -> Result<Self, crate::parser::errors::ParseError> {
+                #[allow(clippy::double_comparisons)] // if code_units.len() === 0
                 if code_units.len() < $len_start || code_units.len() > $len_end {
                     return Err(crate::parser::errors::ParseError::$error);
                 }
@@ -155,12 +157,14 @@ macro_rules! impl_tinystr_subtag {
             fn writeable_length_hint(&self) -> writeable::LengthHint {
                 writeable::LengthHint::exact(self.0.len())
             }
-            fn writeable_borrow(&self) -> Option<&str> {
-                Some(self.0.as_str())
+            #[inline]
+            #[cfg(feature = "alloc")]
+            fn write_to_string(&self) -> alloc::borrow::Cow<str> {
+                alloc::borrow::Cow::Borrowed(self.0.as_str())
             }
         }
 
-        writeable::impl_display_with_writeable!($name, #[cfg(feature = "alloc")]);
+        writeable::impl_display_with_writeable!($name);
 
         #[doc = concat!("A macro allowing for compile-time construction of valid [`", stringify!($name), "`] subtags.")]
         ///
@@ -187,6 +191,7 @@ macro_rules! impl_tinystr_subtag {
                 use $crate::$($path ::)+ $name;
                 match $name::try_from_utf8($string.as_bytes()) {
                     Ok(r) => r,
+                    #[allow(clippy::panic)] // const context
                     _ => panic!(concat!("Invalid ", $(stringify!($path), "::",)+ stringify!($name), ": ", $string)),
                 }
             }};
@@ -234,16 +239,6 @@ macro_rules! impl_tinystr_subtag {
             $(
                 writeable::assert_writeable_eq!($more_good_examples.parse::<$name>().unwrap(), $more_good_examples);
             )*
-        }
-
-        #[cfg(feature = "serde")]
-        impl serde::Serialize for $name {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: serde::Serializer,
-            {
-                self.0.serialize(serializer)
-            }
         }
 
         #[cfg(feature = "serde")]
@@ -322,7 +317,6 @@ macro_rules! impl_tinystr_subtag {
         }
 
         #[cfg(feature = "zerovec")]
-        #[cfg(feature = "alloc")]
         impl<'a> zerovec::maps::ZeroMapKV<'a> for $name {
             type Container = zerovec::ZeroVec<'a, $name>;
             type Slice = zerovec::ZeroSlice<$name>;
@@ -367,24 +361,28 @@ macro_rules! impl_writeable_for_each_subtag_str_no_test {
             }
 
             $(
-                fn writeable_borrow(&self) -> Option<&str> {
+                #[cfg(feature = "alloc")]
+                fn write_to_string(&self) -> alloc::borrow::Cow<str> {
+                    #[allow(clippy::unwrap_used)] // impl_writeable_for_subtag_list's $borrow uses unwrap
                     let $self = self;
                     if $borrow_cond {
                         $borrow
                     } else {
-                        None
+                        let mut output = alloc::string::String::with_capacity(self.writeable_length_hint().capacity());
+                        let _ = self.write_to(&mut output);
+                        alloc::borrow::Cow::Owned(output)
                     }
                 }
             )?
         }
 
-        writeable::impl_display_with_writeable!($type, #[cfg(feature = "alloc")]);
+        writeable::impl_display_with_writeable!($type);
     };
 }
 
 macro_rules! impl_writeable_for_subtag_list {
     ($type:tt, $sample1:literal, $sample2:literal) => {
-        impl_writeable_for_each_subtag_str_no_test!($type, selff, selff.0.len() == 1 => #[allow(clippy::unwrap_used)] { Some(selff.0.get(0).unwrap().as_str()) } );
+        impl_writeable_for_each_subtag_str_no_test!($type, selff, selff.0.len() == 1 => alloc::borrow::Cow::Borrowed(selff.0.get(0).unwrap().as_str()));
 
         #[test]
         fn test_writeable() {

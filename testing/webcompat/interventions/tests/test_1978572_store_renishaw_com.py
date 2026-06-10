@@ -13,7 +13,6 @@ async def does_left_slider_work(client):
     client.hide_elements(POPUPS_CSS)
     client.await_css(MOBILE_FILTERS_CSS, is_displayed=True).click()
     slider = client.await_css(LEFT_SLIDER_CSS, is_displayed=True)
-    client.scroll_into_view(slider)
     await asyncio.sleep(0.5)
 
     # Unfortunately, on desktop range thumbs do not react to any attempts to
@@ -26,14 +25,7 @@ async def does_left_slider_work(client):
     orig_value = slider_value()
 
     coords = client.get_element_screen_position(slider)
-    padding = client.execute_script(
-        """
-            const s = getComputedStyle(arguments[0]);
-            return [parseFloat(s['padding-left']), parseFloat(s['padding-top'])];
-        """,
-        slider,
-    )
-    coords = [coords[0] + padding[0] + 4, coords[1] + padding[1] + 4]
+    coords = [coords[0] + 4, coords[1] + 4]
     await client.apz_down(coords=coords)
     for i in range(25):
         await asyncio.sleep(0.01)

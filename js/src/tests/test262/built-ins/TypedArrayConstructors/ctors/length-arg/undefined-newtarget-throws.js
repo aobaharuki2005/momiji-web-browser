@@ -17,9 +17,9 @@ includes: [testTypedArray.js]
 features: [TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   assert.throws(TypeError, function() {
-    TA(makeCtorArg(0));
+    TA(0);
   });
 
   assert.throws(TypeError, function() {

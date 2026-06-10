@@ -120,7 +120,7 @@ class CpuMonitor {
     private final int size;
     private double sum;
     private double currentValue;
-    private final double[] circBuffer;
+    private double[] circBuffer;
     private int circBufferIndex;
 
     public MovingAverage(int size) {

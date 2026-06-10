@@ -36,6 +36,7 @@ FC_GetFunctionStatus
 
    ``FC_GetFunctionStatus`` is a legacy function that simply returns ``CKR_FUNCTION_NOT_PARALLEL``.
 
+.. _return_value:
 
 `Return value <#return_value>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -47,6 +48,9 @@ FC_GetFunctionStatus
 `Examples <#examples>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. container::
+
+.. _see_also:
 
 `See also <#see_also>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~

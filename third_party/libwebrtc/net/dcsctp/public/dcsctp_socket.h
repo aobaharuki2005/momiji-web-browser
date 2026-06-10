@@ -14,11 +14,11 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <span>
 #include <vector>
 
 #include "absl/base/attributes.h"
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/timestamp.h"
 #include "net/dcsctp/public/dcsctp_handover_state.h"
@@ -287,13 +287,14 @@ class DcSctpSocketCallbacks {
   //
   // Note that it's NOT ALLOWED to call into this library from within this
   // callback.
-  virtual void SendPacket(std::span<const uint8_t> /* data */) {}
+  virtual void SendPacket(webrtc::ArrayView<const uint8_t> /* data */) {}
 
   // Called when the library wants the packet serialized as `data` to be sent.
   //
   // Note that it's NOT ALLOWED to call into this library from within this
   // callback.
-  virtual SendPacketStatus SendPacketWithStatus(std::span<const uint8_t> data) {
+  virtual SendPacketStatus SendPacketWithStatus(
+      webrtc::ArrayView<const uint8_t> data) {
     SendPacket(data);
     return SendPacketStatus::kSuccess;
   }
@@ -409,21 +410,22 @@ class DcSctpSocketCallbacks {
   // Indicates that a stream reset request has failed.
   //
   // It is allowed to call into this library from within this callback.
-  virtual void OnStreamsResetFailed(std::span<const StreamID> outgoing_streams,
-                                    absl::string_view reason) = 0;
+  virtual void OnStreamsResetFailed(
+      webrtc::ArrayView<const StreamID> outgoing_streams,
+      absl::string_view reason) = 0;
 
   // Indicates that a stream reset request has been performed.
   //
   // It is allowed to call into this library from within this callback.
   virtual void OnStreamsResetPerformed(
-      std::span<const StreamID> outgoing_streams) = 0;
+      webrtc::ArrayView<const StreamID> outgoing_streams) = 0;
 
   // When a peer has reset some of its outgoing streams, this will be called. An
   // empty list indicates that all streams have been reset.
   //
   // It is allowed to call into this library from within this callback.
   virtual void OnIncomingStreamsReset(
-      std::span<const StreamID> incoming_streams) = 0;
+      webrtc::ArrayView<const StreamID> incoming_streams) = 0;
 
   // Will be called when the amount of data buffered to be sent falls to or
   // below the threshold set when calling `SetBufferedAmountLowThreshold`.
@@ -529,7 +531,7 @@ class DcSctpSocketInterface {
   virtual ~DcSctpSocketInterface() = default;
 
   // To be called when an incoming SCTP packet is to be processed.
-  virtual void ReceivePacket(std::span<const uint8_t> data) = 0;
+  virtual void ReceivePacket(webrtc::ArrayView<const uint8_t> data) = 0;
 
   // Returns the number of received messages that can be retrieved by calling
   // calling `::GetNextMessage`.
@@ -552,14 +554,6 @@ class DcSctpSocketInterface {
   // Connects the socket. This is an asynchronous operation, and
   // `DcSctpSocketCallbacks::OnConnected` will be called on success.
   virtual void Connect() = 0;
-
-  // Finishes the out-of-bands connection sequence and returns `true` if this
-  // was successful. This will also trigger
-  // `DcSctpSocketCallbacks::OnConnected`.
-  virtual bool ConnectWithConnectionToken(std::span<const uint8_t> my_data,
-                                          std::span<const uint8_t> peer_data) {
-    return false;
-  }
 
   // Puts this socket to the state in which the original socket was when its
   // `DcSctpSocketHandoverState` was captured by `GetHandoverStateAndClose`.
@@ -612,8 +606,9 @@ class DcSctpSocketInterface {
   //
   // This has identical semantics to Send, except that it may coalesce many
   // messages into a single SCTP packet if they would fit.
-  virtual std::vector<SendStatus> SendMany(std::span<DcSctpMessage> messages,
-                                           const SendOptions& send_options) = 0;
+  virtual std::vector<SendStatus> SendMany(
+      webrtc::ArrayView<DcSctpMessage> messages,
+      const SendOptions& send_options) = 0;
 
   // Resetting streams is an asynchronous operation and the results will
   // be notified using `DcSctpSocketCallbacks::OnStreamsResetDone()` on success
@@ -631,7 +626,7 @@ class DcSctpSocketInterface {
   // supports stream resetting. Calling this method on e.g. a closed association
   // or streams that don't support resetting will not perform any operation.
   virtual ResetStreamsStatus ResetStreams(
-      std::span<const StreamID> outgoing_streams) = 0;
+      webrtc::ArrayView<const StreamID> outgoing_streams) = 0;
 
   // Returns the number of bytes of data currently queued to be sent on a given
   // stream.

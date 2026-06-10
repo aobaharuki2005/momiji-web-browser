@@ -4,7 +4,7 @@
  *
  *   FreeType utility functions for bitmaps (body).
  *
- * Copyright (C) 2004-2026 by
+ * Copyright (C) 2004-2025 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -922,7 +922,14 @@
       target->pitch      = (int)final_width * 4;
       target->num_grays  = 256;
 
-      if ( FT_ALLOC_MULT( target->buffer, target->rows, target->pitch ) )
+      if ( FT_LONG_MAX / target->pitch < (int)target->rows )
+      {
+        FT_TRACE5(( "FT_Blend_Bitmap: target bitmap too large (%u x %u)\n",
+                     final_width, final_rows ));
+        return FT_THROW( Invalid_Argument );
+      }
+
+      if ( FT_ALLOC( target->buffer, target->pitch * (int)target->rows ) )
         return error;
 
       free_target_bitmap_on_error = 1;
@@ -943,9 +950,16 @@
 
       new_pitch = (int)final_width * 4;
 
+      if ( FT_LONG_MAX / new_pitch < (int)final_rows )
+      {
+        FT_TRACE5(( "FT_Blend_Bitmap: target bitmap too large (%u x %u)\n",
+                     final_width, final_rows ));
+        return FT_THROW( Invalid_Argument );
+      }
+
       /* TODO: provide an in-buffer solution for large bitmaps */
       /*       to avoid allocation of a new buffer             */
-      if ( FT_ALLOC_MULT( buffer, final_rows, new_pitch ) )
+      if ( FT_ALLOC( buffer, new_pitch * (int)final_rows ) )
         goto Error;
 
       /* copy data to new buffer */

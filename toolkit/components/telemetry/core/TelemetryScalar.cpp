@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -86,10 +88,14 @@ struct ScalarMarker {
   using MS = mozilla::MarkerSchema;
   static MS MarkerTypeDisplay() {
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyLabelFormat("id", "Scalar Name", MS::Format::UniqueString);
-    schema.AddKeyLabelFormat("key", "Key", MS::Format::String);
-    schema.AddKeyLabelFormat("scalarType", "Type", MS::Format::UniqueString);
-    schema.AddKeyLabelFormat("val", "Value", MS::Format::String);
+    schema.AddKeyLabelFormat("id", "Scalar Name", MS::Format::UniqueString,
+                             MS::PayloadFlags::Searchable);
+    schema.AddKeyLabelFormat("key", "Key", MS::Format::String,
+                             MS::PayloadFlags::Searchable);
+    schema.AddKeyLabelFormat("scalarType", "Type", MS::Format::UniqueString,
+                             MS::PayloadFlags::Searchable);
+    schema.AddKeyLabelFormat("val", "Value", MS::Format::String,
+                             MS::PayloadFlags::Searchable);
     schema.SetTooltipLabel(
         "{marker.data.id}[{marker.data.key}] {marker.data.val}");
     schema.SetTableLabel(
@@ -142,6 +148,7 @@ struct ScalarMarker {
 namespace {
 
 const uint32_t kMaximumNumberOfKeys = 100;
+const uint32_t kMaxEventSummaryKeys = 500;
 const uint32_t kMaximumKeyStringLength = 72;
 const uint32_t kMaximumStringValueLength = 50;
 // The category and scalar name maximum lengths are used by the dynamic
@@ -425,12 +432,12 @@ class ScalarUnsigned : public ScalarBase {
                     nsCOMPtr<nsIVariant>& aResult) final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
+ private:
+  nsTArray<uint32_t> mStorage;
+
   // Prevent copying.
   ScalarUnsigned(const ScalarUnsigned& aOther) = delete;
   void operator=(const ScalarUnsigned& aOther) = delete;
-
- private:
-  nsTArray<uint32_t> mStorage;
 };
 
 void ScalarUnsigned::SetValue(uint32_t aValue) {
@@ -498,12 +505,12 @@ class ScalarString : public ScalarBase {
                     nsCOMPtr<nsIVariant>& aResult) final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
+ private:
+  nsTArray<nsString> mStorage;
+
   // Prevent copying.
   ScalarString(const ScalarString& aOther) = delete;
   void operator=(const ScalarString& aOther) = delete;
-
- private:
-  nsTArray<nsString> mStorage;
 };
 
 ScalarResult ScalarString::SetValue(const nsAString& aValue) {
@@ -573,12 +580,12 @@ class ScalarBoolean : public ScalarBase {
                     nsCOMPtr<nsIVariant>& aResult) final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
+ private:
+  nsTArray<bool> mStorage;
+
   // Prevent copying.
   ScalarBoolean(const ScalarBoolean& aOther) = delete;
   void operator=(const ScalarBoolean& aOther) = delete;
-
- private:
-  nsTArray<bool> mStorage;
 };
 
 void ScalarBoolean::SetValue(bool aValue) {
@@ -928,13 +935,13 @@ MOZ_RUNINIT ScalarMapType gScalarNameIDMap(kScalarCount);
 // The (Process Id -> (Scalar ID -> Scalar Object)) map. This is a
 // nsClassHashtable, it owns the scalar instances and takes care of deallocating
 // them when they are removed from the map.
-constinit ProcessesScalarsMapType gScalarStorageMap;
+MOZ_RUNINIT ProcessesScalarsMapType gScalarStorageMap;
 // As above, for the keyed scalars.
-constinit ProcessesKeyedScalarsMapType gKeyedScalarStorageMap;
+MOZ_RUNINIT ProcessesKeyedScalarsMapType gKeyedScalarStorageMap;
 // Provide separate storage for "dynamic builtin" plain and keyed scalars,
 // needed to support "build faster" in local developer builds.
-constinit ProcessesScalarsMapType gDynamicBuiltinScalarStorageMap;
-constinit ProcessesKeyedScalarsMapType gDynamicBuiltinKeyedScalarStorageMap;
+MOZ_RUNINIT ProcessesScalarsMapType gDynamicBuiltinScalarStorageMap;
+MOZ_RUNINIT ProcessesKeyedScalarsMapType gDynamicBuiltinKeyedScalarStorageMap;
 }  // namespace
 
 ////////////////////////////////////////////////////////////////////////
@@ -1774,8 +1781,18 @@ void TelemetryScalar::InitializeGlobalState(bool aCanRecordBase,
     entry->SetData(ScalarKey{i, false});
   }
 
-  // Initializes gDynamicScalarInfo and gDynamicStoreNames.
-  internal_RegisterScalars(locker, {});
+  // To summarize dynamic events we need a dynamic scalar.
+  const nsTArray<DynamicScalarInfo> initialDynamicScalars({
+      DynamicScalarInfo{
+          nsITelemetry::SCALAR_TYPE_COUNT,
+          true /* recordOnRelease */,
+          false /* expired */,
+          nsAutoCString("telemetry.dynamic_event_counts"),
+          true /* keyed */,
+          {} /* stores */,
+      },
+  });
+  internal_RegisterScalars(locker, initialDynamicScalars);
 
   gTelemetryScalarInitDone = true;
 }
@@ -2419,7 +2436,7 @@ nsresult TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
       }
       // In the event of the usual case (just "main"), save the storage.
       if (stores.Length() == 1 && stores[0].EqualsLiteral("main")) {
-        stores.ClearAndRetainStorage();
+        stores.TruncateLength(0);
       }
     }
 
@@ -2445,6 +2462,42 @@ nsresult TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
   ::internal_BroadcastDefinitions(ipcDefinitions);
 
   return NS_OK;
+}
+
+/**
+ * Count in Scalars how many of which events were recorded. See bug 1440673
+ *
+ * Event Telemetry unfortunately cannot use vanilla ScalarAdd because it needs
+ * to summarize events recorded in different processes to the
+ * telemetry.event_counts of the same process. Including "dynamic".
+ *
+ * @param aUniqueEventName - expected to be category#object#method
+ * @param aProcessType - the process of the event being summarized
+ */
+void TelemetryScalar::SummarizeEvent(const nsCString& aUniqueEventName,
+                                     ProcessID aProcessType) {
+  MOZ_ASSERT(XRE_IsParentProcess(),
+             "Only summarize events in the parent process");
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  StaticMutexAutoLock lock(gTelemetryScalarsMutex);
+
+  ScalarKey scalarKey{static_cast<uint32_t>(ScalarID::TELEMETRY_EVENT_COUNTS)};
+  KeyedScalar* scalar = nullptr;
+  nsresult rv =
+      internal_GetKeyedScalarByEnum(lock, scalarKey, aProcessType, &scalar);
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("NS_FAILED getting keyed scalar for event summary. Wut.");
+    return;
+  }
+
+  // Set this each time as it may have been cleared and recreated between calls
+  scalar->SetMaximumNumberOfKeys(kMaxEventSummaryKeys);
+
+  scalar->AddValue(lock, NS_ConvertASCIItoUTF16(aUniqueEventName), 1);
 }
 
 /**

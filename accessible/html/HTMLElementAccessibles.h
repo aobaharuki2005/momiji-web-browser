@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_a11y_HTMLElementAccessibles_h_
-#define mozilla_a11y_HTMLElementAccessibles_h_
+#ifndef mozilla_a11y_HTMLElementAccessibles_h__
+#define mozilla_a11y_HTMLElementAccessibles_h__
 
 #include "BaseAccessibles.h"
 
@@ -60,7 +61,7 @@ class HTMLLabelAccessible : public HyperTextAccessible {
   virtual bool HasPrimaryAction() const override;
 
  protected:
-  virtual ~HTMLLabelAccessible() = default;
+  virtual ~HTMLLabelAccessible() {}
   virtual ENameValueFlag NativeName(nsString& aName) const override;
   virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                    AttrModType aModType,
@@ -88,7 +89,7 @@ class HTMLOutputAccessible : public HyperTextAccessible {
                                    uint64_t aOldState) override;
 
  protected:
-  virtual ~HTMLOutputAccessible() = default;
+  virtual ~HTMLOutputAccessible() {}
 };
 
 /**
@@ -131,7 +132,7 @@ class HTMLHeaderOrFooterAccessible : public HyperTextAccessible {
   virtual a11y::role NativeRole() const override;
 
  protected:
-  virtual ~HTMLHeaderOrFooterAccessible() = default;
+  virtual ~HTMLHeaderOrFooterAccessible() {}
 };
 
 /**

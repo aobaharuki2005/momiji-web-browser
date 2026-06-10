@@ -10,9 +10,9 @@ pub(crate) fn build(
     let ty_s = &*ty.to_string();
 
     let visitor = if cfg!(feature = "parsing") {
-        quote_! {
-            pub(super) struct Visitor;
-            pub(super) struct OptionVisitor;
+        quote! {
+            struct Visitor;
+            struct OptionVisitor;
 
             impl<'a> ::serde::de::Visitor<'a> for Visitor {
                 type Value = __TimeSerdeType;
@@ -69,11 +69,11 @@ pub(crate) fn build(
             }
         }
     } else {
-        quote_!()
+        quote!()
     };
 
     let serialize_primary = if cfg!(feature = "formatting") {
-        quote_! {
+        quote! {
             pub fn serialize<S: ::serde::Serializer>(
                 datetime: &__TimeSerdeType,
                 serializer: S,
@@ -86,11 +86,11 @@ pub(crate) fn build(
             }
         }
     } else {
-        quote_!()
+        quote!()
     };
 
     let deserialize_primary = if cfg!(feature = "parsing") {
-        quote_! {
+        quote! {
             pub fn deserialize<'a, D: ::serde::Deserializer<'a>>(
                 deserializer: D
             ) -> Result<__TimeSerdeType, D::Error> {
@@ -99,12 +99,12 @@ pub(crate) fn build(
             }
         }
     } else {
-        quote_!()
+        quote!()
     };
 
     let serialize_option = if cfg!(feature = "formatting") {
-        quote_! {
-            #[expect(clippy::ref_option)]
+        quote! {
+            #[allow(clippy::ref_option)]
             pub fn serialize<S: ::serde::Serializer>(
                 option: &Option<__TimeSerdeType>,
                 serializer: S,
@@ -117,11 +117,11 @@ pub(crate) fn build(
             }
         }
     } else {
-        quote_!()
+        quote!()
     };
 
     let deserialize_option = if cfg!(feature = "parsing") {
-        quote_! {
+        quote! {
             pub fn deserialize<'a, D: ::serde::Deserializer<'a>>(
                 deserializer: D
             ) -> Result<Option<__TimeSerdeType>, D::Error> {
@@ -130,46 +130,40 @@ pub(crate) fn build(
             }
         }
     } else {
-        quote_!()
+        quote!()
     };
 
     let deserialize_option_imports = if cfg!(feature = "parsing") {
-        quote_! {
-            use super::__hygiene::{OptionVisitor, Visitor};
+        quote! {
+            use super::{OptionVisitor, Visitor};
         }
     } else {
-        quote_!()
+        quote!()
     };
 
     let fd_traits = match (cfg!(feature = "formatting"), cfg!(feature = "parsing")) {
         (false, false) => {
             bug!("serde_format_description::build called without formatting or parsing enabled")
         }
-        (false, true) => quote_! { ::time::parsing::Parsable },
-        (true, false) => quote_! { ::time::formatting::Formattable },
-        (true, true) => quote_! { ::time::formatting::Formattable + ::time::parsing::Parsable },
+        (false, true) => quote! { ::time::parsing::Parsable },
+        (true, false) => quote! { ::time::formatting::Formattable },
+        (true, true) => quote! { ::time::formatting::Formattable + ::time::parsing::Parsable },
     };
 
-    quote_! {
+    quote! {
         #S(visibility) mod #(mod_name) {
             use super::*;
             // TODO Remove the prefix, forcing the user to import the type themself. This must be
             // done in a breaking change.
             use ::time::#(ty) as __TimeSerdeType;
-            #[expect(clippy::pub_use)]
-            pub use self::__hygiene::*;
 
             const fn description() -> impl #S(fd_traits) {
                 #S(format)
             }
 
-            mod __hygiene {
-                use super::{description, __TimeSerdeType};
-
-                #S(visitor)
-                #S(serialize_primary)
-                #S(deserialize_primary)
-            }
+            #S(visitor)
+            #S(serialize_primary)
+            #S(deserialize_primary)
 
             // While technically public, this is effectively the same visibility as the enclosing
             // module, which has its visibility controlled by the user.

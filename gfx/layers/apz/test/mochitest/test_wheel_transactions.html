@@ -137,7 +137,8 @@ SimpleTest.waitForExplicitFinish();
 // transactions.
 pushPrefs([["general.smoothScroll", false],
            ["apz.test.mac.synth_wheel_input", true],
-           ["mousewheel.transaction.timeout", 1500]])
+           ["mousewheel.transaction.timeout", 1500],
+           ["dom.event.wheel-event-groups.enabled", true]])
 .then(waitUntilApzStable)
 .then(test)
 .then(SimpleTest.finish, SimpleTest.finishWithFailure);

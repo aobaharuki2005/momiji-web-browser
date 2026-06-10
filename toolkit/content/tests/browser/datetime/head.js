@@ -44,8 +44,12 @@ class DateTimeTestHelper {
     if (openMethod === "click") {
       await SpecialPowers.spawn(bc, [], () => {
         const input = content.document.querySelector("input");
-        const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
-        shadowRoot.getElementById("picker-button").click();
+        if (input.type == "time") {
+          input.click();
+        } else {
+          const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+          shadowRoot.getElementById("calendar-button").click();
+        }
       });
     } else if (openMethod === "showPicker") {
       await SpecialPowers.spawn(bc, [], function () {
@@ -253,13 +257,13 @@ function testAttributeL10n(el, attr, id, args = null) {
 }
 
 /**
- * Helper function to check the value of a picker button's specific attribute
+ * Helper function to check the value of a Calendar button's specific attribute
  *
  * @param {string} attr: The name of the attribute to be tested
  * @param {string} val: Value that is expected to be assigned to the attribute.
  * @param {boolean} presenceOnly: If "true", test only the presence of the attribute
  */
-async function testPickerBtnAttribute(attr, val, presenceOnly = false) {
+async function testCalendarBtnAttribute(attr, val, presenceOnly = false) {
   let browser = helper.tab.linkedBrowser;
 
   await SpecialPowers.spawn(
@@ -268,18 +272,18 @@ async function testPickerBtnAttribute(attr, val, presenceOnly = false) {
     (attr, val, presenceOnly) => {
       const input = content.document.querySelector("input");
       const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
-      const pickerBtn = shadowRoot.getElementById("picker-button");
+      const calendarBtn = shadowRoot.getElementById("calendar-button");
 
       if (presenceOnly) {
         Assert.ok(
-          pickerBtn.hasAttribute(attr),
-          `Picker button has ${attr} attribute`
+          calendarBtn.hasAttribute(attr),
+          `Calendar button has ${attr} attribute`
         );
       } else {
         Assert.equal(
-          pickerBtn.getAttribute(attr),
+          calendarBtn.getAttribute(attr),
           val,
-          `Picker button has ${attr} attribute set to ${val}`
+          `Calendar button has ${attr} attribute set to ${val}`
         );
       }
     }

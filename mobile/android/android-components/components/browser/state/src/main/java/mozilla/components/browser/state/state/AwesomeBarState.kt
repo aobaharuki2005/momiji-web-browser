@@ -15,5 +15,5 @@ import mozilla.components.concept.awesomebar.AwesomeBar
  */
 data class AwesomeBarState(
     val visibilityState: AwesomeBar.VisibilityState = AwesomeBar.VisibilityState(),
-    val clickedSuggestion: AwesomeBar.SuggestionItem? = null,
+    val clickedSuggestion: AwesomeBar.Suggestion? = null,
 )

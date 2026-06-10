@@ -45,25 +45,25 @@ _hb_gdi_reference_table (hb_face_t *face HB_UNUSED, hb_tag_t tag, void *user_dat
   DWORD length = 0;
 
   HDC hdc = GetDC (nullptr);
-  if (unlikely (!SelectObject (hdc, (HFONT) user_data)))
-    return hb_blob_get_empty ();
-  HB_SCOPE_GUARD (ReleaseDC (nullptr, hdc));
+  if (unlikely (!SelectObject (hdc, (HFONT) user_data))) goto fail;
 
   length = GetFontData (hdc, hb_uint32_swap (tag), 0, buffer, length);
-  if (unlikely (length == GDI_ERROR))
-    return hb_blob_get_empty ();
+  if (unlikely (length == GDI_ERROR)) goto fail_with_releasedc;
 
   buffer = (char *) hb_malloc (length);
-  if (unlikely (!buffer))
-    return hb_blob_get_empty ();
-  auto buffer_guard = hb_make_scope_guard ([&]() { hb_free (buffer); });
-
+  if (unlikely (!buffer)) goto fail_with_releasedc;
   length = GetFontData (hdc, hb_uint32_swap (tag), 0, buffer, length);
-  if (unlikely (length == GDI_ERROR))
-    return hb_blob_get_empty ();
+  if (unlikely (length == GDI_ERROR)) goto fail_with_releasedc_and_free;
+  ReleaseDC (nullptr, hdc);
 
-  buffer_guard.release ();
   return hb_blob_create ((const char *) buffer, length, HB_MEMORY_MODE_WRITABLE, buffer, hb_free);
+
+fail_with_releasedc_and_free:
+  hb_free (buffer);
+fail_with_releasedc:
+  ReleaseDC (nullptr, hdc);
+fail:
+  return hb_blob_get_empty ();
 }
 
 /**

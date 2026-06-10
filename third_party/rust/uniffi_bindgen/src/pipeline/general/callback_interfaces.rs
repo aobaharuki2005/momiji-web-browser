@@ -6,15 +6,16 @@
 
 use super::*;
 use heck::ToUpperCamelCase;
+use std::collections::HashSet;
 
-pub fn pass(namespace: &mut Namespace) -> Result<()> {
-    let crate_name = namespace.crate_name.clone();
-    let module_name = namespace.name.clone();
-    namespace.try_visit_mut(|cbi: &mut CallbackInterface| {
+pub fn pass(module: &mut Module) -> Result<()> {
+    let crate_name = module.crate_name.clone();
+    let module_name = module.name.clone();
+    module.try_visit_mut(|cbi: &mut CallbackInterface| {
         cbi.vtable = vtable(&module_name, &crate_name, &cbi.name, cbi.methods.clone())?;
         Ok(())
     })?;
-    namespace.try_visit_mut(|int: &mut Interface| {
+    module.try_visit_mut(|int: &mut Interface| {
         if int.imp.has_callback_interface() {
             int.vtable = Some(vtable(
                 &module_name,
@@ -26,22 +27,22 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
         Ok(())
     })?;
     // Convert CallableKind:Method to CallableKind:VTableMethod
-    namespace.try_visit_mut(|cbi: &mut CallbackInterface| {
+    module.try_visit_mut(|cbi: &mut CallbackInterface| {
         for meth in cbi.methods.iter_mut() {
             meth.callable.kind = match meth.callable.kind.take() {
-                CallableKind::Method { self_type } => CallableKind::VTableMethod {
-                    self_type: self_type.clone(),
+                CallableKind::Method { interface_name } => CallableKind::VTableMethod {
+                    trait_name: interface_name,
                 },
                 kind => bail!("Unexpected callable kind: {kind:?}"),
             };
         }
         Ok(())
     })?;
-    namespace.try_visit_mut(|vtable: &mut VTable| {
+    module.try_visit_mut(|vtable: &mut VTable| {
         for meth in vtable.methods.iter_mut() {
             meth.callable.kind = match meth.callable.kind.take() {
-                CallableKind::Method { self_type } => CallableKind::VTableMethod {
-                    self_type: self_type.clone(),
+                CallableKind::Method { interface_name } => CallableKind::VTableMethod {
+                    trait_name: interface_name,
                 },
                 kind => bail!("Unexpected callable kind: {kind:?}"),
             };
@@ -49,7 +50,7 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
         Ok(())
     })?;
 
-    add_vtable_ffi_definitions(namespace)?;
+    add_vtable_ffi_definitions(module)?;
     Ok(())
 }
 
@@ -70,10 +71,6 @@ fn vtable(
         init_fn: RustFfiFunctionName(uniffi_meta::init_callback_vtable_fn_symbol_name(
             crate_name,
             interface_name,
-        )),
-        clone_fn_type: FfiFunctionTypeName(format!(
-            "CallbackInterfaceClone{}_{interface_name}",
-            module_name.to_upper_camel_case(),
         )),
         free_fn_type: FfiFunctionTypeName(format!(
             "CallbackInterfaceFree{}_{interface_name}",
@@ -97,15 +94,12 @@ fn vtable(
     })
 }
 
-fn add_vtable_ffi_definitions(namespace: &mut Namespace) -> Result<()> {
+fn add_vtable_ffi_definitions(module: &mut Module) -> Result<()> {
     let mut ffi_definitions = vec![];
-    let module_name = namespace.name.clone();
-    namespace.try_visit(|vtable: &VTable| {
+    let mut seen_return_types = HashSet::new();
+    let module_name = module.name.clone();
+    module.try_visit(|vtable: &VTable| {
         let interface_name = &vtable.interface_name;
-        let handle_type = FfiType::Handle(HandleKind::TraitInterface {
-            namespace: module_name.to_string(),
-            interface_name: interface_name.to_string(),
-        });
         // FFI Function Type for each method in the VTable
         for (i, meth) in vtable.methods.iter().enumerate() {
             let method_name = format!(
@@ -143,61 +137,57 @@ fn add_vtable_ffi_definitions(namespace: &mut Namespace) -> Result<()> {
                 .clone()
                 .map(|return_type| return_type.ffi_type);
 
-            ffi_definitions.extend([
-                FfiStruct {
-                    name: async_info.ffi_foreign_future_result.clone(),
-                    fields: match ffi_return_type {
-                        Some(return_ffi_type) => vec![
-                            FfiField::new("return_value", return_ffi_type.ty),
-                            FfiField::new("call_status", FfiType::RustCallStatus),
+            if seen_return_types.insert(ffi_return_type.clone()) {
+                ffi_definitions.extend([
+                    FfiStruct {
+                        name: async_info.ffi_foreign_future_result.clone(),
+                        fields: match ffi_return_type {
+                            Some(return_ffi_type) => vec![
+                                FfiField::new("return_value", return_ffi_type.ty),
+                                FfiField::new("call_status", FfiType::RustCallStatus),
+                            ],
+                            None => vec![
+                                // In Rust, `return_value` is `()` -- a ZST.
+                                // ZSTs are not valid in `C`, but they also take up 0 space.
+                                // Skip the `return_value` field to make the layout correct.
+                                FfiField::new("call_status", FfiType::RustCallStatus),
+                            ],
+                        },
+                    }
+                    .into(),
+                    FfiFunctionType {
+                        name: async_info.ffi_foreign_future_complete.clone(),
+                        arguments: vec![
+                            FfiArgument::new(
+                                "callback_data",
+                                FfiType::Handle(HandleKind::ForeignFuture),
+                            ),
+                            FfiArgument::new(
+                                "result",
+                                FfiType::Struct(async_info.ffi_foreign_future_result.clone()),
+                            ),
                         ],
-                        None => vec![
-                            // In Rust, `return_value` is `()` -- a ZST.
-                            // ZSTs are not valid in `C`, but they also take up 0 space.
-                            // Skip the `return_value` field to make the layout correct.
-                            FfiField::new("call_status", FfiType::RustCallStatus),
-                        ],
-                    },
-                }
-                .into(),
-                FfiFunctionType {
-                    name: async_info.ffi_foreign_future_complete.clone(),
-                    arguments: vec![
-                        FfiArgument::new(
-                            "callback_data",
-                            FfiType::Handle(HandleKind::ForeignFuture),
-                        ),
-                        FfiArgument::new(
-                            "result",
-                            FfiType::Struct(async_info.ffi_foreign_future_result.clone()),
-                        ),
-                    ],
-                    return_type: FfiReturnType { ty: None },
-                    has_rust_call_status_arg: false,
-                }
-                .into(),
-            ]);
+                        return_type: FfiReturnType { ty: None },
+                        has_rust_call_status_arg: false,
+                    }
+                    .into(),
+                ]);
+            }
         }
         // FFIStruct for the VTable
         ffi_definitions.extend([
             FfiFunctionType {
                 name: FfiFunctionTypeName(format!(
-                    "CallbackInterfaceClone{}_{interface_name}",
-                    module_name.to_upper_camel_case(),
-                )),
-                arguments: vec![FfiArgument::new("handle", handle_type.clone())],
-                return_type: FfiReturnType {
-                    ty: Some(handle_type.clone().into()),
-                },
-                has_rust_call_status_arg: false,
-            }
-            .into(),
-            FfiFunctionType {
-                name: FfiFunctionTypeName(format!(
                     "CallbackInterfaceFree{}_{interface_name}",
                     module_name.to_upper_camel_case(),
                 )),
-                arguments: vec![FfiArgument::new("handle", handle_type.clone())],
+                arguments: vec![FfiArgument::new(
+                    "handle",
+                    FfiType::Handle(HandleKind::CallbackInterface {
+                        module_name: module_name.to_string(),
+                        interface_name: interface_name.to_string(),
+                    }),
+                )],
                 return_type: FfiReturnType { ty: None },
                 has_rust_call_status_arg: false,
             }
@@ -208,28 +198,21 @@ fn add_vtable_ffi_definitions(namespace: &mut Namespace) -> Result<()> {
                     module_name.to_upper_camel_case(),
                     interface_name
                 )),
-                fields: [
-                    FfiField::new(
+                fields: vtable
+                    .methods
+                    .iter()
+                    .map(|vtable_meth| FfiField {
+                        name: vtable_meth.callable.name.clone(),
+                        ty: vtable_meth.ffi_type.clone(),
+                    })
+                    .chain([FfiField::new(
                         "uniffi_free",
                         FfiType::Function(FfiFunctionTypeName(format!(
                             "CallbackInterfaceFree{}_{interface_name}",
                             module_name.to_upper_camel_case(),
                         ))),
-                    ),
-                    FfiField::new(
-                        "uniffi_clone",
-                        FfiType::Function(FfiFunctionTypeName(format!(
-                            "CallbackInterfaceClone{}_{interface_name}",
-                            module_name.to_upper_camel_case(),
-                        ))),
-                    ),
-                ]
-                .into_iter()
-                .chain(vtable.methods.iter().map(|vtable_meth| FfiField {
-                    name: vtable_meth.callable.name.clone(),
-                    ty: vtable_meth.ffi_type.clone(),
-                }))
-                .collect(),
+                    )])
+                    .collect(),
             }
             .into(),
         ]);
@@ -251,7 +234,7 @@ fn add_vtable_ffi_definitions(namespace: &mut Namespace) -> Result<()> {
         );
         Ok(())
     })?;
-    namespace.ffi_definitions.extend(ffi_definitions);
+    module.ffi_definitions.extend(ffi_definitions);
     Ok(())
 }
 
@@ -265,8 +248,8 @@ fn vtable_method(
         name: FfiFunctionTypeName(method_name),
         arguments: std::iter::once(FfiArgument {
             name: "uniffi_handle".into(),
-            ty: FfiType::Handle(HandleKind::TraitInterface {
-                namespace: module_name.to_string(),
+            ty: FfiType::Handle(HandleKind::CallbackInterface {
+                module_name: module_name.to_string(),
                 interface_name: interface_name.to_string(),
             })
             .into(),
@@ -303,8 +286,8 @@ fn vtable_method_async(
         name: FfiFunctionTypeName(method_name),
         arguments: std::iter::once(FfiArgument {
             name: "uniffi_handle".into(),
-            ty: FfiType::Handle(HandleKind::TraitInterface {
-                namespace: module_name.to_string(),
+            ty: FfiType::Handle(HandleKind::CallbackInterface {
+                module_name: module_name.to_string(),
                 interface_name: interface_name.to_string(),
             })
             .into(),
@@ -325,7 +308,7 @@ fn vtable_method_async(
             FfiArgument {
                 name: "uniffi_out_return".into(),
                 ty: FfiType::MutReference(Box::new(FfiType::Struct(FfiStructName(
-                    "ForeignFutureDroppedCallbackStruct".to_owned(),
+                    "ForeignFuture".to_owned(),
                 ))))
                 .into(),
             },

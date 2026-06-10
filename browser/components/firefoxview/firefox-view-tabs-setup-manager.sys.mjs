@@ -45,8 +45,8 @@ const PRIMARY_PASSWORD_UNLOCKED = "passwordmgr-crypto-login";
 
 function openTabInWindow(window, url) {
   // Null checks as the passed window might be closing, particularly in tests.
-  const documentGlobal = window.docShell?.chromeEventHandler?.documentGlobal;
-  documentGlobal?.switchToTabHavingURI(url, true, {});
+  const ownerGlobal = window.docShell?.chromeEventHandler?.ownerGlobal;
+  ownerGlobal?.switchToTabHavingURI(url, true, {});
 }
 
 export const TabsSetupFlowManager = new (class {

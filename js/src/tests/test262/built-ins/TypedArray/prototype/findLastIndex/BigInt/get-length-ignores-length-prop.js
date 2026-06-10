@@ -10,7 +10,7 @@ info: |
   ...
   3. Let len be O.[[ArrayLength]].
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray, array-find-from-last]
 ---*/
 
@@ -20,14 +20,14 @@ Object.defineProperty(TypedArray.prototype, "length", {
   }
 });
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   Object.defineProperty(TA.prototype, "length", {
     get: function() {
       throw new Test262Error();
     }
   });
 
-  var sample = new TA(makeCtorArg([42n]));
+  var sample = new TA([42n]);
 
   Object.defineProperty(sample, "length", {
     get: function() {
@@ -40,6 +40,6 @@ testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
     sample.findLastIndex(function() { return true; }),
     0
   );
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

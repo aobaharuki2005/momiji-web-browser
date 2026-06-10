@@ -657,20 +657,4 @@ function checkStartupReason(expected = undefined) {
     Glean.startup.profileSelectionReason.testGetValue("baseline"),
     expected
   );
-  Assert.equal(
-    Glean.startup.profileSelectionReason.testGetValue("new-profile"),
-    expected
-  );
-}
-
-async function checkProfileSource(profile, expectedSource) {
-  let timesFile = profile.rootDir.clone();
-  timesFile.append("times.json");
-  let times = await IOUtils.readJSON(timesFile.path);
-
-  Assert.equal(
-    times.source,
-    expectedSource,
-    "Profile source should be correct"
-  );
 }

@@ -309,12 +309,18 @@ async def _run_app(
     port: Optional[int] = None,
     path: Union[PathLike, TypingIterable[PathLike], None] = None,
     sock: Optional[Union[socket.socket, TypingIterable[socket.socket]]] = None,
+    shutdown_timeout: float = 60.0,
+    keepalive_timeout: float = 75.0,
     ssl_context: Optional[SSLContext] = None,
     print: Optional[Callable[..., None]] = print,
     backlog: int = 128,
+    access_log_class: Type[AbstractAccessLogger] = AccessLogger,
+    access_log_format: str = AccessLogger.LOG_FORMAT,
+    access_log: Optional[logging.Logger] = access_logger,
+    handle_signals: bool = True,
     reuse_address: Optional[bool] = None,
     reuse_port: Optional[bool] = None,
-    **kwargs: Any,  # TODO(PY311): Use Unpack
+    handler_cancellation: bool = False,
 ) -> None:
     # An internal function to actually do all dirty job for application running
     if asyncio.iscoroutine(app):
@@ -322,7 +328,16 @@ async def _run_app(
 
     app = cast(Application, app)
 
-    runner = AppRunner(app, **kwargs)
+    runner = AppRunner(
+        app,
+        handle_signals=handle_signals,
+        access_log_class=access_log_class,
+        access_log_format=access_log_format,
+        access_log=access_log,
+        keepalive_timeout=keepalive_timeout,
+        shutdown_timeout=shutdown_timeout,
+        handler_cancellation=handler_cancellation,
+    )
 
     await runner.setup()
 
@@ -469,7 +484,6 @@ def run_app(
     reuse_port: Optional[bool] = None,
     handler_cancellation: bool = False,
     loop: Optional[asyncio.AbstractEventLoop] = None,
-    **kwargs: Any,
 ) -> None:
     """Run an app locally"""
     if loop is None:
@@ -501,7 +515,6 @@ def run_app(
             reuse_address=reuse_address,
             reuse_port=reuse_port,
             handler_cancellation=handler_cancellation,
-            **kwargs,
         )
     )
 

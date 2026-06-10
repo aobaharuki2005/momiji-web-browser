@@ -15,7 +15,6 @@ import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.awesomebar.facts.emitHistorySuggestionClickedFact
-import mozilla.components.feature.awesomebar.facts.emitHistorySuggestionRemovedFact
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.android.net.sameHostWithoutMobileSubdomainAs
 import java.util.UUID
@@ -118,13 +117,9 @@ internal suspend fun Iterable<HistoryMetadata>.into(
             title = result.title,
             description = result.key.url,
             editSuggestion = if (showEditSuggestion) result.key.url else null,
-            isRemovalAllowed = true,
             onSuggestionClicked = {
                 loadUrlUseCase(result.key.url)
                 emitHistorySuggestionClickedFact()
-            },
-            onRemovalClicked = {
-                emitHistorySuggestionRemovedFact()
             },
         )
     }

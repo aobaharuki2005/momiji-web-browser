@@ -34,6 +34,8 @@ class MenuTelemetryMiddleware(
         next: (MenuAction) -> Unit,
         action: MenuAction,
     ) {
+        val currentState = store.state
+
         next(action)
 
         when (action) {
@@ -105,6 +107,12 @@ class MenuTelemetryMiddleware(
             MenuAction.Navigate.Passwords -> Events.browserMenuAction.record(
                 Events.BrowserMenuActionExtra(
                     item = "passwords",
+                ),
+            )
+
+            MenuAction.Navigate.ReleaseNotes -> Events.whatsNewTapped.record(
+                Events.WhatsNewTappedExtra(
+                    source = "MENU",
                 ),
             )
 
@@ -183,12 +191,6 @@ class MenuTelemetryMiddleware(
                 )
             }
 
-            MenuAction.MoveToNonPrivateTab -> Events.browserMenuAction.record(
-                Events.BrowserMenuActionExtra(
-                    item = "move_to_non_private_tab",
-                ),
-            )
-
             MenuAction.DeleteBrowsingDataAndQuit -> Events.browserMenuAction.record(
                 Events.BrowserMenuActionExtra(
                     item = "quit",
@@ -218,6 +220,16 @@ class MenuTelemetryMiddleware(
 
             MenuAction.CustomizeReaderView -> ReaderMode.appearance.record(NoExtras())
 
+            MenuAction.ToggleReaderView -> {
+                val readerState = currentState.browserMenuState?.selectedTab?.readerState ?: return
+
+                if (readerState.active) {
+                    ReaderMode.closed.record(NoExtras())
+                } else {
+                    ReaderMode.opened.record(NoExtras())
+                }
+            }
+
             is MenuAction.RequestDesktopSite -> Events.browserMenuAction.record(
                 Events.BrowserMenuActionExtra(
                     item = when (accessPoint) {
@@ -246,6 +258,14 @@ class MenuTelemetryMiddleware(
                 Events.browserMenuAction.record(
                     Events.BrowserMenuActionExtra(
                         item = "discover_more_extensions",
+                    ),
+                )
+            }
+
+            MenuAction.Navigate.ExtensionsLearnMore -> {
+                Events.browserMenuAction.record(
+                    Events.BrowserMenuActionExtra(
+                        item = "extensions_learn_more",
                     ),
                 )
             }
@@ -282,11 +302,18 @@ class MenuTelemetryMiddleware(
                 )
             }
 
+            MenuAction.OpenInRegularTab -> {
+                Events.browserMenuAction.record(
+                    Events.BrowserMenuActionExtra(
+                        item = "open_in_regular_tab",
+                    ),
+                )
+            }
+
             MenuAction.OnCFRShown -> Menu.showCfr.record(NoExtras())
 
             MenuAction.OnCFRDismiss -> Menu.dismissCfr.record(NoExtras())
 
-            MenuAction.Navigate.Summarizer,
             MenuAction.InitAction,
             is MenuAction.CustomMenuItemAction,
             is MenuAction.UpdateBookmarkState,
@@ -296,12 +323,10 @@ class MenuTelemetryMiddleware(
             is MenuAction.InstallAddonFailed,
             is MenuAction.InstallAddonSuccess,
             is MenuAction.UpdateInstallAddonInProgress,
+            is MenuAction.UpdateShowExtensionsOnboarding,
+            is MenuAction.UpdateShowDisabledExtensionsOnboarding,
+            is MenuAction.UpdateManageExtensionsMenuItemVisibility,
             is MenuAction.UpdateAvailableAddons,
-            is MenuAction.OnSummarizationMenuExposed,
-            is MenuAction.InitializeSummarizationMenuState,
-            is MenuAction.UpdateIPProtectionMenuState,
-            is MenuAction.OnMoreMenuClicked,
-            is MenuAction.Navigate.IPProtectionSettings,
             -> Unit
         }
     }

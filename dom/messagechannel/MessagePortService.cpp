@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -61,7 +63,7 @@ class MessagePortService::MessagePortServiceData final {
   CheckedUnsafePtr<MessagePortParent> mParent;
 
   FallibleTArray<NextParent> mNextParents;
-  nsTArray<NotNull<RefPtr<SharedMessageBody>>> mMessages;
+  FallibleTArray<RefPtr<SharedMessageBody>> mMessages;
 
   bool mWaitingForNewParent;
   bool mNextStepCloseAll;
@@ -136,13 +138,22 @@ bool MessagePortService::RequestEntangling(MessagePortParent* aParent,
     data->mParent = aParent;
     data->mWaitingForNewParent = false;
 
-    // We want to ensure we clear data->mMessages even if we early return, so
-    // move it onto the stack before sending.
-    nsTArray<NotNull<RefPtr<SharedMessageBody>>> messages(
+    // We want to ensure we clear data->mMessages even if we early return, while
+    // also ensuring that its contents remain alive until after array's contents
+    // are destroyed because of JSStructuredCloneData borrowing.  So we use
+    // Move to initialize things swapped and do it before we declare `array` so
+    // that reverse destruction order works for us.
+    FallibleTArray<RefPtr<SharedMessageBody>> messages(
         std::move(data->mMessages));
+    nsTArray<MessageData> array;
+    if (!SharedMessageBody::FromSharedToMessagesParent(aParent->Manager(),
+                                                       messages, array)) {
+      CloseAll(aParent->ID());
+      return false;
+    }
 
     // We can entangle the port.
-    if (!aParent->Entangled(std::move(messages))) {
+    if (!aParent->Entangled(std::move(array))) {
       CloseAll(aParent->ID());
       return false;
     }
@@ -172,7 +183,7 @@ bool MessagePortService::RequestEntangling(MessagePortParent* aParent,
 
 bool MessagePortService::DisentanglePort(
     MessagePortParent* aParent,
-    nsTArray<NotNull<RefPtr<SharedMessageBody>>> aMessages) {
+    FallibleTArray<RefPtr<SharedMessageBody>> aMessages) {
   MessagePortServiceData* data;
   if (!mPorts.Get(aParent->ID(), &data)) {
     MOZ_ASSERT(false, "Unknown MessagePortParent should not happen.");
@@ -216,7 +227,13 @@ bool MessagePortService::DisentanglePort(
   data->mParent = nextParent;
   data->mNextParents.RemoveElementAt(index);
 
-  (void)data->mParent->Entangled(std::move(aMessages));
+  nsTArray<MessageData> array;
+  if (!SharedMessageBody::FromSharedToMessagesParent(data->mParent->Manager(),
+                                                     aMessages, array)) {
+    return false;
+  }
+
+  (void)data->mParent->Entangled(std::move(array));
   return true;
 }
 
@@ -305,7 +322,7 @@ void MessagePortService::MaybeShutdown() {
 
 bool MessagePortService::PostMessages(
     MessagePortParent* aParent,
-    nsTArray<NotNull<RefPtr<SharedMessageBody>>> aMessages) {
+    FallibleTArray<RefPtr<SharedMessageBody>> aMessages) {
   MessagePortServiceData* data;
   if (!mPorts.Get(aParent->ID(), &data)) {
     MOZ_ASSERT(false, "Unknown MessagePortParent should not happend.");
@@ -327,9 +344,17 @@ bool MessagePortService::PostMessages(
 
   // If the parent can send data to the child, let's proceed.
   if (data->mParent && data->mParent->CanSendData()) {
-    (void)data->mParent->SendReceiveData(data->mMessages);
+    {
+      nsTArray<MessageData> messages;
+      if (!SharedMessageBody::FromSharedToMessagesParent(
+              data->mParent->Manager(), data->mMessages, messages)) {
+        return false;
+      }
 
-    // We've sent data->mMessages now, so we can clear it out.
+      (void)data->mParent->SendReceiveData(messages);
+    }
+    // `messages` borrows the underlying JSStructuredCloneData so we need to
+    // avoid destroying the `mMessages` until after we've destroyed `messages`.
     data->mMessages.Clear();
   }
 

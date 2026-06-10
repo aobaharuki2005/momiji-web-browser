@@ -199,9 +199,6 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment() {
         private var exceptions: List<TrackingProtectionException> = emptyList()
         private val selectedExceptions: MutableList<TrackingProtectionException> = mutableListOf()
 
-        /**
-         * Refreshes the list of exceptions.
-         */
         fun refresh(context: Context, body: (() -> Unit)? = null) {
             viewLifecycleOwner.lifecycleScope.launch {
                 context.components.trackingProtectionUseCases.fetchExceptions {
@@ -243,14 +240,8 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment() {
             }
         }
 
-        /**
-         * Returns the list of currently selected exceptions.
-         */
         fun selection(): List<TrackingProtectionException> = selectedExceptions
 
-        /**
-         * Moves an item from [from] position to [to] position in the list.
-         */
         fun move(from: Int, to: Int) {
             Collections.swap(exceptions, from, to)
             notifyItemMoved(from, to)

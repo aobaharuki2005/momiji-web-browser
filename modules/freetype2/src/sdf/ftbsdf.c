@@ -4,7 +4,7 @@
  *
  *   Signed Distance Field support for bitmap fonts (body only).
  *
- * Copyright (C) 2020-2026 by
+ * Copyright (C) 2020-2025 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * Written by Anuj Verma.
@@ -113,7 +113,6 @@
    *   // copy SDF data to the target bitmap
    *   copy(dm to t);
    * }
-   * ```
    *
    */
 

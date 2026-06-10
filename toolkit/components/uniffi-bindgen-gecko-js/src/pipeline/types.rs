@@ -60,13 +60,10 @@ fn jsdoc_name(ty: &Type) -> String {
         Type::Bytes => "string".into(),
         Type::Boolean => "boolean".into(),
         Type::Interface { name, .. }
+        | Type::Enum { name, .. }
         | Type::Record { name, .. }
         | Type::CallbackInterface { name, .. }
         | Type::Custom { name, .. } => name.to_upper_camel_case(),
-        Type::Enum { name, .. } => {
-            let name = name.to_upper_camel_case();
-            format!("{name}[keyof {name}]")
-        }
         Type::Optional { inner_type } => format!("?{}", jsdoc_name(inner_type)),
         Type::Sequence { inner_type } => format!("Array.<{}>", jsdoc_name(inner_type)),
         Type::Map { .. } => "object".into(),

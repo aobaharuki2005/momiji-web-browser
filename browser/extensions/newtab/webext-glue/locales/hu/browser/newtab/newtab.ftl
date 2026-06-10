@@ -8,13 +8,9 @@
 newtab-page-title = Új lap
 newtab-settings-button =
     .title = Az Új lap oldal személyre szabása
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Oldal testreszabása
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Testreszabás
-newtab-customize-panel-label =
-    .label = Testreszabás
 newtab-personalize-settings-icon-label =
     .title = Új lap testreszabása
     .aria-label = Beállítások
@@ -27,9 +23,6 @@ newtab-personalize-dialog-label =
     .aria-label = Testreszabás
 newtab-logo-and-wordmark =
     .aria-label = { -brand-full-name }
-newtab-card-dismiss-button =
-    .title = Eltüntetés
-    .aria-label = Eltüntetés
 
 ## Search box component.
 
@@ -56,7 +49,7 @@ newtab-search-box-input =
     .placeholder = Keresés a weben
     .aria-label = Keresés a weben
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = Keresőszolgáltatás hozzáadása
 newtab-topsites-add-shortcut-header = Új gyorskereső
@@ -76,11 +69,6 @@ newtab-topsites-url-validation = Érvényes webcím szükséges
 newtab-topsites-image-url-label = Egyéni kép webcíme
 newtab-topsites-use-image-link = Egyéni kép használata…
 newtab-topsites-image-validation = A kép betöltése nem sikerült. Próbáljon meg egy másik webcímet.
-
-## Clear text button for the URL and image URL input fields in the Top Sites form.
-
-newtab-topsites-clear-input =
-    .aria-label = Szöveg törlése
 
 ## Top Sites - General form dialog buttons. These are verbs/actions.
 
@@ -148,9 +136,6 @@ newtab-menu-report = Jelentés
 # Context menu option to personalize New Tab recommended stories by blocking a section of stories,
 # e.g. "Sports". "Block" is a verb here.
 newtab-menu-section-block = Tiltás
-# "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
-# e.g. Following the travel section of stories.
-newtab-menu-section-unfollow-topic = Követés megszüntetése
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Téma követésének megszüntetése
@@ -270,7 +255,7 @@ newtab-empty-section-topstories-generic = Már felzárkózott. Nézzen vissza k�
 
 newtab-discovery-empty-section-topstories-header = Felzárkózott.
 newtab-discovery-empty-section-topstories-content = Nézzen vissza később további történetekért.
-newtab-discovery-empty-section-topstories-try-again-button = Újrapróbálkozás
+newtab-discovery-empty-section-topstories-try-again-button = Próbálja újra
 newtab-discovery-empty-section-topstories-loading = Betöltés…
 # Displays when a layout in a section took too long to fetch articles.
 newtab-discovery-empty-section-topstories-timed-out = Hoppá! Majdnem betöltöttük ezt a részt, de nem egészen.
@@ -318,23 +303,9 @@ newtab-error-fallback-refresh-link = Az újrapróbálkozáshoz frissítse az old
 
 newtab-custom-shortcuts-title = Gyorskeresők
 newtab-custom-shortcuts-subtitle = Mentett vagy felkeresett webhelyek
-#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Gyorskeresők
     .description = Mentett vagy felkeresett webhelyek
-newtab-custom-shortcuts-nova =
-    .label = Gyorskeresők
-newtab-custom-row-description =
-    .description = Sorok száma
-# Variables
-#   $num (number) - Number of rows to display
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
-newtab-custom-row-selector2 =
-    .label =
-        { $num ->
-            [one] { $num } sor
-           *[other] { $num } sor
-        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -345,12 +316,9 @@ newtab-custom-row-selector =
 newtab-custom-sponsored-sites = Szponzorált gyorskeresők
 newtab-custom-pocket-title = A { -pocket-brand-name } által ajánlott
 newtab-custom-pocket-subtitle = Kivételes tartalmak a { -pocket-brand-name } válogatásában, amely a { -brand-product-name } család része
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be having a description under "Recommended stories" anymore
 newtab-custom-stories-toggle =
     .label = Ajánlott történetek
     .description = Kivételes tartalmak a { -brand-product-name } család válogatásában
-newtab-recommended-stories-toggle =
-    .label = Ajánlott történetek
 newtab-custom-stories-personalized-toggle =
     .label = Történetek
 newtab-custom-stories-personalized-checkbox-label = Személyre szabott történetek a tevékenysége alapján
@@ -361,24 +329,18 @@ newtab-custom-recent-subtitle = Válogatás a legutóbbi webhelyekből és tarta
 newtab-custom-weather-toggle =
     .label = Időjárás
     .description = A mai előrejelzés egy pillantásra
+newtab-custom-trending-search-toggle =
+    .label = Felkapott keresések
+    .description = Népszerű és gyakran keresett témák
 newtab-custom-widget-weather-toggle =
     .label = Időjárás
+newtab-custom-widget-trending-search-toggle =
+    .label = Felkapott keresések
 newtab-custom-widget-lists-toggle =
     .label = Listák
 newtab-custom-widget-timer-toggle =
     .label = Időzítő
-newtab-custom-widget-sports-toggle =
-    .label = Világbajnokság
-newtab-custom-widget-clock-toggle =
-    .label = Óra
-newtab-custom-widget-sports-toggle2 =
-    .label = Sport
-newtab-custom-widget-section-title = Kisalkalmazások
-newtab-custom-widget-section-toggle =
-    .label = Kisalkalmazások
-newtab-widget-manage-title = Kisalkalmazások
-newtab-widget-manage-widget-button =
-    .label = Kisalkalmazások kezelése
+newtab-custom-widget-section-title = Felületi elemek
 # Tooltip for close button
 newtab-custom-close-menu-button =
     .title = Bezárás
@@ -390,12 +352,8 @@ newtab-custom-settings = További beállítások kezelése
 
 newtab-wallpaper-title = Háttérképek
 newtab-wallpaper-reset = Visszaállítás az alapértelmezésre
-#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Kép feltöltése
-newtab-wallpaper-add-an-image = Kép hozzáadása
 newtab-wallpaper-custom-color = Válasszon színt
-newtab-wallpaper-toggle-title =
-    .label = Háttérképek
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = A kép túllépte a { $file_size } MB-os fájlméretkorlátot. Próbáljon meg egy kisebb fájlt feltölteni.
@@ -418,9 +376,7 @@ newtab-wallpaper-light-fox-anniversary = Egy róka egy füves mezőben, ködös 
 
 ## Solid Colors
 
-#  (developer note): @nova-cleanup(remove-string): Remove old "Solid colors" string once Nova lands. The simplified "Colors" string will take over
 newtab-wallpaper-category-title-colors = Egyszínű színek
-newtab-wallpaper-colors = Színek
 newtab-wallpaper-blue = Kék
 newtab-wallpaper-light-blue = Világoskék
 newtab-wallpaper-light-purple = Világoslila
@@ -511,12 +467,7 @@ newtab-weather-menu-change-location = Hely módosítása
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Keresési hely
     .aria-label = Keresési hely
-# "Current" refers to the user's physical/geographic location detected via geolocation.
-newtab-weather-change-location-search-use-current =
-    .label = Jelenlegi hely használata
 newtab-weather-menu-weather-display = Időjárás-kijelző
-newtab-weather-todays-forecast = Mai előrejelzés
-newtab-weather-see-full-forecast = Teljes előrejelzés megtekintése
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
 # - Detailed: Include simple information plus a short text summary: e.g. "Mostly cloudy"
@@ -539,23 +490,8 @@ newtab-weather-opt-in-not-now =
     .label = Most nem
 newtab-weather-opt-in-yes =
     .label = Igen
-newtab-weather-opt-in-headline = Kapjon helyi időjárás-előrejelzést
-newtab-weather-opt-in-use-location =
-    .label = Hely használata
-newtab-weather-opt-in-choose-location = Válasszon helyet
 # We'll be showing static (fake) weather data if the user has not opted in to using their location
 newtab-weather-static-city = New York City
-# "Highest" here refers to the highest temperature of the day
-newtab-weather-high =
-    .aria-label = Legmagasabb
-# "Lowest" here refers to the lowest temperature of the day
-newtab-weather-low =
-    .aria-label = Legalacsonyabb
-# Variables:
-#   $provider (string) - Service provider for weather data
-newtab-weather-see-forecast-description =
-    .title = Előrejelzés megtekintése itt: { $provider }
-    .aria-description = { $provider } ∙ Szponzorálva
 
 ## Topic Labels
 
@@ -602,16 +538,8 @@ newtab-topic-selection-button-pick-interests = Válassza ki az érdeklődési k�
 ## e.g. Following the travel section of stories.
 
 newtab-section-follow-button = Követés
-# Variables:
-#   $topic (string) - Topic that the user can follow
-newtab-section-follow-button-label =
-    .aria-label = { $topic } követése
 newtab-section-following-button = Követés
 newtab-section-unfollow-button = Követés megszüntetése
-# Variables:
-#   $topic (string) - Topic that the user is following and can unfollow
-newtab-section-unfollow-button-label =
-    .aria-label = Követés: { $topic } követésének megszüntetése
 # A modal may appear next to the Follow button, directing users to try out the feature
 newtab-section-follow-highlight-title = Finomhangolja a hírfolyamát
 newtab-section-follow-highlight-subtitle = Kövesse az érdeklődési köreit, hogy többet lásson abból, amit kedvel.
@@ -623,22 +551,6 @@ newtab-section-follow-highlight-subtitle = Kövesse az érdeklődési köreit, h
 newtab-section-block-button = Blokkolás
 newtab-section-blocked-button = Blokkolva
 newtab-section-unblock-button = Blokkolás feloldása
-# Variables:
-#   $topic (string) - Name of topic that user is following
-newtab-section-follow-topic =
-    .aria-label = { $topic } követése
-# Variables:
-#   $topic (string) - Name of topic that user is unfollowing
-newtab-section-unfollow-topic =
-    .aria-label = { $topic } követésének megszüntetése
-# Variables:
-#   $topic (string) - Name of topic that user is blocking
-newtab-section-block-topic =
-    .aria-label = { $topic } blokkolása
-# Variables:
-#   $topic (string) - Name of topic that user is unblocking
-newtab-section-unblock-topic =
-    .aria-label = { $topic } blokkolásának megszüntetése
 
 ## Confirmation modal for blocking a section
 
@@ -648,7 +560,6 @@ newtab-section-confirm-block-topic-p2 = A blokkolt témák többé nem fognak me
 # Variables:
 #   $topic (string) - Name of topic that user is blocking
 newtab-section-block-topic-button = { $topic } blokkolása
-newtab-section-block-cancel-button = Mégse
 
 ## Strings for custom wallpaper highlight
 
@@ -670,12 +581,6 @@ newtab-new-user-custom-wallpaper-title = Válasszon háttérképet, hogy a { -br
 newtab-new-user-custom-wallpaper-subtitle = Tegyen minden új lapot otthonossá az egyéni háttérképekkel és színekkel.
 newtab-new-user-custom-wallpaper-cta = Próbálja ki most
 
-## Strings for Nova wallpaper feature highlight
-
-newtab-wallpaper-feature-highlight-title = Friss háttérképek érkeztek
-newtab-wallpaper-feature-highlight-subtitle = Válassza ki a kedvencét, és legyen otthonos az összes új lapja.
-newtab-wallpaper-feature-highlight-cta = Háttérkép választása
-
 ## Strings for download mobile highlight
 
 newtab-download-mobile-highlight-title = Töltse le a mobilos { -brand-product-name }ot
@@ -691,7 +596,7 @@ newtab-download-mobile-highlight-image =
 newtab-shortcuts-highlight-title = A kedvencei egy karnyújtásnyira
 newtab-shortcuts-highlight-subtitle = Adjon hozzá egy indítót, hogy a kedvenc oldalai egy kattintásra legyenek.
 
-## Strings for reporting issues with ads and content
+## Strings for reporting ads and content
 
 newtab-report-content-why-reporting-this =
     .label = Miért jelenti ezt be?
@@ -709,27 +614,21 @@ newtab-report-content-inappropriate-offensive =
     .label = Nem megfelelő vagy sértő
 newtab-report-content-spam-misleading =
     .label = Kéretlen vagy félrevezető
-newtab-report-content-requires-payment-subscription =
-    .label = Fizetést vagy előfizetést igényel
-newtab-report-content-requires-payment-subscription-learn-more = További tudnivalók
 newtab-report-cancel = Mégse
 newtab-report-submit = Elküldés
 newtab-toast-thanks-for-reporting =
     .message = Köszönjük, hogy bejelentette.
-newtab-toast-widgets-hidden =
-    .message = Válassza a ceruza ikont, hogy bármikor újra kisalkalmazásokat adjon hozzá.
-# Variables:
-#   $topic (string) - Topic that the user has followed
-newtab-section-toast-follow =
-    .message = Mostantól követi a következőt: { $topic }.
-# Variables:
-#   $topic (string) - Topic that the user has unfollowed
-newtab-section-toast-unfollow =
-    .message = Már nem követi a következőt: { $topic }.
-# Variables:
-#   $topic (string) - Topic that the user has blocked
-newtab-section-toast-block =
-    .message = Többé nem fog történeteket látni erről: { $topic }.
+
+## Strings for trending searches
+
+newtab-trending-searches-show-trending =
+    .title = Felkapott keresések megjelenítése
+newtab-trending-searches-hide-trending =
+    .title = Felkapott keresések elrejtése
+newtab-trending-searches-learn-more = További tudnivalók
+newtab-trending-searches-dismiss = Felkapott keresések elrejtése
+# "Trending searches refers to popular searches from search engines
+newtab-trending-searches-title = Felkapott keresések
 
 ## Strings for task / to-do list productivity widget
 
@@ -744,20 +643,13 @@ newtab-widget-lists-label-beta =
 # Variables:
 #   $number (number) - Amount of list items marked complete
 newtab-widget-lists-completed-list = Kész ({ $number })
-newtab-widget-lists-celebration-headline = Szép munka
-newtab-widget-lists-celebration-subhead = Minden tiszta
 newtab-widget-task-list-menu-copy = Másolás
 newtab-widget-lists-menu-edit = Listanév szerkesztése
-newtab-widget-lists-menu-edit2 =
-    .aria-label = Listanév szerkesztése
 newtab-widget-lists-menu-create = Új lista létrehozása
 newtab-widget-lists-menu-delete = Lista törlése
 newtab-widget-lists-menu-copy = Lista vágólapra másolása
+newtab-widget-lists-menu-hide = Összes lista elrejtése
 newtab-widget-lists-menu-learn-more = További tudnivalók
-newtab-widget-lists-button-add-item = Elem hozzáadása
-newtab-widget-lists-input-add-an-item2 =
-    .placeholder = Elem hozzáadása
-    .aria-label = Elem hozzáadása
 newtab-widget-lists-input-add-an-item =
     .placeholder = Elem hozzáadása
 newtab-widget-lists-input-error = Elem hozzáadásához adjon meg szöveget.
@@ -766,47 +658,17 @@ newtab-widget-lists-input-menu-move-up = Mozgatás felfelé
 newtab-widget-lists-input-menu-move-down = Mozgatás lefelé
 newtab-widget-lists-input-menu-delete = Törlés
 newtab-widget-lists-input-menu-edit = Szerkesztés
-newtab-widget-lists-input-menu-edit2 =
-    .aria-label = Elem szerkesztése
-newtab-widget-lists-edit-clear =
-    .aria-label = Mégse
-    .title = Mégse
 # the + symbol emphasises the functionality of adding a new list
 newtab-widget-lists-dropdown-create =
     .label = + Új lista létrehozása
 newtab-widget-lists-name-label-default =
     .label = Feladatlista
-newtab-widget-lists-name-label-checklist =
-    .label = Ellenőrzőlista
 newtab-widget-lists-name-placeholder-default =
     .placeholder = Feladatlista
-newtab-widget-lists-name-placeholder-checklist2 =
-    .placeholder = Ellenőrzőlista
-    .aria-label = Listanév szerkesztése
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new2 =
-    .placeholder = Új lista
-    .aria-label = Listanév szerkesztése
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Ellenőrzőlista
 # The placeholder value of the name field for a newly created list
 newtab-widget-lists-name-placeholder-new =
     .placeholder = Új lista
 newtab-widget-section-title = Kisalkalmazások
-newtab-widget-menu-hide = Kisalkalmazás elrejtése
-newtab-widget-menu-change-size = Méret módosítása
-# Parent label for a submenu in the widget menu that reorders the widget
-# among its siblings. "Left" and "Right" appear as items inside this submenu.
-newtab-widget-menu-move = Áthelyezés
-# Submenu item under "Move"; moves the widget one position to the left.
-# RTL locales should translate this as "Right".
-newtab-widget-menu-move-left = Balra
-# Submenu item under "Move"; moves the widget one position to the right.
-# RTL locales should translate this as "Left".
-newtab-widget-menu-move-right = Jobbra
-newtab-widget-size-small = Kicsi
-newtab-widget-size-medium = Közepes
-newtab-widget-size-large = Nagy
 # Tooltip for hide all widgets button
 newtab-widget-section-hide-all-button =
     .title = Kisalkalmazások elrejtése
@@ -817,19 +679,9 @@ newtab-widget-section-maximize =
 newtab-widget-section-minimize =
     .title = Kisalkalmazások minimalizálása
     .aria-label = Összes kisalkalmazás összecsukása kompakt méretre
-newtab-widget-section-menu-button =
-    .title = Kisalkalmazások menü
-    .aria-label = Kisalkalmazások menü megnyitása
-newtab-widget-add-widgets-button =
-    .aria-label = Kisalkalmazás hozzáadása
-    .title = Kisalkalmazás hozzáadása
-newtab-widget-section-menu-manage = Kisalkalmazások kezelése
-newtab-widget-section-menu-hide-all = Kisalkalmazások elrejtése
-newtab-widget-section-menu-learn-more = További tudnivalók
-newtab-widget-section-feedback = Mondja el nekünk mit gondol
-newtab-widget-lists-name-default = Ellenőrzőlista
 
-## Strings introduced by the Nova redesign of the Timer widget
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
 
 newtab-widget-timer-notification-title = Időzítő
 newtab-widget-timer-notification-focus = Lejárt a fókuszidő. Szép munka. Szüksége van egy kis szünetre?
@@ -847,370 +699,14 @@ newtab-widget-timer-reset =
     .title = Visszaállítás
 newtab-widget-timer-menu-notifications = Értesítések kikapcsolása
 newtab-widget-timer-menu-notifications-on = Értesítések bekapcsolása
+newtab-widget-timer-menu-hide = Időzítő elrejtése
 newtab-widget-timer-menu-learn-more = További tudnivalók
-# The title displays above a set of top news headlines.
-newtab-daily-briefing-card-title = Legfontosabb szalagcímek
-newtab-daily-briefing-card-menu-dismiss = Eltüntetés
-# Variables:
-#   $minutes (number) - Time since the feed has been refreshed
-newtab-daily-briefing-card-timestamp = Frissítve: { $minutes } perce
 newtab-widget-message-title = Maradjon fókuszált a listákkal és a beépített időzítővel
 # to-dos stands for "things to do".
 newtab-widget-message-copy = A gyors emlékeztetőktől a napi tennivalókig, fókuszált munkaszakaszoktól a nyújtó szünetekig — maradjon a feladatnál és időben.
-# One spot refers to a dedicated section on new tab to manage and use widgets
-newtab-widget-message-focus-forecasts-title = Egy helyen összefoglalva minden lényeg, időjárás, egyebek
-newtab-widget-message-focus-forecasts-body = Minden napja gördülékeny lehet a { -brand-product-name } moduljaival. Nézze meg az időjárás-előrejelzést, tartsa számon feladatait, vagy kövesse az időt szerte a világon.
-# "Make Firefox yours" refers to about:newtab. The call to action here ("Try it now")
-# is to customize the new tab page with a background image or color from
-# the built-in wallpaper collection or uploading your own image.
-newtab-promo-card-title-addons = Tegye sajátjává a { -brand-product-name }ot
-newtab-promo-card-body-addons = Válasszon egy háttérképet a gyűjteményünkből, vagy készítse el a sajátját.
-newtab-promo-card-cta-addons = Próbálja ki most
 newtab-promo-card-title = Támogassa a { -brand-product-name }ot
 newtab-promo-card-body = Szponzoraink támogatják a küldetésünket, hogy jobb webet építsünk
 newtab-promo-card-cta = További tudnivalók
 newtab-promo-card-dismiss-button =
     .title = Eltüntetés
     .aria-label = Eltüntetés
-
-## Strings introduced by the Nova redesign of the Timer widget
-
-# Variables:
-#   $minutes (number) - The currently selected timer duration in minutes
-newtab-widget-timer-start-aria =
-    .aria-label =
-        { $minutes ->
-            [one] { $minutes } perces időzítő indítása
-           *[other] { $minutes } perces időzítő indítása
-        }
-newtab-widget-timer-pause-aria =
-    .aria-label = Időzítő szüneteltetése
-# Variables:
-#   $minutes (number) - The currently selected timer duration in minutes
-newtab-widget-timer-spinbutton-name =
-    .aria-label =
-        { $minutes ->
-            [one] { $minutes } perc
-           *[other] { $minutes } perc
-        }
-newtab-widget-timer-decrease-min =
-    .title = Csökkentés 1 perccel
-newtab-widget-timer-increase-min =
-    .title = Növelés 1 perccel
-newtab-widget-timer-mode-group =
-    .aria-label = Időzítő mód
-# Small label shown beneath the live time while the focus timer is running or paused.
-newtab-widget-timer-running-focus = Fókusz
-# Small label shown beneath the live time while the break timer is running or paused.
-newtab-widget-timer-running-break = Szünet
-# Context-menu item to hide the Timer widget. Replaces the shared "Hide widget"
-# copy with a widget-specific string per the Nova design.
-newtab-widget-timer-menu-hide = Időzítő elrejtése
-# Heading shown inside the Timer widget after a focus session ends.
-newtab-widget-timer-celebration-heading-focus = Szép munka
-# Heading shown inside the Timer widget after a break session ends.
-newtab-widget-timer-celebration-heading-break = A szünete véget ért
-# Message shown inside the Timer widget after a focus session ends.
-newtab-widget-timer-celebration-message-focus = Szüksége van egy kis szünetre?
-# Message shown inside the Timer widget after a break session ends.
-newtab-widget-timer-celebration-message-break = Készen áll a fókuszálásra?
-
-##
-
-newtab-sports-widget-menu-follow-teams = Csapatok követése
-newtab-sports-widget-menu-view-schedule = Beosztás megtekintése
-newtab-sports-widget-menu-view-upcoming = Közelgők megtekintése
-newtab-sports-widget-menu-view-results = Eredmények megtekintése
-# Milestone dates (e.g. group stage, semifinals, etc.). Refers to calendar dates.
-newtab-sports-widget-menu-key-dates = Kulcsdátumok
-newtab-sports-widget-menu-learn-more = További tudnivalók
-# “Keep tabs on” is an informal expression meaning to stay updated on, stay informed on, or regularly follow something (in this case, World Cup matches and updates).
-newtab-sports-widget-keep-tabs = Kövesse a világbajnokságot
-newtab-sports-widget-get-updates = Kapjon élő mérkőzésinformációkat és még sok mást.
-newtab-sports-widget-view-schedule =
-    .label = Beosztás megtekintése
-newtab-sports-widget-follow-teams =
-    .label = Csapatok követése
-newtab-sports-widget-view-matches =
-    .label = Mérkőzések megtekintése
-# Variables:
-#   $number (number) - Maximum number of teams a user can choose to follow in the team selection state
-newtab-sports-widget-follow-teams-title =
-    { $number ->
-        [one] Kövessen akár { $number } csapatot
-       *[other] Kövessen akár { $number } csapatot
-    }
-newtab-sports-widget-choose-wallpaper =
-    .label = Válasszon egy háttérképet
-newtab-sports-widget-skip = Kihagyás
-newtab-sports-widget-search-country =
-    .placeholder = Ország keresése
-    .aria-label = Ország keresése
-newtab-sports-widget-cancel = Mégse
-newtab-sports-widget-back-button =
-    .aria-label = Vissza
-newtab-sports-widget-done-button =
-    .label = Kész
-# Shown in the follow-teams list for a team that has been knocked out of the tournament.
-# Variables:
-#   $teamName (string) - the localized team name (e.g. "Canada").
-newtab-sports-widget-team-name-eliminated = { $teamName } (kiesve)
-newtab-sports-widget-view-all =
-    .label = Összes megtekintése
-newtab-sports-widget-show-less =
-    .label = Kevesebb megjelenítése
-# Toggle that filters the list of teams the user follows
-newtab-sports-widget-followed-only-toggle =
-    .label = Csak követett csapatok
-# Watch is a verb (as in watch matches online).
-newtab-sports-widget-watch =
-    .label = Követés
-    .title = Élő követés
-# Watch is a verb (as in watch matches online).
-newtab-sports-widget-watch-icon =
-    .aria-label = Élő követés
-    .title = Élő követés
-newtab-sports-widget-watch-dialog-close =
-    .aria-label = Bezárás
-    .title = Bezárás
-# Tag: user can watch without paying (sign-in may still be required).
-newtab-sports-widget-watch-stream-free = Ingyenes
-# Tag: user can start watching via a trial; continued access may require payment after it ends.
-newtab-sports-widget-watch-stream-free-trial = Ingyenes próbaidőszak
-# Tag: provider offers both a no-cost or trial path and a paid path.
-newtab-sports-widget-watch-stream-free-paid = Ingyenes és fizetős
-# Tag: user must pay to watch (subscription, TV provider, premium plan, or add-on).
-newtab-sports-widget-watch-stream-paid = Fizetős
-# Note: provider only streams some matches, not the full tournament.
-newtab-sports-widget-watch-stream-select-games-only = Csak egyes játékok
-# Heading for the list of streaming services available in the user’s country/region.
-newtab-sports-widget-watch-available-region = Régiójában elérhető
-# Heading for the list of streaming services available outside the user’s country/region.
-newtab-sports-widget-watch-available-other-regions = Egyéb régiók
-# Button that opens the provider’s stream page in a new tab.
-newtab-sports-widget-watch-play =
-    .aria-label = Közvetítés megnyitása
-    .title = Közvetítés megnyitása
-newtab-sports-widget-group-stage = Csoportkörök szakasza
-newtab-sports-widget-group-a = A csoport
-newtab-sports-widget-group-b = B csoport
-newtab-sports-widget-group-c = C csoport
-newtab-sports-widget-group-d = D csoport
-newtab-sports-widget-group-e = E csoport
-newtab-sports-widget-group-f = F csoport
-newtab-sports-widget-group-g = G csoport
-newtab-sports-widget-group-h = H csoport
-newtab-sports-widget-group-i = I csoport
-newtab-sports-widget-group-j = J csoport
-newtab-sports-widget-group-k = K csoport
-newtab-sports-widget-group-l = L csoport
-newtab-sports-widget-round-32 = Legjobb 32
-newtab-sports-widget-round-16 = Legjobb 16
-newtab-sports-widget-quarter-finals = Negyeddöntők
-# The "LIVE" string is meant to be uppercase in English, but other languages and locales may vary in how they handle this.
-newtab-sports-widget-live = ÉLŐ
-newtab-custom-widget-live-refresh =
-    .title = Pontszámok frissítése
-    .aria-label = Pontszámok frissítése
-# Milestone dates (e.g. group stage, semifinals, etc.). Refers to calendar dates.
-newtab-sports-widget-key-dates = Kulcsdátumok
-newtab-sports-widget-upcoming = Közelgő
-# Used for a match currently ongoing
-newtab-sports-widget-now = Most
-newtab-sports-widget-results = Eredmények
-newtab-sports-widget-semi-finals = Elődöntők
-newtab-sports-widget-bronze-finals = Bronzmérkőzés
-# Final is the final match for 1st place.
-newtab-sports-widget-final = Döntő
-# Variables:
-#   $start (Date) - Start date of a tournament stage
-#   $end (Date) - End date of a tournament stage
-newtab-sports-widget-key-date-range = { DATETIME($start, month: "short", day: "numeric") } – { DATETIME($end, month: "short", day: "numeric") }
-# Variables:
-#   $date (Date) - Date of a single tournament event
-newtab-sports-widget-key-date = { DATETIME($date, month: "short", day: "numeric") }
-newtab-sports-widget-delayed = Késleltetve
-newtab-sports-widget-postponed = Elhalasztva
-newtab-sports-widget-suspended = Felfüggesztve
-newtab-sports-widget-cancelled = Lemondva
-newtab-sports-widget-information = Információk a mérkőzésről
-newtab-sports-widget-no-live-data = Az élő mérkőzésadatok most nem frissülnek
-newtab-sports-widget-view-results-link = Eredmények megtekintése
-newtab-sports-widget-third-place = Harmadik helyezett
-# Runner-up is the team in 2nd place.
-newtab-sports-widget-runner-up = Második helyezett
-newtab-sports-widget-champions = Bajnokok
-newtab-sports-widget-world-cup-champions = A 2026-os világbajnokság bajnokai
-# Variables:
-#   $date (Date) - The match start time
-newtab-sports-widget-match-time = { DATETIME($date, hour: "2-digit", minute: "2-digit") }
-newtab-sports-widget-match-full-time = Teljes játékidő
-newtab-sports-widget-match-penalties = Büntetők
-
-## Accessible labels for match rows in the sports widget. These are read by
-## screen readers to announce the match details and status.
-## Variables shared by all messages in this group:
-##   $homeTeam (String) - The full name of the home team (e.g. "Mexico")
-##   $awayTeam (String) - The full name of the away team (e.g. "Russia")
-
-# A finished match row (regular full-time result).
-# Variables:
-#   $homeScore (number) - The home team's regular-time score
-#   $awayScore (number) - The away team's regular-time score
-newtab-sports-widget-match-aria-label-results =
-    .aria-label = { $homeTeam }, { $homeScore } kontra { $awayTeam }, { $awayScore }
-# A finished match row that went to a penalty shootout.
-# Parenthesized values are the shootout score.
-# Variables:
-#   $homeScore (number) - The home team's regular-time score
-#   $awayScore (number) - The away team's regular-time score
-#   $homePenalty (number) - The home team's penalty shootout score
-#   $awayPenalty (number) - The away team's penalty shootout score
-newtab-sports-widget-match-aria-label-results-penalties =
-    .aria-label = { $homeTeam }, { $homeScore } ({ $homePenalty }) kontra { $awayTeam }, { $awayScore } ({ $awayPenalty })
-# A match that is currently in progress.
-# Variables:
-#   $homeScore (number) - The home team's current score
-#   $awayScore (number) - The away team's current score
-newtab-sports-widget-match-aria-label-now =
-    .aria-label = Élő: { $homeTeam }, { $homeScore } kontra { $awayTeam }, { $awayScore }
-# An upcoming scheduled match row. Announces kickoff time and date.
-# Variables:
-#   $date (Date) - The scheduled kickoff date/time
-newtab-sports-widget-match-aria-label-upcoming =
-    .aria-label = { $homeTeam } kontra { $awayTeam }, { DATETIME($date, hour: "numeric", minute: "numeric") }, { DATETIME($date, day: "numeric", month: "long") }
-# An upcoming match row whose status is "delayed".
-newtab-sports-widget-match-aria-label-upcoming-delayed =
-    .aria-label = { $homeTeam } kontra { $awayTeam }, késleltetve
-# An upcoming match row whose status is "postponed".
-newtab-sports-widget-match-aria-label-upcoming-postponed =
-    .aria-label = { $homeTeam } kontra { $awayTeam }, elhalasztva
-# An upcoming match row whose status is "suspended".
-newtab-sports-widget-match-aria-label-upcoming-suspended =
-    .aria-label = { $homeTeam } kontra { $awayTeam }, felfüggesztve
-# An upcoming match row whose status is "cancelled".
-newtab-sports-widget-match-aria-label-upcoming-cancelled =
-    .aria-label = { $homeTeam } kontra { $awayTeam }, törölve
-
-## Sports widget — team names (FIFA country codes)
-## Only includes names not adequately covered by standard country-code
-## internationalization tooling.
-
-newtab-sports-widget-team-name-label-bih =
-    .label = Bosznia-Hercegovina
-newtab-sports-widget-team-name-label-civ =
-    .label = Elefántcsontpart
-newtab-sports-widget-team-name-label-cod =
-    .label = Kongói Demokratikus Köztársaság
-newtab-sports-widget-team-name-label-eng =
-    .label = Anglia
-newtab-sports-widget-team-name-label-sco =
-    .label = Skócia
-
-## Sports widget OMC messages
-## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.
-
-newtab-sports-widget-message-wallpapers-title = Indítsa a világbajnokságot új háttérképekkel
-newtab-sports-widget-message-wallpapers-body = Vigyen egy kis játékos energiát a böngészőjébe a bajnokság alatt.
-newtab-sports-widget-message-wallpapers-cta = Háttérkép választása
-newtab-sports-widget-message-add-widgets-cta =
-    .label = Kisalkalmazások hozzáadása
-newtab-sports-widget-message-day-in-play-title = Maradjon játékban egész nap a { -brand-product-name } kisalkalmazásaival
-newtab-sports-widget-message-day-in-play-body = Kövesse a vb-t, tartsa számon feladatait, kövesse az időt a világ minden táján, és így tovább.
-newtab-sports-widget-message-explore-widgets-cta =
-    .label = Kisalkalmazások felfedezése
-
-## Strings for activation window message variants. In certain experiment configurations,
-## the strings from these variants may be displayed in a message below the search input
-## for the first 48 hours of a new profile's lifetime. Some messages include buttons with
-## labels, but not all.
-
-newtab-activation-window-message-dismiss-button =
-    .title = Eltüntetés
-    .aria-label = Eltüntetés
-# "This space" refers to about:newtab. The call to action here ("make it your own")
-# is to customize newtab with a background image or colour, or by tweaking the
-# existing widgetry that appears on it.
-newtab-activation-window-message-customization-focus-header = Tegye sajátjává ezt a helyet
-newtab-activation-window-message-customization-focus-message = Válasszon egy friss háttérképet, adjon hozzá indítóikonokat a kedvenc webhelyeihez, és legyen naprakész az Önt érdeklő történetekről.
-newtab-activation-window-message-customization-focus-primary-button =
-    .label = Testreszabás megkezdése
-# "This space" refers to about:newtab. The sentiment of "plays by your rules" is
-# meant to evoke the idea that newtab is malleable and customizable. The call to
-# action is to customize newtab with a background image or colour, or by tweaking
-# the existing widgetry that appears on it.
-newtab-activation-window-message-values-focus-header = Ez a hely az Ön szabályai szerint játszik
-newtab-activation-window-message-values-focus-message = A { -brand-product-name } használatával úgy böngészhet, ahogy tetszik, és személyesebben kezdheti a napját online. Tegye sajátjává a { -brand-product-name } böngészőt.
-
-## Strings for the Clock widget
-
-# Context menu item: toggle the clock card off.
-newtab-clock-widget-menu-hide = Óra elrejtése
-newtab-clock-widget-menu-learn-more = További tudnivalók
-newtab-clock-widget-menu-edit = Órák szerkesztése
-newtab-clock-widget-menu-switch-to-12h = Váltás 12 órás formátumra
-newtab-clock-widget-menu-switch-to-24h = Váltás 24 órás formátumra
-newtab-clock-widget-label-your-clocks = Saját órák
-newtab-clock-widget-search-location-input =
-    .label = Hely
-    .placeholder = Város keresése
-    .aria-label = Város keresése
-# "Nickname (optional)" refers to a custom, user-defined label for a saved location
-# (e.g., "Home", "Office", or "School") to make it easier to recognize.
-# Not to be translated as a legal name, username, or alias used for identity verification.
-newtab-clock-widget-input-nickname =
-    .label = Becenév (nem kötelező)
-    .placeholder = Becenév hozzáadása
-    .aria-label = Becenév (nem kötelező)
-# "Add new clock" is an icon-only button in the widget toolbar — the
-# attributes are consumed as tooltip/screen-reader label only. The button
-# never renders visible text.
-newtab-clock-widget-button-add =
-    .title = Új óra hozzáadása
-    .aria-label = Új óra hozzáadása
-newtab-clock-widget-button-add-clock = Hozzáadás
-newtab-clock-widget-button-cancel = Mégse
-newtab-clock-widget-button-back =
-    .title = Vissza
-    .aria-label = Vissza
-newtab-clock-widget-button-edit-clock =
-    .title = Óra szerkesztése
-    .aria-label = Óra szerkesztése
-newtab-clock-widget-button-save = Mentés
-newtab-clock-widget-button-remove-clock =
-    .title = Óra eltávolítása
-    .aria-label = Óra eltávolítása
-# Accessible name for a clock row in the "Your clocks" management panel
-# when the row has no user-provided nickname. Read aloud by screen
-# readers when focus lands on the row.
-# Variables:
-#   $city (string) - The city name displayed in the row.
-newtab-clock-widget-edit-item =
-    .aria-label = { $city }
-# Accessible name for a clock row when a user nickname has been set.
-# Variables:
-#   $city (string) - The city name displayed in the row.
-#   $nickname (string) - The user-provided nickname for the row.
-newtab-clock-widget-edit-item-with-nickname =
-    .aria-label = { $city }, becenév: { $nickname }
-newtab-clock-widget-add-clock-form =
-    .aria-label = Óra hozzáadása
-newtab-clock-widget-edit-clock-form =
-    .aria-label = Óra szerkesztése
-# "Search results" is the accessible label for the listbox dropdown that appears
-# below the location search field, listing matching cities as the user types.
-# It means "results of the search", not "search within the results".
-newtab-clock-widget-search-results =
-    .aria-label = Találatok
-# Shown in place of the search results when the user's query does not match any
-# supported city — e.g. typing a misspelled name or a place not in the IANA
-# time zone list.
-newtab-clock-widget-search-no-results = Nincs találat
-# "Open menu for clock" is an icon-only button in the widget toolbar — the
-# attributes are consumed as tooltip/screen-reader label only. The button
-# never renders visible text.
-newtab-clock-widget-menu-button =
-    .title = Óra menüjének megnyitása
-    .aria-label = Óra menüjének megnyitása
-# $nickname (String) - The user-defined nickname for a saved clock location (e.g., "Home", "Office").
-newtab-clock-widget-label-nickname-with-value = Becenév: { $nickname }

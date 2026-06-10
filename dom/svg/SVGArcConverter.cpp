@@ -1,10 +1,10 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGArcConverter.h"
-
-#include "mozilla/gfx/Matrix.h"
 
 using namespace mozilla::gfx;
 
@@ -24,6 +24,7 @@ SVGArcConverter::SVGArcConverter(const Point& from, const Point& to,
                                  bool largeArcFlag, bool sweepFlag) {
   MOZ_ASSERT(radii.x != 0.0f && radii.y != 0.0f, "Bad radii");
 
+  const double radPerDeg = M_PI / 180.0;
   mTo = to;
 
   if (from == to) {
@@ -33,11 +34,11 @@ SVGArcConverter::SVGArcConverter(const Point& from, const Point& to,
 
   // Convert to center parameterization as shown in
   // http://www.w3.org/TR/SVG/implnote.html
-  mRx = std::abs(radii.x);
-  mRy = std::abs(radii.y);
+  mRx = fabs(radii.x);
+  mRy = fabs(radii.y);
 
-  mSinPhi = sin(angle * kRadPerDegree);
-  mCosPhi = cos(angle * kRadPerDegree);
+  mSinPhi = sin(angle * radPerDeg);
+  mCosPhi = cos(angle * radPerDeg);
 
   double x1dash =
       mCosPhi * (from.x - to.x) / 2.0 + mSinPhi * (from.y - to.y) / 2.0;
@@ -84,13 +85,13 @@ SVGArcConverter::SVGArcConverter(const Point& from, const Point& to,
     dtheta += 2.0 * M_PI;
 
   // Convert into cubic bezier segments <= 90deg
-  mNumSegs = static_cast<int>(ceil(std::abs(dtheta / (M_PI / 2.0))));
+  mNumSegs = static_cast<int>(ceil(fabs(dtheta / (M_PI / 2.0))));
   mDelta = dtheta / mNumSegs;
   mT = 8.0 / 3.0 * sin(mDelta / 4.0) * sin(mDelta / 4.0) / sin(mDelta / 2.0);
 
   mFrom = from;
 
-  if (std::abs(dtheta) < 1e-8) {
+  if (fabs(dtheta) < 1e-8) {
     // If the angle dtheta is extremely small, then the resulting portion of the
     // arc is indistinguishable from a line.
     // In this situation we are likely dealing with quantities that are large or

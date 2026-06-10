@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,14 +13,12 @@
 #include "mozilla/BaseProfiler.h"
 #include "mozilla/Components.h"
 #include "mozilla/FilePreferences.h"
-#include "mozilla/FOG.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/HelperMacros.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/ipc/UtilityProcessChild.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PreferenceSheet.h"
 #include "mozilla/Printf.h"
@@ -29,6 +28,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/glean/SecuritySandboxMetrics.h"
 #include "mozilla/Telemetry.h"
@@ -53,8 +53,6 @@
 
 #ifdef XP_MACOSX
 #  include "nsVersionComparator.h"
-#  include "nsCocoaFeatures.h"
-#  include "mozilla/glean/WidgetCocoaMetrics.h"
 #  include "MacLaunchHelper.h"
 #  include "MacApplicationDelegate.h"
 #  include "MacAutoreleasePool.h"
@@ -146,9 +144,9 @@
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
-#  include "mozilla/a11y/Platform.h"
 #  if defined(XP_WIN)
 #    include "mozilla/a11y/Compatibility.h"
+#    include "mozilla/a11y/Platform.h"
 #  endif
 #endif
 
@@ -176,6 +174,7 @@
 #include "mozilla/LateWriteChecks.h"
 
 #include <stdlib.h>
+#include <locale.h>
 
 #ifdef XP_UNIX
 #  include <errno.h>
@@ -289,12 +288,10 @@ static const char kPrefSetDefaultBrowserUserChoicePref[] =
 
 #if defined(XP_WIN)
 static const char kPrefThemeId[] = "extensions.activeThemeID";
-#  if defined(MOZ_DEFAULT_BROWSER_AGENT)
 static const char kPrefBrowserStartupBlankWindow[] =
     "browser.startup.blankWindow";
 static const char kPrefPreXulSkeletonUI[] = "browser.startup.preXulSkeletonUI";
-#  endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
-#endif    // defined(XP_WIN)
+#endif  // defined(XP_WIN)
 
 #if defined(MOZ_WIDGET_GTK)
 constexpr nsLiteralCString kStartupTokenNames[] = {
@@ -374,7 +371,7 @@ void XRE_LibFuzzerSetDriver(LibFuzzerDriver aDriver) {
 #undef None
 
 namespace mozilla {
-int (*RunGTest)(int*, char**) = nullptr;
+int (*RunGTest)(int*, char**) = 0;
 
 bool RunningGTest() { return RunGTest; }
 }  // namespace mozilla
@@ -387,15 +384,6 @@ using mozilla::dom::ContentParent;
 using mozilla::dom::quota::QuotaManager;
 using mozilla::intl::LocaleService;
 using mozilla::scache::StartupCache;
-
-struct AppRunnerTelemFlags {
-  uint8_t isBackgroundTaskModeRequested : 1;
-  uint8_t isBackgroundTaskMode : 1;
-  uint8_t hasRestartPidParameter : 1;
-  uint8_t isRestartPidNotInteger : 1;
-  uint8_t isRestartPidWaitTimeout : 1;
-  uint8_t isRestartPidFailure : 1;
-};
 
 #ifndef XP_WIN
 // Save the given word to the specified environment variable.
@@ -687,6 +675,8 @@ static bool Win32kRequirementsUnsatisfied(
          aStatus ==
              nsIXULRuntime::ContentWin32kLockdownState::MissingWebRender ||
          aStatus ==
+             nsIXULRuntime::ContentWin32kLockdownState::MissingRemoteWebGL ||
+         aStatus ==
              nsIXULRuntime::ContentWin32kLockdownState::DecodersArentRemote;
 }
 
@@ -774,6 +764,12 @@ nsIXULRuntime::ContentWin32kLockdownState GetLiveWin32kLockdownState() {
   if (!IsWin10FallCreatorsUpdateOrLater()) {
     return nsIXULRuntime::ContentWin32kLockdownState::
         OperatingSystemNotSupported;
+  }
+
+  // Win32k Lockdown requires Remote WebGL, but it may be disabled on
+  // certain hardware or virtual machines.
+  if (!gfx::gfxVars::AllowWebglOop() || !StaticPrefs::webgl_out_of_process()) {
+    return nsIXULRuntime::ContentWin32kLockdownState::MissingRemoteWebGL;
   }
 
   // Some (not sure exactly which) decoders are not compatible
@@ -997,13 +993,21 @@ bool FissionAutostart() {
 
 namespace mozilla {
 
+bool SessionHistoryInParent() {
+  return FissionAutostart() ||
+         !StaticPrefs::
+             fission_disableSessionHistoryInParent_AtStartup_DoNotUseDirectly();
+}
+
 bool SessionStorePlatformCollection() {
-  return !StaticPrefs::
-      browser_sessionstore_disable_platform_collection_AtStartup_DoNotUseDirectly();
+  return SessionHistoryInParent() &&
+         !StaticPrefs::
+             browser_sessionstore_disable_platform_collection_AtStartup_DoNotUseDirectly();
 }
 
 bool BFCacheInParent() {
-  return StaticPrefs::fission_bfcacheInParent_DoNotUseDirectly();
+  return SessionHistoryInParent() &&
+         StaticPrefs::fission_bfcacheInParent_DoNotUseDirectly();
 }
 
 }  // namespace mozilla
@@ -1165,19 +1169,6 @@ nsXULAppInfo::GetUpdateURL(nsACString& aResult) {
     return NS_OK;
   }
   aResult.Assign(gAppData->updateURL);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULAppInfo::GetRemotingName(nsACString& aResult) {
-  if (XRE_IsContentProcess()) {
-    MOZ_ASSERT(false,
-               "nsXULAppInfo::remotingName should not be accessed from the "
-               "content process");
-    return NS_ERROR_UNEXPECTED;
-  }
-  aResult.Assign(gAppData->remotingName);
 
   return NS_OK;
 }
@@ -1404,6 +1395,12 @@ nsXULAppInfo::GetFissionDecisionStatusString(nsACString& aResult) {
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetSessionHistoryInParent(bool* aResult) {
+  *aResult = SessionHistoryInParent();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetSessionStorePlatformCollection(bool* aResult) {
   *aResult = SessionStorePlatformCollection();
   return NS_OK;
@@ -1433,22 +1430,25 @@ nsXULAppInfo::GetAccessibilityEnabled(bool* aResult) {
 
 NS_IMETHODIMP
 nsXULAppInfo::GetAccessibilityInstantiator(nsAString& aInstantiator) {
-  aInstantiator.Truncate();
-#if defined(ACCESSIBILITY)
-  if (GetAccService()) {
-    a11y::GetHumanReadableInstantiatorStr(aInstantiator);
-#  if defined(XP_WIN)
-    aInstantiator.AppendLiteral("|");
-
-    nsCOMPtr<nsIFile> oopClientExe;
-    if (a11y::GetInstantiator(getter_AddRefs(oopClientExe))) {
-      nsAutoString oopClientInfo;
-      if (NS_SUCCEEDED(oopClientExe->GetPath(oopClientInfo))) {
-        aInstantiator.Append(oopClientInfo);
-      }
-    }
-#  endif
+#if defined(ACCESSIBILITY) && defined(XP_WIN)
+  if (!GetAccService()) {
+    aInstantiator.Truncate();
+    return NS_OK;
   }
+  nsAutoString ipClientInfo;
+  a11y::Compatibility::GetHumanReadableConsumersStr(ipClientInfo);
+  aInstantiator.Append(ipClientInfo);
+  aInstantiator.AppendLiteral("|");
+
+  nsCOMPtr<nsIFile> oopClientExe;
+  if (a11y::GetInstantiator(getter_AddRefs(oopClientExe))) {
+    nsAutoString oopClientInfo;
+    if (NS_SUCCEEDED(oopClientExe->GetPath(oopClientInfo))) {
+      aInstantiator.Append(oopClientInfo);
+    }
+  }
+#else
+  aInstantiator.Truncate();
 #endif
   return NS_OK;
 }
@@ -1846,6 +1846,14 @@ NS_IMETHODIMP
 nsXULAppInfo::IsAnnotationValid(const nsACString& aValue, bool* aIsValid) {
   auto annotation = CrashReporter::AnnotationFromString(aValue);
   *aIsValid = annotation.isSome();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::IsAnnotationAllowedForPing(const nsACString& aValue,
+                                         bool* aIsAllowed) {
+  CrashReporter::Annotation annotation = MOZ_TRY(GetCrashAnnotation(aValue));
+  *aIsAllowed = CrashReporter::IsAnnotationAllowedForPing(annotation);
   return NS_OK;
 }
 
@@ -2293,9 +2301,6 @@ static void SetupAlteredPrefetchPref() {
                                 PREF_WIN_ALTERED_DLL_PREFETCH);
 }
 
-static LazyLogModule gSkeletonLog("PreXULSkeletonUI");
-#  define SKELETON_LOG(str, ...) \
-    MOZ_LOG(gSkeletonLog, LogLevel::Debug, (str, ##__VA_ARGS__))
 static void ReflectSkeletonUIPrefToRegistry(const char* aPref, void* aData) {
   (void)aPref;
   (void)aData;
@@ -2303,20 +2308,11 @@ static void ReflectSkeletonUIPrefToRegistry(const char* aPref, void* aData) {
   RefPtr<nsToolkitProfileService> mProfileSvc;
   mProfileSvc = NS_GetToolkitProfileService();
 
-  bool hasShowProfileSelector = mProfileSvc->HasShowProfileSelector();
-  bool skeletonUIPref = StaticPrefs::browser_startup_preXulSkeletonUI();
-  bool startupBlankWindowPref = StaticPrefs::browser_startup_blankWindow();
-  bool drawInTitlebar = LookAndFeel::DrawInTitlebar();
-  SKELETON_LOG(
-      "ReflectSkeletonUIPrefToRegistry: hasShowProfileSelector %d, "
-      "skeletonUIPref %d, startupBlankWindowPref %d, drawInTitlebar %d",
-      hasShowProfileSelector ? 1 : 0, skeletonUIPref ? 1 : 0,
-      startupBlankWindowPref ? 1 : 0, drawInTitlebar ? 1 : 0);
-
-  bool shouldBeEnabled = !hasShowProfileSelector && skeletonUIPref &&
-                         startupBlankWindowPref && drawInTitlebar;
-  SKELETON_LOG("ReflectSkeletonUIPrefToRegistry: shouldBeEnabled %d",
-               shouldBeEnabled ? 1 : 0);
+  bool shouldBeEnabled =
+      !mProfileSvc->HasShowProfileSelector() &&
+      Preferences::GetBool(kPrefPreXulSkeletonUI, false) &&
+      Preferences::GetBool(kPrefBrowserStartupBlankWindow, false) &&
+      LookAndFeel::DrawInTitlebar();
   if (shouldBeEnabled && Preferences::HasUserValue(kPrefThemeId)) {
     nsCString themeId;
     Preferences::GetCString(kPrefThemeId, themeId);
@@ -2327,25 +2323,16 @@ static void ReflectSkeletonUIPrefToRegistry(const char* aPref, void* aData) {
     } else if (themeId.EqualsLiteral("firefox-compact-light@mozilla.org")) {
       (void)SetPreXULSkeletonUIThemeId(ThemeMode::Light);
     } else {
-      SKELETON_LOG(
-          "ReflectSkeletonUIPrefToRegistry: clearing shouldBeEnabled "
-          "because of bad themeId %s",
-          themeId.get());
       shouldBeEnabled = false;
     }
   } else if (shouldBeEnabled) {
     (void)SetPreXULSkeletonUIThemeId(ThemeMode::Default);
   }
 
-  SKELETON_LOG(
-      "ReflectSkeletonUIPrefToRegistry: old enabled %d, new enabled "
-      "%d",
-      GetPreXULSkeletonUIEnabled() ? 1 : 0, shouldBeEnabled ? 1 : 0);
   if (GetPreXULSkeletonUIEnabled() != shouldBeEnabled) {
     (void)SetPreXULSkeletonUIEnabledIfAllowed(shouldBeEnabled);
   }
 }
-#  undef SKELETON_LOG
 
 class ShowProfileSelectorObserver final : public nsIObserver {
  public:
@@ -2372,8 +2359,6 @@ ShowProfileSelectorObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-#  if defined(MOZ_DEFAULT_BROWSER_AGENT)
-
 static void SetupSkeletonUIPrefs() {
   ReflectSkeletonUIPrefToRegistry(nullptr, nullptr);
   Preferences::RegisterCallback(&ReflectSkeletonUIPrefToRegistry,
@@ -2389,8 +2374,6 @@ static void SetupSkeletonUIPrefs() {
   nsCOMPtr<nsIObserver> obs = new ShowProfileSelectorObserver();
   obsService->AddObserver(obs, "profile-show-selector-changed", false);
 }
-
-#  endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
 
 #  if defined(MOZ_LAUNCHER_PROCESS)
 
@@ -2749,7 +2732,7 @@ static nsresult ProfileMissingDialog(nsINativeAppSupport* aNative) {
 
     nsCOMPtr<nsIStringBundle> sb;
     sbs->CreateBundle(kProfileProperties, getter_AddRefs(sb));
-    NS_ENSURE_TRUE_LOG(sb, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE_LOG(sbs, NS_ERROR_FAILURE);
 
     NS_ConvertUTF8toUTF16 appName(gAppData->name);
     AutoTArray<nsString, 2> params = {appName, appName};
@@ -3149,17 +3132,6 @@ static nsresult SelectProfile(nsToolkitProfileService* aProfileSvc,
     return NS_ERROR_ABORT;
   }
 
-  // Block reset without migration for selectable profiles.
-  // Bug 2020801: Update this to allow resetting without migration
-  if (gDoProfileReset && !gDoMigration && *aProfile) {
-    nsCString storeID;
-    (*aProfile)->GetStoreID(storeID);
-    if (!storeID.IsVoid()) {
-      NS_WARNING("Selectable profiles cannot be reset without migration.");
-      return NS_ERROR_ABORT;
-    }
-  }
-
   // No profile could be found. This generally shouldn't happen, a new profile
   // should be created in all cases except for profile reset which is covered
   // above, but just in case...
@@ -3182,8 +3154,7 @@ struct FileWriteFunc final : public JSONWriteFunc {
 };
 
 static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
-                                     bool aHasSync, int32_t aButton,
-                                     AppRunnerTelemFlags appRunnerTelemFlags) {
+                                     bool aHasSync, int32_t aButton) {
   nsCOMPtr<nsIPrefService> prefSvc =
       do_GetService("@mozilla.org/preferences-service;1");
   NS_ENSURE_TRUE_VOID(prefSvc);
@@ -3228,15 +3199,6 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
       do_GetService("@mozilla.org/system-info;1");
   NS_ENSURE_TRUE_VOID(sysInfo);
   sysInfo->GetPropertyAsACString(u"arch"_ns, arch);
-
-  bool isMSIX = false;
-#  ifdef XP_WIN
-  rv = sysInfo->GetPropertyAsBool(u"hasWinPackageId"_ns, &isMSIX);
-  if (rv != NS_OK) {
-    // Don't early return.
-    NS_ERROR("Failed to get property: hasWinPackageId");
-  }
-#  endif
 
   time_t now;
   time(&now);
@@ -3334,19 +3296,6 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
       w.StringProperty("lastBuildId", PromiseFlatCString(lastBuildId));
       w.BoolProperty("hasSync", aHasSync);
       w.IntProperty("button", aButton);
-      w.BoolProperty("isMSIX", isMSIX);
-      w.BoolProperty("isBackgroundTaskModeRequested",
-                     appRunnerTelemFlags.isBackgroundTaskModeRequested);
-      w.BoolProperty("isBackgroundTaskMode",
-                     appRunnerTelemFlags.isBackgroundTaskMode);
-      w.BoolProperty("hasRestartPidParameter",
-                     appRunnerTelemFlags.hasRestartPidParameter);
-      w.BoolProperty("isRestartPidNotInteger",
-                     appRunnerTelemFlags.isRestartPidNotInteger);
-      w.BoolProperty("isRestartPidWaitTimeout",
-                     appRunnerTelemFlags.isRestartPidWaitTimeout);
-      w.BoolProperty("isRestartPidFailure",
-                     appRunnerTelemFlags.isRestartPidFailure);
     }
     w.EndObject();
   }
@@ -3381,10 +3330,10 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
 static const char kProfileDowngradeURL[] =
     "chrome://mozapps/content/profile/profileDowngrade.xhtml";
 
-static ReturnAbortOnError HandleDetectedDowngrade(
-    nsIFile* aProfileDir, nsINativeAppSupport* aNative,
-    nsIToolkitProfileService* aProfileSvc, const nsCString& aLastVersion,
-    AppRunnerTelemFlags appRunnerTelemFlags) {
+static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
+                                         nsINativeAppSupport* aNative,
+                                         nsIToolkitProfileService* aProfileSvc,
+                                         const nsCString& aLastVersion) {
   int32_t result = 0;
   nsresult rv;
 
@@ -3463,8 +3412,7 @@ static ReturnAbortOnError HandleDetectedDowngrade(
 
       paramBlock->GetInt(1, &result);
 
-      SubmitDowngradeTelemetry(aLastVersion, hasSync, result,
-                               appRunnerTelemFlags);
+      SubmitDowngradeTelemetry(aLastVersion, hasSync, result);
     }
   }
 
@@ -3476,7 +3424,7 @@ static ReturnAbortOnError HandleDetectedDowngrade(
     profileName.Append("-" MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL));
 #  endif
     nsCOMPtr<nsIToolkitProfile> newProfile;
-    rv = aProfileSvc->CreateUniqueProfile(nullptr, profileName, "downgrade"_ns,
+    rv = aProfileSvc->CreateUniqueProfile(nullptr, profileName,
                                           getter_AddRefs(newProfile));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aProfileSvc->SetDefaultProfile(newProfile);
@@ -3848,9 +3796,8 @@ class XREMain {
   }
 
   int XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig);
-  int XRE_mainInit(bool* aExitFlag, AppRunnerTelemFlags& appRunnerTelemFlags);
-  int XRE_mainStartup(bool* aExitFlag,
-                      AppRunnerTelemFlags& appRunnerTelemFlags);
+  int XRE_mainInit(bool* aExitFlag);
+  int XRE_mainStartup(bool* aExitFlag);
   nsresult XRE_mainRun();
 
   bool CheckLastStartupWasCrash();
@@ -4054,8 +4001,7 @@ static void SetupConsoleForBackgroundTask(
  * Main() will exit early if either return value != 0 or if aExitFlag is
  * true.
  */
-int XREMain::XRE_mainInit(bool* aExitFlag,
-                          AppRunnerTelemFlags& appRunnerTelemFlags) {
+int XREMain::XRE_mainInit(bool* aExitFlag) {
   if (!aExitFlag) return 1;
   *aExitFlag = false;
 
@@ -4100,7 +4046,7 @@ int XREMain::XRE_mainInit(bool* aExitFlag,
   if (ARG_FOUND ==
       CheckArg("backgroundtask", &backgroundTaskName, CheckArgFlag::None)) {
     backgroundTask = Some(backgroundTaskName);
-    appRunnerTelemFlags.isBackgroundTaskModeRequested = 1;
+
     SetupConsoleForBackgroundTask(backgroundTask.ref());
   }
 
@@ -4297,28 +4243,8 @@ int XREMain::XRE_mainInit(bool* aExitFlag,
     mAppData->flags |= NS_XRE_ENABLE_CRASH_REPORTER;
   }
 
-#ifdef MOZ_THUNDERBIRD
-  // Set an explicit application name for Thunderbird.
-  // We do NOT set one for `firefox`.
-  // FOG uses a default one,
-  // background tasks overwrite it using `initializeFOG`.
-  FOG::SetApplicationID("thunderbird.desktop"_ns);
-#endif  // MOZ_THUNDERBIRD
-
   nsCOMPtr<nsIFile> xreBinDirectory;
   xreBinDirectory = mDirProvider.GetGREBinDir();
-
-  // Unconditionally set the ServerURL exception before we launch the crash
-  // helper or set the exception handler. This guarantees that the annotation
-  // will be populated when we need it.
-  if (mAppData->crashReporterURL) {
-    CrashReporter::SetServerURL(nsDependentCString(mAppData->crashReporterURL));
-  }
-
-  if ((mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER) &&
-      NS_FAILED(CrashReporter::OOPInit(xreBinDirectory))) {
-    NS_WARNING("Could not launch the crash helper");
-  }
 
   if ((mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER) &&
       NS_SUCCEEDED(CrashReporter::SetExceptionHandler(xreBinDirectory))) {
@@ -4326,6 +4252,10 @@ int XREMain::XRE_mainInit(bool* aExitFlag,
     rv = nsXREDirProvider::GetUserAppDataDirectory(getter_AddRefs(file));
     if (NS_SUCCEEDED(rv)) {
       CrashReporter::SetUserAppDataDirectory(file);
+    }
+    if (mAppData->crashReporterURL) {
+      CrashReporter::SetServerURL(
+          nsDependentCString(mAppData->crashReporterURL));
     }
 
     // We overwrite this once we finish starting up.
@@ -4395,7 +4325,8 @@ int XREMain::XRE_mainInit(bool* aExitFlag,
     nsCOMPtr<nsIFile> userAppDataDir;
     if (NS_SUCCEEDED(mDirProvider.GetUserAppDataDirectory(
             getter_AddRefs(userAppDataDir)))) {
-      CrashReporter::SetupExtraData(userAppDataDir, mAppData->xreDirectory);
+      CrashReporter::SetupExtraData(userAppDataDir,
+                                    nsDependentCString(mAppData->buildID));
     }
   } else {
     // We might have registered a runtime exception module very early in process
@@ -4431,11 +4362,21 @@ int XREMain::XRE_mainInit(bool* aExitFlag,
   SetupMacApplicationDelegate(&gRestartedByOS);
 
   if (EnvHasValue("MOZ_LAUNCHED_CHILD")) {
-    // Initialize the shared NSApplication early on relaunch so the dock
-    // tile for the child process gets registered before the original
-    // process exits. `[NSApplication sharedApplication]` calls
-    // `_NSDoOneTimeDockRegistration` internally, which is enough.
+    // This is needed, on relaunch, to force the OS to use the "Cocoa Dock
+    // API".  Otherwise the call to ReceiveNextEvent() below will make it
+    // use the "Carbon Dock API".  For more info see bmo bug 377166.
     EnsureUseCocoaDockAPI();
+
+    // When the app relaunches, the original process exits.  This causes
+    // the dock tile to stop bouncing, lose the "running" triangle, and
+    // if the tile does not permanently reside in the Dock, even disappear.
+    // This can be confusing to the user, who is expecting the app to launch.
+    // Calling ReceiveNextEvent without requesting any event is enough to
+    // cause a dock tile for the child process to appear.
+    const EventTypeSpec kFakeEventList[] = {{INT_MAX, INT_MAX}};
+    EventRef event;
+    ::ReceiveNextEvent(GetEventTypeCount(kFakeEventList), kFakeEventList,
+                       kEventDurationNoWait, false, &event);
   }
 
   if (CheckArg("foreground")) {
@@ -4769,8 +4710,7 @@ bool XREMain::CheckLastStartupWasCrash() {
  * Main() will exit early if either return value != 0 or if aExitFlag is
  * true.
  */
-int XREMain::XRE_mainStartup(bool* aExitFlag,
-                             AppRunnerTelemFlags& appRunnerTelemFlags) {
+int XREMain::XRE_mainStartup(bool* aExitFlag) {
   nsresult rv;
 
   if (!aExitFlag) return 1;
@@ -4854,7 +4794,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag,
     if (const char* currentDesktop = PR_GetEnv("XDG_CURRENT_DESKTOP")) {
       useXI2 |= (nsDependentCString(currentDesktop) == "gamescope"_ns);
     }
-#    ifdef EARLY_BETA_OR_EARLIER
+#    ifdef NIGHTLY_BUILD
     // We tried 3.24.0+ but had problems, let's retry with newer versions. See
     // bug 1660212.
     useXI2 |= !gtk_check_version(3, 24, 49);
@@ -4899,9 +4839,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag,
   bool isBackgroundTaskMode = false;
 #ifdef MOZ_BACKGROUNDTASKS
   isBackgroundTaskMode = BackgroundTasks::IsBackgroundTaskMode();
-  if (isBackgroundTaskMode) {
-    appRunnerTelemFlags.isBackgroundTaskMode = 1;
-  }
 #endif
 
 #ifdef MOZ_HAS_REMOTE
@@ -4933,10 +4870,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag,
       if (!disableWaylandProxy && XRE_IsParentProcess() && waylandEnabled) {
         auto* proxyLog = getenv("WAYLAND_PROXY_LOG");
         WaylandProxy::SetVerbose(proxyLog && *proxyLog);
-        WaylandProxy::SetCompositorUnavailableHandler(
-            WlCompositorUnavailableHandler);
-        WaylandProxy::SetCompositorSilentDisconnectHandler(
-            WlCompositorSilentDisconnectHandler);
+        WaylandProxy::SetCompositorCrashHandler(WlCompositorCrashHandler);
         WaylandProxy::AddState(WAYLAND_PROXY_ENABLED);
         gWaylandProxy = WaylandProxy::Create();
         if (gWaylandProxy) {
@@ -5171,7 +5105,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag,
     // Ensure we keep -restart-pid if we are running tests
     if (ARG_FOUND == CheckArgExists("restart-pid") &&
         !CheckArg("test-only-automatic-restart-no-wait")) {
-      appRunnerTelemFlags.hasRestartPidParameter = 1;
       // We're not testing and can safely remove it now and read the pid.
       const char* restartPidString = nullptr;
       CheckArg("restart-pid", &restartPidString, CheckArgFlag::RemoveArg);
@@ -5181,19 +5114,12 @@ int XREMain::XRE_mainStartup(bool* aExitFlag,
         printf_stderr(
             "*** MaybeWaitForProcessExit: launched pidDWORD = %u ***\n", pid);
         RefPtr<nsUpdateProcessor> updater = new nsUpdateProcessor();
-        rv = updater->WaitForProcessExit(pid, MAYBE_WAIT_TIMEOUT_MS);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("Failure in nsUpdateProcessor::WaitForProcessExit.");
-          // Is this a timeout?
-          if (rv == NS_ERROR_ABORT) {
-            appRunnerTelemFlags.isRestartPidWaitTimeout = 1;
-          } else {
-            appRunnerTelemFlags.isRestartPidFailure = 1;
-          }
+        if (NS_FAILED(
+                updater->WaitForProcessExit(pid, MAYBE_WAIT_TIMEOUT_MS))) {
+          NS_WARNING("Failed to MaybeWaitForProcessExit.");
         }
       } else {
         NS_WARNING("Failed to parse pid from -restart-pid.");
-        appRunnerTelemFlags.isRestartPidNotInteger = 1;
       }
     }
   }
@@ -5394,8 +5320,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag,
 #  ifdef XP_MACOSX
     InitializeMacApp();
 #  endif
-    rv = HandleDetectedDowngrade(mProfD, mNativeApp, mProfileSvc, lastVersion,
-                                 appRunnerTelemFlags);
+    rv = CheckDowngrade(mProfD, mNativeApp, mProfileSvc, lastVersion);
     if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
       *aExitFlag = true;
       return 0;
@@ -5440,13 +5365,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag,
 
   CrashReporter::RecordAnnotationBool(
       CrashReporter::Annotation::StartupCacheValid, cachesOK && versionOK);
-
-#ifdef XP_MACOSX
-  static bool status = nsCocoaFeatures::ProcessIsRosettaTranslated();
-  CrashReporter::RecordAnnotationBool(CrashReporter::Annotation::RosettaStatus,
-                                      status);
-  mozilla::glean::widget::rosetta_status.Set(status);
-#endif
 
   // Every time a profile is loaded by a build with a different version,
   // it updates the compatibility.ini file saying what version last wrote
@@ -5582,8 +5500,8 @@ nsresult XREMain::XRE_mainRun() {
     CrashReporter::SetIncludeContextHeap(includeContextHeap);
 
 #if defined(XP_LINUX) && !defined(ANDROID)
-    PR_CreateThread(PR_USER_THREAD, AnnotateLSBRelease, nullptr,
-                    PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+    PR_CreateThread(PR_USER_THREAD, AnnotateLSBRelease, 0, PR_PRIORITY_LOW,
+                    PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
 #endif
 
     if (mStartOffline) {
@@ -5669,38 +5587,18 @@ nsresult XREMain::XRE_mainRun() {
             do_CreateInstance(NS_PROFILEMIGRATOR_CONTRACTID));
         if (pm) {
           nsAutoCString aKey;
-          nsAutoCString aProfilePath;
+          nsAutoCString aName;
           if (gDoProfileReset) {
             // Automatically migrate from the current application if we just
             // reset the profile.
-            nsCOMPtr<nsIFile> rootDir = gResetOldProfile->GetRootDir();
-            nsAutoString path;
-            rootDir->GetPath(path);
-            CopyUTF16toUTF8(path, aProfilePath);
-
-            nsCString storeID;
-            gResetOldProfile->GetStoreID(storeID);
-            if (!storeID.IsVoid()) {
-              aKey = "firefox-selectable-profile";
-              // In the case that Firefox is launched with --reset-profile,
-              // the storeID and path env variables won't be set, so we set
-              // them here if we are in a profile with a storeID.
-              nsAutoCString envStoreID("SELECTABLE_PROFILE_RESET_STORE_ID=");
-              envStoreID.Append(storeID);
-              SaveToEnv(envStoreID.get());
-
-              nsAutoCString envProfilePath("SELECTABLE_PROFILE_RESET_PATH=");
-              envProfilePath.Append(aProfilePath);
-              SaveToEnv(envProfilePath.get());
-            } else {
-              aKey = MOZ_APP_NAME;
-            }
+            aKey = MOZ_APP_NAME;
+            gResetOldProfile->GetName(aName);
           }
 #ifdef XP_MACOSX
           // Necessary for migration wizard to be accessible.
           InitializeMacApp();
 #endif
-          pm->Migrate(&mDirProvider, aKey, aProfilePath);
+          pm->Migrate(&mDirProvider, aKey, aName);
         }
       }
 
@@ -5866,6 +5764,7 @@ nsresult XREMain::XRE_mainRun() {
           RegisterApplicationRestartChanged,
           PREF_WIN_REGISTER_APPLICATION_RESTART);
       SetupAlteredPrefetchPref();
+      SetupSkeletonUIPrefs();
 #  if defined(MOZ_LAUNCHER_PROCESS)
       SetupLauncherProcessPref();
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)
@@ -5876,7 +5775,6 @@ nsresult XREMain::XRE_mainRun() {
       if (!BackgroundTasks::IsBackgroundTaskMode())
 #    endif  // defined(MOZ_BACKGROUNDTASKS)
       {
-        SetupSkeletonUIPrefs();
         Preferences::RegisterCallbackAndCall(
             &OnDefaultAgentTelemetryPrefChanged,
             kPrefHealthReportUploadEnabled);
@@ -5916,13 +5814,6 @@ nsresult XREMain::XRE_mainRun() {
         tempArgv[i] = strdup(gArgv[i]);
       }
       CommandLineServiceMac::SetupMacCommandLine(gArgc, tempArgv, false);
-
-      // All startup URLs have been consumed by SetupMacCommandLine. From this
-      // point, any URLs received via Apple Events (application:openURLs:) will
-      // be handled immediately by nsICommandLineRunner instead of being
-      // buffered. See bug 2036237.
-      StartupURLCollectionComplete();
-
       rv = cmdLine->Init(gArgc, tempArgv, workingDir,
                          nsICommandLine::STATE_INITIAL_LAUNCH);
       free(tempArgv);
@@ -6071,7 +5962,6 @@ static already_AddRefed<nsIFile> GreOmniPath(int argc, char** argv) {
 int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   gArgc = argc;
   gArgv = argv;
-  AppRunnerTelemFlags appRunnerTelemFlags{};
 
   ScopedLogging log;
 
@@ -6089,7 +5979,7 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   // We call this early because it will kick off a background-thread task
   // to register the fonts, and we'd like it to have a chance to complete
   // before gfxPlatform initialization actually requires it.
-  auto _supplementalFontThread = gfxPlatformMac::RegisterSupplementalFonts();
+  gfxPlatformMac::RegisterSupplementalFonts();
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -6224,11 +6114,8 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   // detect hangs -- they show up as crashes.  We do this as late as possible.
   // In particular, after ProcessRuntime is destroyed on Windows.
   auto unsetExceptionHandler = MakeScopeExit([&] {
-    if (mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER) {
-      nsresult rv = CrashReporter::UnsetExceptionHandler();
-      CrashReporter::OOPDeinit();
-      return rv;
-    }
+    if (mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER)
+      return CrashReporter::UnsetExceptionHandler();
     return NS_OK;
   });
 
@@ -6249,7 +6136,7 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 
   // init
   bool exit = false;
-  int result = XRE_mainInit(&exit, appRunnerTelemFlags);
+  int result = XRE_mainInit(&exit);
   if (result != 0 || exit) return result;
 
   // If we exit gracefully, remove the startup crash canary file.
@@ -6262,7 +6149,7 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   });
 
   // startup
-  result = XRE_mainStartup(&exit, appRunnerTelemFlags);
+  result = XRE_mainStartup(&exit);
   if (result != 0 || exit) return result;
 
   // Start the real application. We use |aInitJSContext = false| because
@@ -6543,7 +6430,7 @@ void SetupErrorHandling(const char* progname) {
   InstallSignalHandlers(progname);
 
   // Unbuffer stdout, needed for tinderbox tests.
-  setbuf(stdout, nullptr);
+  setbuf(stdout, 0);
 }
 
 static bool gRunSelfAsContentProc = false;
@@ -6563,12 +6450,6 @@ mozilla::BinPathType XRE_GetChildProcBinPathType(
   }
 
 #ifdef XP_WIN
-  // Removing this pref and always using the parent binary, along with other
-  // related clean up work, is tracked in Bug 2014843.
-  if (StaticPrefs::dom_ipc_alwaysUseParentBinary()) {
-    return BinPathType::Self;
-  }
-
   // On Windows, plugin-container may or may not be used depending on
   // the process type (e.g., actual plugins vs. content processes)
   switch (aProcessType) {

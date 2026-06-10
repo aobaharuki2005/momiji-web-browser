@@ -125,7 +125,6 @@ browser.engagement:
       - rtestard@mozilla.com
     send_in_pings:
       - metrics
-      - new-profile
     expires: never
     telemetry_mirror: BROWSER_ENGAGEMENT_PROFILE_COUNT
 
@@ -401,6 +400,7 @@ browser.engagement:
       - beth@mozilla.com
       - perf-telemetry-alerts@mozilla.com
     expires: never
+    telemetry_mirror: LOADED_TAB_COUNT
 
 installation.first_seen:
   failure_reason:
@@ -415,9 +415,6 @@ installation.first_seen:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
     data_sensitivity:
       - technical
-    send_in_pings:
-      - metrics
-      - new-profile
     notification_emails:
       - rtestard@mozilla.com
       - application-update-telemetry-alerts@mozilla.com
@@ -435,9 +432,6 @@ installation.first_seen:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
     data_sensitivity:
       - technical
-    send_in_pings:
-      - metrics
-      - new-profile
     notification_emails:
       - rtestard@mozilla.com
       - application-update-telemetry-alerts@mozilla.com
@@ -455,9 +449,6 @@ installation.first_seen:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
     data_sensitivity:
       - technical
-    send_in_pings:
-      - metrics
-      - new-profile
     notification_emails:
       - rtestard@mozilla.com
       - application-update-telemetry-alerts@mozilla.com
@@ -474,9 +465,6 @@ installation.first_seen:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
     data_sensitivity:
       - technical
-    send_in_pings:
-      - metrics
-      - new-profile
     notification_emails:
       - rtestard@mozilla.com
       - application-update-telemetry-alerts@mozilla.com
@@ -493,9 +481,6 @@ installation.first_seen:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
     data_sensitivity:
       - technical
-    send_in_pings:
-      - metrics
-      - new-profile
     notification_emails:
       - rtestard@mozilla.com
       - application-update-telemetry-alerts@mozilla.com
@@ -512,9 +497,6 @@ installation.first_seen:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
     data_sensitivity:
       - technical
-    send_in_pings:
-      - metrics
-      - new-profile
     notification_emails:
       - rtestard@mozilla.com
       - application-update-telemetry-alerts@mozilla.com
@@ -531,9 +513,6 @@ installation.first_seen:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
     data_sensitivity:
       - technical
-    send_in_pings:
-      - metrics
-      - new-profile
     notification_emails:
       - rtestard@mozilla.com
       - application-update-telemetry-alerts@mozilla.com
@@ -550,9 +529,6 @@ installation.first_seen:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
     data_sensitivity:
       - technical
-    send_in_pings:
-      - metrics
-      - new-profile
     notification_emails:
       - rtestard@mozilla.com
       - application-update-telemetry-alerts@mozilla.com
@@ -570,9 +546,6 @@ installation.first_seen:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
     data_sensitivity:
       - technical
-    send_in_pings:
-      - metrics
-      - new-profile
     notification_emails:
       - rtestard@mozilla.com
       - application-update-telemetry-alerts@mozilla.com
@@ -590,9 +563,6 @@ installation.first_seen:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
     data_sensitivity:
       - technical
-    send_in_pings:
-      - metrics
-      - new-profile
     notification_emails:
       - rtestard@mozilla.com
       - application-update-telemetry-alerts@mozilla.com
@@ -610,14 +580,35 @@ installation.first_seen:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
     data_sensitivity:
       - technical
-    send_in_pings:
-      - metrics
-      - new-profile
     notification_emails:
       - rtestard@mozilla.com
       - application-update-telemetry-alerts@mozilla.com
     expires: never
     telemetry_mirror: INSTALLATION_FIRSTSEEN_DEFAULT_PATH
+
+performance.interaction:
+  tab_switch_composite:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: FX_TAB_SWITCH_COMPOSITE_E10S_MS
+    description: >
+      Time between tab selection and first composite of the tab content onto the
+      screen.
+      (Migrated from the geckoview metric of the same name.)
+    metadata:
+      tags:
+        - 'Firefox :: Tabbed Browser'
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1481704
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1529352
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - mconley@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
 
 browser.usage:
   interaction:
@@ -702,8 +693,8 @@ browser.ui:
   mirror_for_toolbar_widgets:
     type: labeled_boolean
     description: >
-      The widgets in the toolbars. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      The widgets in the toolbars. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.toolbar_widgets.
     bugs:
@@ -720,7 +711,8 @@ browser.ui:
     type: labeled_counter
     description: >
       Records when widgets are added, removed or moved in the UI. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.customized_widgets.
     bugs:
@@ -971,7 +963,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with items in the menu bar. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.menu_bar.
     bugs:
@@ -988,7 +981,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with items in the tab bar. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.tabs_bar.
     bugs:
@@ -1005,7 +999,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with items in the vertical tab bar.
-      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.vertical_tabs_container.
     bugs:
@@ -1021,7 +1016,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with items in the nav bar. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.nav_bar.
     bugs:
@@ -1038,7 +1034,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with items in the bookmarks bar. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.bookmarks_bar.
     bugs:
@@ -1055,7 +1052,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with items in the app menu. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.app_menu.
     bugs:
@@ -1072,23 +1070,17 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with items in the tab context menu.
-      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.tabs_context.
     bugs:
       - https://bugzil.la/1620358
-      - https://bugzil.la/2020865
-      - https://bugzil.la/2032598
-      - https://bugzil.la/2032602
     data_reviews:
       - https://bugzil.la/1620358
-      - https://bugzil.la/2020865
-      - https://bugzil.la/2032598
-      - https://bugzil.la/2032602
     notification_emails:
       - shong@mozilla.com
       - dtownsend@mozilla.com
-      - jswinarton@mozilla.com
     expires: never
     telemetry_mirror: BROWSER_UI_INTERACTION_TABS_CONTEXT
 
@@ -1097,7 +1089,8 @@ browser.ui.interaction:
     description: >
       Records a count for each entrypoint (the container of the trigger
       node) when an item from the tabs context menu is selected. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.tabs_context_entrypoint.
     bugs:
@@ -1114,7 +1107,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with items in the content context
-      menu. See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      menu. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.content_context.
     bugs:
@@ -1131,7 +1125,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with items in the overflow menu. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.overflow_menu.
     bugs:
@@ -1148,8 +1143,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with items in the Unified Extensions
-      area. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      area. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.unified_extensions_area.
     bugs:
@@ -1167,8 +1162,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with items in the pinned area of the
-      overflow menu. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      overflow menu. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.pinned_overflow_menu.
     bugs:
@@ -1185,8 +1180,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with page action items in the url
-      bar. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      bar. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.pageaction_urlbar.
     bugs:
@@ -1203,8 +1198,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records a count of interactions with page action items in the panel.
-      See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.pageaction_panel.
     bugs:
@@ -1221,8 +1216,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records the items interacted with in the Home section of
-      preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      preferences. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.preferences_paneHome.
     bugs:
@@ -1239,8 +1234,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records the items interacted with in the General section of
-      preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      preferences. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.preferences_paneGeneral.
     bugs:
@@ -1257,8 +1252,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records the items interacted with in the Privacy section of
-      preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      preferences. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.preferences_panePrivacy.
     bugs:
@@ -1275,8 +1270,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records the items interacted with in the Search section of
-      preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      preferences. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.preferences_paneSearch.
     bugs:
@@ -1293,8 +1288,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records the items interacted with in the Search results section of
-      preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      preferences. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.preferences_paneSearchResults.
     bugs:
@@ -1311,8 +1306,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records the items interacted with in the Sync section of
-      preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      preferences. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.preferences_paneSync.
     bugs:
@@ -1329,8 +1324,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records the items interacted with in the Containers section of
-      preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      preferences. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.preferences_paneContainers.
     bugs:
@@ -1343,143 +1338,12 @@ browser.ui.interaction:
     expires: never
     telemetry_mirror: BROWSER_UI_INTERACTION_PREFERENCES_PANECONTAINERS
 
-  preferences_pane_ai:
-    type: labeled_counter
-    description: >
-      Records the items interacted with in the AI Controls section
-      of preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
-    bugs:
-      - https://bugzil.la/2012800
-    data_reviews:
-      - https://bugzil.la/2012800
-    notification_emails:
-      - mstriemer@mozilla.com
-      - sopsal@mozilla.com
-    expires: never
-
-  preferences_pane_about:
-    type: labeled_counter
-    description: >
-      Records the items interacted with in the About Firefox section
-      of preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
-    bugs:
-      - https://bugzil.la/1990885
-    data_reviews:
-      - https://bugzil.la/1990885
-    notification_emails:
-      - mstriemer@mozilla.com
-      - akulyk@mozilla.com
-    expires: never
-
-  preferences_pane_downloads:
-    type: labeled_counter
-    description: >
-      Records the items interacted with in the Downloads section
-      of preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
-    bugs:
-      - https://bugzil.la/2001154
-    data_reviews:
-      - https://bugzil.la/2001154
-    notification_emails:
-      - mstriemer@mozilla.com
-      - mkennedy@mozilla.com
-    expires: never
-
-  preferences_pane_accessibility:
-    type: labeled_counter
-    description: >
-      Records the items interacted with in the Accessibility section
-      of preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
-    bugs:
-      - https://bugzil.la/1968116
-    data_reviews:
-      - https://bugzil.la/1968116
-    notification_emails:
-      - mstriemer@mozilla.com
-      - tgiles@mozilla.com
-    expires: never
-
-  preferences_pane_appearance:
-    type: labeled_counter
-    description: >
-      Records the items interacted with in the Appearance section
-      of preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
-    bugs:
-      - https://bugzil.la/1968113
-    data_reviews:
-      - https://bugzil.la/1968113
-    notification_emails:
-      - mstriemer@mozilla.com
-      - tgiles@mozilla.com
-    expires: never
-
-  preferences_pane_languages:
-    type: labeled_counter
-    description: >
-      Records the items interacted with in the Languages section
-      of preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
-    bugs:
-      - https://bugzil.la/1972081
-    data_reviews:
-      - https://bugzil.la/1972081
-    notification_emails:
-      - mstriemer@mozilla.com
-    expires: never
-
-  preferences_pane_tabs_browsing:
-    type: labeled_counter
-    description: >
-      Records the items interacted with in the Tabs and browsing section
-      of preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
-    bugs:
-      - https://bugzil.la/1968114
-    data_reviews:
-      - https://bugzil.la/1968114
-    notification_emails:
-      - hjones@mozilla.com
-    expires: never
-
-  preferences_pane_permissions_data:
-    type: labeled_counter
-    description: >
-      Records the items interacted with in the Permissions and data section
-      of preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
-    bugs:
-      - https://bugzil.la/1968118
-    data_reviews:
-      - https://bugzil.la/1968118
-    notification_emails:
-      - hjones@mozilla.com
-    expires: never
-
-  preferences_pane_passwords_autofill:
-    type: labeled_counter
-    description: >
-      Records the items interacted with in the Passwords and autofill section
-      of preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
-    bugs:
-      - https://bugzil.la/2041430
-    data_reviews:
-      - https://bugzil.la/2041430
-    notification_emails:
-      - hjones@mozilla.com
-    expires: never
-
   preferences_pane_experimental:
     type: labeled_counter
     description: >
       Records the items interacted with in the Experimental section of
-      preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      preferences. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.preferences_paneExperimental.
     bugs:
@@ -1498,8 +1362,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records the items interacted with in the More From Mozilla section
-      of preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      of preferences. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.preferences_paneMoreFromMozilla.
     bugs:
@@ -1516,8 +1380,8 @@ browser.ui.interaction:
     type: labeled_counter
     description: >
       Records the items interacted with in any other section of
-      preferences. See
-      https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+      preferences. See https://firefox-source-
+      docs.mozilla.org/browser/BrowserUsageTelemetry.html
       This metric was generated to correspond to the Legacy Telemetry
       scalar browser.ui.interaction.preferences_paneUnknown.
     bugs:
@@ -1550,6 +1414,7 @@ timestamps:
       - mconley@mozilla.com
     expires: never
     unit: ms
+    telemetry_mirror: TIMESTAMPS_ABOUT_HOME_TOPSITES_FIRST_PAINT
 
 browser.sanitizer:
   total:
@@ -1807,180 +1672,3 @@ contextual_services:
     expires: never
     send_in_pings:
       - context-id-deletion-request
-
-web_notification_permission:
-  icon_shown:
-    type: event
-    description: >
-      Recorded when the notification permission icon is shown and displays the
-      shaking animation in the URL bar
-    extra_keys:
-      site_category:
-        description: Category of the site requesting notification permissions
-        type: string
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    notification_emails:
-      - jhan@mozilla.com
-    expires: never
-
-  icon_clicked:
-    type: event
-    description: >
-      Recorded when the user clicks the notification permission icon in the URL bar
-    extra_keys:
-      site_category:
-        description: Category of the site requesting notification permissions
-        type: string
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    notification_emails:
-      - jhan@mozilla.com
-    expires: never
-
-  prompt_shown:
-    type: event
-    description: >
-      Recorded when the notification permission prompt is shown to the user
-    extra_keys:
-      site_category:
-        description: Category of the site requesting notification permissions
-        type: string
-      trigger:
-        description: How the prompt was triggered (user click vs automatic)
-        type: string
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    notification_emails:
-      - jhan@mozilla.com
-    expires: never
-
-  prompt_blocked:
-    type: event
-    description: >
-      Recorded when the notification permission prompt is blocked (auto-denied)
-    extra_keys:
-      site_category:
-        description: Category of the site requesting notification permissions
-        type: string
-      reason:
-        description: Why the prompt was blocked (user action or through previous browser config)
-        type: string
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    notification_emails:
-      - jhan@mozilla.com
-    expires: never
-
-  prompt_interaction:
-    type: event
-    description: >
-      Recorded when the user interacts with the notification permission prompt
-    extra_keys:
-      site_category:
-        description: Category of the site requesting notification permissions
-        type: string
-      action:
-        description: The action the user took
-        type: string
-      is_persistent:
-        description: Whether the user's choice will be remembered
-        type: boolean
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    notification_emails:
-      - jhan@mozilla.com
-    expires: never
-
-  permission_revoked_toolbar:
-    type: event
-    description: >
-      Recorded when the user revokes notification permission via the toolbar
-      permission panel (clicking the X button to remove the permission)
-    extra_keys:
-      site_category:
-        description: Category of the site whose notification permission was revoked
-        type: string
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    notification_emails:
-      - jhan@mozilla.com
-    expires: never
-
-  permission_revoked_preferences:
-    type: event
-    description: >
-      Recorded when the user revokes notification permission via the
-      preferences/settings panel
-    extra_keys:
-      site_category:
-        description: Category of the site whose notification permission was revoked
-        type: string
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1998053
-    notification_emails:
-      - jhan@mozilla.com
-    expires: never
-
-privacy.reduced_page_protection:
-  banner_shown:
-    type: counter
-    description: >
-      Counts how many times the reduced page protection infobar was shown
-      to the user in a private browsing window.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1994687
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1994687
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - manuel@mozilla.com
-      - privacy-team@mozilla.org
-    expires: never
-
-  reload_clicked:
-    type: counter
-    description: >
-      Counts how many times the user clicked the "Reload" button on the
-      reduced page protection infobar to reload with reduced protections.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1994687
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1994687
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - manuel@mozilla.com
-      - privacy-team@mozilla.org
-    expires: never
-
-  disable_clicked:
-    type: counter
-    description: >
-      Counts how many times the user clicked the "Don't show again" button
-      on the reduced page protection infobar to disable it permanently.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1994687
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1994687
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - manuel@mozilla.com
-      - privacy-team@mozilla.org
-    expires: never

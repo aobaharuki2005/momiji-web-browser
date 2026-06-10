@@ -14,8 +14,10 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.webcompat.di.WebCompatReporterMiddlewareProvider
@@ -26,13 +28,15 @@ import org.mozilla.fenix.webcompat.testdata.WebCompatTestData
 class DefaultWebCompatReporterRetrievalServiceTest {
     private val webCompatInfoDeserializer = WebCompatReporterMiddlewareProvider.provideWebCompatInfoDeserializer()
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     @Test
     fun `WHEN WebCompatInfo is retrieved successfully THEN all corresponding fields in the DTO are submitted`() = runTest {
         val engineSession = FakeEngineSession(WebCompatTestData.basicDataJson)
         val service = createService(engineSession = engineSession)
 
         val actual = service.retrieveInfo()
-
         val expected = WebCompatInfoDto(
             antitracking = WebCompatInfoDto.WebCompatAntiTrackingDto(
                 blockList = "basic",
@@ -121,9 +125,7 @@ class DefaultWebCompatReporterRetrievalServiceTest {
         val engineSession = FakeEngineSession(WebCompatTestData.missingDataJson)
         val service = createService(engineSession = engineSession)
 
-        val info = service.retrieveInfo()
-
-        assertNull(info)
+        assertNull(service.retrieveInfo())
     }
 
     @Test
@@ -132,7 +134,6 @@ class DefaultWebCompatReporterRetrievalServiceTest {
         val service = createService(engineSession = engineSession)
 
         val actual = service.retrieveInfo()
-
         val expected = WebCompatInfoDto(
             antitracking = WebCompatInfoDto.WebCompatAntiTrackingDto(
                 blockList = "basic",

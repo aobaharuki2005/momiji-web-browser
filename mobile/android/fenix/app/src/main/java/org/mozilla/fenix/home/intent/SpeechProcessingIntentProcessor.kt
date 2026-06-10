@@ -59,7 +59,6 @@ class SpeechProcessingIntentProcessor(
             )
         }
 
-        @Suppress("DEPRECATION")
         activity.openToBrowserAndLoad(
             searchTermOrURL = text,
             newTab = true,

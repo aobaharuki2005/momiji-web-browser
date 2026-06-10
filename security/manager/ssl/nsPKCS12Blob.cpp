@@ -5,7 +5,6 @@
 #include "nsPKCS12Blob.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/EndianUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_security.h"
@@ -287,7 +286,7 @@ SECItem* nsPKCS12Blob::nicknameCollision(SECItem* oldNick, PRBool* cancel,
   //       does) and come up with a reasonable nickname.  Alas, the NSS
   //       API limits our ability to produce a useful nickname without
   //       bugging the user.  :(
-  while (true) {
+  while (1) {
     // If we've gotten this far, that means there isn't a certificate
     // in the database that has the same subject name as the cert we're
     // trying to import.  So we need to come up with a "nickname" to

@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -25,9 +26,9 @@ interface HTMLElement : Element {
   [CEReactions, SetterThrows, Pure]
            attribute DOMString dir;
 
-  [CEReactions, GetterThrows]
+  [CEReactions, GetterThrows, Pure]
            attribute [LegacyNullToEmptyString] DOMString innerText;
-  [CEReactions, GetterThrows, SetterThrows]
+  [CEReactions, GetterThrows, SetterThrows, Pure]
            attribute [LegacyNullToEmptyString] DOMString outerText;
 
   // user interaction
@@ -48,8 +49,6 @@ interface HTMLElement : Element {
            attribute DOMString contentEditable;
   [Pure]
   readonly attribute boolean isContentEditable;
-  [Pure, SetterThrows, Pref="dom.editcontext.enabled"]
-  attribute EditContext? editContext;
   [CEReactions, SetterThrows, Pure]
            attribute DOMString? popover;
   [CEReactions, SetterThrows, Pure]
@@ -80,12 +79,6 @@ interface HTMLElement : Element {
   [Throws] undefined showPopover(optional ShowPopoverOptions options = {});
   [Throws] undefined hidePopover();
   [Throws] boolean togglePopover(optional (TogglePopoverOptions or boolean) options = {});
-
-  [CEReactions, SetterThrows, Pref="dom.headingoffset.enabled"]
-  attribute unsigned long headingOffset;
-
-  [CEReactions, Pref="dom.headingoffset.enabled"]
-  attribute boolean headingReset;
 };
 
 dictionary ShowPopoverOptions {
@@ -128,7 +121,7 @@ interface mixin TouchEventHandlers {
 
 HTMLElement includes ElementOffsetAttributes;
 HTMLElement includes GlobalEventHandlers;
-HTMLElement includes HTMLOrSVGOrMathMLElement;
+HTMLElement includes HTMLOrForeignElement;
 HTMLElement includes ElementCSSInlineStyle;
 HTMLElement includes TouchEventHandlers;
 HTMLElement includes OnErrorEventHandlerForNodes;

@@ -65,24 +65,14 @@ async function testKeySystemRequest(keySystem) {
     sessionTypes : [sessionType],
   }];
   info(`requestMediaKeySystemAccess for ${keySystem}`);
-  let access;
-  try {
-    access = await navigator.requestMediaKeySystemAccess(keySystem, configs);
-  } catch (e) {
-    ok(false, `requestMediaKeySystemAccess failed for ${keySystem}: ${e}`);
-    return;
-  }
+  let access = await navigator.requestMediaKeySystemAccess(keySystem, configs)
+      .catch(() => ok(false, `failed to create key system access`));
 
-  info(`creating media key for ${keySystem}`);
-  let mediaKeys;
-  try {
-    mediaKeys = await access.createMediaKeys();
-  } catch (e) {
-    ok(false, `createMediaKeys failed for ${keySystem}: ${e}`);
-    return;
-  }
+  info('creating media key');
+  let mediaKeys = await access.createMediaKeys()
+    .catch(() => ok(false, `failed to create media key`));;
 
-  info(`creating a temporary media key session for ${keySystem}`);
+  info(`creating a temporary media key session`);
   let session = mediaKeys.createSession(sessionType);
   let messagePromise = new Promise(r => {
     session.addEventListener('message', async event => {
@@ -102,13 +92,8 @@ async function testKeySystemRequest(keySystem) {
       const encoder = new TextEncoder();
       const licenseBuffer = encoder.encode(JSON.stringify(mockLicenseResponse));
 
-      try {
-        await session.update(licenseBuffer);
-      } catch (e) {
-        ok(false, `session.update failed for ${keySystem}: ${e}`);
-        r();
-        return;
-      }
+      await session.update(licenseBuffer)
+        .catch(e => ok(false, `Failed to update session: ${e}`));
 
       await new Promise(resolve => {
         session.addEventListener('keystatuseschange', resolve, { once: true });
@@ -129,14 +114,10 @@ async function testKeySystemRequest(keySystem) {
     type: 'temporary'
   };
   const initDataString = JSON.stringify(initData);
-  try {
-    await session.generateRequest(
-        'keyids',
-        new TextEncoder().encode(initDataString));
-  } catch (e) {
-    ok(false, `generateRequest failed for ${keySystem}: ${e}`);
-    return;
-  }
+  await session.generateRequest(
+      'keyids',
+      new TextEncoder().encode(initDataString))
+        .catch(() => ok(false, `failed to generate request`));
   await messagePromise;
 }
 

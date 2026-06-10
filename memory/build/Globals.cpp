@@ -16,7 +16,7 @@ namespace mozilla {
 #ifndef MALLOC_STATIC_PAGESIZE
 #  define GLOBAL(type, name, value) type name;
 #  define GLOBAL_ASSERT(...)
-#  include "Globals.inc"
+#  include "Globals_inc.h"
 #  undef GLOBAL_ASSERT
 #  undef GLOBAL
 
@@ -28,7 +28,7 @@ void DefineGlobals() {
 #  define GLOBAL_LOG2 mozilla::FloorLog2
 #  define GLOBAL_ASSERT MOZ_RELEASE_ASSERT
 #  define GLOBAL_CONSTEXPR
-#  include "Globals.inc"
+#  include "Globals_inc.h"
 #  undef GLOBAL_CONSTEXPR
 #  undef GLOBAL_ASSERT
 #  undef GLOBAL_LOG2

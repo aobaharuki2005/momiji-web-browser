@@ -1,3 +1,0 @@
--r ../metadata/requirements.txt
-requests==2.32.3
-types-requests==2.32.0.20241016

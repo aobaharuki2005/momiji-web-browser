@@ -4,7 +4,6 @@
 
 package mozilla.components.service.fxrelay.eligibility
 
-import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Reducer
 import mozilla.components.lib.state.Store
 
@@ -14,9 +13,7 @@ import mozilla.components.lib.state.Store
 class RelayEligibilityStore(
     initialState: RelayState = RelayState(),
     reducer: Reducer<RelayState, RelayEligibilityAction> = ::relayEligibilityReducer,
-    middleware: List<Middleware<RelayState, RelayEligibilityAction>> = emptyList(),
 ) : Store<RelayState, RelayEligibilityAction>(
     initialState = initialState,
     reducer = reducer,
-    middleware = middleware,
 )

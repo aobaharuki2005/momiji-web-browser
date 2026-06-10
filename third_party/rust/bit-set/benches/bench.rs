@@ -10,20 +10,27 @@
 
 #![feature(test)]
 
+extern crate bit_set;
+extern crate bit_vec;
+extern crate rand;
 extern crate test;
 
 use bit_set::BitSet;
 use bit_vec::BitVec;
+use rand::{rngs::ThreadRng, thread_rng, RngCore};
 
-use rand::RngCore;
 use test::{black_box, Bencher};
 
 const BENCH_BITS: usize = 1 << 14;
 const BITS: usize = 32;
 
+fn rng() -> ThreadRng {
+    thread_rng()
+}
+
 #[bench]
 fn bench_bit_vecset_small(b: &mut Bencher) {
-    let mut r = rand::rng();
+    let mut r = rng();
     let mut bit_vec = BitSet::new();
     b.iter(|| {
         for _ in 0..100 {
@@ -35,7 +42,7 @@ fn bench_bit_vecset_small(b: &mut Bencher) {
 
 #[bench]
 fn bench_bit_vecset_big(b: &mut Bencher) {
-    let mut r = rand::rng();
+    let mut r = rng();
     let mut bit_vec = BitSet::new();
     b.iter(|| {
         for _ in 0..100 {
@@ -51,7 +58,7 @@ fn bench_bit_vecset_iter(b: &mut Bencher) {
     b.iter(|| {
         let mut sum = 0;
         for idx in &bit_vec {
-            sum += idx;
+            sum += idx as usize;
         }
         sum
     })

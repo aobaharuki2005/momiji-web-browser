@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 /* exported CustomizableUI makeWidgetId focusWindow forceGC
@@ -54,16 +56,12 @@ const { AppUiTestDelegate, AppUiTestInternals } = ChromeUtils.importESModule(
   "resource://testing-common/AppUiTestDelegate.sys.mjs"
 );
 
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
+);
+
 ChromeUtils.defineESModuleGetters(this, {
   Management: "resource://gre/modules/Extension.sys.mjs",
-});
-
-ChromeUtils.defineLazyGetter(this, "SidebarTestUtils", () => {
-  const { SidebarTestUtils: utils } = ChromeUtils.importESModule(
-    "resource://testing-common/SidebarTestUtils.sys.mjs"
-  );
-  utils.init(this);
-  return utils;
 });
 
 var { makeWidgetId, promisePopupShown, getPanelForNode, awaitBrowserLoaded } =
@@ -161,7 +159,7 @@ function _ensurePopupsInitialized(element) {
 
 function getRawListStyleImage(button) {
   _ensurePopupsInitialized(button);
-  return button.documentGlobal.getComputedStyle(button).listStyleImage;
+  return button.ownerGlobal.getComputedStyle(button).listStyleImage;
 }
 
 function getListStyleImage(button) {
@@ -171,7 +169,7 @@ function getListStyleImage(button) {
 
 function getRawMenuitemImage(menuitem) {
   _ensurePopupsInitialized(menuitem);
-  return menuitem.documentGlobal
+  return menuitem.ownerGlobal
     .getComputedStyle(menuitem)
     .getPropertyValue("--webextension-menuitem-image");
 }
@@ -196,9 +194,9 @@ async function promiseBrowserContentUnloaded(browser) {
     });
   });
 
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     browser,
-    [MSG_WINDOW_DESTROYED],
+    MSG_WINDOW_DESTROYED,
     MSG_WINDOW_DESTROYED => {
       let innerWindowId = this.content.windowGlobalChild.innerWindowId;
       let observer = subject => {
@@ -500,7 +498,7 @@ async function openContextMenuInPopup(
 
   // Ensure that the document layout has been flushed before triggering the mouse event
   // (See Bug 1519808 for a rationale).
-  await browser.documentGlobal.promiseDocumentFlushed(() => {});
+  await browser.ownerGlobal.promiseDocumentFlushed(() => {});
   let popupShownPromise = BrowserTestUtils.waitForEvent(
     contentAreaContextMenu,
     "popupshown"
@@ -529,7 +527,7 @@ registerCleanupFunction(async function () {
     !ObjectUtils.deepEqual(SidebarController.getUIState(), initialSidebarState)
   ) {
     info("Restoring to initial sidebar state");
-    await SidebarController.updateUIState(initialSidebarState);
+    await SidebarController.initializeUIState(initialSidebarState);
   }
 });
 
@@ -758,7 +756,7 @@ function openTabContextMenu(tab = gBrowser.selectedTab) {
   return openChromeContextMenu(
     "tabContextMenu",
     `.tabbrowser-tab:nth-child(${indexOfTab + 1})`,
-    tab.documentGlobal
+    tab.ownerGlobal
   );
 }
 
@@ -860,6 +858,15 @@ async function triggerPageActionWithKeyboardInPanel(
 
 function closePageAction(extension, win = window) {
   return AppUiTestDelegate.closePageAction(win, extension.id);
+}
+
+function promisePrefChangeObserved(pref) {
+  return new Promise(resolve =>
+    Preferences.observe(pref, function prefObserver() {
+      Preferences.ignore(pref, prefObserver);
+      resolve();
+    })
+  );
 }
 
 function promiseWindowRestored(window) {
@@ -1128,10 +1135,10 @@ function isRectContained(actualRect, maxRect) {
 }
 
 function getToolboxBackgroundColor() {
-  let body = document.body;
+  let toolbox = document.getElementById("navigator-toolbox");
   // Ignore any potentially ongoing transition.
-  body.style.transitionProperty = "none";
-  let color = window.getComputedStyle(body).backgroundColor;
-  body.style.transitionProperty = "";
+  toolbox.style.transitionProperty = "none";
+  let color = window.getComputedStyle(toolbox).backgroundColor;
+  toolbox.style.transitionProperty = "";
   return color;
 }

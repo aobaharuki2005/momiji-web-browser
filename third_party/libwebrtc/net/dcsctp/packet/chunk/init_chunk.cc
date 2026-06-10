@@ -11,11 +11,11 @@
 
 #include <cstdint>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "api/array_view.h"
 #include "net/dcsctp/common/internal_types.h"
 #include "net/dcsctp/packet/bounded_byte_reader.h"
 #include "net/dcsctp/packet/bounded_byte_writer.h"
@@ -44,7 +44,8 @@ namespace dcsctp {
 //  \                                                               \
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-std::optional<InitChunk> InitChunk::Parse(std::span<const uint8_t> data) {
+std::optional<InitChunk> InitChunk::Parse(
+    webrtc::ArrayView<const uint8_t> data) {
   std::optional<BoundedByteReader<kHeaderSize>> reader = ParseTLV(data);
   if (!reader.has_value()) {
     return std::nullopt;
@@ -66,7 +67,7 @@ std::optional<InitChunk> InitChunk::Parse(std::span<const uint8_t> data) {
 }
 
 void InitChunk::SerializeTo(std::vector<uint8_t>& out) const {
-  std::span<const uint8_t> parameters = parameters_.data();
+  webrtc::ArrayView<const uint8_t> parameters = parameters_.data();
   BoundedByteWriter<kHeaderSize> writer = AllocateTLV(out, parameters.size());
 
   writer.Store32<4>(*initiate_tag_);

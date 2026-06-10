@@ -55,7 +55,11 @@ fun PocketSection(
             modifier = Modifier.padding(horizontal = horizontalPadding),
             description = stringResource(R.string.stories_discover_more_content_description),
             buttonText = stringResource(R.string.homepage_all_stories),
-            onButtonClick = interactor::onDiscoverMoreClicked,
+            onButtonClick = if (state.showDiscoverMoreButton) {
+                interactor::onDiscoverMoreClicked
+            } else {
+                null
+            },
         )
 
         Spacer(Modifier.height(16.dp))

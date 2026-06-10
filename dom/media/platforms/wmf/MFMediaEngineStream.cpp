@@ -39,32 +39,6 @@ namespace mozilla {
 
 using Microsoft::WRL::ComPtr;
 
-namespace {
-// Dispatches aFunc to aTaskQueue and chains the resulting promise into a
-// newly allocated Private promise. If the dispatch fails (e.g. aTaskQueue has
-// been shut down), the Private is immediately rejected so it cannot be
-// destroyed while pending and orphan any upstream chained promises.
-template <typename Function>
-auto DispatchOrReject(TaskQueue* aTaskQueue, StaticString aCallerName,
-                      Function&& aFunc) {
-  using ReturnType = std::invoke_result_t<Function>;
-  using PromiseType = RemoveSmartPointer<ReturnType>;
-  auto p = MakeRefPtr<typename PromiseType::Private>(aCallerName);
-  nsresult rv = aTaskQueue->Dispatch(NS_NewRunnableFunction(
-      aCallerName.get(),
-      [func = std::forward<Function>(aFunc), p, aCallerName]() mutable {
-        func()->ChainTo(p.forget(), aCallerName);
-      }));
-  if (NS_FAILED(rv)) {
-    p->Reject(MediaResult(NS_ERROR_FAILURE,
-                          nsPrintfCString("%s: Dispatch failed to task queue",
-                                          aCallerName.get())),
-              aCallerName);
-  }
-  return p;
-}
-}  // namespace
-
 RefPtr<MediaDataDecoder::InitPromise> MFMediaEngineStreamWrapper::Init() {
   MOZ_ASSERT(mStream->DescriptorId(), "Stream hasn't been initialized!");
   WLOGV("Init");
@@ -79,11 +53,9 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Decode(
         MediaResult(NS_ERROR_FAILURE, "MFMediaEngineStreamWrapper is shutdown"),
         __func__);
   }
-  return DispatchOrReject(
-      mTaskQueue, __func__,
-      [stream = mStream, sample = RefPtr<MediaRawData>(aSample)]() mutable {
-        return stream->OutputData(std::move(sample));
-      });
+  RefPtr<MediaRawData> sample = aSample;
+  return InvokeAsync(mTaskQueue, mStream.Get(), __func__,
+                     &MFMediaEngineStream::OutputData, std::move(sample));
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Drain() {
@@ -93,8 +65,8 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Drain() {
         MediaResult(NS_ERROR_FAILURE, "MFMediaEngineStreamWrapper is shutdown"),
         __func__);
   }
-  return DispatchOrReject(mTaskQueue, __func__,
-                          [stream = mStream] { return stream->Drain(); });
+  return InvokeAsync(mTaskQueue, mStream.Get(), __func__,
+                     &MFMediaEngineStream::Drain);
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStreamWrapper::Flush() {
@@ -104,8 +76,8 @@ RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStreamWrapper::Flush() {
         MediaResult(NS_ERROR_FAILURE, "MFMediaEngineStreamWrapper is shutdown"),
         __func__);
   }
-  return DispatchOrReject(mTaskQueue, __func__,
-                          [stream = mStream] { return stream->Flush(); });
+  return InvokeAsync(mTaskQueue, mStream.Get(), __func__,
+                     &MFMediaEngineStream::Flush);
 }
 
 RefPtr<ShutdownPromise> MFMediaEngineStreamWrapper::Shutdown() {

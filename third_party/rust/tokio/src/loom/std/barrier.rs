@@ -12,8 +12,6 @@ use std::time::{Duration, Instant};
 /// # Examples
 ///
 /// ```
-/// # #[cfg(not(target_family = "wasm"))]
-/// # {
 /// use std::sync::{Arc, Barrier};
 /// use std::thread;
 ///
@@ -33,7 +31,6 @@ use std::time::{Duration, Instant};
 /// for handle in handles {
 ///     handle.join().unwrap();
 /// }
-/// # }
 /// ```
 pub(crate) struct Barrier {
     lock: Mutex<BarrierState>,
@@ -106,8 +103,6 @@ impl Barrier {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(not(target_family = "wasm"))]
-    /// # {
     /// use std::sync::{Arc, Barrier};
     /// use std::thread;
     ///
@@ -127,7 +122,6 @@ impl Barrier {
     /// for handle in handles {
     ///     handle.join().unwrap();
     /// }
-    /// # }
     /// ```
     pub(crate) fn wait(&self) -> BarrierWaitResult {
         let mut lock = self.lock.lock();

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,13 +26,13 @@ JSObject* SVGEllipseElement::WrapNode(JSContext* aCx,
 
 SVGElement::LengthInfo SVGEllipseElement::sLengthInfo[4] = {
     {nsGkAtoms::cx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::cy, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::Y},
+     SVGContentUtils::Y},
     {nsGkAtoms::rx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::ry, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::Y},
+     SVGContentUtils::Y},
 };
 
 //----------------------------------------------------------------------
@@ -156,29 +158,9 @@ already_AddRefed<Path> SVGEllipseElement::BuildPath(PathBuilder* aBuilder) {
     return nullptr;
   }
 
-  if (rx == ry) {
-    aBuilder->Arc(Point(x, y), rx, 0, Float(2 * M_PI));
-  } else {
-    EllipseToBezier(aBuilder, Point(x, y), Size(rx, ry));
-  }
+  EllipseToBezier(aBuilder, Point(x, y), Size(rx, ry));
 
   return aBuilder->Finish();
-}
-
-Maybe<bool> SVGEllipseElement::HasCtxDependentLength() const {
-  bool hasCtxDependentLength = false;
-  if (SVGGeometryProperty::DoForComputedStyle(
-          this, [&](const ComputedStyle* style) {
-            const nsStyleSVGReset* styleSVGReset = style->StyleSVGReset();
-
-            hasCtxDependentLength = styleSVGReset->mCx.HasPercent() ||
-                                    styleSVGReset->mCy.HasPercent() ||
-                                    styleSVGReset->mRx.HasPercent() ||
-                                    styleSVGReset->mRy.HasPercent();
-          })) {
-    return Some(hasCtxDependentLength);
-  }
-  return Nothing();
 }
 
 bool SVGEllipseElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,

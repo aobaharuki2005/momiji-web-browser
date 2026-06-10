@@ -62,10 +62,8 @@ class NormalizedConstraintSet {
     template <class ConstrainRange>
     void SetFrom(const ConstrainRange& aOther);
 
-    /// Clamp n based on Range. The range must be valid (mMin <= mMax).
+    /// Clamp n based on Range. If the Range is empty, mMin is returned.
     ValueType Clamp(ValueType n) const { return std::clamp(n, mMin, mMax); }
-    /// Get ideal value, if present, or defaultValue otherwise, clamped based on
-    /// Range. The range must be valid (mMin <= mMax).
     ValueType Get(ValueType defaultValue) const {
       return Clamp(mIdeal.valueOr(defaultValue));
     }

@@ -8,6 +8,7 @@ import android.app.Activity
 import android.view.View
 import androidx.core.view.doOnPreDraw
 import mozilla.components.support.ktx.android.view.reportFullyDrawnSafe
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupDestination.APP_LINK
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupDestination.HOMESCREEN
@@ -29,7 +30,7 @@ class StartupReportFullyDrawn {
     /**
      * Instruments "visually complete" cold startup time for app link for use with FNPRMS.
      */
-    fun onActivityCreateEndHome(state: StartupState, activity: Activity) {
+    fun onActivityCreateEndHome(state: StartupState, activity: HomeActivity) {
         if (!isInstrumented &&
             state is StartupState.Cold && state.destination == APP_LINK
         ) {
@@ -47,7 +48,7 @@ class StartupReportFullyDrawn {
      * loading of the actual top sites icons. Our focus for visually complete is usability.
      * There are no tabs available in our FNPRMS tests so they are ignored for this instrumentation.
      */
-    fun onTopSitesItemBound(state: StartupState, activity: Activity) {
+    fun onTopSitesItemBound(state: StartupState, activity: HomeActivity) {
         if (!isInstrumented &&
             state is StartupState.Cold && state.destination == HOMESCREEN
         ) {

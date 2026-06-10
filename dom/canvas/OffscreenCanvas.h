@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -45,14 +47,13 @@ using OwningOffscreenRenderingContext = class
 // store necessary data in it then pass it to worker thread.
 struct OffscreenCanvasCloneData final {
   OffscreenCanvasCloneData(OffscreenCanvasDisplayHelper* aDisplay,
-                           nsAtom* aLang, uint32_t aWidth, uint32_t aHeight,
+                           uint32_t aWidth, uint32_t aHeight,
                            layers::LayersBackend aCompositorBackend,
                            bool aNeutered, bool aIsWriteOnly,
                            nsIPrincipal* aExpandedReader);
   ~OffscreenCanvasCloneData();
 
   RefPtr<OffscreenCanvasDisplayHelper> mDisplay;
-  RefPtr<nsAtom> mLang;
   uint32_t mWidth;
   uint32_t mHeight;
   layers::LayersBackend mCompositorBackendType;
@@ -78,12 +79,11 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
 
   OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth, uint32_t aHeight,
                   layers::LayersBackend aCompositorBackend,
-                  already_AddRefed<OffscreenCanvasDisplayHelper> aDisplay,
-                  nsAtom* aLang);
+                  already_AddRefed<OffscreenCanvasDisplayHelper> aDisplay);
 
   void Destroy();
 
-  nsIGlobalObject* GetParentObject() const { return GetRelevantGlobal(); }
+  nsIGlobalObject* GetParentObject() const { return GetOwnerGlobal(); }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -172,8 +172,6 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
 
   bool IsTransferredFromElement() const { return !!mDisplay; }
 
-  nsAtom* GetLang() const { return mLang; }
-
  private:
   ~OffscreenCanvas();
 
@@ -198,7 +196,6 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
       layers::LayersBackend::LAYERS_NONE;
 
   RefPtr<OffscreenCanvasDisplayHelper> mDisplay;
-  RefPtr<nsAtom> mLang;
   RefPtr<CancelableRunnable> mPendingCommit;
   RefPtr<nsIPrincipal> mExpandedReader;
   Maybe<OffscreenCanvasDisplayData> mPendingUpdate;

@@ -11,8 +11,6 @@
 #ifndef SDK_OBJC_NATIVE_API_AUDIO_DEVICE_MODULE_ERROR_HANDLER_H
 #define SDK_OBJC_NATIVE_API_AUDIO_DEVICE_MODULE_ERROR_HANDLER_H
 
-#include <cstdint>
-
 namespace webrtc {
 enum ADMError : uint8_t {
   // Generic.

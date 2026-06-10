@@ -1,3 +1,5 @@
+.. -*- Mode: rst; fill-column: 80; -*-
+
 ============================
 Interacting with Web content
 ============================
@@ -138,7 +140,7 @@ Let’s set up an activity that registers an extension located in the
 that will be used to communicate with Web Content.
 
 You can find the full example here:
-:searchfox:`MessagingExample <mobile/android/examples/messaging_example>`.
+`MessagingExample <https://searchfox.org/mozilla-central/source/mobile/android/examples/messaging_example>`_.
 
 Activity.java
 ^^^^^^^^^^^^^
@@ -288,7 +290,7 @@ will allow you to receive a
 object that can be used to receive and send messages to the extension.
 
 The following example can be found
-:searchfox:`here <mobile/android/examples/port_messaging_example>`.
+`here <https://searchfox.org/mozilla-central/source/mobile/android/examples/port_messaging_example>`_.
 
 For this example, the extension side will do the following:
 

@@ -19,7 +19,7 @@
         android:layout_height="@dimen/quicksettings_item_height"
         android:scaleType="center"
         android:contentDescription="@string/etp_back_button_content_description"
-        app:tint="?attr/colorOnSurface"
+        app:tint="?attr/textPrimary"
         app:srcCompat="@drawable/mozac_ic_back_24" />
 
     <LinearLayout
@@ -43,7 +43,7 @@
                 android:scaleType="fitCenter"
                 android:layout_marginStart="16dp"
                 android:layout_gravity="center_vertical"
-                tools:drawable="@drawable/mozac_ic_globe_24" />
+                tools:drawable="@drawable/ic_internet" />
 
             <TextView
                 android:id="@+id/title"
@@ -79,7 +79,7 @@
                 android:layout_height="wrap_content"
                 android:importantForAccessibility="no"
                 app:srcCompat="@drawable/mozac_ic_lock_24"
-                app:tint="?attr/colorOnSurface" />
+                app:tint="?attr/textPrimary" />
 
             <LinearLayout
                 android:layout_width="match_parent"

@@ -9,48 +9,36 @@ export default {
   title: "UI Widgets/Badge",
   component: "moz-badge",
   argTypes: {
-    type: {
-      control: "select",
-      options: ["default", "beta", "new"],
-    },
+    label: { table: { disable: true } },
   },
   parameters: {
     status: "in-development",
     fluent: `
 moz-badge =
-    .label = BADGE
+    .label = Beta
     .title = Beta experiment
 `,
   },
 };
 
-const Template = ({ label, iconSrc, title, l10nId, type }) => html`
+const Template = ({ label, iconSrc, title, l10nId }) => html`
   <moz-badge
     label=${label}
     iconSrc=${ifDefined(iconSrc)}
     title=${ifDefined(title)}
-    data-l10n-id=${ifDefined(l10nId)}
-    type=${ifDefined(type)}
+    data-l10n-id=${l10nId}
   ></moz-badge>
 `;
 
 export const Default = Template.bind({});
 Default.args = {
+  label: "Beta",
   l10nId: "moz-badge",
 };
 
 export const WithIcon = Template.bind({});
 WithIcon.args = {
+  label: "Beta",
   iconSrc: "chrome://global/skin/icons/info.svg",
   l10nId: "moz-badge",
-};
-
-export const Beta = Template.bind({});
-Beta.args = {
-  type: "beta",
-};
-
-export const New = Template.bind({});
-New.args = {
-  type: "new",
 };

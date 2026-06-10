@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,8 +8,8 @@
 // nsScrollbarFrame
 //
 
-#ifndef nsScrollbarFrame_h_
-#define nsScrollbarFrame_h_
+#ifndef nsScrollbarFrame_h__
+#define nsScrollbarFrame_h__
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ScrollTypes.h"
@@ -84,7 +86,10 @@ class nsScrollbarFrame final : public nsContainerFrame,
   void MoveToNewPosition();
   int32_t GetButtonScrollDirection() const { return mButtonScrollDirection; }
   void SetButtonScrollDirectionAndUnit(int32_t aDirection,
-                                       mozilla::ScrollUnit aUnit);
+                                       mozilla::ScrollUnit aUnit) {
+    mButtonScrollDirection = aDirection;
+    mButtonScrollUnit = aUnit;
+  }
 
   // nsIAnonymousContentCreator
   nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;

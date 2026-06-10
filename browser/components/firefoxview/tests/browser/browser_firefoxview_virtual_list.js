@@ -1,41 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(async function test_max_render_count_never_infinity() {
-  const now = new Date();
-  await PlacesUtils.history.insertMany([
-    {
-      url: "https://example.net/",
-      visits: [{ date: now }],
-    },
-  ]);
-  await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
-    await navigateToViewAndWait(document, "history");
+const VIRTUAL_LIST_ENABLED_PREF = "browser.firefox-view.virtual-list.enabled";
 
-    let historyComponent = document.querySelector("view-history");
-    await BrowserTestUtils.waitForMutationCondition(
-      historyComponent.shadowRoot,
-      { childList: true, subtree: true },
-      () => historyComponent.lists[0]
-    );
-    let tabList = historyComponent.lists[0];
-    let rootVirtualList = tabList.rootVirtualListEl;
-
-    Assert.ok(
-      Number.isFinite(rootVirtualList.maxRenderCountEstimate),
-      `maxRenderCountEstimate should be finite on init, got ${rootVirtualList.maxRenderCountEstimate}`
-    );
-
-    rootVirtualList.itemHeightEstimate = 0;
-    rootVirtualList.recalculateAfterWindowResize();
-
-    Assert.ok(
-      Number.isFinite(rootVirtualList.maxRenderCountEstimate),
-      `maxRenderCountEstimate should be finite when itemHeightEstimate is 0, got ${rootVirtualList.maxRenderCountEstimate}`
-    );
-
-    gBrowser.removeTab(gBrowser.selectedTab);
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [[VIRTUAL_LIST_ENABLED_PREF, true]],
+  });
+  registerCleanupFunction(async () => {
+    await SpecialPowers.popPrefEnv();
+    clearHistory();
   });
 });
 
@@ -59,8 +33,7 @@ add_task(async function test_max_render_count_on_win_resize() {
 
     let historyComponent = document.querySelector("view-history");
     let tabList = await TestUtils.waitForCondition(
-      () => historyComponent.lists[0],
-      "Waiting for the first list in the history component to be available"
+      () => historyComponent.lists[0]
     );
     let rootVirtualList = tabList.rootVirtualListEl;
 

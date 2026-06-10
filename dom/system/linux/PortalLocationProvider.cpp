@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,7 +16,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/XREAppData.h"
 #include "mozilla/dom/GeolocationPositionErrorBinding.h"
-#include "mozilla/glean/DomGeolocationMetrics.h"
 #include "nsAppShell.h"
 #include "prtime.h"
 
@@ -24,11 +25,9 @@ namespace mozilla::dom {
 
 #ifdef MOZ_LOGGING
 static LazyLogModule sPortalLog("Portal");
-#  define LOG_PORTALD(...) MOZ_LOG(sPortalLog, LogLevel::Debug, (__VA_ARGS__))
-#  define LOG_PORTALI(...) MOZ_LOG(sPortalLog, LogLevel::Info, (__VA_ARGS__))
+#  define LOG_PORTAL(...) MOZ_LOG(sPortalLog, LogLevel::Debug, (__VA_ARGS__))
 #else
-#  define LOG_PORTALD(...)
-#  define LOG_PORTALI(...)
+#  define LOG_PORTAL(...)
 #endif /* MOZ_LOGGING */
 
 const char kDesktopBusName[] = "org.freedesktop.portal.Desktop";
@@ -72,7 +71,7 @@ PortalLocationProvider::MLSGeolocationUpdate::Update(
   if (!coords) {
     return NS_ERROR_FAILURE;
   }
-  LOG_PORTALD("MLS is updating position");
+  LOG_PORTAL("MLS is updating position\n");
   return mCallback->Update(aPosition);
 }
 
@@ -103,14 +102,14 @@ void PortalLocationProvider::Update(nsIDOMGeoPosition* aPosition) {
   }
 
   if (mMLSProvider) {
-    LOG_PORTALD(
+    LOG_PORTAL(
         "Update from location portal received: Cancelling fallback MLS "
-        "provider");
+        "provider\n");
     mMLSProvider->Shutdown(MLSFallback::ShutdownReason::ProviderResponded);
     mMLSProvider = nullptr;
   }
 
-  LOG_PORTALD("Send updated location to the callback %p", mCallback.get());
+  LOG_PORTAL("Send updated location to the callback %p", mCallback.get());
   mCallback->Update(aPosition);
 
   aPosition->GetCoords(getter_AddRefs(mLastGeoPositionCoords));
@@ -121,7 +120,7 @@ void PortalLocationProvider::Update(nsIDOMGeoPosition* aPosition) {
 }
 
 void PortalLocationProvider::NotifyError(int aError) {
-  LOG_PORTALD("*****NotifyError %d", aError);
+  LOG_PORTAL("*****NotifyError %d\n", aError);
   if (!mCallback) {
     return;  // not initialized or already shut down
   }
@@ -143,10 +142,10 @@ NS_IMPL_ISUPPORTS(PortalLocationProvider, nsIGeolocationProvider)
 static void location_updated_signal_cb(GDBusProxy* proxy, gchar* sender_name,
                                        gchar* signal_name, GVariant* parameters,
                                        gpointer user_data) {
-  LOG_PORTALD("Signal: %s received from: %s", sender_name, signal_name);
+  LOG_PORTAL("Signal: %s received from: %s\n", sender_name, signal_name);
 
   if (g_strcmp0(signal_name, "LocationUpdated")) {
-    LOG_PORTALD("Unexpected signal %s received", signal_name);
+    LOG_PORTAL("Unexpected signal %s received", signal_name);
     return;
   }
 
@@ -156,27 +155,19 @@ static void location_updated_signal_cb(GDBusProxy* proxy, gchar* sender_name,
   g_variant_get(parameters, "(o@a{sv})", &session_handle,
                 response_data.StartAssignment());
   if (!response_data) {
-    LOG_PORTALI("Missing response data from portal");
-    glean::geolocation::linux_portal_error
-        .EnumGet(glean::geolocation::LinuxPortalErrorLabel::eEmptyResponse)
-        .Add();
+    LOG_PORTAL("Missing response data from portal\n");
     locationProvider->NotifyError(
         GeolocationPositionError_Binding::POSITION_UNAVAILABLE);
     return;
   }
-
-  LOG_PORTALD("Session handle: %s Response data: %s", session_handle,
-              GUniquePtr<gchar>(g_variant_print(response_data, TRUE)).get());
+  LOG_PORTAL("Session handle: %s Response data: %s\n", session_handle,
+             GUniquePtr<gchar>(g_variant_print(response_data, TRUE)).get());
   g_free(session_handle);
 
   double lat = 0;
   double lon = 0;
   if (!g_variant_lookup(response_data, "Latitude", "d", &lat) ||
       !g_variant_lookup(response_data, "Longitude", "d", &lon)) {
-    LOG_PORTALI("Failed to read response data from portal");
-    glean::geolocation::linux_portal_error
-        .EnumGet(glean::geolocation::LinuxPortalErrorLabel::eCantReadResponse)
-        .Add();
     locationProvider->NotifyError(
         GeolocationPositionError_Binding::POSITION_UNAVAILABLE);
     return;
@@ -199,9 +190,9 @@ static void location_updated_signal_cb(GDBusProxy* proxy, gchar* sender_name,
 
 NS_IMETHODIMP
 PortalLocationProvider::Startup() {
-  LOG_PORTALD("Starting location portal");
+  LOG_PORTAL("Starting location portal");
   if (mDBUSLocationProxy) {
-    LOG_PORTALD("Proxy already started.");
+    LOG_PORTAL("Proxy already started.\n");
     return NS_OK;
   }
 
@@ -250,13 +241,8 @@ PortalLocationProvider::Startup() {
   // TODO Use wayland:handle as described in
   // https://flatpak.github.io/xdg-desktop-portal/#parent_window
   const gchar* parent_window = "";
-  gchar* portalSession = nullptr;
+  gchar* portalSession;
   g_variant_get_child(result, 0, "o", &portalSession);
-  if (!portalSession) {
-    mDBUSLocationProxy = nullptr;
-    return NS_ERROR_FAILURE;
-  }
-
   mPortalSession.reset(portalSession);
 
   result = g_dbus_proxy_call_sync(
@@ -270,11 +256,6 @@ PortalLocationProvider::Startup() {
     g_printerr("Error calling Start method: %s\n", error->message);
     return NS_OK;  // fallback to MLS
   }
-
-  glean::geolocation::geolocation_service
-      .EnumGet(glean::geolocation::GeolocationServiceLabel::eSystem)
-      .Add();
-  LOG_PORTALI("Portal location provider starting.");
   return NS_OK;
 }
 
@@ -285,7 +266,7 @@ PortalLocationProvider::Watch(nsIGeolocationUpdate* aCallback) {
   if (mLastGeoPositionCoords) {
     // We cannot immediately call the Update there becase the window is not
     // yet ready for that.
-    LOG_PORTALD(
+    LOG_PORTAL(
         "Update location in 1ms because we have the valid coords cached.");
     SetRefreshTimer(1);
     return NS_OK;
@@ -308,7 +289,7 @@ NS_IMETHODIMP PortalLocationProvider::GetName(nsACString& aName) {
 }
 
 void PortalLocationProvider::SetRefreshTimer(int aDelay) {
-  LOG_PORTALD("SetRefreshTimer for %p to %d ms", this, aDelay);
+  LOG_PORTAL("SetRefreshTimer for %p to %d ms\n", this, aDelay);
   if (!mRefreshTimer) {
     NS_NewTimerWithCallback(getter_AddRefs(mRefreshTimer), this, aDelay,
                             nsITimer::TYPE_ONE_SHOT);
@@ -325,7 +306,7 @@ PortalLocationProvider::Notify(nsITimer* timer) {
   // watchPosition to fail with TIMEOUT error.
   SetRefreshTimer(5000);
   if (mLastGeoPositionCoords) {
-    LOG_PORTALD("Update location callback with latest coords.");
+    LOG_PORTAL("Update location callback with latest coords.");
     mCallback->Update(
         new nsGeoPosition(mLastGeoPositionCoords, PR_Now() / PR_USEC_PER_MSEC));
   }
@@ -334,7 +315,7 @@ PortalLocationProvider::Notify(nsITimer* timer) {
 
 NS_IMETHODIMP
 PortalLocationProvider::Shutdown() {
-  LOG_PORTALI("Shutdown location provider");
+  LOG_PORTAL("Shutdown location provider");
   if (mRefreshTimer) {
     mRefreshTimer->Cancel();
     mRefreshTimer = nullptr;
@@ -343,7 +324,7 @@ PortalLocationProvider::Shutdown() {
   if (mDBUSLocationProxy) {
     nsAppShell::DBusConnectionCheck();
     g_signal_handler_disconnect(mDBUSLocationProxy, mDBUSSignalHandler);
-    LOG_PORTALD("calling Close method to the session interface...");
+    LOG_PORTAL("calling Close method to the session interface...\n");
     RefPtr<GDBusMessage> message = dont_AddRef(g_dbus_message_new_method_call(
         kDesktopBusName, mPortalSession.get(), kSessionInterfaceName, "Close"));
     mPortalSession = nullptr;
@@ -355,7 +336,7 @@ PortalLocationProvider::Shutdown() {
           connection, message, G_DBUS_SEND_MESSAGE_FLAGS_NONE,
           /*out_serial=*/nullptr, getter_Transfers(error));
       if (error) {
-        LOG_PORTALI("Failed to close the session: %s", error->message);
+        g_printerr("Failed to close the session: %s\n", error->message);
       }
     }
     mDBUSLocationProxy = nullptr;

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,8 +13,7 @@
 #include "nsXULAppAPI.h"
 
 namespace {
-mozilla::StaticRefPtr<mozilla::net::BackgroundChannelRegistrar>
-    gBackgroundChannelRegistrarSingleton;
+mozilla::StaticRefPtr<mozilla::net::BackgroundChannelRegistrar> gSingleton;
 }
 
 namespace mozilla {
@@ -33,13 +34,13 @@ BackgroundChannelRegistrar::~BackgroundChannelRegistrar() {
 }
 
 // static
-already_AddRefed<BackgroundChannelRegistrar>
+already_AddRefed<nsIBackgroundChannelRegistrar>
 BackgroundChannelRegistrar::GetOrCreate() {
-  if (!gBackgroundChannelRegistrarSingleton) {
-    gBackgroundChannelRegistrarSingleton = new BackgroundChannelRegistrar();
-    ClearOnShutdown(&gBackgroundChannelRegistrarSingleton);
+  if (!gSingleton) {
+    gSingleton = new BackgroundChannelRegistrar();
+    ClearOnShutdown(&gSingleton);
   }
-  return do_AddRef(gBackgroundChannelRegistrarSingleton);
+  return do_AddRef(gSingleton);
 }
 
 void BackgroundChannelRegistrar::NotifyChannelLinked(
@@ -56,22 +57,8 @@ void BackgroundChannelRegistrar::NotifyChannelLinked(
 void BackgroundChannelRegistrar::DeleteChannel(uint64_t aKey) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<HttpChannelParent> channel;
-  mChannels.Remove(aKey, getter_AddRefs(channel));
-  RefPtr<HttpBackgroundChannelParent> bgChannel;
-  mBgChannels.Remove(aKey, getter_AddRefs(bgChannel));
-}
-
-void BackgroundChannelRegistrar::DeleteChannelIfMatches(
-    uint64_t aKey, HttpChannelParent* aExpected) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<HttpChannelParent> channel;
-  if (mChannels.GetWeak(aKey) == aExpected) {
-    mChannels.Remove(aKey, getter_AddRefs(channel));
-  }
-  RefPtr<HttpBackgroundChannelParent> bgChannel;
-  mBgChannels.Remove(aKey, getter_AddRefs(bgChannel));
+  mChannels.Remove(aKey);
+  mBgChannels.Remove(aKey);
 }
 
 void BackgroundChannelRegistrar::LinkHttpChannel(uint64_t aKey,

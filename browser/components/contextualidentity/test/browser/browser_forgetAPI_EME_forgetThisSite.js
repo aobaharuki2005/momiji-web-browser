@@ -194,6 +194,7 @@ add_setup(async function () {
     set: [
       ["privacy.userContext.enabled", true],
       ["media.mediasource.enabled", true],
+      ["media.mediasource.webm.enabled", true],
       ["media.clearkey.persistent-license.enabled", true],
     ],
   });

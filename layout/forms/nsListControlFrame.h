@@ -1,21 +1,25 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsListControlFrame_h_
-#define nsListControlFrame_h_
+#ifndef nsListControlFrame_h___
+#define nsListControlFrame_h___
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ScrollContainerFrame.h"
+#include "mozilla/StaticPtr.h"
+#include "nsISelectControlFrame.h"
 
 class nsComboboxControlFrame;
 class nsPresContext;
 
 namespace mozilla {
 class PresShell;
-
-class WidgetMouseEvent;
+class HTMLSelectEventListener;
 
 namespace dom {
+class Event;
 class HTMLOptionElement;
 class HTMLSelectElement;
 class HTMLOptionsCollection;
@@ -26,7 +30,8 @@ class HTMLOptionsCollection;
  * Frame-based listbox.
  */
 
-class nsListControlFrame final : public mozilla::ScrollContainerFrame {
+class nsListControlFrame final : public mozilla::ScrollContainerFrame,
+                                 public nsISelectControlFrame {
  public:
   using HTMLOptionElement = mozilla::dom::HTMLOptionElement;
 
@@ -44,6 +49,8 @@ class nsListControlFrame final : public mozilla::ScrollContainerFrame {
   nsresult HandleEvent(nsPresContext* aPresContext,
                        mozilla::WidgetGUIEvent* aEvent,
                        nsEventStatus* aEventStatus) final;
+
+  void SetInitialChildList(ChildListID aListID, nsFrameList&& aChildList) final;
 
   nscoord IntrinsicISize(const mozilla::IntrinsicSizeInput& aInput,
                          mozilla::IntrinsicISizeType aType) final;
@@ -66,6 +73,7 @@ class nsListControlFrame final : public mozilla::ScrollContainerFrame {
 #endif
 
   void ElementStateChanged(mozilla::dom::ElementState aStates) final;
+  bool ShouldPropagateComputedBSizeToScrolledContent() const final;
 
   // for accessibility purposes
 #ifdef ACCESSIBILITY
@@ -86,30 +94,33 @@ class nsListControlFrame final : public mozilla::ScrollContainerFrame {
   uint32_t GetNumberOfOptions();
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void OnContentReset();
-  void OptionsAdded();
-  void RemoveOption(int32_t aIndex);
+
+  // nsISelectControlFrame
+  NS_IMETHOD AddOption(int32_t index) final;
+  NS_IMETHOD RemoveOption(int32_t index) final;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void DoneAddingChildren();
+  NS_IMETHOD DoneAddingChildren(bool aIsDone) final;
 
   /**
    * Gets the content (an option) by index and then set it as
    * being selected or not selected.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void OnOptionSelected(int32_t aIndex, bool aSelected);
+  NS_IMETHOD OnOptionSelected(int32_t aIndex, bool aSelected) final;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void OnSetSelectedIndex(int32_t aNewIndex);
+  NS_IMETHOD_(void)
+  OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) final;
 
   /**
    * Mouse event listeners.
    * @note These methods might destroy the frame, pres shell and other objects.
    */
   MOZ_CAN_RUN_SCRIPT
-  nsresult HandleLeftButtonMouseDown(const mozilla::WidgetMouseEvent&);
+  nsresult HandleLeftButtonMouseDown(mozilla::dom::Event* aMouseEvent);
   MOZ_CAN_RUN_SCRIPT
-  nsresult HandleLeftButtonMouseUp();
+  nsresult HandleLeftButtonMouseUp(mozilla::dom::Event* aMouseEvent);
   MOZ_CAN_RUN_SCRIPT
-  nsresult DragMove(const mozilla::WidgetMouseEvent&);
+  nsresult DragMove(mozilla::dom::Event* aMouseEvent);
   MOZ_CAN_RUN_SCRIPT
 
   MOZ_CAN_RUN_SCRIPT
@@ -223,8 +234,8 @@ class nsListControlFrame final : public mozilla::ScrollContainerFrame {
    * @param aPoint the event point, in listcontrolframe coordinates
    * @return NS_OK if it successfully found the selection
    */
-  nsresult GetIndexFromEvent(const mozilla::WidgetMouseEvent&,
-                             int32_t& aCurIndex);
+  nsresult GetIndexFromDOMEvent(mozilla::dom::Event* aMouseEvent,
+                                int32_t& aCurIndex);
 
   bool CheckIfAllFramesHere();
 
@@ -249,8 +260,8 @@ class nsListControlFrame final : public mozilla::ScrollContainerFrame {
   bool ExtendedSelection(int32_t aStartIndex, int32_t aEndIndex,
                          bool aClearAll);
   MOZ_CAN_RUN_SCRIPT
-  bool HandleListSelection(const mozilla::WidgetMouseEvent&,
-                           int32_t aClickedIndex);
+  bool HandleListSelection(mozilla::dom::Event* aDOMEvent,
+                           int32_t selectedIndex);
   void InitSelectionRange(int32_t aClickedIndex);
 
  public:
@@ -272,6 +283,9 @@ class nsListControlFrame final : public mozilla::ScrollContainerFrame {
   nscoord mBSizeOfARow = -1;
   bool mChangesSinceDragStart : 1;
 
+  bool mIsAllContentHere : 1;
+  bool mIsAllFramesHere : 1;
+  bool mHasBeenInitialized : 1;
   bool mNeedToReset : 1;
   bool mPostChildrenLoadedReset : 1;
 
@@ -281,6 +295,8 @@ class nsListControlFrame final : public mozilla::ScrollContainerFrame {
 
   // True if our reflow got interrupted.
   bool mReflowWasInterrupted : 1;
+
+  RefPtr<mozilla::HTMLSelectEventListener> mEventListener;
 };
 
-#endif /* nsListControlFrame_h_ */
+#endif /* nsListControlFrame_h___ */

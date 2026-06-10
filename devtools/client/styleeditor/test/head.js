@@ -69,7 +69,7 @@ var reloadPageAndWaitForStyleSheets = async function (ui, editorCount) {
     });
   });
 
-  await reloadSelectedTab();
+  await reloadBrowser();
   await onClear;
 
   await onAllEditorAdded;

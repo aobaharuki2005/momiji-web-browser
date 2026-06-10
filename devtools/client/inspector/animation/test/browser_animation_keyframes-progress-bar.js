@@ -86,18 +86,18 @@ add_task(async function () {
         scrubberPositions[i]
       );
       await waitUntilAnimationsPlayState(animationInspector, "paused");
-      assertPosition(targetClass, barEl, areaEl, expectedPositions[i]);
+      assertPosition(barEl, areaEl, expectedPositions[i], animationInspector);
     }
   }
 });
 
-function assertPosition(targetClass, barEl, areaEl, expectedRate) {
+function assertPosition(barEl, areaEl, expectedRate) {
   const controllerBounds = areaEl.getBoundingClientRect();
   const barBounds = barEl.getBoundingClientRect();
   const barX = barBounds.x + barBounds.width / 2 - controllerBounds.x;
   const expected = controllerBounds.width * expectedRate;
   ok(
     expected - 1 < barX && barX < expected + 1,
-    `Position should approximately be ${expected} for ${targetClass} (x of bar is ${barX})`
+    `Position should apploximately be ${expected} (x of bar is ${barX})`
   );
 }

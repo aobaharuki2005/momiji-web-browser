@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -77,8 +78,6 @@ RasterImage::RasterImage(nsIURI* aURI /* = nullptr */)
 
 //******************************************************************************
 RasterImage::~RasterImage() {
-  mIsBeingDestroyed = true;
-
   // Make sure our SourceBuffer is marked as complete. This will ensure that any
   // outstanding decoders terminate.
   if (!mSourceBuffer->IsComplete()) {
@@ -126,6 +125,11 @@ nsresult RasterImage::Init(const char* aMimeType, uint32_t aFlags) {
     mLockCount++;
     SurfaceCache::LockImage(ImageKey(this));
   }
+
+  // Set the default flags according to the decoder type to allow preferences to
+  // be stored if necessary.
+  mDefaultDecoderFlags =
+      DecoderFactory::GetDefaultDecoderFlagsForType(mDecoderType);
 
   // Mark us as initialized
   mInitialized = true;
@@ -267,12 +271,7 @@ AspectRatio RasterImage::GetIntrinsicRatio() {
   if (mError) {
     return {};
   }
-  OrientedIntSize size = mSize;
-  if (mResolution.mX != mResolution.mY) {
-    mResolution.ApplyXTo(size.width);
-    mResolution.ApplyYTo(size.height);
-  }
-  return AspectRatio::FromSize(size.width, size.height);
+  return AspectRatio::FromSize(mSize.width, mSize.height);
 }
 
 NS_IMETHODIMP_(Orientation)
@@ -487,12 +486,8 @@ RasterImage::WillDrawOpaqueNow() {
 void RasterImage::OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey) {
   MOZ_ASSERT(mProgressTracker);
 
-  if (mIsBeingDestroyed) {
-    return;
-  }
-
   bool animatedFramesDiscarded =
-      aSurfaceKey.Playback() == PlaybackType::eAnimated;
+      mAnimationState && aSurfaceKey.Playback() == PlaybackType::eAnimated;
 
   nsCOMPtr<nsIEventTarget> eventTarget = do_GetMainThread();
 
@@ -1190,7 +1185,7 @@ void RasterImage::Decode(const OrientedIntSize& aSize, uint32_t aFlags,
   SurfaceCache::UnlockEntries(ImageKey(this));
 
   // Determine which flags we need to decode this image with.
-  DecoderFlags decoderFlags = DefaultDecoderFlags();
+  DecoderFlags decoderFlags = mDefaultDecoderFlags;
   if (aFlags & FLAG_ASYNC_NOTIFY) {
     decoderFlags |= DecoderFlags::ASYNC_NOTIFY;
   }
@@ -1274,7 +1269,7 @@ RasterImage::DecodeMetadata(uint32_t aFlags) {
 
   // Create a decoder.
   RefPtr<IDecodingTask> task = DecoderFactory::CreateMetadataDecoder(
-      mDecoderType, WrapNotNull(this), DefaultDecoderFlags(), mSourceBuffer);
+      mDecoderType, WrapNotNull(this), mDefaultDecoderFlags, mSourceBuffer);
 
   // Make sure DecoderFactory was able to create a decoder successfully.
   if (!task) {

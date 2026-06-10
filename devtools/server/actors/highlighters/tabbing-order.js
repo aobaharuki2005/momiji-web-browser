@@ -103,7 +103,7 @@ class TabbingOrderHighlighter {
     let currentFocusedElement = this.moveFocus(startElm);
     while (
       currentFocusedElement &&
-      isWindowIncluded(this.win, currentFocusedElement.documentGlobal)
+      isWindowIncluded(this.win, currentFocusedElement.ownerGlobal)
     ) {
       focusableElements.push(currentFocusedElement);
       currentFocusedElement = this.moveFocus(currentFocusedElement);
@@ -115,7 +115,7 @@ class TabbingOrderHighlighter {
     let endElm = this.focusedElement;
     if (
       currentFocusedElement &&
-      !isWindowIncluded(this.win, currentFocusedElement.documentGlobal)
+      !isWindowIncluded(this.win, currentFocusedElement.ownerGlobal)
     ) {
       endElm = null;
     }

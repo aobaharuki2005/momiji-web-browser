@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -53,11 +55,11 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(CallbackObject)
   // wrappers to cut, we need to check whether the compartment is still alive,
   // and drop the references if it is not.
 
-  if (!callback) [[unlikely]] {
+  if (MOZ_UNLIKELY(!callback)) {
     return true;
   }
-  if (tmp->mIncumbentGlobal &&
-      js::NukedObjectRealm(tmp->CallbackGlobalPreserveColor())) [[unlikely]] {
+  if (MOZ_LIKELY(tmp->mIncumbentGlobal) &&
+      MOZ_UNLIKELY(js::NukedObjectRealm(tmp->CallbackGlobalPreserveColor()))) {
     // It's not safe to release our global reference or drop our JS objects at
     // this point, so defer their finalization until CC is finished.
     AddForDeferredFinalization(new JSObjectsDropper(tmp));

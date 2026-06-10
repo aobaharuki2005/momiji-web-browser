@@ -20,7 +20,7 @@ const UIA_MainLandmarkTypeId = 80002;
 /**
  * Test the Name property.
  */
-addAccessibleTask(
+addUiaTask(
   `
 <button id="button">before</button>
 <div id="div">div</div>
@@ -52,7 +52,7 @@ addAccessibleTask(
 /**
  * Test the FullDescription property.
  */
-addAccessibleTask(
+addUiaTask(
   `
 <button id="button" aria-description="before">button</button>
 <div id="div">div</div>
@@ -82,13 +82,15 @@ addAccessibleTask(
       "after",
       "button has correct FullDescription"
     );
-  }
+  },
+  // The IA2 -> UIA proxy doesn't support FullDescription.
+  { uiaEnabled: true, uiaDisabled: false }
 );
 
 /**
  * Test the IsEnabled property.
  */
-addAccessibleTask(
+addUiaTask(
   `
 <button id="button">button</button>
 <p id="p">p</p>
@@ -97,15 +99,18 @@ addAccessibleTask(
     await definePyVar("doc", `getDocUia()`);
     await assignPyVarToUiaWithId("button");
     ok(await runPython(`button.CurrentIsEnabled`), "button has IsEnabled true");
-    info("Setting disabled on button");
-    await setUpWaitForUiaPropEvent("IsEnabled", "button");
-    await invokeSetAttribute(browser, "button", "disabled", true);
-    await waitForUiaEvent();
-    ok(true, "Got IsEnabled prop change event on button");
-    ok(
-      !(await runPython(`button.CurrentIsEnabled`)),
-      "button has IsEnabled false"
-    );
+    // The IA2 -> UIA proxy doesn't fire IsEnabled prop change events.
+    if (gIsUiaEnabled) {
+      info("Setting disabled on button");
+      await setUpWaitForUiaPropEvent("IsEnabled", "button");
+      await invokeSetAttribute(browser, "button", "disabled", true);
+      await waitForUiaEvent();
+      ok(true, "Got IsEnabled prop change event on button");
+      ok(
+        !(await runPython(`button.CurrentIsEnabled`)),
+        "button has IsEnabled false"
+      );
+    }
 
     await assignPyVarToUiaWithId("p");
     ok(await runPython(`p.CurrentIsEnabled`), "p has IsEnabled true");
@@ -130,7 +135,7 @@ async function testGroupPos(id, level, pos, size) {
 /**
  * Test the Level, PositionInSet and SizeOfSet properties.
  */
-addAccessibleTask(
+addUiaTask(
   `
 <ul>
   <li id="li1">li1<ul id="ul1">
@@ -160,7 +165,10 @@ addAccessibleTask(
     await testGroupPos("li2b", 2, 2, 3);
     await testGroupPos("li2c", 2, 3, 3);
 
-    await testGroupPos("h2", 2, 0, 0);
+    // The IA2 -> UIA proxy doesn't map heading level to the Level property.
+    if (gIsUiaEnabled) {
+      await testGroupPos("h2", 2, 0, 0);
+    }
     await testGroupPos("button", 0, 0, 0);
   }
 );
@@ -168,7 +176,7 @@ addAccessibleTask(
 /**
  * Test the FrameworkId property.
  */
-addAccessibleTask(
+addUiaTask(
   `<button id="button">button</button>`,
   async function testFrameworkId() {
     await definePyVar("doc", `getDocUia()`);
@@ -189,7 +197,7 @@ addAccessibleTask(
 /**
  * Test the ClassName property.
  */
-addAccessibleTask(
+addUiaTask(
   `
 <p id="p">p</p>
 <button id="button" class="c1">button</button>
@@ -220,13 +228,15 @@ addAccessibleTask(
       "c2 c3",
       "button has correct ClassName"
     );
-  }
+  },
+  // The IA2 -> UIA proxy doesn't support ClassName.
+  { uiaEnabled: true, uiaDisabled: false }
 );
 
 /**
  * Test the AriaRole property.
  */
-addAccessibleTask(
+addUiaTask(
   `
 <div id="button" role="button">button</div>
 <div id="main" role="main">main</div>
@@ -253,26 +263,33 @@ addAccessibleTask(
       "unknown",
       "unknown has correct AriaRole"
     );
-    is(
-      await runPython(`findUiaByDomId(doc, "computedButton").CurrentAriaRole`),
-      "button",
-      "computedButton has correct AriaRole"
-    );
-    is(
-      await runPython(`findUiaByDomId(doc, "computedMain").CurrentAriaRole`),
-      "main",
-      "computedMain has correct AriaRole"
-    );
-    is(
-      await runPython(`findUiaByDomId(doc, "computedHeading").CurrentAriaRole`),
-      "heading",
-      "computedHeading has correct AriaRole"
-    );
-    is(
-      await runPython(`findUiaByDomId(doc, "generic").CurrentAriaRole`),
-      "generic",
-      "generic has correct AriaRole"
-    );
+    // The IA2 -> UIA proxy doesn't compute ARIA roles.
+    if (gIsUiaEnabled) {
+      is(
+        await runPython(
+          `findUiaByDomId(doc, "computedButton").CurrentAriaRole`
+        ),
+        "button",
+        "computedButton has correct AriaRole"
+      );
+      is(
+        await runPython(`findUiaByDomId(doc, "computedMain").CurrentAriaRole`),
+        "main",
+        "computedMain has correct AriaRole"
+      );
+      is(
+        await runPython(
+          `findUiaByDomId(doc, "computedHeading").CurrentAriaRole`
+        ),
+        "heading",
+        "computedHeading has correct AriaRole"
+      );
+      is(
+        await runPython(`findUiaByDomId(doc, "generic").CurrentAriaRole`),
+        "generic",
+        "generic has correct AriaRole"
+      );
+    }
   }
 );
 
@@ -280,7 +297,7 @@ addAccessibleTask(
  * Test the LocalizedControlType property. We don't support this ourselves, but
  * the system provides it based on ControlType and AriaRole.
  */
-addAccessibleTask(
+addUiaTask(
   `
 <button id="button">button</button>
 <h1 id="h1">h1</h1>
@@ -295,25 +312,31 @@ addAccessibleTask(
       "button",
       "button has correct LocalizedControlType"
     );
-    is(
-      await runPython(`findUiaByDomId(doc, "h1").CurrentLocalizedControlType`),
-      "heading",
-      "h1 has correct LocalizedControlType"
-    );
-    is(
-      await runPython(
-        `findUiaByDomId(doc, "main").CurrentLocalizedControlType`
-      ),
-      "main",
-      "main has correct LocalizedControlType"
-    );
+    // The IA2 -> UIA proxy doesn't compute ARIA roles, so it can't compute the
+    // correct LocalizedControlType for these either.
+    if (gIsUiaEnabled) {
+      is(
+        await runPython(
+          `findUiaByDomId(doc, "h1").CurrentLocalizedControlType`
+        ),
+        "heading",
+        "h1 has correct LocalizedControlType"
+      );
+      is(
+        await runPython(
+          `findUiaByDomId(doc, "main").CurrentLocalizedControlType`
+        ),
+        "main",
+        "main has correct LocalizedControlType"
+      );
+    }
   }
 );
 
 /**
  * Test the LandmarkType property.
  */
-addAccessibleTask(
+addUiaTask(
   `
 <div id="main" role="main">main</div>
 <main id="htmlMain">htmlMain</main>
@@ -375,7 +398,7 @@ addAccessibleTask(
 /**
  * Test the LocalizedLandmarkType property.
  */
-addAccessibleTask(
+addUiaTask(
   `
 <div id="main" role="main">main</div>
 <div id="contentinfo" role="contentinfo">contentinfo</div>
@@ -394,14 +417,17 @@ addAccessibleTask(
       "main",
       "main has correct LocalizedLandmarkType"
     );
-    // Provided by us.
-    is(
-      await runPython(
-        `findUiaByDomId(doc, "contentinfo").CurrentLocalizedLandmarkType`
-      ),
-      "content information",
-      "contentinfo has correct LocalizedLandmarkType"
-    );
+    // The IA2 -> UIA proxy doesn't follow the Core AAM spec for this role.
+    if (gIsUiaEnabled) {
+      // Provided by us.
+      is(
+        await runPython(
+          `findUiaByDomId(doc, "contentinfo").CurrentLocalizedLandmarkType`
+        ),
+        "content information",
+        "contentinfo has correct LocalizedLandmarkType"
+      );
+    }
     is(
       await runPython(
         `findUiaByDomId(doc, "region").CurrentLocalizedLandmarkType`
@@ -438,7 +464,7 @@ addAccessibleTask(
 /**
  * Test the AcceleratorKey property.
  */
-addAccessibleTask(
+addUiaTask(
   `
   <div id="button" role="button" aria-keyshortcuts="Alt+Shift+f">foo</div>
   `,
@@ -449,13 +475,14 @@ addAccessibleTask(
       "Alt+Shift+f",
       "button has correct AcceleratorKey"
     );
-  }
+  },
+  { uiaEnabled: true, uiaDisabled: false }
 );
 
 /**
  * Test the IsOffscreen property.
  */
-addAccessibleTask(
+addUiaTask(
   `
 <button id="onscreen">onscreen</button>
 <button id="offscreen" style="position: absolute; left: -10000px;">offscreen</button>
@@ -488,13 +515,14 @@ addAccessibleTask(
         "doc has correct IsOffscreen"
       );
     });
-  }
+  },
+  { uiaEnabled: true, uiaDisabled: true }
 );
 
 /**
  * Test the IsPassword property.
  */
-addAccessibleTask(
+addUiaTask(
   `
 <input type="text" id="text">
 <input type="password" id="password">
@@ -513,70 +541,6 @@ addAccessibleTask(
       !(await runPython(`doc.CurrentIsPassword`)),
       "doc has correct IsPassword"
     );
-  }
-);
-
-/**
- * Test exposure of aria-current via the AriaProperties property.
- */
-addAccessibleTask(
-  `
-<button id="missing">missing</button>
-<button id="false" aria-current="false">false</button>
-<button id="undefined" aria-current="undefined">undefined</button>
-<button id="true" aria-current="true">false</button>
-<button id="page" aria-current="page">page</button>
-<button id="unrecognized" aria-current="unrecognized">unrecognized</button>
-  `,
-  async function testCurrent() {
-    await definePyVar("doc", `getDocUia()`);
-    let result = await runPython(
-      `findUiaByDomId(doc, "missing").CurrentAriaProperties`
-    );
-    is(
-      result.indexOf("current="),
-      -1,
-      "AriaProperties for missing doesn't contain current"
-    );
-    result = await runPython(
-      `findUiaByDomId(doc, "false").CurrentAriaProperties`
-    );
-    is(
-      result.indexOf("current="),
-      -1,
-      "AriaProperties for false doesn't contain current"
-    );
-    result = await runPython(
-      `findUiaByDomId(doc, "undefined").CurrentAriaProperties`
-    );
-    is(
-      result.indexOf("current="),
-      -1,
-      "AriaProperties for undefined doesn't contain current"
-    );
-    result = await runPython(
-      `findUiaByDomId(doc, "true").CurrentAriaProperties`
-    );
-    isnot(
-      result.indexOf("current=true"),
-      -1,
-      "AriaProperties for true contains current=true"
-    );
-    result = await runPython(
-      `findUiaByDomId(doc, "page").CurrentAriaProperties`
-    );
-    isnot(
-      result.indexOf("current=page"),
-      -1,
-      "AriaProperties for page contains current=page"
-    );
-    result = await runPython(
-      `findUiaByDomId(doc, "unrecognized").CurrentAriaProperties`
-    );
-    isnot(
-      result.indexOf("current=true"),
-      -1,
-      "AriaProperties for unrecognized contains current=true"
-    );
-  }
+  },
+  { uiaEnabled: true, uiaDisabled: true }
 );

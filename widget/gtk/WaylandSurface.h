@@ -1,9 +1,12 @@
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZ_WAYLAND_SURFACE_H_
-#define MOZ_WAYLAND_SURFACE_H_
+#ifndef __MOZ_WAYLAND_SURFACE_H__
+#define __MOZ_WAYLAND_SURFACE_H__
 
 #include "nsWaylandDisplay.h"
 #include "mozilla/Mutex.h"
@@ -40,46 +43,30 @@ class WaylandSurface final {
   void SetLoggingWidget(void* aWidget) { mLoggingWidget = aWidget; }
 #endif
 
-  // Fire VSync handler registered to this surface.
-  void VSyncCallbackHandler(struct wl_callback* aCallback, uint32_t aTime,
-                            bool aEmulated, bool aRoutedFromChildSurface);
+  void FrameCallbackHandler(struct wl_callback* aCallback, uint32_t aTime,
+                            bool aRoutedFromChildSurface);
 
-  // Set VSync handler which is fired when it's good time for painting
-  // and WalandSurface is visible and VSync is enabled.
-  //
-  // If aEmulateVSyncCallback is set to true, we file VSync handler even
-  // if WaylandSurface is not visible. It's used for painting to hidden
-  // surface.
-  //
-  // Once set, the aVSyncCallbackHandler is preserved between unmap/map.
-  //
-  // It's VSync source responsibility to disable emulated VSync events
-  // by SetVSyncCallbackStateLocked().
-  void SetVSyncCallbackHandlerLocked(
+  // Run frame callback repeatedly. Callback is removed on Unmap.
+  // If aEmulateFrameCallback is set to true and WaylandSurface is mapped and
+  // ready to draw and we don't have buffer attached yet,
+  // fire aFrameCallbackHandler without frame callback from
+  // compositor in sFrameCheckTimeoutMs.
+  void SetFrameCallbackLocked(
       const WaylandSurfaceLock& aProofOfLock,
-      const std::function<void(wl_callback*, uint32_t, bool)>&
-          aVSyncCallbackHandler,
-      bool aEmulateVSyncCallback = false);
+      const std::function<void(wl_callback*, uint32_t)>& aFrameCallbackHandler,
+      bool aEmulateFrameCallback = false);
 
-  // Clears VSync callback handler. It's used if frame callback handler
+  // Clears frame callback handler. It's used if frame callback handler
   // contains strong reference to WaylandSurface class owner
   // which we want to clear.
-  void ClearVSyncCallbackHandlerLocked(const WaylandSurfaceLock& aProofOfLock);
+  void ClearFrameCallbackHandlerLocked(const WaylandSurfaceLock& aProofOfLock);
 
   // Enable/Disable any frame callback emission (includes emulated ones).
-  void SetVSyncCallbackStateLocked(const WaylandSurfaceLock& aProofOfLock,
+  void SetFrameCallbackStateLocked(const WaylandSurfaceLock& aProofOfLock,
                                    bool aEnabled);
-  // Register handler which is called on VSync state change set by
-  // SetVSyncCallbackStateLocked().
-  void SetVSyncCallbackStateHandlerLocked(
+  void SetFrameCallbackStateHandlerLocked(
       const WaylandSurfaceLock& aProofOfLock,
-      const std::function<void(bool)>& aVSyncCallbackStateHandler);
-
-  // Set a routine which returns whether we should run emulated callback
-  // or not. Don't overwrite existing one unless aForce is set.
-  void SetVSyncEmulateCheckLocked(
-      const WaylandSurfaceLock& aProofOfLock,
-      const std::function<bool(void)>& aVSyncEmulateCheck, bool aForce = false);
+      const std::function<void(bool)>& aFrameCallbackStateHandler);
 
   wl_egl_window* GetEGLWindow(DesktopIntSize aSize);
   bool HasEGLWindow() const { return !!mEGLWindow; }
@@ -129,21 +116,13 @@ class WaylandSurface final {
   // Clean up Gdk resources, on main thread only
   void GdkCleanUpLocked(const WaylandSurfaceLock& aProofOfLock);
 
-  // Allow to register and run map callback.
-  // Map callback needs to be called *after* MapLocked() call
-  // on main thread.
-  void SetMapCallbackLocked(
-      const WaylandSurfaceLock& aProofOfLock,
-      const std::function<void(WaylandSurfaceLock& aProofOfLock)>& aMapCB);
-  void ClearMapCallbackLocked(const WaylandSurfaceLock& aProofOfLock);
-  void RunMapCallbackLocked(WaylandSurfaceLock& aProofOfLock);
-
   // Allow to register and run unmap callback.
   // Unmap callback needs to be called *before* UnmapLocked() call
   // on main thread.
   void SetUnmapCallbackLocked(const WaylandSurfaceLock& aProofOfLock,
                               const std::function<void(void)>& aUnmapCB);
   void ClearUnmapCallbackLocked(const WaylandSurfaceLock& aProofOfLock);
+
   void RunUnmapCallback();
 
   // Create Viewport to manage surface transformations.
@@ -204,9 +183,6 @@ class WaylandSurface final {
   void ClearOpaqueRegionLocked(const WaylandSurfaceLock& aProofOfLock);
   void OpaqueCallbackHandler();
 
-  void ClearOpaqueCallbackLocked(const WaylandSurfaceLock& aProofOfLock);
-  void SetOpaqueCallbackLocked(const WaylandSurfaceLock& aProofOfLock);
-
   bool DisableUserInputLocked(const WaylandSurfaceLock& aProofOfLock);
   void InvalidateRegionLocked(const WaylandSurfaceLock& aProofOfLock,
                               const gfx::IntRegion& aInvalidRegion);
@@ -216,18 +192,21 @@ class WaylandSurface final {
       const WaylandSurfaceLock& aProofOfLock,
       std::function<void(void)> aFractionalScaleCallback, bool aManageViewport);
   bool EnableCeiledScaleLocked(const WaylandSurfaceLock& aProofOfLock);
-  bool EnableCoordinatesScaleLocked(const WaylandSurfaceLock& aProofOfLock);
 
+  bool IsFractionalScaleLocked(const WaylandSurfaceLock& aProofOfLock) const {
+    return mScaleType == ScaleType::Disabled;
+  }
   bool IsCeiledScaleLocked(const WaylandSurfaceLock& aProofOfLock) const {
     return mScaleType == ScaleType::Ceiled;
+  }
+  bool IsScaleEnabledLocked(const WaylandSurfaceLock& aProofOfLock) const {
+    return mScaleType != ScaleType::Disabled;
   }
 
   // Returns scale as float point number. If WaylandSurface is not mapped,
   // return fractional scale of parent surface or monitor.
   static constexpr const double sNoScale = -1;
   double GetScale() const;
-  double GetCoordinatesScale() const;
-  bool HasCoordinatesScale() const { return !!mCoordinatesScaleManager; }
 
   // Called when screen ceiled scale changed or set initial scale before we map
   // and paint the surface.
@@ -238,9 +217,6 @@ class WaylandSurface final {
   static void FractionalScaleHandler(void* data,
                                      struct wp_fractional_scale_v1* info,
                                      uint32_t wire_scale);
-  static void CoordinatesScaleHandler(
-      void* data, struct xx_fractional_scale_v2* xx_fractional_scale_v2,
-      uint32_t scale_8_24);
 
   static void AfterPaintHandler(GdkFrameClock* aClock, void* aData);
 
@@ -283,9 +259,7 @@ class WaylandSurface final {
   void SetParentLocked(const WaylandSurfaceLock& aProofOfLock,
                        RefPtr<WaylandSurface> aParent);
 
-  bool EnableColorManagementLocked(const WaylandSurfaceLock& aProofOfLock,
-                                   mozilla::gfx::YUVColorSpace aColorSpace,
-                                   gfx::TransferFunction aTransferFunction);
+  bool EnableColorManagementLocked(const WaylandSurfaceLock& aProofOfLock);
   void SetColorRepresentationLocked(const WaylandSurfaceLock& aProofOfLock,
                                     mozilla::gfx::YUVColorSpace aColorSpace,
                                     bool aFullRange,
@@ -326,12 +300,10 @@ class WaylandSurface final {
   // Force release/detele all transactions and wl_buffers attached to them.
   void ReleaseAllWaylandTransactionsLocked(WaylandSurfaceLock& aSurfaceLock);
 
-  void SetVSyncCallbackLocked(const WaylandSurfaceLock& aProofOfLock);
-  void ClearVSyncCallbackLocked(const WaylandSurfaceLock& aProofOfLock);
-  bool HasEmulatedVSyncCallbackLocked(
+  void RequestFrameCallbackLocked(const WaylandSurfaceLock& aProofOfLock);
+  void ClearFrameCallbackLocked(const WaylandSurfaceLock& aProofOfLock);
+  bool HasEmulatedFrameCallbackLocked(
       const WaylandSurfaceLock& aProofOfLock) const;
-  bool IsEmulatedVSyncEnabledLocked(const WaylandSurfaceLock& aProofOfLock);
-  void RequestEmulatedVSyncLocked(const WaylandSurfaceLock& aProofOfLock);
 
   void ClearScaleLocked(const WaylandSurfaceLock& aProofOfLock);
 
@@ -354,7 +326,6 @@ class WaylandSurface final {
   mozilla::Atomic<bool, mozilla::Relaxed> mIsPendingGdkCleanup{false};
 
   std::function<void(void)> mGdkCommitCallback;
-  std::function<void(WaylandSurfaceLock& aProofOfLock)> mMapCallback;
   std::function<void(void)> mUnmapCallback;
 
   DesktopIntSize mSize;
@@ -417,24 +388,21 @@ class WaylandSurface final {
   // Frame callback for mIsVisible flag
   wl_callback* mVisibleFrameCallback = nullptr;
 
-  // VSync callback handler called every frame or by time for emulated ones.
-  struct VSyncCallback {
-    std::function<void(wl_callback*, uint32_t, bool)> mCb = nullptr;
+  // Frame callbacks of this surface
+  wl_callback* mFrameCallback = nullptr;
+
+  struct FrameCallback {
+    std::function<void(wl_callback*, uint32_t)> mCb = nullptr;
     bool mEmulated = false;
     bool IsSet() const { return !!mCb; }
   };
-  VSyncCallback mVSyncCallbackHandler;
 
-  wl_callback* mVSyncFrameCallback = nullptr;
+  bool mFrameCallbackEnabled = true;
+  std::function<void(bool)> mFrameCallbackStateHandler = nullptr;
 
-  bool mVSyncCallbackEnabled = true;
-  std::function<void(bool)> mVSyncCallbackStateHandler = nullptr;
-  std::function<bool(void)> mVSyncEmulateCheck = nullptr;
+  // Frame callback handler called every frame
+  FrameCallback mFrameCallbackHandler;
 
-  guint mEmulatedVSyncCallbackTimerID = 0;
-  constexpr static int sEmulatedVSyncCallbackTimeoutMs = (int)(1000.0 / 60.0);
-
-  // Frame callback used to set opaque region to wl_surface.
   wl_region* mPendingOpaqueRegion = nullptr;
   wl_callback* mOpaqueRegionFrameCallback = nullptr;
 
@@ -451,6 +419,8 @@ class WaylandSurface final {
                                                      struct wl_surface*);
   static void (*sGdkWaylandWindowRemoveCallbackSurface)(GdkWindow*,
                                                         struct wl_surface*);
+  guint mEmulatedFrameCallbackTimerID = 0;
+  constexpr static int sEmulatedFrameCallbackTimeoutMs = (int)(1000.0 / 60.0);
 
   // We use two scale systems in Firefox/Wayland. Ceiled (integer) scale and
   // fractional scale. Ceiled scale is easy to implement but comes with
@@ -490,10 +460,8 @@ class WaylandSurface final {
   // mScreenScale is set from main thread only but read from
   // different threads.
   mozilla::Atomic<double, mozilla::Relaxed> mScreenScale{sNoScale};
-  mozilla::Atomic<double, mozilla::Relaxed> mCoordinatesScale{sNoScale};
 
   wp_fractional_scale_v1* mFractionalScaleListener = nullptr;
-  xx_fractional_scale_v2* mCoordinatesScaleManager = nullptr;
 
   // mFractionalScaleCallback is called from
   // wp_fractional_scale_v1_add_listener when scale is changed.
@@ -515,4 +483,4 @@ class WaylandSurface final {
 
 }  // namespace mozilla::widget
 
-#endif /* MOZ_WAYLAND_SURFACE_H_ */
+#endif /* __MOZ_WAYLAND_SURFACE_H__ */

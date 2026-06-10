@@ -1,5 +1,4 @@
 <!DOCTYPE HTML>
-<title>Window.scroll* methods exception handling with various arguments</title>
 <link rel="help"
   href="https://drafts.csswg.org/cssom-view/#extensions-to-the-window-interface">
 <script src="/resources/testharness.js"></script>
@@ -9,8 +8,9 @@
   non-dictionary argument or with a dictionary whose 'behavior' field is invalid
   throws an exception.
 -->
-<div style="height: 1000px; width: 1000px;"></div>
-
+<div style="height: 1000px; width: 1000px; border: 1px solid black;">
+  Scrollable area to test.
+</div>
 <script type="text/javascript">
   "use strict";
 

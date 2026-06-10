@@ -15,10 +15,10 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <span>
+#include <string>
 #include <vector>
 
-#include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/data_channel_event_observer_interface.h"
 #include "api/data_channel_interface.h"
 #include "api/priority.h"
@@ -44,7 +44,7 @@ class DataChannelController : public SctpDataChannelControllerInterface,
                               public DataChannelSink {
  public:
   explicit DataChannelController(PeerConnectionInternal* pc) : pc_(pc) {}
-  ~DataChannelController() override;
+  ~DataChannelController();
 
   // Not copyable or movable.
   DataChannelController(DataChannelController&) = delete;
@@ -57,7 +57,7 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   RTCError SendData(StreamId sid,
                     const SendDataParams& params,
                     const CopyOnWriteBuffer& payload) override;
-  RTCError AddSctpDataStream(StreamId sid, PriorityValue priority) override;
+  void AddSctpDataStream(StreamId sid, PriorityValue priority) override;
   void RemoveSctpDataStream(StreamId sid) override;
   void OnChannelStateChanged(SctpDataChannel* channel,
                              DataChannelInterface::DataState state) override;
@@ -66,7 +66,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   void SetBufferedAmountLowThreshold(StreamId sid, size_t bytes) override;
 
   // Implements DataChannelSink.
-  void OnTransportConnected() override;
   void OnDataReceived(int channel_id,
                       DataMessageType type,
                       const CopyOnWriteBuffer& buffer) override;
@@ -75,7 +74,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   void OnReadyToSend() override;
   void OnTransportClosed(RTCError error) override;
   void OnBufferedAmountLow(int channel_id) override;
-  void OnMaxMessageSize(int max_message_size) override;
 
   // Called as part of destroying the owning PeerConnection.
   void PrepareForShutdown();
@@ -96,7 +94,7 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   // Creates channel and adds it to the collection of DataChannels that will
   // be offered in a SessionDescription, and wraps it in a proxy object.
   RTCErrorOr<scoped_refptr<DataChannelInterface>>
-  InternalCreateDataChannelWithProxy(absl::string_view label,
+  InternalCreateDataChannelWithProxy(const std::string& label,
                                      const InternalDataChannelInit& config);
   void AllocateSctpSids(SSLRole role);
 
@@ -119,7 +117,7 @@ class DataChannelController : public SctpDataChannelControllerInterface,
 
   // Creates a new SctpDataChannel object on the network thread.
   RTCErrorOr<scoped_refptr<SctpDataChannel>> CreateDataChannel(
-      absl::string_view label,
+      const std::string& label,
       InternalDataChannelInit& config) RTC_RUN_ON(network_thread());
 
   // Parses and handles open messages.  Returns true if the message is an open
@@ -155,7 +153,7 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   BuildObserverMessage(
       StreamId sid,
       DataMessageType type,
-      std::span<const uint8_t> payload,
+      ArrayView<const uint8_t> payload,
       DataChannelEventObserverInterface::Message::Direction direction) const
       RTC_RUN_ON(network_thread());
 
@@ -176,9 +174,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
       DataChannelUsage::kNeverUsed;
 
   std::unique_ptr<DataChannelEventObserverInterface> event_observer_;
-
-  // Cached value of max-message-size.
-  std::optional<int> max_message_size_ RTC_GUARDED_BY(network_thread());
 
   // Owning PeerConnection.
   PeerConnectionInternal* const pc_;

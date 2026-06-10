@@ -7,7 +7,6 @@ package org.mozilla.fenix.components.settings
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.mockk.spyk
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
@@ -16,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.spy
 
 @RunWith(AndroidJUnit4::class)
 class FeatureFlagPreferenceTest {
@@ -34,7 +34,7 @@ class FeatureFlagPreferenceTest {
     @Test
     fun `WHEN feature flag if true THEN feature acts like boolean preference`() {
         testPreferences.edit().putBoolean("key", true).apply()
-        val holder = spyk(FeatureFlagHolder(featureFlag = true))
+        val holder = spy(FeatureFlagHolder(featureFlag = true))
 
         assertTrue(holder.property)
 
@@ -55,7 +55,6 @@ class FeatureFlagPreferenceTest {
     private inner class FeatureFlagHolder(featureFlag: Boolean) : PreferencesHolder {
         override val preferences = testPreferences
 
-        @Suppress("DEPRECATION")
         var property by featureFlagBooleanPreference(
             "key",
             defaultValue = false,

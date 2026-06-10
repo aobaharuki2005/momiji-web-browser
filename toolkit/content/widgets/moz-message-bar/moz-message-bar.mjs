@@ -65,7 +65,6 @@ export default class MozMessageBar extends MozLitElement {
     supportPage: { type: String },
     messageL10nId: { type: String },
     messageL10nArgs: { type: String },
-    role: { type: String, reflect: true },
   };
 
   constructor() {
@@ -119,13 +118,6 @@ export default class MozMessageBar extends MozLitElement {
      * @type {string | undefined}
      */
     this.supportPage = undefined;
-
-    /**
-     * The ARIA role for the message bar.
-     *
-     * @type {string}
-     */
-    this.role = "alert";
   }
 
   onActionSlotchange() {
@@ -138,6 +130,11 @@ export default class MozMessageBar extends MozLitElement {
       "has-link-after",
       !!this.supportLinkEls.length || !!this.supportPage
     );
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.setAttribute("role", "alert");
   }
 
   disconnectedCallback() {
@@ -214,9 +211,9 @@ export default class MozMessageBar extends MozLitElement {
         href="chrome://global/content/elements/moz-message-bar.css"
       />
       <div class="container">
-        ${this.iconTemplate()}
         <div class="content">
           <div class="text-container">
+            ${this.iconTemplate()}
             <div class="text-content">
               ${this.headingTemplate()}
               <div>
@@ -250,14 +247,8 @@ export default class MozMessageBar extends MozLitElement {
   }
 
   dismiss() {
-    let event = new CustomEvent("message-bar:user-dismissed", {
-      bubbles: true,
-      cancelable: true,
-    });
-    this.dispatchEvent(event);
-    if (!event.defaultPrevented) {
-      this.close();
-    }
+    this.dispatchEvent(new CustomEvent("message-bar:user-dismissed"));
+    this.close();
   }
 
   close() {

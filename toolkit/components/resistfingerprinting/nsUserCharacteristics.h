@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsUserCharacteristics_h_
-#define _nsUserCharacteristics_h_
+#ifndef __nsUserCharacteristics_h__
+#define __nsUserCharacteristics_h__
 
 #include "ErrorList.h"
 #include "mozilla/MouseEvents.h"
@@ -29,10 +30,7 @@ extern "C" {  // Needed to call these in the gtest
 
 int MaxTouchPoints();
 
-// Populates only the MathML prefs metric for testing
-void PopulateMathMLPrefs();
-
 }  // extern "C"
 };  // namespace testing
 
-#endif /*  _nsUserCharacteristics_h_ */
+#endif /*  __nsUserCharacteristics_h__ */

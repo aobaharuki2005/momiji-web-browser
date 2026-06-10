@@ -8,25 +8,24 @@
 #[cfg(feature = "parsing")]
 use core::marker::PhantomData;
 
+#[cfg(feature = "formatting")]
+use serde::ser::Error as _;
 #[cfg(feature = "parsing")]
-use serde_core::Deserializer;
+use serde::Deserializer;
 #[cfg(feature = "formatting")]
-use serde_core::ser::Error as _;
-#[cfg(feature = "formatting")]
-use serde_core::{Serialize, Serializer};
+use serde::{Serialize, Serializer};
 
 #[cfg(feature = "parsing")]
 use super::Visitor;
-use crate::OffsetDateTime;
 use crate::format_description::well_known::Rfc3339;
+use crate::OffsetDateTime;
 
 /// Serialize an [`OffsetDateTime`] using the well-known RFC3339 format.
 #[cfg(feature = "formatting")]
-#[inline]
-pub fn serialize<S>(datetime: &OffsetDateTime, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
+pub fn serialize<S: Serializer>(
+    datetime: &OffsetDateTime,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
     datetime
         .format(&Rfc3339)
         .map_err(S::Error::custom)?
@@ -35,11 +34,7 @@ where
 
 /// Deserialize an [`OffsetDateTime`] from its RFC3339 representation.
 #[cfg(feature = "parsing")]
-#[inline]
-pub fn deserialize<'a, D>(deserializer: D) -> Result<OffsetDateTime, D::Error>
-where
-    D: Deserializer<'a>,
-{
+pub fn deserialize<'a, D: Deserializer<'a>>(deserializer: D) -> Result<OffsetDateTime, D::Error> {
     deserializer.deserialize_str(Visitor::<Rfc3339>(PhantomData))
 }
 
@@ -48,22 +43,17 @@ where
 ///
 /// Use this module in combination with serde's [`#[with]`][with] attribute.
 ///
-/// Note: Due to [serde-rs/serde#2878], you will need to apply `#[serde(default)]` if you want a
-/// missing field to deserialize as `None`.
-///
 /// [RFC3339 format]: https://tools.ietf.org/html/rfc3339#section-5.6
 /// [with]: https://serde.rs/field-attrs.html#with
-/// [serde-rs/serde#2878]: https://github.com/serde-rs/serde/issues/2878
 pub mod option {
     use super::*;
 
     /// Serialize an [`Option<OffsetDateTime>`] using the well-known RFC3339 format.
     #[cfg(feature = "formatting")]
-    #[inline]
-    pub fn serialize<S>(option: &Option<OffsetDateTime>, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
+    pub fn serialize<S: Serializer>(
+        option: &Option<OffsetDateTime>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
         option
             .map(|odt| odt.format(&Rfc3339))
             .transpose()
@@ -73,11 +63,9 @@ pub mod option {
 
     /// Deserialize an [`Option<OffsetDateTime>`] from its RFC3339 representation.
     #[cfg(feature = "parsing")]
-    #[inline]
-    pub fn deserialize<'a, D>(deserializer: D) -> Result<Option<OffsetDateTime>, D::Error>
-    where
-        D: Deserializer<'a>,
-    {
+    pub fn deserialize<'a, D: Deserializer<'a>>(
+        deserializer: D,
+    ) -> Result<Option<OffsetDateTime>, D::Error> {
         deserializer.deserialize_option(Visitor::<Option<Rfc3339>>(PhantomData))
     }
 }

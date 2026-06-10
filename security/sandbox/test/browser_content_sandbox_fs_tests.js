@@ -75,9 +75,10 @@ async function createTempFile() {
       createSymlink
     );
     ok(!symlinkCreated.ok, "created a symlink in temp failed");
+    const expectedError = isLinux() ? lazy.LIBC.EACCES : lazy.LIBC.EPERM;
     is(
       symlinkCreated.code,
-      lazy.LIBC.EPERM,
+      expectedError,
       "created a symlink in temp failed with access denied"
     );
   }

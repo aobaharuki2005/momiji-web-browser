@@ -27,7 +27,7 @@ class PacketReceiver {
   using OnUndemuxablePacketHandler =
       absl::AnyInvocable<bool(const RtpPacketReceived& parsed_packet)>;
 
-  // Can be called on the network thread or the worker thread.
+  // Must be called on the worker thread.
   // If `media_type` is not Audio or Video, packets may be used for BWE
   // calculations but are not demuxed.
   virtual void DeliverRtpPacket(

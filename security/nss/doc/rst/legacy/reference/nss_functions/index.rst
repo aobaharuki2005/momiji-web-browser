@@ -16,6 +16,7 @@ NSS functions
    -  Deprecated - function should no longer be used.
    -  Updated - function has new arguments such as new flag or addition to structure.
 
+.. _ssl_functions:
 
 `SSL functions <#ssl_functions>`__
 ----------------------------------
@@ -37,6 +38,7 @@ NSS functions
 
       {{page("/en-US/docs/NSS/Deprecated_SSL_functions")}}
 
+.. _certificate_functions:
 
 `Certificate functions <#certificate_functions>`__
 --------------------------------------------------
@@ -58,6 +60,7 @@ NSS functions
 
       {{page("/en-US/docs/NSS/Cryptography_functions")}}
 
+.. _utility_functions:
 
 `Utility functions <#utility_functions>`__
 ------------------------------------------
@@ -79,6 +82,7 @@ NSS functions
 
       {{page("/en-US/docs/NSS/S//MIME_functions")}}
 
+.. _pkcs_.237_functions:
 
 `PKCS #7 functions <#pkcs_.237_functions>`__
 --------------------------------------------
@@ -89,6 +93,7 @@ NSS functions
 
       {{page("/en-US/docs/NSS/PKCS_7_functions")}}
 
+.. _pkcs_.2312_functions:
 
 `PKCS #12 functions <#pkcs_.2312_functions>`__
 ----------------------------------------------

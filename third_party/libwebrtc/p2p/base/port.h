@@ -18,7 +18,6 @@
 #include <memory>
 #include <optional>
 #include <set>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -40,16 +39,22 @@
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/callback_list.h"
 #include "rtc_base/dscp.h"
-#include "rtc_base/net_helper.h"
 #include "rtc_base/network.h"
 #include "rtc_base/network/received_packet.h"
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/system/rtc_export.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/weak_ptr.h"
 
 namespace webrtc {
+
+// RFC 6544, TCP candidate encoding rules.
+extern const int DISCARD_PORT;
+extern const char TCPTYPE_ACTIVE_STR[];
+extern const char TCPTYPE_PASSIVE_STR[];
+extern const char TCPTYPE_SIMOPEN_STR[];
 
 enum class MdnsNameRegistrationStatus {
   // IP concealment with mDNS is not enabled or the name registration process is
@@ -103,6 +108,9 @@ class CandidateStats {
 
 typedef std::vector<CandidateStats> CandidateStatsList;
 
+const char* ProtoToString(ProtocolType proto);
+std::optional<ProtocolType> StringToProto(absl::string_view proto_name);
+
 struct ProtocolAddress {
   SocketAddress address;
   ProtocolType proto;
@@ -150,7 +158,7 @@ typedef std::set<SocketAddress> ServerAddresses;
 // Represents a local communication mechanism that can be used to create
 // connections to similar mechanisms of the other client.  Subclasses of this
 // one add support for specific mechanisms like local UDP ports.
-class RTC_EXPORT Port : public PortInterface {
+class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
  public:
   // A struct containing common arguments to creating a port. See also
   // CreateRelayPortArgs.
@@ -189,13 +197,6 @@ class RTC_EXPORT Port : public PortInterface {
   // Methods to set/get ICE role and tiebreaker values.
   IceRole GetIceRole() const override;
   void SetIceRole(IceRole role) override;
-
-  /*
-  int SendTo(std::span<const uint8_t> data,
-             const SocketAddress& addr,
-             const AsyncSocketPacketOptions& options,
-             bool payload) override = 0;
-  */
 
   void SetIceTiebreaker(uint64_t tiebreaker) override;
   uint64_t IceTiebreaker() const override;
@@ -268,57 +269,36 @@ class RTC_EXPORT Port : public PortInterface {
 
   // Fired when candidates are discovered by the port. When all candidates
   // are discovered that belong to port SignalAddressReady is fired.
-  [[deprecated("Use SubscribeCandidateReadyCallback(const void* tag, ...)")]]
   void SubscribeCandidateReadyCallback(
       absl::AnyInvocable<void(Port*, const Candidate&)> callback);
-  void SubscribeCandidateReadyCallback(
-      const void* tag,
-      absl::AnyInvocable<void(Port*, const Candidate&)> callback);
-  void NotifyCandidateReady(Port* port, const Candidate& candidate) {
-    RTC_DCHECK_RUN_ON(thread_);
-    candidate_ready_callback_list_.Send(this, candidate);
-  }
+  // Downstream code uses this signal. We will continue firing it along with the
+  // callback list. The signal can be deleted once all downstream usages are
+  // replaced with the new CallbackList implementation.
+  sigslot::signal2<Port*, const Candidate&> SignalCandidateReady;
   // Provides all of the above information in one handy object.
   const std::vector<Candidate>& Candidates() const override;
   // Fired when candidate discovery failed using certain server.
-  [[deprecated("Use SubscribeCandidateError(const void* tag, ...)")]]
   void SubscribeCandidateError(
-      std::function<void(Port*, const IceCandidateErrorEvent&)> callback);
-  void SubscribeCandidateError(
-      const void* tag,
       std::function<void(Port*, const IceCandidateErrorEvent&)> callback);
   void SendCandidateError(const IceCandidateErrorEvent& candidate_error_event);
 
   // SignalPortComplete is sent when port completes the task of candidates
   // allocation.
-  [[deprecated("Use SubscribePortComplete(const void* tag, ...)")]]
   void SubscribePortComplete(absl::AnyInvocable<void(Port*)> callback);
-  void SubscribePortComplete(const void* tag,
-                             absl::AnyInvocable<void(Port*)> callback);
-  void NotifyPortComplete(Port* port) {
-    RTC_DCHECK_RUN_ON(thread_);
-    port_complete_callback_list_.Send(this);
-  }
+  sigslot::signal1<Port*> SignalPortComplete;
 
   // This signal sent when port fails to allocate candidates and this port
   // can't be used in establishing the connections. When port is in shared mode
   // and port fails to allocate one of the candidates, port shouldn't send
   // this signal as other candidates might be usefull in establishing the
   // connection.
-  [[deprecated("Use SubscribePortError(const void* tag, ...)")]]
   void SubscribePortError(absl::AnyInvocable<void(Port*)> callback);
-  void SubscribePortError(const void* tag,
-                          absl::AnyInvocable<void(Port*)> callback);
-  void NotifyPortError(Port* port) {
-    RTC_DCHECK_RUN_ON(thread_);
-    port_error_callback_list_.Send(this);
-  }
+  // Downstream code uses this signal. We will continue firing it along with the
+  // callback list. The signal can be deleted once all downstream usages are
+  // replaced with the new CallbackList implementation.
+  sigslot::signal1<Port*> SignalPortError;
 
-  [[deprecated("Use SubscribePortDestroyed(const void* tag, ...)")]]
   void SubscribePortDestroyed(
-      std::function<void(PortInterface*)> callback) override;
-  void SubscribePortDestroyed(
-      const void* tag,
       std::function<void(PortInterface*)> callback) override;
   void SendPortDestroyed(Port* port);
   // Returns a map containing all of the connections of this port, keyed by the
@@ -419,16 +399,7 @@ class RTC_EXPORT Port : public PortInterface {
   void SubscribeRoleConflict(absl::AnyInvocable<void()> callback) override;
   void NotifyRoleConflict() override;
 
-  [[deprecated("Use SubscribeUnknownAddress(const void* tag, ...)")]]
   void SubscribeUnknownAddress(
-      absl::AnyInvocable<void(PortInterface*,
-                              const SocketAddress&,
-                              ProtocolType,
-                              IceMessage*,
-                              const std::string&,
-                              bool)> callback) override;
-  void SubscribeUnknownAddress(
-      const void* tag,
       absl::AnyInvocable<void(PortInterface*,
                               const SocketAddress&,
                               ProtocolType,
@@ -442,28 +413,16 @@ class RTC_EXPORT Port : public PortInterface {
                             const std::string& rf,
                             bool port_muxed) override;
 
-  // This function causes strange linker behavior if it's inlined,
-  // otherwise it would have been ABSL_DEPRECATE_AND_INLINE.
-  [[deprecated("Use tagged version with span")]] void SubscribeReadPacket(
+  void SubscribeReadPacket(
       absl::AnyInvocable<
           void(PortInterface*, const char*, size_t, const SocketAddress&)>
           callback) override;
-
-  void SubscribeReadPacket(
-      const void* tag,
-      absl::AnyInvocable<void(PortInterface*,
-                              std::span<const uint8_t>,
-                              const SocketAddress&)> callback) override;
-
   void NotifyReadPacket(PortInterface* prot,
-                        std::span<const uint8_t> data,
+                        const char* data,
+                        size_t size,
                         const SocketAddress& remote_address) override;
 
-  [[deprecated("Use SubscribeSentPacket(const void* tag, ...)")]]
   void SubscribeSentPacket(
-      absl::AnyInvocable<void(const SentPacketInfo&)> callback) override;
-  void SubscribeSentPacket(
-      const void* tag,
       absl::AnyInvocable<void(const SentPacketInfo&)> callback) override;
   void NotifySentPacket(const SentPacketInfo& packet) override;
 
@@ -502,15 +461,29 @@ class RTC_EXPORT Port : public PortInterface {
   // then we will signal the client.
   void OnReadPacket(const ReceivedIpPacket& packet, ProtocolType proto);
 
+  [[deprecated(
+      "Use OnReadPacket(const ReceivedIpPacket& packet, ProtocolType "
+      "proto)")]] void
+  OnReadPacket(const char* data,
+               size_t size,
+               const SocketAddress& addr,
+               ProtocolType proto) {
+    OnReadPacket(ReceivedIpPacket::CreateFromLegacy(
+                     data, size, /*packet_time_us = */ -1, addr),
+                 proto);
+  }
+
   // If the given data comprises a complete and correct STUN message then the
   // return value is true, otherwise false. If the message username corresponds
   // with this port's username fragment, msg will contain the parsed STUN
   // message.  Otherwise, the function may send a STUN response internally.
   // remote_username contains the remote fragment of the STUN username.
-  bool GetStunMessage(std::span<const uint8_t> data,
+  bool GetStunMessage(const char* data,
+                      size_t size,
                       const SocketAddress& addr,
                       std::unique_ptr<IceMessage>* out_msg,
                       std::string* out_username) override;
+
   // Checks if the address in addr is compatible with the port's ip.
   bool IsCompatibleAddress(const SocketAddress& addr);
 
@@ -568,8 +541,6 @@ class RTC_EXPORT Port : public PortInterface {
 
   void OnNetworkTypeChanged(const ::webrtc::Network* network);
 
-  void OnNetworkSliceChanged(const ::webrtc::Network* network);
-
   void OnRequestLocalNetworkAccessPermission(
       LocalNetworkAccessPermissionInterface* permission_query,
       absl::AnyInvocable<void(LocalNetworkAccessPermissionStatus)> callback,
@@ -623,17 +594,6 @@ class RTC_EXPORT Port : public PortInterface {
   std::vector<std::unique_ptr<LocalNetworkAccessPermissionInterface>>
       permission_queries_ RTC_GUARDED_BY(thread_);
 
-  CallbackList<PortInterface*,
-               const SocketAddress&,
-               ProtocolType,
-               IceMessage*,
-               const std::string&,
-               bool>
-      unknown_address_callbacks_;
-  CallbackList<PortInterface*, std::span<const uint8_t>, const SocketAddress&>
-      read_packet_callbacks_;
-  CallbackList<const SentPacketInfo&> sent_packet_callbacks_;
-
   CallbackList<PortInterface*> port_destroyed_callback_list_
       RTC_GUARDED_BY(thread_);
   CallbackList<Port*, const IceCandidateErrorEvent&>
@@ -647,6 +607,13 @@ class RTC_EXPORT Port : public PortInterface {
 
   // Keep as the last member variable.
   WeakPtrFactory<Port> weak_factory_ RTC_GUARDED_BY(thread_);
+
+  SignalTrampoline<PortInterface, &PortInterface::SignalUnknownAddress>
+      unknown_address_trampoline_;
+  SignalTrampoline<PortInterface, &PortInterface::SignalReadPacket>
+      read_packet_trampoline_;
+  SignalTrampoline<PortInterface, &PortInterface::SignalSentPacket>
+      sent_packet_trampoline_;
 };
 
 }  //  namespace webrtc

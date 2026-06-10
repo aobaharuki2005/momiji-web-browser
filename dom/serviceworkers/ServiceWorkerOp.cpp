@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,6 +8,7 @@
 
 #include <utility>
 
+#include "ServiceWorkerCloneData.h"
 #include "ServiceWorkerOpPromise.h"
 #include "ServiceWorkerShutdownState.h"
 #include "js/Exception.h"  // JS::ExceptionStack, JS::StealPendingExceptionStack
@@ -1094,7 +1097,11 @@ class MessageEventOp final : public ExtendableEventOp {
 
   MessageEventOp(ServiceWorkerOpArgs&& aArgs,
                  std::function<void(const ServiceWorkerOpResult&)>&& aCallback)
-      : ExtendableEventOp(std::move(aArgs), std::move(aCallback)) {}
+      : ExtendableEventOp(std::move(aArgs), std::move(aCallback)),
+        mData(new ServiceWorkerCloneData()) {
+    mData->CopyFromClonedMessageData(
+        mArgs.get_ServiceWorkerMessageEventOpArgs().clonedData());
+  }
 
  private:
   ~MessageEventOp() = default;
@@ -1105,25 +1112,21 @@ class MessageEventOp final : public ExtendableEventOp {
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
     MOZ_ASSERT(!mPromiseHolder.IsEmpty());
 
-    ServiceWorkerMessageEventOpArgs& args =
-        mArgs.get_ServiceWorkerMessageEventOpArgs();
-
     JS::Rooted<JS::Value> messageData(aCx);
     nsCOMPtr<nsIGlobalObject> sgo = aWorkerPrivate->GlobalScope();
     ErrorResult rv;
-
-    if (args.clonedData()) {
-      args.clonedData()->Read(aCx, &messageData, rv);
+    if (!mData->IsErrorMessageData()) {
+      mData->Read(aCx, &messageData, rv);
     }
 
     // If mData is an error message data, then it means that it failed to
     // serialize on the caller side because it contains a shared memory object.
     // If deserialization fails, we will fire a messageerror event.
-    const bool deserializationFailed = rv.Failed() || !args.clonedData();
+    const bool deserializationFailed =
+        rv.Failed() || mData->IsErrorMessageData();
 
     Sequence<OwningNonNull<MessagePort>> ports;
-    if (args.clonedData() &&
-        !args.clonedData()->TakeTransferredPortsAsSequence(ports)) {
+    if (!mData->TakeTransferredPortsAsSequence(ports)) {
       RejectAll(NS_ERROR_FAILURE);
       rv.SuppressException();
       return false;
@@ -1141,7 +1144,8 @@ class MessageEventOp final : public ExtendableEventOp {
       init.mPorts = std::move(ports);
     }
 
-    PostMessageSource& ipcSource = args.source();
+    PostMessageSource& ipcSource =
+        mArgs.get_ServiceWorkerMessageEventOpArgs().source();
     nsCString originSource;
     switch (ipcSource.type()) {
       case PostMessageSource::TClientInfoAndState:
@@ -1203,6 +1207,8 @@ class MessageEventOp final : public ExtendableEventOp {
 
     return !DispatchFailed(rv2);
   }
+
+  RefPtr<ServiceWorkerCloneData> mData;
 };
 
 class UpdateIsOnContentBlockingAllowListOp final : public ExtendableEventOp {
@@ -1519,14 +1525,14 @@ void FetchEventOp::AsyncLog(const nsCString& aScriptSpec, uint32_t aLineNumber,
 }
 
 void FetchEventOp::GetRequestURL(nsAString& aOutRequestURL) {
-  nsTArray<NotNull<RefPtr<nsIURI>>>& urls =
+  nsTArray<nsCString>& urls =
       mArgs.get_ParentToChildServiceWorkerFetchEventOpArgs()
           .common()
           .internalRequest()
           .urlList();
   MOZ_ASSERT(!urls.IsEmpty());
 
-  CopyUTF8toUTF16(urls.LastElement()->GetSpecOrDefault(), aOutRequestURL);
+  CopyUTF8toUTF16(urls.LastElement(), aOutRequestURL);
 }
 
 void FetchEventOp::ResolvedCallback(JSContext* aCx,
@@ -1646,7 +1652,7 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
   // responses always have a URL does not break.
   if (NS_WARN_IF((response->Type() == ResponseType::Opaque ||
                   response->Type() == ResponseType::Cors) &&
-                 !ir->GetUnfilteredURL())) {
+                 ir->GetUnfilteredURL().IsEmpty())) {
     MOZ_DIAGNOSTIC_CRASH("Cors or opaque Response without a URL");
     return;
   }
@@ -1656,8 +1662,7 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
     // XXXtt: Will have a pref to enable the quirk response in bug 1419684.
     // The variadic template provided by StringArrayAppender requires exactly
     // an nsString.
-    NS_ConvertUTF8toUTF16 responseURL(
-        ir->GetUnfilteredURL()->GetSpecOrDefault());
+    NS_ConvertUTF8toUTF16 responseURL(ir->GetUnfilteredURL());
     autoCancel.SetCancelMessage("CorsResponseForSameOriginRequest"_ns,
                                 requestURL, responseURL);
     return;
@@ -1683,20 +1688,18 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
 
   autoCancel.Reset();
 
-  ChildToParentSynthesizeResponseArgs synthesizeResponseArgs;
-  synthesizeResponseArgs.closure() = mRespondWithClosure.ref();
-  synthesizeResponseArgs.timeStamps() =
-      FetchEventTimeStamps(mFetchHandlerStart, mFetchHandlerFinish);
-  ir->ToChildToParentInternalResponse(
-      &synthesizeResponseArgs.internalResponse());
-
   // https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm Step 26: If
   // eventHandled is not null, then resolve eventHandled.
+  //
+  // mRespondWithPromiseHolder will resolve a MozPromise that will resolve on
+  // the worker owner's thread, so it's fine to resolve the mHandled promise now
+  // because content will not interfere with respondWith getting the Response to
+  // where it's going.
   mHandled->MaybeResolveWithUndefined();
-
   mRespondWithPromiseHolder.Resolve(
-      FetchEventRespondWithResult(
-          std::make_pair(std::move(ir), std::move(synthesizeResponseArgs))),
+      FetchEventRespondWithResult(std::make_tuple(
+          std::move(ir), mRespondWithClosure.ref(),
+          FetchEventTimeStamps(mFetchHandlerStart, mFetchHandlerFinish))),
       __func__);
 }
 
@@ -1859,14 +1862,10 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
             GetCurrentSerialEventTarget(), __func__,
             [self, globalObjectAsSupports](
                 SafeRefPtr<InternalResponse>&& aPreloadResponse) {
-              // let's complete the promise holder before MaybeResolve
+              self->mPreloadResponse->MaybeResolve(
+                  MakeRefPtr<Response>(globalObjectAsSupports,
+                                       std::move(aPreloadResponse), nullptr));
               self->mPreloadResponseAvailablePromiseRequestHolder.Complete();
-              RefPtr<Promise> preloadResponse = self->mPreloadResponse;
-              if (preloadResponse) {
-                preloadResponse->MaybeResolve(
-                    MakeRefPtr<Response>(globalObjectAsSupports,
-                                         std::move(aPreloadResponse), nullptr));
-              }
             },
             [self](int) {
               self->mPreloadResponseAvailablePromiseRequestHolder.Complete();
@@ -1905,14 +1904,10 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [self, globalObjectAsSupports](ResponseEndArgs&& aArgs) {
-              // let's complete the promise holder before MaybeReject
-              self->mPreloadResponseEndPromiseRequestHolder.Complete();
               if (aArgs.endReason() == FetchDriverObserver::eAborted) {
-                RefPtr<Promise> preloadResponse = self->mPreloadResponse;
-                if (preloadResponse) {
-                  preloadResponse->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-                }
+                self->mPreloadResponse->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
               }
+              self->mPreloadResponseEndPromiseRequestHolder.Complete();
             },
             [self](int) {
               self->mPreloadResponseEndPromiseRequestHolder.Complete();

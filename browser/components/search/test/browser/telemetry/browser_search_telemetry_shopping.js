@@ -25,63 +25,27 @@ const BASE_TEST_PROVIDER = {
       default: true,
     },
   ],
-  impressionAttributes: [
-    {
-      key: "is_shopping_page",
-      url: {
-        regexp: "&page=shopping",
-      },
-    },
-  ],
 };
 
 const TEST_PROVIDER_INFO_1 = [
   {
     ...BASE_TEST_PROVIDER,
-    impressionAttributes: [
-      {
-        key: "is_shopping_page",
-        url: {
-          regexp: "&page=shopping&",
-        },
-      },
-      {
-        key: "shopping_tab_displayed",
-        element: {
-          selector: "nav a#shopping",
-          attributeName: "href",
-          regexp: "&page=shopping&",
-          component: {
-            type: "shopping_tab",
-            countImpressions: true,
-          },
-        },
-      },
-    ],
+    shoppingTab: {
+      selector: "nav a",
+      regexp: "&page=shopping&",
+      inspectRegexpInSERP: true,
+    },
   },
 ];
 
 const TEST_PROVIDER_INFO_2 = [
   {
     ...BASE_TEST_PROVIDER,
-    impressionAttributes: [
-      {
-        key: "is_shopping_page",
-        url: {
-          regexp: "&page=shopping",
-        },
-      },
-      {
-        key: "shopping_tab_displayed",
-        element: {
-          selector: "nav a#shopping",
-          component: {
-            type: "shopping_tab",
-            countImpressions: true,
-          },
-        },
-      },
-    ],
+    shoppingTab: {
+      selector: "nav a#shopping",
+      regexp: "&page=shopping&",
+      inspectRegexpInSERP: false,
+    },
   },
 ];
 
@@ -109,8 +73,14 @@ async function loadSerpAndClickShoppingTab(page) {
   assertSERPTelemetry([
     {
       impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -130,8 +100,14 @@ async function loadSerpAndClickShoppingTab(page) {
   assertSERPTelemetry([
     {
       impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
+        is_signed_in: "false",
       },
       engagements: [
         {

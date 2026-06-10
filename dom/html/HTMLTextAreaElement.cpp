@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -115,8 +117,15 @@ void HTMLTextAreaElement::Select() {
     }
   }
 
-  // FIXME: The <input> equivalent has ScrollAfterSelection::No
   SetSelectionRange(0, UINT32_MAX, Optional<nsAString>(), IgnoreErrors());
+}
+
+void HTMLTextAreaElement::SelectAll() {
+  // FIXME(emilio): Should we try to call Select(), which will avoid flushing?
+  if (nsTextControlFrame* tf =
+          do_QueryFrame(GetPrimaryFrame(FlushType::Frames))) {
+    tf->SelectAll();
+  }
 }
 
 enum class Wrap {
@@ -195,6 +204,47 @@ nsFrameSelection* HTMLTextAreaElement::GetIndependentFrameSelection() const {
   return mState->GetIndependentFrameSelection();
 }
 
+nsresult HTMLTextAreaElement::BindToFrame(nsTextControlFrame* aFrame) {
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
+  MOZ_ASSERT(mState);
+  return mState->BindToFrame(aFrame);
+}
+
+void HTMLTextAreaElement::UnbindFromFrame(nsTextControlFrame* aFrame) {
+  MOZ_ASSERT(mState);
+  if (aFrame) {
+    mState->UnbindFromFrame(aFrame);
+  }
+}
+
+nsresult HTMLTextAreaElement::CreateEditor() {
+  MOZ_ASSERT(mState);
+  return mState->PrepareEditor();
+}
+
+void HTMLTextAreaElement::SetPreviewValue(const nsAString& aValue) {
+  MOZ_ASSERT(mState);
+  mState->SetPreviewText(aValue, true);
+}
+
+void HTMLTextAreaElement::GetPreviewValue(nsAString& aValue) {
+  MOZ_ASSERT(mState);
+  mState->GetPreviewText(aValue);
+}
+
+void HTMLTextAreaElement::EnablePreview() {
+  if (mIsPreviewEnabled) {
+    return;
+  }
+
+  mIsPreviewEnabled = true;
+  // Reconstruct the frame to append an anonymous preview node
+  nsLayoutUtils::PostRestyleEvent(this, RestyleHint{0},
+                                  nsChangeHint_ReconstructFrame);
+}
+
+bool HTMLTextAreaElement::IsPreviewEnabled() { return mIsPreviewEnabled; }
+
 nsresult HTMLTextAreaElement::SetValueInternal(
     const nsAString& aValue, const ValueSetterOptions& aOptions) {
   MOZ_ASSERT(mState);
@@ -251,6 +301,9 @@ void HTMLTextAreaElement::SetValueChanged(bool aValueChanged) {
 
   bool previousValue = mValueChanged;
   mValueChanged = aValueChanged;
+  if (!aValueChanged && !mState->IsEmpty()) {
+    mState->EmptyValue();
+  }
   if (mValueChanged == previousValue) {
     return;
   }
@@ -347,9 +400,13 @@ nsChangeHint HTMLTextAreaElement::GetAttributeChangeHint(
   nsChangeHint retval =
       nsGenericHTMLFormControlElementWithState::GetAttributeChangeHint(
           aAttribute, aModType);
+
+  const bool isAdditionOrRemoval = IsAdditionOrRemoval(aModType);
   if (aAttribute == nsGkAtoms::rows || aAttribute == nsGkAtoms::cols) {
     retval |= NS_STYLE_HINT_REFLOW;
   } else if (aAttribute == nsGkAtoms::wrap) {
+    retval |= nsChangeHint_ReconstructFrame;
+  } else if (aAttribute == nsGkAtoms::placeholder && isAdditionOrRemoval) {
     retval |= nsChangeHint_ReconstructFrame;
   }
   return retval;
@@ -378,17 +435,10 @@ bool HTMLTextAreaElement::IsDisabledForEvents(WidgetEvent* aEvent) {
   return IsElementDisabledForEvents(aEvent, GetPrimaryFrame());
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY
 void HTMLTextAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   aVisitor.mCanHandle = false;
   if (IsDisabledForEvents(aVisitor.mEvent)) {
     return;
-  }
-
-  if (NeedToInitializeEditorForEvent(aVisitor)) {
-    // FIXME(bug 2020902): This is rather evil. Remove
-    // CAN_RUN_SCRIPT_BOUNDARY when removing this.
-    mState->EnsureEditorInitialized();
   }
 
   // Don't dispatch a second select event if we are already handling
@@ -398,12 +448,11 @@ void HTMLTextAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
       return;
     }
     mHandlingSelect = true;
-  } else if (aVisitor.mEvent->mMessage == eFocus ||
-             aVisitor.mEvent->mMessage == eBlur) {
-    // - eFocus: Set mWantsPreHandleEvent and set mFocusedValue in
-    // PreHandleEvent before TextEditor handles the focus.
-    // - eBlur: Set mWantsPreHandleEvent and fire change event in PreHandleEvent
-    // to prevent it breaks event target chain creation.
+  }
+
+  if (aVisitor.mEvent->mMessage == eBlur) {
+    // Set mWantsPreHandleEvent and fire change event in PreHandleEvent to
+    // prevent it breaks event target chain creation.
     aVisitor.mWantsPreHandleEvent = true;
   }
 
@@ -411,10 +460,7 @@ void HTMLTextAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 }
 
 nsresult HTMLTextAreaElement::PreHandleEvent(EventChainVisitor& aVisitor) {
-  if (aVisitor.mEvent->mMessage == eFocus) {
-    // XXX Should we restrict this only when the event is trusted?
-    GetValueInternal(mFocusedValue);
-  } else if (aVisitor.mEvent->mMessage == eBlur) {
+  if (aVisitor.mEvent->mMessage == eBlur) {
     // Fire onchange (if necessary), before we do the blur, bug 370521.
     FireChangeEventIfNeeded();
   }
@@ -437,7 +483,7 @@ void HTMLTextAreaElement::FireChangeEventIfNeeded() {
   }
 
   // Dispatch the change event.
-  mFocusedValue = std::move(value);
+  mFocusedValue = value;
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(), this, u"change"_ns,
                                        CanBubble::eYes, Cancelable::eNo);
 }
@@ -445,6 +491,9 @@ void HTMLTextAreaElement::FireChangeEventIfNeeded() {
 nsresult HTMLTextAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   if (aVisitor.mEvent->mMessage == eFormSelect) {
     mHandlingSelect = false;
+  }
+  if (aVisitor.mEvent->mMessage == eFocus) {
+    GetValueInternal(mFocusedValue);
   }
   return NS_OK;
 }
@@ -593,7 +642,11 @@ nsresult HTMLTextAreaElement::Reset() {
   GetDefaultValue(resetVal, IgnoreErrors());
   SetValueChanged(false);
   SetUserInteracted(false);
-  return SetValueInternal(resetVal, ValueSetterOption::ByInternalAPI);
+
+  nsresult rv = SetValueInternal(resetVal, ValueSetterOption::ByInternalAPI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -724,19 +777,10 @@ nsresult HTMLTextAreaElement::BindToTree(BindContext& aContext,
   // And now make sure our state is up to date
   UpdateValidityElementStates(false);
 
-  if (IsInComposedDoc()) {
-    AttachAndSetUAShadowRoot(NotifyUAWidget::No, DelegatesFocus::No);
-    if (auto* sr = GetShadowRoot()) {
-      SetupShadowTree(*sr, /* aNotify = */ false);
-    }
-  }
   return rv;
 }
 
 void HTMLTextAreaElement::UnbindFromTree(UnbindContext& aContext) {
-  if (IsInComposedDoc()) {
-    TeardownUAShadowRoot(NotifyUAWidget::No);
-  }
   nsGenericHTMLFormControlElementWithState::UnbindFromTree(aContext);
 
   // We might be no longer disabled because of parent chain changed.
@@ -843,14 +887,13 @@ void HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     } else if (aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
       UpdateValidityElementStates(aNotify);
-      if (auto* editor = GetExtantTextEditor()) {
-        editor->SetMaxTextLength(UsedMaxLength());
-      }
     } else if (aName == nsGkAtoms::minlength) {
       UpdateTooShortValidityState();
       UpdateValidityElementStates(aNotify);
     } else if (aName == nsGkAtoms::placeholder) {
-      UpdatePlaceholder(aOldValue, aValue);
+      if (nsTextControlFrame* f = do_QueryFrame(GetPrimaryFrame())) {
+        f->PlaceholderChanged(aOldValue, aValue);
+      }
       UpdatePlaceholderShownState();
     } else if (aName == nsGkAtoms::dir && aValue &&
                aValue->Equals(nsGkAtoms::_auto, eIgnoreCase)) {
@@ -969,9 +1012,9 @@ nsresult HTMLTextAreaElement::GetValidationMessage(
       strTextLength.AppendInt(textLength);
 
       rv = nsContentUtils::FormatMaybeLocalizedString(
-          message, PropertiesFile::DOM_PROPERTIES, "FormValidationTextTooLong",
+          message, nsContentUtils::eDOM_PROPERTIES, "FormValidationTextTooLong",
           OwnerDoc(), strMaxLength, strTextLength);
-      aValidationMessage = std::move(message);
+      aValidationMessage = message;
     } break;
     case VALIDITY_STATE_TOO_SHORT: {
       nsAutoString message;
@@ -984,16 +1027,17 @@ nsresult HTMLTextAreaElement::GetValidationMessage(
       strTextLength.AppendInt(textLength);
 
       rv = nsContentUtils::FormatMaybeLocalizedString(
-          message, PropertiesFile::DOM_PROPERTIES, "FormValidationTextTooShort",
-          OwnerDoc(), strMinLength, strTextLength);
-      aValidationMessage = std::move(message);
+          message, nsContentUtils::eDOM_PROPERTIES,
+          "FormValidationTextTooShort", OwnerDoc(), strMinLength,
+          strTextLength);
+      aValidationMessage = message;
     } break;
     case VALIDITY_STATE_VALUE_MISSING: {
       nsAutoString message;
       rv = nsContentUtils::GetMaybeLocalizedString(
-          PropertiesFile::DOM_PROPERTIES, "FormValidationValueMissing",
+          nsContentUtils::eDOM_PROPERTIES, "FormValidationValueMissing",
           OwnerDoc(), message);
-      aValidationMessage = std::move(message);
+      aValidationMessage = message;
     } break;
     default:
       rv =
@@ -1002,6 +1046,12 @@ nsresult HTMLTextAreaElement::GetValidationMessage(
 
   return rv;
 }
+
+bool HTMLTextAreaElement::IsSingleLineTextControl() const { return false; }
+
+bool HTMLTextAreaElement::IsTextArea() const { return true; }
+
+bool HTMLTextAreaElement::IsPasswordTextControl() const { return false; }
 
 Maybe<int32_t> HTMLTextAreaElement::GetCols() {
   const nsAttrValue* value = GetParsedAttr(nsGkAtoms::cols);
@@ -1038,6 +1088,11 @@ bool HTMLTextAreaElement::ValueChanged() const { return mValueChanged; }
 void HTMLTextAreaElement::GetTextEditorValue(nsAString& aValue) const {
   MOZ_ASSERT(mState);
   mState->GetValue(aValue, /* aForDisplay = */ true);
+}
+
+void HTMLTextAreaElement::InitializeKeyboardEventListeners() {
+  MOZ_ASSERT(mState);
+  mState->InitializeKeyboardEventListeners();
 }
 
 void HTMLTextAreaElement::UpdatePlaceholderShownState() {

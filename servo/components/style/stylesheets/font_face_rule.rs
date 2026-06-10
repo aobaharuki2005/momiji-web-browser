@@ -4,4 +4,4 @@
 
 #![allow(missing_docs)]
 
-pub use crate::font_face::FontFaceRule;
+pub use crate::font_face::FontFaceRuleData as FontFaceRule;

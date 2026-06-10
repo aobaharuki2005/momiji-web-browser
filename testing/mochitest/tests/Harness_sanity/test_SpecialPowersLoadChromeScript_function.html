@@ -13,6 +13,7 @@ SimpleTest.waitForExplicitFinish();
 
 
 var script = SpecialPowers.loadChromeScript(function loadChromeScriptTest() {
+  /* eslint-env mozilla/chrome-script */
   // Copied from SpecialPowersLoadChromeScript.js
 
   // Just receive 'foo' message and forward it back

@@ -15,15 +15,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/listeners/DataChannelListener.sys.mjs",
   NetworkRequest: "chrome://remote/content/shared/NetworkRequest.sys.mjs",
   NetworkResponse: "chrome://remote/content/shared/NetworkResponse.sys.mjs",
-  SessionDataCategory:
-    "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
 });
 
 class NetworkModule extends WindowGlobalBiDiModule {
   #beforeStopRequestListener;
   #cachedResourceListener;
   #dataChannelListener;
-  #hasResponseCollector;
   #subscribedEvents;
 
   constructor(messageHandler) {
@@ -52,9 +49,6 @@ class NetworkModule extends WindowGlobalBiDiModule {
       "data-channel-opened",
       this.#onDataChannelOpened
     );
-
-    // This flag will be updated when processing session data.
-    this.#hasResponseCollector = false;
 
     // Set of event names which have active subscriptions.
     this.#subscribedEvents = new Set();
@@ -92,9 +86,7 @@ class NetworkModule extends WindowGlobalBiDiModule {
     const response = new lazy.NetworkResponse(data.channel, {
       fromCache: true,
       fromServiceWorker: false,
-      hasResponseCollector: this.#hasResponseCollector,
       isCachedResource: true,
-      memoryCacheKey: data.memoryCacheKey,
     });
 
     this.#emitWindowGlobalNetworkResource(data.channel, request, response);
@@ -189,10 +181,6 @@ class NetworkModule extends WindowGlobalBiDiModule {
       for (const { value } of filteredSessionData) {
         this.#subscribeEvent(value);
       }
-    } else if (category === lazy.SessionDataCategory.ResponseCollector) {
-      this.#hasResponseCollector = params.sessionData.some(item =>
-        this.messageHandler.matchesContext(item.contextDescriptor)
-      );
     }
   }
 }

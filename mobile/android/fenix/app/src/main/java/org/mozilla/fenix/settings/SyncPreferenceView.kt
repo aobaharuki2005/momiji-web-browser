@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings
 
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
@@ -23,7 +22,6 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
  *
  * @param syncPreference The sync [SyncPreference] to update and handle navigation.
  * @param lifecycleOwner View lifecycle owner used to determine when to cancel UI jobs.
- * @param coroutineScope [CoroutineScope] used to launch coroutines for engine state changes.
  * @param accountManager An instance of [FxaAccountManager].
  * @param syncEngine The sync engine that will be used for the sync status lookup.
  * @param loggedOffTitle Text label for the setting when user is not logged in.
@@ -32,12 +30,10 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
  * @param onReconnectClicked A callback executed when the [syncPreference] is clicked with a
  * preference status of "Reconnect".
  */
-@Suppress("LongParameterList")
 class SyncPreferenceView(
     private val syncPreference: SyncPreference,
-    private val lifecycleOwner: LifecycleOwner,
-    private val coroutineScope: CoroutineScope,
-    private val accountManager: FxaAccountManager,
+    lifecycleOwner: LifecycleOwner,
+    accountManager: FxaAccountManager,
     private val syncEngine: SyncEngine,
     private val loggedOffTitle: String,
     private val loggedInTitle: String,
@@ -87,10 +83,8 @@ class SyncPreferenceView(
             isChecked = syncStatus
 
             setOnPreferenceChangeListener { _, newValue ->
-                coroutineScope.launch {
-                    accountManager.setEngineEnabled(syncEngine, newValue as Boolean)
-                }
-                setSwitchCheckedState(newValue as Boolean)
+                SyncEnginesStorage(context).setStatus(syncEngine, newValue as Boolean)
+                setSwitchCheckedState(newValue)
                 true
             }
         }

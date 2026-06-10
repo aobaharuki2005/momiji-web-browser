@@ -13,12 +13,12 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/memory/memory.h"
+#include "api/array_view.h"
 #include "api/frame_transformer_interface.h"
 #include "api/rtp_packet_infos.h"
 #include "api/scoped_refptr.h"
@@ -27,6 +27,7 @@
 #include "api/units/timestamp.h"
 #include "api/video/encoded_image.h"
 #include "api/video/video_frame_metadata.h"
+#include "api/video/video_frame_type.h"
 #include "api/video/video_timing.h"
 #include "api/video_codecs/video_codec.h"
 #include "modules/rtp_rtcp/source/frame_object.h"
@@ -54,11 +55,11 @@ class TransformableVideoReceiverFrame
   ~TransformableVideoReceiverFrame() override = default;
 
   // Implements TransformableVideoFrameInterface.
-  std::span<const uint8_t> GetData() const override {
+  ArrayView<const uint8_t> GetData() const override {
     return *frame_->GetEncodedData();
   }
 
-  void SetData(std::span<const uint8_t> data) override {
+  void SetData(ArrayView<const uint8_t> data) override {
     frame_->SetEncodedData(
         EncodedImageBuffer::Create(data.data(), data.size()));
   }
@@ -70,7 +71,9 @@ class TransformableVideoReceiverFrame
     frame_->SetRtpTimestamp(timestamp);
   }
 
-  bool IsKeyFrame() const override { return frame_->IsKey(); }
+  bool IsKeyFrame() const override {
+    return frame_->FrameType() == VideoFrameType::kVideoFrameKey;
+  }
 
   VideoFrameMetadata Metadata() const override { return metadata_; }
 
@@ -232,8 +235,8 @@ void RtpVideoStreamReceiverFrameTransformerDelegate::ManageFrame(
     VideoFrameMetadata metadata = transformed_frame->Metadata();
     RTPVideoHeader video_header = RTPVideoHeader::FromMetadata(metadata);
     VideoSendTiming timing;
-    std::span<const uint8_t> data = transformed_frame->GetData();
-    Timestamp receive_time = clock_->CurrentTime();
+    ArrayView<const uint8_t> data = transformed_frame->GetData();
+    int64_t receive_time = clock_->CurrentTime().ms();
     receiver_->ManageFrame(std::make_unique<RtpFrameObject>(
         /*first_seq_num=*/metadata.GetFrameId().value_or(0),
         /*last_seq_num=*/metadata.GetFrameId().value_or(0),

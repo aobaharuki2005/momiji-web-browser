@@ -77,6 +77,7 @@ add_task(async () => {
   }
 
   function processScript() {
+    /* eslint-env mozilla/process-script */
     const listener = function () {
       Services.obs.removeObserver(listener, "devtools:loader:destroy");
       sendAsyncMessage("test:getProcess-destroy", null);

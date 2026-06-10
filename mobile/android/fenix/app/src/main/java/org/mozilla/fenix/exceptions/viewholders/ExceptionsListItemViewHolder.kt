@@ -12,7 +12,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.exceptions.ExceptionsInteractor
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
-import mozilla.components.ui.icons.R as iconsR
 
 /**
  * View holder for a single website that is exempted from Tracking Protection or Logins.
@@ -27,7 +26,7 @@ class ExceptionsListItemViewHolder<T : Any>(
 
     init {
         view.setSecondaryButton(
-            icon = iconsR.drawable.mozac_ic_cross_24,
+            icon = R.drawable.ic_close,
             contentDescription = R.string.history_delete_item,
         ) {
             interactor.onDeleteOne(item)

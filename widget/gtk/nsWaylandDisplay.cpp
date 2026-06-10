@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,17 +16,12 @@
 #include "mozilla/StaticPrefs_general.h"
 #include "mozilla/Sprintf.h"
 #include "WidgetUtilsGtk.h"
+#include "mozilla/widget/xx-pip-v1-client-protocol.h"
 #include "nsGtkKeyUtils.h"
 #include "nsGtkUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsWindow.h"
 #include "wayland-proxy.h"
-#include "ScreenHelperGTK.h"
-#include "nsIAppStartup.h"
-#include "nsServiceManagerUtils.h"
-#include "nsThreadUtils.h"
-
-#include <dlfcn.h>
 
 #undef LOG
 #undef LOG_VERBOSE
@@ -79,7 +76,6 @@ nsWaylandDisplay* WaylandDisplayGet() {
     // value.
     wl_display_set_max_buffer_size(waylandDisplay, 1024 * 1024);
     gWaylandDisplay = new nsWaylandDisplay(waylandDisplay);
-    gWaylandDisplay->Init();
   }
   return gWaylandDisplay;
 }
@@ -511,8 +507,6 @@ void nsWaylandDisplay::SetAppMenuManager(
   mAppMenuManager = aAppMenuManager;
 }
 
-void nsWaylandDisplay::SetFixes(wl_fixes* aFixes) { mFixes = aFixes; }
-
 void nsWaylandDisplay::SetCMSupportedFeature(uint32_t aFeature) {
   LOG("nsWaylandDisplay::SetCMSupportedFeature() [%d]", aFeature);
   switch (aFeature) {
@@ -669,36 +663,24 @@ static void output_handle_geometry(void* data, struct wl_output* wl_output,
       monitor->id, x, y, physical_width, physical_height, subpixel, transform);
   monitor->x = x;
   monitor->y = y;
-  monitor->pendingChanges = true;
 }
+
+static void output_handle_done(void* data, struct wl_output* wl_output) {}
+
+static void output_handle_scale(void* data, struct wl_output* wl_output,
+                                int32_t scale) {}
 
 static void output_handle_mode(void* data, struct wl_output* wl_output,
                                uint32_t flags, int width, int height,
                                int refresh) {
   auto* monitor = static_cast<nsWaylandDisplay::MonitorConfig*>(data);
+  LOG("nsWaylandDisplay ID %d mode output size %d x %d", monitor->id, width,
+      height);
   if ((flags & WL_OUTPUT_MODE_CURRENT) == 0) {
     return;
   }
-  LOG("nsWaylandDisplay ID %d mode output size %d x %d", monitor->id, width,
-      height);
   monitor->pixelWidth = width;
   monitor->pixelHeight = height;
-  monitor->pendingChanges = true;
-}
-
-static void output_handle_scale(void* data, struct wl_output* wl_output,
-                                int32_t scale) {
-  auto* monitor = static_cast<nsWaylandDisplay::MonitorConfig*>(data);
-  LOG("nsWaylandDisplay ID %d Scale change [%d]", monitor->id, scale);
-  monitor->pendingChanges = true;
-}
-
-static void output_handle_done(void* data, struct wl_output* wl_output) {
-  auto* monitor = static_cast<nsWaylandDisplay::MonitorConfig*>(data);
-  LOG("nsWaylandDisplay ID %d Done", monitor->id);
-  monitor->pendingChanges = false;
-
-  WaylandDisplayGet()->RefreshScreens();
 }
 
 static const struct wl_output_listener output_listener = {
@@ -708,21 +690,15 @@ static const struct wl_output_listener output_listener = {
     output_handle_scale,
 };
 
-void nsWaylandDisplay::AddMonitorConfig(int aId, wl_output* aWlOutput) {
+void nsWaylandDisplay::AddWlOutput(wl_output* aWlOutput, int aId) {
+  wl_output_add_listener(aWlOutput, &output_listener, AddMonitorConfig(aId));
+}
+
+nsWaylandDisplay::MonitorConfig* nsWaylandDisplay::AddMonitorConfig(int aId) {
   LOG("nsWaylandDisplay add monitor ID %d num %zu", aId, mMonitors.Length());
-  mMonitors.AppendElement(MakeUnique<MonitorConfig>(aId, aWlOutput));
-}
-
-nsWaylandDisplay::MonitorConfig::MonitorConfig(int aId,
-                                               struct wl_output* aWlOutput)
-    : id(aId), wlOutput(aWlOutput) {
-  LOG("MonitorConfig() add ID %d", id);
-  wl_output_add_listener(wlOutput, &output_listener, this);
-}
-
-nsWaylandDisplay::MonitorConfig::~MonitorConfig() {
-  LOG("~MonitorConfig() delete ID %d", id);
-  MozClearPointer(wlOutput, wl_output_release);
+  UniquePtr<MonitorConfig> monitor = MakeUnique<MonitorConfig>(aId);
+  mMonitors.AppendElement(std::move(monitor));
+  return mMonitors.LastElement().get();
 }
 
 bool nsWaylandDisplay::RemoveMonitorConfig(int aId) {
@@ -746,17 +722,6 @@ nsWaylandDisplay::MonitorConfig* nsWaylandDisplay::GetMonitorConfig(int x,
   }
   LOG("nsWaylandDisplay::GetMonitorConfig() %d, %d missing!", x, y);
   return nullptr;
-}
-
-void nsWaylandDisplay::RefreshScreens() {
-  LOG("nsWaylandDisplay::RefreshScreens()");
-  for (unsigned int i = 0; i < mMonitors.Length(); i++) {
-    if (mMonitors[i]->pendingChanges) {
-      LOG("  monitor ID %d is not complete", mMonitors[i]->id);
-      return;
-    }
-  }
-  ScreenHelperGTK::RequestRefreshScreens();
 }
 
 static void global_registry_handler(void* data, wl_registry* registry,
@@ -808,10 +773,6 @@ static void global_registry_handler(void* data, wl_registry* registry,
     auto* dmabuf = WaylandRegistryBind<zwp_linux_dmabuf_v1>(
         registry, id, &zwp_linux_dmabuf_v1_interface, vers);
     display->SetDmabuf(dmabuf, vers);
-  } else if (iface.EqualsLiteral("xx_session_manager_v1")) {
-    auto* sessionManager = WaylandRegistryBind<xx_session_manager_v1>(
-        registry, id, &xx_session_manager_v1_interface, 1);
-    display->SetSessionManager(sessionManager);
   } else if (iface.EqualsLiteral("xdg_activation_v1")) {
     auto* activation = WaylandRegistryBind<xdg_activation_v1>(
         registry, id, &xdg_activation_v1_interface, 1);
@@ -830,10 +791,6 @@ static void global_registry_handler(void* data, wl_registry* registry,
     auto* manager = WaylandRegistryBind<wp_fractional_scale_manager_v1>(
         registry, id, &wp_fractional_scale_manager_v1_interface, 1);
     display->SetFractionalScaleManager(manager);
-  } else if (iface.EqualsLiteral("xx_fractional_scale_manager_v2")) {
-    auto* manager = WaylandRegistryBind<xx_fractional_scale_manager_v2>(
-        registry, id, &xx_fractional_scale_manager_v2_interface, 1);
-    display->SetFractionalScaleManagerV2(manager);
   } else if (iface.EqualsLiteral("gtk_primary_selection_device_manager") ||
              iface.EqualsLiteral("zwp_primary_selection_device_manager_v1")) {
     display->EnablePrimarySelection();
@@ -846,7 +803,7 @@ static void global_registry_handler(void* data, wl_registry* registry,
     display->SetPointerGestures(gestures);
   } else if (iface.EqualsLiteral("wp_color_manager_v1")) {
     auto* colorManager = WaylandRegistryBind<wp_color_manager_v1>(
-        registry, id, &wp_color_manager_v1_interface, 1);
+        registry, id, &wp_color_manager_v1_interface, version);
     display->SetColorManager(colorManager);
   } else if (iface.EqualsLiteral("wp_color_representation_manager_v1")) {
     auto* colorRepresentationManager =
@@ -855,30 +812,16 @@ static void global_registry_handler(void* data, wl_registry* registry,
     display->SetColorRepresentationManager(colorRepresentationManager);
   } else if (iface.EqualsLiteral("xx_pip_shell_v1")) {
     auto* pipShell = WaylandRegistryBind<xx_pip_shell_v1>(
-        registry, id, &xx_pip_shell_v1_interface, 1);
+        registry, id, &xx_pip_shell_v1_interface, version);
     display->SetPipShell(pipShell);
   } else if (iface.EqualsLiteral("xdg_wm_base")) {
-    uint32_t vers = MIN(version, (uint32_t)xdg_wm_base_interface.version);
     auto* xdgWm = WaylandRegistryBind<xdg_wm_base>(
-        registry, id, &xdg_wm_base_interface, vers);
+        registry, id, &xdg_wm_base_interface, version);
     display->SetXdgWm(xdgWm);
-  } else if (iface.EqualsLiteral("wl_output") &&
-             version >= WL_OUTPUT_RELEASE_SINCE_VERSION) {
-    auto* output = WaylandRegistryBind<wl_output>(
-        registry, id, &wl_output_interface, WL_OUTPUT_RELEASE_SINCE_VERSION);
-    display->AddMonitorConfig(id, output);
-  } else if (iface.EqualsLiteral("wl_fixes")) {
-    // wl_fixes_interface was introduced in libwayland-client 1.24, but
-    // Ubuntu 22.04 still ships 1.20.
-    static auto* sWlFixesInterface =
-        (wl_interface*)dlsym(RTLD_DEFAULT, "wl_fixes_interface");
-    if (sWlFixesInterface) {
-      auto* fixes = WaylandRegistryBind<wl_fixes>(
-          registry, id, sWlFixesInterface, MIN(version, 2));
-      display->SetFixes(fixes);
-    } else {
-      LOG("wl_fixes_interface is missing!");
-    }
+  } else if (iface.EqualsLiteral("wl_output") && version > 1) {
+    auto* output =
+        WaylandRegistryBind<wl_output>(registry, id, &wl_output_interface, 2);
+    display->AddWlOutput(output, id);
   }
 }
 
@@ -888,17 +831,10 @@ static void global_registry_remover(void* data, wl_registry* registry,
   if (!display) {
     return;
   }
-
-  if (!display->RemoveMonitorConfig(id)) {
-    display->RemoveSeat(id);
+  if (display->RemoveMonitorConfig(id)) {
+    return;
   }
-
-  if (wl_fixes* fixes = display->GetFixes()) {
-    if (wl_fixes_get_version(fixes) >=
-        WL_FIXES_ACK_GLOBAL_REMOVE_SINCE_VERSION) {
-      wl_fixes_ack_global_remove(fixes, registry, id);
-    }
-  }
+  display->RemoveSeat(id);
 }
 
 static const struct wl_registry_listener registry_listener = {
@@ -909,8 +845,6 @@ nsWaylandDisplay::~nsWaylandDisplay() {
   MozClearPointer(mColorManager, wp_color_manager_v1_destroy);
   MozClearPointer(mColorRepresentationManager,
                   wp_color_representation_manager_v1_destroy);
-  MozClearPointer(mWaylandSession, xx_session_v1_destroy);
-  MozClearPointer(mSessionManager, xx_session_manager_v1_destroy);
 }
 
 void nsWaylandDisplay::AsyncRoundtripCallback(void* aData,
@@ -940,66 +874,6 @@ void nsWaylandDisplay::WaitForAsyncRoundtrips() {
       return;
     }
   }
-}
-
-void nsWaylandDisplay::SessionCreate(void* aData, xx_session_v1* aSession,
-                                     const char* aSessionId) {
-  LOG("nsWaylandDisplay::SessionCreate() %s", aSessionId);
-
-  auto* display = static_cast<nsWaylandDisplay*>(aData);
-  display->mWaylandSessionId = aSessionId;
-  Preferences::SetCString("widget.wayland.session-id", aSessionId);
-}
-
-void nsWaylandDisplay::SessionRestore(void* aData, xx_session_v1* aSession) {
-#ifdef MOZ_LOGGING
-  auto* display = static_cast<nsWaylandDisplay*>(aData);
-  LOG("nsWaylandDisplay::SessionRestore() %s",
-      display->mWaylandSessionId.get());
-#endif
-}
-
-void nsWaylandDisplay::SessionReplace(void* aData, xx_session_v1* aSession) {
-  LOG("nsWaylandDisplay::SessionReplace()");
-  auto* display = static_cast<nsWaylandDisplay*>(aData);
-  display->CreateSession();
-}
-
-static const xx_session_v1_listener sSessionListener = {
-    nsWaylandDisplay::SessionCreate,
-    nsWaylandDisplay::SessionRestore,
-    nsWaylandDisplay::SessionReplace,
-};
-
-void nsWaylandDisplay::CreateSession(const char* aSessionId) {
-  LOG("nsWaylandDisplay::CreateSession() ID %s", aSessionId);
-
-  // TODO: WUniquePtr
-  MozClearPointer(mWaylandSession, xx_session_v1_destroy);
-
-  mWaylandSession = xx_session_manager_v1_get_session(
-      mSessionManager,
-      aSessionId ? XX_SESSION_MANAGER_V1_REASON_SESSION_RESTORE
-                 : XX_SESSION_MANAGER_V1_REASON_LAUNCH,
-      aSessionId);
-
-  if (!mWaylandSession) {
-    LOG("  failed to create session %s", aSessionId);
-    return;
-  }
-
-  xx_session_v1_add_listener(mWaylandSession, &sSessionListener, this);
-}
-
-void nsWaylandDisplay::SetSessionManager(
-    xx_session_manager_v1* aSessionManager) {
-  mSessionManager = aSessionManager;
-  LOG("nsWaylandDisplay::SetSessionManager()");
-
-  nsAutoCString prevSessionId;
-  Preferences::GetCString("widget.wayland.session-id", prevSessionId);
-
-  CreateSession(prevSessionId.IsEmpty() ? nullptr : prevSessionId.get());
 }
 
 // Separate crash functions for different Wayland protocol error patterns.
@@ -1093,22 +967,6 @@ MOZ_NEVER_INLINE static void WlLogHandler_MarshallingError(const char* error) {
                           WaylandProxy::GetState());
 }
 
-// xdg_surface buffer mismatch - Example: "dg_wm_base@17: error 4: xdg_surface
-// buffer (1 x 1) is larger than the configured fullscreen state (0 x 0)"
-MOZ_NEVER_INLINE static void WlLogHandler_XdgSurfaceBufferMismatch(
-    const char* error) {
-  MOZ_CRASH_UNSAFE_PRINTF("(%s) %s Proxy: %s",
-                          GetDesktopEnvironmentIdentifier().get(), error,
-                          WaylandProxy::GetState());
-}
-
-// Timestamp of the last "still attached" message ignored by WlLogHandler.
-// Written on the main thread (libwayland event dispatch) with release ordering
-// after writing sStillAttachedMessage, so any thread that observes the
-// timestamp with acquire ordering is guaranteed to see the message too.
-static std::atomic<clock_t> sStillAttachedTime{0};
-static char sStillAttachedMessage[128];
-
 static void WlLogHandler(const char* format, va_list args) {
   char error[1000];
   VsprintfLiteral(error, format, args);
@@ -1120,15 +978,7 @@ static void WlLogHandler(const char* format, va_list args) {
   // like "zwp_linux_dmabuf_feedback_v1@%d still attached" are exceptions on
   // Wayland and non-fatal. They are triggered in certain versions of Mesa or
   // the proprietary Nvidia driver and we don't want to crash because of them.
-  // Store the message and timestamp so ProcessFailure() can correlate this
-  // event with a subsequent silent compositor disconnect.
   if (strstr(error, "still attached")) {
-    // Sentinel: ensures a concurrent reader on the proxy thread never scans
-    // past the end of the array if a longer new string overwrites the old
-    // null terminator before placing its own.
-    sStillAttachedMessage[sizeof(sStillAttachedMessage) - 1] = '\0';
-    SprintfLiteral(sStillAttachedMessage, "%s", error);
-    sStillAttachedTime.store(clock(), std::memory_order_release);
     return;
   }
 
@@ -1190,72 +1040,30 @@ static void WlLogHandler(const char* format, va_list args) {
     WlLogHandler_MarshallingError(error);
   }
 
-  // Pattern 11: xdg_surface buffer mismatch with fullscreen state
-  if (strstr(error, "xdg_surface") && strstr(error, "buffer") &&
-      strstr(error, "fullscreen state")) {
-    WlLogHandler_XdgSurfaceBufferMismatch(error);
-  }
-
   // Fallback for unmatched patterns - use original inline code
   MOZ_CRASH_UNSAFE_PRINTF("(%s) %s Proxy: %s",
                           GetDesktopEnvironmentIdentifier().get(), error,
                           WaylandProxy::GetState());
 }
 
-void WlCompositorUnavailableHandler() {
-  gfxCriticalNote << "Wayland compositor unavailable ("
+void WlCompositorCrashHandler() {
+  gfxCriticalNote << "Wayland protocol error: Compositor ("
                   << GetDesktopEnvironmentIdentifier().get()
-                  << "), proxy: " << WaylandProxy::GetState()
-                  << " - scheduling graceful shutdown";
-  // Called from the WaylandProxy thread. Dispatch to the main thread to
-  // trigger a clean Firefox shutdown instead of crashing.
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction("WlCompositorUnavailableHandler", []() {
-        nsCOMPtr<nsIAppStartup> appStartup =
-            do_GetService("@mozilla.org/toolkit/app-startup;1");
-        if (appStartup) {
-          bool userAllowedQuit = true;
-          appStartup->Quit(nsIAppStartup::eForceQuit, 0, &userAllowedQuit);
-        }
-      }));
-}
-
-MOZ_NEVER_INLINE static void WlLogHandler_StillAttachedDisconnect(
-    const char* error) {
-  MOZ_CRASH_UNSAFE_PRINTF("(%s) %s Proxy: %s",
-                          GetDesktopEnvironmentIdentifier().get(), error,
+                  << ") crashed, proxy: " << WaylandProxy::GetState();
+  MOZ_CRASH_UNSAFE_PRINTF("Compositor crashed (%s) proxy: %s",
+                          GetDesktopEnvironmentIdentifier().get(),
                           WaylandProxy::GetState());
-}
-
-void WlCompositorSilentDisconnectHandler(clock_t aFailureTime) {
-  clock_t t = sStillAttachedTime.load(std::memory_order_acquire);
-  if (t <= aFailureTime) {
-    return;  // no still-attached event in this failure window
-  }
-  nsCString reason(sStillAttachedMessage);
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "WlCompositorSilentDisconnectHandler", [reason = std::move(reason)]() {
-        WlLogHandler_StillAttachedDisconnect(reason.get());
-      }));
 }
 
 nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
     : mThreadId(PR_GetCurrentThread()), mDisplay(aDisplay) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  for (auto& e : mSupportedTransfer) {
-    e = -1;
-  };
-  for (auto& e : mSupportedPrimaries) {
-    e = -1;
-  };
-}
 
-void nsWaylandDisplay::Init() {
   // GTK sets the log handler on display creation, thus we overwrite it here
   // in a similar fashion
   wl_log_set_handler_client(WlLogHandler);
 
-  LOG("nsWaylandDisplay::Init()");
+  LOG("nsWaylandDisplay::nsWaylandDisplay()");
 
   mFormats = new DMABufFormats();
   mRegistry = wl_display_get_registry(mDisplay);
@@ -1265,7 +1073,14 @@ void nsWaylandDisplay::Init() {
   WaitForAsyncRoundtrips();
   EnsureDMABufFormats();
 
-  LOG("  init finished");
+  LOG("nsWaylandDisplay::nsWaylandDisplay() init finished");
+
+  for (auto& e : mSupportedTransfer) {
+    e = -1;
+  };
+  for (auto& e : mSupportedPrimaries) {
+    e = -1;
+  };
 
   // Check we have critical Wayland interfaces.
   // Missing ones indicates a compositor bug and we can't continue.

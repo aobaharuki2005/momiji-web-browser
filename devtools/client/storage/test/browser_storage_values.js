@@ -18,25 +18,25 @@ const LONG_WORD = "a".repeat(1000);
 
 const testCases = [
   [
-    getCookieId("cs2", "." + MAIN_DOMAIN, "/"),
+    getCookieId("cs2", ".example.org", "/"),
     [
       { name: "cs2", value: "sessionCookie" },
       { name: "cs2.Path", value: "/" },
       { name: "cs2.HostOnly", value: "false" },
       { name: "cs2.HttpOnly", value: "false" },
-      { name: "cs2.Domain", value: "." + MAIN_DOMAIN },
+      { name: "cs2.Domain", value: ".example.org" },
       { name: "cs2.Expires / Max-Age", value: "Session" },
       { name: "cs2.Secure", value: "false" },
     ],
   ],
   [
-    getCookieId("c1", MAIN_HOST, "/browser"),
+    getCookieId("c1", "test1.example.org", "/browser"),
     [
       { name: "c1", value: JSON.stringify(["foo", "Bar", { foo: "Bar" }]) },
       { name: "c1.Path", value: "/browser" },
       { name: "c1.HostOnly", value: "true" },
       { name: "c1.HttpOnly", value: "false" },
-      { name: "c1.Domain", value: MAIN_HOST },
+      { name: "c1.Domain", value: "test1.example.org" },
       {
         name: "c1.Expires / Max-Age",
         value: new Date(2000000000000).toUTCString(),
@@ -58,7 +58,7 @@ const testCases = [
   [
     getCookieId(
       "c_encoded",
-      MAIN_HOST,
+      "test1.example.org",
       "/browser/devtools/client/storage/test"
     ),
     [
@@ -77,7 +77,7 @@ const testCases = [
     ],
     true,
   ],
-  [["localStorage", MAIN_ORIGIN_SECURED]],
+  [["localStorage", "https://test1.example.org"]],
   ["ls2", [{ name: "ls2", value: "foobar-2" }]],
   [
     "ls1",
@@ -123,7 +123,7 @@ const testCases = [
     true,
   ],
   ["ls4", [{ name: "ls4", value: "0x1" }], false],
-  [["sessionStorage", MAIN_ORIGIN_SECURED]],
+  [["sessionStorage", "https://test1.example.org"]],
   ["ss1", [{ name: "ss1", value: "This#is#an#array" }]],
   [
     null,
@@ -182,7 +182,7 @@ const testCases = [
     ],
     true,
   ],
-  [["indexedDB", MAIN_ORIGIN_SECURED, "idb1 (default)", "obj1"]],
+  [["indexedDB", "https://test1.example.org", "idb1 (default)", "obj1"]],
   [
     1,
     [
@@ -201,7 +201,7 @@ const testCases = [
     ],
     true,
   ],
-  [["indexedDB", MAIN_ORIGIN_SECURED, "idb1 (default)", "obj2"]],
+  [["indexedDB", "https://test1.example.org", "idb1 (default)", "obj2"]],
   [
     1,
     [
@@ -234,7 +234,7 @@ add_task(async function () {
   });
 
   await openTabAndSetupStorage(
-    MAIN_URL_SECURED + "storage-complex-values.html"
+    MAIN_DOMAIN_SECURED + "storage-complex-values.html"
   );
 
   gUI.tree.expandAll();
@@ -266,8 +266,8 @@ add_task(async function () {
   info(
     `Check that the "Copy" context menu entry in the VariableView works as expected`
   );
-  await selectTreeItem(["cookies", MAIN_ORIGIN_SECURED]);
-  await selectTableItem(getCookieId("cs2", "." + MAIN_DOMAIN, "/"));
+  await selectTreeItem(["cookies", "https://test1.example.org"]);
+  await selectTableItem(getCookieId("cs2", ".example.org", "/"));
 
   const contextMenu = gPanelWindow.document.querySelector(
     "#variable-view-popup"

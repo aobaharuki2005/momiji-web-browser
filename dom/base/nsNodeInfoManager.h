@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,8 +8,8 @@
  * A class for handing out nodeinfos and ensuring sharing of them as needed.
  */
 
-#ifndef nsNodeInfoManager_h_
-#define nsNodeInfoManager_h_
+#ifndef nsNodeInfoManager_h___
+#define nsNodeInfoManager_h___
 
 #include "mozilla/Attributes.h"  // for final
 #include "mozilla/MruCache.h"
@@ -30,7 +32,6 @@ class Document;
 
 class nsNodeInfoManager final {
  private:
-  using NodeInfo = mozilla::dom::NodeInfo;
   ~nsNodeInfoManager();
 
  public:
@@ -50,32 +51,30 @@ class nsNodeInfoManager final {
   /**
    * Methods for creating nodeinfo's from atoms and/or strings.
    */
-  already_AddRefed<NodeInfo> GetNodeInfo(nsAtom* aName, nsAtom* aPrefix,
-                                         int32_t aNamespaceID,
-                                         uint16_t aNodeType,
-                                         nsAtom* aExtraName = nullptr);
+  already_AddRefed<mozilla::dom::NodeInfo> GetNodeInfo(
+      nsAtom* aName, nsAtom* aPrefix, int32_t aNamespaceID, uint16_t aNodeType,
+      nsAtom* aExtraName = nullptr);
   nsresult GetNodeInfo(const nsAString& aName, nsAtom* aPrefix,
                        int32_t aNamespaceID, uint16_t aNodeType,
-                       NodeInfo** aNodeInfo);
+                       mozilla::dom::NodeInfo** aNodeInfo);
   nsresult GetNodeInfo(const nsAString& aName, nsAtom* aPrefix,
                        const nsAString& aNamespaceURI, uint16_t aNodeType,
-                       NodeInfo** aNodeInfo);
+                       mozilla::dom::NodeInfo** aNodeInfo);
 
   /**
    * Returns the nodeinfo for text nodes. Can return null if OOM.
    */
-  already_AddRefed<NodeInfo> GetTextNodeInfo();
+  already_AddRefed<mozilla::dom::NodeInfo> GetTextNodeInfo();
 
   /**
    * Returns the nodeinfo for comment nodes. Can return null if OOM.
    */
-  already_AddRefed<NodeInfo> GetCommentNodeInfo();
+  already_AddRefed<mozilla::dom::NodeInfo> GetCommentNodeInfo();
 
   /**
    * Returns the nodeinfo for the document node. Can return null if OOM.
    */
-  already_AddRefed<NodeInfo> GetDocumentNodeInfo();
-  already_AddRefed<NodeInfo> GetDocumentFragmentNodeInfo();
+  already_AddRefed<mozilla::dom::NodeInfo> GetDocumentNodeInfo();
 
   /**
    * Retrieve a pointer to the document that owns this node info
@@ -91,7 +90,7 @@ class nsNodeInfoManager final {
     return mPrincipal;
   }
 
-  void RemoveNodeInfo(NodeInfo* aNodeInfo);
+  void RemoveNodeInfo(mozilla::dom::NodeInfo* aNodeInfo);
 
   /**
    * Returns true if SVG nodes in this document have real SVG semantics.
@@ -132,7 +131,8 @@ class nsNodeInfoManager final {
   bool InternalSVGEnabled();
   bool InternalMathMLEnabled();
 
-  class NodeInfoInnerKey : public nsPtrHashKey<NodeInfo::NodeInfoInner> {
+  class NodeInfoInnerKey
+      : public nsPtrHashKey<mozilla::dom::NodeInfo::NodeInfoInner> {
    public:
     explicit NodeInfoInnerKey(KeyTypePointer aKey) : nsPtrHashKey(aKey) {}
     NodeInfoInnerKey(NodeInfoInnerKey&&) = default;
@@ -141,20 +141,22 @@ class nsNodeInfoManager final {
     static PLDHashNumber HashKey(KeyTypePointer aKey) { return aKey->Hash(); }
   };
 
-  struct NodeInfoCache : public mozilla::MruCache<NodeInfo::NodeInfoInner,
-                                                  NodeInfo*, NodeInfoCache> {
-    static mozilla::HashNumber Hash(const NodeInfo::NodeInfoInner& aKey) {
+  struct NodeInfoCache
+      : public mozilla::MruCache<mozilla::dom::NodeInfo::NodeInfoInner,
+                                 mozilla::dom::NodeInfo*, NodeInfoCache> {
+    static mozilla::HashNumber Hash(
+        const mozilla::dom::NodeInfo::NodeInfoInner& aKey) {
       return aKey.Hash();
     }
-    static bool Match(const NodeInfo::NodeInfoInner& aKey,
-                      const NodeInfo* aVal) {
+    static bool Match(const mozilla::dom::NodeInfo::NodeInfoInner& aKey,
+                      const mozilla::dom::NodeInfo* aVal) {
       return (aKey.Hash() == aVal->mInner.Hash()) && (aKey == aVal->mInner);
     }
   };
 
-  nsTHashMap<NodeInfoInnerKey, NodeInfo*> mNodeInfoHash;
+  nsTHashMap<NodeInfoInnerKey, mozilla::dom::NodeInfo*> mNodeInfoHash;
   mozilla::dom::Document* MOZ_NON_OWNING_REF mDocument;  // WEAK
-  uint32_t mNonDocumentNodeInfos = 0;
+  uint32_t mNonDocumentNodeInfos;
 
   // Note: it's important that mPrincipal is declared before mDefaultPrincipal,
   // since the latter is initialized to the value of the former in the
@@ -162,12 +164,12 @@ class nsNodeInfoManager final {
   nsCOMPtr<nsIPrincipal> mPrincipal;         // Never null
   nsCOMPtr<nsIPrincipal> mDefaultPrincipal;  // Never null
 
-  // The following refs are weak to avoid circular ownership.
-  NodeInfo* MOZ_NON_OWNING_REF mTextNodeInfo = nullptr;
-  NodeInfo* MOZ_NON_OWNING_REF mCommentNodeInfo = nullptr;
-  NodeInfo* MOZ_NON_OWNING_REF mDocumentNodeInfo = nullptr;
-  NodeInfo* MOZ_NON_OWNING_REF mDocumentFragmentNodeInfo = nullptr;
-
+  mozilla::dom::NodeInfo* MOZ_NON_OWNING_REF
+      mTextNodeInfo;  // WEAK to avoid circular ownership
+  mozilla::dom::NodeInfo* MOZ_NON_OWNING_REF
+      mCommentNodeInfo;  // WEAK to avoid circular ownership
+  mozilla::dom::NodeInfo* MOZ_NON_OWNING_REF
+      mDocumentNodeInfo;  // WEAK to avoid circular ownership
   NodeInfoCache mRecentlyUsedNodeInfos;
   mozilla::Maybe<bool> mSVGEnabled;     // Lazily initialized.
   mozilla::Maybe<bool> mMathMLEnabled;  // Lazily initialized.
@@ -177,4 +179,4 @@ class nsNodeInfoManager final {
   bool mHasAllocated = false;
 };
 
-#endif /* nsNodeInfoManager_h_ */
+#endif /* nsNodeInfoManager_h___ */

@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_BindingUtils_h_
-#define mozilla_dom_BindingUtils_h_
+#ifndef mozilla_dom_BindingUtils_h__
+#define mozilla_dom_BindingUtils_h__
 
 #include <type_traits>
 
@@ -25,6 +27,7 @@
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/SegmentedVector.h"
@@ -33,6 +36,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
+#include "mozilla/dom/FakeString.h"
 #include "mozilla/dom/JSSlots.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/Nullable.h"
@@ -168,8 +172,10 @@ inline bool IsDOMObject(JSObject* obj) { return IsDOMClass(JS::GetClass(obj)); }
       obj, value, cx)
 
 // Test whether the given object is an instance of the given interface.
-#define IS_INSTANCE_OF(Interface, obj) \
-  mozilla::dom::IsInstanceOf<mozilla::dom::prototypes::id::Interface>(obj)
+#define IS_INSTANCE_OF(Interface, obj)                                       \
+  mozilla::dom::IsInstanceOf<mozilla::dom::prototypes::id::Interface,        \
+                             mozilla::dom::Interface##_Binding::NativeType>( \
+      obj)
 
 // Unwrap the given non-wrapper object.  This can be used with any obj that
 // converts to JSObject*; as long as that JSObject* is live the return value
@@ -416,11 +422,11 @@ MOZ_ALWAYS_INLINE nsresult UnwrapObjectWithCrossOriginAsserts(V&& obj,
 }
 }  // namespace binding_detail
 
-template <prototypes::ID PrototypeID>
+template <prototypes::ID PrototypeID, class T>
 MOZ_ALWAYS_INLINE bool IsInstanceOf(JSObject* obj) {
   AssertStaticUnwrapOK<PrototypeID>();
   void* ignored;
-  nsresult unwrapped = binding_detail::UnwrapObjectInternal<void, true>(
+  nsresult unwrapped = binding_detail::UnwrapObjectInternal<T, true>(
       obj, ignored, PrototypeID, PrototypeTraits<PrototypeID>::Depth, nullptr);
   return NS_SUCCEEDED(unwrapped);
 }
@@ -642,10 +648,9 @@ struct VerifyTraceProtoAndIfaceCacheCalledTracer : public JS::CallbackTracer {
       : JS::CallbackTracer(cx, JS::TracerKind::VerifyTraceProtoAndIface),
         ok(false) {}
 
-  bool onChild(JS::GCCellPtr, const char* name) override {
+  void onChild(JS::GCCellPtr, const char* name) override {
     // We don't do anything here, we only want to verify that
     // TraceProtoAndIfaceCache was called.
-    return true;
   }
 };
 #endif
@@ -887,11 +892,11 @@ bool DefineLegacyUnforgeableAttributes(
 #ifdef _MSC_VER
 #  define HAS_MEMBER_CHECK(_name) \
     template <typename V>         \
-    static yes& Check##_name(char (*)[(&V::_name == 0) + 1])
+    static yes& Check##_name(char(*)[(&V::_name == 0) + 1])
 #else
 #  define HAS_MEMBER_CHECK(_name) \
     template <typename V>         \
-    static yes& Check##_name(char (*)[sizeof(&V::_name) + 1])
+    static yes& Check##_name(char(*)[sizeof(&V::_name) + 1])
 #endif
 
 #define HAS_MEMBER(_memberName, _valueName) \
@@ -1911,6 +1916,24 @@ inline JSObject* FindAssociatedGlobal(JSContext* cx,
   return global;
 }
 
+template <typename T,
+          bool hasAssociatedGlobal = NativeHasMember<T>::GetParentObject>
+struct FindAssociatedGlobalForNative {
+  static JSObject* Get(JSContext* cx, JS::Handle<JSObject*> obj) {
+    MOZ_ASSERT(js::IsObjectInContextCompartment(obj, cx));
+    T* native = UnwrapDOMObject<T>(obj);
+    return FindAssociatedGlobal(cx, native->GetParentObject());
+  }
+};
+
+template <typename T>
+struct FindAssociatedGlobalForNative<T, false> {
+  static JSObject* Get(JSContext* cx, JS::Handle<JSObject*> obj) {
+    MOZ_CRASH();
+    return nullptr;
+  }
+};
+
 // Helper for calling GetOrCreateDOMReflector with smart pointers
 // (UniquePtr/RefPtr/nsCOMPtr) or references.
 template <class T, bool isSmartPtr = IsSmartPtr<T>::value>
@@ -2040,7 +2063,7 @@ enum StringificationBehavior { eStringify, eEmpty, eNull };
 
 static inline JSString* ConvertJSValueToJSString(JSContext* cx,
                                                  JS::Handle<JS::Value> v) {
-  if (v.isString()) [[likely]] {
+  if (MOZ_LIKELY(v.isString())) {
     return v.toString();
   }
   return JS::ToString(cx, v);
@@ -2089,7 +2112,10 @@ static inline bool ConvertJSValueToString(
   return ConvertJSValueToString(cx, v, eStringify, eStringify, result);
 }
 
-[[nodiscard]] bool NormalizeUSVString(nsAString&);
+[[nodiscard]] bool NormalizeUSVString(nsAString& aString);
+
+[[nodiscard]] bool NormalizeUSVString(
+    binding_detail::FakeString<char16_t>& aString);
 
 template <typename T>
 static inline bool ConvertJSValueToUSVString(
@@ -2110,7 +2136,7 @@ static inline bool ConvertJSValueToUSVString(
 template <typename T>
 inline bool ConvertIdToString(JSContext* cx, JS::Handle<JS::PropertyKey> id,
                               T& result, bool& isSymbol) {
-  if (id.isString()) [[likely]] {
+  if (MOZ_LIKELY(id.isString())) {
     if (!AssignJSString(cx, result, id.toString())) {
       return false;
     }
@@ -2149,16 +2175,15 @@ template <typename T, bool isDictionary = is_dom_dictionary<T>,
           bool isTypedArray = is_dom_typed_array<T>,
           bool isOwningUnion = is_dom_owning_union<T>>
 class SequenceTracer {
- public:
   explicit SequenceTracer() = delete;  // Should never be instantiated
 };
 
 // sequence<object> or sequence<object?>
 template <>
 class SequenceTracer<JSObject*, false, false, false> {
- public:
   explicit SequenceTracer() = delete;  // Should never be instantiated
 
+ public:
   static void TraceSequence(JSTracer* trc, JSObject** objp, JSObject** end) {
     for (; objp != end; ++objp) {
       JS::TraceRoot(trc, objp, "sequence<object>");
@@ -2169,9 +2194,9 @@ class SequenceTracer<JSObject*, false, false, false> {
 // sequence<any>
 template <>
 class SequenceTracer<JS::Value, false, false, false> {
- public:
   explicit SequenceTracer() = delete;  // Should never be instantiated
 
+ public:
   static void TraceSequence(JSTracer* trc, JS::Value* valp, JS::Value* end) {
     for (; valp != end; ++valp) {
       JS::TraceRoot(trc, valp, "sequence<any>");
@@ -2182,9 +2207,9 @@ class SequenceTracer<JS::Value, false, false, false> {
 // sequence<sequence<T>>
 template <typename T>
 class SequenceTracer<Sequence<T>, false, false, false> {
- public:
   explicit SequenceTracer() = delete;  // Should never be instantiated
 
+ public:
   static void TraceSequence(JSTracer* trc, Sequence<T>* seqp,
                             Sequence<T>* end) {
     for (; seqp != end; ++seqp) {
@@ -2196,9 +2221,9 @@ class SequenceTracer<Sequence<T>, false, false, false> {
 // sequence<sequence<T>> as return value
 template <typename T>
 class SequenceTracer<nsTArray<T>, false, false, false> {
- public:
   explicit SequenceTracer() = delete;  // Should never be instantiated
 
+ public:
   static void TraceSequence(JSTracer* trc, nsTArray<T>* seqp,
                             nsTArray<T>* end) {
     for (; seqp != end; ++seqp) {
@@ -2210,9 +2235,9 @@ class SequenceTracer<nsTArray<T>, false, false, false> {
 // sequence<someDictionary>
 template <typename T>
 class SequenceTracer<T, true, false, false> {
- public:
   explicit SequenceTracer() = delete;  // Should never be instantiated
 
+ public:
   static void TraceSequence(JSTracer* trc, T* dictp, T* end) {
     for (; dictp != end; ++dictp) {
       dictp->TraceDictionary(trc);
@@ -2223,9 +2248,9 @@ class SequenceTracer<T, true, false, false> {
 // sequence<SomeTypedArray>
 template <typename T>
 class SequenceTracer<T, false, true, false> {
- public:
   explicit SequenceTracer() = delete;  // Should never be instantiated
 
+ public:
   static void TraceSequence(JSTracer* trc, T* arrayp, T* end) {
     for (; arrayp != end; ++arrayp) {
       arrayp->TraceSelf(trc);
@@ -2236,9 +2261,9 @@ class SequenceTracer<T, false, true, false> {
 // sequence<SomeOwningUnion>
 template <typename T>
 class SequenceTracer<T, false, false, true> {
- public:
   explicit SequenceTracer() = delete;  // Should never be instantiated
 
+ public:
   static void TraceSequence(JSTracer* trc, T* arrayp, T* end) {
     for (; arrayp != end; ++arrayp) {
       arrayp->TraceUnion(trc);
@@ -2249,9 +2274,9 @@ class SequenceTracer<T, false, false, true> {
 // sequence<T?> with T? being a Nullable<T>
 template <typename T>
 class SequenceTracer<Nullable<T>, false, false, false> {
- public:
   explicit SequenceTracer() = delete;  // Should never be instantiated
 
+ public:
   static void TraceSequence(JSTracer* trc, Nullable<T>* seqp,
                             Nullable<T>* end) {
     for (; seqp != end; ++seqp) {
@@ -2277,9 +2302,9 @@ void TraceRecord(JSTracer* trc, Record<K, V>& record) {
 // sequence<record>
 template <typename K, typename V>
 class SequenceTracer<Record<K, V>, false, false, false> {
- public:
   explicit SequenceTracer() = delete;  // Should never be instantiated
 
+ public:
   static void TraceSequence(JSTracer* trc, Record<K, V>* seqp,
                             Record<K, V>* end) {
     for (; seqp != end; ++seqp) {
@@ -2659,22 +2684,47 @@ const T& NonNullHelper(const OwningNonNull<T>& aArg) {
   return aArg;
 }
 
-// These overloads are here to make sure that we never end up applying
-// NonNullHelper to a NonNull<nsAutoString>. If we try to, it should fail to
-// compile, since presumably the caller will try to use our nonexistent return
-// value.
 template <typename CharT>
-inline void NonNullHelper(NonNull<nsTAutoString<CharT>>&) {}
+inline void NonNullHelper(NonNull<binding_detail::FakeString<CharT>>& aArg) {
+  // This overload is here to make sure that we never end up applying
+  // NonNullHelper to a NonNull<binding_detail::FakeString>. If we
+  // try to, it should fail to compile, since presumably the caller will try to
+  // use our nonexistent return value.
+}
+
 template <typename CharT>
-inline void NonNullHelper(const NonNull<nsTAutoString<CharT>>&) {}
+inline void NonNullHelper(
+    const NonNull<binding_detail::FakeString<CharT>>& aArg) {
+  // This overload is here to make sure that we never end up applying
+  // NonNullHelper to a NonNull<binding_detail::FakeString>. If we
+  // try to, it should fail to compile, since presumably the caller will try to
+  // use our nonexistent return value.
+}
+
 template <typename CharT>
-inline void NonNullHelper(nsTAutoString<CharT>&) {}
+inline void NonNullHelper(binding_detail::FakeString<CharT>& aArg) {
+  // This overload is here to make sure that we never end up applying
+  // NonNullHelper to a FakeString before we've constified it.  If we
+  // try to, it should fail to compile, since presumably the caller will try to
+  // use our nonexistent return value.
+}
 
 template <typename CharT>
 MOZ_ALWAYS_INLINE const nsTSubstring<CharT>& NonNullHelper(
-    const nsTAutoString<CharT>& aArg) {
+    const binding_detail::FakeString<CharT>& aArg) {
   return aArg;
 }
+
+// Given a DOM reflector aObj, give its underlying DOM object a reflector in
+// whatever global that underlying DOM object now thinks it should be in.  If
+// this is in a different compartment from aObj, aObj will become a
+// cross-compatment wrapper for the new object.  Otherwise, aObj will become the
+// new object (via a brain transplant).  If the new global is the same as the
+// old global, we just keep using the same object.
+//
+// On entry to this method, aCx and aObj must be same-compartment.
+void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                           ErrorResult& aError);
 
 // Helper for lenient getters/setters to report to console.  If this
 // returns false, we couldn't even get a global.
@@ -3490,8 +3540,16 @@ class ReflectedHTMLAttributeSlots : public Array<JS::Heap<JS::Value>, Count>,
   }
 
   static constexpr JSClassOps sXrayExpandoObjectClassOps = {
-      .finalize = XrayExpandoObjectFinalize,
-      .trace = XrayExpandoObjectTrace,
+      nullptr, /* addProperty */
+      nullptr, /* delProperty */
+      nullptr, /* enumerate */
+      nullptr, /* newEnumerate */
+      nullptr, /* resolve */
+      nullptr, /* mayResolve */
+      XrayExpandoObjectFinalize,
+      nullptr, /* call */
+      nullptr, /* construct */
+      XrayExpandoObjectTrace,
   };
 
  private:
@@ -3523,4 +3581,4 @@ void ClearXrayExpandoSlots(JS::RootingContext* aCx, JSObject* aObject,
 
 }  // namespace mozilla
 
-#endif /* mozilla_dom_BindingUtils_h_ */
+#endif /* mozilla_dom_BindingUtils_h__ */

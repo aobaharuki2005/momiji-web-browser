@@ -30,23 +30,15 @@ class CorruptionScoreObserver {
                                  VideoContentType content_type) = 0;
 };
 
-// Interface for a class that takes received frame instrumentation data
-// (i.e. corruption detection metadata) and validates that a given raw video
-// frame closely matches that metadata. The result is given by a callback to a
-// `CorruptionScoreObserver`, and that callback may by asynchronous so all
-// implementation need to be thread safe.
-// Note that calls to `OnInstrumentedFrame()` may happen on any thread - but
-// concurrent calls are not allowed; only one decode callback at a time.
 class FrameInstrumentationEvaluation {
  public:
   static std::unique_ptr<FrameInstrumentationEvaluation> Create(
       CorruptionScoreObserver* observer);
 
   virtual ~FrameInstrumentationEvaluation() = default;
-  virtual void OnInstrumentedFrame(FrameInstrumentationData data,
+  virtual void OnInstrumentedFrame(const FrameInstrumentationData& data,
                                    const VideoFrame& frame,
                                    VideoContentType frame_type) = 0;
-  virtual void OnSkippedInstrumentedFrame(FrameInstrumentationData data) = 0;
 
  protected:
   FrameInstrumentationEvaluation() = default;

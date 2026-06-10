@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * Copyright 2016 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -102,7 +104,6 @@ void BaseCompiler::bceCheckLocal(MemoryAccessDesc* access, AccessCheck* check,
 
 #ifdef ENABLE_WASM_CUSTOM_PAGE_SIZES
   if (codeMeta_.memories[0].pageSize() != PageSize::Standard) {
-    // We do not have guard pages, so we cannot perform this optimization.
     return;
   }
 #endif
@@ -157,11 +158,10 @@ RegI32 BaseCompiler::popConstMemoryAccess<RegI32>(MemoryAccessDesc* access,
                 UINT64_MAX - HugeOffsetGuardLimit);
 #endif
   uint64_t ea = uint64_t(addr) + uint64_t(access->offset32());
-  uint64_t finalAddress = ea + access->byteSize();
   uint64_t limit = codeMeta_.memories[access->memoryIndex()].initialLength() +
                    offsetGuardLimit;
 
-  check->omitBoundsCheck = finalAddress < limit;
+  check->omitBoundsCheck = ea < limit;
   check->omitAlignmentCheck = (ea & (access->byteSize() - 1)) == 0;
 
   // Fold the offset into the pointer if we can, as this is always
@@ -191,14 +191,12 @@ RegI64 BaseCompiler::popConstMemoryAccess<RegI64>(MemoryAccessDesc* access,
 
   mozilla::CheckedUint64 ea(addr);
   ea += access->offset64();
-  mozilla::CheckedUint64 finalAddress(ea);
-  finalAddress += access->byteSize();
   mozilla::CheckedUint64 limit(
       codeMeta_.memories[access->memoryIndex()].initialLength());
   limit += offsetGuardLimit;
 
-  if (ea.isValid() && finalAddress.isValid() && limit.isValid()) {
-    check->omitBoundsCheck = finalAddress.value() < limit.value();
+  if (ea.isValid() && limit.isValid()) {
+    check->omitBoundsCheck = ea.value() < limit.value();
     check->omitAlignmentCheck = (ea.value() & (access->byteSize() - 1)) == 0;
 
     // Fold the offset into the pointer if we can, as this is always
@@ -639,9 +637,9 @@ void BaseCompiler::executeLoad(MemoryAccessDesc* access, AccessCheck* check,
 #elif defined(JS_CODEGEN_RISCV64)
   MOZ_ASSERT(temp.isInvalid());
   if (dest.tag == AnyReg::I64) {
-    masm.wasmLoadI64(*access, memoryBase, ptr, dest.i64());
+    masm.wasmLoadI64(*access, memoryBase, ptr, ptr, dest.i64());
   } else {
-    masm.wasmLoad(*access, memoryBase, ptr, dest.any());
+    masm.wasmLoad(*access, memoryBase, ptr, ptr, dest.any());
   }
 #else
   MOZ_CRASH("BaseCompiler platform hook: load");
@@ -782,9 +780,9 @@ void BaseCompiler::executeStore(MemoryAccessDesc* access, AccessCheck* check,
 #elif defined(JS_CODEGEN_RISCV64)
   MOZ_ASSERT(temp.isInvalid());
   if (access->type() == Scalar::Int64) {
-    masm.wasmStoreI64(*access, src.i64(), memoryBase, ptr);
+    masm.wasmStoreI64(*access, src.i64(), memoryBase, ptr, ptr);
   } else {
-    masm.wasmStore(*access, src.any(), memoryBase, ptr);
+    masm.wasmStore(*access, src.any(), memoryBase, ptr, ptr);
   }
 #else
   MOZ_CRASH("BaseCompiler platform hook: store");

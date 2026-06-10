@@ -20,7 +20,6 @@
 
 #include "absl/memory/memory.h"
 #include "api/environment/environment.h"
-#include "api/task_queue/task_queue_base.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/async_tcp_socket.h"
 #include "rtc_base/checks.h"
@@ -28,18 +27,19 @@
 #include "rtc_base/network/received_packet.h"
 #include "rtc_base/socket.h"
 #include "rtc_base/socket_address.h"
-#include "rtc_base/socket_server.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
+#include "rtc_base/thread.h"
 
 namespace webrtc {
 
 // A test echo server, echoes back any packets sent to it.
 // Useful for unit tests.
-class TestEchoServer {
+class TestEchoServer : public sigslot::has_slots<> {
  public:
   TestEchoServer(const Environment& env,
-                 SocketServer* ss,
+                 Thread* thread,
                  const SocketAddress& addr);
-  virtual ~TestEchoServer();
+  ~TestEchoServer() override;
 
   TestEchoServer(const TestEchoServer&) = delete;
   TestEchoServer& operator=(const TestEchoServer&) = delete;
@@ -75,7 +75,7 @@ class TestEchoServer {
     // `OnClose` is triggered by socket Close callback, deleting `socket` while
     // processing that callback might be unsafe.
     auto node = client_sockets_.extract(iter);
-    TaskQueueBase::Current()->PostTask([node = std::move(node)] {});
+    Thread::Current()->PostTask([node = std::move(node)] {});
   }
 
   const Environment env_;
@@ -84,5 +84,6 @@ class TestEchoServer {
 };
 
 }  //  namespace webrtc
+
 
 #endif  // RTC_BASE_TEST_ECHO_SERVER_H_

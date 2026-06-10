@@ -1,3 +1,5 @@
+/* eslint-env mozilla/chrome-script */
+
 // Chrome scripts are run with synchronous messages, so make sure we're completely
 // decoupled from the content process before doing this work.
 Cu.dispatch(function () {

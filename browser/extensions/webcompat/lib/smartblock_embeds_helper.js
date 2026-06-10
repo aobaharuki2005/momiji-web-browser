@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals browser exportFunction Sanitizer */
+/* globals browser exportFunction */
 
 "use strict";
 
@@ -16,7 +16,6 @@ const embedHelperLib = (() => {
   let prevRanShims = new Set();
   let originalEmbedContainers = [];
   let embedPlaceholders = [];
-  let modifiedContainers = [];
   let observerTimeout;
   let newEmbedObserver;
 
@@ -44,19 +43,10 @@ const embedHelperLib = (() => {
         observerTimeout = null;
       }
 
-      // Remove placeholder and restore original containers
-      embedPlaceholders.forEach((placeholder, idx) => {
-        const modifiedContainer = modifiedContainers[idx];
-        const originalContainer = originalEmbedContainers[idx];
-
-        // Replace the modified container with the original
-        modifiedContainer.replaceWith(originalContainer);
+      // remove embed placeholders
+      embedPlaceholders.forEach((p, idx) => {
+        p.replaceWith(originalEmbedContainers[idx]);
       });
-
-      // Clear the arrays
-      embedPlaceholders = [];
-      modifiedContainers = [];
-      originalEmbedContainers = [];
 
       // recreate scripts
       let scriptElement = document.createElement("script");
@@ -82,14 +72,7 @@ const embedHelperLib = (() => {
   async function createShimPlaceholders(embedContainers, SHIM_INFO) {
     const { shimId, embedSelector, embedLogoURL, isTestShim } = SHIM_INFO;
 
-    // Check if we should show embed content in placeholders.
-    // This requires the Sanitizer API (setHTML), available in Firefox 148+.
-    const shouldShowEmbedContent = await sendMessageToAddon(
-      "shouldShowEmbedContentInPlaceholders",
-      shimId
-    );
-
-    const [titleString, descriptionString, buttonString, contentHeaderString] =
+    const [titleString, descriptionString, buttonString] =
       await sendMessageToAddon("smartblockGetFluentString", shimId);
 
     if (!embedContainers.length) {
@@ -133,23 +116,23 @@ const embedHelperLib = (() => {
             border: 0;
   
             /* Colours match light/dark theme from
-              https://searchfox.org/firefox-main/source/browser/themes/addons/light/manifest.json
-              https://searchfox.org/firefox-main/source/browser/themes/addons/dark/manifest.json */
+              https://searchfox.org/mozilla-central/source/browser/themes/addons/light/manifest.json
+              https://searchfox.org/mozilla-central/source/browser/themes/addons/dark/manifest.json */
             background-color: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
             color: light-dark(rgb(251, 251, 254), rgb(43, 42, 51));
           }
   
           #smartblock-placeholder-button:hover {
             /* Colours match light/dark theme from
-              https://searchfox.org/firefox-main/source/browser/themes/addons/light/manifest.json
-              https://searchfox.org/firefox-main/source/browser/themes/addons/dark/manifest.json */
+              https://searchfox.org/mozilla-central/source/browser/themes/addons/light/manifest.json
+              https://searchfox.org/mozilla-central/source/browser/themes/addons/dark/manifest.json */
             background-color: light-dark(rgb(2, 80, 187), rgb(128, 235, 255));
           }
 
           #smartblock-placeholder-button:hover:active {
             /* Colours match light/dark theme from
-              https://searchfox.org/firefox-main/source/browser/themes/addons/light/manifest.json
-              https://searchfox.org/firefox-main/source/browser/themes/addons/dark/manifest.json */
+              https://searchfox.org/mozilla-central/source/browser/themes/addons/light/manifest.json
+              https://searchfox.org/mozilla-central/source/browser/themes/addons/dark/manifest.json */
             background-color: light-dark(rgb(5, 62, 148), rgb(170, 242, 255));
           }
   
@@ -206,171 +189,12 @@ const embedHelperLib = (() => {
           sendMessageToAddon("embedClicked", shimId);
         });
 
-      // Determine what element to use for replacement
-      let replacementElement;
-
-      if (shouldShowEmbedContent) {
-        // Extract safe content from the original container
-        // Only copy text content and links to avoid any dynamic code
-        const safeContentContainer = document.createElement("div");
-
-        // Style the safe content container for better readability
-        safeContentContainer.style.cssText = `
-          margin-top: 12px;
-          padding: 12px;
-          background-color: light-dark(rgb(248, 248, 248), rgb(42, 42, 46));
-          border-radius: 4px;
-          font-size: 14px;
-          line-height: 1.5;
-          color: light-dark(rgb(43, 42, 51), rgb(251, 251, 254));
-          font-family: system-ui, -apple-system, sans-serif;
-        `;
-
-        // Use Sanitizer API to safely extract content
-        // List all default safe HTML elements EXCEPT <a> and <br> which we want to keep
-        // Source: dom/security/sanitizer/SanitizerDefaultConfig.h kDefaultHTMLElements
-        // Sanitizer unwraps these elements (replaces them with their children)
-        const sanitizer = new Sanitizer({
-          attributes: [],
-          elements: [
-            { name: "a", attributes: ["href", "target", "title"] },
-            "br",
-          ],
-          replaceWithChildrenElements: [
-            "abbr",
-            "address",
-            "article",
-            "aside",
-            "b",
-            "bdi",
-            "bdo",
-            "blockquote",
-            "body",
-            "caption",
-            "cite",
-            "code",
-            "col",
-            "colgroup",
-            "data",
-            "dd",
-            "del",
-            "dfn",
-            "div",
-            "dl",
-            "dt",
-            "em",
-            "figcaption",
-            "figure",
-            "footer",
-            "h1",
-            "h2",
-            "h3",
-            "h4",
-            "h5",
-            "h6",
-            "head",
-            "header",
-            "hgroup",
-            "hr",
-            // "html" (not allowed here, but not relevant for setHTML)
-            "i",
-            "ins",
-            "kbd",
-            "li",
-            "main",
-            "mark",
-            "menu",
-            "nav",
-            "ol",
-            "p",
-            "pre",
-            "q",
-            "rp",
-            "rt",
-            "ruby",
-            "s",
-            "samp",
-            "search",
-            "section",
-            "small",
-            "span",
-            "strong",
-            "sub",
-            "sup",
-            "table",
-            "tbody",
-            "td",
-            "tfoot",
-            "th",
-            "thead",
-            "time",
-            "title",
-            "tr",
-            "u",
-            "ul",
-            "var",
-            "wbr",
-          ],
-        });
-
-        // Create container for sanitized content
-        const contentDiv = document.createElement("div");
-        contentDiv.setHTML(originalContainer.innerHTML, { sanitizer });
-
-        // Manually filter out non-https URLs from links (prevents data:, blob:, etc.)
-        // Sanitizer API handles javascript: URLs, but not data: or blob:
-        contentDiv.querySelectorAll("a[href]").forEach(link => {
-          try {
-            const url = new URL(link.href, document.baseURI);
-            if (url.protocol !== "https:") {
-              link.removeAttribute("href");
-            }
-          } catch {
-            link.removeAttribute("href");
-          }
-        });
-
-        // Style remaining links for visibility and add security attributes
-        contentDiv.querySelectorAll("a[href]").forEach(link => {
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.style.cssText = `
-            color: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
-            text-decoration: underline;
-            cursor: pointer;
-          `;
-        });
-
-        // Add explanatory header
-        const explanationDiv = document.createElement("div");
-        explanationDiv.textContent = contentHeaderString;
-        explanationDiv.style.cssText = `
-          font-size: 12px;
-          font-weight: 600;
-          color: light-dark(rgb(91, 91, 102), rgb(191, 191, 201));
-          margin-bottom: 8px;
-        `;
-        safeContentContainer.appendChild(explanationDiv);
-        safeContentContainer.appendChild(contentDiv);
-
-        // Create a wrapper to hold both the placeholder and safe content
-        const wrapperDiv = document.createElement("div");
-        wrapperDiv.appendChild(placeholderDiv);
-        wrapperDiv.appendChild(safeContentContainer);
-
-        replacementElement = wrapperDiv;
-      } else {
-        // Sanitizer API not available, just use the placeholder without embed content
-        replacementElement = placeholderDiv;
-      }
-
-      // Save references for later restoration
-      embedPlaceholders.push(replacementElement);
-      modifiedContainers.push(replacementElement);
+      // Save the original embed element and the newly created placeholder
+      embedPlaceholders.push(placeholderDiv);
       originalEmbedContainers.push(originalContainer);
 
-      // Replace the original container with our replacement element
-      originalContainer.replaceWith(replacementElement);
+      // Replace the embed with the placeholder
+      originalContainer.replaceWith(placeholderDiv);
 
       sendMessageToAddon("smartblockEmbedReplaced", shimId);
     });

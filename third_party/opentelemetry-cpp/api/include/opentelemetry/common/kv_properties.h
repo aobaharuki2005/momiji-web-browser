@@ -33,7 +33,7 @@ public:
   KeyValueStringTokenizer(
       nostd::string_view str,
       const KeyValueStringTokenizerOptions &opts = KeyValueStringTokenizerOptions()) noexcept
-      : str_(str), opts_(opts)
+      : str_(str), opts_(opts), index_(0)
   {}
 
   static nostd::string_view GetDefaultKeyOrValue()
@@ -129,7 +129,7 @@ public:
 private:
   nostd::string_view str_;
   KeyValueStringTokenizerOptions opts_;
-  size_t index_{};
+  size_t index_;
 };
 
 // Class to store fixed size array of key-value pairs of string type
@@ -140,8 +140,7 @@ public:
   class Entry
   {
   public:
-    Entry()  = default;
-    ~Entry() = default;
+    Entry() : key_(nullptr), value_(nullptr) {}
 
     // Copy constructor
     Entry(const Entry &copy)
@@ -151,20 +150,16 @@ public:
     }
 
     // Copy assignment operator
-    Entry &operator=(const Entry &other)
+    Entry &operator=(Entry &other)
     {
-      if (this == &other)
-      {
-        return *this;
-      }
       key_   = CopyStringToPointer(other.key_.get());
       value_ = CopyStringToPointer(other.value_.get());
       return *this;
     }
 
     // Move contructor and assignment operator
-    Entry(Entry &&other) noexcept            = default;
-    Entry &operator=(Entry &&other) noexcept = default;
+    Entry(Entry &&other)            = default;
+    Entry &operator=(Entry &&other) = default;
 
     // Creates an Entry for a given key-value pair.
     Entry(nostd::string_view key, nostd::string_view value)
@@ -199,10 +194,10 @@ public:
   };
 
   // Maintain the number of entries in entries_.
-  size_t num_entries_{};
+  size_t num_entries_;
 
   // Max size of allocated array
-  size_t max_num_entries_{};
+  size_t max_num_entries_;
 
   // Store entries in a C-style array to avoid using std::array or std::vector.
   nostd::unique_ptr<Entry[]> entries_;
@@ -210,14 +205,18 @@ public:
 public:
   // Create Key-value list of given size
   // @param size : Size of list.
-  KeyValueProperties(size_t size) noexcept : max_num_entries_(size), entries_(new Entry[size]) {}
+  KeyValueProperties(size_t size) noexcept
+      : num_entries_(0), max_num_entries_(size), entries_(new Entry[size])
+  {}
 
   // Create Empty Key-Value list
-  KeyValueProperties() noexcept = default;
+  KeyValueProperties() noexcept : num_entries_(0), max_num_entries_(0), entries_(nullptr) {}
 
   template <class T, class = typename std::enable_if<detail::is_key_value_iterable<T>::value>::type>
   KeyValueProperties(const T &keys_and_values) noexcept
-      : max_num_entries_(keys_and_values.size()), entries_(new Entry[max_num_entries_])
+      : num_entries_(0),
+        max_num_entries_(keys_and_values.size()),
+        entries_(new Entry[max_num_entries_])
   {
     for (auto &e : keys_and_values)
     {

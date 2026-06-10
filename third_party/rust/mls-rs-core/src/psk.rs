@@ -24,7 +24,9 @@ pub struct PreSharedKey(
 
 impl Debug for PreSharedKey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("PreSharedKey").finish()
+        crate::debug::pretty_bytes(&self.0)
+            .named("PreSharedKey")
+            .fmt(f)
     }
 }
 
@@ -68,6 +70,10 @@ impl Deref for PreSharedKey {
 
 #[derive(Clone, Eq, Hash, Ord, PartialOrd, PartialEq, MlsSize, MlsEncode, MlsDecode)]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
+// #[cfg_attr(
+//     all(feature = "ffi", not(test)),
+//     safer_ffi_gen::ffi_type(clone, opaque)
+// )]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// An external pre-shared key identifier.
 pub struct ExternalPskId(
@@ -84,6 +90,7 @@ impl Debug for ExternalPskId {
     }
 }
 
+// #[cfg_attr(all(feature = "ffi", not(test)), safer_ffi_gen::safer_ffi_gen)]
 impl ExternalPskId {
     pub fn new(id_data: Vec<u8>) -> Self {
         Self(id_data)

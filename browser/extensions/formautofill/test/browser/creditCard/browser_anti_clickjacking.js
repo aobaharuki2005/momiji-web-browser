@@ -64,14 +64,8 @@ add_task(async function test_active_delay() {
       );
 
       // Check that clicking on menu doesn't do anything while
-      // it is disabled. We need to intentionally turn off this a11y-check,
-      // because the target control is not meant to be interactive and is not
-      // expected to be accessible:
-      AccessibilityUtils.setEnv({
-        mustBeEnabled: false,
-      });
+      // it is disabled
       firstItem.click();
-      AccessibilityUtils.resetEnv();
       is(
         browser.autoCompletePopup.selectedIndex,
         -1,

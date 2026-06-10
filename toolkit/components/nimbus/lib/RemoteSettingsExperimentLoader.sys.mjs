@@ -119,27 +119,6 @@ export const MatchStatus = Object.freeze({
   DISABLED: "DISABLED",
 });
 
-const DeliveryKind = Object.freeze({
-  FIREFOX_LABS_OPT_IN: "firefox-labs-opt-in",
-  ROLLOUT: "rollout",
-  STUDY: "study",
-});
-
-/**
- * @returns {DeliveryKind}
- */
-function getDeliveryKind(recipe) {
-  if (recipe.isFirefoxLabsOptIn) {
-    return DeliveryKind.FIREFOX_LABS_OPT_IN;
-  }
-
-  if (recipe.isRollout) {
-    return DeliveryKind.ROLLOUT;
-  }
-
-  return DeliveryKind.STUDY;
-}
-
 export const CheckRecipeResult = {
   Ok(status) {
     return {
@@ -391,8 +370,6 @@ export class RemoteSettingsExperimentLoader {
 
     await this.withUpdateLock(() => this.#updateImpl(trigger, options));
 
-    Services.prefs.setBoolPref("nimbus.firstUpdateComplete", true);
-
     this._hasUpdatedOnce = true;
     this._updating = false;
     this._updatingDeferred.resolve();
@@ -409,20 +386,11 @@ export class RemoteSettingsExperimentLoader {
    * @param {boolean} options.forceSync
    *                  Force a Remote Settings client to sync records before
    *                  updating. Otherwise locally cached records will be used.
-   * @param {Set<string> | undefined} options.onlyFeatureIds
-   * Only consider experiments that contain one of the given feature IDs when
-   * updating.
-   *
-   * Existing enrollments will only be affected if their feature IDs
-   * are in this set.
    */
-  async #updateImpl(
-    trigger,
-    { forceSync = false, onlyFeatureIds = undefined } = {}
-  ) {
+  async #updateImpl(trigger, { forceSync = false } = {}) {
     lazy.log.debug(`Updating recipes with trigger "${trigger ?? ""}"`);
 
-    this.manager._clearOptIns(this.SOURCE, { onlyFeatureIds });
+    this.manager.optInRecipes = [];
 
     // The targeting context metrics do not work in artifact builds.
     // See-also: https://bugzilla.mozilla.org/show_bug.cgi?id=1936317
@@ -450,7 +418,6 @@ export class RemoteSettingsExperimentLoader {
         allRecipes = await this.getRecipesFromAllCollections({
           forceSync,
           trigger,
-          onlyFeatureIds,
         });
       } catch (e) {
         lazy.log.debug("Failed to update", e);
@@ -468,17 +435,14 @@ export class RemoteSettingsExperimentLoader {
           {
             validationEnabled,
             labsEnabled: lazy.ExperimentAPI.labsEnabled,
-            rolloutsEnabled: lazy.ExperimentAPI.rolloutsEnabled,
             studiesEnabled: lazy.ExperimentAPI.studiesEnabled,
             shouldCheckTargeting: true,
             unenrolledExperimentSlugs,
           }
         );
 
-        const { existingEnrollments, recipes } = this._partitionRecipes(
-          allRecipes,
-          { onlyFeatureIds }
-        );
+        const { existingEnrollments, recipes } =
+          this._partitionRecipes(allRecipes);
 
         for (const { enrollment, recipe } of existingEnrollments) {
           const result = recipe
@@ -529,18 +493,12 @@ export class RemoteSettingsExperimentLoader {
    * fetching recipes.
    * @param {string} options.trigger The name of the event that triggered the
    * update.
-   * @param {string[] | undefined } options.onlyFeatureIds Only include recipes
-   * that have at least one of the listed feature IDs.
    *
    * @returns {Promise<object[]>} The recipes from Remote Settings.
    *
    * @throws {RemoteSettingsSyncError}
    */
-  async getRecipesFromAllCollections({
-    forceSync = false,
-    trigger,
-    onlyFeatureIds,
-  } = {}) {
+  async getRecipesFromAllCollections({ forceSync = false, trigger } = {}) {
     try {
       const recipes = [];
 
@@ -563,7 +521,6 @@ export class RemoteSettingsExperimentLoader {
         const collection = await this.getRecipesFromCollection({
           forceSync,
           client,
-          onlyFeatureIds,
           ...collectionOptions,
         });
 
@@ -582,15 +539,7 @@ export class RemoteSettingsExperimentLoader {
 
         timestamps?.set(client.collectionName, collection.lastModified);
 
-        if (Array.isArray(onlyFeatureIds)) {
-          recipes.push(
-            ...collection.recipes.filter(({ featureIds }) =>
-              featureIds.some(featureId => onlyFeatureIds.includes(featureId))
-            )
-          );
-        } else {
-          recipes.push(...collection.recipes);
-        }
+        recipes.push(...collection.recipes);
       }
 
       if (timestamps) {
@@ -645,10 +594,6 @@ export class RemoteSettingsExperimentLoader {
    *        or it will be rejected.
    * @param {Set<string> | undefined} options.disallowedFeatureIds
    *        If a recipe uses any features in this list, it will be rejected.
-   * @param {Set<string> | undefined} options.onlyFeatureIds Limit the recipes
-   * returned to only those that contain at least one of these featureIds.
-   * Unlike `options.requiredFeatureIds`, it is not an error for a recipe to be
-   * present in the collection without one of these feature IDs.
    *
    * @returns {Promise<RecipeCollection>} The recipes and last modified
    * timestamp from the collection, filtered based on `requiredFeatureIds` and
@@ -662,7 +607,6 @@ export class RemoteSettingsExperimentLoader {
     forceSync = false,
     requiredFeatureIds = undefined,
     disallowedFeatureIds = undefined,
-    onlyFeatureIds = undefined,
   } = {}) {
     let recipes;
     try {
@@ -694,8 +638,7 @@ export class RemoteSettingsExperimentLoader {
     } catch (e) {
       throw new RemoteSettingsSyncError(
         client.collectionName,
-        lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason
-          .LAST_MODIFIED_EXCEPTION,
+        lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.LAST_MODIFIED_EXCEPTION,
         { cause: e }
       );
     }
@@ -719,13 +662,6 @@ export class RemoteSettingsExperimentLoader {
         lazy.log.warn(
           `Recipe ${recipe.slug} not returned from collection ${client.collectionName} because it does not contain at least one required feature ID.`
         );
-        return false;
-      }
-
-      if (
-        onlyFeatureIds &&
-        !recipe.featureIds.some(featureId => onlyFeatureIds.has(featureId))
-      ) {
         return false;
       }
 
@@ -847,7 +783,12 @@ export class RemoteSettingsExperimentLoader {
       throw new Error(`Recipe ${recipe.slug} did not match targeting`);
     }
 
-    this.manager.forceEnroll(recipe, branchSlug);
+    const branch = recipe.branches.find(b => b.slug === branchSlug);
+    if (!branch) {
+      throw new Error(`Could not find branch slug ${branchSlug} in ${slug}`);
+    }
+
+    await this.manager.forceEnroll(recipe, branch);
   }
 
   /**
@@ -855,9 +796,9 @@ export class RemoteSettingsExperimentLoader {
    * and vice versa.
    */
   async onEnabledPrefChange() {
-    if (!this._enabled && lazy.ExperimentAPI.enabled) {
+    if (lazy.ExperimentAPI.enabled) {
       await this.enable();
-    } else if (this._enabled && !lazy.ExperimentAPI.enabled) {
+    } else {
       this.disable();
     }
   }
@@ -915,9 +856,6 @@ export class RemoteSettingsExperimentLoader {
    * @param {object[]} recipes
    *        The recipes returned from Remote Settings.
    *
-   * @param {object} options
-   * @param {Set<string> | undefined} options.onlyFeatureIds
-   *
    * @returns {object}
    *          An object containing:
    *
@@ -928,7 +866,7 @@ export class RemoteSettingsExperimentLoader {
    *          - `recipes`, the remaining recipes which do not have currently
    *            active enrollments.
    */
-  _partitionRecipes(recipes, { onlyFeatureIds }) {
+  _partitionRecipes(recipes) {
     const rollouts = [];
     const experiments = [];
 
@@ -936,13 +874,6 @@ export class RemoteSettingsExperimentLoader {
 
     for (const enrollment of this.manager.store.getAll()) {
       if (!enrollment.active || enrollment.source !== this.SOURCE) {
-        continue;
-      }
-
-      if (
-        onlyFeatureIds &&
-        enrollment.featureIds.some(featureId => !onlyFeatureIds.has(featureId))
-      ) {
         continue;
       }
 
@@ -1000,18 +931,16 @@ export class EnrollmentsContext {
       validationEnabled = true,
       shouldCheckTargeting = true,
       unenrolledExperimentSlugs,
-      labsEnabled = true,
-      rolloutsEnabled = true,
       studiesEnabled = true,
+      labsEnabled = true,
     } = {}
   ) {
     this.manager = manager;
     this.recipeValidator = recipeValidator;
 
     this.validationEnabled = validationEnabled;
-    this.labsEnabled = labsEnabled;
-    this.rolloutsEnabled = rolloutsEnabled;
     this.studiesEnabled = studiesEnabled;
+    this.labsEnabled = labsEnabled;
 
     this.validatorCache = {};
     this.shouldCheckTargeting = shouldCheckTargeting;
@@ -1046,12 +975,9 @@ export class EnrollmentsContext {
       }
     }
 
-    const deliveryKind = getDeliveryKind(recipe);
     if (
-      (deliveryKind === DeliveryKind.FIREFOX_LABS_OPT_IN &&
-        !this.labsEnabled) ||
-      (deliveryKind === DeliveryKind.ROLLOUT && !this.rolloutsEnabled) ||
-      (deliveryKind === DeliveryKind.STUDY && !this.studiesEnabled)
+      (recipe.isFirefoxLabsOptIn && !this.labsEnabled) ||
+      (!recipe.isFirefoxLabsOptIn && !this.studiesEnabled)
     ) {
       return CheckRecipeResult.Ok(MatchStatus.DISABLED);
     }

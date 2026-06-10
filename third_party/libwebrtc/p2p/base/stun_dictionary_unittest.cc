@@ -22,11 +22,10 @@
 #include "rtc_base/socket_address.h"
 #include "test/gtest.h"
 
-namespace webrtc {
-
 namespace {
 
-void Sync(StunDictionaryView& dictionary, StunDictionaryWriter& writer) {
+void Sync(webrtc::StunDictionaryView& dictionary,
+          webrtc::StunDictionaryWriter& writer) {
   int pending = writer.Pending();
   auto delta = writer.CreateDelta();
   if (delta == nullptr) {
@@ -44,17 +43,18 @@ void Sync(StunDictionaryView& dictionary, StunDictionaryWriter& writer) {
   }
 }
 
-void XorToggle(StunByteStringAttribute& attr, size_t byte) {
+void XorToggle(webrtc::StunByteStringAttribute& attr, size_t byte) {
   ASSERT_TRUE(attr.length() > byte);
   uint8_t val = attr.GetByte(byte);
   uint8_t new_val = val ^ (128 - (byte & 255));
   attr.SetByte(byte, new_val);
 }
 
-std::unique_ptr<StunByteStringAttribute> Crop(
-    const StunByteStringAttribute& attr,
+std::unique_ptr<webrtc::StunByteStringAttribute> Crop(
+    const webrtc::StunByteStringAttribute& attr,
     int new_length) {
-  auto new_attr = std::make_unique<StunByteStringAttribute>(attr.type());
+  auto new_attr =
+      std::make_unique<webrtc::StunByteStringAttribute>(attr.type());
   std::string content = std::string(attr.string_view());
   content.erase(new_length);
   new_attr->CopyBytes(content);
@@ -62,6 +62,8 @@ std::unique_ptr<StunByteStringAttribute> Crop(
 }
 
 }  // namespace
+
+namespace webrtc {
 
 constexpr int kKey1 = 100;
 

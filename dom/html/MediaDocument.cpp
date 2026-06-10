@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -45,8 +47,8 @@ MediaDocumentStreamListener::OnStartRequest(nsIRequest* request) {
 
   mDocument->StartLayout();
 
-  if (nsCOMPtr<nsIStreamListener> nextStream = mNextStream) {
-    return nextStream->OnStartRequest(request);
+  if (mNextStream) {
+    return mNextStream->OnStartRequest(request);
   }
 
   return NS_ERROR_PARSED_DATA_CACHED;
@@ -56,8 +58,8 @@ NS_IMETHODIMP
 MediaDocumentStreamListener::OnStopRequest(nsIRequest* request,
                                            nsresult status) {
   nsresult rv = NS_OK;
-  if (nsCOMPtr<nsIStreamListener> nextStream = mNextStream) {
-    rv = nextStream->OnStopRequest(request, status);
+  if (mNextStream) {
+    rv = mNextStream->OnStopRequest(request, status);
   }
 
   // Don't release mDocument here if we're in the middle of a multipart
@@ -79,8 +81,8 @@ MediaDocumentStreamListener::OnDataAvailable(nsIRequest* request,
                                              nsIInputStream* inStr,
                                              uint64_t sourceOffset,
                                              uint32_t count) {
-  if (nsCOMPtr<nsIStreamListener> nextStream = mNextStream) {
-    return nextStream->OnDataAvailable(request, inStr, sourceOffset, count);
+  if (mNextStream) {
+    return mNextStream->OnDataAvailable(request, inStr, sourceOffset, count);
   }
 
   return NS_OK;
@@ -182,7 +184,7 @@ void MediaDocument::InitialSetupDone() {
              "Bad readyState: we should still be doing our initial load");
   mDidInitialDocumentSetup = true;
   nsContentUtils::AddScriptRunner(
-      MakeAndAddRef<nsDocElementCreatedNotificationRunner>(this));
+      new nsDocElementCreatedNotificationRunner(this));
   SetReadyStateInternal(Document::READYSTATE_INTERACTIVE);
 }
 
@@ -374,23 +376,20 @@ void MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
     heightStr.AppendInt(aHeight);
     // If we got a filename, display it
     if (!fileStr.IsEmpty()) {
-      AutoTArray<nsString, 4> formatStrings = {
-          std::move(fileStr), std::move(typeStr), std::move(widthStr),
-          std::move(heightStr)};
+      AutoTArray<nsString, 4> formatStrings = {fileStr, typeStr, widthStr,
+                                               heightStr};
       FormatStringFromName(aFormatNames[eWithDimAndFile], formatStrings, title);
     } else {
-      AutoTArray<nsString, 3> formatStrings = {
-          std::move(typeStr), std::move(widthStr), std::move(heightStr)};
+      AutoTArray<nsString, 3> formatStrings = {typeStr, widthStr, heightStr};
       FormatStringFromName(aFormatNames[eWithDim], formatStrings, title);
     }
   } else {
     // If we got a filename, display it
     if (!fileStr.IsEmpty()) {
-      AutoTArray<nsString, 2> formatStrings = {std::move(fileStr),
-                                               std::move(typeStr)};
+      AutoTArray<nsString, 2> formatStrings = {fileStr, typeStr};
       FormatStringFromName(aFormatNames[eWithFile], formatStrings, title);
     } else {
-      AutoTArray<nsString, 1> formatStrings = {std::move(typeStr)};
+      AutoTArray<nsString, 1> formatStrings = {typeStr};
       FormatStringFromName(aFormatNames[eWithNoInfo], formatStrings, title);
     }
   }

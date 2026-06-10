@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -56,13 +58,15 @@ nsMathMLmencloseFrame::nsMathMLmencloseFrame(ComputedStyle* aStyle,
 
 nsMathMLmencloseFrame::~nsMathMLmencloseFrame() = default;
 
-nsresult nsMathMLmencloseFrame::AllocateMathMLChar(MencloseNotation mask) {
+nsresult nsMathMLmencloseFrame::AllocateMathMLChar(nsMencloseNotation mask) {
   // Is the char already allocated?
-  if (mask == MencloseNotation::LongDiv && mLongDivCharIndex >= 0) {
+  if (mask == NOTATION_LONGDIV && mLongDivCharIndex >= 0) {
     return NS_OK;
   }
 
   // No need to track the ComputedStyle given to our MathML chars.
+  // The Style System will use Get/SetAdditionalComputedStyle() to keep it
+  // up-to-date if dynamic changes arise.
   uint32_t i = mMathMLChar.Length();
   nsAutoString Char;
 
@@ -70,7 +74,7 @@ nsresult nsMathMLmencloseFrame::AllocateMathMLChar(MencloseNotation mask) {
   // pretended earlier, or change the return type to void.
   mMathMLChar.AppendElement();
 
-  if (mask == MencloseNotation::LongDiv) {
+  if (mask == NOTATION_LONGDIV) {
     Char.Assign(kLongDivChar);
     mLongDivCharIndex = i;
   }
@@ -89,45 +93,45 @@ nsresult nsMathMLmencloseFrame::AddNotation(const nsAString& aNotation) {
   nsresult rv;
 
   if (aNotation.EqualsLiteral("longdiv")) {
-    rv = AllocateMathMLChar(MencloseNotation::LongDiv);
+    rv = AllocateMathMLChar(NOTATION_LONGDIV);
     NS_ENSURE_SUCCESS(rv, rv);
-    mNotationsToDraw += MencloseNotation::LongDiv;
+    mNotationsToDraw += NOTATION_LONGDIV;
   } else if (aNotation.EqualsLiteral("actuarial")) {
-    mNotationsToDraw += MencloseNotation::Right;
-    mNotationsToDraw += MencloseNotation::Top;
+    mNotationsToDraw += NOTATION_RIGHT;
+    mNotationsToDraw += NOTATION_TOP;
   } else if (aNotation.EqualsLiteral("box")) {
-    mNotationsToDraw += MencloseNotation::Left;
-    mNotationsToDraw += MencloseNotation::Right;
-    mNotationsToDraw += MencloseNotation::Top;
-    mNotationsToDraw += MencloseNotation::Bottom;
+    mNotationsToDraw += NOTATION_LEFT;
+    mNotationsToDraw += NOTATION_RIGHT;
+    mNotationsToDraw += NOTATION_TOP;
+    mNotationsToDraw += NOTATION_BOTTOM;
   } else if (aNotation.EqualsLiteral("roundedbox")) {
-    mNotationsToDraw += MencloseNotation::RoundedBox;
+    mNotationsToDraw += NOTATION_ROUNDEDBOX;
   } else if (aNotation.EqualsLiteral("circle")) {
-    mNotationsToDraw += MencloseNotation::Circle;
+    mNotationsToDraw += NOTATION_CIRCLE;
   } else if (aNotation.EqualsLiteral("left")) {
-    mNotationsToDraw += MencloseNotation::Left;
+    mNotationsToDraw += NOTATION_LEFT;
   } else if (aNotation.EqualsLiteral("right")) {
-    mNotationsToDraw += MencloseNotation::Right;
+    mNotationsToDraw += NOTATION_RIGHT;
   } else if (aNotation.EqualsLiteral("top")) {
-    mNotationsToDraw += MencloseNotation::Top;
+    mNotationsToDraw += NOTATION_TOP;
   } else if (aNotation.EqualsLiteral("bottom")) {
-    mNotationsToDraw += MencloseNotation::Bottom;
+    mNotationsToDraw += NOTATION_BOTTOM;
   } else if (aNotation.EqualsLiteral("updiagonalstrike")) {
-    mNotationsToDraw += MencloseNotation::UpDiagonalStrike;
+    mNotationsToDraw += NOTATION_UPDIAGONALSTRIKE;
   } else if (aNotation.EqualsLiteral("updiagonalarrow")) {
-    mNotationsToDraw += MencloseNotation::UpDiagonalArrow;
+    mNotationsToDraw += NOTATION_UPDIAGONALARROW;
   } else if (aNotation.EqualsLiteral("downdiagonalstrike")) {
-    mNotationsToDraw += MencloseNotation::DownDiagonalStrike;
+    mNotationsToDraw += NOTATION_DOWNDIAGONALSTRIKE;
   } else if (aNotation.EqualsLiteral("verticalstrike")) {
-    mNotationsToDraw += MencloseNotation::VerticalStrike;
+    mNotationsToDraw += NOTATION_VERTICALSTRIKE;
   } else if (aNotation.EqualsLiteral("horizontalstrike")) {
-    mNotationsToDraw += MencloseNotation::HorizontalStrike;
+    mNotationsToDraw += NOTATION_HORIZONTALSTRIKE;
   } else if (aNotation.EqualsLiteral("madruwb")) {
-    mNotationsToDraw += MencloseNotation::Right;
-    mNotationsToDraw += MencloseNotation::Bottom;
+    mNotationsToDraw += NOTATION_RIGHT;
+    mNotationsToDraw += NOTATION_BOTTOM;
   } else if (aNotation.EqualsLiteral("phasorangle")) {
-    mNotationsToDraw += MencloseNotation::Bottom;
-    mNotationsToDraw += MencloseNotation::PhasorAngle;
+    mNotationsToDraw += NOTATION_BOTTOM;
+    mNotationsToDraw += NOTATION_PHASORANGLE;
   }
 
   return NS_OK;
@@ -152,19 +156,19 @@ void nsMathMLmencloseFrame::InitNotations() {
       AddNotation(tokenizer.nextToken());
     }
 
-    if (IsToDraw(MencloseNotation::UpDiagonalArrow)) {
+    if (IsToDraw(NOTATION_UPDIAGONALARROW)) {
       // For <menclose notation="updiagonalstrike updiagonalarrow">, if
       // the two notations are drawn then the strike line may cause the point of
       // the arrow to be too wide. Hence we will only draw the updiagonalarrow
       // and the arrow shaft may be thought to be the updiagonalstrike.
-      mNotationsToDraw -= MencloseNotation::UpDiagonalStrike;
+      mNotationsToDraw -= NOTATION_UPDIAGONALSTRIKE;
     }
   } else {
     // default: longdiv
-    if (NS_FAILED(AllocateMathMLChar(MencloseNotation::LongDiv))) {
+    if (NS_FAILED(AllocateMathMLChar(NOTATION_LONGDIV))) {
       return;
     }
-    mNotationsToDraw += MencloseNotation::LongDiv;
+    mNotationsToDraw += NOTATION_LONGDIV;
   }
 }
 
@@ -189,84 +193,77 @@ void nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   nsRect mencloseRect = nsIFrame::GetContentRectRelativeToSelf();
 
-  if (IsToDraw(MencloseNotation::PhasorAngle)) {
+  if (IsToDraw(NOTATION_PHASORANGLE)) {
     DisplayNotation(aBuilder, this, mencloseRect, aLists, mRuleThickness,
-                    MencloseNotation::PhasorAngle);
+                    NOTATION_PHASORANGLE);
   }
 
-  if (IsToDraw(MencloseNotation::LongDiv)) {
+  if (IsToDraw(NOTATION_LONGDIV)) {
     mMathMLChar[mLongDivCharIndex].Display(aBuilder, this, aLists, 1);
 
     nsRect rect;
     mMathMLChar[mLongDivCharIndex].GetRect(rect);
     rect.SizeTo(rect.width + mContentWidth, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists,
-               static_cast<uint16_t>(MencloseNotation::LongDiv));
+    DisplayBar(aBuilder, this, rect, aLists, NOTATION_LONGDIV);
   }
 
-  if (IsToDraw(MencloseNotation::Top)) {
+  if (IsToDraw(NOTATION_TOP)) {
     nsRect rect(0, 0, mencloseRect.width, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists,
-               static_cast<uint16_t>(MencloseNotation::Top));
+    DisplayBar(aBuilder, this, rect, aLists, NOTATION_TOP);
   }
 
-  if (IsToDraw(MencloseNotation::Bottom)) {
+  if (IsToDraw(NOTATION_BOTTOM)) {
     nsRect rect(0, mencloseRect.height - mRuleThickness, mencloseRect.width,
                 mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists,
-               static_cast<uint16_t>(MencloseNotation::Bottom));
+    DisplayBar(aBuilder, this, rect, aLists, NOTATION_BOTTOM);
   }
 
-  if (IsToDraw(MencloseNotation::Left)) {
+  if (IsToDraw(NOTATION_LEFT)) {
     nsRect rect(0, 0, mRuleThickness, mencloseRect.height);
-    DisplayBar(aBuilder, this, rect, aLists,
-               static_cast<uint16_t>(MencloseNotation::Left));
+    DisplayBar(aBuilder, this, rect, aLists, NOTATION_LEFT);
   }
 
-  if (IsToDraw(MencloseNotation::Right)) {
+  if (IsToDraw(NOTATION_RIGHT)) {
     nsRect rect(mencloseRect.width - mRuleThickness, 0, mRuleThickness,
                 mencloseRect.height);
-    DisplayBar(aBuilder, this, rect, aLists,
-               static_cast<uint16_t>(MencloseNotation::Right));
+    DisplayBar(aBuilder, this, rect, aLists, NOTATION_RIGHT);
   }
 
-  if (IsToDraw(MencloseNotation::RoundedBox)) {
+  if (IsToDraw(NOTATION_ROUNDEDBOX)) {
     DisplayNotation(aBuilder, this, mencloseRect, aLists, mRuleThickness,
-                    MencloseNotation::RoundedBox);
+                    NOTATION_ROUNDEDBOX);
   }
 
-  if (IsToDraw(MencloseNotation::Circle)) {
+  if (IsToDraw(NOTATION_CIRCLE)) {
     DisplayNotation(aBuilder, this, mencloseRect, aLists, mRuleThickness,
-                    MencloseNotation::Circle);
+                    NOTATION_CIRCLE);
   }
 
-  if (IsToDraw(MencloseNotation::UpDiagonalStrike)) {
+  if (IsToDraw(NOTATION_UPDIAGONALSTRIKE)) {
     DisplayNotation(aBuilder, this, mencloseRect, aLists, mRuleThickness,
-                    MencloseNotation::UpDiagonalStrike);
+                    NOTATION_UPDIAGONALSTRIKE);
   }
 
-  if (IsToDraw(MencloseNotation::UpDiagonalArrow)) {
+  if (IsToDraw(NOTATION_UPDIAGONALARROW)) {
     DisplayNotation(aBuilder, this, mencloseRect, aLists, mRuleThickness,
-                    MencloseNotation::UpDiagonalArrow);
+                    NOTATION_UPDIAGONALARROW);
   }
 
-  if (IsToDraw(MencloseNotation::DownDiagonalStrike)) {
+  if (IsToDraw(NOTATION_DOWNDIAGONALSTRIKE)) {
     DisplayNotation(aBuilder, this, mencloseRect, aLists, mRuleThickness,
-                    MencloseNotation::DownDiagonalStrike);
+                    NOTATION_DOWNDIAGONALSTRIKE);
   }
 
-  if (IsToDraw(MencloseNotation::HorizontalStrike)) {
+  if (IsToDraw(NOTATION_HORIZONTALSTRIKE)) {
     nsRect rect(0, mencloseRect.height / 2 - mRuleThickness / 2,
                 mencloseRect.width, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists,
-               static_cast<uint16_t>(MencloseNotation::HorizontalStrike));
+    DisplayBar(aBuilder, this, rect, aLists, NOTATION_HORIZONTALSTRIKE);
   }
 
-  if (IsToDraw(MencloseNotation::VerticalStrike)) {
+  if (IsToDraw(NOTATION_VERTICALSTRIKE)) {
     nsRect rect(mencloseRect.width / 2 - mRuleThickness / 2, 0, mRuleThickness,
                 mencloseRect.height);
-    DisplayBar(aBuilder, this, rect, aLists,
-               static_cast<uint16_t>(MencloseNotation::VerticalStrike));
+    DisplayBar(aBuilder, this, rect, aLists, NOTATION_VERTICALSTRIKE);
   }
 }
 
@@ -317,7 +314,7 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
     padding += onePixel - delta;  // round up
   }
 
-  if (IsToDraw(MencloseNotation::LongDiv)) {
+  if (IsToDraw(NOTATION_LONGDIV)) {
     // The MathML spec does not define precise layout rules for menclose. Here
     // we draw longdiv using the same parameter as for radicals.
     // See https://github.com/w3c/mathml-core/issues/245
@@ -334,30 +331,26 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
   }
 
   // Set horizontal parameters
-  if (IsToDraw(MencloseNotation::RoundedBox) ||
-      IsToDraw(MencloseNotation::Top) || IsToDraw(MencloseNotation::Left) ||
-      IsToDraw(MencloseNotation::Bottom) ||
-      IsToDraw(MencloseNotation::Circle)) {
+  if (IsToDraw(NOTATION_ROUNDEDBOX) || IsToDraw(NOTATION_TOP) ||
+      IsToDraw(NOTATION_LEFT) || IsToDraw(NOTATION_BOTTOM) ||
+      IsToDraw(NOTATION_CIRCLE)) {
     dx_left = padding;
   }
 
-  if (IsToDraw(MencloseNotation::RoundedBox) ||
-      IsToDraw(MencloseNotation::Top) || IsToDraw(MencloseNotation::Right) ||
-      IsToDraw(MencloseNotation::Bottom) ||
-      IsToDraw(MencloseNotation::Circle)) {
+  if (IsToDraw(NOTATION_ROUNDEDBOX) || IsToDraw(NOTATION_TOP) ||
+      IsToDraw(NOTATION_RIGHT) || IsToDraw(NOTATION_BOTTOM) ||
+      IsToDraw(NOTATION_CIRCLE)) {
     dx_right = padding;
   }
 
   // Set vertical parameters
-  if (IsToDraw(MencloseNotation::Right) || IsToDraw(MencloseNotation::Left) ||
-      IsToDraw(MencloseNotation::UpDiagonalStrike) ||
-      IsToDraw(MencloseNotation::UpDiagonalArrow) ||
-      IsToDraw(MencloseNotation::DownDiagonalStrike) ||
-      IsToDraw(MencloseNotation::VerticalStrike) ||
-      IsToDraw(MencloseNotation::Circle) ||
-      IsToDraw(MencloseNotation::RoundedBox) ||
-      IsToDraw(MencloseNotation::LongDiv) ||
-      IsToDraw(MencloseNotation::PhasorAngle)) {
+  if (IsToDraw(NOTATION_RIGHT) || IsToDraw(NOTATION_LEFT) ||
+      IsToDraw(NOTATION_UPDIAGONALSTRIKE) ||
+      IsToDraw(NOTATION_UPDIAGONALARROW) ||
+      IsToDraw(NOTATION_DOWNDIAGONALSTRIKE) ||
+      IsToDraw(NOTATION_VERTICALSTRIKE) || IsToDraw(NOTATION_CIRCLE) ||
+      IsToDraw(NOTATION_ROUNDEDBOX) || IsToDraw(NOTATION_LONGDIV) ||
+      IsToDraw(NOTATION_PHASORANGLE)) {
     // set a minimal value for the base height
     bmBase.ascent = std::max(bmOne.ascent, bmBase.ascent);
     bmBase.descent = std::max(0, bmBase.descent);
@@ -366,22 +359,21 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
   mBoundingMetrics.ascent = bmBase.ascent;
   mBoundingMetrics.descent = bmBase.descent;
 
-  if (IsToDraw(MencloseNotation::RoundedBox) ||
-      IsToDraw(MencloseNotation::Top) || IsToDraw(MencloseNotation::Left) ||
-      IsToDraw(MencloseNotation::Right) || IsToDraw(MencloseNotation::Circle)) {
+  if (IsToDraw(NOTATION_ROUNDEDBOX) || IsToDraw(NOTATION_TOP) ||
+      IsToDraw(NOTATION_LEFT) || IsToDraw(NOTATION_RIGHT) ||
+      IsToDraw(NOTATION_CIRCLE)) {
     mBoundingMetrics.ascent += padding;
   }
 
-  if (IsToDraw(MencloseNotation::RoundedBox) ||
-      IsToDraw(MencloseNotation::Left) || IsToDraw(MencloseNotation::Right) ||
-      IsToDraw(MencloseNotation::Bottom) ||
-      IsToDraw(MencloseNotation::Circle)) {
+  if (IsToDraw(NOTATION_ROUNDEDBOX) || IsToDraw(NOTATION_LEFT) ||
+      IsToDraw(NOTATION_RIGHT) || IsToDraw(NOTATION_BOTTOM) ||
+      IsToDraw(NOTATION_CIRCLE)) {
     mBoundingMetrics.descent += padding;
   }
 
   ///////////////
   // phasorangle notation
-  if (IsToDraw(MencloseNotation::PhasorAngle)) {
+  if (IsToDraw(NOTATION_PHASORANGLE)) {
     nscoord phasorangleWidth = kPhasorangleWidth * mRuleThickness;
     // Update horizontal parameters
     dx_left = std::max(dx_left, phasorangleWidth);
@@ -390,7 +382,7 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
   ///////////////
   // updiagonal arrow notation. We need enough space at the top right corner to
   // draw the arrow head.
-  if (IsToDraw(MencloseNotation::UpDiagonalArrow)) {
+  if (IsToDraw(NOTATION_UPDIAGONALARROW)) {
     // This is an estimate, see nsDisplayNotation::Paint for the exact head size
     nscoord arrowHeadSize = kArrowHeadSize * mRuleThickness;
 
@@ -406,7 +398,7 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
   // circle notation: we don't want the ellipse to overlap the enclosed
   // content. Hence, we need to increase the size of the bounding box by a
   // factor of at least sqrt(2).
-  if (IsToDraw(MencloseNotation::Circle)) {
+  if (IsToDraw(NOTATION_CIRCLE)) {
     double ratio = (sqrt(2.0) - 1.0) / 2.0;
     nscoord padding2;
 
@@ -427,7 +419,7 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
 
   ///////////////
   // longdiv notation:
-  if (IsToDraw(MencloseNotation::LongDiv)) {
+  if (IsToDraw(NOTATION_LONGDIV)) {
     if (aFlags.contains(PlaceFlag::IntrinsicSize)) {
       nscoord longdiv_width = mMathMLChar[mLongDivCharIndex].GetMaxWidth(
           this, aDrawTarget, fontSizeInflation);
@@ -443,8 +435,8 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
 
       // height(longdiv) should be >= height(base) + psi + mRuleThickness
       mMathMLChar[mLongDivCharIndex].Stretch(
-          this, aDrawTarget, fontSizeInflation, StretchDirection::Vertical,
-          contSize, bmLongdivChar, MathMLStretchFlag::Larger, false);
+          this, aDrawTarget, fontSizeInflation, NS_STRETCH_DIRECTION_VERTICAL,
+          contSize, bmLongdivChar, NS_STRETCH_LARGER, false);
       mMathMLChar[mLongDivCharIndex].GetBoundingMetrics(bmLongdivChar);
 
       // Update horizontal parameters
@@ -465,9 +457,8 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
 
   ///////////////
   //
-  if (IsToDraw(MencloseNotation::Circle) ||
-      IsToDraw(MencloseNotation::RoundedBox) ||
-      (IsToDraw(MencloseNotation::Left) && IsToDraw(MencloseNotation::Right))) {
+  if (IsToDraw(NOTATION_CIRCLE) || IsToDraw(NOTATION_ROUNDEDBOX) ||
+      (IsToDraw(NOTATION_LEFT) && IsToDraw(NOTATION_RIGHT))) {
     // center the menclose around the content (horizontally)
     dx_left = dx_right = std::max(dx_left, dx_right);
   }
@@ -489,12 +480,12 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
       std::max(mBoundingMetrics.descent,
                baseSize.Height() - baseSize.BlockStartAscent());
 
-  if (IsToDraw(MencloseNotation::LongDiv)) {
+  if (IsToDraw(NOTATION_LONGDIV)) {
     nscoord desiredSizeAscent = aDesiredSize.BlockStartAscent();
     nscoord desiredSizeDescent =
         aDesiredSize.Height() - aDesiredSize.BlockStartAscent();
 
-    if (IsToDraw(MencloseNotation::LongDiv)) {
+    if (IsToDraw(NOTATION_LONGDIV)) {
       desiredSizeAscent = std::max(desiredSizeAscent, longdivAscent + leading);
       desiredSizeDescent =
           std::max(desiredSizeDescent, longdivDescent + mRuleThickness);
@@ -504,9 +495,8 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
     aDesiredSize.Height() = desiredSizeAscent + desiredSizeDescent;
   }
 
-  if (IsToDraw(MencloseNotation::Circle) ||
-      IsToDraw(MencloseNotation::RoundedBox) ||
-      (IsToDraw(MencloseNotation::Top) && IsToDraw(MencloseNotation::Bottom))) {
+  if (IsToDraw(NOTATION_CIRCLE) || IsToDraw(NOTATION_ROUNDEDBOX) ||
+      (IsToDraw(NOTATION_TOP) && IsToDraw(NOTATION_BOTTOM))) {
     // center the menclose around the content (vertically)
     nscoord dy = std::max(aDesiredSize.BlockStartAscent() - bmBase.ascent,
                           aDesiredSize.Height() -
@@ -518,32 +508,28 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
   }
 
   // Update mBoundingMetrics ascent/descent
-  if (IsToDraw(MencloseNotation::Top) || IsToDraw(MencloseNotation::Right) ||
-      IsToDraw(MencloseNotation::Left) ||
-      IsToDraw(MencloseNotation::UpDiagonalStrike) ||
-      IsToDraw(MencloseNotation::UpDiagonalArrow) ||
-      IsToDraw(MencloseNotation::DownDiagonalStrike) ||
-      IsToDraw(MencloseNotation::VerticalStrike) ||
-      IsToDraw(MencloseNotation::Circle) ||
-      IsToDraw(MencloseNotation::RoundedBox)) {
+  if (IsToDraw(NOTATION_TOP) || IsToDraw(NOTATION_RIGHT) ||
+      IsToDraw(NOTATION_LEFT) || IsToDraw(NOTATION_UPDIAGONALSTRIKE) ||
+      IsToDraw(NOTATION_UPDIAGONALARROW) ||
+      IsToDraw(NOTATION_DOWNDIAGONALSTRIKE) ||
+      IsToDraw(NOTATION_VERTICALSTRIKE) || IsToDraw(NOTATION_CIRCLE) ||
+      IsToDraw(NOTATION_ROUNDEDBOX)) {
     mBoundingMetrics.ascent = aDesiredSize.BlockStartAscent();
   }
 
-  if (IsToDraw(MencloseNotation::Bottom) || IsToDraw(MencloseNotation::Right) ||
-      IsToDraw(MencloseNotation::Left) ||
-      IsToDraw(MencloseNotation::UpDiagonalStrike) ||
-      IsToDraw(MencloseNotation::UpDiagonalArrow) ||
-      IsToDraw(MencloseNotation::DownDiagonalStrike) ||
-      IsToDraw(MencloseNotation::VerticalStrike) ||
-      IsToDraw(MencloseNotation::Circle) ||
-      IsToDraw(MencloseNotation::RoundedBox)) {
+  if (IsToDraw(NOTATION_BOTTOM) || IsToDraw(NOTATION_RIGHT) ||
+      IsToDraw(NOTATION_LEFT) || IsToDraw(NOTATION_UPDIAGONALSTRIKE) ||
+      IsToDraw(NOTATION_UPDIAGONALARROW) ||
+      IsToDraw(NOTATION_DOWNDIAGONALSTRIKE) ||
+      IsToDraw(NOTATION_VERTICALSTRIKE) || IsToDraw(NOTATION_CIRCLE) ||
+      IsToDraw(NOTATION_ROUNDEDBOX)) {
     mBoundingMetrics.descent =
         aDesiredSize.Height() - aDesiredSize.BlockStartAscent();
   }
 
   // phasorangle notation:
   // move up from the bottom by the angled line height
-  if (IsToDraw(MencloseNotation::PhasorAngle)) {
+  if (IsToDraw(NOTATION_PHASORANGLE)) {
     mBoundingMetrics.ascent = std::max(
         mBoundingMetrics.ascent,
         2 * kPhasorangleWidth * mRuleThickness - mBoundingMetrics.descent);
@@ -567,7 +553,7 @@ void nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
   if (!aFlags.contains(PlaceFlag::MeasureOnly)) {
     //////////////////
     // Set position and size of MathMLChars
-    if (IsToDraw(MencloseNotation::LongDiv)) {
+    if (IsToDraw(NOTATION_LONGDIV)) {
       mMathMLChar[mLongDivCharIndex].SetRect(nsRect(
           dx_left - bmLongdivChar.width + borderPadding.left,
           aDesiredSize.BlockStartAscent() - longdivAscent, bmLongdivChar.width,
@@ -630,7 +616,7 @@ class nsDisplayNotation final : public nsPaintedDisplayItem {
  public:
   nsDisplayNotation(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     const nsRect& aRect, nscoord aThickness,
-                    MencloseNotation aType)
+                    nsMencloseNotation aType)
       : nsPaintedDisplayItem(aBuilder, aFrame),
         mRect(aRect),
         mThickness(aThickness),
@@ -646,7 +632,7 @@ class nsDisplayNotation final : public nsPaintedDisplayItem {
  private:
   nsRect mRect;
   nscoord mThickness;
-  MencloseNotation mType;
+  nsMencloseNotation mType;
 };
 
 void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
@@ -666,13 +652,13 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
   StrokeOptions strokeOptions(strokeWidth);
 
   switch (mType) {
-    case MencloseNotation::Circle: {
+    case NOTATION_CIRCLE: {
       RefPtr<Path> ellipse =
           MakePathForEllipse(aDrawTarget, rect.Center(), rect.Size());
       aDrawTarget.Stroke(ellipse, color, strokeOptions);
       return;
     }
-    case MencloseNotation::RoundedBox: {
+    case NOTATION_ROUNDEDBOX: {
       Float radius = 3 * strokeWidth;
       RectCornerRadii radii(radius, radius);
       RefPtr<Path> roundedRect =
@@ -680,17 +666,17 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
       aDrawTarget.Stroke(roundedRect, color, strokeOptions);
       return;
     }
-    case MencloseNotation::UpDiagonalStrike: {
+    case NOTATION_UPDIAGONALSTRIKE: {
       aDrawTarget.StrokeLine(rect.BottomLeft(), rect.TopRight(), color,
                              strokeOptions);
       return;
     }
-    case MencloseNotation::DownDiagonalStrike: {
+    case NOTATION_DOWNDIAGONALSTRIKE: {
       aDrawTarget.StrokeLine(rect.TopLeft(), rect.BottomRight(), color,
                              strokeOptions);
       return;
     }
-    case MencloseNotation::UpDiagonalArrow: {
+    case NOTATION_UPDIAGONALARROW: {
       // Compute some parameters to draw the updiagonalarrow. The values below
       // are taken from MathJax's HTML-CSS output.
       Float W = rect.Width();
@@ -720,7 +706,7 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
       aDrawTarget.Fill(path, color);
       return;
     }
-    case MencloseNotation::PhasorAngle: {
+    case NOTATION_PHASORANGLE: {
       // Compute some parameters to draw the angled line,
       // that uses a slope of 2 (angle = tan^-1(2)).
       // H = w * tan(angle) = w * 2
@@ -747,12 +733,13 @@ void nsMathMLmencloseFrame::DisplayNotation(nsDisplayListBuilder* aBuilder,
                                             const nsRect& aRect,
                                             const nsDisplayListSet& aLists,
                                             nscoord aThickness,
-                                            MencloseNotation aType) {
+                                            nsMencloseNotation aType) {
   if (!aFrame->StyleVisibility()->IsVisible() || aRect.IsEmpty() ||
       aThickness <= 0) {
     return;
   }
 
+  const uint16_t index = aType;
   aLists.Content()->AppendNewToTopWithIndex<nsDisplayNotation>(
-      aBuilder, aFrame, static_cast<uint16_t>(aType), aRect, aThickness, aType);
+      aBuilder, aFrame, index, aRect, aThickness, aType);
 }

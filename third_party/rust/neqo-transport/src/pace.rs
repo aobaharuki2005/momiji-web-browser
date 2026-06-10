@@ -40,7 +40,7 @@ impl Pacer {
     /// the case the congestion controller increases the congestion window.
     /// This value spaces packets over half the congestion window, which matches
     /// our current congestion controller, which double the window every RTT.
-    const SPEEDUP: u64 = 2;
+    const SPEEDUP: usize = 2;
 
     /// Create a new `Pacer`.  This takes the current time, the maximum burst size,
     /// and the packet size.
@@ -68,7 +68,7 @@ impl Pacer {
         self.p
     }
 
-    pub const fn set_mtu(&mut self, mtu: usize) {
+    pub fn set_mtu(&mut self, mtu: usize) {
         self.p = mtu;
     }
 
@@ -86,54 +86,22 @@ impl Pacer {
 
         // This is the inverse of the function in `spend`:
         // self.t + rtt * (self.p - self.c) / (Self::SPEEDUP * cwnd)
-        //
-        // `deficit` can exceed 2 × MTU when `self.c` carries accumulated debt
-        // from consecutive sub-granularity sends.  `saturating_mul` caps the
-        // product safely regardless of the actual value.
-        let Ok(deficit) = u64::try_from(packet - self.c) else {
-            qtrace!("[{self}] next {cwnd}/{rtt:?} deficit overflow");
-            return self.t;
-        };
-        let rtt_ns = u64::try_from(rtt.as_nanos()).unwrap_or(u64::MAX);
-        let divisor = (cwnd as u64).saturating_mul(Self::SPEEDUP);
-        let w_ns = rtt_ns.saturating_mul(deficit) / divisor;
+        let r = rtt.as_nanos();
+        let deficit =
+            u128::try_from(packet - self.c).expect("packet is larger than current credit");
+        let d = r.saturating_mul(deficit);
+        let add = d / u128::try_from(cwnd * Self::SPEEDUP).expect("usize fits into u128");
+        let w = u64::try_from(add).map(Duration::from_nanos).unwrap_or(rtt);
 
         // If the increment is below the timer granularity, send immediately.
-        #[expect(
-            clippy::cast_possible_truncation,
-            reason = "GRANULARITY is 1ms, fits in u64"
-        )]
-        if w_ns < GRANULARITY.as_nanos() as u64 {
-            qtrace!("[{self}] next {cwnd}/{rtt:?} below granularity ({w_ns}ns)");
+        if w < GRANULARITY {
+            qtrace!("[{self}] next {cwnd}/{rtt:?} below granularity ({w:?})",);
             return self.t;
         }
 
-        let nxt = self.t + Duration::from_nanos(w_ns);
-        qtrace!("[{self}] next {cwnd}/{rtt:?} wait {w_ns}ns = {nxt:?}");
+        let nxt = self.t + w;
+        qtrace!("[{self}] next {cwnd}/{rtt:?} wait {w:?} = {nxt:?}");
         nxt
-    }
-
-    /// Bytes sendable at `SPEEDUP * cwnd / rtt` pace over `elapsed`.
-    /// Returns `None` if `rtt` is zero.
-    ///
-    /// The key product is `elapsed_ns * cwnd * SPEEDUP`.  At 400 Gbps with a
-    /// 100 ms RTT the BDP is ~5 GB, so `factor` = cwnd * 2 ≈ 10^10.  The
-    /// inter-packet interval at that rate is ~24 ns, giving a product of
-    /// ~2.4*10^11, well within u64.  Even a full-RTT elapsed (10^8 ns) gives
-    /// 10^8 * 10^10 = 10^18 < `u64::MAX` (1.8*10^19).  Beyond that the
-    /// `saturating_mul` caps the value and callers clamp to `self.m`.
-    fn bytes_for(cwnd: usize, rtt: Duration, elapsed: Duration) -> Option<u64> {
-        let rtt_ns = u64::try_from(rtt.as_nanos()).unwrap_or(u64::MAX);
-        let elapsed_ns = u64::try_from(elapsed.as_nanos()).unwrap_or(u64::MAX);
-        let factor = (cwnd as u64).saturating_mul(Self::SPEEDUP);
-        elapsed_ns.saturating_mul(factor).checked_div(rtt_ns)
-    }
-
-    /// Compute the effective pacing rate in bytes per second.
-    ///
-    /// Returns `None` if `rtt` is zero.
-    pub(crate) fn rate(cwnd: usize, rtt: Duration) -> Option<u64> {
-        Self::bytes_for(cwnd, rtt, Duration::from_secs(1))
     }
 
     /// Spend credit. This cannot fail, but instead may carry debt into the
@@ -150,10 +118,15 @@ impl Pacer {
         }
 
         qtrace!("[{self}] spend {count} over {cwnd}, {rtt:?}");
-        // Increase the capacity by the elapsed fraction of the RTT times the
-        // pacing rate, i.e. `(now - self.t) * SPEEDUP * cwnd / rtt`.
-        let incr = Self::bytes_for(cwnd, rtt, now.saturating_duration_since(self.t))
-            .and_then(|b| usize::try_from(b).ok())
+        // Increase the capacity by:
+        //    `(now - self.t) * Self::SPEEDUP * cwnd / rtt`
+        // That is, the elapsed fraction of the RTT times rate that data is added.
+        let incr = now
+            .saturating_duration_since(self.t)
+            .as_nanos()
+            .saturating_mul(u128::try_from(cwnd * Self::SPEEDUP).expect("usize fits into u128"))
+            .checked_div(rtt.as_nanos())
+            .and_then(|i| usize::try_from(i).ok())
             .unwrap_or(self.m);
 
         // Add the capacity up to a limit of `self.m`, then subtract `count`.
@@ -188,7 +161,7 @@ mod tests {
 
     use super::Pacer;
 
-    const RTT: Duration = Duration::from_secs(1);
+    const RTT: Duration = Duration::from_millis(1000);
     const PACKET: usize = 1000;
     const CWND: usize = PACKET * 10;
 
@@ -253,50 +226,5 @@ mod tests {
         }
         // We expect _some_ time to have progressed after sending all the packets.
         assert!(n - start > Duration::ZERO);
-    }
-
-    #[test]
-    fn rate_basic() {
-        // 10 KB cwnd, 100 ms RTT → 2 * 10_000 * 1e9 / 100_000_000 = 200_000 B/s
-        assert_eq!(
-            Pacer::rate(10_000, Duration::from_millis(100)),
-            Some(200_000)
-        );
-    }
-
-    #[test]
-    fn rate_zero_rtt() {
-        assert_eq!(Pacer::rate(10_000, Duration::ZERO), None);
-    }
-
-    /// When the computed wait equals GRANULARITY exactly, pacing should NOT
-    /// send immediately; only strictly sub-granularity waits are suppressed.
-    #[test]
-    fn not_immediately_at_exact_granularity() {
-        // Choose RTT and CWND so w = rtt * PACKET / (SPEEDUP * cwnd) = 1ms = GRANULARITY.
-        // With PACKET=1000, SPEEDUP=2: cwnd = rtt_ns * 1000 / (2 * 1_000_000).
-        // rtt=10ms → cwnd = 10_000_000 * 1000 / 2_000_000 = 5000.
-        const SHORT_RTT: Duration = Duration::from_millis(10);
-        const CWND_AT_GRANULARITY: usize = 5000; // yields w = 1ms = GRANULARITY
-        let n = now();
-        let mut p = Pacer::new(true, n, PACKET, PACKET);
-        p.spend(n, SHORT_RTT, CWND_AT_GRANULARITY, PACKET);
-        // w == GRANULARITY: should schedule for later, not send immediately.
-        assert_ne!(
-            p.next(SHORT_RTT, CWND_AT_GRANULARITY),
-            n,
-            "at exactly GRANULARITY should not send immediately"
-        );
-    }
-
-    #[test]
-    fn pacer_display_and_debug() {
-        let mut p = Pacer::new(true, now(), PACKET, PACKET);
-        assert_eq!(p.mtu(), PACKET);
-        p.set_mtu(500);
-        assert_eq!(p.mtu(), 500);
-        p.set_mtu(PACKET);
-        assert_eq!(p.to_string(), "Pacer 1000/1000");
-        assert!(format!("{p:?}").starts_with("Pacer@"));
     }
 }

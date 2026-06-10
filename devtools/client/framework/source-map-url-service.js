@@ -17,47 +17,41 @@ const SOURCE_MAP_PREF = "devtools.source-map.client-service.enabled";
  *        The source-map-loader implemented in devtools/client/shared/source-map-loader/
  */
 class SourceMapURLService {
-  #commands;
-  #mapsById;
-  #pendingIDSubscriptions;
-  #pendingURLSubscriptions;
-  #prefValue;
-  #runningCallback;
-  #sourceMapLoader;
-  #sourcesLoading;
-  #urlToIDMap;
-
   constructor(commands, sourceMapLoader) {
-    this.#commands = commands;
-    this.#sourceMapLoader = sourceMapLoader;
+    this._commands = commands;
+    this._sourceMapLoader = sourceMapLoader;
 
-    this.#prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
-    this.#pendingIDSubscriptions = new Map();
-    this.#pendingURLSubscriptions = new Map();
-    this.#urlToIDMap = new Map();
-    this.#mapsById = new Map();
-    this.#sourcesLoading = null;
-    this.#runningCallback = false;
+    this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
+    this._pendingIDSubscriptions = new Map();
+    this._pendingURLSubscriptions = new Map();
+    this._urlToIDMap = new Map();
+    this._mapsById = new Map();
+    this._sourcesLoading = null;
+    this._onResourceAvailable = this._onResourceAvailable.bind(this);
+    this._runningCallback = false;
 
-    Services.prefs.addObserver(SOURCE_MAP_PREF, this.#syncPrevValue);
+    this._syncPrevValue = this._syncPrevValue.bind(this);
+    this._clearAllState = this._clearAllState.bind(this);
+
+    Services.prefs.addObserver(SOURCE_MAP_PREF, this._syncPrevValue);
 
     // If a tool has changed or introduced a source map
     // (e.g, by pretty-printing a source), tell the
     // source map URL service about the change, so that
     // subscribers to that service can be updated as
     // well.
-    this.#sourceMapLoader.on(
+    this._sourceMapLoader.on(
       "source-map-created",
       this.newSourceMapCreated.bind(this)
     );
   }
 
   destroy() {
-    Services.prefs.removeObserver(SOURCE_MAP_PREF, this.#syncPrevValue);
+    Services.prefs.removeObserver(SOURCE_MAP_PREF, this._syncPrevValue);
 
-    this.#clearAllState();
+    this._clearAllState();
 
-    const { resourceCommand } = this.#commands;
+    const { resourceCommand } = this._commands;
     try {
       resourceCommand.unwatchResources(
         [
@@ -65,18 +59,18 @@ class SourceMapURLService {
           resourceCommand.TYPES.SOURCE,
           resourceCommand.TYPES.DOCUMENT_EVENT,
         ],
-        { onAvailable: this.#onResourceAvailable }
+        { onAvailable: this._onResourceAvailable }
       );
     } catch (e) {
       // If unwatchResources is called before finishing process of watchResources,
       // it throws an error during stopping listener.
     }
 
-    this.#sourcesLoading = null;
-    this.#pendingIDSubscriptions = null;
-    this.#pendingURLSubscriptions = null;
-    this.#urlToIDMap = null;
-    this.#mapsById = null;
+    this._sourcesLoading = null;
+    this._pendingIDSubscriptions = null;
+    this._pendingURLSubscriptions = null;
+    this._urlToIDMap = null;
+    this._mapsById = null;
   }
 
   /**
@@ -98,12 +92,12 @@ class SourceMapURLService {
    *      "callback" argument is guaranteed to never run once unsubscribed.
    */
   subscribeByID(id, line, column, callback) {
-    this.#ensureAllSourcesPopulated();
+    this._ensureAllSourcesPopulated();
 
-    let pending = this.#pendingIDSubscriptions.get(id);
+    let pending = this._pendingIDSubscriptions.get(id);
     if (!pending) {
       pending = new Set();
-      this.#pendingIDSubscriptions.set(id, pending);
+      this._pendingIDSubscriptions.set(id, pending);
     }
     const entry = {
       line,
@@ -114,9 +108,9 @@ class SourceMapURLService {
     };
     pending.add(entry);
 
-    const map = this.#mapsById.get(id);
+    const map = this._mapsById.get(id);
     if (map) {
-      this.#flushPendingIDSubscriptionsToMapQueries(map);
+      this._flushPendingIDSubscriptionsToMapQueries(map);
     }
 
     return () => {
@@ -144,12 +138,12 @@ class SourceMapURLService {
    *      "callback" argument is guaranteed to never run once unsubscribed.
    */
   subscribeByURL(url, line, column, callback) {
-    this.#ensureAllSourcesPopulated();
+    this._ensureAllSourcesPopulated();
 
-    let pending = this.#pendingURLSubscriptions.get(url);
+    let pending = this._pendingURLSubscriptions.get(url);
     if (!pending) {
       pending = new Set();
-      this.#pendingURLSubscriptions.set(url, pending);
+      this._pendingURLSubscriptions.set(url, pending);
     }
     const entry = {
       line,
@@ -160,12 +154,12 @@ class SourceMapURLService {
     };
     pending.add(entry);
 
-    const id = this.#urlToIDMap.get(url);
+    const id = this._urlToIDMap.get(url);
     if (id) {
-      this.#convertPendingURLSubscriptionsToID(url, id);
-      const map = this.#mapsById.get(id);
+      this._convertPendingURLSubscriptionsToID(url, id);
+      const map = this._mapsById.get(id);
       if (map) {
-        this.#flushPendingIDSubscriptionsToMapQueries(map);
+        this._flushPendingIDSubscriptionsToMapQueries(map);
       }
     }
 
@@ -198,10 +192,10 @@ class SourceMapURLService {
    * @param {Array<string>} ids The actor ids of the sources that had the map registered.
    */
   async newSourceMapCreated(ids) {
-    await this.#ensureAllSourcesPopulated();
+    await this._ensureAllSourcesPopulated();
 
     for (const id of ids) {
-      const map = this.#mapsById.get(id);
+      const map = this._mapsById.get(id);
       if (!map) {
         // State could have been cleared.
         continue;
@@ -211,38 +205,38 @@ class SourceMapURLService {
       for (const query of map.queries.values()) {
         query.action = null;
         query.result = null;
-        if (this.#prefValue) {
-          this.#dispatchQuery(query);
+        if (this._prefValue) {
+          this._dispatchQuery(query);
         }
       }
     }
   }
 
-  #syncPrevValue = () => {
-    this.#prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
+  _syncPrevValue() {
+    this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
 
-    for (const map of this.#mapsById.values()) {
+    for (const map of this._mapsById.values()) {
       for (const query of map.queries.values()) {
-        this.#ensureSubscribersSynchronized(query);
+        this._ensureSubscribersSynchronized(query);
       }
     }
-  };
-
-  #clearAllState = () => {
-    this.#sourceMapLoader.clearSourceMaps();
-    this.#pendingIDSubscriptions.clear();
-    this.#pendingURLSubscriptions.clear();
-    this.#urlToIDMap.clear();
-    this.#mapsById.clear();
-  };
-
-  #onNewJavascript(source) {
-    const { url, actor: id, sourceMapBaseURL, sourceMapURL } = source;
-
-    this.#onNewSource(id, url, sourceMapURL, sourceMapBaseURL);
   }
 
-  #onNewStyleSheet(sheet) {
+  _clearAllState() {
+    this._sourceMapLoader.clearSourceMaps();
+    this._pendingIDSubscriptions.clear();
+    this._pendingURLSubscriptions.clear();
+    this._urlToIDMap.clear();
+    this._mapsById.clear();
+  }
+
+  _onNewJavascript(source) {
+    const { url, actor: id, sourceMapBaseURL, sourceMapURL } = source;
+
+    this._onNewSource(id, url, sourceMapURL, sourceMapBaseURL);
+  }
+
+  _onNewStyleSheet(sheet) {
     const {
       href,
       nodeHref,
@@ -252,14 +246,14 @@ class SourceMapURLService {
     } = sheet;
     const url = href || nodeHref;
 
-    this.#onNewSource(id, url, sourceMapURL, sourceMapBaseURL);
+    this._onNewSource(id, url, sourceMapURL, sourceMapBaseURL);
   }
 
-  #onNewSource(id, url, sourceMapURL, sourceMapBaseURL) {
-    this.#urlToIDMap.set(url, id);
-    this.#convertPendingURLSubscriptionsToID(url, id);
+  _onNewSource(id, url, sourceMapURL, sourceMapBaseURL) {
+    this._urlToIDMap.set(url, id);
+    this._convertPendingURLSubscriptionsToID(url, id);
 
-    let map = this.#mapsById.get(id);
+    let map = this._mapsById.get(id);
     if (!map) {
       map = {
         id,
@@ -269,7 +263,7 @@ class SourceMapURLService {
         loaded: null,
         queries: new Map(),
       };
-      this.#mapsById.set(id, map);
+      this._mapsById.set(id, map);
     } else if (
       map.id !== id &&
       map.url !== url &&
@@ -281,10 +275,10 @@ class SourceMapURLService {
       );
     }
 
-    this.#flushPendingIDSubscriptionsToMapQueries(map);
+    this._flushPendingIDSubscriptionsToMapQueries(map);
   }
 
-  #buildQuery(map, line, column) {
+  _buildQuery(map, line, column) {
     const key = `${line}:${column}`;
     let query = map.queries.get(key);
     if (!query) {
@@ -302,8 +296,8 @@ class SourceMapURLService {
     return query;
   }
 
-  #dispatchQuery(query) {
-    if (!this.#prefValue) {
+  _dispatchQuery(query) {
+    if (!this._prefValue) {
       throw new Error("This function should only be called if the pref is on.");
     }
 
@@ -313,7 +307,7 @@ class SourceMapURLService {
       // Call getOriginalURLs to make sure the source map has been
       // fetched.  We don't actually need the result of this though.
       if (!map.loaded) {
-        map.loaded = this.#sourceMapLoader.getOriginalURLs({
+        map.loaded = this._sourceMapLoader.getOriginalURLs({
           id: map.id,
           url: map.url,
           sourceMapBaseURL: map.sourceMapBaseURL,
@@ -332,7 +326,7 @@ class SourceMapURLService {
         }
 
         try {
-          const position = await this.#sourceMapLoader.getOriginalLocation({
+          const position = await this._sourceMapLoader.getOriginalLocation({
             sourceId: map.id,
             line: query.line,
             column: query.column,
@@ -353,22 +347,22 @@ class SourceMapURLService {
             // that if 'result' is truthy, then the subscribers will have run.
             const position = result;
             query.result = { position };
-            this.#ensureSubscribersSynchronized(query);
+            this._ensureSubscribersSynchronized(query);
           }
         }
       })();
       query.action = action;
     }
 
-    this.#ensureSubscribersSynchronized(query);
+    this._ensureSubscribersSynchronized(query);
   }
 
-  #ensureSubscribersSynchronized(query) {
+  _ensureSubscribersSynchronized(query) {
     // Synchronize the subscribers with the pref-disabled state if they need it.
-    if (!this.#prefValue) {
+    if (!this._prefValue) {
       if (query.mostRecentEmitted) {
         query.mostRecentEmitted = null;
-        this.#dispatchSubscribers(null, query.subscribers);
+        this._dispatchSubscribers(null, query.subscribers);
       }
       return;
     }
@@ -378,11 +372,11 @@ class SourceMapURLService {
     const { result } = query;
     if (result && query.mostRecentEmitted !== result.position) {
       query.mostRecentEmitted = result.position;
-      this.#dispatchSubscribers(result.position, query.subscribers);
+      this._dispatchSubscribers(result.position, query.subscribers);
     }
   }
 
-  #dispatchSubscribers(position, subscribers) {
+  _dispatchSubscribers(position, subscribers) {
     // We copy the subscribers before iterating because something could be
     // removed while we're calling the callbacks, which is also why we check
     // the 'unsubscribed' flag.
@@ -391,7 +385,7 @@ class SourceMapURLService {
         continue;
       }
 
-      if (this.#runningCallback) {
+      if (this._runningCallback) {
         console.error(
           "The source map url service does not support reentrant subscribers."
         );
@@ -399,27 +393,27 @@ class SourceMapURLService {
       }
 
       try {
-        this.#runningCallback = true;
+        this._runningCallback = true;
 
         const { callback } = subscriber;
         callback(position ? { ...position } : null);
       } catch (err) {
         console.error("Error in source map url service subscriber", err);
       } finally {
-        this.#runningCallback = false;
+        this._runningCallback = false;
       }
     }
   }
 
-  #flushPendingIDSubscriptionsToMapQueries(map) {
-    const subscriptions = this.#pendingIDSubscriptions.get(map.id);
+  _flushPendingIDSubscriptionsToMapQueries(map) {
+    const subscriptions = this._pendingIDSubscriptions.get(map.id);
     if (!subscriptions || subscriptions.size === 0) {
       return;
     }
-    this.#pendingIDSubscriptions.delete(map.id);
+    this._pendingIDSubscriptions.delete(map.id);
 
     for (const entry of subscriptions) {
-      const query = this.#buildQuery(map, entry.line, entry.column);
+      const query = this._buildQuery(map, entry.line, entry.column);
 
       const { subscribers } = query;
 
@@ -429,57 +423,45 @@ class SourceMapURLService {
       if (query.mostRecentEmitted) {
         // Maintain the invariant that if a query has emitted a value, then
         // _all_ subscribers will have received that value.
-        this.#dispatchSubscribers(query.mostRecentEmitted, [entry]);
+        this._dispatchSubscribers(query.mostRecentEmitted, [entry]);
       }
 
-      if (this.#prefValue) {
-        this.#dispatchQuery(query);
-      }
-    }
-  }
-
-  async waitForPendingQueries() {
-    await this.waitForSourcesLoading();
-
-    for (const map of this.#mapsById.values()) {
-      for (const query of map.queries.values()) {
-        if (query.action) {
-          await query.action;
-        }
+      if (this._prefValue) {
+        this._dispatchQuery(query);
       }
     }
   }
 
-  #ensureAllSourcesPopulated() {
-    if (!this.#prefValue || this.#commands.descriptorFront.isWorkerDescriptor) {
+  _ensureAllSourcesPopulated() {
+    if (!this._prefValue || this._commands.descriptorFront.isWorkerDescriptor) {
       return null;
     }
 
-    if (!this.#sourcesLoading) {
-      const { resourceCommand } = this.#commands;
+    if (!this._sourcesLoading) {
+      const { resourceCommand } = this._commands;
       const { STYLESHEET, SOURCE, DOCUMENT_EVENT } = resourceCommand.TYPES;
 
       const onResources = resourceCommand.watchResources(
         [STYLESHEET, SOURCE, DOCUMENT_EVENT],
         {
-          onAvailable: this.#onResourceAvailable,
+          onAvailable: this._onResourceAvailable,
         }
       );
-      this.#sourcesLoading = onResources;
+      this._sourcesLoading = onResources;
     }
 
-    return this.#sourcesLoading;
+    return this._sourcesLoading;
   }
 
   waitForSourcesLoading() {
-    if (this.#sourcesLoading) {
-      return this.#sourcesLoading;
+    if (this._sourcesLoading) {
+      return this._sourcesLoading;
     }
     return Promise.resolve();
   }
 
-  #onResourceAvailable = resources => {
-    const { resourceCommand } = this.#commands;
+  _onResourceAvailable(resources) {
+    const { resourceCommand } = this._commands;
     const { STYLESHEET, SOURCE, DOCUMENT_EVENT } = resourceCommand.TYPES;
     for (const resource of resources) {
       // Only consider top level document, and ignore remote iframes top document
@@ -488,26 +470,26 @@ class SourceMapURLService {
         resource.name == "will-navigate" &&
         resource.targetFront.isTopLevel
       ) {
-        this.#clearAllState();
+        this._clearAllState();
       } else if (resource.resourceType == STYLESHEET) {
-        this.#onNewStyleSheet(resource);
+        this._onNewStyleSheet(resource);
       } else if (resource.resourceType == SOURCE) {
-        this.#onNewJavascript(resource);
+        this._onNewJavascript(resource);
       }
     }
-  };
+  }
 
-  #convertPendingURLSubscriptionsToID(url, id) {
-    const urlSubscriptions = this.#pendingURLSubscriptions.get(url);
+  _convertPendingURLSubscriptionsToID(url, id) {
+    const urlSubscriptions = this._pendingURLSubscriptions.get(url);
     if (!urlSubscriptions) {
       return;
     }
-    this.#pendingURLSubscriptions.delete(url);
+    this._pendingURLSubscriptions.delete(url);
 
-    let pending = this.#pendingIDSubscriptions.get(id);
+    let pending = this._pendingIDSubscriptions.get(id);
     if (!pending) {
       pending = new Set();
-      this.#pendingIDSubscriptions.set(id, pending);
+      this._pendingIDSubscriptions.set(id, pending);
     }
     for (const entry of urlSubscriptions) {
       entry.owner = pending;

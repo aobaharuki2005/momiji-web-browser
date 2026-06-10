@@ -2,6 +2,3 @@ features:
 - name: text-underline-offset
   files:
   - text-underline-offset-*
-- name: text-decoration
-  files:
-  - "text-decoration-*"

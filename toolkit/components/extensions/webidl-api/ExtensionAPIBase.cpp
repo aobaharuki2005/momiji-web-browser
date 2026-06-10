@@ -1,3 +1,4 @@
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -81,7 +82,7 @@ void ChromeCompatCallbackHandler::ReportUncheckedLastError(
 
   RefPtr<ConsoleReportCollector> reporter = new ConsoleReportCollector();
   reporter->AddConsoleReport(nsIScriptError::errorFlag, "content javascript"_ns,
-                             PropertiesFile::DOM_PROPERTIES, sourceSpec, line,
+                             nsContentUtils::eDOM_PROPERTIES, sourceSpec, line,
                              column, "WebExtensionUncheckedLastError"_ns,
                              params);
 
@@ -153,11 +154,14 @@ void ExtensionAPIBase::CallWebExtMethodReturnsString(
     return;
   }
 
-  if (!AssignJSString(aCx, aRetVal, retval.toString())) {
+  nsAutoJSString str;
+  if (!str.init(aCx, retval.toString())) {
     JS_ClearPendingException(aCx);
     ThrowUnexpectedError(aCx, aRv);
     return;
   }
+
+  aRetVal = str;
 }
 
 already_AddRefed<ExtensionPort> ExtensionAPIBase::CallWebExtMethodReturnsPort(
@@ -237,7 +241,6 @@ void ExtensionAPIBase::CallWebExtMethodAsyncAmbiguous(
   auto lastElement =
       aArgs.IsEmpty() ? JS::UndefinedValue() : aArgs.LastElement();
   dom::Sequence<JS::Value> callArgs(aArgs);
-  dom::SequenceRooter<JS::Value> callArgsRooter(aCx, &callArgs);
   if (lastElement.isObject() && JS::IsCallable(&lastElement.toObject())) {
     JS::Rooted<JSObject*> tempRoot(aCx, &lastElement.toObject());
     JS::Rooted<JSObject*> tempGlobalRoot(aCx, JS::CurrentGlobalOrNull(aCx));
@@ -273,10 +276,12 @@ void ExtensionAPIBase::GetWebExtPropertyAsString(const nsString& aPropertyName,
     NS_WARNING("GetWebExtPropertyAsString failure");
     return;
   }
-  if (!retval.isString() || !AssignJSString(cx, aRetval, retval.toString())) {
+  nsAutoJSString strRetval;
+  if (!retval.isString() || !strRetval.init(cx, retval)) {
     NS_WARNING("GetWebExtPropertyAsString got a non string result");
     return;
   }
+  aRetval.SetKnownLiveString(strRetval);
 }
 
 void ExtensionAPIBase::GetWebExtPropertyAsJSValue(

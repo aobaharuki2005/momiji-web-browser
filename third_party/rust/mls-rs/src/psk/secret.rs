@@ -36,7 +36,9 @@ pub(crate) struct PskSecret(Zeroizing<Vec<u8>>);
 
 impl Debug for PskSecret {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("PskSecret").finish()
+        mls_rs_core::debug::pretty_bytes(&self.0)
+            .named("PskSecret")
+            .fmt(f)
     }
 }
 
@@ -110,7 +112,6 @@ impl PskSecret {
 #[cfg(test)]
 mod tests {
     use alloc::vec::Vec;
-    use core::fmt::Debug;
     #[cfg(not(mls_build_async))]
     use core::iter;
     use serde::{Deserialize, Serialize};
@@ -130,7 +131,7 @@ mod tests {
 
     use super::{PskSecret, PskSecretInput};
 
-    #[derive(Debug, Clone, Deserialize, PartialEq, Serialize)]
+    #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
     struct PskInfo {
         #[serde(with = "hex::serde")]
         id: Vec<u8>,

@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,10 +8,9 @@
 #define mozilla_dom_URLPattern_h
 
 #include "mozilla/dom/URLPatternBinding.h"
+#include "mozilla/net/URLPatternGlue.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-
-using UrlPatternGlue = void*;
 
 namespace mozilla::dom {
 
@@ -19,7 +19,7 @@ class URLPattern final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(URLPattern)
 
-  explicit URLPattern(nsISupports* aParent, UrlPatternGlue aPattern,
+  explicit URLPattern(nsISupports* aParent, UrlpPattern aPattern,
                       bool aIgnoreCase)
       : mParent(aParent),
         mPattern(std::move(aPattern)),
@@ -59,9 +59,7 @@ class URLPattern final : public nsISupports, public nsWrapperCache {
  private:
   ~URLPattern();
   nsCOMPtr<nsISupports> mParent;
-
-  // dom holds onto opaque pointer to urlpattern::UrlPattern (lib.rs)
-  UrlPatternGlue mPattern;
+  UrlpPattern mPattern;
   bool mIgnoreCase;
 };
 

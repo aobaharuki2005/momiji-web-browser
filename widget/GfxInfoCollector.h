@@ -1,10 +1,12 @@
-/*
+/* vim: se cin sw=2 ts=2 et : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _mozilla_widget_GfxInfoCollector_h_
-#define _mozilla_widget_GfxInfoCollector_h_
+#ifndef __mozilla_widget_GfxInfoCollector_h__
+#define __mozilla_widget_GfxInfoCollector_h__
 
 #include "mozilla/Attributes.h"
 #include "nsStringFwd.h"
@@ -23,12 +25,11 @@ class MOZ_STACK_CLASS InfoObject {
   void DefineProperty(const char* name, const nsAString& value);
   void DefineProperty(const char* name, const char* value);
 
-  InfoObject(InfoObject&) = delete;
-
  private:
   // We need to ensure that this object lives on the stack so that GC sees it
   // properly
   explicit InfoObject(JSContext* aCx);
+  InfoObject(InfoObject&);
 
   JSContext* mCx;
   JS::Rooted<JSObject*> mObj;

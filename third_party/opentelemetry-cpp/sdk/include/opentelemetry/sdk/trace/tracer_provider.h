@@ -74,11 +74,6 @@ public:
    */
   explicit TracerProvider(std::unique_ptr<TracerContext> context) noexcept;
 
-  TracerProvider(const TracerProvider &)            = delete;
-  TracerProvider(TracerProvider &&)                 = delete;
-  TracerProvider &operator=(const TracerProvider &) = delete;
-  TracerProvider &operator=(TracerProvider &&)      = delete;
-
   ~TracerProvider() override;
 
   /*

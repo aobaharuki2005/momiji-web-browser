@@ -11,16 +11,12 @@ add_task(async function testDoorhangerUserReject() {
   setPassingHeuristics();
   let promise = waitForDoorhanger();
   let prefPromise = TestUtils.waitForPrefChange(prefs.BREADCRUMB_PREF);
-  Services.prefs.setBoolPref(prefs.ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
 
   await prefPromise;
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb saved.");
   is(
-    Services.prefs.getBoolPref(prefs.BREADCRUMB_PREF),
-    true,
-    "Breadcrumb saved."
-  );
-  is(
-    Services.prefs.getStringPref(prefs.TRR_SELECT_URI_PREF),
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
     "https://example.com/dns-query",
     "TRR selection complete."
   );
@@ -32,11 +28,12 @@ add_task(async function testDoorhangerUserReject() {
   await ensureTRRMode(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
-  await assertGleanValues([
-    [Glean.networking.dohHeuristicsAttempts, 1],
-    [Glean.networking.dohHeuristicsPassCount, 1],
-    [Glean.networking.dohHeuristicsResult, Heuristics.Telemetry.pass],
-    ...allHeuristicsFalseExpectations(),
+  checkScalars([
+    ["networking.doh_heuristics_attempts", { value: 1 }],
+    ["networking.doh_heuristics_pass_count", { value: 1 }],
+    ["networking.doh_heuristics_result", { value: Heuristics.Telemetry.pass }],
+    // All of the heuristics must be false.
+    falseExpectations([]),
   ]);
 
   prefPromise = TestUtils.waitForPrefChange(
@@ -52,7 +49,7 @@ add_task(async function testDoorhangerUserReject() {
   await prefPromise;
 
   is(
-    Services.prefs.getStringPref(prefs.DOORHANGER_USER_DECISION_PREF),
+    Preferences.get(prefs.DOORHANGER_USER_DECISION_PREF),
     "UIDisabled",
     "Doorhanger decision saved."
   );
@@ -60,33 +57,34 @@ add_task(async function testDoorhangerUserReject() {
   BrowserTestUtils.removeTab(tab);
 
   await ensureTRRMode(undefined);
-  await ensureNoHeuristicsTelemetry();
-  ok(
-    !Services.prefs.prefHasUserValue(prefs.BREADCRUMB_PREF),
-    "Breadcrumb cleared."
-  );
+  ensureNoHeuristicsTelemetry();
+  is(Preferences.get(prefs.BREADCRUMB_PREF), undefined, "Breadcrumb cleared.");
 
-  await assertGleanValues([
-    [Glean.networking.dohHeuristicsAttempts, 1],
-    [Glean.networking.dohHeuristicsPassCount, 1],
-    [Glean.networking.dohHeuristicsResult, Heuristics.Telemetry.optOut],
-    ...allHeuristicsFalseExpectations(),
+  checkScalars([
+    ["networking.doh_heuristics_attempts", { value: 1 }],
+    ["networking.doh_heuristics_pass_count", { value: 1 }],
+    [
+      "networking.doh_heuristics_result",
+      { value: Heuristics.Telemetry.optOut },
+    ],
+    // All of the heuristics must be false.
+    falseExpectations([]),
   ]);
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(undefined);
-  await ensureNoHeuristicsTelemetry();
+  ensureNoHeuristicsTelemetry();
 
   // Restart the controller for good measure.
   await restartDoHController();
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(undefined);
-  await ensureNoHeuristicsTelemetry();
+  ensureNoHeuristicsTelemetry();
 
   // Set failing environment and trigger another network change.
   setFailingHeuristics();
   simulateNetworkChange();
   await ensureNoTRRModeChange(undefined);
-  await ensureNoHeuristicsTelemetry();
+  ensureNoHeuristicsTelemetry();
 });

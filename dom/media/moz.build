@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -129,7 +131,6 @@ XPIDL_SOURCES += [
     "nsIAudioDeviceInfo.idl",
     "nsIMediaDevice.idl",
     "nsIMediaManager.idl",
-    "nsIMediaPictureInPictureProvider.idl",
 ]
 
 XPIDL_MODULE = "dom_media"
@@ -170,7 +171,6 @@ EXPORTS += [
     "FileBlockCache.h",
     "ForwardedInputTrack.h",
     "FrameStatistics.h",
-    "HDRUtils.h",
     "ImageConversion.h",
     "Intervals.h",
     "MediaCache.h",
@@ -208,8 +208,6 @@ EXPORTS += [
     "PrincipalHandle.h",
     "QueueObject.h",
     "ReaderProxy.h",
-    "RLBoxSoundTouch.h",
-    "RLBoxSoundTouchTypes.h",
     "SeekJob.h",
     "SeekTarget.h",
     "SelfRef.h",
@@ -243,7 +241,6 @@ if not CONFIG["MOZ_WEBRTC"]:
 
 EXPORTS.mozilla.dom += [
     "AudioDeviceInfo.h",
-    "AudioSession.h",
     "AudioStreamTrack.h",
     "AudioTrack.h",
     "AudioTrackList.h",
@@ -253,8 +250,6 @@ EXPORTS.mozilla.dom += [
     "MediaDevices.h",
     "MediaStreamError.h",
     "MediaStreamTrack.h",
-    "PictureInPictureService.h",
-    "PictureInPictureWindow.h",
     "UnboundedMPSCQueue.h",
     "VideoPlaybackQuality.h",
     "VideoStreamTrack.h",
@@ -276,7 +271,6 @@ UNIFIED_SOURCES += [
     "AudioInputSource.cpp",
     "AudioRingBuffer.cpp",
     "AudioSegment.cpp",
-    "AudioSession.cpp",
     "AudioStream.cpp",
     "AudioStreamTrack.cpp",
     "AudioTrack.cpp",
@@ -329,11 +323,8 @@ UNIFIED_SOURCES += [
     "MediaTrackList.cpp",
     "MediaTrackListener.cpp",
     "MemoryBlockCache.cpp",
-    "PictureInPictureService.cpp",
-    "PictureInPictureWindow.cpp",
     "QueueObject.cpp",
     "ReaderProxy.cpp",
-    "RLBoxSoundTouch.cpp",
     "SeekJob.cpp",
     "TimeUnits.cpp",
     "Tracing.cpp",
@@ -375,7 +366,7 @@ EXTRA_JS_MODULES.media += [
 ]
 
 LOCAL_INCLUDES += [
-    "!/security/rlbox",
+    "!/media/libsoundtouch/src",
     "/caps",
     "/docshell/base",
     "/dom/base",
@@ -435,7 +426,7 @@ if CONFIG["CC_TYPE"] in ("clang", "gcc"):
         "-Wno-error=attributes",
     ]
 
-COMPILE_FLAGS["WARNINGS_CXXFLAGS"] += ["-Werror=switch"]
+CXXFLAGS += ["-Werror=switch"]
 
 FINAL_LIBRARY = "xul"
 

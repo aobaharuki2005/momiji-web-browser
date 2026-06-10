@@ -48,10 +48,7 @@ promise_test(async function(t) {
     });
   });
 
-  let blob = new Blob([CHILD_DOC], {type: "text/html"});
-  let blobURL = URL.createObjectURL(blob);
-  let win = window.open(blobURL);
-  URL.revokeObjectURL(blobURL);
+  let win = window.open("data:text/html," + escape(CHILD_DOC));
 
   assert_true(true, "Window opened");
   let message = await messagePromise;

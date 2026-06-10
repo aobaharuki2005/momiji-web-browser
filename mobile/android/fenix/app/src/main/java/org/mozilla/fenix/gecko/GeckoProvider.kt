@@ -110,13 +110,6 @@ object GeckoProvider {
                     context.settings().strictAllowListBaselineTrackingProtection,
                     allowListConvenienceTrackingProtection =
                     context.settings().strictAllowListConvenienceTrackingProtection,
-                    safeBrowsingGlobalCacheEnabled = Config.channel.isNightlyOrDebug,
-                    safeBrowsingRealTimeEnabled = Config.channel.isNightlyOrDebug,
-                    safeBrowsingRealTimeSimulationEnabled = Config.channel.isNightlyOrDebug,
-                    safeBrowsingRealTimeSimulationHitProbability = 5,
-                    safeBrowsingRealTimeSimulationCacheTTLSec = 300,
-                    safeBrowsingRealTimeSimulationNegativeCacheEnabled = false,
-                    safeBrowsingRealTimeSimulationNegativeCacheTTLSec = 300,
                 ),
             )
             .consoleOutput(context.components.settings.enableGeckoLogs)
@@ -138,6 +131,7 @@ object GeckoProvider {
         if (FxNimbus.features.fission.value().shouldUseNimbus) {
             builder
                 .fissionEnabled(FxNimbus.features.fission.value().enabled)
+                .disableShip(FxNimbus.features.ship.value().disabled)
         }
 
         return builder.build()

@@ -279,7 +279,7 @@ export class PrefFlipsFeature {
     }
   }
 
-  _annotateEnrollment(enrollment) {
+  async _annotateEnrollment(enrollment) {
     const { featureIds } = enrollment;
     if (!featureIds.includes(FEATURE_ID)) {
       return;

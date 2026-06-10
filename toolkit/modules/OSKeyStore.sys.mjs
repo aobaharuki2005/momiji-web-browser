@@ -391,7 +391,10 @@ export var OSKeyStore = {
 };
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
-  return console.createInstance({
+  let { ConsoleAPI } = ChromeUtils.importESModule(
+    "resource://gre/modules/Console.sys.mjs"
+  );
+  return new ConsoleAPI({
     maxLogLevelPref: "toolkit.osKeyStore.loglevel",
     prefix: "OSKeyStore",
   });

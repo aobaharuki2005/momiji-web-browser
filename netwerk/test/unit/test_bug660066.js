@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 "use strict";
 
 const SIMPLEURI_SPEC = "data:text/plain,hello world";

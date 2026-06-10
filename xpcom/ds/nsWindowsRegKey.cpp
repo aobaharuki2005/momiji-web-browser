@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -57,7 +59,7 @@ nsWindowsRegKey::OpenChild(const nsAString& aPath, uint32_t aMode,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  RefPtr child = mozilla::MakeRefPtr<nsWindowsRegKey>();
+  RefPtr<nsWindowsRegKey> child = new nsWindowsRegKey();
   child->mKey = WinRegistry::Key(mKey, PromiseFlatString(aPath),
                                  WinRegistry::KeyMode(aMode));
   if (!child->mKey) {
@@ -74,7 +76,7 @@ nsWindowsRegKey::CreateChild(const nsAString& aPath, uint32_t aMode,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  RefPtr child = mozilla::MakeRefPtr<nsWindowsRegKey>();
+  RefPtr<nsWindowsRegKey> child = new nsWindowsRegKey();
   child->mKey =
       WinRegistry::Key(mKey, PromiseFlatString(aPath),
                        WinRegistry::KeyMode(aMode), WinRegistry::Key::Create);
@@ -273,7 +275,7 @@ nsWindowsRegKey::WriteBinaryValue(const nsAString& aName,
 //-----------------------------------------------------------------------------
 
 void NS_NewWindowsRegKey(nsIWindowsRegKey** aResult) {
-  RefPtr key = mozilla::MakeRefPtr<nsWindowsRegKey>();
+  RefPtr<nsWindowsRegKey> key = new nsWindowsRegKey();
   key.forget(aResult);
 }
 

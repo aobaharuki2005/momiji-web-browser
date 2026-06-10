@@ -391,7 +391,6 @@ export default class LoginList extends HTMLElement {
       case "AboutLoginsFilterLogins": {
         this._filter = event.detail.toLocaleLowerCase();
         this.render();
-        this._selectFirstVisibleLogin();
         break;
       }
       case "AboutLoginsInitialLoginSelected":
@@ -508,20 +507,6 @@ export default class LoginList extends HTMLElement {
     this._internalUpdateMonitorData(
       "_vulnerableLoginsByLoginGUID",
       vulnerableLoginsByLoginGUID
-    );
-  }
-
-  setChangePasswordURLs(changePasswordURLsByLoginGUID) {
-    this._internalUpdateMonitorData(
-      "_changePasswordURLsByLoginGUID",
-      changePasswordURLsByLoginGUID
-    );
-  }
-
-  updateChangePasswordURLs(changePasswordURLsByLoginGUID) {
-    this._internalSetMonitorData(
-      "_changePasswordURLsByLoginGUID",
-      changePasswordURLsByLoginGUID
     );
   }
 

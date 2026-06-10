@@ -13,10 +13,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <span>
 #include <string>
 #include <vector>
 
+#include "api/array_view.h"
 #include "net/dcsctp/packet/parameter/parameter.h"
 #include "net/dcsctp/packet/tlv_trait.h"
 
@@ -34,16 +34,16 @@ class StateCookieParameter : public Parameter,
  public:
   static constexpr int kType = StateCookieParameterConfig::kType;
 
-  explicit StateCookieParameter(std::span<const uint8_t> data)
+  explicit StateCookieParameter(webrtc::ArrayView<const uint8_t> data)
       : data_(data.begin(), data.end()) {}
 
   static std::optional<StateCookieParameter> Parse(
-      std::span<const uint8_t> data);
+      webrtc::ArrayView<const uint8_t> data);
 
   void SerializeTo(std::vector<uint8_t>& out) const override;
   std::string ToString() const override;
 
-  std::span<const uint8_t> data() const { return data_; }
+  webrtc::ArrayView<const uint8_t> data() const { return data_; }
 
  private:
   std::vector<uint8_t> data_;

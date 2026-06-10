@@ -30,6 +30,7 @@ NSS 3.16.1 release notes
 `New in NSS 3.16.1 <#new_in_nss_3.16.1>`__
 ------------------------------------------
 
+.. _new_functionality:
 
 `New Functionality <#new_functionality>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,6 +41,7 @@ NSS 3.16.1 release notes
       (ECC) operations.
 
    .. rubric:: New Functions
+      :name: new_functions
 
    -  *in pk11pub.h*
 
@@ -53,6 +55,7 @@ NSS 3.16.1 release notes
          mechanism flags.
 
    .. rubric:: New Types
+      :name: new_types
 
    -  *in sslt.h*
 
@@ -60,6 +63,7 @@ NSS 3.16.1 release notes
          35655 to the IANA-assigned value 21. .
 
    .. rubric:: New Macros
+      :name: new_macros
 
    -  *in secmod.h*
 

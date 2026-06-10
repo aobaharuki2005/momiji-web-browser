@@ -100,8 +100,6 @@ class nsHtml5TreeOpExecutor final
  public:
   nsHtml5TreeOpExecutor();
 
-  static void InitializeStatics();
-
  protected:
   virtual ~nsHtml5TreeOpExecutor();
 

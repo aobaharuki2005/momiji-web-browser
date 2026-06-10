@@ -21,23 +21,14 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Callable, Optional
 
+from filelock import FileLock, Timeout
 from mozfile import json
 from packaging.specifiers import SpecifierSet
 
-from mach.filelock import FileLock, Timeout
 from mach.requirements import (
     MachEnvRequirements,
     UnexpectedFlexibleRequirementException,
 )
-
-
-class SiteLockTimeout(Exception):
-    def __init__(self, lock_file, site_name, timeout):
-        self.lock_file = lock_file
-        super().__init__(
-            f"Could not acquire the lock at {lock_file} for the {site_name} site after {timeout} seconds"
-        )
-
 
 PTH_FILENAME = "mach.pth"
 METADATA_FILENAME = "moz_virtualenv_metadata.json"
@@ -423,7 +414,9 @@ class MachSiteManager:
                 with FileLock(lock_file, timeout=timeout):
                     self._ensure(force=force)
             except Timeout:
-                raise SiteLockTimeout(lock_file, "mach", timeout)
+                self._log(
+                    f"Could not acquire the lock at {lock_file} for the mach site after {timeout} seconds."
+                )
         else:
             self._ensure(force=force)
 
@@ -441,7 +434,7 @@ class MachSiteManager:
 
     def attempt_populate_optional_packages(self):
         if self._site_packages_source != SitePackagesSource.VENV:
-            return
+            pass
 
         self._virtualenv().install_optional_packages(
             self._requirements.pypi_optional_requirements
@@ -690,7 +683,9 @@ class CommandSiteManager:
                         self._metadata,
                     )
         except Timeout:
-            raise SiteLockTimeout(lock_file, self._site_name, timeout)
+            self._log(
+                f"Could not acquire the lock at {lock_file} for the {self._site_name} site after {timeout} seconds."
+            )
 
     def activate(self):
         """Activate this site in the current Python context.
@@ -865,7 +860,6 @@ class CommandSiteManager:
         """Generate the prioritized import scope to encode in the venv's pthfile
 
         The import priority looks like this:
-
         1. Mach's vendored/first-party modules
         2. Mach's site-package source (the Mach virtualenv, the system Python, or neither)
         3. The command's vendored/first-party modules
@@ -883,7 +877,6 @@ class CommandSiteManager:
 
         Mach doesn't know the command being run when it's preparing its import scope,
         so it has to be defensive. Therefore:
-
         1. If Mach needs a system package: system packages are higher priority.
         2. If Mach doesn't need a system package, but the current command does: system
            packages are still be in the list, albeit at a lower priority.

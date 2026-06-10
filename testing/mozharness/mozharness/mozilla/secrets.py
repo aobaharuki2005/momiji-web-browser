@@ -6,7 +6,9 @@
 
 import json
 import os
-import urllib.request
+
+import six
+from six.moves import urllib
 
 
 class SecretsMixin:
@@ -22,8 +24,7 @@ class SecretsMixin:
         if res.getcode() != 200:
             self.fatal("Error fetching from secrets API:" + res.read())
 
-        response_data = res.read().decode("utf-8")
-        return json.loads(response_data)["secret"]["content"]
+        return json.loads(six.ensure_str(res.read()))["secret"]["content"]
 
     def get_secrets(self):
         """

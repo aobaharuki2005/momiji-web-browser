@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,6 +11,7 @@
 #include "js/experimental/JSStencil.h"
 #include "js/Transcoding.h"
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MemoryReporting.h"
@@ -16,15 +19,13 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
-#include "mozilla/UniquePtr.h"  // mozilla::UniquePtr
 
-#include "mozilla/dom/SRIMetadata.h"  // mozilla::dom::SRIMetadata
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsICacheInfoChannel.h"  // nsICacheInfoChannel
+#include "nsIMemoryReporter.h"
 
 #include "jsapi.h"
-#include "ResolvedModuleSet.h"
 #include "ScriptKind.h"
 #include "ScriptFetchOptions.h"
 
@@ -36,89 +37,13 @@ class ScriptLoadRequest;
 
 using Utf8Unit = mozilla::Utf8Unit;
 
-void HostAddRefScriptFetchInfo(const Value& aPrivate);
-void HostReleaseScriptFetchInfo(const Value& aPrivate);
+void HostAddRefTopLevelScript(const Value& aPrivate);
+void HostReleaseTopLevelScript(const Value& aPrivate);
 
 class ClassicScript;
-class LoadedModuleScript;
+class ModuleScript;
+class EventScript;
 class LoadContextBase;
-
-// Information required to fetch scripts or module graphs.
-//
-// This class is separated than LoadedScript or ScriptLoadRequest, in order to
-// store it into the script private and module private, to propagate the
-// information to the module imports performed later.
-//
-// The fields are initialized from the request, and then updated from the
-// responses.
-class ScriptFetchInfo : public nsISupports {
- public:
-  ScriptFetchInfo(ScriptKind aKind,
-                  mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                  ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
-
-  NS_DECL_ISUPPORTS
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  bool IsForModulePreload() const { return mIsForModulePreload; }
-  void SetForModulePreload(bool aValue) { mIsForModulePreload = aValue; }
-
-  bool IsForModuleScript() const { return mKind == ScriptKind::eModule; }
-  bool IsForEvent() const { return mKind == ScriptKind::eEvent; }
-
-  mozilla::dom::ReferrerPolicy ReferrerPolicy() const {
-    return mReferrerPolicy;
-  }
-  void UpdateReferrerPolicy(mozilla::dom::ReferrerPolicy aReferrerPolicy) {
-    mReferrerPolicy = aReferrerPolicy;
-  }
-
-  ScriptFetchOptions* FetchOptions() const { return mFetchOptions; }
-
-  nsIURI* BaseURL() const { return mBaseURL; }
-  void SetBaseURL(nsIURI* aBaseURL) { mBaseURL = aBaseURL; }
-
-  /*
-   * Set the mBaseURL, based on aChannel.
-   * aOriginalURI is the result of aChannel->GetOriginalURI.
-   */
-  void SetBaseURLFromChannelAndOriginalURI(nsIChannel* aChannel,
-                                           nsIURI* aOriginalURI);
-
-  void AssociateWithScript(JSScript* aScript);
-  void AssociateWithModule(JSObject* aModuleRecord);
-
- protected:
-  virtual ~ScriptFetchInfo() = default;
-
- private:
-  // Set to true if this is for a module imported as part of preload.
-  //
-  // This field can be overwritten based on the module import processing.
-  bool mIsForModulePreload = false;
-
-  // This should match the LoadedScript::mKind.
-  ScriptKind mKind;
-
-  // The referrer policy used for fetching this script, and going to be used for
-  // fetching imported modules.
-  //
-  // This field can be overwritten based on the response.
-  mozilla::dom::ReferrerPolicy mReferrerPolicy;
-
-  // The fetch option used for fetching this script, and going to be used for
-  // fetching imported modules.
-  // This field is constant, and never overwritten from the response.
-  RefPtr<ScriptFetchOptions> mFetchOptions;
-
-  // The base URL used for resolving relative module imports.
-  // This field is unused for Event script, and in that case the loader's base
-  // URL should be used.
-  //
-  // This field can be overwritten based on the response.
-  nsCOMPtr<nsIURI> mBaseURL;
-};
 
 // A LoadedScript is a place where the Script is stored once it is loaded. It is
 // not unique to a load, and can be shared across loads as long as it is
@@ -130,34 +55,52 @@ class ScriptFetchInfo : public nsISupports {
 // As the LoadedScript can be shared, using the SharedSubResourceCache, it is
 // exposed to the memory reporter such that sharing might be accounted for
 // properly.
-class LoadedScript final : public nsISupports {
-  ~LoadedScript() = default;
+class LoadedScript : public nsIMemoryReporter {
+ protected:
+  LoadedScript(ScriptKind aKind, mozilla::dom::ReferrerPolicy aReferrerPolicy,
+               ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
+
+  LoadedScript(const LoadedScript& aOther);
+
+  template <typename T, typename... Args>
+  friend RefPtr<T> mozilla::MakeRefPtr(Args&&... aArgs);
+
+  virtual ~LoadedScript();
 
  public:
-  LoadedScript(ScriptKind aKind, nsIURI* aURI);
+  // When the memory should be reported, register it using RegisterMemoryReport,
+  // and make sure to call SizeOfIncludingThis in the enclosing container.
+  //
+  // Each reported script would be listed under
+  // `explicit/js/script/loaded-script/<kind>`.
+  void RegisterMemoryReport();
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
  public:
-  NS_DECL_ISUPPORTS
-
-  uint16_t ClampedRefCountForTelemetry() const {
-    uintptr_t count = mRefCnt.get();
-    if (count > 100) {
-      return 100;
-    }
-    return uint16_t(count);
-  }
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS;
+  NS_DECL_NSIMEMORYREPORTER;
+  NS_DECL_CYCLE_COLLECTION_CLASS(LoadedScript)
 
   bool IsClassicScript() const { return mKind == ScriptKind::eClassic; }
   bool IsModuleScript() const { return mKind == ScriptKind::eModule; }
+  bool IsEventScript() const { return mKind == ScriptKind::eEvent; }
   bool IsImportMapScript() const { return mKind == ScriptKind::eImportMap; }
 
-  nsIURI* GetURI() const { return mURI; }
+  inline ClassicScript* AsClassicScript();
+  inline ModuleScript* AsModuleScript();
 
-  nsIURI* CachedBaseURL() const { return mCachedBaseURL; }
-  mozilla::dom::ReferrerPolicy CachedReferrerPolicy() const {
-    return mCachedReferrerPolicy;
+  // Used to propagate Fetch Options to child modules
+  ScriptFetchOptions* GetFetchOptions() const { return mFetchOptions; }
+
+  mozilla::dom::ReferrerPolicy ReferrerPolicy() const {
+    return mReferrerPolicy;
   }
+
+  nsIURI* GetURI() const { return mURI; }
+  void SetBaseURL(nsIURI* aBaseURL) { mBaseURL = aBaseURL; }
+  nsIURI* BaseURL() const { return mBaseURL; }
+
+  void AssociateWithScript(JSScript* aScript);
 
  public:
   // ===========================================================================
@@ -183,37 +126,13 @@ class LoadedScript final : public nsISupports {
 
     // This script is received as a serialized stencil from the channel,
     // mSRIAndSerializedStencil holds the SRI and the serialized stencil, and
-    // mCachedStencil is unused.
+    // mStencil holds the decoded stencil.
     eSerializedStencil,
 
     // This script is cached from the previous load.
-    // mCachedStencil holds the cached stencil. mScriptData is unused.
-    //
-    // mSRIAndSerializedStencil can contain SRI only if this script is going to
-    // be saved to disk:
-    //   * If this was retrieved as eTextSource and then converted to
-    //     eCachedStencil:
-    //     * If this script is going to be saved to disk,
-    //       mSRIAndSerializedStencil holds the SRI
-    //     * If this script was already saved to disk,
-    //       mSRIAndSerializedStencil was cleared before save, and is unused
-    //     * If this script is not going to be saved to disk,
-    //       mSRIAndSerializedStencil is unused
-    //   * If this was retrieved as eSerializedStencil and then converted to
-    //     eCachedStencil, the decoded stencil should not borrow the buffer.
-    //     mSRIAndSerializedStencil was cleared on conversion, is unused
-    eCachedStencil,
-
-    // This was eCachedStencil, but the stencil reference is cleared
-    // for the memory pressure.
-    // Other fields are still valid.
-    eInvalidatedCachedStencil,
-
-    // This is a wasm module, which is used when the response mime type essence
-    // is application/wasm.
-    // mScriptData holds the wasm source as uint8_t from the channel.
-    // mCachedStencil and mSRIAndSerializedStencil are unused.
-    eWasmBytes,
+    // mStencil holds the cached stencil, and mSRIAndSerializedStencil holds
+    // the SRI. mScriptData is unused.
+    eCachedStencil
   };
 
   // Use a vector backed by the JS allocator for script text so that contents
@@ -233,10 +152,6 @@ class LoadedScript final : public nsISupports {
     return mDataType == DataType::eSerializedStencil;
   }
   bool IsCachedStencil() const { return mDataType == DataType::eCachedStencil; }
-  bool IsInvalidatedCachedStencil() const {
-    return mDataType == DataType::eInvalidatedCachedStencil;
-  }
-  bool IsWasmBytes() const { return mDataType == DataType::eWasmBytes; }
 
   // ==== Methods to convert the data type ====
 
@@ -256,39 +171,10 @@ class LoadedScript final : public nsISupports {
     mDataType = DataType::eSerializedStencil;
   }
 
-  void ConvertToCachedStencil(JS::Stencil* aStencil,
-                              mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                              nsIURI* aBaseURL) {
-    if (IsTextSource()) {
-      // The text source is no longer necessary, given it's already compiled.
-      // The SRI is still necessary in order to save it to the disk cache.
-      ClearScriptText();
-    } else {
-      // The serialized stencil is no longer necessary, given it's already
-      // decoded, without borrowing.
-      // The SRI is also unnecessary given we don't save serialized stencil
-      // again.
-      MOZ_ASSERT(IsSerializedStencil());
-      MOZ_ASSERT(!JS::StencilIsBorrowed(aStencil));
-      DropSRIOrSRIAndSerializedStencil();
-    }
+  void ConvertToCachedStencil() {
+    MOZ_ASSERT(HasStencil());
     SetUnknownDataType();
     mDataType = DataType::eCachedStencil;
-    mCachedStencil = aStencil;
-    mCachedReferrerPolicy = aReferrerPolicy;
-    mCachedBaseURL = aBaseURL;
-  }
-
-  void InvalidateCachedStencil() {
-    MOZ_ASSERT(IsCachedStencil());
-    mDataType = DataType::eInvalidatedCachedStencil;
-    mCachedStencil = nullptr;
-  }
-
-  void SetWasmBytes() {
-    MOZ_ASSERT(IsUnknownDataType());
-    mDataType = DataType::eWasmBytes;
-    mScriptData.emplace(VariantType<ScriptTextBuffer<uint8_t>>());
   }
 
   bool IsUTF16Text() const {
@@ -298,7 +184,7 @@ class LoadedScript final : public nsISupports {
     return mScriptData->is<ScriptTextBuffer<Utf8Unit>>();
   }
 
-  // ==== Methods to access the text source ====
+  // ==== Methods to access the text soutce ====
 
   template <typename Unit>
   const ScriptTextBuffer<Unit>& ScriptText() const {
@@ -309,11 +195,6 @@ class LoadedScript final : public nsISupports {
   ScriptTextBuffer<Unit>& ScriptText() {
     MOZ_ASSERT(IsTextSource());
     return mScriptData->as<ScriptTextBuffer<Unit>>();
-  }
-
-  ScriptTextBuffer<uint8_t>& WasmBytes() {
-    MOZ_ASSERT(IsWasmBytes());
-    return mScriptData->as<ScriptTextBuffer<uint8_t>>();
   }
 
   size_t ScriptTextLength() const {
@@ -333,13 +214,9 @@ class LoadedScript final : public nsISupports {
                          : ScriptText<Utf8Unit>().clearAndFree();
   }
 
-  size_t ReceivedScriptTextLength() const {
-    MOZ_ASSERT(IsTextSource());
-    return mReceivedScriptTextLength;
-  }
+  size_t ReceivedScriptTextLength() const { return mReceivedScriptTextLength; }
 
   void SetReceivedScriptTextLength(size_t aLength) {
-    MOZ_ASSERT(IsTextSource());
     mReceivedScriptTextLength = aLength;
   }
 
@@ -349,11 +226,9 @@ class LoadedScript final : public nsISupports {
 
   // ---- For SRI-only consumers ----
 
-  bool CanHaveSRIOnly() const {
-    return IsTextSource() || IsCachedStencil() || IsInvalidatedCachedStencil();
-  }
+  bool CanHaveSRIOnly() const { return IsTextSource() || IsCachedStencil(); }
 
-  bool HasSRI() const {
+  bool HasSRI() {
     MOZ_ASSERT(CanHaveSRIOnly());
     return !mSRIAndSerializedStencil.empty();
   }
@@ -406,10 +281,21 @@ class LoadedScript final : public nsISupports {
 
   // ==== Methods to access the stencil ====
 
-  Stencil* GetCachedStencil() const {
-    MOZ_ASSERT(IsCachedStencil());
-    return mCachedStencil;
+  bool HasStencil() const { return mStencil; }
+
+  Stencil* GetStencil() const {
+    MOZ_ASSERT(!IsUnknownDataType());
+    MOZ_ASSERT(HasStencil());
+    return mStencil;
   }
+
+  void SetStencil(Stencil* aStencil) {
+    MOZ_ASSERT(aStencil);
+    MOZ_ASSERT(!HasStencil());
+    mStencil = aStencil;
+  }
+
+  void ClearStencil() { mStencil = nullptr; }
 
   // ==== Methods to access the disk cache reference ====
 
@@ -432,8 +318,12 @@ class LoadedScript final : public nsISupports {
   void SetTookLongInPreviousRuns() { mTookLongInPreviousRuns = true; }
   bool TookLongInPreviousRuns() const { return mTookLongInPreviousRuns; }
 
-  void SetIsEverHitFromMemoryCache() { mIsEverHitFromMemoryCache = true; }
-  bool IsEverHitFromMemoryCache() const { return mIsEverHitFromMemoryCache; }
+  /*
+   * Set the mBaseURL, based on aChannel.
+   * aOriginalURI is the result of aChannel->GetOriginalURI.
+   */
+  void SetBaseURLFromChannelAndOriginalURI(nsIChannel* aChannel,
+                                           nsIURI* aOriginalURI);
 
   bool IsDirty() const { return mIsDirty; }
   void SetDirty() {
@@ -463,12 +353,6 @@ class LoadedScript final : public nsISupports {
     }
   }
 
-  void SetSRIMetadata(const mozilla::dom::SRIMetadata& aSRIMetadata);
-
-  // Returns true if this script has compatible SRI metadata as the provided
-  // one.
-  bool IsSRIMetadataReusableBy(const mozilla::dom::SRIMetadata& aSRIMetadata);
-
  public:
   // Fields.
 
@@ -485,12 +369,10 @@ class LoadedScript final : public nsISupports {
  private:
   const ScriptKind mKind;
 
-  // The final ScriptFetchInfo::mReferrerPolicy value o the
-  // initial request.
-  // This field is set before this LoadedScript is stored into the
-  // SharedScriptCache, and then propagated to the ScriptFetchInfo
-  // for the request that uses this cache.
-  mozilla::dom::ReferrerPolicy mCachedReferrerPolicy;
+ protected:
+  // The referrer policy used for the initial fetch and for fetching any
+  // imported modules
+  mozilla::dom::ReferrerPolicy mReferrerPolicy;
 
  public:
   // Offset of the serialized Stencil in mSRIAndSerializedStencil.
@@ -534,28 +416,16 @@ class LoadedScript final : public nsISupports {
   // TODO: Move this into JS::Stencil, and save to the disk cache (bug 2005128)
   uint64_t mTookLongInPreviousRuns : 1;
 
-  // Set to true if this entry is ever used in the current process.
-  uint64_t mIsEverHitFromMemoryCache : 1;
-
+  RefPtr<ScriptFetchOptions> mFetchOptions;
   nsCOMPtr<nsIURI> mURI;
 
-  // The final ScriptFetchInfo::mBaseURL value of the
-  // initial request.
-  // This field is set before this LoadedScript is stored into the
-  // SharedScriptCache, and then propagated to the ScriptFetchInfo
-  // for the request that uses this cache.
-  nsCOMPtr<nsIURI> mCachedBaseURL;
-
-  // An optional field to store the SRI metadata used by the request that
-  // first creates this instance.
-  // nullptr if the SRI metadata was empty, or not yet set.
-  mozilla::UniquePtr<mozilla::dom::SRIMetadata> mSRIMetadata;
+  // The base URL used for resolving relative module imports.
+  nsCOMPtr<nsIURI> mBaseURL;
 
  public:
-  // Holds script source data for non-inline scripts, or raw bytes for wasm
-  // modules.
-  mozilla::Maybe<Variant<ScriptTextBuffer<char16_t>, ScriptTextBuffer<Utf8Unit>,
-                         ScriptTextBuffer<uint8_t>>>
+  // Holds script source data for non-inline scripts.
+  mozilla::Maybe<
+      Variant<ScriptTextBuffer<char16_t>, ScriptTextBuffer<Utf8Unit>>>
       mScriptData;
 
   // The length of script source text, set when reading completes. This is used
@@ -570,8 +440,8 @@ class LoadedScript final : public nsISupports {
   //     or, if compression is enabled, ScriptBytecodeCompressedDataLayout.
   TranscodeBuffer mSRIAndSerializedStencil;
 
-  // Holds the stencil for the script, cached for the subsequent requests.
-  RefPtr<Stencil> mCachedStencil;
+  // Holds the stencil for the script.  This field is used in all DataType.
+  RefPtr<Stencil> mStencil;
 
   // The cache info channel used when saving the serialized Stencil to the
   // necko cache.
@@ -603,20 +473,41 @@ class LoadedScriptDelegate {
   using ScriptTextBuffer = LoadedScript::ScriptTextBuffer<Unit>;
   using MaybeSourceText = LoadedScript::MaybeSourceText;
 
+  mozilla::dom::ReferrerPolicy ReferrerPolicy() const {
+    return GetLoadedScript()->ReferrerPolicy();
+  }
+  void UpdateReferrerPolicy(mozilla::dom::ReferrerPolicy aReferrerPolicy) {
+    GetLoadedScript()->AsModuleScript()->UpdateReferrerPolicy(aReferrerPolicy);
+  }
+
+  ScriptFetchOptions* FetchOptions() const {
+    return GetLoadedScript()->GetFetchOptions();
+  }
+
   nsIURI* URI() const { return GetLoadedScript()->GetURI(); }
+
+  nsIURI* BaseURL() const { return GetLoadedScript()->BaseURL(); }
+  void SetBaseURL(nsIURI* aBaseURL) { GetLoadedScript()->SetBaseURL(aBaseURL); }
+  void SetBaseURLFromChannelAndOriginalURI(nsIChannel* aChannel,
+                                           nsIURI* aOriginalURI) {
+    GetLoadedScript()->SetBaseURLFromChannelAndOriginalURI(aChannel,
+                                                           aOriginalURI);
+  }
 
   bool IsUnknownDataType() const {
     return GetLoadedScript()->IsUnknownDataType();
   }
-  bool IsWasmBytes() const { return GetLoadedScript()->IsWasmBytes(); }
+  bool IsTextSource() const { return GetLoadedScript()->IsTextSource(); }
+  bool IsSerializedStencil() const {
+    return GetLoadedScript()->IsSerializedStencil();
+  }
+  bool IsCachedStencil() const { return GetLoadedScript()->IsCachedStencil(); }
 
   void SetUnknownDataType() { GetLoadedScript()->SetUnknownDataType(); }
 
   void SetTextSource(LoadContextBase* maybeLoadContext) {
     GetLoadedScript()->SetTextSource(maybeLoadContext);
   }
-
-  void SetWasmBytes() { GetLoadedScript()->SetWasmBytes(); }
 
   void SetSerializedStencil() { GetLoadedScript()->SetSerializedStencil(); }
 
@@ -632,11 +523,6 @@ class LoadedScriptDelegate {
   ScriptTextBuffer<Unit>& ScriptText() {
     LoadedScript* loader = GetLoadedScript();
     return loader->ScriptText<Unit>();
-  }
-
-  ScriptTextBuffer<uint8_t>& WasmBytes() {
-    LoadedScript* loader = GetLoadedScript();
-    return loader->WasmBytes();
   }
 
   size_t ScriptTextLength() const {
@@ -658,6 +544,8 @@ class LoadedScriptDelegate {
     return GetLoadedScript()->GetScriptSource(aCx, aMaybeSource, aLoadContext);
   }
 
+  void ClearScriptText() { GetLoadedScript()->ClearScriptText(); }
+
   bool HasNoSRIOrSRIAndSerializedStencil() const {
     return GetLoadedScript()->HasNoSRIOrSRIAndSerializedStencil();
   }
@@ -675,6 +563,17 @@ class LoadedScriptDelegate {
     GetLoadedScript()->SetSRILength(sriLength);
   }
 
+  void DropSRIOrSRIAndSerializedStencil() {
+    GetLoadedScript()->DropSRIOrSRIAndSerializedStencil();
+  }
+
+  bool HasStencil() const { return GetLoadedScript()->HasStencil(); }
+  Stencil* GetStencil() const { return GetLoadedScript()->GetStencil(); }
+  void SetStencil(Stencil* aStencil) {
+    GetLoadedScript()->SetStencil(aStencil);
+  }
+  void ClearStencil() { GetLoadedScript()->ClearStencil(); }
+
   void SetTookLongInPreviousRuns() {
     GetLoadedScript()->SetTookLongInPreviousRuns();
   }
@@ -683,30 +582,68 @@ class LoadedScriptDelegate {
   }
 };
 
+class ClassicScript final : public LoadedScript {
+  ~ClassicScript() = default;
+
+ private:
+  // Scripts can be created only by ScriptLoadRequest::NoCacheEntryFound.
+  ClassicScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
+
+  friend class ScriptLoadRequest;
+};
+
+class EventScript final : public LoadedScript {
+  ~EventScript() = default;
+
+ public:
+  EventScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+              ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
+};
+
+class ImportMapScript final : public LoadedScript {
+  ~ImportMapScript() = default;
+
+ public:
+  ImportMapScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                  ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
+};
+
 // A single module script. May be used to satisfy multiple load requests.
 
-class ModuleScript final : public nsISupports {
+class ModuleScript final : public LoadedScript {
   // Those fields are used only after instantiated, and they're reset to
   // null and false when stored into the cache as LoadedScript instance.
   Heap<JSObject*> mModuleRecord;
   Heap<Value> mParseError;
   Heap<Value> mErrorToRethrow;
-
-  // A copy of ScriptLoadRequest::mFetchInfo, to read and update the
-  // ScriptFetchInfo::mIsForModulePreload field.
-  RefPtr<ScriptFetchInfo> mFetchInfoForAccessingPreloadFlag;
-
+  bool mForPreload = false;
   bool mHadImportMap = false;
-
-  mozilla::UniquePtr<JS::loader::ResolvedModuleSet> mPreloadedResolvedSet;
 
   ~ModuleScript();
 
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ModuleScript)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ModuleScript,
+                                                         LoadedScript)
 
-  explicit ModuleScript(ScriptFetchInfo* aFetchInfo);
+ private:
+  // Scripts can be created only by ScriptLoadRequest::NoCacheEntryFound.
+  ModuleScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+               ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
+
+  explicit ModuleScript(const LoadedScript& other);
+
+  template <typename T, typename... Args>
+  friend RefPtr<T> mozilla::MakeRefPtr(Args&&... aArgs);
+
+  friend class ScriptLoadRequest;
+
+ public:
+  // Convert between cacheable LoadedScript instance, which is used by
+  // mozilla::dom::SharedScriptCache.
+  static already_AddRefed<ModuleScript> FromCache(const LoadedScript& aScript);
+  already_AddRefed<LoadedScript> ToCache();
 
   void SetModuleRecord(Handle<JSObject*> aModuleRecord);
   void SetParseError(const Value& aError);
@@ -720,22 +657,29 @@ class ModuleScript final : public nsISupports {
   Value ErrorToRethrow() const { return mErrorToRethrow; }
   bool HasParseError() const { return !mParseError.isUndefined(); }
   bool HasErrorToRethrow() const { return !mErrorToRethrow.isUndefined(); }
-  bool ForPreload() const {
-    return mFetchInfoForAccessingPreloadFlag->IsForModulePreload();
-  }
+  bool ForPreload() const { return mForPreload; }
   bool HadImportMap() const { return mHadImportMap; }
 
-  // This is used to reset the module graph information which happened during
-  // preload.
-  void ResetPreload();
   void Shutdown();
+
+  void UnlinkModuleRecord();
 
   friend void CheckModuleScriptPrivate(LoadedScript*, const Value&);
 
-  bool HasPreloadedResolvedSet() { return !!mPreloadedResolvedSet; }
-  ResolvedModuleSet* GetPreloadedResolvedSet();
-  void ReleasePreloadedResolvedSet() { mPreloadedResolvedSet = nullptr; }
+  void UpdateReferrerPolicy(mozilla::dom::ReferrerPolicy aReferrerPolicy) {
+    mReferrerPolicy = aReferrerPolicy;
+  }
 };
+
+ClassicScript* LoadedScript::AsClassicScript() {
+  MOZ_ASSERT(!IsModuleScript());
+  return static_cast<ClassicScript*>(this);
+}
+
+ModuleScript* LoadedScript::AsModuleScript() {
+  MOZ_ASSERT(IsModuleScript());
+  return static_cast<ModuleScript*>(this);
+}
 
 }  // namespace JS::loader
 

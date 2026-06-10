@@ -23,7 +23,7 @@ namespace webrtc {
 class AudioDeviceDummy : public AudioDeviceGeneric {
  public:
   AudioDeviceDummy() {}
-  ~AudioDeviceDummy() override {}
+  virtual ~AudioDeviceDummy() {}
 
   // Retrieve the currently utilized audio layer
   int32_t ActiveAudioLayer(

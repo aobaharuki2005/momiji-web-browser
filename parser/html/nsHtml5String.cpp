@@ -12,11 +12,9 @@ using mozilla::StringBuffer;
 void nsHtml5String::ToString(nsAString& aString) {
   switch (GetKind()) {
     case eStringBuffer:
-      aString.Assign(AsStringBuffer(), Length());
-      return;
+      return aString.Assign(AsStringBuffer(), Length());
     case eAtom:
-      AsAtom()->ToString(aString);
-      return;
+      return AsAtom()->ToString(aString);
     case eEmpty:
       aString.Truncate();
       return;
@@ -25,28 +23,6 @@ void nsHtml5String::ToString(nsAString& aString) {
       aString.SetIsVoid(true);
       return;
   }
-}
-
-void nsHtml5String::MoveToString(nsAString& aString) {
-  switch (GetKind()) {
-    case eStringBuffer:
-      aString.Assign(already_AddRefed<mozilla::StringBuffer>(AsStringBuffer()),
-                     Length());
-      break;
-    case eAtom: {
-      nsAtom* atom = AsAtom();
-      atom->ToString(aString);
-      atom->Release();
-    } break;
-    case eEmpty:
-      aString.Truncate();
-      break;
-    default:
-      aString.Truncate();
-      aString.SetIsVoid(true);
-      break;
-  }
-  mBits = eNull;
 }
 
 void nsHtml5String::CopyToBuffer(char16_t* aBuffer) const {
@@ -204,12 +180,6 @@ nsHtml5String nsHtml5String::FromString(const nsAString& aString) {
 // static
 nsHtml5String nsHtml5String::FromAtom(already_AddRefed<nsAtom> aAtom) {
   return nsHtml5String(reinterpret_cast<uintptr_t>(aAtom.take()) | eAtom);
-}
-
-// static
-nsHtml5String nsHtml5String::FromStaticAtom(nsStaticAtom* aAtom) {
-  nsAtom* atom = aAtom;
-  return nsHtml5String(reinterpret_cast<uintptr_t>(atom) | eAtom);
 }
 
 // static

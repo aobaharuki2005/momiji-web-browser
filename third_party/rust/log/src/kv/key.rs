@@ -6,26 +6,26 @@ use std::fmt;
 /// A type that can be converted into a [`Key`](struct.Key.html).
 pub trait ToKey {
     /// Perform the conversion.
-    fn to_key(&self) -> Key<'_>;
+    fn to_key(&self) -> Key;
 }
 
-impl<T> ToKey for &T
+impl<'a, T> ToKey for &'a T
 where
     T: ToKey + ?Sized,
 {
-    fn to_key(&self) -> Key<'_> {
+    fn to_key(&self) -> Key {
         (**self).to_key()
     }
 }
 
 impl<'k> ToKey for Key<'k> {
-    fn to_key(&self) -> Key<'_> {
+    fn to_key(&self) -> Key {
         Key { key: self.key }
     }
 }
 
 impl ToKey for str {
-    fn to_key(&self) -> Key<'_> {
+    fn to_key(&self) -> Key {
         Key::from_str(self)
     }
 }
@@ -41,7 +41,6 @@ pub struct Key<'k> {
 
 impl<'k> Key<'k> {
     /// Get a key from a borrowed string.
-    #[allow(clippy::should_implement_trait)] // Part of the public API now.
     pub fn from_str(key: &'k str) -> Self {
         Key { key }
     }
@@ -97,13 +96,13 @@ mod std_support {
     use std::borrow::Cow;
 
     impl ToKey for String {
-        fn to_key(&self) -> Key<'_> {
+        fn to_key(&self) -> Key {
             Key::from_str(self)
         }
     }
 
     impl<'a> ToKey for Cow<'a, str> {
-        fn to_key(&self) -> Key<'_> {
+        fn to_key(&self) -> Key {
             Key::from_str(self)
         }
     }
@@ -136,7 +135,7 @@ mod sval_support {
 mod serde_support {
     use super::*;
 
-    use serde_core::{Serialize, Serializer};
+    use serde::{Serialize, Serializer};
 
     impl<'a> Serialize for Key<'a> {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

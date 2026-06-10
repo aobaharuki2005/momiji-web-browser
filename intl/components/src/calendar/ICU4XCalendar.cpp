@@ -8,12 +8,13 @@
 #include "mozilla/TextUtils.h"
 
 #include <cstring>
+#include <mutex>
 #include <stdint.h>
 #include <type_traits>
 
 #include "unicode/timezone.h"
 
-#include "icu4x/diplomat_runtime.hpp"
+#include "diplomat_runtime.hpp"
 #include "icu4x/CalendarError.hpp"
 
 namespace mozilla::intl::calendar {
@@ -46,10 +47,9 @@ static UniqueICU4XDate CreateDateFromCodes(
     int32_t eraYear, MonthCode monthCode, int32_t day) {
   auto monthCodeView = std::string_view{monthCode};
   auto date = icu4x::capi::icu4x_Date_from_codes_in_calendar_mv1(
-      icu4x::diplomat::capi::DiplomatStringView{era.data(), era.length()},
-      eraYear,
-      icu4x::diplomat::capi::DiplomatStringView{monthCodeView.data(),
-                                                monthCodeView.length()},
+      diplomat::capi::DiplomatStringView{era.data(), era.length()}, eraYear,
+      diplomat::capi::DiplomatStringView{monthCodeView.data(),
+                                         monthCodeView.length()},
       day, calendar);
   if (date.is_ok) {
     return UniqueICU4XDate{date.ok};
@@ -178,6 +178,23 @@ icu4x::capi::Calendar* ICU4XCalendar::getICU4XCalendar(
   return calendar_.get();
 }
 
+/**
+ * Get or create the fallback ICU4C calendar. Used for dates outside the range
+ * supported by ICU4X.
+ */
+icu::Calendar* ICU4XCalendar::getFallbackCalendar(UErrorCode& status) const {
+  if (U_FAILURE(status)) {
+    return nullptr;
+  }
+  if (!fallback_) {
+    icu::Locale locale = getLocale(ULOC_ACTUAL_LOCALE, status);
+    locale.setKeywordValue("calendar", getType(), status);
+    fallback_.reset(
+        icu::Calendar::createInstance(getTimeZone(), locale, status));
+  }
+  return fallback_.get();
+}
+
 UniqueICU4XDate ICU4XCalendar::createICU4XDate(const ISODate& date,
                                                UErrorCode& status) const {
   MOZ_ASSERT(U_SUCCESS(status));
@@ -199,7 +216,7 @@ MonthCode ICU4XCalendar::monthCodeFrom(const icu4x::capi::Date* date) {
   // DiplomatWrite doesn't have std::span version.
   // https://github.com/rust-diplomat/diplomat/issues/866
   std::string buf;
-  auto writable = icu4x::diplomat::WriteFromString(buf);
+  auto writable = diplomat::WriteFromString(buf);
 
   icu4x::capi::icu4x_Date_month_code_mv1(date, &writable);
 
@@ -329,21 +346,41 @@ int32_t ICU4XCalendar::internalGetMonth(UErrorCode& status) const {
   int32_t extendedYear = internalGet(UCAL_EXTENDED_YEAR);
   int32_t ordinalMonth = internalGet(UCAL_ORDINAL_MONTH);
 
-  auto* cal = getICU4XCalendar(status);
-  if (U_FAILURE(status)) {
-    return 0;
-  }
+  int32_t month;
+  int32_t isLeapMonth;
+  if (requiresFallbackForExtendedYear(extendedYear)) {
+    // Use the fallback calendar for years outside the range supported by ICU4X.
+    auto* fallback = getFallbackCalendar(status);
+    if (U_FAILURE(status)) {
+      return 0;
+    }
+    fallback->clear();
+    fallback->set(UCAL_EXTENDED_YEAR, extendedYear);
+    fallback->set(UCAL_ORDINAL_MONTH, ordinalMonth);
+    fallback->set(UCAL_DAY_OF_MONTH, 1);
 
-  UniqueICU4XDate date = CreateDateFrom(cal, eraName(extendedYear),
-                                        extendedYear, ordinalMonth + 1, 1);
-  if (!date) {
-    status = U_INTERNAL_PROGRAM_ERROR;
-    return 0;
-  }
+    month = fallback->get(UCAL_MONTH, status);
+    isLeapMonth = fallback->get(UCAL_IS_LEAP_MONTH, status);
+    if (U_FAILURE(status)) {
+      return 0;
+    }
+  } else {
+    auto* cal = getICU4XCalendar(status);
+    if (U_FAILURE(status)) {
+      return 0;
+    }
 
-  MonthCode monthCode = monthCodeFrom(date.get());
-  int32_t month = monthCode.ordinal() - 1;
-  int32_t isLeapMonth = monthCode.isLeapMonth();
+    UniqueICU4XDate date = CreateDateFrom(cal, eraName(extendedYear),
+                                          extendedYear, ordinalMonth + 1, 1);
+    if (!date) {
+      status = U_INTERNAL_PROGRAM_ERROR;
+      return 0;
+    }
+
+    MonthCode monthCode = monthCodeFrom(date.get());
+    month = monthCode.ordinal() - 1;
+    isLeapMonth = monthCode.isLeapMonth();
+  }
 
   auto* nonConstThis = const_cast<ICU4XCalendar*>(this);
   nonConstThis->internalSet(UCAL_IS_LEAP_MONTH, isLeapMonth);
@@ -410,6 +447,12 @@ int32_t ICU4XCalendar::handleGetExtendedYear(UErrorCode& status) {
 
 int32_t ICU4XCalendar::handleGetYearLength(int32_t extendedYear,
                                            UErrorCode& status) const {
+  // Use the (slower) default implementation for years outside the range
+  // supported by ICU4X.
+  if (requiresFallbackForExtendedYear(extendedYear)) {
+    return icu::Calendar::handleGetYearLength(extendedYear, status);
+  }
+
   auto* cal = getICU4XCalendar(status);
   if (U_FAILURE(status)) {
     return 0;
@@ -437,6 +480,20 @@ int32_t ICU4XCalendar::handleGetMonthLength(int32_t extendedYear, int32_t month,
   if (month < 0 || month > 11) {
     status = U_ILLEGAL_ARGUMENT_ERROR;
     return 0;
+  }
+
+  // Use the fallback calendar for years outside the range supported by ICU4X.
+  if (requiresFallbackForExtendedYear(extendedYear)) {
+    auto* fallback = getFallbackCalendar(status);
+    if (U_FAILURE(status)) {
+      return 0;
+    }
+    fallback->clear();
+    fallback->set(UCAL_EXTENDED_YEAR, extendedYear);
+    fallback->set(UCAL_MONTH, month);
+    fallback->set(UCAL_DAY_OF_MONTH, 1);
+
+    return fallback->getActualMaximum(UCAL_DAY_OF_MONTH, status);
   }
 
   auto* cal = getICU4XCalendar(status);
@@ -472,6 +529,29 @@ int64_t ICU4XCalendar::handleComputeMonthStart(int32_t extendedYear,
     return 0;
   }
 
+  // Use the fallback calendar for years outside the range supported by ICU4X.
+  if (requiresFallbackForExtendedYear(extendedYear)) {
+    auto* fallback = getFallbackCalendar(status);
+    if (U_FAILURE(status)) {
+      return 0;
+    }
+    fallback->clear();
+    fallback->set(UCAL_EXTENDED_YEAR, extendedYear);
+    if (useMonth) {
+      fallback->set(UCAL_MONTH, month);
+      fallback->set(UCAL_IS_LEAP_MONTH, internalGet(UCAL_IS_LEAP_MONTH));
+    } else {
+      fallback->set(UCAL_ORDINAL_MONTH, month);
+    }
+    fallback->set(UCAL_DAY_OF_MONTH, 1);
+
+    int32_t newMoon = fallback->get(UCAL_JULIAN_DAY, status);
+    if (U_FAILURE(status)) {
+      return 0;
+    }
+    return newMoon - 1;
+  }
+
   auto* cal = getICU4XCalendar(status);
   if (U_FAILURE(status)) {
     return 0;
@@ -496,6 +576,29 @@ int64_t ICU4XCalendar::handleComputeMonthStart(int32_t extendedYear,
   int32_t newMoon = MakeDay(isoDate);
 
   return (newMoon - 1) + kEpochStartAsJulianDay;
+}
+
+/**
+ * Default implementation of handleComputeFields when using the fallback
+ * calendar.
+ */
+void ICU4XCalendar::handleComputeFieldsFromFallback(int32_t julianDay,
+                                                    UErrorCode& status) {
+  auto* fallback = getFallbackCalendar(status);
+  if (U_FAILURE(status)) {
+    return;
+  }
+  fallback->clear();
+  fallback->set(UCAL_JULIAN_DAY, julianDay);
+
+  internalSet(UCAL_ERA, fallback->get(UCAL_ERA, status));
+  internalSet(UCAL_YEAR, fallback->get(UCAL_YEAR, status));
+  internalSet(UCAL_EXTENDED_YEAR, fallback->get(UCAL_EXTENDED_YEAR, status));
+  internalSet(UCAL_MONTH, fallback->get(UCAL_MONTH, status));
+  internalSet(UCAL_ORDINAL_MONTH, fallback->get(UCAL_ORDINAL_MONTH, status));
+  internalSet(UCAL_IS_LEAP_MONTH, fallback->get(UCAL_IS_LEAP_MONTH, status));
+  internalSet(UCAL_DAY_OF_MONTH, fallback->get(UCAL_DAY_OF_MONTH, status));
+  internalSet(UCAL_DAY_OF_YEAR, fallback->get(UCAL_DAY_OF_YEAR, status));
 }
 
 }  // namespace mozilla::intl::calendar

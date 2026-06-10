@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsGlobalWindowOuter_h_
-#define nsGlobalWindowOuter_h_
+#ifndef nsGlobalWindowOuter_h___
+#define nsGlobalWindowOuter_h___
 
 #include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
@@ -251,11 +253,16 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                   const nsAString& aOptions,
                   mozilla::dom::BrowsingContext** _retval);
 
-  mozilla::EventListenerManager* GetExistingListenerManager() const override;
-  mozilla::EventListenerManager* GetOrCreateListenerManager() override;
+  virtual mozilla::EventListenerManager* GetExistingListenerManager()
+      const override;
+
+  virtual mozilla::EventListenerManager* GetOrCreateListenerManager() override;
+
   bool ComputeDefaultWantsUntrusted(mozilla::ErrorResult& aRv) final;
 
-  nsIGlobalObject* GetRelevantGlobal() const override;
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindingsInternal() override;
+
+  virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
   EventTarget* GetTargetForEventTargetChain() override;
 
@@ -278,6 +285,10 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   // Outer windows only.
   virtual void SetInitialPrincipal(nsIPrincipal* aNewWindowPrincipal) override;
+
+  virtual already_AddRefed<nsISupports> SaveWindowState() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult RestoreWindowState(
+      nsISupports* aState) override;
 
   virtual bool IsSuspended() const override;
   virtual bool IsFrozen() const override;
@@ -485,7 +496,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   }
 #define WINDOW_ONLY_EVENT EVENT
 #define TOUCH_EVENT EVENT
-#include "mozilla/EventNameList.inc"
+#include "mozilla/EventNameList.h"
 #undef TOUCH_EVENT
 #undef WINDOW_ONLY_EVENT
 #undef BEFOREUNLOAD_EVENT
@@ -586,9 +597,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
                      mozilla::dom::CallerType aCallerType,
                      mozilla::ErrorResult& aError);
-  void MoveResizeOuter(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
-                       mozilla::dom::CallerType aCallerType,
-                       mozilla::ErrorResult& aError);
   double GetScrollXOuter();
   double GetScrollYOuter();
 
@@ -1125,4 +1133,4 @@ inline void nsGlobalWindowOuter::MaybeClearInnerWindow(
   }
 }
 
-#endif /* nsGlobalWindowOuter_h_ */
+#endif /* nsGlobalWindowOuter_h___ */

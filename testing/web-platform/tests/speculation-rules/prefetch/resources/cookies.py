@@ -15,11 +15,9 @@ def main(request, response):
   cookie_count = int(
       request.cookies[b"count"].value) if b"count" in request.cookies else 0
   response.set_cookie("count", f"{cookie_count+1}",
-                      path="/speculation-rules/",
                       secure=True, samesite="None")
   response.set_cookie(
-      "type", "prefetch" if sec_purpose.startswith("prefetch") else "navigate",
-      path="/speculation-rules/")
+      "type", "prefetch" if sec_purpose.startswith("prefetch") else "navigate")
 
   headers = [(b"Content-Type", b"text/html"), (b"Cache-Control", b"no-store")]
 

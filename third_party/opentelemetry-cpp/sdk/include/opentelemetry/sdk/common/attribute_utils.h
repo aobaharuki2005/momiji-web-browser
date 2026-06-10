@@ -49,7 +49,7 @@ using OwnedAttributeValue = nostd::variant<bool,
                                            std::vector<uint64_t>,
                                            std::vector<uint8_t>>;
 
-enum OwnedAttributeType : std::uint8_t
+enum OwnedAttributeType
 {
   kTypeBool,
   kTypeInt,
@@ -83,7 +83,7 @@ struct AttributeConverter
   {
     return OwnedAttributeValue(std::string(v));
   }
-  OwnedAttributeValue operator()(std::string v) { return OwnedAttributeValue(std::move(v)); }
+  OwnedAttributeValue operator()(std::string v) { return OwnedAttributeValue(v); }
   OwnedAttributeValue operator()(const char *v) { return OwnedAttributeValue(std::string(v)); }
   OwnedAttributeValue operator()(nostd::span<const uint8_t> v) { return convertSpan<uint8_t>(v); }
   OwnedAttributeValue operator()(nostd::span<const bool> v) { return convertSpan<bool>(v); }
@@ -100,7 +100,8 @@ struct AttributeConverter
   template <typename T, typename U = T>
   OwnedAttributeValue convertSpan(nostd::span<const U> vals)
   {
-    return OwnedAttributeValue(std::vector<T>(vals.begin(), vals.end()));
+    const std::vector<T> copy(vals.begin(), vals.end());
+    return OwnedAttributeValue(std::move(copy));
   }
 };
 
@@ -170,7 +171,11 @@ public:
   // Construct attribute map and populate with attributes
   AttributeMap(const opentelemetry::common::KeyValueIterable &attributes) : AttributeMap()
   {
-    ConstructFrom(attributes);
+    attributes.ForEachKeyValue(
+        [&](nostd::string_view key, opentelemetry::common::AttributeValue value) noexcept {
+          SetAttribute(key, value);
+          return true;
+        });
   }
 
   // Construct attribute map and populate with optional attributes
@@ -178,7 +183,11 @@ public:
   {
     if (attributes != nullptr)
     {
-      ConstructFrom(*attributes);
+      attributes->ForEachKeyValue(
+          [&](nostd::string_view key, opentelemetry::common::AttributeValue value) noexcept {
+            SetAttribute(key, value);
+            return true;
+          });
     }
   }
 
@@ -194,15 +203,6 @@ public:
     }
   }
 
-  void ConstructFrom(const opentelemetry::common::KeyValueIterable &attributes)
-  {
-    attributes.ForEachKeyValue(
-        [&](nostd::string_view key, const opentelemetry::common::AttributeValue &value) noexcept {
-          SetAttribute(key, value);
-          return true;
-        });
-  }
-
   // Returns a reference to this map
   const std::unordered_map<std::string, OwnedAttributeValue> &GetAttributes() const noexcept
   {
@@ -213,7 +213,7 @@ public:
   void SetAttribute(nostd::string_view key,
                     const opentelemetry::common::AttributeValue &value) noexcept
   {
-    (*this)[std::string(key)] = nostd::visit(AttributeConverter(), value);
+    (*this)[std::string(key)] = nostd::visit(converter_, value);
   }
 
   // Compare the attributes of this map with another KeyValueIterable
@@ -235,7 +235,7 @@ public:
             {
               // Order of arguments is important here. OwnedAttributeValue is first then
               // AttributeValue AttributeEqualToVisitor does not support the reverse order
-              return nostd::visit(AttributeEqualToVisitor(), kv.second, value);
+              return nostd::visit(equal_to_visitor_, kv.second, value);
             }
           }
           return false;
@@ -243,6 +243,10 @@ public:
 
     return is_equal;
   }
+
+private:
+  AttributeConverter converter_;
+  AttributeEqualToVisitor equal_to_visitor_;
 };
 
 /**
@@ -287,8 +291,11 @@ public:
   void SetAttribute(nostd::string_view key,
                     const opentelemetry::common::AttributeValue &value) noexcept
   {
-    (*this)[std::string(key)] = nostd::visit(AttributeConverter(), value);
+    (*this)[std::string(key)] = nostd::visit(converter_, value);
   }
+
+private:
+  AttributeConverter converter_;
 };
 
 }  // namespace common

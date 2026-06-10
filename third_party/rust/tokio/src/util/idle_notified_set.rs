@@ -349,10 +349,7 @@ impl<T> IdleNotifiedSet<T> {
 unsafe fn move_to_new_list<T>(from: &mut LinkedList<T>, to: &mut LinkedList<T>) {
     while let Some(entry) = from.pop_back() {
         entry.my_list.with_mut(|ptr| {
-            // Safety: pointer is accessed while holding the mutex.
-            unsafe {
-                *ptr = List::Neither;
-            }
+            *ptr = List::Neither;
         });
         to.push_front(entry);
     }
@@ -482,13 +479,13 @@ unsafe impl<T> linked_list::Link for ListEntry<T> {
     }
 
     unsafe fn from_raw(ptr: NonNull<ListEntry<T>>) -> Arc<ListEntry<T>> {
-        unsafe { Arc::from_raw(ptr.as_ptr()) }
+        Arc::from_raw(ptr.as_ptr())
     }
 
     unsafe fn pointers(
         target: NonNull<ListEntry<T>>,
     ) -> NonNull<linked_list::Pointers<ListEntry<T>>> {
-        unsafe { ListEntry::addr_of_pointers(target) }
+        ListEntry::addr_of_pointers(target)
     }
 }
 

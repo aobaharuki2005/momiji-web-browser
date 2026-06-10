@@ -18,14 +18,14 @@ const EXPECTED_REQUESTS_TOP = [
     url: TOP_URL,
     causeType: "document",
     causeUri: null,
-    stack: true, // Expects that request has an empty stack trace
+    stack: true,
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "stylesheet_request",
     causeType: "stylesheet",
     causeUri: TOP_URL,
-    stack: false, // Expects that request has no stack trace
+    stack: false,
   },
   {
     method: "GET",
@@ -39,29 +39,14 @@ const EXPECTED_REQUESTS_TOP = [
     url: EXAMPLE_URL + "xhr_request",
     causeType: "xhr",
     causeUri: TOP_URL,
-    // Expects that request has a stack trace with items
-    stack: [
-      {
-        fn: "performXhrRequest",
-        file: TOP_FILE_NAME,
-        line: 25,
-        asyncCause: null,
-      },
-    ],
+    stack: [{ fn: "performXhrRequest", file: TOP_FILE_NAME, line: 25 }],
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "fetch_request",
     causeType: "fetch",
     causeUri: TOP_URL,
-    stack: [
-      {
-        fn: "performFetchRequest",
-        file: TOP_FILE_NAME,
-        line: 29,
-        asyncCause: null,
-      },
-    ],
+    stack: [{ fn: "performFetchRequest", file: TOP_FILE_NAME, line: 29 }],
   },
   {
     method: "GET",
@@ -69,12 +54,7 @@ const EXPECTED_REQUESTS_TOP = [
     causeType: "fetch",
     causeUri: TOP_URL,
     stack: [
-      {
-        fn: "performPromiseFetchRequest",
-        file: TOP_FILE_NAME,
-        line: 41,
-        asyncCause: null,
-      },
+      { fn: "performPromiseFetchRequest", file: TOP_FILE_NAME, line: 41 },
       {
         fn: null,
         file: TOP_FILE_NAME,
@@ -89,12 +69,7 @@ const EXPECTED_REQUESTS_TOP = [
     causeType: "fetch",
     causeUri: TOP_URL,
     stack: [
-      {
-        fn: "performTimeoutFetchRequest",
-        file: TOP_FILE_NAME,
-        line: 43,
-        asyncCause: null,
-      },
+      { fn: "performTimeoutFetchRequest", file: TOP_FILE_NAME, line: 43 },
       {
         fn: "performPromiseFetchRequest",
         file: TOP_FILE_NAME,
@@ -108,14 +83,7 @@ const EXPECTED_REQUESTS_TOP = [
     url: EXAMPLE_URL + "beacon_request",
     causeType: "beacon",
     causeUri: TOP_URL,
-    stack: [
-      {
-        fn: "performBeaconRequest",
-        file: TOP_FILE_NAME,
-        line: 33,
-        asyncCause: null,
-      },
-    ],
+    stack: [{ fn: "performBeaconRequest", file: TOP_FILE_NAME, line: 33 }],
   },
 ];
 
@@ -146,28 +114,14 @@ const EXPECTED_REQUESTS_SUB = [
     url: EXAMPLE_URL + "xhr_request",
     causeType: "xhr",
     causeUri: SUB_URL,
-    stack: [
-      {
-        fn: "performXhrRequest",
-        file: SUB_FILE_NAME,
-        line: 24,
-        asyncCause: null,
-      },
-    ],
+    stack: [{ fn: "performXhrRequest", file: SUB_FILE_NAME, line: 24 }],
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "fetch_request",
     causeType: "fetch",
     causeUri: SUB_URL,
-    stack: [
-      {
-        fn: "performFetchRequest",
-        file: SUB_FILE_NAME,
-        line: 28,
-        asyncCause: null,
-      },
-    ],
+    stack: [{ fn: "performFetchRequest", file: SUB_FILE_NAME, line: 28 }],
   },
   {
     method: "GET",
@@ -175,12 +129,7 @@ const EXPECTED_REQUESTS_SUB = [
     causeType: "fetch",
     causeUri: SUB_URL,
     stack: [
-      {
-        fn: "performPromiseFetchRequest",
-        file: SUB_FILE_NAME,
-        line: 40,
-        asyncCause: null,
-      },
+      { fn: "performPromiseFetchRequest", file: SUB_FILE_NAME, line: 40 },
       {
         fn: null,
         file: SUB_FILE_NAME,
@@ -195,12 +144,7 @@ const EXPECTED_REQUESTS_SUB = [
     causeType: "fetch",
     causeUri: SUB_URL,
     stack: [
-      {
-        fn: "performTimeoutFetchRequest",
-        file: SUB_FILE_NAME,
-        line: 42,
-        asyncCause: null,
-      },
+      { fn: "performTimeoutFetchRequest", file: SUB_FILE_NAME, line: 42 },
       {
         fn: "performPromiseFetchRequest",
         file: SUB_FILE_NAME,
@@ -214,14 +158,7 @@ const EXPECTED_REQUESTS_SUB = [
     url: EXAMPLE_URL + "beacon_request",
     causeType: "beacon",
     causeUri: SUB_URL,
-    stack: [
-      {
-        fn: "performBeaconRequest",
-        file: SUB_FILE_NAME,
-        line: 32,
-        asyncCause: null,
-      },
-    ],
+    stack: [{ fn: "performBeaconRequest", file: SUB_FILE_NAME, line: 32 }],
   },
 ];
 
@@ -296,15 +233,14 @@ add_task(async function () {
 
     if (stack) {
       ok(stacktrace, `Request #${i} has a stacktrace`);
+      Assert.greater(
+        stackLen,
+        0,
+        `Request #${i} (${causeType}) has a stacktrace with ${stackLen} items`
+      );
 
+      // if "stack" is array, check the details about the top stack frames
       if (Array.isArray(stack)) {
-        Assert.greater(
-          stackLen,
-          0,
-          `Request #${i} (${causeType}) has a stacktrace with ${stackLen} items`
-        );
-
-        // Since "stack" is an array, check the details about the top stack frames
         stack.forEach((frame, j) => {
           is(
             stacktrace[j].functionName,

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// @ts-nocheck - TODO - Remove this to type check this file.
-
 /**
  * Security utilities for Firefox Smart Window security layer.
  *
@@ -16,12 +14,20 @@
  * Security Model:
  * ---------------
  * - Each tab maintains its own ledger of trusted URLs
- * - Conversation-level URLs (from @mentions) are stored in the SessionLedger
- *   and included in merges for both tool execution and link validation
- * - Request-scoped context merges current tab + @mentioned tabs + conversation URLs
+ * - Request-scoped context merges current tab + @mentioned tabs
  * - URLs are normalized before storage and comparison
  * - Same eTLD+1 validation prevents injection via canonical/og:url
  */
+
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+const lazy = XPCOMUtils.declareLazy({
+  console: () =>
+    console.createInstance({
+      maxLogLevelPref: "browser.ml.logLevel",
+      prefix: "SecurityUtils",
+    }),
+});
 
 /** TTL for ledger entries (30 minutes) */
 const DEFAULT_TTL_MS = 30 * 60 * 1000; // 30 minutes
@@ -63,8 +69,10 @@ export function normalizeUrl(urlString, baseUrl = null) {
   }
 
   try {
-    const url = baseUrl ? URL.parse(urlString, baseUrl) : URL.parse(urlString);
-    if (!url) {
+    let url;
+    try {
+      url = baseUrl ? new URL(urlString, baseUrl) : new URL(urlString);
+    } catch (parseError) {
       return {
         success: false,
         error: "Invalid URL format",
@@ -115,6 +123,28 @@ export function normalizeUrl(urlString, baseUrl = null) {
 }
 
 /**
+ * Validates that two URLs share the same eTLD+1 (effective top-level domain).
+ *
+ * @param {string} url1 - First URL (typically page URL)
+ * @param {string} url2 - Second URL (typically canonical/og:url)
+ * @returns {boolean} True if both URLs share the same eTLD+1
+ */
+export function areSameSite(url1, url2) {
+  try {
+    const parsed1 = new URL(url1);
+    const parsed2 = new URL(url2);
+
+    const eTLD1 = Services.eTLD.getBaseDomainFromHost(parsed1.hostname);
+    const eTLD2 = Services.eTLD.getBaseDomainFromHost(parsed2.hostname);
+
+    return eTLD1 === eTLD2;
+  } catch (error) {
+    lazy.console.error("areSameSite error:", error.message);
+    return false;
+  }
+}
+
+/**
  * Per-tab storage for trusted URLs.
  *
  * Each tab maintains its own ledger of URLs that are authorized for
@@ -152,7 +182,6 @@ export class TabLedger {
    * @param {string} [baseUrl] - Optional base URL for resolving relative URLs
    */
   seed(urls, baseUrl = null) {
-    const startTime = ChromeUtils.now();
     this.#cleanup();
 
     const now = ChromeUtils.now();
@@ -170,12 +199,6 @@ export class TabLedger {
     }
 
     this.lastCleanup = now;
-
-    ChromeUtils.addProfilerMarker(
-      "ML.Security.TabLedger.seed",
-      { startTime },
-      `TabLedger.seed for ${urls?.length} urls and tabId: ${this.tabId}`
-    );
   }
 
   /**
@@ -204,35 +227,30 @@ export class TabLedger {
   }
 
   /**
-   * Returns the normalized URL if it is in the ledger and not expired.
+   * Checks if a URL is in the ledger and not expired.
    *
    * @param {string} url - URL to check (will be normalized)
    * @param {string} [baseUrl] - Optional base URL for resolving relatives
-   * @returns {string|null} Normalized URL if valid, otherwise null
+   * @returns {boolean} True if URL is in ledger and not expired
    */
-  lookup(url, baseUrl = null) {
-    const startTime = ChromeUtils.now();
-    let result = null;
-
+  has(url, baseUrl = null) {
     const normalized = normalizeUrl(url, baseUrl);
-    if (normalized.success) {
-      const expiresAt = this.urls.get(normalized.url);
-      if (expiresAt !== undefined) {
-        if (ChromeUtils.now() > expiresAt) {
-          this.urls.delete(normalized.url);
-        } else {
-          result = normalized.url;
-        }
-      }
+    if (!normalized.success) {
+      return false;
     }
 
-    ChromeUtils.addProfilerMarker(
-      "ML.Security.TabLedger.lookup",
-      { startTime },
-      `TabLedger.lookup for url ${url} and tabId: ${this.tabId}`
-    );
+    const expiresAt = this.urls.get(normalized.url);
+    if (expiresAt === undefined) {
+      return false;
+    }
 
-    return result;
+    // Check expiration
+    if (ChromeUtils.now() > expiresAt) {
+      this.urls.delete(normalized.url);
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -291,58 +309,21 @@ export class TabLedger {
  * SessionLedger manages the lifecycle of individual TabLedgers and provides
  * methods to build request-scoped contexts by merging tab ledgers.
  *
- * Conversation-level URLs (from @mentions) are stored separately and are
- * included in all merge operations, as they represent explicit user consent
- * that applies across the entire conversation.
- *
- * Extends EventTarget to notify listeners of ledger changes. Dispatches
- * a "change" event when conversation-level URLs are added.
- *
  * Lifetime: SessionLedger is ephemeral and in-memory only. It is scoped to
  * the current browser session and cleared on restart. Ledgers are not
  * persisted to disk or restored via session restore.
  */
-export class SessionLedger extends EventTarget {
-  /** @type {Set<string>} Conversation-level trusted URLs (from @mentions) */
-  #conversationUrls = new Set();
-
+export class SessionLedger {
   /**
    * Creates a new session ledger.
    *
    * @param {string} sessionId - The Smart Window session identifier
    */
   constructor(sessionId) {
-    super();
     this.sessionId = sessionId;
 
     /** @type {Map<string, TabLedger>} Map of tab ID --> TabLedger */
     this.tabs = new Map();
-  }
-
-  /**
-   * Seeds URLs at the conversation level (e.g., from @mentions).
-   * These URLs are trusted for the entire conversation, independent of tabs.
-   *
-   * Conversation URLs do not have TTL - they remain trusted for the lifetime
-   * of the conversation. This is appropriate because @mention is explicit
-   * user consent.
-   *
-   * Dispatches a "change" event when the ledger state changes.
-   *
-   * @param {string[]} urls - URLs to seed
-   */
-  seedConversation(urls) {
-    let changed = false;
-    for (const url of urls) {
-      const normalized = normalizeUrl(url);
-      if (normalized.success && !this.#conversationUrls.has(normalized.url)) {
-        this.#conversationUrls.add(normalized.url);
-        changed = true;
-      }
-    }
-    if (changed) {
-      this.dispatchEvent(new Event("change"));
-    }
   }
 
   /**
@@ -364,19 +345,15 @@ export class SessionLedger extends EventTarget {
    * This is used to build context for requests with @mentions, where the user
    * explicitly authorizes access to multiple tabs.
    *
-   * Conversation-level URLs are always included in the merged result, as they
-   * represent explicit user consent that applies across all tabs.
-   *
    * IMPORTANT: The returned merged ledger is a temporary view. It should be
    * used for a single request and then discarded. It does NOT support add()
    * operations (read-only for policy evaluation).
    *
    * @param {string[]} tabIds - Tab IDs to merge (typically current + @mentioned)
-   * @returns {object} Merged ledger with has(), size(), and getAllUrls() methods
+   * @returns {object} Merged ledger with has() and size() methods
    */
   merge(tabIds) {
-    // Always include conversation-level URLs
-    const mergedUrls = new Set(this.#conversationUrls);
+    const mergedUrls = new Set();
 
     for (const tabId of tabIds) {
       const ledger = this.forTab(tabId);
@@ -392,23 +369,18 @@ export class SessionLedger extends EventTarget {
     // Return a temporary read-only ledger
     return {
       /**
-       * Returns the normalized URL if it is in any of the merged ledgers.
+       * Checks if URL is in any of the merged ledgers.
        *
        * @param {string} url - URL to check
        * @param {string} [baseUrl] - Optional base URL
-       * @returns {string|null} Normalized URL if found, otherwise null
+       * @returns {boolean} True if URL is in any merged ledger
        */
-      lookup(url, baseUrl = null) {
+      has(url, baseUrl = null) {
         const normalized = normalizeUrl(url, baseUrl);
         if (!normalized.success) {
-          return null;
+          return false;
         }
-
-        if (!mergedUrls.has(normalized.url)) {
-          return null;
-        }
-
-        return normalized.url;
+        return mergedUrls.has(normalized.url);
       },
 
       /**
@@ -419,34 +391,7 @@ export class SessionLedger extends EventTarget {
       size() {
         return mergedUrls.size;
       },
-
-      /**
-       * Returns all URLs in the merged ledger.
-       * URLs are already normalized.
-       *
-       * @returns {string[]} Array of normalized URLs
-       */
-      getAllUrls() {
-        return Array.from(mergedUrls);
-      },
     };
-  }
-
-  /**
-   * Merges all tab ledgers into a single view of trusted URLs.
-   *
-   * Used for rendering-layer validation where the parent actor pushes
-   * the full set of trusted URLs to the child for synchronous link
-   * validation. Includes conversation-level URLs (from @mentions) as
-   * they are trusted across the entire session.
-   *
-   * NOTE: More permissive than tab-scoped merging (used in tool.execution).
-   *
-   * @returns {object} Merged ledger view for URL lookups
-   */
-  mergeAll() {
-    const allTabIds = Array.from(this.tabs.keys());
-    return this.merge(allTabIds);
   }
 
   /**
@@ -459,13 +404,12 @@ export class SessionLedger extends EventTarget {
     this.tabs.delete(tabId);
   }
 
-  /** Clears all tab ledgers and conversation URLs. */
+  /** Clears all tab ledgers. */
   clearAll() {
     for (const ledger of this.tabs.values()) {
       ledger.clear();
     }
     this.tabs.clear();
-    this.#conversationUrls.clear();
   }
 
   /** @returns {number} Number of tabs */

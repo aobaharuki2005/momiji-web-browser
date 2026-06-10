@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,7 +12,6 @@
 #include "gfxUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/2D.h"
@@ -487,24 +487,20 @@ bool nsTableCellFrame::ComputeCustomOverflow(OverflowAreas& aOverflowAreas) {
 // Per CSS 2.1, we map 'sub', 'super', 'text-top', 'text-bottom',
 // length, percentage, and calc() values to 'baseline'.
 TableCellAlignment nsTableCellFrame::GetTableCellAlignment() const {
-  const auto& baselineShift = StyleDisplay()->mBaselineShift;
-  if (baselineShift.IsKeyword()) {
-    auto value = baselineShift.AsKeyword();
+  const StyleVerticalAlign& verticalAlign = StyleDisplay()->mVerticalAlign;
+  if (verticalAlign.IsKeyword()) {
+    auto value = verticalAlign.AsKeyword();
     switch (value) {
-      case StyleBaselineShiftKeyword::Top:
+      case StyleVerticalAlignKeyword::Top:
         return TableCellAlignment::Top;
-      case StyleBaselineShiftKeyword::Bottom:
+      case StyleVerticalAlignKeyword::Middle:
+        return TableCellAlignment::Middle;
+      case StyleVerticalAlignKeyword::Bottom:
         return TableCellAlignment::Bottom;
       default:
         break;
     }
   }
-
-  const auto& alignmentBaseline = StyleDisplay()->mAlignmentBaseline;
-  if (alignmentBaseline == StyleAlignmentBaseline::Middle) {
-    return TableCellAlignment::Middle;
-  }
-
   return TableCellAlignment::Baseline;
 }
 

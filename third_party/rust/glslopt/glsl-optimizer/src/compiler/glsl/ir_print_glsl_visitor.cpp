@@ -835,7 +835,7 @@ static const char* operator_glsl_str(ir_expression_operation op, const glsl_type
 	case ir_triop_lrp:
 		return "mix";
 	default:
-		UNREACHABLE("Unexpected operator in operator_glsl_str");
+		unreachable("Unexpected operator in operator_glsl_str");
 		return "UNIMPLEMENTED";
 	}
 }
@@ -1891,7 +1891,7 @@ interface_packing_string(enum glsl_interface_packing packing)
 	case GLSL_INTERFACE_PACKING_STD430:
 		return "std430";
 	default:
-		UNREACHABLE("Unexpected interface packing");
+		unreachable("Unexpected interface packing");
 		return "UNKNOWN";
 	}
 }
@@ -1905,7 +1905,7 @@ interface_variable_mode_string(enum ir_variable_mode mode)
 	case ir_var_shader_storage:
 		return "buffer";
 	default:
-		UNREACHABLE("Unexpected interface variable mode");
+		unreachable("Unexpected interface variable mode");
 		return "UNKOWN";
 	}
 }

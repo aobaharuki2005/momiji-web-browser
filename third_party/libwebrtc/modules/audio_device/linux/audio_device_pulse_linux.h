@@ -107,7 +107,7 @@ namespace webrtc {
 class AudioDeviceLinuxPulse : public AudioDeviceGeneric {
  public:
   AudioDeviceLinuxPulse();
-  ~AudioDeviceLinuxPulse() override;
+  virtual ~AudioDeviceLinuxPulse();
 
   // Retrieve the currently utilized audio layer
   int32_t ActiveAudioLayer(

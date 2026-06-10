@@ -54,13 +54,14 @@ static void pool_free_callback(const uint8_t *const data, void *const user_data)
 }
 
 Dav1dRef *dav1d_ref_create_using_pool(Dav1dMemPool *const pool, size_t size) {
-    void *const buf = dav1d_mem_pool_pop(pool, size);
+    size = (size + sizeof(void*) - 1) & ~(sizeof(void*) - 1);
+
+    Dav1dMemPoolBuffer *const buf =
+        dav1d_mem_pool_pop(pool, size + sizeof(Dav1dRef));
     if (!buf) return NULL;
 
-    /* Store Dav1dRef inside the Dav1dMemPoolBuffer alignment padding */
-    assert(sizeof(Dav1dMemPoolBuffer) + sizeof(Dav1dRef) <= 64);
     Dav1dRef *const res = &((Dav1dRef*)buf)[-1];
-    res->data = buf;
+    res->data = buf->data;
     res->const_data = pool;
     atomic_init(&res->ref_cnt, 1);
     res->free_ref = 0;

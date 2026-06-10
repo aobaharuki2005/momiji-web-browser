@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ChromeUtils_
-#define mozilla_dom_ChromeUtils_
+#ifndef mozilla_dom_ChromeUtils__
+#define mozilla_dom_ChromeUtils__
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -92,13 +94,9 @@ class ChromeUtils {
   static void ReleaseAssert(GlobalObject& aGlobal, bool aCondition,
                             const nsAString& aMessage);
 
-  static void RegisterMarkerSchema(GlobalObject& aGlobal,
-                                   JS::Handle<JSObject*> aSchema,
-                                   ErrorResult& aRv);
-
   static void AddProfilerMarker(GlobalObject& aGlobal, const nsACString& aName,
                                 const ProfilerMarkerOptionsOrDouble& aOptions,
-                                const Optional<UTF8StringOrObject>& aData);
+                                const Optional<nsACString>& text);
 
   static void GetXPCOMErrorName(GlobalObject& aGlobal, uint32_t aErrorCode,
                                 nsACString& aRetval);
@@ -204,13 +202,6 @@ class ChromeUtils {
                                  ErrorResult& aRv);
 
   static void InvalidateResourceCache(GlobalObject& aGlobal, ErrorResult& aRv);
-
-  static void GetCachedJavaScriptSource(GlobalObject& aGlobal,
-                                        const nsACString& aKey,
-                                        const nsACString& aURI,
-                                        const nsACString& aHintCharset,
-                                        JS::MutableHandle<JS::Value> aRetval,
-                                        ErrorResult& aRv);
 
   static void ClearBfcacheByPrincipal(GlobalObject& aGlobal,
                                       nsIPrincipal* aPrincipal,
@@ -361,17 +352,6 @@ class ChromeUtils {
   static void EncodeURIForSrcset(GlobalObject&, const nsACString& aIn,
                                  nsACString& aOut);
 
-  static void PredictRemoteTypeForURI(GlobalObject& aGlobal, nsIURI* aURI,
-                                      const PredictRemoteTypeOptions& aOptions,
-                                      nsACString& aRemoteType,
-                                      ErrorResult& aRv);
-
-  static void PredictRemoteTypeForURI(GlobalObject& aGlobal,
-                                      const nsACString& aURIString,
-                                      const PredictRemoteTypeOptions& aOptions,
-                                      nsACString& aRemoteType,
-                                      ErrorResult& aRv);
-
 #ifdef MOZ_WMF_CDM
   static already_AddRefed<Promise> GetWMFContentDecryptionModuleInformation(
       GlobalObject& aGlobal, ErrorResult& aRv);
@@ -397,4 +377,4 @@ class ChromeUtils {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_ChromeUtils_
+#endif  // mozilla_dom_ChromeUtils__

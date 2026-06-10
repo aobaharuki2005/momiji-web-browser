@@ -102,3 +102,8 @@ splitter.devtools-horizontal-splitter {
 
   cursor: ew-resize;
 }
+
+.devtools-horizontal-splitter.disabled,
+.devtools-side-splitter.disabled {
+  pointer-events: none;
+}

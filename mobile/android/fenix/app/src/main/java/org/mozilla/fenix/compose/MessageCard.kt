@@ -21,8 +21,8 @@ import mozilla.components.service.nimbus.messaging.Message
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
@@ -64,7 +64,7 @@ fun MessageCard(
 @Preview
 @Composable
 private fun MessageCardPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         Surface {
@@ -81,7 +81,7 @@ private fun MessageCardPreview(
 @Preview
 @Composable
 private fun MessageCardWithoutTitlePreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         Surface {
@@ -101,7 +101,7 @@ private fun MessageCardWithoutTitlePreview(
 @Preview
 @Composable
 private fun MessageCardWithButtonLabelPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         Surface {

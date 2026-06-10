@@ -8,19 +8,20 @@ import android.view.View
 import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.verify
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.ExtensionsProcessAction
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppState
@@ -34,8 +35,8 @@ class ExtensionsProcessDisabledForegroundControllerTest {
     fun `WHEN showExtensionsProcessDisabledPrompt is true AND positive button clicked then enable extension process spawning`() =
         runTest(dispatcher) {
             val browserStore = BrowserStore()
-            val dialog: AlertDialog = mockk(relaxed = true)
-            val builder: MaterialAlertDialogBuilder = mockk(relaxed = true)
+            val dialog: AlertDialog = mock()
+            val builder: MaterialAlertDialogBuilder = mock()
             val controller = ExtensionsProcessDisabledForegroundController(
                 context = testContext,
                 appStore = AppStore(AppState(isForeground = true)),
@@ -44,11 +45,11 @@ class ExtensionsProcessDisabledForegroundControllerTest {
                 appName = "TestApp",
                 dispatcher = dispatcher,
             )
-            val buttonsContainerCaptor = slot<View>()
+            val buttonsContainerCaptor = argumentCaptor<View>()
 
             controller.start()
 
-            every { builder.show() } returns dialog
+            whenever(builder.show()).thenReturn(dialog)
 
             assertFalse(browserStore.state.showExtensionsProcessDisabledPrompt)
             assertFalse(browserStore.state.extensionsProcessDisabled)
@@ -60,22 +61,22 @@ class ExtensionsProcessDisabledForegroundControllerTest {
             assertTrue(browserStore.state.showExtensionsProcessDisabledPrompt)
             assertTrue(browserStore.state.extensionsProcessDisabled)
 
-            verify { builder.setView(capture(buttonsContainerCaptor)) }
-            verify { builder.show() }
+            verify(builder).setView(buttonsContainerCaptor.capture())
+            verify(builder).show()
 
-            buttonsContainerCaptor.captured.findViewById<Button>(R.id.positive).performClick()
+            buttonsContainerCaptor.value.findViewById<Button>(R.id.positive).performClick()
 
             assertFalse(browserStore.state.showExtensionsProcessDisabledPrompt)
             assertFalse(browserStore.state.extensionsProcessDisabled)
-            verify { dialog.dismiss() }
+            verify(dialog).dismiss()
         }
 
     @Test
     fun `WHEN showExtensionsProcessDisabledPrompt is true AND negative button clicked then dismiss without enabling extension process spawning`() =
         runTest(dispatcher) {
             val browserStore = BrowserStore()
-            val dialog: AlertDialog = mockk(relaxed = true)
-            val builder: MaterialAlertDialogBuilder = mockk(relaxed = true)
+            val dialog: AlertDialog = mock()
+            val builder: MaterialAlertDialogBuilder = mock()
             val controller = ExtensionsProcessDisabledForegroundController(
                 context = testContext,
                 appStore = AppStore(AppState(isForeground = true)),
@@ -84,11 +85,11 @@ class ExtensionsProcessDisabledForegroundControllerTest {
                 appName = "TestApp",
                 dispatcher = dispatcher,
             )
-            val buttonsContainerCaptor = slot<View>()
+            val buttonsContainerCaptor = argumentCaptor<View>()
 
             controller.start()
 
-            every { builder.show() } returns dialog
+            whenever(builder.show()).thenReturn(dialog)
 
             assertFalse(browserStore.state.showExtensionsProcessDisabledPrompt)
             assertFalse(browserStore.state.extensionsProcessDisabled)
@@ -100,22 +101,22 @@ class ExtensionsProcessDisabledForegroundControllerTest {
             assertTrue(browserStore.state.showExtensionsProcessDisabledPrompt)
             assertTrue(browserStore.state.extensionsProcessDisabled)
 
-            verify { builder.setView(capture(buttonsContainerCaptor)) }
-            verify { builder.show() }
+            verify(builder).setView(buttonsContainerCaptor.capture())
+            verify(builder).show()
 
-            buttonsContainerCaptor.captured.findViewById<Button>(R.id.negative).performClick()
+            buttonsContainerCaptor.value.findViewById<Button>(R.id.negative).performClick()
 
             assertFalse(browserStore.state.showExtensionsProcessDisabledPrompt)
             assertTrue(browserStore.state.extensionsProcessDisabled)
-            verify { dialog.dismiss() }
+            verify(dialog).dismiss()
         }
 
     @Test
     fun `WHEN dispatching the same event twice THEN the dialog should only be created once`() =
         runTest(dispatcher) {
             val browserStore = BrowserStore()
-            val dialog: AlertDialog = mockk(relaxed = true)
-            val builder: MaterialAlertDialogBuilder = mockk(relaxed = true)
+            val dialog: AlertDialog = mock()
+            val builder: MaterialAlertDialogBuilder = mock()
             val controller = ExtensionsProcessDisabledForegroundController(
                 context = testContext,
                 appStore = AppStore(AppState(isForeground = true)),
@@ -124,11 +125,11 @@ class ExtensionsProcessDisabledForegroundControllerTest {
                 appName = "TestApp",
                 dispatcher = dispatcher,
             )
-            val buttonsContainerCaptor = slot<View>()
+            val buttonsContainerCaptor = argumentCaptor<View>()
 
             controller.start()
 
-            every { builder.show() } returns dialog
+            whenever(builder.show()).thenReturn(dialog)
 
             // First dispatch...
             browserStore.dispatch(ExtensionsProcessAction.ShowPromptAction(show = true))
@@ -138,10 +139,10 @@ class ExtensionsProcessDisabledForegroundControllerTest {
             browserStore.dispatch(ExtensionsProcessAction.ShowPromptAction(show = true))
             dispatcher.scheduler.advanceUntilIdle()
 
-            verify { builder.setView(capture(buttonsContainerCaptor)) }
-            verify(exactly = 1) { builder.show() }
+            verify(builder).setView(buttonsContainerCaptor.capture())
+            verify(builder, times(1)).show()
 
             // Click a button to dismiss the dialog.
-            buttonsContainerCaptor.captured.findViewById<Button>(R.id.negative).performClick()
+            buttonsContainerCaptor.value.findViewById<Button>(R.id.negative).performClick()
         }
 }

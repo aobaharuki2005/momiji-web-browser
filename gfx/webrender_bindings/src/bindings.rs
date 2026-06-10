@@ -480,6 +480,7 @@ pub enum WrAnimationType {
 pub struct WrAnimationProperty {
     effect_type: WrAnimationType,
     id: u64,
+    key: SpatialTreeItemKey,
 }
 
 /// cbindgen:derive-eq=false
@@ -507,11 +508,13 @@ pub struct WrComputedTransformData {
     pub scale_from: LayoutSize,
     pub vertical_flip: bool,
     pub rotation: WrRotation,
+    pub key: SpatialTreeItemKey,
 }
 
 #[repr(C)]
 pub struct WrTransformInfo {
     pub transform: LayoutTransform,
+    pub key: SpatialTreeItemKey,
 }
 
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void {
@@ -645,13 +648,11 @@ pub extern "C" fn wr_renderer_render(
     buffer_age: usize,
     out_stats: &mut RendererStats,
     out_dirty_rects: &mut ThinVec<DeviceIntRect>,
-    out_did_rasterize: &mut bool,
 ) -> bool {
     match renderer.render(DeviceIntSize::new(width, height), buffer_age) {
         Ok(results) => {
             *out_stats = results.stats;
             out_dirty_rects.extend(results.dirty_rects);
-            *out_did_rasterize = results.did_rasterize_any_tile;
             true
         },
         Err(errors) => {
@@ -925,7 +926,7 @@ pub fn gecko_profiler_event_marker(name: &str) {
 
 pub fn gecko_profiler_add_text_marker(name: &str, text: &str, microseconds: f64) {
     use gecko_profiler::{gecko_profiler_category, MarkerOptions, MarkerTiming, ProfilerTime};
-    if !gecko_profiler::current_thread_is_being_profiled_for_markers() {
+    if !gecko_profiler::can_accept_markers() {
         return;
     }
 
@@ -1325,6 +1326,7 @@ extern "C" {
         num_opaque_rects: usize,
     );
     fn wr_compositor_end_frame(compositor: *mut c_void);
+    fn wr_compositor_enable_native_compositor(compositor: *mut c_void, enable: bool);
     fn wr_compositor_deinit(compositor: *mut c_void);
     fn wr_compositor_get_capabilities(compositor: *mut c_void, caps: *mut CompositorCapabilities);
     fn wr_compositor_get_window_visibility(compositor: *mut c_void, caps: *mut WindowVisibility);
@@ -1496,7 +1498,11 @@ impl Compositor for WrCompositor {
         }
     }
 
-    fn enable_native_compositor(&mut self, _device: &mut Device, _enable: bool) {}
+    fn enable_native_compositor(&mut self, _device: &mut Device, enable: bool) {
+        unsafe {
+            wr_compositor_enable_native_compositor(self.0, enable);
+        }
+    }
 
     fn deinit(&mut self, _device: &mut Device) {
         unsafe {
@@ -2108,6 +2114,24 @@ pub extern "C" fn wr_window_new(
         false
     };
 
+    let precise_linear_gradients = if software {
+        static_prefs::pref!("gfx.webrender.precise-linear-gradients-swgl")
+    } else {
+        static_prefs::pref!("gfx.webrender.precise-linear-gradients")
+    };
+
+    let precise_radial_gradients = if software {
+        static_prefs::pref!("gfx.webrender.precise-radial-gradients-swgl")
+    } else {
+        static_prefs::pref!("gfx.webrender.precise-radial-gradients")
+    };
+
+    let precise_conic_gradients = if software {
+        static_prefs::pref!("gfx.webrender.precise-conic-gradients-swgl")
+    } else {
+        static_prefs::pref!("gfx.webrender.precise-conic-gradients")
+    };
+
     let opts = WebRenderOptions {
         enable_aa: true,
         enable_subpixel_aa,
@@ -2163,6 +2187,9 @@ pub extern "C" fn wr_window_new(
         low_quality_pinch_zoom,
         max_shared_surface_size,
         enable_dithering,
+        precise_linear_gradients,
+        precise_radial_gradients,
+        precise_conic_gradients,
         ..Default::default()
     };
 
@@ -2281,6 +2308,11 @@ pub unsafe extern "C" fn wr_api_clear_all_caches(dh: &mut DocumentHandle) {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn wr_api_enable_native_compositor(dh: &mut DocumentHandle, enable: bool) {
+    dh.api.send_debug_cmd(DebugCommand::EnableNativeCompositor(enable));
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn wr_api_set_batching_lookback(dh: &mut DocumentHandle, count: u32) {
     dh.api.send_debug_cmd(DebugCommand::SetBatchingLookback(count));
 }
@@ -2367,10 +2399,12 @@ pub extern "C" fn wr_transaction_set_display_list(
     pipeline_id: WrPipelineId,
     dl_descriptor: BuiltDisplayListDescriptor,
     dl_items_data: &mut WrVecU8,
+    dl_cache_data: &mut WrVecU8,
     dl_spatial_tree_data: &mut WrVecU8,
 ) {
     let payload = DisplayListPayload {
         items_data: dl_items_data.flush_into_vec(),
+        cache_data: dl_cache_data.flush_into_vec(),
         spatial_tree: dl_spatial_tree_data.flush_into_vec(),
     };
 
@@ -2734,11 +2768,12 @@ pub extern "C" fn wr_resource_updates_add_raw_font(
     txn.add_raw_font(key, bytes.flush_into_vec(), index);
 }
 
-fn generate_capture_path(moz_revision: *const c_char) -> Option<PathBuf> {
+fn generate_capture_path(path: *const c_char, moz_revision: *const c_char) -> Option<PathBuf> {
     use std::fs::{create_dir_all, File};
     use std::io::Write;
 
-    let local_dir = PathBuf::from("wr-capture");
+    let cstr = unsafe { CStr::from_ptr(path) };
+    let local_dir = PathBuf::from(&*cstr.to_string_lossy());
 
     // On Android we need to write into a particular folder on external
     // storage so that (a) it can be written without requiring permissions
@@ -2789,16 +2824,26 @@ fn generate_capture_path(moz_revision: *const c_char) -> Option<PathBuf> {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_capture(dh: &mut DocumentHandle, moz_revision: *const c_char, bits_raw: u32) {
-    if let Some(path) = generate_capture_path(moz_revision) {
+pub extern "C" fn wr_api_capture(
+    dh: &mut DocumentHandle,
+    path: *const c_char,
+    moz_revision: *const c_char,
+    bits_raw: u32,
+) {
+    if let Some(path) = generate_capture_path(path, moz_revision) {
         let bits = CaptureBits::from_bits(bits_raw as _).unwrap();
         dh.api.save_capture(path, bits);
     }
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_start_capture_sequence(dh: &mut DocumentHandle, moz_revision: *const c_char, bits_raw: u32) {
-    if let Some(path) = generate_capture_path(moz_revision) {
+pub extern "C" fn wr_api_start_capture_sequence(
+    dh: &mut DocumentHandle,
+    path: *const c_char,
+    moz_revision: *const c_char,
+    bits_raw: u32,
+) {
+    if let Some(path) = generate_capture_path(path, moz_revision) {
         let bits = CaptureBits::from_bits(bits_raw as _).unwrap();
         dh.api.start_capture_sequence(path, bits);
     }
@@ -3058,7 +3103,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
         .collect();
 
     let transform_ref = unsafe { transform.as_ref() };
-    let mut transform_binding = transform_ref.map(|info| PropertyBinding::Value(info.transform));
+    let mut transform_binding = transform_ref.map(|info| (PropertyBinding::Value(info.transform), info.key));
 
     let computed_ref = unsafe { params.computed_transform.as_ref() };
     let opacity_ref = unsafe { params.opacity.as_ref() };
@@ -3082,12 +3127,15 @@ pub extern "C" fn wr_dp_push_stacking_context(
                 has_opacity_animation = true;
             },
             WrAnimationType::Transform => {
-                transform_binding = Some(PropertyBinding::Binding(
-                    PropertyBindingKey::new(anim.id),
-                    // Same as above opacity case.
-                    transform_ref
-                        .map(|info| info.transform)
-                        .unwrap_or_else(LayoutTransform::identity),
+                transform_binding = Some((
+                    PropertyBinding::Binding(
+                        PropertyBindingKey::new(anim.id),
+                        // Same as above opacity case.
+                        transform_ref
+                            .map(|info| info.transform)
+                            .unwrap_or_else(LayoutTransform::identity),
+                    ),
+                    anim.key,
                 ));
             },
             _ => unreachable!("{:?} should not create a stacking context", anim.effect_type),
@@ -3102,6 +3150,8 @@ pub extern "C" fn wr_dp_push_stacking_context(
 
     let mut wr_spatial_id = spatial_id.to_webrender(state.pipeline_id);
     let wr_clip_id = params.clip.to_webrender(state.pipeline_id);
+
+    let mut origin = bounds.min;
 
     // Note: 0 has special meaning in WR land, standing for ROOT_REFERENCE_FRAME.
     // However, it is never returned by `push_reference_frame`, and we need to return
@@ -3126,13 +3176,15 @@ pub extern "C" fn wr_dp_push_stacking_context(
             WrReferenceFrameKind::Perspective => ReferenceFrameKind::Perspective { scrolling_relative_to },
         };
         wr_spatial_id = state.frame_builder.dl_builder.push_reference_frame(
-            bounds.min,
+            origin,
             wr_spatial_id,
             params.transform_style,
-            transform_binding,
+            transform_binding.0,
             reference_frame_kind,
+            transform_binding.1,
         );
 
+        origin = LayoutPoint::zero();
         result.id = wr_spatial_id.0;
         assert_ne!(wr_spatial_id.0, 0);
     } else if let Some(data) = computed_ref {
@@ -3143,35 +3195,21 @@ pub extern "C" fn wr_dp_push_stacking_context(
             WrRotation::Degree270 => Rotation::Degree270,
         };
         wr_spatial_id = state.frame_builder.dl_builder.push_computed_frame(
-            bounds.min,
+            origin,
             wr_spatial_id,
             Some(data.scale_from),
             data.vertical_flip,
             rotation,
+            data.key,
         );
 
-        result.id = wr_spatial_id.0;
-        assert_ne!(wr_spatial_id.0, 0);
-    } else if bounds.min != LayoutPoint::zero() {
-        // Inherit the stacking context's transform style so this translate-only
-        // reference frame doesn't introduce a 3D flattening boundary for
-        // preserve-3d contexts.
-        wr_spatial_id = state.frame_builder.dl_builder.push_reference_frame(
-            bounds.min,
-            wr_spatial_id,
-            params.transform_style,
-            PropertyBinding::Value(LayoutTransform::identity()),
-            ReferenceFrameKind::Transform {
-                is_2d_scale_translation: true,
-                should_snap: false,
-                paired_with_perspective: false,
-            },
-        );
+        origin = LayoutPoint::zero();
         result.id = wr_spatial_id.0;
         assert_ne!(wr_spatial_id.0, 0);
     }
 
     state.frame_builder.dl_builder.push_stacking_context(
+        origin,
         wr_spatial_id,
         params.prim_flags,
         wr_clip_id,
@@ -3282,6 +3320,7 @@ pub extern "C" fn wr_dp_define_sticky_frame(
     vertical_bounds: StickyOffsetBounds,
     horizontal_bounds: StickyOffsetBounds,
     applied_offset: LayoutVector2D,
+    key: SpatialTreeItemKey,
     animation: *const WrAnimationProperty,
 ) -> WrSpatialId {
     assert!(unsafe { is_in_main_thread() });
@@ -3307,6 +3346,7 @@ pub extern "C" fn wr_dp_define_sticky_frame(
         vertical_bounds,
         horizontal_bounds,
         applied_offset,
+        key,
         transform,
     );
 
@@ -3323,6 +3363,7 @@ pub extern "C" fn wr_dp_define_scroll_layer(
     scroll_offset: LayoutVector2D,
     scroll_offset_generation: APZScrollGeneration,
     has_scroll_linked_effect: HasScrollLinkedEffect,
+    key: SpatialTreeItemKey,
 ) -> WrSpatialId {
     assert!(unsafe { is_in_main_thread() });
 
@@ -3334,6 +3375,7 @@ pub extern "C" fn wr_dp_define_scroll_layer(
         scroll_offset,
         scroll_offset_generation,
         has_scroll_linked_effect,
+        key,
     );
 
     WrSpatialId::from_webrender(space_and_clip)
@@ -4329,7 +4371,6 @@ pub extern "C" fn wr_dp_push_box_shadow(
     blur_radius: f32,
     spread_radius: f32,
     border_radius: BorderRadius,
-    shadow_radius: BorderRadius,
     clip_mode: BoxShadowClipMode,
 ) {
     debug_assert!(unsafe { is_in_main_thread() });
@@ -4351,9 +4392,33 @@ pub extern "C" fn wr_dp_push_box_shadow(
         blur_radius,
         spread_radius,
         border_radius,
-        shadow_radius,
         clip_mode,
     );
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_start_item_group(state: &mut WrState) {
+    state.frame_builder.dl_builder.start_item_group();
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_cancel_item_group(state: &mut WrState, discard: bool) {
+    state.frame_builder.dl_builder.cancel_item_group(discard);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_finish_item_group(state: &mut WrState, key: ItemKey) -> bool {
+    state.frame_builder.dl_builder.finish_item_group(key)
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_reuse_items(state: &mut WrState, key: ItemKey) {
+    state.frame_builder.dl_builder.push_reuse_items(key);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_set_cache_size(state: &mut WrState, cache_size: usize) {
+    state.frame_builder.dl_builder.set_cache_size(cache_size);
 }
 
 #[no_mangle]
@@ -4403,11 +4468,13 @@ pub unsafe extern "C" fn wr_api_end_builder(
     state: &mut WrState,
     dl_descriptor: &mut BuiltDisplayListDescriptor,
     dl_items_data: &mut WrVecU8,
+    dl_cache_data: &mut WrVecU8,
     dl_spatial_tree: &mut WrVecU8,
 ) {
     let (_, dl) = state.frame_builder.dl_builder.end();
     let (payload, descriptor) = dl.into_data();
     *dl_items_data = WrVecU8::from_vec(payload.items_data);
+    *dl_cache_data = WrVecU8::from_vec(payload.cache_data);
     *dl_spatial_tree = WrVecU8::from_vec(payload.spatial_tree);
     *dl_descriptor = descriptor;
 }

@@ -23,7 +23,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
@@ -43,7 +42,7 @@ export class AboutPrivateBrowsingParent extends JSWindowActorParent {
       return undefined;
     }
 
-    let win = browser.documentGlobal;
+    let win = browser.ownerGlobal;
 
     switch (aMessage.name) {
       case "OpenPrivateWindow": {
@@ -56,7 +55,7 @@ export class AboutPrivateBrowsingParent extends JSWindowActorParent {
       }
       case "SearchHandoff": {
         let urlBar = win.gURLBar;
-        let searchEngine = lazy.SearchService.defaultPrivateEngine;
+        let searchEngine = Services.search.defaultPrivateEngine;
         let isFirstChange = true;
 
         if (!aMessage.data || !aMessage.data.text) {
@@ -99,24 +98,18 @@ export class AboutPrivateBrowsingParent extends JSWindowActorParent {
           const forceSuppressFocusBorder = ev?.type === "mousedown";
           urlBar.removeHiddenFocus(forceSuppressFocusBorder);
 
-          urlBar.inputField.removeEventListener("keydown", onKeydown);
-          urlBar.inputField.removeEventListener("mousedown", onDone);
-          urlBar.inputField.removeEventListener("blur", onDone);
-          urlBar.inputField.removeEventListener(
-            "compositionstart",
-            checkFirstChange
-          );
-          urlBar.inputField.removeEventListener("paste", checkFirstChange);
+          urlBar.removeEventListener("keydown", onKeydown);
+          urlBar.removeEventListener("mousedown", onDone);
+          urlBar.removeEventListener("blur", onDone);
+          urlBar.removeEventListener("compositionstart", checkFirstChange);
+          urlBar.removeEventListener("paste", checkFirstChange);
         };
 
-        urlBar.inputField.addEventListener("keydown", onKeydown);
-        urlBar.inputField.addEventListener("mousedown", onDone);
-        urlBar.inputField.addEventListener("blur", onDone);
-        urlBar.inputField.addEventListener(
-          "compositionstart",
-          checkFirstChange
-        );
-        urlBar.inputField.addEventListener("paste", checkFirstChange);
+        urlBar.addEventListener("keydown", onKeydown);
+        urlBar.addEventListener("mousedown", onDone);
+        urlBar.addEventListener("blur", onDone);
+        urlBar.addEventListener("compositionstart", checkFirstChange);
+        urlBar.addEventListener("paste", checkFirstChange);
         break;
       }
       case "ShouldShowSearchBanner": {
@@ -140,7 +133,7 @@ export class AboutPrivateBrowsingParent extends JSWindowActorParent {
         }
         Services.prefs.setIntPref(SHOWN_PREF, shownTimes + 1);
         return new Promise(resolve => {
-          lazy.SearchService.getDefaultPrivate().then(engine => {
+          Services.search.getDefaultPrivate().then(engine => {
             resolve(engine.name);
           });
         });

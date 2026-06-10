@@ -198,7 +198,7 @@ add_task(async function test_sendtab_receive() {
   sendTab._decrypt = bytes => {
     return bytes;
   };
-  const tab = { title: "tab title", url: "http://example.com", private: false };
+  const tab = { title: "tab title", url: "http://example.com" };
   const to = [{ id: "devid", name: "The Device" }];
   const reason = "push";
 
@@ -215,7 +215,6 @@ add_task(async function test_sendtab_receive() {
     Assert.deepEqual(await sendTab.handle(device.id, payload, reason), {
       title: "tab title",
       uri: "http://example.com",
-      private: false,
     });
   }
 

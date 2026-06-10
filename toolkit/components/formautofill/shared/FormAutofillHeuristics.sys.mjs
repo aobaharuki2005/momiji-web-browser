@@ -28,12 +28,6 @@ const MULTI_N_FIELD_NAMES = {
 const CC_TYPE = 1;
 const ADDR_TYPE = 2;
 
-// Regular expression to match a word of text.
-const WORD_RE = /\s*([\p{L}\p{N}]+)/u;
-
-const ADJACENT_BEFORE_PREFIX = "bb";
-const ADJACENT_AFTER_PREFIX = "aa";
-
 /**
  * Returns the autocomplete information of fields according to heuristics.
  */
@@ -43,9 +37,6 @@ export const FormAutofillHeuristics = {
 
   CREDIT_CARD_FIELDNAMES: [],
   ADDRESS_FIELDNAMES: [],
-
-  useTestYear: null, // set by tests to the current year to use
-
   /**
    * Try to find a contiguous sub-array within an array.
    *
@@ -113,7 +104,7 @@ export const FormAutofillHeuristics = {
     const options = [...element.options];
     // A normal expiration year select should contain at least the last three years
     // in the list.
-    const curYear = this.useTestYear || new Date().getFullYear();
+    const curYear = new Date().getFullYear();
     const desiredValues = Array(3)
       .fill(0)
       .map((v, i) => v + curYear + i);
@@ -401,14 +392,6 @@ export const FormAutofillHeuristics = {
   _parseHouseNumberFields(scanner, fieldDetail) {
     if (fieldDetail?.fieldName == "address-housenumber") {
       const savedIndex = scanner.parsingIndex;
-
-      // A house number suffix immediately afterwards implies that this
-      // really is a house number field.
-      const detail = scanner.getFieldDetailByIndex(savedIndex + 1);
-      if (detail?.fieldName == "address-extra-housesuffix") {
-        return false;
-      }
-
       for (let idx = 0; !scanner.parsingFinished; idx++) {
         const detail = scanner.getFieldDetailByIndex(idx);
         if (!detail) {
@@ -860,96 +843,6 @@ export const FormAutofillHeuristics = {
     }
   },
 
-  //
-  // Functions related to ML inference
-  //
-
-  tokenizeWords(text, words) {
-    if (!text) {
-      return;
-    }
-
-    text = text.toLowerCase().replace(/\s+/g, " ");
-
-    let match = text.match(WORD_RE);
-    if (!match) {
-      return;
-    }
-
-    while (match) {
-      let word = match[1];
-      // Ignore short words
-      if (word.length >= 3) {
-        words.push(word);
-      }
-
-      text = text.substring(match.index + match[0].length);
-      match = text.match(WORD_RE);
-    }
-  },
-
-  splitMixedCase(text) {
-    // For ids and names, we try to split mixed case words
-    // (such as addressLine) into two separate words.
-    return text.replaceAll(/([\p{Lower}\p{N}]*)(\p{Upper}*)/gu, "$1 $2");
-  },
-
-  tokenizeAttributes(element, words) {
-    //    stringText.add(element.autocompleteInfo.fieldName, prefix);
-    this.tokenizeWords(this.splitMixedCase(element.id), words);
-    this.tokenizeWords(this.splitMixedCase(element.name), words);
-    this.tokenizeWords(element.placeholder, words);
-
-    const labels = this._getElementLabelStrings(element);
-    for (const label of labels) {
-      this.tokenizeWords(label, words);
-    }
-
-    let elementType = element.type;
-    if (elementType != "text") {
-      this.tokenizeWords("**" + elementType, words);
-    }
-  },
-
-  tokenizeElements(elements) {
-    if (!lazy.FormAutofillUtils.useMLInference) {
-      return null;
-    }
-
-    let elementDataList = [];
-    for (let element of elements) {
-      let words = [];
-      this.tokenizeAttributes(element, words);
-
-      elementDataList.push({ element, words });
-    }
-
-    let resultsMap = new Map();
-
-    // The tokens are made up of the list of words in the text
-    // and the prefixed tokens for the previous and next elements.
-    for (let e = 0; e < elementDataList.length; e++) {
-      let words = elementDataList[e].words.copyWithin();
-
-      if (e > 0) {
-        words = words.concat(
-          elementDataList[e - 1].words.map(
-            text => ADJACENT_BEFORE_PREFIX + text
-          )
-        );
-      }
-      if (e < elementDataList.length - 1) {
-        words = words.concat(
-          elementDataList[e + 1].words.map(text => ADJACENT_AFTER_PREFIX + text)
-        );
-      }
-
-      resultsMap.set(elementDataList[e].element, words.join(" "));
-    }
-
-    return resultsMap;
-  },
-
   /**
    * This function should provide all field details of a form which are placed
    * in the belonging section. The details contain the autocomplete info
@@ -966,12 +859,6 @@ export const FormAutofillHeuristics = {
     const elements = Array.from(formLike.elements).filter(element =>
       lazy.FormAutofillUtils.isCreditCardOrAddressFieldType(element)
     );
-
-    // Because we include information about the adjacent fields, it is
-    // easier to  perform all of the tokenization at once and insert the
-    // results into a map first, keyed by element. The tokens can then be
-    // retrieved later within inferFieldInfo.
-    let mlTokensMap = this.tokenizeElements(elements);
 
     const fieldDetails = [];
     for (let idx = 0; idx < elements.length; idx++) {
@@ -991,12 +878,7 @@ export const FormAutofillHeuristics = {
         continue;
       }
 
-      const [fieldName, inferInfo, mlData] = this.inferFieldInfo(
-        element,
-        elements,
-        mlTokensMap
-      );
-
+      const [fieldName, inferInfo] = this.inferFieldInfo(element, elements);
       const attributes = this.parseAdditionalAttributes(element, fieldName);
 
       fieldDetails.push(
@@ -1005,7 +887,6 @@ export const FormAutofillHeuristics = {
           fathomConfidence: inferInfo.fathomConfidence,
           isVisible,
           isLookup: attributes.isLookup,
-          mlData,
         })
       );
     }
@@ -1095,7 +976,6 @@ export const FormAutofillHeuristics = {
     if (!isAutoCompleteOff || FormAutofill.creditCardsAutocompleteOff) {
       fieldNames.push(...this.CREDIT_CARD_FIELDNAMES);
     }
-
     if (!isAutoCompleteOff || FormAutofill.addressesAutocompleteOff) {
       fieldNames.push(...this.ADDRESS_FIELDNAMES);
     }
@@ -1142,14 +1022,12 @@ export const FormAutofillHeuristics = {
    *
    * @param {HTMLElement} element - The input element to infer information about.
    * @param {Array<HTMLElement>} elements - See `getFathomField` for details
-   * @param {Map} mlTokens map of elements to words to use for ml inference.
    * @returns {Array} - An array containing:
    *                    [0]the inferred field name
    *                    [1]information collected during the inference process. The possible values includes:
    *                       'autocompleteInfo' and 'fathomConfidence'.
-   *                    [2] tokens used for ML inference.
    */
-  inferFieldInfo(element, elements = [], mlTokens) {
+  inferFieldInfo(element, elements = []) {
     const inferredInfo = {};
     const autocompleteInfo = element.getAutocompleteInfo();
 
@@ -1169,7 +1047,7 @@ export const FormAutofillHeuristics = {
     // "email" type of input is accurate for heuristics to determine its Email
     // field or not. However, "tel" type is used for ZIP code for some web site
     // (e.g. HomeDepot, BestBuy), so "tel" type should be not used for "tel"
-    // prediction. We also allow this in ML mode since email is likely correct.
+    // prediction.
     if (element.type == "email" && fields.includes("email")) {
       return ["email", inferredInfo];
     }
@@ -1209,11 +1087,6 @@ export const FormAutofillHeuristics = {
       // by fathom but is considered cc-name by regex-based heuristic, if the form
       // also contains a cc-number identified by fathom, we will treat the form as a
       // valid cc form; hence both cc-number & cc-name are identified.
-    }
-
-    if (mlTokens) {
-      // If ML is desired, skip heuristics and use the ML data instead.
-      return [matchedFieldNames, inferredInfo, mlTokens?.get(element)];
     }
 
     // Check every select for options that
@@ -1273,7 +1146,7 @@ export const FormAutofillHeuristics = {
       return ["tel", inferredInfo];
     }
 
-    return [matchedFieldNames, inferredInfo, mlTokens?.get(element)];
+    return [matchedFieldNames, inferredInfo];
   },
 
   /**

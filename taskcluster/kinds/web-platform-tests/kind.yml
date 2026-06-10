@@ -32,7 +32,11 @@ task-defaults:
                     default: true
             default: false
     docker-image:
-        in-tree: ubuntu2404-test
+        by-test-platform:
+            linux1804.*:
+                in-tree: ubuntu1804-test
+            default:
+                in-tree: ubuntu2404-test
     fetches:
         toolchain:
             by-test-platform:
@@ -98,10 +102,6 @@ tasks:
         suite: web-platform-tests
         treeherder-symbol: W(wpt)
         virtualization: virtual
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2
-                default: default
         tier:
             by-variant:
                 no-fission:
@@ -112,20 +112,24 @@ tasks:
                     by-test-platform:
                         android-em.*/debug-isolated-process: 2
                         default: default
-        chunks: dynamic
-        default-chunks:
-            by-test-platform:
-                android.*/debug: 32
-                android.*: 24
-                linux.*64-tsan(-qr)?/opt: 32
-                linux.*64-asan(-qr)?/opt: 22
-                linux.*64-ccov.*/opt: 20
-                linux.*/debug: 16
-                macosx.*/debug: 18
-                windows.*32.*/opt: 12
-                windows.*/debug: 16
-                windows.*-ccov.*/opt: 14
-                default: 10
+        chunks:
+            by-variant:
+                privatebrowsing: dynamic
+                inc-origin-init: dynamic
+                privatebrowsing-inc-origin-init: dynamic
+                default:
+                    by-test-platform:
+                        android.*/debug: 32
+                        android.*: 24
+                        linux.*64-tsan(-qr)?/opt: 32
+                        linux.*64-asan(-qr)?/opt: 22
+                        linux.*64-ccov.*/opt: 20
+                        linux.*/debug: 16
+                        macosx.*/debug: 18
+                        windows.*32.*/opt: 12
+                        windows.*/debug: 16
+                        windows.*-ccov.*/opt: 14
+                        default: 10
         max-run-time:
             by-test-platform:
                 .*-ccov.*: 10800
@@ -136,16 +140,25 @@ tasks:
                 default: 7200
         variants:
             - no-fission
+            - geckoview-no-fission-no-ship
             - async-event-dispatching
             - privatebrowsing
             - inc-origin-init
             - privatebrowsing-inc-origin-init
         run-on-projects:
             by-variant:
+                geckoview-no-fission-no-ship:
+                    by-test-platform:
+                        android-em.*/debug-isolated-process: []
+                        android-em.*: built-projects
+                        default: []
                 no-fission:
                     by-test-platform:
                         android-em.*/debug-isolated-process: []
                         android.*: built-projects
+                        linux1804-64(-qr)?/debug: ['mozilla-central']
+                        linux1804-64(-shippable)?(-qr)?/opt: ['mozilla-central']
+                        linux1804-64-asan(-qr)?/opt: ['mozilla-central']
                         linux2404-64/debug: ['mozilla-central']
                         linux2404-64(-shippable)?/opt: ['mozilla-central']
                         linux2404-64-asan/opt: ['mozilla-central']
@@ -186,10 +199,6 @@ tasks:
     web-platform-tests-backlog:
         description: "Web platform test (backlog) run"
         treeherder-symbol: W-b(wpt)
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2
-                default: default
         variants:
             - no-fission
         chunks:
@@ -231,13 +240,8 @@ tasks:
         suite: web-platform-tests
         treeherder-symbol: W(codecs)
         virtualization: virtual
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2
-                default: default
         tier: default
-        chunks: dynamic
-        default-chunks: 1
+        chunks: 1
         max-run-time: 1800
         variants: []  # We don't need sw or nofis testing.
         run-on-projects: built-projects
@@ -245,7 +249,6 @@ tasks:
             chunked: true
             extra-options:
                 - --test-type=testharness
-                - --test-type=crashtest
                 - --default-exclude
                 - --tag=webcodecs
                 - --no-update-status-on-crash
@@ -255,8 +258,7 @@ tasks:
         suite: web-platform-tests
         treeherder-symbol: W(eme)
         tier: default
-        chunks: dynamic
-        default-chunks: 1
+        chunks: 1
         max-run-time: 1800
         variants:
             - eme-wmf
@@ -288,17 +290,14 @@ tasks:
             by-test-platform:
                 windows.*64.*/.*: virtual-with-gpu
                 default: virtual
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2-gpu
-                default: default
-        chunks: dynamic
-        default-chunks:
+        chunks:
             by-test-platform:
                 .*-ccov.*: 8
                 android.*/debug: 16
                 android.*: 8
                 linux.*64-tsan(-qr)?/opt: 16
+                linux1804-64(-qr)?/.*: 6
+                linux1804-64-asan(-qr)?/.*: 6
                 linux2404-64/.*: 6
                 linux2404-64-asan/.*: 6
                 macosx.*-64/debug: 6
@@ -322,6 +321,9 @@ tasks:
                 webrender-sw+no-fission:
                     by-test-platform:
                         android-em.*/debug: built-projects
+                        linux1804-64(-qr)?/.*: ['mozilla-central']
+                        linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
+                        linux1804-64-asan(-qr)?/opt: ['mozilla-central']
                         linux2404-64/.*: ['mozilla-central']
                         linux2404-64-shippable/opt: ['mozilla-central']
                         linux2404-64-asan/opt: ['mozilla-central']
@@ -329,6 +331,9 @@ tasks:
                 no-fission:
                     by-test-platform:
                         android-em.*/debug-isolated-process: []
+                        linux1804-64(-qr)?/.*: ['mozilla-central']
+                        linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
+                        linux1804-64-asan(-qr)?/opt: ['mozilla-central']
                         linux2404-64/.*: ['mozilla-central']
                         linux2404-64-shippable/opt: ['mozilla-central']
                         linux2404-64-asan/opt: ['mozilla-central']
@@ -384,7 +389,6 @@ tasks:
             by-test-platform:
                 linux2204.*/debug.*: 25
                 linux2204.*: 20
-                macosx.*-64.*/debug.*: 15
                 windows.*-64.*/opt.*: 14
                 default: 14
         max-run-time: 2700  # 45m
@@ -408,7 +412,7 @@ tasks:
                 - --timeout-multiplier=5.0
         worker-type:
             by-test-platform:
-                .*windows.*: win11-64-25h2-webgpu
+                .*windows.*: win11-64-24h2-webgpu
                 default: default
 
     web-platform-tests-webgpu-long:
@@ -433,10 +437,6 @@ tasks:
                 - --skip-implementation-status=backlog
                 - --skip-implementation-status=not-implementing
                 - --timeout-multiplier=5.0
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2-webgpu
-                default: default
 
     web-platform-tests-webgpu-backlog:
         description: "Web platform WebGPU test run (backlog)"
@@ -477,7 +477,7 @@ tasks:
                 - --timeout-multiplier=5.0
         worker-type:
             by-test-platform:
-                .*windows.*: win11-64-25h2-webgpu
+                .*windows.*: win11-64-24h2-webgpu
                 default: default
 
     web-platform-tests-webgpu-backlog-long:
@@ -504,20 +504,12 @@ tasks:
                 - --skip-implementation-status=not-implementing
                 - --backlog
                 - --timeout-multiplier=5.0
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2-webgpu
-                default: default
 
     web-platform-tests-canvas:
         description: "Web platform Canvas test run"
         suite: web-platform-tests
         treeherder-symbol: W(canvas)
         virtualization: virtual-with-gpu
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2-gpu
-                default: default
         tier:
             by-variant:
                 no-fission:
@@ -528,8 +520,7 @@ tasks:
                     by-test-platform:
                         android-em.*/debug-isolated-process: 3
                         default: default
-        chunks: dynamic
-        default-chunks:
+        chunks:
             by-test-platform:
                 windows.*: 2
                 .*-tsan.*: 3
@@ -550,6 +541,9 @@ tasks:
                     by-test-platform:
                         android-em.*/debug-isolated-process: []
                         android.*: built-projects
+                        linux1804-64(-qr)?/.*: ['mozilla-central']
+                        linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
+                        linux1804-64-asan(-qr)?/opt: ['mozilla-central']
                         linux2404-64/.*: ['mozilla-central']
                         linux2404-64-shippable/opt: ['mozilla-central']
                         linux2404-64-asan/opt: ['mozilla-central']
@@ -581,10 +575,6 @@ tasks:
         schedules-component: web-platform-tests-reftest
         treeherder-symbol: W-b(Wr)
         virtualization: virtual
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2
-                default: default
         chunks: 1
         variants:
             - no-fission
@@ -616,12 +606,7 @@ tasks:
         description: "Web platform webdriver-spec run"
         schedules-component: web-platform-tests-wdspec
         treeherder-symbol: W(Wd)
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2
-                default: default
-        chunks: dynamic
-        default-chunks:
+        chunks:
             by-test-platform:
                 .*-ccov.*: 6
                 .*-tsan.*: 8
@@ -637,6 +622,7 @@ tasks:
                         - --test-type=wdspec
         variants:
             - no-fission
+            - geckoview-no-fission-no-ship
             - headless
             - async-event-dispatching
         run-on-projects:
@@ -647,10 +633,18 @@ tasks:
                         default: built-projects
                 no-fission:
                     by-test-platform:
+                        linux1804-64(-qr)?/.*: ['mozilla-central']
+                        linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
+                        linux1804-64-asan(-qr)?/opt: ['mozilla-central']
                         linux2404-64/.*: ['mozilla-central']
                         linux2404-64-shippable/opt: ['mozilla-central']
                         linux2404-64-asan/opt: ['mozilla-central']
                         android.*: built-projects
+                        default: []
+                geckoview-no-fission-no-ship:
+                    by-test-platform:
+                        android-em.*/debug-isolated-process: []
+                        android-em.*: built-projects
                         default: []
                 async-event-dispatching:
                     by-test-platform:
@@ -684,7 +678,7 @@ tasks:
                         - macosx64-minidump-stackwalk
                         - macosx64-fix-stacks
                     macosx.*-aarch64.*:
-                        - macosx64-geckodriver
+                        - macosx64-aarch64-geckodriver
                         - macosx64-aarch64-minidump-stackwalk
                         - macosx64-aarch64-fix-stacks
                     win.*-32.*:
@@ -704,12 +698,7 @@ tasks:
         description: "Web platform crashtests run"
         schedules-component: web-platform-tests-crashtest
         treeherder-symbol: W(Wc)
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2
-                default: default
-        chunks: dynamic
-        default-chunks:
+        chunks:
             by-test-platform:
                 .*-tsan.*: 4
                 default: 1
@@ -734,6 +723,9 @@ tasks:
                 webrender-sw+no-fission:
                     by-test-platform:
                         android-em.*/debug: built-projects
+                        linux1804-64(-qr)?/.*: ['mozilla-central']
+                        linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
+                        linux1804-64-asan(-qr)?/opt: ['mozilla-central']
                         linux2404-64/.*: ['mozilla-central']
                         linux2404-64-shippable/opt: ['mozilla-central']
                         linux2404-64-asan/opt: ['mozilla-central']
@@ -741,6 +733,9 @@ tasks:
                 no-fission:
                     by-test-platform:
                         android-em.*/debug-isolated-process: []
+                        linux1804-64(-qr)?/.*: ['mozilla-central']
+                        linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
+                        linux1804-64-asan(-qr)?/opt: ['mozilla-central']
                         linux2404-64/.*: ['mozilla-central']
                         linux2404-64-shippable/opt: ['mozilla-central']
                         linux2404-64-asan/opt: ['mozilla-central']
@@ -767,10 +762,6 @@ tasks:
         description: "Web platform print-reftest run"
         schedules-component: web-platform-tests-print-reftest
         treeherder-symbol: W(Wp)
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2
-                default: default
         chunks: 1
         test-manifest-loader: null  # don't load tests in the taskgraph
         tier:
@@ -800,12 +791,18 @@ tasks:
                 webrender-sw+no-fission:
                     by-test-platform:
                         android-em.*/debug: built-projects
+                        linux1804-64(-qr)?/.*: ['mozilla-central']
+                        linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
+                        linux1804-64-asan(-qr)?/opt: ['mozilla-central']
                         linux2404-64/.*: ['mozilla-central']
                         linux2404-64-shippable/opt: ['mozilla-central']
                         linux2404-64-asan/opt: ['mozilla-central']
                         default: []
                 no-fission:
                     by-test-platform:
+                        linux1804-64(-qr)?/.*: ['mozilla-central']
+                        linux1804-64-shippable(-qr)?/opt: ['mozilla-central']
+                        linux1804-64-asan(-qr)?/opt: ['mozilla-central']
                         linux2404-64/.*: ['mozilla-central']
                         linux2404-64-shippable/opt: ['mozilla-central']
                         linux2404-64-asan/opt: ['mozilla-central']
@@ -827,10 +824,6 @@ tasks:
             category: test-verify
             name: test-verify-wpt
         treeherder-symbol: TVw
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2
-                default: default
         max-run-time: 10800
         run-on-projects:
             by-test-platform:
@@ -861,7 +854,7 @@ tasks:
                         - macosx64-minidump-stackwalk
                         - macosx64-fix-stacks
                     macosx.*-aarch64.*:
-                        - macosx64-geckodriver
+                        - macosx64-aarch64-geckodriver
                         - macosx64-aarch64-minidump-stackwalk
                         - macosx64-aarch64-fix-stacks
                     win.*-32.*:
@@ -884,10 +877,6 @@ tasks:
             name: test-coverage-wpt
         schedules-component: test-coverage-wpt
         treeherder-symbol: TCw
-        worker-type:
-            by-test-platform:
-                .*windows.*: win11-64-25h2
-                default: default
         max-run-time: 10800
         variants:
             - no-fission

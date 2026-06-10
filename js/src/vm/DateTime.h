@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -16,7 +18,6 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "threading/ExclusiveData.h"
-#include "util/LanguageId.h"
 
 #if JS_HAS_INTL_API
 #  include "mozilla/intl/ICUError.h"
@@ -231,7 +232,7 @@ class DateTimeInfo {
    */
   static bool timeZoneDisplayName(DateTimeInfo* dtInfo,
                                   TimeZoneDisplayNameVector& result,
-                                  int64_t utcMilliseconds, LanguageId locale) {
+                                  int64_t utcMilliseconds, const char* locale) {
     if (MOZ_UNLIKELY(dtInfo)) {
       return dtInfo->internalTimeZoneDisplayName(result, utcMilliseconds,
                                                  locale);
@@ -312,7 +313,7 @@ class DateTimeInfo {
 
   enum class TimeZoneStatus : uint8_t { Valid, NeedsUpdate, UpdateIfChanged };
 
-  TimeZoneStatus timeZoneStatus_ = TimeZoneStatus::NeedsUpdate;
+  TimeZoneStatus timeZoneStatus_;
 
   /**
    * The offset in seconds from the current UTC time to the current local
@@ -352,7 +353,7 @@ class DateTimeInfo {
    * zone, this field is reused as the time zone cache key. See also
    * |timeZoneCacheKey()| and |updateTimeZoneOverride()|.
    */
-  int32_t utcToLocalStandardOffsetSeconds_ = 0;
+  int32_t utcToLocalStandardOffsetSeconds_;
 
   RangeCache dstRange_;  // UTC-based ranges
 
@@ -386,7 +387,7 @@ class DateTimeInfo {
    * Cached names of the standard and daylight savings display names of the
    * current time zone for the default locale.
    */
-  LanguageId locale_ = LanguageId::und();
+  JS::UniqueChars locale_;
   JS::UniqueTwoByteChars standardName_;
   JS::UniqueTwoByteChars daylightSavingsName_;
 #else
@@ -446,7 +447,7 @@ class DateTimeInfo {
                                         TimeZoneOffset offset);
 
   bool internalTimeZoneDisplayName(TimeZoneDisplayNameVector& result,
-                                   int64_t utcMilliseconds, LanguageId locale);
+                                   int64_t utcMilliseconds, const char* locale);
 
   bool internalTimeZoneId(TimeZoneIdentifierVector& result);
 

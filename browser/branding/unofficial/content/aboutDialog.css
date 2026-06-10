@@ -2,16 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@media not ((prefers-contrast) and (prefers-color-scheme: light)) {
-  #aboutDialogContainer {
-    background-color: #130829;
-    color: #fff;
-    color-scheme: dark;
-  }
-
-  #bottomBox {
-    background-color: hsla(235, 43%, 10%, 0.5);
-  }
+#aboutDialogContainer {
+  background-color: #130829;
+  color: #fff;
+  color-scheme: dark;
 }
 
 #rightBox {
@@ -21,5 +15,6 @@
 }
 
 #bottomBox {
-  padding: 15px 10px;
+  background-color: hsla(235, 43%, 10%, 0.5);
+  padding: 15px 10px 15px;
 }

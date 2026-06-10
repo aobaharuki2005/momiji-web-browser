@@ -1,8 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#if !defined(MediaDecoderStateMachine_h_)
-#  define MediaDecoderStateMachine_h_
+#if !defined(MediaDecoderStateMachine_h__)
+#  define MediaDecoderStateMachine_h__
 
 #  include "AudioDeviceInfo.h"
 #  include "ImageContainer.h"
@@ -253,7 +255,6 @@ class MediaDecoderStateMachine
   void OnVideoPopped(const RefPtr<VideoData>& aSample);
 
   void AudioAudibleChanged(bool aAudible);
-  void OnPlaybackRateFallback();
 
   void SetPlaybackRate(double aPlaybackRate) override;
   void SetCanPlayThrough(bool aCanPlayThrough) override {
@@ -314,7 +315,7 @@ class MediaDecoderStateMachine
   // Called on the state machine thread.
   void UpdatePlaybackPositionPeriodically();
 
-  already_AddRefed<MediaSink> CreateAudioSink();
+  MediaSink* CreateAudioSink();
 
   // Always create mediasink which contains an AudioSink or DecodedStream
   // inside.
@@ -488,7 +489,6 @@ class MediaDecoderStateMachine
   MediaEventListener mAudioQueueListener;
   MediaEventListener mVideoQueueListener;
   MediaEventListener mAudibleListener;
-  MediaEventListener mPlaybackRateFallbackListener;
   MediaEventListener mOnMediaNotSeekable;
 
   const bool mIsMSE;
@@ -537,10 +537,13 @@ class MediaDecoderStateMachine
   // set.
   Mirror<RefPtr<AudioDeviceInfo>> mSinkDevice;
 
-  // Stream capture information. When the state is Capturing, it contains a
-  // dummy track used to access the correct MediaTrackGraph instance, along with
-  // an indication of whether audio should be played out via audio devices.
-  Mirror<MediaDecoder::OutputCaptureInfo> mOutputCaptureInfo;
+  // Whether all output should be captured into mOutputTracks, halted, or not
+  // captured.
+  Mirror<MediaDecoder::OutputCaptureState> mOutputCaptureState;
+
+  // A dummy track used to access the right MediaTrackGraph instance. Needed
+  // since there's no guarantee that output tracks are present.
+  Mirror<nsMainThreadPtrHandle<SharedDummyTrack>> mOutputDummyTrack;
 
   // Tracks to capture data into.
   Mirror<CopyableTArray<RefPtr<ProcessedMediaTrack>>> mOutputTracks;

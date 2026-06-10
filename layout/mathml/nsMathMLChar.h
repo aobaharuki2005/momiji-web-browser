@@ -1,12 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsMathMLChar_h_
-#define nsMathMLChar_h_
+#ifndef nsMathMLChar_h___
+#define nsMathMLChar_h___
 
 #include "gfxTextRun.h"
-#include "mozilla/EnumSet.h"
 #include "nsBoundingMetrics.h"
 #include "nsColor.h"
 #include "nsMathMLOperators.h"
@@ -28,20 +29,22 @@ class ComputedStyle;
 }  // namespace mozilla
 
 // Hints for Stretch() to indicate criteria for stretching
-enum class MathMLStretchFlag : uint8_t {
-  Normal,         // try to stretch to requested size.
-  Nearer,         // Stretch very close to requested size.
-  Smaller,        // Don't stretch more than requested size.
-  Larger,         // Don't stretch less than requested size.
-  LargeOperator,  // Draw as a large operator in displaystyle.
-  MaxWidth,       // Find the widest metrics returned from a vertical stretch.
+enum {
+  // Don't stretch
+  NS_STRETCH_NONE = 0x00,
+  // Variable size stretches
+  NS_STRETCH_VARIABLE_MASK = 0x0F,
+  NS_STRETCH_NORMAL = 0x01,   // try to stretch to requested size
+  NS_STRETCH_NEARER = 0x02,   // stretch very close to requested size
+  NS_STRETCH_SMALLER = 0x04,  // don't stretch more than requested size
+  NS_STRETCH_LARGER = 0x08,   // don't stretch less than requested size
+  // A largeop in displaystyle
+  NS_STRETCH_LARGEOP = 0x10,
+
+  // Intended for internal use:
+  // Find the widest metrics that might be returned from a vertical stretch
+  NS_STRETCH_MAXWIDTH = 0x20
 };
-using MathMLStretchFlags = mozilla::EnumSet<MathMLStretchFlag>;
-constexpr MathMLStretchFlags kMathMLStretchVariableSet(
-    MathMLStretchFlag::Normal, MathMLStretchFlag::Nearer,
-    MathMLStretchFlag::Smaller, MathMLStretchFlag::Larger);
-constexpr MathMLStretchFlags kMathMLStretchSet =
-    kMathMLStretchVariableSet + MathMLStretchFlag::LargeOperator;
 
 // A single glyph in our internal representation is either
 // 1) a code pair from the mathfontFONTFAMILY.properties table, interpreted
@@ -70,7 +73,7 @@ class nsMathMLChar {
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
   // constructor and destructor
-  nsMathMLChar() : mDirection(StretchDirection::Default) {
+  nsMathMLChar() : mDirection(NS_STRETCH_DIRECTION_DEFAULT) {
     MOZ_COUNT_CTOR(nsMathMLChar);
     mComputedStyle = nullptr;
     mUnscaledAscent = 0;
@@ -93,10 +96,11 @@ class nsMathMLChar {
   // @param aContainerSize - IN - suggested size for the stretched char
   // @param aDesiredStretchSize - OUT - the size that the char wants
   nsresult Stretch(nsIFrame* aForFrame, DrawTarget* aDrawTarget,
-                   float aFontSizeInflation, StretchDirection aStretchDirection,
+                   float aFontSizeInflation,
+                   nsStretchDirection aStretchDirection,
                    const nsBoundingMetrics& aContainerSize,
                    nsBoundingMetrics& aDesiredStretchSize,
-                   MathMLStretchFlags aStretchFlags, bool aRTL);
+                   uint32_t aStretchHint, bool aRTL);
 
   void SetData(nsString& aData);
 
@@ -104,7 +108,7 @@ class nsMathMLChar {
 
   int32_t Length() { return mData.Length(); }
 
-  StretchDirection GetStretchDirection() { return mDirection; }
+  nsStretchDirection GetStretchDirection() { return mDirection; }
 
   // Sometimes we only want to pass the data to another routine,
   // this function helps to avoid copying
@@ -119,9 +123,9 @@ class nsMathMLChar {
   //
   // @param aStretchHint can be the value that will be passed to Stretch().
   // It is used to determine whether the operator is stretchy or a largeop.
-  nscoord GetMaxWidth(
-      nsIFrame* aForFrame, DrawTarget* aDrawTarget, float aFontSizeInflation,
-      MathMLStretchFlags aStretchFlags = MathMLStretchFlag::Normal);
+  nscoord GetMaxWidth(nsIFrame* aForFrame, DrawTarget* aDrawTarget,
+                      float aFontSizeInflation,
+                      uint32_t aStretchHint = NS_STRETCH_NORMAL);
 
   // Metrics that _exactly_ enclose the char. The char *must* have *already*
   // being stretched before you can call the GetBoundingMetrics() method.
@@ -136,9 +140,13 @@ class nsMathMLChar {
     mBoundingMetrics = aBoundingMetrics;
   }
 
-  void SetComputedStyle(mozilla::ComputedStyle* aComputedStyle);
+  // Hooks to access the extra leaf ComputedStyles given to the MathMLChars.
+  // They provide an interface to make them accessible to the Style System via
+  // the Get/Set AdditionalComputedStyle() APIs. Owners of MathMLChars
+  // should honor these APIs.
+  mozilla::ComputedStyle* GetComputedStyle() const;
 
-  nscoord ItalicCorrection() const { return mItalicCorrection; }
+  void SetComputedStyle(mozilla::ComputedStyle* aComputedStyle);
 
  protected:
   friend class nsGlyphTable;
@@ -148,7 +156,7 @@ class nsMathMLChar {
 
  private:
   nsRect mRect;
-  StretchDirection mDirection;
+  nsStretchDirection mDirection;
   nsBoundingMetrics mBoundingMetrics;
   RefPtr<mozilla::ComputedStyle> mComputedStyle;
   // mGlyphs/mBmData are arrays describing the glyphs used to draw the operator.
@@ -165,7 +173,7 @@ class nsMathMLChar {
   // - Variant: we draw a larger size variant given by mGlyphs[0].
   // - Parts: we assemble several parts given by mGlyphs[0], ... mGlyphs[4]
   // XXXfredw: the MATH table can have any numbers of parts and extenders.
-  enum class DrawingMethod : uint8_t { Normal, Variant, Parts };
+  enum class DrawingMethod { Normal, Variant, Parts };
   DrawingMethod mDrawingMethod;
 
   // mMirroringMethod indicates whether the character is mirrored.
@@ -183,8 +191,6 @@ class nsMathMLChar {
   };
   MirroringMethod mMirroringMethod;
 
-  nscoord mItalicCorrection = 0;
-
   class StretchEnumContext;
   friend class StretchEnumContext;
 
@@ -197,11 +203,11 @@ class nsMathMLChar {
 
   nsresult StretchInternal(nsIFrame* aForFrame, DrawTarget* aDrawTarget,
                            float aFontSizeInflation,
-                           StretchDirection& aStretchDirection,
+                           nsStretchDirection& aStretchDirection,
                            const nsBoundingMetrics& aContainerSize,
                            nsBoundingMetrics& aDesiredStretchSize,
-                           MathMLStretchFlags aStretchFlags,
-                           float aMaxSize = kMathMLOperatorSizeInfinity,
+                           uint32_t aStretchHint,
+                           float aMaxSize = NS_MATHML_OPERATOR_SIZE_INFINITY,
                            bool aMaxSizeIsAbsolute = false);
 
   nsresult PaintVertically(nsPresContext* aPresContext,
@@ -216,4 +222,4 @@ class nsMathMLChar {
                        nsRect& r);
 };
 
-#endif /* nsMathMLChar_h_ */
+#endif /* nsMathMLChar_h___ */

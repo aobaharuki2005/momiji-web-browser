@@ -31,7 +31,7 @@ data class TabPartition(
 data class TabGroup(
     val id: String = UUID.randomUUID().toString(),
     val name: String = "",
-    val tabIds: Set<String> = emptySet(),
+    val tabIds: List<String> = emptyList(),
 )
 
 /**

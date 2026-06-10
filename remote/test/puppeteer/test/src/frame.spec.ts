@@ -14,7 +14,6 @@ import {
   attachFrame,
   detachFrame,
   dumpFrames,
-  html,
   navigateFrame,
   waitEvent,
 } from './utils.js';
@@ -324,11 +323,11 @@ describe('Frame specs', function () {
 
     it('should handle shadow roots', async () => {
       const {page} = await getTestState();
-      await page.setContent(html`
+      await page.setContent(`
         <div id="shadow-host"></div>
         <script>
           const host = document.getElementById('shadow-host');
-          const shadowRoot = host.attachShadow({mode: 'closed'});
+          const shadowRoot = host.attachShadow({ mode: 'closed' });
           const frame = document.createElement('iframe');
           frame.srcdoc = '<p>Inside frame</p>';
           shadowRoot.appendChild(frame);

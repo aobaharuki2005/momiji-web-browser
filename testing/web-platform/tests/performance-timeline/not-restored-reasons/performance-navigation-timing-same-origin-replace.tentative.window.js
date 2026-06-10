@@ -5,6 +5,7 @@
 // META: script=/common/utils.js
 // META: script=/html/browsers/browsing-the-web/back-forward-cache/resources/rc-helper.js
 // META: script=/html/browsers/browsing-the-web/remote-context-helper/resources/remote-context-helper.js
+// META: script=/websockets/constants.sub.js
 // META: timeout=long
 
 'use strict';
@@ -19,8 +20,8 @@ promise_test(async t => {
     return location.href;
   });
 
-  // Use BFCache blocking feature.
-  await useBFCacheBlockingFeature(rc1);
+  // Use WebSocket to block BFCache.
+  await useWebSocket(rc1);
   // Navigate away.
   const newRemoteContextHelper = await rc1.navigateToNew();
   // Replace the history state to a same-origin site.
@@ -37,6 +38,6 @@ promise_test(async t => {
       /*src=*/ null,
       /*id=*/ null,
       /*name=*/ null,
-      /*reasons=*/[{'reason': BFCACHE_BLOCKING_REASON}],
+      /*reasons=*/[{'reason': 'websocket'}],
       /*children=*/ []);
 });

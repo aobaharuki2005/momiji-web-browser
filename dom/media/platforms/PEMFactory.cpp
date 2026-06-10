@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -189,12 +191,6 @@ void PEMFactory::InitUtilityPEMs() {
             FFmpegRuntimeLinker::CreateEncoder()) {
       mCurrentPEMs.AppendElement(pem);
     }
-  }
-#endif
-
-#ifdef MOZ_WIDGET_ANDROID
-  if (StaticPrefs::media_utility_android_media_codec_enabled()) {
-    mCurrentPEMs.AppendElement(new AndroidEncoderModule());
   }
 #endif
 }
@@ -522,8 +518,10 @@ media::EncodeSupportSet PEMFactory::SupportsCodec(
         return media::MCSInfo::GetEncodeSupportSet(MediaCodec::VP8, aSupported);
       case CodecType::VP9:
         return media::MCSInfo::GetEncodeSupportSet(MediaCodec::VP9, aSupported);
+#ifdef MOZ_AV1
       case CodecType::AV1:
         return media::MCSInfo::GetEncodeSupportSet(MediaCodec::AV1, aSupported);
+#endif
       default:
         break;
     }

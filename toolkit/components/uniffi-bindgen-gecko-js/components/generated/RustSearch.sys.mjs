@@ -75,7 +75,7 @@ export class FfiConverterOptionalString extends FfiConverterArrayBuffer {
 /**
  * The list of possible submission methods for search engine urls.
  */
-export const JsonEngineMethod = Object.freeze({
+export const JsonEngineMethod = {
     /**
      * POST
      */
@@ -84,7 +84,8 @@ export const JsonEngineMethod = Object.freeze({
      * GET
      */
     GET: 1,
-});
+};
+Object.freeze(JsonEngineMethod);
 
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeJSONEngineMethod extends FfiConverterArrayBuffer {
@@ -214,26 +215,22 @@ export class SearchUrlParam {
         }
         /**
          * The name of the parameter in the url.
-         * @type {string}
          */
         this.name = name;
         /**
          * The parameter value, this may be a static value, or additionally contain
          * a parameter replacement, e.g. `{inputEncoding}`. For the partner code
          * parameter, this field should be `{partnerCode}`.
-         * @type {?string}
          */
         this.value = value;
         /**
          * Same as value but only used if Services.polices.isEnterprise is true. Overrides other parameters of the same name.
-         * @type {?string}
          */
         this.enterpriseValue = enterpriseValue;
         /**
          * The value for the parameter will be derived from the equivalent experiment
          * configuration value.
          * Only desktop uses this currently.
-         * @type {?string}
          */
         this.experimentConfig = experimentConfig;
     }
@@ -658,25 +655,21 @@ export class JsonEngineUrl {
          * The PrePath and FilePath of the URL. May include variables for engines
          * which have a variable FilePath, e.g. `{searchTerms}` for when a search
          * term is within the path of the url.
-         * @type {?string}
          */
         this.base = base;
         /**
          * The HTTP method to use to send the request (`GET` or `POST`).
          * If the engine definition has not specified the method, it defaults to GET.
-         * @type {?JsonEngineMethod[keyof JsonEngineMethod]}
          */
         this.method = method;
         /**
          * The parameters for this URL.
-         * @type {?Array.<SearchUrlParam>}
          */
         this.params = params;
         /**
          * The name of the query parameter for the search term. Automatically
          * appended to the end of the query. This may be skipped if `{searchTerms}`
          * is included in the base.
-         * @type {?string}
          */
         this.searchTermParamName = searchTermParamName;
         /**
@@ -685,19 +678,16 @@ export class JsonEngineUrl {
          * name. Since brand names can be localized, this is a map rather than a
          * URL. The client will fall back to the special locale code "default" when
          * its locale is not present in the map.
-         * @type {?object}
          */
         this.displayNameMap = displayNameMap;
         /**
          * Indicates the date until which the URL is considered new
          * (format: YYYY-MM-DD).
-         * @type {?string}
          */
         this.isNewUntil = isNewUntil;
         /**
          * Whether the engine's partner code should be excluded from telemetry when
          * this URL is visited.
-         * @type {boolean}
          */
         this.excludePartnerCodeFromTelemetry = excludePartnerCodeFromTelemetry;
         /**
@@ -707,7 +697,6 @@ export class JsonEngineUrl {
          * visual search, which might support certain image types and not others.
          * Consumers can use it to determine whether search UI corresponding to the
          * URL should be shown to the user in a given context.
-         * @type {?Array.<string>}
          */
         this.acceptedContentTypes = acceptedContentTypes;
     }
@@ -932,27 +921,22 @@ export class JsonEngineUrls {
         }
         /**
          * The URL to use for searches.
-         * @type {?JsonEngineUrl}
          */
         this.search = search;
         /**
          * The URL to use for suggestions.
-         * @type {?JsonEngineUrl}
          */
         this.suggestions = suggestions;
         /**
          * The URL to use for trending suggestions.
-         * @type {?JsonEngineUrl}
          */
         this.trending = trending;
         /**
          * The URL of the search engine homepage.
-         * @type {?JsonEngineUrl}
          */
         this.searchForm = searchForm;
         /**
          * The URL to use for visual searches.
-         * @type {?JsonEngineUrl}
          */
         this.visualSearch = visualSearch;
     }
@@ -1048,7 +1032,7 @@ export class FfiConverterTypeJSONEngineUrls extends FfiConverterArrayBuffer {
 /**
  * The list of acceptable classifications for a search engine.
  */
-export const SearchEngineClassification = Object.freeze({
+export const SearchEngineClassification = {
     /**
      * GENERAL
      */
@@ -1057,7 +1041,8 @@ export const SearchEngineClassification = Object.freeze({
      * UNKNOWN
      */
     UNKNOWN: 1,
-});
+};
+Object.freeze(SearchEngineClassification);
 
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeSearchEngineClassification extends FfiConverterArrayBuffer {
@@ -1192,43 +1177,36 @@ export class SearchEngineUrl {
          * The PrePath and FilePath of the URL. May include variables for engines
          * which have a variable FilePath, e.g. `{searchTerms}` for when a search
          * term is within the path of the url.
-         * @type {string}
          */
         this.base = base;
         /**
          * The HTTP method to use to send the request (`GET` or `POST`).
          * If the engine definition has not specified the method, it defaults to GET.
-         * @type {string}
          */
         this.method = method;
         /**
          * The parameters for this URL.
-         * @type {Array.<SearchUrlParam>}
          */
         this.params = params;
         /**
          * The name of the query parameter for the search term. Automatically
          * appended to the end of the query. This may be skipped if `{searchTerms}`
          * is included in the base.
-         * @type {?string}
          */
         this.searchTermParamName = searchTermParamName;
         /**
          * The display name of the URL, if any. This is useful if the URL
          * corresponds to a brand name distinct from the engine's brand name.
-         * @type {?string}
          */
         this.displayName = displayName;
         /**
          * Indicates the date until which the URL is considered new
          * (format: YYYY-MM-DD).
-         * @type {?string}
          */
         this.isNewUntil = isNewUntil;
         /**
          * Whether the engine's partner code should be excluded from telemetry when
          * this URL is visited.
-         * @type {boolean}
          */
         this.excludePartnerCodeFromTelemetry = excludePartnerCodeFromTelemetry;
         /**
@@ -1238,7 +1216,6 @@ export class SearchEngineUrl {
          * which might support certain image types and not others. Consumers can
          * use it to determine whether search UI corresponding to the URL should be
          * shown to the user in a given context.
-         * @type {?Array.<string>}
          */
         this.acceptedContentTypes = acceptedContentTypes;
     }
@@ -1463,27 +1440,22 @@ export class SearchEngineUrls {
         }
         /**
          * The URL to use for searches.
-         * @type {SearchEngineUrl}
          */
         this.search = search;
         /**
          * The URL to use for suggestions.
-         * @type {?SearchEngineUrl}
          */
         this.suggestions = suggestions;
         /**
          * The URL to use for trending suggestions.
-         * @type {?SearchEngineUrl}
          */
         this.trending = trending;
         /**
          * The URL of the search engine homepage.
-         * @type {?SearchEngineUrl}
          */
         this.searchForm = searchForm;
         /**
          * The URL to use for visual searches.
-         * @type {?SearchEngineUrl}
          */
         this.visualSearch = visualSearch;
     }
@@ -1744,12 +1716,10 @@ export class SearchEngineDefinition {
         }
         /**
          * A list of aliases for this engine.
-         * @type {Array.<string>}
          */
         this.aliases = aliases;
         /**
          * The character set this engine uses for queries.
-         * @type {string}
          */
         this.charset = charset;
         /**
@@ -1758,50 +1728,42 @@ export class SearchEngineDefinition {
          * a general search engine is supported.
          * On Android, only general search engines may be selected as "default"
          * search engines.
-         * @type {SearchEngineClassification[keyof SearchEngineClassification]}
          */
         this.classification = classification;
         /**
          * The identifier of the search engine. This is used as an internal
          * identifier, e.g. for saving the user's settings for the engine. It is
          * also used to form the base telemetry id and may be extended by telemetrySuffix.
-         * @type {string}
          */
         this.identifier = identifier;
         /**
          * Indicates the date until which the engine variant or subvariant is considered new
          * (format: YYYY-MM-DD).
-         * @type {?string}
          */
         this.isNewUntil = isNewUntil;
         /**
          * The user visible name of the search engine.
-         * @type {string}
          */
         this.name = name;
         /**
          * This search engine is presented as an option that the user may enable.
          * The application should not include these in the default list of the
          * user's engines. If not supported, it should filter them out.
-         * @type {boolean}
          */
         this.optional = optional;
         /**
          * The partner code for the engine. This will be inserted into parameters
          * which include `{partnerCode}`. May be the empty string.
-         * @type {string}
          */
         this.partnerCode = partnerCode;
         /**
          * Optional suffix that is appended to the search engine identifier
          * following a dash, i.e. `<identifier>-<suffix>`. If it is an empty string
          * no dash should be appended.
-         * @type {string}
          */
         this.telemetrySuffix = telemetrySuffix;
         /**
          * The URLs associated with the search engine.
-         * @type {SearchEngineUrls}
          */
         this.urls = urls;
         /**
@@ -1810,12 +1772,10 @@ export class SearchEngineDefinition {
          * The higher the number, the nearer to the front it should be.
          * If the number is not specified, other methods of sorting may be relied
          * upon (e.g. alphabetical).
-         * @type {?number}
          */
         this.orderHint = orderHint;
         /**
          * The url used for reporting clicks.
-         * @type {?string}
          */
         this.clickUrl = clickUrl;
     }
@@ -2088,7 +2048,6 @@ export class RefinedSearchConfig {
          * * Application Default Engine for Private Mode (if specified & different)
          * * Engines sorted by descending `SearchEngineDefinition.orderHint`
          * * Any other engines in alphabetical order (locale based comparison)
-         * @type {Array.<SearchEngineDefinition>}
          */
         this.engines = engines;
         /**
@@ -2096,14 +2055,12 @@ export class RefinedSearchConfig {
          * default engine. If this is undefined, an error has occurred, and the
          * application should either default to the first engine in the engines
          * list or otherwise handle appropriately.
-         * @type {?string}
          */
         this.appDefaultEngineId = appDefaultEngineId;
         /**
          * If specified, the identifier of the engine that should be used for the
          * application default engine in private browsing mode.
          * Only desktop uses this currently.
-         * @type {?string}
          */
         this.appPrivateDefaultEngineId = appPrivateDefaultEngineId;
     }
@@ -2176,7 +2133,7 @@ export class FfiConverterTypeRefinedSearchConfig extends FfiConverterArrayBuffer
  * The list of possible update channels for a user's build.
  * Use `default` for a self-build or an unknown channel.
  */
-export const SearchUpdateChannel = Object.freeze({
+export const SearchUpdateChannel = {
     /**
      * NIGHTLY
      */
@@ -2201,7 +2158,8 @@ export const SearchUpdateChannel = Object.freeze({
      * DEFAULT
      */
     DEFAULT: 6,
-});
+};
+Object.freeze(SearchUpdateChannel);
 
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeSearchUpdateChannel extends FfiConverterArrayBuffer {
@@ -2271,7 +2229,7 @@ export class FfiConverterTypeSearchUpdateChannel extends FfiConverterArrayBuffer
 /**
  * The list of possible application names that are currently supported.
  */
-export const SearchApplicationName = Object.freeze({
+export const SearchApplicationName = {
     /**
      * FIREFOX_ANDROID
      */
@@ -2292,7 +2250,8 @@ export const SearchApplicationName = Object.freeze({
      * FIREFOX
      */
     FIREFOX: 5,
-});
+};
+Object.freeze(SearchApplicationName);
 
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeSearchApplicationName extends FfiConverterArrayBuffer {
@@ -2356,7 +2315,7 @@ export class FfiConverterTypeSearchApplicationName extends FfiConverterArrayBuff
 /**
  * SearchDeviceType
  */
-export const SearchDeviceType = Object.freeze({
+export const SearchDeviceType = {
     /**
      * SMARTPHONE
      */
@@ -2369,7 +2328,8 @@ export const SearchDeviceType = Object.freeze({
      * NONE
      */
     NONE: 3,
-});
+};
+Object.freeze(SearchDeviceType);
 
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeSearchDeviceType extends FfiConverterArrayBuffer {
@@ -2508,45 +2468,37 @@ export class SearchUserEnvironment {
         }
         /**
          * The current locale of the application that the user is using.
-         * @type {string}
          */
         this.locale = locale;
         /**
          * The home region that the user is currently identified as being within.
          * On desktop & android there is a 14 day lag after detecting a region
          * change before the home region changes. TBD: iOS?
-         * @type {string}
          */
         this.region = region;
         /**
          * The update channel of the user's build.
-         * @type {SearchUpdateChannel[keyof SearchUpdateChannel]}
          */
         this.updateChannel = updateChannel;
         /**
          * The distribution id for the user's build.
-         * @type {string}
          */
         this.distributionId = distributionId;
         /**
          * The search related experiment id that the user is included within. On
          * desktop this is the `searchConfiguration.experiment` variable.
-         * @type {string}
          */
         this.experiment = experiment;
         /**
          * The application name that the user is using.
-         * @type {SearchApplicationName[keyof SearchApplicationName]}
          */
         this.appName = appName;
         /**
          * The application version that the user is using.
-         * @type {string}
          */
         this.version = version;
         /**
          * The device type that the user is using.
-         * @type {SearchDeviceType[keyof SearchDeviceType]}
          */
         this.deviceType = deviceType;
     }
@@ -2830,7 +2782,7 @@ export class SearchEngineSelector extends SearchEngineSelectorInterface {
     static init() {
        
         const result = UniFFIScaffolding.callSync(
-            88, // uniffi_search_fn_constructor_searchengineselector_new
+            78, // uniffi_search_fn_constructor_searchengineselector_new
         )
         return handleRustResult(
             result,
@@ -2847,7 +2799,7 @@ export class SearchEngineSelector extends SearchEngineSelectorInterface {
     clearSearchConfig() {
        
         const result = UniFFIScaffolding.callSync(
-            89, // uniffi_search_fn_method_searchengineselector_clear_search_config
+            79, // uniffi_search_fn_method_searchengineselector_clear_search_config
             FfiConverterTypeSearchEngineSelector.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2869,7 +2821,7 @@ export class SearchEngineSelector extends SearchEngineSelectorInterface {
        
         FfiConverterTypeSearchUserEnvironment.checkType(userEnvironment);
         const result = UniFFIScaffolding.callSync(
-            90, // uniffi_search_fn_method_searchengineselector_filter_engine_configuration
+            80, // uniffi_search_fn_method_searchengineselector_filter_engine_configuration
             FfiConverterTypeSearchEngineSelector.lowerReceiver(this),
             FfiConverterTypeSearchUserEnvironment.lower(userEnvironment),
         )
@@ -2889,7 +2841,7 @@ export class SearchEngineSelector extends SearchEngineSelectorInterface {
        
         FfiConverterString.checkType(overrides);
         const result = UniFFIScaffolding.callSync(
-            91, // uniffi_search_fn_method_searchengineselector_set_config_overrides
+            81, // uniffi_search_fn_method_searchengineselector_set_config_overrides
             FfiConverterTypeSearchEngineSelector.lowerReceiver(this),
             FfiConverterString.lower(overrides),
         )
@@ -2913,7 +2865,7 @@ export class SearchEngineSelector extends SearchEngineSelectorInterface {
        
         FfiConverterString.checkType(configuration);
         const result = UniFFIScaffolding.callSync(
-            92, // uniffi_search_fn_method_searchengineselector_set_search_config
+            82, // uniffi_search_fn_method_searchengineselector_set_search_config
             FfiConverterTypeSearchEngineSelector.lowerReceiver(this),
             FfiConverterString.lower(configuration),
         )
@@ -2944,7 +2896,7 @@ export class SearchEngineSelector extends SearchEngineSelectorInterface {
         FfiConverterTypeRemoteSettingsService.checkType(service);
         FfiConverterBoolean.checkType(applyEngineOverrides);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            93, // uniffi_search_fn_method_searchengineselector_use_remote_settings_server
+            83, // uniffi_search_fn_method_searchengineselector_use_remote_settings_server
             FfiConverterTypeSearchEngineSelector.lowerReceiver(this),
             FfiConverterTypeRemoteSettingsService.lower(service),
             FfiConverterBoolean.lower(applyEngineOverrides),

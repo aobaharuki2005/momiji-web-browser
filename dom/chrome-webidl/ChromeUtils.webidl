@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -286,31 +287,6 @@ namespace ChromeUtils {
   undefined invalidateResourceCache();
 
   /**
-   * Get the script source for the in-memory cached JavaScript.
-   * Returns an empty string if the cache is not found.
-   *
-   * The key parameter should be the data parameter passed to the
-   * http-on-resource-cache-response observer notification, and uri and
-   * hintCharset parameters should be extracted from the channel
-   * of the notification.
-   * nonce and hintCharset should be empty strings if they're not set for the
-   * channel.
-   *
-   * If the cached entry has already been cleared, for example by
-   * `clearResourceCache` above, this returns undefined.
-   *
-   * For cached entries invalidated with `invalidateResourceCache` above,
-   * this API doesn't check the state nor re-validate, and just returns the
-   * script source.
-   *
-   * This function uses `any` as the return value to avoid the
-   * JS::Value -> Gecko String -> JS::Value turnaround.
-   */
-  [Throws]
-  any getCachedJavaScriptSource(UTF8String key, UTF8String uri,
-                                UTF8String hintCharset);
-
-  /**
    * Clears the bfcache (backward-forward cache)
    */
   [Throws]
@@ -345,68 +321,11 @@ namespace ChromeUtils {
    *                          object that can contain startTime, captureStack or
    *                          category fields. If this parameter is omitted, the marker
    *                          will have no duration.
-   * @param data              Text or object to associate with the marker.
-   *                          - If a string, creates a Text marker (for simple annotations)
-   *                          - If an object, must include a "type" field matching a
-   *                            registered schema name
-   *
-   * Example with object data:
-   *   ChromeUtils.addProfilerMarker("MyOperation", {}, {
-   *     type: "CustomOperation",
-   *     status: "completed",
-   *     itemCount: 42
-   *   });
+   * @param text              Text to associate with the marker.
    */
   undefined addProfilerMarker(UTF8String name,
                               optional (ProfilerMarkerOptions or double) options = {},
-                              optional (UTF8String or object) data);
-
-  /**
-   * Register a custom marker schema for use with the profiler.
-   *
-   * The schema defines how markers with a given "type" field should be displayed
-   * in the Firefox Profiler UI. Schemas are automatically included in captured
-   * profiles and used by the profiler frontend to render custom markers.
-   *
-   * @param schema   An object with the following structure:
-   *   - name {string}:     Required. The marker type name (must match the "type"
-   *                        field in marker data objects)
-   *   - display {string[]}: Where to show the marker. Typical values:
-   *                        ["marker-chart", "marker-table"]
-   *   - data {object[]}:   Array of field definitions, each with:
-   *     - key {string}:    Field name in the marker data
-   *     - label {string}:  Display label in the UI
-   *     - format {string}: How to display the value. Common formats:
-   *                        "string", "integer", "decimal", "bytes",
-   *                        "duration" (in ms), "url", "file-path"
-   *     - searchable {boolean}: Optional. Whether the field is searchable in UI
-   *
-   * Example:
-   *   ChromeUtils.registerMarkerSchema({
-   *     name: "CustomOperation",
-   *     display: ["marker-chart", "marker-table"],
-   *     data: [
-   *       { key: "status", label: "Status", format: "string" },
-   *       { key: "itemCount", label: "Items Processed", format: "integer" },
-   *       { key: "duration", label: "Duration", format: "duration" }
-   *     ]
-   *   });
-   *
-   * After registering this schema, you can add markers with:
-   *   ChromeUtils.addProfilerMarker("MyOperation", {}, {
-   *     type: "CustomOperation",
-   *     status: "completed",
-   *     itemCount: 42,
-   *     duration: 15.5
-   *   });
-   *
-   * Note: If a marker's "type" field doesn't match any registered schema,
-   * the profiler will still capture the marker but it may not display optimally
-   * in the UI. No validation is performed - invalid schemas will be included
-   * in the profile output as-is.
-   */
-  [Throws]
-  undefined registerMarkerSchema(object schema);
+                              optional UTF8String text);
 
   /**
    * Return the symbolic name of any given XPCOM error code (nsresult):
@@ -950,38 +869,6 @@ partial namespace ChromeUtils {
   // or null if no OOM stack trace is available. The stack trace shows the JavaScript
   // call stack at the time the out-of-memory condition occurred
   DOMString getLastOOMStackTrace();
-
-  /**
-   * Given a URI to be loaded, predict a remote type which is reasonable to
-   * start the load within. A null `uri` argument is treated as about:blank.
-   *
-   * This is not guaranteed to be the same remoteType as will be used to
-   * complete the navigation, as that can only be known when the network
-   * response is received.
-   *
-   * In general, the remote type returned here is used to initialize the initial
-   * remote type for a newly created <browser> element to avoid unnecessary
-   * process creation or switches.
-   *
-   * See PredictRemoteTypeOptions for documentation on additional flags. While
-   * these are technically optional, not providing them can often lead to
-   * incorrect predictions.
-   *
-   * NOTE: Because it's a pain to change, `null` (a.k.a. E10SUtils.NOT_REMOTE)
-   * is a remote type indicating the parent process, and must not be used to
-   * indicate the absence of a remote type.
-   */
-  [Throws]
-  UTF8String? predictRemoteTypeForURI(URI? uri,
-                                      optional PredictRemoteTypeOptions options = {});
-
-  /**
-   * Like predictRemoteTypeForURI(URI uri), except will attempt to parse (with
-   * uri fixup) the given URI string, and use that for predicting.
-   */
-  [Throws]
-  UTF8String? predictRemoteTypeForURI(UTF8String uriString,
-                                      optional PredictRemoteTypeOptions options = {});
 };
 
 /*
@@ -1059,7 +946,6 @@ enum WebIDLUtilityActorName {
   "jSOracle",
   "windowsUtils",
   "windowsFileDialog",
-  "pkcs11Module",
 };
 
 dictionary UtilityActorsDictionary {
@@ -1151,6 +1037,45 @@ dictionary ParentProcInfoDictionary {
   // Type of this parent process.
   // As of this writing, this is always `browser`.
   WebIDLProcType type = "browser";
+};
+
+/**
+ * Used by principals and the script security manager to represent origin
+ * attributes. The first dictionary is designed to contain the full set of
+ * OriginAttributes, the second is used for pattern-matching (i.e. does this
+ * OriginAttributesDictionary match the non-empty attributes in this pattern).
+ *
+ * IMPORTANT: If you add any members here, you need to do the following:
+ * (1) Add them to both dictionaries.
+ * (2) Update the methods on mozilla::OriginAttributes, including equality,
+ *     serialization, deserialization, and inheritance.
+ * (3) Update the methods on mozilla::OriginAttributesPattern, including matching.
+ */
+[GenerateInitFromJSON, GenerateEqualityOperator]
+dictionary OriginAttributesDictionary {
+  unsigned long userContextId = 0;
+  unsigned long privateBrowsingId = 0;
+  DOMString firstPartyDomain = "";
+  DOMString geckoViewSessionContextId = "";
+  DOMString partitionKey = "";
+};
+
+[GenerateInitFromJSON, GenerateToJSON]
+dictionary OriginAttributesPatternDictionary {
+  unsigned long userContextId;
+  unsigned long privateBrowsingId;
+  DOMString firstPartyDomain;
+  DOMString geckoViewSessionContextId;
+  // partitionKey takes precedence over partitionKeyPattern.
+  DOMString partitionKey;
+  PartitionKeyPatternDictionary partitionKeyPattern;
+};
+
+dictionary PartitionKeyPatternDictionary {
+  DOMString scheme;
+  DOMString baseDomain;
+  long port;
+  boolean foreignByAncestorContext;
 };
 
 dictionary CompileScriptOptionsDictionary {
@@ -1319,7 +1244,6 @@ dictionary LibcConstants {
   long O_CREAT;
   long O_NONBLOCK;
   long O_WRONLY;
-  long O_CLOEXEC;
 
   long POLLIN;
   long POLLOUT;
@@ -1331,7 +1255,6 @@ dictionary LibcConstants {
 
 #ifdef XP_LINUX
   long PR_CAPBSET_READ;
-  long O_PATH;
 #endif
 };
 #endif
@@ -1358,47 +1281,4 @@ dictionary HTTPCacheControlParseResult {
   boolean public = false;
   boolean private = false;
   boolean immutable = false;
-};
-
-dictionary PredictRemoteTypeOptions {
-  /**
-   * The chrome window where this load will be performed.
-   */
-  Window? window = null;
-
-  /**
-   * If specified, this remote type is "preferred" when the final remote type
-   * would otherwise be ambiguous. This is generally only specified if a process
-   * with the given remote type is known to already be launched.
-   */
-  UTF8String? preferredRemoteType;
-
-  /**
-   * Which container the load will be performed in.
-   */
-  unsigned long userContextId = 0;
-  DOMString geckoViewSessionContextId = "";
-
-  /**
-   * The private browsing state of the context where the load will occur.
-   * If not provided, this will be inferred from the window.
-   */
-  unsigned long privateBrowsingId;
-
-  /**
-   * Specify whether or not the BrowsingContext which this remote type will be
-   * used in has `useRemoteTabs` enabled. If it does not, this method will only
-   * return `NOT_REMOTE_TYPE`. Usually inferred from the window.
-   */
-  boolean useRemoteTabs;
-
-  /**
-   * Specify whether or not the BrowsingContext which this remote type will be
-   * used in has 'useRemoteSubframes' enabled, and therefore can perform
-   * per-origin isolation. Usually inferred from the window.
-   *
-   * NOTE: This method respects the fission.webContentIsolationStrategy
-   * preference, which may disable per-origin isolation.
-   */
-  boolean useRemoteSubframes;
 };

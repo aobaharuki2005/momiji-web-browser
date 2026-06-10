@@ -125,18 +125,19 @@ void ExecuteDifferWrapperCase(BlackWhiteDesktopFramePainter* frame_painter,
   EXPECT_CALL(*callback, OnCaptureResultPtr(DesktopCapturer::Result::SUCCESS,
                                             ::testing::_))
       .Times(1)
-      .WillOnce([&updated_region, check_result, exactly_match](
-                    DesktopCapturer::Result result,
-                    std::unique_ptr<DesktopFrame>* frame) {
-        ASSERT_EQ(result, DesktopCapturer::Result::SUCCESS);
-        if (check_result) {
-          if (exactly_match) {
-            AssertUpdatedRegionIs(**frame, updated_region);
-          } else {
-            AssertUpdatedRegionCovers(**frame, updated_region);
-          }
-        }
-      });
+      .WillOnce(
+          ::testing::Invoke([&updated_region, check_result, exactly_match](
+                                DesktopCapturer::Result result,
+                                std::unique_ptr<DesktopFrame>* frame) {
+            ASSERT_EQ(result, DesktopCapturer::Result::SUCCESS);
+            if (check_result) {
+              if (exactly_match) {
+                AssertUpdatedRegionIs(**frame, updated_region);
+              } else {
+                AssertUpdatedRegionCovers(**frame, updated_region);
+              }
+            }
+          }));
   for (const auto& rect : updated_region) {
     frame_painter->updated_region()->AddRect(rect);
   }
@@ -177,12 +178,12 @@ void ExecuteDifferWrapperTest(Clock* clock,
   EXPECT_CALL(callback, OnCaptureResultPtr(DesktopCapturer::Result::SUCCESS,
                                            ::testing::_))
       .Times(1)
-      .WillOnce([](DesktopCapturer::Result result,
-                   std::unique_ptr<DesktopFrame>* frame) {
+      .WillOnce(::testing::Invoke([](DesktopCapturer::Result result,
+                                     std::unique_ptr<DesktopFrame>* frame) {
         ASSERT_EQ(result, DesktopCapturer::Result::SUCCESS);
         AssertUpdatedRegionIs(**frame,
                               {DesktopRect::MakeSize((*frame)->size())});
-      });
+      }));
   capturer.CaptureFrame();
 
   ExecuteDifferWrapperCase(&frame_painter, &capturer, &callback,

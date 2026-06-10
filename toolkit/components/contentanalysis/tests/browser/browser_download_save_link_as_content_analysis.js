@@ -37,7 +37,7 @@ function setupMockFilePicker() {
   }
 
   let MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
   registerCleanupFunction(function () {
     MockFilePicker.cleanup();
 

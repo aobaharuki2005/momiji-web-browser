@@ -4,10 +4,10 @@
 
 .extension-controlled-message-bar,
 .reenable-extensions-message-bar {
-  margin-block-end: var(--space-large);
+  margin-block: var(--space-large);
 }
 
-setting-control[hidden]:has(> moz-message-bar):not([slot="nested"], :last-child) {
+setting-control[hidden]:has(> moz-message-bar):not([slot="nested"]) {
   display: block;
   margin-block-start: calc(-1 * var(--space-large));
 }

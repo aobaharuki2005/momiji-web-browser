@@ -4,8 +4,6 @@ const { AboutMessagePreviewParent } = ChromeUtils.importESModule(
   "resource:///actors/AboutWelcomeParent.sys.mjs"
 );
 
-let messageSandbox;
-
 const TEST_CFR_MESSAGE = {
   content: {
     text: {
@@ -59,31 +57,25 @@ const TEST_CFR_MESSAGE = {
   id: "CFR_FULL_VIDEO_SUPPORT_EN",
 };
 
-add_setup(async function () {
-  messageSandbox = sinon.createSandbox();
-  registerCleanupFunction(() => {
-    messageSandbox.restore();
-  });
-});
-
 add_task(async function test_show_cfr_message() {
+  const messageSandbox = sinon.createSandbox();
   let { cleanup, browser } = await openMessagePreviewTab();
   let aboutMessagePreviewActor = await getAboutMessagePreviewParent(browser);
   messageSandbox.spy(aboutMessagePreviewActor, "showMessage");
+  registerCleanupFunction(() => {
+    messageSandbox.restore();
+  });
 
-  const popupPromise = BrowserTestUtils.waitForEvent(
-    PopupNotifications.panel,
-    "popupshown"
-  );
-  await SpecialPowers.spawn(browser, [TEST_CFR_MESSAGE], message =>
-    content.wrappedJSObject.MPShowMessage(JSON.stringify(message))
-  );
+  await aboutMessagePreviewActor.receiveMessage({
+    name: "MessagePreview:SHOW_MESSAGE",
+    data: JSON.stringify(TEST_CFR_MESSAGE),
+  });
 
   const { callCount } = aboutMessagePreviewActor.showMessage;
   Assert.greaterOrEqual(callCount, 1, "showMessage was called");
 
   // Wait for the CFR to show
-  await popupPromise;
+  await BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
 
   Assert.strictEqual(
     document.getElementById("contextual-feature-recommendation-notification")
@@ -93,6 +85,5 @@ add_task(async function test_show_cfr_message() {
   );
 
   await clearNotifications();
-  messageSandbox.restore();
   await cleanup();
 });

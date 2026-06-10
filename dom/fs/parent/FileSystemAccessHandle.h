@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 #define DOM_FS_PARENT_FILESYSTEMACCESSHANDLE_H_
 
 #include "FileSystemStreamCallbacks.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
@@ -94,7 +95,7 @@ class FileSystemAccessHandle : public FileSystemStreamCallbacks {
   const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;
   FileSystemAccessHandleParent* mActor;
   FileSystemAccessHandleControlParent* mControlActor;
-  Atomic<uint32_t, ReleaseAcquire> mRegCount;
+  nsAutoRefCnt mRegCount;
   bool mLocked;
   bool mRegistered;
   bool mClosed;

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -391,7 +393,7 @@ bool ChannelMach::ProcessIncomingMessage() {
 
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
   DLOG(INFO) << "received message on channel @" << this << " with type "
-             << message->type();
+             << m.type();
 #endif
 
   if (message->routing_id() == MSG_ROUTING_NONE &&
@@ -422,7 +424,7 @@ bool ChannelMach::ProcessIncomingMessage() {
     }
 #ifdef XP_MACOSX
     if (XRE_IsParentProcess() &&
-        ((pid_t) trailer->msgh_audit.val[5]) != other_pid) {
+        audit_token_to_pid(trailer->msgh_audit) != other_pid) {
       CHROMIUM_LOG(ERROR) << "audit token does not correspond to given pid";
       return false;
     }

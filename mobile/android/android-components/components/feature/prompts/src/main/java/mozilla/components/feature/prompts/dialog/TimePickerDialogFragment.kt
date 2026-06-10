@@ -167,6 +167,9 @@ internal class TimePickerDialogFragment :
 
         datePicker.addOnPositiveButtonClickListener { selection ->
             if (isDateTimePicker) {
+                // For the date-time picker, we dismiss the date picker first
+                // and then show the time picker.
+                datePicker.dismiss()
                 createMaterialTimePickerDialog(selection)
             } else {
                 // For the date-only picker, we confirm the selection and dismiss everything.
@@ -174,19 +177,17 @@ internal class TimePickerDialogFragment :
 
                 selectedDate = Date(millis)
                 feature?.onConfirm(sessionId, promptRequestUID, selectedDate)
+                datePicker.dismiss()
+                dismissAllowingStateLoss()
             }
         }
         datePicker.addOnNegativeButtonClickListener {
             feature?.onCancel(sessionId, promptRequestUID)
+            dismiss()
         }
         datePicker.addOnCancelListener {
             feature?.onCancel(sessionId, promptRequestUID)
-        }
-        datePicker.addOnDismissListener {
-            // Only dismiss parent if we're not showing time picker
-            if (!isDateTimePicker && isAdded) {
-                dismissAllowingStateLoss()
-            }
+            dismiss()
         }
         datePicker.show(parentFragmentManager, datePicker.toString())
     }

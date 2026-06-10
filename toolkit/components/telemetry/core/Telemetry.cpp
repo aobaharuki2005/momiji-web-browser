@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -55,8 +57,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFileStreams.h"
 #include "nsIMemoryReporter.h"
-#include "nsIObserver.h"
-#include "nsIObserverService.h"
 #include "nsISeekableStream.h"
 #include "nsITelemetry.h"
 #if defined(XP_WIN)
@@ -110,13 +110,10 @@ void ClearIOReporting() {
   sTelemetryIOObserver = nullptr;
 }
 
-class TelemetryImpl final : public nsITelemetry,
-                            public nsIMemoryReporter,
-                            public nsIObserver {
+class TelemetryImpl final : public nsITelemetry, public nsIMemoryReporter {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITELEMETRY
   NS_DECL_NSIMEMORYREPORTER
-  NS_DECL_NSIOBSERVER
 
  public:
   void InitMemoryReporter();
@@ -171,7 +168,6 @@ class TelemetryImpl final : public nsITelemetry,
   Mutex mHashMutex MOZ_UNANNOTATED;
   Atomic<bool, SequentiallyConsistent> mCanRecordBase;
   Atomic<bool, SequentiallyConsistent> mCanRecordExtended;
-  RefPtr<MemoryTelemetry> mMemoryTelemetry;
 
   bool mCachedTelemetryData;
   uint32_t mLastShutdownTime;
@@ -180,8 +176,8 @@ class TelemetryImpl final : public nsITelemetry,
   friend class nsFetchTelemetryData;
 };
 
-constinit StaticDataMutex<TelemetryImpl*> TelemetryImpl::sTelemetry(nullptr,
-                                                                    nullptr);
+MOZ_RUNINIT StaticDataMutex<TelemetryImpl*> TelemetryImpl::sTelemetry(nullptr,
+                                                                      nullptr);
 
 MOZ_DEFINE_MALLOC_SIZE_OF(TelemetryMallocSizeOf)
 
@@ -504,7 +500,7 @@ bool TelemetryImpl::ReflectSQL(const SlowSQLEntryType* entry, const Stat* stat,
                                JSContext* cx, JS::Handle<JSObject*> obj) {
   if (stat->hitCount == 0) return true;
 
-  nsPromiseFlatCString sql(entry->GetKey());
+  const nsACString& sql = entry->GetKey();
 
   JS::Rooted<JSObject*> arrayObj(cx, JS::NewArrayObject(cx, 0));
   if (!arrayObj) {
@@ -513,7 +509,8 @@ bool TelemetryImpl::ReflectSQL(const SlowSQLEntryType* entry, const Stat* stat,
   return (
       JS_DefineElement(cx, arrayObj, 0, stat->hitCount, JSPROP_ENUMERATE) &&
       JS_DefineElement(cx, arrayObj, 1, stat->totalTime, JSPROP_ENUMERATE) &&
-      JS_DefineProperty(cx, obj, sql.get(), arrayObj, JSPROP_ENUMERATE));
+      JS_DefineProperty(cx, obj, sql.BeginReading(), arrayObj,
+                        JSPROP_ENUMERATE));
 }
 
 bool TelemetryImpl::ReflectMainThreadSQL(SlowSQLEntryType* entry, JSContext* cx,
@@ -1021,8 +1018,6 @@ static const TrackedDBEntry kTrackedDBPrefixes[] = {
 
 #undef TRACKEDDB_ENTRY
 
-static constexpr const char* kTopicShutdown = "content-child-shutdown";
-
 // Slow SQL statements will be automatically
 // trimmed to kMaxSlowStatementLength characters.
 // This limit doesn't include the ellipsis and DB name,
@@ -1113,7 +1108,7 @@ bool TelemetryImpl::CanRecordReleaseData() { return CanRecordBase(); }
 
 bool TelemetryImpl::CanRecordPrereleaseData() { return CanRecordExtended(); }
 
-NS_IMPL_ISUPPORTS(TelemetryImpl, nsITelemetry, nsIMemoryReporter, nsIObserver)
+NS_IMPL_ISUPPORTS(TelemetryImpl, nsITelemetry, nsIMemoryReporter)
 
 NS_IMETHODIMP
 TelemetryImpl::GetFileIOReports(JSContext* cx,
@@ -1212,60 +1207,32 @@ TelemetryImpl::FlushBatchedChildTelemetry() {
 
 NS_IMETHODIMP
 TelemetryImpl::EarlyInit() {
-  if (mMemoryTelemetry) {
-    // Don't do anything if EarlyInit ran already.
-    return NS_OK;
-  }
-  mMemoryTelemetry = MemoryTelemetry::Create();
-  MOZ_ASSERT(mMemoryTelemetry);
-
-  if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    MOZ_RELEASE_ASSERT(obs);
-
-    obs->AddObserver(this, kTopicShutdown, false);
-  }
+  (void)MemoryTelemetry::Get();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TelemetryImpl::DelayedInit() {
-  if (!mMemoryTelemetry) {
-    return NS_ERROR_FAILURE;
-  }
-  mMemoryTelemetry->DelayedInit();
+  MemoryTelemetry::Get().DelayedInit();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TelemetryImpl::Shutdown() {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  MOZ_RELEASE_ASSERT(obs);
-  obs->RemoveObserver(this, kTopicShutdown);
-
-  if (!mMemoryTelemetry) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mMemoryTelemetry->Shutdown();
-  mMemoryTelemetry = nullptr;
+  MemoryTelemetry::Get().Shutdown();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TelemetryImpl::GatherMemory(JSContext* aCx, Promise** aResult) {
-  if (!mMemoryTelemetry) {
-    return NS_ERROR_FAILURE;
-  }
-
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
 
-  mMemoryTelemetry->GatherReports(
+  MemoryTelemetry::Get().GatherReports(
       [promise]() { promise->MaybeResolve(JS::UndefinedHandleValue); });
 
   promise.forget(aResult);
@@ -1307,14 +1274,6 @@ TelemetryImpl::GetAllStores(JSContext* aCx,
   }
   aResult.setObject(*rarray);
 
-  return NS_OK;
-}
-
-nsresult TelemetryImpl::Observe(nsISupports* aSubject, const char* aTopic,
-                                const char16_t* aData) {
-  if (strcmp(aTopic, kTopicShutdown) == 0) {
-    FlushBatchedChildTelemetry();
-  }
   return NS_OK;
 }
 

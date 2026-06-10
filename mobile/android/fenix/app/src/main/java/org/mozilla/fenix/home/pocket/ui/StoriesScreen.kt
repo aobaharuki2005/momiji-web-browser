@@ -13,11 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,7 +35,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.appstate.recommendations.ContentRecommendationsState
 import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.home.pocket.interactor.PocketStoriesInteractor
-import org.mozilla.fenix.home.ui.LeftChevronPillButton
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
 
@@ -46,7 +45,6 @@ import mozilla.components.ui.icons.R as iconsR
 @Composable
 fun StoriesScreen(
     state: ContentRecommendationsState,
-    entryPointExperimentEnabled: Boolean,
     interactor: PocketStoriesInteractor,
     onNavigationIconClick: () -> Unit,
 ) {
@@ -62,28 +60,22 @@ fun StoriesScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.stories_screen_text_news),
+                        text = stringResource(R.string.pocket_stories_header_2),
                         style = FirefoxTheme.typography.headline5,
                     )
                 },
                 navigationIcon = {
-                    if (entryPointExperimentEnabled) {
-                        HomeButton(
-                            onClick = onNavigationIconClick,
+                    IconButton(
+                        onClick = onNavigationIconClick,
+                        contentDescription = stringResource(R.string.stories_back_button_content_description),
+                    ) {
+                        Icon(
+                            painter = painterResource(iconsR.drawable.mozac_ic_back_24),
+                            contentDescription = null,
                         )
-                    } else {
-                        IconButton(
-                            onClick = onNavigationIconClick,
-                            contentDescription = stringResource(R.string.stories_back_button_content_description),
-                        ) {
-                            Icon(
-                                painter = painterResource(iconsR.drawable.mozac_ic_back_24),
-                                contentDescription = null,
-                            )
-                        }
                     }
                 },
                 windowInsets = WindowInsets(
@@ -147,10 +139,7 @@ private fun Stories(
     LazyVerticalGrid(
         columns = GridCells.Fixed(columnCount),
         verticalArrangement = Arrangement.spacedBy(verticalPadding),
-        horizontalArrangement = Arrangement.spacedBy(
-            16.dp,
-            alignment = Alignment.CenterHorizontally,
-        ),
+        horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
     ) {
         itemsIndexed(state.pocketStories) { index, story ->
             StoryCard(
@@ -162,40 +151,14 @@ private fun Stories(
 }
 
 @Composable
-private fun HomeButton(onClick: () -> Unit) {
-    LeftChevronPillButton(onClick = onClick) {
-        Icon(
-            painter = painterResource(iconsR.drawable.mozac_ic_home_24),
-            contentDescription = stringResource(R.string.content_description_normal_browsing),
-        )
-    }
-}
-
-@Composable
 @FlexibleWindowLightDarkPreview
-private fun StoriesScreenPreviews() {
+private fun ShortcutsScreenPreviews() {
     FirefoxTheme {
         StoriesScreen(
             state = ContentRecommendationsState(
                 pocketStories = FakeHomepagePreview.stories(),
             ),
             interactor = FakeHomepagePreview.storiesInteractor,
-            entryPointExperimentEnabled = false,
-            onNavigationIconClick = {},
-        )
-    }
-}
-
-@Composable
-@FlexibleWindowLightDarkPreview
-private fun StoriesScreenExperimentPreviews() {
-    FirefoxTheme {
-        StoriesScreen(
-            state = ContentRecommendationsState(
-                pocketStories = FakeHomepagePreview.stories(),
-            ),
-            interactor = FakeHomepagePreview.storiesInteractor,
-            entryPointExperimentEnabled = true,
             onNavigationIconClick = {},
         )
     }

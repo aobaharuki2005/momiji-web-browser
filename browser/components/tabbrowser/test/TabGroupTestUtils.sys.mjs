@@ -81,9 +81,7 @@ export const TabGroupTestUtils = {
       return;
     }
     let removePromise = BrowserTestUtils.waitForEvent(group, "TabGroupRemoved");
-    await group.documentGlobal.gBrowser.removeTabGroup(group, {
-      animate: false,
-    });
+    await group.ownerGlobal.gBrowser.removeTabGroup(group, { animate: false });
     await removePromise;
   },
 

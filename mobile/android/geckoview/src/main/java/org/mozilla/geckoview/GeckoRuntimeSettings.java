@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * vim: ts=4 sw=4 expandtab:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -17,7 +19,6 @@ import androidx.annotation.AnyThread;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.StringDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
@@ -342,7 +343,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     /**
-     * Set whether Fission should be enabled or not. This must be set before startup.
+     * Set whether Fission should be enabled or not. This must be set before startup. Note: Session
+     * History in Parent (SHIP) will be enabled as well if Fission is enabled.
      *
      * @param enabled A flag determining whether fission should be enabled.
      * @return The builder instance.
@@ -376,14 +378,13 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     /**
-     * Sets whether Session History in Parent (SHIP) should be disabled or not. As SHIP can no
-     * longer be disabled this is a no-op.
+     * Sets whether Session History in Parent (SHIP) should be disabled or not.
      *
      * @param value A flag determining whether SHIP should be disabled or not.
      * @return The builder instance.
      */
-    public @Deprecated @DeprecationSchedule(id = "disable-ship-removal", version = 153) @NonNull
-    Builder disableShip(final boolean value) {
+    public @NonNull Builder disableShip(final boolean value) {
+      getSettings().mDisableShip.set(value);
       return this;
     }
 
@@ -774,8 +775,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       new PrefWithoutDefault<>("fission.webContentIsolationStrategy");
   /* package */ final Pref<Boolean> mAutofillLogins =
       new Pref<Boolean>("signon.autofillForms", true);
-  /* package */ final PrefWithoutDefault<String> mFirefoxRelay =
-      new PrefWithoutDefault<>("signon.firefoxRelay.feature");
   /* package */ final Pref<Boolean> mAutomaticallyOfferPopup =
       new Pref<Boolean>("browser.translations.automaticallyPopup", true);
   /* package */ final Pref<Boolean> mHttpsOnly =
@@ -828,6 +827,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       new PrefWithoutDefault<>("privacy.baselineFingerprintingProtection");
   /* package */ final PrefWithoutDefault<String> mBaselineFingerprintingProtectionOverrides =
       new PrefWithoutDefault<>("privacy.baselineFingerprintingProtection.overrides");
+  /* package */ PrefWithoutDefault<Boolean> mDisableShip =
+      new PrefWithoutDefault<Boolean>("fission.disableSessionHistoryInParent");
   /* package */ final Pref<Boolean> mFetchPriorityEnabled =
       new Pref<Boolean>("network.fetchpriority.enabled", false);
   /* package */ final Pref<Boolean> mParallelMarkingEnabled =
@@ -2028,58 +2029,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     return this;
   }
 
-  /** Firefox Relay state definitions. */
-  @Retention(RetentionPolicy.SOURCE)
-  @StringDef(
-      value = {
-        FIREFOX_RELAY_AVAILABLE,
-        FIREFOX_RELAY_OFFERED,
-        FIREFOX_RELAY_ENABLED,
-        FIREFOX_RELAY_DISABLED
-      })
-  public @interface FirefoxRelayMode {}
-
-  /** Firefox Relay is available but not yet offered to the user. */
-  public static final String FIREFOX_RELAY_AVAILABLE = "available";
-
-  /** Firefox Relay has been offered to the user. */
-  public static final String FIREFOX_RELAY_OFFERED = "offered";
-
-  /** Firefox Relay is enabled. */
-  public static final String FIREFOX_RELAY_ENABLED = "enabled";
-
-  /** Firefox Relay is disabled. */
-  public static final String FIREFOX_RELAY_DISABLED = "disabled";
-
-  /**
-   * Get the Firefox Relay state.
-   *
-   * <p>This API is experimental because it for Mozilla official builds and will be removed to not
-   * rely on this exposed pref.
-   *
-   * @return The Firefox Relay state, or null if undefined.
-   */
-  @ExperimentalGeckoViewApi
-  public @Nullable @FirefoxRelayMode String getFirefoxRelay() {
-    return mFirefoxRelay.get();
-  }
-
-  /**
-   * Set the Firefox Relay state.
-   *
-   * <p>This API is experimental because it for Mozilla official builds and will be removed to not
-   * rely on this exposed pref.
-   *
-   * @param state The Firefox Relay state.
-   * @return This GeckoRuntimeSettings instance.
-   */
-  @ExperimentalGeckoViewApi
-  public @NonNull GeckoRuntimeSettings setFirefoxRelay(
-      @NonNull final @FirefoxRelayMode String state) {
-    mFirefoxRelay.commit(state);
-    return this;
-  }
-
   /**
    * Sets whether or not the request blocking feature of Local Network / Device Access is enabled
    *
@@ -2392,8 +2341,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   }
 
   /**
-   * Retrieve the status of the disable session history in parent (SHIP) preference. Since SHIP can
-   * no longer be disabled this is always false.
+   * Retrieve the status of the disable session history in parent (SHIP) preference. May be null if
+   * the value hasn't been specifically initialized.
    *
    * <p>Note, there is no conventional setter because this may only be set before Gecko is
    * initialized.
@@ -2402,9 +2351,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
    *
    * @return True if SHIP is disabled, false if SHIP is enabled.
    */
-  public @Deprecated @DeprecationSchedule(id = "disable-ship-removal", version = 153) @Nullable
-  Boolean getDisableShip() {
-    return false;
+  public @Nullable Boolean getDisableShip() {
+    return mDisableShip.get();
   }
 
   /**

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// @ts-nocheck - TODO - Remove this to type check this file.
-
 /**
  * @import {ProgressAndStatusCallbackParams} from "../../content/Utils.sys.mjs"
  */
@@ -69,7 +67,6 @@ export class LlamaCppPipeline {
   #errorFactory = null;
 
   constructor(generator, options, errorFactory) {
-    /** @type {LlamaRunner} */
     this.generator = generator;
     this.#errorFactory = errorFactory;
     this.#options = options;
@@ -96,7 +93,7 @@ export class LlamaCppPipeline {
     } = {},
     errorFactory
   ) {
-    let startInitTime = ChromeUtils.now();
+    let startInitTime = performance.now();
 
     const modelFilePath = (
       await mlEngineWorker.getModelFile({
@@ -152,14 +149,6 @@ export class LlamaCppPipeline {
       modelFilePath,
     };
 
-    let opfsStart = ChromeUtils.now();
-    const modelBlob = await (await OPFS.getFileHandle(modelFilePath)).getFile();
-    ChromeUtils.addProfilerMarker(
-      "MLEngine:llama.cpp",
-      { startTime: opfsStart },
-      `Retrieve model file from OPFS`
-    );
-
     const generator = new LlamaRunner();
 
     await generator.initialize(
@@ -172,16 +161,10 @@ export class LlamaCppPipeline {
           nCtx: numContext,
         },
       },
-      modelBlob
+      await (await OPFS.getFileHandle(modelFilePath)).getFile()
     );
 
-    lazy.console.debug("Init time", ChromeUtils.now() - startInitTime);
-
-    ChromeUtils.addProfilerMarker(
-      "MLEngine:llama.cpp",
-      { startTime: startInitTime },
-      `Initialize: ${modelId}, ctx=${numContext}, threads=${options.n_threads}/${options.n_threads_decoding}`
-    );
+    lazy.console.debug("Init time", performance.now() - startInitTime);
 
     return new LlamaCppPipeline(generator, options, errorFactory);
   }
@@ -227,7 +210,7 @@ export class LlamaCppPipeline {
     port = null
   ) {
     try {
-      let startTime = ChromeUtils.now();
+      let startTime = performance.now();
       let endPromptTime = null;
       let startPromptTime = startTime;
       let startDecodingTime = null;
@@ -240,13 +223,7 @@ export class LlamaCppPipeline {
 
       if (Array.isArray(prompt)) {
         lazy.console.error("received prompt", prompt);
-        let formatChatStart = ChromeUtils.now();
         formattedPrompt = await this.generator.formatChat({ messages: prompt });
-        ChromeUtils.addProfilerMarker(
-          "MLEngine:llama.cpp",
-          { startTime: formatChatStart },
-          `Format chat messages`
-        );
         lazy.console.error("formated prompt ", formattedPrompt);
       }
 
@@ -264,15 +241,13 @@ export class LlamaCppPipeline {
         stopOnEndOfGenerationTokens,
       });
 
-      let chunkStartTime = ChromeUtils.now();
-      let tokenCount = 0;
       for await (const chunk of stream) {
         const isPrompt = chunk.phase == "prompt";
 
         if (isPrompt && chunk.isPhaseCompleted) {
-          endPromptTime = ChromeUtils.now();
+          endPromptTime = performance.now();
         } else if (!startDecodingTime) {
-          startDecodingTime = ChromeUtils.now();
+          startDecodingTime = performance.now();
         }
 
         if (skipPrompt && isPrompt) {
@@ -297,28 +272,13 @@ export class LlamaCppPipeline {
           type: Progress.ProgressType.INFERENCE,
           statusText: Progress.ProgressStatusText.IN_PROGRESS,
         });
-        tokenCount += chunk.tokens.length;
-        ChromeUtils.addProfilerMarker(
-          "MLEngine:llama.cpp",
-          chunkStartTime,
-          `Generate ${chunk.tokens.length} tokens`
-        );
-        chunkStartTime = ChromeUtils.now();
       }
 
-      const endTime = ChromeUtils.now();
-      const promptTime = endPromptTime - startPromptTime;
-      const decodingTime = endTime - startDecodingTime;
-      lazy.console.debug("Decoding time", decodingTime);
-      lazy.console.debug("Prompt time", promptTime);
+      const endTime = performance.now();
+      lazy.console.debug("Decoding time", endTime - startDecodingTime);
+      lazy.console.debug("Prompt time", endPromptTime - startPromptTime);
       lazy.console.debug("Overall time", endTime - startTime);
       lazy.console.debug("Generated", output);
-
-      ChromeUtils.addProfilerMarker(
-        "MLEngine:llama.cpp",
-        { startTime: startPromptTime },
-        `Prompt generation (${tokenCount} tokens generated)`
-      );
 
       port?.postMessage({ done: true, finalOutput: output, ok: true });
 

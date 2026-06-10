@@ -29,9 +29,6 @@ class CookiesPreference(context: Context, attrs: AttributeSet?) : ListPreference
         updateSummary()
     }
 
-    /**
-     * Updates the summary text of the preference based on the current cookie settings.
-     */
     fun updateSummary() {
         val settings = context.settings
 

@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/skin/design-system/toolbar.css");
 @import url("chrome://browser/skin/browser-colors.css");
 @import url("chrome://browser/skin/addons/extension-controlled.css");
 @import url("chrome://browser/skin/addons/unified-extensions.css");
@@ -10,25 +9,22 @@
 @import url("chrome://browser/skin/tabbrowser/content-area.css");
 @import url("chrome://browser/skin/tabbrowser/ctrlTab.css");
 @import url("chrome://browser/skin/tabbrowser/fullscreen-and-pointerlock.css");
-@import url("chrome://browser/skin/tabbrowser/tab.tokens.css");
 @import url("chrome://browser/skin/tabbrowser/tabs.css");
-@import url("chrome://browser/skin/tabbrowser/tab-groups-list.css");
 @import url("chrome://browser/skin/tabbrowser/tab-hover-preview.css");
 @import url("chrome://browser/skin/toolbarbuttons.css");
 @import url("chrome://browser/skin/toolbarbutton-icons.css");
 @import url("chrome://browser/skin/menupanel.css");
-@import url("chrome://browser/skin/urlbar/tokens.css");
-@import url("chrome://browser/skin/urlbar/variables.css");
-@import url("chrome://browser/skin/urlbar/view.css");
 @import url("chrome://browser/skin/urlbar-searchbar.css");
 @import url("chrome://browser/skin/identity-block/identity-block.css");
 @import url("chrome://browser/skin/notification-icons.css");
 @import url("chrome://browser/skin/addon-notification.css");
 @import url("chrome://browser/skin/identity-credential-notification.css");
+@import url("chrome://browser/skin/urlbarView.css");
 @import url("chrome://browser/skin/autocomplete.css");
 @import url("chrome://browser/skin/places/editBookmarkPanel.css");
 @import url("chrome://browser/skin/searchbar.css");
 @import url("chrome://browser/skin/sidebar.css");
+@import url("chrome://browser/skin/smartbar.css");
 @import url("chrome://browser/skin/aiWindowSidebar.css");
 @import url("chrome://browser/skin/customizableui/customizeMode.css");
 @import url("chrome://browser/skin/UITour.css");
@@ -59,11 +55,7 @@ body {
   user-select: none;
   color-scheme: light dark;
   text-rendering: optimizeLegibility;
-  /* Minimum sizing comes from specific size requirements and adds on other
-   * values for different scenarios that don't lend themselves to design tokens. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   min-height: 95px;
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   min-width: 95px;
 
   @media not (forced-colors) {
@@ -75,27 +67,22 @@ body {
   }
 
   &:not([chromehidden~="toolbar"]) {
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     min-width: var(--window-min-width);
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     min-height: 120px;
 
+    /* stylelint-disable-next-line media-query-no-invalid */
     @media -moz-pref("sidebar.verticalTabs") {
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
       min-width: calc(var(--window-min-width) + var(--window-min-width-increase-for-vertical-tabs));
 
       /* If the Content Analysis icon is showing, we don't
          want to collapse it, so make a little more room. */
       &[contentanalysisactive] {
-        /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
         min-width: calc(var(--window-min-width) + var(--window-min-width-increase-for-vertical-tabs) + 36px);
       }
     }
   }
 
   &[taskbartab]:not([chromehidden~="toolbar"]) {
-    /* This size prevents toolbar contents from overlapping or overflowing. */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     min-width: 804px;
   }
 
@@ -103,7 +90,6 @@ body {
   --browser-stack-z-index-devtools-splitter: 1;
   --browser-stack-z-index-dialog-stack: 2;
   --browser-stack-z-index-rdm-toolbar: 3;
-  --browser-stack-z-index-screenshots-panel: 4;
 
   /* z-indices that fight in the general browser / toolbox area */
   --browser-area-z-index-toolbox: 0;
@@ -115,37 +101,26 @@ body {
   /* on macOS the animation of the toolbox in fullscreen needs the toolbox to be higher */
   --browser-area-z-index-toolbox-while-animating: 4;
 
+  --toolbarbutton-border-radius: var(--button-border-radius);
+  --identity-box-margin-inline: 4px;
+  --urlbar-min-height: max(32px, 1.4em);
+  --urlbar-icon-padding: calc((var(--urlbar-min-height) - 2px /* border */ - 2px /* padding */ - 16px /* icon */) / 2);
+
+  /* This should be used for icons and chiclets inside the input field, as well
+     as result rows. It makes the gap around them more uniform when they are
+     close to the field edges. */
+  --urlbar-inner-border-radius: calc(var(--toolbarbutton-border-radius) - 1px);
+  --urlbar-searchmodeswitcher-inline-padding: 6px;
+  --urlbar-searchmodeswitcher-margin-inline-end: 0.45em;
+
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
 
-  --toolbox-background-image: none;
-  --toolbox-background-size: auto;
-  --toolbox-background-position: top left;
-  --toolbox-background-repeat: repeat;
-
-  @media -moz-pref("browser.nova.enabled") {
-    --toolbox-background-image: var(--toolbox-background-gradient);
-  }
-
-  &[lwtheme] {
-    --toolbox-background-image: var(--lwt-additional-images);
-    --toolbox-background-repeat: var(--lwt-background-tiling);
-    --toolbox-background-position: var(--lwt-background-alignment);
-  }
-
-  &[lwtheme-image] {
-    /* When a theme defines both theme_frame and additional_backgrounds, show
-       the latter atop the former. */
-    --toolbox-background-image: var(--lwt-header-image), var(--lwt-additional-images);
-    --toolbox-background-repeat: no-repeat, var(--lwt-background-tiling);
-    --toolbox-background-position: right top, var(--lwt-background-alignment);
-  }
-
   --ext-theme-background-transition: background-color 0.1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
 
   --inactive-window-transition: 0.2s ease;
-  --inactive-titlebar-opacity: var(--opacity-deemphasized-strong);
+  --inactive-titlebar-opacity: 0.6;
   /**
    * On macOS and Linux, fading the whole titlebar is the native behavior.
    *
@@ -162,30 +137,15 @@ body {
   }
 
   &[lwtheme] {
-    /* Theme colors don't need to use design tokens. */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     color: var(--lwt-text-color);
   }
 
-  @media -moz-pref("browser.nova.enabled") {
-    --chrome-window-gap: 4px;
-    --chrome-block-radius: 10px;
+  &[uidensity="compact"] {
+    --urlbar-min-height: max(26px, 1.4em);
+  }
 
-    @media (-moz-platform: linux) {
-      --chrome-block-radius: env(-moz-gtk-csd-titlebar-radius);
-    }
-
-    @media (-moz-platform: windows) {
-      --chrome-block-radius: 4px;
-    }
-
-    @media (-moz-windows-mica) {
-      --chrome-block-radius: 8px;
-    }
-
-    @media (-moz-mac-tahoe-theme) {
-      --chrome-block-radius: 16px;
-    }
+  &[uidensity="touch"] {
+    --urlbar-min-height: max(34px, 1.4em);
   }
 }
 
@@ -211,39 +171,46 @@ body {
    *
    * We also give the toolbox a shadow and border in this case.
    */
-  &.fullscreen-floating-toolbox {
-    /* We want to guarantee an opaque background here */
-    background-color: ActiveCaption;
-    background-image: var(--toolbox-background-image), image(var(--toolbox-background-color));
-    background-repeat: var(--toolbox-background-repeat), no-repeat;
-    background-position:
-      var(--toolbox-background-position),
-      top right;
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-    background-size: var(--toolbox-background-size), auto;
+  &.fullscreen-with-menubar {
     z-index: var(--browser-area-z-index-toolbox-while-animating);
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     box-shadow: var(--content-area-shadow);
-    /* Variables defined in browser-colors.css will be updated to use design tokens, see bug 1952566. */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     border-bottom-color: var(--chrome-content-separator-color);
+  }
+
+  /* Themes define a set of toolbox foreground and background colors which we
+   * want to use across the toolbox and sidebar areas. That happens via the
+   * .browser-toolbox-background class. It's hard to make a theme's background
+   * images work with something other than the toolbox, so for now we ignore
+   * them on other things like the sidebar that could have
+   * .browser-toolbox-background */
+  :root[lwtheme] & {
+    background-image: var(--lwt-additional-images);
+    background-repeat: var(--lwt-background-tiling);
+    background-position: var(--lwt-background-alignment);
+  }
+
+  /* When a theme defines both theme_frame and additional_backgrounds, show
+     the latter atop the former. */
+  :root[lwtheme-image] & {
+    background-image: var(--lwt-header-image), var(--lwt-additional-images);
+    background-repeat: no-repeat, var(--lwt-background-tiling);
+    background-position:
+      right top,
+      var(--lwt-background-alignment);
   }
 }
 
-body {
-  /* Prevents the background from propagating to the viewport */
-  contain: paint;
+.browser-toolbox-background {
   position: relative;
-
-  background-color: var(--toolbox-background-color);
-  color: var(--toolbox-text-color);
+  background-color: var(--toolbox-bgcolor);
+  color: var(--toolbox-textcolor);
 
   will-change: background-color;
   transition: background-color var(--inactive-window-transition);
 
   &:-moz-window-inactive {
-    background-color: var(--toolbox-background-color-inactive);
-    color: var(--toolbox-text-color-inactive);
+    background-color: var(--toolbox-bgcolor-inactive);
+    color: var(--toolbox-textcolor-inactive);
   }
 
   :root[customizing] & {
@@ -278,55 +245,6 @@ body {
   }
 }
 
-/* Toolbox background images go either on the `<body>` or on the toolbox itself.
- * For most themes and pre-nova default theme, it goes on the `<body>`. For themes
- * that align the image in the y axis, and the nova default theme, they go on the toolbox.
- * FIXME(bug 2044711): Clean this up by using a more specific attribute or so. */
-@media not -moz-pref("browser.nova.enabled") {
-  :root:not([lwtheme-image-y-align]) body,
-  :root[lwtheme-image-y-align] #navigator-toolbox {
-    background-image: var(--toolbox-background-image);
-    background-repeat: var(--toolbox-background-repeat);
-    background-position: var(--toolbox-background-position);
-    background-size: var(--toolbox-background-size);
-  }
-}
-
-@media -moz-pref("browser.nova.enabled") {
-  :root[lwtheme]:not([lwtheme-image-y-align]) #navigator-toolbox {
-    color: inherit;
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-    background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
-  }
-
-  :root[lwtheme]:not([lwtheme-image-y-align]) body,
-  :root:is([lwtheme-image-y-align], :not([lwtheme])) #navigator-toolbox {
-    background-image: var(--toolbox-background-image);
-    background-repeat: var(--toolbox-background-repeat);
-    background-position: var(--toolbox-background-position);
-    background-size: var(--toolbox-background-size);
-  }
-
-  .chrome-block {
-    background-color: var(--toolbox-background-color);
-    color: var(--toolbox-text-color);
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-    border-radius: var(--chrome-block-radius);
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-    border: 1px solid var(--chrome-content-separator-color);
-    overflow: clip;
-
-    &:-moz-window-inactive {
-      background-color: var(--toolbox-background-color-inactive);
-      color: var(--toolbox-text-color-inactive);
-    }
-  }
-
-  #sidebar-main {
-    background-color: var(--toolbar-background-color);
-  }
-}
-
 .browser-toolbar {
   appearance: none;
   /* Reset linux padding */
@@ -335,10 +253,11 @@ body {
   background-color: transparent;
   color: inherit;
 
+  /* stylelint-disable-next-line media-query-no-invalid */
   @media not -moz-pref("sidebar.verticalTabs") {
     &:not(.browser-titlebar) {
-      background-color: var(--toolbar-background-color);
-      color: var(--toolbar-text-color);
+      background-color: var(--toolbar-bgcolor);
+      color: var(--toolbar-color);
     }
   }
 }
@@ -354,7 +273,6 @@ body {
     transition: opacity var(--inactive-window-transition);
 
     &:-moz-window-inactive {
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens -- to be addressed in 2033919 */
       opacity: var(--inactive-titlebar-opacity);
     }
   }
@@ -385,8 +303,6 @@ body {
 }
 
 .titlebar-spacer {
-  /* Spacer widths are specific and shouldn't change if underlying token sizes change. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   width: 40px;
 
   :root[inFullscreen] &,
@@ -402,14 +318,14 @@ body {
 
   @media (-moz-platform: linux) and (-moz-gtk-csd-reversed-placement: 0) {
     :root:not([sizemode="normal"]) &[type="pre-tabs"],
-    :root[gtktiledwindow] &[type="pre-tabs"] {
+    :root[gtktiledwindow="true"] &[type="pre-tabs"] {
       display: none;
     }
   }
 
   @media (-moz-gtk-csd-reversed-placement) {
     :root:not([sizemode="normal"]) &[type="post-tabs"],
-    :root[gtktiledwindow] &[type="post-tabs"] {
+    :root[gtktiledwindow="true"] &[type="post-tabs"] {
       display: none;
     }
   }
@@ -420,6 +336,7 @@ body {
     }
   }
 
+  /* stylelint-disable-next-line media-query-no-invalid */
   @media -moz-pref("sidebar.verticalTabs") {
     :root:not([taskbartab]) &:is([type="pre-tabs"], [type="post-tabs"]) {
       display: none;
@@ -457,13 +374,6 @@ body {
   }
 }
 
-@media (-moz-platform: macos) {
-  #titlebar-fullscreen-button {
-    appearance: auto;
-    -moz-default-appearance: -moz-mac-fullscreen-button;
-  }
-}
-
 /* Menu bar */
 
 #toolbar-menubar {
@@ -475,15 +385,11 @@ body {
        For MacOS, autohide is never true on the menubar.
     */
     :root[customtitlebar] #navigator-toolbox:not([tabs-hidden]) > & {
-      /* --tabstrip-min-height is defined in tabs.css, which stylelint doesn't know about. */
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
       min-height: var(--tabstrip-min-height);
     }
     /* adjust the height of the auto-hiding toolbar menubar when the tabstrip is
        hidden and we need to match the height of the nav-bar. */
     :root[customtitlebar] #navigator-toolbox[tabs-hidden] > & {
-      /* urlbar variables will be tokenized, see bug 2017983 */
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
       min-height: calc(var(--urlbar-min-height) + 2 * var(--urlbar-padding-block));
     }
 
@@ -504,14 +410,14 @@ body {
 /* Profiles menu */
 
 #menu_newProfile {
+  -moz-context-properties: fill;
+  fill: currentColor;
   --menuitem-icon: url(chrome://global/skin/icons/plus.svg);
 }
 
 .menuitem-iconic-profile {
-  --menuitem-icon-fill: var(--menu-profiles-theme-bg);
   -moz-context-properties: fill, stroke;
-  /* Theme variables don't need to use design system colors. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
+  fill: var(--menu-profiles-theme-bg);
   stroke: var(--menu-profiles-theme-fg);
 }
 
@@ -521,8 +427,6 @@ body {
   /* The toolbar buttons that animate use position:absolute and require a
    * positioned #nav-bar. */
   position: relative;
-  /* Variables defined in browser-colors.css will be updated to use design tokens, see bug 1952566. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   border-top: 0.01px var(--tabs-navbar-separator-style) var(--tabs-navbar-separator-color);
 
   #navigator-toolbox[tabs-hidden] > & {
@@ -543,15 +447,14 @@ body {
   /* Add space to beginning of toolbar and make that space click the first <toolbarbutton> */
   > :is(toolbarbutton, toolbaritem):first-child,
   > toolbarpaletteitem:first-child > :is(toolbarbutton, toolbaritem) {
-    padding-inline-start: var(--toolbar-padding-inline);
+    padding-inline-start: var(--toolbar-start-end-padding);
   }
 }
 
 #vertical-spacer {
-  /* Spacer widths are specific and shouldn't change if underlying token sizes change. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   min-width: 20px;
 
+  /* stylelint-disable-next-line media-query-no-invalid */
   @media not -moz-pref("sidebar.verticalTabs") {
     display: none;
   }
@@ -561,11 +464,6 @@ body {
   }
 }
 
-/* Share Button */
-.share-more-button {
-  --menuitem-icon: url("chrome://global/skin/icons/more.svg");
-}
-
 /* Bookmarks toolbar */
 
 #PersonalToolbar {
@@ -573,19 +471,10 @@ body {
      bookmarks load. Otherwise, showing the toolbar might resize the content
      area twice. */
   min-height: 0;
-  padding-inline: var(--space-small);
-
-  @media -moz-pref("browser.nova.enabled") {
-    :root:not([lwtheme]) & {
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-      border-top: 1px solid var(--chrome-content-separator-color);
-      background-color: var(--toolbar-background-color);
-      color: var(--toolbar-text-color);
-    }
-  }
+  padding-inline: 6px;
 
   :root[uidensity="compact"] & {
-    padding-inline: var(--space-xxsmall);
+    padding-inline: 2px;
   }
 
   /* Vertical sliding animation */
@@ -629,8 +518,7 @@ body {
   &[customizing] {
     outline: 1px dashed;
     outline-offset: -3px;
-    /* Give the toolbar the correct height when there's no items in it */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
+    /* Avoid the toolbar having no height when there's no items in it */
     min-height: 22px;
   }
 }
@@ -670,13 +558,11 @@ toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
 .bookmark-item[cutting] {
   > .toolbarbutton-icon,
   > .menu-icon {
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens -- to be addressed in 2033919 */
     opacity: 0.5;
   }
 
   > .toolbarbutton-text,
   > .menu-text {
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens -- to be addressed in 2033919 */
     opacity: 0.7;
   }
 }
@@ -697,13 +583,11 @@ menupopup::part(drop-indicator-container) {
 menupopup::part(drop-indicator-bar) {
   position: relative;
   /* these two margins must together compensate the indicator's height */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   margin-block: -1px;
 }
 
 menupopup::part(drop-indicator) {
   list-style-image: none;
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   height: 2px;
   margin-inline-end: -4em;
   background-color: AccentColor;
@@ -714,6 +598,12 @@ menupopup::part(drop-indicator) {
 
 .unified-nav-current {
   font-weight: var(--font-weight-semibold);
+}
+
+.unified-nav-back,
+.unified-nav-forward {
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
@@ -729,28 +619,32 @@ menupopup::part(drop-indicator) {
 /* Find bar */
 
 .browserContainer > findbar {
-  background-color: var(--toolbar-background-color);
-  color: var(--toolbar-text-color);
+  background-color: var(--toolbar-bgcolor);
+  color: var(--toolbar-color);
   color-scheme: var(--toolbar-color-scheme);
-  /* Variables defined in browser-colors.css will be updated to use design tokens, see bug 1952566. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   border-top-color: var(--chrome-content-separator-color);
 
   :root[lwtheme] & {
-    background-color: var(--lwt-accent-color); /* Known opaque */
-    background-image: image(var(--toolbar-background-color)), var(--toolbox-background-image);
-    background-repeat: no-repeat, var(--toolbox-background-repeat);
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
+    background-color: var(--lwt-accent-color);
+    background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)), var(--lwt-additional-images);
+    background-repeat: no-repeat, var(--lwt-background-tiling);
     background-position:
-      top left,
-      var(--toolbox-background-position);
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-    background-size: auto, var(--toolbox-background-size);
+      right bottom,
+      var(--lwt-background-alignment);
     background-position-y: bottom !important;
   }
 
   :root[lwtheme]:not([lwtheme-image]) &:-moz-window-inactive {
     background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
+  }
+
+  :root[lwtheme-image] & {
+    background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)), var(--lwt-header-image), var(--lwt-additional-images);
+    background-repeat: no-repeat, no-repeat, var(--lwt-background-tiling);
+    background-position:
+      center,
+      right bottom,
+      var(--lwt-background-alignment);
   }
 }
 
@@ -758,7 +652,7 @@ menupopup::part(drop-indicator) {
 
 .private-browsing-indicator-with-label {
   align-items: center;
-  margin-inline: var(--space-small);
+  margin-inline: 7px;
 
   :root:not([privatebrowsingmode="temporary"]) &,
   #navigator-toolbox:not([tabs-hidden]) #nav-bar > & {
@@ -766,7 +660,7 @@ menupopup::part(drop-indicator) {
   }
 
   #navigator-toolbox[tabs-hidden] #nav-bar > & {
-    margin-inline-end: var(--space-medium);
+    margin-inline-end: 12px;
 
     /* Hide the private browsing indicator
     label when vertical tabs are enabled */
@@ -778,8 +672,8 @@ menupopup::part(drop-indicator) {
 
 .private-browsing-indicator-icon {
   list-style-image: url("chrome://global/skin/icons/indicator-private-browsing.svg");
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: 16px;
+  height: 16px;
 }
 
 /* Content analysis indicator */
@@ -792,18 +686,18 @@ menupopup::part(drop-indicator) {
 
 /* Various panels and popup notifications */
 
-.screenshotsPagePanel {
+#screenshotsPagePanel {
   position: relative;
   max-height: 0;
-  z-index: var(--browser-stack-z-index-screenshots-panel); /* Above the web content in this stack. */
+  z-index: 1; /* Above the web content in this stack. */
 }
 
 /* Override theme colors since the picker uses extra colors that
    themes cannot set */
 #DateTimePickerPanel {
   color-scheme: env(-moz-content-preferred-color-scheme);
-  --panel-background-color: Field;
-  --panel-text-color: FieldText;
+  --arrowpanel-background: Field;
+  --arrowpanel-color: FieldText;
 }
 
 #widget-overflow .webextension-popup-browser {
@@ -815,7 +709,7 @@ menupopup::part(drop-indicator) {
 }
 
 #addon-progress-notification-progressmeter {
-  margin: var(--space-xxsmall) var(--space-xsmall);
+  margin: 2px 4px;
 }
 
 #invalid-form-popup {
@@ -824,18 +718,14 @@ menupopup::part(drop-indicator) {
   unicode-bidi: plaintext;
 
   > description {
-    max-width: var(--size-layout-medium);
+    max-width: 280px;
   }
 }
 
 .popup-notification-invalid-input {
-  /* Design system box shadows are all neutral tones, the red box shadows can
-   * remain until/unless there's some redesign work. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   box-shadow: 0 0 1.5px 1px red;
 
   &[focused] {
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     box-shadow: 0 0 2px 2px rgba(255, 0, 0, 0.4);
   }
 }
@@ -862,8 +752,6 @@ menupopup::part(drop-indicator) {
         font-size: var(--font-size-large);
         font-weight: normal;
         justify-content: flex-start;
-        /* Calculating padding from other dimensions rather than using a token with no context. */
-        /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
         padding-inline: calc((var(--button-size-icon) - var(--icon-size)) / 2 - var(--border-width));
       }
 
@@ -883,7 +771,7 @@ menupopup::part(drop-indicator) {
   width: 100%;
   display: block;
   text-align: center;
-  box-shadow: var(--box-shadow-level-1);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
 }
 
 #cfr-notification-header-stack {
@@ -891,56 +779,54 @@ menupopup::part(drop-indicator) {
 }
 
 #cfr-notification-header-label {
-  margin: var(--space-small);
+  margin: 9px;
   font-weight: var(--font-weight-semibold);
 }
 
 #cfr-notification-header-link {
-  margin: var(--space-small);
+  margin: 7px;
   color: inherit;
   cursor: default;
   justify-self: end;
 }
 
 #cfr-notification-header-image {
-  width: var(--icon-size-medium);
-  height: var(--icon-size-medium);
-  padding: var(--space-xxsmall);
+  width: 19px;
+  height: 19px;
+  padding: 2px;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  fill-opacity: var(--opacity-deemphasized-strong);
+  fill-opacity: 0.6;
   list-style-image: url(chrome://global/skin/icons/help.svg);
 
   &:hover {
-    --header-image-background-color: oklch(from var(--color-gray-50) l c h / 20%);
-
-    background-color: var(--header-image-background-color);
+    background-color: hsla(0, 0%, 70%, 0.2);
     border-radius: var(--border-radius-xsmall);
   }
 }
 
 #contextual-feature-recommendation-notification {
-  width: var(--size-layout-large);
+  width: 400px;
 
   .popup-notification-icon {
-    margin-inline-end: var(--space-xsmall);
+    margin-inline-end: 4px;
   }
 
   .cfr-doorhanger-large-icon {
-    width: var(--size-image-large);
-    height: var(--size-image-large);
-    margin-inline-end: var(--space-medium);
+    width: 64px;
+    height: 64px;
+    margin-inline-end: 12px;
   }
 
   .cfr-doorhanger-medium-icon {
-    width: var(--size-image-small);
-    height: var(--size-image-small);
-    margin-inline-end: var(--space-medium);
+    width: 50px;
+    height: 50px;
+    margin-inline-end: 12px;
   }
 
   .popup-notification-body-container {
     width: 100%;
-    padding-bottom: var(--space-xxsmall);
+    padding-bottom: 2px;
   }
 
   popupnotificationcontent {
@@ -958,10 +844,9 @@ menupopup::part(drop-indicator) {
       align-items: center;
       background: radial-gradient(circle farthest-side at top right, var(--short-notification-gradient), var(--short-notification-background));
       width: unset;
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
       max-width: 700px;
       overflow-wrap: break-word;
-      padding: var(--space-xsmall);
+      padding: 4px;
     }
 
     &:-moz-locale-dir(rtl) {
@@ -981,7 +866,7 @@ menupopup::part(drop-indicator) {
     description {
       font-weight: normal;
       margin: unset;
-      margin-inline: var(--space-medium);
+      margin-inline: 12px;
     }
 
     .panel-footer,
@@ -998,16 +883,14 @@ menupopup::part(drop-indicator) {
     }
 
     .popup-notification-primary-button {
-      --popup-button-background-color: oklch(from var(--color-gray-20) l c h / 20%);
-
-      background-color: var(--popup-button-background-color);
+      background-color: rgba(216, 216, 216, 0.2);
       color: white;
       border: none;
       border-radius: var(--border-radius-xsmall);
-      margin: var(--space-xsmall);
-      padding: var(--space-xsmall) var(--space-medium);
+      margin: 4px;
+      padding: 3px 12px;
       flex: 1;
-      min-height: var(--size-item-medium);
+      min-height: 22px;
 
       &::after {
         content: url(chrome://global/skin/icons/arrow-left-12.svg);
@@ -1022,35 +905,34 @@ menupopup::part(drop-indicator) {
       }
 
       &:hover {
-        --popup-button-background-color: oklch(from var(--color-gray-20) l c h / 40%);
+        background-color: rgba(216, 216, 216, 0.4);
       }
 
       &:hover:active {
-        --popup-button-background-color: oklch(from var(--color-gray-20) l c h / 50%);
+        background-color: rgba(216, 216, 216, 0.5);
       }
     }
 
     .popup-notification-secondary-button {
-      --popup-button-background-color: transparent;
-
-      margin: var(--space-xsmall);
+      margin: 3px;
       border: none;
       border-radius: var(--border-radius-xsmall);
       background-image: url(chrome://global/skin/icons/close.svg);
-      background-color: var(--popup-button-background-color);
+      background-color: transparent;
       background-repeat: no-repeat;
       background-position: center;
       background-size: 10px;
       -moz-context-properties: fill;
       fill: white;
-      min-height: var(--size-item-medium);
-      width: var(--size-item-medium);
+      min-height: 22px;
+      width: 22px;
       padding: 0;
       align-self: center;
       flex: none;
+      font-size: 0;
 
       &:hover {
-        --popup-button-background-color: oklch(from var(--color-gray-20) l c h / 40%);
+        background-color: rgba(216, 216, 216, 0.4);
       }
     }
 
@@ -1061,18 +943,16 @@ menupopup::part(drop-indicator) {
   }
 
   &[data-notification-bucket="CFR_SOCIAL_TRACKING_PROTECTION"] {
-    /* TODO: determine whether this is still needed, see bug 2032531 */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     width: 386px;
   }
 
   &[data-notification-category="addon_recommendation"] {
     .popup-notification-description > b {
-      padding-inline-start: var(--space-xsmall);
+      padding-inline-start: 5px;
     }
 
     #cfr-notification-footer-learn-more-link {
-      margin-inline-start: var(--space-xsmall);
+      margin-inline-start: 5px;
     }
 
     #cfr-notification-feature-steps,
@@ -1081,7 +961,7 @@ menupopup::part(drop-indicator) {
     }
 
     #cfr-notification-header-label {
-      margin-block-end: var(--space-small);
+      margin-block-end: 9px;
     }
   }
 
@@ -1097,7 +977,7 @@ menupopup::part(drop-indicator) {
 
     .popup-notification-description {
       font-weight: var(--font-weight-semibold);
-      margin-bottom: var(--space-large);
+      margin-bottom: 15px;
     }
 
     popupnotificationcontent {
@@ -1108,23 +988,21 @@ menupopup::part(drop-indicator) {
 
 #cfr-notification-footer-text-and-addon-info {
   display: block;
-  /* Panel variables will be tokenized in bug 2017979 */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-  padding: var(--space-small) var(--panel-padding);
+  padding: 10px var(--arrowpanel-padding);
 }
 
 #cfr-notification-feature-steps {
   display: flex;
   flex-direction: column;
-  margin-top: var(--space-small);
+  margin-top: 10px;
 
   li {
-    margin-inline-start: var(--space-small);
+    margin-inline-start: 10px;
     position: relative;
     display: list-item;
 
     &:not(:last-child) {
-      margin-bottom: var(--space-xsmall);
+      margin-bottom: 5px;
     }
   }
 }
@@ -1138,7 +1016,7 @@ menupopup::part(drop-indicator) {
 #cfr-notification-footer-addon-info {
   align-items: center;
   display: flex;
-  margin-block: var(--space-medium) var(--space-small);
+  margin-block: 10px 6px;
 }
 
 #cfr-notification-footer-filled-stars,
@@ -1147,7 +1025,7 @@ menupopup::part(drop-indicator) {
   background-image: url(chrome://browser/skin/bookmark.svg);
   fill: currentColor;
   fill-opacity: 0.7;
-  height: var(--size-item-small);
+  height: 16px;
 }
 
 #cfr-notification-footer-filled-stars:-moz-locale-dir(rtl),
@@ -1161,13 +1039,11 @@ menupopup::part(drop-indicator) {
 }
 
 #cfr-notification-footer-empty-stars[tooltiptext] {
-  margin-inline-end: var(--space-small);
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens -- to be addressed in 2033919 */
+  margin-inline-end: 6px;
   opacity: 0.3;
 }
 
 #cfr-notification-footer-users {
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens -- to be addressed in 2033919 */
   opacity: 0.7;
 }
 
@@ -1178,7 +1054,7 @@ menupopup::part(drop-indicator) {
 /* Sharing tabs warning */
 
 #sharing-tabs-warning-panel {
-  max-width: var(--size-layout-large);
+  max-width: 400px;
 
   > hbox[type="window"] > vbox > label > #sharing-warning-screen-panel-header {
     display: none;
@@ -1190,20 +1066,18 @@ menupopup::part(drop-indicator) {
 }
 
 #sharing-warning-proceed-to-tab {
-  --sharing-warning-background-color: var(--color-blue-70);
-
   appearance: none;
   border-style: none;
   margin: 0;
-  background-color: var(--sharing-warning-background-color);
-  color: white;
+  background-color: rgb(0, 96, 223);
+  color: rgb(255, 255, 255);
   border-radius: var(--border-radius-small);
-  padding: var(--space-small);
-  margin-top: var(--space-large);
-  margin-bottom: var(--space-small);
+  padding: 10px;
+  margin-top: 15px;
+  margin-bottom: 10px;
 
   &:hover {
-    --sharing-warning-background-color: var(--color-blue-80);
+    background-color: rgb(0, 62, 170);
   }
 }
 
@@ -1227,7 +1101,6 @@ menupopup::part(drop-indicator) {
      richlistitems need to be shown to indicate that there are options
      available but give enough space for the common case of only a few
      devices.  */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   max-height: 600px;
 }
 
@@ -1239,9 +1112,9 @@ menupopup::part(drop-indicator) {
 .webRTC-selectDevice-icon {
   -moz-context-properties: fill;
   fill: currentColor;
-  margin-inline-end: var(--space-small);
+  margin-inline-end: 8px;
   /* Setting width explicitly so it's still visible if the device label is very long */
-  width: var(--icon-size);
+  width: 16px;
 }
 
 #webRTC-selectCamera-icon {
@@ -1259,7 +1132,7 @@ menupopup::part(drop-indicator) {
 /* TODO: move these to popupnotification.css */
 
 popupnotificationcontent {
-  margin-block-start: var(--space-small);
+  margin-block-start: 8px;
 }
 
 .popup-notification-body menulist {
@@ -1267,7 +1140,7 @@ popupnotificationcontent {
 }
 
 .popup-notification-checkbox {
-  margin-block: var(--space-medium) 0;
+  margin-block: 12px 0;
 }
 
 .popup-notification-body-container {
@@ -1292,12 +1165,10 @@ popupnotificationcontent {
 .ac-dropmarker {
   appearance: none;
   justify-self: end;
-  margin-inline-end: var(--space-small);
+  margin-inline-end: 8px;
   align-self: center;
   content: url(chrome://global/skin/icons/arrow-down-12.svg);
   -moz-context-properties: fill;
-  /* Variables defined in browser-colors.css will be updated to use design tokens, see bug 1952566. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   fill: var(--input-color, -moz-DialogText);
 }
 
@@ -1307,22 +1178,22 @@ popupnotificationcontent {
 }
 
 .popup-notification-body input.ac-has-end-icon {
-  --input-padding-from-arrow-side: calc(2 * var(--space-small) + var(--icon-size)); /* spacing on either side + arrow element width */
+  --input-padding-from-arrow-side: calc(8px + 16px + 8px); /* spacing from the end + arrow element width + extra spacing) */
   padding-inline-end: var(--input-padding-from-arrow-side);
 }
 
 /* Avoid overlapping the text on the arrow icon when switching input text direction */
 .popup-notification-body:-moz-locale-dir(rtl) input.ac-has-end-icon:dir(ltr) {
   padding-left: var(--input-padding-from-arrow-side);
-  padding-right: var(--space-small);
+  padding-right: 8px;
 }
 .popup-notification-body:-moz-locale-dir(ltr) input.ac-has-end-icon:dir(rtl) {
   padding-right: var(--input-padding-from-arrow-side);
-  padding-left: var(--space-small);
+  padding-left: 8px;
 }
 
 .password-notification-label {
-  margin-block-start: var(--space-large);
+  margin-block-start: 16px;
 
   /**
    * There's already a margin-block-start of 8px on popupnotificationcontent,
@@ -1330,7 +1201,7 @@ popupnotificationcontent {
    * spec.
    */
   &:first-of-type {
-    margin-block-start: var(--space-small);
+    margin-block-start: 8px;
   }
 }
 
@@ -1343,20 +1214,18 @@ popupnotificationcontent {
 .relay-integration-header {
   display: flex;
   align-items: center;
-  /* Font-size tokens are unset in platform contexts. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   font-size: 2em;
 
   > div:nth-of-type(1) {
-    width: var(--icon-size-xlarge);
-    height: var(--icon-size-xlarge);
+    width: 32px;
+    height: 32px;
     background-image: url("chrome://browser/content/logos/relay.svg");
     background-repeat: no-repeat;
   }
 
   > div:nth-of-type(2) {
     direction: ltr;
-    margin-inline: var(--space-small);
+    margin-inline: 8px;
 
     > span:first-of-type {
       font-weight: var(--font-weight-bold);
@@ -1371,9 +1240,7 @@ popupnotificationcontent {
 .relay-integration-header-variation {
   display: flex;
   align-items: center;
-  font-weight: var(--font-weight-heading);
-  /* Font-size tokens are unset in platform contexts. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
+  font-weight: var(--heading-font-weight);
   font-size: 1.5em;
   margin: auto;
 
@@ -1401,18 +1268,18 @@ popupnotificationcontent {
   flex-direction: column;
 
   > button {
-    padding: var(--space-xsmall);
-    margin: var(--space-xsmall);
+    padding: 4px;
+    margin: 4px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
 
     > span:first-child {
-      margin-inline-end: var(--space-xlarge);
+      margin-inline-end: 20px;
     }
 
     > span:last-child {
-      opacity: var(--opacity-deemphasized-strong);
+      opacity: 0.6;
     }
   }
 }
@@ -1432,8 +1299,9 @@ popupnotificationcontent {
   will-change: transform;
 
   @media not (prefers-contrast) {
-    --swipe-nav-icon-primary-color: var(--color-accent-primary);
-    --swipe-nav-icon-accent-color: light-dark(white, black);
+    /* TODO: Should this be in browser-colors to respect system theming on Linux? */
+    --swipe-nav-icon-primary-color: light-dark(#0060df, #00ddff);
+    --swipe-nav-icon-accent-color: light-dark(#ffffff, #000000);
   }
 
   > svg {
@@ -1479,7 +1347,6 @@ popupnotificationcontent {
 
     .will-navigate > & {
       transition-delay: 0.2s;
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens -- to be addressed in 2033919 */
       opacity: 0.2;
     }
   }
@@ -1523,81 +1390,32 @@ popupnotificationcontent {
 /* Picture-in-Picture panel */
 
 #PictureInPicturePanel {
-  /* Panel variables will be tokenized in bug 2017979 */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   width: var(--menu-panel-width-wide);
   font: caption;
 }
 
 #PictureInPicturePanelBody {
-  gap: var(--space-small);
-  padding: var(--space-small) var(--space-large);
+  gap: 8px;
+  padding: 8px 16px;
 }
 
 #PictureInPicturePanelFooter {
-  margin: var(--space-small) var(--space-large) var(--space-large);
+  margin: 8px 16px 16px;
 }
 
 /* AI Window Toggle Button */
+
 #ai-window-toggle {
   list-style-image: url("chrome://branding/content/icon32.png");
-  border-radius: var(--border-radius-medium);
   padding-inline-end: var(--space-small);
+  border-radius: var(--border-radius-medium);
 
-  /* Toggle button should only have padding-inline-end if #PanelUI-button both visible and rendered next to it */
-  :root:not([aiwindow-first-run]) &:has(+ #PanelUI-button) {
-    padding: 0 var(--smartwindow-ai-toggle-padding, var(--space-xsmall));
+  :root[ai-window] & {
+    list-style-image: url("chrome://browser/skin/ai-window.svg");
   }
 
   > .toolbarbutton-icon {
-    padding: var(--space-small);
-
-    @media not -moz-pref("browser.nova.enabled") {
-      /* The design system does not have any inset box-shadow tokens. */
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-      box-shadow: 0 0 16px 4px var(--box-shadow-color-darker-layer-1) inset;
-    }
-
-    @media -moz-pref("browser.nova.enabled") {
-      --smart-window-toolbarbutton-color: color-mix(in srgb, var(--color-violet-desaturated-50) 15%, transparent);
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-      border: var(--border-width) solid var(--smart-window-toolbarbutton-color);
-      --toolbarbutton-background-color-hover: var(--background-color-box);
-      --toolbarbutton-background-color-active: var(--background-color-box);
-      --toolbarbutton-outline-color: var(--smart-window-toolbarbutton-color);
-    }
-  }
-
-  /* Smart Window toggle */
-  :root[ai-window] & {
-    list-style-image: url("chrome://browser/skin/smart-window-simplified.svg");
-
-    @media -moz-pref("browser.nova.enabled") {
-      list-style-image: url("chrome://browser/skin/smart-window-nova.svg");
-    }
-
-    > .toolbarbutton-icon {
-      @media not -moz-pref("browser.nova.enabled") {
-        /* Smart Window icon has additional 2px padding per side, to be slightly smaller than Classic Window icon when used in Switcher */
-        padding: var(--toolbarbutton-padding-inner);
-        /* The design system does not have any inset box-shadow tokens. */
-        /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-        box-shadow: 0 0 16px 4px var(--smartwindow-toggle-shadow-color) inset;
-      }
-
-      @media -moz-pref("browser.nova.enabled") {
-        /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-        box-shadow: 0 0 16px 4px var(--background-color-box) inset;
-        /* The design system does not have any outline width tokens. */
-        /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-        outline-width: var(--toolbarbutton-padding-inner-compact);
-        --toolbarbutton-background-color-hover: var(--background-color-box);
-        --toolbarbutton-background-color-active: var(--background-color-box);
-        --toolbarbutton-outline-color-hover: var(--smart-window-toolbarbutton-color);
-        --toolbarbutton-outline-color-active: var(--smart-window-toolbarbutton-color);
-        --toolbarbutton-outline-color-selected: var(--smart-window-toolbarbutton-color);
-      }
-    }
+    padding: 8px;
   }
 }
 
@@ -1613,52 +1431,12 @@ popupnotificationcontent {
     height: var(--icon-size-medium);
   }
 
-  .toolbarbutton-text {
-    padding-inline-start: 0;
-  }
-
   &::after {
     content: url("chrome://global/skin/icons/check.svg");
     -moz-context-properties: fill;
     fill: currentColor;
-    width: var(--icon-size);
-    height: var(--icon-size);
-    margin-inline-start: auto;
-  }
-
-  @media not -moz-pref("browser.nova.enabled") {
-    .ai-window-switch-description {
-      display: none;
-    }
-  }
-
-  @media -moz-pref("browser.nova.enabled") {
-    /* TODO: replace with token when available - Bug 2033070 */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-    border-radius: 24px;
-
-    &[checked] {
-      background-color: var(--button-background-color-active);
-    }
-
-    #ai-window-switch-ai-badge {
-      display: none;
-    }
-
-    .toolbarbutton-icon {
-      width: var(--icon-size-large);
-      height: var(--icon-size-large);
-    }
-
-    .toolbarbutton-text {
-      padding-inline-start: var(--space-small);
-      text-align: start;
-    }
-
-    .ai-window-switch-description {
-      color: var(--text-color-deemphasized);
-      font-size: var(--font-size-small);
-    }
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -1671,81 +1449,10 @@ popupnotificationcontent {
 }
 
 #ai-window-switch-ai {
-  list-style-image: url("chrome://browser/skin/smart-window-simplified.svg");
+  list-style-image: url("chrome://browser/skin/ai-window.svg");
 
   :root:not([ai-window]) &::after {
     display: none;
-  }
-
-  @media not -moz-pref("browser.nova.enabled") {
-    & > .toolbarbutton-icon {
-      /* Smart Window icon has additional 0.125rem padding per side, to be slightly smaller than Classic Window icon when used in Switcher */
-      padding: var(--space-xxsmall);
-    }
-
-    & moz-badge {
-      margin-inline-start: var(--space-medium);
-    }
-  }
-}
-
-#appMenu-new-ai-window-button > moz-badge {
-  margin-inline-start: auto;
-}
-
-/* AI window immersive view (hidden nav bar and buttons) */
-:root[ai-window][aiwindow-immersive-view] {
-  #nav-bar:not(.browser-titlebar) {
-    height: 0;
-    min-height: 0;
-    visibility: hidden;
-  }
-
-  #urlbar-container,
-  #nav-bar-customization-target > *:not(#sidebar-button),
-  #nav-bar-overflow-button,
-  #smartwindow-ask-button {
-    visibility: hidden;
-  }
-
-  /* Show back/forward buttons when navigating back to the Smart Window from a page */
-  &[aiwindow-has-nav-forward] {
-    #nav-bar:not(.browser-titlebar) {
-      height: unset;
-      min-height: unset;
-      visibility: visible;
-    }
-
-    #sidebar-button {
-      display: none;
-    }
-
-    #nav-bar-customization-target > #back-button,
-    #nav-bar-customization-target > #forward-button {
-      visibility: visible;
-      -moz-user-focus: normal;
-    }
-  }
-
-  /* immersive view styles exclusive for first run */
-  &[aiwindow-first-run] {
-    #PanelUI-button {
-      display: none;
-    }
-
-    #TabsToolbar > .toolbar-items {
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens -- to be addressed in 2033919 */
-      opacity: 0.2;
-      pointer-events: none;
-    }
-
-    @media -moz-pref("sidebar.verticalTabs") {
-      #sidebar-main {
-        /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens -- to be addressed in 2033919 */
-        opacity: 0.2;
-        pointer-events: none;
-      }
-    }
   }
 }
 

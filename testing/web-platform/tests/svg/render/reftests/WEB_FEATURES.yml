@@ -1,6 +1,0 @@
-features:
-- name: mix-blend-mode
-  files:
-  - blending-001.svg
-  - blending-002.svg
-  - blending-svg-root.html

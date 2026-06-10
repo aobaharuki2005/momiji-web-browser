@@ -20,6 +20,7 @@ function invalidCall(code) {
     errors: [
       {
         messageId: "rejectPassingGlobalThis",
+        type: "CallExpression",
       },
     ],
   };
@@ -31,6 +32,7 @@ function invalidAssignment(code) {
     errors: [
       {
         messageId: "rejectModifyGlobalThis",
+        type: "AssignmentExpression",
       },
     ],
   };

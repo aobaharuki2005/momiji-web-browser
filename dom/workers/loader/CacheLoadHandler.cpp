@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -46,8 +48,7 @@ void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
                                            JS::Handle<JS::Value> aValue,
                                            ErrorResult& aRv) {
   AssertIsOnMainThread();
-  // skip to schedule execution if it has been scheduled already.
-  if (mRequestHandle->mExecutionScheduled) {
+  if (mRequestHandle->IsEmpty()) {
     return;
   }
   WorkerLoadContext* loadContext = mRequestHandle->GetContext();
@@ -70,8 +71,7 @@ void CachePromiseHandler::RejectedCallback(JSContext* aCx,
                                            JS::Handle<JS::Value> aValue,
                                            ErrorResult& aRv) {
   AssertIsOnMainThread();
-  // skip to schedule execution if it has been scheduled already.
-  if (mRequestHandle->mExecutionScheduled) {
+  if (mRequestHandle->IsEmpty()) {
     return;
   }
   WorkerLoadContext* loadContext = mRequestHandle->GetContext();
@@ -263,11 +263,6 @@ void CacheLoadHandler::Fail(nsresult aRv) {
     mPump->Cancel(aRv);
     mPump = nullptr;
   }
-
-  if (mRequestHandle->mExecutionScheduled) {
-    return;
-  }
-
   if (mRequestHandle->IsEmpty()) {
     return;
   }
@@ -282,12 +277,7 @@ void CacheLoadHandler::Fail(nsresult aRv) {
 
   loadContext->mCachePromise = nullptr;
 
-  if (loadContext->mLoadingFinished) {
-    loadContext->mLoadResult = aRv;
-    mRequestHandle->MaybeExecuteFinishedScripts();
-  } else {
-    mRequestHandle->LoadingFinished(aRv);
-  }
+  mRequestHandle->LoadingFinished(aRv);
 }
 
 void CacheLoadHandler::Load(Cache* aCache) {
@@ -312,7 +302,7 @@ void CacheLoadHandler::Load(Cache* aCache) {
   }
 
   mozilla::dom::RequestOrUTF8String request;
-  request.SetAsUTF8String() = loadContext->mFullURL;
+  request.SetAsUTF8String().ShareOrDependUpon(loadContext->mFullURL);
 
   mozilla::dom::CacheQueryOptions params;
 
@@ -412,11 +402,6 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
   rv = ScriptResponseHeaderProcessor::ProcessCrossOriginEmbedderPolicyHeader(
       mWorkerRef->Private(), coep, loadContext->IsTopLevel());
 
-  if (loadContext->IsTopLevel()) {
-    headers->Get("Reporting-Endpoints"_ns, mReportingEndpointsHeaderValue,
-                 IgnoreErrors());
-  }
-
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Fail(rv);
     return;
@@ -443,8 +428,7 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
 
     nsresult rv = DataReceivedFromCache(
         (uint8_t*)"", 0, mChannelInfo, std::move(mPrincipalInfo),
-        mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue,
-        mReportingEndpointsHeaderValue);
+        mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
 
     mRequestHandle->OnStreamComplete(rv);
     return;
@@ -518,8 +502,7 @@ CacheLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
 
   nsresult rv = DataReceivedFromCache(
       aString, aStringLen, mChannelInfo, std::move(mPrincipalInfo),
-      mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue,
-      mReportingEndpointsHeaderValue);
+      mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
   return mRequestHandle->OnStreamComplete(rv);
 }
 
@@ -528,8 +511,7 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
     const mozilla::dom::ChannelInfo& aChannelInfo,
     UniquePtr<PrincipalInfo> aPrincipalInfo, const nsACString& aCSPHeaderValue,
     const nsACString& aCSPReportOnlyHeaderValue,
-    const nsACString& aReferrerPolicyHeaderValue,
-    const nsACString& aReportingEndpointsHeaderValue) {
+    const nsACString& aReferrerPolicyHeaderValue) {
   AssertIsOnMainThread();
   if (mRequestHandle->IsEmpty()) {
     return NS_OK;
@@ -569,7 +551,7 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
 
   if (!loadContext->mRequest->ScriptTextLength()) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
-                                    parentDoc, PropertiesFile::DOM_PROPERTIES,
+                                    parentDoc, nsContentUtils::eDOM_PROPERTIES,
                                     "EmptyWorkerSourceWarning");
   }
 
@@ -581,8 +563,6 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
   if (loadContext->IsTopLevel()) {
     if (NS_SUCCEEDED(rv)) {
       mWorkerRef->Private()->SetBaseURI(finalURI);
-      mWorkerRef->Private()->SetReportingEndpointsHeader(
-          aReportingEndpointsHeaderValue);
     }
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED

@@ -13,6 +13,7 @@ import mozilla.components.ui.widgets.behavior.EngineViewClippingBehavior
 import mozilla.components.ui.widgets.behavior.EngineViewScrollingGesturesBehavior
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
@@ -20,7 +21,6 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mozilla.focus.R
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertIs
 
 @RunWith(RobolectricTestRunner::class)
 internal class BrowserToolbarTest {
@@ -42,8 +42,8 @@ internal class BrowserToolbarTest {
 
         toolbar.enableDynamicBehavior(testContext, engineView)
 
-        assertIs<EngineViewScrollingGesturesBehavior>((toolbar.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior)
-        assertIs<EngineViewClippingBehavior>((engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior)
+        assertTrue((toolbar.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior is EngineViewScrollingGesturesBehavior)
+        assertTrue((engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior is EngineViewClippingBehavior)
         assertEquals(0, (engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.topMargin)
         verify(engineView).setDynamicToolbarMaxHeight(toolbarHeight)
     }

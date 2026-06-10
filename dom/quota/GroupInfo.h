@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -37,15 +39,13 @@ class GroupInfo final {
 
   PersistenceType GetPersistenceType() const { return mPersistenceType; }
 
-  const nsCString& GetGroup() const;
-
  private:
   // Private destructor, to discourage deletion outside of Release():
   MOZ_COUNTED_DTOR(GroupInfo)
 
-  SafeRefPtr<OriginInfo> LockedGetOriginInfo(const nsACString& aOrigin);
+  already_AddRefed<OriginInfo> LockedGetOriginInfo(const nsACString& aOrigin);
 
-  void LockedAddOriginInfo(NotNull<SafeRefPtr<OriginInfo>>&& aOriginInfo);
+  void LockedAddOriginInfo(NotNull<RefPtr<OriginInfo>>&& aOriginInfo);
 
   void LockedAdjustUsageForRemovedOriginInfo(const OriginInfo& aOriginInfo);
 
@@ -59,7 +59,7 @@ class GroupInfo final {
     return !mOriginInfos.IsEmpty();
   }
 
-  nsTArray<NotNull<SafeRefPtr<OriginInfo>>> mOriginInfos;
+  nsTArray<NotNull<RefPtr<OriginInfo>>> mOriginInfos;
 
   GroupInfoPair* mGroupInfoPair;
   PersistenceType mPersistenceType;

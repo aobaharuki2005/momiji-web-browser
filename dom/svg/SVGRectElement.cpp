@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,17 +32,17 @@ JSObject* SVGRectElement::WrapNode(JSContext* aCx,
 
 SVGElement::LengthInfo SVGRectElement::sLengthInfo[6] = {
     {nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::Y},
+     SVGContentUtils::Y},
     {nsGkAtoms::width, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::height, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::Y},
+     SVGContentUtils::Y},
     {nsGkAtoms::rx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::ry, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::Y}};
+     SVGContentUtils::Y}};
 
 //----------------------------------------------------------------------
 // Implementation
@@ -237,25 +239,6 @@ already_AddRefed<Path> SVGRectElement::BuildPath(PathBuilder* aBuilder) {
   }
 
   return aBuilder->Finish();
-}
-
-Maybe<bool> SVGRectElement::HasCtxDependentLength() const {
-  bool hasCtxDependentLength = false;
-  if (SVGGeometryProperty::DoForComputedStyle(
-          this, [&](const ComputedStyle* style) {
-            const nsStyleSVGReset* styleSVGReset = style->StyleSVGReset();
-            const nsStylePosition* stylePosition = style->StylePosition();
-
-            hasCtxDependentLength = styleSVGReset->mX.HasPercent() ||
-                                    styleSVGReset->mY.HasPercent() ||
-                                    styleSVGReset->mRx.HasPercent() ||
-                                    styleSVGReset->mRy.HasPercent() ||
-                                    stylePosition->mWidth.HasPercent() ||
-                                    stylePosition->mHeight.HasPercent();
-          })) {
-    return Some(hasCtxDependentLength);
-  }
-  return Nothing();
 }
 
 bool SVGRectElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,

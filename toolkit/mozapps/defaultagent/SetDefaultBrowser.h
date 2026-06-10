@@ -1,12 +1,14 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DEFAULT_BROWSER_SET_DEFAULT_BROWSER_H_
-#define DEFAULT_BROWSER_SET_DEFAULT_BROWSER_H_
+#ifndef DEFAULT_BROWSER_SET_DEFAULT_BROWSER_H__
+#define DEFAULT_BROWSER_SET_DEFAULT_BROWSER_H__
 
 #include "nsStringFwd.h"
 #include "nsArray.h"
+#include <functional>
 
 namespace mozilla::default_agent {
 
@@ -68,4 +70,4 @@ nsresult SetDefaultExtensionHandlersUserChoice(
 
 }  // namespace mozilla::default_agent
 
-#endif  // DEFAULT_BROWSER_SET_DEFAULT_BROWSER_H_
+#endif  // DEFAULT_BROWSER_SET_DEFAULT_BROWSER_H__

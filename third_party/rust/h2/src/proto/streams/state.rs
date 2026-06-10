@@ -1,4 +1,3 @@
-use std::fmt;
 use std::io;
 
 use crate::codec::UserError;
@@ -48,7 +47,7 @@ use self::Peer::*;
 ///        ES: END_STREAM flag
 ///        R:  RST_STREAM frame
 /// ```
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct State {
     inner: Inner,
 }
@@ -410,13 +409,15 @@ impl State {
         )
     }
 
-    pub fn is_recv_end_stream(&self) -> bool {
-        // In either case END_STREAM has been received
-        matches!(self.inner, Closed(Cause::EndStream) | HalfClosedRemote(..))
-    }
-
     pub fn is_closed(&self) -> bool {
         matches!(self.inner, Closed(_))
+    }
+
+    pub fn is_recv_closed(&self) -> bool {
+        matches!(
+            self.inner,
+            Closed(..) | HalfClosedRemote(..) | ReservedLocal
+        )
     }
 
     pub fn is_send_closed(&self) -> bool {
@@ -464,12 +465,5 @@ impl State {
 impl Default for State {
     fn default() -> State {
         State { inner: Inner::Idle }
-    }
-}
-
-// remove some noise for debug output
-impl fmt::Debug for State {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.inner.fmt(f)
     }
 }

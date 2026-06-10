@@ -2,15 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import datetime
-from typing import Literal, Optional
 
 import jsone
-import taskgraph
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.copy import deepcopy
 from taskgraph.util.schema import Schema, resolve_keyed_by, validate_schema
 from taskgraph.util.templates import merge
 from taskgraph.util.treeherder import join_symbol, split_symbol
+from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph.util.chunking import TEST_VARIANTS
 
@@ -19,27 +18,19 @@ transforms = TransformSequence()
 """List of available test variants defined."""
 
 
-class VariantEntry(Schema, kw_only=True):
-    description: str
-    suffix: str
-    treeherder_suffix: Optional[str] = None
-    mozinfo: Optional[str] = None
-    component: str
-    expiration: str
-    when: Optional[dict[Literal["$eval", "$if"], str]] = None
-    replace: Optional[dict[str, object]] = None
-    merge: Optional[dict[str, object]] = None
-
-    def __post_init__(self):
-        super().__post_init__()
-        if self.expiration != "never":
-            try:
-                datetime.datetime.strptime(self.expiration, "%Y-%m-%d")
-            except ValueError as e:
-                raise ValueError(
-                    f"Invalid expiration {self.expiration!r}, "
-                    "must be a date in YYYY-MM-DD format or 'never'"
-                ) from e
+variant_description_schema = Schema({
+    str: {
+        Required("description"): str,
+        Required("suffix"): str,
+        Optional("mozinfo"): str,
+        Required("component"): str,
+        Required("expiration"): str,
+        Optional("when"): {Any("$eval", "$if"): str},
+        Optional("replace"): {str: object},
+        Optional("merge"): {str: object},
+    }
+})
+"""variant description schema"""
 
 
 @transforms.add
@@ -50,11 +41,7 @@ def split_variants(config, tasks):
     copy of the original task for each variant defined in the list. The copies
     will have the 'unittest_variant' attribute set.
     """
-    if not taskgraph.fast:
-        for name, variant in TEST_VARIANTS.items():
-            validate_schema(
-                VariantEntry, variant, f"In variants.yml, variant {name!r}:"
-            )
+    validate_schema(variant_description_schema, TEST_VARIANTS, "In variants.yml:")
 
     def find_expired_variants(variants):
         expired = []
@@ -103,12 +90,11 @@ def split_variants(config, tasks):
         task["description"] = variant["description"].format(**task)
 
         suffix = f"-{variant['suffix']}"
-        th_suffix = f"-{variant.get('treeherder-suffix') or variant['suffix']}"
         group, symbol = split_symbol(task["treeherder-symbol"])
         if group != "?":
-            group += th_suffix
+            group += suffix
         else:
-            symbol += th_suffix
+            symbol += suffix
         task["treeherder-symbol"] = join_symbol(group, symbol)
 
         # This will be used to set the label and try-name in 'make_job_description'.

@@ -8,38 +8,27 @@
  */
 
 /**
- * @import {Query} from "./UrlbarProvidersManager.sys.mjs"
- * @import {SearchEngine} from "moz-src:///toolkit/components/search/SearchEngine.sys.mjs"
- * @import {SmartbarInput} from "chrome://browser/content/urlbar/SmartbarInput.mjs"
- * @import {UrlbarSearchStringTokenData} from "./UrlbarTokenizer.sys.mjs"
+ * @import {Query} from "UrlbarProvidersManager.sys.mjs"
+ * @import {UrlbarSearchStringTokenData} from "UrlbarTokenizer.sys.mjs"
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const lazy = XPCOMUtils.declareLazy({
-  AIWindow:
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
-  BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
   DEFAULT_FORM_HISTORY_PARAM:
     "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs",
-  FaviconUtils: "moz-src:///toolkit/modules/FaviconUtils.sys.mjs",
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   KeywordUtils: "resource://gre/modules/KeywordUtils.sys.mjs",
-  parserUtils: {
-    service: "@mozilla.org/parserutils;1",
-    iid: Ci.nsIParserUtils,
-  },
   PlacesUIUtils: "moz-src:///browser/components/places/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  SearchEngine: "moz-src:///toolkit/components/search/SearchEngine.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SearchSuggestionController:
     "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
   UrlbarProviderInterventions:
     "moz-src:///browser/components/urlbar/UrlbarProviderInterventions.sys.mjs",
   UrlbarProviderOpenTabs:
@@ -48,32 +37,18 @@ const lazy = XPCOMUtils.declareLazy({
     "moz-src:///browser/components/urlbar/UrlbarProviderSearchTips.sys.mjs",
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
+  UrlbarTokenizer:
+    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
+  BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
   UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
-  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
-
-  historyEnabled: {
-    pref: "places.history.enabled",
-    default: true,
-  },
 });
 
-/**
- * Parses a URL and returns the origin parts needed for moz_origins lookups.
- * Returns null if the URL is unparseable.
- *
- * @param {string} url
- *   The URL to parse.
- * @returns {{ prefix: string, host: string } | null}
- *   The prefix (scheme + "//") and host, or null if parsing failed.
- */
-function parseOriginParts(url) {
-  let parsed = URL.parse(url);
-  if (!parsed) {
-    return null;
-  }
-  return { prefix: parsed.protocol + "//", host: parsed.host };
-}
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "parserUtils",
+  "@mozilla.org/parserutils;1",
+  Ci.nsIParserUtils
+);
 
 export var UrlbarUtils = {
   // Results are categorized into groups to help the muxer compose them.  See
@@ -84,12 +59,10 @@ export var UrlbarUtils = {
   // because we don't want to make downgrades unnecessarily hard.
   RESULT_GROUP: Object.freeze({
     ABOUT_PAGES: "aboutPages",
-    AI: "ai",
     GENERAL: "general",
     GENERAL_PARENT: "generalParent",
     FORM_HISTORY: "formHistory",
     HEURISTIC_AUTOFILL: "heuristicAutofill",
-    HEURISTIC_AI_CHAT: "heuristicAiChat",
     HEURISTIC_ENGINE_ALIAS: "heuristicEngineAlias",
     HEURISTIC_EXTENSION: "heuristicExtension",
     HEURISTIC_FALLBACK: "heuristicFallback",
@@ -146,8 +119,6 @@ export var UrlbarUtils = {
     DYNAMIC: 8,
     // A restrict keyword result, could be @bookmarks, @history, or @tabs.
     RESTRICT: 9,
-    // An AI chat result.
-    AI_CHAT: 10,
 
     // When you add a new type, also add its schema to
     // UrlbarUtils.RESULT_PAYLOAD_SCHEMA below.  Also consider checking if
@@ -229,12 +200,11 @@ export var UrlbarUtils = {
   REGEXP_SINGLE_WORD: /^[^\s@:/?#]+(:\d+)?$/,
 
   // Valid entry points for search mode. If adding a value here, please update
-  // telemetry documentation and metrics.yaml.
+  // telemetry documentation and Scalars.yaml.
   SEARCH_MODE_ENTRY: new Set([
     "bookmarkmenu",
     "handoff",
     "keywordoffer",
-    "messagingSystem",
     "oneoff",
     "historymenu",
     "other",
@@ -268,57 +238,40 @@ export var UrlbarUtils = {
   // Search mode objects corresponding to the local shortcuts in the view, in
   // order they appear.  Pref names are relative to the `browser.urlbar` branch.
   get LOCAL_SEARCH_MODES() {
-    /**
-     * @typedef {object} LocalSearchMode
-     * @property {Values<typeof this.RESULT_SOURCE>} source
-     *   The source which the search mode will search.
-     * @property {Values<typeof lazy.UrlbarShared.RESTRICT_TOKENS>} restrict
-     *   The restrict token that is associated with the search (*, %, $ etc).
-     * @property {string} icon
-     *   The URL of the icon associated with the search mode in preferences.
-     * @property {string} pref
-     *   The suffix of the preference associated with if the mode is displayed
-     *   in the lists or not (prefix with `browser.urlbar.`).
-     * @property {string} telemetryLabel
-     *   The telemetry label for recording searches in this mode.
-     * @property {string} uiLabel
-     *   The string to use for the UI label.
-     */
-
-    return /** @type {LocalSearchMode[]} */ ([
+    return [
       {
         source: this.RESULT_SOURCE.BOOKMARKS,
-        restrict: lazy.UrlbarShared.RESTRICT_TOKENS.BOOKMARK,
+        restrict: lazy.UrlbarTokenizer.RESTRICT.BOOKMARK,
         icon: "chrome://browser/skin/bookmark.svg",
         pref: "shortcuts.bookmarks",
         telemetryLabel: "bookmarks",
-        uiLabel: "urlbar-searchmode-bookmarks2",
+        uiLabel: "urlbar-searchmode-bookmarks",
       },
       {
         source: this.RESULT_SOURCE.TABS,
-        restrict: lazy.UrlbarShared.RESTRICT_TOKENS.OPENPAGE,
+        restrict: lazy.UrlbarTokenizer.RESTRICT.OPENPAGE,
         icon: "chrome://browser/skin/tabs.svg",
         pref: "shortcuts.tabs",
         telemetryLabel: "tabs",
-        uiLabel: "urlbar-searchmode-tabs2",
+        uiLabel: "urlbar-searchmode-tabs",
       },
       {
         source: this.RESULT_SOURCE.HISTORY,
-        restrict: lazy.UrlbarShared.RESTRICT_TOKENS.HISTORY,
+        restrict: lazy.UrlbarTokenizer.RESTRICT.HISTORY,
         icon: "chrome://browser/skin/history.svg",
         pref: "shortcuts.history",
         telemetryLabel: "history",
-        uiLabel: "urlbar-searchmode-history2",
+        uiLabel: "urlbar-searchmode-history",
       },
       {
         source: this.RESULT_SOURCE.ACTIONS,
-        restrict: lazy.UrlbarShared.RESTRICT_TOKENS.ACTION,
+        restrict: lazy.UrlbarTokenizer.RESTRICT.ACTION,
         icon: "chrome://browser/skin/quickactions.svg",
         pref: "shortcuts.actions",
         telemetryLabel: "actions",
-        uiLabel: "urlbar-searchmode-actions2",
+        uiLabel: "urlbar-searchmode-actions",
       },
-    ]);
+    ];
   },
 
   /**
@@ -371,8 +324,8 @@ export var UrlbarUtils = {
       return { url, postData, mayInheritPrincipal };
     }
 
-    /** @type {SearchEngine} */
-    let engine = await lazy.SearchService.getEngineByAlias(keyword);
+    /** @type {nsISearchEngine} */
+    let engine = await Services.search.getEngineByAlias(keyword);
     if (engine) {
       let submission = engine.getSubmission(param, null);
       return {
@@ -598,8 +551,6 @@ export var UrlbarUtils = {
     }
     if (result.heuristic) {
       switch (result.providerName) {
-        case "UrlbarProviderAiChat":
-          return this.RESULT_GROUP.HEURISTIC_AI_CHAT;
         case "UrlbarProviderAliasEngines":
           return this.RESULT_GROUP.HEURISTIC_ENGINE_ALIAS;
         case "UrlbarProviderAutofill":
@@ -665,8 +616,6 @@ export var UrlbarUtils = {
         return this.RESULT_GROUP.REMOTE_TAB;
       case this.RESULT_TYPE.RESTRICT:
         return this.RESULT_GROUP.RESTRICT_SEARCH_KEYWORD;
-      case this.RESULT_TYPE.AI_CHAT:
-        return this.RESULT_GROUP.AI;
     }
     return this.RESULT_GROUP.GENERAL;
   },
@@ -698,9 +647,7 @@ export var UrlbarUtils = {
         result.payload.suggestion ||
         result.payload.query;
       if (query) {
-        const engine = lazy.SearchService.getEngineByName(
-          result.payload.engine
-        );
+        const engine = Services.search.getEngineByName(result.payload.engine);
         let [url, postData] = this.getSearchQueryUrl(engine, query);
         return { url, postData };
       }
@@ -717,7 +664,7 @@ export var UrlbarUtils = {
   /**
    * Get the url to load for the search query.
    *
-   * @param {SearchEngine} engine
+   * @param {nsISearchEngine} engine
    *   The engine to generate the query for.
    * @param {string} query
    *   The query string to search for.
@@ -797,56 +744,20 @@ export var UrlbarUtils = {
   },
 
   /**
-   * Converts a given icon URL to a remote icon URL if it's not a trusted
-   * protocol.
-   *
-   * @param {string} iconUrl The URL of the icon.
-   * @param {number} size The desired size of the icon (currently ignored).
-   * @param {Window} win The window context.
-   * @returns {string|null} The URL of the remote icon or null if not available.
-   */
-  getRemoteIconUrl(iconUrl, size, win) {
-    let url = URL.parse(iconUrl);
-    if (!url) {
-      return null;
-    }
-    if (!lazy.FaviconUtils.TRUSTED_FAVICON_SCHEMES.includes(url.protocol)) {
-      if (Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
-        // XPCShell tests don't have a real window, just use fallback values.
-        return lazy.FaviconUtils.getMozRemoteImageURL(iconUrl, {
-          size,
-          colorScheme: "light",
-        });
-      }
-      return lazy.FaviconUtils.getMozRemoteImageURL(iconUrl, {
-        // TODO Bug 2035971: Restore the size property once `FaviconUtils` and
-        // `moz-remote-image` handle the image aspect ratio correctly.
-        //
-        // size: Math.floor(size * win.devicePixelRatio),
-        colorScheme: win.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light",
-      });
-    }
-    return iconUrl;
-  },
-
-  /**
    * Tries to initiate a speculative connection to a given url.
    *
    * Note: This is not infallible, if a speculative connection cannot be
    *       initialized, it will be a no-op.
    *
-   * @param {SearchEngine|nsIURI|URL|string} urlOrEngine
-   *   The entity to initiate a speculative connection for.
-   * @param {window} window
-   *   The window from where the connection is initialized.
+   * @param {nsISearchEngine|nsIURI|URL|string} urlOrEngine entity to initiate
+   *        a speculative connection for.
+   * @param {window} window the window from where the connection is initialized.
    */
   setupSpeculativeConnection(urlOrEngine, window) {
     if (!lazy.UrlbarPrefs.get("speculativeConnect.enabled")) {
       return;
     }
-    if (urlOrEngine instanceof lazy.SearchEngine) {
+    if (urlOrEngine instanceof Ci.nsISearchEngine) {
       try {
         urlOrEngine.speculativeConnect({
           window,
@@ -980,49 +891,6 @@ export var UrlbarUtils = {
   },
 
   /**
-   * Sanitize and process data retrieved from the clipboard
-   *
-   * @param {string} clipboardData
-   *   The original data retrieved from the clipboard.
-   * @returns {string}
-   *   The sanitized paste data, ready to use.
-   */
-  sanitizeTextFromClipboard(clipboardData) {
-    let fixedURI, keywordAsSent;
-    try {
-      ({ fixedURI, keywordAsSent } = Services.uriFixup.getFixupURIInfo(
-        clipboardData,
-        Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
-          Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
-      ));
-    } catch (e) {}
-
-    let pasteData;
-    if (keywordAsSent) {
-      // For performance reasons, we don't want to beautify a long string.
-      if (clipboardData.length < 500) {
-        // For only keywords, replace any white spaces including line break
-        // with white space.
-        pasteData = clipboardData.replace(/\s/g, " ");
-      } else {
-        pasteData = clipboardData;
-      }
-    } else if (
-      fixedURI?.scheme == "data" &&
-      !fixedURI.spec.match(/^data:.+;base64,/)
-    ) {
-      // For data url without base64, replace line break with white space.
-      pasteData = clipboardData.replace(/[\r\n]/g, " ");
-    } else {
-      // For normal url or data url having basic64, or if fixup failed, just
-      // remove line breaks.
-      pasteData = clipboardData.replace(/[\r\n]/g, "");
-    }
-
-    return this.stripUnsafeProtocolOnPaste(pasteData);
-  },
-
-  /**
    * Used to filter out the javascript protocol from URIs, since we don't
    * support LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL for those.
    *
@@ -1052,80 +920,21 @@ export var UrlbarUtils = {
    *
    * @param {string} url The url to add input history for
    * @param {string} input The associated search term
-   * @returns {Promise<boolean>}
-   *   Whether the row was written. False if the URL is not yet in moz_places
-   *   or history is disabled.
    */
   async addToInputHistory(url, input) {
-    if (!lazy.historyEnabled) {
-      return false;
-    }
-    // use_count will asymptotically approach the max of 10.
-    let rows = await lazy.PlacesUtils.withConnectionWrapper(
-      "addToInputHistory",
-      db => {
-        return db.executeCached(
-          `
-          INSERT OR REPLACE INTO moz_inputhistory
-          SELECT h.id, IFNULL(i.input, :input), IFNULL(i.use_count, 0) * .9 + 1
-          FROM moz_places h
-          LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = :input
-          WHERE url_hash = hash(:url) AND url = :url
-          RETURNING place_id
-          `,
-          { url, input: input.toLowerCase() }
-        );
-      }
-    );
-    return !!rows.length;
-  },
-
-  /**
-   * Like addToInputHistory, but if the URL is not yet in moz_places
-   * (e.g. an origin derived from a deep-link visit), waits for the
-   * visit to land before writing.
-   *
-   * @param {string} url The url to add input history for
-   * @param {string} input The associated search term
-   */
-  async addToInputHistoryWhenReady(url, input) {
-    if (!lazy.historyEnabled) {
-      return;
-    }
-    // Register the observer before the initial attempt so we can't miss
-    // a visit that lands between the check and the registration.
-    let { promise: visitedPromise, resolve: visitedResolve } =
-      Promise.withResolvers();
-    let listener = events => {
-      for (let event of events) {
-        if (event.type == "page-visited" && event.url == url) {
-          PlacesObservers.removeListener(["page-visited"], listener);
-          visitedResolve(true);
-          return;
-        }
-      }
-    };
-    PlacesObservers.addListener(["page-visited"], listener);
-
-    // Safety timeout so we don't leak the listener forever.
-    let timeoutId = lazy.setTimeout(() => {
-      PlacesObservers.removeListener(["page-visited"], listener);
-      visitedResolve(false);
-    }, 1000);
-
-    // Try immediately, succeeds if the URL is already in moz_places.
-    if (await this.addToInputHistory(url, input)) {
-      PlacesObservers.removeListener(["page-visited"], listener);
-      lazy.clearTimeout(timeoutId);
-      return;
-    }
-
-    // Page not yet in moz_places, wait for the visit to be recorded.
-    let visited = await visitedPromise;
-    lazy.clearTimeout(timeoutId);
-    if (visited) {
-      await this.addToInputHistory(url, input);
-    }
+    await lazy.PlacesUtils.withConnectionWrapper("addToInputHistory", db => {
+      // use_count will asymptotically approach the max of 10.
+      return db.executeCached(
+        `
+        INSERT OR REPLACE INTO moz_inputhistory
+        SELECT h.id, IFNULL(i.input, :input), IFNULL(i.use_count, 0) * .9 + 1
+        FROM moz_places h
+        LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = :input
+        WHERE url_hash = hash(:url) AND url = :url
+      `,
+        { url, input: input.toLowerCase() }
+      );
+    });
   },
 
   /**
@@ -1149,374 +958,6 @@ export var UrlbarUtils = {
         { url, input: input.toLowerCase() }
       );
     });
-  },
-
-  /**
-   * Temporarily blocks autofill for the given URL. If the URL is an origin,
-   * blocks origin autofill via blockOriginAutofill. Otherwise, blocks
-   * page-level autofill via blockOriginPageAutofill.
-   *
-   * @param {string} url
-   *   The URL to block from autofill.
-   * @param {number} blockUntilMs
-   *   Epoch timestamp in ms after which the block expires.
-   */
-  async blockAutofill(url, blockUntilMs) {
-    if (this.isOriginUrl(url)) {
-      await this.blockOriginAutofill(url, blockUntilMs);
-    } else {
-      await this.blockOriginPageAutofill(url, blockUntilMs);
-    }
-  },
-
-  /**
-   * Temporarily blocks origin autofill for the given URL's origin and all its
-   * scheme/www variations. For example, blocking https://www.example.com also
-   * blocks http://www.example.com, http://example.com, and
-   * https://example.com. The lookup matches against moz_origins directly, so
-   * the URL need not have a corresponding entry in moz_places.
-   *
-   * This is a no-op if the URL is unparseable.
-   *
-   * @param {string} url
-   *   A URL belonging to the origin to block.
-   * @param {number} blockUntilMs
-   *   Epoch timestamp in ms after which the block expires.
-   */
-  async blockOriginAutofill(url, blockUntilMs) {
-    let origin = parseOriginParts(url);
-    if (!origin) {
-      return;
-    }
-
-    let baseHost = origin.host.replace(/^www\./, "");
-    let wwwHost = "www." + baseHost;
-
-    await lazy.PlacesUtils.withConnectionWrapper("blockOriginAutofill", db => {
-      return db.executeCached(
-        `
-      UPDATE moz_origins SET block_until_ms = :blockUntilMs
-      WHERE host IN (:baseHost, :wwwHost)
-        AND prefix IN ('http://', 'https://')
-      `,
-        { blockUntilMs, baseHost, wwwHost }
-      );
-    });
-  },
-
-  /**
-   * Temporarily blocks page-level autofill for the given URL's origin and all
-   * its scheme/www variations. For example, blocking https://www.example.com
-   * also blocks http://www.example.com, http://example.com, and
-   * https://example.com.
-   *
-   * This is a no-op if the URL is unparseable.
-   *
-   * @param {string} url
-   *   A URL belonging to the origin to block.
-   * @param {number} blockPagesUntilMs
-   *   Epoch timestamp in ms after which the block expires.
-   */
-  async blockOriginPageAutofill(url, blockPagesUntilMs) {
-    let origin = parseOriginParts(url);
-    if (!origin) {
-      return;
-    }
-
-    let baseHost = origin.host.replace(/^www\./, "");
-    let wwwHost = "www." + baseHost;
-
-    await lazy.PlacesUtils.withConnectionWrapper(
-      "blockOriginPageAutofill",
-      db => {
-        return db.executeCached(
-          `
-        UPDATE moz_origins SET block_pages_until_ms = :blockPagesUntilMs
-        WHERE host IN (:baseHost, :wwwHost)
-          AND prefix IN ('http://', 'https://')
-        `,
-          { blockPagesUntilMs, baseHost, wwwHost }
-        );
-      }
-    );
-  },
-
-  /**
-   * Clears an origin-level autofill block for the given URL's origin and all
-   * its scheme/www variations. For example, clearing a block on
-   * http://example.com also clears blocks on https://example.com,
-   * http://www.example.com, and https://www.example.com. The lookup matches
-   * against moz_origins directly, so the URL need not have a corresponding
-   * entry in moz_places.
-   *
-   * This is a no-op if the URL is unparseable or the origin is not
-   * currently blocked.
-   *
-   * @param {string} url
-   *   A URL belonging to the origin to unblock.
-   * @returns {Promise<boolean>}
-   *   True if a block was actually cleared, false otherwise.
-   */
-  async clearOriginAutofillBlock(url) {
-    let origin = parseOriginParts(url);
-    if (!origin) {
-      return false;
-    }
-
-    let baseHost = origin.host.replace(/^www\./, "");
-    let wwwHost = "www." + baseHost;
-
-    let rows = await lazy.PlacesUtils.withConnectionWrapper(
-      "clearOriginAutofillBlock",
-      db => {
-        return db.executeCached(
-          `
-        UPDATE moz_origins SET block_until_ms = NULL
-        WHERE host IN (:baseHost, :wwwHost)
-          AND prefix IN ('http://', 'https://')
-          AND block_until_ms IS NOT NULL
-        RETURNING id
-        `,
-          { baseHost, wwwHost }
-        );
-      }
-    );
-    return !!rows.length;
-  },
-
-  /**
-   * Clears a page-level autofill block for the given URL's origin and all its
-   * scheme/www variations. For example, clearing a block on
-   * http://example.com also clears blocks on https://example.com,
-   * http://www.example.com, and https://www.example.com.
-   *
-   * This is a no-op if the URL is unparseable or the origin's pages are
-   * not currently blocked.
-   *
-   * @param {string} url
-   *   A URL belonging to the origin to unblock.
-   * @returns {Promise<boolean>}
-   *   True if a block was actually cleared, false otherwise.
-   */
-  async clearOriginPageAutofillBlock(url) {
-    let origin = parseOriginParts(url);
-    if (!origin) {
-      return false;
-    }
-
-    let baseHost = origin.host.replace(/^www\./, "");
-    let wwwHost = "www." + baseHost;
-
-    let rows = await lazy.PlacesUtils.withConnectionWrapper(
-      "clearOriginPageAutofillBlock",
-      db => {
-        return db.executeCached(
-          `
-        UPDATE moz_origins SET block_pages_until_ms = NULL
-        WHERE host IN (:baseHost, :wwwHost)
-          AND prefix IN ('http://', 'https://')
-          AND block_pages_until_ms IS NOT NULL
-        RETURNING id
-        `,
-          { baseHost, wwwHost }
-        );
-      }
-    );
-    return !!rows.length;
-  },
-
-  /**
-   * @typedef {object} BackspaceInfo
-   * @property {number?} count
-   *   How many times the origin or URL had its autofill cleared.
-   * @property {number?} blockedAt
-   *   How long ago the origin or URL was blocked from backspacing.
-   */
-
-  /**
-   * LRU map tracking adaptive autofill backspace dismissals through their
-   * lifecycle: pre-block (counting backspaces toward the threshold) and
-   * post-block (timestamp used by re-integration telemetry to measure how
-   * long until the user returned to the same destination).
-   *
-   * Keyed by "<scope>:<host>" where scope is "origin" or "page" and host
-   * has any leading "www." stripped, matching how blockOriginAutofill
-   * applies the underlying SQL block. The two scopes for the same host
-   * live as independent entries.
-   *
-   * Insertion order is maintained as an LRU: entries past
-   * _BACKSPACE_BLOCKS_MAX are evicted. State does not survive
-   * restart.
-   *
-   * Re-integration after restart, or more than _BACKSPACE_BLOCK_MAX_AGE_HOURS
-   * after the block, does not record a sample.
-   *
-   * @type {Map<string, BackspaceInfo>}
-   */
-  _backspaceBlocks: new Map(),
-
-  // Resolves with the most recent recordAutofillBackspace() call's DB write
-  // (if any). Tests can await this to sequence on the block before reading
-  // from the database.
-  _lastRecordAutofillBackspacePromise: Promise.resolve(),
-
-  // Maximum age of a tracked block, in hours.
-  _BACKSPACE_BLOCK_MAX_AGE_HOURS: 24,
-
-  // Maximum number of blocked origins that can be stored at one time.
-  _BACKSPACE_BLOCKS_MAX: 512,
-
-  /**
-   * Computes the map key used to record a backspace block for the given URL.
-   * The key is in the form of the scope (origin or page), followed by colon,
-   * and the URL's host with a leading "www." stripped, mirroring how
-   * blockOriginAutofill applies the underlying block in SQL.
-   *
-   * @param {string} url
-   *   The URL whose key is being computed.
-   * @returns {?string}
-   *   The scope and normalized host key, or null if the URL is unparseable.
-   *
-   * @example
-   * // Returns "origin:example.com"
-   * _backspaceBlockKey("https://www.example.com/");
-   *
-   * @example
-   * // Returns "page:example.com"
-   * _backspaceBlockKey("https://example.com/some/path");
-   */
-  _backspaceBlockKey(url) {
-    let origin = parseOriginParts(url);
-    if (!origin) {
-      return null;
-    }
-    let basehost = origin.host.replace(/^www\./, "");
-    let scope = /** @type {"origin" | "page"} */ (
-      this.isOriginUrl(url) ? "origin" : "page"
-    );
-    return `${scope}:${basehost}`;
-  },
-
-  /**
-   * Records a backspace in the LRU map for the autofill URL. Increments
-   * (or creates) the entry's count and when the count reaches the
-   * `autoFill.backspaceThreshold` pref calls blockAutofill and records the
-   * entry's blockedAt so re-integration telemetry can sample the unblock
-   * delay later.
-   *
-   * @param {string} url
-   *   The autofill result URL whose backspace is being recorded.
-   * @returns {Promise<void>}
-   *   Resolves after the threshold-triggered blockAutofill DB write completes.
-   *   Resolves immediately when the URL is unparseable or the count is still
-   *   below threshold (no DB write in either case). Tests can await this to
-   *   sequence on the block.
-   */
-  async recordAutofillBackspace(url) {
-    let key = this._backspaceBlockKey(url);
-    if (!key) {
-      return;
-    }
-
-    let entry = this._backspaceBlocks.get(key) ?? {
-      count: 0,
-      blockedAt: null,
-    };
-    if (entry.blockedAt) {
-      delete entry.blockedAt;
-    }
-    let newCount = (entry.count ?? 0) + 1;
-
-    if (newCount >= lazy.UrlbarPrefs.get("autoFill.backspaceThreshold")) {
-      delete entry.count;
-      entry.blockedAt = Date.now();
-      await this.blockAutofill(
-        url,
-        Date.now() + lazy.UrlbarPrefs.get("autoFill.backspaceBlockDurationMs")
-      ).catch(console.error);
-    } else {
-      entry.count = newCount;
-    }
-
-    // Remove and reinsert so this entry is treated as most-recent under the
-    // Map's insertion-order semantics, which we rely on below to expire the
-    // least-recently-used entry.
-    this._backspaceBlocks.delete(key);
-    this._backspaceBlocks.set(key, entry);
-
-    // Least recently used are expired.
-    if (this._backspaceBlocks.size > this._BACKSPACE_BLOCKS_MAX) {
-      let oldestKey = this._backspaceBlocks.keys().next().value;
-      this._backspaceBlocks.delete(oldestKey);
-    }
-  },
-
-  /**
-   * Retrieves and deletes the recorded backspace block for the given URL, if
-   * any. Only the timestamp matching the URL's level (origin vs. url) is
-   * returned and removed; any other-level timestamp for the same host is
-   * preserved. If the matching timestamp is older than
-   * BACKSPACE_BLOCK_MAX_AGE_HOURS, this returns null. (The timestamp is
-   * removed either way.)
-   *
-   * @param {string} url
-   *   The URL whose block is being cleared.
-   * @returns {?{blockedAt: number, level: "origin" | "url"}}
-   *   The matching timestamp and level if a fresh block existed,
-   *   null otherwise.
-   */
-  getBackspaceBlock(url) {
-    let key = this._backspaceBlockKey(url);
-    if (!key) {
-      return null;
-    }
-
-    let entry = this._backspaceBlocks.get(key);
-    if (!entry?.blockedAt) {
-      return null;
-    }
-
-    // Consume the timestamp so a later call returns null for this URL.
-    this._backspaceBlocks.delete(key);
-
-    // If the timestamp is too old, don't report it.
-    let ageHours = (Date.now() - entry.blockedAt) / (60 * 60 * 1000);
-    if (ageHours > this._BACKSPACE_BLOCK_MAX_AGE_HOURS) {
-      return null;
-    }
-    /** @type {"origin" | "url"} */
-    let level = this.isOriginUrl(url) ? "origin" : "url";
-    return { blockedAt: entry.blockedAt, level };
-  },
-
-  /**
-   * Clears the in-progress backspace count for the URL's scope.
-   *
-   * @param {string} url
-   *   A URL belonging to the scope being cleared.
-   */
-  clearAutofillBackspaceEntryForUrl(url) {
-    let key = this._backspaceBlockKey(url);
-    if (key) {
-      this._backspaceBlocks.delete(key);
-    }
-  },
-
-  /**
-   * Returns whether a URL is an origin URL, i.e. it has no path beyond "/",
-   * no query string, and no hash.
-   *
-   * @param {string} url
-   *   The URL to check.
-   * @returns {boolean}
-   *   True if the URL is an origin URL, false if it has a path, query, hash,
-   *   or is unparseable.
-   */
-  isOriginUrl(url) {
-    let parsed = URL.parse(url);
-    return (
-      !!parsed && parsed.pathname === "/" && !parsed.search && !parsed.hash
-    );
   },
 
   /**
@@ -1736,18 +1177,6 @@ export var UrlbarUtils = {
   },
 
   /**
-   * Clears the form history for all search engines.
-   *
-   * @returns {Promise<void>}
-   */
-  clearFormHistory() {
-    return lazy.FormHistory.update({
-      op: "remove",
-      fieldname: lazy.DEFAULT_FORM_HISTORY_PARAM,
-    });
-  },
-
-  /**
    * Returns whether a URL can be autofilled from a candidate string. This
    * function is specifically designed for origin and up-to-the-next-slash URL
    * autofill. It should not be used for other types of autofill.
@@ -1897,29 +1326,18 @@ export var UrlbarUtils = {
         }
         return "dynamic";
       case this.RESULT_TYPE.RESTRICT:
-        if (
-          result.payload.keyword === lazy.UrlbarShared.RESTRICT_TOKENS.BOOKMARK
-        ) {
+        if (result.payload.keyword === lazy.UrlbarTokenizer.RESTRICT.BOOKMARK) {
           return "restrict_keyword_bookmarks";
         }
-        if (
-          result.payload.keyword === lazy.UrlbarShared.RESTRICT_TOKENS.OPENPAGE
-        ) {
+        if (result.payload.keyword === lazy.UrlbarTokenizer.RESTRICT.OPENPAGE) {
           return "restrict_keyword_tabs";
         }
-        if (
-          result.payload.keyword === lazy.UrlbarShared.RESTRICT_TOKENS.HISTORY
-        ) {
+        if (result.payload.keyword === lazy.UrlbarTokenizer.RESTRICT.HISTORY) {
           return "restrict_keyword_history";
         }
-        if (
-          result.payload.keyword === lazy.UrlbarShared.RESTRICT_TOKENS.ACTION
-        ) {
+        if (result.payload.keyword === lazy.UrlbarTokenizer.RESTRICT.ACTION) {
           return "restrict_keyword_actions";
         }
-        break;
-      case this.RESULT_TYPE.AI_CHAT:
-        return "ai_chat";
     }
     return "unknown";
   },
@@ -2060,9 +1478,6 @@ export var UrlbarUtils = {
       case this.RESULT_GROUP.RESTRICT_SEARCH_KEYWORD: {
         return "restrict_keyword";
       }
-      case this.RESULT_GROUP.AI: {
-        return "ai";
-      }
     }
 
     return result.heuristic ? "heuristic" : "unknown";
@@ -2198,48 +1613,31 @@ export var UrlbarUtils = {
         if (result.providerName === "UrlbarProviderClipboard") {
           return "clipboard";
         }
-        if (result.payload.isAutofillFallback) {
-          return "history_autofill_fallback_origin";
-        }
         if (result.source === this.RESULT_SOURCE.BOOKMARKS) {
           return checkForSubType("bookmark", result);
         }
         return checkForSubType("history", result);
       case this.RESULT_TYPE.RESTRICT:
-        if (
-          result.payload.keyword === lazy.UrlbarShared.RESTRICT_TOKENS.BOOKMARK
-        ) {
+        if (result.payload.keyword === lazy.UrlbarTokenizer.RESTRICT.BOOKMARK) {
           return "restrict_keyword_bookmarks";
         }
-        if (
-          result.payload.keyword === lazy.UrlbarShared.RESTRICT_TOKENS.OPENPAGE
-        ) {
+        if (result.payload.keyword === lazy.UrlbarTokenizer.RESTRICT.OPENPAGE) {
           return "restrict_keyword_tabs";
         }
-        if (
-          result.payload.keyword === lazy.UrlbarShared.RESTRICT_TOKENS.HISTORY
-        ) {
+        if (result.payload.keyword === lazy.UrlbarTokenizer.RESTRICT.HISTORY) {
           return "restrict_keyword_history";
         }
-        if (
-          result.payload.keyword === lazy.UrlbarShared.RESTRICT_TOKENS.ACTION
-        ) {
+        if (result.payload.keyword === lazy.UrlbarTokenizer.RESTRICT.ACTION) {
           return "restrict_keyword_actions";
         }
-        break;
-      case this.RESULT_TYPE.AI_CHAT:
-        return "ai_chat";
     }
 
     return "unknown";
   },
 
-  searchEngagementTelemetryAction(result, pickedActionKey = null) {
+  searchEngagementTelemetryAction(result) {
     if (result.providerName != "UrlbarProviderGlobalActions") {
       return result.payload.action?.key ?? "none";
-    }
-    if (pickedActionKey) {
-      return pickedActionKey;
     }
     return result.payload.actionsResults.map(({ key }) => key).join(",");
   },
@@ -2377,32 +1775,6 @@ export var UrlbarUtils = {
   },
 
   /**
-   * Gets the URL bar element that should be focused for the given window.
-   * Returns window.gURLBar for regular browser windows, or the smartbar
-   * for AI windows in immersive view.
-   *
-   * @param {Window} window
-   *   The window to get the URL bar for.
-   * @returns {UrlbarInput | SmartbarInput }
-   *   The URL bar element that should be focused.
-   */
-  getURLBarForFocus(window) {
-    /** @type {UrlbarInput | SmartbarInput} */
-    let urlbar = window.gURLBar;
-    // Check if we're in an AI window with immersive view (no address bar visible)
-    if (
-      lazy.AIWindow.isAIWindowActive(window) &&
-      lazy.AIWindow.shouldUseImmersiveView(window.gBrowser.currentURI)
-    ) {
-      let smartbar = lazy.AIWindow.getSmartbarForWindow(window);
-      if (smartbar) {
-        urlbar = smartbar;
-      }
-    }
-    return urlbar;
-  },
-
-  /**
    * Formats the numerical portion of unit conversion results.
    *
    * @param {number} result
@@ -2413,7 +1785,6 @@ export var UrlbarUtils = {
     const MAX_SIG_FIGURES = 10;
     const FULL_NUMBER_MAX_THRESHOLD = 1 * 10 ** 10;
     const FULL_NUMBER_MIN_THRESHOLD = 10 ** -5;
-    const MAX_FLOAT_PRECISION = 15;
 
     let locale = Services.locale.appLocaleAsBCP47;
 
@@ -2434,8 +1805,6 @@ export var UrlbarUtils = {
       return new Intl.NumberFormat(locale, {
         style: "decimal",
         maximumFractionDigits: DECIMAL_PRECISION,
-        maximumSignificantDigits: MAX_FLOAT_PRECISION,
-        roundingPriority: "lessPrecision",
         numberingSystem: "latn",
       }).format(result);
     }
@@ -2444,149 +1813,6 @@ export var UrlbarUtils = {
       maximumSignificantDigits: MAX_SIG_FIGURES,
       numberingSystem: "latn",
     }).format(result);
-  },
-
-  /**
-   * Formats a date and time for display. This is not a general formatting
-   * function. It uses some heuristics to generate formatted strings as used in
-   * urlbar UI. The format chosen will depend on the date.
-   *
-   * @param {Date} date
-   *   A JS `Date` object.
-   * @param {object} options
-   *   Options object
-   * @param {boolean} [options.forceAbsoluteDate]
-   *   Pass true to force the formatted date to be absolute ("May 11") when it
-   *   otherwise would be formatted as relative ("tomorrow").
-   * @param {boolean} [options.capitalizeRelativeDate]
-   *   Whether relative dates should be capitalized ("Tomorrow" instead of
-   *   "tomorrow").
-   * @param {boolean} [options.includeTimeZone]
-   *   When a formatted time is generated, it will include the time zone only if
-   *   this param is true.
-   * @returns {FormatDateResult}
-   *   The result.
-   *
-   * @typedef {object} FormatDateResult
-   * @property {string} formattedDate
-   *   The formatted date.
-   * @property {?string} formattedTime
-   *   The formatted time. Depending on the passed-in date, a formatted time
-   *   might not be generated, and in that case this will be undefined.
-   * @property {boolean} isRelative
-   *   Whether the formatted date is relative ("tomorrow") rather than absolute
-   *   ("May 11").
-   * @property {ParseDateResult} parseDateResult
-   *   This function calls `parseDate()` as part of its operation, and the
-   *   result is included here in case it's useful.
-   */
-  formatDate(
-    date,
-    {
-      forceAbsoluteDate = false,
-      capitalizeRelativeDate = false,
-      includeTimeZone = false,
-    } = {}
-  ) {
-    let parseDateResult = this.parseDate(date);
-    let { zonedNow, zonedDate, daysUntil, isFuture } = parseDateResult;
-
-    // First, format the date.
-    let formattedDate;
-    let isRelative = false;
-    if (Math.abs(daysUntil) <= 1) {
-      // The date is recent. Format it as relative, e.g.: "today", "tomorrow"
-      isRelative = true;
-      formattedDate = new Intl.RelativeTimeFormat(undefined, {
-        numeric: "auto",
-      }).format(daysUntil, "day");
-      if (capitalizeRelativeDate) {
-        formattedDate =
-          formattedDate[0].toLocaleUpperCase() + formattedDate.substring(1);
-      }
-    } else {
-      // The date is not recent. Format it with some combination of year, month,
-      // day, and weekday, e.g.: "May 11", "May 11, 2026", "Mon"
-      let opts = {
-        timeZone: zonedNow.timeZoneId,
-      };
-      if (!forceAbsoluteDate && 0 < daysUntil && daysUntil < 7) {
-        // Include only the weekday.
-        opts.weekday = "short";
-      } else {
-        // Include the month and day and the year if it's not this year.
-        opts.month = "short";
-        opts.day = "numeric";
-        if (zonedDate.year != zonedNow.year) {
-          opts.year = "numeric";
-        }
-      }
-      formattedDate = new Intl.DateTimeFormat(undefined, opts).format(date);
-    }
-
-    // Now format the time.
-    let formattedTime;
-    if (isFuture) {
-      formattedTime = new Intl.DateTimeFormat(undefined, {
-        hour: "numeric",
-        minute: "numeric",
-        timeZoneName: includeTimeZone ? "short" : undefined,
-        timeZone: zonedNow.timeZoneId,
-      }).format(date);
-    }
-
-    return {
-      isRelative,
-      formattedDate,
-      formattedTime,
-      parseDateResult,
-    };
-  },
-
-  /**
-   * Parses a `Date` and returns some info about it.
-   *
-   * @param {Date} date
-   *   A JS `Date` object.
-   * @returns {ParseDateResult}
-   *   The result.
-   *
-   * @typedef {object} ParseDateResult
-   * @property {Temporal.ZonedDateTime} zonedNow
-   *   The "now" date as a `ZonedDateTime`.
-   * @property {Temporal.ZonedDateTime} zonedDate
-   *   The passed-in date as a `ZonedDateTime`.
-   * @property {boolean} isFuture
-   *   Whether the date is in the future.
-   * @property {number} daysUntil
-   *   The number of calendar days from today to the date. If the date is in the
-   *   future, this number will be positive. If the date is in the past, it will
-   *   be negative. If the date is today, it will be zero.
-   */
-  parseDate(date) {
-    let zonedNow = this._zonedDateTimeISO();
-    let zonedDate = date.toTemporalInstant().toZonedDateTimeISO(zonedNow);
-    let isFuture = Temporal.ZonedDateTime.compare(zonedNow, zonedDate) < 0;
-
-    let today = zonedNow.startOfDay();
-    let dateDay = zonedDate.startOfDay();
-
-    let duration = today.until(dateDay).round("days");
-    let daysUntil = duration.days;
-
-    return {
-      zonedNow,
-      zonedDate,
-      isFuture,
-      daysUntil,
-    };
-  },
-
-  // Thin wrapper around `zonedDateTimeISO` so that tests can easily set a mock
-  // "now" date and time. Use `UrlbarTestUtils.stubNowZonedDateTime()` to stub a
-  // "now".
-  _zonedDateTimeISO() {
-    return Temporal.Now.zonedDateTimeISO();
   },
 };
 
@@ -2792,9 +2018,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       iconBlob: {
         type: "object",
       },
-      isAutofillFallback: {
-        type: "boolean",
-      },
       isBlockable: {
         type: "boolean",
       },
@@ -2865,10 +2088,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
         type: "string",
       },
       titleL10n: L10N_SCHEMA,
-      subtitle: {
-        type: "string",
-      },
-      subtitleL10n: L10N_SCHEMA,
       url: {
         type: "string",
       },
@@ -3070,21 +2289,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       },
     },
   },
-  [UrlbarUtils.RESULT_TYPE.AI_CHAT]: {
-    type: "object",
-    required: ["icon", "query", "title"],
-    properties: {
-      icon: {
-        type: "string",
-      },
-      query: {
-        type: "string",
-      },
-      title: {
-        type: "string",
-      },
-    },
-  },
 };
 
 /**
@@ -3261,7 +2465,7 @@ export class UrlbarQueryContext {
   /**
    * @type {string[]}
    *   List of registered provider names. Providers can be registered through
-   *   the ProvidersManager.
+   *   the UrlbarProvidersManager.
    */
   providers;
 
@@ -3412,9 +2616,9 @@ export class UrlbarQueryContext {
     // an origin but we've determined a search is allowed, then allow it.
     if (this.tokens.length == 1) {
       switch (this.tokens[0].type) {
-        case lazy.UrlbarShared.TOKEN_TYPE.POSSIBLE_ORIGIN:
+        case lazy.UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN:
           return false;
-        case lazy.UrlbarShared.TOKEN_TYPE.POSSIBLE_ORIGIN_BUT_SEARCH_ALLOWED:
+        case lazy.UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN_BUT_SEARCH_ALLOWED:
           return true;
       }
     }
@@ -3574,12 +2778,10 @@ export class UrlbarProvider {
    *   The query context object
    * @param {(provider: UrlbarProvider, result: UrlbarResult) => void} _addCallback
    *   Callback invoked by the provider to add a new result.
-   * @param {UrlbarController} _controller
-   *   The current controller.
    * @returns {void|Promise<void>}
    * @abstract
    */
-  startQuery(_queryContext, _addCallback, _controller) {
+  startQuery(_queryContext, _addCallback) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 
@@ -3727,85 +2929,6 @@ export class UrlbarProvider {
   onSelection(_result, _element) {}
 
   /**
-   * @typedef {object} ViewTemplate
-   *   A plain object that describes the DOM subtree for a dynamic result type.
-   *   When a dynamic result is shown in the urlbar view, its type's view template
-   *   is used to construct the part of the view that represents the result.
-   *
-   * @property {ViewTemplateElement[]} children
-   *   The elements that make up the subtree for the dynamic result type.
-   */
-
-  /**
-   * @typedef {object} ViewTemplateElement
-   *   Describes the DOM subtree for the given dynamic result type.
-   *   It should be a tree-like nested structure with each object in the nesting
-   *   representing a DOM element to be created.  This tree-like structure is
-   *   achieved using the `children` property described below.  Each object in
-   *   the structure may include the following properties:
-   *
-   * @property {string} tag
-   *   The tag name of the object.  It is required for all objects in the
-   *   structure except the root object and declares the kind of element that
-   *   will be created for the object: span, div, img, etc.
-   *
-   * @property {string} [name]
-   *   The name of the object. This value is required if you need to update
-   *   the object's DOM element at query time. It's also helpful but not
-   *   required if you need to style the element. When defined, it serves two
-   *   important functions:
-   *   (1) The element created for the object will automatically have a class
-   *       named `urlbarView-dynamic-${dynamicType}-${name}`, where
-   *       `dynamicType` is the name of the dynamic result type.  The element
-   *       will also automatically have an attribute "name" whose value is
-   *       this name.  The class and attribute allow the element to be styled
-   *       in CSS.
-   *   (2) The name is used when updating the view.  See
-   *       UrlbarProvider.getViewUpdate().
-   *   Names must be unique within a view template, but they don't need to be
-   *   globally unique.  i.e., two different view templates can use the same
-   *   names, and other DOM elements can use the same names in their IDs and
-   *   classes.  The name also suffixes the dynamic element's ID: an element
-   *   with name `data` will get the ID `urlbarView-row-{unique number}-data`.
-   *   If there is no name provided for the root element, the root element
-   *   will not get an ID.
-   *
-   * @property {object} [attributes]
-   *   An optional mapping from attribute names to values.  For each
-   *   name-value pair, an attribute is added to the element created for the
-   *   object. The `id` attribute is reserved and cannot be set by the
-   *   provider. Element IDs are passed back to the provider in getViewUpdate
-   *   if they are needed.
-   *
-   * @property {ViewTemplateElement[]} [children]
-   *   An optional list of children.  Each item in the array must be an object
-   *   as described here.  For each item, a child element as described by the
-   *   item is created and added to the element created for the parent object.
-   *
-   * @property {string[]} [classList]
-   *   An optional list of classes.  Each class will be added to the element
-   *   created for the object by calling element.classList.add().
-   *
-   * @property {boolean} [overflowable]
-   *   If true, the element's overflow status will be tracked in order to
-   *   fade it out when needed.
-   */
-
-  /**
-   * This is called only for dynamic result types, when the urlbar view creates
-   * the view of one of the results of the provider.
-   *
-   * @param {UrlbarResult} _result
-   *   The result whose view will be created.
-   * @returns {?ViewTemplate}
-   *   The view template describing the DOM to build for the result,
-   *   or null if the provider doesn't define one.
-   */
-  getViewTemplate(_result) {
-    return null;
-  }
-
-  /**
    * This is called only for dynamic result types, when the urlbar view updates
    * the view of one of the results of the provider.  It should return an object
    * describing the view update that looks like this:
@@ -3836,7 +2959,7 @@ export class UrlbarProvider {
    * The object should contain a property for each element to update in the
    * dynamic result type view.  The names of these properties are the names
    * declared in the view template of the dynamic result type; see
-   * UrlbarProvider.getViewTemplate().  The values are similar to the nested
+   * UrlbarView.addDynamicViewTemplate().  The values are similar to the nested
    * objects specified in the view template but not quite the same; see below.
    * For each property, the element in the view subtree with the specified name
    * is updated according to the object in the property's value.  If an
@@ -3891,11 +3014,9 @@ export class UrlbarProvider {
    *
    * @param {UrlbarResult} _result
    *   The menu will be shown for this result.
-   * @param {boolean} _isPrivate
-   *   Whether the query was made in a private browsing context.
    * @returns {?UrlbarResultCommand[]}
    */
-  getResultCommands(_result, _isPrivate) {
+  getResultCommands(_result) {
     return null;
   }
 

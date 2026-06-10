@@ -1,6 +1,5 @@
-use http::{HeaderName, HeaderValue, Method};
-
-use crate::{Error, Header};
+use http::Method;
+use {Header, HeaderName, HeaderValue};
 
 /// `Access-Control-Request-Method` header, part of
 /// [CORS](http://www.w3.org/TR/cors/#access-control-request-method-request-header)
@@ -19,6 +18,7 @@ use crate::{Error, Header};
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// extern crate http;
 /// use headers::AccessControlRequestMethod;
 /// use http::Method;
@@ -33,15 +33,15 @@ impl Header for AccessControlRequestMethod {
         &::http::header::ACCESS_CONTROL_REQUEST_METHOD
     }
 
-    fn decode<'i, I: Iterator<Item = &'i HeaderValue>>(values: &mut I) -> Result<Self, Error> {
+    fn decode<'i, I: Iterator<Item = &'i HeaderValue>>(values: &mut I) -> Result<Self, ::Error> {
         values
             .next()
             .and_then(|value| Method::from_bytes(value.as_bytes()).ok())
             .map(AccessControlRequestMethod)
-            .ok_or_else(Error::invalid)
+            .ok_or_else(::Error::invalid)
     }
 
-    fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
+    fn encode<E: Extend<::HeaderValue>>(&self, values: &mut E) {
         // For the more common methods, try to use a static string.
         let s = match self.0 {
             Method::GET => "GET",

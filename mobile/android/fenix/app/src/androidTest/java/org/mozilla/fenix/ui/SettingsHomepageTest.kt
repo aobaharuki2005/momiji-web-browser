@@ -4,48 +4,40 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.customannotations.Converted
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AppAndSystemHelper.openAppFromExternalLink
-import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
-import org.mozilla.fenix.helpers.RetryableComposeTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.restartApp
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
 /**
  *  Tests for verifying the Homepage settings menu
  *
  */
-class SettingsHomepageTest {
-    @get:Rule(order = 0)
-    val fenixTestRule: FenixTestRule = FenixTestRule()
-
-    private val mockWebServer get() = fenixTestRule.mockWebServer
-
-    @get:Rule(order = 1)
-    val retryTestRule = RetryTestRule(3)
-
-    @get:Rule(order = 2)
-    val retryableComposeTestRule = RetryableComposeTestRule {
-        AndroidComposeTestRuleV2(
-            HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
+class SettingsHomepageTest : TestSetup() {
+    @get:Rule
+    val composeTestRule =
+        AndroidComposeTestRule(
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true),
         ) { it.activity }
-    }
 
-    private val composeTestRule get() = retryableComposeTestRule.current
+    @get:Rule
+    val memoryLeaksRule = DetectMemoryLeaksRule()
 
-    @get:Rule(order = 3)
-    val memoryLeaksRule = DetectMemoryLeaksRule(composeTestRule = { composeTestRule })
+    @Rule
+    @JvmField
+    val retryTestRule = RetryTestRule(3)
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1564843
     @Test
@@ -59,6 +51,7 @@ class SettingsHomepageTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1564859
+    @Ignore("Disabled after enabling the composable toolbar and main menu: https://bugzilla.mozilla.org/show_bug.cgi?id=2006295")
     @Test
     fun verifyShortcutOptionTest() {
         // en-US defaults
@@ -86,7 +79,6 @@ class SettingsHomepageTest {
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(genericURL.url) {
         }.openThreeDotMenu {
-            clickTheMoreButton()
             verifyAddToShortcutsButton(isDisplayed = false)
         }
     }
@@ -114,11 +106,6 @@ class SettingsHomepageTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1564999
-    @Converted(
-        replacedBy = ["org.mozilla.fenix.ui.efficiency.tests.SettingsHomepageTest#verifyJumpBackInSectionTest"],
-        bug = 2042363,
-        since = "2026-05",
-    )
     @SmokeTest
     @Test
     fun jumpBackInOptionTest() {
@@ -139,11 +126,6 @@ class SettingsHomepageTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1565000
-    @Converted(
-        replacedBy = ["org.mozilla.fenix.ui.efficiency.tests.SettingsHomepageTest#recentBookmarksOptionTest"],
-        bug = 2042363,
-        since = "2026-05",
-    )
     @SmokeTest
     @Test
     fun recentBookmarksOptionTest() {

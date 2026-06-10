@@ -22,12 +22,8 @@ function run_test() {
 
   // Resolving URIs using the original resource path and the alias
   // should yield the same result.
-  let greNetUtilURI = ioService.newURI(
-    "resource://gre/modules/NetUtil.sys.mjs"
-  );
-  let myNetUtilURI = ioService.newURI(
-    "resource://my-gre-modules/NetUtil.sys.mjs"
-  );
+  let greNetUtilURI = ioService.newURI("resource://gre/modules/NetUtil.jsm");
+  let myNetUtilURI = ioService.newURI("resource://my-gre-modules/NetUtil.jsm");
   Assert.equal(
     resProt.resolveURI(greNetUtilURI),
     resProt.resolveURI(myNetUtilURI)

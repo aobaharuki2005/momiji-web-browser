@@ -14,7 +14,6 @@
 #include <functional>
 #include <memory>
 
-#include "absl/base/macros.h"
 #include "api/jsep.h"
 #include "p2p/base/transport_info.h"
 #include "pc/session_description.h"
@@ -23,12 +22,8 @@
 namespace webrtc {
 
 // Returns a copy of the given session description.
-// Deprecated in favor of SessionDescriptionInterface::Clone()
-ABSL_DEPRECATE_AND_INLINE()
-inline std::unique_ptr<SessionDescriptionInterface> CloneSessionDescription(
-    const SessionDescriptionInterface* sdesc) {
-  return sdesc->Clone();
-}
+RTC_EXPORT std::unique_ptr<SessionDescriptionInterface> CloneSessionDescription(
+    const SessionDescriptionInterface* sdesc);
 
 // Returns a copy of the given session description with the type changed.
 RTC_EXPORT std::unique_ptr<SessionDescriptionInterface>

@@ -2,7 +2,11 @@
 import type { BidiPairedBracketType } from "./BidiPairedBracketType"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-export type BidiMirroringGlyph_obj = {
+
+/**
+ * See the [Rust documentation for `BidiMirroringGlyph`](https://docs.rs/icu/latest/icu/properties/props/struct.BidiMirroringGlyph.html) for more information.
+ */
+type BidiMirroringGlyph_obj = {
     mirroringGlyph?: codepoint | null;
     mirrored: boolean;
     pairedBracketType: BidiPairedBracketType;
@@ -10,9 +14,6 @@ export type BidiMirroringGlyph_obj = {
 
 
 
-/**
- * See the [Rust documentation for `BidiMirroringGlyph`](https://docs.rs/icu/2.1.1/icu/properties/props/struct.BidiMirroringGlyph.html) for more information.
- */
 export class BidiMirroringGlyph {
     get mirroringGlyph(): codepoint | null;
     set mirroringGlyph(value: codepoint | null);
@@ -20,18 +21,17 @@ export class BidiMirroringGlyph {
     set mirrored(value: boolean);
     get pairedBracketType(): BidiPairedBracketType;
     set pairedBracketType(value: BidiPairedBracketType);
-    /** @internal */
-    static fromFields(structObj : BidiMirroringGlyph_obj) : BidiMirroringGlyph;
-
-    /**
-    * Create `BidiMirroringGlyph` from an object that contains all of `BidiMirroringGlyph`s fields.
+    /** Create `BidiMirroringGlyph` from an object that contains all of `BidiMirroringGlyph`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    constructor(structObj: BidiMirroringGlyph_obj);
+    static fromFields(structObj : BidiMirroringGlyph_obj) : BidiMirroringGlyph;
+
 
 
     /**
-     * See the [Rust documentation for `for_char`](https://docs.rs/icu/2.1.1/icu/properties/props/trait.EnumeratedProperty.html#tymethod.for_char) for more information.
+     * See the [Rust documentation for `for_char`](https://docs.rs/icu/latest/icu/properties/props/trait.EnumeratedProperty.html#tymethod.for_char) for more information.
      */
     static forChar(ch: codepoint): BidiMirroringGlyph;
+
+    constructor(structObj: BidiMirroringGlyph_obj);
 }

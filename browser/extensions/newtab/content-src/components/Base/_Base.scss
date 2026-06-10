@@ -24,14 +24,17 @@
   }
 }
 
-main.newtab-main {
+main {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
   width: $wrapper-default-width;
   padding: 0;
-  min-width: min-content;
+
+  &.newtab-main {
+    min-width: min-content;
+  }
 
   .vertical-center-wrapper {
     margin: auto 0;
@@ -60,12 +63,12 @@ main.newtab-main {
 }
 
 // Edge case for if search is turned off (compact layout)
-.no-search main.newtab-main {
+.no-search main {
   margin-block-start: var(--space-xxlarge);
 }
 
 .ds-outer-wrapper-search-alignment {
-  main.newtab-main {
+  main {
     // This override is to ensure while Discovery Stream loads,
     // the search bar does not jump around. (it sticks to the top)
     margin: 0 auto;
@@ -73,7 +76,7 @@ main.newtab-main {
 }
 
 .ds-outer-wrapper-breakpoint-override {
-  main.newtab-main {
+  main {
     width: auto;
     padding-block-end: 0;
 
@@ -149,6 +152,7 @@ main.newtab-main {
         grid-template-columns: repeat(4, 1fr);
       }
     }
+
   }
 }
 
@@ -234,34 +238,4 @@ main.newtab-main {
       text-decoration: none;
     }
   }
-}
-
-.asrouter-newtab-message-wrapper {
-  background-color: var(--background-color-canvas);
-  border: 2px solid var(--card-border-color);
-  color: var(--text-color);
-  border-radius: var(--border-radius-large);
-  margin-block: 0 var(--space-xlarge);
-  margin-inline: auto;
-  overflow: hidden;
-  max-width: 300px;
-
-  /**
-   * Bug 2021914 - this is temporary until we get the Nova grid rules more
-   * proliferated on New Tab.
-   */
-  @media (min-width: $break-point-layout-variant) {
-    max-width: 904px;
-  }
-}
-
-// @nova-cleanup(remove-conditional): Remove this selector; move color, min-height, and padding-block-start into the default outer wrapper styles.
-.nova-outer-wrapper {
-  color: var(--newtab-text-primary-color);
-  min-height: 100vh;
-  padding-block-start: var(--space-xlarge);
-}
-
-.asrouter-multistage-message-wrapper {
-  margin-block: var(--space-xlarge);
 }

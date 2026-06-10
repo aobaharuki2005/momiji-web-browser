@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -62,7 +64,8 @@ void GCRuntime::beginCompactPhase() {
 #endif
 }
 
-IncrementalProgress GCRuntime::compactPhase(SliceBudget& sliceBudget,
+IncrementalProgress GCRuntime::compactPhase(JS::GCReason reason,
+                                            SliceBudget& sliceBudget,
                                             AutoGCSession& session) {
   assertBackgroundSweepingFinished();
   MOZ_ASSERT(startedCompacting);
@@ -83,14 +86,14 @@ IncrementalProgress GCRuntime::compactPhase(SliceBudget& sliceBudget,
     zonesToMaybeCompact.ref().removeFront();
 
     MOZ_ASSERT(nursery().isEmpty());
-    zone->changeGCState(this, Zone::Finished, Zone::Compact);
+    zone->changeGCState(Zone::Finished, Zone::Compact);
 
-    if (relocateArenas(zone, relocatedArenas, sliceBudget)) {
+    if (relocateArenas(zone, reason, relocatedArenas, sliceBudget)) {
       updateZonePointersToRelocatedCells(zone);
       relocatedZones.append(zone);
       zonesCompacted++;
     } else {
-      zone->changeGCState(this, Zone::Compact, Zone::Finished);
+      zone->changeGCState(Zone::Compact, Zone::Finished);
     }
 
     if (sliceBudget.isOverBudget()) {
@@ -104,14 +107,14 @@ IncrementalProgress GCRuntime::compactPhase(SliceBudget& sliceBudget,
     do {
       Zone* zone = relocatedZones.front();
       relocatedZones.removeFront();
-      zone->changeGCState(this, Zone::Compact, Zone::Finished);
+      zone->changeGCState(Zone::Compact, Zone::Finished);
     } while (!relocatedZones.isEmpty());
   }
 
-  clearRelocatedArenas(relocatedArenas);
+  clearRelocatedArenas(relocatedArenas, reason);
 
 #ifdef DEBUG
-  protectOrReleaseRelocatedArenas(relocatedArenas);
+  protectOrReleaseRelocatedArenas(relocatedArenas, reason);
 #else
   releaseRelocatedArenas(relocatedArenas);
 #endif
@@ -249,6 +252,10 @@ static void RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind,
         uint32_t numShifted =
             srcNative->getElementsHeader()->numShiftedElements();
         dstNative->setFixedElements(numShifted);
+      }
+    } else if (srcObj->is<ProxyObject>()) {
+      if (srcObj->as<ProxyObject>().usingInlineValueArray()) {
+        dstObj->as<ProxyObject>().setInlineValueArray();
       }
     }
 
@@ -415,7 +422,8 @@ bool ArenaLists::relocateArenas(Arena*& relocatedListOut, JS::GCReason reason,
   return true;
 }
 
-bool GCRuntime::relocateArenas(Zone* zone, Arena*& relocatedListOut,
+bool GCRuntime::relocateArenas(Zone* zone, JS::GCReason reason,
+                               Arena*& relocatedListOut,
                                SliceBudget& sliceBudget) {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::COMPACT_MOVE);
 
@@ -424,7 +432,7 @@ bool GCRuntime::relocateArenas(Zone* zone, Arena*& relocatedListOut,
 
   js::CancelOffThreadCompile(rt, JS::Zone::Compact);
 
-  if (!zone->arenas.relocateArenas(relocatedListOut, sliceReason, sliceBudget,
+  if (!zone->arenas.relocateArenas(relocatedListOut, reason, sliceBudget,
                                    stats())) {
     return false;
   }
@@ -453,13 +461,12 @@ MovingTracer::MovingTracer(JSRuntime* rt)
                         JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
 template <typename T>
-inline bool MovingTracer::onEdge(T** thingp, const char* name) {
+inline void MovingTracer::onEdge(T** thingp, const char* name) {
   T* thing = *thingp;
-  if (thing && IsForwarded(thing)) {
+  if (IsForwarded(thing)) {
     MOZ_ASSERT(thing->runtimeFromAnyThread() == runtime());
     *thingp = Forwarded(thing);
   }
-  return true;
 }
 
 void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
@@ -472,7 +479,7 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   traceWeakFinalizationObserverEdges(trc, zone);
 
   for (auto* cache : zone->weakCaches()) {
-    cache->traceWeak(trc, JS::detail::WeakCacheBase::DontLock);
+    cache->traceWeak(trc, JS::detail::WeakCacheBase::DontLockStoreBuffer);
   }
 
   if (jit::JitZone* jitZone = zone->jitZone()) {
@@ -784,6 +791,7 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
   MovingTracer trc(rt);
 
   zone->fixupAfterMovingGC();
+  zone->fixupScriptMapsAfterMovingGC(&trc);
 
   // Fixup compartment global pointers as these get accessed during marking.
   for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
@@ -821,6 +829,8 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
 
   Zone::fixupAllCrossCompartmentWrappersAfterMovingGC(&trc);
 
+  rt->geckoProfiler().fixupStringsMapAfterMovingGC();
+
   // Mark roots to update them.
 
   traceRuntimeForMajorGC(&trc, session);
@@ -840,8 +850,12 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
 
   // Sweep everything to fix up weak pointers.
   jit::JitRuntime::TraceWeakJitcodeGlobalTable(rt, &trc);
-  for (JS::detail::WeakCacheBase* cache : weakCaches()) {
-    cache->traceWeak(&trc, JS::detail::WeakCacheBase::DontLock);
+  for (JS::detail::WeakCacheBase* cache : rt->weakCaches()) {
+    cache->traceWeak(&trc, JS::detail::WeakCacheBase::DontLockStoreBuffer);
+  }
+
+  if (rt->hasJitRuntime() && rt->jitRuntime()->hasInterpreterEntryMap()) {
+    rt->jitRuntime()->getInterpreterEntryMap()->updateScriptsAfterMovingGC();
   }
 
   // Type inference may put more blocks here to free.
@@ -855,9 +869,14 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
   callWeakPointerZonesCallbacks(&trc);
 }
 
-void GCRuntime::clearRelocatedArenas(Arena* arenaList) {
+void GCRuntime::clearRelocatedArenas(Arena* arenaList, JS::GCReason reason) {
   AutoLockGC lock(this);
+  clearRelocatedArenasWithoutUnlocking(arenaList, reason, lock);
+}
 
+void GCRuntime::clearRelocatedArenasWithoutUnlocking(Arena* arenaList,
+                                                     JS::GCReason reason,
+                                                     const AutoLockGC& lock) {
   // Clear the relocated arenas, now containing only forwarding pointers
   while (arenaList) {
     Arena* arena = arenaList;
@@ -885,7 +904,7 @@ void GCRuntime::clearRelocatedArenas(Arena* arenaList) {
     //    have allocated a similar number of arenas. (This only happens for
     //    collections triggered by GC zeal.)
     //  - if they were allocated since the start of the GC.
-    bool allArenasRelocated = ShouldRelocateAllArenas(sliceReason);
+    bool allArenasRelocated = ShouldRelocateAllArenas(reason);
     bool updateRetainedSize = !allArenasRelocated && !arena->isNewlyCreated();
     Zone* zone = arena->zone();
     zone->gcHeapSize.removeBytes(ArenaSize, updateRetainedSize, heapSize);
@@ -917,8 +936,9 @@ static inline bool ShouldProtectRelocatedArenas(JS::GCReason reason) {
   return reason == JS::GCReason::DEBUG_GC && CanProtectArenas();
 }
 
-void GCRuntime::protectOrReleaseRelocatedArenas(Arena* arenaList) {
-  if (ShouldProtectRelocatedArenas(sliceReason)) {
+void GCRuntime::protectOrReleaseRelocatedArenas(Arena* arenaList,
+                                                JS::GCReason reason) {
+  if (ShouldProtectRelocatedArenas(reason)) {
     protectAndHoldArenas(arenaList);
     return;
   }

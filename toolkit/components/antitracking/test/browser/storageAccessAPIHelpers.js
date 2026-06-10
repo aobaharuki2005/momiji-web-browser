@@ -31,7 +31,8 @@ async function callRequestStorageAccess(callback, expectFail) {
   let rejectTrackers =
     [
       SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
-      SpecialPowers.Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN,
+      SpecialPowers.Ci.nsICookieService
+        .BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
     ].includes(effectiveCookieBehavior) && !isOnContentBlockingAllowList();
   const TEST_ANOTHER_3RD_PARTY_ORIGIN = SpecialPowers.useRemoteSubframes
     ? "http://another-tracking.example.net"

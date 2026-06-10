@@ -4,14 +4,16 @@
 
 package org.mozilla.fenix.tabstray.syncedtabs
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mozilla.fenix.tabstray.redux.action.TabsTrayAction
-import org.mozilla.fenix.tabstray.redux.store.TabsTrayStore
+import org.mozilla.fenix.tabstray.TabsTrayAction
+import org.mozilla.fenix.tabstray.TabsTrayStore
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SyncButtonBindingTest {
     private val testDispatcher = StandardTestDispatcher()
 

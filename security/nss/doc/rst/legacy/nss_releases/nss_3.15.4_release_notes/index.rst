@@ -25,6 +25,7 @@ NSS 3.15.4 release notes
    -  Source tarballs:
       https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_15_4_RTM/src/
 
+.. _security_advisories:
 
 `Security Advisories <#security_advisories>`__
 ----------------------------------------------
@@ -43,6 +44,7 @@ NSS 3.15.4 release notes
 `New in NSS 3.15.4 <#new_in_nss_3.15.4>`__
 ------------------------------------------
 
+.. _new_functionality:
 
 `New Functionality <#new_functionality>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -57,6 +59,7 @@ NSS 3.15.4 release notes
       password when creating a new database.
    -  Added the -w command-line option to pp: don't wrap long output lines.
 
+.. _new_functions:
 
 `New Functions <#new_functions>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,6 +73,7 @@ NSS 3.15.4 release notes
    -  SSL_RecommendedCanFalseStart
    -  SSL_SetCanFalseStartCallback
 
+.. _new_types:
 
 `New Types <#new_types>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -79,6 +83,7 @@ NSS 3.15.4 release notes
    -  CERT_REV_M_FORCE_POST_METHOD_FOR_OCSP: When this flag is used, libpkix will never attempt to
       use the HTTP GET method for OCSP requests; it will always use POST.
 
+.. _new_pkcs_11_mechanisms:
 
 `New PKCS #11 Mechanisms <#new_pkcs_11_mechanisms>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -47,18 +47,11 @@ async function crawlFilesRecursively(dir: string): Promise<string[]> {
 
 export async function crawl(
   suiteDir: string,
-  opts: {
-    validate: boolean;
-    printMetadataWarnings: boolean;
-    printCaseCountReport: boolean;
-  } | null = null
+  opts: { validate: boolean; printMetadataWarnings: boolean } | null = null
 ): Promise<TestSuiteListingEntry[]> {
   if (!fs.existsSync(suiteDir)) {
     throw new Error(`Could not find suite: ${suiteDir}`);
   }
-
-  let totalCases = 0;
-  let totalSubcases = 0;
 
   let validateTimingsEntries;
   if (opts?.validate) {
@@ -95,34 +88,10 @@ export async function crawl(
 
         mod.g.validate(new TestQueryMultiFile(suite, pathSegments));
 
-        if (opts?.printCaseCountReport || validateTimingsEntries) {
-          for (const t of mod.g.iterate()) {
-            const testQuery = new TestQueryMultiCase(
-              suite,
-              pathSegments,
-              t.testPath,
-              {}
-            ).toString();
-
-            let cases = 0;
-            let subcases = 0;
-            for (const c of t.iterate(null)) {
-              cases++;
-              if (opts?.printCaseCountReport) {
-                subcases += c.computeSubcaseCount();
-              }
-            }
-
-            if (opts?.printCaseCountReport) {
-              const perCase = (subcases / cases).toFixed(0);
-              console.log(`${testQuery} - ${cases} cases, ${subcases} subcases (~${perCase}/case)`);
-              totalCases += cases;
-              totalSubcases += subcases;
-            }
-
-            if (validateTimingsEntries && cases > 0) {
-              validateTimingsEntries.testsFoundInFiles.add(testQuery);
-            }
+        for (const { testPath } of mod.g.collectNonEmptyTests()) {
+          const testQuery = new TestQueryMultiCase(suite, pathSegments, testPath, {}).toString();
+          if (validateTimingsEntries) {
+            validateTimingsEntries.testsFoundInFiles.add(testQuery);
           }
         }
       }
@@ -192,9 +161,6 @@ export async function crawl(
     }
   }
 
-  if (opts?.printCaseCountReport) {
-    console.log(`-----\nTOTAL: ${totalCases} cases, ${totalSubcases} subcases`);
-  }
   return entries;
 }
 

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,6 +14,7 @@
 #include "Units.h"  // for CSSPoint
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/gfx/Matrix.h"
+#include "nsSize.h"
 
 class nsIFrame;
 class nsPresContext;
@@ -70,11 +73,6 @@ class MOZ_STACK_CLASS TransformReferenceBox final {
     }
   }
 
-  // We don't really need to prevent copying, but since none of our consumers
-  // currently need to copy, preventing copying may allow us to catch some
-  // cases where we use pass-by-value instead of pass-by-reference.
-  TransformReferenceBox(const TransformReferenceBox&) = delete;
-
   void Init(const nsIFrame* aFrame) {
     MOZ_ASSERT(!mFrame && !mIsCached);
     mFrame = aFrame;
@@ -116,6 +114,11 @@ class MOZ_STACK_CLASS TransformReferenceBox final {
   bool IsEmpty() { return !mFrame; }
 
  private:
+  // We don't really need to prevent copying, but since none of our consumers
+  // currently need to copy, preventing copying may allow us to catch some
+  // cases where we use pass-by-value instead of pass-by-reference.
+  TransformReferenceBox(const TransformReferenceBox&) = delete;
+
   void EnsureDimensionsAreCached();
 
   const nsIFrame* mFrame = nullptr;

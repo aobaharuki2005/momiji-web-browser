@@ -8,7 +8,6 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.JsonReader
 import android.util.JsonWriter
-import kotlinx.coroutines.CoroutineDispatcher
 import mozilla.components.browser.engine.gecko.profiler.Profiler
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
@@ -34,7 +33,7 @@ class TestFocusApplication : FocusApplication() {
 
     override fun initializeNimbus() = Unit
     override fun initializeTelemetry() = Unit
-    override fun finishSetupMegazord(dispatcher: CoroutineDispatcher) = Unit
+    override fun finishSetupMegazord() = Unit
 
     override fun initializeWebExtensionSupport() = Unit
 }

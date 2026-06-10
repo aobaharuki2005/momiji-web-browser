@@ -128,7 +128,7 @@ class InputModule extends WindowGlobalBiDiModule {
 
   #onFilePickerOpening = (eventName, data) => {
     const { element } = data;
-    if (element.documentGlobal.browsingContext != this.messageHandler.context) {
+    if (element.ownerGlobal.browsingContext != this.messageHandler.context) {
       return;
     }
 
@@ -317,14 +317,19 @@ class InputModule extends WindowGlobalBiDiModule {
    */
   _toBrowserWindowCoordinates(options) {
     const { position } = options;
-    const window = this.messageHandler.window;
 
-    return lazy.LayoutUtils.rectToTopLevelWidgetRect(window, {
-      left: position[0],
-      top: position[1],
+    const [x, y] = position;
+    const window = this.messageHandler.window;
+    const dpr = window.devicePixelRatio;
+
+    const val = lazy.LayoutUtils.rectToTopLevelWidgetRect(window, {
+      left: x,
+      top: y,
       height: 0,
       width: 0,
     });
+
+    return [val.x / dpr, val.y / dpr];
   }
 }
 

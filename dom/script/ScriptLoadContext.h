@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -281,21 +283,11 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   bool mIsNonAsyncScriptInserted;  // True if we live in
                                    // mNonAsyncExternalScriptInsertedRequests
   bool mIsXSLT;                    // True if we live in mXSLTRequests.
-  bool mInCompilingList;  // True if we are in mOffThreadCompilingRequests.
-  bool mWasCompiledOMT;   // True if the script has been compiled off main
-                          // thread.
-  // Set on preloading scripts or modules.
-  bool mIsPreload;
-
-  // For preload requests, we defer reporting errors to the console until the
-  // request is used.
-  nsresult mUnreportedPreloadError;
-
-  uint32_t mLineNo;
-  JS::ColumnNumberOneOrigin mColumnNo;
-
-  // Classification flags of the source of the script.
-  net::ClassificationFlags mClassificationFlags;
+  bool mInCompilingList;     // True if we are in mOffThreadCompilingRequests.
+  net::ClassificationFlags   // Classification flags
+      mClassificationFlags;  // of the source of the script.
+  bool mWasCompiledOMT;      // True if the script has been compiled off main
+                             // thread.
 
   // Task that performs off-thread compilation or off-thread decode.
   // This field is used to take the result of the task, or cancel the task.
@@ -303,6 +295,12 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   // Set to non-null on the task creation, and set to null when taking the
   // result or cancelling the task.
   RefPtr<CompileOrDecodeTask> mCompileOrDecodeTask;
+
+  uint32_t mLineNo;
+  JS::ColumnNumberOneOrigin mColumnNo;
+
+  // Set on scripts and top level modules.
+  bool mIsPreload;
 
   // Non-null if there is a document that this request is blocking from loading.
   RefPtr<Document> mLoadBlockedDocument;
@@ -312,6 +310,10 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   nsCOMPtr<nsIScriptElement> mScriptElement;
 
   nsString mSourceText;
+
+  // For preload requests, we defer reporting errors to the console until the
+  // request is used.
+  nsresult mUnreportedPreloadError;
 };
 
 }  // namespace mozilla::dom

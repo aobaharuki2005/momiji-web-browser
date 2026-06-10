@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,7 +37,17 @@ JSProcessActorChild includes JSActor;
 /**
  * Used by `ChromeUtils.registerProcessActor()` to register actors.
  */
-dictionary ProcessActorOptions : JSActorOptions {
+dictionary ProcessActorOptions {
+  /**
+   * An array of remote type which restricts the actor is allowed to instantiate
+   * in specific process type. If this is defined, the prefix of process type
+   * matches the remote type by prefix match is allowed to instantiate, ex: if
+   * Fission is enabled, the prefix of process type will be `webIsolated`, it
+   * can prefix match remote type either `web` or `webIsolated`. If not passed,
+   * all content processes are allowed to instantiate the actor.
+   */
+  sequence<UTF8String> remoteTypes;
+
   /**
    * If this is set to `true`, allow this actor to be created for the parent
    * process.
@@ -45,18 +57,26 @@ dictionary ProcessActorOptions : JSActorOptions {
   /**
    * If true, the actor will be loaded in the loader dedicated to DevTools.
    *
-   * This ultimately prevents DevTools from debugging itself.
+   * This ultimately prevents DevTools to debug itself.
    */
   boolean loadInDevToolsLoader = false;
 
-  /**
-   * These fields are used to configure the individual sides of the actor.
-   */
-  JSActorSidedOptions parent;
+  /** This fields are used for configuring individual sides of the actor. */
+  ProcessActorSidedOptions parent;
   ProcessActorChildOptions child;
 };
 
-dictionary ProcessActorChildOptions : JSActorSidedOptions {
+dictionary ProcessActorSidedOptions {
+  /**
+   * The ESM path which should be loaded for the actor on this side.
+   *
+   * If this is not passed, the specified side cannot receive messages, but may
+   * send them using `sendAsyncMessage` or `sendQuery`.
+   */
+  ByteString esModuleURI;
+};
+
+dictionary ProcessActorChildOptions : ProcessActorSidedOptions {
   /**
    * An array of observer topics to listen to. An observer will be added for each
    * topic in the list.

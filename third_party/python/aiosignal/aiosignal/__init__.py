@@ -1,27 +1,11 @@
-import sys
-from typing import Any, Awaitable, Callable, TypeVar
-
 from frozenlist import FrozenList
 
-if sys.version_info >= (3, 11):
-    from typing import Unpack
-else:
-    from typing_extensions import Unpack
-
-if sys.version_info >= (3, 13):
-    from typing import TypeVarTuple
-else:
-    from typing_extensions import TypeVarTuple
-
-_T = TypeVar("_T")
-_Ts = TypeVarTuple("_Ts", default=Unpack[tuple[()]])
-
-__version__ = "1.4.0"
+__version__ = "1.3.2"
 
 __all__ = ("Signal",)
 
 
-class Signal(FrozenList[Callable[[Unpack[_Ts]], Awaitable[object]]]):
+class Signal(FrozenList):
     """Coroutine-based signal implementation.
 
     To connect a callback to a signal, use any list method.
@@ -32,16 +16,16 @@ class Signal(FrozenList[Callable[[Unpack[_Ts]], Awaitable[object]]]):
 
     __slots__ = ("_owner",)
 
-    def __init__(self, owner: object):
+    def __init__(self, owner):
         super().__init__()
         self._owner = owner
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return "<Signal owner={}, frozen={}, {!r}>".format(
             self._owner, self.frozen, list(self)
         )
 
-    async def send(self, *args: Unpack[_Ts], **kwargs: Any) -> None:
+    async def send(self, *args, **kwargs):
         """
         Sends data to all registered receivers.
         """
@@ -49,11 +33,4 @@ class Signal(FrozenList[Callable[[Unpack[_Ts]], Awaitable[object]]]):
             raise RuntimeError("Cannot send non-frozen signal.")
 
         for receiver in self:
-            await receiver(*args, **kwargs)
-
-    def __call__(
-        self, func: Callable[[Unpack[_Ts]], Awaitable[_T]]
-    ) -> Callable[[Unpack[_Ts]], Awaitable[_T]]:
-        """Decorator to add a function to this Signal."""
-        self.append(func)
-        return func
+            await receiver(*args, **kwargs)  # type: ignore

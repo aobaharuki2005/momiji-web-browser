@@ -14,18 +14,15 @@
 const fs = require("fs");
 const { RESERVED_WORDS } = require("peggy");
 
-const TAGLIST = require.resolve("../../parser/htmlparser/nsHTMLTagList.inc");
+const TAGLIST = require.resolve("../../parser/htmlparser/nsHTMLTagList.h");
 const BINDINGS = require.resolve("../../dom/bindings/Bindings.conf");
 
-// TODO Bug 2022802: Ideally we should get details about the generated files from
+// TODO Bug TBD: Ideally we should get details about the generated files from
 // the build system.
-// This list should match the list of `GeneratedFile` in dom/bindings/moz.build.
 const GENERATED_WEDIDL_FILES = [
   "CSSPageDescriptors.webidl",
   "CSSPositionTryDescriptors.webidl",
   "CSSStyleProperties.webidl",
-  "CSSFontFaceDescriptors.webidl",
-  "CSSCounterStyleRule.webidl",
 ];
 
 // Support overrides using the syntax from @typescript/dom-lib-generator which
@@ -68,7 +65,7 @@ function preprocess(webidl) {
 }
 
 function customize(all, baseTypes) {
-  // Parse HTML element interfaces from nsHTMLTagList.inc.
+  // Parse HTML element interfaces from nsHTMLTagList.h.
   const RE = /^HTML_(HTMLELEMENT_)?TAG\((\w+)(, \w+, (\w*))?\)/gm;
   for (let match of fs.readFileSync(TAGLIST, "utf8").matchAll(RE)) {
     let iface = all.interfaces.interface[`HTML${match[4] ?? ""}Element`];
@@ -136,14 +133,18 @@ function customize(all, baseTypes) {
 
 // Preprocess, convert, merge and customize webidl, emit and postprocess dts.
 async function emitDom(webidls, builtin = "builtin.webidl") {
-  const { merge, baseTypeConversionMap } =
-    await import("@typescript/dom-lib-generator/lib/build/helpers.js");
-  const { emitWebIdl } =
-    await import("@typescript/dom-lib-generator/lib/build/emitter.js");
-  const { convert } =
-    await import("@typescript/dom-lib-generator/lib/build/widlprocess.js");
-  const { getExposedTypes } =
-    await import("@typescript/dom-lib-generator/lib/build/expose.js");
+  const { merge, baseTypeConversionMap } = await import(
+    "@typescript/dom-lib-generator/lib/build/helpers.js"
+  );
+  const { emitWebIdl } = await import(
+    "@typescript/dom-lib-generator/lib/build/emitter.js"
+  );
+  const { convert } = await import(
+    "@typescript/dom-lib-generator/lib/build/widlprocess.js"
+  );
+  const { getExposedTypes } = await import(
+    "@typescript/dom-lib-generator/lib/build/expose.js"
+  );
 
   function mergePartial(partials, bases) {
     for (let p of partials) {

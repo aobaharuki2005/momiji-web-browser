@@ -120,7 +120,7 @@ async function doTestWithNewWindow({
     sandbox.stub(win.gURLBar, "setURI").callsFake(uri => {
       if (
         !uri &&
-        win.gBrowser.selectedBrowser.browsingContext.nonWebControlledLoadingURI
+        win.gBrowser.selectedBrowser.browsingContext.nonWebControlledBlankURI
       ) {
         isSetURIWhileLoading = true;
       }
@@ -134,7 +134,7 @@ async function doTestWithNewWindow({
 
     Assert.equal(isSetURIWhileLoading, expectedSetURICalled);
     Assert.equal(
-      !!win.gBrowser.selectedBrowser.browsingContext.nonWebControlledLoadingURI,
+      !!win.gBrowser.selectedBrowser.browsingContext.nonWebControlledBlankURI,
       expectedSetURICalled
     );
 

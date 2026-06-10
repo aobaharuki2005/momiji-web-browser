@@ -47,7 +47,8 @@ rawPackets.set(`GET request`, {
   "blockedReason": 0,
   "extension": {},
   "totalTime": 2,
-  "securityState": "secure"
+  "securityState": "secure",
+  "isRacing": false
 });
 
 rawPackets.set(`GET request update`, {
@@ -79,7 +80,8 @@ rawPackets.set(`GET request update`, {
   "blockedReason": 0,
   "extension": {},
   "totalTime": 3,
-  "securityState": "secure"
+  "securityState": "secure",
+  "isRacing": false
 });
 
 rawPackets.set(`XHR GET request`, {
@@ -118,7 +120,8 @@ rawPackets.set(`XHR GET request`, {
   "blockedReason": 0,
   "extension": {},
   "totalTime": 1,
-  "securityState": "insecure"
+  "securityState": "insecure",
+  "isRacing": false
 });
 
 rawPackets.set(`XHR GET request update`, {
@@ -156,7 +159,8 @@ rawPackets.set(`XHR GET request update`, {
   "blockedReason": 0,
   "extension": {},
   "totalTime": 1,
-  "securityState": "insecure"
+  "securityState": "insecure",
+  "isRacing": false
 });
 
 rawPackets.set(`XHR POST request`, {
@@ -195,7 +199,8 @@ rawPackets.set(`XHR POST request`, {
   "blockedReason": 0,
   "extension": {},
   "totalTime": 1,
-  "securityState": "insecure"
+  "securityState": "insecure",
+  "isRacing": false
 });
 
 rawPackets.set(`XHR POST request update`, {
@@ -233,7 +238,8 @@ rawPackets.set(`XHR POST request update`, {
   "blockedReason": 0,
   "extension": {},
   "totalTime": 2,
-  "securityState": "insecure"
+  "securityState": "insecure",
+  "isRacing": false
 });
 
 

@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty('Intl'))
+
 var g = newGlobal();
 
 var locale = "en";

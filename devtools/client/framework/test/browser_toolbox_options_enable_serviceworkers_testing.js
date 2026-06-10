@@ -33,7 +33,7 @@ add_task(async function () {
   cbx.scrollIntoView();
   cbx.click();
 
-  await reloadSelectedTab();
+  await reloadBrowser();
 
   data = await register();
   is(data.success, true, "Register should success");
@@ -54,7 +54,7 @@ add_task(async function () {
   info("Workers should be turned back off when we closes the toolbox");
   await toolbox.destroy();
 
-  await reloadSelectedTab();
+  await reloadBrowser();
   data = await register();
   is(data.success, false, "Register should fail with security error");
 });

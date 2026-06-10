@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -224,7 +226,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.push(reg_code);
 
     // Initialize the frame, including filling in the slots.
-    using Fn = void (*)(BaselineFrame* frame, InterpreterFrame* interpFrame,
+    using Fn = bool (*)(BaselineFrame* frame, InterpreterFrame* interpFrame,
                         uint32_t numStackValues);
     masm.setupUnalignedABICall(r19);
     masm.passABIArg(framePtrScratch);  // BaselineFrame.
@@ -237,6 +239,9 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     MOZ_ASSERT(scratch != ReturnReg);
 
     masm.addToStackPtr(Imm32(ExitFrameLayout::SizeWithFooter()));
+
+    Label error;
+    masm.branchIfFalseBool(ReturnReg, &error);
 
     // If OSR-ing, then emit instrumentation for setting lastProfilerFrame
     // if profiler instrumentation is enabled.
@@ -251,6 +256,15 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     }
 
     masm.jump(scratch);
+
+    // OOM: frame epilogue, load error value, discard return address and return.
+    masm.bind(&error);
+    masm.moveToStackPtr(FramePointer);
+    masm.pop(FramePointer);
+    masm.addToStackPtr(Imm32(sizeof(uintptr_t)));  // Return address.
+    masm.syncStackPtr();
+    masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
+    masm.B(&osrReturnPoint);
 
     masm.bind(&notOsr);
     masm.movePtr(reg_scope, R1_);
@@ -329,11 +343,9 @@ JitRuntime::getCppEntryRegisters(JitFrameLayout* frameStackAddress) {
 }
 
 static void PushRegisterDump(MacroAssembler& masm) {
-  const LiveRegisterSet First20GeneralRegisters = LiveRegisterSet(
+  const LiveRegisterSet First28GeneralRegisters = LiveRegisterSet(
       GeneralRegisterSet(Registers::AllMask &
-                         ~(1 << 31 | 1 << 30 | 1 << 29 | 1 << 28 | 1 << 27 |
-                           1 << 26 | 1 << 25 | 1 << 24 | 1 << 23 | 1 << 22 |
-                           1 << 21 | 1 << 20)),
+                         ~(1 << 31 | 1 << 30 | 1 << 29 | 1 << 28)),
       FloatRegisterSet(FloatRegisters::NoneMask));
 
   const LiveRegisterSet AllFloatRegisters =
@@ -349,14 +361,12 @@ static void PushRegisterDump(MacroAssembler& masm) {
   //
   // See block comment in MacroAssembler.h for further required invariants.
 
-  // First, push the last twelve registers, passing zero for sp.
-  // Zero is pushed for x20 and x31: the pseudo-SP and SP, respectively.
-  masm.asVIXL().Push(xzr, x30, x29, x28);
-  masm.asVIXL().Push(x27, x26, x25, x24);
-  masm.asVIXL().Push(x23, x22, x21, xzr);
+  // First, push the last four registers, passing zero for sp.
+  // Zero is pushed for x28 and x31: the pseudo-SP and SP, respectively.
+  masm.asVIXL().Push(xzr, x30, x29, xzr);
 
-  // Second, push the first 20 registers that serve no special purpose.
-  masm.PushRegsInMask(First20GeneralRegisters);
+  // Second, push the first 28 registers that serve no special purpose.
+  masm.PushRegsInMask(First28GeneralRegisters);
 
   // Finally, push all floating-point registers, completing the RegisterDump.
   masm.PushRegsInMask(AllFloatRegisters);

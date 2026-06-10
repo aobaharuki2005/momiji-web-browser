@@ -44,8 +44,10 @@ add_task(async function test_no_default_folder() {
     .returns(null);
 
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    let settings = await waitForBackupSettings(browser);
+    let settings = browser.contentDocument.querySelector("backup-settings");
     let turnOnButton = settings.scheduledBackupsButtonEl;
+
+    await settings.updateComplete;
 
     Assert.ok(bs.archiveEnabledStatus, "Archive is enabled for backups");
 
@@ -83,7 +85,7 @@ add_task(async function test_no_default_folder() {
   docStub.restore();
 
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    let settings = await waitForBackupSettings(browser);
+    let settings = browser.contentDocument.querySelector("backup-settings");
 
     Assert.ok(
       settings.turnOnScheduledBackupsEl,
@@ -117,7 +119,7 @@ add_task(async function test_create_new_backup_trigger() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     Services.fog.testResetFOG();
 
-    let settings = await waitForBackupSettings(browser);
+    let settings = browser.contentDocument.querySelector("backup-settings");
     // disable the buffer for the test
     settings.MESSAGE_BAR_BUFFER = 0;
 
@@ -230,7 +232,7 @@ add_task(async function test_create_backup_trigger_disabled() {
   let backupPromise = bs.createBackup();
 
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    let settings = await waitForBackupSettings(browser);
+    let settings = browser.contentDocument.querySelector("backup-settings");
     Assert.ok(
       settings.triggerBackupButtonEl.disabled,
       "A backup is in progress"

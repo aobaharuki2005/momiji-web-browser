@@ -36,7 +36,7 @@ def test_filter_schedule_if(run_jobs, tasks, expected):
     ("", set()),
     ("tc-jobs:foo\ntc-jobs:bar", {"foo"})])
 @pytest.mark.parametrize("event", [
-    {"head_commit": {"message": "<message>"}},
+    {"commits": [{"message": "<message>"}]},
     {"pull_request": {"body": "<message>"}}
 ])
 def test_extra_jobs_pr(msg, expected, event):

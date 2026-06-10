@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * Copyright 2016 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +39,7 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       observers_(cx->zone()),
       functions_(std::move(functions)),
       addressType_(desc.addressType()),
-      elemType_(desc.elemType()),
+      elemType_(desc.elemType),
       isAsmJS_(desc.isAsmJS),
       length_(desc.initialLength()),
       maximum_(desc.maximumLength()) {
@@ -54,7 +56,7 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       observers_(cx->zone()),
       objects_(std::move(objects)),
       addressType_(desc.addressType()),
-      elemType_(desc.elemType()),
+      elemType_(desc.elemType),
       isAsmJS_(desc.isAsmJS),
       length_(desc.initialLength()),
       maximum_(desc.maximumLength()) {
@@ -76,7 +78,7 @@ SharedTable Table::create(JSContext* cx, const TableDesc& desc,
   // Tables are initialized with init_expr values at Instance::init or
   // WasmTableObject::create.
 
-  switch (desc.elemType().tableRepr()) {
+  switch (desc.elemType.tableRepr()) {
     case TableRepr::Func: {
       FuncRefVector functions;
       if (!functions.resize(desc.initialLength())) {
@@ -104,7 +106,7 @@ void Table::tracePrivate(JSTracer* trc) {
   // WasmTableObject's trace hook so maybeObject_ must already be marked.
   // TraceEdge is called so that the pointer can be updated during a moving
   // GC.
-  TraceEdge(trc, &maybeObject_, "wasm table object");
+  TraceNullableEdge(trc, &maybeObject_, "wasm table object");
 
   switch (repr()) {
     case TableRepr::Func: {
@@ -297,15 +299,13 @@ void Table::setNull(uint32_t address) {
   }
 }
 
-void Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex) {
+bool Table::copy(JSContext* cx, const Table& srcTable, uint32_t dstIndex,
+                 uint32_t srcIndex) {
   MOZ_RELEASE_ASSERT(!srcTable.isAsmJS_);
-
-  // Validation for table.copy rejects copying between TableRepr::Func and
-  // TableRepr::Ref.
-  MOZ_RELEASE_ASSERT(srcTable.repr() == repr());
-
   switch (repr()) {
     case TableRepr::Func: {
+      MOZ_RELEASE_ASSERT(elemType().isFuncHierarchy() &&
+                         srcTable.elemType().isFuncHierarchy());
       FunctionTableElem& dst = functions_[dstIndex];
       if (dst.instance) {
         gc::PreWriteBarrier(dst.instance->objectUnbarriered());
@@ -324,10 +324,28 @@ void Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex) {
       }
       break;
     }
-    case TableRepr::Ref:
-      setAnyRef(dstIndex, srcTable.getAnyRef(srcIndex));
+    case TableRepr::Ref: {
+      switch (srcTable.repr()) {
+        case TableRepr::Ref: {
+          setAnyRef(dstIndex, srcTable.getAnyRef(srcIndex));
+          break;
+        }
+        case TableRepr::Func: {
+          MOZ_RELEASE_ASSERT(srcTable.elemType().isFuncHierarchy());
+          // Upcast.
+          RootedFunction fun(cx);
+          if (!srcTable.getFuncRef(cx, srcIndex, &fun)) {
+            // OOM, so just pass it on.
+            return false;
+          }
+          setAnyRef(dstIndex, AnyRef::fromJSObject(*fun));
+          break;
+        }
+      }
       break;
+    }
   }
+  return true;
 }
 
 uint32_t Table::grow(uint32_t delta) {
@@ -377,8 +395,8 @@ uint32_t Table::grow(uint32_t delta) {
     AddCellMemory(object, gcMallocBytes(), MemoryUse::WasmTableTable);
   }
 
-  for (auto iter = observers_.iter(); !iter.done(); iter.next()) {
-    iter.get()->instance().onMovingGrowTable(this);
+  for (InstanceSet::Range r = observers_.all(); !r.empty(); r.popFront()) {
+    r.front()->instance().onMovingGrowTable(this);
   }
 
   return oldLength;

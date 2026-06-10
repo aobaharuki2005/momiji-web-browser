@@ -9,19 +9,23 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabDao
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabEntity
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabsDatabase
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class RecentlyClosedTabDaoTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
@@ -39,7 +43,7 @@ class RecentlyClosedTabDaoTest {
     }
 
     @Test
-    fun testAddingTabs() = runTest {
+    fun testAddingTabs() = runTestOnMain {
         val tab1 = RecentlyClosedTabEntity(
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",
@@ -63,10 +67,11 @@ class RecentlyClosedTabDaoTest {
             assertEquals(tab1, this[0])
             assertEquals(tab2, this[1])
         }
+        Unit
     }
 
     @Test
-    fun testRemovingTab() = runTest {
+    fun testRemovingTab() = runTestOnMain {
         val tab1 = RecentlyClosedTabEntity(
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",
@@ -91,10 +96,11 @@ class RecentlyClosedTabDaoTest {
             assertEquals(1, this.size)
             assertEquals(tab2, this[0])
         }
+        Unit
     }
 
     @Test
-    fun testRemovingAllTabs() = runTest {
+    fun testRemovingAllTabs() = runTestOnMain {
         RecentlyClosedTabEntity(
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",
@@ -118,6 +124,7 @@ class RecentlyClosedTabDaoTest {
         tabDao.getTabs().first().apply {
             assertEquals(0, this.size)
         }
+        Unit
     }
 
     @After

@@ -1,3 +1,4 @@
+// |reftest| skip-if(!Uint8Array.fromBase64) -- uint8array-base64 is not enabled unconditionally
 // Copyright (C) 2024 Kevin Gibbons. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -16,20 +17,20 @@ Object.defineProperty(options, "alphabet", {
   }
 });
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   if (TA === Uint8Array) return;
-  var sample = new TA(makeCtorArg(2));
+  var sample = new TA(2);
   assert.throws(TypeError, function() {
     Uint8Array.prototype.toBase64.call(sample, options);
   });
-}, null, ["passthrough"]);
+});
 
 assert.throws(TypeError, function() {
   Uint8Array.prototype.toBase64.call([], options);
-}, null, ["passthrough"]);
+});
 
 assert.throws(TypeError, function() {
   toBase64(options);
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

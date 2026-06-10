@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +7,7 @@
 #ifndef nsIConsoleReportCollector_h
 #define nsIConsoleReportCollector_h
 
-#include "mozilla/ErrorResult.h"
+#include "nsContentUtils.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
@@ -14,17 +16,9 @@
 #define NS_NSICONSOLEREPORTCOLLECTOR_IID \
   {0xdd98a481, 0xd2c4, 0x4203, {0x8d, 0xfa, 0x85, 0xbf, 0xd7, 0xdc, 0xd7, 0x05}}
 
-class nsILoadGroup;
-enum class PropertiesFile : uint8_t;
-
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 class ConsoleReportCollected;
-}
-namespace dom {
-class Document;
-}
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 // An interface for saving reports until we can flush them to the correct
 // window at a later time.
@@ -50,7 +44,7 @@ class NS_NO_VTABLE nsIConsoleReportCollector : public nsISupports {
   //                  message.
   virtual void AddConsoleReport(uint32_t aErrorFlags,
                                 const nsACString& aCategory,
-                                PropertiesFile aPropertiesFile,
+                                nsContentUtils::PropertiesFile aPropertiesFile,
                                 const nsACString& aSourceFileURI,
                                 uint32_t aLineNumber, uint32_t aColumnNumber,
                                 const nsACString& aMessageName,
@@ -61,7 +55,7 @@ class NS_NO_VTABLE nsIConsoleReportCollector : public nsISupports {
   // All other args the same as AddConsoleReport().
   template <typename... Params>
   void AddConsoleReport(uint32_t aErrorFlags, const nsACString& aCategory,
-                        PropertiesFile aPropertiesFile,
+                        nsContentUtils::PropertiesFile aPropertiesFile,
                         const nsACString& aSourceFileURI, uint32_t aLineNumber,
                         uint32_t aColumnNumber, const nsACString& aMessageName,
                         Params&&... aParams) {

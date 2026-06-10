@@ -48,6 +48,7 @@ class DecoderDatabase {
    public:
     DecoderInfo(const Environment& env,
                 const SdpAudioFormat& audio_format,
+                std::optional<AudioCodecPairId> codec_pair_id,
                 AudioDecoderFactory* factory);
     DecoderInfo(DecoderInfo&&);
     ~DecoderInfo();
@@ -114,7 +115,8 @@ class DecoderDatabase {
   static const uint8_t kRtpPayloadTypeError = 0xFF;
 
   DecoderDatabase(const Environment& env,
-                  scoped_refptr<AudioDecoderFactory> decoder_factory);
+                  scoped_refptr<AudioDecoderFactory> decoder_factory,
+                  std::optional<AudioCodecPairId> codec_pair_id);
 
   virtual ~DecoderDatabase();
 

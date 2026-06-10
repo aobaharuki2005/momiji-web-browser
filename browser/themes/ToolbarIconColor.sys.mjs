@@ -56,7 +56,7 @@ export const ToolbarIconColor = {
   },
 
   handleEvent(event) {
-    const window = event.target;
+    const window = event.target.ownerGlobal;
     switch (event.type) {
       case "activate":
       case "deactivate":

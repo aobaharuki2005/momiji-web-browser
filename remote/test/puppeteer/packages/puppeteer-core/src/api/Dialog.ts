@@ -18,14 +18,16 @@ import {assert} from '../util/assert.js';
  * ```ts
  * import puppeteer from 'puppeteer';
  *
- * const browser = await puppeteer.launch();
- * const page = await browser.newPage();
- * page.on('dialog', async dialog => {
- *   console.log(dialog.message());
- *   await dialog.dismiss();
- *   await browser.close();
- * });
- * await page.evaluate(() => alert('1'));
+ * (async () => {
+ *   const browser = await puppeteer.launch();
+ *   const page = await browser.newPage();
+ *   page.on('dialog', async dialog => {
+ *     console.log(dialog.message());
+ *     await dialog.dismiss();
+ *     await browser.close();
+ *   });
+ *   page.evaluate(() => alert('1'));
+ * })();
  * ```
  *
  * @public

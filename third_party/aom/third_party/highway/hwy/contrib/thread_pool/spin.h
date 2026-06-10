@@ -82,32 +82,25 @@ struct SpinResult {
 // `HWY_TARGET` and its runtime dispatch mechanism. Returned by `Type()`, also
 // used by callers to set the `disabled` argument for `DetectSpin`.
 enum class SpinType : uint8_t {
-#if HWY_ENABLE_MONITORX
   kMonitorX = 1,  // AMD
-#endif
-#if HWY_ENABLE_UMONITOR
-  kUMonitor = 2,  // Intel
-#endif
-  kPause = 3,
+  kUMonitor,      // Intel
+  kPause,
   kSentinel  // for iterating over all enumerators. Must be last.
 };
 
 // For printing which is in use.
 static inline const char* ToString(SpinType type) {
   switch (type) {
-#if HWY_ENABLE_MONITORX
     case SpinType::kMonitorX:
       return "MonitorX_C1";
-#endif
-#if HWY_ENABLE_UMONITOR
     case SpinType::kUMonitor:
       return "UMonitor_C0.2";
-#endif
     case SpinType::kPause:
       return "Pause";
     case SpinType::kSentinel:
-    default:
       return nullptr;
+    default:
+      HWY_UNREACHABLE;
   }
 }
 
@@ -283,10 +276,9 @@ HWY_POP_ATTRIBUTES
 // Ignores `disabled` for `kPause` if it is the only supported and enabled type.
 // Somewhat expensive, typically called during initialization.
 static inline SpinType DetectSpin(int disabled = 0) {
-  const auto enabled = [disabled](SpinType type) {
+  const auto HWY_MAYBE_UNUSED enabled = [disabled](SpinType type) {
     return (disabled & (1 << static_cast<int>(type))) == 0;
   };
-  (void)enabled;
 
 #if HWY_ENABLE_MONITORX
   if (enabled(SpinType::kMonitorX) && x86::IsAMD()) {
@@ -310,23 +302,23 @@ static inline SpinType DetectSpin(int disabled = 0) {
   return SpinType::kPause;
 }
 
-// Calls `func(spin, args)` for the given `spin_type`.
-template <class Func, typename... Args>
-HWY_INLINE void CallWithSpin(SpinType spin_type, Func&& func, Args&&... args) {
+// Calls `func(spin)` for the given `spin_type`.
+template <class Func>
+HWY_INLINE void CallWithSpin(SpinType spin_type, Func&& func) {
   switch (spin_type) {
 #if HWY_ENABLE_MONITORX
     case SpinType::kMonitorX:
-      func(SpinMonitorX(), std::forward<Args>(args)...);
+      func(SpinMonitorX());
       break;
 #endif
 #if HWY_ENABLE_UMONITOR
     case SpinType::kUMonitor:
-      func(SpinUMonitor(), std::forward<Args>(args)...);
+      func(SpinUMonitor());
       break;
 #endif
     case SpinType::kPause:
     default:
-      func(SpinPause(), std::forward<Args>(args)...);
+      func(SpinPause());
       break;
   }
 }

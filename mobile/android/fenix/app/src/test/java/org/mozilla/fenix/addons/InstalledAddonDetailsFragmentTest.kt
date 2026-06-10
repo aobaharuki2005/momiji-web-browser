@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
-import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.switchmaterial.SwitchMaterial
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.every
@@ -52,7 +52,7 @@ import mozilla.components.feature.addons.R as addonsR
 class InstalledAddonDetailsFragmentTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var fragment: InstalledAddonDetailsFragment
-    private lateinit var tabsUseCases: TabsUseCases
+    private lateinit var addNewTabUseCase: TabsUseCases.AddNewTabUseCase
     private lateinit var loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase
     private lateinit var searchUseCases: SearchUseCases
     private lateinit var homepageTitle: String
@@ -62,7 +62,7 @@ class InstalledAddonDetailsFragmentTest {
     @Before
     fun setup() {
         fragment = spyk(InstalledAddonDetailsFragment())
-        tabsUseCases = mockk(relaxed = true)
+        addNewTabUseCase = mockk(relaxed = true)
         loadUrlUseCase = mockk(relaxed = true)
         searchUseCases = mockk(relaxed = true)
         homepageTitle = testContext.getString(R.string.tab_tray_homepage_tab)
@@ -111,8 +111,8 @@ class InstalledAddonDetailsFragmentTest {
     @Test
     fun `GIVEN blocklisted addon WHEN binding the enable switch THEN disable the switch`() {
         val addon = mockk<Addon>()
-        val enableSwitch = mockk<MaterialSwitch>(relaxed = true)
-        val privateBrowsingSwitch = mockk<MaterialSwitch>(relaxed = true)
+        val enableSwitch = mockk<SwitchMaterial>(relaxed = true)
+        val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
 
         every { fragment.provideEnableSwitch() } returns enableSwitch
         every { fragment.providePrivateBrowsingSwitch() } returns privateBrowsingSwitch
@@ -128,8 +128,8 @@ class InstalledAddonDetailsFragmentTest {
     @Test
     fun `GIVEN enabled addon WHEN binding the enable switch THEN do not disable the switch`() {
         val addon = mockk<Addon>()
-        val enableSwitch = mockk<MaterialSwitch>(relaxed = true)
-        val privateBrowsingSwitch = mockk<MaterialSwitch>(relaxed = true)
+        val enableSwitch = mockk<SwitchMaterial>(relaxed = true)
+        val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
 
         every { fragment.provideEnableSwitch() } returns enableSwitch
         every { fragment.providePrivateBrowsingSwitch() } returns privateBrowsingSwitch
@@ -147,8 +147,8 @@ class InstalledAddonDetailsFragmentTest {
     @Test
     fun `GIVEN addon not correctly signed WHEN binding the enable switch THEN disable the switch`() {
         val addon = mockk<Addon>()
-        val enableSwitch = mockk<MaterialSwitch>(relaxed = true)
-        val privateBrowsingSwitch = mockk<MaterialSwitch>(relaxed = true)
+        val enableSwitch = mockk<SwitchMaterial>(relaxed = true)
+        val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
 
         every { fragment.provideEnableSwitch() } returns enableSwitch
         every { fragment.providePrivateBrowsingSwitch() } returns privateBrowsingSwitch
@@ -165,8 +165,8 @@ class InstalledAddonDetailsFragmentTest {
     @Test
     fun `GIVEN incompatible addon WHEN binding the enable switch THEN disable the switch`() {
         val addon = mockk<Addon>()
-        val enableSwitch = mockk<MaterialSwitch>(relaxed = true)
-        val privateBrowsingSwitch = mockk<MaterialSwitch>(relaxed = true)
+        val enableSwitch = mockk<SwitchMaterial>(relaxed = true)
+        val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
 
         every { fragment.provideEnableSwitch() } returns enableSwitch
         every { fragment.providePrivateBrowsingSwitch() } returns privateBrowsingSwitch
@@ -268,43 +268,9 @@ class InstalledAddonDetailsFragmentTest {
     }
 
     @Test
-    fun `GIVEN an add-on with 'openOptionsPageInTab' false WHEN clicking the settings button THEN navigation to the embedded options page occurs`() {
-        val addon = mockAddon(openOptionsPageInTab = false)
-        every { fragment.addon } returns addon
-        every { fragment.activity } returns mockk<HomeActivity>(relaxed = true)
-
-        every { fragment.requireContext() } returns testContext
-
-        // We create the `binding` instance and bind the UI here because `onCreateView()` checks a late init variable
-        // and we cannot easily mock it to skip the check.
-        fragment.setBindingAndBindUI(
-            FragmentInstalledAddOnDetailsBinding.inflate(
-                LayoutInflater.from(testContext),
-                mockk(relaxed = true),
-                false,
-            ),
-        )
-        val navController = mockk<NavController>(relaxed = true)
-        Navigation.setViewNavController(fragment.binding.root, navController)
-
-        // Click the settings button.
-        fragment.binding.settings.performClick()
-
-        val expectedDirections = InstalledAddonDetailsFragmentDirections
-            .actionInstalledAddonFragmentToAddonInternalSettingsFragment(
-                webExtensionName = "some-name",
-                optionsPageUrl = "some-addon-options-page-url",
-                webExtensionId = "some-addon-id",
-            )
-        verify {
-            navController.navigate(eq(expectedDirections))
-        }
-    }
-
-    @Test
     fun `GIVEN addon does not allow private browsing WHEN binding THEN update switch`() {
         val addon = mockAddon()
-        val privateBrowsingSwitch = mockk<MaterialSwitch>(relaxed = true)
+        val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
 
         every { fragment.providePrivateBrowsingSwitch() } returns privateBrowsingSwitch
         every { addon.incognito } returns Addon.Incognito.NOT_ALLOWED
@@ -394,7 +360,7 @@ class InstalledAddonDetailsFragmentTest {
         val appStore = AppStore(initialState = AppState(mode = BrowsingMode.Normal))
         val useCases = FenixBrowserUseCases(
             appStore = appStore,
-            tabsUseCases = tabsUseCases,
+            addNewTabUseCase = addNewTabUseCase,
             loadUrlUseCase = loadUrlUseCase,
             searchUseCases = searchUseCases,
             homepageTitle = homepageTitle,
@@ -415,7 +381,7 @@ class InstalledAddonDetailsFragmentTest {
         val url = "${BuildConfig.AMO_BASE_URL}/android/blocked-addon/some-addon-id/1.2.3/"
 
         verify {
-            tabsUseCases.addTab.invoke(
+            addNewTabUseCase.invoke(
                 url = url,
                 flags = EngineSession.LoadUrlFlags.none(),
                 private = false,
@@ -446,7 +412,7 @@ class InstalledAddonDetailsFragmentTest {
         val appStore = AppStore(initialState = AppState(mode = BrowsingMode.Normal))
         val useCases = FenixBrowserUseCases(
             appStore = appStore,
-            tabsUseCases = tabsUseCases,
+            addNewTabUseCase = addNewTabUseCase,
             loadUrlUseCase = loadUrlUseCase,
             searchUseCases = searchUseCases,
             homepageTitle = homepageTitle,
@@ -468,7 +434,7 @@ class InstalledAddonDetailsFragmentTest {
         val url = SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.UNSIGNED_ADDONS)
 
         verify {
-            tabsUseCases.addTab.invoke(
+            addNewTabUseCase.invoke(
                 url = url,
                 flags = EngineSession.LoadUrlFlags.none(),
                 private = false,
@@ -499,7 +465,7 @@ class InstalledAddonDetailsFragmentTest {
         val appStore = AppStore(initialState = AppState(mode = BrowsingMode.Normal))
         val useCases = FenixBrowserUseCases(
             appStore = appStore,
-            tabsUseCases = tabsUseCases,
+            addNewTabUseCase = addNewTabUseCase,
             loadUrlUseCase = loadUrlUseCase,
             searchUseCases = searchUseCases,
             homepageTitle = homepageTitle,
@@ -519,7 +485,7 @@ class InstalledAddonDetailsFragmentTest {
         val url = "${BuildConfig.AMO_BASE_URL}/android/blocked-addon/some-addon-id/1.2.3/"
 
         verify {
-            tabsUseCases.addTab.invoke(
+            addNewTabUseCase.invoke(
                 url = url,
                 flags = EngineSession.LoadUrlFlags.none(),
                 private = false,
@@ -529,7 +495,7 @@ class InstalledAddonDetailsFragmentTest {
         }
     }
 
-    private fun mockAddon(openOptionsPageInTab: Boolean = true): Addon {
+    private fun mockAddon(): Addon {
         val addon: Addon = mockk()
         every { addon.id } returns "some-addon-id"
         every { addon.version } returns "1.2.3"
@@ -538,15 +504,10 @@ class InstalledAddonDetailsFragmentTest {
         every { addon.isDisabledAsBlocklisted() } returns false
         every { addon.isDisabledAsNotCorrectlySigned() } returns false
         every { addon.isDisabledAsIncompatible() } returns false
+        every { addon.installedState } returns null
         every { addon.isAllowedInPrivateBrowsing() } returns false
         every { addon.translatableName } returns mapOf("en-US" to "some-name")
         every { addon.defaultLocale } returns "en-US"
-
-        val installedState: Addon.InstalledState = mockk()
-        every { installedState.openOptionsPageInTab } returns openOptionsPageInTab
-        every { installedState.optionsPageUrl } returns "some-addon-options-page-url"
-        every { addon.installedState } returns installedState
-
         return addon
     }
     companion object {

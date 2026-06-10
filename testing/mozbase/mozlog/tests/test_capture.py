@@ -1,8 +1,9 @@
 import sys
 import unittest
 
+import mozunit
 from mozlog import capture, structuredlog
-from test_structured import Handler
+from test_structured import TestHandler
 
 
 class TestCaptureIO(unittest.TestCase):
@@ -10,7 +11,7 @@ class TestCaptureIO(unittest.TestCase):
 
     def setUp(self):
         self.logger = structuredlog.StructuredLogger("test")
-        self.handler = Handler()
+        self.handler = TestHandler()
         self.logger.add_handler(self.handler)
 
     def test_captureio_log(self):
@@ -33,6 +34,4 @@ class TestCaptureIO(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import mozunit
-
     mozunit.main()

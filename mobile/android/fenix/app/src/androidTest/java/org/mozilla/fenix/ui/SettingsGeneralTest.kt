@@ -4,52 +4,45 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
-import org.mozilla.fenix.customannotations.Converted
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithSystemLocaleChanged
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.loremIpsumAsset
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.checkTextSizeOnWebsite
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import org.mozilla.fenix.ui.util.FRENCH_FOLLOW_DEVICE_LANGUAGE_OPTION
 import org.mozilla.fenix.ui.util.FRENCH_LANGUAGE_HEADER
+import org.mozilla.fenix.ui.util.FRENCH_SYSTEM_LOCALE_OPTION
 import org.mozilla.fenix.ui.util.FR_SETTINGS
 import org.mozilla.fenix.ui.util.ROMANIAN_LANGUAGE_HEADER
-import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
 /**
  *  Tests for verifying the General section of the Settings menu
  *
  */
-class SettingsGeneralTest {
-    @get:Rule(order = 0)
-    val fenixTestRule: FenixTestRule = FenixTestRule()
-
-    private val mockWebServer get() = fenixTestRule.mockWebServer
-
-    @get:Rule(order = 1)
+class SettingsGeneralTest : TestSetup() {
+    @get:Rule
     val composeTestRule =
-        AndroidComposeTestRuleV2(
+        AndroidComposeTestRule(
             HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
         ) { it.activity }
 
-    @get:Rule(order = 2)
-    val memoryLeaksRule = DetectMemoryLeaksRule(composeTestRule = { composeTestRule })
+    @get:Rule
+    val memoryLeaksRule = DetectMemoryLeaksRule()
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2092697
     @Test
@@ -70,13 +63,12 @@ class SettingsGeneralTest {
             verifyAutofillButton()
             verifyAccessibilityButton()
             verifyLanguageButton()
-            verifyPageSummariesButton()
             verifySetAsDefaultBrowserButton()
             verifyDefaultBrowserToggle(false)
         }
     }
 
-    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/344213
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135005
     @SmokeTest
     @Test
     fun verifyFontSizingChangeTest() {
@@ -116,11 +108,6 @@ class SettingsGeneralTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/516079
-    @Converted(
-        replacedBy = ["org.mozilla.fenix.ui.efficiency.tests.SettingsGeneralTest#setAppLanguageDifferentThanSystemLanguageTest"],
-        bug = 2040932,
-        since = "2026-05",
-    )
     @SmokeTest
     @Test
     fun setAppLanguageDifferentThanSystemLanguageTest() {
@@ -142,7 +129,7 @@ class SettingsGeneralTest {
                 verifyLanguageHeaderIsTranslated(ROMANIAN_LANGUAGE_HEADER)
                 selectLanguage("Français")
                 verifyLanguageHeaderIsTranslated(FRENCH_LANGUAGE_HEADER)
-                selectLanguage(FRENCH_FOLLOW_DEVICE_LANGUAGE_OPTION)
+                selectLanguage(FRENCH_SYSTEM_LOCALE_OPTION)
                 verifyLanguageHeaderIsTranslated(enLanguageHeaderText)
             }
         }
@@ -174,7 +161,6 @@ class SettingsGeneralTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/516078
-    @Ignore("Failing: https://bugzilla.mozilla.org/show_bug.cgi?id=2021700")
     @Test
     fun verifyFollowDeviceLanguageTest() {
         val frenchLocale = LocaleListCompat.forLanguageTags("fr")
@@ -192,7 +178,7 @@ class SettingsGeneralTest {
                 }
             }.openLanguageSubMenu(localizedText = FRENCH_LANGUAGE_HEADER) {
                 verifyLanguageHeaderIsTranslated(FRENCH_LANGUAGE_HEADER)
-                verifySelectedLanguage(FRENCH_FOLLOW_DEVICE_LANGUAGE_OPTION)
+                verifySelectedLanguage(FRENCH_SYSTEM_LOCALE_OPTION)
             }
         }
     }

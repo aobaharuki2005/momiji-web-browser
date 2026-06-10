@@ -74,10 +74,11 @@ auto Frame(testing::Matcher<EncodedFrame> m) {
 std::unique_ptr<test::FakeEncodedFrame> WithReceiveTimeFromRtpTimestamp(
     std::unique_ptr<test::FakeEncodedFrame> frame) {
   if (frame->RtpTimestamp() == 0) {
-    frame->SetReceivedTime(kClockStart);
+    frame->SetReceivedTime(kClockStart.ms());
   } else {
-    frame->SetReceivedTime(kClockStart +
-                           TimeDelta::Seconds(frame->RtpTimestamp() / 90000.0));
+    frame->SetReceivedTime(
+        TimeDelta::Seconds(frame->RtpTimestamp() / 90000.0).ms() +
+        kClockStart.ms());
   }
   return frame;
 }
@@ -85,14 +86,15 @@ std::unique_ptr<test::FakeEncodedFrame> WithReceiveTimeFromRtpTimestamp(
 class VCMTimingTest : public VCMTiming {
  public:
   using VCMTiming::VCMTiming;
-  void OnCompleteTemporalUnit(uint32_t rtp_timestamp, Timestamp now) override {
-    OnCompleteTemporalUnitMocked(rtp_timestamp, now);
-    VCMTiming::OnCompleteTemporalUnit(rtp_timestamp, now);
+  void IncomingTimestamp(uint32_t rtp_timestamp,
+                         Timestamp last_packet_time) override {
+    IncomingTimestampMocked(rtp_timestamp, last_packet_time);
+    VCMTiming::IncomingTimestamp(rtp_timestamp, last_packet_time);
   }
 
   MOCK_METHOD(void,
-              OnCompleteTemporalUnitMocked,
-              (uint32_t rtp_timestamp, Timestamp now),
+              IncomingTimestampMocked,
+              (uint32_t rtp_timestamp, Timestamp last_packet_time),
               ());
 };
 
@@ -120,6 +122,10 @@ class VideoStreamBufferControllerStatsObserverMock
                int jitter_delay_ms,
                int min_playout_delay_ms,
                int render_delay_ms),
+              (override));
+  MOCK_METHOD(void,
+              OnTimingFrameInfoUpdated,
+              (const TimingFrameInfo& info),
               (override));
 };
 
@@ -924,7 +930,7 @@ class IncomingTimestampVideoStreamBufferControllerTest
 TEST_P(IncomingTimestampVideoStreamBufferControllerTest,
        IncomingTimestampOnMarkerBitOnly) {
   StartNextDecodeForceKeyframe();
-  EXPECT_CALL(timing_, OnCompleteTemporalUnitMocked)
+  EXPECT_CALL(timing_, IncomingTimestampMocked)
       .Times(field_trials_.IsDisabled("WebRTC-IncomingTimestampOnMarkerBitOnly")
                  ? 3
                  : 1);

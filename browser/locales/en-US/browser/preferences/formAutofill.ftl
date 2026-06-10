@@ -41,7 +41,7 @@ address-capture-learn-more-button =
     .label = Learn more
 address-capture-open-menu-button =
     .aria-label = Open menu
-address-capture-edit-address-link = Edit address
+address-capture-edit-address-button =
     .aria-label = Edit address
 
 
@@ -56,7 +56,7 @@ autofill-edit-address-title = Edit address
 
 autofill-address-name = Name
 autofill-address-organization = Organization
-autofill-address-street-address = Street address
+autofill-address-street-address = Street Address
 
 autofill-address-street = Street Address
 
@@ -100,7 +100,7 @@ autofill-address-oblast = Oblast
 autofill-address-pin = Pin
 autofill-address-postal-code = Postal Code
 # Postal code field.
-autofill-address-zip = ZIP code
+autofill-address-zip = ZIP Code
 # Postal code field used in Ireland (IE).
 autofill-address-eircode = Eircode
 
@@ -129,10 +129,3 @@ autofill-card-expires-month = Exp. Month
 autofill-card-expires-year = Exp. Year
 autofill-card-billing-address = Billing Address
 autofill-card-network = Card Type
-
-# This string is never actually displayed, but is used to make it easier to
-# find the payment methods section of about:settings via the search input. It's
-# simply a comma separated list of additional search keywords for the payment
-# methods section. Localizers should choose terms that make sense for payment
-# methods in their region.
-autofill-card-search-term-credit-cards = credit cards, credit, cards, debit cards, debit, wallet, checkout

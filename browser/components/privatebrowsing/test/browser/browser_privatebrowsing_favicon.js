@@ -178,7 +178,7 @@ async function openTab(aBrowser, aURL) {
 
   // Select tab and make sure its browser is focused.
   aBrowser.selectedTab = tab;
-  tab.documentGlobal.focus();
+  tab.ownerGlobal.focus();
 
   let browser = aBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
@@ -208,8 +208,8 @@ add_task(async function test_favicon_privateBrowsing() {
   // Generate two random cookies for non-private window and private window
   // respectively.
   let cookies = [];
-  cookies.push(`A=${Math.random().toString()}`);
-  cookies.push(`B=${Math.random().toString()}`);
+  cookies.push(Math.random().toString());
+  cookies.push(Math.random().toString());
 
   // Open a tab in private window and add a cookie into it.
   await assignCookies(privateWindow.gBrowser, TEST_SITE, cookies[0]);

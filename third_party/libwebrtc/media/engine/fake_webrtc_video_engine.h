@@ -22,7 +22,6 @@
 #include "api/environment/environment.h"
 #include "api/fec_controller_override.h"
 #include "api/video/encoded_image.h"
-#include "api/video/resolution.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_frame_type.h"
 #include "api/video_codecs/scalability_mode.h"
@@ -45,7 +44,7 @@ class FakeWebRtcVideoEncoderFactory;
 class FakeWebRtcVideoDecoder : public VideoDecoder {
  public:
   explicit FakeWebRtcVideoDecoder(FakeWebRtcVideoDecoderFactory* factory);
-  ~FakeWebRtcVideoDecoder() override;
+  ~FakeWebRtcVideoDecoder();
 
   bool Configure(const Settings& settings) override;
   int32_t Decode(const EncodedImage&, int64_t) override;
@@ -84,7 +83,7 @@ class FakeWebRtcVideoDecoderFactory : public VideoDecoderFactory {
 class FakeWebRtcVideoEncoder : public VideoEncoder {
  public:
   explicit FakeWebRtcVideoEncoder(FakeWebRtcVideoEncoderFactory* factory);
-  ~FakeWebRtcVideoEncoder() override;
+  ~FakeWebRtcVideoEncoder();
 
   void SetFecControllerOverride(
       FecControllerOverride* fec_controller_override) override;
@@ -115,15 +114,14 @@ class FakeWebRtcVideoEncoderFactory : public VideoEncoderFactory {
  public:
   FakeWebRtcVideoEncoderFactory();
 
-  using VideoEncoderFactory::QueryCodecSupport;
   std::vector<SdpVideoFormat> GetSupportedFormats() const override;
   VideoEncoderFactory::CodecSupport QueryCodecSupport(
       const SdpVideoFormat& format,
-      std::optional<std::string> scalability_mode,
-      std::optional<Resolution> resolution) const override;
+      std::optional<std::string> scalability_mode) const override;
   std::unique_ptr<VideoEncoder> Create(const Environment& env,
                                        const SdpVideoFormat& format) override;
 
+  bool WaitForCreatedVideoEncoders(int num_encoders);
   void EncoderDestroyed(FakeWebRtcVideoEncoder* encoder);
   void set_encoders_have_internal_sources(bool internal_source);
   void AddSupportedVideoCodec(const SdpVideoFormat& format);
@@ -135,6 +133,7 @@ class FakeWebRtcVideoEncoderFactory : public VideoEncoderFactory {
 
  private:
   Mutex mutex_;
+  Event created_video_encoder_event_;
   std::vector<SdpVideoFormat> formats_;
   std::vector<FakeWebRtcVideoEncoder*> encoders_ RTC_GUARDED_BY(mutex_);
   int num_created_encoders_ RTC_GUARDED_BY(mutex_);

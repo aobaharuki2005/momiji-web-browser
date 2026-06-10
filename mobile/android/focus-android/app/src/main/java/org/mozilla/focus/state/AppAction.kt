@@ -59,9 +59,6 @@ sealed class AppAction : Action {
      */
     data class Unlock(val tabId: String?) : AppAction()
 
-    /**
-     * Action for opening the settings screen at a specific settings [page].
-     */
     data class OpenSettings(val page: Screen.Settings.Page) : AppAction()
 
     /**
@@ -69,14 +66,8 @@ sealed class AppAction : Action {
      */
     internal object OpenCrashList : AppAction()
 
-    /**
-     * Action for opening the site permission options screen for a given [sitePermission].
-     */
     data class OpenSitePermissionOptionsScreen(val sitePermission: SitePermission) : AppAction()
 
-    /**
-     * Action for navigating up, optionally specifying a [tabId].
-     */
     data class NavigateUp(val tabId: String? = null) : AppAction()
 
     /**

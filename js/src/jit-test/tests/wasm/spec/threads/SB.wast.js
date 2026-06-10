@@ -21,18 +21,19 @@ let $0 = instantiate(`(module \$Mem
 )`);
 let $Mem = $0;
 
-// ./test/core/threads/SB.wast:4
-register($0, `mem`);
+// Missing in source test:
+// https://github.com/WebAssembly/threads/pull/217
+register($Mem, `mem`);
 
-// ./test/core/threads/SB.wast:6
+// ./test/core/threads/SB.wast:5
 let $T1 = new Thread($Mem, "$Mem", `
 
-// ./test/core/threads/SB.wast:7:3
+// ./test/core/threads/SB.wast:6:3
 register(\$Mem, \`mem\`);
 
-// ./test/core/threads/SB.wast:8:3
+// ./test/core/threads/SB.wast:7:3
 let \$1 = instantiate(\`(module
-    (memory (import "mem" "shared") 1 1 shared)
+    (memory (import "mem" "shared") 1 10 shared)
     (func (export "run")
       (local i32)
       (i32.store (i32.const 0) (i32.const 1))
@@ -44,17 +45,17 @@ let \$1 = instantiate(\`(module
     )
   )\`);
 
-// ./test/core/threads/SB.wast:20:3
+// ./test/core/threads/SB.wast:19:3
 invoke(\$1, \`run\`, []);
 `);
 
-// ./test/core/threads/SB.wast:23
+// ./test/core/threads/SB.wast:22
 let $T2 = new Thread($Mem, "$Mem", `
 
-// ./test/core/threads/SB.wast:24:3
+// ./test/core/threads/SB.wast:23:3
 register(\$Mem, \`mem\`);
 
-// ./test/core/threads/SB.wast:25:3
+// ./test/core/threads/SB.wast:24:3
 let \$2 = instantiate(\`(module
     (memory (import "mem" "shared") 1 1 shared)
     (func (export "run")
@@ -68,17 +69,17 @@ let \$2 = instantiate(\`(module
     )
   )\`);
 
-// ./test/core/threads/SB.wast:38:3
+// ./test/core/threads/SB.wast:37:3
 invoke(\$2, \`run\`, []);
 `);
 
-// ./test/core/threads/SB.wast:41
+// ./test/core/threads/SB.wast:40
 $T1.wait();
 
-// ./test/core/threads/SB.wast:42
+// ./test/core/threads/SB.wast:41
 $T2.wait();
 
-// ./test/core/threads/SB.wast:44
+// ./test/core/threads/SB.wast:43
 let $3 = instantiate(`(module \$Check
   (memory (import "mem" "shared") 1 1 shared)
 
@@ -99,5 +100,5 @@ let $3 = instantiate(`(module \$Check
 )`);
 let $Check = $3;
 
-// ./test/core/threads/SB.wast:63
+// ./test/core/threads/SB.wast:62
 assert_return(() => invoke($Check, `check`, []), [value("i32", 1)]);

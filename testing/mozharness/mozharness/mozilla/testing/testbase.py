@@ -8,9 +8,9 @@ import json
 import os
 import platform
 import ssl
-import urllib.parse
-import urllib.request
-from urllib.parse import ParseResult, urlparse
+
+from six.moves import urllib
+from six.moves.urllib.parse import ParseResult, urlparse
 
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.log import FATAL, WARNING
@@ -22,6 +22,7 @@ from mozharness.base.python import (
 from mozharness.lib.python.authentication import get_credentials
 from mozharness.mozilla.automation import TBPL_WARNING, AutomationMixin
 from mozharness.mozilla.structuredlog import StructuredOutputParser
+from mozharness.mozilla.testing.try_tools import TryToolsMixin, try_config_options
 from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
 from mozharness.mozilla.testing.verify_tools import (
     VerifyToolsMixin,
@@ -41,7 +42,7 @@ INSTALLER_SUFFIXES = (
     ".zip",  # Windows
 )
 
-# https://searchfox.org/firefox-main/source/testing/config/tooltool-manifests
+# https://searchfox.org/mozilla-central/source/testing/config/tooltool-manifests
 TOOLTOOL_PLATFORM_DIR = {
     "linux": "linux32",
     "linux64": "linux64",
@@ -136,17 +137,9 @@ testing_config_options = (
                 "help": "Instruct the test harness to terminate on failure and restart where it left off",
             },
         ],
-        [
-            ["--restart-between-tests"],
-            {
-                "action": "store_true",
-                "default": False,
-                "dest": "restartBetweenTests",
-                "help": "Restart the browser between each test to identify tests with undocumented dependencies",
-            },
-        ],
     ]
     + copy.deepcopy(virtualenv_config_options)
+    + copy.deepcopy(try_config_options)
     + copy.deepcopy(verify_config_options)
 )
 
@@ -157,6 +150,7 @@ class TestingMixin(
     AutomationMixin,
     ResourceMonitoringMixin,
     TooltoolMixin,
+    TryToolsMixin,
     VerifyToolsMixin,
 ):
     """
@@ -484,8 +478,14 @@ You can set this by specifying --test-url URL
         self.download_unpack(self.test_url, test_install_dir, extract_dirs=extract_dirs)
 
     def structured_output(self, suite_category):
-        unstructured_suites = self.config.get("unstructured_suites", [])
-        return suite_category not in unstructured_suites
+        """Defines whether structured logging is in use in this configuration. This
+        may need to be replaced with data from a different config at the resolution
+        of bug 1070041 and related bugs.
+        """
+        return (
+            "structured_suites" in self.config
+            and suite_category in self.config["structured_suites"]
+        )
 
     def get_test_output_parser(
         self,

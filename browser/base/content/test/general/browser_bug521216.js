@@ -8,9 +8,6 @@ var actual = [];
 var tabIndex = -1;
 this.__defineGetter__("tab", () => gBrowser.tabs[tabIndex]);
 
-const imgUrl =
-  "https://example.com/browser/browser/base/content/test/general/moz.png";
-
 function test() {
   waitForExplicitFinish();
   tabIndex = gBrowser.tabs.length;
@@ -18,7 +15,7 @@ function test() {
   gBrowser.tabContainer.addEventListener("TabOpen", TabOpen);
   BrowserTestUtils.addTab(
     gBrowser,
-    `data:text/html,<html><head><link href='${imgUrl}' rel='shortcut icon'>`
+    "data:text/html,<html><head><link href='about:logo' rel='shortcut icon'>"
   );
 }
 

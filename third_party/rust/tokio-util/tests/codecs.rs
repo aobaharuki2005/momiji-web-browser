@@ -63,19 +63,6 @@ fn lines_decoder() {
 }
 
 #[test]
-fn lines_decoder_invalid_utf8() {
-    let mut codec = LinesCodec::new();
-    let buf = &mut BytesMut::new();
-    buf.reserve(200);
-    buf.put_slice(b"line 1\xc3\x28");
-    assert_eq!(None, codec.decode(buf).unwrap());
-    assert!(codec.decode_eof(buf).is_err());
-    assert_eq!(None, codec.decode_eof(buf).unwrap());
-    buf.put_slice(b"line 22222222222222\n");
-    assert_eq!("line 22222222222222", codec.decode(buf).unwrap().unwrap());
-}
-
-#[test]
 fn lines_decoder_max_length() {
     const MAX_LENGTH: usize = 6;
 
@@ -88,17 +75,32 @@ fn lines_decoder_max_length() {
     assert!(codec.decode(buf).is_err());
 
     let line = codec.decode(buf).unwrap().unwrap();
-    assert!(line.len() <= MAX_LENGTH, "{line:?}.len() <= {MAX_LENGTH:?}");
+    assert!(
+        line.len() <= MAX_LENGTH,
+        "{:?}.len() <= {:?}",
+        line,
+        MAX_LENGTH
+    );
     assert_eq!("line 2", line);
 
     assert!(codec.decode(buf).is_err());
 
     let line = codec.decode(buf).unwrap().unwrap();
-    assert!(line.len() <= MAX_LENGTH, "{line:?}.len() <= {MAX_LENGTH:?}");
+    assert!(
+        line.len() <= MAX_LENGTH,
+        "{:?}.len() <= {:?}",
+        line,
+        MAX_LENGTH
+    );
     assert_eq!("line 4", line);
 
     let line = codec.decode(buf).unwrap().unwrap();
-    assert!(line.len() <= MAX_LENGTH, "{line:?}.len() <= {MAX_LENGTH:?}");
+    assert!(
+        line.len() <= MAX_LENGTH,
+        "{:?}.len() <= {:?}",
+        line,
+        MAX_LENGTH
+    );
     assert_eq!("", line);
 
     assert_eq!(None, codec.decode(buf).unwrap());
@@ -107,7 +109,12 @@ fn lines_decoder_max_length() {
     assert_eq!(None, codec.decode(buf).unwrap());
 
     let line = codec.decode_eof(buf).unwrap().unwrap();
-    assert!(line.len() <= MAX_LENGTH, "{line:?}.len() <= {MAX_LENGTH:?}");
+    assert!(
+        line.len() <= MAX_LENGTH,
+        "{:?}.len() <= {:?}",
+        line,
+        MAX_LENGTH
+    );
     assert_eq!("\rk", line);
 
     assert_eq!(None, codec.decode(buf).unwrap());
@@ -266,14 +273,18 @@ fn any_delimiters_decoder_max_length() {
     let chunk = codec.decode(buf).unwrap().unwrap();
     assert!(
         chunk.len() <= MAX_LENGTH,
-        "{chunk:?}.len() <= {MAX_LENGTH:?}"
+        "{:?}.len() <= {:?}",
+        chunk,
+        MAX_LENGTH
     );
     assert_eq!("chunk 2", chunk);
 
     let chunk = codec.decode(buf).unwrap().unwrap();
     assert!(
         chunk.len() <= MAX_LENGTH,
-        "{chunk:?}.len() <= {MAX_LENGTH:?}"
+        "{:?}.len() <= {:?}",
+        chunk,
+        MAX_LENGTH
     );
     assert_eq!("chunk 3", chunk);
 
@@ -281,28 +292,36 @@ fn any_delimiters_decoder_max_length() {
     let chunk = codec.decode(buf).unwrap().unwrap();
     assert!(
         chunk.len() <= MAX_LENGTH,
-        "{chunk:?}.len() <= {MAX_LENGTH:?}"
+        "{:?}.len() <= {:?}",
+        chunk,
+        MAX_LENGTH
     );
     assert_eq!("", chunk);
 
     let chunk = codec.decode(buf).unwrap().unwrap();
     assert!(
         chunk.len() <= MAX_LENGTH,
-        "{chunk:?}.len() <= {MAX_LENGTH:?}"
+        "{:?}.len() <= {:?}",
+        chunk,
+        MAX_LENGTH
     );
     assert_eq!("chunk 4", chunk);
 
     let chunk = codec.decode(buf).unwrap().unwrap();
     assert!(
         chunk.len() <= MAX_LENGTH,
-        "{chunk:?}.len() <= {MAX_LENGTH:?}"
+        "{:?}.len() <= {:?}",
+        chunk,
+        MAX_LENGTH
     );
     assert_eq!("", chunk);
 
     let chunk = codec.decode(buf).unwrap().unwrap();
     assert!(
         chunk.len() <= MAX_LENGTH,
-        "{chunk:?}.len() <= {MAX_LENGTH:?}"
+        "{:?}.len() <= {:?}",
+        chunk,
+        MAX_LENGTH
     );
     assert_eq!("", chunk);
 
@@ -314,7 +333,9 @@ fn any_delimiters_decoder_max_length() {
     let chunk = codec.decode_eof(buf).unwrap().unwrap();
     assert!(
         chunk.len() <= MAX_LENGTH,
-        "{chunk:?}.len() <= {MAX_LENGTH:?}"
+        "{:?}.len() <= {:?}",
+        chunk,
+        MAX_LENGTH
     );
     assert_eq!("k", chunk);
 

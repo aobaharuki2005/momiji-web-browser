@@ -3,9 +3,8 @@ import pytest
 from webdriver.bidi.modules.script import RealmTarget
 from ... import recursive_compare
 
-pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.asyncio
 async def test_target_realm(bidi_session, default_realm):
     result = await bidi_session.script.call_function(
         raw_result=True,
@@ -28,6 +27,7 @@ async def test_target_realm(bidi_session, default_realm):
     )
 
 
+@pytest.mark.asyncio
 async def test_different_target_realm(bidi_session):
     await bidi_session.browsing_context.create(type_hint="tab")
 

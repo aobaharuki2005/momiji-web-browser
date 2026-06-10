@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -192,22 +193,6 @@ static_assert(Maybe<int>(std::in_place, 43) ==
               Maybe<int>(std::in_place, 42).map([](int val) {
                 return val + 1;
               }));
-
-/* Test we're not using extra bytes to store trivial scalars */
-template <class T>
-struct FakeStorage {
-  T value;
-  char flag;
-};
-
-static_assert(sizeof(FakeStorage<char>) == sizeof(Maybe<char>),
-              "extra padding does not change structure size");
-static_assert(sizeof(FakeStorage<short>) == sizeof(Maybe<short>),
-              "extra padding does not change structure size");
-static_assert(sizeof(FakeStorage<int>) == sizeof(Maybe<int>),
-              "extra padding does not change structure size");
-static_assert(sizeof(FakeStorage<long>) == sizeof(Maybe<long>),
-              "extra padding does not change structure size");
 
 struct TriviallyDestructible {
   TriviallyDestructible() {  // not trivially constructible

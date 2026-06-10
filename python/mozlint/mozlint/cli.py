@@ -92,7 +92,7 @@ class MozlintParser(ArgumentParser):
         [
             ["--include-third-party"],
             {
-                "dest": "include_third_party",
+                "dest": "include_third-party",
                 "default": False,
                 "action": "store_true",
                 "help": "Also run the linter(s) on third-party code",
@@ -208,15 +208,6 @@ class MozlintParser(ArgumentParser):
             },
         ],
         [
-            ["--skip-rollouts"],
-            {
-                "dest": "skip_rollouts",
-                "default": False,
-                "action": "store_true",
-                "help": "Skip loading stylelint-rollouts.config.js (stylelint only).",
-            },
-        ],
-        [
             ["extra_args"],
             {
                 "nargs": REMAINDER,
@@ -259,12 +250,17 @@ class MozlintParser(ArgumentParser):
         ):
             self.error("can't read from both stdin and file system at the same time")
 
+        invalid = None
         if args.paths:
             invalid = [p for p in args.paths if not os.path.exists(p)]
-            if invalid:
-                s_do = " does" if len(invalid) == 1 else "s do"
-                invalid = "\n".join(invalid)
-                self.error(f"the following path{s_do} not exist:\n{invalid}")
+
+        if args.stdin_filename and not os.path.exists(args.stdin_filename):
+            invalid = [args.stdin_filename]
+
+        if invalid:
+            s_do = " does" if len(invalid) == 1 else "s do"
+            invalid = "\n".join(invalid)
+            self.error(f"the following path{s_do} not exist:\n{invalid}")
 
         if args.dump_stdin_file and not args.stdin_filename:
             self.error("must specify --stdin-filename alongside --dump-stdin-file")
@@ -417,7 +413,7 @@ def run(
             mode="wb",
             delete=False,
             dir=os.path.dirname(fpath),
-            suffix="".join(Path(fpath).suffixes),
+            suffix=os.path.splitext(fpath)[1],
         )
 
         # Read directly from stdins byte buffer so that we treat the bytes

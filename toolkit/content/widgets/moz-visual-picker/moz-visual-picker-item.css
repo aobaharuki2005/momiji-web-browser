@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/content/elements/moz-visual-picker-item.tokens.css");
-
 :host {
+  --visual-picker-item-border-radius: var(--border-radius-medium);
+  --visual-picker-item-border-width: var(--border-width);
+  --visual-picker-item-border-color: var(--border-color-interactive);
+
   cursor: default;
-  display: flex;
 }
 
 .picker-item {
@@ -15,10 +16,7 @@
   overflow: hidden;
   border: var(--visual-picker-item-border-width) solid var(--visual-picker-item-border-color);
   border-radius: var(--visual-picker-item-border-radius);
-  /* The margin needs to account for the increased border-width on the checked item. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-  margin: calc(var(--visual-picker-item-border-width-checked) - var(--visual-picker-item-border-width));
-  flex: 1;
+  margin: 2px;
 
   &:focus {
     outline: none;
@@ -30,7 +28,7 @@
   }
 
   &[checked] {
-    --visual-picker-item-border-width: var(--visual-picker-item-border-width-checked);
+    --visual-picker-item-border-width: 3px;
     border-color: var(--border-color-selected);
     margin: 0;
   }
@@ -40,23 +38,9 @@
     border-radius: var(--visual-picker-item-child-border-radius);
   }
 
-  .text-content:has(.label, .description) {
-    padding: var(--space-small) var(--space-medium) var(--space-medium);
-    text-align: center;
-  }
-
   .label {
     margin: 0;
-  }
-
-  .description {
-    margin: 0;
-    font-size: var(--font-size-small);
-    color: var(--text-color-deemphasized);
-  }
-
-  .label + .description {
-    margin-block-start: var(--space-xsmall);
+    padding: var(--space-small);
   }
 
   img {

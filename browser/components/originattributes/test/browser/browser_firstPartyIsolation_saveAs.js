@@ -5,10 +5,6 @@
 
 "use strict";
 
-const { SearchService } = ChromeUtils.importESModule(
-  "moz-src:///toolkit/components/search/SearchService.sys.mjs"
-);
-
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
   this
@@ -31,7 +27,7 @@ const TEST_PATH_PAGE = `${TEST_BASE_PATH}file_favicon.png`;
 const TEST_PATH_FRAME = `${TEST_BASE_PATH}file_favicon.png`;
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init();
+MockFilePicker.init(window.browsingContext);
 const tempDir = createTemporarySaveDirectory();
 MockFilePicker.displayDirectory = tempDir;
 
@@ -133,7 +129,7 @@ async function doCommandForFrameType() {
 
 add_task(async function test_setup() {
   // Make sure SearchService is ready for it to be called.
-  await SearchService.init();
+  await Services.search.init();
 });
 
 add_task(async function testContextMenuSaveAs() {

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,8 +17,8 @@
  * given to the new protocol handler.
  */
 
-#ifndef nsPreloadedStream_h_
-#define nsPreloadedStream_h_
+#ifndef nsPreloadedStream_h__
+#define nsPreloadedStream_h__
 
 #include "nsIAsyncInputStream.h"
 #include "nsCOMPtr.h"

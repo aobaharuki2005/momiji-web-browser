@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -6,7 +8,6 @@
 
 #include "mozilla/Assertions.h"
 
-#include "gc/GCRuntime.h"
 #include "gc/Statistics.h"
 #include "vm/MutexIDs.h"
 #include "vm/Runtime.h"
@@ -71,7 +72,9 @@ size_t StoreBuffer::MonoTypeBuffer<T>::sizeOfExcludingThis(
 StoreBuffer::WholeCellBuffer::WholeCellBuffer(WholeCellBuffer&& other)
     : storage_(std::move(other.storage_)),
       maxSize_(other.maxSize_),
+      sweepHead_(other.sweepHead_),
       last_(other.last_) {
+  other.sweepHead_ = nullptr;
   other.last_ = nullptr;
 }
 StoreBuffer::WholeCellBuffer& StoreBuffer::WholeCellBuffer::operator=(
@@ -84,6 +87,8 @@ StoreBuffer::WholeCellBuffer& StoreBuffer::WholeCellBuffer::operator=(
 }
 
 bool StoreBuffer::WholeCellBuffer::init() {
+  MOZ_ASSERT(!sweepHead_);
+
   if (!storage_) {
     storage_ = MakeUnique<LifoAlloc>(LifoAllocBlockSize, js::MallocArena);
     if (!storage_) {
@@ -110,12 +115,13 @@ bool StoreBuffer::WholeCellBuffer::isEmpty() const {
 }
 
 void StoreBuffer::WholeCellBuffer::clear() {
-  if (storage_) {
-    for (LifoAlloc::Enum e(*storage_); !e.empty();) {
-      ArenaCellSet* cellSet = e.read<ArenaCellSet>();
-      cellSet->arena->bufferedCells() = &ArenaCellSet::Empty;
-    }
+  for (LifoAlloc::Enum e(*storage_); !e.empty();) {
+    ArenaCellSet* cellSet = e.read<ArenaCellSet>();
+    cellSet->arena->bufferedCells() = &ArenaCellSet::Empty;
+  }
+  sweepHead_ = nullptr;
 
+  if (storage_) {
     storage_->used() ? storage_->releaseAll() : storage_->freeAll();
   }
 
@@ -209,11 +215,11 @@ void StoreBuffer::GenericBuffer::trace(JSTracer* trc, StoreBuffer* owner) {
   }
 }
 
-StoreBuffer::StoreBuffer(GCRuntime* gc)
-    : gc_(gc),
-      nursery_(gc->nursery()),
-      entryCount_(gc->tunables.storeBufferEntries()),
-      entryScaling_(gc->tunables.storeBufferScaling()),
+StoreBuffer::StoreBuffer(JSRuntime* rt)
+    : runtime_(rt),
+      nursery_(rt->gc.nursery()),
+      entryCount_(rt->gc.tunables.storeBufferEntries()),
+      entryScaling_(rt->gc.tunables.storeBufferScaling()),
       aboutToOverflow_(false),
       enabled_(false),
       mayHavePointersToDeadCells_(false)
@@ -235,7 +241,7 @@ StoreBuffer::StoreBuffer(StoreBuffer&& other)
       bufferWasmAnyRef(std::move(other.bufferWasmAnyRef)),
       bufferWholeCell(std::move(other.bufferWholeCell)),
       bufferGeneric(std::move(other.bufferGeneric)),
-      gc_(other.gc_),
+      runtime_(other.runtime_),
       nursery_(other.nursery_),
       entryCount_(other.entryCount_),
       entryScaling_(other.entryScaling_),
@@ -266,12 +272,12 @@ void StoreBuffer::checkAccess() const {
   // The GC runs tasks that may access the storebuffer in parallel and so must
   // take a lock. The mutator may only access the storebuffer from the main
   // thread.
-  if (gc_->heapState() != JS::HeapState::Idle &&
-      gc_->heapState() != JS::HeapState::MinorCollecting) {
+  if (runtime_->heapState() != JS::HeapState::Idle &&
+      runtime_->heapState() != JS::HeapState::MinorCollecting) {
     MOZ_ASSERT(!CurrentThreadIsGCMarking());
-    gc_->assertCurrentThreadHasLockedSweepingLock();
+    runtime_->gc.assertCurrentThreadHasLockedStoreBuffer();
   } else {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(gc_->rt));
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
   }
 }
 #endif
@@ -306,7 +312,7 @@ void StoreBuffer::updateSize() {
   // The entry counts for the individual buffers are scaled based on the initial
   // entryCount parameter passed to the constructor.
   MOZ_ASSERT(entryCount_ != 0);
-  MOZ_ASSERT(entryScaling_ >= 0.0 && entryScaling_ <= 1.0);
+  MOZ_ASSERT(entryScaling_ >= 0.0);
 
   // Scale the entry count linearly based on the size of the nursery. The entry
   // count parameter specifies the result at a nursery size of 16MB.
@@ -315,7 +321,7 @@ void StoreBuffer::updateSize() {
   double count =
       ((nurserySizeRatio - 1.0) * entryScaling_ + 1.0) * double(entryCount_);
   MOZ_ASSERT(count > 0.0);
-  size_t defaultEntryCount = size_t(std::max(count, 1.0));
+  size_t defaultEntryCount = std::max(size_t(count), size_t(1));
 
   size_t slotsEntryCount = std::max(defaultEntryCount / 2, size_t(1));
   size_t wholeCellEntryCount = std::max(defaultEntryCount / 10, size_t(1));
@@ -366,7 +372,7 @@ void StoreBuffer::clear() {
 void StoreBuffer::setAboutToOverflow(JS::GCReason reason) {
   if (!aboutToOverflow_) {
     aboutToOverflow_ = true;
-    gc_->stats().count(gcstats::COUNT_STOREBUFFER_OVERFLOW);
+    runtime_->gc.stats().count(gcstats::COUNT_STOREBUFFER_OVERFLOW);
   }
   nursery_.requestMinorGC(reason);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google LLC
+ * Copyright 2017 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -313,8 +313,8 @@ void Draw::drawVertices(const SkVertices* vertices,
                         const SkPaint& paint,
                         bool skipColorXform) const {
     SkVerticesPriv info(vertices->priv());
-    const size_t vertexCount = info.vertexCount();
-    const size_t indexCount = info.indexCount();
+    const int vertexCount = info.vertexCount();
+    const int indexCount = info.indexCount();
 
     // abort early if there is nothing to draw
     if (vertexCount < 3 || (indexCount > 0 && indexCount < 3) || fRC->isEmpty()) {

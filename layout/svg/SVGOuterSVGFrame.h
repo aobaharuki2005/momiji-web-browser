@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,7 +13,8 @@
 class gfxContext;
 
 namespace mozilla {
-class AutoFragmentHandler;
+class AutoSVGViewHandler;
+class SVGFragmentIdentifier;
 class PresShell;
 }  // namespace mozilla
 
@@ -32,7 +35,8 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   friend nsContainerFrame* ::NS_NewSVGOuterSVGFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
   friend class AsyncSendIntrinsicSizeAndRatioToEmbedder;
-  friend class AutoFragmentHandler;
+  friend class AutoSVGViewHandler;
+  friend class SVGFragmentIdentifier;
 
  protected:
   explicit SVGOuterSVGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
@@ -44,18 +48,6 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   nscoord IntrinsicISize(const IntrinsicSizeInput& aInput,
                          IntrinsicISizeType aType) override;
 
-  // The CSS Containment spec says that size-contained replaced elements must be
-  // treated as having an intrinsic width and height of 0.  That's applicable to
-  // outer SVG frames, unless they're the outermost element (in which case
-  // they're not really "replaced", and there's no outer context to contain
-  // sizes from leaking into). Hence, we check for a parent element before we
-  // bother testing for 'contain:size'.
-  inline ContainSizeAxes ContainSizeAxesIfApplicable() const {
-    if (!GetContent()->GetParent()) {
-      return ContainSizeAxes(false, false);
-    }
-    return GetContainSizeAxes();
-  }
   IntrinsicSize GetIntrinsicSize() override;
   AspectRatio GetIntrinsicRatio() const override;
 
@@ -113,7 +105,7 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
                 imgDrawingParams& aImgParams) override;
   SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
-                              SVGBBoxFlags aFlags) override;
+                              uint32_t aFlags) override;
 
   // SVGContainerFrame methods:
   gfxMatrix GetCanvasTM() override;

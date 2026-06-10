@@ -8,14 +8,11 @@ use arrayvec::ArrayVec;
 use spirv::Word;
 
 use super::{
-    helpers::map_storage_class, index::BoundsCheckResult, selection::Selection, Block,
-    BlockContext, Dimension, Error, IdGenerator, Instruction, LocalType, LookupType, NumericType,
-    ResultMember, WrappedFunction, Writer, WriterFlags,
+    index::BoundsCheckResult, selection::Selection, Block, BlockContext, Dimension, Error,
+    Instruction, LocalType, LookupType, NumericType, ResultMember, WrappedFunction, Writer,
+    WriterFlags,
 };
-use crate::{
-    arena::Handle, back::spv::helpers::is_uniform_matcx2_struct_member_access,
-    proc::index::GuardedIndex, Statement,
-};
+use crate::{arena::Handle, proc::index::GuardedIndex, Statement};
 
 fn get_dimension(type_inner: &crate::TypeInner) -> Dimension {
     match *type_inner {
@@ -38,7 +35,6 @@ fn get_dimension(type_inner: &crate::TypeInner) -> Dimension {
 /// the type of the given Naga IR [`Expression`] it's generating code for.
 ///
 /// [`Expression`]: crate::Expression
-#[derive(Copy, Clone)]
 enum AccessTypeAdjustment {
     /// No adjustment needed: the SPIR-V type should be the direct
     /// analog of the Naga IR expression type.
@@ -74,17 +70,6 @@ enum AccessTypeAdjustment {
     /// [`Access`]: crate::Expression::Access
     /// [`AccessIndex`]: crate::Expression::AccessIndex
     IntroducePointer(spirv::StorageClass),
-
-    /// The SPIR-V type should be an `OpPointer` to the std140 layout
-    /// compatible variant of the Naga IR expression's base type.
-    ///
-    /// This is used when accessing a type through an [`AddressSpace::Uniform`]
-    /// pointer in cases where the original type is incompatible with std140
-    /// layout requirements and we have therefore declared the uniform to be of
-    /// an alternative std140 compliant type.
-    ///
-    /// [`AddressSpace::Uniform`]: crate::AddressSpace::Uniform
-    UseStd140CompatType,
 }
 
 /// The results of emitting code for a left-hand-side expression.
@@ -221,7 +206,7 @@ impl Writer {
         let clamp_id = self.id_gen.next();
         body.push(Instruction::ext_inst_gl_op(
             self.gl450_ext_inst_id,
-            spirv::GlslStd450Op::FClamp,
+            spirv::GLOp::FClamp,
             float_type_id,
             clamp_id,
             &[original_id, zero_scalar_id, one_scalar_id],
@@ -237,11 +222,12 @@ impl Writer {
         ir_result: &crate::FunctionResult,
         result_members: &[ResultMember],
         body: &mut Vec<Instruction>,
+        task_payload: Option<Word>,
     ) -> Result<Instruction, Error> {
         for (index, res_member) in result_members.iter().enumerate() {
             // This isn't a real builtin, and is handled elsewhere
             if res_member.built_in == Some(crate::BuiltIn::MeshTaskSize) {
-                return Ok(Instruction::return_value(value_id));
+                continue;
             }
             let member_value_id = match ir_result.binding {
                 Some(_) => value_id,
@@ -273,7 +259,13 @@ impl Writer {
                 _ => {}
             }
         }
-        Ok(Instruction::return_void())
+        self.try_write_entry_point_task_return(
+            value_id,
+            ir_result,
+            result_members,
+            body,
+            task_payload,
+        )
     }
 }
 
@@ -429,276 +421,6 @@ impl BlockContext<'_> {
         block
     }
 
-    /// If `pointer` refers to an access chain that contains a dynamic indexing
-    /// of a two-row matrix in the [`Uniform`] address space, write code to
-    /// access the value returning the ID of the result. Else return None.
-    ///
-    /// Two-row matrices in the uniform address space will have been declared
-    /// using a alternative std140 layout compatible type, where each column is
-    /// a member of a containing struct. As a result, SPIR-V is unable to access
-    /// its columns with a non-constant index. To work around this limitation
-    /// this function will call [`Self::write_checked_load()`] to load the
-    /// matrix itself, which handles conversion from the std140 compatible type
-    /// to the real matrix type. It then calls a [`wrapper function`] to obtain
-    /// the correct column from the matrix, and possibly extracts a component
-    /// from the vector too.
-    ///
-    /// [`Uniform`]: crate::AddressSpace::Uniform
-    /// [`wrapper function`]: super::Writer::write_wrapped_matcx2_get_column
-    fn maybe_write_uniform_matcx2_dynamic_access(
-        &mut self,
-        pointer: Handle<crate::Expression>,
-        block: &mut Block,
-    ) -> Result<Option<Word>, Error> {
-        // If this access chain contains a dynamic matrix access, `pointer` is
-        // either a pointer to a vector (the column) or a scalar (a component
-        // within the column). In either case grab the pointer to the column,
-        // and remember the component index if there is one. If `pointer`
-        // points to any other type we're not interested.
-        let (column_pointer, component_index) = match self.fun_info[pointer]
-            .ty
-            .inner_with(&self.ir_module.types)
-            .pointer_base_type()
-        {
-            Some(resolution) => match *resolution.inner_with(&self.ir_module.types) {
-                crate::TypeInner::Scalar(_) => match self.ir_function.expressions[pointer] {
-                    crate::Expression::Access { base, index } => {
-                        (base, Some(GuardedIndex::Expression(index)))
-                    }
-                    crate::Expression::AccessIndex { base, index } => {
-                        (base, Some(GuardedIndex::Known(index)))
-                    }
-                    _ => return Ok(None),
-                },
-                crate::TypeInner::Vector { .. } => (pointer, None),
-                _ => return Ok(None),
-            },
-            None => return Ok(None),
-        };
-
-        // Ensure the column is accessed with a dynamic index (i.e.
-        // `Expression::Access`), and grab the pointer to the matrix.
-        let crate::Expression::Access {
-            base: matrix_pointer,
-            index: column_index,
-        } = self.ir_function.expressions[column_pointer]
-        else {
-            return Ok(None);
-        };
-
-        // Ensure the matrix pointer is in the uniform address space.
-        let crate::TypeInner::Pointer {
-            base: matrix_pointer_base_type,
-            space: crate::AddressSpace::Uniform,
-        } = *self.fun_info[matrix_pointer]
-            .ty
-            .inner_with(&self.ir_module.types)
-        else {
-            return Ok(None);
-        };
-
-        // Ensure the matrix pointer actually points to a Cx2 matrix.
-        let crate::TypeInner::Matrix {
-            columns,
-            rows: rows @ crate::VectorSize::Bi,
-            scalar,
-        } = self.ir_module.types[matrix_pointer_base_type].inner
-        else {
-            return Ok(None);
-        };
-
-        let matrix_type_id = self.get_numeric_type_id(NumericType::Matrix {
-            columns,
-            rows,
-            scalar,
-        });
-        let column_type_id = self.get_numeric_type_id(NumericType::Vector { size: rows, scalar });
-        let component_type_id = self.get_numeric_type_id(NumericType::Scalar(scalar));
-        let get_column_function_id = self.writer.wrapped_functions
-            [&WrappedFunction::MatCx2GetColumn {
-                r#type: matrix_pointer_base_type,
-            }];
-
-        let matrix_load_id = self.write_checked_load(
-            matrix_pointer,
-            block,
-            AccessTypeAdjustment::None,
-            matrix_type_id,
-        )?;
-
-        // Naga IR allows the index to be either an I32 or U32 but our wrapper
-        // function expects a U32 argument, so convert it if required.
-        let column_index_id = match *self.fun_info[column_index]
-            .ty
-            .inner_with(&self.ir_module.types)
-        {
-            crate::TypeInner::Scalar(crate::Scalar {
-                kind: crate::ScalarKind::Uint,
-                ..
-            }) => self.cached[column_index],
-            crate::TypeInner::Scalar(crate::Scalar {
-                kind: crate::ScalarKind::Sint,
-                ..
-            }) => {
-                let cast_id = self.gen_id();
-                let u32_type_id = self.writer.get_u32_type_id();
-                block.body.push(Instruction::unary(
-                    spirv::Op::Bitcast,
-                    u32_type_id,
-                    cast_id,
-                    self.cached[column_index],
-                ));
-                cast_id
-            }
-            _ => return Err(Error::Validation("Matrix access index must be u32 or i32")),
-        };
-        let column_id = self.gen_id();
-        block.body.push(Instruction::function_call(
-            column_type_id,
-            column_id,
-            get_column_function_id,
-            &[matrix_load_id, column_index_id],
-        ));
-        let result_id = match component_index {
-            Some(index) => self.write_vector_access(
-                component_type_id,
-                column_pointer,
-                Some(column_id),
-                index,
-                block,
-            )?,
-            None => column_id,
-        };
-
-        Ok(Some(result_id))
-    }
-
-    /// If `pointer` refers to two-row matrix that is a member of a struct in
-    /// the [`Uniform`] address space, write code to load the matrix returning
-    /// the ID of the result. Else return None.
-    ///
-    /// Two-row matrices that are struct members in the uniform address space
-    /// will have been decomposed such that the struct contains a separate
-    /// vector member for each column of the matrix. This function will load
-    /// each column separately from the containing struct, then composite them
-    /// into the real matrix type.
-    ///
-    /// [`Uniform`]: crate::AddressSpace::Uniform
-    fn maybe_write_load_uniform_matcx2_struct_member(
-        &mut self,
-        pointer: Handle<crate::Expression>,
-        block: &mut Block,
-    ) -> Result<Option<Word>, Error> {
-        // Check this is a uniform address space pointer to a two-row matrix.
-        let crate::TypeInner::Pointer {
-            base: matrix_type,
-            space: space @ crate::AddressSpace::Uniform,
-        } = *self.fun_info[pointer].ty.inner_with(&self.ir_module.types)
-        else {
-            return Ok(None);
-        };
-
-        let crate::TypeInner::Matrix {
-            columns,
-            rows: rows @ crate::VectorSize::Bi,
-            scalar,
-        } = self.ir_module.types[matrix_type].inner
-        else {
-            return Ok(None);
-        };
-
-        // Check this is a struct member. Note struct members can only be
-        // accessed with `AccessIndex`.
-        let crate::Expression::AccessIndex {
-            base: struct_pointer,
-            index: member_index,
-        } = self.ir_function.expressions[pointer]
-        else {
-            return Ok(None);
-        };
-
-        let crate::TypeInner::Pointer {
-            base: struct_type, ..
-        } = *self.fun_info[struct_pointer]
-            .ty
-            .inner_with(&self.ir_module.types)
-        else {
-            return Ok(None);
-        };
-
-        let crate::TypeInner::Struct { .. } = self.ir_module.types[struct_type].inner else {
-            return Ok(None);
-        };
-
-        let matrix_type_id = self.get_numeric_type_id(NumericType::Matrix {
-            columns,
-            rows,
-            scalar,
-        });
-        let column_type_id = self.get_numeric_type_id(NumericType::Vector { size: rows, scalar });
-        let column_pointer_type_id =
-            self.get_pointer_type_id(column_type_id, map_storage_class(space));
-        let column0_index = self.writer.std140_compat_uniform_types[&struct_type].member_indices
-            [member_index as usize];
-        let column_indices = (0..columns as u32)
-            .map(|c| self.get_index_constant(column0_index + c))
-            .collect::<ArrayVec<_, 4>>();
-
-        // Load each column from the struct, then composite into the real
-        // matrix type.
-        let load_mat_from_struct =
-            |struct_pointer_id: Word, id_gen: &mut IdGenerator, block: &mut Block| -> Word {
-                let mut column_ids: ArrayVec<Word, 4> = ArrayVec::new();
-                for index in &column_indices {
-                    let column_pointer_id = id_gen.next();
-                    block.body.push(Instruction::access_chain(
-                        column_pointer_type_id,
-                        column_pointer_id,
-                        struct_pointer_id,
-                        &[*index],
-                    ));
-                    let column_id = id_gen.next();
-                    block.body.push(Instruction::load(
-                        column_type_id,
-                        column_id,
-                        column_pointer_id,
-                        None,
-                    ));
-                    column_ids.push(column_id);
-                }
-                let result_id = id_gen.next();
-                block.body.push(Instruction::composite_construct(
-                    matrix_type_id,
-                    result_id,
-                    &column_ids,
-                ));
-                result_id
-            };
-
-        let result_id = match self.write_access_chain(
-            struct_pointer,
-            block,
-            AccessTypeAdjustment::UseStd140CompatType,
-        )? {
-            ExpressionPointer::Ready { pointer_id } => {
-                load_mat_from_struct(pointer_id, &mut self.writer.id_gen, block)
-            }
-            ExpressionPointer::Conditional { condition, access } => self
-                .write_conditional_indexed_load(
-                    matrix_type_id,
-                    condition,
-                    block,
-                    |id_gen, block| {
-                        let pointer_id = access.result_id.unwrap();
-                        block.body.push(access);
-                        load_mat_from_struct(pointer_id, id_gen, block)
-                    },
-                ),
-        };
-
-        Ok(Some(result_id))
-    }
-
     /// Cache an expression for a value.
     pub(super) fn cache_expression_value(
         &mut self,
@@ -791,13 +513,9 @@ impl BlockContext<'_> {
                         self.function.spilled_accesses.insert(expr_handle);
                         self.maybe_access_spilled_composite(expr_handle, block, result_type_id)?
                     }
-                    crate::TypeInner::Vector { .. } => self.write_vector_access(
-                        result_type_id,
-                        base,
-                        None,
-                        GuardedIndex::Expression(index),
-                        block,
-                    )?,
+                    crate::TypeInner::Vector { .. } => {
+                        self.write_vector_access(expr_handle, base, index, block)?
+                    }
                     crate::TypeInner::Array { .. } | crate::TypeInner::Matrix { .. } => {
                         // See if `index` is known at compile time.
                         match GuardedIndex::from_expression(
@@ -1264,7 +982,7 @@ impl BlockContext<'_> {
             } => {
                 use crate::MathFunction as Mf;
                 enum MathOp {
-                    Ext(spirv::GlslStd450Op),
+                    Ext(spirv::GLOp),
                     Custom(Instruction),
                 }
 
@@ -1289,10 +1007,8 @@ impl BlockContext<'_> {
                     // comparison
                     Mf::Abs => {
                         match arg_scalar_kind {
-                            Some(crate::ScalarKind::Float) => {
-                                MathOp::Ext(spirv::GlslStd450Op::FAbs)
-                            }
-                            Some(crate::ScalarKind::Sint) => MathOp::Ext(spirv::GlslStd450Op::SAbs),
+                            Some(crate::ScalarKind::Float) => MathOp::Ext(spirv::GLOp::FAbs),
+                            Some(crate::ScalarKind::Sint) => MathOp::Ext(spirv::GLOp::SAbs),
                             Some(crate::ScalarKind::Uint) => {
                                 MathOp::Custom(Instruction::unary(
                                     spirv::Op::CopyObject, // do nothing
@@ -1305,29 +1021,29 @@ impl BlockContext<'_> {
                         }
                     }
                     Mf::Min => MathOp::Ext(match arg_scalar_kind {
-                        Some(crate::ScalarKind::Float) => spirv::GlslStd450Op::FMin,
-                        Some(crate::ScalarKind::Sint) => spirv::GlslStd450Op::SMin,
-                        Some(crate::ScalarKind::Uint) => spirv::GlslStd450Op::UMin,
+                        Some(crate::ScalarKind::Float) => spirv::GLOp::FMin,
+                        Some(crate::ScalarKind::Sint) => spirv::GLOp::SMin,
+                        Some(crate::ScalarKind::Uint) => spirv::GLOp::UMin,
                         other => unimplemented!("Unexpected min({:?})", other),
                     }),
                     Mf::Max => MathOp::Ext(match arg_scalar_kind {
-                        Some(crate::ScalarKind::Float) => spirv::GlslStd450Op::FMax,
-                        Some(crate::ScalarKind::Sint) => spirv::GlslStd450Op::SMax,
-                        Some(crate::ScalarKind::Uint) => spirv::GlslStd450Op::UMax,
+                        Some(crate::ScalarKind::Float) => spirv::GLOp::FMax,
+                        Some(crate::ScalarKind::Sint) => spirv::GLOp::SMax,
+                        Some(crate::ScalarKind::Uint) => spirv::GLOp::UMax,
                         other => unimplemented!("Unexpected max({:?})", other),
                     }),
                     Mf::Clamp => match arg_scalar_kind {
                         // Clamp is undefined if min > max. In practice this means it can use a median-of-three
                         // instruction to determine the value. This is fine according to the WGSL spec for float
                         // clamp, but integer clamp _must_ use min-max. As such we write out min/max.
-                        Some(crate::ScalarKind::Float) => MathOp::Ext(spirv::GlslStd450Op::FClamp),
+                        Some(crate::ScalarKind::Float) => MathOp::Ext(spirv::GLOp::FClamp),
                         Some(_) => {
                             let (min_op, max_op) = match arg_scalar_kind {
                                 Some(crate::ScalarKind::Sint) => {
-                                    (spirv::GlslStd450Op::SMin, spirv::GlslStd450Op::SMax)
+                                    (spirv::GLOp::SMin, spirv::GLOp::SMax)
                                 }
                                 Some(crate::ScalarKind::Uint) => {
-                                    (spirv::GlslStd450Op::UMin, spirv::GlslStd450Op::UMax)
+                                    (spirv::GLOp::UMin, spirv::GLOp::UMax)
                                 }
                                 _ => unreachable!(),
                             };
@@ -1377,37 +1093,37 @@ impl BlockContext<'_> {
 
                         MathOp::Custom(Instruction::ext_inst_gl_op(
                             self.writer.gl450_ext_inst_id,
-                            spirv::GlslStd450Op::FClamp,
+                            spirv::GLOp::FClamp,
                             result_type_id,
                             id,
                             &[arg0_id, arg1_id, arg2_id],
                         ))
                     }
                     // trigonometry
-                    Mf::Sin => MathOp::Ext(spirv::GlslStd450Op::Sin),
-                    Mf::Sinh => MathOp::Ext(spirv::GlslStd450Op::Sinh),
-                    Mf::Asin => MathOp::Ext(spirv::GlslStd450Op::Asin),
-                    Mf::Cos => MathOp::Ext(spirv::GlslStd450Op::Cos),
-                    Mf::Cosh => MathOp::Ext(spirv::GlslStd450Op::Cosh),
-                    Mf::Acos => MathOp::Ext(spirv::GlslStd450Op::Acos),
-                    Mf::Tan => MathOp::Ext(spirv::GlslStd450Op::Tan),
-                    Mf::Tanh => MathOp::Ext(spirv::GlslStd450Op::Tanh),
-                    Mf::Atan => MathOp::Ext(spirv::GlslStd450Op::Atan),
-                    Mf::Atan2 => MathOp::Ext(spirv::GlslStd450Op::Atan2),
-                    Mf::Asinh => MathOp::Ext(spirv::GlslStd450Op::Asinh),
-                    Mf::Acosh => MathOp::Ext(spirv::GlslStd450Op::Acosh),
-                    Mf::Atanh => MathOp::Ext(spirv::GlslStd450Op::Atanh),
-                    Mf::Radians => MathOp::Ext(spirv::GlslStd450Op::Radians),
-                    Mf::Degrees => MathOp::Ext(spirv::GlslStd450Op::Degrees),
+                    Mf::Sin => MathOp::Ext(spirv::GLOp::Sin),
+                    Mf::Sinh => MathOp::Ext(spirv::GLOp::Sinh),
+                    Mf::Asin => MathOp::Ext(spirv::GLOp::Asin),
+                    Mf::Cos => MathOp::Ext(spirv::GLOp::Cos),
+                    Mf::Cosh => MathOp::Ext(spirv::GLOp::Cosh),
+                    Mf::Acos => MathOp::Ext(spirv::GLOp::Acos),
+                    Mf::Tan => MathOp::Ext(spirv::GLOp::Tan),
+                    Mf::Tanh => MathOp::Ext(spirv::GLOp::Tanh),
+                    Mf::Atan => MathOp::Ext(spirv::GLOp::Atan),
+                    Mf::Atan2 => MathOp::Ext(spirv::GLOp::Atan2),
+                    Mf::Asinh => MathOp::Ext(spirv::GLOp::Asinh),
+                    Mf::Acosh => MathOp::Ext(spirv::GLOp::Acosh),
+                    Mf::Atanh => MathOp::Ext(spirv::GLOp::Atanh),
+                    Mf::Radians => MathOp::Ext(spirv::GLOp::Radians),
+                    Mf::Degrees => MathOp::Ext(spirv::GLOp::Degrees),
                     // decomposition
-                    Mf::Ceil => MathOp::Ext(spirv::GlslStd450Op::Ceil),
-                    Mf::Round => MathOp::Ext(spirv::GlslStd450Op::RoundEven),
-                    Mf::Floor => MathOp::Ext(spirv::GlslStd450Op::Floor),
-                    Mf::Fract => MathOp::Ext(spirv::GlslStd450Op::Fract),
-                    Mf::Trunc => MathOp::Ext(spirv::GlslStd450Op::Trunc),
-                    Mf::Modf => MathOp::Ext(spirv::GlslStd450Op::ModfStruct),
-                    Mf::Frexp => MathOp::Ext(spirv::GlslStd450Op::FrexpStruct),
-                    Mf::Ldexp => MathOp::Ext(spirv::GlslStd450Op::Ldexp),
+                    Mf::Ceil => MathOp::Ext(spirv::GLOp::Ceil),
+                    Mf::Round => MathOp::Ext(spirv::GLOp::RoundEven),
+                    Mf::Floor => MathOp::Ext(spirv::GLOp::Floor),
+                    Mf::Fract => MathOp::Ext(spirv::GLOp::Fract),
+                    Mf::Trunc => MathOp::Ext(spirv::GLOp::Trunc),
+                    Mf::Modf => MathOp::Ext(spirv::GLOp::ModfStruct),
+                    Mf::Frexp => MathOp::Ext(spirv::GLOp::FrexpStruct),
+                    Mf::Ldexp => MathOp::Ext(spirv::GLOp::Ldexp),
                     // geometry
                     Mf::Dot => match *self.fun_info[arg].ty.inner_with(&self.ir_module.types) {
                         crate::TypeInner::Vector {
@@ -1547,26 +1263,26 @@ impl BlockContext<'_> {
                         arg0_id,
                         arg1_id,
                     )),
-                    Mf::Cross => MathOp::Ext(spirv::GlslStd450Op::Cross),
-                    Mf::Distance => MathOp::Ext(spirv::GlslStd450Op::Distance),
-                    Mf::Length => MathOp::Ext(spirv::GlslStd450Op::Length),
-                    Mf::Normalize => MathOp::Ext(spirv::GlslStd450Op::Normalize),
-                    Mf::FaceForward => MathOp::Ext(spirv::GlslStd450Op::FaceForward),
-                    Mf::Reflect => MathOp::Ext(spirv::GlslStd450Op::Reflect),
-                    Mf::Refract => MathOp::Ext(spirv::GlslStd450Op::Refract),
+                    Mf::Cross => MathOp::Ext(spirv::GLOp::Cross),
+                    Mf::Distance => MathOp::Ext(spirv::GLOp::Distance),
+                    Mf::Length => MathOp::Ext(spirv::GLOp::Length),
+                    Mf::Normalize => MathOp::Ext(spirv::GLOp::Normalize),
+                    Mf::FaceForward => MathOp::Ext(spirv::GLOp::FaceForward),
+                    Mf::Reflect => MathOp::Ext(spirv::GLOp::Reflect),
+                    Mf::Refract => MathOp::Ext(spirv::GLOp::Refract),
                     // exponent
-                    Mf::Exp => MathOp::Ext(spirv::GlslStd450Op::Exp),
-                    Mf::Exp2 => MathOp::Ext(spirv::GlslStd450Op::Exp2),
-                    Mf::Log => MathOp::Ext(spirv::GlslStd450Op::Log),
-                    Mf::Log2 => MathOp::Ext(spirv::GlslStd450Op::Log2),
-                    Mf::Pow => MathOp::Ext(spirv::GlslStd450Op::Pow),
+                    Mf::Exp => MathOp::Ext(spirv::GLOp::Exp),
+                    Mf::Exp2 => MathOp::Ext(spirv::GLOp::Exp2),
+                    Mf::Log => MathOp::Ext(spirv::GLOp::Log),
+                    Mf::Log2 => MathOp::Ext(spirv::GLOp::Log2),
+                    Mf::Pow => MathOp::Ext(spirv::GLOp::Pow),
                     // computational
                     Mf::Sign => MathOp::Ext(match arg_scalar_kind {
-                        Some(crate::ScalarKind::Float) => spirv::GlslStd450Op::FSign,
-                        Some(crate::ScalarKind::Sint) => spirv::GlslStd450Op::SSign,
+                        Some(crate::ScalarKind::Float) => spirv::GLOp::FSign,
+                        Some(crate::ScalarKind::Sint) => spirv::GLOp::SSign,
                         other => unimplemented!("Unexpected sign({:?})", other),
                     }),
-                    Mf::Fma => MathOp::Ext(spirv::GlslStd450Op::Fma),
+                    Mf::Fma => MathOp::Ext(spirv::GLOp::Fma),
                     Mf::Mix => {
                         let selector = arg2.unwrap();
                         let selector_ty =
@@ -1591,27 +1307,27 @@ impl BlockContext<'_> {
 
                                 MathOp::Custom(Instruction::ext_inst_gl_op(
                                     self.writer.gl450_ext_inst_id,
-                                    spirv::GlslStd450Op::FMix,
+                                    spirv::GLOp::FMix,
                                     result_type_id,
                                     id,
                                     &[arg0_id, arg1_id, selector_id],
                                 ))
                             }
-                            _ => MathOp::Ext(spirv::GlslStd450Op::FMix),
+                            _ => MathOp::Ext(spirv::GLOp::FMix),
                         }
                     }
-                    Mf::Step => MathOp::Ext(spirv::GlslStd450Op::Step),
-                    Mf::SmoothStep => MathOp::Ext(spirv::GlslStd450Op::SmoothStep),
-                    Mf::Sqrt => MathOp::Ext(spirv::GlslStd450Op::Sqrt),
-                    Mf::InverseSqrt => MathOp::Ext(spirv::GlslStd450Op::InverseSqrt),
-                    Mf::Inverse => MathOp::Ext(spirv::GlslStd450Op::MatrixInverse),
+                    Mf::Step => MathOp::Ext(spirv::GLOp::Step),
+                    Mf::SmoothStep => MathOp::Ext(spirv::GLOp::SmoothStep),
+                    Mf::Sqrt => MathOp::Ext(spirv::GLOp::Sqrt),
+                    Mf::InverseSqrt => MathOp::Ext(spirv::GLOp::InverseSqrt),
+                    Mf::Inverse => MathOp::Ext(spirv::GLOp::MatrixInverse),
                     Mf::Transpose => MathOp::Custom(Instruction::unary(
                         spirv::Op::Transpose,
                         result_type_id,
                         id,
                         arg0_id,
                     )),
-                    Mf::Determinant => MathOp::Ext(spirv::GlslStd450Op::Determinant),
+                    Mf::Determinant => MathOp::Ext(spirv::GLOp::Determinant),
                     Mf::QuantizeToF16 => MathOp::Custom(Instruction::unary(
                         spirv::Op::QuantizeToF16,
                         result_type_id,
@@ -1648,7 +1364,7 @@ impl BlockContext<'_> {
                         let lsb_id = self.gen_id();
                         block.body.push(Instruction::ext_inst_gl_op(
                             self.writer.gl450_ext_inst_id,
-                            spirv::GlslStd450Op::FindILsb,
+                            spirv::GLOp::FindILsb,
                             result_type_id,
                             lsb_id,
                             &[arg0_id],
@@ -1656,7 +1372,7 @@ impl BlockContext<'_> {
 
                         MathOp::Custom(Instruction::ext_inst_gl_op(
                             self.writer.gl450_ext_inst_id,
-                            spirv::GlslStd450Op::UMin,
+                            spirv::GLOp::UMin,
                             result_type_id,
                             id,
                             &[uint_id, lsb_id],
@@ -1698,9 +1414,9 @@ impl BlockContext<'_> {
                         block.body.push(Instruction::ext_inst_gl_op(
                             self.writer.gl450_ext_inst_id,
                             if width != 4 {
-                                spirv::GlslStd450Op::FindILsb
+                                spirv::GLOp::FindILsb
                             } else {
-                                spirv::GlslStd450Op::FindUMsb
+                                spirv::GLOp::FindUMsb
                             },
                             int_type_id,
                             msb_id,
@@ -1754,7 +1470,7 @@ impl BlockContext<'_> {
                         let offset_id = self.gen_id();
                         block.body.push(Instruction::ext_inst_gl_op(
                             self.writer.gl450_ext_inst_id,
-                            spirv::GlslStd450Op::UMin,
+                            spirv::GLOp::UMin,
                             u32_type,
                             offset_id,
                             &[arg1_id, width_constant],
@@ -1774,7 +1490,7 @@ impl BlockContext<'_> {
                         let count_id = self.gen_id();
                         block.body.push(Instruction::ext_inst_gl_op(
                             self.writer.gl450_ext_inst_id,
-                            spirv::GlslStd450Op::UMin,
+                            spirv::GLOp::UMin,
                             u32_type,
                             count_id,
                             &[arg2_id, max_count_id],
@@ -1804,7 +1520,7 @@ impl BlockContext<'_> {
                         let offset_id = self.gen_id();
                         block.body.push(Instruction::ext_inst_gl_op(
                             self.writer.gl450_ext_inst_id,
-                            spirv::GlslStd450Op::UMin,
+                            spirv::GLOp::UMin,
                             u32_type,
                             offset_id,
                             &[arg2_id, width_constant],
@@ -1824,7 +1540,7 @@ impl BlockContext<'_> {
                         let count_id = self.gen_id();
                         block.body.push(Instruction::ext_inst_gl_op(
                             self.writer.gl450_ext_inst_id,
-                            spirv::GlslStd450Op::UMin,
+                            spirv::GLOp::UMin,
                             u32_type,
                             count_id,
                             &[arg3_id, max_count_id],
@@ -1840,12 +1556,12 @@ impl BlockContext<'_> {
                             count_id,
                         ))
                     }
-                    Mf::FirstTrailingBit => MathOp::Ext(spirv::GlslStd450Op::FindILsb),
+                    Mf::FirstTrailingBit => MathOp::Ext(spirv::GLOp::FindILsb),
                     Mf::FirstLeadingBit => {
                         if arg_ty.scalar_width() == Some(4) {
                             let thing = match arg_scalar_kind {
-                                Some(crate::ScalarKind::Uint) => spirv::GlslStd450Op::FindUMsb,
-                                Some(crate::ScalarKind::Sint) => spirv::GlslStd450Op::FindSMsb,
+                                Some(crate::ScalarKind::Uint) => spirv::GLOp::FindUMsb,
+                                Some(crate::ScalarKind::Sint) => spirv::GLOp::FindSMsb,
                                 other => unimplemented!("Unexpected firstLeadingBit({:?})", other),
                             };
                             MathOp::Ext(thing)
@@ -1853,11 +1569,11 @@ impl BlockContext<'_> {
                             unreachable!("This is validated out until a polyfill is implemented. https://github.com/gfx-rs/wgpu/issues/5276");
                         }
                     }
-                    Mf::Pack4x8unorm => MathOp::Ext(spirv::GlslStd450Op::PackUnorm4x8),
-                    Mf::Pack4x8snorm => MathOp::Ext(spirv::GlslStd450Op::PackSnorm4x8),
-                    Mf::Pack2x16float => MathOp::Ext(spirv::GlslStd450Op::PackHalf2x16),
-                    Mf::Pack2x16unorm => MathOp::Ext(spirv::GlslStd450Op::PackUnorm2x16),
-                    Mf::Pack2x16snorm => MathOp::Ext(spirv::GlslStd450Op::PackSnorm2x16),
+                    Mf::Pack4x8unorm => MathOp::Ext(spirv::GLOp::PackUnorm4x8),
+                    Mf::Pack4x8snorm => MathOp::Ext(spirv::GLOp::PackSnorm4x8),
+                    Mf::Pack2x16float => MathOp::Ext(spirv::GLOp::PackHalf2x16),
+                    Mf::Pack2x16unorm => MathOp::Ext(spirv::GLOp::PackUnorm2x16),
+                    Mf::Pack2x16snorm => MathOp::Ext(spirv::GLOp::PackSnorm2x16),
                     fun @ (Mf::Pack4xI8 | Mf::Pack4xU8 | Mf::Pack4xI8Clamp | Mf::Pack4xU8Clamp) => {
                         let is_signed = matches!(fun, Mf::Pack4xI8 | Mf::Pack4xI8Clamp);
                         let should_clamp = matches!(fun, Mf::Pack4xI8Clamp | Mf::Pack4xU8Clamp);
@@ -1885,11 +1601,11 @@ impl BlockContext<'_> {
 
                         MathOp::Custom(last_instruction)
                     }
-                    Mf::Unpack4x8unorm => MathOp::Ext(spirv::GlslStd450Op::UnpackUnorm4x8),
-                    Mf::Unpack4x8snorm => MathOp::Ext(spirv::GlslStd450Op::UnpackSnorm4x8),
-                    Mf::Unpack2x16float => MathOp::Ext(spirv::GlslStd450Op::UnpackHalf2x16),
-                    Mf::Unpack2x16unorm => MathOp::Ext(spirv::GlslStd450Op::UnpackUnorm2x16),
-                    Mf::Unpack2x16snorm => MathOp::Ext(spirv::GlslStd450Op::UnpackSnorm2x16),
+                    Mf::Unpack4x8unorm => MathOp::Ext(spirv::GLOp::UnpackUnorm4x8),
+                    Mf::Unpack4x8snorm => MathOp::Ext(spirv::GLOp::UnpackSnorm4x8),
+                    Mf::Unpack2x16float => MathOp::Ext(spirv::GLOp::UnpackHalf2x16),
+                    Mf::Unpack2x16unorm => MathOp::Ext(spirv::GLOp::UnpackUnorm2x16),
+                    Mf::Unpack2x16snorm => MathOp::Ext(spirv::GLOp::UnpackSnorm2x16),
                     fun @ (Mf::Unpack4xI8 | Mf::Unpack4xU8) => {
                         let is_signed = matches!(fun, Mf::Unpack4xI8);
 
@@ -2404,7 +2120,7 @@ impl BlockContext<'_> {
                 let clamp_id = self.gen_id();
                 block.body.push(Instruction::ext_inst_gl_op(
                     self.writer.gl450_ext_inst_id,
-                    spirv::GlslStd450Op::FClamp,
+                    spirv::GLOp::FClamp,
                     expr_type_id,
                     clamp_id,
                     &[expr_id, min_const_id, max_const_id],
@@ -2486,20 +2202,6 @@ impl BlockContext<'_> {
                 AccessTypeAdjustment::IntroducePointer(class) => {
                     self.writer.get_resolution_pointer_id(resolution, class)
                 }
-                AccessTypeAdjustment::UseStd140CompatType => {
-                    match *resolution.inner_with(&self.ir_module.types) {
-                        crate::TypeInner::Pointer {
-                            base,
-                            space: space @ crate::AddressSpace::Uniform,
-                        } => self.writer.get_pointer_type_id(
-                            self.writer.std140_compat_uniform_types[&base].type_id,
-                            map_storage_class(space),
-                        ),
-                        _ => unreachable!(
-                            "`UseStd140CompatType` must only be used with uniform pointer types"
-                        ),
-                    }
-                }
             }
         };
 
@@ -2510,13 +2212,6 @@ impl BlockContext<'_> {
 
         // Is true if we are accessing into a binding array with a non-uniform index.
         let mut is_non_uniform_binding_array = false;
-
-        // The index value if the previously encountered expression was an
-        // `AccessIndex` of a matrix which has been decomposed into individual
-        // column vectors directly in the containing struct. The subsequent
-        // iteration will append the correct index to the list for accessing
-        // said column from the containing struct.
-        let mut prev_decomposed_matrix_index = None;
 
         self.temp_list.clear();
         let root_id = loop {
@@ -2544,67 +2239,27 @@ impl BlockContext<'_> {
                     // Decide whether we're indexing a struct (bounds checks
                     // forbidden) or anything else (bounds checks required).
                     let mut base_ty = self.fun_info[base].ty.inner_with(&self.ir_module.types);
-                    let mut base_ty_handle = self.fun_info[base].ty.handle();
-                    let mut pointer_space = None;
-                    if let crate::TypeInner::Pointer { base, space } = *base_ty {
+                    if let crate::TypeInner::Pointer { base, .. } = *base_ty {
                         base_ty = &self.ir_module.types[base].inner;
-                        base_ty_handle = Some(base);
-                        pointer_space = Some(space);
                     }
-                    match *base_ty {
-                        // When indexing a struct bounds checks are forbidden. If accessing the
-                        // struct through a uniform address space pointer, where the struct has
-                        // been declared with an alternative std140 compatible layout, we must use
-                        // the remapped member index. Additionally if the previous iteration was
-                        // accessing a column of a matrix member which has been decomposed directly
-                        // into the struct, we must ensure we access the correct column.
-                        crate::TypeInner::Struct { .. } => {
-                            let index = match base_ty_handle.and_then(|handle| {
-                                self.writer.std140_compat_uniform_types.get(&handle)
-                            }) {
-                                Some(std140_type_info)
-                                    if pointer_space == Some(crate::AddressSpace::Uniform) =>
-                                {
-                                    std140_type_info.member_indices[index as usize]
-                                        + prev_decomposed_matrix_index.take().unwrap_or(0)
-                                }
-                                _ => index,
-                            };
-                            let index_id = self.get_index_constant(index);
-                            self.temp_list.push(index_id);
-                        }
-                        // Bounds checks are not required when indexing a matrix. If indexing a
-                        // two-row matrix contained within a struct through a uniform address space
-                        // pointer then the matrix' columns will have been decomposed directly into
-                        // the containing struct. We skip adding an index to the list on this
-                        // iteration and instead adjust the index on the next iteration when
-                        // accessing the struct member.
-                        _ if is_uniform_matcx2_struct_member_access(
-                            self.ir_function,
-                            self.fun_info,
-                            self.ir_module,
-                            base,
-                        ) =>
-                        {
-                            assert!(prev_decomposed_matrix_index.is_none());
-                            prev_decomposed_matrix_index = Some(index);
-                        }
-                        _ => {
-                            // `index` is constant, so this can't possibly require
-                            // setting `is_nonuniform_binding_array_access`.
+                    let index_id = if let crate::TypeInner::Struct { .. } = *base_ty {
+                        self.get_index_constant(index)
+                    } else {
+                        // `index` is constant, so this can't possibly require
+                        // setting `is_nonuniform_binding_array_access`.
 
-                            // Even though the index value is statically known, `base`
-                            // may be a runtime-sized array, so we still need to go
-                            // through the bounds check process.
-                            let index_id = self.write_access_chain_index(
-                                base,
-                                GuardedIndex::Known(index),
-                                &mut accumulated_checks,
-                                block,
-                            )?;
-                            self.temp_list.push(index_id);
-                        }
-                    }
+                        // Even though the index value is statically known, `base`
+                        // may be a runtime-sized array, so we still need to go
+                        // through the bounds check process.
+                        self.write_access_chain_index(
+                            base,
+                            GuardedIndex::Known(index),
+                            &mut accumulated_checks,
+                            block,
+                        )?
+                    };
+
+                    self.temp_list.push(index_id);
                     base
                 }
                 crate::Expression::GlobalVariable(handle) => {
@@ -2765,119 +2420,57 @@ impl BlockContext<'_> {
         access_type_adjustment: AccessTypeAdjustment,
         result_type_id: Word,
     ) -> Result<Word, Error> {
-        if let Some(result_id) = self.maybe_write_uniform_matcx2_dynamic_access(pointer, block)? {
-            Ok(result_id)
-        } else if let Some(result_id) =
-            self.maybe_write_load_uniform_matcx2_struct_member(pointer, block)?
-        {
-            Ok(result_id)
-        } else {
-            // If `pointer` refers to a uniform address space pointer to a type
-            // which was declared using a std140 compatible type variant (i.e.
-            // is a two-row matrix, or a struct or array containing such a
-            // matrix) we must ensure the access chain and the type of the load
-            // instruction use the std140 compatible type variant.
-            struct WrappedLoad {
-                access_type_adjustment: AccessTypeAdjustment,
-                r#type: Handle<crate::Type>,
-            }
-            let mut wrapped_load = None;
-            if let crate::TypeInner::Pointer {
-                base: pointer_base_type,
-                space: crate::AddressSpace::Uniform,
-            } = *self.fun_info[pointer].ty.inner_with(&self.ir_module.types)
-            {
-                if self
-                    .writer
-                    .std140_compat_uniform_types
-                    .contains_key(&pointer_base_type)
-                {
-                    wrapped_load = Some(WrappedLoad {
-                        access_type_adjustment: AccessTypeAdjustment::UseStd140CompatType,
-                        r#type: pointer_base_type,
-                    });
-                };
-            };
-
-            let (load_type_id, access_type_adjustment) = match wrapped_load {
-                Some(ref wrapped_load) => (
-                    self.writer.std140_compat_uniform_types[&wrapped_load.r#type].type_id,
-                    wrapped_load.access_type_adjustment,
-                ),
-                None => (result_type_id, access_type_adjustment),
-            };
-
-            let load_id = match self.write_access_chain(pointer, block, access_type_adjustment)? {
-                ExpressionPointer::Ready { pointer_id } => {
-                    let id = self.gen_id();
-                    let atomic_space =
-                        match *self.fun_info[pointer].ty.inner_with(&self.ir_module.types) {
-                            crate::TypeInner::Pointer { base, space } => {
-                                match self.ir_module.types[base].inner {
-                                    crate::TypeInner::Atomic { .. } => Some(space),
-                                    _ => None,
-                                }
+        match self.write_access_chain(pointer, block, access_type_adjustment)? {
+            ExpressionPointer::Ready { pointer_id } => {
+                let id = self.gen_id();
+                let atomic_space =
+                    match *self.fun_info[pointer].ty.inner_with(&self.ir_module.types) {
+                        crate::TypeInner::Pointer { base, space } => {
+                            match self.ir_module.types[base].inner {
+                                crate::TypeInner::Atomic { .. } => Some(space),
+                                _ => None,
                             }
-                            _ => None,
-                        };
-                    let instruction = if let Some(space) = atomic_space {
-                        let (semantics, scope) = space.to_spirv_semantics_and_scope();
-                        let scope_constant_id = self.get_scope_constant(scope as u32);
-                        let semantics_id = self.get_index_constant(semantics.bits());
-                        Instruction::atomic_load(
-                            result_type_id,
-                            id,
-                            pointer_id,
-                            scope_constant_id,
-                            semantics_id,
-                        )
-                    } else {
-                        Instruction::load(load_type_id, id, pointer_id, None)
+                        }
+                        _ => None,
                     };
-                    block.body.push(instruction);
-                    id
-                }
-                ExpressionPointer::Conditional { condition, access } => {
-                    //TODO: support atomics?
-                    self.write_conditional_indexed_load(
-                        load_type_id,
-                        condition,
-                        block,
-                        move |id_gen, block| {
-                            // The in-bounds path. Perform the access and the load.
-                            let pointer_id = access.result_id.unwrap();
-                            let value_id = id_gen.next();
-                            block.body.push(access);
-                            block.body.push(Instruction::load(
-                                load_type_id,
-                                value_id,
-                                pointer_id,
-                                None,
-                            ));
-                            value_id
-                        },
-                    )
-                }
-            };
-
-            match wrapped_load {
-                Some(ref wrapped_load) => {
-                    // If we loaded a std140 compat type then we must call the
-                    // function to convert the loaded value to the regular type.
-                    let result_id = self.gen_id();
-                    let function_id = self.writer.wrapped_functions
-                        [&WrappedFunction::ConvertFromStd140CompatType {
-                            r#type: wrapped_load.r#type,
-                        }];
-                    block.body.push(Instruction::function_call(
+                let instruction = if let Some(space) = atomic_space {
+                    let (semantics, scope) = space.to_spirv_semantics_and_scope();
+                    let scope_constant_id = self.get_scope_constant(scope as u32);
+                    let semantics_id = self.get_index_constant(semantics.bits());
+                    Instruction::atomic_load(
                         result_type_id,
-                        result_id,
-                        function_id,
-                        &[load_id],
-                    ));
-                    Ok(result_id)
-                }
-                None => Ok(load_id),
+                        id,
+                        pointer_id,
+                        scope_constant_id,
+                        semantics_id,
+                    )
+                } else {
+                    Instruction::load(result_type_id, id, pointer_id, None)
+                };
+                block.body.push(instruction);
+                Ok(id)
+            }
+            ExpressionPointer::Conditional { condition, access } => {
+                //TODO: support atomics?
+                let value = self.write_conditional_indexed_load(
+                    result_type_id,
+                    condition,
+                    block,
+                    move |id_gen, block| {
+                        // The in-bounds path. Perform the access and the load.
+                        let pointer_id = access.result_id.unwrap();
+                        let value_id = id_gen.next();
+                        block.body.push(access);
+                        block.body.push(Instruction::load(
+                            result_type_id,
+                            value_id,
+                            pointer_id,
+                            None,
+                        ));
+                        value_id
+                    },
+                );
+                Ok(value)
             }
         }
     }
@@ -3170,13 +2763,13 @@ impl BlockContext<'_> {
                 (
                     crate::Literal::I32(-128),
                     crate::Literal::I32(127),
-                    spirv::GlslStd450Op::SClamp,
+                    spirv::GLOp::SClamp,
                 )
             } else {
                 (
                     crate::Literal::U32(0),
                     crate::Literal::U32(255),
-                    spirv::GlslStd450Op::UClamp,
+                    spirv::GLOp::UClamp,
                 )
             };
             let [min, max] = [min, max].map(|lit| {
@@ -3270,13 +2863,13 @@ impl BlockContext<'_> {
                     (
                         crate::Literal::I32(-128),
                         crate::Literal::I32(127),
-                        spirv::GlslStd450Op::SClamp,
+                        spirv::GLOp::SClamp,
                     )
                 } else {
                     (
                         crate::Literal::U32(0),
                         crate::Literal::U32(255),
-                        spirv::GlslStd450Op::UClamp,
+                        spirv::GLOp::UClamp,
                     )
                 };
                 let [min, max] = [min, max].map(|lit| self.writer.get_constant_scalar(lit));
@@ -3749,6 +3342,7 @@ impl BlockContext<'_> {
                             self.ir_function.result.as_ref().unwrap(),
                             &context.results,
                             &mut block.body,
+                            context.task_payload_variable_id,
                         )?,
                         None => Instruction::return_value(value_id),
                     };
@@ -3756,7 +3350,18 @@ impl BlockContext<'_> {
                     return Ok(BlockExitDisposition::Discarded);
                 }
                 Statement::Return { value: None } => {
-                    self.function.consume(block, Instruction::return_void());
+                    if let Some(super::EntryPointContext {
+                        mesh_state: Some(ref mesh_state),
+                        ..
+                    }) = self.function.entry_point_context
+                    {
+                        self.function.consume(
+                            block,
+                            Instruction::branch(mesh_state.entry_point_epilogue_id),
+                        );
+                    } else {
+                        self.function.consume(block, Instruction::return_void());
+                    }
                     return Ok(BlockExitDisposition::Discarded);
                 }
                 Statement::Kill => {
@@ -4105,15 +3710,43 @@ impl BlockContext<'_> {
                     self.writer
                         .write_control_barrier(crate::Barrier::WORK_GROUP, &mut block.body);
                     let result_type_id = self.get_expression_type_id(&self.fun_info[result].ty);
-                    // Match `Expression::Load` behavior, including `OpAtomicLoad` when
-                    // loading from a pointer to `atomic<T>`.
-                    let id = self.write_checked_load(
+                    // Embed the body of
+                    match self.write_access_chain(
                         pointer,
                         &mut block,
                         AccessTypeAdjustment::None,
-                        result_type_id,
-                    )?;
-                    self.cached[result] = id;
+                    )? {
+                        ExpressionPointer::Ready { pointer_id } => {
+                            let id = self.gen_id();
+                            block.body.push(Instruction::load(
+                                result_type_id,
+                                id,
+                                pointer_id,
+                                None,
+                            ));
+                            self.cached[result] = id;
+                        }
+                        ExpressionPointer::Conditional { condition, access } => {
+                            self.cached[result] = self.write_conditional_indexed_load(
+                                result_type_id,
+                                condition,
+                                &mut block,
+                                move |id_gen, block| {
+                                    // The in-bounds path. Perform the access and the load.
+                                    let pointer_id = access.result_id.unwrap();
+                                    let value_id = id_gen.next();
+                                    block.body.push(access);
+                                    block.body.push(Instruction::load(
+                                        result_type_id,
+                                        value_id,
+                                        pointer_id,
+                                        None,
+                                    ));
+                                    value_id
+                                },
+                            )
+                        }
+                    }
                     self.writer
                         .write_control_barrier(crate::Barrier::WORK_GROUP, &mut block.body);
                 }
@@ -4177,9 +3810,6 @@ impl BlockContext<'_> {
                         }
                     };
                 }
-                Statement::RayPipelineFunction(ref fun) => {
-                    self.write_ray_tracing_pipeline_function(fun, &mut block);
-                }
             }
         }
 
@@ -4227,6 +3857,16 @@ impl BlockContext<'_> {
             LoopContext::default(),
             debug_info,
         )?;
+        if let Some(super::EntryPointContext {
+            mesh_state: Some(ref mesh_state),
+            ..
+        }) = self.function.entry_point_context
+        {
+            let mut block = Block::new(mesh_state.entry_point_epilogue_id);
+            self.writer
+                .write_mesh_shader_return(mesh_state, &mut block)?;
+            self.function.consume(block, Instruction::return_void());
+        }
 
         Ok(())
     }

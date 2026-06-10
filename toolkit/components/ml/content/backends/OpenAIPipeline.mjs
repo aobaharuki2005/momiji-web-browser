@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// @ts-nocheck - TODO - Remove this to type check this file.
-
 /**
  * @typedef {import("../../content/Utils.sys.mjs").ProgressAndStatusCallbackParams} ProgressAndStatusCallbackParams
  */
@@ -53,21 +51,16 @@ export class OpenAIPipeline {
   }
 
   static async initialize(mlEngineWorker, wasm, options = {}, errorFactory) {
-    let initStart = ChromeUtils.now();
     lazy.console.debug("Initializing OpenAI pipeline");
-    let importStart = ChromeUtils.now();
     if (AppConstants.NIGHTLY_BUILD) {
-      OpenAIPipeline.OpenAILib =
-        await import("chrome://global/content/ml/openai-dev.mjs");
+      OpenAIPipeline.OpenAILib = await import(
+        "chrome://global/content/ml/openai-dev.mjs"
+      );
     } else {
-      OpenAIPipeline.OpenAILib =
-        await import("chrome://global/content/ml/openai.mjs");
+      OpenAIPipeline.OpenAILib = await import(
+        "chrome://global/content/ml/openai.mjs"
+      );
     }
-    ChromeUtils.addProfilerMarker(
-      "MLEngine:OpenAI",
-      { startTime: importStart },
-      `Library loaded`
-    );
     if (options.logLevel) {
       _logLevel = options.logLevel;
       lazy.setLogLevel(options.logLevel); // setting Utils log level
@@ -80,12 +73,6 @@ export class OpenAIPipeline {
     if (lazy.console.logLevel != config.logLevel) {
       lazy.console.logLevel = config.logLevel;
     }
-
-    ChromeUtils.addProfilerMarker(
-      "MLEngine:OpenAI",
-      { startTime: initStart },
-      `Initialized`
-    );
 
     return new OpenAIPipeline(config, errorFactory);
   }
@@ -109,7 +96,6 @@ export class OpenAIPipeline {
       port,
       isDone,
       toolCalls,
-      usage,
     } = args;
     port?.postMessage({
       text: content,
@@ -124,7 +110,6 @@ export class OpenAIPipeline {
         requestId,
         tokens: [],
         ...(toolCalls ? { toolCalls } : {}),
-        ...(usage ? { usage } : {}),
       },
       type: Progress.ProgressType.INFERENCE,
       statusText: isDone
@@ -220,7 +205,6 @@ export class OpenAIPipeline {
     let streamOutput = "";
     let toolAcc = new Map();
     let sawToolCallsFinish = false;
-    let usage = null;
 
     for await (const chunk of stream) {
       const choice = chunk?.choices?.[0];
@@ -240,10 +224,6 @@ export class OpenAIPipeline {
 
       if (Array.isArray(delta.tool_calls) && delta.tool_calls.length) {
         toolAcc = this.#mergeToolDeltas(toolAcc, delta.tool_calls);
-      }
-
-      if (chunk?.usage) {
-        usage = chunk.usage;
       }
 
       // If the model signals it wants tools now
@@ -272,7 +252,6 @@ export class OpenAIPipeline {
       inferenceProgressCallback,
       port,
       isDone: true,
-      ...(usage ? { usage } : {}),
     });
 
     return {
@@ -347,29 +326,48 @@ export class OpenAIPipeline {
   ) {
     lazy.console.debug("Running OpenAI pipeline");
     try {
-      const {
-        baseURL,
-        apiKey,
-        modelId,
-        serviceType,
-        purpose,
-        extraHeaders,
-        engineId,
-      } = this.#options;
+      const { baseURL, apiKey, modelId, serviceType, extraHeaders, engineId } =
+        this.#options;
       const fxAccountToken = request.fxAccountToken
         ? request.fxAccountToken
         : null;
-      const chatId = request.chatId;
+
+      let isFastlyRequest = false;
+      if (extraHeaders) {
+        for (const headerKey of Object.keys(extraHeaders)) {
+          if (headerKey.toLowerCase() == "x-fastly-request") {
+            isFastlyRequest = true;
+            break;
+          }
+        }
+      }
+
+      /** @type {Record<string, string>} */
+      let authHeaders;
+      if (isFastlyRequest) {
+        // If the x-fastly-request extra header is present, we want to hit the LiteLLM
+        // endpoint directly, so don't use an FxA token
+        authHeaders = {
+          authorization: `Bearer ${apiKey}`,
+        };
+      } else if (fxAccountToken) {
+        // Use a Firefox account token if available
+        authHeaders = {
+          authorization: `Bearer ${fxAccountToken}`,
+          "service-type": serviceType || "ai",
+        };
+      } else {
+        // Don't use any authentication headers
+        authHeaders = {};
+      }
 
       const client = new OpenAIPipeline.OpenAILib.OpenAI({
         baseURL: baseURL ? baseURL : "http://localhost:11434/v1",
-        apiKey: apiKey || fxAccountToken || "apiKey",
+        apiKey: apiKey || "ollama",
         defaultHeaders: {
+          ...authHeaders,
           ...extraHeaders,
-          "service-type": serviceType || "ai",
-          purpose: purpose || "chat",
           "x-engine-id": engineId,
-          "chat-id": chatId,
         },
       });
       const stream = request.streamOptions?.enabled || false;
@@ -381,9 +379,7 @@ export class OpenAIPipeline {
         stream,
         tools,
       };
-      if (stream) {
-        completionParams.stream_options = { include_usage: true };
-      }
+
       const args = {
         client,
         completionParams,
@@ -404,11 +400,9 @@ export class OpenAIPipeline {
           text: "",
           requestId,
           tokens: [],
-          errorMessage: error.error,
         },
         type: Progress.ProgressType.INFERENCE,
         statusText: Progress.ProgressStatusText.DONE,
-        ...(error.status && { status: error.status }),
       });
 
       throw backendError;

@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:set ts=2 sts=2 sw=2 et cin:
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -94,7 +96,7 @@ nsExtProtocolChannel::nsExtProtocolChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo)
       mConnectedParent(false),
       mLoadInfo(aLoadInfo) {}
 
-nsExtProtocolChannel::~nsExtProtocolChannel() = default;
+nsExtProtocolChannel::~nsExtProtocolChannel() {}
 
 NS_IMETHODIMP nsExtProtocolChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   NS_IF_ADDREF(*aLoadGroup = mLoadGroup);
@@ -230,7 +232,7 @@ NS_IMETHODIMP nsExtProtocolChannel::AsyncOpen(nsIStreamListener* aListener) {
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
   mWasOpened = true;
-  mListener = std::move(listener);
+  mListener = listener;
 
   return OpenURL();
 }
@@ -473,7 +475,7 @@ nsExternalProtocolHandler::nsExternalProtocolHandler() {
   m_schemeName = "default";
 }
 
-nsExternalProtocolHandler::~nsExternalProtocolHandler() = default;
+nsExternalProtocolHandler::~nsExternalProtocolHandler() {}
 
 NS_IMPL_ADDREF(nsExternalProtocolHandler)
 NS_IMPL_RELEASE(nsExternalProtocolHandler)

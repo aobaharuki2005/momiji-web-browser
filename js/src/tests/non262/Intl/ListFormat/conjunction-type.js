@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty('Intl'))
+
 // Note: Use the same test locales as used in unit-type.js
 
 const {Element, Literal} = ListFormatParts;

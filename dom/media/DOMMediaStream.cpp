@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-*/
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -325,13 +326,8 @@ void DOMMediaStream::GetTracks(
 }
 
 void DOMMediaStream::AddTrack(MediaStreamTrack& aTrack) {
-  const char* trackType =
-      aTrack.AsAudioStreamTrack()
-          ? "Audio"
-          : (aTrack.AsVideoStreamTrack() ? "Video" : "Other");
-  LOG(LogLevel::Info,
-      ("DOMMediaStream %p Adding track %p (type=%s, from track %p)", this,
-       &aTrack, trackType, aTrack.GetTrack()));
+  LOG(LogLevel::Info, ("DOMMediaStream %p Adding track %p (from track %p)",
+                       this, &aTrack, aTrack.GetTrack()));
 
   if (HasTrack(aTrack)) {
     LOG(LogLevel::Debug,
@@ -553,7 +549,6 @@ nsresult DOMMediaStream::DispatchTrackEvent(
 
   RefPtr<MediaStreamTrackEvent> event =
       MediaStreamTrackEvent::Constructor(this, aName, init);
-  LOG(LogLevel::Info, ("DOMMediaStream %p dispatch '%s' event", this,
-                       NS_ConvertUTF16toUTF8(aName).get()));
+
   return DispatchTrustedEvent(event);
 }

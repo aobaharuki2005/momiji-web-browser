@@ -13,12 +13,11 @@
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <span>
 #include <utility>
 
 #include "absl/flags/flag.h"
+#include "api/array_view.h"
 #include "api/call/transport.h"
-#include "api/environment/environment.h"
 #include "api/media_types.h"
 #include "api/rtp_parameters.h"
 #include "api/task_queue/task_queue_base.h"
@@ -54,19 +53,19 @@ class RtpRtcpObserver {
     return observation_complete_.Wait(timeout_);
   }
 
-  virtual Action OnSendRtp(std::span<const uint8_t> packet) {
+  virtual Action OnSendRtp(ArrayView<const uint8_t> packet) {
     return SEND_PACKET;
   }
 
-  virtual Action OnSendRtcp(std::span<const uint8_t> packet) {
+  virtual Action OnSendRtcp(ArrayView<const uint8_t> packet) {
     return SEND_PACKET;
   }
 
-  virtual Action OnReceiveRtp(std::span<const uint8_t> packet) {
+  virtual Action OnReceiveRtp(ArrayView<const uint8_t> packet) {
     return SEND_PACKET;
   }
 
-  virtual Action OnReceiveRtcp(std::span<const uint8_t> packet) {
+  virtual Action OnReceiveRtcp(ArrayView<const uint8_t> packet) {
     return SEND_PACKET;
   }
 
@@ -84,17 +83,15 @@ class PacketTransport : public test::DirectTransport {
  public:
   enum TransportType { kReceiver, kSender };
 
-  PacketTransport(const Environment& env,
-                  TaskQueueBase* task_queue,
+  PacketTransport(TaskQueueBase* task_queue,
                   Call* send_call,
                   RtpRtcpObserver* observer,
                   TransportType transport_type,
                   const std::map<uint8_t, MediaType>& payload_type_map,
                   std::unique_ptr<SimulatedPacketReceiverInterface> nw_pipe,
-                  std::span<const RtpExtension> audio_extensions,
-                  std::span<const RtpExtension> video_extensions)
-      : test::DirectTransport(env,
-                              task_queue,
+                  ArrayView<const RtpExtension> audio_extensions,
+                  ArrayView<const RtpExtension> video_extensions)
+      : test::DirectTransport(task_queue,
                               std::move(nw_pipe),
                               send_call,
                               payload_type_map,
@@ -104,7 +101,7 @@ class PacketTransport : public test::DirectTransport {
         transport_type_(transport_type) {}
 
  private:
-  bool SendRtp(std::span<const uint8_t> packet,
+  bool SendRtp(ArrayView<const uint8_t> packet,
                const PacketOptions& options) override {
     EXPECT_TRUE(IsRtpPacket(packet));
     RtpRtcpObserver::Action action = RtpRtcpObserver::SEND_PACKET;
@@ -126,7 +123,7 @@ class PacketTransport : public test::DirectTransport {
     return true;
   }
 
-  bool SendRtcp(std::span<const uint8_t> packet,
+  bool SendRtcp(ArrayView<const uint8_t> packet,
                 const PacketOptions& options) override {
     EXPECT_TRUE(IsRtcpPacket(packet));
     RtpRtcpObserver::Action action = RtpRtcpObserver::SEND_PACKET;

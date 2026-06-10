@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -20,9 +22,9 @@ namespace mozilla::uniffi {
 struct UniFFIPointerType {
   nsLiteralCString typeName;
   // Rust FFI function to clone for the pointer
-  uint64_t (*clone)(uint64_t, RustCallStatus*);
+  void* (*clone)(void*, RustCallStatus*);
   // Rust FFI function to destroy for the pointer
-  void (*destructor)(uint64_t, RustCallStatus*);
+  void (*destructor)(void*, RustCallStatus*);
 };
 }  // namespace mozilla::uniffi
 

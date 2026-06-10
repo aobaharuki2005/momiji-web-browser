@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,6 +16,7 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsFrameManager.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsLayoutUtils.h"
 #include "nsLineLayout.h"
@@ -67,7 +70,7 @@ void nsFirstLetterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     // that represents everything *except* the first letter, so just create
     // a ComputedStyle that inherits from our style parent, with no extra rules.
     nsIFrame* styleParent =
-        CorrectStyleParentFrame(aParent, PseudoStyleType::FirstLetter);
+        CorrectStyleParentFrame(aParent, PseudoStyleType::firstLetter);
     ComputedStyle* parentComputedStyle = styleParent->Style();
     newSC = PresContext()->StyleSet()->ResolveStyleForFirstLetterContinuation(
         parentComputedStyle);
@@ -278,7 +281,7 @@ void nsFirstLetterFrame::Reflow(nsPresContext* aPresContext,
     bool pushedFrame;
 
     ll->SetInFirstLetter(Style()->GetPseudoType() ==
-                         PseudoStyleType::FirstLetter);
+                         PseudoStyleType::firstLetter);
     ll->BeginSpan(this, &aReflowInput, bp.IStart(wm), availSize.ISize(wm),
                   &mBaseline);
     ll->ReflowFrame(kid, aReflowStatus, &kidMetrics, pushedFrame);
@@ -457,7 +460,7 @@ void nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext) {
       if (prevInFlow) {
         // This is for the rest of the content not in the first-letter.
         nsIFrame* styleParent =
-            CorrectStyleParentFrame(GetParent(), PseudoStyleType::FirstLetter);
+            CorrectStyleParentFrame(GetParent(), PseudoStyleType::firstLetter);
         parentSC = styleParent->Style();
       } else {
         // And this for the first-letter style.

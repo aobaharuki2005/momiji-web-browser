@@ -108,7 +108,7 @@ if (extProtocolSvc && extProtocolSvc.externalProtocolHandlerExists("mailto")) {
 
 var len = data.length;
 
-add_setup(async () => {
+add_task(async function setup() {
   await setupSearchService();
   await addTestEngines();
 
@@ -119,13 +119,13 @@ add_setup(async () => {
     true
   );
 
-  await SearchService.setDefault(
-    SearchService.getEngineByName(kSearchEngineName),
-    SearchService.CHANGE_REASON.UNKNOWN
+  await Services.search.setDefault(
+    Services.search.getEngineByName(kSearchEngineID),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
-  await SearchService.setDefaultPrivate(
-    SearchService.getEngineByName(kPrivateSearchEngineName),
-    SearchService.CHANGE_REASON.UNKNOWN
+  await Services.search.setDefaultPrivate(
+    Services.search.getEngineByName(kPrivateSearchEngineID),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 });
 

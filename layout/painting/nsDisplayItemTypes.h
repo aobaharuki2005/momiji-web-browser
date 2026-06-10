@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -17,7 +19,7 @@ enum class DisplayItemType : uint8_t {
   TYPE_ZERO = 0, /** Spacer so that the first item starts at 1 */
 
 #define DECLARE_DISPLAY_ITEM_TYPE(name, flags) TYPE_##name,
-#include "nsDisplayItemTypesList.inc"
+#include "nsDisplayItemTypesList.h"
 #undef DECLARE_DISPLAY_ITEM_TYPE
 
   TYPE_MAX
@@ -39,7 +41,7 @@ inline const char* DisplayItemTypeName(DisplayItemType aType) {
 #define DECLARE_DISPLAY_ITEM_TYPE(name, flags) \
   case DisplayItemType::TYPE_##name:           \
     return #name;
-#include "nsDisplayItemTypesList.inc"
+#include "nsDisplayItemTypesList.h"
 #undef DECLARE_DISPLAY_ITEM_TYPE
 
     default:
@@ -51,7 +53,7 @@ inline uint8_t GetDisplayItemFlagsForType(DisplayItemType aType) {
   static const uint8_t flags[static_cast<uint32_t>(DisplayItemType::TYPE_MAX)] =
       {0
 #define DECLARE_DISPLAY_ITEM_TYPE(name, flags) , flags
-#include "nsDisplayItemTypesList.inc"
+#include "nsDisplayItemTypesList.h"
 #undef DECLARE_DISPLAY_ITEM_TYPE
       };
 

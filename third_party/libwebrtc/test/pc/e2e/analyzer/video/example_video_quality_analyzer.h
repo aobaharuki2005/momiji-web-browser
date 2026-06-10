@@ -14,13 +14,14 @@
 #include <cstdint>
 #include <map>
 #include <set>
-#include <span>
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/test/video_quality_analyzer_interface.h"
 #include "api/video/encoded_image.h"
 #include "api/video/video_frame.h"
+#include "api/video_codecs/video_encoder.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -36,7 +37,7 @@ class ExampleVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   ~ExampleVideoQualityAnalyzer() override;
 
   void Start(std::string test_case_name,
-             std::span<const std::string> peer_names,
+             ArrayView<const std::string> peer_names,
              int max_threads_count) override;
   uint16_t OnFrameCaptured(absl::string_view peer_name,
                            const std::string& stream_label,
@@ -48,7 +49,8 @@ class ExampleVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
                       const EncodedImage& encoded_image,
                       const EncoderStats& stats,
                       bool discarded) override;
-  void OnFrameDropped(absl::string_view peer_name) override;
+  void OnFrameDropped(absl::string_view peer_name,
+                      EncodedImageCallback::DropReason reason) override;
   void OnFramePreDecode(absl::string_view peer_name,
                         uint16_t frame_id,
                         const EncodedImage& encoded_image) override;

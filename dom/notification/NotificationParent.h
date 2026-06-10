@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -41,7 +43,7 @@ class NotificationParent final : public PNotificationParent,
   NS_DECL_ISUPPORTS
 
   nsresult HandleAlertTopic(AlertTopic aTopic);
-  IPCResult RecvShow(Maybe<IPCImage>&& aIcon, ShowResolver&& aResolver);
+  IPCResult RecvShow(ShowResolver&& aResolver);
   IPCResult RecvClose();
 
   static nsresult CreateOnMainThread(
@@ -54,7 +56,7 @@ class NotificationParent final : public PNotificationParent,
       : mId(aArgs.mNotification.id()), mArgs(std::move(aArgs)) {};
   ~NotificationParent() = default;
 
-  nsresult Show(Maybe<IPCImage>&& aIcon);
+  nsresult Show();
   nsresult FireClickEvent();
 
   void Unregister();
@@ -70,12 +72,6 @@ class NotificationParent final : public PNotificationParent,
   // either because it's closed or denied permission. We don't have to call
   // CloseAlert if this is the case.
   bool mDangling = false;
-
-  // State tracking for async SafeBrowsing checks (bug 1986300).
-  // When a SafeBrowsing classification is in progress, we track whether a
-  // close was requested before the check completes.
-  bool mShowPending = false;
-  bool mClosePending = false;
 };
 
 }  // namespace mozilla::dom::notification

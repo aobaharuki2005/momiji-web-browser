@@ -13,7 +13,7 @@ document.prerendering false.
 
 <body>
 <script>
-setup(() => assertSpeculationRulesIsSupported('prerender'));
+setup(() => assertSpeculationRulesIsSupported());
 
 promise_test(async t => {
   const uid = token();

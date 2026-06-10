@@ -2,9 +2,9 @@ use std::error::Error as StdError;
 use std::fmt;
 use std::future::Future;
 use std::marker::PhantomData;
+use std::task::{Context, Poll};
 
-use crate::body::Body;
-use crate::service::service::Service;
+use crate::body::HttpBody;
 use crate::{Request, Response};
 
 /// Create a `Service` from a function.
@@ -12,14 +12,12 @@ use crate::{Request, Response};
 /// # Example
 ///
 /// ```
-/// use bytes::Bytes;
-/// use hyper::{body, Request, Response, Version};
-/// use http_body_util::Full;
+/// use hyper::{Body, Request, Response, Version};
 /// use hyper::service::service_fn;
 ///
-/// let service = service_fn(|req: Request<body::Incoming>| async move {
+/// let service = service_fn(|req: Request<Body>| async move {
 ///     if req.version() == Version::HTTP_11 {
-///         Ok(Response::new(Full::<Bytes>::from("Hello World")))
+///         Ok(Response::new(Body::from("Hello World")))
 ///     } else {
 ///         // Note: it's usually better to return a Response
 ///         // with an appropriate StatusCode instead of an Err.
@@ -29,7 +27,7 @@ use crate::{Request, Response};
 /// ```
 pub fn service_fn<F, R, S>(f: F) -> ServiceFn<F, R>
 where
-    F: Fn(Request<R>) -> S,
+    F: FnMut(Request<R>) -> S,
     S: Future,
 {
     ServiceFn {
@@ -44,19 +42,24 @@ pub struct ServiceFn<F, R> {
     _req: PhantomData<fn(R)>,
 }
 
-impl<F, ReqBody, Ret, ResBody, E> Service<Request<ReqBody>> for ServiceFn<F, ReqBody>
+impl<F, ReqBody, Ret, ResBody, E> tower_service::Service<crate::Request<ReqBody>>
+    for ServiceFn<F, ReqBody>
 where
-    F: Fn(Request<ReqBody>) -> Ret,
-    ReqBody: Body,
+    F: FnMut(Request<ReqBody>) -> Ret,
+    ReqBody: HttpBody,
     Ret: Future<Output = Result<Response<ResBody>, E>>,
     E: Into<Box<dyn StdError + Send + Sync>>,
-    ResBody: Body,
+    ResBody: HttpBody,
 {
     type Response = crate::Response<ResBody>;
     type Error = E;
     type Future = Ret;
 
-    fn call(&self, req: Request<ReqBody>) -> Self::Future {
+    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
         (self.f)(req)
     }
 }

@@ -5,9 +5,6 @@
 #ifndef AudioDecoderInputTrack_h
 #define AudioDecoderInputTrack_h
 
-#include <memory>
-#include <thread>
-
 #include "AudioSegment.h"
 #include "MediaEventSource.h"
 #include "MediaSegment.h"
@@ -40,7 +37,7 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   static AudioDecoderInputTrack* Create(MediaTrackGraph* aGraph,
                                         nsISerialEventTarget* aDecoderThread,
                                         const AudioInfo& aInfo,
-                                        float aPlaybackRate,
+                                        float aPlaybackRate, float aVolume,
                                         bool aPreservesPitch);
 
   // SPSCData suppports filling different supported type variants, and is used
@@ -97,6 +94,7 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
                   const PrincipalHandle& aPrincipalHandle);
   void NotifyEndOfStream();
   void ClearFutureData();
+  void SetVolume(float aVolume);
   void SetPlaybackRate(float aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
   // After calling this, the track are not expected to receive any new data.
@@ -105,9 +103,6 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
 
   MediaEventSource<int64_t>& OnOutput() { return mOnOutput; }
   MediaEventSource<void>& OnEnd() { return mOnEnd; }
-  MediaEventSource<void>& OnPlaybackRateFallback() {
-    return mOnPlaybackRateFallback;
-  }
 
   // Graph Thread API
   void DestroyImpl() override;
@@ -118,6 +113,10 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   TrackTime WrittenFrames() const {
     AssertOnGraphThread();
     return mWrittenFrames;
+  }
+  float Volume() const {
+    AssertOnGraphThread();
+    return mVolume;
   }
   float PlaybackRate() const {
     AssertOnGraphThread();
@@ -130,7 +129,8 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
  private:
   AudioDecoderInputTrack(nsISerialEventTarget* aDecoderThread,
                          TrackRate aGraphRate, const AudioInfo& aInfo,
-                         float aPlaybackRate, bool aPreservesPitch);
+                         float aPlaybackRate, float aVolume,
+                         bool aPreservesPitch);
 
   // Return false if the converted segment contains zero duration.
   bool ConvertAudioDataToSegment(AudioData* aAudio, AudioSegment& aSegment,
@@ -180,7 +180,6 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   MediaEventProducer<int64_t> mOnOutput;
   // Notify when the track is ended.
   MediaEventProducer<void> mOnEnd;
-  MediaEventProducer<void> mOnPlaybackRateFallback;
 
   // These variables are ONLY used in the decoder thread.
   nsAutoRef<SpeexResamplerState> mResampler;
@@ -194,6 +193,7 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   bool mReceivedEOS = false;
   TrackTime mWrittenFrames = 0;
   float mPlaybackRate;
+  float mVolume;
   bool mPreservesPitch;
 
   // A thread-safe queue shared by the decoder thread and the graph thread.
@@ -206,7 +206,6 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   // not clear all data in SPSC queue when the track's `DestroyImpl()` gets
   // called. We leave to destroy the queue later when the track gets destroyed.
   SPSCQueue<SPSCData> mSPSCQueue{40};
-  std::thread::id mProducerThreadId;
 
   // When the graph requires the less amount of audio frames than the amount of
   // frames an audio data has, then the remaining part of frames would be stored
@@ -225,7 +224,7 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   bool mSentAllData = false;
 
   // This is used to adjust the playback rate and pitch.
-  std::unique_ptr<RLBoxSoundTouch> mTimeStretcher;
+  RLBoxSoundTouch* mTimeStretcher = nullptr;
 
   // Buffers that would be used for the time stretching.
   AutoTArray<AudioDataValue, 2> mInterleavedBuffer;

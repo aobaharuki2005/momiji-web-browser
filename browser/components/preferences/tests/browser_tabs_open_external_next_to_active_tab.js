@@ -7,11 +7,6 @@ const PREF_NAME = "browser.link.open_newwindow.override.external";
 const PREF_VALUE_FEATURE_OFF = Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_BACKGROUND;
 const PREF_VALUE_FEATURE_ON = Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT;
 
-const TABS_PANE = SRD_PREF_VALUE ? "paneTabsBrowsing" : "paneGeneral";
-const BROWSER_UI_PANE = SRD_PREF_VALUE
-  ? Glean.browserUiInteraction.preferencesPaneTabsBrowsing
-  : Glean.browserUiInteraction.preferencesPaneGeneral;
-
 let resetTelemetry = async () => {
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
@@ -73,12 +68,12 @@ async function assertOpenNextToActiveTabSettingsChange(
 async function assertBrowserUiInteraction(expectedCounterValue) {
   await TestUtils.waitForCondition(
     () =>
-      BROWSER_UI_PANE?.openAppLinksNextToActiveTab?.testGetValue() ==
+      Glean.browserUiInteraction.preferencesPaneGeneral?.openAppLinksNextToActiveTab?.testGetValue() ==
       expectedCounterValue,
     "wait for metric to be recorded"
   );
   Assert.equal(
-    BROWSER_UI_PANE.openAppLinksNextToActiveTab.testGetValue(),
+    Glean.browserUiInteraction.preferencesPaneGeneral.openAppLinksNextToActiveTab.testGetValue(),
     expectedCounterValue,
     "click on the pref checkbox should have been counted"
   );
@@ -88,16 +83,12 @@ add_task(async function test_open_external_link_next_to_active_tab_pref() {
   await SpecialPowers.pushPrefEnv({
     set: [[PREF_NAME, PREF_VALUE_FEATURE_OFF]],
   });
-  await openPreferencesViaOpenPreferencesAPI(TABS_PANE, {
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
   await resetTelemetry();
 
   const doc = gBrowser.contentDocument;
-  await TestUtils.waitForCondition(
-    () => doc.getElementById("openAppLinksNextToActiveTab"),
-    "openAppLinksNextToActiveTab checkbox rendered"
-  );
   const checkbox = doc.getElementById("openAppLinksNextToActiveTab");
 
   info("validate default starting conditions");

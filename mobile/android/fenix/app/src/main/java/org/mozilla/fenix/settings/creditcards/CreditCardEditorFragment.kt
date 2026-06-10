@@ -16,7 +16,6 @@ import androidx.navigation.fragment.navArgs
 import mozilla.components.lib.state.helpers.StoreProvider.Companion.storeProvider
 import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.requireComponents
@@ -32,7 +31,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 /**
  * Display a credit card editor for adding and editing a credit card.
  */
-class CreditCardEditorFragment : SecureFragment(), SystemInsetsPaddedFragment {
+class CreditCardEditorFragment : SecureFragment() {
 
     private val args by navArgs<CreditCardEditorFragmentArgs>()
 

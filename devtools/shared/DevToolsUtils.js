@@ -427,6 +427,18 @@ exports.dumpn = function (str) {
 };
 
 /**
+ * Dump verbose - This is a verbose logger for low-level tracing, that is typically
+ * used to provide information about the remote debugging protocol's transport
+ * mechanisms. The logging can be enabled by changing the preferences
+ * "devtools.debugger.log" and "devtools.debugger.log.verbose" to true.
+ */
+exports.dumpv = function (msg) {
+  if (flags.wantVerbose) {
+    exports.dumpn(msg);
+  }
+};
+
+/**
  * Defines a getter on a specified object that will be created upon first use.
  *
  * @param object
@@ -932,6 +944,7 @@ function errorOnFlag(exports, name) {
 
 errorOnFlag(exports, "testing");
 errorOnFlag(exports, "wantLogging");
+errorOnFlag(exports, "wantVerbose");
 
 // Calls the property with the given `name` on the given `object`, where
 // `name` is a string, and `object` a Debugger.Object instance.
@@ -997,7 +1010,7 @@ exports.makeDebuggeeIterator = makeDebuggeeIterator;
  * window embedding the DevTools frame.
  */
 function getTopWindow(win) {
-  return win.windowRoot ? win.windowRoot.window : win.top;
+  return win.windowRoot ? win.windowRoot.ownerGlobal : win.top;
 }
 
 exports.getTopWindow = getTopWindow;
@@ -1005,7 +1018,7 @@ exports.getTopWindow = getTopWindow;
 /**
  * Check whether two objects are identical by performing
  * a deep equality check on their properties and values.
- * See toolkit/modules/ObjectUtils.sys.mjs for implementation.
+ * See toolkit/modules/ObjectUtils.jsm for implementation.
  *
  * @param {object} a
  * @param {object} b

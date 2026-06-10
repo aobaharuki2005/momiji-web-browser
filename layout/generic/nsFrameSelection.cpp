@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -135,21 +137,9 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult CreateAndAddRange(
 static nsresult SelectCellElement(nsIContent* aCellElement,
                                   Selection& aNormalSelection);
 
-// On macOS, we need to update the selection cache when we repaint a selection.
-// This runs nsHTMLCopyEncoder to serialize the selection ranges, which is
-// really complicated especially when shadow DOM selection. Therefore, that may
-// cause some assertion failures. Unfortunately, our macOS machines in the CI
-// are always busy and we need one or two days to check the result on trysever.
-// Therefore, we should run nsHTMLCopyEncoder part in all desktop platforms if
-// it's a debug build. Thus, we can check the result on Linux machines in
-// tryserver.
-#if defined(XP_MACOSX) || (defined(DEBUG) && !defined(ANDROID))
-#  define RUN_MAYBE_UPDATE_SELECTION_CACHE_REPAINT_SELECTION
-#endif
-
-#ifdef RUN_MAYBE_UPDATE_SELECTION_CACHE_REPAINT_SELECTION
-static nsresult MaybeUpdateSelectionCacheOnRepaintSelection(Selection* aSel);
-#endif  // RUN_MAYBE_UPDATE_SELECTION_CACHE_REPAINT_SELECTION
+#ifdef XP_MACOSX
+static nsresult UpdateSelectionCacheOnRepaintSelection(Selection* aSel);
+#endif  // XP_MACOSX
 
 #ifdef PRINT_RANGE
 static void printRange(nsRange* aDomRange);
@@ -248,7 +238,7 @@ bool nsFrameSelection::NodeIsInLimiters(
   // the Text in it.
   if (aIndependentSelectionLimiterElement) {
     MOZ_ASSERT(aIndependentSelectionLimiterElement->GetPseudoElementType() ==
-               PseudoStyleType::MozTextControlEditingRoot);
+               PseudoStyleType::mozTextControlEditingRoot);
     MOZ_ASSERT(
         aIndependentSelectionLimiterElement->IsHTMLElement(nsGkAtoms::div));
     if (aIndependentSelectionLimiterElement == aContainerNode) {
@@ -285,13 +275,13 @@ struct MOZ_RAII AutoPrepareFocusRange {
       mUserSelect.emplace(aSelection);
     }
 
-    Span ranges = aSelection->mStyledRanges.Ranges();
+    nsTArray<StyledRange>& ranges = aSelection->mStyledRanges.mRanges;
     if (!aSelection->mUserInitiated || aMultiRangeSelection) {
       // Scripted command or the user is starting a new explicit multi-range
       // selection.
-      for (const auto& range : ranges) {
-        MOZ_ASSERT(range->IsDynamicRange());
-        range->AsDynamicRange()->SetIsGenerated(false);
+      for (StyledRange& entry : ranges) {
+        MOZ_ASSERT(entry.mRange->IsDynamicRange());
+        entry.mRange->AsDynamicRange()->SetIsGenerated(false);
       }
       return;
     }
@@ -331,43 +321,48 @@ struct MOZ_RAII AutoPrepareFocusRange {
  private:
   static nsRange* FindGeneratedRangeMostDistantFromAnchor(
       const Selection& aSelection) {
-    const Span ranges = aSelection.mStyledRanges.Ranges();
-    // This function is only called for selections with type == eNormal.
-    // (see MOZ_ASSERT in constructor).
-    // Therefore, all ranges must be dynamic.
+    const nsTArray<StyledRange>& ranges = aSelection.mStyledRanges.mRanges;
+    const size_t len = ranges.Length();
+    nsRange* result{nullptr};
     if (aSelection.GetDirection() == eDirNext) {
-      for (const auto& range : ranges) {
-        if (range->AsDynamicRange()->IsGenerated()) {
-          return range->AsDynamicRange();
+      for (size_t i = 0; i < len; ++i) {
+        // This function is only called for selections with type == eNormal.
+        // (see MOZ_ASSERT in constructor).
+        // Therefore, all ranges must be dynamic.
+        if (ranges[i].mRange->AsDynamicRange()->IsGenerated()) {
+          result = ranges[i].mRange->AsDynamicRange();
+          break;
         }
       }
     } else {
-      for (const auto& range : Reversed(ranges)) {
-        if (range->AsDynamicRange()->IsGenerated()) {
-          return range->AsDynamicRange();
+      size_t i = len;
+      while (i--) {
+        if (ranges[i].mRange->AsDynamicRange()->IsGenerated()) {
+          result = ranges[i].mRange->AsDynamicRange();
+          break;
         }
       }
     }
 
-    return nullptr;
+    return result;
   }
 
   static void RemoveGeneratedRanges(Selection& aSelection) {
     RefPtr<nsPresContext> presContext = aSelection.GetPresContext();
-    Span ranges = aSelection.mStyledRanges.Ranges();
+    nsTArray<StyledRange>& ranges = aSelection.mStyledRanges.mRanges;
     size_t i = ranges.Length();
     while (i--) {
       // This function is only called for selections with type == eNormal.
       // (see MOZ_ASSERT in constructor).
       // Therefore, all ranges must be dynamic.
-      if (!ranges[i]->IsDynamicRange()) {
+      if (!ranges[i].mRange->IsDynamicRange()) {
         continue;
       }
-      nsRange* range = ranges[i]->AsDynamicRange();
+      nsRange* range = ranges[i].mRange->AsDynamicRange();
       if (range->IsGenerated()) {
         range->UnregisterSelection(aSelection);
         aSelection.SelectFrames(presContext, *range, false);
-        aSelection.mStyledRanges.mRanges.RemoveElementAt(i);
+        ranges.RemoveElementAt(i);
       }
     }
   }
@@ -423,7 +418,7 @@ nsFrameSelection::nsFrameSelection(
 
   MOZ_ASSERT_IF(aEditorRootAnonymousDiv,
                 aEditorRootAnonymousDiv->GetPseudoElementType() ==
-                    PseudoStyleType::MozTextControlEditingRoot);
+                    PseudoStyleType::mozTextControlEditingRoot);
   MOZ_ASSERT_IF(aEditorRootAnonymousDiv,
                 aEditorRootAnonymousDiv->IsHTMLElement(nsGkAtoms::div));
   mLimiters.mIndependentSelectionRootElement = aEditorRootAnonymousDiv;
@@ -488,51 +483,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameSelection)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // static
-void nsFrameSelection::WillFocusDocument(PresShell& aPresShell,
-                                         Document& aDocument) {
-  const RefPtr<nsFrameSelection> selection =
-      aPresShell.GetLastFocusedFrameSelection();
-  if (!selection) [[unlikely]] {
-    return;
-  }
-  const int16_t selectionStatus = selection->GetDisplaySelection();
-  // If selection was disabled, re-enable it.
-  if (selectionStatus == nsISelectionController::SELECTION_DISABLED ||
-      selectionStatus == nsISelectionController::SELECTION_HIDDEN) {
-    selection->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-    selection->RepaintSelection(SelectionType::eNormal);
-  }
-  // See EditorBase::FinalizeSelection. This fixes up the case where focus
-  // left the editor's selection but returned to something else.
-  if (selection != aPresShell.ConstFrameSelection()) {
-    const bool selectionMatchesFocus =
-        selection->IsIndependentSelection() &&
-        selection->GetIndependentSelectionRootParentElement() ==
-            aDocument.GetUnretargetedFocusedContent();
-    if (NS_WARN_IF(!selectionMatchesFocus)) {
-      aPresShell.FrameSelectionWillLoseFocus(*selection);
-      aPresShell.SelectionWillTakeFocus();
-    }
-  }
-}
-
-// static
-void nsFrameSelection::WillBlurDocument(PresShell& aPresShell,
-                                        Document& aDocument) {
-  nsFrameSelection* const selection = aPresShell.GetLastFocusedFrameSelection();
-  if (!selection) [[unlikely]] {
-    return;
-  }
-  const int16_t selectionStatus = selection->GetDisplaySelection();
-  // If selection was on, disable it.
-  if (selectionStatus == nsISelectionController::SELECTION_ON ||
-      selectionStatus == nsISelectionController::SELECTION_ATTENTION) {
-    selection->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
-    selection->RepaintSelection(SelectionType::eNormal);
-  }
-}
-
-// static
 bool nsFrameSelection::Caret::IsVisualMovement(
     ExtendSelection aExtendSelection, CaretMovementStyle aMovementStyle) {
   int32_t movementFlag = StaticPrefs::bidi_edit_caret_movement_style();
@@ -554,7 +504,7 @@ nsresult nsFrameSelection::DesiredCaretPos::FetchPos(
     return NS_OK;
   }
 
-  RefPtr<nsCaret> caret = aPresShell.GetActiveCaret();
+  RefPtr<nsCaret> caret = aPresShell.GetCaret();
   if (!caret) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -628,7 +578,8 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
   RefPtr<PresShell> presShell = mPresShell;
   nsIContent* anchorRoot = anchorContent->GetSelectionRootContent(
       presShell, nsINode::IgnoreOwnIndependentSelection::Yes,
-      nsINode::AllowCrossShadowBoundary::Yes);
+      static_cast<nsINode::AllowCrossShadowBoundary>(
+          StaticPrefs::dom_shadowdom_selection_across_boundary_enabled()));
   NS_ENSURE_TRUE(anchorRoot, NS_ERROR_UNEXPECTED);
 
   //
@@ -640,7 +591,8 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
   if (content) {
     nsIContent* contentRoot = content->GetSelectionRootContent(
         presShell, nsINode::IgnoreOwnIndependentSelection::Yes,
-        nsINode::AllowCrossShadowBoundary::Yes);
+        static_cast<nsINode::AllowCrossShadowBoundary>(
+            StaticPrefs::dom_shadowdom_selection_across_boundary_enabled()));
     NS_ENSURE_TRUE(contentRoot, NS_ERROR_UNEXPECTED);
 
     if (anchorRoot == contentRoot) {
@@ -666,7 +618,9 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
         NS_ENSURE_TRUE(cursorContent, NS_ERROR_FAILURE);
         nsIContent* cursorContentRoot = cursorContent->GetSelectionRootContent(
             presShell, nsINode::IgnoreOwnIndependentSelection::Yes,
-            nsINode::AllowCrossShadowBoundary::Yes);
+            static_cast<nsINode::AllowCrossShadowBoundary>(
+                StaticPrefs::
+                    dom_shadowdom_selection_across_boundary_enabled()));
         NS_ENSURE_TRUE(cursorContentRoot, NS_ERROR_UNEXPECTED);
         if (cursorContentRoot == anchorRoot) {
           *aRetFrame = cursorFrame;
@@ -709,7 +663,7 @@ void nsFrameSelection::SetCaretBidiLevelAndMaybeSchedulePaint(
   mCaret.mBidiLevel = aLevel;
 
   RefPtr<nsCaret> caret;
-  if (mPresShell && (caret = mPresShell->GetActiveCaret())) {
+  if (mPresShell && (caret = mPresShell->GetCaret())) {
     caret->SchedulePaint();
   }
 }
@@ -891,7 +845,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
       sel->CollapseInLimiter(node, offset);
     }
     sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                        AxisScrollParams(), AxisScrollParams(), scrollFlags);
+                        ScrollAxis(), ScrollAxis(), scrollFlags);
     return NS_OK;
   }
 
@@ -1005,8 +959,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   }
   if (NS_SUCCEEDED(rv)) {
     rv = sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                             AxisScrollParams(), AxisScrollParams(),
-                             scrollFlags);
+                             ScrollAxis(), ScrollAxis(), scrollFlags);
   }
 
   return rv;
@@ -1214,8 +1167,9 @@ void nsFrameSelection::MaintainedRange::AdjustContentOffsets(
   // Adjust offsets according to maintained amount
   if (mRange && mAmount != eSelectNoAmount) {
     const Maybe<int32_t> relativePosition = nsContentUtils::ComparePoints(
-        mRange->StartRef(), RawRangeBoundary(aOffsets.content, aOffsets.offset,
-                                             RangeBoundarySetBy::Offset));
+        mRange->StartRef(),
+        RawRangeBoundary(aOffsets.content, aOffsets.offset,
+                         RangeBoundaryIsMutationObserved::No));
     if (NS_WARN_IF(!relativePosition)) {
       // Potentially handle this properly when Selection across Shadow DOM
       // boundary is implemented
@@ -1331,7 +1285,7 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
   }
 
   nsresult result;
-  nsIFrame* newFrame = nullptr;
+  nsIFrame* newFrame = 0;
   nsPoint newPoint;
 
   result = ConstrainFrameAndPointToAnchorSubtree(aFrame, aPoint, &newFrame,
@@ -1519,7 +1473,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent& aNewFocus,
     }
     case FocusMode::kExtendSelection: {
       // Now update the range list:
-      nsCOMPtr<nsINode> inclusiveTableCellAncestor =
+      nsINode* inclusiveTableCellAncestor =
           GetClosestInclusiveTableCellAncestor(&aNewFocus);
       if (mTableSelection.mClosestInclusiveTableCellAncestor &&
           inclusiveTableCellAncestor &&
@@ -1655,45 +1609,22 @@ Selection* nsFrameSelection::GetSelection(SelectionType aSelectionType) const {
   return mDomSelections[index];
 }
 
-void nsFrameSelection::PopulateHighlightSelection(
-    Selection& aSelection, mozilla::dom::Highlight& aHighlight) {
-  MOZ_ASSERT(GetPresShell());
-  AutoFrameSelectionBatcher selectionBatcher(__FUNCTION__);
-  selectionBatcher.AddFrameSelection(this);
-  const Document* doc = GetPresShell()->GetDocument();
-  for (const RefPtr<AbstractRange>& range : aHighlight.Ranges()) {
-    const Document* rangeDoc = range->GetComposedDocOfContainers();
-    if (!rangeDoc || rangeDoc == doc) {
-      // since this is run in a context guarded by a selection batcher,
-      // no strong reference is needed to keep `range` alive.
-      aSelection.AddHighlightRangeAndSelectFramesAndNotifyListeners(
-          MOZ_KnownLive(*range));
-    }
-  }
-}
-
 void nsFrameSelection::AddHighlightSelection(
     nsAtom* aHighlightName, mozilla::dom::Highlight& aHighlight) {
-  // Create the selection and register it in mHighlightSelections BEFORE
-  // adding ranges. Adding ranges triggers paint, which queries
-  // `mHighlightSelections`.
   RefPtr<Selection> selection =
-      MakeRefPtr<Selection>(SelectionType::eHighlight, this);
-  selection->SetHighlightSelectionData({aHighlightName, &aHighlight});
+      aHighlight.CreateHighlightSelection(aHighlightName, this);
   if (auto iter =
           std::find_if(mHighlightSelections.begin(), mHighlightSelections.end(),
                        [&aHighlightName](auto const& aElm) {
                          return aElm.first() == aHighlightName;
                        });
       iter != mHighlightSelections.end()) {
-    iter->second() = selection;
+    iter->second() = std::move(selection);
   } else {
     mHighlightSelections.AppendElement(
         CompactPair<RefPtr<nsAtom>, RefPtr<Selection>>(aHighlightName,
-                                                       selection));
+                                                       std::move(selection)));
   }
-  // Now add ranges to the registered selection.
-  PopulateHighlightSelection(*selection, aHighlight);
 }
 
 void nsFrameSelection::RepaintHighlightSelection(nsAtom* aHighlightName) {
@@ -1733,7 +1664,12 @@ void nsFrameSelection::AddHighlightSelectionRange(
     RefPtr<Selection> selection = iter->second();
     selection->AddHighlightRangeAndSelectFramesAndNotifyListeners(aRange);
   } else {
-    AddHighlightSelection(aHighlightName, aHighlight);
+    // if the selection does not exist yet, add all of its ranges and exit.
+    RefPtr<Selection> selection =
+        aHighlight.CreateHighlightSelection(aHighlightName, this);
+    mHighlightSelections.AppendElement(
+        CompactPair<RefPtr<nsAtom>, RefPtr<Selection>>(aHighlightName,
+                                                       std::move(selection)));
   }
 }
 
@@ -1784,8 +1720,8 @@ nsresult nsFrameSelection::ScrollSelectionIntoView(SelectionType aSelectionType,
 
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-  return sel->ScrollIntoView(aRegion, AxisScrollParams(vScroll),
-                             AxisScrollParams(), scrollFlags, mode);
+  return sel->ScrollIntoView(aRegion, ScrollAxis(vScroll), ScrollAxis(),
+                             scrollFlags, mode);
 }
 
 nsresult nsFrameSelection::RepaintSelection(SelectionType aSelectionType) {
@@ -1799,21 +1735,14 @@ nsresult nsFrameSelection::RepaintSelection(SelectionType aSelectionType) {
 
 // On macOS, update the selection cache to the new active selection
 // aka the current selection.
-// NOTE: On Linux and Windows, we don't need to run this because this just runs
-// nsHTMLCopyEncorder without updating the selection cache.  However, we run
-// this in the debug builds on Linux and Windows. See the comment of this macro
-// definition for the detail.
-#ifdef RUN_MAYBE_UPDATE_SELECTION_CACHE_REPAINT_SELECTION
+#ifdef XP_MACOSX
   // Check that we're in the an active window and, if this is Web content,
   // in the frontmost tab.
-  // XXX This is called when the selection blurs, see
-  // PresShell::FrameSelectionWillLoseFocus(). Cannot we skip doing this in that
-  // case?
   Document* doc = mPresShell->GetDocument();
   if (doc && IsInActiveTab(doc) && aSelectionType == SelectionType::eNormal) {
-    MaybeUpdateSelectionCacheOnRepaintSelection(sel);
+    UpdateSelectionCacheOnRepaintSelection(sel);
   }
-#endif  // #ifdef RUN_MAYBE_UPDATE_SELECTION_CACHE_REPAINT_SELECTION
+#endif
   return sel->Repaint(mPresShell->GetPresContext());
 }
 
@@ -1875,84 +1804,76 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
                                     SelectionIntoView aSelectionIntoView) {
   MOZ_ASSERT(aFrame);
 
-  if (!IsAvailable()) [[unlikely]] {
-    return NS_OK;
-  }
-
   // expected behavior for PageMove is to scroll AND move the caret
   // and remain relative position of the caret in view. see Bug 4302.
-
-  // find out where the caret is.
-  // we should know mDesiredCaretPos.mValue value of nsFrameSelection, but I
-  // haven't seen that behavior in other windows applications yet.
-  MOZ_DIAGNOSTIC_ASSERT(GetSelection(mozilla::SelectionType::eNormal));
-  const OwningNonNull<Selection> selection = NormalSelection();
 
   // Get the scroll container frame.  If aFrame is not scrollable, this is
   // nullptr.
   ScrollContainerFrame* scrollContainerFrame = aFrame->GetScrollTargetFrame();
-  const AutoWeakFrame scrollContainerFrameWeak(scrollContainerFrame);
+  // Get the scrolled frame.  If aFrame is not scrollable, this is aFrame
+  // itself.
+  nsIFrame* scrolledFrame =
+      scrollContainerFrame ? scrollContainerFrame->GetScrolledFrame() : aFrame;
+  if (!scrolledFrame) {
+    return NS_OK;
+  }
 
-  bool scrolledFrameIsInLimiter = true;
-  const auto offsets = [&]()
-                           MOZ_NEVER_INLINE_DEBUG -> nsIFrame::ContentOffsets {
-    // Get the scrolled frame.  If aFrame is not scrollable, this is aFrame
-    // itself.
-    nsIFrame* scrolledFrame = scrollContainerFrame
-                                  ? scrollContainerFrame->GetScrolledFrame()
-                                  : aFrame;
-    if (!scrolledFrame) [[unlikely]] {
-      return {};
+  // find out where the caret is.
+  // we should know mDesiredCaretPos.mValue value of nsFrameSelection, but I
+  // havent seen that behavior in other windows applications yet.
+  RefPtr<Selection> selection = &NormalSelection();
+  if (!selection) {
+    return NS_OK;
+  }
+
+  nsRect caretPos;
+  nsIFrame* caretFrame = nsCaret::GetGeometry(selection, &caretPos);
+  if (!caretFrame) {
+    return NS_OK;
+  }
+
+  // If the scrolled frame is outside of current selection limiter,
+  // we need to scroll the frame but keep moving selection in the limiter.
+  nsIFrame* frameToClick = scrolledFrame;
+  if (!NodeIsInLimiters(scrolledFrame->GetContent())) {
+    frameToClick = GetFrameToPageSelect();
+    if (NS_WARN_IF(!frameToClick)) {
+      return NS_OK;
     }
+  }
 
-    nsRect caretPos;
-    nsIFrame* caretFrame = nsCaret::GetGeometry(selection, &caretPos);
-    if (!caretFrame) [[unlikely]] {
-      return {};
-    }
-
-    // If the scrolled frame is outside of current selection limiter,
-    // we need to scroll the frame but keep moving selection in the limiter.
-    nsIFrame* frameToClick = scrolledFrame;
-    if (!NodeIsInLimiters(scrolledFrame->GetContent())) {
-      frameToClick = GetFrameToPageSelect();
-      scrolledFrameIsInLimiter = scrolledFrame == frameToClick;
-      if (NS_WARN_IF(!frameToClick)) {
-        return {};
-      }
-    }
-
-    if (scrollContainerFrame) {
-      // If there is a scrollable frame, adjust pseudo-click position with page
-      // scroll amount.
-      // XXX This may scroll more than one page if ScrollSelectionIntoView is
-      //     called later because caret may not fully visible.  E.g., if
-      //     clicking line will be visible only half height with scrolling
-      //     the frame, ScrollSelectionIntoView additionally scrolls to show
-      //     the caret entirely.
-      if (aForward) {
-        caretPos.y += scrollContainerFrame->GetPageScrollAmount().height;
-      } else {
-        caretPos.y -= scrollContainerFrame->GetPageScrollAmount().height;
-      }
+  if (scrollContainerFrame) {
+    // If there is a scrollable frame, adjust pseudo-click position with page
+    // scroll amount.
+    // XXX This may scroll more than one page if ScrollSelectionIntoView is
+    //     called later because caret may not fully visible.  E.g., if
+    //     clicking line will be visible only half height with scrolling
+    //     the frame, ScrollSelectionIntoView additionally scrolls to show
+    //     the caret entirely.
+    if (aForward) {
+      caretPos.y += scrollContainerFrame->GetPageScrollAmount().height;
     } else {
-      // Otherwise, adjust pseudo-click position with the frame size.
-      if (aForward) {
-        caretPos.y += frameToClick->GetSize().height;
-      } else {
-        caretPos.y -= frameToClick->GetSize().height;
-      }
+      caretPos.y -= scrollContainerFrame->GetPageScrollAmount().height;
     }
+  } else {
+    // Otherwise, adjust pseudo-click position with the frame size.
+    if (aForward) {
+      caretPos.y += frameToClick->GetSize().height;
+    } else {
+      caretPos.y -= frameToClick->GetSize().height;
+    }
+  }
 
-    caretPos += caretFrame->GetOffsetTo(frameToClick);
+  caretPos += caretFrame->GetOffsetTo(frameToClick);
 
-    // get a content at desired location
-    nsPoint desiredPoint;
-    desiredPoint.x = caretPos.x;
-    desiredPoint.y = caretPos.y + caretPos.height / 2;
-    return frameToClick->GetContentOffsetsFromPoint(desiredPoint);
-  }();
-  if (!offsets.content) [[unlikely]] {
+  // get a content at desired location
+  nsPoint desiredPoint;
+  desiredPoint.x = caretPos.x;
+  desiredPoint.y = caretPos.y + caretPos.height / 2;
+  nsIFrame::ContentOffsets offsets =
+      frameToClick->GetContentOffsetsFromPoint(desiredPoint);
+
+  if (!offsets.content) {
     // XXX Do we need to handle ScrollSelectionIntoView in this case?
     return NS_OK;
   }
@@ -1962,7 +1883,7 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
   {
     // We don't want any script to run until we check whether selection is
     // modified by HandleClick.
-    SelectionBatcher ensureNoSelectionChangeNotifications(selection.ref(),
+    SelectionBatcher ensureNoSelectionChangeNotifications(selection,
                                                           __FUNCTION__);
 
     RangeBoundary oldAnchor = selection->AnchorRef();
@@ -1982,7 +1903,7 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
       aSelectionIntoView == SelectionIntoView::IfChanged && !selectionChanged);
 
   // Then, scroll the given frame one page.
-  if (scrollContainerFrameWeak.IsAlive()) {
+  if (scrollContainerFrame) {
     // If we'll call ScrollSelectionIntoView later and selection wasn't
     // changed and we scroll outside of selection limiter, we shouldn't use
     // smooth scroll here because ScrollContainerFrame uses normal runnable,
@@ -1991,10 +1912,9 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
     // case, ScrollSelectionIntoView would scroll to show caret instead of
     // page scroll of an element outside selection limiter.
     ScrollMode scrollMode = doScrollSelectionIntoView && !selectionChanged &&
-                                    !scrolledFrameIsInLimiter
+                                    scrolledFrame != frameToClick
                                 ? ScrollMode::Instant
                                 : ScrollMode::Smooth;
-    MOZ_ASSERT(scrollContainerFrameWeak.GetFrame() == scrollContainerFrame);
     scrollContainerFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
                                    ScrollUnit::PAGES, scrollMode);
   }
@@ -2021,7 +1941,7 @@ nsresult nsFrameSelection::PhysicalMove(int16_t aDirection, int16_t aAmount,
   }
 
   // Check that parameters are safe
-  if (aDirection < 0 || aDirection > 3 || aAmount < 0 || aAmount > 2) {
+  if (aDirection < 0 || aDirection > 3 || aAmount < 0 || aAmount > 1) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2084,21 +2004,6 @@ nsresult nsFrameSelection::PhysicalMove(int16_t aDirection, int16_t aAmount,
     }
   }
 
-  if (aAmount == 2) {
-    // Amount 2 is visual intra-line movement (move to line edge).
-    // Determine the logical forward direction from the physical direction
-    // and the writing mode's bidi direction, then use IntraLineMove which
-    // handles eLogical movement correctly.
-    bool isLeftOrUp = (aDirection == nsISelectionController::MOVE_LEFT ||
-                       aDirection == nsISelectionController::MOVE_UP);
-    // In LTR, left/up = backward (beginning), right/down = forward (end).
-    // In RTL, left/up = forward (end), right/down = backward (beginning).
-    bool forward = wm.IsBidiRTL() ? isLeftOrUp : !isLeftOrUp;
-    return IntraLineMove(forward, aExtend);
-  }
-
-  MOZ_ASSERT(aAmount <= 1, "aAmount == 2 should have been handled above");
-
   const PhysicalToLogicalMapping& mapping =
       wm.IsVertical()
           ? wm.IsVerticalLR() ? verticalLR[aDirection] : verticalRL[aDirection]
@@ -2148,11 +2053,6 @@ nsresult nsFrameSelection::IntraLineMove(bool aForward, bool aExtend) {
   }
   return MoveCaret(eDirPrevious, ExtendSelection(aExtend), eSelectBeginLine,
                    eLogical);
-}
-
-nsresult nsFrameSelection::ParagraphMove(bool aForward, bool aExtend) {
-  return MoveCaret(aForward ? eDirNext : eDirPrevious, ExtendSelection(aExtend),
-                   eSelectParagraph, eLogical);
 }
 
 // static
@@ -3227,7 +3127,7 @@ void nsFrameSelection::DisconnectFromPresShell() {
   }
 }
 
-#ifdef RUN_MAYBE_UPDATE_SELECTION_CACHE_REPAINT_SELECTION
+#ifdef XP_MACOSX
 /**
  * See Bug 1288453.
  *
@@ -3247,7 +3147,7 @@ void nsFrameSelection::DisconnectFromPresShell() {
  * If the current selection is empty. The current selection cache
  * would be cleared by AutoCopyListener::OnSelectionChange().
  */
-static nsresult MaybeUpdateSelectionCacheOnRepaintSelection(Selection* aSel) {
+static nsresult UpdateSelectionCacheOnRepaintSelection(Selection* aSel) {
   PresShell* presShell = aSel->GetPresShell();
   if (!presShell) {
     return NS_OK;
@@ -3256,21 +3156,12 @@ static nsresult MaybeUpdateSelectionCacheOnRepaintSelection(Selection* aSel) {
 
   if (aDoc && aSel && !aSel->IsCollapsed()) {
     return nsCopySupport::EncodeDocumentWithContextAndPutToClipboard(
-        aSel, aDoc, nsIClipboard::kSelectionCache, false,
-#  ifdef XP_MACOSX
-        // Update the selection cache on macOS
-        nsCopySupport::UpdateClipboard::Yes
-#  else
-        // Do not update the clipboard on the other platforms, just run the
-        // serializer to detect assertion failures.
-        nsCopySupport::UpdateClipboard::No
-#  endif
-    );
+        aSel, aDoc, nsIClipboard::kSelectionCache, false);
   }
 
   return NS_OK;
 }
-#endif  // RUN_MAYBE_UPDATE_SELECTION_CACHE_REPAINT_SELECTION
+#endif  // XP_MACOSX
 
 // mozilla::AutoCopyListener
 

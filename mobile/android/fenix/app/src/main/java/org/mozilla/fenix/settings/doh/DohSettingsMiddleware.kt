@@ -7,11 +7,13 @@ package org.mozilla.fenix.settings.doh
 import androidx.navigation.NavController
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 
 internal class DohSettingsMiddleware(
     private val getNavController: () -> NavController,
     private val getSettingsProvider: () -> DohSettingsProvider,
-    private val openUrlInBrowser: (String) -> Unit,
+    private val getHomeActivity: () -> HomeActivity,
     private val exitDohSettings: () -> Unit,
 ) : Middleware<DohSettingsState, DohSettingsAction> {
 
@@ -43,7 +45,11 @@ internal class DohSettingsMiddleware(
             }
 
             is LearnMoreClicked -> {
-                openUrlInBrowser(action.url)
+                getHomeActivity().openToBrowserAndLoad(
+                    searchTermOrURL = action.url,
+                    newTab = true,
+                    from = BrowserDirection.FromDnsOverHttps,
+                )
             }
 
             is DohSettingsRootAction.ExceptionsClicked -> {

@@ -47,7 +47,6 @@
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::Field;
-using ::testing::Property;
 using ::testing::Return;
 
 namespace webrtc {
@@ -102,10 +101,10 @@ class SimulcastTestFixtureImpl::TestEncodedImageCallback
     bool is_h264 = (codec_specific_info->codecType == kVideoCodecH264);
     // Only store the base layer.
     if (encoded_image.SimulcastIndex().value_or(0) == 0) {
-      if (encoded_image.IsKey()) {
+      if (encoded_image._frameType == VideoFrameType::kVideoFrameKey) {
         encoded_key_frame_.SetEncodedData(EncodedImageBuffer::Create(
             encoded_image.data(), encoded_image.size()));
-        encoded_key_frame_.set_frame_type(VideoFrameType::kVideoFrameKey);
+        encoded_key_frame_._frameType = VideoFrameType::kVideoFrameKey;
       } else {
         encoded_frame_.SetEncodedData(EncodedImageBuffer::Create(
             encoded_image.data(), encoded_image.size()));
@@ -124,11 +123,6 @@ class SimulcastTestFixtureImpl::TestEncodedImageCallback
     }
     return Result(Result::OK, encoded_image.RtpTimestamp());
   }
-
-  void OnFrameDropped(uint32_t /*rtp_timestamp*/,
-                      int /*spatial_id*/,
-                      bool /*is_end_of_temporal_unit*/) override {}
-
   // This method only makes sense for VP8.
   void GetLastEncodedFrameInfo(int* temporal_layer,
                                bool* layer_sync,
@@ -374,7 +368,7 @@ void SimulcastTestFixtureImpl::ExpectStream(VideoFrameType frame_type,
                                             int scaleResolutionDownBy) {
   EXPECT_CALL(
       encoder_callback_,
-      OnEncodedImage(AllOf(Property(&EncodedImage::frame_type, frame_type),
+      OnEncodedImage(AllOf(Field(&EncodedImage::_frameType, frame_type),
                            Field(&EncodedImage::_encodedWidth,
                                  kDefaultWidth / scaleResolutionDownBy),
                            Field(&EncodedImage::_encodedHeight,
@@ -718,8 +712,8 @@ void SimulcastTestFixtureImpl::SwitchingToOneStream(int width, int height) {
                                           VideoFrameType::kVideoFrameDelta);
   EXPECT_CALL(
       encoder_callback_,
-      OnEncodedImage(AllOf(Property(&EncodedImage::frame_type,
-                                    VideoFrameType::kVideoFrameKey),
+      OnEncodedImage(AllOf(Field(&EncodedImage::_frameType,
+                                 VideoFrameType::kVideoFrameKey),
                            Field(&EncodedImage::_encodedWidth, width),
                            Field(&EncodedImage::_encodedHeight, height)),
                      _))
@@ -947,46 +941,48 @@ void SimulcastTestFixtureImpl::TestDecodeWidthHeightSet() {
 
   EXPECT_CALL(encoder_callback, OnEncodedImage(_, _))
       .Times(3)
-      .WillRepeatedly(
+      .WillRepeatedly(::testing::Invoke(
           [&](const EncodedImage& encoded_image,
               const CodecSpecificInfo* /* codec_specific_info */) {
-            EXPECT_EQ(encoded_image.frame_type(),
-                      VideoFrameType::kVideoFrameKey);
+            EXPECT_EQ(encoded_image._frameType, VideoFrameType::kVideoFrameKey);
 
             size_t index = encoded_image.SimulcastIndex().value_or(0);
             encoded_frame[index].SetEncodedData(EncodedImageBuffer::Create(
                 encoded_image.data(), encoded_image.size()));
-            encoded_frame[index].set_frame_type(encoded_image.frame_type());
+            encoded_frame[index]._frameType = encoded_image._frameType;
             return EncodedImageCallback::Result(
                 EncodedImageCallback::Result::OK, 0);
-          });
+          }));
   EXPECT_EQ(0, encoder_->Encode(*input_frame_, nullptr));
 
   EXPECT_CALL(decoder_callback, Decoded(_, _, _))
-      .WillOnce([](VideoFrame& decodedImage,
-                   std::optional<int32_t> /* decode_time_ms */,
-                   std::optional<uint8_t> /* qp */) {
-        EXPECT_EQ(decodedImage.width(), kDefaultWidth / 4);
-        EXPECT_EQ(decodedImage.height(), kDefaultHeight / 4);
-      });
+      .WillOnce(
+          ::testing::Invoke([](VideoFrame& decodedImage,
+                               std::optional<int32_t> /* decode_time_ms */,
+                               std::optional<uint8_t> /* qp */) {
+            EXPECT_EQ(decodedImage.width(), kDefaultWidth / 4);
+            EXPECT_EQ(decodedImage.height(), kDefaultHeight / 4);
+          }));
   EXPECT_EQ(0, decoder_->Decode(encoded_frame[0], 0));
 
   EXPECT_CALL(decoder_callback, Decoded(_, _, _))
-      .WillOnce([](VideoFrame& decodedImage,
-                   std::optional<int32_t> /* decode_time_ms */,
-                   std::optional<uint8_t> /* qp */) {
-        EXPECT_EQ(decodedImage.width(), kDefaultWidth / 2);
-        EXPECT_EQ(decodedImage.height(), kDefaultHeight / 2);
-      });
+      .WillOnce(
+          ::testing::Invoke([](VideoFrame& decodedImage,
+                               std::optional<int32_t> /* decode_time_ms */,
+                               std::optional<uint8_t> /* qp */) {
+            EXPECT_EQ(decodedImage.width(), kDefaultWidth / 2);
+            EXPECT_EQ(decodedImage.height(), kDefaultHeight / 2);
+          }));
   EXPECT_EQ(0, decoder_->Decode(encoded_frame[1], 0));
 
   EXPECT_CALL(decoder_callback, Decoded(_, _, _))
-      .WillOnce([](VideoFrame& decodedImage,
-                   std::optional<int32_t> /* decode_time_ms */,
-                   std::optional<uint8_t> /* qp */) {
-        EXPECT_EQ(decodedImage.width(), kDefaultWidth);
-        EXPECT_EQ(decodedImage.height(), kDefaultHeight);
-      });
+      .WillOnce(
+          ::testing::Invoke([](VideoFrame& decodedImage,
+                               std::optional<int32_t> /* decode_time_ms */,
+                               std::optional<uint8_t> /* qp */) {
+            EXPECT_EQ(decodedImage.width(), kDefaultWidth);
+            EXPECT_EQ(decodedImage.height(), kDefaultHeight);
+          }));
   EXPECT_EQ(0, decoder_->Decode(encoded_frame[2], 0));
 }
 

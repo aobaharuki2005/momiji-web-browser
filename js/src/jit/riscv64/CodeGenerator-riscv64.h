@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -27,6 +29,10 @@ class CodeGeneratorRiscv64 : public CodeGeneratorShared {
 
   NonAssertingLabel deoptLabel_;
 
+  Operand ToOperand(const LAllocation& a);
+  Operand ToOperand(const LAllocation* a);
+  Operand ToOperand(const LDefinition* def);
+
   MoveOperand toMoveOperand(LAllocation a) const;
 
   template <typename T1, typename T2>
@@ -54,7 +60,7 @@ class CodeGeneratorRiscv64 : public CodeGeneratorShared {
     Label bail;
     UseScratchRegisterScope temps(&masm);
     Register scratch = temps.Acquire();
-    masm.andi(scratch, reg, 0xFF);
+    masm.ma_and(scratch, reg, Imm32(0xFF));
     masm.ma_b(scratch, scratch, &bail, Assembler::Zero);
     bailoutFrom(&bail, snapshot);
   }
@@ -69,8 +75,6 @@ class CodeGeneratorRiscv64 : public CodeGeneratorShared {
                      Assembler::Condition cond) {
     masm.ma_b(lhs, rhs, skipTrivialBlocks(mir)->lir()->label(), cond);
   }
-
-  enum FloatFormat { SingleFloat, DoubleFloat };
   void branchToBlock(FloatFormat fmt, FloatRegister lhs, FloatRegister rhs,
                      MBasicBlock* mir, Assembler::DoubleCondition cond);
 
@@ -89,6 +93,11 @@ class CodeGeneratorRiscv64 : public CodeGeneratorShared {
 
   void emitTableSwitchDispatch(MTableSwitch* mir, Register index,
                                Register base);
+
+  template <typename T>
+  void emitWasmLoad(T* ins);
+  template <typename T>
+  void emitWasmStore(T* ins);
 
   void generateInvalidateEpilogue();
 
@@ -122,6 +131,8 @@ class CodeGeneratorRiscv64 : public CodeGeneratorShared {
                         Register output);
   void emitBigIntPtrMod(LBigIntPtrMod* ins, Register dividend, Register divisor,
                         Register output);
+
+  void emitMulI64(Register lhs, int64_t rhs, Register dest);
 };
 
 typedef CodeGeneratorRiscv64 CodeGeneratorSpecific;

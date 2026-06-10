@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -8,7 +10,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/EnumSet.h"
 
-#include <compare>
 #include <initializer_list>
 #include <stddef.h>
 #include <stdint.h>
@@ -88,14 +89,32 @@ class MonthCode final {
 
   constexpr bool isLeapMonth() const { return code_ >= Code::M01L; }
 
-  constexpr auto operator<=>(const MonthCode& other) const {
-    if (ordinal() != other.ordinal()) {
-      return ordinal() <=> other.ordinal();
-    }
-    return code_ <=> other.code_;
+  constexpr bool operator==(const MonthCode& other) const {
+    return other.code_ == code_;
   }
 
-  constexpr bool operator==(const MonthCode&) const = default;
+  constexpr bool operator!=(const MonthCode& other) const {
+    return !(*this == other);
+  }
+
+  constexpr bool operator<(const MonthCode& other) const {
+    if (ordinal() != other.ordinal()) {
+      return ordinal() < other.ordinal();
+    }
+    return code_ < other.code_;
+  }
+
+  constexpr bool operator>(const MonthCode& other) const {
+    return other < *this;
+  }
+
+  constexpr bool operator<=(const MonthCode& other) const {
+    return !(other < *this);
+  }
+
+  constexpr bool operator>=(const MonthCode& other) const {
+    return !(*this < other);
+  }
 
   constexpr explicit operator std::string_view() const {
     constexpr const char* name =

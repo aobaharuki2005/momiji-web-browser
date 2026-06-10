@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 let nf1 = new Intl.NumberFormat("en", {useGrouping: "true"});
 assertEq(nf1.format(1000), "1,000");
 

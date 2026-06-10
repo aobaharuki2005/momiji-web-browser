@@ -216,7 +216,7 @@ export var SiteDataTestUtils = {
 
     let registrationBrowsingContext = browser.browsingContext;
 
-    let { SpecialPowers } = browser.documentGlobal;
+    let { SpecialPowers } = browser.ownerGlobal;
 
     // If caller requested a partitioned service worker create an iframe to
     // register the SW in.

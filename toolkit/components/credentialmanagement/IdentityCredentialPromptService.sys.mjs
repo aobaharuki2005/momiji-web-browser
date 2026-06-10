@@ -300,7 +300,7 @@ export class IdentityCredentialPromptService {
       browser.ownerDocument.getElementById(
         "identity-credential-header"
       ).hidden = true;
-      browser.documentGlobal.PopupNotifications.show(
+      browser.ownerGlobal.PopupNotifications.show(
         browser,
         "identity-credential",
         headerMessage,
@@ -550,7 +550,7 @@ export class IdentityCredentialPromptService {
       browser.ownerDocument.getElementById(
         "identity-credential-header"
       ).hidden = false;
-      browser.documentGlobal.PopupNotifications.show(
+      browser.ownerGlobal.PopupNotifications.show(
         browser,
         "identity-credential",
         "",
@@ -573,16 +573,12 @@ export class IdentityCredentialPromptService {
     if (!browser || AppConstants.platform === "android") {
       return;
     }
-    let notification =
-      browser.documentGlobal.PopupNotifications.getNotification(
-        "identity-credential",
-        browser
-      );
+    let notification = browser.ownerGlobal.PopupNotifications.getNotification(
+      "identity-credential",
+      browser
+    );
     if (notification) {
-      browser.documentGlobal.PopupNotifications.remove(
-        notification,
-        /* withoutUserResponse = */ true
-      );
+      browser.ownerGlobal.PopupNotifications.remove(notification, true);
     }
   }
 }

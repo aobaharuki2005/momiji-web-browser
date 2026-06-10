@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,7 +12,9 @@
 #include <shlwapi.h>
 #include <stdint.h>
 
-#include "AOMDecoder.h"
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "MP4Decoder.h"
 #include "VPXDecoder.h"
 #include "VideoUtils.h"
@@ -67,9 +71,11 @@ WMFStreamType GetStreamTypeFromMimeType(const nsCString& aMimeType) {
   if (VPXDecoder::IsVP9(aMimeType)) {
     return WMFStreamType::VP9;
   }
+#ifdef MOZ_AV1
   if (AOMDecoder::IsAV1(aMimeType)) {
     return WMFStreamType::AV1;
   }
+#endif
   if (MP4Decoder::IsHEVC(aMimeType)) {
     return WMFStreamType::HEVC;
   }
@@ -349,9 +355,11 @@ GUID VideoMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType) {
   if (VPXDecoder::IsVP9(aMimeType)) {
     return MFVideoFormat_VP90;
   }
+#ifdef MOZ_AV1
   if (AOMDecoder::IsAV1(aMimeType)) {
     return MFVideoFormat_AV1;
   }
+#endif
   if (MP4Decoder::IsHEVC(aMimeType)) {
     return MFVideoFormat_HEVC;
   }

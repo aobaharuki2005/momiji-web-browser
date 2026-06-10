@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -151,16 +153,14 @@ class GCParallelTask : private mozilla::LinkedListElement<GCParallelTask>,
   // Time spent in the most recent invocation of this task.
   mozilla::TimeDuration duration() const { return duration_; }
 
-  // Queue a task to be run on a background thread.
+  // The simple interface to a parallel task works exactly like pthreads.
   void start();
-
-  // Wait for a task to finish or return false if it had not been started.
-  bool join(mozilla::Maybe<mozilla::TimeStamp> deadline = mozilla::Nothing());
+  void join(mozilla::Maybe<mozilla::TimeStamp> deadline = mozilla::Nothing());
 
   // If multiple tasks are to be started or joined at once, it is more
   // efficient to take the helper thread lock once and use these methods.
   void startWithLockHeld(AutoLockHelperThreadState& lock);
-  bool joinWithLockHeld(
+  void joinWithLockHeld(
       AutoLockHelperThreadState& lock,
       mozilla::Maybe<mozilla::TimeStamp> deadline = mozilla::Nothing());
 
@@ -172,9 +172,8 @@ class GCParallelTask : private mozilla::LinkedListElement<GCParallelTask>,
   // thread if that fails.
   void startOrRunIfIdle(AutoLockHelperThreadState& lock);
 
-  // Set the cancel flag and wait for the task to finish. Return false if the
-  // task had not been started.
-  bool cancelAndWait();
+  // Set the cancel flag and wait for the task to finish.
+  void cancelAndWait();
 
   // Report whether the task is idle. This means either before start() has been
   // called or after join() has been called.

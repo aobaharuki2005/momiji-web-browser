@@ -6,6 +6,7 @@ package mozilla.components.service.fxa.store
 
 import mozilla.components.concept.sync.Avatar
 import mozilla.components.concept.sync.ConstellationState
+import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.lib.state.State
 import mozilla.components.service.fxa.manager.AccountState
@@ -22,7 +23,7 @@ import mozilla.components.service.fxa.sync.WorkManagerSyncManager
 data class SyncState(
     val status: SyncStatus = SyncStatus.NotInitialized,
     val account: Account? = null,
-    val accountState: AccountState = AccountState.Unknown,
+    val accountState: AccountState = AccountState.NotAuthenticated,
     val constellationState: ConstellationState? = null,
 ) : State
 
@@ -52,10 +53,14 @@ enum class SyncStatus {
  * @property email See [Profile.email].
  * @property avatar See [Profile.avatar].
  * @property displayName See [Profile.displayName].
+ * @property currentDeviceId See [OAuthAccount.getCurrentDeviceId].
+ * @property sessionToken See [OAuthAccount.getSessionToken].
  */
 data class Account(
     val uid: String?,
     val email: String?,
     val avatar: Avatar?,
     val displayName: String?,
+    val currentDeviceId: String?,
+    val sessionToken: String?,
 )

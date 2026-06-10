@@ -19,9 +19,6 @@ import org.mozilla.focus.session.VisibilityLifeCycleCallback
 import org.mozilla.focus.state.AppAction
 import mozilla.components.ui.icons.R as iconsR
 
-/**
- * Widget provider implementation for the Focus search widget.
- */
 class SearchWidgetProvider : AppSearchWidgetProvider() {
 
     override fun onEnabled(context: Context) {

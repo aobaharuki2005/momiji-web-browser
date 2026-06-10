@@ -78,7 +78,7 @@ class YuvFileGenerator : public FrameGeneratorInterface {
                    size_t height,
                    int frame_repeat_count);
 
-  ~YuvFileGenerator() override;
+  ~YuvFileGenerator();
 
   VideoFrameData NextFrame() override;
   void ChangeResolution(size_t width, size_t height) override {
@@ -112,7 +112,7 @@ class NV12FileGenerator : public FrameGeneratorInterface {
                     size_t height,
                     int frame_repeat_count);
 
-  ~NV12FileGenerator() override;
+  ~NV12FileGenerator();
 
   VideoFrameData NextFrame() override;
   void ChangeResolution(size_t width, size_t height) override {

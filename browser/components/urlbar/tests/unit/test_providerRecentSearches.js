@@ -38,17 +38,17 @@ async function addSearches(searches = TEST_SEARCHES) {
 
 add_setup(async () => {
   defaultEngine = await addTestSuggestionsEngine();
-  await SearchService.setDefault(
+  await Services.search.setDefault(
     defaultEngine,
-    SearchService.CHANGE_REASON.ADDON_INSTALL
+    Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
   );
 
-  let oldCurrentEngine = SearchService.defaultEngine;
+  let oldCurrentEngine = Services.search.defaultEngine;
 
   registerCleanupFunction(async () => {
-    await SearchService.setDefault(
+    await Services.search.setDefault(
       oldCurrentEngine,
-      SearchService.CHANGE_REASON.ADDON_INSTALL
+      Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
     );
     UrlbarPrefs.clear(ENABLED_PREF);
     UrlbarPrefs.clear(SUGGESTS_PREF);
@@ -73,22 +73,10 @@ add_task(async function test_enabled() {
 add_task(async function test_disabled() {
   UrlbarPrefs.set(ENABLED_PREF, false);
   UrlbarPrefs.set(SUGGESTS_PREF, false);
-  info("Check whether prefs disable it in urlbar");
   await addSearches();
   await check_results({
     context: createContext("", { isPrivate: false }),
     matches: [],
-  });
-
-  info("Check whether prefs don't disable it in searchbar");
-  let context = createContext("", { isPrivate: false, sapName: "searchbar" });
-  await check_results({
-    context,
-    matches: [
-      makeRecentSearchResult(context, defaultEngine, "Joy Formidable"),
-      makeRecentSearchResult(context, defaultEngine, "Glasgow Weather"),
-      makeRecentSearchResult(context, defaultEngine, "Bob Vylan"),
-    ],
   });
 });
 
@@ -111,33 +99,6 @@ add_task(async function test_most_recent_shown() {
   await UrlbarTestUtils.formHistory.clear();
 });
 
-add_task(async function test_most_recent_shown_searchbar() {
-  UrlbarPrefs.set(ENABLED_PREF, true);
-  UrlbarPrefs.set(SUGGESTS_PREF, true);
-
-  info(
-    "Check that browser.urlbar.recentsearches.maxResults doesn't affect the search bar"
-  );
-  await addSearches(Array.from(Array(12).keys()).map(i => `Search ${i}`));
-  let context = createContext("", { isPrivate: false, sapName: "searchbar" });
-  await check_results({
-    context,
-    matches: [
-      makeRecentSearchResult(context, defaultEngine, "Search 11"),
-      makeRecentSearchResult(context, defaultEngine, "Search 10"),
-      makeRecentSearchResult(context, defaultEngine, "Search 9"),
-      makeRecentSearchResult(context, defaultEngine, "Search 8"),
-      makeRecentSearchResult(context, defaultEngine, "Search 7"),
-      makeRecentSearchResult(context, defaultEngine, "Search 6"),
-      makeRecentSearchResult(context, defaultEngine, "Search 5"),
-      makeRecentSearchResult(context, defaultEngine, "Search 4"),
-      makeRecentSearchResult(context, defaultEngine, "Search 3"),
-      makeRecentSearchResult(context, defaultEngine, "Search 2"),
-    ],
-  });
-  await UrlbarTestUtils.formHistory.clear();
-});
-
 add_task(async function test_per_engine() {
   UrlbarPrefs.set(ENABLED_PREF, true);
   UrlbarPrefs.set(SUGGESTS_PREF, true);
@@ -148,9 +109,9 @@ add_task(async function test_per_engine() {
   defaultEngine = await addTestSuggestionsEngine(null, {
     name: "NewTestEngine",
   });
-  await SearchService.setDefault(
+  await Services.search.setDefault(
     defaultEngine,
-    SearchService.CHANGE_REASON.ADDON_INSTALL
+    Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
   );
 
   await addSearches();
@@ -167,10 +128,10 @@ add_task(async function test_per_engine() {
     ],
   });
 
-  [defaultEngine, oldEngine] = [oldEngine, defaultEngine];
-  await SearchService.setDefault(
+  defaultEngine = oldEngine;
+  await Services.search.setDefault(
     defaultEngine,
-    SearchService.CHANGE_REASON.ADDON_INSTALL
+    Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
   );
 
   info("We only show searches made since last default engine change");
@@ -178,33 +139,6 @@ add_task(async function test_per_engine() {
   await check_results({
     context,
     matches: [],
-  });
-  info("We show recent searches of all engines in the searchbar");
-  context = createContext("", {
-    isPrivate: false,
-    sapName: "searchbar",
-  });
-  await check_results({
-    context,
-    matches: [
-      makeRecentSearchResult(context, defaultEngine, "Joy Formidable"),
-      makeRecentSearchResult(context, defaultEngine, "Glasgow Weather"),
-      makeRecentSearchResult(context, defaultEngine, "Bob Vylan"),
-    ],
-  });
-  info("Use engine from searchmode in searchbar");
-  context = createContext("", {
-    isPrivate: false,
-    sapName: "searchbar",
-    searchMode: { engineName: oldEngine.name },
-  });
-  await check_results({
-    context,
-    matches: [
-      makeRecentSearchResult(context, oldEngine, "Joy Formidable"),
-      makeRecentSearchResult(context, oldEngine, "Glasgow Weather"),
-      makeRecentSearchResult(context, oldEngine, "Bob Vylan"),
-    ],
   });
   await UrlbarTestUtils.formHistory.clear();
 });
@@ -231,15 +165,5 @@ add_task(async function test_expiry() {
   await check_results({
     context: createContext("", { isPrivate: false }),
     matches: [],
-  });
-
-  // On the searchbar, EXPIRE_PREF should be ignored.
-  await check_results({
-    context: createContext("", { isPrivate: false, sapName: "searchbar" }),
-    matches: [
-      makeRecentSearchResult(context, defaultEngine, "Joy Formidable"),
-      makeRecentSearchResult(context, defaultEngine, "Glasgow Weather"),
-      makeRecentSearchResult(context, defaultEngine, "Bob Vylan"),
-    ],
   });
 });

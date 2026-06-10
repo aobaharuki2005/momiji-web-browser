@@ -7,8 +7,6 @@ package mozilla.components.service.sync.logins
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.WorkManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -24,8 +22,6 @@ import mozilla.components.concept.storage.KeyGenerationReason
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginsStorage
-import mozilla.components.concept.storage.constraints
-import mozilla.components.concept.storage.periodicStorageWorkRequest
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.base.log.logger.Logger
@@ -56,6 +52,14 @@ typealias SyncTelemetryPing = mozilla.appservices.sync15.SyncTelemetryPing
  * concrete `LoginsApiException`.
  */
 typealias LoginsApiException = mozilla.appservices.logins.LoginsApiException
+
+/**
+ * This indicates that the authentication information (e.g. the [SyncUnlockInfo])
+ * provided to [AsyncLoginsStorage.sync] is invalid. This often indicates that it's
+ * stale and should be refreshed with FxA (however, care should be taken not to
+ * get into a loop refreshing this information).
+ */
+typealias SyncAuthInvalidException = mozilla.appservices.logins.LoginsApiException.SyncAuthInvalid
 
 /**
  * This is thrown if `update()` is performed with a record whose GUID
@@ -125,13 +129,9 @@ class SyncableLoginsStorage(
     /**
      * "Warms up" this storage layer by establishing the database connection.
      */
-    override suspend fun warmUp() = withContext(coroutineContext) {
+    suspend fun warmUp() = withContext(coroutineContext) {
         logElapsedTime(logger, "Warming up storage") { conn.await() }
         Unit
-    }
-
-    override suspend fun runMaintenance(dbSizeLimit: UInt) {
-         getStorage().runMaintenance()
     }
 
     /**
@@ -178,16 +178,6 @@ class SyncableLoginsStorage(
     @Throws(LoginsApiException::class)
     override suspend fun list(): List<Login> = withContext(coroutineContext) {
         tryWithStorageOr(listOf()) { list().map { it.toLogin() } }
-    }
-
-    /**
-     * Counts logins in the database.
-     * @throws [LoginsApiException] if the storage is locked, and on unexpected
-     *              errors (IO failure, rust panics, etc)
-     */
-    @Throws(LoginsApiException::class)
-    override suspend fun count(): Long = withContext(coroutineContext) {
-        getStorage().count()
     }
 
     /**
@@ -288,31 +278,6 @@ class SyncableLoginsStorage(
                 deleteUndecryptableLoginsAndRecordMetrics()
             }
             prefs.edit { putInt(UNDECRYPTABLE_LOGINS_CLEANED_KEY, ++cleanedPref) }
-        }
-    }
-
-    /**
-     * Enqueues a periodic storage maintenance worker to WorkManager.
-     */
-    override fun registerStorageMaintenanceWorker() {
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-            SyncableLoginsStorageWorker.UNIQUE_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
-            periodicStorageWorkRequest<SyncableLoginsStorageWorker>(
-                tag = SyncableLoginsStorageWorker.UNIQUE_NAME,
-            ) {
-                constraints {
-                    setRequiresBatteryNotLow(true)
-                    setRequiresDeviceIdle(true)
-                }
-            },
-        )
-    }
-
-    override fun unregisterStorageMaintenanceWorker(uniqueWorkName: String) {
-        WorkManager.getInstance(context).also {
-            it.cancelUniqueWork(SyncableLoginsStorageWorker.UNIQUE_NAME)
-            it.cancelAllWorkByTag(SyncableLoginsStorageWorker.UNIQUE_NAME)
         }
     }
 }

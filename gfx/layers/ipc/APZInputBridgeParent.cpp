@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,15 +16,16 @@ namespace mozilla {
 namespace layers {
 
 /* static */
-void APZInputBridgeParent::Create(const LayersId& aLayersId,
-                                  Endpoint<PAPZInputBridgeParent>&& aEndpoint) {
-  auto parent = MakeRefPtr<APZInputBridgeParent>(aLayersId);
+APZInputBridgeParent* APZInputBridgeParent::Create(
+    const LayersId& aLayersId, Endpoint<PAPZInputBridgeParent>&& aEndpoint) {
+  APZInputBridgeParent* parent = new APZInputBridgeParent(aLayersId);
   if (!aEndpoint.Bind(parent)) {
     // We can't recover from this.
     MOZ_CRASH("Failed to bind APZInputBridgeParent to endpoint");
   }
 
-  CompositorBridgeParent::SetAPZInputBridgeParent(aLayersId, std::move(parent));
+  CompositorBridgeParent::SetAPZInputBridgeParent(aLayersId, parent);
+  return parent;
 }
 
 APZInputBridgeParent::APZInputBridgeParent(const LayersId& aLayersId) {
@@ -52,7 +55,7 @@ mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceiveMultiTouchInputEvent(
 
   *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(
       event, std::move(callback));
-  *aOutEvent = std::move(event);
+  *aOutEvent = event;
 
   return IPC_OK();
 }
@@ -73,7 +76,7 @@ mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceiveMouseInputEvent(
 
   *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(
       event, std::move(callback));
-  *aOutEvent = std::move(event);
+  *aOutEvent = event;
 
   return IPC_OK();
 }
@@ -94,7 +97,7 @@ mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceivePanGestureInputEvent(
 
   *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(
       event, std::move(callback));
-  *aOutEvent = std::move(event);
+  *aOutEvent = event;
 
   return IPC_OK();
 }
@@ -115,7 +118,7 @@ mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceivePinchGestureInputEvent(
 
   *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(
       event, std::move(callback));
-  *aOutEvent = std::move(event);
+  *aOutEvent = event;
 
   return IPC_OK();
 }
@@ -136,7 +139,7 @@ mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceiveTapGestureInputEvent(
 
   *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(
       event, std::move(callback));
-  *aOutEvent = std::move(event);
+  *aOutEvent = event;
 
   return IPC_OK();
 }
@@ -157,7 +160,7 @@ mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceiveScrollWheelInputEvent(
 
   *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(
       event, std::move(callback));
-  *aOutEvent = std::move(event);
+  *aOutEvent = event;
 
   return IPC_OK();
 }
@@ -178,7 +181,7 @@ mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceiveKeyboardInputEvent(
 
   *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(
       event, std::move(callback));
-  *aOutEvent = std::move(event);
+  *aOutEvent = event;
 
   return IPC_OK();
 }

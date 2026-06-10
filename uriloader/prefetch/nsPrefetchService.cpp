@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -204,15 +205,16 @@ nsPrefetchNode::OnStartRequest(nsIRequest* aRequest) {
     return NS_BINDING_ABORTED;
   }
 
+  //
+  // no need to prefetch a document that must be requested fresh each
+  // and every time.
+  //
   uint32_t expTime;
   if (NS_SUCCEEDED(cacheInfoChannel->GetCacheTokenExpirationTime(&expTime))) {
-    // expTime == 0 means the response has a MustValidate directive (no-cache,
-    // no-store, Expires in past). These cannot be reused from cache so we
-    // cancel to avoid wasting bandwidth. Responses with no explicit cache
-    // headers get expTime = now (non-zero) and are handled by ForceValidFor
-    // in nsHttpChannel (bug 1527334).
-    if (expTime == 0) {
-      LOG(("document cannot be reused from cache; canceling prefetch\n"));
+    if (mozilla::net::NowInSeconds() >= expTime) {
+      LOG(
+          ("document cannot be reused from cache; "
+           "canceling prefetch\n"));
       return NS_BINDING_ABORTED;
     }
   }
@@ -437,7 +439,7 @@ void nsPrefetchService::DispatchEvent(nsPrefetchNode* node, bool aSuccess) {
       // We don't dispatch synchronously since |node| might be in a DocGroup
       // that we're not allowed to touch. (Our network request happens in the
       // DocGroup of one of the mSources nodes--not necessarily this one).
-      RefPtr dispatcher = MakeRefPtr<AsyncEventDispatcher>(
+      RefPtr<AsyncEventDispatcher> dispatcher = new AsyncEventDispatcher(
           domNode, aSuccess ? u"load"_ns : u"error"_ns, CanBubble::eNo);
       dispatcher->RequireNodeInDocument();
       dispatcher->PostDOMEvent();
@@ -466,8 +468,8 @@ nsresult nsPrefetchService::EnqueueURI(nsIURI* aURI,
                                        nsIReferrerInfo* aReferrerInfo,
                                        nsINode* aSource,
                                        nsPrefetchNode** aNode) {
-  RefPtr node = MakeRefPtr<nsPrefetchNode>(this, aURI, aReferrerInfo, aSource,
-                                           nsIContentPolicy::TYPE_OTHER, false);
+  RefPtr<nsPrefetchNode> node = new nsPrefetchNode(
+      this, aURI, aReferrerInfo, aSource, nsIContentPolicy::TYPE_OTHER, false);
   mPrefetchQueue.push_back(node);
   node.forget(aNode);
   return NS_OK;

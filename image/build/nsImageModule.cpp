@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,7 +25,6 @@ struct ImageEnablementCookie {
   const nsLiteralCString mMimeType;
 };
 
-#ifdef MOZ_JXL
 static void UpdateDocumentViewerRegistration(const char* aPref, void* aData) {
   auto* cookie = static_cast<ImageEnablementCookie*>(aData);
 
@@ -36,7 +36,7 @@ static void UpdateDocumentViewerRegistration(const char* aPref, void* aData) {
 
   static nsLiteralCString kCategory = "Gecko-Content-Viewers"_ns;
   static nsLiteralCString kContractId =
-      "@mozilla.org/content/document-loader-factory;1"_ns;
+      "@mozilla.org/content/plugin/document-loader-factory;1"_ns;
 
   if (cookie->mIsEnabled()) {
     catMan->AddCategoryEntry(kCategory, cookie->mMimeType, kContractId,
@@ -47,7 +47,6 @@ static void UpdateDocumentViewerRegistration(const char* aPref, void* aData) {
     );
   }
 }
-#endif
 
 static bool sInitialized = false;
 nsresult mozilla::image::EnsureModuleInitialized() {
@@ -57,12 +56,10 @@ nsresult mozilla::image::EnsureModuleInitialized() {
     return NS_OK;
   }
 
-#ifdef MOZ_JXL
   static ImageEnablementCookie kJXLCookie = {
       mozilla::StaticPrefs::image_jxl_enabled, "image/jxl"_ns};
   Preferences::RegisterCallbackAndCall(UpdateDocumentViewerRegistration,
                                        "image.jxl.enabled", &kJXLCookie);
-#endif
 
   mozilla::image::ShutdownTracker::Initialize();
   mozilla::image::ImageFactory::Initialize();

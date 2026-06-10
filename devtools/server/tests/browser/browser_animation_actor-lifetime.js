@@ -20,15 +20,15 @@ add_task(async function () {
 
   await assertNumberOfAnimationActors(
     1,
-    "AnimationActor have 1 AnimationActors"
+    "AnimationActor have 1 AnimationPlayerActors"
   );
 
-  info("Testing AnimationActors release");
+  info("Testing AnimationPlayerActors release");
   const stillNodeActor = await walker.querySelector(walker.rootNode, ".still");
   await animations.getAnimationPlayersForNode(stillNodeActor);
   await assertNumberOfAnimationActors(
     0,
-    "AnimationActor does not have any AnimationActors anymore"
+    "AnimationActor does not have any AnimationPlayerActors anymore"
   );
 
   info("Testing multi animated node actor");
@@ -36,21 +36,21 @@ add_task(async function () {
   await animations.getAnimationPlayersForNode(multiNodeActor);
   await assertNumberOfAnimationActors(
     2,
-    "AnimationActor has now 2 AnimationActors"
+    "AnimationActor has now 2 AnimationPlayerActors"
   );
 
   info("Testing single animated node actor");
   await animations.getAnimationPlayersForNode(animatedNodeActor);
   await assertNumberOfAnimationActors(
     1,
-    "AnimationActor has only one AnimationActors"
+    "AnimationActor has only one AnimationPlayerActors"
   );
 
-  info("Testing AnimationActors release again");
+  info("Testing AnimationPlayerActors release again");
   await animations.getAnimationPlayersForNode(stillNodeActor);
   await assertNumberOfAnimationActors(
     0,
-    "AnimationActor does not have any AnimationActors anymore"
+    "AnimationActor does not have any AnimationPlayerActors anymore"
   );
 
   async function assertNumberOfAnimationActors(expected, message) {

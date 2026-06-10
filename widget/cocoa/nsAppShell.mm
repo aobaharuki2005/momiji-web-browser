@@ -1,3 +1,5 @@
+/* -*- tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -69,24 +71,13 @@ class MacWakeLockListener final : public nsIDOMMozWakeLockListener {
  private:
   ~MacWakeLockListener() {}
 
-  struct TopicAssertion {
-    const CFStringRef type = nullptr;
-    IOPMAssertionID id = kIOPMNullAssertionID;
-  };
-
-  // For video and screen locks, we want to keep the display on. For the others,
-  // we just want to prevent system sleep.
-  TopicAssertion mScreenAssertion{kIOPMAssertionTypeNoDisplaySleep};
-  TopicAssertion mVideoAssertion{kIOPMAssertionTypeNoDisplaySleep};
-
-  TopicAssertion mAudioAssertion{kIOPMAssertionTypeNoIdleSleep};
-  TopicAssertion mDownloadAssertion{kIOPMAssertionTypeNoIdleSleep};
+  IOPMAssertionID mAssertionNoDisplaySleepID = kIOPMNullAssertionID;
+  IOPMAssertionID mAssertionNoIdleSleepID = kIOPMNullAssertionID;
 
   NS_IMETHOD Callback(const nsAString& aTopic,
                       const nsAString& aState) override {
     if (!aTopic.EqualsASCII("screen") && !aTopic.EqualsASCII("audio-playing") &&
-        !aTopic.EqualsASCII("video-playing") &&
-        !aTopic.EqualsASCII("download-in-progress")) {
+        !aTopic.EqualsASCII("video-playing")) {
       return NS_OK;
     }
 
@@ -97,25 +88,22 @@ class MacWakeLockListener final : public nsIDOMMozWakeLockListener {
       return NS_OK;
     }
 
-    // Each topic gets its own assertion ID so that one topic releasing its lock
-    // (e.g. audio stops) does not inadvertently drop the lock held by another
-    // (e.g. an active download).
-    TopicAssertion& assertion =
-        aTopic.EqualsASCII("screen")          ? mScreenAssertion
-        : aTopic.EqualsASCII("video-playing") ? mVideoAssertion
-        : aTopic.EqualsASCII("audio-playing") ? mAudioAssertion
-                                              : mDownloadAssertion;
-    WAKE_LOCK_LOG("topic=%s, state=%s", NS_ConvertUTF16toUTF8(aTopic).get(),
-                  NS_ConvertUTF16toUTF8(aState).get());
+    bool shouldKeepDisplayOn =
+        aTopic.EqualsASCII("screen") || aTopic.EqualsASCII("video-playing");
+    CFStringRef assertionType = shouldKeepDisplayOn
+                                    ? kIOPMAssertionTypeNoDisplaySleep
+                                    : kIOPMAssertionTypeNoIdleSleep;
+    IOPMAssertionID& assertionId = shouldKeepDisplayOn
+                                       ? mAssertionNoDisplaySleepID
+                                       : mAssertionNoIdleSleepID;
+    WAKE_LOCK_LOG("topic=%s, state=%s, shouldKeepDisplayOn=%d",
+                  NS_ConvertUTF16toUTF8(aTopic).get(),
+                  NS_ConvertUTF16toUTF8(aState).get(), shouldKeepDisplayOn);
 
     // Note the wake lock code ensures that we're not sent duplicate
     // "locked-foreground" notifications when multiple wake locks are held.
-    // Downloads are windowless and always report "locked-background", so hold
-    // the lock for them despite the state that would otherwise release it.
-    if (aState.EqualsASCII("locked-foreground") ||
-        (aState.EqualsASCII("locked-background") &&
-         aTopic.EqualsASCII("download-in-progress"))) {
-      if (assertion.id != kIOPMNullAssertionID) {
+    if (aState.EqualsASCII("locked-foreground")) {
+      if (assertionId != kIOPMNullAssertionID) {
         WAKE_LOCK_LOG("already has a lock");
         return NS_OK;
       }
@@ -124,7 +112,7 @@ class MacWakeLockListener final : public nsIDOMMozWakeLockListener {
           kCFAllocatorDefault, reinterpret_cast<const UniChar*>(aTopic.Data()),
           aTopic.Length());
       IOReturn success = ::IOPMAssertionCreateWithName(
-          assertion.type, kIOPMAssertionLevelOn, cf_topic, &assertion.id);
+          assertionType, kIOPMAssertionLevelOn, cf_topic, &assertionId);
       CFRelease(cf_topic);
       if (success != kIOReturnSuccess) {
         WAKE_LOCK_LOG("failed to disable screensaver");
@@ -132,13 +120,13 @@ class MacWakeLockListener final : public nsIDOMMozWakeLockListener {
       WAKE_LOCK_LOG("create screensaver");
     } else {
       // Re-enable screen saver.
-      if (assertion.id != kIOPMNullAssertionID) {
-        IOReturn result = ::IOPMAssertionRelease(assertion.id);
+      if (assertionId != kIOPMNullAssertionID) {
+        IOReturn result = ::IOPMAssertionRelease(assertionId);
         if (result != kIOReturnSuccess) {
           WAKE_LOCK_LOG("failed to release screensaver");
         }
         WAKE_LOCK_LOG("Release screensaver");
-        assertion.id = kIOPMNullAssertionID;
+        assertionId = kIOPMNullAssertionID;
       }
     }
     return NS_OK;
@@ -190,13 +178,7 @@ void OnUncaughtException(NSException* aException) {
   [super sendEvent:anEvent];
 }
 
-#if defined(MAC_OS_X_VERSION_10_12) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12 && \
-    __LP64__
-// 10.12 changed `mask` to NSEventMask (unsigned long long) for x86_64 builds.
 - (NSEvent*)nextEventMatchingMask:(NSEventMask)mask
-#else
-- (NSEvent*)nextEventMatchingMask:(NSUInteger)mask
-#endif
                         untilDate:(NSDate*)expiration
                            inMode:(NSString*)mode
                           dequeue:(BOOL)flag {
@@ -246,8 +228,8 @@ nsAppShell::ResumeNative(void) {
 nsAppShell::nsAppShell()
     : mAutoreleasePools(nullptr),
       mDelegate(nullptr),
-      mCFRunLoop(nullptr),
-      mCFRunLoopSource(nullptr),
+      mCFRunLoop(NULL),
+      mCFRunLoopSource(NULL),
       mRunningEventLoop(false),
       mStarted(false),
       mTerminated(false),
@@ -389,61 +371,19 @@ nsresult nsAppShell::Init() {
   mAutoreleasePools = ::CFArrayCreateMutable(nullptr, 0, nullptr);
   NS_ENSURE_STATE(mAutoreleasePools);
 
-  // Don't call -[NSBundle loadNibNamed:owner:options:] for child process types
-  // that don't need graphics. The loadNibNamed call triggers some graphics-
-  // related initialization that is not needed for these process types.
   bool isNSApplicationProcessType =
-      (XRE_GetProcessType() != GeckoProcessType_Content) &&
       (XRE_GetProcessType() != GeckoProcessType_RDD) &&
       (XRE_GetProcessType() != GeckoProcessType_Socket);
 
   if (isNSApplicationProcessType) {
-    if(@available(macOS 10.8, *)) {
-      // This call initializes NSApplication unless:
-      // 1) we're using xre -- NSApp's already been initialized by
-      //    MacApplicationDelegate.mm's EnsureUseCocoaDockAPI().
-      // 2) an embedding app that uses NSApplicationMain() is running -- NSApp's
-      //    already been initialized and its main run loop is already running.
-      [[NSBundle mainBundle] loadNibNamed:@"res/MainMenu"
-                                    owner:[GeckoNSApplication sharedApplication]
-                          topLevelObjects:nil];
-    } else {
-      //on 10.7 and probably lower, the audio decoding (utility) process
-      //behaves weird, so we have to call it using the mainBundle approach
-      //we cannot use the mainBundle approach all the time because there
-      //are issues with the menu after closing a window. at least this approach
-      //is faithful since we launch a utility process slightly differently,
-      //as opposed to not launching it through nsBundle altogether (previous
-      //way)
-      //so we have no choice but to add this until i find a better fix.
-      if((XRE_GetProcessType() != GeckoProcessType_Utility)) {
-        nsCOMPtr<nsIFile> nibFile;
-        nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(nibFile));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nibFile->AppendNative("res"_ns);
-        nibFile->AppendNative("MainMenu.nib"_ns);
-
-        nsAutoCString nibPath;
-        rv = nibFile->GetNativePath(nibPath);
-        NS_ENSURE_SUCCESS(rv, rv);
-        // Get the path of the nib file, which lives in the GRE location
-        [NSBundle loadNibFile:[NSString stringWithUTF8String:(const char*)nibPath.get()]
-         externalNameTable:[NSDictionary dictionaryWithObjectsAndKeys:[GeckoNSApplication sharedApplication], NSNibOwner,
-                                                                     nil, NSNibTopLevelObjects,
-                                                                     nil]
-         withZone:nil];
-     } else {
-       //big thanks to the @uTox team for their example that helped me bridge the old fawx code to
-       //the proper form that uses mainBundle and topLevelObjects for loading on < 10.8:
-       //https://github.com/uTox/uTox/blob/8d5cd82e3554a3108f2aff9411bbe551e1e443b0/src/cocoa/main.m#L513
-       [NSBundle loadNibFile:[[NSBundle mainBundle] pathForResource:@"res/MainMenu" ofType:@"nib"]
-                 externalNameTable:[NSDictionary dictionaryWithObjectsAndKeys:[GeckoNSApplication sharedApplication], NSNibOwner,
-                                                                    nil, NSNibTopLevelObjects,
-                                                                    nil]
-        withZone:nil];
-     }
-   }
+    // This call initializes NSApplication unless:
+    // 1) we're using xre -- NSApp's already been initialized by
+    //    MacApplicationDelegate.mm's EnsureUseCocoaDockAPI().
+    // 2) an embedding app that uses NSApplicationMain() is running -- NSApp's
+    //    already been initialized and its main run loop is already running.
+    [[NSBundle mainBundle] loadNibNamed:@"res/MainMenu"
+                                  owner:[GeckoNSApplication sharedApplication]
+                        topLevelObjects:nil];
   }
 
   mDelegate = [[AppShellDelegate alloc] initWithAppShell:this];
@@ -491,10 +431,8 @@ nsresult nsAppShell::Init() {
     } else {
       screenManager.SetHelper(mozilla::MakeUnique<ScreenHelperCocoa>());
     }
-    if(__builtin_available(macOS 10.9, *)) {
-      //does not exist in 10.8 or lower. guarded accordingly.
-      InitMemoryPressureObserver();
-    }
+
+    InitMemoryPressureObserver();
   }
 
   nsresult rv = nsBaseAppShell::Init();
@@ -510,8 +448,7 @@ nsresult nsAppShell::Init() {
   }
 
 #if !defined(RELEASE_OR_BETA) || defined(DEBUG)
-  if (nsCocoaFeatures::OnMavericksOrLater() && 
-      Preferences::GetBool("security.sandbox.mac.track.violations", false)) {
+  if (Preferences::GetBool("security.sandbox.mac.track.violations", false)) {
     nsSandboxViolationSink::Start();
   }
 #endif
@@ -559,7 +496,7 @@ void nsAppShell::ProcessGeckoEvents(void* aInfo) {
                                    modifierFlags:0
                                        timestamp:0
                                     windowNumber:0
-                                         context:nullptr
+                                         context:NULL
                                          subtype:kEventSubtypeNone
                                            data1:0
                                            data2:0]
@@ -583,7 +520,7 @@ void nsAppShell::ProcessGeckoEvents(void* aInfo) {
                                    modifierFlags:0
                                        timestamp:0
                                     windowNumber:0
-                                         context:nullptr
+                                         context:NULL
                                          subtype:kEventSubtypeNone
                                            data1:0
                                            data2:0]
@@ -605,7 +542,7 @@ void nsAppShell::ProcessGeckoEvents(void* aInfo) {
                                    modifierFlags:0
                                        timestamp:0
                                     windowNumber:0
-                                         context:nullptr
+                                         context:NULL
                                          subtype:kEventSubtypeNone
                                            data1:0
                                            data2:0]
@@ -711,7 +648,7 @@ void nsAppShell::ScheduleNativeEventCallback() {
 }
 
 // Undocumented Cocoa Event Manager function, present in the same form since
-// at least macOS 10.6.
+// at least OS X 10.6.
 extern "C" EventAttributes GetEventAttributes(EventRef inEvent);
 
 // ProcessNextNativeEvent
@@ -752,7 +689,7 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
   }
 
   // Only call -[NSApp sendEvent:] (and indirectly send user-input events to
-  // Gecko) if aMayWait is true.  This ensures most calls to -[NSApp
+  // Gecko) if aMayWait is true.  Tbis ensures most calls to -[NSApp
   // sendEvent:] happen under nsAppShell::Run(), at the lowest level of
   // recursion -- thereby making it less likely Gecko will process user-input
   // events in the wrong order or skip some of them.  It also avoids eating
@@ -950,9 +887,7 @@ nsAppShell::Exit(void) {
   mTerminated = true;
 
 #if !defined(RELEASE_OR_BETA) || defined(DEBUG)
-  if (nsCocoaFeatures::OnMavericksOrLater()) {
-    nsSandboxViolationSink::Stop();
-  }
+  nsSandboxViolationSink::Stop();
 #endif
 
   // Quoting from Apple's doc on the [NSApplication stop:] method (from their
@@ -1193,7 +1128,7 @@ void nsAppShell::OnMemoryPressureChanged(
 
 // Called by the OS after [MacApplicationDelegate applicationShouldTerminate:]
 // has returned NSTerminateNow.  This method "subclasses" and replaces the
-// OS's original implementation.  The only thing the original method does which
+// OS's original implementation.  The only thing the orginal method does which
 // we need is that it posts NSApplicationWillTerminateNotification.  Everything
 // else is unneeded (because it's handled elsewhere), or actively interferes
 // with Gecko's shutdown sequence.  For example the original terminate: method

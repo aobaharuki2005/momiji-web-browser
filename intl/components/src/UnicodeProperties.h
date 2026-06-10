@@ -13,12 +13,6 @@
 #include "unicode/uchar.h"
 #include "unicode/uscript.h"
 
-extern "C" {
-
-uint8_t mozilla_canonical_combining_class(uint32_t c);
-
-}  // extern "C"
-
 namespace mozilla::intl {
 
 /**
@@ -55,7 +49,7 @@ class UnicodeProperties final {
    * UnicodeData.txt.
    */
   static inline uint8_t GetCombiningClass(uint32_t aCh) {
-    return mozilla_canonical_combining_class(aCh);
+    return u_getCombiningClass(aCh);
   }
 
   enum class IntProperty {

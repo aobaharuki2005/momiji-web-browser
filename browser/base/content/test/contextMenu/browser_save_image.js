@@ -10,7 +10,7 @@ add_setup(async function () {
     set: [["test.wait300msAfterTabSwitch", true]],
   });
 
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
 
   registerCleanupFunction(async () => {
     MockFilePicker.cleanup();

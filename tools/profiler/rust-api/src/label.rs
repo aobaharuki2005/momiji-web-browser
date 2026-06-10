@@ -7,6 +7,7 @@
 //! Use the `profiler_label!` macro directly instead of using `AutoProfilerLabel`.
 //! See the `profiler_label!` macro documentation on how to use it.
 
+#[cfg(feature = "enabled")]
 use crate::gecko_bindings::{
     bindings, profiling_categories::ProfilingCategoryPair, structs::mozilla,
 };
@@ -14,8 +15,10 @@ use crate::gecko_bindings::{
 /// RAII object that constructs and destroys a C++ AutoProfilerLabel object
 /// pointed to be the specified reference.
 /// Use `profiler_label!` macro directly instead of this, if possible.
+#[cfg(feature = "enabled")]
 pub struct AutoProfilerLabel<'a>(&'a mut mozilla::AutoProfilerLabel);
 
+#[cfg(feature = "enabled")]
 impl<'a> AutoProfilerLabel<'a> {
     /// Creates a new AutoProfilerLabel with the specified label type.
     ///
@@ -34,6 +37,7 @@ impl<'a> AutoProfilerLabel<'a> {
     }
 }
 
+#[cfg(feature = "enabled")]
 impl<'a> Drop for AutoProfilerLabel<'a> {
     #[inline]
     fn drop(&mut self) {
@@ -56,6 +60,7 @@ impl<'a> Drop for AutoProfilerLabel<'a> {
 /// gecko_profiler_label!(JavaScript, Parsing);
 /// ```
 /// You can wrap this macro with a block to only label a specific part of a function.
+#[cfg(feature = "enabled")]
 #[macro_export]
 macro_rules! gecko_profiler_label {
     ($category:ident) => {
@@ -82,6 +87,14 @@ macro_rules! gecko_profiler_label {
             None
         };
     };
+}
+
+/// No-op when MOZ_GECKO_PROFILER is not defined.
+#[cfg(not(feature = "enabled"))]
+#[macro_export]
+macro_rules! gecko_profiler_label {
+    ($category:ident) => {};
+    ($category:ident, $subcategory:ident) => {};
 }
 
 #[cfg(test)]

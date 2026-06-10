@@ -8,7 +8,6 @@ import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.view.ViewGroup
-import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,36 +42,26 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.DialogFragment
-import mozilla.components.compose.base.LinkText
-import mozilla.components.compose.base.LinkTextState
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.lib.crash.store.CrashAction
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.LinkText
+import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * Callback for dispatching [CrashAction]s from the [UnsubmittedCrashDialog].
- */
-fun interface CrashActionDispatcher {
-
-    /**
-     * Dispatches the received [CrashAction]
-     */
-    fun dispatchCrashAction(action: CrashAction)
-}
-
-/**
  * Dialog to request whether a user wants to submit crashes that have not been reported.
+ *
+ * @param dispatcher Callback to dispatch various [CrashAction]s in response to user input.
+ * @param crashIDs If present holds the list of minidump files requested over Remote Settings.
+ * @param localContext Application context to provide for Learn More links opening.
  */
-class UnsubmittedCrashDialog : DialogFragment() {
-
-    private val crashIDs: List<String>
-        get() = arguments?.getStringArrayList(BUNDLE_ARG_CRASH_IDS) ?: emptyList()
-
-    @VisibleForTesting
-    internal var dispatcher: CrashActionDispatcher? = null
-
+class UnsubmittedCrashDialog(
+    private val dispatcher: (action: CrashAction) -> Unit,
+    private val crashIDs: List<String>?,
+    private val localContext: Context,
+) : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return activity?.let { activity ->
             Dialog(activity).apply {
@@ -82,10 +72,9 @@ class UnsubmittedCrashDialog : DialogFragment() {
                             FirefoxTheme {
                                 CrashCard(
                                     dismiss = ::dismiss,
-                                    dispatcher = {
-                                        dispatcher?.dispatchCrashAction(it)
-                                    },
+                                    dispatcher = dispatcher,
                                     crashIDs = crashIDs,
+                                    cardContext = localContext,
                                 )
                             }
                         }
@@ -100,33 +89,8 @@ class UnsubmittedCrashDialog : DialogFragment() {
         } ?: throw IllegalStateException("Activity cannot be null")
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (dispatcher == null) {
-            dispatcher = context as? CrashActionDispatcher
-        }
-    }
-
-    override fun onDetach() {
-        dispatcher = null
-        super.onDetach()
-    }
-
     companion object {
-        private const val BUNDLE_ARG_CRASH_IDS = "bundle-arg-crash-ids"
-
         const val TAG = "unsubmitted crash dialog tag"
-
-        /**
-         * Creates an instance of [UnsubmittedCrashDialog] with a list of [crashIDs]
-         */
-        fun create(crashIDs: List<String>? = null): UnsubmittedCrashDialog {
-            return UnsubmittedCrashDialog().apply {
-                arguments = Bundle().apply {
-                    putStringArrayList(BUNDLE_ARG_CRASH_IDS, ArrayList(crashIDs ?: emptyList()))
-                }
-            }
-        }
     }
 }
 
@@ -135,6 +99,7 @@ private fun CrashCard(
     dismiss: () -> Unit,
     dispatcher: (action: CrashAction) -> Unit,
     crashIDs: List<String>?,
+    cardContext: Context?,
 ) {
     dispatcher(CrashAction.PromptShown)
 
@@ -160,7 +125,7 @@ private fun CrashCard(
     }
 
     Surface(
-        shape = MaterialTheme.shapes.small,
+        shape = RoundedCornerShape(8.dp),
     ) {
         if (!requestedByDevs) {
             CrashDialog(
@@ -174,6 +139,7 @@ private fun CrashCard(
                 dismiss = dismiss,
                 dispatcher = dispatcher,
                 crashIDs = crashIDs,
+                cardContext = cardContext,
             )
         }
     }
@@ -287,6 +253,7 @@ private fun CrashPullDialog(
     dismiss: () -> Unit,
     dispatcher: (action: CrashAction) -> Unit,
     crashIDs: List<String>,
+    cardContext: Context?,
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
@@ -302,18 +269,19 @@ private fun CrashPullDialog(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            val context = LocalContext.current
             Text(
                 text = stringResource(R.string.unsubmitted_crash_requested_by_devs_learn_more).uppercase(),
                 color = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier.clickable {
-                    SupportUtils.launchSandboxCustomTab(
-                        context = context,
-                        url = SupportUtils.getSumoURLForTopic(
-                            context = context,
-                            topic = SupportUtils.SumoTopic.REQUESTED_CRASH_MINIDUMP,
-                        ),
-                    )
+                    if (cardContext != null) {
+                        SupportUtils.launchSandboxCustomTab(
+                            context = cardContext,
+                            url = SupportUtils.getSumoURLForTopic(
+                                context = cardContext,
+                                topic = SupportUtils.SumoTopic.REQUESTED_CRASH_MINIDUMP,
+                            ),
+                        )
+                    }
                 },
             )
 
@@ -382,6 +350,7 @@ private fun UnsubmittedCrashDialogPreview(
                 dismiss = {},
                 dispatcher = {},
                 crashIDs = state.crashIDs,
+                cardContext = null,
             )
         }
     }

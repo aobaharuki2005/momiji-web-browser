@@ -14,8 +14,7 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 ChromeUtils.defineESModuleGetters(this, {
-  ScreenshotsUtils:
-    "moz-src:///browser/components/screenshots/ScreenshotsUtils.sys.mjs",
+  ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
 });
 
 add_task(async function test_screenshot_too_large_cropped() {

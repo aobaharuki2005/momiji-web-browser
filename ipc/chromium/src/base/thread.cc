@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2009 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -41,9 +43,9 @@ struct Thread::StartupData {
 };
 
 Thread::Thread(const char* name)
-    : startup_data_(nullptr),
-      thread_{},
-      message_loop_(nullptr),
+    : startup_data_(NULL),
+      thread_(0),
+      message_loop_(NULL),
       thread_id_(0),
       name_(name) {
   MOZ_COUNT_CTOR(base::Thread);
@@ -90,7 +92,7 @@ bool Thread::StartWithOptions(const Options& options) {
 
   if (!PlatformThread::Create(options.stack_size, this, &thread_)) {
     DLOG(ERROR) << "failed to create thread";
-    startup_data_ = nullptr;  // Record that we failed to start.
+    startup_data_ = NULL;  // Record that we failed to start.
     return false;
   }
 
@@ -122,10 +124,10 @@ void Thread::Stop() {
   PlatformThread::Join(thread_);
 
   // The thread can't receive messages anymore.
-  message_loop_ = nullptr;
+  message_loop_ = NULL;
 
   // The thread no longer needs to be joined.
-  startup_data_ = nullptr;
+  startup_data_ = NULL;
 }
 
 void Thread::StopSoon() {
@@ -192,7 +194,7 @@ void Thread::ThreadMain() {
   mozilla::IOInterposer::UnregisterCurrentThread();
 
   // We can't receive messages anymore.
-  message_loop_ = nullptr;
+  message_loop_ = NULL;
   thread_id_ = 0;
 }
 

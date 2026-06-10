@@ -199,7 +199,7 @@ class TouchSimulator {
   }
 
   sendContextMenu({ target, clientX, clientY, screenX, screenY }) {
-    const view = target.documentGlobal;
+    const view = target.ownerGlobal;
     const evt = new view.PointerEvent("contextmenu", {
       bubbles: true,
       cancelable: true,
@@ -230,25 +230,27 @@ class TouchSimulator {
    *        The type of the touch event.
    */
   sendTouchEvent(win, clientX, clientY, type) {
-    win.synthesizeTouchEvent(
+    const utils = win.windowUtils;
+    utils.sendTouchEvent(
       type,
-      [
-        {
-          identifier: 0,
-          offsetX: clientX,
-          offsetY: clientY,
-          radiiX: 0,
-          radiiY: 0,
-        },
-      ],
+      [0],
+      [clientX],
+      [clientY],
+      [0],
+      [0],
+      [0],
+      [0],
+      [0],
+      [0],
+      [0],
       0,
-      { isAsyncEnabled: true }
+      utils.ASYNC_ENABLED
     );
     return true;
   }
 
   getContent(target) {
-    const win = target?.ownerDocument ? target.documentGlobal : null;
+    const win = target?.ownerDocument ? target.ownerGlobal : null;
     return win;
   }
 }

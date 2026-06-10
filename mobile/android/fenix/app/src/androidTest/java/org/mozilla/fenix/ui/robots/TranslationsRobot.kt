@@ -23,6 +23,7 @@ import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemIsChecked
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemIsEnabledAndVisible
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -34,23 +35,28 @@ import org.mozilla.fenix.helpers.TestHelper.waitUntilSnackbarGone
 class TranslationsRobot(private val composeTestRule: ComposeTestRule) {
 
     @OptIn(ExperimentalTestApi::class)
-    fun verifyTranslationSheetIsDisplayed(isDisplayed: Boolean) {
+    fun verifyTranslationSheetIsDisplayed(isDisplayed: Boolean, isRedesignedToolbarEnabled: Boolean = false) {
         Log.i(TAG, "verifyTranslationSheetIsDisplayed: Trying to verify the Translations sheet is displayed $isDisplayed.")
         if (isDisplayed) {
             for (i in 1..RETRY_COUNT) {
                 Log.i(TAG, "verifyTranslationSheetIsDisplayed: Started try #$i")
                 try {
-                    composeTestRule.waitUntilAtLeastOneExists(hasText("Translate to"), waitingTimeLong)
-
-                    break
+                    composeTestRule.waitUntilAtLeastOneExists(hasText("Translate to"), waitingTime)
+                    composeTestRule.onNodeWithText("Translate to").assertIsDisplayed()
                 } catch (e: ComposeTimeoutException) {
-                    Log.i(TAG, "verifyTranslationSheetIsDisplayed: ComposeTimeoutException caught, executing fallback methods")
+                    Log.i(TAG, "verifyTranslationSheetIsDisplayed: AssertionError caught, executing fallback methods")
                     if (i == RETRY_COUNT) {
                         throw e
                     } else {
-                        browserScreen(composeTestRule) {
-                        }.openThreeDotMenu {
-                        }.clickRefreshButton {
+                        if (isRedesignedToolbarEnabled) {
+                            browserScreen(composeTestRule) {
+                                refreshPageFromRedesignedToolbar()
+                            }
+                        } else {
+                            browserScreen(composeTestRule) {
+                            }.openThreeDotMenu {
+                            }.clickRefreshButton {
+                            }
                         }
                     }
                 }
@@ -78,14 +84,12 @@ class TranslationsRobot(private val composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickAlwaysOfferToTranslateOption: Trying to click the \"Always offer to translate\" option button.")
         composeTestRule.onNodeWithText(getStringResource(R.string.translation_option_bottom_sheet_always_translate)).performClick()
         Log.i(TAG, "clickAlwaysOfferToTranslateOption: Clicked the \"Always offer to translate\" options button.")
-        composeTestRule.waitForIdle()
     }
 
     fun clickAlwaysTranslateLanguageOption(languageToTranslate: String) {
         Log.i(TAG, "clickAlwaysTranslateLanguageOption: Trying to click the \"Always translate $languageToTranslate\" option button.")
         composeTestRule.onNodeWithText("Always translate $languageToTranslate").performClick()
         Log.i(TAG, "clickAlwaysTranslateLanguageOption: Clicked the \"Always translate $languageToTranslate\" options button.")
-        composeTestRule.waitForIdle()
     }
 
     fun clickNeverTranslateLanguageOption(languageToTranslate: String) {
@@ -128,6 +132,22 @@ class TranslationsRobot(private val composeTestRule: ComposeTestRule) {
         Log.i(TAG, "verifyAlwaysOfferToTranslateOptionIsChecked: Verified the \"Always offer to translate\" option is checked.")
     }
 
+    fun verifyAlwaysOfferToTranslateOptionIsEnabled(isEnabled: Boolean) {
+        Log.i(TAG, "verifyAlwaysOfferToTranslateOptionIsEnabled: Waiting for compose test rule to be idle")
+        composeTestRule.waitForIdle()
+        Log.i(TAG, "verifyAlwaysOfferToTranslateOptionIsEnabled: Waited for compose test rule to be idle")
+        Log.i(TAG, "verifyAlwaysOfferToTranslateOptionIsEnabled: Trying to verify the \"Always offer to translate\" option is enabled.")
+        assertItemIsEnabledAndVisible(
+            mDevice.findObject(
+                UiSelector()
+                    .index(3)
+                    .className("android.view.View"),
+            ),
+            isEnabled = isEnabled,
+        )
+        Log.i(TAG, "verifyAlwaysOfferToTranslateOptionIsEnabled: Verified the \"Always offer to translate\" option is enabled.")
+    }
+
     fun verifyAlwaysTranslateOptionIsChecked(isChecked: Boolean) {
         Log.i(TAG, "verifyAlwaysTranslateOptionIsChecked: Waiting for compose test rule to be idle")
         composeTestRule.waitForIdle()
@@ -142,6 +162,22 @@ class TranslationsRobot(private val composeTestRule: ComposeTestRule) {
             isChecked = isChecked,
         )
         Log.i(TAG, "verifyAlwaysTranslateOptionIsChecked: Verified the \"Always translate\" description is checked.")
+    }
+
+    fun verifyAlwaysTranslateOptionIsEnabled(isEnabled: Boolean) {
+        Log.i(TAG, "verifyAlwaysTranslateOptionIsEnabled: Waiting for compose test rule to be idle")
+        composeTestRule.waitForIdle()
+        Log.i(TAG, "verifyAlwaysTranslateOptionIsEnabled: Waited for compose test rule to be idle")
+        Log.i(TAG, "verifyAlwaysTranslateOptionIsEnabled: Trying to verify the \"Always translate\" option is enabled.")
+        assertItemIsEnabledAndVisible(
+            mDevice.findObject(
+                UiSelector()
+                    .index(4)
+                    .className("android.view.View"),
+            ),
+            isEnabled = isEnabled,
+        )
+        Log.i(TAG, "verifyAlwaysTranslateOptionIsEnabled: Verified the \"Always translate\" option is enabled.")
     }
 
     @OptIn(ExperimentalTestApi::class)
@@ -175,6 +211,22 @@ class TranslationsRobot(private val composeTestRule: ComposeTestRule) {
             isChecked = isChecked,
         )
         Log.i(TAG, "verifyTheNeverTranslateLanguageOptionIsChecked: Verified the \"Never translate this site\" description is checked.")
+    }
+
+    fun verifyTheNeverTranslateLanguageOptionIsEnabled(isEnabled: Boolean) {
+        Log.i(TAG, "verifyTheNeverTranslateLanguageOptionIsEnabled: Waiting for compose test rule to be idle")
+        composeTestRule.waitForIdle()
+        Log.i(TAG, "verifyTheNeverTranslateLanguageOptionIsEnabled: Waited for compose test rule to be idle")
+        Log.i(TAG, "verifyTheNeverTranslateLanguageOptionIsEnabled: Trying to verify the \"Never translate this site\" description is enabled.")
+        assertItemIsEnabledAndVisible(
+            mDevice.findObject(
+                UiSelector()
+                    .index(4)
+                    .className("android.view.View"),
+            ),
+            isEnabled = isEnabled,
+        )
+        Log.i(TAG, "verifyTheNeverTranslateLanguageOptionIsEnabled: Verified the \"Never translate this site\" description is enabled.")
     }
 
     fun clickTranslateToDropdown() {
@@ -268,8 +320,6 @@ class TranslationsRobot(private val composeTestRule: ComposeTestRule) {
             Log.i(TAG, "clickShowOriginalButton: Trying to click on the \"Not now\" button.")
             composeTestRule.onNodeWithText(getStringResource(R.string.translations_bottom_sheet_negative_button)).performClick()
             Log.i(TAG, "clickShowOriginalButton: Clicked on the \"Not now\" button.")
-            composeTestRule.waitForIdle()
-            mDevice.waitForIdle(waitingTimeLong)
 
             BrowserRobot(composeTestRule).interact()
             return BrowserRobot.Transition(composeTestRule)
@@ -283,8 +333,6 @@ class TranslationsRobot(private val composeTestRule: ComposeTestRule) {
                     Log.i(TAG, "swipeCloseTranslationsSheet: Trying to swipe down the Translations sheet.")
                     mDevice.findObject(By.res("$packageName:id/design_bottom_sheet")).swipe(Direction.DOWN, 1.0f)
                     Log.i(TAG, "swipeCloseTranslationsSheet: Swiped down the Translations sheet.")
-                    composeTestRule.waitForIdle()
-                    mDevice.waitForIdle(waitingTimeLong)
                     assertUIObjectIsGone(itemWithResId("$packageName:id/design_bottom_sheet"))
 
                     break

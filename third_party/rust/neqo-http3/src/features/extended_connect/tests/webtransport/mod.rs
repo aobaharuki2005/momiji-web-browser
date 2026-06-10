@@ -11,17 +11,17 @@ mod streams;
 use std::{cell::RefCell, rc::Rc, time::Duration};
 
 use neqo_common::{event::Provider as _, header::HeadersExt as _};
-use neqo_transport::{ConnectionParameters, Pmtud, StreamId, StreamType, recv_stream, send_stream};
-use nss::AuthenticationStatus;
+use neqo_crypto::AuthenticationStatus;
+use neqo_transport::{recv_stream, send_stream, ConnectionParameters, Pmtud, StreamId, StreamType};
 use test_fixture::{
-    CountingConnectionIdGenerator, DEFAULT_ADDR, DEFAULT_ALPN_H3, DEFAULT_KEYS,
-    DEFAULT_SERVER_NAME, anti_replay, fixture_init, now,
+    anti_replay, fixture_init, now, CountingConnectionIdGenerator, DEFAULT_ADDR, DEFAULT_ALPN_H3,
+    DEFAULT_KEYS, DEFAULT_SERVER_NAME,
 };
 
 use crate::{
-    Error, Header, Http3Client, Http3ClientEvent, Http3OrWebTransportStream, Http3Parameters,
-    Http3Server, Http3ServerEvent, Http3State, SessionAcceptAction, WebTransportEvent,
-    WebTransportRequest, WebTransportServerEvent, features::extended_connect::CloseReason,
+    features::extended_connect::CloseReason, Error, Header, Http3Client, Http3ClientEvent,
+    Http3OrWebTransportStream, Http3Parameters, Http3Server, Http3ServerEvent, Http3State,
+    SessionAcceptAction, WebTransportEvent, WebTransportRequest, WebTransportServerEvent,
 };
 
 // Leave space for large QUIC header.
@@ -600,8 +600,7 @@ impl WtTest {
     }
 
     fn send_datagram(&mut self, stream_id: StreamId, buf: &[u8]) -> Result<(), Error> {
-        self.client
-            .webtransport_send_datagram(stream_id, buf, None, now())
+        self.client.webtransport_send_datagram(stream_id, buf, None)
     }
 
     fn check_datagram_received_client(

@@ -47,6 +47,7 @@ fn ffi_type_name(ty: &FfiType) -> String {
         FfiType::Float32 => "float".to_owned(),
         FfiType::Float64 => "double".to_owned(),
         FfiType::RustBuffer(_) => "RustBuffer".to_owned(),
+        FfiType::RustArcPtr { .. } => "void*".to_owned(),
         FfiType::ForeignBytes => "ForeignBytes".to_owned(),
         FfiType::Handle(_) => "uint64_t".to_owned(),
         FfiType::RustCallStatus => "RustCallStatus".to_owned(),
@@ -59,8 +60,18 @@ fn ffi_type_name(ty: &FfiType) -> String {
     }
 }
 
-fn ffi_value_class(node: &FfiTypeNode) -> Result<String> {
+pub fn ffi_value_class(node: &FfiTypeNode) -> Result<String> {
     Ok(match &node.ty {
+        FfiType::RustArcPtr {
+            module_name,
+            object_name,
+        } => {
+            format!(
+                "FfiValueObjectHandle{}{}",
+                module_name.to_upper_camel_case(),
+                object_name.to_upper_camel_case(),
+            )
+        }
         FfiType::UInt8
         | FfiType::Int8
         | FfiType::UInt16
@@ -73,19 +84,11 @@ fn ffi_value_class(node: &FfiTypeNode) -> Result<String> {
             format!("FfiValueFloat<{}>", node.type_name)
         }
         FfiType::RustBuffer(_) => "FfiValueRustBuffer".to_owned(),
-        FfiType::Handle(HandleKind::StructInterface {
-            namespace,
-            interface_name,
-        })
-        | FfiType::Handle(HandleKind::TraitInterface {
-            namespace,
+        FfiType::Handle(HandleKind::CallbackInterface {
+            module_name,
             interface_name,
         }) => {
-            format!(
-                "FfiValueObjectHandle{}{}",
-                namespace.to_upper_camel_case(),
-                interface_name.to_upper_camel_case(),
-            )
+            format!("FfiValueCallbackInterface{module_name}_{interface_name}")
         }
         ty => bail!("No FfiValue class for: {ty:?}"),
     })

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +7,6 @@
 #include "mozilla/dom/Permissions.h"
 
 #include "PermissionUtils.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_permissions.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MidiPermissionStatus.h"
@@ -102,23 +103,6 @@ RefPtr<PermissionStatus> CreatePermissionStatus(
         return nullptr;
       }
       return new PermissionStatus(aGlobal, rootDesc.mName);
-    case PermissionName::Loopback_network:
-      if (!StaticPrefs::network_lna_blocking()) {
-        aRv.ThrowTypeError(
-            "'loopback-network' (value of 'name' member of "
-            "PermissionDescriptor) is not a valid value for enumeration "
-            "PermissionName.");
-        return nullptr;
-      }
-      return new PermissionStatus(aGlobal, rootDesc.mName);
-    case PermissionName::Local_network:
-      if (!StaticPrefs::network_lna_blocking()) {
-        aRv.ThrowTypeError(
-            "'local-network' (value of 'name' member of PermissionDescriptor) "
-            "is not a valid value for enumeration PermissionName.");
-        return nullptr;
-      }
-      return new PermissionStatus(aGlobal, rootDesc.mName);
     default:
       MOZ_ASSERT_UNREACHABLE("Unhandled type");
       aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
@@ -136,7 +120,7 @@ already_AddRefed<Promise> Permissions::Query(JSContext* aCx,
   // Step 1.1: If the current settings object's associated Document is not fully
   // active, return a promise rejected with an "InvalidStateError" DOMException.
 
-  nsCOMPtr<nsIGlobalObject> global = GetRelevantGlobal();
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   if (NS_WARN_IF(!global)) {
     aRv.ThrowInvalidStateError("The context is not fully active.");
     return nullptr;
@@ -163,22 +147,12 @@ already_AddRefed<Promise> Permissions::Query(JSContext* aCx,
     return nullptr;
   }
 
-  RefPtr<StrongWorkerRef> workerRef;
-  if (!NS_IsMainThread()) {
-    workerRef = StrongWorkerRef::Create(GetCurrentThreadWorkerPrivate(),
-                                        "Permissions::Query");
-    if (!workerRef) {
-      aRv.ThrowUnknownError("Invalid worker state");
-      return nullptr;
-    }
-  }
-
   // Step 8.2 - 8.3: (Done by the Init method)
   // Step 8.4: Queue a global task on the permissions task source with this's
   // relevant global object to resolve promise with status.
   status->Init()->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [workerRef = std::move(workerRef), status, promise]() {
+      [status, promise]() {
         promise->MaybeResolve(status);
         return;
       },

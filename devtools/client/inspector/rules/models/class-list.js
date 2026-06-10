@@ -28,9 +28,9 @@ const CLASSES = new WeakMap();
  * @param {Inspector} inspector
  *        The current inspector instance.
  */
-class ClassList extends EventEmitter {
+class ClassList {
   constructor(inspector) {
-    super();
+    EventEmitter.decorate(this);
 
     this.inspector = inspector;
 

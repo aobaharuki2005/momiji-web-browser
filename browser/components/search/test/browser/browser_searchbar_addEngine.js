@@ -20,7 +20,7 @@ add_setup(async function () {
 
   registerCleanupFunction(async function () {
     gCUITestUtils.removeSearchBar();
-    SearchService.restoreDefaultEngines();
+    Services.search.restoreDefaultEngines();
   });
 });
 
@@ -59,7 +59,7 @@ add_task(async function test_addEngine() {
   // Image URL in testEngine.xml is very long, so we only check its end.
   Assert.ok(oneOffButton?.image.endsWith("AElFTkSuQmCC"), "Image is correct");
 
-  await SearchService.removeEngine(engine);
+  await Services.search.removeEngine(engine);
   BrowserTestUtils.removeTab(tab);
 });
 
@@ -69,7 +69,7 @@ add_task(async function test_invalidEngine() {
     rootDir + "opensearch.html"
   );
   let promise = promiseEvent(searchPopup, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(
+  await EventUtils.synthesizeMouseAtCenter(
     searchbar.querySelector(".searchbar-search-button"),
     {}
   );
@@ -95,7 +95,7 @@ add_task(async function test_invalidEngine() {
     promptType: "alert",
   });
 
-  EventUtils.synthesizeMouseAtCenter(item, {});
+  await EventUtils.synthesizeMouseAtCenter(item, {});
 
   let prompt = await promptPromise;
 
@@ -112,11 +112,11 @@ add_task(async function test_invalidEngine() {
 
 add_task(async function test_onOnlyDefaultEngine() {
   info("Remove engines except default");
-  const defaultEngine = SearchService.defaultEngine;
-  const engines = await SearchService.getVisibleEngines();
+  const defaultEngine = Services.search.defaultEngine;
+  const engines = await Services.search.getVisibleEngines();
   for (const engine of engines) {
     if (defaultEngine.name !== engine.name) {
-      await SearchService.removeEngine(engine);
+      await Services.search.removeEngine(engine);
     }
   }
 
@@ -126,7 +126,7 @@ add_task(async function test_onOnlyDefaultEngine() {
     rootDir + "opensearch.html"
   );
   const onShown = promiseEvent(searchPopup, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(
+  await EventUtils.synthesizeMouseAtCenter(
     searchbar.querySelector(".searchbar-search-button"),
     {}
   );

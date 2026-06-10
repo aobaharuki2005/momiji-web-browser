@@ -1,9 +1,9 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AIWindow } from "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs";
-import { AIWindowUI } from "moz-src:///browser/components/aiwindow/ui/modules/AIWindowUI.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -116,23 +116,20 @@ export class AIWindowMenu {
       return;
     }
 
+    newBrowserTabUrl += `#convId/${convId}`;
+
+    const win = event.target.ownerGlobal;
+    let newBrowserTabUrl = win.BROWSER_NEW_TAB_URL;
+    const site = conversation.getMostRecentPageVisited();
+    if (site) {
+      newBrowserTabUrl += `#convId/${convId}/site/${site}`;
+    }
+
     let where = lazy.BrowserUtils.whereToOpenLink(event);
     if (where === "current") {
       where = "tab";
     }
 
-    const win = event.target.documentGlobal;
-    const mostRecentPage = conversation.getMostRecentPageVisited();
-    const url = mostRecentPage?.href ?? win.BROWSER_NEW_TAB_URL;
-
-    lazy.URILoadingHelper.openTrustedLinkIn(win, url, where, {
-      resolveOnContentBrowserCreated: async targetBrowser => {
-        if (url === win.BROWSER_NEW_TAB_URL) {
-          AIWindowUI.openInFullWindow(targetBrowser, conversation);
-        } else {
-          AIWindowUI.openSidebar(targetBrowser.documentGlobal, conversation);
-        }
-      },
-    });
+    lazy.URILoadingHelper.openTrustedLinkIn(win, newBrowserTabUrl, where);
   }
 }

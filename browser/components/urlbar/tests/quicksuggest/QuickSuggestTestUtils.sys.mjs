@@ -423,7 +423,6 @@ class _QuickSuggestTestUtils {
     keywords = ["amp"],
     full_keywords = keywords.map(kw => [kw, 1]),
     url = "https://example.com/amp",
-    click_url = "https://example.com/amp-click",
     title = "Amp Suggestion",
     score = 0.3,
   } = {}) {
@@ -434,7 +433,7 @@ class _QuickSuggestTestUtils {
       title,
       score,
       id: 1,
-      click_url,
+      click_url: "https://example.com/amp-click",
       impression_url: "https://example.com/amp-impression",
       advertiser: "Amp",
       iab_category: "22 - Shopping",
@@ -471,6 +470,7 @@ class _QuickSuggestTestUtils {
     isBestMatch = false,
     requestId = undefined,
     dismissalKey = undefined,
+    descriptionL10n = { id: "urlbar-result-action-sponsored" },
     categories = [],
   } = {}) {
     let result = {
@@ -481,9 +481,7 @@ class _QuickSuggestTestUtils {
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       heuristic: false,
       payload: {
-        title: fullKeyword,
-        subtitle: title,
-        bottomTextL10n: { id: "urlbar-result-action-sponsored" },
+        title: fullKeyword ? `${fullKeyword} — ${title}` : title,
         url,
         originalUrl,
         requestId,
@@ -495,9 +493,15 @@ class _QuickSuggestTestUtils {
         sponsoredBlockId: blockId,
         sponsoredAdvertiser: advertiser,
         sponsoredIabCategory: iabCategory,
+        isBlockable: true,
+        isManageable: true,
         telemetryType: "adm_sponsored",
       },
     };
+
+    if (descriptionL10n) {
+      result.payload.descriptionL10n = descriptionL10n;
+    }
 
     if (result.payload.source == "rust") {
       result.payload.iconBlob = iconBlob;
@@ -582,9 +586,7 @@ class _QuickSuggestTestUtils {
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       heuristic: false,
       payload: {
-        title: fullKeyword,
-        subtitle: title,
-        bottomTextL10n: { id: "urlbar-result-suggestion-recommended" },
+        title: fullKeyword ? `${fullKeyword} — ${title}` : title,
         url,
         icon,
         iconBlob,
@@ -592,6 +594,8 @@ class _QuickSuggestTestUtils {
         provider,
         telemetryType,
         isSponsored: false,
+        isBlockable: true,
+        isManageable: true,
       },
     };
 
@@ -931,15 +935,14 @@ class _QuickSuggestTestUtils {
         title,
         description,
         url,
-        subtitleL10n: {
-          id: "urlbar-result-addons-subtitle",
-        },
         originalUrl,
         icon,
         isSponsored: false,
+        shouldShowUrl: true,
         bottomTextL10n: {
-          id: "urlbar-result-suggestion-recommended",
+          id: "firefox-suggest-addons-recommended",
         },
+        helpUrl: lazy.QuickSuggest.HELP_URL,
         telemetryType: "amo",
       },
     };
@@ -986,14 +989,14 @@ class _QuickSuggestTestUtils {
       payload: {
         telemetryType: "mdn",
         title,
-        subtitleL10n: { id: "urlbar-result-mdn-subtitle" },
         url: finalUrl.href,
         originalUrl: url,
         isSponsored: false,
         description,
         icon: "chrome://global/skin/icons/mdn.svg",
+        shouldShowUrl: true,
         bottomTextL10n: {
-          id: "urlbar-result-suggestion-recommended",
+          id: "firefox-suggest-mdn-bottom-text",
         },
         source: "rust",
         provider: "Mdn",
@@ -1056,7 +1059,7 @@ class _QuickSuggestTestUtils {
         provider,
         telemetryType: "yelp",
         bottomTextL10n: {
-          id: "urlbar-result-action-sponsored",
+          id: "firefox-suggest-yelp-bottom-text",
         },
         url,
         originalUrl,
@@ -1064,7 +1067,6 @@ class _QuickSuggestTestUtils {
         titleL10n,
         icon: null,
         isSponsored: true,
-        subtitleL10n: { id: "urlbar-result-yelp-subtitle" },
       },
     };
 
@@ -1134,7 +1136,6 @@ class _QuickSuggestTestUtils {
       type: lazy.UrlbarUtils.RESULT_TYPE.URL,
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       heuristic: false,
-      isBestMatch: true,
       suggestedIndex: 1,
       isRichSuggestion: true,
       richSuggestionIconVariation: "6",
@@ -1173,6 +1174,11 @@ class _QuickSuggestTestUtils {
    *   Whether the result is expected to be sponsored.
    * @param {boolean} [options.isBestMatch]
    *   Whether the result is expected to be a best match.
+   * @param {boolean} [options.isManageable]
+   *   Whether the result is expected to show Manage result menu item.
+   * @param {boolean} [options.hasSponsoredLabel]
+   *   Whether the result is expected to show the "Sponsored" label below the
+   *   title.
    * @returns {Promise<object>}
    *   The quick suggest result.
    */
@@ -1183,6 +1189,8 @@ class _QuickSuggestTestUtils {
     index = -1,
     isSponsored = true,
     isBestMatch = false,
+    isManageable = true,
+    hasSponsoredLabel = isSponsored || isBestMatch,
   }) {
     this.Assert.ok(
       url || originalUrl,
@@ -1241,15 +1249,34 @@ class _QuickSuggestTestUtils {
 
     let { row } = details.element;
 
-    let bottomLabel = row._elements.get("bottomLabel");
-    this.Assert.ok(bottomLabel, "Result bottom label should exist");
-    this.Assert.deepEqual(
-      window.document.l10n.getAttributes(bottomLabel),
-      isSponsored
-        ? { id: "urlbar-result-action-sponsored", args: null }
-        : { id: "urlbar-result-suggestion-recommended", args: null },
-      "Result bottom label should have correct l10n"
+    let sponsoredElement = row._elements.get("description");
+    if (hasSponsoredLabel) {
+      this.Assert.ok(sponsoredElement, "Result sponsored label element exists");
+      this.Assert.equal(
+        sponsoredElement.textContent,
+        isSponsored ? "Sponsored" : "",
+        "Result sponsored label"
+      );
+    } else {
+      this.Assert.ok(
+        !sponsoredElement?.textContent,
+        "Result sponsored label element should not exist"
+      );
+    }
+
+    this.Assert.equal(
+      result.payload.isManageable,
+      isManageable,
+      "Result isManageable"
     );
+
+    if (!isManageable) {
+      this.Assert.equal(
+        result.payload.helpUrl,
+        lazy.QuickSuggest.HELP_URL,
+        "Result helpURL"
+      );
+    }
 
     this.Assert.ok(
       row._buttons.get("result-menu"),

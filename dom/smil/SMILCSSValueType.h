@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,7 +15,7 @@
 
 namespace mozilla {
 struct AnimationValue;
-struct StyleLockedDeclarationBlock;
+class DeclarationBlock;
 namespace dom {
 class Element;
 }  // namespace dom
@@ -94,7 +96,7 @@ class SMILCSSValueType : public SMILType {
    * Returns whether the declaration changed.
    */
   static bool SetPropertyValues(NonCustomCSSPropertyId, const SMILValue&,
-                                mozilla::StyleLockedDeclarationBlock&);
+                                mozilla::DeclarationBlock&);
 
   /**
    * Return the CSS property animated by the specified value.

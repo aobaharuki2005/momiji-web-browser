@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -15,12 +16,6 @@ dictionary IDBIndexParameters {
     // "auto":   Sorted by the platform default, may change based on
     //           user agent options.
     DOMString? locale = null;
-};
-
-dictionary IDBGetAllOptions {
-    any query = null;
-    [EnforceRange] unsigned long count;
-    IDBCursorDirection direction = "next";
 };
 
 [Exposed=(Window,Worker)]
@@ -51,13 +46,11 @@ interface IDBIndex {
     // with a BinaryName mapping to the same underlying implementation.
     // See also bug 1577227.
     [NewObject, Throws, Alias="mozGetAll"]
-    IDBRequest getAll(optional any queryOrOptions,
+    IDBRequest getAll(optional any query,
                       optional [EnforceRange] unsigned long count);
     [NewObject, Throws, Alias="mozGetAllKeys"]
-    IDBRequest getAllKeys(optional any queryOrOptions,
+    IDBRequest getAllKeys(optional any query,
                             optional [EnforceRange] unsigned long count);
-    [NewObject, Throws]
-    IDBRequest getAllRecords(optional IDBGetAllOptions options = {});
 
     [NewObject, Throws] IDBRequest count(optional any query);
 

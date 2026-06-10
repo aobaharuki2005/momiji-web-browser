@@ -1304,7 +1304,7 @@ typedef bool (*PolyMapProc)(const SkPoint[], SkMatrix*);
 /*  Originally adapted from Rob Johnson's original sample code in QuickDraw GX
 */
 std::optional<SkMatrix> SkMatrix::PolyToPoly(SkSpan<const SkPoint> src, SkSpan<const SkPoint> dst) {
-    if (src.size() != dst.size() || src.size() > 4) {
+    if (src.size() != dst.size()) {
         return {};
     }
 
@@ -1332,9 +1332,11 @@ std::optional<SkMatrix> SkMatrix::PolyToPoly(SkSpan<const SkPoint> src, SkSpan<c
                 return {};
             }
             return tempMap * inverse.value();
-        }
+        } break;
+        default:
+            break;
     }
-    SkUNREACHABLE;
+    return {};
 }
 
 ///////////////////////////////////////////////////////////////////////////////

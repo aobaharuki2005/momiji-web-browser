@@ -688,7 +688,7 @@ style:
       - 'equals'
     excludeLabeled: false
     excludeReturnFromLambda: true
-    excludeGuardClauses: true
+    excludeGuardClauses: false
   SafeCast:
     active: true
   SerialVersionUIDInSerializableClass:
@@ -790,21 +790,3 @@ style:
     ignoreLateinitVar: false
   WildcardImport:
     active: true
-
-# Custom Rules
-
-mozilla-rules:
-  active: true
-
-acorn-detekt-rules:
-  active: true
-  HardcodedPaddingUsage:
-    active: true
-  AcornThemeUsage:
-    active: false
-  MaterialSwitchUsage:
-    active: false
-  MaterialTextButtonUsage:
-    active: false
-  MaterialTypographyUsage:
-    active: false

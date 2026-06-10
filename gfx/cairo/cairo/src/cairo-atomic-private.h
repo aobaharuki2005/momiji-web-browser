@@ -45,93 +45,13 @@
 
 #include <assert.h>
 
+/* The autoconf on OpenBSD 4.5 produces the malformed constant name
+ * SIZEOF_VOID__ rather than SIZEOF_VOID_P.  Work around that here. */
+#if !defined(SIZEOF_VOID_P) && defined(SIZEOF_VOID__)
+# define SIZEOF_VOID_P SIZEOF_VOID__
+#endif
+
 CAIRO_BEGIN_DECLS
-
-#if HAVE_C11_ATOMIC_PRIMITIVES
-
-#include <stdatomic.h>
-
-#define HAS_ATOMIC_OPS 1
-
-typedef atomic_int cairo_atomic_int_t;
-typedef _Atomic(void *) cairo_atomic_intptr_t;
-
-static cairo_always_inline int
-_cairo_atomic_int_get (cairo_atomic_int_t *x)
-{
-    return atomic_load_explicit (x, memory_order_seq_cst);
-}
-
-static cairo_always_inline int
-_cairo_atomic_int_get_relaxed (cairo_atomic_int_t *x)
-{
-    return atomic_load_explicit (x, memory_order_relaxed);
-}
-
-static cairo_always_inline void
-_cairo_atomic_int_set_relaxed (cairo_atomic_int_t *x, int val)
-{
-    atomic_store_explicit (x, val, memory_order_relaxed);
-}
-
-static cairo_always_inline void *
-_cairo_atomic_ptr_get (cairo_atomic_intptr_t *x)
-{
-    return atomic_load_explicit (x, memory_order_seq_cst);
-}
-
-# define _cairo_atomic_int_inc(x) ((void) atomic_fetch_add_explicit(x, 1, memory_order_seq_cst))
-# define _cairo_atomic_int_dec(x) ((void) atomic_fetch_sub_explicit(x, 1, memory_order_seq_cst))
-# define _cairo_atomic_int_dec_and_test(x) (atomic_fetch_sub_explicit(x, 1, memory_order_seq_cst) == 1)
-
-
-static cairo_always_inline cairo_bool_t
-_cairo_atomic_int_cmpxchg_impl(cairo_atomic_int_t *x,
-			       int                oldv,
-			       int                newv)
-{
-    int expected = oldv;
-    return atomic_compare_exchange_strong_explicit (x, &expected, newv, memory_order_seq_cst, memory_order_seq_cst);
-}
-
-#define _cairo_atomic_int_cmpxchg(x, oldv, newv) \
-  _cairo_atomic_int_cmpxchg_impl(x, oldv, newv)
-
-static cairo_always_inline int
-_cairo_atomic_int_cmpxchg_return_old_impl(cairo_atomic_int_t *x,
-					  int                 oldv,
-					  int                 newv)
-{
-    int expected = oldv;
-    (void) atomic_compare_exchange_strong_explicit (x, &expected, newv, memory_order_seq_cst, memory_order_seq_cst);
-    return expected;
-}
-
-#define _cairo_atomic_int_cmpxchg_return_old(x, oldv, newv) \
-  _cairo_atomic_int_cmpxchg_return_old_impl(x, oldv, newv)
-
-static cairo_always_inline cairo_bool_t
-_cairo_atomic_ptr_cmpxchg_impl(cairo_atomic_intptr_t *x, void *oldv, void *newv)
-{
-    void *expected = oldv;
-    return atomic_compare_exchange_strong_explicit (x, &expected, newv, memory_order_seq_cst, memory_order_seq_cst);
-}
-
-#define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
-  _cairo_atomic_ptr_cmpxchg_impl(x, oldv, newv)
-
-static cairo_always_inline void *
-_cairo_atomic_ptr_cmpxchg_return_old_impl(cairo_atomic_intptr_t *x, void *oldv, void *newv)
-{
-    void *expected = oldv;
-    (void) atomic_compare_exchange_strong_explicit (x, &expected, newv, memory_order_seq_cst, memory_order_seq_cst);
-    return expected;
-}
-
-#define _cairo_atomic_ptr_cmpxchg_return_old(x, oldv, newv) \
-  _cairo_atomic_ptr_cmpxchg_return_old_impl(x, oldv, newv)
-
-#endif /* HAVE_C11_ATOMIC_PRIMITIVES */
 
 /* C++11 atomic primitives were designed to be more flexible than the
  * __sync_* family of primitives.  Despite the name, they are available
@@ -148,54 +68,63 @@ _cairo_atomic_ptr_cmpxchg_return_old_impl(cairo_atomic_intptr_t *x, void *oldv, 
 #define HAS_ATOMIC_OPS 1
 
 typedef int cairo_atomic_int_t;
-typedef intptr_t cairo_atomic_intptr_t;
 
-static cairo_always_inline int
+static cairo_always_inline cairo_atomic_int_t
 _cairo_atomic_int_get (cairo_atomic_int_t *x)
 {
     return __atomic_load_n(x, __ATOMIC_SEQ_CST);
 }
 
-static cairo_always_inline int
+static cairo_always_inline cairo_atomic_int_t
 _cairo_atomic_int_get_relaxed (cairo_atomic_int_t *x)
 {
     return __atomic_load_n(x, __ATOMIC_RELAXED);
 }
 
 static cairo_always_inline void
-_cairo_atomic_int_set_relaxed (cairo_atomic_int_t *x, int val)
+_cairo_atomic_int_set_relaxed (cairo_atomic_int_t *x, cairo_atomic_int_t val)
 {
     __atomic_store_n(x, val, __ATOMIC_RELAXED);
 }
 
 static cairo_always_inline void *
-_cairo_atomic_ptr_get (cairo_atomic_intptr_t *x)
+_cairo_atomic_ptr_get (void **x)
 {
-    return (void*)__atomic_load_n(x, __ATOMIC_SEQ_CST);
+    return __atomic_load_n(x, __ATOMIC_SEQ_CST);
 }
 
 # define _cairo_atomic_int_inc(x) ((void) __atomic_fetch_add(x, 1, __ATOMIC_SEQ_CST))
 # define _cairo_atomic_int_dec(x) ((void) __atomic_fetch_sub(x, 1, __ATOMIC_SEQ_CST))
 # define _cairo_atomic_int_dec_and_test(x) (__atomic_fetch_sub(x, 1, __ATOMIC_SEQ_CST) == 1)
 
+#if SIZEOF_VOID_P==SIZEOF_INT
+typedef int cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG
+typedef long cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG_LONG
+typedef long long cairo_atomic_intptr_t;
+#else
+#error No matching integer pointer type
+#endif
+
 static cairo_always_inline cairo_bool_t
 _cairo_atomic_int_cmpxchg_impl(cairo_atomic_int_t *x,
-			       int                 oldv,
-			       int                 newv)
+			       cairo_atomic_int_t oldv,
+			       cairo_atomic_int_t newv)
 {
-    int expected = oldv;
+    cairo_atomic_int_t expected = oldv;
     return __atomic_compare_exchange_n(x, &expected, newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 }
 
 #define _cairo_atomic_int_cmpxchg(x, oldv, newv) \
   _cairo_atomic_int_cmpxchg_impl(x, oldv, newv)
 
-static cairo_always_inline int
+static cairo_always_inline cairo_atomic_int_t
 _cairo_atomic_int_cmpxchg_return_old_impl(cairo_atomic_int_t *x,
-					  int                 oldv,
-					  int                 newv)
+					  cairo_atomic_int_t oldv,
+					  cairo_atomic_int_t newv)
 {
-    int expected = oldv;
+    cairo_atomic_int_t expected = oldv;
     (void) __atomic_compare_exchange_n(x, &expected, newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
     return expected;
 }
@@ -204,59 +133,58 @@ _cairo_atomic_int_cmpxchg_return_old_impl(cairo_atomic_int_t *x,
   _cairo_atomic_int_cmpxchg_return_old_impl(x, oldv, newv)
 
 static cairo_always_inline cairo_bool_t
-_cairo_atomic_ptr_cmpxchg_impl(cairo_atomic_intptr_t *x, void *oldv, void *newv)
+_cairo_atomic_ptr_cmpxchg_impl(void **x, void *oldv, void *newv)
 {
-    intptr_t expected = (intptr_t)oldv;
-    return __atomic_compare_exchange_n(x, &expected, (intptr_t)newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+    void *expected = oldv;
+    return __atomic_compare_exchange_n(x, &expected, newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 }
 
 #define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
   _cairo_atomic_ptr_cmpxchg_impl(x, oldv, newv)
 
 static cairo_always_inline void *
-_cairo_atomic_ptr_cmpxchg_return_old_impl(cairo_atomic_intptr_t *x, void *oldv, void *newv)
+_cairo_atomic_ptr_cmpxchg_return_old_impl(void **x, void *oldv, void *newv)
 {
-    intptr_t expected = (intptr_t)oldv;
-    (void) __atomic_compare_exchange_n(x, &expected, (intptr_t)newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
-    return (void*)expected;
+    void *expected = oldv;
+    (void) __atomic_compare_exchange_n(x, &expected, newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+    return expected;
 }
 
 #define _cairo_atomic_ptr_cmpxchg_return_old(x, oldv, newv) \
   _cairo_atomic_ptr_cmpxchg_return_old_impl(x, oldv, newv)
 
-#endif /* HAVE_CXX11_ATOMIC_PRIMITIVES */
+#endif
 
 #if HAVE_GCC_LEGACY_ATOMICS
 
 #define HAS_ATOMIC_OPS 1
 
 typedef int cairo_atomic_int_t;
-typedef intptr_t cairo_atomic_intptr_t;
 
-static cairo_always_inline int
+static cairo_always_inline cairo_atomic_int_t
 _cairo_atomic_int_get (cairo_atomic_int_t *x)
 {
     __sync_synchronize ();
     return *x;
 }
 
-static cairo_always_inline int
+static cairo_always_inline cairo_atomic_int_t
 _cairo_atomic_int_get_relaxed (cairo_atomic_int_t *x)
 {
     return *x;
 }
 
 static cairo_always_inline void
-_cairo_atomic_int_set_relaxed (cairo_atomic_int_t *x, int val)
+_cairo_atomic_int_set_relaxed (cairo_atomic_int_t *x, cairo_atomic_int_t val)
 {
     *x = val;
 }
 
 static cairo_always_inline void *
-_cairo_atomic_ptr_get (cairo_atomic_intptr_t *x)
+_cairo_atomic_ptr_get (void **x)
 {
     __sync_synchronize ();
-    return (void*)*x;
+    return *x;
 }
 
 # define _cairo_atomic_int_inc(x) ((void) __sync_fetch_and_add(x, 1))
@@ -265,13 +193,23 @@ _cairo_atomic_ptr_get (cairo_atomic_intptr_t *x)
 # define _cairo_atomic_int_cmpxchg(x, oldv, newv) __sync_bool_compare_and_swap (x, oldv, newv)
 # define _cairo_atomic_int_cmpxchg_return_old(x, oldv, newv) __sync_val_compare_and_swap (x, oldv, newv)
 
+#if SIZEOF_VOID_P==SIZEOF_INT
+typedef int cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG
+typedef long cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG_LONG
+typedef long long cairo_atomic_intptr_t;
+#else
+#error No matching integer pointer type
+#endif
+
 # define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
     __sync_bool_compare_and_swap ((cairo_atomic_intptr_t*)x, (cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv)
 
 # define _cairo_atomic_ptr_cmpxchg_return_old(x, oldv, newv) \
     _cairo_atomic_intptr_to_voidptr (__sync_val_compare_and_swap ((cairo_atomic_intptr_t*)x, (cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv))
 
-#endif /* HAVE_GCC_LEGACY_ATOMICS */
+#endif
 
 #if HAVE_LIB_ATOMIC_OPS
 #include <atomic_ops.h>
@@ -289,7 +227,15 @@ typedef  AO_t cairo_atomic_int_t;
 # define _cairo_atomic_int_dec_and_test(x) (AO_fetch_and_sub1_full(x) == 1)
 # define _cairo_atomic_int_cmpxchg(x, oldv, newv) AO_compare_and_swap_full(x, oldv, newv)
 
-typedef intptr_t cairo_atomic_intptr_t;
+#if SIZEOF_VOID_P==SIZEOF_INT
+typedef unsigned int cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG
+typedef unsigned long cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG_LONG
+typedef unsigned long long cairo_atomic_intptr_t;
+#else
+#error No matching integer pointer type
+#endif
 
 # define _cairo_atomic_ptr_get(x) _cairo_atomic_intptr_to_voidptr (AO_load_full (x))
 # define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
@@ -303,7 +249,6 @@ typedef intptr_t cairo_atomic_intptr_t;
 #define HAS_ATOMIC_OPS 1
 
 typedef int32_t cairo_atomic_int_t;
-typedef intptr_t cairo_atomic_intptr_t;
 
 # define _cairo_atomic_int_get(x) (OSMemoryBarrier(), *(x))
 # define _cairo_atomic_int_get_relaxed(x) *(x)
@@ -315,10 +260,12 @@ typedef intptr_t cairo_atomic_intptr_t;
 # define _cairo_atomic_int_cmpxchg(x, oldv, newv) OSAtomicCompareAndSwap32Barrier(oldv, newv, x)
 
 #if SIZEOF_VOID_P==4
+typedef int32_t cairo_atomic_intptr_t;
 # define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
     OSAtomicCompareAndSwap32Barrier((cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv, (cairo_atomic_intptr_t *)x)
 
 #elif SIZEOF_VOID_P==8
+typedef int64_t cairo_atomic_intptr_t;
 # define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
     OSAtomicCompareAndSwap64Barrier((cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv, (cairo_atomic_intptr_t *)x)
 
@@ -328,17 +275,26 @@ typedef intptr_t cairo_atomic_intptr_t;
 
 # define _cairo_atomic_ptr_get(x) (OSMemoryBarrier(), *(x))
 
-#endif /* HAVE_OS_ATOMIC_OPS */
+#endif
 
 #if !defined(HAS_ATOMIC_OPS) && defined(_WIN32)
 #include <windows.h>
 
 #define HAS_ATOMIC_OPS 1
 
-typedef LONG cairo_atomic_int_t;
-typedef PVOID cairo_atomic_intptr_t;
+typedef int32_t cairo_atomic_int_t;
 
-static cairo_always_inline int
+#if SIZEOF_VOID_P==SIZEOF_INT
+typedef unsigned int cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG
+typedef unsigned long cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG_LONG
+typedef unsigned long long cairo_atomic_intptr_t;
+#else
+#error No matching integer pointer type
+#endif
+
+static cairo_always_inline cairo_atomic_int_t
 _cairo_atomic_int_get (cairo_atomic_int_t *x)
 {
     MemoryBarrier ();
@@ -348,33 +304,33 @@ _cairo_atomic_int_get (cairo_atomic_int_t *x)
 # define _cairo_atomic_int_get_relaxed(x) *(x)
 # define _cairo_atomic_int_set_relaxed(x, val) *(x) = (val)
 
-# define _cairo_atomic_int_inc(x) ((void) InterlockedIncrement (x))
-# define _cairo_atomic_int_dec(x) ((void) InterlockedDecrement (x))
-# define _cairo_atomic_int_dec_and_test(x) (InterlockedDecrement (x) == 0)
+# define _cairo_atomic_int_inc(x) ((void) InterlockedIncrement ((LONG*)x))
+# define _cairo_atomic_int_dec(x) ((void) InterlockedDecrement ((LONG*)x))
+# define _cairo_atomic_int_dec_and_test(x) (InterlockedDecrement ((LONG*)x) == 0)
 
 static cairo_always_inline cairo_bool_t
 _cairo_atomic_int_cmpxchg (cairo_atomic_int_t *x,
-                           int                 oldv,
-                           int                 newv)
+                           cairo_atomic_int_t oldv,
+                           cairo_atomic_int_t newv)
 {
-    return InterlockedCompareExchange (x, (LONG)newv, (LONG)oldv) == oldv;
+    return InterlockedCompareExchange ((LONG*)x, (LONG)newv, (LONG)oldv) == oldv;
 }
 
 static cairo_always_inline void *
-_cairo_atomic_ptr_get (cairo_atomic_intptr_t *x)
+_cairo_atomic_ptr_get (void **x)
 {
     MemoryBarrier ();
-    return (void *) *x;
+    return *x;
 }
 
 static cairo_always_inline cairo_bool_t
-_cairo_atomic_ptr_cmpxchg (cairo_atomic_intptr_t *x, void *oldv, void *newv)
+_cairo_atomic_ptr_cmpxchg (void **x, void *oldv, void *newv)
 {
     return InterlockedCompareExchangePointer (x, newv, oldv) == oldv;
 }
 
 static cairo_always_inline void *
-_cairo_atomic_ptr_cmpxchg_return_old (cairo_atomic_intptr_t *x, void *oldv, void *newv)
+_cairo_atomic_ptr_cmpxchg_return_old (void **x, void *oldv, void *newv)
 {
     return InterlockedCompareExchangePointer (x, newv, oldv);
 }
@@ -385,7 +341,16 @@ _cairo_atomic_ptr_cmpxchg_return_old (cairo_atomic_intptr_t *x, void *oldv, void
 #ifndef HAS_ATOMIC_OPS
 
 typedef int cairo_atomic_int_t;
-typedef intptr_t cairo_atomic_intptr_t;
+
+#if SIZEOF_VOID_P==SIZEOF_INT
+typedef unsigned int cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG
+typedef unsigned long cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG_LONG
+typedef unsigned long long cairo_atomic_intptr_t;
+#else
+#error No matching integer pointer type
+#endif
 
 cairo_private void
 _cairo_atomic_int_inc (cairo_atomic_int_t *x);
@@ -395,24 +360,24 @@ _cairo_atomic_int_inc (cairo_atomic_int_t *x);
 cairo_private cairo_bool_t
 _cairo_atomic_int_dec_and_test (cairo_atomic_int_t *x);
 
-cairo_private int
-_cairo_atomic_int_cmpxchg_return_old_impl (cairo_atomic_int_t *x, int oldv, int newv);
+cairo_private cairo_atomic_int_t
+_cairo_atomic_int_cmpxchg_return_old_impl (cairo_atomic_int_t *x, cairo_atomic_int_t oldv, cairo_atomic_int_t newv);
 
 cairo_private void *
-_cairo_atomic_ptr_cmpxchg_return_old_impl (cairo_atomic_intptr_t *x, void *oldv, void *newv);
+_cairo_atomic_ptr_cmpxchg_return_old_impl (void **x, void *oldv, void *newv);
 
 #define _cairo_atomic_int_cmpxchg_return_old(x, oldv, newv) _cairo_atomic_int_cmpxchg_return_old_impl (x, oldv, newv)
 #define _cairo_atomic_ptr_cmpxchg_return_old(x, oldv, newv) _cairo_atomic_ptr_cmpxchg_return_old_impl (x, oldv, newv)
 
 #ifdef ATOMIC_OP_NEEDS_MEMORY_BARRIER
-cairo_private int
+cairo_private cairo_atomic_int_t
 _cairo_atomic_int_get (cairo_atomic_int_t *x);
-cairo_private int
+cairo_private cairo_atomic_int_t
 _cairo_atomic_int_get_relaxed (cairo_atomic_int_t *x);
 void
-_cairo_atomic_int_set_relaxed (cairo_atomic_int_t *x, int val);
+_cairo_atomic_int_set_relaxed (cairo_atomic_int_t *x, cairo_atomic_int_t val);
 cairo_private void*
-_cairo_atomic_ptr_get(cairo_atomic_intptr_t *x);
+_cairo_atomic_ptr_get(void **x);
 #else
 # define _cairo_atomic_int_get(x) (*x)
 # define _cairo_atomic_int_get_relaxed(x) (*x)
@@ -429,10 +394,10 @@ _cairo_atomic_intptr_to_voidptr (cairo_atomic_intptr_t x)
   return (void *) x;
 }
 
-static cairo_always_inline int
-_cairo_atomic_int_cmpxchg_return_old_fallback(cairo_atomic_int_t *x, int oldv, int newv)
+static cairo_always_inline cairo_atomic_int_t
+_cairo_atomic_int_cmpxchg_return_old_fallback(cairo_atomic_int_t *x, cairo_atomic_int_t oldv, cairo_atomic_int_t newv)
 {
-    int curr;
+    cairo_atomic_int_t curr;
 
     do {
         curr = _cairo_atomic_int_get (x);
@@ -442,7 +407,7 @@ _cairo_atomic_int_cmpxchg_return_old_fallback(cairo_atomic_int_t *x, int oldv, i
 }
 
 static cairo_always_inline void *
-_cairo_atomic_ptr_cmpxchg_return_old_fallback(cairo_atomic_intptr_t *x, void *oldv, void *newv)
+_cairo_atomic_ptr_cmpxchg_return_old_fallback(void **x, void *oldv, void *newv)
 {
     void *curr;
 

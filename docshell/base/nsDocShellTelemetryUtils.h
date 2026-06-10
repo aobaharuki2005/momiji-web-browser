@@ -1,9 +1,10 @@
+//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDocShellTelemetryUtils_h_
-#define nsDocShellTelemetryUtils_h_
+#ifndef nsDocShellTelemetryUtils_h__
+#define nsDocShellTelemetryUtils_h__
 
 #include "nsLiteralString.h"
 
@@ -18,4 +19,4 @@ namespace dom {
 nsLiteralCString LoadErrorToTelemetryLabel(nsresult aRv);
 }  // namespace dom
 }  // namespace mozilla
-#endif  // nsDocShellTelemetryUtils_h_
+#endif  // nsDocShellTelemetryUtils_h__

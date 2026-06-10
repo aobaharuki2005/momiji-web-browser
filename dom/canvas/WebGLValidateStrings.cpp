@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -150,7 +151,7 @@ std::string CrushGlslToAscii(const std::string& u8) {
   static_assert(!IsValidForPreprocOrGlsl(INVALID_GLSL_CHAR));
   auto ascii = u8;
   for (auto& c : ascii) {
-    if (!IsValidForPreprocOrGlsl(c)) [[unlikely]] {
+    if (MOZ_UNLIKELY(!IsValidForPreprocOrGlsl(c))) {
       c = INVALID_GLSL_CHAR;
     }
   }
@@ -167,14 +168,15 @@ Maybe<webgl::ErrorInfo> CheckGLSLVariableName(const bool webgl2,
         "Identifier is %zu characters long, exceeds the"
         " maximum allowed length of %u characters.",
         name.size(), maxSize);
-    return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE, info.get()});
+    return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE, info.BeginReading()});
   }
 
   for (const auto cur : name) {
     if (!IsValidGLSLChar(cur)) {
       const auto info =
           nsPrintfCString("String contains the illegal character 0x%x'.", cur);
-      return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE, info.get()});
+      return Some(
+          webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE, info.BeginReading()});
     }
   }
 

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -25,7 +27,6 @@ namespace gc {
 class AutoSetThreadGCUse;
 class AutoSetThreadIsSweeping;
 class AutoDisallowPreWriteBarrier;
-class GCRuntime;
 
 enum class GCUse {
   // This thread is not running in the garbage collector.
@@ -68,7 +69,7 @@ class GCContext {
   using Cell = js::gc::Cell;
   using MemoryUse = js::MemoryUse;
 
-  js::gc::GCRuntime* const gc_;
+  JSRuntime* const runtime_;
 
   js::jit::JitPoisonRangeVector jitPoisonRanges;
 
@@ -91,26 +92,26 @@ class GCContext {
 #endif
 
  public:
-  explicit GCContext(js::gc::GCRuntime* maybeGc);
+  explicit GCContext(JSRuntime* maybeRuntime);
   ~GCContext();
 
-  js::gc::GCRuntime* gcRuntime() const {
+  JSRuntime* runtime() const {
     MOZ_ASSERT(onMainThread());
-    return gcRuntimeFromAnyThread();
+    return runtimeFromAnyThread();
   }
-  js::gc::GCRuntime* gcRuntimeFromAnyThread() const {
-    MOZ_ASSERT(gc_);
-    return gc_;
+  JSRuntime* runtimeFromAnyThread() const {
+    MOZ_ASSERT(runtime_);
+    return runtime_;
   }
-  JSRuntime* runtime() const;
-  JSRuntime* runtimeFromAnyThread() const;
 
   js::gc::GCUse gcUse() const { return gcUse_; }
   bool isCollecting() const { return gcUse() != js::gc::GCUse::None; }
   bool isFinalizing() const { return gcUse_ == js::gc::GCUse::Finalizing; }
 
 #ifdef DEBUG
-  bool onMainThread() const;
+  bool onMainThread() const {
+    return js::CurrentThreadCanAccessRuntime(runtime_);
+  }
 
   Zone* gcSweepZone() const { return gcSweepZone_; }
   bool isTouchingGrayThings() const { return isTouchingGrayThings_; }

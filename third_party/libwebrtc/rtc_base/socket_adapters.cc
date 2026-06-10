@@ -15,8 +15,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <span>
 
+#include "api/array_view.h"
 #include "rtc_base/async_socket.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -135,8 +135,8 @@ static const uint8_t kSslClientHello[] = {
 };
 
 // static
-std::span<const uint8_t> AsyncSSLSocket::SslClientHello() {
-  // Implicit conversion directly from kSslClientHello to std::span fails when
+ArrayView<const uint8_t> AsyncSSLSocket::SslClientHello() {
+  // Implicit conversion directly from kSslClientHello to ArrayView fails when
   // built with gcc.
   return {kSslClientHello, sizeof(kSslClientHello)};
 }
@@ -163,7 +163,7 @@ static const uint8_t kSslServerHello[] = {
 };
 
 // static
-std::span<const uint8_t> AsyncSSLSocket::SslServerHello() {
+ArrayView<const uint8_t> AsyncSSLSocket::SslServerHello() {
   return {kSslServerHello, sizeof(kSslServerHello)};
 }
 
@@ -184,7 +184,7 @@ void AsyncSSLSocket::OnConnectEvent(Socket* socket) {
   if (res != sizeof(kSslClientHello)) {
     RTC_LOG(LS_ERROR) << "Sending fake SSL ClientHello message failed.";
     Close();
-    NotifyCloseEvent(this, 0);
+    SignalCloseEvent(this, 0);
   }
 }
 
@@ -195,7 +195,7 @@ void AsyncSSLSocket::ProcessInput(char* data, size_t* len) {
   if (memcmp(kSslServerHello, data, sizeof(kSslServerHello)) != 0) {
     RTC_LOG(LS_ERROR) << "Received non-matching fake SSL ServerHello message.";
     Close();
-    NotifyCloseEvent(this, 0);  // TODO: error code?
+    SignalCloseEvent(this, 0);  // TODO: error code?
     return;
   }
 
@@ -206,11 +206,11 @@ void AsyncSSLSocket::ProcessInput(char* data, size_t* len) {
 
   bool remainder = (*len > 0);
   BufferInput(false);
-  NotifyConnectEvent(this);
+  SignalConnectEvent(this);
 
   // FIX: if SignalConnect causes the socket to be destroyed, we are in trouble
   if (remainder)
-    NotifyReadEvent(this);
+    SignalReadEvent(this);
 }
 
 }  // namespace webrtc

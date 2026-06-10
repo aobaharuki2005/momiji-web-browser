@@ -83,10 +83,6 @@ function channelPhase(aChannel) {
   }
 }
 
-/**
- * Implements the W3C Network Error Logging (NEL) specification
- * (https://www.w3.org/TR/network-error-logging/).
- */
 export class NetworkErrorLogging {
   constructor() {}
 

@@ -11,8 +11,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.feature.top.sites.TopSite
@@ -27,10 +25,8 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 internal fun Shortcuts(
     topSites: List<TopSite>,
-    interactor: TopSiteInteractor,
     topSiteColors: TopSiteColors = TopSiteColors.colors(),
-    showAddShortcut: Boolean = false,
-    onAddShortcutClicked: () -> Unit,
+    interactor: TopSiteInteractor,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = TOP_SITES_ITEM_SIZE.dp),
@@ -64,35 +60,18 @@ internal fun Shortcuts(
                 )
             }
         }
-
-        if (showAddShortcut) {
-            item {
-                AddShortcutItem(
-                    topSiteColors = topSiteColors,
-                    onClick = onAddShortcutClicked,
-                )
-            }
-        }
     }
 }
 
 @Composable
 @FlexibleWindowLightDarkPreview
-private fun ShortcutsPreview(
-    @PreviewParameter(ShortcutsPreviewParameterProvider::class) showAddShortcut: Boolean,
-) {
+private fun ShortcutsPreview() {
     FirefoxTheme {
         Surface {
             Shortcuts(
                 topSites = FakeHomepagePreview.topSites(),
                 interactor = FakeHomepagePreview.topSitesInteractor,
-                showAddShortcut = showAddShortcut,
-                onAddShortcutClicked = {},
             )
         }
     }
-}
-
-private class ShortcutsPreviewParameterProvider : PreviewParameterProvider<Boolean> {
-    override val values: Sequence<Boolean> = sequenceOf(false, true)
 }

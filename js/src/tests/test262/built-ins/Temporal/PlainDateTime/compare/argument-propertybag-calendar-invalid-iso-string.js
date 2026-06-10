@@ -10,12 +10,10 @@ features: [Temporal]
 
 const invalidStrings = [
   ["", "empty string"],
-  ["1997-12-04[u-ca=notacal]", "Unknown calendar"],
-  ["notacal", "Unknown calendar"],
 ];
-
-for (const [cal, description] of invalidStrings) {
-  const arg = { year: 1976, monthCode: "M11", day: 18, calendar: cal };
+  
+for (const [calendar, description] of invalidStrings) {
+  const arg = { year: 1976, monthCode: "M11", day: 18, calendar };
   assert.throws(
     RangeError,
     () => Temporal.PlainDateTime.compare(arg, new Temporal.PlainDateTime(1976, 11, 18)),

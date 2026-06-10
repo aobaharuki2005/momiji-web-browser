@@ -7,9 +7,7 @@
 
 void ExplicitOperatorBoolChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
-      cxxConversionDecl(isFirstParty(), hasName("operator bool"),
-                        isInterestingForImplicitConversion(),
-                        unless(anyOf(isExplicit(), isMarkedImplicit())))
+      cxxMethodDecl(allOf(isFirstParty(), hasName("operator bool")))
           .bind("node"),
       this);
 }
@@ -18,12 +16,16 @@ void ExplicitOperatorBoolChecker::check(
     const MatchFinder::MatchResult &Result) {
   const CXXConversionDecl *Method =
       Result.Nodes.getNodeAs<CXXConversionDecl>("node");
-
   const CXXRecordDecl *Clazz = Method->getParent();
-  diag(Method->getBeginLoc(), "bad implicit conversion operator for %0",
-       DiagnosticIDs::Error)
-      << Clazz;
-  diag(Method->getBeginLoc(), "consider adding the explicit keyword to %0",
-       DiagnosticIDs::Note)
-      << "'operator bool'";
+
+  if (!Method->isExplicit() && !hasCustomAttribute<moz_implicit>(Method) &&
+      !ASTIsInSystemHeader(Method->getASTContext(), *Method) &&
+      isInterestingDeclForImplicitConversion(Method)) {
+    diag(Method->getBeginLoc(), "bad implicit conversion operator for %0",
+         DiagnosticIDs::Error)
+        << Clazz;
+    diag(Method->getBeginLoc(), "consider adding the explicit keyword to %0",
+         DiagnosticIDs::Note)
+        << "'operator bool'";
+  }
 }

@@ -113,7 +113,7 @@ impl TimestampNormalizer {
                 .raw()
                 .create_bind_group_layout(&hal::BindGroupLayoutDescriptor {
                     label: hal_label(
-                        Some("(wgpu internal) Timestamp Normalization Bind Group Layout"),
+                        Some("Timestamp Normalization Bind Group Layout"),
                         device.instance_flags,
                     ),
                     flags: hal::BindGroupLayoutFlags::empty(),
@@ -169,10 +169,7 @@ impl TimestampNormalizer {
                 debug_source: None,
             });
             let hal_desc = hal::ShaderModuleDescriptor {
-                label: hal_label(
-                    Some("(wgpu internal) Timestamp normalizer shader module"),
-                    device.instance_flags,
-                ),
+                label: None,
                 runtime_checks: wgt::ShaderRuntimeChecks::unchecked(),
             };
             let module = device
@@ -191,11 +188,8 @@ impl TimestampNormalizer {
             let pipeline_layout = device
                 .raw()
                 .create_pipeline_layout(&hal::PipelineLayoutDescriptor {
-                    label: hal_label(
-                        Some("(wgpu internal) Timestamp normalizer pipeline layout"),
-                        device.instance_flags,
-                    ),
-                    bind_group_layouts: &[Some(temporary_bind_group_layout.as_ref())],
+                    label: None,
+                    bind_group_layouts: &[temporary_bind_group_layout.as_ref()],
                     immediate_size: 8,
                     flags: hal::PipelineLayoutFlags::empty(),
                 })
@@ -210,10 +204,7 @@ impl TimestampNormalizer {
             constants.insert(String::from("TIMESTAMP_PERIOD_SHIFT"), shift as f64);
 
             let pipeline_desc = hal::ComputePipelineDescriptor {
-                label: hal_label(
-                    Some("(wgpu internal) Timestamp normalizer pipeline"),
-                    device.instance_flags,
-                ),
+                label: None,
                 layout: pipeline_layout.as_ref(),
                 stage: hal::ProgrammableStage {
                     module: module.as_ref(),
@@ -276,7 +267,7 @@ impl TimestampNormalizer {
             // at once to normalize the timestamps, we can't use it. We force the buffer to fail
             // to allocate. The lowest max binding size is 128MB, and query sets must be small
             // (no more than 4096), so this should never be hit in practice by sane programs.
-            if buffer_size.get() > device.adapter.limits().max_storage_buffer_binding_size {
+            if buffer_size.get() > device.adapter.limits().max_storage_buffer_binding_size as u64 {
                 return Err(DeviceError::OutOfMemory);
             }
 
@@ -341,19 +332,19 @@ impl TimestampNormalizer {
             encoder.transition_buffers(barrier.as_slice());
             encoder.begin_compute_pass(&hal::ComputePassDescriptor {
                 label: hal_label(
-                    Some("(wgpu internal) Timestamp normalization pass"),
+                    Some("Timestamp normalization pass"),
                     buffer.device.instance_flags,
                 ),
                 timestamp_writes: None,
             });
             encoder.set_compute_pipeline(&*state.pipeline);
-            encoder.set_bind_group(&*state.pipeline_layout, 0, bind_group, &[]);
+            encoder.set_bind_group(&*state.pipeline_layout, 0, Some(bind_group), &[]);
             encoder.set_immediates(
                 &*state.pipeline_layout,
                 0,
                 &[buffer_offset_timestamps, total_timestamps],
             );
-            encoder.dispatch_workgroups([needed_workgroups, 1, 1]);
+            encoder.dispatch([needed_workgroups, 1, 1]);
             encoder.end_compute_pass();
         }
     }

@@ -12,8 +12,8 @@ import {Writable, Readable} from 'node:stream';
 
 import {TestServer} from '@pptr/testserver';
 
-import {isErrorLike} from '../../lib/esm/launch.js';
-import {Cache} from '../../lib/esm/main.js';
+import {isErrorLike} from '../../lib/cjs/launch.js';
+import {Cache} from '../../lib/cjs/main.js';
 
 export function createMockedReadlineInterface(
   input: string,
@@ -40,7 +40,7 @@ export function createMockedReadlineInterface(
 }
 
 const startServer = async () => {
-  const assetsPath = path.join(import.meta.dirname, '..', '.cache', 'server');
+  const assetsPath = path.join(__dirname, '..', '.cache', 'server');
   return await TestServer.create(assetsPath);
 };
 
@@ -50,7 +50,7 @@ interface ServerState {
 
 const state: Partial<ServerState> = {};
 
-export function setupTestServer(): ServerState {
+export function setupTestServer(): void {
   before(async () => {
     state.server = await startServer();
   });
@@ -59,8 +59,6 @@ export function setupTestServer(): ServerState {
     await state.server!.stop();
     state.server = undefined;
   });
-
-  return state as ServerState;
 }
 
 export function getServerUrl(): string {

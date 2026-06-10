@@ -1,7 +1,3 @@
-PLHashAllocOps
-==============
-
-.. _plhashallocops-syntax:
 
 Syntax
 ------
@@ -21,8 +17,6 @@ Syntax
    #define HT_FREE_ENTRY 1 /* free value and entire entry */
 
 
-.. _plhashallocops-description:
-
 Description
 -----------
 
@@ -38,8 +32,6 @@ to a memory pool used by the memory allocator.
 The ``freeEntry`` function does not need to free the value of the entry.
 If flag is ``HT_FREE_ENTRY``, the function frees the entry.
 
-
-.. _plhashallocops-remark:
 
 Remark
 ------

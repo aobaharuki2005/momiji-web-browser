@@ -23,9 +23,6 @@ class StartupStateProvider(
     private val startReasonProvider: AppStartReasonProvider,
 ) {
 
-    /**
-     * Possible startup states of the application.
-     */
     enum class StartupState {
         COLD, WARM, HOT,
 

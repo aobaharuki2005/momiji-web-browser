@@ -15,7 +15,7 @@ const ruleTester = new RuleTester();
 // ------------------------------------------------------------------------------
 
 function callError() {
-  return [{ messageId: "useConsoleError" }];
+  return [{ messageId: "useConsoleError", type: "CallExpression" }];
 }
 
 ruleTester.run("no-cu-reportError", rule, {

@@ -1,5 +1,4 @@
 // META: title=WebCryptoAPI: deriveBits() tests for the 'length' parameter
-// META: script=../util/helpers.js
 // META: script=derived_bits_length.js
 // META: script=derived_bits_length_vectors.js
 // META: script=derived_bits_length_testcases.js

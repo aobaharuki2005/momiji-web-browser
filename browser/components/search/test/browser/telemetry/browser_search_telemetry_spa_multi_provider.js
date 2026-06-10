@@ -49,6 +49,13 @@ add_task(async function test_load_serps_and_click_organic() {
     {
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -68,6 +75,13 @@ add_task(async function test_load_serps_and_click_organic() {
     {
       impression: {
         provider: "example2",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -123,6 +137,13 @@ add_task(async function test_load_serps_and_click_ads() {
     {
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -142,6 +163,13 @@ add_task(async function test_load_serps_and_click_ads() {
     {
       impression: {
         provider: "example2",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -193,6 +221,13 @@ add_task(async function test_load_serps_and_click_related() {
     {
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -212,6 +247,13 @@ add_task(async function test_load_serps_and_click_related() {
     {
       impression: {
         provider: "example2",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -231,6 +273,13 @@ add_task(async function test_load_serps_and_click_related() {
     {
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -244,6 +293,13 @@ add_task(async function test_load_serps_and_click_related() {
     {
       impression: {
         provider: "example2",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -299,6 +355,13 @@ add_task(async function test_load_pages_tabhistory() {
     {
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -319,6 +382,13 @@ add_task(async function test_load_pages_tabhistory() {
       // This is second because it was the second tab created.
       impression: {
         provider: "example2",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -338,6 +408,13 @@ add_task(async function test_load_pages_tabhistory() {
     {
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -354,7 +431,13 @@ add_task(async function test_load_pages_tabhistory() {
     {
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
         source: "tabhistory",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -371,7 +454,13 @@ add_task(async function test_load_pages_tabhistory() {
     {
       impression: {
         provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
         source: "tabhistory",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -385,6 +474,13 @@ add_task(async function test_load_pages_tabhistory() {
     {
       impression: {
         provider: "example2",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -401,7 +497,13 @@ add_task(async function test_load_pages_tabhistory() {
     {
       impression: {
         provider: "example2",
+        tagged: "true",
+        partner_code: "ff",
         source: "tabhistory",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -418,7 +520,13 @@ add_task(async function test_load_pages_tabhistory() {
     {
       impression: {
         provider: "example2",
+        tagged: "true",
+        partner_code: "ff",
         source: "tabhistory",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {

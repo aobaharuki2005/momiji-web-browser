@@ -162,7 +162,7 @@ add_task(async function test_removeAllLogins() {
       }
 
       _("Tell sync to remove all logins");
-      await Services.logins.removeAllUserFacingLoginsAsync();
+      Services.logins.removeAllUserFacingLogins();
       await tracker.asyncObserver.promiseObserversComplete();
       changes = await engine.getChangedIDs();
       do_check_attribute_count(changes, syncBeforeRemove ? 2 : 0);

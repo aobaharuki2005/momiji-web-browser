@@ -43,11 +43,6 @@ skip-if = [
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # osx: Bug 1550141
 ]
 
-["test_DeferredTask_gc.js"]
-
-["test_DeferredTask_window.js"]
-support-files = ["test_DeferredTask_window/*"]
-
 ["test_E10SUtils_getRemoteTypeForURIObject.js"]
 
 ["test_EventEmitter.js"]
@@ -68,12 +63,6 @@ support-files = [
   "../../../mozapps/extensions/test/xpcshell/data/productaddons/content_signing_int.pem",
   "../../../mozapps/extensions/test/xpcshell/data/productaddons/bad.xml",
   "../../../mozapps/extensions/test/xpcshell/data/productaddons/good.xml",
-  "../../../mozapps/extensions/test/xpcshell/data/productaddons/missing.xml",
-  "../../../mozapps/extensions/test/xpcshell/data/productaddons/empty.xml",
-  "../../../mozapps/extensions/test/xpcshell/data/productaddons/singleaddon.xml",
-  "../../../mozapps/extensions/test/xpcshell/data/productaddons/sizedaddon.xml",
-  "../../../mozapps/extensions/test/xpcshell/data/productaddons/invalidaddons.xml",
-  "../../../mozapps/extensions/test/xpcshell/data/productaddons/updatesaddons.xml",
 ]
 
 ["test_IgnoreList.js"]
@@ -124,8 +113,6 @@ skip-if = [
   "os == 'android'",
 ]
 
-["test_ScheduledTask.js"]
-
 ["test_Services.js"]
 
 ["test_UpdateUtils_updatechannel.js"]
@@ -166,6 +153,8 @@ run-if = [
   "os == 'mac'",
 ]
 tags = "os_integration"
+
+["test_readCertPrefs.js"]
 
 ["test_servicerequest_xhr.js"]
 

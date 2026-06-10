@@ -23,7 +23,6 @@ macro_rules! limited_write_buf {
 pub struct FramedWrite<T, B> {
     /// Upstream `AsyncWrite`
     inner: T,
-    final_flush_done: bool,
 
     encoder: Encoder<B>,
 }
@@ -90,7 +89,6 @@ where
         };
         FramedWrite {
             inner,
-            final_flush_done: false,
             encoder: Encoder {
                 hpack: hpack::Encoder::default(),
                 buf: Cursor::new(BytesMut::with_capacity(DEFAULT_BUFFER_CAPACITY)),
@@ -167,10 +165,7 @@ where
 
     /// Close the codec
     pub fn shutdown(&mut self, cx: &mut Context) -> Poll<io::Result<()>> {
-        if !self.final_flush_done {
-            ready!(self.flush(cx))?;
-            self.final_flush_done = true;
-        }
+        ready!(self.flush(cx))?;
         Pin::new(&mut self.inner).poll_shutdown(cx)
     }
 }

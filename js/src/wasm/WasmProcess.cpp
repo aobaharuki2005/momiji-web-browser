@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * Copyright 2017 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -160,27 +162,16 @@ void ConfigureHugeMemory() {
 #endif
 }
 
-#ifdef ENABLE_WASM_JSPI
-const TagType* wasm::sJSPromiseTagType = nullptr;
-#endif
 const TagType* wasm::sWrappedJSValueTagType = nullptr;
 
-static bool InitStaticTagTypes() {
+static bool InitTagForJSValue() {
   MutableTagType type = js_new<TagType>();
-  if (!type || !type->initialize(StaticTypeDefs::jsExceptionTag)) {
+  if (!type || !type->initialize(StaticTypeDefs::jsTag)) {
     return false;
   }
-  MOZ_ASSERT(WrappedJSValueTagType_ValueOffset ==
-             type->exceptionArgOffsets()[0]);
-  type.forget(&sWrappedJSValueTagType);
+  MOZ_ASSERT(WrappedJSValueTagType_ValueOffset == type->argOffsets()[0]);
 
-#ifdef ENABLE_WASM_JSPI
-  type = js_new<TagType>();
-  if (!type || !type->initialize(StaticTypeDefs::jsPromiseTag)) {
-    return false;
-  }
-  type.forget(&sJSPromiseTagType);
-#endif
+  type.forget(&sWrappedJSValueTagType);
 
   return true;
 }
@@ -213,7 +204,7 @@ bool wasm::Init() {
 
   sThreadSafeCodeBlockMap = map;
 
-  if (!InitStaticTagTypes()) {
+  if (!InitTagForJSValue()) {
     oomUnsafe.crash("js::wasm::Init");
   }
 
@@ -231,13 +222,6 @@ void wasm::ShutDown() {
   BuiltinModuleFuncs::destroy();
   StaticTypeDefs::destroy();
   PurgeCanonicalTypes();
-
-#ifdef ENABLE_WASM_JSPI
-  if (sJSPromiseTagType) {
-    sJSPromiseTagType->Release();
-    sJSPromiseTagType = nullptr;
-  }
-#endif
 
   if (sWrappedJSValueTagType) {
     sWrappedJSValueTagType->Release();

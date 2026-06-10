@@ -11,6 +11,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.ktx.util.PromptAbuserDetector
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assume
 import org.junit.Before
@@ -20,9 +21,9 @@ import org.junit.Test
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
-import org.mozilla.focus.helpers.FocusTestRule
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.MockLocationUpdatesRule
+import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.TestAssetHelper.genericAsset
 import org.mozilla.focus.helpers.TestAssetHelper.getMediaTestAsset
 import org.mozilla.focus.helpers.TestHelper.exitToTop
@@ -30,20 +31,17 @@ import org.mozilla.focus.helpers.TestHelper.grantAppPermission
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.helpers.TestSetup
 import org.mozilla.focus.testAnnotations.SmokeTest
 
-class SitePermissionsTest {
+class SitePermissionsTest : TestSetup() {
+    private lateinit var webServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
 
     // Test page created and handled by the Mozilla mobile test-eng team
     private val permissionsPage = "https://mozilla-mobile.github.io/testapp/permissions"
     private val permissionsPageHost = "mozilla-mobile.github.io"
     private val cameraManager = (InstrumentationRegistry.getInstrumentation().targetContext.getSystemService(Context.CAMERA_SERVICE) as CameraManager)
-
-    @get:Rule(order = 0)
-    val focusTestRule: FocusTestRule = FocusTestRule()
-
-    private val webServerRule get() = focusTestRule.mockWebServerRule
 
     @get:Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
@@ -57,14 +55,20 @@ class SitePermissionsTest {
     val mockLocationUpdatesRule = MockLocationUpdatesRule()
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setSearchWidgetDialogEnabled(false)
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
         PromptAbuserDetector.validationsEnabled = false
     }
 
     @After
     fun tearDown() {
+        webServer.shutdown()
         featureSettingsHelper.resetAllFeatureFlags()
         PromptAbuserDetector.validationsEnabled = true
     }
@@ -97,7 +101,7 @@ class SitePermissionsTest {
     @SmokeTest
     @Test
     fun blockAudioAutoplayPermissionTest() {
-        val videoPage = webServerRule.server.getMediaTestAsset("videoPage")
+        val videoPage = webServer.getMediaTestAsset("videoPage")
 
         searchScreen {
         }.loadPage(videoPage.url) {
@@ -112,7 +116,7 @@ class SitePermissionsTest {
     @SmokeTest
     @Test
     fun blockAudioAutoplayPermissionOnMutedVideoTest() {
-        val mutedVideoPage = webServerRule.server.getMediaTestAsset("mutedVideoPage")
+        val mutedVideoPage = webServer.getMediaTestAsset("mutedVideoPage")
 
         searchScreen {
         }.loadPage(mutedVideoPage.url) {
@@ -126,7 +130,7 @@ class SitePermissionsTest {
     @SmokeTest
     @Test
     fun allowAudioVideoAutoplayPermissionTest() {
-        val videoPage = webServerRule.server.getMediaTestAsset("videoPage")
+        val videoPage = webServer.getMediaTestAsset("videoPage")
 
         homeScreen {
         }.openMainMenu {
@@ -147,8 +151,8 @@ class SitePermissionsTest {
     @SmokeTest
     @Test
     fun allowAudioVideoAutoplayPermissionOnMutedVideoTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val mutedVideoPage = webServerRule.server.getMediaTestAsset("mutedVideoPage")
+        val genericPage = webServer.genericAsset
+        val mutedVideoPage = webServer.getMediaTestAsset("mutedVideoPage")
 
         homeScreen {
         }.openMainMenu {
@@ -172,7 +176,7 @@ class SitePermissionsTest {
     @SmokeTest
     @Test
     fun blockAudioVideoAutoplayPermissionTest() {
-        val videoPage = webServerRule.server.getMediaTestAsset("videoPage")
+        val videoPage = webServer.getMediaTestAsset("videoPage")
 
         homeScreen {
         }.openMainMenu {

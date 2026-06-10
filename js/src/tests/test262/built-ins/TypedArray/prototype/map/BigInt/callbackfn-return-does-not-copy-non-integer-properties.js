@@ -13,12 +13,12 @@ info: |
     b. Let kValue be ? Get(O, Pk).
     c. Let mappedValue be ? Call(callbackfn, T, « kValue, k, O »).
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Symbol, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg([7n, 8n]));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA([7n, 8n]);
   var bar = Symbol("1");
 
   sample.foo = 42;

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,7 +23,6 @@ enum class PopoverAttributeState : uint8_t {
   None,
   Auto,    ///< https://html.spec.whatwg.org/#attr-popover-auto-state
   Manual,  ///< https://html.spec.whatwg.org/#attr-popover-manual-state
-  Hint,    ///< https://html.spec.whatwg.org/#attr-popover-hint-state
 };
 
 enum class PopoverVisibilityState : uint8_t {
@@ -32,15 +33,13 @@ enum class PopoverVisibilityState : uint8_t {
 class PopoverToggleEventTask : public Runnable {
  public:
   explicit PopoverToggleEventTask(nsWeakPtr aElement, nsWeakPtr aSource,
-                                  PopoverVisibilityState aOldState,
-                                  PopoverVisibilityState aNewState);
+                                  PopoverVisibilityState aOldState);
 
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
   // bug 1535398.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override;
 
   PopoverVisibilityState GetOldState() const { return mOldState; }
-  PopoverVisibilityState GetNewState() const { return mNewState; }
 
   Element* GetSource() const;
 
@@ -48,7 +47,6 @@ class PopoverToggleEventTask : public Runnable {
   nsWeakPtr mElement;
   nsWeakPtr mSource;
   PopoverVisibilityState mOldState;
-  PopoverVisibilityState mNewState;
 };
 
 class PopoverData {
@@ -94,9 +92,9 @@ class PopoverData {
   void SetToggleEventTask(PopoverToggleEventTask* aTask) { mTask = aTask; }
   void ClearToggleEventTask() { mTask = nullptr; }
 
-  bool IsPopoverHiding() const { return mIsPopoverHiding; }
-  void SetIsPopoverHiding(bool aIsPopoverHiding) {
-    mIsPopoverHiding = aIsPopoverHiding;
+  bool IsShowingOrHiding() const { return mIsShowingOrHiding; }
+  void SetIsShowingOrHiding(bool aIsShowingOrHiding) {
+    mIsShowingOrHiding = aIsShowingOrHiding;
   }
 
  private:
@@ -114,7 +112,7 @@ class PopoverData {
   // this a weak reference, as if the element goes away it's necessarily not
   // connected to our document.
   nsWeakPtr mInvokerElement;
-  bool mIsPopoverHiding = false;
+  bool mIsShowingOrHiding = false;
   RefPtr<PopoverToggleEventTask> mTask;
 
   // This won't need to be cycle collected as CloseWatcher only has strong

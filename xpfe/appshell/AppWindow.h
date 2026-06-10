@@ -1,10 +1,11 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_AppWindow_h_
-#define mozilla_AppWindow_h_
+#ifndef mozilla_AppWindow_h__
+#define mozilla_AppWindow_h__
 
 // Local Includes
 #include "nsChromeTreeOwner.h"
@@ -383,4 +384,4 @@ class AppWindow final : public nsIBaseWindow,
 
 }  // namespace mozilla
 
-#endif /* mozilla_AppWindow_h_ */
+#endif /* mozilla_AppWindow_h__ */

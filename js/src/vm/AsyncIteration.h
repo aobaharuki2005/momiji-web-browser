@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -397,9 +399,7 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
   State state() const {
     return static_cast<State>(getFixedSlot(Slot_State).toInt32());
   }
-  void setState(State state_) {
-    setNeverGCThingFixedSlot(Slot_State, Int32Value(state_));
-  }
+  void setState(State state_) { setFixedSlot(Slot_State, Int32Value(state_)); }
 
  private:
   // Queue is implemented in 2 ways.  If only one request is queued ever,

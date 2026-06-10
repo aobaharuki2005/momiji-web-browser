@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -106,6 +108,11 @@ extern "C" int statvfs(const char*, struct statvfs*);
 
 using namespace mozilla;
 
+#define ENSURE_STAT_CACHE()                            \
+  do {                                                 \
+    if (!FillStatCache()) return NSRESULT_FOR_ERRNO(); \
+  } while (0)
+
 #define CHECK_mPath()                                     \
   do {                                                    \
     if (mPath.IsEmpty()) return NS_ERROR_NOT_INITIALIZED; \
@@ -137,8 +144,7 @@ static PRTime TimespecToMillis(const struct timespec& aTimeSpec) {
 class nsDirEnumeratorUnix final : public nsSimpleEnumerator,
                                   public nsIDirectoryEnumerator {
  public:
-  static nsresult Create(nsLocalFile* aParent,
-                         RefPtr<nsDirEnumeratorUnix>& aResult);
+  nsDirEnumeratorUnix();
 
   // nsISupports interface
   NS_DECL_ISUPPORTS_INHERITED
@@ -149,14 +155,16 @@ class nsDirEnumeratorUnix final : public nsSimpleEnumerator,
   // nsIDirectoryEnumerator interface
   NS_DECL_NSIDIRECTORYENUMERATOR
 
+  NS_IMETHOD Init(nsLocalFile* aParent, bool aIgnored);
+
   NS_FORWARD_NSISIMPLEENUMERATORBASE(nsSimpleEnumerator::)
 
   const nsID& DefaultInterface() override { return NS_GET_IID(nsIFile); }
 
  private:
-  nsDirEnumeratorUnix() : mDir(nullptr), mEntry(nullptr) {}
   ~nsDirEnumeratorUnix() override;
 
+ protected:
   NS_IMETHOD GetNextEntry();
 
   DIR* mDir;
@@ -164,39 +172,37 @@ class nsDirEnumeratorUnix final : public nsSimpleEnumerator,
   nsCString mParentPath;
 };
 
+nsDirEnumeratorUnix::nsDirEnumeratorUnix() : mDir(nullptr), mEntry(nullptr) {}
+
 nsDirEnumeratorUnix::~nsDirEnumeratorUnix() { Close(); }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsDirEnumeratorUnix, nsSimpleEnumerator,
                             nsIDirectoryEnumerator)
 
-nsresult nsDirEnumeratorUnix::Create(nsLocalFile* aParent,
-                                     RefPtr<nsDirEnumeratorUnix>& aResult) {
-  RefPtr<nsDirEnumeratorUnix> self = new nsDirEnumeratorUnix();
-
-  if (NS_FAILED(aParent->GetNativePath(self->mParentPath)) ||
-      self->mParentPath.IsEmpty()) {
+NS_IMETHODIMP
+nsDirEnumeratorUnix::Init(nsLocalFile* aParent,
+                          bool aResolveSymlinks /*ignored*/) {
+  nsAutoCString dirPath;
+  if (NS_FAILED(aParent->GetNativePath(dirPath)) || dirPath.IsEmpty()) {
     return NS_ERROR_FILE_INVALID_PATH;
   }
 
   // When enumerating the directory, the paths must have a slash at the end.
-  nsAutoCString dirPathWithSlash(self->mParentPath);
+  nsAutoCString dirPathWithSlash(dirPath);
   dirPathWithSlash.Append('/');
   if (!FilePreferences::IsAllowedPath(dirPathWithSlash)) {
     return NS_ERROR_FILE_ACCESS_DENIED;
   }
 
-  self->mDir = opendir(self->mParentPath.get());
-  if (!self->mDir) {
+  if (NS_FAILED(aParent->GetNativePath(mParentPath))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mDir = opendir(dirPath.get());
+  if (!mDir) {
     return NSRESULT_FOR_ERRNO();
   }
-
-  nsresult rv = self->GetNextEntry();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  aResult = std::move(self);
-  return NS_OK;
+  return GetNextEntry();
 }
 
 NS_IMETHODIMP
@@ -268,7 +274,7 @@ nsDirEnumeratorUnix::Close() {
   return NS_OK;
 }
 
-nsLocalFile::nsLocalFile() = default;
+nsLocalFile::nsLocalFile() : mCachedStat() {}
 
 nsLocalFile::nsLocalFile(const nsLocalFile& aOther) : mPath(aOther.mPath) {}
 
@@ -290,19 +296,19 @@ nsresult nsLocalFile::nsLocalFileConstructor(const nsIID& aIID,
   return inst->QueryInterface(aIID, aInstancePtr);
 }
 
-nsresult nsLocalFile::StatFile(struct STAT* statInfo) {
+bool nsLocalFile::FillStatCache() {
   if (!FilePreferences::IsAllowedPath(mPath)) {
-    return NS_ERROR_FILE_ACCESS_DENIED;
+    errno = EACCES;
+    return false;
   }
 
-  if (STAT(mPath.get(), statInfo) == -1) {
+  if (STAT(mPath.get(), &mCachedStat) == -1) {
     // try lstat it may be a symlink
-    if (LSTAT(mPath.get(), statInfo) == -1) {
-      return NSRESULT_FOR_ERRNO();
+    if (LSTAT(mPath.get(), &mCachedStat) == -1) {
+      return false;
     }
   }
-
-  return NS_OK;
+  return true;
 }
 
 NS_IMETHODIMP
@@ -1265,51 +1271,65 @@ nsLocalFile::MoveToFollowingLinksNative(nsIFile* aNewParent,
 NS_IMETHODIMP
 nsLocalFile::Remove(bool aRecursive, uint32_t* aRemoveCount) {
   CHECK_mPath();
+  ENSURE_STAT_CACHE();
 
-  bool isLink = false;
-  nsresult rv = IsSymlink(&isLink);
+  bool isSymLink;
+
+  nsresult rv = IsSymlink(&isSymLink);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  // only check to see if we have a directory if it isn't a link
-  bool isDir = false;
-  if (!isLink) {
-    rv = IsDirectory(&isDir);
+  if (isSymLink || !S_ISDIR(mCachedStat.st_mode)) {
+    rv = NSRESULT_FOR_RETURN(unlink(mPath.get()));
+    if (NS_SUCCEEDED(rv) && aRemoveCount) {
+      *aRemoveCount += 1;
+    }
+    return rv;
+  }
+
+  if (aRecursive) {
+    auto* dir = new nsDirEnumeratorUnix();
+
+    RefPtr<nsSimpleEnumerator> dirRef(dir);  // release on exit
+
+    rv = dir->Init(this, false);
     if (NS_FAILED(rv)) {
       return rv;
     }
-  }
 
-  if (isDir) {
-    if (aRecursive) {
-      RefPtr<nsDirEnumeratorUnix> dirEnum;
-      rv = nsDirEnumeratorUnix::Create(this, dirEnum);
+    bool more;
+    while (NS_SUCCEEDED(dir->HasMoreElements(&more)) && more) {
+      nsCOMPtr<nsISupports> item;
+      rv = dir->GetNext(getter_AddRefs(item));
+      if (NS_FAILED(rv)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      nsCOMPtr<nsIFile> file = do_QueryInterface(item, &rv);
+      if (NS_FAILED(rv)) {
+        return NS_ERROR_FAILURE;
+      }
+      // XXX: We care the result of the removal here while
+      // nsLocalFileWin does not. We should align the behavior. (bug 1779696)
+      rv = file->Remove(aRecursive, aRemoveCount);
+
+#ifdef ANDROID
+      // See bug 580434 - Bionic gives us just deleted files
+      if (rv == NS_ERROR_FILE_NOT_FOUND) {
+        continue;
+      }
+#endif
       if (NS_FAILED(rv)) {
         return rv;
       }
-
-      nsCOMPtr<nsIFile> file;
-      while (NS_SUCCEEDED(dirEnum->GetNextFile(getter_AddRefs(file))) && file) {
-        file->Remove(aRecursive, aRemoveCount);
-      }
-    }
-
-    rv = NSRESULT_FOR_RETURN(rmdir(mPath.get()));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  } else {
-    rv = NSRESULT_FOR_RETURN(unlink(mPath.get()));
-    if (NS_FAILED(rv)) {
-      return rv;
     }
   }
 
-  if (aRemoveCount) {
+  rv = NSRESULT_FOR_RETURN(rmdir(mPath.get()));
+  if (NS_SUCCEEDED(rv) && aRemoveCount) {
     *aRemoveCount += 1;
   }
-
   return rv;
 }
 
@@ -1324,7 +1344,7 @@ nsresult nsLocalFile::GetTimeImpl(PRTime* aTime,
   using StatFn = int (*)(const char*, struct STAT*);
   StatFn statFn = aFollowLinks ? &STAT : &LSTAT;
 
-  struct STAT fileStats {};
+  struct STAT fileStats{};
   if (statFn(mPath.get(), &fileStats) < 0) {
     return NSRESULT_FOR_ERRNO();
   }
@@ -1370,6 +1390,8 @@ nsresult nsLocalFile::SetTimeImpl(PRTime aTime,
   }
 #endif
 
+  ENSURE_STAT_CACHE();
+
   if (aTime == 0) {
     aTime = PR_Now();
   }
@@ -1389,19 +1411,13 @@ nsresult nsLocalFile::SetTimeImpl(PRTime aTime,
   const size_t writeIndex = aTimeField == TimeField::AccessedTime ? 0 : 1;
   const size_t copyIndex = aTimeField == TimeField::AccessedTime ? 1 : 0;
 
-  struct STAT statInfo {};
-  nsresult rv = StatFile(&statInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
 #if (defined(__APPLE__) && defined(__MACH__))
   auto* copyFrom = aTimeField == TimeField::AccessedTime
-                       ? &statInfo.st_mtimespec
-                       : &statInfo.st_atimespec;
+                       ? &mCachedStat.st_mtimespec
+                       : &mCachedStat.st_atimespec;
 #else
-  auto* copyFrom = aTimeField == TimeField::AccessedTime ? &statInfo.st_mtim
-                                                         : &statInfo.st_atim;
+  auto* copyFrom = aTimeField == TimeField::AccessedTime ? &mCachedStat.st_mtim
+                                                         : &mCachedStat.st_atim;
 #endif
 
   times[copyIndex].tv_sec = copyFrom->tv_sec;
@@ -1464,12 +1480,12 @@ nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModTimeOfLink) {
 
 NS_IMETHODIMP
 nsLocalFile::GetCreationTime(PRTime* aCreationTime) {
-  return GetCreationTimeImpl(aCreationTime, true);
+  return GetCreationTimeImpl(aCreationTime, false);
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetCreationTimeOfLink(PRTime* aCreationTimeOfLink) {
-  return GetCreationTimeImpl(aCreationTimeOfLink, false);
+  return GetCreationTimeImpl(aCreationTimeOfLink, /* aFollowLinks = */ true);
 }
 
 nsresult nsLocalFile::GetCreationTimeImpl(PRTime* aCreationTime,
@@ -1483,7 +1499,7 @@ nsresult nsLocalFile::GetCreationTimeImpl(PRTime* aCreationTime,
   using StatFn = int (*)(const char*, struct STAT*);
   StatFn statFn = aFollowLinks ? &STAT : &LSTAT;
 
-  struct STAT fileStats {};
+  struct STAT fileStats{};
   if (statFn(mPath.get(), &fileStats) < 0) {
     return NSRESULT_FOR_ERRNO();
   }
@@ -1507,14 +1523,8 @@ nsLocalFile::GetPermissions(uint32_t* aPermissions) {
   if (NS_WARN_IF(!aPermissions)) {
     return NS_ERROR_INVALID_ARG;
   }
-
-  struct STAT statInfo {};
-  nsresult rv = StatFile(&statInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *aPermissions = NORMALIZE_PERMS(statInfo.st_mode);
+  ENSURE_STAT_CACHE();
+  *aPermissions = NORMALIZE_PERMS(mCachedStat.st_mode);
   return NS_OK;
 }
 
@@ -1573,15 +1583,10 @@ nsLocalFile::GetFileSize(int64_t* aFileSize) {
     return NS_ERROR_INVALID_ARG;
   }
   *aFileSize = 0;
+  ENSURE_STAT_CACHE();
 
-  struct STAT statInfo {};
-  nsresult rv = StatFile(&statInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (!S_ISDIR(statInfo.st_mode)) {
-    *aFileSize = (int64_t)statInfo.st_size;
+  if (!S_ISDIR(mCachedStat.st_mode)) {
+    *aFileSize = (int64_t)mCachedStat.st_size;
   }
   return NS_OK;
 }
@@ -1734,14 +1739,13 @@ nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
 
 #  if defined(USE_LINUX_QUOTACTL)
 
-  struct STAT statInfo {};
-  nsresult rv = StatFile(&statInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (!FillStatCache()) {
+    // Returns info from statfs
+    return NS_OK;
   }
 
   nsAutoCString deviceName;
-  if (!GetDeviceName(major(statInfo.st_dev), minor(statInfo.st_dev),
+  if (!GetDeviceName(major(mCachedStat.st_dev), minor(mCachedStat.st_dev),
                      deviceName)) {
     // Returns info from statfs
     return NS_OK;
@@ -1791,12 +1795,11 @@ nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
 
 NS_IMETHODIMP
 nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
-#ifdef STATFS
   return GetDiskInfo(
       [](const struct STATFS& aStatInfo) {
         return aStatInfo.f_bavail * static_cast<uint64_t>(aStatInfo.F_BSIZE);
       },
-#  if defined(USE_LINUX_QUOTACTL)
+#if defined(USE_LINUX_QUOTACTL)
       [](const struct dqblk& aQuotaInfo) -> uint64_t {
         // dqb_bhardlimit is count of BLOCK_SIZE blocks, dqb_curspace is bytes
         const uint64_t hardlimit = aQuotaInfo.dqb_bhardlimit * BLOCK_SIZE;
@@ -1805,40 +1808,23 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
         }
         return 0;
       },
-#  endif
-      aDiskSpaceAvailable);
-#else
-#  ifdef DEBUG
-  printf(
-      "ERROR: GetDiskSpaceAvailable: Not implemented for plaforms without "
-      "statfs.\n");
-#  endif
-  return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+      aDiskSpaceAvailable);
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetDiskCapacity(int64_t* aDiskCapacity) {
-#ifdef STATFS
   return GetDiskInfo(
       [](const struct STATFS& aStatInfo) {
         return aStatInfo.f_blocks * static_cast<uint64_t>(aStatInfo.F_BSIZE);
       },
-#  if defined(USE_LINUX_QUOTACTL)
+#if defined(USE_LINUX_QUOTACTL)
       [](const struct dqblk& aQuotaInfo) {
         // dqb_bhardlimit is count of BLOCK_SIZE blocks
         return aQuotaInfo.dqb_bhardlimit * BLOCK_SIZE;
       },
-#  endif
-      aDiskCapacity);
-#else
-#  ifdef DEBUG
-  printf(
-      "ERROR: GetDiskCapacity: Not implemented for plaforms without "
-      "statfs.\n");
-#  endif
-  return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+      aDiskCapacity);
 }
 
 NS_IMETHODIMP
@@ -1962,22 +1948,21 @@ nsLocalFile::IsExecutable(bool* aResult) {
     // Search for any of the set of executable extensions.
     static const char* const executableExts[] = {
 #ifdef MOZ_WIDGET_COCOA
-        ".afploc",  // Can point to other files.
+        "afploc",  // Can point to other files.
 #endif
-        ".air",  // Adobe AIR installer
+        "air",  // Adobe AIR installer
 #ifdef MOZ_WIDGET_COCOA
-        ".atloc",     // Can point to other files.
-        ".command",   // Mac script
-        ".fileloc",   // File location files can be used to point to other
-                      // files.
-        ".ftploc",    // Can point to other files.
-        ".inetloc",   // Shouldn't be able to do the same, but can, due to
-                      // macOS vulnerabilities.
-        ".terminal",  // macOS Terminal app configuration files
+        "atloc",     // Can point to other files.
+        "fileloc",   // File location files can be used to point to other
+                     // files.
+        "ftploc",    // Can point to other files.
+        "inetloc",   // Shouldn't be able to do the same, but can, due to
+                     // macOS vulnerabilities.
+        "terminal",  // macOS Terminal app configuration files
 #endif
-        ".jar"  // java application bundle
+        "jar"  // java application bundle
     };
-    nsDependentSubstring ext = Substring(path, dotIdx);
+    nsDependentSubstring ext = Substring(path, dotIdx + 1);
     for (auto executableExt : executableExts) {
       if (ext.EqualsASCII(executableExt)) {
         // Found a match.  Set result and quit.
@@ -1987,7 +1972,6 @@ nsLocalFile::IsExecutable(bool* aResult) {
     }
   }
 
-  // On OS X, then query Launch Services.
 #ifdef MOZ_WIDGET_COCOA
   // Certain Mac applications, such as Classic applications, which
   // run under Rosetta, might not have the +x mode bit but are still
@@ -1997,15 +1981,16 @@ nsLocalFile::IsExecutable(bool* aResult) {
     return NS_ERROR_FAILURE;
   }
 
-  LSRequestedInfo theInfoRequest = kLSRequestAllInfo;
-  LSItemInfoRecord theInfo;
-  OSStatus result = ::LSCopyItemInfoForURL(url, theInfoRequest, &theInfo);
+  CFBooleanRef isApp = NULL;
+  *aResult = ::CFURLCopyResourcePropertyForKey(url, kCFURLIsApplicationKey,
+                                               &isApp, NULL) &&
+             (isApp == kCFBooleanTrue);
   ::CFRelease(url);
-  if (result == noErr) {
-    if ((theInfo.flags & kLSItemInfoIsApplication) != 0) {
-      *aResult = true;
-      return NS_OK;
-    }
+  if (isApp) {
+    ::CFRelease(isApp);
+  }
+  if (*aResult) {
+    return NS_OK;
   }
 #endif
 
@@ -2038,17 +2023,9 @@ nsLocalFile::IsDirectory(bool* aResult) {
   if (NS_WARN_IF(!aResult)) {
     return NS_ERROR_INVALID_ARG;
   }
-
   *aResult = false;
-
-  struct STAT statInfo {};
-  nsresult rv = StatFile(&statInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *aResult = S_ISDIR(statInfo.st_mode);
-
+  ENSURE_STAT_CACHE();
+  *aResult = S_ISDIR(mCachedStat.st_mode);
   return NS_OK;
 }
 
@@ -2058,14 +2035,8 @@ nsLocalFile::IsFile(bool* aResult) {
     return NS_ERROR_INVALID_ARG;
   }
   *aResult = false;
-
-  struct STAT statInfo {};
-  nsresult rv = StatFile(&statInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *aResult = S_ISREG(statInfo.st_mode);
+  ENSURE_STAT_CACHE();
+  *aResult = S_ISREG(mCachedStat.st_mode);
   return NS_OK;
 }
 
@@ -2100,18 +2071,12 @@ nsLocalFile::IsSpecial(bool* aResult) {
   if (NS_WARN_IF(!aResult)) {
     return NS_ERROR_INVALID_ARG;
   }
-
-  struct STAT statInfo {};
-  nsresult rv = StatFile(&statInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *aResult = S_ISCHR(statInfo.st_mode) || S_ISBLK(statInfo.st_mode) ||
+  ENSURE_STAT_CACHE();
+  *aResult = S_ISCHR(mCachedStat.st_mode) || S_ISBLK(mCachedStat.st_mode) ||
 #ifdef S_ISSOCK
-             S_ISSOCK(statInfo.st_mode) ||
+             S_ISSOCK(mCachedStat.st_mode) ||
 #endif
-             S_ISFIFO(statInfo.st_mode);
+             S_ISFIFO(mCachedStat.st_mode);
 
   return NS_OK;
 }
@@ -2283,8 +2248,9 @@ nsLocalFile::GetNativeTarget(nsACString& aResult) {
 
 NS_IMETHODIMP
 nsLocalFile::GetDirectoryEntriesImpl(nsIDirectoryEnumerator** aEntries) {
-  RefPtr<nsDirEnumeratorUnix> dir;
-  nsresult rv = nsDirEnumeratorUnix::Create(this, dir);
+  RefPtr<nsDirEnumeratorUnix> dir = new nsDirEnumeratorUnix();
+
+  nsresult rv = dir->Init(this, false);
   if (NS_FAILED(rv)) {
     *aEntries = nullptr;
   } else {
@@ -2815,18 +2781,17 @@ nsLocalFile::IsPackage(bool* aResult) {
     return rv;
   }
 
-  CFBooleanRef isPackage = nullptr;
-  Boolean success = ::CFURLCopyResourcePropertyForKey(url, kCFURLIsPackageKey,
-                                                      &isPackage, nullptr);
+  LSItemInfoRecord info;
+  OSStatus status =
+      ::LSCopyItemInfoForURL(url, kLSRequestBasicFlagsOnly, &info);
 
   ::CFRelease(url);
 
-  if (!success) {
+  if (status != noErr) {
     return NS_ERROR_FAILURE;
   }
 
-  *aResult = ::CFBooleanGetValue(isPackage);
-  ::CFRelease(isPackage);
+  *aResult = !!(info.flags & kLSItemInfoIsPackage);
 
   return NS_OK;
 }

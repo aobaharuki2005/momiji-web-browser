@@ -3,16 +3,17 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
- * Result of a single iteration of {@link CodePointRangeIterator}.
+ * Result of a single iteration of [`CodePointRangeIterator`].
  * Logically can be considered to be an `Option<RangeInclusive<DiplomatChar>>`,
  *
- * `start` and `end` represent an inclusive range of code points `[start, end]`,
+ * `start` and `end` represent an inclusive range of code points [start, end],
  * and `done` will be true if the iterator has already finished. The last contentful
- * iteration will NOT produce a range `done=true`, in other words `start` and `end` are useful
+ * iteration will NOT produce a range done=true, in other words `start` and `end` are useful
  * values if and only if `done=false`.
  */
+
+
 export class CodePointRangeIteratorResult {
     #start;
     get start() {
@@ -61,13 +62,7 @@ export class CodePointRangeIteratorResult {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 12, 4);
-
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-
-        functionCleanupArena.alloc(buffer);
-
-        return buffer.ptr;
+        return [this.#start, this.#end, this.#done, /* [3 x i8] padding */ 0, 0, 0 /* end padding */]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -126,7 +128,6 @@ public:
   MakeCall(JSContext* aCx, dom::UniFFICallbackHandler* aJsHandler, ErrorResult& aError) override {
     // Convert arguments
     nsTArray<dom::OwningUniFFIScaffoldingValue> uniffiArgs;
-    SequenceRooter<dom::OwningUniFFIScaffoldingValue> uniffiArgsRooter(aCx, &uniffiArgs);
     if (!uniffiArgs.AppendElements({{ arguments.len()  }}, mozilla::fallible)) {
       aError.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
@@ -184,7 +185,7 @@ extern "C" void {{ meth.fn_name }}(
   // This can be used to detected when the future is dropped from the Rust side and cancel the
   // async task on the foreign side.  However, there's no way to do that in JS, so we just ignore
   // it.
-  ForeignFutureDroppedCallbackStruct *aUniffiOutForeignFuture
+  ForeignFuture *aUniffiOutForeignFuture
 ) {
   UniquePtr<AsyncCallbackMethodHandlerBase> handler = MakeUnique<{{ meth.async_handler_class_name }}>(
         aUniffiHandle,
@@ -236,7 +237,6 @@ public:
   MakeCall(JSContext* aCx, dom::UniFFICallbackHandler* aJsHandler, ErrorResult& aError) override {
     // Convert arguments
     nsTArray<dom::OwningUniFFIScaffoldingValue> uniffiArgs;
-    SequenceRooter<dom::OwningUniFFIScaffoldingValue> uniffiArgsRooter(aCx, &uniffiArgs);
     if (!uniffiArgs.AppendElements({{ arguments.len()  }}, mozilla::fallible)) {
       aError.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
@@ -298,7 +298,6 @@ extern "C" void {{ meth.fn_name }}(
 
   // Convert arguments
   nsTArray<dom::OwningUniFFIScaffoldingValue> uniffiArgs;
-  SequenceRooter<dom::OwningUniFFIScaffoldingValue> uniffiArgsRooter(aes.cx(), &uniffiArgs);
   if (!uniffiArgs.AppendElements({{ arguments.len()  }}, mozilla::fallible)) {
     MOZ_LOG(gUniffiLogger, LogLevel::Error, ("[{{ meth.fn_name }}] Failed to allocate arguments"));
     return;
@@ -332,27 +331,19 @@ extern "C" void {{ meth.fn_name }}(
 {%- endmatch %}
 {%- endfor %}
 
-extern "C" void {{ cbi.free_fn }}(uint64_t aUniffiHandle) {
-  if (CallbackHandleRelease(aUniffiHandle) == 0) {
+extern "C" void {{ cbi.free_fn }}(uint64_t uniffiHandle) {
    // Callback object handles are keys in a map stored in the JS handler. To
    // handle the free call, schedule a fire-and-forget JS call to remove the key.
    AsyncCallbackMethodHandlerBase::ScheduleAsyncCall(
-      MakeUnique<CallbackFreeHandler>("{{ cbi.name }}.uniffi_free", aUniffiHandle),
+      MakeUnique<CallbackFreeHandler>("{{ cbi.name }}.uniffi_free", uniffiHandle),
       &{{ cbi.handler_var }});
-  }
-}
-
-extern "C" uint64_t {{ cbi.clone_fn }}(uint64_t aUniffiHandle) {
-  CallbackHandleAddRef(aUniffiHandle);
-  return aUniffiHandle;
 }
 
 static {{ cbi.vtable_struct_type.type_name }} {{ cbi.vtable_var }} {
-  {{ cbi.free_fn }},
-  {{ cbi.clone_fn }},
   {%- for meth in cbi.methods %}
   {{ meth.fn_name }},
   {%- endfor %}
+  {{ cbi.free_fn }}
 };
 
 {%- endfor %}

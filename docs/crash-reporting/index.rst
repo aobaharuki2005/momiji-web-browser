@@ -1,5 +1,5 @@
-Firefox Crash Reporting
-=======================
+Crash reporting
+===============
 
 Firefox ships with an open-source crash reporting system. This system is
 combination of projects:

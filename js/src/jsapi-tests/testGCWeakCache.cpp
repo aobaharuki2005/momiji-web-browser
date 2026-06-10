@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -351,7 +354,7 @@ bool GCUntilCacheSweep(JSContext* cx, const Cache& cache) {
 
   CHECK(IsIncrementalGCInProgress(cx));
   CHECK(zone->isGCSweeping());
-  CHECK(cache.needsMarkingBarrier());
+  CHECK(cache.needsIncrementalBarrier());
 
   return true;
 }
@@ -366,7 +369,7 @@ bool SweepCacheAndFinishGC(JSContext* cx, const Cache& cache) {
   JS::Zone* zone = JS::GetObjectZone(global);
   CHECK(!IsIncrementalGCInProgress(cx));
   CHECK(!zone->isCollecting());
-  CHECK(!cache.needsMarkingBarrier());
+  CHECK(!cache.needsIncrementalBarrier());
 
   return true;
 }
@@ -430,8 +433,8 @@ bool TestSet() {
   CHECK(!cache.has(static_cast<JSObject*>(old4)));
 
   size_t count = 0;
-  for (auto iter = cache.iter(); !iter.done(); iter.next()) {
-    CHECK(iter.get() == obj1 || iter.get() == obj2);
+  for (auto r = cache.all(); !r.empty(); r.popFront()) {
+    CHECK(r.front() == obj1 || r.front() == obj2);
     count++;
   }
   CHECK(count == 2);
@@ -531,7 +534,7 @@ bool TestMap() {
   CHECK(cache.lookup(obj1)->key() == obj1);
 
   CHECK(GCUntilCacheSweep(cx, cache));
-  CHECK(cache.needsMarkingBarrier());
+  CHECK(cache.needsIncrementalBarrier());
 
   CHECK(!cache.has(obj2));
   CHECK(cache.put(obj2, 2));
@@ -539,7 +542,7 @@ bool TestMap() {
   CHECK(cache.lookup(obj2)->key() == obj2);
 
   CHECK(SweepCacheAndFinishGC(cx, cache));
-  CHECK(!cache.needsMarkingBarrier());
+  CHECK(!cache.needsIncrementalBarrier());
 
   CHECK(cache.count() == 2);
   CHECK(cache.has(obj1));
@@ -561,8 +564,8 @@ bool TestMap() {
   CHECK(!cache.has(static_cast<JSObject*>(old4)));
 
   size_t count = 0;
-  for (auto iter = cache.iter(); !iter.done(); iter.next()) {
-    CHECK(iter.get().key() == obj1 || iter.get().key() == obj2);
+  for (auto r = cache.all(); !r.empty(); r.popFront()) {
+    CHECK(r.front().key() == obj1 || r.front().key() == obj2);
     count++;
   }
   CHECK(count == 2);

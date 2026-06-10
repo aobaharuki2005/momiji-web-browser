@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -208,7 +210,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".class",  // Java
     //".cmd", exec // Windows executable
     //".com", exec // Windows executable
-    //".command", exec  // Mac script
+    ".command",        // Mac script
     ".configprofile",  // Configuration file for Apple systems
     ".cpgz",           // Mac archive
     ".cpi",            // Control Panel Item. Executable used for adding icons
@@ -431,9 +433,9 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".scptd",  // AppleScript
     //".scr", exec         // Windows
     //".sct", exec         // Windows shell
-    //".search-ms", exec         // Windows Saved Search
-    ".seplugin",  // AppleScript
-    ".service",   // Systemd service unit file
+    ".search-ms",  // Windows
+    ".seplugin",   // AppleScript
+    ".service",    // Systemd service unit file
     //".settingcontent-ms", exec // Windows settings
     ".sh",    // Linux shell
     ".shar",  // Linux shell
@@ -504,7 +506,6 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".workflow",  // Mac Automator
     //".wrc", // FreeArc archive
     //".ws",  exec  // Windows script
-    ".wsb",  // Windows Sandbox configuration
     //".wsc", exec  // Windows script
     //".wsf", exec  // Windows script
     //".wsh", exec  // Windows script
@@ -797,8 +798,7 @@ PendingDBLookup::~PendingDBLookup() {
 
 nsresult PendingDBLookup::LookupSpec(const nsACString& aSpec,
                                      const LookupType& aLookupType) {
-  LOG(("Checking principal %s [this=%p]", PromiseFlatCString(aSpec).get(),
-       this));
+  LOG(("Checking principal %s [this=%p]", aSpec.Data(), this));
   mSpec = aSpec;
   mLookupType = aLookupType;
   nsresult rv = LookupSpecInternal(aSpec);

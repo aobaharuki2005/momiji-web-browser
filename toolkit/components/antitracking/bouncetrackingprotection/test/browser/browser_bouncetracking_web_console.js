@@ -73,6 +73,7 @@ add_setup(async function () {
         "privacy.bounceTrackingProtection.mode",
         Ci.nsIBounceTrackingProtection.MODE_ENABLED,
       ],
+      ["privacy.bounceTrackingProtection.requireStatefulBounces", true],
       ["privacy.bounceTrackingProtection.bounceTrackingGracePeriodSec", 0],
     ],
   });

@@ -1,9 +1,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::util::HeaderValueString;
+use util::HeaderValueString;
 
-/// `Server` header, defined in [RFC7231](https://datatracker.ietf.org/doc/html/rfc7231#section-7.4.2)
+/// `Server` header, defined in [RFC7231](http://tools.ietf.org/html/rfc7231#section-7.4.2)
 ///
 /// The `Server` header field contains information about the software
 /// used by the origin server to handle the request, which is often used
@@ -25,6 +25,7 @@ use crate::util::HeaderValueString;
 /// # Example
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::Server;
 ///
 /// let server = Server::from_static("hyper/0.12.2");
@@ -43,7 +44,7 @@ impl Server {
     /// # Panic
     ///
     /// Panics if the static string is not a legal header value.
-    pub const fn from_static(s: &'static str) -> Server {
+    pub fn from_static(s: &'static str) -> Server {
         Server(HeaderValueString::from_static(s))
     }
 

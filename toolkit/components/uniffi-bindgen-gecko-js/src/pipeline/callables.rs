@@ -7,10 +7,10 @@ use crate::ConcurrencyMode;
 
 use anyhow::{anyhow, bail, Result};
 
-pub fn pass(namespace: &mut Namespace) -> Result<()> {
+pub fn pass(module: &mut Module) -> Result<()> {
     // We have to generate for_callback_interface for now.  In the future, this probably should be
     // done in the general pipeline.
-    namespace.visit_mut(|cbi: &mut CallbackInterface| {
+    module.visit_mut(|cbi: &mut CallbackInterface| {
         cbi.visit_mut(|callable: &mut Callable| {
             if let CallableKind::VTableMethod {
                 for_callback_interface,
@@ -22,31 +22,29 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
         });
     });
 
-    let async_wrappers = &namespace.config.async_wrappers;
-    let namespace_name = &namespace.name;
+    let async_wrappers = &module.config.async_wrappers;
+    let module_name = &module.name;
 
     // Track unconfigured callables for later reporting
     let mut unconfigured_callables = Vec::new();
 
     // Configure all callables
-    namespace
-        .functions
-        .try_visit_mut(|callable: &mut Callable| {
-            handle_callable(
-                callable,
-                async_wrappers,
-                &mut unconfigured_callables,
-                namespace_name,
-            )
-        })?;
-    namespace
+    module.functions.try_visit_mut(|callable: &mut Callable| {
+        handle_callable(
+            callable,
+            async_wrappers,
+            &mut unconfigured_callables,
+            module_name,
+        )
+    })?;
+    module
         .type_definitions
         .try_visit_mut(|callable: &mut Callable| {
             handle_callable(
                 callable,
                 async_wrappers,
                 &mut unconfigured_callables,
-                namespace_name,
+                module_name,
             )
         })?;
 
@@ -55,7 +53,7 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
         let mut message = format!(
             "Found {} callables in module '{}' without explicit async/sync configuration in config.toml:\n",
             unconfigured_callables.len(),
-            namespace_name
+            module_name
         );
 
         for (spec, info, _) in &unconfigured_callables {
@@ -65,7 +63,7 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
         message.push_str(
             "\nPlease add these callables to the `toolkit/components/uniffi-bindgen-gecko-js/config.toml` file with explicit configuration:\n",
         );
-        message.push_str(&format!("[{}.async_wrappers]\n", namespace.crate_name));
+        message.push_str(&format!("[{}.async_wrappers]\n", module.crate_name));
 
         for (spec, _, example) in &unconfigured_callables {
             message.push_str(&format!("\"{spec}\" = {example}\n"));
@@ -87,30 +85,31 @@ fn handle_callable(
     let name = &callable.name;
     let spec = match &callable.kind {
         CallableKind::Function => name.clone(),
-        CallableKind::Method { self_type, .. } | CallableKind::Constructor { self_type, .. } => {
-            let interface_name = self_type.ty.name()?;
+        CallableKind::Method { interface_name, .. }
+        | CallableKind::Constructor { interface_name, .. } => {
             format!("{interface_name}.{name}")
         }
-        CallableKind::VTableMethod { self_type, .. } => {
-            let trait_name = self_type.ty.name()?;
+        CallableKind::VTableMethod { trait_name, .. } => {
             format!("{trait_name}.{name}")
         }
     };
 
     let config = async_wrappers.get(&spec);
     // If the config is not set, check for a parent config
-    let config = match config {
-        Some(c) => Some(c),
-        None => match &callable.kind {
-            CallableKind::Method { self_type, .. }
-            | CallableKind::Constructor { self_type, .. }
-            | CallableKind::VTableMethod { self_type, .. } => {
-                let parent = self_type.ty.name()?;
-                async_wrappers.get(parent)
-            }
-            _ => None,
-        },
-    };
+    let config = config.or_else(|| match &callable.kind {
+        CallableKind::Method {
+            interface_name: parent,
+            ..
+        }
+        | CallableKind::Constructor {
+            interface_name: parent,
+            ..
+        }
+        | CallableKind::VTableMethod {
+            trait_name: parent, ..
+        } => async_wrappers.get(parent),
+        _ => None,
+    });
     // Finally, default to `Async` for async methods
     let config = config.or_else(|| {
         if callable.async_data.is_some() {
@@ -166,23 +165,17 @@ fn handle_callable(
                 CallableKind::Function => {
                     format!("Function '{}' in module '{}'", name, module_name)
                 }
-                CallableKind::Method { self_type, .. } => format!(
+                CallableKind::Method { interface_name, .. } => format!(
                     "Method '{}.{}' in module '{}'",
-                    self_type.ty.name()?,
-                    name,
-                    module_name
+                    interface_name, name, module_name
                 ),
-                CallableKind::Constructor { self_type, .. } => format!(
+                CallableKind::Constructor { interface_name, .. } => format!(
                     "Constructor '{}.{}' in module '{}'",
-                    self_type.ty.name()?,
-                    name,
-                    module_name
+                    interface_name, name, module_name
                 ),
-                CallableKind::VTableMethod { self_type, .. } => format!(
+                CallableKind::VTableMethod { trait_name, .. } => format!(
                     "VTable method '{}.{}' in module '{}'",
-                    self_type.ty.name()?,
-                    name,
-                    module_name
+                    trait_name, name, module_name
                 ),
             };
 

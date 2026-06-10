@@ -11,7 +11,7 @@ add_task(async function () {
   // We should not enforce https for tests using this page.
   await pushPref("dom.security.https_first", false);
 
-  await openTabAndSetupStorage(MAIN_URL + "storage-listings.html");
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
   const contextMenu = gPanelWindow.document.getElementById(
     "storage-table-popup"
@@ -23,27 +23,30 @@ add_task(async function () {
   info("test state before delete");
   const beforeState = [
     [
-      ["localStorage", MAIN_ORIGIN],
+      ["localStorage", "http://test1.example.org"],
       ["key", "ls1", "ls2"],
     ],
-    [["localStorage", ALT_ORIGIN], ["iframe-u-ls1"]],
-    [["localStorage", ALT_ORIGIN_SECURED], ["iframe-s-ls1"]],
+    [["localStorage", "http://sectest1.example.org"], ["iframe-u-ls1"]],
+    [["localStorage", "https://sectest1.example.org"], ["iframe-s-ls1"]],
     [
-      ["sessionStorage", MAIN_ORIGIN],
+      ["sessionStorage", "http://test1.example.org"],
       ["key", "ss1"],
     ],
     [
-      ["sessionStorage", ALT_ORIGIN],
+      ["sessionStorage", "http://sectest1.example.org"],
       ["iframe-u-ss1", "iframe-u-ss2"],
     ],
-    [["sessionStorage", ALT_ORIGIN_SECURED], ["iframe-s-ss1"]],
+    [["sessionStorage", "https://sectest1.example.org"], ["iframe-s-ss1"]],
     [
-      ["indexedDB", MAIN_ORIGIN, "idb1 (default)", "obj1"],
+      ["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
       [1, 2, 3],
     ],
     [
-      ["Cache", MAIN_ORIGIN, "plop"],
-      [MAIN_URL + "404_cached_file.js", MAIN_URL + "browser_storage_basic.js"],
+      ["Cache", "http://test1.example.org", "plop"],
+      [
+        MAIN_DOMAIN + "404_cached_file.js",
+        MAIN_DOMAIN + "browser_storage_basic.js",
+      ],
     ],
   ];
 
@@ -51,10 +54,22 @@ add_task(async function () {
 
   info("do the delete");
   const deleteHosts = [
-    [["localStorage", ALT_ORIGIN_SECURED], "iframe-s-ls1", "name"],
-    [["sessionStorage", ALT_ORIGIN_SECURED], "iframe-s-ss1", "name"],
-    [["indexedDB", MAIN_ORIGIN, "idb1 (default)", "obj1"], 1, "name"],
-    [["Cache", MAIN_ORIGIN, "plop"], MAIN_URL + "404_cached_file.js", "url"],
+    [["localStorage", "https://sectest1.example.org"], "iframe-s-ls1", "name"],
+    [
+      ["sessionStorage", "https://sectest1.example.org"],
+      "iframe-s-ss1",
+      "name",
+    ],
+    [
+      ["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
+      1,
+      "name",
+    ],
+    [
+      ["Cache", "http://test1.example.org", "plop"],
+      MAIN_DOMAIN + "404_cached_file.js",
+      "url",
+    ],
   ];
 
   for (const [store, rowName, cellToClick] of deleteHosts) {
@@ -78,22 +93,22 @@ add_task(async function () {
     // iframes from the same host, one secure, one unsecure, are independent
     // from each other. Delete all in one doesn't touch the other one.
     [
-      ["localStorage", MAIN_ORIGIN],
+      ["localStorage", "http://test1.example.org"],
       ["key", "ls1", "ls2"],
     ],
-    [["localStorage", ALT_ORIGIN], ["iframe-u-ls1"]],
-    [["localStorage", ALT_ORIGIN_SECURED], []],
+    [["localStorage", "http://sectest1.example.org"], ["iframe-u-ls1"]],
+    [["localStorage", "https://sectest1.example.org"], []],
     [
-      ["sessionStorage", MAIN_ORIGIN],
+      ["sessionStorage", "http://test1.example.org"],
       ["key", "ss1"],
     ],
     [
-      ["sessionStorage", ALT_ORIGIN],
+      ["sessionStorage", "http://sectest1.example.org"],
       ["iframe-u-ss1", "iframe-u-ss2"],
     ],
-    [["sessionStorage", ALT_ORIGIN_SECURED], []],
-    [["indexedDB", MAIN_ORIGIN, "idb1 (default)", "obj1"], []],
-    [["Cache", MAIN_ORIGIN, "plop"], []],
+    [["sessionStorage", "https://sectest1.example.org"], []],
+    [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"], []],
+    [["Cache", "http://test1.example.org", "plop"], []],
   ];
 
   await checkState(afterState);

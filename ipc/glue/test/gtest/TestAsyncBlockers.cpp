@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -109,7 +110,7 @@ TEST_F(TestAsyncBlockers, NoRegister_WaitUntilClear) {
   nsCOMPtr<nsITimer> timer = NS_NewTimer();
   ASSERT_TRUE(timer);
 
-  RefPtr timerCb = MakeRefPtr<AsyncBlockerTimerCallback>();
+  RefPtr<AsyncBlockerTimerCallback> timerCb = new AsyncBlockerTimerCallback();
   timer->InitWithCallback(timerCb, 1 * 1000, nsITimer::TYPE_ONE_SHOT);
 
   blockers.WaitUntilClear(10 * 1000)->Then(GetCurrentSerialEventTarget(),

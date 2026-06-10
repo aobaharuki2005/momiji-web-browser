@@ -14,6 +14,9 @@ const {
   snapshotState: states,
   viewState,
 } = require("resource://devtools/client/memory/constants.js");
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
+);
 
 add_task(async function () {
   const s1 = utils.createSnapshot({ view: { state: viewState.CENSUS } });
@@ -30,7 +33,7 @@ add_task(async function () {
   );
 
   const custom = { by: "internalType", then: { by: "count", bytes: true } };
-  Services.prefs.setStringPref(
+  Preferences.set(
     "devtools.memory.custom-census-displays",
     JSON.stringify({ "My Display": custom })
   );

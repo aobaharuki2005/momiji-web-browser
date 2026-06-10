@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TelemetryIPCAccumulator_h_
-#define TelemetryIPCAccumulator_h_
+#ifndef TelemetryIPCAccumulator_h__
+#define TelemetryIPCAccumulator_h__
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Maybe.h"
@@ -52,4 +53,4 @@ void DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent);
 }  // namespace TelemetryIPCAccumulator
 }  // namespace mozilla
 
-#endif  // TelemetryIPCAccumulator_h_
+#endif  // TelemetryIPCAccumulator_h__

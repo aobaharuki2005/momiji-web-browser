@@ -29,15 +29,9 @@ function asyncStoreHelper(root, mappings) {
   Object.keys(mappings).map(key =>
     Object.defineProperty(store, key, {
       async get() {
-        let value;
-        const fullKey = `${root}.${getMappingKey(key)}`;
-        try {
-          value = await asyncStorage.getItem(fullKey);
-        } catch {
-          console.error(
-            `Failed to retrieve the async storage item for ${fullKey}, falling back to default value.`
-          );
-        }
+        const value = await asyncStorage.getItem(
+          `${root}.${getMappingKey(key)}`
+        );
         return value || getMappingDefaultValue(key);
       },
       set(value) {

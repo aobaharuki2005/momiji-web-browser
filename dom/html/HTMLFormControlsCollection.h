@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,10 +7,11 @@
 #ifndef mozilla_dom_HTMLFormControlsCollection_h
 #define mozilla_dom_HTMLFormControlsCollection_h
 
-#include "mozilla/dom/ContentList.h"
 #include "mozilla/dom/TreeOrderedArray.h"
+#include "nsIHTMLCollection.h"
 #include "nsInterfaceHashtable.h"
 #include "nsTArray.h"
+#include "nsWrapperCache.h"
 
 class nsGenericHTMLFormElement;
 class nsIContent;
@@ -24,21 +27,22 @@ class OwningRadioNodeListOrElement;
 template <typename>
 struct Nullable;
 
-class HTMLFormControlsCollection final : public HTMLCollection {
+class HTMLFormControlsCollection final : public nsIHTMLCollection,
+                                         public nsWrapperCache {
  public:
   explicit HTMLFormControlsCollection(HTMLFormElement* aForm);
 
   void DropFormReference();
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  uint32_t Length() override;
-  Element* Item(uint32_t aIndex) override;
-  nsINode* GetParentObject() override;
+  virtual uint32_t Length() override;
+  virtual Element* GetElementAt(uint32_t index) override;
+  virtual nsINode* GetParentObject() override;
 
-  Element* GetFirstNamedElement(const nsAString& aName, bool& aFound) override;
+  virtual Element* GetFirstNamedElement(const nsAString& aName,
+                                        bool& aFound) override;
 
-  using HTMLCollection::NamedItem;
   void NamedGetter(const nsAString& aName, bool& aFound,
                    Nullable<OwningRadioNodeListOrElement>& aResult);
   void NamedItem(const nsAString& aName,
@@ -46,7 +50,7 @@ class HTMLFormControlsCollection final : public HTMLCollection {
     bool dummy;
     NamedGetter(aName, dummy, aResult);
   }
-  void GetSupportedNames(nsTArray<nsString>& aNames) override;
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);
@@ -70,11 +74,22 @@ class HTMLFormControlsCollection final : public HTMLCollection {
   nsresult GetSortedControls(
       nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls) const;
 
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override;
+  // nsWrapperCache
+  using nsWrapperCache::GetWrapper;
+  using nsWrapperCache::GetWrapperPreserveColor;
+  using nsWrapperCache::PreserveWrapper;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
   virtual ~HTMLFormControlsCollection();
+  virtual JSObject* GetWrapperPreserveColorInternal() override {
+    return nsWrapperCache::GetWrapperPreserveColor();
+  }
+  virtual void PreserveWrapperInternal(
+      nsISupports* aScriptObjectHolder) override {
+    nsWrapperCache::PreserveWrapper(aScriptObjectHolder);
+  }
 
  public:
   static bool ShouldBeInElements(const nsIFormControl* aFormControl);
@@ -84,18 +99,15 @@ class HTMLFormControlsCollection final : public HTMLCollection {
   // Holds WEAK references - bug 36639
   // NOTE(emilio): These are not guaranteed to be descendants of mForm, because
   // of the form attribute, though that's likely.
-  TreeOrderedArray<nsGenericHTMLFormElement*, TreeKind::ShadowIncludingDOM>
-      mElements;
+  TreeOrderedArray<nsGenericHTMLFormElement*> mElements;
 
   // This array holds on to all form controls that are not contained
   // in mElements (form.elements in JS, see ShouldBeInFormControl()).
   // This is needed to properly clean up the bi-directional references
   // (both weak and strong) between the form and its form controls.
-  TreeOrderedArray<nsGenericHTMLFormElement*, TreeKind::ShadowIncludingDOM>
-      mNotInElements;
+  TreeOrderedArray<nsGenericHTMLFormElement*> mNotInElements;
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
-      HTMLFormControlsCollection, HTMLCollection)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(HTMLFormControlsCollection)
 
  protected:
   // Drop all our references to the form elements

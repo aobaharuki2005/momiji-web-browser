@@ -19,7 +19,7 @@ add_setup(async function () {
     set: [["test.wait300msAfterTabSwitch", true]],
   });
 
-  await SearchService.init();
+  await Services.search.init();
 
   await SearchTestUtils.installSearchExtension(
     {

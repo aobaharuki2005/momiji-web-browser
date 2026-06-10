@@ -46,9 +46,7 @@
 #define SRTP_PRIV_H
 
 // Leave this as the top level import. Ensures the existence of defines
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "config.h"
 
 #include "srtp.h"
 #include "rdbx.h"
@@ -145,7 +143,6 @@ typedef struct srtp_stream_ctx_t_ {
     int allow_repeat_tx;
     int *enc_xtn_hdr;
     int enc_xtn_hdr_count;
-    int use_cryptex;
     uint32_t pending_roc;
     /*
     The next and prev pointers are here to allow for a stream list to be

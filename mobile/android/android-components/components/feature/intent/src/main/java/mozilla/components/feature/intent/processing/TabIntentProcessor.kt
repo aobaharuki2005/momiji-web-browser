@@ -61,6 +61,7 @@ class TabIntentProcessor(
         return if (url.isNullOrEmpty()) {
             false
         } else {
+            // Don't do app-link DNS warmup when DoH is enabled. See Bug 1929005.
             warmupNativeDNS(url.toNormalizedUrl())
             createSpeculativeConnection(url.toNormalizedUrl())
 
@@ -92,39 +93,13 @@ class TabIntentProcessor(
     private fun warmupNativeDNS(normalizedUrl: String) {
         GlobalScope.launch(IO) {
             try {
-                val hostToWarmup = getHostForDnsWarmup(normalizedUrl)
-                if (hostToWarmup != null) {
-                    logger.debug("DNS warmup for host: $hostToWarmup (original URL: $normalizedUrl)")
-                    InetAddress.getByName(hostToWarmup)
-                } else {
-                    logger.debug("Skipping DNS warmup (DoH enabled but no provider URL)")
-                }
+                val url = URL(normalizedUrl)
+                InetAddress.getByName(url.host)
+            } catch (e: MalformedURLException) {
+                logger.error("The normalized URL is malformed.")
             } catch (e: UnknownHostException) {
                 logger.error("The IP address of a host could not be determined.")
             }
-        }
-    }
-
-    private fun getWarmupUrl(normalizedUrl: String): String? {
-        val engineSettings = engine?.settings ?: return normalizedUrl
-        val dohMode = engineSettings.dohSettingsMode
-        val isDohEnabled = dohMode == Engine.DohSettingsMode.INCREASED ||
-            dohMode == Engine.DohSettingsMode.MAX
-        return if (isDohEnabled) {
-            engineSettings.dohProviderUrl.ifEmpty { null }
-        } else {
-            normalizedUrl
-        }
-    }
-
-    @VisibleForTesting
-    internal fun getHostForDnsWarmup(normalizedUrl: String): String? {
-        val warmupUrl = getWarmupUrl(normalizedUrl) ?: return null
-        return try {
-            URL(warmupUrl).host
-        } catch (e: MalformedURLException) {
-            logger.error("Warmup URL is malformed: $warmupUrl")
-            null
         }
     }
 

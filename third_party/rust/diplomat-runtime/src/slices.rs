@@ -3,8 +3,7 @@ use core::marker::PhantomData;
 use core::mem::ManuallyDrop;
 use core::ops::{Deref, DerefMut};
 use core::ptr::NonNull;
-
-/// This is equivalent to `&[T]`, except it has a stable `repr(C)` layout
+/// This is equivalent to &[T], except it has a stable repr(C) layout
 #[repr(C)]
 pub struct DiplomatSlice<'a, T> {
     // Invariant: ptr is a valid ptr to the beginning of an &[T] allocation. It may be null if len is null
@@ -54,7 +53,7 @@ impl<T> Deref for DiplomatSlice<'_, T> {
     }
 }
 
-/// This is equivalent to `&mut [T]`, except it has a stable repr(C) layout
+/// This is equivalent to &mut [T], except it has a stable repr(C) layout
 #[repr(C)]
 pub struct DiplomatSliceMut<'a, T> {
     // Invariant: ptr is a valid ptr to the beginning of an &[T] allocation.  It may be null if len is null
@@ -117,11 +116,6 @@ impl<T> DerefMut for DiplomatSliceMut<'_, T> {
     }
 }
 
-/// This is equivalent to `Box<[T]>`.
-///
-/// By and large, this is useful when a backend like JS or Dart needs to allocate
-/// a new slice in Rust memory to pass data around *anyway*, so we can avoid wasting
-/// allocations by reusing them in Rust.
 #[repr(C)]
 pub struct DiplomatOwnedSlice<T> {
     // Invariant: ptr is a valid ptr to the beginning of an owned Box<[T]> allocation.  It may be null if len is null
@@ -194,7 +188,7 @@ impl<T> DerefMut for DiplomatOwnedSlice<T> {
     }
 }
 
-/// This is equivalent to `&str`, except it has a stable `repr(C)` layout
+/// This is equivalent to &str, except it has a stable repr(C) layout
 // Safety invariant: contained slice must be valid UTF-8
 #[repr(transparent)]
 #[derive(Copy, Clone)]
@@ -223,7 +217,7 @@ impl Deref for DiplomatUtf8StrSlice<'_> {
     }
 }
 
-/// This is equivalent to `Box<str>`, except it has a stable `repr(C)` layout
+/// This is equivalent to Box<str>, except it has a stable repr(C) layout
 // Safety invariant: contained slice must be valid UTF-8
 #[repr(transparent)]
 pub struct DiplomatOwnedUTF8StrSlice(DiplomatOwnedSlice<u8>);
@@ -269,23 +263,11 @@ impl Deref for DiplomatOwnedUTF8StrSlice {
     }
 }
 
-/// This like `&str`, but unvalidated and safe to use over FFI
-///
-/// This type will usually map to some string type in the target language, and
-/// you will not need to worry about the safety of mismatched string invariants.
+/// Like &str, but unvalidated
 pub type DiplomatStrSlice<'a> = DiplomatSlice<'a, u8>;
-/// This like `Box<str>`, but unvalidated and safe to use over FFI
-///
-/// This type will usually map to some string type in the target language, and
-/// you will not need to worry about the safety of mismatched string invariants.
+/// Like Box<str>, but unvalidated
 pub type DiplomatOwnedStrSlice = DiplomatOwnedSlice<u8>;
-/// An unvalidated UTF-16 string that is safe to use over FFI
-///
-/// This type will usually map to some string type in the target language, and
-/// you will not need to worry about the safety of mismatched string invariants.
+/// An unvalidated UTF-16 string
 pub type DiplomatStr16Slice<'a> = DiplomatSlice<'a, u16>;
-/// An unvalidated, owned UTF-16 string that is safe to use over FFI
-///
-/// This type will usually map to some string type in the target language, and
-/// you will not need to worry about the safety of mismatched string invariants.
+/// An unvalidated, owned UTF-16 string
 pub type DiplomatOwnedStr16Slice<'a> = DiplomatOwnedSlice<u16>;

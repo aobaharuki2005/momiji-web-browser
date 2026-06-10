@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_devtools_DeserializedNode_
-#define mozilla_devtools_DeserializedNode_
+#ifndef mozilla_devtools_DeserializedNode__
+#define mozilla_devtools_DeserializedNode__
 
 #include <utility>
 
@@ -90,7 +91,7 @@ struct DeserializedNode {
         scriptFilename(filename),
         descriptiveTypeName(descriptiveName),
         owner(&owner) {}
-  virtual ~DeserializedNode() = default;
+  virtual ~DeserializedNode() {}
 
   DeserializedNode(DeserializedNode&& rhs)
       : id(rhs.id),
@@ -304,4 +305,4 @@ class ConcreteStackFrame<DeserializedStackFrame> : public BaseStackFrame {
 }  // namespace ubi
 }  // namespace JS
 
-#endif  // mozilla_devtools_DeserializedNode_
+#endif  // mozilla_devtools_DeserializedNode__

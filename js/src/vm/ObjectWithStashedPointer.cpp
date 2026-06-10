@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -15,15 +17,23 @@ static void ObjectWithUntypedStashedPointerFinalize(JS::GCContext*,
                                                     JSObject* obj) {
   AutoAssertNoGC nogc;
 
-  void* freeFunc =
-      GetMaybePtrFromNativeObjectReservedSlot<void>(obj, FREE_FUNC_SLOT);
-  void* data = GetMaybePtrFromNativeObjectReservedSlot<void>(obj, DATA_SLOT);
+  void* freeFunc = GetMaybePtrFromReservedSlot<void>(obj, FREE_FUNC_SLOT);
+  void* data = GetMaybePtrFromReservedSlot<void>(obj, DATA_SLOT);
 
   reinterpret_cast<UntypedFreeFunction>(freeFunc)(data);
 }
 
 static const JSClassOps classOps = {
-    .finalize = ObjectWithUntypedStashedPointerFinalize,
+    nullptr,  // addProperty
+    nullptr,  // delProperty
+    nullptr,  // enumerate
+    nullptr,  // newEnumerate
+    nullptr,  // resolve
+    nullptr,  // mayResolve
+    ObjectWithUntypedStashedPointerFinalize,
+    nullptr,  // call
+    nullptr,  // construct
+    nullptr,  // trace
 };
 
 static const JSClass DataOnlyClass = {
@@ -44,7 +54,7 @@ JSObject* NewObjectWithUntypedStashedPointer(JSContext* cx, void* ptr,
     if (!retval) {
       return nullptr;
     }
-    JS::SetNativeObjectReservedSlot(retval, DATA_SLOT, JS::PrivateValue(ptr));
+    JS::SetReservedSlot(retval, DATA_SLOT, JS::PrivateValue(ptr));
     return retval;
   }
 
@@ -52,10 +62,9 @@ JSObject* NewObjectWithUntypedStashedPointer(JSContext* cx, void* ptr,
   if (!retval) {
     return nullptr;
   }
-  JS::SetNativeObjectReservedSlot(retval, DATA_SLOT, JS::PrivateValue(ptr));
-  JS::SetNativeObjectReservedSlot(
-      retval, FREE_FUNC_SLOT,
-      JS::PrivateValue(reinterpret_cast<void*>(freeFunc)));
+  JS::SetReservedSlot(retval, DATA_SLOT, JS::PrivateValue(ptr));
+  JS::SetReservedSlot(retval, FREE_FUNC_SLOT,
+                      JS::PrivateValue(reinterpret_cast<void*>(freeFunc)));
   return retval;
 }
 

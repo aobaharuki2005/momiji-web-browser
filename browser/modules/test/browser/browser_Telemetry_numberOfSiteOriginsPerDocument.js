@@ -4,6 +4,11 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+});
+
+const histogramName = "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_DOCUMENT";
 const testRoot = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "http://mochi.test:8888"
@@ -30,46 +35,31 @@ async function openAndCloseTab(uri) {
   await wgpDestroyed;
 }
 
-// Asserts the perDocumentSiteOrigins distribution after flushing children.
-// `samples` is the list of values expected to have been recorded.
-async function assertPerDocumentSiteOrigins(samples, message) {
-  await Services.fog.testFlushAllChildren();
-  const v = Glean.geckoview.perDocumentSiteOrigins.testGetValue();
-  if (!samples.length) {
-    Assert.equal(v, null, message);
-    return;
-  }
-  Assert.equal(v.count, samples.length, message + " - count");
-  Assert.equal(
-    v.sum,
-    samples.reduce((a, b) => a + b, 0),
-    message + " - sum"
-  );
-}
-
 add_task(async function test_numberOfSiteOriginsAfterTabClose() {
-  Services.fog.testResetFOG();
+  const histogram = TelemetryTestUtils.getAndClearHistogram(histogramName);
   const testPage = `${testRoot}contain_iframe.html`;
 
   await openAndCloseTab(testPage);
 
   // testPage contains two origins: mochi.test:8888 and example.com.
-  await assertPerDocumentSiteOrigins([2], "perDocumentSiteOrigins - tab close");
+  TelemetryTestUtils.assertHistogram(histogram, 2, 1);
 });
 
 add_task(async function test_numberOfSiteOriginsAboutBlank() {
-  Services.fog.testResetFOG();
+  const histogram = TelemetryTestUtils.getAndClearHistogram(histogramName);
 
   await openAndCloseTab("about:blank");
 
-  await assertPerDocumentSiteOrigins(
-    [],
-    "perDocumentSiteOrigins - about:blank records nothing"
+  const { values } = histogram.snapshot();
+  Assert.deepEqual(
+    values,
+    {},
+    `Histogram should have no values; had ${JSON.stringify(values)}`
   );
 });
 
 add_task(async function test_numberOfSiteOriginsMultipleNavigations() {
-  Services.fog.testResetFOG();
+  const histogram = TelemetryTestUtils.getAndClearHistogram(histogramName);
   const testPage = `${testRoot}contain_iframe.html`;
 
   const tab = await BrowserTestUtils.openNewForegroundTab({
@@ -101,14 +91,11 @@ add_task(async function test_numberOfSiteOriginsMultipleNavigations() {
 
   // testPage has been loaded twice and contains two origins: mochi.test:8888
   // and example.com.
-  await assertPerDocumentSiteOrigins(
-    [2, 2],
-    "perDocumentSiteOrigins - 2 origins recorded twice"
-  );
+  TelemetryTestUtils.assertHistogram(histogram, 2, 2);
 });
 
 add_task(async function test_numberOfSiteOriginsAddAndRemove() {
-  Services.fog.testResetFOG();
+  const histogram = TelemetryTestUtils.getAndClearHistogram(histogramName);
   const testPage = `${testRoot}blank_iframe.html`;
 
   const tab = await BrowserTestUtils.openNewForegroundTab({
@@ -145,8 +132,5 @@ add_task(async function test_numberOfSiteOriginsAddAndRemove() {
   await wgpDestroyed;
 
   // The page only ever had two origins at once.
-  await assertPerDocumentSiteOrigins(
-    [2],
-    "perDocumentSiteOrigins - max 2 origins at once"
-  );
+  TelemetryTestUtils.assertHistogram(histogram, 2, 1);
 });

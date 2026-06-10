@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,16 +26,12 @@ namespace net {
 class TRRService;
 class TRRServiceChannel;
 
-class TRR : public Runnable,
-            public nsITimerCallback,
-            public nsIStreamListener,
-            public nsIRunnablePriority {
+class TRR : public Runnable, public nsITimerCallback, public nsIStreamListener {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSIRUNNABLEPRIORITY
 
   // Number of "steps" we follow CNAME chains
   static const unsigned int kCnameChaseMax = 64;

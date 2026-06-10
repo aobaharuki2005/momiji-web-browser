@@ -8,21 +8,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.navigation.NavController
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.pwa.WebAppUseCases
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -38,10 +36,12 @@ class PwaOnboardingObserverTest {
     private lateinit var navigationController: NavController
     private lateinit var settings: Settings
     private lateinit var webAppUseCases: WebAppUseCases
-    private val testDispatcher = StandardTestDispatcher()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
-    fun setUp() = runTest(testDispatcher) {
+    fun setUp() {
         store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -63,19 +63,18 @@ class PwaOnboardingObserverTest {
                 navController = navigationController,
                 settings = settings,
                 webAppUseCases = webAppUseCases,
-                dispatcher = testDispatcher,
             ),
         )
-        every { pwaOnboardingObserver.navigateToPwaOnboarding() } just Runs
+        every { pwaOnboardingObserver.navigateToPwaOnboarding() } returns Unit
     }
 
     @After
-    fun teardown() = runTest(testDispatcher) {
+    fun teardown() {
         pwaOnboardingObserver.stop()
     }
 
     @Test
-    fun `GIVEN browsing mode is private and cfr should not yet be shown WHEN installable page is loaded THEN counter is not incremented`() = runTest(testDispatcher) {
+    fun `GIVEN browsing mode is private and cfr should not yet be shown WHEN installable page is loaded THEN counter is not incremented`() {
         every { webAppUseCases.isInstallable() } returns true
         every { settings.userKnowsAboutPwas } returns false
         every { settings.shouldShowPwaCfr } returns false
@@ -88,13 +87,12 @@ class PwaOnboardingObserverTest {
     }
 
     @Test
-    fun `GIVEN cfr should not yet be shown WHEN installable page is loaded THEN counter is incremented`() = runTest(testDispatcher) {
+    fun `GIVEN cfr should not yet be shown WHEN installable page is loaded THEN counter is incremented`() {
         every { webAppUseCases.isInstallable() } returns true
         every { settings.userKnowsAboutPwas } returns false
         every { settings.shouldShowPwaCfr } returns false
         every { settings.lastKnownMode } returns BrowsingMode.Normal
         pwaOnboardingObserver.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         store.dispatch(ContentAction.UpdateWebAppManifestAction("1", mockk()))
         verify { settings.incrementVisitedInstallableCount() }
@@ -102,7 +100,7 @@ class PwaOnboardingObserverTest {
     }
 
     @Test
-    fun `GIVEN cfr should be shown WHEN installable page is loaded THEN we navigate to onboarding fragment`() = runTest(testDispatcher) {
+    fun `GIVEN cfr should be shown WHEN installable page is loaded THEN we navigate to onboarding fragment`() {
         every { webAppUseCases.isInstallable() } returns true
         every { settings.userKnowsAboutPwas } returns false
         every { settings.shouldShowPwaCfr } returns true
@@ -110,14 +108,12 @@ class PwaOnboardingObserverTest {
         pwaOnboardingObserver.start()
 
         store.dispatch(ContentAction.UpdateWebAppManifestAction("1", mockk()))
-        testDispatcher.scheduler.advanceUntilIdle()
-
         verify { settings.incrementVisitedInstallableCount() }
         verify { pwaOnboardingObserver.navigateToPwaOnboarding() }
     }
 
     @Test
-    fun `GIVEN web app is not installable WHEN page with manifest is loaded THEN nothing happens`() = runTest(testDispatcher) {
+    fun `GIVEN web app is not installable WHEN page with manifest is loaded THEN nothing happens`() {
         every { webAppUseCases.isInstallable() } returns false
         every { settings.userKnowsAboutPwas } returns false
         every { settings.shouldShowPwaCfr } returns true

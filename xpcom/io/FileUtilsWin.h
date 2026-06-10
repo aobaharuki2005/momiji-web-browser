@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,18 +37,18 @@ inline bool EnsureLongPath(nsAString& aDosPath) {
 
 inline bool NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath) {
   aDosPath.Truncate();
-  nsPromiseFlatString ntPath(aNtPath);
-  if (ntPath.IsEmpty()) {
+  if (aNtPath.IsEmpty()) {
     return true;
   }
   constexpr auto symLinkPrefix = u"\\??\\"_ns;
-  uint32_t ntPathLen = ntPath.Length();
+  uint32_t ntPathLen = aNtPath.Length();
   uint32_t symLinkPrefixLen = symLinkPrefix.Length();
-  if (ntPathLen >= 6 && ntPath.CharAt(5) == L':' &&
+  if (ntPathLen >= 6 && aNtPath.CharAt(5) == L':' &&
       ntPathLen >= symLinkPrefixLen &&
-      Substring(ntPath, 0, symLinkPrefixLen).Equals(symLinkPrefix)) {
+      Substring(aNtPath, 0, symLinkPrefixLen).Equals(symLinkPrefix)) {
     // Symbolic link for DOS device. Just strip off the prefix.
-    aDosPath = Substring(ntPath, 4);
+    aDosPath = aNtPath;
+    aDosPath.Cut(0, 4);
     return true;
   }
   nsAutoString logicalDrives;
@@ -94,9 +96,10 @@ inline bool NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath) {
     if (targetPathLen) {
       // Need to use wcslen here because targetPath contains embedded NULL chars
       size_t firstTargetPathLen = wcslen(targetPath.get());
-      const char16_t* pathComponent = ntPath.get() + firstTargetPathLen;
-      bool found = _wcsnicmp(ntPath.getW(), targetPath.getW(),
-                             firstTargetPathLen) == 0 &&
+      const char16_t* pathComponent =
+          aNtPath.BeginReading() + firstTargetPathLen;
+      bool found = _wcsnicmp(char16ptr_t(aNtPath.BeginReading()),
+                             targetPath.get(), firstTargetPathLen) == 0 &&
                    *pathComponent == L'\\';
       if (found) {
         aDosPath = driveTemplate;
@@ -118,16 +121,16 @@ inline bool NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath) {
   // mappings in case a UNC path is mapped to a drive!
   constexpr auto uncPrefix = u"\\\\"_ns;
   constexpr auto deviceMupPrefix = u"\\Device\\Mup\\"_ns;
-  if (StringBeginsWith(ntPath, deviceMupPrefix)) {
+  if (StringBeginsWith(aNtPath, deviceMupPrefix)) {
     aDosPath = uncPrefix;
-    aDosPath += Substring(ntPath, deviceMupPrefix.Length());
+    aDosPath += Substring(aNtPath, deviceMupPrefix.Length());
     return true;
   }
   constexpr auto deviceLanmanRedirectorPrefix =
       u"\\Device\\LanmanRedirector\\"_ns;
-  if (StringBeginsWith(ntPath, deviceLanmanRedirectorPrefix)) {
+  if (StringBeginsWith(aNtPath, deviceLanmanRedirectorPrefix)) {
     aDosPath = uncPrefix;
-    aDosPath += Substring(ntPath, deviceLanmanRedirectorPrefix.Length());
+    aDosPath += Substring(aNtPath, deviceLanmanRedirectorPrefix.Length());
     return true;
   }
   return false;

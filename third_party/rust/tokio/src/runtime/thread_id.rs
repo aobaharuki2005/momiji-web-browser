@@ -5,15 +5,9 @@ pub(crate) struct ThreadId(NonZeroU64);
 
 impl ThreadId {
     pub(crate) fn next() -> Self {
-        use crate::loom::sync::atomic::{AtomicU64, Ordering::Relaxed};
+        use crate::loom::sync::atomic::{Ordering::Relaxed, StaticAtomicU64};
 
-        #[cfg(all(test, loom))]
-        crate::loom::lazy_static! {
-            static ref NEXT_ID: AtomicU64 = AtomicU64::new(0);
-        }
-
-        #[cfg(not(all(test, loom)))]
-        static NEXT_ID: AtomicU64 = AtomicU64::new(0);
+        static NEXT_ID: StaticAtomicU64 = StaticAtomicU64::new(0);
 
         let mut last = NEXT_ID.load(Relaxed);
         loop {

@@ -11,7 +11,6 @@ be called more than once.
 This module provides several pre-defined writers and writer factories for
 common cases.
 """
-
 import functools
 
 from .aio import download as aio_download
@@ -77,14 +76,11 @@ def downloadArtifact(*, writerFactory, **kwargs):
     download.  Returns the content-type.
     """
     wrappedWriterFactory = _wrapSyncWriterFactory(writerFactory)
-    return runAsync(
-        aio_download.downloadArtifact(writerFactory=wrappedWriterFactory, **kwargs)
-    )
+    return runAsync(aio_download.downloadArtifact(writerFactory=wrappedWriterFactory, **kwargs))
 
 
 def _wrapSyncWriterFactory(writerFactory):
     """Modify the reader returned by readerFactory to have an async read."""
-
     @functools.wraps(writerFactory)
     async def wrappedFactory():
         writer = writerFactory()

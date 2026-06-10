@@ -110,7 +110,7 @@ async function test_save_change(testData) {
         "passwordmgr/test/browser/form_multipage.html",
     },
     async function (browser) {
-      await SimpleTest.promiseFocus(browser.documentGlobal);
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       info("Waiting for form-processed message");
       await formProcessedPromise;
@@ -187,5 +187,5 @@ async function test_save_change(testData) {
   );
 
   // Clean up the database before the next test case is executed.
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
 }

@@ -341,9 +341,6 @@ impl DataStorageInner {
             "SiteSecurityServiceState" => {
                 data_storage::site_security_service_state.set(num_entries)
             }
-            "SiteIntegrityServiceState" => {
-                data_storage::site_integrity_service_state.set(num_entries)
-            }
             _ => panic!("unknown nsIDataStorageManager::DataStorage"),
         }
         Ok(())
@@ -452,9 +449,6 @@ impl DataStorageInner {
             "ClientAuthRememberList" => data_storage::client_auth_remember_list.set(num_entries),
             "SiteSecurityServiceState" => {
                 data_storage::site_security_service_state.set(num_entries)
-            }
-            "SiteIntegrityServiceState" => {
-                data_storage::site_integrity_service_state.set(num_entries)
             }
             _ => panic!("unknown nsIDataStorageManager::DataStorage"),
         }

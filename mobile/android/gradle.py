@@ -9,7 +9,7 @@ import time
 from contextlib import contextmanager
 
 import mozpack.path as mozpath
-from mach.filelock import SoftFileLock
+from filelock import SoftFileLock
 from mozbuild.dirutils import ensureParentDir
 
 

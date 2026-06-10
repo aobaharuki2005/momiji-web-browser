@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<title>HTMLBodyElement event handlers: reflection from document.body</title>
-<meta name=timeout content=long>
+<title>HTMLBodyElement event handlers</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/resources/WebIDLParser.js"></script>
@@ -11,8 +10,7 @@
 setup({ explicit_done: true });
 
 handlersListPromise.then(({ shadowedHandlers, notShadowedHandlers }) => {
-  const altBody = document.createElement("body");
-  runEventHandlerReflectionTest(shadowedHandlers, notShadowedHandlers, "document.body", document.body, altBody, window, "body", "alternative body", "window");
+  eventHandlerTest(shadowedHandlers, notShadowedHandlers, "body");
 
   done();
 });

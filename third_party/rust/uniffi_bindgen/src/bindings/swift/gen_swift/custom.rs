@@ -7,12 +7,11 @@ use super::CodeType;
 #[derive(Debug)]
 pub struct CustomCodeType {
     name: String,
-    builtin: Box<dyn CodeType>,
 }
 
 impl CustomCodeType {
-    pub fn new(name: String, builtin: Box<dyn CodeType>) -> Self {
-        Self { name, builtin }
+    pub fn new(name: String) -> Self {
+        CustomCodeType { name }
     }
 }
 
@@ -23,11 +22,5 @@ impl CodeType for CustomCodeType {
 
     fn canonical_name(&self) -> String {
         format!("Type{}", self.name)
-    }
-
-    fn default(&self, default: &crate::interface::DefaultValue) -> anyhow::Result<String> {
-        self.builtin
-            .default(default)
-            .map_err(|_e| anyhow::anyhow!("Unsupported default value for {}", self.type_label()))
     }
 }

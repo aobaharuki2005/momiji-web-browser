@@ -8,11 +8,7 @@ import os
 import sys
 
 from mach.decorators import Command
-from mach_commands_base import (
-    WebPlatformTestsRunner,
-    create_parser_wpt,
-    setup_environment,
-)
+from mach_commands_base import WebPlatformTestsRunner, create_parser_wpt
 from mozbuild.base import MachCommandConditions as conditions
 from mozbuild.base import MozbuildObject
 
@@ -27,7 +23,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         super().__init__(*args, **kwargs)
         self._here = os.path.join(self.topsrcdir, "testing", "web-platform")
         kwargs["tests_root"] = os.path.join(self._here, "tests")
-        setup_environment(kwargs["tests_root"])
+        sys.path.insert(0, kwargs["tests_root"])
         build_path = os.path.join(self.topobjdir, "build")
         if build_path not in sys.path:
             sys.path.append(build_path)
@@ -347,9 +343,13 @@ class WebPlatformTestsTestPathsRunner(MozbuildObject):
     """Update web platform tests."""
 
     def run(self, **kwargs):
-        setup_environment()
+        sys.path.insert(
+            0,
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "tests", "tools")),
+        )
         import logging
 
+        import localpaths  # noqa: F401
         import manifestupdate
         from manifest import testpaths
         from wptrunner import wptcommandline
@@ -414,8 +414,10 @@ def create_parser_metadata_merge():
 
 
 def create_parser_serve():
-    setup_environment()
-    from tools import serve
+    sys.path.insert(
+        0, os.path.abspath(os.path.join(os.path.dirname(__file__), "tests", "tools"))
+    )
+    import serve
 
     return serve.serve.get_parser()
 

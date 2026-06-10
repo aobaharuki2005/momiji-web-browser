@@ -18,13 +18,12 @@ use crate::computed_value_flags::ComputedValueFlags;
 use crate::context::QuirksMode;
 use crate::custom_properties::ComputedCustomProperties;
 use crate::derives::*;
-use crate::device::Device;
 use crate::font_metrics::{FontMetrics, FontMetricsOrientation};
+use crate::media_queries::Device;
 #[cfg(feature = "gecko")]
 use crate::properties;
 use crate::properties::{ComputedValues, StyleBuilder};
 use crate::rule_cache::RuleCacheConditions;
-use crate::rule_tree::{CascadeLevel, RuleCascadeFlags};
 use crate::stylesheets::container_rule::{
     ContainerInfo, ContainerSizeQuery, ContainerSizeQueryResult,
 };
@@ -44,9 +43,9 @@ pub use self::align::{ContentDistribution, ItemPlacement, JustifyItems, SelfAlig
 pub use self::angle::Angle;
 pub use self::animation::{
     AnimationComposition, AnimationDirection, AnimationDuration, AnimationFillMode,
-    AnimationIterationCount, AnimationName, AnimationPlayState, AnimationRangeEnd,
-    AnimationRangeStart, AnimationTimeline, ScrollAxis, TimelineName, TransitionBehavior,
-    TransitionProperty, ViewTimelineInset, ViewTransitionClass, ViewTransitionName,
+    AnimationIterationCount, AnimationName, AnimationPlayState, AnimationTimeline, ScrollAxis,
+    TimelineName, TransitionBehavior, TransitionProperty, ViewTimelineInset, ViewTransitionClass,
+    ViewTransitionName,
 };
 pub use self::background::{BackgroundRepeat, BackgroundSize};
 pub use self::basic_shape::FillRule;
@@ -55,18 +54,16 @@ pub use self::border::{
     BorderImageWidth, BorderRadius, BorderSideOffset, BorderSideWidth, BorderSpacing, LineWidth,
 };
 pub use self::box_::{
-    AlignmentBaseline, Appearance, BaselineShift, BaselineSource, BreakBetween, BreakWithin, Clear,
-    Contain, ContainIntrinsicSize, ContainerName, ContainerType, ContentVisibility, Display,
-    DominantBaseline, Float, LineClamp, Overflow, OverflowAnchor, OverflowClipMargin,
-    OverscrollBehavior, Perspective, PositionProperty, Resize, ScrollSnapAlign, ScrollSnapAxis,
-    ScrollSnapStop, ScrollSnapStrictness, ScrollSnapType, ScrollbarGutter, TouchAction, WillChange,
-    WritingModeProperty, Zoom,
+    Appearance, BaselineSource, BreakBetween, BreakWithin, Clear, Contain, ContainIntrinsicSize,
+    ContainerName, ContainerType, ContentVisibility, Display, Float, LineClamp, Overflow,
+    OverflowAnchor, OverflowClipMargin, OverscrollBehavior, Perspective, PositionProperty, Resize,
+    ScrollSnapAlign, ScrollSnapAxis, ScrollSnapStop, ScrollSnapStrictness, ScrollSnapType,
+    ScrollbarGutter, TouchAction, VerticalAlign, WillChange, WritingModeProperty, Zoom,
 };
 pub use self::color::{
     Color, ColorOrAuto, ColorPropertyValue, ColorScheme, ForcedColorAdjust, PrintColorAdjust,
 };
 pub use self::column::ColumnCount;
-pub use self::corner_shape::{CornerShape, CornerShapeRect};
 pub use self::counters::{Content, ContentItem, CounterIncrement, CounterReset, CounterSet};
 pub use self::easing::TimingFunction;
 pub use self::effects::{BoxShadow, Filter, SimpleShadow};
@@ -84,15 +81,16 @@ pub use self::length::{CSSPixelLength, NonNegativeLength};
 pub use self::length::{Length, LengthOrNumber, LengthPercentage, NonNegativeLengthOrNumber};
 pub use self::length::{LengthOrAuto, LengthPercentageOrAuto, Margin, MaxSize, Size};
 pub use self::length::{NonNegativeLengthPercentage, NonNegativeLengthPercentageOrAuto};
+#[cfg(feature = "gecko")]
 pub use self::list::ListStyleType;
 pub use self::list::Quotes;
 pub use self::motion::{OffsetPath, OffsetPosition, OffsetRotate};
 pub use self::outline::OutlineStyle;
 pub use self::page::{PageName, PageOrientation, PageSize, PageSizeOrientation, PaperSize};
-pub use self::param::LinkParameters;
 pub use self::percentage::{NonNegativePercentage, Percentage};
 pub use self::position::AnchorFunction;
 pub use self::position::AnchorName;
+pub use self::position::AnchorScope;
 pub use self::position::AspectRatio;
 pub use self::position::DashedIdentAndOrTryTactic;
 pub use self::position::Inset;
@@ -100,7 +98,6 @@ pub use self::position::PositionAnchor;
 pub use self::position::PositionTryFallbacks;
 pub use self::position::PositionTryOrder;
 pub use self::position::PositionVisibility;
-pub use self::position::ScopedName;
 pub use self::position::{
     GridAutoFlow, GridTemplateAreas, MasonryAutoFlow, Position, PositionOrAuto, ZIndex,
 };
@@ -116,7 +113,6 @@ pub use self::text::{InitialLetter, LetterSpacing, LineBreak, TextIndent};
 pub use self::text::{OverflowWrap, RubyPosition, TextOverflow, WordBreak, WordSpacing};
 pub use self::text::{TextAlign, TextAlignLast, TextEmphasisPosition, TextEmphasisStyle};
 pub use self::text::{TextAutospace, TextUnderlinePosition};
-pub use self::text::{TextBoxEdge, TextBoxTrim};
 pub use self::text::{
     TextDecorationInset, TextDecorationLength, TextDecorationSkipInk, TextJustify,
 };
@@ -141,10 +137,8 @@ pub mod basic_shape;
 pub mod border;
 #[path = "box.rs"]
 pub mod box_;
-pub mod calc;
 pub mod color;
 pub mod column;
-pub mod corner_shape;
 pub mod counters;
 pub mod easing;
 pub mod effects;
@@ -157,7 +151,6 @@ pub mod list;
 pub mod motion;
 pub mod outline;
 pub mod page;
-pub mod param;
 pub mod percentage;
 pub mod position;
 pub mod ratio;
@@ -183,7 +176,7 @@ pub struct Context<'a> {
     ///
     /// See properties/longhands/font.mako.rs
     #[cfg(feature = "gecko")]
-    pub cached_system_font: Option<properties::gecko::system_font::ComputedSystemFont>,
+    pub cached_system_font: Option<properties::longhands::system_font::ComputedSystemFont>,
 
     /// A dummy option for servo so initializing a computed::Context isn't
     /// painful.
@@ -201,10 +194,11 @@ pub struct Context<'a> {
     /// The quirks mode of this context.
     pub quirks_mode: QuirksMode,
 
-    /// Whether this computation is being done for animation.
+    /// Whether this computation is being done for a SMIL animation.
     ///
-    /// Allows opacity to interpolate out-of-range values
-    pub for_animation: bool,
+    /// This is used to allow certain properties to generate out-of-range
+    /// values, which SMIL allows.
+    pub for_smil_animation: bool,
 
     /// Returns the container information to evaluate a given container query.
     pub container_info: Option<ContainerInfo>,
@@ -218,15 +212,6 @@ pub struct Context<'a> {
     ///
     /// FIXME(emilio): Drop the refcell.
     pub rule_cache_conditions: RefCell<&'a mut RuleCacheConditions>,
-
-    /// The cascade level in the shadow tree hierarchy.
-    pub scope: CascadeLevel,
-
-    /// The set of RuleCascadeFlags whose rules should be included during the
-    /// cascade. STARTING_STYLE is set from the caller for re-cascade.
-    /// APPEARANCE_BASE is added dynamically after the appearance property is
-    /// resolved to a non-None value.
-    pub included_cascade_flags: RuleCascadeFlags,
 
     /// Container size query for this context.
     container_size_query: RefCell<ContainerSizeQuery<'a>>,
@@ -253,12 +238,10 @@ impl<'a> Context<'a> {
             in_media_query: true,
             in_container_query: false,
             quirks_mode,
-            for_animation: false,
+            for_smil_animation: false,
             container_info: None,
             for_non_inherited_property: false,
             rule_cache_conditions: RefCell::new(&mut conditions),
-            scope: CascadeLevel::same_tree_author_normal(),
-            included_cascade_flags: RuleCascadeFlags::empty(),
             container_size_query: RefCell::new(ContainerSizeQuery::none()),
         };
         f(&context)
@@ -291,12 +274,10 @@ impl<'a> Context<'a> {
             in_media_query: false,
             in_container_query: true,
             quirks_mode,
-            for_animation: false,
+            for_smil_animation: false,
             container_info,
             for_non_inherited_property: false,
             rule_cache_conditions: RefCell::new(&mut conditions),
-            scope: CascadeLevel::same_tree_author_normal(),
-            included_cascade_flags: RuleCascadeFlags::empty(),
             container_size_query: RefCell::new(container_size_query),
         };
 
@@ -309,14 +290,7 @@ impl<'a> Context<'a> {
         quirks_mode: QuirksMode,
         rule_cache_conditions: &'a mut RuleCacheConditions,
         container_size_query: ContainerSizeQuery<'a>,
-        mut included_cascade_flags: RuleCascadeFlags,
     ) -> Self {
-        if builder
-            .flags()
-            .intersects(ComputedValueFlags::IS_IN_APPEARANCE_BASE_SUBTREE)
-        {
-            included_cascade_flags.insert(RuleCascadeFlags::APPEARANCE_BASE);
-        }
         Self {
             builder,
             cached_system_font: None,
@@ -324,11 +298,9 @@ impl<'a> Context<'a> {
             in_container_query: false,
             quirks_mode,
             container_info: None,
-            for_animation: false,
+            for_smil_animation: false,
             for_non_inherited_property: false,
             rule_cache_conditions: RefCell::new(rule_cache_conditions),
-            scope: CascadeLevel::same_tree_author_normal(),
-            included_cascade_flags,
             container_size_query: RefCell::new(container_size_query),
         }
     }
@@ -336,6 +308,7 @@ impl<'a> Context<'a> {
     /// Creates a context suitable for computing animations.
     pub fn new_for_animation(
         builder: StyleBuilder<'a>,
+        for_smil_animation: bool,
         quirks_mode: QuirksMode,
         rule_cache_conditions: &'a mut RuleCacheConditions,
         container_size_query: ContainerSizeQuery<'a>,
@@ -347,11 +320,9 @@ impl<'a> Context<'a> {
             in_container_query: false,
             quirks_mode,
             container_info: None,
-            for_animation: true,
+            for_smil_animation,
             for_non_inherited_property: false,
             rule_cache_conditions: RefCell::new(rule_cache_conditions),
-            scope: CascadeLevel::same_tree_author_normal(),
-            included_cascade_flags: RuleCascadeFlags::empty(),
             container_size_query: RefCell::new(container_size_query),
         }
     }
@@ -371,11 +342,9 @@ impl<'a> Context<'a> {
             in_container_query: false,
             quirks_mode: stylist.quirks_mode(),
             container_info: None,
-            for_animation: false,
+            for_smil_animation: false,
             for_non_inherited_property: false,
             rule_cache_conditions: RefCell::new(rule_cache_conditions),
-            scope: CascadeLevel::same_tree_author_normal(),
-            included_cascade_flags: RuleCascadeFlags::empty(),
             container_size_query: RefCell::new(ContainerSizeQuery::none()),
         }
     }
@@ -459,11 +428,6 @@ impl<'a> Context<'a> {
     /// The current style.
     pub fn style(&self) -> &StyleBuilder<'a> {
         &self.builder
-    }
-
-    /// The current tree scope.
-    pub fn current_scope(&self) -> CascadeLevel {
-        self.scope
     }
 
     /// Apply text-zoom if enabled.
@@ -755,7 +719,6 @@ trivial_to_computed_value!(bool);
 trivial_to_computed_value!(f32);
 trivial_to_computed_value!(i32);
 trivial_to_computed_value!(u8);
-trivial_to_computed_value!(i8);
 trivial_to_computed_value!(u16);
 trivial_to_computed_value!(u32);
 trivial_to_computed_value!(usize);
@@ -796,7 +759,7 @@ impl ToComputedValue for specified::AngleOrPercentage {
 
     #[inline]
     fn to_computed_value(&self, context: &Context) -> AngleOrPercentage {
-        match self {
+        match *self {
             specified::AngleOrPercentage::Percentage(percentage) => {
                 AngleOrPercentage::Percentage(percentage.to_computed_value(context))
             },
@@ -938,16 +901,6 @@ pub enum NumberOrPercentage {
     Number(Number),
 }
 
-impl NumberOrPercentage {
-    /// Get the underlying value of this number or percentage.
-    pub fn value(&self) -> f32 {
-        match self {
-            NumberOrPercentage::Percentage(p) => p.0,
-            NumberOrPercentage::Number(n) => *n,
-        }
-    }
-}
-
 impl ClampToNonNegative for NumberOrPercentage {
     fn clamp_to_non_negative(self) -> Self {
         match self {
@@ -964,7 +917,7 @@ impl ToComputedValue for specified::NumberOrPercentage {
 
     #[inline]
     fn to_computed_value(&self, context: &Context) -> NumberOrPercentage {
-        match self {
+        match *self {
             specified::NumberOrPercentage::Percentage(percentage) => {
                 NumberOrPercentage::Percentage(percentage.to_computed_value(context))
             },

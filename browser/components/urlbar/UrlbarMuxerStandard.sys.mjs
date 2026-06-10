@@ -15,7 +15,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlbarProviderOpenTabs:
     "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs",
@@ -32,7 +31,9 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 /**
- * Constructs the map key by joining the url with the userContextId.
+ * Constructs the map key by joining the url with the userContextId if
+ * 'browser.urlbar.switchTabs.searchAllContainers' is set to true.
+ * Otherwise, just the url is used.
  *
  * @param   {UrlbarResult} result The result object.
  * @returns {string} map key
@@ -40,7 +41,8 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
 function makeMapKeyForTabResult(result) {
   return UrlbarUtils.tupleString(
     result.payload.url,
-    result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
+    lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
+      result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
       lazy.UrlbarProviderOpenTabs.isNonPrivateUserContextId(
         result.payload.userContextId
       )
@@ -965,9 +967,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       // against, so avoid processing the url.
       state.suggestions.size
     ) {
-      let submission = lazy.SearchService.parseSubmissionURL(
-        result.payload.url
-      );
+      let submission = Services.search.parseSubmissionURL(result.payload.url);
       if (submission) {
         let resultQuery = submission.terms.trim().toLocaleLowerCase();
         if (state.suggestions.has(resultQuery)) {
@@ -993,7 +993,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // When in an engine search mode, discard URL results whose hostnames don't
     // include the root domain of the search mode engine.
     if (state.context.searchMode?.engineName && result.payload.url) {
-      let engine = lazy.SearchService.getEngineByName(
+      let engine = Services.search.getEngineByName(
         state.context.searchMode.engineName
       );
       if (engine) {
@@ -1223,12 +1223,11 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     }
 
     // If we find results other than the heuristic, "Search in Private
-    // Window," tail suggestions, or AI chat results, then we should hide
-    // tail suggestions since they're a last resort.
+    // Window," or tail suggestions, then we should hide tail suggestions
+    // since they're a last resort.
     if (
       state.canShowTailSuggestions &&
       !result.heuristic &&
-      result.type != UrlbarUtils.RESULT_TYPE.AI_CHAT &&
       (result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
         (!result.payload.inPrivateWindow && !result.payload.tail))
     ) {
@@ -1287,7 +1286,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // are other results and all of them are searches.  It should not be shown
     // if the user typed an alias because that's an explicit engine choice.
     if (
-      !lazy.SearchService.separatePrivateDefaultUrlbarResultEnabled ||
+      !Services.search.separatePrivateDefaultUrlbarResultEnabled ||
       (state.canShowPrivateSearch &&
         (result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
           result.payload.providesSearchMode ||

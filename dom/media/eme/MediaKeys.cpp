@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,7 +32,7 @@
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidDecoderModule.h"
 #  include "mozilla/MediaDrmCDMProxy.h"
-#  include "mozilla/RemoteCDMProxy.h"
+#  include "mozilla/RemoteCDMChild.h"
 #  include "mozilla/RemoteMediaManagerChild.h"
 #  include "mozilla/StaticPrefs_media.h"
 #endif
@@ -326,7 +328,6 @@ void MediaKeys::RejectPromise(PromiseId aId, ErrorResult&& aException,
             this, aId, errorCodeAsInt);
     return;
   }
-  RefPtr<MediaKeys> keys(this);
 
   // This promise could be a createSession or loadSession promise,
   // so we might have a pending session waiting to be resolved into
@@ -381,7 +382,6 @@ void MediaKeys::ResolvePromise(PromiseId aId) {
   if (!promise) {
     return;
   }
-  RefPtr<MediaKeys> keys(this);
 
   uint32_t token = 0;
   if (!mPromiseIdToken.Get(aId, &token)) {

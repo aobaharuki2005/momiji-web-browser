@@ -28,11 +28,12 @@ namespace webrtc {
 namespace test {
 
 std::string NetEqStatsGetter::ConcealmentEvent::ToString() const {
-  StringBuilder ss;
+  char ss_buf[256];
+  SimpleStringBuilder ss(ss_buf);
   ss << "ConcealmentEvent duration_ms:" << duration_ms
      << " event_number:" << concealment_event_number
      << " time_from_previous_event_end_ms:" << time_from_previous_event_end_ms;
-  return ss.Release();
+  return ss.str();
 }
 
 NetEqStatsGetter::NetEqStatsGetter(

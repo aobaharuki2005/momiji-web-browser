@@ -45,12 +45,6 @@ Firefox Source Tree Documentation
    {testing_doc}
 
 .. toctree::
-   :caption: AI Agent Tools
-   :maxdepth: 1
-
-   {ai_agent_tools_doc}
-
-.. toctree::
    :caption: Releases & Updates
    :maxdepth: 1
 

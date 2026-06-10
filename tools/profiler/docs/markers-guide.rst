@@ -119,14 +119,14 @@ Header to Include
 ^^^^^^^^^^^^^^^^^
 
 If the compilation unit only defines and records untyped, text, and/or its own markers, include
-:searchfox:`the main profiler markers header <tools/profiler/public/ProfilerMarkers.h>`:
+`the main profiler markers header <https://searchfox.org/mozilla-central/source/tools/profiler/public/ProfilerMarkers.h>`_:
 
 .. code-block:: cpp
 
     #include "mozilla/ProfilerMarkers.h"
 
 If it also records one of the other common markers defined in
-:searchfox:`ProfilerMarkerTypes.h <tools/profiler/public/ProfilerMarkerTypes.h>`,
+`ProfilerMarkerTypes.h <https://searchfox.org/mozilla-central/source/tools/profiler/public/ProfilerMarkerTypes.h>`_,
 include that one instead:
 
 .. code-block:: cpp
@@ -134,7 +134,7 @@ include that one instead:
     #include "mozilla/ProfilerMarkerTypes.h"
 
 And if it uses any other profiler functions (e.g., labels), use
-:searchfox:`the main Gecko Profiler header <tools/profiler/public/GeckoProfiler.h>`
+`the main Gecko Profiler header <https://searchfox.org/mozilla-central/source/tools/profiler/public/GeckoProfiler.h>`_
 instead:
 
 .. code-block:: cpp
@@ -166,13 +166,14 @@ Name, category, options.
         MarkerOptions(MarkerStack::Capture(), ...));
 
 ``PROFILER_MARKER_UNTYPED`` is a macro that simplifies the use of the main
-``profiler_add_marker`` function, by adding the appropriate namespaces.
+``profiler_add_marker`` function, by adding the appropriate namespaces, and a surrounding
+``#ifdef MOZ_GECKO_PROFILER`` guard.
 
 1. Marker name
     The first argument is the name of this marker. This will be displayed in most places
     the marker is shown. It can be a literal C string, or any dynamic string object.
-2. :searchfox:`Category pair name <__GENERATED__/mozglue/baseprofiler/public/ProfilingCategoryList.h>`
-    Choose a category + subcategory from the :searchfox:`the list of categories <mozglue/baseprofiler/build/profiling_categories.yaml>`.
+2. `Category pair name <https://searchfox.org/mozilla-central/source/__GENERATED__/mozglue/baseprofiler/public/ProfilingCategoryList.h>`_
+    Choose a category + subcategory from the `the list of categories <https://searchfox.org/mozilla-central/source/mozglue/baseprofiler/build/profiling_categories.yaml>`_.
     This is the second parameter of each ``SUBCATEGORY`` line, for instance ``LAYOUT_Reflow``.
     (Internally, this is really a `MarkerCategory <https://searchfox.org/mozilla-central/define?q=T_mozilla%3A%3AMarkerCategory>`_
     object, in case you need to construct it elsewhere.)
@@ -287,8 +288,8 @@ events.
 
 If there’s not an obvious pointer that matches the lifetime of the flow, there are alternatives:
 
-- :searchfox:`Flow::ProcessScoped(uint64_t aFlowId) <mozilla-central/rev/86878e73a24fe32ea09dbae5b55362efaf7485c8:mozglue/baseprofiler/public/Flow.h#43>` -- the id should be unique in the process
-- :searchfox:`Flow::Global(uint64_t aFlowId) <mozilla-central/rev/86878e73a24fe32ea09dbae5b55362efaf7485c8:mozglue/baseprofiler/public/Flow.h#58>` -- the id should be unique across all processes
+- `Flow::ProcessScoped(uint64_t aFlowId) <https://searchfox.org/mozilla-central/rev/86878e73a24fe32ea09dbae5b55362efaf7485c8/mozglue/baseprofiler/public/Flow.h#43>`__ -- the id should be unique in the process
+- `Flow::Global(uint64_t aFlowId) <https://searchfox.org/mozilla-central/rev/86878e73a24fe32ea09dbae5b55362efaf7485c8/mozglue/baseprofiler/public/Flow.h#58>`__ -- the id should be unique across all processes
 
 ``Runnable``, IPC, and ``Task`` have already been annotated with flow markers.
 This allow linking flows together, even across process boundaries.
@@ -411,10 +412,10 @@ The first step is to determine the location of the marker type definition:
 
   * If there is no dependency on XUL, it can be defined in the Base Profiler, which can
     be used in most locations in the codebase:
-    :searchfox:`mozglue/baseprofiler/public/BaseProfilerMarkerTypes.h`
+    `mozglue/baseprofiler/public/BaseProfilerMarkerTypes.h <https://searchfox.org/mozilla-central/source/mozglue/baseprofiler/public/BaseProfilerMarkerTypes.h>`__
 
   * However, if there is a XUL dependency, then it needs to be defined in the Gecko Profiler:
-    :searchfox:`tools/profiler/public/ProfilerMarkerTypes.h`
+    `tools/profiler/public/ProfilerMarkerTypes.h <https://searchfox.org/mozilla-central/source/tools/profiler/public/ProfilerMarkerTypes.h>`__
 
 .. _how-to-define-new-marker-types:
 
@@ -617,9 +618,6 @@ The arguments is a string that may refer to marker data within braces:
 
 * ``{marker.name}``: Marker name.
 * ``{marker.data.X}``: Type-specific data, as streamed with property name "X" from ``StreamJSONMarkerData`` (e.g., ``aWriter.IntProperty("X", a number);``
-* ``{marker.data.X ? 'yes' : 'no'}``: Ternary expression — renders the first string when the field is truthy,
-  or the second string when it is falsy (null, undefined, 0, false, or empty string).
-  Only ``marker.data.*`` fields are supported as the condition, and both branches must be single-quoted string literals.
 
 For example, here's how to set the Marker Chart label to show the marker name and the
 ``myBytes`` number of bytes:
@@ -628,13 +626,6 @@ For example, here's how to set the Marker Chart label to show the marker name an
 
     // …
         static constexpr const char* ChartLabel = "{marker.name} – {marker.data.myBytes}";
-
-Ternary expressions can be combined with regular field lookups. For instance, a label could conditionally show an icon when a request was canceled:
-
-.. code-block:: cpp
-
-    // …
-        static constexpr const char* TableLabel = "{marker.data.canceled ? '❌' : ''} {marker.data.delay}";
 
 profiler.firefox.com will apply the label with the data in a consistent manner. For
 example, with this label definition, it could display marker information like the

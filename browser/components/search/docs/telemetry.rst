@@ -1,7 +1,5 @@
-.. _browser-search-telemetry:
-
-Search UI Telemetry
-===================
+Telemetry
+=========
 
 This section describes existing telemetry probes measuring interaction with
 search engines from the browser UI.
@@ -97,15 +95,12 @@ SEARCH_COUNTS - SAP usage
     - ``contextmenu``
     - ``newtab``
     - ``searchbar``
-    - ``smartbar`` Used when searching from Smart Window.
-    - ``smartwindow_assistant`` Used when searching from Smart Window assistant.
     - ``system``
     - ``urlbar`` Except aliases and search mode.
     - ``urlbar-handoff`` Used when searching from about:newtab.
     - ``urlbar-persisted`` Used when searching from the Urlbar while it
       was in a Persisted Search state.
-    - ``urlbar-searchmode`` Used when the Urlbar is in search mode or the search
-      was started using the unified search button popup.
+    - ``urlbar-searchmode`` Used when the Urlbar is in search mode.
     - ``webextension``
 
 browser.engagement.navigation.*
@@ -123,8 +118,6 @@ browser.engagement.navigation.*
       was in a Persisted Search state.
     - ``urlbar_searchmode``  Used when the Urlbar is in search mode.
     - ``searchbar``
-    - ``smartbar`` Used when searching from Smart Window.
-    - ``smartwindow_assistant`` Used when searching from Smart Window assistant.
     - ``about_home``
     - ``about_newtab``
     - ``contextmenu``
@@ -184,8 +177,6 @@ browser.search.content.*
     was in a Persisted Search state.
   - ``urlbar_searchmode``  Used when the Urlbar is in search mode.
   - ``searchbar``
-  - ``smartbar`` Used when searching from Smart Window.
-  - ``smartwindow_assistant`` Used for search hand-off from Smart Window assistant.
   - ``about_home``
   - ``about_newtab``
   - ``contextmenu``
@@ -212,5 +203,5 @@ browser.search.adclicks.*
 
 .. _additional telemetry of its own: /browser/urlbar/telemetry.html
 .. _SearchSERPTelemetry.sys.mjs and the associated parent/child actors: https://searchfox.org/mozilla-central/search?q=&path=SearchSERPTelemetry*.sys.mjs&case=false&regexp=false
-.. _BrowserSearchTelemetry: :searchfox:`browser/components/search/BrowserSearchTelemetry.sys.mjs`
+.. _BrowserSearchTelemetry: https://searchfox.org/mozilla-central/source/browser/components/search/BrowserSearchTelemetry.sys.mjs
 .. _sap.counts Event documentation: https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/metrics/sap_counts

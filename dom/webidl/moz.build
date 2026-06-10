@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -11,7 +13,7 @@ with Files("APZTestData.webidl"):
 with Files("AccessibleNode.webidl"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
 
-with Files("ARIA*.webidl"):
+with Files("ARIAMixin.webidl"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
 
 with Files("Addon*"):
@@ -53,9 +55,6 @@ with Files("CSS*"):
 with Files("Canvas*"):
     BUG_COMPONENT = ("Core", "Graphics: Canvas2D")
 
-with Files("CharacterBoundsUpdateEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Editor")
-
 with Files("Caret*"):
     BUG_COMPONENT = ("Core", "DOM: Editor")
 
@@ -89,9 +88,6 @@ with Files("Crypto.webidl"):
 with Files("Device*"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
-with Files("DigitalCredential.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Credential Management")
-
 with Files("Directory.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
@@ -109,9 +105,6 @@ with Files("DelayNode.webidl"):
 
 with Files("DynamicsCompressorNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
-
-with Files("EditContext.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Editor")
 
 with Files("FeaturePolicy.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Security")
@@ -332,14 +325,8 @@ with Files("TCP*"):
 with Files("TextEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
-with Files("TextFormat*"):
-    BUG_COMPONENT = ("Core", "DOM: Editor")
-
 with Files("TextTrack*"):
     BUG_COMPONENT = ("Core", "Audio/Video")
-
-with Files("TextUpdateEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Editor")
 
 with Files("TrackEvent.webidl"):
     BUG_COMPONENT = ("Core", "Audio/Video")
@@ -367,9 +354,6 @@ with Files("VRDisplay.webidl"):
 
 with Files("Video*"):
     BUG_COMPONENT = ("Core", "Audio/Video")
-
-with Files("ViewTimeline.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Animation")
 
 with Files("ViewTransition.webidl"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
@@ -411,8 +395,6 @@ with Files("WebTransport*"):
     BUG_COMPONENT = ("Core", "Networking")
 
 GENERATED_WEBIDL_FILES = [
-    "CSSCounterStyleRule.webidl",
-    "CSSFontFaceDescriptors.webidl",
     "CSSPageDescriptors.webidl",
     "CSSPositionTryDescriptors.webidl",
     "CSSStyleProperties.webidl",
@@ -440,7 +422,6 @@ WEBIDL_FILES = [
     "AppInfo.webidl",
     "APZTestData.webidl",
     "ARIAMixin.webidl",
-    "ARIANotifyMixin.webidl",
     "Attr.webidl",
     "AudioBuffer.webidl",
     "AudioBufferSourceNode.webidl",
@@ -456,7 +437,6 @@ WEBIDL_FILES = [
     "AudioParamMap.webidl",
     "AudioProcessingEvent.webidl",
     "AudioScheduledSourceNode.webidl",
-    "AudioSession.webidl",
     "AudioTrack.webidl",
     "AudioTrackList.webidl",
     "AudioWorklet.webidl",
@@ -512,6 +492,7 @@ WEBIDL_FILES = [
     "CSSColorValue.webidl",
     "CSSConditionRule.webidl",
     "CSSContainerRule.webidl",
+    "CSSCounterStyleRule.webidl",
     "CSSCustomMediaRule.webidl",
     "CSSFontFaceRule.webidl",
     "CSSFontFeatureValuesRule.webidl",
@@ -573,7 +554,6 @@ WEBIDL_FILES = [
     "CSSUnitValue.webidl",
     "CSSUnparsedValue.webidl",
     "CSSVariableReferenceValue.webidl",
-    "CSSViewTransitionRule.webidl",
     "CustomElementRegistry.webidl",
     "DataTransfer.webidl",
     "DataTransferItem.webidl",
@@ -583,7 +563,6 @@ WEBIDL_FILES = [
     "DedicatedWorkerGlobalScope.webidl",
     "DelayNode.webidl",
     "DeviceMotionEvent.webidl",
-    "DigitalCredential.webidl",
     "Directory.webidl",
     "Document.webidl",
     "DocumentFragment.webidl",
@@ -606,7 +585,6 @@ WEBIDL_FILES = [
     "DOMTokenList.webidl",
     "DragEvent.webidl",
     "DynamicsCompressorNode.webidl",
-    "EditContext.webidl",
     "Element.webidl",
     "ElementInternals.webidl",
     "EncodedAudioChunk.webidl",
@@ -668,7 +646,6 @@ WEBIDL_FILES = [
     "GleanPings.webidl",
     "Headers.webidl",
     "Highlight.webidl",
-    "HighlightRegistry.webidl",
     "History.webidl",
     "HTMLAllCollection.webidl",
     "HTMLAnchorElement.webidl",
@@ -728,7 +705,6 @@ WEBIDL_FILES = [
     "HTMLProgressElement.webidl",
     "HTMLQuoteElement.webidl",
     "HTMLScriptElement.webidl",
-    "HTMLSelectedContentElement.webidl",
     "HTMLSelectElement.webidl",
     "HTMLSlotElement.webidl",
     "HTMLSourceElement.webidl",
@@ -747,7 +723,6 @@ WEBIDL_FILES = [
     "HTMLTrackElement.webidl",
     "HTMLUListElement.webidl",
     "HTMLVideoElement.webidl",
-    "HyperlinkElementUtils.webidl",
     "IDBCursor.webidl",
     "IDBDatabase.webidl",
     "IDBFactory.webidl",
@@ -755,7 +730,6 @@ WEBIDL_FILES = [
     "IDBKeyRange.webidl",
     "IDBObjectStore.webidl",
     "IDBOpenDBRequest.webidl",
-    "IDBRecord.webidl",
     "IDBRequest.webidl",
     "IDBTransaction.webidl",
     "IDBVersionChangeEvent.webidl",
@@ -828,7 +802,6 @@ WEBIDL_FILES = [
     "MimeType.webidl",
     "MimeTypeArray.webidl",
     "MLS.webidl",
-    "ModelContext.webidl",
     "MouseEvent.webidl",
     "MouseScrollEvent.webidl",
     "MozFrameLoaderOwner.webidl",
@@ -886,7 +859,6 @@ WEBIDL_FILES = [
     "PeriodicWave.webidl",
     "Permissions.webidl",
     "PermissionStatus.webidl",
-    "PictureInPictureWindow.webidl",
     "Plugin.webidl",
     "PluginArray.webidl",
     "PointerEvent.webidl",
@@ -919,14 +891,12 @@ WEBIDL_FILES = [
     "ScreenOrientation.webidl",
     "ScriptProcessorNode.webidl",
     "ScrollAreaEvent.webidl",
-    "ScrollTimeline.webidl",
     "Selection.webidl",
-    "Serial.webidl",
-    "SerialPort.webidl",
     "ServiceWorker.webidl",
     "ServiceWorkerContainer.webidl",
     "ServiceWorkerGlobalScope.webidl",
     "ServiceWorkerRegistration.webidl",
+    "ShadowRealmGlobalScope.webidl",
     "ShadowRoot.webidl",
     "SharedWorker.webidl",
     "SharedWorkerGlobalScope.webidl",
@@ -1063,8 +1033,6 @@ WEBIDL_FILES = [
     "TextEncoder.webidl",
     "TextEncoderStream.webidl",
     "TextEvent.webidl",
-    "TextFormat.webidl",
-    "TextFormatUpdateEvent.webidl",
     "TextTrack.webidl",
     "TextTrackCue.webidl",
     "TextTrackCueList.webidl",
@@ -1098,7 +1066,6 @@ WEBIDL_FILES = [
     "VideoPlaybackQuality.webidl",
     "VideoTrack.webidl",
     "VideoTrackList.webidl",
-    "ViewTimeline.webidl",
     "ViewTransition.webidl",
     "VisualViewport.webidl",
     "VRDisplay.webidl",
@@ -1162,9 +1129,7 @@ if CONFIG["MOZ_WEBRTC"]:
         "RTCDtlsTransport.webidl",
         "RTCDTMFSender.webidl",
         "RTCEncodedAudioFrame.webidl",
-        "RTCEncodedFrameMetadata.webidl",
         "RTCEncodedVideoFrame.webidl",
-        "RTCError.webidl",
         "RTCIceCandidate.webidl",
         "RTCIceTransport.webidl",
         "RTCIdentityAssertion.webidl",
@@ -1253,7 +1218,6 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     "AnimationPlaybackEvent.webidl",
     "BlobEvent.webidl",
     "CaretStateChangedEvent.webidl",
-    "CharacterBoundsUpdateEvent.webidl",
     "CloseEvent.webidl",
     "ContentVisibilityAutoStateChangeEvent.webidl",
     "DeviceLightEvent.webidl",
@@ -1281,7 +1245,6 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     "PageSwapEvent.webidl",
     "PageTransitionEvent.webidl",
     "PerformanceEntryEvent.webidl",
-    "PictureInPictureEvent.webidl",
     "PopStateEvent.webidl",
     "PopupBlockedEvent.webidl",
     "PositionStateEvent.webidl",
@@ -1294,7 +1257,6 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     "TCPServerSocketEvent.webidl",
     "TCPSocketErrorEvent.webidl",
     "TCPSocketEvent.webidl",
-    "TextUpdateEvent.webidl",
     "TrackEvent.webidl",
     "UDPMessageEvent.webidl",
     "UserProximityEvent.webidl",
@@ -1309,8 +1271,6 @@ if CONFIG["MOZ_WEBRTC"]:
     GENERATED_EVENTS_WEBIDL_FILES += [
         "RTCDataChannelEvent.webidl",
         "RTCDTMFToneChangeEvent.webidl",
-        "RTCErrorEvent.webidl",
-        "RTCPeerConnectionIceErrorEvent.webidl",
         "RTCPeerConnectionIceEvent.webidl",
         "RTCTrackEvent.webidl",
         "RTCTransformEvent.webidl",

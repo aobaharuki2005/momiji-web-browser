@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -231,20 +233,20 @@ using ValueTable = Matrix<MDefinition*, 128, SystemAllocPolicy>;
 // For debugging, dump specific rows (loop body copies) of a block table.
 static void DumpBlockTableRows(const BlockTable& table, int32_t firstCix,
                                int32_t lastCix, const char* tag) {
-  JitSpew(JitSpew_UnrollDetails, "<<<< %s", tag);
+  Fprinter& printer(JitSpewPrinter());
+  printer.printf("<<<< %s\n", tag);
   for (int32_t cix = firstCix; cix <= lastCix; cix++) {
     if (cix == 0) {
-      JitSpew(JitSpew_UnrollDetails, "  -------- Original --------");
+      printer.printf("  -------- Original --------\n");
     } else {
-      JitSpew(JitSpew_UnrollDetails, "  -------- Copy %u --------", cix);
+      printer.printf("  -------- Copy %u --------\n", cix);
     }
     for (uint32_t bix = 0; bix < table.size2(); bix++) {
-      AutoJitSpewMessage msg(JitSpew_UnrollDetails);
-      DumpMIRBlock(msg.printer(), table.get(uint32_t(cix), bix),
+      DumpMIRBlock(printer, table.get(uint32_t(cix), bix),
                    /*showDetails=*/true);
     }
   }
-  JitSpew(JitSpew_UnrollDetails, ">>>>");
+  printer.printf(">>>>\n");
 }
 
 // Dump an entire block table.
@@ -259,20 +261,22 @@ static void DumpBlockTableRowZero(const BlockTable& table, const char* tag) {
 
 // Dump a value table.
 static void DumpValueTable(const ValueTable& table, const char* tag) {
-  JitSpew(JitSpew_UnrollDetails, "<<<< %s", tag);
+  Fprinter& printer(JitSpewPrinter());
+  printer.printf("<<<< %s\n", tag);
   for (uint32_t cix = 0; cix < table.size1(); cix++) {
     if (cix == 0) {
-      JitSpew(JitSpew_UnrollDetails, "  -------- Original --------");
+      printer.printf("  -------- Original --------\n");
     } else {
-      JitSpew(JitSpew_UnrollDetails, "  -------- Copy %u --------", cix);
+      printer.printf("  -------- Copy %u --------\n", cix);
     }
     for (uint32_t vix = 0; vix < table.size2(); vix++) {
-      AutoJitSpewMessage msg(JitSpew_UnrollDetails, "    ");
-      DumpMIRDefinition(msg.printer(), table.get(cix, vix),
+      printer.printf("    ");
+      DumpMIRDefinition(printer, table.get(cix, vix),
                         /*showDetails=*/true);
+      printer.printf("\n");
     }
   }
-  JitSpew(JitSpew_UnrollDetails, ">>>>");
+  printer.printf(">>>>\n");
 }
 
 #endif  // JS_JITSPEW
@@ -325,7 +329,7 @@ class MDefinitionRemapper {
   mozilla::Vector<Pair, 32, SystemAllocPolicy> pairs;
 
  public:
-  MDefinitionRemapper() = default;
+  MDefinitionRemapper() {}
   // Register `original` as a key in the mapper, and map it to itself.
   [[nodiscard]] bool enregister(MDefinition* original) {
     MOZ_ASSERT(original);
@@ -943,13 +947,11 @@ static bool UnrollAndOrPeelLoop(MIRGraph& graph, UnrollState& state) {
 
 #ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_UnrollDetails)) {
-    JitSpew(JitSpew_UnrollDetails,
-            "<<<< ORIGINAL FUNCTION (after LCSSA-ification of chosen loops)");
-    {
-      AutoJitSpewMessage msg(JitSpew_UnrollDetails);
-      DumpMIRGraph(msg.printer(), graph, /*showDetails=*/true);
-    }
-    JitSpew(JitSpew_UnrollDetails, ">>>>");
+    Fprinter& printer(JitSpewPrinter());
+    printer.printf(
+        "<<<< ORIGINAL FUNCTION (after LCSSA-ification of chosen loops)\n");
+    DumpMIRGraph(printer, graph, /*showDetails=*/true);
+    printer.printf(">>>>\n");
   }
 #endif
 
@@ -984,25 +986,21 @@ static bool UnrollAndOrPeelLoop(MIRGraph& graph, UnrollState& state) {
 #ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_UnrollDetails)) {
     DumpBlockTableRowZero(state.blockTable, "ORIGINAL LOOP");
-    {
-      AutoJitSpewMessage msg(JitSpew_UnrollDetails,
-                             "<<<< EXIT TARGET BLOCKS: ");
-      for (size_t i = 0; i < state.exitTargetBlocks.size(); i++) {
-        MBasicBlock* targetBlock = state.exitTargetBlocks.get(i);
-        DumpMIRBlockID(msg.printer(), targetBlock, /*showDetails=*/true);
-        msg.append(" ");
-      }
-      msg.append(">>>>");
+    Fprinter& printer(JitSpewPrinter());
+    printer.printf("<<<< EXIT TARGET BLOCKS: ");
+    for (size_t i = 0; i < state.exitTargetBlocks.size(); i++) {
+      MBasicBlock* targetBlock = state.exitTargetBlocks.get(i);
+      DumpMIRBlockID(printer, targetBlock, /*showDetails=*/true);
+      printer.printf(" ");
     }
-    {
-      AutoJitSpewMessage msg(JitSpew_UnrollDetails, "<<<< EXITING VALUES: ");
-      for (size_t i = 0; i < state.exitingValues.size(); i++) {
-        MDefinition* exitingValue = state.exitingValues.get(i);
-        DumpMIRDefinitionID(msg.printer(), exitingValue, /*showDetails=*/true);
-        msg.append(" ");
-      }
-      msg.append(">>>>");
+    printer.printf(">>>>\n");
+    printer.printf("<<<< EXITING VALUES: ");
+    for (size_t i = 0; i < state.exitingValues.size(); i++) {
+      MDefinition* exitingValue = state.exitingValues.get(i);
+      DumpMIRDefinitionID(printer, exitingValue, /*showDetails=*/true);
+      printer.printf(" ");
     }
+    printer.printf(">>>>\n");
   }
 #endif
 
@@ -1646,12 +1644,12 @@ static bool UnrollAndOrPeelLoop(MIRGraph& graph, UnrollState& state) {
 #ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_UnrollDetails)) {
     DumpBlockTable(state.blockTable, "LOOP BLOCKS (final)");
-    JitSpew(JitSpew_UnrollDetails, "<<<< SPLITTER BLOCKS");
+    Fprinter& printer(JitSpewPrinter());
+    printer.printf("<<<< SPLITTER BLOCKS\n");
     for (MBasicBlock* block : splitterBlocks) {
-      AutoJitSpewMessage msg(JitSpew_UnrollDetails);
-      DumpMIRBlock(msg.printer(), block, /*showDetails=*/true);
+      DumpMIRBlock(printer, block, /*showDetails=*/true);
     }
-    JitSpew(JitSpew_UnrollDetails, ">>>>");
+    printer.printf(">>>>\n");
   }
 #endif
 
@@ -1677,12 +1675,10 @@ static bool UnrollAndOrPeelLoop(MIRGraph& graph, UnrollState& state) {
 
 #ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_UnrollDetails)) {
-    JitSpew(JitSpew_UnrollDetails, "<<<< FUNCTION AFTER UNROLLING");
-    {
-      AutoJitSpewMessage msg(JitSpew_UnrollDetails);
-      DumpMIRGraph(msg.printer(), graph, /*showDetails=*/true);
-    }
-    JitSpew(JitSpew_UnrollDetails, ">>>>");
+    Fprinter& printer(JitSpewPrinter());
+    printer.printf("<<<< FUNCTION AFTER UNROLLING\n");
+    DumpMIRGraph(printer, graph, /*showDetails=*/true);
+    printer.printf(">>>>\n");
   }
 #endif
 

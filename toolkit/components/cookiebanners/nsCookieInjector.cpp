@@ -342,7 +342,8 @@ nsresult nsCookieInjector::InjectCookiesFromRules(
       NS_ENSURE_SUCCESS(rv, rv);
 
       MOZ_LOG(gCookieInjectorLog, LogLevel::Error,
-              ("Invalid cookie: %s", NS_ConvertUTF16toUTF8(errorString).get()));
+              ("Invalid cookie: %s",
+               NS_ConvertUTF16toUTF8(errorString).BeginReading()));
       continue;
     }
 

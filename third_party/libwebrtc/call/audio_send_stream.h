@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "api/audio/audio_processing_statistics.h"
+#include "api/audio_codecs/audio_codec_pair_id.h"
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/audio_codecs/audio_encoder_factory.h"
 #include "api/audio_codecs/audio_format.h"
@@ -163,6 +164,7 @@ class AudioSendStream : public AudioSender {
 
     std::optional<SendCodecSpec> send_codec_spec;
     scoped_refptr<AudioEncoderFactory> encoder_factory;
+    std::optional<AudioCodecPairId> codec_pair_id;
 
     // Track ID as specified during track creation.
     std::string track_id;
@@ -180,7 +182,7 @@ class AudioSendStream : public AudioSender {
     scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer;
   };
 
-  ~AudioSendStream() override = default;
+  virtual ~AudioSendStream() = default;
 
   virtual const webrtc::AudioSendStream::Config& GetConfig() const = 0;
 

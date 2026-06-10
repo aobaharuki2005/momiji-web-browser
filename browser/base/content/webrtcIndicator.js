@@ -260,7 +260,7 @@ const WebRTCIndicator = {
     }
 
     let browser = activeStreams[activeStreams.length - 1].browser;
-    let browserWindow = browser.documentGlobal;
+    let browserWindow = browser.ownerGlobal;
     let browserRect =
       browserWindow.windowUtils.getBoundsWithoutFlushing(browser);
 

@@ -36,7 +36,7 @@ const YELP_MERINO_SINGLE = [
 
 add_setup(async function init() {
   // Disable search suggestions so we don't hit the network.
-  await SearchService.init();
+  await Services.search.init();
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({

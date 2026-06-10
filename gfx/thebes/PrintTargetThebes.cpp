@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -64,7 +65,6 @@ already_AddRefed<DrawTarget> PrintTargetThebes::GetReferenceDrawTarget() {
 
 nsresult PrintTargetThebes::BeginPrinting(const nsAString& aTitle,
                                           const nsAString& aPrintToFileName,
-                                          uint64_t aBrowsingContextId,
                                           int32_t aStartPage,
                                           int32_t aEndPage) {
   return mGfxSurface->BeginPrinting(aTitle, aPrintToFileName);

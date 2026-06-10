@@ -1647,7 +1647,11 @@ export class SpecialPowersChild extends JSWindowActorChild {
   }
 
   async evictAllDocumentViewers() {
-    await this.sendQuery("EvictAllDocumentViewers");
+    if (Services.appinfo.sessionHistoryInParent) {
+      await this.sendQuery("EvictAllDocumentViewers");
+    } else {
+      this.browsingContext.top.childSessionHistory.legacySHistory.evictAllDocumentViewers();
+    }
   }
 
   /**
@@ -2126,6 +2130,25 @@ export class SpecialPowersChild extends JSWindowActorChild {
     return this._pu;
   }
 
+  createDOMWalker(node, showAnonymousContent) {
+    node = lazy.WrapPrivileged.unwrap(node);
+    let walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].createInstance(
+      Ci.inIDeepTreeWalker
+    );
+    walker.showAnonymousContent = showAnonymousContent;
+    walker.init(node.ownerDocument, NodeFilter.SHOW_ALL);
+    walker.currentNode = node;
+    let contentWindow = this.contentWindow;
+    return {
+      get firstChild() {
+        return lazy.WrapPrivileged.wrap(walker.firstChild(), contentWindow);
+      },
+      get lastChild() {
+        return lazy.WrapPrivileged.wrap(walker.lastChild(), contentWindow);
+      },
+    };
+  }
+
   /**
    * Which commands are available can be determined by checking which commands
    * are registered. See \ref
@@ -2248,21 +2271,6 @@ export class SpecialPowersChild extends JSWindowActorChild {
       win = win.parent;
     }
     return Promise.resolve();
-  }
-
-  /**
-   * Gets the privileged button inside an <input> element
-   * (clear / reveal / number spinner).
-   *
-   * @param {HTMLInputElement} input
-   * @returns {HTMLButtonElement?} the privileged button, if any.
-   */
-  getInputButton(input) {
-    if (ChromeUtils.getClassName(input) != "HTMLInputElement") {
-      throw new Error("Not an <input> element");
-    }
-    let children = InspectorUtils.getChildrenForNode(input, true, false);
-    return children.find(e => e.localName == "button");
   }
 }
 

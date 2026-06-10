@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -33,28 +35,6 @@ void RegisterCallbackHandler(uint64_t aInterfaceId,
  * vtable will still be registered with Rust, but all method calls will fail.
  */
 void DeregisterCallbackHandler(uint64_t aInterfaceId, ErrorResult& aError);
-
-/**
- * Create a new Callback interface handle
- */
-uint64_t CallbackHandleCreate();
-
-/**
- * Increase the refcount for a callback interface handle.  Returns the new
- * refcount.
- */
-uint32_t CallbackHandleAddRef(uint64_t aHandle);
-
-/**
- * Decrease the refcount for a callback interface handle.  Returns the new
- * refcount.
- */
-uint32_t CallbackHandleRelease(uint64_t aHandle);
-
-/**
- * Free a callback interface handle
- */
-void CallbackHandleFree(uint64_t aHandle);
 
 /**
  * Base class for async callback interface method handlers

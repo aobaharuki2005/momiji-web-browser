@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -81,20 +83,19 @@ class WebAuthnHandler final : public AbortFollower {
     MOZ_ASSERT(aWindow);
   }
 
-  void MakeCredential(JSContext* aCx,
-                      const PublicKeyCredentialCreationOptions& aOptions,
-                      const Optional<OwningNonNull<AbortSignal>>& aSignal,
-                      const RefPtr<Promise>& aPromise);
+  already_AddRefed<Promise> MakeCredential(
+      const PublicKeyCredentialCreationOptions& aOptions,
+      const Optional<OwningNonNull<AbortSignal>>& aSignal, ErrorResult& aError);
 
-  void GetAssertion(JSContext* aCx,
-                    const PublicKeyCredentialRequestOptions& aOptions,
-                    const bool aConditionallyMediated,
-                    const Optional<OwningNonNull<AbortSignal>>& aSignal,
-                    const RefPtr<Promise>& aPromise);
+  already_AddRefed<Promise> GetAssertion(
+      const PublicKeyCredentialRequestOptions& aOptions,
+      const bool aConditionallyMediated,
+      const Optional<OwningNonNull<AbortSignal>>& aSignal, ErrorResult& aError);
 
-  void Store(const Credential& aCredential, const RefPtr<Promise>& aPromise);
+  already_AddRefed<Promise> Store(const Credential& aCredential,
+                                  ErrorResult& aError);
 
-  void IsUVPAA(const RefPtr<Promise>& aPromise);
+  already_AddRefed<Promise> IsUVPAA(GlobalObject& aGlobal, ErrorResult& aError);
 
   void ActorDestroyed();
 

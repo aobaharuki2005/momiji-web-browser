@@ -11,7 +11,7 @@ info: |
     d. Repeat, while next is not false
       i. Let next be ? IteratorStep(iterator).
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Symbol.iterator, TypedArray]
 ---*/
 
@@ -28,6 +28,6 @@ testWithBigIntTypedArrayConstructors(function(TA) {
   assert.throws(Test262Error, function() {
     TA.from(iter);
   });
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

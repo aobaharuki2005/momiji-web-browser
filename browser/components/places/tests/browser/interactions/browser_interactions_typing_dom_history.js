@@ -41,7 +41,7 @@ add_task(async function test_typing_pushState() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await sendTextToInput(browser, sentence);
 
-    await SpecialPowers.spawn(browser, [TEST_URL2], url => {
+    await ContentTask.spawn(browser, TEST_URL2, url => {
       content.history.pushState(null, "", url);
     });
 
@@ -71,7 +71,7 @@ add_task(async function test_typing_pushState_sameUrl() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await sendTextToInput(browser, sentence);
 
-    await SpecialPowers.spawn(browser, [TEST_URL], url => {
+    await ContentTask.spawn(browser, TEST_URL, url => {
       content.history.pushState(null, "", url);
     });
 
@@ -96,7 +96,7 @@ add_task(async function test_typing_replaceState() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await sendTextToInput(browser, sentence);
 
-    await SpecialPowers.spawn(browser, [TEST_URL2], url => {
+    await ContentTask.spawn(browser, TEST_URL2, url => {
       content.history.replaceState(null, "", url);
     });
 
@@ -126,7 +126,7 @@ add_task(async function test_typing_replaceState_sameUrl() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await sendTextToInput(browser, sentence);
 
-    await SpecialPowers.spawn(browser, [TEST_URL], url => {
+    await ContentTask.spawn(browser, TEST_URL, url => {
       content.history.replaceState(null, "", url);
     });
 
@@ -151,7 +151,7 @@ add_task(async function test_typing_hashchange() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await sendTextToInput(browser, sentence);
 
-    await SpecialPowers.spawn(browser, [TEST_URL + "#foo"], url => {
+    await ContentTask.spawn(browser, TEST_URL + "#foo", url => {
       content.location = url;
     });
 

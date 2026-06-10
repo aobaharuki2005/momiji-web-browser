@@ -25,8 +25,6 @@ const {
  * @internal
  */
 class FrameImpl {
-  #binaryBody;
-  #body;
   /**
    * Frame constructor. `command`, `headers` and `body` are available as properties.
    *
@@ -44,10 +42,10 @@ class FrameImpl {
     this.command = command;
     this.headers = Object.assign({}, headers || {});
     if (binaryBody) {
-      this.#binaryBody = binaryBody;
+      this._binaryBody = binaryBody;
       this.isBinaryBody = true;
     } else {
-      this.#body = body || "";
+      this._body = body || "";
       this.isBinaryBody = false;
     }
     this.escapeHeaderValues = escapeHeaderValues || false;
@@ -57,19 +55,19 @@ class FrameImpl {
    * body of the frame
    */
   get body() {
-    if (!this.#body && this.isBinaryBody) {
-      this.#body = new TextDecoder().decode(this.#binaryBody);
+    if (!this._body && this.isBinaryBody) {
+      this._body = new TextDecoder().decode(this._binaryBody);
     }
-    return this.#body;
+    return this._body;
   }
   /**
    * body as Uint8Array
    */
   get binaryBody() {
-    if (!this.#binaryBody && !this.isBinaryBody) {
-      this.#binaryBody = new TextEncoder().encode(this.#body);
+    if (!this._binaryBody && !this.isBinaryBody) {
+      this._binaryBody = new TextEncoder().encode(this._body);
     }
-    return this.#binaryBody;
+    return this._binaryBody;
   }
   /**
    * deserialize a STOMP Frame from raw data.
@@ -115,9 +113,9 @@ class FrameImpl {
   serialize() {
     const cmdAndHeaders = this.serializeCmdAndHeaders();
     if (this.isBinaryBody) {
-      return FrameImpl.toUnit8Array(cmdAndHeaders, this.#binaryBody).buffer;
+      return FrameImpl.toUnit8Array(cmdAndHeaders, this._binaryBody).buffer;
     }
-    return cmdAndHeaders + this.#body + BYTE.NULL;
+    return cmdAndHeaders + this._body + BYTE.NULL;
   }
   serializeCmdAndHeaders() {
     const lines = [this.command];

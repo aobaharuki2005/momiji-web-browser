@@ -11,6 +11,8 @@
 #include "sechash.h"
 #include "stdio.h"
 
+#include "blapi.h"
+
 #include "gtest/gtest.h"
 #include "nss_scoped_ptrs.h"
 #include "util.h"

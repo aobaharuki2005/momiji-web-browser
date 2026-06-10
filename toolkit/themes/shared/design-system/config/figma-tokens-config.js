@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env node */
+
 const StyleDictionary = require("style-dictionary");
-const { OVERRIDE_IDENTIFIERS } = require("./override-identifiers");
 
 const COLLECTIONS = {
   colors: "Colors",
@@ -84,11 +85,7 @@ StyleDictionary.registerTransform({
       (typeof token.value !== "object" || isNestedDefaultObject(token.value)) &&
       token.value !== "currentColor"
     ) {
-      if (
-        OVERRIDE_IDENTIFIERS.some(
-          ({ name }) => token.path[0].replace(`.${name}`, "") === "color"
-        )
-      ) {
+      if (token.path[0] === "color") {
         collection = COLLECTIONS.colors;
       } else {
         collection = COLLECTIONS.primitives;
@@ -117,121 +114,117 @@ StyleDictionary.registerTransform({
  * Formats design tokens based on the provided arguments and options.
  *
  * @param {string} collection - The name of the token collection to filter by.
- * @param {string} overrideIdentifier - The name of the set of override tokens to handle separately.
  * @returns {Function} A function that takes an object with `dictionary` and `options` properties
  * and returns a formatted JSON string of the tokens.
  */
-const formatTokens =
-  (collection, overrideIdentifier = "") =>
-  args => {
-    let dictionary = Object.assign({}, args.dictionary);
-    let tokens = [];
+const formatTokens = collection => args => {
+  let dictionary = Object.assign({}, args.dictionary);
+  let tokens = [];
 
-    const filter = mergeFilters(
-      defaultFilter,
-      token => overrideFilter(token, overrideIdentifier),
-      token => token.attributes?.collection === collection
-    );
+  const filter = mergeFilters(
+    defaultFilter,
+    token => token.attributes?.collection === collection
+  );
 
-    dictionary.allTokens.forEach(token => {
-      let originalVal = token.original.value;
+  dictionary.allTokens.forEach(token => {
+    let originalVal = token.original.value;
 
-      if (originalVal === undefined) {
-        throw new Error(
-          `[formatTokens] Token ${token.name} has an undefined original value. Please check your tokens.`
-        );
-      }
-
-      // If the current token references another token that will be destructured,
-      // we skip it altogether
-      if (dictionary.usesReference(originalVal)) {
-        const references = dictionary.getReferences(originalVal);
-        if (references.some(ref => ref.attributes.willBeDestructured)) {
-          console.warn(
-            `[formatTokens] Skipping token ${token.name} because it references a token that will be destructured`
-          );
-          return;
-        }
-      }
-
-      // If the token is a CSS box-shadow shorthand, attempt to destructure it
-      // into its subtokens and process each subtoken
-      const potentialShadowTokens = attemptShadowDestructuring(
-        token,
-        originalVal
+    if (originalVal === undefined) {
+      throw new Error(
+        `[formatTokens] Token ${token.name} has an undefined original value. Please check your tokens.`
       );
-      if (potentialShadowTokens) {
-        potentialShadowTokens.forEach(
-          ({ token: sToken, originalVal: sOriginalVal }) => {
-            // Check if the subtoken should be filtered out
-            if (!filter(sToken)) {
-              return;
-            }
-            // Transform the subtoken value and add it to the tokens array
-            let formattedToken = transformTokenValue(
-              sToken,
-              sOriginalVal,
-              dictionary
-            );
-            tokens.push(formattedToken);
-          }
-        );
-        return;
-      }
-
-      // If the token is a padding/margin shorthand, attempt to destructure it
-      const potentialPaddingMarginTokens = attemptPaddingMarginDestructuring(
-        token,
-        originalVal
-      );
-      if (potentialPaddingMarginTokens) {
-        potentialPaddingMarginTokens.forEach(
-          ({ token: sToken, originalVal: sOriginalVal }) => {
-            // Check if the subtoken should be filtered out
-            if (!filter(sToken)) {
-              return;
-            }
-            // Transform the subtoken value and add it to the tokens array
-            let formattedToken = transformTokenValue(
-              sToken,
-              sOriginalVal,
-              dictionary
-            );
-            tokens.push(formattedToken);
-          }
-        );
-        return;
-      }
-
-      // Check if the token should be filtered out
-      if (!filter(token)) {
-        return;
-      }
-      // Otherwise transform the original token value and add it to the tokens array
-      let formattedToken = transformTokenValue(token, originalVal, dictionary);
-      tokens.push(formattedToken);
-    });
-
-    if (!tokens.length) {
-      return "{}\n";
     }
 
-    dictionary.allTokens = dictionary.allProperties = tokens;
-    return (
-      "{\n" +
-      dictionary.allTokens
-        .map(function (token) {
-          return `  "${token.name}": ${JSON.stringify(
-            args.options.usesDtcg ? token.$value : token.value,
-            null,
-            2
-          ).replace(/\n/g, "\n  ")}`;
-        })
-        .join(",\n") +
-      "\n}" +
-      "\n"
+    // If the current token references another token that will be destructured,
+    // we skip it altogether
+    if (dictionary.usesReference(originalVal)) {
+      const references = dictionary.getReferences(originalVal);
+      if (references.some(ref => ref.attributes.willBeDestructured)) {
+        console.warn(
+          `[formatTokens] Skipping token ${token.name} because it references a token that will be destructured`
+        );
+        return;
+      }
+    }
+
+    // If the token is a CSS box-shadow shorthand, attempt to destructure it
+    // into its subtokens and process each subtoken
+    const potentialShadowTokens = attemptShadowDestructuring(
+      token,
+      originalVal
     );
-  };
+    if (potentialShadowTokens) {
+      potentialShadowTokens.forEach(
+        ({ token: sToken, originalVal: sOriginalVal }) => {
+          // Check if the subtoken should be filtered out
+          if (!filter(sToken)) {
+            return;
+          }
+          // Transform the subtoken value and add it to the tokens array
+          let formattedToken = transformTokenValue(
+            sToken,
+            sOriginalVal,
+            dictionary
+          );
+          tokens.push(formattedToken);
+        }
+      );
+      return;
+    }
+
+    // If the token is a padding/margin shorthand, attempt to destructure it
+    const potentialPaddingMarginTokens = attemptPaddingMarginDestructuring(
+      token,
+      originalVal
+    );
+    if (potentialPaddingMarginTokens) {
+      potentialPaddingMarginTokens.forEach(
+        ({ token: sToken, originalVal: sOriginalVal }) => {
+          // Check if the subtoken should be filtered out
+          if (!filter(sToken)) {
+            return;
+          }
+          // Transform the subtoken value and add it to the tokens array
+          let formattedToken = transformTokenValue(
+            sToken,
+            sOriginalVal,
+            dictionary
+          );
+          tokens.push(formattedToken);
+        }
+      );
+      return;
+    }
+
+    // Check if the token should be filtered out
+    if (!filter(token)) {
+      return;
+    }
+    // Otherwise transform the original token value and add it to the tokens array
+    let formattedToken = transformTokenValue(token, originalVal, dictionary);
+    tokens.push(formattedToken);
+  });
+
+  if (!tokens.length) {
+    return "";
+  }
+
+  dictionary.allTokens = dictionary.allProperties = tokens;
+  return (
+    "{\n" +
+    dictionary.allTokens
+      .map(function (token) {
+        return `  "${token.name}": ${JSON.stringify(
+          args.options.usesDtcg ? token.$value : token.value,
+          null,
+          2
+        ).replace(/\n/g, "\n  ")}`;
+      })
+      .join(",\n") +
+    "\n}" +
+    "\n"
+  );
+};
 
 /**
  * Transforms the value of a design token by resolving references, handling `calc()` expressions,
@@ -244,13 +237,6 @@ const formatTokens =
  */
 function transformTokenValue(token, originalVal, dictionary) {
   let newValue = originalVal;
-  let newName = token.name;
-
-  OVERRIDE_IDENTIFIERS.forEach(({ name }) => {
-    if (token.name.includes(name)) {
-      newName = token.name.replace(`.${name}`, "");
-    }
-  });
 
   if (typeof token.value === "object") {
     const brandValue = getNestedBrandColor(originalVal);
@@ -292,7 +278,7 @@ function transformTokenValue(token, originalVal, dictionary) {
     newValue = potentiallyTransformValue(token, newValue);
   }
 
-  return { ...token, name: newName, value: newValue };
+  return { ...token, value: newValue };
 }
 
 function potentiallyTransformValue(token, value) {
@@ -430,7 +416,7 @@ function getNestedBrandColor(token) {
  * or `undefined` if the token is not a shadow or cannot be parsed.
  */
 function attemptShadowDestructuring(token, originalVal) {
-  if (!token.path.includes("box-shadow") || typeof originalVal !== "string") {
+  if (!token.path.includes("shadow") || typeof originalVal !== "string") {
     return undefined;
   }
 
@@ -484,8 +470,7 @@ function attemptShadowDestructuring(token, originalVal) {
 function attemptPaddingMarginDestructuring(token, originalVal) {
   if (
     typeof originalVal !== "string" ||
-    (!token.path.includes("padding") && !token.path.includes("margin")) ||
-    token.path.includes("@base")
+    (!token.path.includes("padding") && !token.path.includes("margin"))
   ) {
     return undefined;
   }
@@ -754,24 +739,6 @@ function defaultFilter(token) {
   return true;
 }
 
-const overrideFilter = (token, overrideIdentifier) => {
-  // discard tokens not belonging to the specified set of override tokens
-  if (overrideIdentifier && !token.name.includes(`.${overrideIdentifier}`)) {
-    return false;
-  }
-
-  // discard override tokens from the base set
-  if (
-    !overrideIdentifier &&
-    (token.override ||
-      OVERRIDE_IDENTIFIERS.some(({ name }) => token.name.includes(`.${name}`)))
-  ) {
-    return false;
-  }
-
-  return true;
-};
-
 function filterBase(pathItem) {
   return pathItem !== "@base";
 }
@@ -779,38 +746,6 @@ function filterBase(pathItem) {
 // ---------
 // Style Dictionary Configuration
 // ---------
-
-const getOverrideFiles = () => {
-  return OVERRIDE_IDENTIFIERS.flatMap(({ name }) => [
-    {
-      destination: `dist/${name}/tokens-figma-colors.json`,
-      format: `json/figma/colors/${name}`,
-    },
-    {
-      destination: `dist/${name}/tokens-figma-primitives.json`,
-      format: `json/figma/primitives/${name}`,
-    },
-    {
-      destination: `dist/${name}/tokens-figma-theme.json`,
-      format: `json/figma/theme/${name}`,
-    },
-  ]);
-};
-
-const getOverrideFormats = () => {
-  return OVERRIDE_IDENTIFIERS.reduce(
-    (config, { name }) => ({
-      ...config,
-      [`json/figma/colors/${name}`]: formatTokens(COLLECTIONS.colors, name),
-      [`json/figma/primitives/${name}`]: formatTokens(
-        COLLECTIONS.primitives,
-        name
-      ),
-      [`json/figma/theme/${name}`]: formatTokens(COLLECTIONS.theme, name),
-    }),
-    {}
-  );
-};
 
 const platform = {
   options: {
@@ -831,7 +766,6 @@ const platform = {
       destination: "dist/tokens-figma-theme.json",
       format: "json/figma/theme",
     },
-    ...getOverrideFiles(),
   ],
 };
 
@@ -841,6 +775,5 @@ module.exports = {
     "json/figma/colors": formatTokens(COLLECTIONS.colors),
     "json/figma/primitives": formatTokens(COLLECTIONS.primitives),
     "json/figma/theme": formatTokens(COLLECTIONS.theme),
-    ...getOverrideFormats(),
   },
 };

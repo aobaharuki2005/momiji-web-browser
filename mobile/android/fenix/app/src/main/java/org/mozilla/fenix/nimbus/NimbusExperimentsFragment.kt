@@ -7,28 +7,19 @@ package org.mozilla.fenix.nimbus
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.fragment.app.Fragment
 import androidx.fragment.compose.content
 import androidx.navigation.fragment.findNavController
 import org.mozilla.fenix.R
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.nimbus.ext.fetchPartitionedExperimentListsAsync
-import org.mozilla.fenix.nimbus.view.NimbusExperimentItem
 import org.mozilla.fenix.nimbus.view.NimbusExperiments
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Fragment use for managing Nimbus experiments.
  */
-class NimbusExperimentsFragment : Fragment(), SystemInsetsPaddedFragment {
+class NimbusExperimentsFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
@@ -41,12 +32,8 @@ class NimbusExperimentsFragment : Fragment(), SystemInsetsPaddedFragment {
         savedInstanceState: Bundle?,
     ) = content {
         FirefoxTheme {
-            var experiments by remember { mutableStateOf(emptyList<NimbusExperimentItem>()) }
-            val nimbusSdk = LocalContext.current.components.nimbus.sdk
-
-            LaunchedEffect(Unit) {
-                experiments = nimbusSdk.fetchPartitionedExperimentListsAsync()
-            }
+            val experiments =
+                requireContext().components.nimbus.sdk.getAvailableExperiments()
 
             NimbusExperiments(
                 experiments = experiments,

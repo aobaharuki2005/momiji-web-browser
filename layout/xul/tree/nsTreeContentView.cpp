@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -723,8 +725,7 @@ int32_t nsTreeContentView::GetIndexOfItem(Element* aItem) {
 
 void nsTreeContentView::AttributeChanged(dom::Element* aElement,
                                          int32_t aNameSpaceID,
-                                         nsAtom* aAttribute,
-                                         AttrModType aModType,
+                                         nsAtom* aAttribute, AttrModType,
                                          const nsAttrValue* aOldValue) {
   // Lots of codepaths under here that do all sorts of stuff, so be safe.
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
@@ -763,10 +764,11 @@ void nsTreeContentView::AttributeChanged(dom::Element* aElement,
 
   // Handle changes of the hidden attribute.
   if (aAttribute == nsGkAtoms::hidden &&
-      aModType != AttrModType::Modification &&
       aElement->IsAnyOfXULElements(nsGkAtoms::treeitem,
                                    nsGkAtoms::treeseparator)) {
-    bool hidden = aElement->GetBoolAttr(nsGkAtoms::hidden);
+    bool hidden = aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
+                                        nsGkAtoms::_true, eCaseMatters);
+
     int32_t index = FindContent(aElement);
     if (hidden && index >= 0) {
       // Hide this row along with its children.
@@ -1044,7 +1046,8 @@ void nsTreeContentView::Serialize(nsIContent* aContent, int32_t aParentIndex,
 void nsTreeContentView::SerializeItem(Element* aContent, int32_t aParentIndex,
                                       int32_t* aIndex,
                                       nsTArray<UniquePtr<Row>>& aRows) {
-  if (aContent->GetBoolAttr(nsGkAtoms::hidden)) {
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
+                            nsGkAtoms::_true, eCaseMatters)) {
     return;
   }
 
@@ -1079,7 +1082,8 @@ void nsTreeContentView::SerializeSeparator(Element* aContent,
                                            int32_t aParentIndex,
                                            int32_t* aIndex,
                                            nsTArray<UniquePtr<Row>>& aRows) {
-  if (aContent->GetBoolAttr(nsGkAtoms::hidden)) {
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
+                            nsGkAtoms::_true, eCaseMatters)) {
     return;
   }
 
@@ -1102,7 +1106,9 @@ void nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
     }
 
     if (content->IsXULElement(nsGkAtoms::treeitem)) {
-      if (!content->AsElement()->GetBoolAttr(nsGkAtoms::hidden)) {
+      if (!content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                             nsGkAtoms::hidden,
+                                             nsGkAtoms::_true, eCaseMatters)) {
         (*aIndex)++;
         if (content->AsElement()->AttrValueIs(kNameSpaceID_None,
                                               nsGkAtoms::container,
@@ -1118,7 +1124,9 @@ void nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
         }
       }
     } else if (content->IsXULElement(nsGkAtoms::treeseparator)) {
-      if (!content->AsElement()->GetBoolAttr(nsGkAtoms::hidden)) {
+      if (!content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                             nsGkAtoms::hidden,
+                                             nsGkAtoms::_true, eCaseMatters)) {
         (*aIndex)++;
       }
     }

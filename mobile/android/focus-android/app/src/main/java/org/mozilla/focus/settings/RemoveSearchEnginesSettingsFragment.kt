@@ -17,9 +17,6 @@ import org.mozilla.focus.search.MultiselectSearchEngineListPreference
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.utils.ViewUtils
 
-/**
- * Settings fragment for removing search engines.
- */
 class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.remove_search_engines)

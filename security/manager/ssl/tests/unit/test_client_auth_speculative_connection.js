@@ -49,9 +49,10 @@ function run_test() {
   MockRegistrar.register("@mozilla.org/prompter;1", gPromptFactory);
 
   // Set a primary password.
-  let token = Cc["@mozilla.org/security/internalkeytoken;1"].createInstance(
-    Ci.nsIPKCS11Token
+  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
+    Ci.nsIPK11TokenDB
   );
+  let token = tokenDB.getInternalKeyToken();
   token.initPassword("password");
 
   let clientAuthRememberService = Cc[

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,8 +9,8 @@
  * interface.  See the "test_backgroundfilesaver.js" file for usage examples.
  */
 
-#ifndef BackgroundFileSaver_h_
-#define BackgroundFileSaver_h_
+#ifndef BackgroundFileSaver_h__
+#define BackgroundFileSaver_h__
 
 #include "ScopedNSSTypes.h"
 #include "mozilla/Mutex.h"
@@ -377,9 +379,6 @@ class DigestOutputStream : public nsIOutputStream {
   // Constructor. Neither parameter may be null. The caller owns both.
   DigestOutputStream(nsIOutputStream* aStream, Digest& aDigest);
 
-  // Don't accidentally copy construct.
-  DigestOutputStream(const DigestOutputStream& d) = delete;
-
  private:
   virtual ~DigestOutputStream() = default;
 
@@ -387,6 +386,9 @@ class DigestOutputStream : public nsIOutputStream {
   nsCOMPtr<nsIOutputStream> mOutputStream;
   // Digest used to compute the hash, owned by the caller.
   Digest& mDigest;
+
+  // Don't accidentally copy construct.
+  DigestOutputStream(const DigestOutputStream& d) = delete;
 };
 
 }  // namespace net

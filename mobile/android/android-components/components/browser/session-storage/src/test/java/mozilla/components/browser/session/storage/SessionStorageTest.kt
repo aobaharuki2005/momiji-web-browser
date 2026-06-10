@@ -10,8 +10,6 @@ import mozilla.components.browser.state.ext.getUrl
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.ReaderState
-import mozilla.components.browser.state.state.TabGroup
-import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
@@ -21,6 +19,7 @@ import mozilla.components.support.test.fakes.engine.FakeEngineSessionState
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -28,12 +27,11 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class SessionStorageTest {
     @Test
-    fun `Restored browser state should contain tabs and tab partitions of saved state`() {
+    fun `Restored browser state should contain tabs of saved state`() {
         // Build the state
 
         val engineSessionState1 = FakeEngineSessionState("engineState1")
@@ -44,14 +42,9 @@ class SessionStorageTest {
         val tab2 = createTab("https://getpocket.com", id = "tab2", contextId = "context2")
         val tab3 = createTab("https://www.firefox.com", id = "tab3", parent = tab1)
 
-        val tabGroup = TabGroup(id = "group1", name = "Group 1", tabIds = setOf("a"))
-        val tabPartition = TabPartition(id = "testFeaturePartition1", tabGroups = listOf(tabGroup))
-        val tabPartitions = mapOf("testFeaturePartition1" to tabPartition)
-
         val state = BrowserState(
             tabs = listOf(tab1, tab2, tab3),
             selectedTabId = tab1.id,
-            tabPartitions = tabPartitions,
         )
 
         // Persist the state
@@ -65,11 +58,10 @@ class SessionStorageTest {
         // Read it back
 
         val restoredState = storage.restore()
-        assertNotNull(restoredState)
+        assertNotNull(restoredState!!)
 
         assertEquals(3, restoredState.tabs.size)
         assertEquals("tab1", restoredState.selectedTabId)
-        assertEquals(tabPartitions, restoredState.tabPartitions)
 
         tab1.assertSameAs(restoredState.tabs[0])
         tab2.assertSameAs(restoredState.tabs[1])
@@ -111,7 +103,7 @@ class SessionStorageTest {
         val restoredState = storage.restore {
             it.state.contextId == "context"
         }
-        assertNotNull(restoredState)
+        assertNotNull(restoredState!!)
 
         // Only the two "context" tabs should be restored
         assertEquals(2, restoredState.tabs.size)
@@ -152,7 +144,7 @@ class SessionStorageTest {
 
         // Read it back and filter using predicate
         val restoredState = storage.restore()
-        assertNotNull(restoredState)
+        assertNotNull(restoredState!!)
 
         // Only the tab with readable URI should be restored
         assertEquals(1, restoredState.tabs.size)
@@ -227,7 +219,7 @@ class SessionStorageTest {
         val browsingSession = storage.restore()
 
         assertNotNull(browsingSession)
-        assertEquals(2, browsingSession.tabs.size)
+        assertEquals(2, browsingSession!!.tabs.size)
 
         browsingSession.tabs[0].state.apply {
             assertEquals("https://www.mozilla.org/en-US/firefox/", url)
@@ -279,7 +271,7 @@ class SessionStorageTest {
         val browsingSession = storage.restore()
 
         assertNotNull(browsingSession)
-        assertEquals(2, browsingSession.tabs.size)
+        assertEquals(2, browsingSession!!.tabs.size)
 
         browsingSession.tabs[0].state.apply {
             assertEquals("https://www.theverge.com/", url)
@@ -357,7 +349,7 @@ class SessionStorageTest {
         val browsingSession = storage.restore()
 
         assertNotNull(browsingSession)
-        assertEquals(2, browsingSession.tabs.size)
+        assertEquals(2, browsingSession!!.tabs.size)
 
         browsingSession.tabs[0].state.apply {
             assertEquals("https://www.mozilla.org", url)
@@ -400,7 +392,7 @@ class SessionStorageTest {
 
         // Read it back
         val browsingSession = storage.restore()
-        assertNotNull(browsingSession)
+        assertNotNull(browsingSession!!)
 
         assertEquals(2, browsingSession.tabs.size)
         assertEquals("https://www.mozilla.org", browsingSession.tabs[0].state.url)
@@ -429,7 +421,7 @@ class SessionStorageTest {
 
         // Read it back
         val browsingSession = storage.restore()
-        assertNotNull(browsingSession)
+        assertNotNull(browsingSession!!)
 
         assertEquals(1, browsingSession.tabs.size)
         assertEquals("https://getpocket.com", browsingSession.tabs[0].state.url)

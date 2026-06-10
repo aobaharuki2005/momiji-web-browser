@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/strings/string_view.h"
 
 // Generated at build-time by the protobuf compiler.
@@ -95,9 +96,15 @@ struct IntervalSeries {
 };
 
 // A container that represents a general graph, with axes, title and one or
-// more data series.
+// more data series. A subclass should define the output format by overriding
+// the Draw() method.
 class Plot {
  public:
+  virtual ~Plot() {}
+
+  ABSL_DEPRECATED("Use PrintPythonCode() or ExportProtobuf() instead.")
+  virtual void Draw() {}
+
   // Sets the lower x-axis limit to min_value (if left_margin == 0).
   // Sets the upper x-axis limit to max_value (if right_margin == 0).
   // The margins are measured as fractions of the interval
@@ -160,10 +167,11 @@ class Plot {
   // Otherwise, the call has no effect and the timeseries is destroyed.
   void AppendTimeSeriesIfNotEmpty(TimeSeries&& time_series);
 
+  // Replaces PythonPlot::Draw()
   void PrintPythonCode(
-      bool show_grid = false,
       absl::string_view figure_output_path = absl::string_view()) const;
 
+  // Replaces ProtobufPlot::Draw()
   void ExportProtobuf(analytics::Chart* chart) const;
 
  protected:
@@ -182,19 +190,25 @@ class Plot {
 
 class PlotCollection {
  public:
-  Plot* AppendNewPlot();
+  virtual ~PlotCollection() {}
 
-  Plot* AppendNewPlot(absl::string_view);
+  ABSL_DEPRECATED("Use PrintPythonCode() or ExportProtobuf() instead.")
+  virtual void Draw() {}
+
+  virtual Plot* AppendNewPlot();
+
+  virtual Plot* AppendNewPlot(absl::string_view);
 
   void SetCallTimeToUtcOffsetMs(int64_t calltime_to_utc_ms) {
     calltime_to_utc_ms_ = calltime_to_utc_ms;
   }
 
+  // Replaces PythonPlotCollection::Draw()
   void PrintPythonCode(
       bool shared_xaxis,
-      bool show_grid_on_all_plots,
       absl::string_view figure_output_path = absl::string_view()) const;
 
+  // Replaces ProtobufPlotCollections::Draw()
   void ExportProtobuf(analytics::ChartCollection* collection) const;
 
  protected:

@@ -17,6 +17,7 @@ const ruleTester = new RuleTester();
 function error(line, column = undefined) {
   return {
     messageId: "useSingleCall",
+    type: "CallExpression",
     line,
     column,
   };

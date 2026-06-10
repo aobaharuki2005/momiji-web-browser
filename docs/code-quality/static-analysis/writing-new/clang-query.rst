@@ -4,7 +4,8 @@ Using clang-query
 =================
 
 clang-query is a tool that allows you to quickly iterate and develop the difficult part of a matcher.
-Once the design of the matcher is completed, it can be transferred to a C++ clang-tidy plugin, :searchfox:`similar to the ones in mozilla-central <build/clang-plugin>`.
+Once the design of the matcher is completed, it can be transferred to a C++ clang-tidy plugin, `similar
+to the ones in mozilla-central <https://searchfox.org/mozilla-central/source/build/clang-plugin>`_.
 
 Recommended Boilerplate
 -----------------------

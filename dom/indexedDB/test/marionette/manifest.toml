@@ -1,5 +1,4 @@
 [DEFAULT]
-subsuite = "integration"
-tags = "inc-origin-init os_integration"
+tags = "inc-origin-init"
 
 ["test_IDB_encryption_PBM.py"]

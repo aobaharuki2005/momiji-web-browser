@@ -7,14 +7,15 @@ package org.mozilla.fenix.components.toolbar
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.StandardTestDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class MenuPresenterTest {
@@ -24,16 +25,16 @@ class MenuPresenterTest {
     private lateinit var menuPresenter: MenuPresenter
     private lateinit var menuToolbar: BrowserToolbar
 
-    private val testDispatcher = StandardTestDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
     fun setup() {
         testTab = createTab(url = "https://mozilla.org")
         store = BrowserStore(initialState = BrowserState(tabs = listOf(testTab), selectedTabId = testTab.id))
         menuToolbar = mockk(relaxed = true)
-        menuPresenter = MenuPresenter(menuToolbar, store, mainDispatcher = testDispatcher).also {
+        menuPresenter = MenuPresenter(menuToolbar, store).also {
             it.start()
-            testDispatcher.scheduler.advanceUntilIdle()
         }
         clearMocks(menuToolbar)
     }
@@ -43,11 +44,9 @@ class MenuPresenterTest {
         verify(exactly = 0) { menuToolbar.invalidateActions() }
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(testTab.id, true))
-        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 1) { menuToolbar.invalidateActions() }
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(testTab.id, false))
-        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { menuToolbar.invalidateActions() }
     }
 
@@ -56,11 +55,9 @@ class MenuPresenterTest {
         verify(exactly = 0) { menuToolbar.invalidateActions() }
 
         store.dispatch(ContentAction.UpdateBackNavigationStateAction(testTab.id, true))
-        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 1) { menuToolbar.invalidateActions() }
 
         store.dispatch(ContentAction.UpdateBackNavigationStateAction(testTab.id, false))
-        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { menuToolbar.invalidateActions() }
     }
 
@@ -69,11 +66,9 @@ class MenuPresenterTest {
         verify(exactly = 0) { menuToolbar.invalidateActions() }
 
         store.dispatch(ContentAction.UpdateForwardNavigationStateAction(testTab.id, true))
-        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 1) { menuToolbar.invalidateActions() }
 
         store.dispatch(ContentAction.UpdateForwardNavigationStateAction(testTab.id, false))
-        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { menuToolbar.invalidateActions() }
     }
 
@@ -82,7 +77,6 @@ class MenuPresenterTest {
         verify(exactly = 0) { menuToolbar.invalidateActions() }
 
         store.dispatch(ContentAction.UpdateWebAppManifestAction(testTab.id, mockk()))
-        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 1) { menuToolbar.invalidateActions() }
     }
 }

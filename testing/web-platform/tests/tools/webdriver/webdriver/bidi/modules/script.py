@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Union
 
+from ..error import UnknownErrorException
 from ._module import BidiModule, command
 from ..undefined import UNDEFINED, Undefined
 
@@ -117,7 +118,7 @@ class Script(BidiModule):
 
     @add_preload_script.result
     def _add_preload_script(self, result: Mapping[str, Any]) -> Any:
-        assert isinstance(result["script"], str)
+        assert "script" in result
 
         return result["script"]
 
@@ -153,15 +154,14 @@ class Script(BidiModule):
 
     @call_function.result
     def _call_function(self, result: Mapping[str, Any]) -> Any:
-        assert isinstance(result["realm"], str)
-
-        assert result["type"] in ["success", "exception"]
+        assert "type" in result
 
         if result["type"] == "success":
-            assert isinstance(result["result"], dict)
             return result["result"]
         elif result["type"] == "exception":
             raise ScriptEvaluateResultException(result)
+        else:
+            raise UnknownErrorException(f"""Invalid type '{result["type"]}' in response""")
 
     @command
     def disown(self, handles: List[str], target: Target) -> Mapping[str, Any]:
@@ -194,15 +194,14 @@ class Script(BidiModule):
 
     @evaluate.result
     def _evaluate(self, result: Mapping[str, Any]) -> Any:
-        assert isinstance(result["realm"], str)
-
-        assert result["type"] in ["success", "exception"]
+        assert "type" in result
 
         if result["type"] == "success":
-            assert isinstance(result["result"], dict)
             return result["result"]
         elif result["type"] == "exception":
             raise ScriptEvaluateResultException(result)
+        else:
+            raise UnknownErrorException(f"""Invalid type '{result["type"]}' in response""")
 
     @command
     def get_realms(
@@ -221,19 +220,8 @@ class Script(BidiModule):
 
     @get_realms.result
     def _get_realms(self, result: Mapping[str, Any]) -> Any:
+        assert result["realms"] is not None
         assert isinstance(result["realms"], list)
-        for realm in result["realms"]:
-            assert isinstance(realm["realm"], str)
-            assert isinstance(realm["origin"], str)
-            assert isinstance(realm["type"], str)
-            if "owners" in realm:
-                assert isinstance(realm["owners"], list)
-                for owner in realm["owners"]:
-                    assert isinstance(owner, str)
-            if "context" in realm:
-                assert isinstance(realm["context"], str)
-            if "sandbox" in realm:
-                assert isinstance(realm["sandbox"], str)
 
         return result["realms"]
 

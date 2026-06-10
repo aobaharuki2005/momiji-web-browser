@@ -11,15 +11,6 @@ async function getAboutMessagePreviewParent(browser) {
   return windowGlobalParent.getActor("AboutMessagePreview");
 }
 
-function getConsoleErrorPromise(expectedString) {
-  return TestUtils.consoleMessageObserved(msg => {
-    return (
-      typeof msg.wrappedJSObject.arguments?.[0] === "string" &&
-      msg.wrappedJSObject.arguments[0].includes(expectedString)
-    );
-  });
-}
-
 async function waitForClick(selector, win) {
   let el = await TestUtils.waitForCondition(() =>
     win.document.querySelector(selector)
@@ -29,7 +20,7 @@ async function waitForClick(selector, win) {
 
 async function dialogClosed(browser) {
   await TestUtils.waitForCondition(
-    () => !browser?.documentGlobal.gDialogBox.isOpen
+    () => !browser?.ownerGlobal.gDialogBox.isOpen
   );
 }
 
@@ -52,7 +43,7 @@ function clearNotifications() {
   );
 }
 
-async function openMessagePreviewTab(gBrowser = window.gBrowser) {
+async function openMessagePreviewTab() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:messagepreview",

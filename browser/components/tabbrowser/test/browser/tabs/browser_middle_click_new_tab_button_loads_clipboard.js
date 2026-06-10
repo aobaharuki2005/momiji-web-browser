@@ -3,6 +3,8 @@
 
 "use strict";
 
+const searchclipboardforPref = "browser.tabs.searchclipboardfor.middleclick";
+
 const { SearchTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SearchTestUtils.sys.mjs"
 );
@@ -10,8 +12,7 @@ const { SearchTestUtils } = ChromeUtils.importESModule(
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["middlemouse.paste", true],
-      ["browser.tabs.searchclipboardfor.middleclick", true],
+      [searchclipboardforPref, true],
       // set preloading to false so we can await the new tab being opened.
       ["browser.newtab.preload", false],
     ],

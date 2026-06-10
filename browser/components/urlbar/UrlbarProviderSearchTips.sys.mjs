@@ -21,13 +21,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DefaultBrowserCheck:
     "moz-src:///browser/components/DefaultBrowserCheck.sys.mjs",
   LaterRun: "resource:///modules/LaterRun.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SearchStaticData:
     "moz-src:///toolkit/components/search/SearchStaticData.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlbarProviderTopSites:
     "moz-src:///browser/components/urlbar/UrlbarProviderTopSites.sys.mjs",
-  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
+  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
@@ -173,7 +172,7 @@ export class UrlbarProviderSearchTips extends UrlbarProvider {
     this.showedTipTypeInCurrentEngagement = this.currentTip;
     this.currentTip = TIPS.NONE;
 
-    let defaultEngine = await lazy.SearchService.getDefault();
+    let defaultEngine = await Services.search.getDefault();
     let icon = await defaultEngine.getIconURL();
     if (instance != this.queryInstance) {
       return;
@@ -506,7 +505,7 @@ async function isBrowserShowingNotification(window) {
  * @returns {Promise<boolean>}
  */
 async function isDefaultEngineHomepage(urlStr) {
-  let defaultEngine = await lazy.SearchService.getDefault();
+  let defaultEngine = await Services.search.getDefault();
   if (!defaultEngine) {
     return false;
   }

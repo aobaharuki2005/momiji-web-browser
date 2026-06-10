@@ -1,9 +1,10 @@
+/* vim:set ts=4 sw=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsAuthGSSAPI_h_
-#define nsAuthGSSAPI_h_
+#ifndef nsAuthGSSAPI_h__
+#define nsAuthGSSAPI_h__
 
 #include "nsAuth.h"
 #include "nsIAuthModule.h"
@@ -52,9 +53,11 @@ class nsAuthGSSAPI final : public nsIAuthModule {
   gss_ctx_id_t mCtx;
   gss_OID mMechOID;
   nsCString mServiceName;
-  uint32_t mServiceFlags;
+  uint32_t mServiceFlags = REQ_DEFAULT;
   nsString mUsername;
-  bool mComplete;
+  bool mComplete = false;
+  bool mDelegationRequested = false;
+  bool mDelegationSupported = false;
 };
 
-#endif /* nsAuthGSSAPI_h_ */
+#endif /* nsAuthGSSAPI_h__ */

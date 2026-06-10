@@ -57,11 +57,11 @@ java nu.validator.htmlparser.impl.AttributeName
 cd ../.. # Back to parser/html/java/
 make translate
 cd ../../..
-./mach format
+./mach clang-format
 
 ## How to add an element
 
-# First, add an entry to parser/htmlparser/nsHTMLTagList.inc or dom/svg/SVGTagList.inc!
+# First, add an entry to parser/htmlparser/nsHTMLTagList.h or dom/svg/SVGTagList.h!
 # Then, starting from the root of a mozilla-central checkout
 cd parser/html/java/
 make sync
@@ -75,14 +75,14 @@ $EDITOR nu/validator/htmlparser/impl/ElementName.java
 # Search for "BDO,", duplicate that line and change the duplicate to say the new name in all caps followed by comma.
 # Save.
 javac nu/validator/htmlparser/impl/ElementName.java
-java nu.validator.htmlparser.impl.ElementName ../../../../../parser/htmlparser/nsHTMLTagList.inc ../../../../../dom/svg/SVGTagList.inc
+java nu.validator.htmlparser.impl.ElementName ../../../../../parser/htmlparser/nsHTMLTagList.h ../../../../../dom/svg/SVGTagList.h
 # Copy and paste the output into nu/validator/htmlparser/impl/ElementName.java replacing the text below the comment "START GENERATED CODE" and above the very last "}".
 # Recomment the bits that you uncommented earlier.
 # Save.
 cd ../.. # Back to parser/html/java/
 make translate
 cd ../../..
-./mach format
+./mach clang-format
 
 Ben Newman (23 September 2009)
-Henri Sivonen (10 August 2017, 10 February 2020, 1 June 2026)
+Henri Sivonen (10 August 2017, 10 February 2020)

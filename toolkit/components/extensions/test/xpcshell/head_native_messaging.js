@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 /* globals AppConstants, FileUtils */
@@ -113,7 +115,7 @@ async function setupHosts(scripts) {
         let batPath = getPath(`batch ${script.name}.${scriptExtension}`);
         let scriptPath = getPath(`${script.name}.py`);
 
-        let batBody = `@ECHO OFF\n"${pythonPath}" -u "${scriptPath}" %*\n`;
+        let batBody = `@ECHO OFF\n${pythonPath} -u "${scriptPath}" %*\n`;
         await IOUtils.writeUTF8(batPath, batBody);
 
         let manifestPath = await writeManifest(script, scriptPath, batPath);

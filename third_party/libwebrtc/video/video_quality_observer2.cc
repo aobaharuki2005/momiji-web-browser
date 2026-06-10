@@ -66,7 +66,8 @@ void VideoQualityObserver::UpdateHistograms(bool screenshare) {
     return;
   }
 
-  StringBuilder log_stream;
+  char log_stream_buf[2 * 1024];
+  SimpleStringBuilder log_stream(log_stream_buf);
 
   if (last_frame_rendered_ms_ > last_unfreeze_time_ms_) {
     smooth_playback_durations_.Add(last_frame_rendered_ms_ -

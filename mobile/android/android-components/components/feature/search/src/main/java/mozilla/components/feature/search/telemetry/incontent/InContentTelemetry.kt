@@ -6,8 +6,6 @@ package mozilla.components.feature.search.telemetry.incontent
 
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.search.telemetry.BaseSearchTelemetry
@@ -24,9 +22,7 @@ import org.json.JSONObject
  * Implemented as a browser extension based on the WebExtension API:
  * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions
  */
-class InContentTelemetry(
-    mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
-) : BaseSearchTelemetry(mainDispatcher) {
+class InContentTelemetry : BaseSearchTelemetry() {
 
     override suspend fun install(
         engine: Engine,

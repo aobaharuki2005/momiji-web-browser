@@ -1,44 +1,40 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GroupInfo.h"
 
-#include "GroupInfoPair.h"
 #include "OriginInfo.h"
 #include "mozilla/dom/quota/AssertionsImpl.h"
 
 namespace mozilla::dom::quota {
 
-SafeRefPtr<OriginInfo> GroupInfo::LockedGetOriginInfo(
+already_AddRefed<OriginInfo> GroupInfo::LockedGetOriginInfo(
     const nsACString& aOrigin) {
   AssertCurrentThreadOwnsQuotaMutex();
 
   for (const auto& originInfo : mOriginInfos) {
     if (originInfo->mOrigin == aOrigin) {
-      return originInfo.get().clonePtr();
+      RefPtr<OriginInfo> result = originInfo;
+      return result.forget();
     }
   }
 
   return nullptr;
 }
 
-const nsCString& GroupInfo::GetGroup() const {
-  MOZ_ASSERT(mGroupInfoPair);
-  return mGroupInfoPair->Group();
-}
-
-void GroupInfo::LockedAddOriginInfo(
-    NotNull<SafeRefPtr<OriginInfo>>&& aOriginInfo) {
+void GroupInfo::LockedAddOriginInfo(NotNull<RefPtr<OriginInfo>>&& aOriginInfo) {
   AssertCurrentThreadOwnsQuotaMutex();
 
   NS_ASSERTION(!mOriginInfos.Contains(aOriginInfo),
                "Replacing an existing entry!");
-  const auto& back = *mOriginInfos.AppendElement(std::move(aOriginInfo));
+  mOriginInfos.AppendElement(std::move(aOriginInfo));
 
-  uint64_t usage = back->LockedUsage();
+  uint64_t usage = aOriginInfo->LockedUsage();
 
-  if (!back->LockedPersisted()) {
+  if (!aOriginInfo->LockedPersisted()) {
     AssertNoOverflow(mUsage, usage);
     mUsage += usage;
   }

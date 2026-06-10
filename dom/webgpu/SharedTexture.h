@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,7 +41,8 @@ class SharedTexture {
 
   virtual Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() = 0;
 
-  virtual void GetSnapshot(const ipc::Shmem& aDestShmem, size_t aDestStride) {}
+  virtual void GetSnapshot(const ipc::Shmem& aDestShmem,
+                           const gfx::IntSize& aSize) {}
 
   virtual SharedTextureDMABuf* AsSharedTextureDMABuf() { return nullptr; }
 
@@ -65,9 +67,7 @@ class SharedTexture {
 
   virtual void onBeforeQueueSubmit(RawId aQueueId) {}
 
-  virtual void CleanForRecycling() { mSubmissionIndex = 0; }
-
-  virtual bool IsSubmitted() { return mSubmissionIndex > 0; }
+  virtual void CleanForRecycling() {}
 
   const uint32_t mWidth;
   const uint32_t mHeight;

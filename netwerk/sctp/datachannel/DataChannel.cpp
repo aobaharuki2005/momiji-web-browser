@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -355,7 +357,7 @@ void DataChannelConnection::ProcessQueuedOpens() {
   // Technically in an unspecified state, although no reasonable impl will leave
   // anything in here.
   mPending.clear();
-  for (const auto& channel : temp) {
+  for (auto channel : temp) {
     DC_DEBUG(("%p: Processing queued open for %p (%u)", this, channel.get(),
               channel->mStream));
     OpenFinish(channel);  // may end up back in mPending
@@ -1143,14 +1145,6 @@ void DataChannel::EndOfStream() {
   }
 }
 
-RefPtr<dom::RTCDataChannel> DataChannel::GetDomDataChannel() const {
-  MOZ_ASSERT(mDomEventTarget->IsOnCurrentThread());
-  if (NS_IsMainThread()) {
-    return mMainthreadDomDataChannel;
-  }
-  return mWorkerDomDataChannel;
-}
-
 void DataChannelConnection::FinishClose_s(const RefPtr<DataChannel>& aChannel) {
   MOZ_ASSERT(mSTS->IsOnCurrentThread());
 
@@ -1423,8 +1417,7 @@ void DataChannel::AnnounceOpen() {
       NS_NewCancelableRunnableFunction(
           "DataChannel::AnnounceOpen",
           [this, self = RefPtr<DataChannel>(this)] {
-            if (GetDomDataChannel() && !mAnnouncedOpen) {
-              mAnnouncedOpen = true;
+            if (GetDomDataChannel()) {
               DC_INFO(("Calling AnnounceOpen on RTCDataChannel."));
               GetDomDataChannel()->AnnounceOpen();
             }
@@ -1652,10 +1645,6 @@ void DataChannel::OnMessageReceived(nsCString&& aMsg, bool aIsBinary) {
                                 [this, self = RefPtr<DataChannel>(this),
                                  msg = std::move(aMsg), aIsBinary]() {
                                   if (GetDomDataChannel()) {
-                                    if (!mAnnouncedOpen) {
-                                      mAnnouncedOpen = true;
-                                      GetDomDataChannel()->AnnounceOpen();
-                                    }
                                     GetDomDataChannel()->DoOnMessageAvailable(
                                         msg, aIsBinary);
                                   }

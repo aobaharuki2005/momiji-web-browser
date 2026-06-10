@@ -2126,6 +2126,8 @@ Node::DelegateHolder::DelegateHolder(Node* node, NodeDelegate* delegate)
   DCHECK(node_);
 }
 
+Node::DelegateHolder::~DelegateHolder() = default;
+
 #ifdef DEBUG
 void Node::DelegateHolder::EnsureSafeDelegateAccess() const {
   PortLocker::AssertNoPortsLockedOnCurrentThread();

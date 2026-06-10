@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -99,7 +101,7 @@ class SurfaceFilter {
  public:
   SurfaceFilter() : mRowPointer(nullptr), mCol(0), mPixelSize(0) {}
 
-  virtual ~SurfaceFilter() = default;
+  virtual ~SurfaceFilter() {}
 
   /**
    * Reset this surface to the first row. It's legal for this filter to throw
@@ -631,20 +633,17 @@ class SurfaceFilter {
  */
 class SurfacePipe {
  public:
-  SurfacePipe() = default;
+  SurfacePipe() {}
 
   SurfacePipe(SurfacePipe&& aOther) : mHead(std::move(aOther.mHead)) {}
 
-  ~SurfacePipe() = default;
+  ~SurfacePipe() {}
 
   SurfacePipe& operator=(SurfacePipe&& aOther) {
     MOZ_ASSERT(this != &aOther);
     mHead = std::move(aOther.mHead);
     return *this;
   }
-
-  SurfacePipe(const SurfacePipe&) = delete;
-  SurfacePipe& operator=(const SurfacePipe&) = delete;
 
   /// Begins a new pass, seeking to the first row of the surface.
   void ResetToFirstRow() {
@@ -748,6 +747,9 @@ class SurfacePipe {
 
   explicit SurfacePipe(UniquePtr<SurfaceFilter>&& aHead)
       : mHead(std::move(aHead)) {}
+
+  SurfacePipe(const SurfacePipe&) = delete;
+  SurfacePipe& operator=(const SurfacePipe&) = delete;
 
   UniquePtr<SurfaceFilter> mHead;  /// The first filter in the chain.
 };

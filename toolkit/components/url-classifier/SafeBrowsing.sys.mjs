@@ -92,21 +92,6 @@ const FEATURES = [
     },
   },
   {
-    name: "globalCache",
-    list: ["urlclassifier.globalCacheTable"],
-    enabled() {
-      return Services.prefs.getBoolPref(
-        "browser.safebrowsing.globalCache.enabled"
-      );
-    },
-    update() {
-      return Services.prefs.getBoolPref(
-        "browser.safebrowsing.features.globalCache.update",
-        this.enabled()
-      );
-    },
-  },
-  {
     name: "trackingAnnotation",
     list: [
       "urlclassifier.trackingAnnotationTable",

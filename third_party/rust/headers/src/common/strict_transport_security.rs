@@ -1,10 +1,7 @@
 use std::fmt;
 use std::time::Duration;
 
-use http::{HeaderName, HeaderValue};
-
-use crate::util::{self, IterExt, Seconds};
-use crate::{Error, Header};
+use util::{self, IterExt, Seconds};
 
 /// `StrictTransportSecurity` header, defined in [RFC6797](https://tools.ietf.org/html/rfc6797)
 ///
@@ -35,6 +32,7 @@ use crate::{Error, Header};
 /// # Example
 ///
 /// ```
+/// # extern crate headers;
 /// use std::time::Duration;
 /// use headers::StrictTransportSecurity;
 ///
@@ -92,7 +90,7 @@ enum Directive {
     Unknown,
 }
 
-fn from_str(s: &str) -> Result<StrictTransportSecurity, Error> {
+fn from_str(s: &str) -> Result<StrictTransportSecurity, ::Error> {
     s.split(';')
         .map(str::trim)
         .map(|sub| {
@@ -113,13 +111,13 @@ fn from_str(s: &str) -> Result<StrictTransportSecurity, Error> {
                 }
             }
         })
-        .try_fold((None, None), |res, dir| match (res, dir) {
-            ((None, sub), Some(Directive::MaxAge(age))) => Some((Some(age), sub)),
-            ((age, None), Some(Directive::IncludeSubdomains)) => Some((age, Some(()))),
-            ((Some(_), _), Some(Directive::MaxAge(_)))
-            | ((_, Some(_)), Some(Directive::IncludeSubdomains))
+        .fold(Some((None, None)), |res, dir| match (res, dir) {
+            (Some((None, sub)), Some(Directive::MaxAge(age))) => Some((Some(age), sub)),
+            (Some((age, None)), Some(Directive::IncludeSubdomains)) => Some((age, Some(()))),
+            (Some((Some(_), _)), Some(Directive::MaxAge(_)))
+            | (Some((_, Some(_))), Some(Directive::IncludeSubdomains))
             | (_, None) => None,
-            (res, _) => Some(res),
+            (res, _) => res,
         })
         .and_then(|res| match res {
             (Some(age), sub) => Some(StrictTransportSecurity {
@@ -128,26 +126,26 @@ fn from_str(s: &str) -> Result<StrictTransportSecurity, Error> {
             }),
             _ => None,
         })
-        .ok_or_else(Error::invalid)
+        .ok_or_else(::Error::invalid)
 }
 
-impl Header for StrictTransportSecurity {
-    fn name() -> &'static HeaderName {
+impl ::Header for StrictTransportSecurity {
+    fn name() -> &'static ::HeaderName {
         &::http::header::STRICT_TRANSPORT_SECURITY
     }
 
-    fn decode<'i, I: Iterator<Item = &'i HeaderValue>>(values: &mut I) -> Result<Self, Error> {
+    fn decode<'i, I: Iterator<Item = &'i ::HeaderValue>>(values: &mut I) -> Result<Self, ::Error> {
         values
             .just_one()
             .and_then(|v| v.to_str().ok())
             .map(from_str)
-            .unwrap_or_else(|| Err(Error::invalid()))
+            .unwrap_or_else(|| Err(::Error::invalid()))
     }
 
-    fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
+    fn encode<E: Extend<::HeaderValue>>(&self, values: &mut E) {
         struct Adapter<'a>(&'a StrictTransportSecurity);
 
-        impl fmt::Display for Adapter<'_> {
+        impl<'a> fmt::Display for Adapter<'a> {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 if self.0.include_subdomains {
                     write!(f, "max-age={}; includeSubdomains", self.0.max_age)

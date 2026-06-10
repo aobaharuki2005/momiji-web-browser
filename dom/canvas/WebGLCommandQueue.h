@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -29,7 +30,7 @@ class RangeConsumerView final : public webgl::ConsumerView<RangeConsumerView> {
 
   void AlignTo(const size_t alignment) {
     const auto padToAlign = AlignmentOffset(alignment, mSrcItr.get());
-    if (padToAlign > Remaining()) [[unlikely]] {
+    if (MOZ_UNLIKELY(padToAlign > Remaining())) {
       mSrcItr = mSrcEnd;
       return;
     }
@@ -47,9 +48,7 @@ class RangeConsumerView final : public webgl::ConsumerView<RangeConsumerView> {
     const auto& byteSize = byteSizeChecked.value();
 
     const auto remaining = Remaining();
-    if (byteSize > remaining) [[unlikely]] {
-      return {};
-    }
+    if (MOZ_UNLIKELY(byteSize > remaining)) return {};
 
     const auto begin = reinterpret_cast<const T*>(mSrcItr.get());
     mSrcItr += byteSize;
@@ -118,7 +117,7 @@ class RangeProducerView final : public webgl::ProducerView<RangeProducerView> {
     mDestItr += padToAlign;
 
     MOZ_ASSERT(byteSize <= Remaining());
-    if (byteSize) [[likely]] {
+    if (MOZ_LIKELY(byteSize)) {
       memcpy(mDestItr.get(), src.begin().get(), byteSize);
     }
     mDestItr += byteSize;
@@ -261,16 +260,6 @@ class MethodDispatcher {
           argsTuple);
     };
   }
-};
-
-struct WebGLMethodInfo {
-  enum Flags : uint8_t {};
-
-  size_t id = 0;
-  uint8_t flags = 0;
-
-  template <typename MethodT, MethodT Method>
-  static WebGLMethodInfo Get();
 };
 
 }  // namespace mozilla

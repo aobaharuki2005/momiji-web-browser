@@ -83,11 +83,8 @@ function makeChan(uri) {
   return chan;
 }
 
-const MAX_POLL_RETRIES = 50;
-
-let WaitForHttp3Listener = function (expectedH3Version, retries = 0) {
+let WaitForHttp3Listener = function (expectedH3Version) {
   this._expectedH3Version = expectedH3Version;
-  this._retries = retries;
 };
 
 WaitForHttp3Listener.prototype = {
@@ -118,26 +115,16 @@ WaitForHttp3Listener.prototype = {
       } catch (e) {}
       Assert.equal(httpVersion, this._expectedH3Version);
       run_next_test();
-    } else if (this._retries >= MAX_POLL_RETRIES) {
-      Assert.ok(
-        false,
-        `Alt-svc route to ${this.expectedRoute} was not established after ${MAX_POLL_RETRIES} retries`
-      );
     } else {
       dump("poll later for alt svc mapping\n");
-      this._retries++;
       do_test_pending();
-      do_timeout(1000, () => {
-        Services.obs.notifyObservers(null, "net:cancel-all-connections");
-        do_timeout(500, () => {
-          doTest(
-            this.uri,
-            this.expectedRoute,
-            this.h3AltSvc,
-            this._expectedH3Version,
-            this._retries
-          );
-        });
+      do_timeout(500, () => {
+        doTest(
+          this.uri,
+          this.expectedRoute,
+          this.h3AltSvc,
+          this._expectedH3Version
+        );
       });
     }
 
@@ -145,9 +132,9 @@ WaitForHttp3Listener.prototype = {
   },
 };
 
-function doTest(uri, expectedRoute, altSvc, expectedH3Version, retries = 0) {
+function doTest(uri, expectedRoute, altSvc, expectedH3Version) {
   let chan = makeChan(uri);
-  let listener = new WaitForHttp3Listener(expectedH3Version, retries);
+  let listener = new WaitForHttp3Listener(expectedH3Version);
   listener.uri = uri;
   listener.expectedRoute = expectedRoute;
   listener.h3AltSvc = altSvc;
@@ -170,10 +157,7 @@ function test_https_alt_svc() {
       setupAltSvc();
       doTest(httpsOrigin + "http3-test2", h3Route, h3AltSvc, "h3");
     })
-    .catch(e => {
-      Assert.ok(false, `HTTP3Server.start failed: ${e}`);
-      do_test_finished();
-    });
+    .catch(_ => {});
 }
 
 // Test if we use the latest version of HTTP/3.
@@ -193,10 +177,7 @@ function test_https_alt_svc_1() {
       setupAltSvc();
       doTest(httpsOrigin + "http3-test3", h3Route, h3AltSvc, "h3");
     })
-    .catch(e => {
-      Assert.ok(false, `HTTP3Server.start failed: ${e}`);
-      do_test_finished();
-    });
+    .catch(_ => {});
 }
 
 function test_https_speculativeConnect_alt_svc() {
@@ -204,38 +185,19 @@ function test_https_speculativeConnect_alt_svc() {
 
   do_test_pending();
 
-  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   let observer = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
     observe(aSubject, aTopic, aData) {
       if (aTopic == "speculative-connect-request") {
         Services.obs.removeObserver(observer, "speculative-connect-request");
-        timer.cancel();
         info("h3Route=" + h3Route + "\n");
         info("aData=" + aData + "\n");
-        info(`.S........H[tlsflags0x00000000]${h3Route}`);
-        Assert.ok(
-          aData.includes(`<ROUTE-via ${h3Route}`) ||
-            aData.includes(`.S........H[tlsflags0x00000000]foo.example.com`)
-        );
-        do_timeout(0, () => {
-          run_next_test();
-          do_test_finished();
-        });
+        Assert.ok(aData.includes(`<ROUTE-via ${h3Route}`));
+        do_test_finished();
       }
     },
   };
   Services.obs.addObserver(observer, "speculative-connect-request");
-
-  timer.initWithCallback(
-    () => {
-      Services.obs.removeObserver(observer, "speculative-connect-request");
-      Assert.ok(false, "speculative-connect-request observer timed out");
-      do_test_finished();
-    },
-    30000,
-    Ci.nsITimer.TYPE_ONE_SHOT
-  );
 
   Services.prefs.setBoolPref("network.http.debug-observations", true);
 

@@ -33,9 +33,6 @@
     if (event.target != document) {
       return;
     }
-    await SpecialPowers.pushPrefEnv({"set":
-      [["layout.disable-pixel-alignment", true]]});
-
     await testScrollBehaviorInterruption();
     await testScrollBehaviorFramerate();
     window.scrollTo(0,0);
@@ -48,37 +45,33 @@
     await promiseApzFlushedRepaints();
 
     window.scrollTo(10, 9);
-    is(window.scrollX, 10, "instant scroll-behavior must be synchronous when setting initial position (x)");
-    is(window.scrollY, 9, "instant scroll-behavior must be synchronous when setting initial position (y)");
+    ok(window.scrollX == 10 && window.scrollY == 9,
+      "instant scroll-behavior must be synchronous when setting initial position");
 
     window.scrollTo(15, 16);
-    is(window.scrollX, 15, "instant scroll-behavior must be synchronous when setting new position (x)");
-    is(window.scrollY, 16, "instant scroll-behavior must be synchronous when setting new position (y)");
+    ok(window.scrollX == 15 && window.scrollY == 16,
+      "instant scroll-behavior must be synchronous when setting new position");
 
     window.scrollTo({left: 100, top: 200, behavior: 'smooth'});
-    is(window.scrollX, 15, "smooth scroll-behavior must be asynchronous (x)");
-    is(window.scrollY, 16, "smooth scroll-behavior must be asynchronous (y)");
-
-    // Ensure the smooth scroll request has arrived to APZ before advancing.
-    await promiseApzFlushedRepaints();
+    ok(window.scrollX == 15 && window.scrollY == 16,
+      "smooth scroll-behavior must be asynchronous");
 
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(100);
     await promiseApzFlushedRepaints();
 
-    isnot(window.scrollX, 15, "smooth scroll-behavior must be triggered by window.scrollTo (x not at start)");
-    isnot(window.scrollY, 16, "smooth scroll-behavior must be triggered by window.scrollTo (y not at start)");
-    isnot(window.scrollX, 100, "smooth scroll-behavior must be triggered by window.scrollTo (x not at end)");
-    isnot(window.scrollY, 200, "smooth scroll-behavior must be triggered by window.scrollTo (y not at end)");
+    ok(window.scrollX != 15 && window.scrollY != 16
+       && window.scrollX != 100 && window.scrollY != 200,
+      "smooth scroll-behavior must be triggered by window.scrollTo");
 
     window.scrollTo(50, 52);
-    is(window.scrollX, 50, "instant scroll-behavior must interrupt smooth scroll-behavior animation (x)");
-    is(window.scrollY, 52, "instant scroll-behavior must interrupt smooth scroll-behavior animation (y)");
+    ok(window.scrollX == 50 && window.scrollY == 52,
+      "instant scroll-behavior must interrupt smooth scroll-behavior animation");
 
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(100);
     await promiseApzFlushedRepaints();
 
-    is(window.scrollX, 50, "smooth scroll-behavior animation must stop after being interrupted (x)");
-    is(window.scrollY, 52, "smooth scroll-behavior animation must stop after being interrupted (y)");
+    ok(window.scrollX == 50 && window.scrollY == 52,
+      "smooth scroll-behavior animation must stop after being interrupted");
 
     // Release control of refresh driver
     SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
@@ -220,9 +213,6 @@
 
     window.scrollTo(startX, startY);
     window.scrollTo({left: endX, top: endY, behavior: 'smooth'});
-
-    // Ensure the smooth scroll request has arrived to APZ before advancing.
-    await promiseApzFlushedRepaints();
 
     var currentTime = 0; // ms
 

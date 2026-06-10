@@ -4,8 +4,8 @@
 
 /* bit vectors for sets of CSS properties */
 
-#ifndef nsCSSPropertyIDSet_h_
-#define nsCSSPropertyIDSet_h_
+#ifndef nsCSSPropertyIDSet_h__
+#define nsCSSPropertyIDSet_h__
 
 #include <limits.h>  // for CHAR_BIT
 
@@ -293,4 +293,4 @@ inline std::ostream& operator<<(std::ostream& aOut,
   return aOut << properties;
 }
 
-#endif /* !defined(nsCSSPropertyIDSet_h_) */
+#endif /* !defined(nsCSSPropertyIDSet_h__) */

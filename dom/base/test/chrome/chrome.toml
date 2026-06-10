@@ -111,8 +111,6 @@ support-files = [
 
 ["test_domparsing.xhtml"]
 
-["test_droppedLinkHandler.xhtml"]
-
 ["test_fileconstructor.xhtml"]
 
 ["test_getElementsWithGrid.html"]

@@ -4,8 +4,6 @@
 
 #include "PeerConnectionCtx.h"
 
-#include <span>
-
 #include "PeerConnectionImpl.h"
 #include "WebrtcGlobalChild.h"
 #include "WebrtcGlobalInformation.h"
@@ -112,7 +110,8 @@ class DummyAudioProcessing : public AudioProcessing {
     MOZ_CRASH("Unexpected call");
     return kNoError;
   }
-  bool GetLinearAecOutput(std::span<std::array<float, 160>>) const override {
+  bool GetLinearAecOutput(
+      webrtc::ArrayView<std::array<float, 160>>) const override {
     MOZ_CRASH("Unexpected call");
     return false;
   }
@@ -175,7 +174,7 @@ class PeerConnectionCtxObserver : public nsIObserver {
  public:
   NS_DECL_ISUPPORTS
 
-  PeerConnectionCtxObserver() = default;
+  PeerConnectionCtxObserver() {}
 
   void Init() {
     nsCOMPtr<nsIObserverService> observerService =
@@ -442,7 +441,7 @@ void PeerConnectionCtx::UpdateNetworkState(bool online) {
   if (ctx->mPeerConnections.empty()) {
     return;
   }
-  for (const auto& pc : ctx->mPeerConnections) {
+  for (auto pc : ctx->mPeerConnections) {
     pc.second->UpdateNetworkState(online);
   }
 }
@@ -506,7 +505,8 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
         GetMediaThreadPool(MediaThreadType::WEBRTC_CALL_THREAD),
         "CallWorker"_ns, supportTailDispatch);
 
-    auto trials = MakeUnique<MozTrialsConfig>();
+    UniquePtr<webrtc::FieldTrialsView> trials =
+        WrapUnique(new MozTrialsConfig());
 
     mSharedWebrtcState = MakeAndAddRef<SharedWebrtcState>(
         std::move(callWorkerThread), std::move(audioStateConfig),

@@ -3,6 +3,12 @@
 
 "use strict";
 
+/* import-globals-from helper-telemetry.js */
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-telemetry.js",
+  this
+);
+
 const DEVICE_A = "Device A";
 const USB_RUNTIME_1 = {
   id: "runtime-id-1",
@@ -36,28 +42,17 @@ const RUNTIME_2_EXTRAS = {
 };
 
 /**
- * Assert that the expected keys are present in actual and have the same value.
- */
-function assertExtras(expected, actual) {
-  for (const [k, v] of Object.entries(expected)) {
-    Assert.equal(v, actual[k], `Key ${k} matches.`);
-  }
-}
-
-/**
  * Test runtime update events when a device is connected/disconnected with multiple
  * runtimes available on the same device.
  */
 add_task(async function () {
   // enable USB devices mocks
   const mocks = new Mocks();
-  Services.fog.testResetFOG();
+  setupTelemetryTest();
 
   const { tab, document } = await openAboutDebugging();
 
-  const sessionId =
-    Glean.devtoolsMain.openAdbgAboutdebugging.testGetValue()[0].extra
-      .session_id;
+  const sessionId = getOpenEventSessionId();
   ok(!isNaN(sessionId), "Open event has a valid session id");
 
   info("Add two runtimes on the same device at the same time");
@@ -79,21 +74,13 @@ add_task(async function () {
     findSidebarItemByText(USB_RUNTIME_2.shortName, document)
   );
 
-  const daEvents = Glean.devtoolsMain.deviceAddedAboutdebugging.testGetValue();
-  Assert.equal(1, daEvents.length);
-  assertExtras(
-    { ...DEVICE_A_EXTRAS, session_id: sessionId },
-    daEvents[0].extra
-  );
-  const raEvents = Glean.devtoolsMain.runtimeAddedAboutdebugging.testGetValue();
-  Assert.equal(2, raEvents.length);
-  assertExtras(
-    { ...RUNTIME_1_EXTRAS, session_id: sessionId },
-    raEvents[0].extra
-  );
-  assertExtras(
-    { ...RUNTIME_2_EXTRAS, session_id: sessionId },
-    raEvents[1].extra
+  checkTelemetryEvents(
+    [
+      { method: "device_added", extras: DEVICE_A_EXTRAS },
+      { method: "runtime_added", extras: RUNTIME_1_EXTRAS },
+      { method: "runtime_added", extras: RUNTIME_2_EXTRAS },
+    ],
+    sessionId
   );
 
   info("Remove both runtimes at once to simulate a device disconnection");
@@ -111,23 +98,13 @@ add_task(async function () {
       !findSidebarItemByText(USB_RUNTIME_2.shortName, document)
   );
 
-  const rrEvents =
-    Glean.devtoolsMain.runtimeRemovedAboutdebugging.testGetValue();
-  Assert.equal(2, rrEvents.length);
-  assertExtras(
-    { ...RUNTIME_1_EXTRAS, session_id: sessionId },
-    rrEvents[0].extra
-  );
-  assertExtras(
-    { ...RUNTIME_2_EXTRAS, session_id: sessionId },
-    rrEvents[1].extra
-  );
-  const drEvents =
-    Glean.devtoolsMain.deviceRemovedAboutdebugging.testGetValue();
-  Assert.equal(1, drEvents.length);
-  assertExtras(
-    { ...DEVICE_A_EXTRAS, session_id: sessionId },
-    drEvents[0].extra
+  checkTelemetryEvents(
+    [
+      { method: "runtime_removed", extras: RUNTIME_1_EXTRAS },
+      { method: "runtime_removed", extras: RUNTIME_2_EXTRAS },
+      { method: "device_removed", extras: DEVICE_A_EXTRAS },
+    ],
+    sessionId
   );
 
   await removeTab(tab);

@@ -13,13 +13,14 @@
 #include <optional>
 #include <string>
 
+#include "api/array_view.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 namespace {
 
 template <class T>
-void ToStringIfSet(StringBuilder* result,
+void ToStringIfSet(SimpleStringBuilder* result,
                    const char* key,
                    const std::optional<T>& val) {
   if (val) {
@@ -79,7 +80,8 @@ bool AudioOptions::operator==(const AudioOptions& o) const {
 }
 
 std::string AudioOptions::ToString() const {
-  StringBuilder result;
+  char buffer[1024];
+  SimpleStringBuilder result(buffer);
   result << "AudioOptions {";
   ToStringIfSet(&result, "aec", echo_cancellation);
 #if defined(WEBRTC_IOS)
@@ -99,7 +101,7 @@ std::string AudioOptions::ToString() const {
   ToStringIfSet(&result, "audio_network_adaptor", audio_network_adaptor);
   ToStringIfSet(&result, "init_recording_on_send", init_recording_on_send);
   result << "}";
-  return result.Release();
+  return result.str();
 }
 
 }  // namespace webrtc

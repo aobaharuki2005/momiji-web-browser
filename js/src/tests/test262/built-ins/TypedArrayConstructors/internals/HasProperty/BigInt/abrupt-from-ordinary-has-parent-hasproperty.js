@@ -23,7 +23,7 @@ info: |
   5. If parent is not null, then
     a. Return ? parent.[[HasProperty]](P).
   6. Return false.
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [align-detached-buffer-semantics-with-web-reality, BigInt, Reflect, Proxy, TypedArray]
 ---*/
 
@@ -35,8 +35,8 @@ var handler = {
 
 var proxy = new Proxy(TypedArray.prototype, handler);
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg(1));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA(1);
 
   Object.setPrototypeOf(sample, proxy);
 
@@ -60,6 +60,6 @@ testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
     true,
     'Reflect.has(sample, "foo") must return true'
   );
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +9,6 @@
 
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/css/Rule.h"
-#include "nsCSSProps.h"
 
 struct StyleLockedCounterStyleRule;
 
@@ -43,8 +44,11 @@ class CSSCounterStyleRule final : public css::Rule {
   void GetCssText(nsACString& aCssText) const override;
   void GetName(nsAString& aName);
   void SetName(const nsAString& aName);
-  void GetDescriptor(CounterStyleDescriptorId aDesc, nsACString& aResult);
-  void SetDescriptor(CounterStyleDescriptorId aDesc, const nsACString& aValue);
+#define CSS_COUNTER_DESC(name_, method_) \
+  void Get##method_(nsACString& aValue); \
+  void Set##method_(const nsACString& aValue);
+#include "nsCSSCounterDescList.h"
+#undef CSS_COUNTER_DESC
 
   size_t SizeOfIncludingThis(MallocSizeOf) const final;
 

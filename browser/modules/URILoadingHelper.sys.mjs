@@ -11,6 +11,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
+  UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "ReferrerInfo", () =>
@@ -74,12 +75,8 @@ function openInWindow(url, params, sourceWindow) {
     policyContainer,
     resolveOnContentBrowserCreated,
     chromeless,
-    width,
-    height,
   } = params;
-  const chromelessDimensions =
-    chromeless && width && height ? `,width=${width},height=${height}` : "";
-  const CHROMELESS_FEATURES = `resizable,minimizable,titlebar,close${chromelessDimensions}`;
+  const CHROMELESS_FEATURES = `resizable,minimizable,titlebar,close`;
   let features = `chrome,dialog=no,${chromeless ? CHROMELESS_FEATURES : "all"}`;
   if (params.private) {
     features += ",private";
@@ -149,9 +146,6 @@ function openInWindow(url, params, sourceWindow) {
   }
   if (params.schemelessInput !== undefined) {
     extraOptions.setPropertyAsUint32("schemelessInput", params.schemelessInput);
-  }
-  if (params.aiWindow) {
-    extraOptions.setPropertyAsBool("ai-window", true);
   }
 
   var allowThirdPartyFixupSupports = Cc[
@@ -689,7 +683,7 @@ export const URILoadingHelper = {
    */
   _resolveInitialTargetWindow(where, params, win, forceNonPrivate) {
     if (where === "current" && params.targetBrowser) {
-      return params.targetBrowser.documentGlobal;
+      return params.targetBrowser.ownerGlobal;
     }
 
     if (where === "tab" || where === "tabshifted") {
@@ -910,8 +904,6 @@ export const URILoadingHelper = {
    * @param aUserContextId
    *        If not null, will switch to the first found tab having the provided
    *        userContextId.
-   * @param aSplitView
-   *        If not null, will move the tab to the active split view instead of switching to tab
    * @return True if an existing tab was found, false otherwise
    */
   switchToTabHavingURI(
@@ -919,8 +911,7 @@ export const URILoadingHelper = {
     aURI,
     aOpenNew,
     aOpenParams = {},
-    aUserContextId = null,
-    aSplitView = null
+    aUserContextId = null
   ) {
     // Certain URLs can be switched to irrespective of the source or destination
     // window being in private browsing mode:
@@ -1027,18 +1018,7 @@ export const URILoadingHelper = {
           }
 
           if (!doAdopt) {
-            if (aSplitView) {
-              let tabToMove = aWindow.gBrowser.tabs[i];
-              if (aSplitView.tabs.includes(tabToMove)) {
-                aWindow.gBrowser.selectedTab = tabToMove;
-              } else {
-                let tabToReplace = aSplitView.tabs.find(tab => tab.selected);
-                aSplitView.replaceTab(tabToReplace, tabToMove);
-              }
-              aSplitView.documentGlobal.focus();
-            } else {
-              aWindow.gBrowser.tabContainer.selectedIndex = i;
-            }
+            aWindow.gBrowser.tabContainer.selectedIndex = i;
           }
 
           return true;
@@ -1070,7 +1050,10 @@ export const URILoadingHelper = {
 
     // No opened tab has that url.
     if (aOpenNew) {
-      if (aUserContextId != null) {
+      if (
+        lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
+        aUserContextId != null
+      ) {
         aOpenParams.userContextId = aUserContextId;
       }
       if (isBrowserWindow && window.gBrowser.selectedTab.isEmpty) {

@@ -310,7 +310,7 @@ function test() {
       const requestsListStatus = requestListItem.querySelector(".status-code");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
-      await waitForDOM(requestListItem, ".requests-list-timings-total");
+      await waitForDOMIfNeeded(requestListItem, ".requests-list-timings-total");
 
       await verifyRequestItemTarget(
         document,
@@ -456,7 +456,7 @@ function test() {
     });
 
     const wait = waitForNetworkEvents(monitor, 1);
-    await reloadSelectedTab();
+    await reloadBrowser();
     await wait;
 
     const requestItem = getSortedRequests(store.getState())[0];

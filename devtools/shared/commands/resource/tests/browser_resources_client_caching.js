@@ -354,7 +354,7 @@ function assertResources(resources, expectedResources) {
 }
 
 function logMessages(browser, messages) {
-  return SpecialPowers.spawn(browser, [{ messages }], args => {
+  return ContentTask.spawn(browser, { messages }, args => {
     for (const message of args.messages) {
       content.console.log(message);
     }
@@ -363,7 +363,7 @@ function logMessages(browser, messages) {
 
 async function triggerErrors(browser, errorScripts) {
   for (const errorScript of errorScripts) {
-    await SpecialPowers.spawn(browser, [errorScript], expr => {
+    await ContentTask.spawn(browser, errorScript, expr => {
       const document = content.document;
       const container = document.createElement("script");
       document.body.appendChild(container);

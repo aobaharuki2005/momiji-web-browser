@@ -17,7 +17,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <span>
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
@@ -32,7 +31,6 @@
 #include "p2p/base/stun_request.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/dscp.h"
-#include "rtc_base/net_helper.h"
 #include "rtc_base/network/received_packet.h"
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/network_constants.h"
@@ -129,11 +127,14 @@ class RTC_EXPORT UDPPort : public Port {
           bool emit_local_for_anyaddress);
   bool Init();
 
-  int SendTo(std::span<const uint8_t> data,
+  int SendTo(const void* data,
+             size_t size,
              const SocketAddress& addr,
              const AsyncSocketPacketOptions& options,
              bool payload) override;
+
   void UpdateNetworkCost() override;
+
   DiffServCodePoint StunDscpValue() const override;
 
   void OnLocalAddressReady(AsyncPacketSocket* socket,
@@ -209,7 +210,7 @@ class RTC_EXPORT UDPPort : public Port {
       absl::string_view reason);
 
   // Sends STUN requests to the server.
-  void SendStunRequest(std::span<const uint8_t> data, StunRequest* req);
+  void OnSendPacket(const void* data, size_t size, StunRequest* req);
 
   // TODO(mallinaht): Move this up to Port when SignalAddressReady is
   // changed to SignalPortReady.

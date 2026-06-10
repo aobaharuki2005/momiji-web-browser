@@ -19,10 +19,7 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
-  UserSearchEngine:
-    "moz-src:///toolkit/components/search/UserSearchEngine.sys.mjs",
 });
 
 // Set the appropriate l10n id before the dialog's connectedCallback.
@@ -100,7 +97,7 @@ class EngineDialog {
       return;
     }
 
-    let existingEngine = lazy.SearchService.getEngineByName(name);
+    let existingEngine = Services.search.getEngineByName(name);
     if (existingEngine && !this.allowedNames.includes(name)) {
       this.setValidity(this._name, "add-engine-name-exists");
       return;
@@ -116,7 +113,7 @@ class EngineDialog {
       return;
     }
 
-    let existingEngine = await lazy.SearchService.getEngineByAlias(alias);
+    let existingEngine = await Services.search.getEngineByAlias(alias);
     if (existingEngine && !this.allowedAliases.includes(alias)) {
       this.setValidity(this._alias, "add-engine-keyword-exists");
       return;
@@ -286,7 +283,7 @@ class NewEngineDialog extends EngineDialog {
     );
     let url = this._url.value.trim().replace(/%s/, "{searchTerms}");
 
-    lazy.SearchService.addUserEngine({
+    Services.search.addUserEngine({
       name: this._name.value.trim(),
       url,
       method: params.size ? "POST" : "GET",
@@ -298,10 +295,7 @@ class NewEngineDialog extends EngineDialog {
 }
 
 /**
- * This dialog is opened when editing a search engine in preferences.
- *
- * For non-user search engines, it will only allow editing the alias. For user
- * engines it will allow editing any supported field.
+ * This dialog is opened when editing a user search engine in preferences.
  */
 class EditEngineDialog extends EngineDialog {
   #engine;
@@ -310,8 +304,8 @@ class EditEngineDialog extends EngineDialog {
    *
    * @param {object} args
    *   The arguments.
-   * @param {SearchEngine} args.engine
-   *   The search engine to edit.
+   * @param {UserSearchEngine} args.engine
+   *   The search engine to edit. Must be a UserSearchEngine.
    */
   constructor({ engine }) {
     super();
@@ -324,24 +318,6 @@ class EditEngineDialog extends EngineDialog {
     );
     this._url.value = url;
     this._postData.value = postData;
-
-    if (!(this.#engine instanceof lazy.UserSearchEngine)) {
-      this._name.closest(".dialogRow").hidden = true;
-      this._url.closest(".dialogRow").hidden = true;
-      this._dialog.getButton("extra1").hidden = true;
-
-      // For the fields we aren't using, pretend they are all valid so that the
-      // form validation can pass.
-      for (let input of this._form.elements) {
-        if (input === this._alias) {
-          continue;
-        }
-        this.setValidity(input, "");
-      }
-
-      this.validateAll();
-      return;
-    }
 
     let [suggestUrl] = this.getSubmissionTemplate(
       lazy.SearchUtils.URL_TYPE.SUGGEST_JSON
@@ -357,53 +333,38 @@ class EditEngineDialog extends EngineDialog {
     this.validateAll();
   }
 
-  async validateAll() {
-    // For non-user engines, we only allow the alias to be changed, thus we
-    // should only validate the alias field.
-    if (this.#engine instanceof lazy.UserSearchEngine) {
-      super.validateAll();
-    } else {
-      await this.validateAlias();
-    }
-  }
-
   onAccept() {
-    if (this.#engine instanceof lazy.UserSearchEngine) {
-      this.#engine.rename(this._name.value.trim());
-      this.#engine.alias = this._alias.value.trim();
+    this.#engine.rename(this._name.value.trim());
+    this.#engine.alias = this._alias.value.trim();
 
-      let newURL = this._url.value.trim();
-      let newPostData = this._postData.value.trim() || null;
+    let newURL = this._url.value.trim();
+    let newPostData = this._postData.value.trim() || null;
 
-      // UserSearchEngine.changeUrl() does not check whether the URL has actually changed.
-      let [prevURL, prevPostData] = this.getSubmissionTemplate(
-        lazy.SearchUtils.URL_TYPE.SEARCH
+    // UserSearchEngine.changeUrl() does not check whether the URL has actually changed.
+    let [prevURL, prevPostData] = this.getSubmissionTemplate(
+      lazy.SearchUtils.URL_TYPE.SEARCH
+    );
+    if (newURL != prevURL || prevPostData != newPostData) {
+      this.#engine.changeUrl(
+        lazy.SearchUtils.URL_TYPE.SEARCH,
+        newURL.replace(/%s/, "{searchTerms}"),
+        newPostData?.replace(/%s/, "{searchTerms}")
       );
-      if (newURL != prevURL || prevPostData != newPostData) {
-        this.#engine.changeUrl(
-          lazy.SearchUtils.URL_TYPE.SEARCH,
-          newURL.replace(/%s/, "{searchTerms}"),
-          newPostData?.replace(/%s/, "{searchTerms}")
-        );
-      }
-
-      let newSuggestURL = this._suggestUrl.value.trim() || null;
-      let [prevSuggestUrl] = this.getSubmissionTemplate(
-        lazy.SearchUtils.URL_TYPE.SUGGEST_JSON
-      );
-      if (newSuggestURL != prevSuggestUrl) {
-        this.#engine.changeUrl(
-          lazy.SearchUtils.URL_TYPE.SUGGEST_JSON,
-          newSuggestURL?.replace(/%s/, "{searchTerms}"),
-          null
-        );
-      }
-
-      this.#engine.updateFavicon();
-    } else {
-      let newAlias = this._alias.value;
-      this.#engine.alias = newAlias.trim().toLowerCase();
     }
+
+    let newSuggestURL = this._suggestUrl.value.trim() || null;
+    let [prevSuggestUrl] = this.getSubmissionTemplate(
+      lazy.SearchUtils.URL_TYPE.SUGGEST_JSON
+    );
+    if (newSuggestURL != prevSuggestUrl) {
+      this.#engine.changeUrl(
+        lazy.SearchUtils.URL_TYPE.SUGGEST_JSON,
+        newSuggestURL?.replace(/%s/, "{searchTerms}"),
+        null
+      );
+    }
+
+    this.#engine.updateFavicon();
   }
 
   get allowedAliases() {

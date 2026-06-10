@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,6 +7,7 @@
 #include "ServiceWorker.h"
 
 #include "ServiceWorkerChild.h"
+#include "ServiceWorkerCloneData.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
 #include "ServiceWorkerRegistration.h"
@@ -35,8 +38,8 @@ namespace mozilla::dom {
 
 // static
 already_AddRefed<ServiceWorker> ServiceWorker::Create(
-    nsIGlobalObject* aGlobal, const ServiceWorkerDescriptor& aDescriptor) {
-  RefPtr<ServiceWorker> ref = new ServiceWorker(aGlobal, aDescriptor);
+    nsIGlobalObject* aOwner, const ServiceWorkerDescriptor& aDescriptor) {
+  RefPtr<ServiceWorker> ref = new ServiceWorker(aOwner, aDescriptor);
   return ref.forget();
 }
 
@@ -170,7 +173,7 @@ void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  nsIGlobalObject* global = GetRelevantGlobal();
+  nsIGlobalObject* global = GetOwnerGlobal();
   if (NS_WARN_IF(!global)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -193,18 +196,17 @@ void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   // Window-to-SW messages do not allow memory sharing since they are not in the
   // same agent cluster group, but we do not want to throw an error during the
-  // serialization. Because of this, we will propagate an error message data if
-  // the SameProcess serialization is required. So that the receiver (service
-  // worker) knows that it needs to throw while deserialization and sharing
-  // memory objects are not propagated to the other process.
+  // serialization. Because of this, ServiceWorkerCloneData will propagate an
+  // error message data if the SameProcess serialization is required. So that
+  // the receiver (service worker) knows that it needs to throw while
+  // deserialization and sharing memory objects are not propagated to the other
+  // process.
   JS::CloneDataPolicy clonePolicy;
   if (global->IsSharedMemoryAllowed()) {
     clonePolicy.allowSharedMemoryObjects();
   }
 
-  auto data = MakeRefPtr<ipc::StructuredCloneData>(
-      JS::StructuredCloneScope::UnknownDestination,
-      StructuredCloneHolder::TransferringSupported);
+  RefPtr<ServiceWorkerCloneData> data = new ServiceWorkerCloneData();
   data->Write(aCx, aMessage, transferable, clonePolicy, aRv);
   if (aRv.Failed()) {
     return;
@@ -217,11 +219,17 @@ void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   // spec for situations like SharedArrayBuffer which are limited to being sent
   // within the same agent cluster and where ServiceWorkers are always spawned
   // in their own agent cluster.
-  if (data->CloneScope() != JS::StructuredCloneScope::DifferentProcess) {
-    data = nullptr;
+  if (data->CloneScope() ==
+      StructuredCloneHolder::StructuredCloneScope::SameProcess) {
+    data->SetAsErrorMessageData();
   }
 
   if (!mActor) {
+    return;
+  }
+
+  ClonedOrErrorMessageData clonedData;
+  if (!data->BuildClonedMessageData(clonedData)) {
     return;
   }
 
@@ -247,7 +255,7 @@ void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
         ClientInfoAndState(clientInfo.ref().ToIPC(), clientState.ref().ToIPC());
   }
 
-  mActor->SendPostMessage(data, source);
+  mActor->SendPostMessage(clonedData, source);
 }
 
 void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,

@@ -11,7 +11,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "getTreeWalkerFilter",
+  "standardTreeWalkerFilter",
   "resource://devtools/server/actors/inspector/utils.js",
   true
 );
@@ -46,11 +46,7 @@ class DocumentWalker {
     node,
     rootWin,
     {
-      filter = getTreeWalkerFilter({
-        includeNativeAnonymousContent: false,
-        includePseudoElements: true,
-        includeComments: true,
-      }),
+      filter = standardTreeWalkerFilter,
       skipTo = SKIP_TO_PARENT,
       showAnonymousContent = true,
     } = {}

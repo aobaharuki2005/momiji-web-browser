@@ -79,3 +79,5 @@ support-files = [
 ]
 
 ["browser_contentBlockingTelemetry.js"]
+
+["browser_trackerCookieBlocking.js"]

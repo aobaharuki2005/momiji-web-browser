@@ -3,7 +3,7 @@
 /*---
 es6id: 26.1.12
 description: >
-  Prevent extensions on target.
+  Prevent extentions on target.
 info: |
   26.1.12 Reflect.preventExtensions ( target )
 

@@ -49,6 +49,9 @@ pub fn add_group_to_ci(iface: &mut ComponentInterface, group: MetadataGroup) -> 
     }
 
     iface
+        .derive_ffi_funcs()
+        .context("Failed to derive FFI functions")?;
+    iface
         .check_consistency()
         .context("ComponentInterface consistency error")?;
     Ok(())

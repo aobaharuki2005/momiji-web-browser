@@ -7,7 +7,6 @@ Performance Testing
   :hidden:
   :glob:
 
-  adding-tests
   awsy
   DAMP
   IndexedDB
@@ -27,7 +26,6 @@ but `mozperftest </testing/perfdocs/mozperftest.html>`_ aims to provide this in 
 
 For more detailed information about each test suite and project, see their documentation:
 
-  * :doc:`adding-tests`
   * :doc:`awsy`
   * :doc:`DAMP`
   * :doc:`IndexedDB`

@@ -5,6 +5,8 @@
 "use strict";
 
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+const { dumpn } = DevToolsUtils;
+const flags = require("resource://devtools/shared/flags.js");
 const StreamUtils = require("resource://devtools/shared/transport/stream-utils.js");
 
 loader.lazyGetter(this, "Pipe", () => {
@@ -29,6 +31,9 @@ class LocalDebuggerTransport {
     this.other = other;
     this.hooks = null;
 
+    // A packet number, shared between this and this.other. This isn't used by the
+    // protocol at all, but it makes the packet traces a lot easier to follow.
+    this._serial = this.other ? this.other._serial : { count: 0 };
     this.close = this.close.bind(this);
   }
 
@@ -43,11 +48,29 @@ class LocalDebuggerTransport {
    * endpoint.
    */
   send(packet) {
+    const serial = this._serial.count++;
+    if (flags.wantLogging) {
+      // Check 'from' first, as 'echo' packets have both.
+      if (packet.from) {
+        dumpn("Packet " + serial + " sent from " + JSON.stringify(packet.from));
+      } else if (packet.to) {
+        dumpn("Packet " + serial + " sent to " + JSON.stringify(packet.to));
+      }
+    }
     this._deepFreeze(packet);
     const other = this.other;
     if (other) {
       DevToolsUtils.executeSoon(
         DevToolsUtils.makeInfallible(() => {
+          // Avoid the cost of JSON.stringify() when logging is disabled.
+          if (flags.wantLogging) {
+            dumpn(
+              "Received packet " +
+                serial +
+                ": " +
+                JSON.stringify(packet, null, 2)
+            );
+          }
           if (other.hooks) {
             other.hooks.onPacket(packet);
           }
@@ -67,6 +90,8 @@ class LocalDebuggerTransport {
    */
   startBulkSend(sentPacket) {
     const { actor, type, length } = sentPacket;
+    const serial = this._serial.count++;
+    dumpn("Sent bulk packet " + serial + " for actor " + actor);
 
     if (!this.other) {
       const error = new Error("startBulkSend: other side of transport missing");
@@ -77,6 +102,15 @@ class LocalDebuggerTransport {
 
     DevToolsUtils.executeSoon(
       DevToolsUtils.makeInfallible(() => {
+        // Avoid the cost of JSON.stringify() when logging is disabled.
+        if (flags.wantLogging) {
+          dumpn(
+            "Received bulk packet " +
+              serial +
+              ": " +
+              JSON.stringify(sentPacket, null, 2)
+          );
+        }
         if (!this.other.hooks) {
           return;
         }

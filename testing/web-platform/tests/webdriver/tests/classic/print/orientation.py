@@ -1,7 +1,6 @@
 import pytest
 
-from tests.support.classic.asserts import assert_success
-from tests.support.asserts import assert_pdf
+from tests.support.asserts import assert_pdf, assert_success
 from tests.support.image import png_dimensions
 
 from . import do_print
@@ -23,7 +22,7 @@ from . import do_print
 def test_orientation(
     session,
     inline,
-    render_pdf_to_png_classic,
+    render_pdf_to_png_http,
     orientation_value,
     is_portrait,
 ):
@@ -38,7 +37,7 @@ def test_orientation(
     print_value = assert_success(print_result)
     assert_pdf(print_value)
 
-    png = render_pdf_to_png_classic(print_value)
+    png = render_pdf_to_png_http(print_value)
     width, height = png_dimensions(png)
 
     assert (width < height) == is_portrait

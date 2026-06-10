@@ -13,8 +13,7 @@ def parse_range(header_value, file_size):
 
 def main(request, response):
     file_extension = request.GET.first(b"extension").decode()
-    file_path = os.path.join(request.doc_root, "media", f"movie_300.{file_extension}")
-    with open(file_path, "rb") as f:
+    with open(f"media/movie_300.{file_extension}", "rb") as f:
         f.seek(0, os.SEEK_END)
         file_size = f.tell()
 

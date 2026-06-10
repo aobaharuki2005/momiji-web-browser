@@ -26,19 +26,56 @@
 #include <algorithm>
 #include <cstdint>
 
+/*  Our attempt to compute the worst case "bounds" for the horizontal and
+    vertical cases has some numerical bug in it, and we sometimes undervalue
+    our extends. The bug is that when this happens, we will set the clip to
+    nullptr (for speed), and thus draw outside of the clip by a pixel, which might
+    only look bad, but it might also access memory outside of the valid range
+    allcoated for the device bitmap.
+
+    This define enables our fix to outset our "bounds" by 1, thus avoiding the
+    chance of the bug, but at the cost of sometimes taking the rectblitter
+    case (i.e. not setting the clip to nullptr) when we might not actually need
+    to. If we can improve/fix the actual calculations, then we can remove this
+    step.
+ */
+#define OUTSET_BEFORE_CLIP_TEST     true
+
 #define HLINE_STACK_BUFFER      100
 
-static inline U8CPU scale_alpha_by_coverage(U8CPU value, SkFDot6 coverage) {
-    SkASSERT(value <= 255);
-    SkASSERT(coverage >= 0 && coverage <= SK_FDot6One);
-    return (value * coverage) >> 6;
+static inline int SmallDot6Scale(int value, int dot6) {
+    SkASSERT((int16_t)value == value);
+    SkASSERT((unsigned)dot6 <= 64);
+    return (value * dot6) >> 6;
 }
 
-// Extracts the high 8 bits of the fractional part of a 16.16 fixed-point
-// number, returning an 8-bit alpha value.
-static inline U8CPU fixed_to_alpha(SkFixed f) {
-    return (f >> 8) & 0xFF;
-}
+//#define TEST_GAMMA
+
+#ifdef TEST_GAMMA
+    static uint8_t gGammaTable[256];
+    #define ApplyGamma(table, alpha)    (table)[alpha]
+
+    static void build_gamma_table() {
+        static bool gInit = false;
+
+        if (gInit == false) {
+            for (int i = 0; i < 256; i++) {
+                SkFixed n = i * 257;
+                n += n >> 15;
+                SkASSERT(n >= 0 && n <= SK_Fixed1);
+                n = SkFixedSqrt(n);
+                n = n * 255 >> 16;
+            //  SkDebugf("morph %d -> %d\n", i, n);
+                gGammaTable[i] = SkToU8(n);
+            }
+            gInit = true;
+        }
+    }
+#else
+    #define ApplyGamma(table, alpha)    SkToU8(alpha)
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
 
 static void call_hline_blitter(SkBlitter* blitter, int x, int y, int count,
                                U8CPU alpha) {
@@ -49,11 +86,11 @@ static void call_hline_blitter(SkBlitter* blitter, int x, int y, int count,
 
     do {
         // In theory, we should be able to just do this once (outside of the loop),
-        // since aa[] and runs[] are "supposed" to be const when we call the blitter.
+        // since aa[] and runs[] are supposed" to be const when we call the blitter.
         // In reality, some wrapper-blitters (e.g. SkRgnClipBlitter) cast away that
         // constness, and modify the buffers in-place. Hence the need to be defensive
         // here and reseed the aa value.
-        aa[0] = SkToU8(alpha);
+        aa[0] = ApplyGamma(gGammaTable, alpha);
 
         int n = count;
         if (n > HLINE_STACK_BUFFER) {
@@ -67,10 +104,6 @@ static void call_hline_blitter(SkBlitter* blitter, int x, int y, int count,
     } while (count > 0);
 }
 
-// This is an abstract class that defines the blitter interface for drawing
-// anti-aliased hairlines. There are concrete implementations for different
-// line orientations. The do_anti_hairline function chooses the appropriate
-// implementation based on the line's slope.
 class SkAntiHairBlitter {
 public:
     SkAntiHairBlitter() : fBlitter(nullptr) {}
@@ -82,50 +115,43 @@ public:
         fBlitter = blitter;
     }
 
-    virtual SkFixed drawCap(int x, SkFixed fy, SkFixed slope, SkFDot6 coverage) = 0;
+    virtual SkFixed drawCap(int x, SkFixed fy, SkFixed slope, int mod64) = 0;
     virtual SkFixed drawLine(int x, int stopx, SkFixed fy, SkFixed slope) = 0;
 
 private:
     SkBlitter*  fBlitter;
 };
 
-// This class is responsible for drawing perfectly horizontal hairlines.
-// Such hairlines will be over two rows. One row may be 100% coverage
-// if the line was exactly on a pixel row boundary.
 class HLine_SkAntiHairBlitter : public SkAntiHairBlitter {
 public:
-    SkFixed drawCap(int x, SkFixed fy, SkFixed, SkFDot6 coverage) override {
-        fy += SK_FixedHalf;
+    SkFixed drawCap(int x, SkFixed fy, SkFixed slope, int mod64) override {
+        fy += SK_Fixed1/2;
 
-        int y = SkFixedFloorToInt(fy);
-        // Compute an alpha va lue based on the fractional part of fy
-        // 0 means fy was at NN.5 and we'll only be drawing the upper line.
-        // 128 means fy was at NN.0 and we'll be coloring both lines approximately
-        // the same opacity.
-        U8CPU a = fixed_to_alpha(fy);
+        int y = fy >> 16;
+        uint8_t  a = (uint8_t)((fy >> 8) & 0xFF);
 
         // lower line
-        U8CPU ma = scale_alpha_by_coverage(a, coverage);
+        unsigned ma = SmallDot6Scale(a, mod64);
         if (ma) {
             call_hline_blitter(this->getBlitter(), x, y, 1, ma);
         }
 
         // upper line
-        ma = scale_alpha_by_coverage(255 - a, coverage);
+        ma = SmallDot6Scale(255 - a, mod64);
         if (ma) {
             call_hline_blitter(this->getBlitter(), x, y - 1, 1, ma);
         }
 
-        return fy - SK_FixedHalf;
+        return fy - SK_Fixed1/2;
     }
 
-    SkFixed drawLine(int x, int stopx, SkFixed fy, SkFixed) override {
+    SkFixed drawLine(int x, int stopx, SkFixed fy, SkFixed slope) override {
         SkASSERT(x < stopx);
         int count = stopx - x;
-        fy += SK_FixedHalf;
+        fy += SK_Fixed1/2;
 
-        int y = SkFixedFloorToInt(fy);
-        U8CPU a = fixed_to_alpha(fy);
+        int y = fy >> 16;
+        uint8_t  a = (uint8_t)((fy >> 8) & 0xFF);
 
         // lower line
         if (a) {
@@ -138,71 +164,68 @@ public:
             call_hline_blitter(this->getBlitter(), x, y - 1, count, a);
         }
 
-        return fy - SK_FixedHalf;
+        return fy - SK_Fixed1/2;
     }
 };
 
-// This class handles lines that are mostly horizontal (i.e., their slope is
-// between -1 and 1).
 class Horish_SkAntiHairBlitter : public SkAntiHairBlitter {
 public:
-    SkFixed drawCap(int x, SkFixed fy, SkFixed dy, SkFDot6 coverage) override {
-        fy += SK_FixedHalf;
+    SkFixed drawCap(int x, SkFixed fy, SkFixed dy, int mod64) override {
+        fy += SK_Fixed1/2;
 
-        int lower_y = SkFixedFloorToInt(fy);
-        U8CPU  a = fixed_to_alpha(fy);
-        U8CPU a0 = scale_alpha_by_coverage(255 - a, coverage);
-        U8CPU a1 = scale_alpha_by_coverage(a, coverage);
+        int lower_y = fy >> 16;
+        uint8_t  a = (uint8_t)((fy >> 8) & 0xFF);
+        unsigned a0 = SmallDot6Scale(255 - a, mod64);
+        unsigned a1 = SmallDot6Scale(a, mod64);
         this->getBlitter()->blitAntiV2(x, lower_y - 1, a0, a1);
 
-        return fy + dy - SK_FixedHalf;
+        return fy + dy - SK_Fixed1/2;
     }
 
     SkFixed drawLine(int x, int stopx, SkFixed fy, SkFixed dy) override {
         SkASSERT(x < stopx);
 
-        fy += SK_FixedHalf;
+        fy += SK_Fixed1/2;
         SkBlitter* blitter = this->getBlitter();
         do {
-            int lower_y = SkFixedFloorToInt(fy);
-            U8CPU a = fixed_to_alpha(fy);
+            int lower_y = fy >> 16;
+            uint8_t  a = (uint8_t)((fy >> 8) & 0xFF);
             blitter->blitAntiV2(x, lower_y - 1, 255 - a, a);
             fy += dy;
         } while (++x < stopx);
 
-        return fy - SK_FixedHalf;
+        return fy - SK_Fixed1/2;
     }
 };
 
-// This class is responsible for drawing perfectly vertical hairlines.
 class VLine_SkAntiHairBlitter : public SkAntiHairBlitter {
 public:
-    SkFixed drawCap(int y, SkFixed fx, SkFixed dx, SkFDot6 coverage) override {
+    SkFixed drawCap(int y, SkFixed fx, SkFixed dx, int mod64) override {
         SkASSERT(0 == dx);
-        fx += SK_FixedHalf;
+        fx += SK_Fixed1/2;
 
-        int x = SkFixedFloorToInt(fx);
-        U8CPU a = fixed_to_alpha(fx);
+        int x = fx >> 16;
+        int a = (uint8_t)((fx >> 8) & 0xFF);
 
-        U8CPU ma = scale_alpha_by_coverage(a, coverage);
+        unsigned ma = SmallDot6Scale(a, mod64);
         if (ma) {
             this->getBlitter()->blitV(x, y, 1, ma);
         }
-        ma = scale_alpha_by_coverage(255 - a, coverage);
+        ma = SmallDot6Scale(255 - a, mod64);
         if (ma) {
             this->getBlitter()->blitV(x - 1, y, 1, ma);
         }
 
-        return fx - SK_FixedHalf;
+        return fx - SK_Fixed1/2;
     }
 
     SkFixed drawLine(int y, int stopy, SkFixed fx, SkFixed dx) override {
         SkASSERT(y < stopy);
         SkASSERT(0 == dx);
-        fx += SK_FixedHalf;
+        fx += SK_Fixed1/2;
 
-        int x = SkFixedFloorToInt(fx);
-        U8CPU a = fixed_to_alpha(fx);
+        int x = fx >> 16;
+        int a = (uint8_t)((fx >> 8) & 0xFF);
 
         if (a) {
             this->getBlitter()->blitV(x, y, stopy - y, a);
@@ -212,36 +235,34 @@ public:
             this->getBlitter()->blitV(x - 1, y, stopy - y, a);
         }
 
-        return fx - SK_FixedHalf;
+        return fx - SK_Fixed1/2;
     }
 };
 
-// This class handles lines that are mostly vertical (i.e., their slope is
-// greater than 1 or less than -1).
 class Vertish_SkAntiHairBlitter : public SkAntiHairBlitter {
 public:
-    SkFixed drawCap(int y, SkFixed fx, SkFixed dx, SkFDot6 coverage) override {
-        fx += SK_FixedHalf;
+    SkFixed drawCap(int y, SkFixed fx, SkFixed dx, int mod64) override {
+        fx += SK_Fixed1/2;
 
-        int x = SkFixedFloorToInt(fx);
-        U8CPU a = fixed_to_alpha(fx);
+        int x = fx >> 16;
+        uint8_t a = (uint8_t)((fx >> 8) & 0xFF);
         this->getBlitter()->blitAntiH2(x - 1, y,
-                                       scale_alpha_by_coverage(255 - a, coverage), scale_alpha_by_coverage(a, coverage));
+                                       SmallDot6Scale(255 - a, mod64), SmallDot6Scale(a, mod64));
 
-        return fx + dx - SK_FixedHalf;
+        return fx + dx - SK_Fixed1/2;
     }
 
     SkFixed drawLine(int y, int stopy, SkFixed fx, SkFixed dx) override {
         SkASSERT(y < stopy);
-        fx += SK_FixedHalf;
+        fx += SK_Fixed1/2;
         do {
-            int x = SkFixedFloorToInt(fx);
-            U8CPU a = fixed_to_alpha(fx);
+            int x = fx >> 16;
+            uint8_t a = (uint8_t)((fx >> 8) & 0xFF);
             this->getBlitter()->blitAntiH2(x - 1, y, 255 - a, a);
             fx += dx;
         } while (++y < stopy);
 
-        return fx - SK_FixedHalf;
+        return fx - SK_Fixed1/2;
     }
 };
 
@@ -279,28 +300,22 @@ static bool canConvertFDot6ToFixed(SkFDot6 x) {
 }
 #endif
 
-// Returns the fractional part of the passed in number.
-// e.g. 2.75 -> 0.75
-static inline SkFDot6 fd6_frac(SkFDot6 x) {
-    return x & (SK_FDot6One - 1);
-}
-
 /*
- *  We want the fractional part of x or y, but we want multiples of 64 to
- *  return 64, not 0, so we can't just say take the fractional component.
+ *  We want the fractional part of ordinate, but we want multiples of 64 to
+ *  return 64, not 0, so we can't just say (ordinate & 63).
  *  We basically want to compute those bits, and if they're 0, return 64.
  *  We can do that w/o a branch with an extra sub and add.
  */
-static SkFDot6 partial_pixel_coverage(SkFDot6 pos) {
+static int contribution_64(SkFDot6 ordinate) {
 #if 0
-    int result = fd6_frac(pos);
+    int result = ordinate & 63;
     if (0 == result) {
-        result = SK_FDot6One;
+        result = 64;
     }
 #else
-    int result = fd6_frac(pos - 1) + 1;
+    int result = ((ordinate - 1) & 63) + 1;
 #endif
-    SkASSERT(result > 0 && result <= SK_FDot6One);
+    SkASSERT(result > 0 && result <= 64);
     return result;
 }
 
@@ -334,7 +349,7 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
         return;
     }
 
-    int         startCoverage, stopCoverage;
+    int         scaleStart, scaleStop;
     int         istart, istop;
     SkFixed     fstart, slope;
 
@@ -353,29 +368,26 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
 
         istart = SkFDot6Floor(x0);
         istop = SkFDot6Ceil(x1);
+        fstart = SkFDot6ToFixed(y0);
         if (y0 == y1) {   // completely horizontal, take fast case
             slope = 0;
             hairBlitter = &hline_blitter;
-            fstart = SkFDot6ToFixed(y0);
         } else {
             slope = fastfixdiv(y1 - y0, x1 - x0);
-            SkASSERTF(slope >= -SK_Fixed1 && slope <= SK_Fixed1,
-                      "should be vertical or mostly vertical");
-            // Adjust fstart to be the Y-intercept at the center of the first pixel.
-            SkFDot6 dx_to_center = SK_FDot6Half - fd6_frac(x0);
-            fstart = SkFDot6ToFixed(y0) + ((slope * dx_to_center + SK_FDot6Half) >> 6);
+            SkASSERT(slope >= -SK_Fixed1 && slope <= SK_Fixed1);
+            fstart += (slope * (32 - (x0 & 63)) + 32) >> 6;
             hairBlitter = &horish_blitter;
         }
 
         SkASSERT(istop > istart);
         if (istop - istart == 1) {
             // we are within a single pixel
-            startCoverage = x1 - x0;
-            SkASSERT(startCoverage >= 0 && startCoverage <= SK_FDot6One);
-            stopCoverage = 0;
+            scaleStart = x1 - x0;
+            SkASSERT(scaleStart >= 0 && scaleStart <= 64);
+            scaleStop = 0;
         } else {
-            startCoverage = SK_FDot6One - fd6_frac(x0);
-            stopCoverage = fd6_frac(x1);
+            scaleStart = 64 - (x0 & 63);
+            scaleStop = x1 & 63;
         }
 
         if (clip){
@@ -385,16 +397,16 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
             if (istart < clip->fLeft) {
                 fstart += slope * (clip->fLeft - istart);
                 istart = clip->fLeft;
-                startCoverage = SK_FDot6One;
+                scaleStart = 64;
                 if (istop - istart == 1) {
                     // we are within a single pixel
-                    startCoverage = partial_pixel_coverage(x1);
-                    stopCoverage = 0;
+                    scaleStart = contribution_64(x1);
+                    scaleStop = 0;
                 }
             }
             if (istop > clip->fRight) {
                 istop = clip->fRight;
-                stopCoverage = 0;  // so we don't draw this last column
+                scaleStop = 0;  // so we don't draw this last column
             }
 
             SkASSERT(istart <= istop);
@@ -410,10 +422,10 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
                 bottom = SkFixedCeilToInt(fstart + SK_FixedHalf);
                 top = SkFixedFloorToInt(fstart + (istop - istart - 1) * slope - SK_FixedHalf);
             }
-            // Expand outset to work around possible numerical calculation bug that lead to overflow
+#ifdef OUTSET_BEFORE_CLIP_TEST
             top -= 1;
             bottom += 1;
-
+#endif
             if (top >= clip->fBottom || bottom <= clip->fTop) {
                 return;
             }
@@ -430,32 +442,29 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
 
         istart = SkFDot6Floor(y0);
         istop = SkFDot6Ceil(y1);
+        fstart = SkFDot6ToFixed(x0);
         if (x0 == x1) {
             if (y0 == y1) { // are we zero length?
                 return;     // nothing to do
             }
             slope = 0;
             hairBlitter = &vline_blitter;
-            fstart = SkFDot6ToFixed(x0);
         } else {
             slope = fastfixdiv(x1 - x0, y1 - y0);
-            SkASSERTF(slope <= SK_Fixed1 && slope >= -SK_Fixed1,
-                      "should be horizontal or mostly horizontal");
-            // Adjust fstart to be the X-intercept at the center of the first pixel row.
-            SkFDot6 dy_to_center = SK_FDot6Half - fd6_frac(y0);
-            fstart = SkFDot6ToFixed(x0) + ((slope * dy_to_center + SK_FDot6Half) >> 6);
+            SkASSERT(slope <= SK_Fixed1 && slope >= -SK_Fixed1);
+            fstart += (slope * (32 - (y0 & 63)) + 32) >> 6;
             hairBlitter = &vertish_blitter;
         }
 
         SkASSERT(istop > istart);
         if (istop - istart == 1) {
             // we are within a single pixel
-            startCoverage = y1 - y0;
-            SkASSERT(startCoverage >= 0 && startCoverage <= SK_FDot6One);
-            stopCoverage = 0;
+            scaleStart = y1 - y0;
+            SkASSERT(scaleStart >= 0 && scaleStart <= 64);
+            scaleStop = 0;
         } else {
-            startCoverage = SK_FDot6One - fd6_frac(y0);
-            stopCoverage = fd6_frac(y1);
+            scaleStart = 64 - (y0 & 63);
+            scaleStop = y1 & 63;
         }
 
         if (clip) {
@@ -465,16 +474,16 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
             if (istart < clip->fTop) {
                 fstart += slope * (clip->fTop - istart);
                 istart = clip->fTop;
-                startCoverage = SK_FDot6One;
+                scaleStart = 64;
                 if (istop - istart == 1) {
                     // we are within a single pixel
-                    startCoverage = partial_pixel_coverage(y1);
-                    stopCoverage = 0;
+                    scaleStart = contribution_64(y1);
+                    scaleStop = 0;
                 }
             }
             if (istop > clip->fBottom) {
                 istop = clip->fBottom;
-                stopCoverage = 0;  // so we don't draw this last row
+                scaleStop = 0;  // so we don't draw this last row
             }
 
             SkASSERT(istart <= istop);
@@ -490,10 +499,10 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
                 right = SkFixedCeilToInt(fstart + SK_FixedHalf);
                 left = SkFixedFloorToInt(fstart + (istop - istart - 1) * slope - SK_FixedHalf);
             }
-            // Expand outset to work around possible numerical calculation bug that lead to overflow
+#ifdef OUTSET_BEFORE_CLIP_TEST
             left -= 1;
             right += 1;
-
+#endif
             if (left >= clip->fRight || right <= clip->fLeft) {
                 return;
             }
@@ -513,25 +522,26 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
     hairBlitter->setup(blitter);
 
 #ifdef SK_DEBUG
-    if (startCoverage > 0 && stopCoverage > 0) {
+    if (scaleStart > 0 && scaleStop > 0) {
         // be sure we don't draw twice in the same pixel
         SkASSERT(istart < istop - 1);
     }
 #endif
 
-    fstart = hairBlitter->drawCap(istart, fstart, slope, startCoverage);
+    fstart = hairBlitter->drawCap(istart, fstart, slope, scaleStart);
     istart += 1;
-    int fullSpans = istop - istart - (stopCoverage > 0);
+    int fullSpans = istop - istart - (scaleStop > 0);
     if (fullSpans > 0) {
         fstart = hairBlitter->drawLine(istart, istart + fullSpans, fstart, slope);
     }
-    if (stopCoverage > 0) {
-        hairBlitter->drawCap(istop - 1, fstart, slope, stopCoverage);
+    if (scaleStop > 0) {
+        hairBlitter->drawCap(istop - 1, fstart, slope, scaleStop);
     }
 }
 
-void SkScan::AntiHairLineRgn(SkSpan<const SkPoint> src, const SkRegion* clip, SkBlitter* blitter) {
-    if (src.empty() || (clip && clip->isEmpty())) {
+void SkScan::AntiHairLineRgn(const SkPoint array[], int arrayCount, const SkRegion* clip,
+                             SkBlitter* blitter) {
+    if (clip && clip->isEmpty()) {
         return;
     }
 
@@ -559,12 +569,12 @@ void SkScan::AntiHairLineRgn(SkSpan<const SkPoint> src, const SkRegion* clip, Sk
         clipBounds.outset(SK_Scalar1, SK_Scalar1);
     }
 
-    for (size_t i = 0; i < src.size() - 1; ++i) {
+    for (int i = 0; i < arrayCount - 1; ++i) {
         SkPoint pts[2];
 
         // We have to pre-clip the line to fit in a SkFixed, so we just chop
         // the line. TODO find a way to actually draw beyond that range.
-        if (!SkLineClipper::IntersectLine(&src[i], fixedBounds, pts)) {
+        if (!SkLineClipper::IntersectLine(&array[i], fixedBounds, pts)) {
             continue;
         }
 
@@ -617,7 +627,7 @@ void SkScan::AntiHairRect(const SkRect& rect, const SkRasterClip& clip,
     pts[2].set(rect.fRight, rect.fBottom);
     pts[3].set(rect.fLeft, rect.fBottom);
     pts[4] = pts[0];
-    SkScan::AntiHairLine(pts, clip, blitter);
+    SkScan::AntiHairLine(pts, 5, clip, blitter);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

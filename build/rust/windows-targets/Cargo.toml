@@ -2,10 +2,12 @@
 name = "windows-targets"
 version = "0.52.999"
 edition = "2018"
-license = "MPL-2.0"
+license = "MIT OR Apache-2.0"
 
 [lib]
+proc-macro = true
 path = "lib.rs"
 
 [dependencies]
-windows-link = "0.2"
+syn = { version = "2", features = ["full"] }
+quote = "1"

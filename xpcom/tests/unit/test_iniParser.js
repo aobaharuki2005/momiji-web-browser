@@ -1,15 +1,13 @@
 var testnum = 0;
 var factory;
 
-function parserForFile(filename, expectErrors) {
+function parserForFile(filename) {
   let parser = null;
   try {
     let file = do_get_file(filename);
     Assert.ok(!!file);
-    let containedErrors = { value: false };
-    parser = factory.createINIParser(file, containedErrors);
+    parser = factory.createINIParser(file);
     Assert.ok(!!parser);
-    Assert.equal(expectErrors, containedErrors.value);
   } catch (e) {
     dump("INFO | caught error: " + e);
     // checkParserOutput will handle a null parser when it's expected.
@@ -65,11 +63,11 @@ function run_test() {
     var testdata = [
       { filename: "data/iniparser01.ini", reference: {} },
       { filename: "data/iniparser02.ini", reference: {} },
-      { filename: "data/iniparser03.ini", containsErrors: true, reference: {} },
+      { filename: "data/iniparser03.ini", reference: {} },
       { filename: "data/iniparser04.ini", reference: {} },
-      { filename: "data/iniparser05.ini", containsErrors: true, reference: {} },
+      { filename: "data/iniparser05.ini", reference: {} },
       { filename: "data/iniparser06.ini", reference: {} },
-      { filename: "data/iniparser07.ini", containsErrors: true, reference: {} },
+      { filename: "data/iniparser07.ini", reference: {} },
       {
         filename: "data/iniparser08.ini",
         reference: { section1: { name1: "" } },
@@ -115,11 +113,7 @@ function run_test() {
           "☼": { "♣": "♠", "♦": "♥" },
         },
       },
-      {
-        filename: "data/iniparser17.ini",
-        containsErrors: true,
-        reference: { section: { key: "" } },
-      },
+      { filename: "data/iniparser17.ini", reference: { section: { key: "" } } },
     ];
 
     testdata.push({
@@ -132,7 +126,6 @@ function run_test() {
     });
     testdata.push({
       filename: "data/iniparser03-utf8BOM.ini",
-      containsErrors: true,
       reference: testdata[2].reference,
     });
     testdata.push({
@@ -141,7 +134,6 @@ function run_test() {
     });
     testdata.push({
       filename: "data/iniparser05-utf8BOM.ini",
-      containsErrors: true,
       reference: testdata[4].reference,
     });
     testdata.push({
@@ -150,7 +142,6 @@ function run_test() {
     });
     testdata.push({
       filename: "data/iniparser07-utf8BOM.ini",
-      containsErrors: true,
       reference: testdata[6].reference,
     });
     testdata.push({
@@ -204,7 +195,6 @@ function run_test() {
       });
       testdata.push({
         filename: "data/iniparser03-utf16leBOM.ini",
-        containsErrors: true,
         reference: testdata[2].reference,
       });
       testdata.push({
@@ -213,7 +203,6 @@ function run_test() {
       });
       testdata.push({
         filename: "data/iniparser05-utf16leBOM.ini",
-        containsErrors: true,
         reference: testdata[4].reference,
       });
       testdata.push({
@@ -222,7 +211,6 @@ function run_test() {
       });
       testdata.push({
         filename: "data/iniparser07-utf16leBOM.ini",
-        containsErrors: true,
         reference: testdata[6].reference,
       });
       testdata.push({
@@ -275,10 +263,7 @@ function run_test() {
       dump("\nINFO | test #" + ++testnum);
       let filename = testdata[testnum - 1].filename;
       dump(", filename " + filename + "\n");
-      let parser = parserForFile(
-        filename,
-        testdata[testnum - 1].containsErrors ?? false
-      );
+      let parser = parserForFile(filename);
       checkParserOutput(parser, testdata[testnum - 1].reference);
       if (!parser) {
         continue;
@@ -290,7 +275,7 @@ function run_test() {
       newfile.leafName += ".new";
       parser.writeFile(newfile);
       // read new file and make sure the contents are the same.
-      parser = parserForFile(newfilename, false);
+      parser = parserForFile(newfilename);
       checkParserOutput(parser, testdata[testnum - 1].reference);
       // cleanup after the test
       newfile.remove(false);
@@ -339,7 +324,7 @@ function run_test() {
     Assert.ok(newfile.exists());
     checkParserOutput(parser, { section: { key: "value", key2: "" } });
     // read it in again, check for same data.
-    parser = parserForFile("data/nonexistent-file.ini", false);
+    parser = parserForFile("data/nonexistent-file.ini");
     checkParserOutput(parser, { section: { key: "value", key2: "" } });
     // cleanup after the test
     newfile.remove(false);
@@ -347,7 +332,7 @@ function run_test() {
     dump("INFO | test #" + ++testnum + "\n");
 
     // test modifying a existing key's value (in an existing section)
-    parser = parserForFile("data/iniparser09.ini", false);
+    parser = parserForFile("data/iniparser09.ini");
     checkParserOutput(parser, { section1: { name1: "value1" } });
 
     Assert.ok(parser instanceof Ci.nsIINIParserWriter);

@@ -66,14 +66,12 @@ function check_has_alt_data_in_index(aHasAltData, callback) {
     return;
   }
 
-  wait_for_cache_index(() => {
-    syncWithCacheIOThread(() => {
-      var hasAltData = {};
-      cache_storage.getCacheIndexEntryAttrs(createURI(URL), "", hasAltData, {});
-      Assert.equal(hasAltData.value, aHasAltData);
-      callback();
-    }, true);
-  });
+  syncWithCacheIOThread(() => {
+    var hasAltData = {};
+    cache_storage.getCacheIndexEntryAttrs(createURI(URL), "", hasAltData, {});
+    Assert.equal(hasAltData.value, aHasAltData);
+    callback();
+  }, true);
 }
 
 function run_test() {

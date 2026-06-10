@@ -1,3 +1,4 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 4; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -17,8 +18,7 @@ namespace mozilla::gl {
 // SwapChainPresenter
 
 UniquePtr<SwapChainPresenter> SwapChain::Acquire(
-    const gfx::IntSize& size, const gfx::ColorSpace2 colorSpace,
-    const gfx::TransferFunction transferFunction) {
+    const gfx::IntSize& size, const gfx::ColorSpace2 colorSpace) {
   MOZ_ASSERT(mFactory);
 
   std::shared_ptr<SharedSurface> surf;
@@ -28,7 +28,6 @@ UniquePtr<SwapChainPresenter> SwapChain::Acquire(
     auto newDesc = existingDesc;
     newDesc.size = size;
     newDesc.colorSpace = colorSpace;
-    newDesc.transferFunction = transferFunction;
     if (newDesc != existingDesc || !mPool.front()->IsValid()) {
       mPool = {};
     }
@@ -53,7 +52,7 @@ UniquePtr<SwapChainPresenter> SwapChain::Acquire(
   }
 
   auto ret = MakeUnique<SwapChainPresenter>(*this);
-  const auto old = ret->SwapBackBuffer(std::move(surf));
+  const auto old = ret->SwapBackBuffer(surf);
   MOZ_ALWAYS_TRUE(!old);
   return ret;
 }
@@ -94,7 +93,7 @@ SwapChainPresenter::~SwapChainPresenter() {
   auto newFront = SwapBackBuffer(nullptr);
   if (newFront) {
     mSwapChain->mPrevFrontBuffer = mSwapChain->mFrontBuffer;
-    mSwapChain->mFrontBuffer = std::move(newFront);
+    mSwapChain->mFrontBuffer = newFront;
   }
 }
 
@@ -104,7 +103,7 @@ std::shared_ptr<SharedSurface> SwapChainPresenter::SwapBackBuffer(
     mBackBuffer->EndWrite();
   }
   auto old = mBackBuffer;
-  mBackBuffer = std::move(back);
+  mBackBuffer = back;
   if (mBackBuffer) {
     mBackBuffer->BeginWrite();
   }

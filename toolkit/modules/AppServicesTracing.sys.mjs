@@ -11,17 +11,16 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   // eslint-disable-next-line mozilla/use-console-createInstance
   Log: "resource://gre/modules/Log.sys.mjs",
 });
 
 import {
+  registerMinLevelEventSink,
   registerEventSink,
+  unregisterMinLevelEventSink,
   unregisterEventSink,
   EventSink,
-  EventSinkSpecification,
-  EventTarget,
   TracingLevel,
 } from "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/components/generated/RustTracing.sys.mjs";
 
@@ -53,16 +52,25 @@ class CallbackList {
    * If the callback is already in the list, then the level will be updated rather than adding a new
    * item.
    *
+   * If this changes the max level for the list, this returns the new max level otherwise it returns
+   * undefined;
+   *
    * @param {number} level
    * @param {(event: object) => void} callback
    */
   add(level, callback) {
+    const oldMaxLevel = this.maxLevel();
     const index = this.items.findIndex(item => item.callback === callback);
     if (index == -1) {
       this.items.push({ level, callback });
     } else {
       this.items[index].level = level;
     }
+    const newMaxLevel = this.maxLevel();
+    if (newMaxLevel != oldMaxLevel) {
+      return newMaxLevel;
+    }
+    return undefined;
   }
 
   /**
@@ -79,8 +87,15 @@ class CallbackList {
       lazy.console.trace(
         "ignoring attempt to remove an event handler that's not registered"
       );
+      return undefined;
     }
+    const oldMaxLevel = this.maxLevel();
     this.items.splice(index, 1);
+    const newMaxLevel = this.maxLevel();
+    if (newMaxLevel != oldMaxLevel) {
+      return newMaxLevel;
+    }
+    return undefined;
   }
 
   /**
@@ -105,30 +120,16 @@ class CallbackList {
 
 /** A singleton uniffi callback interface. */
 class TracingEventHandler extends EventSink {
+  static OBSERVER_NAME = "xpcom-will-shutdown";
+
   constructor() {
     super();
     // Map targets to CallbackLists
     this.targetCallbackLists = new Map();
     // CallbackList for callbacks registered with registerMinLevelEventSink
     this.minLevelCallbackList = new CallbackList();
-    this.eventSinkId = null;
 
-    // Choose `profileBeforeChange` to call `#close()` and deregister our callbacks.
-    //
-    // Most other components will shutdown during the `profileChangeTeardown` phase, since that's
-    // the last opportunity to write to the profile directory.  By choosing the next one, we ensure
-    // we can forward any logging that happens when those components shutdown.
-    if (lazy.AsyncShutdown.profileBeforeChange.isClosed) {
-      // Corner case, where we're already in the shutdown phase while being constructed.  In this
-      // case, uninitialize immediately.
-      this.#close();
-    } else {
-      // If we're not in the above corner case, then register a shutdown blocker to uninitialize.
-      lazy.AsyncShutdown.profileBeforeChange.addBlocker(
-        "TracingEventHandler: deregister callbacks",
-        () => this.#close()
-      );
-    }
+    Services.obs.addObserver(this, TracingEventHandler.OBSERVER_NAME);
   }
 
   register(target, level, callback) {
@@ -139,7 +140,13 @@ class TracingEventHandler extends EventSink {
       return;
     }
     const callbackList = this._getTargetList(target);
-    callbackList.add(level, callback);
+    const newMaxLevel = callbackList.add(level, callback);
+    if (newMaxLevel !== undefined) {
+      lazy.console.trace(
+        `calling registerEventSink (${target} ${newMaxLevel})`
+      );
+      registerEventSink(target, newMaxLevel, this);
+    }
   }
 
   deregister(target, callback) {
@@ -150,7 +157,19 @@ class TracingEventHandler extends EventSink {
       return;
     }
     const callbackList = this._getTargetList(target);
-    callbackList.remove(callback);
+    const newMaxLevel = callbackList.remove(callback);
+    if (newMaxLevel !== undefined) {
+      if (newMaxLevel == -Infinity) {
+        lazy.console.trace(`calling unregisterEventSink (${target})`);
+        unregisterEventSink(target);
+        this.targetCallbackLists.delete(target);
+      } else {
+        lazy.console.trace(
+          `calling registerEventSink (${target} ${newMaxLevel})`
+        );
+        registerEventSink(target, newMaxLevel, this);
+      }
+    }
   }
 
   registerMinLevelEventSink(level, callback) {
@@ -161,7 +180,11 @@ class TracingEventHandler extends EventSink {
       return;
     }
 
-    this.minLevelCallbackList.add(level, callback);
+    const newMaxLevel = this.minLevelCallbackList.add(level, callback);
+    if (newMaxLevel !== undefined) {
+      lazy.console.trace(`calling registerMinLevelEventSink (${newMaxLevel})`);
+      registerMinLevelEventSink(newMaxLevel, this);
+    }
   }
 
   unregisterMinLevelEventSink(callback) {
@@ -172,7 +195,18 @@ class TracingEventHandler extends EventSink {
       return;
     }
 
-    this.minLevelCallbackList.remove(callback);
+    const newMaxLevel = this.minLevelCallbackList.remove(callback);
+    if (newMaxLevel !== undefined) {
+      if (newMaxLevel == -Infinity) {
+        lazy.console.trace(`calling unregisterMinLevelEventSink`);
+        unregisterMinLevelEventSink();
+      } else {
+        lazy.console.trace(
+          `calling registerMinLevelEventSink (${newMaxLevel})`
+        );
+        registerMinLevelEventSink(newMaxLevel, this);
+      }
+    }
   }
 
   _getTargetList(target) {
@@ -191,46 +225,15 @@ class TracingEventHandler extends EventSink {
     this.minLevelCallbackList.processEvent(event);
   }
 
-  updateRustTracingRegistration() {
-    let minLevel = this.minLevelCallbackList.maxLevel();
-    if (minLevel == -Infinity) {
-      minLevel = null;
+  observe(_aSubject, aTopic, _aData) {
+    if (aTopic == TracingEventHandler.OBSERVER_NAME) {
+      for (let target of this.targetCallbackLists.keys()) {
+        unregisterEventSink(target);
+      }
+      unregisterMinLevelEventSink();
+      this.targetCallbackLists = null;
+      this.minLevelCallbackList = null;
     }
-    const spec = new EventSinkSpecification({
-      targets: [
-        ...this.targetCallbackLists.entries().map(([target, callbackList]) => {
-          let level = callbackList.maxLevel();
-          if (level == -Infinity) {
-            level = TracingLevel.DEBUG;
-          }
-          return new EventTarget({ target, level });
-        }),
-      ],
-      minLevel,
-    });
-    this.#unregisterWithRustTracing();
-    if (spec.minLevel !== null || spec.targets.length) {
-      lazy.console.trace("calling registerEventSink", spec);
-      this.eventSinkId = registerEventSink(spec, this);
-    } else {
-      lazy.console.trace(
-        "skipping registerEventSink, since there are callbacks"
-      );
-    }
-  }
-
-  #unregisterWithRustTracing() {
-    if (this.eventSinkId !== null) {
-      lazy.console.trace("calling unregisterEventSink", this.eventSinkId);
-      unregisterEventSink(this.eventSinkId);
-      this.eventSinkId = null;
-    }
-  }
-
-  #close() {
-    this.#unregisterWithRustTracing();
-    this.targetCallbackLists = null;
-    this.minLevelCallbackList = null;
   }
 }
 
@@ -301,7 +304,6 @@ export function setupLoggerForTarget(target, log) {
   let logTargets = targetToLogNames.getOrInsert(target, []);
   logTargets.push(log.name);
   tracingEventHandler.register(target, tracing_level, loggerEventHandler);
-  tracingEventHandler.updateRustTracingRegistration();
 }
 
 /**
@@ -352,7 +354,6 @@ class LogForwarder extends EventSink {
     for (const oldTarget of oldRegisteredTargets) {
       tracingEventHandler.deregister(oldTarget, this.callback);
     }
-    tracingEventHandler.updateRustTracingRegistration();
   }
 
   /**

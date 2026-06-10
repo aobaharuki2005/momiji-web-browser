@@ -40,7 +40,7 @@ export var PopupAndRedirectBlockerObserver = {
    * @param {*} aEvent
    */
   onDOMUpdateBlockedPopupsAndRedirect(aEvent) {
-    const window = aEvent.originalTarget.documentGlobal;
+    const window = aEvent.originalTarget.ownerGlobal;
     const { gBrowser, gPermissionPanel } = window;
     if (aEvent.originalTarget != gBrowser.selectedBrowser) {
       return;
@@ -149,7 +149,7 @@ export var PopupAndRedirectBlockerObserver = {
    * @param {*} aEvent
    */
   async onPopupShowing(aEvent) {
-    const window = aEvent.originalTarget.documentGlobal;
+    const window = aEvent.originalTarget.ownerGlobal;
     const { gBrowser, document } = window;
 
     // We get `uriHost` from the principal whenever possible and fall
@@ -166,22 +166,18 @@ export var PopupAndRedirectBlockerObserver = {
     const blockedPopupAllowSite = document.getElementById(
       "blockedPopupAllowSite"
     );
-    if (Services.prefs.prefIsLocked("dom.disable_open_during_load")) {
-      blockedPopupAllowSite.setAttribute("hidden", "true");
-    } else {
-      blockedPopupAllowSite.removeAttribute("hidden");
-      document.l10n.setAttributes(
-        blockedPopupAllowSite,
-        "popups-infobar-allow2",
-        { uriHost }
-      );
-    }
+    blockedPopupAllowSite.removeAttribute("hidden");
+    document.l10n.setAttributes(
+      blockedPopupAllowSite,
+      "popups-infobar-allow2",
+      { uriHost }
+    );
 
     // "Dont show this message when..."
     const blockedPopupDontShowMessage = document.getElementById(
       "blockedPopupDontShowMessage"
     );
-    blockedPopupDontShowMessage.removeAttribute("checked");
+    blockedPopupDontShowMessage.setAttribute("checked", false);
 
     gBrowser.selectedBrowser.popupAndRedirectBlocker
       .getBlockedRedirect()
@@ -263,11 +259,9 @@ export var PopupAndRedirectBlockerObserver = {
       document.l10n.setAttributes(menuitem, "popup-show-popup-menuitem", {
         popupURI: blockedPopup.popupWindowURISpec,
       });
-      // The report index is the index into the blocked popup list
-      // maintained by the window where this popup was blocked.
-      menuitem.setAttribute("popupReportIndex", blockedPopup.reportIndex);
+      menuitem.setAttribute("popupReportIndex", i);
       // Store the source inner window id, so we can check if the document
-      // that triggered the popup is still the same.
+      // that triggered the redirect is still the same.
       menuitem.setAttribute("popupInnerWindowId", blockedPopup.innerWindowId);
       // Store the browser for the current tab. The active tab may change,
       // so we keep a reference to it.
@@ -287,7 +281,7 @@ export var PopupAndRedirectBlockerObserver = {
    * @param {*} aEvent
    */
   onPopupHiding(aEvent) {
-    const window = aEvent.originalTarget.documentGlobal;
+    const window = aEvent.originalTarget.ownerGlobal;
     const { document } = window;
 
     // Remove the blocked redirect, if any.
@@ -347,12 +341,12 @@ export var PopupAndRedirectBlockerObserver = {
   showBlockedPopup(aEvent) {
     const { browser, browsingContext } = aEvent.target;
     const innerWindowId = aEvent.target.getAttribute("popupInnerWindowId");
-    const reportIndex = aEvent.target.getAttribute("popupReportIndex");
+    const popupReportIndex = aEvent.target.getAttribute("popupReportIndex");
 
     browser.popupAndRedirectBlocker.unblockPopup(
       browsingContext,
       innerWindowId,
-      reportIndex
+      popupReportIndex
     );
   },
 
@@ -369,12 +363,8 @@ export var PopupAndRedirectBlockerObserver = {
   },
 
   async toggleAllowPopupsForSite(aEvent) {
-    const window = aEvent.originalTarget.documentGlobal;
+    const window = aEvent.originalTarget.ownerGlobal;
     const { gBrowser } = window;
-
-    if (Services.prefs.prefIsLocked("dom.disable_open_during_load")) {
-      return;
-    }
 
     // The toggle should only be visible (and therefore clickable) if
     // popups are currently blocked.
@@ -393,14 +383,14 @@ export var PopupAndRedirectBlockerObserver = {
   },
 
   editPopupSettings(aEvent) {
-    const window = aEvent.originalTarget.documentGlobal;
+    const window = aEvent.originalTarget.ownerGlobal;
     const { openPreferences } = window;
 
     openPreferences("privacy-permissions-block-popups");
   },
 
   dontShowMessage(aEvent) {
-    const window = aEvent.originalTarget.documentGlobal;
+    const window = aEvent.originalTarget.ownerGlobal;
     const { gBrowser } = window;
 
     Services.prefs.setBoolPref("privacy.popups.showBrowserMessage", false);

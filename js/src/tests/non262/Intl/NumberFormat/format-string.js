@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 function groupByThree(s) {
   return String(s).split("").reduceRight((acc, x) => x + (acc.match(/^\d{3}/) ? "," : "") + acc, "");
 }

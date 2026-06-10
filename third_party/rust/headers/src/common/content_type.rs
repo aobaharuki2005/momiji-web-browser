@@ -1,12 +1,9 @@
 use std::fmt;
 
-use http::{HeaderName, HeaderValue};
-use mime::Mime;
-
-use crate::{Error, Header};
+use mime::{self, Mime};
 
 /// `Content-Type` header, defined in
-/// [RFC7231](https://datatracker.ietf.org/doc/html/rfc7231#section-3.1.1.5)
+/// [RFC7231](http://tools.ietf.org/html/rfc7231#section-3.1.1.5)
 ///
 /// The `Content-Type` header field indicates the media type of the
 /// associated representation: either the representation enclosed in the
@@ -34,6 +31,7 @@ use crate::{Error, Header};
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::ContentType;
 ///
 /// let ct = ContentType::json();
@@ -96,20 +94,20 @@ impl ContentType {
     }
 }
 
-impl Header for ContentType {
-    fn name() -> &'static HeaderName {
+impl ::Header for ContentType {
+    fn name() -> &'static ::HeaderName {
         &::http::header::CONTENT_TYPE
     }
 
-    fn decode<'i, I: Iterator<Item = &'i HeaderValue>>(values: &mut I) -> Result<Self, Error> {
+    fn decode<'i, I: Iterator<Item = &'i ::HeaderValue>>(values: &mut I) -> Result<Self, ::Error> {
         values
             .next()
             .and_then(|v| v.to_str().ok()?.parse().ok())
             .map(ContentType)
-            .ok_or_else(Error::invalid)
+            .ok_or_else(::Error::invalid)
     }
 
-    fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
+    fn encode<E: Extend<::HeaderValue>>(&self, values: &mut E) {
         let value = self
             .0
             .as_ref()
@@ -138,12 +136,12 @@ impl fmt::Display for ContentType {
 }
 
 impl std::str::FromStr for ContentType {
-    type Err = Error;
+    type Err = ::Error;
 
     fn from_str(s: &str) -> Result<ContentType, Self::Err> {
         s.parse::<Mime>()
             .map(|m| m.into())
-            .map_err(|_| Error::invalid())
+            .map_err(|_| ::Error::invalid())
     }
 }
 

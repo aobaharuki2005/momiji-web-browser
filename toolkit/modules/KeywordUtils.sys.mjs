@@ -1,3 +1,4 @@
+/* -*- mode: js; indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -56,14 +57,26 @@ export var KeywordUtils = {
       }
     }
 
+    // encodeURIComponent produces UTF-8, and cannot be used for other charsets.
+    // escape() works in those cases, but it doesn't uri-encode +, @, and /.
+    // Therefore we need to manually replace these ASCII characters by their
+    // encodeURIComponent result, to match the behavior of nsEscape() with
+    // url_XPAlphas.
     let encodedParam = "";
     if (charset && charset != "UTF-8") {
       try {
-        encodedParam = Services.textToSubURI.ConvertAndEscape(charset, param);
+        let converter = Cc[
+          "@mozilla.org/intl/scriptableunicodeconverter"
+        ].createInstance(Ci.nsIScriptableUnicodeConverter);
+        converter.charset = charset;
+        encodedParam = converter.ConvertFromUnicode(param) + converter.Finish();
       } catch (ex) {
-        // Fallback to UTF-8 if the charset is invalid or conversion fails.
-        encodedParam = encodeURIComponent(param);
+        encodedParam = param;
       }
+      encodedParam = escape(encodedParam).replace(
+        /[+@\/]+/g,
+        encodeURIComponent
+      );
     } else {
       // Default charset is UTF-8
       encodedParam = encodeURIComponent(param);

@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmJSPromiseIntegrationEnabled()
-
 // Test if user code in interrupt handler causes the problem.
 
 // Stay in wasm for long time (double loop) so timeout can be triggerred.

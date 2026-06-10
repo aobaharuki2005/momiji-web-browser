@@ -4,7 +4,7 @@
  *
  *   OpenType objects manager (body).
  *
- * Copyright (C) 1996-2026 by
+ * Copyright (C) 1996-2025 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -14,6 +14,7 @@
  * understand and accept it fully.
  *
  */
+
 
 
 #include <freetype/internal/ftdebug.h>
@@ -43,7 +44,6 @@
 
 #define CFF_fixedToInt( x )                          \
           ( (FT_Short)( ( (x) + 0x8000U ) >> 16 ) )
-
 
   /**************************************************************************
    *
@@ -846,8 +846,10 @@
           cffface->height = (FT_Short)( cffface->ascender -
                                         cffface->descender );
 
-        cffface->underline_position  = (FT_Short)dict->underline_position;
-        cffface->underline_thickness = (FT_Short)dict->underline_thickness;
+        cffface->underline_position  =
+          (FT_Short)( dict->underline_position >> 16 );
+        cffface->underline_thickness =
+          (FT_Short)( dict->underline_thickness >> 16 );
 
         /* retrieve font family & style name */
         if ( dict->family_name )

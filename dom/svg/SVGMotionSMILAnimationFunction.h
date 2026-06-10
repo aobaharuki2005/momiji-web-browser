@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,7 +36,7 @@ class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
   using Path = mozilla::gfx::Path;
 
  public:
-  SVGMotionSMILAnimationFunction() = default;
+  SVGMotionSMILAnimationFunction();
   bool SetAttr(nsAtom* aAttribute, const nsAString& aValue,
                nsAttrValue& aResult, nsresult* aParseResult = nullptr) override;
   bool UnsetAttr(nsAtom* aAttribute) override;
@@ -47,15 +49,15 @@ class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
   void MpathChanged() { mIsPathStale = mHasChanged = true; }
 
  protected:
-  enum class PathSourceType : uint8_t {
+  enum PathSourceType {
     // NOTE: Ordering matters here. Higher-priority path-descriptors should
     // have higher enumerated values
-    None,    // uninitialized or not applicable
-    ByAttr,  // by or from-by animation
-    ToAttr,  // to or from-to animation
-    ValuesAttr,
-    PathAttr,
-    Mpath
+    ePathSourceType_None,    // uninitialized or not applicable
+    ePathSourceType_ByAttr,  // by or from-by animation
+    ePathSourceType_ToAttr,  // to or from-to animation
+    ePathSourceType_ValuesAttr,
+    ePathSourceType_PathAttr,
+    ePathSourceType_Mpath
   };
 
   SMILCalcMode GetCalcMode() const override;
@@ -83,15 +85,16 @@ class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
 
   // Members
   // -------
-  FallibleTArray<double> mKeyPoints;     // parsed from "keyPoints" attribute.
+  FallibleTArray<double> mKeyPoints;  // parsed from "keyPoints" attribute.
+
+  RotateType mRotateType;  // auto, auto-reverse, or explicit.
+  float mRotateAngle;      // the angle value, if explicit.
+
+  PathSourceType mPathSourceType;        // source of our Path.
   RefPtr<Path> mPath;                    // representation of motion path.
   FallibleTArray<double> mPathVertices;  // distances of vertices along path.
 
-  float mRotateAngle = 0.0f;
-  RotateType mRotateType = RotateType::Explicit;
-  PathSourceType mPathSourceType = PathSourceType::None;
-
-  bool mIsPathStale = true;
+  bool mIsPathStale;
 };
 
 }  // namespace mozilla

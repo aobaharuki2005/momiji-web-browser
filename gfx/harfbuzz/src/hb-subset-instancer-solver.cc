@@ -370,8 +370,7 @@ double renormalizeValue (double v, const Triple &triple,
                          const TripleDistances &triple_distances, bool extrapolate)
 {
   double lower = triple.minimum, def = triple.middle, upper = triple.maximum;
-  if (unlikely (!(lower <= def && def <= upper)))
-    return hb_clamp (v, -1.0, +1.0);
+  assert (lower <= def && def <= upper);
 
   if (!extrapolate)
     v = hb_clamp (v, lower, upper);
@@ -385,26 +384,14 @@ double renormalizeValue (double v, const Triple &triple,
 
   /* default >= 0 and v != default */
   if (v > def)
-  {
-    double positive_range = upper - def;
-    if (unlikely (!positive_range))
-      return +1.0;
-    return (v - def) / positive_range;
-  }
+    return (v - def) / (upper - def);
 
   /* v < def */
   if (lower >= 0.0)
-  {
-    double negative_range = def - lower;
-    if (unlikely (!negative_range))
-      return -1.0;
-    return (v - def) / negative_range;
-  }
+    return (v - def) / (def - lower);
 
   /* lower < 0 and v < default */
   double total_distance = triple_distances.negative * (-lower) + triple_distances.positive * def;
-  if (unlikely (!total_distance))
-    return 0.0;
 
   double v_distance;
   if (v >= 0.0)
@@ -420,19 +407,9 @@ rebase_tent (Triple tent, Triple axisLimit, TripleDistances axis_triple_distance
 	     rebase_tent_result_t &out,
 	     rebase_tent_result_t &scratch)
 {
-  if (unlikely (!(-1.0 <= axisLimit.minimum &&
-                  axisLimit.minimum <= axisLimit.middle &&
-                  axisLimit.middle <= axisLimit.maximum &&
-                  axisLimit.maximum <= +1.0) ||
-                !(-2.0 <= tent.minimum &&
-                  tent.minimum <= tent.middle &&
-                  tent.middle <= tent.maximum &&
-                  tent.maximum <= +2.0) ||
-                tent.middle == 0.0))
-  {
-    out.reset ();
-    return;
-  }
+  assert (-1.0 <= axisLimit.minimum && axisLimit.minimum <= axisLimit.middle && axisLimit.middle <= axisLimit.maximum && axisLimit.maximum <= +1.0);
+  assert (-2.0 <= tent.minimum && tent.minimum <= tent.middle && tent.middle <= tent.maximum && tent.maximum <= +2.0);
+  assert (tent.middle != 0.0);
 
   rebase_tent_result_t &sols = scratch;
   _solve (tent, axisLimit, sols);

@@ -14,6 +14,7 @@
 #include <memory>
 #include <utility>
 
+#include "api/video/video_frame_type.h"
 #include "modules/rtp_rtcp/source/frame_object.h"
 #include "modules/video_coding/rtp_frame_reference_finder.h"
 #include "rtc_base/checks.h"
@@ -47,7 +48,7 @@ RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::ManageFrame(
 
 RtpSeqNumOnlyRefFinder::FrameDecision
 RtpSeqNumOnlyRefFinder::ManageFrameInternal(RtpFrameObject* frame) {
-  if (frame->IsKey()) {
+  if (frame->frame_type() == VideoFrameType::kVideoFrameKey) {
     last_seq_num_gop_.insert(std::make_pair(
         frame->last_seq_num(),
         std::make_pair(frame->last_seq_num(), frame->last_seq_num())));
@@ -81,7 +82,7 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(RtpFrameObject* frame) {
   // this frame.
   uint16_t last_picture_id_gop = seq_num_it->second.first;
   uint16_t last_picture_id_with_padding_gop = seq_num_it->second.second;
-  if (frame->IsDelta()) {
+  if (frame->frame_type() == VideoFrameType::kVideoFrameDelta) {
     uint16_t prev_seq_num = frame->first_seq_num() - 1;
 
     if (prev_seq_num != last_picture_id_with_padding_gop)
@@ -93,7 +94,8 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(RtpFrameObject* frame) {
   // Since keyframes can cause reordering we can't simply assign the
   // picture id according to some incrementing counter.
   frame->SetId(frame->last_seq_num());
-  frame->num_references = frame->IsDelta();
+  frame->num_references =
+      frame->frame_type() == VideoFrameType::kVideoFrameDelta;
   frame->references[0] = rtp_seq_num_unwrapper_.Unwrap(last_picture_id_gop);
   if (AheadOf<uint16_t>(frame->Id(), last_picture_id_gop)) {
     seq_num_it->second.first = frame->Id();

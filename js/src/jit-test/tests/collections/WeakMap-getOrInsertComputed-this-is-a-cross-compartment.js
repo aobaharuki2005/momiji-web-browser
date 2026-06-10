@@ -1,3 +1,5 @@
+// |jit-test| --enable-upsert; skip-if: !WeakMap.prototype.getOrInsertComputed
+
 const g = newGlobal({ newCompartment: true });
 
 var map = g.eval("new WeakMap()");

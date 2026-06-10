@@ -19,10 +19,11 @@ export class BrowsingDataDelegate {
 
   async sendRequestForResult(type, data) {
     try {
-      const result = await lazy.EventDispatcher.instance.sendRequestForResult(
+      const result = await lazy.EventDispatcher.instance.sendRequestForResult({
         type,
-        { ...data, extensionId: this.extension.id }
-      );
+        extensionId: this.extension.id,
+        ...data,
+      });
       return result;
     } catch (errorMessage) {
       throw new ExtensionError(errorMessage);

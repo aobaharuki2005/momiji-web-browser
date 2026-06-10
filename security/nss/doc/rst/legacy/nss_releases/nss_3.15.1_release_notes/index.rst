@@ -28,6 +28,7 @@ NSS 3.15.1 release notes
 `New in NSS 3.15.1 <#new_in_nss_3.15.1>`__
 ------------------------------------------
 
+.. _new_functionality:
 
 `New Functionality <#new_functionality>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,10 +45,12 @@ NSS 3.15.1 release notes
       -  AES GCM cipher suites are not yet supported.
 
    .. rubric:: New Functions
+      :name: new_functions
 
    None.
 
    .. rubric:: New Types
+      :name: new_types
 
    -  *in sslprot.h*
 
@@ -69,6 +72,7 @@ NSS 3.15.1 release notes
       -  **ssl_signature_algorithms_xtn** - A new value in the SSLExtensionType enum type.
 
    .. rubric:: New PKCS #11 Mechanisms
+      :name: new_pkcs_11_mechanisms
 
    None.
 

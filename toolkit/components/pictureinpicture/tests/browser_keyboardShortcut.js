@@ -3,6 +3,26 @@
 
 "use strict";
 
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
+const PIP_SHORTCUT_OPEN_EVENTS = [
+  {
+    category: "pictureinpicture",
+    method: "opened_method",
+    object: "shortcut",
+  },
+];
+
+const PIP_SHORTCUT_CLOSE_EVENTS = [
+  {
+    category: "pictureinpicture",
+    method: "closed_method",
+    object: "shortcut",
+  },
+];
+
 /**
  * Tests that if the user keys in the keyboard shortcut for
  * Picture-in-Picture, then the first video on the currently
@@ -15,7 +35,7 @@ add_task(async function test_pip_keyboard_shortcut() {
       gBrowser,
     },
     async browser => {
-      Services.fog.testResetFOG();
+      Services.telemetry.clearEvents();
       await ensureVideosReady(browser);
 
       // In test-page.html, the "with-controls" video is the first one that
@@ -52,9 +72,20 @@ add_task(async function test_pip_keyboard_shortcut() {
 
       await ensureMessageAndClosePiP(browser, VIDEO_ID, pipWin, false);
 
-      await Services.fog.testFlushAllChildren();
-      let ev = Glean.pictureinpicture.openedMethodShortcut.testGetValue();
-      Assert.equal(ev.length, 1);
+      let openFilter = {
+        category: "pictureinpicture",
+        method: "opened_method",
+        object: "shortcut",
+      };
+      await waitForTelemeryEvents(
+        openFilter,
+        PIP_SHORTCUT_OPEN_EVENTS.length,
+        "content"
+      );
+      TelemetryTestUtils.assertEvents(PIP_SHORTCUT_OPEN_EVENTS, openFilter, {
+        clear: true,
+        process: "content",
+      });
 
       // Reopen PiP Window
       pipWin = await triggerPictureInPicture(browser, VIDEO_ID);
@@ -84,8 +115,20 @@ add_task(async function test_pip_keyboard_shortcut() {
 
       ok(pipWin.closed, "Picture-in-Picture window closed.");
 
-      ev = Glean.pictureinpicture.closedMethodShortcut.testGetValue();
-      Assert.equal(ev.length, 1);
+      let closeFilter = {
+        category: "pictureinpicture",
+        method: "closed_method",
+        object: "shortcut",
+      };
+      await waitForTelemeryEvents(
+        closeFilter,
+        PIP_SHORTCUT_CLOSE_EVENTS.length,
+        "parent"
+      );
+      TelemetryTestUtils.assertEvents(PIP_SHORTCUT_CLOSE_EVENTS, closeFilter, {
+        clear: true,
+        process: "parent",
+      });
     }
   );
 });

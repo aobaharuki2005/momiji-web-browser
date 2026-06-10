@@ -4,6 +4,9 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
 const { CreditCard } = ChromeUtils.importESModule(
   "resource://gre/modules/CreditCard.sys.mjs"
 );
@@ -110,7 +113,7 @@ let prepareTestCreditCards = async function (path) {
   await profileStorage._saveImmediately();
 };
 
-let reCCNumber = /^(\•+)(.{4})$/;
+let reCCNumber = /^(\*+)(.{4})$/;
 
 let do_check_credit_card_matches = (creditCardWithMeta, creditCard) => {
   for (let key in creditCard) {
@@ -280,13 +283,11 @@ add_task(async function test_update() {
   // Test assumes that when an entry is saved a second time, it's last modified date will
   // be different from the first. With high values of precision reduction, we execute too
   // fast for that to be true.
-  let timerPrecision = Services.prefs.getBoolPref(
-    "privacy.reduceTimerPrecision"
-  );
-  Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
+  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  Preferences.set("privacy.reduceTimerPrecision", false);
 
   registerCleanupFunction(function () {
-    Services.prefs.setBoolPref("privacy.reduceTimerPrecision", timerPrecision);
+    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 
   let path = getTempFile(TEST_STORE_FILE_NAME).path;

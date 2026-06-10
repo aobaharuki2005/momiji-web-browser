@@ -18,11 +18,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,13 +35,13 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import mozilla.components.compose.base.LinkTextState
-import mozilla.components.compose.base.PagerIndicator
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.setup.checklist.ChecklistItem
 import org.mozilla.fenix.components.components
+import org.mozilla.fenix.compose.LinkTextState
+import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.onboarding.WidgetPinnedReceiver.WidgetPinnedState
 import org.mozilla.fenix.onboarding.store.OnboardingAction.OnboardingThemeAction
@@ -75,7 +73,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onFinish Invoked when the onboarding is completed.
  * @param onImpression Invoked when a page in the pager is displayed.
  * @param currentIndex callback for when the current horizontal pager page changes
- * @param onNavigateToNextPage callback for when the user navigates to the next page in onboarding.
  */
 @Composable
 @Suppress("LongParameterList", "LongMethod")
@@ -99,7 +96,6 @@ fun OnboardingScreen(
     onFinish: (pageType: OnboardingPageUiData) -> Unit,
     onImpression: (pageType: OnboardingPageUiData) -> Unit,
     currentIndex: (index: Int) -> Unit,
-    onNavigateToNextPage: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { pagesToDisplay.size })
@@ -107,17 +103,12 @@ fun OnboardingScreen(
         .observeAsComposableState { it.account != null }
     val widgetPinnedFlow: StateFlow<Boolean> = WidgetPinnedState.isPinned
     val isWidgetPinnedState by widgetPinnedFlow.collectAsState()
-    var lastSettledPage by remember { mutableIntStateOf(pagerState.settledPage) }
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }
             .distinctUntilChanged()
             .collect { page ->
-                if (page > lastSettledPage) {
-                    onNavigateToNextPage()
-                }
                 currentIndex(page)
-                lastSettledPage = page
             }
     }
 
@@ -172,28 +163,28 @@ fun OnboardingScreen(
         pagesToDisplay = pagesToDisplay,
         pagerState = pagerState,
         onMakeFirefoxDefaultClick = {
-            onMakeFirefoxDefaultClick()
             scrollToNextPageOrDismiss()
+            onMakeFirefoxDefaultClick()
         },
         onMakeFirefoxDefaultSkipClick = {
-            onSkipDefaultClick()
             scrollToNextPageOrDismiss()
+            onSkipDefaultClick()
         },
         onSignInButtonClick = {
             onSignInButtonClick()
             scrollToNextPageOrDismiss()
         },
         onSignInSkipClick = {
-            onSkipSignInClick()
             scrollToNextPageOrDismiss()
+            onSkipSignInClick()
         },
         onNotificationPermissionButtonClick = {
-            onNotificationPermissionButtonClick()
             scrollToNextPageOrDismiss()
+            onNotificationPermissionButtonClick()
         },
         onNotificationPermissionSkipClick = {
-            onSkipNotificationClick()
             scrollToNextPageOrDismiss()
+            onSkipNotificationClick()
         },
         onAddFirefoxWidgetClick = {
             if (isWidgetPinnedState) {
@@ -203,21 +194,21 @@ fun OnboardingScreen(
             }
         },
         onSkipFirefoxWidgetClick = {
-            onSkipFirefoxWidgetClick()
             scrollToNextPageOrDismiss()
+            onSkipFirefoxWidgetClick()
         },
         onCustomizeToolbarButtonClick = {
-            onCustomizeToolbarClick()
             scrollToNextPageOrDismiss()
+            onCustomizeToolbarClick()
         },
         onCustomizeThemeButtonClick = {
-            onCustomizeThemeClick()
             scrollToNextPageOrDismiss()
+            onCustomizeThemeClick()
         },
         termsOfServiceEventHandler = termsOfServiceEventHandler,
         onAgreeAndConfirmTermsOfService = {
-            termsOfServiceEventHandler.onAcceptTermsButtonClicked()
             scrollToNextPageOrDismiss()
+            termsOfServiceEventHandler.onAcceptTermsButtonClicked()
         },
         onMarketingDataLearnMoreClick = onMarketingDataLearnMoreClick,
         onMarketingOptInToggle = onMarketingOptInToggle,
@@ -303,7 +294,6 @@ private fun OnboardingContent(
                     onCustomizeToolbarButtonClick = onCustomizeToolbarButtonClick,
                     onCustomizeThemeClick = onCustomizeThemeButtonClick,
                     onTermsOfServiceButtonClick = onAgreeAndConfirmTermsOfService,
-                    shouldShowElevation = false,
                 )
                 OnboardingPageForType(
                     type = pageUiState.type,

@@ -4,23 +4,21 @@
 
 /*---
 esid: sec-temporal.plainmonthday.from
-description: Invalid ISO string as calendar should throw RangeError
+description: Various invalid ISO string values for calendar in a property bag
 features: [Temporal]
 ---*/
 
 const invalidStrings = [
-  ["", "empty string"],
-  ["1997-12-04[u-ca=notacal]", "Unknown calendar"],
-  ["notacal", "Unknown calendar"],
+	["", "empty string"],
 ];
 
-for (const [cal, description] of invalidStrings) {
-  const arg = { year: 1976, monthCode: "M11", day: 18, calendar: cal };
-  assert.throws(
-    RangeError,
-    () => Temporal.PlainMonthDay.from(arg),
-    `${description} is not a valid calendar ID`
-  );
+for (const [calendar, description] of invalidStrings) {
+	const arg = { monthCode: "M11", day: 18, calendar };
+	assert.throws(
+		RangeError,
+		() => Temporal.PlainMonthDay.from(arg),
+		`${description} is not a valid calendar ID`
+	);
 }
 
 reportCompare(0, 0);

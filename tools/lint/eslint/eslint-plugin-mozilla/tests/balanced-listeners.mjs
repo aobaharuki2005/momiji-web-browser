@@ -20,6 +20,7 @@ function error(code, functionName, type) {
     errors: [
       {
         messageId: "noCorresponding",
+        type: "Identifier",
         data: { functionName, type },
       },
     ],

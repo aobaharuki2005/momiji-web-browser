@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsNetCID_h_
-#define nsNetCID_h_
+#ifndef nsNetCID_h__
+#define nsNetCID_h__
 
 /******************************************************************************
  * netwerk/base/ classes
@@ -819,4 +820,4 @@
    0x4450,                                    \
    {0xb0, 0x19, 0xd1, 0xc1, 0xfb, 0xa5, 0x60, 0x25}}
 
-#endif  // nsNetCID_h_
+#endif  // nsNetCID_h__

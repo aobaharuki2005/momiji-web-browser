@@ -43,7 +43,6 @@ export class Topic extends React.PureComponent {
   }
 }
 
-// eslint-disable-next-line no-shadow
 export class Navigation extends React.PureComponent {
   render() {
     let links = this.props.links || [];

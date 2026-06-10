@@ -32,14 +32,14 @@ async function testAddTextInFilter(inspector, view) {
   await setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
-  assertDisplayedRulesCount(view, 2);
+  is(view.element.children.length, 2, "Should have 2 rules.");
   is(
-    getRuleViewRuleEditorAt(view, 0).rule.selectorText,
+    getRuleViewRuleEditor(view, 0).rule.selectorText,
     "element",
     "First rule is inline element."
   );
 
-  const rule = getRuleViewRuleEditorAt(view, 1).rule;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
   const ruleEditor = getTextProperty(view, 1, { margin: "4px 0px" }).editor;
   const computed = ruleEditor.computed;
 
@@ -85,14 +85,14 @@ async function testRemoveTextInFilter(inspector, view) {
   await onRuleviewFiltered;
 
   info("Check that the correct rules are visible");
-  assertDisplayedRulesCount(view, 2);
+  is(view.element.children.length, 2, "Should have 2 rules.");
   is(
-    getRuleViewRuleEditorAt(view, 0).rule.selectorText,
+    getRuleViewRuleEditor(view, 0).rule.selectorText,
     "element",
     "First rule is inline element."
   );
 
-  const rule = getRuleViewRuleEditorAt(view, 1).rule;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
   const ruleEditor = getTextProperty(view, 1, { margin: "4px 0px" }).editor;
   const computed = ruleEditor.computed;
 

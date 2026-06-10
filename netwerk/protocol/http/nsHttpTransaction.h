@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHttpTransaction_h_
-#define nsHttpTransaction_h_
+#ifndef nsHttpTransaction_h__
+#define nsHttpTransaction_h__
 
 #include "ARefBase.h"
 #include "EventTokenBucket.h"
@@ -141,8 +142,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
     mDoNotResetIPFamilyPreference = true;
   }
   void DisableHttp3(bool aAllowRetryHTTPSRR) override;
-  void RemoveAltSvcUsedHeader();
-  void Deactivate();
 
   nsHttpTransaction* QueryHttpTransaction() override { return this; }
 
@@ -155,13 +154,9 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void SetConnectEnd(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
   void SetRequestStart(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
   void SetResponseStart(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
-  void SetFirstInterimResponseStart(mozilla::TimeStamp timeStamp,
-                                    bool onlyIfNull = false);
-  void SetFinalResponseHeadersStart(mozilla::TimeStamp timeStamp,
-                                    bool onlyIfNull = false);
   void SetResponseEnd(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
 
-  [[nodiscard]] bool Do0RTT(bool aCanSendEarlyData) override;
+  [[nodiscard]] bool Do0RTT() override;
   [[nodiscard]] nsresult Finish0RTT(bool aRestart,
                                     bool aAlpnChanged /* ignored */) override;
 
@@ -169,63 +164,13 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // restart - this indicates that state for dev tools
   void Refused0RTT();
 
-  bool Connected() const { return mConnected; }
-
-  // Exposes mRequestStream to ZeroRttHandle so Happy Eyeballs racing
-  // attempts can drive 0-RTT by reading directly from it (seeking to
-  // per-attempt offsets) without mutating any of the transaction's
-  // own 0-RTT flags.
-  nsIInputStream* RequestStream() const { return mRequestStream; }
-
-  // Called by ZeroRttHandle::ReadSegments each time a racer HT
-  // successfully forwards early-data bytes on this txn's behalf.
-  // Mirrors the EARLY_NONE → EARLY_SENT transition the non-HE
-  // ReadSegments path does inline when m0RTTInProgress and
-  // *countRead > 0. Idempotent: later ReadSegments rounds / racer
-  // attempts are no-ops once the disposition has advanced past
-  // EARLY_NONE.
-  void MarkEarlyDataSent() {
-    if (mEarlyDataDisposition == EARLY_NONE) {
-      mEarlyDataDisposition = EARLY_SENT;
-    }
-  }
-
-  // Called by ZeroRttHandle::Finish0RTT once 0-RTT has completed on
-  // behalf of the HE path. In the non-HE flow Do0RTT()+Finish0RTT()
-  // are driven by nsHttpConnection against the transaction that did
-  // its own ReadSegments, so m0RTTInProgress is true when we enter.
-  // In the HE path the HappyEyeballsTransaction did all of that on
-  // its racer and this txn's own 0-RTT flags were never set — so
-  // we can't reuse Finish0RTT() (its m0RTTInProgress assert would
-  // fire). Flip the flags that outlive 0-RTT and that downstream
-  // code still reads on the real txn:
-  //   * both: mEarlyDataWasAvailable = true so
-  //     ShouldRestartOn0RttError in Close() can map a later 0-RTT
-  //     TLS alert (BAD_MAC / PROTOCOL_VERSION / UNEXPECTED) into a
-  //     restart instead of a channel failure.
-  //   * accept: mEarlyDataDisposition = EARLY_ACCEPTED so
-  //     HandleContentStart tags the response and a 425 is mapped to
-  //     EARLY_425 for retry.
-  //   * reject: mDoNotTryEarlyData = true so a later restart of this
-  //     txn won't re-attempt 0-RTT.
-  // mConnected / mSecurityInfo / fallback-timers are intentionally
-  // left alone — the real txn's ReadSegments path initializes them
-  // once Adopt() attaches the conn and dispatch kicks in, and HE's
-  // fast-fallback timers live on the HappyEyeballsConnectionAttempt,
-  // not on this transaction.
-  void FinishAdopted0RTT(bool aRestart);
-
-  // Remove all SSL session tokens keyed by aSecInfo->GetPeerId() so a 0-RTT
-  // restart starts a fresh handshake instead of looping on the rejected ticket.
-  void RemoveSSLTokens(nsITransportSecurityInfo* aSecInfo);
-
   uint64_t BrowserId() override { return mBrowserId; }
 
   void SetHttpTrailers(nsCString& aTrailers);
 
   bool IsWebsocketUpgrade();
 
-  void OnProxyConnectComplete(const nsHttpResponseHead& aResponseHead) override;
+  void OnProxyConnectComplete(int32_t aResponseCode) override;
   void SetFlat407Headers(const nsACString& aHeaders);
 
   void UpdateConnectionInfo(nsHttpConnectionInfo* aConnInfo);
@@ -247,19 +192,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsAutoCString GetUrl() { return mUrl; }
 
   uint64_t ChannelId() { return mChannelId; }
-
-  void SetIsTRRTransaction() override { mIsTRRTransaction = true; }
-  bool IsTRRTransaction() { return mIsTRRTransaction; }
-
-  // Used by the HE speculative path to propagate the failed-handshake
-  // security info onto the real transaction whose mConnection was never
-  // set (so its own MaybeRefreshSecurityInfo skips). Without this the
-  // channel's GetSecurityInfo returns null on TLS handshake failures
-  // routed through the speculative racer.
-  void SetSecurityInfo(nsITransportSecurityInfo* aSecurityInfo) {
-    MutexAutoLock lock(mLock);
-    mSecurityInfo = aSecurityInfo;
-  }
 
  private:
   friend class DeleteHttpTransaction;
@@ -365,7 +297,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
     TRANSACTION_RESTART_POSSIBLE_0RTT_ERROR
   };
   void SetRestartReason(TRANSACTION_RESTART_REASON aReason);
-  bool MaybeForceRestart(const char* aLogMessage);
 
   bool HandleWebTransportResponse(uint16_t aStatus);
 
@@ -381,18 +312,13 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   }
 
  private:
-  class UpdateSecurityCallbacks : public Runnable, public nsIRunnablePriority {
+  class UpdateSecurityCallbacks : public Runnable {
    public:
     UpdateSecurityCallbacks(nsHttpTransaction* aTrans,
-                            nsIInterfaceRequestor* aCallbacks,
-                            uint32_t aPriority)
+                            nsIInterfaceRequestor* aCallbacks)
         : Runnable("net::nsHttpTransaction::UpdateSecurityCallbacks"),
           mTrans(aTrans),
-          mCallbacks(aCallbacks),
-          mPriority(aPriority) {}
-
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIRUNNABLEPRIORITY
+          mCallbacks(aCallbacks) {}
 
     NS_IMETHOD Run() override {
       if (mTrans->mConnection) {
@@ -402,24 +328,16 @@ class nsHttpTransaction final : public nsAHttpTransaction,
     }
 
    private:
-    virtual ~UpdateSecurityCallbacks() = default;
-
     RefPtr<nsHttpTransaction> mTrans;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-    uint32_t mPriority;
   };
 
-  // Fields annotated MOZ_GUARDED_BY(mLock) are accessed from multiple threads.
-  // Fields without annotation are either socket-thread-only, or have complex
-  // mixed-access patterns (e.g. mConnection is checked without the lock on the
-  // socket thread but modified with it; mChunkedDecoder is accessed without the
-  // lock except during trailer extraction).
-  Mutex mLock{"transaction lock"};
+  Mutex mLock MOZ_UNANNOTATED{"transaction lock"};
 
-  nsCOMPtr<nsIInterfaceRequestor> mCallbacks MOZ_GUARDED_BY(mLock);
+  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsITransportEventSink> mTransportSink;
   nsCOMPtr<nsIEventTarget> mConsumerTarget;
-  nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo MOZ_GUARDED_BY(mLock);
+  nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
   nsCOMPtr<nsIAsyncInputStream> mPipeIn;
   nsCOMPtr<nsIAsyncOutputStream> mPipeOut;
   nsCOMPtr<nsIRequestContext> mRequestContext;
@@ -466,7 +384,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   nsHttpChunkedDecoder* mChunkedDecoder{nullptr};
 
-  TimingStruct mTimings MOZ_GUARDED_BY(mLock);
+  TimingStruct mTimings;
 
   nsresult mStatus{NS_OK};
 
@@ -539,7 +457,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool mDoNotRemoveAltSvc{false};
   bool mDoNotResetIPFamilyPreference{false};
   bool mIsHttp2Websocket{false};
-  bool mIsTRRTransaction{false};
 
   // mClosed           := transaction has been explicitly closed
   // mTransactionDone  := transaction ran to completion or was interrupted
@@ -617,10 +534,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   Atomic<bool, Relaxed> mClassOfServiceIncremental{false};
 
  public:
-  nsIInterfaceRequestor* SecurityCallbacks() {
-    MutexAutoLock lock(mLock);
-    return mCallbacks;
-  }
+  nsIInterfaceRequestor* SecurityCallbacks() { return mCallbacks; }
   // Called when this transaction is inserted in the pending queue.
   void OnPendingQueueInserted(const nsACString& aConnectionHashKey);
 
@@ -646,7 +560,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   } mEarlyDataDisposition{EARLY_NONE};
 
   HttpTrafficCategory mTrafficCategory{HttpTrafficCategory::eInvalid};
-  Maybe<nsHttpResponseHead> mProxyConnectResponseHead MOZ_GUARDED_BY(mLock);
+  Atomic<int32_t> mProxyConnectResponseCode{0};
 
   nsCOMPtr<nsICancelable> mDNSRequest;
   Atomic<uint32_t, Relaxed> mHTTPSSVCReceivedStage{HTTPSSVC_NOT_USED};
@@ -663,7 +577,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   RefPtr<nsHttpConnectionInfo> mBackupConnInfo;
   // A clone of mConnInfo taken when this transaction is activated.
   // Describes the server that the associated connection is connected to.
-  RefPtr<nsHttpConnectionInfo> mFinalizedConnInfo MOZ_GUARDED_BY(mLock);
+  RefPtr<nsHttpConnectionInfo> mFinalizedConnInfo;
   RefPtr<HTTPSRecordResolver> mResolver;
   TRANSACTION_RESTART_REASON mRestartReason = TRANSACTION_RESTART_NONE;
 
@@ -678,29 +592,26 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool mSupportsHTTP3 = false;
   Atomic<bool, Relaxed> mIsForWebTransport{false};
   bool mIsResettingForTunnelConn = false;
-  Maybe<bool> mIsWebsocketUpgrade;
 
-  bool mResumptionAttempted = false;
-  void OnPSKResumptionAccepted() override;
-  bool ShouldRestartOnResumptionError(nsresult reason);
+  bool mEarlyDataWasAvailable = false;
+  bool ShouldRestartOn0RttError(nsresult reason);
 
-  nsCOMPtr<nsIEarlyHintObserver> mEarlyHintObserver MOZ_GUARDED_BY(mLock);
+  nsCOMPtr<nsIEarlyHintObserver> mEarlyHintObserver;
   // This hash key is set when a transaction is inserted into the connection
   // entry's pending queue.
   // See nsHttpConnectionMgr::GetOrCreateConnectionEntry(). A transaction could
   // be associated with the connection entry whose hash key is not the same as
   // this transaction's.
-  nsCString mHashKeyOfConnectionEntry MOZ_GUARDED_BY(mLock);
+  nsCString mHashKeyOfConnectionEntry;
   // The CNAME of the host, or empty if none.
   nsCString mCname;
   nsCString mServerHeader;
 
-  nsCOMPtr<WebTransportSessionEventListener> mWebTransportSessionEventListener
-      MOZ_GUARDED_BY(mLock);
+  nsCOMPtr<WebTransportSessionEventListener> mWebTransportSessionEventListener;
 
   nsAutoCString mUrl;
 };
 
 }  // namespace mozilla::net
 
-#endif  // nsHttpTransaction_h_
+#endif  // nsHttpTransaction_h__

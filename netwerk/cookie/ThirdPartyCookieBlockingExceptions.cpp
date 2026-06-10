@@ -154,7 +154,7 @@ bool ThirdPartyCookieBlockingExceptions::CheckExceptionForChannel(
   RefPtr<dom::BrowsingContext> bc;
   loadInfo->GetBrowsingContext(getter_AddRefs(bc));
   if (!bc) {
-    bc = loadInfo->GetAssociatedBrowsingContext();
+    bc = loadInfo->GetWorkerAssociatedBrowsingContext();
   }
 
   nsAutoCString firstPartySite;

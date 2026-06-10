@@ -8,7 +8,6 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Store
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
-import org.mozilla.fenix.GleanMetrics.TrustPanel
 import org.mozilla.fenix.settings.trustpanel.store.TrustPanelAction
 import org.mozilla.fenix.settings.trustpanel.store.TrustPanelState
 import org.mozilla.fenix.settings.trustpanel.store.TrustPanelStore
@@ -33,13 +32,6 @@ class TrustPanelTelemetryMiddleware : Middleware<TrustPanelState, TrustPanelActi
                 TrackingProtection.exceptionAdded.record(NoExtras())
             }
 
-            is TrustPanelAction.Navigate.SecurityCertificate -> {
-                TrustPanel.securityCertificate.record(NoExtras())
-            }
-            is TrustPanelAction.Navigate.QWAC -> {
-                TrustPanel.qwac.record(NoExtras())
-            }
-
             is TrustPanelAction.ClearSiteData,
             is TrustPanelAction.RequestClearSiteDataDialog,
             is TrustPanelAction.UpdateBaseDomain,
@@ -49,13 +41,9 @@ class TrustPanelTelemetryMiddleware : Middleware<TrustPanelState, TrustPanelActi
             is TrustPanelAction.TogglePermission,
             is TrustPanelAction.UpdateAutoplayValue,
             is TrustPanelAction.UpdateSitePermissions,
-            is TrustPanelAction.UpdateIPProtectionMenuState,
             is TrustPanelAction.WebsitePermissionAction,
-            is TrustPanelAction.RequestQWAC,
-            is TrustPanelAction.UpdateQWAC,
             TrustPanelAction.Navigate.PrivacySecuritySettings,
             is TrustPanelAction.Navigate.ManagePhoneFeature,
-            is TrustPanelAction.Navigate.IPProtectionSettings,
             -> Unit
         }
     }

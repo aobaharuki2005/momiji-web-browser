@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -39,8 +40,8 @@ import org.mozilla.fenix.components.menu.MenuDialogTestTag.DESKTOP_SITE_OFF
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.DESKTOP_SITE_ON
 import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -165,12 +166,15 @@ internal fun CustomTabMenu(
         MenuGroup {
             val badgeText: String
             val menuItemState: MenuItemState
+            val badgeBackgroundColor: Color
 
             if (isDesktopMode) {
                 badgeText = stringResource(id = R.string.browser_feature_desktop_site_on)
+                badgeBackgroundColor = MaterialTheme.colorScheme.primaryContainer
                 menuItemState = if (isPdf) MenuItemState.DISABLED else MenuItemState.ACTIVE
             } else {
                 badgeText = stringResource(id = R.string.browser_feature_desktop_site_off)
+                badgeBackgroundColor = MaterialTheme.colorScheme.surfaceContainerHighest
                 menuItemState = if (isPdf) MenuItemState.DISABLED else MenuItemState.ENABLED
             }
 
@@ -179,7 +183,7 @@ internal fun CustomTabMenu(
                     id = R.string.browser_menu_open_in_fenix,
                     stringResource(id = R.string.app_name),
                 ),
-                beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_external_link_24),
+                beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_open_in),
                 onClick = onOpenInFirefoxMenuClick,
                 state = if (isSandboxCustomTab) {
                     MenuItemState.DISABLED
@@ -214,6 +218,7 @@ internal fun CustomTabMenu(
                 Badge(
                     badgeText = badgeText,
                     state = menuItemState,
+                    badgeBackgroundColor = badgeBackgroundColor,
                 )
             }
 
@@ -305,7 +310,7 @@ private fun PoweredByFirefoxItem(modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun CustomTabMenuPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         Column(
@@ -349,7 +354,7 @@ private fun CustomTabMenuPreview(
 @Preview
 @Composable
 private fun CustomTabMenuDisabledButtonsPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         Column(

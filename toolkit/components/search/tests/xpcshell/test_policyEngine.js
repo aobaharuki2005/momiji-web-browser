@@ -47,7 +47,7 @@ add_task(async function test_enterprise_policy_engine() {
     },
   });
 
-  let engine = SearchService.getEngineByName("policy");
+  let engine = Services.search.getEngineByName("policy");
   Assert.ok(engine, "Should have installed the engine.");
 
   Assert.equal(engine.name, "policy", "Should have the correct name");
@@ -67,7 +67,10 @@ add_task(async function test_enterprise_policy_engine() {
     "Should have the correct suggest url"
   );
 
-  await SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await assertGleanDefaultEngine({
     normal: {
@@ -87,7 +90,7 @@ add_task(async function test_enterprise_policy_engine_hidden_persisted() {
   let settingsWritten = SearchTestUtils.promiseSearchNotification(
     "write-settings-to-disk-complete"
   );
-  let engine = SearchService.getEngineByName("policy");
+  let engine = Services.search.getEngineByName("policy");
   engine.hidden = "p1";
   engine.alias = "p1";
   await settingsWritten;
@@ -110,7 +113,7 @@ add_task(async function test_enterprise_policy_engine_hidden_persisted() {
     },
   });
 
-  engine = SearchService.getEngineByName("policy");
+  engine = Services.search.getEngineByName("policy");
   Assert.equal(engine.alias, "p1", "Should have retained the engine alias");
   Assert.ok(engine.hidden, "Should have kept the engine hidden");
 });
@@ -122,7 +125,7 @@ add_task(async function test_enterprise_policy_engine_remove() {
   });
 
   Assert.ok(
-    !SearchService.getEngineByName("policy"),
+    !Services.search.getEngineByName("policy"),
     "Should not have the policy engine installed"
   );
 
@@ -142,15 +145,15 @@ add_task(async function test_enterprise_policy_hidden_default() {
     },
   });
 
-  SearchService.resetToAppDefaultEngine();
+  Services.search.resetToAppDefaultEngine();
 
   Assert.ok(
-    SearchService.getEngineById("zAppDefaultEngine").hidden,
+    Services.search.getEngineById("zAppDefaultEngine").hidden,
     "Should have removed the application default engine"
   );
 
   Assert.equal(
-    SearchService.defaultEngine.id,
+    Services.search.defaultEngine.id,
     "otherEngine",
     "Should have the expected engine set as default"
   );
@@ -165,10 +168,10 @@ add_task(async function test_enterprise_policy_default() {
     },
   });
 
-  SearchService.resetToAppDefaultEngine();
+  Services.search.resetToAppDefaultEngine();
 
   Assert.equal(
-    SearchService.defaultEngine.id,
+    Services.search.defaultEngine.id,
     "otherEngineToMakeDefault",
     "Should have the expected engine set as default"
   );
@@ -184,10 +187,10 @@ add_task(async function test_enterprise_policy_invalid_default() {
     },
   });
 
-  SearchService.resetToAppDefaultEngine();
+  Services.search.resetToAppDefaultEngine();
 
   Assert.equal(
-    SearchService.defaultEngine.id,
+    Services.search.defaultEngine.id,
     "zAppDefaultEngine",
     "Should have the expected engine set as default"
   );
@@ -207,9 +210,9 @@ add_task(async function test_enterprise_policy_private_default() {
     },
   });
 
-  SearchService.resetToAppDefaultEngine();
+  Services.search.resetToAppDefaultEngine();
   Assert.equal(
-    SearchService.defaultPrivateEngine.id,
+    Services.search.defaultPrivateEngine.id,
     "otherEngineToMakeDefault",
     "Should have the expected engine set as default"
   );

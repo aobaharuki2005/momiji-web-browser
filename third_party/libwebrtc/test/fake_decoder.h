@@ -28,7 +28,7 @@ class FakeDecoder : public VideoDecoder {
 
   FakeDecoder();
   explicit FakeDecoder(TaskQueueFactory* task_queue_factory);
-  ~FakeDecoder() override {}
+  virtual ~FakeDecoder() {}
 
   bool Configure(const Settings& settings) override;
 
@@ -57,7 +57,7 @@ class FakeDecoder : public VideoDecoder {
 
 class FakeH264Decoder : public FakeDecoder {
  public:
-  ~FakeH264Decoder() override {}
+  virtual ~FakeH264Decoder() {}
 
   int32_t Decode(const EncodedImage& input, int64_t render_time_ms) override;
 };

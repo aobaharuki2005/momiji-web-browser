@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.library.history
 
-import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
@@ -17,7 +16,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioGroup
-import androidx.activity.compose.LocalActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -101,16 +99,13 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.LensFeature
 import org.mozilla.fenix.components.QrScanFenixFeature
 import org.mozilla.fenix.components.VoiceSearchFeature
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
-import org.mozilla.fenix.components.share.ShareSource
 import org.mozilla.fenix.databinding.FragmentHistoryBinding
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
@@ -135,25 +130,16 @@ import org.mozilla.fenix.search.FenixSearchMiddleware
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionClicked
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionSelected
 import org.mozilla.fenix.search.SearchFragmentStore
-import org.mozilla.fenix.search.awesomebar.DeleteHistoryEntryDelegate
 import org.mozilla.fenix.search.createInitialSearchFragmentState
-import org.mozilla.fenix.tabstray.redux.state.Page
+import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.allowUndo
-import androidx.appcompat.R as appcompatR
 import org.mozilla.fenix.GleanMetrics.History as GleanHistory
 
 private const val MATERIAL_DESIGN_SCRIM = "#52000000"
 
-/**
- * Browser history screen.
- */
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class HistoryFragment :
-    LibraryPageFragment<History>(),
-    UserInteractionHandler,
-    MenuProvider,
-    SystemInsetsPaddedFragment {
+class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, MenuProvider {
     private lateinit var historyStore: HistoryFragmentStore
     private lateinit var searchStore: SearchFragmentStore
     private val toolbarStore by buildToolbarStore()
@@ -193,20 +179,6 @@ class HistoryFragment :
     private val voiceSearchLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             voiceSearchFeature?.get()?.handleVoiceSearchResult(result.resultCode, result.data)
-        }
-    private var lensFeature: ViewBoundFeatureWrapper<LensFeature>? =
-        ViewBoundFeatureWrapper<LensFeature>()
-    private val lensLauncher: ActivityResultLauncher<Intent> =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            lensFeature?.get()?.handleCameraActivityResult(
-                result.resultCode,
-                result.data,
-                qrScanFenixFeature?.get(),
-            )
-        }
-    private val lensCameraPermissionLauncher: ActivityResultLauncher<String> =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            lensFeature?.get()?.onCameraPermissionResult(isGranted)
         }
 
     private val menuBinding by lazy {
@@ -319,16 +291,17 @@ class HistoryFragment :
         super.onViewCreated(view, savedInstanceState)
         requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
-        qrScanFenixFeature = QrScanFenixFeature.register(this, qrScanLauncher)
-        voiceSearchFeature = VoiceSearchFeature.register(this, voiceSearchLauncher)
-        lensFeature = LensFeature.register(this, lensLauncher, lensCameraPermissionLauncher)
+        if (requireContext().settings().shouldUseComposableToolbar) {
+            qrScanFenixFeature = QrScanFenixFeature.register(this, qrScanLauncher)
+            voiceSearchFeature = VoiceSearchFeature.register(this, voiceSearchLauncher)
+        }
 
         consumeFrom(historyStore) {
             historyView.update(it)
             updateDeleteMenuItemView(!it.isEmpty)
         }
 
-        requireContext().components.appStore.flowScoped(viewLifecycleOwner, Dispatchers.Main) { flow ->
+        requireContext().components.appStore.flowScoped(viewLifecycleOwner) { flow ->
             flow.mapNotNull { state -> state.pendingDeletionHistoryItems }.collect { items ->
                 historyStore.dispatch(
                     HistoryFragmentAction.UpdatePendingDeletionItems(pendingDeletionItems = items),
@@ -372,9 +345,10 @@ class HistoryFragment :
     override fun onResume() {
         super.onResume()
 
+        val shouldUseComposableToolbar = context?.settings()?.shouldUseComposableToolbar == true
         val isSearchActive = context?.components?.appStore?.state?.searchState?.isSearchActive == true
 
-        if (isSearchActive) {
+        if (shouldUseComposableToolbar && isSearchActive) {
             handleShowingSearchUX()
         } else {
             (activity as NavHostActivity).getSupportActionBarAndInflateIfNecessary().show()
@@ -387,7 +361,7 @@ class HistoryFragment :
             menu.findItem(R.id.share_history_multi_select)?.isVisible = true
             menu.findItem(R.id.delete_history_multi_select)?.title =
                 SpannableString(getString(R.string.bookmark_menu_delete_button)).apply {
-                    setTextColor(requireContext(), appcompatR.attr.colorError)
+                    setTextColor(requireContext(), R.attr.textCritical)
                 }
         } else {
             inflater.inflate(R.menu.history_menu, menu)
@@ -446,8 +420,15 @@ class HistoryFragment :
             true
         }
         R.id.history_search -> {
-            historyStore.dispatch(SearchClicked)
-            handleShowingSearchUX()
+            if (context?.settings()?.shouldUseComposableToolbar == true) {
+                historyStore.dispatch(SearchClicked)
+                handleShowingSearchUX()
+            } else {
+                findNavController().nav(
+                    R.id.historyFragment,
+                    HistoryFragmentDirections.actionGlobalSearchDialog(null),
+                )
+            }
             true
         }
         R.id.history_delete -> {
@@ -478,12 +459,6 @@ class HistoryFragment :
                                     true -> awesomebarBackground
                                     else -> Color(MATERIAL_DESIGN_SCRIM.toColorInt())
                                 }
-                            }
-                        }
-                        val activity = LocalActivity.current
-                        val deleteHistoryDelegate = remember(activity?.getRootView(), searchStore) {
-                            activity?.getRootView()?.let {
-                                DeleteHistoryEntryDelegate(it, it.context.components, searchStore)
                             }
                         }
 
@@ -522,16 +497,12 @@ class HistoryFragment :
                                     AwesomeBar(
                                         text = searchState.query,
                                         providers = searchState.searchSuggestionsProviders,
-                                        hiddenSuggestions = searchState.hiddenSuggestions,
                                         orientation = AwesomeBarOrientation.TOP,
                                         onSuggestionClicked = { suggestion ->
                                             searchStore.dispatch(SuggestionClicked(suggestion))
                                         },
                                         onAutoComplete = { suggestion ->
                                             searchStore.dispatch(SuggestionSelected(suggestion))
-                                        },
-                                        onRemoveClicked = { suggestion ->
-                                            deleteHistoryDelegate?.handleDeletingHistoryEntry(suggestion)
                                         },
                                         onVisibilityStateUpdated = {
                                             requireComponents.core.store.dispatch(
@@ -618,16 +589,29 @@ class HistoryFragment :
     }
 
     private fun showTabTray(openInPrivate: Boolean = false) {
-        findNavController().nav(
-            R.id.historyFragment,
-            HistoryFragmentDirections.actionGlobalTabManagementFragment(
-                page = if (openInPrivate) {
-                    Page.PrivateTabs
-                } else {
-                    Page.NormalTabs
-                },
-            ),
-        )
+        if (requireContext().settings().tabManagerEnhancementsEnabled) {
+            findNavController().nav(
+                R.id.historyFragment,
+                HistoryFragmentDirections.actionGlobalTabManagementFragment(
+                    page = if (openInPrivate) {
+                        Page.PrivateTabs
+                    } else {
+                        Page.NormalTabs
+                    },
+                ),
+            )
+        } else {
+            findNavController().nav(
+                R.id.historyFragment,
+                HistoryFragmentDirections.actionGlobalTabsTrayFragment(
+                    page = if (openInPrivate) {
+                        Page.PrivateTabs
+                    } else {
+                        Page.NormalTabs
+                    },
+                ),
+            )
+        }
     }
 
     private fun getMultiSelectSnackBarMessage(historyItems: Set<History>): String {
@@ -700,17 +684,10 @@ class HistoryFragment :
 
     private fun share(data: List<ShareData>) {
         GleanHistory.shared.record(NoExtras())
-
-        requireComponents.useCases.shareUseCases.shareItems(
-            items = data,
-            source = ShareSource.HISTORY,
-            navigateToShareFragment = {
-                val directions = HistoryFragmentDirections.actionGlobalShareFragment(
-                    data = data.toTypedArray(),
-                )
-                navigateToHistoryFragment(directions)
-            },
+        val directions = HistoryFragmentDirections.actionGlobalShareFragment(
+            data = data.toTypedArray(),
         )
+        navigateToHistoryFragment(directions)
     }
 
     private fun navigateToHistoryFragment(directions: NavDirections) {
@@ -783,7 +760,6 @@ class HistoryFragment :
     internal class DeleteConfirmationDialogFragment(
         private val onDeleteTimeRange: (selectedTimeFrame: RemoveTimeFrame?) -> Unit,
     ) : DialogFragment() {
-        @SuppressLint("InflateParams")
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
             MaterialAlertDialogBuilder(requireContext()).apply {
                 val layout = getLayoutInflater().inflate(R.layout.delete_history_time_range_dialog, null)
@@ -862,7 +838,6 @@ class HistoryFragment :
                 BrowserStoreToFenixSearchMapperMiddleware(
                     browserStore = requireComponents.core.store,
                     scope = lifecycleScope,
-                    appStore = requireComponents.appStore,
                 ),
                 FenixSearchMiddleware(
                     fragment = this@HistoryFragment,

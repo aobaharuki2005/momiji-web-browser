@@ -2,10 +2,20 @@
 
 /* import-globals-from trr_common.js */
 
+// Allow telemetry probes which may otherwise be disabled for some
+// applications (e.g. Thunderbird).
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
 let trrServer;
 add_setup(async function setup() {
   trr_test_setup();
-  Services.fog.initializeFOG();
   Services.prefs.setBoolPref("network.trr.useGET", false);
 
   trrServer = new TRRServer();
@@ -21,6 +31,10 @@ registerCleanupFunction(async () => {
 });
 
 async function trrLookup(mode, rolloutMode) {
+  let hist = TelemetryTestUtils.getAndClearKeyedHistogram(
+    "TRR_SKIP_REASON_TRR_FIRST2"
+  );
+
   if (rolloutMode) {
     info("Testing doh-rollout.mode");
     setModeAndURI(0, "doh?responseIP=2.2.2.2");
@@ -29,28 +43,25 @@ async function trrLookup(mode, rolloutMode) {
     setModeAndURI(mode, "doh?responseIP=2.2.2.2");
   }
 
+  Services.dns.clearCache(true);
+  await new TRRDNSListener("test.example.com", "2.2.2.2");
   let expectedKey = `(other)_${mode}`;
   if (mode == 0) {
     expectedKey = "(other)";
   }
 
-  let metric = Glean.dns.trrSkipReasonTrrFirst[expectedKey];
-  let baseline = metric.testGetValue();
-
-  Services.dns.clearCache(true);
-  await new TRRDNSListener("test.example.com", "2.2.2.2");
-
+  let snapshot = hist.snapshot();
   await TestUtils.waitForCondition(() => {
-    let snapshot = metric.testGetValue();
+    snapshot = hist.snapshot();
     info("snapshot:" + JSON.stringify(snapshot));
     return snapshot;
   });
-
-  let current = metric.testGetValue();
-  let bucketKey = String(Ci.nsITRRSkipReason.TRR_OK);
-  let delta =
-    (current?.values?.[bucketKey] ?? 0) - (baseline?.values?.[bucketKey] ?? 0);
-  Assert.equal(delta, 1, `Expected 1 new TRR_OK entry for key ${expectedKey}`);
+  TelemetryTestUtils.assertKeyedHistogramValue(
+    hist,
+    expectedKey,
+    Ci.nsITRRSkipReason.TRR_OK,
+    1
+  );
 }
 
 add_task(async function test_trr_lookup_mode_2() {
@@ -74,9 +85,9 @@ async function trrByTypeLookup(trrURI, expectedSuccess, expectedSkipReason) {
     Ci.nsIDNSService.MODE_NATIVEONLY
   );
 
-  let expectedKey = `(other)_2`;
-  let metric = Glean.dns.trrRelevantSkipReasonTrrFirstTypeRec[expectedKey];
-  let baseline = metric.testGetValue();
+  let hist = TelemetryTestUtils.getAndClearKeyedHistogram(
+    "TRR_RELEVANT_SKIP_REASON_TRR_FIRST_TYPE_REC"
+  );
 
   setModeAndURI(Ci.nsIDNSService.MODE_TRRFIRST, trrURI);
 
@@ -85,21 +96,20 @@ async function trrByTypeLookup(trrURI, expectedSuccess, expectedSkipReason) {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
     expectedSuccess,
   });
+  let expectedKey = `(other)_2`;
 
+  let snapshot = hist.snapshot();
   await TestUtils.waitForCondition(() => {
-    let snapshot = metric.testGetValue();
+    snapshot = hist.snapshot();
     info("snapshot:" + JSON.stringify(snapshot));
     return snapshot;
   });
 
-  let current = metric.testGetValue();
-  let bucketKey = String(expectedSkipReason);
-  let delta =
-    (current?.values?.[bucketKey] ?? 0) - (baseline?.values?.[bucketKey] ?? 0);
-  Assert.equal(
-    delta,
-    1,
-    `Expected 1 new skip reason entry for key ${expectedKey}`
+  TelemetryTestUtils.assertKeyedHistogramValue(
+    hist,
+    expectedKey,
+    expectedSkipReason,
+    1
   );
 }
 

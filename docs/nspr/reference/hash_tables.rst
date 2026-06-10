@@ -18,13 +18,13 @@ table (to speed up future lookups).
 Hash Table Types and Constants
 ------------------------------
 
- - ``PLHashEntry``
+ - :ref:`PLHashEntry`
  - :ref:`PLHashTable`
- - ``PLHashNumber``
- - ``PLHashFunction``
+ - :ref:`PLHashNumber`
+ - :ref:`PLHashFunction`
  - :ref:`PLHashComparator`
- - ``PLHashEnumerator``
- - ``PLHashAllocOps``
+ - :ref:`PLHashEnumerator`
+ - :ref:`PLHashAllocOps`
 
 .. _Hash_Table_Functions:
 

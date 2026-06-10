@@ -43,7 +43,7 @@ add_task(async function () {
 });
 
 async function assertDisplayStyle(detailEl, isNoneExpected, description) {
-  const win = detailEl.documentGlobal;
+  const win = detailEl.ownerGlobal;
   await waitUntil(() => {
     const isNone = win.getComputedStyle(detailEl).display === "none";
     return isNone === isNoneExpected;

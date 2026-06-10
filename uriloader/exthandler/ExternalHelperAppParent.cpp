@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -107,13 +109,12 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnStartRequest(
     const nsACString& entityID) {
   mEntityID = entityID;
   mPending = true;
-  RefPtr<nsIStreamListener> listener = mListener;
-  mStatus = listener->OnStartRequest(this);
+  mStatus = mListener->OnStartRequest(this);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnDataAvailable(
-    const nsACString& data, const uint64_t& offset) {
+    const nsACString& data, const uint64_t& offset, const uint32_t& count) {
   if (NS_FAILED(mStatus)) {
     return IPC_OK();
   }
@@ -122,11 +123,9 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnDataAvailable(
 
   nsCOMPtr<nsIInputStream> stringStream;
   DebugOnly<nsresult> rv = NS_NewByteInputStream(
-      getter_AddRefs(stringStream), Span(data), NS_ASSIGNMENT_DEPEND);
+      getter_AddRefs(stringStream), Span(data).To(count), NS_ASSIGNMENT_DEPEND);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create dependent string!");
-  RefPtr<nsIStreamListener> listener = mListener;
-  mStatus =
-      listener->OnDataAvailable(this, stringStream, offset, data.Length());
+  mStatus = mListener->OnDataAvailable(this, stringStream, offset, count);
 
   return IPC_OK();
 }
@@ -134,8 +133,7 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnDataAvailable(
 mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnStopRequest(
     const nsresult& code) {
   mPending = false;
-  RefPtr<nsIStreamListener> listener = mListener;
-  listener->OnStopRequest(
+  mListener->OnStopRequest(
       this, (NS_SUCCEEDED(code) && NS_FAILED(mStatus)) ? mStatus : code);
   Delete();
   return IPC_OK();
@@ -149,25 +147,22 @@ NS_IMETHODIMP
 ExternalHelperAppParent::OnDataAvailable(nsIRequest* request,
                                          nsIInputStream* input, uint64_t offset,
                                          uint32_t count) {
-  RefPtr<nsIStreamListener> listener = mListener;
-  return listener->OnDataAvailable(request, input, offset, count);
+  return mListener->OnDataAvailable(request, input, offset, count);
 }
 
 NS_IMETHODIMP
 ExternalHelperAppParent::OnStartRequest(nsIRequest* request) {
-  RefPtr<nsIStreamListener> listener = mListener;
-  return listener->OnStartRequest(request);
+  return mListener->OnStartRequest(request);
 }
 
 NS_IMETHODIMP
 ExternalHelperAppParent::OnStopRequest(nsIRequest* request, nsresult status) {
-  RefPtr<nsIStreamListener> listener = mListener;
-  nsresult rv = listener->OnStopRequest(request, status);
+  nsresult rv = mListener->OnStopRequest(request, status);
   Delete();
   return rv;
 }
 
-ExternalHelperAppParent::~ExternalHelperAppParent() = default;
+ExternalHelperAppParent::~ExternalHelperAppParent() {}
 
 //
 // nsIRequest implementation...

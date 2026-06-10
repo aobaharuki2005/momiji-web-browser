@@ -13,17 +13,17 @@ const QUICKACTIONS_URLBAR_PREF = "quickactions.enabled";
 add_setup(async function () {
   let engine = await addTestTailSuggestionsEngine(defaultRichSuggestionsFn);
   // Install the test engine.
-  let oldDefaultEngine = await SearchService.getDefault();
+  let oldDefaultEngine = await Services.search.getDefault();
   registerCleanupFunction(async () => {
-    SearchService.setDefault(
+    Services.search.setDefault(
       oldDefaultEngine,
-      SearchService.CHANGE_REASON.UNKNOWN
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
     Services.prefs.clearUserPref(RICH_SUGGESTIONS_PREF);
     Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
     UrlbarPrefs.clear(QUICKACTIONS_URLBAR_PREF);
   });
-  SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
+  Services.search.setDefault(engine, Ci.nsISearchService.CHANGE_REASON_UNKNOWN);
   Services.prefs.setBoolPref(RICH_SUGGESTIONS_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
   UrlbarPrefs.set(QUICKACTIONS_URLBAR_PREF, false);

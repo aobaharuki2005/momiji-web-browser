@@ -350,14 +350,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     CurrentState().textRendering = aTextRendering;
   }
 
-  void GetLang(nsAString& aLang) { CurrentState().lang->ToString(aLang); }
-  void SetLang(const nsAString& aLang) {
-    if (!CurrentState().lang->Equals(aLang)) {
-      CurrentState().lang = NS_Atomize(aLang);
-      CurrentState().fontGroup = nullptr;
-    }
-  }
-
   void GetLetterSpacing(nsACString& aLetterSpacing);
   void SetLetterSpacing(const nsACString& aLetterSpacing);
   void GetWordSpacing(nsACString& aWordSpacing);
@@ -621,13 +613,11 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
  protected:
   /**
    * Helper to parse a value for the letterSpacing or wordSpacing attribute.
-   * If the string can be parsed, returns Some(value) and sets aNormalized to
-   * the normalized form of the specified string. If it cannot be parsed as a
-   * spacing value, returns Nothing, and aNormalized is untouched.
-   * Note that ParseSpacing may flush style (to resolve font-relative units).
+   * If successful, returns the result in aValue, and the whitespace-normalized
+   * value string in aNormalized; if unsuccessful these are left untouched.
    */
-  mozilla::Maybe<float> ParseSpacing(const nsACString& aSpacing,
-                                     nsACString& aNormalized);
+  void ParseSpacing(const nsACString& aSpacing, float* aValue,
+                    nsACString& aNormalized);
 
   already_AddRefed<const ComputedStyle> ResolveStyleForProperty(
       NonCustomCSSPropertyId aProperty, const nsACString& aValue);
@@ -1010,14 +1000,10 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
    * last call to UpdateFilter and now.
    */
   const gfx::FilterDescription& EnsureUpdatedFilter() {
-    bool isWriteOnly = IsWriteOnly() ||
-                       (mCanvasElement && mCanvasElement->IsWriteOnly()) ||
-                       (mOffscreenCanvas && mOffscreenCanvas->IsWriteOnly());
+    bool isWriteOnly = mCanvasElement && mCanvasElement->IsWriteOnly();
     if (CurrentState().filterSourceGraphicTainted != isWriteOnly) {
-      // Do not flush here: this runs inside drawing operations that hold raw
-      // references to mPath/state, and a flush can run script that resets the
-      // context, leading to UAF. Flush already happened at SetFilter() time.
-      UpdateFilter(/* aFlushIfNeeded = */ false);
+      UpdateFilter(/* aFlushIfNeeded = */ true);
+      EnsureTarget();
     }
     MOZ_ASSERT(CurrentState().filterSourceGraphicTainted == isWriteOnly);
     return CurrentState().filter;
@@ -1028,10 +1014,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   }
 
   // text
-
-  // Resolve the `lang` property if it is `inherit` or empty, returning true
-  // if the resolved value has changed.
-  bool ResolveFontLang();
 
  public:
   gfxFontGroup* GetCurrentFontStyle();
@@ -1118,8 +1100,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     gfx::Float wordSpacing = 0.0f;
     nsCString letterSpacingStr;
     nsCString wordSpacingStr;
-    RefPtr<nsAtom> lang = nsGkAtoms::inherit;
-    RefPtr<nsAtom> resolvedFontLang;
 
     nscolor shadowColor = 0;
 
@@ -1159,9 +1139,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     // tainted state of the canvas itself, we update our filters accordingly.
     bool filterSourceGraphicTainted = false;
     bool imageSmoothingEnabled = true;
-
-    // Whether resolvedFontLang was an explicitly-specified lang or inferred.
-    bool explicitLang = false;
   };
 
   AutoTArray<ContextState, 3> mStyleStack;
@@ -1180,11 +1157,9 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
   struct FontStyleCacheKey {
     FontStyleCacheKey() = default;
-    FontStyleCacheKey(const nsACString& aFont, nsAtom* aLang,
-                      uint64_t aGeneration)
-        : mFont(aFont), mLang(aLang), mGeneration(aGeneration) {}
+    FontStyleCacheKey(const nsACString& aFont, uint64_t aGeneration)
+        : mFont(aFont), mGeneration(aGeneration) {}
     nsCString mFont;
-    RefPtr<nsAtom> mLang;
     uint64_t mGeneration = 0;
   };
 
@@ -1199,13 +1174,12 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
    public:
     static HashNumber Hash(const FontStyleCacheKey& aKey) {
       HashNumber hash = HashString(aKey.mFont);
-      hash = AddToHash(hash, aKey.mLang->hash());
       return AddToHash(hash, aKey.mGeneration);
     }
     static bool Match(const FontStyleCacheKey& aKey,
                       const FontStyleData& aVal) {
       return aVal.mKey.mGeneration == aKey.mGeneration &&
-             aVal.mKey.mLang == aKey.mLang && aVal.mKey.mFont == aKey.mFont;
+             aVal.mKey.mFont == aKey.mFont;
     }
   };
 

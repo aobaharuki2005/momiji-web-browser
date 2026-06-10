@@ -70,7 +70,7 @@ export class AppTestDelegateParent extends JSWindowActorParent {
   }
 
   get window() {
-    return this.browser.documentGlobal;
+    return this.browser.ownerGlobal;
   }
 
   async receiveMessage(message) {

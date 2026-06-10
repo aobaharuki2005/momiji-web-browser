@@ -4,17 +4,16 @@
 
 :host(login-alert) {
   display: grid;
-  column-gap: var(--space-large);
+  column-gap: 16px;
   grid-template-areas: "icon title action" "icon content content";
   grid-template-columns: min-content 1fr auto;
-  padding: var(--space-large) var(--space-xxlarge);
+  padding: 16px 32px;
   color: var(--text-color);
   background-color: var(--background-color-box);
   border-radius: var(--border-radius-small);
-  border: var(--border-width) solid var(--border-color);
-  box-shadow: var(--box-shadow-level-2);
-  font-size: var(--font-size-small);
-  margin-block-end: var(--space-large);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+  font-size: 0.9em;
 }
 
 :host([variant="info"]) {
@@ -22,13 +21,13 @@
 }
 
 :host([variant="error"]) {
-  background-color: var(--background-color-critical);
-  color: var(--text-color);
+  background-color: #a4000f;
+  color: white;
 }
 
 :host([variant="warning"]) {
-  background: var(--background-color-warning);
-  color: var(--text-color);
+  background: #d7b600;
+  color: black;
 }
 
 :host(login-alert) img {

@@ -14,6 +14,7 @@ import {
   MESSAGE_TYPE_LIST,
   MESSAGE_TYPE_HASH,
 } from "modules/ActorConstants.mjs";
+import { MESSAGING_EXPERIMENTS_DEFAULT_FEATURES } from "modules/MessagingExperimentConstants.sys.mjs";
 
 enzyme.configure({ adapter: new Adapter() });
 
@@ -42,8 +43,11 @@ chai.tv4.addSchema("file:///FxMSCommon.schema.json", FxMSCommonSchema);
 
 const overrider = new GlobalOverrider();
 
-const RemoteSettings = _cid => ({
+const RemoteSettings = name => ({
   get: () => {
+    if (name === "attachment") {
+      return Promise.resolve([{ attachment: {} }]);
+    }
     return Promise.resolve([]);
   },
   on: () => {},
@@ -125,7 +129,7 @@ const TEST_GLOBAL = {
       prefix: "ASRouter",
     }),
   },
-  ASRouterScreenUtils: {
+  AWScreenUtils: {
     evaluateTargetingAndRemoveScreens() {
       return true;
     },
@@ -531,7 +535,13 @@ const TEST_GLOBAL = {
   FeatureCalloutBroker: {
     showFeatureCallout() {},
   },
-  NimbusFeatures: FakeNimbusFeatures,
+  NimbusFeatures: FakeNimbusFeatures([
+    ...MESSAGING_EXPERIMENTS_DEFAULT_FEATURES,
+    "glean",
+    "newtab",
+    "pocketNewtab",
+    "cookieBannerHandling",
+  ]),
   TelemetryEnvironment: {
     setExperimentActive() {},
     currentEnvironment: {
@@ -565,12 +575,6 @@ const TEST_GLOBAL = {
   },
   Logger: FakeLogger,
   getFxAccountsSingleton() {},
-  AWEnsureAddonInstalled() {
-    return Promise.resolve("complete");
-  },
-  AWWaitForNimbus() {
-    return Promise.resolve("ready");
-  },
   AboutNewTab: {},
   Glean: {
     messagingExperiments: {

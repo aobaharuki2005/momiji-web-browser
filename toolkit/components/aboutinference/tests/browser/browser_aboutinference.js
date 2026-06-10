@@ -62,15 +62,17 @@ add_task(async function test_about_inference_process() {
             return;
           }
           const checkInnerHTML = () => {
-            info(`Checking innerHTML of element with selector: ${selector}`);
+            console.log(
+              `Checking innerHTML of element with selector: ${selector}`
+            );
             if (element.innerHTML.includes(substring)) {
-              info(
+              console.log(
                 `Substring "${substring}" found in element with selector: ${selector}`
               );
               resolve();
             } else {
               // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-              content.setTimeout(checkInnerHTML, interval);
+              setTimeout(checkInnerHTML, interval);
             }
           };
           checkInnerHTML();

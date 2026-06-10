@@ -117,9 +117,23 @@ const TEST_GLOBAL = {
       prefix: "ASRouter",
     }),
   },
+  AWScreenUtils: {
+    evaluateTargetingAndRemoveScreens() {
+      return true;
+    },
+    async removeScreens() {
+      return true;
+    },
+    evaluateScreenTargeting() {
+      return true;
+    },
+  },
   BrowserUtils: {
     sendToDeviceEmailsSupported() {
       return true;
+    },
+    isChinaRepack() {
+      return false;
     },
   },
   UpdateUtils: { getUpdateChannel() {} },
@@ -548,9 +562,6 @@ const TEST_GLOBAL = {
     return Promise.resolve({ value: "complete" });
   },
   AboutNewTab: {},
-  AWWaitForNimbus() {
-    return Promise.resolve("skipped");
-  },
   Glean: {
     newtab: {
       opened: {

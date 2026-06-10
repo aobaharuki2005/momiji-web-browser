@@ -152,7 +152,7 @@ fn worker_park_unpark_count() {
     let metrics = rt.metrics();
     rt.block_on(rt.spawn(async {})).unwrap();
     drop(rt);
-    assert_eq!(0, metrics.worker_park_unpark_count(0) % 2);
+    assert!(2 <= metrics.worker_park_unpark_count(0));
 
     let rt = threaded();
     let metrics = rt.metrics();

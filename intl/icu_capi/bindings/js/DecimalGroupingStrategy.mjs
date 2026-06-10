@@ -3,10 +3,11 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
- * See the [Rust documentation for `GroupingStrategy`](https://docs.rs/icu/2.1.1/icu/decimal/options/enum.GroupingStrategy.html) for more information.
+ * See the [Rust documentation for `GroupingStrategy`](https://docs.rs/icu/latest/icu/decimal/options/enum.GroupingStrategy.html) for more information.
  */
+
+
 export class DecimalGroupingStrategy {
     #value = undefined;
 
@@ -46,7 +47,6 @@ export class DecimalGroupingStrategy {
         throw TypeError(value + " is not a DecimalGroupingStrategy and does not correspond to any of its enumerator values.");
     }
 
-    /** @internal */
     static fromValue(value) {
         return new DecimalGroupingStrategy(value);
     }
@@ -55,7 +55,6 @@ export class DecimalGroupingStrategy {
         return [...DecimalGroupingStrategy.#values.keys()][this.#value];
     }
 
-    /** @internal */
     get ffiValue(){
         return this.#value;
     }

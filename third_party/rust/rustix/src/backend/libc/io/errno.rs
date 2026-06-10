@@ -276,7 +276,6 @@ impl Errno {
         windows,
         target_os = "aix",
         target_os = "android",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
@@ -327,7 +326,6 @@ impl Errno {
         solarish,
         windows,
         target_os = "aix",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
@@ -344,7 +342,6 @@ impl Errno {
         solarish,
         windows,
         target_os = "aix",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
@@ -361,7 +358,6 @@ impl Errno {
         solarish,
         windows,
         target_os = "aix",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
@@ -378,7 +374,6 @@ impl Errno {
         solarish,
         windows,
         target_os = "aix",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
@@ -531,7 +526,6 @@ impl Errno {
         solarish,
         windows,
         target_os = "aix",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
@@ -561,7 +555,6 @@ impl Errno {
         solarish,
         windows,
         target_os = "aix",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
@@ -642,7 +635,6 @@ impl Errno {
         bsd,
         windows,
         target_os = "aix",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
@@ -767,7 +759,6 @@ impl Errno {
         solarish,
         windows,
         target_os = "aix",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
@@ -791,7 +782,7 @@ impl Errno {
     #[cfg(not(target_os = "l4re"))]
     pub const NOTSOCK: Self = Self(c::ENOTSOCK);
     /// `ENOTSUP`
-    #[cfg(not(any(windows, target_os = "redox")))]
+    #[cfg(not(any(windows, target_os = "haiku", target_os = "redox")))]
     pub const NOTSUP: Self = Self(c::ENOTSUP);
     /// `ENOTTY`
     #[cfg(not(windows))]
@@ -896,7 +887,6 @@ impl Errno {
         solarish,
         windows,
         target_os = "aix",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
@@ -911,14 +901,13 @@ impl Errno {
     #[cfg(not(any(
         bsd,
         windows,
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
         target_os = "hurd",
         target_os = "l4re",
         target_os = "vita",
-        target_os = "wasi",
+        target_os = "wasi"
     )))]
     pub const RESTART: Self = Self(c::ERESTART);
     /// `ERFKILL`
@@ -928,7 +917,6 @@ impl Errno {
         windows,
         target_os = "aix",
         target_os = "android",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",
@@ -1028,7 +1016,6 @@ impl Errno {
         solarish,
         windows,
         target_os = "aix",
-        target_os = "cygwin",
         target_os = "espidf",
         target_os = "haiku",
         target_os = "horizon",

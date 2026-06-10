@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -53,7 +55,8 @@ already_AddRefed<Event> RTCTransformEventRunnable::BuildEvent(
   // Set transformer.[[readable]] to readable.
 
   // Set transformer.[[writable]] to writable.
-  RefPtr transformer = MakeRefPtr<RTCRtpScriptTransformer>(aGlobal);
+  RefPtr<RTCRtpScriptTransformer> transformer =
+      new RTCRtpScriptTransformer(aGlobal);
   nsresult nrv = transformer->Init(aCx, aTransformerOptions,
                                    GetCurrentThreadWorkerPrivate(), mProxy);
   if (NS_WARN_IF(NS_FAILED(nrv))) {

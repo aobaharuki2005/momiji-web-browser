@@ -17,18 +17,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import mozilla.components.compose.base.button.OutlinedButton
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.list.SwitchListItem
+import org.mozilla.fenix.compose.SwitchWithLabel
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 
 /**
  * CFR Tools UI that allows for the CFR states to be reset.
@@ -60,7 +61,9 @@ fun CfrTools(
 private fun ResetCfrTool(
     cfrToolsStore: CfrToolsStore,
 ) {
-    val cfrPreferences by cfrToolsStore.stateFlow.collectAsState()
+    val cfrPreferences by cfrToolsStore.observeAsState(initialValue = cfrToolsStore.state) { state ->
+        state
+    }
 
     Column(
         modifier = Modifier
@@ -92,6 +95,25 @@ private fun ResetCfrTool(
             ) {
                 cfrToolsStore.dispatch(CfrToolsAction.ResetLastCFRTimestampButtonClicked)
             }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(FirefoxTheme.layout.space.dynamic150),
+        ) {
+            CfrSectionTitle(
+                text = stringResource(R.string.debug_drawer_cfr_tools_homepage_cfr_title),
+            )
+
+            CfrToggle(
+                title = stringResource(R.string.debug_drawer_cfr_tools_homepage_searchbar_title),
+                description = stringResource(R.string.debug_drawer_cfr_tools_homepage_searchbar_description),
+                checked = cfrPreferences.homepageSearchBarShown,
+                enabled = FxNimbus.features.encourageSearchCfr.value().enabled,
+                onCfrToggle = {
+                    cfrToolsStore.dispatch(CfrToolsAction.HomepageSearchBarShownToggled)
+                },
+            )
         }
 
         Column(
@@ -169,15 +191,12 @@ private fun CfrToggle(
     enabled: Boolean = true,
     onCfrToggle: () -> Unit,
 ) {
-    SwitchListItem(
+    SwitchWithLabel(
         label = title,
         checked = checked,
         modifier = Modifier.padding(horizontal = FirefoxTheme.layout.space.dynamic400),
         description = description,
-        maxDescriptionLines = Int.MAX_VALUE,
-        maxLabelLines = Int.MAX_VALUE,
         enabled = enabled,
-        showSwitchAfter = true,
     ) {
         onCfrToggle()
     }
@@ -203,7 +222,7 @@ private fun CfrSectionTitle(
 @Composable
 @FlexibleWindowPreview
 private fun CfrToolsPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         CfrTools(

@@ -1,3 +1,5 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -2017,22 +2019,22 @@ tests.push({
   async setup() {
     await PlacesTestUtils.addVisits([
       {
-        uri: Services.io.newURI("http://l3.moz.org/"),
+        uri: NetUtil.newURI("http://l3.moz.org/"),
         transition: TRANSITION_TYPED,
       },
       {
-        uri: Services.io.newURI("http://l3.moz.org/redirecting/"),
+        uri: NetUtil.newURI("http://l3.moz.org/redirecting/"),
         transition: TRANSITION_TYPED,
       },
       {
-        uri: Services.io.newURI("http://l3.moz.org/redirecting2/"),
+        uri: NetUtil.newURI("http://l3.moz.org/redirecting2/"),
         transition: TRANSITION_REDIRECT_TEMPORARY,
-        referrer: Services.io.newURI("http://l3.moz.org/redirecting/"),
+        referrer: NetUtil.newURI("http://l3.moz.org/redirecting/"),
       },
       {
-        uri: Services.io.newURI("http://l3.moz.org/target/"),
+        uri: NetUtil.newURI("http://l3.moz.org/target/"),
         transition: TRANSITION_REDIRECT_PERMANENT,
-        referrer: Services.io.newURI("http://l3.moz.org/redirecting2/"),
+        referrer: NetUtil.newURI("http://l3.moz.org/redirecting2/"),
       },
     ]);
   },

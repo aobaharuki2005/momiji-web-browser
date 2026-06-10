@@ -16,8 +16,9 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
+    // gA11yEventDumpToConsole = true;
     function doPreTest() {
-      waitForImageMapInContent("imgmap").then(doTest);
+      waitForImageMap("imgmap", doTest);
     }
 
     function doTest() {

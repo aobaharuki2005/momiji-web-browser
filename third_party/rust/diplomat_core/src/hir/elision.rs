@@ -99,7 +99,6 @@
 use super::lifetimes::{BoundedLifetime, Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
 use super::LoweringContext;
 use crate::ast;
-use crate::hir::ty_position::Sealed;
 use smallvec::SmallVec;
 
 /// Lower [`ast::Lifetime`]s to [`Lifetime`]s.
@@ -108,7 +107,7 @@ use smallvec::SmallVec;
 /// to abstractly lower lifetimes without concern for what sort of tracking
 /// goes on. In particular, elision inference requires updating internal state
 /// when visiting lifetimes in the input.
-pub trait LifetimeLowerer: Sealed {
+pub trait LifetimeLowerer {
     /// Lowers an [`ast::Lifetime`].
     fn lower_lifetime(&mut self, lifetime: &ast::Lifetime) -> MaybeStatic<Lifetime>;
 
@@ -228,12 +227,6 @@ pub(super) struct ReturnLifetimeLowerer<'ast> {
     elision_source: ElisionSource,
     base: BaseLifetimeLowerer<'ast>,
 }
-
-impl<'ast> Sealed for BaseLifetimeLowerer<'ast> {}
-impl<'ast> Sealed for SelfParamLifetimeLowerer<'ast> {}
-impl<'ast> Sealed for ParamLifetimeLowerer<'ast> {}
-impl<'ast> Sealed for ReturnLifetimeLowerer<'ast> {}
-impl<'ast> Sealed for &'ast ast::LifetimeEnv {}
 
 impl<'ast> BaseLifetimeLowerer<'ast> {
     /// Returns a [`Lifetime`] representing a new anonymous lifetime, and

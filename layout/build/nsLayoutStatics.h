@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsLayoutStatics_h_
-#define nsLayoutStatics_h_
+#ifndef nsLayoutStatics_h__
+#define nsLayoutStatics_h__
 
 #include "MainThreadUtils.h"
 #include "nsDebug.h"
@@ -44,13 +46,13 @@ class nsLayoutStatics {
     }
   }
 
-  // not to be called!
-  nsLayoutStatics() = delete;
-
  private:
+  // not to be called!
+  nsLayoutStatics();
+
   static void Shutdown();
 
   static nsrefcnt sLayoutStaticRefcnt;
 };
 
-#endif  // nsLayoutStatics_h_
+#endif  // nsLayoutStatics_h__

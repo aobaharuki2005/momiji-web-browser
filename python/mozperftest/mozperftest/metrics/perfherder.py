@@ -158,12 +158,10 @@ class Perfherder(Layer):
         sequence = int(time.monotonic() * 1000)
         payload = json.dumps(all_perfherder_data, sort_keys=True).encode("utf-8")
         digest = hashlib.sha1(payload).hexdigest()[:8]
-        perfherder_file = f"perfherder-data-{sequence}-{digest}.json"
+        file = f"perfherder-data-{sequence}-{digest}.json"
         if prefix:
-            perfherder_file = f"{prefix}-{perfherder_file}"
-        self.info(
-            f"Writing perfherder results to {os.path.join(output, perfherder_file)}"
-        )
+            file = f"{prefix}-{file}"
+        self.info(f"Writing perfherder results to {os.path.join(output, file)}")
 
         # XXX "suites" key error occurs when using self.info so a print
         # is being done for now.
@@ -175,7 +173,7 @@ class Perfherder(Layer):
         sys.stdout.write("\n")
         sys.stdout.flush()
 
-        metadata.set_output(write_json(all_perfherder_data, output, perfherder_file))
+        metadata.set_output(write_json(all_perfherder_data, output, file))
         return metadata
 
     def _build_blob(

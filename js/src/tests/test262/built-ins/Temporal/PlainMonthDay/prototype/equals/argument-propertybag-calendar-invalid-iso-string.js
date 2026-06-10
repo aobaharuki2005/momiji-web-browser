@@ -4,7 +4,8 @@
 
 /*---
 esid: sec-temporal.plainmonthday.prototype.equals
-description: Invalid ISO string as calendar should throw RangeError
+description: >
+  A string value for calendar in a property bag that is not a valid calendar ID
 features: [Temporal]
 ---*/
 
@@ -12,12 +13,10 @@ const instance = new Temporal.PlainMonthDay(5, 2);
 
 const invalidStrings = [
   ["", "empty string"],
-  ["1997-12-04[u-ca=notacal]", "Unknown calendar"],
-  ["notacal", "Unknown calendar"],
 ];
 
-for (const [cal, description] of invalidStrings) {
-  const arg = { year: 1970, monthCode: "M11", day: 18, calendar: cal };
+for (const [calendar, description] of invalidStrings) {
+  const arg = { year: 2019, monthCode: "M11", day: 1, calendar };
   assert.throws(
     RangeError,
     () => instance.equals(arg),

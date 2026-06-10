@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||!this.Intl.Segmenter)
+
 // Grapheme boundaries are locale independent. Test with various locales to
 // ensure we get the same results.
 const locales = [

@@ -49,7 +49,7 @@ void TRRQuery::Cancel(nsresult aStatus) {
   }
 }
 
-void TRRQuery::MarkSendingTRR(TRR* trr, enum TrrType rectype) {
+void TRRQuery::MarkSendingTRR(TRR* trr, enum TrrType rectype, MutexAutoLock&) {
   if (rectype == TRRTYPE_A) {
     MOZ_ASSERT(!mTrrA);
     mTrrA = trr;
@@ -71,7 +71,7 @@ void TRRQuery::PrepareQuery(enum TrrType aRecType,
 
   {
     MutexAutoLock trrlock(mTrrLock);
-    MarkSendingTRR(trr, aRecType);
+    MarkSendingTRR(trr, aRecType, trrlock);
     aRequestsToSend.AppendElement(trr);
   }
 }

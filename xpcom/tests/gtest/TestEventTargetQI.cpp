@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -27,7 +29,7 @@ bool TestQITo(SourcePtr& aPtr1) {
 
 TEST(TestEventTargetQI, ThreadPool)
 {
-  RefPtr thing = MakeRefPtr<nsThreadPool>();
+  nsCOMPtr<nsIThreadPool> thing = new nsThreadPool();
 
   EXPECT_FALSE(TestQITo<nsISerialEventTarget>(thing));
 
@@ -38,7 +40,7 @@ TEST(TestEventTargetQI, ThreadPool)
 
 TEST(TestEventTargetQI, SharedThreadPool)
 {
-  nsCOMPtr<nsIThreadPool> thing = SharedThreadPool::Get("TestPool", 1);
+  nsCOMPtr<nsIThreadPool> thing = SharedThreadPool::Get("TestPool"_ns, 1);
   EXPECT_TRUE(thing);
 
   EXPECT_FALSE(TestQITo<nsISerialEventTarget>(thing));
@@ -70,7 +72,7 @@ TEST(TestEventTargetQI, ThrottledEventQueue)
 
 TEST(TestEventTargetQI, LazyIdleThread)
 {
-  RefPtr thing = MakeRefPtr<LazyIdleThread>(0, "TestThread");
+  RefPtr<LazyIdleThread> thing = new LazyIdleThread(0, "TestThread");
   EXPECT_TRUE(thing);
 
   EXPECT_TRUE(TestQITo<nsISerialEventTarget>(thing));

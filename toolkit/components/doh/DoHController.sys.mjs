@@ -18,6 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   EnrollmentType: "resource://nimbus/ExperimentAPI.sys.mjs",
   Heuristics: "moz-src:///toolkit/components/doh/DoHHeuristics.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -138,8 +139,8 @@ export const DoHController = {
     await lazy.DoHConfigController.initComplete;
 
     Services.obs.addObserver(this, lazy.DoHConfigController.kConfigUpdateTopic);
-    Services.prefs.addObserver(NETWORK_TRR_MODE_PREF, this);
-    Services.prefs.addObserver(NETWORK_TRR_URI_PREF, this);
+    lazy.Preferences.observe(NETWORK_TRR_MODE_PREF, this);
+    lazy.Preferences.observe(NETWORK_TRR_URI_PREF, this);
 
     if (lazy.DoHConfigController.currentConfig.enabled) {
       // At init time set these heuristics to false if we may run heuristics
@@ -148,7 +149,7 @@ export const DoHController = {
       }
 
       await this.maybeEnableHeuristics();
-    } else if (Services.prefs.getBoolPref(FIRST_RUN_PREF, false)) {
+    } else if (lazy.Preferences.get(FIRST_RUN_PREF, false)) {
       await this.rollback();
     }
 
@@ -161,15 +162,12 @@ export const DoHController = {
       this._asyncShutdownBlocker
     );
 
-    Services.prefs.setBoolPref(FIRST_RUN_PREF, true);
+    lazy.Preferences.set(FIRST_RUN_PREF, true);
   },
 
   // Clears all of the doh-rollout prefs
   async cleanupPrefs() {
-    const branch = Services.prefs.getBranch("doh-rollout.");
-    for (const pref of branch.getChildList("")) {
-      branch.clearUserPref(pref);
-    }
+    lazy.Preferences.resetBranch("doh-rollout.");
   },
 
   // Also used by tests to reset DoHController state (prefs are not cleared
@@ -179,8 +177,8 @@ export const DoHController = {
       this,
       lazy.DoHConfigController.kConfigUpdateTopic
     );
-    Services.prefs.removeObserver(NETWORK_TRR_MODE_PREF, this);
-    Services.prefs.removeObserver(NETWORK_TRR_URI_PREF, this);
+    lazy.Preferences.ignore(NETWORK_TRR_MODE_PREF, this);
+    lazy.Preferences.ignore(NETWORK_TRR_URI_PREF, this);
     lazy.AsyncShutdown.profileBeforeChange.removeBlocker(
       this._asyncShutdownBlocker
     );
@@ -204,7 +202,7 @@ export const DoHController = {
   //    detected this (i.e. DISABLED_PREF is true)
   // 2. If there are any non-DoH enterprise policies active
   async maybeEnableHeuristics() {
-    if (Services.prefs.getBoolPref(DISABLED_PREF, false)) {
+    if (lazy.Preferences.get(DISABLED_PREF)) {
       return;
     }
 
@@ -233,25 +231,25 @@ export const DoHController = {
           );
           break;
       }
-      Services.prefs.setBoolPref(SKIP_HEURISTICS_PREF, true);
+      lazy.Preferences.set(SKIP_HEURISTICS_PREF, true);
       return;
     }
 
-    Services.prefs.clearUserPref(SKIP_HEURISTICS_PREF);
+    lazy.Preferences.reset(SKIP_HEURISTICS_PREF);
 
     if (
-      Services.prefs.prefHasUserValue(NETWORK_TRR_MODE_PREF) ||
-      Services.prefs.prefHasUserValue(NETWORK_TRR_URI_PREF)
+      lazy.Preferences.isSet(NETWORK_TRR_MODE_PREF) ||
+      lazy.Preferences.isSet(NETWORK_TRR_URI_PREF)
     ) {
       await this.setState("manuallyDisabled");
-      Services.prefs.setBoolPref(DISABLED_PREF, true);
+      lazy.Preferences.set(DISABLED_PREF, true);
       return;
     }
 
     await this.runTRRSelection();
     // If we enter this branch it means that no automatic selection was possible.
     // In this case, we try to set a fallback (as defined by DoHConfigController).
-    if (!Services.prefs.prefHasUserValue(ROLLOUT_URI_PREF)) {
+    if (!lazy.Preferences.isSet(ROLLOUT_URI_PREF)) {
       let uri = lazy.DoHConfigController.currentConfig.fallbackProviderURI;
 
       // If part of the treatment branch use the URL from the experiment.
@@ -264,7 +262,7 @@ export const DoHController = {
         console.error(`Error getting dooh.ohttpURI: ${e.message}`);
       }
 
-      Services.prefs.setStringPref(ROLLOUT_URI_PREF, uri || "");
+      lazy.Preferences.set(ROLLOUT_URI_PREF, uri || "");
     }
     this.runHeuristicsThrottled("startup");
     Services.obs.addObserver(this, kLinkStatusChangedTopic);
@@ -458,25 +456,25 @@ export const DoHController = {
   async setState(state) {
     switch (state) {
       case "disabled":
-        Services.prefs.setIntPref(ROLLOUT_MODE_PREF, 0);
+        lazy.Preferences.set(ROLLOUT_MODE_PREF, 0);
         break;
       case "enabled":
-        Services.prefs.setIntPref(ROLLOUT_MODE_PREF, 2);
-        Services.prefs.setBoolPref(BREADCRUMB_PREF, true);
+        lazy.Preferences.set(ROLLOUT_MODE_PREF, 2);
+        lazy.Preferences.set(BREADCRUMB_PREF, true);
         break;
       case "policyDisabled":
       case "manuallyDisabled":
       case "UIDisabled":
-        Services.prefs.clearUserPref(BREADCRUMB_PREF);
+        lazy.Preferences.reset(BREADCRUMB_PREF);
       // Fall through.
       case "rollback":
         this.setHeuristicResult(Ci.nsITRRSkipReason.TRR_UNSET);
-        Services.prefs.clearUserPref(ROLLOUT_MODE_PREF);
+        lazy.Preferences.reset(ROLLOUT_MODE_PREF);
         break;
       case "shutdown":
         this.setHeuristicResult(Ci.nsITRRSkipReason.TRR_UNSET);
-        if (Services.prefs.getBoolPref(CLEAR_ON_SHUTDOWN_PREF, true)) {
-          Services.prefs.clearUserPref(ROLLOUT_MODE_PREF);
+        if (lazy.Preferences.get(CLEAR_ON_SHUTDOWN_PREF, true)) {
+          lazy.Preferences.reset(ROLLOUT_MODE_PREF);
         }
         break;
     }
@@ -485,7 +483,7 @@ export const DoHController = {
       value: "null",
     });
 
-    let modePref = Services.prefs.getIntPref(NETWORK_TRR_MODE_PREF, 0);
+    let modePref = lazy.Preferences.get(NETWORK_TRR_MODE_PREF);
     if (state == "manuallyDisabled") {
       if (
         modePref == Ci.nsIDNSService.MODE_TRRFIRST ||
@@ -495,7 +493,7 @@ export const DoHController = {
           lazy.Heuristics.Telemetry.manuallyEnabled
         );
       } else if (
-        Services.prefs.getStringPref("doh-rollout.doorhanger-decision", "") ==
+        lazy.Preferences.get("doh-rollout.doorhanger-decision", "") ==
         "UIDisabled"
       ) {
         Glean.networking.dohHeuristicsResult.set(
@@ -537,7 +535,7 @@ export const DoHController = {
     // If persisting the selection is disabled, clear the existing
     // selection.
     if (!lazy.DoHConfigController.currentConfig.trrSelection.commitResult) {
-      Services.prefs.clearUserPref(ROLLOUT_URI_PREF);
+      lazy.Preferences.reset(ROLLOUT_URI_PREF);
     }
 
     if (!lazy.DoHConfigController.currentConfig.trrSelection.enabled) {
@@ -545,9 +543,9 @@ export const DoHController = {
     }
 
     if (
-      Services.prefs.prefHasUserValue(ROLLOUT_URI_PREF) &&
-      Services.prefs.getStringPref(ROLLOUT_URI_PREF, "") ==
-        Services.prefs.getStringPref(TRR_SELECT_DRY_RUN_RESULT_PREF, "")
+      lazy.Preferences.isSet(ROLLOUT_URI_PREF) &&
+      lazy.Preferences.get(ROLLOUT_URI_PREF) ==
+        lazy.Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF)
     ) {
       return;
     }
@@ -559,20 +557,17 @@ export const DoHController = {
       return;
     }
 
-    Services.prefs.setStringPref(
+    lazy.Preferences.set(
       ROLLOUT_URI_PREF,
-      Services.prefs.getStringPref(TRR_SELECT_DRY_RUN_RESULT_PREF, "")
+      lazy.Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF)
     );
   },
 
   async runTRRSelectionDryRun() {
-    if (Services.prefs.prefHasUserValue(TRR_SELECT_DRY_RUN_RESULT_PREF)) {
+    if (lazy.Preferences.isSet(TRR_SELECT_DRY_RUN_RESULT_PREF)) {
       // Check whether the existing dry-run-result is in the default
       // list of TRRs. If it is, all good. Else, run the dry run again.
-      let dryRunResult = Services.prefs.getStringPref(
-        TRR_SELECT_DRY_RUN_RESULT_PREF,
-        ""
-      );
+      let dryRunResult = lazy.Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF);
       let dryRunResultIsValid =
         lazy.DoHConfigController.currentConfig.providerList.some(
           trr => trr.uri == dryRunResult
@@ -583,7 +578,7 @@ export const DoHController = {
     }
 
     let setDryRunResultAndRecordTelemetry = trrUri => {
-      Services.prefs.setStringPref(TRR_SELECT_DRY_RUN_RESULT_PREF, trrUri);
+      lazy.Preferences.set(TRR_SELECT_DRY_RUN_RESULT_PREF, trrUri);
       Glean.securityDohTrrPerformance.trrselectDryrunresult.record({
         value: trrUri.substring(0, 40), // Telemetry payload max length
       });
@@ -641,7 +636,7 @@ export const DoHController = {
     switch (pref) {
       case NETWORK_TRR_URI_PREF:
       case NETWORK_TRR_MODE_PREF:
-        Services.prefs.setBoolPref(DISABLED_PREF, true);
+        lazy.Preferences.set(DISABLED_PREF, true);
         await this.disableHeuristics("manuallyDisabled");
         break;
     }

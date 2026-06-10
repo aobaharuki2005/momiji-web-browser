@@ -4,9 +4,6 @@
 const { TelemetryEnvironment } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryEnvironment.sys.mjs"
 );
-const { SearchService } = ChromeUtils.importESModule(
-  "moz-src:///toolkit/components/search/SearchService.sys.mjs"
-);
 const { SearchTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SearchTestUtils.sys.mjs"
 );
@@ -148,9 +145,9 @@ async function checkDefaultSearch(privateOn, reInitSearchService) {
 
   // Initialize the search service.
   if (reInitSearchService) {
-    SearchService.reset();
+    Services.search.wrappedJSObject.reset();
   }
-  await SearchService.init();
+  await Services.search.init();
   await promiseNextTick();
 
   // Our default engine from the JAR file has an identifier. Check if it is correctly
@@ -212,19 +209,22 @@ async function checkDefaultSearch(privateOn, reInitSearchService) {
     // As we had no default and no search engines, the normal mode engine will
     // assume the same as the added engine. To ensure the telemetry is different
     // we enforce a different default here.
-    const engine = await SearchService.getEngineByName(
+    const engine = await Services.search.getEngineByName(
       "telemetrySearchIdentifier"
     );
     engine.hidden = false;
-    await SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
-    await SearchService.setDefaultPrivate(
-      SearchService.getEngineByName(SEARCH_ENGINE_ID),
-      SearchService.CHANGE_REASON.UNKNOWN
+    await Services.search.setDefault(
+      engine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
+    await Services.search.setDefaultPrivate(
+      Services.search.getEngineByName(SEARCH_ENGINE_ID),
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
   } else {
-    await SearchService.setDefault(
-      SearchService.getEngineByName(SEARCH_ENGINE_ID),
-      SearchService.CHANGE_REASON.UNKNOWN
+    await Services.search.setDefault(
+      Services.search.getEngineByName(SEARCH_ENGINE_ID),
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
   }
   await deferred.promise;
@@ -290,9 +290,9 @@ add_task(async function test_defaultSearchEngine() {
   const SEARCH_ENGINE_ID = "telemetry_default";
   const EXPECTED_SEARCH_ENGINE = "other-" + SEARCH_ENGINE_ID;
   // Work around bug 1165341: Intentionally set the default engine.
-  await SearchService.setDefault(
-    SearchService.getEngineByName(SEARCH_ENGINE_ID),
-    SearchService.CHANGE_REASON.UNKNOWN
+  await Services.search.setDefault(
+    Services.search.getEngineByName(SEARCH_ENGINE_ID),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   // Double-check the default for the next part of the test.
@@ -344,8 +344,11 @@ add_task(async function test_defaultSearchEngine_paramsChanged() {
       resolve
     );
   });
-  let engine = SearchService.getEngineByName("TestEngine");
-  await SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
+  let engine = Services.search.getEngineByName("TestEngine");
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   await promise;
 
   let data = TelemetryEnvironment.currentEnvironment;

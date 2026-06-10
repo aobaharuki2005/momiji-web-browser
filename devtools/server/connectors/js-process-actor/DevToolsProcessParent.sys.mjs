@@ -301,7 +301,7 @@ export class DevToolsProcessParent extends JSProcessActorParent {
    *   none of them use any returned value (except a promise to know when their processing is done).
    */
   async sendQuery(msg, args) {
-    // If any previous query timed out and did not reply yet, the process is considered frozen
+    // If any preview query timed out and did not reply yet, the process is considered frozen
     // and are no longer waiting for the process response.
     if (this.#frozen) {
       this.sendAsyncMessage(msg, args);
@@ -312,63 +312,49 @@ export class DevToolsProcessParent extends JSProcessActorParent {
     // a `AssertReturnTypeMatchesJitinfo` assertion crash into GenericGetter .
     const { osPid } = this.manager;
 
-    const { resolve, reject, promise } = Promise.withResolvers();
-
-    // The process may be slow to resolve the query, or even be completely frozen.
-    // Use a timeout to detect when it happens.
-    const timeout = setTimeout(() => {
-      this.#frozen = true;
-      console.error(
-        `Content process ${osPid} isn't responsive while sending "${msg}" request. DevTools will ignore this process for now.`
-      );
-      // Do not consider timeout as an error as it may easily break the frontend.
-      resolve();
-    }, 1000);
-
-    // Use a inlined async function in order to be able to retrieve the async stack correctly
-    // when querying `new Error().stack` after the async step.
-    (async () => {
-      let response, error;
-      try {
-        response = await super.sendQuery(msg, args);
-      } catch (e) {
-        error = e;
-      }
-
-      // Ignore frozen processes when the JS Process Actor is destroyed.
-      // Either the process was shut down or DevTools unregistered the Actor.
-      if (this.#frozen && !this.#destroyed) {
+    return new Promise((resolve, reject) => {
+      // The process may be slow to resolve the query, or even be completely frozen.
+      // Use a timeout to detect when it happens.
+      const timeout = setTimeout(() => {
+        this.#frozen = true;
         console.error(
-          `Content process ${osPid} is responsive again. DevTools resumes operations against it.`
+          `Content process ${osPid} isn't responsive while sending "${msg}" request. DevTools will ignore this process for now.`
         );
-      }
-
-      clearTimeout(timeout);
-      // If any of the ongoing query resolved, consider the process as responsive again
-      this.#frozen = false;
-
-      if (error) {
-        console.error("Failed to sendQuery in DevToolsProcessParent", msg);
-        console.error(error.toString());
-        reject(error);
-      } else if (response?.error) {
-        // DevToolsProcessChild intercepts all exceptions and translate them into a non-throwing
-        // query response with information about the content process stack trace.
-        //
-        // Re-throw a specific exception object to convey the stacktraces up to the frontend and the AppErrorBoundary.
-        // (protocol.js Actor layer will intercept this error object and pass it up to the client)
-        reject({
-          name: response.error,
-          message: response.message,
-          stack: new Error().stack,
-          contentProcessStack: response.stack,
-        });
-      } else {
+        // Do not consider timeout as an error as it may easily break the frontend.
         resolve();
-      }
-    })();
+      }, 1000);
 
-    return promise;
+      super.sendQuery(msg, args).then(
+        () => {
+          if (this.#frozen && !this.#destroyed) {
+            console.error(
+              `Content process ${osPid} is responsive again. DevTools resumes operations against it.`
+            );
+          }
+          clearTimeout(timeout);
+          // If any of the ongoing query resolved, consider the process as responsive again
+          this.#frozen = false;
+
+          resolve();
+        },
+        async e => {
+          // Ignore frozen processes when the JS Process Actor is destroyed.
+          // Either the process was shut down or DevTools unregistered the Actor.
+          if (this.#frozen && !this.#destroyed) {
+            console.error(
+              `Content process ${osPid} is responsive again. DevTools resumes operations against it.`
+            );
+          }
+          clearTimeout(timeout);
+          // If any of the ongoing query resolved, consider the process as responsive again
+          this.#frozen = false;
+
+          console.error("Failed to sendQuery in DevToolsProcessParent", msg);
+          console.error(e.toString());
+          reject(e);
+        }
+      );
+    });
   }
 
   /**

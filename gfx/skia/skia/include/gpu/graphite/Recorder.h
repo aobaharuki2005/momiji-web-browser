@@ -11,7 +11,6 @@
 #include "include/core/SkCPURecorder.h"
 #include "include/core/SkRecorder.h"
 #include "include/core/SkRefCnt.h"
-#include "include/core/SkSurface.h"
 #include "include/gpu/graphite/GraphiteTypes.h"
 #include "include/gpu/graphite/Recording.h"
 #include "include/private/base/SingleOwner.h"
@@ -55,8 +54,6 @@ class Device;
 class DrawBufferManager;
 class FloatStorageManager;
 class ImageProvider;
-class PaintParamsKeyBuilder;
-class PipelineDataGatherer;
 class ProxyReadCountMap;
 class RecorderPriv;
 class ResourceProvider;
@@ -68,8 +65,6 @@ class UploadBufferManager;
 class UploadList;
 
 struct RecorderOptionsPriv;
-
-using KeyAndDataBuilder = std::pair<PipelineDataGatherer, PaintParamsKeyBuilder>;
 
 struct SK_API RecorderOptions final {
     RecorderOptions();
@@ -210,12 +205,9 @@ public:
     /**
      * Purge GPU resources on the Recorder that haven't been used in the past 'msNotUsed'
      * milliseconds or are otherwise marked for deletion, regardless of whether the context is under
-     * budget. Optionally provide a `microsMaxPurgingDur` after which Skia should stop purging
-     * resources.
+     * budget.
      */
-    void performDeferredCleanup(
-            std::chrono::milliseconds msNotUsed,
-            std::optional<std::chrono::microseconds> microsMaxPurgingDur = std::nullopt);
+    void performDeferredCleanup(std::chrono::milliseconds msNotUsed);
 
     /**
      * Returns the number of bytes of the Recorder's gpu memory cache budget that are currently in
@@ -250,8 +242,6 @@ public:
     const RecorderPriv priv() const;  // NOLINT(readability-const-return-type)
 
 private:
-    static constexpr int kMaxKeyAndDataBuilders = 2;
-
     friend class Context; // For ctor
     friend class Device; // For registering and deregistering Devices;
     friend class RecorderPriv; // for ctor and hidden methods
@@ -284,7 +274,6 @@ private:
     void deregisterDevice(const Device*);
 
     SkCanvas* makeCaptureCanvas(SkCanvas*) override;
-    void createCaptureBreakpoint(SkSurface*) override;
 
     sk_sp<SharedContext> fSharedContext;
     ResourceProvider* fResourceProvider; // May point to the Context's resource provider
@@ -294,16 +283,13 @@ private:
 
     // NOTE: These are stored by pointer to allow them to be forward declared.
     std::unique_ptr<TaskList> fRootTaskList;
-    // Aggregated one-time uploads that precede all tasks in the root task list.
+    // Aggregated one-time uploads that preceed all tasks in the root task list.
     std::unique_ptr<UploadList> fRootUploads;
 
     std::unique_ptr<DrawBufferManager> fDrawBufferManager;
     std::unique_ptr<UploadBufferManager> fUploadBufferManager;
     sk_sp<FloatStorageManager> fFloatStorageManager;
     std::unique_ptr<ProxyReadCountMap> fProxyReadCounts;
-
-    skia_private::STArray<kMaxKeyAndDataBuilders, std::unique_ptr<KeyAndDataBuilder>>
-        fKeyAndDataBuilders;
 
     // Iterating over tracked devices in flushTrackedDevices() needs to be re-entrant and support
     // additions to fTrackedDevices if registerDevice() is triggered by a temporary device during
@@ -332,9 +318,6 @@ private:
     std::unique_ptr<Recording::LazyProxyData> fTargetProxyData;
 
     skia_private::TArray<sk_sp<RefCntedCallback>> fFinishedProcs;
-
-    // Tracks the flushing state to ensure recursive flushing does not occur.
-    SkDEBUGCODE(bool fIsFlushingTrackedDevices = false;)
 
 #if defined(GPU_TEST_UTILS)
     // For testing use only -- the Context used to create this Recorder

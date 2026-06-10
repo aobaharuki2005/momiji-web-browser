@@ -6,10 +6,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {exec} from 'node:child_process';
-import {readdirSync} from 'node:fs';
-import path from 'node:path';
-import {promisify} from 'node:util';
+import {exec} from 'child_process';
+import {readdirSync} from 'fs';
+import path from 'path';
+import url from 'url';
+import {promisify} from 'util';
 
 const execAsync = promisify(exec);
 
@@ -21,7 +22,8 @@ try {
   process.exit(0);
 }
 
-const puppeteerRoot = path.join(import.meta.dirname, '../');
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+const puppeteerRoot = path.join(__dirname, '../');
 
 const {stdout} = await execAsync('git rev-parse --show-toplevel');
 const gitTopLevel = stdout.replaceAll('\n', '').trim();

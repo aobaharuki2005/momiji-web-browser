@@ -17,9 +17,12 @@ sslcrt
    .. rubric:: Certificate Functions
       :name: Certificate_Functions
 
+   --------------
 
-`Chapter 5 <#chapter_5_certificate_functions>`__ Certificate Functions
+.. _chapter_5_certificate_functions:
 
+`Chapter 5
+ <#chapter_5_certificate_functions>`__ Certificate Functions
 ------------------------------------------------------------
 
 .. container::
@@ -32,6 +35,7 @@ sslcrt
    | `Getting Certificate Information <#1056475>`__
    | `Comparing SecItem Objects <#1055384>`__
 
+.. _validating_certificates:
 
 `Validating Certificates <#validating_certificates>`__
 ------------------------------------------------------
@@ -44,11 +48,13 @@ sslcrt
    | ```NSS_CmpCertChainWCANames`` <#1056760>`__
 
    .. rubric:: CERT_VerifyCertNow
+      :name: cert_verifycertnow
 
    Checks that the current date is within the certificate's validity period and that the CA
    signature on the certificate is valid.
 
    .. rubric:: Syntax
+      :name: syntax
 
    .. code::
 
@@ -64,25 +70,26 @@ sslcrt
          void *wincx);
 
    .. rubric:: Parameters
+      :name: parameters
 
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to the certificate database handle.   |
+   | .. code::                           | A pointer to the certificate database handle.   |
    |                                                 |                                                 |
    |    handle                                       |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to the certificate to be checked.     |
+   | .. code::                           | A pointer to the certificate to be checked.     |
    |                                                 |                                                 |
    |    cert                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | Indicates whether certificate signatures are to |
+   | .. code::                           | Indicates whether certificate signatures are to |
    |                                                 | be checked. ``PR_TRUE`` means certificate       |
    |    checkSig                                     | signatures are to be checked. ``PR_FALSE``      |
    |                                                 | means certificate signatures will not be        |
    |                                                 | checked.                                        |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | One of these values:                            |
+   | .. code::                           | One of these values:                            |
    |                                                 |                                                 |
    |    certUsage                                    | -  ``certUsageSSLClient``                       |
    |                                                 | -  ``certUsageSSLServer``                       |
@@ -95,12 +102,13 @@ sslcrt
    |                                                 | -  ``certUsageVerifyCA``                        |
    |                                                 | -  ``certUsageProtectedObjectSigner``           |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | The PIN argument value to pass to PK11          |
+   | .. code::                           | The PIN argument value to pass to PK11          |
    |                                                 | functions. See description below for more       |
    |    wincx                                        | information.                                    |
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns
 
    The function returns one of these values:
 
@@ -110,6 +118,7 @@ sslcrt
       code.
 
    .. rubric:: Description
+      :name: description
 
    The ``CERT_VerifyCertNow`` function must call one or more PK11 functions to obtain the services
    of a PKCS #11 module. Some of the PK11 functions require a PIN argument (see
@@ -118,10 +127,12 @@ sslcrt
    :ref:`mozilla_projects_nss_ssl_functions_sslfnc#1123385`.
 
    .. rubric:: CERT_VerifyCertName
+      :name: cert_verifycertname
 
    Compares the common name specified in the subject DN for a certificate with a specified hostname.
 
    .. rubric:: Syntax
+      :name: syntax_2
 
    .. code::
 
@@ -134,20 +145,22 @@ sslcrt
          char *hostname);
 
    .. rubric:: Parameters
+      :name: parameters_2
 
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to the certificate against which to   |
+   | .. code::                           | A pointer to the certificate against which to   |
    |                                                 | check the hostname referenced by ``hostname``.  |
    |    cert                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | The hostname to be checked.                     |
+   | .. code::                           | The hostname to be checked.                     |
    |                                                 |                                                 |
    |    hostname                                     |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_2
 
    The function returns one of these values:
 
@@ -159,6 +172,7 @@ sslcrt
       code.
 
    .. rubric:: Description
+      :name: description_2
 
    The comparison performed by CERT_VerifyCertName is not a simple string comparison. Instead, it
    takes account of the following rules governing the construction of common names in SSL server
@@ -178,10 +192,12 @@ sslcrt
       shell expressions as well.
 
    .. rubric:: CERT_CheckCertValidTimes
+      :name: cert_checkcertvalidtimes
 
    Checks whether a specified time is within a certificate's validity period.
 
    .. rubric:: Syntax
+      :name: syntax_3
 
    .. code::
 
@@ -195,20 +211,22 @@ sslcrt
          int64 t);
 
    .. rubric:: Parameters
+      :name: parameters_3
 
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to the certificate whose validity     |
+   | .. code::                           | A pointer to the certificate whose validity     |
    |                                                 | period you want to check against.               |
    |    cert                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | The time to check against the certificate's     |
+   | .. code::                           | The time to check against the certificate's     |
    |                                                 | validity period. For more information, see the  |
    |    t                                            | NSPR header ``pr_time.h``.                      |
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_3
 
    The function returns an enumerator of type ``SECCertTimeValidity``:
 
@@ -221,11 +239,13 @@ sslcrt
       } SECCertTimeValidity;
 
    .. rubric:: NSS_CmpCertChainWCANames
+      :name: nss_cmpcertchainwcanames
 
    Determines whether any of the signers in the certificate chain for a specified certificate are on
    a specified list of CA names.
 
    .. rubric:: Syntax
+      :name: syntax_4
 
    .. code::
 
@@ -238,21 +258,23 @@ sslcrt
          CERTDistNames *caNames);
 
    .. rubric:: Parameters
+      :name: parameters_4
 
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to the certificate structure for the  |
+   | .. code::                           | A pointer to the certificate structure for the  |
    |                                                 | certificate whose certificate chain is to be    |
    |    cert                                         | checked.                                        |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to a structure that contains a list   |
+   | .. code::                           | A pointer to a structure that contains a list   |
    |                                                 | of distinguished names (DNs) against which to   |
    |    caNames                                      | check the DNs for the signers in the            |
    |                                                 | certificate chain.                              |
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_4
 
    The function returns one of these values:
 
@@ -261,6 +283,7 @@ sslcrt
       ```PR_GetError`` <../../../../../nspr/reference/html/prerr.html#26127>`__ to obtain the error
       code.
 
+.. _manipulating_certificates:
 
 `Manipulating Certificates <#manipulating_certificates>`__
 ----------------------------------------------------------
@@ -271,10 +294,12 @@ sslcrt
    | ```CERT_DestroyCertificate`` <#1050532>`__
 
    .. rubric:: CERT_DupCertificate
+      :name: cert_dupcertificate
 
    Makes a shallow copy of a specified certificate.
 
    .. rubric:: Syntax
+      :name: syntax_5
 
    .. code::
 
@@ -285,30 +310,35 @@ sslcrt
       CERTCertificate *CERT_DupCertificate(CERTCertificate *c)
 
    .. rubric:: Parameter
+      :name: parameter
 
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to the certificate object to be       |
+   | .. code::                           | A pointer to the certificate object to be       |
    |                                                 | duplicated.                                     |
    |    c                                            |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_5
 
    If successful, the function returns a pointer to a certificate object of type
    ```CERTCertificate`` <ssltyp.html#1027387>`__.
 
    .. rubric:: Description
+      :name: description_3
 
    The ``CERT_DupCertificate`` function increments the reference count for the certificate passed in
    the ``c`` parameter.
 
    .. rubric:: CERT_DestroyCertificate
+      :name: cert_destroycertificate
 
    Destroys a certificate object.
 
    .. rubric:: Syntax
+      :name: syntax_6
 
    .. code::
 
@@ -320,16 +350,18 @@ sslcrt
       void CERT_DestroyCertificate(CERTCertificate *cert);
 
    .. rubric:: Parameters
+      :name: parameters_5
 
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to the certificate to destroy.        |
+   | .. code::                           | A pointer to the certificate to destroy.        |
    |                                                 |                                                 |
    |    cert                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Description
+      :name: description_4
 
    Certificate and key structures are shared objects. When an application makes a copy of a
    particular certificate or key structure that already exists in memory, SSL makes a *shallow*
@@ -343,6 +375,7 @@ sslcrt
    Never alter the contents of a certificate or key structure. If you attempt to do so, the change
    affects all the shallow copies of that structure and can cause severe problems.
 
+.. _getting_certificate_information:
 
 `Getting Certificate Information <#getting_certificate_information>`__
 ----------------------------------------------------------------------
@@ -356,10 +389,12 @@ sslcrt
    | ```NSS_FindCertKEAType`` <#1056950>`__
 
    .. rubric:: CERT_FindCertByName
+      :name: cert_findcertbyname
 
    Finds the certificate in the certificate database with a specified DN.
 
    .. rubric:: Syntax
+      :name: syntax_7
 
    .. code::
 
@@ -372,29 +407,33 @@ sslcrt
          SECItem *name);
 
    .. rubric:: Parameters
+      :name: parameters_6
 
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to the certificate database handle.   |
+   | .. code::                           | A pointer to the certificate database handle.   |
    |                                                 |                                                 |
    |    handle                                       |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | The subject DN of the certificate you wish to   |
+   | .. code::                           | The subject DN of the certificate you wish to   |
    |                                                 | find.                                           |
    |    name                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_6
 
    If successful, the function returns a certificate object of type
    ```CERTCertificate`` <ssltyp.html#1027387>`__.
 
    .. rubric:: CERT_GetCertNicknames
+      :name: cert_getcertnicknames
 
    Returns the nicknames of the certificates in a specified certificate database.
 
    .. rubric:: Syntax
+      :name: syntax_8
 
    .. code::
 
@@ -409,31 +448,34 @@ sslcrt
          void *wincx);
 
    .. rubric:: Parameters
+      :name: parameters_7
 
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to the certificate database handle.   |
+   | .. code::                           | A pointer to the certificate database handle.   |
    |                                                 |                                                 |
    |    handle                                       |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | One of these values:                            |
+   | .. code::                           | One of these values:                            |
    |                                                 |                                                 |
    |    what                                         | -  ``SEC_CERT_NICKNAMES_ALL``                   |
    |                                                 | -  ``SEC_CERT_NICKNAMES_USER``                  |
    |                                                 | -  ``SEC_CERT_NICKNAMES_SERVER``                |
    |                                                 | -  ``SEC_CERT_NICKNAMES_CA``                    |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | The PIN argument value to pass to PK11          |
+   | .. code::                           | The PIN argument value to pass to PK11          |
    |                                                 | functions. See description below for more       |
    |    wincx                                        | information.                                    |
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_7
 
    The function returns a ``CERTCertNicknames`` object containing the requested nicknames.
 
    .. rubric:: Description
+      :name: description_5
 
    ``CERT_GetCertNicknames`` must call one or more PK11 functions to obtain the services of a PKCS
    #11 module. Some of the PK11 functions require a PIN argument (see
@@ -442,11 +484,13 @@ sslcrt
    :ref:`mozilla_projects_nss_ssl_functions_sslfnc#1123385`.
 
    .. rubric:: CERT_FreeNicknames
+      :name: cert_freenicknames
 
    Frees a ``CERTCertNicknames`` structure. This structure is returned by
    ```CERT_GetCertNicknames`` <#1050346>`__.
 
    .. rubric:: Syntax
+      :name: syntax_9
 
    .. code::
 
@@ -457,20 +501,23 @@ sslcrt
       void CERT_FreeNicknames(CERTCertNicknames *nicknames);
 
    .. rubric:: Parameters
+      :name: parameters_8
 
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to the ``CERTCertNicknames``          |
+   | .. code::                           | A pointer to the ``CERTCertNicknames``          |
    |                                                 | structure to be freed.                          |
    |    nicknames                                    |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: CERT_GetDefaultCertDB
+      :name: cert_getdefaultcertdb
 
    Returns a handle to the default certificate database.
 
    .. rubric:: Syntax
+      :name: syntax_10
 
    .. code::
 
@@ -481,19 +528,23 @@ sslcrt
       CERTCertDBHandle *CERT_GetDefaultCertDB(void);
 
    .. rubric:: Returns
+      :name: returns_8
 
    The function returns the ```CERTCertDBHandle`` <ssltyp.html#1028465>`__ for the default
    certificate database.
 
    .. rubric:: Description
+      :name: description_6
 
    This function is useful for determining whether the default certificate database has been opened.
 
    .. rubric:: NSS_FindCertKEAType
+      :name: nss_findcertkeatype
 
    Returns key exchange type of the keys in an SSL server certificate.
 
    .. rubric:: Syntax
+      :name: syntax_11
 
    .. code::
 
@@ -504,16 +555,18 @@ sslcrt
       SSLKEAType NSS_FindCertKEAType(CERTCertificate * cert);
 
    .. rubric:: Parameter
+      :name: parameter_2
 
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | The certificate to check.                       |
+   | .. code::                           | The certificate to check.                       |
    |                                                 |                                                 |
    |    a                                            |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_9
 
    The function returns one of these values:
 
@@ -523,6 +576,7 @@ sslcrt
    -  ``kt_fortezza``
    -  ``kt_kea_size``
 
+.. _comparing_secitem_objects:
 
 `Comparing SecItem Objects <#comparing_secitem_objects>`__
 ----------------------------------------------------------
@@ -530,11 +584,13 @@ sslcrt
 .. container::
 
    .. rubric:: SECITEM_CompareItem
+      :name: secitem_compareitem
 
    Compares two ```SECItem`` <ssltyp.html#1026076>`__ objects and returns a ``SECComparison``
    enumerator that shows the difference between them.
 
    .. rubric:: Syntax
+      :name: syntax_12
 
    .. code::
 
@@ -548,20 +604,22 @@ sslcrt
          SECItem *b);
 
    .. rubric:: Parameters
+      :name: parameters_9
 
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to one of the items to be compared.   |
+   | .. code::                           | A pointer to one of the items to be compared.   |
    |                                                 |                                                 |
    |    a                                            |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code::                                       | A pointer to one of the items to be compared.   |
+   | .. code::                           | A pointer to one of the items to be compared.   |
    |                                                 |                                                 |
    |    b                                            |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
 
    .. rubric:: Returns
+      :name: returns_10
 
    The function returns an enumerator of type ``SECComparison``.
 

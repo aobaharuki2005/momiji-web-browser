@@ -5,7 +5,8 @@
 #include "mozilla/Maybe.h"  // mozilla::Maybe
 #include "mozilla/Utf8.h"  // mozilla::IsTrailingUnit, mozilla::Utf8Unit, mozilla::DecodeOneUtf8CodePoint
 
-#include <stdint.h>  // uint16_t
+#include <inttypes.h>  // UINT8_MAX
+#include <stdint.h>    // uint16_t
 
 #include "js/Exception.h"   // JS_IsExceptionPending, JS_ClearPendingException
 #include "js/RootingAPI.h"  // JS::Rooted, JS::MutableHandle

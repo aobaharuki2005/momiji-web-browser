@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -131,9 +133,9 @@ already_AddRefed<JSActor> JSActorManager::GetExistingActor(
     }                                      \
   } while (0)
 
-void JSActorManager::ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
-                                       JSIPCValue&& aData,
-                                       ipc::StructuredCloneData* aStack) {
+void JSActorManager::ReceiveRawMessage(
+    const JSActorMessageMeta& aMetadata, JSIPCValue&& aData,
+    UniquePtr<ipc::StructuredCloneData> aStack) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 
   CrashReporter::AutoRecordAnnotation autoActorName(
@@ -162,6 +164,7 @@ void JSActorManager::ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
       aStack->Read(cx, &stackVal, error);
       if (error.Failed()) {
         error.SuppressException();
+        JS_ClearPendingException(cx);
         stackVal.setUndefined();
       }
     }

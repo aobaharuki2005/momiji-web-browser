@@ -253,16 +253,12 @@ void MediaControlService::GenerateTestMediaControlKey(MediaControlKey aKey,
   switch (aKey) {
     case MediaControlKey::Seekto:
       mMediaKeysHandler->OnActionPerformed(MediaControlAction(
-          aKey, MediaControlActionParams(aSeekValue, false /* fast seek */)));
+          aKey, SeekDetails(aSeekValue, false /* fast seek */)));
       break;
     case MediaControlKey::Seekbackward:
     case MediaControlKey::Seekforward:
       mMediaKeysHandler->OnActionPerformed(
-          MediaControlAction(aKey, MediaControlActionParams(aSeekValue)));
-      break;
-    case MediaControlKey::Setvolume:
-      mMediaKeysHandler->OnActionPerformed(MediaControlAction(
-          aKey, MediaControlActionParams::FromVolume(aSeekValue)));
+          MediaControlAction(aKey, SeekDetails(aSeekValue)));
       break;
     default:
       mMediaKeysHandler->OnActionPerformed(MediaControlAction(aKey));
@@ -274,10 +270,8 @@ MediaMetadataBase MediaControlService::GetMainControllerMediaMetadata() const {
   if (!StaticPrefs::media_mediacontrol_testingevents_enabled()) {
     return metadata;
   }
-  if (auto* controller = GetMainController()) {
-    return controller->GetCurrentMediaMetadata();
-  }
-  return metadata;
+  return GetMainController() ? GetMainController()->GetCurrentMediaMetadata()
+                             : metadata;
 }
 
 MediaSessionPlaybackState MediaControlService::GetMainControllerPlaybackState()

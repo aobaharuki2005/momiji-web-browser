@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,9 +28,8 @@ class MIDIPortChild final : public PMIDIPortChild, public MIDIPortInterface {
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvUpdateStatus(
-      const MIDIPortDeviceState& aDeviceState,
-      const MIDIPortConnectionState& aConnectionState);
+  mozilla::ipc::IPCResult RecvUpdateStatus(const uint32_t& aDeviceState,
+                                           const uint32_t& aConnectionState);
 
   MIDIPortChild(const MIDIPortInfo& aPortInfo, bool aSysexEnabled,
                 MIDIPort* aPort);

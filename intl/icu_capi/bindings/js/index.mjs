@@ -4,10 +4,6 @@ export { TitlecaseOptions } from "./TitlecaseOptions.mjs"
 
 export { CollatorOptions } from "./CollatorOptions.mjs"
 
-export { DateFields } from "./DateFields.mjs"
-
-export { DateFromFieldsOptions } from "./DateFromFieldsOptions.mjs"
-
 export { IsoWeekOfYear } from "./IsoWeekOfYear.mjs"
 
 export { DisplayNamesOptions } from "./DisplayNamesOptions.mjs"
@@ -118,6 +114,10 @@ export { LocaleDirectionality } from "./LocaleDirectionality.mjs"
 
 export { Logger } from "./Logger.mjs"
 
+export { MeasureUnit } from "./MeasureUnit.mjs"
+
+export { MeasureUnitParser } from "./MeasureUnitParser.mjs"
+
 export { ComposingNormalizer } from "./ComposingNormalizer.mjs"
 
 export { DecomposingNormalizer } from "./DecomposingNormalizer.mjs"
@@ -196,6 +196,10 @@ export { TimeZoneInfo } from "./TimeZoneInfo.mjs"
 
 export { TimeZoneFormatter } from "./TimeZoneFormatter.mjs"
 
+export { UnitsConverter } from "./UnitsConverter.mjs"
+
+export { UnitsConverterFactory } from "./UnitsConverterFactory.mjs"
+
 export { UtcOffset } from "./UtcOffset.mjs"
 
 export { VariantOffsetsCalculator } from "./VariantOffsetsCalculator.mjs"
@@ -236,10 +240,6 @@ export { CollatorNumericOrdering } from "./CollatorNumericOrdering.mjs"
 
 export { CollatorStrength } from "./CollatorStrength.mjs"
 
-export { DateMissingFieldsStrategy } from "./DateMissingFieldsStrategy.mjs"
-
-export { DateOverflow } from "./DateOverflow.mjs"
-
 export { Weekday } from "./Weekday.mjs"
 
 export { DateTimeAlignment } from "./DateTimeAlignment.mjs"
@@ -257,8 +257,6 @@ export { DisplayNamesFallback } from "./DisplayNamesFallback.mjs"
 export { DisplayNamesStyle } from "./DisplayNamesStyle.mjs"
 
 export { LanguageDisplay } from "./LanguageDisplay.mjs"
-
-export { CalendarDateFromFieldsError } from "./CalendarDateFromFieldsError.mjs"
 
 export { CalendarError } from "./CalendarError.mjs"
 

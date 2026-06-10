@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.concept.sync.UserData
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncEngine
@@ -40,6 +41,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.clearInvocations
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.Shadows.shadowOf
@@ -161,7 +163,9 @@ class FxaWebChannelFeatureTest {
         val controller: BuiltInWebExtensionController = mock()
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab", engineSession = engineSession)
-        val store = BrowserStore(initialState = BrowserState(tabs = listOf(tab), selectedTabId = tab.id))
+        val store = spy(
+            BrowserStore(initialState = BrowserState(tabs = listOf(tab), selectedTabId = tab.id)),
+        )
 
         val webchannelFeature = FxaWebChannelFeature(null, engine, store, accountManager, serverConfig)
         webchannelFeature.extensionController = controller
@@ -341,9 +345,7 @@ class FxaWebChannelFeatureTest {
 
         val account: OAuthAccount = mock()
         val profile = Profile(uid = "testUID", email = "test@example.com", avatar = null, displayName = null)
-        whenever(account.getSignedInUserForWebChannel()).thenReturn(
-            """{"sessionToken":"testToken","email":"test@example.com","uid":"testUID","verified":true}""",
-        )
+        whenever(account.getSessionToken()).thenReturn("testToken")
         whenever(accountManager.accountProfile()).thenReturn(profile)
         whenever(accountManager.authenticatedAccount()).thenReturn(account)
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
@@ -399,9 +401,7 @@ class FxaWebChannelFeatureTest {
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
 
         val account: OAuthAccount = mock()
-        whenever(account.getSignedInUserForWebChannel()).thenReturn(
-            """{"sessionToken":"testToken","email":null,"uid":null,"verified":true}""",
-        )
+        whenever(account.getSessionToken()).thenReturn("testToken")
         whenever(accountManager.accountProfile()).thenReturn(null)
         whenever(accountManager.authenticatedAccount()).thenReturn(account)
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
@@ -1015,15 +1015,15 @@ class FxaWebChannelFeatureTest {
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         messageHandler.onPortMessage(jsonToWebChannel, port)
 
+        val expectedUserData = UserData(
+            sessionToken = sessionToken,
+            email = email,
+            uid = uid,
+            verified = verified,
+        )
         shadowOf(getMainLooper()).idle()
 
-        val loginDataCaptor = argumentCaptor<String>()
-        verify(accountManager).handleWebChannelLogin(loginDataCaptor.capture())
-        val loginData = JSONObject(loginDataCaptor.value)
-        assertEquals(sessionToken, loginData.getString("sessionToken"))
-        assertEquals(email, loginData.getString("email"))
-        assertEquals(uid, loginData.getString("uid"))
-        assertEquals(verified, loginData.getBoolean("verified"))
+        verify(accountManager).setUserData(expectedUserData)
     }
 
     private fun jsonLogin(sessionToken: String, email: String, uid: String, verified: Boolean): JSONObject {
@@ -1070,6 +1070,6 @@ class FxaWebChannelFeatureTest {
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         whenever(serverConfig.server).thenReturn(FxaServer.Custom("https://foo.bar"))
 
-        return FxaWebChannelFeature(null, mock(), store, accountManager, serverConfig, fxaCapabilities)
+        return spy(FxaWebChannelFeature(null, mock(), store, accountManager, serverConfig, fxaCapabilities))
     }
 }

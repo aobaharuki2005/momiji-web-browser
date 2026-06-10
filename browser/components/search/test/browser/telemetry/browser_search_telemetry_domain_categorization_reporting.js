@@ -60,14 +60,9 @@ const TEST_PROVIDER_INFO = [
         default: true,
       },
     ],
-    impressionAttributes: [
-      {
-        key: "is_shopping_page",
-        url: {
-          regexp: "&page=shop",
-        },
-      },
-    ],
+    shoppingTab: {
+      regexp: "&page=shop",
+    },
   },
 ];
 

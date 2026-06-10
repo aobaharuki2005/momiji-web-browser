@@ -229,10 +229,6 @@ class TLSKeyUpdateDamager : public TlsRecordFilter {
       return KEEP;
     }
 
-    if (plaintext.data() == NULL || plaintext.len() == 0) {
-      return KEEP;
-    }
-
     if (inner_content_type != ssl_ct_handshake) {
       return KEEP;
     }

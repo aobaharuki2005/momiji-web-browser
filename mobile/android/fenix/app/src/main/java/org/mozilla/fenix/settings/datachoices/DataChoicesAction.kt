@@ -15,7 +15,6 @@ internal sealed class ChoiceAction : DataChoicesAction {
     data object TelemetryClicked : ChoiceAction()
     data object UsagePingClicked : ChoiceAction()
     data object StudiesClicked : ChoiceAction()
-    data object ScrolledToItem : ChoiceAction()
     data object MeasurementDataClicked : ChoiceAction()
     data class ReportOptionClicked(val reportOption: CrashReportOption) : DataChoicesAction
 }

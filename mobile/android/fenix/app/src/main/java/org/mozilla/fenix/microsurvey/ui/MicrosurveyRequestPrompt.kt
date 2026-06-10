@@ -35,11 +35,12 @@ import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.button.IconButton
 import mozilla.components.support.utils.KeyboardState
 import mozilla.components.support.utils.keyboardAsState
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.microsurvey.ui.ext.MicrosurveyUIData
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 private const val TABLET_WIDTH_FRACTION = 0.5f
@@ -49,12 +50,14 @@ private const val NON_TABLET_WIDTH_FRACTION = 1.0f
  * Initial microsurvey prompt displayed to the user to request completion of feedback.
  *
  * @param microsurvey Contains the required microsurvey data for the UI.
+ * @param activity [HomeActivity] used to have access to [HomeActivity.isMicrosurveyPromptDismissed]
  * @param onStartSurveyClicked Handles the on click event of the start survey button.
  * @param onCloseButtonClicked Invoked when the user clicks on the close button.
  */
 @Composable
 fun MicrosurveyRequestPrompt(
     microsurvey: MicrosurveyUIData,
+    activity: HomeActivity,
     onStartSurveyClicked: () -> Unit,
     onCloseButtonClicked: () -> Unit,
 ) {
@@ -64,7 +67,7 @@ fun MicrosurveyRequestPrompt(
 
     // Animation properties for the microsurvey's visibility transitions.
     AnimatedVisibility(
-        visible = isMicrosurveyVisible,
+        visible = isMicrosurveyVisible && !activity.isMicrosurveyPromptDismissed.value,
         enter = slideInVertically(initialOffsetY = { it }),
         exit = slideOutVertically(targetOffsetY = { it }),
     ) {
@@ -136,7 +139,7 @@ private fun Header(
 @FlexibleWindowPreview
 @Composable
 private fun MicrosurveyRequestPromptPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         MicrosurveyRequestPrompt(
@@ -147,6 +150,7 @@ private fun MicrosurveyRequestPromptPreview(
                 question = "",
                 answers = emptyList(),
             ),
+            activity = HomeActivity(),
             onStartSurveyClicked = {},
             onCloseButtonClicked = {},
         )

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -27,7 +29,6 @@
 #include "prerror.h"
 
 #include "mozilla/Logging.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/net/DNSPacket.h"
 #include "nsIDNSService.h"
@@ -35,29 +36,13 @@
 
 namespace mozilla::net {
 
-static StaticMutex gOverrideServiceMutex;
 static StaticRefPtr<NativeDNSResolverOverride> gOverrideService;
-static Atomic<bool, Relaxed> gOverrideServiceUsed{false};
 
 LazyLogModule gGetAddrInfoLog("GetAddrInfo");
 #define LOG(msg, ...) \
   MOZ_LOG(gGetAddrInfoLog, LogLevel::Debug, ("[DNS]: " msg, ##__VA_ARGS__))
 #define LOG_WARNING(msg, ...) \
   MOZ_LOG(gGetAddrInfoLog, LogLevel::Warning, ("[DNS]: " msg, ##__VA_ARGS__))
-
-static already_AddRefed<NativeDNSResolverOverride> GetOverrideSingleton() {
-  StaticMutexAutoLock lock(gOverrideServiceMutex);
-  if (!gOverrideService) {
-    gOverrideService = new NativeDNSResolverOverride();
-    gOverrideServiceUsed = true;
-    RunOnShutdown([] {
-      gOverrideServiceUsed = false;
-      StaticMutexAutoLock lock(gOverrideServiceMutex);
-      gOverrideService = nullptr;
-    });
-  }
-  return do_AddRef(gOverrideService);
-}
 
 #ifdef DNSQUERY_AVAILABLE
 
@@ -86,12 +71,12 @@ static MOZ_ALWAYS_INLINE nsresult _CallDnsQuery_A_Windows(
 
   auto callDnsQuery_A = [&](uint16_t reqFamily) {
     PDNS_RECORDA dnsData = nullptr;
-    DNS_STATUS status = DnsQuery_A(PromiseFlatCString(aHost).get(), reqFamily,
-                                   aFlags, nullptr, &dnsData, nullptr);
+    DNS_STATUS status = DnsQuery_A(aHost.BeginReading(), reqFamily, aFlags,
+                                   nullptr, &dnsData, nullptr);
     if (status == DNS_INFO_NO_RECORDS || status == DNS_ERROR_RCODE_NAME_ERROR ||
         !dnsData) {
       LOG("No DNS records found for %s. status=%lX. reqFamily = %X\n",
-          PromiseFlatCString(aHost).get(), status, reqFamily);
+          aHost.BeginReading(), status, reqFamily);
       return NS_ERROR_FAILURE;
     } else if (status != NOERROR) {
       LOG_WARNING("DnsQuery_A failed with status %lX.\n", status);
@@ -163,7 +148,7 @@ static MOZ_ALWAYS_INLINE nsresult _GetTTLData_Windows(const nsACString& aHost,
           ttl = std::min<unsigned int>(ttl, curRecord->dwTtl);
         } else {
           LOG("Received unexpected record type %u in response for %s.\n",
-              curRecord->wType, PromiseFlatCString(aHost).get());
+              curRecord->wType, aHost.BeginReading());
         }
       });
 
@@ -185,9 +170,8 @@ _DNSQuery_A_SingleLabel(const nsACString& aCanonHost, uint16_t aAddressFamily,
                        DNS_QUERY_ACCEPT_TRUNCATED_RESPONSE);
   nsTArray<NetAddr> addresses;
 
-  nsPromiseFlatCString canonHost(aCanonHost);
   _CallDnsQuery_A_Windows(
-      canonHost, aAddressFamily, flags, [&](PDNS_RECORDA curRecord) {
+      aCanonHost, aAddressFamily, flags, [&](PDNS_RECORDA curRecord) {
         MOZ_DIAGNOSTIC_ASSERT(curRecord->wType == DNS_TYPE_A ||
                               curRecord->wType == DNS_TYPE_AAAA);
         if (setCanonName) {
@@ -199,12 +183,13 @@ _DNSQuery_A_SingleLabel(const nsACString& aCanonHost, uint16_t aAddressFamily,
         addresses.AppendElement(addr);
       });
 
-  LOG("Query for: %s has %zu results", canonHost.get(), addresses.Length());
+  LOG("Query for: %s has %zu results", aCanonHost.BeginReading(),
+      addresses.Length());
   if (addresses.IsEmpty()) {
     return NS_ERROR_UNKNOWN_HOST;
   }
   RefPtr<AddrInfo> ai(new AddrInfo(
-      canonHost, canonName, DNSResolverType::Native, 0, std::move(addresses)));
+      aCanonHost, canonName, DNSResolverType::Native, 0, std::move(addresses)));
   ai.forget(aAddrInfo);
 
   return NS_OK;
@@ -267,17 +252,16 @@ _GetAddrInfo_Portable(const nsACString& aCanonHost, uint16_t aAddressFamily,
       // This is a single label name resolve without a dot.
       // We use DNSQuery_A for these.
       LOG("Resolving %s using DnsQuery_A (computername: %s)\n",
-          PromiseFlatCString(aCanonHost).get(), sDNSComputerName);
+          aCanonHost.BeginReading(), sDNSComputerName);
       return _DNSQuery_A_SingleLabel(aCanonHost, aAddressFamily, aFlags,
                                      aAddrInfo);
     }
   }
 #endif
 
-  LOG("Resolving %s using PR_GetAddrInfoByName",
-      PromiseFlatCString(aCanonHost).get());
-  PRAddrInfo* prai = PR_GetAddrInfoByName(PromiseFlatCString(aCanonHost).get(),
-                                          aAddressFamily, prFlags);
+  LOG("Resolving %s using PR_GetAddrInfoByName", aCanonHost.BeginReading());
+  PRAddrInfo* prai =
+      PR_GetAddrInfoByName(aCanonHost.BeginReading(), aAddressFamily, prFlags);
 
   if (!prai) {
     LOG("PR_GetAddrInfoByName returned null PR_GetError:%d PR_GetOSErrpr:%d",
@@ -334,11 +318,7 @@ nsresult GetAddrInfoShutdown() {
 
 bool FindAddrOverride(const nsACString& aHost, uint16_t aAddressFamily,
                       nsIDNSService::DNSFlags aFlags, AddrInfo** aAddrInfo) {
-  if (!gOverrideServiceUsed) {
-    return false;
-  }
-
-  RefPtr<NativeDNSResolverOverride> overrideService = GetOverrideSingleton();
+  RefPtr<NativeDNSResolverOverride> overrideService = gOverrideService;
   if (!overrideService) {
     return false;
   }
@@ -393,7 +373,7 @@ nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
 #endif
 
   // If there is an override for this host, then we synthetize a result.
-  if (gOverrideServiceUsed &&
+  if (gOverrideService &&
       FindAddrOverride(aHost, aAddressFamily, aFlags, aAddrInfo)) {
     LOG("Returning IP address from NativeDNSResolverOverride");
     return (*aAddrInfo)->Addresses().Length() ? NS_OK : NS_ERROR_UNKNOWN_HOST;
@@ -449,11 +429,8 @@ nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
 
 bool FindHTTPSRecordOverride(const nsACString& aHost,
                              TypeRecordResultType& aResult) {
-  LOG("FindHTTPSRecordOverride aHost=%s", PromiseFlatCString(aHost).get());
-  if (!gOverrideServiceUsed) {
-    return false;
-  }
-  RefPtr<NativeDNSResolverOverride> overrideService = GetOverrideSingleton();
+  LOG("FindHTTPSRecordOverride aHost=%s", nsCString(aHost).get());
+  RefPtr<NativeDNSResolverOverride> overrideService = gOverrideService;
   if (!overrideService) {
     return false;
   }
@@ -524,7 +501,7 @@ nsresult ParseHTTPSRecord(nsCString& aHost, DNSPacket& aDNSPacket,
 nsresult ResolveHTTPSRecord(const nsACString& aHost,
                             nsIDNSService::DNSFlags aFlags,
                             TypeRecordResultType& aResult, uint32_t& aTTL) {
-  if (gOverrideServiceUsed) {
+  if (gOverrideService) {
     return FindHTTPSRecordOverride(aHost, aResult) ? NS_OK
                                                    : NS_ERROR_UNKNOWN_HOST;
   }
@@ -597,7 +574,14 @@ NativeDNSResolverOverride::GetSingleton() {
   if (nsIOService::UseSocketProcess() && XRE_IsParentProcess()) {
     return NativeDNSResolverOverrideParent::GetSingleton();
   }
-  return GetOverrideSingleton();
+
+  if (gOverrideService) {
+    return do_AddRef(gOverrideService);
+  }
+
+  gOverrideService = new NativeDNSResolverOverride();
+  ClearOnShutdown(&gOverrideService);
+  return do_AddRef(gOverrideService);
 }
 
 NS_IMPL_ISUPPORTS(NativeDNSResolverOverride, nsINativeDNSResolverOverride)

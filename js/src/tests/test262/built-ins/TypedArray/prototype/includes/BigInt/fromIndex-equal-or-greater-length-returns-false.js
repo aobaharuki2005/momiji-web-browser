@@ -23,14 +23,14 @@ info: |
   7. Repeat, while k < len
     ...
   8. Return false.
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var sample;
 
-  sample = new TA(makeCtorArg(42));
+  sample = new TA(42);
   assert.sameValue(sample.includes(0n, 42), false);
   assert.sameValue(sample.includes(0n, 43), false);
 });

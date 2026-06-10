@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +9,6 @@
 
 #include "Assertions.h"
 #include "ClientUsageArray.h"
-#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 
 namespace mozilla::dom::quota {
@@ -15,25 +16,20 @@ namespace mozilla::dom::quota {
 class CanonicalQuotaObject;
 class GroupInfo;
 
-class OriginInfo final : public AtomicSafeRefCounted<OriginInfo> {
+class OriginInfo final {
   friend class CanonicalQuotaObject;
   friend class GroupInfo;
   friend class PersistOp;
   friend class QuotaManager;
 
  public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(mozilla::dom::quota::OriginInfo)
-
   OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
              const nsACString& aStorageOrigin, bool aIsPrivate,
              const ClientUsageArray& aClientUsages, uint64_t aUsage,
              int64_t aAccessTime, int32_t aMaintenanceDate, bool aPersisted,
              bool aDirectoryExists);
 
-  ~OriginInfo() {
-    MOZ_COUNT_DTOR(OriginInfo);
-    MOZ_ASSERT(!mCanonicalQuotaObjects.Count());
-  }
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OriginInfo)
 
   GroupInfo* GetGroupInfo() const { return mGroupInfo; }
 
@@ -98,6 +94,13 @@ class OriginInfo final : public AtomicSafeRefCounted<OriginInfo> {
   nsresult LockedBindToStatement(mozIStorageStatement* aStatement) const;
 
  private:
+  // Private destructor, to discourage deletion outside of Release():
+  ~OriginInfo() {
+    MOZ_COUNT_DTOR(OriginInfo);
+
+    MOZ_ASSERT(!mCanonicalQuotaObjects.Count());
+  }
+
   void LockedDecreaseUsage(Client::Type aClientType, int64_t aSize);
 
   void LockedResetUsageForClient(Client::Type aClientType);
@@ -131,17 +134,13 @@ class OriginInfo final : public AtomicSafeRefCounted<OriginInfo> {
 
   void LockedDirectoryCreated();
 
-  void LockedTruncateUsages(Client::Type aClientType, uint64_t aDelta);
-
-  Maybe<bool> LockedUpdateUsages(Client::Type aClientType, uint64_t aDelta);
-
-  bool LockedUpdateUsagesForEviction(Client::Type aClientType, uint64_t aDelta);
-
   nsTHashMap<nsStringHashKey, NotNull<CanonicalQuotaObject*>>
       mCanonicalQuotaObjects;
+  ClientUsageArray mClientUsages;
   GroupInfo* mGroupInfo;
   const nsCString mOrigin;
   const nsCString mStorageOrigin;
+  uint64_t mUsage;
   int64_t mAccessTime;
   int32_t mMaintenanceDate;
   bool mIsPrivate;
@@ -161,21 +160,17 @@ class OriginInfo final : public AtomicSafeRefCounted<OriginInfo> {
    * has not yet flushed the data to disk.
    */
   bool mDirectoryExists;
-
- private:
-  ClientUsageArray mClientUsages;
-  uint64_t mUsage;
 };
 
 class OriginInfoAccessTimeComparator {
  public:
-  bool Equals(const NotNull<SafeRefPtr<OriginInfo>>& a,
-              const NotNull<SafeRefPtr<OriginInfo>>& b) const {
+  bool Equals(const NotNull<RefPtr<const OriginInfo>>& a,
+              const NotNull<RefPtr<const OriginInfo>>& b) const {
     return a->LockedAccessTime() == b->LockedAccessTime();
   }
 
-  bool LessThan(const NotNull<SafeRefPtr<OriginInfo>>& a,
-                const NotNull<SafeRefPtr<OriginInfo>>& b) const {
+  bool LessThan(const NotNull<RefPtr<const OriginInfo>>& a,
+                const NotNull<RefPtr<const OriginInfo>>& b) const {
     return a->LockedAccessTime() < b->LockedAccessTime();
   }
 };

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.library.history.state
 
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
@@ -17,7 +18,6 @@ import org.mozilla.fenix.library.history.HistoryFragmentStore
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
 import org.mozilla.fenix.library.history.RemoveTimeFrame
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertNotNull
 import org.mozilla.fenix.GleanMetrics.History as GleanHistory
 
 @RunWith(RobolectricTestRunner::class)

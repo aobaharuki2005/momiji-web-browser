@@ -6,7 +6,7 @@
 add_task(async function test_check_layers_cleared() {
   let initialTab = gBrowser.selectedTab;
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
-    await SpecialPowers.spawn(browser, [], () => {
+    await ContentTask.spawn(browser, null, () => {
       return new Promise(resolve => {
         content.requestAnimationFrame(() => {
           content.setTimeout(

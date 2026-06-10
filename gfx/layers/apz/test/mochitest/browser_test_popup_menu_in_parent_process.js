@@ -35,12 +35,11 @@ add_task(() => {
 });
 
 // Setup preferences.
-add_setup(async () => {
+add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["apz.popups.enabled", true],
       ["apz.popups_without_remote.enabled", true],
-      ["widget.macos.allow-native-select", false],
     ],
   });
 });
@@ -96,7 +95,7 @@ async function runTest(aTestFile) {
   });
 
   await selectChangePromise;
-  ok(true, "clicking on popped up element works");
+  ok(true, "clicking on poped up element works");
 
   BrowserTestUtils.removeTab(tab);
 }

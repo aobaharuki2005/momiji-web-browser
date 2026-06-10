@@ -15,7 +15,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonDefaults.outlinedButtonBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -53,7 +52,6 @@ private fun ButtonContent(
     text: String,
     icon: Painter?,
     modifier: Modifier = Modifier,
-    iconTint: Color = LocalContentColor.current,
 ) {
     val fontScale: Float = LocalConfiguration.current.fontScale
 
@@ -62,7 +60,6 @@ private fun ButtonContent(
             painter = painter,
             contentDescription = null,
             modifier = modifier,
-            tint = iconTint,
         )
         Spacer(modifier = Modifier.width(AcornTheme.layout.space.static100))
     }
@@ -86,8 +83,6 @@ private fun ButtonContent(
  * @param containerColor The background color of the button when enabled.
  * @param icon Optional [Painter] used to display an [Icon] before the button text.
  * @param iconModifier [Modifier] to be applied to the icon.
- * @param iconTint Optional [Color] used to tint the icon. When `null` the icon is tinted using
- * [contentColor].
  * @param onClick Invoked when the user clicks on the button.
  */
 @Composable
@@ -96,10 +91,9 @@ fun FilledButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     contentColor: Color = ButtonDefaults.buttonColors().contentColor,
-    containerColor: Color = MaterialTheme.colorScheme.tertiary,
+    containerColor: Color = ButtonDefaults.buttonColors().containerColor,
     icon: Painter? = null,
     iconModifier: Modifier = Modifier,
-    iconTint: Color = contentColor,
     onClick: () -> Unit,
 ) {
     M3Button(
@@ -112,7 +106,7 @@ fun FilledButton(
             contentColor = contentColor,
         ),
     ) {
-        ButtonContent(text = text, icon = icon, modifier = iconModifier, iconTint = iconTint)
+        ButtonContent(text = text, icon = icon, modifier = iconModifier)
     }
 }
 
@@ -157,21 +151,20 @@ fun FilledButton(
  * @param modifier [Modifier] to be applied to the layout.
  * @param enabled Controls the enabled state of the button.
  * When false, this button will not be clickable
- * @param contentColor The [Color] to be used for the button's text and icon when enabled.
- * @param containerColor The background fill [Color] of the button when enabled.
- * @param outlineColor The [Color] to be used for the button's outline when enabled.
+ * @param contentColor The color to be used for the button's text and icon when enabled.
+ * @param containerColor The background fill color of the button when enabled.
  * @param icon Optional [Painter] used to display an [Icon] before the button text.
  * @param iconModifier [Modifier] to be applied to the icon.
  * @param onClick Invoked when the user clicks on the button.
  */
+
 @Composable
 fun OutlinedButton(
     text: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    contentColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = ButtonDefaults.outlinedButtonColors().contentColor,
     containerColor: Color = ButtonDefaults.outlinedButtonColors().containerColor,
-    outlineColor: Color = MaterialTheme.colorScheme.outline,
     icon: Painter? = null,
     iconModifier: Modifier = Modifier,
     onClick: () -> Unit,
@@ -185,7 +178,6 @@ fun OutlinedButton(
             containerColor = containerColor,
         ),
         contentPadding = AcornTheme.buttonContentPadding(),
-        border = enabled.getBorderColor(outlineColor),
     ) {
         ButtonContent(text = text, icon = icon, modifier = iconModifier)
     }
@@ -210,7 +202,7 @@ fun DestructiveButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     contentColor: Color = MaterialTheme.colorScheme.error,
-    containerColor: Color = ButtonDefaults.outlinedButtonColors().containerColor,
+    containerColor: Color = MaterialTheme.colorScheme.error.copy(alpha = 0.08f),
     icon: Painter? = null,
     iconModifier: Modifier = Modifier,
     onClick: () -> Unit,
@@ -224,28 +216,16 @@ fun DestructiveButton(
             containerColor = containerColor,
         ),
         contentPadding = AcornTheme.buttonContentPadding(),
-        border = enabled.getBorderColor(contentColor),
+        border = if (enabled) {
+            BorderStroke(
+                width = 1.dp,
+                color = contentColor,
+            )
+        } else {
+            outlinedButtonBorder(enabled = false)
+        },
     ) {
         ButtonContent(text = text, icon = icon, modifier = iconModifier)
-    }
-}
-
-/**
- * Extension function to return the appropriate border color based on the enabled state.
- *
- * @param this [Boolean] indicating whether the button is enabled or not.
- * @param borderOutline The [Color] to be used for the button's border when enabled.
- * @return [BorderStroke] representing the border of the button.
- */
-@Composable
-private fun Boolean.getBorderColor(borderOutline: Color): BorderStroke {
-    return if (this) {
-        BorderStroke(
-            width = 1.dp,
-            color = borderOutline,
-        )
-    } else {
-        outlinedButtonBorder(enabled = false)
     }
 }
 
@@ -271,13 +251,6 @@ private fun ButtonPreviewContent() {
                 text = "Label",
                 enabled = false,
                 icon = painterResource(iconsR.drawable.mozac_ic_collection_24),
-                onClick = {},
-            )
-
-            FilledButton(
-                text = "Label",
-                icon = painterResource(iconsR.drawable.mozac_ic_collection_24),
-                iconTint = Color.Red,
                 onClick = {},
             )
 

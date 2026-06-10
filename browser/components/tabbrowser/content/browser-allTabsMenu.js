@@ -7,7 +7,6 @@ ChromeUtils.defineESModuleGetters(this, {
   GroupsPanel: "moz-src:///browser/components/tabbrowser/GroupsList.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   TabsPanel: "moz-src:///browser/components/tabbrowser/TabsList.sys.mjs",
-  UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
 });
 
 var gTabsPanel = {
@@ -92,11 +91,15 @@ var gTabsPanel = {
       document.getElementById("allTabsMenu-hiddenTabsSeparator").hidden =
         !hasHiddenTabs;
 
+      let closeDuplicateEnabled = Services.prefs.getBoolPref(
+        "browser.tabs.context.close-duplicate.enabled"
+      );
       let closeDuplicateTabsItem = document.getElementById(
         "allTabsMenu-closeDuplicateTabs"
       );
+      closeDuplicateTabsItem.hidden = !closeDuplicateEnabled;
       closeDuplicateTabsItem.disabled =
-        !gBrowser.getAllDuplicateTabsToClose().length;
+        !closeDuplicateEnabled || !gBrowser.getAllDuplicateTabsToClose().length;
 
       let syncedTabs = document.getElementById("allTabsMenu-syncedTabs");
       syncedTabs.hidden =
@@ -111,7 +114,7 @@ var gTabsPanel = {
 
     this.allTabsView.addEventListener("command", event => {
       let { target } = event;
-      let { PanelUI } = target.documentGlobal;
+      let { PanelUI } = target.ownerGlobal;
       switch (target.id) {
         case "allTabsMenu-searchTabs":
           Glean.browserUiInteraction.listAllTabsAction.search_tabs.add(1);
@@ -244,7 +247,7 @@ var gTabsPanel = {
   },
 
   searchTabs() {
-    gURLBar.search(UrlbarShared.RESTRICT_TOKENS.OPENPAGE, {
+    gURLBar.search(UrlbarTokenizer.RESTRICT.OPENPAGE, {
       searchModeEntry: "tabmenu",
     });
   },

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -360,12 +361,8 @@ bool nsJSPrincipals::write(JSContext* aCx, JSStructuredCloneWriter* aWriter) {
   return WritePrincipalInfo(aWriter, info);
 }
 
-bool nsJSPrincipals::isSystemPrincipal() {
+bool nsJSPrincipals::isSystemOrAddonPrincipal() {
   JS::AutoSuppressGCAnalysis suppress;
-  return this->IsSystemPrincipal();
-}
-
-bool nsJSPrincipals::isAddonPrincipal() {
-  JS::AutoSuppressGCAnalysis suppress;
-  return this->GetIsAddonOrExpandedAddonPrincipal();
+  return this->IsSystemPrincipal() ||
+         this->GetIsAddonOrExpandedAddonPrincipal();
 }

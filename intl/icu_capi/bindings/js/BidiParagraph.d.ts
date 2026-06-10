@@ -3,15 +3,13 @@ import type { BidiDirection } from "./BidiDirection"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
-
 /**
  * Bidi information for a single processed paragraph
  */
+
+
 export class BidiParagraph {
-    /** @internal */
     get ffiValue(): pointer;
-    /** @internal */
-    constructor();
 
 
     /**
@@ -26,14 +24,14 @@ export class BidiParagraph {
     /**
      * The primary direction of this paragraph
      *
-     * See the [Rust documentation for `level_at`](https://docs.rs/unicode_bidi/0.3.11/unicode_bidi/struct.Paragraph.html#method.level_at) for more information.
+     * See the [Rust documentation for `level_at`](https://docs.rs/unicode_bidi/latest/unicode_bidi/struct.Paragraph.html#method.level_at) for more information.
      */
     get direction(): BidiDirection;
 
     /**
      * The number of bytes in this paragraph
      *
-     * See the [Rust documentation for `len`](https://docs.rs/unicode_bidi/0.3.11/unicode_bidi/struct.ParagraphInfo.html#method.len) for more information.
+     * See the [Rust documentation for `len`](https://docs.rs/unicode_bidi/latest/unicode_bidi/struct.ParagraphInfo.html#method.len) for more information.
      */
     get size(): number;
 
@@ -51,7 +49,7 @@ export class BidiParagraph {
      * Reorder a line based on display order. The ranges are specified relative to the source text and must be contained
      * within this paragraph's range.
      *
-     * See the [Rust documentation for `level_at`](https://docs.rs/unicode_bidi/0.3.11/unicode_bidi/struct.Paragraph.html#method.level_at) for more information.
+     * See the [Rust documentation for `level_at`](https://docs.rs/unicode_bidi/latest/unicode_bidi/struct.Paragraph.html#method.level_at) for more information.
      */
     reorderLine(rangeStart: number, rangeEnd: number): string | null;
 
@@ -62,7 +60,7 @@ export class BidiParagraph {
      *
      * Returns 0 (equivalent to `Level::ltr()`) on error
      *
-     * See the [Rust documentation for `level_at`](https://docs.rs/unicode_bidi/0.3.11/unicode_bidi/struct.Paragraph.html#method.level_at) for more information.
+     * See the [Rust documentation for `level_at`](https://docs.rs/unicode_bidi/latest/unicode_bidi/struct.Paragraph.html#method.level_at) for more information.
      */
     levelAt(pos: number): number;
 }

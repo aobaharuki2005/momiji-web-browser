@@ -25,40 +25,26 @@ register($0, `test`);
 // ./test/core/custom-page-sizes/memory_max_i64.wast:18
 assert_unlinkable(
   () => instantiate(`(module
-    (import "test" "unknown" (func))
+    (import "test" "import" (func))
     (memory i64 0xFFFF_FFFF_FFFF_FFFF (pagesize 1)))`),
-  `incompatible import type`,
+  `unknown import`,
 );
 
 // ./test/core/custom-page-sizes/memory_max_i64.wast:25
 assert_unlinkable(
   () => instantiate(`(module
-    (import "test" "unknown" (memory i64 0xFFFF_FFFF_FFFF_FFFF (pagesize 1))))`),
-  `incompatible import type`,
-);
-
-// ./test/core/custom-page-sizes/memory_max_i64.wast:31
-assert_unlinkable(
-  () => instantiate(`(module
     (import "test" "unknown" (func))
     (memory i64 0x1_0000_0000_0000 (pagesize 65536)))`),
-  `incompatible import type`,
+  `unknown import`,
 );
 
-// ./test/core/custom-page-sizes/memory_max_i64.wast:38
-assert_unlinkable(
-  () => instantiate(`(module
-    (import "test" "unknown" (memory i64 0x1_0000_0000_0000 (pagesize 65536))))`),
-  `incompatible import type`,
-);
-
-// ./test/core/custom-page-sizes/memory_max_i64.wast:49
+// ./test/core/custom-page-sizes/memory_max_i64.wast:37
 assert_malformed(
   () => instantiate(`(memory i64 0x1_0000_0000_0000_0000 (pagesize 1)) `),
-  `i64 constant out of range`,
+  `constant out of range`,
 );
 
-// ./test/core/custom-page-sizes/memory_max_i64.wast:54
+// ./test/core/custom-page-sizes/memory_max_i64.wast:42
 assert_invalid(
   () => instantiate(`(module
     (memory i64 0x1_0000_0000_0001 (pagesize 65536)))`),

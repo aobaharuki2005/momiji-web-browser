@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -31,10 +33,6 @@ extern LazyLogModule gMediaDecoderLog;
 #define LOG_DS(type, fmt, ...)    \
   MOZ_LOG(gMediaDecoderLog, type, \
           ("DecodedStream=%p " fmt, this, ##__VA_ARGS__))
-
-#define LOG_DSD(type, fmt, ...)   \
-  MOZ_LOG(gMediaDecoderLog, type, \
-          ("DecodedStreamData=%p " fmt, this, ##__VA_ARGS__))
 
 #define PLAYBACK_PROFILER_MARKER(markerString) \
   PROFILER_MARKER_TEXT(FUNCTION_SIGNATURE, MEDIA_PLAYBACK, {}, markerString)
@@ -330,7 +328,6 @@ class DecodedStreamData final {
       MozPromiseHolder<DecodedStream::EndedPromise>&& aAudioEndedPromise,
       MozPromiseHolder<DecodedStream::EndedPromise>&& aVideoEndedPromise,
       float aPlaybackRate, float aVolume, bool aPreservesPitch,
-      void* aAudioOutputKey, AudioDeviceInfo* aDevice,
       nsISerialEventTarget* aDecoderThread);
   ~DecodedStreamData();
   MediaEventSource<int64_t>& OnOutput();
@@ -348,7 +345,6 @@ class DecodedStreamData final {
                            const TimeStamp& aTimeStamp, VideoSegment* aOutput,
                            const PrincipalHandle& aPrincipalHandle,
                            double aPlaybackRate);
-  void SetVolume(float aVolume);
 
   /* The following group of fields are protected by the decoder's monitor
    * and can be read or written on any thread.
@@ -378,10 +374,6 @@ class DecodedStreamData final {
   gfx::IntSize mLastVideoImageDisplaySize;
   bool mHaveSentFinishAudio;
   bool mHaveSentFinishVideo;
-  // These are used for audio output. mDevice will only be used when
-  // mAudioOutputKey is not null.
-  void* const mAudioOutputKey;
-  const RefPtr<AudioDeviceInfo> mDevice;
 
   const RefPtr<AudioDecoderInputTrack> mAudioTrack;
   const RefPtr<SourceMediaTrack> mVideoTrack;
@@ -401,19 +393,16 @@ DecodedStreamData::DecodedStreamData(
     MozPromiseHolder<DecodedStream::EndedPromise>&& aAudioEndedPromise,
     MozPromiseHolder<DecodedStream::EndedPromise>&& aVideoEndedPromise,
     float aPlaybackRate, float aVolume, bool aPreservesPitch,
-    void* aAudioOutputKey, AudioDeviceInfo* aDevice,
     nsISerialEventTarget* aDecoderThread)
     : mAudioFramesWritten(0),
       mVideoTrackWritten(0),
       mNextAudioTime(aInit.mStartTime),
       mHaveSentFinishAudio(false),
       mHaveSentFinishVideo(false),
-      mAudioOutputKey(aAudioOutputKey),
-      mDevice(aDevice),
       mAudioTrack(aInit.mInfo.HasAudio()
                       ? AudioDecoderInputTrack::Create(
                             aGraph, aDecoderThread, aInit.mInfo.mAudio,
-                            aPlaybackRate, aPreservesPitch)
+                            aPlaybackRate, aVolume, aPreservesPitch)
                       : nullptr),
       mVideoTrack(aInit.mInfo.HasVideo()
                       ? aGraph->CreateSourceTrack(MediaSegment::VIDEO)
@@ -474,25 +463,16 @@ void DecodedStreamData::GetDebugInfo(dom::DecodedStreamDataDebugInfo& aInfo) {
   aInfo.mHaveSentFinishVideo = mHaveSentFinishVideo;
 }
 
-void DecodedStreamData::SetVolume(float aVolume) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mAudioTrack || !mAudioOutputKey || !mAudioOutputTrack) {
-    return;
-  }
-  LOG_DSD(LogLevel::Debug, "Setting volume %f on output track", aVolume);
-  mAudioOutputTrack->SetAudioOutputVolume(mAudioOutputKey, aVolume);
-}
-
 DecodedStream::DecodedStream(
     AbstractThread* aOwnerThread,
     nsMainThreadPtrHandle<SharedDummyTrack> aDummyTrack,
     CopyableTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks,
     AbstractCanonical<PrincipalHandle>* aCanonicalOutputPrincipal,
     double aVolume, double aPlaybackRate, bool aPreservesPitch,
-    bool aShouldConfigAudioOutput, AudioDeviceInfo* aDevice,
     MediaQueue<AudioData>& aAudioQueue, MediaQueue<VideoData>& aVideoQueue)
     : mOwnerThread(aOwnerThread),
       mDummyTrack(std::move(aDummyTrack)),
+
       mWatchManager(this, mOwnerThread),
       mPlaying(false, "DecodedStream::mPlaying"),
       mPrincipalHandle(aOwnerThread, PRINCIPAL_HANDLE_NONE,
@@ -502,9 +482,6 @@ DecodedStream::DecodedStream(
       mVolume(aVolume),
       mPlaybackRate(aPlaybackRate),
       mPreservesPitch(aPreservesPitch),
-      mShouldConfigAudioOutput(aShouldConfigAudioOutput),
-      mDevice(aDevice),
-      mPlaybackRateFallbackForwarder(aOwnerThread),
       mAudioQueue(aAudioQueue),
       mVideoQueue(aVideoQueue) {}
 
@@ -536,9 +513,8 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
                                  aStartTime.ToMicroseconds());
     PLAYBACK_PROFILER_MARKER(markerString);
   }
-  LOG_DS(LogLevel::Debug,
-         "Start() mStartTime=%" PRId64 ", audioOutputConfig=%d",
-         aStartTime.ToMicroseconds(), mShouldConfigAudioOutput);
+  LOG_DS(LogLevel::Debug, "Start() mStartTime=%" PRId64,
+         aStartTime.ToMicroseconds());
 
   mStartTime.emplace(aStartTime);
   mLastOutputTime = TimeUnit::Zero();
@@ -559,7 +535,6 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
       MozPromiseHolder<MediaSink::EndedPromise>&& aAudioEndedPromise,
       MozPromiseHolder<MediaSink::EndedPromise>&& aVideoEndedPromise,
       float aPlaybackRate, float aVolume, bool aPreservesPitch,
-      void* aAudioOutputKey, AudioDeviceInfo* aDevice,
       nsISerialEventTarget* aDecoderThread)
         : Runnable("CreateDecodedStreamData"),
           mInit(std::move(aInit)),
@@ -570,8 +545,6 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
           mPlaybackRate(aPlaybackRate),
           mVolume(aVolume),
           mPreservesPitch(aPreservesPitch),
-          mAudioOutputKey(aAudioOutputKey),
-          mDevice(aDevice),
           mDecoderThread(aDecoderThread) {}
     NS_IMETHOD Run() override {
       MOZ_ASSERT(NS_IsMainThread());
@@ -610,18 +583,10 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
           std::move(mInit), mDummyTrack->mTrack->Graph(),
           std::move(audioOutputTrack), std::move(videoOutputTrack),
           std::move(mAudioEndedPromise), std::move(mVideoEndedPromise),
-          mPlaybackRate, mVolume, mPreservesPitch, mAudioOutputKey, mDevice,
-          mDecoderThread);
-      if (mAudioOutputKey && mData->mAudioOutputTrack) {
-        mData->mAudioOutputTrack->AddAudioOutput(mAudioOutputKey, mDevice);
-        mData->mAudioOutputTrack->SetAudioOutputVolume(mAudioOutputKey,
-                                                       mVolume);
-        mDidRegisterAudio = true;
-      }
+          mPlaybackRate, mVolume, mPreservesPitch, mDecoderThread);
       return NS_OK;
     }
     UniquePtr<DecodedStreamData> ReleaseData() { return std::move(mData); }
-    bool mDidRegisterAudio = false;
 
    private:
     PlaybackInfoInit mInit;
@@ -633,8 +598,6 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
     const float mPlaybackRate;
     const float mVolume;
     const bool mPreservesPitch;
-    void* const mAudioOutputKey;
-    const RefPtr<AudioDeviceInfo> mDevice;
     const RefPtr<nsISerialEventTarget> mDecoderThread;
   };
 
@@ -645,16 +608,8 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
       new R(std::move(init), mDummyTrack, mOutputTracks.Clone(),
             std::move(audioEndedHolder), std::move(videoEndedHolder),
             static_cast<float>(mPlaybackRate), static_cast<float>(mVolume),
-            mPreservesPitch, mShouldConfigAudioOutput ? this : nullptr, mDevice,
-            mOwnerThread);
+            mPreservesPitch, mOwnerThread);
   SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), r);
-  if (static_cast<R*>(r.get())->mDidRegisterAudio) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "DecodedStream::Start", [self = RefPtr<DecodedStream>(this), this]() {
-          AssertIsOnMainThread();
-          mAudioOutputRegistered = true;
-        }));
-  }
   mData = static_cast<R*>(r.get())->ReleaseData();
 
   if (mData) {
@@ -662,10 +617,6 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
     mVideoEndedPromise = mData->mVideoEndedPromise;
     mOutputListener = mData->OnOutput().Connect(mOwnerThread, this,
                                                 &DecodedStream::NotifyOutput);
-    if (mData->mAudioTrack) {
-      mPlaybackRateFallbackForwarder.Forward(
-          mData->mAudioTrack->OnPlaybackRateFallback());
-    }
     SendData();
   }
   return NS_OK;
@@ -719,28 +670,11 @@ void DecodedStream::DestroyData(UniquePtr<DecodedStreamData>&& aData) {
 
   TRACE("DecodedStream::DestroyData");
   mOutputListener.Disconnect();
-  mPlaybackRateFallbackForwarder.DisconnectAll();
 
   aData->Close();
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "DecodedStream::DestroyData",
-      [self = RefPtr<DecodedStream>(this), this, data = std::move(aData)]() {
-        AssertIsOnMainThread();
-        if (mAudioOutputRegistered) {
-          RefPtr<ProcessedMediaTrack> audioOutputTrack;
-          for (const auto& track : mOutputTracks) {
-            if (track->mType == MediaSegment::AUDIO) {
-              audioOutputTrack = track;
-              break;
-            }
-          }
-          if (audioOutputTrack) {
-            audioOutputTrack->RemoveAudioOutput(this);
-          }
-          mAudioOutputRegistered = false;
-        }
-        data->Forget();
-      }));
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("DecodedStream::DestroyData",
+                             [data = std::move(aData)]() { data->Forget(); }));
 }
 
 void DecodedStream::SetPlaying(bool aPlaying) {
@@ -769,14 +703,8 @@ void DecodedStream::SetVolume(double aVolume) {
     return;
   }
   mVolume = aVolume;
-  if (mData) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "DecodedStream::SetVolume",
-        [self = RefPtr<DecodedStream>(this), this, aVolume]() {
-          if (mData) {
-            mData->SetVolume(static_cast<float>(aVolume));
-          }
-        }));
+  if (mData && mData->mAudioTrack) {
+    mData->mAudioTrack->SetVolume(static_cast<float>(aVolume));
   }
 }
 
@@ -813,38 +741,8 @@ void DecodedStream::SetPreservesPitch(bool aPreservesPitch) {
 
 RefPtr<GenericPromise> DecodedStream::SetAudioDevice(
     RefPtr<AudioDeviceInfo> aDevice) {
-  AssertOwnerThread();
-  if (!mShouldConfigAudioOutput || !mInfo.HasAudio()) {
-    LOG_DS(LogLevel::Debug,
-           "SetAudioDevice() called when no audio configuration is needed ("
-           "captured through WebAudio or no audio)");
-    return GenericPromise::CreateAndResolve(true, __func__);
-  }
-  LOG_DS(LogLevel::Debug, "SetAudioDevice() device=%p", aDevice.get());
-  mDevice = aDevice;
-  return InvokeAsync(
-      GetMainThreadSerialEventTarget(), __func__,
-      [self = RefPtr<DecodedStream>(this), this,
-       aDevice]() -> RefPtr<GenericPromise> {
-        AssertIsOnMainThread();
-        RefPtr<ProcessedMediaTrack> audioOutputTrack;
-        for (const auto& track : mOutputTracks) {
-          if (track->mType == MediaSegment::AUDIO) {
-            audioOutputTrack = track;
-            break;
-          }
-        }
-        if (!audioOutputTrack) {
-          return GenericPromise::CreateAndResolve(true, __func__);
-        }
-        if (mAudioOutputRegistered) {
-          audioOutputTrack->RemoveAudioOutput(this);
-        }
-        audioOutputTrack->AddAudioOutput(this, aDevice);
-        mAudioOutputRegistered = true;
-        return audioOutputTrack->Graph()->NotifyWhenDeviceStarted(
-            aDevice ? aDevice->DeviceID() : nullptr);
-      });
+  // All audio is captured, so nothing is actually played out, so nothing to do.
+  return GenericPromise::CreateAndResolve(true, __func__);
 }
 
 double DecodedStream::PlaybackRate() const {
@@ -904,12 +802,12 @@ already_AddRefed<AudioData> DecodedStream::CreateSilenceDataIfGapExists(
       TimeUnitToFrames(*mStartTime, aNextAudio->mRate);
   CheckedInt64 frameOffset =
       TimeUnitToFrames(aNextAudio->mTime, aNextAudio->mRate);
-  CheckedInt64 missingFrames = frameOffset - audioWrittenOffset;
-  if (!missingFrames.isValid() || missingFrames.value() <= 0) {
+  if (audioWrittenOffset.value() >= frameOffset.value()) {
     return nullptr;
   }
   // We've written less audio than our frame offset, return a silence data so we
   // have enough audio to be at the correct offset for our current frames.
+  CheckedInt64 missingFrames = frameOffset - audioWrittenOffset;
   AlignedAudioBuffer silenceBuffer(missingFrames.value() *
                                    aNextAudio->mChannels);
   if (!silenceBuffer) {
@@ -1292,6 +1190,5 @@ void DecodedStream::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
 }
 
 #undef LOG_DS
-#undef LOG_DSD
 
 }  // namespace mozilla

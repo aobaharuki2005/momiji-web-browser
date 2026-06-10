@@ -15,8 +15,9 @@ add_task(async function () {
   );
 
   let menu = await rightClickStyleSheet(panel, ui.editors[0]);
-  ok(
-    !openLinkNewTabItem.hasAttribute("disabled"),
+  is(
+    openLinkNewTabItem.getAttribute("disabled"),
+    "false",
     "The menu item is not disabled"
   );
   ok(!openLinkNewTabItem.hidden, "The menu item is not hidden");
@@ -47,7 +48,11 @@ add_task(async function () {
   await hidden;
 
   menu = await rightClickInlineStyleSheet(panel, ui.editors[1]);
-  ok(openLinkNewTabItem.hasAttribute("disabled"), "The menu item is disabled");
+  is(
+    openLinkNewTabItem.getAttribute("disabled"),
+    "true",
+    "The menu item is disabled"
+  );
   ok(!openLinkNewTabItem.hidden, "The menu item should not be hidden");
   menu.hidePopup();
 

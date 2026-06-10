@@ -4,8 +4,8 @@
 
 package org.mozilla.fenix.perf
 
-import android.app.Activity
 import androidx.annotation.UiThread
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.perf.StartupTimeline.onApplicationInit
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupActivity
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupDestination
@@ -43,13 +43,7 @@ object StartupTimeline {
         advanceState(StartupActivity.INTENT_RECEIVER)
     }
 
-    /**
-     * Called at the end of [Activity.onCreate] to signal that the home activity has finished
-     * creating. This advances the startup state machine and triggers fully drawn reporting.
-     *
-     * @param activity The [Activity] that has finished creating.
-     */
-    fun onActivityCreateEndHome(activity: Activity) {
+    fun onActivityCreateEndHome(activity: HomeActivity) {
         advanceState(StartupActivity.HOME)
         reportFullyDrawn.onActivityCreateEndHome(state, activity)
     }
@@ -57,7 +51,7 @@ object StartupTimeline {
     /**
      * Instruments "visually complete" cold startup time to homescreen for use with FNPRMS.
      */
-    fun onTopSitesItemBound(activity: Activity) {
+    fun onTopSitesItemBound(activity: HomeActivity) {
         reportFullyDrawn.onTopSitesItemBound(state, activity)
     }
 

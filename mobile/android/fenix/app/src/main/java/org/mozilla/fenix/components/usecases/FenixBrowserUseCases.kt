@@ -21,7 +21,7 @@ import org.mozilla.fenix.components.AppStore
  * Use cases for handling loading a URL and performing a search.
  *
  * @param appStore [AppStore] used to fetch the appstore
- * @param tabsUseCases [TabsUseCases] used for adding new tabs.
+ * @param addNewTabUseCase [TabsUseCases.AddNewTabUseCase] used for adding new tabs.
  * @param loadUrlUseCase [SessionUseCases.DefaultLoadUrlUseCase] used for loading a URL.
  * @param searchUseCases [SearchUseCases] used for performing a search.
  * @param homepageTitle The title of the new homepage tab.
@@ -29,7 +29,7 @@ import org.mozilla.fenix.components.AppStore
  */
 class FenixBrowserUseCases(
     private val appStore: AppStore,
-    private val tabsUseCases: TabsUseCases,
+    private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase,
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
     private val searchUseCases: SearchUseCases,
     private val homepageTitle: String,
@@ -66,7 +66,7 @@ class FenixBrowserUseCases(
         // and let it try to load whatever was entered.
         if (searchEngine == null || (!forceSearch && searchTermOrURL.isUrl())) {
             if (newTab) {
-                tabsUseCases.addTab.invoke(
+                addNewTabUseCase.invoke(
                     url = searchTermOrURL.toNormalizedUrl(),
                     flags = flags,
                     private = private,
@@ -124,25 +124,10 @@ class FenixBrowserUseCases(
      * @return The ID of the created tab.
      */
     fun addNewHomepageTab(private: Boolean = appStore.state.mode.isPrivate): String {
-        return tabsUseCases.addTab.invoke(
+        return addNewTabUseCase.invoke(
             url = ABOUT_HOME_URL,
             title = homepageTitle,
             private = private,
-        )
-    }
-
-    /**
-     * Adds a new homepage ("about:home") tab to the provided tab group.
-     *
-     * @param group The ID of the group.
-     */
-    fun addNewHomepageTabInGroup(
-        group: String,
-    ) {
-        val tabId = addNewHomepageTab()
-        tabsUseCases.addTabsInGroup(
-            group = group,
-            tabId = tabId,
         )
     }
 

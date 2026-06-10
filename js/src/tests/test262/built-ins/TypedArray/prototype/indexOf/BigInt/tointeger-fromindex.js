@@ -17,7 +17,7 @@ info: |
   4. Let n be ? ToInteger(fromIndex). (If fromIndex is undefined, this step
   produces the value 0.)
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
@@ -27,10 +27,10 @@ var obj = {
   }
 };
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var sample;
 
-  sample = new TA(makeCtorArg([42n, 43n]));
+  sample = new TA([42n, 43n]);
   assert.sameValue(sample.indexOf(42n, "1"), -1, "string [0]");
   assert.sameValue(sample.indexOf(43n, "1"), 1, "string [1]");
 

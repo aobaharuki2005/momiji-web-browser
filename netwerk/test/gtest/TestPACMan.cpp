@@ -148,7 +148,7 @@ class TestPACMan : public ::testing::Test {
   }
 
   void AssertPACSpecEqualTo(const char* aExpected) {
-    ASSERT_STREQ(aExpected, mPACMan->mPACURISpec.get());
+    ASSERT_STREQ(aExpected, mPACMan->mPACURISpec.Data());
   }
 
  private:
@@ -168,7 +168,7 @@ TEST_F(TestPACMan, TestCreateDHCPClientAndGetOption) {
 
   GetPACManDHCPCient()->GetOption(252, spec);
 
-  ASSERT_STREQ(TEST_WPAD_DHCP_OPTION, spec.get());
+  ASSERT_STREQ(TEST_WPAD_DHCP_OPTION, spec.Data());
 }
 
 TEST_F(TestPACMan, TestCreateDHCPClientAndGetEmptyOption) {
@@ -189,19 +189,19 @@ TEST_F(TestPACMan,
   ProcessAllEventsTenTimes();
 
   mozilla::StaticMutexAutoLock lock(sMutex);
-  ASSERT_STREQ(TEST_WPAD_DHCP_OPTION, WPADOptionResult.get());
+  ASSERT_STREQ(TEST_WPAD_DHCP_OPTION, WPADOptionResult.Data());
   AssertPACSpecEqualTo(TEST_WPAD_DHCP_OPTION);
 }
 
 TEST_F(TestPACMan, WhenTheDHCPResponseIsEmptyWPADDefaultsToStandardURL) {
-  SetOptionResult("");
+  SetOptionResult(""_ns.Data());
 
   mPACMan->LoadPACFromURI(""_ns);
   ASSERT_TRUE(NS_HasPendingEvents(nullptr));
   ProcessAllEventsTenTimes();
 
   mozilla::StaticMutexAutoLock lock(sMutex);
-  ASSERT_STREQ("", WPADOptionResult.get());
+  ASSERT_STREQ("", WPADOptionResult.Data());
   AssertPACSpecEqualTo("http://wpad/wpad.dat");
 }
 
@@ -213,7 +213,7 @@ TEST_F(TestPACMan, WhenThereIsNoDHCPClientWPADDefaultsToStandardURL) {
   ProcessAllEventsTenTimes();
 
   mozilla::StaticMutexAutoLock lock(sMutex);
-  ASSERT_STREQ(TEST_WPAD_DHCP_OPTION, WPADOptionResult.get());
+  ASSERT_STREQ(TEST_WPAD_DHCP_OPTION, WPADOptionResult.Data());
   AssertPACSpecEqualTo("http://wpad/wpad.dat");
 }
 
@@ -225,7 +225,7 @@ TEST_F(TestPACMan, WhenWPADOverDHCPIsPreffedOffWPADDefaultsToStandardURL) {
   ProcessAllEventsTenTimes();
 
   mozilla::StaticMutexAutoLock lock(sMutex);
-  ASSERT_STREQ(TEST_WPAD_DHCP_OPTION, WPADOptionResult.get());
+  ASSERT_STREQ(TEST_WPAD_DHCP_OPTION, WPADOptionResult.Data());
   AssertPACSpecEqualTo("http://wpad/wpad.dat");
 }
 

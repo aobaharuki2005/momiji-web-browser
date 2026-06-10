@@ -213,12 +213,12 @@ async function runWindowOpenTests(browser, tests) {
       BrowserTestUtils.synthesizeMouseAtCenter(id, { ...event }, browser);
     } else {
       // Make sure the keyboard activates a simple button on the page.
-      await SpecialPowers.spawn(browser, [], () => {
+      await ContentTask.spawn(browser, id, () => {
         content.document.querySelector("#focus-result").value = "";
         content.document.querySelector("#focus-check").focus();
       });
       BrowserTestUtils.synthesizeKey("VK_SPACE", {}, browser);
-      await SpecialPowers.spawn(browser, [], async () => {
+      await ContentTask.spawn(browser, {}, async () => {
         await ContentTaskUtils.waitForCondition(
           () => content.document.querySelector("#focus-result").value === "ok"
         );
@@ -226,7 +226,7 @@ async function runWindowOpenTests(browser, tests) {
 
       // Once confirmed the keyboard event works, send the actual event
       // that calls window.open.
-      await SpecialPowers.spawn(browser, [id], elementId => {
+      await ContentTask.spawn(browser, id, elementId => {
         content.document.querySelector(elementId).focus();
       });
       BrowserTestUtils.synthesizeKey(type, { ...event }, browser);

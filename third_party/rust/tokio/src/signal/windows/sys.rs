@@ -1,37 +1,35 @@
 use std::io;
-use std::sync::OnceLock;
+use std::sync::Once;
 
+use crate::signal::registry::{globals, EventId, EventInfo, Init, Storage};
 use crate::signal::RxFuture;
-use crate::sync::watch;
 
-use windows_sys::core::BOOL;
+use windows_sys::Win32::Foundation::BOOL;
 use windows_sys::Win32::System::Console as console;
 
-type EventInfo = watch::Sender<()>;
-
 pub(super) fn ctrl_break() -> io::Result<RxFuture> {
-    new(&registry().ctrl_break)
+    new(console::CTRL_BREAK_EVENT)
 }
 
 pub(super) fn ctrl_close() -> io::Result<RxFuture> {
-    new(&registry().ctrl_close)
+    new(console::CTRL_CLOSE_EVENT)
 }
 
 pub(super) fn ctrl_c() -> io::Result<RxFuture> {
-    new(&registry().ctrl_c)
+    new(console::CTRL_C_EVENT)
 }
 
 pub(super) fn ctrl_logoff() -> io::Result<RxFuture> {
-    new(&registry().ctrl_logoff)
+    new(console::CTRL_LOGOFF_EVENT)
 }
 
 pub(super) fn ctrl_shutdown() -> io::Result<RxFuture> {
-    new(&registry().ctrl_shutdown)
+    new(console::CTRL_SHUTDOWN_EVENT)
 }
 
-fn new(event_info: &EventInfo) -> io::Result<RxFuture> {
+fn new(signum: u32) -> io::Result<RxFuture> {
     global_init()?;
-    let rx = event_info.subscribe();
+    let rx = globals().register_listener(signum as EventId);
     Ok(RxFuture::new(rx))
 }
 
@@ -42,14 +40,16 @@ fn event_requires_infinite_sleep_in_handler(signum: u32) -> bool {
     //
     // For more information, see:
     // https://learn.microsoft.com/en-us/windows/console/handlerroutine#remarks
-    matches!(
-        signum,
-        console::CTRL_CLOSE_EVENT | console::CTRL_LOGOFF_EVENT | console::CTRL_SHUTDOWN_EVENT
-    )
+    match signum {
+        console::CTRL_CLOSE_EVENT => true,
+        console::CTRL_LOGOFF_EVENT => true,
+        console::CTRL_SHUTDOWN_EVENT => true,
+        _ => false,
+    }
 }
 
-#[derive(Debug, Default)]
-struct Registry {
+#[derive(Debug)]
+pub(crate) struct OsStorage {
     ctrl_break: EventInfo,
     ctrl_close: EventInfo,
     ctrl_c: EventInfo,
@@ -57,62 +57,92 @@ struct Registry {
     ctrl_shutdown: EventInfo,
 }
 
-impl Registry {
-    fn event_info(&self, signum: u32) -> Option<&EventInfo> {
-        match signum {
-            console::CTRL_BREAK_EVENT => Some(&self.ctrl_break),
-            console::CTRL_CLOSE_EVENT => Some(&self.ctrl_close),
-            console::CTRL_C_EVENT => Some(&self.ctrl_c),
-            console::CTRL_LOGOFF_EVENT => Some(&self.ctrl_logoff),
-            console::CTRL_SHUTDOWN_EVENT => Some(&self.ctrl_shutdown),
-            _ => None,
+impl Init for OsStorage {
+    fn init() -> Self {
+        Self {
+            ctrl_break: Default::default(),
+            ctrl_close: Default::default(),
+            ctrl_c: Default::default(),
+            ctrl_logoff: Default::default(),
+            ctrl_shutdown: Default::default(),
         }
     }
 }
 
-fn registry() -> &'static Registry {
-    static REGISTRY: OnceLock<Registry> = OnceLock::new();
+impl Storage for OsStorage {
+    fn event_info(&self, id: EventId) -> Option<&EventInfo> {
+        match u32::try_from(id) {
+            Ok(console::CTRL_BREAK_EVENT) => Some(&self.ctrl_break),
+            Ok(console::CTRL_CLOSE_EVENT) => Some(&self.ctrl_close),
+            Ok(console::CTRL_C_EVENT) => Some(&self.ctrl_c),
+            Ok(console::CTRL_LOGOFF_EVENT) => Some(&self.ctrl_logoff),
+            Ok(console::CTRL_SHUTDOWN_EVENT) => Some(&self.ctrl_shutdown),
+            _ => None,
+        }
+    }
 
-    REGISTRY.get_or_init(Default::default)
+    fn for_each<'a, F>(&'a self, mut f: F)
+    where
+        F: FnMut(&'a EventInfo),
+    {
+        f(&self.ctrl_break);
+        f(&self.ctrl_close);
+        f(&self.ctrl_c);
+        f(&self.ctrl_logoff);
+        f(&self.ctrl_shutdown);
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct OsExtraData {}
+
+impl Init for OsExtraData {
+    fn init() -> Self {
+        Self {}
+    }
 }
 
 fn global_init() -> io::Result<()> {
-    static INIT: OnceLock<Result<(), Option<i32>>> = OnceLock::new();
+    static INIT: Once = Once::new();
 
-    INIT.get_or_init(|| {
-        let rc = unsafe { console::SetConsoleCtrlHandler(Some(handler), 1) };
-        if rc == 0 {
-            Err(io::Error::last_os_error().raw_os_error())
+    let mut init = None;
+
+    INIT.call_once(|| unsafe {
+        let rc = console::SetConsoleCtrlHandler(Some(handler), 1);
+        let ret = if rc == 0 {
+            Err(io::Error::last_os_error())
         } else {
             Ok(())
-        }
-    })
-    .map_err(|e| {
-        e.map_or_else(
-            || io::Error::new(io::ErrorKind::Other, "registering signal handler failed"),
-            io::Error::from_raw_os_error,
-        )
-    })
+        };
+
+        init = Some(ret);
+    });
+
+    init.unwrap_or_else(|| Ok(()))
 }
 
 unsafe extern "system" fn handler(ty: u32) -> BOOL {
-    // Ignore unknown control signal types.
-    let Some(event_info) = registry().event_info(ty) else {
-        return 0;
-    };
+    let globals = globals();
+    globals.record_event(ty as EventId);
 
-    // According to https://learn.microsoft.com/en-us/windows/console/handlerroutine
+    // According to https://docs.microsoft.com/en-us/windows/console/handlerroutine
     // the handler routine is always invoked in a new thread, thus we don't
     // have the same restrictions as in Unix signal handlers, meaning we can
     // go ahead and perform the broadcast here.
-    match event_info.send(()) {
-        Ok(_) if event_requires_infinite_sleep_in_handler(ty) => loop {
+    let event_was_handled = globals.broadcast();
+
+    if event_was_handled && event_requires_infinite_sleep_in_handler(ty) {
+        loop {
             std::thread::park();
-        },
-        Ok(_) => 1,
+        }
+    }
+
+    if event_was_handled {
+        1
+    } else {
         // No one is listening for this notification any more
         // let the OS fire the next (possibly the default) handler.
-        Err(_) => 0,
+        0
     }
 }
 
@@ -127,9 +157,9 @@ mod tests {
         if event_requires_infinite_sleep_in_handler(signum) {
             // Those events will enter an infinite loop in `handler`, so
             // we need to run them on a separate thread
-            std::thread::spawn(move || unsafe { super::handler(signum) });
+            std::thread::spawn(move || super::handler(signum));
         } else {
-            unsafe { super::handler(signum) };
+            super::handler(signum);
         }
     }
 

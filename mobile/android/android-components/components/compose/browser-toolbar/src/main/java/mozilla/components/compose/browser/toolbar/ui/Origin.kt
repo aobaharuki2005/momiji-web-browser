@@ -64,7 +64,6 @@ import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.T
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.utils.PageOriginContextualMenuBuilder
-import mozilla.components.compose.browser.toolbar.utils.truncateUrlAroundDomain
 import mozilla.components.support.ktx.kotlin.getRegistrableDomainIndexRange
 import mozilla.components.support.utils.ClipboardHandler
 
@@ -202,13 +201,10 @@ private fun Url(
     val registrableDomainIndexRange = remember(url) {
         url.getRegistrableDomainIndexRange()
     }
-    val (truncatedUrl, adjustedDomainIndexRange) = remember(urlString, registrableDomainIndexRange) {
-        truncateUrlAroundDomain(urlString, registrableDomainIndexRange)
-    }
 
     HighlightedDomainUrl(
-        url = truncatedUrl,
-        registrableDomainIndexRange = adjustedDomainIndexRange,
+        url = urlString,
+        registrableDomainIndexRange = registrableDomainIndexRange,
         fadedTextStyle = materialTextStyle.merge(
             fontSize = fontSize.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

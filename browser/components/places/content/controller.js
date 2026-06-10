@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1665,7 +1666,7 @@ var PlacesControllerDragHelper = {
       } else if (
         XULElement.isInstance(data) &&
         data.localName == "tab" &&
-        data.documentGlobal.isChromeWindow
+        data.ownerGlobal.isChromeWindow
       ) {
         let uri = data.linkedBrowser.currentURI;
         let spec = uri ? uri.spec : "about:blank";
@@ -1673,21 +1674,6 @@ var PlacesControllerDragHelper = {
           uri: spec,
           title: data.label,
           type: PlacesUtils.TYPE_X_MOZ_URL,
-        });
-      } else if (
-        XULElement.isInstance(data) &&
-        data.localName == "tab-split-view-wrapper" &&
-        data.documentGlobal.isChromeWindow
-      ) {
-        // Splitview tabs are dragged together via tab-split-view-wrapper, so that means
-        // mozItemCount/dropCount is 1, which is why we unpack its tabs to bookmark here.
-        data.tabs.forEach(tab => {
-          let uri = tab.linkedBrowser.currentURI?.spec ?? "about:blank";
-          nodes.push({
-            uri,
-            title: tab.label,
-            type: PlacesUtils.TYPE_X_MOZ_URL,
-          });
         });
       } else {
         throw new Error("bogus data was passed as a tab");

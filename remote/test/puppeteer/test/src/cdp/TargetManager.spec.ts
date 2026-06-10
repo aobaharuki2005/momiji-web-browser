@@ -27,25 +27,18 @@ describe('TargetManager', () => {
     const {server, context, browser} = state;
 
     const targetManager = (browser as CdpBrowser)._targetManager();
-
-    const initialTargetCount = targetManager.getAvailableTargets().size;
-    // There could be an conditional extra prerender target.
-    expect(initialTargetCount === 3 || initialTargetCount === 4).toBeTruthy();
+    expect(targetManager.getAvailableTargets().size).toBe(3);
 
     expect(await context.pages()).toHaveLength(0);
-    expect(targetManager.getAvailableTargets().size).toBe(initialTargetCount);
+    expect(targetManager.getAvailableTargets().size).toBe(3);
 
     const page = await context.newPage();
     expect(await context.pages()).toHaveLength(1);
-    expect(targetManager.getAvailableTargets().size).toBe(
-      initialTargetCount + 2,
-    );
+    expect(targetManager.getAvailableTargets().size).toBe(5);
 
     await page.goto(server.EMPTY_PAGE);
     expect(await context.pages()).toHaveLength(1);
-    expect(targetManager.getAvailableTargets().size).toBe(
-      initialTargetCount + 2,
-    );
+    expect(targetManager.getAvailableTargets().size).toBe(5);
 
     // attach a local iframe.
     let framePromise = page.waitForFrame(frame => {
@@ -54,9 +47,7 @@ describe('TargetManager', () => {
     await attachFrame(page, 'frame1', server.EMPTY_PAGE);
     await framePromise;
     expect(await context.pages()).toHaveLength(1);
-    expect(targetManager.getAvailableTargets().size).toBe(
-      initialTargetCount + 2,
-    );
+    expect(targetManager.getAvailableTargets().size).toBe(5);
     expect(page.frames()).toHaveLength(2);
 
     // // attach a remote frame iframe.
@@ -70,9 +61,7 @@ describe('TargetManager', () => {
     );
     await framePromise;
     expect(await context.pages()).toHaveLength(1);
-    expect(targetManager.getAvailableTargets().size).toBe(
-      initialTargetCount + 3,
-    );
+    expect(targetManager.getAvailableTargets().size).toBe(6);
     expect(page.frames()).toHaveLength(3);
 
     framePromise = page.waitForFrame(frame => {
@@ -85,9 +74,7 @@ describe('TargetManager', () => {
     );
     await framePromise;
     expect(await context.pages()).toHaveLength(1);
-    expect(targetManager.getAvailableTargets().size).toBe(
-      initialTargetCount + 4,
-    );
+    expect(targetManager.getAvailableTargets().size).toBe(7);
     expect(page.frames()).toHaveLength(4);
   });
 });

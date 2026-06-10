@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google LLC
+ * Copyright 2017 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -153,7 +153,7 @@ void SkVertices::Builder::init(const Desc& desc) {
 sk_sp<SkVertices> SkVertices::Builder::detach() {
     if (fVertices) {
         fVertices->fBounds = SkRect::BoundsOrEmpty({fVertices->fPositions,
-                                                    (size_t)fVertices->fVertexCount});
+                                                    fVertices->fVertexCount});
         if (fVertices->fMode == kTriangleFan_VertexMode) {
             if (fIntermediateFanIndices) {
                 SkASSERT(fVertices->fIndexCount);

@@ -8,7 +8,7 @@ use crate::context::{ElementCascadeInputs, SharedStyleContext, StyleContext};
 use crate::data::{ElementData, ElementStyles, RestyleKind};
 use crate::dom::{NodeInfo, OpaqueNode, TElement, TNode};
 use crate::invalidation::element::restyle_hints::RestyleHint;
-use crate::matching::MatchMethods;
+use crate::matching::{ChildRestyleRequirement, MatchMethods};
 use crate::selector_parser::PseudoElement;
 use crate::sharing::StyleSharingTarget;
 use crate::style_resolver::{PseudoElementResolution, StyleResolverForElement};
@@ -50,6 +50,27 @@ impl<E: TElement> PreTraverseToken<E> {
     pub(crate) fn traversal_root(self) -> Option<E> {
         self.0
     }
+}
+
+/// A global variable holding the state of
+/// `is_servo_nonincremental_layout()`.
+/// See [#22854](https://github.com/servo/servo/issues/22854).
+#[cfg(feature = "servo")]
+pub static IS_SERVO_NONINCREMENTAL_LAYOUT: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+#[cfg(feature = "servo")]
+#[inline]
+fn is_servo_nonincremental_layout() -> bool {
+    use std::sync::atomic::Ordering;
+
+    IS_SERVO_NONINCREMENTAL_LAYOUT.load(Ordering::Relaxed)
+}
+
+#[cfg(not(feature = "servo"))]
+#[inline]
+fn is_servo_nonincremental_layout() -> bool {
+    false
 }
 
 /// A DOM Traversal trait, that is used to generically implement styling for
@@ -198,6 +219,11 @@ pub trait DomTraversal<E: TElement>: Sync {
             el, traversal_flags, data
         );
 
+        // Non-incremental layout visits every node.
+        if is_servo_nonincremental_layout() {
+            return true;
+        }
+
         // Unwrap the data.
         let data = match data {
             Some(d) if d.has_styles() => d,
@@ -322,7 +348,11 @@ where
             rule_inclusion,
             PseudoElementResolution::IfApplicable,
         )
-        .resolve_primary_style(style.as_deref(), layout_parent_style.as_deref());
+        .resolve_primary_style(
+            style.as_deref(),
+            layout_parent_style.as_deref(),
+            selectors::matching::IncludeStartingStyle::No,
+        );
 
         let is_display_contents = primary_style.style().is_display_contents();
 
@@ -369,6 +399,8 @@ pub fn recalc_style_at<E, D, F>(
     D: DomTraversal<E>,
     F: FnMut(E::ConcreteNode),
 {
+    use std::cmp;
+
     let flags = context.shared.traversal_flags;
     let is_initial_style = !data.has_styles();
 
@@ -390,17 +422,21 @@ pub fn recalc_style_at<E, D, F>(
         data
     );
 
-    let mut child_restyle_hint = RestyleHint::empty();
+    let mut child_restyle_requirement = ChildRestyleRequirement::CanSkipCascade;
 
     // Compute style for this element if necessary.
     if let Some(restyle_kind) = restyle_kind {
-        child_restyle_hint = compute_style(traversal_data, context, element, data, restyle_kind);
+        child_restyle_requirement =
+            compute_style(traversal_data, context, element, data, restyle_kind);
 
         if !element.matches_user_and_content_rules() {
             // We must always cascade native anonymous subtrees, since they
             // may have pseudo-elements underneath that would inherit from the
             // closest non-NAC ancestor instead of us.
-            child_restyle_hint |= RestyleHint::RECASCADE_SELF;
+            child_restyle_requirement = cmp::max(
+                child_restyle_requirement,
+                ChildRestyleRequirement::MustCascadeChildren,
+            );
         }
 
         // If we're restyling this element to display:none, throw away all style
@@ -438,13 +474,27 @@ pub fn recalc_style_at<E, D, F>(
         "propagated_hint={:?}, restyle_requirement={:?}, \
          is_display_none={:?}, implementing_pseudo={:?}",
         propagated_hint,
-        child_restyle_hint,
+        child_restyle_requirement,
         data.styles.is_display_none(),
         element.implemented_pseudo_element()
     );
 
     // Integrate the child cascade requirement into the propagated hint.
-    propagated_hint |= child_restyle_hint;
+    match child_restyle_requirement {
+        ChildRestyleRequirement::CanSkipCascade => {},
+        ChildRestyleRequirement::MustCascadeDescendants => {
+            propagated_hint |= RestyleHint::RECASCADE_SELF | RestyleHint::RECASCADE_DESCENDANTS;
+        },
+        ChildRestyleRequirement::MustCascadeChildrenIfInheritResetStyle => {
+            propagated_hint |= RestyleHint::RECASCADE_SELF_IF_INHERIT_RESET_STYLE;
+        },
+        ChildRestyleRequirement::MustCascadeChildren => {
+            propagated_hint |= RestyleHint::RECASCADE_SELF;
+        },
+        ChildRestyleRequirement::MustMatchDescendants => {
+            propagated_hint |= RestyleHint::restyle_subtree();
+        },
+    }
 
     let has_dirty_descendants_for_this_restyle = if flags.for_animation_only() {
         element.has_animation_only_dirty_descendants()
@@ -462,8 +512,9 @@ pub fn recalc_style_at<E, D, F>(
     //
     // We only do this if we're not a display: none root, since in that case
     // it's useless to style children.
-    let mut traverse_children =
-        has_dirty_descendants_for_this_restyle || !propagated_hint.is_empty();
+    let mut traverse_children = has_dirty_descendants_for_this_restyle
+        || !propagated_hint.is_empty()
+        || is_servo_nonincremental_layout();
 
     traverse_children = traverse_children && !data.styles.is_display_none();
 
@@ -507,7 +558,7 @@ fn compute_style<E>(
     element: E,
     data: &mut ElementData,
     kind: RestyleKind,
-) -> RestyleHint
+) -> ChildRestyleRequirement
 where
     E: TElement,
 {
@@ -589,7 +640,8 @@ where
                 PseudoElementResolution::IfApplicable,
             );
 
-            resolver.cascade_styles_with_default_parents(cascade_inputs)
+            resolver
+                .cascade_styles_with_default_parents(cascade_inputs, data.may_have_starting_style())
         },
         CascadeOnly => {
             // Skipping full matching, load cascade inputs from previous values.
@@ -603,7 +655,10 @@ where
                     PseudoElementResolution::IfApplicable,
                 );
 
-                resolver.cascade_styles_with_default_parents(cascade_inputs)
+                resolver.cascade_styles_with_default_parents(
+                    cascade_inputs,
+                    data.may_have_starting_style(),
+                )
             };
 
             // Insert into the cache, but only if this style isn't reused from a
@@ -704,7 +759,9 @@ fn note_children<E, D, F>(
         let child = match child_node.as_element() {
             Some(el) => el,
             None => {
-                if D::text_node_needs_traversal(child_node, data) {
+                if is_servo_nonincremental_layout()
+                    || D::text_node_needs_traversal(child_node, data)
+                {
                     note_child(child_node);
                 }
                 continue;

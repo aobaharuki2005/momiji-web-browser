@@ -4,8 +4,6 @@ prefs = [
   "browser.sessionstore.closedTabsFromClosedWindows=true",
 ]
 tags = "os_integration"
-head = "head.js"
-support-files = ["file_shareurl.html"]
 
 ["browser_aiwindow_options.js"]
 
@@ -13,19 +11,11 @@ support-files = ["file_shareurl.html"]
 
 ["browser_file_menu_import_wizard.js"]
 
-["browser_file_offline.js"]
-
-["browser_file_share_linux.js"]
+["browser_file_share.js"]
 https_first_disabled = true
-run-if = ["os == 'linux'"]
-
-["browser_file_share_macosx.js"]
-https_first_disabled = true
-run-if = ["os == 'mac'"]
-
-["browser_file_share_win.js"]
-https_first_disabled = true
-run-if = ["os == 'win'"]
+run-if = [
+  "os == 'mac'", # Mac only feature
+]
 
 ["browser_history_recently_closed_tabs.js"]
 run-if = [
@@ -33,10 +23,8 @@ run-if = [
   "os == 'win'",
 ] # No menubar on macOS.
 
-["browser_macos_application_set_as_default.js"]
-run-if = [
-  "os == 'mac'", # Mac only feature
-]
+support-files = ["file_shareurl.html"]
+
 ["browser_search_bookmarks.js"]
 
 ["browser_search_history.js"]

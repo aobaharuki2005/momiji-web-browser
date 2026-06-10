@@ -19,6 +19,10 @@
   <string name="content_description_menu">هەڵبژاردەی زیاتر</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
   <string name="search_hint">بگەڕێ یان ناونیشان بنووسە</string>
+  <!-- No Open Tabs Message Description -->
+  <string name="no_open_tabs_description">بازدەرە کراوەکانت لێرە پیشان دەدرێت.</string>
+  <!-- No Private Tabs Message Description -->
+  <string name="no_private_tabs_description">بازدەرە تایبەتە شاراوەکان لێرە پیشان دەدرێت</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d دیاریکراوە</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
@@ -29,6 +33,8 @@
   <string name="tab_tray_select_collection">کۆمەڵە هەڵبژێرە</string>
   <!-- Content description for close button while in multiselect mode in tab tray -->
   <string name="tab_tray_close_multiselect_content_description">لە دۆخی دیاریکردنی چەندیی دەربچۆ</string>
+  <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+  <string name="tab_tray_collection_button_multiselect_content_description">بازدەرە دیاریکراوەکان هەڵبگرە لە کۆمەڵەکە</string>
   <!-- About content. %1$s is the name of the app (for example "Firefox"). -->
   <string name="about_content">%1$s بەرهەم هێنراوە لە لایەن مۆزیلاوە.</string>
   <!-- Private Browsing -->
@@ -69,6 +75,10 @@
   <string name="browser_menu_refresh">نوێکردنەوە</string>
   <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
   <string name="browser_menu_stop">بوەستە</string>
+  <!-- Browser menu button that sends a user to help articles -->
+  <string name="browser_menu_help">یارمەتی</string>
+  <!-- Browser menu button that sends a to a the what's new article -->
+  <string name="browser_menu_whats_new">چی نوێ هەیە</string>
   <!-- Browser menu button that opens the settings menu -->
   <string name="browser_menu_settings">ڕێکخستنەکان</string>
   <!-- Browser menu button that opens a user's library -->
@@ -94,6 +104,11 @@
     Browser menu text shown in custom tabs to indicate this is a Fenix tab
     %1$s is the name of the app (for example "Firefox").
   -->
+  <string name="browser_menu_powered_by">پشتگیریکراوە لە لایەن %1$s</string>
+  <!--
+    Browser menu text shown in custom tabs to indicate this is a Fenix tab
+    %1$s is the name of the app (for example "Firefox").
+  -->
   <string name="browser_menu_powered_by2">پشتگیریکراوە لە لایەن %1$s</string>
   <!-- Browser menu button to put the current page in reader mode -->
   <string name="browser_menu_read">شێوازی دۆخی خوێندنەوە</string>
@@ -101,6 +116,12 @@
   <string name="browser_menu_read_close">شێوازی دۆخی خوێندنەوە دابخە</string>
   <!-- Browser menu button to open the current page in an external app -->
   <string name="browser_menu_open_app_link">کردنەوە لە بەرنامە</string>
+  <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+  <string name="browser_menu_customize_reader_view">شێوازی خوێندنەوە ڕێکبخە</string>
+  <!-- Browser menu label for adding a bookmark -->
+  <string name="browser_menu_add">زیادکردن</string>
+  <!-- Browser menu label for editing a bookmark -->
+  <string name="browser_menu_edit">دەستکاریکردن</string>
   <!--
     Locale Settings Fragment
 
@@ -111,11 +132,9 @@
   <string name="default_locale_text">وەکوو زمانی ئامێرەکە</string>
   <!-- Placeholder text shown in the search bar before a user enters text -->
   <string name="locale_search_hint">گەڕان بۆ زمان</string>
-  <!--
-    Search Fragment
-
-    Button in the search view that lets a user navigate to the site in their clipboard
-  -->
+  <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+  <string name="search_shortcuts_engine_settings">ڕێکخستنەکانی بزوێنەری گەڕان</string>
+  <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
   <string name="awesomebar_clipboard_title">بەستەر بهێنە لە گرتەتەختەوە</string>
   <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
   <string name="search_suggestions_onboarding_allow_button">ڕێگەبدە</string>
@@ -322,6 +341,8 @@
   <string name="preference_gestures_website_pull_to_refresh">بیخزێنە بۆ نوێکردنەوە</string>
   <!-- Preference for using the dynamic toolbar -->
   <string name="preference_gestures_dynamic_toolbar">بیخزێنە بۆ شاردنەوەی توڵامراز</string>
+  <!-- Preference for showing the opened tabs by swiping up on the toolbar -->
+  <string name="preference_gestures_swipe_toolbar_show_tabs">توڵامراز ببە بۆ سەرەوە بۆ کردنەوەی بازدەرەکان</string>
   <!--
     Library
 
@@ -396,6 +417,12 @@
   <string name="add_tab">بازدەر زیادبکە</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_private_tab">بازدەری تایبەت زیاد بکە</string>
+  <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+  <string name="tab_drawer_fab_content">تایبەت</string>
+  <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+  <string name="tab_drawer_fab_sync">هاوکاتگەری</string>
+  <!-- Text shown in the menu for sharing all tabs -->
+  <string name="tab_tray_menu_item_share">هەموو بازدەرەکانی بڵاوەپێبکە</string>
   <!-- Text shown in the menu to view recently closed tabs -->
   <string name="tab_tray_menu_recently_closed">کۆتا بازدەری داخراو</string>
   <!-- Text shown in the menu to view account settings -->
@@ -404,6 +431,12 @@
   <string name="tab_tray_menu_tab_settings">ڕێکخستنەکانی بازدەر</string>
   <!-- Text shown in the menu for closing all tabs -->
   <string name="tab_tray_menu_item_close">هەموو بازدەرەکان دابخە</string>
+  <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+  <string name="tab_tray_multiselect_menu_item_bookmark">نیشانەکراو</string>
+  <!-- Text shown in the multiselect menu for closing selected tabs. -->
+  <string name="tab_tray_multiselect_menu_item_close">داخستن</string>
+  <!-- Content description for tabs tray multiselect share button -->
+  <string name="tab_tray_multiselect_share_content_description">بازدەری دیاریکراو بڵاوبکەرەوە</string>
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">پێڕستی بازدەری دیاریکراو</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
@@ -480,6 +513,8 @@
   <string name="edit_bookmark_snackbar_action">دەستکاریکردن</string>
   <!-- Bookmark overflow menu edit button -->
   <string name="bookmark_menu_edit_button">دەستکاریکردن</string>
+  <!-- Bookmark overflow menu copy button -->
+  <string name="bookmark_menu_copy_button">لەبەرگرتنەوە</string>
   <!-- Bookmark overflow menu share button -->
   <string name="bookmark_menu_share_button">بڵاوکردنەوە</string>
   <!-- Bookmark overflow menu open in new tab button -->
@@ -512,6 +547,8 @@
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">%1$s سڕایەوە</string>
+  <!-- Bookmark undo button for deletion snackbar action -->
+  <string name="bookmark_undo_deletion">گێڕانەوە</string>
   <!--
     Site Permissions
 
@@ -671,6 +708,8 @@
     Text shown in snackbar when user closes a tab
   -->
   <string name="snackbar_tab_closed">بازدەر داخرا</string>
+  <!-- Text shown in snackbar when user closes all tabs -->
+  <string name="snackbar_tabs_closed">بازدەرەکان داخران</string>
   <!-- Text shown in snackbar when user closes a private tab -->
   <string name="snackbar_private_tab_closed">بازدەری تایبەت داخرا</string>
   <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
@@ -723,6 +762,8 @@
   <string name="preferences_delete_browsing_data_on_quit">سڕێنەوەی زانیاری گەڕان دووای دەرچوون</string>
   <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
   <string name="preference_summary_delete_browsing_data_on_quit_2">خۆکارانەوە زانیارییەکانی گەڕان دەسڕێتەوە کاتێک دەردەچیت لە پێڕستی سەرەکیەوە</string>
+  <!-- Action item in menu for the Delete browsing data on quit feature -->
+  <string name="delete_browsing_data_on_quit_action">وازهێنان</string>
   <!-- Dialog message to the user asking to delete browsing data. %s is the name of the app (for example "Firefox"). -->
   <string name="delete_browsing_data_prompt_message_3">%s زانیاری گەڕانی دیاریکراو دەسڕێتەوە.</string>
   <!-- Text for the cancel button for the data deletion dialog -->
@@ -964,6 +1005,10 @@
     the certificate authority that verified the ticket
   -->
   <string name="certificate_info_verified_by">سەلمێنراوە لە لایەن: %1$s</string>
+  <!-- Login overflow menu delete button -->
+  <string name="login_menu_delete_button">سڕینەوە</string>
+  <!-- Login overflow menu edit button -->
+  <string name="login_menu_edit_button">دەستکاریکردن</string>
   <!-- Positive action of a dialog asking to delete -->
   <string name="dialog_delete_positive">سڕینەوە</string>
   <!-- Voice search button content description -->

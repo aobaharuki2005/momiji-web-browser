@@ -8,27 +8,17 @@ import android.content.Context
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Store
 import mozilla.components.support.ktx.android.content.share
-import mozilla.components.support.ktx.android.content.shareFile
-import mozilla.components.support.utils.DefaultDownloadFileUtils
-import mozilla.components.support.utils.DownloadFileUtils
+import mozilla.components.support.ktx.android.content.shareMedia
 import org.mozilla.fenix.downloads.listscreen.store.DownloadUIAction
 import org.mozilla.fenix.downloads.listscreen.store.DownloadUIState
-import org.mozilla.fenix.settings.downloads.DownloadLocationManager
 
 /**
  * Middleware for sharing the Download item's URL.
  *
  * @param applicationContext A [Context] used to share the URL.
- * @param downloadFileUtils [DownloadFileUtils] used for file-related operations.
  */
 class DownloadUIShareMiddleware(
     private val applicationContext: Context,
-    private val downloadFileUtils: DownloadFileUtils = DefaultDownloadFileUtils(
-        context = applicationContext,
-        downloadLocation = {
-            DownloadLocationManager(applicationContext).defaultLocation
-        },
-    ),
 ) : Middleware<DownloadUIState, DownloadUIAction> {
 
     override fun invoke(
@@ -39,28 +29,14 @@ class DownloadUIShareMiddleware(
         next(action)
         when (action) {
             is DownloadUIAction.ShareUrlClicked -> applicationContext.share(action.url)
-            is DownloadUIAction.ShareFileClicked -> shareFile(
-                directoryPath = action.directoryPath,
-                fileName = action.fileName,
-                contentType = action.contentType,
-            )
-
+            is DownloadUIAction.ShareFileClicked -> shareFile(action.filePath, action.contentType)
             else -> {
                 // no - op
             }
         }
     }
 
-    private fun shareFile(directoryPath: String, fileName: String?, contentType: String?) {
-        val downloadFileUri = downloadFileUtils.findDownloadFileUri(
-            fileName = fileName,
-            directoryPath = directoryPath,
-        )
-        downloadFileUri?.let {
-            applicationContext.shareFile(
-                contentUri = it,
-                contentType = contentType,
-            )
-        }
+    private fun shareFile(filePath: String, contentType: String?) {
+        applicationContext.shareMedia(filePath, contentType)
     }
 }

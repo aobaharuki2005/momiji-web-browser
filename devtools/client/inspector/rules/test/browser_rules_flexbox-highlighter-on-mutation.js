@@ -25,7 +25,7 @@ add_task(async function () {
     waitForHighlighterTypeHidden,
   } = getHighlighterTestHelpers(inspector);
 
-  const onRuleViewUpdated = inspector.once("rule-view-refreshed");
+  const onRuleViewUpdated = view.once("ruleview-refreshed");
   await selectNode("#flex", inspector);
   await onRuleViewUpdated;
   const container = getRuleViewProperty(view, "#flex", "display").valueSpan;

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -32,6 +34,9 @@ js::jit::JitActivation::JitActivation(JSContext* cx)
     : Activation(cx, Jit),
       packedExitFP_(nullptr),
       encodedWasmExitReason_(0),
+#ifdef ENABLE_WASM_JSPI
+      wasmExitSuspender_(cx, nullptr),
+#endif
       prevJitActivation_(cx->jitActivation),
       ionRecovery_(cx),
       bailoutData_(nullptr),
@@ -63,13 +68,10 @@ js::jit::JitActivation::~JitActivation() {
 }
 
 void js::jit::JitActivation::trace(JSTracer* trc) {
-  traceCommon(trc);
-
-  TraceJitFrames(trc, this);
-
   if (rematerializedFrames_) {
-    for (auto iter = rematerializedFrames_->iter(); !iter.done(); iter.next()) {
-      iter.get().value().trace(trc);
+    for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty();
+         e.popFront()) {
+      e.front().value().trace(trc);
     }
   }
 
@@ -244,7 +246,11 @@ void js::jit::JitActivation::startWasmTrap(wasm::Trap trap,
   const wasm::Code& code = wasm::GetNearestEffectiveInstance(fp)->code();
   MOZ_RELEASE_ASSERT(&code == wasm::LookupCode(pc));
 
-  setWasmExitFP(fp);
+  wasm::SuspenderObject* suspender = nullptr;
+#ifdef ENABLE_WASM_JSPI
+  suspender = cx()->wasm().findSuspenderForStackAddress(fp);
+#endif
+  setWasmExitFP(fp, suspender);
   wasmTrapData_.emplace();
   wasmTrapData_->resumePC =
       ((uint8_t*)state.pc) + jit::WasmTrapInstructionLength;
@@ -267,10 +273,17 @@ void js::jit::JitActivation::startWasmTrap(wasm::Trap trap,
   MOZ_ASSERT(isWasmTrapping());
 }
 
-void js::jit::JitActivation::finishWasmTrap() {
+void js::jit::JitActivation::finishWasmTrap(bool isResuming) {
   MOZ_ASSERT(hasWasmExitFP());
   MOZ_ASSERT(isWasmTrapping());
   wasmTrapData_.reset();
   packedExitFP_ = nullptr;
+  // Don't clear the exit suspender if we're resuming, or else the trap stub
+  // won't know that it needs to switch back to the main stack.
+#ifdef ENABLE_WASM_JSPI
+  if (!isResuming) {
+    wasmExitSuspender_ = nullptr;
+  }
+#endif
   MOZ_ASSERT(!isWasmTrapping());
 }

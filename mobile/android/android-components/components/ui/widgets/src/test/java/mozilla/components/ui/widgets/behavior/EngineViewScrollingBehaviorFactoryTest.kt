@@ -11,11 +11,11 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.widgets.behavior.DependencyGravity.Bottom
 import mozilla.components.ui.widgets.behavior.DependencyGravity.Top
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
-import kotlin.test.assertIs
 
 @RunWith(AndroidJUnit4::class)
 class EngineViewScrollingBehaviorFactoryTest {
@@ -34,7 +34,7 @@ class EngineViewScrollingBehaviorFactoryTest {
             dependencyGravity = Bottom,
         )
 
-        assertIs<EngineViewScrollingDataBehavior>(result)
+        assertTrue(result is EngineViewScrollingDataBehavior)
     }
 
     @Test
@@ -45,7 +45,7 @@ class EngineViewScrollingBehaviorFactoryTest {
             dependencyGravity = Bottom,
         )
 
-        assertIs<EngineViewScrollingGesturesBehavior>(result)
+        assertTrue(result is EngineViewScrollingGesturesBehavior)
     }
 
     @Test
@@ -56,7 +56,7 @@ class EngineViewScrollingBehaviorFactoryTest {
             dependencyGravity = Top,
         )
 
-        assertIs<EngineViewScrollingGesturesBehavior>(result)
+        assertTrue(result is EngineViewScrollingGesturesBehavior)
     }
 
     @Test
@@ -67,6 +67,6 @@ class EngineViewScrollingBehaviorFactoryTest {
             dependencyGravity = Top,
         )
 
-        assertIs<EngineViewScrollingGesturesBehavior>(result)
+        assertTrue(result is EngineViewScrollingGesturesBehavior)
     }
 }

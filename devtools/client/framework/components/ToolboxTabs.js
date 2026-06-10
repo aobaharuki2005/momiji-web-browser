@@ -56,10 +56,6 @@ class ToolboxTabs extends Component {
     };
   }
 
-  #cachedToolTabsWidthMap;
-  #resizeTimerId;
-  #tabsOrderManager;
-
   constructor(props) {
     super(props);
 
@@ -73,13 +69,13 @@ class ToolboxTabs extends Component {
     // Map with tool Id and its width size. This lifecycle is out of React's
     // lifecycle. If a tool is registered, ToolboxTabs will add target tool id
     // to this map. ToolboxTabs will never remove tool id from this cache.
-    this.#cachedToolTabsWidthMap = new Map();
+    this._cachedToolTabsWidthMap = new Map();
 
-    this.#resizeTimerId = null;
+    this._resizeTimerId = null;
     this.resizeHandler = this.resizeHandler.bind(this);
 
     const { toolbox, onTabsOrderUpdated, panelDefinitions } = props;
-    this.#tabsOrderManager = new ToolboxTabsOrderManager(
+    this._tabsOrderManager = new ToolboxTabsOrderManager(
       toolbox,
       onTabsOrderUpdated,
       panelDefinitions
@@ -105,7 +101,7 @@ class ToolboxTabs extends Component {
     if (this.shouldUpdateToolboxTabs(prevProps, this.props)) {
       this.updateCachedToolTabsWidthMap();
       this.updateOverflowedTabs();
-      this.#tabsOrderManager.setCurrentPanelDefinitions(
+      this._tabsOrderManager.setCurrentPanelDefinitions(
         this.props.panelDefinitions
       );
     }
@@ -113,8 +109,8 @@ class ToolboxTabs extends Component {
 
   componentWillUnmount() {
     window.removeEventListener("resize", this.resizeHandler);
-    window.cancelIdleCallback(this.#resizeTimerId);
-    this.#tabsOrderManager.destroy();
+    window.cancelIdleCallback(this._resizeTimerId);
+    this._tabsOrderManager.destroy();
   }
 
   /**
@@ -159,9 +155,9 @@ class ToolboxTabs extends Component {
       ".devtools-tab"
     )) {
       const tabId = tab.id.replace("toolbox-tab-", "");
-      if (!this.#cachedToolTabsWidthMap.has(tabId)) {
+      if (!this._cachedToolTabsWidthMap.has(tabId)) {
         const rect = utils.getBoundsWithoutFlushing(tab);
-        this.#cachedToolTabsWidthMap.set(tabId, rect.width);
+        this._cachedToolTabsWidthMap.set(tabId, rect.width);
       }
     }
   }
@@ -182,7 +178,7 @@ class ToolboxTabs extends Component {
     const visibleTabs = [];
 
     for (const id of enabledTabs) {
-      const width = this.#cachedToolTabsWidthMap.get(id);
+      const width = this._cachedToolTabsWidthMap.get(id);
       sumWidth += width;
       if (sumWidth <= toolboxWidth) {
         visibleTabs.push(id);
@@ -192,7 +188,7 @@ class ToolboxTabs extends Component {
         // If toolbox can't display the Chevron, remove the last tool tab.
         if (sumWidth > toolboxWidth) {
           const removeTabId = visibleTabs.pop();
-          sumWidth -= this.#cachedToolTabsWidthMap.get(removeTabId);
+          sumWidth -= this._cachedToolTabsWidthMap.get(removeTabId);
         }
         break;
       }
@@ -204,14 +200,14 @@ class ToolboxTabs extends Component {
       !visibleTabs.includes(currentToolId) &&
       enabledTabs.includes(currentToolId)
     ) {
-      const selectedToolWidth = this.#cachedToolTabsWidthMap.get(currentToolId);
+      const selectedToolWidth = this._cachedToolTabsWidthMap.get(currentToolId);
       while (
         sumWidth + selectedToolWidth > toolboxWidth &&
         visibleTabs.length
       ) {
         const removingToolId = visibleTabs.pop();
         const removingToolWidth =
-          this.#cachedToolTabsWidthMap.get(removingToolId);
+          this._cachedToolTabsWidthMap.get(removingToolId);
         sumWidth -= removingToolWidth;
       }
 
@@ -231,8 +227,8 @@ class ToolboxTabs extends Component {
   }
 
   resizeHandler() {
-    window.cancelIdleCallback(this.#resizeTimerId);
-    this.#resizeTimerId = window.requestIdleCallback(
+    window.cancelIdleCallback(this._resizeTimerId);
+    this._resizeTimerId = window.requestIdleCallback(
       () => {
         this.updateOverflowedTabs();
       },
@@ -321,7 +317,7 @@ class ToolboxTabs extends Component {
       div(
         {
           className: "toolbox-tabs",
-          onMouseDown: e => this.#tabsOrderManager.onMouseDown(e),
+          onMouseDown: e => this._tabsOrderManager.onMouseDown(e),
         },
         tabs,
         this.state.overflowedTabIds.length

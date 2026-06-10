@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -225,14 +228,13 @@ static void PrintUsage() {
 }
 
 int main(int argc, char** argv) {
-  struct option longOptions[] = {{"help", no_argument, nullptr, 'h'},
-                                 {"drm", required_argument, nullptr, 'd'},
-                                 {nullptr, 0, nullptr, 0}};
+  struct option longOptions[] = {{"help", no_argument, NULL, 'h'},
+                                 {"drm", required_argument, NULL, 'd'},
+                                 {NULL, 0, NULL, 0}};
   const char* shortOptions = "hd:";
   int c;
   const char* drmDevice = nullptr;
-  while ((c = getopt_long(argc, argv, shortOptions, longOptions, nullptr)) !=
-         -1) {
+  while ((c = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
     switch (c) {
       case 'd':
         drmDevice = optarg;

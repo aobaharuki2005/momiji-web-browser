@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -142,8 +144,8 @@ RefPtr<DtlsIdentity> DtlsIdentity::Deserialize(
     return nullptr;
   }
 
-  return MakeRefPtr<DtlsIdentity>(UniqueSECKEYPrivateKey(privateKey),
-                                  std::move(cert), authType);
+  return new DtlsIdentity(UniqueSECKEYPrivateKey(privateKey), std::move(cert),
+                          authType);
 }
 
 RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
@@ -274,8 +276,8 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   UniqueCERTCertificate certificate(CERT_NewTempCertificate(
       CERT_GetDefaultCertDB(), certDer, nullptr, false, true));
 
-  return MakeRefPtr<DtlsIdentity>(std::move(private_key),
-                                  std::move(certificate), ssl_kea_ecdh);
+  return new DtlsIdentity(std::move(private_key), std::move(certificate),
+                          ssl_kea_ecdh);
 }
 
 constexpr nsLiteralCString DtlsIdentity::DEFAULT_HASH_ALGORITHM;

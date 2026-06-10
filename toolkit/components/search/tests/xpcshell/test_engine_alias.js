@@ -5,7 +5,7 @@ const NAME = "Test Alias Engine";
 
 add_setup(async function () {
   let settingsFileWritten = promiseAfterSettings();
-  await SearchService.init();
+  await Services.search.init();
   await settingsFileWritten;
 });
 
@@ -17,14 +17,14 @@ add_task(async function upgrade_with_configuration_change_test() {
   });
   await settingsFileWritten;
 
-  let engine = await SearchService.getEngineByAlias("testalias");
+  let engine = await Services.search.getEngineByAlias("testalias");
   Assert.equal(engine?.name, NAME, "Engine can be fetched by alias");
 
   // Restart the search service but not the AddonManager, we will
   // load the engines from settings.
-  SearchService.reset();
-  await SearchService.init();
+  Services.search.wrappedJSObject.reset();
+  await Services.search.init();
 
-  engine = await SearchService.getEngineByAlias("testalias");
+  engine = await Services.search.getEngineByAlias("testalias");
   Assert.equal(engine?.name, NAME, "Engine can be fetched by alias");
 });

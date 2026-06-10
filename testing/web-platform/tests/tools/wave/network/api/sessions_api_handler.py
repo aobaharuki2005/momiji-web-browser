@@ -20,7 +20,7 @@ class SessionsApiHandler(ApiHandler):
         results_manager,
         event_dispatcher,
         web_root,
-        read_sessions_enabled,
+        read_sessions_enabled
     ):
         super().__init__(web_root)
         self._sessions_manager = sessions_manager
@@ -53,6 +53,9 @@ class SessionsApiHandler(ApiHandler):
             expiration_date = None
             if "expiration_date" in config:
                 expiration_date = config["expiration_date"]
+            type = None
+            if "type" in config:
+                type = config["type"]
 
             session = self._sessions_manager.create_session(
                 tests,
@@ -62,16 +65,20 @@ class SessionsApiHandler(ApiHandler):
                 user_agent,
                 labels,
                 expiration_date,
+                type
             )
 
-            return {"format": "application/json", "data": {"token": session.token}}
+            return {
+                "format": "application/json",
+                "data": {"token": session.token}
+            }
 
         except InvalidDataException:
             self.handle_exception("Failed to create session")
             return {
                 "format": "application/json",
                 "data": {"error": "Invalid input data!"},
-                "status": 400,
+                "status": 400
             }
 
         except Exception:
@@ -99,8 +106,8 @@ class SessionsApiHandler(ApiHandler):
                     "browser": data["browser"],
                     "is_public": data["is_public"],
                     "date_created": data["date_created"],
-                    "labels": data["labels"],
-                },
+                    "labels": data["labels"]
+                }
             }
         except Exception:
             self.handle_exception("Failed to read session")
@@ -118,9 +125,7 @@ class SessionsApiHandler(ApiHandler):
             if "expand" in query_parameters:
                 expand = query_parameters["expand"].split(",")
 
-            session_tokens = self._sessions_manager.read_sessions(
-                index=index, count=count
-            )
+            session_tokens = self._sessions_manager.read_sessions(index=index, count=count)
             total_sessions = self._sessions_manager.get_total_sessions()
 
             embedded = {}
@@ -147,17 +152,18 @@ class SessionsApiHandler(ApiHandler):
             uris = {
                 "self": uri_path,
                 "configuration": self._web_root + "api/sessions/{token}",
-                "status": self._web_root + "api/sessions/{token}/status",
+                "status": self._web_root + "api/sessions/{token}/status"
             }
 
-            data = self.create_hal_list(
-                session_tokens, uris, index, count, total=total_sessions
-            )
+            data = self.create_hal_list(session_tokens, uris, index, count, total=total_sessions)
 
             if len(embedded) > 0:
                 data["_embedded"] = embedded
 
-            return {"format": "application/json", "data": data}
+            return {
+                "format": "application/json",
+                "data": data
+            }
         except Exception:
             self.handle_exception("Failed to read session")
             return {"status": 500}
@@ -177,8 +183,8 @@ class SessionsApiHandler(ApiHandler):
                     "status": data["status"],
                     "date_started": data["date_started"],
                     "date_finished": data["date_finished"],
-                    "expiration_date": data["expiration_date"],
-                },
+                    "expiration_date": data["expiration_date"]
+                }
             }
         except Exception:
             self.handle_exception("Failed to read session status")
@@ -215,9 +221,17 @@ class SessionsApiHandler(ApiHandler):
             reference_tokens = []
             if "reference_tokens" in config:
                 reference_tokens = config["reference_tokens"]
+            type = None
+            if "type" in config:
+                type = config["type"]
 
             self._sessions_manager.update_session_configuration(
-                token, tests, test_types, timeouts, reference_tokens
+                token,
+                tests,
+                test_types,
+                timeouts,
+                reference_tokens,
+                type
             )
         except NotFoundException:
             self.handle_exception("Failed to update session configuration")
@@ -324,14 +338,12 @@ class SessionsApiHandler(ApiHandler):
 
             query_parameters = self.parse_query_parameters(request)
             last_event_number = None
-            if "last_event" in query_parameters:
+            if ("last_event" in query_parameters):
                 last_event_number = int(query_parameters["last_event"])
 
             event = threading.Event()
             http_polling_event_listener = HttpPollingEventListener(token, event)
-            event_listener_token = self._event_dispatcher.add_event_listener(
-                http_polling_event_listener, last_event_number
-            )
+            event_listener_token = self._event_dispatcher.add_event_listener(http_polling_event_listener, last_event_number)
 
             event.wait()
 
@@ -352,8 +364,9 @@ class SessionsApiHandler(ApiHandler):
                 message = json.loads(body)
 
             self._event_dispatcher.dispatch_event(
-                token, message["type"], message["data"]
-            )
+                token,
+                message["type"],
+                message["data"])
         except Exception:
             self.handle_exception("Failed to push session event")
 

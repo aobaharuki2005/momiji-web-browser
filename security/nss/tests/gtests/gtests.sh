@@ -56,8 +56,11 @@ gtest_start()
     DIR="${GTESTDIR}/$i"
     html_head "$i"
     if [ ! -d "$DIR" ]; then
-      "${QADIR}/gtests/gtest_db.sh" "$DIR" "${BINDIR}/certutil" "${R_NOISE_FILE}"
-      html_msg $? 0 "create gtest certificates for $i"
+      mkdir -p "$DIR"
+      echo "${BINDIR}/certutil" -N -d "$DIR" --empty-password 2>&1
+      "${BINDIR}/certutil" -N -d "$DIR" --empty-password 2>&1
+
+      PROFILEDIR="$DIR" make_cert dummy p256 sign
     fi
     pushd "$DIR"
     GTESTREPORT="$DIR/report.xml"
@@ -92,7 +95,7 @@ gtest_cleanup()
 }
 
 ################## main #################################################
-GTESTS="${GTESTS:-base_gtest certhigh_gtest certdb_gtest der_gtest pk11_gtest util_gtest freebl_gtest softoken_gtest sysinit_gtest smime_gtest mozpkix_gtest cryptohi_gtest}"
+GTESTS="${GTESTS:-base_gtest certhigh_gtest certdb_gtest der_gtest pk11_gtest util_gtest freebl_gtest softoken_gtest sysinit_gtest smime_gtest mozpkix_gtest}"
 gtest_init "$0"
 gtest_start
 gtest_cleanup

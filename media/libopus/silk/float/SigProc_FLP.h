@@ -33,6 +33,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "main.h"
 #include <math.h>
 
+#ifdef  __cplusplus
+extern "C"
+{
+#endif
 
 /********************************************************************/
 /*                    SIGNAL PROCESSING FUNCTIONS                   */
@@ -193,5 +197,9 @@ static OPUS_INLINE silk_float silk_log2( double x )
 {
     return ( silk_float )( 3.32192809488736 * log10( x ) );
 }
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif /* SILK_SIGPROC_FLP_H */

@@ -79,6 +79,7 @@ NSS_Initialize
    -  NSS_INIT_COOPERATE - Sets the above four recommended options for applications that use both
       NSS and the Java SunPKCS11 provider.
 
+.. _return_value:
 
 `Return value <#return_value>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,6 +103,7 @@ NSS_Initialize
       configdir = ...;  /* application-specific */
       rv = NSS_Initialize(configdir, "", "", SECMOD_DB, NSS_INIT_NOROOTINIT | NSS_INIT_OPTIMIZESPACE);
 
+.. _see_also:
 
 `See also <#see_also>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~

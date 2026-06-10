@@ -22,10 +22,9 @@ const altTextPref = "pdfjs.enableAltText";
 const guessAltTextPref = "pdfjs.enableGuessAltText";
 const newFlowPref = "pdfjs.enableUpdatedAddImage";
 const browserMLPref = "browser.ml.enable";
-const altTextModelDownloadPref = "pdfjs.enableAltTextModelDownload";
 
 add_setup(async function () {
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
   MockFilePicker.setFiles([file]);
   MockFilePicker.returnValue = MockFilePicker.returnOK;
   registerCleanupFunction(function () {
@@ -68,7 +67,6 @@ add_task(async function test_telemetry_new_alt_text_settings() {
           [guessAltTextPref, true],
           [newFlowPref, true],
           [browserMLPref, true],
-          [altTextModelDownloadPref, true],
         ],
       });
 
@@ -145,12 +143,12 @@ add_task(async function test_telemetry_new_alt_text_settings() {
       ]);
 
       telemetryPromise = getPromise("model_deleted");
-      await clickOn(browser, "#createModelButton");
+      await clickOn(browser, "#deleteModelButton");
       await telemetryPromise;
       await testTelemetryEventExtra(Glean.pdfjsImageAltText.modelDeleted, [{}]);
 
       telemetryPromise = getPromise("model_download_complete");
-      await clickOn(browser, "#createModelButton");
+      await clickOn(browser, "#downloadModelButton");
       await telemetryPromise;
       await testTelemetryEventExtra(
         Glean.pdfjsImageAltText.modelDownloadStart,
@@ -183,7 +181,6 @@ add_task(async function test_telemetry_new_alt_text_dialog() {
           [guessAltTextPref, true],
           [newFlowPref, true],
           [browserMLPref, true],
-          [altTextModelDownloadPref, true],
         ],
       });
 
@@ -412,7 +409,6 @@ add_task(async function test_telemetry_new_alt_text_count() {
           [guessAltTextPref, true],
           [newFlowPref, true],
           [browserMLPref, true],
-          [altTextModelDownloadPref, true],
         ],
       });
 

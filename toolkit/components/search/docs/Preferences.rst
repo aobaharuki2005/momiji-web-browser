@@ -1,7 +1,5 @@
-.. _toolkit-search-preferences:
-
-Search Service Preferences
-==========================
+Preferences
+===========
 
 This document describes Preferences affecting the toolkit Search Service.
 Preferences that are generated and updated by code won't be described here.

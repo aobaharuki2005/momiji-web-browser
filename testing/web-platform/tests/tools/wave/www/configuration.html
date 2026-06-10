@@ -9,7 +9,6 @@
     <script src="lib/utils.js"></script>
     <script src="lib/wave-service.js"></script>
     <script src="lib/ui.js"></script>
-    <script src="lib/hbbtv.js"></script>
     <style>
       .site-logo {
         max-width: 300px;
@@ -96,9 +95,10 @@
         var state = {};
         loadServerStatus();
         loadSessionData(token, function () {
-          loadPublicSessionData();
+                loadPublicSessionData(function () {
+                  renderReferencesField();
+                });
         });
-        loadTestSubsets();
         render();
 
         function loadServerStatus() {
@@ -158,24 +158,10 @@
           );
         }
 
-        function loadTestSubsets() {
-          state.testSubsets = [];
-          WaveService.readTestSubsets(function (subsets) {
-            state.testSubsets = subsets;
-            WaveService.readTestList(
-              function (readTests) {
-                state.tests = readTests;
-              }
-            );
-            try {
-              renderApisField();
-            } catch (_) {}
-          });
-        }
-
-        function loadPublicSessionData() {
+        function loadPublicSessionData(callback) {
           WaveService.readPublicSessions(function (tokens) {
             WaveService.readMultipleSessions(tokens, function (configurations) {
+                    console.log(configurations);
               referenceSessions = configurations
                 .sort((confA, confB) =>
                   confA.browser.name.toLowerCase() >
@@ -211,6 +197,7 @@
                     engine: configuration.browser.engine || "",
                   };
                 });
+              callback(referenceSessions);
             });
           });
         }
@@ -326,11 +313,6 @@
         function deselectAllTests() {
           var configuration = state.configuration;
           configuration.tests.include = [];
-        }
-
-        function selectSubset(subset) {
-          var tests = state.configuration.tests;
-          tests.include = subset.tests;
         }
 
         function hasTestType(value) {
@@ -482,17 +464,16 @@
             WaveService.findToken(
               token,
               function (token) {
-                WaveService.readMalfunctioningTests(
-                  token,
-                  function (malfunctioningTests) {
-                    for (var test of malfunctioningTests) {
-                      if (!test) continue;
-                      if (excludedTests.indexOf(test) !== -1) continue;
-                      excludedTests.push(test);
-                    }
-                    renderExcludedTests();
+                WaveService.readMalfunctioningTests(token, function (
+                  malfunctioningTests
+                ) {
+                  for (var test of malfunctioningTests) {
+                    if (!test) continue;
+                    if (excludedTests.indexOf(test) !== -1) continue;
+                    excludedTests.push(test);
                   }
-                );
+                  renderExcludedTests();
+                });
               },
               function () {
                 state.excludedTestError = "Session not found";
@@ -648,7 +629,8 @@
                     id: "find-error",
                     children: [
                       {
-                        text: "Could not find any sessions! Try adding more characters of the token.",
+                        text:
+                          "Could not find any sessions! Try adding more characters of the token.",
                         className: "message-body",
                       },
                     ],
@@ -922,32 +904,16 @@
                   className: "field-label",
                   children: [
                     { className: "label", text: "APIs" },
-                    {
-                      style: "margin-top: 0.3em",
-                      children: [
-                        createSelectButton("All", function () {
-                          selectAllTests();
-                          renderApisField();
-                        }),
-                        createSelectButton("None", function () {
-                          deselectAllTests();
-                          renderApisField();
-                        }),
-                      ],
-                    },
-                    {
-                      children: state.testSubsets.map((subset) => {
-                        var button = createSelectButton(
-                          subset.title,
-                          function () {
-                            selectSubset(subset);
-                            renderApisField();
-                          }
-                        );
-                        button.style = "margin: 0.3em 0.3em 0 0";
-                        return button;
-                      }),
-                    },
+                    createSelectDeselectButtons(
+                      function () {
+                        selectAllTests();
+                        renderApisField();
+                      },
+                      function () {
+                        deselectAllTests();
+                        renderApisField();
+                      }
+                    ),
                   ],
                 },
                 {
@@ -1068,34 +1034,36 @@
             };
 
             testListView.children = testListView.children.concat(
-              tests.sort().map(function (test) {
-                return {
-                  element: "li",
-                  onclick: function (event) {
-                    handleIncludedTestToggle(test);
-                    renderApiList(api);
-                  },
-                  children: [
-                    {
-                      element: "a",
-                      children: [
-                        {
-                          element: "input",
-                          type: "checkbox",
-                          style:
-                            "width: 1.3em; height: 1.3em;vertical-align: middle;",
-                          checked: hasIncludedTest(test),
-                        },
-                        {
-                          style:
-                            "display: inline-block;vertical-align: middle;margin-left:0.3em;max-width: 90%",
-                          text: test,
-                        },
-                      ],
+              tests
+                .sort()
+                .map(function (test) {
+                  return {
+                    element: "li",
+                    onclick: function (event) {
+                      handleIncludedTestToggle(test);
+                      renderApiList(api);
                     },
-                  ],
-                };
-              })
+                    children: [
+                      {
+                        element: "a",
+                        children: [
+                          {
+                            element: "input",
+                            type: "checkbox",
+                            style:
+                              "width: 1.3em; height: 1.3em;vertical-align: middle;",
+                            checked: hasIncludedTest(test),
+                          },
+                          {
+                            style:
+                              "display: inline-block;vertical-align: middle;margin-left:0.3em;max-width: 90%",
+                            text: test,
+                          },
+                        ],
+                      },
+                    ],
+                  };
+                })
             );
             return UI.createElement(testListView);
           }
@@ -1175,19 +1143,16 @@
                   className: "field-label",
                   children: [
                     { className: "label", text: "Reference Browsers" },
-                    {
-                      style: "margin-top: 0.3em",
-                      children: [
-                        createSelectButton("All", function () {
-                          selectAllRefSessions();
-                          renderReferencesField();
-                        }),
-                        createSelectButton("None", function () {
-                          deselectAllRefSessions;
-                          renderReferencesField();
-                        }),
-                      ],
-                    },
+                    createSelectDeselectButtons(
+                      function () {
+                        selectAllRefSessions();
+                        renderReferencesField();
+                      },
+                      function () {
+                        deselectAllRefSessions();
+                        renderReferencesField();
+                      }
+                    ),
                   ],
                 },
                 {
@@ -1320,7 +1285,8 @@
                 {
                   className: "is-size-7",
                   style: "margin-bottom: 20px",
-                  text: "Provide paths to test files or directories to exclude them from the session. One path per line, lines starting with # are omitted.",
+                  text:
+                    "Provide paths to test files or directories to exclude them from the session. One path per line, lines starting with # are omitted.",
                 },
                 {
                   element: "textarea",
@@ -1561,13 +1527,24 @@
           }));
         }
 
-        function createSelectButton(text, onSelect) {
+        function createSelectDeselectButtons(onSelect, onDeselect) {
           return {
-            element: "button",
-            style: "margin-right: 0.3em",
-            className: "button is-rounded is-small",
-            text: text,
-            onClick: onSelect,
+            style: "margin-top: 0.3em",
+            children: [
+              {
+                element: "button",
+                style: "margin-right: 0.3em",
+                className: "button is-rounded is-small",
+                text: "All",
+                onClick: onSelect,
+              },
+              {
+                element: "button",
+                className: "button is-rounded is-small",
+                text: "None",
+                onClick: onDeselect,
+              },
+            ],
           };
         }
 

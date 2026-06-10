@@ -14,8 +14,6 @@ import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ActivityScenario.launch
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.prompt.CrashReporterActivity.Companion.PREFERENCE_KEY_SEND_REPORT
@@ -23,10 +21,13 @@ import mozilla.components.lib.crash.prompt.CrashReporterActivity.Companion.SHARE
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
@@ -36,9 +37,14 @@ import kotlin.coroutines.CoroutineContext
 
 @RunWith(AndroidJUnit4::class)
 class CrashReporterActivityTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
+    private val scope = coroutinesTestRule.scope
+
     @Mock
     lateinit var service: CrashReporterService
-    private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setUp() {
@@ -46,13 +52,12 @@ class CrashReporterActivityTest {
     }
 
     @Test
-    fun `Pressing close button sends report`() = runTest(testDispatcher) {
+    fun `Pressing close button sends report`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            mainDispatcher = testDispatcher,
-            scope = this,
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -64,20 +69,19 @@ class CrashReporterActivityTest {
         }
 
         // Await for all coroutines to be finished
-        testScheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         // Then
         verify(service).report(crash)
     }
 
     @Test
-    fun `Pressing restart button sends report`() = runTest(testDispatcher) {
+    fun `Pressing restart button sends report`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            mainDispatcher = testDispatcher,
-            scope = this,
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -89,14 +93,14 @@ class CrashReporterActivityTest {
         }
 
         // Await for all coroutines to be finished
-        testScheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         // Then
         verify(service).report(crash)
     }
 
     @Test
-    fun `Custom message is set on CrashReporterActivity`() = runTest(testDispatcher) {
+    fun `Custom message is set on CrashReporterActivity`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
@@ -104,8 +108,6 @@ class CrashReporterActivityTest {
                 message = "Hello World!",
                 theme = android.R.style.Theme_DeviceDefault, // Yolo!
             ),
-            mainDispatcher = testDispatcher,
-            scope = this,
             services = listOf(mock()),
         ).install(testContext)
 
@@ -119,13 +121,12 @@ class CrashReporterActivityTest {
     }
 
     @Test
-    fun `Sending crash report saves checkbox state`() = runTest(testDispatcher) {
+    fun `Sending crash report saves checkbox state`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            mainDispatcher = testDispatcher,
-            scope = this,
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -147,13 +148,12 @@ class CrashReporterActivityTest {
     }
 
     @Test
-    fun `Restart button visible for main process crash`() = runTest(testDispatcher) {
+    fun `Restart button visible for main process crash`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            mainDispatcher = testDispatcher,
-            scope = this,
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(
@@ -173,13 +173,12 @@ class CrashReporterActivityTest {
     }
 
     @Test
-    fun `Restart button hidden for background child process crash`() = runTest(testDispatcher) {
+    fun `Restart button hidden for background child process crash`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            mainDispatcher = testDispatcher,
-            scope = this,
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(
@@ -199,13 +198,12 @@ class CrashReporterActivityTest {
     }
 
     @Test
-    fun `WHEN crash is native AND background child THEN is background returns true`() = runTest(testDispatcher) {
+    fun `WHEN crash is native AND background child THEN is background returns true`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
-            mainDispatcher = testDispatcher,
-            scope = this,
+            scope = scope,
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(

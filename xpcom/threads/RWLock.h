@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -180,7 +182,7 @@ typedef BaseAutoTryWriteLock<RWLock> AutoTryWriteLock;
 // calls to WriteLock() and WriteUnlock().
 typedef BaseAutoWriteLock<RWLock> AutoWriteLock;
 
-class  MOZ_CAPABILITY("rwlock")
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS MOZ_CAPABILITY("rwlock")
     StaticRWLock {
  public:
   // In debug builds, check that mLock is initialized for us as we expect by

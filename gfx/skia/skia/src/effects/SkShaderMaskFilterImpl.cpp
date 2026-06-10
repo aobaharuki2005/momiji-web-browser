@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Google LLC
+ * Copyright 2018 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -77,9 +77,7 @@ bool SkShaderMaskFilterImpl::filterMask(SkMaskBuilder* dst, const SkMask& src, c
 
     // Now we have a dst-mask, just need to setup a canvas and draw into it
     SkBitmap bitmap;
-    if (!bitmap.installPixels(SkImageInfo::MakeA8(dst->fBounds.width(), dst->fBounds.height()),
-                              dst->image(),
-                              dst->fRowBytes)) {
+    if (!bitmap.installMaskPixels(*dst)) {
         return false;
     }
 

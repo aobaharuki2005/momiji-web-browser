@@ -81,10 +81,6 @@ const EDIT_CREDITCARD_L10N_IDS = [
   "autofill-card-expires-month",
   "autofill-card-expires-year",
   "autofill-card-network",
-
-  // This string isn't ever displayed, but is used to make the payment methods
-  // section easier to find via the search input in about:settings.
-  "autofill-card-search-term-credit-cards",
 ];
 const FIELD_STATES = {
   NORMAL: "",
@@ -147,9 +143,6 @@ FormAutofillUtils = {
     // combined they form address-line1
     "address-streetname": "address",
     "address-housenumber": "address",
-    // NL forms often split the suffix from the house number;
-    // for example 35B becomes '35' as the number and 'B' as the suffix.
-    "address-extra-housesuffix": "address",
     "postal-code": "address",
     country: "address",
     "country-name": "address",
@@ -212,8 +205,15 @@ FormAutofillUtils = {
   },
 
   isValidSection(fieldDetails) {
-    // If one of the fields has the autocomplete reason, the section is valid.
-    if (fieldDetails.some(f => f.reason == "autocomplete")) {
+    // If one of the fields has the autocomplete reason, the section is valid,
+    // except for email fields since those are often login forms.
+    // Bug 2008553 - should find a way to display an email dropdown if this
+    // isn't a login form.
+    if (
+      fieldDetails.some(
+        f => f.reason == "autocomplete" && f.fieldName != "email"
+      )
+    ) {
       return true;
     }
 
@@ -222,17 +222,11 @@ FormAutofillUtils = {
     return fields.size >= this.AUTOFILL_FIELDS_THRESHOLD;
   },
 
-  queryEligibleElements(element, includeIframe = true) {
+  queryEligibleElements(element, includeIframe = false) {
     const types = includeIframe
       ? [...ELIGIBLE_ELEMENT_TYPES, "iframe"]
       : ELIGIBLE_ELEMENT_TYPES;
     return Array.from(element.querySelectorAll(types.join(",")));
-  },
-
-  get useMLInference() {
-    return (
-      AppConstants.platform !== "android" && FormAutofillUtils.enableMLAutofill
-    );
   },
 
   /**
@@ -306,6 +300,17 @@ FormAutofillUtils = {
 
   getCategoryFromFieldName(fieldName) {
     return this._fieldNameInfo[fieldName];
+  },
+
+  getCategoriesFromFieldNames(fieldNames) {
+    let categories = new Set();
+    for (let fieldName of fieldNames) {
+      let info = this.getCategoryFromFieldName(fieldName);
+      if (info) {
+        categories.add(info);
+      }
+    }
+    return Array.from(categories);
   },
 
   getCollectionNameFromFieldName(fieldName) {
@@ -695,17 +700,16 @@ FormAutofillUtils = {
       names = subNames || subLnames;
     }
 
-    // Build the keys array using a copy to avoid mutating the cached sub_keys data
-    const keys = [...subKeys];
+    // Overwrite subKeys with subIsoids, when available
     if (subIsoids && subIsoids.length && subIsoids.length == subKeys.length) {
       for (let i = 0; i < subIsoids.length; i++) {
         if (subIsoids[i]) {
-          keys[i] = subIsoids[i];
+          subKeys[i] = subIsoids[i];
         }
       }
     }
 
-    return new Map(keys.map((key, index) => [key, names[index]]));
+    return new Map(subKeys.map((key, index) => [key, names[index]]));
   },
 
   /**
@@ -1556,12 +1560,5 @@ XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofillUtils,
   "ignoreVisibilityCheck",
   "extensions.formautofill.test.ignoreVisibilityCheck",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  FormAutofillUtils,
-  "enableMLAutofill",
-  "extensions.formautofill.useml",
   false
 );

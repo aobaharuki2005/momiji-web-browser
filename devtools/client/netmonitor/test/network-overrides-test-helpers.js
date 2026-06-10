@@ -208,7 +208,10 @@ async function setNetworkOverride(
   overrideContent,
   isEmpty = false
 ) {
-  const overridePath = prepareFilePicker(overrideFileName);
+  const overridePath = prepareFilePicker(
+    overrideFileName,
+    monitor.toolbox.topWindow
+  );
 
   info("Select the request to update");
   EventUtils.sendMouseEvent({ type: "mousedown" }, request);
@@ -257,12 +260,14 @@ async function removeNetworkOverride(monitor, request) {
  *
  * @param {string} filename
  *     The name of the file to create.
+ * @param {XULWindow} chromeWindow
+ *     The browser window.
  * @returns {string}
  *     The path of the mocked file.
  */
-function prepareFilePicker(filename) {
+function prepareFilePicker(filename, chromeWindow) {
   const MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init();
+  MockFilePicker.init(chromeWindow.browsingContext);
   const nsiFile = new FileUtils.File(
     PathUtils.join(PathUtils.tempDir, filename)
   );

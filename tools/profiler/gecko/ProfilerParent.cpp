@@ -1,11 +1,15 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ProfilerParent.h"
 
-#include "nsProfiler.h"
-#include "platform.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "nsProfiler.h"
+#  include "platform.h"
+#endif
 
 #include "GeckoProfiler.h"
 #include "ProfilerControl.h"
@@ -33,6 +37,7 @@ Endpoint<PProfilerChild> ProfilerParent::CreateForProcess(
     base::ProcessId aOtherPid) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   Endpoint<PProfilerChild> child;
+#ifdef MOZ_GECKO_PROFILER
   Endpoint<PProfilerParent> parent;
   nsresult rv = PProfiler::CreateEndpoints(&parent, &child);
 
@@ -46,9 +51,12 @@ Endpoint<PProfilerChild> ProfilerParent::CreateForProcess(
   }
 
   actor->Init();
+#endif
 
   return child;
 }
+
+#ifdef MOZ_GECKO_PROFILER
 
 class ProfilerParentTracker;
 
@@ -461,13 +469,13 @@ void ProfileBufferGlobalController::HandleChunkManagerNonFinalUpdate(
 
   mReleasedTotalBytes = mReleasedTotalBytes - destroyedReleased + newlyReleased;
 
-#ifdef DEBUG
+#  ifdef DEBUG
   size_t totalReleased = 0;
   for (const TimeStampAndBytesAndPid& item : mReleasedChunksByTime) {
     totalReleased += item.mBytes;
   }
   MOZ_ASSERT(mReleasedTotalBytes == totalReleased);
-#endif  // DEBUG
+#  endif  // DEBUG
 
   std::vector<ProfileBufferControlledChunkManager::ChunkMetadata> toDestroy;
   while (mUnreleasedTotalBytes + mReleasedTotalBytes > mMaximumBytes &&
@@ -717,14 +725,18 @@ void ProfilerParent::Init() {
 
   (void)SendStop();
 }
+#endif  // MOZ_GECKO_PROFILER
 
 ProfilerParent::~ProfilerParent() {
   MOZ_COUNT_DTOR(ProfilerParent);
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+#ifdef MOZ_GECKO_PROFILER
   ProfilerParentTracker::StopTracking(this);
+#endif
 }
 
+#ifdef MOZ_GECKO_PROFILER
 /* static */
 nsTArray<ProfilerParent::SingleProcessProfilePromiseAndChildPid>
 ProfilerParent::GatherProfiles() {
@@ -899,7 +911,7 @@ RefPtr<GenericPromise> ProfilerParent::ProfilerStarted(
   // We need filters as a Span<const char*> to test pids in the lambda below.
   auto filtersCStrings = nsTArray<const char*>{aParams->GetFilters().Length()};
   for (const auto& filter : aParams->GetFilters()) {
-    filtersCStrings.AppendElement(filter.get());
+    filtersCStrings.AppendElement(filter.Data());
   }
   aParams->GetActiveTabID(&ipcParams.activeTabID());
 
@@ -985,5 +997,7 @@ void ProfilerParent::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   mDestroyed = true;
 }
+
+#endif
 
 }  // namespace mozilla

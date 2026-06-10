@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -158,7 +159,7 @@ bool nsWindow::OnPaint() {
     return true;
   }
 
-  RefPtr renderer = GetWindowRenderer();
+  WindowRenderer* renderer = GetWindowRenderer();
   KnowsCompositor* knowsCompositor = renderer->AsKnowsCompositor();
   WebRenderLayerManager* layerManager = renderer->AsWebRender();
   const bool isFallback =
@@ -194,7 +195,7 @@ bool nsWindow::OnPaint() {
   Maybe<FallbackPaintContext> fallback;
   if (isFallback) {
     uint32_t flags = isTransparent ? gfxWindowsSurface::FLAG_IS_TRANSPARENT : 0;
-    auto targetSurface = MakeRefPtr<gfxWindowsSurface>(hDC, flags);
+    RefPtr<gfxASurface> targetSurface = new gfxWindowsSurface(hDC, flags);
     RECT paintRect;
     ::GetClientRect(mWnd, &paintRect);
     RefPtr<DrawTarget> dt = gfxPlatform::CreateDrawTargetForSurface(
@@ -466,9 +467,8 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer* aContainer,
 
     mozilla::image::ImgDrawResult res = aContainer->Draw(
         &context, iconSize, image::ImageRegion::Create(iconSize),
-        imgIContainer::FRAME_CURRENT, SamplingFilter::LINEAR, svgContext,
-        imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY,
-        1.0);
+        imgIContainer::FRAME_CURRENT, SamplingFilter::POINT, svgContext,
+        imgIContainer::FLAG_SYNC_DECODE, 1.0);
 
     if (res != mozilla::image::ImgDrawResult::SUCCESS) {
       return NS_ERROR_FAILURE;

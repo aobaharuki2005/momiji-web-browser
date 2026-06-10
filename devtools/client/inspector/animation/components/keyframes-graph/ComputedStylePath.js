@@ -92,7 +92,7 @@ class ComputedStylePath extends PureComponent {
     }
 
     const simulatedElement = simulatedAnimation.effect.target;
-    const win = simulatedElement.documentGlobal;
+    const win = simulatedElement.ownerGlobal;
     const threshold = getPreferredProgressThresholdByKeyframes(keyframes);
 
     const getSegment = time => {

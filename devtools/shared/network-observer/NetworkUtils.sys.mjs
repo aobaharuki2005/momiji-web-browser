@@ -86,14 +86,6 @@ const LOAD_CAUSE_STRINGS = {
   [Ci.nsIContentPolicy.TYPE_WEB_IDENTITY]: "webidentity",
 };
 
-const REDIRECT_CODES = [
-  301, // HTTP Moved Permanently
-  302, // HTTP Found
-  303, // HTTP See Other
-  307, // HTTP Temporary Redirect
-  308, // HTTP Moved Permanently
-];
-
 function causeTypeToString(causeType, loadFlags, internalContentPolicyType) {
   let prefix = "";
   if (
@@ -115,8 +107,8 @@ function stringToCauseType(value) {
 
 function isChannelFromSystemPrincipal(channel) {
   let principal;
-  const channelURI = channel.originalURI || channel.URI;
-  if (channelURI?.spec.startsWith("view-source:") || channel.isDocument) {
+
+  if (channel.isDocument) {
     // The loadingPrincipal is the principal where the request will be used.
     principal = channel.loadInfo.loadingPrincipal;
   } else {
@@ -169,8 +161,8 @@ function getChannelBrowsingContextID(channel) {
     return channel.loadInfo.browsingContextID;
   }
 
-  if (channel.loadInfo.associatedBrowsingContextID) {
-    return channel.loadInfo.associatedBrowsingContextID;
+  if (channel.loadInfo.workerAssociatedBrowsingContextID) {
+    return channel.loadInfo.workerAssociatedBrowsingContextID;
   }
 
   // At least WebSocket channel aren't having a browsingContextID set on their loadInfo
@@ -219,8 +211,7 @@ function isPreloadRequest(channel) {
     type == Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_PRELOAD ||
     type == Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET_PRELOAD ||
     type == Ci.nsIContentPolicy.TYPE_INTERNAL_FONT_PRELOAD ||
-    type == Ci.nsIContentPolicy.TYPE_INTERNAL_JSON_PRELOAD ||
-    type == Ci.nsIContentPolicy.TYPE_INTERNAL_TEXT_PRELOAD
+    type == Ci.nsIContentPolicy.TYPE_INTERNAL_JSON_PRELOAD
   );
 }
 
@@ -571,19 +562,20 @@ function matchRequest(channel, filters) {
     }
 
     if (type == "browser-element") {
-      let browsingContext =
-        channel.loadInfo.browsingContext ||
-        channel.loadInfo.associatedBrowsingContext;
-
-      if (!browsingContext) {
+      if (!channel.loadInfo.browsingContext) {
         const topFrame = lazy.NetworkHelper.getTopFrameForRequest(channel);
-        // `topFrame` is typically null for some chrome requests like favicons,
-        // and its `browsingContext` attribute might be null if the request happened
+        // `topFrame` is typically null for some chrome requests like favicons
+        // And its `browsingContext` attribute might be null if the request happened
         // while the tab is being closed.
-        browsingContext = topFrame?.browsingContext;
+        return (
+          topFrame?.browsingContext?.browserId ==
+          filters.sessionContext.browserId
+        );
       }
-
-      return browsingContext?.browserId == filters.sessionContext.browserId;
+      return (
+        channel.loadInfo.browsingContext.browserId ==
+        filters.sessionContext.browserId
+      );
     }
     if (type == "webextension") {
       return (
@@ -912,10 +904,6 @@ async function decodeCompressedStream(stream, length, encodings) {
   return onDecodingComplete;
 }
 
-function isRedirect(responseStatus) {
-  return REDIRECT_CODES.includes(responseStatus);
-}
-
 /**
  * Remove any frames in a stack that are related to chrome resource files.
  *
@@ -958,7 +946,6 @@ export const NetworkUtils = {
   isFromCache,
   isNavigationRequest,
   isPreloadRequest,
-  isRedirect,
   isThirdPartyTrackingResource,
   matchRequest,
   NETWORK_EVENT_TYPES,

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -43,22 +44,9 @@ extern bool gUserCancelledDrag;
 mozilla::StaticRefPtr<nsIArray> gDraggedTransferables;
 
 already_AddRefed<nsIDragSession> nsDragService::CreateDragSession() {
-  auto sess = MakeRefPtr<nsDragSession>();
+  RefPtr<nsIDragSession> sess = new nsDragSession();
   return sess.forget();
 }
-
-
-#if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
-/* this imagewithSize, unlike the one in nsCocoaWindow.mm, 
- * was added after 10.7 support was dropped. so, i am adding 
- * it here because i saw an exception and it has to be here*/
-@interface NSImage (ImageCreationWithDrawingHandler)
-+ (NSImage*)imageWithSize:(NSSize)size
-                  flipped:(BOOL)drawingHandlerShouldBeCalledWithFlippedContext
-           drawingHandler:(BOOL (^)(NSRect dstRect))drawingHandler;
-@end
-
-#endif
 
 NSImage* nsDragSession::ConstructDragImage(nsINode* aDOMNode,
                                            const Maybe<CSSIntRegion>& aRegion,
@@ -77,31 +65,16 @@ NSImage* nsDragSession::ConstructDragImage(nsINode* aDOMNode,
         nsCocoaUtils::DevPixelsToCocoaPoints(dragRect.width, scaleFactor);
     size.height =
         nsCocoaUtils::DevPixelsToCocoaPoints(dragRect.height, scaleFactor);
-    if(@available(macOS 10.8, *)) {
-      image = [NSImage imageWithSize:size
-                             flipped:YES
-                      drawingHandler:^BOOL(NSRect dstRect) {
-                        [[NSColor grayColor] set];
-                        NSBezierPath* path =
-                            [NSBezierPath bezierPathWithRect:dstRect];
-                        [path setLineWidth:2.0];
-                        [path stroke];
-                        return YES;
-                      }];
-    } else {
-      image = [[NSImage alloc] initWithSize:size];
-      [image lockFocus];
-      [[NSColor grayColor] set];
-      NSBezierPath* path = [NSBezierPath bezierPath];
-      [path setLineWidth:2.0];
-      [path moveToPoint:NSMakePoint(0, 0)];
-      [path lineToPoint:NSMakePoint(0, size.height)];
-      [path lineToPoint:NSMakePoint(size.width, size.height)];
-      [path lineToPoint:NSMakePoint(size.width, 0)];
-      [path lineToPoint:NSMakePoint(0, 0)];
-      [path stroke];
-      [image unlockFocus];
-    }
+    image = [NSImage imageWithSize:size
+                           flipped:YES
+                    drawingHandler:^BOOL(NSRect dstRect) {
+                      [[NSColor grayColor] set];
+                      NSBezierPath* path =
+                          [NSBezierPath bezierPathWithRect:dstRect];
+                      [path setLineWidth:2.0];
+                      [path stroke];
+                      return YES;
+                    }];
   }
 
   LayoutDeviceIntPoint pt(dragRect.x, dragRect.YMost());
@@ -141,9 +114,6 @@ NSImage* nsDragSession::ConstructDragImage(nsINode* aDOMNode,
 
   RefPtr<DataSourceSurface> dataSurface = Factory::CreateDataSourceSurface(
       IntSize(width, height), SurfaceFormat::B8G8R8A8);
-  if (!dataSurface) {
-    return nil;
-  }
   DataSourceSurface::MappedSurface map;
   if (!dataSurface->Map(DataSourceSurface::MapType::READ_WRITE, &map)) {
     return nil;
@@ -162,7 +132,7 @@ NSImage* nsDragSession::ConstructDragImage(nsINode* aDOMNode,
                DrawOptions(1.0f, CompositionOp::OP_SOURCE));
 
   NSBitmapImageRep* imageRep =
-      [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:nullptr
+      [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
                                               pixelsWide:width
                                               pixelsHigh:height
                                            bitsPerSample:8
@@ -225,12 +195,25 @@ nsresult nsDragSession::InvokeDragSessionImpl(
     return NS_ERROR_FAILURE;
   }
 
+  mDataItems = aTransferableArray;
+
+  // Save the transferables away in case a promised file callback is invoked.
+  gDraggedTransferables = aTransferableArray;
+
+  // We need to retain the view and the event during the drag in case either
+  // gets destroyed.
+  mNativeDragView = [gLastDragView retain];
+  mNativeDragEvent = [gLastDragMouseDownEvent retain];
+
   gUserCancelledDrag = false;
 
+  NSPasteboardItem* pbItem = [NSPasteboardItem new];
   NSMutableArray* types = [NSMutableArray arrayWithCapacity:5];
-  if (aTransferableArray) {
+
+  if (gDraggedTransferables) {
     uint32_t count = 0;
-    aTransferableArray->GetLength(&count);
+    gDraggedTransferables->GetLength(&count);
+
     for (uint32_t j = 0; j < count; j++) {
       nsCOMPtr<nsITransferable> currentTransferable =
           do_QueryElementAt(aTransferableArray, j);
@@ -253,18 +236,6 @@ nsresult nsDragSession::InvokeDragSessionImpl(
       [types addObject:[UTIHelper stringFromPboardType:kMozWildcardPboardType]];
     }
   }
-
-  // Save the transferables away in case a promised file callback is invoked.
-  gDraggedTransferables = aTransferableArray;
-
-  mDataItems = aTransferableArray;
-
-  // We need to retain the view and the event during the drag in case either
-  // gets destroyed.
-  mNativeDragView = [gLastDragView retain];
-  mNativeDragEvent = [gLastDragMouseDownEvent retain];
-
-  NSPasteboardItem* pbItem = [[NSPasteboardItem new] autorelease];
   [pbItem setDataProvider:mNativeDragView forTypes:types];
 
   NSPoint draggingPoint;
@@ -275,13 +246,15 @@ nsresult nsDragSession::InvokeDragSessionImpl(
   localDragRect.origin.y = draggingPoint.y - localDragRect.size.height;
 
   NSDraggingItem* dragItem =
-      [[[NSDraggingItem alloc] initWithPasteboardWriter:pbItem] autorelease];
+      [[NSDraggingItem alloc] initWithPasteboardWriter:pbItem];
+  [pbItem release];
   [dragItem setDraggingFrame:localDragRect contents:image];
 
   OpenDragPopup();
 
   mNSDraggingSession = [mNativeDragView
-      beginDraggingSessionWithItems:[NSArray arrayWithObject:dragItem]
+      beginDraggingSessionWithItems:[NSArray
+                                        arrayWithObject:[dragItem autorelease]]
                               event:mNativeDragEvent
                              source:mNativeDragView];
 
@@ -414,18 +387,6 @@ nsDragSession::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
     *_retval = true;
   }
 
-  // Also accept files for kURLMime, which we convert to file:// URLs.
-  if (!*_retval && dataFlavor.EqualsLiteral(kURLMime)) {
-    NSString* fileType =
-        [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL];
-    NSString* availableFileType =
-        [globalDragPboard availableTypeFromArray:@[ (id)fileType ]];
-    if (availableFileType &&
-        nsCocoaUtils::IsValidPasteboardType(availableFileType, true)) {
-      *_retval = true;
-    }
-  }
-
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
@@ -542,7 +503,6 @@ nsresult nsDragSession::EndDragSessionImpl(bool aDoneDrag,
 
   nsresult rv = nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
   mDataItems = nullptr;
-  gDraggedTransferables = nullptr;
   return rv;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);

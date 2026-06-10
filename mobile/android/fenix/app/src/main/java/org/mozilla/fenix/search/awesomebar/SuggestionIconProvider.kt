@@ -14,7 +14,6 @@ import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
-import com.google.android.material.R as materialR
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -99,6 +98,13 @@ interface SuggestionIconProvider {
         @DrawableRes drawableRes: Int,
         tintWithPrimaryColor: Boolean = false,
     ): Bitmap?
+
+    /**
+     * Provides a standard settings icon.
+     *
+     * @return A [Bitmap] of the settings icon, or null if it cannot be loaded/created.
+     */
+    fun getSettingsIconBitmap(): Bitmap?
 }
 
 /**
@@ -111,11 +117,11 @@ interface SuggestionIconProvider {
 class DefaultSuggestionIconProvider(private val context: Context) : SuggestionIconProvider {
 
     private val primaryTextColor: Int by lazy {
-        context.getColorFromAttr(materialR.attr.colorOnSurface)
+        context.getColorFromAttr(R.attr.textPrimary)
     }
 
     private val searchIconBitmapInstance: Bitmap? by lazy {
-        AppCompatResources.getDrawable(context, iconsR.drawable.mozac_ic_search_24)?.apply {
+        AppCompatResources.getDrawable(context, R.drawable.ic_search)?.apply {
             colorFilter = createBlendModeColorFilterCompat(
                 primaryTextColor,
                 SRC_IN,
@@ -128,7 +134,7 @@ class DefaultSuggestionIconProvider(private val context: Context) : SuggestionIc
     }
 
     private val historyIconBitmapInstance: Bitmap? by lazy {
-        AppCompatResources.getDrawable(context, iconsR.drawable.mozac_ic_history_24)?.toBitmap()
+        AppCompatResources.getDrawable(context, R.drawable.ic_history)?.toBitmap()
     }
 
     override fun getSearchIconBitmap(): Bitmap? {
@@ -176,4 +182,12 @@ class DefaultSuggestionIconProvider(private val context: Context) : SuggestionIc
             }
         }?.toBitmap()
     }
+
+    override fun getSettingsIconBitmap(): Bitmap? =
+        AppCompatResources.getDrawable(context, iconsR.drawable.mozac_ic_settings_24)?.apply {
+            colorFilter = createBlendModeColorFilterCompat(
+                context.getColorFromAttr(R.attr.textPrimary),
+                SRC_IN,
+            )
+        }?.toBitmap()
 }

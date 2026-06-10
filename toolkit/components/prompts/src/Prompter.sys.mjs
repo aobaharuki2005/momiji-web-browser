@@ -813,6 +813,61 @@ var InternalPromptUtils = {
     authInfo.password = password;
   },
 
+  /**
+   * Strip out things like userPass and path for display.
+   */
+  getFormattedHostname(uri) {
+    return uri.scheme + "://" + uri.hostPort;
+  },
+
+  // Note: there's a similar implementation in the login manager.
+  getAuthTarget(aChannel, aAuthInfo) {
+    let displayHost, realm;
+
+    // If our proxy is demanding authentication, don't use the
+    // channel's actual destination.
+    if (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) {
+      if (!(aChannel instanceof Ci.nsIProxiedChannel)) {
+        throw new Error("proxy auth needs nsIProxiedChannel");
+      }
+
+      let info = aChannel.proxyInfo;
+      if (!info) {
+        throw new Error("proxy auth needs nsIProxyInfo");
+      }
+
+      // Proxies don't have a scheme, but we'll use "moz-proxy://"
+      // so that it's more obvious what the login is for.
+      let idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
+        Ci.nsIIDNService
+      );
+      displayHost =
+        "moz-proxy://" +
+        idnService.convertUTF8toACE(info.host) +
+        ":" +
+        info.port;
+      realm = aAuthInfo.realm;
+      if (!realm) {
+        realm = displayHost;
+      }
+
+      return { realm, displayHost };
+    }
+
+    displayHost = this.getFormattedHostname(aChannel.URI);
+    let displayHostOnly = aChannel.URI.hostPort;
+
+    // If a HTTP WWW-Authenticate header specified a realm, that value
+    // will be available here. If it wasn't set or wasn't HTTP, we'll use
+    // the formatted hostname instead.
+    realm = aAuthInfo.realm;
+    if (!realm) {
+      realm = displayHost;
+    }
+
+    return { realm, displayHostOnly, displayHost };
+  },
+
   makeAuthMessage(prompt, channel, authInfo) {
     if (prompt.modalType != MODAL_TYPE_TAB) {
       return this._legacyMakeAuthMessage(channel, authInfo);
@@ -825,10 +880,10 @@ var InternalPromptUtils = {
     let username = authInfo.username;
 
     // We use the realm and displayHost only for proxy auth,
-    // and the displayHostOnly only for x-origin auth prompts.
+    // and the displayHostOnly (hostPort) only for x-origin auth prompts.
     // Otherwise we rely on the title of the dialog displaying the correct
     // title.
-    let { displayHost, realm, displayHostOnly } = PromptUtils.getAuthTarget(
+    let { displayHost, realm, displayHostOnly } = this.getAuthTarget(
       channel,
       authInfo
     );
@@ -866,7 +921,7 @@ var InternalPromptUtils = {
       authInfo.flags & Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE;
 
     let username = authInfo.username;
-    let { displayHost, realm } = PromptUtils.getAuthTarget(channel, authInfo);
+    let { displayHost, realm } = this.getAuthTarget(channel, authInfo);
 
     // Suppress "the site says: $realm" when we synthesized a missing realm.
     if (!authInfo.realm && !isProxy) {
@@ -1094,7 +1149,7 @@ class ModalPrompter {
         parentWin = this.browsingContext.window;
       } else {
         // Try to get the window which is the browsers parent
-        parentWin = this.browsingContext.top?.embedderElement?.documentGlobal;
+        parentWin = this.browsingContext.top?.embedderElement?.ownerGlobal;
       }
       this.openWindowPrompt(parentWin, args);
       return args;
@@ -1780,7 +1835,10 @@ AuthPromptAdapter.prototype = {
     let userParam = { value: username };
     let passParam = { value: password };
 
-    let { displayHost, realm } = PromptUtils.getAuthTarget(channel, authInfo);
+    let { displayHost, realm } = InternalPromptUtils.getAuthTarget(
+      channel,
+      authInfo
+    );
     let authTarget = displayHost + " (" + realm + ")";
 
     let ok;

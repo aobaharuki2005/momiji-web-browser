@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -28,25 +30,25 @@ SVGElement::NumberInfo SVGFEConvolveMatrixElement::sNumberInfo[2] = {
     {nsGkAtoms::divisor, 1}, {nsGkAtoms::bias, 0}};
 
 SVGElement::NumberPairInfo SVGFEConvolveMatrixElement::sNumberPairInfo[1] = {
-    {nsGkAtoms::kernelUnitLength, 0}};
+    {nsGkAtoms::kernelUnitLength, 0, 0}};
 
 SVGElement::IntegerInfo SVGFEConvolveMatrixElement::sIntegerInfo[2] = {
     {nsGkAtoms::targetX, 0}, {nsGkAtoms::targetY, 0}};
 
 SVGElement::IntegerPairInfo SVGFEConvolveMatrixElement::sIntegerPairInfo[1] = {
-    {nsGkAtoms::order, 3}};
+    {nsGkAtoms::order, 3, 3}};
 
 SVGElement::BooleanInfo SVGFEConvolveMatrixElement::sBooleanInfo[1] = {
     {nsGkAtoms::preserveAlpha, false}};
 
 SVGEnumMapping SVGFEConvolveMatrixElement::sEdgeModeMap[] = {
-    {nsGkAtoms::duplicate, uint8_t(SVGEdgeMode::Duplicate)},
-    {nsGkAtoms::wrap, uint8_t(SVGEdgeMode::Wrap)},
-    {nsGkAtoms::none, uint8_t(SVGEdgeMode::None)},
+    {nsGkAtoms::duplicate, SVG_EDGEMODE_DUPLICATE},
+    {nsGkAtoms::wrap, SVG_EDGEMODE_WRAP},
+    {nsGkAtoms::none, SVG_EDGEMODE_NONE},
     {nullptr, 0}};
 
 SVGElement::EnumInfo SVGFEConvolveMatrixElement::sEnumInfo[1] = {
-    {nsGkAtoms::edgeMode, sEdgeModeMap, uint8_t(SVGEdgeMode::Duplicate)}};
+    {nsGkAtoms::edgeMode, sEdgeModeMap, SVG_EDGEMODE_DUPLICATE}};
 
 SVGElement::StringInfo SVGFEConvolveMatrixElement::sStringInfo[2] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
@@ -68,12 +70,12 @@ already_AddRefed<DOMSVGAnimatedString> SVGFEConvolveMatrixElement::In1() {
 
 already_AddRefed<DOMSVGAnimatedInteger> SVGFEConvolveMatrixElement::OrderX() {
   return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(
-      SVGAnimatedIntegerPairWhichOne::First, this);
+      SVGAnimatedIntegerPair::eFirst, this);
 }
 
 already_AddRefed<DOMSVGAnimatedInteger> SVGFEConvolveMatrixElement::OrderY() {
   return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(
-      SVGAnimatedIntegerPairWhichOne::Second, this);
+      SVGAnimatedIntegerPair::eSecond, this);
 }
 
 already_AddRefed<DOMSVGAnimatedNumberList>
@@ -111,13 +113,13 @@ already_AddRefed<DOMSVGAnimatedNumber> SVGFEConvolveMatrixElement::Bias() {
 already_AddRefed<DOMSVGAnimatedNumber>
 SVGFEConvolveMatrixElement::KernelUnitLengthX() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
-      SVGAnimatedNumberPairWhichOne::First, this);
+      SVGAnimatedNumberPair::eFirst, this);
 }
 
 already_AddRefed<DOMSVGAnimatedNumber>
 SVGFEConvolveMatrixElement::KernelUnitLengthY() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
-      SVGAnimatedNumberPairWhichOne::Second, this);
+      SVGAnimatedNumberPair::eSecond, this);
 }
 
 void SVGFEConvolveMatrixElement::GetSourceImageNames(
@@ -136,9 +138,9 @@ FilterPrimitiveDescription SVGFEConvolveMatrixElement::GetPrimitiveDescription(
   uint32_t kmLength = kernelMatrix.Length();
 
   int32_t orderX = mIntegerPairAttributes[ORDER].GetAnimValue(
-      SVGAnimatedIntegerPairWhichOne::First);
+      SVGAnimatedIntegerPair::eFirst);
   int32_t orderY = mIntegerPairAttributes[ORDER].GetAnimValue(
-      SVGAnimatedIntegerPairWhichOne::Second);
+      SVGAnimatedIntegerPair::eSecond);
 
   if (orderX <= 0 || orderY <= 0 ||
       static_cast<uint32_t>(orderX * orderY) != kmLength) {
@@ -173,7 +175,7 @@ FilterPrimitiveDescription SVGFEConvolveMatrixElement::GetPrimitiveDescription(
     }
   }
 
-  SVGEdgeMode edgeMode = SVGEdgeMode(mEnumAttributes[EDGEMODE].GetAnimValue());
+  uint32_t edgeMode = mEnumAttributes[EDGEMODE].GetAnimValue();
   bool preserveAlpha = mBooleanAttributes[PRESERVEALPHA].GetAnimValue();
   float bias = mNumberAttributes[BIAS].GetAnimValue();
 

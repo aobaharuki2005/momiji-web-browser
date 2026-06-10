@@ -444,11 +444,10 @@ update_state(cubeb_stream * stm)
     return;
   }
 
-  // Requeue a state update if stream is already locked.
+  // If the main thread currently operates on this thread, we don't
+  // have to wait for it
   unique_lock lock(stm->mutex, std::try_to_lock);
   if (!lock.owns_lock()) {
-    stm->context->state.waiting.store(true);
-    stm->context->state.cond.notify_one();
     return;
   }
 
@@ -515,7 +514,7 @@ update_state(cubeb_stream * stm)
         ostate == AAUDIO_STREAM_STATE_UNKNOWN ||
         ostate == AAUDIO_STREAM_STATE_DISCONNECTED) {
       LOG("Unexpected android output stream state %s",
-          WRAP(AAudio_convertStreamStateToText)(ostate));
+          WRAP(AAudio_convertStreamStateToText)(istate));
       shutdown_with_error(stm);
       return;
     }
@@ -806,7 +805,7 @@ aaudio_get_latency(cubeb_stream * stm, aaudio_direction_t direction,
                            : signed_tstamp_ns - app_frame_hw_time;
   int64_t latency_frames = stm->sample_rate * latency_ns / NS_PER_S;
 
-  LOGV("Latency in frames (%s): %ld (%fms)", is_output ? "output" : "input",
+  LOGV("Latency in frames (%s): %d (%dms)", is_output ? "output" : "input",
        latency_frames, latency_ns / 1e6);
 
   return latency_frames;
@@ -884,14 +883,12 @@ aaudio_duplex_data_cb(AAudioStream * astream, void * user_data,
   long in_num_frames =
       WRAP(AAudioStream_read)(stm->istream, stm->in_buf.data(), num_frames, 0);
   if (in_num_frames < 0) { // error
-    if (in_num_frames == AAUDIO_ERROR_DISCONNECTED) {
+    if (in_num_frames == AAUDIO_STREAM_STATE_DISCONNECTED) {
       LOG("AAudioStream_read: %s (reinitializing)",
           WRAP(AAudio_convertResultToText)(in_num_frames));
       reinitialize_stream(stm);
     } else {
       stm->state.store(stream_state::ERROR);
-      stm->context->state.waiting.store(true);
-      stm->context->state.cond.notify_one();
     }
     LOG("AAudioStream_read: %s",
         WRAP(AAudio_convertResultToText)(in_num_frames));
@@ -899,7 +896,7 @@ aaudio_duplex_data_cb(AAudioStream * astream, void * user_data,
   }
 
   ALOGV("aaudio duplex data cb on stream %p: state %ld (in: %d, out: %d), "
-        "num_frames: %d, read: %ld",
+        "num_frames: %ld, read: %ld",
         (void *)stm, state, istate, ostate, num_frames, in_num_frames);
 
   compute_and_report_latency_metrics(stm);
@@ -927,8 +924,6 @@ aaudio_duplex_data_cb(AAudioStream * astream, void * user_data,
   if (done_frames < 0 || done_frames > num_frames) {
     LOG("Error in data callback or resampler: %ld", done_frames);
     stm->state.store(stream_state::ERROR);
-    stm->context->state.waiting.store(true);
-    stm->context->state.cond.notify_one();
     return AAUDIO_CALLBACK_RESULT_STOP;
   }
   if (done_frames < num_frames) {
@@ -959,7 +954,7 @@ aaudio_output_data_cb(AAudioStream * astream, void * user_data,
 
   stream_state state = stm->state.load();
   int ostate = WRAP(AAudioStream_getState)(stm->ostream);
-  ALOGV("aaudio output data cb on stream %p: state %ld (%d), num_frames: %d",
+  ALOGV("aaudio output data cb on stream %p: state %ld (%d), num_frames: %ld",
         stm, state, ostate, num_frames);
 
   // all other states may happen since the callback might be called
@@ -980,8 +975,6 @@ aaudio_output_data_cb(AAudioStream * astream, void * user_data,
   if (done_frames < 0 || done_frames > num_frames) {
     LOG("Error in data callback or resampler: %ld", done_frames);
     stm->state.store(stream_state::ERROR);
-    stm->context->state.waiting.store(true);
-    stm->context->state.cond.notify_one();
     return AAUDIO_CALLBACK_RESULT_STOP;
   }
 
@@ -1013,7 +1006,7 @@ aaudio_input_data_cb(AAudioStream * astream, void * user_data,
 
   stream_state state = stm->state.load();
   int istate = WRAP(AAudioStream_getState)(stm->istream);
-  ALOGV("aaudio input data cb on stream %p: state %ld (%d), num_frames: %d",
+  ALOGV("aaudio input data cb on stream %p: state %ld (%d), num_frames: %ld",
         stm, state, istate, num_frames);
 
   // all other states may happen since the callback might be called
@@ -1035,8 +1028,6 @@ aaudio_input_data_cb(AAudioStream * astream, void * user_data,
   if (done_frames < 0 || done_frames > num_frames) {
     LOG("Error in data callback or resampler: %ld", done_frames);
     stm->state.store(stream_state::ERROR);
-    stm->context->state.waiting.store(true);
-    stm->context->state.cond.notify_one();
     return AAUDIO_CALLBACK_RESULT_STOP;
   }
 
@@ -1091,8 +1082,6 @@ reinitialize_stream(cubeb_stream * stm)
       LOG("aaudio_stream_init_impl error while reiniting: %s",
           WRAP(AAudio_convertResultToText)(err));
       stm->state.store(stream_state::ERROR);
-      stm->context->state.waiting.store(true);
-      stm->context->state.cond.notify_one();
       return;
     }
 
@@ -1104,8 +1093,6 @@ reinitialize_stream(cubeb_stream * stm)
         LOG("aaudio_stream_start error while reiniting: %s",
             WRAP(AAudio_convertResultToText)(err));
         stm->state.store(stream_state::ERROR);
-        stm->context->state.waiting.store(true);
-        stm->context->state.cond.notify_one();
         return;
       }
     }
@@ -1127,8 +1114,6 @@ aaudio_error_cb(AAudioStream * astream, void * user_data, aaudio_result_t error)
 
   LOG("AAudio error callback: %s", WRAP(AAudio_convertResultToText)(error));
   stm->state.store(stream_state::ERROR);
-  stm->context->state.waiting.store(true);
-  stm->context->state.cond.notify_one();
 }
 
 static int
@@ -1634,11 +1619,9 @@ aaudio_stream_start_locked(cubeb_stream * stm, lock_guard<mutex> & lock)
 
   if (success) {
     stm->pos_estimate.start(now_ns());
+    stm->context->state.waiting.store(true);
+    stm->context->state.cond.notify_one();
   }
-
-  // Wake the state thread to trigger STARTED/ERROR state callback.
-  stm->context->state.waiting.store(true);
-  stm->context->state.cond.notify_one();
 
   return ret;
 }

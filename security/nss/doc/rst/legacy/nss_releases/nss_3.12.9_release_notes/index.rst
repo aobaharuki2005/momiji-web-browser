@@ -1,3 +1,5 @@
+.. _:
+
 NSS 3.12.9 release notes
 ========================
 
@@ -26,6 +28,7 @@ NSS 3.12.9 release notes
       :name: section_2
 
       .. rubric:: Distribution Information
+         :name: Distribution_Information
 
       | The CVS tag for the NSS 3.12.9 release is ``NSS_3.12.9_RTM``.  NSS 3.12.9 requires `NSPR
         4.8.7 <https://www.mozilla.org/projects/nspr/release-notes/nspr486.html>`__.
@@ -48,6 +51,9 @@ NSS 3.12.9 release notes
          :name: New_in_NSS_3.12.9
 
       .. container::
+         :name: section_5
+
+      .. container::
          :name: section_6
 
          .. rubric:: New SSL options
@@ -57,11 +63,13 @@ NSS 3.12.9 release notes
             :name: section_7
 
             .. rubric:: New error codes
+               :name: New_error_codes
 
    .. container::
       :name: section_8
 
       .. rubric:: Bugs Fixed
+         :name: Bugs_Fixed
 
       The following bugs have been fixed in NSS 3.12.9.
 
@@ -105,6 +113,7 @@ NSS 3.12.9 release notes
       :name: section_9
 
       .. rubric:: Documentation
+         :name: Documentation
 
       NSS Documentation. New and revised documents available since the release of NSS 3.11 include
       the following:
@@ -117,6 +126,7 @@ NSS 3.12.9 release notes
       :name: section_10
 
       .. rubric:: Compatibility
+         :name: Compatibility
 
       NSS 3.12.9 shared libraries are backward compatible with all older NSS 3.x shared libraries. A
       program linked with older NSS 3.x shared libraries will work with NSS 3.12.9 shared libraries
@@ -128,6 +138,7 @@ NSS 3.12.9 release notes
       :name: section_11
 
       .. rubric:: Feedback
+         :name: Feedback
 
       Bugs discovered should be reported by filing a bug report with `mozilla.org
       Bugzilla <https://bugzilla.mozilla.org/>`__ (product NSS).

@@ -14,9 +14,9 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
-#include <span>
 #include <utility>
 
+#include "api/array_view.h"
 #include "api/environment/environment.h"
 #include "p2p/test/nat_socket_factory.h"
 #include "p2p/test/nat_types.h"
@@ -116,7 +116,8 @@ class NATProxyServerSocket : public AsyncProxyServerSocket {
 
     SocketAddress dest_addr;
     size_t address_length = UnpackAddressFromNAT(
-        std::span(reinterpret_cast<const uint8_t*>(data), *len), &dest_addr);
+        MakeArrayView(reinterpret_cast<const uint8_t*>(data), *len),
+        &dest_addr);
     *len -= address_length;
     if (*len > 0) {
       memmove(data, data + address_length, *len);
@@ -124,9 +125,9 @@ class NATProxyServerSocket : public AsyncProxyServerSocket {
 
     bool remainder = (*len > 0);
     BufferInput(false);
-    NotifyConnectRequest(this, dest_addr);
+    SignalConnectRequest(this, dest_addr);
     if (remainder) {
-      NotifyReadEvent(this);
+      SignalReadEvent(this);
     }
   }
 };
@@ -233,8 +234,7 @@ void NATServer::OnExternalUDPPacket(AsyncPacketSocket* socket,
 
   // Forward this packet to the internal address.
   // First prepend the address in a quasi-STUN format.
-  Buffer real_buf = Buffer::CreateWithCapacity(packet.payload().size() +
-                                               kNATEncodedIPv6AddressSize);
+  Buffer real_buf(packet.payload().size() + kNATEncodedIPv6AddressSize);
   PackAddressForNAT(packet.source_address(), real_buf);
   // Copy the data part after the address.
   AsyncSocketPacketOptions options;

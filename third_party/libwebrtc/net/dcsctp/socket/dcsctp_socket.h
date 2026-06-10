@@ -12,14 +12,13 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <optional>
-#include <span>
 #include <string>
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/units/time_delta.h"
 #include "net/dcsctp/common/internal_types.h"
 #include "net/dcsctp/packet/chunk/data_common.h"
@@ -66,26 +65,20 @@ class DcSctpSocket : public DcSctpSocketInterface {
   DcSctpSocket& operator=(const DcSctpSocket&) = delete;
 
   // Implementation of `DcSctpSocketInterface`.
-  void ReceivePacket(std::span<const uint8_t> data) override;
+  void ReceivePacket(webrtc::ArrayView<const uint8_t> data) override;
   size_t MessagesReady() const override;
   std::optional<DcSctpMessage> GetNextMessage() override;
   void HandleTimeout(TimeoutID timeout_id) override;
   void Connect() override;
-  static std::vector<uint8_t> GenerateConnectionToken(
-      const DcSctpOptions& options,
-      std::function<uint32_t(uint32_t low, uint32_t high)> get_random_uint32);
-  bool ConnectWithConnectionToken(std::span<const uint8_t> my_data,
-                                  std::span<const uint8_t> peer_data) override;
-
   void RestoreFromState(const DcSctpSocketHandoverState& state) override;
   void Shutdown() override;
   void Close() override;
   SendStatus Send(DcSctpMessage message,
                   const SendOptions& send_options) override;
-  std::vector<SendStatus> SendMany(std::span<DcSctpMessage> messages,
+  std::vector<SendStatus> SendMany(webrtc::ArrayView<DcSctpMessage> messages,
                                    const SendOptions& send_options) override;
   ResetStreamsStatus ResetStreams(
-      std::span<const StreamID> outgoing_streams) override;
+      webrtc::ArrayView<const StreamID> outgoing_streams) override;
   SocketState state() const override;
   const DcSctpOptions& options() const override { return options_; }
   void SetMaxMessageSize(size_t max_message_size) override;
@@ -110,7 +103,6 @@ class DcSctpSocket : public DcSctpSocketInterface {
   struct ConnectParameters {
     TSN initial_tsn = TSN(0);
     VerificationTag verification_tag = VerificationTag(0);
-    bool is_out_of_bands_connect = false;
   };
 
   // Detailed state (separate from SocketState, which is the public state).
@@ -150,7 +142,8 @@ class DcSctpSocket : public DcSctpSocketInterface {
   webrtc::TimeDelta OnInitTimerExpiry();
   webrtc::TimeDelta OnCookieTimerExpiry();
   webrtc::TimeDelta OnShutdownTimerExpiry();
-  void OnSentPacket(std::span<const uint8_t> packet, SendPacketStatus status);
+  void OnSentPacket(webrtc::ArrayView<const uint8_t> packet,
+                    SendPacketStatus status);
   // Sends SHUTDOWN or SHUTDOWN-ACK if the socket is shutting down and if all
   // outstanding data has been acknowledged.
   void MaybeSendShutdownOrAck();
@@ -172,7 +165,7 @@ class DcSctpSocket : public DcSctpSocketInterface {
   bool ValidatePacket(const SctpPacket& packet);
   // Parses `payload`, which is a serialized packet that is just going to be
   // sent and prints all chunks.
-  void DebugPrintOutgoing(std::span<const uint8_t> payload);
+  void DebugPrintOutgoing(webrtc::ArrayView<const uint8_t> payload);
   // Called whenever data has been received, or the cumulative acknowledgment
   // TSN has moved, that may result in delivering messages.
   void MaybeDeliverMessages();

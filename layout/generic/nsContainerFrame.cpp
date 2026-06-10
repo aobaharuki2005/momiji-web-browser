@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,7 +16,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
 #include "mozilla/gfx/2D.h"
@@ -33,6 +34,7 @@
 #include "nsError.h"
 #include "nsFlexContainerFrame.h"
 #include "nsFrameSelection.h"
+#include "nsGkAtoms.h"
 #include "nsIBaseWindow.h"
 #include "nsIFrameInlines.h"
 #include "nsIWidget.h"
@@ -333,9 +335,13 @@ void nsContainerFrame::BuildDisplayListForNonBlockChildren(
 
 class nsDisplaySelectionOverlay final : public nsPaintedDisplayItem {
  public:
+  /**
+   * @param aSelectionValue nsISelectionController::getDisplaySelection.
+   */
   nsDisplaySelectionOverlay(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                            const DeviceColor& aColor)
-      : nsPaintedDisplayItem(aBuilder, aFrame), mColor(aColor) {
+                            int16_t aSelectionValue)
+      : nsPaintedDisplayItem(aBuilder, aFrame),
+        mSelectionValue(aSelectionValue) {
     MOZ_COUNT_CTOR(nsDisplaySelectionOverlay);
   }
 
@@ -349,12 +355,14 @@ class nsDisplaySelectionOverlay final : public nsPaintedDisplayItem {
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   NS_DISPLAY_DECL_NAME("SelectionOverlay", TYPE_SELECTION_OVERLAY)
+ private:
+  DeviceColor ComputeColor() const;
 
-  static DeviceColor ComputeColorFromSelectionStyle(const ComputedStyle&);
+  static DeviceColor ComputeColorFromSelectionStyle(ComputedStyle&);
   static DeviceColor ApplyTransparencyIfNecessary(nscolor);
 
- private:
-  DeviceColor mColor;
+  // nsISelectionController::getDisplaySelection.
+  int16_t mSelectionValue;
 };
 
 DeviceColor nsDisplaySelectionOverlay::ApplyTransparencyIfNecessary(
@@ -372,15 +380,33 @@ DeviceColor nsDisplaySelectionOverlay::ApplyTransparencyIfNecessary(
 }
 
 DeviceColor nsDisplaySelectionOverlay::ComputeColorFromSelectionStyle(
-    const ComputedStyle& aStyle) {
+    ComputedStyle& aStyle) {
   return ApplyTransparencyIfNecessary(
       aStyle.GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor));
+}
+
+DeviceColor nsDisplaySelectionOverlay::ComputeColor() const {
+  LookAndFeel::ColorID colorID;
+  if (RefPtr<ComputedStyle> style =
+          mFrame->ComputeSelectionStyle(mSelectionValue)) {
+    return ComputeColorFromSelectionStyle(*style);
+  }
+  if (mSelectionValue == nsISelectionController::SELECTION_ON) {
+    colorID = LookAndFeel::ColorID::Highlight;
+  } else if (mSelectionValue == nsISelectionController::SELECTION_ATTENTION) {
+    colorID = LookAndFeel::ColorID::TextSelectAttentionBackground;
+  } else {
+    colorID = LookAndFeel::ColorID::TextSelectDisabledBackground;
+  }
+
+  return ApplyTransparencyIfNecessary(
+      LookAndFeel::Color(colorID, mFrame, NS_RGB(255, 255, 255)));
 }
 
 void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
                                       gfxContext* aCtx) {
   DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
-  ColorPattern color(mColor);
+  ColorPattern color(ComputeColor());
 
   nsIntRect pxRect =
       GetPaintRect(aBuilder, aCtx)
@@ -401,7 +427,7 @@ bool nsDisplaySelectionOverlay::CreateWebRenderCommands(
       nsRect(ToReferenceFrame(), Frame()->GetSize()),
       mFrame->PresContext()->AppUnitsPerDevPixel()));
   aBuilder.PushRect(bounds, bounds, !BackfaceIsHidden(), false, false,
-                    wr::ToColorF(mColor));
+                    wr::ToColorF(ComputeColor()));
   return true;
 }
 
@@ -442,62 +468,19 @@ void nsContainerFrame::DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
   }
 
   bool normal = false;
-  AutoTArray<SelectionDetails*, 1> highlights;
   for (SelectionDetails* sd = details.get(); sd; sd = sd->mNext.get()) {
     if (sd->mSelectionType == SelectionType::eNormal) {
       normal = true;
-    } else if (sd->mSelectionType == SelectionType::eHighlight) {
-      highlights.AppendElement(sd);
     }
   }
 
-  if (aContentType == nsISelectionDisplay::DISPLAY_IMAGES && !normal &&
-      highlights.IsEmpty()) {
-    // Don't overlay an image if it's not in the primary or a custom highlight
-    // selection.
+  if (!normal && aContentType == nsISelectionDisplay::DISPLAY_IMAGES) {
+    // Don't overlay an image if it's not in the primary selection.
     return;
   }
 
-  // Custom highlights paint below ::selection per spec. Sort them by priority
-  // (stable sort preserves insertion order for equal priorities).
-  highlights.StableSort(
-      [](const SelectionDetails* a, const SelectionDetails* b) -> int {
-        const int32_t pa = a->mHighlightData.mHighlight->Priority();
-        const int32_t pb = b->mHighlightData.mHighlight->Priority();
-        return (pa > pb) - (pa < pb);
-      });
-
-  uint16_t index = 0;
-  for (const auto* sd : highlights) {
-    if (RefPtr<ComputedStyle> style =
-            ComputeHighlightSelectionStyle(sd->mHighlightData.mHighlightName)) {
-      aList->AppendNewToTopWithIndex<nsDisplaySelectionOverlay>(
-          aBuilder, this, index++,
-          nsDisplaySelectionOverlay::ComputeColorFromSelectionStyle(*style));
-    }
-  }
-
-  // ::selection paints on top of all custom highlights.
-  if (normal) {
-    DeviceColor color;
-    if (RefPtr<ComputedStyle> style = ComputeSelectionStyle(selectionValue)) {
-      color = nsDisplaySelectionOverlay::ComputeColorFromSelectionStyle(*style);
-    } else {
-      LookAndFeel::ColorID colorID;
-      if (selectionValue == nsISelectionController::SELECTION_ON) {
-        colorID = LookAndFeel::ColorID::Highlight;
-      } else if (selectionValue ==
-                 nsISelectionController::SELECTION_ATTENTION) {
-        colorID = LookAndFeel::ColorID::TextSelectAttentionBackground;
-      } else {
-        colorID = LookAndFeel::ColorID::TextSelectDisabledBackground;
-      }
-      color = nsDisplaySelectionOverlay::ApplyTransparencyIfNecessary(
-          LookAndFeel::Color(colorID, this, NS_RGB(255, 255, 255)));
-    }
-    aList->AppendNewToTopWithIndex<nsDisplaySelectionOverlay>(aBuilder, this,
-                                                              index++, color);
-  }
+  aList->AppendNewToTop<nsDisplaySelectionOverlay>(aBuilder, this,
+                                                   selectionValue);
 }
 
 /* virtual */
@@ -545,52 +528,37 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
                                           nsIWidget* aWidget,
                                           const nsSize& aMinSize,
                                           const nsSize& aMaxSize) {
-  // Compute constraints in desktop pixels so they are independent of the
-  // widget's current backing scale factor. Each widget converts to its
-  // native coordinate system using its own scale.
-  //
-  // Use the pres context's nearest widget for the desktop-to-device scale
-  // to match the scale used by AppUnitsToDevPixels. That widget may differ
-  // from aWidget (e.g. for popups on macOS whose NSWindow is initially
-  // backed by a different screen than the frame's nearest widget).
-  nsIWidget* rootWidget = aPresContext->GetNearestWidget();
-  const DesktopToLayoutDeviceScale desktopToDev =
-      rootWidget ? rootWidget->GetDesktopToDeviceScale()
-                 : aWidget->GetDesktopToDeviceScale();
-
-  auto AppUnitsToDesktop = [&](nscoord aAppUnits) {
-    return NSToIntRound(aPresContext->AppUnitsToDevPixels(aAppUnits) /
-                        desktopToDev.scale);
-  };
-
-  DesktopIntSize minSize(AppUnitsToDesktop(aMinSize.width),
-                         AppUnitsToDesktop(aMinSize.height));
-  DesktopIntSize maxSize(aMaxSize.width == NS_UNCONSTRAINEDSIZE
-                             ? NS_MAXSIZE
-                             : AppUnitsToDesktop(aMaxSize.width),
-                         aMaxSize.height == NS_UNCONSTRAINEDSIZE
-                             ? NS_MAXSIZE
-                             : AppUnitsToDesktop(aMaxSize.height));
+  LayoutDeviceIntSize devMinSize(
+      aPresContext->AppUnitsToDevPixels(aMinSize.width),
+      aPresContext->AppUnitsToDevPixels(aMinSize.height));
+  LayoutDeviceIntSize devMaxSize(
+      aMaxSize.width == NS_UNCONSTRAINEDSIZE
+          ? NS_MAXSIZE
+          : aPresContext->AppUnitsToDevPixels(aMaxSize.width),
+      aMaxSize.height == NS_UNCONSTRAINEDSIZE
+          ? NS_MAXSIZE
+          : aPresContext->AppUnitsToDevPixels(aMaxSize.height));
 
   // MinSize has a priority over MaxSize
-  if (minSize.width > maxSize.width) {
-    maxSize.width = minSize.width;
+  if (devMinSize.width > devMaxSize.width) {
+    devMaxSize.width = devMinSize.width;
   }
-  if (minSize.height > maxSize.height) {
-    maxSize.height = minSize.height;
+  if (devMinSize.height > devMaxSize.height) {
+    devMaxSize.height = devMinSize.height;
   }
 
-  widget::SizeConstraints constraints(minSize, maxSize);
+  DesktopToLayoutDeviceScale constraintsScale(MOZ_WIDGET_INVALID_SCALE);
+  if (nsIWidget* rootWidget = aPresContext->GetNearestWidget()) {
+    constraintsScale = rootWidget->GetDesktopToDeviceScale();
+  }
+
+  widget::SizeConstraints constraints(devMinSize, devMaxSize, constraintsScale);
 
   // The sizes are in inner window sizes, so convert them into outer window
   // sizes. Use a size of (200, 200) as only the difference between the inner
-  // and outer size is needed. NormalSizeModeClientToWindowSizeDifference
-  // reports values in aWidget's device pixels, so convert through aWidget's
-  // scale rather than rootWidget's.
-  const LayoutDeviceIntSize devSizeDiff =
+  // and outer size is needed.
+  const LayoutDeviceIntSize sizeDiff =
       aWidget->NormalSizeModeClientToWindowSizeDifference();
-  const DesktopIntSize sizeDiff =
-      DesktopIntSize::Round(devSizeDiff / aWidget->GetDesktopToDeviceScale());
   if (constraints.mMinSize.width) {
     constraints.mMinSize.width += sizeDiff.width;
   }
@@ -855,12 +823,10 @@ void nsContainerFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
     AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation,
                             AbsPosReflowFlag::CBWidthChanged,
                             AbsPosReflowFlag::CBHeightChanged};
-    nsReflowStatus absposStatus;
     absoluteContainer->Reflow(
-        this, aPresContext, aReflowInput, absposStatus,
+        this, aPresContext, aReflowInput, aStatus,
         cbRect.GetPhysicalRect(wm, aDesiredSize.PhysicalSize()), flags,
         &aDesiredSize.mOverflowAreas);
-    aStatus.MergeCompletionStatusFrom(absposStatus);
   }
 }
 
@@ -939,14 +905,16 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
       StyleSizeOverrides sizeOverride;
       // We override current continuation's inline-size by using the
       // prev-in-flow's inline-size since both should be the same.
-      sizeOverride.mStyleISize.emplace(StyleSize::FromAppUnits(
-          frame->StylePosition()->mBoxSizing == StyleBoxSizing::BorderBox
-              ? prevInFlow->ISize(wm)
-              : prevInFlow->ContentISize(wm)));
+      sizeOverride.mStyleISize.emplace(
+          StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(
+              frame->StylePosition()->mBoxSizing == StyleBoxSizing::Border
+                  ? prevInFlow->ISize(wm)
+                  : prevInFlow->ContentISize(wm))));
 
       if (frame->IsFlexItem()) {
         // An overflow container's block-size must be 0.
-        sizeOverride.mStyleBSize.emplace(StyleSize::FromAppUnits(0));
+        sizeOverride.mStyleBSize.emplace(
+            StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(0)));
       }
       ReflowOutput desiredSize(wm);
       ReflowInput reflowInput(aPresContext, aReflowInput, frame, availSpace,
@@ -1001,7 +969,7 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
                                        aReflowInput.ComputedPhysicalSize());
       }
     }
-    ConsiderChildOverflow(aOverflowRects, frame, OverflowAreaUnionFlags::None);
+    ConsiderChildOverflow(aOverflowRects, frame, /* aAsIfScrolled = */ false);
   }
 }
 
@@ -1014,17 +982,10 @@ void nsContainerFrame::DisplayOverflowContainers(
   }
 }
 
-void nsContainerFrame::DisplayAbsoluteFramesNotBuiltByPlaceholder(
+void nsContainerFrame::DisplayPushedAbsoluteFrames(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
   for (nsIFrame* frame : GetChildList(FrameChildListID::Absolute)) {
     if (frame->HasAnyStateBits(NS_FRAME_IS_PUSHED_OUT_OF_FLOW)) {
-      BuildDisplayListForChild(aBuilder, frame, aLists);
-    } else if (IsTransformed() && !nsLayoutUtils::IsProperAncestorFrame(
-                                      this, frame->GetPlaceholderFrame())) {
-      // If this is a transformed absolute containing block and the abspos's
-      // placeholder is in a different continuation's subtree, build the abspos
-      // directly here so that it ends up in the correct fragment's
-      // nsDisplayTransform.
       BuildDisplayListForChild(aBuilder, frame, aLists);
     }
   }
@@ -1634,9 +1595,28 @@ nsIFrame* nsContainerFrame::GetFirstNonAnonBoxInSubtree(nsIFrame* aFrame) {
     // If aFrame isn't an anonymous container, or it's text or such, then it'll
     // do.
     if (!aFrame->Style()->IsAnonBox() ||
-        PseudoStyle::IsNonElement(aFrame->Style()->GetPseudoType())) {
+        nsCSSAnonBoxes::IsNonElement(aFrame->Style()->GetPseudoType())) {
       break;
     }
+
+    // Otherwise, descend to its first child and repeat.
+
+    // SPECIAL CASE: if we're dealing with an anonymous table, then it might
+    // be wrapping something non-anonymous in its col-group list
+    // (instead of its principal child list), so we have to look there.
+    // (Note: For anonymous tables that have a non-anon cell *and* a non-anon
+    // column, we'll always return the column. This is fine; we're really just
+    // looking for a handle to *anything* with a meaningful content node inside
+    // the table, for use in DOM comparisons to things outside of the table.)
+    if (MOZ_UNLIKELY(aFrame->IsTableFrame())) {
+      nsIFrame* colgroupDescendant = GetFirstNonAnonBoxInSubtree(
+          aFrame->GetChildList(FrameChildListID::ColGroup).FirstChild());
+      if (colgroupDescendant) {
+        return colgroupDescendant;
+      }
+    }
+
+    // USUAL CASE: Descend to the first child in principal list.
     aFrame = aFrame->PrincipalChildList().FirstChild();
   }
   return aFrame;
@@ -2008,14 +1988,14 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   const bool isAutoBSize =
       nsLayoutUtils::IsAutoBSize(*styleBSize, aCBSize.BSize(aWM));
 
-  const auto boxSizingAdjust = stylePos->mBoxSizing == StyleBoxSizing::BorderBox
+  const auto boxSizingAdjust = stylePos->mBoxSizing == StyleBoxSizing::Border
                                    ? aBorderPadding
                                    : LogicalSize(aWM);
   const nscoord boxSizingToMarginEdgeISize = aMargin.ISize(aWM) +
                                              aBorderPadding.ISize(aWM) -
                                              boxSizingAdjust.ISize(aWM);
 
-  // We don't expect these initial values of iSize/bSize to be used, but this
+  // We don't expect these intial values of iSize/bSize to be used, but this
   // silences a GCC warning about them being uninitialized.
   nscoord minISize, maxISize, minBSize, maxBSize, iSize = 0, bSize = 0;
   enum class FillCB {
@@ -2210,13 +2190,11 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
             (blockFillCB == FillCB::Stretch ? FillCB::Stretch : FillCB::Clamp);
       }
 
-      // Honor aspect ratio if there's an intrinsic isize, even if there's an
-      // intrinsic bsize.
-      if (aspectRatio && (!hasIntrinsicBSize || hasIntrinsicISize)) {
+      if (hasIntrinsicBSize) {
+        tentBSize = intrinsicBSize;
+      } else if (aspectRatio) {
         tentBSize = aspectRatio.ComputeRatioDependentSize(
             LogicalAxis::Block, aWM, tentISize, boxSizingAdjust);
-      } else if (hasIntrinsicBSize) {
-        tentBSize = intrinsicBSize;
       } else {
         tentBSize = fallbackIntrinsicSize.BSize(aWM);
       }
@@ -2330,7 +2308,7 @@ nsRect nsContainerFrame::ComputeSimpleTightBounds(
     DrawTarget* aDrawTarget) const {
   if (StyleOutline()->ShouldPaintOutline() || StyleBorder()->HasBorder() ||
       !StyleBackground()->IsTransparent(this) ||
-      StyleDisplay()->HasNativeAppearance()) {
+      StyleDisplay()->HasAppearance()) {
     // Not necessarily tight, due to clipping, negative
     // outline-offset, and lots of other issues, but that's OK
     return InkOverflowRect();
@@ -2400,9 +2378,9 @@ bool nsContainerFrame::ShouldAvoidBreakInside(
       case StyleBreakWithin::Avoid:
         return true;
       case StyleBreakWithin::AvoidPage:
-        return aReflowInput.mBreakType == BreakType::Page;
+        return aReflowInput.mBreakType == ReflowInput::BreakType::Page;
       case StyleBreakWithin::AvoidColumn:
-        return aReflowInput.mBreakType == BreakType::Column;
+        return aReflowInput.mBreakType == ReflowInput::BreakType::Column;
     }
     MOZ_ASSERT_UNREACHABLE("Unknown break-inside value");
     return false;
@@ -2425,25 +2403,21 @@ bool nsContainerFrame::ShouldAvoidBreakInside(
 
 void nsContainerFrame::ConsiderChildOverflow(OverflowAreas& aOverflowAreas,
                                              nsIFrame* aChildFrame,
-                                             OverflowAreaUnionFlags aFlags) {
-  const OverflowAreas childOverflows = [&]() -> OverflowAreas {
-    if (StyleDisplay()->IsContainLayout() && SupportsContainLayoutAndPaint() &&
-        !(aFlags & OverflowAreaUnionFlags::AsIfScrolled)) {
-      // If we have layout containment and are not a non-atomic, inline-level
-      // principal box, we should only consider our child's ink overflow,
-      // leaving the scrollable regions of the parent unaffected.
-      // Note: scrollable overflow is a subset of ink overflow,
-      // so this has the same affect as unioning the child's ink and
-      // scrollable overflow with the parent's ink overflow.
-      return OverflowAreas(aChildFrame->InkOverflowRect(), nsRect()) +
-             aChildFrame->GetPosition();
-    }
-    return aChildFrame->GetActualAndNormalOverflowAreasRelativeToParent();
-  }();
-  if (aFlags & OverflowAreaUnionFlags::ChildIsAbsPos) {
-    aOverflowAreas.UnionWithAbsoluteOverflowAreas(childOverflows);
+                                             bool aAsIfScrolled) {
+  if (StyleDisplay()->IsContainLayout() && SupportsContainLayoutAndPaint() &&
+      !aAsIfScrolled) {
+    // If we have layout containment and are not a non-atomic, inline-level
+    // principal box, we should only consider our child's ink overflow,
+    // leaving the scrollable regions of the parent unaffected.
+    // Note: scrollable overflow is a subset of ink overflow,
+    // so this has the same affect as unioning the child's ink and
+    // scrollable overflow with the parent's ink overflow.
+    const OverflowAreas childOverflows(aChildFrame->InkOverflowRect(),
+                                       nsRect());
+    aOverflowAreas.UnionWith(childOverflows + aChildFrame->GetPosition());
   } else {
-    aOverflowAreas.UnionWith(childOverflows);
+    aOverflowAreas.UnionWith(
+        aChildFrame->GetActualAndNormalOverflowAreasRelativeToParent());
   }
 }
 
@@ -2795,10 +2769,10 @@ void nsContainerFrame::SanityCheckChildListsBeforeReflow() const {
   const auto didPushItemsBit = IsFlexContainerFrame()
                                    ? NS_STATE_FLEX_DID_PUSH_ITEMS
                                    : NS_STATE_GRID_DID_PUSH_ITEMS;
-  ChildListIDs absLists = {FrameChildListID::Absolute,
-                           FrameChildListID::PushedAbsolute,
-                           FrameChildListID::OverflowContainers,
-                           FrameChildListID::ExcessOverflowContainers};
+  ChildListIDs absLists = {
+      FrameChildListID::Absolute, FrameChildListID::PushedAbsolute,
+      FrameChildListID::Fixed, FrameChildListID::OverflowContainers,
+      FrameChildListID::ExcessOverflowContainers};
   ChildListIDs itemLists = {FrameChildListID::Principal,
                             FrameChildListID::Overflow};
   for (const nsIFrame* f = this; f; f = f->GetNextInFlow()) {

@@ -11,7 +11,6 @@
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageStatementCallback.h"
 #include "Helpers.h"
-#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDeque.h"
 #include "nsIAsyncShutdown.h"
@@ -45,10 +44,6 @@ struct PendingQuery final {
  * Since this is lacking any capability of setting up the database file, if it
  * doesn't exist, or has an outdated schema version, it will queue up requests
  * and await for Places to start up fully.
- *
- * Available in the parent process and in privileged content processes
- * (privilegedabout and privilegedmozilla).  Queue() and GetInstance() are
- * safe to call from any thread.
  */
 class ConcurrentConnection final : public nsIObserver,
                                    public nsSupportsWeakReference,
@@ -74,18 +69,9 @@ class ConcurrentConnection final : public nsIObserver,
   ConcurrentConnection();
 
   /**
-   * Get the singleton instance. Returns a strong reference so the instance
-   * stays alive for the caller's use regardless of concurrent shutdown.
-   * Safe to call from any thread.
+   * Get a pointer to the singleton instance.
    */
-  static Maybe<RefPtr<ConcurrentConnection>> GetInstance();
-
-  static bool IsSupportedProcessType();
-
-  /**
-   * Interrupt any ongoing operations on the current connection, if any.
-   */
-  static void MaybeInterrupt();
+  static Maybe<ConcurrentConnection*> GetInstance();
 
   /**
    * Enqueue a query or a Runnable.
@@ -108,7 +94,6 @@ class ConcurrentConnection final : public nsIObserver,
       const nsCString& aQuery);
 
  private:
-  void Init();
   void InitializeOnMainThread();
 
   /**
@@ -161,6 +146,8 @@ class ConcurrentConnection final : public nsIObserver,
    */
   nsresult AttachDatabase(const nsString& aFileName,
                           const nsCString& aSchemaName);
+
+  static ConcurrentConnection* gConcurrentConnection;
 
   ~ConcurrentConnection() = default;
 

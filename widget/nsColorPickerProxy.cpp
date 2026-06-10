@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,22 +40,24 @@ nsColorPickerProxy::Open(
 
 mozilla::ipc::IPCResult nsColorPickerProxy::RecvUpdate(
     const nsAString& aColor) {
-  if (nsCOMPtr<nsIColorPickerShownCallback> callback = mCallback) {
-    callback->Update(aColor);
+  if (mCallback) {
+    mCallback->Update(aColor);
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult nsColorPickerProxy::Recv__delete__(
     const nsAString& aColor) {
-  if (nsCOMPtr<nsIColorPickerShownCallback> callback = std::move(mCallback)) {
-    callback->Done(aColor);
+  if (mCallback) {
+    mCallback->Done(aColor);
+    mCallback = nullptr;
   }
   return IPC_OK();
 }
 
 void nsColorPickerProxy::ActorDestroy(ActorDestroyReason aWhy) {
-  if (nsCOMPtr<nsIColorPickerShownCallback> callback = std::move(mCallback)) {
-    callback->Done(u""_ns);
+  if (mCallback) {
+    mCallback->Done(u""_ns);
+    mCallback = nullptr;
   }
 }

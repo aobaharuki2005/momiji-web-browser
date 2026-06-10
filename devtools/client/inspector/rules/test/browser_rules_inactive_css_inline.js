@@ -45,7 +45,6 @@ const TEST_DATA = [
       {
         declaration: { "vertical-align": "text-bottom" },
         ruleIndex: 0,
-        msgId: "inactive-css-not-inline-or-tablecell",
       },
     ],
   },
@@ -55,7 +54,6 @@ const TEST_DATA = [
       {
         declaration: { "vertical-align": "sub" },
         ruleIndex: 1,
-        msgId: "inactive-css-not-inline-or-tablecell",
       },
     ],
   },
@@ -83,20 +81,18 @@ const TEST_DATA = [
       {
         declarations: { "vertical-align": "middle", top: "20px" },
         // The ::before rule in the pseudo-element section
-        ruleIndex: 0,
+        ruleIndex: [1, 0],
       },
     ],
     inactiveDeclarations: [
       {
         declaration: { height: "10px" },
         // The ::before rule in the pseudo-element section
-        ruleIndex: 0,
-        msgId: "inactive-css-property-because-of-display",
+        ruleIndex: [1, 0],
       },
       {
         declaration: { "vertical-align": "middle" },
-        ruleIndex: 2,
-        msgId: "inactive-css-not-inline-or-tablecell",
+        ruleIndex: 4,
       },
     ],
   },
@@ -118,7 +114,6 @@ const TEST_DATA = [
       {
         declaration: { height: "10px" },
         ruleIndex: 0,
-        msgId: "inactive-css-property-because-of-display",
       },
     ],
   },
@@ -165,14 +160,9 @@ add_task(async function () {
   await selectNode("button", inspector);
 
   info("Set an inactive property on the element style");
-  const inlineStyleRuleIndex = 1;
-  await addProperty(view, inlineStyleRuleIndex, "flex-grow", "1");
-  await checkDeclarationIsInactive(
-    view,
-    inlineStyleRuleIndex,
-    {
-      "flex-grow": "1",
-    },
-    "inactive-css-not-flex-item"
-  );
+  const inlineStyleRuleIndex = 3;
+  await addProperty(view, inlineStyleRuleIndex, "left", "10px");
+  await checkDeclarationIsInactive(view, inlineStyleRuleIndex, {
+    left: "10px",
+  });
 });

@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCSPUtils_h_
-#define nsCSPUtils_h_
+#ifndef nsCSPUtils_h___
+#define nsCSPUtils_h___
 
 #include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
@@ -791,4 +793,4 @@ class nsCSPPolicy {
   bool mDeliveredViaMetaTag;
 };
 
-#endif /* nsCSPUtils_h_ */
+#endif /* nsCSPUtils_h___ */

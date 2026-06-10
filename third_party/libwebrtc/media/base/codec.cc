@@ -22,7 +22,6 @@
 #include "absl/strings/str_cat.h"
 #include "api/audio_codecs/audio_format.h"
 #include "api/media_types.h"
-#include "api/payload_type.h"
 #include "api/rtp_parameters.h"
 #include "api/video_codecs/h264_profile_level_id.h"
 #include "api/video_codecs/sdp_video_format.h"
@@ -98,10 +97,10 @@ bool FeedbackParams::HasDuplicateEntries() const {
   return false;
 }
 
-Codec::Codec(Type type, PayloadType id, const std::string& name, int clockrate)
+Codec::Codec(Type type, int id, const std::string& name, int clockrate)
     : Codec(type, id, name, clockrate, 0) {}
 Codec::Codec(Type type,
-             PayloadType id,
+             int id,
              const std::string& name,
              int clockrate,
              size_t channels)
@@ -116,22 +115,18 @@ Codec::Codec(Type type,
 
 Codec::Codec(Type type)
     : Codec(type,
-            PayloadType::NotSet(),
+            kIdNotSet,
             "",
             type == Type::kVideo ? kDefaultVideoClockRateHz
                                  : kDefaultAudioClockRateHz) {}
 
 Codec::Codec(const SdpAudioFormat& c)
-    : Codec(Type::kAudio,
-            PayloadType::NotSet(),
-            c.name,
-            c.clockrate_hz,
-            c.num_channels) {
+    : Codec(Type::kAudio, kIdNotSet, c.name, c.clockrate_hz, c.num_channels) {
   params = c.parameters;
 }
 
 Codec::Codec(const SdpVideoFormat& c)
-    : Codec(Type::kVideo, PayloadType::NotSet(), c.name, kVideoCodecClockrate) {
+    : Codec(Type::kVideo, kIdNotSet, c.name, kVideoCodecClockrate) {
   params = c.parameters;
   scalability_modes = c.scalability_modes;
 }
@@ -274,7 +269,9 @@ bool Codec::ValidateCodecFormat() const {
 }
 
 std::string Codec::ToString() const {
-  StringBuilder sb;
+  char buf[256];
+
+  SimpleStringBuilder sb(buf);
   switch (type) {
     case Type::kAudio: {
       sb << "AudioCodec[" << id << ":" << name << ":" << clockrate << ":"
@@ -290,28 +287,23 @@ std::string Codec::ToString() const {
       break;
     }
   }
-  return sb.Release();
+  return sb.str();
 }
 
-Codec CreateAudioRtxCodec(PayloadType rtx_payload_type,
-                          PayloadType associated_payload_type) {
+Codec CreateAudioRtxCodec(int rtx_payload_type, int associated_payload_type) {
   Codec rtx_codec = CreateAudioCodec(rtx_payload_type, kRtxCodecName,
                                      kDefaultAudioClockRateHz, 1);
-  rtx_codec.SetParam(kCodecParamAssociatedPayloadType,
-                     associated_payload_type.value());
+  rtx_codec.SetParam(kCodecParamAssociatedPayloadType, associated_payload_type);
   return rtx_codec;
 }
 
-Codec CreateVideoRtxCodec(PayloadType rtx_payload_type,
-                          PayloadType associated_payload_type) {
+Codec CreateVideoRtxCodec(int rtx_payload_type, int associated_payload_type) {
   Codec rtx_codec = CreateVideoCodec(rtx_payload_type, kRtxCodecName);
-  rtx_codec.SetParam(kCodecParamAssociatedPayloadType,
-                     associated_payload_type.value());
+  rtx_codec.SetParam(kCodecParamAssociatedPayloadType, associated_payload_type);
   return rtx_codec;
 }
 
-const Codec* FindCodecById(const std::vector<Codec>& codecs,
-                           PayloadType payload_type) {
+const Codec* FindCodecById(const std::vector<Codec>& codecs, int payload_type) {
   for (const auto& codec : codecs) {
     if (codec.id == payload_type)
       return &codec;
@@ -403,7 +395,7 @@ void AddH264ConstrainedBaselineProfileToSupportedFormats(
   }
 }
 
-Codec CreateAudioCodec(PayloadType id,
+Codec CreateAudioCodec(int id,
                        const std::string& name,
                        int clockrate,
                        size_t channels) {
@@ -415,10 +407,10 @@ Codec CreateAudioCodec(const SdpAudioFormat& c) {
 }
 
 Codec CreateVideoCodec(const std::string& name) {
-  return CreateVideoCodec(PayloadType::NotSet(), name);
+  return CreateVideoCodec(Codec::kIdNotSet, name);
 }
 
-Codec CreateVideoCodec(PayloadType id, const std::string& name) {
+Codec CreateVideoCodec(int id, const std::string& name) {
   Codec c(Codec::Type::kVideo, id, name, kVideoCodecClockrate);
   if (absl::EqualsIgnoreCase(kH264CodecName, name)) {
     // This default is set for all H.264 codecs created because
@@ -434,7 +426,7 @@ Codec CreateVideoCodec(const SdpVideoFormat& c) {
   return Codec(c);
 }
 
-Codec CreateVideoCodec(PayloadType id, const SdpVideoFormat& sdp) {
+Codec CreateVideoCodec(int id, const SdpVideoFormat& sdp) {
   Codec c = CreateVideoCodec(sdp);
   c.id = id;
   return c;

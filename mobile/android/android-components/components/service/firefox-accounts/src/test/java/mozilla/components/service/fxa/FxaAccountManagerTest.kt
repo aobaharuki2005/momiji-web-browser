@@ -9,7 +9,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
 import mozilla.appservices.fxaclient.FxaConfig
-import mozilla.appservices.fxaclient.FxaRustAuthState
 import mozilla.appservices.fxaclient.FxaServer
 import mozilla.appservices.fxaclient.FxaState
 import mozilla.components.concept.base.crash.CrashReporting
@@ -171,7 +170,7 @@ class FxaAccountManagerTest {
         whenever(account.processEvent(any())).thenReturn(FxaState.Disconnected)
         fxaManager.start()
 
-        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/", FxaRustAuthState.CONNECTED))
+        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/"))
         fxaManager.beginAuthentication(entrypoint = entryPoint)
 
         whenever(account.processEvent(any())).thenReturn(FxaState.Connected)
@@ -197,7 +196,7 @@ class FxaAccountManagerTest {
         whenever(account.processEvent(any())).thenReturn(FxaState.Disconnected)
         fxaManager.start()
 
-        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/", FxaRustAuthState.CONNECTED))
+        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/"))
         fxaManager.beginAuthentication(
             pairingUrl = "http://test-oauth/example.com/pairing",
             entrypoint = entryPoint,
@@ -251,7 +250,7 @@ class FxaAccountManagerTest {
         whenever(account.processEvent(any())).thenReturn(FxaState.Disconnected)
         fxaManager.start()
 
-        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/", FxaRustAuthState.CONNECTED))
+        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/"))
         fxaManager.beginAuthentication(entrypoint = entryPoint)
 
         // Simulate the fxa client moving to the `Disconnected` state after `finishAuthentication()` is called.
@@ -323,7 +322,7 @@ class FxaAccountManagerTest {
         whenever(account.processEvent(any())).thenReturn(FxaState.Disconnected)
         fxaManager.start()
 
-        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/", FxaRustAuthState.CONNECTED))
+        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/"))
         fxaManager.beginAuthentication(entrypoint = entryPoint)
 
         whenever(account.processEvent(any())).thenReturn(FxaState.Connected)
@@ -351,7 +350,7 @@ class FxaAccountManagerTest {
         whenever(account.processEvent(any())).thenReturn(FxaState.Disconnected)
         fxaManager.start()
 
-        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/", FxaRustAuthState.CONNECTED))
+        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/"))
         fxaManager.beginAuthentication(entrypoint = entryPoint)
 
         whenever(account.processEvent(any())).thenReturn(FxaState.Connected)
@@ -380,7 +379,7 @@ class FxaAccountManagerTest {
         whenever(account.processEvent(any())).thenReturn(FxaState.Disconnected)
         fxaManager.start()
 
-        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/", FxaRustAuthState.CONNECTED))
+        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/"))
         fxaManager.beginAuthentication(entrypoint = entryPoint)
 
         whenever(account.processEvent(any())).thenReturn(FxaState.Connected)
@@ -409,7 +408,7 @@ class FxaAccountManagerTest {
         whenever(account.processEvent(any())).thenReturn(FxaState.Disconnected)
         fxaManager.start()
 
-        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/", FxaRustAuthState.CONNECTED))
+        whenever(account.processEvent(any())).thenReturn(FxaState.Authenticating("https://test-oauth.example.com/"))
         fxaManager.beginAuthentication(entrypoint = entryPoint)
 
         whenever(account.processEvent(any())).thenReturn(FxaState.Connected)

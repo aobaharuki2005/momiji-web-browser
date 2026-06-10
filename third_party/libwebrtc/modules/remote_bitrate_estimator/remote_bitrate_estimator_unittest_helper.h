@@ -29,7 +29,7 @@ namespace testing {
 class TestBitrateObserver : public RemoteBitrateObserver {
  public:
   TestBitrateObserver() : updated_(false), latest_bitrate_(0) {}
-  ~TestBitrateObserver() override {}
+  virtual ~TestBitrateObserver() {}
 
   void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs,
                                uint32_t bitrate) override;
@@ -154,14 +154,14 @@ class StreamGenerator {
 class RemoteBitrateEstimatorTest : public ::testing::Test {
  public:
   RemoteBitrateEstimatorTest();
-  ~RemoteBitrateEstimatorTest() override;
+  virtual ~RemoteBitrateEstimatorTest();
 
   RemoteBitrateEstimatorTest(const RemoteBitrateEstimatorTest&) = delete;
   RemoteBitrateEstimatorTest& operator=(const RemoteBitrateEstimatorTest&) =
       delete;
 
  protected:
-  void SetUp() override = 0;
+  virtual void SetUp() = 0;
 
   void AddDefaultStream();
 

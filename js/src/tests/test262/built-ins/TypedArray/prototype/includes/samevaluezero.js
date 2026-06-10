@@ -24,8 +24,8 @@ includes: [testTypedArray.js]
 features: [TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg([42, 0, 1, undefined]));
+testWithTypedArrayConstructors(function(TA) {
+  var sample = new TA([42, 0, 1, undefined]);
   assert.sameValue(sample.includes(), false, "no arg");
   assert.sameValue(sample.includes(undefined), false, "undefined");
   assert.sameValue(sample.includes("42"), false, "'42'");
@@ -38,8 +38,8 @@ testWithTypedArrayConstructors(function(TA, makeCtorArg) {
   assert.sameValue(sample.includes(""), false, "empty string");
 });
 
-testWithTypedArrayConstructors(function(FloatArray, makeCtorArg) {
-  var sample = new FloatArray(makeCtorArg([42, 0, 1, undefined, NaN]));
+testWithTypedArrayConstructors(function(FloatArray) {
+  var sample = new FloatArray([42, 0, 1, undefined, NaN]);
   assert.sameValue(sample.includes(NaN), true, "NaN");
 }, floatArrayConstructors);
 

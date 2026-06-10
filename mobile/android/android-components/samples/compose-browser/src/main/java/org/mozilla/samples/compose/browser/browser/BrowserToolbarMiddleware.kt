@@ -136,7 +136,7 @@ internal class BrowserToolbarMiddleware(
 
     private fun buildEditPageActionsEnd() = listOf(
         ActionButtonRes(
-            drawableResId = iconsR.drawable.mozac_ic_cross_24,
+            drawableResId = iconsR.drawable.mozac_ic_stop,
             contentDescription = R.string.clear_input_description,
             onClick = ClearClicked,
         ),

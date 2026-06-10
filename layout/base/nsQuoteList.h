@@ -1,11 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* implementation of quotes for the CSS 'content' property */
 
-#ifndef nsQuoteList_h_
-#define nsQuoteList_h_
+#ifndef nsQuoteList_h___
+#define nsQuoteList_h___
 
 #include "nsGenConList.h"
 
@@ -94,4 +96,4 @@ class nsQuoteList : public nsGenConList {
   mozilla::ContainStyleScope* mScope;
 };
 
-#endif /* nsQuoteList_h_ */
+#endif /* nsQuoteList_h___ */

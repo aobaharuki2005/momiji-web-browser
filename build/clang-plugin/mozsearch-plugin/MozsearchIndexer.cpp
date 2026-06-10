@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,8 +27,10 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <stack>
 #include <string>
 #include <unordered_set>
@@ -323,7 +326,6 @@ private:
     AutoSetContext *Prev;
     NamedDecl *Decl;
     bool VisitImplicit;
-    unsigned nextLambdaIndex = 1;
   };
   AutoSetContext *CurDeclContext;
 
@@ -490,7 +492,7 @@ private:
   // Returns the qualified name of `d` without considering template parameters.
   std::string getQualifiedName(const NamedDecl *D) {
     const DeclContext *Ctx = D->getDeclContext();
-    if (Ctx->isFunctionOrMethod() && !dyn_cast<CXXRecordDecl>(D)) {
+    if (Ctx->isFunctionOrMethod()) {
       return D->getQualifiedNameAsString();
     }
 
@@ -502,26 +504,13 @@ private:
       Ctx = Ctx->getParent();
     }
 
-    std::vector<std::string> ReversedComponents;
-    if (D->getDeclName()) {
-      ReversedComponents.push_back(D->getNameAsString());
-    } else {
-      auto cxxDecl = dyn_cast<CXXRecordDecl>(D);
-      if (cxxDecl && cxxDecl->isLambda()) {
-        char index[64];
-        sprintf(index, "%u", cxxDecl->getLambdaIndexInContext());
-        std::string Component = "(lambda class";
-        Component += index;
-        Component += ")";
-        ReversedComponents.push_back(Component);
-      } else {
-        ReversedComponents.push_back("(anonymous)");
-      }
-    }
+    std::string Result;
+
+    std::reverse(Contexts.begin(), Contexts.end());
 
     for (const DeclContext *DC : Contexts) {
       if (const auto *Spec = dyn_cast<ClassTemplateSpecializationDecl>(DC)) {
-        std::string Component = Spec->getNameAsString();
+        Result += Spec->getNameAsString();
 
         if (Spec->getSpecializationKind() == TSK_ExplicitSpecialization) {
           std::string Backing;
@@ -529,68 +518,40 @@ private:
           const TemplateArgumentList &TemplateArgs = Spec->getTemplateArgs();
           printTemplateArgumentList(Stream, TemplateArgs.asArray(),
                                     PrintingPolicy(CI.getLangOpts()));
-          Component += Stream.str();
+          Result += Stream.str();
         }
-
-        ReversedComponents.push_back(Component);
       } else if (const auto *Nd = dyn_cast<NamespaceDecl>(DC)) {
         if (Nd->isAnonymousNamespace() || Nd->isInline()) {
           continue;
         }
-        ReversedComponents.push_back(Nd->getNameAsString());
+        Result += Nd->getNameAsString();
       } else if (const auto *Rd = dyn_cast<RecordDecl>(DC)) {
-        auto cxxDecl = dyn_cast<CXXRecordDecl>(Rd);
-        if (cxxDecl && cxxDecl->isLambda()) {
-          // Lambda functions are anonymous classes with `operator()`.
-          //
-          // We use `(lambda classN)` notation for those classes,
-          // where the `N` is the index inside the context
-          // (calculated by our own).
-          //
-          // Also we use `(lambdaN)` notation for
-          // `(lambda classN)::operator()`.
-
-          char index[64];
-          sprintf(index, "%u", cxxDecl->getLambdaIndexInContext());
-
-          std::string Component;
-          if (!ReversedComponents.empty() && ReversedComponents.back() == "operator()") {
-            ReversedComponents.pop_back();
-            Component = "(lambda";
-          } else {
-            Component = "(lambda class";
-          }
-          Component += index;
-          Component += ")";
-          ReversedComponents.push_back(Component);
-        } else if (!Rd->getIdentifier()) {
-          ReversedComponents.push_back("(anonymous)");
+        if (!Rd->getIdentifier()) {
+          Result += "(anonymous)";
         } else {
-          ReversedComponents.push_back(Rd->getNameAsString());
+          Result += Rd->getNameAsString();
         }
       } else if (const auto *Fd = dyn_cast<FunctionDecl>(DC)) {
-        ReversedComponents.push_back(Fd->getNameAsString());
+        Result += Fd->getNameAsString();
       } else if (const auto *Ed = dyn_cast<EnumDecl>(DC)) {
         // C++ [dcl.enum]p10: Each enum-name and each unscoped
         // enumerator is declared in the scope that immediately contains
         // the enum-specifier. Each scoped enumerator is declared in the
         // scope of the enumeration.
-        if (Ed->isScoped() || Ed->getIdentifier()) {
-          ReversedComponents.push_back(Ed->getNameAsString());
-        }
+        if (Ed->isScoped() || Ed->getIdentifier())
+          Result += Ed->getNameAsString();
+        else
+          continue;
       } else {
-        ReversedComponents.push_back(cast<NamedDecl>(DC)->getNameAsString());
+        Result += cast<NamedDecl>(DC)->getNameAsString();
       }
+      Result += "::";
     }
 
-    std::string Result;
-    for (const auto& Component : ReversedComponents) {
-      if (Result.empty()) {
-        Result = Component;
-      } else {
-        Result = Component + "::" + Result;
-      }
-    }
+    if (D->getDeclName())
+      Result += D->getNameAsString();
+    else
+      Result += "(anonymous)";
 
     return Result;
   }
@@ -677,23 +638,6 @@ private:
     if (isa<FunctionDecl>(Decl) && cast<FunctionDecl>(Decl)->isExternC()) {
       return cast<FunctionDecl>(Decl)->getNameAsString();
     }
-
-#if CLANG_VERSION_MAJOR >= 21
-    // clang 21 (commit 6d00c4297f67) sets the DeclContext of lambdas inside
-    // requires-expression bodies to RequiresExprBodyDecl, but manglePrefix
-    // has no guard for it and crashes. Use a location-based name instead.
-    // Works around https://github.com/llvm/llvm-project/issues/200336
-    if (const CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(Decl)) {
-      if (MD->getParent()->isLambda()) {
-        for (const DeclContext *DC = MD->getParent()->getDeclContext(); DC;
-             DC = DC->getParent()) {
-          if (DC->isRequiresExprBody()) {
-            return std::string("L_") + mangleLocation(Decl->getLocation());
-          }
-        }
-      }
-    }
-#endif
 
     if (isa<FunctionDecl>(Decl) || isa<VarDecl>(Decl)) {
       const DeclContext *DC = Decl->getDeclContext();
@@ -1013,45 +957,8 @@ public:
     return Super::TraverseCXXDestructorDecl(D);
   }
 
-  // While the LambdaExpr node has fields for indices, all the indices
-  // are set to 0.
-  // We calculate and set it based on the index inside the enclosing context.
-  void AddLambdaNumbering(LambdaExpr *E) {
-    if (!CurDeclContext) {
-      return;
-    }
-
-    CXXRecordDecl *cls = E->getLambdaClass();
-    if (!cls) {
-      return;
-    }
-
-    auto numbering = cls->getLambdaNumbering();
-    numbering.IndexInContext = CurDeclContext->nextLambdaIndex++;
-    cls->setLambdaNumbering(numbering);
-  }
-
-  void AddImplicitLambdaUse(LambdaExpr *E) {
-    CXXMethodDecl* Lambda = E->getCallOperator();
-    if (!Lambda) {
-      return;
-    }
-
-    SourceLocation Loc = Lambda->getLocation();
-    SourceLocation SpellingLoc = SM.getSpellingLoc(Loc);
-    std::string Mangled = getMangledName(CurMangleContext, Lambda);
-
-    visitIdentifier("use", "function", getQualifiedName(Lambda), Loc,
-                    Mangled, Lambda->getType(),
-                    getContext(SpellingLoc), NotIdentifierToken);
-  }
-
   bool TraverseLambdaExpr(LambdaExpr *E) {
-    AddLambdaNumbering(E);
-    AddImplicitLambdaUse(E);
-
     AutoSetContext Asc(this, nullptr, true);
-
     return Super::TraverseLambdaExpr(E);
   }
 
@@ -1074,7 +981,7 @@ public:
       D = F->getTemplateInstantiationPattern();
     }
 
-    return Context(getQualifiedName(D),
+    return Context(D->getQualifiedNameAsString(),
                    getMangledName(CurMangleContext, D));
   }
 
@@ -1596,12 +1503,8 @@ public:
       QualType CanonicalFieldType = FieldType.getCanonicalType();
       LangOptions langOptions;
       PrintingPolicy Policy(langOptions);
-#if CLANG_VERSION_MAJOR >= 21
-      Policy.PrintAsCanonical = true;
-#else
       Policy.PrintCanonicalTypes = true;
-#endif
-      J.attribute("type", typeToString(CanonicalFieldType, Policy));
+      J.attribute("type", CanonicalFieldType.getAsString(Policy));
 
       const TagDecl *tagDecl = CanonicalFieldType->getAsTagDecl();
       if (!tagDecl) {
@@ -1674,7 +1577,7 @@ public:
 
       J.attribute("name", param->getName());
       QualType ArgType = param->getOriginalType();
-      J.attribute("type", typeToString(ArgType));
+      J.attribute("type", ArgType.getAsString());
 
       QualType CanonicalArgType = ArgType.getCanonicalType();
       const TagDecl *canonDecl = CanonicalArgType->getAsTagDecl();
@@ -1850,23 +1753,6 @@ public:
     F->Output.push_back(std::move(ros.str()));
   }
 
-  std::string typeToString(QualType Type) {
-    if (CXXRecordDecl* cxxDecl = Type->getAsCXXRecordDecl()) {
-      if (cxxDecl->isLambda()) {
-        return getQualifiedName(cxxDecl);
-      }
-    }
-    return Type.getAsString();
-  }
-  std::string typeToString(QualType Type, PrintingPolicy policy) {
-    if (CXXRecordDecl* cxxDecl = Type->getAsCXXRecordDecl()) {
-      if (cxxDecl->isLambda()) {
-        return getQualifiedName(cxxDecl);
-      }
-    }
-    return Type.getAsString(policy);
-  }
-
   // XXX Type annotating.
   // QualType is the type class.  It has helpers like TagDecl via getAsTagDecl.
   // ValueDecl exposes a getType() method.
@@ -1893,11 +1779,9 @@ public:
     // Also visit the spelling site.
     SourceLocation SpellingLoc = SM.getSpellingLoc(Loc);
     if (SpellingLoc != Loc) {
-      // NOTE: PeekRange, NestingRange, and ArgRanges come from the
-      //       macro expansion, which shouldn't be associated with the
-      //       symbols inside the macro.
       visitIdentifier(Kind, SyntaxKind, QualName, SpellingLoc, Symbol,
-                      MaybeType, TokenContext, Flags);
+                      MaybeType, TokenContext, Flags, PeekRange, NestingRange,
+                      ArgRanges);
     }
 
     SourceLocation ExpansionLoc = SM.getExpansionLoc(Loc);
@@ -2011,7 +1895,7 @@ public:
     }
 
     if (!MaybeType.isNull()) {
-      J.attribute("type", typeToString(MaybeType));
+      J.attribute("type", MaybeType.getAsString());
       QualType canonical = MaybeType.getCanonicalType();
       const TagDecl *decl = canonical->getAsTagDecl();
       if (!decl) {
@@ -2260,6 +2144,7 @@ public:
     int Flags = 0;
     const char *Kind = "def";
     const char *PrettyKind = "?";
+    bool wasTemplate = false;
     SourceRange PeekRange(D->getBeginLoc(), D->getEndLoc());
     // The nesting range identifies the left brace and right brace, which
     // heavily depends on the AST node type.
@@ -2267,6 +2152,7 @@ public:
     QualType qtype = QualType();
     if (FunctionDecl *D2 = dyn_cast<FunctionDecl>(D)) {
       if (D2->isTemplateInstantiation()) {
+        wasTemplate = true;
         D = D2->getTemplateInstantiationPattern();
       }
       // We treat pure virtual declarations as definitions.
@@ -2415,7 +2301,11 @@ public:
       }
     }
     if (FunctionDecl *D2 = dyn_cast<FunctionDecl>(D)) {
-      if (D2->isThisDeclarationADefinition() || isPure(D2)) {
+      if ((D2->isThisDeclarationADefinition() || isPure(D2)) &&
+          // a clause at the top should have generalized and set wasTemplate so
+          // it shouldn't be the case that isTemplateInstantiation() is true.
+          !D2->isTemplateInstantiation() && !wasTemplate &&
+          !D2->isFunctionTemplateSpecialization() && !TemplateStack) {
         if (auto *D3 = dyn_cast<CXXMethodDecl>(D2)) {
           findBindingToJavaMember(*AstContext, *D3);
         } else {

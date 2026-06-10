@@ -380,7 +380,7 @@ const GARBAGED_PAGE_CONTENT = `<!DOCTYPE html>
       <head>
         <script type="text/javascript" src="/garbaged-script.js"></script>
         <script>
-          console.log("garbaged inline script COUNT");
+          console.log("garbaged inline script");
         </script>
       </head>
     </html>`;
@@ -390,9 +390,7 @@ httpServer.registerPathHandler(
   (request, response) => {
     loadCounts[request.path] = (loadCounts[request.path] || 0) + 1;
     response.setStatusLine(request.httpVersion, 200, "OK");
-    response.write(
-      GARBAGED_PAGE_CONTENT.replace("COUNT", loadCounts[request.path])
-    );
+    response.write(GARBAGED_PAGE_CONTENT);
   }
 );
 
@@ -415,67 +413,37 @@ add_task(async function testGarbageCollectedSourceTextContent() {
   );
 
   // Force freeing both the HTML page and script in memory
-  // so that the debugger has to fetch source content from http cache or network.
+  // so that the debugger has to fetch source content from http cache.
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     Cu.forceGC();
   });
 
-  // Do a first pass without clearing http cache and debugger should retrieve sources
-  // from the http cache without trigerring any actual network request
-  let toolbox = await openToolboxForTab(tab, "jsdebugger");
-  let dbg = createDebuggerContext(toolbox);
+  const toolbox = await openToolboxForTab(tab, "jsdebugger");
+  const dbg = createDebuggerContext(toolbox);
   await waitForSources(dbg, "garbaged-collected.html", "garbaged-script.js");
 
   await selectSource(dbg, "garbaged-script.js");
-  is(getEditorContent(dbg), `console.log("garbaged script 1")`);
-
-  await selectSource(dbg, "garbaged-collected.html");
-  is(getEditorContent(dbg), GARBAGED_PAGE_CONTENT.replace("COUNT", 1));
-
-  is(
-    loadCounts["/garbaged-collected.html"],
-    1,
-    "We loaded the html page once as debugger was able to retrieve it from http cache"
-  );
-  is(
-    loadCounts["/garbaged-script.js"],
-    1,
-    "We loaded the garbaged script once as debugger was able to retrieve it from http cache"
-  );
-
-  await gDevTools.closeToolboxForTab(tab);
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    Cu.forceGC();
-  });
-
-  // To prevent the SourcesManager from retrieving the data from cache,
-  // clear the network cache.
-  Services.cache2.clear();
-
-  // Now do a second pass which will trigger actual http requests
-  toolbox = await openToolboxForTab(tab, "jsdebugger");
-  dbg = createDebuggerContext(toolbox);
-  await waitForSources(dbg, "garbaged-collected.html", "garbaged-script.js");
-
-  await selectSource(dbg, "garbaged-script.js");
+  // XXX Bug 1758454 - Source content of GC-ed script can be wrong!
+  // Even if we have to issue a new HTTP request for this source,
+  // we should be using HTTP cache and retrieve the first served version which
+  // is the one that actually runs in the page!
+  // We should be displaying `console.log("garbaged script 1")`,
+  // but instead, a new HTTP request is dispatched and we get a new content.
   is(getEditorContent(dbg), `console.log("garbaged script 2")`);
 
   await selectSource(dbg, "garbaged-collected.html");
-  is(getEditorContent(dbg), GARBAGED_PAGE_CONTENT.replace("COUNT", 2));
+  is(getEditorContent(dbg), GARBAGED_PAGE_CONTENT);
 
   is(
     loadCounts["/garbaged-collected.html"],
     2,
-    "We loaded the html page a second time because of the debugger doing a request"
+    "We loaded the html page once as we haven't tried to display it in the debugger (2)"
   );
   is(
     loadCounts["/garbaged-script.js"],
     2,
-    "We loaded the garbaged script a second time as we lost its content from memory and http cache"
+    "We loaded the garbaged script twice as we lost its content"
   );
-
-  await gDevTools.closeToolboxForTab(tab);
 });
 
 /**
@@ -513,10 +481,6 @@ add_task(async function testFailingHtmlSource() {
     BASE_URL + "200-then-connection-reset.html",
     "200-then-connection-reset.html"
   );
-
-  // To prevent the SourcesManager from retrieving the data from cache,
-  // clear the network cache.
-  Services.cache2.clear();
 
   // We can't select the HTML page as its source content isn't fetched
   // (waitForSelectedSource doesn't resolve)
@@ -566,10 +530,6 @@ add_task(async function testLoadingHtmlSource() {
     BASE_URL + "slow-loading-page.html",
     "slow-loading-page.html"
   );
-
-  // To prevent the SourcesManager from retrieving the data from cache,
-  // clear the network cache.
-  Services.cache2.clear();
 
   const onSelected = selectSource(dbg, "slow-loading-page.html");
   await waitFor(

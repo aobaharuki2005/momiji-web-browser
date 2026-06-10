@@ -1,15 +1,15 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_intl_LineBreakCache_h_
-#define mozilla_intl_LineBreakCache_h_
+#ifndef mozilla_intl_LineBreakCache_h__
+#define mozilla_intl_LineBreakCache_h__
 
 #include "nsIObserver.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
-#include "mozilla/HashFunctions.h"
 #include "mozilla/MruCache.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/intl/Segmenter.h"
@@ -95,4 +95,4 @@ class LineBreakCache : public MruCache<detail::LBCacheKey, detail::LBCacheEntry,
 }  // namespace intl
 }  // namespace mozilla
 
-#endif /* mozilla_intl_LineBreakCache_h_ */
+#endif /* mozilla_intl_LineBreakCache_h__ */

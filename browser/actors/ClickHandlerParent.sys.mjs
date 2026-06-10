@@ -1,3 +1,4 @@
+/* -*- mode: js; indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -38,7 +39,7 @@ export class MiddleMousePasteHandlerParent extends JSWindowActorParent {
         return;
       }
       fillInClickEvent(this, message.data);
-      browser.documentGlobal.middleMousePaste(message.data);
+      browser.ownerGlobal.middleMousePaste(message.data);
     }
   }
 }
@@ -65,8 +66,8 @@ export class ClickHandlerParent extends JSWindowActorParent {
   /**
    * Handles clicks in the content area.
    *
-   * @param {object} data
-   *   An Object that looks like an Event.
+   * @param data {Object} object that looks like an Event
+   * @param browser {Element<browser>}
    */
   contentAreaClick(data) {
     // This is heavily based on contentAreaClick from browser.js (Bug 903016)
@@ -77,7 +78,7 @@ export class ClickHandlerParent extends JSWindowActorParent {
       // Just bail.
       return;
     }
-    let window = browser.documentGlobal;
+    let window = browser.ownerGlobal;
 
     // If the browser is not in a place where we can open links, bail out.
     // This can happen in osx sheets, dialogs, etc. that are not browser

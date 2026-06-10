@@ -62,7 +62,7 @@ class TaskQueueTimeoutFactory {
    public:
     TaskQueueTimeout(TaskQueueTimeoutFactory& parent,
                      webrtc::TaskQueueBase::DelayPrecision precision);
-    ~TaskQueueTimeout() override;
+    ~TaskQueueTimeout();
 
     void Start(DurationMs duration_ms, TimeoutID timeout_id) override;
     void Stop() override;

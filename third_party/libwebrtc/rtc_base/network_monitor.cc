@@ -10,17 +10,18 @@
 
 #include "rtc_base/network_monitor.h"
 
-#include "absl/strings/string_view.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
-absl::string_view NetworkPreferenceToString(NetworkPreference preference) {
+const char* NetworkPreferenceToString(NetworkPreference preference) {
   switch (preference) {
     case NetworkPreference::NEUTRAL:
       return "NEUTRAL";
     case NetworkPreference::NOT_PREFERRED:
       return "NOT_PREFERRED";
   }
+  RTC_CHECK_NOTREACHED();
 }
 
 NetworkMonitorInterface::NetworkMonitorInterface() {}

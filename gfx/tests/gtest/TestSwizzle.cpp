@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "Orientation.h"
-#include <bit>
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -289,13 +290,13 @@ TEST(Moz2D, SwizzleData)
 
   const uint8_t* uint32_argb;
 
-  if constexpr (std::endian::native == std::endian::big) {
-    EXPECT_EQ(SurfaceFormat::A8R8G8B8_UINT32, SurfaceFormat::A8R8G8B8);
-    uint32_argb = check_argb;
-  } else {
-    EXPECT_EQ(SurfaceFormat::A8R8G8B8_UINT32, SurfaceFormat::B8G8R8A8);
-    uint32_argb = check_bgra;
-  }
+#if MOZ_BIG_ENDIAN()
+  EXPECT_EQ(SurfaceFormat::A8R8G8B8_UINT32, SurfaceFormat::A8R8G8B8);
+  uint32_argb = check_argb;
+#else
+  EXPECT_EQ(SurfaceFormat::A8R8G8B8_UINT32, SurfaceFormat::B8G8R8A8);
+  uint32_argb = check_bgra;
+#endif
 
   SwizzleData(uint32_argb, sizeof(in_bgra), SurfaceFormat::A8R8G8B8_UINT32,
               reinterpret_cast<uint8_t*>(out16), sizeof(out16),

@@ -36,19 +36,17 @@ export const PersonalizedCard = ({
           type="icon ghost"
           iconSrc="chrome://global/skin/icons/close.svg"
           onClick={onDismiss}
-          data-l10n-id="newtab-card-dismiss-button"
+          data-l10n-id="newtab-toast-dismiss-button"
         ></moz-button>
       </div>
-      <img src={kitFox} alt="" />
       <div className="personalized-card-inner">
-        <div className="personalized-card-message-wrapper">
-          <h2>{messageData.content.cardTitle}</h2>
-          <p>{messageData.content.cardMessage}</p>
-        </div>
+        <img src={kitFox} alt="" />
+        <h2>{messageData.content.cardTitle}</h2>
+        <p>{messageData.content.cardMessage}</p>
         <div className="personalized-card-cta-wrapper">
           <moz-button
             type="primary"
-            class="personalized-card-button"
+            class="personalized-card-cta"
             onClick={() => onToggleClick("open-personalization-panel")}
           >
             {messageData.content.ctaText}

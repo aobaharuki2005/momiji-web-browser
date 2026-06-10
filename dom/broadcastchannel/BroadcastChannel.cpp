@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -378,7 +380,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
 void BroadcastChannel::PostMessage(JSContext* aCx,
                                    JS::Handle<JS::Value> aMessage,
                                    ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> global = GetRelevantGlobal();
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   if (!global || !global->IsEligibleForMessaging()) {
     return;
   }
@@ -390,7 +392,7 @@ void BroadcastChannel::PostMessage(JSContext* aCx,
 
   Maybe<nsID> agentClusterId = global->GetAgentClusterId();
 
-  auto data = MakeNotNull<RefPtr<SharedMessageBody>>(
+  RefPtr<SharedMessageBody> data = new SharedMessageBody(
       StructuredCloneHolder::TransferringNotSupported, agentClusterId);
 
   data->Write(aCx, aMessage, JS::UndefinedHandleValue, mPortUUID,
@@ -401,7 +403,9 @@ void BroadcastChannel::PostMessage(JSContext* aCx,
 
   RemoveDocFromBFCache();
 
-  mActor->SendPostMessage(data);
+  MessageData message;
+  SharedMessageBody::FromSharedToMessageChild(mActor->Manager(), data, message);
+  mActor->SendPostMessage(message);
 }
 
 void BroadcastChannel::Close() {
@@ -464,13 +468,13 @@ void BroadcastChannel::DisconnectFromOwner() {
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
-void BroadcastChannel::MessageReceived(SharedMessageBody* aData) {
+void BroadcastChannel::MessageReceived(const MessageData& aData) {
   if (NS_FAILED(CheckCurrentGlobalCorrectness())) {
     RemoveDocFromBFCache();
     return;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = GetRelevantGlobal();
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   if (!global || !global->IsEligibleForMessaging()) {
     return;
   }
@@ -498,11 +502,18 @@ void BroadcastChannel::MessageReceived(SharedMessageBody* aData) {
 
   JSContext* cx = jsapi.cx();
 
+  RefPtr<SharedMessageBody> data = SharedMessageBody::FromMessageToSharedChild(
+      aData, StructuredCloneHolder::TransferringNotSupported);
+  if (NS_WARN_IF(!data)) {
+    DispatchError(cx);
+    return;
+  }
+
   IgnoredErrorResult rv;
   JS::Rooted<JS::Value> value(cx);
 
-  aData->Read(cx, &value, mRefMessageBodyService,
-              SharedMessageBody::ReadMethod::KeepRefMessageBody, rv);
+  data->Read(cx, &value, mRefMessageBodyService,
+             SharedMessageBody::ReadMethod::KeepRefMessageBody, rv);
   if (NS_WARN_IF(rv.Failed())) {
     JS_ClearPendingException(cx);
     DispatchError(cx);

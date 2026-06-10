@@ -13,13 +13,13 @@ info: |
   ...
   2. If NewTarget is undefined, throw a TypeError exception.
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   assert.throws(TypeError, function() {
-    TA(makeCtorArg(0));
+    TA(0);
   });
 
   assert.throws(TypeError, function() {

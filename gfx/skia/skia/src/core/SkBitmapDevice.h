@@ -24,7 +24,6 @@ class SkBlender;
 class SkImage;
 class SkMatrix;
 class SkMesh;
-class SkMipmap;
 class SkPaint;
 class SkPath;
 class SkPixmap;
@@ -51,7 +50,7 @@ public:
      *  valid for the bitmap to have no pixels associated with it. In that case,
      *  any drawing to this device will have no effect.
      */
-    explicit SkBitmapDevice(const SkBitmap& bitmap);
+    SkBitmapDevice(const SkBitmap& bitmap);
 
     /**
      *  Construct a new device with the specified bitmap as its backend. It is
@@ -76,7 +75,7 @@ public:
     void drawOval(const SkRect& oval, const SkPaint& paint) override;
     void drawRRect(const SkRRect& rr, const SkPaint& paint) override;
 
-    void drawPath(const SkPath&, const SkPaint&) override;
+    void drawPath(const SkPath&, const SkPaint&, bool pathIsMutable) override;
 
     void drawImageRect(const SkImage*, const SkRect* src, const SkRect& dst,
                        const SkSamplingOptions&, const SkPaint&,
@@ -146,12 +145,8 @@ private:
     bool onPeekPixels(SkPixmap*) override;
     bool onAccessPixels(SkPixmap*) override;
 
-    void drawBitmap(const SkBitmap&,
-                    const SkMatrix&,
-                    const SkRect* dstOrNull,
-                    const SkSamplingOptions&,
-                    const SkPaint&,
-                    sk_sp<SkMipmap>);
+    void drawBitmap(const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull,
+                    const SkSamplingOptions&, const SkPaint&);
 
     void* fRasterHandle = nullptr;
     skcpu::RecorderImpl* fRecorder = nullptr;

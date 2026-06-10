@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!this.hasOwnProperty("Intl")||!xulRuntime.shell)
 
 const locales = [
   "en", "ar", "ar-SA", "ar-EG",

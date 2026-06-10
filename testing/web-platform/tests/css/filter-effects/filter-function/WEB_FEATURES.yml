@@ -1,4 +1,4 @@
 features:
-- name: filter-function
+- name: filter
   files:
   - "*"

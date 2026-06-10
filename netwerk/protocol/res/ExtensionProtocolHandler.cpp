@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,8 +9,6 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/Components.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/StaticMutex.h"
-#include "nsThreadUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Promise-inl.h"
 #include "mozilla/ExtensionPolicyService.h"
@@ -20,7 +20,6 @@
 #include "mozilla/Omnijar.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/SyncRunnable.h"
 #include "mozilla/Try.h"
 
 #include "FileDescriptorFile.h"
@@ -343,7 +342,7 @@ void ExtensionStreamGetter::OnStream(already_AddRefed<nsIInputStream> aStream) {
     return;
   }
 
-  mPump = std::move(pump);
+  mPump = pump;
 }
 
 // Handle an FD sent from the parent.
@@ -386,24 +385,9 @@ NS_IMPL_RELEASE_INHERITED(ExtensionProtocolHandler, SubstitutingProtocolHandler)
 
 already_AddRefed<ExtensionProtocolHandler>
 ExtensionProtocolHandler::GetSingleton() {
-  static StaticMutex sMutex;
-  StaticMutexAutoLock lock(sMutex);
   if (!sSingleton) {
-    if (NS_IsMainThread()) {
-      sSingleton = new ExtensionProtocolHandler();
-      ClearOnShutdown(&sSingleton);
-    } else {
-      StaticMutexAutoUnlock unlock(sMutex);
-      RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
-          "ExtensionProtocolHandler::GetSingleton", []() {
-            StaticMutexAutoLock lock(sMutex);
-            if (!sSingleton) {
-              sSingleton = new ExtensionProtocolHandler();
-              ClearOnShutdown(&sSingleton);
-            }
-          });
-      SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), r);
-    }
+    sSingleton = new ExtensionProtocolHandler();
+    ClearOnShutdown(&sSingleton);
   }
   return do_AddRef(sSingleton);
 }
@@ -561,7 +545,6 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
           nsCOMPtr<nsIRequest> request(origChannel);
           return RequestOrCancelable(WrapNotNull(request));
         });
-    channel->SetContentType("text/css"_ns);
   } else if (readyPromise) {
     size_t matchIdx;
     if (BinarySearchIf(
@@ -587,7 +570,6 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
           nsCOMPtr<nsIRequest> request(origChannel);
           return RequestOrCancelable(WrapNotNull(request));
         });
-    SetContentType(aURI, channel);
   } else {
     return NS_OK;
   }

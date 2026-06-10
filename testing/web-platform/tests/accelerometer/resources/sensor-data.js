@@ -4,21 +4,21 @@ const kAccelerometerSensorData = {
   sensorName: 'Accelerometer',
   permissionName: 'accelerometer',
   testDriverName: 'accelerometer',
-  permissionsPolicyNames: ['accelerometer']
+  featurePolicyNames: ['accelerometer']
 };
 
 const kGravitySensorData = {
   sensorName: 'GravitySensor',
   permissionName: 'accelerometer',
   testDriverName: 'gravity',
-  permissionsPolicyNames: ['accelerometer']
+  featurePolicyNames: ['accelerometer']
 };
 
 const kLinearAccelerationSensorData = {
   sensorName: 'LinearAccelerationSensor',
   permissionName: 'accelerometer',
   testDriverName: 'linear-acceleration',
-  permissionsPolicyNames: ['accelerometer']
+  featurePolicyNames: ['accelerometer']
 };
 
 const kAccelerometerReadings = {

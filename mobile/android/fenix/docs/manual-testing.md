@@ -1,9 +1,10 @@
 # Softvision Mobile QA - Fenix testing tasks and process
+=============
 
-## Overview
+Overview
+--------
 
 ## Release
-
 - Frequency: Fenix release schedule
 - Tasks performed by the QA team:
   - Smoke and sanity testing
@@ -14,8 +15,8 @@
 - Feature coverage: yes
 - Bug verification coverage: uplifts
 
-## Beta
 
+## Beta
 - Frequency: Fenix release schedule
 - Tasks performed by the QA team:
   - Smoke and sanity testing
@@ -30,7 +31,6 @@
 - Bug verification coverage: uplifts
 
 ## Nightly
-
 - Frequency: daily
 - Tasks performed by the QA team
   - Smoke and sanity testing
@@ -44,7 +44,6 @@
 - Bug verification coverage: yes
 
 ### Device defaults
-
 - Device coverage: (unless otherwise specified): Pixel, Samsung, Xiaomi, OnePlus, Huawei
   - Phone & tablets
   - Android version: all
@@ -52,7 +51,6 @@
 ## Detailed informations about the tasks performed
 
 ### Full-functional & UI testing
-
 - Duration: 2 days
 - Frequency:
   - Upon Geckoview release (Beta 1)
@@ -62,16 +60,14 @@
   - 2 runs: 1 tablet, and 1 for phone
 
 ### Smoke & sanity testing
-
 - Duration: 1 day
 - Frequency:
   - Release & Beta: Fenix release schedule
-  - Nightly: 2-3 times per week (depending of other tasks priority)
+  - Nightly: 2-3  times per week (depending of other tasks priority)
 - Description:
   - Small suite of tests focused on all major functionalities
 
 ### Feature testing
-
 - Duration: based on feature complexity
 - Frequency: when a new feature is implemented
 - Description:
@@ -80,7 +76,6 @@
   - Exploratory testing around the new implementation and different areas that might be affected
 
 ### Bug verification (qa label & uplifts)
-
 - Duration: based on bug complexity
 - Frequency: daily/when qa label is added to fixed bugs
 - Description:
@@ -88,7 +83,6 @@
   - Verify the steps provided in the description on an affected build, in order to reproduce the bug (if it wasn't earlier) and on the build that contains the patch, to confirm the fix.
 
 ### Localization testing
-
 - Duration
   - Beta: 9hrs
   - Release: 6hrs
@@ -98,14 +92,12 @@
   - Additionally, the number of languages listed ( Fenix settings) are verified to be the same number as in Pontoon.
 
 ### Search testing
-
 - Duration: 1 day
 - Frequency: Upon Geckoview release
 - Description
   - Set of tests that cover the interaction of users with URL bar, search engines & search codes (VPN).
 
 ### Accessibility testing
-
 - Duration
   - TalkBack: 1,5 day
   - Scanner app: 1 day
@@ -116,7 +108,6 @@
   - Scanner: Menus, snackbars, others are being scanned in order to find suggestions for text contrast and touch target size
 
 ### Bug triage
-
 - Duration: based on issue complexity
 - Frequency:
   - Daily/depending on the impact logged by the users
@@ -124,7 +115,6 @@
   - Issue investigation based on the information provided by the user
 
 ### Exploratory testing
-
 - Duration: based on area tested
 - Frequency (performed with):
   - Smoke & sanity testing

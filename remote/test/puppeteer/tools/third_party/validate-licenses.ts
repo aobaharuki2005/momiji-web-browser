@@ -93,10 +93,11 @@ function _passesSpdx(licenses: string[], accepted: string[]) {
 
 function main(): Promise<number> {
   return new Promise(resolve => {
-    const startFolder = join(import.meta.dirname, '..', '..');
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const startFolder = join(__dirname, '..', '..');
     checker.init(
       {start: startFolder, excludePrivatePackages: true},
-      (err: Error, json: Record<string, unknown>) => {
+      (err: Error, json: object) => {
         if (err) {
           console.error(`Something happened:\n${err.message}`);
           resolve(1);

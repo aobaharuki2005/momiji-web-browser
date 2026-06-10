@@ -6,44 +6,43 @@ package org.mozilla.fenix.tabhistory
 
 import androidx.navigation.NavController
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestScope
-import mozilla.components.browser.state.action.BrowserAction
-import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.engine.EngineMiddleware
-import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.support.test.middleware.CaptureActionsMiddleware
-import org.junit.Assert.assertEquals
+import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class TabHistoryControllerTest {
 
-    private val navController = mockk<NavController>(relaxed = true)
-    private val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-    private val tab = createTab("https://www.mozilla.org")
+    private lateinit var navController: NavController
+    private lateinit var goToHistoryIndexUseCase: SessionUseCases.GoToHistoryIndexUseCase
+    private lateinit var currentItem: TabHistoryItem
+    private lateinit var store: BrowserStore
 
-    private val store = BrowserStore(
-        initialState = BrowserState(
-            tabs = listOf(tab),
-            selectedTabId = tab.id,
-        ),
-        middleware = listOf(captureActionsMiddleware) + EngineMiddleware.create(
-            engine = mockk(),
-            TestScope(),
-        ),
-    )
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
-    private val goToHistoryIndexUseCase = SessionUseCases(store).goToHistoryIndex
-
-    private val currentItem = TabHistoryItem(
-        index = 0,
-        title = "",
-        url = "",
-        isSelected = true,
-    )
+    @Before
+    fun setUp() {
+        val engineMiddleware = EngineMiddleware.create(
+            mockk<Engine>(),
+            coroutinesTestRule.scope,
+        )
+        store = BrowserStore(middleware = engineMiddleware)
+        navController = mockk(relaxed = true)
+        goToHistoryIndexUseCase = spyk(SessionUseCases(store).goToHistoryIndex)
+        currentItem = TabHistoryItem(
+            index = 0,
+            title = "",
+            url = "",
+            isSelected = true,
+        )
+    }
 
     @Test
     fun handleGoToHistoryIndexNormalBrowsing() {
@@ -53,18 +52,13 @@ class TabHistoryControllerTest {
         )
 
         controller.handleGoToHistoryItem(currentItem)
-
         verify { navController.navigateUp() }
-        captureActionsMiddleware.assertFirstAction(EngineAction.GoToHistoryIndexAction::class) { action ->
-            assertEquals(tab.id, action.tabId)
-            assertEquals(0, action.index)
-        }
+        verify { goToHistoryIndexUseCase.invoke(currentItem.index) }
     }
 
     @Test
     fun handleGoToHistoryIndexCustomTab() {
         val customTabId = "customTabId"
-
         val customTabController = DefaultTabHistoryController(
             navController = navController,
             goToHistoryIndexUseCase = goToHistoryIndexUseCase,
@@ -72,11 +66,7 @@ class TabHistoryControllerTest {
         )
 
         customTabController.handleGoToHistoryItem(currentItem)
-
         verify { navController.navigateUp() }
-        captureActionsMiddleware.assertFirstAction(EngineAction.GoToHistoryIndexAction::class) { action ->
-            assertEquals("customTabId", action.tabId)
-            assertEquals(0, action.index)
-        }
+        verify { goToHistoryIndexUseCase.invoke(currentItem.index, customTabId) }
     }
 }

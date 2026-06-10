@@ -632,6 +632,12 @@ R::privateMethod() {
   std::function<void()>([=]() {
     self->privateMethod();
   });
+  std::function<void()>([=]() {
+    this->method(); // expected-error{{Refcounted variable 'this' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
+  });
+  std::function<void()>([=]() {
+    this->privateMethod(); // expected-error{{Refcounted variable 'this' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
+  });
   std::function<void()>([self]() {
     self->method();
   });
@@ -648,6 +654,12 @@ R::privateMethod() {
     method(); // expected-error{{Refcounted variable 'this' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
   });
   std::function<void()>([this]() {
+    privateMethod(); // expected-error{{Refcounted variable 'this' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
+  });
+  std::function<void()>([=]() {
+    method(); // expected-error{{Refcounted variable 'this' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
+  });
+  std::function<void()>([=]() {
     privateMethod(); // expected-error{{Refcounted variable 'this' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
   });
   std::function<void()>([&]() {

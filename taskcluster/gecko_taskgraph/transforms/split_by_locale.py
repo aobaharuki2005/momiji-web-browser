@@ -7,32 +7,33 @@ provided by the `locales-file`.
 """
 
 from pprint import pprint
-from typing import Optional
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.copy import deepcopy
 from taskgraph.util.schema import Schema
+from voluptuous import Extra, Optional, Required
 
 from gecko_taskgraph.transforms.l10n import parse_locales_file
 
 transforms = TransformSequence()
 
-
-class SplitByLocaleSchema(Schema, forbid_unknown_fields=False, kw_only=True):
+split_by_locale_schema = Schema({
     # The file to pull locale information from. This should be a json file
     # such as browser/locales/l10n-changesets.json.
-    locales_file: str
+    Required("locales-file"): str,
     # The platform name in the form used by the locales files. Defaults to
     # attributes.build_platform if not provided.
-    locale_file_platform: Optional[str] = None
+    Optional("locale-file-platform"): str,
     # A list of properties elsewhere in the job that need to have the locale
     # name substituted into them. The referenced properties may be strings
     # or lists. In the case of the latter, all list values will have
     # substitutions performed.
-    properties_with_locale: Optional[list[str]] = None
+    Optional("properties-with-locale"): [str],
+    Extra: object,
+})
 
 
-transforms.add_validate(SplitByLocaleSchema)
+transforms.add_validate(split_by_locale_schema)
 
 
 @transforms.add

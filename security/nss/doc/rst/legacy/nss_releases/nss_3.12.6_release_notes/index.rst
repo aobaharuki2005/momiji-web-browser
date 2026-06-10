@@ -19,6 +19,7 @@ NSS 3.12.6 release notes
          :name: section_1
 
          .. rubric:: Introduction
+            :name: Introduction
 
          Network Security Services (NSS) 3.12.6 is a patch release for NSS 3.12. The bug fixes in
          NSS 3.12.6 are described in the "`Bugs
@@ -30,6 +31,7 @@ NSS 3.12.6 release notes
          :name: section_2
 
          .. rubric:: Distribution Information
+            :name: Distribution_Information
 
          | The CVS tag for the NSS 3.12.6 release is ``NSS_3_12_6_RTM``.  NSS 3.12.6 requires `NSPR
            4.8.4 <https://www.mozilla.org/projects/nspr/release-notes/>`__.
@@ -146,6 +148,7 @@ NSS 3.12.6 release notes
             :name: section_6
 
             .. rubric:: New functions
+               :name: New_functions
 
             -  *in cert.h*
 
@@ -170,6 +173,7 @@ NSS 3.12.6 release notes
             :name: section_7
 
             .. rubric:: New error codes
+               :name: New_error_codes
 
             -  *in sslerr.h*
 
@@ -180,6 +184,7 @@ NSS 3.12.6 release notes
             :name: section_8
 
             .. rubric:: New types
+               :name: New_types
 
             -  *in sslt.h*
 
@@ -207,6 +212,7 @@ NSS 3.12.6 release notes
          :name: section_10
 
          .. rubric:: Bugs Fixed
+            :name: Bugs_Fixed
 
          The following bugs have been fixed in NSS 3.12.6.
 
@@ -279,6 +285,7 @@ NSS 3.12.6 release notes
          :name: section_11
 
          .. rubric:: Documentation
+            :name: Documentation
 
          For a list of the primary NSS documentation pages on mozilla.org, see `NSS
          Documentation <https://www.mozilla.org/projects/security/pki/nss/#documentation>`__. New
@@ -292,6 +299,7 @@ NSS 3.12.6 release notes
          :name: section_12
 
          .. rubric:: Compatibility
+            :name: Compatibility
 
          NSS 3.12.6 shared libraries are backward compatible with all older NSS 3.x shared
          libraries. A program linked with older NSS 3.x shared libraries will work with NSS 3.12.6
@@ -304,6 +312,7 @@ NSS 3.12.6 release notes
          :name: section_13
 
          .. rubric:: Feedback
+            :name: Feedback
 
          Bugs discovered should be reported by filing a bug report with `mozilla.org
          Bugzilla <https://bugzilla.mozilla.org/>`__ (product NSS).

@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -10,7 +11,9 @@
  * and create derivative works of this document.
  */
 
-[LegacyUnforgeable, Exposed=Window]
+[LegacyUnforgeable,
+ Exposed=Window,
+ InstrumentedProps=(ancestorOrigins)]
 interface Location {
   [Throws, CrossOriginWritable, NeedsSubjectPrincipal]
   stringifier attribute UTF8String href;
@@ -42,6 +45,6 @@ interface Location {
   undefined reload(optional boolean forceget = false);
 
   // https://html.spec.whatwg.org/#dom-location-ancestororigins
-  [Throws, UseCounter, LegacyUnforgeable, GetterNeedsSubjectPrincipal, Pref="dom.location.ancestorOrigins.enabled"]
+  [Throws, LegacyUnforgeable, GetterNeedsSubjectPrincipal, Pref="dom.location.ancestorOrigins.enabled"]
   readonly attribute DOMStringList ancestorOrigins;
 };

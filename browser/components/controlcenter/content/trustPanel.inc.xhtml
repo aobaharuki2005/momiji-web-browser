@@ -30,22 +30,19 @@
           </toolbarbutton>
         </hbox>
 
-        <html:script type="module" src="chrome://browser/content/controlcenter/components/breach-alert-panel.mjs"></html:script>
-        <html:breach-alert-panel id="trustpanel-breach-alert-section">
-        </html:breach-alert-panel>
         <vbox id="trustpanel-graphic-section">
           <hbox>
             <image id="trustpanel-graphic-image"></image>
             <vbox id="trustpanel-graphic-section-text">
-              <label when-connection="secure secure-ev secure-etsi secure-cert-user-overridden chrome file extension net-error-page https-only-error-page"
+              <label when-connection="secure secure-ev secure-cert-user-overridden chrome file extension"
                      id="trustpanel-header"
                      class="trustpanel-header"></label>
-              <label when-connection="not-secure cert-error-page"
+              <label when-connection="not-secure cert-error-page net-error-page https-only-error-page"
                      class="trustpanel-header"
                      data-l10n-id="trustpanel-header-enabled-insecure"></label>
-              <label when-connection="secure secure-ev secure-etsi secure-cert-user-overridden chrome file extension net-error-page https-only-error-page"
+              <label when-connection="secure secure-ev secure-cert-user-overridden chrome file extension"
                      id="trustpanel-description"></label>
-              <label when-connection="not-secure cert-error-page"
+              <label when-connection="not-secure cert-error-page net-error-page https-only-error-page"
                      data-l10n-id="trustpanel-description-enabled-insecure"></label>
             </vbox>
           </hbox>
@@ -56,7 +53,7 @@
               <html:moz-button id="trustpanel-blocker-see-all" data-l10n-id="trustpanel-blocker-see-all" default="true" size="small" type="primary"></html:moz-button>
             </html:moz-button-group>
           </vbox>
-          <vbox id="trustpanel-insecure-section" class="trustpanel-graphic-inner" when-connection="not-secure">
+          <vbox id="trustpanel-insecure-section" class="trustpanel-graphic-inner">
             <label data-l10n-id="trustpanel-insecure-section-header" class="trustpanel-header"></label>
             <label data-l10n-id="trustpanel-insecure-description"></label>
           </vbox>
@@ -82,6 +79,7 @@
                class="PanelUI-subView"
                role="document">
 #include securityInformation.inc.xhtml
+      <toolbarseparator></toolbarseparator>
       <html:a id="trustpanel-siteinformation-morelink" data-l10n-id="trustpanel-siteinformation-morelink" role="link" class="trustpanel-section panel-subview-footer-button"></html:a>
     </panelview>
 

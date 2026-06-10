@@ -9,8 +9,6 @@ use std::{
     os::unix::ffi::OsStringExt,
 };
 
-use bytes::Bytes;
-
 use crate::{messages::MessageError, BreakpadString};
 
 use super::BreakpadChar;
@@ -18,12 +16,12 @@ use super::BreakpadChar;
 // BreakpadString implementation for regular 8-byte per character strings
 
 impl BreakpadString for OsString {
-    fn serialize(self) -> Bytes {
-        Bytes::from(self.into_vec())
+    fn serialize(&self) -> Vec<u8> {
+        <OsString as Clone>::clone(self).into_vec()
     }
 
-    fn deserialize(bytes: Vec<u8>) -> Result<OsString, MessageError> {
-        Ok(OsString::from_vec(bytes))
+    fn deserialize(bytes: &[u8]) -> Result<OsString, MessageError> {
+        Ok(OsString::from_vec(bytes.to_owned()))
     }
 
     unsafe fn from_ptr(ptr: *const BreakpadChar) -> OsString {

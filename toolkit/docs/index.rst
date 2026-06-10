@@ -16,7 +16,6 @@ This is the nascent documentation of the Toolkit code that is shared across Fire
    crashreporter/crashreporter/index
    internal-urls
    search/index
-   ipprotection/index
    components/normandy/normandy/index
    components/nimbus/docs/index
    components/messaging-system/docs/index

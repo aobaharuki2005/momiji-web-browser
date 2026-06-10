@@ -1,3 +1,4 @@
+// |jit-test| --ion-sink=on
 // Sink Algorithm should not move instruction into merge blocks
 // which have no corresponding pc.
 

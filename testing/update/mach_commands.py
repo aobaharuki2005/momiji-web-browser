@@ -9,7 +9,6 @@ import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass
-from enum import Enum
 from os import environ, makedirs
 from pathlib import Path
 from shutil import copytree, unpack_archive
@@ -17,25 +16,15 @@ from shutil import copytree, unpack_archive
 import mozinfo
 import mozinstall
 import requests
+from gecko_taskgraph.transforms.update_test import ReleaseType
 from mach.decorators import Command, CommandArgument
 from mozbuild.base import BinaryNotFoundException
 from mozlog.structured import commandline
 from mozrelease.update_verify import UpdateVerifyConfig
 
-
-class ReleaseType(Enum):
-    """Release type - duplicated from gecko_taskgraph.transforms.update_test
-    to avoid importing taskgraph dependencies at mach command load time."""
-
-    release = 0
-    beta = 1
-    esr = 2
-    other = 3
-
-
 STAGING_POLICY_PAYLOAD = {
     "policies": {
-        "AppUpdateURL": "https://stage.balrog.nonprod.webservices.mozgcp.net/update/6/Firefox/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml"
+        "AppUpdateURL": "https://stage.balrog.nonprod.cloudops.mozgcp.net/update/6/Firefox/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml"
     }
 }
 
@@ -316,7 +305,7 @@ def get_binary_path(config: UpdateTestConfig, **kwargs) -> str:
             policy_path = fx_path / "Contents" / "Resources" / "distribution"
         else:
             raise ValueError("Invalid OS.")
-        makedirs(policy_path, exist_ok=True)
+        makedirs(policy_path)
         policy_loc = policy_path / "policies.json"
         print(f"Creating {policy_loc}...")
         with policy_loc.open("w") as fh:

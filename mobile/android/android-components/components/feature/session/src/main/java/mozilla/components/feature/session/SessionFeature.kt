@@ -4,8 +4,6 @@
 
 package mozilla.components.feature.session
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
@@ -22,9 +20,8 @@ class SessionFeature(
     private val goForwardUseCase: SessionUseCases.GoForwardUseCase,
     private val engineView: EngineView,
     private val tabId: String? = null,
-    mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : LifecycleAwareFeature, UserInteractionHandler {
-    internal val presenter = EngineViewPresenter(store, engineView, tabId, mainDispatcher)
+    internal val presenter = EngineViewPresenter(store, engineView, tabId)
 
     /**
      * Start feature: App is in the foreground.
@@ -45,16 +42,7 @@ class SessionFeature(
             engineView.clearSelection()
             return true
         } else if (tab?.content?.canGoBack == true) {
-            val engineSession = tab.engineState.engineSession
-            if (engineSession != null) {
-                engineSession.processBackPressed(onResult = { handled ->
-                    if (!handled) {
-                        goBackUseCase(tab.id)
-                    }
-                })
-            } else {
-                goBackUseCase(tab.id)
-            }
+            goBackUseCase(tab.id)
             return true
         }
 

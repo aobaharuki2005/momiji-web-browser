@@ -13,10 +13,9 @@
 // fuzzing efficiency.
 
 #include <cstddef>
-#include <span>
+#include <cstdint>
 
 #include "rtc_base/logging.h"
-#include "test/fuzzers/fuzz_data_helper.h"
 
 namespace {
 bool g_initialized = false;
@@ -35,12 +34,11 @@ void InitializeWebRtcFuzzDefaults() {
 }  // namespace
 
 namespace webrtc {
-extern void FuzzOneInput(FuzzDataHelper fuzz_data);
+extern void FuzzOneInput(const uint8_t* data, size_t size);
 }  // namespace webrtc
 
 extern "C" int LLVMFuzzerTestOneInput(const unsigned char* data, size_t size) {
   InitializeWebRtcFuzzDefaults();
-  webrtc::FuzzDataHelper fuzz_data(std::span(data, size));
-  webrtc::FuzzOneInput(fuzz_data);
+  webrtc::FuzzOneInput(data, size);
   return 0;
 }

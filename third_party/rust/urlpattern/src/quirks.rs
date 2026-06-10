@@ -3,14 +3,13 @@
 
 use serde::Deserialize;
 use serde::Serialize;
-use std::borrow::Cow;
 use url::Url;
 
-pub use crate::Error;
-use crate::UrlPatternOptions;
-pub use crate::component::Component;
+use crate::component::Component;
 use crate::parser::RegexSyntax;
 use crate::regexp::RegExp;
+pub use crate::Error;
+use crate::UrlPatternOptions;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UrlPatternInit {
@@ -37,8 +36,8 @@ pub struct UrlPatternInit {
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum StringOrInit<'a> {
-  String(Cow<'a, str>),
+pub enum StringOrInit {
+  String(String),
   Init(UrlPatternInit),
 }
 
@@ -103,15 +102,11 @@ pub struct UrlPatternComponent {
   pub group_name_list: Vec<String>,
 }
 
-impl<R: RegExp> From<Component<R>> for UrlPatternComponent {
-  fn from(component: Component<R>) -> Self {
-    let regexp_string = component
-      .regexp
-      .map(|r| r.pattern_string().to_owned())
-      .unwrap_or_default();
+impl From<Component<EcmaRegexp>> for UrlPatternComponent {
+  fn from(component: Component<EcmaRegexp>) -> Self {
     Self {
       pattern_string: component.pattern_string,
-      regexp_string,
+      regexp_string: component.regexp.unwrap().0,
       matcher: component.matcher.into(),
       group_name_list: component.group_name_list,
     }
@@ -143,8 +138,8 @@ pub enum InnerMatcher {
   },
 }
 
-impl<R: RegExp> From<crate::matcher::Matcher<R>> for Matcher {
-  fn from(matcher: crate::matcher::Matcher<R>) -> Self {
+impl From<crate::matcher::Matcher<EcmaRegexp>> for Matcher {
+  fn from(matcher: crate::matcher::Matcher<EcmaRegexp>) -> Self {
     Self {
       prefix: matcher.prefix,
       suffix: matcher.suffix,
@@ -153,8 +148,8 @@ impl<R: RegExp> From<crate::matcher::Matcher<R>> for Matcher {
   }
 }
 
-impl<R: RegExp> From<crate::matcher::InnerMatcher<R>> for InnerMatcher {
-  fn from(inner: crate::matcher::InnerMatcher<R>) -> Self {
+impl From<crate::matcher::InnerMatcher<EcmaRegexp>> for InnerMatcher {
+  fn from(inner: crate::matcher::InnerMatcher<EcmaRegexp>) -> Self {
     match inner {
       crate::matcher::InnerMatcher::Literal { literal } => {
         Self::Literal { literal }
@@ -167,15 +162,13 @@ impl<R: RegExp> From<crate::matcher::InnerMatcher<R>> for InnerMatcher {
         allow_empty,
       },
       crate::matcher::InnerMatcher::RegExp { regexp } => Self::RegExp {
-        regexp: regexp
-          .map(|r| r.pattern_string().to_owned())
-          .unwrap_or_default(),
+        regexp: regexp.unwrap().0,
       },
     }
   }
 }
 
-pub struct EcmaRegexp(String, String);
+struct EcmaRegexp(String, String);
 
 impl RegExp for EcmaRegexp {
   fn syntax() -> RegexSyntax {
@@ -198,18 +191,15 @@ impl RegExp for EcmaRegexp {
     let regexp = regex::Regex::parse(&self.0, &self.1, false).ok()?;
     regexp.matches(text)
   }
-
-  fn pattern_string(&self) -> &str {
-    self.0.as_ref()
-  }
 }
 
 /// Parse a pattern into its components.
-pub fn parse_pattern<R: RegExp>(
+pub fn parse_pattern(
   init: crate::UrlPatternInit,
   options: UrlPatternOptions,
 ) -> Result<UrlPattern, Error> {
-  let pattern = crate::UrlPattern::<R>::parse_internal(init, true, options)?;
+  let pattern =
+    crate::UrlPattern::<EcmaRegexp>::parse_internal(init, true, options)?;
 
   let urlpattern = UrlPattern {
     has_regexp_groups: pattern.has_regexp_groups(),
@@ -225,20 +215,12 @@ pub fn parse_pattern<R: RegExp>(
   Ok(urlpattern)
 }
 
-pub fn parse_pattern_as_lib<R: RegExp>(
-  init: crate::UrlPatternInit,
-  options: UrlPatternOptions,
-) -> Result<crate::UrlPattern<R>, Error> {
-  let pattern = crate::UrlPattern::<R>::parse_internal(init, true, options)?;
-  Ok(pattern)
-}
+pub type Inputs = (StringOrInit, Option<String>);
 
-pub type Inputs<'a> = (StringOrInit<'a>, Option<String>);
-
-pub fn process_match_input<'a>(
-  input: StringOrInit<'a>,
+pub fn process_match_input(
+  input: StringOrInit,
   base_url_str: Option<&str>,
-) -> Result<Option<(crate::UrlPatternMatchInput, Inputs<'a>)>, Error> {
+) -> Result<Option<(crate::UrlPatternMatchInput, Inputs)>, Error> {
   let mut inputs = (input.clone(), None);
   let init = match input {
     StringOrInit::String(url) => {

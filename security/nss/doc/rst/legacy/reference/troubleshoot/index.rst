@@ -18,6 +18,7 @@ troubleshoot
    If you have suggestions for this page, please post them to
    `mozilla.dev.tech.crypto <nntp://news.mozilla.org/mozilla.dev.tech.crypto>`__.
 
+.. _building_nss:
 
 `Building NSS <#building_nss>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

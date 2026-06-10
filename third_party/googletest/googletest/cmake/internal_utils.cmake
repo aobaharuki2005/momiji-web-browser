@@ -185,19 +185,11 @@ function(cxx_library_with_type name type cxx_flags)
     COMPILE_PDB_NAME_DEBUG "${name}${pdb_debug_postfix}")
 
   if (BUILD_SHARED_LIBS OR type STREQUAL "SHARED")
-    target_compile_definitions(${name} PRIVATE
-      "GTEST_CREATE_SHARED_LIBRARY=1")
+    set_target_properties(${name}
+      PROPERTIES
+      COMPILE_DEFINITIONS "GTEST_CREATE_SHARED_LIBRARY=1")
     target_compile_definitions(${name} INTERFACE
-      $<BUILD_INTERFACE:GTEST_LINKED_AS_SHARED_LIBRARY=1>
-      $<INSTALL_INTERFACE:GTEST_LINKED_AS_SHARED_LIBRARY=1>
-    )
-    if(APPLE)
-      set_target_properties(${name} PROPERTIES
-        INSTALL_RPATH "@loader_path")
-    elseif(UNIX)
-      set_target_properties(${name} PROPERTIES
-        INSTALL_RPATH "$ORIGIN")
-    endif()
+      $<INSTALL_INTERFACE:GTEST_LINKED_AS_SHARED_LIBRARY=1>)
   endif()
   if (DEFINED GTEST_HAS_PTHREAD)
     target_link_libraries(${name} PUBLIC Threads::Threads)
@@ -234,8 +226,9 @@ function(cxx_executable_with_flags name cxx_flags libs)
       COMPILE_FLAGS "${cxx_flags}")
   endif()
   if (BUILD_SHARED_LIBS)
-    target_compile_definitions(${name} PRIVATE
-      "GTEST_LINKED_AS_SHARED_LIBRARY=1")
+    set_target_properties(${name}
+      PROPERTIES
+      COMPILE_DEFINITIONS "GTEST_LINKED_AS_SHARED_LIBRARY=1")
   endif()
   # To support mixing linking in static and dynamic libraries, link each
   # library in with an extra call to target_link_libraries.

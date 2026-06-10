@@ -12,18 +12,16 @@
 #include <stdint.h>
 
 #include <memory>
-#include <span>
 #include <utility>
 #include <vector>
 
 #include "api/video_codecs/sdp_video_format.h"
 #include "call/video_receive_stream.h"
-#include "test/fuzzers/fuzz_data_helper.h"
 #include "test/fuzzers/utils/rtp_replayer.h"
 
 namespace webrtc {
 
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
+void FuzzOneInput(const uint8_t* data, size_t size) {
   auto stream_state = std::make_unique<test::RtpReplayer::StreamState>();
   VideoReceiveStreamInterface::Config vp9_config(&(stream_state->transport));
 
@@ -32,6 +30,7 @@ void FuzzOneInput(FuzzDataHelper fuzz_data) {
   vp9_decoder.payload_type = 124;
   vp9_config.decoders.push_back(std::move(vp9_decoder));
 
+  vp9_config.rtp.local_ssrc = 7731;
   vp9_config.rtp.remote_ssrc = 1337;
   vp9_config.rtp.rtx_ssrc = 100;
   vp9_config.rtp.nack.rtp_history_ms = 1000;
@@ -39,9 +38,8 @@ void FuzzOneInput(FuzzDataHelper fuzz_data) {
   std::vector<VideoReceiveStreamInterface::Config> replay_configs;
   replay_configs.push_back(std::move(vp9_config));
 
-  std::span<const uint8_t> raw = fuzz_data.ReadRemaining();
   test::RtpReplayer::Replay(std::move(stream_state), std::move(replay_configs),
-                            raw.data(), raw.size());
+                            data, size);
 }
 
 }  // namespace webrtc

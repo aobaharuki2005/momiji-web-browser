@@ -15,14 +15,12 @@ use super::reg::{ArgReg, RetReg, SyscallNumber, A0, A1, A2, A3, A4, A5, R0};
 use super::vdso;
 #[cfg(target_arch = "x86")]
 use core::arch::global_asm;
-#[cfg(feature = "thread")]
+#[cfg(feature = "process")]
 #[cfg(any(
     target_arch = "x86_64",
     target_arch = "x86",
     target_arch = "riscv64",
-    target_arch = "powerpc",
-    target_arch = "powerpc64",
-    target_arch = "s390x",
+    target_arch = "powerpc64"
 ))]
 use core::ffi::c_void;
 use core::mem::transmute;
@@ -34,14 +32,12 @@ use core::sync::atomic::Ordering::Relaxed;
 use linux_raw_sys::general::timespec as __kernel_old_timespec;
 #[cfg(any(
     all(
-        feature = "thread",
+        feature = "process",
         any(
             target_arch = "x86_64",
             target_arch = "x86",
             target_arch = "riscv64",
-            target_arch = "powerpc",
-            target_arch = "powerpc64",
-            target_arch = "s390x"
+            target_arch = "powerpc64"
         )
     ),
     feature = "time"
@@ -53,23 +49,22 @@ use {
     crate::clockid::{ClockId, DynamicClockId},
     crate::io,
     crate::timespec::Timespec,
-    linux_raw_sys::general::__kernel_clockid_t,
+    linux_raw_sys::general::{__kernel_clockid_t, __kernel_timespec},
 };
 
 #[cfg(feature = "time")]
 #[inline]
-#[must_use]
-pub(crate) fn clock_gettime(id: ClockId) -> Timespec {
+pub(crate) fn clock_gettime(which_clock: ClockId) -> __kernel_timespec {
     // SAFETY: `CLOCK_GETTIME` contains either null or the address of a
     // function with an ABI like libc `clock_gettime`, and calling it has the
     // side effect of writing to the result buffer, and no others.
     unsafe {
-        let mut result = MaybeUninit::<Timespec>::uninit();
+        let mut result = MaybeUninit::<__kernel_timespec>::uninit();
         let callee = match transmute(CLOCK_GETTIME.load(Relaxed)) {
             Some(callee) => callee,
             None => init_clock_gettime(),
         };
-        let r0 = callee(id as c::c_int, result.as_mut_ptr());
+        let r0 = callee(which_clock as c::c_int, result.as_mut_ptr());
         // The `ClockId` enum only contains clocks which never fail. It may be
         // tempting to change this to `debug_assert_eq`, however they can still
         // fail on uncommon kernel configs, so we leave this in place to ensure
@@ -81,13 +76,13 @@ pub(crate) fn clock_gettime(id: ClockId) -> Timespec {
 
 #[cfg(feature = "time")]
 #[inline]
-pub(crate) fn clock_gettime_dynamic(id: DynamicClockId<'_>) -> io::Result<Timespec> {
-    let id = match id {
+pub(crate) fn clock_gettime_dynamic(which_clock: DynamicClockId<'_>) -> io::Result<Timespec> {
+    let id = match which_clock {
         DynamicClockId::Known(id) => id as __kernel_clockid_t,
 
         DynamicClockId::Dynamic(fd) => {
             // See `FD_TO_CLOCKID` in Linux's `clock_gettime` documentation.
-            use crate::backend::fd::AsRawFd as _;
+            use crate::backend::fd::AsRawFd;
             const CLOCKFD: i32 = 3;
             ((!fd.as_raw_fd() << 3) | CLOCKFD) as __kernel_clockid_t
         }
@@ -111,20 +106,18 @@ pub(crate) fn clock_gettime_dynamic(id: DynamicClockId<'_>) -> io::Result<Timesp
         match callee(id, timespec.as_mut_ptr()) {
             0 => (),
             EINVAL => return Err(io::Errno::INVAL),
-            _ => _clock_gettime_via_syscall(id, timespec.as_mut_ptr())?,
+            _ => _rustix_clock_gettime_via_syscall(id, timespec.as_mut_ptr())?,
         }
         Ok(timespec.assume_init())
     }
 }
 
-#[cfg(feature = "thread")]
+#[cfg(feature = "process")]
 #[cfg(any(
     target_arch = "x86_64",
     target_arch = "x86",
     target_arch = "riscv64",
-    target_arch = "powerpc",
-    target_arch = "powerpc64",
-    target_arch = "s390x",
+    target_arch = "powerpc64"
 ))]
 #[inline]
 pub(crate) fn sched_getcpu() -> usize {
@@ -270,14 +263,12 @@ pub(super) mod x86_via_vdso {
 #[cfg(feature = "time")]
 type ClockGettimeType = unsafe extern "C" fn(c::c_int, *mut Timespec) -> c::c_int;
 
-#[cfg(feature = "thread")]
+#[cfg(feature = "process")]
 #[cfg(any(
     target_arch = "x86_64",
     target_arch = "x86",
     target_arch = "riscv64",
-    target_arch = "powerpc",
-    target_arch = "powerpc64",
-    target_arch = "s390x",
+    target_arch = "powerpc64"
 ))]
 type GetcpuType = unsafe extern "C" fn(*mut u32, *mut u32, *mut c_void) -> c::c_int;
 
@@ -298,14 +289,12 @@ fn init_clock_gettime() -> ClockGettimeType {
 }
 
 /// Initialize `GETCPU` and return its value.
-#[cfg(feature = "thread")]
+#[cfg(feature = "process")]
 #[cfg(any(
     target_arch = "x86_64",
     target_arch = "x86",
     target_arch = "riscv64",
-    target_arch = "powerpc",
-    target_arch = "powerpc64",
-    target_arch = "s390x",
+    target_arch = "powerpc64"
 ))]
 #[cold]
 fn init_getcpu() -> GetcpuType {
@@ -330,23 +319,23 @@ fn init_syscall() -> SyscallType {
 struct Function;
 #[cfg(feature = "time")]
 static CLOCK_GETTIME: AtomicPtr<Function> = AtomicPtr::new(null_mut());
-#[cfg(feature = "thread")]
+#[cfg(feature = "process")]
 #[cfg(any(
     target_arch = "x86_64",
     target_arch = "x86",
     target_arch = "riscv64",
-    target_arch = "powerpc",
-    target_arch = "powerpc64",
-    target_arch = "s390x",
+    target_arch = "powerpc64"
 ))]
 static GETCPU: AtomicPtr<Function> = AtomicPtr::new(null_mut());
 #[cfg(target_arch = "x86")]
 static SYSCALL: AtomicPtr<Function> = AtomicPtr::new(null_mut());
 
 #[cfg(feature = "time")]
-#[must_use]
-unsafe extern "C" fn clock_gettime_via_syscall(clockid: c::c_int, res: *mut Timespec) -> c::c_int {
-    match _clock_gettime_via_syscall(clockid, res) {
+unsafe extern "C" fn rustix_clock_gettime_via_syscall(
+    clockid: c::c_int,
+    res: *mut Timespec,
+) -> c::c_int {
+    match _rustix_clock_gettime_via_syscall(clockid, res) {
         Ok(()) => 0,
         Err(err) => err.raw_os_error().wrapping_neg(),
     }
@@ -354,17 +343,23 @@ unsafe extern "C" fn clock_gettime_via_syscall(clockid: c::c_int, res: *mut Time
 
 #[cfg(feature = "time")]
 #[cfg(target_pointer_width = "32")]
-unsafe fn _clock_gettime_via_syscall(clockid: c::c_int, res: *mut Timespec) -> io::Result<()> {
+unsafe fn _rustix_clock_gettime_via_syscall(
+    clockid: c::c_int,
+    res: *mut Timespec,
+) -> io::Result<()> {
     let r0 = syscall!(__NR_clock_gettime64, c_int(clockid), res);
     match ret(r0) {
-        Err(io::Errno::NOSYS) => _clock_gettime_via_syscall_old(clockid, res),
+        Err(io::Errno::NOSYS) => _rustix_clock_gettime_via_syscall_old(clockid, res),
         otherwise => otherwise,
     }
 }
 
 #[cfg(feature = "time")]
 #[cfg(target_pointer_width = "32")]
-unsafe fn _clock_gettime_via_syscall_old(clockid: c::c_int, res: *mut Timespec) -> io::Result<()> {
+unsafe fn _rustix_clock_gettime_via_syscall_old(
+    clockid: c::c_int,
+    res: *mut Timespec,
+) -> io::Result<()> {
     // Ordinarily `rustix` doesn't like to emulate system calls, but in the
     // case of time APIs, it's specific to Linux, specific to 32-bit
     // architectures *and* specific to old kernel versions, and it's not that
@@ -386,20 +381,21 @@ unsafe fn _clock_gettime_via_syscall_old(clockid: c::c_int, res: *mut Timespec) 
 
 #[cfg(feature = "time")]
 #[cfg(target_pointer_width = "64")]
-unsafe fn _clock_gettime_via_syscall(clockid: c::c_int, res: *mut Timespec) -> io::Result<()> {
+unsafe fn _rustix_clock_gettime_via_syscall(
+    clockid: c::c_int,
+    res: *mut Timespec,
+) -> io::Result<()> {
     ret(syscall!(__NR_clock_gettime, c_int(clockid), res))
 }
 
-#[cfg(feature = "thread")]
+#[cfg(feature = "process")]
 #[cfg(any(
     target_arch = "x86_64",
     target_arch = "x86",
     target_arch = "riscv64",
-    target_arch = "powerpc",
-    target_arch = "powerpc64",
-    target_arch = "s390x",
+    target_arch = "powerpc64"
 ))]
-unsafe extern "C" fn getcpu_via_syscall(
+unsafe extern "C" fn rustix_getcpu_via_syscall(
     cpu: *mut u32,
     node: *mut u32,
     unused: *mut c_void,
@@ -412,34 +408,29 @@ unsafe extern "C" fn getcpu_via_syscall(
 
 #[cfg(target_arch = "x86")]
 extern "C" {
-    /// A symbol pointing to an x86 `int 0x80` instruction. This “function”
-    /// is only called from assembly, and only with the x86 syscall calling
-    /// convention, so its signature here is not its true signature.
+    /// A symbol pointing to an `int 0x80` instruction. This “function” is only
+    /// called from assembly, and only with the x86 syscall calling convention,
+    /// so its signature here is not its true signature.
     ///
     /// This extern block and the `global_asm!` below can be replaced with
     /// `#[naked]` if it's stabilized.
-    fn rustix_x86_int_0x80();
+    fn rustix_int_0x80();
 }
 
-// This uses `.weak` so that it doesn't conflict if multiple versions of rustix
-// are linked in in non-lto builds, and `.ifndef` so that it doesn't conflict
-// if multiple versions of rustix are linked in in lto builds.
 #[cfg(target_arch = "x86")]
 global_asm!(
     r#"
-    .ifndef     rustix_x86_int_0x80
-    .section    .text.rustix_x86_int_0x80,"ax",@progbits
+    .section    .text.rustix_int_0x80,"ax",@progbits
     .p2align    4
-    .weak       rustix_x86_int_0x80
-    .hidden     rustix_x86_int_0x80
-    .type       rustix_x86_int_0x80, @function
-rustix_x86_int_0x80:
+    .weak       rustix_int_0x80
+    .hidden     rustix_int_0x80
+    .type       rustix_int_0x80, @function
+rustix_int_0x80:
     .cfi_startproc
     int    0x80
     ret
     .cfi_endproc
-    .size rustix_x86_int_0x80, .-rustix_x86_int_0x80
-    .endif
+    .size rustix_int_0x80, .-rustix_int_0x80
 "#
 );
 
@@ -453,27 +444,25 @@ fn minimal_init() {
         CLOCK_GETTIME
             .compare_exchange(
                 null_mut(),
-                clock_gettime_via_syscall as *mut Function,
+                rustix_clock_gettime_via_syscall as *mut Function,
                 Relaxed,
                 Relaxed,
             )
             .ok();
     }
 
-    #[cfg(feature = "thread")]
+    #[cfg(feature = "process")]
     #[cfg(any(
         target_arch = "x86_64",
         target_arch = "x86",
         target_arch = "riscv64",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "s390x",
+        target_arch = "powerpc64"
     ))]
     {
         GETCPU
             .compare_exchange(
                 null_mut(),
-                getcpu_via_syscall as *mut Function,
+                rustix_getcpu_via_syscall as *mut Function,
                 Relaxed,
                 Relaxed,
             )
@@ -485,7 +474,7 @@ fn minimal_init() {
         SYSCALL
             .compare_exchange(
                 null_mut(),
-                rustix_x86_int_0x80 as *mut Function,
+                rustix_int_0x80 as *mut Function,
                 Relaxed,
                 Relaxed,
             )
@@ -514,8 +503,6 @@ fn init() {
             let ptr = vdso.sym(cstr!("LINUX_2.6"), cstr!("__vdso_clock_gettime64"));
             #[cfg(target_arch = "riscv64")]
             let ptr = vdso.sym(cstr!("LINUX_4.15"), cstr!("__vdso_clock_gettime"));
-            #[cfg(target_arch = "powerpc")]
-            let ptr = vdso.sym(cstr!("LINUX_5.11"), cstr!("__kernel_clock_gettime64"));
             #[cfg(target_arch = "powerpc64")]
             let ptr = vdso.sym(cstr!("LINUX_2.6.15"), cstr!("__kernel_clock_gettime"));
             #[cfg(target_arch = "s390x")]
@@ -536,7 +523,6 @@ fn init() {
                 target_arch = "arm",
                 target_arch = "mips",
                 target_arch = "mips32r6",
-                target_arch = "powerpc",
                 target_arch = "x86"
             ))]
             let ok = !ptr.is_null();
@@ -551,14 +537,12 @@ fn init() {
             }
         }
 
-        #[cfg(feature = "thread")]
+        #[cfg(feature = "process")]
         #[cfg(any(
             target_arch = "x86_64",
             target_arch = "x86",
             target_arch = "riscv64",
-            target_arch = "powerpc",
-            target_arch = "powerpc64",
-            target_arch = "s390x",
+            target_arch = "powerpc64"
         ))]
         {
             // Look up the platform-specific `getcpu` symbol as documented
@@ -570,18 +554,14 @@ fn init() {
             #[cfg(target_arch = "x86")]
             let ptr = vdso.sym(cstr!("LINUX_2.6"), cstr!("__vdso_getcpu"));
             #[cfg(target_arch = "riscv64")]
-            let ptr = vdso.sym(cstr!("LINUX_4.15"), cstr!("__vdso_getcpu"));
-            #[cfg(any(target_arch = "powerpc", target_arch = "powerpc64"))]
+            let ptr = vdso.sym(cstr!("LINUX_4.15"), cstr!("__kernel_getcpu"));
+            #[cfg(target_arch = "powerpc64")]
             let ptr = vdso.sym(cstr!("LINUX_2.6.15"), cstr!("__kernel_getcpu"));
-            #[cfg(target_arch = "s390x")]
-            let ptr = vdso.sym(cstr!("LINUX_2.6.29"), cstr!("__kernel_getcpu"));
 
             #[cfg(any(
                 target_arch = "x86_64",
                 target_arch = "riscv64",
-                target_arch = "powerpc",
-                target_arch = "powerpc64",
-                target_arch = "s390x"
+                target_arch = "powerpc64"
             ))]
             let ok = true;
 
@@ -596,6 +576,7 @@ fn init() {
                 target_arch = "mips32r6",
                 target_arch = "mips64",
                 target_arch = "mips64r6",
+                target_arch = "s390x",
             ))]
             let ok = false;
 

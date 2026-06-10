@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set et sw=2 ts=4: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -61,7 +63,7 @@ class NetlinkService : public nsIRunnable {
   void EnqueueRtMsg(uint8_t aFamily, void* aAddress);
   void RemovePendingMsg();
 
-  mozilla::Mutex mMutex{"NetlinkService::mMutex"};
+  mozilla::Mutex mMutex MOZ_UNANNOTATED{"NetlinkService::mMutex"};
 
   void OnNetlinkMessage(int aNetlinkSocket);
   void OnLinkMessage(struct nlmsghdr* aNlh);
@@ -108,9 +110,9 @@ class NetlinkService : public nsIRunnable {
   // Time stamp of setting mRecalculateNetworkId to true
   mozilla::TimeStamp mTriggerTime;
 
-  nsCString mNetworkId MOZ_GUARDED_BY(mMutex);
-  nsTArray<nsCString> mDNSSuffixList MOZ_GUARDED_BY(mMutex);
-  nsTArray<NetAddr> mDNSResolvers MOZ_GUARDED_BY(mMutex);
+  nsCString mNetworkId;
+  nsTArray<nsCString> mDNSSuffixList;
+  nsTArray<NetAddr> mDNSResolvers;
 
   class LinkInfo {
    public:
@@ -159,7 +161,7 @@ class NetlinkService : public nsIRunnable {
 
   nsTArray<UniquePtr<NetlinkMsg>> mOutgoingMessages;
 
-  RefPtr<NetlinkServiceListener> mListener MOZ_GUARDED_BY(mMutex);
+  RefPtr<NetlinkServiceListener> mListener;
 };
 
 }  // namespace net

@@ -1085,8 +1085,7 @@ PK11_HPKE_SetupR(HpkeContext *cx, const SECKEYPublicKey *pkR, SECKEYPrivateKey *
     SECStatus rv;
     SECItem empty = { siBuffer, NULL, 0 };
 
-    CHECK_FAIL_ERR((!cx || !skR || !info || !enc || !enc->data || !enc->len ||
-                    info->len > 0xFFFF),
+    CHECK_FAIL_ERR((!cx || !skR || !info || !enc || !enc->data || !enc->len),
                    SEC_ERROR_INVALID_ARGS);
     /* Already setup */
     CHECK_FAIL_ERR((cx->aeadContext), SEC_ERROR_INVALID_STATE);
@@ -1120,8 +1119,7 @@ PK11_HPKE_SetupS(HpkeContext *cx, const SECKEYPublicKey *pkE, SECKEYPrivateKey *
     SECItem empty = { siBuffer, NULL, 0 };
     SECKEYPublicKey *tmpPkE = NULL;
     SECKEYPrivateKey *tmpSkE = NULL;
-    CHECK_FAIL_ERR((!cx || !pkR || !info || (!!skE != !!pkE) || info->len > 0xFFFF),
-                   SEC_ERROR_INVALID_ARGS);
+    CHECK_FAIL_ERR((!cx || !pkR || !info || (!!skE != !!pkE)), SEC_ERROR_INVALID_ARGS);
     /* Already setup */
     CHECK_FAIL_ERR((cx->aeadContext), SEC_ERROR_INVALID_STATE);
 

@@ -58,11 +58,7 @@ add_task(async function test_create_profile() {
     "The name for the original profile should be correct"
   );
 
-  let newProfile = await SelectableProfileService.createNewProfile(
-    false,
-    null,
-    "tests"
-  );
+  let newProfile = await SelectableProfileService.createNewProfile(false);
   leafName = (await newProfile.rootDir).leafName;
 
   Assert.equal(
@@ -75,15 +71,6 @@ add_task(async function test_create_profile() {
     newProfile.name,
     "Profile number: 1",
     "The name for the new profile should be correct"
-  );
-
-  let times = await IOUtils.readJSON(
-    PathUtils.join(newProfile.path, "times.json")
-  );
-  Assert.equal(
-    times.source,
-    "tests",
-    "The times.json source should be recorded"
   );
 
   profiles = await SelectableProfileService.getAllProfiles();

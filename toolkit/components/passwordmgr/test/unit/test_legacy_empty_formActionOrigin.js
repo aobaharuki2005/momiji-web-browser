@@ -77,7 +77,7 @@ add_task(async function test_search_all_wildcard() {
   Assert.equal(result.length, 2);
 
   Assert.equal(
-    await Services.logins.countLoginsAsync("", "http://www.example.com", null),
+    Services.logins.countLogins("", "http://www.example.com", null),
     2
   );
 
@@ -89,7 +89,7 @@ add_task(async function test_search_all_wildcard() {
   Assert.equal(result2.length, 1);
 
   Assert.equal(
-    await Services.logins.countLoginsAsync(
+    Services.logins.countLogins(
       "http://any.example.com",
       "http://www.example.com",
       null

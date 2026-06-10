@@ -6,16 +6,20 @@ package org.mozilla.fenix.messaging
 
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.runTest
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.utils.RunWhenReadyQueue
+import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction
 
 class MessagingFeatureTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
-    fun `WHEN start is called and queue is not ready THEN do nothing`() = runTest {
+    fun `WHEN start is called and queue is not ready THEN do nothing`() = runTestOnMain {
         val appStore: AppStore = spyk(AppStore())
         val queue = RunWhenReadyQueue(this)
         val binding = MessagingFeature(
@@ -25,13 +29,12 @@ class MessagingFeatureTest {
         )
 
         binding.start()
-        testScheduler.advanceUntilIdle()
 
         verify(exactly = 0) { appStore.dispatch(MessagingAction.Evaluate(FenixMessageSurfaceId.HOMESCREEN)) }
     }
 
     @Test
-    fun `WHEN start is called and queue is ready THEN evaluate message`() = runTest {
+    fun `WHEN start is called and queue is ready THEN evaluate message`() = runTestOnMain {
         val appStore: AppStore = spyk(AppStore())
         val queue = RunWhenReadyQueue(this)
         val binding = MessagingFeature(
@@ -42,7 +45,6 @@ class MessagingFeatureTest {
 
         binding.start()
         queue.ready()
-        testScheduler.advanceUntilIdle()
 
         verify { appStore.dispatch(MessagingAction.Evaluate(FenixMessageSurfaceId.HOMESCREEN)) }
     }

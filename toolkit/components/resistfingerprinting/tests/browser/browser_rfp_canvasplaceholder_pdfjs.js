@@ -28,12 +28,7 @@ add_task(async function canvas_placeholder_pdfjs() {
       return context.getImageData(0, 0, 10, 10).data;
     }
 
-    // The PDF.js viewer's CSP forbids `eval`, so run the extraction in a
-    // sandbox that inherits the content window's principal. This still
-    // exercises the canvas APIs as content (not as the chrome caller) so
-    // the RFP placeholder logic gets the right subject principal.
-    const sb = Cu.Sandbox(content, { sandboxPrototype: content });
-    return Cu.evalInSandbox(`(${extractCanvasData})()`, sb);
+    return content.eval(`(${extractCanvasData})()`);
   });
 
   is(data.length, 10 * 10 * 4, "correct canvas data size");
@@ -53,9 +48,5 @@ add_task(async function canvas_placeholder_pdfjs() {
   }
   ok(!failure, "canvas is correct");
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
-    const viewer = content.wrappedJSObject.PDFViewerApplication;
-    await viewer.testingClose();
-  });
   BrowserTestUtils.removeTab(tab);
 });

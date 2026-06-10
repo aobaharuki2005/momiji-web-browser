@@ -55,8 +55,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </copyright> */
-#ifndef _LEGACYITTNOTIFY_H_
-#define _LEGACYITTNOTIFY_H_
+#ifndef _LEGACY_ITTNOTIFY_H_
+#define _LEGACY_ITTNOTIFY_H_
 
 /**
  * @file
@@ -277,7 +277,7 @@ extern "C" {
  *   .
  * @{
  */
-#ifndef ITTNOTIFY_H_
+#ifndef _ITTNOTIFY_H_
 /** @brief Pause collection */
 void ITTAPI __itt_pause(void);
 /** @brief Resume collection */
@@ -311,7 +311,7 @@ ITT_STUBV(ITTAPI, void, detach,  (void))
 #define __itt_detach_ptr 0
 #endif /* INTEL_NO_MACRO_BODY */
 /** @endcond */
-#endif /* ITTNOTIFY_H_ */
+#endif /* _ITTNOTIFY_H_ */
 /** @} legacy_control group */
 
 /**
@@ -637,7 +637,7 @@ ITT_STUBV(LIBITTAPI, void, notify_sync_releasing, (void *addr))
 /** @endcond */
 /** @} legacy_sync group */
 
-#ifndef ITTNOTIFY_H_
+#ifndef _ITTNOTIFY_H_
 /**
  * @defgroup legacy_events Events
  * @ingroup legacy
@@ -749,7 +749,7 @@ ITT_STUB(LIBITTAPI, int, event_end, (__itt_event event))
 #endif /* INTEL_NO_MACRO_BODY */
 /** @endcond */
 /** @} legacy_events group */
-#endif /* ITTNOTIFY_H_ */
+#endif /* _ITTNOTIFY_H_ */
 
 /**
  * @defgroup legacy_memory Memory Accesses
@@ -1036,4 +1036,4 @@ ITT_STUBV(ITTAPI, void, frame_end,   (__itt_frame frame))
 }
 #endif /* __cplusplus */
 
-#endif /* _LEGACYITTNOTIFY_H_ */
+#endif /* _LEGACY_ITTNOTIFY_H_ */

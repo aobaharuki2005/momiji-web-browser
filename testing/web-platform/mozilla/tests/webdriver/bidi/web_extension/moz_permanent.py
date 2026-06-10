@@ -14,13 +14,7 @@ pytestmark = pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["archivePath", "base64", "path"])
 @pytest.mark.parametrize("signed", [True, False], ids=["signed", "unsigned"])
 async def test_install_with_permanent(
-    bidi_session,
-    current_session,
-    extension_data,
-    install_webextension,
-    mode,
-    permanent,
-    signed,
+    bidi_session, current_session, extension_data, mode, permanent, signed
 ):
     if mode == "path" and signed:
         # Unpacked extensions are not signed
@@ -39,7 +33,7 @@ async def test_install_with_permanent(
         try:
             with pytest.raises(error.InvalidWebExtensionException):
                 set_pref(current_session, "xpinstall.signatures.required", True)
-                await install_webextension(
+                await bidi_session.web_extension.install(
                     extension_data=data,
                     _extension_params=extension_params,
                 )
@@ -49,7 +43,7 @@ async def test_install_with_permanent(
 
     try:
         set_pref(current_session, "xpinstall.signatures.required", True)
-        web_extension = await install_webextension(
+        web_extension = await bidi_session.web_extension.install(
             extension_data=data,
             _extension_params=extension_params,
         )
@@ -59,4 +53,6 @@ async def test_install_with_permanent(
             permanent
         )
     finally:
+        # Clean up the extension.
         clear_pref(current_session, "xpinstall.signatures.required")
+        await bidi_session.web_extension.uninstall(extension=web_extension)

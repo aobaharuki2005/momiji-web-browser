@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+ChromeUtils.defineESModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
+
 add_task(async function insert_separator_notification() {
   let observer = expectPlacesObserverNotifications(["bookmark-added"]);
   let bm = await PlacesUtils.bookmarks.insert({
@@ -193,10 +197,11 @@ add_task(async function insert_bookmark_tag_notification() {
 });
 
 add_task(async function update_bookmark_lastModified() {
-  Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
+  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  Preferences.set("privacy.reduceTimerPrecision", false);
 
   registerCleanupFunction(function () {
-    Services.prefs.clearUserPref("privacy.reduceTimerPrecision");
+    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 
   let bm = await PlacesUtils.bookmarks.insert({

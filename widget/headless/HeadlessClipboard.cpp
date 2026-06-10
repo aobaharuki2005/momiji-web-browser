@@ -68,8 +68,7 @@ HeadlessClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
 
 mozilla::Result<nsCOMPtr<nsISupports>, nsresult>
 HeadlessClipboard::GetNativeClipboardData(const nsACString& aFlavor,
-                                          ClipboardType aWhichClipboard,
-                                          uint64_t aThreshold) {
+                                          ClipboardType aWhichClipboard) {
   MOZ_DIAGNOSTIC_ASSERT(
       nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
 
@@ -83,10 +82,6 @@ HeadlessClipboard::GetNativeClipboardData(const nsACString& aFlavor,
   bool isText = aFlavor.EqualsLiteral(kTextMime);
   if (!(isText ? clipboard->HasText() : clipboard->HasHTML())) {
     return nsCOMPtr<nsISupports>{};
-  }
-
-  if (aThreshold && isText && clipboard->GetText().Length() > aThreshold) {
-    return mozilla::Err(NS_ERROR_CLIPBOARD_TOO_BIG);
   }
 
   nsresult rv;

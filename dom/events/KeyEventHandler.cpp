@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -163,7 +165,9 @@ bool KeyEventHandler::TryConvertToKeyboardShortcut(
 
 bool KeyEventHandler::KeyElementIsDisabled() const {
   RefPtr<dom::Element> keyElement = GetHandlerElement();
-  return keyElement && keyElement->GetBoolAttr(nsGkAtoms::disabled);
+  return keyElement &&
+         keyElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                 nsGkAtoms::_true, eCaseMatters);
 }
 
 already_AddRefed<dom::Element> KeyEventHandler::GetHandlerElement() const {
@@ -311,7 +315,8 @@ nsresult KeyEventHandler::DispatchXBLCommand(dom::EventTarget* aTarget,
 nsresult KeyEventHandler::DispatchXULKeyCommand(dom::Event* aEvent) {
   nsCOMPtr<dom::Element> handlerElement = GetHandlerElement();
   NS_ENSURE_STATE(handlerElement);
-  if (handlerElement->GetBoolAttr(nsGkAtoms::disabled)) {
+  if (handlerElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                  nsGkAtoms::_true, eCaseMatters)) {
     // Don't dispatch command events for disabled keys.
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
@@ -456,7 +461,7 @@ static const keyCodeData gKeyCodes[] = {
 
 #define NS_DEFINE_VK(aDOMKeyName, aDOMKeyCode) \
   {#aDOMKeyName, sizeof(#aDOMKeyName) - 1, aDOMKeyCode},
-#include "mozilla/VirtualKeyCodeList.inc"
+#include "mozilla/VirtualKeyCodeList.h"
 #undef NS_DEFINE_VK
 
     {nullptr, 0, 0}};
@@ -651,7 +656,7 @@ void KeyEventHandler::ReportKeyConflict(const char16_t* aKey,
   params.AppendElement(id);
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, "Key dom::Event Handler"_ns, doc,
-      PropertiesFile::DOM_PROPERTIES, aMessageName, params);
+      nsContentUtils::eDOM_PROPERTIES, aMessageName, params);
 }
 
 bool KeyEventHandler::ModifiersMatchMask(

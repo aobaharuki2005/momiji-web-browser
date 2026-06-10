@@ -11,15 +11,15 @@ use std::{
 };
 
 use neqo_common::Datagram;
-use test_fixture::{DEFAULT_ADDR_V4, fixture_init, now};
+use test_fixture::{fixture_init, now, DEFAULT_ADDR_V4};
 
 use super::Connection;
 use crate::{
-    ConnectionParameters, Output, Pmtud, StreamType,
     connection::tests::{
-        CountingConnectionIdGenerator, DEFAULT_RTT, connect, default_server, fill_stream,
-        new_client, new_server, send_something,
+        connect, default_server, fill_stream, new_client, new_server, send_something,
+        CountingConnectionIdGenerator, DEFAULT_RTT,
     },
+    ConnectionParameters, Output, Pmtud, StreamType,
 };
 
 /// Test that one can reach the maximum MTU with GSO enabled.

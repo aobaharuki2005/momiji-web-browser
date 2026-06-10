@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef READSTRINGS_H_
-#define READSTRINGS_H_
+#ifndef READSTRINGS_H__
+#define READSTRINGS_H__
 
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
@@ -23,18 +25,12 @@ struct StringTable {
 };
 
 struct MARChannelStringTable {
-  mozilla::UniquePtr<char[]> MARChannelID;
-
- public:
-  MARChannelStringTable() = default;
-  const mozilla::UniquePtr<char[]>& get() const { return MARChannelID; }
-  mozilla::UniquePtr<char[]>& get() {
-    if (!MARChannelID) {
-      MARChannelID = mozilla::MakeUnique<char[]>(1);
-      MARChannelID[0] = '\0';
-    }
-    return MARChannelID;
+  MARChannelStringTable() {
+    MARChannelID = mozilla::MakeUnique<char[]>(1);
+    MARChannelID[0] = '\0';
   }
+
+  mozilla::UniquePtr<char[]> MARChannelID;
 };
 
 /**
@@ -110,4 +106,4 @@ class IniReader {
   mozilla::Maybe<int> mMaybeStatusCode;
 };
 
-#endif  // READSTRINGS_H_
+#endif  // READSTRINGS_H__

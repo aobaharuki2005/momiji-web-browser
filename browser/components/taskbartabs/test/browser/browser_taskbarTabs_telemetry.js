@@ -4,14 +4,12 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   FileTestUtils: "resource://testing-common/FileTestUtils.sys.mjs",
   TaskbarTabsRegistry:
     "resource:///modules/taskbartabs/TaskbarTabsRegistry.sys.mjs",
   TaskbarTabsWindowManager:
     "resource:///modules/taskbartabs/TaskbarTabsWindowManager.sys.mjs",
   TaskbarTabsPin: "resource:///modules/taskbartabs/TaskbarTabsPin.sys.mjs",
-  TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
   ShellService: "moz-src:///browser/components/shell/ShellService.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
   MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
@@ -40,6 +38,7 @@ const exposeDeleteResult = async () => {
 
 const proxyNativeShellService = {
   ...ShellService.shellService,
+  createWindowsIcon: sinon.stub().resolves(),
   createShortcut: sinon.stub().resolves("dummy_path"),
   deleteShortcut: sinon.stub().callsFake(exposeDeleteResult),
   pinShortcutToTaskbar: sinon.stub().callsFake(exposePinResult),
@@ -47,15 +46,6 @@ const proxyNativeShellService = {
 };
 
 sinon.stub(ShellService, "shellService").value(proxyNativeShellService);
-sinon.stub(ShellService, "writeShortcutIcon").resolves();
-sinon.stub(ShellService, "createLinuxDesktopEntry").resolves();
-sinon
-  .stub(ShellService, "deleteLinuxDesktopEntry")
-  .callsFake(exposeDeleteResult);
-sinon.stub(ShellService, "requestCreateAndPinSecondaryTile").resolves();
-sinon
-  .stub(ShellService, "requestDeleteSecondaryTile")
-  .callsFake(exposeDeleteResult);
 
 registerCleanupFunction(() => {
   sinon.restore();
@@ -91,12 +81,7 @@ async function testPinMetricCustom(aPinResult, aPinMessage = null) {
 
   gShortcutPinResult = aPinResult;
 
-  await TaskbarTabsPin.pinTaskbarTab(
-    taskbarTab,
-    gRegistry,
-    await TaskbarTabsUtils.getDefaultIcon()
-  );
-
+  await TaskbarTabsPin.pinTaskbarTab(taskbarTab, gRegistry);
   snapshot = Glean.webApp.pin.testGetValue();
   is(snapshot.length, 1, "A single pin event was recorded");
   Assert.strictEqual(
@@ -114,11 +99,11 @@ add_task(async function testPinMetricSuccess() {
 
 add_task(async function testPinMetricFail() {
   await testPinMetricCustom("Pin fail!");
-}).skip(AppConstants.platform !== "win" || TaskbarTabsUtils.isMSIX()); // Pinning shortcuts is Windows-non-MSIX-only.
+});
 
 add_task(async function testPinMetricInvalid() {
   await testPinMetricCustom(undefined, "Unknown exception");
-}).skip(AppConstants.platform !== "win" || TaskbarTabsUtils.isMSIX()); // Pinning shortcuts is Windows-non-MSIX-only.
+});
 
 async function testUnpinMetricCustom(
   aUnpinResult,
@@ -135,11 +120,6 @@ async function testUnpinMetricCustom(
   gShortcutDeleteResult = aDeleteResult;
 
   // We've mocked out so much that calling pinTaskbarTab should be irrelevant.
-  // However, we still need to specify the shortcut path, since otherwise
-  // deleteShortcut et al won't be called.
-  gRegistry.patchTaskbarTab(taskbarTab, {
-    shortcutRelativePath: "whatever",
-  });
 
   await TaskbarTabsPin.unpinTaskbarTab(taskbarTab, gRegistry);
   snapshot = Glean.webApp.unpin.testGetValue();
@@ -164,7 +144,7 @@ add_task(async function testPinAndUnpinMetric_UnpinSuccessDeleteSuccess() {
 
 add_task(async function testPinAndUnpinMetric_UnpinFailDeleteSuccess() {
   await testUnpinMetricCustom("Unpin fail!", null);
-}).skip(AppConstants.platform !== "win" || TaskbarTabsUtils.isMSIX()); // Unpinning shortcuts is Windows-non-MSIX-only.
+});
 
 add_task(async function testPinAndUnpinMetric_UnpinSuccessDeleteFail() {
   await testUnpinMetricCustom(null, "Deletion fail!");
@@ -172,10 +152,11 @@ add_task(async function testPinAndUnpinMetric_UnpinSuccessDeleteFail() {
 
 add_task(async function testPinAndUnpinMetric_UnpinSuccessDeleteFail() {
   await testUnpinMetricCustom("Unpin fail!", "Deletion fail!");
-}).skip(AppConstants.platform !== "win" || TaskbarTabsUtils.isMSIX()); // Unpinning shortcuts is Windows-non-MSIX-only.
+});
+
 add_task(async function testPinAndUnpinMetric_UnpinInvalid() {
   await testUnpinMetricCustom(undefined, null, "Unknown exception", null);
-}).skip(AppConstants.platform !== "win" || TaskbarTabsUtils.isMSIX()); // Unpinning shortcuts is Windows-non-MSIX-only.
+});
 
 add_task(async function testPinAndUnpinMetric_DeleteInvalid() {
   await testUnpinMetricCustom(null, undefined, null, "Unknown exception");
@@ -285,19 +266,21 @@ add_task(async function testUsageTimeMetricSingleWindow() {
   Services.fog.testResetFOG();
 
   const win = await gWindowManager.openWindow(taskbarTab);
-
-  // Focus that window if it wasn't already focused.
-  await SimpleTest.promiseFocus(win);
+  let promise;
 
   // Take focus away from that window.
-  await SimpleTest.promiseFocus(window);
+  promise = BrowserTestUtils.waitForEvent(window, "focus");
+  window.focus();
+  await promise;
 
   // ...and give it back.
-  await SimpleTest.promiseFocus(win);
+  promise = BrowserTestUtils.waitForEvent(win, "focus");
+  win.focus();
+  await promise;
 
   // now close it.
   await BrowserTestUtils.closeWindow(win);
-  await SimpleTest.promiseFocus(window); // for good measure
+  window.focus(); // for good measure
 
   const snapshot = Glean.webApp.usageTime.testGetValue();
   is(snapshot.count, 2, "Two separate intervals should be made");

@@ -1,3 +1,4 @@
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -306,8 +307,7 @@ add_task(async function test_preload_basic() {
   // certificate but doesn't send the intermediate.
   await asyncStartTLSTestServer(
     "BadCertAndPinningServer",
-    "test_intermediate_preloads",
-    false
+    "test_intermediate_preloads"
   );
   // This ensures the test server doesn't include the intermediate in the
   // handshake.

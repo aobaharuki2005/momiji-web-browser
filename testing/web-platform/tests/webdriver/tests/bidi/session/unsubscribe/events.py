@@ -1,14 +1,14 @@
 import pytest
 from webdriver.error import TimeoutException
 
-pytestmark = pytest.mark.asyncio
-
+from tests.bidi import wait_for_bidi_events
 
 # The basic use case of unsubscribing globally from a single event
 # is covered by tests for each event in the dedicated folders.
 
 
-async def test_unsubscribe_from_module(bidi_session, new_tab, wait_for_bidi_events, inline):
+@pytest.mark.asyncio
+async def test_unsubscribe_from_module(bidi_session, new_tab, inline):
     await bidi_session.session.subscribe(events=["browsingContext"])
     await bidi_session.session.unsubscribe(events=["browsingContext"])
 
@@ -30,12 +30,13 @@ async def test_unsubscribe_from_module(bidi_session, new_tab, wait_for_bidi_even
     )
 
     with pytest.raises(TimeoutException):
-        await wait_for_bidi_events(events, 1, timeout=0.5)
+        await wait_for_bidi_events(bidi_session, events, 1, timeout=0.5)
 
     remove_listener_domContentLoaded()
     remove_listener_load()
 
 
+@pytest.mark.asyncio
 async def test_subscribe_to_module_unsubscribe_from_one_event(
       bidi_session, wait_for_event, wait_for_future_safe, new_tab, inline
 ):

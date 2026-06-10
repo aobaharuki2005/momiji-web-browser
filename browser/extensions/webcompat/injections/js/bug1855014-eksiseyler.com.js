@@ -12,10 +12,10 @@
  * window.loggingEnabled = false
  */
 
-if (typeof loggingEnabled == "undefined") {
-  console.info(
-    "loggingEnabled been set to true for compatibility reasons. See https://bugzilla.mozilla.org/show_bug.cgi?id=1855014 for details."
-  );
+/* globals exportFunction */
 
-  window.loggingEnabled = false;
-}
+console.info(
+  "loggingEnabled been set to true for compatibility reasons. See https://webcompat.com/issues/77221 for details."
+);
+
+window.wrappedJSObject.loggingEnabled = false;

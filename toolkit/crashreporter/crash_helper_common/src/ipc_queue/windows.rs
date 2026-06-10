@@ -50,16 +50,14 @@ impl IPCQueue {
         let port = unsafe {
             CreateIoCompletionPort(
                 /* FileHandle */ INVALID_HANDLE_VALUE,
-                /* ExistingCompletionPort */ std::ptr::null_mut(),
+                /* ExistingCompletionPort */ 0,
                 /* CompletionKey */ 0,
                 CONCURRENT_THREADS,
             ) as RawHandle
         };
 
         if port.is_null() {
-            return Err(IPCQueueError::CreationFailure(
-                PlatformError::CreateIoCompletionPortFailed(get_last_error()),
-            ));
+            return Err(IPCQueueError::CreationFailure(get_last_error()));
         }
 
         let mut queue = IPCQueue {
@@ -103,9 +101,7 @@ impl IPCQueue {
         };
 
         if port.is_null() {
-            return Err(IPCQueueError::RegistrationFailure(
-                PlatformError::CreateIoCompletionPortFailed(get_last_error()),
-            ));
+            return Err(IPCQueueError::RegistrationFailure(get_last_error()));
         }
 
         Ok(())
@@ -132,7 +128,7 @@ impl IPCQueue {
             }
         }
 
-        if self.connectors.is_empty() {
+        if self.connectors.len() == 0 {
             // The last client disconnected.
             return Ok(events);
         }
@@ -173,7 +169,7 @@ impl IPCQueue {
                 debug_assert!(element.is_some(), "Completion on missing connector");
                 events.push(IPCEvent::Disconnect(completion_key));
             } else {
-                return Err(IPCQueueError::WaitError(PlatformError::IOError(err)));
+                return Err(IPCQueueError::WaitError(err));
             }
         } else {
             // SAFETY: `GetQueueCompletionStatus()` successfully retrieved a
@@ -193,7 +189,9 @@ impl IPCQueue {
                 );
                 let operation = self.listen_operation.take();
                 if let Some(operation) = operation {
-                    operation.accept().map_err(IPCQueueError::WaitError)?;
+                    operation
+                        .accept()
+                        .map_err(|_e| IPCQueueError::RegistrationFailure(0))?;
                 }
                 let connector = Rc::new(self.listener.replace_pipe()?);
                 self.insert_connector(&connector);
@@ -213,7 +211,7 @@ impl IPCQueue {
                     .operation
                     .take()
                     .expect("No pending receive operation");
-                let buffer = operation.collect_recv();
+                let buffer = &operation.collect_recv();
                 let header = Header::decode(buffer)?;
                 let payload = element.connector.recv(header.size);
                 match payload {

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,18 +28,17 @@ SVGElement::NumberInfo SVGFECompositeElement::sNumberInfo[4] = {
     {nsGkAtoms::k4, 0}};
 
 SVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
-    {nsGkAtoms::over, uint8_t(SVGFECompositeOperator::Over)},
-    {nsGkAtoms::in, uint8_t(SVGFECompositeOperator::In)},
-    {nsGkAtoms::out, uint8_t(SVGFECompositeOperator::Out)},
-    {nsGkAtoms::atop, uint8_t(SVGFECompositeOperator::Atop)},
-    {nsGkAtoms::xor_, uint8_t(SVGFECompositeOperator::Xor)},
-    {nsGkAtoms::arithmetic, uint8_t(SVGFECompositeOperator::Arithmetic)},
-    {nsGkAtoms::lighter, uint8_t(SVGFECompositeOperator::Lighter)},
+    {nsGkAtoms::over, SVG_FECOMPOSITE_OPERATOR_OVER},
+    {nsGkAtoms::in, SVG_FECOMPOSITE_OPERATOR_IN},
+    {nsGkAtoms::out, SVG_FECOMPOSITE_OPERATOR_OUT},
+    {nsGkAtoms::atop, SVG_FECOMPOSITE_OPERATOR_ATOP},
+    {nsGkAtoms::xor_, SVG_FECOMPOSITE_OPERATOR_XOR},
+    {nsGkAtoms::arithmetic, SVG_FECOMPOSITE_OPERATOR_ARITHMETIC},
+    {nsGkAtoms::lighter, SVG_FECOMPOSITE_OPERATOR_LIGHTER},
     {nullptr, 0}};
 
 SVGElement::EnumInfo SVGFECompositeElement::sEnumInfo[1] = {
-    {nsGkAtoms::_operator, sOperatorMap,
-     uint8_t(SVGFECompositeOperator::Over)}};
+    {nsGkAtoms::_operator, sOperatorMap, SVG_FECOMPOSITE_OPERATOR_OVER}};
 
 SVGElement::StringInfo SVGFECompositeElement::sStringInfo[3] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
@@ -89,10 +90,10 @@ FilterPrimitiveDescription SVGFECompositeElement::GetPrimitiveDescription(
     const nsTArray<bool>& aInputsAreTainted,
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   CompositeAttributes atts;
-  atts.mOperator =
-      SVGFECompositeOperator(mEnumAttributes[OPERATOR].GetAnimValue());
+  uint32_t op = mEnumAttributes[OPERATOR].GetAnimValue();
+  atts.mOperator = op;
 
-  if (atts.mOperator == SVGFECompositeOperator::Arithmetic) {
+  if (op == SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
     std::array<float, 4> k;
     GetAnimatedNumberValues(&k[0], &k[1], &k[2], &k[3], nullptr);
     atts.mCoefficients.AppendElements(Span(k));

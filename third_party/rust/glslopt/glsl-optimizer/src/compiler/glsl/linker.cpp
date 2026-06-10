@@ -3988,7 +3988,7 @@ add_packed_varyings(const struct gl_context *ctx,
             iface = GL_PROGRAM_OUTPUT;
             break;
          default:
-            UNREACHABLE("unexpected type");
+            unreachable("unexpected type");
          }
 
          if (type == iface) {

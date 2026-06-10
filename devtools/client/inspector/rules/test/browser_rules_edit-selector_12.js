@@ -14,13 +14,19 @@ add_task(async function () {
   await selectNode("#target", inspector);
 
   info("Focus the selector in the rule-view");
-  let ruleEditor = getRuleViewRuleEditorAt(view, 1);
-  await editSelectorForRuleEditor(view, ruleEditor, "div");
+  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
+
+  info("Change the selector to something else");
+  editor.input.value = "div";
+  const onRuleViewChanged = once(view, "ruleview-changed");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await onRuleViewChanged;
 
   info("Check the rules are still displayed correctly");
-  assertDisplayedRulesCount(view, 3);
+  is(view._elementStyle.rules.length, 3, "The element still has 3 rules.");
 
-  ruleEditor = getRuleViewRuleEditorAt(view, 1);
+  ruleEditor = getRuleViewRuleEditor(view, 1);
   is(
     ruleEditor.element.getAttribute("unmatched"),
     "false",

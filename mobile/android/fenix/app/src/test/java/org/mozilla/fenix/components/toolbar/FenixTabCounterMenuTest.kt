@@ -6,6 +6,8 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
 import androidx.appcompat.view.ContextThemeWrapper
+import io.mockk.mockk
+import io.mockk.verify
 import mozilla.components.concept.menu.candidate.DividerMenuCandidate
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.support.test.robolectric.testContext
@@ -22,13 +24,13 @@ import org.robolectric.RobolectricTestRunner
 class FenixTabCounterMenuTest {
 
     private lateinit var context: Context
-    private val onItemTappedCalls = mutableListOf<TabCounterMenu.Item>()
-    private val onItemTapped: (TabCounterMenu.Item) -> Unit = { onItemTappedCalls.add(it) }
+    private lateinit var onItemTapped: (TabCounterMenu.Item) -> Unit
     private lateinit var menu: FenixTabCounterMenu
 
     @Before
     fun setup() {
         context = ContextThemeWrapper(testContext, R.style.NormalTheme)
+        onItemTapped = mockk(relaxed = true)
         menu = FenixTabCounterMenu(context, onItemTapped)
     }
 
@@ -41,7 +43,7 @@ class FenixTabCounterMenuTest {
         assertEquals("New tab", item.text)
         item.onClick()
 
-        assertEquals(listOf(TabCounterMenu.Item.NewTab), onItemTappedCalls)
+        verify { onItemTapped(TabCounterMenu.Item.NewTab) }
     }
 
     @Test
@@ -53,7 +55,7 @@ class FenixTabCounterMenuTest {
         assertEquals("New private tab", item.text)
         item.onClick()
 
-        assertEquals(listOf(TabCounterMenu.Item.NewPrivateTab), onItemTappedCalls)
+        verify { onItemTapped(TabCounterMenu.Item.NewPrivateTab) }
     }
 
     @Test
@@ -67,13 +69,10 @@ class FenixTabCounterMenuTest {
         assertEquals("New private tab", newPrivateTab.text)
 
         newTab.onClick()
-        assertEquals(listOf(TabCounterMenu.Item.NewTab), onItemTappedCalls)
+        verify { onItemTapped(TabCounterMenu.Item.NewTab) }
 
         newPrivateTab.onClick()
-        assertEquals(
-            listOf(TabCounterMenu.Item.NewTab, TabCounterMenu.Item.NewPrivateTab),
-            onItemTappedCalls,
-        )
+        verify { onItemTapped(TabCounterMenu.Item.NewPrivateTab) }
     }
 
     @Test

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -89,15 +90,6 @@ class nsMenuX final : public nsMenuParentX,
   void OnMenuClosed(mozilla::dom::Element* aPopupElement) override;
 
   bool IsVisible() const { return mVisible; }
-
-  bool IsAnchoredPopUp() { return mIsAnchoredPopUp; }
-  void SetIsAnchoredPopUp(bool aIsAnchoredPopUp) {
-    mIsAnchoredPopUp = aIsAnchoredPopUp;
-  }
-  void SetIsAnchoredPullDown(bool aIsAnchoredPullDown) {
-    mIsAnchoredPullDown = aIsAnchoredPullDown;
-  }
-  void RefreshMenuChildren(const MenuChild& aChildInserted);
 
   // Unregisters nsMenuX from the nsMenuGroupOwner, and nulls out the group
   // owner pointer, on this nsMenuX and also all nested nsMenuX and nsMenuItemX
@@ -191,8 +183,8 @@ class nsMenuX final : public nsMenuParentX,
   static bool IsXULEditMenu(nsIContent* aMenuContent);
 
   // Set an observer that gets notified of menu opening and closing.
-  // The menu does not keep a strong reference to the observer. The observer
-  // must remove itself before it is destroyed.
+  // The menu does not keep a strong reference the observer. The observer must
+  // remove itself before it is destroyed.
   void SetObserver(Observer* aObserver) { mObserver = aObserver; }
 
   // Stop observing.
@@ -203,19 +195,17 @@ class nsMenuX final : public nsMenuParentX,
 
   void RebuildMenu();
   nsresult RemoveAll();
-  void SetTitle();
-  void SetAttributedTitle();
   nsresult SetEnabled(bool aIsEnabled);
   nsresult GetEnabled(bool* aIsEnabled);
   already_AddRefed<nsIContent> GetMenuPopupContent();
   void WillInsertChild(const MenuChild& aChild);
   void WillRemoveChild(const MenuChild& aChild);
-  void AddMenuChild(const MenuChild& aChild);
-  void InsertMenuChild(const MenuChild& aChild);
+  void AddMenuChild(MenuChild&& aChild);
+  void InsertMenuChild(MenuChild&& aChild);
   void RemoveMenuChild(const MenuChild& aChild);
   mozilla::Maybe<MenuChild> CreateMenuChild(nsIContent* aContent);
   RefPtr<nsMenuItemX> CreateMenuItem(nsIContent* aMenuItemContent);
-  GeckoNSMenu* CreateMenuWithGeckoString(const nsString& aMenuTitle,
+  GeckoNSMenu* CreateMenuWithGeckoString(nsString& aMenuTitle,
                                          bool aShowServices);
   void DidFirePopupShowing();
 
@@ -317,15 +307,6 @@ class nsMenuX final : public nsMenuParentX,
   bool mIsOpenForGecko = false;
 
   bool mVisible = true;
-
-  bool mIsAnchoredPopUp = false;
-  bool mIsAnchoredPullDown = false;
-
-  // NSPopUpButtonCell with pullsDown=true always assumes the first menu item is
-  // a placeholder and removes it from the menu (even with
-  // usesItemFromMenu=false). We insert our own placeholder to prevent
-  // legitimate menu items from being removed.
-  bool mIsPullDownPlaceholderPresent = false;
 
   // true between an OnOpen() call that returned true, and the subsequent call
   // to MenuOpened().

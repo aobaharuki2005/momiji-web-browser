@@ -6,11 +6,10 @@
 // This file may not be copied, modified, or distributed except according to
 // those terms.
 
-include!("../../zerocopy-derive/tests/include.rs");
+include!("../../zerocopy-derive/tests/util.rs");
 
 extern crate zerocopy;
 
-use util::AU16;
 use zerocopy::transmute;
 
 fn main() {}

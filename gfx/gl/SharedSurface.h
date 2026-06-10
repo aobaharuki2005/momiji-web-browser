@@ -1,3 +1,4 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 4; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,6 +15,7 @@
 #ifndef SHARED_SURFACE_H_
 #define SHARED_SURFACE_H_
 
+#include <queue>
 #include <stdint.h>
 
 #include "GLContext.h"  // Bug 1635644
@@ -65,12 +67,10 @@ struct PartialSharedSurfaceDesc {
 struct SharedSurfaceDesc : public PartialSharedSurfaceDesc {
   gfx::IntSize size = {};
   gfx::ColorSpace2 colorSpace = gfx::ColorSpace2::UNKNOWN;
-  gfx::TransferFunction transferFunction = gfx::TransferFunction::SRGB;
 
   bool operator==(const SharedSurfaceDesc& rhs) const {
     return PartialSharedSurfaceDesc::operator==(rhs) && size == rhs.size &&
-           colorSpace == rhs.colorSpace &&
-           transferFunction == rhs.transferFunction;
+           colorSpace == rhs.colorSpace;
   }
   bool operator!=(const SharedSurfaceDesc& rhs) const {
     return !(*this == rhs);

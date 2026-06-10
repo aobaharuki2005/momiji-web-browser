@@ -513,9 +513,7 @@
     [Ci.nsIDOMXULSelectControlItemElement]
   );
 
-  class MozAutocompleteRichlistitemInsecureWarning
-    extends MozElements.MozAutocompleteRichlistitem
-  {
+  class MozAutocompleteRichlistitemInsecureWarning extends MozElements.MozAutocompleteRichlistitem {
     constructor() {
       super();
 
@@ -599,12 +597,9 @@
     }
   }
 
-  class MozAutocompleteRichlistitemLoginsFooter
-    extends MozElements.MozAutocompleteRichlistitem {}
+  class MozAutocompleteRichlistitemLoginsFooter extends MozElements.MozAutocompleteRichlistitem {}
 
-  class MozAutocompleteImportableLearnMoreRichlistitem
-    extends MozElements.MozAutocompleteRichlistitem
-  {
+  class MozAutocompleteImportableLearnMoreRichlistitem extends MozElements.MozAutocompleteRichlistitem {
     constructor() {
       super();
       MozXULElement.insertFTLIfNeeded("toolkit/main-window/autocomplete.ftl");
@@ -727,6 +722,53 @@
     constructor() {
       super();
       this.selectedByMouseOver = true;
+    }
+  }
+
+  // A row that conveys status information assigned from the status field
+  // within the comment associated with the selected item in the list.
+  class MozAutocompleteStatusRichlistitem extends MozAutocompleteTwoLineRichlistitem {
+    static get markup() {
+      return `<div class="ac-status" xmlns="http://www.w3.org/1999/xhtml"></div>`;
+    }
+
+    connectedCallback() {
+      super.connectedCallback();
+      this.parentNode.addEventListener("select", this);
+      this.eventListenerParentNode = this.parentNode;
+    }
+
+    disconnectedCallback() {
+      this.eventListenerParentNode?.removeEventListener("select", this);
+      this.eventListenerParentNode = null;
+    }
+
+    handleEvent(event) {
+      if (event.type == "select") {
+        let selectedItem = event.target.selectedItem;
+        if (selectedItem) {
+          this.#setStatus(selectedItem);
+        }
+      }
+    }
+
+    #setStatus(item) {
+      // For normal rows, use that row's comment, otherwise use the status's
+      // comment which serves as the default label.
+      let target =
+        !item || item instanceof MozAutocompleteActionRichlistitem
+          ? this
+          : item;
+
+      let comment = JSON.parse(target.getAttribute("ac-comment"));
+
+      let statusBox = this.querySelector(".ac-status");
+      statusBox.textContent = comment?.status || "";
+    }
+
+    _adjustAcItem() {
+      this.#setStatus(this);
+      this.setAttribute("disabled", "true");
     }
   }
 
@@ -918,6 +960,14 @@
   customElements.define(
     "autocomplete-action-richlistitem",
     MozAutocompleteActionRichlistitem,
+    {
+      extends: "richlistitem",
+    }
+  );
+
+  customElements.define(
+    "autocomplete-status-richlistitem",
+    MozAutocompleteStatusRichlistitem,
     {
       extends: "richlistitem",
     }

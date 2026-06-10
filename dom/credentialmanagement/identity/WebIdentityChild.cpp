@@ -1,10 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/WebIdentityChild.h"
 
-#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/WebIdentityHandler.h"
 #include "mozilla/dom/WindowContext.h"
 #include "nsGlobalWindowOuter.h"
@@ -29,8 +30,8 @@ mozilla::ipc::IPCResult WebIdentityChild::RecvOpenContinuationWindow(
   MOZ_ASSERT(window);
   MOZ_ASSERT(window->GetWindowContext());
 
-  // Open a popup via the window opening this to the provided URL, resolving
-  // with the new browsing context if we can get one.
+  // Open a popup on via the window opening this to the provided URL, resolving
+  // with the new BC ID if we can get one. Otherwise resolve with the error
   nsGlobalWindowOuter* outer = nsGlobalWindowOuter::GetOuterWindowWithId(
       window->GetWindowContext()->OuterWindowId());
   RefPtr<BrowsingContext> newBC;
@@ -41,7 +42,7 @@ mozilla::ipc::IPCResult WebIdentityChild::RecvOpenContinuationWindow(
   } else if (!newBC) {
     aResolver(NS_ERROR_UNEXPECTED);
   } else {
-    aResolver(MaybeDiscardedBrowsingContext(newBC));
+    aResolver(newBC->Id());
   }
   return IPC_OK();
 }

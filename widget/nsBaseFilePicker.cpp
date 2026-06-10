@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -38,9 +39,10 @@ using mozilla::ErrorResult;
 
 namespace {
 
-nsresult LocalFileToDirectoryOrBlob(nsIGlobalObject* aGlobal, bool aIsDirectory,
-                                    nsIFile* aFile, nsISupports** aResult) {
-  MOZ_ASSERT(aGlobal);
+nsresult LocalFileToDirectoryOrBlob(nsPIDOMWindowInner* aWindow,
+                                    bool aIsDirectory, nsIFile* aFile,
+                                    nsISupports** aResult) {
+  MOZ_ASSERT(aWindow);
 
   if (aIsDirectory) {
 #ifdef DEBUG
@@ -49,14 +51,14 @@ nsresult LocalFileToDirectoryOrBlob(nsIGlobalObject* aGlobal, bool aIsDirectory,
     MOZ_ASSERT(isDir);
 #endif
 
-    RefPtr<Directory> directory = Directory::Create(aGlobal, aFile);
+    RefPtr<Directory> directory = Directory::Create(aWindow->AsGlobal(), aFile);
     MOZ_ASSERT(directory);
 
     directory.forget(aResult);
     return NS_OK;
   }
 
-  RefPtr<File> file = File::CreateFromFile(aGlobal, aFile);
+  RefPtr<File> file = File::CreateFromFile(aWindow->AsGlobal(), aFile);
   if (NS_WARN_IF(!file)) {
     return NS_ERROR_FAILURE;
   }
@@ -69,10 +71,12 @@ nsresult LocalFileToDirectoryOrBlob(nsIGlobalObject* aGlobal, bool aIsDirectory,
 
 class nsBaseFilePickerEnumerator : public nsSimpleEnumerator {
  public:
-  nsBaseFilePickerEnumerator(nsIGlobalObject* aGlobal,
+  nsBaseFilePickerEnumerator(nsPIDOMWindowOuter* aParent,
                              nsISimpleEnumerator* iterator,
                              nsIFilePicker::Mode aMode)
-      : mIterator(iterator), mGlobal(aGlobal), mMode(aMode) {}
+      : mIterator(iterator),
+        mParent(aParent->GetCurrentInnerWindow()),
+        mMode(aMode) {}
 
   const nsID& DefaultInterface() override { return NS_GET_IID(nsIFile); }
 
@@ -91,12 +95,12 @@ class nsBaseFilePickerEnumerator : public nsSimpleEnumerator {
       return NS_ERROR_FAILURE;
     }
 
-    if (!mGlobal) {
+    if (!mParent) {
       return NS_ERROR_FAILURE;
     }
 
     return LocalFileToDirectoryOrBlob(
-        mGlobal, mMode == nsIFilePicker::modeGetFolder, localFile, aResult);
+        mParent, mMode == nsIFilePicker::modeGetFolder, localFile, aResult);
   }
 
   NS_IMETHOD
@@ -106,7 +110,7 @@ class nsBaseFilePickerEnumerator : public nsSimpleEnumerator {
 
  private:
   nsCOMPtr<nsISimpleEnumerator> mIterator;
-  nsCOMPtr<nsIGlobalObject> mGlobal;
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsIFilePicker::Mode mMode;
 };
 
@@ -116,8 +120,7 @@ nsBaseFilePicker::~nsBaseFilePicker() = default;
 
 NS_IMETHODIMP nsBaseFilePicker::Init(BrowsingContext* aBrowsingContext,
                                      const nsAString& aTitle,
-                                     nsIFilePicker::Mode aMode,
-                                     nsISupports* aGlobal) {
+                                     nsIFilePicker::Mode aMode) {
   MOZ_ASSERT(XRE_IsParentProcess());
   NS_ENSURE_ARG_POINTER(aBrowsingContext);
 
@@ -126,7 +129,6 @@ NS_IMETHODIMP nsBaseFilePicker::Init(BrowsingContext* aBrowsingContext,
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
   mBrowsingContext = aBrowsingContext;
-  mGlobal = do_QueryInterface(aGlobal);
   mMode = aMode;
   InitNative(widget, aTitle);
 
@@ -296,7 +298,7 @@ NS_IMETHODIMP nsBaseFilePicker::SetDisplayDirectory(nsIFile* aDirectory) {
     return rv;
   }
 
-  mDisplayDirectory = std::move(directory);
+  mDisplayDirectory = directory;
   return NS_OK;
 }
 
@@ -428,20 +430,6 @@ nsBaseFilePicker::GetOkButtonLabel(nsAString& aLabel) {
   return NS_OK;
 }
 
-nsIGlobalObject* nsBaseFilePicker::GetRelevantGlobal() const {
-  if (mGlobal) {
-    return mGlobal;
-  }
-  if (mBrowsingContext) {
-    if (auto* win = mBrowsingContext->GetDOMWindow()) {
-      if (auto* inner = win->GetCurrentInnerWindow()) {
-        return inner->AsGlobal();
-      }
-    }
-  }
-  return nullptr;
-}
-
 NS_IMETHODIMP
 nsBaseFilePicker::GetDomFileOrDirectory(nsISupports** aValue) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -455,7 +443,11 @@ nsBaseFilePicker::GetDomFileOrDirectory(nsISupports** aValue) {
     return NS_OK;
   }
 
-  auto* innerParent = GetRelevantGlobal();
+  auto* innerParent =
+      mBrowsingContext->GetDOMWindow()
+          ? mBrowsingContext->GetDOMWindow()->GetCurrentInnerWindow()
+          : nullptr;
+
   if (!innerParent) {
     return NS_ERROR_FAILURE;
   }
@@ -473,13 +465,15 @@ nsBaseFilePicker::GetDomFileOrDirectoryEnumerator(
   nsresult rv = GetFiles(getter_AddRefs(iter));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  auto* global = GetRelevantGlobal();
-  if (!global) {
+  auto* parent = mBrowsingContext->GetDOMWindow();
+
+  if (!parent) {
     return NS_ERROR_FAILURE;
   }
 
-  auto retIter =
-      mozilla::MakeRefPtr<nsBaseFilePickerEnumerator>(global, iter, mMode);
+  RefPtr<nsBaseFilePickerEnumerator> retIter =
+      new nsBaseFilePickerEnumerator(parent, iter, mMode);
+
   retIter.forget(aValue);
   return NS_OK;
 }

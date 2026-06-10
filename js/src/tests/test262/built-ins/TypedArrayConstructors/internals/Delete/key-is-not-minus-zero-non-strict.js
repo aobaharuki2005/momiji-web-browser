@@ -29,7 +29,7 @@ includes: [testTypedArray.js]
 features: [align-detached-buffer-semantics-with-web-reality, TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   let proto = TypedArray.prototype;
   Object.defineProperty(proto, "-0", {
     configurable: true,
@@ -37,10 +37,10 @@ testWithTypedArrayConstructors(function(TA, makeCtorArg) {
       throw new Test262Error("OrdinaryGet was called!");
     }
   });
-  let sample = new TA(makeCtorArg(1));
+  let sample = new TA(1);
 
   assert.sameValue(delete sample["-0"], true, 'The value of `delete sample["-0"]` is true');
   assert.sameValue(delete sample[-0], false, 'The value of `delete sample[-0]` is false');
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

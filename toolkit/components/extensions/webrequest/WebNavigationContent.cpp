@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -211,8 +212,20 @@ WebNavigationContent::OnStateChange(nsIWebProgress* aWebProgress,
   RefPtr<dom::BrowsingContext> bc(GetBrowsingContext(aWebProgress));
   NS_ENSURE_ARG_POINTER(bc);
 
-  // TODO bug 1732564: This can fire twice when process switches are involved.
   ExtensionsChild::Get().SendStateChange(bc, uri, aStatus, aStateFlags);
+
+  // Based on the docs of the webNavigation.onCommitted event, it should be
+  // raised when: "The document  might still be downloading, but at least part
+  // of the document has been received" and for some reason we don't fire
+  // onLocationChange for the initial navigation of a sub-frame. For the above
+  // two reasons, when the navigation event is related to a sub-frame we process
+  // the document change here and then send an OnDocumentChange message to the
+  // main process, where it will be turned into a webNavigation.onCommitted
+  // event. (bug 1264936 and bug 125662)
+  if (!bc->IsTop() && aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
+    ExtensionsChild::Get().SendDocumentChange(
+        bc, GetFrameTransitionData(aWebProgress, aRequest), uri);
+  }
   return NS_OK;
 }
 
@@ -265,16 +278,16 @@ WebNavigationContent::OnLocationChange(nsIWebProgress* aWebProgress,
           bc, GetFrameTransitionData(aWebProgress, aRequest), aLocation,
           isHistoryStateUpdated, isReferenceFragmentUpdated);
     }
-  } else {
+  } else if (bc->IsTop()) {
     MOZ_ASSERT(bc->IsInProcess());
     if (RefPtr browserChild = dom::BrowserChild::GetFrom(bc->GetDocShell())) {
       // Only send progress events which happen after we've started loading
       // things into the BrowserChild. This matches the behavior of the remote
       // WebProgress implementation.
       if (browserChild->ShouldSendWebProgressEventsToParent()) {
-        // Based on the docs of the webNavigation.onCommitted event, it should
-        // be raised when: "The document might still be downloading, but at
-        // least part of the document has been received".
+        // We have to catch the document changes from top level frames here,
+        // where we can detect the "server redirect" transition.
+        // (bug 1264936 and bug 125662)
         ExtensionsChild::Get().SendDocumentChange(
             bc, GetFrameTransitionData(aWebProgress, aRequest), aLocation);
       }

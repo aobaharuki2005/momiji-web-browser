@@ -31,19 +31,12 @@ add_task(async function () {
 });
 
 async function testAccordionState(target, pref, selector) {
-  let context = await openLayoutViewAndSelectNode(target);
+  const context = await openLayoutViewAndSelectNode(target);
 
   await testAccordionStateAfterClickingHeader(pref, selector, context);
   await testAccordionStateAfterSwitchingSidebars(pref, selector, context);
-  // This re-opens the toolbox, we need updated context so we have access to the currently
-  // opened toolbox.
-  context = await testAccordionStateAfterReopeningLayoutView(
-    pref,
-    selector,
-    context
-  );
+  await testAccordionStateAfterReopeningLayoutView(pref, selector, context);
 
-  await context.toolbox.destroy();
   Services.prefs.clearUserPref(pref);
 }
 
@@ -80,10 +73,10 @@ async function testAccordionStateAfterSwitchingSidebars(
   const item = await waitFor(() => doc.querySelector(selector));
 
   info("Selecting the computed view.");
-  await inspector.sidebar.select("computedview");
+  inspector.sidebar.select("computedview");
 
   info("Selecting the layout view.");
-  await inspector.sidebar.select("layoutview");
+  inspector.sidebar.select("layoutview");
 
   info("Checking the state of the flexbox panel.");
   const content = item.querySelector(ACCORDION_CONTENT_SELECTOR);
@@ -95,27 +88,23 @@ async function testAccordionStateAfterSwitchingSidebars(
 async function testAccordionStateAfterReopeningLayoutView(
   pref,
   selector,
-  context
+  { target, toolbox }
 ) {
   info(
     "Checking the flexbox accordion state is persistent after closing and re-opening the layout view."
   );
-  const { target, toolbox } = context;
 
   info("Closing the toolbox.");
   await toolbox.destroy();
 
   info("Re-opening the layout view.");
-  const newContext = await openLayoutViewAndSelectNode(target);
-
-  const item = await waitFor(() => newContext.doc.querySelector(selector));
+  const { doc } = await openLayoutViewAndSelectNode(target);
+  const item = await waitFor(() => doc.querySelector(selector));
   const content = item.querySelector(ACCORDION_CONTENT_SELECTOR);
 
   info("Checking the state of the flexbox panel.");
   ok(content.hidden, "The flexbox panel content is hidden.");
   ok(!Services.prefs.getBoolPref(pref), `${pref} is pref off.`);
-
-  return newContext;
 }
 
 async function openLayoutViewAndSelectNode(target) {

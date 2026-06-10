@@ -10,8 +10,7 @@ async def is_menu_visible(client):
     menu = client.await_css(MENU_CSS)
     return client.execute_script(
         """
-      const box = arguments[0].getBoundingClientRect();
-      return box.x < window.innerWidth && box.x + box.width > window.innerWidth;
+      return arguments[0].getBoundingClientRect().x < window.innerWidth
       """,
         menu,
     )
@@ -19,6 +18,13 @@ async def is_menu_visible(client):
 
 @pytest.mark.only_platforms("android")
 @pytest.mark.asyncio
-@pytest.mark.without_interventions
-async def test_regression(client):
+@pytest.mark.with_interventions
+async def test_enabled(client):
     assert not await is_menu_visible(client)
+
+
+@pytest.mark.only_platforms("android")
+@pytest.mark.asyncio
+@pytest.mark.without_interventions
+async def test_disabled(client):
+    assert await is_menu_visible(client)

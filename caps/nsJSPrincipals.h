@@ -1,10 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* describes principals by their orginating uris*/
 
-#ifndef nsJSPrincipals_h_
-#define nsJSPrincipals_h_
+#ifndef nsJSPrincipals_h__
+#define nsJSPrincipals_h__
 
 #include "js/Principals.h"
 #include "nsIPrincipal.h"
@@ -43,8 +44,7 @@ class nsJSPrincipals : public nsIPrincipal, public JSPrincipals {
 
   bool write(JSContext* aCx, JSStructuredCloneWriter* aWriter) final;
 
-  bool isSystemPrincipal() final;
-  bool isAddonPrincipal() final;
+  bool isSystemOrAddonPrincipal() final;
 
   /*
    * Get a weak reference to nsIPrincipal associated with the given JS
@@ -79,4 +79,4 @@ class nsJSPrincipals : public nsIPrincipal, public JSPrincipals {
   virtual ~nsJSPrincipals() { setDebugToken(0); }
 };
 
-#endif /* nsJSPrincipals_h_ */
+#endif /* nsJSPrincipals_h__ */

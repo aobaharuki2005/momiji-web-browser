@@ -1,8 +1,10 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsHistory_h_
-#define nsHistory_h_
+#ifndef nsHistory_h___
+#define nsHistory_h___
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ChildSHistory.h"
@@ -26,15 +28,15 @@ class ErrorResult;
 // Script "History" object
 class nsHistory final : public nsISupports, public nsWrapperCache {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsHistory)
 
  public:
   explicit nsHistory(nsPIDOMWindowInner* aInnerWindow);
 
   nsPIDOMWindowInner* GetParentObject() const;
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t GetLength(mozilla::ErrorResult& aRv) const;
   mozilla::dom::ScrollRestoration GetScrollRestoration(
@@ -68,7 +70,7 @@ class nsHistory final : public nsISupports, public nsWrapperCache {
                     mozilla::ErrorResult& aRv);
 
  protected:
-  ~nsHistory();
+  virtual ~nsHistory();
 
   MOZ_CAN_RUN_SCRIPT
   void PushOrReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
@@ -86,4 +88,4 @@ class nsHistory final : public nsISupports, public nsWrapperCache {
   nsWeakPtr mInnerWindow;
 };
 
-#endif /* nsHistory_h_ */
+#endif /* nsHistory_h___ */

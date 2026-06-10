@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -249,15 +250,9 @@ partial interface Navigator {
   readonly attribute XRSystem xr;
 };
 
-// https://wicg.github.io/serial/
-partial interface Navigator {
-  [SecureContext, Throws, SameObject, Pref="dom.webserial.enabled"]
-  readonly attribute Serial serial;
-};
-
 // http://webaudio.github.io/web-midi-api/#requestmidiaccess
 partial interface Navigator {
-  [UseCounter, NewObject, Func="Navigator::HasMidiSupport"]
+  [NewObject, Func="Navigator::HasMidiSupport"]
   Promise<MIDIAccess> requestMIDIAccess(optional MIDIOptions options = {});
 
   // Deprecated. Use mediaDevices.getUserMedia instead.
@@ -355,13 +350,6 @@ partial interface Navigator {
   readonly attribute MediaSession mediaSession;
 };
 
-// https://w3c.github.io/audio-session/
-[Exposed=Window]
-partial interface Navigator {
-  [Pref="dom.audio_session.enabled", SameObject]
-  readonly attribute AudioSession audioSession;
-};
-
 // https://w3c.github.io/web-locks/#navigator-mixins
 [SecureContext]
 interface mixin NavigatorLocks {
@@ -415,11 +403,4 @@ partial interface Navigator {
 [SecureContext]
 partial interface Navigator {
   [SameObject] readonly attribute NavigatorLogin login;
-};
-
-// Model Context API
-[SecureContext]
-partial interface Navigator {
-  [SameObject, Pref="dom.modelcontext.enabled"]
-  readonly attribute ModelContext modelContext;
 };

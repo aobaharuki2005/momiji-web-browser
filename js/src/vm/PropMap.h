@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -324,17 +326,17 @@ class PropMapTable {
   Set set_;
 
   void setCacheEntry(PropertyKey key, PropMapAndIndex entry) {
-    for (auto& cacheEntry : cacheEntries_) {
-      if (cacheEntry.key == key) {
-        cacheEntry.result = entry;
+    for (uint32_t i = 0; i < NumCacheEntries; i++) {
+      if (cacheEntries_[i].key == key) {
+        cacheEntries_[i].result = entry;
         return;
       }
     }
   }
   bool lookupInCache(PropertyKey key, PropMapAndIndex* result) const {
-    for (const auto& cacheEntry : cacheEntries_) {
-      if (cacheEntry.key == key) {
-        *result = cacheEntry.result;
+    for (uint32_t i = 0; i < NumCacheEntries; i++) {
+      if (cacheEntries_[i].key == key) {
+        *result = cacheEntries_[i].result;
 #ifdef DEBUG
         auto p = lookupRaw(key);
         MOZ_ASSERT(*result == (p ? *p : PropMapAndIndex()));
@@ -390,8 +392,8 @@ class PropMapTable {
   }
 
   void purgeCache() {
-    for (auto& cacheEntry : cacheEntries_) {
-      cacheEntry = CacheEntry();
+    for (uint32_t i = 0; i < NumCacheEntries; i++) {
+      cacheEntries_[i] = CacheEntry();
     }
   }
 
@@ -896,6 +898,14 @@ class NormalPropMap final : public SharedPropMap {
     linkedData_.propInfos[index] = prop;
   }
 
+  bool isDictionary() const = delete;
+  bool isShared() const = delete;
+  bool isCompact() const = delete;
+  bool isNormal() const = delete;
+  bool isLinked() const = delete;
+  NormalPropMap* asNormal() = delete;
+  const NormalPropMap* asNormal() const = delete;
+
   SharedPropMap* previous() const {
     return static_cast<SharedPropMap*>(linkedData_.previous.get());
   }
@@ -907,15 +917,6 @@ class NormalPropMap final : public SharedPropMap {
     static_assert(offsetof(NormalPropMap, linkedData_) ==
                   offsetof(LinkedPropMap, data_));
   }
-
- public:
-  bool isDictionary() const = delete;
-  bool isShared() const = delete;
-  bool isCompact() const = delete;
-  bool isNormal() const = delete;
-  bool isLinked() const = delete;
-  NormalPropMap* asNormal() = delete;
-  const NormalPropMap* asNormal() const = delete;
 };
 
 class DictionaryPropMap final : public PropMap {

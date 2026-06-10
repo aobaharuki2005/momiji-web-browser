@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -72,11 +74,8 @@ def original_path():
 @imports("os")
 @imports("traceback")
 @imports(_from="mozbuild.toolchains", _import="toolchain_task_definitions")
-@imports(_from="mozbuild.util", _import="TASKCLUSTER_ROOT_URL")
 @imports(_from="__builtin__", _import="Exception")
 def bootstrap_toolchain_tasks(host):
-    if "TASKCLUSTER_ROOT_URL" not in os.environ:
-        os.environ["TASKCLUSTER_ROOT_URL"] = TASKCLUSTER_ROOT_URL
     prefix = {
         ("x86_64", "GNU", "Linux"): "linux64",
         ("aarch64", "GNU", "Linux"): "linux64-aarch64",
@@ -95,11 +94,11 @@ def bootstrap_toolchain_tasks(host):
 
     def task_data(t):
         result = {
-            "index": t.get("optimization", {})["index-search"],
-            "artifact": t["attributes"][f"{t['kind']}-artifact"],
-            "extract": t["attributes"].get(f"{t['kind']}-extract", True),
+            "index": t.optimization["index-search"],
+            "artifact": t.attributes[f"{t.kind}-artifact"],
+            "extract": t.attributes.get(f"{t.kind}-extract", True),
         }
-        command = t["attributes"].get("toolchain-command")
+        command = t.attributes.get("toolchain-command")
         if command:
             result["command"] = command
         return result
@@ -109,9 +108,9 @@ def bootstrap_toolchain_tasks(host):
     tasks = {
         k: task_data(t)
         for k, t in tasks.items()
-        if t["attributes"].get(f"local-{t['kind']}")
-        and t.get("optimization")
-        and "index-search" in t.get("optimization", {})
+        if t.attributes.get(f"local-{t.kind}")
+        and t.optimization
+        and "index-search" in t.optimization
     }
 
     return namespace(prefix=prefix, tasks=tasks)
@@ -212,13 +211,15 @@ def bootstrap_path(path, **kwargs):
             task_id = None
             if not command:
                 try:
-                    find_task_from_index = import_module(
-                        "mozbuild.util"
-                    ).find_task_from_index
+                    IndexSearch = import_module(
+                        "taskgraph.optimize.strategies"
+                    ).IndexSearch
                 except Exception:
-                    log.debug("Cannot bootstrap %s: missing mozbuild module", label)
+                    log.debug("Cannot bootstrap %s: missing taskgraph module", label)
                     return False
-                task_id = find_task_from_index(task["index"])
+                task_id = IndexSearch().should_replace_task(
+                    task, {}, None, task["index"]
+                )
             if task_id:
                 # If we found the task in the index, use the `mach artifact toolchain`
                 # fast path.

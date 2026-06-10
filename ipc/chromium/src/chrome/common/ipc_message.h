@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CHROME_COMMON_IPC_MESSAGE_H_
-#define CHROME_COMMON_IPC_MESSAGE_H_
+#ifndef CHROME_COMMON_IPC_MESSAGE_H__
+#define CHROME_COMMON_IPC_MESSAGE_H__
 
 #include "base/basictypes.h"
 #include "base/pickle.h"
@@ -336,8 +338,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 
   uint32_t num_send_rights() const;
 
-  //it ain't workin sorry nika
-  /*
   bool WriteMachReceiveRight(mozilla::UniqueMachReceiveRight port);
 
   // WARNING: This method is marked as `const` so it can be called when
@@ -346,7 +346,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
                                mozilla::UniqueMachReceiveRight* port) const;
 
   uint32_t num_receive_rights() const;
-  */
 #endif
 
 #ifdef FUZZING_SNAPSHOT
@@ -416,8 +415,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // deserializing a message.
   mutable nsTArray<mozilla::UniqueMachSendRight> attached_send_rights_;
 
-  //it ain't workin sorry nika
-  /*
   // The set of mach receive rights which are attached to this message.
   //
   // Mutable, as this array can be mutated during `ConsumeMachReceiveRight` when
@@ -428,7 +425,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // being processed, which may be used by the system to temporarily boost the
   // QoS for this process.
   mozilla::UniqueMachSendRight mach_voucher_;
-  */
 #endif
 
   // Total size of buffers which should have been sent in shared memory, but had
@@ -453,4 +449,4 @@ enum SpecialRoutingIDs : IPC::Message::routeid_t {
   MSG_ROUTING_CONTROL = INT64_MAX
 };
 
-#endif  // CHROME_COMMON_IPC_MESSAGE_H_
+#endif  // CHROME_COMMON_IPC_MESSAGE_H__

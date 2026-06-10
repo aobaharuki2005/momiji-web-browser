@@ -171,7 +171,7 @@ class InterfacePrioritizer {
       return R_FAILED;
     }
     std::pair<std::set<LocalAddress>::iterator, bool> r =
-        local_addrs_.insert(std::move(addr));
+        local_addrs_.insert(addr);
     if (!r.second) {
       return R_ALREADY;  // This address is already in the set.
     }

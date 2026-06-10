@@ -17,7 +17,6 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.autofill.AddressStructure
 import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import org.mozilla.fenix.SecureFragment
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.settings.address.store.AddressEnvironment
@@ -34,7 +33,7 @@ import kotlin.coroutines.suspendCoroutine
 /**
  * Displays an address editor for adding and editing an address.
  */
-class AddressEditorFragment : SecureFragment(), SystemInsetsPaddedFragment {
+class AddressEditorFragment : SecureFragment() {
     private val args by navArgs<AddressEditorFragmentArgs>()
 
     override fun onCreateView(

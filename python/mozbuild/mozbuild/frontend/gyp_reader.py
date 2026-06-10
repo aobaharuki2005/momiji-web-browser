@@ -73,7 +73,7 @@ class GypContext(TemplateContext):
     """
 
     def __init__(self, config, relobjdir):
-        self.relobjdir = relobjdir
+        self._relobjdir = relobjdir
         TemplateContext.__init__(
             self, template="Gyp", allowed_variables=VARIABLES, config=config
         )
@@ -345,7 +345,6 @@ def process_gyp_result(
                 }
                 variables = (suffix_map[e] for e in extensions if e in suffix_map)
                 for var in variables:
-                    pending_flag = None
                     for f in flags:
                         # We may be getting make variable references out of the
                         # gyp data, and we don't want those in emitted data, so
@@ -353,30 +352,11 @@ def process_gyp_result(
                         f = expand_variables(f, config.substs).split()
                         if not f:
                             continue
-
-                        def add_flag(context, flag):
-                            nonlocal pending_flag
-
-                            if flag == "-Xclang":
-                                assert pending_flag is None
-                                pending_flag = flag
-                                return
-
-                            if not var.startswith("CM") and flag.startswith("-W"):
-                                dest = context["COMPILE_FLAGS"][f"WARNINGS_{var}"]
-                            else:
-                                dest = context[var]
-                            if pending_flag:
-                                dest.append(pending_flag)
-                                pending_flag = None
-                            dest.append(flag)
-
                         # the result may be a string or a list.
                         if isinstance(f, str):
-                            add_flag(context, f)
+                            context[var].append(f)
                         else:
-                            for elem in f:
-                                add_flag(context, elem)
+                            context[var].extend(f)
         else:
             # Ignore other types because we don't have
             # anything using them, and we're not testing them. They can be

@@ -11,20 +11,20 @@ info: |
   3. If Type(P) is String, then
     ...
   4. Return ? OrdinaryHasProperty(O, P).
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Reflect, Symbol, TypedArray]
 ---*/
 
 var s = Symbol("foo");
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg(1));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA(1);
 
   assert.sameValue(Reflect.has(sample, s), false);
 
   Object.defineProperty(sample, s, { value: 42 });
 
   assert.sameValue(Reflect.has(sample, s), true);
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

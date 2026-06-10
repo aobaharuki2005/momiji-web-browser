@@ -9,7 +9,6 @@ import type {Protocol} from 'devtools-protocol';
 import {CDPSessionEvent, type CDPSession} from '../api/CDPSession.js';
 import type {ElementHandle} from '../api/ElementHandle.js';
 import type {JSHandle} from '../api/JSHandle.js';
-import {ARIAQueryHandler} from '../common/AriaQueryHandler.js';
 import {EventEmitter} from '../common/EventEmitter.js';
 import {LazyArg} from '../common/LazyArg.js';
 import {scriptInjector} from '../common/ScriptInjector.js';
@@ -22,12 +21,13 @@ import {
   getSourceUrlComment,
   isString,
 } from '../common/util.js';
-import type {PuppeteerInjectedUtil} from '../injected/injected.js';
+import type PuppeteerUtil from '../injected/injected.js';
 import {AsyncIterableUtil} from '../util/AsyncIterableUtil.js';
 import {DisposableStack, disposeSymbol} from '../util/disposable.js';
 import {stringifyFunction} from '../util/Function.js';
 import {Mutex} from '../util/Mutex.js';
 
+import {ARIAQueryHandler} from './AriaQueryHandler.js';
 import {Binding} from './Binding.js';
 import {CdpElementHandle} from './ElementHandle.js';
 import type {IsolatedWorld} from './IsolatedWorld.js';
@@ -208,8 +208,8 @@ export class ExecutionContext
   }
 
   #bindingsInstalled = false;
-  #puppeteerUtil?: Promise<JSHandle<PuppeteerInjectedUtil>>;
-  get puppeteerUtil(): Promise<JSHandle<PuppeteerInjectedUtil>> {
+  #puppeteerUtil?: Promise<JSHandle<PuppeteerUtil>>;
+  get puppeteerUtil(): Promise<JSHandle<PuppeteerUtil>> {
     let promise = Promise.resolve() as Promise<unknown>;
     if (!this.#bindingsInstalled) {
       promise = Promise.all([
@@ -225,12 +225,10 @@ export class ExecutionContext
         });
       }
       this.#puppeteerUtil = promise.then(() => {
-        return this.evaluateHandle(script) as Promise<
-          JSHandle<PuppeteerInjectedUtil>
-        >;
+        return this.evaluateHandle(script) as Promise<JSHandle<PuppeteerUtil>>;
       });
     }, !this.#puppeteerUtil);
-    return this.#puppeteerUtil as Promise<JSHandle<PuppeteerInjectedUtil>>;
+    return this.#puppeteerUtil as Promise<JSHandle<PuppeteerUtil>>;
   }
 
   async #addBindingWithoutThrowing(binding: Binding) {
@@ -403,9 +401,7 @@ export class ExecutionContext
       }
 
       if (returnByValue) {
-        return valueFromRemoteObject(remoteObject) as HandleFor<
-          Awaited<ReturnType<Func>>
-        >;
+        return valueFromRemoteObject(remoteObject);
       }
 
       return this.#world.createCdpHandle(remoteObject) as HandleFor<
@@ -457,9 +453,7 @@ export class ExecutionContext
     }
 
     if (returnByValue) {
-      return valueFromRemoteObject(remoteObject) as unknown as HandleFor<
-        Awaited<ReturnType<Func>>
-      >;
+      return valueFromRemoteObject(remoteObject);
     }
 
     return this.#world.createCdpHandle(remoteObject) as HandleFor<

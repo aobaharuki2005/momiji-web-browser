@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import functools
 import os
 import pickle
 import sys
@@ -18,7 +17,7 @@ from glean_parser import lint, metrics, parser, translate, util
 from glean_parser.lint import METRIC_CHECKS, CheckType, GlinterNit
 from glean_parser.pings import Ping
 from metrics_header_names import convert_yaml_path_to_header_name
-from mozbuild.util import FileAvoidWrite
+from mozbuild.util import FileAvoidWrite, memoize
 from util import generate_metric_ids
 
 import js
@@ -48,7 +47,7 @@ METRIC_CHECKS["GIFFT_NON_PING_LIFETIME"] = (
 )
 
 
-@functools.cache
+@memoize
 def get_deps():
     # Any imported python module is added as a dep automatically,
     # so we only need the index and the templates.
@@ -226,11 +225,6 @@ def main(cpp_fd, *args):
     def open_output(filename):
         return FileAvoidWrite(os.path.join(cpp_fd_path.parent, filename))
 
-    def is_standalone(header_name):
-        # SpiderMonkey must be buildable without some of the types available to
-        # FOG (like nsCString and nsTArray), so it uses the standalone Glean types
-        return header_name.startswith("JsSrc")
-
     all_objs, options = parse(args)
     all_metric_header_files = {}
 
@@ -247,7 +241,6 @@ def main(cpp_fd, *args):
                 all_metric_header_files[filename] = {}
             if not category_name in all_metric_header_files[filename]:
                 all_metric_header_files[filename][category_name] = {}
-            metric.standalone = is_standalone(filename)
             all_metric_header_files[filename][category_name][name] = metric
 
     get_metric_id = generate_metric_ids(all_objs, options)
@@ -259,11 +252,7 @@ def main(cpp_fd, *args):
                 if header_name == cpp_fd_path.stem
                 else open_output(header_name + ".h")
             ),
-            {
-                "header_name": header_name,
-                "get_metric_id": get_metric_id,
-                "standalone": is_standalone(header_name),
-            },
+            {"header_name": header_name, "get_metric_id": get_metric_id},
         )
 
     return get_deps()

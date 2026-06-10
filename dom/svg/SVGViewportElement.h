@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -45,7 +47,7 @@ class SVGViewportElement : public SVGGraphicsElement {
 
   // SVGViewportElement methods:
 
-  float GetLength(SVGLength::Axis aAxis) const;
+  float GetLength(uint8_t aCtxType) const;
 
   // public helpers:
 
@@ -146,18 +148,18 @@ class SVGViewportElement : public SVGGraphicsElement {
   SVGViewBox GetViewBoxWithSynthesis(float aViewportWidth,
                                      float aViewportHeight) const;
 
+  enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
+  SVGAnimatedLength mLengthAttributes[4];
+  static LengthInfo sLengthInfo[4];
+  LengthAttributesInfo GetLengthInfo() override;
+
   SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio() override;
 
   virtual const SVGAnimatedViewBox& GetViewBoxInternal() const {
     return mViewBox;
   }
-
   SVGAnimatedViewBox mViewBox;
-
-  enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
-  SVGAnimatedLength mLengthAttributes[4];
-  static LengthInfo sLengthInfo[4];
-  LengthAttributesInfo GetLengthInfo() override;
+  SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 
   // The size of the rectangular SVG viewport into which we render. This is
   // not (necessarily) the same as the content area. See:
@@ -169,9 +171,7 @@ class SVGViewportElement : public SVGGraphicsElement {
   // XXXjwatt our frame should probably reset this when it's destroyed.
   gfx::Size mViewportSize;
 
-  SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
-
-  bool mHasChildrenOnlyTransform = false;
+  bool mHasChildrenOnlyTransform;
 };
 
 }  // namespace dom

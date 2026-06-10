@@ -14,8 +14,8 @@ add_task(async function () {
 
   const doc = panel.panelWin.document;
 
-  await selectPage(panel, "service-workers");
-  Services.fog.testResetFOG();
+  selectPage(panel, "service-workers");
+  setupTelemetryTest();
 
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
@@ -31,14 +31,15 @@ add_task(async function () {
   debugLink.click();
   await waitUntil(() => toolbox.getPanel("jsdebugger"));
 
-  const events = Glean.devtoolsMain.enterJsdebugger.testGetValue();
+  const events = getTelemetryEvents("jsdebugger");
+  const openToolboxEvent = events.find(event => event.method == "enter");
   Assert.greater(
-    Number(events[0].extra.session_id),
+    Number(openToolboxEvent.session_id),
     0,
     "Event has a valid session id"
   );
   is(
-    events[0].extra.start_state,
+    openToolboxEvent.start_state,
     "application",
     "Event has the 'application' start state"
   );

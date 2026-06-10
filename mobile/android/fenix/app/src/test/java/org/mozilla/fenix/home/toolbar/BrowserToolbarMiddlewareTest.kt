@@ -4,19 +4,16 @@
 
 package org.mozilla.fenix.home.toolbar
 
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.speech.RecognizerIntent
+import android.os.Looper
 import androidx.navigation.NavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.SearchAction.ApplicationSearchEnginesLoaded
 import mozilla.components.browser.state.action.TabListAction.AddTabAction
@@ -46,13 +43,15 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.B
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.Icon.DrawableResIcon
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.Text.StringResText
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainLooperTestRule
 import mozilla.components.support.utils.ClipboardHandler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -74,7 +73,6 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.OrientationMode.Landscape
 import org.mozilla.fenix.components.appstate.OrientationMode.Portrait
 import org.mozilla.fenix.components.appstate.SupportedMenuNotifications
-import org.mozilla.fenix.components.appstate.VoiceSearchAction.VoiceInputRequested
 import org.mozilla.fenix.components.appstate.search.SearchState
 import org.mozilla.fenix.components.appstate.search.SelectedSearchEngine
 import org.mozilla.fenix.components.menu.MenuAccessPoint
@@ -86,7 +84,6 @@ import org.mozilla.fenix.home.toolbar.BrowserToolbarMiddleware.Companion.toHomeT
 import org.mozilla.fenix.home.toolbar.BrowserToolbarMiddleware.HomeToolbarAction
 import org.mozilla.fenix.home.toolbar.DisplayActions.FakeClicked
 import org.mozilla.fenix.home.toolbar.DisplayActions.MenuClicked
-import org.mozilla.fenix.home.toolbar.DisplayActions.VoiceSearchClicked
 import org.mozilla.fenix.home.toolbar.PageOriginInteractions.OriginClicked
 import org.mozilla.fenix.home.toolbar.TabCounterInteractions.AddNewPrivateTab
 import org.mozilla.fenix.home.toolbar.TabCounterInteractions.AddNewTab
@@ -95,17 +92,16 @@ import org.mozilla.fenix.home.toolbar.TabCounterInteractions.TabCounterLongClick
 import org.mozilla.fenix.search.fixtures.assertSearchSelectorEquals
 import org.mozilla.fenix.search.fixtures.buildExpectedSearchSelector
 import org.mozilla.fenix.settings.ShortcutType
-import org.mozilla.fenix.tabstray.redux.state.Page
+import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.Shadows.shadowOf
-import kotlin.test.assertNotNull
 import mozilla.components.ui.icons.R as iconsR
 import mozilla.components.ui.tabcounter.R as tabcounterR
 
 @RunWith(AndroidJUnit4::class)
 class BrowserToolbarMiddlewareTest {
-    private val testDispatcher = StandardTestDispatcher()
-    private val testScope = TestScope(testDispatcher)
+    @get:Rule
+    val mainLooperRule = MainLooperTestRule()
 
     @get:Rule
     val gleanRule = FenixGleanTestRule(testContext)
@@ -119,8 +115,9 @@ class BrowserToolbarMiddlewareTest {
         appStore = spyk(AppStore())
         every { testContext.settings().shouldUseExpandedToolbar } returns false
         every { testContext.settings().isTabStripEnabled } returns false
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.BOOKMARK.value
-        every { testContext.settings().showVoiceSearchInDisplayToolbar } returns false
+        every { testContext.settings().tabManagerEnhancementsEnabled } returns false
+        every { testContext.settings().shouldShowToolbarCustomization } returns false
+        every { testContext.settings().toolbarExpandedShortcut } returns ShortcutType.BOOKMARK.value
     }
 
     @Test
@@ -209,7 +206,7 @@ class BrowserToolbarMiddlewareTest {
         isWideScreen = true
         isTallScreen = false
         appStore.dispatch(AppAction.OrientationChange(Landscape))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         navigationActions = toolbarStore.state.displayState.navigationActions
         assertEquals(0, navigationActions.size)
@@ -282,60 +279,6 @@ class BrowserToolbarMiddlewareTest {
         assertEquals("HOME", Events.searchBarTapped.testGetValue()?.last()?.extra?.get("source"))
     }
 
-    @Test
-    fun `GIVEN voice search in display toolbar is disabled WHEN initializing the toolbar THEN no end page actions are shown and the long search hint is used`() {
-        every { testContext.settings().showVoiceSearchInDisplayToolbar } returns false
-
-        val (_, toolbarStore) = buildMiddlewareAndAddToStore()
-
-        assertTrue(toolbarStore.state.displayState.pageActionsEnd.isEmpty())
-        assertEquals(R.string.search_hint, toolbarStore.state.displayState.pageOrigin.hint)
-    }
-
-    @Test
-    fun `GIVEN voice search is enabled AND speech recognition is available WHEN initializing the toolbar THEN a voice search button is shown and the short search hint is used`() {
-        every { testContext.settings().showVoiceSearchInDisplayToolbar } returns true
-        registerSpeechRecognizer()
-
-        val (_, toolbarStore) = buildMiddlewareAndAddToStore()
-
-        val pageActionsEnd = toolbarStore.state.displayState.pageActionsEnd
-        assertEquals(1, pageActionsEnd.size)
-        val voiceSearchButton = pageActionsEnd[0] as ActionButtonRes
-        assertEquals(iconsR.drawable.mozac_ic_microphone_24, voiceSearchButton.drawableResId)
-        assertEquals(R.string.voice_search_content_description, voiceSearchButton.contentDescription)
-        assertEquals(VoiceSearchClicked, voiceSearchButton.onClick)
-        assertEquals(R.string.search_hint_short, toolbarStore.state.displayState.pageOrigin.hint)
-    }
-
-    @Test
-    fun `GIVEN voice search is enabled AND speech recognition is unavailable WHEN initializing the toolbar THEN no voice search button is shown`() {
-        every { testContext.settings().showVoiceSearchInDisplayToolbar } returns true
-
-        val (_, toolbarStore) = buildMiddlewareAndAddToStore()
-
-        assertTrue(toolbarStore.state.displayState.pageActionsEnd.isEmpty())
-        assertEquals(R.string.search_hint_short, toolbarStore.state.displayState.pageOrigin.hint)
-    }
-
-    @Test
-    fun `GIVEN voice search button is shown WHEN it is clicked THEN VoiceInputRequested is dispatched and SearchStarted is dispatched after the toolbar edit delay`() = runTest {
-        every { testContext.settings().showVoiceSearchInDisplayToolbar } returns true
-        registerSpeechRecognizer()
-        val (_, toolbarStore) = buildMiddlewareAndAddToStore()
-        val voiceSearchButton = toolbarStore.state.displayState.pageActionsEnd[0] as ActionButtonRes
-
-        toolbarStore.dispatch(voiceSearchButton.onClick as BrowserToolbarEvent)
-        testDispatcher.scheduler.runCurrent()
-
-        verify { appStore.dispatch(VoiceInputRequested) }
-        verify(exactly = 0) { appStore.dispatch(SearchStarted()) }
-
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        verify { appStore.dispatch(SearchStarted()) }
-    }
-
     // Testing updated configuration
 
     @Test
@@ -347,14 +290,14 @@ class BrowserToolbarMiddlewareTest {
             isWideScreen = { isWideScreen },
             isTallScreen = { isTallScreen },
         )
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
 
         isWideScreen = true
         isTallScreen = false
         appStore.dispatch(AppAction.OrientationChange(Landscape))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
@@ -373,14 +316,14 @@ class BrowserToolbarMiddlewareTest {
             isWideScreen = { isWideScreen },
             isTallScreen = { isTallScreen },
         )
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
 
         isWideScreen = false
         isTallScreen = true
         appStore.dispatch(AppAction.OrientationChange(Portrait))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
@@ -401,7 +344,7 @@ class BrowserToolbarMiddlewareTest {
             isWideScreen = { isWideScreen },
             isTallScreen = { isTallScreen },
         )
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var navigationActions = toolbarStore.state.displayState.navigationActions
         assertEquals(5, navigationActions.size)
         var toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
@@ -410,7 +353,7 @@ class BrowserToolbarMiddlewareTest {
         isWideScreen = true
         isTallScreen = false
         appStore.dispatch(AppAction.OrientationChange(Portrait))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         navigationActions = toolbarStore.state.displayState.navigationActions
         assertEquals(0, navigationActions.size)
@@ -430,7 +373,7 @@ class BrowserToolbarMiddlewareTest {
             browserStore = browserStore,
             browsingModeManager = browsingModeManager,
         )
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
         var tabCounterButton = toolbarBrowserActions[0] as TabCounterAction
@@ -440,7 +383,7 @@ class BrowserToolbarMiddlewareTest {
         val newPrivateTab = createTab("test.com", private = true)
         browserStore.dispatch(AddTabAction(newNormalTab))
         browserStore.dispatch(AddTabAction(newPrivateTab))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
@@ -462,14 +405,14 @@ class BrowserToolbarMiddlewareTest {
             browserStore = browserStore,
             browsingModeManager = browsingModeManager,
         )
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         var toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
         var tabCounterButton = toolbarBrowserActions[0] as TabCounterAction
         assertEqualsToolbarButton(expectedToolbarButton(1, true), tabCounterButton)
 
         browserStore.dispatch(RemoveTabAction(initialPrivateTab.id))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(2, toolbarBrowserActions.size)
@@ -514,7 +457,7 @@ class BrowserToolbarMiddlewareTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                NavGraphDirections.actionGlobalTabManagementFragment(page = Page.NormalTabs),
+                NavGraphDirections.actionGlobalTabsTrayFragment(page = Page.NormalTabs),
             )
         }
     }
@@ -534,7 +477,7 @@ class BrowserToolbarMiddlewareTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                NavGraphDirections.actionGlobalTabManagementFragment(page = Page.PrivateTabs),
+                NavGraphDirections.actionGlobalTabsTrayFragment(page = Page.PrivateTabs),
             )
         }
     }
@@ -619,7 +562,6 @@ class BrowserToolbarMiddlewareTest {
         toolbarStore.dispatch(PasteFromClipboardClicked)
 
         assertEquals(clipboard.text, toolbarStore.state.editState.query.current)
-        assertTrue(toolbarStore.state.editState.isQueryPrefilled)
         verify { appStore.dispatch(SearchStarted()) }
     }
 
@@ -663,10 +605,10 @@ class BrowserToolbarMiddlewareTest {
         val (_, toolbarStore) = buildMiddlewareAndAddToStore(
             appStore = appStore,
         )
-        val newSearchEngine = SearchEngine("test", "Test", mockk(relaxed = true), type = APPLICATION)
+        val newSearchEngine = SearchEngine("test", "Test", mock(), type = APPLICATION)
 
         appStore.dispatch(SearchEngineSelected(newSearchEngine, true))
-        testDispatcher.scheduler.advanceUntilIdle()
+        shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing the search engine update
 
         assertSearchSelectorEquals(
             expectedSearchSelector(newSearchEngine),
@@ -676,8 +618,8 @@ class BrowserToolbarMiddlewareTest {
 
     @Test
     fun `GIVEN a search engine is already selected WHEN the search engine configuration changes THEN don't change the selected search engine`() {
-        val selectedSearchEngine = SearchEngine("test", "Test", mockk(relaxed = true), type = APPLICATION)
-        val otherSearchEngine = SearchEngine("other", "Other", mockk(relaxed = true), type = APPLICATION)
+        val selectedSearchEngine = SearchEngine("test", "Test", mock(), type = APPLICATION)
+        val otherSearchEngine = SearchEngine("other", "Other", mock(), type = APPLICATION)
         val appStore = AppStore(
             initialState = AppState(
                 searchState = SearchState.EMPTY.copy(
@@ -690,7 +632,7 @@ class BrowserToolbarMiddlewareTest {
         )
 
         browserStore.dispatch(ApplicationSearchEnginesLoaded(listOf(otherSearchEngine)))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         assertNotEquals(
             appStore.state.searchState.selectedSearchEngine?.searchEngine,
@@ -754,7 +696,7 @@ class BrowserToolbarMiddlewareTest {
             appStore = appStore,
         )
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         val initialMenuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
         assertEquals(expectedMenuButton(), initialMenuButton)
 
@@ -763,7 +705,7 @@ class BrowserToolbarMiddlewareTest {
                 SupportedMenuNotifications.Downloads,
             ),
         )
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         val updatedMenuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
         assertEquals(expectedMenuButton(true), updatedMenuButton)
     }
@@ -779,7 +721,7 @@ class BrowserToolbarMiddlewareTest {
             appStore = appStore,
         )
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         val initialMenuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
         assertEquals(expectedMenuButton(true), initialMenuButton)
 
@@ -788,7 +730,7 @@ class BrowserToolbarMiddlewareTest {
                 SupportedMenuNotifications.Downloads,
             ),
         )
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         val updatedMenuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
         assertEquals(expectedMenuButton(), updatedMenuButton)
     }
@@ -804,73 +746,16 @@ class BrowserToolbarMiddlewareTest {
             appStore = appStore,
         )
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         val menuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
         assertEquals(expectedMenuButton(false), menuButton)
-    }
-
-    @Test
-    fun `GIVEN SupportedMenuNotifications contains NotDefaultBrowser THEN menu button is highlighted`() = runTest {
-        val appStore = AppStore(
-            initialState = AppState(
-                supportedMenuNotifications = setOf(SupportedMenuNotifications.NotDefaultBrowser),
-            ),
-        )
-        val (_, toolbarStore) = buildMiddlewareAndAddToStore(
-            appStore = appStore,
-        )
-
-        testDispatcher.scheduler.advanceUntilIdle()
-        val menuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
-        assertEquals(expectedMenuButton(true), menuButton)
-    }
-
-    @Test
-    fun `GIVEN SupportedMenuNotifications doesn't contains NotDefaultBrowser but other notification THEN menu button is not highlighted`() = runTest {
-        val appStore = AppStore(
-            initialState = AppState(
-                supportedMenuNotifications = emptySet(),
-            ),
-        )
-        val (_, toolbarStore) = buildMiddlewareAndAddToStore(
-            appStore = appStore,
-        )
-
-        testDispatcher.scheduler.advanceUntilIdle()
-        val menuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
-        assertEquals(expectedMenuButton(false), menuButton)
-    }
-
-    @Test
-    fun `GIVEN menu is highlighted from browser not being set as default during onboarding WHEN clicking the menu button THEN remove highlight`() = runTest {
-        val appStore = AppStore(
-            initialState = AppState(
-                supportedMenuNotifications = setOf(SupportedMenuNotifications.NotDefaultBrowser),
-            ),
-        )
-        val (_, toolbarStore) = buildMiddlewareAndAddToStore(
-            appStore = appStore,
-        )
-
-        testDispatcher.scheduler.advanceUntilIdle()
-        val initialMenuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
-        assertEquals(expectedMenuButton(true), initialMenuButton)
-
-        appStore.dispatch(
-            AppAction.MenuNotification.RemoveMenuNotification(
-                SupportedMenuNotifications.NotDefaultBrowser,
-            ),
-        )
-
-        testDispatcher.scheduler.advanceUntilIdle()
-        val updatedMenuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
-        assertEquals(expectedMenuButton(), updatedMenuButton)
     }
 
     @Test
     fun `GIVEN expanded toolbar use translate shortcut WHEN initializing toolbar THEN show DISABLED Translate in navigation actions`() = runTest {
+        every { testContext.settings().shouldShowToolbarCustomization } returns true
         every { testContext.settings().shouldUseExpandedToolbar } returns true
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.TRANSLATE.value
+        every { testContext.settings().toolbarExpandedShortcut } returns ShortcutType.TRANSLATE.value
 
         val (_, toolbarStore) = buildMiddlewareAndAddToStore()
 
@@ -880,8 +765,9 @@ class BrowserToolbarMiddlewareTest {
 
     @Test
     fun `GIVEN expanded toolbar use homepage shortcut WHEN initializing toolbar THEN show DISABLED Homepage in navigation actions`() = runTest {
+        every { testContext.settings().shouldShowToolbarCustomization } returns true
         every { testContext.settings().shouldUseExpandedToolbar } returns true
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.HOMEPAGE.value
+        every { testContext.settings().toolbarExpandedShortcut } returns ShortcutType.HOMEPAGE.value
 
         val (_, toolbarStore) = buildMiddlewareAndAddToStore()
 
@@ -891,8 +777,9 @@ class BrowserToolbarMiddlewareTest {
 
     @Test
     fun `GIVEN expanded toolbar use back shortcut WHEN initializing toolbar THEN show DISABLED Back in navigation actions`() = runTest {
+        every { testContext.settings().shouldShowToolbarCustomization } returns true
         every { testContext.settings().shouldUseExpandedToolbar } returns true
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.BACK.value
+        every { testContext.settings().toolbarExpandedShortcut } returns ShortcutType.BACK.value
 
         val (_, toolbarStore) = buildMiddlewareAndAddToStore()
 
@@ -939,6 +826,7 @@ class BrowserToolbarMiddlewareTest {
         settings: Settings = testContext.settings(),
         isWideScreen: () -> Boolean = { false },
         isTallScreen: () -> Boolean = { true },
+        scope: CoroutineScope = MainScope(),
     ): Pair<BrowserToolbarMiddleware, BrowserToolbarStore> {
         val middleware = buildMiddleware(
             uiContext = uiContext,
@@ -951,6 +839,7 @@ class BrowserToolbarMiddlewareTest {
             settings = settings,
             isWideScreen = isWideScreen,
             isTallScreen = isTallScreen,
+            scope = scope,
         )
         val store = buildStore(
             middleware = middleware,
@@ -970,6 +859,7 @@ class BrowserToolbarMiddlewareTest {
         settings: Settings = testContext.settings(),
         isWideScreen: () -> Boolean = { false },
         isTallScreen: () -> Boolean = { true },
+        scope: CoroutineScope = MainScope(),
     ) = BrowserToolbarMiddleware(
         uiContext = uiContext,
         appStore = appStore,
@@ -981,7 +871,7 @@ class BrowserToolbarMiddlewareTest {
         settings = settings,
         isWideScreen = isWideScreen,
         isTallScreen = isTallScreen,
-        scope = testScope,
+        scope = scope,
     )
 
     private fun buildStore(
@@ -989,20 +879,7 @@ class BrowserToolbarMiddlewareTest {
     ) = BrowserToolbarStore(
         middleware = listOf(middleware),
     ).also {
-        testDispatcher.scheduler.advanceUntilIdle() // to complete the initial setup happening in coroutines
-    }
-
-    private fun registerSpeechRecognizer() {
-        val component = ComponentName("com.test", "VoiceTest")
-        shadowOf(testContext.packageManager).apply {
-            addActivityIfNotPresent(component)
-            addIntentFilterForActivity(
-                component,
-                IntentFilter(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                    addCategory(Intent.CATEGORY_DEFAULT)
-                },
-            )
-        }
+        mainLooperRule.idle() // to complete the initial setup happening in coroutines
     }
 
     private fun expectedSearchSelector(
@@ -1071,7 +948,7 @@ class BrowserToolbarMiddlewareTest {
 
                 false -> listOf(
                     BrowserToolbarMenuButton(
-                        icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_fill_24),
+                        icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
                         text = StringResText(tabcounterR.string.mozac_browser_menu_new_private_tab),
                         contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_private_tab),
                         onClick = AddNewPrivateTab(source),

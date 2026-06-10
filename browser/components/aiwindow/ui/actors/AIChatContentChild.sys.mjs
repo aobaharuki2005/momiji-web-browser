@@ -2,17 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {});
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "ClipboardHelper",
-  "@mozilla.org/widget/clipboardhelper;1",
-  Ci.nsIClipboardHelper
-);
 
 /**
  * Represents a child actor for getting page data from the browser.
@@ -22,29 +13,9 @@ export class AIChatContentChild extends JSWindowActorChild {
     "AIChatContent:DispatchMessage": {
       event: "aiChatContentActor:message",
     },
-    "AIChatContent:TruncateConversation": {
-      event: "aiChatContentActor:truncate",
-    },
-    "AIChatContent:RemoveAppliedMemory": {
-      event: "aiChatContentActor:remove-applied-memory",
-    },
-    "AIChatContent:SeenUrls": {
-      event: "aiChatContentActor:seen-urls",
-    },
-    "AIChatContent:SetGenerating": {
-      event: "aiChatContentActor:set-generating",
-    },
   };
 
-  static #VALID_EVENTS_FROM_CONTENT = new Set([
-    "AIChatContent:DispatchFollowUp",
-    "AIChatContent:Ready",
-    "AIChatContent:DispatchAction",
-    "AIChatContent:OpenLink",
-    "AIChatContent:DispatchNewChat",
-    "AIChatContent:AccountSignIn",
-    "AIChatContent:ToolUIUpdate",
-  ]);
+  static #VALID_EVENTS_FROM_CONTENT = new Set(["AIChatContent:DispatchSearch"]);
 
   /**
    *  Receives event from the content process and sends to the parent.
@@ -58,39 +29,8 @@ export class AIChatContentChild extends JSWindowActorChild {
     }
 
     switch (event.type) {
-      case "AIChatContent:DispatchAction":
-        this.#handleActionDispatch(event);
-        break;
-
-      case "AIChatContent:DispatchFollowUp":
-        this.#handleFollowUpDispatch(event);
-        break;
-
-      case "AIChatContent:DispatchNewChat":
-        /*
-         * This message round-trips:
-         * child
-         * -> parent (to reset conversation state in ai-window)
-         * -> child (to clear the UI via "clear-conversation").
-         * The parent owns the conversation state, so we must go through it to start a new chat.
-         */
-        this.sendAsyncMessage("AIChatContent:DispatchNewChat");
-        break;
-
-      case "AIChatContent:Ready":
-        this.sendAsyncMessage("AIChatContent:Ready");
-        break;
-
-      case "AIChatContent:OpenLink":
-        this.sendAsyncMessage("AIChatContent:OpenLink", event.detail);
-        break;
-
-      case "AIChatContent:AccountSignIn":
-        this.sendAsyncMessage("AIChatContent:AccountSignIn", event.detail);
-        break;
-
-      case "AIChatContent:ToolUIUpdate":
-        this.sendAsyncMessage("AIChatContent:ToolUIUpdate", event.detail);
+      case "AIChatContent:DispatchSearch":
+        this.#handleSearchDispatch(event);
         break;
 
       default:
@@ -100,20 +40,8 @@ export class AIChatContentChild extends JSWindowActorChild {
     }
   }
 
-  #handleActionDispatch(event) {
-    const { action, text } = event.detail ?? {};
-    // Copy is handled in the child actor since it depends on content-side
-    // selection and clipboard context.
-    if (action === "copy" || action === "copy-table") {
-      if (text) {
-        lazy.ClipboardHelper.copyString(text, this.windowContext);
-      }
-    }
-    this.sendAsyncMessage("aiChatContentActor:footer-action", event.detail);
-  }
-
-  #handleFollowUpDispatch(event) {
-    this.sendAsyncMessage("aiChatContentActor:followUp", event.detail);
+  #handleSearchDispatch(event) {
+    this.sendAsyncMessage("aiChatContentActor:search", event.detail);
   }
 
   async receiveMessage(message) {

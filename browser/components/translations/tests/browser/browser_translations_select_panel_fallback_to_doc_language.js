@@ -49,7 +49,11 @@ add_task(
   async function test_select_translations_panel_translate_sentence_on_open() {
     const { cleanup, runInPage, resolveDownloads } = await loadTestPage({
       page: FRENCH_PAGE_URL,
-      languagePairs: LANGUAGE_PAIRS_WITHOUT_SPANISH,
+      languagePairs: [
+        // Do not include Spanish.
+        { fromLang: "fr", toLang: "en" },
+        { fromLang: "en", toLang: "fr" },
+      ],
       prefs: [["browser.translations.select.enable", true]],
     });
 

@@ -6,24 +6,22 @@
 // This file may not be copied, modified, or distributed except according to
 // those terms.
 
-// See comment in `include.rs` for why we disable the prelude.
-#![no_implicit_prelude]
 #![allow(warnings)]
 
-include!("include.rs");
+use zerocopy::{AsBytes, FromBytes, FromZeroes, Unaligned};
 
 // Ensure that types that are use'd and types that are referenced by path work.
 
 mod foo {
-    use super::*;
+    use zerocopy::{AsBytes, FromBytes, FromZeroes, Unaligned};
 
-    #[derive(imp::FromBytes, imp::IntoBytes, imp::Unaligned)]
+    #[derive(FromZeroes, FromBytes, AsBytes, Unaligned)]
     #[repr(C)]
     pub struct Foo {
         foo: u8,
     }
 
-    #[derive(imp::FromBytes, imp::IntoBytes, imp::Unaligned)]
+    #[derive(FromZeroes, FromBytes, AsBytes, Unaligned)]
     #[repr(C)]
     pub struct Bar {
         bar: u8,
@@ -32,7 +30,7 @@ mod foo {
 
 use foo::Foo;
 
-#[derive(imp::FromBytes, imp::IntoBytes, imp::Unaligned)]
+#[derive(FromZeroes, FromBytes, AsBytes, Unaligned)]
 #[repr(C)]
 struct Baz {
     foo: Foo,

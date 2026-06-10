@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,20 +42,14 @@
 // thus making node linkage as compact as is possible for red-black trees.
 //
 // The RedBlackTree template expects two type arguments: the type of the nodes,
-// containing a RedBlackTreeNode, and a trait providing three methods:
+// containing a RedBlackTreeNode, and a trait providing two methods:
 //  - a GetTreeNode method that returns a reference to the RedBlackTreeNode
 //    corresponding to a given node with the following signature:
 //      static RedBlackTreeNode<T>& GetTreeNode(T*)
 //  - a Compare function with the following signature:
 //      static Order Compare(T* aNode, T* aOther)
-//  - a Compare function with the following signature:
-//      static Order Compare(SearchKey aKey, T* aOther)
-//
-//  SearchKey is a type defined by the trait for searching.  The first Compare
-//  function must provide a "total order" and is used for placing nodes in the
-//  tree.  The second compare function may provide a "partial order" that is a
-//  subset of the total order given by the first method.  It is used for
-//  searching the tree.
+//                              ^^^^^
+//                           or aKey
 //
 // Interpretation of comparision function return values:
 //
@@ -133,13 +129,11 @@ class RedBlackTree {
 
   T* Prev(T* aNode) { return Prev(TreeNode(aNode)).Get(); }
 
-  T* Search(typename Trait::SearchKey aKey) { return SearchImpl(aKey).Get(); }
+  T* Search(T* aKey) { return Search(TreeNode(aKey)).Get(); }
 
   // Find a match if it exists. Otherwise, find the next greater node, if one
   // exists.
-  T* SearchOrNext(typename Trait::SearchKey aKey) {
-    return SearchOrNextImpl(aKey).Get();
-  }
+  T* SearchOrNext(T* aKey) { return SearchOrNext(TreeNode(aKey)).Get(); }
 
   void Insert(T* aNode) { Insert(TreeNode(aNode)); }
 
@@ -269,11 +263,11 @@ class RedBlackTree {
     return ret;
   }
 
-  TreeNode SearchImpl(typename Trait::SearchKey aKey) {
+  TreeNode Search(TreeNode aKey) {
     TreeNode ret = mRoot;
     Order rbp_se_cmp;
-    while (ret &&
-           (rbp_se_cmp = Trait::Compare(aKey, ret.Get())) != Order::eEqual) {
+    while (ret && (rbp_se_cmp = Trait::Compare(aKey.Get(), ret.Get())) !=
+                      Order::eEqual) {
       if (rbp_se_cmp == Order::eLess) {
         ret = ret.Left();
       } else {
@@ -283,11 +277,11 @@ class RedBlackTree {
     return ret;
   }
 
-  TreeNode SearchOrNextImpl(typename Trait::SearchKey aKey) {
+  TreeNode SearchOrNext(TreeNode aKey) {
     TreeNode ret = nullptr;
     TreeNode rbp_ns_t = mRoot;
     while (rbp_ns_t) {
-      Order rbp_ns_cmp = Trait::Compare(aKey, rbp_ns_t.Get());
+      Order rbp_ns_cmp = Trait::Compare(aKey.Get(), rbp_ns_t.Get());
       if (rbp_ns_cmp == Order::eLess) {
         ret = rbp_ns_t;
         rbp_ns_t = rbp_ns_t.Left();

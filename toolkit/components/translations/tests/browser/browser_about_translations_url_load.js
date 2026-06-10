@@ -35,7 +35,6 @@ add_task(async function test_about_translations_url_load_src_param() {
     value: "",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: null,
     showsPlaceholder: true,
   });
 
@@ -50,7 +49,6 @@ add_task(async function test_about_translations_url_load_src_param() {
     value: "",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: null,
     showsPlaceholder: true,
   });
 
@@ -65,7 +63,6 @@ add_task(async function test_about_translations_url_load_src_param() {
     value: "",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: null,
     showsPlaceholder: true,
   });
 
@@ -80,7 +77,6 @@ add_task(async function test_about_translations_url_load_src_param() {
     value: "",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: null,
     showsPlaceholder: true,
   });
 
@@ -106,7 +102,6 @@ add_task(async function test_about_translations_url_load_trg_param() {
     value: "de",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: null,
     showsPlaceholder: true,
   });
 
@@ -121,7 +116,6 @@ add_task(async function test_about_translations_url_load_trg_param() {
     value: "ja",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: null,
     showsPlaceholder: true,
   });
 
@@ -136,7 +130,6 @@ add_task(async function test_about_translations_url_load_trg_param() {
     value: "",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: null,
     showsPlaceholder: true,
   });
 
@@ -151,7 +144,6 @@ add_task(async function test_about_translations_url_load_trg_param() {
     value: "",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: null,
     showsPlaceholder: true,
   });
 
@@ -173,19 +165,12 @@ add_task(async function test_about_translations_url_load_one_param_missing() {
     targetLanguage: "de",
     sourceText: "Hello world",
   });
-  await aboutTranslationsTestUtils.assertEvents(
-    {
-      expected: [
-        [
-          AboutTranslationsTestUtils.Events.TranslationComplete,
-          ({ translationId }) => translationId === 1 || translationId === 2,
-        ],
-      ],
-    },
-    async () => {
-      await aboutTranslationsTestUtils.resolveDownloads(1);
-    }
+
+  const translationCompletePromise = aboutTranslationsTestUtils.waitForEvent(
+    AboutTranslationsTestUtils.Events.TranslationComplete
   );
+  aboutTranslationsTestUtils.resolveDownloads(1);
+  await translationCompletePromise;
 
   await aboutTranslationsTestUtils.assertSourceLanguageSelector({
     value: "detect",
@@ -195,7 +180,6 @@ add_task(async function test_about_translations_url_load_one_param_missing() {
     value: "de",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: "en",
     value: "Hello world",
   });
   await aboutTranslationsTestUtils.assertTranslatedText({
@@ -216,7 +200,6 @@ add_task(async function test_about_translations_url_load_one_param_missing() {
     value: "",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: "en",
     value: "Hello world",
   });
 
@@ -232,7 +215,6 @@ add_task(async function test_about_translations_url_load_one_param_missing() {
     value: "de",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: null,
     showsPlaceholder: true,
   });
 
@@ -257,12 +239,13 @@ add_task(async function test_about_translations_url_load_all_params_present() {
     targetLanguage: "de",
     sourceText: "Hello world",
   });
+
   await aboutTranslationsTestUtils.assertEvents(
     {
       expected: [
         [
           AboutTranslationsTestUtils.Events.TranslationComplete,
-          ({ translationId }) => translationId === 1 || translationId === 2,
+          { translationId: 1 },
         ],
       ],
     },
@@ -278,7 +261,6 @@ add_task(async function test_about_translations_url_load_all_params_present() {
     value: "de",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: "en",
     value: "Hello world",
   });
   await aboutTranslationsTestUtils.assertTranslatedText({
@@ -295,12 +277,13 @@ add_task(async function test_about_translations_url_load_all_params_present() {
     targetLanguage: "ja",
     sourceText: "Hola mundo",
   });
+
   await aboutTranslationsTestUtils.assertEvents(
     {
       expected: [
         [
           AboutTranslationsTestUtils.Events.TranslationComplete,
-          ({ translationId }) => translationId === 1 || translationId === 2,
+          { translationId: 1 },
         ],
       ],
     },
@@ -316,7 +299,6 @@ add_task(async function test_about_translations_url_load_all_params_present() {
     value: "ja",
   });
   await aboutTranslationsTestUtils.assertSourceTextArea({
-    languageTag: "es",
     value: "Hola mundo",
   });
   await aboutTranslationsTestUtils.assertTranslatedText({

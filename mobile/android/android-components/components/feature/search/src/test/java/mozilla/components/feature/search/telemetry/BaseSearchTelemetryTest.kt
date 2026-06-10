@@ -6,9 +6,6 @@ package mozilla.components.feature.search.telemetry
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.StandardTestDispatcher
-import mozilla.appservices.remotesettings.RemoteSettingsClient
-import mozilla.appservices.remotesettings.RemoteSettingsService
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.test.any
@@ -21,10 +18,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import mozilla.components.support.remotesettings.RemoteSettingsService as MozillaRemoteSettingsService
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class BaseSearchTelemetryTest {
@@ -36,7 +34,7 @@ class BaseSearchTelemetryTest {
     private lateinit var mockRepo: SerpTelemetryRepository
 
     private val mockReadJson: () -> JSONObject = mock()
-    private val testDispatcher = StandardTestDispatcher()
+    private val mockRootStorageDirectory: File = mock()
 
     private fun createMockProviderList(): List<SearchProviderModel> = listOf(
         SearchProviderModel(
@@ -67,17 +65,15 @@ class BaseSearchTelemetryTest {
       "queryParamNames": [
         "wd"
       ],
-      "searchPageRegexp": "^https://(?:m|www)\\\\.baidu\\\\.com/(?:s|baidu)",
+      "searchPageRegexp": "^https://(?:m|www)\\.baidu\\.com/(?:s|baidu)",
       "followOnParamNames": [
         "oq"
       ],
       "extraAdServersRegexps": [
-        "^https?://www\\\\.baidu\\\\.com/baidu\\\\.php?"
+        "^https?://www\\.baidu\\.com/baidu\\.php?"
       ],
       "id": "19c434a3-d173-4871-9743-290ac92a3f6a",
-      "last_modified": 1698666532326,
-      "expectedOrganicCodes": [],
-      "followOnCookies": []
+      "last_modified": 1698666532326
     }],
   "timestamp": 16
 }
@@ -86,7 +82,7 @@ class BaseSearchTelemetryTest {
     @Before
     fun setup() {
         baseTelemetry = spy(
-            object : BaseSearchTelemetry(testDispatcher) {
+            object : BaseSearchTelemetry() {
                 override suspend fun install(
                     engine: Engine,
                     store: BrowserStore,
@@ -101,27 +97,13 @@ class BaseSearchTelemetryTest {
             },
         )
         handler = baseTelemetry.SearchTelemetryMessageHandler()
-
-        // mocking underlying remote-settings service
-        val mockMozillaService: MozillaRemoteSettingsService = mock()
-        val mockRemoteSettingsService: RemoteSettingsService = mock()
-        val mockRemoteSettingsClient: RemoteSettingsClient = mock()
-        `when`(mockMozillaService.remoteSettingsService).thenReturn(mockRemoteSettingsService)
-        `when`(mockRemoteSettingsService.makeClient("test")).thenReturn(mockRemoteSettingsClient)
-
-        mockRepo = spy(
-            SerpTelemetryRepository(
-                readJson = mockReadJson,
-                collectionName = "test",
-                remoteSettingsService = mockMozillaService,
-            ),
-        )
+        mockRepo = spy(SerpTelemetryRepository(mockRootStorageDirectory, mockReadJson, "test"))
     }
 
     @Test
     fun `GIVEN an engine WHEN installWebExtension is called THEN the provided extension is installed in engine`() {
         val engine: Engine = mock()
-        val store = BrowserStore()
+        val store: BrowserStore = mock()
         val id = "id"
         val resourceUrl = "resourceUrl"
         val messageId = "messageId"
@@ -165,14 +147,16 @@ class BaseSearchTelemetryTest {
     fun `GIVEN empty cacheResponse WHEN initializeProviderList is called THEN  update providerList`(): Unit =
         runBlocking {
             val localResponse = JSONObject(rawJson)
+            val cacheResponse: Pair<ULong, List<SearchProviderModel>> = Pair(0u, emptyList())
 
+            `when`(mockRepo.loadProvidersFromCache()).thenReturn(cacheResponse)
             doAnswer {
                 localResponse
             }.`when`(mockReadJson)()
 
-            `when`(mockRepo.parseLocalPreinstalledData(localResponse)).thenReturn(
-                createMockProviderList(),
-            )
+            `when`(mockRepo.parseLocalPreinstalledData(localResponse)).thenReturn(createMockProviderList())
+            doReturn(Unit).`when`(mockRepo).fetchRemoteResponse(any())
+
             baseTelemetry.setProviderList(mockRepo.updateProviderList())
 
             assertEquals(baseTelemetry.providerList.toString(), createMockProviderList().toString())
@@ -182,9 +166,13 @@ class BaseSearchTelemetryTest {
     fun `GIVEN non-empty cacheResponse WHEN initializeProviderList is called THEN update providerList`(): Unit =
         runBlocking {
             val localResponse = JSONObject(rawJson)
+            val cacheResponse: Pair<ULong, List<SearchProviderModel>> = Pair(123u, createMockProviderList())
+
+            `when`(mockRepo.loadProvidersFromCache()).thenReturn(cacheResponse)
             doAnswer {
                 localResponse
             }.`when`(mockReadJson)()
+            doReturn(Unit).`when`(mockRepo).fetchRemoteResponse(any())
 
             baseTelemetry.setProviderList(mockRepo.updateProviderList())
 

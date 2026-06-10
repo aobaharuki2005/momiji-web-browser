@@ -130,17 +130,15 @@ class UndoMiddleware(
 
         val undoHistory = state.undoHistory
         val tabs = undoHistory.tabs
-        val tabPartitions = undoHistory.tabPartitions
-        if (tabs.isEmpty() && tabPartitions.isEmpty()) {
-            logger.debug("No recoverable tabs or tab partitions for undo.")
+        if (tabs.isEmpty()) {
+            logger.debug("No recoverable tabs for undo.")
             return@launch
         }
 
         store.dispatch(
             TabListAction.RestoreAction(
-                tabs = tabs,
+                tabs,
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX,
-                tabPartitions = tabPartitions,
             ),
         )
 

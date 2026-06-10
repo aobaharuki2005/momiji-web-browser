@@ -193,7 +193,7 @@ class IsolatedProcessTest : BaseSessionTest() {
         // Check for isolated process + Zygote naming
         var contentProc: Process? = null
         for (process in processes) {
-            if (process.key.contains("zygoteTab")) {
+            if (process.key.contains("isolatedTabWithZygote")) {
                 assertTrue("User ID indicates process isolation.", process.value.user.contains("u0_i"))
                 contentProc = process.value
                 break

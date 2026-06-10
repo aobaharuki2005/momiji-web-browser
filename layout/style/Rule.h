@@ -1,11 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* base class for all rule types in a CSS style sheet */
 
-#ifndef mozilla_css_Rule_h_
-#define mozilla_css_Rule_h_
+#ifndef mozilla_css_Rule_h___
+#define mozilla_css_Rule_h___
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSheet.h"
@@ -148,4 +150,4 @@ class Rule : public nsISupports, public nsWrapperCache, public SupportsWeakPtr {
 }  // namespace css
 }  // namespace mozilla
 
-#endif /* mozilla_css_Rule_h_ */
+#endif /* mozilla_css_Rule_h___ */

@@ -12,13 +12,9 @@ add_task(setup);
 add_task(async function testProviderSteering() {
   setPassingHeuristics();
   let prefPromise = TestUtils.waitForPrefChange(prefs.BREADCRUMB_PREF);
-  Services.prefs.setBoolPref(prefs.ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
   await prefPromise;
-  is(
-    Services.prefs.getBoolPref(prefs.BREADCRUMB_PREF),
-    true,
-    "Breadcrumb saved."
-  );
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb saved.");
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
   let providerTestcases = [
@@ -34,7 +30,7 @@ add_task(async function testProviderSteering() {
     },
   ];
   let configFlushPromise = DoHTestUtils.waitForConfigFlush();
-  Services.prefs.setStringPref(
+  Preferences.set(
     prefs.PROVIDER_STEERING_LIST_PREF,
     JSON.stringify(providerTestcases)
   );
@@ -93,11 +89,16 @@ add_task(async function testProviderSteering() {
   await testNetChangeResult(AUTO_TRR_URI, "disable_doh");
   gDNSOverride.clearHostOverride(googleDomain);
   gDNSOverride.addIPOverride(googleDomain, googleIP);
-  await assertGleanValues([
-    [Glean.networking.dohHeuristicsResult, Heuristics.Telemetry.google],
-    [Glean.networking.dohHeuristicEverTripped.google, true],
-    ...allHeuristicsFalseExpectations(["google"]),
-  ]);
+  checkScalars(
+    [
+      [
+        "networking.doh_heuristics_result",
+        { value: Heuristics.Telemetry.google },
+      ],
+      ["networking.doh_heuristic_ever_tripped", { value: true, key: "google" }],
+      // All of the other heuristics must be false.
+    ].concat(falseExpectations(["google"]))
+  );
 
   // Check that provider steering is enabled again after we reset above.
   await testNetChangeResult(provider.uri, "enable_doh", provider.id);
@@ -106,10 +107,14 @@ add_task(async function testProviderSteering() {
   gDNSOverride.clearHostOverride(TEST_DOMAIN);
   await testNetChangeResult(AUTO_TRR_URI, "enable_doh");
 
-  await assertGleanValues([
-    [Glean.networking.dohHeuristicsResult, Heuristics.Telemetry.pass],
-    // Was tripped earlier this session.
-    [Glean.networking.dohHeuristicEverTripped.google, true],
-    ...allHeuristicsFalseExpectations(["google"]),
-  ]);
+  checkScalars(
+    [
+      [
+        "networking.doh_heuristics_result",
+        { value: Heuristics.Telemetry.pass },
+      ],
+      ["networking.doh_heuristic_ever_tripped", { value: true, key: "google" }],
+      // All of the other heuristics must be false.
+    ].concat(falseExpectations(["google"]))
+  );
 });

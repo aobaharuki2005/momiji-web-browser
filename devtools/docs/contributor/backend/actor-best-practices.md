@@ -22,7 +22,7 @@ destroy: function() {
   this.targetActor.off("will-navigate", this.onWillNavigate);
   this.targetActor.off("navigate", this.onNavigate);
 
-  this.stopAnimationsUpdates();
+  this.stopAnimationPlayerUpdates();
   this.targetActor = this.observer = this.actors = null;
 },
 ```

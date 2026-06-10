@@ -12,12 +12,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
 import java.util.concurrent.Executors
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 
 class StoreTest {
     @Test
@@ -293,7 +292,7 @@ class StoreTest {
         store.dispatch(TestAction.IncrementAction)
 
         assertNotNull(caughtException)
-        assertIs<IOException>(caughtException)
+        assertTrue(caughtException is IOException)
     }
 
     @Test

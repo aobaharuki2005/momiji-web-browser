@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -22,7 +24,6 @@
 #include "js/RealmOptions.h"
 #include "js/TelemetryTimers.h"
 #include "js/UniquePtr.h"
-#include "util/LanguageId.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/GuardFuse.h"
 #include "vm/InvalidatingFuse.h"
@@ -59,8 +60,8 @@ struct NativeIterator;
  * is erroneously included in the measurement; see bug 562553.
  */
 class DtoaCache {
-  double dbl = 0.0;
-  int base = 0;
+  double dbl;
+  int base;
   JSLinearString* str;  // if str==nullptr, dbl and base are not valid
 
  public:
@@ -248,6 +249,9 @@ class ObjectRealm {
   js::UniquePtr<NonSyntacticLexialEnvironmentsMap>
       nonSyntacticLexicalEnvironments_;
 
+  ObjectRealm(const ObjectRealm&) = delete;
+  void operator=(const ObjectRealm&) = delete;
+
  public:
   // Map from array buffers to views sharing that storage.
   JS::WeakCache<js::InnerViewTable> innerViews;
@@ -265,9 +269,6 @@ class ObjectRealm {
   static inline ObjectRealm& get(const JSObject* obj);
 
   explicit ObjectRealm(JS::Zone* zone);
-
-  ObjectRealm(const ObjectRealm&) = delete;
-  void operator=(const ObjectRealm&) = delete;
 
   void finishRoots();
   void trace(JSTracer* trc);
@@ -346,9 +347,6 @@ class JS::Realm : public JS::shadow::Realm {
 
   const js::AllocationMetadataBuilder* allocationMetadataBuilder_ = nullptr;
   void* realmPrivate_ = nullptr;
-
-  // Default locale for realms with non-default locales.
-  js::LanguageId localeId_ = js::LanguageId::und();
 
 #if JS_HAS_INTL_API
   // Date-time info for realms with non-default time zones.
@@ -482,12 +480,12 @@ class JS::Realm : public JS::shadow::Realm {
   void updateDebuggerObservesFlag(unsigned flag);
   void restoreDebugModeBitsOnOOM(uint32_t bits);
 
+  Realm(const Realm&) = delete;
+  void operator=(const Realm&) = delete;
+
  public:
   Realm(JS::Compartment* comp, const JS::RealmOptions& options);
   ~Realm();
-
-  Realm(const Realm&) = delete;
-  void operator=(const Realm&) = delete;
 
   void init(JSContext* cx, JSPrincipals* principals);
   void destroy(JS::GCContext* gcx);
@@ -558,8 +556,6 @@ class JS::Realm : public JS::shadow::Realm {
    * global is still live.
    */
   void traceGlobalData(JSTracer* trc);
-
-  void traceGlobalRoot(JSTracer* trc, const char* name);
 
   void traceWeakGlobalEdge(JSTracer* trc);
 
@@ -815,12 +811,8 @@ class JS::Realm : public JS::shadow::Realm {
 
   bool shouldCaptureStackForThrow();
 
-  // Returns the locale for this realm.
-  //
-  // The returned locale is canonicalized, but not necessarily an available
-  // locale for the ECMA-402 Intl API. `intl::GlobalIntlData::defaultLocale()`
-  // returns the *actual* default locale used for `Intl` objects.
-  js::LanguageId getLocale();
+  // Returns the locale for this realm. (Pointer must NOT be freed!)
+  const char* getLocale() const;
 
   // Set the locale for this realm. Reset to the system default locale when the
   // input is |nullptr|.
@@ -937,25 +929,26 @@ class AutoRealm {
   inline AutoRealm(JSContext* cx, const T& target);
   inline ~AutoRealm();
 
-  AutoRealm(const AutoRealm&) = delete;
-  AutoRealm& operator=(const AutoRealm&) = delete;
-
   JSContext* context() const { return cx_; }
   JS::Realm* origin() const { return origin_; }
 
  protected:
   inline AutoRealm(JSContext* cx, JS::Realm* target);
+
+ private:
+  AutoRealm(const AutoRealm&) = delete;
+  AutoRealm& operator=(const AutoRealm&) = delete;
 };
 
 class MOZ_RAII AutoAllocInAtomsZone {
   JSContext* const cx_;
   JS::Realm* const origin_;
+  AutoAllocInAtomsZone(const AutoAllocInAtomsZone&) = delete;
+  AutoAllocInAtomsZone& operator=(const AutoAllocInAtomsZone&) = delete;
 
  public:
   inline explicit AutoAllocInAtomsZone(JSContext* cx);
   inline ~AutoAllocInAtomsZone();
-  AutoAllocInAtomsZone(const AutoAllocInAtomsZone&) = delete;
-  AutoAllocInAtomsZone& operator=(const AutoAllocInAtomsZone&) = delete;
 };
 
 // During GC we sometimes need to enter a realm when we may have been allocating
@@ -963,12 +956,12 @@ class MOZ_RAII AutoAllocInAtomsZone {
 class MOZ_RAII AutoMaybeLeaveAtomsZone {
   JSContext* const cx_;
   bool wasInAtomsZone_;
+  AutoMaybeLeaveAtomsZone(const AutoMaybeLeaveAtomsZone&) = delete;
+  AutoMaybeLeaveAtomsZone& operator=(const AutoMaybeLeaveAtomsZone&) = delete;
 
  public:
   inline explicit AutoMaybeLeaveAtomsZone(JSContext* cx);
   inline ~AutoMaybeLeaveAtomsZone();
-  AutoMaybeLeaveAtomsZone(const AutoMaybeLeaveAtomsZone&) = delete;
-  AutoMaybeLeaveAtomsZone& operator=(const AutoMaybeLeaveAtomsZone&) = delete;
 };
 
 // Enter a realm directly. Only use this where there's no target GC thing
@@ -992,6 +985,7 @@ class AutoFunctionOrCurrentRealm {
   inline AutoFunctionOrCurrentRealm(JSContext* cx, js::HandleObject fun);
   ~AutoFunctionOrCurrentRealm() = default;
 
+ private:
   AutoFunctionOrCurrentRealm(const AutoFunctionOrCurrentRealm&) = delete;
   AutoFunctionOrCurrentRealm& operator=(const AutoFunctionOrCurrentRealm&) =
       delete;
@@ -1014,6 +1008,9 @@ class ErrorCopier {
 class MOZ_RAII AutoSetNewObjectMetadata {
   JSContext* cx_;
 
+  AutoSetNewObjectMetadata(const AutoSetNewObjectMetadata& aOther) = delete;
+  void operator=(const AutoSetNewObjectMetadata& aOther) = delete;
+
   void setPendingMetadata();
 
  public:
@@ -1031,9 +1028,6 @@ class MOZ_RAII AutoSetNewObjectMetadata {
       setPendingMetadata();
     }
   }
-
-  AutoSetNewObjectMetadata(const AutoSetNewObjectMetadata& aOther) = delete;
-  void operator=(const AutoSetNewObjectMetadata& aOther) = delete;
 };
 
 } /* namespace js */

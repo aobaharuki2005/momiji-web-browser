@@ -2,7 +2,6 @@
 #![deny(missing_debug_implementations)]
 #![deny(rust_2018_idioms)]
 #![cfg_attr(test, deny(warnings))]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 //! # warp
 //!
@@ -86,7 +85,6 @@
 //! [Filter]: trait.Filter.html
 //! [reject]: reject/index.html
 
-mod bodyt;
 #[macro_use]
 mod error;
 mod filter;
@@ -96,13 +94,12 @@ pub mod redirect;
 pub mod reject;
 pub mod reply;
 mod route;
-#[cfg(feature = "server")]
 mod server;
 mod service;
-#[cfg(feature = "test")]
 pub mod test;
 #[cfg(feature = "tls")]
 mod tls;
+mod transport;
 
 pub use self::error::Error;
 pub use self::filter::Filter;
@@ -120,7 +117,7 @@ pub use self::filters::multipart;
 pub use self::filters::ws;
 #[doc(hidden)]
 pub use self::filters::{
-    //addr,
+    addr,
     // any() function
     any::any,
     body,
@@ -163,15 +160,12 @@ pub use self::redirect::redirect;
 pub use self::reject::{reject, Rejection};
 #[doc(hidden)]
 pub use self::reply::{reply, Reply};
-#[cfg(feature = "server")]
-pub use self::server::serve;
-#[cfg(docsrs)]
-#[cfg(feature = "server")]
-pub use self::server::Server;
+#[cfg(feature = "tls")]
+pub use self::server::TlsServer;
+pub use self::server::{serve, Server};
 pub use self::service::service;
 #[doc(hidden)]
 pub use http;
-#[cfg(any(feature = "server", feature = "websocket"))]
 #[doc(hidden)]
 pub use hyper;
 
@@ -181,4 +175,4 @@ pub use bytes::Buf;
 pub use futures_util::{Future, Sink, Stream};
 #[doc(hidden)]
 
-pub(crate) type Request = http::Request<crate::bodyt::Body>;
+pub(crate) type Request = http::Request<hyper::Body>;

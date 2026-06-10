@@ -32,8 +32,7 @@ class TArraySyntheticChildrenProvider:
 
     def num_children(self):
         return (
-            self.header
-            .Dereference()
+            self.header.Dereference()
             .GetChildMemberWithName("mLength")
             .GetValueAsUnsigned(0)
         )
@@ -86,8 +85,7 @@ def prefcnt(debugger, command, result, dict):
         )
     elif refcnt_type == "mozilla::ThreadSafeAutoRefCnt":
         print(
-            field
-            .GetChildMemberWithName("mValue")
+            field.GetChildMemberWithName("mValue")
             .GetChildMemberWithName("mValue")
             .GetValueAsUnsigned(0)
         )

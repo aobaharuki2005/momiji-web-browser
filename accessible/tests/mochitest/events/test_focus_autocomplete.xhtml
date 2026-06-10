@@ -29,10 +29,206 @@
   <script type="application/javascript">
   <![CDATA[
     ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function loadFormAutoComplete(aIFrameID)
+    {
+      this.iframeNode = getNode(aIFrameID);
+      this.iframe = getAccessible(aIFrameID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.iframe)
+      ];
+
+      this.invoke = function loadFormAutoComplete_invoke()
+      {
+        var url = "data:text/html,<html><body><form id='form'>" +
+          "<input id='input' name='a11ytest-formautocomplete'>" +
+          "</form></body></html>";
+        this.iframeNode.setAttribute("src", url);
+      }
+
+      this.getID = function loadFormAutoComplete_getID()
+      {
+        return "load form autocomplete page";
+      }
+    }
+
+    function initFormAutoCompleteBy(aIFrameID, aAutoCompleteValue)
+    {
+      this.iframe = getAccessible(aIFrameID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.iframe)
+      ];
+
+      this.invoke = function initFormAutoCompleteBy_invoke()
+      {
+        var iframeDOMDoc = getIFrameDOMDoc(aIFrameID);
+
+        var inputNode = iframeDOMDoc.getElementById("input");
+        inputNode.value = aAutoCompleteValue;
+        var formNode = iframeDOMDoc.getElementById("form");
+        formNode.submit();
+      }
+
+      this.getID = function initFormAutoCompleteBy_getID()
+      {
+        return "init form autocomplete by '" + aAutoCompleteValue + "'";
+      }
+    }
+
+    function loadHTML5ListAutoComplete(aIFrameID)
+    {
+      this.iframeNode = getNode(aIFrameID);
+      this.iframe = getAccessible(aIFrameID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.iframe)
+      ];
+
+      this.invoke = function loadHTML5ListAutoComplete_invoke()
+      {
+        var url = "data:text/html,<html><body>" +
+          "<datalist id='cities'><option>hello</option><option>hi</option></datalist>" +
+          "<input id='input' list='cities'>" +
+          "</body></html>";
+        this.iframeNode.setAttribute("src", url);
+      }
+
+      this.getID = function loadHTML5ListAutoComplete_getID()
+      {
+        return "load HTML5 list autocomplete page";
+      }
+    }
+
+    function removeChar(aID, aCheckerOrEventSeq)
+    {
+      this.__proto__ = new synthAction(aID, aCheckerOrEventSeq);
+
+      this.invoke = function removeChar_invoke()
+      {
+        synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
+        synthesizeKey("KEY_Delete");
+      }
+
+      this.getID = function removeChar_getID()
+      {
+        return "remove char on " + prettyName(aID);
+      }
+    }
+
+    function replaceOnChar(aID, aChar, aCheckerOrEventSeq)
+    {
+      this.__proto__ = new synthAction(aID, aCheckerOrEventSeq);
+
+      this.invoke = function replaceOnChar_invoke()
+      {
+        this.DOMNode.select();
+        sendString(aChar);
+      }
+
+      this.getID = function replaceOnChar_getID()
+      {
+        return "replace on char '" + aChar + "' for" + prettyName(aID);
+      }
+    }
+
+    function focusOnMouseOver(aIDFunc, aIDFuncArg)
+    {
+      this.eventSeq = [ new focusChecker(aIDFunc, aIDFuncArg) ];
+
+      this.invoke = function focusOnMouseOver_invoke()
+      {
+        this.id = aIDFunc(aIDFuncArg);
+        this.node = getNode(this.id);
+        this.window = this.node.ownerGlobal;
+
+        if (this.node.localName == "tree") {
+          var tree = getAccessible(this.node);
+          var accessible = getAccessible(this.id);
+          if (tree != accessible) {
+            var itemX = {}, itemY = {}, treeX = {}, treeY = {};
+            accessible.getBounds(itemX, itemY, {}, {});
+            tree.getBounds(treeX, treeY, {}, {});
+            this.x = itemX.value - treeX.value;
+            this.y = itemY.value - treeY.value;
+          }
+        }
+
+        // Generate mouse move events in timeouts until autocomplete popup list
+        // doesn't have it, the reason is do that because autocomplete popup
+        // ignores mousemove events firing in too short range.
+        synthesizeMouse(this.node, this.x, this.y, { type: "mousemove" });
+        this.doMouseMoveFlood(this);
+      }
+
+      this.finalCheck = function focusOnMouseOver_getID()
+      {
+        this.isFlooding = false;
+      }
+
+      this.getID = function focusOnMouseOver_getID()
+      {
+        return "mouse over on " + prettyName(aIDFunc(aIDFuncArg));
+      }
+
+      this.doMouseMoveFlood = function focusOnMouseOver_doMouseMoveFlood(aThis)
+      {
+        synthesizeMouse(aThis.node, aThis.x + 1, aThis.y + 1,
+                        { type: "mousemove" }, aThis.window);
+
+        if (aThis.isFlooding)
+          aThis.window.setTimeout(aThis.doMouseMoveFlood, 0, aThis);
+      }
+
+      this.id = null;
+      this.node = null;
+      this.window = null;
+
+      this.isFlooding = true;
+      this.x = 1;
+      this.y = 1;
+    }
+
+    function selectByClick(aIDFunc, aIDFuncArg,
+                           aFocusTargetFunc, aFocusTargetFuncArg)
+    {
+      this.eventSeq = [ new focusChecker(aFocusTargetFunc, aFocusTargetFuncArg) ];
+
+      this.invoke = function selectByClick_invoke()
+      {
+        var id = aIDFunc(aIDFuncArg);
+        var node = getNode(id);
+        var targetWindow = node.ownerGlobal;
+
+        if (node.localName == "tree") {
+          var tree = getAccessible(node);
+          var accessible = getAccessible(id);
+          if (tree != accessible) {
+            var itemX = {}, itemY = {}, treeX = {}, treeY = {};
+            accessible.getBounds(itemX, itemY, {}, {});
+            tree.getBounds(treeX, treeY, {}, {});
+            this.x = itemX.value - treeX.value;
+            this.y = itemY.value - treeY.value;
+          }
+        }
+
+        synthesizeMouseAtCenter(node, {}, targetWindow);
+      }
+
+      this.getID = function selectByClick_getID()
+      {
+        return "select by click " + prettyName(aIDFunc(aIDFuncArg));
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
     // Target getters
 
-    function getItem(aItemObj) {
-      const autocompleteNode = aItemObj.autocompleteNode;
+    function getItem(aItemObj)
+    {
+      var autocompleteNode = aItemObj.autocompleteNode;
 
       // XUL searchbar
       if (autocompleteNode.localName == "searchbar") {
@@ -47,7 +243,7 @@
       let popupNode = autocompleteNode.popup;
       if (!popupNode) {
         // HTML form autocomplete
-        const controller = Cc["@mozilla.org/autocomplete/controller;1"].
+        var controller = Cc["@mozilla.org/autocomplete/controller;1"].
           getService(Ci.nsIAutoCompleteController);
         popupNode = controller.input.popup;
       }
@@ -64,11 +260,12 @@
       return null;
     }
 
-    function getTextEntry(aID) {
+    function getTextEntry(aID)
+    {
       // For form autocompletes the autocomplete widget and text entry widget
       // is the same widget, for XUL autocompletes the text entry is a first
       // child.
-      const localName = getNode(aID).localName;
+      var localName = getNode(aID).localName;
 
       // HTML form autocomplete
       if (localName == "input")
@@ -81,7 +278,8 @@
       return null;
     }
 
-    function itemObj(aID, aIdx) {
+    function itemObj(aID, aIdx)
+    {
       this.autocompleteNode = getNode(aID);
 
       this.autocomplete = this.autocompleteNode.localName == "searchbar" ?
@@ -91,168 +289,80 @@
       this.index = aIdx;
     }
 
-    function getIFrameDOMDoc(aIFrameID) {
+    function getIFrameDOMDoc(aIFrameID)
+    {
       return getNode(aIFrameID).contentDocument;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Action helpers
-
-    async function focusOnMouseOver(aIDFunc, aIDFuncArg) {
-      const target = aIDFunc(aIDFuncArg);
-      const id = target;
-      const node = target && target.DOMNode ? target.DOMNode : getNode(id);
-      const win = node.ownerGlobal;
-
-      let x = 1, y = 1;
-      if (node.localName == "tree") {
-        const tree = getAccessible(node);
-        const accessible = getAccessible(id);
-        if (tree != accessible) {
-          const itemX = {}, itemY = {}, treeX = {}, treeY = {};
-          accessible.getBounds(itemX, itemY, {}, {});
-          tree.getBounds(treeX, treeY, {}, {});
-          x = itemX.value - treeX.value;
-          y = itemY.value - treeY.value;
-        }
-      }
-
-      const focused = waitForEvent(EVENT_FOCUS, target);
-      let flooding = true;
-      function flood() {
-        synthesizeMouse(node, x + 1, y + 1, { type: "mousemove" }, win);
-        if (flooding) {
-          win.setTimeout(flood, 0);
-        }
-      }
-      synthesizeMouse(node, x, y, { type: "mousemove" });
-      flood();
-      await focused;
-      flooding = false;
-    }
-
-    async function selectByClick(
-      aIDFunc,
-      aIDFuncArg,
-      aFocusTargetFunc,
-      aFocusTargetFuncArg
-    ) {
-      const id = aIDFunc(aIDFuncArg);
-      const node = id && id.DOMNode ? id.DOMNode : getNode(id);
-      const targetWindow = node.ownerGlobal;
-      let focused;
-
-      if (node.localName == "tree") {
-        const tree = getAccessible(node);
-        const accessible = getAccessible(id);
-        if (tree != accessible) {
-          const itemX = {}, itemY = {}, treeX = {}, treeY = {};
-          accessible.getBounds(itemX, itemY, {}, {});
-          tree.getBounds(treeX, treeY, {}, {});
-          const x = itemX.value - treeX.value;
-          const y = itemY.value - treeY.value;
-          focused = waitForEvent(
-            EVENT_FOCUS,
-            aFocusTargetFunc(aFocusTargetFuncArg)
-          );
-          synthesizeMouse(node, x, y, {}, targetWindow);
-          await focused;
-          return;
-        }
-      }
-
-      focused = waitForEvent(
-        EVENT_FOCUS,
-        aFocusTargetFunc(aFocusTargetFuncArg)
-      );
-      synthesizeMouseAtCenter(node, {}, targetWindow);
-      await focused;
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Test helpers
 
-    async function doAutoCompleteTests(aID) {
+    function queueAutoCompleteTests(aID)
+    {
       // focus autocomplete text entry
-      let focused = waitForEvent(EVENT_FOCUS, getTextEntry(aID));
-      const node = getNode(aID);
-      if (node.editor) {
-        node.selectionStart = node.selectionEnd = node.value.length;
-      }
-      node.focus();
-      await focused;
+      gQueue.push(new synthFocus(aID, new focusChecker(getTextEntry, aID)));
 
       // open autocomplete popup
-      synthesizeKey("KEY_ArrowDown", {});
+      gQueue.push(new synthDownKey(aID, new nofocusChecker()));
 
       // select second option ('hi' option), focus on it
-      focused = waitForEvent(EVENT_FOCUS, getItem(new itemObj(aID, 1)));
-      synthesizeKey("KEY_ArrowUp", {});
-      await focused;
+      gQueue.push(new synthUpKey(aID,
+                                 new focusChecker(getItem, new itemObj(aID, 1))));
 
       // choose selected option, focus on text entry
-      focused = waitForEvent(EVENT_FOCUS, getTextEntry(aID));
-      synthesizeKey("KEY_Enter", {});
-      await focused;
+      gQueue.push(new synthEnterKey(aID, new focusChecker(getTextEntry, aID)));
 
       // remove char, autocomplete popup appears
-      synthesizeKey("KEY_ArrowLeft", { shiftKey: true });
-      synthesizeKey("KEY_Delete");
+      gQueue.push(new removeChar(aID, new nofocusChecker()));
 
       // select first option ('hello' option), focus on it
-      focused = waitForEvent(EVENT_FOCUS, getItem(new itemObj(aID, 0)));
-      synthesizeKey("KEY_ArrowDown", {});
-      await focused;
+      gQueue.push(new synthDownKey(aID,
+                                   new focusChecker(getItem, new itemObj(aID, 0))));
 
       // mouse move on second option ('hi' option), focus on it
-      await focusOnMouseOver(getItem, new itemObj(aID, 1));
+      gQueue.push(new focusOnMouseOver(getItem, new itemObj(aID, 1)));
 
       // autocomplete popup updated (no selected item), focus on textentry
-      focused = waitForEvent(EVENT_FOCUS, getTextEntry(aID));
-      synthesizeKey("e", {});
-      await focused;
+      gQueue.push(new synthKey(aID, "e", null, new focusChecker(getTextEntry, aID)));
 
       // select first option ('hello' option), focus on it
-      focused = waitForEvent(EVENT_FOCUS, getItem(new itemObj(aID, 0)));
-      synthesizeKey("KEY_ArrowDown", {});
-      await focused;
+      gQueue.push(new synthDownKey(aID,
+                                   new focusChecker(getItem, new itemObj(aID, 0))));
 
       // popup gets hidden, focus on textentry
-      focused = waitForEvent(EVENT_FOCUS, getTextEntry(aID));
-      synthesizeKey("KEY_ArrowRight", {});
-      await focused;
+      gQueue.push(new synthRightKey(aID, new focusChecker(getTextEntry, aID)));
 
       // popup gets open, no focus
-      synthesizeKey("KEY_ArrowDown", { altKey: true });
+      gQueue.push(new synthOpenComboboxKey(aID, new nofocusChecker()));
 
       // select first option again ('hello' option), focus on it
-      focused = waitForEvent(EVENT_FOCUS, getItem(new itemObj(aID, 0)));
-      synthesizeKey("KEY_ArrowDown", {});
-      await focused;
+      gQueue.push(new synthDownKey(aID,
+                                   new focusChecker(getItem, new itemObj(aID, 0))));
 
       // no option is selected, focus on text entry
-      focused = waitForEvent(EVENT_FOCUS, getTextEntry(aID));
-      synthesizeKey("KEY_ArrowUp", {});
-      await focused;
+      gQueue.push(new synthUpKey(aID, new focusChecker(getTextEntry, aID)));
 
       // close popup, no focus
-      synthesizeKey("KEY_Escape", {});
+      gQueue.push(new synthEscapeKey(aID, new nofocusChecker()));
 
       // autocomplete popup appears (no selected item), focus stays on textentry
-      getNode(aID).select();
-      sendString("h");
+      gQueue.push(new replaceOnChar(aID, "h", new nofocusChecker()));
 
       // mouse move on first option ('hello' option), focus on it
-      await focusOnMouseOver(getItem, new itemObj(aID, 0));
+      gQueue.push(new focusOnMouseOver(getItem, new itemObj(aID, 0)));
 
       // click first option ('hello' option), popup closes, focus on text entry
-      await selectByClick(getItem, new itemObj(aID, 0), getTextEntry, aID);
+      gQueue.push(new selectByClick(getItem, new itemObj(aID, 0), getTextEntry, aID));
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Tests
 
-    async function initTests() {
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gInitQueue = null;
+    function initTests()
+    {
       if (SEAMONKEY || MAC) {
         todo(false, "Skipping this test on SeaMonkey ftb. (Bug 718237), and on Mac (bug 746177)");
         shutdownAutoComplete();
@@ -260,119 +370,80 @@
         return;
       }
 
-      // loadFormAutoComplete("iframe")
-      let iframe = getAccessible("iframe");
-      let reordered = waitForEvent(EVENT_REORDER, iframe);
-      const formURL = "data:text/html,<html><body><form id='form'>" +
-        "<input id='input' name='a11ytest-formautocomplete'>" +
-        "</form></body></html>";
-      getNode("iframe").setAttribute("src", formURL);
-      await reordered;
-
-      // initFormAutoCompleteBy("iframe", "hello")
-      iframe = getAccessible("iframe");
-      reordered = waitForEvent(EVENT_REORDER, iframe);
-      let iframeDOMDoc = getNode("iframe").contentDocument;
-      iframeDOMDoc.getElementById("input").value = "hello";
-      iframeDOMDoc.getElementById("form").submit();
-      await reordered;
-
-      // initFormAutoCompleteBy("iframe", "hi")
-      iframe = getAccessible("iframe");
-      reordered = waitForEvent(EVENT_REORDER, iframe);
-      iframeDOMDoc = getNode("iframe").contentDocument;
-      iframeDOMDoc.getElementById("input").value = "hi";
-      iframeDOMDoc.getElementById("form").submit();
-      await reordered;
-
-      // loadHTML5ListAutoComplete("iframe2")
-      const iframe2 = getAccessible("iframe2");
-      reordered = waitForEvent(EVENT_REORDER, iframe2);
-      const html5URL = "data:text/html,<html><body>" +
-        "<datalist id='cities'><option>hello</option><option>hi</option></datalist>" +
-        "<input id='input' list='cities'>" +
-        "</body></html>";
-      getNode("iframe2").setAttribute("src", html5URL);
-      await reordered;
-
-      await doTests();
+      gInitQueue = new eventQueue();
+      gInitQueue.push(new loadFormAutoComplete("iframe"));
+      gInitQueue.push(new initFormAutoCompleteBy("iframe", "hello"));
+      gInitQueue.push(new initFormAutoCompleteBy("iframe", "hi"));
+      gInitQueue.push(new loadHTML5ListAutoComplete("iframe2"));
+      gInitQueue.onFinish = function initQueue_onFinish()
+      {
+        SimpleTest.executeSoon(doTests);
+        return DO_NOT_FINISH_TEST;
+      }
+      gInitQueue.invoke();
     }
 
-    async function doTests() {
+    var gQueue = null;
+    function doTests()
+    {
+      // Test focus events.
+      gQueue = new eventQueue();
+
       ////////////////////////////////////////////////////////////////////////////
       // tree popup autocomplete tests
-      await doAutoCompleteTests("autocomplete");
+      queueAutoCompleteTests("autocomplete");
 
       ////////////////////////////////////////////////////////////////////////////
       // richlistbox popup autocomplete tests
-      await doAutoCompleteTests("richautocomplete");
+      queueAutoCompleteTests("richautocomplete");
 
       ////////////////////////////////////////////////////////////////////////////
       // HTML form autocomplete tests
-      await doAutoCompleteTests(
-        getIFrameDOMDoc("iframe").getElementById("input")
-      );
+      queueAutoCompleteTests(getIFrameDOMDoc("iframe").getElementById("input"));
 
       ////////////////////////////////////////////////////////////////////////////
       // HTML5 list autocomplete tests
-      await doAutoCompleteTests(
-        getIFrameDOMDoc("iframe2").getElementById("input")
-      );
+      queueAutoCompleteTests(getIFrameDOMDoc("iframe2").getElementById("input"));
 
       ////////////////////////////////////////////////////////////////////////////
       // searchbar tests
 
       // focus searchbar, focus on text entry
-      let focused = waitForEvent(EVENT_FOCUS, getTextEntry("searchbar"));
-      getNode("searchbar").focus();
-      await focused;
-
+      gQueue.push(new synthFocus("searchbar",
+                                 new focusChecker(getTextEntry, "searchbar")));
       // open search engine popup, no focus
-      synthesizeKey("KEY_ArrowDown", { altKey: true });
-
+      gQueue.push(new synthOpenComboboxKey("searchbar", new nofocusChecker()));
       // select first item, focus on it
-      focused = waitForEvent(EVENT_FOCUS, getItem(new itemObj("searchbar", 0)));
-      synthesizeKey("KEY_ArrowDown", {});
-      await focused;
-
+      gQueue.push(new synthDownKey("searchbar",
+                                   new focusChecker(getItem, new itemObj("searchbar", 0))));
       // mouse over on second item, focus on it
-      await focusOnMouseOver(getItem, new itemObj("searchbar", 1));
-
+      gQueue.push(new focusOnMouseOver(getItem, new itemObj("searchbar", 1)));
       // press enter key, focus on text entry
-      focused = waitForEvent(EVENT_FOCUS, getTextEntry("searchbar"));
-      synthesizeKey("KEY_Enter", {});
-      await focused;
-
+      gQueue.push(new synthEnterKey("searchbar",
+                                    new focusChecker(getTextEntry, "searchbar")));
       // click on search button, open popup, focus goes to document
-      focused = waitForEvent(EVENT_FOCUS, document);
-      const searchBtn = getAccessible(getNode("searchbar").searchButton);
-      synthesizeMouse(searchBtn.DOMNode, 1, 1, {});
-      await focused;
-
+      var searchBtn = getAccessible(getNode("searchbar").searchButton);
+      gQueue.push(new synthClick(searchBtn, new focusChecker(document)));
       // select first item, focus on it
-      focused = waitForEvent(EVENT_FOCUS, getItem(new itemObj("searchbar", 0)));
-      synthesizeKey("KEY_ArrowDown", {});
-      await focused;
-
+      gQueue.push(new synthDownKey("searchbar",
+                                   new focusChecker(getItem, new itemObj("searchbar", 0))));
       // close popup, focus goes on document
-      focused = waitForEvent(EVENT_FOCUS, document);
-      synthesizeKey("KEY_Escape", {});
-      await focused;
+      gQueue.push(new synthEscapeKey("searchbar", new focusChecker(document)));
 
-      // unregister 'test-a11y-search' autocomplete search
-      shutdownAutoComplete();
-
-      SimpleTest.finish();
+      gQueue.onFinish = function()
+      {
+        // unregister 'test-a11y-search' autocomplete search
+        shutdownAutoComplete();
+      }
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
 
     // Register 'test-a11y-search' autocomplete search.
     // XPFE AutoComplete needs to register early.
-    initAutoComplete(
-      ["hello", "hi"],
-      ["Beep beep'm beep beep yeah", "Baby you can drive my car"]
-    );
+    initAutoComplete([ "hello", "hi" ],
+                     [ "Beep beep'm beep beep yeah", "Baby you can drive my car" ]);
 
     addA11yLoadEvent(initTests);
   ]]>

@@ -51,6 +51,8 @@ public:
         trace_state_(std::move(trace_state))
   {}
 
+  SpanContext(const SpanContext &ctx) = default;
+
   // @returns whether this context is valid
   bool IsValid() const noexcept { return trace_id_.IsValid() && span_id_.IsValid(); }
 
@@ -76,6 +78,8 @@ public:
     return trace_id() == that.trace_id() && span_id() == that.span_id() &&
            trace_flags() == that.trace_flags();
   }
+
+  SpanContext &operator=(const SpanContext &ctx) = default;
 
   bool IsRemote() const noexcept { return is_remote_; }
 

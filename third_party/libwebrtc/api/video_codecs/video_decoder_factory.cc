@@ -10,17 +10,13 @@
 
 #include "api/video_codecs/video_decoder_factory.h"
 
-#include <optional>
-
-#include "api/video/resolution.h"
 #include "api/video_codecs/sdp_video_format.h"
 
 namespace webrtc {
 
 VideoDecoderFactory::CodecSupport VideoDecoderFactory::QueryCodecSupport(
     const SdpVideoFormat& format,
-    bool reference_scaling,
-    std::optional<Resolution> resolution) const {
+    bool reference_scaling) const {
   // Default implementation, query for supported formats and check if the
   // specified format is supported. Returns false if `reference_scaling` is
   // true.

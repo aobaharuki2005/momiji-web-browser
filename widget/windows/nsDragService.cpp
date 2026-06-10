@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -54,7 +55,7 @@ using namespace mozilla::widget;
 nsDragSession::~nsDragSession() { NS_IF_RELEASE(mDataObject); }
 
 already_AddRefed<nsIDragSession> nsDragService::CreateDragSession() {
-  auto session = MakeRefPtr<nsDragSession>();
+  RefPtr<nsIDragSession> session = new nsDragSession();
   return session.forget();
 }
 
@@ -262,7 +263,8 @@ nsresult nsDragSession::StartInvokingDragSession(nsIWidget* aWidget,
 
   // To do the drag we need to create an object that
   // implements the IDataObject interface (for OLE)
-  auto nativeDragSrc = MakeRefPtr<nsNativeDragSource>(mDataTransfer);
+  RefPtr<nsNativeDragSource> nativeDragSrc =
+      new nsNativeDragSource(mDataTransfer);
 
   // Now figure out what the native drag effect should be
   DWORD winDropRes;
@@ -706,7 +708,3 @@ nsDragSession::UpdateDragImage(nsINode* aImage, int32_t aImageX,
 
   return NS_OK;
 }
-
-#undef LOGD
-#undef LOGI
-#undef LOGE

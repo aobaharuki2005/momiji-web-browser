@@ -1,3 +1,4 @@
+/* vim:t ts=4 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,16 +19,16 @@ namespace mozilla {
 namespace net {
 
 PendingTransactionInfo::~PendingTransactionInfo() {
-  if (mConnectionAttempt) {
-    RefPtr<ConnectionAttempt> conn = do_QueryReferent(mConnectionAttempt);
+  if (mDnsAndSock) {
+    RefPtr<DnsAndConnectSocket> dnsAndSock = do_QueryReferent(mDnsAndSock);
     LOG(
-        ("PendingTransactionInfo::~PendingTransactionInfo "
+        ("PendingTransactionInfo::PendingTransactionInfo "
          "[trans=%p halfOpen=%p]",
-         mTransaction.get(), conn.get()));
-    if (conn) {
-      conn->Unclaim();
+         mTransaction.get(), dnsAndSock.get()));
+    if (dnsAndSock) {
+      dnsAndSock->Unclaim();
     }
-    mConnectionAttempt = nullptr;
+    mDnsAndSock = nullptr;
   } else if (mActiveConn) {
     RefPtr<HttpConnectionBase> activeConn = do_QueryReferent(mActiveConn);
     if (activeConn && activeConn->Transaction() &&
@@ -35,10 +36,9 @@ PendingTransactionInfo::~PendingTransactionInfo() {
       NullHttpTransaction* nullTrans =
           activeConn->Transaction()->QueryNullTransaction();
       nullTrans->Unclaim();
-      LOG(
-          ("PendingTransactionInfo::~PendingTransactionInfo - mark %p "
-           "unclaimed.",
-           activeConn.get()));
+      LOG((
+          "PendingTransactionInfo::PendingTransactionInfo - mark %p unclaimed.",
+          activeConn.get()));
     }
   }
 }
@@ -47,7 +47,7 @@ bool PendingTransactionInfo::IsAlreadyClaimedInitializingConn() {
   LOG(
       ("PendingTransactionInfo::IsAlreadyClaimedInitializingConn "
        "[trans=%p, halfOpen=%p, activeConn=%p]\n",
-       mTransaction.get(), mConnectionAttempt.get(), mActiveConn.get()));
+       mTransaction.get(), mDnsAndSock.get(), mActiveConn.get()));
 
   // When this transaction has already established a half-open
   // connection, we want to prevent any duplicate half-open
@@ -55,21 +55,21 @@ bool PendingTransactionInfo::IsAlreadyClaimedInitializingConn() {
   // transaction. Allow only use of an idle persistent connection
   // (if found) for transactions referred by a half-open connection.
   bool alreadyDnsAndSockOrWaitingForTLS = false;
-  if (mConnectionAttempt) {
+  if (mDnsAndSock) {
     MOZ_ASSERT(!mActiveConn);
-    RefPtr<ConnectionAttempt> conn = do_QueryReferent(mConnectionAttempt);
+    RefPtr<DnsAndConnectSocket> dnsAndSock = do_QueryReferent(mDnsAndSock);
     LOG(
         ("PendingTransactionInfo::IsAlreadyClaimedInitializingConn "
-         "[trans=%p, conn=%p]\n",
-         mTransaction.get(), conn.get()));
-    if (conn) {
+         "[trans=%p, dnsAndSock=%p]\n",
+         mTransaction.get(), dnsAndSock.get()));
+    if (dnsAndSock) {
       alreadyDnsAndSockOrWaitingForTLS = true;
     } else {
       // If we have not found the halfOpen socket, remove the pointer.
-      mConnectionAttempt = nullptr;
+      mDnsAndSock = nullptr;
     }
   } else if (mActiveConn) {
-    MOZ_ASSERT(!mConnectionAttempt);
+    MOZ_ASSERT(!mDnsAndSock);
     RefPtr<HttpConnectionBase> activeConn = do_QueryReferent(mActiveConn);
     LOG(
         ("PendingTransactionInfo::IsAlreadyClaimedInitializingConn "
@@ -96,17 +96,17 @@ bool PendingTransactionInfo::IsAlreadyClaimedInitializingConn() {
   return alreadyDnsAndSockOrWaitingForTLS;
 }
 
-nsWeakPtr PendingTransactionInfo::ForgetConnectionAttemptAndActiveConn() {
-  nsWeakPtr conn = mConnectionAttempt;
+nsWeakPtr PendingTransactionInfo::ForgetDnsAndConnectSocketAndActiveConn() {
+  nsWeakPtr dnsAndSock = mDnsAndSock;
 
-  mConnectionAttempt = nullptr;
+  mDnsAndSock = nullptr;
   mActiveConn = nullptr;
-  return conn;
+  return dnsAndSock;
 }
 
-void PendingTransactionInfo::RememberConnectionAttempt(
-    ConnectionAttempt* sock) {
-  mConnectionAttempt =
+void PendingTransactionInfo::RememberDnsAndConnectSocket(
+    DnsAndConnectSocket* sock) {
+  mDnsAndSock =
       do_GetWeakReference(static_cast<nsISupportsWeakReference*>(sock));
 }
 
@@ -125,6 +125,11 @@ bool PendingTransactionInfo::TryClaimingActiveConn(HttpConnectionBase* conn) {
     return true;
   }
   return false;
+}
+
+void PendingTransactionInfo::AddDnsAndConnectSocket(DnsAndConnectSocket* sock) {
+  mDnsAndSock =
+      do_GetWeakReference(static_cast<nsISupportsWeakReference*>(sock));
 }
 
 }  // namespace net

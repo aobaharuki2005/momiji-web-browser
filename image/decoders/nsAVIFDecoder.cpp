@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -138,19 +139,13 @@ Orientation GetImageOrientation(const Mp4parseAvifInfo& aInfo) {
 }
 nsresult AVIFDecoderStream::ReadAt(int64_t offset, void* data, size_t size,
                                    size_t* bytes_read) {
-  CheckedInt<size_t> checkedOffset(offset);
-  if (!checkedOffset.isValid() || offset < 0 ||
-      checkedOffset.value() >= mBuffer->length()) {
-    return NS_ERROR_DOM_MEDIA_RANGE_ERR;
-  }
-  CheckedInt<size_t> endPoint = checkedOffset + size;
-  if (!endPoint.isValid() || endPoint.value() > mBuffer->length()) {
+  size = std::min(size, size_t(mBuffer->length() - offset));
+
+  if (size <= 0) {
     return NS_ERROR_DOM_MEDIA_RANGE_ERR;
   }
 
-  size = std::min<size_t>(size, mBuffer->length() - checkedOffset.value());
-
-  memcpy(data, mBuffer->begin() + checkedOffset.value(), size);
+  memcpy(data, mBuffer->begin() + offset, size);
   *bytes_read = size;
   return NS_OK;
 }
@@ -163,14 +158,11 @@ bool AVIFDecoderStream::Length(int64_t* size) {
 
 const uint8_t* AVIFDecoderStream::GetContiguousAccess(int64_t aOffset,
                                                       size_t aSize) {
-  CheckedInt<size_t> checkedOffset(aOffset);
-  CheckedInt<size_t> endPoint = checkedOffset + aSize;
-  if (!checkedOffset.isValid() || !endPoint.isValid() ||
-      endPoint.value() > mBuffer->length()) {
+  if (aOffset + aSize >= mBuffer->length()) {
     return nullptr;
   }
 
-  return mBuffer->begin() + checkedOffset.value();
+  return mBuffer->begin() + aOffset;
 }
 
 AVIFParser::~AVIFParser() {
@@ -178,12 +170,14 @@ AVIFParser::~AVIFParser() {
 }
 
 Mp4parseStatus AVIFParser::Create(const Mp4parseIo* aIo, ByteStream* aBuffer,
-                                  UniquePtr<AVIFParser>& aParserOut) {
+                                  UniquePtr<AVIFParser>& aParserOut,
+                                  bool aAllowSequences,
+                                  bool aAnimateAVIFMajor) {
   MOZ_ASSERT(aIo);
   MOZ_ASSERT(!aParserOut);
 
   UniquePtr<AVIFParser> p(new AVIFParser(aIo));
-  Mp4parseStatus status = p->Init(aBuffer);
+  Mp4parseStatus status = p->Init(aBuffer, aAllowSequences, aAnimateAVIFMajor);
 
   if (status == MP4PARSE_STATUS_OK) {
     MOZ_ASSERT(p->mParser);
@@ -283,13 +277,13 @@ nsAVIFDecoder::DecodeResult AVIFParser::GetImage(AVIFImage& aImage) {
     return AsVariant(nsAVIFDecoder::NonDecoderResult::NoSamples);
   }
 
-  auto colorImage = MakeRefPtr<MediaRawData>(image.primary_image.data,
-                                             image.primary_image.length);
+  RefPtr<MediaRawData> colorImage =
+      new MediaRawData(image.primary_image.data, image.primary_image.length);
   RefPtr<MediaRawData> alphaImage = nullptr;
 
   if (image.alpha_image.length) {
-    alphaImage = MakeRefPtr<MediaRawData>(image.alpha_image.data,
-                                          image.alpha_image.length);
+    alphaImage =
+        new MediaRawData(image.alpha_image.data, image.alpha_image.length);
   }
 
   aImage.mFrameNum = 0;
@@ -318,13 +312,14 @@ static Mp4parseStatus CreateSampleIterator(
   }
 
   UniquePtr<IndiceWrapper> wrapper = MakeUnique<IndiceWrapper>(data);
-  auto index = MakeRefPtr<MP4SampleIndex>(*wrapper, aBuffer, trackID, false,
-                                          AssertedCast<uint32_t>(timescale));
+  RefPtr<MP4SampleIndex> index = new MP4SampleIndex(
+      *wrapper, aBuffer, trackID, false, AssertedCast<int32_t>(timescale));
   aIteratorOut = MakeUnique<SampleIterator>(index);
   return MP4PARSE_STATUS_OK;
 }
 
-Mp4parseStatus AVIFParser::Init(ByteStream* aBuffer) {
+Mp4parseStatus AVIFParser::Init(ByteStream* aBuffer, bool aAllowSequences,
+                                bool aAnimateAVIFMajor) {
 #define CHECK_MP4PARSE_STATUS(v)     \
   do {                               \
     if ((v) != MP4PARSE_STATUS_OK) { \
@@ -351,14 +346,12 @@ Mp4parseStatus AVIFParser::Init(ByteStream* aBuffer) {
 
   bool useSequence = mInfo.has_sequence;
   if (useSequence) {
-    if (!StaticPrefs::image_avif_sequence_enabled_AtStartup()) {
+    if (!aAllowSequences) {
       MOZ_LOG(sAVIFLog, LogLevel::Debug,
               ("[this=%p] AVIF sequences disabled", this));
       useSequence = false;
-    } else if (
-        !StaticPrefs::
-            image_avif_sequence_animate_avif_major_branded_images_AtStartup() &&
-        !!memcmp(mInfo.major_brand, "avis", sizeof(mInfo.major_brand))) {
+    } else if (!aAnimateAVIFMajor &&
+               !!memcmp(mInfo.major_brand, "avis", sizeof(mInfo.major_brand))) {
       useSequence = false;
       MOZ_LOG(sAVIFLog, LogLevel::Debug,
               ("[this=%p] AVIF prefers still image", this));
@@ -688,19 +681,16 @@ bool OwnedAOMImage::CloneFrom(aom_image_t* aImage, bool aIsAlpha) {
   uint8_t* srcY = aImage->planes[AOM_PLANE_Y];
   int yStride = aImage->stride[AOM_PLANE_Y];
   int yHeight = aom_img_plane_height(aImage, AOM_PLANE_Y);
-  auto yBufSize = CheckedInt<size_t>(yStride) * yHeight;
-  if (!yBufSize.isValid()) {
-    return false;
-  }
+  size_t yBufSize = yStride * yHeight;
 
   // If aImage is alpha plane. The data is located in Y channel.
   if (aIsAlpha) {
-    mBuffer = MakeUniqueFallible<uint8_t[]>(yBufSize.value());
+    mBuffer = MakeUniqueFallible<uint8_t[]>(yBufSize);
     if (!mBuffer) {
       return false;
     }
     uint8_t* destY = mBuffer.get();
-    memcpy(destY, srcY, yBufSize.value());
+    memcpy(destY, srcY, yBufSize);
     mImage.emplace(*aImage);
     mImage->planes[AOM_PLANE_Y] = destY;
 
@@ -710,32 +700,25 @@ bool OwnedAOMImage::CloneFrom(aom_image_t* aImage, bool aIsAlpha) {
   uint8_t* srcCb = aImage->planes[AOM_PLANE_U];
   int cbStride = aImage->stride[AOM_PLANE_U];
   int cbHeight = aom_img_plane_height(aImage, AOM_PLANE_U);
-  auto cbBufSize = CheckedInt<size_t>(cbStride) * cbHeight;
-  if (!cbBufSize.isValid()) {
-    return false;
-  }
+  size_t cbBufSize = cbStride * cbHeight;
 
   uint8_t* srcCr = aImage->planes[AOM_PLANE_V];
   int crStride = aImage->stride[AOM_PLANE_V];
   int crHeight = aom_img_plane_height(aImage, AOM_PLANE_V);
-  auto crBufSize = CheckedInt<size_t>(crStride) * crHeight;
-  if (!crBufSize.isValid()) {
-    return false;
-  }
+  size_t crBufSize = crStride * crHeight;
 
-  mBuffer = MakeUniqueFallible<uint8_t[]>(yBufSize.value() + cbBufSize.value() +
-                                          crBufSize.value());
+  mBuffer = MakeUniqueFallible<uint8_t[]>(yBufSize + cbBufSize + crBufSize);
   if (!mBuffer) {
     return false;
   }
 
   uint8_t* destY = mBuffer.get();
-  uint8_t* destCb = destY + yBufSize.value();
-  uint8_t* destCr = destCb + cbBufSize.value();
+  uint8_t* destCb = destY + yBufSize;
+  uint8_t* destCr = destCb + cbBufSize;
 
-  memcpy(destY, srcY, yBufSize.value());
-  memcpy(destCb, srcCb, cbBufSize.value());
-  memcpy(destCr, srcCr, crBufSize.value());
+  memcpy(destY, srcY, yBufSize);
+  memcpy(destCb, srcCb, cbBufSize);
+  memcpy(destCr, srcCr, crBufSize);
 
   mImage.emplace(*aImage);
   mImage->planes[AOM_PLANE_Y] = destY;
@@ -1266,8 +1249,10 @@ Mp4parseStatus nsAVIFDecoder::CreateParser() {
     Mp4parseIo io = {nsAVIFDecoder::ReadSource, this};
     mBufferStream = new AVIFDecoderStream(&mBufferedData);
 
-    Mp4parseStatus status =
-        AVIFParser::Create(&io, mBufferStream.get(), mParser);
+    Mp4parseStatus status = AVIFParser::Create(
+        &io, mBufferStream.get(), mParser,
+        bool(GetDecoderFlags() & DecoderFlags::AVIF_SEQUENCES_ENABLED),
+        bool(GetDecoderFlags() & DecoderFlags::AVIF_ANIMATE_AVIF_MAJOR));
 
     if (status != MP4PARSE_STATUS_OK) {
       return status;

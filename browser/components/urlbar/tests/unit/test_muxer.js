@@ -19,20 +19,19 @@ add_setup(async function () {
 });
 
 add_task(async function test_muxer() {
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
   Assert.throws(
-    () => providersManager.registerMuxer(),
+    () => UrlbarProvidersManager.registerMuxer(),
     /invalid muxer/,
     "Should throw with no arguments"
   );
   Assert.throws(
-    () => providersManager.registerMuxer({}),
+    () => UrlbarProvidersManager.registerMuxer({}),
     /invalid muxer/,
     "Should throw with empty object"
   );
   Assert.throws(
     () =>
-      providersManager.registerMuxer({
+      UrlbarProvidersManager.registerMuxer({
         name: "",
       }),
     /invalid muxer/,
@@ -40,7 +39,7 @@ add_task(async function test_muxer() {
   );
   Assert.throws(
     () =>
-      providersManager.registerMuxer({
+      UrlbarProvidersManager.registerMuxer({
         name: "test",
         sort: "no",
       }),
@@ -90,16 +89,16 @@ add_task(async function test_muxer() {
   }
   let muxer = new TestMuxer();
 
-  providersManager.registerMuxer(muxer);
+  UrlbarProvidersManager.registerMuxer(muxer);
   context.muxer = "TestMuxer";
 
   info("Check results, the order should be: bookmark, history, tab");
-  await providersManager.startQuery(context, controller);
+  await UrlbarProvidersManager.startQuery(context, controller);
   Assert.deepEqual(context.results, [matches[1], matches[2], matches[0]]);
 
   // Sanity check, should not throw.
-  providersManager.unregisterMuxer(muxer);
-  providersManager.unregisterMuxer("TestMuxer"); // no-op.
+  UrlbarProvidersManager.unregisterMuxer(muxer);
+  UrlbarProvidersManager.unregisterMuxer("TestMuxer"); // no-op.
 });
 
 add_task(async function test_preselectedHeuristic_singleProvider() {
@@ -129,10 +128,7 @@ add_task(async function test_preselectedHeuristic_singleProvider() {
   let controller = UrlbarTestUtils.newMockController();
 
   info("Check results, the order should be: b (heuristic), a, c");
-  await ProvidersManager.getInstanceForSap("urlbar").startQuery(
-    context,
-    controller
-  );
+  await UrlbarProvidersManager.startQuery(context, controller);
   Assert.deepEqual(context.results, [matches[1], matches[0], matches[2]]);
 });
 
@@ -183,10 +179,7 @@ add_task(async function test_preselectedHeuristic_multiProviders() {
   let controller = UrlbarTestUtils.newMockController();
 
   info("Check results, the order should be: e (heuristic), a, b, c, d, f");
-  await ProvidersManager.getInstanceForSap("urlbar").startQuery(
-    context,
-    controller
-  );
+  await UrlbarProvidersManager.startQuery(context, controller);
   Assert.deepEqual(context.results, [
     matches2[1],
     ...matches1,
@@ -254,10 +247,7 @@ add_task(async function test_suggestions() {
   let controller = UrlbarTestUtils.newMockController();
 
   info("Check results, the order should be: mozzarella, moz, a, b, @moz, c");
-  await ProvidersManager.getInstanceForSap("urlbar").startQuery(
-    context,
-    controller
-  );
+  await UrlbarProvidersManager.startQuery(context, controller);
   Assert.deepEqual(context.results, [
     matches[2],
     matches[3],
@@ -308,10 +298,7 @@ add_task(async function test_deduplicate_for_unitConversion() {
     providers: [searchProvider.name, unitConversion.name],
   });
   const controller = UrlbarTestUtils.newMockController();
-  await ProvidersManager.getInstanceForSap("urlbar").startQuery(
-    context,
-    controller
-  );
+  await UrlbarProvidersManager.startQuery(context, controller);
   Assert.deepEqual(context.results, [unitConversionSuggestion]);
 });
 
@@ -608,10 +595,7 @@ async function doBadHeuristicGroupsTest(resultGroups, expectedResults) {
   let provider = registerBasicTestProvider(BAD_HEURISTIC_RESULTS);
   let context = createContext("foo", { providers: [provider.name] });
   let controller = UrlbarTestUtils.newMockController();
-  await ProvidersManager.getInstanceForSap("urlbar").startQuery(
-    context,
-    controller
-  );
+  await UrlbarProvidersManager.startQuery(context, controller);
   Assert.deepEqual(context.results, expectedResults);
 
   sandbox.restore();

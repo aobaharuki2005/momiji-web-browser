@@ -10,7 +10,6 @@ mod composing_normalizer_nfc;
 mod composing_normalizer_nfkc;
 mod decomposing_normalizer_nfd;
 mod decomposing_normalizer_nfkd;
-mod utf16_throughput;
 
 criterion_group!(
     benches,
@@ -20,7 +19,6 @@ criterion_group!(
     composing_normalizer_nfkc::criterion_benchmark,
     decomposing_normalizer_nfd::criterion_benchmark,
     decomposing_normalizer_nfkd::criterion_benchmark,
-    utf16_throughput::criterion_benchmark,
 );
 
 criterion_main!(benches);

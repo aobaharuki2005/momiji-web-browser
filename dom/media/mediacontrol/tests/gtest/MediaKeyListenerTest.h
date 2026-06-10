@@ -27,11 +27,11 @@ class MediaKeyListenerTest : public MediaControlKeyListener {
     return false;
   }
 
-  MediaControlActionParams GetMediaControlActionParams() const {
+  mozilla::Maybe<SeekDetails> GetSeekDetails() const {
     if (mReceivedAction.isSome()) {
-      return mReceivedAction->mParams;
+      return mReceivedAction->mDetails;
     }
-    return MediaControlActionParams();
+    return Nothing();
   }
 
   bool IsReceivedResult() const { return mReceivedAction.isSome(); }

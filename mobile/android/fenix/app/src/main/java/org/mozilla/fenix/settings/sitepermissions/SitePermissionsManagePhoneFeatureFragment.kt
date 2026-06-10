@@ -27,7 +27,6 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BL
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentManageSitePermissionsFeaturePhoneBinding
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.ext.settings
@@ -38,7 +37,6 @@ import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY_INAUDIBLE
 import org.mozilla.fenix.settings.setStartCheckedIndicator
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
-import com.google.android.material.R as materialR
 
 const val AUTOPLAY_BLOCK_ALL = 0
 const val AUTOPLAY_BLOCK_AUDIBLE = 1
@@ -52,11 +50,8 @@ enum class AutoplaySettingMetricsExtraKey {
     BLOCK_CELLULAR, BLOCK_AUDIO, BLOCK_ALL, ALLOW_ALL
 }
 
-/**
- * Settings screen allowing users to manage the browser phone permission.
- */
 @SuppressWarnings("TooManyFunctions")
-class SitePermissionsManagePhoneFeatureFragment : Fragment(), SystemInsetsPaddedFragment {
+class SitePermissionsManagePhoneFeatureFragment : Fragment() {
 
     private val args by navArgs<SitePermissionsManagePhoneFeatureFragmentArgs>()
     private val settings by lazy { requireContext().settings() }
@@ -255,7 +250,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment(), SystemInsetsPadded
         val recommendedSpannable = SpannableString(subText)
         val subTextColor = ContextCompat.getColor(
             requireContext(),
-            ThemeManager.resolveAttribute(materialR.attr.colorOnSurfaceVariant, requireContext()),
+            ThemeManager.resolveAttribute(R.attr.textSecondary, requireContext()),
         )
 
         recommendedSpannable.setSpan(

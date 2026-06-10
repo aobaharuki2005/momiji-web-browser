@@ -54,20 +54,12 @@ name = "dump"
 path = "examples/dump.rs"
 
 [[test]]
-name = "test_afconvert"
-path = "tests/test_afconvert.rs"
-
-[[test]]
 name = "test_avis"
 path = "tests/test_avis.rs"
 
 [[test]]
 name = "test_chunk_out_of_range"
 path = "tests/test_chunk_out_of_range.rs"
-
-[[test]]
-name = "test_colour_info"
-path = "tests/test_colour_info.rs"
 
 [[test]]
 name = "test_encryption"

@@ -44,7 +44,7 @@
 
       const verifyAbortedTransition = (promise) => {
         return promise.then(
-          () => { assert_unreached('transition aborted') },
+          () => { assert_not_reached('transition aborted') },
           (reason) => {
             assert_true(reason instanceof DOMException);
             assert_equals(reason.code, DOMException.ABORT_ERR);

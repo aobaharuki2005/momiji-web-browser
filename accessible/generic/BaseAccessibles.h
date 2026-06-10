@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_a11y_BaseAccessibles_h_
-#define mozilla_a11y_BaseAccessibles_h_
+#ifndef mozilla_a11y_BaseAccessibles_h__
+#define mozilla_a11y_BaseAccessibles_h__
 
 #include "AccessibleWrap.h"
 #include "HyperTextAccessible.h"
@@ -38,7 +39,7 @@ class LeafAccessible : public AccessibleWrap {
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
  protected:
-  virtual ~LeafAccessible() = default;
+  virtual ~LeafAccessible() {}
 };
 
 /**
@@ -67,7 +68,7 @@ class LinkableAccessible : public AccessibleWrap {
                                     bool* aIsOnclick = nullptr) const;
 
  protected:
-  virtual ~LinkableAccessible() = default;
+  virtual ~LinkableAccessible() {}
 };
 
 /**
@@ -87,7 +88,7 @@ class EnumRoleAccessible : public AccessibleWrap {
   virtual a11y::role NativeRole() const override { return R; }
 
  protected:
-  virtual ~EnumRoleAccessible() = default;
+  virtual ~EnumRoleAccessible() {}
 };
 
 /**
@@ -103,7 +104,7 @@ class EnumRoleHyperTextAccessible : public HyperTextAccessible {
   virtual a11y::role NativeRole() const override { return R; }
 
  protected:
-  virtual ~EnumRoleHyperTextAccessible() = default;
+  virtual ~EnumRoleHyperTextAccessible() {}
 };
 
 /**
@@ -126,7 +127,7 @@ class DummyAccessible : public AccessibleWrap {
   void ApplyARIAState(uint64_t* aState) const final;
 
  protected:
-  virtual ~DummyAccessible() = default;
+  virtual ~DummyAccessible() {}
 };
 
 }  // namespace a11y

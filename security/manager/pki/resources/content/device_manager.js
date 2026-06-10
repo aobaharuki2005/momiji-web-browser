@@ -7,31 +7,22 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const lazy = {};
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "FIPSUtils",
-  "@mozilla.org/security/fipsutils;1",
-  Ci.nsIFIPSUtils
-);
-
 var secmoddb;
 var skip_enable_buttons = false;
 
 /* Do the initial load of all PKCS# modules and list them. */
-async function LoadModules() {
+function LoadModules() {
   secmoddb = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
     Ci.nsIPKCS11ModuleDB
   );
-  await RefreshDeviceList();
+  RefreshDeviceList();
 
   document
     .getElementById("device_tree")
     .addEventListener("select", () => enableButtons());
   document
     .getElementById("devicemanager")
-    .addEventListener("command", async event => {
+    .addEventListener("command", event => {
       switch (event.target.id) {
         case "login_button":
           doLogin();
@@ -43,13 +34,13 @@ async function LoadModules() {
           changePassword();
           break;
         case "load_button":
-          await doLoad();
+          doLoad();
           break;
         case "unload_button":
-          await doUnload();
+          doUnload();
           break;
         case "fipsbutton":
-          await toggleFIPS();
+          toggleFIPS();
           break;
         default:
           // Default means that we are not handling a command so we should
@@ -57,8 +48,6 @@ async function LoadModules() {
           throw new Error("Unhandled command event");
       }
     });
-
-  Services.obs.notifyObservers(window, "device-manager-loaded");
 }
 
 async function doPrompt(l10n_id) {
@@ -71,9 +60,10 @@ async function doConfirm(l10n_id) {
   return Services.prompt.confirm(window, null, msg);
 }
 
-async function RefreshDeviceList() {
-  for (let module of await secmoddb.listModules()) {
-    AddModule(module, module.slots);
+function RefreshDeviceList() {
+  for (let module of secmoddb.listModules()) {
+    let slots = module.listSlots();
+    AddModule(module, slots);
   }
 
   // Set the text on the FIPS button.
@@ -82,13 +72,13 @@ async function RefreshDeviceList() {
 
 function SetFIPSButton() {
   var fipsButton = document.getElementById("fipsbutton");
-  if (lazy.FIPSUtils.isFIPSEnabled) {
+  if (secmoddb.isFIPSEnabled) {
     document.l10n.setAttributes(fipsButton, "devmgr-button-disable-fips");
   } else {
     document.l10n.setAttributes(fipsButton, "devmgr-button-enable-fips");
   }
 
-  var can_toggle = lazy.FIPSUtils.canToggleFIPS;
+  var can_toggle = secmoddb.canToggleFIPS;
   if (can_toggle) {
     fipsButton.removeAttribute("disabled");
   } else {
@@ -366,21 +356,21 @@ function doLogout() {
 }
 
 // load a new device
-async function doLoad() {
+function doLoad() {
   window.browsingContext.topChromeWindow.open(
     "load_device.xhtml",
     "loaddevice",
     "chrome,centerscreen,modal"
   );
   ClearDeviceList();
-  await RefreshDeviceList();
+  RefreshDeviceList();
 }
 
 async function deleteSelected() {
   getSelectedItem();
   if (selected_module && (await doConfirm("del-module-warning"))) {
     try {
-      await secmoddb.deleteModule(selected_module.name);
+      secmoddb.deleteModule(selected_module.name);
     } catch (e) {
       doPrompt("del-module-error");
       return false;
@@ -394,7 +384,7 @@ async function deleteSelected() {
 async function doUnload() {
   if (await deleteSelected()) {
     ClearDeviceList();
-    await RefreshDeviceList();
+    RefreshDeviceList();
   }
 }
 
@@ -407,7 +397,7 @@ function changePassword() {
   objects.appendElement(selected_slot.getToken());
   params.objects = objects;
   window.browsingContext.topChromeWindow.openDialog(
-    "chrome://pippki/content/changepassword.xhtml",
+    "changepassword.xhtml",
     "",
     "chrome,centerscreen,modal",
     params
@@ -443,15 +433,16 @@ function showTokenInfo() {
   );
 }
 
-async function toggleFIPS() {
-  if (!lazy.FIPSUtils.isFIPSEnabled) {
+function toggleFIPS() {
+  if (!secmoddb.isFIPSEnabled) {
     // A restriction of FIPS mode is, the password must be set
     // In FIPS mode the password must be non-empty.
     // This is different from what we allow in NON-Fips mode.
 
-    var internal_token = Cc[
-      "@mozilla.org/security/internalkeytoken;1"
-    ].createInstance(Ci.nsIPKCS11Token);
+    var tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
+      Ci.nsIPK11TokenDB
+    );
+    var internal_token = tokendb.getInternalKeyToken(); // nsIPK11Token
     if (!internal_token.hasPassword) {
       // Token has either no or an empty password.
       doPrompt("fips-nonempty-primary-password-required");
@@ -460,7 +451,7 @@ async function toggleFIPS() {
   }
 
   try {
-    lazy.FIPSUtils.toggleFIPSMode();
+    secmoddb.toggleFIPSMode();
   } catch (e) {
     doPrompt("unable-to-toggle-fips");
     return;
@@ -470,7 +461,7 @@ async function toggleFIPS() {
   // module that just changed.
   ClearDeviceList();
 
-  await RefreshDeviceList();
+  RefreshDeviceList();
 }
 
-window.addEventListener("load", async () => LoadModules());
+window.addEventListener("load", () => LoadModules());

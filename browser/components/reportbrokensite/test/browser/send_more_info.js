@@ -35,7 +35,6 @@ async function reformatExpectedWebCompatInfo(tab, overrides) {
   const { antitracking, languages, useragentString } = tabInfo;
 
   const addons = overrides.addons || [];
-  const category = overrides.category || "";
   const experiments = overrides.experiments || [];
   const atOverrides = overrides.antitracking;
   const blockList = atOverrides?.blockList ?? antitracking.blockList;
@@ -68,7 +67,6 @@ async function reformatExpectedWebCompatInfo(tab, overrides) {
 
   const reformatted = {
     blockList,
-    category,
     details: {
       additionalData: {
         browserInfo: {
@@ -87,7 +85,7 @@ async function reformatExpectedWebCompatInfo(tab, overrides) {
           },
           experiments,
           graphics: {
-            devicePixelRatio: parseFloat(devicePixelRatio),
+            devicePixelRatio: parseInt(devicePixelRatio),
             devices(actual) {
               const devices = getExpectedGraphicsDevices(snapshot);
               return compareGraphicsDevices(devices, actual);
@@ -193,51 +191,42 @@ async function reformatExpectedWebCompatInfo(tab, overrides) {
 
 async function testSendMoreInfo(tab, menu, expectedOverrides = {}) {
   const url = expectedOverrides.url ?? menu.win.gBrowser.currentURI.spec;
-  const reason = expectedOverrides.reason || "load";
   const description = expectedOverrides.description ?? "";
 
-  let rbs = await menu.openReportBrokenSiteToDetailsPanel({
-    url,
-    reason,
-    description,
-  });
+  let rbs = await menu.openAndPrefillReportBrokenSite(url, description);
 
   const receivedData = await rbs.clickSendMoreInfo();
   await checkWebcompatComPayload(
     tab,
     url,
-    reason,
     description,
     expectedOverrides,
     receivedData
   );
 
-  // re-opening the panel, the url, reason, and description should be reset
+  // re-opening the panel, the url and description should be reset
   rbs = await menu.openReportBrokenSite();
-  rbs.isProperlyReset();
+  rbs.isMainViewResetToCurrentTab();
   rbs.close();
 }
 
 async function testWebcompatComFallback(tab, menu) {
-  ViewState.get(menu.win.document).reset();
   const url = menu.win.gBrowser.currentURI.spec;
   const receivedData =
     await menu.clickReportBrokenSiteAndAwaitWebCompatTabData();
-  await checkWebcompatComPayload(tab, url, "", "", {}, receivedData);
+  await checkWebcompatComPayload(tab, url, "", {}, receivedData);
   menu.close();
 }
 
 async function checkWebcompatComPayload(
   tab,
   url,
-  reason,
   description,
   expectedOverrides,
   receivedData
 ) {
   const expected = await reformatExpectedWebCompatInfo(tab, expectedOverrides);
-  expected.url = URL.parse(url).href;
-  expected.category = reason;
+  expected.url = url;
   expected.description = description;
 
   // sanity checks
@@ -256,14 +245,14 @@ async function checkWebcompatComPayload(
   ok(details.defaultUserAgent?.length, "Got a default UA string");
   ok(additionalData.tabInfo.useragentString?.length, "Got a final UA string");
 
-  // Check that if there is also a screenshot, that it is valid.
-  const { screenshot } = receivedData;
-  if (screenshot) {
+  // If we're sending any tab-specific data (which includes console logs),
+  // check that there is also a valid screenshot.
+  if (details.consoleLog) {
     const isScreenshotValid = await new Promise(done => {
       var image = new Image();
       image.onload = () => done(image.width > 0);
       image.onerror = () => done(false);
-      image.src = screenshot;
+      image.src = receivedData.screenshot;
     });
     ok(isScreenshotValid, "Got a valid screenshot");
   }

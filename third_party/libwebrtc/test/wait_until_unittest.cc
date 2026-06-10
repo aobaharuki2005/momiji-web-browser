@@ -13,18 +13,16 @@
 #include <memory>
 
 #include "api/rtc_error.h"
-#include "api/task_queue/task_queue_base.h"
-#include "api/task_queue/task_queue_factory.h"
 #include "api/test/create_time_controller.h"
 #include "api/test/rtc_error_matchers.h"
 #include "api/test/time_controller.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "rtc_base/fake_clock.h"
+#include "rtc_base/thread.h"
 #include "system_wrappers/include/clock.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-#include "test/run_loop.h"
 
 namespace webrtc {
 namespace {
@@ -39,7 +37,7 @@ using ::testing::MatchesRegex;
 using ::testing::Property;
 
 TEST(WaitUntilTest, ReturnsTrueWhenConditionIsMet) {
-  test::RunLoop thread;
+  AutoThread thread;
 
   int counter = 0;
   EXPECT_TRUE(WaitUntil([&] { return ++counter == 3; }));
@@ -49,7 +47,7 @@ TEST(WaitUntilTest, ReturnsTrueWhenConditionIsMet) {
 }
 
 TEST(WaitUntilTest, ReturnsWhenConditionIsMet) {
-  test::RunLoop thread;
+  AutoThread thread;
 
   int counter = 0;
   RTCErrorOr<int> result = WaitUntil([&] { return ++counter; }, Eq(3));
@@ -57,7 +55,7 @@ TEST(WaitUntilTest, ReturnsWhenConditionIsMet) {
 }
 
 TEST(WaitUntilTest, ReturnsErrorWhenTimeoutIsReached) {
-  test::RunLoop thread;
+  AutoThread thread;
   int counter = 0;
   RTCErrorOr<int> result =
       WaitUntil([&] { return --counter; }, Eq(1),
@@ -73,7 +71,7 @@ TEST(WaitUntilTest, ReturnsErrorWhenTimeoutIsReached) {
 }
 
 TEST(WaitUntilTest, ErrorContainsMatcherExplanation) {
-  test::RunLoop thread;
+  AutoThread thread;
   int counter = 0;
   auto matcher = AllOf(Gt(0), Lt(10));
   RTCErrorOr<int> result =
@@ -97,19 +95,9 @@ TEST(WaitUntilTest, ReturnsWhenConditionIsMetWithSimulatedClock) {
   EXPECT_TRUE(WaitUntil(
       [&] { return ++counter == 3; },
       {.polling_interval = TimeDelta::Millis(10), .clock = &fake_clock}));
-  // Check function wasn't called again after it become true.
   EXPECT_EQ(counter, 3);
-}
-
-TEST(WaitUntilTest, ReturnsFalseAfterTimeoutWithSimulatedClock) {
-  SimulatedClock fake_clock(Timestamp::Millis(1'337));
-
-  EXPECT_FALSE(
-      WaitUntil([&] { return false; },
-                {.timeout = TimeDelta::Seconds(1), .clock = &fake_clock}));
-
-  // With fake time `WaitUntil` should wait exactly `timeout`, not any longer.
-  EXPECT_EQ(fake_clock.CurrentTime(), Timestamp::Millis(2'337));
+  // The fake clock should have advanced at least 2 polling intervals, 20ms.
+  EXPECT_THAT(fake_clock.CurrentTime(), Ge(Timestamp::Millis(1357)));
 }
 
 TEST(WaitUntilTest, ReturnsWhenConditionIsMetWithThreadProcessingFakeClock) {
@@ -153,7 +141,7 @@ class CustomType {
 };
 
 TEST(WaitUntilTest, RequiresOnlyMoveCopyConstructionForReturnedType) {
-  test::RunLoop thread;
+  AutoThread thread;
 
   int counter = 0;
   RTCErrorOr<CustomType> result =
@@ -175,49 +163,6 @@ TEST(WaitUntilTest, ReturnsWhenConditionIsMetWithSimulatedTimeController) {
   // The fake clock should have advanced at least 2ms.
   EXPECT_THAT(time_controller->GetClock()->CurrentTime(),
               Ge(Timestamp::Millis(1339)));
-}
-
-TEST(WaitUntilTest,
-     ReturnsTrueImmidiatelyWhenConditionIsMetByRunningPendingTask) {
-  std::unique_ptr<TimeController> time_controller =
-      CreateSimulatedTimeController();
-  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> task_queue =
-      time_controller->GetTaskQueueFactory()->CreateTaskQueue(
-          "task_queue", TaskQueueFactory::Priority::kNormal);
-
-  bool condition = false;
-  Timestamp start = time_controller->GetClock()->CurrentTime();
-  task_queue->PostTask([&] { condition = true; });
-  EXPECT_FALSE(condition);
-  EXPECT_TRUE(
-      WaitUntil([&] { return condition; }, {.clock = time_controller.get()}));
-  EXPECT_EQ(time_controller->GetClock()->CurrentTime(), start);
-}
-
-TEST(WaiterTest, ReturnsTrueWhenConditionIsMet) {
-  ScopedFakeClock clock;
-  Waiter waiter({.timeout = TimeDelta::Seconds(1), .clock = &clock});
-
-  int counter = 0;
-  EXPECT_TRUE(waiter.Until([&] { return ++counter == 3; }));
-  EXPECT_EQ(counter, 3);
-}
-
-TEST(WaiterTest, ReturnsResultWhenMatcherIsMet) {
-  ScopedFakeClock clock;
-  Waiter waiter({.timeout = TimeDelta::Seconds(1), .clock = &clock});
-
-  int counter = 0;
-  auto result = waiter.Until([&] { return ++counter; }, Eq(3));
-  EXPECT_THAT(result, IsRtcOkAndHolds(3));
-}
-
-TEST(WaiterTest, ReturnsFalseWhenTimeoutIsReached) {
-  SimulatedClock clock(Timestamp::Millis(1000));
-  Waiter waiter({.timeout = TimeDelta::Millis(100), .clock = &clock});
-
-  EXPECT_FALSE(waiter.Until([&] { return false; }));
-  EXPECT_EQ(clock.CurrentTime(), Timestamp::Millis(1100));
 }
 
 }  // namespace

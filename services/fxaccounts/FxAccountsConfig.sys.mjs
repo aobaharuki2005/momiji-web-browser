@@ -55,24 +55,24 @@ const SYNC_PARAM = "sync";
 
 export var FxAccountsConfig = {
   async promiseEmailURI(email, entrypoint, extraParams = {}) {
+    const authParams = await this._getAuthParams();
     return this._buildURL("", {
-      includeAuthParams: true,
       extraParams: {
         entrypoint,
         email,
-        service: SYNC_PARAM,
+        ...authParams,
         ...extraParams,
       },
     });
   },
 
   async promiseConnectAccountURI(entrypoint, extraParams = {}) {
+    const authParams = await this._getAuthParams();
     return this._buildURL("", {
-      includeAuthParams: true,
       extraParams: {
         entrypoint,
         action: "email",
-        service: SYNC_PARAM,
+        ...authParams,
         ...extraParams,
       },
     });
@@ -146,27 +146,25 @@ export var FxAccountsConfig = {
   /**
    * @param path should be parsable by the URL constructor first parameter.
    * @param {bool} [options.includeDefaultParams] If true include the default search params.
-   * @param {bool} [options.includeAuthParams] If true include the auth params.
-   * @param {[key: string]: string} [options.extraParams] Additionnal search params.
+   * @param {{[key: string]: string}} [options.extraParams] Additionnal search params.
    * @param {bool} [options.addAccountIdentifiers] if true we add the current logged-in user uid and email to the search params.
    */
   async _buildURL(
     path,
     {
       includeDefaultParams = true,
-      includeAuthParams = false,
       extraParams = {},
       addAccountIdentifiers = false,
     }
   ) {
     await this.ensureConfigured();
     const url = new URL(path, lazy.ROOT_URL);
-    this.ensureHTTPS(url.protocol);
-    const authParams = includeAuthParams ? await this._getAuthParams() : {};
+    if (lazy.REQUIRES_HTTPS && url.protocol != "https:") {
+      throw new Error("Firefox Accounts server must use HTTPS");
+    }
     const params = {
       ...(includeDefaultParams ? this.defaultParams : null),
       ...extraParams,
-      ...authParams,
     };
     for (let [k, v] of Object.entries(params)) {
       url.searchParams.append(k, v);
@@ -182,12 +180,6 @@ export var FxAccountsConfig = {
     return url.href;
   },
 
-  ensureHTTPS(protocol) {
-    if (lazy.REQUIRES_HTTPS && protocol != "https:") {
-      throw new Error("Firefox Accounts server must use HTTPS");
-    }
-  },
-
   async _buildURLFromString(href, extraParams = {}) {
     const url = new URL(href);
     for (let [k, v] of Object.entries(extraParams)) {
@@ -197,15 +189,15 @@ export var FxAccountsConfig = {
   },
 
   resetConfigURLs() {
-    // We unconditionally reset all the prefs, which will point them at prod. If the autoconfig URL is not set,
-    // these will be used next sign in. If the autoconfig pref *is* set then as we start the signin flow we
-    // will reconfigure all the prefs we just restored to whereever that autoconfig pref points now.
+    let autoconfigURL = this.getAutoConfigURL();
+    if (autoconfigURL) {
+      return;
+    }
+    // They have the autoconfig uri pref set, so we clear all the prefs that we
+    // will have initialized, which will leave them pointing at production.
     for (let pref of CONFIG_PREFS) {
       Services.prefs.clearUserPref(pref);
     }
-    // Reset FxAccountsClient
-    lazy.fxAccounts.resetFxAccountsClient();
-
     // Reset the webchannel.
     lazy.EnsureFxAccountsWebChannel();
   },
@@ -227,8 +219,6 @@ export var FxAccountsConfig = {
   },
 
   async ensureConfigured() {
-    // We don't want to update any configuration if we are already signed in,
-    // or in the process of signing in.
     let isSignedIn = !!(await this.getSignedInUser());
     if (!isSignedIn) {
       await this.updateConfigURLs();
@@ -303,9 +293,6 @@ export var FxAccountsConfig = {
       );
       Services.prefs.setStringPref("identity.fxaccounts.remote.root", rootURL);
 
-      // Reset FxAccountsClient
-      lazy.fxAccounts.resetFxAccountsClient();
-
       // Ensure the webchannel is pointed at the correct uri
       lazy.EnsureFxAccountsWebChannel();
     } catch (e) {
@@ -361,7 +348,7 @@ export var FxAccountsConfig = {
   },
 
   async _getAuthParams() {
-    let params = {};
+    let params = { service: SYNC_PARAM };
     const scopes = [SCOPE_APP_SYNC, SCOPE_PROFILE];
     Object.assign(
       params,

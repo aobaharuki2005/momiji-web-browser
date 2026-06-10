@@ -19,7 +19,6 @@ pub struct KeyPackageData {
     pub key_package_bytes: Vec<u8>,
     pub init_key: HpkeSecretKey,
     pub leaf_node_key: HpkeSecretKey,
-    /// Seconds since the Unix epoch starting Jan 1st 1970.
     pub expiration: u64,
 }
 

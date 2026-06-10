@@ -17,7 +17,7 @@ use rkv::{
     backend::{SafeMode as RkvSafeMode, SafeModeEnvironment as RkvSafeModeEnvironment},
     Rkv,
 };
-use storage_variant::{DataType, HashPropertyBag, NsIVariantExt, VariantType};
+use storage_variant::{HashPropertyBag, VariantType};
 use thin_vec::ThinVec;
 use xpcom::{
     getter_addrefs,
@@ -45,65 +45,6 @@ use crate::{
         value::{Value, ValueError},
     },
 };
-
-fn value_from_variant(variant: &nsIVariant) -> Result<Option<Value>, InterfaceError> {
-    let raw_type = variant.get_data_type();
-    let result = || -> Result<Option<Value>, nsresult> {
-        Ok(Some(Value::from(match raw_type.try_into()? {
-            DataType::Bool => serde_json::Value::from(bool::from_variant(variant)?),
-            DataType::Int32 => serde_json::Value::from(i32::from_variant(variant)?),
-            DataType::Int64 => serde_json::Value::from(i64::from_variant(variant)?),
-            DataType::Double => serde_json::Value::from(f64::from_variant(variant)?),
-            DataType::AString | DataType::WCharStr | DataType::WStringSizeIs => {
-                serde_json::Value::from(nsString::from_variant(variant)?.to_string())
-            }
-            DataType::CString
-            | DataType::CharStr
-            | DataType::StringSizeIs
-            | DataType::Utf8String => {
-                serde_json::Value::from(nsCString::from_variant(variant)?.to_utf8().into_owned())
-            }
-            DataType::Void | DataType::EmptyArray | DataType::Empty => return Ok(None),
-        })))
-    }();
-    result.map_err(|code| InterfaceError::FromVariant(raw_type, code))
-}
-
-fn value_to_variant(value: &Value) -> Result<RefPtr<nsIVariant>, ValueError> {
-    Ok(match value.inner() {
-        serde_json::Value::Null => ().into_variant(),
-        serde_json::Value::Bool(v) => v.into_variant(),
-        serde_json::Value::Number(n) if n.is_i64() => n
-            .as_i64()
-            .map(i64::into_variant)
-            .ok_or(ValueError::ToVariant)?,
-        serde_json::Value::Number(n) if n.is_f64() => n
-            .as_f64()
-            .map(f64::into_variant)
-            .ok_or(ValueError::ToVariant)?,
-        serde_json::Value::String(s) => nsCString::from(s).into_variant(),
-        serde_json::Value::Number(_)
-        | serde_json::Value::Array(_)
-        | serde_json::Value::Object(_) => Err(ValueError::ToVariant)?,
-    })
-}
-
-fn store_path_from_wide(path: WidePathBuf) -> Result<StorePath, StoreError> {
-    if path == StorePath::IN_MEMORY_DATABASE_NAME {
-        Ok(StorePath::for_in_memory())
-    } else {
-        let dir = path.canonicalize().map_err(StoreError::StorageDir)?;
-        Ok(StorePath::for_storage_dir(dir))
-    }
-}
-
-fn key_from_nscstring(s: &nsACString) -> Key {
-    Key::from(&*s.to_utf8())
-}
-
-fn key_to_nscstring(key: Key) -> nsCString {
-    nsCString::from(key.into_string())
-}
 
 #[xpcom(implement(nsIKeyValueService), atomic)]
 pub struct KeyValueService {
@@ -136,7 +77,7 @@ impl KeyValueService {
             moz_task::spawn_blocking("skv:KeyValueService:GetOrCreate:Request", async move {
                 Ok((
                     client.child_with_name("skv:KeyValueDatabase")?,
-                    store_path_from_wide(dir)?,
+                    StorePath::canonicalizing(dir)?,
                 ))
             });
 
@@ -323,8 +264,8 @@ impl KeyValueDatabase {
     ) -> Result<(), Infallible> {
         let inputs = || -> Result<_, InterfaceError> {
             let store = self.store()?;
-            let key = key_from_nscstring(key);
-            let value = value_from_variant(value)?;
+            let key = Key::from(key);
+            let value = Value::from_variant(value)?;
             Ok((store, key, value))
         }();
 
@@ -371,7 +312,7 @@ impl KeyValueDatabase {
                     let mut key = nsCString::new();
                     unsafe { pair.GetKey(&mut *key) }.to_result()?;
                     let value = getter_addrefs(|p| unsafe { pair.GetValue(p) })?;
-                    Ok((key_from_nscstring(&key), value_from_variant(value.coerce())?))
+                    Ok((Key::from(&*key), Value::from_variant(value.coerce())?))
                 })
                 .collect::<Result<Vec<_>, InterfaceError>>()?;
             Ok((store, pairs))
@@ -416,7 +357,7 @@ impl KeyValueDatabase {
     ) -> Result<(), Infallible> {
         let inputs = || -> Result<_, InterfaceError> {
             let store = self.store()?;
-            let key = key_from_nscstring(key);
+            let key = Key::from(key);
             Ok((store, key))
         }();
 
@@ -433,7 +374,7 @@ impl KeyValueDatabase {
         moz_task::spawn_local("skv:KeyValueDatabase:Get:Response", async move {
             let result = signal.aborting(request).await.and_then(|value| {
                 Ok(match value {
-                    Some(value) => value_to_variant(&value)?,
+                    Some(value) => value.to_variant()?,
                     None => default_value,
                 })
             });
@@ -460,7 +401,7 @@ impl KeyValueDatabase {
     ) -> Result<(), Infallible> {
         let inputs = || -> Result<_, InterfaceError> {
             let store = self.store()?;
-            let key = key_from_nscstring(key);
+            let key = Key::from(key);
             Ok((store, key))
         }();
 
@@ -497,7 +438,7 @@ impl KeyValueDatabase {
     ) -> Result<(), Infallible> {
         let inputs = || -> Result<_, InterfaceError> {
             let store = self.store()?;
-            let key = key_from_nscstring(key);
+            let key = Key::from(key);
             Ok((store, key))
         }();
 
@@ -541,11 +482,11 @@ impl KeyValueDatabase {
             let store = self.store()?;
             let from_key = match from_key.is_empty() {
                 true => Bound::Unbounded,
-                false => Bound::Included(key_from_nscstring(from_key)),
+                false => Bound::Included(Key::from(from_key)),
             };
             let to_key = match to_key.is_empty() {
                 true => Bound::Unbounded,
-                false => Bound::Excluded(key_from_nscstring(to_key)),
+                false => Bound::Excluded(Key::from(to_key)),
             };
             Ok((store, from_key, to_key))
         }();
@@ -619,11 +560,11 @@ impl KeyValueDatabase {
             let store = self.store()?;
             let from_key = match from_key.is_empty() {
                 true => Bound::Unbounded,
-                false => Bound::Included(key_from_nscstring(from_key)),
+                false => Bound::Included(Key::from(from_key)),
             };
             let to_key = match to_key.is_empty() {
                 true => Bound::Unbounded,
-                false => Bound::Excluded(key_from_nscstring(to_key)),
+                false => Bound::Excluded(Key::from(to_key)),
             };
             Ok((store, from_key, to_key))
         }();
@@ -716,12 +657,14 @@ impl KeyValuePair {
 
     xpcom_method!(get_key => GetKey() -> nsACString);
     fn get_key(&self) -> Result<nsCString, Infallible> {
-        Ok(key_to_nscstring(self.key.clone()))
+        Ok(self.key.clone().into())
     }
 
     xpcom_method!(get_value => GetValue() -> *const nsIVariant);
     fn get_value(&self) -> Result<RefPtr<nsIVariant>, nsresult> {
-        value_to_variant(&self.value).map_err(|_| nserror::NS_ERROR_FAILURE)
+        self.value
+            .to_variant()
+            .map_err(|_| nserror::NS_ERROR_FAILURE)
     }
 }
 
@@ -880,7 +823,7 @@ impl RkvSafeModeKeyValueImporter {
                     .write()
                     .unwrap();
                 let store =
-                    client.store_for_path(store_path_from_wide(specs[0].dir.clone())?)?;
+                    client.store_for_path(StorePath::canonicalizing(specs[0].dir.clone())?)?;
 
                 // An Rkv environment is unique to a storage directory;
                 // if we're importing from multiple directories, we need to
@@ -1085,8 +1028,6 @@ pub enum InterfaceError {
     Store(#[from] StoreError),
     #[error("value: {0}")]
     Value(#[from] ValueError),
-    #[error("from variant of type {0}: {1}")]
-    FromVariant(u16, nsresult),
     #[error("rkv store: {0}")]
     RkvStore(#[from] rkv::StoreError),
     #[error("importer: {0}")]

@@ -1,9 +1,9 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Base64.h"
-#include "mozilla/EndianUtils.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "mozilla/dom/ContentChild.h"
@@ -166,10 +166,6 @@ FTUserFontData* FT2FontEntry::GetUserFontData() {
  */
 
 FT2FontEntry::~FT2FontEntry() {
-  auto* cache = mFontTableCache.exchange(nullptr);
-  delete cache;
-  auto* face = mHBFace.exchange(nullptr);
-  hb_face_destroy(face);
   if (mMMVar) {
     SharedFTFace* face = mFTFace;
     FT_Done_MM_Var(face->GetFace()->glyph->library, mMMVar);
@@ -233,10 +229,11 @@ gfxFont* FT2FontEntry::CreateFontInstance(const gfxFontStyle* aStyle) {
   RefPtr<UnscaledFontFreeType> unscaledFont(mUnscaledFont);
   if (!unscaledFont) {
     RefPtr<SharedFTFace> origFace(mFTFace);
-    unscaledFont = !mFilename.IsEmpty() && mFilename[0] == '/'
-                       ? new UnscaledFontFreeType(mFilename.get(), mFTFontIndex,
-                                                  std::move(origFace))
-                       : new UnscaledFontFreeType(std::move(origFace));
+    unscaledFont =
+        !mFilename.IsEmpty() && mFilename[0] == '/'
+            ? new UnscaledFontFreeType(mFilename.BeginReading(), mFTFontIndex,
+                                       std::move(origFace))
+            : new UnscaledFontFreeType(std::move(origFace));
     mUnscaledFont = unscaledFont;
   }
 
@@ -468,52 +465,45 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   return rv;
 }
 
-hb_face_t* FT2FontEntry::CreateHBFace() {
-  if (mHBFace) {
-    return hb_face_reference(mHBFace);
-  }
+hb_face_t* FT2FontEntry::CreateHBFace() const {
+  hb_face_t* result = nullptr;
 
-  hb_face_t* face = nullptr;
   if (mFilename[0] == '/') {
     // An absolute path means a normal file in the filesystem, so we can use
-    // hb_face_create_from_file_or_fail, and keep the face around.
-    face = hb_face_create_from_file_or_fail(mFilename.get(), mFTFontIndex);
-    if (face) {
-      if (!mHBFace.compareExchange(nullptr, face)) {
-        hb_face_destroy(face);
-        face = mHBFace;
-      }
+    // hb_blob_create_from_file to read it.
+    gfxFontUtils::AutoHBBlob fileBlob(
+        hb_blob_create_from_file(mFilename.get()));
+    if (hb_blob_get_length(fileBlob) > 0) {
+      result = hb_face_create(fileBlob, mFTFontIndex);
     }
-    return hb_face_reference(face);
-  }
-
-  // A relative path means an omnijar resource, which we may need to
-  // decompress to a temporary buffer.
-  RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
-  nsZipItem* item = reader->GetItem(mFilename);
-  MOZ_ASSERT(item, "failed to find zip entry");
-  if (item) {
-    // TODO(jfkthame):
-    // Check whether the item is compressed; if not, we could just get a
-    // pointer without needing to allocate a buffer and copy the data.
-    // (Currently this configuration isn't used for Gecko on Android.)
-    uint32_t length = item->RealSize();
-    uint8_t* buffer = static_cast<uint8_t*>(malloc(length));
-    if (buffer) {
-      nsZipCursor cursor(item, reader, buffer, length);
-      cursor.Copy(&length);
-      MOZ_ASSERT(length == item->RealSize(), "error reading font");
-      if (length == item->RealSize()) {
-        gfxFontUtils::AutoHBBlob blob(
-            hb_blob_create((const char*)buffer, length, HB_MEMORY_MODE_READONLY,
-                           buffer, free));
-        // We don't retain this face; the caller will own the only reference.
-        return hb_face_create(blob, mFTFontIndex);
+  } else {
+    // A relative path means an omnijar resource, which we may need to
+    // decompress to a temporary buffer.
+    RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
+    nsZipItem* item = reader->GetItem(mFilename);
+    MOZ_ASSERT(item, "failed to find zip entry");
+    if (item) {
+      // TODO(jfkthame):
+      // Check whether the item is compressed; if not, we could just get a
+      // pointer without needing to allocate a buffer and copy the data.
+      // (Currently this configuration isn't used for Gecko on Android.)
+      uint32_t length = item->RealSize();
+      uint8_t* buffer = static_cast<uint8_t*>(malloc(length));
+      if (buffer) {
+        nsZipCursor cursor(item, reader, buffer, length);
+        cursor.Copy(&length);
+        MOZ_ASSERT(length == item->RealSize(), "error reading font");
+        if (length == item->RealSize()) {
+          gfxFontUtils::AutoHBBlob blob(
+              hb_blob_create((const char*)buffer, length,
+                             HB_MEMORY_MODE_READONLY, buffer, free));
+          result = hb_face_create(blob, mFTFontIndex);
+        }
       }
     }
   }
 
-  return nullptr;
+  return result;
 }
 
 bool FT2FontEntry::HasFontTable(uint32_t aTableTag) {
@@ -584,30 +574,20 @@ hb_blob_t* FT2FontEntry::GetFontTable(uint32_t aTableTag) {
     }
   }
 
-  // Try to read table directly via harfbuzz API, unless CreateHBFace will be
-  // expensive.
-  if (mHBFace || (!mFilename.IsEmpty() && mFilename[0] == '/')) {
-    if (hb_face_t* face = CreateHBFace()) {
+  // If the FT_Face hasn't been instantiated, try to read table directly
+  // via harfbuzz API to avoid expensive FT_Face creation.
+  if (!mFTFace && !mFilename.IsEmpty()) {
+    hb_face_t* face = CreateHBFace();
+    if (face) {
       hb_blob_t* result = hb_face_reference_table(face, aTableTag);
       hb_face_destroy(face);
-      return result != hb_blob_get_empty() ? result : nullptr;
+      return result;
     }
   }
 
   // Otherwise, use the default method (which in turn will call our
   // implementation of CopyFontTable).
   return gfxFontEntry::GetFontTable(aTableTag);
-}
-
-gfxFontEntry::FontTableCache* FT2FontEntry::GetFontTableCache(bool aCreate) {
-  // Create the cache if it does not yet exist.
-  if (!mFontTableCache && aCreate) {
-    auto* cache = new FontTableCache();
-    if (!mFontTableCache.compareExchange(nullptr, cache)) {
-      delete cache;
-    }
-  }
-  return mFontTableCache;
 }
 
 bool FT2FontEntry::HasVariations() {
@@ -763,7 +743,17 @@ class FontNameCache {
 
   // Creates the object but does NOT load the cached data from the startup
   // cache; call Init() after creation to do that.
-  FontNameCache() : mWriteNeeded(false) {
+  FontNameCache() : mMap(&mOps, sizeof(FNCMapEntry), 0), mWriteNeeded(false) {
+    // HACK ALERT: it's weird to assign |mOps| after we passed a pointer to
+    // it to |mMap|'s constructor. A more normal approach here would be to
+    // have a static |sOps| member. Unfortunately, this mysteriously but
+    // consistently makes Fennec start-up slower, so we take this
+    // unorthodox approach instead. It's safe because PLDHashTable's
+    // constructor doesn't dereference the pointer; it just makes a copy of
+    // it.
+    mOps = (PLDHashTableOps){StringHash, HashMatchEntry, MoveEntry,
+                             PLDHashTable::ClearEntryStub, nullptr};
+
     MOZ_ASSERT(XRE_IsParentProcess(),
                "FontNameCache should only be used in chrome process");
     mCache = mozilla::scache::StartupCache::GetSingleton();
@@ -771,11 +761,12 @@ class FontNameCache {
 
   ~FontNameCache() { WriteCache(); }
 
-  size_t EntryCount() const { return mMap.Count(); }
+  size_t EntryCount() const { return mMap.EntryCount(); }
 
   void DropStaleEntries() {
-    for (auto iter = mMap.Iter(); !iter.Done(); iter.Next()) {
-      if (!iter.Data().mFileExists) {
+    for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<FNCMapEntry*>(iter.Get());
+      if (!entry->mFileExists) {
         iter.Remove();
       }
     }
@@ -788,15 +779,16 @@ class FontNameCache {
 
     LOG(("Writing FontNameCache:"));
     nsAutoCString buf;
-    for (auto& entry : mMap) {
-      MOZ_ASSERT(entry.GetData().mFileExists);
-      buf.Append(entry.GetKey());
+    for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<FNCMapEntry*>(iter.Get());
+      MOZ_ASSERT(entry->mFileExists);
+      buf.Append(entry->mFilename);
       buf.Append(kGroupSep);
-      buf.Append(entry.GetData().mFaces);
+      buf.Append(entry->mFaces);
       buf.Append(kGroupSep);
-      buf.AppendInt(entry.GetData().mTimestamp);
+      buf.AppendInt(entry->mTimestamp);
       buf.Append(kGroupSep);
-      buf.AppendInt(entry.GetData().mFilesize);
+      buf.AppendInt(entry->mFilesize);
       buf.Append(kFileSep);
     }
 
@@ -866,13 +858,17 @@ class FontNameCache {
       }
       uint32_t filesize = strtoul(cur, nullptr, 10);
 
-      auto& mapEntry = mMap.LookupOrInsert(filename);
-      mapEntry.mTimestamp = timestamp;
-      mapEntry.mFilesize = filesize;
-      mapEntry.mFaces.Assign(faceList);
-      // entries from the startupcache are marked "non-existing"
-      // until we have confirmed that the file still exists
-      mapEntry.mFileExists = false;
+      auto mapEntry =
+          static_cast<FNCMapEntry*>(mMap.Add(filename.get(), fallible));
+      if (mapEntry) {
+        mapEntry->mFilename.Assign(filename);
+        mapEntry->mTimestamp = timestamp;
+        mapEntry->mFilesize = filesize;
+        mapEntry->mFaces.Assign(faceList);
+        // entries from the startupcache are marked "non-existing"
+        // until we have confirmed that the file still exists
+        mapEntry->mFileExists = false;
+      }
 
       cur = fileEnd + 1;
     }
@@ -880,7 +876,7 @@ class FontNameCache {
 
   void GetInfoForFile(const nsCString& aFileName, nsCString& aFaceList,
                       uint32_t* aTimestamp, uint32_t* aFilesize) {
-    auto entry = mMap.Lookup(aFileName);
+    auto entry = static_cast<FNCMapEntry*>(mMap.Search(aFileName.get()));
     if (entry) {
       *aTimestamp = entry->mTimestamp;
       *aFilesize = entry->mFilesize;
@@ -894,25 +890,52 @@ class FontNameCache {
 
   void CacheFileInfo(const nsCString& aFileName, const nsCString& aFaceList,
                      uint32_t aTimestamp, uint32_t aFilesize) {
-    auto& entry = mMap.LookupOrInsert(aFileName);
-    entry.mTimestamp = aTimestamp;
-    entry.mFilesize = aFilesize;
-    entry.mFaces.Assign(aFaceList);
-    entry.mFileExists = true;
+    auto entry = static_cast<FNCMapEntry*>(mMap.Add(aFileName.get(), fallible));
+    if (entry) {
+      entry->mFilename.Assign(aFileName);
+      entry->mTimestamp = aTimestamp;
+      entry->mFilesize = aFilesize;
+      entry->mFaces.Assign(aFaceList);
+      entry->mFileExists = true;
+    }
     mWriteNeeded = true;
   }
 
  private:
-  struct FNCEntry {
+  mozilla::scache::StartupCache* mCache;
+  PLDHashTable mMap;
+  bool mWriteNeeded;
+
+  PLDHashTableOps mOps;
+
+  struct FNCMapEntry : public PLDHashEntryHdr {
+   public:
+    nsCString mFilename;
     uint32_t mTimestamp;
     uint32_t mFilesize;
     nsCString mFaces;
     bool mFileExists;
   };
 
-  mozilla::scache::StartupCache* mCache;
-  nsTHashMap<nsCString, FNCEntry> mMap;
-  bool mWriteNeeded;
+  static PLDHashNumber StringHash(const void* key) {
+    return HashString(reinterpret_cast<const char*>(key));
+  }
+
+  static bool HashMatchEntry(const PLDHashEntryHdr* aHdr, const void* key) {
+    const FNCMapEntry* entry = static_cast<const FNCMapEntry*>(aHdr);
+    return entry->mFilename.Equals(reinterpret_cast<const char*>(key));
+  }
+
+  static void MoveEntry(PLDHashTable* table, const PLDHashEntryHdr* aFrom,
+                        PLDHashEntryHdr* aTo) {
+    FNCMapEntry* to = static_cast<FNCMapEntry*>(aTo);
+    const FNCMapEntry* from = static_cast<const FNCMapEntry*>(aFrom);
+    to->mFilename.Assign(from->mFilename);
+    to->mTimestamp = from->mTimestamp;
+    to->mFilesize = from->mFilesize;
+    to->mFaces.Assign(from->mFaces);
+    to->mFileExists = from->mFileExists;
+  }
 };
 
 /***************************************************************

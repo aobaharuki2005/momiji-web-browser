@@ -17,7 +17,6 @@ const args = [
   Symbol(),
   2020,
   2020n,
-  NaN,
 ];
 for (const argument of args) {
   assert.throws(TypeError, () => instance.with(argument), `Does not support ${typeof argument}`);

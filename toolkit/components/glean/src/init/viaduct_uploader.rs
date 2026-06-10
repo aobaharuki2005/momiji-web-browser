@@ -175,9 +175,10 @@ fn bhttp_encode(upload_request: PingUploadRequest) -> Result<Vec<u8>, ViaductUpl
         parsed_url.path().into(),
     );
 
-    for (k, v) in upload_request.headers {
-        message.put_header(k, v);
-    }
+    upload_request
+        .headers
+        .into_iter()
+        .for_each(|(k, v)| message.put_header(k, v));
 
     message.write_content(upload_request.body);
 

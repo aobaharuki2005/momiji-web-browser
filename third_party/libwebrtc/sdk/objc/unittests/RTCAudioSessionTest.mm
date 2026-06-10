@@ -12,12 +12,10 @@
 #import <OCMock/OCMock.h>
 #import <XCTest/XCTest.h>
 
-#include "rtc_base/thread.h"
-#include "test/gtest.h"
-
 #include <vector>
 
 #include "rtc_base/event.h"
+#include "rtc_base/gunit.h"
 
 #import "components/audio/RTCAudioSession+Private.h"
 
@@ -27,9 +25,8 @@
 @interface RTC_OBJC_TYPE (RTCAudioSession)
 (UnitTesting)
 
-    @property(nonatomic, readonly)
-        std::vector<__weak id<RTC_OBJC_TYPE(RTCAudioSessionDelegate)> >
-            delegates;
+    @property(nonatomic, readonly) std::vector<
+        __weak id<RTC_OBJC_TYPE(RTCAudioSessionDelegate)> > delegates;
 
 - (instancetype)initWithAudioSession:(id)audioSession;
 

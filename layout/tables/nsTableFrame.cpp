@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,10 +14,10 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/Range.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/WritingModes.h"
@@ -24,6 +26,7 @@
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "nsCOMPtr.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
 #include "nsCSSRendering.h"
@@ -33,6 +36,7 @@
 #include "nsError.h"
 #include "nsFrameList.h"
 #include "nsFrameManager.h"
+#include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIContent.h"
 #include "nsIFrameInlines.h"
@@ -204,6 +208,7 @@ nsTableFrame::~nsTableFrame() = default;
 void nsTableFrame::Destroy(DestroyContext& aContext) {
   MOZ_ASSERT(!mBits.mIsDestroying);
   mBits.mIsDestroying = true;
+  mColGroups.DestroyFrames(aContext);
   nsContainerFrame::Destroy(aContext);
 }
 
@@ -250,10 +255,15 @@ void nsTableFrame::PositionedTablePartMaybeChanged(nsContainerFrame* aFrame,
   MOZ_ASSERT(tableFrame, "Should have a table frame here");
   tableFrame = static_cast<nsTableFrame*>(tableFrame->FirstContinuation());
 
-  // Retrieve the positioned parts array for this table (lazily creating it
-  // if it doesn't exist yet).
+  // Retrieve the positioned parts array for this table.
   TablePartsArray* positionedParts =
-      tableFrame->GetOrCreateDeletableProperty(PositionedTablePartsProperty());
+      tableFrame->GetProperty(PositionedTablePartsProperty());
+
+  // Lazily create the array if it doesn't exist yet.
+  if (!positionedParts) {
+    positionedParts = new TablePartsArray;
+    tableFrame->SetProperty(PositionedTablePartsProperty(), positionedParts);
+  }
 
   if (isPositioned) {
     // Add this frame to the list.
@@ -289,11 +299,38 @@ void nsTableFrame::MaybeUnregisterPositionedTablePart(
   }
 }
 
+// XXX this needs to be cleaned up so that the frame constructor breaks out col
+// group frames into a separate child list, bug 343048.
 void nsTableFrame::SetInitialChildList(ChildListID aListID,
                                        nsFrameList&& aChildList) {
-  nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
   if (aListID != FrameChildListID::Principal) {
+    nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
     return;
+  }
+
+  MOZ_ASSERT(mFrames.IsEmpty() && mColGroups.IsEmpty(),
+             "unexpected second call to SetInitialChildList");
+#ifdef DEBUG
+  for (nsIFrame* f : aChildList) {
+    MOZ_ASSERT(f->GetParent() == this, "Unexpected parent");
+  }
+#endif
+
+  // XXXbz the below code is an icky cesspit that's only needed in its current
+  // form for two reasons:
+  // 1) Both rowgroups and column groups come in on the principal child list.
+  while (aChildList.NotEmpty()) {
+    nsIFrame* childFrame = aChildList.FirstChild();
+    aChildList.RemoveFirstChild();
+    const nsStyleDisplay* childDisplay = childFrame->StyleDisplay();
+
+    if (mozilla::StyleDisplay::TableColumnGroup == childDisplay->mDisplay) {
+      NS_ASSERTION(childFrame->IsTableColGroupFrame(),
+                   "This is not a colgroup");
+      mColGroups.AppendFrame(nullptr, childFrame);
+    } else {  // row groups and unknown frames go on the main list for now
+      mFrames.AppendFrame(nullptr, childFrame);
+    }
   }
 
   // If we have a prev-in-flow, then we're a table that has been split and
@@ -301,7 +338,7 @@ void nsTableFrame::SetInitialChildList(ChildListID aListID,
   if (!GetPrevInFlow()) {
     // process col groups first so that real cols get constructed before
     // anonymous ones due to cells in rows.
-    InsertColGroups(0, mFrames);
+    InsertColGroups(0, mColGroups);
     InsertRowGroups(mFrames);
     // calc collapsing borders
     if (IsBorderCollapse()) {
@@ -311,25 +348,23 @@ void nsTableFrame::SetInitialChildList(ChildListID aListID,
 }
 
 void nsTableFrame::RowOrColSpanChanged(nsTableCellFrame* aCellFrame) {
-  if (!aCellFrame) {
-    return;
-  }
-  nsTableCellMap* cellMap = GetCellMap();
-  if (!cellMap) {
-    return;
-  }
-  // for now just remove the cell from the map and reinsert it
-  uint32_t rowIndex = aCellFrame->RowIndex();
-  uint32_t colIndex = aCellFrame->ColIndex();
-  RemoveCell(aCellFrame, rowIndex);
-  AutoTArray<nsTableCellFrame*, 1> cells;
-  cells.AppendElement(aCellFrame);
-  InsertCells(cells, rowIndex, colIndex - 1);
+  if (aCellFrame) {
+    nsTableCellMap* cellMap = GetCellMap();
+    if (cellMap) {
+      // for now just remove the cell from the map and reinsert it
+      uint32_t rowIndex = aCellFrame->RowIndex();
+      uint32_t colIndex = aCellFrame->ColIndex();
+      RemoveCell(aCellFrame, rowIndex);
+      AutoTArray<nsTableCellFrame*, 1> cells;
+      cells.AppendElement(aCellFrame);
+      InsertCells(cells, rowIndex, colIndex - 1);
 
-  // XXX Should this use IntrinsicDirty::FrameAncestorsAndDescendants? It
-  // currently doesn't need to, but it might given more optimization.
-  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
-                                NS_FRAME_IS_DIRTY);
+      // XXX Should this use IntrinsicDirty::FrameAncestorsAndDescendants? It
+      // currently doesn't need to, but it might given more optimization.
+      PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
+                                    NS_FRAME_IS_DIRTY);
+    }
+  }
 }
 
 /* ****** CellMap methods ******* */
@@ -425,8 +460,10 @@ bool nsTableFrame::HasMoreThanOneCell(int32_t aRowIndex) const {
 void nsTableFrame::AdjustRowIndices(int32_t aRowIndex, int32_t aAdjustment) {
   // Iterate over the row groups and adjust the row indices of all rows
   // whose index is >= aRowIndex.
-  for (nsTableRowGroupFrame* rg : OrderedGroups().mRowGroups) {
-    rg->AdjustRowIndices(aRowIndex, aAdjustment);
+  RowGroupArray rowGroups = OrderedRowGroups();
+
+  for (uint32_t rgIdx = 0; rgIdx < rowGroups.Length(); rgIdx++) {
+    rowGroups[rgIdx]->AdjustRowIndices(aRowIndex, aAdjustment);
   }
 }
 
@@ -440,24 +477,22 @@ void nsTableFrame::ResetRowIndices(
 
   nsTHashSet<nsTableRowGroupFrame*> excludeRowGroups;
   for (nsIFrame* excludeRowGroup : aRowGroupsToExclude) {
-    if (nsTableRowGroupFrame* rg = do_QueryFrame(excludeRowGroup)) {
-      excludeRowGroups.Insert(rg);
+    excludeRowGroups.Insert(
+        static_cast<nsTableRowGroupFrame*>(excludeRowGroup));
 #ifdef DEBUG
-      {
-        // Check to make sure that the row indices of all rows in excluded row
-        // groups are '0' (i.e. the initial value since they haven't been added
-        // yet)
-        const nsFrameList& rowFrames = excludeRowGroup->PrincipalChildList();
-        for (nsIFrame* r : rowFrames) {
-          auto* row = static_cast<nsTableRowFrame*>(r);
-          MOZ_ASSERT(
-              row->GetRowIndex() == 0,
-              "exclusions cannot be used for rows that were already added,"
-              "because we'd need to process mDeletedRowIndexRanges");
-        }
+    {
+      // Check to make sure that the row indices of all rows in excluded row
+      // groups are '0' (i.e. the initial value since they haven't been added
+      // yet)
+      const nsFrameList& rowFrames = excludeRowGroup->PrincipalChildList();
+      for (nsIFrame* r : rowFrames) {
+        auto* row = static_cast<nsTableRowFrame*>(r);
+        MOZ_ASSERT(row->GetRowIndex() == 0,
+                   "exclusions cannot be used for rows that were already added,"
+                   "because we'd need to process mDeletedRowIndexRanges");
       }
-#endif
     }
+#endif
   }
 
   int32_t rowIndex = 0;
@@ -477,50 +512,55 @@ void nsTableFrame::ResetRowIndices(
 }
 
 void nsTableFrame::InsertColGroups(int32_t aStartColIndex,
-                                   const nsFrameList::Slice& aNewFrames) {
-  auto colIndex = aStartColIndex;
-  nsIFrame* lastFrame = nullptr;
-  for (nsIFrame* f : aNewFrames) {
-    lastFrame = f;
-    nsTableColGroupFrame* cg = do_QueryFrame(f);
-    if (!cg || cg->IsSynthetic()) {
-      continue;
-    }
-    cg->SetStartColumnIndex(colIndex);
-    cg->AddColsToTable(colIndex, false, cg->PrincipalChildList());
-    int32_t numCols = cg->GetColCount();
+                                   const nsFrameList::Slice& aColGroups) {
+  int32_t colIndex = aStartColIndex;
+
+  // XXX: We cannot use range-based for loop because AddColsToTable() can
+  // destroy the nsTableColGroupFrame in the slice we're traversing! Need to
+  // check the validity of *colGroupIter.
+  auto colGroupIter = aColGroups.begin();
+  for (auto colGroupIterEnd = aColGroups.end();
+       *colGroupIter && colGroupIter != colGroupIterEnd; ++colGroupIter) {
+    MOZ_ASSERT((*colGroupIter)->IsTableColGroupFrame());
+    auto* cgFrame = static_cast<nsTableColGroupFrame*>(*colGroupIter);
+    cgFrame->SetStartColumnIndex(colIndex);
+    cgFrame->AddColsToTable(colIndex, false, cgFrame->PrincipalChildList());
+    int32_t numCols = cgFrame->GetColCount();
     colIndex += numCols;
   }
-  auto* next = lastFrame ? lastFrame->GetNextSibling() : nullptr;
-  nsTableColGroupFrame::ResetColIndices(next, GetSyntheticColGroup(), colIndex);
-#ifdef DEBUG
-  VerifyColFrames();
-#endif
+
+  if (*colGroupIter) {
+    nsTableColGroupFrame::ResetColIndices(*colGroupIter, colIndex);
+  }
 }
 
 void nsTableFrame::InsertCol(nsTableColFrame& aColFrame, int32_t aColIndex) {
   mColFrames.InsertElementAt(aColIndex, &aColFrame);
   nsTableColType insertedColType = aColFrame.GetColType();
   int32_t numCacheCols = mColFrames.Length();
-  if (nsTableCellMap* cellMap = GetCellMap()) {
+  nsTableCellMap* cellMap = GetCellMap();
+  if (cellMap) {
     int32_t numMapCols = cellMap->GetColCount();
     if (numCacheCols > numMapCols) {
       bool removedFromCache = false;
       if (eColAnonymousCell != insertedColType) {
-        if (nsTableColFrame* lastCol = mColFrames.ElementAt(numCacheCols - 1)) {
+        nsTableColFrame* lastCol = mColFrames.ElementAt(numCacheCols - 1);
+        if (lastCol) {
           nsTableColType lastColType = lastCol->GetColType();
           if (eColAnonymousCell == lastColType) {
             // remove the col from the cache
             mColFrames.RemoveLastElement();
-            if (mSyntheticColGroup) {
-              MOZ_ASSERT(mSyntheticColGroup->IsSynthetic());
+            // remove the col from the synthetic col group
+            nsTableColGroupFrame* lastColGroup =
+                (nsTableColGroupFrame*)mColGroups.LastChild();
+            if (lastColGroup) {
+              MOZ_ASSERT(lastColGroup->IsSynthetic());
               DestroyContext context(PresShell());
-              mSyntheticColGroup->RemoveChild(context, *lastCol, false);
+              lastColGroup->RemoveChild(context, *lastCol, false);
 
               // remove the col group if it is empty
-              if (mSyntheticColGroup->GetColCount() <= 0) {
-                mFrames.DestroyFrame(context, mSyntheticColGroup);
-                mSyntheticColGroup = nullptr;
+              if (lastColGroup->GetColCount() <= 0) {
+                mColGroups.DestroyFrame(context, (nsIFrame*)lastColGroup);
               }
             }
             removedFromCache = true;
@@ -540,7 +580,8 @@ void nsTableFrame::InsertCol(nsTableColFrame& aColFrame, int32_t aColIndex) {
   }
 }
 
-void nsTableFrame::RemoveCol(int32_t aColIndex, bool aRemoveFromCache,
+void nsTableFrame::RemoveCol(nsTableColGroupFrame* aColGroupFrame,
+                             int32_t aColIndex, bool aRemoveFromCache,
                              bool aRemoveFromCellMap) {
   if (aRemoveFromCache) {
     mColFrames.RemoveElementAt(aColIndex);
@@ -570,7 +611,8 @@ void nsTableFrame::RemoveCol(int32_t aColIndex, bool aRemoveFromCache,
   }
   // for now, just bail and recalc all of the collapsing borders
   if (IsBorderCollapse()) {
-    SetFullBCDamageArea();
+    TableArea damageArea(0, 0, GetColCount(), GetRowCount());
+    AddBCDamageArea(damageArea);
   }
 }
 
@@ -587,7 +629,7 @@ nsTableColGroupFrame* nsTableFrame::CreateSyntheticColGroupFrame() {
 
   RefPtr<ComputedStyle> colGroupStyle;
   colGroupStyle = presShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
-      PseudoStyleType::MozTableColumnGroup);
+      PseudoStyleType::tableColGroup);
   // Create a col group frame
   nsTableColGroupFrame* newFrame =
       NS_NewTableColGroupFrame(presShell, colGroupStyle);
@@ -596,37 +638,25 @@ nsTableColGroupFrame* nsTableFrame::CreateSyntheticColGroupFrame() {
   return newFrame;
 }
 
-int32_t nsTableFrame::GetRealColEnd() const {
-  for (auto* col : Reversed(mColFrames)) {
-    auto* cg = static_cast<nsTableColGroupFrame*>(col->GetParent());
-    if (!cg->IsSynthetic()) {
-      return col->GetColIndex() + 1;
-    }
-  }
-  return 0;
-}
-
-static int32_t GetColStartAfter(nsIFrame* aPrevSibling) {
-  for (nsIFrame* f = aPrevSibling; f; f = f->GetPrevSibling()) {
-    if (nsTableColGroupFrame* cg = do_QueryFrame(f)) {
-      if (!cg->IsSynthetic()) {
-        return cg->GetStartColumnIndex() + cg->GetColCount();
-      }
-    }
-  }
-  return 0;
-}
-
 void nsTableFrame::AppendAnonymousColFrames(int32_t aNumColsToAdd) {
   MOZ_ASSERT(aNumColsToAdd > 0, "We should be adding _something_.");
-  if (!mSyntheticColGroup) {
-    int32_t colIndex = GetRealColEnd();
-    mSyntheticColGroup = CreateSyntheticColGroupFrame();
+  // get the last col group frame
+  nsTableColGroupFrame* colGroupFrame =
+      static_cast<nsTableColGroupFrame*>(mColGroups.LastChild());
+
+  if (!colGroupFrame || !colGroupFrame->IsSynthetic()) {
+    int32_t colIndex = (colGroupFrame) ? colGroupFrame->GetStartColumnIndex() +
+                                             colGroupFrame->GetColCount()
+                                       : 0;
+    colGroupFrame = CreateSyntheticColGroupFrame();
+    if (!colGroupFrame) {
+      return;
+    }
     // add the new frame to the child list
-    mFrames.AppendFrame(this, mSyntheticColGroup);
-    mSyntheticColGroup->SetStartColumnIndex(colIndex);
+    mColGroups.AppendFrame(this, colGroupFrame);
+    colGroupFrame->SetStartColumnIndex(colIndex);
   }
-  AppendAnonymousColFrames(mSyntheticColGroup, aNumColsToAdd, eColAnonymousCell,
+  AppendAnonymousColFrames(colGroupFrame, aNumColsToAdd, eColAnonymousCell,
                            true);
 }
 
@@ -653,7 +683,7 @@ void nsTableFrame::AppendAnonymousColFrames(
     nsIContent* iContent = aColGroupFrame->GetContent();
     RefPtr<ComputedStyle> computedStyle =
         presShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
-            PseudoStyleType::MozTableColumn);
+            PseudoStyleType::tableCol);
     // ASSERTION to check for bug 54454 sneaking back in...
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
 
@@ -751,7 +781,7 @@ int32_t nsTableFrame::DestroyAnonymousColFrames(int32_t aNumFrames) {
       // remove the frame from the colgroup
       cgFrame->RemoveChild(context, *colFrame, false);
       // remove the frame from the cache, but not the cell map
-      RemoveCol(colIdx, true, false);
+      RemoveCol(nullptr, colIdx, true, false);
       numColsRemoved++;
     } else {
       break;
@@ -1058,6 +1088,18 @@ void nsTableFrame::InsertRowGroups(const nsFrameList::Slice& aRowGroups) {
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
+const nsFrameList& nsTableFrame::GetChildList(ChildListID aListID) const {
+  if (aListID == FrameChildListID::ColGroup) {
+    return mColGroups;
+  }
+  return nsContainerFrame::GetChildList(aListID);
+}
+
+void nsTableFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
+  nsContainerFrame::GetChildLists(aLists);
+  mColGroups.AppendIfNonempty(aLists, FrameChildListID::ColGroup);
+}
+
 static inline bool FrameHasBorder(nsIFrame* f) {
   if (!f->StyleVisibility()->IsVisible()) {
     return false;
@@ -1077,15 +1119,15 @@ void nsTableFrame::CalcHasBCBorders() {
     return;
   }
 
-  auto groups = OrderedGroups();
   // Check col and col group has borders.
-  for (nsTableColGroupFrame* cg : groups.mColGroups) {
-    if (FrameHasBorder(cg)) {
+  for (nsIFrame* f : this->GetChildList(FrameChildListID::ColGroup)) {
+    if (FrameHasBorder(f)) {
       SetHasBCBorders(true);
       return;
     }
 
-    for (nsTableColFrame* col = cg->GetFirstColumn(); col;
+    nsTableColGroupFrame* colGroup = static_cast<nsTableColGroupFrame*>(f);
+    for (nsTableColFrame* col = colGroup->GetFirstColumn(); col;
          col = col->GetNextCol()) {
       if (FrameHasBorder(col)) {
         SetHasBCBorders(true);
@@ -1095,7 +1137,8 @@ void nsTableFrame::CalcHasBCBorders() {
   }
 
   // check row group, row and cell has borders.
-  for (nsTableRowGroupFrame* rowGroup : groups.mRowGroups) {
+  RowGroupArray rowGroups = OrderedRowGroups();
+  for (nsTableRowGroupFrame* rowGroup : rowGroups) {
     if (FrameHasBorder(rowGroup)) {
       SetHasBCBorders(true);
       return;
@@ -1145,9 +1188,11 @@ void nsTableFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // won't use its passed-in BorderBackground list anyway. It does affect cell
   // borders though; this lets us get cell borders into the nsTableFrame's
   // BorderBackground list.
-  for (nsTableColFrame* col :
-       static_cast<nsTableFrame*>(FirstInFlow())->mColFrames) {
-    tableBGs.AddColumn(col);
+  for (nsIFrame* colGroup :
+       FirstContinuation()->GetChildList(FrameChildListID::ColGroup)) {
+    for (nsIFrame* col : colGroup->PrincipalChildList()) {
+      tableBGs.AddColumn((nsTableColFrame*)col);
+    }
   }
 
   if (!mFrames.IsEmpty() && !HidesContent()) {
@@ -1205,7 +1250,7 @@ void nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
                               aBorderPadding.IStart(aWM) + GetColSpacing(-1),
                               aBorderPadding.BStart(aWM) + GetRowSpacing(-1));
   nsTableFrame* fif = static_cast<nsTableFrame*>(FirstInFlow());
-  for (nsIFrame* colGroupFrame : OrderedGroups().mColGroups) {
+  for (nsIFrame* colGroupFrame : mColGroups) {
     MOZ_ASSERT(colGroupFrame->IsTableColGroupFrame());
     // first we need to figure out the size of the colgroup
     int32_t groupFirstCol = colIdx;
@@ -1304,6 +1349,8 @@ nscoord nsTableFrame::IntrinsicISize(const IntrinsicSizeInput& aInput,
   if (NeedToCalcBCBorders()) {
     CalcBCBorders();
   }
+
+  ReflowColGroups(aInput.mContext);
 
   return aType == IntrinsicISizeType::MinISize
              ? LayoutStrategy()->GetMinISize(aInput.mContext)
@@ -1590,6 +1637,8 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
   MoveOverflowToChildList();
 
   bool haveCalledCalcDesiredBSize = false;
+  SetHaveReflowedColGroups(false);
+
   LogicalMargin borderPadding =
       aReflowInput.ComputedLogicalBorderPadding(wm).ApplySkipSides(
           PreReflowBlockLevelLogicalSkipSides());
@@ -1606,7 +1655,6 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
   // necessary positioning adjustments along the x-axis.
   nscoord tentativeContainerWidth = 0;
   bool mayAdjustXForAllChildren = false;
-  Groups groups = OrderedGroups();
 
   // Reflow the entire table (pass 2 and possibly pass 3). This phase is
   // necessary during a constrained initial reflow and other reflows which
@@ -1657,7 +1705,7 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
                                                 ? TableReflowMode::Measuring
                                                 : TableReflowMode::Final;
     ReflowTable(aDesiredSize, aReflowInput, borderPadding, firstReflowMode,
-                groups, lastChildReflowed, aStatus);
+                lastChildReflowed, aStatus);
 
     // When in vertical-rl mode, there may be two kinds of scenarios in which
     // the positioning of all the children need to be adjusted along the x-axis
@@ -1698,7 +1746,7 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
       mutable_rs.mFlags.mSpecialBSizeReflow = true;
 
       ReflowTable(aDesiredSize, aReflowInput, borderPadding,
-                  TableReflowMode::Final, groups, lastChildReflowed, aStatus);
+                  TableReflowMode::Final, lastChildReflowed, aStatus);
 
       mutable_rs.mFlags.mSpecialBSizeReflow = false;
     }
@@ -1739,6 +1787,14 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
     }
   }
 
+  // Calculate the overflow area contribution from our children. We couldn't
+  // do this on the fly during ReflowChildren(), because in vertical-rl mode
+  // with unconstrained width, we weren't placing them in their final positions
+  // until the fixupKidPositions loop just above.
+  for (nsIFrame* kid : mFrames) {
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kid);
+  }
+
   SetColumnDimensions(aDesiredSize.BSize(wm), wm, borderPadding,
                       aDesiredSize.PhysicalSize());
   NS_WARNING_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableISize(),
@@ -1748,16 +1804,7 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
     // and rows have just been reflowed (i.e., it makes adjustments to
     // their rects that are not idempotent).  Thus the reflow code
     // checks NeedToCollapse() to ensure this is true.
-    AdjustForCollapsingRowsCols(aDesiredSize, wm, groups.mRowGroups,
-                                borderPadding);
-  }
-
-  // Calculate the overflow area contribution from our children. We couldn't
-  // do this on the fly during ReflowChildren(), because in vertical-rl mode
-  // with unconstrained width, we weren't placing them in their final positions
-  // until the fixupKidPositions loop just above.
-  for (nsIFrame* kid : groups.mRowGroups) {
-    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kid);
+    AdjustForCollapsingRowsCols(aDesiredSize, wm, borderPadding);
   }
 
   // If there are any relatively-positioned table parts, we need to reflow their
@@ -1838,7 +1885,7 @@ bool nsTableFrame::ComputeCustomOverflow(OverflowAreas& aOverflowAreas) {
 void nsTableFrame::ReflowTable(ReflowOutput& aDesiredSize,
                                const ReflowInput& aReflowInput,
                                const LogicalMargin& aBorderPadding,
-                               TableReflowMode aReflowMode, Groups& aGroups,
+                               TableReflowMode aReflowMode,
                                nsIFrame*& aLastChildReflowed,
                                nsReflowStatus& aStatus) {
   aLastChildReflowed = nullptr;
@@ -1848,8 +1895,10 @@ void nsTableFrame::ReflowTable(ReflowOutput& aDesiredSize,
   }
 
   TableReflowInput reflowInput(aReflowInput, aBorderPadding, aReflowMode);
-  ReflowChildren(reflowInput, aStatus, aGroups, aLastChildReflowed,
+  ReflowChildren(reflowInput, aStatus, aLastChildReflowed,
                  aDesiredSize.mOverflowAreas);
+
+  ReflowColGroups(aReflowInput.mRenderingContext);
 }
 
 void nsTableFrame::PushChildrenToOverflow(const RowGroupArray& aRowGroups,
@@ -1878,7 +1927,6 @@ void nsTableFrame::PushChildrenToOverflow(const RowGroupArray& aRowGroups,
 // passes of reflow so that it has no effect on the calculations of reflow.
 void nsTableFrame::AdjustForCollapsingRowsCols(
     ReflowOutput& aDesiredSize, const WritingMode aWM,
-    const nsTArray<nsTableRowGroupFrame*>& aRowGroups,
     const LogicalMargin& aBorderPadding) {
   nscoord bTotalOffset = 0;  // total offset among all rows in all row groups
 
@@ -1887,16 +1935,28 @@ void nsTableFrame::AdjustForCollapsingRowsCols(
   SetNeedToCollapse(false);
 
   // collapse the rows and/or row groups as necessary
+  // Get the ordered children
+  RowGroupArray rowGroups = OrderedRowGroups();
+
   nsTableFrame* firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
   nscoord iSize = firstInFlow->GetCollapsedISize(aWM, aBorderPadding);
   nscoord rgISize = iSize - GetColSpacing(-1) - GetColSpacing(GetColCount());
+  OverflowAreas overflow;
   // Walk the list of children
-  for (nsTableRowGroupFrame* rg : aRowGroups) {
-    bTotalOffset += rg->CollapseRowGroupIfNecessary(bTotalOffset, rgISize, aWM);
+  for (uint32_t childX = 0; childX < rowGroups.Length(); childX++) {
+    nsTableRowGroupFrame* rgFrame = rowGroups[childX];
+    NS_ASSERTION(rgFrame, "Must have row group frame here");
+    bTotalOffset +=
+        rgFrame->CollapseRowGroupIfNecessary(bTotalOffset, rgISize, aWM);
+    ConsiderChildOverflow(overflow, rgFrame);
   }
 
   aDesiredSize.BSize(aWM) -= bTotalOffset;
   aDesiredSize.ISize(aWM) = iSize;
+  overflow.UnionAllWith(
+      nsRect(0, 0, aDesiredSize.Width(), aDesiredSize.Height()));
+  FinishAndStoreOverflow(overflow,
+                         nsSize(aDesiredSize.Width(), aDesiredSize.Height()));
 }
 
 nscoord nsTableFrame::GetCollapsedISize(const WritingMode aWM,
@@ -1904,19 +1964,28 @@ nscoord nsTableFrame::GetCollapsedISize(const WritingMode aWM,
   NS_ASSERTION(!GetPrevInFlow(), "GetCollapsedISize called on next in flow");
   nscoord iSize = GetColSpacing(GetColCount());
   iSize += aBorderPadding.IStartEnd(aWM);
-  for (nsTableColFrame* colFrame : mColFrames) {
-    bool collapseGroup = colFrame->GetParent()->StyleVisibility()->mVisible ==
-                         StyleVisibility::Collapse;
-    const nsStyleVisibility* colVis = colFrame->StyleVisibility();
-    bool collapseCol = StyleVisibility::Collapse == colVis->mVisible;
-    if (collapseGroup || collapseCol) {
-      SetNeedToCollapse(true);
-      continue;
-    }
-    nscoord colISize = colFrame->GetFinalISize();
-    iSize += colISize;
-    if (ColumnHasCellSpacingBefore(colFrame->GetColIndex())) {
-      iSize += GetColSpacing(colFrame->GetColIndex() - 1);
+  nsTableFrame* fif = static_cast<nsTableFrame*>(FirstInFlow());
+  for (nsIFrame* groupFrame : mColGroups) {
+    const nsStyleVisibility* groupVis = groupFrame->StyleVisibility();
+    bool collapseGroup = StyleVisibility::Collapse == groupVis->mVisible;
+    nsTableColGroupFrame* cgFrame = (nsTableColGroupFrame*)groupFrame;
+    for (nsTableColFrame* colFrame = cgFrame->GetFirstColumn(); colFrame;
+         colFrame = colFrame->GetNextCol()) {
+      const nsStyleDisplay* colDisplay = colFrame->StyleDisplay();
+      nscoord colIdx = colFrame->GetColIndex();
+      if (mozilla::StyleDisplay::TableColumn == colDisplay->mDisplay) {
+        const nsStyleVisibility* colVis = colFrame->StyleVisibility();
+        bool collapseCol = StyleVisibility::Collapse == colVis->mVisible;
+        nscoord colISize = fif->GetColumnISizeFromFirstInFlow(colIdx);
+        if (!collapseGroup && !collapseCol) {
+          iSize += colISize;
+          if (ColumnHasCellSpacingBefore(colIdx)) {
+            iSize += GetColSpacing(colIdx - 1);
+          }
+        } else {
+          SetNeedToCollapse(true);
+        }
+      }
     }
   }
   return iSize;
@@ -1950,19 +2019,52 @@ void nsTableFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 }
 
 void nsTableFrame::AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) {
-  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
+  NS_ASSERTION(aListID == FrameChildListID::Principal ||
+                   aListID == FrameChildListID::ColGroup,
+               "unexpected child list");
 
-  nsIFrame* firstNew = aFrameList.FirstChild();
-  if (!firstNew) {
-    return;
+  // Because we actually have two child lists, one for col group frames and one
+  // for everything else, we need to look at each frame individually
+  // XXX The frame construction code should be separating out child frames
+  // based on the type, bug 343048.
+  while (!aFrameList.IsEmpty()) {
+    nsIFrame* f = aFrameList.FirstChild();
+    aFrameList.RemoveFrame(f);
+
+    // See what kind of frame we have
+    const nsStyleDisplay* display = f->StyleDisplay();
+
+    if (mozilla::StyleDisplay::TableColumnGroup == display->mDisplay) {
+      if (MOZ_UNLIKELY(GetPrevInFlow())) {
+        nsFrameList colgroupFrame(f, f);
+        auto firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
+        firstInFlow->AppendFrames(aListID, std::move(colgroupFrame));
+        continue;
+      }
+      nsTableColGroupFrame* lastColGroup =
+          nsTableColGroupFrame::GetLastRealColGroup(this);
+      int32_t startColIndex = (lastColGroup)
+                                  ? lastColGroup->GetStartColumnIndex() +
+                                        lastColGroup->GetColCount()
+                                  : 0;
+      mColGroups.InsertFrame(this, lastColGroup, f);
+      // Insert the colgroup and its cols into the table
+      InsertColGroups(startColIndex,
+                      nsFrameList::Slice(f, f->GetNextSibling()));
+    } else if (IsRowGroup(display->mDisplay)) {
+      DrainSelfOverflowList();  // ensure the last frame is in mFrames
+      // Append the new row group frame to the sibling chain
+      mFrames.AppendFrame(nullptr, f);
+
+      // insert the row group and its rows into the table
+      InsertRowGroups(nsFrameList::Slice(f, nullptr));
+    } else {
+      // Nothing special to do, just add the frame to our child list
+      MOZ_ASSERT_UNREACHABLE(
+          "How did we get here? Frame construction screwed up");
+      mFrames.AppendFrame(nullptr, f);
+    }
   }
-
-  DrainSelfOverflowList();  // ensure the last frame is in mFrames
-  nsContainerFrame::AppendFrames(aListID, std::move(aFrameList));
-
-  nsFrameList::Slice newFrames(firstNew, nullptr);
-  InsertColGroups(GetRealColEnd(), newFrames);
-  InsertRowGroups(newFrames);
 
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== TableFrame::AppendFrames\n");
@@ -1976,95 +2078,254 @@ void nsTableFrame::AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) {
 void nsTableFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                 const nsLineList::iterator* aPrevFrameLine,
                                 nsFrameList&& aFrameList) {
+  // The frames in aFrameList can be a mix of row group frames and col group
+  // frames. The problem is that they should go in separate child lists so
+  // we need to deal with that here...
+  // XXX The frame construction code should be separating out child frames
+  // based on the type, bug 343048.
+
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
 
-  nsIFrame* firstNew = aFrameList.FirstChild();
-  if (!firstNew) {
+  if ((aPrevFrame && !aPrevFrame->GetNextSibling()) ||
+      (!aPrevFrame && GetChildList(aListID).IsEmpty())) {
+    // Treat this like an append; still a workaround for bug 343048.
+    AppendFrames(aListID, std::move(aFrameList));
     return;
   }
 
-  DrainSelfOverflowList();
+  // Collect ColGroupFrames into a separate list and insert those separately
+  // from the other frames (bug 759249).
+  nsFrameList colGroupList;
+  nsFrameList principalList;
+  do {
+    const auto display = aFrameList.FirstChild()->StyleDisplay()->mDisplay;
+    nsFrameList head = aFrameList.Split([display](nsIFrame* aFrame) {
+      return aFrame->StyleDisplay()->mDisplay != display;
+    });
+    if (display == mozilla::StyleDisplay::TableColumnGroup) {
+      colGroupList.AppendFrames(nullptr, std::move(head));
+    } else {
+      principalList.AppendFrames(nullptr, std::move(head));
+    }
+  } while (aFrameList.NotEmpty());
 
-  // Capture the frame that will follow the inserted frames, before insertion
-  // changes the sibling chain. Skip the synthetic colgroup as sentinel because
-  // InsertColGroups -> AddColsToTable -> InsertCol can destroy it.
-  nsIFrame* afterInserted =
-      aPrevFrame ? aPrevFrame->GetNextSibling() : mFrames.FirstChild();
-  if (mSyntheticColGroup && afterInserted == mSyntheticColGroup) {
-    afterInserted = afterInserted->GetNextSibling();
+  // We pass aPrevFrame for both ColGroup and other frames since
+  // HomogenousInsertFrames will only use it if it's a suitable
+  // prev-sibling for the frames in the frame list.
+  if (colGroupList.NotEmpty()) {
+    HomogenousInsertFrames(FrameChildListID::ColGroup, aPrevFrame,
+                           colGroupList);
   }
-  nsContainerFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
-                                 std::move(aFrameList));
+  if (principalList.NotEmpty()) {
+    HomogenousInsertFrames(FrameChildListID::Principal, aPrevFrame,
+                           principalList);
+  }
+}
 
-  nsFrameList::Slice newFrames(firstNew, afterInserted);
-  InsertColGroups(GetColStartAfter(aPrevFrame), newFrames);
-  InsertRowGroups(newFrames);
+void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
+                                          nsIFrame* aPrevFrame,
+                                          nsFrameList& aFrameList) {
+  // See what kind of frame we have
+  const nsStyleDisplay* display = aFrameList.FirstChild()->StyleDisplay();
+  bool isColGroup =
+      mozilla::StyleDisplay::TableColumnGroup == display->mDisplay;
+#ifdef DEBUG
+  // Verify that either all siblings have display:table-column-group, or they
+  // all have display values different from table-column-group.
+  for (nsIFrame* frame : aFrameList) {
+    auto nextDisplay = frame->StyleDisplay()->mDisplay;
+    MOZ_ASSERT(
+        isColGroup == (nextDisplay == mozilla::StyleDisplay::TableColumnGroup),
+        "heterogenous childlist");
+  }
+#endif
+  if (MOZ_UNLIKELY(isColGroup && GetPrevInFlow())) {
+    auto firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
+    firstInFlow->AppendFrames(aListID, std::move(aFrameList));
+    return;
+  }
+  if (aPrevFrame) {
+    const nsStyleDisplay* prevDisplay = aPrevFrame->StyleDisplay();
+    // Make sure they belong on the same frame list
+    if ((display->mDisplay == mozilla::StyleDisplay::TableColumnGroup) !=
+        (prevDisplay->mDisplay == mozilla::StyleDisplay::TableColumnGroup)) {
+      // the previous frame is not valid, see comment at ::AppendFrames
+      // XXXbz Using content indices here means XBL will get screwed
+      // over...  Oh, well.
+      nsIFrame* pseudoFrame = aFrameList.FirstChild();
+      nsIContent* parentContent = GetContent();
+      nsIContent* content = nullptr;
+      aPrevFrame = nullptr;
+      while (pseudoFrame &&
+             (parentContent == (content = pseudoFrame->GetContent()))) {
+        pseudoFrame = pseudoFrame->PrincipalChildList().FirstChild();
+      }
+      nsCOMPtr<nsIContent> container = content->GetParent();
+      if (MOZ_LIKELY(container)) {  // XXX need this null-check, see bug 411823.
+        const Maybe<uint32_t> newIndex = container->ComputeIndexOf(content);
+        nsIFrame* kidFrame;
+        nsTableColGroupFrame* lastColGroup = nullptr;
+        if (isColGroup) {
+          kidFrame = mColGroups.FirstChild();
+          lastColGroup = nsTableColGroupFrame::GetLastRealColGroup(this);
+        } else {
+          kidFrame = mFrames.FirstChild();
+        }
+        // Important: need to start at a value smaller than all valid indices
+        Maybe<uint32_t> lastIndex;
+        while (kidFrame) {
+          if (isColGroup) {
+            if (kidFrame == lastColGroup) {
+              aPrevFrame =
+                  kidFrame;  // there is no real colgroup after this one
+              break;
+            }
+          }
+          pseudoFrame = kidFrame;
+          while (pseudoFrame &&
+                 (parentContent == (content = pseudoFrame->GetContent()))) {
+            pseudoFrame = pseudoFrame->PrincipalChildList().FirstChild();
+          }
+          const Maybe<uint32_t> index = container->ComputeIndexOf(content);
+          // XXX Keep the odd traditional behavior in some indices are nothing
+          //     cases for now.
+          if ((index.isSome() &&
+               (lastIndex.isNothing() || *index > *lastIndex)) &&
+              (newIndex.isSome() &&
+               (index.isNothing() || *index < *newIndex))) {
+            lastIndex = index;
+            aPrevFrame = kidFrame;
+          }
+          kidFrame = kidFrame->GetNextSibling();
+        }
+      }
+    }
+  }
+  if (mozilla::StyleDisplay::TableColumnGroup == display->mDisplay) {
+    NS_ASSERTION(aListID == FrameChildListID::ColGroup,
+                 "unexpected child list");
+    // Insert the column group frames
+    const nsFrameList::Slice& newColgroups =
+        mColGroups.InsertFrames(this, aPrevFrame, std::move(aFrameList));
+    // find the starting col index for the first new col group
+    int32_t startColIndex = 0;
+    if (aPrevFrame) {
+      nsTableColGroupFrame* prevColGroup =
+          (nsTableColGroupFrame*)GetFrameAtOrBefore(
+              this, aPrevFrame, LayoutFrameType::TableColGroup);
+      if (prevColGroup) {
+        startColIndex =
+            prevColGroup->GetStartColumnIndex() + prevColGroup->GetColCount();
+      }
+    }
+    InsertColGroups(startColIndex, newColgroups);
+  } else if (IsRowGroup(display->mDisplay)) {
+    NS_ASSERTION(aListID == FrameChildListID::Principal,
+                 "unexpected child list");
+    DrainSelfOverflowList();  // ensure aPrevFrame is in mFrames
+    // Insert the frames in the sibling chain
+    const nsFrameList::Slice& newRowGroups =
+        mFrames.InsertFrames(nullptr, aPrevFrame, std::move(aFrameList));
+
+    InsertRowGroups(newRowGroups);
+  } else {
+    NS_ASSERTION(aListID == FrameChildListID::Principal,
+                 "unexpected child list");
+    MOZ_ASSERT_UNREACHABLE("How did we even get here?");
+    // Just insert the frame and don't worry about reflowing it
+    mFrames.InsertFrames(nullptr, aPrevFrame, std::move(aFrameList));
+    return;
+  }
 
   PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
   SetGeometryDirty();
+#ifdef DEBUG_TABLE_CELLMAP
+  printf("=== TableFrame::InsertFrames\n");
+  Dump(true, true, true);
+#endif
 }
 
 void nsTableFrame::DoRemoveFrame(DestroyContext& aContext, ChildListID aListID,
                                  nsIFrame* aOldFrame) {
-  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
-  nsTableCellMap* cellMap = GetCellMap();
-
-  if (nsTableColGroupFrame* cgFrame = do_QueryFrame(aOldFrame)) {
-    nsIFrame* nextSibling = aOldFrame->GetNextSibling();
-    int32_t colsStart = cgFrame->GetStartColumnIndex();
-    int32_t colCount = cgFrame->GetColCount();
-    if (cgFrame == mSyntheticColGroup) {
-      mSyntheticColGroup = nullptr;
-    }
-    mFrames.DestroyFrame(aContext, aOldFrame);
-    nsTableColGroupFrame::ResetColIndices(nextSibling, GetSyntheticColGroup(),
-                                          colsStart);
-    // NB: Frames in mColFrames might be dead already.
-    mColFrames.RemoveElementsAt(colsStart, colCount);
-    if (IsBorderCollapse()) {
-      SetFullBCDamageArea();
+  if (aListID == FrameChildListID::ColGroup) {
+    nsIFrame* nextColGroupFrame = aOldFrame->GetNextSibling();
+    nsTableColGroupFrame* colGroup = (nsTableColGroupFrame*)aOldFrame;
+    int32_t firstColIndex = colGroup->GetStartColumnIndex();
+    int32_t lastColIndex = firstColIndex + colGroup->GetColCount() - 1;
+    mColGroups.DestroyFrame(aContext, aOldFrame);
+    nsTableColGroupFrame::ResetColIndices(nextColGroupFrame, firstColIndex);
+    // remove the cols from the table
+    int32_t colIdx;
+    for (colIdx = lastColIndex; colIdx >= firstColIndex; colIdx--) {
+      nsTableColFrame* colFrame = mColFrames.SafeElementAt(colIdx);
+      if (colFrame) {
+        RemoveCol(colGroup, colIdx, true, false);
+      }
     }
 
-    if (!mColFrames.IsEmpty() && mColFrames.LastElement() &&
+    // If we have some anonymous cols at the end already, we just
+    // add more of them.
+    if (!mColFrames.IsEmpty() &&
+        mColFrames.LastElement() &&  // XXXbz is this ever null?
         mColFrames.LastElement()->GetColType() == eColAnonymousCell) {
       int32_t numAnonymousColsToAdd = GetColCount() - mColFrames.Length();
       if (numAnonymousColsToAdd > 0) {
+        // this sets the child list, updates the col cache and cell map
         AppendAnonymousColFrames(numAnonymousColsToAdd);
       }
-    } else if (cellMap) {
-      cellMap->RemoveColsAtEnd();
-      MatchCellMapToColCache(cellMap);
+    } else {
+      // All of our colframes correspond to actual <col> tags.  It's possible
+      // that we still have at least as many <col> tags as we have logical
+      // columns from cells, but we might have one less.  Handle the latter case
+      // as follows: First ask the cellmap to drop its last col if it doesn't
+      // have any actual cells in it.  Then call MatchCellMapToColCache to
+      // append an anonymous column if it's needed; this needs to be after
+      // RemoveColsAtEnd, since it will determine the need for a new column
+      // frame based on the width of the cell map.
+      nsTableCellMap* cellMap = GetCellMap();
+      if (cellMap) {  // XXXbz is this ever null?
+        cellMap->RemoveColsAtEnd();
+        MatchCellMapToColCache(cellMap);
+      }
     }
-#ifdef DEBUG
-    VerifyColFrames();
-#endif
-    return;
-  }
 
-  nsTableRowGroupFrame* rgFrame = do_QueryFrame(aOldFrame);
-  if (cellMap && rgFrame) {
+  } else {
+    NS_ASSERTION(aListID == FrameChildListID::Principal,
+                 "unexpected child list");
+    nsTableRowGroupFrame* rgFrame =
+        static_cast<nsTableRowGroupFrame*>(aOldFrame);
     // remove the row group from the cell map
-    cellMap->RemoveGroupCellMap(rgFrame);
-  }
+    nsTableCellMap* cellMap = GetCellMap();
+    if (cellMap) {
+      cellMap->RemoveGroupCellMap(rgFrame);
+    }
 
-  mFrames.DestroyFrame(aContext, aOldFrame);
+    // remove the row group frame from the sibling chain
+    mFrames.DestroyFrame(aContext, aOldFrame);
 
-  // the removal of a row group changes the cellmap, the columns might change
-  if (cellMap && rgFrame) {
-    cellMap->Synchronize(this);
-    // Create an empty slice
-    ResetRowIndices(nsFrameList::Slice(nullptr, nullptr));
-    TableArea damageArea;
-    cellMap->RebuildConsideringCells(nullptr, nullptr, 0, 0, false, damageArea);
+    // the removal of a row group changes the cellmap, the columns might change
+    if (cellMap) {
+      cellMap->Synchronize(this);
+      // Create an empty slice
+      ResetRowIndices(nsFrameList::Slice(nullptr, nullptr));
+      TableArea damageArea;
+      cellMap->RebuildConsideringCells(nullptr, nullptr, 0, 0, false,
+                                       damageArea);
 
-    static_cast<nsTableFrame*>(FirstInFlow())->MatchCellMapToColCache(cellMap);
+      static_cast<nsTableFrame*>(FirstInFlow())
+          ->MatchCellMapToColCache(cellMap);
+    }
   }
 }
 
 void nsTableFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
                                nsIFrame* aOldFrame) {
+  NS_ASSERTION(aListID == FrameChildListID::ColGroup ||
+                   mozilla::StyleDisplay::TableColumnGroup !=
+                       aOldFrame->StyleDisplay()->mDisplay,
+               "Wrong list name; use FrameChildListID::ColGroup iff colgroup");
   mozilla::PresShell* presShell = PresShell();
   nsTableFrame* lastParent = nullptr;
   while (aOldFrame) {
@@ -2128,6 +2389,17 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(TableBCDataProperty, TableBCData)
 
 TableBCData* nsTableFrame::GetTableBCData() const {
   return GetProperty(TableBCDataProperty());
+}
+
+TableBCData* nsTableFrame::GetOrCreateTableBCData() {
+  TableBCData* value = GetProperty(TableBCDataProperty());
+  if (!value) {
+    value = new TableBCData();
+    SetProperty(TableBCDataProperty(), value);
+  }
+
+  MOZ_ASSERT(value, "TableBCData must exist!");
+  return value;
 }
 
 static void DivideBCBorderSize(nscoord aPixelSize, nscoord& aSmallHalf,
@@ -2205,42 +2477,39 @@ void nsTableFrame::PlaceChild(TableReflowInput& aReflowInput,
   aReflowInput.AdvanceBCoord(aKidDesiredSize.BSize(wm));
 }
 
-auto nsTableFrame::OrderedGroups() const -> Groups {
-  Groups children;
-  auto& rowGroups = children.mRowGroups;
-  auto& colGroups = children.mColGroups;
+nsTableFrame::RowGroupArray nsTableFrame::OrderedRowGroups(
+    nsTableRowGroupFrame** aHead, nsTableRowGroupFrame** aFoot) const {
+  RowGroupArray children;
+  nsTableRowGroupFrame* head = nullptr;
+  nsTableRowGroupFrame* foot = nullptr;
 
   nsIFrame* kidFrame = mFrames.FirstChild();
   while (kidFrame) {
-    if (nsTableRowGroupFrame* rowGroup = do_QueryFrame(kidFrame)) {
-      switch (kidFrame->StyleDisplay()->DisplayInside()) {
-        case StyleDisplayInside::TableHeaderGroup:
-          if (children.mHead) {  // treat additional thead like tbody
-            rowGroups.AppendElement(rowGroup);
-          } else {
-            children.mHead = rowGroup;
-          }
-          break;
-        case StyleDisplayInside::TableFooterGroup:
-          if (children.mFoot) {  // treat additional tfoot like tbody
-            rowGroups.AppendElement(rowGroup);
-          } else {
-            children.mFoot = rowGroup;
-          }
-          break;
-        case StyleDisplayInside::TableRowGroup:
-          rowGroups.AppendElement(rowGroup);
-          break;
-        default:
-          MOZ_ASSERT_UNREACHABLE(
-              "How did this produce an nsTableRowGroupFrame?");
-          // Just ignore it
-          break;
-      }
-    } else if (nsTableColGroupFrame* cg = do_QueryFrame(kidFrame)) {
-      if (cg != mSyntheticColGroup) {
-        colGroups.AppendElement(cg);
-      }
+    const nsStyleDisplay* kidDisplay = kidFrame->StyleDisplay();
+    auto* rowGroup = static_cast<nsTableRowGroupFrame*>(kidFrame);
+
+    switch (kidDisplay->DisplayInside()) {
+      case StyleDisplayInside::TableHeaderGroup:
+        if (head) {  // treat additional thead like tbody
+          children.AppendElement(rowGroup);
+        } else {
+          head = rowGroup;
+        }
+        break;
+      case StyleDisplayInside::TableFooterGroup:
+        if (foot) {  // treat additional tfoot like tbody
+          children.AppendElement(rowGroup);
+        } else {
+          foot = rowGroup;
+        }
+        break;
+      case StyleDisplayInside::TableRowGroup:
+        children.AppendElement(rowGroup);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("How did this produce an nsTableRowGroupFrame?");
+        // Just ignore it
+        break;
     }
     // Get the next sibling but skip it if it's also the next-in-flow, since
     // a next-in-flow will not be part of the current table.
@@ -2254,17 +2523,20 @@ auto nsTableFrame::OrderedGroups() const -> Groups {
   }
 
   // put the thead first
-  if (children.mHead) {
-    rowGroups.InsertElementAt(0, children.mHead);
+  if (head) {
+    children.InsertElementAt(0, head);
+  }
+  if (aHead) {
+    *aHead = head;
   }
   // put the tfoot after the last tbody
-  if (children.mFoot) {
-    rowGroups.AppendElement(children.mFoot);
+  if (foot) {
+    children.AppendElement(foot);
   }
-  // Put the synthetic colgroup after all the non-synthetic ones.
-  if (mSyntheticColGroup) {
-    colGroups.AppendElement(mSyntheticColGroup);
+  if (aFoot) {
+    *aFoot = foot;
   }
+
   return children;
 }
 
@@ -2332,7 +2604,7 @@ void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
 
 // Reflow the children based on the avail size and reason in aReflowInput
 void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
-                                  nsReflowStatus& aStatus, Groups& aGroups,
+                                  nsReflowStatus& aStatus,
                                   nsIFrame*& aLastChildReflowed,
                                   OverflowAreas& aOverflowAreas) {
   aStatus.Reset();
@@ -2378,6 +2650,9 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
                        mBits.mResizedColumns || IsGeometryDirty() ||
                        NeedToCollapse();
 
+  nsTableRowGroupFrame* thead = nullptr;
+  nsTableRowGroupFrame* tfoot = nullptr;
+  RowGroupArray rowGroups = OrderedRowGroups(&thead, &tfoot);
   bool pageBreak = false;
   nscoord footerBSize = 0;
 
@@ -2391,22 +2666,22 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
   // but there's no real need.
   if (isPaginated) {
     bool reorder = false;
-    if (aGroups.mHead && !GetPrevInFlow()) {
-      reorder = aGroups.mHead->GetNextInFlow();
-      SetupHeaderFooterChild(aReflowInput, aGroups.mHead);
+    if (thead && !GetPrevInFlow()) {
+      reorder = thead->GetNextInFlow();
+      SetupHeaderFooterChild(aReflowInput, thead);
     }
-    if (aGroups.mFoot) {
-      reorder = reorder || aGroups.mFoot->GetNextInFlow();
-      footerBSize = SetupHeaderFooterChild(aReflowInput, aGroups.mFoot);
+    if (tfoot) {
+      reorder = reorder || tfoot->GetNextInFlow();
+      footerBSize = SetupHeaderFooterChild(aReflowInput, tfoot);
     }
     if (reorder) {
       // Reorder row groups - the reflow may have changed the nextinflows.
-      aGroups = OrderedGroups();
+      rowGroups = OrderedRowGroups(&thead, &tfoot);
     }
   }
   bool allowRepeatedFooter = false;
-  for (size_t childX = 0; childX < aGroups.mRowGroups.Length(); childX++) {
-    nsTableRowGroupFrame* kidFrame = aGroups.mRowGroups[childX];
+  for (size_t childX = 0; childX < rowGroups.Length(); childX++) {
+    nsTableRowGroupFrame* kidFrame = rowGroups[childX];
     const nscoord rowSpacing =
         GetRowSpacing(kidFrame->GetStartRowIndex() + kidFrame->GetRowCount());
     // See if we should only reflow the dirty child frames
@@ -2418,18 +2693,18 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       // non-repeatable.
       auto MaybePlaceRepeatedFooter = [&]() {
         if (allowRepeatedFooter) {
-          PlaceRepeatedFooter(aReflowInput, aGroups.mFoot, footerBSize);
-        } else if (aGroups.mFoot && aGroups.mFoot->IsRepeatable()) {
-          aGroups.mFoot->SetRepeatable(false);
+          PlaceRepeatedFooter(aReflowInput, tfoot, footerBSize);
+        } else if (tfoot && tfoot->IsRepeatable()) {
+          tfoot->SetRepeatable(false);
         }
       };
 
       if (pageBreak) {
         MaybePlaceRepeatedFooter();
-        PushChildrenToOverflow(aGroups.mRowGroups, childX);
+        PushChildrenToOverflow(rowGroups, childX);
         aStatus.Reset();
         aStatus.SetIncomplete();
-        aLastChildReflowed = allowRepeatedFooter ? aGroups.mFoot : prevKidFrame;
+        aLastChildReflowed = allowRepeatedFooter ? tfoot : prevKidFrame;
         break;
       }
 
@@ -2439,10 +2714,10 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       // If the child is a tbody in paginated mode, reduce the available
       // block-size by a repeated footer.
       if (isPaginated && (NS_UNCONSTRAINEDSIZE != kidAvailSize.BSize(wm))) {
-        if (kidFrame != aGroups.mHead && kidFrame != aGroups.mFoot &&
-            aGroups.mFoot && aGroups.mFoot->IsRepeatable()) {
+        if (kidFrame != thead && kidFrame != tfoot && tfoot &&
+            tfoot->IsRepeatable()) {
           // the child is a tbody and there is a repeatable footer
-          NS_ASSERTION(aGroups.mFoot == aGroups.mRowGroups.LastElement(),
+          NS_ASSERTION(tfoot == rowGroups[rowGroups.Length() - 1],
                        "Missing footer!");
           if (footerBSize + rowSpacing < kidAvailSize.BSize(wm)) {
             allowRepeatedFooter = true;
@@ -2466,9 +2741,8 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       // nonzero BEnd, then we can't be at the top of the page.
       // We ignore a repeated head row group in this check to avoid causing
       // infinite loops in some circumstances - see bug 344883.
-      if (childX >
-              ((aGroups.mHead && IsRepeatedFrame(aGroups.mHead)) ? 1u : 0u) &&
-          (aGroups.mRowGroups[childX - 1]
+      if (childX > ((thead && IsRepeatedFrame(thead)) ? 1u : 0u) &&
+          (rowGroups[childX - 1]
                ->GetLogicalNormalRect(wm, containerSize)
                .BEnd(wm) > 0)) {
         kidReflowInput.mFlags.mIsTopOfPage = false;
@@ -2485,9 +2759,9 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
                   aStatus);
 
       if (reorder) {
-        // Reorder row aGroups - the reflow may have changed the nextinflows.
-        aGroups = OrderedGroups();
-        childX = aGroups.mRowGroups.IndexOf(kidFrame);
+        // Reorder row groups - the reflow may have changed the nextinflows.
+        rowGroups = OrderedRowGroups(&thead, &tfoot);
+        childX = rowGroups.IndexOf(kidFrame);
         MOZ_ASSERT(childX != RowGroupArray::NoIndex,
                    "kidFrame should still be in rowGroups!");
       }
@@ -2509,15 +2783,15 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
         }
         // if we are on top of the page place with dataloss
         if (kidReflowInput.mFlags.mIsTopOfPage) {
-          if (childX + 1 < aGroups.mRowGroups.Length()) {
+          if (childX + 1 < rowGroups.Length()) {
             PlaceChild(aReflowInput, kidFrame, kidReflowInput, kidPosition,
                        containerSize, desiredSize, oldKidRect,
                        oldKidInkOverflow);
             MaybePlaceRepeatedFooter();
             aStatus.Reset();
             aStatus.SetIncomplete();
-            PushChildrenToOverflow(aGroups.mRowGroups, childX + 1);
-            aLastChildReflowed = allowRepeatedFooter ? aGroups.mFoot : kidFrame;
+            PushChildrenToOverflow(rowGroups, childX + 1);
+            aLastChildReflowed = allowRepeatedFooter ? tfoot : kidFrame;
             break;
           }
         } else {  // we are not on top, push this rowgroup onto the next page
@@ -2525,16 +2799,15 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
             MaybePlaceRepeatedFooter();
             aStatus.Reset();
             aStatus.SetIncomplete();
-            PushChildrenToOverflow(aGroups.mRowGroups, childX);
-            aLastChildReflowed =
-                allowRepeatedFooter ? aGroups.mFoot : prevKidFrame;
+            PushChildrenToOverflow(rowGroups, childX);
+            aLastChildReflowed = allowRepeatedFooter ? tfoot : prevKidFrame;
             break;
           } else {  // we can't push so lets make clear how much space we need
             PlaceChild(aReflowInput, kidFrame, kidReflowInput, kidPosition,
                        containerSize, desiredSize, oldKidRect,
                        oldKidInkOverflow);
             MaybePlaceRepeatedFooter();
-            aLastChildReflowed = allowRepeatedFooter ? aGroups.mFoot : kidFrame;
+            aLastChildReflowed = allowRepeatedFooter ? tfoot : kidFrame;
             break;
           }
         }
@@ -2547,9 +2820,8 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       // one
       if (aStatus.IsComplete() && isPaginated &&
           (kidReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE)) {
-        nsIFrame* nextKid = (childX + 1 < aGroups.mRowGroups.Length())
-                                ? aGroups.mRowGroups[childX + 1]
-                                : nullptr;
+        nsIFrame* nextKid =
+            (childX + 1 < rowGroups.Length()) ? rowGroups[childX + 1] : nullptr;
         pageBreak = PageBreakAfter(kidFrame, nextKid);
       }
 
@@ -2577,14 +2849,14 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
           // Insert the kid's new next-in-flow into our sibling list...
           mFrames.InsertFrame(nullptr, kidFrame, kidNextInFlow);
           // and in rowGroups after childX so that it will get pushed below.
-          aGroups.mRowGroups.InsertElementAt(
+          rowGroups.InsertElementAt(
               childX + 1, static_cast<nsTableRowGroupFrame*>(kidNextInFlow));
         } else if (kidNextInFlow == kidFrame->GetNextSibling()) {
           // OrderedRowGroups excludes NIFs in the child list from 'rowGroups'
           // so we deal with that here to make sure they get pushed.
-          MOZ_ASSERT(!aGroups.mRowGroups.Contains(kidNextInFlow),
+          MOZ_ASSERT(!rowGroups.Contains(kidNextInFlow),
                      "OrderedRowGroups must not put our NIF in 'rowGroups'");
-          aGroups.mRowGroups.InsertElementAt(
+          rowGroups.InsertElementAt(
               childX + 1, static_cast<nsTableRowGroupFrame*>(kidNextInFlow));
         }
 
@@ -2592,9 +2864,9 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
         // children.
         MaybePlaceRepeatedFooter();
         if (kidFrame->GetNextSibling()) {
-          PushChildrenToOverflow(aGroups.mRowGroups, childX + 1);
+          PushChildrenToOverflow(rowGroups, childX + 1);
         }
-        aLastChildReflowed = allowRepeatedFooter ? aGroups.mFoot : kidFrame;
+        aLastChildReflowed = allowRepeatedFooter ? tfoot : kidFrame;
         break;
       }
     } else {  // it isn't being reflowed
@@ -2613,26 +2885,6 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
 
       aReflowInput.AdvanceBCoord(kidRect.BSize(wm));
     }
-  }
-
-  for (nsTableColGroupFrame* cg : aGroups.mColGroups) {
-    // The column groups don't care about dimensions or reflow inputs. In fact,
-    // we mostly need to do this to deal with dynamic style changes to a
-    // colgroup having to reflow the table with border-collapsing.
-    if (!cg->IsSubtreeDirty()) {
-      continue;
-    }
-    ReflowOutput kidSize(wm);
-    ReflowInput kidReflowInput(presContext, cg,
-                               aReflowInput.mReflowInput.mRenderingContext,
-                               LogicalSize(cg->GetWritingMode()));
-    nsReflowStatus cgStatus;
-    const LogicalPoint dummyPos(wm);
-    const nsSize dummyContainerSize;
-    ReflowChild(cg, presContext, kidSize, kidReflowInput, wm, dummyPos,
-                dummyContainerSize, ReflowChildFlags::Default, cgStatus);
-    FinishReflowChild(cg, presContext, kidSize, &kidReflowInput, wm, dummyPos,
-                      dummyContainerSize, ReflowChildFlags::Default);
   }
 
   // We've now propagated the column resizes and geometry changes to all
@@ -2671,12 +2923,37 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
   }
 }
 
+void nsTableFrame::ReflowColGroups(gfxContext* aRenderingContext) {
+  if (!GetPrevInFlow() && !HaveReflowedColGroups()) {
+    const WritingMode wm = GetWritingMode();
+    nsPresContext* presContext = PresContext();
+    for (nsIFrame* kidFrame : mColGroups) {
+      if (kidFrame->IsSubtreeDirty()) {
+        // The column groups don't care about dimensions or reflow inputs.
+        ReflowOutput kidSize(wm);
+        ReflowInput kidReflowInput(presContext, kidFrame, aRenderingContext,
+                                   LogicalSize(kidFrame->GetWritingMode()));
+        nsReflowStatus cgStatus;
+        const LogicalPoint dummyPos(wm);
+        const nsSize dummyContainerSize;
+        ReflowChild(kidFrame, presContext, kidSize, kidReflowInput, wm,
+                    dummyPos, dummyContainerSize, ReflowChildFlags::Default,
+                    cgStatus);
+        FinishReflowChild(kidFrame, presContext, kidSize, &kidReflowInput, wm,
+                          dummyPos, dummyContainerSize,
+                          ReflowChildFlags::Default);
+      }
+    }
+    SetHaveReflowedColGroups(true);
+  }
+}
+
 nscoord nsTableFrame::CalcDesiredBSize(const ReflowInput& aReflowInput,
                                        const LogicalMargin& aBorderPadding,
                                        const nsReflowStatus& aStatus) {
   WritingMode wm = aReflowInput.GetWritingMode();
 
-  auto rowGroups = OrderedGroups().mRowGroups;
+  RowGroupArray rowGroups = OrderedRowGroups();
   if (rowGroups.IsEmpty()) {
     if (eCompatibility_NavQuirks == PresContext()->CompatibilityMode()) {
       // empty tables should not have a size in quirks mode
@@ -2729,7 +3006,7 @@ nscoord nsTableFrame::CalcDesiredBSize(const ReflowInput& aReflowInput,
 }
 
 static void ResizeCells(nsTableFrame& aTableFrame) {
-  auto rowGroups = aTableFrame.OrderedGroups().mRowGroups;
+  nsTableFrame::RowGroupArray rowGroups = aTableFrame.OrderedRowGroups();
   WritingMode wm = aTableFrame.GetWritingMode();
   ReflowOutput tableDesiredSize(wm);
   tableDesiredSize.SetSize(wm, aTableFrame.GetLogicalSize(wm));
@@ -2762,7 +3039,7 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
 
   nsSize containerSize = aReflowInput.ComputedSizeAsContainerIfConstrained();
 
-  auto rowGroups = OrderedGroups().mRowGroups;
+  RowGroupArray rowGroups = OrderedRowGroups();
 
   nscoord amountUsed = 0;
   // distribute space to each pct bsize row whose row group doesn't have a
@@ -3101,6 +3378,14 @@ nscoord nsTableFrame::GetRowSpacing(int32_t aStartRowIndex,
   return GetRowSpacing() * (aEndRowIndex - aStartRowIndex);
 }
 
+nscoord nsTableFrame::SynthesizeFallbackBaseline(
+    mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+  if (aBaselineGroup == BaselineSharingGroup::Last) {
+    return 0;
+  }
+  return BSize(aWM);
+}
+
 /* virtual */
 Maybe<nscoord> nsTableFrame::GetNaturalBaselineBOffset(
     WritingMode aWM, BaselineSharingGroup aBaselineGroup,
@@ -3257,21 +3542,6 @@ void nsTableFrame::DumpRowGroup(nsIFrame* aKidFrame) {
   }
 }
 
-void nsTableFrame::VerifyColFrames() {
-  for (int32_t i = 0; i < int32_t(mColFrames.Length()); i++) {
-    nsTableColFrame* col = mColFrames[i];
-    MOZ_ASSERT(col);
-    MOZ_ASSERT(col->GetColIndex() == i);
-    MOZ_ASSERT(col->GetParent());
-    MOZ_ASSERT(col->GetParent()->IsTableColGroupFrame());
-    auto* cg = static_cast<nsTableColGroupFrame*>(col->GetParent());
-    int32_t cgStart = cg->GetStartColumnIndex();
-    int32_t cgEnd = cgStart + cg->GetColCount();
-    MOZ_ASSERT(i >= cgStart && i < cgEnd,
-               "col index not within its colgroup's range");
-  }
-}
-
 void nsTableFrame::Dump(bool aDumpRows, bool aDumpCols, bool aDumpCellMap) {
   printf("***START TABLE DUMP*** \n");
   // dump the columns widths array
@@ -3287,9 +3557,7 @@ void nsTableFrame::Dump(bool aDumpRows, bool aDumpCols, bool aDumpCellMap) {
   if (aDumpRows) {
     nsIFrame* kidFrame = mFrames.FirstChild();
     while (kidFrame) {
-      if (kidFrame->IsTableRowGroupFrame()) {
-        DumpRowGroup(kidFrame);
-      }
+      DumpRowGroup(kidFrame);
       kidFrame = kidFrame->GetNextSibling();
     }
   }
@@ -3320,9 +3588,10 @@ void nsTableFrame::Dump(bool aDumpRows, bool aDumpCols, bool aDumpCellMap) {
       }
     }
     printf("\n colgroups->");
-    for (nsIFrame* childFrame : mFrames) {
-      if (nsTableColGroupFrame* cg = do_QueryFrame(childFrame)) {
-        cg->Dump(1);
+    for (nsIFrame* childFrame : mColGroups) {
+      if (LayoutFrameType::TableColGroup == childFrame->Type()) {
+        nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame*)childFrame;
+        colGroupFrame->Dump(1);
       }
     }
     for (colIdx = 0; colIdx < numCols; colIdx++) {
@@ -3415,7 +3684,7 @@ void nsTableFrame::AddBCDamageArea(const TableArea& aValue) {
   SetNeedToCalcBCBorders(true);
   SetNeedToCalcHasBCBorders(true);
   // Get the property
-  TableBCData* value = GetOrCreateDeletableProperty(TableBCDataProperty());
+  TableBCData* value = GetOrCreateTableBCData();
 
 #ifdef DEBUG
   VerifyNonNegativeDamageRect(value->mDamageArea);
@@ -3451,7 +3720,7 @@ void nsTableFrame::SetFullBCDamageArea() {
   SetNeedToCalcBCBorders(true);
   SetNeedToCalcHasBCBorders(true);
 
-  TableBCData* value = GetOrCreateDeletableProperty(TableBCDataProperty());
+  TableBCData* value = GetOrCreateTableBCData();
   value->mDamageArea = TableArea(0, 0, GetColCount(), GetRowCount());
 }
 
@@ -4097,7 +4366,7 @@ class nsDelayedCalcBCBorders : public Runnable {
 
   NS_IMETHOD Run() override {
     if (mFrame) {
-      auto* tableFrame = static_cast<nsTableFrame*>(mFrame.GetFrame());
+      nsTableFrame* tableFrame = static_cast<nsTableFrame*>(mFrame.GetFrame());
       if (tableFrame->NeedToCalcBCBorders()) {
         tableFrame->CalcBCBorders();
       }
@@ -4111,6 +4380,10 @@ class nsDelayedCalcBCBorders : public Runnable {
 
 bool nsTableFrame::BCRecalcNeeded(ComputedStyle* aOldComputedStyle,
                                   ComputedStyle* aNewComputedStyle) {
+  // Attention: the old ComputedStyle is the one we're forgetting,
+  // and hence possibly completely bogus for GetStyle* purposes.
+  // We use PeekStyleData instead.
+
   const nsStyleBorder* oldStyleData = aOldComputedStyle->StyleBorder();
   const nsStyleBorder* newStyleData = aNewComputedStyle->StyleBorder();
   nsChangeHint change = newStyleData->CalcDifference(*oldStyleData);
@@ -4127,7 +4400,7 @@ bool nsTableFrame::BCRecalcNeeded(ComputedStyle* aOldComputedStyle,
     // However the bc painting code tries to maximize the drawn border segments
     // so it stores in the cellmap where a new border segment starts and this
     // introduces a unwanted cellmap data dependence on color
-    nsCOMPtr<nsIRunnable> evt = MakeAndAddRef<nsDelayedCalcBCBorders>(this);
+    nsCOMPtr<nsIRunnable> evt = new nsDelayedCalcBCBorders(this);
     nsresult rv = GetContent()->OwnerDoc()->Dispatch(evt.forget());
     return NS_SUCCEEDED(rv);
   }
@@ -4853,7 +5126,10 @@ void nsTableFrame::CalcBCBorders() {
 
   // We accumulate border widths as we process the cells, so we need
   // to reset it once in the beginning.
-  bool tableBorderReset[4] = {false};
+  bool tableBorderReset[4];
+  for (uint32_t sideX = 0; sideX < std::size(tableBorderReset); sideX++) {
+    tableBorderReset[sideX] = false;
+  }
 
   // Storage for block-direction borders from the previous row, indexed by
   // columns.
@@ -5745,7 +6021,8 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
 bool BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect) {
   nsSize containerSize = mTable->GetSize();
   LogicalRect dirtyRect(mTableWM, aDirtyRect, containerSize);
-  uint32_t startRowIndex = 0, endRowIndex = 0;
+  uint32_t startRowIndex, endRowIndex, startColIndex, endColIndex;
+  startRowIndex = endRowIndex = startColIndex = endColIndex = 0;
   bool done = false;
   bool haveIntersect = false;
   // find startRowIndex, endRowIndex
@@ -5811,8 +6088,8 @@ bool BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect) {
   mInitialOffsetI = bp.IStart(mTableWM);
 
   nscoord x = 0;
-  uint32_t startColIndex = 0, endColIndex = 0;
-  for (int32_t colIdx = 0; colIdx != mNumTableCols; colIdx++) {
+  int32_t colIdx;
+  for (colIdx = 0; colIdx != mNumTableCols; colIdx++) {
     nsTableColFrame* colFrame = mTableFirstInFlow->GetColFrame(colIdx);
     if (!colFrame) ABORT1(false);
     const nscoord onePx = mTable->PresContext()->DevPixelsToAppUnits(1);
@@ -5841,9 +6118,9 @@ bool BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect) {
   if (!haveIntersect) {
     return false;
   }
-  MOZ_ASSERT(endColIndex >= startColIndex);
   mDamageArea =
-      TableArea(startColIndex, startRowIndex, 1 + endColIndex - startColIndex,
+      TableArea(startColIndex, startRowIndex,
+                1 + DeprecatedAbs<int32_t>(endColIndex - startColIndex),
                 1 + endRowIndex - startRowIndex);
 
   Reset();
@@ -6603,7 +6880,7 @@ void BCInlineDirSeg::GetIEndCorner(BCPaintBorderIterator& aIter,
     cornerSubWidth = aIter.mBCData->GetCorner(ownerSide, bevel);
   }
 
-  mIsIEndBevel = (mWidth > 0) ? bevel : false;
+  mIsIEndBevel = (mWidth > 0) ? bevel : 0;
   int32_t relColIndex = aIter.GetRelativeColIndex();
   nscoord verWidth =
       std::max(aIter.mBlockDirInfo[relColIndex].mWidth, aIStartSegISize);
@@ -7029,9 +7306,8 @@ void nsTableFrame::InvalidateTableFrame(nsIFrame* aFrame,
 void nsTableFrame::AppendDirectlyOwnedAnonBoxes(
     nsTArray<OwnedAnonBox>& aResult) {
   nsIFrame* wrapper = GetParent();
-  MOZ_ASSERT(
-      wrapper->Style()->GetPseudoType() == PseudoStyleType::MozTableWrapper,
-      "What happened to our parent?");
+  MOZ_ASSERT(wrapper->Style()->GetPseudoType() == PseudoStyleType::tableWrapper,
+             "What happened to our parent?");
   aResult.AppendElement(
       OwnedAnonBox(wrapper, &UpdateStyleOfOwnedAnonBoxesForTableWrapper));
 }
@@ -7040,13 +7316,13 @@ void nsTableFrame::AppendDirectlyOwnedAnonBoxes(
 void nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
     nsIFrame* aOwningFrame, nsIFrame* aWrapperFrame,
     ServoRestyleState& aRestyleState) {
-  MOZ_ASSERT(aWrapperFrame->Style()->GetPseudoType() ==
-                 PseudoStyleType::MozTableWrapper,
-             "What happened to our parent?");
+  MOZ_ASSERT(
+      aWrapperFrame->Style()->GetPseudoType() == PseudoStyleType::tableWrapper,
+      "What happened to our parent?");
 
   RefPtr<ComputedStyle> newStyle =
       aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(
-          PseudoStyleType::MozTableWrapper, aOwningFrame->Style());
+          PseudoStyleType::tableWrapper, aOwningFrame->Style());
 
   // Figure out whether we have an actual change.  It's important that we do
   // this, even though all the wrapper's changes are due to properties it

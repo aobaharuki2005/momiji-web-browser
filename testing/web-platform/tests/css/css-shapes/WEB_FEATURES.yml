@@ -1,9 +1,0 @@
-features:
-- name: shapes
-  files:
-  - basic-shape-circle-ellipse-serialization.html
-  - basic-shape-interpolation.html
-- name: shape-outside
-  files:
-  - inheritance.html
-  - shape-outside-*

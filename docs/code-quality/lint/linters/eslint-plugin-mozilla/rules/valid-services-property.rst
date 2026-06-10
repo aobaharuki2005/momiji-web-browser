@@ -14,17 +14,17 @@ this rule manually, use:
 Examples of incorrect code for this rule:
 -----------------------------------------
 
-Assuming ``foo`` is not defined within ``Ci.nsIIOService``.
+Assuming ``foo`` is not defined within ``Ci.nsISearchService``.
 
 .. code-block:: js
 
-    Services.io.foo();
+    Services.search.foo();
 
 Examples of correct code for this rule:
 ---------------------------------------
 
-Assuming ``bar`` is defined within ``Ci.nsIIOService``.
+Assuming ``bar`` is defined within ``Ci.nsISearchService``.
 
 .. code-block:: js
 
-    Services.io.bar();
+    Services.search.bar();

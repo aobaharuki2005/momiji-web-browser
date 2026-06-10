@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,9 +17,14 @@ constexpr auto kInvalidCategory = "INVALID_CATEGORY"_ns;
 
 #define DEFINE_CATEGORY(_name, _idx) nsLiteralCString("Y" #_idx "_" #_name),
 static constexpr nsLiteralCString gKeyName[] = {
-    FOR_EACH_HTTP_TRAFFIC_CATEGORY(DEFINE_CATEGORY)
+#include "HttpTrafficAnalyzer.inc"
+    kInvalidCategory,
+};
+#undef DEFINE_CATEGORY
 
-        kInvalidCategory,
+#define DEFINE_CATEGORY(_name, _idx) "Y##_idx##_##_name"_ns,
+static const nsLiteralCString gTelemetryLabel[] = {
+#include "HttpTrafficAnalyzer.inc"
 };
 #undef DEFINE_CATEGORY
 
@@ -178,7 +184,8 @@ void HttpTrafficAnalyzer::IncrementHttpTransaction(
   LOG(("HttpTrafficAnalyzer::IncrementHttpTransaction [%s] [this=%p]\n",
        gKeyName[aCategory].get(), this));
 
-  glean::http::traffic_analysis.Get("Transaction"_ns, gKeyName[aCategory])
+  glean::http::traffic_analysis
+      .Get("Transaction"_ns, gTelemetryLabel[aCategory])
       .Add();
 }
 
@@ -191,7 +198,8 @@ void HttpTrafficAnalyzer::IncrementHttpConnection(
   LOG(("HttpTrafficAnalyzer::IncrementHttpConnection [%s] [this=%p]\n",
        gKeyName[aCategory].get(), this));
 
-  glean::http::traffic_analysis.Get("Connection"_ns, gKeyName[aCategory]).Add();
+  glean::http::traffic_analysis.Get("Connection"_ns, gTelemetryLabel[aCategory])
+      .Add();
 }
 
 void HttpTrafficAnalyzer::IncrementHttpConnection(

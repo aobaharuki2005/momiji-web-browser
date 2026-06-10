@@ -120,7 +120,6 @@ internal interface SyncDispatcher : Closeable, Observable<SyncStatusObserver> {
     fun startPeriodicSync(unit: TimeUnit, period: Long, initialDelay: Long)
     fun stopPeriodicSync()
     fun workersStateChanged(currentWorkStates: List<WorkInfo.State>?)
-    fun setEngineEnabled(engine: SyncEngine, enabled: Boolean)
 }
 
 /**
@@ -169,10 +168,6 @@ internal abstract class SyncManager(
             logger.info("Sync is not enabled. Ignoring 'sync now' request.")
         }
         syncDispatcher?.syncNow(reason, debounce, customEngineSubset)
-    }
-
-    internal fun setEngineEnabled(engine: SyncEngine, enabled: Boolean) {
-        syncDispatcher?.setEngineEnabled(engine, enabled)
     }
 
     /**

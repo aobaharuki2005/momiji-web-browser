@@ -167,8 +167,7 @@ int main(int argc, char **argv) {
   printf("Using %s\n", aom_codec_iface_name(encoder));
 
   res = aom_codec_enc_config_default(encoder, &cfg, usage);
-  if (res)
-    die("Failed to get default codec config: %s", aom_codec_err_to_string(res));
+  if (res) die_codec(&codec, "Failed to get default codec config.");
 
   cfg.g_w = info.frame_width;
   cfg.g_h = info.frame_height;

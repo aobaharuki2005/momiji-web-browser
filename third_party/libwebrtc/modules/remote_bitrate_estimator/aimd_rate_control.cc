@@ -113,13 +113,13 @@ TimeDelta AimdRateControl::GetFeedbackInterval() const {
   const TimeDelta interval = kRtcpSize / rtcp_bitrate;
   const TimeDelta kMinFeedbackInterval = TimeDelta::Millis(200);
   const TimeDelta kMaxFeedbackInterval = TimeDelta::Millis(1000);
-  return std::clamp(interval, kMinFeedbackInterval, kMaxFeedbackInterval);
+  return interval.Clamped(kMinFeedbackInterval, kMaxFeedbackInterval);
 }
 
 bool AimdRateControl::TimeToReduceFurther(Timestamp at_time,
                                           DataRate estimated_throughput) const {
   const TimeDelta bitrate_reduction_interval =
-      std::clamp(rtt_, TimeDelta::Millis(10), TimeDelta::Millis(200));
+      rtt_.Clamped(TimeDelta::Millis(10), TimeDelta::Millis(200));
   if (at_time - time_last_bitrate_change_ >= bitrate_reduction_interval) {
     return true;
   }
@@ -216,8 +216,8 @@ TimeDelta AimdRateControl::GetExpectedBandwidthPeriod() const {
     return kDefaultPeriod;
   double time_to_recover_decrease_seconds =
       last_decrease_->bps() / increase_rate_bps_per_second;
-  return std::clamp(TimeDelta::Seconds(time_to_recover_decrease_seconds),
-                    kMinPeriod, kMaxPeriod);
+  TimeDelta period = TimeDelta::Seconds(time_to_recover_decrease_seconds);
+  return period.Clamped(kMinPeriod, kMaxPeriod);
 }
 
 void AimdRateControl::ChangeBitrate(const RateControlInput& input,

@@ -14,21 +14,14 @@ add_task(async function test_usermessaging() {
   });
 
   await BrowserTestUtils.withNewTab("about:preferences", async browser => {
-    // The category buttons get removed when they aren't visible in SRD.
     let moreFromMozillaCategory = browser.contentDocument.getElementById(
       "category-more-from-mozilla"
     );
-    ok(
-      !moreFromMozillaCategory || moreFromMozillaCategory.hidden,
-      "The more category is hidden"
-    );
+    ok(moreFromMozillaCategory.hidden, "The more category is hidden");
     let firefoxLabsCategory = browser.contentDocument.getElementById(
       "category-experimental"
     );
-    ok(
-      !firefoxLabsCategory || firefoxLabsCategory.hidden,
-      "The labs category is hidden"
-    );
+    ok(firefoxLabsCategory.hidden, "The labs category is hidden");
   });
 });
 

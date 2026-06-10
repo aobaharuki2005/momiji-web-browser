@@ -11,10 +11,9 @@
 add_task(async function rowCanUpdateToResult() {
   // Create a provider that returns two non-hidden results.
   let provider = new UrlbarTestUtils.TestProvider({ priority: Infinity });
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(provider);
+  UrlbarProvidersManager.registerProvider(provider);
   registerCleanupFunction(() => {
-    providersManager.unregisterProvider(provider);
+    UrlbarProvidersManager.unregisterProvider(provider);
   });
 
   for (let i = 0; i < 2; i++) {
@@ -81,5 +80,5 @@ add_task(async function rowCanUpdateToResult() {
   await UrlbarTestUtils.promisePopupClose(window);
   gURLBar.handleRevert();
 
-  providersManager.unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 });

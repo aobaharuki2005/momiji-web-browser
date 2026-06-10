@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::fmt::{self, Write};
 use std::str;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 
 #[cfg(feature = "http2")]
 use http::header::HeaderValue;
@@ -29,15 +29,13 @@ pub(crate) fn update_and_header_value() -> HeaderValue {
     CACHED.with(|cache| {
         let mut cache = cache.borrow_mut();
         cache.check();
-        cache.header_value.clone()
+        HeaderValue::from_bytes(cache.buffer()).expect("Date format should be valid HeaderValue")
     })
 }
 
 struct CachedDate {
     bytes: [u8; DATE_VALUE_LENGTH],
     pos: usize,
-    #[cfg(feature = "http2")]
-    header_value: HeaderValue,
     next_update: SystemTime,
 }
 
@@ -48,8 +46,6 @@ impl CachedDate {
         let mut cache = CachedDate {
             bytes: [0; DATE_VALUE_LENGTH],
             pos: 0,
-            #[cfg(feature = "http2")]
-            header_value: HeaderValue::from_static(""),
             next_update: SystemTime::now(),
         };
         cache.update(cache.next_update);
@@ -68,30 +64,15 @@ impl CachedDate {
     }
 
     fn update(&mut self, now: SystemTime) {
-        let nanos = now
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .subsec_nanos();
-
         self.render(now);
-        self.next_update = now + Duration::new(1, 0) - Duration::from_nanos(nanos as u64);
+        self.next_update = now + Duration::new(1, 0);
     }
 
     fn render(&mut self, now: SystemTime) {
         self.pos = 0;
         let _ = write!(self, "{}", HttpDate::from(now));
         debug_assert!(self.pos == DATE_VALUE_LENGTH);
-        self.render_http2();
     }
-
-    #[cfg(feature = "http2")]
-    fn render_http2(&mut self) {
-        self.header_value = HeaderValue::from_bytes(self.buffer())
-            .expect("Date format should be valid HeaderValue");
-    }
-
-    #[cfg(not(feature = "http2"))]
-    fn render_http2(&mut self) {}
 }
 
 impl fmt::Write for CachedDate {

@@ -9,7 +9,7 @@ use crate::clip::{rounded_rectangle_contains_point, ClipNodeId, ClipTreeBuilder}
 use crate::clip::{polygon_contains_point, ClipItemKey, ClipItemKeyKind};
 use crate::prim_store::PolygonKey;
 use crate::scene_builder_thread::Interners;
-use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
+use crate::spatial_tree::{SpatialNodeIndex, SpatialTree, get_external_scroll_offset};
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo};
 use std::sync::{Arc, Mutex};
 use crate::util::LayoutToWorldFastTransform;
@@ -62,6 +62,8 @@ struct HitTestSpatialNode {
     /// World viewport transform for content transformed by this node.
     world_viewport_transform: LayoutToWorldFastTransform,
 
+    /// The accumulated external scroll offset for this spatial node.
+    external_scroll_offset: LayoutVector2D,
 }
 
 #[derive(MallocSizeOf)]
@@ -78,32 +80,31 @@ struct HitTestClipNode {
 impl HitTestClipNode {
     fn new(
         item: &ClipItemKey,
-        clip_rect: LayoutRect,
         interners: &Interners,
         parent: ClipNodeId,
-        spatial_node_index: SpatialNodeIndex,
     ) -> Self {
         let region = match item.kind {
-            ClipItemKeyKind::Rectangle(mode) => {
-                HitTestRegion::Rectangle(clip_rect, mode)
+            ClipItemKeyKind::Rectangle(rect, mode) => {
+                HitTestRegion::Rectangle(rect.into(), mode)
             }
-            ClipItemKeyKind::RoundedRectangle(radius, mode) => {
-                HitTestRegion::RoundedRectangle(clip_rect, radius.into(), mode)
+            ClipItemKeyKind::RoundedRectangle(rect, radius, mode) => {
+                HitTestRegion::RoundedRectangle(rect.into(), radius.into(), mode)
             }
-            ClipItemKeyKind::ImageMask(_, polygon_handle) => {
+            ClipItemKeyKind::ImageMask(rect, _, polygon_handle) => {
                 if let Some(handle) = polygon_handle {
                     // Retrieve the polygon data from the interner.
                     let polygon = &interners.polygon[handle];
-                    HitTestRegion::Polygon(clip_rect, *polygon)
+                    HitTestRegion::Polygon(rect.into(), *polygon)
                 } else {
-                    HitTestRegion::Rectangle(clip_rect, ClipMode::Clip)
+                    HitTestRegion::Rectangle(rect.into(), ClipMode::Clip)
                 }
             }
+            ClipItemKeyKind::BoxShadow(..) => HitTestRegion::Invalid,
         };
 
         HitTestClipNode {
             region,
-            spatial_node_index,
+            spatial_node_index: item.spatial_node_index,
             parent,
         }
     }
@@ -205,17 +206,10 @@ impl HitTestingScene {
             let src_clip_node = clip_tree_builder.get_node(clip_node_id);
             let clip_item = &interners.clip[src_clip_node.handle];
 
-            // SNAPTODO: Scene-build hit-test scene captures the unsnapped
-            // clip rect. Snapping happens against frame-time spatial state
-            // which isn't available here; audit hit-test consumers to
-            // confirm using the unsnapped value is correct for hit
-            // semantics, or apply a frame-time snap before testing.
             let clip_node = HitTestClipNode::new(
                 &clip_item.key,
-                src_clip_node.unsnapped_clip_rect,
                 interners,
                 src_clip_node.parent,
-                src_clip_node.spatial_node_index,
             );
 
             self.clip_nodes.insert(clip_node_id, clip_node);
@@ -259,6 +253,7 @@ impl HitTestingScene {
 
 #[derive(MallocSizeOf)]
 enum HitTestRegion {
+    Invalid,
     Rectangle(LayoutRect, ClipMode),
     RoundedRectangle(LayoutRect, BorderRadius, ClipMode),
     Polygon(LayoutRect, PolygonKey),
@@ -277,6 +272,7 @@ impl HitTestRegion {
                 !rounded_rectangle_contains_point(point, &rect, &radii),
             HitTestRegion::Polygon(rect, polygon) =>
                 polygon_contains_point(point, &rect, &polygon),
+            HitTestRegion::Invalid => true,
         }
     }
 }
@@ -328,6 +324,7 @@ impl HitTester {
                 world_viewport_transform: spatial_tree
                     .get_world_viewport_transform(index)
                     .into_fast_transform(),
+                external_scroll_offset: get_external_scroll_offset(spatial_tree, index),
             });
         });
     }

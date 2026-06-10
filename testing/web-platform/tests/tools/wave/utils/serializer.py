@@ -23,6 +23,7 @@ def serialize_session(session):
         "is_public": session.is_public,
         "reference_tokens": session.reference_tokens,
         "expiration_date": millis_to_iso(session.expiration_date),
+        "type": session.type,
         "malfunctioning_tests": session.malfunctioning_tests
     }
 

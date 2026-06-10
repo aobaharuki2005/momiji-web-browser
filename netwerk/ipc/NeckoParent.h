@@ -1,17 +1,19 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-#ifndef mozilla_net_NeckoParent_h
-#define mozilla_net_NeckoParent_h
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/MozPromise.h"
 #include "nsIAuthPrompt2.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsNetUtil.h"
+
+#ifndef mozilla_net_NeckoParent_h
+#  define mozilla_net_NeckoParent_h
 
 namespace mozilla {
 namespace net {
@@ -79,10 +81,12 @@ class NeckoParent : public PNeckoParent {
       const SerializedLoadContext& aSerialized,
       const HttpChannelCreationArgs& aOpenArgs) override;
 
-  already_AddRefed<PStunAddrsRequestParent> AllocPStunAddrsRequestParent();
+  PStunAddrsRequestParent* AllocPStunAddrsRequestParent();
+  bool DeallocPStunAddrsRequestParent(PStunAddrsRequestParent* aActor);
 
-  already_AddRefed<PWebrtcTCPSocketParent> AllocPWebrtcTCPSocketParent(
+  PWebrtcTCPSocketParent* AllocPWebrtcTCPSocketParent(
       const Maybe<TabId>& aTabId);
+  bool DeallocPWebrtcTCPSocketParent(PWebrtcTCPSocketParent* aActor);
 
   PCacheEntryWriteHandleParent* AllocPCacheEntryWriteHandleParent(
       PHttpChannelParent* channel);
@@ -101,6 +105,8 @@ class NeckoParent : public PNeckoParent {
       PBrowserParent* browser, const SerializedLoadContext& aSerialized,
       const uint32_t& aSerial);
   bool DeallocPWebSocketParent(PWebSocketParent*);
+  PTCPSocketParent* AllocPTCPSocketParent(const nsAString& host,
+                                          const uint16_t& port);
 
   already_AddRefed<PDocumentChannelParent> AllocPDocumentChannelParent(
       const dom::MaybeDiscarded<dom::BrowsingContext>& aContext,
@@ -111,23 +117,20 @@ class NeckoParent : public PNeckoParent {
       const DocumentChannelCreationArgs& aArgs) override;
   bool DeallocPDocumentChannelParent(PDocumentChannelParent* channel);
 
-  already_AddRefed<PTCPServerSocketParent> AllocPTCPServerSocketParent(
+  bool DeallocPTCPSocketParent(PTCPSocketParent*);
+  PTCPServerSocketParent* AllocPTCPServerSocketParent(
       const uint16_t& aLocalPort, const uint16_t& aBacklog,
       const bool& aUseArrayBuffers);
   virtual mozilla::ipc::IPCResult RecvPTCPServerSocketConstructor(
       PTCPServerSocketParent*, const uint16_t& aLocalPort,
       const uint16_t& aBacklog, const bool& aUseArrayBuffers) override;
-
-  PTCPSocketParent* AllocPTCPSocketParent(const nsAString& host,
-                                          const uint16_t& port);
-  bool DeallocPTCPSocketParent(PTCPSocketParent*);
-
-  already_AddRefed<PUDPSocketParent> AllocPUDPSocketParent(
-      nsIPrincipal* aPrincipal, const nsACString& aFilter);
+  bool DeallocPTCPServerSocketParent(PTCPServerSocketParent*);
+  PUDPSocketParent* AllocPUDPSocketParent(nsIPrincipal* aPrincipal,
+                                          const nsACString& aFilter);
   virtual mozilla::ipc::IPCResult RecvPUDPSocketConstructor(
       PUDPSocketParent*, nsIPrincipal* aPrincipal,
       const nsACString& aFilter) override;
-
+  bool DeallocPUDPSocketParent(PUDPSocketParent*);
   already_AddRefed<PDNSRequestParent> AllocPDNSRequestParent(
       const nsACString& aHost, const nsACString& aTrrServer,
       const int32_t& aPort, const uint16_t& aType,
@@ -139,15 +142,12 @@ class NeckoParent : public PNeckoParent {
       const OriginAttributes& aOriginAttributes,
       const nsIDNSService::DNSFlags& flags) override;
   mozilla::ipc::IPCResult RecvSpeculativeConnect(
-      PBrowserParent* aBrowser, const IPC::SerializedLoadContext& aSerialized,
       nsIURI* aURI, nsIPrincipal* aPrincipal,
       Maybe<OriginAttributes>&& aOriginAttributes, const bool& aAnonymous);
   mozilla::ipc::IPCResult RecvHTMLDNSPrefetch(
       const nsAString& hostname, const bool& isHttps,
       const OriginAttributes& aOriginAttributes,
       const nsIDNSService::DNSFlags& flags);
-  mozilla::ipc::IPCResult RecvHTMLDNSPrefetchBatch(
-      nsTArray<HTMLDNSPrefetchArgs>&& aPrefetches);
   mozilla::ipc::IPCResult RecvCancelHTMLDNSPrefetch(
       const nsAString& hostname, const bool& isHttps,
       const OriginAttributes& aOriginAttributes,
@@ -158,7 +158,18 @@ class NeckoParent : public PNeckoParent {
 
   mozilla::ipc::IPCResult RecvConnectBaseChannel(const uint32_t& channelId);
 
-#ifdef MOZ_WIDGET_ANDROID
+#  ifdef MOZ_WIDGET_GTK
+  PGIOChannelParent* AllocPGIOChannelParent(
+      PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
+      const GIOChannelCreationArgs& aOpenArgs);
+  bool DeallocPGIOChannelParent(PGIOChannelParent* channel);
+
+  virtual mozilla::ipc::IPCResult RecvPGIOChannelConstructor(
+      PGIOChannelParent* aActor, PBrowserParent* aBrowser,
+      const SerializedLoadContext& aSerialized,
+      const GIOChannelCreationArgs& aOpenArgs) override;
+#  endif
+#  ifdef MOZ_WIDGET_ANDROID
   already_AddRefed<PGeckoViewContentChannelParent>
   AllocPGeckoViewContentChannelParent(
       PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
@@ -168,7 +179,7 @@ class NeckoParent : public PNeckoParent {
       PGeckoViewContentChannelParent* aActor, PBrowserParent* aBrowser,
       const SerializedLoadContext& aSerialized,
       const GeckoViewContentChannelArgs& args) override;
-#endif
+#  endif
 
   mozilla::ipc::IPCResult RecvNotifyFileChannelOpened(
       const FileChannelInfo& aInfo);

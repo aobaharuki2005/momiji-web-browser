@@ -1069,7 +1069,7 @@ nsresult CacheFile::DoomLocked(CacheFileListener* aCallback) {
   if (mHandle) {
     rv = CacheFileIOManager::DoomFile(mHandle, listener);
   } else if (mOpeningFile) {
-    mDoomAfterOpenListener = std::move(listener);
+    mDoomAfterOpenListener = listener;
   }
 
   return rv;

@@ -32,6 +32,7 @@
 #include "nsThreadUtils.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
+#include "rtc_base/trace_event.h"
 #include "tab_capturer.h"
 
 #ifdef XP_MACOSX
@@ -50,10 +51,10 @@ static void CaptureFrameOnThread(nsITimer* aTimer, void* aClosure) {
 
 namespace webrtc {
 
-DesktopCaptureImpl* DesktopCaptureImpl::Create(int32_t aCaptureId,
+DesktopCaptureImpl* DesktopCaptureImpl::Create(const int32_t aModuleId,
                                                const char* aUniqueId,
                                                const CaptureDeviceType aType) {
-  return new webrtc::RefCountedObject<DesktopCaptureImpl>(aCaptureId, aUniqueId,
+  return new webrtc::RefCountedObject<DesktopCaptureImpl>(aModuleId, aUniqueId,
                                                           aType);
 }
 
@@ -114,7 +115,8 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
 }
 
 std::shared_ptr<VideoCaptureModule::DeviceInfo>
-DesktopCaptureImpl::CreateDeviceInfo(const CaptureDeviceType aType) {
+DesktopCaptureImpl::CreateDeviceInfo(const int32_t aId,
+                                     const CaptureDeviceType aType) {
   if (aType == CaptureDeviceType::Screen) {
     auto options = CreateDesktopCaptureOptions();
 #ifdef XP_MACOSX
@@ -124,14 +126,14 @@ DesktopCaptureImpl::CreateDeviceInfo(const CaptureDeviceType aType) {
       options.set_allow_sck_capturer(false);
     }
 #endif
-    return CreateDesktopDeviceInfo(CreateScreenCaptureInfo(options));
+    return CreateDesktopDeviceInfo(aId, CreateScreenCaptureInfo(options));
   }
   if (aType == CaptureDeviceType::Window) {
     return CreateDesktopDeviceInfo(
-        CreateWindowCaptureInfo(CreateDesktopCaptureOptions()));
+        aId, CreateWindowCaptureInfo(CreateDesktopCaptureOptions()));
   }
   if (aType == CaptureDeviceType::Browser) {
-    return CreateTabDeviceInfo(CreateTabCaptureInfo());
+    return CreateTabDeviceInfo(aId, CreateTabCaptureInfo());
   }
   return nullptr;
 }
@@ -251,10 +253,10 @@ static std::unique_ptr<DesktopCapturer> CreateDesktopCapturerAndThread(
   return capturer;
 }
 
-DesktopCaptureImpl::DesktopCaptureImpl(int32_t aCaptureId,
-                                       const char* aUniqueId,
+DesktopCaptureImpl::DesktopCaptureImpl(const int32_t aId, const char* aUniqueId,
                                        const CaptureDeviceType aType)
-    : mTrackingId(mozilla::TrackingId(CaptureEngineToTrackingSourceStr([&] {
+    : mModuleId(aId),
+      mTrackingId(mozilla::TrackingId(CaptureEngineToTrackingSourceStr([&] {
                                         switch (aType) {
                                           case CaptureDeviceType::Screen:
                                             return CaptureEngine::ScreenEngine;
@@ -266,12 +268,12 @@ DesktopCaptureImpl::DesktopCaptureImpl(int32_t aCaptureId,
                                             return CaptureEngine::InvalidEngine;
                                         }
                                       }()),
-                                      aCaptureId)),
+                                      aId)),
       mDeviceUniqueId(aUniqueId),
       mDeviceType(aType),
       mControlThread(mozilla::GetCurrentSerialEventTarget()),
       mNextFrameMinimumTime(Timestamp::Zero()),
-      mCallback("DesktopCaptureImpl::mCallback"),
+      mCallbacks("DesktopCaptureImpl::mCallbacks"),
       mBufferPool(false, 2) {}
 
 DesktopCaptureImpl::~DesktopCaptureImpl() {
@@ -281,13 +283,27 @@ DesktopCaptureImpl::~DesktopCaptureImpl() {
 
 void DesktopCaptureImpl::RegisterCaptureDataCallback(
     webrtc::VideoSinkInterface<VideoFrame>* aDataCallback) {
-  auto callback = mCallback.Lock();
-  *callback = aDataCallback;
+  auto callbacks = mCallbacks.Lock();
+  callbacks->insert(aDataCallback);
 }
 
-void DesktopCaptureImpl::DeRegisterCaptureDataCallback() {
-  auto callback = mCallback.Lock();
-  *callback = nullptr;
+void DesktopCaptureImpl::DeRegisterCaptureDataCallback(
+    webrtc::VideoSinkInterface<VideoFrame>* aDataCallback) {
+  auto callbacks = mCallbacks.Lock();
+  auto it = callbacks->find(aDataCallback);
+  if (it != callbacks->end()) {
+    callbacks->erase(it);
+  }
+}
+
+int32_t DesktopCaptureImpl::StopCaptureIfAllClientsClose() {
+  {
+    auto callbacks = mCallbacks.Lock();
+    if (!callbacks->empty()) {
+      return 0;
+    }
+  }
+  return StopCapture();
 }
 
 int32_t DesktopCaptureImpl::SetCaptureRotation(VideoRotation aRotation) {
@@ -514,8 +530,8 @@ void DesktopCaptureImpl::NotifyOnFrame(const VideoFrame& aFrame) {
   MOZ_ASSERT(nextFrameMinimumTime >= mNextFrameMinimumTime);
 
   mNextFrameMinimumTime = nextFrameMinimumTime;
-  auto callback = mCallback.Lock();
-  if (auto& cb = *callback) {
+  auto callbacks = mCallbacks.Lock();
+  for (auto* cb : *callbacks) {
     cb->OnFrame(aFrame);
   }
 }

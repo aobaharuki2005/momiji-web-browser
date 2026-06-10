@@ -30,7 +30,7 @@ Context Menu
 .. image:: img/context-menu-layout.png
     :class: border
     :alt: The context menu for classes
-    :width: 484px
+    :width: 448px
 
 Class layout of ...
   Open the class field layout table of given class.

@@ -77,7 +77,7 @@ fn get_imports_exports(
         let payload = payload.unwrap();
         match payload {
             wasmparser::Payload::ImportSection(ir) => {
-                for import in ir.into_imports() {
+                for import in ir {
                     let import = import.unwrap();
                     imports.push(WasmImport(
                         import.module.to_string(),

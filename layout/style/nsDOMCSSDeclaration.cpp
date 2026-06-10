@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,11 +12,12 @@
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/StyleSheetInlines.h"
-#include "mozilla/Try.h"
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/CSSStylePropertiesBinding.h"
+#include "nsCOMPtr.h"
 #include "nsCSSProps.h"
+#include "nsQueryObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -35,9 +38,9 @@ void nsDOMCSSDeclaration::GetPropertyValue(const NonCustomCSSPropertyId aPropId,
              "Should never pass eCSSProperty_UNKNOWN around");
   MOZ_ASSERT(aValue.IsEmpty());
 
-  if (Block* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr)) {
-    Servo_DeclarationBlock_GetPropertyValueByNonCustomId(decl, aPropId,
-                                                         &aValue);
+  if (DeclarationBlock* decl =
+          GetOrCreateCSSDeclaration(Operation::Read, nullptr)) {
+    decl->GetPropertyValueById(aPropId, aValue);
   }
 }
 
@@ -58,30 +61,11 @@ void nsDOMCSSDeclaration::SetPropertyValue(const NonCustomCSSPropertyId aPropId,
   aRv = ParsePropertyValue(aPropId, aValue, false, aSubjectPrincipal);
 }
 
-void nsDOMCSSDeclaration::SetPropertyTypedValue(
-    const mozilla::CSSPropertyId& aPropId, const nsACString& aValue,
-    mozilla::ErrorResult& aRv) {
-  MOZ_ASSERT(!aValue.IsEmpty());
-
-  if (IsReadOnly()) {
-    return;
-  }
-
-  nsresult rv = SetPropertyTypedValue(aPropId, aValue);
-  if (NS_FAILED(rv)) {
-    if (rv == NS_ERROR_DOM_SYNTAX_ERR) {
-      aRv.ThrowTypeError("Invalid values");
-    } else {
-      aRv.Throw(rv);
-    }
-  }
-}
-
 void nsDOMCSSDeclaration::GetCssText(nsACString& aCssText) {
   MOZ_ASSERT(aCssText.IsEmpty());
 
   if (auto* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr)) {
-    Servo_DeclarationBlock_GetCssText(decl, &aCssText);
+    decl->ToString(aCssText);
   }
 }
 
@@ -94,8 +78,8 @@ void nsDOMCSSDeclaration::SetCssText(const nsACString& aCssText,
 
   // We don't need to *do* anything with the old declaration, but we need
   // to ensure that it exists, or else SetCSSDeclaration may crash.
-  RefPtr<Block> created;
-  Block* olddecl =
+  RefPtr<DeclarationBlock> created;
+  DeclarationBlock* olddecl =
       GetOrCreateCSSDeclaration(Operation::Modify, getter_AddRefs(created));
   if (!olddecl) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
@@ -125,40 +109,41 @@ void nsDOMCSSDeclaration::SetCssText(const nsACString& aCssText,
     closure.function(&closureData, eCSSProperty_UNKNOWN);
   }
 
-  RefPtr<Block> newdecl =
-      Servo_ParseStyleAttribute(&aCssText, servoEnv.mUrlExtraData,
-                                servoEnv.mCompatMode, servoEnv.mLoader,
-                                servoEnv.mRuleType)
-          .Consume();
+  RefPtr<DeclarationBlock> newdecl = DeclarationBlock::FromCssText(
+      aCssText, servoEnv.mUrlExtraData, servoEnv.mCompatMode, servoEnv.mLoader,
+      servoEnv.mRuleType);
+
   aRv = SetCSSDeclaration(newdecl, &closureData);
 }
 
 uint32_t nsDOMCSSDeclaration::Length() {
-  Block* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr);
+  DeclarationBlock* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr);
+
   if (decl) {
-    return Servo_DeclarationBlock_Count(decl);
+    return decl->Count();
   }
+
   return 0;
 }
 
 void nsDOMCSSDeclaration::IndexedGetter(uint32_t aIndex, bool& aFound,
                                         nsACString& aPropName) {
-  Block* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr);
-  aFound =
-      decl && Servo_DeclarationBlock_GetNthProperty(decl, aIndex, &aPropName);
+  DeclarationBlock* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr);
+  aFound = decl && decl->GetNthProperty(aIndex, aPropName);
 }
 
 void nsDOMCSSDeclaration::GetPropertyValue(const nsACString& aPropertyName,
                                            nsACString& aReturn) {
   MOZ_ASSERT(aReturn.IsEmpty());
   if (auto* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr)) {
-    Servo_DeclarationBlock_GetPropertyValue(decl, &aPropertyName, &aReturn);
+    decl->GetPropertyValue(aPropertyName, aReturn);
   }
 }
 
 bool nsDOMCSSDeclaration::HasLonghandProperty(const nsACString& aPropertyName) {
   if (auto* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr)) {
-    return Servo_DeclarationBlock_HasLonghandProperty(decl, &aPropertyName);
+    return Servo_DeclarationBlock_HasLonghandProperty(decl->Raw(),
+                                                      &aPropertyName);
   }
 
   return false;
@@ -167,9 +152,8 @@ bool nsDOMCSSDeclaration::HasLonghandProperty(const nsACString& aPropertyName) {
 void nsDOMCSSDeclaration::GetPropertyPriority(const nsACString& aPropertyName,
                                               nsACString& aPriority) {
   MOZ_ASSERT(aPriority.IsEmpty());
-  auto* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr);
-  if (decl &&
-      Servo_DeclarationBlock_GetPropertyIsImportant(decl, &aPropertyName)) {
+  DeclarationBlock* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr);
+  if (decl && decl->GetPropertyIsImportant(aPropertyName)) {
     aPriority.AssignLiteral("important");
   }
 }
@@ -232,7 +216,6 @@ nsDOMCSSDeclaration::GetParsingEnvironmentForRule(const css::Rule* aRule,
   }
 
   MOZ_ASSERT(aRule->Type() == aRuleType);
-  MOZ_ASSERT(aRuleType != StyleCssRuleType::NestedDeclarations);
 
   StyleSheet* sheet = aRule->GetStyleSheet();
   if (!sheet) {
@@ -260,8 +243,8 @@ template <typename Func>
 nsresult nsDOMCSSDeclaration::ModifyDeclaration(
     nsIPrincipal* aSubjectPrincipal, MutationClosureData* aClosureData,
     Func aFunc) {
-  RefPtr<Block> created;
-  Block* olddecl =
+  RefPtr<DeclarationBlock> created;
+  DeclarationBlock* olddecl =
       GetOrCreateCSSDeclaration(Operation::Modify, getter_AddRefs(created));
   if (!olddecl) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -273,14 +256,18 @@ nsresult nsDOMCSSDeclaration::ModifyDeclaration(
   // between when we mutate the declaration and when we set the new
   // rule (see stack in bug 209575).
   mozAutoDocUpdate autoUpdate(DocToUpdate(), true);
+  RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
+
+  bool changed;
   ParsingEnvironment servoEnv = GetParsingEnvironment(aSubjectPrincipal);
   if (!servoEnv.mUrlExtraData) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<Block> decl = EnsureBlockMutable(olddecl);
-  bool changed = MOZ_TRY(aFunc(decl, servoEnv));
+  changed = aFunc(decl, servoEnv);
+
   if (!changed) {
+    // Parsing failed -- but we don't throw an exception for that.
     return NS_OK;
   }
 
@@ -291,73 +278,51 @@ nsresult nsDOMCSSDeclaration::ParsePropertyValue(
     const NonCustomCSSPropertyId aPropId, const nsACString& aPropValue,
     bool aIsImportant, nsIPrincipal* aSubjectPrincipal) {
   AUTO_PROFILER_LABEL_CATEGORY_PAIR_RELEVANT_FOR_JS(LAYOUT_CSSParsing);
-  MOZ_ASSERT(!IsReadOnly());
 
-  DeclarationBlockMutationClosure closure = {};
-  MutationClosureData closureData;
-  GetPropertyChangeClosure(&closure, &closureData);
-
-  return ModifyDeclaration(aSubjectPrincipal, &closureData,
-                           [&](Block* decl, ParsingEnvironment& env) {
-                             bool ok = Servo_DeclarationBlock_SetPropertyById(
-                                 decl, aPropId, &aPropValue, aIsImportant,
-                                 env.mUrlExtraData, StyleParsingMode::DEFAULT,
-                                 env.mCompatMode, env.mLoader, env.mRuleType,
-                                 closure);
-
-                             // Don't propagate parsing failures as nsresult
-                             // errors. Instead, treat treat them as "no
-                             // change".
-                             return Result<bool, nsresult>(ok);
-                           });
-}
-
-nsresult nsDOMCSSDeclaration::ParseCustomPropertyValue(
-    const nsACString& aPropertyName, const nsACString& aPropValue,
-    bool aIsImportant, nsIPrincipal* aSubjectPrincipal) {
-  MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
-  MOZ_ASSERT(!IsReadOnly());
-
-  DeclarationBlockMutationClosure closure = {};
-  MutationClosureData closureData;
-  GetPropertyChangeClosure(&closure, &closureData);
-
-  return ModifyDeclaration(aSubjectPrincipal, &closureData,
-                           [&](Block* decl, ParsingEnvironment& env) {
-                             bool ok = Servo_DeclarationBlock_SetProperty(
-                                 decl, &aPropertyName, &aPropValue,
-                                 aIsImportant, env.mUrlExtraData,
-                                 StyleParsingMode::DEFAULT, env.mCompatMode,
-                                 env.mLoader, env.mRuleType, closure);
-
-                             // Don't propagate parsing failures as nsresult
-                             // errors. Instead, treat treat them as "no
-                             // change".
-                             return Result<bool, nsresult>(ok);
-                           });
-}
-
-nsresult nsDOMCSSDeclaration::SetPropertyTypedValue(
-    const CSSPropertyId& aPropId, const nsACString& aPropValue) {
-  MOZ_ASSERT(!IsReadOnly());
+  if (IsReadOnly()) {
+    return NS_OK;
+  }
 
   DeclarationBlockMutationClosure closure = {};
   MutationClosureData closureData;
   GetPropertyChangeClosure(&closure, &closureData);
 
   return ModifyDeclaration(
-      nullptr, &closureData,
-      [&](Block* decl, ParsingEnvironment& env) -> Result<bool, nsresult> {
-        bool changed;
-        MOZ_TRY(Servo_DeclarationBlock_SetPropertyTypedValue(
-            decl, &aPropId, &aPropValue, env.mUrlExtraData, closure, &changed));
-        return changed;
+      aSubjectPrincipal, &closureData,
+      [&](DeclarationBlock* decl, ParsingEnvironment& env) {
+        return Servo_DeclarationBlock_SetPropertyById(
+            decl->Raw(), aPropId, &aPropValue, aIsImportant, env.mUrlExtraData,
+            StyleParsingMode::DEFAULT, env.mCompatMode, env.mLoader,
+            env.mRuleType, closure);
+      });
+}
+
+nsresult nsDOMCSSDeclaration::ParseCustomPropertyValue(
+    const nsACString& aPropertyName, const nsACString& aPropValue,
+    bool aIsImportant, nsIPrincipal* aSubjectPrincipal) {
+  MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
+
+  if (IsReadOnly()) {
+    return NS_OK;
+  }
+
+  DeclarationBlockMutationClosure closure = {};
+  MutationClosureData closureData;
+  GetPropertyChangeClosure(&closure, &closureData);
+
+  return ModifyDeclaration(
+      aSubjectPrincipal, &closureData,
+      [&](DeclarationBlock* decl, ParsingEnvironment& env) {
+        return Servo_DeclarationBlock_SetProperty(
+            decl->Raw(), &aPropertyName, &aPropValue, aIsImportant,
+            env.mUrlExtraData, StyleParsingMode::DEFAULT, env.mCompatMode,
+            env.mLoader, env.mRuleType, closure);
       });
 }
 
 void nsDOMCSSDeclaration::RemovePropertyInternal(NonCustomCSSPropertyId aPropId,
                                                  ErrorResult& aRv) {
-  Block* olddecl =
+  DeclarationBlock* olddecl =
       GetOrCreateCSSDeclaration(Operation::RemoveProperty, nullptr);
   if (IsReadOnly()) {
     return;
@@ -378,19 +343,11 @@ void nsDOMCSSDeclaration::RemovePropertyInternal(NonCustomCSSPropertyId aPropId,
   MutationClosureData closureData;
   GetPropertyChangeClosure(&closure, &closureData);
 
-  RefPtr<Block> decl = EnsureBlockMutable(olddecl);
-  if (!Servo_DeclarationBlock_RemovePropertyById(decl, aPropId, closure)) {
+  RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
+  if (!decl->RemovePropertyById(aPropId, closure)) {
     return;
   }
   aRv = SetCSSDeclaration(decl, &closureData);
-}
-
-already_AddRefed<StyleLockedDeclarationBlock>
-nsDOMCSSDeclaration::EnsureBlockMutable(Block* aBlock) {
-  if (Servo_DeclarationBlock_IsImmutable(aBlock)) {
-    return Servo_DeclarationBlock_Clone(aBlock).Consume();
-  }
-  return do_AddRef(aBlock);
 }
 
 void nsDOMCSSDeclaration::RemovePropertyInternal(
@@ -399,7 +356,7 @@ void nsDOMCSSDeclaration::RemovePropertyInternal(
     return;
   }
 
-  Block* olddecl =
+  DeclarationBlock* olddecl =
       GetOrCreateCSSDeclaration(Operation::RemoveProperty, nullptr);
   if (!olddecl) {
     return;  // no decl, so nothing to remove
@@ -416,8 +373,8 @@ void nsDOMCSSDeclaration::RemovePropertyInternal(
   MutationClosureData closureData;
   GetPropertyChangeClosure(&closure, &closureData);
 
-  RefPtr<Block> decl = EnsureBlockMutable(olddecl);
-  if (!Servo_DeclarationBlock_RemoveProperty(decl, &aPropertyName, closure)) {
+  RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
+  if (!decl->RemoveProperty(aPropertyName, closure)) {
     return;
   }
   aRv = SetCSSDeclaration(decl, &closureData);

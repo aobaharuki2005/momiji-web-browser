@@ -8,34 +8,22 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  ContextDescriptorType:
+    "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
-  RootMessageHandler:
-    "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs",
-  SessionDataCategory:
-    "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
+  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
+  UserContextManager:
+    "chrome://remote/content/shared/UserContextManager.sys.mjs",
+  WindowGlobalMessageHandler:
+    "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.WEBDRIVER_BIDI)
 );
-
-/**
- * @typedef {object} NetworkConditions
- * @property {string} type
- */
-
-/**
- * Enum of possible network conditions.
- *
- * @readonly
- * @enum {NetworkConditionsType}
- */
-const NetworkConditionsType = {
-  Offline: "offline",
-};
 
 /**
  * Enum of possible natural orientations supported by the
@@ -136,7 +124,8 @@ class EmulationModule extends RootBiDiModule {
    */
   async setGeolocationOverride(options = {}) {
     let { coordinates } = options;
-    const { contexts: contextIds, userContexts: userContextIds } = options;
+    const { contexts: contextIds = null, userContexts: userContextIds = null } =
+      options;
 
     if (coordinates !== null) {
       lazy.assert.object(
@@ -222,19 +211,38 @@ class EmulationModule extends RootBiDiModule {
       };
     }
 
-    await this.messageHandler.handleCommand({
-      moduleName: "_configuration",
-      commandName: "_applyConfigurationParameters",
-      destination: { type: lazy.RootMessageHandler.type },
-      params: {
-        async: true,
-        category: lazy.SessionDataCategory.GeolocationOverride,
-        contextIds,
-        resetValue: null,
-        supportsGlobalConfiguration: false,
-        userContextIds,
-        value: coordinates,
-      },
+    const { navigables, userContexts } = this.#getEmulationTargets(
+      contextIds,
+      userContextIds
+    );
+
+    const sessionDataItems = this.#generateSessionDataUpdate({
+      category: "geolocation-override",
+      contextOverride: contextIds !== null,
+      hasGlobalOverride: false,
+      navigables,
+      resetValue: null,
+      userContexts,
+      userContextOverride: userContextIds !== null,
+      value: coordinates,
+    });
+
+    if (sessionDataItems.length) {
+      // TODO: Bug 1953079. Saving the geolocation override in the session data works fine
+      // with one session, but when we start supporting multiple BiDi session, we will
+      // have to rethink this approach.
+      await this.messageHandler.updateSessionData(sessionDataItems);
+    }
+
+    await this.#applyOverride({
+      async: true,
+      callback: this.#applyGeolocationOverride.bind(this),
+      category: "geolocation-override",
+      contextIds,
+      navigables,
+      resetValue: null,
+      userContextIds,
+      value: coordinates,
     });
   }
 
@@ -261,9 +269,9 @@ class EmulationModule extends RootBiDiModule {
    */
   async setLocaleOverride(options = {}) {
     const {
-      contexts: contextIds,
+      contexts: contextIds = null,
       locale: localeArg,
-      userContexts: userContextIds,
+      userContexts: userContextIds = null,
     } = options;
 
     let locale;
@@ -290,87 +298,37 @@ class EmulationModule extends RootBiDiModule {
       }
     }
 
-    await this.messageHandler.handleCommand({
-      moduleName: "_configuration",
-      commandName: "_applyConfigurationParameters",
-      destination: { type: lazy.RootMessageHandler.type },
-      params: {
-        async: true,
-        category: lazy.SessionDataCategory.LocaleOverride,
-        contextIds,
-        resetValue: "",
-        supportsGlobalConfiguration: false,
-        userContextIds,
-        value: locale,
-      },
+    const { navigables, userContexts } = this.#getEmulationTargets(
+      contextIds,
+      userContextIds
+    );
+
+    const sessionDataItems = this.#generateSessionDataUpdate({
+      category: "locale-override",
+      contextOverride: contextIds !== null,
+      hasGlobalOverride: false,
+      navigables,
+      resetValue: "",
+      userContexts,
+      userContextOverride: userContextIds !== null,
+      value: locale,
     });
-  }
 
-  /**
-   * Emulates specific network conditions for the provided contexts, user
-   * contexts, or globally.
-   *
-   * @param {object=} options
-   * @param {Array<string>=} options.contexts
-   *     Optional list of browsing context ids.
-   * @param {(NetworkConditions|null)} options.networkConditions
-   *     Network conditions to emulate. At the moment only the value
-   *     NetworkConditionsOffline is supported.
-   *     Null value resets the override.
-   * @param {Array<string>=} options.userContexts
-   *     Optional list of user context ids.
-   *
-   * @throws {InvalidArgumentError}
-   *     Raised if an argument is of an invalid type or value.
-   * @throws {NoSuchFrameError}
-   *     If the browsing context cannot be found.
-   * @throws {NoSuchUserContextError}
-   *     Raised if the user context id could not be found.
-   */
-  async setNetworkConditions(options = {}) {
-    const {
-      contexts: contextIds,
-      networkConditions,
-      userContexts: userContextIds,
-    } = options;
-
-    if (networkConditions !== null) {
-      lazy.assert.object(
-        networkConditions,
-        lazy.pprint`Expected "networkConditions" to be an object, got ${networkConditions}`
-      );
-
-      lazy.assert.that(
-        conditions => conditions.type === NetworkConditionsType.Offline,
-        lazy.pprint`Expected "networkConditions.type" to be "offline", got ${networkConditions.type}`
-      )(networkConditions);
-
-      if (networkConditions.type === NetworkConditionsType.Offline) {
-        // For offline network conditions, some requests need to be blocked from
-        // the beforeRequestSent handler.
-        await this.messageHandler.handleCommand({
-          moduleName: "network",
-          commandName: "_startListeningForNetworkConditionsOffline",
-          destination: {
-            type: lazy.RootMessageHandler.type,
-          },
-        });
-      }
+    if (sessionDataItems.length) {
+      // TODO: Bug 1953079. Saving the locale override in the session data works fine
+      // with one session, but when we start supporting multiple BiDi session, we will
+      // have to rethink this approach.
+      await this.messageHandler.updateSessionData(sessionDataItems);
     }
 
-    await this.messageHandler.handleCommand({
-      moduleName: "_configuration",
-      commandName: "_applyConfigurationParameters",
-      destination: { type: lazy.RootMessageHandler.type },
-      params: {
-        async: false,
-        category: lazy.SessionDataCategory.NetworkConditions,
-        contextIds,
-        resetValue: null,
-        supportsGlobalConfiguration: true,
-        userContextIds,
-        value: networkConditions,
-      },
+    await this.#applyOverride({
+      async: true,
+      callback: this._setLocaleForBrowsingContext.bind(this),
+      category: "locale-override",
+      contextIds,
+      navigables,
+      userContextIds,
+      value: locale,
     });
   }
 
@@ -408,9 +366,9 @@ class EmulationModule extends RootBiDiModule {
    */
   async setScreenOrientationOverride(options = {}) {
     const {
-      contexts: contextIds,
+      contexts: contextIds = null,
       screenOrientation,
-      userContexts: userContextIds,
+      userContexts: userContextIds = null,
     } = options;
 
     let orientationOverride;
@@ -450,19 +408,37 @@ class EmulationModule extends RootBiDiModule {
       orientationOverride = null;
     }
 
-    await this.messageHandler.handleCommand({
-      moduleName: "_configuration",
-      commandName: "_applyConfigurationParameters",
-      destination: { type: lazy.RootMessageHandler.type },
-      params: {
-        async: false,
-        category: lazy.SessionDataCategory.ScreenOrientationOverride,
-        contextIds,
-        resetValue: null,
-        supportsGlobalConfiguration: false,
-        userContextIds,
-        value: orientationOverride,
-      },
+    const { navigables, userContexts } = this.#getEmulationTargets(
+      contextIds,
+      userContextIds
+    );
+
+    const sessionDataItems = this.#generateSessionDataUpdate({
+      category: "screen-orientation-override",
+      contextOverride: contextIds !== null,
+      hasGlobalOverride: false,
+      navigables,
+      resetValue: null,
+      userContexts,
+      userContextOverride: userContextIds !== null,
+      value: orientationOverride,
+    });
+
+    if (sessionDataItems.length) {
+      // TODO: Bug 1953079. Saving the screen orientation override in the session data works fine
+      // with one session, but when we start supporting multiple BiDi session, we will
+      // have to rethink this approach.
+      await this.messageHandler.updateSessionData(sessionDataItems);
+    }
+
+    this.#applyOverride({
+      callback: this._setEmulatedScreenOrientation,
+      category: "screen-orientation-override",
+      contextIds,
+      navigables,
+      resetValue: null,
+      userContextIds,
+      value: orientationOverride,
     });
   }
 
@@ -500,9 +476,9 @@ class EmulationModule extends RootBiDiModule {
    */
   async setScreenSettingsOverride(options = {}) {
     const {
-      contexts: contextIds,
+      contexts: contextIds = null,
       screenArea,
-      userContexts: userContextIds,
+      userContexts: userContextIds = null,
     } = options;
 
     if (screenArea !== null) {
@@ -522,19 +498,37 @@ class EmulationModule extends RootBiDiModule {
       );
     }
 
-    await this.messageHandler.handleCommand({
-      moduleName: "_configuration",
-      commandName: "_applyConfigurationParameters",
-      destination: { type: lazy.RootMessageHandler.type },
-      params: {
-        async: false,
-        category: lazy.SessionDataCategory.ScreenSettingsOverride,
-        contextIds,
-        resetValue: null,
-        supportsGlobalConfiguration: false,
-        userContextIds,
-        value: screenArea,
-      },
+    const { navigables, userContexts } = this.#getEmulationTargets(
+      contextIds,
+      userContextIds
+    );
+
+    const sessionDataItems = this.#generateSessionDataUpdate({
+      category: "screen-settings-override",
+      contextOverride: contextIds !== null,
+      hasGlobalOverride: false,
+      navigables,
+      resetValue: null,
+      userContexts,
+      userContextOverride: userContextIds !== null,
+      value: screenArea,
+    });
+
+    if (sessionDataItems.length) {
+      // TODO: Bug 1953079. Saving the locale override in the session data works fine
+      // with one session, but when we start supporting multiple BiDi session, we will
+      // have to rethink this approach.
+      await this.messageHandler.updateSessionData(sessionDataItems);
+    }
+
+    this.#applyOverride({
+      callback: this._setScreenSettingsOverride,
+      category: "screen-settings-override",
+      contextIds,
+      navigables,
+      resetValue: null,
+      userContextIds,
+      value: screenArea,
     });
   }
 
@@ -562,7 +556,8 @@ class EmulationModule extends RootBiDiModule {
    */
   async setTimezoneOverride(options = {}) {
     let { timezone } = options;
-    const { contexts: contextIds, userContexts: userContextIds } = options;
+    const { contexts: contextIds = null, userContexts: userContextIds = null } =
+      options;
 
     if (timezone === null) {
       // The API requires an empty string to reset the override.
@@ -591,19 +586,37 @@ class EmulationModule extends RootBiDiModule {
       }
     }
 
-    await this.messageHandler.handleCommand({
-      moduleName: "_configuration",
-      commandName: "_applyConfigurationParameters",
-      destination: { type: lazy.RootMessageHandler.type },
-      params: {
-        async: true,
-        category: lazy.SessionDataCategory.TimezoneOverride,
-        contextIds,
-        resetValue: "",
-        supportsGlobalConfiguration: false,
-        userContextIds,
-        value: timezone,
-      },
+    const { navigables, userContexts } = this.#getEmulationTargets(
+      contextIds,
+      userContextIds
+    );
+
+    const sessionDataItems = this.#generateSessionDataUpdate({
+      category: "timezone-override",
+      contextOverride: contextIds !== null,
+      hasGlobalOverride: false,
+      navigables,
+      resetValue: "",
+      userContexts,
+      userContextOverride: userContextIds !== null,
+      value: timezone,
+    });
+
+    if (sessionDataItems.length) {
+      // TODO: Bug 1953079. Saving the timezone override in the session data works fine
+      // with one session, but when we start supporting multiple BiDi session, we will
+      // have to rethink this approach.
+      await this.messageHandler.updateSessionData(sessionDataItems);
+    }
+
+    await this.#applyOverride({
+      async: true,
+      callback: this._setTimezoneOverride.bind(this),
+      category: "timezone-override",
+      contextIds,
+      navigables,
+      userContextIds,
+      value: timezone,
     });
   }
 
@@ -648,20 +661,532 @@ class EmulationModule extends RootBiDiModule {
       }
     }
 
-    await this.messageHandler.handleCommand({
-      moduleName: "_configuration",
-      commandName: "_applyConfigurationParameters",
-      destination: { type: lazy.RootMessageHandler.type },
-      params: {
-        async: false,
-        category: lazy.SessionDataCategory.UserAgentOverride,
+    if (contextIds !== undefined && userContextIds !== undefined) {
+      throw new lazy.error.InvalidArgumentError(
+        `Providing both "contexts" and "userContexts" arguments is not supported`
+      );
+    }
+
+    const navigables = new Set();
+    const userContexts = new Set();
+    if (contextIds !== undefined) {
+      lazy.assert.isNonEmptyArray(
         contextIds,
-        resetValue: "",
-        supportsGlobalConfiguration: true,
+        lazy.pprint`Expected "contexts" to be a non-empty array, got ${contextIds}`
+      );
+
+      for (const contextId of contextIds) {
+        lazy.assert.string(
+          contextId,
+          lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
+        );
+
+        const context = this._getNavigable(contextId);
+
+        lazy.assert.topLevel(
+          context,
+          `Browsing context with id ${contextId} is not top-level`
+        );
+
+        navigables.add(context);
+      }
+    } else if (userContextIds !== undefined) {
+      lazy.assert.isNonEmptyArray(
         userContextIds,
-        value: userAgent,
+        lazy.pprint`Expected "userContexts" to be a non-empty array, got ${userContextIds}`
+      );
+
+      for (const userContextId of userContextIds) {
+        lazy.assert.string(
+          userContextId,
+          lazy.pprint`Expected elements of "userContexts" to be a string, got ${userContextId}`
+        );
+
+        const internalId =
+          lazy.UserContextManager.getInternalIdById(userContextId);
+
+        if (internalId === null) {
+          throw new lazy.error.NoSuchUserContextError(
+            `User context with id: ${userContextId} doesn't exist`
+          );
+        }
+
+        userContexts.add(internalId);
+
+        // Prepare the list of navigables to update.
+        lazy.UserContextManager.getTabsForUserContext(internalId).forEach(
+          tab => {
+            const contentBrowser = lazy.TabManager.getBrowserForTab(tab);
+            navigables.add(contentBrowser.browsingContext);
+          }
+        );
+      }
+    } else {
+      lazy.TabManager.getBrowsers().forEach(browser =>
+        navigables.add(browser.browsingContext)
+      );
+    }
+
+    const sessionDataItems = this.#generateSessionDataUpdate({
+      category: "user-agent-override",
+      contextOverride: contextIds !== undefined,
+      hasGlobalOverride: true,
+      navigables,
+      resetValue: "",
+      userContexts,
+      userContextOverride: userContextIds !== undefined,
+      value: userAgent,
+    });
+
+    if (sessionDataItems.length) {
+      // TODO: Bug 1953079. Saving the user agent override in the session data works fine
+      // with one session, but when we start supporting multiple BiDi session, we will
+      // have to rethink this approach.
+      await this.messageHandler.updateSessionData(sessionDataItems);
+    }
+
+    this.#applyOverride({
+      callback: this._setUserAgentOverride,
+      category: "user-agent-override",
+      contextIds,
+      navigables,
+      userContextIds,
+      value: userAgent,
+    });
+  }
+
+  /**
+   * Set the screen orientation override to the top-level browsing context.
+   *
+   * @param {object} options
+   * @param {BrowsingContext} options.context
+   *     Top-level browsing context object which is a target
+   *     for the screen orientation override.
+   * @param {(object|null)} options.value
+   *     Screen orientation object which have to override
+   *     screen settings.
+   *     Null value resets the override.
+   */
+  _setEmulatedScreenOrientation(options) {
+    const { context, value } = options;
+    if (value) {
+      const { angle, type } = value;
+      context.setOrientationOverride(type, angle);
+    } else {
+      context.resetOrientationOverride();
+    }
+  }
+
+  /**
+   * Set the locale override to the top-level browsing context.
+   *
+   * @param {object} options
+   * @param {BrowsingContext} options.context
+   *     Top-level browsing context object which is a target
+   *     for the locale override.
+   * @param {(string|null)} options.value
+   *     Locale string which have to override
+   *     the return result of JavaScript Intl APIs.
+   *     Null value resets the override.
+   */
+  async _setLocaleForBrowsingContext(options) {
+    const { context, value } = options;
+
+    context.languageOverride = value;
+
+    await this.messageHandler.handleCommand({
+      moduleName: "emulation",
+      commandName: "_setLocaleOverrideToSandboxes",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        contextDescriptor: {
+          type: lazy.ContextDescriptorType.TopBrowsingContext,
+          id: context.browserId,
+        },
+      },
+      params: {
+        locale: value,
       },
     });
+  }
+
+  /**
+   * Set the screen settings override to the top-level browsing context.
+   *
+   * @param {object} options
+   * @param {BrowsingContext} options.context
+   *     Top-level browsing context object which is a target
+   *     for the locale override.
+   * @param {(ScreenArea|null)} options.value
+   *     An object which has to override
+   *     the return result of JavaScript APIs which return
+   *     screen dimensions. Null value resets the override.
+   */
+  _setScreenSettingsOverride(options) {
+    const { context, value } = options;
+
+    if (value === null) {
+      context.resetScreenAreaOverride();
+    } else {
+      const { height, width } = value;
+      context.setScreenAreaOverride(width, height);
+    }
+  }
+
+  /**
+   * Set the timezone override to the top-level browsing context.
+   *
+   * @param {object} options
+   * @param {BrowsingContext} options.context
+   *     Top-level browsing context object which is a target
+   *     for the locale override.
+   * @param {(string|null)} options.value
+   *     Timezone string which has to override
+   *     the return result of JavaScript Intl/Date APIs.
+   *     Null value resets the override.
+   */
+  async _setTimezoneOverride(options) {
+    const { context, value } = options;
+
+    context.timezoneOverride = value;
+
+    await this.messageHandler.handleCommand({
+      moduleName: "emulation",
+      commandName: "_setTimezoneOverrideToSandboxes",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        contextDescriptor: {
+          type: lazy.ContextDescriptorType.TopBrowsingContext,
+          id: context.browserId,
+        },
+      },
+      params: {
+        timezone: value,
+      },
+    });
+  }
+
+  /**
+   * Set the user agent override to the top-level browsing context.
+   *
+   * @param {object} options
+   * @param {BrowsingContext} options.context
+   *     Top-level browsing context object which is a target
+   *     for the locale override.
+   * @param {string} options.value
+   *     User agent string which has to override
+   *     the browser user agent.
+   */
+  _setUserAgentOverride(options) {
+    const { context, value } = options;
+
+    try {
+      context.customUserAgent = value;
+    } catch (e) {
+      const contextId = lazy.NavigableManager.getIdForBrowsingContext(context);
+
+      lazy.logger.warn(
+        `Failed to override user agent for context with id: ${contextId} (${e.message})`
+      );
+    }
+  }
+
+  /**
+   * Apply the geolocation override to the top-level browsing context.
+   *
+   * @param {object} options
+   * @param {BrowsingContext} options.context
+   *     Top-level browsing context object which is a target
+   *     for the geolocation override.
+   * @param {(GeolocationCoordinates|null)} options.value
+   *     Geolocation coordinates which have to override
+   *     the return result of geolocation APIs.
+   *     Null value resets the override.
+   */
+  #applyGeolocationOverride(options) {
+    const { context, value } = options;
+
+    return this._forwardToWindowGlobal(
+      "_setGeolocationOverride",
+      context.id,
+      {
+        coordinates: value,
+      },
+      { retryOnAbort: true }
+    );
+  }
+
+  async #applyOverride(options) {
+    const {
+      async = false,
+      callback,
+      category,
+      contextIds,
+      navigables,
+      resetValue = "",
+      userContextIds,
+      value,
+    } = options;
+
+    const commands = [];
+
+    for (const navigable of navigables) {
+      const overrideValue = this.#getOverrideValue(
+        {
+          category,
+          context: navigable,
+          contextIds,
+          userContextIds,
+          value,
+        },
+        resetValue
+      );
+
+      if (overrideValue === undefined) {
+        continue;
+      }
+
+      const commandArgs = {
+        context: navigable,
+        value: overrideValue,
+      };
+
+      if (async) {
+        commands.push(callback(commandArgs));
+      } else {
+        callback(commandArgs);
+      }
+    }
+
+    if (async) {
+      await Promise.all(commands);
+    }
+  }
+
+  #generateSessionDataUpdate(options) {
+    const {
+      category,
+      contextOverride,
+      hasGlobalOverride,
+      navigables,
+      resetValue,
+      userContexts,
+      userContextOverride,
+      value,
+    } = options;
+    const sessionDataItems = [];
+    const onlyRemoveSessionDataItem = value === resetValue;
+
+    if (userContextOverride) {
+      for (const userContext of userContexts) {
+        sessionDataItems.push(
+          ...this.messageHandler.sessionData.generateSessionDataItemUpdate(
+            "_configuration",
+            category,
+            {
+              type: lazy.ContextDescriptorType.UserContext,
+              id: userContext,
+            },
+            onlyRemoveSessionDataItem,
+            value
+          )
+        );
+      }
+    } else if (contextOverride) {
+      for (const navigable of navigables) {
+        sessionDataItems.push(
+          ...this.messageHandler.sessionData.generateSessionDataItemUpdate(
+            "_configuration",
+            category,
+            {
+              type: lazy.ContextDescriptorType.TopBrowsingContext,
+              id: navigable.browserId,
+            },
+            onlyRemoveSessionDataItem,
+            value
+          )
+        );
+      }
+    } else if (hasGlobalOverride) {
+      sessionDataItems.push(
+        ...this.messageHandler.sessionData.generateSessionDataItemUpdate(
+          "_configuration",
+          category,
+          {
+            type: lazy.ContextDescriptorType.All,
+          },
+          onlyRemoveSessionDataItem,
+          value
+        )
+      );
+    }
+
+    return sessionDataItems;
+  }
+
+  /**
+   * Return value for #getEmulationTargets.
+   *
+   * @typedef {object} EmulationTargets
+   *
+   * @property {Set<Navigable>} navigables
+   * @property {Set<number>} userContexts
+   */
+
+  /**
+   * Validates the provided browsing contexts or user contexts and resolves them
+   * to a set of navigables.
+   *
+   * @param {Array<string>|null} contextIds
+   *     Optional list of browsing context ids.
+   * @param {Array<string>|null} userContextIds
+   *     Optional list of user context ids.
+   *
+   * @returns {EmulationTargets}
+   */
+  #getEmulationTargets(contextIds, userContextIds) {
+    if (contextIds !== null && userContextIds !== null) {
+      throw new lazy.error.InvalidArgumentError(
+        `Providing both "contexts" and "userContexts" arguments is not supported`
+      );
+    }
+
+    const navigables = new Set();
+    const userContexts = new Set();
+
+    if (contextIds !== null) {
+      lazy.assert.isNonEmptyArray(
+        contextIds,
+        lazy.pprint`Expected "contexts" to be a non-empty array, got ${contextIds}`
+      );
+
+      for (const contextId of contextIds) {
+        lazy.assert.string(
+          contextId,
+          lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
+        );
+
+        const context = this._getNavigable(contextId);
+
+        lazy.assert.topLevel(
+          context,
+          `Browsing context with id ${contextId} is not top-level`
+        );
+
+        navigables.add(context);
+      }
+    } else if (userContextIds !== null) {
+      lazy.assert.isNonEmptyArray(
+        userContextIds,
+        lazy.pprint`Expected "userContexts" to be a non-empty array, got ${userContextIds}`
+      );
+
+      for (const userContextId of userContextIds) {
+        lazy.assert.string(
+          userContextId,
+          lazy.pprint`Expected elements of "userContexts" to be a string, got ${userContextId}`
+        );
+
+        const internalId =
+          lazy.UserContextManager.getInternalIdById(userContextId);
+
+        if (internalId === null) {
+          throw new lazy.error.NoSuchUserContextError(
+            `User context with id: ${userContextId} doesn't exist`
+          );
+        }
+
+        userContexts.add(internalId);
+
+        // Prepare the list of navigables to update.
+        lazy.UserContextManager.getTabsForUserContext(internalId).forEach(
+          tab => {
+            const contentBrowser = lazy.TabManager.getBrowserForTab(tab);
+            navigables.add(contentBrowser.browsingContext);
+          }
+        );
+      }
+    } else {
+      throw new lazy.error.InvalidArgumentError(
+        `At least one of "contexts" or "userContexts" arguments should be provided`
+      );
+    }
+
+    return { navigables, userContexts };
+  }
+
+  #getOverrideValue(params, resetValue = "") {
+    const { category, context, contextIds, userContextIds, value } = params;
+    const [overridePerContext, overridePerUserContext, overrideGlobal] =
+      this.#findExistingOverrideForContext(category, context);
+
+    if (contextIds) {
+      if (value === resetValue) {
+        // In case of resetting an override for navigable,
+        // if there is an existing override for user context or global,
+        // we should apply it to browsing context.
+        return overridePerUserContext || overrideGlobal || resetValue;
+      }
+    } else if (userContextIds) {
+      // No need to do anything if there is an override
+      // for the browsing context.
+      if (overridePerContext) {
+        return undefined;
+      }
+
+      // In case of resetting an override for user context,
+      // apply a global override if it exists
+      if (value === resetValue && overrideGlobal) {
+        return overrideGlobal;
+      }
+    } else if (overridePerContext || overridePerUserContext) {
+      // No need to do anything if there is an override
+      // for the browsing or user context.
+      return undefined;
+    }
+
+    return value;
+  }
+
+  /**
+   * Find the existing overrides for a given category and context.
+   *
+   * @param {string} category
+   *     The session data category.
+   * @param {BrowsingContext} context
+   *     The browsing context.
+   *
+   * @returns {Array<string>}
+   *     Return the list of existing values.
+   */
+  #findExistingOverrideForContext(category, context) {
+    let overrideGlobal, overridePerUserContext, overridePerContext;
+
+    const sessionDataItems =
+      this.messageHandler.sessionData.getSessionDataForContext(
+        "_configuration",
+        category,
+        context
+      );
+
+    sessionDataItems.forEach(item => {
+      switch (item.contextDescriptor.type) {
+        case lazy.ContextDescriptorType.All: {
+          overrideGlobal = item.value;
+          break;
+        }
+        case lazy.ContextDescriptorType.UserContext: {
+          overridePerUserContext = item.value;
+          break;
+        }
+        case lazy.ContextDescriptorType.TopBrowsingContext: {
+          overridePerContext = item.value;
+          break;
+        }
+      }
+    });
+
+    return [overridePerContext, overridePerUserContext, overrideGlobal];
   }
 
   /**
@@ -685,159 +1210,5 @@ class EmulationModule extends RootBiDiModule {
     return ChromeUtils.isISOStyleDate(`2011-10-05T00:00${string}`);
   }
 }
-
-/**
- * Set the locale override to the top-level browsing context.
- *
- * @param {object} options
- * @param {BrowsingContext} options.context
- *     Top-level browsing context object which is a target
- *     for the locale override.
- * @param {string} options.value
- *     Locale string which have to override
- *     the return result of JavaScript Intl APIs.
- *     Empty string resets the override.
- */
-export const setLocaleOverrideForBrowsingContext = options => {
-  const { context, value } = options;
-
-  context.languageOverride = value;
-
-  const contextId = lazy.NavigableManager.getIdForBrowsingContext(context);
-  lazy.logger.trace(`[${contextId}] Updated locale override to: ${value}`);
-};
-
-/**
- * Update the network conditions for the provided top-level browsing context.
- *
- * @param {object} options
- * @param {BrowsingContext} options.context
- *     Top-level browsing context object for which the network conditions are
- *     updated.
- * @param {NetworkConditions} options.value
- *     The value of the NetworkConditions to enable.
- */
-export const setNetworkConditionsForBrowsingContext = options => {
-  const { context, value } = options;
-
-  const contextId = lazy.NavigableManager.getIdForBrowsingContext(context);
-
-  if (value?.type === NetworkConditionsType.Offline) {
-    context.forceOffline = true;
-    lazy.logger.trace(`[${contextId}] Updated network conditions to "offline"`);
-  } else {
-    context.forceOffline = false;
-    lazy.logger.trace(`[${contextId}] Restored network conditions to default`);
-  }
-};
-
-/**
- * Set the screen orientation override to the top-level browsing context.
- *
- * @param {object} options
- * @param {BrowsingContext} options.context
- *     Top-level browsing context object which is a target
- *     for the screen orientation override.
- * @param {(object|null)} options.value
- *     Screen orientation object which have to override
- *     screen settings.
- *     Null value resets the override.
- */
-export const setScreenOrientationOverrideForBrowsingContext = options => {
-  const { context, value } = options;
-  const contextId = lazy.NavigableManager.getIdForBrowsingContext(context);
-
-  if (value) {
-    const { angle, type } = value;
-    context.setOrientationOverride(type, angle);
-
-    lazy.logger.trace(
-      `[${contextId}] Updated screen orientation override to: ${JSON.stringify(value)}`
-    );
-  } else {
-    context.resetOrientationOverride();
-
-    lazy.logger.trace(`[${contextId}] Reset screen orientation override`);
-  }
-};
-
-/**
- * Set the screen settings override to the top-level browsing context.
- *
- * @param {object} options
- * @param {BrowsingContext} options.context
- *     Top-level browsing context object which is a target
- *     for the locale override.
- * @param {(ScreenArea|null)} options.value
- *     An object which has to override
- *     the return result of JavaScript APIs which return
- *     screen dimensions. Null value resets the override.
- */
-export const setScreenSettingsOverrideForBrowsingContext = options => {
-  const { context, value } = options;
-  const contextId = lazy.NavigableManager.getIdForBrowsingContext(context);
-
-  if (value === null) {
-    context.resetScreenAreaOverride();
-
-    lazy.logger.trace(`[${contextId}] Reset screen settings override`);
-  } else {
-    const { height, width } = value;
-    context.setScreenAreaOverride(width, height);
-
-    lazy.logger.trace(
-      `[${contextId}] Updated screen settings override to: ${JSON.stringify(value)}`
-    );
-  }
-};
-
-/**
- * Set the timezone override to the top-level browsing context.
- *
- * @param {object} options
- * @param {BrowsingContext} options.context
- *     Top-level browsing context object which is a target
- *     for the timezone override.
- * @param {string} options.value
- *     Timezone string which has to override
- *     the return result of JavaScript Intl/Date APIs.
- *     Empty string value resets the override.
- */
-export const setTimezoneOverrideForBrowsingContext = options => {
-  const { context, value } = options;
-
-  context.timezoneOverride = value;
-
-  const contextId = lazy.NavigableManager.getIdForBrowsingContext(context);
-  lazy.logger.trace(`[${contextId}] Updated timezone override to: ${value}`);
-};
-
-/**
- * Set the user agent override to the top-level browsing context.
- *
- * @param {object} options
- * @param {BrowsingContext} options.context
- *     Top-level browsing context object which is a target
- *     for the user agent override.
- * @param {string} options.value
- *     User agent string which has to override
- *     the browser user agent.
- */
-export const setUserAgentOverrideForBrowsingContext = options => {
-  const { context, value } = options;
-  const contextId = lazy.NavigableManager.getIdForBrowsingContext(context);
-
-  try {
-    context.customUserAgent = value;
-
-    lazy.logger.trace(
-      `[${contextId}] Updated user agent override to: ${value}`
-    );
-  } catch (e) {
-    lazy.logger.warn(
-      `Failed to override user agent for context with id: ${contextId} (${e.message})`
-    );
-  }
-};
 
 export const emulation = EmulationModule;

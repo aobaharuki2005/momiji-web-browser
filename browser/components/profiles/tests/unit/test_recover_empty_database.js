@@ -36,11 +36,7 @@ add_task(async function test_recover_empty_database() {
   let profiles = await SelectableProfileService.getAllProfiles();
   Assert.ok(!profiles.length, "No selectable profiles exist yet");
 
-  let newProfile = await SelectableProfileService.createNewProfile(
-    false,
-    null,
-    "tests"
-  );
+  let newProfile = await SelectableProfileService.createNewProfile(false);
   Assert.ok(newProfile, "Should have created a new profile");
   Assert.ok(
     Services.prefs.getBoolPref("browser.profiles.created", false),

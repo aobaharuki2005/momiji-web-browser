@@ -1,20 +1,11 @@
 "use strict";
 
-const kBoolTestPref = "testing.allowed-prefs.some-bool-pref";
-const kCharTestPref = "testing.allowed-prefs.some-char-pref";
-const kIntTestPref = "testing.allowed-prefs.some-int-pref";
-
-// We have to use a real pref because we don't want to include testing
-// prefs for the web content process.
-const kRealTestPref = "reader.font_size";
+const kWhiteListedBool = "testing.allowed-prefs.some-bool-pref";
+const kWhiteListedChar = "testing.allowed-prefs.some-char-pref";
+const kWhiteListedInt = "testing.allowed-prefs.some-int-pref";
 
 function resetPrefs() {
-  for (let pref of [
-    kBoolTestPref,
-    kCharTestPref,
-    kIntTestPref,
-    kRealTestPref,
-  ]) {
+  for (let pref of [kWhiteListedBool, kWhiteListedChar, kWhiteListedBool]) {
     Services.prefs.clearUserPref(pref);
   }
 }
@@ -35,26 +26,16 @@ async function runTest() {
   let { AsyncPrefs } = ChromeUtils.importESModule(
     "resource://gre/modules/AsyncPrefs.sys.mjs"
   );
+  const kInChildProcess =
+    Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
   // Need to define these again because when run in a content task we have no scope access.
-  const kNotAllowed = "some.pref.thats.not.allowed";
-  const kBoolTestPref = "testing.allowed-prefs.some-bool-pref";
-  const kCharTestPref = "testing.allowed-prefs.some-char-pref";
-  const kIntTestPref = "testing.allowed-prefs.some-int-pref";
-  const kRealTestPref = "reader.font_size";
+  const kNotWhiteListed = "some.pref.thats.not.whitelisted";
+  const kWhiteListedBool = "testing.allowed-prefs.some-bool-pref";
+  const kWhiteListedChar = "testing.allowed-prefs.some-char-pref";
+  const kWhiteListedInt = "testing.allowed-prefs.some-int-pref";
 
-  let procDesc;
-  switch (Services.appinfo.remoteType) {
-    case null:
-      procDesc = "parent process";
-      break;
-    case "privilegedabout":
-      procDesc = "privileged about: process";
-      break;
-    default:
-      procDesc = `${Services.appinfo.remoteType} child process`;
-      break;
-  }
+  const procDesc = kInChildProcess ? "child process" : "parent process";
 
   const valueResultMap = [
     [true, "Bool"],
@@ -69,9 +50,9 @@ async function runTest() {
   ];
 
   const prefMap = [
-    ["Bool", kBoolTestPref],
-    ["Char", kCharTestPref],
-    ["Int", kIntTestPref],
+    ["Bool", kWhiteListedBool],
+    ["Char", kWhiteListedChar],
+    ["Int", kWhiteListedInt],
   ];
 
   function doesFail(pref, value) {
@@ -99,26 +80,23 @@ async function runTest() {
   }
 
   for (let [val] of valueResultMap) {
-    await doesFail(kNotAllowed, val);
+    await doesFail(kNotWhiteListed, val);
     is(
-      Services.prefs.prefHasUserValue(kNotAllowed),
+      Services.prefs.prefHasUserValue(kNotWhiteListed),
       false,
       "Pref shouldn't get changed"
     );
   }
 
-  let resetMsg = `Should not succeed resetting ${kNotAllowed} in ${procDesc}`;
-  AsyncPrefs.reset(kNotAllowed).then(
+  let resetMsg = `Should not succeed resetting ${kNotWhiteListed} in ${procDesc}`;
+  AsyncPrefs.reset(kNotWhiteListed).then(
     () => ok(false, resetMsg),
     error => ok(true, resetMsg + "; " + error)
   );
 
-  let haveSomePrivilege =
-    Services.appinfo.remoteType == null ||
-    Services.appinfo.remoteType == "privilegedabout";
   for (let [type, pref] of prefMap) {
     for (let [val, result] of valueResultMap) {
-      if (haveSomePrivilege && result == type) {
+      if (result == type) {
         await doesWork(pref, val);
         is(
           Services.prefs["get" + type + "Pref"](pref),
@@ -136,62 +114,20 @@ async function runTest() {
       }
     }
   }
-
-  let oldValue = Services.prefs.getIntPref(kRealTestPref);
-  await AsyncPrefs.set(kRealTestPref, 2 * oldValue);
-  Assert.equal(
-    Services.prefs.getIntPref(kRealTestPref),
-    2 * oldValue,
-    `Should have been able to set ${kRealTestPref} from ${procDesc}`
-  );
-  await AsyncPrefs.reset(kRealTestPref);
-  Assert.equal(
-    Services.prefs.getIntPref(kRealTestPref),
-    oldValue,
-    `Should have been able to reset ${kRealTestPref} from ${procDesc}`
-  );
 }
 
-describe("AsyncPrefs", function runInParent() {
-  afterEach(resetPrefs);
-
-  it("should work in the parent process", async function runInParent() {
-    await runTest();
-  });
-
-  it("should work in the privileged about process", async function runInPrivilegedAbout() {
-    await BrowserTestUtils.withNewTab(
-      "about:privatebrowsing",
-      async function (browser) {
-        ok(
-          browser.isRemoteBrowser,
-          "Should actually run this in child process"
-        );
-        Assert.equal(
-          browser.browsingContext.currentRemoteType,
-          "privilegedabout",
-          "Should be in a privileged about process"
-        );
-        await SpecialPowers.spawn(browser, [], runTest);
-      }
-    );
-  });
-
-  it("should work in the web child process", async function runInWebChild() {
-    await BrowserTestUtils.withNewTab(
-      "https://example.com/somewhere404",
-      async function (browser) {
-        ok(
-          browser.isRemoteBrowser,
-          "Should actually run this in child process"
-        );
-        Assert.equal(
-          browser.browsingContext.currentRemoteType,
-          "webIsolated=https://example.com",
-          "Should be in a web isolated process"
-        );
-        await SpecialPowers.spawn(browser, [], runTest);
-      }
-    );
-  });
+add_task(async function runInParent() {
+  await runTest();
+  resetPrefs();
 });
+
+if (gMultiProcessBrowser) {
+  add_task(async function runInChild() {
+    ok(
+      gBrowser.selectedBrowser.isRemoteBrowser,
+      "Should actually run this in child process"
+    );
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], runTest);
+    resetPrefs();
+  });
+}

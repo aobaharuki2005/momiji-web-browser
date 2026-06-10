@@ -102,9 +102,8 @@ internal inline fun<T> uniffiTraitInterfaceCall(
     try {
         writeReturn(makeCall())
     } catch(e: kotlin.Exception) {
-        val err = try { e.stackTraceToString() } catch(_: Throwable) { "" }
         callStatus.code = UNIFFI_CALL_UNEXPECTED_ERROR
-        callStatus.error_buf = {{ Type::String.borrow()|lower_fn }}(err)
+        callStatus.error_buf = {{ Type::String.borrow()|lower_fn }}(e.toString())
     }
 }
 
@@ -121,9 +120,8 @@ internal inline fun<T, reified E: Throwable> uniffiTraitInterfaceCallWithError(
             callStatus.code = UNIFFI_CALL_ERROR
             callStatus.error_buf = lowerError(e)
         } else {
-            val err = try { e.stackTraceToString() } catch(_: Throwable) { "" }
             callStatus.code = UNIFFI_CALL_UNEXPECTED_ERROR
-            callStatus.error_buf = {{ Type::String.borrow()|lower_fn }}(err)
+            callStatus.error_buf = {{ Type::String.borrow()|lower_fn }}(e.toString())
         }
     }
 }

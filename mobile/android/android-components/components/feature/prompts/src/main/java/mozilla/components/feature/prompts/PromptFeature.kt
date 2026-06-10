@@ -12,9 +12,7 @@ import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.action.ContentAction
@@ -50,14 +48,12 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Share
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
-import mozilla.components.concept.engine.prompt.PromptRequest.WebAuthnRelatedOriginPrompt
 import mozilla.components.concept.identitycredential.Account
 import mozilla.components.concept.identitycredential.Provider
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardValidationDelegate
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
-import mozilla.components.concept.storage.LoginHint
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.address.AddressDelegate
 import mozilla.components.feature.prompts.address.AddressPicker
@@ -80,10 +76,7 @@ import mozilla.components.feature.prompts.dialog.Prompter
 import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
 import mozilla.components.feature.prompts.dialog.TextPromptDialogFragment
 import mozilla.components.feature.prompts.dialog.TimePickerDialogFragment
-import mozilla.components.feature.prompts.dialog.WebAuthnRelatedOriginDialogFragment
 import mozilla.components.feature.prompts.dialog.emitGeneratedPasswordShownFact
-import mozilla.components.feature.prompts.emailmask.EmailMaskDelegate
-import mozilla.components.feature.prompts.emailmask.EmailMaskPromptViewListener
 import mozilla.components.feature.prompts.ext.executeIfWindowedPrompt
 import mozilla.components.feature.prompts.facts.emitCreditCardSaveShownFact
 import mozilla.components.feature.prompts.facts.emitPromptConfirmedFact
@@ -171,11 +164,6 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * the user does not want to see a save login dialog for.
  * @property loginDelegate Delegate for login picker.
  * @property suggestStrongPasswordDelegate Delegate for strong password generator.
- * @property emailMaskDelegate Delegate for email mask.
- * @property isSuggestEmailMaskEnabled A callback invoked before an email mask prompt is triggered.
- * If false, 'Use email mask' prompt will not be shown.
- * @property isEmailMaskFeatureEnabled A callback invoked before an email mask prompt is triggered,
- * which is determined by Nimbus. If false, 'Use email mask' prompt will not be shown.
  * @property onSaveLoginWithStrongPassword A callback invoked to save a new login that uses the
  * generated strong password
  * @property shouldAutomaticallyShowSuggestedPassword A callback invoked to check whether the user
@@ -195,7 +183,6 @@ class PromptFeature private constructor(
     private val store: BrowserStore,
     private var customTabId: String?,
     private val fragmentManager: FragmentManager,
-    private val mainDispatcher: CoroutineDispatcher,
     private val identityCredentialColorsProvider: DialogColorsProvider = DialogColorsProvider {
         DialogColors.default()
     },
@@ -212,9 +199,6 @@ class PromptFeature private constructor(
     private val loginDelegate: LoginDelegate = object : LoginDelegate {},
     private val suggestStrongPasswordDelegate: SuggestStrongPasswordDelegate = object :
         SuggestStrongPasswordDelegate {},
-    private val emailMaskDelegate: EmailMaskDelegate? = null,
-    private val isSuggestEmailMaskEnabled: () -> Boolean,
-    private val isEmailMaskFeatureEnabled: () -> Boolean,
     private var shouldAutomaticallyShowSuggestedPassword: () -> Boolean = { false },
     private val onFirstTimeEngagedWithSignup: () -> Unit = {},
     private val onSaveLoginWithStrongPassword: (String, String) -> Unit = { _, _ -> },
@@ -264,7 +248,6 @@ class PromptFeature private constructor(
         store: BrowserStore,
         customTabId: String? = null,
         fragmentManager: FragmentManager,
-        mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
         tabsUseCases: TabsUseCases,
         identityCredentialColorsProvider: DialogColorsProvider = DialogColorsProvider { DialogColors.default() },
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
@@ -279,9 +262,6 @@ class PromptFeature private constructor(
         loginDelegate: LoginDelegate = object : LoginDelegate {},
         suggestStrongPasswordDelegate: SuggestStrongPasswordDelegate = object :
             SuggestStrongPasswordDelegate {},
-        emailMaskDelegate: EmailMaskDelegate? = null,
-        isSuggestEmailMaskEnabled: () -> Boolean,
-        isEmailMaskFeatureEnabled: () -> Boolean,
         shouldAutomaticallyShowSuggestedPassword: () -> Boolean = { false },
         onFirstTimeEngagedWithSignup: () -> Unit = {},
         onSaveLoginWithStrongPassword: (String, String) -> Unit = { _, _ -> },
@@ -300,8 +280,8 @@ class PromptFeature private constructor(
         store = store,
         customTabId = customTabId,
         fragmentManager = fragmentManager,
-        identityCredentialColorsProvider = identityCredentialColorsProvider,
         tabsUseCases = tabsUseCases,
+        identityCredentialColorsProvider = identityCredentialColorsProvider,
         shareDelegate = shareDelegate,
         exitFullscreenUsecase = exitFullscreenUsecase,
         creditCardValidationDelegate = creditCardValidationDelegate,
@@ -311,11 +291,10 @@ class PromptFeature private constructor(
         isCreditCardAutofillEnabled = isCreditCardAutofillEnabled,
         isAddressAutofillEnabled = isAddressAutofillEnabled,
         loginExceptionStorage = loginExceptionStorage,
+        fileUploadsDirCleaner = fileUploadsDirCleaner,
+        onNeedToRequestPermissions = onNeedToRequestPermissions,
         loginDelegate = loginDelegate,
         suggestStrongPasswordDelegate = suggestStrongPasswordDelegate,
-        emailMaskDelegate = emailMaskDelegate,
-        isSuggestEmailMaskEnabled = isSuggestEmailMaskEnabled,
-        isEmailMaskFeatureEnabled = isEmailMaskFeatureEnabled,
         shouldAutomaticallyShowSuggestedPassword = shouldAutomaticallyShowSuggestedPassword,
         onFirstTimeEngagedWithSignup = onFirstTimeEngagedWithSignup,
         onSaveLoginWithStrongPassword = onSaveLoginWithStrongPassword,
@@ -325,10 +304,7 @@ class PromptFeature private constructor(
         removeLastSavedGeneratedPassword = removeLastSavedGeneratedPassword,
         creditCardDelegate = creditCardDelegate,
         addressDelegate = addressDelegate,
-        fileUploadsDirCleaner = fileUploadsDirCleaner,
-        onNeedToRequestPermissions = onNeedToRequestPermissions,
         androidPhotoPicker = androidPhotoPicker,
-        mainDispatcher = mainDispatcher,
     )
 
     constructor(
@@ -336,7 +312,6 @@ class PromptFeature private constructor(
         store: BrowserStore,
         customTabId: String? = null,
         fragmentManager: FragmentManager,
-        mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
         tabsUseCases: TabsUseCases,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
         exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
@@ -350,9 +325,6 @@ class PromptFeature private constructor(
         loginDelegate: LoginDelegate = object : LoginDelegate {},
         suggestStrongPasswordDelegate: SuggestStrongPasswordDelegate = object :
             SuggestStrongPasswordDelegate {},
-        emailMaskDelegate: EmailMaskDelegate? = null,
-        isSuggestEmailMaskEnabled: () -> Boolean = { false },
-        isEmailMaskFeatureEnabled: () -> Boolean = { false },
         shouldAutomaticallyShowSuggestedPassword: () -> Boolean = { false },
         onFirstTimeEngagedWithSignup: () -> Unit = {},
         onSaveLoginWithStrongPassword: (String, String) -> Unit = { _, _ -> },
@@ -381,9 +353,6 @@ class PromptFeature private constructor(
         loginExceptionStorage = loginExceptionStorage,
         loginDelegate = loginDelegate,
         suggestStrongPasswordDelegate = suggestStrongPasswordDelegate,
-        emailMaskDelegate = emailMaskDelegate,
-        isSuggestEmailMaskEnabled = isSuggestEmailMaskEnabled,
-        isEmailMaskFeatureEnabled = isEmailMaskFeatureEnabled,
         shouldAutomaticallyShowSuggestedPassword = shouldAutomaticallyShowSuggestedPassword,
         onFirstTimeEngagedWithSignup = onFirstTimeEngagedWithSignup,
         onSaveLoginWithStrongPassword = onSaveLoginWithStrongPassword,
@@ -395,7 +364,6 @@ class PromptFeature private constructor(
         fileUploadsDirCleaner = fileUploadsDirCleaner,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
         androidPhotoPicker = androidPhotoPicker,
-        mainDispatcher = mainDispatcher,
     )
 
     @VisibleForTesting
@@ -427,17 +395,6 @@ class PromptFeature private constructor(
                 StrongPasswordPromptViewListener(store, it, customTabId)
             }
         }
-
-    private var emailMaskPromptViewListener = emailMaskDelegate?.let { delegate ->
-        delegate.emailMaskPromptViewListenerView?.let { view ->
-            EmailMaskPromptViewListener(
-                browserStore = store,
-                emailMaskBar = view,
-                emailMaskDelegate = delegate,
-                sessionId = customTabId,
-            )
-        }
-    }
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal var creditCardPicker =
@@ -483,7 +440,7 @@ class PromptFeature private constructor(
     override fun start() {
         promptAbuserDetector.resetJSAlertAbuseState()
 
-        handlePromptScope = store.flowScoped(dispatcher = mainDispatcher) { flow ->
+        handlePromptScope = store.flowScoped { flow ->
             flow.map { state -> state.findTabOrCustomTabOrSelectedTab(customTabId) }
                 .ifAnyChanged {
                     arrayOf(it?.content?.promptRequests, it?.content?.loading)
@@ -497,9 +454,6 @@ class PromptFeature private constructor(
                                 is SelectLoginPrompt -> {
                                     loginPicker?.dismissCurrentLoginSelect(activePromptRequest as SelectLoginPrompt)
                                     strongPasswordPromptViewListener?.dismissCurrentSuggestStrongPassword(
-                                        activePromptRequest as SelectLoginPrompt,
-                                    )
-                                    emailMaskPromptViewListener?.dismissCurrentEmailMaskPrompt(
                                         activePromptRequest as SelectLoginPrompt,
                                     )
                                 }
@@ -556,7 +510,7 @@ class PromptFeature private constructor(
         }
 
         // Dismiss all prompts when page host or session id changes. See Fenix#5326
-        dismissPromptScope = store.flowScoped(dispatcher = mainDispatcher) { flow ->
+        dismissPromptScope = store.flowScoped { flow ->
             flow.ifAnyChanged { state ->
                 arrayOf(
                     state.selectedTabId,
@@ -723,35 +677,25 @@ class PromptFeature private constructor(
                     return
                 }
 
-                val loginsByHint = promptRequest.logins.groupBy { it.hint }
-                when {
-                    LoginHint.GENERATED in loginsByHint -> {
-                        if (shouldAutomaticallyShowSuggestedPassword.invoke()) {
-                            onFirstTimeEngagedWithSignup.invoke()
+                if (promptRequest.generatedPassword != null) {
+                    if (shouldAutomaticallyShowSuggestedPassword.invoke()) {
+                        onFirstTimeEngagedWithSignup.invoke()
+                        handleDialogsRequest(
+                            promptRequest,
+                            session,
+                        )
+                    } else {
+                        strongPasswordPromptViewListener?.onGeneratedPasswordPromptClick = {
                             handleDialogsRequest(
                                 promptRequest,
                                 session,
                             )
-                        } else {
-                            strongPasswordPromptViewListener?.onGeneratedPasswordPromptClick = {
-                                handleDialogsRequest(
-                                    promptRequest,
-                                    session,
-                                )
-                            }
-                            strongPasswordPromptViewListener?.handleSuggestStrongPasswordRequest()
                         }
+                        strongPasswordPromptViewListener?.handleSuggestStrongPasswordRequest()
                     }
-                    LoginHint.EMAIL_MASK in loginsByHint -> handleEmailMaskOrLoginPrompt(
-                        promptRequest,
-                        session,
-                        loginsByHint,
-                    )
-                    else -> {
-                        loginPicker?.handleSelectLoginRequest(promptRequest)
-                    }
+                } else {
+                    loginPicker?.handleSelectLoginRequest(promptRequest)
                 }
-
                 emitPromptDisplayedFact(promptName = "SelectLoginPrompt")
             }
 
@@ -878,7 +822,6 @@ class PromptFeature private constructor(
                 is PromptRequest.IdentityCredential.PrivacyPolicy -> it.onConfirm(value as Boolean)
                 is SelectLoginPrompt -> it.onConfirm(value as Login)
                 is FolderUploadPrompt -> it.onConfirm()
-                is WebAuthnRelatedOriginPrompt -> it.onConfirm()
                 else -> {
                     // no-op
                 }
@@ -1250,19 +1193,6 @@ class PromptFeature private constructor(
                 )
             }
 
-            is WebAuthnRelatedOriginPrompt -> {
-                val messageResId = if (promptRequest.isCreate) {
-                    R.string.webauthn_related_origin_create_message
-                } else {
-                    R.string.webauthn_related_origin_use_message
-                }
-                WebAuthnRelatedOriginDialogFragment.newInstance(
-                    sessionId = session.id,
-                    promptRequestUID = promptRequest.uid,
-                    message = container.getString(messageResId, promptRequest.origin, promptRequest.rpId),
-                )
-            }
-
             is PromptRequest.IdentityCredential.SelectProvider -> {
                 SelectProviderDialogFragment.newInstance(
                     sessionId = session.id,
@@ -1353,28 +1283,6 @@ class PromptFeature private constructor(
     }
 
     /**
-     * Helper function to handle showing an email mask prompt if the conditions are met
-     * or to fallback to handling the dialog request.
-     */
-    @VisibleForTesting
-    internal fun handleEmailMaskOrLoginPrompt(
-        promptRequest: SelectLoginPrompt,
-        session: SessionState,
-        loginsByHint: Map<LoginHint, List<Login>>,
-    ) {
-        val shouldShowEmailMaskSuggestion =
-            isEmailMaskFeatureEnabled() && isSuggestEmailMaskEnabled()
-        if (!shouldShowEmailMaskSuggestion) {
-            return
-        } else {
-            emailMaskPromptViewListener?.apply {
-                onEmailMaskPromptClick = { handleDialogsRequest(promptRequest, session) }
-                handleEmailMaskRequest(loginsByHint[LoginHint.EMAIL_MASK])
-            } ?: handleDialogsRequest(promptRequest, session)
-        }
-    }
-
-    /**
      * Dismiss and consume the given prompt request for the session.
      */
     @VisibleForTesting
@@ -1417,9 +1325,6 @@ class PromptFeature private constructor(
 
             is Alert, is TextPrompt, is Confirm, is Repost, is Popup, is FolderUploadPrompt, is Redirect,
             -> promptAbuserDetector.shouldShowMoreDialogs
-
-            is WebAuthnRelatedOriginPrompt,
-            -> true
         }
     }
 

@@ -159,7 +159,7 @@ add_task(
 );
 
 add_task(async function test_country() {
-  Region._setHomeRegion(null, false);
+  Region._home = null;
   RegionTestUtils.setNetworkRegion("FR");
   await Region._fetchRegion();
 

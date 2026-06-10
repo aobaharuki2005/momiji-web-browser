@@ -139,7 +139,7 @@ export class LoginManagerPrompter {
 
     return {
       dismiss() {
-        const { PopupNotifications } = aBrowser.documentGlobal.wrappedJSObject;
+        const { PopupNotifications } = aBrowser.ownerGlobal.wrappedJSObject;
         PopupNotifications.remove(notification);
       },
     };
@@ -300,7 +300,6 @@ export class LoginManagerPrompter {
       );
       // Ensure the type is reset so the field is masked.
       passwordField.type = "password";
-      passwordField.revealPassword = false;
       passwordField.value = login.password;
 
       updateButtonLabel();
@@ -344,7 +343,7 @@ export class LoginManagerPrompter {
 
     const onKeyUp = e => {
       if (e.key == "Enter") {
-        e.target.closest("popupnotification").button.click();
+        e.target.closest("popupnotification").button.doCommand();
       }
     };
 
@@ -421,7 +420,7 @@ export class LoginManagerPrompter {
       ) {
         // We only want to touch the login's use count and last used time.
         lazy.log.debug(`Touch matched login: ${loginToUpdate.guid}.`);
-        await Services.logins.recordPasswordUseAsync(
+        Services.logins.recordPasswordUse(
           loginToUpdate,
           PrivateBrowsingUtils.isBrowserPrivate(browser),
           loginToUpdate.username ? "FormPassword" : "FormLogin",
@@ -441,7 +440,7 @@ export class LoginManagerPrompter {
 
       if (loginToRemove) {
         lazy.log.debug(`Removing login ${loginToRemove.guid}.`);
-        await Services.logins.removeLoginAsync(loginToRemove);
+        Services.logins.removeLogin(loginToRemove);
       }
     };
 
@@ -473,7 +472,7 @@ export class LoginManagerPrompter {
           !Services.policies.isAllowed("removeMasterPassword")
         ) {
           if (!lazy.LoginHelper.isPrimaryPasswordSet()) {
-            browser.documentGlobal.openDialog(
+            browser.ownerGlobal.openDialog(
               "chrome://mozapps/content/preferences/changemp.xhtml",
               "",
               "centerscreen,chrome,modal,titlebar"
@@ -570,7 +569,7 @@ export class LoginManagerPrompter {
             guid: login.guid,
             origin: login.origin,
           });
-          await Services.logins.removeLoginAsync(matchingLogins[0]);
+          Services.logins.removeLogin(matchingLogins[0]);
           browser.focus();
           lazy.log.debug("Showing the ConfirmationHint");
           showConfirmation(browser, "confirmation-hint-password-removed");
@@ -583,7 +582,7 @@ export class LoginManagerPrompter {
     );
 
     // .wrappedJSObject needed here -- see bug 422974 comment 5.
-    const { PopupNotifications } = browser.documentGlobal.wrappedJSObject;
+    const { PopupNotifications } = browser.ownerGlobal.wrappedJSObject;
 
     const notificationID = "password";
     // keep attention notifications around for longer after a locationchange
@@ -810,7 +809,7 @@ export class LoginManagerPrompter {
 
     return {
       dismiss() {
-        const { PopupNotifications } = aBrowser.documentGlobal.wrappedJSObject;
+        const { PopupNotifications } = aBrowser.ownerGlobal.wrappedJSObject;
         PopupNotifications.remove(notification);
       },
     };
@@ -845,7 +844,7 @@ export class LoginManagerPrompter {
     // If user selects ok, outparam.value is set to the index
     // of the selected username.
     const ok = Services.prompt.select(
-      browser.documentGlobal,
+      browser.ownerGlobal,
       dialogTitle,
       dialogText,
       usernames,

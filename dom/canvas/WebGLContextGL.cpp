@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -655,7 +656,7 @@ webgl::GetUniformData WebGLContext::GetUniform(const WebGLProgram& prog,
       case LOCAL_GL_FLOAT_MAT4x2:
       case LOCAL_GL_FLOAT_MAT4x3:
         gl->fGetUniformfv(prog.mGLName, loc,
-                          reinterpret_cast<float*>(ret.data.data()));
+                          reinterpret_cast<float*>(ret.data));
         break;
 
       case LOCAL_GL_INT:
@@ -682,7 +683,7 @@ webgl::GetUniformData WebGLContext::GetUniform(const WebGLProgram& prog,
       case LOCAL_GL_BOOL_VEC3:
       case LOCAL_GL_BOOL_VEC4:
         gl->fGetUniformiv(prog.mGLName, loc,
-                          reinterpret_cast<int32_t*>(ret.data.data()));
+                          reinterpret_cast<int32_t*>(ret.data));
         break;
 
       case LOCAL_GL_UNSIGNED_INT:
@@ -690,7 +691,7 @@ webgl::GetUniformData WebGLContext::GetUniform(const WebGLProgram& prog,
       case LOCAL_GL_UNSIGNED_INT_VEC3:
       case LOCAL_GL_UNSIGNED_INT_VEC4:
         gl->fGetUniformuiv(prog.mGLName, loc,
-                           reinterpret_cast<uint32_t*>(ret.data.data()));
+                           reinterpret_cast<uint32_t*>(ret.data));
         break;
 
       default:
@@ -1046,7 +1047,7 @@ webgl::PackingInfo WebGLContext::ValidImplementationColorReadPI(
 }
 
 std::string webgl::format_as(const PackingInfo& pi) {
-  return fmt::format("{}/{}", pi.format, pi.type);
+  return fmt::format(FMT_STRING("{}/{}"), pi.format, pi.type);
 }
 
 static bool ValidateReadPixelsFormatAndType(
@@ -1087,17 +1088,20 @@ static bool ValidateReadPixelsFormatAndType(
     clientImplPI.type = LOCAL_GL_HALF_FLOAT_OES;
   }
 
-  auto validPiStr = fmt::format("{} (spec-required baseline for format {}",
-                                defaultPI, srcUsage->format->name);
+  auto validPiStr =
+      fmt::format(FMT_STRING("{} (spec-required baseline for format {})"),
+                  defaultPI, srcUsage->format->name);
   if (implPI != defaultPI) {
     validPiStr += fmt::format(
-        ", or {} (spec-optional implementation-chosen format-dependant"
-        " IMPLEMENTATION_COLOR_READ_FORMAT/_TYPE)",
+        FMT_STRING(
+            ", or {} (spec-optional implementation-chosen format-dependant"
+            " IMPLEMENTATION_COLOR_READ_FORMAT/_TYPE)"),
         clientImplPI);
   }
   if (bonusValidPi) {
-    validPiStr += fmt::format(", or {} (spec-required bonus for format {}",
-                              *bonusValidPi, srcUsage->format->name);
+    validPiStr +=
+        fmt::format(FMT_STRING(", or {} (spec-required bonus for format {})"),
+                    *bonusValidPi, srcUsage->format->name);
   }
 
   webgl->ErrorInvalidOperation(
@@ -1120,18 +1124,6 @@ webgl::ReadPixelsResult WebGLContext::ReadPixelsImpl(
   if (!ValidateReadPixelsFormatAndType(srcFormat, desc.pi, this)) return {};
 
   //////
-
-  // Reject invalid pack alignment.
-  switch (desc.packState.alignmentInTypeElems) {
-    case 1:
-    case 2:
-    case 4:
-    case 8:
-      break;  // all good
-    default:
-      ErrorInvalidValue("pack alignment must be 1, 2, 4, or 8.");
-      return {};
-  }
 
   const auto& srcOffset = desc.srcOffset;
   const auto& size = desc.size;

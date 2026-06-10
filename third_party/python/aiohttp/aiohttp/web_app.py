@@ -62,8 +62,8 @@ __all__ = ("Application", "CleanupError")
 
 
 if TYPE_CHECKING:
-    _AppSignal = Signal["Application"]
-    _RespPrepareSignal = Signal[Request, StreamResponse]
+    _AppSignal = Signal[Callable[["Application"], Awaitable[None]]]
+    _RespPrepareSignal = Signal[Callable[[Request, StreamResponse], Awaitable[None]]]
     _Middlewares = FrozenList[Middleware]
     _MiddlewaresHandlers = Optional[Sequence[Tuple[Middleware, bool]]]
     _Subapps = List["Application"]

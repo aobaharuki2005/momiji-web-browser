@@ -12,6 +12,18 @@ const {
 
 loader.lazyRequireGetter(
   this,
+  "promiseWarn",
+  "resource://devtools/client/inspector/shared/utils.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  ["parseDeclarations", "parseNamedDeclarations", "parseSingleValue"],
+  "resource://devtools/shared/css/parsing-utils.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "isCssVariable",
   "resource://devtools/shared/inspector/css-logic.js",
   true
@@ -39,16 +51,16 @@ class ElementStyle {
    *         Should user agent styles be inspected?
    */
   constructor(element, ruleView, store, pageStyle, showUserAgentStyles) {
-    // These attributes are widely used outside of this class
     this.element = element;
     this.ruleView = ruleView;
-    this.rules = [];
-
-    // This is used externaly, from TextPropertyEditor
     this.store = store || {};
-    // These ares used externally, from RuleEditor
     this.pageStyle = pageStyle;
+    this.pseudoElementTypes = new Set();
     this.showUserAgentStyles = showUserAgentStyles;
+    this.rules = [];
+    this.cssProperties = this.ruleView.cssProperties;
+    this.variablesMap = new Map();
+    this.startingStyleVariablesMap = new Map();
 
     // We don't want to overwrite this.store.userProperties so we only create it
     // if it doesn't already exist.
@@ -61,19 +73,13 @@ class ElementStyle {
     }
   }
 
-  #destroyed = false;
-  #populated = null;
-  #pseudoElementTypes = new Set();
-  #variablesMap = new Map();
-  #startingStyleVariablesMap = new Map();
-
   destroy() {
-    if (this.#destroyed) {
+    if (this.destroyed) {
       return;
     }
-    this.#destroyed = true;
 
-    this.#pseudoElementTypes.clear();
+    this.destroyed = true;
+    this.pseudoElementTypes.clear();
 
     for (const rule of this.rules) {
       if (rule.editor) {
@@ -88,8 +94,7 @@ class ElementStyle {
    * Called by the Rule object when it has been changed through the
    * setProperty* methods.
    */
-  notifyChanged() {
-    // This listener may be set externally from `CssRuleView.selectElement`
+  _changed() {
     if (this.onChanged) {
       this.onChanged();
     }
@@ -102,16 +107,16 @@ class ElementStyle {
    * Returns a promise that will be resolved when the elementStyle is
    * ready.
    */
-  async populate() {
-    const resultPromise = (async () => {
-      try {
-        const entries = await this.pageStyle.getApplied(this.element, {
-          inherited: true,
-          matchedSelectors: true,
-          filter: this.showUserAgentStyles ? "ua" : undefined,
-        });
-        if (this.#destroyed || this.#populated !== resultPromise) {
-          return;
+  populate() {
+    const populated = this.pageStyle
+      .getApplied(this.element, {
+        inherited: true,
+        matchedSelectors: true,
+        filter: this.showUserAgentStyles ? "ua" : undefined,
+      })
+      .then(entries => {
+        if (this.destroyed || this.populated !== populated) {
+          return Promise.resolve(undefined);
         }
 
         // Store the current list of rules (if any) during the population
@@ -121,21 +126,21 @@ class ElementStyle {
         this.rules = [];
 
         for (const entry of entries) {
-          this.#maybeAddRule(entry, existingRules);
+          this._maybeAddRule(entry, existingRules);
         }
 
         // Store a list of all (non-inherited) pseudo-element types found in the matching rules.
-        this.#pseudoElementTypes = new Set();
+        this.pseudoElementTypes = new Set();
         for (const rule of this.rules) {
           if (rule.pseudoElement && !rule.inherited) {
-            this.#pseudoElementTypes.add(rule.pseudoElement);
+            this.pseudoElementTypes.add(rule.pseudoElement);
           }
         }
 
         // Mark overridden computed styles.
         this.onRuleUpdated();
 
-        this.#sortRulesForPseudoElement();
+        this._sortRulesForPseudoElement();
 
         // We're done with the previous list of rules.
         for (const r of existingRules) {
@@ -145,18 +150,19 @@ class ElementStyle {
 
           r.destroy();
         }
-      } catch (e) {
+
+        return undefined;
+      })
+      .catch(e => {
         // populate is often called after a setTimeout,
         // the connection may already be closed.
-        if (!this.#destroyed) {
-          console.error("Error while updating element rules", e);
-          throw e;
+        if (this.destroyed) {
+          return Promise.resolve(undefined);
         }
-      }
-    })();
-
-    this.#populated = resultPromise;
-    return this.#populated;
+        return promiseWarn(e);
+      });
+    this.populated = populated;
+    return this.populated;
   }
 
   /**
@@ -212,7 +218,7 @@ class ElementStyle {
   /**
    * Put non inherited pseudo elements in front of others rules.
    */
-  #sortRulesForPseudoElement() {
+  _sortRulesForPseudoElement() {
     this.rules = this.rules.sort((a, b) => {
       if (
         !a.inherited === !b.inherited &&
@@ -228,19 +234,19 @@ class ElementStyle {
    * Add a rule if it's one we care about. Filters out duplicates and
    * inherited styles with no inherited properties.
    *
-   * @param  {object} appliedStyle
+   * @param  {object} options
    *         Options for creating the Rule, see the Rule constructor.
    * @param  {Array} existingRules
    *         Rules to reuse if possible. If a rule is reused, then it
    *         it will be deleted from this array.
    * @return {boolean} true if we added the rule.
    */
-  #maybeAddRule(appliedStyle, existingRules) {
+  _maybeAddRule(options, existingRules) {
     // If we've already included this domRule (for example, when a
     // common selector is inherited), ignore it.
     if (
-      appliedStyle.rule &&
-      this.rules.some(rule => rule.domRule === appliedStyle.rule)
+      options.system ||
+      (options.rule && this.rules.some(rule => rule.domRule === options.rule))
     ) {
       return false;
     }
@@ -250,21 +256,21 @@ class ElementStyle {
     // If we're refreshing and the rule previously existed, reuse the
     // Rule object.
     if (existingRules) {
-      const ruleIndex = existingRules.findIndex(r => r.matches(appliedStyle));
+      const ruleIndex = existingRules.findIndex(r => r.matches(options));
       if (ruleIndex >= 0) {
         rule = existingRules[ruleIndex];
-        rule.refresh(appliedStyle);
+        rule.refresh(options);
         existingRules.splice(ruleIndex, 1);
       }
     }
 
     // If this is a new rule, create its Rule object.
     if (!rule) {
-      rule = new Rule(this, appliedStyle);
+      rule = new Rule(this, options);
     }
 
     // Ignore inherited rules with no visible properties.
-    if (appliedStyle.inherited && !rule.hasAnyVisibleProperties()) {
+    if (options.inherited && !rule.hasAnyVisibleProperties()) {
       return false;
     }
 
@@ -276,11 +282,11 @@ class ElementStyle {
    * Calls updateDeclarations with all supported pseudo elements
    */
   onRuleUpdated() {
-    this.#updateDeclarations();
+    this.updateDeclarations();
 
     // Update declarations for matching rules for pseudo-elements.
-    for (const pseudo of this.#pseudoElementTypes) {
-      this.#updateDeclarations(pseudo);
+    for (const pseudo of this.pseudoElementTypes) {
+      this.updateDeclarations(pseudo);
     }
   }
 
@@ -301,14 +307,14 @@ class ElementStyle {
    *         overridden.
    */
   // eslint-disable-next-line complexity
-  #updateDeclarations(pseudo = "") {
+  updateDeclarations(pseudo = "") {
     // Gather all text properties applicable to the selected element or pseudo-element.
-    const textProps = this.#getDeclarations(pseudo);
+    const textProps = this._getDeclarations(pseudo);
 
     // CSS Variables inherits from the normal element in case of pseudo element.
-    const variables = new Map(pseudo ? this.#variablesMap.get("") : null);
+    const variables = new Map(pseudo ? this.variablesMap.get("") : null);
     const startingStyleVariables = new Map(
-      pseudo ? this.#startingStyleVariablesMap.get("") : null
+      pseudo ? this.startingStyleVariablesMap.get("") : null
     );
 
     // Walk over the computed properties. As we see a property name
@@ -355,12 +361,12 @@ class ElementStyle {
         const isPropInStartingStyle =
           computedProp.textProp.rule?.isInStartingStyle();
 
-        const hasHigherPriority = this.hasHigherPriorityThanEarlierProp(
+        const hasHigherPriority = this._hasHigherPriorityThanEarlierProp(
           computedProp,
           earlier
         );
         const startingStyleHasHigherPriority =
-          this.hasHigherPriorityThanEarlierProp(
+          this._hasHigherPriorityThanEarlierProp(
             computedProp,
             earlierInStartingStyle
           );
@@ -430,14 +436,14 @@ class ElementStyle {
     }
 
     // Find the CSS variables that have been updated.
-    const previousVariablesMap = new Map(this.#variablesMap.get(pseudo));
+    const previousVariablesMap = new Map(this.variablesMap.get(pseudo));
     const changedVariableNamesSet = new Set(
       [...variables.keys(), ...previousVariablesMap.keys()].filter(
         k => variables.get(k) !== previousVariablesMap.get(k)
       )
     );
     const previousStartingStyleVariablesMap = new Map(
-      this.#startingStyleVariablesMap.get(pseudo)
+      this.startingStyleVariablesMap.get(pseudo)
     );
     const changedStartingStyleVariableNamesSet = new Set(
       [...variables.keys(), ...previousStartingStyleVariablesMap.keys()].filter(
@@ -445,8 +451,8 @@ class ElementStyle {
       )
     );
 
-    this.#variablesMap.set(pseudo, variables);
-    this.#startingStyleVariablesMap.set(pseudo, startingStyleVariables);
+    this.variablesMap.set(pseudo, variables);
+    this.startingStyleVariablesMap.set(pseudo, startingStyleVariables);
 
     const rulesEditors = new Set();
     const variableTree = new Map();
@@ -463,14 +469,14 @@ class ElementStyle {
     // computed properties. For each editor we also show or hide the inactive
     // CSS icon as needed.
     for (const textProp of textProps) {
-      // #updatePropertyOverridden will return true if the
+      // _updatePropertyOverridden will return true if the
       // overridden state has changed for the text property.
-      // #hasUpdatedCSSVariable will return true if the declaration contains any
+      // _hasUpdatedCSSVariable will return true if the declaration contains any
       // of the updated CSS variable names.
       if (
-        this.#updatePropertyOverridden(textProp) ||
-        this.#hasUpdatedCSSVariable(textProp, changedVariableNamesSet) ||
-        this.#hasUpdatedCSSVariable(
+        this._updatePropertyOverridden(textProp) ||
+        this._hasUpdatedCSSVariable(textProp, changedVariableNamesSet) ||
+        this._hasUpdatedCSSVariable(
           textProp,
           changedStartingStyleVariableNamesSet
         )
@@ -543,7 +549,7 @@ class ElementStyle {
    * @param {object} earlierProp: The computed prop to compare against
    * @returns Boolean
    */
-  hasHigherPriorityThanEarlierProp(computedProp, earlierProp) {
+  _hasHigherPriorityThanEarlierProp(computedProp, earlierProp) {
     if (!earlierProp) {
       return false;
     }
@@ -589,7 +595,7 @@ class ElementStyle {
   onRegisteredPropertiesChange(registeredPropertyNamesSet) {
     for (const rule of this.rules) {
       for (const textProp of rule.textProps) {
-        if (this.#hasUpdatedCSSVariable(textProp, registeredPropertyNamesSet)) {
+        if (this._hasUpdatedCSSVariable(textProp, registeredPropertyNamesSet)) {
           textProp.updateEditor();
         }
       }
@@ -605,7 +611,7 @@ class ElementStyle {
    * @param {Set<string>} variableNamesSet
    *        A Set of CSS variable names that have been updated.
    */
-  #hasUpdatedCSSVariable(declaration, variableNamesSet) {
+  _hasUpdatedCSSVariable(declaration, variableNamesSet) {
     if (variableNamesSet.size === 0) {
       return false;
     }
@@ -634,7 +640,7 @@ class ElementStyle {
    * @return {Array}
    *         Array of TextProperty instances.
    */
-  #getDeclarations(pseudo = "") {
+  _getDeclarations(pseudo = "") {
     const textProps = [];
 
     for (const rule of this.rules) {
@@ -695,6 +701,291 @@ class ElementStyle {
   }
 
   /**
+   * Adds a new declaration to the rule.
+   *
+   * @param  {string} ruleId
+   *         The id of the Rule to be modified.
+   * @param  {string} value
+   *         The new declaration value.
+   */
+  addNewDeclaration(ruleId, value) {
+    const rule = this.getRule(ruleId);
+    if (!rule) {
+      return;
+    }
+
+    const declarationsToAdd = parseNamedDeclarations(
+      this.cssProperties.isKnown,
+      value,
+      true
+    );
+    if (!declarationsToAdd.length) {
+      return;
+    }
+
+    this._addMultipleDeclarations(rule, declarationsToAdd);
+  }
+
+  /**
+   * Adds a new rule. The rules view is updated from a "stylesheet-updated" event
+   * emitted the PageStyleActor as a result of the rule being inserted into the
+   * the stylesheet.
+   */
+  async addNewRule() {
+    await this.pageStyle.addNewRule(
+      this.element,
+      this.element.pseudoClassLocks
+    );
+  }
+
+  /**
+   * Given the id of the rule and the new declaration name, modifies the existing
+   * declaration name to the new given value.
+   *
+   * @param  {string} ruleId
+   *         The Rule id of the given CSS declaration.
+   * @param  {string} declarationId
+   *         The TextProperty id for the CSS declaration.
+   * @param  {string} name
+   *         The new declaration name.
+   */
+  async modifyDeclarationName(ruleId, declarationId, name) {
+    const rule = this.getRule(ruleId);
+    if (!rule) {
+      return;
+    }
+
+    const declaration = rule.getDeclaration(declarationId);
+    if (!declaration || declaration.name === name) {
+      return;
+    }
+
+    // Adding multiple rules inside of name field overwrites the current
+    // property with the first, then adds any more onto the property list.
+    const declarations = parseDeclarations(this.cssProperties.isKnown, name);
+    if (!declarations.length) {
+      return;
+    }
+
+    await declaration.setName(declarations[0].name);
+
+    if (!declaration.enabled) {
+      await declaration.setEnabled(true);
+    }
+  }
+
+  /**
+   * Helper function to addNewDeclaration() and modifyDeclarationValue() for
+   * adding multiple declarations to a rule.
+   *
+   * @param  {Rule} rule
+   *         The Rule object to write new declarations to.
+   * @param  {Array<object>} declarationsToAdd
+   *         An array of object containg the parsed declaration data to be added.
+   * @param  {TextProperty|null} siblingDeclaration
+   *         Optional declaration next to which the new declaration will be added.
+   */
+  _addMultipleDeclarations(rule, declarationsToAdd, siblingDeclaration = null) {
+    for (const { commentOffsets, name, value, priority } of declarationsToAdd) {
+      const isCommented = Boolean(commentOffsets);
+      const enabled = !isCommented;
+      siblingDeclaration = rule.createProperty(
+        name,
+        value,
+        priority,
+        enabled,
+        siblingDeclaration
+      );
+    }
+  }
+
+  /**
+   * Parse a value string and break it into pieces, starting with the
+   * first value, and into an array of additional declarations (if any).
+   *
+   * Example: Calling with "red; width: 100px" would return
+   * { firstValue: "red", propertiesToAdd: [{ name: "width", value: "100px" }] }
+   *
+   * @param  {string} value
+   *         The string to parse.
+   * @return {object} An object with the following properties:
+   *         firstValue: A string containing a simple value, like
+   *                     "red" or "100px!important"
+   *         declarationsToAdd: An array with additional declarations, following the
+   *                            parseDeclarations format of { name, value, priority }
+   */
+  _getValueAndExtraProperties(value) {
+    // The inplace editor will prevent manual typing of multiple declarations,
+    // but we need to deal with the case during a paste event.
+    // Adding multiple declarations inside of value editor sets value with the
+    // first, then adds any more onto the declaration list (below this declarations).
+    let firstValue = value;
+    let declarationsToAdd = [];
+
+    const declarations = parseDeclarations(this.cssProperties.isKnown, value);
+
+    // Check to see if the input string can be parsed as multiple declarations
+    if (declarations.length) {
+      // Get the first property value (if any), and any remaining
+      // declarations (if any)
+      if (!declarations[0].name && declarations[0].value) {
+        firstValue = declarations[0].value;
+        declarationsToAdd = declarations.slice(1);
+      } else if (declarations[0].name && declarations[0].value) {
+        // In some cases, the value could be a property:value pair
+        // itself.  Join them as one value string and append
+        // potentially following declarations
+        firstValue = declarations[0].name + ": " + declarations[0].value;
+        declarationsToAdd = declarations.slice(1);
+      }
+    }
+
+    return {
+      declarationsToAdd,
+      firstValue,
+    };
+  }
+
+  /**
+   * Given the id of the rule and the new declaration value, modifies the existing
+   * declaration value to the new given value.
+   *
+   * @param  {string} ruleId
+   *         The Rule id of the given CSS declaration.
+   * @param  {string} declarationId
+   *         The TextProperty id for the CSS declaration.
+   * @param  {string} value
+   *         The new declaration value.
+   */
+  async modifyDeclarationValue(ruleId, declarationId, value) {
+    const rule = this.getRule(ruleId);
+    if (!rule) {
+      return;
+    }
+
+    const declaration = rule.getDeclaration(declarationId);
+    if (!declaration) {
+      return;
+    }
+
+    const { declarationsToAdd, firstValue } =
+      this._getValueAndExtraProperties(value);
+    const parsedValue = parseSingleValue(
+      this.cssProperties.isKnown,
+      firstValue
+    );
+
+    if (
+      !declarationsToAdd.length &&
+      declaration.value === parsedValue.value &&
+      declaration.priority === parsedValue.priority
+    ) {
+      return;
+    }
+
+    // First, set this declaration value (common case, only modified a property)
+    await declaration.setValue(parsedValue.value, parsedValue.priority);
+
+    if (!declaration.enabled) {
+      await declaration.setEnabled(true);
+    }
+
+    this._addMultipleDeclarations(rule, declarationsToAdd, declaration);
+  }
+
+  /**
+   * Modifies the existing rule's selector to the new given value.
+   *
+   * @param  {string} ruleId
+   *         The id of the Rule to be modified.
+   * @param  {string} selector
+   *         The new selector value.
+   */
+  async modifySelector(ruleId, selector) {
+    try {
+      const rule = this.getRule(ruleId);
+      if (!rule) {
+        return;
+      }
+
+      const response = await rule.domRule.modifySelector(
+        this.element,
+        selector
+      );
+      const { ruleProps, isMatching } = response;
+
+      if (!ruleProps) {
+        // Notify for changes, even when nothing changes, just to allow tests
+        // being able to track end of this request.
+        this.ruleView.emit("ruleview-invalid-selector");
+        return;
+      }
+
+      const newRule = new Rule(this, {
+        ...ruleProps,
+        isUnmatched: !isMatching,
+      });
+
+      // Recompute the list of applied styles because editing a
+      // selector might cause this rule's position to change.
+      const appliedStyles = await this.pageStyle.getApplied(this.element, {
+        inherited: true,
+        matchedSelectors: true,
+        filter: this.showUserAgentStyles ? "ua" : undefined,
+      });
+      const newIndex = appliedStyles.findIndex(r => r.rule == ruleProps.rule);
+      const oldIndex = this.rules.indexOf(rule);
+
+      // Remove the old rule and insert the new rule according to where it appears
+      // in the list of applied styles.
+      this.rules.splice(oldIndex, 1);
+      // If the selector no longer matches, then we leave the rule in
+      // the same relative position.
+      this.rules.splice(newIndex === -1 ? oldIndex : newIndex, 0, newRule);
+
+      // Recompute, mark and update the UI for any properties that are
+      // overridden or contain inactive CSS according to the new list of rules.
+      this.onRuleUpdated();
+
+      // In order to keep the new rule in place of the old in the rules view, we need
+      // to remove the rule again if the rule was inserted to its new index according
+      // to the list of applied styles.
+      // Note: you might think we would replicate the list-modification logic above,
+      // but that is complicated due to the way the UI installs pseudo-element rules
+      // and the like.
+      if (newIndex !== -1) {
+        this.rules.splice(newIndex, 1);
+        this.rules.splice(oldIndex, 0, newRule);
+      }
+      this._changed();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  /**
+   * Toggles the enabled state of the given CSS declaration.
+   *
+   * @param  {string} ruleId
+   *         The Rule id of the given CSS declaration.
+   * @param  {string} declarationId
+   *         The TextProperty id for the CSS declaration.
+   */
+  toggleDeclaration(ruleId, declarationId) {
+    const rule = this.getRule(ruleId);
+    if (!rule) {
+      return;
+    }
+
+    const declaration = rule.getDeclaration(declarationId);
+    if (!declaration) {
+      return;
+    }
+
+    declaration.setEnabled(!declaration.enabled);
+  }
+
+  /**
    * Mark a given TextProperty as overridden or not depending on the
    * state of its computed properties. Clears the _overriddenDirty state
    * on all computed properties.
@@ -704,7 +995,7 @@ class ElementStyle {
    * @return {boolean} true if the TextProperty's overridden state (or any of
    *         its computed properties overridden state) changed.
    */
-  #updatePropertyOverridden(prop) {
+  _updatePropertyOverridden(prop) {
     if (!prop.isValid() && !prop.computed.length) {
       prop.overridden = false;
       return false;
@@ -741,8 +1032,8 @@ class ElementStyle {
    *           is not a registered property.
    */
   getVariableData(name, pseudo = "") {
-    const variables = this.#variablesMap.get(pseudo);
-    const startingStyleVariables = this.#startingStyleVariablesMap.get(pseudo);
+    const variables = this.variablesMap.get(pseudo);
+    const startingStyleVariables = this.startingStyleVariablesMap.get(pseudo);
     const registeredPropertiesMap =
       this.ruleView.getRegisteredPropertiesForSelectedNodeTarget();
 
@@ -778,12 +1069,12 @@ class ElementStyle {
     for (const [
       key,
       { computedValue, declarationValue },
-    ] of this.#variablesMap.get(pseudo)) {
+    ] of this.variablesMap.get(pseudo)) {
       customProperties.set(key, computedValue ?? declarationValue);
     }
 
     const startingStyleCustomProperties =
-      this.#startingStyleVariablesMap.get(pseudo);
+      this.startingStyleVariablesMap.get(pseudo);
 
     const registeredPropertiesMap =
       this.ruleView.getRegisteredPropertiesForSelectedNodeTarget();

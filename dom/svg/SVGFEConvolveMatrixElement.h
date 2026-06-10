@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -75,10 +77,6 @@ class SVGFEConvolveMatrixElement final : public SVGFEConvolveMatrixElementBase {
   StringAttributesInfo GetStringInfo() override;
   NumberListAttributesInfo GetNumberListInfo() override;
 
-  enum { RESULT, IN1 };
-  SVGAnimatedString mStringAttributes[2];
-  static StringInfo sStringInfo[2];
-
   enum { DIVISOR, BIAS };
   SVGAnimatedNumber mNumberAttributes[2];
   static NumberInfo sNumberInfo[2];
@@ -95,10 +93,6 @@ class SVGFEConvolveMatrixElement final : public SVGFEConvolveMatrixElementBase {
   SVGAnimatedIntegerPair mIntegerPairAttributes[1];
   static IntegerPairInfo sIntegerPairInfo[1];
 
-  enum { KERNELMATRIX };
-  SVGAnimatedNumberList mNumberListAttributes[1];
-  static NumberListInfo sNumberListInfo[1];
-
   enum { PRESERVEALPHA };
   SVGAnimatedBoolean mBooleanAttributes[1];
   static BooleanInfo sBooleanInfo[1];
@@ -107,6 +101,14 @@ class SVGFEConvolveMatrixElement final : public SVGFEConvolveMatrixElementBase {
   SVGAnimatedEnumeration mEnumAttributes[1];
   static SVGEnumMapping sEdgeModeMap[];
   static EnumInfo sEnumInfo[1];
+
+  enum { RESULT, IN1 };
+  SVGAnimatedString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
+
+  enum { KERNELMATRIX };
+  SVGAnimatedNumberList mNumberListAttributes[1];
+  static NumberListInfo sNumberListInfo[1];
 };
 
 }  // namespace mozilla::dom

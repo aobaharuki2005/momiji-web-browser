@@ -130,7 +130,7 @@ async function testPlacesPanel(testInfo) {
 
           let promiseAlert = promiseAlertDialogObserved();
 
-          await synthesizeClickOnSelectedTreeCell(tree);
+          synthesizeClickOnSelectedTreeCell(tree);
           // Now, wait for the observer to catch the alert dialog.
           // If something goes wrong, the test will time out at this stage.
           // Note that for the history sidebar, the URL itself is not opened,

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,14 +9,9 @@
 #include "GLDefs.h"
 
 namespace mozilla {
-namespace layers {
-class AndroidHardwareBuffer;
-}
-
 namespace gl {
 
 class GLContext;
-class GLContextEGL;
 
 #ifdef DEBUG
 bool IsContextCurrent(GLContext* gl);
@@ -99,20 +95,6 @@ struct ScopedRenderbuffer final {
 
   GLuint RB() { return mRB; }
   operator GLuint() const { return mRB; }
-};
-
-struct ScopedEGLImageForAndroidHardwareBuffer final {
- private:
-  GLContextEGL* const mGL;
-  EGLImage mImage;
-
- public:
-  explicit ScopedEGLImageForAndroidHardwareBuffer(
-      GLContextEGL* aGL, layers::AndroidHardwareBuffer* aHardwareBuffer);
-  ~ScopedEGLImageForAndroidHardwareBuffer();
-
-  EGLImage Image() const { return mImage; }
-  operator EGLImage() const { return mImage; }
 };
 
 struct ScopedBindTexture final {

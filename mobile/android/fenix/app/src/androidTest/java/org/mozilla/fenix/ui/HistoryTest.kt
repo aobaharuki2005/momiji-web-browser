@@ -4,17 +4,17 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.filters.SdkSuppress
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
-import org.mozilla.fenix.customannotations.Converted
 import org.mozilla.fenix.customannotations.SkipLeaks
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
-import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.createHistoryItem
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
@@ -24,27 +24,22 @@ import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.historyMenu
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
 /**
  *  Tests for verifying basic functionality of history
  *
  */
-class HistoryTest {
-    @get:Rule(order = 0)
-    val fenixTestRule: FenixTestRule = FenixTestRule()
-
-    private val mockWebServer get() = fenixTestRule.mockWebServer
-
-    @get:Rule(order = 1)
+class HistoryTest : TestSetup() {
+    @get:Rule
     val composeTestRule =
-        AndroidComposeTestRuleV2(
+        AndroidComposeTestRule(
             HomeActivityIntentTestRule(
                 // workaround for toolbar at top position by default
                 // remove with https://bugzilla.mozilla.org/show_bug.cgi?id=1917640
@@ -52,8 +47,8 @@ class HistoryTest {
             ),
         ) { it.activity }
 
-    @get:Rule(order = 2)
-    val memoryLeaksRule = DetectMemoryLeaksRule(composeTestRule = { composeTestRule })
+    @get:Rule
+    val memoryLeaksRule = DetectMemoryLeaksRule()
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/243285
     @Test
@@ -68,11 +63,6 @@ class HistoryTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2302742
-    @Converted(
-        replacedBy = ["org.mozilla.fenix.ui.efficiency.tests.HistoryTest#verifyHistoryMenuWithHistoryItemsTest"],
-        bug = 2039573,
-        since = "2026-05",
-    )
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
     @SmokeTest
@@ -89,7 +79,7 @@ class HistoryTest {
             registerAndCleanupIdlingResources(
                 RecyclerViewIdlingResource(composeTestRule.activity.findViewById(R.id.history_list), 1),
             ) {
-                verifyHistoryMenuView(historyItemExists = true)
+                verifyHistoryMenuView()
                 verifyVisitedTimeTitle()
                 verifyFirstTestPageTitle("Test_Page_1")
                 verifyTestPageUrl(firstWebPage.url)
@@ -123,11 +113,6 @@ class HistoryTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1848881
-    @Converted(
-        replacedBy = ["org.mozilla.fenix.ui.efficiency.tests.HistoryTest#deleteAllHistoryTest"],
-        bug = 2039573,
-        since = "2026-05",
-    )
     @SmokeTest
     @Test
     fun deleteAllHistoryTest() {
@@ -159,6 +144,7 @@ class HistoryTest {
 
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.clickHistoryButton {
             verifyHistoryListExists()
@@ -175,7 +161,7 @@ class HistoryTest {
             verifyShareHistoryButton()
             verifyCloseToolbarButton()
         }.closeToolbarReturnToHistory {
-            verifyHistoryMenuView(historyItemExists = true)
+            verifyHistoryMenuView()
         }
     }
 
@@ -298,6 +284,7 @@ class HistoryTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1715627
+    @Ignore("Disabled after enabling the composable toolbar and main menu: https://bugzilla.mozilla.org/show_bug.cgi?id=2006295")
     @Test
     fun verifySearchHistoryViewTest() {
         val defaultWebPage = mockWebServer.getGenericAsset(1)
@@ -311,8 +298,8 @@ class HistoryTest {
             verifySearchSelectorButton()
             verifySearchEngineIcon("History")
             verifySearchBarPlaceholder("Search history")
-            verifySearchBarPosition()
-            tapOutsideToDismissSearchBar(defaultWebPage.url.toString())
+            verifySearchBarPosition(true)
+            tapOutsideToDismissSearchBar()
             verifySearchToolbar(false)
             exitMenu()
         }
@@ -330,11 +317,11 @@ class HistoryTest {
         }.clickHistoryButton {
         }.clickSearchButton {
             verifySearchToolbar(true)
-            verifySearchBarPosition()
+            verifySearchBarPosition(false)
             pressBack()
         }
         historyMenu(composeTestRule) {
-            verifyHistoryMenuView(historyItemExists = true)
+            verifyHistoryMenuView()
         }
     }
 
@@ -424,11 +411,6 @@ class HistoryTest {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/903590
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
-    @Converted(
-        replacedBy = ["org.mozilla.fenix.ui.efficiency.tests.HistoryTest#noHistoryInPrivateBrowsingTest"],
-        bug = 2024690,
-        since = "2026-03",
-    )
     @SmokeTest
     @Test
     fun noHistoryInPrivateBrowsingTest() {

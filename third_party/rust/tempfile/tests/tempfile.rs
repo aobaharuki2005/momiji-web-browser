@@ -10,11 +10,6 @@ use std::{
 
 #[test]
 fn test_basic() {
-    // For the wasi platforms, `std::env::temp_dir` will panic. For those targets, configure the /tmp
-    // directory instead as the base directory for temp files.
-    #[cfg(target_os = "wasi")]
-    let _ = tempfile::env::override_temp_dir(std::path::Path::new("/tmp"));
-
     let mut tmpfile = tempfile::tempfile().unwrap();
     write!(tmpfile, "abcde").unwrap();
     tmpfile.seek(SeekFrom::Start(0)).unwrap();
@@ -25,11 +20,6 @@ fn test_basic() {
 
 #[test]
 fn test_cleanup() {
-    // For the wasi platforms, `std::env::temp_dir` will panic. For those targets, configure the /tmp
-    // directory instead as the base directory for temp files.
-    #[cfg(target_os = "wasi")]
-    let _ = tempfile::env::override_temp_dir(std::path::Path::new("/tmp"));
-
     let tmpdir = tempfile::tempdir().unwrap();
     {
         let mut tmpfile = tempfile::tempfile_in(&tmpdir).unwrap();

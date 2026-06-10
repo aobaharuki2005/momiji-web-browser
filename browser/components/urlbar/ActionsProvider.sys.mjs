@@ -68,6 +68,8 @@ export class ActionsResult {
   #l10nArgs;
   #icon;
   #dataset;
+  #onPick;
+  #onSelection;
   #engine;
 
   /**
@@ -84,15 +86,30 @@ export class ActionsResult {
    * @param {{[key: string]: any}} [options.dataset]
    *    An object of properties we set on the action button that
    *    can be used to pass data when it is selected.
+   * @param {(context: UrlbarQueryContext, controller: UrlbarController) => void} options.onPick
+   *    A callback function called when the result has been picked.
+   * @param {(result: UrlbarResult, resultElement: Element) => void} [options.onSelection]
+   *    A callback function called when the result has been selected.
    * @param {string} [options.engine]
    *    The name of an installed engine if the action prompts search mode.
    */
-  constructor({ key, l10nId, l10nArgs, icon, dataset, engine }) {
+  constructor({
+    key,
+    l10nId,
+    l10nArgs,
+    icon,
+    dataset,
+    onPick,
+    onSelection,
+    engine,
+  }) {
     this.#key = key;
     this.#l10nId = l10nId;
     this.#l10nArgs = l10nArgs;
     this.#icon = icon;
     this.#dataset = dataset;
+    this.#onPick = onPick;
+    this.#onSelection = onSelection;
     this.#engine = engine;
   }
 
@@ -114,6 +131,14 @@ export class ActionsResult {
 
   get dataset() {
     return this.#dataset;
+  }
+
+  get onPick() {
+    return this.#onPick;
+  }
+
+  get onSelection() {
+    return this.#onSelection;
   }
 
   get engine() {

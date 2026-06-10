@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -291,7 +293,9 @@ nsDNSRecord::GetNextAddrAsString(nsACString& result) {
     return rv;
   }
 
-  if (addr.ToString(result)) {
+  char buf[kIPv6CStrBufSize];
+  if (addr.ToStringBuffer(buf, sizeof(buf))) {
+    result.Assign(buf);
     return NS_OK;
   }
   NS_ERROR("NetAddrToString failed unexpectedly");
@@ -307,14 +311,12 @@ nsDNSRecord::HasMore(bool* result) {
 
   nsTArray<NetAddr>::const_iterator iterCopy = mIter;
   int iterGenCntCopy = mIterGenCnt;
-  RefPtr<AddrInfo> addrInfoCopy = mAddrInfo;
 
   NetAddr addr;
   *result = NS_SUCCEEDED(GetNextAddr(0, &addr));
 
   mIter = iterCopy;
   mIterGenCnt = iterGenCntCopy;
-  mAddrInfo = std::move(addrInfoCopy);
   mDone = false;
 
   return NS_OK;
@@ -906,10 +908,6 @@ nsDNSService::Init() {
   }
   if (NS_FAILED(mTrrService->Init(httpsEnabled))) {
     mTrrService = nullptr;
-  }
-
-  if (mTrrService && httpsEnabled) {
-    mTrrService->ReadEtcHostsFile();
   }
 
   return NS_OK;
@@ -1541,14 +1539,6 @@ nsDNSService::GetTrrDomain(nsACString& aTRRDomain) {
 
 nsresult nsDNSService::GetTRRDomainKey(nsACString& aTRRDomain) {
   aTRRDomain = TRRService::ProviderKey();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDNSService::SetHttp3FirstForServer(const nsACString& aServer, bool aEnabled) {
-  if (mTrrService) {
-    mTrrService->SetHttp3FirstForServer(aServer, aEnabled);
-  }
   return NS_OK;
 }
 

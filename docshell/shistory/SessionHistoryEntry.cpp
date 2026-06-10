@@ -1,11 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SessionHistoryEntry.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
-#include "mozilla/dom/SessionHistoryEntry.h"
-#include "nsCOMPtr.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsFrameLoader.h"
@@ -419,7 +419,7 @@ LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
 LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
     SessionHistoryEntry* aEntry, const LoadingSessionHistoryInfo* aInfo)
     : mInfo(aEntry->Info()),
-      mPreviousEntry(aInfo->mPreviousEntry),
+      mTriggeringEntry(aInfo->mTriggeringEntry),
       mTriggeringNavigationType(aInfo->mTriggeringNavigationType),
       mLoadId(aInfo->mLoadId),
       mLoadIsFromSessionHistory(aInfo->mLoadIsFromSessionHistory),
@@ -434,7 +434,8 @@ LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
 
 already_AddRefed<nsDocShellLoadState>
 LoadingSessionHistoryInfo::CreateLoadInfo() const {
-  RefPtr loadState = MakeRefPtr<nsDocShellLoadState>(mInfo.GetURI());
+  RefPtr<nsDocShellLoadState> loadState(
+      new nsDocShellLoadState(mInfo.GetURI()));
 
   mInfo.FillLoadInfo(*loadState);
 
@@ -484,21 +485,28 @@ void SessionHistoryEntry::RemoveLoadId(uint64_t aLoadId) {
 }
 
 SessionHistoryEntry::SessionHistoryEntry()
-    : mInfo(MakeUnique<SessionHistoryInfo>()), mID(++gEntryID) {}
+    : mInfo(new SessionHistoryInfo()), mID(++gEntryID) {
+  MOZ_ASSERT(mozilla::SessionHistoryInParent());
+}
 
 SessionHistoryEntry::SessionHistoryEntry(nsDocShellLoadState* aLoadState,
                                          nsIChannel* aChannel)
-    : mInfo(MakeUnique<SessionHistoryInfo>(aLoadState, aChannel)),
-      mID(++gEntryID) {}
+    : mInfo(new SessionHistoryInfo(aLoadState, aChannel)), mID(++gEntryID) {
+  MOZ_ASSERT(mozilla::SessionHistoryInParent());
+}
 
 SessionHistoryEntry::SessionHistoryEntry(SessionHistoryInfo* aInfo)
-    : mInfo(MakeUnique<SessionHistoryInfo>(*aInfo)), mID(++gEntryID) {}
+    : mInfo(MakeUnique<SessionHistoryInfo>(*aInfo)), mID(++gEntryID) {
+  MOZ_ASSERT(mozilla::SessionHistoryInParent());
+}
 
 SessionHistoryEntry::SessionHistoryEntry(const SessionHistoryEntry& aEntry)
     : mInfo(MakeUnique<SessionHistoryInfo>(*aEntry.mInfo)),
       mParent(aEntry.mParent),
       mID(aEntry.mID),
-      mBCHistoryLength(aEntry.mBCHistoryLength) {}
+      mBCHistoryLength(aEntry.mBCHistoryLength) {
+  MOZ_ASSERT(mozilla::SessionHistoryInParent());
+}
 
 SessionHistoryEntry::~SessionHistoryEntry() {
   // Null out the mParent pointers on all our kids.
@@ -593,15 +601,7 @@ SessionHistoryEntry::GetTitle(nsAString& aTitle) {
 
 NS_IMETHODIMP
 SessionHistoryEntry::SetTitle(const nsAString& aTitle) {
-  if (aTitle.Equals(mInfo->GetTitle())) {
-    return NS_OK;
-  }
-
   mInfo->SetTitle(aTitle);
-  if (nsCOMPtr<nsISHistory> sHistory =
-          do_QueryReferent(SharedInfo()->mSHistory)) {
-    sHistory->NotifyOnEntryUpdated(this);
-  }
   return NS_OK;
 }
 
@@ -614,10 +614,6 @@ SessionHistoryEntry::GetName(nsAString& aName) {
 NS_IMETHODIMP
 SessionHistoryEntry::SetName(const nsAString& aName) {
   mInfo->mName = aName;
-  if (nsCOMPtr<nsISHistory> sHistory =
-          do_QueryReferent(SharedInfo()->mSHistory)) {
-    sHistory->NotifyOnEntryUpdated(this);
-  }
   return NS_OK;
 }
 
@@ -685,6 +681,18 @@ SessionHistoryEntry::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
 }
 
 NS_IMETHODIMP
+SessionHistoryEntry::GetDocumentViewer(nsIDocumentViewer** aDocumentViewer) {
+  *aDocumentViewer = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::SetDocumentViewer(nsIDocumentViewer* aDocumentViewer) {
+  MOZ_CRASH("This lives in the child process");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 SessionHistoryEntry::GetIsInBFCache(bool* aResult) {
   *aResult = !!SharedInfo()->mFrameLoader;
   return NS_OK;
@@ -700,6 +708,30 @@ NS_IMETHODIMP
 SessionHistoryEntry::SetSticky(bool aSticky) {
   SharedInfo()->mSticky = aSticky;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::GetWindowState(nsISupports** aWindowState) {
+  MOZ_CRASH("This lives in the child process");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::SetWindowState(nsISupports* aWindowState) {
+  MOZ_CRASH("This lives in the child process");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::GetRefreshURIList(nsIMutableArray** aRefreshURIList) {
+  MOZ_CRASH("This lives in the child process");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::SetRefreshURIList(nsIMutableArray* aRefreshURIList) {
+  MOZ_CRASH("This lives in the child process");
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -745,11 +777,6 @@ SessionHistoryEntry::GetParent(nsISHEntry** aParent) {
   nsCOMPtr<nsISHEntry> parent = do_QueryReferent(mParent);
   parent.forget(aParent);
   return NS_OK;
-}
-
-already_AddRefed<SessionHistoryEntry> SessionHistoryEntry::GetParent() {
-  RefPtr<SessionHistoryEntry> parent = do_QueryReferent(mParent);
-  return parent.forget();
 }
 
 NS_IMETHODIMP
@@ -1066,6 +1093,28 @@ SessionHistoryEntry::SetViewerBounds(const nsIntRect& bounds) {
   SharedInfo()->mViewerBounds = bounds;
 }
 
+NS_IMETHODIMP_(void)
+SessionHistoryEntry::AddChildShell(nsIDocShellTreeItem* shell) {
+  MOZ_CRASH("This lives in the child process");
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::ChildShellAt(int32_t index,
+                                  nsIDocShellTreeItem** _retval) {
+  MOZ_CRASH("This lives in the child process");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP_(void)
+SessionHistoryEntry::ClearChildShells() {
+  MOZ_CRASH("This lives in the child process");
+}
+
+NS_IMETHODIMP_(void)
+SessionHistoryEntry::SyncPresentationState() {
+  MOZ_CRASH("This lives in the child process");
+}
+
 NS_IMETHODIMP
 SessionHistoryEntry::InitLayoutHistoryState(
     nsILayoutHistoryState** aLayoutHistoryState) {
@@ -1095,7 +1144,7 @@ SessionHistoryEntry::Create(
 
 NS_IMETHODIMP
 SessionHistoryEntry::Clone(nsISHEntry** aEntry) {
-  RefPtr entry = MakeRefPtr<SessionHistoryEntry>(*this);
+  RefPtr<SessionHistoryEntry> entry = new SessionHistoryEntry(*this);
 
   // These are not copied for some reason, we're not sure why.
   entry->mInfo->mLoadType = 0;
@@ -1108,6 +1157,23 @@ SessionHistoryEntry::Clone(nsISHEntry** aEntry) {
   entry.forget(aEntry);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP_(nsDocShellEditorData*)
+SessionHistoryEntry::ForgetEditorData() {
+  MOZ_CRASH("This lives in the child process");
+  return nullptr;
+}
+
+NS_IMETHODIMP_(void)
+SessionHistoryEntry::SetEditorData(nsDocShellEditorData* aData) {
+  NS_WARNING("This lives in the child process");
+}
+
+NS_IMETHODIMP_(bool)
+SessionHistoryEntry::HasDetachedEditor() {
+  NS_WARNING("This lives in the child process");
+  return false;
 }
 
 NS_IMETHODIMP_(bool)
@@ -1143,18 +1209,25 @@ SessionHistoryEntry::HasBFCacheEntry(SHEntrySharedParentState* aEntry) {
 
 NS_IMETHODIMP
 SessionHistoryEntry::AdoptBFCacheEntry(nsISHEntry* aEntry) {
-  auto* entry = static_cast<SessionHistoryEntry*>(aEntry);
-  NS_ENSURE_STATE(entry && entry->mInfo->mSharedState.Get());
+  nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aEntry);
+  NS_ENSURE_STATE(she && she->mInfo->mSharedState.Get());
 
-  mInfo->mSharedState = entry->mInfo->mSharedState;
+  mInfo->mSharedState =
+      static_cast<SessionHistoryEntry*>(aEntry)->mInfo->mSharedState;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
+SessionHistoryEntry::AbandonBFCacheEntry() {
+  MOZ_CRASH("This lives in the child process");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 SessionHistoryEntry::SharesDocumentWith(nsISHEntry* aEntry,
                                         bool* aSharesDocumentWith) {
-  SessionHistoryEntry* entry = aEntry->GetAsSessionHistoryEntry();
+  SessionHistoryEntry* entry = static_cast<SessionHistoryEntry*>(aEntry);
 
   MOZ_ASSERT_IF(entry->SharedInfo() != SharedInfo(),
                 entry->SharedInfo()->GetId() != SharedInfo()->GetId());
@@ -1172,8 +1245,9 @@ SessionHistoryEntry::SetLoadTypeAsHistory() {
 NS_IMETHODIMP
 SessionHistoryEntry::AddChild(nsISHEntry* aChild, int32_t aOffset,
                               bool aUseRemoteSubframes) {
-  AddChild(static_cast<SessionHistoryEntry*>(aChild), aOffset,
-           aUseRemoteSubframes);
+  nsCOMPtr<SessionHistoryEntry> child = do_QueryInterface(aChild);
+  MOZ_ASSERT_IF(aChild, child);
+  AddChild(child, aOffset, aUseRemoteSubframes);
 
   return NS_OK;
 }
@@ -1279,7 +1353,8 @@ NS_IMETHODIMP
 SessionHistoryEntry::RemoveChild(nsISHEntry* aChild) {
   NS_ENSURE_TRUE(aChild, NS_ERROR_FAILURE);
 
-  RefPtr<SessionHistoryEntry> child = aChild->GetAsSessionHistoryEntry();
+  nsCOMPtr<SessionHistoryEntry> child = do_QueryInterface(aChild);
+  MOZ_ASSERT(child);
   RemoveChild(child);
 
   return NS_OK;
@@ -1316,25 +1391,21 @@ SessionHistoryEntry::GetChildAt(int32_t aIndex, nsISHEntry** aChild) {
   return NS_OK;
 }
 
-void SessionHistoryEntry::GetChildAt(int32_t aIndex,
-                                     SessionHistoryEntry** aChild) {
-  RefPtr<SessionHistoryEntry> child = mChildren.SafeElementAt(aIndex);
-  child.forget(aChild);
-}
-
-SessionHistoryEntry*
+NS_IMETHODIMP_(void)
 SessionHistoryEntry::GetChildSHEntryIfHasNoDynamicallyAddedChild(
-    int32_t aChildOffset) {
+    int32_t aChildOffset, nsISHEntry** aChild) {
+  *aChild = nullptr;
+
   bool dynamicallyAddedChild = false;
   HasDynamicallyAddedChild(&dynamicallyAddedChild);
   if (dynamicallyAddedChild) {
-    return nullptr;
+    return;
   }
 
   // If the user did a shift-reload on this frameset page,
   // we don't want to load the subframes from history.
   if (IsForceReloadType(mInfo->mLoadType) || mInfo->mLoadType == LOAD_REFRESH) {
-    return nullptr;
+    return;
   }
 
   /* Before looking for the subframe's url, check
@@ -1346,28 +1417,23 @@ SessionHistoryEntry::GetChildSHEntryIfHasNoDynamicallyAddedChild(
    */
   if (SharedInfo()->mExpired && (mInfo->mLoadType == LOAD_RELOAD_NORMAL)) {
     // The parent has expired. Return null.
-    return nullptr;
+    *aChild = nullptr;
+    return;
   }
   // Get the child subframe from session history.
-  auto* child = mChildren.SafeElementAt(aChildOffset);
-  if (child) {
+  GetChildAt(aChildOffset, aChild);
+  if (*aChild) {
     // Set the parent's Load Type on the child
-    child->SetLoadType(mInfo->mLoadType);
+    (*aChild)->SetLoadType(mInfo->mLoadType);
   }
-  return child;
-}
-
-NS_IMETHODIMP_(void)
-SessionHistoryEntry::GetChildSHEntryIfHasNoDynamicallyAddedChild(
-    int32_t aChildOffset, nsISHEntry** aChild) {
-  *aChild = GetChildSHEntryIfHasNoDynamicallyAddedChild(aChildOffset);
 }
 
 NS_IMETHODIMP
 SessionHistoryEntry::ReplaceChild(nsISHEntry* aNewChild) {
   NS_ENSURE_STATE(aNewChild);
 
-  RefPtr<SessionHistoryEntry> newChild = aNewChild->GetAsSessionHistoryEntry();
+  nsCOMPtr<SessionHistoryEntry> newChild = do_QueryInterface(aNewChild);
+  MOZ_ASSERT(newChild);
   return ReplaceChild(newChild) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -1441,21 +1507,22 @@ NS_IMETHODIMP_(void)
 SessionHistoryEntry::SyncTreesForSubframeNavigation(
     nsISHEntry* aEntry, mozilla::dom::BrowsingContext* aTopBC,
     mozilla::dom::BrowsingContext* aIgnoreBC) {
+  // XXX Keep this in sync with nsSHEntry::SyncTreesForSubframeNavigation.
+  //
   // We need to sync up the browsing context and session history trees for
   // subframe navigation.  If the load was in a subframe, we forward up to
   // the top browsing context, which will then recursively sync up all browsing
   // contexts to their corresponding entries in the new session history tree. If
   // we don't do this, then we can cache a content viewer on the wrong cloned
   // entry, and subsequently restore it at the wrong time.
-  RefPtr<SessionHistoryEntry> newRootEntry =
-      nsSHistory::GetRootSHEntry(aEntry->GetAsSessionHistoryEntry());
+  nsCOMPtr<nsISHEntry> newRootEntry = nsSHistory::GetRootSHEntry(aEntry);
   if (newRootEntry) {
     // newRootEntry is now the new root entry.
     // Find the old root entry as well.
 
     // Need a strong ref. on |oldRootEntry| so it isn't destroyed when
     // SetChildHistoryEntry() does SwapHistoryEntries() (bug 304639).
-    RefPtr<SessionHistoryEntry> oldRootEntry = nsSHistory::GetRootSHEntry(this);
+    nsCOMPtr<nsISHEntry> oldRootEntry = nsSHistory::GetRootSHEntry(this);
 
     if (oldRootEntry) {
       nsSHistory::SwapEntriesData data = {aIgnoreBC, newRootEntry, nullptr};
@@ -1523,54 +1590,6 @@ already_AddRefed<nsIURI> SessionHistoryEntry::GetURIOrInheritedForAboutBlank()
   return mInfo->GetURIOrInheritedForAboutBlank();
 }
 
-already_AddRefed<nsSHistory> SessionHistoryEntry::GetSessionHistory() {
-  if (RefPtr<SessionHistoryEntry> rootSHEntry =
-          nsSHistory::GetRootSHEntry(this)) {
-    return rootSHEntry->GetShistory().downcast<nsSHistory>();
-  }
-  return nullptr;
-}
-
-/* static */
-Maybe<PreviousSessionHistoryInfo>
-PreviousSessionHistoryInfo::CreateValidatedPreviousEntry(
-    const SessionHistoryInfo& aCurrentEntry,
-    const Maybe<SessionHistoryInfo>& aPreviousEntryForActivation,
-    Maybe<NavigationType> aNavigationType) {
-  // https://html.spec.whatwg.org/#update-document-for-history-step-application
-  // Step 7 If all the following are true:
-  // * previousEntryForActivation is given;
-  // * navigationType is non-null; and
-  // * navigationType is "reload" or previousEntryForActivation's document is
-  //   not document,
-  if (!aPreviousEntryForActivation || !aNavigationType ||
-      (*aNavigationType != NavigationType::Reload &&
-       aCurrentEntry.SharesDocumentWith(*aPreviousEntryForActivation))) {
-    return Nothing();
-  }
-
-  // 7.4 Otherwise, if all the following are true:
-  //     navigationType is "replace";
-  //     previousEntryForActivation's document state's origin is same origin
-  //     with document's origin; and previousEntryForActivation's document's
-  //     initial about:blank is false,
-  // then set activation's old entry to a new NavigationHistoryEntry in
-  // navigation's relevant realm, whose session history entry is
-  // previousEntryForActivation.
-  nsCOMPtr previousURI =
-      aPreviousEntryForActivation->GetURIOrInheritedForAboutBlank();
-  nsCOMPtr currentURI = aCurrentEntry.GetURIOrInheritedForAboutBlank();
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
-          currentURI, previousURI, false, false))) {
-    return Some(PreviousSessionHistoryInfo{});
-  }
-
-  return Some(PreviousSessionHistoryInfo(aPreviousEntryForActivation));
-}
-
-SessionHistoryEntry* SessionHistoryEntry::GetAsSessionHistoryEntry() {
-  return this;
-}
 }  // namespace dom
 }  // namespace mozilla
 
@@ -1580,6 +1599,28 @@ void ParamTraits<mozilla::dom::SessionHistoryInfo>::Write(
     IPC::MessageWriter* aWriter,
     const mozilla::dom::SessionHistoryInfo& aParam) {
   nsCOMPtr<nsIInputStream> postData = aParam.GetPostData();
+
+  mozilla::Maybe<std::tuple<uint32_t, mozilla::dom::ClonedMessageData>>
+      stateData;
+  if (aParam.mStateData) {
+    stateData.emplace();
+    // FIXME: We should fail more aggressively if this fails, as currently we'll
+    // just early return and the deserialization will break.
+    NS_ENSURE_SUCCESS_VOID(
+        aParam.mStateData->GetFormatVersion(&std::get<0>(*stateData)));
+    NS_ENSURE_TRUE_VOID(
+        aParam.mStateData->BuildClonedMessageData(std::get<1>(*stateData)));
+  }
+
+  mozilla::Maybe<std::tuple<uint32_t, mozilla::dom::ClonedMessageData>>
+      navigationState;
+  if (aParam.mNavigationAPIState) {
+    navigationState.emplace();
+    NS_ENSURE_SUCCESS_VOID(aParam.mNavigationAPIState->GetFormatVersion(
+        &std::get<0>(*navigationState)));
+    NS_ENSURE_TRUE_VOID(aParam.mNavigationAPIState->BuildClonedMessageData(
+        std::get<1>(*navigationState)));
+  }
 
   WriteParam(aWriter, aParam.mURI);
   WriteParam(aWriter, aParam.mOriginalURI);
@@ -1592,7 +1633,7 @@ void ParamTraits<mozilla::dom::SessionHistoryInfo>::Write(
   WriteParam(aWriter, aParam.mLoadType);
   WriteParam(aWriter, aParam.mScrollPositionX);
   WriteParam(aWriter, aParam.mScrollPositionY);
-  WriteParam(aWriter, aParam.mStateData);
+  WriteParam(aWriter, stateData);
   WriteParam(aWriter, aParam.mSrcdocData);
   WriteParam(aWriter, aParam.mBaseURI);
   WriteParam(aWriter, aParam.mNavigationKey);
@@ -1614,11 +1655,13 @@ void ParamTraits<mozilla::dom::SessionHistoryInfo>::Write(
   WriteParam(aWriter, aParam.mSharedState.Get()->mCacheKey);
   WriteParam(aWriter, aParam.mSharedState.Get()->mIsFrameNavigation);
   WriteParam(aWriter, aParam.mSharedState.Get()->mSaveLayoutState);
-  WriteParam(aWriter, aParam.mNavigationAPIState);
+  WriteParam(aWriter, navigationState);
 }
 
 bool ParamTraits<mozilla::dom::SessionHistoryInfo>::Read(
     IPC::MessageReader* aReader, mozilla::dom::SessionHistoryInfo* aResult) {
+  mozilla::Maybe<std::tuple<uint32_t, mozilla::dom::ClonedMessageData>>
+      stateData;
   uint64_t sharedId;
   if (!ReadParam(aReader, &aResult->mURI) ||
       !ReadParam(aReader, &aResult->mOriginalURI) ||
@@ -1631,7 +1674,7 @@ bool ParamTraits<mozilla::dom::SessionHistoryInfo>::Read(
       !ReadParam(aReader, &aResult->mLoadType) ||
       !ReadParam(aReader, &aResult->mScrollPositionX) ||
       !ReadParam(aReader, &aResult->mScrollPositionY) ||
-      !ReadParam(aReader, &aResult->mStateData) ||
+      !ReadParam(aReader, &stateData) ||
       !ReadParam(aReader, &aResult->mSrcdocData) ||
       !ReadParam(aReader, &aResult->mBaseURI) ||
       !ReadParam(aReader, &aResult->mNavigationKey) ||
@@ -1718,31 +1761,31 @@ bool ParamTraits<mozilla::dom::SessionHistoryInfo>::Read(
     aResult->mSharedState.Get()->mContentType = contentType;
   }
 
+  mozilla::Maybe<std::tuple<uint32_t, mozilla::dom::ClonedMessageData>>
+      navigationState;
   if (!ReadParam(aReader, &aResult->mSharedState.Get()->mLayoutHistoryState) ||
       !ReadParam(aReader, &aResult->mSharedState.Get()->mCacheKey) ||
       !ReadParam(aReader, &aResult->mSharedState.Get()->mIsFrameNavigation) ||
       !ReadParam(aReader, &aResult->mSharedState.Get()->mSaveLayoutState) ||
-      !ReadParam(aReader, &aResult->mNavigationAPIState)) {
+      !ReadParam(aReader, &navigationState)) {
     aReader->FatalError("Error reading fields for SessionHistoryInfo");
     return false;
   }
 
-  return true;
-}
-
-void ParamTraits<mozilla::dom::PreviousSessionHistoryInfo>::Write(
-    IPC::MessageWriter* aWriter,
-    const mozilla::dom::PreviousSessionHistoryInfo& aParam) {
-  WriteParam(aWriter, aParam.mSameOriginSessionHistoryInfo);
-}
-
-bool ParamTraits<mozilla::dom::PreviousSessionHistoryInfo>::Read(
-    IPC::MessageReader* aReader,
-    mozilla::dom::PreviousSessionHistoryInfo* aResult) {
-  if (!ReadParam(aReader, &aResult->mSameOriginSessionHistoryInfo)) {
-    aReader->FatalError("Error reading fields for PreviousSessionHistoryInfo");
-    return false;
+  if (stateData.isSome()) {
+    uint32_t version = std::get<0>(*stateData);
+    aResult->mStateData = new nsStructuredCloneContainer(version);
+    aResult->mStateData->StealFromClonedMessageData(std::get<1>(*stateData));
   }
+  MOZ_ASSERT_IF(stateData.isNothing(), !aResult->mStateData);
+
+  if (navigationState.isSome()) {
+    uint32_t version = std::get<0>(*navigationState);
+    aResult->mNavigationAPIState = new nsStructuredCloneContainer(version);
+    aResult->mNavigationAPIState->StealFromClonedMessageData(
+        std::get<1>(*navigationState));
+  }
+  MOZ_ASSERT_IF(navigationState.isNothing(), !aResult->mNavigationAPIState);
 
   return true;
 }
@@ -1752,7 +1795,7 @@ void ParamTraits<mozilla::dom::LoadingSessionHistoryInfo>::Write(
     const mozilla::dom::LoadingSessionHistoryInfo& aParam) {
   WriteParam(aWriter, aParam.mInfo);
   WriteParam(aWriter, aParam.mContiguousEntries);
-  WriteParam(aWriter, aParam.mPreviousEntry);
+  WriteParam(aWriter, aParam.mTriggeringEntry);
   WriteParam(aWriter, aParam.mTriggeringNavigationType);
   WriteParam(aWriter, aParam.mLoadId);
   WriteParam(aWriter, aParam.mLoadIsFromSessionHistory);
@@ -1766,7 +1809,7 @@ bool ParamTraits<mozilla::dom::LoadingSessionHistoryInfo>::Read(
     mozilla::dom::LoadingSessionHistoryInfo* aResult) {
   if (!ReadParam(aReader, &aResult->mInfo) ||
       !ReadParam(aReader, &aResult->mContiguousEntries) ||
-      !ReadParam(aReader, &aResult->mPreviousEntry) ||
+      !ReadParam(aReader, &aResult->mTriggeringEntry) ||
       !ReadParam(aReader, &aResult->mTriggeringNavigationType) ||
       !ReadParam(aReader, &aResult->mLoadId) ||
       !ReadParam(aReader, &aResult->mLoadIsFromSessionHistory) ||

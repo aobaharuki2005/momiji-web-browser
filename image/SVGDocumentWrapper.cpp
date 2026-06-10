@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -55,7 +56,7 @@ void SVGDocumentWrapper::DestroyViewer() {
   MOZ_ASSERT(NS_IsMainThread());
   if (mViewer) {
     mViewer->GetDocument()->OnPageHide(false, nullptr);
-    mViewer->Close();
+    mViewer->Close(nullptr);
     mViewer->Destroy();
     mViewer = nullptr;
   }
@@ -134,7 +135,7 @@ void SVGDocumentWrapper::StartAnimation() {
   if (doc) {
     SMILAnimationController* controller = doc->GetAnimationController();
     if (controller) {
-      controller->Resume(SMILTimeContainer::PauseType::Image);
+      controller->Resume(SMILTimeContainer::PAUSE_IMAGE);
     }
     doc->SetImageAnimationState(true);
   }
@@ -150,7 +151,7 @@ void SVGDocumentWrapper::StopAnimation() {
   if (Document* doc = mViewer->GetDocument()) {
     SMILAnimationController* controller = doc->GetAnimationController();
     if (controller) {
-      controller->Pause(SMILTimeContainer::PauseType::Image);
+      controller->Pause(SMILTimeContainer::PAUSE_IMAGE);
     }
     doc->SetImageAnimationState(false);
   }
@@ -192,8 +193,7 @@ void SVGDocumentWrapper::TickRefreshDriver() {
 NS_IMETHODIMP
 SVGDocumentWrapper::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* inStr,
                                     uint64_t sourceOffset, uint32_t count) {
-  nsCOMPtr<nsIStreamListener> listener = mListener;
-  return listener->OnDataAvailable(aRequest, inStr, sourceOffset, count);
+  return mListener->OnDataAvailable(aRequest, inStr, sourceOffset, count);
 }
 
 /** nsIRequestObserver methods **/
@@ -203,14 +203,13 @@ SVGDocumentWrapper::OnStartRequest(nsIRequest* aRequest) {
   nsresult rv = SetupViewer(aRequest, getter_AddRefs(mViewer),
                             getter_AddRefs(mLoadGroup));
 
-  nsCOMPtr<nsIStreamListener> listener = mListener;
-  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(listener->OnStartRequest(aRequest))) {
+  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(mListener->OnStartRequest(aRequest))) {
     mViewer->GetDocument()->SetIsBeingUsedAsImage();
     StopAnimation();  // otherwise animations start automatically in helper doc
 
     rv = mViewer->Init(nullptr, LayoutDeviceIntRect(), nullptr);
     if (NS_SUCCEEDED(rv)) {
-      rv = mViewer->Open();
+      rv = mViewer->Open(nullptr, nullptr);
     }
   }
   return rv;
@@ -218,8 +217,8 @@ SVGDocumentWrapper::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 SVGDocumentWrapper::OnStopRequest(nsIRequest* aRequest, nsresult status) {
-  if (nsCOMPtr<nsIStreamListener> listener = mListener) {
-    listener->OnStopRequest(aRequest, status);
+  if (mListener) {
+    mListener->OnStopRequest(aRequest, status);
     mListener = nullptr;
   }
 
@@ -308,7 +307,7 @@ nsresult SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
   // For a root document, DocShell would do these sort of things
   // automatically. Since there is no DocShell for this wrapped SVG document,
   // we must set it up manually.
-  auto timing = MakeRefPtr<nsDOMNavigationTiming>(nullptr);
+  RefPtr<nsDOMNavigationTiming> timing = new nsDOMNavigationTiming(nullptr);
   timing->NotifyNavigationStart(
       nsDOMNavigationTiming::DocShellState::eInactive);
   viewer->SetNavigationTiming(timing);

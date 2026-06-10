@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -43,7 +45,7 @@ class XMLHttpRequestStringBuffer final {
 
   [[nodiscard]] bool GetAsString(nsAString& aString) {
     MutexAutoLock lock(mMutex);
-    return aString.Assign(mData, fallible);
+    return aString.Assign(mData, mozilla::fallible);
   }
 
   size_t SizeOfThis(MallocSizeOf aMallocSizeOf) {
@@ -51,9 +53,30 @@ class XMLHttpRequestStringBuffer final {
     return mData.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 
+  [[nodiscard]] bool GetAsString(DOMString& aString, uint32_t aLength) {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(aLength <= mData.Length());
+
+    // XXX: Bug 1408793 suggests encapsulating the following sequence within
+    //      DOMString.
+    if (StringBuffer* buf = mData.GetStringBuffer()) {
+      // We have to use SetStringBuffer, because once we release our mutex mData
+      // can get mutated from some other thread while the DOMString is still
+      // alive.
+      aString.SetStringBuffer(buf, aLength);
+      return true;
+    }
+
+    // We can get here if mData is empty.  In that case it won't have an
+    // nsStringBuffer....
+    MOZ_ASSERT(mData.IsEmpty());
+    return aString.AsAString().Assign(mData.BeginReading(), aLength,
+                                      mozilla::fallible);
+  }
+
   void CreateSnapshot(XMLHttpRequestStringSnapshot& aSnapshot) {
     MutexAutoLock lock(mMutex);
-    aSnapshot.Set(this);
+    aSnapshot.Set(this, mData.Length());
   }
 
  private:
@@ -101,26 +124,31 @@ void XMLHttpRequestString::CreateSnapshot(
 // ---------------------------------------------------------------------------
 // XMLHttpRequestStringSnapshot
 
-XMLHttpRequestStringSnapshot::XMLHttpRequestStringSnapshot() : mVoid(false) {}
+XMLHttpRequestStringSnapshot::XMLHttpRequestStringSnapshot()
+    : mLength(0), mVoid(false) {}
 
 XMLHttpRequestStringSnapshot::~XMLHttpRequestStringSnapshot() = default;
 
 void XMLHttpRequestStringSnapshot::ResetInternal(bool aIsVoid) {
   mBuffer = nullptr;
+  mLength = 0;
   mVoid = aIsVoid;
 }
 
-void XMLHttpRequestStringSnapshot::Set(XMLHttpRequestStringBuffer* aBuffer) {
+void XMLHttpRequestStringSnapshot::Set(XMLHttpRequestStringBuffer* aBuffer,
+                                       uint32_t aLength) {
   MOZ_ASSERT(aBuffer);
+  MOZ_ASSERT(aLength <= aBuffer->UnsafeLength());
 
   mBuffer = aBuffer;
+  mLength = aLength;
   mVoid = false;
 }
 
 bool XMLHttpRequestStringSnapshot::GetAsString(DOMString& aString) const {
   if (mBuffer) {
     MOZ_ASSERT(!mVoid);
-    return mBuffer->GetAsString(aString);
+    return mBuffer->GetAsString(aString, mLength);
   }
 
   if (mVoid) {

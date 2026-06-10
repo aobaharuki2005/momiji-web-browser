@@ -1,3 +1,4 @@
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -115,7 +116,7 @@ class _RFPHelper {
       case "TabOpen": {
         let browser = aMessage.target.linkedBrowser;
         this._roundOrResetContentSize(browser, /* isNewTab = */ true);
-        let resizeObserver = this._resizeObservers.get(browser.documentGlobal);
+        let resizeObserver = this._resizeObservers.get(browser.ownerGlobal);
         resizeObserver.observe(browser.parentElement);
         break;
       }
@@ -409,7 +410,7 @@ class _RFPHelper {
   async _roundContentSize(aBrowser, isNewTab = false) {
     let logPrefix = `_roundContentSize[${Math.random()}]`;
     log(logPrefix);
-    let win = aBrowser.documentGlobal;
+    let win = aBrowser.ownerGlobal;
     let browserContainer = aBrowser
       .getTabBrowser()
       .getBrowserContainer(aBrowser);

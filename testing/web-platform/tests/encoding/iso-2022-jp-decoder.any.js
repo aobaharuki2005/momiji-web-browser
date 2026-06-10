@@ -1,4 +1,4 @@
-// META: global=window,dedicatedworker
+// META: global=window,dedicatedworker,shadowrealm
 //
 function decode(input, output, desc) {
   test(function() {

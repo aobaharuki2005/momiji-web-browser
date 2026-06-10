@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,9 +32,10 @@ TEST(DOM_Quota_OriginParser_IsUserContextSuffix, True)
   const uint32_t userContextId = 5;
 
   EXPECT_TRUE(IsUserContextSuffix(
-      nsFmtCString("^userContextId={}", userContextId), userContextId));
+      nsFmtCString(FMT_STRING("^userContextId={}"), userContextId),
+      userContextId));
   EXPECT_TRUE(IsUserContextSuffix(
-      nsFmtCString("^inBrowser=1&userContextId={}", userContextId),
+      nsFmtCString(FMT_STRING("^inBrowser=1&userContextId={}"), userContextId),
       userContextId));
 }
 
@@ -53,15 +56,16 @@ TEST(DOM_Quota_OriginParser_IsUserContextPattern, True)
 
   {
     OriginAttributesPattern pattern;
-    pattern.Init(nsFmtString(u"{{ \"userContextId\": {} }}", userContextId));
+    pattern.Init(
+        nsFmtString(FMT_STRING(u"{{ \"userContextId\": {} }}"), userContextId));
     EXPECT_TRUE(IsUserContextPattern(pattern, userContextId));
   }
 
   {
     OriginAttributesPattern pattern;
-    pattern.Init(
-        nsFmtString(u"{{ \"userContextId\": 5, \"privateBrowsingId\": 1 }}",
-                    userContextId));
+    pattern.Init(nsFmtString(
+        FMT_STRING(u"{{ \"userContextId\": 5, \"privateBrowsingId\": 1 }}"),
+        userContextId));
     EXPECT_TRUE(IsUserContextPattern(pattern, userContextId));
   }
 }

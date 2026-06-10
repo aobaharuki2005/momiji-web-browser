@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mediapacket_h_
-#define mediapacket_h_
+#ifndef mediapacket_h__
+#define mediapacket_h__
 
 #include <cstddef>
 #include <cstdint>
@@ -116,4 +118,4 @@ struct ParamTraits<mozilla::MediaPacket> {
   }
 };
 }  // namespace IPC
-#endif  // mediapacket_h_
+#endif  // mediapacket_h__

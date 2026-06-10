@@ -21,35 +21,36 @@ let $0 = instantiate(`(module \$Mem
 )`);
 let $Mem = $0;
 
-// ./test/core/threads/MP.wast:4
-register($0, `mem`);
+// Missing in source test:
+// https://github.com/WebAssembly/threads/pull/217
+register($Mem, `mem`);
 
-// ./test/core/threads/MP.wast:6
+// ./test/core/threads/MP.wast:5
 let $T1 = new Thread($Mem, "$Mem", `
 
-// ./test/core/threads/MP.wast:7:3
+// ./test/core/threads/MP.wast:6:3
 register(\$Mem, \`mem\`);
 
-// ./test/core/threads/MP.wast:8:3
+// ./test/core/threads/MP.wast:7:3
 let \$1 = instantiate(\`(module
-    (memory (import "mem" "shared") 1 1 shared)
+    (memory (import "mem" "shared") 1 10 shared)
     (func (export "run")
       (i32.store (i32.const 0) (i32.const 42))
       (i32.store (i32.const 4) (i32.const 1))
     )
   )\`);
 
-// ./test/core/threads/MP.wast:15:3
+// ./test/core/threads/MP.wast:14:3
 invoke(\$1, \`run\`, []);
 `);
 
-// ./test/core/threads/MP.wast:18
+// ./test/core/threads/MP.wast:17
 let $T2 = new Thread($Mem, "$Mem", `
 
-// ./test/core/threads/MP.wast:19:3
+// ./test/core/threads/MP.wast:18:3
 register(\$Mem, \`mem\`);
 
-// ./test/core/threads/MP.wast:20:3
+// ./test/core/threads/MP.wast:19:3
 let \$2 = instantiate(\`(module
     (memory (import "mem" "shared") 1 1 shared)
     (func (export "run")
@@ -65,17 +66,17 @@ let \$2 = instantiate(\`(module
     )
   )\`);
 
-// ./test/core/threads/MP.wast:35:3
+// ./test/core/threads/MP.wast:34:3
 invoke(\$2, \`run\`, []);
 `);
 
-// ./test/core/threads/MP.wast:38
+// ./test/core/threads/MP.wast:37
 $T1.wait();
 
-// ./test/core/threads/MP.wast:39
+// ./test/core/threads/MP.wast:38
 $T2.wait();
 
-// ./test/core/threads/MP.wast:41
+// ./test/core/threads/MP.wast:40
 let $3 = instantiate(`(module \$Check
   (memory (import "mem" "shared") 1 1 shared)
 
@@ -96,5 +97,5 @@ let $3 = instantiate(`(module \$Check
 )`);
 let $Check = $3;
 
-// ./test/core/threads/MP.wast:60
+// ./test/core/threads/MP.wast:59
 assert_return(() => invoke($Check, `check`, []), [value("i32", 1)]);

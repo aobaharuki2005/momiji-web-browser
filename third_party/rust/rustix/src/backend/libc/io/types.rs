@@ -17,7 +17,7 @@ bitflags! {
     }
 }
 
-#[cfg(all(linux_kernel, not(target_os = "android")))]
+#[cfg(linux_kernel)]
 bitflags! {
     /// `RWF_*` constants for use with [`preadv2`] and [`pwritev2`].
     ///
@@ -27,15 +27,15 @@ bitflags! {
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct ReadWriteFlags: u32 {
         /// `RWF_DSYNC` (since Linux 4.7)
-        const DSYNC = libc::RWF_DSYNC as u32;
+        const DSYNC = linux_raw_sys::general::RWF_DSYNC;
         /// `RWF_HIPRI` (since Linux 4.6)
-        const HIPRI = libc::RWF_HIPRI as u32;
+        const HIPRI = linux_raw_sys::general::RWF_HIPRI;
         /// `RWF_SYNC` (since Linux 4.7)
-        const SYNC = libc::RWF_SYNC as u32;
+        const SYNC = linux_raw_sys::general::RWF_SYNC;
         /// `RWF_NOWAIT` (since Linux 4.14)
-        const NOWAIT = libc::RWF_NOWAIT as u32;
+        const NOWAIT = linux_raw_sys::general::RWF_NOWAIT;
         /// `RWF_APPEND` (since Linux 4.16)
-        const APPEND = libc::RWF_APPEND as u32;
+        const APPEND = linux_raw_sys::general::RWF_APPEND;
 
         /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;

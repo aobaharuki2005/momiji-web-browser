@@ -140,8 +140,8 @@ public:
      */
     static void PurgeAllCaches();
 
-    using ImageGeneratorFromEncodedDataFactory =
-            std::unique_ptr<SkImageGenerator> (*)(sk_sp<const SkData>);
+    typedef std::unique_ptr<SkImageGenerator>
+                                            (*ImageGeneratorFromEncodedDataFactory)(sk_sp<SkData>);
 
     /**
      *  To instantiate images from encoded data, first looks at this runtime function-ptr. If it

@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,7 +26,6 @@ namespace image {
 class Image;
 struct Orientation;
 class SourceBuffer;
-enum class DecoderType : uint8_t;
 
 class ImageOps {
  public:
@@ -153,11 +153,6 @@ class ImageOps {
   static already_AddRefed<gfx::SourceSurface> DecodeToSurface(
       ImageBuffer* aBuffer, const nsACString& aMimeType, uint32_t aFlags,
       const Maybe<gfx::IntSize>& aSize = Nothing());
-
-  /* Same as above but with a SourceBuffer + DecoderType */
-  static already_AddRefed<gfx::SourceSurface> DecodeToSurface(
-      SourceBuffer* aSourceBuffer, image::DecoderType aDecoderType,
-      uint32_t aFlags, const Maybe<gfx::IntSize>& aSize = Nothing());
 
  private:
   class ImageBufferImpl;

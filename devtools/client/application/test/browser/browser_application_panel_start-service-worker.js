@@ -21,7 +21,7 @@ add_task(async function () {
   const { panel, tab, commands } = await openNewTabAndApplicationPanel(TAB_URL);
   const doc = panel.panelWin.document;
 
-  await selectPage(panel, "service-workers");
+  selectPage(panel, "service-workers");
 
   await waitForWorkerRegistration(tab);
 

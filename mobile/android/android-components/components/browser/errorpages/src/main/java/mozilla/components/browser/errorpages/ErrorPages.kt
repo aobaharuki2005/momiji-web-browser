@@ -33,7 +33,6 @@ object ErrorPages {
         htmlResource: String = HTML_RESOURCE_FILE,
         titleOverride: (ErrorType) -> String? = { null },
         descriptionOverride: (ErrorType) -> String? = { null },
-        isPrivate: Boolean = false,
     ): String {
         val title = titleOverride(errorType) ?: context.getString(errorType.titleRes)
         val button = context.getString(errorType.refreshButtonRes)
@@ -91,8 +90,7 @@ object ErrorPages {
             "&badCertAcceptTemporary=${badCertAcceptTemporary.urlEncode()}" +
             "&showContinueHttp=${showContinueHttp.urlEncode()}" +
             "&continueHttpButton=${continueHttpButton.urlEncode()}" +
-            "&errorCode=${errorCode.urlEncode()}" +
-            "&isPrivate=$isPrivate"
+            "&errorCode=${errorCode.urlEncode()}"
 
         urlEncodedErrorPage = urlEncodedErrorPage
             .replace("<ul>".urlEncode(), "<ul role=\"presentation\">".urlEncode())

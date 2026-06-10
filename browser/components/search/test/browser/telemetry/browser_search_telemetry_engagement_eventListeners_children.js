@@ -20,6 +20,17 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
+const IMPRESSION = {
+  provider: "example",
+  tagged: "true",
+  partner_code: "ff",
+  source: "unknown",
+  is_shopping_page: "false",
+  is_private: "false",
+  shopping_tab_displayed: "false",
+  is_signed_in: "false",
+};
+
 const SELECTOR = ".arrow";
 const SERP_URL = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
 
@@ -73,7 +84,7 @@ add_task(async function test_listeners_not_provided() {
 
   assertSERPTelemetry([
     {
-      engagements: [],
+      impression: IMPRESSION,
     },
   ]);
 
@@ -105,7 +116,7 @@ add_task(async function test_no_listeners() {
 
   assertSERPTelemetry([
     {
-      engagements: [],
+      impression: IMPRESSION,
     },
   ]);
 
@@ -140,6 +151,7 @@ add_task(async function test_click_listener() {
 
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
@@ -186,7 +198,7 @@ add_task(async function test_event_with_no_default_action() {
 
   assertSERPTelemetry([
     {
-      engagements: [],
+      impression: IMPRESSION,
     },
   ]);
 
@@ -222,6 +234,7 @@ add_task(async function test_event_no_default_action_with_override() {
 
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
@@ -258,6 +271,7 @@ add_task(async function test_target_override() {
 
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
@@ -300,6 +314,7 @@ add_task(async function test_target_and_action_override() {
 
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       engagements: [
         {
           action: "custom_action",
@@ -352,6 +367,7 @@ add_task(async function test_multiple_listeners() {
 
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       engagements: [
         {
           action: "mouseovered",
@@ -406,6 +422,7 @@ add_task(async function test_condition() {
 
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       engagements: [
         {
           action: "keydowned",
@@ -456,7 +473,7 @@ add_task(async function test_condition_invalid() {
 
   assertSERPTelemetry([
     {
-      engagements: [],
+      impression: IMPRESSION,
     },
   ]);
 

@@ -1,10 +1,12 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef GFX_PLATFORM_H
 #define GFX_PLATFORM_H
 
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/intl/UnicodeScriptCodes.h"
 #include "nsTArray.h"
@@ -44,11 +46,6 @@ typedef struct FT_LibraryRec_* FT_Library;
 
 namespace mozilla {
 struct StyleFontFamilyList;
-struct StyleFontFaceSourceTechFlags;
-enum class StyleFontFaceSourceFormatKeyword : uint8_t;
-class WeightRange;
-class StretchRange;
-class SlantStyleRange;
 class LogModule;
 class VsyncDispatcher;
 namespace layers {
@@ -88,7 +85,7 @@ enum class CMSMode : int32_t {
   _ENUM_MAX = TaggedOnly
 };
 
-enum eGfxLog : uint8_t {
+enum eGfxLog {
   // all font enumerations, localized names, fullname/psnames, cmap loads
   eGfxLog_fontlist = 0,
   // timing info on font initialization
@@ -100,9 +97,7 @@ enum eGfxLog : uint8_t {
   // dump cmap coverage data as they are loaded
   eGfxLog_cmapdata = 4,
   // text perf data
-  eGfxLog_textperf = 5,
-  // font query / font-fallback simulation
-  eGfxLog_fontquery = 6
+  eGfxLog_textperf = 5
 };
 
 // Used during font matching to express a preference, if any, for whether
@@ -169,9 +164,9 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   friend class SRGBOverrideObserver;
 
  public:
-  using WeightRange = mozilla::WeightRange;
-  using StretchRange = mozilla::StretchRange;
-  using SlantStyleRange = mozilla::SlantStyleRange;
+  typedef mozilla::StretchRange StretchRange;
+  typedef mozilla::SlantStyleRange SlantStyleRange;
+  typedef mozilla::WeightRange WeightRange;
   typedef mozilla::gfx::sRGBColor sRGBColor;
   typedef mozilla::gfx::DeviceColor DeviceColor;
   typedef mozilla::gfx::DataSourceSurface DataSourceSurface;
@@ -228,8 +223,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static bool IsHeadless();
 
   static bool UseRemoteCanvas();
-
-  static bool UseHDR();
 
   static bool IsBackendAccelerated(
       const mozilla::gfx::BackendType aBackendType);
@@ -402,9 +395,9 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    */
   gfxFontEntry* LookupLocalFont(FontVisibilityProvider* aFontVisibilityProvider,
                                 const nsACString& aFontName,
-                                const WeightRange& aWeightForEntry,
-                                const StretchRange& aStretchForEntry,
-                                const SlantStyleRange& aStyleForEntry);
+                                WeightRange aWeightForEntry,
+                                StretchRange aStretchForEntry,
+                                SlantStyleRange aStyleForEntry);
 
   /**
    * Activate a platform font.  (Needed to support @font-face src url().)
@@ -415,9 +408,9 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    * who must either AddRef() or delete.
    */
   gfxFontEntry* MakePlatformFont(const nsACString& aFontName,
-                                 const WeightRange& aWeightForEntry,
-                                 const StretchRange& aStretchForEntry,
-                                 const SlantStyleRange& aStyleForEntry,
+                                 WeightRange aWeightForEntry,
+                                 StretchRange aStretchForEntry,
+                                 SlantStyleRange aStyleForEntry,
                                  const uint8_t* aFontData, uint32_t aLength);
 
   /**
@@ -485,7 +478,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   // all platforms, but individual platform implementations may override.
   virtual bool IsFontFormatSupported(
       mozilla::StyleFontFaceSourceFormatKeyword aFormatHint,
-      const mozilla::StyleFontFaceSourceTechFlags& aTechFlags);
+      mozilla::StyleFontFaceSourceTechFlags aTechFlags);
 
   bool IsKnownIconFontFamily(const nsAtom* aFamilyName) const;
 
@@ -550,16 +543,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    */
   static qcms_profile* GetCMSOutputProfile() {
     return GetPlatform()->mCMSOutputProfile;
-  }
-
-  static const mozilla::Maybe<nsTArray<uint8_t>>& GetCMSOutputICCProfileData() {
-    // This data only represents mCMSOutputProfile if it is not the sRGB
-    // profile, so this should not be called unless that is the case as there is
-    // no need for that data otherwise.
-    MOZ_ASSERT(qcms_profile_is_sRGB(GetPlatform()->mCMSsRGBProfile));
-    MOZ_ASSERT(GetPlatform()->mCMSsRGBProfile !=
-               GetPlatform()->mCMSOutputProfile);
-    return GetPlatform()->mCMSOutputProfileData;
   }
 
   /**

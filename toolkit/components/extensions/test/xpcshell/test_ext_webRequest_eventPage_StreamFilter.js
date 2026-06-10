@@ -135,7 +135,9 @@ async function test_idletimeout_on_streamfilter({
       "background-script-reset-idle"
     );
 
-    Services.fog.testResetFOG();
+    clearHistograms();
+    assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
+    assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
 
     await extension.terminateBackground({ expectStopped: false });
 
@@ -147,31 +149,19 @@ async function test_idletimeout_on_streamfilter({
       "Initial background context is still available as expected"
     );
 
-    // TODO(Bug 2028892): replace this assertion with the assertGleanLabeledMetric
-    // call that follows it once the underlying issue with testGetValue
-    // for labeled_* metrics.
-    Assert.equal(
-      Glean.extensionsCounters.eventPageIdleResult.reset_streamfilter.testGetValue(),
-      1,
-      `Got the expected value for reset_streamfilter counter`
-    );
+    assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+      category: "reset_streamfilter",
+      categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    });
 
-    // assertGleanLabeledMetric({
-    //   metricId: "eventPageIdleResult",
-    //   gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
-    //   gleanMetricLabels: GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES,
-    //   ignoreNonExpectedLabels: true, // Only check values on the labels listed below.
-    //   expectedLabelsValue: {
-    //     reset_streamfilter: 1,
-    //   },
-    // });
-
-    Assert.equal(
-      Glean.extensionsCounters.eventPageIdleResultByAddonid
-        .get(extension.id, "reset_streamfilter")
-        ?.testGetValue(),
-      1,
-      `Got the expected value for extension ${extension.id} reset_streamfilter counter`
+    assertHistogramCategoryNotEmpty(
+      WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+      {
+        keyed: true,
+        key: extension.id,
+        category: "reset_streamfilter",
+        categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+      }
     );
   } else {
     const { Management } = ChromeUtils.importESModule(

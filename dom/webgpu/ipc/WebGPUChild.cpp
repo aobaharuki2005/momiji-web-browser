@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -27,7 +28,6 @@
 #include "mozilla/webgpu/InternalError.h"
 #include "mozilla/webgpu/OutOfMemoryError.h"
 #include "mozilla/webgpu/PipelineError.h"
-#include "mozilla/webgpu/PromiseHelpers.h"
 #include "mozilla/webgpu/RenderPipeline.h"
 #include "mozilla/webgpu/ValidationError.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
@@ -97,17 +97,18 @@ void wgpu_child_resolve_request_adapter_promise(
     WGPUWebGPUChildPtr aChild, RawId aAdapterId,
     const struct WGPUAdapterInformation* aAdapterInfo) {
   auto* c = static_cast<WebGPUChild*>(aChild);
-  auto pending_promise = c->DequeueRequestAdapterPromise();
+  auto& pending_promises = c->mPendingRequestAdapterPromises;
+  auto pending_promise = std::move(pending_promises.front());
+  pending_promises.pop_front();
 
   MOZ_RELEASE_ASSERT(pending_promise.adapter_id == aAdapterId);
 
   if (aAdapterInfo == nullptr) {
-    promise::MaybeResolveWithNull(std::move(pending_promise.promise));
+    pending_promise.promise->MaybeResolve(JS::NullHandleValue);
   } else {
     auto info = std::make_shared<WGPUAdapterInformation>(*aAdapterInfo);
     RefPtr<Adapter> adapter = new Adapter(pending_promise.instance, c, info);
-    promise::MaybeResolve(std::move(pending_promise.promise),
-                          std::move(adapter));
+    pending_promise.promise->MaybeResolve(adapter);
   }
 }
 
@@ -115,7 +116,9 @@ void wgpu_child_resolve_request_device_promise(WGPUWebGPUChildPtr aChild,
                                                RawId aDeviceId, RawId aQueueId,
                                                const nsCString* aError) {
   auto* c = static_cast<WebGPUChild*>(aChild);
-  auto pending_promise = c->DequeueRequestDevicePromise();
+  auto& pending_promises = c->mPendingRequestDevicePromises;
+  auto pending_promise = std::move(pending_promises.front());
+  pending_promises.pop_front();
 
   MOZ_RELEASE_ASSERT(pending_promise.device_id == aDeviceId);
   MOZ_RELEASE_ASSERT(pending_promise.queue_id == aQueueId);
@@ -127,11 +130,9 @@ void wgpu_child_resolve_request_device_promise(WGPUWebGPUChildPtr aChild,
                    pending_promise.limits, pending_promise.adapter_info,
                    pending_promise.lost_promise);
     device->SetLabel(pending_promise.label);
-    promise::MaybeResolve(std::move(pending_promise.promise),
-                          std::move(device));
+    pending_promise.promise->MaybeResolve(device);
   } else {
-    promise::MaybeRejectWithOperationError(std::move(pending_promise.promise),
-                                           nsCString(*aError));
+    pending_promise.promise->MaybeRejectWithOperationError(*aError);
   }
 }
 
@@ -139,7 +140,9 @@ void wgpu_child_resolve_pop_error_scope_promise(WGPUWebGPUChildPtr aChild,
                                                 RawId aDeviceId, uint8_t aTy,
                                                 const nsCString* aMessage) {
   auto* c = static_cast<WebGPUChild*>(aChild);
-  auto pending_promise = c->DequeuePopErrorScopePromise();
+  auto& pending_promises = c->mPendingPopErrorScopePromises;
+  auto pending_promise = std::move(pending_promises.front());
+  pending_promises.pop_front();
 
   MOZ_RELEASE_ASSERT(pending_promise.device->GetId() == aDeviceId);
 
@@ -147,16 +150,15 @@ void wgpu_child_resolve_pop_error_scope_promise(WGPUWebGPUChildPtr aChild,
 
   switch ((PopErrorScopeResultType)aTy) {
     case PopErrorScopeResultType::NoError:
-      promise::MaybeResolveWithNull(std::move(pending_promise.promise));
+      pending_promise.promise->MaybeResolve(JS::NullHandleValue);
       return;
 
     case PopErrorScopeResultType::DeviceLost:
-      promise::MaybeResolveWithNull(std::move(pending_promise.promise));
+      pending_promise.promise->MaybeResolve(JS::NullHandleValue);
       return;
 
     case PopErrorScopeResultType::ThrowOperationError:
-      promise::MaybeRejectWithOperationError(std::move(pending_promise.promise),
-                                             nsCString(*aMessage));
+      pending_promise.promise->MaybeRejectWithOperationError(*aMessage);
       return;
 
     case PopErrorScopeResultType::OutOfMemory:
@@ -174,7 +176,7 @@ void wgpu_child_resolve_pop_error_scope_promise(WGPUWebGPUChildPtr aChild,
                                 *aMessage);
       break;
   }
-  promise::MaybeResolve(std::move(pending_promise.promise), std::move(error));
+  pending_promise.promise->MaybeResolve(std::move(error));
 }
 
 void wgpu_child_resolve_create_pipeline_promise(WGPUWebGPUChildPtr aChild,
@@ -183,7 +185,9 @@ void wgpu_child_resolve_create_pipeline_promise(WGPUWebGPUChildPtr aChild,
                                                 bool aIsValidationError,
                                                 const nsCString* aError) {
   auto* c = static_cast<WebGPUChild*>(aChild);
-  auto pending_promise = c->DequeueCreatePipelinePromise();
+  auto& pending_promises = c->mPendingCreatePipelinePromises;
+  auto pending_promise = std::move(pending_promises.front());
+  pending_promises.pop_front();
 
   MOZ_RELEASE_ASSERT(pending_promise.pipeline_id == aPipelineId);
   MOZ_RELEASE_ASSERT(pending_promise.is_render_pipeline == aIsRenderPipeline);
@@ -193,14 +197,12 @@ void wgpu_child_resolve_create_pipeline_promise(WGPUWebGPUChildPtr aChild,
       RefPtr<RenderPipeline> object = new RenderPipeline(
           pending_promise.device, pending_promise.pipeline_id);
       object->SetLabel(pending_promise.label);
-      promise::MaybeResolve(std::move(pending_promise.promise),
-                            std::move(object));
+      pending_promise.promise->MaybeResolve(object);
     } else {
       RefPtr<ComputePipeline> object = new ComputePipeline(
           pending_promise.device, pending_promise.pipeline_id);
       object->SetLabel(pending_promise.label);
-      promise::MaybeResolve(std::move(pending_promise.promise),
-                            std::move(object));
+      pending_promise.promise->MaybeResolve(object);
     }
   } else {
     dom::GPUPipelineErrorReason reason;
@@ -210,8 +212,7 @@ void wgpu_child_resolve_create_pipeline_promise(WGPUWebGPUChildPtr aChild,
       reason = dom::GPUPipelineErrorReason::Internal;
     }
     RefPtr<PipelineError> e = new PipelineError(*aError, reason);
-    promise::MaybeRejectWithPipelineError(std::move(pending_promise.promise),
-                                          std::move(e));
+    pending_promise.promise->MaybeReject(e);
   }
 }
 
@@ -219,7 +220,9 @@ void wgpu_child_resolve_create_shader_module_promise(
     WGPUWebGPUChildPtr aChild, RawId aShaderModuleId,
     struct WGPUFfiSlice_FfiShaderModuleCompilationMessage aMessages) {
   auto* c = static_cast<WebGPUChild*>(aChild);
-  auto pending_promise = c->DequeueCreateShaderModulePromise();
+  auto& pending_promises = c->mPendingCreateShaderModulePromises;
+  auto pending_promise = std::move(pending_promises.front());
+  pending_promises.pop_front();
 
   MOZ_RELEASE_ASSERT(pending_promise.shader_module->GetId() == aShaderModuleId);
 
@@ -245,8 +248,7 @@ void wgpu_child_resolve_create_shader_module_promise(
   RefPtr<CompilationInfo> infoObject(
       new CompilationInfo(pending_promise.device));
   infoObject->SetMessages(messages);
-  promise::MaybeResolve(std::move(pending_promise.promise),
-                        std::move(infoObject));
+  pending_promise.promise->MaybeResolve(infoObject);
 };
 
 void wgpu_child_resolve_buffer_map_promise(WGPUWebGPUChildPtr aChild,
@@ -255,7 +257,25 @@ void wgpu_child_resolve_buffer_map_promise(WGPUWebGPUChildPtr aChild,
                                            uint64_t aSize,
                                            const nsCString* aError) {
   auto* c = static_cast<WebGPUChild*>(aChild);
-  auto pending_promise = c->DequeueBufferMapPromise(aBufferId);
+  auto& pending_promises = c->mPendingBufferMapPromises;
+
+  WebGPUChild::PendingBufferMapPromise pending_promise;
+  if (auto search = pending_promises.find(aBufferId);
+      search != pending_promises.end()) {
+    pending_promise = std::move(search->second.front());
+    search->second.pop_front();
+
+    if (search->second.empty()) {
+      pending_promises.erase(aBufferId);
+    }
+  } else {
+    NS_ERROR("Missing pending promise for buffer map");
+  }
+
+  // Unmap might have been called while the result was on the way back.
+  if (pending_promise.promise->State() != dom::Promise::PromiseState::Pending) {
+    return;
+  }
 
   if (aError == nullptr) {
     pending_promise.buffer->ResolveMapRequest(pending_promise.promise, aOffset,
@@ -268,9 +288,17 @@ void wgpu_child_resolve_buffer_map_promise(WGPUWebGPUChildPtr aChild,
 void wgpu_child_resolve_on_submitted_work_done_promise(
     WGPUWebGPUChildPtr aChild, WGPUQueueId aQueueId) {
   auto* c = static_cast<WebGPUChild*>(aChild);
-  auto pending_promise = c->DequeueOnSubmittedWorkDonePromise(aQueueId);
+  const auto& it = c->mPendingOnSubmittedWorkDonePromises.find(aQueueId);
+  MOZ_RELEASE_ASSERT(it != c->mPendingOnSubmittedWorkDonePromises.end());
+  auto& pending_promises = it->second;
+  auto pending_promise = std::move(pending_promises.front());
+  pending_promises.pop_front();
 
-  promise::MaybeResolveWithUndefined(std::move(pending_promise));
+  if (pending_promises.empty()) {
+    c->mPendingOnSubmittedWorkDonePromises.erase(it);
+  }
+
+  pending_promise->MaybeResolveWithUndefined();
 };
 }  // namespace ffi
 
@@ -339,7 +367,6 @@ void WebGPUChild::SendSerializedMessages(uint32_t aNrOfMessages,
 }
 
 ipc::IPCResult WebGPUChild::RecvUncapturedError(RawId aDeviceId,
-                                                const dom::GPUErrorFilter aType,
                                                 const nsACString& aMessage) {
   MOZ_RELEASE_ASSERT(aDeviceId);
 
@@ -355,20 +382,10 @@ ipc::IPCResult WebGPUChild::RecvUncapturedError(RawId aDeviceId,
 
   // We don't want to spam the errors to the console indefinitely
   if (device->CheckNewWarning(aMessage)) {
-    JsWarning(device->GetRelevantGlobal(), aMessage);
+    JsWarning(device->GetOwnerGlobal(), aMessage);
 
     dom::GPUUncapturedErrorEventInit init;
-    switch (aType) {
-      case dom::GPUErrorFilter::Validation:
-        init.mError = new ValidationError(device->GetParentObject(), aMessage);
-        break;
-      case dom::GPUErrorFilter::Out_of_memory:
-        init.mError = new OutOfMemoryError(device->GetParentObject(), aMessage);
-        break;
-      case dom::GPUErrorFilter::Internal:
-        init.mError = new InternalError(device->GetParentObject(), aMessage);
-        break;
-    }
+    init.mError = new ValidationError(device->GetParentObject(), aMessage);
     RefPtr<mozilla::dom::GPUUncapturedErrorEvent> event =
         dom::GPUUncapturedErrorEvent::Constructor(device, u"uncapturederror"_ns,
                                                   init);
@@ -377,8 +394,7 @@ ipc::IPCResult WebGPUChild::RecvUncapturedError(RawId aDeviceId,
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUChild::RecvDeviceLost(RawId aDeviceId,
-                                           const GPUDeviceLostReason aReason,
+ipc::IPCResult WebGPUChild::RecvDeviceLost(RawId aDeviceId, uint8_t aReason,
                                            const nsACString& aMessage) {
   // There might have been a race between getting back the response to a
   // `device.destroy()` call and actual device loss. If that was the case,
@@ -390,7 +406,7 @@ ipc::IPCResult WebGPUChild::RecvDeviceLost(RawId aDeviceId,
     RefPtr<DeviceLostInfo> info = new DeviceLostInfo(
         promise->GetParentObject(), dom::GPUDeviceLostReason::Destroyed,
         u"Device destroyed"_ns);
-    promise::MaybeResolve(std::move(promise), std::move(info));
+    promise->MaybeResolve(info);
   } else {
     auto message = NS_ConvertUTF8toUTF16(aMessage);
 
@@ -402,7 +418,9 @@ ipc::IPCResult WebGPUChild::RecvDeviceLost(RawId aDeviceId,
         return IPC_OK();
       }
 
-      device->ResolveLost(aReason, message);
+      dom::GPUDeviceLostReason reason =
+          static_cast<dom::GPUDeviceLostReason>(aReason);
+      device->ResolveLost(reason, message);
     }
   }
 
@@ -432,146 +450,29 @@ void WebGPUChild::UnregisterDevice(RawId aDeviceId) {
   mDeviceMap.erase(aDeviceId);
 }
 
-void WebGPUChild::EnqueueRequestAdapterPromise(
-    PendingRequestAdapterPromise&& promise) {
-  mPendingRequestAdapterPromises.push_back(std::move(promise));
-}
-
-void WebGPUChild::EnqueueRequestDevicePromise(
-    PendingRequestDevicePromise&& promise) {
-  mPendingRequestDevicePromises.push_back(std::move(promise));
-}
-
-void WebGPUChild::RegisterDeviceLostPromise(RawId id,
-                                            RefPtr<dom::Promise>& promise) {
-  mPendingDeviceLostPromises.insert({id, promise});
-}
-
-void WebGPUChild::EnqueuePopErrorScopePromise(
-    PendingPopErrorScopePromise&& promise) {
-  mPendingPopErrorScopePromises.push_back(std::move(promise));
-}
-
-void WebGPUChild::EnqueueCreatePipelinePromise(
-    PendingCreatePipelinePromise&& promise) {
-  mPendingCreatePipelinePromises.push_back(std::move(promise));
-}
-
-void WebGPUChild::EnqueueCreateShaderModulePromise(
-    PendingCreateShaderModulePromise&& promise) {
-  mPendingCreateShaderModulePromises.push_back(std::move(promise));
-}
-
-void WebGPUChild::EnqueueBufferMapPromise(RawId id,
-                                          PendingBufferMapPromise&& promise) {
-  mPendingBufferMapPromises[id].push_back(std::move(promise));
-}
-
-void WebGPUChild::EnqueueOnSubmittedWorkDonePromise(
-    RawId id, RefPtr<dom::Promise>& promise) {
-  mPendingOnSubmittedWorkDonePromises[id].push_back(promise);
-}
-
-PendingRequestAdapterPromise WebGPUChild::DequeueRequestAdapterPromise() {
-  auto& promises = mPendingRequestAdapterPromises;
-  MOZ_RELEASE_ASSERT(!promises.empty());
-  auto promise = std::move(promises.front());
-  promises.pop_front();
-  return promise;
-}
-
-PendingRequestDevicePromise WebGPUChild::DequeueRequestDevicePromise() {
-  auto& promises = mPendingRequestDevicePromises;
-  MOZ_RELEASE_ASSERT(!promises.empty());
-  auto promise = std::move(promises.front());
-  promises.pop_front();
-  return promise;
-}
-
-PendingPopErrorScopePromise WebGPUChild::DequeuePopErrorScopePromise() {
-  auto& promises = mPendingPopErrorScopePromises;
-  MOZ_RELEASE_ASSERT(!promises.empty());
-  auto promise = std::move(promises.front());
-  promises.pop_front();
-  return promise;
-}
-
-PendingCreatePipelinePromise WebGPUChild::DequeueCreatePipelinePromise() {
-  auto& promises = mPendingCreatePipelinePromises;
-  MOZ_RELEASE_ASSERT(!promises.empty());
-  auto promise = std::move(promises.front());
-  promises.pop_front();
-  return promise;
-}
-
-PendingCreateShaderModulePromise
-WebGPUChild::DequeueCreateShaderModulePromise() {
-  auto& promises = mPendingCreateShaderModulePromises;
-  MOZ_RELEASE_ASSERT(!promises.empty());
-  auto promise = std::move(promises.front());
-  promises.pop_front();
-  return promise;
-}
-
-PendingBufferMapPromise WebGPUChild::DequeueBufferMapPromise(RawId id) {
-  auto& promises_map = mPendingBufferMapPromises;
-  const auto& it = promises_map.find(id);
-  MOZ_RELEASE_ASSERT(it != promises_map.end());
-
-  auto& promises = it->second;
-  MOZ_RELEASE_ASSERT(!promises.empty());
-  auto promise = std::move(promises.front());
-  promises.pop_front();
-
-  if (promises.empty()) {
-    promises_map.erase(it);
-  }
-  return promise;
-}
-
-RefPtr<dom::Promise> WebGPUChild::DequeueOnSubmittedWorkDonePromise(RawId id) {
-  auto& promises_map = mPendingOnSubmittedWorkDonePromises;
-  const auto& it = promises_map.find(id);
-  MOZ_RELEASE_ASSERT(it != promises_map.end());
-
-  auto& promises = it->second;
-  MOZ_RELEASE_ASSERT(!promises.empty());
-  auto promise = std::move(promises.front());
-  promises.pop_front();
-
-  if (promises.empty()) {
-    promises_map.erase(it);
-  }
-  return promise;
-}
-
 void WebGPUChild::ActorDestroy(ActorDestroyReason) { ClearActorState(); }
 
 void WebGPUChild::ClearActorState() {
-  // The following code sections dispatch runnables that resolve/reject
-  // promises.
-  //
-  // There are a few reasons why we defer promise resolution:
-  //
-  //  - this function can be indirectly called by `ScheduledFlushQueuedMessages`
-  // which is a runnable that should not enter the JS runtime; see docs of
-  // `nsContentUtils::RunInStableState`,
-  //  - if the thread is shutting down we can no longer resolve the promises;
-  //  `NS_DispatchToCurrentThread` will return an error in this case that we
-  //  ignore,
-  //  - it avoids reentrancy issues (ex: invalidating the iterators below).
+  // All following code sections resolve/reject promises immediately. JS code
+  // can perform further calls that add more promises to data structures, so
+  // all code sections below should not use iterators!
 
-  // Resolve the promise with null since the WebGPUChild has been destroyed.
-  {
-    for (auto& pending_promise : mPendingRequestAdapterPromises) {
-      promise::MaybeResolveWithNull(std::move(pending_promise.promise));
+  // Make sure we resolve/reject all pending promises; even the ones that get
+  // enqueued immediately by JS code that gets to run as a result of a promise
+  // we just resolved/rejected.
+  while (true) {
+    // Resolve the promise with null since the WebGPUChild has been destroyed.
+    if (!mPendingRequestAdapterPromises.empty()) {
+      auto pending_promise = std::move(mPendingRequestAdapterPromises.front());
+      mPendingRequestAdapterPromises.pop_front();
+
+      pending_promise.promise->MaybeResolve(JS::NullHandleValue);
     }
-    mPendingRequestAdapterPromises.clear();
-  }
+    // Pretend this worked but return a lost device, per spec.
+    else if (!mPendingRequestDevicePromises.empty()) {
+      auto pending_promise = std::move(mPendingRequestDevicePromises.front());
+      mPendingRequestDevicePromises.pop_front();
 
-  // Pretend this worked but return a lost device, per spec.
-  {
-    for (auto& pending_promise : mPendingRequestDevicePromises) {
       RefPtr<Device> device =
           new Device(pending_promise.adapter, pending_promise.device_id,
                      pending_promise.queue_id, pending_promise.features,
@@ -580,99 +481,102 @@ void WebGPUChild::ClearActorState() {
       device->SetLabel(pending_promise.label);
       device->ResolveLost(dom::GPUDeviceLostReason::Unknown,
                           u"WebGPUChild destroyed"_ns);
-      promise::MaybeResolve(std::move(pending_promise.promise),
-                            std::move(device));
+      pending_promise.promise->MaybeResolve(device);
     }
-    mPendingRequestDevicePromises.clear();
-  }
-
-  // Resolve all promises that were pending due to `device.destroy()` being
-  // called.
-  {
-    for (auto& pending_promise_entry : mPendingDeviceLostPromises) {
-      auto pending_promise = std::move(pending_promise_entry.second);
+    // Resolve all promises that were pending due to `device.destroy()` being
+    // called.
+    else if (!mPendingDeviceLostPromises.empty()) {
+      auto pending_promise_entry = mPendingDeviceLostPromises.begin();
+      auto pending_promise = std::move(pending_promise_entry->second);
+      mPendingDeviceLostPromises.erase(pending_promise_entry->first);
 
       RefPtr<DeviceLostInfo> info = new DeviceLostInfo(
           pending_promise->GetParentObject(),
           dom::GPUDeviceLostReason::Destroyed, u"Device destroyed"_ns);
-      promise::MaybeResolve(std::move(pending_promise), std::move(info));
+      pending_promise->MaybeResolve(info);
     }
-    mPendingDeviceLostPromises.clear();
-  }
-
-  // Empty device map and resolve all lost promises with an "unknown" reason.
-  {
-    for (auto& device_map_entry : mDeviceMap) {
-      RefPtr<Device> device = device_map_entry.second.get();
+    // Empty device map and resolve all lost promises with an "unknown" reason.
+    else if (!mDeviceMap.empty()) {
+      auto device_map_entry = mDeviceMap.begin();
+      RefPtr<Device> device = device_map_entry->second.get();
+      mDeviceMap.erase(device_map_entry->first);
 
       if (device) {
         device->ResolveLost(dom::GPUDeviceLostReason::Unknown,
                             u"WebGPUChild destroyed"_ns);
       }
     }
-    mDeviceMap.clear();
-  }
+    // Pretend this worked and there is no error, per spec.
+    else if (!mPendingPopErrorScopePromises.empty()) {
+      auto pending_promise = std::move(mPendingPopErrorScopePromises.front());
+      mPendingPopErrorScopePromises.pop_front();
 
-  // Pretend this worked and there is no error, per spec.
-  {
-    for (auto& pending_promise : mPendingPopErrorScopePromises) {
-      promise::MaybeResolveWithNull(std::move(pending_promise.promise));
+      pending_promise.promise->MaybeResolve(JS::NullHandleValue);
     }
-    mPendingPopErrorScopePromises.clear();
-  }
+    // Pretend this worked, per spec; see "Listen for timeline event".
+    else if (!mPendingCreatePipelinePromises.empty()) {
+      auto pending_promise = std::move(mPendingCreatePipelinePromises.front());
+      mPendingCreatePipelinePromises.pop_front();
 
-  // Pretend this worked, per spec; see "Listen for timeline event".
-  {
-    for (auto& pending_promise : mPendingCreatePipelinePromises) {
       if (pending_promise.is_render_pipeline) {
         RefPtr<RenderPipeline> object = new RenderPipeline(
             pending_promise.device, pending_promise.pipeline_id);
         object->SetLabel(pending_promise.label);
-        promise::MaybeResolve(std::move(pending_promise.promise),
-                              std::move(object));
+        pending_promise.promise->MaybeResolve(object);
       } else {
         RefPtr<ComputePipeline> object = new ComputePipeline(
             pending_promise.device, pending_promise.pipeline_id);
         object->SetLabel(pending_promise.label);
-        promise::MaybeResolve(std::move(pending_promise.promise),
-                              std::move(object));
+        pending_promise.promise->MaybeResolve(object);
       }
     }
-    mPendingCreatePipelinePromises.clear();
-  }
+    // Pretend this worked, per spec; see "Listen for timeline event".
+    else if (!mPendingCreateShaderModulePromises.empty()) {
+      auto pending_promise =
+          std::move(mPendingCreateShaderModulePromises.front());
+      mPendingCreateShaderModulePromises.pop_front();
 
-  // Pretend this worked, per spec; see "Listen for timeline event".
-  {
-    for (auto& pending_promise : mPendingCreateShaderModulePromises) {
       nsTArray<WebGPUCompilationMessage> messages;
       RefPtr<CompilationInfo> infoObject(
           new CompilationInfo(pending_promise.device));
       infoObject->SetMessages(messages);
-      promise::MaybeResolve(std::move(pending_promise.promise),
-                            std::move(infoObject));
+      pending_promise.promise->MaybeResolve(infoObject);
     }
-    mPendingCreateShaderModulePromises.clear();
-  }
-
-  // Reject the promise as if unmap() has been called, per spec.
-  {
-    for (auto& pending_promises : mPendingBufferMapPromises) {
-      for (auto& pending_promise : pending_promises.second) {
-        pending_promise.buffer->RejectMapRequestWithAbortError(
-            pending_promise.promise);
+    // Reject the promise as if unmap() has been called, per spec.
+    else if (!mPendingBufferMapPromises.empty()) {
+      auto pending_promises = mPendingBufferMapPromises.begin();
+      auto pending_promise = std::move(pending_promises->second.front());
+      pending_promises->second.pop_front();
+      if (pending_promises->second.empty()) {
+        mPendingBufferMapPromises.erase(pending_promises->first);
       }
-    }
-    mPendingBufferMapPromises.clear();
-  }
 
-  // Pretend this worked, per spec; see "Listen for timeline event".
-  {
-    for (auto& pending_promises : mPendingOnSubmittedWorkDonePromises) {
-      for (auto& pending_promise : pending_promises.second) {
-        promise::MaybeResolveWithUndefined(std::move(pending_promise));
+      // Unmap might have been called.
+      if (pending_promise.promise->State() !=
+          dom::Promise::PromiseState::Pending) {
+        continue;
       }
+      pending_promise.buffer->RejectMapRequestWithAbortError(
+          pending_promise.promise);
     }
-    mPendingOnSubmittedWorkDonePromises.clear();
+    // Pretend this worked, per spec; see "Listen for timeline event".
+    else if (auto it = mPendingOnSubmittedWorkDonePromises.begin();
+             it != mPendingOnSubmittedWorkDonePromises.end()) {
+      auto& pending_promises = it->second;
+      MOZ_ASSERT(!pending_promises.empty(),
+                 "Empty queues should have been removed from the map");
+
+      auto pending_promise = std::move(pending_promises.front());
+      pending_promises.pop_front();
+
+      if (pending_promises.empty()) {
+        mPendingOnSubmittedWorkDonePromises.erase(it);
+      }
+
+      pending_promise->MaybeResolveWithUndefined();
+    } else {
+      break;
+    }
   }
 }
 

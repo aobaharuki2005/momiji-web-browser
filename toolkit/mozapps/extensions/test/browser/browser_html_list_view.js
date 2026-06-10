@@ -321,12 +321,10 @@ add_task(async function testMouseSupport() {
   let panel = card.querySelector("panel-list");
 
   ok(!panel.open, "The panel is initially closed");
-  EventUtils.synthesizeMouseAtCenter(
-    AboutAddonsTestUtils.getAddonCardMoreOptionsButton(win, {
-      addonCard: card,
-    }),
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "addon-card[addon-id$='@mochi.test'] button[action='more-options']",
     { type: "mousedown" },
-    win
+    win.docShell.browsingContext
   );
   ok(panel.open, "The panel is now open");
 
@@ -363,10 +361,7 @@ add_task(async function testKeyboardSupport() {
   is(card.addon.id, "test@mochi.test", "The right card is found");
 
   // Focus the more options menu button.
-  let moreOptionsButton = AboutAddonsTestUtils.getAddonCardMoreOptionsButton(
-    win,
-    { addonCard: card }
-  );
+  let moreOptionsButton = card.querySelector('[action="more-options"]');
   moreOptionsButton.focus();
   isFocused(moreOptionsButton, "The more options button is focused");
 
@@ -744,10 +739,7 @@ add_task(async function testSideloadRemoveButton() {
   let card = getCardByAddonId(doc, id);
 
   let moreOptionsPanel = card.querySelector("panel-list");
-  let moreOptionsButton = AboutAddonsTestUtils.getAddonCardMoreOptionsButton(
-    win,
-    { addonCard: card }
-  );
+  let moreOptionsButton = card.querySelector('[action="more-options"]');
   let panelOpened = BrowserTestUtils.waitForEvent(moreOptionsPanel, "shown");
   EventUtils.synthesizeMouseAtCenter(moreOptionsButton, {}, win);
   await panelOpened;
@@ -757,16 +749,18 @@ add_task(async function testSideloadRemoveButton() {
   ok(removeButton.disabled, "Remove is disabled");
   ok(!removeButton.hidden, "Remove is visible");
 
-  // Verify it cannot be uninstalled even if the remove button is somehow
-  // enabled (regression test for bug 1658768). When disabled, the click
-  // would trivially not register, so we temporarily enable the button.
-  removeButton.disabled = false;
+  // Remove but cancel.
   let prevented = BrowserTestUtils.waitForEvent(card, "remove-disabled");
+  // We intentionally turn off this a11y check, because the following click
+  // is purposefully targeting a disabled control to confirm the click event
+  // won't come through. It is not meant to be interactive and is not expected
+  // to be accessible, therefore the rule check shall be ignored by a11y_checks.
+  AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
   removeButton.click();
+  AccessibilityUtils.resetEnv();
   await prevented;
-  removeButton.disabled = true;
 
-  // Reopen the panel.
+  // reopen the panel
   panelOpened = BrowserTestUtils.waitForEvent(moreOptionsPanel, "shown");
   EventUtils.synthesizeMouseAtCenter(moreOptionsButton, {}, win);
   await panelOpened;
@@ -969,9 +963,7 @@ add_task(async function testDisabledDimming() {
 
   const normalize = val => Math.floor(val * 10);
   const getOpacity = card => {
-    let { opacity } = card.documentGlobal.getComputedStyle(
-      card.firstElementChild
-    );
+    let { opacity } = card.ownerGlobal.getComputedStyle(card.firstElementChild);
     return normalize(opacity);
   };
   const checkOpacity = (card, expected, msg) => {

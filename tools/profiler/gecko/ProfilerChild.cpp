@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -394,7 +396,7 @@ void ProfilerChild::GatherProfileThreadFunction(
                           len);
                       if (parameters->profilerChild->AllocShmem(
                               message.Length() + 1, &shmem)) {
-                        strcpy(shmem.get<char>(), message.get());
+                        strcpy(shmem.get<char>(), message.Data());
                       }
                     }
                   } else {
@@ -405,7 +407,7 @@ void ProfilerChild::GatherProfileThreadFunction(
                         size_t(UINT32_MAX));
                     if (parameters->profilerChild->AllocShmem(
                             message.Length() + 1, &shmem)) {
-                      strcpy(shmem.get<char>(), message.get());
+                      strcpy(shmem.get<char>(), message.Data());
                     }
                   }
                   writer = nullptr;
@@ -419,7 +421,7 @@ void ProfilerChild::GatherProfileThreadFunction(
                       failure ? ", failure: " : "", failure ? failure : "");
                   if (parameters->profilerChild->AllocShmem(
                           message.Length() + 1, &shmem)) {
-                    strcpy(shmem.get<char>(), message.get());
+                    strcpy(shmem.get<char>(), message.Data());
                   }
                 }
 

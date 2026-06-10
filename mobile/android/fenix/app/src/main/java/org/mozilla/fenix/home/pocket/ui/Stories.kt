@@ -54,7 +54,6 @@ import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.ui.HomepageTestTag.HOMEPAGE_SPONSORED_STORY
 import org.mozilla.fenix.home.ui.HomepageTestTag.HOMEPAGE_STORY
-import org.mozilla.fenix.home.ui.HomepageTestTag.POCKET_STORIES
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.roundToInt
 
@@ -170,7 +169,7 @@ fun ContentRecommendationStory(
 fun Stories(
     @PreviewParameter(StoryProvider::class) stories: List<PocketStory>,
     contentPadding: Dp,
-    backgroundColor: Color = MaterialTheme.colorScheme.surfaceBright,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
     onStoryShown: (PocketStory, Triple<Int, Int, Int>) -> Unit,
     onStoryClicked: (PocketStory, Triple<Int, Int, Int>) -> Unit,
 ) {
@@ -181,7 +180,7 @@ fun Stories(
             .padding(start = contentPadding, end = contentPadding)
             .semantics {
                 testTagsAsResourceId = true
-                testTag = POCKET_STORIES
+                testTag = "pocket.stories"
             },
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

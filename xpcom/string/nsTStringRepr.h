@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -144,13 +146,8 @@ class nsTStringRepr {
   typedef StringClassFlags ClassFlags;
   typedef nsTStringLengthStorage<T> LengthStorage;
 
-  nsTStringRepr() = delete;  // Never instantiate directly
-
   // Reading iterators.
-  // You must not assume the returned value is null-terminated.
-  // If you need a null terminated string, use nsTString::get().
-  constexpr const_char_iterator BeginReading() const MOZ_LIFETIME_BOUND
-      MOZ_NON_TERMINATED_STRING {
+  constexpr const_char_iterator BeginReading() const MOZ_LIFETIME_BOUND {
     return mData;
   }
   constexpr const_char_iterator EndReading() const MOZ_LIFETIME_BOUND {
@@ -173,7 +170,7 @@ class nsTStringRepr {
   }
 
   const_char_iterator& BeginReading(const_char_iterator& aIter) const
-      MOZ_LIFETIME_BOUND MOZ_NON_TERMINATED_STRING {
+      MOZ_LIFETIME_BOUND {
     return aIter = mData;
   }
 
@@ -194,11 +191,8 @@ class nsTStringRepr {
   };
 #endif
 
-  // Returns a raw pointer to the start of the string's data.
-  // You must not assume the returned value is null-terminated.
-  // If you need a null terminated string, use nsTString::get().
-  constexpr typename raw_type<T, int>::type Data() const MOZ_LIFETIME_BOUND
-      MOZ_NON_TERMINATED_STRING {
+  // Returns pointer to string data (not necessarily null-terminated)
+  constexpr typename raw_type<T, int>::type Data() const MOZ_LIFETIME_BOUND {
     return mData;
   }
 
@@ -469,6 +463,8 @@ class nsTStringRepr {
   float ToFloatAllowTrailingChars(nsresult* aErrorCode) const;
 
  protected:
+  nsTStringRepr() = delete;  // Never instantiate directly
+
   constexpr nsTStringRepr(char_type* aData, size_type aLength,
                           DataFlags aDataFlags, ClassFlags aClassFlags)
       : mData(aData),

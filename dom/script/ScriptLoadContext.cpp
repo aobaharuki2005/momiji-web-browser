@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -31,7 +33,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ScriptLoadContext,
                                                 JS::loader::LoadContextBase)
-  tmp->MaybeCancelOffThreadScript();
+  MOZ_ASSERT(!tmp->mCompileOrDecodeTask);
   tmp->MaybeUnblockOnload();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mScriptElement);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -57,21 +59,19 @@ ScriptLoadContext::ScriptLoadContext(
       mIsNonAsyncScriptInserted(false),
       mIsXSLT(false),
       mInCompilingList(false),
+      mClassificationFlags({0, 0}),
       mWasCompiledOMT(false),
-      mIsPreload(false),
-      mUnreportedPreloadError(NS_OK),
       mLineNo(1),
       mColumnNo(0),
-      mClassificationFlags({0, 0}),
+      mIsPreload(false),
       mScriptElement(aScriptElement),
-      mSourceText(aSourceText) {}
+      mSourceText(aSourceText),
+      mUnreportedPreloadError(NS_OK) {}
 
 ScriptLoadContext::~ScriptLoadContext() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // A request can be abandoned after off-thread compilation completes but
-  // before execution steals the result.
-  MaybeCancelOffThreadScript();
+  // Off-thread parsing must have completed or cancelled by this point.
   MOZ_DIAGNOSTIC_ASSERT(!mCompileOrDecodeTask);
 
   mRequest = nullptr;

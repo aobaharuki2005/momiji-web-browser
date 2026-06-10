@@ -29,6 +29,7 @@ server.registerPathHandler(childFramePath, (request, response) => {
 });
 
 function childFrameScript() {
+  /* eslint-env mozilla/frame-script */
   "use strict";
 
   let { MockFilePicker } = ChromeUtils.importESModule(
@@ -36,7 +37,7 @@ function childFrameScript() {
   );
 
   function parentReady(message) {
-    MockFilePicker.init();
+    MockFilePicker.init(content.browsingContext);
     MockFilePicker.setFiles([message.data.file]);
     MockFilePicker.returnValue = MockFilePicker.returnOK;
 

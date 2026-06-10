@@ -13,9 +13,6 @@ import org.mozilla.focus.GleanMetrics.SearchWidget
 import org.mozilla.focus.activity.IntentReceiverActivity
 import java.util.Locale
 
-/**
- * Activity for handling voice search.
- */
 class VoiceSearchActivity : BaseVoiceSearchActivity() {
 
     override fun getCurrentLocale(): Locale {

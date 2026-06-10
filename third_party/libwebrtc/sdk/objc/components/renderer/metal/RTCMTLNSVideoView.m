@@ -24,7 +24,7 @@
 @end
 
 @implementation RTC_OBJC_TYPE (RTCMTLNSVideoView) {
-  id<RTC_OBJC_TYPE(RTCMTLRenderer)> _renderer;
+  id<RTCMTLRenderer> _renderer;
 }
 
 @synthesize delegate = _delegate;
@@ -51,11 +51,7 @@
 #pragma mark - Private
 
 + (BOOL)isMetalAvailable {
-    if(@available(macOS 10.11, *)) {
-        return [MTLCopyAllDevices() count] > 0;
-    } else {
-        return 0;
-    }
+  return [MTLCopyAllDevices() count] > 0;
 }
 
 - (void)configure {
@@ -68,7 +64,7 @@
     _metalView.framebufferOnly = YES;
     _metalView.delegate = self;
 
-    _renderer = [[RTC_OBJC_TYPE(RTCMTLI420Renderer) alloc] init];
+    _renderer = [[RTCMTLI420Renderer alloc] init];
     if (![(RTCMTLI420Renderer *)_renderer addRenderingDestination:_metalView]) {
       _renderer = nil;
     };

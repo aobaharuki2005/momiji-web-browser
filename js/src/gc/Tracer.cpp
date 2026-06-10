@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -67,15 +69,15 @@ void js::gc::TraceIncomingCCWs(JSTracer* trc,
       continue;
     }
     // Iterate over all compartments that |source| has wrappers for.
-    for (auto dest = source->wrappedObjectCompartments(); !dest.done();
-         dest.next()) {
+    for (Compartment::WrappedObjectCompartmentEnum dest(source); !dest.empty();
+         dest.popFront()) {
       if (!compartments.has(dest)) {
         continue;
       }
       // Iterate over all wrappers from |source| to |dest| compartments.
-      for (auto iter = source->objectWrapperMappingsTo(dest); !iter.done();
-           iter.next()) {
-        JSObject* obj = iter.get().key();
+      for (Compartment::ObjectWrapperEnum e(source, dest); !e.empty();
+           e.popFront()) {
+        JSObject* obj = e.front().key();
         MOZ_ASSERT(compartments.has(obj->compartment()));
         mozilla::DebugOnly<JSObject*> prior = obj;
         TraceManuallyBarrieredEdge(trc, &obj,
@@ -92,7 +94,7 @@ void js::gc::TraceIncomingCCWs(JSTracer* trc,
 // CC parlance, traverse -- a Shape. The CC does not care about Shapes,
 // BaseShapes or PropMaps themselves, only things held live by them that can
 // participate in cycles.
-void gc::TraceCycleCollectorChildren(JSTracer* trc, Shape* shape) {
+void gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape) {
   shape->base()->traceChildren(trc);
 
   // TODO: Trace symbols reachable from |shape|. Shapes can entrain symbols via

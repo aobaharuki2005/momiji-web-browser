@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,7 +13,6 @@ ChromeUtils.defineESModuleGetters(this, {
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
   OriginControls: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   ViewPopup: "resource:///modules/ExtensionPopups.sys.mjs",
-  isGloballyBlockingOpenPopup: "resource:///modules/ExtensionPopups.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -48,10 +49,11 @@ function actionWidgetId(widgetId) {
 class BrowserAction extends BrowserActionBase {
   constructor(extension, buttonDelegate) {
     let tabContext = new TabContext(target => {
-      if (ChromeUtils.getClassName(target) == "Window") {
+      let window = target.ownerGlobal;
+      if (target === window) {
         return this.getContextData(null);
       }
-      return tabContext.get(target.documentGlobal);
+      return tabContext.get(window);
     });
     super(tabContext, extension);
     this.buttonDelegate = buttonDelegate;
@@ -59,10 +61,9 @@ class BrowserAction extends BrowserActionBase {
 
   updateOnChange(target) {
     if (target) {
-      if (ChromeUtils.getClassName(target) == "Window") {
-        this.buttonDelegate.updateWindow(target);
-      } else if (target.selected) {
-        this.buttonDelegate.updateWindow(target.documentGlobal);
+      let window = target.ownerGlobal;
+      if (target === window || target.selected) {
+        this.buttonDelegate.updateWindow(window);
       }
     } else {
       for (let window of windowTracker.browserWindows()) {
@@ -87,24 +88,6 @@ class BrowserAction extends BrowserActionBase {
 
   dispatchClick(tab, clickInfo) {
     this.buttonDelegate.emit("click", tab, clickInfo);
-  }
-
-  isPanelShownBlockingOpenPopup(window) {
-    const widget = this.buttonDelegate.widget;
-    if (!widget) {
-      return false;
-    }
-    if (window.gUnifiedExtensions.isPanelOpen()) {
-      // This covers buttons that are part of the panel, and also covers the
-      // scenario when the user is interacting with the Extensions Panel (not
-      // specific to browserActions).
-      return true;
-    }
-    if (isGloballyBlockingOpenPopup(window)) {
-      return true;
-    }
-    return window.document.getElementById(this.buttonDelegate.buttonViewId)
-      ?.open;
   }
 }
 
@@ -135,7 +118,6 @@ this.browserAction = class extends ExtensionAPIPersistent {
     let widgetId = makeWidgetId(extension.id);
     this.id = actionWidgetId(widgetId);
     this.viewId = `PanelUI-webext-${widgetId}-BAV`;
-    this.buttonViewId = `${widgetId}-BAP`;
     this.widget = null;
 
     this.pendingPopup = null;
@@ -192,6 +174,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
   build() {
     let { extension } = this;
+    let widgetId = makeWidgetId(extension.id);
     let widget = CustomizableUI.createWidget({
       id: this.id,
       viewId: this.viewId,
@@ -210,9 +193,10 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
       // Build a custom widget that looks like a `unified-extensions-item`
       // custom element.
-      onBuild: document => {
+      onBuild(document) {
+        let viewId = widgetId + "-BAP";
         let button = document.createXULElement("toolbarbutton");
-        button.setAttribute("id", this.buttonViewId);
+        button.setAttribute("id", viewId);
         // Ensure the extension context menuitems are available by setting this
         // on all button children and the item.
         button.setAttribute("data-extensionid", extension.id);
@@ -282,7 +266,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
           "toolbaritem-combined-buttons",
           "unified-extensions-item"
         );
-        node.setAttribute("view-button-id", this.buttonViewId);
+        node.setAttribute("view-button-id", viewId);
         node.setAttribute("data-extensionid", extension.id);
 
         let rowWrapper = document.createXULElement("box");
@@ -501,15 +485,10 @@ this.browserAction = class extends ExtensionAPIPersistent {
       return;
     }
 
-    if (Services.focus.activeWindow !== window) {
-      // We should not get here - action.openPopup() should enforce that the
-      // window is not focused, and other callers are in response to user
-      // interaction.
-      this.extension.logger.warn(
-        "Refused to open action popup for non-focused window"
-      );
-      return;
-    }
+    // We want to focus hidden or minimized windows (both for the API, and to
+    // avoid an issue where showing the popup in a non-focused window
+    // immediately triggers a popuphidden event)
+    window.focus();
 
     const toolbarButton = widgetForWindow.node.querySelector(
       ".unified-extensions-item-action-button"
@@ -576,7 +555,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
    * @param {Event} event
    */
   handleMenuButtonEvent(event) {
-    let window = event.target.documentGlobal;
+    let window = event.target.ownerGlobal;
     let { node } = window.gBrowser && this.widget.forWindow(window);
     let messageDeck = node?.querySelector(
       ".unified-extensions-item-message-deck"
@@ -606,7 +585,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
   handleEvent(event) {
     // This button is the action/primary button in the custom widget.
     let button = event.target;
-    let window = button.documentGlobal;
+    let window = button.ownerGlobal;
 
     switch (event.type) {
       case "mousedown":
@@ -852,7 +831,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
     let policy = WebExtensionPolicy.getByID(this.extension.id);
     let messages = OriginControls.getStateMessageIDs({
       policy,
-      tab: node.documentGlobal.gBrowser.selectedTab,
+      tab: node.ownerGlobal.gBrowser.selectedTab,
       isAction: true,
       hasPopup: !!tabData.popup,
     });
@@ -929,7 +908,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
     if (sync) {
       callback();
     } else {
-      node.documentGlobal.requestAnimationFrame(callback);
+      node.ownerGlobal.requestAnimationFrame(callback);
     }
   }
 
@@ -1107,20 +1086,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
               ? windowTracker.getWindow(options.windowId, context)
               : windowTracker.getTopNormalWindow(context);
 
-          if (
-            // Ideally this should match the windows.Window.focused definition,
-            // which uses document.hasFocus(), but for some reason hasFocus()
-            // can be false despite the window being focused. This was observed
-            // while running test_ext_action_openPopup_multiple.html with
-            // --tag=in-process-webextensions.
-            Services.focus.activeWindow !== window ||
-            window.windowState === window.STATE_MINIMIZED
-          ) {
-            throw new ExtensionError(BrowserActionBase.ERROR_WIN_NOT_FOCUSED);
-          }
-
-          if (action.getPopupUrl(window.gBrowser.selectedTab, true)) {
-            action.throwIfOpenPopupIsBlockedByAnyAction(window);
+          if (this.action.getPopupUrl(window.gBrowser.selectedTab, true)) {
             await this.openPopup(window, !isHandlingUserInput);
           }
         },

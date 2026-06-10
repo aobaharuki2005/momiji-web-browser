@@ -1,1 +1,2 @@
-windows_link::link!("kernel32.dll" "system" fn CeipIsOptedIn() -> windows_sys::core::BOOL);
+#[cfg(feature = "Win32_Foundation")]
+::windows_targets::link!("kernel32.dll" "system" #[doc = "Required features: `\"Win32_Foundation\"`"] fn CeipIsOptedIn() -> super::super::super::Foundation:: BOOL);

@@ -22,14 +22,10 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.locale.LocaleUseCases
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentLocaleSettingsBinding
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
 
-/**
- * Settings screen allowing users to change the locale used inside the application.
- */
-class LocaleSettingsFragment : Fragment(), MenuProvider, SystemInsetsPaddedFragment {
+class LocaleSettingsFragment : Fragment(), MenuProvider {
 
     private lateinit var localeSettingsStore: LocaleSettingsStore
     private lateinit var interactor: LocaleSettingsInteractor

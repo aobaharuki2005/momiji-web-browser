@@ -16,7 +16,6 @@ const EXPECTED_VALUES_FILE =
   "browser_webconsole_object_inspector_entries.snapshot.mjs";
 
 add_task(async function () {
-  await pushPref("dom.event.dragexit.enabled", true);
   // nsHttpServer does not support https
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   const hud = await openNewTabAndConsole("http://example.com");
@@ -77,14 +76,7 @@ add_task(async function () {
 
         // Generate a human-friendly representation of the state of the object inspector
         for (const node of oi.querySelectorAll(".tree-node")) {
-          let label = node.textContent.replace(/\u200B/g, "");
-
-          // Fix for the lastModified property of `new Document()` which gives the
-          // current time.
-          label = label.replace(
-            /lastModified: "[^"]*"/,
-            'lastModified: "<removed-for-test>"'
-          );
+          const label = node.textContent.replace(/\u200B/g, "");
 
           let icon = "\u251C "; // "|-" character
           if (isObjectInspectorNodeExpandable(node)) {
@@ -112,7 +104,6 @@ add_task(async function () {
       // If this is a primitive data type, there won't be an object inspector,
       // but only a simple Rep that we can only stringify.
       const object = messageNode.querySelectorAll(".message-body > *")[1];
-
       return object.textContent;
     }
   );

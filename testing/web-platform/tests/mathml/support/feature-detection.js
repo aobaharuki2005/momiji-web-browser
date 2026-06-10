@@ -3,11 +3,6 @@
 
 var MathMLFeatureDetection = {
 
-    "has_a": function() {
-        // FIXME: Improve feature detection.
-        return this.has_mrow();
-    },
-
     "has_annotation": function() {
         // FIXME: Improve feature detection.
         return this.has_mspace();

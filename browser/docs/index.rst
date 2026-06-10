@@ -2,12 +2,11 @@
 Firefox Front-end
 =================
 
-This is the documentation for the code powering the Firefox Desktop front-end.
+This is the nascent documentation of the Firefox front-end code.
 
 .. toctree::
    :maxdepth: 2
 
-   how_to/index
    urlbar/index
    BrowserUsageTelemetry
    FrontendCodeReviewBestPractices
@@ -28,6 +27,7 @@ This is the documentation for the code powering the Firefox Desktop front-end.
    places/index
    components/asrouter/docs/index
    search/index
+   ipprotection/index
    base/tabbrowser/index
    touchbar/index
    components/uitour/docs/index
@@ -39,6 +39,7 @@ This is the documentation for the code powering the Firefox Desktop front-end.
    components/storybook/docs/README.xul-and-html.stories
    components/storybook/docs/README.figma-code-connect.stories
    /toolkit/themes/shared/design-system/docs/README.design-tokens.stories
+   /toolkit/themes/shared/design-system/docs/README.json-design-tokens.stories
    components/backup/docs/index
    components/sidebar/docs/index
    components/mozcachedohttp/docs/index

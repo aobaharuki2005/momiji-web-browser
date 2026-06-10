@@ -4,35 +4,35 @@
 
 package org.mozilla.fenix.settings.about
 
-import io.mockk.mockk
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import mozilla.components.support.test.any
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.inOrder
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoMoreInteractions
 
 class SecretDebugMenuTriggerTest {
 
-    private lateinit var logoClicks: MutableList<Int>
-    private var debugMenuWasActivated: Boolean = false
+    private lateinit var onLogoClicked: (Int) -> Unit
+    private lateinit var onDebugMenuActivated: () -> Unit
     private lateinit var trigger: SecretDebugMenuTrigger
 
     @Before
     fun setup() {
-        logoClicks = mutableListOf()
-        debugMenuWasActivated = false
-
-        trigger = SecretDebugMenuTrigger(
-            onLogoClicked = { remaining -> logoClicks.add(remaining) },
-            onDebugMenuActivated = { debugMenuWasActivated = true },
-        )
+        onLogoClicked = mock()
+        onDebugMenuActivated = mock()
+        trigger = SecretDebugMenuTrigger(onLogoClicked, onDebugMenuActivated)
     }
 
     @Test
     fun `first click does not do anything`() {
         trigger.onClick() // 1 click
 
-        assertTrue(logoClicks.isEmpty())
-        assertEquals(false, debugMenuWasActivated)
+        verify(onLogoClicked, never()).invoke(any())
+        verify(onDebugMenuActivated, never()).invoke()
     }
 
     @Test
@@ -42,8 +42,11 @@ class SecretDebugMenuTriggerTest {
         trigger.onClick() // 3 clicks
         trigger.onClick() // 4 clicks
 
-        assertEquals(listOf(3, 2, 1), logoClicks)
-        assertEquals(false, debugMenuWasActivated)
+        verify(onLogoClicked).invoke(3)
+        verify(onLogoClicked).invoke(2)
+        verify(onLogoClicked).invoke(1)
+
+        verify(onDebugMenuActivated, never()).invoke()
     }
 
     @Test
@@ -54,8 +57,12 @@ class SecretDebugMenuTriggerTest {
         trigger.onClick() // 4 clicks
         trigger.onClick() // 5 clicks
 
-        assertEquals(listOf(3, 2, 1), logoClicks)
-        assertEquals(true, debugMenuWasActivated)
+        val orderVerifier = inOrder(onLogoClicked, onDebugMenuActivated)
+
+        orderVerifier.verify(onLogoClicked).invoke(3)
+        orderVerifier.verify(onLogoClicked).invoke(2)
+        orderVerifier.verify(onLogoClicked).invoke(1)
+        orderVerifier.verify(onDebugMenuActivated).invoke()
     }
 
     @Test
@@ -68,8 +75,12 @@ class SecretDebugMenuTriggerTest {
         trigger.onClick() // 6 clicks
         trigger.onClick() // 7 clicks
 
-        assertEquals(listOf(3, 2, 1), logoClicks)
-        assertEquals(true, debugMenuWasActivated)
+        val orderVerifier = inOrder(onLogoClicked, onDebugMenuActivated)
+
+        orderVerifier.verify(onLogoClicked).invoke(3)
+        orderVerifier.verify(onLogoClicked).invoke(2)
+        orderVerifier.verify(onLogoClicked).invoke(1)
+        orderVerifier.verify(onDebugMenuActivated, times(1)).invoke()
     }
 
     @Test
@@ -78,20 +89,15 @@ class SecretDebugMenuTriggerTest {
         trigger.onClick() // 2 clicks
         trigger.onClick() // 3 clicks
 
-        assertEquals(2, logoClicks.size)
+        val orderVerifier = inOrder(onLogoClicked, onDebugMenuActivated)
 
-        trigger.onResume(mockk()) // Reset the counter
+        orderVerifier.verify(onLogoClicked).invoke(3)
+        orderVerifier.verify(onLogoClicked).invoke(2)
 
-        logoClicks.clear()
-        debugMenuWasActivated = false
+        trigger.onResume(mock()) // Reset the counter
 
-        // First click after reset should not trigger anything
-        trigger.onClick()
-        assertTrue(logoClicks.isEmpty())
-        assertEquals(false, debugMenuWasActivated)
+        trigger.onClick() // 1 click after reset
 
-        repeat(4) { trigger.onClick() }
-        assertEquals(listOf(3, 2, 1), logoClicks)
-        assertEquals(true, debugMenuWasActivated)
+        verifyNoMoreInteractions(onLogoClicked)
     }
 }

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,7 +21,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/SVGImageContext.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_image.h"
@@ -42,6 +43,7 @@
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "nsCOMPtr.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsCSSRendering.h"
 #include "nsContentUtils.h"
 #include "nsFontMetrics.h"
@@ -212,7 +214,7 @@ class BrokenImageIcon final : public imgINotificationObserver {
  private:
   static BrokenImageIcon& Get(const nsImageFrame& aFrame) {
     if (!gSingleton) {
-      gSingleton = MakeRefPtr<BrokenImageIcon>(aFrame);
+      gSingleton = new BrokenImageIcon(aFrame);
     }
     return *gSingleton;
   }
@@ -725,7 +727,7 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   nsAtomicContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  mListener = MakeRefPtr<nsImageListener>(this);
+  mListener = new nsImageListener(this);
 
   GetImageMap();  // Ensure to init the image map asap. This is important to
                   // make <area> elements focusable.
@@ -971,7 +973,7 @@ Maybe<nsSize> nsImageFrame::GetViewTransitionBorderBoxSize() const {
   if (NS_WARN_IF(!vt)) {
     return {};
   }
-  return Style()->GetPseudoType() == PseudoStyleType::ViewTransitionOld
+  return Style()->GetPseudoType() == PseudoStyleType::viewTransitionOld
              ? vt->GetOldBorderBoxSize(name)
              : vt->GetNewBorderBoxSize(name);
 }
@@ -988,7 +990,7 @@ wr::ImageKey nsImageFrame::GetViewTransitionImageKey(
     return kNoKey;
   }
   const auto* key =
-      Style()->GetPseudoType() == PseudoStyleType::ViewTransitionOld
+      Style()->GetPseudoType() == PseudoStyleType::viewTransitionOld
           ? vt->ReadOldImageKey(name, aManager, aResources)
           : vt->GetNewImageKey(name);
   return key ? *key : kNoKey;
@@ -1558,18 +1560,22 @@ nscoord nsImageFrame::IntrinsicISize(const IntrinsicSizeInput& aInput,
 void nsImageFrame::ReflowChildren(nsPresContext* aPresContext,
                                   const ReflowInput& aReflowInput,
                                   const LogicalSize& aImageSize) {
-  const WritingMode wm = GetWritingMode();
   for (nsIFrame* child : mFrames) {
     ReflowOutput childDesiredSize(aReflowInput);
-    const WritingMode childWm = child->GetWritingMode();
-    ReflowInput childReflowInput(aPresContext, aReflowInput, child,
-                                 aImageSize.ConvertTo(childWm, wm));
-    LogicalPoint childOffset(wm);
-    const nsSize containerSize = aImageSize.GetPhysicalSize(wm);
+    WritingMode wm = GetWritingMode();
+    // Shouldn't be hard to support if we want, but why bother.
+    MOZ_ASSERT(
+        wm == child->GetWritingMode(),
+        "We don't expect mismatched writing-modes in content we control");
     nsReflowStatus childStatus;
+
+    LogicalPoint childOffset(wm);
+    ReflowInput childReflowInput(aPresContext, aReflowInput, child, aImageSize);
+    const nsSize containerSize = aImageSize.GetPhysicalSize(wm);
     ReflowChild(child, aPresContext, childDesiredSize, childReflowInput, wm,
                 childOffset, containerSize, ReflowChildFlags::Default,
                 childStatus);
+
     FinishReflowChild(child, aPresContext, childDesiredSize, &childReflowInput,
                       wm, childOffset, containerSize,
                       ReflowChildFlags::Default);
@@ -1616,14 +1622,9 @@ void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     currentRequest->GetImageStatus(&loadStatus);
   }
 
-  const bool haveSize = loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE;
-
-  // Printing an image frame in vertical writing mode is not properly supported
-  // yet (Bug 1751260). In this case, don't split it, and let the display-list
-  // slicing fallback (layout.display-list.improve-fragmentation) handle
-  // fragmentation.
-  if (aPresContext->IsPaginated() && !wm.IsVertical() &&
-      (haveSize || HasAnyStateBits(IMAGE_SIZECONSTRAINED)) &&
+  if (aPresContext->IsPaginated() &&
+      ((loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) ||
+       HasAnyStateBits(IMAGE_SIZECONSTRAINED)) &&
       NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableHeight() &&
       aMetrics.Height() > aReflowInput.AvailableHeight()) {
     // our desired height was greater than 0, so to avoid infinite
@@ -1636,6 +1637,9 @@ void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   aMetrics.SetOverflowAreasToDesiredBounds();
   const bool imageOK = mKind != Kind::ImageLoadingContent ||
                        ImageOk(mContent->AsElement()->State());
+
+  // Determine if the size is available
+  const bool haveSize = loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE;
   if (!imageOK || !haveSize) {
     nsRect altFeedbackSize(
         0, 0,
@@ -2253,9 +2257,9 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
 
   // Draw text
   if (!inner.IsEmpty()) {
-    auto textDrawer = MakeRefPtr<TextDrawTarget>(
-        aBuilder, aResources, aSc, aManager, aItem, inner,
-        /* aCallerDoesSaveRestore = */ true);
+    RefPtr<TextDrawTarget> textDrawer =
+        new TextDrawTarget(aBuilder, aResources, aSc, aManager, aItem, inner,
+                           /* aCallerDoesSaveRestore = */ true);
     MOZ_ASSERT(textDrawer->IsValid());
     if (textDrawer->IsValid()) {
       gfxContext captureCtx(textDrawer);
@@ -2375,7 +2379,7 @@ nsRect nsDisplayImage::GetDestRectViewTransition() const {
   nsSize borderBoxSize;
   Maybe<nsRect> activeRect;
 
-  if (image->Style()->GetPseudoType() == PseudoStyleType::ViewTransitionOld) {
+  if (image->Style()->GetPseudoType() == PseudoStyleType::viewTransitionOld) {
     inkOverflowRect = vt->GetOldInkOverflowRect(name).value();
     borderBoxSize = vt->GetOldBorderBoxSize(name).value();
     activeRect = vt->GetOldActiveRect(name);
@@ -2752,7 +2756,7 @@ bool nsImageFrame::ShouldDisplaySelection() {
 nsImageMap* nsImageFrame::GetImageMap() {
   if (!mImageMap) {
     if (nsIContent* map = GetMapElement()) {
-      mImageMap = MakeRefPtr<nsImageMap>();
+      mImageMap = new nsImageMap();
       mImageMap->Init(this, map);
     }
   }
@@ -2810,9 +2814,8 @@ bool nsImageFrame::IsLeafDynamic() const {
   return !shadow;
 }
 
-nsIContent* nsImageFrame::GetExplicitEventTargetContent(
-    const WidgetEvent* aEvent /* = nullptr */) const {
-  if (mImageMap && aEvent) {
+nsIContent* nsImageFrame::GetContentForEvent(const WidgetEvent* aEvent) const {
+  if (mImageMap) {
     // XXX We need to make this special check for area element's capturing the
     // mouse due to bug 135040. Remove it once that's fixed.
     nsIContent* capturingContent = aEvent->HasMouseEventMessage()
@@ -2827,7 +2830,7 @@ nsIContent* nsImageFrame::GetExplicitEventTargetContent(
       return area;
     }
   }
-  return nsIFrame::GetExplicitEventTargetContent(aEvent);
+  return nsIFrame::GetContentForEvent(aEvent);
 }
 
 // XXX what should clicks on transparent pixels do?
@@ -3030,7 +3033,7 @@ static bool IsInAutoWidthTableCellForQuirk(nsIFrame* aFrame) {
   }
   // Check if the parent of the closest nsBlockFrame has auto width.
   nsBlockFrame* ancestor = nsLayoutUtils::FindNearestBlockAncestor(aFrame);
-  if (ancestor->Style()->GetPseudoType() == PseudoStyleType::MozCellContent) {
+  if (ancestor->Style()->GetPseudoType() == PseudoStyleType::cellContent) {
     // Assume direct parent is a table cell frame.
     nsIFrame* grandAncestor = static_cast<nsIFrame*>(ancestor->GetParent());
     return grandAncestor &&

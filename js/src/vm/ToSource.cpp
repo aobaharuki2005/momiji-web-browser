@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -16,7 +18,6 @@
 #include "js/Class.h"               // ESClass
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/Object.h"              // JS::GetBuiltinClass
-#include "js/Prefs.h"               // JS::Prefs
 #include "js/Printer.h"             // QuoteString
 #include "js/Symbol.h"              // SymbolCode, JS::WellKnownSymbolLimit
 #include "js/TypeDecls.h"  // Rooted{Object, String, Value}, HandleValue, Latin1Char
@@ -158,24 +159,18 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
     }
 
     case JS::ValueType::Object: {
-      // Try the non-standard object.toSource() path first if the
-      // legacy_tosource_lookup pref is set or if we're in a realm that has the
-      // builtin toSource functions enabled (JS shell or browser chrome code).
+      RootedValue fval(cx);
       RootedObject obj(cx, &v.toObject());
-      if (JS::Prefs::legacy_tosource_lookup() ||
-          cx->realm()->creationOptions().getToSourceEnabled()) {
-        RootedValue fval(cx);
-        if (!GetProperty(cx, obj, obj, cx->names().toSource, &fval)) {
+      if (!GetProperty(cx, obj, obj, cx->names().toSource, &fval)) {
+        return nullptr;
+      }
+      if (IsCallable(fval)) {
+        RootedValue v(cx);
+        if (!js::Call(cx, fval, obj, &v)) {
           return nullptr;
         }
-        if (IsCallable(fval)) {
-          RootedValue v(cx);
-          if (!js::Call(cx, fval, obj, &v)) {
-            return nullptr;
-          }
 
-          return ToString<CanGC>(cx, v);
-        }
+        return ToString<CanGC>(cx, v);
       }
 
       ESClass cls;

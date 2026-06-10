@@ -7,15 +7,14 @@
 
 void AssertAssignmentChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
-      callExpr(callee(functionDecl(hasName("MOZ_AssertAssignmentTest"))),
-               anyOf(hasDescendant(cxxOperatorCallExpr(isAssignmentOperator())),
-                     hasDescendant(binaryOperator(isAssignmentOperator()))))
-          .bind("funcCall"),
-      this);
+      callExpr(isAssertAssignmentTestFunc()).bind("funcCall"), this);
 }
 
 void AssertAssignmentChecker::check(const MatchFinder::MatchResult &Result) {
   const CallExpr *FuncCall = Result.Nodes.getNodeAs<CallExpr>("funcCall");
-  diag(FuncCall->getBeginLoc(), "Forbidden assignment in assert expression",
-       DiagnosticIDs::Error);
+
+  if (FuncCall && hasSideEffectAssignment(FuncCall)) {
+    diag(FuncCall->getBeginLoc(), "Forbidden assignment in assert expression",
+         DiagnosticIDs::Error);
+  }
 }

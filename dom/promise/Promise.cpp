@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,7 +20,6 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
@@ -433,14 +434,7 @@ void Promise::MaybeResolve(JSContext* aCx, JS::Handle<JS::Value> aValue) {
   NS_ASSERT_OWNINGTHREAD(Promise);
 
   JS::Rooted<JSObject*> p(aCx, PromiseObj());
-#ifdef NIGHTLY_BUILD
-  const bool ok = p && (StaticPrefs::dom_promise_experimental_safe_resolve()
-                            ? JS::SafeResolve(aCx, p, aValue)
-                            : JS::ResolvePromise(aCx, p, aValue));
-#else
-  const bool ok = p && JS::ResolvePromise(aCx, p, aValue);
-#endif
-  if (!ok) {
+  if (!p || !JS::ResolvePromise(aCx, p, aValue)) {
     // Now what?  There's nothing sane to do here.
     JS_ClearPendingException(aCx);
   }
@@ -885,9 +879,8 @@ class PromiseWorkerProxyRunnable final : public WorkerThreadRunnable {
 
     // Here we convert the buffer to a JS::Value.
     JS::Rooted<JS::Value> value(aCx);
-    IgnoredErrorResult rv;
-    mPromiseWorkerProxy->Read(aCx, &value, rv);
-    if (rv.Failed()) {
+    if (!mPromiseWorkerProxy->Read(aCx, &value)) {
+      JS_ClearPendingException(aCx);
       return false;
     }
 
@@ -989,9 +982,8 @@ void PromiseWorkerProxy::RunCallback(JSContext* aCx,
   }
 
   // The |aValue| is written into the StructuredCloneHolderBase.
-  IgnoredErrorResult rv;
-  Write(aCx, aValue, rv);
-  if (rv.Failed()) {
+  if (!Write(aCx, aValue)) {
+    JS_ClearPendingException(aCx);
     MOZ_ASSERT(false,
                "cannot serialize the value with the StructuredCloneAlgorithm!");
   }

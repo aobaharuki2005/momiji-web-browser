@@ -450,7 +450,7 @@ impl<Expander: AsRef<LocaleExpander>> LocaleCanonicalizer<Expander> {
                         if modified.is_empty() {
                             modified = locale.id.variants.to_vec();
                         }
-                        #[expect(clippy::indexing_slicing)]
+                        #[allow(clippy::indexing_slicing)]
                         let _ = core::mem::replace(&mut modified[idx], updated);
                     }
                 }
@@ -589,7 +589,8 @@ mod test {
                     rule.variants.iter().map(Variant::as_str),
                 ),
                 result,
-                "{source}"
+                "{}",
+                source
             );
         }
     }

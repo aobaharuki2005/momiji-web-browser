@@ -33,8 +33,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PromptListener:
     "chrome://remote/content/shared/listeners/PromptListener.sys.mjs",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.sys.mjs",
-  SessionDataCategory:
-    "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
   SessionDataMethod:
     "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
   setDefaultAndAssertSerializationOptions:
@@ -44,8 +42,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/UserContextManager.sys.mjs",
   waitForInitialNavigationCompleted:
     "chrome://remote/content/shared/Navigate.sys.mjs",
-  waitForTopBrowsingContextToBeReady:
-    "chrome://remote/content/shared/BrowsingContextUtils.sys.mjs",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
   windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
@@ -148,7 +144,7 @@ const TIMEOUT_WAIT_FOR_VISIBILITY = 250;
  * @readonly
  * @enum {UserPromptType}
  */
-export const UserPromptType = {
+const UserPromptType = {
   alert: "alert",
   confirm: "confirm",
   prompt: "prompt",
@@ -212,7 +208,6 @@ class BrowsingContextModule extends RootBiDiModule {
   #navigationListener;
   #promptListener;
   #subscribedEvents;
-  #waitForContextCreatedEvent;
 
   /**
    * Create a new module instance.
@@ -258,13 +253,8 @@ class BrowsingContextModule extends RootBiDiModule {
     // Treat the event of moving a page to BFCache as context discarded event for iframes.
     this.messageHandler.on("windowglobal-pagehide", this.#onPageHideEvent);
 
-    // Maps browsers to a promise and resolver that is used to block the create method
-    // until configurations are applied.
+    // Maps browsers to a promise and resolver that is used to block the create method.
     this.#blockedCreateCommands = new WeakMap();
-
-    // Maps browsing contexts to a promise and resolver that is used to block the create method
-    // until "browsingContext.contextCreated" event is submitted.
-    this.#waitForContextCreatedEvent = new WeakMap();
   }
 
   destroy() {
@@ -297,8 +287,6 @@ class BrowsingContextModule extends RootBiDiModule {
     this.#subscribedEvents = null;
 
     this.messageHandler.off("windowglobal-pagehide", this.#onPageHideEvent);
-
-    this.#waitForContextCreatedEvent = new WeakMap();
   }
 
   /**
@@ -763,45 +751,18 @@ class BrowsingContextModule extends RootBiDiModule {
       this.#blockedCreateCommands.set(browser, blocker);
     }
 
-    const browsingContext = browser.browsingContext;
-    const sessionData =
-      this.messageHandler.sessionData.getSessionDataForContext(
-        "browsingContext",
-        "event",
-        browsingContext
-      );
-
-    const hasEventSubscriptionToContextCreated = sessionData.some(
-      item => item.value === "browsingContext.contextCreated"
-    );
-
-    let waitForContextCreatedEvent = Promise.withResolvers();
-
-    // If a client subscribed to "browsingContext.contextCreated" event,
-    // we have to wait for it to be submitted.
-    if (hasEventSubscriptionToContextCreated) {
-      if (!this.#waitForContextCreatedEvent.has(browsingContext)) {
-        this.#waitForContextCreatedEvent.set(
-          browsingContext,
-          Promise.withResolvers()
-        );
-      }
-      waitForContextCreatedEvent =
-        this.#waitForContextCreatedEvent.get(browsingContext);
-    } else {
-      waitForContextCreatedEvent.resolve();
-    }
     await Promise.all([
-      lazy.waitForInitialNavigationCompleted(browsingContext.webProgress, {
-        unloadTimeout: 5000,
-      }),
+      lazy.waitForInitialNavigationCompleted(
+        browser.browsingContext.webProgress,
+        {
+          unloadTimeout: 5000,
+        }
+      ),
       waitForVisibilityStatePromise,
       blocker.promise,
-      waitForContextCreatedEvent.promise,
     ]);
 
     this.#blockedCreateCommands.delete(browser);
-    this.#waitForContextCreatedEvent.delete(browsingContext);
 
     // The tab on Android is always opened in the foreground,
     // so we need to select the previous tab,
@@ -1610,20 +1571,12 @@ class BrowsingContextModule extends RootBiDiModule {
 
     // webProgress will be stable even if the context navigates, retrieve it
     // immediately before doing any asynchronous call.
-    const { webProgress } = context;
+    const webProgress = context.webProgress;
+
     return this.#awaitNavigation(
       webProgress,
       () => {
-        const { sessionHistory } = context;
-        const flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-
-        // Bug 2026546: As workaround use sessionHistory if available to avoid
-        // issues with frames.
-        if (sessionHistory?.count && sessionHistory?.index >= 0) {
-          sessionHistory.reload(flags);
-        } else {
-          context.reload(flags);
-        }
+        context.reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
       },
       { wait }
     );
@@ -1768,7 +1721,7 @@ class BrowsingContextModule extends RootBiDiModule {
           }
         );
         sessionDataItems.push({
-          category: lazy.SessionDataCategory.ViewportOverride,
+          category: "viewport-overrides",
           moduleName: "_configuration",
           values: [viewportOverride],
           contextDescriptor: {
@@ -1781,7 +1734,7 @@ class BrowsingContextModule extends RootBiDiModule {
     } else {
       for (const navigable of navigables) {
         sessionDataItems.push({
-          category: lazy.SessionDataCategory.ViewportOverride,
+          category: "viewport-overrides",
           moduleName: "_configuration",
           values: [viewportOverride],
           contextDescriptor: {
@@ -2084,17 +2037,6 @@ class BrowsingContextModule extends RootBiDiModule {
         return;
       }
 
-      // If `waitForTopBrowsingContextToBeReady` returns `null`,
-      // it means that the browsing context was discarded.
-      // Do not send an event in this case.
-      if (
-        !browsingContext.parent &&
-        (await lazy.waitForTopBrowsingContextToBeReady(browsingContext)) ===
-          null
-      ) {
-        return;
-      }
-
       const browsingContextInfo = getBrowsingContextInfo(browsingContext, {
         maxDepth: 0,
       });
@@ -2108,34 +2050,18 @@ class BrowsingContextModule extends RootBiDiModule {
       // This is an internal event is used by the script module
       // to ensure that "script.realmCreated" event is emitted
       // after "browsingContext.contextCreated".
-      this.emitEvent(
+      this.messageHandler.emitEvent(
         "browsingContext._contextCreatedEmitted",
         { browsingContext },
         browsingContextInfo
       );
-
-      if (!this.#waitForContextCreatedEvent.has(browsingContext)) {
-        this.#waitForContextCreatedEvent.set(
-          browsingContext,
-          Promise.withResolvers()
-        );
-      }
-
-      this.#waitForContextCreatedEvent.get(browsingContext).resolve();
     }
   };
 
   #onContextDiscarded = async (eventName, data = {}) => {
-    const { browsingContext, why } = data;
-
-    // In case the newly created browsing context got discarded immediately resolve pending promise.
-    if (this.#waitForContextCreatedEvent.has(browsingContext)) {
-      const waitForContextCreatedEvent =
-        this.#waitForContextCreatedEvent.get(browsingContext);
-      waitForContextCreatedEvent.resolve();
-    }
-
     if (this.#subscribedEvents.has("browsingContext.contextDestroyed")) {
+      const { browsingContext, why } = data;
+
       // Filter out top-level browsing contexts that are destroyed because of a
       // cross-group navigation.
       if (why === "replace") {
@@ -2278,11 +2204,14 @@ class BrowsingContextModule extends RootBiDiModule {
 
   #onPromptClosed = (eventName, data) => {
     if (this.#subscribedEvents.has("browsingContext.userPromptClosed")) {
-      const { detail } = data;
-      const { browsingContext } = detail;
-      const navigableId = lazy.NavigableManager.getIdForBrowsingContext(
-        detail.browsingContext
-      );
+      const { contentBrowser, detail } = data;
+      // TODO: Bug 2007385. Use only browsingContext from event details when the support for Android is added.
+      const browsingContext = lazy.AppInfo.isAndroid
+        ? contentBrowser.browsingContext
+        : detail.browsingContext;
+
+      const navigableId =
+        lazy.NavigableManager.getIdForBrowsingContext(browsingContext);
 
       if (navigableId === null) {
         return;
@@ -2311,8 +2240,14 @@ class BrowsingContextModule extends RootBiDiModule {
 
   #onPromptOpened = async (eventName, data) => {
     if (this.#subscribedEvents.has("browsingContext.userPromptOpened")) {
-      const { browsingContext, prompt, promptDetails } = data;
+      const { contentBrowser, prompt } = data;
       const type = prompt.promptType;
+
+      // TODO: Bug 2007385. We can remove this fallback
+      // when we have support for browsing context property on Android.
+      const browsingContext = lazy.AppInfo.isAndroid
+        ? contentBrowser.browsingContext
+        : data.browsingContext;
 
       prompt.getText().then(text => {
         // We need the text to identify a user prompt when it gets
@@ -2320,7 +2255,7 @@ class BrowsingContextModule extends RootBiDiModule {
         // retrieved lets delay the logging without making the handler async.
         lazy.logger.trace(
           `[${browsingContext.id}] Prompt opened (type: "${
-            type
+            prompt.promptType
           }", text: "${text}")`
         );
       });
@@ -2337,20 +2272,17 @@ class BrowsingContextModule extends RootBiDiModule {
       const session = lazy.getWebDriverSessionById(
         this.messageHandler.sessionId
       );
-      const handlerConfig = session.userPromptHandler.getPromptHandler(
-        type == "beforeunload" ? "beforeUnload" : type
-      );
-      const { defaultValue, message } = promptDetails;
+      const handlerConfig = session.userPromptHandler.getPromptHandler(type);
 
       const eventPayload = {
         context: navigableId,
         handler: handlerConfig.handler,
-        message,
+        message: await prompt.getText(),
         type,
       };
 
-      if (defaultValue !== null) {
-        eventPayload.defaultValue = defaultValue;
+      if (type === "prompt") {
+        eventPayload.defaultValue = await prompt.getInputText();
       }
 
       this.#emitContextEventForBrowsingContext(
@@ -2617,19 +2549,22 @@ class BrowsingContextModule extends RootBiDiModule {
     }
 
     if (devicePixelRatio !== undefined) {
-      setDevicePixelRatioForBrowsingContext({
-        context: navigable,
-        value: devicePixelRatio,
-      });
+      if (devicePixelRatio !== null) {
+        navigable.overrideDPPX = devicePixelRatio;
+      } else {
+        // Will reset to use the global default scaling factor.
+        navigable.overrideDPPX = 0;
+      }
     }
 
     if (targetHeight !== currentHeight || targetWidth !== currentWidth) {
-      // Force a synchronous update of the remote browser dimensions so that
-      // background tabs get resized.
-      browser.ownerDocument.synchronouslyUpdateRemoteBrowserDimensions(
-        /* aIncludeInactive = */ true
-      );
-
+      if (!navigable.isActive) {
+        // Force a synchronous update of the remote browser dimensions so that
+        // background tabs get resized.
+        browser.ownerDocument.synchronouslyUpdateRemoteBrowserDimensions(
+          /* aIncludeInactive = */ true
+        );
+      }
       // Wait until the viewport has been resized
       await this._forwardToWindowGlobal(
         "_awaitViewportDimensions",
@@ -2641,10 +2576,6 @@ class BrowsingContextModule extends RootBiDiModule {
         { retryOnAbort: true }
       );
     }
-  }
-
-  static get supportedCommandsFromContent() {
-    return ["_onConfigurationComplete"];
   }
 
   static get supportedEvents() {
@@ -2737,33 +2668,6 @@ export const getBrowsingContextInfo = (context, options = {}) => {
   }
 
   return contextInfo;
-};
-
-/**
- * Set the device pixel ratio override to the top-level browsing context.
- *
- * @param {object} options
- * @param {BrowsingContext} options.context
- *     Top-level browsing context object which is a target
- *     for the device pixel ratio override.
- * @param {number|null} options.value
- *     A value to override device pixel ratio,
- *     or `null` to reset it to the original value.
- */
-export const setDevicePixelRatioForBrowsingContext = options => {
-  const { context, value } = options;
-  const contextId = lazy.NavigableManager.getIdForBrowsingContext(context);
-
-  if (value !== null) {
-    context.overrideDPPX = value;
-    lazy.logger.trace(
-      `[${contextId}] Updated device pixel ratio override to: ${value}`
-    );
-  } else {
-    // Will reset to use the global default scaling factor.
-    context.overrideDPPX = 0;
-    lazy.logger.trace(`[${contextId}] Reset device pixel ratio override`);
-  }
 };
 
 export const browsingContext = BrowsingContextModule;

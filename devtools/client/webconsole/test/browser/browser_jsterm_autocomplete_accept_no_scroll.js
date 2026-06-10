@@ -30,9 +30,7 @@ add_task(async function () {
   EventUtils.sendString("window.foobar.");
 
   await onPopUpOpen;
-  const scrollableEl = ui.window.document.querySelector(
-    codemirrorSelectors.cmScroller
-  );
+  const scrollableEl = ui.window.document.querySelector(".CodeMirror-scroll");
 
   Assert.greater(scrollableEl.scrollTop, 0, "The input overflows");
   const scrollTop = scrollableEl.scrollTop;

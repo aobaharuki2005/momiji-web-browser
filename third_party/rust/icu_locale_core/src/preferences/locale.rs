@@ -99,7 +99,6 @@ impl From<&crate::LanguageIdentifier> for LocalePreferences {
     }
 }
 
-/// ✨ *Enabled with the `alloc` Cargo feature.*
 #[cfg(feature = "alloc")]
 impl From<LocalePreferences> for crate::Locale {
     fn from(prefs: LocalePreferences) -> Self {
@@ -122,7 +121,7 @@ impl From<LocalePreferences> for crate::Locale {
                     );
                 }
                 if let Some(rg) = prefs.ue_region {
-                    #[expect(clippy::unwrap_used)] // Region is a valid Subtag
+                    #[allow(clippy::unwrap_used)] // Region is a valid Subtag
                     extensions.unicode.keywords.set(
                         crate::extensions::unicode::key!("rg"),
                         crate::extensions::unicode::Value::try_from_str(rg.as_str()).unwrap(),

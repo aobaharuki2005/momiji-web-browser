@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -86,8 +87,7 @@ bool DBusService::LaunchApp(const char* aCommand, const char** aURIList,
   nsAutoCString param(mAppFile);
   if (aCommand) {
     param.Append(" ");
-    GUniquePtr<char> escCommand(g_shell_quote(aCommand));
-    param.Append(escCommand.get());
+    param.Append(aCommand);
   }
   for (int i = 0; aURIList && i < aURIListLen; i++) {
     param.Append(" ");
@@ -186,9 +186,6 @@ static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
   if (strcmp("org.freedesktop.Application", aInterfaceName) != 0) {
     g_warning("DBusService: HandleMethodCall() wrong interface name %s",
               aInterfaceName);
-    g_dbus_method_invocation_return_error(
-        aInvocation, G_DBUS_ERROR, G_DBUS_ERROR_UNKNOWN_INTERFACE,
-        "Unknown interface: %s", aInterfaceName);
     return;
   }
   if (strcmp("Activate", aMethodName) == 0) {
@@ -202,9 +199,6 @@ static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
         aParameters, aInvocation);
   } else {
     g_warning("DBusService: HandleMethodCall() wrong method %s", aMethodName);
-    g_dbus_method_invocation_return_error(aInvocation, G_DBUS_ERROR,
-                                          G_DBUS_ERROR_UNKNOWN_METHOD,
-                                          "Unknown method: %s", aMethodName);
   }
 }
 
@@ -309,9 +303,7 @@ bool DBusService::StartFreedesktopListener() {
 }
 
 void DBusService::StopFreedesktopListener() {
-  if (mConnection) {
-    OnNameLost(mConnection);
-  }
+  OnNameLost(mConnection);
   if (mDBusID) {
     g_bus_unown_name(mDBusID);
     mDBusID = 0;

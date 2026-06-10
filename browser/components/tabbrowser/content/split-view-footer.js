@@ -82,7 +82,6 @@
       this.#updateIconElement();
       this.#updateUriElement();
 
-      this.addEventListener("click", this);
       this.menuButtonElement.addEventListener("command", this);
 
       this.#initialized = true;
@@ -94,9 +93,6 @@
 
     handleEvent(e) {
       switch (e.type) {
-        case "click":
-          e.stopPropagation();
-          break;
         case "command":
           gBrowser.openSplitViewMenu(this.menuButtonElement);
           break;
@@ -217,11 +213,9 @@
     #resetTab() {
       if (this.#tab) {
         this.#tab.removeEventListener("TabAttrModified", this);
-        if (this.#tab.linkedBrowser?.webProgress) {
-          this.#tab.linkedBrowser.removeProgressListener(
-            this.#browserProgressListener
-          );
-        }
+        this.#tab.linkedBrowser?.removeProgressListener(
+          this.#browserProgressListener
+        );
       }
       this.#tab = null;
     }

@@ -76,13 +76,13 @@ export var ToolbarDropHandler = {
         return;
       }
 
-      const win = aEvent.target.documentGlobal;
+      const win = aEvent.target.ownerGlobal;
       win.setTimeout(this._openHomeDialog, 0, urls.join("|"), win);
     }
   },
 
   async onDropNewTabButtonObserver(aEvent) {
-    const win = aEvent.target.documentGlobal;
+    const win = aEvent.target.ownerGlobal;
     let links = Services.droppedLinkHandler.dropLinks(aEvent);
     if (
       links.length >=
@@ -118,7 +118,7 @@ export var ToolbarDropHandler = {
   },
 
   async onDropNewWindowButtonObserver(aEvent) {
-    const win = aEvent.target.documentGlobal;
+    const win = aEvent.target.ownerGlobal;
     let links = Services.droppedLinkHandler.dropLinks(aEvent);
     if (
       links.length >=

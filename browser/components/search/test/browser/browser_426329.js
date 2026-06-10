@@ -96,7 +96,7 @@ async function prepareTest(searchBarValue = "test") {
 }
 
 add_setup(async function () {
-  await SearchService.init();
+  await Services.search.init();
 
   searchBar = await gCUITestUtils.addSearchBar();
   searchButton = searchBar.querySelector(".search-go-button");
@@ -162,10 +162,6 @@ add_task(async function testShiftReturn() {
 });
 
 add_task(async function testAltReturn() {
-  // Ensure the history has been updated so that it is complete when we
-  // get to the clear history test.
-  let historyUpdated = TestUtils.topicObserved("satchel-storage-changed");
-
   await prepareTest("testAltReturn");
   await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     EventUtils.synthesizeKey("KEY_Enter", { altKey: true });
@@ -177,8 +173,6 @@ add_task(async function testAltReturn() {
     expectedURL(searchBar.value),
     "testAltReturn opened correct search page"
   );
-
-  await historyUpdated;
 });
 
 add_task(async function testAltReturnEmpty() {
@@ -193,10 +187,6 @@ add_task(async function testAltReturnEmpty() {
 });
 
 add_task(async function testAltGrReturn() {
-  // Ensure the history has been updated so that it is complete when we
-  // get to the clear history test.
-  let historyUpdated = TestUtils.topicObserved("satchel-storage-changed");
-
   await prepareTest("testAltGrReturn");
   await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     EventUtils.synthesizeKey("KEY_Enter", { altGraphKey: true });
@@ -208,8 +198,6 @@ add_task(async function testAltGrReturn() {
     expectedURL(searchBar.value),
     "testAltGrReturn opened correct search page"
   );
-
-  await historyUpdated;
 });
 
 add_task(async function testAltGrReturnEmpty() {
@@ -241,10 +229,6 @@ add_task(async function testShiftAltReturnEmpty() {
 });
 
 add_task(async function testLeftClick() {
-  // Ensure the history has been updated so that it is complete when we
-  // get to the clear history test.
-  let historyUpdated = TestUtils.topicObserved("satchel-storage-changed");
-
   await prepareTest("testLeftClick");
   simulateClick({ button: 0 }, searchButton);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -254,15 +238,9 @@ add_task(async function testLeftClick() {
     expectedURL(searchBar.value),
     "testLeftClick opened correct search page"
   );
-
-  await historyUpdated;
 });
 
 add_task(async function testMiddleClick() {
-  // Ensure the history has been updated so that it is complete when we
-  // get to the clear history test.
-  let historyUpdated = TestUtils.topicObserved("satchel-storage-changed");
-
   await prepareTest("testMiddleClick");
   await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     simulateClick({ button: 1 }, searchButton);
@@ -273,15 +251,9 @@ add_task(async function testMiddleClick() {
     expectedURL(searchBar.value),
     "testMiddleClick opened correct search page"
   );
-
-  await historyUpdated;
 });
 
 add_task(async function testShiftMiddleClick() {
-  // Ensure the history has been updated so that it is complete when we
-  // get to the clear history test.
-  let historyUpdated = TestUtils.topicObserved("satchel-storage-changed");
-
   await prepareTest("testShiftMiddleClick");
 
   let url = expectedURL(searchBar.value);
@@ -296,8 +268,6 @@ add_task(async function testShiftMiddleClick() {
     url,
     "testShiftMiddleClick opened correct search page"
   );
-
-  await historyUpdated;
 });
 
 add_task(async function testRightClick() {
@@ -321,12 +291,7 @@ add_task(async function testRightClick() {
   });
   // The click in the searchbox focuses it, which opens the suggestion
   // panel. Clean up after ourselves.
-  let popupHiddenPromise = BrowserTestUtils.waitForPopupEvent(
-    searchBar.textbox.popup,
-    "hidden"
-  );
-  searchBar.textbox.closePopup();
-  await popupHiddenPromise;
+  searchBar.textbox.popup.hidePopup();
 });
 
 add_task(async function testSearchHistory() {
@@ -346,33 +311,30 @@ add_task(async function testSearchHistory() {
 
 add_task(async function testAutocomplete() {
   let popup = searchBar.textbox.popup;
-  let popupShownPromise = BrowserTestUtils.waitForPopupEvent(popup, "shown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(popup, "popupshown");
   searchBar.textbox.showHistoryPopup();
   await popupShownPromise;
-
   checkMenuEntries(searchEntries);
-
-  let popupHiddenPromise = BrowserTestUtils.waitForPopupEvent(popup, "hidden");
   searchBar.textbox.closePopup();
-  await popupHiddenPromise;
 });
 
 add_task(async function testClearHistory() {
+  // Open the textbox context menu to trigger controller attachment.
   let textbox = searchBar.textbox;
-
-  // If the menu hasn't been built yet, then force it to be built.
-  if (!searchBar._menupopup) {
-    searchBar._buildContextMenu();
-  }
-  let popupShownPromise = BrowserTestUtils.waitForPopupEvent(
-    searchBar._menupopup,
-    "shown"
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    window,
+    "popupshown",
+    false,
+    event => event.target.classList.contains("textbox-contextmenu")
   );
   EventUtils.synthesizeMouseAtCenter(textbox, {
     type: "contextmenu",
     button: 2,
   });
   await popupShownPromise;
+  // Close the context menu.
+  let contextMenu = document.querySelector(".textbox-contextmenu");
+  contextMenu.hidePopup();
 
   let menuitem = searchBar._menupopup.querySelector(".searchbar-clear-history");
   ok(!menuitem.disabled, "Clear history menuitem enabled");
@@ -380,15 +342,6 @@ add_task(async function testClearHistory() {
   let historyCleared = promiseObserver("satchel-storage-changed");
   searchBar._menupopup.activateItem(menuitem);
   await historyCleared;
-
-  // Close the context menu.
-  let popupHiddenPromise = BrowserTestUtils.waitForPopupEvent(
-    searchBar._menupopup,
-    "hidden"
-  );
-  searchBar._menupopup.hidePopup();
-  await popupHiddenPromise;
-
   let count = await FormHistoryTestUtils.count(
     textbox.getAttribute("autocompletesearchparam")
   );

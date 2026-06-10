@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,11 +7,10 @@
 #ifndef LAYOUT_SVG_SVGPATTERNFRAME_H_
 #define LAYOUT_SVG_SVGPATTERNFRAME_H_
 
-#include <memory>
-
 #include "gfxMatrix.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/SVGPaintServerFrame.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
 
 class nsIFrame;
@@ -125,7 +126,7 @@ class SVGPatternFrame final : public SVGPaintServerFrame {
   // referencing our pattern.  This must be temporary because different
   // referencing frames will all reference this one frame
   SVGGeometryFrame* mSource;
-  std::unique_ptr<gfxMatrix> mCTM;
+  UniquePtr<gfxMatrix> mCTM;
 
  protected:
   // This flag is used to detect loops in xlink:href processing

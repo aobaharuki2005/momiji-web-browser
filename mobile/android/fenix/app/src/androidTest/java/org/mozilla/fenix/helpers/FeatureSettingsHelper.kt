@@ -23,6 +23,11 @@ interface FeatureSettingsHelper {
     var isWallpaperOnboardingEnabled: Boolean
 
     /**
+     * Whether the homepage header should be shown or not.
+     */
+    var isHomepageHeaderEnabled: Boolean
+
+    /**
      * Whether the "Jump back in" homescreen section is enabled or not.
      * It shows the last visited tab on this device and on other synced devices.
      */
@@ -67,6 +72,16 @@ interface FeatureSettingsHelper {
     var isLocationPermissionEnabled: SitePermissionsRules.Action
 
     /**
+     * Enable or disable the composable toolbar.
+     */
+    var isComposableToolbarEnabled: Boolean
+
+    /**
+     * Enable or disable the new main menu.
+     */
+    var isMenuRedesignEnabled: Boolean
+
+    /**
      * Enable or disable the new main menu CFR.
      */
     var isMenuRedesignCFREnabled: Boolean
@@ -87,9 +102,9 @@ interface FeatureSettingsHelper {
     var onboardingFeatureEnabled: Boolean
 
     /**
-     * Enable or disable new crash reporter flow.
+     * Enable or disable new crash reporter.
      */
-    var isUseNewCrashReporterFlow: Boolean
+    var isUseNewCrashReporterDialog: Boolean
 
     /**
      * Enable or disable the tab swipe CFR.
@@ -100,11 +115,6 @@ interface FeatureSettingsHelper {
      * Accept or not the terms of service.
      */
     var isTermsOfServiceAccepted: Boolean
-
-    /**
-     * Enable or disable the private mode and stories entry point.
-     */
-    var isPrivateModeAndStoriesEntryPointEnabled: Boolean
 
     /**
      * The Open links in External apps settings, between the following options:
@@ -120,29 +130,9 @@ interface FeatureSettingsHelper {
     var tabManagerOpeningAnimationEnabled: Boolean
 
     /**
-     * Indicates if the shake to summarize toolbar CFR was displayed to the user.
+     * Indicates if the toolbar CFR was displayed to the user.
      */
-    var hasSeenShakeToSummarizeToolbarCfr: Boolean
-
-    /**
-     * Enable or disable the shake to summarize feature flag.
-     */
-    var shakeToSummarizeFeatureFlagEnabled: Boolean
-
-    /**
-     * Enable or disable expanded toolbar layout.
-     */
-    var shouldUseExpandedToolbar: Boolean
-
-    /**
-     * Whether the Native Share Sheet feature is enabled.
-     */
-    var nativeShareSheetEnabled: Boolean
-
-    /**
-     * Whether the voice search entry point is shown in the display-mode browser toolbar.
-     */
-    var showVoiceSearchInDisplayToolbar: Boolean
+    var hasSeenBrowserToolbarCFR: Boolean
 
     /**
      * Enable or disable the translations prompt after a page that can be translated is loaded.

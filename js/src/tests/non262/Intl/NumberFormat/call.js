@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 function IsIntlService(c) {
     return typeof c === "function" &&
            c.hasOwnProperty("prototype") &&

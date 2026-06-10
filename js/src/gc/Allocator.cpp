@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -11,7 +13,6 @@
 #include "gc/GCLock.h"
 #include "gc/GCProbes.h"
 #include "gc/Nursery.h"
-#include "gc/PublicIterators.h"
 #include "threading/CpuCount.h"
 #include "util/Poison.h"
 #include "vm/BigIntType.h"
@@ -332,11 +333,10 @@ void* js::gc::AllocateTenuredCellInGC(Zone* zone, AllocKind thingKind) {
 
 void GCRuntime::startBackgroundAllocTaskIfIdle() {
   AutoLockHelperThreadState lock;
-  if (allocTask.isFinished(lock)) {
+  if (!allocTask.wasStarted(lock)) {
+    // Join the previous invocation of the task. This will return immediately
+    // if the thread has never been started.
     allocTask.joinWithLockHeld(lock);
-  }
-
-  if (allocTask.isIdle(lock)) {
     allocTask.startWithLockHeld(lock);
   }
 }
@@ -397,23 +397,23 @@ retry_loop:
   }
 
   // Use the current chunk if set.
-  ArenaChunk* chunk = zone_->currentChunk_;
-  MOZ_ASSERT_IF(chunk, chunk->info.isCurrentChunk);
+  ArenaChunk* chunk = gc->currentChunk_;
+  MOZ_ASSERT_IF(chunk, gc->isCurrentChunk(chunk));
 
   if (!chunk) {
     // The chunk lists can be accessed by background sweeping and background
     // chunk allocation. Take the GC lock to synchronize access.
     AutoLockGCBgAlloc lock(gc);
 
-    chunk = gc->pickChunk(zone_, stallAndRetry, lock);
+    chunk = gc->pickChunk(stallAndRetry, lock);
     if (!chunk) {
       return nullptr;
     }
 
-    gc->setCurrentChunk(zone_, chunk, lock);
+    gc->setCurrentChunk(chunk, lock);
   }
 
-  MOZ_ASSERT(chunk->info.isCurrentChunk);
+  MOZ_ASSERT(gc->isCurrentChunk(chunk));
 
   // Although our chunk should definitely have enough space for another arena,
   // there are other valid reasons why ArenaChunk::allocateArena() may fail.
@@ -422,7 +422,7 @@ retry_loop:
     return nullptr;
   }
 
-  arena->init(gc, thingKind);
+  arena->init(gc, zone_, thingKind);
 
   ArenaList& al = arenaList(thingKind);
   MOZ_ASSERT(!al.hasNonFullArenas());
@@ -471,17 +471,9 @@ bool GCRuntime::wantBackgroundAllocation(const AutoLockGC& lock) const {
   // To minimize memory waste, we do not want to run the background chunk
   // allocation if we already have some empty chunks or when the runtime has
   // a small heap size (and therefore likely has a small growth rate).
-  if (!allocTask.enabled() ||
-      emptyChunks(lock).count() >= minEmptyChunkCount(lock)) {
-    return false;
-  }
-
-  size_t nonEmptyCount = 0;
-  for (AllZonesIter zone(rt); !zone.done(); zone.next()) {
-    nonEmptyCount +=
-        zone->fullChunks(lock).count() + zone->availableChunks(lock).count();
-  }
-  return nonEmptyCount >= 4;
+  return allocTask.enabled() &&
+         emptyChunks(lock).count() < minEmptyChunkCount(lock) &&
+         (fullChunks(lock).count() + availableChunks(lock).count()) >= 4;
 }
 
 // Allocate a new arena but don't initialize it.
@@ -565,15 +557,6 @@ Arena* ArenaChunk::fetchNextFreeArena(GCRuntime* gc) {
 
 // ///////////  System -> ArenaChunk Allocator  ////////////////////////////////
 
-ArenaChunk* GCRuntime::getOrAllocChunk(Zone* zone, StallAndRetry stallAndRetry,
-                                       AutoLockGCBgAlloc& lock) {
-  ArenaChunk* chunk = getOrAllocChunk(stallAndRetry, lock);
-  if (chunk) {
-    chunk->info.zone = zone;
-  }
-  return chunk;
-}
-
 ArenaChunk* GCRuntime::getOrAllocChunk(StallAndRetry stallAndRetry,
                                        AutoLockGCBgAlloc& lock) {
   ArenaChunk* chunk;
@@ -606,7 +589,6 @@ void GCRuntime::recycleChunk(ArenaChunk* chunk, const AutoLockGC& lock) {
 #ifdef DEBUG
   MOZ_ASSERT(chunk->isEmpty());
   MOZ_ASSERT(!chunk->info.isCurrentChunk);
-  MOZ_ASSERT(!chunk->info.zone);
   chunk->verify();
 #endif
 
@@ -617,15 +599,15 @@ void GCRuntime::recycleChunk(ArenaChunk* chunk, const AutoLockGC& lock) {
   emptyChunks(lock).push(chunk);
 }
 
-ArenaChunk* GCRuntime::pickChunk(Zone* zone, StallAndRetry stallAndRetry,
+ArenaChunk* GCRuntime::pickChunk(StallAndRetry stallAndRetry,
                                  AutoLockGCBgAlloc& lock) {
-  if (zone->availableChunks(lock).count()) {
-    ArenaChunk* chunk = zone->availableChunks(lock).head();
-    zone->availableChunks(lock).remove(chunk);
+  if (availableChunks(lock).count()) {
+    ArenaChunk* chunk = availableChunks(lock).head();
+    availableChunks(lock).remove(chunk);
     return chunk;
   }
 
-  ArenaChunk* chunk = getOrAllocChunk(zone, stallAndRetry, lock);
+  ArenaChunk* chunk = getOrAllocChunk(stallAndRetry, lock);
   if (!chunk) {
     return nullptr;
   }

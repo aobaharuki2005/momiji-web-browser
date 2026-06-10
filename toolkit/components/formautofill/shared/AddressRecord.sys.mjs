@@ -70,18 +70,11 @@ export class AddressRecord {
 
   static #computeStreetAndHouseNumberFields(address) {
     if (!("address-housenumber" in address) && "street-address" in address) {
-      let streetAddress = address["street-address"];
-      let parsedAddress = AddressParser.parseStreetAddress(streetAddress);
-      if (parsedAddress) {
-        address["address-housenumber"] = parsedAddress.street_number;
-
-        let splitNumber = AddressParser.parseHouseSuffix(
-          streetAddress,
-          parsedAddress
-        );
-        if (splitNumber?.length >= 2) {
-          address["address-extra-housesuffix"] = splitNumber[1];
-        }
+      let streetAddress = AddressParser.parseStreetAddress(
+        address["street-address"]
+      );
+      if (streetAddress) {
+        address["address-housenumber"] = streetAddress.street_number;
       }
     }
   }

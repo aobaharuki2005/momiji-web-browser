@@ -71,10 +71,11 @@ where
     let mut value_start = name_end;
     let value_end = arg_str.len();
     let value = if value_start < value_end {
-        if let Some(c) = arg_str[value_start..value_end].chars().next()
-            && name_end_char(c) {
+        if let Some(c) = arg_str[value_start..value_end].chars().next() {
+            if name_end_char(c) {
                 value_start += 1;
             }
+        }
         Some(arg_str[value_start..value_end].into())
     } else {
         None
@@ -208,11 +209,12 @@ pub fn get_arg_value<'a>(
 ) -> Option<String> {
     let mut found_value = None;
     for (arg_name, arg_value) in &mut parsed_args {
-        if let (Some(name), value) = (arg_name, arg_value)
-            && *name == arg {
+        if let (Some(name), value) = (arg_name, arg_value) {
+            if *name == arg {
                 found_value = value.clone();
                 break;
             }
+        }
     }
     if found_value.is_none() {
         // If there wasn't a value, check if the following argument is a value

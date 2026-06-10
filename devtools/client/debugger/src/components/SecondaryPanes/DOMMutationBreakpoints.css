@@ -8,10 +8,12 @@
   font-style: italic;
   color: var(--theme-body-color);
   white-space: normal;
+}
 
-  button {
-    margin-block-start: 10px;
-  }
+.dom-mutation-empty a {
+  text-decoration: underline;
+  color: var(--theme-toolbar-selected-color);
+  cursor: pointer;
 }
 
 .dom-mutation-list * {

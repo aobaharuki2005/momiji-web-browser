@@ -1,6 +1,5 @@
 ChromeUtils.defineESModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
 });
 
 /**
@@ -303,7 +302,6 @@ function triggerMainCommand(popup) {
   ok(!!notifications.length, "at least one notification displayed");
   let notification = notifications[0];
   info("Triggering main command for notification " + notification.id);
-  notification.button.performUpdate?.();
   EventUtils.synthesizeMouseAtCenter(notification.button, {});
 }
 
@@ -319,30 +317,19 @@ function triggerSecondaryCommand(popup, index) {
   }
 
   // Extra secondary actions appear in a menu.
-  notification.secondaryButton.performUpdate?.();
-  notification.secondaryButton.chevronButtonEl.focus();
+  notification.secondaryButton.nextElementSibling.focus();
+
   popup.addEventListener(
     "popupshown",
     function () {
       info("Command popup open for notification " + notification.id);
-      if (notification.menupopup.isNativeMenu) {
-        // Activate the desired command.
-        let actualExtraSecondaryActions = Array.prototype.filter.call(
-          notification.menupopup.childNodes,
-          child => child.nodeName == "menuitem"
-        );
-        notification.menupopup.activateItem(
-          actualExtraSecondaryActions[index - 1]
-        );
-      } else {
-        // Press down until the desired command is selected. Decrease index by one
-        // since the secondary action was handled above.
-        for (let i = 0; i <= index - 1; i++) {
-          EventUtils.synthesizeKey("KEY_ArrowDown");
-        }
-        // Activate
-        EventUtils.synthesizeKey("KEY_Enter");
+      // Press down until the desired command is selected. Decrease index by one
+      // since the secondary action was handled above.
+      for (let i = 0; i <= index - 1; i++) {
+        EventUtils.synthesizeKey("KEY_ArrowDown");
       }
+      // Activate
+      EventUtils.synthesizeKey("KEY_Enter");
     },
     { once: true }
   );
@@ -352,10 +339,8 @@ function triggerSecondaryCommand(popup, index) {
     "Open the popup to trigger secondary command for notification " +
       notification.id
   );
-
-  const isMac = AppConstants.platform == "macosx";
   EventUtils.synthesizeKey("KEY_ArrowDown", {
-    altKey: !isMac,
+    altKey: !navigator.platform.includes("Mac"),
   });
 }
 

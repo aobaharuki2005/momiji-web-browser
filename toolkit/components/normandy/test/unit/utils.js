@@ -4,6 +4,9 @@
 // Loaded into the same scope as head_xpc.js
 /* import-globals-from head_xpc.js */
 
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
+);
 const { HttpServer } = ChromeUtils.importESModule(
   "resource://testing-common/httpd.sys.mjs"
 );

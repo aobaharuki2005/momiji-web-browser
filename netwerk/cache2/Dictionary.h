@@ -1,3 +1,4 @@
+/* vim: set ts=2 sts=2 et sw=2: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,12 +19,10 @@
 #include "mozilla/Vector.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include <vector>
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/TimeStamp.h"
 #include "nsTHashMap.h"
 #include "nsHashKeys.h"
-#include "mozilla/net/urlpattern_glue.h"
 
 class nsICacheStorage;
 class nsIIOService;
@@ -81,9 +80,18 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   nsresult Prefetch(nsILoadContextInfo* aLoadContextInfo, bool& aShouldSuspend,
                     const std::function<void(nsresult)>& aFunc);
 
-  nsCString GetHash() const;
-  bool HasHash();
-  void SetHash(const nsACString& aHash);
+  const nsCString& GetHash() const { return mHash; }
+
+  bool HasHash() {
+    // Hard to statically check since we're called from lambdas in
+    // GetDictionaryFor
+    return !mHash.IsEmpty();
+  }
+
+  void SetHash(const nsACString& aHash) {
+    MOZ_ASSERT(NS_IsMainThread());
+    mHash = aHash;
+  }
 
   void WriteOnHash();
 
@@ -94,7 +102,7 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   // keep track of requests that may need the data
   void InUse();
   void UseCompleted();
-  bool IsReading() const;
+  bool IsReading() const { return mUsers > 0 && !mWaitingPrefetch.IsEmpty(); }
 
   void SetReplacement(DictionaryCacheEntry* aEntry, DictionaryOrigin* aOrigin) {
     mReplacement = aEntry;
@@ -109,25 +117,33 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
 
   // aFunc is called when we have finished reading a dictionary from the
   // cache, or we have no users waiting for cache data (cancelled, etc)
-  void CallbackOnCacheRead(const std::function<void(nsresult)>& aFunc);
+  void CallbackOnCacheRead(const std::function<void(nsresult)>& aFunc) {
+    // the reasons to call back are identical to Prefetch()
+    mWaitingPrefetch.AppendElement(aFunc);
+  }
 
   const nsACString& GetURI() const { return mURI; }
 
-  const Vector<uint8_t>& GetDictionary() const;
+  const Vector<uint8_t>& GetDictionary() const { return mDictionaryData; }
 
   // Clear dictionary data for testing (forces reload from cache on next
   // prefetch)
-  void ClearDataForTesting();
+  void ClearDataForTesting() {
+    mDictionaryData.clear();
+    mDictionaryDataComplete = false;
+  }
 
   // Accumulate a hash while saving a file being received to the cache
   void AccumulateHash(const char* aBuf, int32_t aCount);
   void FinishHash();
-  void FinishHashOnMainThread();
 
   // return a pointer to the data and length
-  uint8_t* DictionaryData(size_t* aLength) const;
+  uint8_t* DictionaryData(size_t* aLength) const {
+    *aLength = mDictionaryData.length();
+    return (uint8_t*)mDictionaryData.begin();
+  }
 
-  bool DictionaryReady() const;
+  bool DictionaryReady() const { return mDictionaryDataComplete; }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     // XXX
@@ -137,8 +153,6 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   static nsresult ReadCacheData(nsIInputStream* aInStream, void* aClosure,
                                 const char* aFromSegment, uint32_t aToOffset,
                                 uint32_t aCount, uint32_t* aWriteCount);
-
-  void CleanupOnCacheData(nsresult result);
 
   void MakeMetadataEntry(nsCString& aNewValue);
 
@@ -175,49 +189,24 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   // understand, so we can fail to record a dictionary with type != 'raw'
   //  nsCString mType;
 
-  // Cached parsed URLPattern for performance
-  Maybe<UrlPatternGlue> mCachedPattern;
-
-  // SHA-256 hash value - only written/read on MainThread (after
-  // pending->active) Written by FinishHash() on MainThread, immutable after
-  // that
+  // SHA-256 hash value ready to put into a header
   nsCString mHash;
-
   uint32_t mUsers{0};  // active requests using this entry
-
-  // In-memory copy - only accessed on MainThread after validation
-  // Populated on MainThread after hash validation succeeds
+  // in-memory copy of the entry to use to decompress incoming data
   Vector<uint8_t> mDictionaryData;
-
-  // Publishes mDictionaryData to reader threads. ReleaseAcquire so that
-  // the non-atomic mDictionaryData write is visible before readers see true.
-  Atomic<bool, ReleaseAcquire> mDictionaryDataComplete{false};
-
-  // Temporary buffer for accumulating dictionary data during cache reads
-  // Only accessed by cache I/O thread during stream callbacks (serialized)
-  Vector<uint8_t> mPendingDictionaryData;
+  bool mDictionaryDataComplete{false};
 
   // for accumulating SHA-256 hash values for dictionaries
-  // Only used on main thread (MOZ_ASSERT in AccumulateHash/FinishHash)
   nsCOMPtr<nsICryptoHash> mCrypto;
 
-  // Structure to track prefetch callbacks with their private browsing status
-  struct PrefetchRequest {
-    std::function<void(nsresult)> callback;
-    bool isPrivateBrowsing;
-  };
-
-  // Callbacks when prefetch is complete - only accessed on MainThread
-  // std::vector instead of TArray because it has a std::function ptr in it
-  std::vector<PrefetchRequest> mWaitingPrefetch;
+  // call these when prefetch is complete
+  nsTArray<std::function<void(nsresult)>> mWaitingPrefetch;
 
   // If we need to Write() an entry before we know the hash, remember the origin
   // here (creates a temporary cycle). Clear on StopRequest
   RefPtr<DictionaryOrigin> mOrigin;
-
-  // Simple state flags accessed from multiple threads
-  Atomic<bool, Relaxed> mStopReceived{false};
-  Atomic<bool, Relaxed> mNotCached{false};
+  // Don't store origin for write if we've already received OnStopRequest
+  bool mStopReceived{false};
 
   // If set, a new entry wants to replace us, and we have active decoding users.
   // When we finish reading data into this entry for decoding, do 2 things:
@@ -228,13 +217,11 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   // We should suspend until the ond entry has been read
   bool mShouldSuspend{false};
 
+  // The cache entry has been removed
+  bool mNotCached{false};
+
   // We're blocked from taking over for the old entry for now
   bool mBlocked{false};
-
-  // Set during Prefetch in OnCacheEntryAvailable if the stored response
-  // headers still contain Content-Encoding. Non-empty means data on disk
-  // is likely still compressed (decompressor wasn't applied before save).
-  nsCString mStoredContentEncoding;
 };
 
 // XXX Do we want to pre-read dictionaries into RAM at startup (lazily)?
@@ -254,7 +241,7 @@ class DictionaryOriginReader final : public nsICacheEntryOpenCallback,
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  DictionaryOriginReader() = default;
+  DictionaryOriginReader() {}
 
   void Start(
       bool aCreate, DictionaryOrigin* aOrigin, nsACString& aKey, nsIURI* aURI,
@@ -263,11 +250,11 @@ class DictionaryOriginReader final : public nsICacheEntryOpenCallback,
   void FinishMatch();
 
  private:
-  ~DictionaryOriginReader() = default;
+  ~DictionaryOriginReader() {}
 
   RefPtr<DictionaryOrigin> mOrigin;
   nsCOMPtr<nsIURI> mURI;
-  ExtContentPolicyType mType = ExtContentPolicyType::TYPE_INVALID;
+  ExtContentPolicyType mType;
   std::function<nsresult(bool, DictionaryCacheEntry*)> mCallback;
   RefPtr<DictionaryCache> mCache;
 };
@@ -305,7 +292,7 @@ class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
   }
 
  private:
-  virtual ~DictionaryOrigin() = default;
+  virtual ~DictionaryOrigin() {}
 
   nsCString mOrigin;
   nsCOMPtr<nsICacheEntry> mEntry;
@@ -324,21 +311,20 @@ class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
 };
 
 // singleton class
-class DictionaryCache final : public nsIObserver {
+class DictionaryCache final {
  private:
   DictionaryCache() {
     nsresult rv = Init();
     (void)rv;
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   }
-  ~DictionaryCache() = default;
+  ~DictionaryCache() {}
 
   friend class DictionaryOriginReader;
   friend class DictionaryCacheEntry;
 
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIOBSERVER
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DictionaryCache)
 
   static already_AddRefed<DictionaryCache> GetInstance();
 
@@ -354,12 +340,12 @@ class DictionaryCache final : public nsIObserver {
   already_AddRefed<DictionaryCacheEntry> AddEntry(
       nsIURI* aURI, bool aNewEntry, DictionaryCacheEntry* aDictEntry);
 
-  static void RemoveDictionaryOMT(const nsACString& aKey);
+  static void RemoveDictionaryFor(const nsACString& aKey);
   // remove the entire origin (should be empty!)
   static void RemoveOriginFor(const nsACString& aKey);
 
   // Remove a dictionary if it exists for the key given
-  static void RemoveDictionary(const nsACString& aKey);
+  void RemoveDictionary(const nsACString& aKey);
   // Remove an origin for the origin given
   void RemoveOrigin(const nsACString& aOrigin);
 
@@ -392,7 +378,6 @@ class DictionaryCache final : public nsIObserver {
   void RemoveOriginForInternal(const nsACString& aKey);
 
   static StaticRefPtr<nsICacheStorage> sCacheStorage;
-  static Atomic<bool, Relaxed> sShutdown;
 
   // In-memory cache of dictionary entries.  HashMap, keyed by origin, of
   // Linked list (LRU order) of valid dictionaries for the origin.

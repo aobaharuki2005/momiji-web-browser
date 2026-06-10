@@ -1,3 +1,6 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
+
 // Tests for `History.remove` with removing many urls, as implemented in
 // History.sys.mjs.
 
@@ -12,16 +15,16 @@ add_task(async function test_remove_many() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   info("Adding a witness page");
-  let WITNESS_URI = Services.io.newURI(
+  let WITNESS_URI = NetUtil.newURI(
     "http://mozilla.com/test_browserhistory/test_remove/" + Math.random()
   );
   await PlacesTestUtils.addVisits(WITNESS_URI);
-  Assert.ok(await page_in_database(WITNESS_URI), "Witness page added");
+  Assert.ok(page_in_database(WITNESS_URI), "Witness page added");
 
   info("Generating samples");
   let pages = [];
   for (let i = 0; i < SIZE; ++i) {
-    let uri = Services.io.newURI(
+    let uri = NetUtil.newURI(
       "http://mozilla.com/test_browserhistory/test_remove?sample=" +
         i +
         "&salt=" +
@@ -54,7 +57,7 @@ add_task(async function test_remove_many() {
         title: "test bookmark " + i,
       });
     }
-    Assert.ok(await page_in_database(uri), "Page added");
+    Assert.ok(page_in_database(uri), "Page added");
   }
 
   info("Mixing key types and introducing dangling keys");
@@ -62,7 +65,7 @@ add_task(async function test_remove_many() {
   for (let i = 0; i < SIZE; ++i) {
     if (i % 4 == 0) {
       keys.push(pages[i].uri);
-      keys.push(Services.io.newURI("http://example.org/dangling/nsIURI/" + i));
+      keys.push(NetUtil.newURI("http://example.org/dangling/nsIURI/" + i));
     } else if (i % 4 == 1) {
       keys.push(new URL(pages[i].uri.spec));
       keys.push(new URL("http://example.org/dangling/URL/" + i));
@@ -164,12 +167,12 @@ add_task(async function test_remove_many() {
       `We have reached the page #${i} from the callback`
     );
     Assert.equal(
-      await visits_in_database(page.uri),
+      visits_in_database(page.uri),
       0,
       "History entry has disappeared"
     );
     Assert.equal(
-      (await page_in_database(page.uri)) != 0,
+      page_in_database(page.uri) != 0,
       page.hasBookmark,
       "Page is present only if it also has bookmarks"
     );
@@ -187,12 +190,12 @@ add_task(async function test_remove_many() {
   );
 
   Assert.notEqual(
-    await visits_in_database(WITNESS_URI),
+    visits_in_database(WITNESS_URI),
     0,
     "Witness URI still has visits"
   );
   Assert.notEqual(
-    await page_in_database(WITNESS_URI),
+    page_in_database(WITNESS_URI),
     0,
     "Witness URI is still here"
   );

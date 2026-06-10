@@ -93,7 +93,15 @@ export const selectLayoutRender = ({ state = {}, prefs = {} }) => {
   function getMaxTiles(responsiveLayouts) {
     return responsiveLayouts
       .flatMap(responsiveLayout => responsiveLayout)
-      .reduce((max, t) => Math.max(max, t.tiles.length), 0);
+      .reduce((acc, t) => {
+        acc[t.columnCount] = t.tiles.length;
+
+        // Update maxTile if current tile count is greater
+        if (!acc.maxTile || t.tiles.length > acc.maxTile) {
+          acc.maxTile = t.tiles.length;
+        }
+        return acc;
+      }, {});
   }
 
   const placeholderComponent = component => {
@@ -176,8 +184,7 @@ export const selectLayoutRender = ({ state = {}, prefs = {} }) => {
 
     result.forEach(section => {
       const { sectionKey } = section;
-      const sectionRecs = sectionsMap[sectionKey] || [];
-      section.data = sectionRecs.filter(rec => !rec.isHeadline);
+      section.data = sectionsMap[sectionKey];
     });
 
     return result;
@@ -245,23 +252,15 @@ export const selectLayoutRender = ({ state = {}, prefs = {} }) => {
             sections: handleSections(data.sections, data.recommendations).map(
               section => {
                 const sectionsSpocsPositions = [];
-                const smallestBreakpointLayout =
-                  section.layout.responsiveLayouts
-                    // Initial position for spocs is going to be for the smallest breakpoint.
-                    // We can then move it from there via breakpoints.
-                    .find(item => item.columnCount === 1);
-
-                smallestBreakpointLayout.tiles.forEach(tile => {
-                  if (tile.hasAd && section.allowAds !== false) {
-                    const widgetsBeforeThisPosition =
-                      smallestBreakpointLayout.tiles.filter(
-                        t => t.allowsWidget && t.position < tile.position
-                      ).length;
-                    const adjustedPosition =
-                      tile.position - widgetsBeforeThisPosition;
-                    sectionsSpocsPositions.push({ index: adjustedPosition });
-                  }
-                });
+                section.layout.responsiveLayouts
+                  // Initial position for spocs is going to be for the smallest breakpoint.
+                  // We can then move it from there via breakpoints.
+                  .find(item => item.columnCount === 1)
+                  .tiles.forEach(tile => {
+                    if (tile.hasAd) {
+                      sectionsSpocsPositions.push({ index: tile.position });
+                    }
+                  });
                 return {
                   ...section,
                   data: handleSpocs(
@@ -305,7 +304,7 @@ export const selectLayoutRender = ({ state = {}, prefs = {} }) => {
       let currentPosition = 0;
       data.sections.forEach(section => {
         // We assume the count for the breakpoint with the most tiles.
-        const maxTile = getMaxTiles(section?.layout?.responsiveLayouts);
+        const { maxTile } = getMaxTiles(section?.layout?.responsiveLayouts);
         for (let i = 0; i < maxTile; i++) {
           if (section.data[i]) {
             section.data[i] = {

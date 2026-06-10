@@ -1,5 +1,4 @@
 import { CONTENT_MESSAGE_TYPE } from "common/Actions.mjs";
-import { WIDGET_REGISTRY } from "common/WidgetsRegistry.mjs";
 import {
   ActivityStream,
   PREFS_CONFIG,
@@ -12,6 +11,7 @@ import { AboutPreferences } from "lib/AboutPreferences.sys.mjs";
 import { DefaultPrefs } from "lib/ActivityStreamPrefs.sys.mjs";
 import { NewTabInit } from "lib/NewTabInit.sys.mjs";
 import { SectionsFeed } from "lib/SectionsManager.sys.mjs";
+import { RecommendationProvider } from "lib/RecommendationProvider.sys.mjs";
 import { PlacesFeed } from "lib/PlacesFeed.sys.mjs";
 import { PrefsFeed } from "lib/PrefsFeed.sys.mjs";
 import { SystemTickFeed } from "lib/SystemTickFeed.sys.mjs";
@@ -41,9 +41,10 @@ describe("ActivityStream", () => {
       DEFAULT_SITES,
       AboutPreferences,
       DefaultPrefs,
-      NewTabActorRegistry: { init: () => {}, uninit: () => {} },
+      NewTabActorRegistry: { init: () => {} },
       NewTabInit,
       SectionsFeed,
+      RecommendationProvider,
       PlacesFeed,
       PrefsFeed,
       SystemTickFeed,
@@ -76,19 +77,6 @@ describe("ActivityStream", () => {
   });
   it("should initialize with .initialized=false", () => {
     assert.isFalse(as.initialized, ".initialized");
-  });
-  it("should have a null createdInstant if not constructed with one", () => {
-    const noCreatedInstantAS = new ActivityStream();
-    assert.isNull(noCreatedInstantAS.createdInstant);
-  });
-  it("should have a createdInstant value exposed if constructed with one", () => {
-    // The Node environment does not know what Temporal is, but we can pretend
-    // that a Date is a temporal, since ActivityStream isn't really doing any
-    // type-checking here - it's just holding onto whatever it was constructed
-    // with, and exposing it with a getter.
-    const instant = new Date();
-    const createdInstantAS = new ActivityStream(instant);
-    assert.equal(createdInstantAS.createdInstant, instant);
   });
   describe("#init", () => {
     beforeEach(() => {
@@ -206,6 +194,10 @@ describe("ActivityStream", () => {
     });
     it("should create a Favicon feed", () => {
       const feed = as.feeds.get("feeds.favicon")();
+      assert.ok(feed, "feed should exist");
+    });
+    it("should create a RecommendationProvider feed", () => {
+      const feed = as.feeds.get("feeds.recommendationprovider")();
       assert.ok(feed, "feed should exist");
     });
     it("should create a DiscoveryStreamFeed feed", () => {
@@ -364,51 +356,6 @@ describe("ActivityStream", () => {
       sandbox.stub(global.Services.locale, "appLocaleAsBCP47").get(() => "fr");
       as._updateDynamicPrefs();
       assert.isFalse(PREFS_CONFIG.get(FEATURE_ENABLED_PREF).value);
-    });
-  });
-  describe("getWeatherWidgetSize", () => {
-    let getBoolPrefStub;
-    let getStringPrefStub;
-    const PREF = "widgets.weather.size";
-    const FORECAST_PREF =
-      "browser.newtabpage.activity-stream.widgets.system.weatherForecast.enabled";
-    const MAXIMIZED_PREF =
-      "browser.newtabpage.activity-stream.widgets.maximized";
-    const DISPLAY_PREF = "browser.newtabpage.activity-stream.weather.display";
-
-    beforeEach(() => {
-      getBoolPrefStub = sandbox.stub(global.Services.prefs, "getBoolPref");
-      getBoolPrefStub.withArgs(FORECAST_PREF, false).returns(false);
-      getBoolPrefStub.withArgs(MAXIMIZED_PREF, true).returns(true);
-      getStringPrefStub = sandbox
-        .stub(global.Services.prefs, "getStringPref")
-        .callsFake((_pref, defaultVal) => defaultVal);
-      getStringPrefStub.withArgs(DISPLAY_PREF, "detailed").returns("detailed");
-    });
-
-    it("should return small when forecast system pref is disabled", () => {
-      as._updateDynamicPrefs();
-      assert.equal(PREFS_CONFIG.get(PREF).value, "small");
-    });
-
-    it("should return small when forecast is enabled but display is not detailed", () => {
-      getBoolPrefStub.withArgs(FORECAST_PREF, false).returns(true);
-      getStringPrefStub.withArgs(DISPLAY_PREF, "detailed").returns("simple");
-      as._updateDynamicPrefs();
-      assert.equal(PREFS_CONFIG.get(PREF).value, "small");
-    });
-
-    it("should return large when forecast is enabled and widgets are maximized", () => {
-      getBoolPrefStub.withArgs(FORECAST_PREF, false).returns(true);
-      as._updateDynamicPrefs();
-      assert.equal(PREFS_CONFIG.get(PREF).value, "large");
-    });
-
-    it("should return medium when forecast is enabled but widgets are not maximized", () => {
-      getBoolPrefStub.withArgs(FORECAST_PREF, false).returns(true);
-      getBoolPrefStub.withArgs(MAXIMIZED_PREF, true).returns(false);
-      as._updateDynamicPrefs();
-      assert.equal(PREFS_CONFIG.get(PREF).value, "medium");
     });
   });
   describe("showTopicsSelection", () => {
@@ -1069,22 +1016,4 @@ describe("ActivityStream", () => {
       });
     });
   });
-});
-
-describe("WIDGET_REGISTRY pref coverage", () => {
-  for (const widget of WIDGET_REGISTRY) {
-    it(`should have enabledPref registered for widget "${widget.id}"`, () => {
-      assert.ok(
-        PREFS_CONFIG.has(widget.enabledPref),
-        `Missing PREFS_CONFIG entry for ${widget.enabledPref}`
-      );
-    });
-
-    it(`should have sizePref registered for widget "${widget.id}"`, () => {
-      assert.ok(
-        PREFS_CONFIG.has(widget.sizePref),
-        `Missing PREFS_CONFIG entry for ${widget.sizePref}`
-      );
-    });
-  }
 });

@@ -17,13 +17,11 @@ import { LangPackMatcher } from "resource://gre/modules/LangPackMatcher.sys.mjs"
  *
  * The locales are BCP 47 identifiers:
  *
- * ```
- * {
+ * @param {{
  *   sandbox: SinonSandbox,
  *   systemLocale: string,
  *   appLocale, string,
- * }
- * ```
+ * }}
  */
 export function getAddonAndLocalAPIsMocker(testScope, sandbox) {
   const { info } = testScope;

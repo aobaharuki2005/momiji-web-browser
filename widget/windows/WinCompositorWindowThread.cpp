@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 #include "WinCompositorWindowThread.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/SynchronousTask.h"
-#include "mozilla/StaticMonitor.h"
 #include "mozilla/StaticPtr.h"
 #include "transport/runnable_utils.h"
 #include "mozilla/StaticPrefs_apz.h"
@@ -15,9 +16,6 @@ namespace mozilla {
 namespace widget {
 
 static StaticRefPtr<WinCompositorWindowThread> sWinCompositorWindowThread;
-
-static StaticMonitor sShutdownMonitor;
-static bool sShutdownComplete MOZ_GUARDED_BY(sShutdownMonitor) = false;
 
 /// A window procedure that logs when an input event is received to the gfx
 /// error log
@@ -56,7 +54,7 @@ static LRESULT CALLBACK InputEventRejectingWindowProc(HWND window, UINT msg,
 }
 
 WinCompositorWindowThread::WinCompositorWindowThread(base::Thread* aThread)
-    : mThread(aThread) {}
+    : mThread(aThread), mMonitor("WinCompositorWindowThread") {}
 
 /* static */
 WinCompositorWindowThread* WinCompositorWindowThread::Get() {
@@ -113,13 +111,13 @@ void WinCompositorWindowThread::ShutDown() {
   // to be deallocated and join the thread. If it times out,
   // we do nothing, which means that the thread will not be
   // joined and sWinCompositorWindowThread memory will leak.
-  bool shutdownComplete = false;
+  CVStatus status;
   {
     // It's important to hold the lock before posting the
     // runnable. This ensures that the runnable can't begin
     // until we've started our Wait, which prevents us from
     // Waiting on a monitor that has already been notified.
-    StaticMonitorAutoLock lock(sShutdownMonitor);
+    MonitorAutoLock lock(sWinCompositorWindowThread->mMonitor);
 
     static const TimeDuration TIMEOUT = TimeDuration::FromSeconds(2.0);
     RefPtr<Runnable> runnable =
@@ -128,7 +126,7 @@ void WinCompositorWindowThread::ShutDown() {
                           &WinCompositorWindowThread::ShutDownTask);
     Loop()->PostTask(runnable.forget());
 
-    // sShutdownMonitor can wake up spuriously, which can have
+    // Monitor uses SleepConditionVariableSRW, which can have
     // spurious wakeups which are reported as timeouts, so we
     // check timestamps to ensure that we've waited as long we
     // intended to. If we wake early, we don't bother calculating
@@ -137,23 +135,21 @@ void WinCompositorWindowThread::ShutDown() {
     // much as 2x the TIMEOUT time.
     TimeStamp timeStart = TimeStamp::NowLoRes();
     do {
-      sShutdownMonitor.Wait(TIMEOUT);
-    } while (!(shutdownComplete = sShutdownComplete) &&
+      status = sWinCompositorWindowThread->mMonitor.Wait(TIMEOUT);
+    } while ((status == CVStatus::Timeout) &&
              ((TimeStamp::NowLoRes() - timeStart) < TIMEOUT));
   }
 
-  if (shutdownComplete) {
+  if (status == CVStatus::NoTimeout) {
     sWinCompositorWindowThread = nullptr;
   }
 }
 
 void WinCompositorWindowThread::ShutDownTask() {
-  StaticMonitorAutoLock lock(sShutdownMonitor);
+  MonitorAutoLock lock(mMonitor);
 
   MOZ_ASSERT(IsInCompositorWindowThread());
-
-  sShutdownComplete = true;
-  sShutdownMonitor.NotifyAll();
+  mMonitor.NotifyAll();
 }
 
 /* static */

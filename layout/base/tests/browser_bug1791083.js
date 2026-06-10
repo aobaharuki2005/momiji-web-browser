@@ -38,7 +38,11 @@ add_task(async function test() {
     [],
     async function () {
       const a = content.document.querySelector("a");
-      EventUtils.synthesizeMouseAtCenter(a, { type: "mousemove" }, content);
+      await EventUtils.synthesizeMouseAtCenter(
+        a,
+        { type: "mousemove" },
+        content
+      );
     }
   );
 
@@ -54,8 +58,12 @@ add_task(async function test() {
     [],
     async function () {
       const a = content.document.querySelector("a");
-      EventUtils.synthesizeMouseAtCenter(a, { type: "mousedown" }, content);
-      EventUtils.synthesizeMouseAtCenter(a, { type: "mouseup" }, content);
+      await EventUtils.synthesizeMouseAtCenter(
+        a,
+        { type: "mousedown" },
+        content
+      );
+      await EventUtils.synthesizeMouseAtCenter(a, { type: "mouseup" }, content);
     }
   );
   await locationChange;

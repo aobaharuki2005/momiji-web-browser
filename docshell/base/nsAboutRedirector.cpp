@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -144,7 +146,9 @@ static const RedirEntry kRedirMap[] = {
     {"logging", "chrome://global/content/aboutLogging/aboutLogging.html",
      nsIAboutModule::ALLOW_SCRIPT},
     {"logo", "chrome://branding/content/about.png",
-     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
+     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+         // Linkable for testing reasons.
+         nsIAboutModule::MAKE_LINKABLE},
     {"memory", "chrome://global/content/aboutMemory.xhtml",
      nsIAboutModule::ALLOW_SCRIPT},
     {"certificate", "chrome://global/content/certviewer/certviewer.html",
@@ -240,6 +244,7 @@ static const RedirEntry kRedirMap[] = {
 #endif
     {"crashgpu", "about:blank", nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     {"crashextensions", "about:blank", nsIAboutModule::HIDE_FROM_ABOUTABOUT}};
+static const int kRedirTotal = std::size(kRedirMap);
 
 NS_IMETHODIMP
 nsAboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
@@ -279,11 +284,11 @@ nsAboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  for (const auto& redir : kRedirMap) {
-    if (!strcmp(path.get(), redir.id)) {
+  for (int i = 0; i < kRedirTotal; i++) {
+    if (!strcmp(path.get(), kRedirMap[i].id)) {
       nsCOMPtr<nsIChannel> tempChannel;
       nsCOMPtr<nsIURI> tempURI;
-      rv = NS_NewURI(getter_AddRefs(tempURI), redir.url);
+      rv = NS_NewURI(getter_AddRefs(tempURI), kRedirMap[i].url);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = NS_NewChannelInternal(getter_AddRefs(tempChannel), tempURI,
@@ -324,9 +329,9 @@ nsAboutRedirector::GetURIFlags(nsIURI* aURI, uint32_t* aResult) {
   nsresult rv = NS_GetAboutModuleName(aURI, name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (const auto& redir : kRedirMap) {
-    if (name.EqualsASCII(redir.id)) {
-      *aResult = redir.flags;
+  for (int i = 0; i < kRedirTotal; i++) {
+    if (name.EqualsASCII(kRedirMap[i].id)) {
+      *aResult = kRedirMap[i].flags;
       return NS_OK;
     }
   }
@@ -354,6 +359,6 @@ nsAboutRedirector::GetChromeURI(nsIURI* aURI, nsIURI** chromeURI) {
 }
 
 nsresult nsAboutRedirector::Create(REFNSIID aIID, void** aResult) {
-  RefPtr about = mozilla::MakeRefPtr<nsAboutRedirector>();
+  RefPtr<nsAboutRedirector> about = new nsAboutRedirector();
   return about->QueryInterface(aIID, aResult);
 }

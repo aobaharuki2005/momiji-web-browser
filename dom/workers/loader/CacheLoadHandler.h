@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_CacheLoadHandler_h_
-#define mozilla_dom_workers_CacheLoadHandler_h_
+#ifndef mozilla_dom_workers_CacheLoadHandler_h__
+#define mozilla_dom_workers_CacheLoadHandler_h__
 
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/dom/CacheBinding.h"
@@ -95,14 +97,12 @@ class CacheLoadHandler final : public PromiseNativeHandler,
  private:
   ~CacheLoadHandler() { AssertIsOnMainThread(); }
 
-  nsresult DataReceivedFromCache(
-      const uint8_t* aString, uint32_t aStringLen,
-      const mozilla::dom::ChannelInfo& aChannelInfo,
-      UniquePtr<PrincipalInfo> aPrincipalInfo,
-      const nsACString& aCSPHeaderValue,
-      const nsACString& aCSPReportOnlyHeaderValue,
-      const nsACString& aReferrerPolicyHeaderValue,
-      const nsACString& aReportingEndpointsHeaderValue);
+  nsresult DataReceivedFromCache(const uint8_t* aString, uint32_t aStringLen,
+                                 const mozilla::dom::ChannelInfo& aChannelInfo,
+                                 UniquePtr<PrincipalInfo> aPrincipalInfo,
+                                 const nsACString& aCSPHeaderValue,
+                                 const nsACString& aCSPReportOnlyHeaderValue,
+                                 const nsACString& aReferrerPolicyHeaderValue);
   nsresult DataReceived();
 
   RefPtr<ThreadSafeRequestHandle> mRequestHandle;
@@ -119,7 +119,6 @@ class CacheLoadHandler final : public PromiseNativeHandler,
   nsCString mCSPHeaderValue;
   nsCString mCSPReportOnlyHeaderValue;
   nsCString mReferrerPolicyHeaderValue;
-  nsCString mReportingEndpointsHeaderValue;
   nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
 };
 
@@ -217,4 +216,4 @@ class CachePromiseHandler final : public PromiseNativeHandler {
 }  // namespace workerinternals::loader
 }  // namespace mozilla::dom
 
-#endif /* mozilla_dom_workers_CacheLoadHandler_h_ */
+#endif /* mozilla_dom_workers_CacheLoadHandler_h__ */

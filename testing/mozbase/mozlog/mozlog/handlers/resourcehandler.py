@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-import os
 
 from ..reader import LogHandler
 
@@ -14,27 +13,15 @@ class ResourceHandler(LogHandler):
     def __init__(self, command_context, **kwargs):
         super().__init__(**kwargs)
 
-        from mozbuild.util import construct_log_filename
         from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 
-        # Get command name for log subdirectory
-        handler = getattr(command_context, "handler", None)
-        command_name = handler.name if handler else "test"
-        log_subdir = os.path.join("logs", command_name)
-
-        # Ensure log directory exists and create timestamped profile filename
-        command_context._ensure_state_subdir_exists(log_subdir)
         self.build_resources_profile_path = command_context._get_state_filename(
-            construct_log_filename("profile"), subdir=log_subdir
+            "profile_build_resources.json"
         )
         self.resources = SystemResourceMonitor(
             poll_interval=0.1,
         )
         self.resources.start()
-        self.resources.start_streaming(self.build_resources_profile_path)
-        print(
-            f"Streaming resource usage profile to: {self.build_resources_profile_path}"
-        )
 
     def shutdown(self, data):
         if not self.resources:
@@ -77,18 +64,3 @@ class ResourceHandler(LogHandler):
 
     def crash(self, data):
         self.resources.crash(data)
-
-    def lsan_leak(self, data):
-        self.resources.lsan_leak(data)
-
-    def lsan_summary(self, data):
-        self.resources.lsan_summary(data)
-
-    def tsan_error(self, data):
-        self.resources.tsan_error(data)
-
-    def mozleak_object(self, data):
-        self.resources.mozleak_object(data)
-
-    def mozleak_total(self, data):
-        self.resources.mozleak_total(data)

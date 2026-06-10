@@ -22,15 +22,6 @@ transforms = TransformSequence()
 
 
 @transforms.add
-def set_ccov_attribute(config, jobs):
-    for job in jobs:
-        label = job.get("label", job["name"])
-        if "ccov" in label:
-            job.setdefault("attributes", {})["ccov"] = True
-        yield job
-
-
-@transforms.add
 def set_defaults(config, jobs):
     """Set defaults, including those that differ per worker implementation"""
     for job in jobs:

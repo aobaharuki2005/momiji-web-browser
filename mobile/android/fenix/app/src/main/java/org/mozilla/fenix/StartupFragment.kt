@@ -5,7 +5,6 @@
 package org.mozilla.fenix
 
 import androidx.fragment.app.Fragment
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.home.HomeFragment
 
 /**
@@ -17,4 +16,4 @@ import org.mozilla.fenix.home.HomeFragment
  * to navigate to, which makes sure we only render the [HomeFragment]
  * as needed.
  */
-class StartupFragment : Fragment(), SystemInsetsPaddedFragment
+class StartupFragment : Fragment()

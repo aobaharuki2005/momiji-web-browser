@@ -6,7 +6,6 @@ package mozilla.components.browser.state.engine.middleware
 
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.BrowserState
@@ -15,11 +14,12 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
-import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 class SuspendMiddlewareTest {
@@ -79,34 +79,32 @@ class SuspendMiddlewareTest {
     @Test
     fun `does nothing if tab doesn't exist`() = runTest(testDispatcher) {
         val middleware = SuspendMiddleware(this)
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
 
-        val store = BrowserStore(
-            initialState = BrowserState(tabs = listOf()),
-            middleware = listOf(captureActionsMiddleware, middleware),
+        val store = spy(
+            BrowserStore(
+                initialState = BrowserState(tabs = listOf()),
+                middleware = listOf(middleware),
+            ),
         )
 
         store.dispatch(EngineAction.SuspendEngineSessionAction("invalid"))
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        captureActionsMiddleware.assertNotDispatched(EngineAction.UnlinkEngineSessionAction::class)
+        verify(store, never()).dispatch(EngineAction.UnlinkEngineSessionAction("invalid"))
     }
 
     @Test
     fun `does nothing if engine session doesn't exist`() = runTest(testDispatcher) {
         val middleware = SuspendMiddleware(this)
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
 
         val tab = createTab("https://www.mozilla.org", id = "1")
-        val store = BrowserStore(
-            initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware),
+        val store = spy(
+            BrowserStore(
+                initialState = BrowserState(tabs = listOf(tab)),
+                middleware = listOf(middleware),
+            ),
         )
 
-        store.dispatch(EngineAction.SuspendEngineSessionAction("invalid"))
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        captureActionsMiddleware.assertNotDispatched(EngineAction.UnlinkEngineSessionAction::class)
+        store.dispatch(EngineAction.SuspendEngineSessionAction(tab.id))
+        verify(store, never()).dispatch(EngineAction.UnlinkEngineSessionAction(tab.id))
     }
 
     @Test

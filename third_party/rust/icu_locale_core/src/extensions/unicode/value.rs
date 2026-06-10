@@ -3,6 +3,7 @@
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
 use crate::parser::ParseError;
+#[cfg(feature = "alloc")]
 use crate::parser::SubtagIterator;
 use crate::shortvec::{ShortBoxSlice, ShortBoxSliceIntoIter};
 use crate::subtags::{subtag, Subtag};
@@ -50,18 +51,14 @@ impl Value {
     ///
     /// Value::try_from_str("buddhist").expect("Parsing failed.");
     /// ```
-    ///
-    /// # `alloc` Cargo feature
-    ///
-    /// Without the `alloc` Cargo feature, this only supports parsing
-    /// up to two (non-`true`) subtags, and will return an error for
-    /// longer strings.
     #[inline]
+    #[cfg(feature = "alloc")]
     pub fn try_from_str(s: &str) -> Result<Self, ParseError> {
         Self::try_from_utf8(s.as_bytes())
     }
 
     /// See [`Self::try_from_str`]
+    #[cfg(feature = "alloc")]
     pub fn try_from_utf8(code_units: &[u8]) -> Result<Self, ParseError> {
         let mut v = ShortBoxSlice::new();
 
@@ -69,16 +66,7 @@ impl Value {
             for chunk in SubtagIterator::new(code_units) {
                 let subtag = Subtag::try_from_utf8(chunk)?;
                 if subtag != TRUE_VALUE {
-                    #[cfg(feature = "alloc")]
                     v.push(subtag);
-                    #[cfg(not(feature = "alloc"))]
-                    if v.is_empty() {
-                        v = ShortBoxSlice::new_single(subtag);
-                    } else if let &[prev] = &*v {
-                        v = ShortBoxSlice::new_double(prev, subtag);
-                    } else {
-                        return Err(ParseError::InvalidSubtag);
-                    }
                 }
             }
         }
@@ -129,8 +117,6 @@ impl Value {
     }
 
     /// Appends a subtag to the back of a [`Value`].
-    ///
-    /// ✨ *Enabled with the `alloc` Cargo feature.*
     ///
     /// # Examples
     ///
@@ -184,7 +170,7 @@ impl Value {
     /// use icu::locale::{extensions::unicode::Value, subtags::subtag};
     ///
     /// let mut v = Value::default();
-    /// assert!(v.is_empty());
+    /// assert_eq!(v.is_empty(), true);
     /// ```
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
@@ -240,14 +226,8 @@ impl Value {
         }
     }
 
-    #[doc(hidden)]
-    pub fn from_two_subtags(f: Subtag, s: Subtag) -> Self {
-        Self(ShortBoxSlice::new_double(f, s))
-    }
-
     /// A constructor which takes a pre-sorted list of [`Value`] elements.
     ///
-    /// ✨ *Enabled with the `alloc` Cargo feature.*
     ///
     /// # Examples
     ///
@@ -303,7 +283,6 @@ impl IntoIterator for Value {
     }
 }
 
-/// ✨ *Enabled with the `alloc` Cargo feature.*
 #[cfg(feature = "alloc")]
 impl FromIterator<Subtag> for Value {
     fn from_iter<T: IntoIterator<Item = Subtag>>(iter: T) -> Self {
@@ -311,7 +290,6 @@ impl FromIterator<Subtag> for Value {
     }
 }
 
-/// ✨ *Enabled with the `alloc` Cargo feature.*
 #[cfg(feature = "alloc")]
 impl Extend<Subtag> for Value {
     fn extend<T: IntoIterator<Item = Subtag>>(&mut self, iter: T) {
@@ -321,7 +299,6 @@ impl Extend<Subtag> for Value {
     }
 }
 
-/// ✨ *Enabled with the `alloc` Cargo feature.*
 #[cfg(feature = "alloc")]
 impl FromStr for Value {
     type Err = ParseError;

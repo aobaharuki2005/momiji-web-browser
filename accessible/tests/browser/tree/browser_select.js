@@ -121,13 +121,7 @@ addAccessibleTask(
       expected: [[EVENT_HIDE, LOCAL_DROPDOWN_ID]],
     });
 
-    const popup = window.document.getElementById(LOCAL_DROPDOWN_ID).menupopup;
-    if (popup.isNativeMenu) {
-      // Synthesized events are not available with native menus
-      popup.hidePopup();
-    } else {
-      EventUtils.synthesizeKey("VK_ESCAPE");
-    }
+    EventUtils.synthesizeKey("VK_ESCAPE");
     await p;
 
     // Verify walking down from the select produces the

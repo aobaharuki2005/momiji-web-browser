@@ -6,33 +6,32 @@
 
 add_task(async function testCategoryRestore() {
   let win = await loadInitialView("extension");
+  let utils = new CategoryUtilities(win);
 
   // Open the plugins category
-  let viewLoaded = waitForViewLoad(win);
-  AboutAddonsTestUtils.clickCategoryButton(win, "plugin");
-  await viewLoaded;
+  await utils.openType("plugin");
 
   // Re-open the manager
   await closeView(win);
   win = await loadInitialView();
+  utils = new CategoryUtilities(win);
 
   is(
-    AboutAddonsTestUtils.getSidebarSelectedCategory(win),
+    utils.selectedCategory,
     "plugin",
     "Should have shown the plugins category"
   );
 
   // Open the extensions category
-  viewLoaded = waitForViewLoad(win);
-  AboutAddonsTestUtils.clickCategoryButton(win, "extension");
-  await viewLoaded;
+  await utils.openType("extension");
 
   // Re-open the manager
   await closeView(win);
   win = await loadInitialView();
+  utils = new CategoryUtilities(win);
 
   is(
-    AboutAddonsTestUtils.getSidebarSelectedCategory(win),
+    utils.selectedCategory,
     "extension",
     "Should have shown the extensions category"
   );
@@ -43,8 +42,9 @@ add_task(async function testCategoryRestore() {
 add_task(async function testInvalidAddonType() {
   let win = await loadInitialView("invalid");
 
+  let categoryUtils = new CategoryUtilities(win);
   is(
-    AboutAddonsTestUtils.getSidebarSelectedViewId(win),
+    categoryUtils.getSelectedViewId(),
     win.gViewController.defaultViewId,
     "default view is selected"
   );
@@ -60,8 +60,9 @@ add_task(async function testInvalidAddonType() {
 add_task(async function testInvalidViewId() {
   let win = await loadInitialView("addons://invalid/view");
 
+  let categoryUtils = new CategoryUtilities(win);
   is(
-    AboutAddonsTestUtils.getSidebarSelectedViewId(win),
+    categoryUtils.getSelectedViewId(),
     win.gViewController.defaultViewId,
     "default view is selected"
   );

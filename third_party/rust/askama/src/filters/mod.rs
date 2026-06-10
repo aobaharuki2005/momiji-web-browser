@@ -17,26 +17,22 @@ mod escape;
 mod humansize;
 #[cfg(feature = "serde_json")]
 mod json;
-#[cfg(feature = "std")]
-mod std;
 #[cfg(feature = "urlencode")]
 mod urlencode;
 
 #[cfg(feature = "alloc")]
 pub use self::alloc::{
-    AsIndent, capitalize, fmt, format, indent, linebreaks, linebreaksbr, lower, lowercase,
-    paragraphbreaks, title, titlecase, trim, upper, uppercase, wordcount,
+    capitalize, fmt, format, indent, linebreaks, linebreaksbr, lower, lowercase, paragraphbreaks,
+    title, trim, upper, uppercase, wordcount,
 };
 pub use self::builtin::{PluralizeCount, center, join, pluralize, truncate};
 pub use self::escape::{
-    AutoEscape, AutoEscaper, Escaper, Html, HtmlSafe, HtmlSafeOutput, MaybeSafe, Safe, Text,
-    Unsafe, Writable, WriteWritable, e, escape, safe,
+    AutoEscape, AutoEscaper, Escaper, FastWritable, Html, HtmlSafe, HtmlSafeOutput, MaybeSafe,
+    Safe, Text, Unsafe, Writable, WriteWritable, e, escape, safe,
 };
 pub use self::humansize::filesizeformat;
 #[cfg(feature = "serde_json")]
-pub use self::json::{json, json_pretty};
-#[cfg(feature = "std")]
-pub use self::std::unique;
+pub use self::json::{AsIndent, json, json_pretty};
 #[cfg(feature = "urlencode")]
 pub use self::urlencode::{urlencode, urlencode_strict};
 

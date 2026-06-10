@@ -111,7 +111,6 @@ impl super::Queue {
         attachment: u32,
         view: &super::TextureView,
         depth_slice: Option<u32>,
-        sample_count: u32,
     ) {
         match view.inner {
             super::TextureInner::Renderbuffer { raw } => {
@@ -157,24 +156,13 @@ impl super::Queue {
                 } else {
                     unsafe {
                         assert_eq!(view.mip_levels.len(), 1);
-                        if sample_count != 1 {
-                            gl.framebuffer_texture_2d_multisample(
-                                fbo_target,
-                                attachment,
-                                get_2d_target(target, view.array_layers.start),
-                                Some(raw),
-                                view.mip_levels.start as i32,
-                                sample_count as i32,
-                            )
-                        } else {
-                            gl.framebuffer_texture_2d(
-                                fbo_target,
-                                attachment,
-                                get_2d_target(target, view.array_layers.start),
-                                Some(raw),
-                                view.mip_levels.start as i32,
-                            )
-                        }
+                        gl.framebuffer_texture_2d(
+                            fbo_target,
+                            attachment,
+                            get_2d_target(target, view.array_layers.start),
+                            Some(raw),
+                            view.mip_levels.start as i32,
+                        )
                     };
                 }
             }
@@ -377,8 +365,7 @@ impl super::Queue {
                     }
                 }
                 None => {
-                    let mut map_state = lock(&dst.map_state);
-                    map_state.data.as_mut().unwrap().as_mut_slice()
+                    lock(dst.data.as_ref().unwrap()).as_mut_slice()
                         [range.start as usize..range.end as usize]
                         .fill(0);
                 }
@@ -420,8 +407,8 @@ impl super::Queue {
                         };
                     }
                     (Some(src), None) => {
-                        let mut map_state = lock(&dst.map_state);
-                        let dst_data = &mut map_state.data.as_mut().unwrap().as_mut_slice()
+                        let mut data = lock(dst.data.as_ref().unwrap());
+                        let dst_data = &mut data.as_mut_slice()
                             [copy.dst_offset as usize..copy.dst_offset as usize + size];
 
                         unsafe { gl.bind_buffer(copy_src_target, Some(src)) };
@@ -435,8 +422,8 @@ impl super::Queue {
                         };
                     }
                     (None, Some(dst)) => {
-                        let map_state = lock(&src.map_state);
-                        let src_data = &map_state.data.as_ref().unwrap().as_slice()
+                        let data = lock(src.data.as_ref().unwrap());
+                        let src_data = &data.as_slice()
                             [copy.src_offset as usize..copy.src_offset as usize + size];
                         unsafe { gl.bind_buffer(copy_dst_target, Some(dst)) };
                         unsafe {
@@ -537,10 +524,6 @@ impl super::Queue {
                                 v,
                             );
                         },
-                        #[cfg(not(web_sys_unstable_apis))]
-                        wgt::ExternalImageSource::VideoFrame(_) => {
-                            unimplemented!("web_sys_unstable_apis is needed for glow")
-                        }
                         #[cfg(web_sys_unstable_apis)]
                         wgt::ExternalImageSource::VideoFrame(ref v) => unsafe {
                             gl.tex_sub_image_3d_with_video_frame(
@@ -632,10 +615,6 @@ impl super::Queue {
                                 v,
                             )
                         },
-                        #[cfg(not(web_sys_unstable_apis))]
-                        wgt::ExternalImageSource::VideoFrame(_) => {
-                            unimplemented!("web_sys_unstable_apis is needed for glow")
-                        }
                         #[cfg(web_sys_unstable_apis)]
                         wgt::ExternalImageSource::VideoFrame(ref v) => unsafe {
                             gl.tex_sub_image_2d_with_video_frame_and_width_and_height(
@@ -776,7 +755,7 @@ impl super::Queue {
                 unsafe { gl.pixel_store_i32(glow::UNPACK_IMAGE_HEIGHT, column_texels as i32) };
                 let mut unbind_unpack_buffer = false;
                 if !dst_format.is_compressed() {
-                    let map_state;
+                    let buffer_data;
                     let unpack_data = match src.raw {
                         Some(buffer) => {
                             unsafe { gl.bind_buffer(glow::PIXEL_UNPACK_BUFFER, Some(buffer)) };
@@ -784,9 +763,9 @@ impl super::Queue {
                             glow::PixelUnpackData::BufferOffset(copy.buffer_layout.offset as u32)
                         }
                         None => {
-                            map_state = lock(&src.map_state);
-                            let src_data = &map_state.data.as_ref().unwrap().as_slice()
-                                [copy.buffer_layout.offset as usize..];
+                            buffer_data = lock(src.data.as_ref().unwrap());
+                            let src_data =
+                                &buffer_data.as_slice()[copy.buffer_layout.offset as usize..];
                             glow::PixelUnpackData::Slice(Some(src_data))
                         }
                     };
@@ -838,7 +817,7 @@ impl super::Queue {
                         (bytes_per_image * (copy.size.depth - 1)) + minimum_bytes_per_image;
                     let offset = copy.buffer_layout.offset as u32;
 
-                    let map_state;
+                    let buffer_data;
                     let unpack_data = match src.raw {
                         Some(buffer) => {
                             unsafe { gl.bind_buffer(glow::PIXEL_UNPACK_BUFFER, Some(buffer)) };
@@ -848,8 +827,8 @@ impl super::Queue {
                             )
                         }
                         None => {
-                            map_state = lock(&src.map_state);
-                            let src_data = &map_state.data.as_ref().unwrap().as_slice()
+                            buffer_data = lock(src.data.as_ref().unwrap());
+                            let src_data = &buffer_data.as_slice()
                                 [(offset as usize)..(offset + bytes_in_upload) as usize];
                             glow::CompressedPixelUnpackData::Slice(src_data)
                         }
@@ -921,7 +900,7 @@ impl super::Queue {
                 unsafe { gl.bind_framebuffer(glow::READ_FRAMEBUFFER, Some(self.copy_fbo)) };
 
                 let read_pixels = |offset| {
-                    let mut map_state;
+                    let mut buffer_data;
                     let unpack_data = match dst.raw {
                         Some(buffer) => {
                             unsafe { gl.pixel_store_i32(glow::PACK_ROW_LENGTH, row_texels as i32) };
@@ -929,9 +908,8 @@ impl super::Queue {
                             glow::PixelPackData::BufferOffset(offset as u32)
                         }
                         None => {
-                            map_state = lock(&dst.map_state);
-                            let dst_data = &mut map_state.data.as_mut().unwrap().as_mut_slice()
-                                [offset as usize..];
+                            buffer_data = lock(dst.data.as_ref().unwrap());
+                            let dst_data = &mut buffer_data.as_mut_slice()[offset as usize..];
                             glow::PixelPackData::Slice(Some(dst_data))
                         }
                     };
@@ -1096,8 +1074,7 @@ impl super::Queue {
                             };
                         }
                         None => {
-                            let mut map_state = lock(&dst.map_state);
-                            let data = map_state.data.as_mut().unwrap();
+                            let data = &mut lock(dst.data.as_ref().unwrap());
                             let len = query_data.len().min(data.len());
                             data[..len].copy_from_slice(&query_data[..len]);
                         }
@@ -1142,17 +1119,9 @@ impl super::Queue {
                 attachment,
                 ref view,
                 depth_slice,
-                sample_count,
             } => {
                 unsafe {
-                    self.set_attachment(
-                        gl,
-                        glow::DRAW_FRAMEBUFFER,
-                        attachment,
-                        view,
-                        depth_slice,
-                        sample_count,
-                    )
+                    self.set_attachment(gl, glow::DRAW_FRAMEBUFFER, attachment, view, depth_slice)
                 };
             }
             C::ResolveAttachment {
@@ -1170,7 +1139,6 @@ impl super::Queue {
                         glow::COLOR_ATTACHMENT0,
                         dst,
                         None,
-                        1,
                     )
                 };
                 unsafe {
@@ -1904,7 +1872,7 @@ impl crate::Queue for super::Queue {
         &self,
         command_buffers: &[&super::CommandBuffer],
         _surface_textures: &[&super::Texture],
-        (signal_fence, signal_value): (&super::Fence, crate::FenceValue),
+        (signal_fence, signal_value): (&mut super::Fence, crate::FenceValue),
     ) -> Result<(), crate::DeviceError> {
         let shared = Arc::clone(&self.shared);
         let gl = &shared.context.lock();
@@ -1965,12 +1933,6 @@ impl crate::Queue for super::Queue {
 
     unsafe fn get_timestamp_period(&self) -> f32 {
         1.0
-    }
-
-    unsafe fn wait_for_idle(&self) -> Result<(), crate::DeviceError> {
-        let gl = &self.shared.context.lock();
-        unsafe { gl.finish() };
-        Ok(())
     }
 }
 

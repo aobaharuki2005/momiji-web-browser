@@ -1,7 +1,3 @@
-PLHashNumber
-============
-
-.. _plhashnumber-syntax:
 
 Syntax
 ------
@@ -15,8 +11,6 @@ Syntax
    #define PL_HASH_BITS 32
 
 
-.. _plhashnumber-description:
-
 Description
 -----------
 
@@ -28,8 +22,6 @@ bucket.
 The macro ``PL_HASH_BITS`` is the size (in bits) of the ``PLHashNumber``
 data type and has the value of 32.
 
-
-.. _plhashnumber-see-also:
 
 See Also
 --------

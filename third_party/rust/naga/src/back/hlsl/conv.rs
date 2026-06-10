@@ -23,13 +23,11 @@ impl crate::Scalar {
     pub(super) const fn to_hlsl_str(self) -> Result<&'static str, Error> {
         match self.kind {
             crate::ScalarKind::Sint => match self.width {
-                2 => Ok("int16_t"),
                 4 => Ok("int"),
                 8 => Ok("int64_t"),
                 _ => Err(Error::UnsupportedScalar(self)),
             },
             crate::ScalarKind::Uint => match self.width {
-                2 => Ok("uint16_t"),
                 4 => Ok("uint"),
                 8 => Ok("uint64_t"),
                 _ => Err(Error::UnsupportedScalar(self)),
@@ -151,13 +149,11 @@ impl crate::StorageFormat {
 }
 
 impl crate::BuiltIn {
-    /// Returns `None` for "virtual" builtins, i.e. mesh shader builtins that are
-    /// used by naga but not recognized by HLSL.
-    pub(super) fn to_hlsl_str(self) -> Result<Option<&'static str>, Error> {
-        Ok(Some(match self {
+    pub(super) fn to_hlsl_str(self) -> Result<&'static str, Error> {
+        Ok(match self {
             Self::Position { .. } => "SV_Position",
             // vertex
-            Self::ClipDistances => "SV_ClipDistance",
+            Self::ClipDistance => "SV_ClipDistance",
             Self::CullDistance => "SV_CullDistance",
             Self::InstanceIndex => "SV_InstanceID",
             Self::VertexIndex => "SV_VertexID",
@@ -165,7 +161,7 @@ impl crate::BuiltIn {
             Self::FragDepth => "SV_Depth",
             Self::FrontFacing => "SV_IsFrontFace",
             Self::PrimitiveIndex => "SV_PrimitiveID",
-            Self::Barycentric { .. } => "SV_Barycentrics",
+            Self::Barycentric => "SV_Barycentrics",
             Self::SampleIndex => "SV_SampleIndex",
             Self::SampleMask => "SV_Coverage",
             // compute
@@ -186,32 +182,17 @@ impl crate::BuiltIn {
             Self::BaseInstance | Self::BaseVertex | Self::WorkGroupSize => {
                 return Err(Error::Unimplemented(format!("builtin {self:?}")))
             }
-            Self::PointSize | Self::PointCoord | Self::DrawIndex => {
+            Self::PointSize | Self::PointCoord | Self::DrawID => {
                 return Err(Error::Custom(format!("Unsupported builtin {self:?}")))
             }
             Self::CullPrimitive => "SV_CullPrimitive",
+            Self::PointIndex | Self::LineIndices | Self::TriangleIndices => unimplemented!(),
             Self::MeshTaskSize
             | Self::VertexCount
             | Self::PrimitiveCount
             | Self::Vertices
-            | Self::Primitives
-            | Self::PointIndex
-            | Self::LineIndices
-            | Self::TriangleIndices => return Ok(None),
-            Self::RayInvocationId
-            | Self::NumRayInvocations
-            | Self::InstanceCustomData
-            | Self::GeometryIndex
-            | Self::WorldRayOrigin
-            | Self::WorldRayDirection
-            | Self::ObjectRayOrigin
-            | Self::ObjectRayDirection
-            | Self::RayTmin
-            | Self::RayTCurrentMax
-            | Self::ObjectToWorld
-            | Self::WorldToObject
-            | Self::HitKind => unreachable!(),
-        }))
+            | Self::Primitives => unreachable!(),
+        })
     }
 }
 
@@ -224,7 +205,6 @@ impl crate::Interpolation {
             Self::Perspective => None,
             Self::Linear => Some("noperspective"),
             Self::Flat => Some("nointerpolation"),
-            Self::PerVertex => Some("nointerpolation"),
         }
     }
 }

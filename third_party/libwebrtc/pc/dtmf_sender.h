@@ -67,7 +67,7 @@ class DtmfSender : public DtmfSenderInterface {
 
  protected:
   DtmfSender(TaskQueueBase* signaling_thread, DtmfProviderInterface* provider);
-  ~DtmfSender() override;
+  virtual ~DtmfSender();
 
   DtmfSender(const DtmfSender&) = delete;
   DtmfSender& operator=(const DtmfSender&) = delete;

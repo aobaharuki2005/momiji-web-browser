@@ -47,10 +47,10 @@ add_task(async function test_install_duplicate_engine_startup() {
   let extension = lazy.ExtensionTestUtils.loadExtension(extensionInfo);
   await extension.startup();
 
-  await SearchService.init();
+  await Services.search.init();
 
   await AddonTestUtils.waitForSearchProviderStartup(extension);
-  let engine = await SearchService.getEngineByName(name);
+  let engine = await Services.search.getEngineByName(name);
   let submission = engine.getSubmission("foo");
   Assert.equal(
     submission.uri.spec,

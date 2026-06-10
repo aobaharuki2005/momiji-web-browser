@@ -11,9 +11,6 @@
 ChromeUtils.defineESModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
-const { ConfigSearchEngine } = ChromeUtils.importESModule(
-  "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs"
-);
 
 const CONFIG = [
   { identifier: "engine1" },
@@ -91,7 +88,7 @@ add_setup(async () => {
   SearchTestUtils.setRemoteSettingsConfig(CONFIG);
 
   let promiseSaved = promiseAfterSettings();
-  await SearchService.init();
+  await Services.search.init();
   await promiseSaved;
 
   registerCleanupFunction(async () => {
@@ -115,15 +112,15 @@ async function switchExperiment(newExperiment) {
 }
 
 function getSettingsAttribute(setting, engine) {
-  return SearchService._settings.getVerifiedMetaDataAttribute(
+  return Services.search.wrappedJSObject._settings.getVerifiedMetaDataAttribute(
     setting,
-    engine instanceof ConfigSearchEngine
+    engine.isConfigEngine
   );
 }
 
 add_task(async function test_experiment_setting() {
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine1",
     "Should have the application default engine as default"
   );
@@ -132,7 +129,7 @@ add_task(async function test_experiment_setting() {
   await switchExperiment("exp1");
 
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine2",
     "Should have set the experiment engine as default"
   );
@@ -141,47 +138,47 @@ add_task(async function test_experiment_setting() {
   await switchExperiment("");
 
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine1",
     "Should have reset the default engine to the application default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "",
     "Should have kept the saved attribute as empty"
   );
 });
 
 add_task(async function test_experiment_setting_to_same_as_user() {
-  await SearchService.setDefault(
-    SearchService.getEngineByName("engine2"),
-    SearchService.CHANGE_REASON.UNKNOWN
+  await Services.search.setDefault(
+    Services.search.getEngineByName("engine2"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine2",
     "Should have the user selected engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "engine2"
   );
 
   // Start the experiment, ensure user default is maintained.
   await switchExperiment("exp1");
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "engine2"
   );
 
   Assert.equal(
-    SearchService.appDefaultEngine.name,
+    Services.search.appDefaultEngine.name,
     "engine2",
     "Should have set the experiment engine as default"
   );
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine2",
     "Should have set the experiment engine as default"
   );
@@ -190,35 +187,35 @@ add_task(async function test_experiment_setting_to_same_as_user() {
   await switchExperiment("");
 
   Assert.equal(
-    SearchService.appDefaultEngine.name,
+    Services.search.appDefaultEngine.name,
     "engine1",
     "Should have set the app default engine correctly"
   );
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine2",
     "Should have kept the engine the same "
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "engine2",
     "Should have kept the saved attribute as the user's preference"
   );
 });
 
 add_task(async function test_experiment_setting_user_changed_back_during() {
-  await SearchService.setDefault(
-    SearchService.getEngineByName("engine1"),
-    SearchService.CHANGE_REASON.UNKNOWN
+  await Services.search.setDefault(
+    Services.search.getEngineByName("engine1"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine1",
     "Should have the application default engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "",
     "Should have an empty settings attribute"
   );
@@ -227,28 +224,28 @@ add_task(async function test_experiment_setting_user_changed_back_during() {
   await switchExperiment("exp1");
 
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine2",
     "Should have set the experiment engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "",
     "Should still have an empty settings attribute"
   );
 
   // User resets to the original default engine.
-  await SearchService.setDefault(
-    SearchService.getEngineByName("engine1"),
-    SearchService.CHANGE_REASON.UNKNOWN
+  await Services.search.setDefault(
+    Services.search.getEngineByName("engine1"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine1",
     "Should have the user selected engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "engine1"
   );
 
@@ -257,37 +254,37 @@ add_task(async function test_experiment_setting_user_changed_back_during() {
   await switchExperiment("");
 
   Assert.equal(
-    SearchService.appDefaultEngine.name,
+    Services.search.appDefaultEngine.name,
     "engine1",
     "Should have set the app default engine correctly"
   );
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine1",
     "Should have kept the engine the same"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "",
     "Should have reset the saved attribute to empty after the experiment ended"
   );
 });
 
 add_task(async function test_experiment_setting_user_changed_back_private() {
-  await SearchService.setDefaultPrivate(
-    SearchService.getEngineByName("engine1"),
-    SearchService.CHANGE_REASON.UNKNOWN
+  await Services.search.setDefaultPrivate(
+    Services.search.getEngineByName("engine1"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   Assert.equal(
-    SearchService.defaultPrivateEngine.name,
+    Services.search.defaultPrivateEngine.name,
     "engine1",
     "Should have the user selected engine as default"
   );
   Assert.equal(
     getSettingsAttribute(
       "privateDefaultEngineId",
-      SearchService.defaultPrivateEngine
+      Services.search.defaultPrivateEngine
     ),
     "",
     "Should have an empty settings attribute"
@@ -297,30 +294,30 @@ add_task(async function test_experiment_setting_user_changed_back_private() {
   await switchExperiment("exp2");
 
   Assert.equal(
-    SearchService.defaultPrivateEngine.name,
+    Services.search.defaultPrivateEngine.name,
     "exp2",
     "Should have set the experiment engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "",
     "Should still have an empty settings attribute"
   );
 
   // User resets to the original default engine.
-  await SearchService.setDefaultPrivate(
-    SearchService.getEngineByName("engine1"),
-    SearchService.CHANGE_REASON.UNKNOWN
+  await Services.search.setDefaultPrivate(
+    Services.search.getEngineByName("engine1"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   Assert.equal(
-    SearchService.defaultPrivateEngine.name,
+    Services.search.defaultPrivateEngine.name,
     "engine1",
     "Should have the user selected engine as default"
   );
   Assert.equal(
     getSettingsAttribute(
       "privateDefaultEngineId",
-      SearchService.defaultPrivateEngine
+      Services.search.defaultPrivateEngine
     ),
     "engine1"
   );
@@ -329,16 +326,16 @@ add_task(async function test_experiment_setting_user_changed_back_private() {
   // saved attribute.
   await switchExperiment("");
 
-  Assert.equal(SearchService.appPrivateDefaultEngine.name, "engine1");
+  Assert.equal(Services.search.appPrivateDefaultEngine.name, "engine1");
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine1",
     "Should have kept the engine the same "
   );
   Assert.equal(
     getSettingsAttribute(
       "privateDefaultEngineId",
-      SearchService.defaultPrivateEngine
+      Services.search.defaultPrivateEngine
     ),
     "",
     "Should have reset the saved attribute to empty after the experiment ended"
@@ -346,18 +343,18 @@ add_task(async function test_experiment_setting_user_changed_back_private() {
 });
 
 add_task(async function test_experiment_setting_user_changed_to_other_during() {
-  await SearchService.setDefault(
-    SearchService.getEngineByName("engine1"),
-    SearchService.CHANGE_REASON.UNKNOWN
+  await Services.search.setDefault(
+    Services.search.getEngineByName("engine1"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine1",
     "Should have the application default engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "",
     "Should have an empty settings attribute"
   );
@@ -366,28 +363,28 @@ add_task(async function test_experiment_setting_user_changed_to_other_during() {
   await switchExperiment("exp3");
 
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "exp3",
     "Should have set the experiment engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "",
     "Should still have an empty settings attribute"
   );
 
   // User changes to a different default engine
-  await SearchService.setDefault(
-    SearchService.getEngineByName("engine2"),
-    SearchService.CHANGE_REASON.UNKNOWN
+  await Services.search.setDefault(
+    Services.search.getEngineByName("engine2"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine2",
     "Should have the user selected engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "engine2",
     "Should have correctly set the user's default in settings"
   );
@@ -397,17 +394,17 @@ add_task(async function test_experiment_setting_user_changed_to_other_during() {
   await switchExperiment("");
 
   Assert.equal(
-    SearchService.appDefaultEngine.name,
+    Services.search.appDefaultEngine.name,
     "engine1",
     "Should have set the app default engine correctly"
   );
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine2",
     "Should have kept the user's choice of engine"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "engine2",
     "Should have kept the user's choice in settings"
   );
@@ -418,18 +415,18 @@ add_task(async function test_experiment_setting_user_hid_app_default_during() {
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
     false
   );
-  await SearchService.setDefault(
-    SearchService.getEngineByName("engine1"),
-    SearchService.CHANGE_REASON.UNKNOWN
+  await Services.search.setDefault(
+    Services.search.getEngineByName("engine1"),
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine1",
     "Should have the application default engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "",
     "Should have an empty settings attribute"
   );
@@ -438,20 +435,22 @@ add_task(async function test_experiment_setting_user_hid_app_default_during() {
   await switchExperiment("exp3");
 
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "exp3",
     "Should have set the experiment engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "",
     "Should still have an empty settings attribute"
   );
 
   // User hides the original application engine
-  await SearchService.removeEngine(SearchService.getEngineByName("engine1"));
+  await Services.search.removeEngine(
+    Services.search.getEngineByName("engine1")
+  );
   Assert.equal(
-    SearchService.getEngineByName("engine1").hidden,
+    Services.search.getEngineByName("engine1").hidden,
     true,
     "Should have hid the selected engine"
   );
@@ -461,22 +460,22 @@ add_task(async function test_experiment_setting_user_hid_app_default_during() {
   await switchExperiment("");
 
   Assert.equal(
-    SearchService.appDefaultEngine.name,
+    Services.search.appDefaultEngine.name,
     "engine1",
     "Should have set the app default engine correctly"
   );
   Assert.equal(
-    SearchService.defaultEngine.hidden,
+    Services.search.defaultEngine.hidden,
     false,
     "Should not have set default engine to an engine that is hidden"
   );
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "engine2",
     "Should have reset the user's engine to the next available engine"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId", SearchService.defaultEngine),
+    getSettingsAttribute("defaultEngineId", Services.search.defaultEngine),
     "engine2",
     "Should have saved the choice in settings"
   );

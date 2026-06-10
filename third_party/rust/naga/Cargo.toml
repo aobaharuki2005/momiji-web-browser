@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.87"
+rust-version = "1.82.0"
 name = "naga"
-version = "29.0.0"
+version = "28.0.0"
 authors = ["gfx-rs developers"]
 build = "build.rs"
 exclude = [
@@ -80,7 +80,10 @@ spv-in = [
 spv-out = ["dep:spirv"]
 stderr = ["codespan-reporting/std"]
 termcolor = ["codespan-reporting/termcolor"]
-wgsl-in = ["dep:unicode-ident"]
+wgsl-in = [
+    "dep:hexf-parse",
+    "dep:unicode-ident",
+]
 wgsl-out = []
 
 [lib]
@@ -97,7 +100,7 @@ version = "0.7.1"
 default-features = false
 
 [dependencies.bit-set]
-version = "0.10"
+version = "0.8"
 default-features = false
 
 [dependencies.bitflags]
@@ -107,7 +110,7 @@ version = "2.9"
 version = "1"
 
 [dependencies.codespan-reporting]
-version = "0.13"
+version = "0.12"
 default-features = false
 
 [dependencies.half]
@@ -123,8 +126,12 @@ features = [
 ]
 default-features = false
 
+[dependencies.hexf-parse]
+version = "0.2"
+optional = true
+
 [dependencies.indexmap]
-version = "2.11.4"
+version = "2.8"
 default-features = false
 
 [dependencies.libm]
@@ -132,7 +139,7 @@ version = "0.2.6"
 default-features = false
 
 [dependencies.log]
-version = "0.4.29"
+version = "0.4.21"
 
 [dependencies.num-traits]
 version = "0.2.16"
@@ -160,7 +167,7 @@ version = "1.1"
 default-features = false
 
 [dependencies.serde]
-version = "1.0.225"
+version = "1.0.219"
 features = [
     "alloc",
     "derive",
@@ -169,7 +176,9 @@ optional = true
 default-features = false
 
 [dependencies.spirv]
-version = "0.4"
+version = "0.3"
+git = "https://github.com/gfx-rs/rspirv"
+rev = "89ce4d0e64c91b0635f617409dc57cb031749a39"
 optional = true
 
 [dependencies.thiserror]
@@ -209,10 +218,12 @@ path = "../naga-test"
 version = "0.12"
 
 [dev-dependencies.rspirv]
-version = "0.13"
+version = "0.12"
+git = "https://github.com/gfx-rs/rspirv"
+rev = "89ce4d0e64c91b0635f617409dc57cb031749a39"
 
 [dev-dependencies.serde]
-version = "1.0.225"
+version = "1.0.219"
 features = [
     "default",
     "derive",
@@ -220,10 +231,12 @@ features = [
 default-features = false
 
 [dev-dependencies.spirv]
-version = "0.4"
+version = "0.3"
+git = "https://github.com/gfx-rs/rspirv"
+rev = "89ce4d0e64c91b0635f617409dc57cb031749a39"
 
 [dev-dependencies.strum]
-version = "0.28"
+version = "0.27.1"
 features = ["derive"]
 default-features = false
 

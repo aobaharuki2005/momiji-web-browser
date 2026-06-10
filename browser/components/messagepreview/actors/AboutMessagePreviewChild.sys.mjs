@@ -2,20 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const lazy = XPCOMUtils.declareLazy({
-  log: () => {
-    const { Logger } = ChromeUtils.importESModule(
-      "resource://messaging-system/lib/Logger.sys.mjs"
-    );
-    return new Logger("AboutMessagePreviewChild");
-  },
-});
-
 export class AboutMessagePreviewChild extends JSWindowActorChild {
   handleEvent(event) {
-    lazy.log.debug(`Received page event ${event.type}`);
+    console.log(`Received page event ${event.type}`);
   }
 
   actorCreated() {
@@ -24,7 +13,12 @@ export class AboutMessagePreviewChild extends JSWindowActorChild {
 
   exportFunctions() {
     if (this.contentWindow) {
-      for (const name of ["MPShowMessage", "MPIsEnabled", "MPToggleLights"]) {
+      for (const name of [
+        "MPShowMessage",
+        "MPIsEnabled",
+        "MPShouldShowHint",
+        "MPToggleLights",
+      ]) {
         Cu.exportFunction(this[name].bind(this), this.contentWindow, {
           defineAs: name,
         });
@@ -48,11 +42,11 @@ export class AboutMessagePreviewChild extends JSWindowActorChild {
   /**
    * Check the browser theme and switch it.
    */
-  async MPToggleLights() {
+  MPToggleLights() {
     const isDark = this.contentWindow.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
-    await this.sendQuery(`MessagePreview:CHANGE_THEME`, { isDark });
+    this.sendAsyncMessage(`MessagePreview:CHANGE_THEME`, { isDark });
   }
 
   /**
@@ -61,7 +55,16 @@ export class AboutMessagePreviewChild extends JSWindowActorChild {
    *
    * @param {object} message
    */
-  async MPShowMessage(message) {
-    await this.sendQuery(`MessagePreview:SHOW_MESSAGE`, message);
+  MPShowMessage(message) {
+    this.sendAsyncMessage(`MessagePreview:SHOW_MESSAGE`, message);
+  }
+
+  /**
+   * Check if a hint should be shown about how to enable Message Preview.
+   *
+   * @returns {boolean}
+   */
+  MPShouldShowHint() {
+    return !this.MPIsEnabled();
   }
 }

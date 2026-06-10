@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -23,11 +25,11 @@ void nsGenConNode::CheckFrameAssertions() {
 
   NS_ASSERTION(mContentIndex < 0 ||
                    mPseudoFrame->Style()->GetPseudoType() ==
-                       mozilla::PseudoStyleType::Before ||
+                       mozilla::PseudoStyleType::before ||
                    mPseudoFrame->Style()->GetPseudoType() ==
-                       mozilla::PseudoStyleType::After ||
+                       mozilla::PseudoStyleType::after ||
                    mPseudoFrame->Style()->GetPseudoType() ==
-                       mozilla::PseudoStyleType::Marker,
+                       mozilla::PseudoStyleType::marker,
                "not CSS generated content and not counter change");
   NS_ASSERTION(mContentIndex < 0 ||
                    mPseudoFrame->HasAnyStateBits(NS_FRAME_GENERATED_CONTENT),
@@ -78,15 +80,15 @@ bool nsGenConList::DestroyNodesFor(nsIFrame* aFrame) {
  */
 inline int32_t PseudoCompareType(nsIFrame* aFrame, nsIContent** aContent) {
   auto pseudo = aFrame->Style()->GetPseudoType();
-  if (pseudo == mozilla::PseudoStyleType::Marker) {
+  if (pseudo == mozilla::PseudoStyleType::marker) {
     *aContent = aFrame->GetContent()->GetParent();
     return -2;
   }
-  if (pseudo == mozilla::PseudoStyleType::Before) {
+  if (pseudo == mozilla::PseudoStyleType::before) {
     *aContent = aFrame->GetContent()->GetParent();
     return -1;
   }
-  if (pseudo == mozilla::PseudoStyleType::After) {
+  if (pseudo == mozilla::PseudoStyleType::after) {
     *aContent = aFrame->GetContent()->GetParent();
     return 1;
   }

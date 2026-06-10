@@ -12,7 +12,7 @@ See moz.yaml for the current in-tree version.
 To update run 
 
 $ ./mach vendor media/libvpx/moz.yaml --patch-mode=none
-$ git commit -m "Update libvpx"
+$ hg commit -m "Update libvpx"
 $ ./mach vendor media/libvpx/moz.yaml --patch-mode=only
-$ git commit -m "Apply local patches to libvpx"
+$ hg commit -m "Apply local patches to libvpx"
 

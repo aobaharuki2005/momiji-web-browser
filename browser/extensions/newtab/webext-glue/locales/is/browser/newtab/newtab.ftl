@@ -8,13 +8,9 @@
 newtab-page-title = Nýr flipi
 newtab-settings-button =
     .title = Sérsníða nýju flipasíðuna
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Sérsníða þessa síðu
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Sérsníða
-newtab-customize-panel-label =
-    .label = Sérsníða
 newtab-personalize-settings-icon-label =
     .title = Sérsníða nýjan flipa
     .aria-label = Stillingar
@@ -53,7 +49,7 @@ newtab-search-box-input =
     .placeholder = Leita á vefnum
     .aria-label = Leita á vefnum
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = Bæta við leitarvél
 newtab-topsites-add-shortcut-header = Nýr flýtilykill
@@ -307,21 +303,9 @@ newtab-error-fallback-refresh-link = Endurlestu síðu til að reyna aftur.
 
 newtab-custom-shortcuts-title = Flýtileiðir
 newtab-custom-shortcuts-subtitle = Vefsvæði sem þú vistar eða heimsækir
-#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Flýtileiðir
     .description = Vefsvæði sem þú vistar eða heimsækir
-newtab-custom-shortcuts-nova =
-    .label = Flýtileiðir
-# Variables
-#   $num (number) - Number of rows to display
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
-newtab-custom-row-selector2 =
-    .label =
-        { $num ->
-            [one] { $num } röð
-           *[other] { $num } raðir
-        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -332,12 +316,9 @@ newtab-custom-row-selector =
 newtab-custom-sponsored-sites = Kostaðar flýtileiðir
 newtab-custom-pocket-title = Mælt með af { -pocket-brand-name }
 newtab-custom-pocket-subtitle = Úrvalsefni í umsjón { -pocket-brand-name }, hluta af { -brand-product-name } fjölskyldunni
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be having a description under "Recommended stories" anymore
 newtab-custom-stories-toggle =
     .label = Sögur sem mælt er með
     .description = Úrvalsefni sem safnað hefur verið af aðstandendum { -brand-product-name }
-newtab-recommended-stories-toggle =
-    .label = Sögur sem mælt er með
 newtab-custom-stories-personalized-toggle =
     .label = Sögur
 newtab-custom-stories-personalized-checkbox-label = Sérsniðnar sögur byggðar á virkni þinni
@@ -348,16 +329,18 @@ newtab-custom-recent-subtitle = Úrval af nýlegum síðum og efni
 newtab-custom-weather-toggle =
     .label = Veður
     .description = Veðurspá dagsins í skyndi
+newtab-custom-trending-search-toggle =
+    .label = Vinsælar leitir
+    .description = Vinsæl og algeng leitarefni
 newtab-custom-widget-weather-toggle =
     .label = Veður
+newtab-custom-widget-trending-search-toggle =
+    .label = Vinsælar leitir
 newtab-custom-widget-lists-toggle =
     .label = Listar
 newtab-custom-widget-timer-toggle =
     .label = Tímamælir
 newtab-custom-widget-section-title = Viðmótshlutar
-newtab-custom-widget-section-toggle =
-    .label = Viðmótshlutar
-newtab-widget-manage-title = Viðmótshlutar
 # Tooltip for close button
 newtab-custom-close-menu-button =
     .title = Loka
@@ -369,11 +352,8 @@ newtab-custom-settings = Sýsla með fleiri stillingar
 
 newtab-wallpaper-title = Bakgrunnar
 newtab-wallpaper-reset = Endurstilla á sjálfgefið
-#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Senda inn mynd
 newtab-wallpaper-custom-color = Veldu lit
-newtab-wallpaper-toggle-title =
-    .label = Bakgrunnar
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Myndin er stærri en takmörkin á stærð skráa { $file_size }MB. Reyndu að senda inn minni skrá.
@@ -396,7 +376,6 @@ newtab-wallpaper-light-fox-anniversary = Refur í grasi með þokufullu fjallala
 
 ## Solid Colors
 
-#  (developer note): @nova-cleanup(remove-string): Remove old "Solid colors" string once Nova lands. The simplified "Colors" string will take over
 newtab-wallpaper-category-title-colors = Heillitir
 newtab-wallpaper-blue = Blátt
 newtab-wallpaper-light-blue = Ljósblátt
@@ -513,11 +492,6 @@ newtab-weather-opt-in-yes =
     .label = Já
 # We'll be showing static (fake) weather data if the user has not opted in to using their location
 newtab-weather-static-city = New York borg
-# Variables:
-#   $provider (string) - Service provider for weather data
-newtab-weather-see-forecast-description =
-    .title = Sjá veðurspá í { $provider }
-    .aria-description = { $provider } ∙ Kostað
 
 ## Topic Labels
 
@@ -622,7 +596,7 @@ newtab-download-mobile-highlight-image =
 newtab-shortcuts-highlight-title = Eftirlætin þín innan seilingar
 newtab-shortcuts-highlight-subtitle = Bættu við flýtileið til að hafa uppáhaldsvefina þína í eins-smells fjarlægð.
 
-## Strings for reporting issues with ads and content
+## Strings for reporting ads and content
 
 newtab-report-content-why-reporting-this =
     .label = Af hverju ertu að tilkynna þetta?
@@ -645,6 +619,17 @@ newtab-report-submit = Senda inn
 newtab-toast-thanks-for-reporting =
     .message = Takk fyrir að tilkynna þetta.
 
+## Strings for trending searches
+
+newtab-trending-searches-show-trending =
+    .title = Sýna vinsælar leitir
+newtab-trending-searches-hide-trending =
+    .title = Fela vinsælar leitir
+newtab-trending-searches-learn-more = Frekari upplýsingar
+newtab-trending-searches-dismiss = Fela vinsælar leitir
+# "Trending searches refers to popular searches from search engines
+newtab-trending-searches-title = Vinsælar leitir
+
 ## Strings for task / to-do list productivity widget
 
 # "Add one" means adding a new task to the list (e.g., "Walk the dog")
@@ -660,16 +645,11 @@ newtab-widget-lists-label-beta =
 newtab-widget-lists-completed-list = Lokið ({ $number })
 newtab-widget-task-list-menu-copy = Afrita
 newtab-widget-lists-menu-edit = Breyta heiti á lista
-newtab-widget-lists-menu-edit2 =
-    .aria-label = Breyta heiti á lista
 newtab-widget-lists-menu-create = Búa til nýjan lista
 newtab-widget-lists-menu-delete = Eyða þessum lista
 newtab-widget-lists-menu-copy = Afrita lista á klippispjald
+newtab-widget-lists-menu-hide = Fela alla lista
 newtab-widget-lists-menu-learn-more = Frekari upplýsingar
-newtab-widget-lists-button-add-item = Bæta við atriði
-newtab-widget-lists-input-add-an-item2 =
-    .placeholder = Bæta við atriði
-    .aria-label = Bæta við atriði
 newtab-widget-lists-input-add-an-item =
     .placeholder = Bæta við atriði
 newtab-widget-lists-input-error = Settu inn texta til að bæta við atriði.
@@ -686,14 +666,11 @@ newtab-widget-lists-name-label-default =
 newtab-widget-lists-name-placeholder-default =
     .placeholder = Verkefnalisti
 # The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new2 =
-    .placeholder = Nýr listi
-    .aria-label = Breyta heiti á lista
-# The placeholder value of the name field for a newly created list
 newtab-widget-lists-name-placeholder-new =
     .placeholder = Nýr listi
 
-## Strings introduced by the Nova redesign of the Timer widget
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
 
 newtab-widget-timer-notification-title = Tímamælir
 newtab-widget-timer-notification-focus = Einbeitingartíminn er liðinn. Vel gert. Þarftu pásu?
@@ -711,6 +688,7 @@ newtab-widget-timer-reset =
     .title = Endurstilla
 newtab-widget-timer-menu-notifications = Slökkva á tilkynningum
 newtab-widget-timer-menu-notifications-on = Kveikja á tilkynningum
+newtab-widget-timer-menu-hide = Fela tímamæli
 newtab-widget-timer-menu-learn-more = Fræðast meira
 newtab-widget-message-title = Vertu einbeittur með listum og innbyggðum tímamæli
 # to-dos stands for "things to do".

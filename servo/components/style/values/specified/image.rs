@@ -11,7 +11,6 @@ use crate::color::mix::ColorInterpolationMethod;
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
 use crate::stylesheets::CorsMode;
-use crate::typed_om::{ImageValue, KeywordValue, ToTyped, TypedValue};
 use crate::values::generics::color::{ColorMixFlags, GenericLightDark};
 use crate::values::generics::image::{
     self as generic, Circle, Ellipse, GradientCompatMode, ShapeExtent,
@@ -32,9 +31,8 @@ use cssparser::{match_ignore_ascii_case, Delimiter, Parser, Token};
 use selectors::parser::SelectorParseErrorKind;
 use std::cmp::Ordering;
 use std::fmt::{self, Write};
-use style_traits::{CssString, CssType, CssWriter, KeywordsCollectFn, ParseError};
+use style_traits::{CssType, CssWriter, KeywordsCollectFn, ParseError};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
-use thin_vec::ThinVec;
 
 #[inline]
 fn gradient_color_interpolation_method_enabled() -> bool {
@@ -44,22 +42,6 @@ fn gradient_color_interpolation_method_enabled() -> bool {
 /// Specified values for an image according to CSS-IMAGES.
 /// <https://drafts.csswg.org/css-images/#image-values>
 pub type Image = generic::Image<Gradient, SpecifiedUrl, Color, Percentage, Resolution>;
-
-impl ToTyped for Image {
-    fn to_typed(&self, dest: &mut ThinVec<TypedValue>) -> Result<(), ()> {
-        match *self {
-            Image::None => {
-                dest.push(TypedValue::Keyword(KeywordValue(CssString::from("none"))));
-                Ok(())
-            },
-            Image::Url(ref url) => {
-                dest.push(TypedValue::Image(ImageValue::Specified(url.clone())));
-                Ok(())
-            },
-            _ => Err(()),
-        }
-    }
-}
 
 // Images should remain small, see https://github.com/servo/servo/pull/18430
 size_of_test!(Image, 16);
@@ -101,7 +83,7 @@ impl Color {
                 if mix.flags.contains(ColorMixFlags::RESULT_IN_MODERN_SYNTAX) {
                     true
                 } else {
-                    mix.items.iter().any(|item| item.color.has_modern_syntax())
+                    mix.left.has_modern_syntax() || mix.right.has_modern_syntax()
                 }
             },
             Self::LightDark(ld) => ld.light.has_modern_syntax() || ld.dark.has_modern_syntax(),
@@ -263,10 +245,8 @@ impl Image {
             #[cfg(feature = "servo")]
             "paint" => Self::PaintWorklet(Box::new(<PaintWorklet>::parse_args(context, input)?)),
             "cross-fade" if cross_fade_enabled() => Self::CrossFade(Box::new(CrossFade::parse_args(context, input, cors_mode, flags)?)),
-            "image" => Self::Image(Box::new(Color::parse(context, input)?)),
             "light-dark" if image_light_dark_enabled(context) => Self::LightDark(Box::new(GenericLightDark::parse_args_with(input, |input| {
-                // `none` in `light-dark()` has a special meaning.
-                Self::parse_with_cors_mode(context, input, cors_mode, flags & !ParseImageFlags::FORBID_NONE)
+                Self::parse_with_cors_mode(context, input, cors_mode, flags)
             })?)),
             #[cfg(feature = "gecko")]
             "-moz-element" => Self::Element(Self::parse_element(input)?),
@@ -356,11 +336,10 @@ impl CrossFadeElement {
         // implementation handle out-of-bounds percentages but whether or not
         // this behavior follows the specification is still being discussed.
         // See: <https://github.com/w3c/csswg-drafts/issues/5333>
-        let mut p = input
+        input
             .try_parse(|input| Percentage::parse_non_negative(context, input))
-            .ok()?;
-        p.clamp_to_hundred();
-        Some(p)
+            .ok()
+            .map(|p| p.clamp_to_hundred())
     }
 
     /// <cf-image> = <percentage>? && [ <image> | <color> ]
@@ -445,20 +424,12 @@ impl ImageSetItem {
         cors_mode: CorsMode,
         flags: ParseImageFlags,
     ) -> Result<Self, ParseError<'i>> {
-        let start = input.position().byte_index();
-        let location = input.current_source_location();
         let image = match input.try_parse(|i| i.expect_url_or_string()) {
-            Ok(url) => {
-                let end = input.position().byte_index();
-                Image::Url(SpecifiedUrl::parse_from_string(
-                    url.as_ref().into(),
-                    start,
-                    end,
-                    context,
-                    cors_mode,
-                    location,
-                )?)
-            },
+            Ok(url) => Image::Url(SpecifiedUrl::parse_from_string(
+                url.as_ref().into(),
+                context,
+                cors_mode,
+            )),
             Err(..) => Image::parse_with_cors_mode(
                 context,
                 input,
@@ -582,7 +553,7 @@ impl Gradient {
         };
         type Point = GenericPosition<Component<X>, Component<Y>>;
 
-        #[derive(Clone, Parse)]
+        #[derive(Clone, Copy, Parse)]
         enum Component<S> {
             Center,
             Number(NumberOrPercentage),
@@ -619,14 +590,6 @@ impl Gradient {
                     let x = Component::parse(context, i)?;
                     let y = Component::parse(context, i)?;
 
-                    // TODO(Bug 2037751) - Enable calc()-expressions that can only be resolved at
-                    // computed value time (due to relative lengths, sibling-index(), etc.).
-                    if matches!(&x, Component::Number(NumberOrPercentage::Number(n)) if n.resolve().is_none()) ||
-                        matches!(&y, Component::Number(NumberOrPercentage::Number(n)) if n.resolve().is_none())
-                    {
-                        return Err(i.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                    }
-
                     Ok(Self::new(x, y))
                 })
             }
@@ -654,11 +617,10 @@ impl Gradient {
                 match self {
                     Component::Center => PositionComponent::Center,
                     Component::Number(NumberOrPercentage::Number(number)) => {
-                        // Unresolvable calc is rejected in Point::parse.
-                        PositionComponent::Length(Length::from_px(number.resolve().unwrap()).into())
+                        PositionComponent::Length(Length::from_px(number.value).into())
                     },
                     Component::Number(NumberOrPercentage::Percentage(p)) => {
-                        PositionComponent::Length(p.to_length_percentage())
+                        PositionComponent::Length(p.into())
                     },
                     Component::Side(side) => PositionComponent::Side(side, None),
                 }
@@ -667,13 +629,12 @@ impl Gradient {
 
         impl<S: Copy + Side> Component<S> {
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-                match (self.clone().into(), other.clone().into()) {
-                    (
-                        NumberOrPercentage::Percentage(ref a),
-                        NumberOrPercentage::Percentage(ref b),
-                    ) => a.resolve().partial_cmp(&b.resolve()),
+                match ((*self).into(), (*other).into()) {
+                    (NumberOrPercentage::Percentage(a), NumberOrPercentage::Percentage(b)) => {
+                        a.get().partial_cmp(&b.get())
+                    },
                     (NumberOrPercentage::Number(a), NumberOrPercentage::Number(b)) => {
-                        a.resolve().partial_cmp(&b.resolve())
+                        a.value.partial_cmp(&b.value)
                     },
                     (_, _) => None,
                 }
@@ -710,20 +671,13 @@ impl Gradient {
                 input.expect_comma()?;
                 let second_radius = Number::parse_non_negative(context, input)?;
 
-                // TODO(Bug 2037751) - Enable calc()-expressions that can only be resolved at
-                // computed value time (due to relative lengths, sibling-index(), etc.).
-                if first_radius.resolve().is_none() || second_radius.resolve().is_none() {
-                    return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                }
-
-                let (reverse_stops, point, radius) = if second_radius.resolve() >= first_radius.resolve() {
+                let (reverse_stops, point, radius) = if second_radius.value >= first_radius.value {
                     (false, second_point, second_radius)
                 } else {
                     (true, first_point, first_radius)
                 };
 
-                // Unresolvable calc is rejected above.
-                let rad = Circle::Radius(NonNegative(Length::from_px(radius.resolve().unwrap())));
+                let rad = Circle::Radius(NonNegative(Length::from_px(radius.value)));
                 let shape = generic::EndingShape::Circle(rad);
                 let position = Position::new(point.horizontal.into(), point.vertical.into());
                 let items = Gradient::parse_webkit_gradient_stops(context, input, reverse_stops)?;
@@ -758,11 +712,7 @@ impl Gradient {
                     let (color, mut p) = i.parse_nested_block(|i| {
                         let p = match_ignore_ascii_case! { &function,
                             "color-stop" => {
-                                // TODO(Bug 2037751) - Enable calc()-expressions that can only be resolved at
-                                // computed value time (due to relative lengths, sibling-index(), etc.).
-                                let Some(p) = NumberOrPercentage::parse(context, i)?.to_percentage() else {
-                                    return Err(i.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                                };
+                                let p = NumberOrPercentage::parse(context, i)?.to_percentage();
                                 i.expect_comma()?;
                                 p
                             },
@@ -785,7 +735,7 @@ impl Gradient {
                     }
                     Ok(generic::GradientItem::ComplexColorStop {
                         color,
-                        position: p.to_length_percentage(),
+                        position: p.into(),
                     })
                 })
             })
@@ -819,7 +769,7 @@ impl Gradient {
                         },
                     ) => match (a_position, b_position) {
                         (&LengthPercentage::Percentage(a), &LengthPercentage::Percentage(b)) => {
-                            return a.get().partial_cmp(&b.get()).unwrap_or(Ordering::Equal);
+                            return a.0.partial_cmp(&b.0).unwrap_or(Ordering::Equal);
                         },
                         _ => {},
                     },
@@ -1046,9 +996,7 @@ impl Gradient {
 impl generic::LineDirection for LineDirection {
     fn points_downwards(&self, compat_mode: GradientCompatMode) -> bool {
         match *self {
-            LineDirection::Angle(ref angle) => {
-                angle.as_no_calc().is_some_and(|a| a.degrees() == 180.0)
-            },
+            LineDirection::Angle(ref angle) => angle.degrees() == 180.0,
             LineDirection::Vertical(VerticalPositionKeyword::Bottom) => {
                 compat_mode == GradientCompatMode::Modern
             },
@@ -1064,7 +1012,7 @@ impl generic::LineDirection for LineDirection {
         W: Write,
     {
         match *self {
-            LineDirection::Angle(ref angle) => angle.to_css(dest),
+            LineDirection::Angle(angle) => angle.to_css(dest),
             LineDirection::Horizontal(x) => {
                 if compat_mode == GradientCompatMode::Modern {
                     dest.write_str("to ")?;
@@ -1235,7 +1183,7 @@ impl EndingShape {
                 NonNegativeLengthPercentage::parse(context, i)?
             };
             Ok(generic::EndingShape::Ellipse(Ellipse::Radii(
-                NonNegative(x.to_length_percentage()),
+                NonNegative(LengthPercentage::from(x)),
                 y,
             )))
         })
@@ -1343,12 +1291,7 @@ impl PaintWorklet {
             .try_parse(|input| {
                 input.expect_comma()?;
                 input.parse_comma_separated(|input| {
-                    SpecifiedValue::parse(
-                        input,
-                        Some(&context.namespaces.prefixes),
-                        &context.url_data,
-                    )
-                    .map(Arc::new)
+                    SpecifiedValue::parse(input, &context.url_data).map(Arc::new)
                 })
             })
             .unwrap_or_default();

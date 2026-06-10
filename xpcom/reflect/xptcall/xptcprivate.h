@@ -1,11 +1,12 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* All the xptcall private declarations - only include locally. */
 
-#ifndef xptcprivate_h_
-#define xptcprivate_h_
+#ifndef xptcprivate_h___
+#define xptcprivate_h___
 
 #include "xptcall.h"
 
@@ -63,4 +64,4 @@ class nsXPTCStubBase final : public nsIXPTCStubBase {
 #  define ATTRIBUTE_USED
 #endif
 
-#endif /* xptcprivate_h_ */
+#endif /* xptcprivate_h___ */

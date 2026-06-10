@@ -18,8 +18,9 @@ namespace webrtc {
 // static
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
     const DesktopCaptureOptions& options) {
-  RTC_LOG(LS_INFO) << "DesktopCapturer::CreateRawScreenCapturer creates null "
-                      "DesktopCapturer";
+  RTC_LOG(LS_INFO)
+      << "video capture: DesktopCapturer::CreateRawScreenCapturer creates null "
+         "DesktopCapturer";
   return nullptr;
 }
 

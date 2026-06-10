@@ -24,22 +24,16 @@ add_task(async function open_test_xfo_error_page() {
     await loaded;
 
     await SpecialPowers.spawn(browser, [], async function () {
-      const iframe = content.document.getElementById("testframe");
-      const getErrorPage = () => {
-        const netErrorCard =
-          iframe.contentDocument?.querySelector("net-error-card");
-        if (netErrorCard?.shadowRoot) {
-          return netErrorCard.shadowRoot.innerHTML;
-        }
-        return iframe.contentDocument?.body?.innerHTML;
-      };
-
-      await ContentTaskUtils.waitForCondition(
-        () => getErrorPage()?.includes("csp-xfo-error-title"),
-        "Waiting for csp-xfo-error-title to appear"
+      const getErrorPage = async () =>
+        ContentTaskUtils.waitForCondition(
+          () =>
+            content.document.getElementById("testframe").contentDocument?.body
+              .innerHTML
+        );
+      await ContentTaskUtils.waitForCondition(() =>
+        getErrorPage()?.then(p => p.includes("csp-xfo-error-title"))
       );
-
-      const errorPage = getErrorPage();
+      const errorPage = await getErrorPage();
       ok(errorPage.includes("csp-xfo-error-title"), "xfo error page correct");
     });
   });
@@ -57,22 +51,16 @@ add_task(async function open_test_csp_frame_ancestor_error_page() {
     await loaded;
 
     await SpecialPowers.spawn(browser, [], async function () {
-      const iframe = content.document.getElementById("testframe");
-      const getErrorPage = () => {
-        const netErrorCard =
-          iframe.contentDocument?.querySelector("net-error-card");
-        if (netErrorCard?.shadowRoot) {
-          return netErrorCard.shadowRoot.innerHTML;
-        }
-        return iframe.contentDocument?.body?.innerHTML;
-      };
-
-      await ContentTaskUtils.waitForCondition(
-        () => getErrorPage()?.includes("csp-xfo-error-title"),
-        "Waiting for csp-xfo-error-title to appear"
+      const getErrorPage = async () =>
+        ContentTaskUtils.waitForCondition(
+          () =>
+            content.document.getElementById("testframe").contentDocument?.body
+              .innerHTML
+        );
+      await ContentTaskUtils.waitForCondition(() =>
+        getErrorPage()?.then(p => p.includes("csp-xfo-error-title"))
       );
-
-      const errorPage = getErrorPage();
+      const errorPage = await getErrorPage();
       ok(errorPage.includes("csp-xfo-error-title"), "csp error page correct");
     });
   });

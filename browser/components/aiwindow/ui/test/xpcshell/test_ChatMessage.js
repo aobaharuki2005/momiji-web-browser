@@ -17,31 +17,20 @@ add_task(function test_ChatMessage_constructor_defaults() {
   });
 
   Assert.withSoftAssertions(function (soft) {
-    soft.equal(message.id.length, 36);
+    soft.equal(message.id.length, 12);
     soft.equal(message.revisionRootMessageId, message.id);
     soft.ok(!isNaN(message.createdDate));
     soft.ok(message.isActiveBranch);
-    soft.deepEqual(
-      message.webSearchQueries,
-      [],
-      "webSearchQueries",
-      "webSearchQueries should default to []"
-    );
-    soft.deepEqual(
-      message.webSearchQueries,
-      [],
-      "memoriesApplied",
-      "memoriesApplied should default to []"
-    );
-
     const nullFields = [
       "parentMessageId",
       "modelId",
       "params",
       "usage",
       "convId",
-      "memoriesEnabled",
-      "memoriesFlagSource",
+      "insightsEnabled",
+      "insightsFlagSource",
+      "insightsApplied",
+      "webSearchQueries",
     ];
 
     nullFields.forEach(nullField => {
@@ -69,6 +58,37 @@ add_task(function test_pageUrl_as_URL_ChatConversation() {
   });
 });
 
+add_task(function test_pageUrl_as_string_ChatConversation() {
+  const message = new ChatMessage({
+    ordinal: 0,
+    role: 0,
+    turnIndex: 0,
+    content: "some content",
+    pageUrl: "https://www.mozilla.com",
+  });
+
+  Assert.withSoftAssertions(function (soft) {
+    soft.ok(URL.isInstance(message.pageUrl));
+    soft.equal(message.pageUrl.href, "https://www.mozilla.com/");
+  });
+});
+
+add_task(function test_invalid_pageUrl_ChatConversation() {
+  Assert.throws(
+    function () {
+      new ChatMessage({
+        ordinal: 0,
+        role: 0,
+        turnIndex: 0,
+        content: "some content",
+        pageUrl: "www.mozilla.com",
+      });
+    },
+    new RegExp("URL constructor: www.mozilla.com is not a valid URL"),
+    "Did not get correct error message"
+  );
+});
+
 add_task(function test_missing_pageUrl_ChatConversation() {
   const message = new ChatMessage({
     ordinal: 0,
@@ -86,6 +106,7 @@ add_task(function test_empty_pageUrl_ChatConversation() {
     role: 0,
     turnIndex: 0,
     content: "some content",
+    pageUrl: "",
   });
 
   Assert.equal(message.pageUrl, null);

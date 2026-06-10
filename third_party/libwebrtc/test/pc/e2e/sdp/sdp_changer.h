@@ -13,12 +13,11 @@
 
 #include <map>
 #include <memory>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/jsep.h"
 #include "api/rtp_parameters.h"
 #include "api/test/pclf/media_configuration.h"
@@ -42,11 +41,11 @@ namespace webrtc_pc_e2e {
 // vector and they will be added in the same order, as they were in
 // `supported_codecs`.
 std::vector<RtpCodecCapability> FilterVideoCodecCapabilities(
-    std::span<const VideoCodecConfig> video_codecs,
+    ArrayView<const VideoCodecConfig> video_codecs,
     bool use_rtx,
     bool use_ulpfec,
     bool use_flexfec,
-    std::span<const RtpCodecCapability> supported_codecs);
+    ArrayView<const RtpCodecCapability> supported_codecs);
 
 struct LocalAndRemoteSdp {
   LocalAndRemoteSdp(std::unique_ptr<SessionDescriptionInterface> local_sdp,
@@ -84,15 +83,15 @@ class SignalingInterceptor {
       const VideoCodecConfig& first_codec);
 
   std::vector<std::unique_ptr<IceCandidate>> PatchOffererIceCandidates(
-      std::span<const IceCandidate* const> candidates);
+      ArrayView<const IceCandidate* const> candidates);
   std::vector<std::unique_ptr<IceCandidate>> PatchAnswererIceCandidates(
-      std::span<const IceCandidate* const> candidates);
+      ArrayView<const IceCandidate* const> candidates);
 
  private:
   // Contains information about simulcast section, that is required to perform
   // modified offer/answer and ice candidates exchange.
   struct SimulcastSectionInfo {
-    SimulcastSectionInfo(absl::string_view mid,
+    SimulcastSectionInfo(const std::string& mid,
                          MediaProtocolType media_protocol_type,
                          const std::vector<RidDescription>& rids_desc);
 

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -45,7 +47,7 @@ const char16* c16memchr(const char16* s, char16 c, size_t n) {
     }
     ++s;
   }
-  return nullptr;
+  return 0;
 }
 
 char16* c16memmove(char16* s1, const char16* s2, size_t n) {

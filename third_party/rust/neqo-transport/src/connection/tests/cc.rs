@@ -6,20 +6,20 @@
 
 use std::time::Duration;
 
-use neqo_common::{Datagram, Ecn, qdebug, qinfo};
+use neqo_common::{qdebug, qinfo, Datagram, Ecn};
 
 use super::{
-    super::Output, CLIENT_HANDSHAKE_1RTT_PACKETS, DEFAULT_RTT, POST_HANDSHAKE_CWND, ack_bytes,
-    assert_full_cwnd, connect_rtt_idle, cwnd, cwnd_avail, cwnd_packets, default_client,
-    default_server, fill_cwnd, induce_persistent_congestion, send_something,
+    super::Output, ack_bytes, assert_full_cwnd, connect_rtt_idle, cwnd, cwnd_avail, cwnd_packets,
+    default_client, default_server, fill_cwnd, induce_persistent_congestion, send_something,
+    CLIENT_HANDSHAKE_1RTT_PACKETS, DEFAULT_RTT, POST_HANDSHAKE_CWND,
 };
 use crate::{
-    CongestionControl, ConnectionParameters,
     connection::tests::{connect_with_rtt, new_client, new_server, now},
     packet,
     recovery::{ACK_ONLY_SIZE_LIMIT, PACKET_THRESHOLD},
     sender::PACING_BURST_SIZE,
     stream_id::StreamType,
+    CongestionControlAlgorithm, ConnectionParameters,
 };
 
 #[test]
@@ -214,11 +214,9 @@ fn single_packet_on_recovery() {
 
 /// Verify that CC moves out of recovery period when packet sent after start
 /// of recovery period is acked.
-fn cc_cong_avoidance_recovery_period_to_cong_avoidance(congestion_control: CongestionControl) {
-    let mut client =
-        new_client(ConnectionParameters::default().congestion_control(congestion_control));
-    let mut server =
-        new_server(ConnectionParameters::default().congestion_control(congestion_control));
+fn cc_cong_avoidance_recovery_period_to_cong_avoidance(cc_algorithm: CongestionControlAlgorithm) {
+    let mut client = new_client(ConnectionParameters::default().cc_algorithm(cc_algorithm));
+    let mut server = new_server(ConnectionParameters::default().cc_algorithm(cc_algorithm));
     let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     // Create stream 0
@@ -272,12 +270,12 @@ fn cc_cong_avoidance_recovery_period_to_cong_avoidance(congestion_control: Conge
 
 #[test]
 fn cc_cong_avoidance_recovery_period_to_cong_avoidance_new_reno() {
-    cc_cong_avoidance_recovery_period_to_cong_avoidance(CongestionControl::NewReno);
+    cc_cong_avoidance_recovery_period_to_cong_avoidance(CongestionControlAlgorithm::NewReno);
 }
 
 #[test]
 fn cc_cong_avoidance_recovery_period_to_cong_avoidance_cubic() {
-    cc_cong_avoidance_recovery_period_to_cong_avoidance(CongestionControl::Cubic);
+    cc_cong_avoidance_recovery_period_to_cong_avoidance(CongestionControlAlgorithm::Cubic);
 }
 
 #[test]

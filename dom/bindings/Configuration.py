@@ -569,6 +569,11 @@ class Configuration(DescriptorProvider):
                 def getter(x):
                     return x.interface.isExposedInWindow()
 
+            elif key == "isExposedInShadowRealms":
+
+                def getter(x):
+                    return x.interface.isExposedInShadowRealms()
+
             elif key == "isSerializable":
 
                 def getter(x):

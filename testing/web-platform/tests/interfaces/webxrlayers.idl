@@ -219,7 +219,3 @@ dictionary XRLayerEventInit : EventInit {
 [SecureContext, Exposed=Window] partial interface XRRenderState {
   readonly attribute FrozenArray<XRLayer> layers;
 };
-
-[SecureContext, Exposed=Window] partial interface XRSession {
-  readonly attribute unsigned long maxRenderLayers;
-};

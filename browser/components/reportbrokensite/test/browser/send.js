@@ -208,7 +208,7 @@ async function getExpectedWebCompatInfo(tab, snapshot, fullAppData = false) {
     browserInfo.security.firewall = securityStringToArray(registeredFirewall);
   }
 
-  const tabInfo = await tab.linkedBrowser.documentGlobal.SpecialPowers.spawn(
+  const tabInfo = await tab.linkedBrowser.ownerGlobal.SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
     async function () {
@@ -283,13 +283,9 @@ function extractBrokenSiteReportFromGleanPing(Glean) {
 async function testSend(tab, menu, expectedOverrides = {}) {
   const url = expectedOverrides.url ?? menu.win.gBrowser.currentURI.spec;
   const description = expectedOverrides.description ?? "";
-  const breakageCategory = expectedOverrides.breakageCategory ?? "load";
+  const breakageCategory = expectedOverrides.breakageCategory ?? null;
 
-  let rbs = await menu.openReportBrokenSiteToDetailsPanel({
-    url,
-    reason: breakageCategory,
-    description,
-  });
+  let rbs = await menu.openAndPrefillReportBrokenSite(url, description);
 
   const snapshot = await Troubleshoot.snapshot();
   const expected = await getExpectedWebCompatInfo(tab, snapshot);
@@ -309,38 +305,17 @@ async function testSend(tab, menu, expectedOverrides = {}) {
   if (expectedOverrides.antitracking) {
     expected.tabInfo.antitracking = expectedOverrides.antitracking;
 
-    if (
-      expectedOverrides.antitracking.blockedOrigins &&
-      rbs.hasBlockedOrigins
-    ) {
-      const { blockedTrackersToggle } = rbs;
-      await isVisible(
-        blockedTrackersToggle,
-        "blocked trackers toggle should be visible"
-      );
-      await isNotPressed(
-        blockedTrackersToggle,
-        "blocked trackers toggle should start off"
-      );
-      EventUtils.synthesizeMouseAtCenter(blockedTrackersToggle, {}, rbs.win);
-      await isPressed(
-        blockedTrackersToggle,
-        "blocked trackers toggle should toggle"
-      );
+    if (expectedOverrides.antitracking.blockedOrigins) {
+      rbs.blockedTrackersCheckbox = true;
     }
-  }
-
-  if (expectedOverrides.toggleOffScreenshot && rbs.hasScreenshot) {
-    const { screenshotToggle } = rbs;
-    const { top, left } = screenshotToggle.getBoundingClientRect();
-    await isVisible(screenshotToggle, "screenshot toggle should be visible");
-    await isPressed(screenshotToggle, "screenshot toggle should start off");
-    EventUtils.synthesizeMouseAtPoint(left + 10, top + 10, {}, rbs.win);
-    await isNotPressed(screenshotToggle, "screenshot toggle should toggle");
   }
 
   if (expectedOverrides.frameworks) {
     expected.tabInfo.frameworks = expectedOverrides.frameworks;
+  }
+
+  if (breakageCategory) {
+    rbs.chooseReason(breakageCategory);
   }
 
   Services.fog.testResetFOG();
@@ -355,7 +330,7 @@ async function testSend(tab, menu, expectedOverrides = {}) {
         ["basic", "strict"].includes(tabInfo.antitracking.blockList),
         "Got a blockList"
       );
-      if (rbs.blockedTrackersToggle.pressed) {
+      if (rbs.blockedTrackersCheckbox.checked) {
         ok(
           Array.isArray(tabInfo.antitracking.blockedOrigins),
           "Got an array for blockedOrigins"
@@ -388,6 +363,10 @@ async function testSend(tab, menu, expectedOverrides = {}) {
 
   // re-opening the panel, the url and description should be reset
   rbs = await menu.openReportBrokenSite();
-  rbs.isProperlyReset();
+  rbs.isMainViewResetToCurrentTab();
+  ok(
+    !rbs.blockedTrackersCheckbox.checked,
+    "blocked trackers checkbox is reset"
+  );
   rbs.close();
 }

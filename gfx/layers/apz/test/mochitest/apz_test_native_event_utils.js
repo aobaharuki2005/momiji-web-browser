@@ -1,5 +1,5 @@
-// documentGlobal isn't defined in content privileged windows.
-/* eslint-disable mozilla/use-documentGlobal */
+// ownerGlobal isn't defined in content privileged windows.
+/* eslint-disable mozilla/use-ownerGlobal */
 
 // Utilities for synthesizing of native events.
 
@@ -1591,6 +1591,10 @@ function promiseTopic(aTopic) {
 // Returns a promise that is resolved when a APZ transform ends.
 function promiseTransformEnd() {
   return promiseTopic("APZ:TransformEnd");
+}
+
+function promiseScrollend(aTarget = window) {
+  return promiseOneEvent(aTarget, "scrollend");
 }
 
 // Returns a promise that resolves after the indicated number

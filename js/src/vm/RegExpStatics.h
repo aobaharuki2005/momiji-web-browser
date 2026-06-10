@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -98,9 +100,9 @@ class RegExpStatics {
      * Changes to this function must also be reflected in
      * RegExpStatics::AutoRooter::trace().
      */
-    TraceEdge(trc, &matchesInput, "res->matchesInput");
-    TraceEdge(trc, &lazySource, "res->lazySource");
-    TraceEdge(trc, &pendingInput, "res->pendingInput");
+    TraceNullableEdge(trc, &matchesInput, "res->matchesInput");
+    TraceNullableEdge(trc, &lazySource, "res->lazySource");
+    TraceNullableEdge(trc, &pendingInput, "res->pendingInput");
   }
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
@@ -294,15 +296,14 @@ inline bool RegExpStatics::updateFromMatchPairs(JSContext* cx,
   pendingLazyEvaluation = false;
   this->lazySource = nullptr;
   this->lazyIndex = size_t(-1);
-  this->pendingInput = input;
-  this->matchesInput = input;
+
+  BarrieredSetPair<JSString, JSLinearString>(cx->zone(), pendingInput, input,
+                                             matchesInput, input);
 
   if (!matches.initArrayFrom(newPairs)) {
     ReportOutOfMemory(cx);
-    clear();
     return false;
   }
-
   clearInvalidation();
   return true;
 }

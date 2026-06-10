@@ -1,11 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef mozilla_BounceTrackingProtection_h_
-#define mozilla_BounceTrackingProtection_h_
+#ifndef mozilla_BounceTrackingProtection_h__
+#define mozilla_BounceTrackingProtection_h__
 
 #include "BounceTrackingMapEntry.h"
-#include "BounceTrackingRecord.h"
+#include "BounceTrackingStorageObserver.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MozPromise.h"
 #include "nsIBounceTrackingProtection.h"
@@ -14,20 +14,6 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsTHashSet.h"
-
-inline const char* format_as(nsIBounceTrackingProtection::Modes aMode) {
-  switch (aMode) {
-    case nsIBounceTrackingProtection::MODE_DISABLED:
-      return "MODE_DISABLED";
-    case nsIBounceTrackingProtection::MODE_ENABLED:
-      return "MODE_ENABLED";
-    case nsIBounceTrackingProtection::MODE_ENABLED_STANDBY:
-      return "MODE_ENABLED_STANDBY";
-    case nsIBounceTrackingProtection::MODE_ENABLED_DRY_RUN:
-      return "MODE_ENABLED_DRY_RUN";
-  }
-  return "UNKNOWN";
-}
 
 class nsIPrincipal;
 class nsITimer;
@@ -131,6 +117,9 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection,
   // Timer which periodically runs PurgeBounceTrackers.
   nsCOMPtr<nsITimer> mBounceTrackingPurgeTimer;
 
+  // Used to notify BounceTrackingState of storage and cookie access.
+  RefPtr<BounceTrackingStorageObserver> mStorageObserver;
+
   // Storage for user agent globals.
   RefPtr<BounceTrackingProtectionStorage> mStorage;
 
@@ -167,7 +156,7 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection,
   [[nodiscard]] nsresult PurgeStateForHostAndOriginAttributes(
       const nsACString& aHost, PRTime bounceTime,
       const OriginAttributes& aOriginAttributes,
-      BounceTrackingRecord* aChainRecord, ClearDataMozPromise** aClearPromise);
+      ClearDataMozPromise** aClearPromise);
 
   // Whether a purge operation is currently in progress. This avoids running
   // multiple purge operations at the same time.

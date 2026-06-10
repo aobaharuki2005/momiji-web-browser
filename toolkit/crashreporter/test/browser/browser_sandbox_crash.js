@@ -48,10 +48,8 @@ if (AppConstants.platform == "linux") {
           { crashType: "CRASH_SYSCALL" }
         );
 
-        const stackTraces = JSON.parse(annotations.StackTraces);
-
         Assert.ok(
-          stackTraces.crash_type.startsWith("SIGSYS"),
+          annotations.StackTraces.crash_info.type.startsWith("SIGSYS"),
           "The crash type is SIGSYS"
         );
 
@@ -68,7 +66,7 @@ if (AppConstants.platform == "linux") {
         }
 
         Assert.equal(
-          stackTraces.crash_address,
+          annotations.StackTraces.crash_info.address,
           chroot_syscall_number(),
           "The address corresponds to the chroot() syscall number"
         );

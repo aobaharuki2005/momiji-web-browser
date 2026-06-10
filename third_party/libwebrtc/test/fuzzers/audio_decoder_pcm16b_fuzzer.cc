@@ -15,16 +15,15 @@
 #include "modules/audio_coding/codecs/pcm16b/audio_decoder_pcm16b.h"
 #include "rtc_base/checks.h"
 #include "test/fuzzers/audio_decoder_fuzzer.h"
-#include "test/fuzzers/fuzz_data_helper.h"
 
 namespace webrtc {
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
-  if (fuzz_data.size() > 10'000 || fuzz_data.size() < 2) {
+void FuzzOneInput(const uint8_t* data, size_t size) {
+  if (size > 10000 || size < 2) {
     return;
   }
 
   int sample_rate_hz;
-  switch (fuzz_data.Read<uint8_t>() % 4) {
+  switch (data[0] % 4) {
     case 0:
       sample_rate_hz = 8000;
       break;
@@ -41,7 +40,11 @@ void FuzzOneInput(FuzzDataHelper fuzz_data) {
       RTC_DCHECK_NOTREACHED();
       return;
   }
-  const size_t num_channels = fuzz_data.Read<uint8_t>() % 16 + 1;
+  const size_t num_channels = data[1] % 16 + 1;
+
+  // Two first bytes of the data are used. Move forward.
+  data += 2;
+  size -= 2;
 
   AudioDecoderPcm16B dec(sample_rate_hz, num_channels);
   // Allocate a maximum output size of 100 ms.
@@ -50,7 +53,7 @@ void FuzzOneInput(FuzzDataHelper fuzz_data) {
   std::unique_ptr<int16_t[]> output =
       std::make_unique<int16_t[]>(allocated_ouput_size_samples);
   FuzzAudioDecoder(
-      DecoderFunctionType::kNormalDecode, fuzz_data, &dec, sample_rate_hz,
+      DecoderFunctionType::kNormalDecode, data, size, &dec, sample_rate_hz,
       allocated_ouput_size_samples * sizeof(int16_t), output.get());
 }
 }  // namespace webrtc

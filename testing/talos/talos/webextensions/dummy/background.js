@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* eslint-env webextensions */
+
 let skipFilters = false;
 
 browser.webRequest.onBeforeRequest.addListener(

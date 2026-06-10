@@ -22,6 +22,16 @@
     inset-inline-end: var(--space-xxlarge);
   }
 
+  // Variant with the weather in the header of a section
+  &.section-weather {
+    position: initial;
+    margin-inline-start: var(--space-medium);
+
+    .weatherInfoLink {
+      max-width: unset;
+    }
+  }
+
   // Edge case: users with weather enabled/search disabled
   .no-search & {
     position: absolute;
@@ -42,6 +52,13 @@
       inset-inline-end: var(--space-xxlarge);
     }
   }
+
+  .context-menu {
+    inset-inline-end: 100%;
+    inset-inline-start: auto;
+    margin-inline-end: var(--space-xsmall);
+  }
+
 }
 
 .weather-placeholder {
@@ -235,7 +252,7 @@
   }
 
   &:hover {
-    box-shadow: var(--card-box-shadow);
+    box-shadow: var(--box-shadow-card);
   }
 
   a {
@@ -266,9 +283,9 @@
 
   dialog {
     background: var(--newtab-background-color-secondary);
-    border: 1px solid var(--card-border-color);
+    border: 1px solid var(--border-color-card);
     border-radius: var(--border-radius-medium);
-    box-shadow: var(--card-box-shadow);
+    box-shadow: var(--box-shadow-card);
     display: flex;
     width: 332px;
 
@@ -299,7 +316,7 @@
 
     h3 {
       font-size: var(--button-font-size);
-      font-weight: var(--font-weight-heading);
+      font-weight: var(--heading-font-weight);
       margin-block: 0 var(--space-medium);
     }
 
@@ -329,14 +346,14 @@ dialog {
     height: 16px;
     width: 16px;
     background: var(--newtab-background-color-secondary);
-    box-shadow: 4px 4px 6px -2px var(--card-box-shadow);
-    border-inline-end: 1px solid var(--card-border-color);
-    border-block-end: 1px solid var(--card-border-color);
+    box-shadow: 4px 4px 6px -2px var(--box-shadow-card);
+    border-inline-end: 1px solid var(--border-color-card);
+    border-block-end: 1px solid var(--border-color-card);
   }
 
   &:dir(rtl)::after {
-    border-inline-start: 1px solid var(--card-border-color);
-    border-block-end: 1px solid var(--card-border-color);
+    border-inline-start: 1px solid var(--border-color-card);
+    border-block-end: 1px solid var(--border-color-card);
     border-inline-end: none;
     inset-inline-end: 10%;
   }
@@ -386,7 +403,10 @@ dialog {
   display: flex;
   gap: var(--space-medium);
   padding: var(--space-small) var(--space-medium);
-  border-radius: var(--border-radius-medium);
+  border-start-start-radius: var(--border-radius-medium);
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+  border-end-start-radius: var(--border-radius-medium);
   text-decoration: none;
   color: var(--text-color);
   min-width: 130px;
@@ -395,11 +415,6 @@ dialog {
 
   @media(min-width: $break-point-medium) {
     min-width: unset;
-  }
-
-  @media(min-width: $break-point-large) {
-    border-start-end-radius: 0;
-    border-end-end-radius: 0;
   }
 
   &:hover ~.weatherButtonContextMenuWrapper {
@@ -675,8 +690,7 @@ dialog {
   }
 }
 
-.weatherWrapper .location-input-wrapper,
-.weather-forecast-widget .location-input-wrapper {
+.location-input-wrapper {
   background-color: light-dark(var(--color-white), var(--newtab-background-color-secondary));
   color: var(--newtab-text-primary-color);
   border-radius: var(--border-radius-medium);

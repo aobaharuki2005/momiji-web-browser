@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -100,8 +102,11 @@ nsresult StatementJSHelper::getRow(Statement* aStatement, JSContext* aCtx,
     nsCOMPtr<nsPIDOMWindowInner> window =
         do_QueryInterface(global.GetAsSupports());
 
-    auto row = MakeRefPtr<StatementRow>(window, aStatement);
-    auto rowHolder = MakeRefPtr<StatementRowHolder>(row);
+    RefPtr<StatementRow> row(new StatementRow(window, aStatement));
+    NS_ENSURE_TRUE(row, NS_ERROR_OUT_OF_MEMORY);
+
+    RefPtr<StatementRowHolder> rowHolder = new StatementRowHolder(row);
+    NS_ENSURE_TRUE(rowHolder, NS_ERROR_OUT_OF_MEMORY);
 
     aStatement->mStatementRowHolder =
         new nsMainThreadPtrHolder<StatementRowHolder>(
@@ -140,8 +145,12 @@ nsresult StatementJSHelper::getParams(Statement* aStatement, JSContext* aCtx,
     nsCOMPtr<nsPIDOMWindowInner> window =
         do_QueryInterface(global.GetAsSupports());
 
-    auto params = MakeRefPtr<StatementParams>(window, aStatement);
-    auto paramsHolder = MakeRefPtr<StatementParamsHolder>(params);
+    RefPtr<StatementParams> params(new StatementParams(window, aStatement));
+    NS_ENSURE_TRUE(params, NS_ERROR_OUT_OF_MEMORY);
+
+    RefPtr<StatementParamsHolder> paramsHolder =
+        new StatementParamsHolder(params);
+    NS_ENSURE_TRUE(paramsHolder, NS_ERROR_OUT_OF_MEMORY);
 
     aStatement->mStatementParamsHolder =
         new nsMainThreadPtrHolder<StatementParamsHolder>(

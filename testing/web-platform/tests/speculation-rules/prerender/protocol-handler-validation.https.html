@@ -29,7 +29,7 @@ async function registerProtocolHandlerTestHelper(
   assert_equals(result, expected_result);
 }
 
-setup(() => assertSpeculationRulesIsSupported('prerender'));
+setup(() => assertSpeculationRulesIsSupported());
 
 promise_test(async t => {
   await registerProtocolHandlerTestHelper(

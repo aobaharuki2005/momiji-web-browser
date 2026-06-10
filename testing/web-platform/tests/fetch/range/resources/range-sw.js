@@ -144,6 +144,7 @@ function storeRangedResponse(event) {
 function useStoredRangeResponse(event) {
   event.respondWith(async function() {
     const response = await storedRangeResponseP;
+    if (!response) throw Error("Expected stored range response");
     return response.clone();
   }());
 }

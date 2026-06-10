@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.PackageInfoCompat
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.support.utils.ext.packageManagerCompatHelper
@@ -34,7 +35,6 @@ import org.mozilla.focus.state.Screen.Settings.Page.About
 import org.mozilla.focus.ui.preferences.LearnMoreLink
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.ui.theme.focusColors
-import org.mozilla.focus.ui.theme.focusDimensions
 import org.mozilla.focus.ui.theme.focusTypography
 import org.mozilla.focus.utils.SupportUtils.manifestoURL
 import org.mozilla.geckoview.BuildConfig as GeckoViewBuildConfig
@@ -122,7 +122,7 @@ private fun AboutPageContent(
     FocusTheme {
         Column(
             modifier = Modifier
-                .padding(focusDimensions.paddingSmall)
+                .padding(8.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
@@ -141,8 +141,8 @@ private fun LogoIcon(onLogoClick: () -> Unit) {
     Image(
         painter = painterResource(R.drawable.wordmark2),
         contentDescription = null,
-            modifier = Modifier
-                .padding(focusDimensions.paddingTiny)
+        modifier = Modifier
+            .padding(4.dp)
             .clickable(onClick = onLogoClick),
     )
 }
@@ -158,7 +158,7 @@ private fun VersionInfo(aboutVersion: String) {
                 textDirection = TextDirection.Ltr,
             ),
             modifier = Modifier
-                .padding(focusDimensions.paddingText),
+                .padding(10.dp),
         )
     }
 }
@@ -170,7 +170,7 @@ private fun AboutContent(content: String) {
         color = focusColors.aboutPageText,
         style = focusTypography.bodyLarge,
         modifier = Modifier
-            .padding(focusDimensions.paddingText),
+            .padding(10.dp),
     )
 }
 

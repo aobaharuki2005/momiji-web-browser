@@ -7,16 +7,17 @@ package org.mozilla.fenix.settings.about
 import android.content.Context
 import android.view.View
 import android.widget.Toast
-import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleRegistry
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.runs
-import io.mockk.slot
-import io.mockk.verify
+import mozilla.components.support.test.KArgumentCaptor
+import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.whenever
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.doNothing
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.about.AboutFragment.ToastHandler
 import org.mozilla.fenix.utils.Settings
@@ -28,67 +29,69 @@ class AboutFragmentTest {
     private lateinit var logoView: View
     private lateinit var fragment: AboutFragment
     private lateinit var lifecycle: LifecycleRegistry
+    private lateinit var secretDebugMenuTrigger: KArgumentCaptor<SecretDebugMenuTrigger>
     private lateinit var toastHandler: ToastHandler
 
     private val message = "Debug menu: 3 clicks left to enable"
     private val doneMessage = "Debug menu enabled"
 
-    val secretDebugMenuTrigger = slot<LifecycleObserver>()
-
     @Before
     fun setup() {
-        toastHandler = mockk(relaxUnitFun = true)
+        toastHandler = mock()
         fragment = AboutFragment(toastHandler)
-        lifecycle = mockk()
-        context = mockk()
-        settings = mockk()
-        logoView = mockk(relaxUnitFun = true)
+        lifecycle = mock()
+        context = mock()
+        settings = mock()
+        logoView = mock()
 
-        every { context.getString(R.string.about_debug_menu_toast_progress, 3) } returns message
-        every { context.getString(R.string.about_debug_menu_toast_done) } returns doneMessage
-        every { settings.showSecretDebugMenuThisSession = true } just runs
-        every { lifecycle.addObserver(capture(secretDebugMenuTrigger)) } answers { }
+        secretDebugMenuTrigger = argumentCaptor()
+
+        whenever(context.getString(R.string.about_debug_menu_toast_progress, 3)).thenReturn(message)
+        whenever(context.getString(R.string.about_debug_menu_toast_done)).thenReturn(doneMessage)
+        doNothing().`when`(settings).showSecretDebugMenuThisSession = true
+
+        whenever(lifecycle.addObserver(secretDebugMenuTrigger.capture())).then { }
     }
 
     @Test
     fun `setupDebugMenu sets proper click listener when showSecretDebugMenuThisSession is false`() {
-        every { settings.showSecretDebugMenuThisSession } returns false
+        whenever(settings.showSecretDebugMenuThisSession).thenReturn(false)
 
         fragment.setupDebugMenu(logoView, settings, lifecycle)
 
-        verify { logoView.setOnClickListener(any()) }
+        verify(logoView).setOnClickListener(any())
     }
 
     @Test
     fun `setupDebugMenu doesn't set click listener when showSecretDebugMenuThisSession is true`() {
-        every { settings.showSecretDebugMenuThisSession } returns true
+        whenever(settings.showSecretDebugMenuThisSession).thenReturn(true)
 
         fragment.setupDebugMenu(logoView, settings, lifecycle)
 
-        verify(exactly = 0) { logoView.setOnClickListener(any()) }
+        verify(logoView, never()).setOnClickListener(any())
     }
 
     @Test
     fun `setupDebugMenu adds secretDebugMenuTrigger as lifecycle observer`() {
-        every { settings.showSecretDebugMenuThisSession } returns false
+        whenever(settings.showSecretDebugMenuThisSession).thenReturn(false)
 
         fragment.setupDebugMenu(logoView, settings, lifecycle)
 
-        verify { lifecycle.addObserver(secretDebugMenuTrigger.captured) }
+        verify(lifecycle).addObserver(secretDebugMenuTrigger.value)
     }
 
     @Test
     fun `onDebugMenuActivated should update settings and show a Toast`() {
         fragment.onDebugMenuActivated(context, settings)
 
-        verify { toastHandler.showToast(context, doneMessage, Toast.LENGTH_LONG) }
-        verify { settings.showSecretDebugMenuThisSession = true }
+        verify(toastHandler).showToast(context, doneMessage, Toast.LENGTH_LONG)
+        verify(settings).showSecretDebugMenuThisSession = true
     }
 
     @Test
     fun `onLogoClicked should update settings and show a Toast`() {
         fragment.onLogoClicked(context, 3)
 
-        verify { toastHandler.showToast(context, message, Toast.LENGTH_SHORT) }
+        verify(toastHandler).showToast(context, message, Toast.LENGTH_SHORT)
     }
 }

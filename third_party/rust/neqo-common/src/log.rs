@@ -14,14 +14,9 @@ use env_logger::Builder;
 
 fn since_start() -> Duration {
     static START_TIME: OnceLock<Instant> = OnceLock::new();
-    #[expect(clippy::disallowed_methods, reason = "Logging needs to use real time")]
     START_TIME.get_or_init(Instant::now).elapsed()
 }
 
-/// Initialize the logging system with optional level filtering.
-///
-/// This function sets up the `env_logger` with a custom format that includes
-/// elapsed time since initialization. It can be called multiple times safely.
 pub fn init(level_filter: Option<log::LevelFilter>) {
     static INIT_ONCE: Once = Once::new();
 
@@ -53,12 +48,8 @@ pub fn init(level_filter: Option<log::LevelFilter>) {
     });
 }
 
-/// Log an error message using the neqo logging framework.
-///
-/// Automatically initializes logging in test/bench builds before logging.
-/// Equivalent to `log::error!` but with automatic initialization.
 #[macro_export]
-#[clippy::format_args]
+// TODO: Enable `#[clippy::format_args]` once our MSRV is >= 1.84
 macro_rules! qerror {
     ($($arg:tt)*) => ( {
         #[cfg(any(test, feature = "bench"))]
@@ -66,13 +57,8 @@ macro_rules! qerror {
         ::log::error!($($arg)*);
     } );
 }
-
-/// Log a warning message using the neqo logging framework.
-///
-/// Automatically initializes logging in test/bench builds before logging.
-/// Equivalent to `log::warn!` but with automatic initialization.
 #[macro_export]
-#[clippy::format_args]
+// TODO: Enable `#[clippy::format_args]` once our MSRV is >= 1.84
 macro_rules! qwarn {
     ($($arg:tt)*) => ( {
         #[cfg(any(test, feature = "bench"))]
@@ -80,13 +66,8 @@ macro_rules! qwarn {
         ::log::warn!($($arg)*);
     } );
 }
-
-/// Log an informational message using the neqo logging framework.
-///
-/// Automatically initializes logging in test/bench builds before logging.
-/// Equivalent to `log::info!` but with automatic initialization.
 #[macro_export]
-#[clippy::format_args]
+// TODO: Enable `#[clippy::format_args]` once our MSRV is >= 1.84
 macro_rules! qinfo {
     ($($arg:tt)*) => ( {
         #[cfg(any(test, feature = "bench"))]
@@ -94,13 +75,8 @@ macro_rules! qinfo {
         ::log::info!($($arg)*);
     } );
 }
-
-/// Log a debug message using the neqo logging framework.
-///
-/// Automatically initializes logging in test/bench builds before logging.
-/// Equivalent to `log::debug!` but with automatic initialization.
 #[macro_export]
-#[clippy::format_args]
+// TODO: Enable `#[clippy::format_args]` once our MSRV is >= 1.84
 macro_rules! qdebug {
     ($($arg:tt)*) => ( {
         #[cfg(any(test, feature = "bench"))]
@@ -108,13 +84,8 @@ macro_rules! qdebug {
         ::log::debug!($($arg)*);
     } );
 }
-
-/// Log a trace message using the neqo logging framework.
-///
-/// Automatically initializes logging in test/bench builds before logging.
-/// Equivalent to `log::trace!` but with automatic initialization.
 #[macro_export]
-#[clippy::format_args]
+// TODO: Enable `#[clippy::format_args]` once our MSRV is >= 1.84
 macro_rules! qtrace {
     ($($arg:tt)*) => ( {
         #[cfg(any(test, feature = "bench"))]

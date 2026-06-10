@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -53,11 +55,11 @@ class SMILTimeValue {
  public:
   // Creates an unresolved time value
   SMILTimeValue()
-      : mMilliseconds(kUnresolvedMillis), mState(State::Unresolved) {}
+      : mMilliseconds(kUnresolvedMillis), mState(STATE_UNRESOLVED) {}
 
   // Creates a resolved time value
   explicit SMILTimeValue(SMILTime aMillis)
-      : mMilliseconds(aMillis), mState(State::Definite) {}
+      : mMilliseconds(aMillis), mState(STATE_DEFINITE) {}
 
   // Named constructor to create an indefinite time value
   static SMILTimeValue Indefinite() {
@@ -68,32 +70,32 @@ class SMILTimeValue {
 
   static SMILTimeValue Zero() { return SMILTimeValue(SMILTime(0L)); }
 
-  bool IsIndefinite() const { return mState == State::Indefinite; }
+  bool IsIndefinite() const { return mState == STATE_INDEFINITE; }
   void SetIndefinite() {
-    mState = State::Indefinite;
+    mState = STATE_INDEFINITE;
     mMilliseconds = kUnresolvedMillis;
   }
 
-  bool IsResolved() const { return mState != State::Unresolved; }
+  bool IsResolved() const { return mState != STATE_UNRESOLVED; }
   void SetUnresolved() {
-    mState = State::Unresolved;
+    mState = STATE_UNRESOLVED;
     mMilliseconds = kUnresolvedMillis;
   }
 
-  bool IsDefinite() const { return mState == State::Definite; }
+  bool IsDefinite() const { return mState == STATE_DEFINITE; }
   SMILTime GetMillis() const {
-    MOZ_ASSERT(mState == State::Definite,
+    MOZ_ASSERT(mState == STATE_DEFINITE,
                "GetMillis() called for unresolved or indefinite time");
 
-    return mState == State::Definite ? mMilliseconds : kUnresolvedMillis;
+    return mState == STATE_DEFINITE ? mMilliseconds : kUnresolvedMillis;
   }
 
   bool IsZero() const {
-    return mState == State::Definite ? mMilliseconds == 0 : false;
+    return mState == STATE_DEFINITE ? mMilliseconds == 0 : false;
   }
 
   void SetMillis(SMILTime aMillis) {
-    mState = State::Definite;
+    mState = STATE_DEFINITE;
     mMilliseconds = aMillis;
   }
 
@@ -135,7 +137,7 @@ class SMILTimeValue {
   static const SMILTime kUnresolvedMillis;
 
   SMILTime mMilliseconds;
-  enum class State : uint8_t { Definite, Indefinite, Unresolved } mState;
+  enum { STATE_DEFINITE, STATE_INDEFINITE, STATE_UNRESOLVED } mState;
 };
 
 }  // namespace mozilla

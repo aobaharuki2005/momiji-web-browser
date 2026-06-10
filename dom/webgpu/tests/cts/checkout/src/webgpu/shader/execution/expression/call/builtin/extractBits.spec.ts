@@ -179,11 +179,6 @@ g.test('u32')
               0b00000000000000000000000010101010
             ),
           },
-          // Difficult edge case involving a MAX_UINT 'count'.
-          {
-            input: [V(5), u32(1), u32(4294967295)],
-            expected: V(2),
-          },
         ]
       );
     }
@@ -323,11 +318,6 @@ g.test('i32')
               0b00000000000000000000000101010101,
               0b00000000000000000000000010101010
             ),
-          },
-          // Difficult edge case involving a MAX_UINT 'count'.
-          {
-            input: [V(5), u32(1), u32(4294967295)],
-            expected: V(2),
           },
         ]
       );

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -6,12 +8,10 @@
 #define gc_WeakMap_h
 
 #include "mozilla/Atomics.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/LinkedList.h"
 
-#include "ds/SlimLinkedList.h"
 #include "gc/AllocKind.h"
 #include "gc/Barrier.h"
-#include "gc/Cell.h"
 #include "gc/Marking.h"
 #include "gc/Tracer.h"
 #include "gc/ZoneAllocator.h"
@@ -36,10 +36,6 @@ struct WeakMapKeyHasher;
 extern void DumpWeakMapLog(JSRuntime* rt);
 
 namespace gc {
-
-// Ensure a Symbol read out of a weak map is marked black in |zone|'s atom
-// marking bitmap before it can escape to script.
-void MarkSymbolForWeakMapReadBarrier(JS::Zone* zone, JS::Symbol* sym);
 
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
 // Check whether a weak map entry is marked correctly.
@@ -124,31 +120,21 @@ using WeakMapColors = HashMap<WeakMapBase*, js::gc::CellColor,
 
 // Common base class for all WeakMap specializations, used for calling
 // subclasses' GC-related methods.
-class WeakMapBase : public SlimLinkedListElement<WeakMapBase> {
+class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   friend class js::GCMarker;
 
  public:
   using CellColor = js::gc::CellColor;
 
   WeakMapBase(JSObject* memOf, JS::Zone* zone);
-  virtual ~WeakMapBase() = default;
+  virtual ~WeakMapBase() {}
 
   JS::Zone* zone() const { return zone_; }
-
-  // Whether this is a 'system' weakmap as opposed to a 'user' one. System
-  // weakmaps are used internally by the engine and |memberOf| is null. User
-  // ones are part of a JS WeakMap object pointed to by |memberOf|.
-  bool isSystem() const { return !memberOf; }
 
   // Garbage collector entry points.
 
   // Unmark all weak maps in a zone.
   static void unmarkZone(JS::Zone* zone);
-#ifdef DEBUG
-  static void checkZoneUnmarked(JS::Zone* zone);
-#else
-  static void checkZoneUnmarked(JS::Zone* zone) {}
-#endif
 
   // Check all weak maps in a zone that have been marked as live in this garbage
   // collection, and mark the values of all entries that have become strong
@@ -165,14 +151,12 @@ class WeakMapBase : public SlimLinkedListElement<WeakMapBase> {
   // Trace all weak map bindings. Used by the cycle collector.
   static void traceAllMappings(WeakMapTracer* tracer);
 
-#if defined(JS_GC_ZEAL)
   // Save information about which weak maps are marked for a zone.
   static bool saveZoneMarkedWeakMaps(JS::Zone* zone,
                                      WeakMapColors& markedWeakMaps);
 
   // Restore information about which weak maps are marked for many zones.
   static void restoreMarkedWeakMaps(WeakMapColors& markedWeakMaps);
-#endif
 
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
   static bool checkMarkingForZone(JS::Zone* zone);
@@ -185,10 +169,9 @@ class WeakMapBase : public SlimLinkedListElement<WeakMapBase> {
  protected:
   // Instance member functions called by the above. Instantiations of WeakMap
   // override these with definitions appropriate for their Key and Value types.
-  virtual bool empty() const = 0;
   virtual void trace(JSTracer* tracer) = 0;
   virtual bool findSweepGroupEdges(Zone* atomsZone) = 0;
-  virtual void traceWeakEdgesDuringSweeping(JSTracer* trc) = 0;
+  virtual void traceWeakEdges(JSTracer* trc) = 0;
   virtual void traceMappings(WeakMapTracer* tracer) = 0;
   virtual void clearAndCompact() = 0;
 
@@ -211,17 +194,9 @@ class WeakMapBase : public SlimLinkedListElement<WeakMapBase> {
 
   gc::CellColor mapColor() const { return gc::CellColor(uint32_t(mapColor_)); }
   void setMapColor(gc::CellColor newColor) { mapColor_ = uint32_t(newColor); }
-
-  bool isMarked() const { return gc::IsMarked(mapColor()); }
-
-  // Attempt to mark the map and return the old color if successful.
-  mozilla::Maybe<gc::CellColor> markMap(gc::MarkColor markColor);
+  bool markMap(gc::MarkColor markColor);
 
   void setHasNurseryEntries();
-
-#ifdef DEBUG
-  virtual void checkCachedFlags() const = 0;
-#endif
 
 #ifdef JS_GC_ZEAL
   virtual bool checkMarking() const = 0;
@@ -329,7 +304,7 @@ struct WeakMapKeyHasher<PreBarriered<JS::Value>> {
   static bool match(const Key& k, const Lookup& l) {
     return WeakMapKeyHasher<JS::Value>::match(k, l);
   }
-  static void rekey(Key& k, const Lookup& newKey) { k.unbarrieredSet(newKey); }
+  static void rekey(Key& k, const Key& newKey) { k.unbarrieredSet(newKey); }
 };
 
 template <class Key, class Value, class AllocPolicy>
@@ -346,13 +321,12 @@ class WeakMap : public WeakMapBase {
 
   // The keys of entries where either the key or value is allocated in the
   // nursery.
-  GCVector<Key, 0, AllocPolicy> nurseryKeys;
+  GCVector<Key, 0, SystemAllocPolicy> nurseryKeys;
 
  public:
   using Lookup = typename Map::Lookup;
   using Entry = typename Map::Entry;
-  using Iterator = typename Map::Iterator;
-  using ModIterator = typename Map::ModIterator;
+  using Range = typename Map::Range;
 
   // Restrict the interface of HashMap::Ptr and AddPtr to remove mutable access
   // to the hash table entry which could otherwise bypass our barriers.
@@ -383,21 +357,27 @@ class WeakMap : public WeakMapBase {
     const Entry* operator->() const { return &*ptr; }
   };
 
-  // Create a weak map owned by a JS object. Used for script-facing objects.
-  explicit WeakMap(JSContext* cx, JSObject* memOf);
+  struct Enum : public Map::Enum {
+    explicit Enum(WeakMap& map) : Map::Enum(map.map()) {}
+  };
 
-  // Create a weak map associated with a zone. For internal use by the engine.
-  explicit WeakMap(JS::Zone* zone);
-
+  explicit WeakMap(JSContext* cx, JSObject* memOf = nullptr);
+  explicit WeakMap(JS::Zone* zone, JSObject* memOf = nullptr);
   ~WeakMap() override;
 
-  Iterator iter() const { return map().iter(); }
-  ModIterator modIter() { return map().modIter(); }
+  Range all() const { return map().all(); }
   uint32_t count() const { return map().count(); }
-  bool empty() const override { return map().empty(); }
+  bool empty() const { return map().empty(); }
   bool has(const Lookup& lookup) const { return map().has(lookup); }
   void remove(const Lookup& lookup) { return map().remove(lookup); }
   void remove(Ptr ptr) { return map().remove(ptr.ptr); }
+
+  size_t shallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    return map().shallowSizeOfExcludingThis(aMallocSizeOf);
+  }
+  size_t shallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    return aMallocSizeOf(this) + shallowSizeOfExcludingThis(aMallocSizeOf);
+  }
 
   // Get the value associated with a key, or a default constructed Value if the
   // key is not present in the map.
@@ -458,9 +438,7 @@ class WeakMap : public WeakMapBase {
     nurseryKeys.clear();
     nurseryKeysValid = true;
     mayHaveSymbolKeys = false;
-    if (!isSystem()) {
-      mayHaveKeyDelegates = false;
-    }
+    mayHaveKeyDelegates = false;
   }
 
 #ifdef DEBUG
@@ -470,16 +448,16 @@ class WeakMap : public WeakMapBase {
   }
 #endif
 
-  bool markEntry(GCMarker* marker, gc::CellColor mapColor, ModIterator& iter,
+  bool markEntry(GCMarker* marker, gc::CellColor mapColor, Enum& iter,
                  bool populateWeakKeysTable);
 
   void trace(JSTracer* trc) override;
 
   // Used by the debugger to trace cross-compartment edges.
   void traceKeys(JSTracer* trc);
-  void traceKey(JSTracer* trc, ModIterator& iter);
+  void traceKey(JSTracer* trc, Enum& iter);
 
-  size_t shallowSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   static size_t offsetOfHashShift() {
     return offsetof(WeakMap, map_) + UnbarrieredMap::offsetOfHashShift();
@@ -502,7 +480,6 @@ class WeakMap : public WeakMapBase {
 
 #if DEBUG
   void assertEntriesNotAboutToBeFinalized();
-  void checkCachedFlags() const override;
 #endif
 
 #ifdef JS_GC_ZEAL
@@ -514,8 +491,6 @@ class WeakMap : public WeakMapBase {
 #endif
 
  private:
-  static void staticAssertions();
-
   // Map accessor uses a cast to add barriers.
   Map& map() { return reinterpret_cast<Map&>(map_); }
   const Map& map() const { return reinterpret_cast<const Map&>(map_); }
@@ -524,20 +499,11 @@ class WeakMap : public WeakMapBase {
     return map().lookup(l);
   }
 
-  void valueReadBarrier(const JS::Value& v) const {
-    // js::jit::WeakMapValueReadBarrier is a specialized version of this
-    // function designed to be called from jitcode. If this code is changed, it
-    // should be kept in sync.
+  static void valueReadBarrier(const JS::Value& v) {
     JS::ExposeValueToActiveJS(v);
-    if (MOZ_UNLIKELY(v.isSymbol())) {
-      gc::MarkSymbolForWeakMapReadBarrier(zone(), v.toSymbol());
-    }
   }
   static void valueReadBarrier(JSObject* obj) {
     JS::ExposeObjectToActiveJS(obj);
-  }
-  static void valueReadBarrier(jit::JitCode* code) {
-    gc::ExposeGCThingToActiveJS(JS::GCCellPtr(code));
   }
 
   void writeBarrier(const Key& key, const Value& value) {
@@ -546,27 +512,17 @@ class WeakMap : public WeakMapBase {
   }
 
   void keyKindBarrier(const JS::Value& key) {
-    if (key.isSymbol() && !mayHaveSymbolKeys) {
-      setMayHaveSymbolKeys();
+    if (key.isSymbol()) {
+      mayHaveSymbolKeys = true;
     }
     if (key.isObject()) {
       keyKindBarrier(&key.toObject());
     }
   }
   void keyKindBarrier(JSObject* key) {
-    // Fast path for non-proxy objects.
-    if (!IsProxy(key)) {
-      MOZ_ASSERT(!ObjectMayBeSwapped(key));
-      return;
-    }
-    keyKindBarrierSlow(key);
-  }
-  void keyKindBarrierSlow(JSObject* key) {
-    if (!mayHaveKeyDelegates) {
-      JSObject* delegate = UncheckedUnwrapWithoutExpose(key);
-      if (delegate != key || ObjectMayBeSwapped(key)) {
-        setMayHaveKeyDelegates();
-      }
+    JSObject* delegate = UncheckedUnwrapWithoutExpose(key);
+    if (delegate != key || ObjectMayBeSwapped(key)) {
+      mayHaveKeyDelegates = true;
     }
   }
   void keyKindBarrier(BaseScript* key) {}
@@ -585,10 +541,8 @@ class WeakMap : public WeakMapBase {
   }
 
   void addNurseryKey(const Key& key);
-  void setMayHaveSymbolKeys();
-  void setMayHaveKeyDelegates();
 
-  void traceWeakEdgesDuringSweeping(JSTracer* trc) override;
+  void traceWeakEdges(JSTracer* trc) override;
 
   void clearAndCompact() override {
     clear();

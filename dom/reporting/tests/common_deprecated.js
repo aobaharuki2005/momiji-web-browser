@@ -14,6 +14,10 @@ function test_deprecatedInterface() {
       is(report.type, "deprecation", "Deprecation report received");
       is(report.url, location.href, "URL is location");
       ok(!!report.body, "The report has a body");
+      ok(
+        report.body instanceof DeprecationReportBody,
+        "Correct type for the body"
+      );
       is(
         report.body.id,
         "DeprecatedTestingInterface",
@@ -32,7 +36,7 @@ function test_deprecatedInterface() {
           .replace("worker_deprecated.js", "common_deprecated.js"),
         "We have a sourceFile"
       );
-      is(report.body.lineNumber, 46, "We have a lineNumber");
+      is(report.body.lineNumber, 50, "We have a lineNumber");
       is(report.body.columnNumber, 24, "We have a columnNumber");
 
       obs.disconnect();
@@ -60,6 +64,10 @@ function test_deprecatedMethod() {
       is(report.type, "deprecation", "Deprecation report received");
       is(report.url, location.href, "URL is location");
       ok(!!report.body, "The report has a body");
+      ok(
+        report.body instanceof DeprecationReportBody,
+        "Correct type for the body"
+      );
       is(
         report.body.id,
         "DeprecatedTestingMethod",
@@ -80,7 +88,7 @@ function test_deprecatedMethod() {
           .replace("worker_deprecated.js", "common_deprecated.js"),
         "We have a sourceFile"
       );
-      is(report.body.lineNumber, 94, "We have a lineNumber");
+      is(report.body.lineNumber, 102, "We have a lineNumber");
       is(report.body.columnNumber, 22, "We have a columnNumber");
 
       obs.disconnect();
@@ -137,6 +145,10 @@ function test_deprecatedAttribute() {
       is(report.type, "deprecation", "Deprecation report received");
       is(report.url, location.href, "URL is location");
       ok(!!report.body, "The report has a body");
+      ok(
+        report.body instanceof DeprecationReportBody,
+        "Correct type for the body"
+      );
       is(
         report.body.id,
         "DeprecatedTestingAttribute",
@@ -157,7 +169,7 @@ function test_deprecatedAttribute() {
           .replace("worker_deprecated.js", "common_deprecated.js"),
         "We have a sourceFile"
       );
-      is(report.body.lineNumber, 171, "We have a lineNumber");
+      is(report.body.lineNumber, 183, "We have a lineNumber");
       is(report.body.columnNumber, 8, "We have a columnNumber");
 
       obs.disconnect();

@@ -1,3 +1,5 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -414,13 +416,13 @@ export const ContentAnalysis = {
         // If we're showing a dialog in the sidebar, the dialog is managed
         // by the embedderElement.
         let isSidebar =
-          browser?.documentGlobal?.browsingContext?.embedderElement?.id ==
+          browser?.ownerGlobal?.browsingContext?.embedderElement?.id ==
           "sidebar";
         if (isSidebar) {
-          browser = browser.documentGlobal.browsingContext.embedderElement;
+          browser = browser.ownerGlobal.browsingContext.embedderElement;
         }
         // browser will be null if the tab was closed
-        let win = browser?.documentGlobal;
+        let win = browser?.ownerGlobal;
         if (win) {
           let dialogBox = win.gBrowser.getTabDialogBox(browser);
           // Just close the dialog associated with this CA request.
@@ -988,7 +990,7 @@ export const ContentAnalysis = {
           // So instead, try to find the browser that this print preview dialog is on top of
           // and show the dialog there.
           let printPreviewBrowser = aBrowsingContext.embedderElement;
-          let win = printPreviewBrowser.documentGlobal;
+          let win = printPreviewBrowser.ownerGlobal;
           for (let browser of win.gBrowser.browsers) {
             if (
               win.PrintUtils.getPreviewBrowser(browser)?.browserId ===

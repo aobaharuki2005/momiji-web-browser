@@ -66,12 +66,7 @@ add_task(async function test_change_in_popup() {
         // Select "graphics" using the popup
         ok(!graphics.checked, "The Graphics preset is not checked.");
 
-        let popupPromise = BrowserTestUtils.waitForEvent(
-          presetsInPopup.menupopup,
-          "popupshown"
-        );
         presetsInPopup.menupopup.openPopup();
-        await popupPromise;
         presetsInPopup.menupopup.activateItem(
           await getElementByLabel(presetsInPopup, "Graphics")
         );
@@ -96,12 +91,7 @@ add_task(async function test_change_in_popup() {
         // Select "firefox frontend" using the popup
         ok(!media.checked, "The Media preset is not checked.");
 
-        popupPromise = BrowserTestUtils.waitForEvent(
-          presetsInPopup.menupopup,
-          "popupshown"
-        );
         presetsInPopup.menupopup.openPopup();
-        await popupPromise;
         presetsInPopup.menupopup.activateItem(
           await getElementByLabel(presetsInPopup, "Media")
         );

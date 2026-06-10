@@ -294,7 +294,6 @@ class Front extends Pool {
       if (!packet.to) {
         packet.to = this.actorID;
       }
-
       this.conn._transport.send(packet);
     } else {
       if (!packet.actor) {

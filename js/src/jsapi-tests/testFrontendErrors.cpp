@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -87,8 +89,8 @@ BEGIN_TEST(testFrontendErrors_error) {
     CHECK(exception.isObject());
     JS::Rooted<JSObject*> exceptionObj(cx, &exception.toObject());
 
-    JS::BorrowedErrorReport report(cx);
-    CHECK(JS_ErrorFromException(cx, exceptionObj, report));
+    const JSErrorReport* report = JS_ErrorFromException(cx, exceptionObj);
+    CHECK(report);
 
     CHECK(report->errorNumber == JSMSG_UNEXPECTED_TOKEN_NO_EXPECT);
     // Runtime's error report doesn't borrow the filename.
@@ -267,8 +269,8 @@ BEGIN_TEST(testFrontendErrors_overRecursed) {
     CHECK(exception.isObject());
     JS::Rooted<JSObject*> exceptionObj(cx, &exception.toObject());
 
-    JS::BorrowedErrorReport report(cx);
-    CHECK(JS_ErrorFromException(cx, exceptionObj, report));
+    const JSErrorReport* report = JS_ErrorFromException(cx, exceptionObj);
+    CHECK(report);
 
     CHECK(report->errorNumber == JSMSG_OVER_RECURSED);
   }
@@ -325,8 +327,8 @@ BEGIN_TEST(testFrontendErrors_allocationOverflow) {
     CHECK(exception.isObject());
     JS::Rooted<JSObject*> exceptionObj(cx, &exception.toObject());
 
-    JS::BorrowedErrorReport report(cx);
-    CHECK(JS_ErrorFromException(cx, exceptionObj, report));
+    const JSErrorReport* report = JS_ErrorFromException(cx, exceptionObj);
+    CHECK(report);
 
     CHECK(report->errorNumber == JSMSG_ALLOC_OVERFLOW);
   }

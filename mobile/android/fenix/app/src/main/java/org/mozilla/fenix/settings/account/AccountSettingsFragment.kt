@@ -46,7 +46,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.compose.snackbar.Snackbar
 import org.mozilla.fenix.compose.snackbar.SnackbarState
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.pixelSizeFor
@@ -56,15 +55,10 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.requirePreference
-import org.mozilla.fenix.settings.scrollToPreferenceWithHighlight
 import org.mozilla.fenix.settings.showCustomEditTextPreferenceDialog
-import com.google.android.material.R as materialR
 
-/**
- * Settings screen allowing users to manage their Firefox account and what data to sync through it.
- */
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class AccountSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragment {
+class AccountSettingsFragment : PreferenceFragmentCompat() {
     private lateinit var accountManager: FxaAccountManager
     private lateinit var accountSettingsStore: AccountSettingsFragmentStore
     private lateinit var accountSettingsInteractor: AccountSettingsInteractor
@@ -95,7 +89,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFr
         super.onResume()
         showToolbar(getString(R.string.preferences_account_settings))
         args.preferenceToScrollTo?.let {
-            scrollToPreferenceWithHighlight(it)
+            scrollToPreference(it)
         }
     }
 
@@ -170,10 +164,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFr
     }
 
     override fun onDisplayPreferenceDialog(preference: Preference) {
-        val handled = showCustomEditTextPreferenceDialog(
-            preference = preference,
-            errorMessage = { value -> R.string.empty_device_name_error.takeIf { value.isBlank() } },
-        )
+        val handled = showCustomEditTextPreferenceDialog(preference)
 
         if (!handled) {
             super.onDisplayPreferenceDialog(preference)
@@ -209,7 +200,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFr
 
             icon?.let {
                 icon = it.mutate().apply {
-                    setTint(context.getColorFromAttr(materialR.attr.colorOnSurface))
+                    setTint(context.getColorFromAttr(R.attr.textPrimary))
                 }
             }
 
@@ -323,8 +314,9 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFr
      * preference and false indicates not synced.
      */
     private fun updateSyncEngineState(engine: SyncEngine, newValue: Boolean) {
+        SyncEnginesStorage(requireContext()).setStatus(engine, newValue)
         viewLifecycleOwner.lifecycleScope.launch {
-            requireContext().components.backgroundServices.accountManager.setEngineEnabled(engine, newValue)
+            requireContext().components.backgroundServices.accountManager.syncNow(SyncReason.EngineChange)
         }
     }
 

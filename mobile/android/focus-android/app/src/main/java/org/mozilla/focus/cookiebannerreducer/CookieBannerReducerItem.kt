@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.sp
 import org.mozilla.focus.R
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.ui.theme.focusColors
-import org.mozilla.focus.ui.theme.focusDimensions
 import mozilla.components.ui.icons.R as iconsR
 
 @Composable
@@ -112,7 +111,7 @@ fun CookieBannerReducerItem(
             painter = painter,
             contentDescription = null,
             tint = focusColors.onPrimary,
-            modifier = Modifier.padding(end = focusDimensions.paddingIconEnd),
+            modifier = Modifier.padding(end = 20.dp),
         )
 
         Column(

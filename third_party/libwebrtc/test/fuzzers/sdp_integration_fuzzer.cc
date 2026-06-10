@@ -23,7 +23,6 @@
 #include "pc/test/integration_test_helpers.h"
 #include "pc/test/mock_peer_connection_observers.h"
 #include "rtc_base/checks.h"
-#include "test/fuzzers/fuzz_data_helper.h"
 #include "test/gmock.h"
 #include "test/wait_until.h"
 
@@ -70,13 +69,14 @@ class FuzzerTest : public PeerConnectionIntegrationBaseTest {
   void TestBody() override {}
 };
 
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
-  if (fuzz_data.size() > 16384) {
+void FuzzOneInput(const uint8_t* data, size_t size) {
+  if (size > 16384) {
     return;
   }
 
   FuzzerTest test;
-  test.RunNegotiateCycle(fuzz_data.ReadString());
+  test.RunNegotiateCycle(
+      absl::string_view(reinterpret_cast<const char*>(data), size));
 }
 
 }  // namespace webrtc

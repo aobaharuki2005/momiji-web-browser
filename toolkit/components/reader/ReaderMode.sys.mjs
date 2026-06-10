@@ -1,3 +1,4 @@
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -62,6 +63,19 @@ export var ReaderMode = {
     let url = win.document.location.href;
     let readerURL = "about:reader?url=" + encodeURIComponent(url);
 
+    if (!Services.appinfo.sessionHistoryInParent) {
+      let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+      let sh = webNav.sessionHistory;
+      if (webNav.canGoForward) {
+        let forwardEntry = sh.legacySHistory.getEntryAtIndex(sh.index + 1);
+        let forwardURL = forwardEntry.URI.spec;
+        if (forwardURL && (forwardURL == readerURL || !readerURL)) {
+          webNav.goForward();
+          return;
+        }
+      }
+    }
+
     // This could possibly move to the parent. See bug 1664982.
     win.document.location = readerURL;
   },
@@ -92,6 +106,18 @@ export var ReaderMode = {
     let url = win.document.location.href;
     let originalURL = this.getOriginalUrl(url);
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+
+    if (!Services.appinfo.sessionHistoryInParent) {
+      let sh = webNav.sessionHistory;
+      if (webNav.canGoBack) {
+        let prevEntry = sh.legacySHistory.getEntryAtIndex(sh.index - 1);
+        let prevURL = prevEntry.URI.spec;
+        if (prevURL && (prevURL == originalURL || !originalURL)) {
+          webNav.goBack();
+          return;
+        }
+      }
+    }
 
     let referrerURI, principal;
     try {

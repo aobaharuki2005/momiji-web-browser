@@ -96,8 +96,7 @@ run-sequentially = ["true"] # hardcoded ports
 
 ["test_cert_expiration_canary.js"]
 run-if = [
-  "false",
-  #"nightly_build",
+  "nightly_build",
 ]
 
 ["test_cert_keyUsage.js"]
@@ -157,7 +156,6 @@ run-if = [
 run-sequentially = ["true"] # hardcoded ports
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && msix",
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && msix",
 ]
 
 ["test_ct_stapled.js"]
@@ -167,7 +165,6 @@ run-if = [
 run-sequentially = ["true"] # hardcoded ports
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && msix",
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && msix",
 ]
 
 ["test_data_storage.js"]
@@ -179,7 +176,6 @@ run-if = [
 skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt && condprof",
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && opt && condprof",
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && opt && condprof",
 ]
 
 ["test_delegated_credentials.js"]
@@ -198,9 +194,8 @@ run-sequentially = ["true"] # hardcoded ports
 # have a way to test it on OS X.
 run-if = [
   "os == 'mac'",
-  "os == 'win'",
+  "os == 'windows'",
 ]
-skip-if = ["os == 'mac' && arch == 'aarch64'"]  # Asserts non-zero enterprise roots; fails on macOS aarch64 workers (see Bug 2037084 discussion)
 
 ["test_ev_certs.js"]
 tags = "blocklist psm"
@@ -320,12 +315,6 @@ run-sequentially = ["true"] # hardcoded ports
 ["test_signed_apps.js"]
 
 ["test_signed_pdfs.js"]
-prefs = [
-  "security.pdf_signature_verification.enable_test_trust_anchors=true"
-]
-
-["test_ssl_session_cache_pbm_exit.js"]
-run-sequentially = ["true"] # hardcoded ports
 
 ["test_ssl_status.js"]
 run-sequentially = ["true"] # hardcoded ports
@@ -364,8 +353,19 @@ run-if = [
 
 ["test_sss_resetState.js"]
 
+["test_sss_sanitizeOnShutdown.js"]
+requesttimeoutfactor = 3  # Slow on condprof
+prefs = ["privacy.sanitize.useOldClearHistoryDialog=true"]
+firefox-appdir = "browser"
+skip-if = [
+  "appname == 'thunderbird'", # browser/modules/Sanitizer.sys.mjs used by the test isn't available in Thunderbird.
+  "os == 'android'", # Sanitization works differently on Android - this doesn't apply.
+  "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && opt", # Bug 1839376
+]
+
 ["test_sss_sanitizeOnShutdown_v2.js"]
 requesttimeoutfactor = 2  # Slow on condprof
+prefs = ["privacy.sanitize.useOldClearHistoryDialog=false"]
 firefox-appdir = "browser"
 skip-if = [
   "appname == 'thunderbird'", # browser/modules/Sanitizer.sys.mjs used by the test isn't available in Thunderbird.

@@ -32,31 +32,22 @@ add_setup(async () => {
 add_task(async function test_eventpage_idle() {
   const { GleanCustomDistribution } = globalThis;
 
-  Services.fog.testResetFOG();
+  resetTelemetryData();
 
+  assertHistogramEmpty(WEBEXT_EVENTPAGE_RUNNING_TIME_MS);
+  assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_RUNNING_TIME_MS_BY_ADDONID);
+  assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
+  assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
   assertGleanMetricsNoSamples({
     metricId: "eventPageRunningTime",
     gleanMetric: Glean.extensionsTiming.eventPageRunningTime,
     gleanMetricConstructor: GleanCustomDistribution,
   });
-  assertGleanLabeledMetricEmpty({
+  assertGleanLabeledCounterEmpty({
     metricId: "eventPageIdleResult",
     gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
     gleanMetricLabels: GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES,
   });
-  assertGleanLabeledMetricEmpty({
-    metricId: "eventPageRunningTimeByAddonid",
-    gleanMetric: Glean.extensionsTiming.eventPageRunningTimeByAddonid,
-    gleanMetricLabels: [],
-  });
-  // TODO: asserting eventPageIdleResultByAddonid GleanDualLabeledCounter
-  // is empty (currently blocked on Bug 2026013).
-  //
-  // At the moment GleanDualLabeledCounter webidl only provides
-  // a `get` method that requires both the labels to be passed,
-  // the eventPageIdleResultByAddonid key is the addon ids and
-  // so it is not predefined and it is tricky to verify the metric
-  // is empty without known expected values for both the labels.
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
@@ -133,37 +124,65 @@ add_task(async function test_eventpage_idle() {
 
   info("Verify eventpage telemetry recorded");
 
-  assertGleanLabeledMetricNotEmpty({
+  assertHistogramSnapshot(
+    WEBEXT_EVENTPAGE_RUNNING_TIME_MS,
+    {
+      keyed: false,
+      processSnapshot: snapshot => snapshot.sum > 0,
+      expectedValue: true,
+    },
+    `Expect stored values in the eventpage running time non-keyed histogram snapshot`
+  );
+
+  assertHistogramSnapshot(
+    WEBEXT_EVENTPAGE_RUNNING_TIME_MS_BY_ADDONID,
+    {
+      keyed: true,
+      processSnapshot: snapshot => snapshot[id]?.sum > 0,
+      expectedValue: true,
+    },
+    `Expect stored values for addon with id ${id} in the eventpage running time keyed histogram snapshot`
+  );
+
+  assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+    category: "suspend",
+    categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+  });
+  assertGleanLabeledCounterNotEmpty({
     metricId: "eventPageIdleResult",
     gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
     expectedNotEmptyLabels: ["suspend"],
   });
+
+  assertHistogramCategoryNotEmpty(
+    WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+    {
+      keyed: true,
+      key: id,
+      category: "suspend",
+      categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    }
+  );
 
   Assert.greater(
     Glean.extensionsTiming.eventPageRunningTime.testGetValue()?.sum,
     0,
     `Expect stored values in the eventPageRunningTime Glean metric`
   );
-  Assert.greater(
-    Glean.extensionsTiming.eventPageRunningTimeByAddonid.testGetValue()?.[id]
-      ?.sum,
-    0,
-    `Expect stored values in the eventPageRunningTimeByAddonid Glean metric for extension ${id}`
-  );
 });
 
 add_task(
   { pref_set: [["extensions.background.idle.timeout", 500]] },
   async function test_eventpage_runtime_parentApiCall_resets_timeout() {
-    Services.fog.testResetFOG();
+    resetTelemetryData();
 
-    assertGleanLabeledMetricEmpty({
+    assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
+    assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+    assertGleanLabeledCounterEmpty({
       metricId: "eventPageIdleResult",
       gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
       gleanMetricLabels: GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES,
     });
-    // TODO: asserting eventPageIdleResultByAddonid GleanDualLabeledCounter
-    // is empty (currently blocked on Bug 2026013).
 
     let extension = ExtensionTestUtils.loadExtension({
       useAddonManager: "permanent",
@@ -197,17 +216,26 @@ add_task(
     Assert.greater(time, 100, `Background script suspended after ${time}ms.`);
 
     // Disabled because the telemetry is too chatty, see bug 1868960.
-    //
-    // assertGleanLabeledMetricNotEmpty({
+    // assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+    //   category: "reset_parentapicall",
+    //   categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    // });
+
+    // assertHistogramCategoryNotEmpty(
+    //   WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+    //   {
+    //     keyed: true,
+    //     key: extension.id,
+    //     category: "reset_parentapicall",
+    //     categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    //   }
+    // );
+
+    // assertGleanLabeledCounterNotEmpty({
     //   metricId: "eventPageIdleResult",
     //   gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
     //   expectedNotEmptyLabels: ["reset_parentapicall"],
     // });
-    //
-    // TODO: assert eventPageIdleResultByAddonid GleanDualLabeledCounter
-    // also include data for extension.id and reset_parentapicall labels
-    // (blocked on the collection for reset_parentapicall, disabled as part
-    // of Bug 1868960, to be re-enabled).
 
     await extension.unload();
   }
@@ -380,15 +408,15 @@ add_task(
 add_task(
   { pref_set: [["extensions.webextensions.runtime.timeout", 1000]] },
   async function test_eventpage_runtime_onSuspend_canceled() {
-    Services.fog.testResetFOG();
+    resetTelemetryData();
 
-    assertGleanLabeledMetricEmpty({
+    assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
+    assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+    assertGleanLabeledCounterEmpty({
       metricId: "eventPageIdleResult",
       gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
       gleanMetricLabels: GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES,
     });
-    // TODO: asserting eventPageIdleResultByAddonid GleanDualLabeledCounter
-    // is empty (currently blocked on Bug 2026013).
 
     let extension = ExtensionTestUtils.loadExtension({
       useAddonManager: "permanent",
@@ -431,16 +459,25 @@ add_task(
     ok(true, "event caused suspend-canceled");
 
     // Disabled because the telemetry is too chatty, see bug 1868960.
-    // assertGleanLabeledMetricNotEmpty({
+    // assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+    //   category: "reset_event",
+    //   categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    // });
+    // assertGleanLabeledCounterNotEmpty({
     //   metricId: "eventPageIdleResult",
     //   gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
     //   expectedNotEmptyLabels: ["reset_event"],
     // });
-    //
-    // TODO: assert eventPageIdleResultByAddonid GleanDualLabeledCounter
-    // also include data for extension.id and reset_parentapicall labels
-    // (blocked on the collection for reset_parentapicall, disabled as part
-    // of Bug 1868960, to be re-enabled).
+
+    // assertHistogramCategoryNotEmpty(
+    //   WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+    //   {
+    //     keyed: true,
+    //     key: extension.id,
+    //     category: "reset_event",
+    //     categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    //   }
+    // );
 
     await extension.awaitMessage("suspending");
     await promiseExtensionEvent(extension, "shutdown-background-script");
@@ -601,15 +638,15 @@ function createPendingListenerTestExtension() {
 add_task(
   { pref_set: [["extensions.background.idle.timeout", 500]] },
   async function test_eventpage_idle_reset_on_async_listener_unresolved() {
-    Services.fog.testResetFOG();
+    resetTelemetryData();
 
-    assertGleanLabeledMetricEmpty({
+    assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
+    assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+    assertGleanLabeledCounterEmpty({
       metricId: "eventPageIdleResult",
       gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
       gleanMetricLabels: GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES,
     });
-    // TODO: asserting eventPageIdleResultByAddonid GleanDualLabeledCounter
-    // is empty (currently blocked on Bug 2026013).
 
     let extension = createPendingListenerTestExtension();
     await extension.startup();
@@ -648,7 +685,12 @@ add_task(
       "Got the expected idle reset reason and pendingListeners count"
     );
 
-    assertGleanLabeledMetric({
+    assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+      category: "reset_listeners",
+      categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    });
+
+    assertGleanLabeledCounter({
       metricId: "eventPageIdleResult",
       gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
       gleanMetricLabels: GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES,
@@ -657,12 +699,15 @@ add_task(
         reset_listeners: 1,
       },
     });
-    Assert.equal(
-      Glean.extensionsCounters.eventPageIdleResultByAddonid
-        .get(extension.id, "reset_listeners")
-        ?.testGetValue(),
-      1,
-      `Got the expected value for extension ${extension.id} reset_listeners counter`
+
+    assertHistogramCategoryNotEmpty(
+      WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+      {
+        keyed: true,
+        key: extension.id,
+        category: "reset_listeners",
+        categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+      }
     );
 
     info(

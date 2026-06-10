@@ -5,11 +5,10 @@
 package org.mozilla.fenix.settings.logins.fragment
 
 import android.os.Bundle
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreferenceCompat
+import androidx.preference.SwitchPreference
 import mozilla.components.feature.autofill.preference.AutofillPreference
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.telemetry.glean.private.NoExtras
@@ -18,7 +17,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.biometricauthentication.AuthenticationStatus
 import org.mozilla.fenix.biometricauthentication.BiometricAuthenticationManager
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.requireComponents
@@ -28,11 +26,8 @@ import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import org.mozilla.fenix.settings.SyncPreferenceView
 import org.mozilla.fenix.settings.requirePreference
 
-/**
- * Settings screen allowing users to configure the passwords manager functionality of the application.
- */
 @Suppress("TooManyFunctions")
-class SavedLoginsAuthFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragment {
+class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.logins_preferences, rootKey)
@@ -67,7 +62,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFr
             }
         }
 
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_autofill_logins).apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_autofill_logins).apply {
             title = context.getString(
                 R.string.preferences_passwords_autofill2,
                 getString(R.string.app_name),
@@ -94,7 +89,6 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFr
         SyncPreferenceView(
             syncPreference = requirePreference(R.string.pref_key_sync_logins),
             lifecycleOwner = viewLifecycleOwner,
-            coroutineScope = viewLifecycleOwner.lifecycleScope,
             accountManager = requireComponents.backgroundServices.accountManager,
             syncEngine = SyncEngine.Passwords,
             loggedOffTitle = requireContext()

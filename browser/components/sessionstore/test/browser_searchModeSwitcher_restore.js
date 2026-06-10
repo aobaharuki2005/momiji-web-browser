@@ -6,7 +6,6 @@
 requestLongerTimeout(4);
 
 ChromeUtils.defineESModuleGetters(this, {
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
@@ -24,7 +23,7 @@ add_setup(async function () {
 add_task(async function () {
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
-  await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:mozilla");
+  await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:logo");
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:home");
 
   info("Set bookmarks search mode");
@@ -57,7 +56,7 @@ add_task(async function () {
       updateCalled++;
     });
 
-  let defaultEngine = await SearchService.getDefault();
+  let defaultEngine = await Services.search.getDefault();
   let defaultEngineIconURL = await defaultEngine.getIconURL();
 
   let defaultEngineIconCallsStack = [];
@@ -82,12 +81,16 @@ add_task(async function () {
   // Search mode switcher icon update will trigger once.
   await BrowserTestUtils.waitForCondition(() => updateCalled == 1);
 
-  let searchModeSwitcherIconUrl = win.gURLBar
-    .querySelector(".searchmode-switcher")
-    .getAttribute("iconsrc");
+  let searchModeSwitcherButton = win.gURLBar.querySelector(
+    ".searchmode-switcher-icon"
+  );
+  let regex = /url\("([^"]+)"\)/;
+  let searchModeSwitcherIconUrl = win
+    .getComputedStyle(searchModeSwitcherButton)
+    .listStyleImage.match(regex);
 
   Assert.equal(
-    searchModeSwitcherIconUrl,
+    searchModeSwitcherIconUrl[1],
     BOOKMARKS_ICON_URL,
     "Search mode switcher should display bookmarks icon."
   );

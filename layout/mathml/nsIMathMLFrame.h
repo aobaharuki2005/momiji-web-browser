@@ -1,8 +1,10 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsIMathMLFrame_h_
-#define nsIMathMLFrame_h_
+#ifndef nsIMathMLFrame_h___
+#define nsIMathMLFrame_h___
 
 #include "nsMathMLOperators.h"
 #include "nsQueryFrame.h"
@@ -17,7 +19,8 @@ class ReflowOutput;
 
 // For MathML, this 'type' will be used to determine the spacing between frames
 // Subclasses can return a 'type' that will give them a particular spacing
-enum class MathMLFrameType : uint8_t {
+enum class MathMLFrameType {
+  Unknown = -1,
   Ordinary,
   OperatorOrdinary,
   OperatorInvisible,
@@ -25,13 +28,16 @@ enum class MathMLFrameType : uint8_t {
   Inner,
   ItalicIdentifier,
   UprightIdentifier,
-  Unknown,
+  Count
 };
-constexpr auto MathMLFrameTypeCount = size_t(MathMLFrameType::Unknown);
 
 // Bits used for the presentation flags -- these bits are set
 // in their relevant situation as they become available
 enum class MathMLPresentationFlag : uint8_t {
+  // This bit is used to emulate TeX rendering.
+  // Internal use only, cannot be set by the user with an attribute.
+  Compressed,
+
   // This bit is set if the frame will fire a vertical stretch
   // command on all its (non-empty) children.
   // Tags like <mrow> (or an inferred mrow), mpadded, etc, will fire a
@@ -69,10 +75,6 @@ enum class MathMLEmbellishFlag : uint8_t {
   // This bit is set if the frame is an <mo> frame or an embellihsed
   // operator for which the core <mo> has accent="true"
   Accent,
-
-  // This bit is set if the frame is an <mo> frame or an embellihsed
-  // operator for which the core <mo> has largeop="true"
-  LargeOp,
 
   // This bit is set if the frame is an <mover> or <munderover> with
   // an accent frame
@@ -142,7 +144,8 @@ class nsIMathMLFrame {
    */
   NS_IMETHOD
   Stretch(mozilla::gfx::DrawTarget* aDrawTarget,
-          StretchDirection aStretchDirection, nsBoundingMetrics& aContainerSize,
+          nsStretchDirection aStretchDirection,
+          nsBoundingMetrics& aContainerSize,
           mozilla::ReflowOutput& aDesiredStretchSize) = 0;
 
   /* Get the mEmbellishData member variable. */
@@ -266,10 +269,6 @@ class nsIMathMLFrame {
   // child.  In the latter case, the child is to be treated as if it wasn't
   // within an mrow, so we pretend the mrow isn't mrow-like.
   virtual bool IsMrowLike() = 0;
-
-  // Return the italic correction of this frame.
-  // https://w3c.github.io/mathml-core/#dfn-italic-correction
-  virtual nscoord ItalicCorrection() = 0;
 };
 
 // struct used by a container frame to keep track of its embellishments.
@@ -285,7 +284,7 @@ struct nsEmbellishData {
   nsIFrame* coreFrame = nullptr;
 
   // stretchy direction that the nsMathMLChar owned by the core <mo> supports
-  StretchDirection direction = StretchDirection::Unsupported;
+  nsStretchDirection direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
 
   // spacing that may come from <mo> depending on its 'form'. Since
   // the 'form' may also depend on the position of the outermost

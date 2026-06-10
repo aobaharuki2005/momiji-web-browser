@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -126,8 +128,7 @@ BOOL CALLBACK CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam) {
                  refreshRate);
 
   auto* manager = gfx::DeviceManagerDx::Get();
-  bool isHDR = manager && manager->MonitorHDREnabled(aMon);
-  bool isVideoHDR = isHDR && manager && manager->VideoProcessorHDREnabled();
+  bool isHDR = manager ? manager->MonitorHDREnabled(aMon) : false;
 
   MOZ_LOG(sScreenLog, LogLevel::Debug,
           ("New screen [%s (%s) %d %u %f %f %f %d %d %d]",
@@ -137,7 +138,7 @@ BOOL CALLBACK CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam) {
   auto screen = MakeRefPtr<Screen>(
       rect, availRect, pixelDepth, pixelDepth, refreshRate, contentsScaleFactor,
       defaultCssScaleFactor, dpi, Screen::IsPseudoDisplay(isPseudoDisplay),
-      Screen::IsHDR(isHDR), Screen::IsHDR(isVideoHDR), orientation, angle);
+      Screen::IsHDR(isHDR), orientation, angle);
   if (info.dwFlags & MONITORINFOF_PRIMARY) {
     // The primary monitor must be the first element of the screen list.
     cmParam->screens.InsertElementAt(0, std::move(screen));

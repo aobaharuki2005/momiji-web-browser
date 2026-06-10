@@ -36,6 +36,7 @@ impl Example for App {
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         builder.push_simple_stacking_context(
+            bounds.min,
             space_and_clip.spatial_id,
             PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );
@@ -60,20 +61,19 @@ impl Example for App {
     ) -> bool {
         match event {
             winit::event::WindowEvent::KeyboardInput {
-                event: winit::event::KeyEvent {
+                input: winit::event::KeyboardInput {
                     state: winit::event::ElementState::Pressed,
-                    ref logical_key,
+                    virtual_keycode: Some(key),
                     ..
                 },
                 ..
             } => {
-                use winit::keyboard::{Key, NamedKey};
-                match logical_key.as_ref() {
-                    Key::Named(NamedKey::ArrowRight) => {
+                match key {
+                    winit::event::VirtualKeyCode::Right => {
                         self.rect_count += 1;
                         println!("rects = {}", self.rect_count);
                     }
-                    Key::Named(NamedKey::ArrowLeft) => {
+                    winit::event::VirtualKeyCode::Left => {
                         self.rect_count = cmp::max(self.rect_count, 1) - 1;
                         println!("rects = {}", self.rect_count);
                     }

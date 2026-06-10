@@ -5,222 +5,121 @@ Test rendering to 3d texture slices.
 - Render to same slice on different render pass, different textures, or texture [1, 1, N]'s different mip levels
 - Render to different slices at mip levels on same texture in render pass
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { range } from '../../../../common/util/util.js';
-import {
-
-  getColorRenderByteCost,
-  isSintOrUintFormat,
-  kPossibleColorRenderableTextureFormats,
-  textureFormatAndDimensionPossiblyCompatible } from
-'../../../format_info.js';
+import { getColorRenderByteCost } from '../../../format_info.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
-import {
-  compareTexelViews,
-  getTextureFormatTypeInfo,
-  readTextureToTexelViews } from
-'../../../shader/execution/expression/call/builtin/texture_utils.js';
-import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
-import { TexelView } from '../../../util/texture/texel_view.js';
+import { kBytesPerRowAlignment } from '../../../util/texture/layout.js';
 
 const kSize = 4;
+const kFormat = 'rgba8unorm';
 
-async function checkTextureContent(
-t,
-{
-  texture,
-  clearValue,
-  mipLevelToSliceToLocationMap
-
-
-
-
-})
-{
-  const format = texture.format;
-
-  // Generate output values by location for used locations
-  const d = isSintOrUintFormat(format) ? 1 : 255;
-  const usedLocations = [
-  ...new Set([...mipLevelToSliceToLocationMap.values()].flatMap((map) => [...map.values()]))];
-
-  const outputValuesByLocation = new Map(
-    usedLocations.map((location) => {
-      return [location, range(4, (ch) => outputForLocationByChannel(location, ch) / d)];
-    })
-  );
-
-  const descriptor = {
-    size: [texture.width, texture.height, texture.depthOrArrayLayers],
-    dimension: texture.dimension,
-    format: texture.format,
-    mipLevelCount: texture.mipLevelCount,
-    usage: texture.usage
-  };
-
-  const actual = await readTextureToTexelViews(t, texture, descriptor, format);
-  const zeroTexel = colorNumbersToPerTexelComponent(format, [0, 0, 0, 0]);
-  const clearTexel = colorNumbersToPerTexelComponent(format, clearValue);
-  const expected = range(descriptor.mipLevelCount, (level) =>
-  TexelView.fromTexelsAsColors(
-    format,
-    (coords) => {
-      // If it's not a slice of a mip we rendered to expect 0
-      const sliceToLocationMap = mipLevelToSliceToLocationMap.get(level);
-      const location = sliceToLocationMap?.get(coords.z);
-      if (location === undefined) {
-        return zeroTexel;
-      }
-
-      // Return the same value the shader would
-      const renderTexel = colorNumbersToPerTexelComponent(
-        format,
-        outputValuesByLocation.get(location)
-      );
-      return coords.x <= coords.y ? renderTexel : clearTexel;
+class F extends AllFeaturesMaxLimitsGPUTest {
+  createShaderModule(attachmentCount = 1) {
+    let locations = '';
+    let outputs = '';
+    for (let i = 0; i < attachmentCount; i++) {
+      locations = locations + `@location(${i}) color${i} : vec4f, \n`;
+      outputs = outputs + `output.color${i} = vec4f(0.0, 1.0, 0.0, 1.0);\n`;
     }
-  )
-  );
 
-  const errors = compareTexelViews(t.device, {
-    actualTexelViews: actual,
-    expectedTexelViews: expected,
-    dimension: descriptor.dimension,
-    size: descriptor.size
-  });
-  t.expect(errors.length === 0, `errors in texture: (${texture.label})\n  ${errors.join('\n  ')}`);
-}
+    return this.device.createShaderModule({
+      code: `
+        struct Output {
+          ${locations}
+        }
 
-function getClearValueForFormat(format) {
-  return isSintOrUintFormat(format) ? [11, 22, 33, 44] : [0.3, 0.4, 0.5, 0.6];
-}
+        @vertex
+        fn main_vs(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
+          var pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
+              // Triangle is slightly extended so its edge doesn't cut through pixel centers.
+              vec2<f32>(-1.0, 1.01),
+              vec2<f32>(1.01, -1.0),
+              vec2<f32>(-1.0, -1.0));
+          return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+        }
 
-function colorNumbersToPerTexelComponent(
-format,
-clearValue)
-{
-  const rep = kTexelRepresentationInfo[format];
-  const clearValueAsRep = {};
-  const clearRGBA = {
-    R: clearValue[0],
-    G: clearValue[1],
-    B: clearValue[2],
-    A: clearValue[3]
-  };
-
-  for (const component of rep.componentOrder) {
-    clearValueAsRep[component] = clearRGBA[component];
+        @fragment
+        fn main_fs() -> Output {
+          var output : Output;
+          ${outputs}
+          return output;
+        }
+        `
+    });
   }
-  return clearValueAsRep;
+
+  getBufferSizeAndOffset(
+  attachmentWidth,
+  attachmentHeight,
+  attachmentCount)
+  {
+    const bufferSize =
+    (attachmentCount * attachmentHeight - 1) * kBytesPerRowAlignment + attachmentWidth * 4;
+    const bufferOffset = attachmentCount > 1 ? attachmentHeight * kBytesPerRowAlignment : 0;
+    return { bufferSize, bufferOffset };
+  }
+
+  checkAttachmentResult(
+  attachmentWidth,
+  attachmentHeight,
+  attachmentCount,
+  buffer)
+  {
+    const { bufferSize, bufferOffset } = this.getBufferSizeAndOffset(
+      attachmentWidth,
+      attachmentHeight,
+      attachmentCount
+    );
+    const expectedData = new Uint8Array(bufferSize);
+    for (let i = 0; i < attachmentCount; i++) {
+      for (let j = 0; j < attachmentHeight; j++) {
+        for (let k = 0; k < attachmentWidth; k++) {
+          expectedData[i * bufferOffset + j * 256 + k * 4] = k <= j ? 0x00 : 0xff;
+          expectedData[i * bufferOffset + j * 256 + k * 4 + 1] = k <= j ? 0xff : 0x00;
+          expectedData[i * bufferOffset + j * 256 + k * 4 + 2] = 0x00;
+          expectedData[i * bufferOffset + j * 256 + k * 4 + 3] = 0xff;
+        }
+      }
+    }
+
+    this.expectGPUBufferValuesEqual(buffer, expectedData);
+  }
 }
 
-// generates:
-//    11, 22, 33, 44 for location 0, ch 0, 1, 2, 3
-//    21, 32, 43, 54 for location 1, ch 0, 1, 2, 3
-//    31, 42, 53, 64 for location 2, ch 0, 1, 2, 3
-const outputForLocationByChannel = (location, ch) =>
-(ch + location + 1) * 10 + 1 + location;
-
-// Creates a shader module that outputs different values for each location.
-// example:
-//
-//   const d = 255.0;  // d is 1 for integer formats, 255 for floaty formats
-//   ...
-//   output.color0 = vec4f(11 / d, 21 / d, 31 / d, 41 / d);
-//   output.color1 = vec4f(22 / d, 32 / d, 42 / d, 52 / d);
-//   output.color2 = vec4f(33 / d, 43 / d, 53 / d, 63 / d);
-//   output.color3 = vec4f(44 / d, 54 / d, 64 / d, 74 / d);
-//   output.color4 = vec4f(55 / d, 65 / d, 75 / d, 85 / d);
-//   output.color5 = vec4f(66 / d, 76 / d, 86 / d, 96 / d);
-//   output.color6 = vec4f(77 / d, 87 / d, 97 / d, 107 / d);
-//   output.color7 = vec4f(88 / d, 98 / d, 108 / d, 118 / d);
-function createShaderModule(t, format, attachmentCount = 1) {
-  const { resultType } = getTextureFormatTypeInfo(format);
-  const output = (i) =>
-  range(4, (ch) => `${outputForLocationByChannel(i, ch)} / d`).join(', ');
-
-  const locations = range(attachmentCount, (i) => `@location(${i}) color${i} : ${resultType}`).join(
-    ',\n        '
-  );
-  const outputs = range(
-    attachmentCount,
-    (i) => `output.color${i} = ${resultType}(${output(i)});`
-  ).join('\n        ');
-
-  const code = `
-      struct Output {
-        ${locations}
-      }
-
-      @vertex
-      fn main_vs(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4f {
-        //  -1,1
-        //    +-----+
-        //    |\\   |
-        //    |.\\  |
-        //    |..\\ |
-        //    |...\\|
-        //    +-----+
-        // -1,-1   1,-1
-
-        let pos = array(
-            // Triangle is slightly extended so its edge doesn't cut through pixel centers.
-            vec2f(-1.0, 1.01),
-            vec2f(1.01, -1.0),
-            vec2f(-1.0, -1.0),
-        );
-        return vec4f(pos[VertexIndex], 0.0, 1.0);
-      }
-
-      const d = ${isSintOrUintFormat(format) ? '1' : '255.0'};
-
-      @fragment
-      fn main_fs() -> Output {
-        var output : Output;
-        ${outputs}
-        return output;
-      }
-  `;
-  t.debug(() => code);
-  return t.device.createShaderModule({ code });
-}
-
-export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
+export const g = makeTestGroup(F);
 
 g.test('one_color_attachment,mip_levels').
-desc('Render to a 3d texture slice with mip levels.').
-params((u) =>
-u.
-combine('format', kPossibleColorRenderableTextureFormats).
-filter((p) => textureFormatAndDimensionPossiblyCompatible('3d', p.format)).
-combine('mipLevel', [0, 1, 2]).
-combine('depthSlice', [0, 1])
+desc(
+  `
+  Render to a 3d texture slice with mip levels.
+  `
 ).
-fn(async (t) => {
-  const { format, mipLevel, depthSlice } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
-  t.skipIfTextureFormatDoesNotSupportUsage(GPUTextureUsage.RENDER_ATTACHMENT, format);
+params((u) => u.combine('mipLevel', [0, 1, 2]).combine('depthSlice', [0, 1])).
+fn((t) => {
+  const { mipLevel, depthSlice } = t.params;
 
-  const clearValue = getClearValueForFormat(format);
-
-  const descriptor = {
+  const texture = t.createTextureTracked({
     size: [kSize << mipLevel, kSize << mipLevel, 2 << mipLevel],
     dimension: '3d',
-    format,
+    format: kFormat,
     mipLevelCount: mipLevel + 1,
-    usage:
-    GPUTextureUsage.RENDER_ATTACHMENT |
-    GPUTextureUsage.COPY_SRC |
-    GPUTextureUsage.TEXTURE_BINDING
-  };
-  const texture = t.createTextureTracked(descriptor);
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+  });
 
-  const module = createShaderModule(t, format);
+  const { bufferSize } = t.getBufferSizeAndOffset(kSize, kSize, 1);
+
+  const buffer = t.createBufferTracked({
+    size: bufferSize,
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
+
+  const module = t.createShaderModule();
+
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: { module },
     fragment: {
       module,
-      targets: [{ format }]
+      targets: [{ format: kFormat }]
     },
     primitive: { topology: 'triangle-list' }
   });
@@ -234,7 +133,7 @@ fn(async (t) => {
         mipLevelCount: 1
       }),
       depthSlice,
-      clearValue,
+      clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
       storeOp: 'store'
     }]
@@ -243,14 +142,14 @@ fn(async (t) => {
   pass.setPipeline(pipeline);
   pass.draw(3);
   pass.end();
+  encoder.copyTextureToBuffer(
+    { texture, mipLevel, origin: { x: 0, y: 0, z: depthSlice } },
+    { buffer, bytesPerRow: 256 },
+    { width: kSize, height: kSize, depthOrArrayLayers: 1 }
+  );
   t.device.queue.submit([encoder.finish()]);
 
-  const sliceToLocationMap = new Map([[depthSlice, 0]]);
-  await checkTextureContent(t, {
-    texture,
-    clearValue,
-    mipLevelToSliceToLocationMap: new Map([[mipLevel, sliceToLocationMap]])
-  });
+  t.checkAttachmentResult(kSize, kSize, 1, buffer);
 });
 
 g.test('multiple_color_attachments,same_mip_level').
@@ -263,19 +162,15 @@ desc(
 ).
 params((u) =>
 u.
-combine('format', kPossibleColorRenderableTextureFormats).
-filter((p) => textureFormatAndDimensionPossiblyCompatible('3d', p.format)).
 combine('sameTexture', [true, false]).
 beginSubcases().
 combine('samePass', [true, false]).
 combine('mipLevel', [0, 1])
 ).
-fn(async (t) => {
-  const { format, sameTexture, samePass, mipLevel } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
-  t.skipIfTextureFormatDoesNotSupportUsage(GPUTextureUsage.RENDER_ATTACHMENT, format);
+fn((t) => {
+  const { sameTexture, samePass, mipLevel } = t.params;
 
-  const formatByteCost = getColorRenderByteCost(format);
+  const formatByteCost = getColorRenderByteCost(kFormat);
   const maxAttachmentCountPerSample = Math.trunc(
     t.device.limits.maxColorAttachmentBytesPerSample / formatByteCost
   );
@@ -285,43 +180,32 @@ fn(async (t) => {
   );
 
   const descriptor = {
-    label: 'texture-0',
     size: [kSize << mipLevel, kSize << mipLevel, 1 << attachmentCount << mipLevel],
     dimension: '3d',
-    format,
+    format: kFormat,
     mipLevelCount: mipLevel + 1,
-    usage:
-    GPUTextureUsage.RENDER_ATTACHMENT |
-    GPUTextureUsage.COPY_SRC |
-    GPUTextureUsage.TEXTURE_BINDING
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
   };
 
-  const clearValue = getClearValueForFormat(format);
   const texture = t.createTextureTracked(descriptor);
 
-  const textures = [texture];
-  const sliceToLocationMaps = [new Map()];
+  const textures = [];
   const colorAttachments = [];
   for (let i = 0; i < attachmentCount; i++) {
-    let target;
     if (sameTexture) {
-      target = texture;
-      sliceToLocationMaps[0].set(i, samePass ? i : 0);
+      textures.push(texture);
     } else {
-      descriptor.label = `texture-${i}`;
       const diffTexture = t.createTextureTracked(descriptor);
       textures.push(diffTexture);
-      sliceToLocationMaps.push(new Map([[0, samePass ? i : 0]]));
-      target = diffTexture;
     }
 
     const colorAttachment = {
-      view: target.createView({
+      view: textures[i].createView({
         baseMipLevel: mipLevel,
         mipLevelCount: 1
       }),
       depthSlice: sameTexture ? i : 0,
-      clearValue,
+      clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
       storeOp: 'store'
     };
@@ -332,14 +216,14 @@ fn(async (t) => {
   const encoder = t.device.createCommandEncoder();
 
   if (samePass) {
-    const module = createShaderModule(t, format, attachmentCount);
+    const module = t.createShaderModule(attachmentCount);
 
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
       vertex: { module },
       fragment: {
         module,
-        targets: new Array(attachmentCount).fill({ format })
+        targets: new Array(attachmentCount).fill({ format: kFormat })
       },
       primitive: { topology: 'triangle-list' }
     });
@@ -349,14 +233,14 @@ fn(async (t) => {
     pass.draw(3);
     pass.end();
   } else {
-    const module = createShaderModule(t, format);
+    const module = t.createShaderModule();
 
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
       vertex: { module },
       fragment: {
         module,
-        targets: [{ format }]
+        targets: [{ format: kFormat }]
       },
       primitive: { topology: 'triangle-list' }
     });
@@ -369,17 +253,26 @@ fn(async (t) => {
     }
   }
 
+  const { bufferSize, bufferOffset } = t.getBufferSizeAndOffset(kSize, kSize, attachmentCount);
+  const buffer = t.createBufferTracked({
+    size: bufferSize,
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
+  for (let i = 0; i < attachmentCount; i++) {
+    encoder.copyTextureToBuffer(
+      {
+        texture: textures[i],
+        mipLevel,
+        origin: { x: 0, y: 0, z: sameTexture ? i : 0 }
+      },
+      { buffer, bytesPerRow: 256, offset: bufferOffset * i },
+      { width: kSize, height: kSize, depthOrArrayLayers: 1 }
+    );
+  }
+
   t.device.queue.submit([encoder.finish()]);
 
-  await Promise.all(
-    textures.map((tex, i) => {
-      return checkTextureContent(t, {
-        texture: tex,
-        clearValue: getClearValueForFormat(format),
-        mipLevelToSliceToLocationMap: new Map([[mipLevel, sliceToLocationMaps[i]]])
-      });
-    })
-  );
+  t.checkAttachmentResult(kSize, kSize, attachmentCount, buffer);
 });
 
 g.test('multiple_color_attachments,same_slice_with_diff_mip_levels').
@@ -389,20 +282,13 @@ desc(
   - For texture size with 1x1xN, the same depth slice of different mip levels can be rendered.
   `
 ).
-params((u) =>
-u.
-combine('format', kPossibleColorRenderableTextureFormats).
-filter((p) => textureFormatAndDimensionPossiblyCompatible('3d', p.format)).
-combine('depthSlice', [0, 1])
-).
-fn(async (t) => {
-  const { format, depthSlice } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
-  t.skipIfTextureFormatDoesNotSupportUsage(GPUTextureUsage.RENDER_ATTACHMENT, format);
+params((u) => u.combine('depthSlice', [0, 1])).
+fn((t) => {
+  const { depthSlice } = t.params;
 
   const kBaseSize = 1;
 
-  const formatByteCost = getColorRenderByteCost(format);
+  const formatByteCost = getColorRenderByteCost(kFormat);
   const maxAttachmentCountPerSample = Math.trunc(
     t.device.limits.maxColorAttachmentBytesPerSample / formatByteCost
   );
@@ -411,43 +297,35 @@ fn(async (t) => {
     t.device.limits.maxColorAttachments
   );
 
-  const module = createShaderModule(t, format, attachmentCount);
+  const module = t.createShaderModule(attachmentCount);
 
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: { module },
     fragment: {
       module,
-      targets: new Array(attachmentCount).fill({ format })
+      targets: new Array(attachmentCount).fill({ format: kFormat })
     },
     primitive: { topology: 'triangle-list' }
   });
 
-  const clearValue = getClearValueForFormat(format);
   const texture = t.createTextureTracked({
     size: [kBaseSize, kBaseSize, depthSlice + 1 << attachmentCount],
     dimension: '3d',
-    format,
+    format: kFormat,
     mipLevelCount: attachmentCount,
-    usage:
-    GPUTextureUsage.RENDER_ATTACHMENT |
-    GPUTextureUsage.COPY_SRC |
-    GPUTextureUsage.TEXTURE_BINDING
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
   });
-
-  const mipLevelToSliceToLocationMap = new Map();
 
   const colorAttachments = [];
   for (let i = 0; i < attachmentCount; i++) {
-    const sliceToLocationMap = new Map([[depthSlice, i]]);
-    mipLevelToSliceToLocationMap.set(i, sliceToLocationMap);
     const colorAttachment = {
       view: texture.createView({
         baseMipLevel: i,
         mipLevelCount: 1
       }),
       depthSlice,
-      clearValue,
+      clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
       storeOp: 'store'
     };
@@ -462,7 +340,24 @@ fn(async (t) => {
   pass.draw(3);
   pass.end();
 
+  const { bufferSize, bufferOffset } = t.getBufferSizeAndOffset(
+    kBaseSize,
+    kBaseSize,
+    attachmentCount
+  );
+  const buffer = t.createBufferTracked({
+    size: bufferSize,
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
+  for (let i = 0; i < attachmentCount; i++) {
+    encoder.copyTextureToBuffer(
+      { texture, mipLevel: i, origin: { x: 0, y: 0, z: depthSlice } },
+      { buffer, bytesPerRow: 256, offset: bufferOffset * i },
+      { width: kBaseSize, height: kBaseSize, depthOrArrayLayers: 1 }
+    );
+  }
+
   t.device.queue.submit([encoder.finish()]);
 
-  await checkTextureContent(t, { texture, clearValue, mipLevelToSliceToLocationMap });
+  t.checkAttachmentResult(kBaseSize, kBaseSize, attachmentCount, buffer);
 });

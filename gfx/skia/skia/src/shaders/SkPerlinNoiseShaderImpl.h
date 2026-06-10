@@ -245,7 +245,6 @@ public:
                         const SkISize* tileSize);
 
     ShaderType type() const override { return ShaderType::kPerlinNoise; }
-    bool isOpaque() const override { return false; }
 
     SkPerlinNoiseShaderType noiseType() const { return fType; }
     int numOctaves() const { return fNumOctaves; }

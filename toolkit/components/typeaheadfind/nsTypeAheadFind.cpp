@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -199,7 +200,7 @@ void nsTypeAheadFind::ReleaseFoundResultsAndDisconnect() {
 }
 
 void nsTypeAheadFind::SetCurrentWindow(nsPIDOMWindowInner* aWindow) {
-  BindToGlobal(aWindow->AsGlobal());
+  BindToOwner(aWindow->AsGlobal());
 }
 
 NS_IMETHODIMP
@@ -451,12 +452,14 @@ nsresult nsTypeAheadFind::FindItNow(uint32_t aMode, bool aIsLinksOnly,
         nsINode* node = returnRange->GetStartContainer();
         while (node) {
           nsCOMPtr<nsIEditor> editor;
-          if (RefPtr input = HTMLInputElement::FromNode(node)) {
+          if (RefPtr<HTMLInputElement> input =
+                  HTMLInputElement::FromNode(node)) {
             editor = input->GetTextEditor();
-          } else if (RefPtr textarea = HTMLTextAreaElement::FromNode(node)) {
+          } else if (RefPtr<HTMLTextAreaElement> textarea =
+                         HTMLTextAreaElement::FromNode(node)) {
             editor = textarea->GetTextEditor();
           } else {
-            node = node->GetParentOrShadowHostNode();
+            node = node->GetParentNode();
             continue;
           }
 
@@ -538,9 +541,8 @@ nsresult nsTypeAheadFind::FindItNow(uint32_t aMode, bool aIsLinksOnly,
                   selectionController->ScrollSelectionIntoView(
                       SelectionType::eNormal,
                       nsISelectionController::SELECTION_WHOLE_SELECTION,
-                      AxisScrollParams(WhereToScroll::Center),
-                      AxisScrollParams(), ScrollFlags::None,
-                      SelectionScrollMode::SyncFlush);
+                      ScrollAxis(WhereToScroll::Center), ScrollAxis(),
+                      ScrollFlags::None, SelectionScrollMode::SyncFlush);
                 }
               }));
 

@@ -31,17 +31,13 @@ var Chart = {
  * Each item in the `slices` property represents a [data, node] pair containing
  * the data used to create the slice and the Node displaying it.
  *
+ * @param Node node
+ *        The node representing the view for this chart.
  */
-class PieChart extends EventEmitter {
-  /**
-   * @param Node node
-   *        The node representing the view for this chart.
-   */
-  constructor(node) {
-    super();
-    this.node = node;
-    this.slices = new WeakMap();
-  }
+function PieChart(node) {
+  this.node = node;
+  this.slices = new WeakMap();
+  EventEmitter.decorate(this);
 }
 
 /**
@@ -49,38 +45,30 @@ class PieChart extends EventEmitter {
  * Each item in the `rows` property represents a [data, node] pair containing
  * the data used to create the row and the Node displaying it.
  *
+ * @param Node node
+ *        The node representing the view for this chart.
  */
-class TableChart extends EventEmitter {
-  /**
-   * @param Node node
-   *        The node representing the view for this chart.
-   */
-  constructor(node) {
-    super();
-    this.node = node;
-    this.rows = new WeakMap();
-  }
+function TableChart(node) {
+  this.node = node;
+  this.rows = new WeakMap();
+  EventEmitter.decorate(this);
 }
 
 /**
  * A simple pie+table chart proxy for the underlying view.
  *
+ * @param Node node
+ *        The node representing the view for this chart.
+ * @param PieChart pie
+ *        The pie chart proxy.
+ * @param TableChart table
+ *        The table chart proxy.
  */
-class PieTableChart extends EventEmitter {
-  /**
-   * @param Node node
-   *        The node representing the view for this chart.
-   * @param PieChart pie
-   *        The pie chart proxy.
-   * @param TableChart table
-   *        The table chart proxy.
-   */
-  constructor(node, pie, table) {
-    super();
-    this.node = node;
-    this.pie = pie;
-    this.table = table;
-  }
+function PieTableChart(node, pie, table) {
+  this.node = node;
+  this.pie = pie;
+  this.table = table;
+  EventEmitter.decorate(this);
 }
 
 /**

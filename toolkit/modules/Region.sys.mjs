@@ -118,17 +118,19 @@ let inChildProcess =
  */
 class RegionDetector {
   /**
-   * The users home location.
+   * The users home location. Accessible to tests. Production code should use
+   * the `home` getter.
    *
    * @type {string}
    */
-  #home = null;
+  _home = null;
   /**
-   * The most recent location the user was detected.
+   * The most recent location the user was detected. Production code should use
+   * the `current` getter.
    *
-   * @type {string|null}
+   * @type {string}
    */
-  #current = null;
+  _current = null;
   /**
    * The RemoteSettings client used to sync region files.
    *
@@ -169,7 +171,7 @@ class RegionDetector {
     // If we're running in the child process, then all `Region` does is act
     // as a proxy for the browser.search.region preference.
     if (inChildProcess) {
-      this.#home = Services.prefs.getCharPref(REGION_PREF, null);
+      this._home = Services.prefs.getCharPref(REGION_PREF, null);
       return Promise.resolve();
     }
 
@@ -186,10 +188,10 @@ class RegionDetector {
       });
     }
     let promises = [];
-    this.#home = Services.prefs.getCharPref(REGION_PREF, null);
-    if (this.#home) {
+    this._home = Services.prefs.getCharPref(REGION_PREF, null);
+    if (this._home) {
       // On startup, ensure the Glean probe knows the home region from preferences.
-      Glean.region.homeRegion.set(this.#home);
+      Glean.region.homeRegion.set(this._home);
     } else {
       promises.push(this.#idleDispatch(() => this._fetchRegion()));
     }
@@ -206,17 +208,17 @@ class RegionDetector {
    *   The users current home region.
    */
   get home() {
-    return this.#home;
+    return this._home;
   }
 
   /**
    * Get the last region we detected the user to be in.
    *
-   * @returns {?string}
+   * @returns {string}
    *   The users current region.
    */
   get current() {
-    return this.#current;
+    return this._current;
   }
 
   /**
@@ -283,7 +285,7 @@ class RegionDetector {
    */
   _setCurrentRegion(region = "") {
     log.info("Setting current region:", region);
-    this.#current = region;
+    this._current = region;
 
     let now = Math.round(Date.now() / 1000);
     let prefs = Services.prefs;
@@ -298,15 +300,15 @@ class RegionDetector {
     let firstSeen = prefs.getIntPref(`${UPDATE_PREFIX}.first-seen`, 0);
 
     // If we don't have a value for .home we can set it immediately.
-    if (!this.#home) {
+    if (!this._home) {
       this._setHomeRegion(region);
-    } else if (region != this.#home && region != seenRegion) {
+    } else if (region != this._home && region != seenRegion) {
       // If we are in a different region than what is currently
       // considered home, then keep track of when we first
       // seen the new location.
       prefs.setCharPref(`${UPDATE_PREFIX}.region`, region);
       prefs.setIntPref(`${UPDATE_PREFIX}.first-seen`, now);
-    } else if (region != this.#home && region == seenRegion) {
+    } else if (region != this._home && region == seenRegion) {
       // If we have been in the new region for longer than
       // a specified time period, then set that as the new home.
       if (now >= firstSeen + interval) {
@@ -342,11 +344,11 @@ class RegionDetector {
    *   may trigger an engines reload.
    */
   _setHomeRegion(region, notify = true) {
-    if (region == this.#home) {
+    if (region == this._home) {
       return;
     }
     log.info("Updating home region:", region);
-    this.#home = region;
+    this._home = region;
     Services.prefs.setCharPref("browser.search.region", region);
     Glean.region.homeRegion.set(region);
     if (notify) {

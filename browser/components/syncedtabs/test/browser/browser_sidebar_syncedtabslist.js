@@ -557,7 +557,7 @@ async function testContextMenu(
     "popupshown"
   );
 
-  let chromeWindow = triggerElement.documentGlobal.top;
+  let chromeWindow = triggerElement.ownerGlobal.top;
   let rect = triggerElement.getBoundingClientRect();
   let contentRect =
     chromeWindow.SidebarController.browser.getBoundingClientRect();
@@ -569,7 +569,7 @@ async function testContextMenu(
   let offsetX = contentRect.x + rect.x + rect.width / 2;
   let offsetY = contentRect.y + rect.y + rect.height / 4;
 
-  EventUtils.synthesizeMouseAtPoint(
+  await EventUtils.synthesizeMouseAtPoint(
     offsetX,
     offsetY,
     {

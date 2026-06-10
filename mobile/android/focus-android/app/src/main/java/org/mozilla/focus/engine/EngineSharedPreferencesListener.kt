@@ -80,17 +80,11 @@ class EngineSharedPreferencesListener(
         components.sessionUseCases.reload()
     }
 
-    /**
-     * Source of the setting change.
-     */
     enum class ChangeSource(val source: String) {
         SETTINGS("Settings"),
         PANEL("Panel"),
     }
 
-    /**
-     * The type of tracker being changed.
-     */
     enum class TrackerChanged(val tracker: String) {
         ADVERTISING("Advertising"),
         ANALYTICS("Analytics"),

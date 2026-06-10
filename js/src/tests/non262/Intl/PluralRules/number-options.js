@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // Test number-format options are accepted by Intl.PluralRules.
 
 for (let minimumIntegerDigits of [undefined, 1, 21]) {

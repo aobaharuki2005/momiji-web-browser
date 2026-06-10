@@ -19,6 +19,9 @@ extern "C" void {{ cbi.free_fn }}(uint64_t uniffiHandle);
 // `FfiValueInt<uint64_t>`, except it has extra code to cleanup the callback handles.
 class {{ ffi_value_class }} {
  private:
+  // Was this value lowered?  If so, that means we own the handle and are responsible for cleaning
+  // it up if we don't pass it to Rust because other values failed to lower
+  bool mLowered = false;
   uint64_t mValue = 0;
 
  public:
@@ -40,17 +43,20 @@ class {{ ffi_value_class }} {
     }
     ReleaseHandleIfSet();
     mValue = intValue;
+    mLowered = true;
   }
 
   void Lift(JSContext* aContext, dom::OwningUniFFIScaffoldingValue* aDest,
             ErrorResult& aError) {
     aDest->SetAsDouble() = mValue;
     mValue = 0;
+    mLowered = false;
   }
 
   uint64_t IntoRust() {
     auto handle = mValue;
     mValue = 0;
+    mLowered = false;
     return handle;
   }
 
@@ -58,10 +64,11 @@ class {{ ffi_value_class }} {
 
   void ReleaseHandleIfSet() {
     // A non-zero value indicates that we own a callback handle that was never passed to Rust or
-    // lifted to JS.  Call the free function to decrease the refcount.
-    if (mValue != 0) {
+    // lifted to JS and needs to be freed.
+    if (mValue != 0 && mLowered) {
         {{ cbi.free_fn }}(mValue);
         mValue = 0;
+        mLowered = false;
     }
   }
 

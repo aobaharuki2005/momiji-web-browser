@@ -27,11 +27,11 @@
   <div class="filler"></div>
 </div>
 <script>
-  promise_setup(async () => {
-    await waitForCompositorReady();
-  });
-
   promise_test(async () => {
+    await waitForCompositorReady();
+  }, "Make sure the page is ready for animation.");
+
+  test(() => {
     scrollable.scrollTo(0, 5000);
     assert_equals(scrollable.scrollTop, 5000, "Initially scrolls instantly");
     scrollable.scrollTo(0, 0);
@@ -42,18 +42,17 @@
     scrollable.scrollTo(0, 0);
   }, "scroll-behavior: smooth on DIV element");
 
-  promise_test(async () => {
+  test(() => {
     window.scrollTo(0, 5000);
     assert_equals(window.scrollY, 5000, "Initially scrolls instantly");
     window.scrollTo(0, 0);
     document.documentElement.className = "smooth";
-    window.scrollTo(0, 5000);
     assert_less_than(window.scrollY, 5000, "scroll-behavior:smooth should not scroll instantly");
     document.documentElement.className = "";
     window.scrollTo(0, 0);
   }, "HTML element scroll-behavior should propagate to viewport");
 
-  promise_test(async () => {
+  test(() => {
     window.scrollTo(0, 5000);
     assert_equals(window.scrollY, 5000, "Initially scrolls instantly");
     window.scrollTo(0, 0);
@@ -63,4 +62,6 @@
     document.body.className = "";
     window.scrollTo(0, 0);
   }, "BODY element scroll-behavior should not propagate to viewport");
+
+  testContainer.style.display = "none";
 </script>

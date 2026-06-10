@@ -51,6 +51,7 @@ FC_Verify
 
    A user must log into the token (to assume the NSS User role) before calling ``FC_Verify``.
 
+.. _return_value:
 
 `Return value <#return_value>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,6 +63,9 @@ FC_Verify
 `Examples <#examples>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. container::
+
+.. _see_also:
 
 `See also <#see_also>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~

@@ -214,9 +214,7 @@ function Spinner(props, context) {
       const { items, isInfiniteScroll } = this.state;
 
       // Prepends null elements so the selected value is centered in spinner
-      let itemsView = new Array(viewportTopOffset)
-        .fill({ hidden: true })
-        .concat(items);
+      let itemsView = new Array(viewportTopOffset).fill({}).concat(items);
 
       if (items.length >= viewportSize && isInfiniteScroll) {
         // To achieve infinite scroll, we move the scroll position back to the
@@ -303,14 +301,7 @@ function Spinner(props, context) {
       items.forEach((item, index) => {
         elements[index].textContent =
           item.value != undefined ? getDisplayString(item.value) : "";
-        const classList = [];
-        if (!item.enabled) {
-          classList.push("disabled");
-        }
-        if (item.hidden) {
-          classList.push("hidden");
-        }
-        elements[index].className = classList.join(" ");
+        elements[index].className = item.enabled ? "" : "disabled";
       });
     },
 
@@ -587,7 +578,7 @@ function Spinner(props, context) {
       }
 
       this.elements.selected = itemsViewElements[currentItemIndex];
-      if (itemsView[currentItemIndex]) {
+      if (itemsView[currentItemIndex] && itemsView[currentItemIndex].enabled) {
         this.elements.selected.classList.add("selection");
       }
     },

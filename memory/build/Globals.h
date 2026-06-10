@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,6 +12,7 @@
 // values defined here may be determined at runtime.
 
 #include "mozilla/Literals.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include "Constants.h"
 // Chunk.h is required for sizeof(arena_chunk_t), but it's inconvenient that
@@ -53,9 +56,11 @@ namespace mozilla {
 // They can be different so that we can continue to use 4KB pages on systems
 // with a larger page size. (WIP see Bug 1980047).
 //
-// For now they are the same on all platforms, since a lower logical page
-// size creates a performance regression due to smaller runs and more
-// frequent run allocation.
+// On x86-64 they are both 4KiB.  However Apple Silicon has a 16KiB page size,
+// so gRealPageSize will be 16KiB, but in order to keep the number of
+// regions-per-run to 256 we want to limit gPageSize to 4KiB.  (4096 / 16 =
+// 256).  Other platforms with different gRealPageSizes might also have
+// different gRealPageSize and gPageSize.
 //
 // gPageSize is always less than or equal to gRealPageSize.
 //
@@ -77,12 +82,8 @@ extern size_t gPageSize;
 #endif
 
 // Return the smallest pagesize multiple that is >= s.
-#define PAGE_CEILING(s) \
-  (((s) + mozilla::gPageSizeMask) & ~mozilla::gPageSizeMask)
+#define PAGE_CEILING(s) (((s) + gPageSizeMask) & ~gPageSizeMask)
 #define REAL_PAGE_CEILING(s) (((s) + gRealPageSizeMask) & ~gRealPageSizeMask)
-
-// Return the largest pagesize multiple that is <= s.
-#define REAL_PAGE_FLOOR(s) ((s) & ~gRealPageSizeMask)
 
 #define PAGES_PER_REAL_PAGE_CEILING(s) \
   (((s) + gPagesPerRealPage - 1) & ~(gPagesPerRealPage - 1))
@@ -97,7 +98,7 @@ extern size_t gPageSize;
     MOZ_PASTE_PREFIX_AND_ARG_COUNT(GLOBAL_ASSERT_HELPER, __VA_ARGS__) \
     (__VA_ARGS__)
 #  define GLOBAL_CONSTEXPR constexpr
-#  include "Globals.inc"
+#  include "Globals_inc.h"
 #  undef GLOBAL_CONSTEXPR
 #  undef GLOBAL_ASSERT
 #  undef GLOBAL_ASSERT_HELPER1
@@ -108,7 +109,7 @@ extern size_t gPageSize;
 // We declare the globals here and initialise them in DefineGlobals()
 #  define GLOBAL(type, name, value) extern type name;
 #  define GLOBAL_ASSERT(...)
-#  include "Globals.inc"
+#  include "Globals_inc.h"
 #  undef GLOBAL_ASSERT
 #  undef GLOBAL
 
@@ -123,7 +124,8 @@ void DefineGlobals();
 #define CHUNK_CEILING(s) (((s) + kChunkSizeMask) & ~kChunkSizeMask)
 
 // Return the smallest cacheline multiple that is >= s.
-#define CACHELINE_CEILING(s) (((s) + kCacheLineMask) & ~kCacheLineMask)
+#define CACHELINE_CEILING(s) \
+  (((s) + (kCacheLineSize - 1)) & ~(kCacheLineSize - 1))
 
 // Return the smallest quantum multiple that is >= a.
 #define QUANTUM_CEILING(a) (((a) + (kQuantumMask)) & ~(kQuantumMask))
@@ -131,7 +133,7 @@ void DefineGlobals();
   (((a) + (kQuantumWideMask)) & ~(kQuantumWideMask))
 
 // Return the smallest sub page-size  that is >= a.
-#define SUBPAGE_CEILING(a) (std::bit_ceil(a))
+#define SUBPAGE_CEILING(a) (RoundUpPow2(a))
 
 // Number of all the small-allocated classes
 #define NUM_SMALL_CLASSES \

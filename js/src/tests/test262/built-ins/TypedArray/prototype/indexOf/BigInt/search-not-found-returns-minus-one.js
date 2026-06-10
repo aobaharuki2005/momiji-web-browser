@@ -21,14 +21,14 @@ info: |
     b. If k < 0, let k be 0.
   ...
   9. Return -1.
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var sample;
 
-  sample = new TA(makeCtorArg([42n, 43n, 42n, 41n]));
+  sample = new TA([42n, 43n, 42n, 41n]);
   assert.sameValue(sample.indexOf(44n), -1, "indexOf(44)");
   assert.sameValue(sample.indexOf(43n, 2), -1, "indexOf(43, 2)");
   assert.sameValue(sample.indexOf(42n, 3), -1, "indexOf(42, 3)");

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -113,7 +115,7 @@ bool URLInputType::HasTypeMismatch() const {
 
 nsresult URLInputType::GetTypeMismatchMessage(nsAString& aMessage) {
   return nsContentUtils::GetMaybeLocalizedString(
-      PropertiesFile::DOM_PROPERTIES, "FormValidationInvalidURL",
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationInvalidURL",
       mInputElement->OwnerDoc(), aMessage);
 }
 
@@ -152,13 +154,13 @@ bool EmailInputType::HasBadInput() const {
 
 nsresult EmailInputType::GetTypeMismatchMessage(nsAString& aMessage) {
   return nsContentUtils::GetMaybeLocalizedString(
-      PropertiesFile::DOM_PROPERTIES, "FormValidationInvalidEmail",
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationInvalidEmail",
       mInputElement->OwnerDoc(), aMessage);
 }
 
 nsresult EmailInputType::GetBadInputMessage(nsAString& aMessage) {
   return nsContentUtils::GetMaybeLocalizedString(
-      PropertiesFile::DOM_PROPERTIES, "FormValidationInvalidEmail",
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationInvalidEmail",
       mInputElement->OwnerDoc(), aMessage);
 }
 
@@ -251,7 +253,7 @@ bool EmailInputType::PunycodeEncodeEmailAddress(const nsAString& aEmail,
   *aIndexOfAt = (uint32_t)value.FindChar('@');
 
   if (*aIndexOfAt == (uint32_t)kNotFound || *aIndexOfAt == value.Length() - 1) {
-    aEncodedEmail = std::move(value);
+    aEncodedEmail = value;
     return true;
   }
 
@@ -275,6 +277,6 @@ bool EmailInputType::PunycodeEncodeEmailAddress(const nsAString& aEmail,
 
   value.Replace(indexOfDomain, domain.Length(), domainACE);
 
-  aEncodedEmail = std::move(value);
+  aEncodedEmail = value;
   return true;
 }

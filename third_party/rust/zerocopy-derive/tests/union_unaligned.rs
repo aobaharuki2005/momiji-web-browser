@@ -6,11 +6,11 @@
 // This file may not be copied, modified, or distributed except according to
 // those terms.
 
-// See comment in `include.rs` for why we disable the prelude.
-#![no_implicit_prelude]
 #![allow(warnings)]
 
-include!("include.rs");
+use std::{marker::PhantomData, option::IntoIter};
+
+use {static_assertions::assert_impl_all, zerocopy::Unaligned};
 
 // A union is `Unaligned` if:
 // - `repr(align)` is no more than 1 and either
@@ -18,13 +18,13 @@ include!("include.rs");
 //     - all fields `Unaligned`
 //   - `repr(packed)`
 
-#[derive(imp::Unaligned)]
+#[derive(Unaligned)]
 #[repr(C)]
 union Foo {
-    a: imp::u8,
+    a: u8,
 }
 
-util_assert_impl_all!(Foo: imp::Unaligned);
+assert_impl_all!(Foo: Unaligned);
 
 // Transparent unions are unstable; see issue #60405
 // <https://github.com/rust-lang/rust/issues/60405> for more information.
@@ -37,7 +37,7 @@ util_assert_impl_all!(Foo: imp::Unaligned);
 
 // is_unaligned!(Bar);
 
-#[derive(imp::Unaligned)]
+#[derive(Unaligned)]
 #[repr(packed)]
 union Baz {
     // NOTE: The `u16` type is not guaranteed to have alignment 2, although it
@@ -50,28 +50,28 @@ union Baz {
     a: u16,
 }
 
-util_assert_impl_all!(Baz: imp::Unaligned);
+assert_impl_all!(Baz: Unaligned);
 
-#[derive(imp::Unaligned)]
+#[derive(Unaligned)]
 #[repr(C, align(1))]
 union FooAlign {
-    a: imp::u8,
+    a: u8,
 }
 
-util_assert_impl_all!(FooAlign: imp::Unaligned);
+assert_impl_all!(FooAlign: Unaligned);
 
-#[derive(imp::Unaligned)]
+#[derive(Unaligned)]
 #[repr(C)]
-union TypeParams<'a, T: imp::Copy, I: imp::Iterator>
+union TypeParams<'a, T: Copy, I: Iterator>
 where
-    I::Item: imp::Copy,
+    I::Item: Copy,
 {
     a: T,
     c: I::Item,
     d: u8,
-    e: imp::PhantomData<&'a [imp::u8]>,
-    f: imp::PhantomData<&'static imp::str>,
-    g: imp::PhantomData<imp::String>,
+    e: PhantomData<&'a [u8]>,
+    f: PhantomData<&'static str>,
+    g: PhantomData<String>,
 }
 
-util_assert_impl_all!(TypeParams<'static, (), imp::IntoIter<()>>: imp::Unaligned);
+assert_impl_all!(TypeParams<'static, (), IntoIter<()>>: Unaligned);

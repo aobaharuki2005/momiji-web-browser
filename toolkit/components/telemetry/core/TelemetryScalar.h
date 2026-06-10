@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TelemetryScalar_h_
-#define TelemetryScalar_h_
+#ifndef TelemetryScalar_h__
+#define TelemetryScalar_h__
 
 #include <stdint.h>
 #include "mozilla/TelemetryProcessEnums.h"
@@ -61,6 +62,10 @@ void Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, bool aValue);
 nsresult RegisterScalars(const nsACString& aCategoryName,
                          JS::Handle<JS::Value> aScalarData, JSContext* cx);
 
+// Event Summary
+void SummarizeEvent(const nsCString& aUniqueEventName,
+                    mozilla::Telemetry::ProcessID aProcessType);
+
 // Only to be used for testing.
 void ClearScalars();
 
@@ -91,4 +96,4 @@ void AddDynamicScalarDefinitions(
 nsresult GetAllStores(mozilla::Telemetry::Common::StringHashSet& set);
 }  // namespace TelemetryScalar
 
-#endif  // TelemetryScalar_h_
+#endif  // TelemetryScalar_h__

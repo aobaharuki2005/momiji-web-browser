@@ -9,8 +9,6 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include <assert.h>
-
 #include "aom/aom_image.h"
 #include "config/aom_config.h"
 #include "config/aom_scale_rtcd.h"
@@ -940,7 +938,7 @@ static void foreach_rest_unit_in_planes_mt(AV1LrStruct *lr_ctxt,
   }
 
   int i;
-  static_assert(MAX_MB_PLANE == 3, "");
+  assert(MAX_MB_PLANE == 3);
 
   if (!lr_sync->sync_range || num_rows_lr > lr_sync->rows ||
       num_workers > lr_sync->num_workers || num_planes > lr_sync->num_planes) {

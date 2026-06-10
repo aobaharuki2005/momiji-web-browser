@@ -456,8 +456,6 @@ struct avar
 
     OT::ItemVariationStore::destroy_cache (var_store_cache);
     return true;
-#else
-    return version.major < 2;
 #endif
   }
 

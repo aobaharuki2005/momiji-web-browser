@@ -30,6 +30,7 @@ NSS 3.22.3 release notes
 `New in NSS 3.22.3 <#new_in_nss_3.22.3>`__
 ------------------------------------------
 
+.. _new_functionality:
 
 `New Functionality <#new_functionality>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

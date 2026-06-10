@@ -1,9 +1,10 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHttpAuthManager_h_
-#define nsHttpAuthManager_h_
+#ifndef nsHttpAuthManager_h__
+#define nsHttpAuthManager_h__
 
 #include "nsIHttpAuthManager.h"
 
@@ -32,4 +33,4 @@ class nsHttpAuthManager : public nsIHttpAuthManager {
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // nsHttpAuthManager_h_
+#endif  // nsHttpAuthManager_h__

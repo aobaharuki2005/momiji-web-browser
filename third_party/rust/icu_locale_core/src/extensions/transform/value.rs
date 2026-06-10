@@ -40,8 +40,6 @@ impl Value {
     /// A constructor which takes a str slice, parses it and
     /// produces a well-formed [`Value`].
     ///
-    /// ✨ *Enabled with the `alloc` Cargo feature.*
-    ///
     /// # Examples
     ///
     /// ```
@@ -56,8 +54,6 @@ impl Value {
     }
 
     /// See [`Self::try_from_str`]
-    ///
-    /// ✨ *Enabled with the `alloc` Cargo feature.*
     #[cfg(feature = "alloc")]
     pub fn try_from_utf8(code_units: &[u8]) -> Result<Self, ParseError> {
         let mut v = ShortBoxSlice::default();
@@ -119,7 +115,6 @@ impl Value {
     }
 }
 
-/// ✨ *Enabled with the `alloc` Cargo feature.*
 #[cfg(feature = "alloc")]
 impl FromStr for Value {
     type Err = ParseError;
@@ -130,7 +125,7 @@ impl FromStr for Value {
     }
 }
 
-impl_writeable_for_each_subtag_str_no_test!(Value, selff, selff.0.is_empty() => Some("true"));
+impl_writeable_for_each_subtag_str_no_test!(Value, selff, selff.0.is_empty() => alloc::borrow::Cow::Borrowed("true"));
 
 #[test]
 fn test_writeable() {

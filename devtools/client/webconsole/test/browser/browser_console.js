@@ -95,7 +95,14 @@ async function testMessages() {
   // a non-numeric innerID in Console.cpp
   const browserConsoleGlobal = Cu.getGlobalForObject(hud);
   const chromeWorker = new browserConsoleGlobal.ChromeWorker(
-    getRootDirectory(gTestPath) + "test-chrome-worker.js"
+    URL.createObjectURL(
+      new browserConsoleGlobal.Blob(
+        [`console.log("message in chrome worker")`],
+        {
+          type: "application/javascript",
+        }
+      )
+    )
   );
 
   const sandbox = new Cu.Sandbox(null, {

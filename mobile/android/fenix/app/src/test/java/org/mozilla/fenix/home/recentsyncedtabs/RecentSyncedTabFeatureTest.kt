@@ -11,8 +11,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.verify
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.browser.storage.sync.Tab
@@ -33,8 +34,10 @@ import mozilla.components.service.fxa.store.SyncStatus
 import mozilla.components.service.fxa.store.SyncStore
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.telemetry.glean.testing.ErrorType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
@@ -44,10 +47,13 @@ import org.mozilla.fenix.GleanMetrics.RecentSyncedTabs
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.helpers.FenixGleanTestRule
-import kotlin.test.assertNotNull
 
+@OptIn(ExperimentalCoroutinesApi::class) // runCurrent
 @RunWith(AndroidJUnit4::class)
 class RecentSyncedTabFeatureTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     @get:Rule
     val gleanTestRule = FenixGleanTestRule(testContext)
@@ -94,8 +100,6 @@ class RecentSyncedTabFeatureTest {
     private val syncStore = SyncStore()
 
     private lateinit var feature: RecentSyncedTabFeature
-    private val testDispatcher = StandardTestDispatcher()
-    private val testScope = TestScope(testDispatcher)
 
     @Before
     fun setup() {
@@ -112,21 +116,19 @@ class RecentSyncedTabFeatureTest {
             accountManager = accountManager,
             storage = syncedTabsStorage,
             historyStorage = historyStorage,
-            coroutineScope = testScope,
-            ioDispatcher = testDispatcher,
+            coroutineScope = TestScope(),
         )
     }
 
     @Test
-    fun `GIVEN account is not available WHEN started THEN nothing is dispatched`() = runTest(testDispatcher) {
+    fun `GIVEN account is not available WHEN started THEN nothing is dispatched`() {
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(exactly = 0) { appStore.dispatch(any()) }
     }
 
     @Test
-    fun `GIVEN current tab state is none WHEN account becomes available THEN loading state is dispatched, devices are refreshed, and a sync is started`() = runTest(testDispatcher) {
+    fun `GIVEN current tab state is none WHEN account becomes available THEN loading state is dispatched, devices are refreshed, and a sync is started`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
 
@@ -135,7 +137,7 @@ class RecentSyncedTabFeatureTest {
         }
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Loading)) }
         coVerify { accountManager.withConstellationIfExists { refreshDevices() } }
@@ -143,7 +145,7 @@ class RecentSyncedTabFeatureTest {
     }
 
     @Test
-    fun `GIVEN current tab state is not none WHEN account becomes available THEN loading state is not dispatched`() = runTest(testDispatcher) {
+    fun `GIVEN current tab state is not none WHEN account becomes available THEN loading state is not dispatched`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
 
@@ -152,13 +154,13 @@ class RecentSyncedTabFeatureTest {
         }
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         verify(exactly = 0) { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Loading)) }
     }
 
     @Test
-    fun `GIVEN synced tabs WHEN status becomes idle THEN recent synced tab is dispatched`() = runTest(testDispatcher) {
+    fun `GIVEN synced tabs WHEN status becomes idle THEN recent synced tab is dispatched`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -175,14 +177,14 @@ class RecentSyncedTabFeatureTest {
 
         feature.start()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         val expected = listOf(activeTab.toRecentSyncedTab(deviceAccessed1))
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expected))) }
     }
 
     @Test
-    fun `GIVEN loading state has not been dispatched WHEN status becomes idle THEN timing distribution is not recorded`() = runTest(testDispatcher) {
+    fun `GIVEN loading state has not been dispatched WHEN status becomes idle THEN timing distribution is not recorded`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -199,13 +201,13 @@ class RecentSyncedTabFeatureTest {
 
         feature.start()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
         // this does not trigger a loading state, which should only be shown when tabs are loaded
         // during app initialization
         syncStore.setState(status = SyncStatus.Started)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         assertEquals(
             0,
@@ -216,7 +218,7 @@ class RecentSyncedTabFeatureTest {
     }
 
     @Test
-    fun `GIVEN tabs from remote and current devices WHEN dispatching recent synced tab THEN current device is filtered out of dispatch`() = runTest(testDispatcher) {
+    fun `GIVEN tabs from remote and current devices WHEN dispatching recent synced tab THEN current device is filtered out of dispatch`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -233,7 +235,7 @@ class RecentSyncedTabFeatureTest {
 
         feature.start()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         val expectedTabs = listOf(remoteTab.toRecentSyncedTab(deviceAccessed1))
         verify {
@@ -244,7 +246,7 @@ class RecentSyncedTabFeatureTest {
     }
 
     @Test
-    fun `GIVEN there are devices with empty tabs list WHEN dispatching recent synced tab THEN devices with empty tabs list are filtered out`() = runTest(testDispatcher) {
+    fun `GIVEN there are devices with empty tabs list WHEN dispatching recent synced tab THEN devices with empty tabs list are filtered out`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -260,7 +262,7 @@ class RecentSyncedTabFeatureTest {
 
         feature.start()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         val expectedTabs = listOf(remoteTab.toRecentSyncedTab(deviceAccessed1))
         verify {
@@ -302,7 +304,7 @@ class RecentSyncedTabFeatureTest {
 
             feature.start()
             syncStore.setState(status = SyncStatus.Idle)
-            testDispatcher.scheduler.advanceUntilIdle()
+            runCurrent()
 
             // The order of the tabs should be given by the `lastUsed` property
             val expectedTabs =
@@ -321,7 +323,7 @@ class RecentSyncedTabFeatureTest {
         }
 
     @Test
-    fun `GIVEN sync tabs are disabled WHEN dispatching recent synced tab THEN dispatch none`() = runTest(testDispatcher) {
+    fun `GIVEN sync tabs are disabled WHEN dispatching recent synced tab THEN dispatch none`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -339,7 +341,7 @@ class RecentSyncedTabFeatureTest {
 
         feature.start()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         verify {
             appStore.dispatch(
@@ -349,7 +351,7 @@ class RecentSyncedTabFeatureTest {
     }
 
     @Test
-    fun `WHEN synced tab dispatched THEN labeled counter metric recorded with device type`() = runTest(testDispatcher) {
+    fun `WHEN synced tab dispatched THEN labeled counter metric recorded with device type`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -361,13 +363,13 @@ class RecentSyncedTabFeatureTest {
 
         feature.start()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         assertEquals(1, RecentSyncedTabs.recentSyncedTabShown["desktop"].testGetValue())
     }
 
     @Test
-    fun `WHEN synced tab dispatched THEN load time metric recorded`() = runTest(testDispatcher) {
+    fun `WHEN synced tab dispatched THEN load time metric recorded`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -379,13 +381,13 @@ class RecentSyncedTabFeatureTest {
 
         feature.start()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         assertNotNull(RecentSyncedTabs.recentSyncedTabTimeToLoad.testGetValue())
     }
 
     @Test
-    fun `GIVEN that the dispatched tab was the last dispatched tab WHEN dispatched THEN recorded as stale`() = runTest(testDispatcher) {
+    fun `GIVEN that the dispatched tab was the last dispatched tab WHEN dispatched THEN recorded as stale`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -397,17 +399,17 @@ class RecentSyncedTabFeatureTest {
 
         feature.start()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
         syncStore.setState(status = SyncStatus.Started)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         assertEquals(1, RecentSyncedTabs.latestSyncedTabIsStale.testGetValue())
     }
 
     @Test
-    fun `GIVEN that the dispatched tab was not the last dispatched tab WHEN dispatched THEN not recorded as stale`() = runTest(testDispatcher) {
+    fun `GIVEN that the dispatched tab was not the last dispatched tab WHEN dispatched THEN not recorded as stale`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -419,17 +421,17 @@ class RecentSyncedTabFeatureTest {
 
         feature.start()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
         syncStore.setState(status = SyncStatus.Started)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         assertNull(RecentSyncedTabs.latestSyncedTabIsStale.testGetValue())
     }
 
     @Test
-    fun `GIVEN current tab state is loading WHEN error is observed THEN tab state is dispatched as none`() = runTest(testDispatcher) {
+    fun `GIVEN current tab state is loading WHEN error is observed THEN tab state is dispatched as none`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -440,24 +442,24 @@ class RecentSyncedTabFeatureTest {
         }
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
         syncStore.setState(status = SyncStatus.Error)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
     }
 
     @Test
-    fun `GIVEN current tab state is not loading WHEN error is observed THEN nothing is dispatched`() = runTest(testDispatcher) {
+    fun `GIVEN current tab state is not loading WHEN error is observed THEN nothing is dispatched`() = runTest {
         feature.start()
         syncStore.setState(status = SyncStatus.Error)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         verify(exactly = 0) { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
     }
 
     @Test
-    fun `GIVEN that a tab has been dispatched WHEN LoggedOut is observed THEN tab state is dispatched as none`() = runTest(testDispatcher) {
+    fun `GIVEN that a tab has been dispatched WHEN LoggedOut is observed THEN tab state is dispatched as none`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -470,11 +472,11 @@ class RecentSyncedTabFeatureTest {
         )
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
         syncStore.setState(status = SyncStatus.LoggedOut)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         val expected = listOf(tab.toRecentSyncedTab(deviceAccessed1))
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expected))) }
@@ -482,7 +484,7 @@ class RecentSyncedTabFeatureTest {
     }
 
     @Test
-    fun `GIVEN history entry contains synced tab host and has a preview image URL WHEN dispatched THEN preview url is included`() = runTest(testDispatcher) {
+    fun `GIVEN history entry contains synced tab host and has a preview image URL WHEN dispatched THEN preview url is included`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -503,14 +505,14 @@ class RecentSyncedTabFeatureTest {
 
         feature.start()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         val expected = listOf(activeTab.toRecentSyncedTab(deviceAccessed1, previewUrl))
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expected))) }
     }
 
     @Test
-    fun `GIVEN history entry contains synced tab host but has no preview image URL WHEN dispatched THEN preview url is not included`() = runTest(testDispatcher) {
+    fun `GIVEN history entry contains synced tab host but has no preview image URL WHEN dispatched THEN preview url is not included`() = runTest {
         val account = mockk<Account>()
         syncStore.setState(account = account)
         every { appStore.state } returns mockk {
@@ -530,7 +532,7 @@ class RecentSyncedTabFeatureTest {
 
         feature.start()
         syncStore.setState(status = SyncStatus.Idle)
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         val expected = listOf(activeTab.toRecentSyncedTab(deviceAccessed1, null))
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expected))) }

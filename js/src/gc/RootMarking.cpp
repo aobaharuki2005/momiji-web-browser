@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -28,13 +30,15 @@ using mozilla::LinkedList;
 using JS::AutoGCRooter;
 using JS::SliceBudget;
 
+using RootRange = RootedValueMap::Range;
 using RootEntry = RootedValueMap::Entry;
+using RootEnum = RootedValueMap::Enum;
 
 template <typename Base, typename T>
 inline void TypedRootedGCThingBase<Base, T>::trace(JSTracer* trc,
                                                    const char* name) {
   auto* self = this->template derived<T>();
-  TraceRoot(trc, self->address(), name);
+  TraceNullableRoot(trc, self->address(), name);
 }
 
 template <typename T>
@@ -98,26 +102,26 @@ static inline void TracePersistentRootedTraceableList(
   }
 }
 
-void GCRuntime::tracePersistentRoots(JSTracer* trc) {
-#define TRACE_ROOTS(name, type, _, _1)                                         \
-  TracePersistentRootedList<type*>(trc, persistentRoots()[JS::RootKind::name], \
+void JSRuntime::tracePersistentRoots(JSTracer* trc) {
+#define TRACE_ROOTS(name, type, _, _1)                                       \
+  TracePersistentRootedList<type*>(trc, heapRoots.ref()[JS::RootKind::name], \
                                    "persistent-" #name);
   JS_FOR_EACH_TRACEKIND(TRACE_ROOTS)
 #undef TRACE_ROOTS
-  TracePersistentRootedList<jsid>(trc, persistentRoots()[JS::RootKind::Id],
+  TracePersistentRootedList<jsid>(trc, heapRoots.ref()[JS::RootKind::Id],
                                   "persistent-id");
-  TracePersistentRootedList<Value>(trc, persistentRoots()[JS::RootKind::Value],
+  TracePersistentRootedList<Value>(trc, heapRoots.ref()[JS::RootKind::Value],
                                    "persistent-value");
 
   // RootedTraceable uses virtual dispatch.
   JS::AutoSuppressGCAnalysis nogc;
 
   TracePersistentRootedTraceableList(
-      trc, persistentRoots()[JS::RootKind::Traceable], "persistent-traceable");
+      trc, heapRoots.ref()[JS::RootKind::Traceable], "persistent-traceable");
 }
 
 static void TracePersistentRooted(JSRuntime* rt, JSTracer* trc) {
-  rt->gc.tracePersistentRoots(trc);
+  rt->tracePersistentRoots(trc);
 }
 
 template <typename T>
@@ -128,13 +132,13 @@ static void FinishPersistentRootedChain(
   }
 }
 
-void GCRuntime::finishPersistentRoots() {
+void JSRuntime::finishPersistentRoots() {
 #define FINISH_ROOT_LIST(name, type, _, _1) \
-  FinishPersistentRootedChain<type*>(persistentRoots()[JS::RootKind::name]);
+  FinishPersistentRootedChain<type*>(heapRoots.ref()[JS::RootKind::name]);
   JS_FOR_EACH_TRACEKIND(FINISH_ROOT_LIST)
 #undef FINISH_ROOT_LIST
-  FinishPersistentRootedChain<jsid>(persistentRoots()[JS::RootKind::Id]);
-  FinishPersistentRootedChain<Value>(persistentRoots()[JS::RootKind::Value]);
+  FinishPersistentRootedChain<jsid>(heapRoots.ref()[JS::RootKind::Id]);
+  FinishPersistentRootedChain<Value>(heapRoots.ref()[JS::RootKind::Value]);
 
   // Note that we do not finalize the Traceable list as we do not know how to
   // safely clear members. We instead assert that none escape the RootLists.
@@ -296,10 +300,8 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
     JSContext* cx = rt->mainContextFromOwnThread();
 
     // Trace active interpreter and JIT stack roots.
-    TraceActivations(cx, trc);
-#ifdef ENABLE_WASM_JSPI
-    jit::TraceWasmSuspendedContStacks(cx, trc);
-#endif
+    TraceInterpreterActivations(cx, trc);
+    jit::TraceJitActivations(cx, trc);
 
     // Trace legacy C stack roots.
     cx->traceAllGCRooters(trc);
@@ -307,8 +309,8 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
     // Trace C stack roots.
     TraceExactStackRoots(cx, trc);
 
-    for (auto iter = rootsHash.ref().iter(); !iter.done(); iter.next()) {
-      const RootEntry& entry = iter.get();
+    for (RootRange r = rootsHash.ref().all(); !r.empty(); r.popFront()) {
+      const RootEntry& entry = r.front();
       TraceRoot(trc, entry.key(), entry.value());
     }
   }
@@ -337,6 +339,11 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
     for (ZonesIter zone(this, ZoneSelector::SkipAtoms); !zone.done();
          zone.next()) {
       zone->traceRootsInMajorGC(trc);
+    }
+
+    // Trace interpreter entry code generated with --emit-interpreter-entry
+    if (rt->hasJitRuntime() && rt->jitRuntime()->hasInterpreterEntryMap()) {
+      rt->jitRuntime()->getInterpreterEntryMap()->traceTrampolineCode(trc);
     }
   }
 
@@ -398,7 +405,7 @@ IncrementalProgress GCRuntime::traceEmbeddingGrayRoots(JSTracer* trc,
 
 #ifdef DEBUG
 class AssertNoRootsTracer final : public JS::CallbackTracer {
-  bool onChild(JS::GCCellPtr thing, const char* name) override {
+  void onChild(JS::GCCellPtr thing, const char* name) override {
     MOZ_CRASH("There should not be any roots during runtime shutdown");
   }
 
@@ -418,7 +425,7 @@ void js::gc::GCRuntime::finishRoots() {
 
   rootsHash.ref().clear();
 
-  finishPersistentRoots();
+  rt->finishPersistentRoots();
 
   rt->finishSelfHosting();
 
@@ -429,6 +436,9 @@ void js::gc::GCRuntime::finishRoots() {
 #ifdef JS_GC_ZEAL
   clearSelectedForMarking();
 #endif
+
+  // Clear out the interpreter entry map before the final gc.
+  ClearInterpreterEntryMap(rt);
 
   // Clear any remaining roots from the embedding (as otherwise they will be
   // left dangling after we shut down) and remove the callbacks.
@@ -448,10 +458,10 @@ void js::gc::GCRuntime::checkNoRuntimeRoots(AutoGCSession& session) {
 JS_PUBLIC_API void JS::AddPersistentRoot(JS::RootingContext* cx, RootKind kind,
                                          PersistentRootedBase* root) {
   JSRuntime* rt = static_cast<JSContext*>(cx)->runtime();
-  rt->gc.persistentRoots()[kind].insertBack(root);
+  rt->heapRoots.ref()[kind].insertBack(root);
 }
 
 JS_PUBLIC_API void JS::AddPersistentRoot(JSRuntime* rt, RootKind kind,
                                          PersistentRootedBase* root) {
-  rt->gc.persistentRoots()[kind].insertBack(root);
+  rt->heapRoots.ref()[kind].insertBack(root);
 }

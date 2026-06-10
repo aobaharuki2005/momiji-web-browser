@@ -8,22 +8,18 @@ use crate::{backend, io};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CapabilitySets {
     /// `__user_cap_data_struct.effective`
-    pub effective: CapabilitySet,
+    pub effective: CapabilityFlags,
     /// `__user_cap_data_struct.permitted`
-    pub permitted: CapabilitySet,
+    pub permitted: CapabilityFlags,
     /// `__user_cap_data_struct.inheritable`
-    pub inheritable: CapabilitySet,
+    pub inheritable: CapabilityFlags,
 }
-
-/// Previous name of `CapabilitySet`.
-#[deprecated(since = "1.1.0", note = "Renamed to CapabilitySet")]
-pub type CapabilityFlags = CapabilitySet;
 
 bitflags! {
     /// `CAP_*` constants.
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct CapabilitySet: u64 {
+    pub struct CapabilityFlags: u64 {
         /// `CAP_CHOWN`
         const CHOWN = 1 << linux_raw_sys::general::CAP_CHOWN;
         /// `CAP_DAC_OVERRIDE`
@@ -160,9 +156,9 @@ fn capget(pid: Option<Pid>) -> io::Result<CapabilitySets> {
 
     // The kernel returns a partitioned bitset that we just combined above.
     Ok(CapabilitySets {
-        effective: CapabilitySet::from_bits_retain(effective),
-        permitted: CapabilitySet::from_bits_retain(permitted),
-        inheritable: CapabilitySet::from_bits_retain(inheritable),
+        effective: CapabilityFlags::from_bits_retain(effective),
+        permitted: CapabilityFlags::from_bits_retain(permitted),
+        inheritable: CapabilityFlags::from_bits_retain(inheritable),
     })
 }
 

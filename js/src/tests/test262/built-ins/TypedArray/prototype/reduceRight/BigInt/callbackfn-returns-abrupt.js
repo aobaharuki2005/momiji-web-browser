@@ -22,12 +22,12 @@ info: |
       i. Let accumulator be ? Call(callbackfn, undefined, « accumulator, kValue,
       k, O »).
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg(2));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA(2);
 
   assert.throws(Test262Error, function() {
     sample.reduceRight(function() {

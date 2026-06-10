@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// @ts-nocheck - TODO - Remove this to type check this file.
-
 /**
  * Safe condition evaluator for JSON-based security policies.
  * Evaluates policy conditions against action and context.
@@ -124,7 +122,7 @@ function evaluateAllUrlsIn(condition, action, context) {
     return true;
   }
 
-  if (!ledger || typeof ledger.lookup !== "function") {
+  if (!ledger || typeof ledger.has !== "function") {
     lazy.console.error(
       "[ConditionEvaluator] Ledger not found or invalid:",
       condition.ledger
@@ -132,10 +130,10 @@ function evaluateAllUrlsIn(condition, action, context) {
     return false;
   }
 
-  const result = urls.every(url => ledger.lookup(url));
+  const result = urls.every(url => ledger.has(url));
 
   if (!result) {
-    const failedUrl = urls.find(url => !ledger.lookup(url));
+    const failedUrl = urls.find(url => !ledger.has(url));
     lazy.console.warn(
       `[ConditionEvaluator] URL not in ledger: ${failedUrl}`,
       condition.description || ""

@@ -851,11 +851,11 @@ export class StyleEditorUI extends EventEmitter {
     this.#copyUrlItem.hidden = !this.#contextMenuStyleSheet;
 
     if (this.#contextMenuStyleSheet) {
-      this.#openLinkNewTabItem.toggleAttribute(
+      this.#openLinkNewTabItem.setAttribute(
         "disabled",
         !this.#contextMenuStyleSheet.href
       );
-      this.#copyUrlItem.toggleAttribute(
+      this.#copyUrlItem.setAttribute(
         "disabled",
         !this.#contextMenuStyleSheet.href
       );
@@ -1921,6 +1921,10 @@ export class StyleEditorUI extends EventEmitter {
     }
 
     if (this.#prefObserver) {
+      this.#prefObserver.off(
+        PREF_AT_RULES_SIDEBAR,
+        this.#onAtRulesSidebarPrefChanged
+      );
       this.#prefObserver.destroy();
       this.#prefObserver = null;
     }

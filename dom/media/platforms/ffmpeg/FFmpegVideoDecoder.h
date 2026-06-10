@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef FFmpegVideoDecoder_h_
-#define FFmpegVideoDecoder_h_
+#ifndef __FFmpegVideoDecoder_h__
+#define __FFmpegVideoDecoder_h__
 
 #include <atomic>
 
@@ -13,10 +15,8 @@
 #include "ImageContainer.h"
 #include "PerformanceRecorder.h"
 #include "SimpleMap.h"
-#include "nsTHashMap.h"
 #include "nsTHashSet.h"
 #if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
-#  include "mozilla/DataMutex.h"
 #  include "mozilla/layers/TextureClient.h"
 #endif
 #if defined(MOZ_USE_HWDECODE) && defined(MOZ_WIDGET_GTK)
@@ -37,12 +37,6 @@
 
 struct _VADRMPRIMESurfaceDescriptor;
 typedef struct _VADRMPRIMESurfaceDescriptor VADRMPRIMESurfaceDescriptor;
-
-struct AVHWFramesContext;
-struct AVFrame;
-#if LIBAVCODEC_VERSION_MAJOR >= 60 && !defined(FFVPX_VERSION)
-#  include <vulkan/vulkan.h>
-#endif
 
 namespace mozilla {
 namespace layers {
@@ -122,8 +116,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
     return mLib->avcodec_default_get_buffer2(aCodecContext, aFrame, aFlags);
   }
   void ReleaseAllocatedImage(ImageBufferWrapper* aImage) {
-    auto lock = mAllocatedImages.Lock();
-    lock->Remove(aImage);
+    mAllocatedImages.Remove(aImage);
   }
 #endif
   bool IsHardwareAccelerated() const {
@@ -187,7 +180,6 @@ class FFmpegVideoDecoder<LIBAV_VER>
     MediaCodec,  // Android
     VAAPI,       // Linux Desktop
     V4L2,        // Linux embedded
-    Vulkan,      // Linux Vulkan Video
   };
   void InitHWCodecContext(ContextType aType);
 
@@ -212,22 +204,14 @@ class FFmpegVideoDecoder<LIBAV_VER>
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#  ifdef USING_MOZFFVPX
-  MediaResult AllocateExtraData();
-  MediaResult AllocateH264ExtraData();
-  MediaResult AllocateHEVCExtraData();
-#  endif
   MediaResult InitMediaCodecDecoder();
   MediaResult CreateImageMediaCodec(int64_t aOffset, int64_t aPts,
                                     int64_t aTimecode, int64_t aDuration,
                                     MediaDataDecoder::DecodedData& aResults);
-  bool ReleaseFrameMediaCodec(void* aKey, bool aRender);
-  void ReleaseFramesMediaCodec();
   int32_t mTextureAlignment;
   AVBufferRef* mMediaCodecDeviceContext = nullptr;
   java::GeckoSurface::GlobalRef mSurface;
   AndroidSurfaceTextureHandle mSurfaceHandle{};
-  SimpleMap<void*, AVFrame*, ThreadSafePolicy> mFrameMap;
 #endif
 
 #if defined(MOZ_USE_HWDECODE) && defined(MOZ_WIDGET_GTK)
@@ -235,17 +219,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   bool IsLinuxHDR() const;
   MediaResult InitVAAPIDecoder();
   MediaResult InitV4L2Decoder();
-#  if LIBAVCODEC_VERSION_MAJOR >= 60 && !defined(FFVPX_VERSION)
-  MediaResult InitVulkanDecoder();
-
-#    include "FFmpegVulkanVideoDecoder.h"
-#  endif
   bool CreateVAAPIDeviceContext();
-#  if LIBAVCODEC_VERSION_MAJOR >= 60 && !defined(FFVPX_VERSION)
-  bool CreateVulkanDeviceContext(const StaticMutexAutoLock& aProofOfLock);
-  void PrepareVulkanDrmModifiersForSwFormat(int aSwFormat,
-                                            VkImageUsageFlags aImageUsages);
-#  endif
   bool GetVAAPISurfaceDescriptor(VADRMPRIMESurfaceDescriptor* aVaDesc);
   void AddAcceleratedFormats(nsTArray<AVCodecID>& aCodecList,
                              AVCodecID aCodecID, AVVAAPIHWConfig* hwconfig);
@@ -256,28 +230,9 @@ class FFmpegVideoDecoder<LIBAV_VER>
                                MediaDataDecoder::DecodedData& aResults);
   MediaResult CreateImageV4L2(int64_t aOffset, int64_t aPts, int64_t aDuration,
                               MediaDataDecoder::DecodedData& aResults);
-#  if LIBAVCODEC_VERSION_MAJOR >= 60 && !defined(FFVPX_VERSION)
- public:
-  int ChooseVulkanPixelFormatFromContext(struct AVCodecContext* aCodecContext,
-                                         const int* aFormats);
-
- private:
-  MediaResult CreateImageVulkan(int64_t aOffset, int64_t aPts,
-                                int64_t aDuration,
-                                MediaDataDecoder::DecodedData& aResults);
-#  endif
   void AdjustHWDecodeLogging();
 
   AVBufferRef* mVAAPIDeviceContext = nullptr;
-  AVBufferRef* mVulkanDeviceContext = nullptr;
-#  if LIBAVCODEC_VERSION_MAJOR >= 60 && !defined(FFVPX_VERSION)
-  FFmpegVulkanVideoDecoder mVulkanDecoder;
-  VkImageDrmFormatModifierListCreateInfoEXT mVulkanDrmModifierList = {};
-  VkImageFormatListCreateInfo mVulkanImageFormatList = {};
-  VkMemoryDedicatedAllocateInfo mVulkanAllocPnextDedicated[2] = {};
-  bool mVulkanDecodeUsesDrmModifier = false;
-  bool mVulkanTilingSettled = false;
-#  endif
   bool mUsingV4L2 = false;
   // If video overlay is used we want to upload SW decoded frames to
   // DMABuf and present it as a external texture to rendering pipeline.
@@ -297,8 +252,8 @@ class FFmpegVideoDecoder<LIBAV_VER>
    private:
     uint32_t mDecodedFrames = 0;
 
-    double mAverageFrameDecodeTime = 0;
-    double mAverageFrameDuration = 0;
+    float mAverageFrameDecodeTime = 0;
+    float mAverageFrameDuration = 0;
 
     // Number of delayed frames until we consider decoding as slow.
     const uint32_t mMaxLateDecodedFrames = 15;
@@ -387,9 +342,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
     // Retrieve duration from the given ts.
     // We use the first entry found matching this ts (this is done to
     // handle damaged file with multiple frames with the same ts)
-    if (Maybe<InputInfo> v = mInputInfo.Take(GetFrameInputKey(aFrame))) {
-      aEntry = v.extract();
-    } else {
+    if (!mInputInfo.Find(GetFrameInputKey(aFrame), aEntry)) {
       NS_WARNING("Unable to retrieve input info from map");
       // dts are probably incorrectly reported ; so clear the map as we're
       // unlikely to find them in the future anyway. This also guards
@@ -429,8 +382,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   // When an image is removed from mAllocatedImages it's recycled
   // for a new frame by AllocateTextureClientForImage() in
   // FFmpegVideoDecoder::GetVideoBuffer().
-  DataMutex<nsTHashSet<RefPtr<ImageBufferWrapper>>> mAllocatedImages{
-      "FFmpegVideoDecoder::mAllocatedImages"};
+  nsTHashSet<RefPtr<ImageBufferWrapper>> mAllocatedImages;
 #endif
 
   // Convert dav1d output to 8-bit when GPU doesn't support higher bit images.
@@ -469,4 +421,4 @@ class ImageBufferWrapper final {
 
 }  // namespace mozilla
 
-#endif  // FFmpegVideoDecoder_h_
+#endif  // __FFmpegVideoDecoder_h__

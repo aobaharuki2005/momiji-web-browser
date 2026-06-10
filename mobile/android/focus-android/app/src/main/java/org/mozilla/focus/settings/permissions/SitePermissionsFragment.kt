@@ -16,9 +16,6 @@ import org.mozilla.focus.settings.permissions.permissionoptions.SitePermission
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOptionsStorage
 import org.mozilla.focus.state.AppAction
 
-/**
- * Settings fragment for managing site permissions.
- */
 class SitePermissionsFragment : BaseSettingsFragment() {
 
     @VisibleForTesting

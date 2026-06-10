@@ -132,7 +132,13 @@ class JitterEstimator {
 
   // Returns the current jitter estimate and adds an RTT dependent term in cases
   // of retransmission.
-  TimeDelta GetEstimate();
+  //  Input:
+  //          - rtt_multiplier   : RTT param multiplier (when applicable).
+  //          - rtt_mult_add_cap : Multiplier cap from the RTTMultExperiment.
+  //
+  // Return value              : Jitter estimate.
+  TimeDelta GetJitterEstimate(double rtt_multiplier,
+                              std::optional<TimeDelta> rtt_mult_add_cap);
 
   // Updates the nack counter.
   void FrameNacked();

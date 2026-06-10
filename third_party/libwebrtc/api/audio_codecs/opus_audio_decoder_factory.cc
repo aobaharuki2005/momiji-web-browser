@@ -12,7 +12,6 @@
 
 #include <memory>
 #include <optional>
-#include <utility>
 #include <vector>
 
 #include "api/audio_codecs/audio_codec_pair_id.h"
@@ -40,9 +39,9 @@ struct NotAdvertised {
     // Don't advertise support for anything.
   }
   static std::unique_ptr<AudioDecoder> MakeAudioDecoder(
-      Config config,
+      const Config& config,
       std::optional<AudioCodecPairId> codec_pair_id = std::nullopt) {
-    return T::MakeAudioDecoder(std::move(config), codec_pair_id);
+    return T::MakeAudioDecoder(config, codec_pair_id);
   }
 };
 

@@ -63,8 +63,8 @@
   -moz-context-properties: fill;
   fill: currentColor;
   user-select: none;
-  width: var(--size-image-xsmall);
-  height: var(--size-image-xsmall);
+  width: 40px;
+  height: 40px;
   margin: 16px;
 }
 

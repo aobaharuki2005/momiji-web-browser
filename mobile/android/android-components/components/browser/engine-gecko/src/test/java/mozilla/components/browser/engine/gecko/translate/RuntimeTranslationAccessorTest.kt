@@ -5,6 +5,7 @@ package mozilla.components.browser.engine.gecko.translate
 
 import mozilla.components.concept.engine.translate.TranslationError
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -16,8 +17,6 @@ import org.mozilla.geckoview.TranslationsController.TranslationsException
 import org.mozilla.geckoview.TranslationsController.TranslationsException.ERROR_COULD_NOT_TRANSLATE
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowLooper
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class RuntimeTranslationAccessorTest {
@@ -79,7 +78,7 @@ class RuntimeTranslationAccessorTest {
 
         assertEquals("Initial", successValue)
         assertNotNull(errorValue)
-        assertIs<TranslationError.UnexpectedNull>(errorValue)
+        assertTrue(errorValue is TranslationError.UnexpectedNull)
     }
 
     @Test
@@ -117,7 +116,7 @@ class RuntimeTranslationAccessorTest {
 
         assertNull(successValue)
         assertNotNull(errorValue)
-        assertIs<TranslationError.UnknownError>(errorValue)
+        assertTrue(errorValue is TranslationError.UnknownError)
         assertEquals(exception, (errorValue as TranslationError.UnknownError).cause)
     }
 
@@ -138,6 +137,6 @@ class RuntimeTranslationAccessorTest {
 
         assertNull(successValue)
         assertNotNull(errorValue)
-        assertIs<TranslationError.CouldNotTranslateError>(errorValue)
+        assertTrue(errorValue is TranslationError.CouldNotTranslateError)
     }
 }

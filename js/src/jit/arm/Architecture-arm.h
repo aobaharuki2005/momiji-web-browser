@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -6,9 +8,9 @@
 #define jit_arm_Architecture_arm_h
 
 #include "mozilla/EnumSet.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include <algorithm>
-#include <bit>
 #include <limits.h>
 #include <stdint.h>
 
@@ -123,14 +125,15 @@ class Registers {
 
   static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
 
-  static uint32_t SetSize(SetType x) { return std::popcount(x); }
+  static uint32_t SetSize(SetType x) {
+    static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
+    return mozilla::CountPopulation32(x);
+  }
   static uint32_t FirstBit(SetType x) {
-    MOZ_ASSERT(x);
-    return std::countr_zero(x);
+    return mozilla::CountTrailingZeroes32(x);
   }
   static uint32_t LastBit(SetType x) {
-    MOZ_ASSERT(x);
-    return std::bit_width(x) - 1;
+    return 31 - mozilla::CountLeadingZeroes32(x);
   }
 };
 
@@ -277,10 +280,6 @@ class FloatRegisters {
     //
   /* clang-format on */
   using SetType = uint64_t;
-
-  static_assert(sizeof(SetType) * 8 >= Total,
-                "SetType should be large enough to enumerate all registers.");
-
   static const SetType AllSingleMask = (1ull << TotalSingle) - 1;
   static const SetType AllDoubleMask = ((1ull << TotalDouble) - 1)
                                        << TotalSingle;
@@ -530,7 +529,10 @@ class VFPRegister {
     return SetType(0);
   }
 
-  static uint32_t SetSize(SetType x) { return std::popcount(x); }
+  static uint32_t SetSize(SetType x) {
+    static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
+    return mozilla::CountPopulation32(x);
+  }
   static Code FromName(const char* name) {
     return FloatRegisters::FromName(name);
   }
@@ -539,12 +541,10 @@ class VFPRegister {
   static uint32_t GetPushSizeInBytes(const TypedRegisterSet<VFPRegister>& s);
   uint32_t getRegisterDumpOffsetInBytes();
   static uint32_t FirstBit(SetType x) {
-    MOZ_ASSERT(x);
-    return std::countr_zero(x);
+    return mozilla::CountTrailingZeroes64(x);
   }
   static uint32_t LastBit(SetType x) {
-    MOZ_ASSERT(x);
-    return std::bit_width(x) - 1;
+    return 63 - mozilla::CountLeadingZeroes64(x);
   }
 };
 

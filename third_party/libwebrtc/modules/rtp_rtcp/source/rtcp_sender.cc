@@ -15,12 +15,12 @@
 #include <cstring>
 #include <memory>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/call/transport.h"
 #include "api/environment/environment.h"
 #include "api/rtc_event_log/rtc_event_log.h"
@@ -87,7 +87,7 @@ class RTCPSender::PacketSender {
   // Sends pending rtcp packet.
   void Send() {
     if (index_ > 0) {
-      callback_(std::span<const uint8_t>(buffer_, index_));
+      callback_(ArrayView<const uint8_t>(buffer_, index_));
       index_ = 0;
     }
   }
@@ -115,21 +115,19 @@ RTCPSender::FeedbackState::~FeedbackState() = default;
 class RTCPSender::RtcpContext {
  public:
   RtcpContext(const FeedbackState& feedback_state,
-              std::span<const uint16_t> nacks,
+              ArrayView<const uint16_t> nacks,
               Timestamp now)
       : feedback_state_(feedback_state), nacks_(nacks), now_(now) {}
 
   const FeedbackState& feedback_state_;
-  const std::span<const uint16_t> nacks_;
+  const ArrayView<const uint16_t> nacks_;
   const Timestamp now_;
 };
 
 RTCPSender::RTCPSender(const Environment& env, Configuration config)
     : env_(env),
-      is_rtp_sender_(config.recv_ssrc_callback == nullptr),
       audio_(config.audio),
-      send_ssrc_(config.local_media_ssrc),
-      recv_ssrc_callback_(std::move(config.recv_ssrc_callback)),
+      ssrc_(config.local_media_ssrc),
       random_(env_.clock().TimeInMicroseconds()),
       method_(RtcpMode::kOff),
       transport_(config.outgoing_transport),
@@ -154,9 +152,6 @@ RTCPSender::RTCPSender(const Environment& env, Configuration config)
   RTC_CHECK(schedule_next_rtcp_send_evaluation_);
   RTC_CHECK_GT(report_interval_, TimeDelta::Zero());
   RTC_DCHECK(transport_ != nullptr);
-  // We don't want to see local_media_ssrc if we're not an RTP sender.
-  // It's likely a configuration error.
-  RTC_DCHECK(is_rtp_sender_ || send_ssrc_ == 0);
 
   builders_[kRtcpSr] = &RTCPSender::BuildSR;
   builders_[kRtcpRr] = &RTCPSender::BuildRR;
@@ -201,8 +196,6 @@ void RTCPSender::SetSendingStatus(const FeedbackState& feedback_state,
   bool sendRTCPBye = false;
   {
     MutexLock lock(&mutex_rtcp_sender_);
-    RTC_DCHECK(is_rtp_sender_ || !sending)
-        << "Only senders can have sending turned on";
 
     if (method_ != RtcpMode::kOff) {
       if (sending == false && sending_ == true) {
@@ -230,7 +223,7 @@ int32_t RTCPSender::SendLossNotification(const FeedbackState& feedback_state,
                                          bool decodability_flag,
                                          bool buffering_allowed) {
   int32_t error_code = -1;
-  auto callback = [&](std::span<const uint8_t> packet) {
+  auto callback = [&](ArrayView<const uint8_t> packet) {
     transport_->SendRtcp(packet, /*packet_options=*/{});
     error_code = 0;
     env_.event_log().Log(std::make_unique<RtcEventRtcpPacketOutgoing>(packet));
@@ -326,12 +319,12 @@ void RTCPSender::SetRtpClockRate(int8_t payload_type, int rtp_clock_rate_hz) {
 
 uint32_t RTCPSender::SSRC() const {
   MutexLock lock(&mutex_rtcp_sender_);
-  return ComputeSsrc();
+  return ssrc_;
 }
 
 void RTCPSender::SetSsrc(uint32_t ssrc) {
   MutexLock lock(&mutex_rtcp_sender_);
-  send_ssrc_ = ssrc;
+  ssrc_ = ssrc;
 }
 
 void RTCPSender::SetRemoteSSRC(uint32_t ssrc) {
@@ -386,7 +379,7 @@ void RTCPSender::BuildSR(const RtcpContext& ctx, PacketSender& sender) {
           rtp_rate;
 
   rtcp::SenderReport report;
-  report.SetSenderSsrc(ComputeSsrc());
+  report.SetSenderSsrc(ssrc_);
   report.SetNtp(env_.clock().ConvertTimestampToNtpTime(ctx.now_));
   report.SetRtpTimestamp(rtp_timestamp);
   report.SetPacketCount(ctx.feedback_state_.packets_sent);
@@ -400,13 +393,13 @@ void RTCPSender::BuildSDES(const RtcpContext& /* ctx */, PacketSender& sender) {
   RTC_CHECK_LT(length_cname, RTCP_CNAME_SIZE);
 
   rtcp::Sdes sdes;
-  sdes.AddCName(ComputeSsrc(), cname_);
+  sdes.AddCName(ssrc_, cname_);
   sender.AppendPacket(sdes);
 }
 
 void RTCPSender::BuildRR(const RtcpContext& ctx, PacketSender& sender) {
   rtcp::ReceiverReport report;
-  report.SetSenderSsrc(ComputeSsrc());
+  report.SetSenderSsrc(ssrc_);
   report.SetReportBlocks(CreateReportBlocks(ctx.feedback_state_));
   if (method_ == RtcpMode::kCompound || !report.report_blocks().empty()) {
     sender.AppendPacket(report);
@@ -415,7 +408,7 @@ void RTCPSender::BuildRR(const RtcpContext& ctx, PacketSender& sender) {
 
 void RTCPSender::BuildPLI(const RtcpContext& /* ctx */, PacketSender& sender) {
   rtcp::Pli pli;
-  pli.SetSenderSsrc(ComputeSsrc());
+  pli.SetSenderSsrc(ssrc_);
   pli.SetMediaSsrc(remote_ssrc_);
 
   ++packet_type_counter_.pli_packets;
@@ -426,7 +419,7 @@ void RTCPSender::BuildFIR(const RtcpContext& /* ctx */, PacketSender& sender) {
   ++sequence_number_fir_;
 
   rtcp::Fir fir;
-  fir.SetSenderSsrc(ComputeSsrc());
+  fir.SetSenderSsrc(ssrc_);
   fir.AddRequestTo(remote_ssrc_, sequence_number_fir_);
 
   ++packet_type_counter_.fir_packets;
@@ -435,7 +428,7 @@ void RTCPSender::BuildFIR(const RtcpContext& /* ctx */, PacketSender& sender) {
 
 void RTCPSender::BuildREMB(const RtcpContext& /* ctx */, PacketSender& sender) {
   rtcp::Remb remb;
-  remb.SetSenderSsrc(ComputeSsrc());
+  remb.SetSenderSsrc(ssrc_);
   remb.SetBitrateBps(remb_bitrate_);
   remb.SetSsrcs(remb_ssrcs_);
   sender.AppendPacket(remb);
@@ -474,12 +467,12 @@ void RTCPSender::BuildTMMBR(const RtcpContext& ctx, PacketSender& sender) {
     if (!tmmbr_owner) {
       // Use received bounding set as candidate set.
       // Add current tuple.
-      candidates.emplace_back(ComputeSsrc(), tmmbr_send_bps_, packet_oh_send_);
+      candidates.emplace_back(ssrc_, tmmbr_send_bps_, packet_oh_send_);
 
       // Find bounding set.
       std::vector<rtcp::TmmbItem> bounding =
           TMMBRHelp::FindBoundingSet(std::move(candidates));
-      tmmbr_owner = TMMBRHelp::IsOwner(bounding, ComputeSsrc());
+      tmmbr_owner = TMMBRHelp::IsOwner(bounding, ssrc_);
       if (!tmmbr_owner) {
         // Did not enter bounding set, no meaning to send this request.
         return;
@@ -491,7 +484,7 @@ void RTCPSender::BuildTMMBR(const RtcpContext& ctx, PacketSender& sender) {
     return;
 
   rtcp::Tmmbr tmmbr;
-  tmmbr.SetSenderSsrc(ComputeSsrc());
+  tmmbr.SetSenderSsrc(ssrc_);
   rtcp::TmmbItem request;
   request.set_ssrc(remote_ssrc_);
   request.set_bitrate_bps(tmmbr_send_bps_);
@@ -503,7 +496,7 @@ void RTCPSender::BuildTMMBR(const RtcpContext& ctx, PacketSender& sender) {
 void RTCPSender::BuildTMMBN(const RtcpContext& /* ctx */,
                             PacketSender& sender) {
   rtcp::Tmmbn tmmbn;
-  tmmbn.SetSenderSsrc(ComputeSsrc());
+  tmmbn.SetSenderSsrc(ssrc_);
   for (const rtcp::TmmbItem& tmmbr : tmmbn_to_send_) {
     if (tmmbr.bitrate_bps() > 0) {
       tmmbn.AddTmmbr(tmmbr);
@@ -514,20 +507,20 @@ void RTCPSender::BuildTMMBN(const RtcpContext& /* ctx */,
 
 void RTCPSender::BuildAPP(const RtcpContext& /* ctx */, PacketSender& sender) {
   rtcp::App app;
-  app.SetSenderSsrc(ComputeSsrc());
+  app.SetSenderSsrc(ssrc_);
   sender.AppendPacket(app);
 }
 
 void RTCPSender::BuildLossNotification(const RtcpContext& /* ctx */,
                                        PacketSender& sender) {
-  loss_notification_.SetSenderSsrc(ComputeSsrc());
+  loss_notification_.SetSenderSsrc(ssrc_);
   loss_notification_.SetMediaSsrc(remote_ssrc_);
   sender.AppendPacket(loss_notification_);
 }
 
 void RTCPSender::BuildNACK(const RtcpContext& ctx, PacketSender& sender) {
   rtcp::Nack nack;
-  nack.SetSenderSsrc(ComputeSsrc());
+  nack.SetSenderSsrc(ssrc_);
   nack.SetMediaSsrc(remote_ssrc_);
   nack.SetPacketIds(ctx.nacks_.data(), ctx.nacks_.size());
 
@@ -544,7 +537,7 @@ void RTCPSender::BuildNACK(const RtcpContext& ctx, PacketSender& sender) {
 
 void RTCPSender::BuildBYE(const RtcpContext& /* ctx */, PacketSender& sender) {
   rtcp::Bye bye;
-  bye.SetSenderSsrc(ComputeSsrc());
+  bye.SetSenderSsrc(ssrc_);
   bye.SetCsrcs(csrcs_);
   sender.AppendPacket(bye);
 }
@@ -552,7 +545,7 @@ void RTCPSender::BuildBYE(const RtcpContext& /* ctx */, PacketSender& sender) {
 void RTCPSender::BuildExtendedReports(const RtcpContext& ctx,
                                       PacketSender& sender) {
   rtcp::ExtendedReports xr;
-  xr.SetSenderSsrc(ComputeSsrc());
+  xr.SetSenderSsrc(ssrc_);
 
   if (!sending_ && xr_send_receiver_reference_time_enabled_) {
     rtcp::Rrtr rrtr;
@@ -567,8 +560,8 @@ void RTCPSender::BuildExtendedReports(const RtcpContext& ctx,
   if (send_video_bitrate_allocation_) {
     rtcp::TargetBitrate target_bitrate;
 
-    for (size_t sl = 0; sl < kMaxSpatialLayers; ++sl) {
-      for (size_t tl = 0; tl < kMaxTemporalStreams; ++tl) {
+    for (int sl = 0; sl < kMaxSpatialLayers; ++sl) {
+      for (int tl = 0; tl < kMaxTemporalStreams; ++tl) {
         if (video_bitrate_allocation_.HasBitrate(sl, tl)) {
           target_bitrate.AddTargetBitrate(
               sl, tl, video_bitrate_allocation_.GetBitrate(sl, tl) / 1000);
@@ -584,9 +577,9 @@ void RTCPSender::BuildExtendedReports(const RtcpContext& ctx,
 
 int32_t RTCPSender::SendRTCP(const FeedbackState& feedback_state,
                              RTCPPacketType packet_type,
-                             std::span<const uint16_t> nacks) {
+                             ArrayView<const uint16_t> nacks) {
   int32_t error_code = -1;
-  auto callback = [&](std::span<const uint8_t> packet) {
+  auto callback = [&](ArrayView<const uint8_t> packet) {
     if (transport_->SendRtcp(packet, /*packet_options=*/{})) {
       error_code = 0;
       env_.event_log().Log(
@@ -608,19 +601,10 @@ int32_t RTCPSender::SendRTCP(const FeedbackState& feedback_state,
   return error_code;
 }
 
-uint32_t RTCPSender::ComputeSsrc() const {
-  if (is_rtp_sender_) {
-    return send_ssrc_;
-  } else {
-    RTC_DCHECK(recv_ssrc_callback_);
-    return recv_ssrc_callback_();
-  }
-}
-
 std::optional<int32_t> RTCPSender::ComputeCompoundRTCPPacket(
     const FeedbackState& feedback_state,
     RTCPPacketType packet_type,
-    std::span<const uint16_t> nacks,
+    ArrayView<const uint16_t> nacks,
     PacketSender& sender) {
   if (method_ == RtcpMode::kOff) {
     RTC_LOG(LS_WARNING) << "Can't send RTCP if it is disabled.";
@@ -841,7 +825,7 @@ void RTCPSender::SetVideoBitrateAllocation(
       CheckAndUpdateLayerStructure(bitrate);
   if (new_bitrate) {
     video_bitrate_allocation_ = *new_bitrate;
-    RTC_LOG(LS_INFO) << "Emitting TargetBitrate XR for SSRC " << ComputeSsrc()
+    RTC_LOG(LS_INFO) << "Emitting TargetBitrate XR for SSRC " << ssrc_
                      << " with new layers enabled/disabled: "
                      << video_bitrate_allocation_.ToString();
     SetNextRtcpSendEvaluationDuration(TimeDelta::Zero());
@@ -888,10 +872,10 @@ void RTCPSender::SendCombinedRtcpPacket(
     }
 
     max_packet_size = max_packet_size_;
-    ssrc = ComputeSsrc();
+    ssrc = ssrc_;
   }
   RTC_DCHECK_LE(max_packet_size, IP_PACKET_SIZE);
-  auto callback = [&](std::span<const uint8_t> packet) {
+  auto callback = [&](ArrayView<const uint8_t> packet) {
     if (transport_->SendRtcp(packet, /*packet_options=*/{})) {
       env_.event_log().Log(
           std::make_unique<RtcEventRtcpPacketOutgoing>(packet));

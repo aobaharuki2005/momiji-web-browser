@@ -558,7 +558,6 @@ static inline void set_mode_eval_params(const struct AV1_COMP *cpi,
     case DEFAULT_EVAL:
       txfm_params->default_inter_tx_type_prob_thresh = INT_MAX;
       txfm_params->use_default_intra_tx_type = 0;
-      txfm_params->use_derived_intra_tx_type_set = 0;
       txfm_params->skip_txfm_level =
           winner_mode_params->skip_txfm_level[DEFAULT_EVAL];
       txfm_params->predict_dc_level =
@@ -577,10 +576,8 @@ static inline void set_mode_eval_params(const struct AV1_COMP *cpi,
       break;
     case MODE_EVAL:
       txfm_params->use_default_intra_tx_type =
-          (cpi->sf.tx_sf.tx_type_search.fast_intra_tx_type_search == 2 ||
+          (cpi->sf.tx_sf.tx_type_search.fast_intra_tx_type_search ||
            cpi->oxcf.txfm_cfg.use_intra_default_tx_only);
-      txfm_params->use_derived_intra_tx_type_set =
-          cpi->sf.tx_sf.tx_type_search.fast_intra_tx_type_search == 1;
       txfm_params->default_inter_tx_type_prob_thresh =
           cpi->sf.tx_sf.tx_type_search.fast_inter_tx_type_prob_thresh;
       txfm_params->skip_txfm_level =
@@ -610,7 +607,6 @@ static inline void set_mode_eval_params(const struct AV1_COMP *cpi,
     case WINNER_MODE_EVAL:
       txfm_params->default_inter_tx_type_prob_thresh = INT_MAX;
       txfm_params->use_default_intra_tx_type = 0;
-      txfm_params->use_derived_intra_tx_type_set = 0;
       txfm_params->skip_txfm_level =
           winner_mode_params->skip_txfm_level[WINNER_MODE_EVAL];
       txfm_params->predict_dc_level =

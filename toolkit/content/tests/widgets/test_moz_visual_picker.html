@@ -112,6 +112,11 @@
           TEST_SUPPORT_PAGE,
           "Visual picker support page is set."
         );
+        is(
+          picker.fieldset.getAttribute("role"),
+          "radiogroup",
+          "Visual picker uses the 'radiogroup' role by default."
+        );
         items.forEach(item => {
           is(
             item.itemEl.getAttribute("role"),
@@ -123,6 +128,11 @@
         picker.type = "listbox";
         await picker.updateComplete;
 
+        is(
+          picker.fieldset.getAttribute("role"),
+          "listbox",
+          "Visual picker uses the 'listbox' role after the type is changed."
+        );
         items.forEach(item => {
           is(
             item.itemEl.getAttribute("role"),
@@ -132,29 +142,19 @@
         });
       });
 
-      add_task(async function testVisualPickerItemText() {
-        let itemData = [
-          { value: "first", label: "first", description: "one" },
-          { value: "second", label: "second", description: "two" },
-          { value: "third", label: "third", description: "three" },
-        ];
-
+      add_task(async function testVisualPickerItemLabel() {
         let labelledItemsTemplate = html`
           <moz-visual-picker
             type="listbox"
             label="Testing labels"
             value="first"
           >
-            ${itemData.map(
-              data => html`
-                <moz-visual-picker-item
-                  value=${data.value}
-                  label=${data.label}
-                  description=${data.description}
-                >
-                </moz-visual-picker-item>
-              `
-            )}
+            <moz-visual-picker-item value="first" label="first">
+            </moz-visual-picker-item>
+            <moz-visual-picker-item value="second" label="second">
+            </moz-visual-picker-item>
+            <moz-visual-picker-item value="third" label="third">
+            </moz-visual-picker-item>
           </moz-visual-picker>
         `;
         let renderTarget = await testHelpers.renderTemplate(
@@ -163,33 +163,24 @@
         let items = [
           ...renderTarget.querySelectorAll("moz-visual-picker-item"),
         ];
+        let labels = ["first", "second", "third"];
 
-        itemData.forEach((data, i) => {
+        labels.forEach((label, i) => {
           is(
-            items[i].labelEl.textContent.trim(),
-            data.label,
+            items[i].shadowRoot.textContent.trim(),
+            label,
             "Visual picker items support a visible label."
-          );
-          is(
-            items[i].descriptionEl.textContent.trim(),
-            data.description,
-            "Visual picker items support a visible description."
           );
         });
 
         items.forEach(async (item, i) => {
-          let { label: itemLabel, description: itemDescription } = itemData[i];
+          let itemLabel = labels[i];
 
-          // Verify that label and description are set via markup.
+          // Verify that label is set via markup.
           is(
-            item.labelEl.textContent.trim(),
+            items.shadowRoot.textContent.trim(),
             itemLabel,
             "Visual picker items support a visible label."
-          );
-          is(
-            item.descriptionEl.textContent.trim(),
-            itemDescription,
-            "Visual picker items support a visible description."
           );
 
           // Clear the visible label and set an aria label instead
@@ -198,7 +189,7 @@
           await item.updateComplete;
 
           ok(
-            !item.labelEl,
+            !item.shadowRoot.textContent.trim(),
             "Visual picker item no longer has a visible label."
           );
           is(
@@ -214,9 +205,9 @@
           item.append(textEl);
           await item.updateComplete;
 
-          ok(
-            !item.labelEl,
-            "Visual picker item still has no visible label element."
+          is(
+            item.shadowRoot.textContent.trim(),
+            "Visual picker has a visible label again."
           );
           ok(
             item.ariaLabelledByElements.includes(textEl),
@@ -727,6 +718,11 @@
         picker.focus();
         picker.scrollIntoView();
 
+        is(
+          picker.fieldset.getAttribute("role"),
+          "listbox",
+          "The top level picker element has a role of 'listbox'."
+        );
         is(
           picker.fieldset.shadowRoot
             .querySelector("fieldset")

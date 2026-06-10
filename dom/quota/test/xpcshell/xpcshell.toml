@@ -73,8 +73,6 @@ run-if = [
 
 ["test_clearStoragesForPrivateBrowsing.js"]
 
-["test_clearStoragesForPrivateBrowsing_callback.js"]
-
 ["test_clientDirectoryOpeningStarted.js"]
 
 ["test_createLocalStorage.js"]
@@ -188,24 +186,6 @@ skip-if = [
 ]
 
 ["test_tempMetadataCleanup.js"]
-
-["test_temporaryStorageCleanup.js"]
-# This test requires precise control over the storage repository contents,
-# including exact origin metadata (usage, persistence, and access time).
-# Conditioned profiles contain pre-existing data that would invalidate these
-# assumptions, so the test must run only on a clean profile.
-run-if = ["!condprof"]
-# The test cannot function correctly with incremental origin initialization
-# enabled because incremental origin initialization automatically triggers
-# lazy initialization of all temporary origins after temporary storage
-# initialization is complete. The cleanup is simply not triggered in that case
-# at present.
-#
-# The test can be updated once incremental origin initialization is fully
-# implemented and its behavior is finalized.
-skip-if = [
-  "inc_origin_init",
-]
 
 ["test_temporaryStorageEviction.js"]
 # This test requires precise control over storage size, which isn't compatible

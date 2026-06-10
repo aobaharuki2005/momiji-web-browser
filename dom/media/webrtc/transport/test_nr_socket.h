@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -78,8 +80,18 @@ nrappkit copyright:
 
 // Original author: bcampen@mozilla.com [:bwc]
 
-#ifndef test_nr_socket_
-#define test_nr_socket_
+#ifndef test_nr_socket__
+#define test_nr_socket__
+
+extern "C" {
+#include "transport_addr.h"
+}
+
+#include "nr_socket_prsock.h"
+
+extern "C" {
+#include "nr_socket.h"
+}
 
 #include <list>
 #include <map>
@@ -88,10 +100,7 @@ nrappkit copyright:
 
 #include "mediapacket.h"
 #include "mozilla/UniquePtr.h"
-#include "nr_socket.h"
-#include "nr_socket_prsock.h"
 #include "prinrval.h"
-#include "transport_addr.h"
 
 namespace mozilla {
 
@@ -148,7 +157,7 @@ class TestNat {
         block_stun_(false),
         block_tcp_(false),
         block_tls_(false),
-        error_code_for_drop_(false),
+        error_code_for_drop_(0),
         delay_stun_resp_ms_(0),
         nat_delegate_(nullptr),
         network_delay_ms_(0) {}
@@ -267,7 +276,7 @@ class TestNrSocket : public NrSocketBase {
     int send_from_queue();
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PortMapping);
 
-    PRIntervalTime last_used_ = 0;
+    PRIntervalTime last_used_;
     RefPtr<NrSocketBase> external_socket_;
     // For non-symmetric, most of the data here doesn't matter
     nr_transport_addr remote_address_;
@@ -357,4 +366,4 @@ class TestNrSocket : public NrSocketBase {
 
 }  // namespace mozilla
 
-#endif  // test_nr_socket_
+#endif  // test_nr_socket__

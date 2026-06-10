@@ -1,13 +1,12 @@
 import pytest
 
 import webdriver.bidi.error as error
-from tests.bidi import get_invalid_cases
 from webdriver.bidi.undefined import UNDEFINED
 
 pytestmark = pytest.mark.asyncio
 
 
-@pytest.mark.parametrize("value", get_invalid_cases("string"))
+@pytest.mark.parametrize("value", [False, 42, "foo", {}])
 async def test_params_contexts_invalid_type(bidi_session, value):
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.emulation.set_screen_orientation_override(
@@ -28,7 +27,7 @@ async def test_params_contexts_empty_list(bidi_session):
             })
 
 
-@pytest.mark.parametrize("value", get_invalid_cases("string"))
+@pytest.mark.parametrize("value", [None, False, 42, [], {}])
 async def test_params_contexts_context_invalid_type(bidi_session, value):
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.emulation.set_screen_orientation_override(
@@ -144,7 +143,7 @@ async def test_params_contexts_and_user_contexts(bidi_session,
             user_contexts=[user_context])
 
 
-@pytest.mark.parametrize("value", get_invalid_cases("list"))
+@pytest.mark.parametrize("value", [None, False, "foo", 42, {}])
 async def test_params_user_contexts_invalid_type(bidi_session, value):
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.emulation.set_screen_orientation_override(
@@ -165,7 +164,7 @@ async def test_params_user_contexts_empty_list(bidi_session):
             user_contexts=[])
 
 
-@pytest.mark.parametrize("value", get_invalid_cases("string"))
+@pytest.mark.parametrize("value", [None, False, 42, {}, []])
 async def test_params_user_contexts_entry_invalid_type(bidi_session, value):
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.emulation.set_screen_orientation_override(

@@ -6,10 +6,7 @@
 const TEST_URL = "https://example.com/autocomplete";
 
 add_setup(async function () {
-  await PlacesTestUtils.addVisits({
-    url: TEST_URL,
-    transition: PlacesUtils.history.TRANSITION_TYPED,
-  });
+  await PlacesTestUtils.addVisits(TEST_URL);
   registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });

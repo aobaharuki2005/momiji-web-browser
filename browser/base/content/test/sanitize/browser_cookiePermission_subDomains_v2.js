@@ -12,6 +12,7 @@ add_setup(async function () {
       ["privacy.clearOnShutdown.downloads", false],
       ["privacy.clearOnShutdown.siteSettings", false],
       ["browser.sanitizer.loglevel", "All"],
+      ["privacy.sanitize.useOldClearHistoryDialog", false],
     ],
   });
 });

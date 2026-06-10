@@ -1,3 +1,7 @@
+ChromeUtils.defineESModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
+
 var makeGuid = PlacesUtils.history.makeGuid;
 
 function shuffle(array) {
@@ -2152,10 +2156,11 @@ add_task(async function test_remove_partial() {
 });
 
 add_task(async function test_migrateOldTrackerEntries() {
-  Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
+  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  Preferences.set("privacy.reduceTimerPrecision", false);
 
   registerCleanupFunction(function () {
-    Services.prefs.clearUserPref("privacy.reduceTimerPrecision");
+    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 
   let unknownBmk = await PlacesUtils.bookmarks.insert({

@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // Test UnwrapDateTimeFormat operation.
 
 const dateTimeFormatFunctions = [];

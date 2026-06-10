@@ -2,13 +2,14 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-const Logger_box_destroy_registry = new FinalizationRegistry((ptr) => {
-    wasm.icu4x_Logger_destroy_mv1(ptr);
-});
 
 /**
  * An object allowing control over the logging used
  */
+const Logger_box_destroy_registry = new FinalizationRegistry((ptr) => {
+    wasm.icu4x_Logger_destroy_mv1(ptr);
+});
+
 export class Logger {
     // Internal ptr reference:
     #ptr = null;
@@ -32,7 +33,6 @@ export class Logger {
 
         return this;
     }
-    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

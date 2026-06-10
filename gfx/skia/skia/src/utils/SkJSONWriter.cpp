@@ -1,9 +1,14 @@
 /*
- * Copyright 2017 Google LLC
+ * Copyright 2017 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+
+// Make sure that the PRI format string macros are defined
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
 
 #include "src/utils/SkJSONWriter.h"
 

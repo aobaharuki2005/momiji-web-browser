@@ -11,7 +11,6 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.utils.NamedThreadFactory
 import org.mozilla.experiments.nimbus.AbstractNimbusBuilder
 import org.mozilla.experiments.nimbus.NimbusDelegate
-import org.mozilla.experiments.nimbus.internal.NimbusServerSettings
 import java.util.concurrent.Executors
 
 private val logger = Logger("service/Nimbus")
@@ -42,7 +41,6 @@ class NimbusBuilder(context: Context) : AbstractNimbusBuilder<NimbusApi>(context
         deviceInfo = createDeviceInfo(),
         delegate = createDelegate(),
         recordedContext = recordedContext,
-        geckoPrefHandler = geckoPrefHandler,
     ).apply {
         this.register(createObserver())
     }

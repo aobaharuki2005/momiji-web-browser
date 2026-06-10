@@ -56,7 +56,7 @@ describe("CFRPageActions", () => {
         scheme: "https",
         host: fakeHost,
       },
-      documentGlobal: window,
+      ownerGlobal: window,
     };
     dispatchStub = sandbox.stub();
 
@@ -473,10 +473,7 @@ describe("CFRPageActions", () => {
       let setAttributesStub;
       let getStringsStub;
       beforeEach(async () => {
-        CFRPageActions.PageActionMap.set(
-          fakeBrowser.documentGlobal,
-          pageAction
-        );
+        CFRPageActions.PageActionMap.set(fakeBrowser.ownerGlobal, pageAction);
         await CFRPageActions.addRecommendation(
           fakeBrowser,
           fakeHost,
@@ -761,10 +758,7 @@ describe("CFRPageActions", () => {
         heartbeatRecommendation = (await CFRMessageProvider.getMessages()).find(
           m => m.template === "cfr_urlbar_chiclet"
         );
-        CFRPageActions.PageActionMap.set(
-          fakeBrowser.documentGlobal,
-          pageAction
-        );
+        CFRPageActions.PageActionMap.set(fakeBrowser.ownerGlobal, pageAction);
         await CFRPageActions.addRecommendation(
           fakeBrowser,
           fakeHost,
@@ -826,10 +820,7 @@ describe("CFRPageActions", () => {
           sumAllEvents: sandbox.stub(),
         };
         globals.set({ TrackingDBService: fakeTrackingDBService });
-        CFRPageActions.PageActionMap.set(
-          fakeBrowser.documentGlobal,
-          pageAction
-        );
+        CFRPageActions.PageActionMap.set(fakeBrowser.ownerGlobal, pageAction);
         sandbox
           .stub(pageAction, "getStrings")
           .callsFake(async a => a) // eslint-disable-line max-nested-callbacks
@@ -901,7 +892,7 @@ describe("CFRPageActions", () => {
       let savedRec;
 
       beforeEach(() => {
-        const win = fakeBrowser.documentGlobal;
+        const win = fakeBrowser.ownerGlobal;
         CFRPageActions.PageActionMap.set(
           win,
           new PageAction(win, dispatchStub)
@@ -916,7 +907,7 @@ describe("CFRPageActions", () => {
       });
 
       it("should do nothing if a pageAction doesn't exist for the window", () => {
-        const win = fakeBrowser.documentGlobal;
+        const win = fakeBrowser.ownerGlobal;
         CFRPageActions.PageActionMap.delete(win);
         CFRPageActions.updatePageActions(fakeBrowser);
         assert.notCalled(PageAction.prototype.showAddressBarNotifier);
@@ -996,7 +987,7 @@ describe("CFRPageActions", () => {
         });
       });
       it("should create a PageAction if one doesn't exist for the window, save it in the PageActionMap, and call `show`", async () => {
-        const win = fakeBrowser.documentGlobal;
+        const win = fakeBrowser.ownerGlobal;
         assert.isFalse(CFRPageActions.PageActionMap.has(win));
         await CFRPageActions.forceRecommendation(
           fakeBrowser,
@@ -1180,7 +1171,7 @@ describe("CFRPageActions", () => {
         assert.isTrue(CFRPageActions.RecommendationMap.has(fakeBrowser));
 
         const pageAction = CFRPageActions.PageActionMap.get(
-          fakeBrowser.documentGlobal
+          fakeBrowser.ownerGlobal
         );
         await pageAction.showAddressBarNotifier(fakeRecommendation, true);
         assert.calledWith(dispatchStub, {
@@ -1244,7 +1235,7 @@ describe("CFRPageActions", () => {
         });
       });
       it("should create a PageAction if one doesn't exist for the window, save it in the PageActionMap, and call `show`", async () => {
-        const win = fakeBrowser.documentGlobal;
+        const win = fakeBrowser.ownerGlobal;
         assert.isFalse(CFRPageActions.PageActionMap.has(win));
         await CFRPageActions.addRecommendation(
           fakeBrowser,

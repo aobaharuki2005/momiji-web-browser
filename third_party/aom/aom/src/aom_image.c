@@ -11,7 +11,6 @@
 
 #include <assert.h>
 #include <limits.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -31,21 +30,6 @@ static inline unsigned int align_image_dimension(unsigned int d,
   return ((d + align) & ~align);
 }
 
-static bool is_valid_img_fmt(aom_img_fmt_t fmt) {
-  switch (fmt) {
-    case AOM_IMG_FMT_YV12:
-    case AOM_IMG_FMT_I420:
-    case AOM_IMG_FMT_I422:
-    case AOM_IMG_FMT_I444:
-    case AOM_IMG_FMT_NV12:
-    case AOM_IMG_FMT_I42016:
-    case AOM_IMG_FMT_YV1216:
-    case AOM_IMG_FMT_I42216:
-    case AOM_IMG_FMT_I44416: return true;
-    default: return false;
-  }
-}
-
 static aom_image_t *img_alloc_helper(
     aom_image_t *img, aom_img_fmt_t fmt, unsigned int d_w, unsigned int d_h,
     unsigned int buf_align, unsigned int stride_align, unsigned int size_align,
@@ -58,7 +42,7 @@ static aom_image_t *img_alloc_helper(
 
   if (img != NULL) memset(img, 0, sizeof(aom_image_t));
 
-  if (!is_valid_img_fmt(fmt)) goto fail;
+  if (fmt == AOM_IMG_FMT_NONE) goto fail;
 
   /* Impose maximum values on input parameters so that this function can
    * perform arithmetic operations without worrying about overflows.
@@ -90,7 +74,9 @@ static aom_image_t *img_alloc_helper(
   switch (fmt) {
     case AOM_IMG_FMT_I420:
     case AOM_IMG_FMT_YV12:
-    case AOM_IMG_FMT_NV12: bps = 12; break;
+    case AOM_IMG_FMT_NV12:
+    case AOM_IMG_FMT_AOMI420:
+    case AOM_IMG_FMT_AOMYV12: bps = 12; break;
     case AOM_IMG_FMT_I422: bps = 16; break;
     case AOM_IMG_FMT_I444: bps = 24; break;
     case AOM_IMG_FMT_YV1216:
@@ -107,6 +93,8 @@ static aom_image_t *img_alloc_helper(
     case AOM_IMG_FMT_I420:
     case AOM_IMG_FMT_YV12:
     case AOM_IMG_FMT_NV12:
+    case AOM_IMG_FMT_AOMI420:
+    case AOM_IMG_FMT_AOMYV12:
     case AOM_IMG_FMT_I422:
     case AOM_IMG_FMT_I42016:
     case AOM_IMG_FMT_YV1216:
@@ -118,6 +106,8 @@ static aom_image_t *img_alloc_helper(
     case AOM_IMG_FMT_I420:
     case AOM_IMG_FMT_YV12:
     case AOM_IMG_FMT_NV12:
+    case AOM_IMG_FMT_AOMI420:
+    case AOM_IMG_FMT_AOMYV12:
     case AOM_IMG_FMT_YV1216:
     case AOM_IMG_FMT_I42016: ycs = 1; break;
     default: ycs = 0; break;

@@ -91,7 +91,7 @@ impl_tinystr_subtag!(
     ["f", "toolooong"],
 );
 
-#[expect(clippy::len_without_is_empty)]
+#[allow(clippy::len_without_is_empty)]
 impl Subtag {
     #[allow(dead_code)]
     pub(crate) const fn valid_key(v: &[u8]) -> bool {

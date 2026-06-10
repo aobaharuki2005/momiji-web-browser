@@ -19,22 +19,16 @@
 #include "rtc_base/system/file_wrapper.h"
 #include "test/testsupport/file_utils.h"
 
-namespace webrtc {
-namespace test {
-
 namespace {
 const std::string& DefaultArtifactPath() {
-  static const std::string path = OutputPathWithRandomDirectory();
+  static const std::string path = webrtc::test::OutputPathWithRandomDirectory();
   return path;
 }
 }  // namespace
 
-}  // namespace test
-}  // namespace webrtc
-
 ABSL_FLAG(std::string,
           test_artifacts_dir,
-          webrtc::test::DefaultArtifactPath().c_str(),
+          DefaultArtifactPath().c_str(),
           "The output folder where test output should be saved.");
 
 namespace webrtc {

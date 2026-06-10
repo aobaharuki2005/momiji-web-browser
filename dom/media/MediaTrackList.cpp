@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 et tw=78: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -50,7 +52,7 @@ MediaTrack* MediaTrackList::GetTrackById(const nsAString& aId) {
 }
 
 void MediaTrackList::AddTrack(MediaTrack* aTrack) {
-  MOZ_ASSERT(aTrack->GetRelevantGlobal() == GetRelevantGlobal(),
+  MOZ_ASSERT(aTrack->GetOwnerGlobal() == GetOwnerGlobal(),
              "Where is this track from?");
   mTracks.AppendElement(aTrack);
   aTrack->SetTrackList(this);
@@ -89,20 +91,20 @@ void MediaTrackList::RemoveTracks() {
 }
 
 already_AddRefed<AudioTrack> MediaTrackList::CreateAudioTrack(
-    nsIGlobalObject* aRelevantGlobal, const nsAString& aId,
-    const nsAString& aKind, const nsAString& aLabel, const nsAString& aLanguage,
-    bool aEnabled, AudioStreamTrack* aAudioTrack) {
-  RefPtr<AudioTrack> track = new AudioTrack(aRelevantGlobal, aId, aKind, aLabel,
+    nsIGlobalObject* aOwnerGlobal, const nsAString& aId, const nsAString& aKind,
+    const nsAString& aLabel, const nsAString& aLanguage, bool aEnabled,
+    AudioStreamTrack* aAudioTrack) {
+  RefPtr<AudioTrack> track = new AudioTrack(aOwnerGlobal, aId, aKind, aLabel,
                                             aLanguage, aEnabled, aAudioTrack);
   return track.forget();
 }
 
 already_AddRefed<VideoTrack> MediaTrackList::CreateVideoTrack(
-    nsIGlobalObject* aRelevantGlobal, const nsAString& aId,
-    const nsAString& aKind, const nsAString& aLabel, const nsAString& aLanguage,
+    nsIGlobalObject* aOwnerGlobal, const nsAString& aId, const nsAString& aKind,
+    const nsAString& aLabel, const nsAString& aLanguage,
     VideoStreamTrack* aVideoTrack) {
-  RefPtr<VideoTrack> track = new VideoTrack(aRelevantGlobal, aId, aKind, aLabel,
-                                            aLanguage, aVideoTrack);
+  RefPtr<VideoTrack> track =
+      new VideoTrack(aOwnerGlobal, aId, aKind, aLabel, aLanguage, aVideoTrack);
   return track.forget();
 }
 

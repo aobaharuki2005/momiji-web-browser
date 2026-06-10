@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,7 +19,7 @@ class GMPContentChild;
 
 class GMPVideoDecoderChild final : public PGMPVideoDecoderChild,
                                    public GMPVideoDecoderCallback,
-                                   public GMPVideoHostImpl {
+                                   public GMPSharedMemManager {
   friend class PGMPVideoDecoderChild;
 
  public:
@@ -29,6 +30,7 @@ class GMPVideoDecoderChild final : public PGMPVideoDecoderChild,
   explicit GMPVideoDecoderChild(GMPContentChild* aPlugin);
 
   void Init(GMPVideoDecoder* aDecoder);
+  GMPVideoHostImpl& Host();
 
   // GMPVideoDecoderCallback
   void Decoded(GMPVideoi420Frame* decodedFrame) override;
@@ -40,13 +42,8 @@ class GMPVideoDecoderChild final : public PGMPVideoDecoderChild,
   void Error(GMPErr aError) override;
 
   // GMPSharedMemManager
-  bool MgrCanSend() const override { return CanSend(); }
   bool MgrIsOnOwningThread() const override;
-  void MgrDeallocShmem(Shmem& aMem) override {
-    if (CanSend()) {
-      DeallocShmem(aMem);
-    }
-  }
+  void MgrDeallocShmem(Shmem& aMem) override { DeallocShmem(aMem); }
 
  private:
   virtual ~GMPVideoDecoderChild();
@@ -66,8 +63,9 @@ class GMPVideoDecoderChild final : public PGMPVideoDecoderChild,
 
   GMPContentChild* mPlugin;
   GMPVideoDecoder* mVideoDecoder;
-  RefPtr<GMPVideoDecoderChild> mDrainSelfRef;
-  RefPtr<GMPVideoDecoderChild> mResetSelfRef;
+  GMPVideoHostImpl mVideoHost;
+  bool mOutstandingDrain = false;
+  bool mOutstandingReset = false;
 };
 
 }  // namespace mozilla::gmp

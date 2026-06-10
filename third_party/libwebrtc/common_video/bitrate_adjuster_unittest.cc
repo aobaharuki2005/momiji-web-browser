@@ -14,8 +14,7 @@
 #include <cstdint>
 
 #include "api/units/time_delta.h"
-#include "api/units/timestamp.h"
-#include "system_wrappers/include/clock.h"
+#include "rtc_base/fake_clock.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -23,8 +22,7 @@ namespace webrtc {
 class BitrateAdjusterTest : public ::testing::Test {
  public:
   BitrateAdjusterTest()
-      : clock_(Timestamp::Seconds(123)),
-        adjuster_(&clock_, kMinAdjustedBitratePct, kMaxAdjustedBitratePct) {}
+      : adjuster_(kMinAdjustedBitratePct, kMaxAdjustedBitratePct) {}
 
   // Simulate an output bitrate for one update cycle of BitrateAdjuster.
   void SimulateBitrateBps(uint32_t bitrate_bps) {
@@ -69,7 +67,7 @@ class BitrateAdjusterTest : public ::testing::Test {
  protected:
   static const float kMinAdjustedBitratePct;
   static const float kMaxAdjustedBitratePct;
-  SimulatedClock clock_;
+  ScopedFakeClock clock_;
   BitrateAdjuster adjuster_;
 };
 

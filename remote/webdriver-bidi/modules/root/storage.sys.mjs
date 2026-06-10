@@ -20,14 +20,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const PREF_COOKIE_CHIPS_ENABLED = "network.cookie.CHIPS.enabled";
 const PREF_COOKIE_BEHAVIOR = "network.cookie.cookieBehavior";
-const PREF_COOKIE_VALUELESS = "network.cookie.valueless_cookie";
 
-// These are static preferences, so they cannot be modified during runtime and we can cache their values.
+// This is a static preference, so it cannot be modified during runtime and we can cache its value.
 ChromeUtils.defineLazyGetter(lazy, "cookieCHIPSEnabled", () =>
   Services.prefs.getBoolPref(PREF_COOKIE_CHIPS_ENABLED)
-);
-ChromeUtils.defineLazyGetter(lazy, "cookieValuelessEnabled", () =>
-  Services.prefs.getBoolPref(PREF_COOKIE_VALUELESS)
 );
 
 const CookieFieldsMapping = {
@@ -283,12 +279,6 @@ class StorageModule extends RootBiDiModule {
       value,
     });
     this.#assertPartition(partitionSpec);
-
-    if (!name.length && lazy.cookieValuelessEnabled) {
-      throw new lazy.error.UnableToSetCookieError(
-        "Cookie name cannot be empty"
-      );
-    }
 
     const partitionKey = this.#expandStoragePartitionSpec(partitionSpec);
 
@@ -952,7 +942,8 @@ class StorageModule extends RootBiDiModule {
 
     if (
       cookieBehavior === Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN ||
-      cookieBehavior === Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN
+      cookieBehavior ===
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
     ) {
       return false;
     }
@@ -964,7 +955,8 @@ class StorageModule extends RootBiDiModule {
     const cookieBehavior = Services.prefs.getIntPref(PREF_COOKIE_BEHAVIOR);
 
     return (
-      cookieBehavior === Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN &&
+      cookieBehavior ===
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
       lazy.cookieCHIPSEnabled
     );
   }

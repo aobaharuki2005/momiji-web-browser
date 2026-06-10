@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -15,7 +17,7 @@
 #include "base/string_util.h"
 #include "base/sys_string_conversions.h"
 
-CommandLine* CommandLine::current_process_commandline_ = nullptr;
+CommandLine* CommandLine::current_process_commandline_ = NULL;
 
 // Since we use a lazy match, make sure that longer versions (like L"--")
 // are listed before shorter versions (like L"-") of similar prefixes.
@@ -46,7 +48,7 @@ void CommandLine::ParseFromString(const std::wstring& command_line) {
   if (command_line_string_.empty()) return;
 
   int num_args = 0;
-  wchar_t** args = nullptr;
+  wchar_t** args = NULL;
   // When calling CommandLineToArgvW, use the API set if available.
   // Doing so will bypass loading shell32.dll on Win8+.
   mozilla::DynamicallyLinkedFunctionPtr<decltype(&::CommandLineToArgvW)>
@@ -140,8 +142,8 @@ bool CommandLine::IsSwitch(const StringType& parameter_string,
   switch_string->clear();
   switch_value->clear();
 
-  for (auto switchPrefix : kSwitchPrefixes) {
-    StringType prefix(switchPrefix);
+  for (size_t i = 0; i < arraysize(kSwitchPrefixes); ++i) {
+    StringType prefix(kSwitchPrefixes[i]);
     if (parameter_string.find(prefix) != 0) continue;
 
     const size_t switch_start = prefix.length();
@@ -170,7 +172,7 @@ bool CommandLine::IsSwitch(const StringType& parameter_string,
 
 // static
 void CommandLine::Init(int argc, const char* const* argv) {
-  DCHECK(current_process_commandline_ == nullptr);
+  DCHECK(current_process_commandline_ == NULL);
 #if defined(XP_WIN)
   current_process_commandline_ = new CommandLine;
   current_process_commandline_->ParseFromString(::GetCommandLineW());
@@ -180,9 +182,9 @@ void CommandLine::Init(int argc, const char* const* argv) {
 }
 
 void CommandLine::Terminate() {
-  DCHECK(current_process_commandline_ != nullptr);
+  DCHECK(current_process_commandline_ != NULL);
   delete current_process_commandline_;
-  current_process_commandline_ = nullptr;
+  current_process_commandline_ = NULL;
 }
 
 bool CommandLine::HasSwitch(const std::wstring& switch_string) const {
@@ -222,7 +224,6 @@ std::wstring CommandLine::program() const { return program_; }
 #else
 std::vector<std::wstring> CommandLine::GetLooseValues() const {
   std::vector<std::wstring> values;
-  values.reserve(loose_values_.size());
   for (size_t i = 0; i < loose_values_.size(); ++i)
     values.push_back(ASCIIToWide(loose_values_[i]));
   return values;

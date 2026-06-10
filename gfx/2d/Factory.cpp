@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -72,6 +74,83 @@ GFX2D_API mozilla::LogModule* GetGFX2DLog() {
   static mozilla::LazyLogModule sLog("gfx2d");
   return sLog;
 }
+#endif
+
+// The following code was largely taken from xpcom/glue/SSE.cpp and
+// made a little simpler.
+enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
+
+#ifdef HAVE_CPUID_H
+
+#  if !(defined(__SSE2__) || defined(_M_X64) ||      \
+        (defined(_M_IX86_FP) && _M_IX86_FP >= 2)) || \
+      !defined(__SSE4__)
+// cpuid.h is available on gcc 4.3 and higher on i386 and x86_64
+#    include <cpuid.h>
+
+static inline bool HasCPUIDBit(unsigned int level, CPUIDRegister reg,
+                               unsigned int bit) {
+  unsigned int regs[4];
+  return __get_cpuid(level, &regs[0], &regs[1], &regs[2], &regs[3]) &&
+         (regs[reg] & bit);
+}
+#  endif
+
+#  define HAVE_CPU_DETECTION
+#else
+
+#  if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
+// MSVC 2005 or later supports __cpuid by intrin.h
+#    include <intrin.h>
+
+#    define HAVE_CPU_DETECTION
+#  elif defined(__SUNPRO_CC) && (defined(__i386) || defined(__x86_64__))
+
+// Define a function identical to MSVC function.
+#    ifdef __i386
+static void __cpuid(int CPUInfo[4], int InfoType) {
+  asm("xchg %esi, %ebx\n"
+      "cpuid\n"
+      "movl %eax, (%edi)\n"
+      "movl %ebx, 4(%edi)\n"
+      "movl %ecx, 8(%edi)\n"
+      "movl %edx, 12(%edi)\n"
+      "xchg %esi, %ebx\n"
+      :
+      : "a"(InfoType),  // %eax
+        "D"(CPUInfo)    // %edi
+      : "%ecx", "%edx", "%esi");
+}
+#    else
+static void __cpuid(int CPUInfo[4], int InfoType) {
+  asm("xchg %rsi, %rbx\n"
+      "cpuid\n"
+      "movl %eax, (%rdi)\n"
+      "movl %ebx, 4(%rdi)\n"
+      "movl %ecx, 8(%rdi)\n"
+      "movl %edx, 12(%rdi)\n"
+      "xchg %rsi, %rbx\n"
+      :
+      : "a"(InfoType),  // %eax
+        "D"(CPUInfo)    // %rdi
+      : "%ecx", "%edx", "%rsi");
+}
+
+#      define HAVE_CPU_DETECTION
+#    endif
+#  endif
+
+#  ifdef HAVE_CPU_DETECTION
+static inline bool HasCPUIDBit(unsigned int level, CPUIDRegister reg,
+                               unsigned int bit) {
+  // Check that the level in question is supported.
+  volatile int regs[4];
+  __cpuid((int*)regs, level & 0x80000000u);
+  if (unsigned(regs[0]) < level) return false;
+  __cpuid((int*)regs, level);
+  return !!(unsigned(regs[reg]) & bit);
+}
+#  endif
 #endif
 
 #ifdef MOZ_ENABLE_FREETYPE
@@ -182,6 +261,49 @@ void Factory::ShutDown() {
 #endif
 }
 
+bool Factory::HasSSE2() {
+#if defined(__SSE2__) || defined(_M_X64) || \
+    (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+  // gcc with -msse2 (default on OSX and x86-64)
+  // cl.exe with -arch:SSE2 (default on x64 compiler)
+  return true;
+#elif defined(HAVE_CPU_DETECTION)
+  static enum {
+    UNINITIALIZED,
+    NO_SSE2,
+    HAS_SSE2
+  } sDetectionState = UNINITIALIZED;
+
+  if (sDetectionState == UNINITIALIZED) {
+    sDetectionState = HasCPUIDBit(1u, edx, (1u << 26)) ? HAS_SSE2 : NO_SSE2;
+  }
+  return sDetectionState == HAS_SSE2;
+#else
+  return false;
+#endif
+}
+
+bool Factory::HasSSE4() {
+#if defined(__SSE4__)
+  // gcc with -msse2 (default on OSX and x86-64)
+  // cl.exe with -arch:SSE2 (default on x64 compiler)
+  return true;
+#elif defined(HAVE_CPU_DETECTION)
+  static enum {
+    UNINITIALIZED,
+    NO_SSE4,
+    HAS_SSE4
+  } sDetectionState = UNINITIALIZED;
+
+  if (sDetectionState == UNINITIALIZED) {
+    sDetectionState = HasCPUIDBit(1u, ecx, (1u << 19)) ? HAS_SSE4 : NO_SSE4;
+  }
+  return sDetectionState == HAS_SSE4;
+#else
+  return false;
+#endif
+}
+
 // If the size is "reasonable", we want gfxCriticalError to assert, so
 // this is the option set up for it.
 inline int LoggerOptionsBasedOnSize(const IntSize& aSize) {
@@ -215,14 +337,13 @@ bool Factory::CheckSurfaceSize(const IntSize& sz, int32_t extentLimit,
 
   // assuming 4 bytes per pixel, make sure the allocation size
   // doesn't overflow a int32_t either
-  auto stride = GetAlignedStride<16>(sz.width, 4);
-  if (stride.isNothing()) {
-    gfxDebug() << "Surface size too large (stride is invalid)!";
+  CheckedInt<int32_t> stride = GetAlignedStride<16>(sz.width, 4);
+  if (!stride.isValid() || stride.value() == 0) {
+    gfxDebug() << "Surface size too large (stride overflows int32_t)!";
     return false;
   }
 
-  CheckedInt<int32_t> numBytes =
-      CheckedInt<int32_t>(stride.value()) * sz.height;
+  CheckedInt<int32_t> numBytes = stride * sz.height;
   if (!numBytes.isValid()) {
     gfxDebug()
         << "Surface size too large (allocation size would overflow int32_t)!";
@@ -383,23 +504,12 @@ bool Factory::DoesBackendSupportDataDrawtarget(BackendType aType) {
   return false;
 }
 
-size_t Factory::GetMaxSurfaceSize(BackendType aType) {
+uint32_t Factory::GetMaxSurfaceSize(BackendType aType) {
   switch (aType) {
     case BackendType::CAIRO:
       return DrawTargetCairo::GetMaxSurfaceSize();
     case BackendType::SKIA:
       return DrawTargetSkia::GetMaxSurfaceSize();
-    default:
-      return 0;
-  }
-}
-
-size_t Factory::GetMaxSurfaceArea(BackendType aType) {
-  switch (aType) {
-    case BackendType::CAIRO:
-      return DrawTargetCairo::GetMaxSurfaceArea();
-    case BackendType::SKIA:
-      return DrawTargetSkia::GetMaxSurfaceArea();
     default:
       return 0;
   }
@@ -908,8 +1018,7 @@ void Factory::CopyDataSourceSurface(DataSourceSurface* aSource,
 already_AddRefed<DataSourceSurface>
 Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(
     ID3D11Texture2D* aSrcTexture, uint32_t aArrayIndex,
-    gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
-    gfx::TransferFunction aTransferFunction) {
+    gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange) {
   D3D11_TEXTURE2D_DESC srcDesc = {0};
   aSrcTexture->GetDesc(&srcDesc);
 
@@ -920,7 +1029,7 @@ Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(
     return nullptr;
   }
   if (!ReadbackTexture(destTexture, aSrcTexture, aArrayIndex, aColorSpace,
-                       aColorRange, aTransferFunction)) {
+                       aColorRange)) {
     return nullptr;
   }
   return destTexture.forget();
@@ -955,10 +1064,11 @@ Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(
 }
 
 /* static */
-bool Factory::ConvertSourceAndRetryReadback(
-    DataSourceSurface* aDestCpuTexture, ID3D11Texture2D* aSrcTexture,
-    uint32_t aArrayIndex, gfx::ColorSpace2 aColorSpace,
-    gfx::ColorRange aColorRange, gfx::TransferFunction aTransferFunction) {
+bool Factory::ConvertSourceAndRetryReadback(DataSourceSurface* aDestCpuTexture,
+                                            ID3D11Texture2D* aSrcTexture,
+                                            uint32_t aArrayIndex,
+                                            gfx::ColorSpace2 aColorSpace,
+                                            gfx::ColorRange aColorRange) {
   MOZ_ASSERT(aDestCpuTexture);
   MOZ_ASSERT(aSrcTexture);
 
@@ -1003,15 +1113,15 @@ bool Factory::ConvertSourceAndRetryReadback(
     return false;
   }
 
-  layers::VideoProcessorD3D11::InputTextureInfo info(
-      aColorSpace, aColorRange, aTransferFunction, aArrayIndex, aSrcTexture);
+  layers::VideoProcessorD3D11::InputTextureInfo info(aColorSpace, aColorRange,
+                                                     aArrayIndex, aSrcTexture);
   if (!videoProcessor->CallVideoProcessorBlt(info, newSrcTexture)) {
     gfxWarning() << "CallVideoProcessorBlt failed";
     return false;
   }
 
   return ReadbackTexture(aDestCpuTexture, newSrcTexture, 0, aColorSpace,
-                         aColorRange, aTransferFunction);
+                         aColorRange);
 }
 
 /* static */
@@ -1019,8 +1129,7 @@ bool Factory::ReadbackTexture(DataSourceSurface* aDestCpuTexture,
                               ID3D11Texture2D* aSrcTexture,
                               uint32_t aArrayIndex,
                               gfx::ColorSpace2 aColorSpace,
-                              gfx::ColorRange aColorRange,
-                              gfx::TransferFunction aTransferFunction) {
+                              gfx::ColorRange aColorRange) {
   D3D11_TEXTURE2D_DESC srcDesc = {0};
   aSrcTexture->GetDesc(&srcDesc);
 
@@ -1029,8 +1138,7 @@ bool Factory::ReadbackTexture(DataSourceSurface* aDestCpuTexture,
   if ((srcDesc.Format != DXGIFormat(aDestCpuTexture->GetFormat())) &&
       (aDestCpuTexture->GetFormat() == SurfaceFormat::B8G8R8A8)) {
     return ConvertSourceAndRetryReadback(aDestCpuTexture, aSrcTexture,
-                                         aArrayIndex, aColorSpace, aColorRange,
-                                         aTransferFunction);
+                                         aArrayIndex, aColorSpace, aColorRange);
   }
 
   if ((IntSize(srcDesc.Width, srcDesc.Height) != aDestCpuTexture->GetSize()) ||

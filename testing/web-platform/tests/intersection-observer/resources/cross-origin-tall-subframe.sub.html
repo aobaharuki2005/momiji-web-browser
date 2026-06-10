@@ -76,8 +76,4 @@
     });
     observer.observe(document.getElementById("target"));
   });
-
-  if (isLeaf) {
-    onload = () => window.top.postMessage("leafLoaded", "*");
-  }
 </script>

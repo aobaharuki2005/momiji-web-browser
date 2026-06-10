@@ -146,11 +146,11 @@ tasks:
                 - build
             with-attributes:
                 build_platform:
-                    - linux32
-                    - linux32-make
                     - linux64
                     - linux64-make
-                    - linux64-asan
+                build_type:
+                    - opt
+                    - opt-make
                 nspr: [false]
                 dbm: [false]
                 cc: [false]
@@ -172,11 +172,11 @@ tasks:
                 - build
             with-attributes:
                 build_platform:
-                    - linux32
-                    - linux32-make
                     - linux64
                     - linux64-make
-                    - linux64-asan
+                build_type:
+                    - opt
+                    - opt-make
                 nspr: [false]
                 dbm: [false]
                 cc: [false]
@@ -285,6 +285,20 @@ tasks:
             env:
                 TC_PARENT_TASK_ID: {task-reference: "<certs>"}
                 NSS_TESTS: policy
+
+    crmf:
+        description: CRMF tests
+        from-deps:
+            kinds: [certs]
+            with-attributes:
+                dbm: [false]
+                make-fips: [false]
+        treeherder:
+            symbol: CRMF
+        worker:
+            env:
+                TC_PARENT_TASK_ID: {task-reference: "<certs>"}
+                NSS_TESTS: crmf
 
     db:
         description: DB tests

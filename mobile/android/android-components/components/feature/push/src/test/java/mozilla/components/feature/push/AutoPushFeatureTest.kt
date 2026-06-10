@@ -9,7 +9,6 @@ import android.content.SharedPreferences
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.runTest
 import mozilla.appservices.push.BridgeType
 import mozilla.appservices.push.DecryptResponse
 import mozilla.appservices.push.KeyInfo
@@ -27,11 +26,15 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.nullable
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
@@ -39,10 +42,13 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class AutoPushFeatureTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     private val connection: PushManagerInterface = mock()
 
     @Test
@@ -60,7 +66,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `updateToken not called if no token in prefs`() = runTest {
+    fun `updateToken not called if no token in prefs`() = runTestOnMain {
         val feature = AutoPushFeature(testContext, mock(), mock(), coroutineContext)
         feature.connection = connection
 
@@ -68,7 +74,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `updateToken called if token is in prefs`() = runTest {
+    fun `updateToken called if token is in prefs`() = runTestOnMain {
         preference(testContext).edit().putString(PREF_TOKEN, "token").apply()
 
         val feature = AutoPushFeature(
@@ -81,33 +87,30 @@ class AutoPushFeatureTest {
         feature.connection = connection
 
         feature.initialize()
-        testScheduler.advanceUntilIdle()
 
         verify(connection).update("token")
     }
 
     @Test
-    fun `shutdown stops service and unsubscribes all`() = runTest {
+    fun `shutdown stops service and unsubscribes all`() = runTestOnMain {
         val service: PushService = mock()
 
         AutoPushFeature(testContext, service, mock(), coroutineContext).also {
             it.connection = connection
             it.shutdown()
         }
-        testScheduler.advanceUntilIdle()
 
         verify(connection).unsubscribeAll()
     }
 
     @Test
-    fun `onNewToken updates connection and saves pref`() = runTest {
+    fun `onNewToken updates connection and saves pref`() = runTestOnMain {
         val feature = AutoPushFeature(testContext, mock(), mock(), coroutineContext)
         feature.connection = connection
 
         whenever(connection.subscribe(anyString(), nullable())).thenReturn(mock())
 
         feature.onNewToken("token")
-        testScheduler.advanceUntilIdle()
 
         verify(connection).update("token")
 
@@ -117,7 +120,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `onMessageReceived decrypts message and notifies observers`() = runTest {
+    fun `onMessageReceived decrypts message and notifies observers`() = runTestOnMain {
         val encryptedMessage: Map<String, String> = mock()
         val owner: LifecycleOwner = mock()
         val lifecycle: Lifecycle = mock()
@@ -131,21 +134,18 @@ class AutoPushFeatureTest {
         val feature = AutoPushFeature(testContext, mock(), mock(), coroutineContext)
         feature.connection = connection
         feature.register(observer)
-        testScheduler.advanceUntilIdle()
 
         feature.onMessageReceived(encryptedMessage)
-        testScheduler.advanceUntilIdle()
 
         verify(observer, never()).onMessageReceived("testScope", "test".toByteArray())
 
         feature.onMessageReceived(encryptedMessage)
-        testScheduler.advanceUntilIdle()
 
         verify(observer).onMessageReceived("testScope", "test".toByteArray())
     }
 
     @Test
-    fun `subscribe calls native layer and notifies observers`() = runTest {
+    fun `subscribe calls native layer and notifies observers`() = runTestOnMain {
         val connection: PushManagerInterface = mock()
 
         var invoked = false
@@ -164,13 +164,12 @@ class AutoPushFeatureTest {
         feature.subscribe("testScope") {
             invoked = true
         }
-        testScheduler.advanceUntilIdle()
 
         assertTrue(invoked)
     }
 
     @Test
-    fun `subscribe invokes error callback`() = runTest {
+    fun `subscribe invokes error callback`() = runTestOnMain {
         val subscription: AutoPushSubscription = mock()
         var invoked = false
         var errorInvoked = false
@@ -186,7 +185,6 @@ class AutoPushFeatureTest {
                 invoked = true
             },
         )
-        testScheduler.advanceUntilIdle()
 
         assertFalse(invoked)
         assertFalse(errorInvoked)
@@ -203,14 +201,13 @@ class AutoPushFeatureTest {
                 invoked = true
             },
         )
-        testScheduler.advanceUntilIdle()
 
         assertFalse(invoked)
         assertTrue(errorInvoked)
     }
 
     @Test
-    fun `unsubscribe calls native layer and notifies observers`() = runTest {
+    fun `unsubscribe calls native layer and notifies observers`() = runTestOnMain {
         var invoked = false
         var errorInvoked = false
 
@@ -225,14 +222,13 @@ class AutoPushFeatureTest {
                 invoked = true
             },
         )
-        testScheduler.advanceUntilIdle()
 
         assertTrue(invoked)
         assertFalse(errorInvoked)
     }
 
     @Test
-    fun `unsubscribe invokes error callback on native exception`() = runTest {
+    fun `unsubscribe invokes error callback on native exception`() = runTestOnMain {
         val feature = AutoPushFeature(testContext, mock(), mock(), coroutineContext)
         feature.connection = connection
         var invoked = false
@@ -249,14 +245,13 @@ class AutoPushFeatureTest {
                 invoked = true
             },
         )
-        testScheduler.advanceUntilIdle()
 
         assertFalse(invoked)
         assertTrue(errorInvoked)
     }
 
     @Test
-    fun `getSubscription returns null when there is no subscription`() = runTest {
+    fun `getSubscription returns null when there is no subscription`() = runTestOnMain {
         val feature = AutoPushFeature(testContext, mock(), mock(), coroutineContext)
         feature.connection = connection
         var invoked = false
@@ -269,13 +264,12 @@ class AutoPushFeatureTest {
         ) {
             invoked = it == null
         }
-        testScheduler.advanceUntilIdle()
 
         assertTrue(invoked)
     }
 
     @Test
-    fun `getSubscription invokes subscribe when there is a subscription`() = runTest {
+    fun `getSubscription invokes subscribe when there is a subscription`() = runTestOnMain {
         val feature = AutoPushFeature(testContext, mock(), mock(), coroutineContext)
         feature.connection = connection
         var invoked = false
@@ -299,13 +293,12 @@ class AutoPushFeatureTest {
         ) {
             invoked = it != null
         }
-        testScheduler.advanceUntilIdle()
 
         assertTrue(invoked)
     }
 
     @Test
-    fun `forceRegistrationRenewal deletes pref and calls service`() = runTest {
+    fun `forceRegistrationRenewal deletes pref and calls service`() = runTestOnMain {
         val service: PushService = mock()
         val feature = AutoPushFeature(testContext, service, mock(), coroutineContext)
         feature.connection = connection
@@ -320,7 +313,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `verifyActiveSubscriptions notifies observers`() = runTest {
+    fun `verifyActiveSubscriptions notifies observers`() = runTestOnMain {
         val connection: PushManagerInterface = mock()
         val owner: LifecycleOwner = mock()
         val lifecycle: Lifecycle = mock()
@@ -332,31 +325,27 @@ class AutoPushFeatureTest {
         whenever(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
 
         feature.register(observers)
-        testScheduler.advanceUntilIdle()
 
         // When there are NO subscription updates, observers should not be notified.
         feature.verifyActiveSubscriptions()
-        testScheduler.advanceUntilIdle()
 
         verify(observers, never()).onSubscriptionChanged(any())
 
         // When there are no subscription updates, observers should not be notified.
         whenever(connection.verifyConnection()).thenReturn(emptyList())
         feature.verifyActiveSubscriptions()
-        testScheduler.advanceUntilIdle()
 
         verify(observers, never()).onSubscriptionChanged(any())
 
         // When there are subscription updates, observers should be notified.
         whenever(connection.verifyConnection()).thenReturn(listOf(PushSubscriptionChanged(scope = "scope", channelId = "1246")))
         feature.verifyActiveSubscriptions()
-        testScheduler.advanceUntilIdle()
 
         verify(observers).onSubscriptionChanged("scope")
     }
 
     @Test
-    fun `new FCM token executes verifyActiveSubscription`() = runTest {
+    fun `new FCM token executes verifyActiveSubscription`() = runTestOnMain {
         val feature = spy(
             AutoPushFeature(
                 context = testContext,
@@ -368,19 +357,16 @@ class AutoPushFeatureTest {
         feature.connection = connection
 
         feature.initialize()
-        testScheduler.advanceUntilIdle()
         // no token yet so should not have even tried.
         verify(feature, never()).verifyActiveSubscriptions()
 
         // new token == "check now"
         feature.onNewToken("test-token")
-        testScheduler.advanceUntilIdle()
-
         verify(feature).verifyActiveSubscriptions()
     }
 
     @Test
-    fun `verification doesn't happen until we've got the token`() = runTest {
+    fun `verification doesn't happen until we've got the token`() = runTestOnMain {
         val feature = spy(
             AutoPushFeature(
                 context = testContext,
@@ -398,7 +384,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `crash reporter is notified of errors`() = runTest {
+    fun `crash reporter is notified of errors`() = runTestOnMain {
         val connection: PushManagerInterface = mock()
         val crashReporter: CrashReporting = mock()
         val feature = AutoPushFeature(
@@ -416,7 +402,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `Non-Internal errors are submitted to crash reporter`() = runTest {
+    fun `Non-Internal errors are submitted to crash reporter`() = runTestOnMain {
         val crashReporter: CrashReporting = mock()
         val feature = AutoPushFeature(
             context = testContext,
@@ -432,13 +418,12 @@ class AutoPushFeatureTest {
             throw PushApiException.UaidNotRecognizedException("test")
         }
         feature.unsubscribe("123") {}
-        testScheduler.advanceUntilIdle()
 
         verify(crashReporter).submitCaughtException(any<PushError.Rust>())
     }
 
     @Test
-    fun `Internal errors errors are not reported`() = runTest {
+    fun `Internal errors errors are not reported`() = runTestOnMain {
         val crashReporter: CrashReporting = mock()
         val feature = AutoPushFeature(
             context = testContext,

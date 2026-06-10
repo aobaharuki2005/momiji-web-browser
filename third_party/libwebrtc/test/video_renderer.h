@@ -33,7 +33,7 @@ class VideoRenderer : public VideoSinkInterface<VideoFrame> {
   static VideoRenderer* CreatePlatformRenderer(const char* window_title,
                                                size_t width,
                                                size_t height);
-  ~VideoRenderer() override {}
+  virtual ~VideoRenderer() {}
 
  protected:
   VideoRenderer() {}

@@ -54,8 +54,8 @@ when a given version reaches the end of its Beta cycle. This is the primary prod
 While a release is live, interim updates (dot releases) are used to ship important bug fixes prior to
 the next major release. These can happen on an as-needed basis when there is an important-enough
 :ref:`driver <dot release drivers>` to do so (such as a critical bug severely impairing the usability
-of the product for some users). In order to provide better predictability, there are also three planned
-dot releases scheduled for the three weeks following the initial go-live for less-critical fixes and other
+of the product for some users). In order to provide better predictability, there is also a planned
+dot release scheduled for two weeks after the initial go-live for less-critical fixes and other
 :ref:`ride-along fixes <ride alongs>` deemed low-risk enough to include.
 
 .. note::
@@ -147,25 +147,21 @@ Feature Complete Milestone                            Nightly W2       Friday   
 QA Test Plan approval due                             Nightly W2       Friday            Last day to provide QA with feature Test Plan sign-offs
 Nightly features Go/No-Go decisions                   Nightly W4       Wednesday
 Beta release notes draft                              Nightly W4       Wednesday
+Nightly soft code freeze start                        Nightly W4       Thursday          Stabilization period in preparation to merge to Beta
 QA pre-merge regression testing completed             Nightly W4       Friday
 String freeze                                         Nightly W4       Friday            Modification or deletion of strings exposed to the end-users is not allowed
 Merge Day                                             Beta W1          Monday            Day 1 of the new Beta cycle
 User affecting changes identified & provided to SUMO  Beta W1          Friday
-End of Early Beta & intended pref state deadline      Beta W2          Friday            Post-B5
+End of Early Beta & intended pref state deadline      Beta W2          Friday            Post-B6
 Pre-release sign off                                  Beta W3          Wednesday         Final round of QA testing prior to Release
 Go/No-Go for features riding train                    Beta W3          Friday
-Deadline for security-approval requests               Beta W3          Friday
-Release note submission deadline                      Beta W4          Tuesday
-What’s new page & release notes ready                 Beta W4          Wednesday
-Firefox Release Candidate build creation              Beta W4          Wednesday         End of the current Beta cycle in preparation for the upcoming Firefox Release
+Firefox RC week                                       Beta W4          Monday            Validating Release Candidate builds in preparation for the next Firefox Release
+Release Notes ready                                   Beta W4          Tuesday
+What’s new page ready                                 Beta W4          Wednesday
 Firefox go-live @ 6am PT                              Release W1       Tuesday           Day 1 of the new Firefox Release to 25% of Release users
 Firefox Release bump to 100%                          Release W1       Thursday          Increase deployment of new Firefox Release to 100% of Release users
-Scheduled dot release 1 approval requests due         Release W1       Friday            All requests required by EOD
-Scheduled dot release 1 go-live                       Release W2       Tuesday           By default, ships when ready. Specific time available upon request.
-Scheduled dot release 2 approval requests due         Release W2       Friday            All requests required by EOD
-Scheduled dot release 2 go-live                       Release W3       Tuesday           By default, ships when ready. Specific time available upon request.
-Scheduled dot release 3 approval requests due         Release W3       Friday            All requests required by EOD
-Scheduled dot release 3 go-live                       Release W4       Tuesday           By default, ships when ready. Specific time available upon request.
+Scheduled dot release approval requests due           Release W2       Friday            All requests required by EOD
+Scheduled dot release go-live                         Release W3       Tuesday           By default, ships when ready. Specific time available upon request.
 ===================================================== ================ ================= =======================================================================================
 
 
@@ -359,6 +355,12 @@ and can be used to land revisions to various repositories.
 **Merge** - General term used to describe the process of integrating and
 reconciling file changes within the mozilla repositories
 
+.. _nightly soft code freeze:
+
+**Nightly Soft Code Freeze** - Last week of the nightly cycle on firefox-main
+just before the merge to beta during which landing risky or experimental code
+in the repository is discouraged.
+
 .. _nimbus:
 
 **Nimbus** - Nimbus is a collection of servers, workflows, and
@@ -381,6 +383,13 @@ when a test or a testsuite can intermittently fail.
 **Phabricator** - Mozilla’s instance of the web-based software
 development collaboration tool suite. Read more about `Phabricator as a
 product <https://phacility.com/phabricator/>`__.
+
+.. _pi request:
+
+**PI Request** - Short for Product Integrity Request is a form
+submission request that’s used to engage the PI team for a variety of
+services. Most commonly used to request Feature QA it can also be used
+for Security, Fuzzing, Performance, and many other services.
 
 .. _preferences:
 

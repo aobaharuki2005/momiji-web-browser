@@ -1468,8 +1468,6 @@ pub enum ComponentDefinedType {
     Variant(VariantType),
     /// The type is a list.
     List(ComponentValType),
-    /// The type is a map.
-    Map(ComponentValType, ComponentValType),
     /// The type is a fixed size list.
     FixedSizeList(ComponentValType, u32),
     /// The type is a tuple.
@@ -1513,11 +1511,6 @@ impl TypeData for ComponentDefinedType {
             Self::Variant(v) => v.info,
             Self::Tuple(t) => t.info,
             Self::List(ty) | Self::FixedSizeList(ty, _) | Self::Option(ty) => ty.info(types),
-            Self::Map(k, v) => {
-                let mut info = k.info(types);
-                info.combine(v.info(types), 0).unwrap();
-                info
-            }
             Self::Result { ok, err } => {
                 let default = TypeInfo::new();
                 let mut info = ok.map(|ty| ty.type_info(types)).unwrap_or(default);
@@ -1538,7 +1531,7 @@ impl ComponentDefinedType {
                 .cases
                 .values()
                 .any(|case| case.ty.map(|ty| ty.contains_ptr(types)).unwrap_or(false)),
-            Self::List(_) | Self::Map(_, _) => true,
+            Self::List(_) => true,
             Self::Tuple(t) => t.types.iter().any(|ty| ty.contains_ptr(types)),
             Self::Flags(_)
             | Self::Enum(_)
@@ -1566,7 +1559,7 @@ impl ComponentDefinedType {
                 types,
                 lowered_types,
             ),
-            Self::List(_) | Self::Map(_, _) => {
+            Self::List(_) => {
                 lowered_types.try_push(ValType::I32) && lowered_types.try_push(ValType::I32)
             }
             Self::FixedSizeList(ty, length) => {
@@ -1646,7 +1639,6 @@ impl ComponentDefinedType {
             ComponentDefinedType::Flags(_) => "flags",
             ComponentDefinedType::Option(_) => "option",
             ComponentDefinedType::List(_) => "list",
-            ComponentDefinedType::Map(_, _) => "map",
             ComponentDefinedType::FixedSizeList(_, _) => "fixed size list",
             ComponentDefinedType::Result { .. } => "result",
             ComponentDefinedType::Own(_) => "own",
@@ -1690,11 +1682,6 @@ impl ComponentDefinedType {
                 };
                 ty.lower_gc(types, abi, options, offset, array_ty.0.element_type.into())
             }
-
-            ComponentDefinedType::Map(_, _) => bail!(
-                offset,
-                "GC lowering for component `map` type is not yet implemented"
-            ),
 
             ComponentDefinedType::Tuple(ty) => ty.lower_gc(types, abi, options, offset, core),
 
@@ -2528,10 +2515,6 @@ impl TypeAlloc {
             | ComponentDefinedType::Option(ty) => {
                 self.free_variables_valtype(ty, set);
             }
-            ComponentDefinedType::Map(k, v) => {
-                self.free_variables_valtype(k, set);
-                self.free_variables_valtype(v, set);
-            }
             ComponentDefinedType::Result { ok, err } => {
                 if let Some(ok) = ok {
                     self.free_variables_valtype(ok, set);
@@ -2674,9 +2657,6 @@ impl TypeAlloc {
             ComponentDefinedType::List(ty)
             | ComponentDefinedType::FixedSizeList(ty, _)
             | ComponentDefinedType::Option(ty) => self.type_named_valtype(ty, set),
-            ComponentDefinedType::Map(k, v) => {
-                self.type_named_valtype(k, set) && self.type_named_valtype(v, set)
-            }
 
             // own/borrow themselves don't have to be named, but the resource
             // they refer to must be named.
@@ -2868,10 +2848,6 @@ where
             | ComponentDefinedType::FixedSizeList(ty, _)
             | ComponentDefinedType::Option(ty) => {
                 any_changed |= self.remap_valtype(ty, map);
-            }
-            ComponentDefinedType::Map(k, v) => {
-                any_changed |= self.remap_valtype(k, map);
-                any_changed |= self.remap_valtype(v, map);
             }
             ComponentDefinedType::Result { ok, err } => {
                 if let Some(ok) = ok {
@@ -3784,13 +3760,6 @@ impl<'a> SubtypeCx<'a> {
             (Variant(_), b) => bail!(offset, "expected {}, found variant", b.desc()),
             (List(a), List(b)) | (Option(a), Option(b)) => self.component_val_type(a, b, offset),
             (List(_), b) => bail!(offset, "expected {}, found list", b.desc()),
-            (Map(ak, av), Map(bk, bv)) => {
-                self.component_val_type(ak, bk, offset)
-                    .with_context(|| "type mismatch in map key")?;
-                self.component_val_type(av, bv, offset)
-                    .with_context(|| "type mismatch in map value")
-            }
-            (Map(_, _), b) => bail!(offset, "expected {}, found map", b.desc()),
             (FixedSizeList(a, asize), FixedSizeList(b, bsize)) => {
                 if asize != bsize {
                     bail!(offset, "expected fixed size {bsize}, found size {asize}")

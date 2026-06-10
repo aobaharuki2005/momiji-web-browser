@@ -10,20 +10,14 @@ import android.app.Activity.RESULT_OK
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ActivityInfo
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import android.content.pm.ResolveInfo
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
@@ -35,7 +29,6 @@ import mozilla.components.feature.prompts.file.FilePicker.Companion.FILE_PICKER_
 import mozilla.components.feature.prompts.file.FilePicker.Companion.FOLDER_PICKER_ACTIVITY_REQUEST_CODE
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
-import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
@@ -54,10 +47,9 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.robolectric.annotation.Config
 import java.io.File
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class FilePickerTest {
@@ -81,14 +73,14 @@ class FilePickerTest {
     private lateinit var state: BrowserState
     private lateinit var filePicker: FilePicker
     private lateinit var fileUploadsDirCleaner: FileUploadsDirCleaner
-    private val captureMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
 
     @Before
     fun setup() {
         fileUploadsDirCleaner = mock()
         fragment = spy(PromptContainer.TestPromptContainer(testContext))
         state = mock()
-        store = BrowserStore(state, middleware = listOf(captureMiddleware))
+        store = mock()
+        whenever(store.state).thenReturn(state)
         filePicker = FilePicker(
             fragment,
             store,
@@ -98,45 +90,28 @@ class FilePickerTest {
 
     @Test
     fun `FilePicker acts on a given (custom tab) session or the selected session`() {
-        val customTabContent = ContentState(
-            url = "http://mozilla.org",
-            promptRequests = listOf(request),
-        )
+        val customTabContent: ContentState = mock()
+        whenever(customTabContent.promptRequests).thenReturn(listOf(request))
         val customTab = CustomTabSessionState(id = "custom-tab", content = customTabContent, trackingProtection = mock(), config = mock())
 
-        val store = BrowserStore(
-            BrowserState(
-                customTabs = listOf(customTab),
-            ),
-            middleware = listOf(captureMiddleware),
-        )
-
+        whenever(state.customTabs).thenReturn(listOf(customTab))
         filePicker = FilePicker(
             fragment,
             store,
             customTab.id,
             fileUploadsDirCleaner = mock(),
         ) { }
-
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(customTab.id, request))
 
-        captureMiddleware.assertFirstAction(ContentAction.ConsumePromptRequestAction::class) { action ->
-            assertEquals(customTab.id, action.sessionId)
-            assertEquals(request, action.promptRequest)
-        }
-
+        val selected = prepareSelectedSession(request)
         filePicker = FilePicker(
             fragment,
             store,
             fileUploadsDirCleaner = mock(),
         ) { }
-
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
-
-        captureMiddleware.assertFirstAction(ContentAction.ConsumePromptRequestAction::class) { action ->
-            assertEquals(customTab.id, action.sessionId)
-            assertEquals(request, action.promptRequest)
-        }
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, request))
     }
 
     @Test
@@ -217,8 +192,7 @@ class FilePickerTest {
 
         // The original prompt that started the request permission flow is persisted in the store
         // That should not be accesses / modified in any way.
-        captureMiddleware.assertFirstAction(InitAction::class)
-        captureMiddleware.assertLastAction(InitAction::class)
+        verifyNoInteractions(store)
         // After the permission is granted we should retry picking a file based on the original request.
         verify(filePicker).buildIntentList(eq(request))
         verify(filePicker).showChooser(any())
@@ -238,10 +212,7 @@ class FilePickerTest {
         filePicker.onPermissionsDenied()
 
         assertTrue(onDismissWasCalled)
-        captureMiddleware.assertFirstAction(ContentAction.ConsumePromptRequestAction::class) { action ->
-            assertEquals(selected.id, action.sessionId)
-            assertEquals(filePickerRequest, action.promptRequest)
-        }
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, filePickerRequest))
     }
 
     @Test
@@ -264,10 +235,7 @@ class FilePickerTest {
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
         assertTrue(onSingleFileSelectionWasCalled)
-        captureMiddleware.assertFirstAction(ContentAction.ConsumePromptRequestAction::class) { action ->
-            assertEquals(selected.id, action.sessionId)
-            assertEquals(filePickerRequest, action.promptRequest)
-        }
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, filePickerRequest))
     }
 
     @Test
@@ -301,22 +269,16 @@ class FilePickerTest {
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
         assertTrue(onMultipleFileSelectionWasCalled)
-        captureMiddleware.assertFirstAction(ContentAction.ConsumePromptRequestAction::class) { action ->
-            assertEquals(selected.id, action.sessionId)
-            assertEquals(filePickerRequest, action.promptRequest)
-        }
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, filePickerRequest))
     }
 
     @Test
     fun `onActivityResult with not RESULT_OK will consume PromptRequest of the actual session and call onDismiss `() {
         var onDismissWasCalled = false
 
-        val filePickerRequest = request.copy(
-            isMultipleFilesSelection = true,
-            onDismiss = {
-                onDismissWasCalled = true
-            },
-        )
+        val filePickerRequest = request.copy(isMultipleFilesSelection = true) {
+            onDismissWasCalled = true
+        }
 
         val selected = prepareSelectedSession(filePickerRequest)
         val intent = Intent()
@@ -324,10 +286,7 @@ class FilePickerTest {
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_CANCELED, intent)
 
         assertTrue(onDismissWasCalled)
-        captureMiddleware.assertFirstAction(ContentAction.ConsumePromptRequestAction::class) { action ->
-            assertEquals(selected.id, action.sessionId)
-            assertEquals(filePickerRequest, action.promptRequest)
-        }
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, filePickerRequest))
     }
 
     @Test
@@ -338,15 +297,14 @@ class FilePickerTest {
         val onDismiss = { wasDismissed = true }
         val invalidRequest = PromptRequest.Alert("", "", false, onConfirm, onDismiss)
         val spiedFilePicker = spy(filePicker)
-        prepareSelectedSession(invalidRequest)
+        val selected = prepareSelectedSession(invalidRequest)
         val intent = Intent()
 
         spiedFilePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
         assertFalse(wasConfirmed)
         assertFalse(wasDismissed)
-
-        captureMiddleware.assertNotDispatched(ContentAction.ConsumePromptRequestAction::class)
+        verify(store, never()).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, request))
         verify(spiedFilePicker, never()).handleFilePickerIntentResult(intent, request)
     }
 
@@ -617,10 +575,10 @@ class FilePickerTest {
 
         val result = filePicker.getVisualMediaType(request)
 
-        assertIs<ActivityResultContracts.PickVisualMedia.SingleMimeType>(result)
+        assertTrue(result is ActivityResultContracts.PickVisualMedia.SingleMimeType)
         assertEquals(
             "image/png",
-            result.mimeType,
+            (result as ActivityResultContracts.PickVisualMedia.SingleMimeType).mimeType,
         )
     }
 
@@ -701,10 +659,7 @@ class FilePickerTest {
         filePicker.onActivityResult(FOLDER_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
         assertTrue(onFolderSelectionWasCalled)
-        captureMiddleware.assertFirstAction(ContentAction.ConsumePromptRequestAction::class) { action ->
-            assertEquals(selected.id, action.sessionId)
-            assertEquals(filePickerRequest, action.promptRequest)
-        }
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, filePickerRequest))
     }
 
     @Test
@@ -721,51 +676,13 @@ class FilePickerTest {
         filePicker.onActivityResult(FOLDER_PICKER_ACTIVITY_REQUEST_CODE, RESULT_CANCELED, intent)
 
         assertTrue(onDismissWasCalled)
-        captureMiddleware.assertFirstAction(ContentAction.ConsumePromptRequestAction::class) { action ->
-            assertEquals(selected.id, action.sessionId)
-            assertEquals(filePickerRequest, action.promptRequest)
-        }
-    }
-
-    @Test
-    fun `buildCaptureIntent grants read and write URI permissions on image capture intent`() {
-        val photoUri = "content://test/photo.jpg".toUri()
-        val image = MimeType.Image { _, _, _ -> photoUri }
-        val mockContext = mock<Context>()
-        val mockPackageManager = mock<PackageManager>()
-        whenever(mockContext.packageManager).thenReturn(mockPackageManager)
-        whenever(mockContext.packageName).thenReturn("org.mozilla.browser")
-        val resolveInfo = ResolveInfo().apply {
-            activityInfo = ActivityInfo().apply {
-                applicationInfo = ApplicationInfo().apply {
-                    packageName = "com.example.camera"
-                }
-                name = "CameraActivity"
-            }
-        }
-        @Suppress("DEPRECATION")
-        whenever(mockPackageManager.resolveActivity(any(), anyInt())).thenReturn(resolveInfo)
-
-        val captureRequest = PromptRequest.File(
-            mimeTypes = arrayOf("image/*"),
-            onSingleFileSelected = noopSingle,
-            onMultipleFilesSelected = noopMulti,
-            onDismiss = {},
-        )
-
-        val intent = image.buildCaptureIntent(mockContext, captureRequest)
-
-        assertNotNull(intent)
-        assertTrue(intent.flags and Intent.FLAG_GRANT_WRITE_URI_PERMISSION != 0)
-        assertTrue(intent.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, filePickerRequest))
     }
 
     private fun prepareSelectedSession(request: PromptRequest? = null): TabSessionState {
         val promptRequest: PromptRequest = request ?: mock()
-        val content = ContentState(
-            url = "http://mozilla.org",
-            promptRequests = listOf(promptRequest),
-        )
+        val content: ContentState = mock()
+        whenever(content.promptRequests).thenReturn(listOf(promptRequest))
 
         val selected = TabSessionState("browser-tab", content, mock(), mock())
         whenever(state.selectedTabId).thenReturn(selected.id)

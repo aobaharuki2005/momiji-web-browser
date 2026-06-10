@@ -43,10 +43,7 @@ class FlexfecReceiveStream : public RtpPacketSinkInterface,
     // Payload type for FlexFEC.
     int payload_type = -1;
 
-    // Synchronization source (stream identifier) to be received.
-    // This member will not change mid-stream and can be assumed to be const
-    // post initialization.
-    uint32_t remote_ssrc = 0;
+    ReceiveStreamRtpConfig rtp;
 
     // Vector containing a single element, corresponding to the SSRC of the
     // media stream being protected by this FlexFEC stream. The vector MUST have

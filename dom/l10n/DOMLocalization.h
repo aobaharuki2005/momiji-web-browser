@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -41,7 +43,6 @@ class DOMLocalization : public intl::Localization {
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
   bool HasPendingMutations() const;
-  bool IsDocumentL10n() const { return mIsDocumentL10n; }
 
   /**
    * DOMLocalization API
@@ -131,7 +132,6 @@ class DOMLocalization : public intl::Localization {
 
   RefPtr<L10nMutations> mMutations;
   nsTHashSet<RefPtr<nsINode>> mRoots;
-  bool mIsDocumentL10n = false;
 };
 
 }  // namespace mozilla::dom

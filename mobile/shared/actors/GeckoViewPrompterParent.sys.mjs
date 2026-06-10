@@ -25,10 +25,10 @@ export class GeckoViewPrompterParent extends GeckoViewActorParent {
     );
   }
 
-  registerPrompt(promptId, promptType, browsingContext, actor) {
+  registerPrompt(promptId, promptType, actor) {
     return this._prompts.set(
       promptId,
-      new RemotePrompt(promptId, promptType, browsingContext, actor)
+      new RemotePrompt(promptId, promptType, actor)
     );
   }
 
@@ -39,13 +39,7 @@ export class GeckoViewPrompterParent extends GeckoViewActorParent {
   notifyPromptShow(promptId) {
     // ToDo: Bug 1761480 - GeckoView can send additional prompts to Marionette
     if (this._prompts.get(promptId).isDialog) {
-      Services.obs.notifyObservers(
-        {
-          id: promptId,
-          owningBrowsingContext: this._prompts.get(promptId).browsingContext,
-        },
-        "geckoview-prompt-show"
-      );
+      Services.obs.notifyObservers({ id: promptId }, "geckoview-prompt-show");
     }
   }
 
@@ -87,7 +81,6 @@ export class GeckoViewPrompterParent extends GeckoViewActorParent {
             self.window.dispatchEvent(
               createDialogClosedEvent({
                 areLeaving: true,
-                owningBrowsingContext: prompt.browsingContext,
                 promptType: prompt.type,
                 value: prompt.inputText,
               })
@@ -98,7 +91,6 @@ export class GeckoViewPrompterParent extends GeckoViewActorParent {
             self.window.dispatchEvent(
               createDialogClosedEvent({
                 areLeaving: false,
-                owningBrowsingContext: prompt.browsingContext,
                 promptType: prompt.type,
               })
             );
@@ -119,12 +111,7 @@ export class GeckoViewPrompterParent extends GeckoViewActorParent {
   async receiveMessage({ name, data }) {
     switch (name) {
       case "RegisterPrompt": {
-        this.rootActor.registerPrompt(
-          data.id,
-          data.promptType,
-          data.owningBrowsingContext,
-          this
-        );
+        this.rootActor.registerPrompt(data.id, data.promptType, this);
         break;
       }
       case "UnregisterPrompt": {
@@ -136,22 +123,22 @@ export class GeckoViewPrompterParent extends GeckoViewActorParent {
         break;
       }
       case "GeckoView:Prompt:Dismiss": {
-        return this.eventDispatcher.sendRequest(
-          "GeckoView:Prompt:Dismiss",
-          data
-        );
+        return this.eventDispatcher.sendRequest({
+          ...data,
+          type: "GeckoView:Prompt:Dismiss",
+        });
       }
       case "GeckoView:Prompt:Update": {
-        return this.eventDispatcher.sendRequest(
-          "GeckoView:Prompt:Update",
-          data
-        );
+        return this.eventDispatcher.sendRequest({
+          ...data,
+          type: "GeckoView:Prompt:Update",
+        });
       }
       case "GeckoView:Prompt": {
-        return this.eventDispatcher.sendRequestForResult(
-          "GeckoView:Prompt",
-          data
-        );
+        return this.eventDispatcher.sendRequestForResult({
+          ...data,
+          type: "GeckoView:Prompt",
+        });
       }
       default: {
         return super.receiveMessage({ name, data });
@@ -161,11 +148,10 @@ export class GeckoViewPrompterParent extends GeckoViewActorParent {
 }
 
 class RemotePrompt {
-  constructor(id, type, browsingContext, actor) {
+  constructor(id, type, actor) {
     this.id = id;
     this.type = type;
     this.actor = actor;
-    this.browsingContext = browsingContext;
   }
 
   // Checks if the prompt conforms to a WebDriver simple dialog.

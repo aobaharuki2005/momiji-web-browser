@@ -14,13 +14,6 @@
     assert_implements(window.PerformanceEventTiming, 'Event Timing is not supported.');
     const button = document.getElementById('button');
     const observedEntries = [];
-
-    button.addEventListener('pointerdown', () => {
-      mainThreadBusy(30);
-    });
-    button.addEventListener('pointerup', () => {
-      mainThreadBusy(30);
-    });
     button.addEventListener('click', () => {
       mainThreadBusy(150);
     });
@@ -35,16 +28,16 @@
         if (observedEntries.length >= 3) {
           resolve();
         }
-      }).observe({type: 'event', durationThreshold: 16, buffered: true});
+      }).observe({entryTypes: ['event', 'first-input'], buffered: true});
     });
 
     const actions1 = new test_driver.Actions();
     await actions1
-      .addPointer("testPointer", "mouse")
-      .pointerMove(0, 0, {origin: button})
-      .pointerDown({button: actions1.ButtonType.LEFT})
-      .pause(50)
-      .send();
+    .addPointer("testPointer", "mouse")
+    .pointerMove(0, 0, { origin: button })
+    .pointerDown({ button: actions1.ButtonType.LEFT })
+    .pause(50)
+    .send();
 
     // Wait for a paint to occur
     await afterNextPaint();
@@ -52,10 +45,10 @@
     // Perform pointerup
     const actions2 = new test_driver.Actions();
     await actions2
-      .addPointer("testPointer", "mouse")
-      .pointerMove(0, 0, {origin: button})
-      .pointerUp({button: actions2.ButtonType.LEFT})
-      .send();
+    .addPointer("testPointer", "mouse")
+    .pointerMove(0, 0, { origin: button })
+    .pointerUp({ button: actions2.ButtonType.LEFT })
+    .send();
 
     await observerPromise;
 

@@ -6,13 +6,16 @@ package org.mozilla.fenix.home.pocket.controller
 
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.ContentRecommendation
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketStory.SponsoredContent
 import mozilla.components.service.pocket.ext.getCurrentFlightImpressions
 import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.StoriesLibrary
 import org.mozilla.fenix.R
@@ -26,8 +29,6 @@ import org.mozilla.fenix.home.pocket.PocketImpression
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.interactor.PocketStoriesInteractor
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.utils.Stories.markAsOpenedFromHomeScreen
-import org.mozilla.fenix.utils.Stories.markAsOpenedFromStoriesScreen
 import java.lang.ref.WeakReference
 
 private const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 8
@@ -118,6 +119,18 @@ internal class DefaultPocketStoriesController(
         )
 
         when (storyShown) {
+            is PocketSponsoredStory -> {
+                Pocket.homeRecsSpocShown.record(
+                    Pocket.HomeRecsSpocShownExtra(
+                        spocId = storyShown.id.toString(),
+                        position = "${storyPosition.first}x${storyPosition.second}",
+                        timesShown = storyShown.getCurrentFlightImpressions().size.inc().toString(),
+                    ),
+                )
+                Pocket.spocShim.set(storyShown.shim.impression)
+                Pings.spoc.submit(Pings.spocReasonCodes.impression)
+            }
+
             is SponsoredContent -> {
                 Pocket.homeRecsSpocShown.record(
                     Pocket.HomeRecsSpocShownExtra(
@@ -126,7 +139,7 @@ internal class DefaultPocketStoriesController(
                     ),
                 )
 
-                viewLifecycleScope.launch {
+                viewLifecycleScope.launch(Dispatchers.IO) {
                     marsUseCases.recordInteraction(storyShown.callbacks.impressionUrl)
                 }
             }
@@ -197,15 +210,9 @@ internal class DefaultPocketStoriesController(
         storyClicked: PocketStory,
         storyPosition: Triple<Int, Int, Int>,
     ) {
-        val storyUrl = when (navController.currentDestination?.id) {
-            R.id.storiesFragment -> storyClicked.url.markAsOpenedFromStoriesScreen()
-            R.id.homeFragment -> storyClicked.url.markAsOpenedFromHomeScreen()
-            else -> storyClicked.url
-        }
-
         navController.navigate(R.id.browserFragment)
         fenixBrowserUseCases.loadUrlOrSearch(
-            searchTermOrURL = storyUrl,
+            searchTermOrURL = storyClicked.url,
             newTab = !settings.enableHomepageAsNewTab,
             private = false,
         )
@@ -218,6 +225,18 @@ internal class DefaultPocketStoriesController(
                         timesShown = storyClicked.timesShown.inc().toString(),
                     ),
                 )
+            }
+
+            is PocketSponsoredStory -> {
+                Pocket.homeRecsSpocClicked.record(
+                    Pocket.HomeRecsSpocClickedExtra(
+                        spocId = storyClicked.id.toString(),
+                        position = "${storyPosition.first}x${storyPosition.second}",
+                        timesShown = storyClicked.getCurrentFlightImpressions().size.inc().toString(),
+                    ),
+                )
+                Pocket.spocShim.set(storyClicked.shim.click)
+                Pings.spoc.submit(Pings.spocReasonCodes.click)
             }
 
             is ContentRecommendation -> {
@@ -237,13 +256,9 @@ internal class DefaultPocketStoriesController(
                     ),
                 )
 
-                viewLifecycleScope.launch {
+                viewLifecycleScope.launch(Dispatchers.IO) {
                     marsUseCases.recordInteraction(storyClicked.callbacks.clickUrl)
                 }
-            }
-
-            else -> {
-                // no-op
             }
         }
     }

@@ -37,7 +37,7 @@ extern int gMaxRecursion[];
 class SkStroke {
 public:
     SkStroke();
-    explicit SkStroke(const SkPaint&);
+    SkStroke(const SkPaint&);
     SkStroke(const SkPaint&, SkScalar width);   // width overrides paint.getStrokeWidth()
 
     SkPaint::Cap getCap() const { return (SkPaint::Cap)fCap; }

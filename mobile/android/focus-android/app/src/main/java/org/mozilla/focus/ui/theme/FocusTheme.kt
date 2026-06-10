@@ -15,7 +15,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.ui.colors.PhotonColors
 
@@ -36,7 +35,7 @@ fun FocusTheme(
         LocalWindowInfo.current.containerSize.width.toDp().value
     }
 
-    val dimensions = if (widthDp < TABLET_SIZE) {
+    val dimensions = if (widthDp <= TABLET_SIZE) {
         phoneDimensions()
     } else {
         tabletDimensions()
@@ -132,42 +131,14 @@ private fun lightColorSchemeMaterial(): ColorScheme = lightColorScheme(
     onPrimary = PhotonColors.Ink50,
 )
 
-/**
- * Returns the [FocusDimensions] for phone devices.
- */
 fun phoneDimensions() = FocusDimensions(
     onboardingTitle = 24.sp,
     onboardingSubtitleOne = 16.sp,
     onboardingSubtitleTwo = 14.sp,
-    paddingTiny = 4.dp,
-    paddingSmall = 8.dp,
-    paddingText = 10.dp,
-    paddingListHorizontal = 12.dp,
-    paddingDefault = 16.dp,
-    paddingIconEnd = 20.dp,
-    paddingLarge = 24.dp,
-    paddingExtraLarge = 32.dp,
-    paddingOnboardingButtonTop = 33.dp,
-    paddingPermissionStart = 55.dp,
-    paddingOnboardingBottom = 74.dp,
 )
 
-/**
- * Returns the [FocusDimensions] for tablet devices.
- */
 fun tabletDimensions() = FocusDimensions(
     onboardingTitle = 28.sp,
     onboardingSubtitleOne = 18.sp,
     onboardingSubtitleTwo = 18.sp,
-    paddingTiny = 4.dp,
-    paddingSmall = 8.dp,
-    paddingText = 10.dp,
-    paddingListHorizontal = 12.dp,
-    paddingDefault = 16.dp,
-    paddingIconEnd = 20.dp,
-    paddingLarge = 24.dp,
-    paddingExtraLarge = 32.dp,
-    paddingOnboardingButtonTop = 33.dp,
-    paddingPermissionStart = 55.dp,
-    paddingOnboardingBottom = 74.dp,
 )

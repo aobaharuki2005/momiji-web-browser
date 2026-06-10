@@ -139,7 +139,7 @@ add_setup(async function () {
     locale: "en-US",
   });
 
-  await SearchService.init();
+  await Services.search.init();
 
   SystemDate = Cu.getGlobalForObject(QuickSuggestTestUtils).Date;
 });
@@ -538,7 +538,7 @@ function makeExpectedResult({
     isRichSuggestion,
     payload: {
       title: date,
-      engine: SearchService.defaultEngine.name,
+      engine: Services.search.defaultEngine.name,
       query: name,
       lowerCaseSuggestion: name.toLocaleLowerCase(),
       description,

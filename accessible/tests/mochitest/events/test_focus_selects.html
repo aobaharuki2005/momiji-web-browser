@@ -12,14 +12,16 @@
   <script type="application/javascript"
           src="../common.js"></script>
   <script type="application/javascript"
-          src="../events.js"></script>
+          src="../promisified-events.js"></script>
   <script type="application/javascript"
           src="../role.js"></script>
   <script type="application/javascript"
           src="../states.js"></script>
 
   <script type="application/javascript">
-    let gQueue = null;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+    var gQueue = null;
 
     async function doTests() {
       // Bug 746534 - File causes crash or hang on OS X

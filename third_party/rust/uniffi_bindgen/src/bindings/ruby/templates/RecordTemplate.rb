@@ -4,7 +4,7 @@ class {{ rec.name()|class_name_rb }}
 
   def initialize({% for field in rec.fields() %}{{ field.name()|var_name_rb -}}:
         {%- match field.default_value() %}
-        {%- when Some(default) %} {{ default|default_rb }}
+        {%- when Some with(literal) %} {{ literal|literal_rb }}
         {%- else %}
         {%- endmatch %}
   {%- if loop.last %}{% else %}, {% endif -%}{% endfor %})

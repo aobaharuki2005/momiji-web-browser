@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * ***** BEGIN LICENSE BLOCK *****
  * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
@@ -218,10 +220,15 @@ class AssemblerBuffer {
 
 class GenericAssembler {
 #ifdef JS_JITSPEW
-  Sprinter* printer = nullptr;
+  Sprinter* printer;
 #endif
  public:
-  GenericAssembler() = default;
+  GenericAssembler()
+#ifdef JS_JITSPEW
+      : printer(nullptr)
+#endif
+  {
+  }
 
   void setPrinter(Sprinter* sp) {
 #ifdef JS_JITSPEW
@@ -230,22 +237,20 @@ class GenericAssembler {
   }
 
 #ifdef JS_JITSPEW
-  MOZ_COLD MOZ_NEVER_INLINE void spewVA(unsigned long currentOffset,
-                                        const char* fmt, va_list va)
-      MOZ_FORMAT_PRINTF(3, 0);
-
-  inline void spew(unsigned long currentOffset, const char* fmt, ...)
-      MOZ_FORMAT_PRINTF(3, 4) {
+  inline void spew(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3) {
     if (MOZ_UNLIKELY(printer || JitSpewEnabled(JitSpew_Codegen))) {
       va_list va;
       va_start(va, fmt);
-      spewVA(currentOffset, fmt, va);
+      spew(fmt, va);
       va_end(va);
     }
   }
 #else
-  MOZ_ALWAYS_INLINE void spew(unsigned long currentOffset, const char* fmt, ...)
-      MOZ_FORMAT_PRINTF(3, 4) {}
+  MOZ_ALWAYS_INLINE void spew(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3) {}
+#endif
+
+#ifdef JS_JITSPEW
+  MOZ_COLD void spew(const char* fmt, va_list va) MOZ_FORMAT_PRINTF(2, 0);
 #endif
 };
 

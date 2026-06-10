@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(this, {
   EngineURL: "moz-src:///toolkit/components/search/SearchEngine.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   NimbusTestUtils: "resource://testing-common/NimbusTestUtils.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 // Expected source and action recorded by `BrowserSearchTelemetry`.
@@ -117,7 +118,7 @@ add_setup(async function () {
   await SearchTestUtils.updateRemoteSettingsConfig(SEARCH_CONFIG);
   await waitForIdle();
 
-  let engine = await SearchService.getDefault();
+  let engine = await Services.search.getDefault();
   Assert.equal(
     engine.id,
     ENGINE_ID,
@@ -138,8 +139,8 @@ add_setup(async function () {
     search_url: "https://example.com/nonconfig-engine",
     search_url_get_params: "q={searchTerms}",
   });
-  let nonconfigEngine = SearchService.getEngineByName(NONCONFIG_ENGINE_NAME);
-  nonconfigEngine._urls.push(
+  let nonconfigEngine = Services.search.getEngineByName(NONCONFIG_ENGINE_NAME);
+  nonconfigEngine.wrappedJSObject._urls.push(
     new EngineURL({
       type: SearchUtils.URL_TYPE.VISUAL_SEARCH,
       template: "https://example.com/nonconfig-engine-visual",
@@ -202,10 +203,14 @@ add_task(async function nonPrivateWindow() {
     {
       impression: {
         provider: "example-visual",
+        tagged: "true",
+        partner_code: "ff",
         search_mode: "image_search",
         source: "contextmenu_visual",
-        has_ai_summary: "unknown",
-        shopping_tab_displayed: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       abandonment: {
         reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
@@ -286,11 +291,14 @@ async function doPrivateWindowTest(shouldRecordCounts) {
       {
         impression: {
           provider: "example-visual",
+          tagged: "true",
+          partner_code: "ff",
           search_mode: "image_search",
           source: "contextmenu_visual",
+          is_shopping_page: "false",
           is_private: "true",
-          has_ai_summary: "unknown",
-          shopping_tab_displayed: "unknown",
+          shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         abandonment: {
           reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
@@ -335,15 +343,18 @@ add_task(async function nonconfigEngine() {
 
   Services.fog.testResetFOG();
 
-  let engine = SearchService.getEngineByName(NONCONFIG_ENGINE_NAME);
+  let engine = Services.search.getEngineByName(NONCONFIG_ENGINE_NAME);
   Assert.ok(
-    engine.getURLOfType(SearchUtils.URL_TYPE.VISUAL_SEARCH),
+    engine.wrappedJSObject.getURLOfType(SearchUtils.URL_TYPE.VISUAL_SEARCH),
     "Sanity check: Nonconfig engine has a visual search URL"
   );
 
   // Make the nonconfig engine the default so that it handles visual searches.
-  let previousEngine = await SearchService.getDefault();
-  await SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
+  let previousEngine = await Services.search.getDefault();
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   await openAndCheckMenu({
     shouldBeShown: true,
@@ -362,9 +373,9 @@ add_task(async function nonconfigEngine() {
     "impressionCounts.contextmenuVisual should not be recorded with the engine ID"
   );
 
-  await SearchService.setDefault(
+  await Services.search.setDefault(
     previousEngine,
-    SearchService.CHANGE_REASON.UNKNOWN
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   await SpecialPowers.popPrefEnv();
 });
@@ -404,10 +415,11 @@ async function doNimbusExposureTest({
 }) {
   // The `visualSearchEnabled` variable sets this pref on the default branch.
   // Get the original value to make sure it's properly reset on unenrollment.
-  let defaults = Services.prefs.getDefaultBranch(
-    "browser.search.visualSearch.featureGate"
-  );
-  let originalDefault = defaults.getBoolPref("");
+  let defaults = new Preferences({
+    branch: "browser.search.visualSearch.featureGate",
+    defaultBranch: true,
+  });
+  let originalDefault = defaults.get("");
 
   await ExperimentAPI.ready();
   Services.fog.testResetFOG();
@@ -468,9 +480,9 @@ async function doNimbusExposureTest({
 
   await doExperimentCleanup();
 
-  defaults.setBoolPref("", originalDefault);
+  defaults.set("", originalDefault);
   Assert.strictEqual(
-    defaults.getBoolPref(""),
+    defaults.get(""),
     originalDefault,
     "The original default pref value should be restored"
   );

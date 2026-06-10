@@ -616,7 +616,7 @@ struct GDEFVersion1_2
   public:
   DEFINE_SIZE_MIN (4 + 4 * Types::size);
 
-  size_t get_size () const
+  unsigned int get_size () const
   {
     return min_size +
 	   (version.to_int () >= 0x00010002u ? markGlyphSetsDef.static_size : 0) +
@@ -755,7 +755,7 @@ struct GDEF
     ComponentGlyph	= 4
   };
 
-  size_t get_size () const
+  unsigned int get_size () const
   {
     switch (u.version.major) {
     case 1: return u.version1.get_size ();
@@ -1002,34 +1002,20 @@ struct GDEF
 
     }
 
-    HB_ALWAYS_INLINE
     bool mark_set_covers (unsigned int set_index, hb_codepoint_t glyph_id) const
     {
       return
 #ifndef HB_NO_GDEF_CACHE
-	     // We can access arrayZ directly because of sanitize_lookup_props() guarantee.
-	     mark_glyph_sets.arrayZ[set_index].may_have (glyph_id) &&
-#endif
+	     mark_glyph_sets[set_index].may_have (glyph_id)
+#else
 	     table->mark_set_covers (set_index, glyph_id)
-      ;
-    }
-
-    unsigned sanitize_lookup_props (unsigned lookup_props) const
-    {
-#ifndef HB_NO_GDEF_CACHE
-      if (lookup_props & LookupFlag::UseMarkFilteringSet &&
-	  (lookup_props >> 16) >= mark_glyph_sets.length)
-      {
-        // Invalid mark filtering set index; unset the flag.
-	lookup_props &= ~LookupFlag::UseMarkFilteringSet;
-      }
 #endif
-      return lookup_props;
+      ;
     }
 
     hb_blob_ptr_t<GDEF> table;
 #ifndef HB_NO_GDEF_CACHE
-    hb_vector_t<hb_set_digest_t> mark_glyph_sets;
+    hb_vector_t<hb_bit_set_t> mark_glyph_sets;
     mutable hb_cache_t<21, 3> glyph_props_cache;
     static_assert (sizeof (glyph_props_cache) == 512, "");
 #endif

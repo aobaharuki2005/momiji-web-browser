@@ -9,7 +9,6 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.browser.state.state.TranslationsBrowserState
 import mozilla.components.browser.state.state.TranslationsState
 import mozilla.components.concept.engine.translate.LanguageModel
 import mozilla.components.concept.engine.translate.ModelOperation
@@ -466,26 +465,6 @@ internal object TranslationsStateReducer {
                     offerTranslation = action.offerTranslation,
                 ),
             )
-        }
-
-        is TranslationsAction.SetTranslationsEnabledAction -> {
-            if (action.isTranslationsEnabled) {
-                state.copy(
-                    translationEngine = state.translationEngine.copy(
-                        isTranslationsEnabled = true,
-                    ),
-                )
-            } else {
-                state.copy(
-                    translationEngine = TranslationsBrowserState(
-                        isTranslationsEnabled = false,
-                        isEngineSupported = state.translationEngine.isEngineSupported,
-                    ),
-                    // Clear the state on all tab sessions
-                    tabs = state.tabs.map { it.copy(translationsState = TranslationsState()) },
-                    customTabs = state.customTabs.map { it.copy(translationsState = TranslationsState()) },
-                )
-            }
         }
 
         is TranslationsAction.SetEngineSupportedAction -> {

@@ -56,7 +56,7 @@ add_task(async () => {
   info(
     "Update a property value and check that evaluating $_ returns the expected object instance"
   );
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.foo.bar = "updated_value";
   });
 

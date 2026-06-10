@@ -12,7 +12,7 @@
 
 <body>
 <script>
-setup(() => assertSpeculationRulesIsSupported('prerender'));
+setup(() => assertSpeculationRulesIsSupported());
 
 promise_test(async t => {
   const rule_extras = {'target_hint': getTargetHint()};

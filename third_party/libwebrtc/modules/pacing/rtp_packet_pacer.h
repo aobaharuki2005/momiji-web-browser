@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "api/transport/network_types.h"
+#include "api/units/data_rate.h"
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -37,7 +38,7 @@ class RtpPacketPacer {
   virtual void SetCongested(bool congested) = 0;
 
   // Sets the pacing rates. Must be called once before packets can be sent.
-  virtual void SetConfig(const PacerConfig& pacer_config) = 0;
+  virtual void SetPacingRates(DataRate pacing_rate, DataRate padding_rate) = 0;
 
   // Time since the oldest packet currently in the queue was added.
   virtual TimeDelta OldestPacketWaitTime() const = 0;

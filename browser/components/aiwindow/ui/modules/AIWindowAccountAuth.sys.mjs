@@ -20,41 +20,34 @@ ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
 ChromeUtils.defineLazyGetter(lazy, "log", function () {
   return console.createInstance({
     prefix: "AIWindowAccountAuth",
-    maxLogLevelPref: Services.prefs.getBoolPref(
-      "browser.smartwindow.log",
-      false
-    )
+    maxLogLevelPref: Services.prefs.getBoolPref("browser.aiwindow.log", false)
       ? "Debug"
       : "Warn",
   });
 });
 
+// Temporary gating while feature is in development
+// To be set to true by default before MVP launch
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "AIWindowRequireSignIn",
+  "browser.aiwindow.requireSignIn",
+  false
+);
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "hasAIWindowToSConsent",
-  "browser.smartwindow.tos.consentTime",
-  0
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "hasFirstrunCompleted",
-  "browser.smartwindow.firstrun.hasCompleted",
+  "browser.aiwindow.tos.hasConsent",
   false
 );
 
 export const AIWindowAccountAuth = {
   get hasToSConsent() {
-    return !!lazy.hasAIWindowToSConsent;
+    return lazy.hasAIWindowToSConsent;
   },
 
   set hasToSConsent(value) {
-    const nowSeconds = Math.floor(Date.now() / 1000);
-
-    Services.prefs.setIntPref(
-      "browser.smartwindow.tos.consentTime",
-      value ? nowSeconds : 0
-    );
+    Services.prefs.setBoolPref("browser.aiwindow.tos.hasConsent", value);
   },
 
   async isSignedIn() {
@@ -67,7 +60,14 @@ export const AIWindowAccountAuth = {
     }
   },
 
+  requiresSignIn() {
+    return lazy.AIWindowRequireSignIn;
+  },
+
   async canAccessAIWindow() {
+    if (!this.requiresSignIn()) {
+      return true;
+    }
     if (!this.hasToSConsent) {
       return false;
     }
@@ -77,10 +77,10 @@ export const AIWindowAccountAuth = {
   async promptSignIn(browser) {
     try {
       const data = {
-        autoClose: !!lazy.hasFirstrunCompleted,
-        entrypoint: "smartwindow",
+        autoClose: false,
+        entrypoint: "aiwindow",
         extraParams: {
-          service: "smartwindow",
+          service: "aiwindow",
         },
       };
       const signedIn = await lazy.SpecialMessageActions.fxaSignInFlow(
@@ -97,7 +97,7 @@ export const AIWindowAccountAuth = {
     }
   },
 
-  async ensureAIWindowAccess(browser) {
+  async launchAIWindow(browser) {
     if (!(await this.canAccessAIWindow())) {
       const signedIn = await this.promptSignIn(browser);
       if (!signedIn) {
@@ -105,6 +105,9 @@ export const AIWindowAccountAuth = {
         return false;
       }
     }
+    // Proceed with launching the AI window
+    // Tobe updated with window switching toggleWindow call implemented with fix of bug 2006469
+    browser.ownerGlobal.OpenBrowserWindow({ aiWindow: true });
     return true;
   },
 };

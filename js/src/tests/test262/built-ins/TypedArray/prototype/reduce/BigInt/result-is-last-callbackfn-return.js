@@ -30,15 +30,15 @@ info: |
       ii. Let accumulator be ? Call(callbackfn, undefined, « accumulator,
       kValue, k, O »).
   9. Return accumulator.
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var calls, result;
 
   calls = 0;
-  result = new TA(makeCtorArg([1n, 2n, 3n])).reduce(function() {
+  result = new TA([1n, 2n, 3n]).reduce(function() {
     calls++;
 
     if (calls == 2) {
@@ -48,7 +48,7 @@ testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
   assert.sameValue(result, 42, "using default accumulator");
 
   calls = 0;
-  result = new TA(makeCtorArg([1n, 2n, 3n])).reduce(function() {
+  result = new TA([1n, 2n, 3n]).reduce(function() {
     calls++;
 
     if (calls == 3) {

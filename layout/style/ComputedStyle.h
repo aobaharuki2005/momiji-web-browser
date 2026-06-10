@@ -1,18 +1,21 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* the interface (to internal code) for retrieving computed style data */
 
-#ifndef ComputedStyle_h_
-#define ComputedStyle_h_
+#ifndef _ComputedStyle_h_
+#define _ComputedStyle_h_
 
 #include "mozilla/Assertions.h"
 #include "mozilla/CachedInheritingStyles.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/PseudoStyleRequest.h"
+#include "mozilla/PseudoStyleType.h"
 #include "mozilla/ServoComputedData.h"
 #include "mozilla/ServoStyleConsts.h"
+#include "nsCSSPseudoElements.h"
 #include "nsColor.h"
 #include "nsStyleStructFwd.h"
 
@@ -29,7 +32,6 @@ void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle*);
 
 namespace mozilla {
 
-struct CSSPropertyId;
 enum class StylePointerEvents : uint8_t;
 enum class StyleUserSelect : uint8_t;
 
@@ -60,7 +62,8 @@ class ComputedStyle {
   const StyleComputedValueFlags& Flags() const { return mSource.flags; }
 
  public:
-  explicit ComputedStyle(ServoComputedDataForgotten aComputedValues);
+  ComputedStyle(PseudoStyleType aPseudoType,
+                ServoComputedDataForgotten aComputedValues);
 
   // Returns the computed (not resolved) value of the given property.
   void GetComputedPropertyValue(NonCustomCSSPropertyId aId,
@@ -68,10 +71,10 @@ class ComputedStyle {
     Servo_GetComputedValue(this, aId, &aOut);
   }
 
-  // Returns the computed typed value list of the given property.
-  bool GetPropertyTypedValueList(const CSSPropertyId& aId,
-                                 StylePropertyTypedValueList& aOut) const {
-    return Servo_ComputedValues_GetPropertyTypedValueList(this, &aId, &aOut);
+  // Returns the computed typed value of the given property.
+  bool GetPropertyTypedValue(const nsACString& aProperty,
+                             StylePropertyTypedValueResult& aOut) const {
+    return Servo_GetComputedTypedValue(this, &aProperty, &aOut);
   }
 
   // Return the ComputedStyle whose style data should be used for the R,
@@ -94,31 +97,31 @@ class ComputedStyle {
 
   bool IsLazilyCascadedPseudoElement() const {
     return IsPseudoElement() &&
-           !PseudoStyle::IsEagerlyCascadedInServo(GetPseudoType());
+           !nsCSSPseudoElements::IsEagerlyCascadedInServo(GetPseudoType());
   }
 
-  PseudoStyleType GetPseudoType() const { return mSource.pseudo_type; }
+  PseudoStyleType GetPseudoType() const { return mPseudoType; }
 
   bool IsPseudoElement() const {
-    return PseudoStyle::IsPseudoElement(GetPseudoType());
+    return PseudoStyle::IsPseudoElement(mPseudoType);
   }
 
   bool IsInheritingAnonBox() const {
-    return PseudoStyle::IsInheritingAnonBox(GetPseudoType());
+    return PseudoStyle::IsInheritingAnonBox(mPseudoType);
   }
 
   bool IsNonInheritingAnonBox() const {
-    return PseudoStyle::IsNonInheritingAnonBox(GetPseudoType());
+    return PseudoStyle::IsNonInheritingAnonBox(mPseudoType);
   }
 
   bool IsWrapperAnonBox() const {
-    return PseudoStyle::IsWrapperAnonBox(GetPseudoType());
+    return PseudoStyle::IsWrapperAnonBox(mPseudoType);
   }
 
-  bool IsAnonBox() const { return PseudoStyle::IsAnonBox(GetPseudoType()); }
+  bool IsAnonBox() const { return PseudoStyle::IsAnonBox(mPseudoType); }
 
   bool IsPseudoOrAnonBox() const {
-    return GetPseudoType() != PseudoStyleType::NotPseudo;
+    return mPseudoType != PseudoStyleType::NotPseudo;
   }
 
   // Whether there are author-specified rules for border or background
@@ -128,14 +131,9 @@ class ComputedStyle {
     return bool(Flags() & Flag::HAS_AUTHOR_SPECIFIED_BORDER_BACKGROUND);
   }
 
-  // Whether there are author-specific rules for text `color`.
+  // Whether there are author-specific rules for text color.
   bool HasAuthorSpecifiedTextColor() const {
     return bool(Flags() & Flag::HAS_AUTHOR_SPECIFIED_TEXT_COLOR);
-  }
-
-  // Whether there are author-specific rules for text-shadow.
-  bool HasAuthorSpecifiedTextShadow() const {
-    return bool(Flags() & Flag::HAS_AUTHOR_SPECIFIED_TEXT_SHADOW);
   }
 
   // Does this ComputedStyle or any of its ancestors have text
@@ -181,24 +179,6 @@ class ComputedStyle {
     return bool(Flags() & Flag::SELF_OR_ANCESTOR_HAS_CONTAIN_STYLE);
   }
 
-  // Whether the style uses container query units (cqw, cqh, etc.).
-  bool UsesContainerUnits() const {
-    return bool(Flags() & Flag::USES_CONTAINER_UNITS);
-  }
-
-  // Whether the style uses viewport units (vw, vh, etc.).
-  bool UsesViewportUnits() const {
-    return bool(Flags() & Flag::USES_VIEWPORT_UNITS);
-  }
-
-  // Appends all cached lazy pseudo-element styles to the given array.
-  void GetCachedLazyPseudoStyles(nsTArray<const ComputedStyle*>& aArray) const {
-    mCachedInheritingStyles.AppendTo(aArray);
-  }
-
-  template <typename Func>
-  void ForEachCachedLazyPseudoEntry(Func&& aFunc) const;
-
   // Is the only link whose visitedness is allowed to influence the
   // style of the node this ComputedStyle is for (which is that element
   // or its nearest ancestor that is a link) visited?
@@ -215,43 +195,26 @@ class ComputedStyle {
     return bool(Flags() & Flag::IS_IN_OPACITY_ZERO_SUBTREE);
   }
 
-  bool HasAuthorSpecifiedGridAutoFlow() const {
-    return bool(Flags() & Flag::HAS_AUTHOR_SPECIFIED_GRID_AUTO_FLOW);
-  }
-
   bool HasAnchorPosReference() const;
-
-  bool HasAttrReferences() const {
-    return !!mSource.attribute_references.mUsedAttributes;
-  }
 
   bool MaybeAnchorPosReferencesDiffer(const ComputedStyle* aOther) const;
 
   ComputedStyle* GetCachedInheritingAnonBoxStyle(
       PseudoStyleType aPseudoType) const {
     MOZ_ASSERT(PseudoStyle::IsInheritingAnonBox(aPseudoType));
-    return mCachedInheritingStyles.Lookup(PseudoStyleRequest(aPseudoType));
+    return mCachedInheritingStyles.Lookup(aPseudoType);
   }
 
   void SetCachedInheritedAnonBoxStyle(ComputedStyle* aStyle) {
-    mCachedInheritingStyles.Insert(aStyle, aStyle->GetPseudoType());
+    mCachedInheritingStyles.Insert(aStyle);
   }
 
-  ComputedStyle* GetCachedLazyPseudoStyle(const PseudoStyleRequest&) const;
+  ComputedStyle* GetCachedLazyPseudoStyle(PseudoStyleType aPseudo) const;
 
-  // aStyle may be null to record a probe that returned no matching rules.
-  void SetCachedLazyPseudoStyle(ComputedStyle* aStyle, PseudoStyleType aType,
-                                nsAtom* aFunctionalPseudoParameter) {
-    MOZ_ASSERT_IF(aStyle, aStyle->IsPseudoElement());
-    MOZ_ASSERT_IF(aStyle, aStyle->GetPseudoType() == aType);
-    // If a null entry was already cached for this pseudo (from a prior probe),
-    // avoid re-inserting. Lookup() returns nullptr for both "not cached" and
-    // "cached as null", so we need HasEntry() to distinguish them.
-    if (!aStyle &&
-        mCachedInheritingStyles.HasEntry({aType, aFunctionalPseudoParameter})) {
-      return;
-    }
-    MOZ_ASSERT(!GetCachedLazyPseudoStyle({aType, aFunctionalPseudoParameter}));
+  void SetCachedLazyPseudoStyle(ComputedStyle* aStyle) {
+    MOZ_ASSERT(aStyle->IsPseudoElement());
+    MOZ_ASSERT(!GetCachedLazyPseudoStyle(aStyle->GetPseudoType()));
+    MOZ_ASSERT(aStyle->IsLazilyCascadedPseudoElement());
 
     // Since we're caching lazy pseudo styles on the ComputedValues of the
     // originating element, we can assume that we either have the same
@@ -262,11 +225,12 @@ class ComputedStyle {
     //
     // The one place this optimization breaks is with pseudo-elements that
     // support state (like :hover). So we just avoid sharing in those cases.
-    if (PseudoStyle::SupportsUserActionState(aType)) {
+    if (nsCSSPseudoElements::PseudoElementSupportsUserActionState(
+            aStyle->GetPseudoType())) {
       return;
     }
 
-    mCachedInheritingStyles.Insert(aStyle, aType, aFunctionalPseudoParameter);
+    mCachedInheritingStyles.Insert(aStyle);
   }
 
 #define GENERATE_ACCESSOR(name_)                                         \
@@ -387,9 +351,9 @@ class ComputedStyle {
   ServoComputedData mSource;
 
   // A cache of anonymous box and lazy pseudo styles inheriting from this style.
-  // For functional pseudo-elements like ::highlight(name), the functional
-  // parameter is stored alongside the style in the cache.
   CachedInheritingStyles mCachedInheritingStyles;
+
+  const PseudoStyleType mPseudoType;
 };
 
 }  // namespace mozilla

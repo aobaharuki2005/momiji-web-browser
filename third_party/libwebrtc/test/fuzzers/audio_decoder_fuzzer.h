@@ -14,8 +14,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "test/fuzzers/fuzz_data_helper.h"
-
 namespace webrtc {
 
 class AudioDecoder;
@@ -26,7 +24,8 @@ enum class DecoderFunctionType {
 };
 
 void FuzzAudioDecoder(DecoderFunctionType decode_type,
-                      FuzzDataHelper& fuzz_data,
+                      const uint8_t* data,
+                      size_t size,
                       AudioDecoder* decoder,
                       int sample_rate_hz,
                       size_t max_decoded_bytes,

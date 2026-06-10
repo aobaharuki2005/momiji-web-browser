@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,6 +36,10 @@ class GMPVideoi420FrameImpl : public GMPVideoi420Frame {
       GMPVideoHostImpl* aHost,
       HostReportPolicy aReportPolicy = HostReportPolicy::None);
   virtual ~GMPVideoi420FrameImpl();
+
+  // This is called during a normal destroy sequence, which is
+  // when a consumer is finished or during XPCOM shutdown.
+  void DoneWithAPI();
 
   static bool CheckFrameData(const GMPVideoi420FrameData& aFrameData,
                              size_t aBufferSize);
@@ -101,12 +106,13 @@ class GMPVideoi420FrameImpl : public GMPVideoi420Frame {
   bool CheckDimensions(int32_t aWidth, int32_t aHeight, int32_t aStride_y,
                        int32_t aStride_u, int32_t aStride_v);
   GMPErr MaybeResize(int32_t aNewSize);
+  void DestroyBuffer();
 
  public:
   const HostReportPolicy mReportPolicy;
 
  protected:
-  RefPtr<GMPVideoHostImpl> mHost;
+  GMPVideoHostImpl* mHost;
   nsTArray<uint8_t> mArrayBuffer;
   ipc::Shmem mShmemBuffer;
   GMPFramePlane mYPlane;

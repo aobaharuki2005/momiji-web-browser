@@ -3,10 +3,6 @@
 
 "use strict";
 
-const {
-  EVENTS,
-} = require("resource://devtools/client/netmonitor/src/constants.js");
-
 const TEST_FILE = "test-network-request.html";
 const TEST_PATH =
   "https://example.com/browser/devtools/client/webconsole/test/browser/";
@@ -73,7 +69,7 @@ add_task(async function task() {
     "An empty notice is displayed instead of the response content"
   );
   const responseContent = messageNode.querySelector(
-    "#response-panel .editor-row-container .cm-editor"
+    "#response-panel .editor-row-container .CodeMirror"
   );
   ok(!responseContent, "Response content is really not displayed");
 
@@ -240,7 +236,7 @@ async function testSecurity(messageNode) {
 // Waiting helpers
 
 async function waitForPayloadReady(hud) {
-  return hud.ui.once(EVENTS.PAYLOAD_READY);
+  return hud.ui.once("network-request-payload-ready");
 }
 
 async function waitForRequestUpdates(hud) {

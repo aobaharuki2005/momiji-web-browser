@@ -27,7 +27,6 @@ import org.mozilla.fenix.settings.SupportUtils
  * @param getNavController Fetch the NavController for navigating within the local Composable nav graph.
  * @param exitLogins Invoked when back is clicked while the navController's backstack is empty.
  * @param persistLoginsSortOrder Invoked to persist the new sorting order for logins.
- * @param navigateToImportDialog Invoked to navigate to the import passwords dialog.
  * @param openTab Invoked when opening a tab when a login url is clicked.
  * @param ioDispatcher Coroutine dispatcher for IO operations.
  * @param clipboardManager For copying logins URLs.
@@ -38,7 +37,6 @@ internal class LoginsMiddleware(
     private val getNavController: () -> NavController,
     private val exitLogins: () -> Unit,
     private val persistLoginsSortOrder: suspend (LoginsSortOrder) -> Unit,
-    private val navigateToImportDialog: () -> Unit,
     private val openTab: (url: String, openInNewTab: Boolean) -> Unit,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val clipboardManager: ClipboardManager?,
@@ -122,9 +120,6 @@ internal class LoginsMiddleware(
             is EditLoginAction.SaveEditClicked -> {
                 store.handleEditLogin(loginItem = action.login)
             }
-            is ImportFileClicked -> {
-                navigateToImportDialog()
-            }
             is LoginsLoaded,
             is EditLoginAction.UsernameChanged,
             is EditLoginAction.PasswordChanged,
@@ -132,11 +127,8 @@ internal class LoginsMiddleware(
             is AddLoginAction.HostChanged,
             is AddLoginAction.UsernameChanged,
             is AddLoginAction.PasswordChanged,
-            is DetailLoginAction.PasswordVisibilityChanged,
             is DetailLoginMenuAction.DeleteLoginMenuItemClicked,
             is LoginDeletionDialogAction.CancelTapped,
-            is ImportPasswordsOverflowMenuClicked,
-            is ImportPasswordsOverflowMenuDismissed,
                 -> Unit
         }
     }

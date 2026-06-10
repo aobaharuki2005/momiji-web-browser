@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -50,15 +52,19 @@ class MOZ_GSL_POINTER nsTDependentString : public nsTString<T> {
   typedef typename base_string_type::DataFlags DataFlags;
   typedef typename base_string_type::ClassFlags ClassFlags;
 
-  nsTDependentString(const char_type* aData MOZ_LIFETIME_BOUND,
-                     size_type aLength)
-      : nsTDependentString(const_cast<char_type*>(aData), aLength,
-                           DataFlags(0)) {}
+ public:
+  /**
+   * constructors
+   */
 
   nsTDependentString(const char_type* aStart MOZ_LIFETIME_BOUND,
-                     const char_type* aEnd MOZ_LIFETIME_BOUND)
-      : nsTDependentString(aStart, aEnd - aStart) {
-    MOZ_RELEASE_ASSERT(aStart <= aEnd, "Overflow!");
+                     const char_type* aEnd MOZ_LIFETIME_BOUND);
+
+  nsTDependentString(const char_type* aData MOZ_LIFETIME_BOUND,
+                     size_type aLength)
+      : string_type(const_cast<char_type*>(aData), aLength,
+                    DataFlags::TERMINATED, ClassFlags(0)) {
+    this->AssertValidDependentString();
   }
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
@@ -68,7 +74,10 @@ class MOZ_GSL_POINTER nsTDependentString : public nsTString<T> {
 #endif
 
   explicit nsTDependentString(const char_type* aData MOZ_LIFETIME_BOUND)
-      : nsTDependentString(aData, char_traits::length(aData)) {}
+      : string_type(const_cast<char_type*>(aData), char_traits::length(aData),
+                    DataFlags::TERMINATED, ClassFlags(0)) {
+    string_type::AssertValidDependentString();
+  }
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
   template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
@@ -95,8 +104,6 @@ class MOZ_GSL_POINTER nsTDependentString : public nsTString<T> {
   explicit nsTDependentString(const self_type& aStr) : string_type() {
     Rebind(aStr, /* aStartPos = */ 0);
   }
-  nsTDependentString(const substring_tuple_type&) = delete;
-  self_type& operator=(const self_type& aStr) = delete;
 
   /**
    * allow this class to be bound to a different string...
@@ -111,13 +118,10 @@ class MOZ_GSL_POINTER nsTDependentString : public nsTString<T> {
               const char_type* aEnd MOZ_LIFETIME_CAPTURE_BY(this));
   void Rebind(const string_type&, index_type aStartPos);
 
- protected:
-  nsTDependentString(const char_type* aData MOZ_LIFETIME_BOUND,
-                     size_type aLength, DataFlags aExtraDataFlags)
-      : string_type(const_cast<char_type*>(aData), aLength,
-                    DataFlags::TERMINATED | aExtraDataFlags, ClassFlags(0)) {
-    this->AssertValidDependentString();
-  }
+ private:
+  // NOT USED
+  nsTDependentString(const substring_tuple_type&) = delete;
+  self_type& operator=(const self_type& aStr) = delete;
 };
 
 extern template class nsTDependentString<char>;

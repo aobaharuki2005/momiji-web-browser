@@ -1,10 +1,13 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * vim: sw=2 ts=2 sts=2 expandtab
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint complexity: ["error", 53] */
 
 /**
  * @import {OpenedConnection} from "resource://gre/modules/Sqlite.sys.mjs"
+ * @import {UrlbarSearchStringTokenData} from "UrlbarTokenizer.sys.mjs"
  */
 
 /**
@@ -99,13 +102,11 @@ const lazy = XPCOMUtils.declareLazy({
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
   UrlbarProviderOpenTabs:
     "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs",
   ProvidersManager:
     "moz-src:///browser/components/urlbar/UrlbarProvidersManager.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
-  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
+  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer:
@@ -117,15 +118,15 @@ const lazy = XPCOMUtils.declareLazy({
   },
   // Maps restriction character types to textual behaviors.
   typeToBehaviorMap: () => {
-    return /** @type {Map<Values<typeof lazy.UrlbarShared.TOKEN_TYPE>, string>} */ (
+    return /** @type {Map<Values<typeof lazy.UrlbarTokenizer.TYPE>, string>} */ (
       new Map([
-        [lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_HISTORY, "history"],
-        [lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_BOOKMARK, "bookmark"],
-        [lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_TAG, "tag"],
-        [lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_OPENPAGE, "openpage"],
-        [lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_SEARCH, "search"],
-        [lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_TITLE, "title"],
-        [lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_URL, "url"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_HISTORY, "history"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK, "bookmark"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_TAG, "tag"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE, "openpage"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH, "search"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_TITLE, "title"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_URL, "url"],
       ])
     );
   },
@@ -164,6 +165,7 @@ function makeMapKeyForResult(url, match) {
   return UrlbarUtils.tupleString(
     url,
     action?.type == "switchtab" &&
+      lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
       lazy.UrlbarProviderOpenTabs.isNonPrivateUserContextId(match.userContextId)
       ? match.userContextId
       : undefined
@@ -407,6 +409,14 @@ function makeUrlbarResult(queryContext, info) {
     });
   }
 
+  if (!title && info.url) {
+    try {
+      // If there's no title, show the domain as the title. Not all valid URLs
+      // have a domain.
+      title = new URL(info.url).URI.displayHostPort;
+    } catch (e) {}
+  }
+
   return new lazy.UrlbarResult({
     type: UrlbarUtils.RESULT_TYPE.URL,
     source,
@@ -482,7 +492,7 @@ class Search {
     this.#searchModeEngine = queryContext.searchMode?.engineName;
     if (this.#searchModeEngine) {
       // Filter Places results on host.
-      let engine = lazy.SearchService.getEngineByName(this.#searchModeEngine);
+      let engine = Services.search.getEngineByName(this.#searchModeEngine);
       this.#filterOnHost = engine.searchUrlDomain;
     }
 
@@ -499,7 +509,7 @@ class Search {
       if (
         lazy.UrlbarTokenizer.isRestrictionToken(tokens[0]) &&
         (tokens.length > 1 ||
-          tokens[0].type == lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_SEARCH)
+          tokens[0].type == lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH)
       ) {
         this.#leadingRestrictionToken = tokens[0].value;
       }
@@ -699,8 +709,7 @@ class Search {
       // UrlbarProviderSearchSuggestions will handle suggestions, if any.
       let emptySearchRestriction =
         this.#trimmedOriginalSearchString.length <= 3 &&
-        this.#leadingRestrictionToken ==
-          lazy.UrlbarShared.RESTRICT_TOKENS.SEARCH &&
+        this.#leadingRestrictionToken == lazy.UrlbarTokenizer.RESTRICT.SEARCH &&
         /\s*\S?$/.test(this.#trimmedOriginalSearchString);
       if (
         emptySearchRestriction ||
@@ -718,13 +727,6 @@ class Search {
     // "openpage" behavior is supported by the default query.
     // #switchToTabQuery instead returns only pages not supported by history.
     if (this.hasBehavior("openpage")) {
-      // Wait for open tabs to be fully populated in moz_openpages_temp.
-      // The table is populated asynchronously when the connection is first
-      // created, and querying before it's ready returns incomplete results.
-      await lazy.UrlbarProviderOpenTabs.promiseDBPopulated;
-      if (!this.pending) {
-        return;
-      }
       queries.push(this.#switchToTabQuery);
     }
     queries.push(this.#searchQuery);
@@ -869,7 +871,7 @@ class Search {
   #maybeRestyleSearchMatch(match) {
     // Return if the URL does not represent a search result.
     let historyUrl = match.value;
-    let parseResult = lazy.SearchService.parseSubmissionURL(historyUrl);
+    let parseResult = Services.search.parseSubmissionURL(historyUrl);
     if (!parseResult?.engine) {
       return false;
     }
@@ -1207,7 +1209,8 @@ class Search {
     if (openPageCount > 0 && this.hasBehavior("openpage")) {
       if (
         this.#currentPage == match.value &&
-        this.#userContextId == match.userContextId
+        (!lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") ||
+          this.#userContextId == match.userContextId)
       ) {
         // Don't suggest switching to the current tab.
         return;
@@ -1363,11 +1366,14 @@ class Search {
       maxResults: this.#maxResults,
       switchTabsEnabled: this.hasBehavior("openpage"),
     };
-    params.userContextId =
-      lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
-        null,
-        this.#inPrivateWindow
-      );
+    params.userContextId = lazy.UrlbarPrefs.get(
+      "switchTabs.searchAllContainers"
+    )
+      ? lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+          null,
+          this.#inPrivateWindow
+        )
+      : this.#userContextId;
 
     if (this.#filterOnHost) {
       params.host = this.#filterOnHost;
@@ -1391,11 +1397,12 @@ class Search {
         // We only want to search the tokens that we are left with - not the
         // original search string.
         searchString: this.#keywordFilteredSearchString,
-        userContextId:
-          lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
-            null,
-            this.#inPrivateWindow
-          ),
+        userContextId: lazy.UrlbarPrefs.get("switchTabs.searchAllContainers")
+          ? lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+              null,
+              this.#inPrivateWindow
+            )
+          : this.#userContextId,
         maxResults: this.#maxResults,
       },
     ];

@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsEnvironment_h_
-#define nsEnvironment_h_
+#ifndef nsEnvironment_h__
+#define nsEnvironment_h__
 
 #include "mozilla/Mutex.h"
 #include "nsIEnvironment.h"
@@ -23,8 +25,8 @@ class nsEnvironment final : public nsIEnvironment {
   static nsresult Create(REFNSIID aIID, void** aResult);
 
  private:
-  nsEnvironment() = default;
+  nsEnvironment() {}
   ~nsEnvironment() = default;
 };
 
-#endif /* !nsEnvironment_h_ */
+#endif /* !nsEnvironment_h__ */

@@ -32,9 +32,7 @@ add_task(async function () {
 
   info("Selecting the test element");
   await selectNode(".testclass", inspector);
-  // Modify the first rule after the "element" one
-  let ruleEditor = getRuleViewRuleEditorAt(view, 1);
-  await testEditSelector(view, ruleEditor, "div:nth-child(1)");
+  await testEditSelector(view, "div:nth-child(1)");
 
   info("Selecting the modified element");
   await selectNode("#testid", inspector);
@@ -42,9 +40,7 @@ add_task(async function () {
 
   info("Selecting the test element");
   await selectNode("#testid3", inspector);
-  // Modify the pseudo element selector
-  ruleEditor = getRuleViewRuleEditorAt(view, 0);
-  await testEditSelector(view, ruleEditor, ".testclass2::first-letter");
+  await testEditSelector(view, ".testclass2::first-letter");
 
   info("Selecting the modified element");
   await selectNode(".testclass2", inspector);
@@ -54,26 +50,43 @@ add_task(async function () {
   Services.prefs.clearUserPref(PSEUDO_PREF);
 });
 
-async function testEditSelector(view, ruleEditor, newSelector) {
+async function testEditSelector(view, name) {
   info("Test editing existing selector fields");
 
-  await editSelectorForRuleEditor(view, ruleEditor, newSelector);
+  const idRuleEditor =
+    getRuleViewRuleEditor(view, 1) || getRuleViewRuleEditor(view, 1, 0);
 
-  assertDisplayedRulesCount(view, 2);
-  ok(
-    getRuleViewRule(view, newSelector),
-    `Rule with ${newSelector} selector exists.`
+  info("Focusing an existing selector name in the rule-view");
+  const editor = await focusEditableField(view, idRuleEditor.selectorText);
+
+  is(
+    inplaceEditor(idRuleEditor.selectorText),
+    editor,
+    "The selector editor got focused"
   );
 
+  info("Entering a new selector name: " + name);
+  editor.input.value = name;
+
+  info("Waiting for rule view to update");
+  const onRuleViewChanged = once(view, "ruleview-changed");
+
+  info("Entering the commit key");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await onRuleViewChanged;
+
+  is(view._elementStyle.rules.length, 2, "Should have 2 rule.");
+  ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
+
   const newRuleEditor =
-    getRuleViewRuleEditorAt(view, 1) || getRuleViewRuleEditorAt(view, 1, 0);
+    getRuleViewRuleEditor(view, 1) || getRuleViewRuleEditor(view, 1, 0);
   ok(
     newRuleEditor.element.getAttribute("unmatched"),
-    `Rule with ${newSelector} does not match the current element.`
+    "Rule with " + name + " does not match the current element."
   );
 }
 
-function checkModifiedElement(view, selector) {
-  assertDisplayedRulesCount(view, 2);
-  ok(getRuleViewRule(view, selector), `Rule with ${selector} selector exists.`);
+function checkModifiedElement(view, name) {
+  is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
+  ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
 }

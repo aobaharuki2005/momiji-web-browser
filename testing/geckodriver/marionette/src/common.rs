@@ -120,11 +120,9 @@ pub struct WebElement {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Timeouts {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[allow(clippy::option_option)]
-    pub implicit: Option<Option<u64>>,
-    #[serde(default, skip_serializing_if = "Option::is_none", rename = "pageLoad")]
-    #[allow(clippy::option_option)]
-    pub page_load: Option<Option<u64>>,
+    pub implicit: Option<u64>,
+    #[serde(default, rename = "pageLoad", skip_serializing_if = "Option::is_none")]
+    pub page_load: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[allow(clippy::option_option)]
     pub script: Option<Option<u64>>,
@@ -210,8 +208,8 @@ mod tests {
     #[test]
     fn test_timeouts_with_all_params() {
         let data = Timeouts {
-            implicit: Some(Some(1000)),
-            page_load: Some(Some(200000)),
+            implicit: Some(1000),
+            page_load: Some(200000),
             script: Some(Some(60000)),
         };
         assert_ser_de(
@@ -223,7 +221,7 @@ mod tests {
     #[test]
     fn test_timeouts_with_missing_params() {
         let data = Timeouts {
-            implicit: Some(1000.into()),
+            implicit: Some(1000),
             page_load: None,
             script: None,
         };
@@ -233,7 +231,7 @@ mod tests {
     #[test]
     fn test_timeouts_setting_script_none() {
         let data = Timeouts {
-            implicit: Some(1000.into()),
+            implicit: Some(1000),
             page_load: None,
             script: Some(None),
         };

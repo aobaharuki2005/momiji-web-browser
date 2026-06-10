@@ -18,6 +18,7 @@ const ruleTester = new RuleTester();
 const errors = [
   {
     messageId: "preferIsInstance",
+    type: "BinaryExpression",
   },
 ];
 

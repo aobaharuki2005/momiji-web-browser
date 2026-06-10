@@ -29,7 +29,6 @@ import kotlin.coroutines.CoroutineContext
  * @param prefKey the pref key identifier for the "should show marketing page" pref
  * @param pagesToDisplay the mutable list of onboarding pages we display
  * @param settings settings class that holds shared preferences
- * @param mainContext the coroutine context for UI
  * @param ioContext the coroutine context for IO
  * @param lifecycleOwner the lifecycle owner
  */
@@ -37,7 +36,6 @@ class MarketingPageRemovalSupport(
     private val prefKey: String,
     private val pagesToDisplay: MutableList<OnboardingPageUiData>,
     private val settings: Settings,
-    private val mainContext: CoroutineContext = Dispatchers.Main,
     private val ioContext: CoroutineContext = Dispatchers.IO,
     private val lifecycleOwner: LifecycleOwner,
 ) : LifecycleAwareFeature {
@@ -50,7 +48,6 @@ class MarketingPageRemovalSupport(
         job = lifecycleOwner.lifecycleScope.launch(ioContext) {
             settings.preferences.flowScopedBooleanPreference(
                 lifecycleOwner,
-                mainContext,
                 prefKey,
                 settings.shouldShowMarketingOnboarding,
             )
@@ -78,7 +75,6 @@ internal fun MutableList<OnboardingPageUiData>.removeIfPageNotReached(index: Int
 
 internal fun SharedPreferences.flowScopedBooleanPreference(
     owner: LifecycleOwner,
-    mainContext: CoroutineContext,
     key: String,
     defValue: Boolean,
 ) = channelFlow {
@@ -94,7 +90,7 @@ internal fun SharedPreferences.flowScopedBooleanPreference(
         }
     }
 
-    withContext(mainContext) {
+    withContext(Dispatchers.Main) {
         owner.lifecycle.addObserver(listener)
     }
 

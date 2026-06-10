@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -29,13 +31,6 @@ void SVGStringList::GetValue(nsAString& aValue) const {
 nsresult SVGStringList::SetValue(const nsAString& aValue) {
   SVGStringList temp;
 
-  if (aValue.IsEmpty()) {
-    if (!temp.AppendItem(u""_ns)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    return CopyFrom(temp);
-  }
-
   if (mIsCommaSeparated) {
     nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
         tokenizer(aValue, ',');
@@ -46,9 +41,7 @@ nsresult SVGStringList::SetValue(const nsAString& aValue) {
       }
     }
     if (tokenizer.separatorAfterCurrentToken()) {
-      if (!temp.AppendItem(u""_ns)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      return NS_ERROR_DOM_SYNTAX_ERR;  // trailing comma
     }
   } else {
     nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(

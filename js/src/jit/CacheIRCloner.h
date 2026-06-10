@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -68,7 +70,6 @@ class MOZ_RAII CacheIRCloner {
   JitCode* getJitCodeField(uint32_t stubOffset);
   uint32_t getRawInt32Field(uint32_t stubOffset);
   const void* getRawPointerField(uint32_t stubOffset);
-  const ICScript* getICScriptField(uint32_t stubOffset);
   jsid getIdField(uint32_t stubOffset);
   Value getValueField(uint32_t stubOffset);
   Value getWeakValueField(uint32_t stubOffset);

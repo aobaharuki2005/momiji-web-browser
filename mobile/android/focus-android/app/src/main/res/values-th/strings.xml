@@ -549,7 +549,7 @@
     * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
     * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
   -->
-  <string name="notification_browsing_session_channel_name">เซสชันการท่องเว็บแบบส่วนตัว</string>
+  <string name="notification_browsing_session_channel_name">วาระการท่องเว็บแบบส่วนตัว</string>
   <!--
     The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
@@ -557,13 +557,11 @@
     * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
     * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
   -->
-  <string name="notification_browsing_session_channel_description">การแจ้งเตือนช่วยให้คุณล้างเซสชัน %1$s ของคุณด้วยการแตะ คุณไม่จำเป็นต้องเปิดแอปหรือดูสิ่งที่กำลังทำงานในเบราว์เซอร์ของคุณ</string>
+  <string name="notification_browsing_session_channel_description">การแจ้งเตือนช่วยให้คุณล้างวาระ %1$s ของคุณด้วยการแตะ คุณไม่จำเป็นต้องเปิดแอปหรือดูสิ่งที่กำลังทำงานในเบราว์เซอร์ของคุณ</string>
   <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
   <string name="tabs_tray_action_erase">ล้างประวัติการท่องเว็บ</string>
   <!-- Label for the option in the Focus "tabs tray" to clos the other tabs except the current tab. -->
   <string name="tabs_tray_action_erase_other">ปิดแท็บอื่น ๆ</string>
-  <!-- Label for the option in the Focus "tabs tray" to add a new tab. -->
-  <string name="tabs_tray_action_add_new_tab">เพิ่มแท็บใหม่</string>
   <!--
     If the user decides to open the current page in another browser and if Firefox is not installed then we show this
     item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play).
@@ -584,21 +582,6 @@
   <string name="security_popup_security_verified">ยืนยันโดย: %1$s</string>
   <!-- Content Description of Security Icon in toolbar -->
   <string name="site_security_icon_content_description">ความปลอดภัยของไซต์</string>
-  <!--
-    %1$s will be replaced with the organization for which the certificate
-    used by the site was issued. For example, the certificate in use by
-    the site https://eidas.ec.europa.eu/ was issued to "The European
-    Commission".
-  -->
-  <string name="qualified_identity">ออกใบรับรองให้กับ %1$s</string>
-  <!--
-    The European Union eIDAS Regulation specifies a type of certificate
-    called a "qualified website authentication certificate" (QWAC) and
-    requires that browsers identify and indicate such certificates. This
-    text was paraphrased from ETSI TS 119 411-5 V2.1.1 section 6.3 and
-    indicates that the website uses a QWAC.
-  -->
-  <string name="qualified_text">มีคุณสมบัติตรงตามที่ระบุไว้ในระเบียบ (EU) 2024/1183</string>
   <string name="preference_autocomplete_duplicate_url_error">มี URL อยู่แล้ว</string>
   <!-- Label for the Find in page button -->
   <string name="find_in_page">ค้นหาในหน้า</string>
@@ -736,7 +719,7 @@
     Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened.
   -->
-  <string name="biometric_auth_open_link_new_session">เปิดลิงก์ในเซสชันใหม่</string>
+  <string name="biometric_auth_open_link_new_session">เปิดลิงก์ในวาระใหม่</string>
   <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
   <string name="biometric_auth_image_description">ไอคอนลายนิ้วมือ</string>
   <!--
@@ -941,7 +924,7 @@
   <!-- This is the title of promote search widget dialog. -->
   <string name="promote_search_widget_dialog_title">ล้างประวัติการท่องเว็บแล้ว! 🎉</string>
   <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
-  <string name="cfr_for_start_browsing">เริ่มเซสชันการท่องเว็บแบบส่วนตัว แล้วเราจะปิดกั้นตัวติดตามและสิ่งไม่พึงประสงค์ในขณะที่คุณใช้งาน</string>
+  <string name="cfr_for_start_browsing">เริ่มวาระการท่องเว็บแบบส่วนตัว แล้วเราจะปิดกั้นตัวติดตามและสิ่งไม่พึงประสงค์ในขณะที่คุณใช้งาน</string>
   <!--
     This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. "Focus")

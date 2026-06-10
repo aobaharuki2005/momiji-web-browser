@@ -21,15 +21,17 @@
 #include <utility>
 #include <vector>
 
-#include "absl/functional/any_invocable.h"
+#include "absl/functional/bind_front.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/audio/audio_device.h"
 #include "api/audio/audio_processing_statistics.h"
 #include "api/candidate.h"
 #include "api/data_channel_interface.h"
 #include "api/dtls_transport_interface.h"
 #include "api/environment/environment.h"
+#include "api/make_ref_counted.h"
 #include "api/media_stream_interface.h"
 #include "api/media_types.h"
 #include "api/rtp_parameters.h"
@@ -40,13 +42,11 @@
 #include "api/stats/rtc_stats_collector_callback.h"
 #include "api/stats/rtc_stats_report.h"
 #include "api/stats/rtcstats_objects.h"
-#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/enums.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_content_type.h"
 #include "api/video_codecs/scalability_mode.h"
-#include "call/call.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/media_channel.h"
 #include "media/base/stream_params.h"
@@ -63,10 +63,10 @@
 #include "pc/rtp_receiver_proxy.h"
 #include "pc/rtp_sender_proxy.h"
 #include "pc/rtp_transceiver.h"
-#include "pc/scoped_operations_batcher.h"
-#include "pc/track_media_info_map.h"
 #include "pc/transport_stats.h"
+#include "pc/webrtc_sdp.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/event.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/network_constants.h"
@@ -75,7 +75,7 @@
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/system/plan_b_only.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
@@ -99,71 +99,79 @@ std::string RTCCodecStatsIDFromTransportAndCodecParameters(
     const char direction,
     const std::string& transport_id,
     const RtpCodecParameters& codec_params) {
-  StringBuilder sb;
+  char buf[1024];
+  SimpleStringBuilder sb(buf);
   sb << 'C' << direction << transport_id << '_' << codec_params.payload_type;
   // TODO(https://crbug.com/webrtc/14420): If we stop supporting different FMTP
   // lines for the same PT and transport, which should be illegal SDP, then we
   // wouldn't need `fmtp` to be part of the ID here.
   StringBuilder fmtp;
-  if (WriteFmtpParameters(codec_params.parameters, fmtp)) {
+  if (WriteFmtpParameters(codec_params.parameters, &fmtp)) {
     sb << '_' << fmtp.Release();
   }
-  return sb.Release();
+  return sb.str();
 }
 
 std::string RTCIceCandidatePairStatsIDFromConnectionInfo(
     const ConnectionInfo& info) {
-  StringBuilder sb;
+  char buf[4096];
+  SimpleStringBuilder sb(buf);
   sb << "CP" << info.local_candidate.id() << "_" << info.remote_candidate.id();
-  return sb.Release();
+  return sb.str();
 }
 
 std::string RTCTransportStatsIDFromTransportChannel(
     const std::string& transport_name,
     int channel_component) {
-  StringBuilder sb;
+  char buf[1024];
+  SimpleStringBuilder sb(buf);
   sb << 'T' << transport_name << channel_component;
-  return sb.Release();
+  return sb.str();
 }
 
 std::string RTCInboundRtpStreamStatsIDFromSSRC(const std::string& transport_id,
                                                MediaType media_type,
                                                uint32_t ssrc) {
-  StringBuilder sb;
+  char buf[1024];
+  SimpleStringBuilder sb(buf);
   sb << 'I' << transport_id << (media_type == MediaType::AUDIO ? 'A' : 'V')
      << ssrc;
-  return sb.Release();
+  return sb.str();
 }
 
 std::string RTCOutboundRtpStreamStatsIDFromSSRC(const std::string& transport_id,
                                                 MediaType media_type,
                                                 uint32_t ssrc) {
-  StringBuilder sb;
+  char buf[1024];
+  SimpleStringBuilder sb(buf);
   sb << 'O' << transport_id << (media_type == MediaType::AUDIO ? 'A' : 'V')
      << ssrc;
-  return sb.Release();
+  return sb.str();
 }
 
 std::string RTCRemoteInboundRtpStreamStatsIdFromSourceSsrc(
     MediaType media_type,
     uint32_t source_ssrc) {
-  StringBuilder sb;
+  char buf[1024];
+  SimpleStringBuilder sb(buf);
   sb << "RI" << (media_type == MediaType::AUDIO ? 'A' : 'V') << source_ssrc;
-  return sb.Release();
+  return sb.str();
 }
 
 std::string RTCRemoteOutboundRTPStreamStatsIDFromSSRC(MediaType media_type,
                                                       uint32_t source_ssrc) {
-  StringBuilder sb;
+  char buf[1024];
+  SimpleStringBuilder sb(buf);
   sb << "RO" << (media_type == MediaType::AUDIO ? 'A' : 'V') << source_ssrc;
-  return sb.Release();
+  return sb.str();
 }
 
 std::string RTCMediaSourceStatsIDFromKindAndAttachment(MediaType media_type,
                                                        int attachment_id) {
-  StringBuilder sb;
+  char buf[1024];
+  SimpleStringBuilder sb(buf);
   sb << 'S' << (media_type == MediaType::AUDIO ? 'A' : 'V') << attachment_id;
-  return sb.Release();
+  return sb.str();
 }
 
 const char* DataStateToRTCDataChannelState(
@@ -308,18 +316,6 @@ absl::string_view NetworkTypeToStatsNetworkAdapterType(AdapterType type) {
   return {};
 }
 
-absl::string_view NetworkSliceToStatsNetworkSlice(NetworkSlice slice) {
-  switch (slice) {
-    case NetworkSlice::UNIFIED_COMMUNICATIONS:
-      return "unified-communications";
-    case NetworkSlice::NO_SLICE:
-      /* Should not be handled here. Report empty slice in stats instead. */
-      break;
-  }
-  RTC_DCHECK_NOTREACHED();
-  return {};
-}
-
 const char* QualityLimitationReasonToRTCQualityLimitationReason(
     QualityLimitationReason reason) {
   switch (reason) {
@@ -385,7 +381,7 @@ std::string GetCodecIdAndMaybeCreateCodecStats(
   }
 
   StringBuilder fmtp;
-  if (WriteFmtpParameters(codec_params.parameters, fmtp)) {
+  if (WriteFmtpParameters(codec_params.parameters, &fmtp)) {
     codec_stats->sdp_fmtp_line = fmtp.Release();
   }
   codec_stats->transport_id = transport_id;
@@ -443,20 +439,6 @@ void SetInboundRTPStreamStatsFromMediaReceiverInfo(
   }
   inbound_stats->total_processing_delay =
       media_receiver_info.total_processing_delay_seconds;
-}
-
-void AppendCallStats(const Call::Stats& call_stats,
-                     RTCInboundRtpStreamStats& rtp_stats) {
-  if (!rtp_stats.ssrc.has_value()) {
-    return;
-  }
-  auto it = call_stats.sent_ccfb_stats_per_ssrc.find(*rtp_stats.ssrc);
-  if (it == call_stats.sent_ccfb_stats_per_ssrc.end()) {
-    return;
-  }
-  rtp_stats.packets_reported_as_lost = it->second.num_packets_reported_lost;
-  rtp_stats.packets_reported_as_lost_but_recovered =
-      it->second.num_packets_reported_recovered;
 }
 
 std::unique_ptr<RTCInboundRtpStreamStats> CreateInboundAudioStreamStats(
@@ -901,13 +883,12 @@ CreateOutboundRTPStreamStatsFromVideoSenderInfo(
 }
 
 std::unique_ptr<RTCRemoteInboundRtpStreamStats>
-ProduceRemoteInboundRtpStreamStats(
+ProduceRemoteInboundRtpStreamStatsFromReportBlockData(
     const std::string& transport_id,
     const ReportBlockData& report_block,
     MediaType media_type,
     const std::map<std::string, RTCOutboundRtpStreamStats*>& outbound_rtps,
     const RTCStatsReport& report,
-    const Call::Stats& call_stats,
     const bool stats_timestamp_with_environment_clock) {
   // RTCStats' timestamp generally refers to when the metric was sampled, but
   // for "remote-[outbound/inbound]-rtp" it refers to the local time when the
@@ -919,8 +900,7 @@ ProduceRemoteInboundRtpStreamStats(
       RTCRemoteInboundRtpStreamStatsIdFromSourceSsrc(
           media_type, report_block.source_ssrc()),
       arrival_timestamp);
-  uint32_t ssrc = report_block.source_ssrc();
-  remote_inbound->ssrc = ssrc;
+  remote_inbound->ssrc = report_block.source_ssrc();
   remote_inbound->kind = media_type == MediaType::AUDIO ? "audio" : "video";
   remote_inbound->packets_lost = report_block.cumulative_lost();
   remote_inbound->fraction_lost = report_block.fraction_lost();
@@ -930,20 +910,6 @@ ProduceRemoteInboundRtpStreamStats(
   remote_inbound->total_round_trip_time =
       report_block.sum_rtts().seconds<double>();
   remote_inbound->round_trip_time_measurements = report_block.num_rtts();
-
-  if (auto it = call_stats.received_ccfb_stats_per_ssrc.find(ssrc);
-      it != call_stats.received_ccfb_stats_per_ssrc.end()) {
-    remote_inbound->packets_received_with_ect1 =
-        it->second.num_packets_received_with_ect1;
-    remote_inbound->packets_received_with_ce =
-        it->second.num_packets_received_with_ce;
-    remote_inbound->packets_reported_as_lost =
-        it->second.num_packets_reported_as_lost;
-    remote_inbound->packets_reported_as_lost_but_recovered =
-        it->second.num_packets_reported_as_lost_but_recovered;
-    remote_inbound->packets_with_bleached_ect1_marking =
-        it->second.num_packets_with_bleached_ect1_marking;
-  }
 
   std::string local_id = RTCOutboundRtpStreamStatsIDFromSSRC(
       transport_id, media_type, report_block.source_ssrc());
@@ -1087,10 +1053,6 @@ const std::string& ProduceIceCandidateStats(Timestamp timestamp,
     if (candidate.protocol() == "tcp") {
       candidate_stats->tcp_type = candidate.tcptype();
     }
-    if (candidate.network_slice() != NetworkSlice::NO_SLICE) {
-      candidate_stats->network_slice =
-          NetworkSliceToStatsNetworkSlice(candidate.network_slice());
-    }
 
     stats = candidate_stats.get();
     report->AddStats(std::move(candidate_stats));
@@ -1112,14 +1074,6 @@ void SetAudioProcessingStats(StatsType* stats,
   }
 }
 
-// Helper function for inserting into voice/video send/receive std::map types
-// while also DCHECKing for uniqueness.
-template <typename StatsMap>
-void AddChannelStats(StatsMap& stats_map, typename StatsMap::key_type channel) {
-  RTC_DCHECK(!stats_map.contains(channel));
-  stats_map.insert(std::make_pair(channel, typename StatsMap::mapped_type()));
-}
-
 }  // namespace
 
 scoped_refptr<RTCStatsReport> RTCStatsCollector::CreateReportFilteredBySelector(
@@ -1132,10 +1086,7 @@ scoped_refptr<RTCStatsReport> RTCStatsCollector::CreateReportFilteredBySelector(
     // Filter mode: RTCStatsCollector::RequestInfo::kSenderSelector
     if (sender_selector) {
       // Find outbound-rtp(s) of the sender using ssrc lookup.
-      RtpParameters parameters =
-          sender_selector->GetParametersInternal(/*may_use_cache=*/true,
-                                                 /*with_all_layers=*/false);
-      std::vector<RtpEncodingParameters>& encodings = parameters.encodings;
+      auto encodings = sender_selector->GetParametersInternal().encodings;
       for (const auto* outbound_rtp :
            report->GetStatsOfType<RTCOutboundRtpStreamStats>()) {
         RTC_DCHECK(outbound_rtp->ssrc.has_value());
@@ -1212,19 +1163,12 @@ RTCStatsCollector::RequestInfo::RequestInfo(
   RTC_DCHECK(!sender_selector_ || !receiver_selector_);
 }
 
-struct RTCStatsCollector::CollectionContext {
-  CollectionContext(scoped_refptr<RTCStatsReport> partial_report,
-                    int64_t partial_report_timestamp_us)
-      : partial_report_timestamp_us(partial_report_timestamp_us),
-        partial_report(std::move(partial_report)) {}
-
-  int64_t partial_report_timestamp_us = 0;
-
-  // Reports that are produced on the signaling thread or the network thread are
-  // merged into this report. It is only touched on the signaling thread. Once
-  // all partial reports are merged this is the result of a request.
-  scoped_refptr<RTCStatsReport> partial_report;
-};
+scoped_refptr<RTCStatsCollector> RTCStatsCollector::Create(
+    PeerConnectionInternal* pc,
+    const Environment& env,
+    int64_t cache_lifetime_us) {
+  return make_ref_counted<RTCStatsCollector>(pc, env, cache_lifetime_us);
+}
 
 RTCStatsCollector::RTCStatsCollector(PeerConnectionInternal* pc,
                                      const Environment& env,
@@ -1237,17 +1181,12 @@ RTCStatsCollector::RTCStatsCollector(PeerConnectionInternal* pc,
       signaling_thread_(pc->signaling_thread()),
       worker_thread_(pc->worker_thread()),
       network_thread_(pc->network_thread()),
+      num_pending_partial_reports_(0),
+      partial_report_timestamp_us_(0),
+      network_report_event_(true /* manual_reset */,
+                            true /* initially_signaled */),
       cache_timestamp_us_(0),
-      cache_lifetime_us_(cache_lifetime_us),
-      signaling_safety_(
-          PendingTaskSafetyFlag::CreateAttachedToTaskQueue(/*alive=*/true,
-                                                           signaling_thread_)),
-      worker_safety_(
-          PendingTaskSafetyFlag::CreateAttachedToTaskQueue(/*alive=*/true,
-                                                           worker_thread_)),
-      network_safety_(
-          PendingTaskSafetyFlag::CreateAttachedToTaskQueue(/*alive=*/true,
-                                                           network_thread_)) {
+      cache_lifetime_us_(cache_lifetime_us) {
   RTC_DCHECK(pc_);
   RTC_DCHECK(signaling_thread_);
   RTC_DCHECK(worker_thread_);
@@ -1255,7 +1194,9 @@ RTCStatsCollector::RTCStatsCollector(PeerConnectionInternal* pc,
   RTC_DCHECK_GE(cache_lifetime_us_, 0);
 }
 
-RTCStatsCollector::~RTCStatsCollector() = default;
+RTCStatsCollector::~RTCStatsCollector() {
+  RTC_DCHECK_EQ(num_pending_partial_reports_, 0);
+}
 
 void RTCStatsCollector::GetStatsReport(
     scoped_refptr<RTCStatsCollectorCallback> callback) {
@@ -1274,50 +1215,10 @@ void RTCStatsCollector::GetStatsReport(
   GetStatsReportInternal(RequestInfo(std::move(selector), std::move(callback)));
 }
 
-/*
-[Signaling Thread]        [Worker Thread]          [Network Thread]
-       |                         |                        |
-GetStatsReport                   |                        |
-       |                         |                        |
-GetStatsReportInternal           |                        |
-       |                         |                        |
-PrepareTransceiverStatsInfos-    |                        |
-  AndCallStats_s_w               |                        |
-       |                         |                        |
-       |----- (Post Task) ------>|                        |
-       |                         |                        |
-       |                  Call::GetStats                  |
-       |              MediaChannel::GetStats              |
-       |                         |                        |
-       |<---- (Post Task) -------|                        |
-       |                         |                        |
-ProducePartialResultsOnSig       |                        |
-       |                         |                        |
-       |----------------------------- (Post Task) ------->|
-       |                         |                        |
-       |                         |       ProducePartialResultsOnNetworkThread
-       |                         |           GetTransportStatsByNames
-       |                         |           GetDataChannelStats
-       |                         |           PrepareTransportCertStats
-       |                         |                        |
-       |<---------------------------- (Post Task) --------|
-       |                         |                        |
-ProcessResultsFromNetworkThread  |                        |
- (ProduceCertificateStats_s)     |                        |
- (ProduceTransportStats_s)       |                        |
- (ProduceRTPStreamStats_s)       |                        |
-       |                         |                        |
-OnNetworkReportReady             |                        |
- (Deliver Callback)              |                        |
-       v                         v                        v
-*/
 void RTCStatsCollector::GetStatsReportInternal(
     RTCStatsCollector::RequestInfo request) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (!signaling_safety_->alive()) {
-    RTC_LOG(LS_WARNING) << "GetStats called after shutdown.";
-    return;
-  }
+  requests_.push_back(std::move(request));
 
   // "Now" using a monotonically increasing timer.
   int64_t cache_now_us = env_.clock().TimeInMicroseconds();
@@ -1327,252 +1228,222 @@ void RTCStatsCollector::GetStatsReportInternal(
     // the caller may not be expecting a synchronous callback, and it avoids
     // reentrancy problems.
     signaling_thread_->PostTask(
-        SafeTask(signaling_safety_, [this, request = std::move(request),
-                                     report = cached_report_]() mutable {
-          DeliverReport(request, report);
-        }));
-    return;
+        absl::bind_front(&RTCStatsCollector::DeliverCachedReport,
+                         scoped_refptr<RTCStatsCollector>(this), cached_report_,
+                         std::move(requests_)));
+  } else if (!num_pending_partial_reports_) {
+    // Only start gathering stats if we're not already gathering stats. In the
+    // case of already gathering stats, `callback_` will be invoked when there
+    // are no more pending partial reports.
+
+    Timestamp timestamp =
+        stats_timestamp_with_environment_clock_
+            ?
+            // "Now" using a monotonically increasing timer.
+            env_.clock().CurrentTime()
+            :
+            // "Now" using a system clock, relative to the UNIX epoch (Jan 1,
+            // 1970, UTC), in microseconds. The system clock could be modified
+            // and is not necessarily monotonically increasing.
+            Timestamp::Micros(TimeUTCMicros());
+
+    num_pending_partial_reports_ = 2;
+    partial_report_timestamp_us_ = cache_now_us;
+
+    // Prepare `transceiver_stats_infos_` and `call_stats_` for use in
+    // `ProducePartialResultsOnNetworkThread` and
+    // `ProducePartialResultsOnSignalingThread`.
+    PrepareTransceiverStatsInfosAndCallStats_s_w_n();
+    // Don't touch `network_report_` on the signaling thread until
+    // ProducePartialResultsOnNetworkThread() has signaled the
+    // `network_report_event_`.
+    network_report_event_.Reset();
+    scoped_refptr<RTCStatsCollector> collector(this);
+    network_thread_->PostTask([collector,
+                               sctp_transport_name = pc_->sctp_transport_name(),
+                               timestamp]() mutable {
+      collector->ProducePartialResultsOnNetworkThread(
+          timestamp, std::move(sctp_transport_name));
+    });
+    ProducePartialResultsOnSignalingThread(timestamp);
   }
-
-  requests_.push_back(std::move(request));
-  if (collection_context_) {
-    // A stats gathering operation is already in progress.
-    return;
-  }
-
-  // Only start gathering stats if we're not already gathering stats. In the
-  // case of already gathering stats, `callback_` will be invoked when there
-  // are no more pending partial reports.
-
-  // Initialize common variables for the stats gather operation.
-  Timestamp timestamp =
-      stats_timestamp_with_environment_clock_
-          ?
-          // "Now" using a monotonically increasing timer.
-          env_.clock().CurrentTime()
-          :
-          // "Now" using a system clock, relative to the UNIX epoch (Jan 1,
-          // 1970, UTC), in microseconds. The system clock could be modified
-          // and is not necessarily monotonically increasing.
-          Timestamp::Micros(TimeUTCMicros());
-
-  collection_context_ = std::make_unique<CollectionContext>(
-      RTCStatsReport::Create(timestamp), cache_now_us);
-
-  // Prepare `transceiver_stats_infos` and `call_stats` for use in
-  // `ProducePartialResultsOnNetworkThread` and
-  // `ProducePartialResultsOnSignalingThread`.
-  auto worker_task = PrepareTransceiverStatsInfosAndCallStats_s_w();
-
-  auto signaling_task = [this](WorkerThreadResult worker_result) mutable {
-    RTC_DCHECK_RUN_ON(signaling_thread_);
-    // Create the initial `partial_report_` for the gathering operation.
-    ProducePartialResultsOnSignalingThread(
-        worker_result.results.transceiver_stats_infos,
-        worker_result.transceiver_references,
-        worker_result.results.audio_device_stats);
-
-    Timestamp timestamp = collection_context_->partial_report->timestamp();
-    std::set<std::string> transport_names;
-    auto sctp_transport_name = pc_->sctp_transport_name();
-    if (sctp_transport_name) {
-      transport_names.emplace(std::move(*sctp_transport_name));
-    }
-
-    for (const auto& info : worker_result.results.transceiver_stats_infos) {
-      if (info.transport_name)
-        transport_names.insert(*info.transport_name);
-    }
-
-    network_thread_->PostTask(SafeTask(
-        network_safety_,
-        [this, transport_names = std::move(transport_names), timestamp,
-         signaling_flag = signaling_safety_,
-         results = std::move(worker_result.results)]() mutable {
-          ProducePartialResultsOnNetworkThread(
-              std::move(signaling_flag), timestamp, std::move(transport_names),
-              std::move(results));
-        }));
-  };
-
-  worker_thread_->PostTask(SafeTask(
-      worker_safety_, [this, worker_task = std::move(worker_task),
-                       signaling_task = std::move(signaling_task)]() mutable {
-        auto worker_result = std::move(worker_task)();
-        signaling_thread_->PostTask(
-            SafeTask(signaling_safety_,
-                     [signaling_task = std::move(signaling_task),
-                      worker_result = std::move(worker_result)]() mutable {
-                       signaling_task(std::move(worker_result));
-                     }));
-      }));
 }
 
 void RTCStatsCollector::ClearCachedStatsReport() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   cached_report_ = nullptr;
-  // If we're not shutting down, clear the cache on the network thread.
-  if (signaling_safety_->alive()) {
-    network_thread_->PostTask(SafeTask(network_safety_, [this]() {
-      RTC_DCHECK_RUN_ON(network_thread_);
-      cached_certificates_by_transport_.clear();
-    }));
-  }
+  MutexLock lock(&cached_certificates_mutex_);
+  cached_certificates_by_transport_.clear();
 }
 
-void RTCStatsCollector::CancelPendingRequestAndGetShutdownTasks(
-    ScopedOperationsBatcher& network_tasks,
-    ScopedOperationsBatcher& worker_tasks) {
+void RTCStatsCollector::WaitForPendingRequest() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  signaling_safety_->SetNotAlive();
-  worker_tasks.Add([flag = worker_safety_]() { flag->SetNotAlive(); });
-  network_tasks.Add([flag = network_safety_]() { flag->SetNotAlive(); });
+  // If a request is pending, blocks until the `network_report_event_` is
+  // signaled and then delivers the result. Otherwise this is a NO-OP.
+  MergeNetworkReport_s();
 }
 
 void RTCStatsCollector::ProducePartialResultsOnSignalingThread(
-    const std::vector<RtpTransceiverStatsInfo>& transceiver_stats_infos,
-    const std::vector<TransceiverReferences>& transceiver_references,
-    const std::optional<AudioDeviceModule::Stats>& audio_device_stats) {
+    Timestamp timestamp) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTC_DCHECK(collection_context_);
-  RTC_DCHECK(collection_context_->partial_report.get());
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
-  ProducePartialResultsOnSignalingThreadImpl(
-      collection_context_->partial_report->timestamp(), transceiver_stats_infos,
-      transceiver_references, audio_device_stats,
-      collection_context_->partial_report.get());
+  partial_report_ = RTCStatsReport::Create(timestamp);
+
+  ProducePartialResultsOnSignalingThreadImpl(timestamp, partial_report_.get());
+
+  // ProducePartialResultsOnSignalingThread() is running synchronously on the
+  // signaling thread, so it is always the first partial result delivered on the
+  // signaling thread. The request is not complete until MergeNetworkReport_s()
+  // happens; we don't have to do anything here.
+  RTC_DCHECK_GT(num_pending_partial_reports_, 1);
+  --num_pending_partial_reports_;
 }
 
 void RTCStatsCollector::ProducePartialResultsOnSignalingThreadImpl(
     Timestamp timestamp,
-    const std::vector<RtpTransceiverStatsInfo>& transceiver_stats_infos,
-    const std::vector<TransceiverReferences>& transceiver_references,
-    const std::optional<AudioDeviceModule::Stats>& audio_device_stats,
     RTCStatsReport* partial_report) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  ProduceMediaSourceStats_s(timestamp, transceiver_stats_infos,
-                            transceiver_references, partial_report);
+  Thread::ScopedDisallowBlockingCalls no_blocking_calls;
+
+  ProduceMediaSourceStats_s(timestamp, partial_report);
   ProducePeerConnectionStats_s(timestamp, partial_report);
-  ProduceAudioPlayoutStats_s(timestamp, audio_device_stats, partial_report);
+  ProduceAudioPlayoutStats_s(timestamp, partial_report);
 }
 
 void RTCStatsCollector::ProducePartialResultsOnNetworkThread(
-    scoped_refptr<PendingTaskSafetyFlag> signaling_safety,
     Timestamp timestamp,
-    std::set<std::string> transport_names,
-    StatsGatheringResults results) {
-  RTC_DCHECK_RUN_ON(network_thread_);
+    std::optional<std::string> sctp_transport_name) {
   TRACE_EVENT0("webrtc",
                "RTCStatsCollector::ProducePartialResultsOnNetworkThread");
+  RTC_DCHECK_RUN_ON(network_thread_);
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
-  std::vector<DataChannelStats> data_channel_stats = pc_->GetDataChannelStats();
+  // Touching `network_report_` on this thread is safe by this method because
+  // `network_report_event_` is reset before this method is invoked.
+  network_report_ = RTCStatsReport::Create(timestamp);
+
+  ProduceDataChannelStats_n(timestamp, network_report_.get());
+
+  std::set<std::string> transport_names;
+  if (sctp_transport_name) {
+    transport_names.emplace(std::move(*sctp_transport_name));
+  }
+
+  for (const auto& info : transceiver_stats_infos_) {
+    if (info.transport_name)
+      transport_names.insert(*info.transport_name);
+  }
 
   std::map<std::string, TransportStats> transport_stats_by_name =
       pc_->GetTransportStatsByNames(transport_names);
   std::map<std::string, CertificateStatsPair> transport_cert_stats =
       PrepareTransportCertificateStats_n(transport_stats_by_name);
 
-  signaling_thread_->PostTask(SafeTask(
-      std::move(signaling_safety),
-      [this, timestamp,
-       transport_stats_by_name = std::move(transport_stats_by_name),
-       transport_cert_stats = std::move(transport_cert_stats),
-       transceiver_stats_infos = std::move(results.transceiver_stats_infos),
-       call_stats = results.call_stats,
-       audio_device_stats = results.audio_device_stats,
-       data_channel_stats = std::move(data_channel_stats)]() mutable {
-        auto network_report = RTCStatsReport::Create(timestamp);
-        ProcessResultsFromNetworkThread(
-            timestamp, std::move(transport_stats_by_name),
-            std::move(transport_cert_stats), std::move(transceiver_stats_infos),
-            call_stats, audio_device_stats, network_report.get());
-        OnNetworkReportReady(std::move(network_report),
-                             std::move(data_channel_stats));
-      }));
+  ProducePartialResultsOnNetworkThreadImpl(timestamp, transport_stats_by_name,
+                                           transport_cert_stats,
+                                           network_report_.get());
+
+  // Signal that it is now safe to touch `network_report_` on the signaling
+  // thread, and post a task to merge it into the final results.
+  network_report_event_.Set();
+  scoped_refptr<RTCStatsCollector> collector(this);
+  signaling_thread_->PostTask(
+      [collector] { collector->MergeNetworkReport_s(); });
 }
 
-void RTCStatsCollector::ProcessResultsFromNetworkThread(
+void RTCStatsCollector::ProducePartialResultsOnNetworkThreadImpl(
     Timestamp timestamp,
-    std::map<std::string, TransportStats> transport_stats_by_name,
-    std::map<std::string, CertificateStatsPair> transport_cert_stats,
-    std::vector<RtpTransceiverStatsInfo> transceiver_stats_infos,
-    Call::Stats call_stats,
-    std::optional<AudioDeviceModule::Stats> audio_device_stats,
+    const std::map<std::string, TransportStats>& transport_stats_by_name,
+    const std::map<std::string, CertificateStatsPair>& transport_cert_stats,
     RTCStatsReport* partial_report) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK_RUN_ON(network_thread_);
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
-  ProduceCertificateStats_s(timestamp, transport_cert_stats, partial_report);
-  ProduceIceCandidateAndPairStats_s(timestamp, transport_stats_by_name,
-                                    call_stats, partial_report);
-  ProduceTransportStats_s(timestamp, transport_stats_by_name,
-                          transport_cert_stats, call_stats, partial_report);
-  ProduceRTPStreamStats_s(timestamp, transceiver_stats_infos, call_stats,
-                          audio_device_stats, partial_report);
+  ProduceCertificateStats_n(timestamp, transport_cert_stats, partial_report);
+  ProduceIceCandidateAndPairStats_n(timestamp, transport_stats_by_name,
+                                    call_stats_, partial_report);
+  ProduceTransportStats_n(timestamp, transport_stats_by_name,
+                          transport_cert_stats, call_stats_, partial_report);
+  ProduceRTPStreamStats_n(timestamp, transceiver_stats_infos_, partial_report);
 }
 
-void RTCStatsCollector::OnNetworkReportReady(
-    scoped_refptr<RTCStatsReport> network_report,
-    std::vector<DataChannelStats> data_channel_stats) {
+void RTCStatsCollector::MergeNetworkReport_s() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTC_DCHECK(collection_context_);
-  RTC_DCHECK(collection_context_->partial_report);
-  RTC_DCHECK(network_report);
-
-  collection_context_->partial_report->TakeMembersFrom(network_report);
-
-  ProduceDataChannelStats_s(collection_context_->partial_report->timestamp(),
-                            data_channel_stats,
-                            collection_context_->partial_report.get());
-
-  cache_timestamp_us_ = collection_context_->partial_report_timestamp_us;
-  cached_report_ = std::move(collection_context_->partial_report);
-  collection_context_ = nullptr;
-
+  // The `network_report_event_` must be signaled for it to be safe to touch
+  // `network_report_`. This is normally not blocking, but if
+  // WaitForPendingRequest() is called while a request is pending, we might have
+  // to wait until the network thread is done touching `network_report_`.
+  network_report_event_.Wait(Event::kForever);
+  if (!network_report_) {
+    // Normally, MergeNetworkReport_s() is executed because it is posted from
+    // the network thread. But if WaitForPendingRequest() is called while a
+    // request is pending, an early call to MergeNetworkReport_s() is made,
+    // merging the report and setting `network_report_` to null. If so, when the
+    // previously posted MergeNetworkReport_s() is later executed, the report is
+    // already null and nothing needs to be done here.
+    return;
+  }
+  RTC_DCHECK_GT(num_pending_partial_reports_, 0);
+  RTC_DCHECK(partial_report_);
+  partial_report_->TakeMembersFrom(network_report_);
+  network_report_ = nullptr;
+  --num_pending_partial_reports_;
+  // `network_report_` is currently the only partial report collected
+  // asynchronously, so `num_pending_partial_reports_` must now be 0 and we are
+  // ready to deliver the result.
+  RTC_DCHECK_EQ(num_pending_partial_reports_, 0);
+  cache_timestamp_us_ = partial_report_timestamp_us_;
+  cached_report_ = partial_report_;
+  partial_report_ = nullptr;
+  transceiver_stats_infos_.clear();
   // Trace WebRTC Stats when getStats is called on Javascript.
   // This allows access to WebRTC stats from trace logs. To enable them,
   // select the "webrtc_stats" category when recording traces.
   TRACE_EVENT_INSTANT1("webrtc_stats", "webrtc_stats", TRACE_EVENT_SCOPE_GLOBAL,
                        "report", cached_report_->ToJson());
 
-  // Clear `requests_` before the loop in case a callback adds a request.
-  auto requests = std::move(requests_);
-  for (const RequestInfo& request : requests) {
-    DeliverReport(request, cached_report_);
-  }
+  // Deliver report and clear `requests_`.
+  std::vector<RequestInfo> requests;
+  requests.swap(requests_);
+  DeliverCachedReport(cached_report_, std::move(requests));
 }
 
-void RTCStatsCollector::DeliverReport(
-    const RequestInfo& request,
-    const scoped_refptr<const RTCStatsReport>& report) {
+void RTCStatsCollector::DeliverCachedReport(
+    scoped_refptr<const RTCStatsReport> cached_report,
+    std::vector<RTCStatsCollector::RequestInfo> requests) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (request.filter_mode() == RequestInfo::FilterMode::kAll) {
-    request.callback()->OnStatsDelivered(report);
-  } else {
-    bool filter_by_sender_selector;
-    scoped_refptr<RtpSenderInternal> sender_selector;
-    scoped_refptr<RtpReceiverInternal> receiver_selector;
-    if (request.filter_mode() == RequestInfo::FilterMode::kSenderSelector) {
-      filter_by_sender_selector = true;
-      sender_selector = request.sender_selector();
+  RTC_DCHECK(!requests.empty());
+  RTC_DCHECK(cached_report);
+
+  for (const RequestInfo& request : requests) {
+    if (request.filter_mode() == RequestInfo::FilterMode::kAll) {
+      request.callback()->OnStatsDelivered(cached_report);
     } else {
-      RTC_DCHECK(request.filter_mode() ==
-                 RequestInfo::FilterMode::kReceiverSelector);
-      filter_by_sender_selector = false;
-      receiver_selector = request.receiver_selector();
+      bool filter_by_sender_selector;
+      scoped_refptr<RtpSenderInternal> sender_selector;
+      scoped_refptr<RtpReceiverInternal> receiver_selector;
+      if (request.filter_mode() == RequestInfo::FilterMode::kSenderSelector) {
+        filter_by_sender_selector = true;
+        sender_selector = request.sender_selector();
+      } else {
+        RTC_DCHECK(request.filter_mode() ==
+                   RequestInfo::FilterMode::kReceiverSelector);
+        filter_by_sender_selector = false;
+        receiver_selector = request.receiver_selector();
+      }
+      request.callback()->OnStatsDelivered(CreateReportFilteredBySelector(
+          filter_by_sender_selector, cached_report, sender_selector,
+          receiver_selector));
     }
-    request.callback()->OnStatsDelivered(CreateReportFilteredBySelector(
-        filter_by_sender_selector, report, sender_selector, receiver_selector));
   }
 }
 
-void RTCStatsCollector::ProduceCertificateStats_s(
+void RTCStatsCollector::ProduceCertificateStats_n(
     Timestamp timestamp,
     const std::map<std::string, CertificateStatsPair>& transport_cert_stats,
     RTCStatsReport* report) const {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK_RUN_ON(network_thread_);
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   for (const auto& transport_cert_stats_pair : transport_cert_stats) {
@@ -1587,13 +1458,12 @@ void RTCStatsCollector::ProduceCertificateStats_s(
   }
 }
 
-void RTCStatsCollector::ProduceDataChannelStats_s(
+void RTCStatsCollector::ProduceDataChannelStats_n(
     Timestamp timestamp,
-    const std::vector<DataChannelStats>& data_stats,
     RTCStatsReport* report) const {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK_RUN_ON(network_thread_);
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
-
+  std::vector<DataChannelStats> data_stats = pc_->GetDataChannelStats();
   for (const auto& stats : data_stats) {
     auto data_channel_stats = std::make_unique<RTCDataChannelStats>(
         "D" + absl::StrCat(stats.internal_id), timestamp);
@@ -1613,12 +1483,12 @@ void RTCStatsCollector::ProduceDataChannelStats_s(
   }
 }
 
-void RTCStatsCollector::ProduceIceCandidateAndPairStats_s(
+void RTCStatsCollector::ProduceIceCandidateAndPairStats_n(
     Timestamp timestamp,
     const std::map<std::string, TransportStats>& transport_stats_by_name,
     const Call::Stats& call_stats,
     RTCStatsReport* report) const {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK_RUN_ON(network_thread_);
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   for (const auto& entry : transport_stats_by_name) {
@@ -1721,30 +1591,15 @@ void RTCStatsCollector::ProduceIceCandidateAndPairStats_s(
 
 void RTCStatsCollector::ProduceMediaSourceStats_s(
     Timestamp timestamp,
-    const std::vector<RtpTransceiverStatsInfo>& transceiver_stats_infos,
-    const std::vector<TransceiverReferences>& transceiver_references,
     RTCStatsReport* report) const {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
-  RTC_DCHECK_EQ(transceiver_stats_infos.size(), transceiver_references.size());
-  for (size_t i = 0; i < transceiver_stats_infos.size(); ++i) {
-    const RtpTransceiverStatsInfo& transceiver_stats_info =
-        transceiver_stats_infos[i];
-    const TransceiverReferences& refs = transceiver_references[i];
-
-    // The transceiver will still exist but in a stopped state after pc.close().
-    if (transceiver_stats_info.current_direction ==
-        RtpTransceiverDirection::kStopped) {
-      continue;
-    }
-    RTC_DCHECK(transceiver_stats_info.track_media_info_map);
-    const TrackMediaInfoMap& track_media_info_map =
-        *transceiver_stats_info.track_media_info_map;
-
-    RTC_ALLOW_PLAN_B_DEPRECATION_BEGIN()
-    for (const auto& sender : refs.transceiver->senders()) {
-      RTC_ALLOW_PLAN_B_DEPRECATION_END()
+  for (const RtpTransceiverStatsInfo& transceiver_stats_info :
+       transceiver_stats_infos_) {
+    const auto& track_media_info_map =
+        transceiver_stats_info.track_media_info_map;
+    for (const auto& sender : transceiver_stats_info.transceiver->senders()) {
       const auto& sender_internal = sender->internal();
       const auto& track = sender_internal->track();
       if (!track)
@@ -1757,7 +1612,7 @@ void RTCStatsCollector::ProduceMediaSourceStats_s(
       // levels are moved to the corresponding audio track/source object), don't
       // create separate media source stats objects on a per-attachment basis.
       std::unique_ptr<RTCMediaSourceStats> media_source_stats;
-      if (sender_internal->media_type() == MediaType::AUDIO) {
+      if (track->kind() == MediaStreamTrackInterface::kAudioKind) {
         AudioTrackInterface* audio_track =
             static_cast<AudioTrackInterface*>(track.get());
         auto audio_source_stats = std::make_unique<RTCAudioSourceStats>(
@@ -1847,58 +1702,47 @@ void RTCStatsCollector::ProducePeerConnectionStats_s(
 
 void RTCStatsCollector::ProduceAudioPlayoutStats_s(
     Timestamp timestamp,
-    const std::optional<AudioDeviceModule::Stats>& audio_device_stats,
     RTCStatsReport* report) const {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
-  if (audio_device_stats) {
-    report->AddStats(CreateAudioPlayoutStats(*audio_device_stats, timestamp));
+  if (audio_device_stats_) {
+    report->AddStats(CreateAudioPlayoutStats(*audio_device_stats_, timestamp));
   }
 }
 
-void RTCStatsCollector::ProduceRTPStreamStats_s(
+void RTCStatsCollector::ProduceRTPStreamStats_n(
     Timestamp timestamp,
     const std::vector<RtpTransceiverStatsInfo>& transceiver_stats_infos,
-    const Call::Stats& call_stats,
-    const std::optional<AudioDeviceModule::Stats>& audio_device_stats,
     RTCStatsReport* report) const {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK_RUN_ON(network_thread_);
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
+  bool spec_lifetime = is_unified_plan_ &&
+                       !env_.field_trials().IsDisabled("WebRTC-RTP-Lifetime");
   for (const RtpTransceiverStatsInfo& stats : transceiver_stats_infos) {
-    if (!stats.mid || !stats.transport_name) {
-      continue;
-    }
-
-    if (stats.current_direction == RtpTransceiverDirection::kStopped) {
-      continue;
-    }
-
     if (stats.media_type == MediaType::AUDIO) {
-      ProduceAudioRTPStreamStats_s(timestamp, stats, call_stats,
-                                   audio_device_stats, report);
+      ProduceAudioRTPStreamStats_n(timestamp, stats, spec_lifetime, report);
+    } else if (stats.media_type == MediaType::VIDEO) {
+      ProduceVideoRTPStreamStats_n(timestamp, stats, spec_lifetime, report);
     } else {
-      RTC_DCHECK_EQ(stats.media_type, MediaType::VIDEO);
-      ProduceVideoRTPStreamStats_s(timestamp, stats, call_stats, report);
+      RTC_DCHECK_NOTREACHED();
     }
   }
 }
 
-void RTCStatsCollector::ProduceAudioRTPStreamStats_s(
+void RTCStatsCollector::ProduceAudioRTPStreamStats_n(
     Timestamp timestamp,
     const RtpTransceiverStatsInfo& stats,
-    const Call::Stats& call_stats,
-    const std::optional<AudioDeviceModule::Stats>& audio_device_stats,
+    bool spec_lifetime,
     RTCStatsReport* report) const {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTC_DCHECK(stats.mid);
-  RTC_DCHECK(stats.transport_name);
-  RTC_DCHECK(stats.track_media_info_map);
-  RTC_DCHECK(stats.track_media_info_map->voice_media_info().has_value());
-
+  RTC_DCHECK_RUN_ON(network_thread_);
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
+  if (!stats.mid || !stats.transport_name) {
+    return;
+  }
+  RTC_DCHECK(stats.track_media_info_map.voice_media_info().has_value());
   std::string mid = *stats.mid;
   std::string transport_id = RTCTransportStatsIDFromTransportChannel(
       *stats.transport_name, ICE_CANDIDATE_COMPONENT_RTP);
@@ -1906,31 +1750,29 @@ void RTCStatsCollector::ProduceAudioRTPStreamStats_s(
   // The remote-outbound stats are based on RTCP sender reports sent from the
   // remote endpoint providing metrics about the remote outbound streams.
   for (const VoiceReceiverInfo& voice_receiver_info :
-       stats.track_media_info_map->voice_media_info()->receivers) {
+       stats.track_media_info_map.voice_media_info()->receivers) {
     if (!voice_receiver_info.connected()) {
       continue;  // The SSRC is not known yet.
     }
     // Check both packets received and samples received to handle the Insertable
     // Streams use case of receiving media without receiving packets.
-    if (is_unified_plan_ && voice_receiver_info.packets_received == 0 &&
+    if (spec_lifetime && voice_receiver_info.packets_received == 0 &&
         voice_receiver_info.total_samples_received == 0) {
       // The SSRC is known despite not receiving any packets. This happens if
       // SSRC is signalled in the SDP which we should not rely on for getStats.
       continue;
     }
     // Inbound.
-    std::unique_ptr<RTCInboundRtpStreamStats> inbound_audio =
-        CreateInboundAudioStreamStats(
-            *stats.track_media_info_map->voice_media_info(),
-            voice_receiver_info, transport_id, mid, timestamp, report);
-    AppendCallStats(call_stats, *inbound_audio);
+    auto inbound_audio = CreateInboundAudioStreamStats(
+        *stats.track_media_info_map.voice_media_info(), voice_receiver_info,
+        transport_id, mid, timestamp, report);
     // TODO(hta): This lookup should look for the sender, not the track.
-    auto track_id = stats.track_media_info_map->GetReceiverTrackIdBySsrc(
-        voice_receiver_info.ssrc(), MediaType::AUDIO);
-    if (track_id.has_value()) {
-      inbound_audio->track_identifier = *track_id;
+    scoped_refptr<AudioTrackInterface> audio_track =
+        stats.track_media_info_map.GetAudioTrack(voice_receiver_info);
+    if (audio_track) {
+      inbound_audio->track_identifier = audio_track->id();
     }
-    if (audio_device_stats && stats.media_type == MediaType::AUDIO &&
+    if (audio_device_stats_ && stats.media_type == MediaType::AUDIO &&
         stats.current_direction &&
         (*stats.current_direction == RtpTransceiverDirection::kSendRecv ||
          *stats.current_direction == RtpTransceiverDirection::kRecvOnly)) {
@@ -1963,25 +1805,25 @@ void RTCStatsCollector::ProduceAudioRTPStreamStats_s(
   // Outbound.
   std::map<std::string, RTCOutboundRtpStreamStats*> audio_outbound_rtps;
   for (const VoiceSenderInfo& voice_sender_info :
-       stats.track_media_info_map->voice_media_info()->senders) {
+       stats.track_media_info_map.voice_media_info()->senders) {
     if (!voice_sender_info.connected()) {
       continue;  // The SSRC is not known yet.
     }
-    if (is_unified_plan_ && !stats.current_direction.has_value()) {
+    if (spec_lifetime && !stats.current_direction.has_value()) {
       continue;  // The SSRC is known but the O/A has not completed.
     }
     auto outbound_audio = CreateOutboundRTPStreamStatsFromVoiceSenderInfo(
-        transport_id, mid, *stats.track_media_info_map->voice_media_info(),
+        transport_id, mid, *stats.track_media_info_map.voice_media_info(),
         voice_sender_info, timestamp, report);
-    if (!voice_sender_info.local_stats.empty()) {
-      auto attachment_id = stats.track_media_info_map->GetAttachmentIdBySsrc(
-          voice_sender_info.local_stats[0].ssrc, MediaType::AUDIO,
-          /*is_sender=*/true);
-      if (attachment_id.has_value()) {
-        outbound_audio->media_source_id =
-            RTCMediaSourceStatsIDFromKindAndAttachment(MediaType::AUDIO,
-                                                       attachment_id.value());
-      }
+    scoped_refptr<AudioTrackInterface> audio_track =
+        stats.track_media_info_map.GetAudioTrack(voice_sender_info);
+    if (audio_track) {
+      int attachment_id =
+          stats.track_media_info_map.GetAttachmentIdByTrack(audio_track.get())
+              .value();
+      outbound_audio->media_source_id =
+          RTCMediaSourceStatsIDFromKindAndAttachment(MediaType::AUDIO,
+                                                     attachment_id);
     }
     auto audio_outbound_pair =
         std::make_pair(outbound_audio->id(), outbound_audio.get());
@@ -1998,55 +1840,52 @@ void RTCStatsCollector::ProduceAudioRTPStreamStats_s(
   // that RTCOutboundRtpStreamStats, RTCCodecStats and RTCTransport have already
   // been added to the report.
   for (const VoiceSenderInfo& voice_sender_info :
-       stats.track_media_info_map->voice_media_info()->senders) {
+       stats.track_media_info_map.voice_media_info()->senders) {
     for (const auto& report_block_data : voice_sender_info.report_block_datas) {
-      report->AddStats(ProduceRemoteInboundRtpStreamStats(
+      report->AddStats(ProduceRemoteInboundRtpStreamStatsFromReportBlockData(
           transport_id, report_block_data, MediaType::AUDIO,
-          audio_outbound_rtps, *report, call_stats,
+          audio_outbound_rtps, *report,
           stats_timestamp_with_environment_clock_));
     }
   }
 }
 
-void RTCStatsCollector::ProduceVideoRTPStreamStats_s(
+void RTCStatsCollector::ProduceVideoRTPStreamStats_n(
     Timestamp timestamp,
     const RtpTransceiverStatsInfo& stats,
-    const Call::Stats& call_stats,
+    bool spec_lifetime,
     RTCStatsReport* report) const {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTC_DCHECK(stats.mid);
-  RTC_DCHECK(stats.transport_name);
-  RTC_DCHECK(stats.track_media_info_map);
-  RTC_DCHECK(stats.track_media_info_map->video_media_info().has_value());
-
+  RTC_DCHECK_RUN_ON(network_thread_);
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
+  if (!stats.mid || !stats.transport_name) {
+    return;
+  }
+  RTC_DCHECK(stats.track_media_info_map.video_media_info().has_value());
   std::string mid = *stats.mid;
   std::string transport_id = RTCTransportStatsIDFromTransportChannel(
       *stats.transport_name, ICE_CANDIDATE_COMPONENT_RTP);
   // Inbound and remote-outbound.
   for (const VideoReceiverInfo& video_receiver_info :
-       stats.track_media_info_map->video_media_info()->receivers) {
+       stats.track_media_info_map.video_media_info()->receivers) {
     if (!video_receiver_info.connected()) {
       continue;  // The SSRC is not known yet.
     }
     // Check both packets received and frames received to handle the Insertable
     // Streams use case of receiving media without receiving packets.
-    if (is_unified_plan_ && video_receiver_info.packets_received == 0 &&
+    if (spec_lifetime && video_receiver_info.packets_received == 0 &&
         video_receiver_info.frames_received == 0) {
       // The SSRC is known despite not receiving any packets. This happens if
       // SSRC is signalled in the SDP which we should not rely on for getStats.
       continue;
     }
-    std::unique_ptr<RTCInboundRtpStreamStats> inbound_video =
-        CreateInboundRTPStreamStatsFromVideoReceiverInfo(
-            transport_id, mid, *stats.track_media_info_map->video_media_info(),
-            video_receiver_info, timestamp, report);
-    AppendCallStats(call_stats, *inbound_video);
-    auto track_id = stats.track_media_info_map->GetReceiverTrackIdBySsrc(
-        video_receiver_info.ssrc(), MediaType::VIDEO);
-    if (track_id.has_value()) {
-      inbound_video->track_identifier = *track_id;
+    auto inbound_video = CreateInboundRTPStreamStatsFromVideoReceiverInfo(
+        transport_id, mid, *stats.track_media_info_map.video_media_info(),
+        video_receiver_info, timestamp, report);
+    scoped_refptr<VideoTrackInterface> video_track =
+        stats.track_media_info_map.GetVideoTrack(video_receiver_info);
+    if (video_track) {
+      inbound_video->track_identifier = video_track->id();
     }
     auto* inbound_video_ptr = report->TryAddStats(std::move(inbound_video));
     if (!inbound_video_ptr) {
@@ -2075,25 +1914,25 @@ void RTCStatsCollector::ProduceVideoRTPStreamStats_s(
   // Outbound
   std::map<std::string, RTCOutboundRtpStreamStats*> video_outbound_rtps;
   for (const VideoSenderInfo& video_sender_info :
-       stats.track_media_info_map->video_media_info()->senders) {
+       stats.track_media_info_map.video_media_info()->senders) {
     if (!video_sender_info.connected()) {
       continue;  // The SSRC is not known yet.
     }
-    if (is_unified_plan_ && !stats.current_direction.has_value()) {
+    if (spec_lifetime && !stats.current_direction.has_value()) {
       continue;  // The SSRC is known but the O/A has not completed.
     }
     auto outbound_video = CreateOutboundRTPStreamStatsFromVideoSenderInfo(
-        transport_id, mid, *stats.track_media_info_map->video_media_info(),
+        transport_id, mid, *stats.track_media_info_map.video_media_info(),
         video_sender_info, timestamp, report);
-    if (!video_sender_info.local_stats.empty()) {
-      auto attachment_id = stats.track_media_info_map->GetAttachmentIdBySsrc(
-          video_sender_info.local_stats[0].ssrc, MediaType::VIDEO,
-          /*is_sender=*/true);
-      if (attachment_id.has_value()) {
-        outbound_video->media_source_id =
-            RTCMediaSourceStatsIDFromKindAndAttachment(MediaType::VIDEO,
-                                                       attachment_id.value());
-      }
+    scoped_refptr<VideoTrackInterface> video_track =
+        stats.track_media_info_map.GetVideoTrack(video_sender_info);
+    if (video_track) {
+      int attachment_id =
+          stats.track_media_info_map.GetAttachmentIdByTrack(video_track.get())
+              .value();
+      outbound_video->media_source_id =
+          RTCMediaSourceStatsIDFromKindAndAttachment(MediaType::VIDEO,
+                                                     attachment_id);
     }
     auto video_outbound_pair =
         std::make_pair(outbound_video->id(), outbound_video.get());
@@ -2110,23 +1949,23 @@ void RTCStatsCollector::ProduceVideoRTPStreamStats_s(
   // that RTCOutboundRtpStreamStats, RTCCodecStats and RTCTransport have already
   // been added to the report.
   for (const VideoSenderInfo& video_sender_info :
-       stats.track_media_info_map->video_media_info()->senders) {
+       stats.track_media_info_map.video_media_info()->senders) {
     for (const auto& report_block_data : video_sender_info.report_block_datas) {
-      report->AddStats(ProduceRemoteInboundRtpStreamStats(
+      report->AddStats(ProduceRemoteInboundRtpStreamStatsFromReportBlockData(
           transport_id, report_block_data, MediaType::VIDEO,
-          video_outbound_rtps, *report, call_stats,
+          video_outbound_rtps, *report,
           stats_timestamp_with_environment_clock_));
     }
   }
 }
 
-void RTCStatsCollector::ProduceTransportStats_s(
+void RTCStatsCollector::ProduceTransportStats_n(
     Timestamp timestamp,
     const std::map<std::string, TransportStats>& transport_stats_by_name,
     const std::map<std::string, CertificateStatsPair>& transport_cert_stats,
     const Call::Stats& call_stats,
     RTCStatsReport* report) const {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK_RUN_ON(network_thread_);
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   for (const auto& entry : transport_stats_by_name) {
@@ -2228,7 +2067,7 @@ void RTCStatsCollector::ProduceTransportStats_s(
             SrtpCryptoSuiteToName(channel_stats.srtp_crypto_suite);
       }
       channel_transport_stats->ccfb_messages_received =
-          call_stats.ccfb_messages_received;
+          call_stats_.ccfb_messages_received;
       report->AddStats(std::move(channel_transport_stats));
     }
   }
@@ -2241,12 +2080,15 @@ RTCStatsCollector::PrepareTransportCertificateStats_n(
   Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   std::map<std::string, CertificateStatsPair> transport_cert_stats;
-  // Copy the certificate info from the cache, avoiding expensive
-  // webrtc::SSLCertChain::GetStats() calls.
-  for (const auto& pair : cached_certificates_by_transport_) {
-    transport_cert_stats.insert(std::make_pair(pair.first, pair.second.Copy()));
+  {
+    MutexLock lock(&cached_certificates_mutex_);
+    // Copy the certificate info from the cache, avoiding expensive
+    // webrtc::SSLCertChain::GetStats() calls.
+    for (const auto& pair : cached_certificates_by_transport_) {
+      transport_cert_stats.insert(
+          std::make_pair(pair.first, pair.second.Copy()));
+    }
   }
-
   if (transport_cert_stats.empty()) {
     // Collect certificate info.
     for (const auto& entry : transport_stats_by_name) {
@@ -2268,6 +2110,7 @@ RTCStatsCollector::PrepareTransportCertificateStats_n(
           std::make_pair(transport_name, std::move(certificate_stats_pair)));
     }
     // Copy the result into the certificate cache for future reference.
+    MutexLock lock(&cached_certificates_mutex_);
     for (const auto& pair : transport_cert_stats) {
       cached_certificates_by_transport_.insert(
           std::make_pair(pair.first, pair.second.Copy()));
@@ -2276,159 +2119,155 @@ RTCStatsCollector::PrepareTransportCertificateStats_n(
   return transport_cert_stats;
 }
 
-absl::AnyInvocable<RTCStatsCollector::WorkerThreadResult()>
-RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w() {
+void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTC_DCHECK_DISALLOW_THREAD_BLOCKING_CALLS();
 
-  std::vector<RtpTransceiverStatsInfo> transceiver_stats_infos;
-  std::vector<TransceiverReferences> transceiver_references;
+  transceiver_stats_infos_.clear();
+  // These are used to invoke GetStats for all the media channels together in
+  // one worker thread hop.
+  std::map<VoiceMediaSendChannelInterface*, VoiceMediaSendInfo>
+      voice_send_stats;
+  std::map<VideoMediaSendChannelInterface*, VideoMediaSendInfo>
+      video_send_stats;
+  std::map<VoiceMediaReceiveChannelInterface*, VoiceMediaReceiveInfo>
+      voice_receive_stats;
+  std::map<VideoMediaReceiveChannelInterface*, VideoMediaReceiveInfo>
+      video_receive_stats;
 
   auto transceivers = pc_->GetTransceiversInternal();
 
-  for (const auto& transceiver_proxy : transceivers) {
-    RtpTransceiver* transceiver = transceiver_proxy->internal();
-
-    RtpTransceiverStatsInfo stats{
-        .media_type = transceiver->media_type(),
-        .mid = transceiver->mid(),
-        .transport_name = transceiver->transport_name(),
-        .current_direction = transceiver->current_direction(),
-        .has_channel = transceiver->HasChannel()};
-
-    TransceiverReferences refs{.transceiver =
-                                   scoped_refptr<RtpTransceiver>(transceiver)};
-
-    RTC_ALLOW_PLAN_B_DEPRECATION_BEGIN()
-    for (const auto& sender : transceiver->senders()) {
-      stats.sender_infos.push_back(
-          {.ssrc = sender->ssrc(),
-           .attachment_id = sender->internal()->AttachmentId(),
-           .media_type = sender->media_type()});
-    }
-    for (const auto& receiver : transceiver->receivers()) {
-      stats.receiver_infos.push_back(
-          {.track_id = receiver->track() ? receiver->track()->id() : "",
-           .attachment_id = receiver->internal()->AttachmentId(),
-           .media_type = receiver->media_type()});
-      refs.receivers.push_back(
-          scoped_refptr<RtpReceiverInternal>(receiver->internal()));
-    }
-    RTC_ALLOW_PLAN_B_DEPRECATION_END()
-    stats.has_receivers = !refs.receivers.empty();
-
-    if (stats.has_channel) {
-      auto* send_channel = transceiver->media_send_channel();
-      auto* receive_channel = transceiver->media_receive_channel();
-      if (stats.media_type == MediaType::AUDIO) {
-        VoiceMediaSendChannelInterface* voice_send =
-            send_channel->AsVoiceSendChannel();
-        RTC_CHECK(voice_send);
-        VoiceMediaReceiveChannelInterface* voice_receive =
-            receive_channel->AsVoiceReceiveChannel();
-        RTC_CHECK(voice_receive);
-        refs.get_send_stats_voice = voice_send->GetStatsTask();
-        refs.get_receive_stats_voice = voice_receive->GetStatsTask(false);
-        refs.get_send_parameters = voice_send->GetRtpSendParametersCallback();
-      } else if (stats.media_type == MediaType::VIDEO) {
-        VideoMediaSendChannelInterface* video_send =
-            send_channel->AsVideoSendChannel();
-        RTC_CHECK(video_send);
-        VideoMediaReceiveChannelInterface* video_receive =
-            receive_channel->AsVideoReceiveChannel();
-        RTC_CHECK(video_receive);
-        refs.get_send_stats_video = video_send->GetStatsTask();
-        refs.get_receive_stats_video = video_receive->GetStatsTask();
-        refs.get_send_parameters = video_send->GetRtpSendParametersCallback();
-      }
-    }
-
-    transceiver_stats_infos.push_back(std::move(stats));
-    transceiver_references.push_back(std::move(refs));
-  }
-
-  // Embed the collected information into this lambda which will run on the
-  // worker thread. There, we'll call GetStats() on each media channel as well
-  // as GetCallStats(). At the same time we construct the TrackMediaInfoMaps,
-  // which also needs info from the worker thread.
-  return [this, transceiver_stats_infos = std::move(transceiver_stats_infos),
-          transceiver_references =
-              std::move(transceiver_references)]() mutable {
+  // TODO(tommi): See if we can avoid synchronously blocking the signaling
+  // thread while we do this (or avoid the BlockingCall at all).
+  network_thread_->BlockingCall([&] {
     Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
-    WorkerThreadResult worker_result;
-    worker_result.results.transceiver_stats_infos =
-        std::move(transceiver_stats_infos);
-    worker_result.transceiver_references = std::move(transceiver_references);
+    for (const auto& transceiver_proxy : transceivers) {
+      RtpTransceiver* transceiver = transceiver_proxy->internal();
+      MediaType media_type = transceiver->media_type();
+
+      // Prepare stats entry. The TrackMediaInfoMap will be filled in after the
+      // stats have been fetched on the worker thread.
+      transceiver_stats_infos_.emplace_back();
+      RtpTransceiverStatsInfo& stats = transceiver_stats_infos_.back();
+      stats.transceiver = transceiver;
+      stats.media_type = media_type;
+
+      ChannelInterface* channel = transceiver->channel();
+      if (!channel) {
+        // The remaining fields require a BaseChannel.
+        continue;
+      }
+
+      stats.mid = channel->mid();
+      stats.transport_name = std::string(channel->transport_name());
+
+      if (media_type == MediaType::AUDIO) {
+        auto voice_send_channel = channel->voice_media_send_channel();
+        RTC_DCHECK(voice_send_stats.find(voice_send_channel) ==
+                   voice_send_stats.end());
+        voice_send_stats.insert(
+            std::make_pair(voice_send_channel, VoiceMediaSendInfo()));
+
+        auto voice_receive_channel = channel->voice_media_receive_channel();
+        RTC_DCHECK(voice_receive_stats.find(voice_receive_channel) ==
+                   voice_receive_stats.end());
+        voice_receive_stats.insert(
+            std::make_pair(voice_receive_channel, VoiceMediaReceiveInfo()));
+      } else if (media_type == MediaType::VIDEO) {
+        auto video_send_channel = channel->video_media_send_channel();
+        RTC_DCHECK(video_send_stats.find(video_send_channel) ==
+                   video_send_stats.end());
+        video_send_stats.insert(
+            std::make_pair(video_send_channel, VideoMediaSendInfo()));
+        auto video_receive_channel = channel->video_media_receive_channel();
+        RTC_DCHECK(video_receive_stats.find(video_receive_channel) ==
+                   video_receive_stats.end());
+        video_receive_stats.insert(
+            std::make_pair(video_receive_channel, VideoMediaReceiveInfo()));
+      } else {
+        RTC_DCHECK_NOTREACHED();
+      }
+    }
+  });
+
+  // We jump to the worker thread and call GetStats() on each media channel as
+  // well as GetCallStats(). At the same time we construct the
+  // TrackMediaInfoMaps, which also needs info from the worker thread. This
+  // minimizes the number of thread jumps.
+  worker_thread_->BlockingCall([&] {
+    Thread::ScopedDisallowBlockingCalls no_blocking_calls;
+
+    for (auto& pair : voice_send_stats) {
+      if (!pair.first->GetStats(&pair.second)) {
+        RTC_LOG(LS_WARNING) << "Failed to get voice send stats.";
+      }
+    }
+    for (auto& pair : voice_receive_stats) {
+      if (!pair.first->GetStats(&pair.second,
+                                /*get_and_clear_legacy_stats=*/false)) {
+        RTC_LOG(LS_WARNING) << "Failed to get voice receive stats.";
+      }
+    }
+    for (auto& pair : video_send_stats) {
+      if (!pair.first->GetStats(&pair.second)) {
+        RTC_LOG(LS_WARNING) << "Failed to get video send stats.";
+      }
+    }
+    for (auto& pair : video_receive_stats) {
+      if (!pair.first->GetStats(&pair.second)) {
+        RTC_LOG(LS_WARNING) << "Failed to get video receive stats.";
+      }
+    }
 
     // Create the TrackMediaInfoMap for each transceiver stats object
     // and keep track of whether we have at least one audio receiver.
     bool has_audio_receiver = false;
-    RTC_DCHECK_EQ(worker_result.results.transceiver_stats_infos.size(),
-                  worker_result.transceiver_references.size());
-    for (size_t i = 0; i < worker_result.results.transceiver_stats_infos.size();
-         ++i) {
-      auto& stats = worker_result.results.transceiver_stats_infos[i];
-      auto& refs = worker_result.transceiver_references[i];
-      // The transceiver will still exist but in a stopped state after
-      // pc.close().
-      if (stats.current_direction == RtpTransceiverDirection::kStopped) {
-        continue;
-      }
-
-      std::vector<RtpParameters> sender_parameters;
-      for (const auto& sender : stats.sender_infos) {
-        RtpParameters params;
-        if (sender.ssrc != 0 && stats.has_channel) {
-          params = refs.get_send_parameters(sender.ssrc);
-        }
-        // `sender_parameters` must be the same size as `stats.sender_infos` to
-        // allow 1:1 mapping when TrackMediaInfoMap is constructed. Empty params
-        // are safely ignored since they have no encodings/SSRCs.
-        sender_parameters.push_back(std::move(params));
-      }
-
-      std::vector<RtpParameters> receiver_parameters;
-      for (const auto& receiver : refs.receivers) {
-        receiver_parameters.push_back(receiver->GetParameters());
-      }
-
+    for (auto& stats : transceiver_stats_infos_) {
+      auto transceiver = stats.transceiver;
       std::optional<VoiceMediaInfo> voice_media_info;
       std::optional<VideoMediaInfo> video_media_info;
-      if (stats.has_channel) {
-        if (stats.media_type == MediaType::AUDIO) {
-          std::optional<VoiceMediaSendInfo> voice_send =
-              refs.get_send_stats_voice();
-          std::optional<VoiceMediaReceiveInfo> voice_receive =
-              refs.get_receive_stats_voice();
+      auto channel = transceiver->channel();
+      if (channel) {
+        MediaType media_type = transceiver->media_type();
+        if (media_type == MediaType::AUDIO) {
+          auto voice_send_channel = channel->voice_media_send_channel();
+          auto voice_receive_channel = channel->voice_media_receive_channel();
           voice_media_info = VoiceMediaInfo(
-              std::move(voice_send).value_or(VoiceMediaSendInfo{}),
-              std::move(voice_receive).value_or(VoiceMediaReceiveInfo{}));
-        } else if (stats.media_type == MediaType::VIDEO) {
-          std::optional<VideoMediaSendInfo> video_send =
-              refs.get_send_stats_video();
-          std::optional<VideoMediaReceiveInfo> video_receive =
-              refs.get_receive_stats_video();
+              std::move(voice_send_stats[voice_send_channel]),
+              std::move(voice_receive_stats[voice_receive_channel]));
+        } else if (media_type == MediaType::VIDEO) {
+          auto video_send_channel = channel->video_media_send_channel();
+          auto video_receive_channel = channel->video_media_receive_channel();
           video_media_info = VideoMediaInfo(
-              std::move(video_send).value_or(VideoMediaSendInfo{}),
-              std::move(video_receive).value_or(VideoMediaReceiveInfo{}));
+              std::move(video_send_stats[video_send_channel]),
+              std::move(video_receive_stats[video_receive_channel]));
         }
       }
-
-      stats.track_media_info_map = std::make_unique<TrackMediaInfoMap>(
-          std::move(voice_media_info), std::move(video_media_info),
-          std::move(stats.sender_infos), std::move(sender_parameters),
-          std::move(stats.receiver_infos), std::move(receiver_parameters));
-      if (stats.media_type == MediaType::AUDIO) {
-        has_audio_receiver |= stats.has_receivers;
+      std::vector<scoped_refptr<RtpSenderInternal>> senders;
+      for (const auto& sender : transceiver->senders()) {
+        senders.push_back(scoped_refptr<RtpSenderInternal>(sender->internal()));
+      }
+      std::vector<scoped_refptr<RtpReceiverInternal>> receivers;
+      for (const auto& receiver : transceiver->receivers()) {
+        receivers.push_back(
+            scoped_refptr<RtpReceiverInternal>(receiver->internal()));
+      }
+      stats.track_media_info_map.Initialize(std::move(voice_media_info),
+                                            std::move(video_media_info),
+                                            senders, receivers);
+      if (transceiver->media_type() == MediaType::AUDIO) {
+        has_audio_receiver |= !receivers.empty();
       }
     }
 
-    worker_result.results.call_stats = pc_->GetCallStats();
-    worker_result.results.audio_device_stats =
+    call_stats_ = pc_->GetCallStats();
+    audio_device_stats_ =
         has_audio_receiver ? pc_->GetAudioDeviceStats() : std::nullopt;
-    return worker_result;
-  };
+  });
+
+  for (auto& stats : transceiver_stats_infos_) {
+    stats.current_direction = stats.transceiver->current_direction();
+  }
 }
 
 void RTCStatsCollector::OnSctpDataChannelStateChanged(

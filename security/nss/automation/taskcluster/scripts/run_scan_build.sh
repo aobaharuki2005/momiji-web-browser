@@ -21,6 +21,7 @@ declare -A scan=( \
         [lib/certdb]=0 \
         [lib/certhigh]=0 \
         [lib/ckfw]=0 \
+        [lib/crmf]=0 \
         [lib/cryptohi]=0 \
         [lib/dev]=0 \
         [lib/freebl]=0 \

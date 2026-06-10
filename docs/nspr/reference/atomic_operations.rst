@@ -26,7 +26,7 @@ These functions operate on 32-bit integers:
 
 These functions implement a simple stack data structure:
 
--  ``PR_CreateStack``
--  ``PR_StackPush``
--  ``PR_StackPop``
--  ``PR_DestroyStack``
+-  :ref:`PR_CreateStack`
+-  :ref:`PR_StackPush`
+-  :ref:`PR_StackPop`
+-  :ref:`PR_DestroyStack`

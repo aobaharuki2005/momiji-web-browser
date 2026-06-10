@@ -1,8 +1,4 @@
 features:
-- name: margin
-  files:
-  - margin-*
-  - "!margin-border-padding-*"
-- name: padding
-  files:
-  - padding-*
+  - name: padding
+    files:
+      - 'padding-*'

@@ -23,7 +23,6 @@
 
 #include "absl/flags/flag.h"
 #include "absl/strings/string_view.h"
-#include "api/environment/environment.h"
 #include "api/test/metrics/chrome_perf_dashboard_metrics_exporter.h"
 #include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "api/test/metrics/metric.h"
@@ -35,7 +34,6 @@
 #include "rtc_base/ssl_adapter.h"
 #include "rtc_base/ssl_stream_adapter.h"
 #include "system_wrappers/include/metrics.h"
-#include "test/create_test_environment.h"
 #include "test/gtest.h"
 #include "test/test_flags.h"
 #include "test/testsupport/file_utils.h"
@@ -43,9 +41,9 @@
 
 #if defined(RTC_USE_PERFETTO)
 #include "rtc_base/event_tracer.h"
-#include "third_party/perfetto/include/perfetto/tracing/backend_type.h"  // nogncheck
-#include "third_party/perfetto/include/perfetto/tracing/tracing.h"  // nogncheck
-#include "third_party/perfetto/protos/perfetto/config/trace_config.gen.h"  // nogncheck
+#include "third_party/perfetto/include/perfetto/tracing/backend_type.h"
+#include "third_party/perfetto/include/perfetto/tracing/tracing.h"
+#include "third_party/perfetto/protos/perfetto/config/trace_config.gen.h"
 #endif
 
 #if defined(WEBRTC_WIN)
@@ -91,14 +89,6 @@ ABSL_FLAG(bool, test_launcher_bot_mode, false, "Intentionally ignored flag.");
 #endif
 
 ABSL_FLAG(std::string,
-          webrtc_test_metrics_output_path,
-          "",
-          "Path where the test perf metrics should be stored using "
-          "api/test/metrics/metric.proto proto format. File will contain "
-          "MetricsSet as a root proto. On iOS, this MUST be a file name "
-          "and the file will be stored under NSDocumentDirectory.");
-
-ABSL_FLAG(std::string,
           isolated_script_test_output,
           "",
           "Path to output an empty JSON file which Chromium infra requires.");
@@ -138,33 +128,16 @@ class TestMainImpl : public TestMain {
     // have this flag).
     (void)absl::GetFlag(FLAGS_resources_dir);
 
-    // The WEBRTC_TEST_SKIP_LOGGING_INIT env var is specifically here to
-    // support tests for logging initialization. It is important that
-    // TestMainImpl doesn't do its own initialization when this env var is set,
-    // to allow tests to verify explicit initialization behavior.
-    bool do_logging_init = true;
+    // Default to LS_INFO, even for release builds to provide better test
+    // logging.
+    if (LogMessage::GetLogToDebug() > LS_INFO)
+      LogMessage::LogToDebug(LS_INFO);
 
-    const char* skip_logging_init_env = getenv("WEBRTC_TEST_SKIP_LOGGING_INIT");
-    if (skip_logging_init_env != nullptr &&
-        std::string(skip_logging_init_env) == "1") {
-      do_logging_init = false;
-    }
+    if (absl::GetFlag(FLAGS_verbose))
+      LogMessage::LogToDebug(LS_VERBOSE);
 
-    if (do_logging_init) {
-      LoggingConfig config;
-      config.set_min_severity(LS_INFO);
-      config.set_debug_severity(LS_INFO);
-
-      if (absl::GetFlag(FLAGS_verbose)) {
-        config.set_min_severity(LS_VERBOSE);
-        config.set_debug_severity(LS_VERBOSE);
-      }
-
-      config.set_log_to_stderr(absl::GetFlag(FLAGS_logs) ||
+    LogMessage::SetLogToStderr(absl::GetFlag(FLAGS_logs) ||
                                absl::GetFlag(FLAGS_verbose));
-
-      InitializeLogging(std::move(config));
-    }
 
     metrics::Enable();
 
@@ -314,8 +287,7 @@ class TestMainImpl : public TestMain {
         << trace_output_file << "\"";
     tracing_session_->StartBlocking();
 #else
-    Environment env = CreateTestEnvironment();
-    tracing::SetupInternalTracer(env);
+    tracing::SetupInternalTracer();
     tracing::StartInternalCapture(trace_output_file);
 #endif
   }

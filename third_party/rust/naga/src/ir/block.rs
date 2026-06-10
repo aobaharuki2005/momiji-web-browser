@@ -81,11 +81,11 @@ impl Block {
         self.body.iter_mut().zip(span_iter)
     }
 
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.body.is_empty()
     }
 
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.body.len()
     }
 }

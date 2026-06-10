@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsJARChannel_h_
-#define nsJARChannel_h_
+#ifndef nsJARChannel_h__
+#define nsJARChannel_h__
 
 #include "nsIJARChannel.h"
 #include "nsIJARURI.h"
@@ -111,4 +112,4 @@ class nsJARChannel final : public nsIJARChannel,
   nsCOMPtr<nsIEventTarget> mWorker;
 };
 
-#endif  // nsJARChannel_h_
+#endif  // nsJARChannel_h__

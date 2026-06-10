@@ -93,7 +93,7 @@ impl CaseMapCloser<CaseMapper> {
     ///
     /// [📚 Help choosing a constructor](icu_provider::constructors)
     #[cfg(feature = "compiled_data")]
-    #[expect(clippy::new_ret_no_self)] // Intentional
+    #[allow(clippy::new_ret_no_self)] // Intentional
     pub const fn new() -> CaseMapCloserBorrowed<'static> {
         CaseMapCloserBorrowed::new()
     }

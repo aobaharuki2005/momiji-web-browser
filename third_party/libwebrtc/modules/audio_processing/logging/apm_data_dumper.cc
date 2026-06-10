@@ -36,7 +36,8 @@ std::string FormFileName(absl::string_view output_dir,
                          int instance_index,
                          int reinit_index,
                          absl::string_view suffix) {
-  StringBuilder ss;
+  char buf[1024];
+  SimpleStringBuilder ss(buf);
   if (!output_dir.empty()) {
     ss << output_dir;
     if (output_dir.back() != kPathDelimiter) {
@@ -44,7 +45,7 @@ std::string FormFileName(absl::string_view output_dir,
     }
   }
   ss << name << "_" << instance_index << "-" << reinit_index << suffix;
-  return ss.Release();
+  return ss.str();
 }
 #endif
 

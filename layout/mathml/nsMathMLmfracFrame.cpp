@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -51,6 +53,13 @@ uint8_t nsMathMLmfracFrame::ScriptIncrement(nsIFrame* aFrame) {
 
 NS_IMETHODIMP
 nsMathMLmfracFrame::TransmitAutomaticData() {
+  // The TeXbook (Ch 17. p.141) says the numerator inherits the compression
+  //  while the denominator is compressed
+  if (!StaticPrefs::mathml_math_shift_enabled()) {
+    UpdatePresentationDataFromChildAt(1, 1, MathMLPresentationFlag::Compressed,
+                                      MathMLPresentationFlag::Compressed);
+  }
+
   // If displaystyle is false, then scriptlevel is incremented, so notify the
   // children of this.
   if (StyleFont()->mMathStyle == StyleMathStyle::Compact) {
@@ -65,7 +74,7 @@ nsMathMLmfracFrame::TransmitAutomaticData() {
   if (mEmbellishData.flags.contains(MathMLEmbellishFlag::EmbellishedOperator)) {
     // even when embellished, we need to record that <mfrac> won't fire
     // Stretch() on its embellished child
-    mEmbellishData.direction = StretchDirection::Unsupported;
+    mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   }
 
   return NS_OK;
@@ -84,8 +93,8 @@ nscoord nsMathMLmfracFrame::CalcLineThickness(nsString& aThicknessAttribute,
   if (!aThicknessAttribute.IsEmpty()) {
     lineThickness = defaultThickness;
     ParseAndCalcNumericValue(aThicknessAttribute, &lineThickness,
-                             aFontSizeInflation, this,
-                             dom::MathMLElement::ParseFlag::AllowNegative);
+                             dom::MathMLElement::PARSE_ALLOW_NEGATIVE,
+                             aFontSizeInflation, this);
     // MathML Core says a negative value is interpreted as 0.
     if (lineThickness < 0) {
       lineThickness = 0;
@@ -204,10 +213,8 @@ void nsMathMLmfracFrame::Place(DrawTarget* aDrawTarget,
   // in the core since our last visit there)
   nscoord leftSpace = 0;
   nscoord rightSpace = 0;
-  if (!StaticPrefs::
-          mathml_lspace_rspace_for_child_spacing_during_mrow_layout_enabled() &&
-      outermostEmbellished) {
-    const bool isRTL = GetWritingMode().IsBidiRTL();
+  if (outermostEmbellished) {
+    const bool isRTL = StyleVisibility()->mDirection == StyleDirection::Rtl;
     nsEmbellishData coreData;
     GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
     leftSpace += isRTL ? coreData.trailingSpace : coreData.leadingSpace;

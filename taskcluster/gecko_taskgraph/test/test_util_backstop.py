@@ -20,17 +20,12 @@ from gecko_taskgraph.util.backstop import (
 
 LAST_BACKSTOP_PUSHID = 1
 LAST_BACKSTOP_PUSHDATE = mktime(datetime.now().timetuple())
-ARTIFACT_REDIRECT_URL = "https://taskcluster.example.com/redirect/parameters.yml"
 DEFAULT_RESPONSES = {
     "index": {
         "status": 200,
         "json": {"taskId": LAST_BACKSTOP_PUSHID},
     },
     "artifact": {
-        "status": 303,
-        "json": {"url": ARTIFACT_REDIRECT_URL},
-    },
-    "artifact_content": {
         "status": 200,
         "body": dedent(
             f"""
@@ -93,7 +88,7 @@ def params():
         pytest.param(
             {},
             {
-                "dontbuild": True,
+                "target_tasks_method": "nothing",
             },
             False,
             id="dontbuild",
@@ -156,7 +151,7 @@ def params():
             {
                 "repository_type": "git",
             },
-            False,
+            True,
             id="git",
         ),
     ),
@@ -181,11 +176,10 @@ def test_is_backstop(
             })
         ),
         "artifact": get_artifact_url(LAST_BACKSTOP_PUSHID, "public%2Fparameters.yml"),
-        "artifact_content": ARTIFACT_REDIRECT_URL,
         "status": get_task_url(LAST_BACKSTOP_PUSHID) + "/status",
     }
 
-    for key in ("index", "status", "artifact", "artifact_content"):
+    for key in ("index", "status", "artifact"):
         if key in response_args:
             responses.add(responses.GET, urls[key], **response_args[key])
 

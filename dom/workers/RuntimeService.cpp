@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -41,6 +43,7 @@
 #include "mozilla/dom/PerformanceService.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/ShadowRealmGlobalScope.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/TrustedTypeUtils.h"
 #include "mozilla/dom/WorkerBinding.h"
@@ -152,6 +155,14 @@ Atomic<RuntimeService*> gRuntimeService(nullptr);
 
 // Only true during the call to Init.
 bool gRuntimeServiceDuringInit = false;
+
+class LiteralRebindingCString : public nsDependentCString {
+ public:
+  template <int N>
+  void RebindLiteral(const char (&aStr)[N]) {
+    Rebind(aStr, N - 1);
+  }
+};
 
 template <typename T>
 struct PrefTraits;
@@ -365,10 +376,6 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       PREF("gc_parallel_marking_threshold_mb",
            JSGC_PARALLEL_MARKING_THRESHOLD_MB),
       PREF("gc_max_parallel_marking_threads", JSGC_MAX_MARKING_THREADS),
-#ifdef JS_GC_CONCURRENT_MARKING
-      PREF("gc_experimental_concurrent_marking",
-           JSGC_CONCURRENT_MARKING_ENABLED),
-#endif
 #ifdef NIGHTLY_BUILD
       PREF("gc_experimental_semispace_nursery", JSGC_SEMISPACE_NURSERY_ENABLED),
 #endif
@@ -427,9 +434,6 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       }
       case JSGC_COMPACTING_ENABLED:
       case JSGC_PARALLEL_MARKING_ENABLED:
-#ifdef JS_GC_CONCURRENT_MARKING
-      case JSGC_CONCURRENT_MARKING_ENABLED:
-#endif
 #ifdef NIGHTLY_BUILD
       case JSGC_SEMISPACE_NURSERY_ENABLED:
 #endif
@@ -545,12 +549,12 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION bool ContentSecurityPolicyAllows(
       return true;
     }
 
-    if (OffThreadCSPContext* ctx = worker->GetCSPContext()) {
+    if (WorkerCSPContext* ctx = worker->GetCSPContext()) {
       evalOK = ctx->IsEvalAllowed(reportViolation);
     }
     violationType = nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL;
   } else {
-    if (OffThreadCSPContext* ctx = worker->GetCSPContext()) {
+    if (WorkerCSPContext* ctx = worker->GetCSPContext()) {
       evalOK = ctx->IsWasmEvalAllowed(reportViolation);
     }
 
@@ -998,7 +1002,7 @@ class WorkerJSContext final : public mozilla::CycleCollectedJSContext {
   virtual bool useDebugQueue(JS::Handle<JSObject*> global) const override {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    return !IsWorkerGlobal(global);
+    return !(IsWorkerGlobal(global) || IsShadowRealmGlobal(global));
   }
 
   virtual void DispatchToMicroTask(
@@ -1015,27 +1019,53 @@ class WorkerJSContext final : public mozilla::CycleCollectedJSContext {
     NS_ASSERTION(global, "This should never be null!");
 
     JS::JobQueueMayNotBeEmpty(cx);
-    PROFILER_MARKER_FLOW_ONLY("WorkerJSContext::DispatchToMicroTask", OTHER, {},
-                              FlowMarker, Flow::FromPointer(runnable.get()));
+    if (StaticPrefs::javascript_options_use_js_microtask_queue()) {
+      PROFILER_MARKER_FLOW_ONLY("WorkerJSContext::DispatchToMicroTask", OTHER,
+                                {}, FlowMarker,
+                                Flow::FromPointer(runnable.get()));
 
-    // On worker threads, if the current global is the worker global, we use
-    // the main micro task queue. Otherwise, the current global must be either
-    // the debugger global or a debugger sandbox, and we use the debugger micro
-    // task queue instead.
-    if (IsWorkerGlobal(global)) {
-      if (!EnqueueMicroTask(cx, runnable.forget())) {
-        // This should never fail, but if it does, we have no choice but to
-        // crash. This is always an OOM.
-        NS_ABORT_OOM(0);
+      // On worker threads, if the current global is the worker global or
+      // ShadowRealm global, we use the main micro task queue. Otherwise, the
+      // current global must be either the debugger global or a debugger
+      // sandbox, and we use the debugger micro task queue instead.
+      if (IsWorkerGlobal(global) || IsShadowRealmGlobal(global)) {
+        if (!EnqueueMicroTask(cx, runnable.forget())) {
+          // This should never fail, but if it does, we have no choice but to
+          // crash. This is always an OOM.
+          NS_ABORT_OOM(0);
+        }
+      } else {
+        MOZ_ASSERT(IsWorkerDebuggerGlobal(global) ||
+                   IsWorkerDebuggerSandbox(global));
+        if (!EnqueueDebugMicroTask(cx, runnable.forget())) {
+          // This should never fail, but if it does, we have no choice but to
+          // crash. This is always an OOM.
+          NS_ABORT_OOM(0);
+        }
       }
     } else {
-      MOZ_ASSERT(IsWorkerDebuggerGlobal(global) ||
-                 IsWorkerDebuggerSandbox(global));
-      if (!EnqueueDebugMicroTask(cx, runnable.forget())) {
-        // This should never fail, but if it does, we have no choice but to
-        // crash. This is always an OOM.
-        NS_ABORT_OOM(0);
+      std::deque<RefPtr<MicroTaskRunnable>>* microTaskQueue = nullptr;
+      // On worker threads, if the current global is the worker global or
+      // ShadowRealm global, we use the main micro task queue. Otherwise, the
+      // current global must be either the debugger global or a debugger
+      // sandbox, and we use the debugger micro task queue instead.
+      if (IsWorkerGlobal(global) || IsShadowRealmGlobal(global)) {
+        microTaskQueue = &GetMicroTaskQueue();
+      } else {
+        MOZ_ASSERT(IsWorkerDebuggerGlobal(global) ||
+                   IsWorkerDebuggerSandbox(global));
+
+        microTaskQueue = &GetDebuggerMicroTaskQueue();
       }
+
+      if (!runnable->isInList()) {
+        // A recycled object may be in the list already.
+        mMicrotasksToTrace.insertBack(runnable);
+      }
+      PROFILER_MARKER_FLOW_ONLY("WorkerJSContext::DispatchToMicroTask", OTHER,
+                                {}, FlowMarker,
+                                Flow::FromPointer(runnable.get()));
+      microTaskQueue->push_back(std::move(runnable));
     }
   }
 
@@ -1202,6 +1232,22 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
     AssertIsOnMainThread();
   }
 
+  nsCString sharedWorkerScriptSpec;
+  if (isSharedWorker) {
+    AssertIsOnMainThread();
+
+    nsCOMPtr<nsIURI> scriptURI = aWorkerPrivate.GetResolvedScriptURI();
+    NS_ASSERTION(scriptURI, "Null script URI!");
+
+    nsresult rv = scriptURI->GetSpec(sharedWorkerScriptSpec);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("GetSpec failed?!");
+      return false;
+    }
+
+    NS_ASSERTION(!sharedWorkerScriptSpec.IsEmpty(), "Empty spec!");
+  }
+
   bool exemptFromPerDomainMax = false;
   if (isServiceWorker) {
     AssertIsOnMainThread();
@@ -1239,7 +1285,7 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
       // Worker spawn gets queued due to hitting max workers per domain
       // limit so let's log a warning.
       WorkerPrivate::ReportErrorToConsole(nsIScriptError::warningFlag, "DOM"_ns,
-                                          PropertiesFile::DOM_PROPERTIES,
+                                          nsContentUtils::eDOM_PROPERTIES,
                                           "HittingMaxWorkersPerDomain2"_ns);
 
       if (isServiceWorker) {
@@ -1268,8 +1314,6 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
     }
   } else {
     if (!mNavigatorPropertiesLoaded) {
-      MutexAutoLock lock(mMutex);
-
       if (NS_FAILED(Navigator::GetAppVersion(
               mNavigatorProperties.mAppVersion, aWorkerPrivate.GetDocument(),
               false /* aUsePrefOverriddenValue */)) ||
@@ -1696,18 +1740,13 @@ void RuntimeService::CrashIfHanging() {
   msg.Append(activeStats.mMessage);
 
   // This string will be leaked.
-  MOZ_CRASH_UNSAFE(strdup(msg.get()));
+  MOZ_CRASH_UNSAFE(strdup(msg.BeginReading()));
 }
 
 // This spins the event loop until all workers are finished and their threads
 // have been joined.
 void RuntimeService::Cleanup() {
   AssertIsOnMainThread();
-
-  if (mCleanedUp) {
-    return;
-  }
-  mCleanedUp = true;
 
   if (!mShuttingDown) {
     Shutdown();
@@ -1803,9 +1842,9 @@ void RuntimeService::Cleanup() {
       obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       mObserved = false;
     }
-
-    nsLayoutStatics::Release();
   }
+
+  nsLayoutStatics::Release();
 }
 
 void RuntimeService::AddAllTopLevelWorkersToArray(
@@ -1940,13 +1979,11 @@ void RuntimeService::UpdateAllWorkerContextOptions() {
 void RuntimeService::UpdateAppVersionOverridePreference(
     const nsAString& aValue) {
   AssertIsOnMainThread();
-  MutexAutoLock lock(mMutex);
   mNavigatorProperties.mAppVersionOverridden = aValue;
 }
 
 void RuntimeService::UpdatePlatformOverridePreference(const nsAString& aValue) {
   AssertIsOnMainThread();
-  MutexAutoLock lock(mMutex);
   mNavigatorProperties.mPlatformOverridden = aValue;
 }
 
@@ -1954,10 +1991,7 @@ void RuntimeService::UpdateAllWorkerLanguages(
     const nsTArray<nsString>& aLanguages) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  {
-    MutexAutoLock lock(mMutex);
-    mNavigatorProperties.mLanguages = aLanguages.Clone();
-  }
+  mNavigatorProperties.mLanguages = aLanguages.Clone();
   BroadcastAllWorkers(
       [&aLanguages](auto& worker) { worker.UpdateLanguages(aLanguages); });
 }
@@ -2194,21 +2228,6 @@ void RuntimeService::UpdateWorkersPeerConnections(
   for (WorkerPrivate* const worker : GetWorkersForWindow(aWindow)) {
     MOZ_ASSERT(!worker->IsSharedWorker());
     worker->SetActivePeerConnections(aHasPeerConnections);
-  }
-}
-
-void RuntimeService::UpdateWorkersLanguageOverride(
-    const nsPIDOMWindowInner& aWindow, const nsCString& aLanguageOverride) {
-  AssertIsOnMainThread();
-
-  nsTArray<nsString> resolvedLanguages;
-  Navigator::GetAcceptLanguages(resolvedLanguages, aLanguageOverride.IsEmpty()
-                                                       ? nullptr
-                                                       : &aLanguageOverride);
-
-  for (WorkerPrivate* const worker : GetWorkersForWindow(aWindow)) {
-    MOZ_ASSERT(!worker->IsSharedWorker());
-    worker->UpdateLanguageOverride(aLanguageOverride, resolvedLanguages);
   }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Google LLC
+ * Copyright 2019 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -76,9 +76,7 @@ public:
             const SkFont& font, const SkPaint* paint = nullptr);
 
     // Create a strike spec without a device, and does not switch over to path for large sizes.
-    static SkStrikeSpec MakeWithNoDevice(
-        const SkFont& font, const SkPaint* paint = nullptr,
-        SkScalerContextFlags flags = SkScalerContextFlags::kFakeGammaAndBoostContrast);
+    static SkStrikeSpec MakeWithNoDevice(const SkFont& font, const SkPaint* paint = nullptr);
 
     sk_sp<sktext::StrikeForGPU> findOrCreateScopedStrike(
             sktext::StrikeForGPUCacheInterface* cache) const;

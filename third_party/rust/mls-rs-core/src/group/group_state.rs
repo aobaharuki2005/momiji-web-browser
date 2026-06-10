@@ -8,20 +8,20 @@ use crate::error::IntoAnyError;
 #[cfg(mls_build_async)]
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use zeroize::Zeroizing;
 
 /// Generic representation of a group's state.
 #[derive(Clone, PartialEq, Eq)]
 pub struct GroupState {
     /// A unique group identifier.
     pub id: Vec<u8>,
-    pub data: Zeroizing<Vec<u8>>,
+    pub data: Vec<u8>,
 }
 
 impl Debug for GroupState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("GroupState")
             .field("id", &crate::debug::pretty_bytes(&self.id))
+            .field("data", &crate::debug::pretty_bytes(&self.data))
             .finish()
     }
 }
@@ -31,17 +31,20 @@ impl Debug for GroupState {
 pub struct EpochRecord {
     /// A unique epoch identifier within a particular group.
     pub id: u64,
-    pub data: Zeroizing<Vec<u8>>,
+    pub data: Vec<u8>,
 }
 
 impl Debug for EpochRecord {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("EpochRecord").field("id", &self.id).finish()
+        f.debug_struct("EpochRecord")
+            .field("id", &self.id)
+            .field("data", &crate::debug::pretty_bytes(&self.data))
+            .finish()
     }
 }
 
 impl EpochRecord {
-    pub fn new(id: u64, data: Zeroizing<Vec<u8>>) -> Self {
+    pub fn new(id: u64, data: Vec<u8>) -> Self {
         Self { id, data }
     }
 }
@@ -67,14 +70,10 @@ pub trait GroupStateStorage: Send + Sync {
     type Error: IntoAnyError;
 
     /// Fetch a group state from storage.
-    async fn state(&self, group_id: &[u8]) -> Result<Option<Zeroizing<Vec<u8>>>, Self::Error>;
+    async fn state(&self, group_id: &[u8]) -> Result<Option<Vec<u8>>, Self::Error>;
 
     /// Lazy load cached epoch data from a particular group.
-    async fn epoch(
-        &self,
-        group_id: &[u8],
-        epoch_id: u64,
-    ) -> Result<Option<Zeroizing<Vec<u8>>>, Self::Error>;
+    async fn epoch(&self, group_id: &[u8], epoch_id: u64) -> Result<Option<Vec<u8>>, Self::Error>;
 
     /// Write pending state updates.
     ///

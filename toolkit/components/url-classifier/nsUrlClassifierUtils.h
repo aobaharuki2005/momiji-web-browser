@@ -18,8 +18,6 @@ class nsUrlClassifierUtils final : public nsIUrlClassifierUtils,
  public:
   typedef nsClassHashtable<nsCStringHashKey, nsCString> ProviderDictType;
 
-  nsUrlClassifierUtils(const nsUrlClassifierUtils&) = delete;
-
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERUTILS
   NS_DECL_NSIOBSERVER
@@ -57,6 +55,9 @@ class nsUrlClassifierUtils final : public nsIUrlClassifierUtils,
   ~nsUrlClassifierUtils();
 
   nsresult Init();
+
+  // Disallow copy constructor
+  nsUrlClassifierUtils(const nsUrlClassifierUtils&);
 
   // Function to tell if we should encode a character.
   bool ShouldURLEscape(const unsigned char c) const;

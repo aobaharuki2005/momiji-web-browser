@@ -3,6 +3,12 @@
 // (https://github.com/w3c/webref)
 // Source: CSS View Transitions Module Level 2 (https://drafts.csswg.org/css-view-transitions-2/)
 
+[Exposed=Window]
+interface CSSViewTransitionRule : CSSRule {
+  readonly attribute CSSOMString navigation;
+  [SameObject] readonly attribute FrozenArray<CSSOMString> types;
+};
+
 partial interface Document {
   ViewTransition startViewTransition(
     optional (ViewTransitionUpdateCallback or StartViewTransitionOptions) callbackOptions = {}
@@ -30,7 +36,7 @@ interface ViewTransition {
   readonly attribute Promise<undefined> ready;
   readonly attribute Promise<undefined> finished;
   undefined skipTransition();
-  [SameObject] readonly attribute ViewTransitionTypeSet types;
+  [SameObject] attribute ViewTransitionTypeSet types;
   readonly attribute Element transitionRoot;
   undefined waitUntil(Promise<any> promise);
 };
@@ -38,10 +44,4 @@ interface ViewTransition {
 [Exposed=Window]
 interface ViewTransitionTypeSet {
   setlike<DOMString>;
-};
-
-[Exposed=Window]
-interface CSSViewTransitionRule : CSSRule {
-  readonly attribute CSSOMString navigation;
-  [SameObject] readonly attribute FrozenArray<CSSOMString> types;
 };

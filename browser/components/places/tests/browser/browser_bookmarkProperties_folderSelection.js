@@ -37,59 +37,6 @@ add_setup(async function () {
   });
 });
 
-// "Choose Folder" should only activate on explicit user interaction (click or
-// Enter from the open popup), not on arrow-key cycling.
-add_task(async function test_arrowKeysDontActivateChooseFolder() {
-  for (let popupOpen of [false, true]) {
-    await clickBookmarkStar();
-
-    let menuList = document.getElementById("editBMPanel_folderMenuList");
-    let folderTreeRow = document.getElementById("editBMPanel_folderTreeRow");
-
-    Assert.ok(folderTreeRow.hidden, "Folder tree should initially be hidden");
-
-    if (popupOpen) {
-      let shownPromise = BrowserTestUtils.waitForPopupEvent(
-        menuList.menupopup,
-        "shown"
-      );
-      EventUtils.synthesizeMouseAtCenter(menuList, {});
-      await shownPromise;
-    } else {
-      menuList.focus();
-    }
-
-    // Press ArrowDown enough times to cycle through all items at least once,
-    // including "Choose Folder".
-    for (let i = 0; i < menuList.itemCount + 1; i++) {
-      EventUtils.synthesizeKey("KEY_ArrowDown");
-    }
-
-    if (menuList.open) {
-      // Close the popup if it was opened (explicitly or by arrow keys on macOS).
-      // Use hidePopup() rather than KEY_Escape, which may not fire popuphidden
-      // on the menupopup on macOS.
-      let hiddenPromise = BrowserTestUtils.waitForPopupEvent(
-        menuList.menupopup,
-        "hidden"
-      );
-      menuList.menupopup.hidePopup();
-      await hiddenPromise;
-    }
-
-    Assert.ok(
-      folderTreeRow.hidden,
-      `Folder tree should NOT be shown by arrow-key navigation (popup ${popupOpen ? "open" : "closed"})`
-    );
-
-    const promiseCancel = promisePopupHidden(
-      document.getElementById("editBookmarkPanel")
-    );
-    document.getElementById("editBookmarkPanelRemoveButton").click();
-    await promiseCancel;
-  }
-});
-
 add_task(async function test_selectChoose() {
   await clickBookmarkStar();
 
@@ -124,16 +71,10 @@ add_task(async function test_selectChoose() {
   await promisePopup;
 
   // Click the choose item.
-  if (menuList.menupopup.isNativeMenu) {
-    menuList.menupopup.activateItem(
-      document.getElementById("editBMPanel_chooseFolderMenuItem")
-    );
-  } else {
-    EventUtils.synthesizeMouseAtCenter(
-      document.getElementById("editBMPanel_chooseFolderMenuItem"),
-      {}
-    );
-  }
+  EventUtils.synthesizeMouseAtCenter(
+    document.getElementById("editBMPanel_chooseFolderMenuItem"),
+    {}
+  );
 
   await TestUtils.waitForCondition(
     () => !folderTreeRow.hidden,
@@ -210,16 +151,10 @@ add_task(async function test_selectBookmarksMenu() {
   await promisePopup;
 
   // Click the bookmarks menu item.
-  if (menuList.menupopup.isNativeMenu) {
-    menuList.menupopup.activateItem(
-      document.getElementById("editBMPanel_bmRootItem")
-    );
-  } else {
-    EventUtils.synthesizeMouseAtCenter(
-      document.getElementById("editBMPanel_bmRootItem"),
-      {}
-    );
-  }
+  EventUtils.synthesizeMouseAtCenter(
+    document.getElementById("editBMPanel_bmRootItem"),
+    {}
+  );
 
   await TestUtils.waitForCondition(
     () => menuList.getAttribute("selectedGuid") == expectedGuid,
@@ -268,16 +203,10 @@ add_task(async function test_selectBookmarksMenu() {
   );
   EventUtils.synthesizeMouseAtCenter(menuList, {});
   await promisePopup;
-  if (menuList.menupopup.isNativeMenu) {
-    menuList.menupopup.activateItem(
-      document.getElementById("editBMPanel_toolbarFolderItem")
-    );
-  } else {
-    EventUtils.synthesizeMouseAtCenter(
-      document.getElementById("editBMPanel_toolbarFolderItem"),
-      {}
-    );
-  }
+  EventUtils.synthesizeMouseAtCenter(
+    document.getElementById("editBMPanel_toolbarFolderItem"),
+    {}
+  );
   await TestUtils.waitForCondition(
     () => menuList.getAttribute("selectedGuid") == toolbarGuid,
     "Should select the toolbar folder item"

@@ -1,5 +1,7 @@
 // Forward iframe loaded event.
 
+/* eslint-env mozilla/frame-script */
+
 addEventListener(
   "frames-loaded",
   () => sendAsyncMessage("test:frames-loaded"),

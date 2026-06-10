@@ -1,99 +1,7 @@
 /*!
 Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
-# Layout of values in `uniform` buffers
-
-WGSL's ["Internal Layout of Values"][ilov] rules specify the memory layout of
-each WGSL type. The memory layout is important for data stored in `uniform` and
-`storage` buffers, especially when exchanging data with CPU code.
-
-Both WGSL and Vulkan specify some conditions that a type's memory layout
-must satisfy in order to use that type in a `uniform` or `storage` buffer.
-For `storage` buffers, the WGSL and Vulkan restrictions are compatible, but
-for `uniform` buffers, WGSL allows some types that Vulkan does not, requiring
-adjustments when emitting SPIR-V for `uniform` buffers.
-
-## Padding in two-row matrices
-
-SPIR-V provides detailed control over the layout of matrix types, and is
-capable of describing the WGSL memory layout. However, Vulkan imposes
-additional restrictions.
-
-Vulkan's ["extended layout"][extended-layout] (also known as std140) rules
-apply to types used in `uniform` buffers. Under these rules, matrices are
-defined in terms of arrays of their vector type, and arrays are defined to have
-an alignment equal to the alignment of their element type rounded up to a
-multiple of 16. This means that each column of the matrix has a minimum
-alignment of 16. WGSL, and consequently Naga IR, on the other hand specifies
-column alignment equal to the alignment of the vector type, without being
-rounded up to 16.
-
-To compensate for this, for any `struct` used as a `uniform` buffer which
-contains a two-row matrix, we declare an additional "std140 compatible" type
-in which each column of the matrix has been decomposed into the containing
-struct. For example, the following WGSL struct type:
-
-```ignore
-struct Baz {
-    m: mat3x2<f32>,
-}
-```
-
-is rendered as the SPIR-V struct type:
-
-```ignore
-OpTypeStruct %v2float %v2float %v2float
-```
-
-This has the effect that struct indices in Naga IR for such types do not
-correspond to the struct indices used in SPIR-V. A mapping of struct indices
-for these types is maintained in [`Std140CompatTypeInfo`].
-
-Additionally, any two-row matrices that are declared directly as uniform
-buffers without being wrapped in a struct are declared as a struct containing a
-vector member for each column. Any array of a two-row matrix in a uniform
-buffer is declared as an array of a struct containing a vector member for each
-column. Any struct or array within a uniform buffer which contains a member or
-whose base type requires a std140 compatible type declaration, itself requires a
-std140 compatible type declaration.
-
-Whenever a value of such a type is [`loaded`] we insert code to convert the
-loaded value from the std140 compatible type to the regular type. This occurs
-in `BlockContext::write_checked_load`, making use of the wrapper function
-defined by `Writer::write_wrapped_convert_from_std140_compat_type`. For matrices
-that have been decomposed as separate columns in the containing struct, we load
-each column separately then composite the matrix type in
-`BlockContext::maybe_write_load_uniform_matcx2_struct_member`.
-
-Whenever a column of a matrix that has been decomposed into its containing
-struct is [`accessed`] with a constant index we adjust the emitted access chain
-to access from the containing struct instead, in `BlockContext::write_access_chain`.
-
-Whenever a column of a uniform buffer two-row matrix is [`dynamically accessed`]
-we must first load the matrix type, converting it from its std140 compatible
-type as described above, then access the column using the wrapper function
-defined by `Writer::write_wrapped_matcx2_get_column`. This is handled by
-`BlockContext::maybe_write_uniform_matcx2_dynamic_access`.
-
-Note that this approach differs somewhat from the equivalent code in the HLSL
-backend. For HLSL all structs containing two-row matrices (or arrays of such)
-have their declarations modified, not just those used as uniform buffers.
-Two-row matrices and arrays of such only use modified type declarations when
-used as uniform buffers, or additionally when used as struct member in any
-context. This avoids the need to convert struct values when loading from uniform
-buffers, but when loading arrays and matrices from uniform buffers or from any
-struct the conversion is still required. In contrast, the approach used here
-always requires converting *any* affected type when loading from a uniform
-buffer, but consistently *only* when loading from a uniform buffer. As a result
-this also means we only have to handle loads and not stores, as uniform buffers
-are read-only.
-
 [spv]: https://www.khronos.org/registry/SPIR-V/
-[ilov]: https://gpuweb.github.io/gpuweb/wgsl/#internal-value-layout
-[extended-layout]: https://docs.vulkan.org/spec/latest/chapters/interfaces.html#interfaces-resources-layout
-[`loaded`]: crate::Expression::Load
-[`accessed`]: crate::Expression::AccessIndex
-[`dynamically accessed`]: crate::Expression::Access
 */
 
 mod block;
@@ -105,7 +13,7 @@ mod instructions;
 mod layout;
 mod mesh_shader;
 mod ray;
-mod reclaimable;
+mod recyclable;
 mod selection;
 mod subgroup;
 mod writer;
@@ -120,7 +28,6 @@ use spirv::Word;
 use thiserror::Error;
 
 use crate::arena::{Handle, HandleVec};
-use crate::back::TaskDispatchLimits;
 use crate::proc::{BoundsCheckPolicies, TypeResolution};
 
 #[derive(Clone)]
@@ -184,7 +91,7 @@ pub enum Error {
 struct IdGenerator(Word);
 
 impl IdGenerator {
-    const fn next(&mut self) -> Word {
+    fn next(&mut self) -> Word {
         self.0 += 1;
         self.0
     }
@@ -593,14 +500,6 @@ enum LookupRayQueryFunction {
     Terminate,
 }
 
-// Just one supported function right now, more in the future.
-#[derive(Debug, PartialEq, Clone, Hash, Eq)]
-enum LookupRaytracingFunction {
-    TraceRay {
-        payload: Handle<crate::GlobalVariable>,
-    },
-}
-
 #[derive(Debug)]
 enum Dimension {
     Scalar,
@@ -618,12 +517,6 @@ enum WrappedFunction {
         op: crate::BinaryOperator,
         left_type_id: Word,
         right_type_id: Word,
-    },
-    ConvertFromStd140CompatType {
-        r#type: Handle<crate::Type>,
-    },
-    MatCx2GetColumn {
-        r#type: Handle<crate::Type>,
     },
 }
 
@@ -664,10 +557,10 @@ impl ops::IndexMut<Handle<crate::Expression>> for CachedExpressions {
         id
     }
 }
-impl reclaimable::Reclaimable for CachedExpressions {
-    fn reclaim(self) -> Self {
+impl recyclable::Recyclable for CachedExpressions {
+    fn recycle(self) -> Self {
         CachedExpressions {
-            ids: self.ids.reclaim(),
+            ids: self.ids.recycle(),
         }
     }
 }
@@ -772,7 +665,7 @@ impl GlobalVariable {
     }
 
     /// Prepare `self` for use within a single function.
-    const fn reset_for_function(&mut self) {
+    fn reset_for_function(&mut self) {
         self.handle_id = 0;
         self.access_id = 0;
     }
@@ -866,7 +759,7 @@ struct RayQueryTrackers {
 }
 
 impl BlockContext<'_> {
-    const fn gen_id(&mut self) -> Word {
+    fn gen_id(&mut self) -> Word {
         self.writer.id_gen.next()
     }
 
@@ -900,20 +793,6 @@ impl BlockContext<'_> {
     }
 }
 
-/// Information about a type for which we have declared a std140 layout
-/// compatible variant, because the type is used in a uniform but does not
-/// adhere to std140 requirements. The uniform will be declared using the
-/// type `type_id`, and the result of any `Load` will be immediately converted
-/// to the base type. This is used for matrices with 2 rows, as well as any
-/// arrays or structs containing such matrices.
-pub struct Std140CompatTypeInfo {
-    /// ID of the std140 compatible type declaration.
-    type_id: Word,
-    /// For structs, a mapping of Naga IR struct member indices to the indices
-    /// used in the generated SPIR-V. For non-struct types this will be empty.
-    member_indices: Vec<u32>,
-}
-
 pub struct Writer {
     physical_layout: PhysicalLayout,
     logical_layout: LogicalLayout,
@@ -942,7 +821,6 @@ pub struct Writer {
     force_loop_bounding: bool,
     use_storage_input_output_16: bool,
     void_type: Word,
-    tuple_of_u32s_ty_id: Option<Word>,
     //TODO: convert most of these into vectors, addressable by handle indices
     lookup_type: crate::FastHashMap<LookupType, Word>,
     lookup_function: crate::FastHashMap<Handle<crate::Function>, Word>,
@@ -955,7 +833,6 @@ pub struct Writer {
     constant_ids: HandleVec<crate::Expression, Word>,
     cached_constants: crate::FastHashMap<CachedConstant, Word>,
     global_variables: HandleVec<crate::GlobalVariable, GlobalVariable>,
-    std140_compat_uniform_types: crate::FastHashMap<Handle<crate::Type>, Std140CompatTypeInfo>,
     fake_missing_bindings: bool,
     binding_map: BindingMap,
 
@@ -970,10 +847,6 @@ pub struct Writer {
 
     ray_query_functions: crate::FastHashMap<LookupRayQueryFunction, Word>,
 
-    ray_tracing_functions: crate::FastHashMap<LookupRaytracingFunction, Word>,
-
-    has_ray_tracing_pipeline: bool,
-
     /// F16 I/O polyfill manager for handling `f16` input/output variables
     /// when `StorageInputOutput16` capability is not available.
     io_f16_polyfills: f16_polyfill::F16IoPolyfill,
@@ -981,14 +854,6 @@ pub struct Writer {
     /// Non semantic debug printf extension `OpExtInstImport`
     debug_printf: Option<Word>,
     pub(crate) ray_query_initialization_tracking: bool,
-
-    /// Whether the arguments to trace ray should be validated
-    pub(crate) trace_ray_argument_validation: bool,
-
-    /// See docs in [`Options`]
-    task_dispatch_limits: Option<TaskDispatchLimits>,
-    /// See docs in [`Options`]
-    mesh_shader_primitive_indices_clamp: bool,
 }
 
 bitflags::bitflags! {
@@ -1027,13 +892,19 @@ bitflags::bitflags! {
         /// Note: VK_KHR_shader_non_semantic_info must be enabled. This will have no
         /// effect if `options.ray_query_initialization_tracking` is set to false.
         const PRINT_ON_RAY_QUERY_INITIALIZATION_FAIL = 0x20;
+    }
+}
 
-        /// Instead of silently failing if the arguments to `traceRays` are
-        /// invalid, uses debug printf extension to print to the command line
-        ///
-        /// Note: VK_KHR_shader_non_semantic_info must be enabled. This will have no
-        /// effect if `options.trace_ray_argument_validation` is set to false.
-        const PRINT_ON_TRACE_RAYS_FAIL = 0x40;
+bitflags::bitflags! {
+    /// How far through a ray query are we
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    pub(super) struct RayQueryPoint: u32 {
+        /// Ray query has been successfully initialized.
+        const INITIALIZED = 1 << 0;
+        /// Proceed has been called on ray query.
+        const PROCEED = 1 << 1;
+        /// Proceed has returned false (have finished traversal).
+        const FINISHED_TRAVERSAL = 1 << 2;
     }
 }
 
@@ -1095,25 +966,11 @@ pub struct Options<'a> {
     /// misuse.
     pub ray_query_initialization_tracking: bool,
 
-    /// If set, arguments to `traceRays` calls will be validated.
-    pub trace_ray_argument_validation: bool,
-
     /// Whether to use the `StorageInputOutput16` capability for `f16` shader I/O.
     /// When false, `f16` I/O is polyfilled using `f32` types with conversions.
     pub use_storage_input_output_16: bool,
 
     pub debug_info: Option<DebugInfo<'a>>,
-
-    /// Limits to the mesh shader dispatch group a task workgroup can dispatch.
-    ///
-    /// Metal for example limits to 1024 workgroups per task shader dispatch. Dispatching more is
-    /// undefined behavior, so this would validate that to dispatch zero workgroups.
-    pub task_dispatch_limits: Option<TaskDispatchLimits>,
-
-    /// If true, naga may generate checks that the primitive indices are valid in the output.
-    ///
-    /// Currently this validation is unimplemented.
-    pub mesh_shader_primitive_indices_clamp: bool,
 }
 
 impl Default for Options<'_> {
@@ -1134,11 +991,8 @@ impl Default for Options<'_> {
             zero_initialize_workgroup_memory: ZeroInitializeWorkgroupMemoryMode::Polyfill,
             force_loop_bounding: true,
             ray_query_initialization_tracking: true,
-            trace_ray_argument_validation: true,
             use_storage_input_output_16: true,
             debug_info: None,
-            task_dispatch_limits: None,
-            mesh_shader_primitive_indices_clamp: true,
         }
     }
 }
@@ -1173,53 +1027,4 @@ pub fn write_vec(
         &mut words,
     )?;
     Ok(words)
-}
-
-pub fn supported_capabilities() -> crate::valid::Capabilities {
-    use crate::valid::Capabilities as Caps;
-
-    Caps::IMMEDIATES
-        | Caps::FLOAT64
-        | Caps::PRIMITIVE_INDEX
-        | Caps::TEXTURE_AND_SAMPLER_BINDING_ARRAY
-        | Caps::BUFFER_BINDING_ARRAY
-        | Caps::STORAGE_TEXTURE_BINDING_ARRAY
-        | Caps::STORAGE_BUFFER_BINDING_ARRAY
-        | Caps::ACCELERATION_STRUCTURE_BINDING_ARRAY
-        | Caps::CLIP_DISTANCES
-        // No cull distance
-        | Caps::STORAGE_TEXTURE_16BIT_NORM_FORMATS
-        | Caps::MULTIVIEW
-        | Caps::EARLY_DEPTH_TEST
-        | Caps::MULTISAMPLED_SHADING
-        | Caps::RAY_QUERY
-        | Caps::DUAL_SOURCE_BLENDING
-        | Caps::CUBE_ARRAY_TEXTURES
-        | Caps::SHADER_INT64
-        | Caps::SUBGROUP
-        | Caps::SUBGROUP_BARRIER
-        | Caps::SUBGROUP_VERTEX_STAGE
-        | Caps::SHADER_INT64_ATOMIC_MIN_MAX
-        | Caps::SHADER_INT64_ATOMIC_ALL_OPS
-        | Caps::SHADER_FLOAT32_ATOMIC
-        | Caps::TEXTURE_ATOMIC
-        | Caps::TEXTURE_INT64_ATOMIC
-        | Caps::RAY_HIT_VERTEX_POSITION
-        | Caps::SHADER_FLOAT16
-        | Caps::SHADER_INT16
-        // No TEXTURE_EXTERNAL
-        | Caps::SHADER_FLOAT16_IN_FLOAT32
-        | Caps::SHADER_BARYCENTRICS
-        | Caps::MESH_SHADER
-        | Caps::MESH_SHADER_POINT_TOPOLOGY
-        | Caps::TEXTURE_AND_SAMPLER_BINDING_ARRAY_NON_UNIFORM_INDEXING
-        // No BUFFER_BINDING_ARRAY_NON_UNIFORM_INDEXING
-        | Caps::STORAGE_TEXTURE_BINDING_ARRAY_NON_UNIFORM_INDEXING
-        | Caps::STORAGE_BUFFER_BINDING_ARRAY_NON_UNIFORM_INDEXING
-        | Caps::COOPERATIVE_MATRIX
-        | Caps::PER_VERTEX
-        | Caps::RAY_TRACING_PIPELINE
-        | Caps::DRAW_INDEX
-        | Caps::MEMORY_DECORATION_COHERENT
-        | Caps::MEMORY_DECORATION_VOLATILE
 }

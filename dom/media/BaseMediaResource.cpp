@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,7 +12,6 @@
 #include "MediaContainerType.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/dom/BlobImpl.h"
-#include "mozilla/dom/BlobURLChannel.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "nsDebug.h"
@@ -20,7 +21,6 @@
 #include "nsIFileChannel.h"
 #include "nsIInputStream.h"
 #include "nsNetUtil.h"
-#include "nsQueryObject.h"
 
 namespace mozilla {
 
@@ -55,22 +55,15 @@ already_AddRefed<BaseMediaResource> BaseMediaResource::Create(
 
   int64_t streamLength = -1;
 
-  RefPtr<dom::BlobURLChannel> blobChan = do_QueryObject(aChannel);
-  if (blobChan) {
-    // All callers to BaseMediaResource::Create are performed from within an
-    // OnStartRequest callback for aChannel, meaning that the backing BlobImpl
-    // should be available in our process already.
-    RefPtr<dom::BlobImpl> blobImpl;
-    rv = blobChan->GetBackingBlob(getter_AddRefs(blobImpl));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
-
-    IgnoredErrorResult error;
+  RefPtr<mozilla::dom::BlobImpl> blobImpl;
+  if (dom::IsBlobURI(uri) &&
+      NS_SUCCEEDED(NS_GetBlobForBlobURI(uri, getter_AddRefs(blobImpl))) &&
+      blobImpl) {
+    IgnoredErrorResult rv;
 
     nsCOMPtr<nsIInputStream> stream;
-    blobImpl->CreateInputStream(getter_AddRefs(stream), error);
-    if (NS_WARN_IF(error.Failed())) {
+    blobImpl->CreateInputStream(getter_AddRefs(stream), rv);
+    if (NS_WARN_IF(rv.Failed())) {
       return nullptr;
     }
 
@@ -88,8 +81,8 @@ already_AddRefed<BaseMediaResource> BaseMediaResource::Create(
 
     // Also if the stream doesn't know its own size synchronously, we can still
     // read the length from the blob.
-    uint64_t size = blobImpl->GetSize(error);
-    if (NS_WARN_IF(error.Failed())) {
+    uint64_t size = blobImpl->GetSize(rv);
+    if (NS_WARN_IF(rv.Failed())) {
       return nullptr;
     }
 
@@ -148,30 +141,27 @@ void BaseMediaResource::SetLoadInBackground(bool aLoadInBackground) {
 }
 
 nsresult BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags) {
-  RefPtr<BaseMediaResource> kungFuDeathGrip(this);
-  nsCOMPtr<nsIChannel> channel = mChannel;
-
   nsCOMPtr<nsILoadGroup> loadGroup;
-  nsresult rv = channel->GetLoadGroup(getter_AddRefs(loadGroup));
+  nsresult rv = mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   MOZ_ASSERT(NS_SUCCEEDED(rv), "GetLoadGroup() failed!");
 
   bool inLoadGroup = false;
   if (loadGroup) {
     nsresult status;
-    channel->GetStatus(&status);
+    mChannel->GetStatus(&status);
 
-    rv = loadGroup->RemoveRequest(channel, nullptr, status);
+    rv = loadGroup->RemoveRequest(mChannel, nullptr, status);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     inLoadGroup = true;
   }
 
-  rv = channel->SetLoadFlags(aFlags);
+  rv = mChannel->SetLoadFlags(aFlags);
   MOZ_ASSERT(NS_SUCCEEDED(rv), "SetLoadFlags() failed!");
 
   if (inLoadGroup) {
-    rv = loadGroup->AddRequest(channel, nullptr);
+    rv = loadGroup->AddRequest(mChannel, nullptr);
     MOZ_ASSERT(NS_SUCCEEDED(rv), "AddRequest() failed!");
   }
 

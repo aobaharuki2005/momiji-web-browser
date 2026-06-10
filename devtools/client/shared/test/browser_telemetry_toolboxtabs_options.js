@@ -13,7 +13,7 @@ const TOOL_DELAY = 200;
 
 add_task(async function () {
   await addTab(TEST_URI);
-  Services.fog.testResetFOG();
+  startTelemetry();
 
   await openAndCloseToolbox(2, TOOL_DELAY, "options");
   checkResults();
@@ -22,6 +22,13 @@ add_task(async function () {
 });
 
 function checkResults() {
-  is(2, Glean.devtools.optionsOpenedCount.testGetValue());
-  Assert.greater(Glean.devtools.optionsTimeActive.testGetValue().sum, 0);
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_OPTIONS_")
+  // here.
+  checkTelemetry("DEVTOOLS_OPTIONS_OPENED_COUNT", "", { 0: 2, 1: 0 }, "array");
+  checkTelemetry(
+    "DEVTOOLS_OPTIONS_TIME_ACTIVE_SECONDS",
+    "",
+    null,
+    "hasentries"
+  );
 }

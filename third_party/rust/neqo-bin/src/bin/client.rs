@@ -10,11 +10,10 @@ use clap::Parser as _;
 #[allow(
     clippy::allow_attributes,
     clippy::unwrap_in_result,
-    reason = "FIXME: Fixed in newer tokio versions."
+    reason = "FIXME: False positive?"
 )]
 async fn main() -> Result<(), neqo_bin::client::Error> {
     let args = neqo_bin::client::Args::parse();
 
-    #[cfg_attr(apple, expect(clippy::large_futures, reason = "OK in test code."))]
     neqo_bin::client::client(args).await
 }

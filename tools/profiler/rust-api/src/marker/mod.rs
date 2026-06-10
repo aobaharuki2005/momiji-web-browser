@@ -118,11 +118,8 @@
 //! ```
 
 pub(crate) mod deserializer_tags_state;
-mod flow_id;
 pub mod options;
 pub mod schema;
-
-pub use flow_id::FlowId;
 
 pub use options::*;
 pub use schema::MarkerSchema;
@@ -143,7 +140,7 @@ pub type CowString = Cow<'static, str>;
 /// Marker API to add a new simple marker without any payload.
 /// Please see the module documentation on how to add a marker with this API.
 pub fn add_untyped_marker(name: &str, category: ProfilingCategoryPair, mut options: MarkerOptions) {
-    if !crate::profiler_state::current_thread_is_being_profiled_for_markers() {
+    if !crate::profiler_state::can_accept_markers() {
         // Nothing to do.
         return;
     }
@@ -167,7 +164,7 @@ pub fn add_text_marker(
     mut options: MarkerOptions,
     text: &str,
 ) {
-    if !crate::profiler_state::current_thread_is_being_profiled_for_markers() {
+    if !crate::profiler_state::can_accept_markers() {
         // Nothing to do.
         return;
     }
@@ -208,7 +205,7 @@ impl<'a> AutoProfilerTextMarker<'a> {
         options: MarkerOptions,
         text: &'a str,
     ) -> Option<AutoProfilerTextMarker<'a>> {
-        if !crate::profiler_state::current_thread_is_being_profiled_for_markers() {
+        if !crate::profiler_state::can_accept_markers() {
             return None;
         }
         let start = ProfilerTime::now();
@@ -250,11 +247,20 @@ impl<'a> Drop for AutoProfilerTextMarker<'a> {
 /// );
 /// ```
 ///
+#[cfg(feature = "enabled")]
 #[macro_export]
 macro_rules! auto_profiler_marker_text {
     ($name:expr, $category:expr,$options:expr, $text:expr) => {
         let _macro_created_rust_text_marker =
             $crate::AutoProfilerTextMarker::new($name, $category, $options, $text);
+    };
+}
+
+#[cfg(not(feature = "enabled"))]
+#[macro_export]
+macro_rules! auto_profiler_marker_text {
+    ($name:expr, $category:expr,$options:expr, $text:expr) => {
+        // Do nothing if the profiler is not enabled
     };
 }
 
@@ -309,7 +315,7 @@ pub fn add_marker<T>(
 ) where
     T: ProfilerMarker + 'static,
 {
-    if !crate::profiler_state::current_thread_is_being_profiled_for_markers() {
+    if !crate::profiler_state::can_accept_markers() {
         // Nothing to do.
         return;
     }
@@ -345,7 +351,7 @@ pub fn add_marker<T>(
 /// Record a marker using the Rust `add_marker` API, but delay evaluation of
 /// arguments until we're sure that the profiler can accept markers.
 ///
-/// This macro is equivalent to testing `gecko_profiler::current_thread_is_being_profiled_for_markers`
+/// This macro is equivalent to testing `gecko_profiler::can_accept_markers`
 /// before calling `gecko_profiler::add_marker`. Note that
 /// `gecko_profiler::add_marker` already performs this check, but after
 /// arguments to the function have already been evaluated, which is too late
@@ -366,10 +372,11 @@ pub fn add_marker<T>(
 /// category but *not* the options is not possible, due to how we're able to
 /// define macros in Rust.
 ///
+#[cfg(feature = "enabled")]
 #[macro_export]
 macro_rules! lazy_add_marker {
     ($name:expr, $category:expr, $options:expr, $payload:expr) => {
-        if gecko_profiler::current_thread_is_being_profiled_for_markers() {
+        if gecko_profiler::can_accept_markers() {
             gecko_profiler::add_marker($name, $category, $options, $payload);
         }
     };
@@ -377,14 +384,14 @@ macro_rules! lazy_add_marker {
     // so take advantage of that to provide a version that drops the
     // `options` argument, and gives a default value instead.
     ($name: expr, $category:expr, $payload:expr) => {
-        if gecko_profiler::current_thread_is_being_profiled_for_markers() {
+        if gecko_profiler::can_accept_markers() {
             gecko_profiler::add_marker($name, $category, Default::default(), $payload);
         }
     };
     // Take advantage of overloading to provide a version that drops the
     // category as well.
     ($name: expr, $payload:expr) => {
-        if gecko_profiler::current_thread_is_being_profiled_for_markers() {
+        if gecko_profiler::can_accept_markers() {
             gecko_profiler::add_marker(
                 $name,
                 gecko_profiler::ProfilingCategoryPair::Other(None),
@@ -392,6 +399,20 @@ macro_rules! lazy_add_marker {
                 $payload,
             );
         }
+    };
+}
+
+#[cfg(not(feature = "enabled"))]
+#[macro_export]
+macro_rules! lazy_add_marker {
+    ($name:expr, $category:expr, $options:expr, $text:expr) => {
+        // Do nothing if the profiler is not enabled
+    };
+    ($name: expr, $category:expr, $payload:expr) => {
+        // Do nothing if the profiler is not enabled
+    };
+    ($name: expr, $payload:expr) => {
+        // Do nothing if the profiler is not enabled
     };
 }
 
@@ -479,7 +500,7 @@ impl<'a> AutoProfilerMarker<'a> {
         category: ProfilingCategoryPair,
         options: MarkerOptions,
     ) -> Option<AutoProfilerMarker<'a>> {
-        if !crate::profiler_state::current_thread_is_being_profiled_for_markers() {
+        if !crate::profiler_state::can_accept_markers() {
             return None;
         }
         // Record our starting marker.
@@ -504,7 +525,7 @@ impl<'a> Drop for AutoProfilerMarker<'a> {
         // guarantee that it's still running though, so check again! If the
         // profiler has stopped, then there's no point recording the second of a
         // pair of markers.
-        if !crate::profiler_state::current_thread_is_being_profiled_for_markers() {
+        if !crate::profiler_state::can_accept_markers() {
             return;
         }
         // record the ending marker
@@ -533,6 +554,7 @@ impl<'a> Drop for AutoProfilerMarker<'a> {
 /// );
 /// ```
 ///
+#[cfg(feature = "enabled")]
 #[macro_export]
 macro_rules! auto_profiler_marker {
     ($name:expr, $category:expr,$options:expr) => {
@@ -541,13 +563,21 @@ macro_rules! auto_profiler_marker {
     };
 }
 
+#[cfg(not(feature = "enabled"))]
+#[macro_export]
+macro_rules! auto_profiler_marker {
+    ($name:expr, $category:expr,$options:expr) => {
+        // Do nothing if the profiler is not enabled
+    };
+}
+
 /// Flow marker type for Rust code.
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-pub struct FlowStackMarker(pub FlowId);
+pub struct FlowStackMarker(pub u64);
 
 impl FlowStackMarker {
     pub fn from_pointer<T>(s: *const T) -> Self {
-        FlowStackMarker(FlowId::from(s))
+        FlowStackMarker(s as usize as u64)
     }
 }
 
@@ -557,8 +587,17 @@ impl ProfilerMarker for FlowStackMarker {
     }
 
     fn stream_json_marker_data(&self, json_writer: &mut JSONWriter) {
+        fn hex_string(id: u64) -> [u8; 16] {
+            let mut buf = [0; 16];
+            let hex_digits = b"0123456789abcdef";
+            for i in 0..16 {
+                buf[i] = hex_digits[(id >> (60 - i * 4)) as usize & 0xf];
+            }
+            buf
+        }
+
         json_writer.unique_string_property("flow", unsafe {
-            std::str::from_utf8_unchecked(&self.0.to_hex())
+            std::str::from_utf8_unchecked(&hex_string(self.0))
         });
     }
 
@@ -597,7 +636,7 @@ impl<'a> AutoProfilerFlowMarker<'a> {
         options: MarkerOptions,
         flow: FlowStackMarker,
     ) -> Option<AutoProfilerFlowMarker<'a>> {
-        if !crate::profiler_state::current_thread_is_being_profiled_for_markers() {
+        if !crate::profiler_state::can_accept_markers() {
             return None;
         }
         Some(AutoProfilerFlowMarker {
@@ -617,7 +656,7 @@ impl<'a> Drop for AutoProfilerFlowMarker<'a> {
         // guarantee that it's still running though, so check again! If the
         // profiler has stopped, then there's no point recording the second of a
         // pair of markers.
-        if !crate::profiler_state::current_thread_is_being_profiled_for_markers() {
+        if !crate::profiler_state::can_accept_markers() {
             return;
         }
         // record the ending marker
@@ -647,10 +686,19 @@ impl<'a> Drop for AutoProfilerFlowMarker<'a> {
 /// );
 /// ```
 ///
+#[cfg(feature = "enabled")]
 #[macro_export]
 macro_rules! auto_profiler_flow_marker {
     ($name:expr, $category:expr,$options:expr, $payload:expr) => {
         let _macro_created_rust_tracing_marker =
             $crate::AutoProfilerFlowMarker::new($name, $category, $options, $payload);
+    };
+}
+
+#[cfg(not(feature = "enabled"))]
+#[macro_export]
+macro_rules! auto_profiler_flow_marker {
+    ($name:expr, $category:expr,$options:expr, $payload:expr) => {
+        // Do nothing if the profiler is not enabled
     };
 }

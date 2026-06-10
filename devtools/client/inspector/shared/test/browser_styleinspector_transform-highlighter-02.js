@@ -40,7 +40,7 @@ add_task(async function () {
   await onHighlighterShown;
 
   const onComputedViewReady = inspector.once("computed-view-refreshed");
-  const cView = await selectComputedView(inspector);
+  const cView = selectComputedView(inspector);
   await onComputedViewReady;
   hs = cView.highlighters;
 

@@ -19,9 +19,7 @@ export class ColorPickerChild extends InputPickerChildCommon {
   closeImpl(inputElement) {
     inputElement.setOpenState(false);
     if (this.initialValue !== inputElement.value) {
-      inputElement.dispatchEvent(
-        new inputElement.documentGlobal.Event("change")
-      );
+      inputElement.dispatchEvent(new inputElement.ownerGlobal.Event("change"));
     }
   }
 
@@ -42,7 +40,6 @@ export class ColorPickerChild extends InputPickerChildCommon {
       component1: rgb[0],
       component2: rgb[1],
       component3: rgb[2],
-      alpha: rgb[3],
     });
   }
 

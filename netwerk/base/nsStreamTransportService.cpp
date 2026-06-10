@@ -49,10 +49,10 @@ class nsInputStreamTransport : public nsITransport,
  private:
   virtual ~nsInputStreamTransport() = default;
 
-  Mutex mMutex{"nsInputStreamTransport::mMutex"};
+  Mutex mMutex MOZ_UNANNOTATED{"nsInputStreamTransport::mMutex"};
 
   // This value is protected by mutex.
-  nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback MOZ_GUARDED_BY(mMutex);
+  nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
 
   nsCOMPtr<nsIAsyncInputStream> mPipeIn;
 
@@ -246,32 +246,31 @@ nsInputStreamTransport::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 // nsStreamTransportService
 //-----------------------------------------------------------------------------
 
-/* static */
-already_AddRefed<nsStreamTransportService> nsStreamTransportService::Create() {
-  nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
-  pool->SetName("StreamTrans"_ns);
-  // TODO: Make these settings configurable.
-  pool->SetThreadLimit(25);
-  pool->SetIdleThreadLimit(4);
-  pool->SetIdleThreadMaximumTimeout(30 * 1000);
-  pool->SetIdleThreadGraceTimeout(500);
+nsStreamTransportService::nsStreamTransportService() = default;
 
-  RefPtr<nsStreamTransportService> svc =
-      new nsStreamTransportService(pool.forget());
-
-  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
-  if (obsSvc) {
-    obsSvc->AddObserver(svc, "xpcom-shutdown-threads", false);
-  }
-
-  return svc.forget();
+nsStreamTransportService::~nsStreamTransportService() {
+  NS_ASSERTION(!mPool, "thread pool wasn't shutdown");
 }
 
-nsStreamTransportService::nsStreamTransportService(
-    already_AddRefed<nsIThreadPool> aPool)
-    : mPool(aPool) {}
+nsresult nsStreamTransportService::Init() {
+  // Can't be used multithreaded before this
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
+  MOZ_ASSERT(!mPool);
+  mPool = new nsThreadPool();
 
-nsStreamTransportService::~nsStreamTransportService() = default;
+  // Configure the pool
+  mPool->SetName("StreamTrans"_ns);
+  // TODO: Make these settings configurable.
+  mPool->SetThreadLimit(25);
+  mPool->SetIdleThreadLimit(4);
+  mPool->SetIdleThreadMaximumTimeout(30 * 1000);
+  mPool->SetIdleThreadGraceTimeout(500);
+  MOZ_POP_THREAD_SAFETY
+
+  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+  if (obsSvc) obsSvc->AddObserver(this, "xpcom-shutdown-threads", false);
+  return NS_OK;
+}
 
 NS_IMPL_ISUPPORTS(nsStreamTransportService, nsIStreamTransportService,
                   nsIEventTarget, nsIObserver)
@@ -285,7 +284,19 @@ nsStreamTransportService::DispatchFromScript(nsIRunnable* task,
 NS_IMETHODIMP
 nsStreamTransportService::Dispatch(already_AddRefed<nsIRunnable> task,
                                    DispatchFlags flags) {
-  return mPool->Dispatch(std::move(task), flags);
+  // NOTE: To maintain existing behaviour, we never leak task on error, even if
+  // NS_DISPATCH_FALLIBLE is not specified.
+  nsCOMPtr<nsIRunnable> event(task);  // so it gets released on failure paths
+  nsCOMPtr<nsIThreadPool> pool;
+  {
+    mozilla::MutexAutoLock lock(mShutdownLock);
+    if (mIsShutdown) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+    pool = mPool;
+  }
+  NS_ENSURE_TRUE(pool, NS_ERROR_NOT_INITIALIZED);
+  return pool->Dispatch(event.forget(), flags);
 }
 
 NS_IMETHODIMP
@@ -295,27 +306,40 @@ nsStreamTransportService::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
 }
 
 NS_IMETHODIMP
-nsStreamTransportService::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
-  return mPool->RegisterShutdownTask(aTask);
+nsStreamTransportService::RegisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsStreamTransportService::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
-  return mPool->UnregisterShutdownTask(aTask);
-}
-
-nsIEventTarget::FeatureFlags nsStreamTransportService::GetFeatures() {
-  return mPool->GetFeatures();
+nsStreamTransportService::UnregisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP_(bool)
 nsStreamTransportService::IsOnCurrentThreadInfallible() {
-  return mPool->IsOnCurrentThread();
+  nsCOMPtr<nsIThreadPool> pool;
+  {
+    mozilla::MutexAutoLock lock(mShutdownLock);
+    pool = mPool;
+  }
+  if (!pool) {
+    return false;
+  }
+  return pool->IsOnCurrentThread();
 }
 
 NS_IMETHODIMP
 nsStreamTransportService::IsOnCurrentThread(bool* result) {
-  return mPool->IsOnCurrentThread(result);
+  nsCOMPtr<nsIThreadPool> pool;
+  {
+    mozilla::MutexAutoLock lock(mShutdownLock);
+    if (mIsShutdown) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+    pool = mPool;
+  }
+  NS_ENSURE_TRUE(pool, NS_ERROR_NOT_INITIALIZED);
+  return pool->IsOnCurrentThread(result);
 }
 
 NS_IMETHODIMP
@@ -333,7 +357,18 @@ nsStreamTransportService::Observe(nsISupports* subject, const char* topic,
                                   const char16_t* data) {
   NS_ASSERTION(strcmp(topic, "xpcom-shutdown-threads") == 0, "oops");
 
-  mPool->Shutdown();
+  {
+    nsCOMPtr<nsIThreadPool> pool;
+    {
+      mozilla::MutexAutoLock lock(mShutdownLock);
+      mIsShutdown = true;
+      pool = mPool.forget();
+    }
+
+    if (pool) {
+      pool->Shutdown();
+    }
+  }
   return NS_OK;
 }
 

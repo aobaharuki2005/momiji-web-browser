@@ -33,21 +33,6 @@
 </style>
 
 <script>
-  function click(element) {
-    return (new test_driver.Actions()
-      .pointerMove(0, 0, {origin: element})
-      .pointerDown()
-      .pointerUp())
-      .send();
-  }
-
-  function pressKey(key) {
-    return (new test_driver.Actions()
-      .keyDown(key)
-      .keyUp(key))
-      .send();
-  }
-
   const events = ['click','keydown','keyup','mousedown','mouseup','pointerdown','pointerup',
       'focusin','focusout','input','change','beforetoggle','toggle'];
   const keys = {Enter:'\uE007',Escape:'\uE00C',ArrowLeft:'\uE012',ArrowUp:'\uE013',ArrowRight:'\uE014',ArrowDown:'\uE015',Space:' ',Tab:'\uE004',Shift:'\uE008'};
@@ -79,7 +64,7 @@
       assert_events([]);
 
       // Open the picker by clicking on it, which will focus the currently selected option.
-      await click(select);
+      await test_driver.click(select);
       assert_true(select.matches(':open'));
       assert_events([
         'pointerdown on select at select. open: false.',
@@ -98,7 +83,7 @@
 
       // Press arrow-down, and preventDefault
       wrapper.addEventListener('keydown',(e) => e.preventDefault(),{once:true});
-      await pressKey(keys.ArrowDown);
+      await test_driver.send_keys(document.activeElement, keys.ArrowDown);
       assert_equals(select.selectedOptions[0].innerText,'one');
       assert_events([
         'keydown on option1 at select. open: true. focused: option1.',
@@ -108,7 +93,7 @@
       ],'arrow down, with preventDefault');
 
       // Press arrow-down, no preventDefault
-      await pressKey(keys.ArrowDown);
+      await test_driver.send_keys(document.activeElement, keys.ArrowDown);
       assert_equals(select.selectedOptions[0].innerText,'one','selection does not follow focus');
       assert_events([
         'keydown on option1 at select. open: true. focused: option1.',
@@ -123,7 +108,7 @@
 
       // Press escape, and preventDefault
       wrapper.addEventListener('keydown',(e) => e.preventDefault(),{once:true});
-      await pressKey(keys.Escape);
+      await test_driver.send_keys(document.activeElement, keys.Escape);
       assert_true(select.matches(':open'));
       assert_events([
         'keydown on option2 at select. open: true. focused: option2.',
@@ -133,7 +118,7 @@
       ],'escape, with preventDefault');
 
       // Press escape, no preventDefault
-      await pressKey(keys.Escape);
+      await test_driver.send_keys(document.activeElement, keys.Escape);
       assert_false(select.matches(':open'),'select should be closed escape no preventDefault');
       assert_events([
         'keydown on option2 at select. open: true. focused: option2.',
@@ -147,16 +132,16 @@
       ],'escape, no preventDefault');
 
       // Re-open the picker and hit arrow-down again.
-      await click(select);
+      await test_driver.click(select);
       assert_true(select.matches(':open'));
       assert_equals(select.value,'one');
-      await pressKey(keys.ArrowDown);
+      await test_driver.send_keys(document.activeElement, keys.ArrowDown);
       assert_equals(select.value,'one','selection does not follow focus');
       eventList = [];
 
       // Press enter to select an option, with preventDefault
       wrapper.addEventListener('keydown',(e) => e.preventDefault(),{once:true});
-      await pressKey(keys.Enter);
+      await test_driver.send_keys(document.activeElement, keys.Enter);
       assert_true(select.matches(':open'));
       assert_equals(select.value,'one','value has not changed');
       assert_events([
@@ -167,7 +152,7 @@
       ],'enter, with preventDefault');
 
       // Press enter to select an option, no preventDefault
-      await pressKey(keys.Enter);
+      await test_driver.send_keys(document.activeElement, keys.Enter);
       assert_false(select.matches(':open'),'select should be closed enter no preventDefault');
       assert_equals(select.value,'two');
       assert_events([
@@ -186,14 +171,18 @@
       ],'enter, no preventDefault');
 
       // Re-open the picker.
-      await click(select);
+      await test_driver.click(select);
       assert_true(select.matches(':open'));
       eventList = [];
 
       // Click on an option, with preventDefault
       wrapper.addEventListener('mouseup',(e) => e.preventDefault(),{once:true});
       assert_equals(select.selectedOptions[0].innerText,'two');
-      await click(option1);
+      await (new test_driver.Actions()
+        .pointerMove(1, 1, {origin: option1})
+        .pointerDown()
+        .pointerUp())
+        .send();
       assert_true(select.matches(':open'),'click should be cancelled');
       assert_events([
         'pointerdown on option1 at select. open: true.',
@@ -214,7 +203,11 @@
 
       // Click on an option, no preventDefault
       assert_equals(select.selectedOptions[0].innerText,'two');
-      await click(option1);
+      await (new test_driver.Actions()
+        .pointerMove(1, 1, {origin: option1})
+        .pointerDown()
+        .pointerUp())
+        .send();
       assert_false(select.matches(':open'),'select should be closed click option no preventDefault');
       assert_events([
         'pointerdown on option1 at select. open: true.',

@@ -14,7 +14,7 @@ add_setup(async function () {
     });
   }
 
-  defaultEngine = await SearchService.getDefault();
+  defaultEngine = await Services.search.getDefault();
 
   extension = await SearchTestUtils.installSearchExtension({
     id: TEST_ENGINE_NAME,
@@ -24,7 +24,7 @@ add_setup(async function () {
     suggest_url_get_params: "query={searchTerms}",
   });
 
-  addedEngine = await SearchService.getEngineByName(TEST_ENGINE_NAME);
+  addedEngine = await Services.search.getEngineByName(TEST_ENGINE_NAME);
 
   // Enable suggestions in this test. Otherwise, the string in the content
   // search box changes.
@@ -33,9 +33,9 @@ add_setup(async function () {
   });
 
   registerCleanupFunction(async () => {
-    await SearchService.setDefault(
+    await Services.search.setDefault(
       defaultEngine,
-      SearchService.CHANGE_REASON.UNKNOWN
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
   });
 });
@@ -131,12 +131,12 @@ async function runNewTabTest() {
   await ensurePlaceholder(
     tab,
     "newtab-search-box-handoff-input",
-    SearchService.defaultEngine.name
+    Services.search.defaultEngine.name
   );
 
-  await SearchService.setDefault(
+  await Services.search.setDefault(
     addedEngine,
-    SearchService.CHANGE_REASON.UNKNOWN
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   // We only show the engine's own icon for config engines, otherwise show
@@ -152,9 +152,9 @@ async function runNewTabTest() {
   await ensurePlaceholder(tab, "newtab-search-box-input");
   await SpecialPowers.popPrefEnv();
 
-  await SearchService.setDefault(
+  await Services.search.setDefault(
     defaultEngine,
-    SearchService.CHANGE_REASON.UNKNOWN
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   BrowserTestUtils.removeTab(tab);
@@ -177,12 +177,12 @@ add_task(async function test_content_search_attributes_in_private_window() {
   await ensurePlaceholder(
     tab,
     "about-private-browsing-handoff",
-    SearchService.defaultEngine.name
+    Services.search.defaultEngine.name
   );
 
-  await SearchService.setDefault(
+  await Services.search.setDefault(
     addedEngine,
-    SearchService.CHANGE_REASON.UNKNOWN
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   // We only show the engine's own icon for config engines, otherwise show
@@ -196,9 +196,9 @@ add_task(async function test_content_search_attributes_in_private_window() {
   await ensurePlaceholder(tab, "about-private-browsing-search-btn");
   await SpecialPowers.popPrefEnv();
 
-  await SearchService.setDefault(
+  await Services.search.setDefault(
     defaultEngine,
-    SearchService.CHANGE_REASON.UNKNOWN
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   await BrowserTestUtils.closeWindow(win);

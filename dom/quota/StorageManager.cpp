@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -280,7 +282,7 @@ already_AddRefed<Promise> ExecuteOpOnMainOrWorkerThread(
       return nullptr;
     }
 
-    nsCOMPtr<nsIPrincipal> principal = doc->EffectiveStoragePrincipal();
+    nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
     MOZ_ASSERT(principal);
 
     // Storage Standard 7. API
@@ -604,7 +606,7 @@ bool EstimateWorkerMainThreadRunnable::MainThreadRun() {
     if (mProxy->CleanedUp()) {
       return true;
     }
-    principal = mProxy->GetWorkerPrivate()->GetEffectiveStoragePrincipal();
+    principal = mProxy->GetWorkerPrivate()->GetPrincipal();
   }
 
   MOZ_ASSERT(principal);
@@ -631,7 +633,7 @@ bool PersistedWorkerMainThreadRunnable::MainThreadRun() {
     if (mProxy->CleanedUp()) {
       return true;
     }
-    principal = mProxy->GetWorkerPrivate()->GetEffectiveStoragePrincipal();
+    principal = mProxy->GetWorkerPrivate()->GetPrincipal();
   }
 
   MOZ_ASSERT(principal);
@@ -651,11 +653,20 @@ bool PersistedWorkerMainThreadRunnable::MainThreadRun() {
 nsresult PersistentStoragePermissionRequest::Start() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!CheckPermissionDelegate()) {
-    return Cancel();
+  PromptResult pr;
+#ifdef MOZ_WIDGET_ANDROID
+  // on Android calling `ShowPrompt` here calls
+  // `nsContentPermissionUtils::AskPermission` once, and a response of
+  // `PromptResult::Pending` calls it again. This results in multiple requests
+  // for storage access, so we check the prompt prefs only to ensure we only
+  // request it once.
+  pr = CheckPromptPrefs();
+#else
+  nsresult rv = ShowPrompt(pr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
-
-  PromptResult pr = CheckPromptPrefs();
+#endif
   if (pr == PromptResult::Granted) {
     return Allow(JS::UndefinedHandleValue);
   }
@@ -713,7 +724,7 @@ PersistentStoragePermissionRequest::Allow(JS::Handle<JS::Value> aChoices) {
  * StorageManager
  ******************************************************************************/
 
-StorageManager::StorageManager(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {
+StorageManager::StorageManager(nsIGlobalObject* aGlobal) : mOwner(aGlobal) {
   MOZ_ASSERT(aGlobal);
 }
 
@@ -730,11 +741,11 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(StorageManager)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(StorageManager)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(StorageManager)
   tmp->Shutdown();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(StorageManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFileSystemManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -747,9 +758,9 @@ void StorageManager::Shutdown() {
 
 already_AddRefed<FileSystemManager> StorageManager::GetFileSystemManager() {
   if (!mFileSystemManager) {
-    MOZ_ASSERT(mGlobal);
+    MOZ_ASSERT(mOwner);
 
-    mFileSystemManager = MakeRefPtr<FileSystemManager>(mGlobal, this);
+    mFileSystemManager = MakeRefPtr<FileSystemManager>(mOwner, this);
   }
 
   return do_AddRef(mFileSystemManager);
@@ -765,23 +776,23 @@ JSObject* StorageManager::WrapObject(JSContext* aCx,
 // WebIDL Interface
 
 already_AddRefed<Promise> StorageManager::Persisted(ErrorResult& aRv) {
-  MOZ_ASSERT(mGlobal);
+  MOZ_ASSERT(mOwner);
 
-  return ExecuteOpOnMainOrWorkerThread(mGlobal,
-                                       RequestResolver::Type::Persisted, aRv);
+  return ExecuteOpOnMainOrWorkerThread(mOwner, RequestResolver::Type::Persisted,
+                                       aRv);
 }
 
 already_AddRefed<Promise> StorageManager::Persist(ErrorResult& aRv) {
-  MOZ_ASSERT(mGlobal);
+  MOZ_ASSERT(mOwner);
 
-  return ExecuteOpOnMainOrWorkerThread(mGlobal, RequestResolver::Type::Persist,
+  return ExecuteOpOnMainOrWorkerThread(mOwner, RequestResolver::Type::Persist,
                                        aRv);
 }
 
 already_AddRefed<Promise> StorageManager::Estimate(ErrorResult& aRv) {
-  MOZ_ASSERT(mGlobal);
+  MOZ_ASSERT(mOwner);
 
-  return ExecuteOpOnMainOrWorkerThread(mGlobal, RequestResolver::Type::Estimate,
+  return ExecuteOpOnMainOrWorkerThread(mOwner, RequestResolver::Type::Estimate,
                                        aRv);
 }
 

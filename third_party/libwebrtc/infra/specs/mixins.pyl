@@ -18,6 +18,19 @@
       }
     }
   },
+  'arm64': {
+    'swarming': {
+      'dimensions': {
+        'cpu': 'arm64'
+      }
+    }
+  },
+  'chrome-tester-service-account': {
+    'swarming': {
+      'service_account':
+      'chrome-tester@chops-service-accounts.iam.gserviceaccount.com'
+    }
+  },
   'chromium-tester-service-account': {
     'fail_if_unused': False,
     'swarming': {
@@ -51,6 +64,23 @@
     'resultdb': {
       'enable': True,
       'has_native_resultdb_integration': True
+    }
+  },
+  'ios-device-18': {
+    'swarming': {
+      'dimensions': {
+        'os': 'iOS-18',
+        'pool': 'chrome.tests'
+      }
+    }
+  },
+  'ios-device-perf': {
+    'swarming': {
+      'idempotent': False,
+      'dimensions': {
+        'os': 'iOS-17.6.1',
+        'pool': 'WebRTC'
+      }
     }
   },
   'ios_runtime_cache_17_5': {
@@ -89,6 +119,13 @@
     'swarming': {
       'dimensions': {
         'cpu': 'arm64-64-Apple_M1'
+      }
+    }
+  },
+  'mac11': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Mac-11'
       }
     }
   },
@@ -210,6 +247,12 @@
       'shards': 8
     }
   },
+  'timeout-2h': {
+    'swarming': {
+      'hard_timeout': 7200,
+      'io_timeout': 7200
+    }
+  },
   'timeout-3h': {
     'swarming': {
       'hard_timeout': 10800,
@@ -257,10 +300,10 @@
     }
   },
   'xcode_26_main': {
-    'args': ['--xcode-build-version', '17a400'],
+    'args': ['--xcode-build-version', '17a5305f'],
     'swarming': {
       'named_caches': [{
-        'name': 'xcode_ios_17a400',
+        'name': 'xcode_ios_17a5305f',
         'path': 'Xcode.app'
       }]
     }

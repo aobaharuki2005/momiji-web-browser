@@ -51,6 +51,7 @@ NSS reference
 
    Based on :ref:`mozilla_projects_nss_ssl_functions_gtstd` in the SSL Reference.
 
+.. _data_types:
 
 `Data types <#data_types>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,6 +73,7 @@ NSS reference
    -  :ref:`mozilla_projects_nss_reference_nss_initialize`
    -  NSS_Shutdown
 
+.. _utility_functions:
 
 `Utility functions <#utility_functions>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,6 +83,7 @@ NSS reference
    Based on :ref:`mozilla_projects_nss_reference_nss_functions#utility_functions` in NSS Public
    Functions.
 
+.. _certificate_functions:
 
 `Certificate functions <#certificate_functions>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,6 +121,7 @@ NSS reference
 
       -  :ref:`mozilla_projects_nss_reference_nss_certificate_functions#secitem_compareitem`
 
+.. _key_functions:
 
 `Key functions <#key_functions>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,8 +148,12 @@ NSS reference
 `Encryption/decryption <#encryption.2fdecryption>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. container::
+
 `Hashing <#hashing>`__
 ~~~~~~~~~~~~~~~~~~~~~~
+
+.. container::
 
 .. _key_generation:
 
@@ -167,6 +175,7 @@ NSS reference
    PK11_GenerateRandomOnSlot and PK11_GenerateRandom -- and the two routines used for seeding
    pseudorandom number generation -- PK11_SeedRandom and PK11_RandomUpdate.
 
+.. _pkcs_.2311_functions:
 
 `PKCS #11 functions <#pkcs_.2311_functions>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -190,6 +199,7 @@ NSS reference
    -  :ref:`mozilla_projects_nss_pkcs11_functions#pk11_isreadonly`
    -  :ref:`mozilla_projects_nss_pkcs11_functions#pk11_setpasswordfunc`
 
+.. _ssl_functions:
 
 `SSL Functions <#ssl_functions>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -216,6 +226,7 @@ NSS reference
    has one written chapter) and
    :ref:`mozilla_projects_nss_reference_nss_functions#s_2fmime_functions` in NSS Public Functions.
 
+.. _pkcs_.237_functions:
 
 `PKCS #7 functions <#pkcs_.237_functions>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,6 +252,7 @@ NSS reference
    -  SEC_PKCS5GetPBEAlgorithm
    -  SEC_PKCS5IsAlgorithmPBEAlg
 
+.. _pkcs_.2312_functions:
 
 `PKCS #12 functions <#pkcs_.2312_functions>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -282,6 +294,7 @@ NSS reference
    A small number of :ref:`mozilla_projects_nss_reference_nspr_functions` are required for using the
    certificate verification and SSL functions in NSS.  These functions are listed in this section.
 
+.. _error_codes:
 
 `Error codes <#error_codes>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -61,9 +61,4 @@ interface nsIXULAppInfo : nsIPlatformInfo
    * @see XREAppData.updateURL
    */
   readonly attribute ACString updateURL;
-
-  /**
-   * @see XREAppData.remotingName
-   */
-  readonly attribute ACString remotingName;
 };

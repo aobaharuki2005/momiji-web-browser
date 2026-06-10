@@ -16,19 +16,11 @@ runPropertyTests('order', [
   {
     syntax: '<number>',
     // order needs to be an integer
-    specified: (input, result, alternateExpected) => {
-      if (input instanceof CSSUnitValue && !Number.isInteger(input.value)) {
+    specified: (input, result) => {
+      if (input instanceof CSSUnitValue && !Number.isInteger(input.value))
         assert_style_value_equals(result, new CSSMathSum(input));
-      } else {
-        try {
-          assert_style_value_equals(result, input);
-        } catch(e) {
-          if (alternateExpected === undefined) {
-            throw e;
-          }
-          assert_style_value_equals(result, alternateExpected);
-        }
-      }
+      else
+        assert_style_value_equals(result, input);
     },
     computed: (input, result) => {
       const number = input.to('number');

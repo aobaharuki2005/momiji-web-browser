@@ -22,7 +22,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///toolkit/components/search/AddonSearchEngine.sys.mjs",
   ConfigSearchEngine:
     "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
 });
 
 // eslint-disable-next-line mozilla/reject-importGlobalProperties
@@ -52,12 +51,12 @@ this.addonsSearchDetection = class extends ExtensionAPI {
           const results = [];
 
           try {
-            // Delaying accessing SearchService if we didn't get to first paint yet
+            // Delaying accessing Services.search if we didn't get to first paint yet
             // to avoid triggering search internals from loading too soon during the
             // application startup.
             if (
               !Cu.isESModuleLoaded(
-                "moz-src:///toolkit/components/search/SearchService.sys.mjs"
+                "resource://gre/modules/SearchService.sys.mjs"
               )
             ) {
               await ExtensionParent.browserPaintedPromise;
@@ -66,8 +65,8 @@ this.addonsSearchDetection = class extends ExtensionAPI {
             if (extension.hasShutdown || Services.startup.shuttingDown) {
               return results;
             }
-            await lazy.SearchService.promiseInitialized;
-            const engines = await lazy.SearchService.getEngines();
+            await Services.search.promiseInitialized;
+            const engines = await Services.search.getEngines();
 
             for (let engine of engines) {
               if (
@@ -88,7 +87,7 @@ this.addonsSearchDetection = class extends ExtensionAPI {
                 // because we don't need to report them. However, we do ensure
                 // the pattern is recorded (above), so that we check for
                 // redirects against those.
-                const addonId = engine.extensionID;
+                const addonId = engine.wrappedJSObject._extensionID;
 
                 let paramName;
                 for (let [key, value] of new URLSearchParams(uri.query)) {

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,6 +15,10 @@
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGTransformBinding.h"
 #include "nsError.h"
+
+namespace {
+const double kRadPerDegree = 2.0 * M_PI / 360.0;
+}  // namespace
 
 namespace mozilla::dom {
 
@@ -255,14 +261,13 @@ void DOMSVGTransform::RemovingFromList() {
   MOZ_ASSERT(!mTransform,
              "Item in list also has another non-list value associated with it");
 
-  mTransform = std::make_unique<SVGTransform>(InternalItem());
+  mTransform = MakeUnique<SVGTransform>(InternalItem());
   mList = nullptr;
   mIsAnimValItem = false;
 }
 
 SVGTransform& DOMSVGTransform::InternalItem() {
-  SVGAnimatedTransformList* alist =
-      Element()->GetExistingAnimatedTransformList();
+  SVGAnimatedTransformList* alist = Element()->GetAnimatedTransformList();
   return mIsAnimValItem && alist->mAnimVal ? (*alist->mAnimVal)[mListIndex]
                                            : alist->mBaseVal[mListIndex];
 }
@@ -273,8 +278,7 @@ const SVGTransform& DOMSVGTransform::InternalItem() const {
 
 #ifdef DEBUG
 bool DOMSVGTransform::IndexIsValid() {
-  SVGAnimatedTransformList* alist =
-      Element()->GetExistingAnimatedTransformList();
+  SVGAnimatedTransformList* alist = Element()->GetAnimatedTransformList();
   return (mIsAnimValItem && mListIndex < alist->GetAnimValue().Length()) ||
          (!mIsAnimValItem && mListIndex < alist->GetBaseValue().Length());
 }

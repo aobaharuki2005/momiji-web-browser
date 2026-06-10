@@ -2,9 +2,11 @@
 
 .outer-wrapper {
   .ds-top-sites {
-    .top-sites {
+    .collapsible-section {
       margin-block-end: var(--space-large);
+    }
 
+    .top-sites {
       .top-site-outer {
         .top-site-inner > a:is(.active, :focus) {
           .tile {

@@ -12,6 +12,9 @@
 #ifndef XSIMD_AVX512PF_HPP
 #define XSIMD_AVX512PF_HPP
 
+#include <array>
+#include <type_traits>
+
 #include "../types/xsimd_avx512pf_register.hpp"
 
 #endif

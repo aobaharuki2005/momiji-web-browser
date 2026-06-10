@@ -2,10 +2,10 @@
 "use strict";
 
 add_task(async function () {
-  await openTabAndSetupStorage(MAIN_URL_SECURED + "storage-search.html");
+  await openTabAndSetupStorage(MAIN_DOMAIN_SECURED + "storage-search.html");
 
   gUI.tree.expandAll();
-  await selectTreeItem(["cookies", MAIN_ORIGIN_SECURED]);
+  await selectTreeItem(["cookies", "https://test1.example.org"]);
 
   showColumn("expires", false);
   showColumn("host", false);

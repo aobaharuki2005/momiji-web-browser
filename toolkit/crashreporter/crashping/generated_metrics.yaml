@@ -17,7 +17,7 @@ crash:
     - https://bugzilla.mozilla.org/1950749
     data_sensitivity:
     - technical
-    description: Application build ID, the format is YYYYMMDDHHMMSS.
+    description: Product application's build ID.
     expires: never
     notification_emails:
     - crash-reporting-wg@mozilla.org
@@ -48,21 +48,6 @@ crash:
     data_sensitivity:
     - technical
     description: Product version.
-    expires: never
-    notification_emails:
-    - crash-reporting-wg@mozilla.org
-    - stability@mozilla.org
-    send_in_pings:
-    - crash
-    type: string
-  application_build_id:
-    bugs:
-    - https://bugzilla.mozilla.org/1950749
-    data_reviews:
-    - https://bugzilla.mozilla.org/1950749
-    data_sensitivity:
-    - technical
-    description: The Android application's build ID.
     expires: never
     notification_emails:
     - crash-reporting-wg@mozilla.org
@@ -114,6 +99,21 @@ crash:
     send_in_pings:
     - crash
     type: string
+  build_id:
+    bugs:
+    - https://bugzilla.mozilla.org/1950749
+    data_reviews:
+    - https://bugzilla.mozilla.org/1950749
+    data_sensitivity:
+    - technical
+    description: Application build ID, the format is YYYYMMDDHHMMSS.
+    expires: never
+    notification_emails:
+    - crash-reporting-wg@mozilla.org
+    - stability@mozilla.org
+    send_in_pings:
+    - crash
+    type: string
   crash_type:
     bugs:
     - https://bugzilla.mozilla.org/1950749
@@ -145,23 +145,6 @@ crash:
     send_in_pings:
     - crash
     type: boolean
-  event_id:
-    bugs:
-    - https://bugzilla.mozilla.org/1993525
-    - https://bugzilla.mozilla.org/2037943
-    data_reviews:
-    - https://bugzilla.mozilla.org/1993525
-    - https://bugzilla.mozilla.org/2037943
-    data_sensitivity:
-    - technical
-    description: A UUID for the crash event.
-    expires: never
-    notification_emails:
-    - crash-reporting-wg@mozilla.org
-    - stability@mozilla.org
-    send_in_pings:
-    - crash
-    type: string
   event_loop_nesting_level:
     bugs:
     - https://bugzilla.mozilla.org/1950749
@@ -351,7 +334,7 @@ crash:
     send_in_pings:
     - crash
     type: string
-  minidump_sha256_hash:
+  minidump_sha_256_hash:
     bugs:
     - https://bugzilla.mozilla.org/1950749
     data_reviews:
@@ -541,8 +524,9 @@ crash:
     - https://bugzilla.mozilla.org/1950749
     data_sensitivity:
     - technical
-    description: Stack traces extracted from the crash minidump, if available. A serialized
-      JSON object (with a structure matching the associated Glean object description).
+    description: Stack traces extracted from the crash minidump, if available. These
+      are sent in pings, however they are extracted and transformed into a different
+      format. The field in the extra file is meant only for client use.
     expires: never
     notification_emails:
     - crash-reporting-wg@mozilla.org

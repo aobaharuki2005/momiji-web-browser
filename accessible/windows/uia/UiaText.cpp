@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -33,7 +35,7 @@ static SAFEARRAY* TextLeafRangesToUiaRanges(
 }
 
 // IUnknown
-IMPL_IUNKNOWN2(UiaText, ITextProvider2, ITextProvider)
+IMPL_IUNKNOWN1(UiaText, ITextProvider)
 
 // UiaText
 
@@ -99,7 +101,7 @@ UiaText::RangeFromChild(__RPC__in_opt IRawElementProviderSimple* aChildElement,
     return E_INVALIDARG;
   }
   TextLeafRange range = TextLeafRange::FromAccessible(child);
-  auto uiaRange = MakeRefPtr<UiaTextRange>(range);
+  RefPtr uiaRange = new UiaTextRange(range);
   uiaRange.forget(aRetVal);
   return S_OK;
 }
@@ -129,7 +131,7 @@ UiaText::RangeFromPoint(struct UiaPoint aPoint,
   TextLeafPoint closestPoint =
       leafRange.TextLeafPointAtScreenPoint(aPoint.x, aPoint.y);
   TextLeafRange range{closestPoint, closestPoint};
-  auto uiaRange = MakeRefPtr<UiaTextRange>(range);
+  RefPtr uiaRange = new UiaTextRange(range);
   uiaRange.forget(aRetVal);
   return S_OK;
 }
@@ -148,7 +150,7 @@ UiaText::get_DocumentRange(__RPC__deref_out_opt ITextRangeProvider** aRetVal) {
   // pattern was queried. See:
   // https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-textpattern-and-embedded-objects-overview#webpage-and-text-input-controls-in-edge
   TextLeafRange range = TextLeafRange::FromAccessible(acc);
-  auto uiaRange = MakeRefPtr<UiaTextRange>(range);
+  RefPtr uiaRange = new UiaTextRange(range);
   uiaRange.forget(aRetVal);
   return S_OK;
 }
@@ -173,41 +175,6 @@ UiaText::get_SupportedTextSelection(
   } else {
     *aRetVal = SupportedTextSelection_None;
   }
-  return S_OK;
-}
-
-// ITextProvider2 methods
-
-STDMETHODIMP
-UiaText::RangeFromAnnotation(
-    __RPC__in_opt IRawElementProviderSimple* aAnnotationElement,
-    __RPC__deref_out_opt ITextRangeProvider** aRetVal) {
-  return E_NOTIMPL;
-}
-
-STDMETHODIMP
-UiaText::GetCaretRange(__RPC__out BOOL* aIsActive,
-                       __RPC__deref_out_opt ITextRangeProvider** aRetVal) {
-  if (!aRetVal) {
-    return E_INVALIDARG;
-  }
-  *aRetVal = nullptr;
-  if (!aIsActive) {
-    return E_INVALIDARG;
-  }
-  *aIsActive = FALSE;
-  Accessible* acc = Acc();
-  if (!acc) {
-    return CO_E_OBJNOTCONNECTED;
-  }
-  TextLeafPoint caret = TextLeafPoint::GetCaret(acc);
-  if (!caret) {
-    return S_OK;
-  }
-  *aIsActive = !!(acc->State() & states::FOCUSED);
-  TextLeafRange range{caret, caret};
-  auto uiaRange = MakeRefPtr<UiaTextRange>(range);
-  uiaRange.forget(aRetVal);
   return S_OK;
 }
 

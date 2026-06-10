@@ -6,19 +6,17 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use bytes::Bytes;
-use futures_util::{future, ready, FutureExt, Sink, Stream, TryFutureExt};
-use headers::{Connection, HeaderMapExt, SecWebsocketAccept, SecWebsocketKey, Upgrade};
-use hyper::upgrade::OnUpgrade;
-use tokio_tungstenite::{
-    tungstenite::protocol::{self, frame::Utf8Bytes, WebSocketConfig},
-    WebSocketStream,
-};
-
 use super::header;
 use crate::filter::{filter_fn_one, Filter, One};
 use crate::reject::Rejection;
 use crate::reply::{Reply, Response};
+use futures_util::{future, ready, FutureExt, Sink, Stream, TryFutureExt};
+use headers::{Connection, HeaderMapExt, SecWebsocketAccept, SecWebsocketKey, Upgrade};
+use hyper::upgrade::OnUpgrade;
+use tokio_tungstenite::{
+    tungstenite::protocol::{self, WebSocketConfig},
+    WebSocketStream,
+};
 
 /// Creates a Websocket Filter.
 ///
@@ -191,8 +189,9 @@ fn on_upgrade() -> impl Filter<Extract = (Option<OnUpgrade>,), Error = Rejection
 ///
 /// **Note!**
 /// Due to rust futures nature, pings won't be handled until read part of `WebSocket` is polled
+
 pub struct WebSocket {
-    inner: WebSocketStream<hyper_util::rt::TokioIo<hyper::upgrade::Upgraded>>,
+    inner: WebSocketStream<hyper::upgrade::Upgraded>,
 }
 
 impl WebSocket {
@@ -201,7 +200,6 @@ impl WebSocket {
         role: protocol::Role,
         config: Option<protocol::WebSocketConfig>,
     ) -> Self {
-        let upgraded = hyper_util::rt::TokioIo::new(upgraded);
         WebSocketStream::from_raw_socket(upgraded, role, config)
             .map(|inner| WebSocket { inner })
             .await
@@ -286,23 +284,23 @@ pub struct Message {
 
 impl Message {
     /// Construct a new Text `Message`.
-    pub fn text<B: Into<String>>(bytes: B) -> Message {
+    pub fn text<S: Into<String>>(s: S) -> Message {
         Message {
-            inner: protocol::Message::text(bytes.into()),
+            inner: protocol::Message::text(s),
         }
     }
 
     /// Construct a new Binary `Message`.
-    pub fn binary<B: Into<Bytes>>(bytes: B) -> Message {
+    pub fn binary<V: Into<Vec<u8>>>(v: V) -> Message {
         Message {
-            inner: protocol::Message::binary(bytes),
+            inner: protocol::Message::binary(v),
         }
     }
 
     /// Construct a new Ping `Message`.
-    pub fn ping<B: Into<Bytes>>(bytes: B) -> Message {
+    pub fn ping<V: Into<Vec<u8>>>(v: V) -> Message {
         Message {
-            inner: protocol::Message::Ping(bytes.into()),
+            inner: protocol::Message::Ping(v.into()),
         }
     }
 
@@ -311,9 +309,9 @@ impl Message {
     /// Note that one rarely needs to manually construct a Pong message because the underlying tungstenite socket
     /// automatically responds to the Ping messages it receives. Manual construction might still be useful in some cases
     /// like in tests or to send unidirectional heartbeats.
-    pub fn pong<B: Into<Bytes>>(bytes: B) -> Message {
+    pub fn pong<V: Into<Vec<u8>>>(v: V) -> Message {
         Message {
-            inner: protocol::Message::Pong(bytes.into()),
+            inner: protocol::Message::Pong(v.into()),
         }
     }
 
@@ -329,10 +327,7 @@ impl Message {
         Message {
             inner: protocol::Message::Close(Some(protocol::frame::CloseFrame {
                 code: protocol::frame::coding::CloseCode::from(code.into()),
-                reason: match reason.into() {
-                    Cow::Borrowed(s) => Utf8Bytes::from_static(s),
-                    Cow::Owned(s) => s.into(),
-                },
+                reason: reason.into(),
             })),
         }
     }
@@ -392,7 +387,7 @@ impl Message {
     }
 
     /// Destructure this message into binary data.
-    pub fn into_bytes(self) -> Bytes {
+    pub fn into_bytes(self) -> Vec<u8> {
         self.inner.into_data()
     }
 }
@@ -403,7 +398,7 @@ impl fmt::Debug for Message {
     }
 }
 
-impl From<Message> for Bytes {
+impl From<Message> for Vec<u8> {
     fn from(m: Message) -> Self {
         m.into_bytes()
     }

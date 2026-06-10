@@ -4,5 +4,3 @@ subsuite = "mozbase"
 ["test.py"]
 
 ["test_resolve.py"]
-
-["test_tsan.py"]

@@ -25,7 +25,6 @@ class SettingsTranslationsPage(composeRule: AndroidComposeTestRule<HomeActivityI
             steps = listOf(
                 NavigationStep.Click(HomeSelectors.MAIN_MENU_BUTTON),
                 NavigationStep.Click(MainMenuSelectors.SETTINGS_BUTTON),
-                NavigationStep.Swipe(SettingsSelectors.TRANSLATIONS_BUTTON),
                 NavigationStep.Click(SettingsSelectors.TRANSLATIONS_BUTTON),
             ),
         )

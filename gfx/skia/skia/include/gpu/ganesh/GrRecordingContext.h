@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Google LLC
+ * Copyright 2019 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -63,14 +63,12 @@ public:
      * use maxSurfaceSampleCountForColorType().
      */
     SK_API bool colorTypeSupportedAsSurface(SkColorType colorType) const {
-        if (colorType == kR16G16_unorm_SkColorType       ||
-            colorType == kA16_unorm_SkColorType          ||
-            colorType == kA16_float_SkColorType          ||
-            colorType == kR16_unorm_SkColorType          ||
-            colorType == kR16_float_SkColorType          ||
-            colorType == kR16G16_float_SkColorType       ||
-            colorType == kR16G16B16A16_unorm_SkColorType ||
-            colorType == kGray_8_SkColorType) {
+        if (kR16G16_unorm_SkColorType == colorType ||
+            kA16_unorm_SkColorType == colorType ||
+            kA16_float_SkColorType == colorType ||
+            kR16G16_float_SkColorType == colorType ||
+            kR16G16B16A16_unorm_SkColorType == colorType ||
+            kGray_8_SkColorType == colorType) {
             return false;
         }
 

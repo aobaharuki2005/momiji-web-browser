@@ -14,79 +14,52 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
+    /**
+     * Turn on/off the caret browsing mode.
+     */
     function turnCaretBrowsing(aIsOn) {
       Services.prefs.setBoolPref("accessibility.browsewithcaret", aIsOn);
     }
 
+    /**
+     * Test caret offset for the given accessible.
+     */
     function testCaretOffset(aID, aCaretOffset) {
-      const acc = getAccessible(aID, [nsIAccessibleText]);
+      var acc = getAccessible(aID, [nsIAccessibleText]);
       is(acc.caretOffset, aCaretOffset,
          "Wrong caret offset for " + aID);
     }
 
     function testCaretOffsets(aList) {
-      for (let i = 0; i < aList.length; i++)
+      for (var i = 0; i < aList.length; i++)
         testCaretOffset(aList[0][0], aList[0][1]);
     }
 
-    async function doSetCaretOffset(aID, aOffset, aFocusTargetID) {
-      let target = getAccessible(aID, [nsIAccessibleText]);
-      let offset = aOffset == -1 ? target.characterCount : aOffset;
-      let focus = aFocusTargetID ? getAccessible(aFocusTargetID) : null;
+    function queueTraversalList(aList, aFocusNode) {
+      for (var i = 0 ; i < aList.length; i++) {
+        var node = aList[i].DOMPoint[0];
+        var nodeOffset = aList[i].DOMPoint[1];
 
-      let events = [[EVENT_TEXT_CARET_MOVED, target]];
-      if (focus) {
-        events.push([EVENT_FOCUS, focus]);
-      }
-      let p = waitForEvents(events);
-      target.caretOffset = offset;
-      let [caretEvt] = await p;
-      caretEvt.QueryInterface(nsIAccessibleCaretMoveEvent);
-      is(caretEvt.caretOffset, offset,
-         "Wrong caret offset for " + prettyName(aID));
-      is(caretEvt.isSelectionCollapsed, true,
-         "Wrong collapsed for " + prettyName(aID));
-    }
-
-    async function doMoveCaretToDOMPoint(aID, aDOMPointNode, aDOMPointOffset,
-                                         aExpectedOffset, aFocusTargetID,
-                                         aCheckFunc) {
-      let target = getAccessible(aID, [nsIAccessibleText]);
-      let focus = aFocusTargetID ? getAccessible(aFocusTargetID) : null;
-      let focusNode = focus ? focus.DOMNode : null;
-
-      let events = [[EVENT_TEXT_CARET_MOVED, target]];
-      if (focus) {
-        events.push([EVENT_FOCUS, focus]);
-      }
-      let p = waitForEvents(events);
-
-      if (focusNode) {
-        focusNode.focus();
-      }
-
-      let selection = aDOMPointNode.documentGlobal.getSelection();
-      let selRange = selection.rangeCount
-        ? selection.getRangeAt(0)
-        : aDOMPointNode.ownerDocument.createRange();
-      selRange.setStart(aDOMPointNode, aDOMPointOffset);
-      selRange.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(selRange);
-
-      let [caretEvt] = await p;
-      caretEvt.QueryInterface(nsIAccessibleCaretMoveEvent);
-      is(caretEvt.caretOffset, aExpectedOffset,
-         "Wrong caret offset for " + prettyName(aID));
-      is(caretEvt.isSelectionCollapsed, true,
-         "Wrong collapsed for " + prettyName(aID));
-
-      if (aCheckFunc) {
-        aCheckFunc.call();
+        var textAcc = aList[i].point[0];
+        var textOffset = aList[i].point[1];
+        var textList = aList[i].pointList;
+        var invoker =
+          new moveCaretToDOMPoint(textAcc, node, nodeOffset, textOffset,
+                                  ((i == 0) ? aFocusNode : null),
+                                  testCaretOffsets.bind(null, textList));
+        gQueue.push(invoker);
       }
     }
 
-    async function doTests() {
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+
+    function doTests() {
       turnCaretBrowsing(true);
 
       // test caret offsets
@@ -96,18 +69,15 @@
       testCaretOffset("p", -1);
 
       // test caret move events and caret offsets
-      let focusEvt = waitForEvent(EVENT_FOCUS, "textbox");
-      getNode("textbox").focus();
-      await focusEvt;
-      testCaretOffset("textbox", 0);
+      gQueue = new eventQueue();
 
-      await doSetCaretOffset("textbox", 1);
-      await doSetCaretOffset("link", 1, "link");
-      await doSetCaretOffset("heading", 1, document);
+      gQueue.push(new setCaretOffset("textbox", 1, "textbox"));
+      gQueue.push(new setCaretOffset("link", 1, "link"));
+      gQueue.push(new setCaretOffset("heading", 1, document));
 
       // a*b*c
-      let p2Doc = getNode("p2_container").contentDocument;
-      let traversalList = [
+      var p2Doc = getNode("p2_container").contentDocument;
+      var traversalList = [
         { // before 'a'
           DOMPoint: [ getNode("p2", p2Doc).firstChild, 0 ],
           point: [ getNode("p2", p2Doc), 0 ],
@@ -145,25 +115,13 @@
           pointList: [ [ p2Doc, 0 ] ],
         },
       ];
+      queueTraversalList(traversalList, getNode("p2", p2Doc));
 
-      const focusNode = getNode("p2", p2Doc);
-      for (let i = 0; i < traversalList.length; i++) {
-        const item = traversalList[i];
-        const domPointNode = item.DOMPoint[0];
-        const domPointOffset = item.DOMPoint[1];
-        const textAcc = item.point[0];
-        const textOffset = item.point[1];
-        const textList = item.pointList;
-        const aFocusTargetID = i == 0 ? focusNode : null;
-        await doMoveCaretToDOMPoint(
-          textAcc, domPointNode, domPointOffset, textOffset,
-          aFocusTargetID,
-          testCaretOffsets.bind(null, textList)
-        );
-      }
+      gQueue.onFinish = function() {
+        turnCaretBrowsing(false);
+      };
 
-      turnCaretBrowsing(false);
-      SimpleTest.finish();
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

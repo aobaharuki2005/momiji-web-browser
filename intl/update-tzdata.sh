@@ -47,7 +47,6 @@ fi
 
 tzdata_version=$1
 
-topsrcdir=`dirname "$0"`/../
 icudata_dir=`dirname "$0"`/../config/external/icu/data
 icu_dir=`dirname "$0"`/icu
 tzdata_dir=`dirname "$0"`/tzdata
@@ -165,9 +164,9 @@ if [ $dry = false ]; then
     update_icu_data "be" "${icudata_file_be}"
   fi
 
-  git -C "${topsrcdir}" add --all "intl/tzdata/source" "intl/tzdata/GIT-INFO" "intl/tzdata/VERSION" "${icudata_file_le}"
+  hg addremove "${tzdata_dir}/source" "${tzdata_dir}/GIT-INFO" "${tzdata_dir}/VERSION" "${icudata_file_le}"
   if [ -n "${icudata_file_be}" ]; then
-    git -C "${topsrcdir}" add --all "${icudata_file_be}"
+    hg addremove "${icudata_file_be}"
   fi
 
   echo "INFO: Successfully updated tzdata!"

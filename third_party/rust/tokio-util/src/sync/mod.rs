@@ -1,11 +1,7 @@
 //! Synchronization primitives
 
 mod cancellation_token;
-pub use cancellation_token::{
-    guard::DropGuard, guard_ref::DropGuardRef, CancellationToken, WaitForCancellationFuture,
-    WaitForCancellationFutureOwned,
-};
-pub(crate) use cancellation_token::{RunUntilCancelledFuture, RunUntilCancelledFutureOwned};
+pub use cancellation_token::{guard::DropGuard, CancellationToken, WaitForCancellationFuture};
 
 mod mpsc;
 pub use mpsc::{PollSendError, PollSender};
@@ -15,6 +11,3 @@ pub use poll_semaphore::PollSemaphore;
 
 mod reusable_box;
 pub use reusable_box::ReusableBoxFuture;
-
-#[cfg(test)]
-mod tests;

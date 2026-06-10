@@ -30,7 +30,7 @@ export const ThemeVariableMap = [
     },
   ],
   [
-    "--tab-background-color-selected",
+    "--tab-selected-bgcolor",
     {
       lwtProperty: "tab_selected",
     },
@@ -82,25 +82,25 @@ export const ThemeVariableMap = [
     },
   ],
   [
-    "--toolbarbutton-background-color-hover",
+    "--toolbarbutton-hover-background",
     {
       lwtProperty: "button_background_hover",
     },
   ],
   [
-    "--toolbarbutton-background-color-active",
+    "--toolbarbutton-active-background",
     {
       lwtProperty: "button_background_active",
     },
   ],
   [
-    "--urlbarview-background-color-selected",
+    "--urlbarView-highlight-background",
     {
       lwtProperty: "popup_highlight",
     },
   ],
   [
-    "--urlbarview-text-color-selected",
+    "--urlbarView-highlight-color",
     {
       lwtProperty: "popup_highlight_text",
     },
@@ -165,5 +165,5 @@ export const ThemeContentPropertyList = [
   "sidebar_highlight_text",
   "sidebar_text",
   "zap_gradient",
-  "ai_background_color",
+  "ai_gradient",
 ];

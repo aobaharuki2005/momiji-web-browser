@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -28,8 +30,9 @@
 #include <type_traits>
 
 #include "jsapi.h"
+#include "jsexn.h"
+#include "jsnum.h"
 
-#include "builtin/Number.h"
 #include "ctypes/Library.h"
 #include "gc/GCContext.h"
 #include "jit/AtomicOperations.h"
@@ -52,7 +55,6 @@
 #include "util/Text.h"
 #include "util/Unicode.h"
 #include "util/WindowsWrapper.h"
-#include "vm/ErrorObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
@@ -456,8 +458,16 @@ static const JSClass sCABIClass = {
 // This exists to give said prototypes a class of "CType", and to provide
 // reserved slots for stashing various other prototype objects.
 static const JSClassOps sCTypeProtoClassOps = {
-    .call = ConstructAbstract,
-    .construct = ConstructAbstract,
+    nullptr,            // addProperty
+    nullptr,            // delProperty
+    nullptr,            // enumerate
+    nullptr,            // newEnumerate
+    nullptr,            // resolve
+    nullptr,            // mayResolve
+    nullptr,            // finalize
+    ConstructAbstract,  // call
+    ConstructAbstract,  // construct
+    nullptr,            // trace
 };
 static const JSClass sCTypeProtoClass = {
     "CType",
@@ -473,10 +483,16 @@ static const JSClass sCDataProtoClass = {
 };
 
 static const JSClassOps sCTypeClassOps = {
-    .finalize = CType::Finalize,
-    .call = CType::ConstructData,
-    .construct = CType::ConstructData,
-    .trace = CType::Trace,
+    nullptr,               // addProperty
+    nullptr,               // delProperty
+    nullptr,               // enumerate
+    nullptr,               // newEnumerate
+    nullptr,               // resolve
+    nullptr,               // mayResolve
+    CType::Finalize,       // finalize
+    CType::ConstructData,  // call
+    CType::ConstructData,  // construct
+    CType::Trace,          // trace
 };
 static const JSClass sCTypeClass = {
     "CType",
@@ -485,9 +501,16 @@ static const JSClass sCTypeClass = {
 };
 
 static const JSClassOps sCDataClassOps = {
-    .finalize = CData::Finalize,
-    .call = FunctionType::Call,
-    .construct = FunctionType::Call,
+    nullptr,             // addProperty
+    nullptr,             // delProperty
+    nullptr,             // enumerate
+    nullptr,             // newEnumerate
+    nullptr,             // resolve
+    nullptr,             // mayResolve
+    CData::Finalize,     // finalize
+    FunctionType::Call,  // call
+    FunctionType::Call,  // construct
+    nullptr,             // trace
 };
 static const JSClass sCDataClass = {
     "CData",
@@ -496,8 +519,16 @@ static const JSClass sCDataClass = {
 };
 
 static const JSClassOps sCClosureClassOps = {
-    .finalize = CClosure::Finalize,
-    .trace = CClosure::Trace,
+    nullptr,             // addProperty
+    nullptr,             // delProperty
+    nullptr,             // enumerate
+    nullptr,             // newEnumerate
+    nullptr,             // resolve
+    nullptr,             // mayResolve
+    CClosure::Finalize,  // finalize
+    nullptr,             // call
+    nullptr,             // construct
+    CClosure::Trace,     // trace
 };
 static const JSClass sCClosureClass = {
     "CClosure",
@@ -520,7 +551,16 @@ static const JSClass sCDataFinalizerProtoClass = {
  * |CDataFinalizer::Private|) and slots (see |CDataFinalizerSlots|).
  */
 static const JSClassOps sCDataFinalizerClassOps = {
-    .finalize = CDataFinalizer::Finalize,
+    nullptr,                   // addProperty
+    nullptr,                   // delProperty
+    nullptr,                   // enumerate
+    nullptr,                   // newEnumerate
+    nullptr,                   // resolve
+    nullptr,                   // mayResolve
+    CDataFinalizer::Finalize,  // finalize
+    nullptr,                   // call
+    nullptr,                   // construct
+    nullptr,                   // trace
 };
 static const JSClass sCDataFinalizerClass = {
     "CDataFinalizer",
@@ -715,7 +755,16 @@ static const JSClass sUInt64ProtoClass = {
 };
 
 static const JSClassOps sInt64ClassOps = {
-    .finalize = Int64Base::Finalize,
+    nullptr,              // addProperty
+    nullptr,              // delProperty
+    nullptr,              // enumerate
+    nullptr,              // newEnumerate
+    nullptr,              // resolve
+    nullptr,              // mayResolve
+    Int64Base::Finalize,  // finalize
+    nullptr,              // call
+    nullptr,              // construct
+    nullptr,              // trace
 };
 
 static const JSClass sInt64Class = {
@@ -1049,9 +1098,9 @@ static void BuildConversionPosition(JSContext* cx, ConversionType convType,
 static JSLinearString* GetFieldName(HandleObject structObj,
                                     unsigned fieldIndex) {
   const FieldInfoHash* fields = StructType::GetFieldInfo(structObj);
-  for (auto iter = fields->iter(); !iter.done(); iter.next()) {
-    if (iter.get().value().mIndex == fieldIndex) {
-      return iter.get().key();
+  for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+    if (r.front().value().mIndex == fieldIndex) {
+      return (&r.front())->key();
     }
   }
   return nullptr;
@@ -4097,8 +4146,8 @@ static void BuildTypeSource(JSContext* cx, JSObject* typeObj_, bool makeShort,
         break;
       }
 
-      for (auto iter = fields->iter(); !iter.done(); iter.next()) {
-        fieldsArray[iter.get().value().mIndex] = &iter.get();
+      for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+        fieldsArray[r.front().value().mIndex] = &r.front();
       }
 
       for (size_t i = 0; i < length; ++i) {
@@ -4260,8 +4309,8 @@ static void BuildTypeSource(JSContext* cx, JSObject* typeObj_, bool makeShort,
         return false;
       }
 
-      for (auto iter = fields->iter(); !iter.done(); iter.next()) {
-        fieldsArray[iter.get().value().mIndex] = &iter.get();
+      for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+        fieldsArray[r.front().value().mIndex] = &r.front();
       }
 
       for (size_t i = 0; i < length; ++i) {
@@ -6086,8 +6135,8 @@ UniquePtrFFIType StructType::BuildFFIType(JSContext* cx, JSObject* obj) {
   if (len != 0) {
     elements[len] = nullptr;
 
-    for (auto iter = fields->iter(); !iter.done(); iter.next()) {
-      const FieldInfoHash::Entry& entry = iter.get();
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+      const FieldInfoHash::Entry& entry = r.front();
       ffi_type* fieldType = CType::GetFFIType(cx, entry.value().mType);
       if (!fieldType) {
         return nullptr;
@@ -6237,8 +6286,8 @@ bool StructType::ConstructData(JSContext* cx, HandleObject obj,
   // We have a type constructor of the form 'ctypes.StructType(a, b, c, ...)'.
   // ImplicitConvert each field.
   if (args.length() == fields->count()) {
-    for (auto iter = fields->iter(); !iter.done(); iter.next()) {
-      const FieldInfo& field = iter.get().value();
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+      const FieldInfo& field = r.front().value();
       MOZ_ASSERT(field.mIndex < fields->count()); /* Quantified invariant */
       if (!ImplicitConvert(cx, args[field.mIndex], field.mType,
                            buffer + field.mOffset, ConversionType::Construct,
@@ -6297,8 +6346,8 @@ JSObject* StructType::BuildFieldsArray(JSContext* cx, JSObject* obj) {
     return nullptr;
   }
 
-  for (auto iter = fields->iter(); !iter.done(); iter.next()) {
-    const FieldInfoHash::Entry& entry = iter.get();
+  for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+    const FieldInfoHash::Entry& entry = r.front();
     // Add the field descriptor to the array.
     if (!AddFieldToArray(cx, fieldsVec[entry.value().mIndex], entry.key(),
                          entry.value().mType))
@@ -6677,11 +6726,6 @@ static bool PrepareCIF(JSContext* cx, FunctionInfo* fninfo) {
     case FFI_BAD_TYPEDEF:
       JS_ReportErrorASCII(cx, "Invalid type specification");
       return false;
-#ifdef FFI_BAD_ARGTYPE  // not defined in system libffi < 3.4
-    case FFI_BAD_ARGTYPE:
-      JS_ReportErrorASCII(cx, "Variadic argument has an unsupported type");
-      return false;
-#endif
     default:
       JS_ReportErrorASCII(cx, "Unknown libffi error");
       return false;
@@ -7063,42 +7107,10 @@ bool FunctionType::Call(JSContext* cx, unsigned argc, Value* vp) {
       if (!ConvertArgument(cx, obj, i, arg, type, &values[i], &strings)) {
         return false;
       }
-      ffi_type* ffiType = CType::GetFFIType(cx, type);
-      if (!ffiType) {
+      fninfo->mFFITypes[i] = CType::GetFFIType(cx, type);
+      if (!fninfo->mFFITypes[i]) {
         return false;
       }
-      // Apply C default argument promotions: sub-int integers to int,
-      // float to double. libffi 3.4+ enforces these for variadic arguments.
-      if (ffiType == &ffi_type_sint8) {
-        *static_cast<int32_t*>(values[i].mData) =
-            *static_cast<int8_t*>(values[i].mData);
-        ffiType = &ffi_type_sint32;
-      } else if (ffiType == &ffi_type_uint8) {
-        *static_cast<int32_t*>(values[i].mData) =
-            *static_cast<uint8_t*>(values[i].mData);
-        ffiType = &ffi_type_sint32;
-      } else if (ffiType == &ffi_type_sint16) {
-        *static_cast<int32_t*>(values[i].mData) =
-            *static_cast<int16_t*>(values[i].mData);
-        ffiType = &ffi_type_sint32;
-      } else if (ffiType == &ffi_type_uint16) {
-        *static_cast<int32_t*>(values[i].mData) =
-            *static_cast<uint16_t*>(values[i].mData);
-        ffiType = &ffi_type_sint32;
-      } else if (ffiType == &ffi_type_float) {
-        // SizeToType allocates Align(sizeof(float), sizeof(ffi_arg)) bytes,
-        // which is only 4 bytes on 32-bit. Reallocate to fit a double.
-        double promoted = *static_cast<float*>(values[i].mData);
-        js_free(values[i].mData);
-        values[i].mData = js_malloc(sizeof(double));
-        if (!values[i].mData) {
-          JS_ReportOutOfMemory(cx);
-          return false;
-        }
-        *static_cast<double*>(values[i].mData) = promoted;
-        ffiType = &ffi_type_double;
-      }
-      fninfo->mFFITypes[i] = ffiType;
     }
     if (!PrepareCIF(cx, fninfo)) {
       return false;
@@ -7129,19 +7141,8 @@ bool FunctionType::Call(JSContext* cx, unsigned argc, Value* vp) {
   int savedErrno = errno;
   errno = 0;
 
-  // libffi may modify avalue[i] in-place for large struct args (replacing the
-  // pointer with an alloca'd copy). Use a separate array so AutoValue::mData
-  // pointers remain valid for destruction.
-  Vector<void*, 16, SystemAllocPolicy> avalue;
-  if (!avalue.resize(values.length())) {
-    JS_ReportOutOfMemory(cx);
-    return false;
-  }
-  for (size_t i = 0; i < values.length(); ++i) {
-    avalue[i] = values[i].mData;
-  }
-
-  ffi_call(&fninfo->mCIF, FFI_FN(fn), returnValue.mData, avalue.begin());
+  ffi_call(&fninfo->mCIF, FFI_FN(fn), returnValue.mData,
+           reinterpret_cast<void**>(values.begin()));
 
   // Save error value.
   // We need to save it before leaving the scope of |suspend| as destructing
@@ -7380,7 +7381,7 @@ void CClosure::Trace(JSTracer* trc, JSObject* obj) {
   TraceEdge(trc, &cinfo->closureObj, "closureObj");
   TraceEdge(trc, &cinfo->typeObj, "typeObj");
   TraceEdge(trc, &cinfo->jsfnObj, "jsfnObj");
-  TraceEdge(trc, &cinfo->thisObj, "thisObj");
+  TraceNullableEdge(trc, &cinfo->thisObj, "thisObj");
 }
 
 void CClosure::Finalize(JS::GCContext* gcx, JSObject* obj) {

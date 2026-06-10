@@ -177,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // takes a really long time with miri
+    #[cfg_attr(miri, ignore)]
     fn test_splitter() {
         let data = str::repeat("█", DEFAULT_MAX_BUF_SIZE);
         let mut wr = super::SplitByUtf8BoundaryIfWindows::new(TextMockWriter);
@@ -191,7 +191,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // takes a really long time with miri
+    #[cfg_attr(miri, ignore)]
     fn test_pseudo_text() {
         // In this test we write a piece of binary data, whose beginning is
         // text though. We then validate that even in this corner case buffer

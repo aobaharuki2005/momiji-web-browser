@@ -35,7 +35,6 @@ pub struct IPCPayload {
     pub memory_samples: HashMap<BaseMetricId, Vec<u64>>,
     pub labeled_memory_samples: HashMap<BaseMetricId, HashMap<String, Vec<u64>>>,
     pub numerators: HashMap<BaseMetricId, i32>,
-    pub quantities: HashMap<BaseMetricId, i64>,
     pub rates: HashMap<BaseMetricId, (i32, i32)>,
     pub string_lists: HashMap<BaseMetricId, Vec<String>>,
     pub timing_samples: HashMap<BaseMetricId, Vec<u64>>,
@@ -371,7 +370,7 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
                 .read()
                 .expect("Read lock for dynamic memory dist map was poisoned");
             if let Some(metric) = map.get(&id) {
-                metric.accumulate_samples_unsigned(samples);
+                metric.accumulate_samples(samples);
             }
         } else if let Some(metric) = __glean_metric_maps::MEMORY_DISTRIBUTION_MAP.get(&id) {
             samples
@@ -386,13 +385,13 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
                 .expect("Read lock for dynamic labeled memory distribution map was poisoned");
             if let Some(metric) = map.get(&id) {
                 for (label, samples) in labeled_memory_samples.into_iter() {
-                    metric.get(&label).accumulate_samples_unsigned(samples);
+                    metric.get(&label).accumulate_samples(samples);
                 }
             }
         } else {
             for (label, samples) in labeled_memory_samples.into_iter() {
                 __glean_metric_maps::labeled_memory_distribution_get(*id, &label)
-                    .accumulate_samples_unsigned(samples);
+                    .accumulate_samples(samples);
             }
         }
     }
@@ -406,18 +405,6 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
             }
         } else if let Some(metric) = __glean_metric_maps::NUMERATOR_MAP.get(&id) {
             metric.add_to_numerator(value);
-        }
-    }
-    for (id, value) in ipc_payload.quantities.into_iter() {
-        if id.is_dynamic() {
-            let map = crate::factory::__jog_metric_maps::QUANTITY_MAP
-                .read()
-                .expect("Read lock for dynamic quantity map was poisoned");
-            if let Some(metric) = map.get(&id) {
-                metric.set(value);
-            }
-        } else if let Some(metric) = __glean_metric_maps::QUANTITY_MAP.get(&id) {
-            metric.set(value);
         }
     }
     for (id, (n, d)) in ipc_payload.rates.into_iter() {

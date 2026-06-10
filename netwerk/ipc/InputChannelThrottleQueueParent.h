@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef InputChannelThrottleQueueParent_h_
-#define InputChannelThrottleQueueParent_h_
+#ifndef InputChannelThrottleQueueParent_h__
+#define InputChannelThrottleQueueParent_h__
 
 #include "nsISupportsImpl.h"
 #include "nsIThrottledInputChannel.h"
@@ -40,4 +41,4 @@ class InputChannelThrottleQueueParent final
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // InputChannelThrottleQueueParent_h_
+#endif  // InputChannelThrottleQueueParent_h__

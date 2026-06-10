@@ -51,7 +51,6 @@
         7.  Fire an event named tonechange with a string consisting of tone at the
             RTCDTMFSender object.
    */
-
   test_tone_change_events((t, dtmfSender) => {
     dtmfSender.insertDTMF('123');
   }, [
@@ -291,4 +290,5 @@
     const ev2 = new RTCDTMFToneChangeEvent('tonechange');
     assert_equals(ev2.tone, '');
   }, 'Tone change event init optional parameters');
+
 </script>

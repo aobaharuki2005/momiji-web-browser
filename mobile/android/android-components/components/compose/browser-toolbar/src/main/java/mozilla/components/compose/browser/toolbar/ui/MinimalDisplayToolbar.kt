@@ -8,16 +8,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
@@ -50,8 +47,6 @@ internal fun MinimalDisplayToolbar(
     pageActionsStart: List<Action>,
     gravity: ToolbarGravity,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = MaterialTheme.colorScheme.surface,
-    outlineColor: Color = DividerDefaults.color,
     pageActionsStartModifier: Modifier = Modifier,
     originModifier: Modifier = Modifier,
 ) {
@@ -68,7 +63,7 @@ internal fun MinimalDisplayToolbar(
         registrableDomain,
     )
 
-    Surface(color = backgroundColor) {
+    Surface {
         Box {
             Row(
                 modifier = modifier
@@ -115,7 +110,6 @@ internal fun MinimalDisplayToolbar(
                         Bottom -> Alignment.TopCenter
                     },
                 ),
-                color = outlineColor,
             )
         }
     }

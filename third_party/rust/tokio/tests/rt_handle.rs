@@ -100,22 +100,27 @@ fn drop_tasks_with_reference_cycle() {
     });
 }
 
-#[test]
-fn runtime_id_is_same() {
-    let rt = rt();
+#[cfg(tokio_unstable)]
+mod unstable {
+    use super::*;
 
-    let handle1 = rt.handle();
-    let handle2 = rt.handle();
+    #[test]
+    fn runtime_id_is_same() {
+        let rt = rt();
 
-    assert_eq!(handle1.id(), handle2.id());
-}
+        let handle1 = rt.handle();
+        let handle2 = rt.handle();
 
-#[test]
-fn runtime_ids_different() {
-    let rt1 = rt();
-    let rt2 = rt();
+        assert_eq!(handle1.id(), handle2.id());
+    }
 
-    assert_ne!(rt1.handle().id(), rt2.handle().id());
+    #[test]
+    fn runtime_ids_different() {
+        let rt1 = rt();
+        let rt2 = rt();
+
+        assert_ne!(rt1.handle().id(), rt2.handle().id());
+    }
 }
 
 fn rt() -> Runtime {

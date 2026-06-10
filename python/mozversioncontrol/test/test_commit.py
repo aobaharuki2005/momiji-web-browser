@@ -112,8 +112,6 @@ def test_commit(repo):
         patterns = [
             rf"^diff --git a/{re.escape(filename)} b/{re.escape(filename)}$",
             rf"^Modified regular file {re.escape(filename)}:$",
-            # Handle hg format: both single revision (diff -r hash file) and dual revision (diff -r hash1 -r hash2 file)
-            rf"^diff -r \S+(?: -r \S+)? {re.escape(filename)}$",
         ]
 
         matches = [
@@ -131,15 +129,10 @@ def test_commit(repo):
 
     marker = find_diff_marker(patch, "bar")
 
-    # Check that we found the appropriate diff marker
-    assert any(
-        marker.startswith(prefix)
-        for prefix in [
-            "diff --git a/bar b/bar",
-            "Modified regular file bar:",
-            "diff -r ",
-        ]
-    )
+    assert marker in [
+        "diff --git a/bar b/bar",
+        "Modified regular file bar:",
+    ]
 
 
 if __name__ == "__main__":

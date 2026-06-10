@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode:nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,7 +40,7 @@ NS_IMETHODIMP nsSystemAlertsService::ShowAlert(nsIAlertNotification* aAlert,
   }
 
   AddListener(alertName, alertListener);
-  return alertListener->InitAlert(aAlert, aAlertListener);
+  return alertListener->InitAlertAsync(aAlert, aAlertListener);
 }
 
 NS_IMETHODIMP nsSystemAlertsService::CloseAlert(const nsAString& aAlertName,
@@ -92,11 +93,6 @@ NS_IMETHODIMP nsSystemAlertsService::Teardown() {
 }
 
 NS_IMETHODIMP nsSystemAlertsService::PbmTeardown() {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsSystemAlertsService::IsFullscreen(bool* aRetVal) {
-  *aRetVal = false;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

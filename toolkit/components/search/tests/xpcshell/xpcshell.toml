@@ -104,8 +104,6 @@ support-files = ["settings/ignorelist.json"]
 
 ["test_migrateWebExtensionEngine.js"]
 
-["test_move_engine.js"]
-
 ["test_no_excess_default_engine_changed_notifications.js"]
 
 ["test_nodb_pluschanges.js"]
@@ -174,8 +172,6 @@ support-files = [
 ["test_reload_engines_experiment.js"]
 
 ["test_reload_engines_locales.js"]
-
-["test_reload_engines_webextensions.js"]
 
 ["test_remove_engine_notification_box.js"]
 
@@ -262,13 +258,15 @@ support-files = [
 
 ["test_sort_orders.js"]
 
-["test_telemetry_default.js"]
+["test_telemetry_event_default.js"]
 
 ["test_userEngine.js"]
 
 ["test_userInstalledConfigEngine.js"]
 
 ["test_validate_engines.js"]
+
+["test_validate_manifests.js"]
 
 ["test_webextensions_install.js"]
 support-files = [
@@ -286,6 +284,8 @@ support-files = ["settings/v1-migrate-to-webextension.json"]
 ["test_webextensions_startup_duplicate.js"]
 
 ["test_webextensions_startup_remove.js"]
+
+["test_webextensions_uninstall_appProvided.js"]
 
 ["test_webextensions_upgrade.js"]
 

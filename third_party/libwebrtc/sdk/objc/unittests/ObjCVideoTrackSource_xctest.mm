@@ -19,7 +19,6 @@
 #import "components/video_frame_buffer/RTCCVPixelBuffer.h"
 #import "frame_buffer_helpers.h"
 
-#include "api/environment/environment_factory.h"
 #include "api/scoped_refptr.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "media/base/fake_video_renderer.h"
@@ -52,8 +51,7 @@ class ObjCCallbackVideoSink
 }
 
 - (void)setUp {
-  _video_source = webrtc::make_ref_counted<webrtc::ObjCVideoTrackSource>(
-      webrtc::CreateEnvironment(), /*is_screencast=*/false);
+  _video_source = webrtc::make_ref_counted<webrtc::ObjCVideoTrackSource>();
 }
 
 - (void)tearDown {

@@ -26,7 +26,7 @@ includes: [testTypedArray.js]
 features: [TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   var result = TA.of(NaN, undefined);
   assert.sameValue(result.length, 2);
   assert.sameValue(result[0], NaN);
@@ -36,7 +36,7 @@ testWithTypedArrayConstructors(function(TA, makeCtorArg) {
 },
 floatArrayConstructors);
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   var result = TA.of(NaN, undefined);
   assert.sameValue(result.length, 2);
   assert.sameValue(result[0], 0);

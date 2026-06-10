@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -15,6 +17,7 @@
 #include <errno.h>
 
 #include "jsfriendapi.h"
+#include "jsmath.h"
 
 #include "gc/Memory.h"
 #include "jit/FlushICache.h"  // js::jit::FlushICache
@@ -23,7 +26,6 @@
 #include "threading/Mutex.h"
 #include "util/Memory.h"
 #include "util/Poison.h"
-#include "util/RandomSeed.h"
 #include "util/WindowsWrapper.h"
 #include "vm/MutexIDs.h"
 
@@ -508,7 +510,7 @@ static void* ReserveProcessExecutableMemory(size_t bytes) {
   unsigned protection = PROT_NONE;
   unsigned flags = MAP_NORESERVE | MAP_PRIVATE | MAP_ANON;
 #  if defined(XP_DARWIN)
-    flags |= MAP_JIT;
+  flags |= MAP_JIT;
 #    if defined(JS_USE_APPLE_FAST_WX)
   protection = PROT_READ | PROT_WRITE | PROT_EXEC;
 #    endif
@@ -562,13 +564,22 @@ static unsigned ProtectionSettingToFlags(ProtectionSetting protection) {
 [[nodiscard]] static bool CommitPages(void* addr, size_t bytes,
                                       ProtectionSetting protection) {
   // See the comment in ReserveProcessExecutableMemory.
-#if defined(JS_USE_APPLE_FAST_WX)
+#  if defined(XP_DARWIN)
   int ret;
   do {
     ret = madvise(addr, bytes, MADV_FREE_REUSE);
   } while (ret != 0 && errno == EAGAIN);
-  return ret == 0;
-#else
+  if (ret != 0) {
+    return false;
+  }
+#    if !defined(JS_USE_APPLE_FAST_WX)
+  unsigned flags = ProtectionSettingToFlags(protection);
+  if (mprotect(addr, bytes, flags)) {
+    return false;
+  }
+#    endif
+  return true;
+#  else
   unsigned flags = ProtectionSettingToFlags(protection);
   void* p = MozTaggedAnonymousMmap(addr, bytes, flags,
                                    MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0,
@@ -578,25 +589,29 @@ static unsigned ProtectionSettingToFlags(ProtectionSetting protection) {
   }
   MOZ_RELEASE_ASSERT(p == addr);
   return true;
-#endif
+#  endif
 }
 
 static void DecommitPages(void* addr, size_t bytes) {
   // See the comment in ReserveProcessExecutableMemory.
-#if defined(JS_USE_APPLE_FAST_WX)
+#  if defined(XP_DARWIN)
   int ret;
+#    if !defined(JS_USE_APPLE_FAST_WX)
+  ret = mprotect(addr, bytes, PROT_NONE);
+  MOZ_RELEASE_ASSERT(ret == 0);
+#    endif
   do {
     ret = madvise(addr, bytes, MADV_FREE_REUSABLE);
   } while (ret != 0 && errno == EAGAIN);
   MOZ_RELEASE_ASSERT(ret == 0);
-#else
+#  else
   // Use mmap with MAP_FIXED and PROT_NONE. Inspired by jemalloc's
   // pages_decommit.
   void* p = MozTaggedAnonymousMmap(addr, bytes, PROT_NONE,
                                    MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0,
                                    "js-executable-memory");
   MOZ_RELEASE_ASSERT(addr == p);
-#endif
+#  endif
 }
 #endif
 

@@ -1,6 +1,0 @@
-features:
-- name: shape-outside
-  files:
-  - shape-image-threshold-*
-  - shape-margin-*
-  - shape-outside-*

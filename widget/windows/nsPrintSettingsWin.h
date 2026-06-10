@@ -1,10 +1,11 @@
-/*
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPrintSettingsWin_h_
-#define nsPrintSettingsWin_h_
+#ifndef nsPrintSettingsWin_h__
+#define nsPrintSettingsWin_h__
 
 #include "nsPrintSettingsImpl.h"
 #include "nsIPrintSettingsWin.h"
@@ -58,4 +59,4 @@ class nsPrintSettingsWin : public nsPrintSettings, public nsIPrintSettingsWin {
   LPDEVMODEW mDevMode;
 };
 
-#endif /* nsPrintSettingsWin_h_ */
+#endif /* nsPrintSettingsWin_h__ */

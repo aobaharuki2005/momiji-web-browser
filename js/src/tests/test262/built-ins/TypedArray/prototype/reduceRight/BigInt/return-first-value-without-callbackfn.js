@@ -28,13 +28,13 @@ info: |
   8. Repeat, while k ≥ 0
     ...
   9. Return accumulator.
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var called = false;
-  var result = new TA(makeCtorArg([42n])).reduceRight(function() {
+  var result = new TA([42n]).reduceRight(function() {
     called = true;
   });
 

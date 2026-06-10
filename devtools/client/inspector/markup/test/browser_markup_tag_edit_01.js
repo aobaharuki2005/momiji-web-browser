@@ -25,8 +25,8 @@ var TEST_DATA = [
   },
   {
     desc:
-      'Try changing an attribute to a quote (") - class becomes empty, ' +
-      "and the trailing quote becomes a valid attribute name",
+      'Try changing an attribute to a quote (") - this should result ' +
+      "in it being set to an empty string",
     node: "#node22",
     originalAttributes: {
       id: "node22",
@@ -37,8 +37,6 @@ var TEST_DATA = [
     expectedAttributes: {
       id: "node22",
       class: "",
-      // With relaxed attribute name rules, " is now a valid attribute name
-      '"': "",
     },
   },
   {
@@ -65,8 +63,6 @@ var TEST_DATA = [
     expectedAttributes: {
       id: "node24",
       class: "",
-      // With relaxed attribute name rules, " is now a valid attribute name
-      '"': "",
     },
   },
 ];

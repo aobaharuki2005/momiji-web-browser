@@ -77,7 +77,15 @@ function takeWindowSnapshot(win, ctx) {
     ctx.DRAWWINDOW_DRAW_CARET |
     ctx.DRAWWINDOW_DRAW_VIEW |
     ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
-  ctx.drawWindow(win, 0, 0, PAGE_WIDTH, PAGE_HEIGHT, "rgb(255,255,255)", flags);
+  ctx.drawWindow(
+    win.ownerGlobal,
+    0,
+    0,
+    PAGE_WIDTH,
+    PAGE_HEIGHT,
+    "rgb(255,255,255)",
+    flags
+  );
 }
 
 // Verify that all the 4 coloured squares of the video
@@ -247,7 +255,7 @@ var listener = {
     browser.setAttribute("disableglobalhistory", "true");
 
     let remoteBrowser = Services.appinfo.browserTabsRemoteAutostart;
-    browser.toggleAttribute("remote", remoteBrowser);
+    browser.setAttribute("remote", remoteBrowser);
 
     browser.style.width = PAGE_WIDTH + "px";
     browser.style.height = PAGE_HEIGHT + "px";
@@ -268,7 +276,7 @@ var listener = {
       return;
     }
 
-    this.win.close();
+    this.win.ownerGlobal.close();
     this.win = null;
     this.utils = null;
     this.canvas = null;

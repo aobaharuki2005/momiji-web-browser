@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,8 +21,6 @@ namespace dom {
 
 class StaticRange : public AbstractRange {
  public:
-  enum class MutationObserved : bool { No, Yes };
-
   StaticRange() = delete;
   explicit StaticRange(const StaticRange& aOther) = delete;
 
@@ -54,8 +54,9 @@ class StaticRange : public AbstractRange {
                                               ErrorResult& aRv) {
     return StaticRange::Create(
         RawRangeBoundary(aStartContainer, aStartOffset,
-                         RangeBoundarySetBy::Offset),
-        RawRangeBoundary(aEndContainer, aEndOffset, RangeBoundarySetBy::Offset),
+                         RangeBoundaryIsMutationObserved::No),
+        RawRangeBoundary(aEndContainer, aEndOffset,
+                         RangeBoundaryIsMutationObserved::No),
         aRv);
   }
   template <typename SPT, typename SRT, typename EPT, typename ERT>
@@ -76,10 +77,11 @@ class StaticRange : public AbstractRange {
   bool mAreStartAndEndInSameTree = false;
 
   // Whether mutation is observed.
-  MutationObserved mIsMutationObserved = MutationObserved::No;
+  RangeBoundaryIsMutationObserved mIsMutationObserved;
 
  protected:
-  explicit StaticRange(nsINode* aNode, MutationObserved aIsMutationObserved,
+  explicit StaticRange(nsINode* aNode,
+                       RangeBoundaryIsMutationObserved aIsMutationObserved,
                        TreeKind aBoundaryTreeKind = TreeKind::DOM)
       : AbstractRange(aNode, /* aIsDynamicRange = */ false, aBoundaryTreeKind),
         mIsMutationObserved(aIsMutationObserved) {}
@@ -103,10 +105,8 @@ class StaticRange : public AbstractRange {
    */
   nsresult SetStartAndEnd(nsINode* aStartContainer, uint32_t aStartOffset,
                           nsINode* aEndContainer, uint32_t aEndOffset) {
-    return SetStartAndEnd(RawRangeBoundary(aStartContainer, aStartOffset,
-                                           RangeBoundarySetBy::Offset),
-                          RawRangeBoundary(aEndContainer, aEndOffset,
-                                           RangeBoundarySetBy::Offset));
+    return SetStartAndEnd(RawRangeBoundary(aStartContainer, aStartOffset),
+                          RawRangeBoundary(aEndContainer, aEndOffset));
   }
   template <typename SPT, typename SRT, typename EPT, typename ERT>
   nsresult SetStartAndEnd(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,

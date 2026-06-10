@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,7 +30,6 @@ import org.mozilla.focus.browser.BrowserCoordinatorLayout
 import org.mozilla.focus.databinding.FragmentBrowserBinding
 import org.mozilla.focus.fragment.BrowserFragment
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserFragmentTest {

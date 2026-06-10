@@ -1,11 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Original author: ekr@rtfm.com
 
-#ifndef logging_h_
-#define logging_h_
+#ifndef logging_h__
+#define logging_h__
 
 #include <sstream>
 
@@ -61,4 +63,4 @@
       }                                                           \
     } while (0)
 #endif  // MOZILLA_INTERNAL_API
-#endif  // logging_h_
+#endif  // logging_h__

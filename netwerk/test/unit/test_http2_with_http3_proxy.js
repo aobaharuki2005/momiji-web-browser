@@ -34,6 +34,7 @@ add_setup(async function setup() {
   Services.prefs.setBoolPref("network.http.http3.enable", true);
   Services.prefs.setBoolPref("network.http.http2.enabled", true);
   Services.prefs.setBoolPref("network.http.altsvc.enabled", true);
+  Services.prefs.setBoolPref("network.http.altsvc.oe", true);
   Services.prefs.setCharPref(
     "network.dns.localDomains",
     "foo.example.com, alt1.example.com, bar.example.com"
@@ -73,6 +74,7 @@ add_setup(async function setup() {
     Services.prefs.clearUserPref("network.http.http3.enable");
     Services.prefs.clearUserPref("network.dns.localDomains");
     Services.prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
+    Services.prefs.clearUserPref("network.http.altsvc.oe");
     Services.prefs.clearUserPref(
       "network.http.http3.alt-svc-mapping-for-testing"
     );
@@ -205,7 +207,7 @@ add_task(async function do_test_http2_multiplex() {
   Assert.equal(values[0].httpProxyConnectResponseCode, 200);
   Assert.equal(values[1].httpProxyConnectResponseCode, 200);
   Assert.notEqual(values[0].streamID, values[1].streamID);
-}).skip(); // TODO: bug 1998062
+});
 
 add_task(async function do_test_http2_big() {
   const { httpProxyConnectResponseCode } = await test_http2_big(
@@ -285,12 +287,6 @@ add_task(async function do_test_http2_empty_data() {
     serverPort,
     "foo.example.com"
   );
-  Assert.equal(httpProxyConnectResponseCode, 200);
-});
-
-add_task(async function do_test_http2_continuation_stream_zero() {
-  const { httpProxyConnectResponseCode } =
-    await test_http2_continuation_stream_zero(serverPort, "foo.example.com");
   Assert.equal(httpProxyConnectResponseCode, 200);
 });
 

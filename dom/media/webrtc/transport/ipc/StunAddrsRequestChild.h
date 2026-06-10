@@ -31,13 +31,20 @@ class StunAddrsRequestChild final : public PStunAddrsRequestChild {
   friend class PStunAddrsRequestChild;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StunAddrsRequestChild, override);
+  explicit StunAddrsRequestChild(StunAddrsListener* listener);
 
-  static RefPtr<StunAddrsRequestChild> Create(StunAddrsListener* listener);
+  NS_IMETHOD_(MozExternalRefCountType) AddRef();
+  NS_IMETHOD_(MozExternalRefCountType) Release();
+
+  // Not sure why AddIPDLReference & ReleaseIPDLReference don't come
+  // from PStunAddrsRequestChild since the IPC plumbing seem to
+  // expect this.
+  void AddIPDLReference() { AddRef(); }
+  void ReleaseIPDLReference() { Release(); }
+
   void Cancel();
 
  protected:
-  explicit StunAddrsRequestChild(StunAddrsListener* listener);
   virtual ~StunAddrsRequestChild() = default;
 
   virtual mozilla::ipc::IPCResult RecvOnMDNSQueryComplete(
@@ -47,6 +54,9 @@ class StunAddrsRequestChild final : public PStunAddrsRequestChild {
       const NrIceStunAddrArray& addrs) override;
 
   RefPtr<StunAddrsListener> mListener;
+
+  ThreadSafeAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
 };
 
 }  // namespace mozilla::net

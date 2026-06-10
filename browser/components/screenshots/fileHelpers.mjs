@@ -25,8 +25,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DownloadLastDir: "resource://gre/modules/DownloadLastDir.sys.mjs",
   DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-  ScreenshotsUtils:
-    "moz-src:///browser/components/screenshots/ScreenshotsUtils.sys.mjs",
+  ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -140,7 +139,7 @@ export async function getFilename(filenameTitle, browser) {
       saveAsType: 0,
       file,
     };
-    let accepted = await promiseTargetFile(fpParams, browser.documentGlobal);
+    let accepted = await promiseTargetFile(fpParams, browser.ownerGlobal);
     if (!accepted) {
       return { filename: null, accepted };
     }

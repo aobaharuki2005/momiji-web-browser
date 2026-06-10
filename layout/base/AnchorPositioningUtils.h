@@ -1,13 +1,16 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef AnchorPositioningUtils_h_
-#define AnchorPositioningUtils_h_
+#ifndef AnchorPositioningUtils_h__
+#define AnchorPositioningUtils_h__
 
+#include "WritingModes.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/WritingModes.h"
 #include "nsRect.h"
+#include "nsTHashMap.h"
 
 class nsAtom;
 class nsIFrame;
@@ -19,10 +22,6 @@ template <class T>
 class CopyableTArray;
 
 namespace mozilla {
-
-namespace dom {
-class ShadowRoot;
-}
 
 class nsDisplayListBuilder;
 
@@ -66,48 +65,6 @@ struct AnchorPosOffsetData {
   DistanceToNearestScrollContainer mDistanceToNearestScrollContainer;
 };
 
-class ScopedNameRef {
- public:
-  ScopedNameRef(const nsAtom* aAtom, const StyleCascadeLevel& aTreeScope)
-      : mName(aAtom), mTreeScope(aTreeScope) {}
-
-  const nsAtom* mName = nullptr;
-  StyleCascadeLevel mTreeScope = StyleCascadeLevel::Default();
-};
-
-class nsScopedNameRefHashKey : public PLDHashEntryHdr {
- public:
-  using KeyType = ScopedNameRef;
-  using KeyTypePointer = const ScopedNameRef*;
-
-  explicit nsScopedNameRefHashKey(const ScopedNameRef* aKey)
-      : mAtom(aKey->mName), mTreeScope(aKey->mTreeScope) {
-    MOZ_ASSERT(aKey);
-    MOZ_ASSERT(aKey->mName);
-  }
-  nsScopedNameRefHashKey(const nsScopedNameRefHashKey& aOther) = delete;
-  nsScopedNameRefHashKey(nsScopedNameRefHashKey&& aOther) = default;
-  ~nsScopedNameRefHashKey() = default;
-
-  KeyType GetKey() const { return ScopedNameRef(mAtom, mTreeScope); }
-  bool KeyEquals(KeyTypePointer aKey) const {
-    // This should work because a positioned element can't make two references
-    // with the same name in different tree scopes. Further scope resolution is
-    // hard to do here because the map does not have all the context.
-    return aKey->mName == mAtom.get();
-  }
-
-  static KeyTypePointer KeyToPointer(const KeyType& aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    return MOZ_LIKELY(aKey && aKey->mName) ? aKey->mName->hash() : 0;
-  }
-  enum { ALLOW_MEMMOVE = true };
-
- private:
-  RefPtr<const nsAtom> mAtom;
-  StyleCascadeLevel mTreeScope;
-};
-
 // Resolved anchor positioning data.
 struct AnchorPosResolutionData {
   // Size of the referenced anchor.
@@ -115,7 +72,6 @@ struct AnchorPosResolutionData {
   // Offset resolution data. Nothing if the anchor did not resolve, or if the
   // anchor was only referred to by its size.
   Maybe<AnchorPosOffsetData> mOffsetData;
-  StyleCascadeLevel mAnchorTreeScope;
 };
 
 // Data required for an anchor positioned frame, including:
@@ -129,9 +85,7 @@ struct AnchorPosResolutionData {
 class AnchorPosReferenceData {
  private:
   using ResolutionMap =
-      nsBaseHashtable<nsScopedNameRefHashKey,
-                      mozilla::Maybe<AnchorPosResolutionData>,
-                      mozilla::Maybe<AnchorPosResolutionData>>;
+      nsTHashMap<RefPtr<const nsAtom>, mozilla::Maybe<AnchorPosResolutionData>>;
 
  public:
   // Backup data for attempting a different `@position-try` style, when
@@ -158,8 +112,8 @@ class AnchorPosReferenceData {
     Value* mEntry;
   };
 
-  Result InsertOrModify(const ScopedNameRef& aKey, bool aNeedOffset);
-  const Value* Lookup(const ScopedNameRef& aKey) const;
+  Result InsertOrModify(const nsAtom* aAnchorName, bool aNeedOffset);
+  const Value* Lookup(const nsAtom* aAnchorName) const;
 
   bool IsEmpty() const { return mMap.IsEmpty(); }
 
@@ -228,8 +182,6 @@ class AnchorPosReferenceData {
   // scrolled containing block.
   nsMargin mInsets;
 
-  StyleCascadeLevel mAnchorTreeScope = StyleCascadeLevel::Default();
-
  private:
   ResolutionMap mMap;
   // Axes we need to compensate for scroll [1] in.
@@ -238,13 +190,8 @@ class AnchorPosReferenceData {
 };
 
 struct LastSuccessfulPositionData {
-  // The style + index of our last reflow.
-  RefPtr<const ComputedStyle> mLastStyle;
-  Maybe<uint32_t> mLastIndex;
-  // The "recorded" index that we start looking fallbacks from.
-  // https://drafts.csswg.org/css-anchor-position/#last-successful-recording
-  Maybe<uint32_t> mRecordedIndex;
-  // Whether we tried all fallbacks or not.
+  RefPtr<const ComputedStyle> mStyle;
+  uint32_t mIndex = 0;
   bool mTriedAllFallbacks = false;
 };
 
@@ -316,20 +263,20 @@ struct AnchorPositioningUtils {
    * following https://drafts.csswg.org/css-anchor-position-1/#target
    */
   static nsIFrame* FindFirstAcceptableAnchor(
-      const ScopedNameRef& aName, const nsIFrame* aPositionedFrame,
+      const nsAtom* aName, const nsIFrame* aPositionedFrame,
       const nsTArray<nsIFrame*>& aPossibleAnchorFrames);
 
   static Maybe<nsRect> GetAnchorPosRect(
       const nsIFrame* aAbsoluteContainingBlock, const nsIFrame* aAnchor,
-      bool aCBRectIsValid);
+      bool aCBRectIsvalid);
 
   static Maybe<AnchorPosInfo> ResolveAnchorPosRect(
       const nsIFrame* aPositioned, const nsIFrame* aAbsoluteContainingBlock,
-      const ScopedNameRef& aAnchorName, bool aCBRectIsValid,
+      const nsAtom* aAnchorName, bool aCBRectIsvalid,
       AnchorPosResolutionCache* aResolutionCache);
 
   static Maybe<nsSize> ResolveAnchorPosSize(
-      const nsIFrame* aPositioned, const ScopedNameRef& aAnchorName,
+      const nsIFrame* aPositioned, const nsAtom* aAnchorName,
       AnchorPosResolutionCache* aResolutionCache);
 
   /**
@@ -353,8 +300,8 @@ struct AnchorPositioningUtils {
    * Otherwise it will return `nsGkAtoms::AnchorPosImplicitAnchor` if the
    * element has an implicit anchor, or a nullptr.
    */
-  static Maybe<ScopedNameRef> GetUsedAnchorName(
-      const nsIFrame* aPositioned, const ScopedNameRef& aAnchorName);
+  static const nsAtom* GetUsedAnchorName(const nsIFrame* aPositioned,
+                                         const nsAtom* aAnchorName);
 
   /**
    * Get the implicit anchor of the frame.
@@ -365,13 +312,7 @@ struct AnchorPositioningUtils {
    * element. For popovers, this returns the primary frame of the invoker. In
    * all other cases, returns null.
    */
-  enum class ImplicitAnchorKind : uint8_t { None, Popover, PseudoElement };
-  struct ImplicitAnchorResult {
-    nsIFrame* mAnchorFrame = nullptr;
-    ImplicitAnchorKind mKind = ImplicitAnchorKind::None;
-  };
-  static ImplicitAnchorResult GetAnchorPosImplicitAnchor(
-      const nsIFrame* aFrame);
+  static nsIFrame* GetAnchorPosImplicitAnchor(const nsIFrame* aFrame);
 
   struct NearestScrollFrameInfo {
     const nsIFrame* mScrollContainer = nullptr;
@@ -413,30 +354,10 @@ struct AnchorPositioningUtils {
 
   // Trigger a layout for positioned items that are currently overflowing their
   // abs-cb and that have available fallbacks to try.
-  static bool TriggerLayoutOnOverflow(PresShell*, bool aFirstIteration);
-
-  static StylePositionArea PhysicalizePositionArea(StylePositionArea aPosArea,
-                                                   const nsIFrame* aPositioned);
-
-  /**
-   * When an anchor is split across fragmentainers such as multiple columns or
-   * pages, this function reconstructs what its unfragmented bounding rect would
-   * be by walking through the containing block's continuations and stacking all
-   * the anchor's fragment rects vertically in the containing block's block-axis
-   * direction. The returned rect is relative to the containing block's
-   * first-continuation. During reflow, we simply cache the unfragmented anchor
-   * rect as the resolution cache is populated, and use it, so this isn't
-   * required. However, we need to be able to recompute the anchor out-of-reflow
-   * to see if we need to trigger reflow.
-   */
-  static nsRect ReassembleAnchorRect(const nsIFrame* aAnchor,
-                                     const nsIFrame* aContainingBlock);
-
-  // Helper to get shadow root for a property's tree scope
-  static const dom::ShadowRoot* GetShadowRootForTreeScope(
-      const dom::Element& aElement, const StyleCascadeLevel& aTreeScope);
+  static bool TriggerLayoutOnOverflow(PresShell* aPresShell,
+                                      bool aEvaluateAllFallbacksIfNeeded);
 };
 
 }  // namespace mozilla
 
-#endif  // AnchorPositioningUtils_h_
+#endif  // AnchorPositioningUtils_h__

@@ -4,7 +4,8 @@
 
 /*---
 esid: sec-temporal.zoneddatetime.prototype.since
-description: Invalid ISO string as calendar should throw RangeError
+description: >
+  An ISO string that cannot be converted to a calendar ID should throw a RangeError
 features: [Temporal]
 ---*/
 
@@ -12,13 +13,11 @@ const timeZone = "UTC";
 const instance = new Temporal.ZonedDateTime(0n, timeZone);
 
 const invalidStrings = [
-  ["", "empty string"],
-  ["1997-12-04[u-ca=notacal]", "Unknown calendar"],
-  ["notacal", "Unknown calendar"],
+  ["", "empty string"]
 ];
 
-for (const [cal, description] of invalidStrings) {
-  const arg = { year: 1970, monthCode: "M11", day: 18, calendar: cal };
+for (const [calendar, description] of invalidStrings) {
+  const arg = { year: 2019, monthCode: "M11", day: 1, calendar };
   assert.throws(
     RangeError,
     () => instance.since(arg),

@@ -249,7 +249,7 @@ hy{
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
-                Hv{"H v"}
+                Hv{"ժ․ HH v"}
                 MEd{"dd.MM, E"}
                 Md{"dd.MM"}
                 y{"y, G"}
@@ -399,7 +399,7 @@ hy{
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
-                Hv{"H v"}
+                Hv{"ժ․ HH v"}
                 MEd{"dd.MM, E"}
                 MMMMW{
                     one{"MMMM W-ին շաբաթ"}

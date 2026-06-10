@@ -40,7 +40,7 @@ pub struct WindowsParser {
 
 impl WindowsParser {
     /// Creates a new static [`WindowsParserBorrowed`].
-    #[expect(clippy::new_ret_no_self)]
+    #[allow(clippy::new_ret_no_self)]
     #[cfg(feature = "compiled_data")]
     pub fn new() -> WindowsParserBorrowed<'static> {
         WindowsParserBorrowed::new()
@@ -69,7 +69,7 @@ impl WindowsParser {
     ///
     /// Using the borrowed version allows one to avoid a small potential
     /// indirection cost when querying the mapper from the owned version.
-    pub fn as_borrowed(&self) -> WindowsParserBorrowed<'_> {
+    pub fn as_borrowed(&self) -> WindowsParserBorrowed {
         WindowsParserBorrowed {
             data: self.data.get(),
         }

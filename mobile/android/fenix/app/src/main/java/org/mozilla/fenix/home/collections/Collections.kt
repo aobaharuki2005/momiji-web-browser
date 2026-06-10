@@ -194,6 +194,8 @@ private fun CollectionsPreview() {
                     }
 
                     override fun onAddTabsToCollectionTapped() { /* no op */ }
+
+                    override fun onRemoveCollectionsPlaceholder() { /* no op */ }
                 },
             )
         }

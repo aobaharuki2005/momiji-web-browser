@@ -7,7 +7,6 @@ package mozilla.components.feature.toolbar
 import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.isActive
-import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
@@ -15,9 +14,9 @@ import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -27,7 +26,6 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.Shadows.shadowOf
-import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class ToolbarBehaviorControllerTest {
@@ -125,7 +123,7 @@ class ToolbarBehaviorControllerTest {
     @Test
     fun `Controller should disable toolbar scrolling when disableScrolling is called`() {
         val toolbar: Toolbar = mock()
-        val controller = spy(ToolbarBehaviorController(toolbar, BrowserStore()))
+        val controller = spy(ToolbarBehaviorController(toolbar, mock()))
 
         controller.disableScrolling()
 
@@ -135,7 +133,7 @@ class ToolbarBehaviorControllerTest {
     @Test
     fun `Controller should enable toolbar scrolling when enableScrolling is called`() {
         val toolbar: Toolbar = mock()
-        val controller = spy(ToolbarBehaviorController(toolbar, BrowserStore()))
+        val controller = spy(ToolbarBehaviorController(toolbar, mock()))
 
         controller.enableScrolling()
 
@@ -145,25 +143,21 @@ class ToolbarBehaviorControllerTest {
     @Test
     fun `Controller should expand the toolbar and set showToolbarAsExpanded to false when showToolbarAsExpanded is true`() {
         val normalTabContent = ContentState("url", showToolbarAsExpanded = true)
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(
-            initialState = BrowserState(
-                tabs = listOf(TabSessionState("123", normalTabContent)),
-                selectedTabId = "123",
+        val store = spy(
+            BrowserStore(
+                BrowserState(
+                    tabs = listOf(TabSessionState("123", normalTabContent)),
+                    selectedTabId = "123",
+                ),
             ),
-            middleware = listOf(captureActionsMiddleware),
         )
-
         val controller = spy(ToolbarBehaviorController(mock(), store))
 
         controller.start()
         shadowOf(getMainLooper()).idle()
 
         verify(controller).expandToolbar()
-        captureActionsMiddleware.assertFirstAction(ContentAction.UpdateExpandedToolbarStateAction::class) { action ->
-            assert(action.sessionId == "123")
-            assert(!action.expanded)
-        }
+        verify(store).dispatch(ContentAction.UpdateExpandedToolbarStateAction("123", false))
     }
 
     @Test

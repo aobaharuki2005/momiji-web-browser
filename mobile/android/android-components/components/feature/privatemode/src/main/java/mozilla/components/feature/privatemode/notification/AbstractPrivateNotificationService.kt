@@ -17,7 +17,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.VISIBILITY_SECRET
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -51,7 +50,6 @@ import java.util.Locale
  */
 @Suppress("TooManyFunctions")
 abstract class AbstractPrivateNotificationService(
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
     private val notificationScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : Service() {
     private var privateTabsScope: CoroutineScope? = null
@@ -109,7 +107,7 @@ abstract class AbstractPrivateNotificationService(
             val channelId = getChannelId()
 
             val notification = createNotification(channelId)
-            withContext(mainDispatcher) {
+            withContext(Dispatchers.Main) {
                 notificationsDelegate.notify(notificationId = notificationId, notification = notification)
             }
         }
@@ -133,12 +131,12 @@ abstract class AbstractPrivateNotificationService(
                 )
             }
 
-            withContext(mainDispatcher) {
+            withContext(Dispatchers.Main) {
                 startForeground(notificationId, notification)
             }
         }
 
-        privateTabsScope = store.flowScoped(dispatcher = mainDispatcher) { flow ->
+        privateTabsScope = store.flowScoped { flow ->
             flow.map { state -> state.privateTabs.isEmpty() }
                 .distinctUntilChanged()
                 .collect { noPrivateTabs ->
@@ -146,7 +144,7 @@ abstract class AbstractPrivateNotificationService(
                 }
         }
 
-        localeScope = store.flowScoped(dispatcher = mainDispatcher) { flow ->
+        localeScope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.locale }
                 .distinctUntilChanged()
                 .collect {

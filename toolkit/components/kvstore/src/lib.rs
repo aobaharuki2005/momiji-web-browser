@@ -24,11 +24,6 @@ mod owned_value;
 pub mod skv;
 mod task;
 
-pub use skv::database::{Database, DatabaseError, GetOptions};
-pub use skv::key::Key;
-pub use skv::store::{Store, StorePath, StoreError};
-pub use skv::value::Value;
-
 use atomic_refcell::AtomicRefCell;
 use error::KeyValueError;
 use libc::c_void;
@@ -70,17 +65,6 @@ pub unsafe extern "C" fn nsKeyValueServiceConstructor(
     *result = ptr::null_mut();
 
     let service = KeyValueService::new();
-    service.QueryInterface(iid, result)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn nsSQLiteKeyValueServiceConstructor(
-    iid: &nsIID,
-    result: *mut *mut libc::c_void,
-) -> nsresult {
-    *result = ptr::null_mut();
-
-    let service = skv::interface::KeyValueService::new();
     service.QueryInterface(iid, result)
 }
 

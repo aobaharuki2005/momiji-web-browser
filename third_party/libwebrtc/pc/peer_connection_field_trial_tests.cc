@@ -36,7 +36,6 @@
 #include "system_wrappers/include/clock.h"
 #include "test/create_test_field_trials.h"
 #include "test/gtest.h"
-#include "test/run_loop.h"
 
 #ifdef WEBRTC_ANDROID
 #include "pc/test/android_test_initializer.h"
@@ -94,7 +93,7 @@ class PeerConnectionFieldTrialTest : public ::testing::Test {
 
   Clock* const clock_;
   std::unique_ptr<SocketServer> socket_server_;
-  test::RunLoop main_thread_;
+  AutoSocketServerThread main_thread_;
   scoped_refptr<PeerConnectionFactoryInterface> pc_factory_ = nullptr;
   PeerConnectionInterface::RTCConfiguration config_;
 };

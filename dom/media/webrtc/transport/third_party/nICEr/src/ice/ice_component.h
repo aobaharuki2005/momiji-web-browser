@@ -34,6 +34,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef _ice_component_h
 #define _ice_component_h
+#ifdef __cplusplus
+using namespace std;
+extern "C" {
+#endif /* __cplusplus */
 
 typedef struct nr_ice_pre_answer_request_ {
   nr_stun_server_request req;
@@ -101,4 +105,7 @@ void nr_ice_component_refresh_consent_now(nr_ice_component *comp);
 void nr_ice_component_disconnected(nr_ice_component *comp);
 void nr_ice_component_dump_state(nr_ice_component *comp, int log_level);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 #endif

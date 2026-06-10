@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env node */
+
 /*
  * A small test runner/reporter for node-based tests,
  * which are run via taskcluster node(debugger).
@@ -18,17 +20,14 @@ const prettier = require("prettier");
 const StyleDictionary = require("style-dictionary");
 const config = require("../config/tokens-config.js");
 
-const TEST_BUILD_PATH = "tests/build/design-system/tokens/css/";
+const TEST_BUILD_PATH = "tests/build/css/";
 const PROJECT_ROOT = path.resolve(__dirname, "../../../../../");
 
 function buildFilesWithTestConfig() {
   // Use our real config, just modify some values for the test. This prevents us
   // from re-building the CSS files that get checked in when we run the tests.
   let testConfig = Object.assign({}, config);
-  testConfig.source = [
-    path.join(__dirname, "../src/tokens/**/*.json"),
-    path.join(PROJECT_ROOT, "toolkit/content/widgets/**/*.tokens.json"),
-  ];
+  testConfig.source = [path.join(__dirname, "../src/design-tokens.json")];
   testConfig.platforms.css.buildPath = TEST_BUILD_PATH;
   testConfig.platforms.tables.buildPath = TEST_BUILD_PATH;
   testConfig.platforms.figma.buildPath = TEST_BUILD_PATH;
@@ -61,26 +60,6 @@ const FILE_PATHS = {
   "tokens-shared.css": {
     path: path.join("dist/tokens-shared.css"),
     testPath: path.join(TEST_BUILD_PATH, "dist/tokens-shared.css"),
-  },
-  "moz-badge.tokens.css": {
-    path: path.join(
-      PROJECT_ROOT,
-      "toolkit/content/widgets/moz-badge/moz-badge.tokens.css"
-    ),
-    testPath: path.join(
-      TEST_BUILD_PATH,
-      "../../../content/widgets/moz-badge/moz-badge.tokens.css"
-    ),
-  },
-  "moz-toggle.tokens.css": {
-    path: path.join(
-      PROJECT_ROOT,
-      "toolkit/content/widgets/moz-toggle/moz-toggle.tokens.css"
-    ),
-    testPath: path.join(
-      TEST_BUILD_PATH,
-      "../../../content/widgets/moz-toggle/moz-toggle.tokens.css"
-    ),
   },
 };
 

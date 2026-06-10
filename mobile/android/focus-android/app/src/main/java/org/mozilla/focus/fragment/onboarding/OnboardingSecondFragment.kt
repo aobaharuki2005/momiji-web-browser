@@ -24,9 +24,6 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ui.theme.FocusTheme
 
-/**
- * The second fragment of the onboarding flow.
- */
 class OnboardingSecondFragment : Fragment() {
     private lateinit var onboardingInteractor: OnboardingInteractor
 
@@ -84,7 +81,7 @@ class OnboardingSecondFragment : Fragment() {
         super.onResume()
         // check if the default browser was changed from OS settings for devices with Android 8 & 9.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
-            Browsers.isDefaultBrowser(requireContext())
+            Browsers.all(requireContext()).isDefaultBrowser
         ) {
             onboardingInteractor.onFinishOnBoarding()
         }

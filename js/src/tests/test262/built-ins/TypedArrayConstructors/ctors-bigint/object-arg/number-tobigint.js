@@ -54,38 +54,38 @@ info: |
     Argument Type: Number
     Result: Throw a TypeError exception.
 
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
 
   assert.throws(TypeError, function() {
-    new TA(makeCtorArg([1]));
+    new TA([1]);
   }, "abrupt completion from Number: 1");
 
   assert.throws(TypeError, function() {
-    new TA(makeCtorArg([Math.pow(2, 63)]));
+    new TA([Math.pow(2, 63)]);
   }, "abrupt completion from Number: 2**63");
 
   assert.throws(TypeError, function() {
-    new TA(makeCtorArg([+0]));
+    new TA([+0]);
   }, "abrupt completion from Number: +0");
 
   assert.throws(TypeError, function() {
-    new TA(makeCtorArg([-0]));
+    new TA([-0]);
   }, "abrupt completion from Number: -0");
 
   assert.throws(TypeError, function() {
-    new TA(makeCtorArg([Infinity]));
+    new TA([Infinity]);
   }, "abrupt completion from Number: Infinity");
 
   assert.throws(TypeError, function() {
-    new TA(makeCtorArg([-Infinity]));
+    new TA([-Infinity]);
   }, "abrupt completion from Number: -Infinity");
 
   assert.throws(TypeError, function() {
-    new TA(makeCtorArg([NaN]));
+    new TA([NaN]);
   }, "abrupt completion from Number: NaN");
 
 });

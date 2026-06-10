@@ -72,7 +72,8 @@ class NotificationsDelegate(
     /**
      * Checks if the post permission notification was previously granted.
      */
-    fun hasPostNotificationsPermission(): Boolean {
+    @VisibleForTesting
+    internal fun hasPostNotificationsPermission(): Boolean {
         return try {
             notificationManagerCompat.areNotificationsEnabled()
         } catch (e: RemoteException) {

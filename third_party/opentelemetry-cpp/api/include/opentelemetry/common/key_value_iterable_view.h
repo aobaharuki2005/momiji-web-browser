@@ -122,7 +122,7 @@ MakeAttributes(
  * @return common::KeyValueIterable
  */
 inline static const common::KeyValueIterable &MakeAttributes(
-    const common::KeyValueIterable &attributes OPENTELEMETRY_ATTRIBUTE_LIFETIME_BOUND) noexcept
+    const common::KeyValueIterable &attributes) noexcept
 {
   return attributes;
 }

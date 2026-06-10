@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -355,11 +357,11 @@ bool ParseElementBaseTimeValueSpec(const nsAString& aSpec,
 
     // element-name.begin
     if (token2.EqualsLiteral("begin")) {
-      result.mType = SMILTimeValueSpecParams::Type::Syncbase;
+      result.mType = SMILTimeValueSpecParams::SYNCBASE;
       result.mSyncBegin = true;
       // element-name.end
     } else if (token2.EqualsLiteral("end")) {
-      result.mType = SMILTimeValueSpecParams::Type::Syncbase;
+      result.mType = SMILTimeValueSpecParams::SYNCBASE;
       result.mSyncBegin = false;
       // element-name.repeat(digit+)
     } else if (StringBeginsWith(token2, REPEAT_PREFIX)) {
@@ -372,7 +374,7 @@ bool ParseElementBaseTimeValueSpec(const nsAString& aSpec,
       if (start == tokenEnd || *start != ')') {
         return false;
       }
-      result.mType = SMILTimeValueSpecParams::Type::Repeat;
+      result.mType = SMILTimeValueSpecParams::REPEAT;
       result.mRepeatIteration = repeatValue;
       // element-name.event-symbol
     } else {
@@ -380,12 +382,12 @@ bool ParseElementBaseTimeValueSpec(const nsAString& aSpec,
       if (atom == nullptr) {
         return false;
       }
-      result.mType = SMILTimeValueSpecParams::Type::Event;
+      result.mType = SMILTimeValueSpecParams::EVENT;
       result.mEventSymbol = atom;
     }
   } else {
     // event-symbol
-    result.mType = SMILTimeValueSpecParams::Type::Event;
+    result.mType = SMILTimeValueSpecParams::EVENT;
     result.mEventSymbol = atom;
   }
 
@@ -394,7 +396,7 @@ bool ParseElementBaseTimeValueSpec(const nsAString& aSpec,
   if (!ParseOptionalOffset(tokenEnd, end, &result.mOffset) || tokenEnd != end) {
     return false;
   }
-  aResult = std::move(result);
+  aResult = result;
   return true;
 }
 
@@ -572,13 +574,13 @@ bool SMILParserUtils::ParseTimeValueSpecParams(
   const nsAString& spec = TrimWhitespace(aSpec);
 
   if (spec.EqualsLiteral("indefinite")) {
-    aResult.mType = SMILTimeValueSpecParams::Type::Indefinite;
+    aResult.mType = SMILTimeValueSpecParams::INDEFINITE;
     return true;
   }
 
   // offset type
   if (ParseOffsetValue(spec, &aResult.mOffset)) {
-    aResult.mType = SMILTimeValueSpecParams::Type::Offset;
+    aResult.mType = SMILTimeValueSpecParams::OFFSET;
     return true;
   }
 

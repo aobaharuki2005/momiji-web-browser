@@ -10,7 +10,7 @@ import {
   TYPE_ICO,
   TRUSTED_FAVICON_SCHEMES,
   blobAsDataURL,
-} from "moz-src:///toolkit/modules/FaviconUtils.sys.mjs";
+} from "moz-src:///browser/modules/FaviconUtils.sys.mjs";
 
 const lazy = {};
 
@@ -152,23 +152,11 @@ class FaviconLoad {
         Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
     }
 
-    let loadingNode = iconInfo.node;
-    let loadingPrincipal = loadingNode.nodePrincipal;
-
-    if (loadingPrincipal.originNoSuffix === "resource://pdf.js") {
-      // PDF.js uses a resource:// principal.
-      loadingPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-        iconInfo.pageUri,
-        loadingPrincipal.originAttributes
-      );
-      loadingNode = null;
-    }
-
     this.channel = Services.io.newChannelFromURI(
       iconInfo.iconUri,
-      loadingNode,
-      loadingPrincipal,
-      loadingPrincipal,
+      iconInfo.node,
+      iconInfo.node.nodePrincipal,
+      iconInfo.node.nodePrincipal,
       securityFlags |
         Ci.nsILoadInfo.SEC_ALLOW_CHROME |
         Ci.nsILoadInfo.SEC_DISALLOW_SCRIPT,
@@ -196,7 +184,7 @@ class FaviconLoad {
     // Sometimes node is a document and sometimes it is an element. This is
     // the easiest single way to get to the load group in both those cases.
     this.channel.loadGroup =
-      iconInfo.node.documentGlobal.document.documentLoadGroup;
+      iconInfo.node.ownerGlobal.document.documentLoadGroup;
     this.channel.notificationCallbacks = this;
 
     if (this.channel instanceof Ci.nsIHttpChannelInternal) {

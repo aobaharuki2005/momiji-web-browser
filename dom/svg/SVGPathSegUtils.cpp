@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -185,7 +187,7 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       Point to(aCommand.h_line.x.IsToPosition() ? x : aState.pos.x + x,
                aState.pos.y);
       if (aState.ShouldUpdateLengthAndControlPoints()) {
-        aState.length += std::abs(to.x - aState.pos.x);
+        aState.length += std::fabs(to.x - aState.pos.x);
         aState.cp1 = aState.cp2 = to;
       }
       aState.pos = to;
@@ -196,7 +198,7 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       Point to(aState.pos.x,
                aCommand.v_line.y.IsToPosition() ? y : aState.pos.y + y);
       if (aState.ShouldUpdateLengthAndControlPoints()) {
-        aState.length += std::abs(to.y - aState.pos.y);
+        aState.length += std::fabs(to.y - aState.pos.y);
         aState.cp1 = aState.cp2 = to;
       }
       aState.pos = to;
@@ -249,12 +251,8 @@ Maybe<EdgeDir> GetDirection(Point v) {
     return Nothing();
   }
 
-  // We may be dealing with very small rects scaled up so make
-  // adjust the threshold based on the magnitude of the sides.
-  float threshold = std::min((std::abs(v.x) + std::abs(v.y)) * 0.00001, 0.001);
-
-  bool x = std::abs(v.x) > threshold;
-  bool y = std::abs(v.y) > threshold;
+  bool x = fabs(v.x) > 0.001;
+  bool y = fabs(v.y) > 0.001;
   if (x && y) {
     return Nothing();
   }
@@ -325,10 +323,10 @@ struct IsRectHelper {
       currentDir = dir;
     }
 
-    min.x = std::min(min.x, to.x);
-    min.y = std::min(min.y, to.y);
-    max.x = std::max(max.x, to.x);
-    max.y = std::max(max.y, to.y);
+    min.x = fmin(min.x, to.x);
+    min.y = fmin(min.y, to.y);
+    max.x = fmax(max.x, to.x);
+    max.y = fmax(max.y, to.y);
 
     return true;
   }
@@ -347,6 +345,11 @@ struct IsRectHelper {
   }
 };
 
+bool ApproxEqual(gfx::Point a, gfx::Point b) {
+  auto v = b - a;
+  return fabs(v.x) < 0.001 && fabs(v.y) < 0.001;
+}
+
 Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
   Point pathStart(0.0, 0.0);
   Point segStart(0.0, 0.0);
@@ -357,7 +360,6 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
       0,
       {EdgeDir::NONE, EdgeDir::NONE, EdgeDir::NONE, EdgeDir::NONE},
   };
-  static constexpr float kEpsilon = 0.001f;
 
   for (const StylePathCommand& cmd : aPath) {
     switch (cmd.tag) {
@@ -371,7 +373,7 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
           return Nothing();
         }
 
-        if (!pathStart.WithinEpsilonOf(segStart, kEpsilon)) {
+        if (!ApproxEqual(pathStart, segStart)) {
           // If we were only interested in filling we could auto-close here
           // by calling helper.Edge like in the ClosePath case and detect some
           // unclosed paths as rectangles.
@@ -452,8 +454,8 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
     }
   }
 
-  if (!pathStart.WithinEpsilonOf(segStart, kEpsilon)) {
-    // Same situation as with moveto regarding stroking not fully closed path
+  if (!ApproxEqual(pathStart, segStart)) {
+    // Same situation as with moveto regarding stroking not fullly closed path
     // even though the fill is a rectangle.
     return Nothing();
   }
@@ -462,7 +464,7 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
     return Nothing();
   }
 
-  auto size = helper.max - helper.min;
+  auto size = (helper.max - helper.min);
   return Some(Rect(helper.min, Size(size.x, size.y)));
 }
 

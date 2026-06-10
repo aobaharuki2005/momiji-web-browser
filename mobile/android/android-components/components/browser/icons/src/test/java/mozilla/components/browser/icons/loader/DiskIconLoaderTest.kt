@@ -8,8 +8,8 @@ import android.content.Context
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.test.assertIs
 
 class DiskIconLoaderTest {
     @Test
@@ -30,9 +30,11 @@ class DiskIconLoaderTest {
 
         val result = loader.load(mock(), request, resource)
 
-        assertIs<IconLoader.Result.BytesResult>(result)
+        assertTrue(result is IconLoader.Result.BytesResult)
 
-        assertEquals("Hello World", String(result.bytes))
+        val bytesResult = result as IconLoader.Result.BytesResult
+
+        assertEquals("Hello World", String(bytesResult.bytes))
     }
 
     @Test
@@ -53,6 +55,6 @@ class DiskIconLoaderTest {
 
         val result = loader.load(mock(), request, resource)
 
-        assertIs<IconLoader.Result.NoResult>(result)
+        assertTrue(result is IconLoader.Result.NoResult)
     }
 }

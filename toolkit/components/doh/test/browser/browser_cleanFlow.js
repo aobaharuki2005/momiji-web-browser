@@ -11,16 +11,12 @@ add_task(async function testCleanFlow() {
   setPassingHeuristics();
   let promise = waitForDoorhanger();
   let prefPromise = TestUtils.waitForPrefChange(prefs.BREADCRUMB_PREF);
-  Services.prefs.setBoolPref(prefs.ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
 
   await prefPromise;
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb saved.");
   is(
-    Services.prefs.getBoolPref(prefs.BREADCRUMB_PREF),
-    true,
-    "Breadcrumb saved."
-  );
-  is(
-    Services.prefs.getStringPref(prefs.TRR_SELECT_URI_PREF),
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
     "https://example.com/dns-query",
     "TRR selection complete."
   );
@@ -44,15 +40,11 @@ add_task(async function testCleanFlow() {
 
   await prefPromise;
   is(
-    Services.prefs.getStringPref(prefs.DOORHANGER_USER_DECISION_PREF),
+    Preferences.get(prefs.DOORHANGER_USER_DECISION_PREF),
     "UIOk",
     "Doorhanger decision saved."
   );
-  is(
-    Services.prefs.getBoolPref(prefs.BREADCRUMB_PREF),
-    true,
-    "Breadcrumb not cleared."
-  );
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb not cleared.");
 
   BrowserTestUtils.removeTab(tab);
 
@@ -69,7 +61,7 @@ add_task(async function testCleanFlow() {
 
   // Restart the controller for good measure.
   await restartDoHController();
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
   // The mode technically changes from undefined/empty to 0 here.
   await ensureTRRMode(0);
   await checkHeuristicsTelemetry("disable_doh", "startup");
@@ -87,10 +79,10 @@ add_task(async function testCleanFlow() {
 
   // Test the clearModeOnShutdown pref. `restartDoHController` does the actual
   // test for us between shutdown and startup.
-  Services.prefs.setBoolPref(prefs.CLEAR_ON_SHUTDOWN_PREF, false);
+  Preferences.set(prefs.CLEAR_ON_SHUTDOWN_PREF, false);
   await restartDoHController();
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
-  Services.prefs.setBoolPref(prefs.CLEAR_ON_SHUTDOWN_PREF, true);
+  Preferences.set(prefs.CLEAR_ON_SHUTDOWN_PREF, true);
 });

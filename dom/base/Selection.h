@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_Selection_h_
-#define mozilla_Selection_h_
+#ifndef mozilla_Selection_h__
+#define mozilla_Selection_h__
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EventForwards.h"
@@ -41,6 +43,7 @@ namespace mozilla {
 class AccessibleCaretEventHub;
 class ErrorResult;
 class HTMLEditor;
+class PostContentIterator;
 enum class CaretAssociationHint;
 enum class TableSelectionMode : uint32_t;
 struct AutoPrepareFocusRange;
@@ -105,24 +108,6 @@ class MOZ_RAII SelectionNodeCache final {
     return MaybeCollect(aSelection).Contains(aNode);
   }
 
-  AutoTArray<Selection*, 1>* LastCommonAncestorSelections(
-      const nsINode* aCommonAncestorForRangeInSelection) {
-    if (mLastCommonAncestorForRangeInSelection &&
-        mLastCommonAncestorForRangeInSelection ==
-            aCommonAncestorForRangeInSelection) {
-      return &mLastCommonAncestorSelections;
-    }
-    return nullptr;
-  }
-
-  void SetLastCommonAncestorSelections(
-      const nsINode* aCommonAncestorForRangeInSelection,
-      const AutoTArray<Selection*, 1>& aAncestorSelections) {
-    mLastCommonAncestorForRangeInSelection = aCommonAncestorForRangeInSelection;
-    mLastCommonAncestorSelections.Clear();
-    mLastCommonAncestorSelections.AppendElements(aAncestorSelections);
-  }
-
  private:
   /**
    * This class is supposed to be only created by the PresShell.
@@ -136,10 +121,6 @@ class MOZ_RAII SelectionNodeCache final {
    * If `aSelection` is already cached, the hash set is returned directly.
    */
   const nsTHashSet<const nsINode*>& MaybeCollect(const Selection* aSelection);
-
-  const nsINode* mLastCommonAncestorForRangeInSelection = nullptr;
-
-  AutoTArray<Selection*, 1> mLastCommonAncestorSelections;
 
   nsTHashMap<const Selection*, nsTHashSet<const nsINode*>> mSelectedNodes;
 
@@ -159,7 +140,7 @@ class Selection final : public nsSupportsWeakReference,
   using IsUnlinking = AbstractRange::IsUnlinking;
 
  protected:
-  ~Selection();
+  virtual ~Selection();
 
  public:
   /**
@@ -168,7 +149,7 @@ class Selection final : public nsSupportsWeakReference,
   explicit Selection(SelectionType aSelectionType,
                      nsFrameSelection* aFrameSelection);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Selection)
 
   /**
@@ -247,13 +228,12 @@ class Selection final : public nsSupportsWeakReference,
 
   nsresult PostScrollSelectionIntoViewEvent(SelectionRegion aRegion,
                                             ScrollFlags aFlags,
-                                            AxisScrollParams aVertical,
-                                            AxisScrollParams aHorizontal);
+                                            ScrollAxis aVertical,
+                                            ScrollAxis aHorizontal);
 
   MOZ_CAN_RUN_SCRIPT nsresult ScrollIntoView(
-      SelectionRegion, AxisScrollParams aVertical = AxisScrollParams(),
-      AxisScrollParams aHorizontal = AxisScrollParams(),
-      ScrollFlags = ScrollFlags::None,
+      SelectionRegion, ScrollAxis aVertical = ScrollAxis(),
+      ScrollAxis aHorizontal = ScrollAxis(), ScrollFlags = ScrollFlags::None,
       SelectionScrollMode = SelectionScrollMode::Async);
 
  private:
@@ -338,12 +318,6 @@ class Selection final : public nsSupportsWeakReference,
   // Get the anchor-to-focus range if we don't care which end is
   // anchor and which end is focus.
   const nsRange* GetAnchorFocusRange() const { return mAnchorFocusRange; }
-
-  /**
-   * Set mAnchorFocusRange to mStyledRanges.mRanges[aIndex] if aIndex is a
-   * valid index.
-   */
-  void SetAnchorFocusRange(size_t aIndex);
 
   void GetDirection(nsAString& aDirection) const;
 
@@ -474,11 +448,14 @@ class Selection final : public nsSupportsWeakReference,
       return false;
     }
 
-    return mStyledRanges.GetAbstractRangeAt(0)->Collapsed();
+    return mStyledRanges.mRanges[0].mRange->Collapsed();
   }
 
   // Returns whether both normal range and cross-shadow-boundary
   // range are collapsed.
+  //
+  // If StaticPrefs::dom_shadowdom_selection_across_boundary_enabled is
+  // disabled, this method always returns result as nsRange::IsCollapsed.
   bool AreNormalAndCrossShadowBoundaryRangesCollapsed() const {
     if (!IsCollapsed()) {
       return false;
@@ -489,7 +466,7 @@ class Selection final : public nsSupportsWeakReference,
       return true;
     }
 
-    AbstractRange* range = mStyledRanges.GetAbstractRangeAt(0);
+    AbstractRange* range = mStyledRanges.mRanges[0].mRange;
     if (range->MayCrossShadowBoundary()) {
       return range->AsDynamicRange()->CrossShadowBoundaryRangeCollapsed();
     }
@@ -700,7 +677,6 @@ class Selection final : public nsSupportsWeakReference,
    */
   MOZ_CAN_RUN_SCRIPT void CollapseToEnd(mozilla::ErrorResult& aRv);
 
- private:
   /**
    * Extends the selection by moving the selection end to the specified node and
    * offset, preserving the selection begin position. The new selection end
@@ -711,10 +687,9 @@ class Selection final : public nsSupportsWeakReference,
    * @param aOffset    Where in aContainer to place the offset of the new
    *                   selection end.
    */
-  MOZ_CAN_RUN_SCRIPT void ExtendInternal(nsINode& aContainer, uint32_t aOffset,
-                                         ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Extend(nsINode& aContainer, uint32_t aOffset,
+                                 ErrorResult& aRv);
 
- public:
   MOZ_CAN_RUN_SCRIPT void AddRangeAndSelectFramesAndNotifyListeners(
       nsRange& aRange, mozilla::ErrorResult& aRv);
 
@@ -873,7 +848,7 @@ class Selection final : public nsSupportsWeakReference,
   nsresult SelectionLanguageChange(bool aLangRTL);
 
  private:
-  bool HasSameRootOrSameComposedDoc(const nsINode& aNode) const;
+  bool HasSameRootOrSameComposedDoc(const nsINode& aNode);
 
   // XXX Please don't add additional uses of this method, it's only for
   // XXX supporting broken code (bug 1245883) in the following classes:
@@ -898,10 +873,6 @@ class Selection final : public nsSupportsWeakReference,
                                 const RawRangeBoundary& aAnchorRef,
                                 const RawRangeBoundary& aFocusRef,
                                 ErrorResult& aRv);
-
-  static bool IsValidNodeAndOffsetForBoundary(const nsINode& aContainer,
-                                              uint32_t aOffset,
-                                              ErrorResult& aRv);
 
  public:
   SelectionType GetType() const { return mSelectionType; }
@@ -934,8 +905,7 @@ class Selection final : public nsSupportsWeakReference,
     MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_DECL_NSIRUNNABLE
 
     ScrollSelectionIntoViewEvent(Selection* aSelection, SelectionRegion aRegion,
-                                 AxisScrollParams aVertical,
-                                 AxisScrollParams aHorizontal,
+                                 ScrollAxis aVertical, ScrollAxis aHorizontal,
                                  ScrollFlags aFlags)
         : Runnable("dom::Selection::ScrollSelectionIntoViewEvent"),
           mSelection(aSelection),
@@ -950,13 +920,25 @@ class Selection final : public nsSupportsWeakReference,
    private:
     Selection* mSelection;
     SelectionRegion mRegion;
-    AxisScrollParams mVerticalScroll;
-    AxisScrollParams mHorizontalScroll;
+    ScrollAxis mVerticalScroll;
+    ScrollAxis mHorizontalScroll;
     ScrollFlags mFlags;
   };
 
+  /**
+   * Set mAnchorFocusRange to mStyledRanges.mRanges[aIndex] if aIndex is a valid
+   * index.
+   */
+  void SetAnchorFocusRange(size_t aIndex);
   void RemoveAnchorFocusRange() { mAnchorFocusRange = nullptr; }
   void SelectFramesOf(nsIContent* aContent, bool aSelected) const;
+
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-descendant.
+   */
+  nsresult SelectFramesOfInclusiveDescendantsOfContent(
+      PostContentIterator& aPostOrderIter, nsIContent* aContent,
+      bool aSelected) const;
 
   void SelectFramesOfFlattenedTreeOfContent(nsIContent* aContent,
                                             bool aSelected) const;
@@ -989,34 +971,11 @@ class Selection final : public nsSupportsWeakReference,
     explicit StyledRanges(Selection& aSelection) : mSelection(aSelection) {}
     void Clear();
 
-    const TextRangeStyle* GetNonDefaultTextRangeStyle(
-        const AbstractRange* aRange);
+    StyledRange* FindRangeData(AbstractRange* aRange);
 
-    size_t Length() const;
+    using StyledRangeArray = AutoTArray<StyledRange, 1>;
 
-    /** Returns a span of strong references to the AbstractRanges. */
-    mozilla::Span<RefPtr<AbstractRange>> Ranges() { return mRanges.Ranges(); }
-    mozilla::Span<const RefPtr<AbstractRange>> Ranges() const {
-      return mRanges.Ranges();
-    }
-
-    /**
-     * Returns an `AbstractRange` at `aIndex`. This MOZ_RELEASE_ASSERTs if
-     * `aIndex` is out of bounds.
-     */
-    AbstractRange* GetAbstractRangeAt(uint32_t aIndex) const {
-      return mRanges.GetAbstractRangeAt(aIndex);
-    }
-
-    /**
-     * Returns a `StyledRange` at `aIndex`. This MOZ_RELEASE_ASSERTs if
-     * `aIndex` is out of bounds.
-     * Note that each call creates a new object, which increments the refcount
-     * of the underlying `AbstractRange` and copies the `TextRangeStyle`.
-     */
-    StyledRange GetStyledRangeAt(uint32_t aIndex) {
-      return mRanges.GetStyledRangeAt(aIndex);
-    }
+    StyledRangeArray::size_type Length() const;
 
     nsresult RemoveCollapsedRanges();
 
@@ -1026,19 +985,16 @@ class Selection final : public nsSupportsWeakReference,
      * Binary searches the given sorted array of ranges for the insertion point
      * for the given aBoundary. The given comparator is used, and the index
      * where the point should appear in the array is returned.
-     *
+
      * If there is an item in the array equal to aBoundary, we will return the
-     * index of this item.
+     index of this item.
      *
-     * @param aElementArray Can be any array-like container (`nsTArray`,
-     *                      `AutoTArray`, `Span`) containing either
-     *                      `StyledRange` or `RefPtr<AbstractRange>`
      * @return the index where the point should appear in the array. In
      *         [0, `aElementArray->Length()`].
      */
-    template <typename PT, typename RT, typename ArrayType>
+    template <typename PT, typename RT>
     static size_t FindInsertionPoint(
-        const ArrayType& aElementArray,
+        const nsTArray<StyledRange>* aElementArray,
         const RangeBoundaryBase<PT, RT>& aBoundary,
         int32_t (*aComparator)(const RangeBoundaryBase<PT, RT>&,
                                const AbstractRange&));
@@ -1144,7 +1100,7 @@ class Selection final : public nsSupportsWeakReference,
     // If this proves to be a performance concern, then an interval tree may be
     // a possible solution, allowing the calculation of the overlap interval in
     // O(log n) time, though this would require rebalancing and other overhead.
-    StyledRangeCollection mRanges;
+    StyledRangeArray mRanges;
 
     // With introduction of the custom highlight API, Selection must be able to
     // hold `StaticRange`s as well. If they become invalid (eg. end is before
@@ -1152,7 +1108,7 @@ class Selection final : public nsSupportsWeakReference,
     // mRanges needs to contain valid ranges sorted correctly only. Therefore,
     // invalid static ranges are being stored in this array, which is being kept
     // up to date in `ReorderRangesIfNecessary()`.
-    nsTArray<StyledRange> mInvalidStaticRanges;
+    StyledRangeArray mInvalidStaticRanges;
 
     Selection& mSelection;
 
@@ -1317,32 +1273,12 @@ inline std::ostream& operator<<(
   }
 }
 
-/**
- * Use this to detect unexpected selection changes. This is almost the same as
- * nsMutationGuard. So, when you fix some bugs of this, you should change
- * nsMutationGuard too.
- */
-class SelectionChangeGuard {
- public:
-  SelectionChangeGuard() : mStartingGeneration(sGeneration) {}
-
-  [[nodiscard]] bool Changed(uint32_t aIgnoreCount) const {
-    return (sGeneration - mStartingGeneration) > aIgnoreCount;
-  }
-
-  static void DidChange() { sGeneration++; }
-
- private:
-  uint64_t mStartingGeneration;
-  static uint64_t sGeneration;
-};
-
 }  // namespace mozilla
 
 inline nsresult nsISelectionController::ScrollSelectionIntoView(
     mozilla::SelectionType aType, SelectionRegion aRegion,
-    const mozilla::AxisScrollParams& aVertical = mozilla::AxisScrollParams(),
-    const mozilla::AxisScrollParams& aHorizontal = mozilla::AxisScrollParams(),
+    const mozilla::ScrollAxis& aVertical = mozilla::ScrollAxis(),
+    const mozilla::ScrollAxis& aHorizontal = mozilla::ScrollAxis(),
     mozilla::ScrollFlags aScrollFlags = mozilla::ScrollFlags::None,
     mozilla::SelectionScrollMode aMode = mozilla::SelectionScrollMode::Async) {
   RefPtr selection = GetSelection(mozilla::RawSelectionType(aType));
@@ -1356,9 +1292,9 @@ inline nsresult nsISelectionController::ScrollSelectionIntoView(
 inline nsresult nsISelectionController::ScrollSelectionIntoView(
     mozilla::SelectionType aType, SelectionRegion aRegion,
     mozilla::SelectionScrollMode aMode) {
-  return ScrollSelectionIntoView(aType, aRegion, mozilla::AxisScrollParams(),
-                                 mozilla::AxisScrollParams(),
+  return ScrollSelectionIntoView(aType, aRegion, mozilla::ScrollAxis(),
+                                 mozilla::ScrollAxis(),
                                  mozilla::ScrollFlags::None, aMode);
 }
 
-#endif  // mozilla_Selection_h_
+#endif  // mozilla_Selection_h__

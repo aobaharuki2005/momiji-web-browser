@@ -24,10 +24,12 @@ use crate::{backend, io};
 use {crate::ffi::CString, alloc::vec::Vec};
 
 #[cfg(target_os = "linux")]
-use crate::{fd::FromRawFd as _, ioctl};
+use crate::{fd::FromRawFd, ioctl};
 
 bitflags::bitflags! {
     /// `O_*` flags for use with [`openpt`] and [`ioctl_tiocgptpeer`].
+    ///
+    /// [`ioctl_tiocgptpeer`]: https://docs.rs/rustix/*/x86_64-unknown-linux-gnu/rustix/pty/fn.ioctl_tiocgptpeer.html
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct OpenptFlags: u32 {
@@ -35,7 +37,7 @@ bitflags::bitflags! {
         const RDWR = c::O_RDWR as c::c_uint;
 
         /// `O_NOCTTY`
-        #[cfg(not(any(target_os = "espidf", target_os = "horizon", target_os = "l4re", target_os = "redox", target_os = "vita")))]
+        #[cfg(not(any(target_os = "espidf", target_os = "l4re", target_os = "redox", target_os = "vita")))]
         const NOCTTY = c::O_NOCTTY as c::c_uint;
 
         /// `O_CLOEXEC`
@@ -112,12 +114,10 @@ pub fn openpt(flags: OpenptFlags) -> io::Result<OwnedFd> {
 /// # References
 ///  - [POSIX]
 ///  - [Linux]
-///  - [illumos]
 ///  - [glibc]
 ///
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9799919799/functions/ptsname.html
 /// [Linux]: https://man7.org/linux/man-pages/man3/ptsname.3.html
-/// [illumos]: https://www.illumos.org/man/3C/ptsname
 /// [glibc]: https://sourceware.org/glibc/manual/latest/html_node/Allocation.html#index-ptsname
 #[cfg(all(
     feature = "alloc",
@@ -131,7 +131,6 @@ pub fn openpt(flags: OpenptFlags) -> io::Result<OwnedFd> {
 ))]
 #[inline]
 #[doc(alias = "ptsname_r")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub fn ptsname<Fd: AsFd, B: Into<Vec<u8>>>(fd: Fd, reuse: B) -> io::Result<CString> {
     backend::pty::syscalls::ptsname(fd.as_fd(), reuse.into())
 }
@@ -155,7 +154,7 @@ pub fn unlockpt<Fd: AsFd>(fd: Fd) -> io::Result<()> {
 ///
 /// On Linux, calling this function has no effect, as the kernel is expected to
 /// grant the appropriate access. On all other platforms, this function has
-/// unspecified behavior if the calling process has a [`Signal::CHILD`] signal
+/// unspecified behavior if the calling process has a [`Signal::Child`] signal
 /// handler installed.
 ///
 /// # References
@@ -166,7 +165,7 @@ pub fn unlockpt<Fd: AsFd>(fd: Fd) -> io::Result<()> {
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9799919799/functions/grantpt.html
 /// [Linux]: https://man7.org/linux/man-pages/man3/grantpt.3.html
 /// [glibc]: https://sourceware.org/glibc/manual/latest/html_node/Allocation.html#index-grantpt
-/// [`Signal::CHILD`]: crate::process::Signal::CHILD
+/// [`Signal::Child`]: crate::process::Signal::Child
 #[inline]
 pub fn grantpt<Fd: AsFd>(fd: Fd) -> io::Result<()> {
     #[cfg(not(linux_kernel))]
@@ -205,10 +204,7 @@ unsafe impl ioctl::Ioctl for Tiocgptpeer {
     type Output = OwnedFd;
 
     const IS_MUTATING: bool = false;
-
-    fn opcode(&self) -> ioctl::Opcode {
-        c::TIOCGPTPEER as ioctl::Opcode
-    }
+    const OPCODE: ioctl::Opcode = ioctl::Opcode::old(c::TIOCGPTPEER as ioctl::RawOpcode);
 
     fn as_ptr(&mut self) -> *mut c::c_void {
         self.0.bits() as *mut c::c_void

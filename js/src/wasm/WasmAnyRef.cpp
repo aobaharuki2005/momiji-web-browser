@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * Copyright 2023 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -84,7 +86,7 @@ bool AnyRef::fromJSValue(JSContext* cx, HandleValue value,
   if (value.isDouble()) {
     double doubleValue = value.toDouble();
     int32_t intValue;
-    if (mozilla::NumberIsInt32(doubleValue, &intValue) &&
+    if (mozilla::NumberEqualsInt32(doubleValue, &intValue) &&
         !int32NeedsBoxing(intValue)) {
       result.set(AnyRef::fromInt32(intValue));
       return true;

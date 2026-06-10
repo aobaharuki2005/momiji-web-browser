@@ -4,13 +4,6 @@
 
 import { RealtimeSuggestProvider } from "moz-src:///browser/components/urlbar/private/RealtimeSuggestProvider.sys.mjs";
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
-  UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
-});
-
 /**
  * A feature that manages sports realtime suggestions.
  */
@@ -27,43 +20,23 @@ export class SportsSuggestions extends RealtimeSuggestProvider {
     return "sports";
   }
 
-  getViewTemplateForImageContainer(item, index) {
-    // Create two image containers, one for the home team and one for the away
-    // team. Each container has an `img` and date chiclet components. Depending
-    // on the item, there are three possible "modes" for each container:
-    //
-    // (1) When the team has an icon: `img[src]` will be the icon URL (which
-    //     will be a remote URL)
-    // (2) When the sport is recognized: The container's `background-image` will
-    //     be a fallback icon set via CSS
-    // (3) Otherwise: The date chiclet will be visible
-    //
-    // Note that only one team may have an icon, depending on Merino, even
-    // though that shouldn't typically happen.
-    //
-    // See the view-update logic in `#viewUpdateImageAndBottom()`.
-    return ["home", "away"].map(team => ({
-      name: `${team}-team-image-container-${index}`,
-      tag: "span",
-      classList: ["urlbarView-realtime-image-container"],
-      children: [
-        {
-          name: `${team}-team-image-${index}`,
-          tag: "img",
-          classList: ["urlbarView-realtime-image"],
-        },
-        {
-          name: `${team}-team-date-chiclet-day-${index}`,
-          tag: "span",
-          classList: ["urlbarView-sports-date-chiclet-day"],
-        },
-        {
-          name: `${team}-team-date-chiclet-month-${index}`,
-          tag: "span",
-          classList: ["urlbarView-sports-date-chiclet-month"],
-        },
-      ],
-    }));
+  getViewTemplateForImage(item, index) {
+    if (itemIcon(item)) {
+      return super.getViewTemplateForImage(item, index);
+    }
+
+    return [
+      {
+        name: `scheduled-date-chiclet-day-${index}`,
+        tag: "span",
+        classList: ["urlbarView-sports-scheduled-date-chiclet-day"],
+      },
+      {
+        name: `scheduled-date-chiclet-month-${index}`,
+        tag: "span",
+        classList: ["urlbarView-sports-scheduled-date-chiclet-month"],
+      },
+    ];
   }
 
   getViewTemplateForDescriptionTop(item, index) {
@@ -82,20 +55,20 @@ export class SportsSuggestions extends RealtimeSuggestProvider {
       {
         name: `home-team-score-${index}`,
         tag: "span",
-        classList: ["urlbarView-sports-score", "urlbarView-sports-score-home"],
+        classList: ["urlbarView-sports-score"],
       },
       {
         tag: "span",
         classList: ["urlbarView-realtime-description-separator-dot"],
       },
       {
-        name: `away-team-score-${index}`,
-        tag: "span",
-        classList: ["urlbarView-sports-score", "urlbarView-sports-score-away"],
-      },
-      {
         name: `away-team-name-${index}`,
         tag: "span",
+      },
+      {
+        name: `away-team-score-${index}`,
+        tag: "span",
+        classList: ["urlbarView-sports-score"],
       },
     ];
   }
@@ -113,7 +86,7 @@ export class SportsSuggestions extends RealtimeSuggestProvider {
   getViewTemplateForDescriptionBottom(item, index) {
     return [
       {
-        name: `sport-${index}`,
+        name: `sport-name-${index}`,
         tag: "span",
       },
       {
@@ -148,7 +121,7 @@ export class SportsSuggestions extends RealtimeSuggestProvider {
       ...this.#viewUpdateImageAndBottom(item, index),
       [`item_${index}`]: {
         attributes: {
-          "sport-category": item.sport_category,
+          sport: item.sport,
           status: item.status_type,
         },
       },
@@ -187,81 +160,100 @@ export class SportsSuggestions extends RealtimeSuggestProvider {
   }
 
   #viewUpdateImageAndBottom(item, i) {
-    // Format the date.
     let date = new Date(item.date);
-    let {
-      formattedDate,
-      formattedTime,
-      parseDateResult: { daysUntil, zonedNow },
-    } = lazy.UrlbarUtils.formatDate(date, {
-      // If the item has an icon, the date chiclet won't be shown, so show the
-      // absolute date in the bottom part of the row.
-      forceAbsoluteDate: !!item.home_team?.icon || !!item.away_team?.icon,
-      includeTimeZone: true,
-      capitalizeRelativeDate: true,
-    });
+    let { zonedNow, zonedDate, daysUntil, isFuture } =
+      SportsSuggestions._parseDate(date);
 
-    // Compute the date chiclet components.
-    let partsArray = new Intl.DateTimeFormat(undefined, {
-      month: "short",
-      day: "numeric",
-      timeZone: zonedNow.timeZoneId,
-    }).formatToParts(date);
-    let partsMap = Object.fromEntries(
-      partsArray.map(({ type, value }) => [type, value])
-    );
+    let icon = itemIcon(item);
+    let isScheduled = item.status_type == "scheduled";
 
-    // Create the image update. Start by creating each team's update.
-    let imageUpdatesByTeam = ["home", "away"].reduce((memo, team) => {
-      let itemKey = `${team}_team`;
-      let icon = item[itemKey]?.icon;
-      memo[team] = {
-        [`image-container-${i}`]: {
+    // Create the image update.
+    let imageUpdate;
+    if (icon) {
+      // The image container will contain the icon.
+      imageUpdate = {
+        [`image_container_${i}`]: {
           attributes: {
-            "has-team-icon": icon ? "" : null,
+            // Remove the fallback attribute by setting it to null.
+            "is-fallback": null,
           },
         },
-        [`image-${i}`]: {
+        [`image_${i}`]: {
           attributes: {
-            src: icon ?? null,
+            src: icon,
           },
-        },
-        [`date-chiclet-day-${i}`]: {
-          textContent: partsMap.day ?? "",
-        },
-        [`date-chiclet-month-${i}`]: {
-          textContent: partsMap.month ?? "",
         },
       };
-      return memo;
-    }, {});
+    } else {
+      // Instead of an icon, the image container will be a date chiclet
+      // containing the item's date as text, with the day above the month.
+      let partsArray = new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
+        timeZone: zonedNow.timeZoneId,
+      }).formatToParts(date);
+      let partsMap = Object.fromEntries(
+        partsArray.map(({ type, value }) => [type, value])
+      );
+      if (partsMap.day && partsMap.month) {
+        imageUpdate = {
+          [`image_container_${i}`]: {
+            attributes: {
+              "is-fallback": "",
+            },
+          },
+          [`scheduled-date-chiclet-day-${i}`]: {
+            textContent: partsMap.day,
+          },
+          [`scheduled-date-chiclet-month-${i}`]: {
+            textContent: partsMap.month,
+          },
+        };
+      } else {
+        // This shouldn't happen.
+        imageUpdate = {};
+      }
+    }
 
-    // If the teams' updates are the same, then they'll show the same thing, so
-    // hide the away team's container (the second container) in that case.
-    // @ts-ignore
-    imageUpdatesByTeam.away[`image-container-${i}`].attributes.hidden =
-      lazy.ObjectUtils.deepEqual(
-        // @ts-ignore
-        imageUpdatesByTeam.home,
-        // @ts-ignore
-        imageUpdatesByTeam.away
-      )
-        ? ""
-        : null;
-
-    // Create the final image update. Merge the two teams' updates and prefix
-    // each key with the team.
-    let imageUpdate = Object.entries(imageUpdatesByTeam).reduce(
-      (memo, [team, teamUpdate]) => {
-        for (let [key, value] of Object.entries(teamUpdate)) {
-          memo[`${team}-team-${key}`] = value;
+    // Create the date update. First, format the date.
+    let formattedDate;
+    if (Math.abs(daysUntil) <= 1) {
+      // Relative date: "Today", "Tomorrow", "Yesterday"
+      formattedDate = capitalizeString(
+        new Intl.RelativeTimeFormat(undefined, {
+          numeric: "auto",
+        }).format(daysUntil, "day")
+      );
+    } else {
+      // Formatted date with some combination of year, month, day, and weekday
+      let opts = {
+        timeZone: zonedNow.timeZoneId,
+      };
+      if (!isScheduled || icon || !isFuture) {
+        opts.month = "short";
+        opts.day = "numeric";
+        if (zonedDate.year != zonedNow.year) {
+          opts.year = "numeric";
         }
-        return memo;
-      },
-      {}
-    );
+      }
+      if (isScheduled && isFuture) {
+        opts.weekday = "short";
+      }
+      formattedDate = new Intl.DateTimeFormat(undefined, opts).format(date);
+    }
 
-    // Create the date update in the bottom part of the row.
+    // Now format the time.
+    let formattedTime;
+    if (isScheduled && daysUntil >= 0) {
+      formattedTime = new Intl.DateTimeFormat(undefined, {
+        hour: "numeric",
+        minute: "numeric",
+        timeZoneName: "short",
+        timeZone: zonedNow.timeZoneId,
+      }).format(date);
+    }
+
+    // Finally, create the date update.
     let dateUpdate;
     if (formattedTime) {
       dateUpdate = {
@@ -315,11 +307,85 @@ export class SportsSuggestions extends RealtimeSuggestProvider {
       ...imageUpdate,
       ...dateUpdate,
       ...statusUpdate,
-      [`sport-${i}`]: {
+      [`sport-name-${i}`]: {
         textContent: item.sport,
       },
     };
   }
+
+  /**
+   * Parses a date and returns some info about it.
+   *
+   * This is a static method rather than a helper function internal to this file
+   * so that tests can easily test it.
+   *
+   * @param {Date} date
+   *   A `Date` object.
+   * @returns {DateParseResult}
+   *   The result.
+   *
+   * @typedef {object} DateParseResult
+   * @property {typeof Temporal.ZonedDateTime} zonedNow
+   *   Now as a `ZonedDateTime`.
+   * @property {typeof Temporal.ZonedDateTime} zonedDate
+   *   The passed-in date as a `ZonedDateTime`.
+   * @property {boolean} isFuture
+   *   Whether the date is in the future.
+   * @property {number} daysUntil
+   *   The number of calendar days from today to the date:
+   *   If the date is after tomorrow: `Infinity`
+   *   If the date is tomorrow: `1`
+   *   If the date is today: `0`
+   *   If the date is yesterday: `-1`
+   *   If the date is before yesterday: `-Infinity`
+   */
+  static _parseDate(date) {
+    // Find how many days there are from today to the date.
+    let zonedNow = SportsSuggestions._zonedDateTimeISO();
+    let zonedDate = date.toTemporalInstant().toZonedDateTimeISO(zonedNow);
+
+    let today = zonedNow.startOfDay();
+    let yesterday = today.subtract({ days: 1 });
+    let tomorrow = today.add({ days: 1 });
+    let dayAfterTomorrow = today.add({ days: 2 });
+
+    let daysUntil;
+    if (Temporal.ZonedDateTime.compare(dayAfterTomorrow, zonedDate) <= 0) {
+      // date is after tomorrow
+      daysUntil = Infinity;
+    } else if (Temporal.ZonedDateTime.compare(tomorrow, zonedDate) <= 0) {
+      // date is tomorrow
+      daysUntil = 1;
+    } else if (Temporal.ZonedDateTime.compare(today, zonedDate) <= 0) {
+      // date is today
+      daysUntil = 0;
+    } else if (Temporal.ZonedDateTime.compare(yesterday, zonedDate) <= 0) {
+      // date is yesterday
+      daysUntil = -1;
+    } else {
+      // date is before yesterday
+      daysUntil = -Infinity;
+    }
+
+    let isFuture = Temporal.ZonedDateTime.compare(zonedNow, zonedDate) < 0;
+
+    return {
+      zonedNow,
+      zonedDate,
+      isFuture,
+      daysUntil,
+    };
+  }
+
+  // Thin wrapper around `zonedDateTimeISO` so that tests can easily set a mock
+  // "now" date and time.
+  static _zonedDateTimeISO() {
+    return Temporal.Now.zonedDateTimeISO();
+  }
+}
+
+function itemIcon(item) {
+  return item.icon || item.home_team?.icon || item.away_team?.icon;
 }
 
 function stringifiedScore(scoreValue) {
@@ -328,4 +394,8 @@ function stringifiedScore(scoreValue) {
     s = String(s);
   }
   return typeof s == "string" ? s : "";
+}
+
+function capitalizeString(str) {
+  return str[0].toLocaleUpperCase() + str.substring(1);
 }

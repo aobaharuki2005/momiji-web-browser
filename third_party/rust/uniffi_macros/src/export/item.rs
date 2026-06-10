@@ -36,10 +36,6 @@ pub(super) enum ExportItem {
         self_ident: Ident,
         uniffi_traits: Vec<UniffiTraitDiscriminants>,
     },
-    Enum {
-        self_ident: Ident,
-        uniffi_traits: Vec<UniffiTraitDiscriminants>,
-    },
 }
 
 impl ExportItem {
@@ -54,11 +50,11 @@ impl ExportItem {
             syn::Item::Impl(item) => Self::from_impl(item, attr_args),
             syn::Item::Trait(item) => Self::from_trait(item, attr_args),
             syn::Item::Struct(item) => Self::from_struct(item, attr_args),
-            syn::Item::Enum(item) => Self::from_enum(item, attr_args),
             // FIXME: Support const / static?
             _ => Err(syn::Error::new(
                 Span::call_site(),
-                "unsupported item: This block doesn't support `uniffi::export`",
+                "unsupported item: only functions and impl \
+                 blocks may be annotated with this attribute",
             )),
         }
     }
@@ -107,17 +103,9 @@ impl ExportItem {
 
                 let docstring = extract_docstring(&impl_fn.attrs)?;
                 let attrs = ExportedImplFnAttributes::new(&impl_fn.attrs)?;
-
-                let foreign_self_ident = if let Some(name) = &args.name {
-                    Ident::new(name, self_ident.span())
-                } else {
-                    self_ident.clone()
-                };
-
                 let item = if attrs.constructor {
                     ImplItem::Constructor(FnSignature::new_constructor(
                         self_ident.clone(),
-                        foreign_self_ident,
                         impl_fn.sig,
                         attrs.args,
                         docstring,
@@ -125,7 +113,6 @@ impl ExportItem {
                 } else {
                     ImplItem::Method(FnSignature::new_method(
                         self_ident.clone(),
-                        foreign_self_ident,
                         impl_fn.sig,
                         attrs.args,
                         docstring,
@@ -172,12 +159,6 @@ impl ExportItem {
                         ));
                     }
                 };
-                if let Some(default) = tim.default {
-                    return Err(syn::Error::new_spanned(
-                        default,
-                        "uniffi::export'd trait methods can't have a default implementation.",
-                    ));
-                }
 
                 let docstring = extract_docstring(&tim.attrs)?;
                 let attrs = ExportedImplFnAttributes::new(&tim.attrs)?;
@@ -190,7 +171,7 @@ impl ExportItem {
                     ImplItem::Method(FnSignature::new_trait_method(
                         self_ident.clone(),
                         tim.sig,
-                        attrs.args,
+                        ExportFnArgs::default(),
                         i as u32,
                         docstring,
                     )?)
@@ -219,21 +200,6 @@ impl ExportItem {
             ))
         } else {
             Ok(Self::Struct {
-                self_ident: item.ident,
-                uniffi_traits,
-            })
-        }
-    }
-
-    fn from_enum(item: syn::ItemEnum, attr_args: TokenStream) -> syn::Result<Self> {
-        let args: ExportStructArgs = syn::parse(attr_args)?;
-        let uniffi_traits: Vec<UniffiTraitDiscriminants> = args.traits.into_iter().collect();
-        if uniffi_traits.is_empty() {
-            Err(syn::Error::new(Span::call_site(),
-                "uniffi::export on an enum must supply a builtin trait name. Did you mean `#[derive(uniffi::Enum)]`?"
-            ))
-        } else {
-            Ok(Self::Enum {
                 self_ident: item.ident,
                 uniffi_traits,
             })

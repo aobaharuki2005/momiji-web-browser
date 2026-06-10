@@ -4,9 +4,8 @@ from webdriver.bidi.modules.script import ContextTarget
 from . import assert_console_entry, create_console_api_message_from_string
 from ... import any_string, int_interval
 
-pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "log_argument, expected_text",
     [
@@ -37,6 +36,7 @@ async def test_text_with_argument_variation(
     assert_console_entry(event_data, text=expected_text, context=top_context["context"])
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "log_method, expected_level",
     [
@@ -72,6 +72,7 @@ async def test_level(
     )
 
 
+@pytest.mark.asyncio
 async def test_timestamp(bidi_session, subscribe_events, top_context, wait_for_event, wait_for_future_safe, current_time):
     await subscribe_events(events=["log.entryAdded"])
 
@@ -99,6 +100,7 @@ async def test_timestamp(bidi_session, subscribe_events, top_context, wait_for_e
     assert_console_entry(event_data, text="foo", timestamp=int_interval(time_start, time_end))
 
 
+@pytest.mark.asyncio
 async def test_method_timeEnd(bidi_session, subscribe_events, top_context, wait_for_event, wait_for_future_safe):
     await subscribe_events(events=["log.entryAdded"])
 
@@ -114,29 +116,10 @@ async def test_method_timeEnd(bidi_session, subscribe_events, top_context, wait_
 
     event_data = await wait_for_future_safe(on_entry_added)
 
-    # Verify that `console.time` didn't trigger the event.
     assert_console_entry(event_data, method="timeEnd")
 
 
-async def test_method_clear(bidi_session, subscribe_events, top_context, wait_for_event, wait_for_future_safe):
-    await subscribe_events(events=["log.entryAdded"])
-
-    on_entry_added = wait_for_event("log.entryAdded")
-
-    script = "console.clear(); console.log('test');"
-
-    await bidi_session.script.evaluate(
-        expression=script,
-        await_promise=True,
-        target=ContextTarget(top_context["context"]),
-    )
-
-    event_data = await wait_for_future_safe(on_entry_added)
-
-    # Verify that `console.clear` didn't trigger the event.
-    assert_console_entry(event_data, method="log")
-
-
+@pytest.mark.asyncio
 async def test_new_context_with_new_window(bidi_session, subscribe_events, top_context, wait_for_event, wait_for_future_safe):
     await subscribe_events(events=["log.entryAdded"])
 
@@ -155,6 +138,7 @@ async def test_new_context_with_new_window(bidi_session, subscribe_events, top_c
     assert_console_entry(event_data, text="foo_in_new_window", context=new_context["context"])
 
 
+@pytest.mark.asyncio
 async def test_new_context_with_refresh(bidi_session, subscribe_events, top_context, wait_for_event, wait_for_future_safe):
     await subscribe_events(events=["log.entryAdded"])
 
@@ -176,6 +160,7 @@ async def test_new_context_with_refresh(bidi_session, subscribe_events, top_cont
     )
 
 
+@pytest.mark.asyncio
 async def test_different_contexts(
     bidi_session,
     subscribe_events,

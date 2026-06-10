@@ -3,10 +3,11 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
- * See the [Rust documentation for `TransformResult`](https://docs.rs/icu/2.1.1/icu/locale/enum.TransformResult.html) for more information.
+ * See the [Rust documentation for `TransformResult`](https://docs.rs/icu/latest/icu/locale/enum.TransformResult.html) for more information.
  */
+
+
 export class TransformResult {
     #value = undefined;
 
@@ -44,7 +45,6 @@ export class TransformResult {
         throw TypeError(value + " is not a TransformResult and does not correspond to any of its enumerator values.");
     }
 
-    /** @internal */
     static fromValue(value) {
         return new TransformResult(value);
     }
@@ -53,7 +53,6 @@ export class TransformResult {
         return [...TransformResult.#values.keys()][this.#value];
     }
 
-    /** @internal */
     get ffiValue(){
         return this.#value;
     }

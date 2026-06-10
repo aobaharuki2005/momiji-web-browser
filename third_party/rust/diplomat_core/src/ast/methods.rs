@@ -22,9 +22,6 @@ pub struct Method {
     /// The `self` param of the method, if any.
     pub self_param: Option<SelfParam>,
 
-    // the 'Self' type of the method, if any.
-    pub self_type: Option<PathType>,
-
     /// All non-`self` params taken by the method.
     pub params: Vec<Param>,
 
@@ -81,7 +78,7 @@ impl Method {
                 // support it so we can insert the expanded explicit lifetimes.
                 Some(TypeName::from_syn(
                     return_typ.as_ref(),
-                    Some(self_path_type.clone()),
+                    Some(self_path_type),
                 ))
             }
             syn::ReturnType::Default => None,
@@ -100,7 +97,6 @@ impl Method {
             docs: Docs::from_attrs(&m.attrs),
             abi_name: Ident::from(&extern_ident),
             self_param,
-            self_type: Some(self_path_type),
             params: all_params,
             return_type: return_ty,
             lifetime_env,
@@ -128,7 +124,7 @@ impl Method {
     /// contain elided lifetimes that we depend on for this method. The validity
     /// checks ensure that the return type doesn't elide any lifetimes, ensuring
     /// that this method will produce correct results.
-    pub fn borrowed_params(&self) -> BorrowedParams<'_> {
+    pub fn borrowed_params(&self) -> BorrowedParams {
         // To determine which params the return type is bound to, we just have to
         // find the params that contain a lifetime that's also in the return type.
         if let Some(ref return_type) = self.return_type {
@@ -355,7 +351,7 @@ impl BorrowedParams<'_> {
         self.0.iter().map(move |_| self_name).chain(
             self.1
                 .iter()
-                .filter(|(_, ltk)| *ltk == LifetimeKind::ReturnValue)
+                .filter(|(_, ltk)| (*ltk == LifetimeKind::ReturnValue))
                 .map(|(param, _)| &param.name),
         )
     }
@@ -365,7 +361,7 @@ impl BorrowedParams<'_> {
     pub fn static_names(&self) -> impl Iterator<Item = &'_ Ident> {
         self.1
             .iter()
-            .filter(|(_, ltk)| *ltk == LifetimeKind::Static)
+            .filter(|(_, ltk)| (*ltk == LifetimeKind::Static))
             .map(|(param, _)| &param.name)
     }
 

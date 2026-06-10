@@ -39,7 +39,6 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ui.menu.CustomDropdownMenu
 import org.mozilla.focus.ui.menu.MenuItem
 import org.mozilla.focus.ui.theme.focusColors
-import org.mozilla.focus.ui.theme.focusDimensions
 
 /**
  * A list of top sites.
@@ -59,7 +58,7 @@ fun TopSites(
 ) {
     Row(
         modifier = Modifier
-            .padding(horizontal = focusDimensions.paddingText)
+            .padding(horizontal = 10.dp)
             .size(width = 324.dp, height = 86.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(28.dp),

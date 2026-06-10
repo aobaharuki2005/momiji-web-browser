@@ -48,7 +48,7 @@ const isMacOS = Services.appinfo.OS === "Darwin";
  * meant to be an integration point between the Firefox UI and the Web Console
  * UI and features.
  */
-class WebConsole extends EventEmitter {
+class WebConsole {
   /**
    * @class
    * @param object toolbox
@@ -68,7 +68,6 @@ class WebConsole extends EventEmitter {
     chromeWindow,
     isBrowserConsole = false
   ) {
-    super();
     this.toolbox = toolbox;
     this.commands = commands;
     this.iframeWindow = iframeWindow;
@@ -88,6 +87,8 @@ class WebConsole extends EventEmitter {
     }
     this.ui = new WebConsoleUI(this);
     this._destroyer = null;
+
+    EventEmitter.decorate(this);
   }
 
   recordEvent(event, extra = {}) {
@@ -170,14 +171,14 @@ class WebConsole extends EventEmitter {
 
   inputHasSelection() {
     const { editor } = this.jsterm || {};
-    return editor && !!editor.getSelectedText();
+    return editor && !!editor.getSelection();
   }
 
   getInputSelection() {
     if (!this.jsterm || !this.jsterm.editor) {
       return null;
     }
-    return this.jsterm.editor.getSelectedText();
+    return this.jsterm.editor.getSelection();
   }
 
   /**

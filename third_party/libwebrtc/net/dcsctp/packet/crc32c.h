@@ -11,12 +11,13 @@
 #define NET_DCSCTP_PACKET_CRC32C_H_
 
 #include <cstdint>
-#include <span>
+
+#include "api/array_view.h"
 
 namespace dcsctp {
 
 // Generates the CRC32C checksum of `data`.
-uint32_t GenerateCrc32C(std::span<const uint8_t> data);
+uint32_t GenerateCrc32C(webrtc::ArrayView<const uint8_t> data);
 
 }  // namespace dcsctp
 

@@ -1,9 +1,10 @@
+/* vim:set ts=4 sw=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHttpNegotiateAuth_h_
-#define nsHttpNegotiateAuth_h_
+#ifndef nsHttpNegotiateAuth_h__
+#define nsHttpNegotiateAuth_h__
 
 #include "nsIHttpAuthenticator.h"
 #include "nsIURI.h"
@@ -20,7 +21,7 @@ class nsHttpNegotiateAuth final : public nsIHttpAuthenticator {
   static already_AddRefed<nsIHttpAuthenticator> GetOrCreate();
 
  private:
-  ~nsHttpNegotiateAuth() = default;
+  ~nsHttpNegotiateAuth() {}
 
   // returns the value of the given boolean pref
   bool TestBoolPref(const char* pref);
@@ -31,4 +32,4 @@ class nsHttpNegotiateAuth final : public nsIHttpAuthenticator {
   // Singleton pointer
   static mozilla::StaticRefPtr<nsHttpNegotiateAuth> gSingleton;
 };
-#endif /* nsHttpNegotiateAuth_h_ */
+#endif /* nsHttpNegotiateAuth_h__ */

@@ -9,65 +9,49 @@ treeherder configuration and attributes for that platform.
 
 import copy
 import os
-from typing import Optional, Union
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import keymatch
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.treeherder import join_symbol, split_symbol
+from voluptuous import Any, Extra, Optional, Required
 
-from gecko_taskgraph.transforms.job import JobDescriptionSchema
+from gecko_taskgraph.transforms.job import job_description_schema
 
-
-class SourceTestDescriptionSchema(Schema, forbid_unknown_fields=False, kw_only=True):
-    # most fields are passed directly through as job fields, and are not repeated here
+source_test_description_schema = Schema({
+    # most fields are passed directly through as job fields, and are not
+    # repeated here
+    Extra: object,
     # The platform on which this task runs.  This will be used to set up attributes
     # (for try selection) and treeherder metadata (for display).  If given as a list,
     # the job will be "split" into multiple tasks, one with each platform.
-    platform: Union[str, list[str]]
+    Required("platform"): Any(str, [str]),
     # Build labels required for the task. If this key is provided it must
     # contain a build label for the task platform.
     # The task will then depend on a build task, and the installer url will be
     # saved to the GECKO_INSTALLER_URL environment variable.
-    require_build: Optional[  # type: ignore
-        optionally_keyed_by("project", dict[str, str], use_msgspec=True)
-    ] = None
+    Optional("require-build"): optionally_keyed_by("project", {str: str}),
     # These fields can be keyed by "platform", and are otherwise identical to
     # job descriptions.
-    worker_type: optionally_keyed_by(
-        "platform",
-        JobDescriptionSchema.__annotations__["worker_type"],
-        use_msgspec=True,
-    )
-    worker: optionally_keyed_by(
-        "platform", JobDescriptionSchema.__annotations__["worker"], use_msgspec=True
-    )
-    dependencies: Optional[  # type: ignore
-        dict[
-            str,
-            optionally_keyed_by(
-                "platform",
-                JobDescriptionSchema.__annotations__["dependencies"],
-                use_msgspec=True,
-            ),
-        ]
-    ] = None
+    Required("worker-type"): optionally_keyed_by(
+        "platform", job_description_schema["worker-type"]
+    ),
+    Required("worker"): optionally_keyed_by(
+        "platform", job_description_schema["worker"]
+    ),
+    Optional("dependencies"): {
+        k: optionally_keyed_by("platform", v)
+        for k, v in job_description_schema["dependencies"].items()
+    },
     # A list of artifacts to install from 'fetch' tasks.
-    fetches: Optional[  # type: ignore
-        dict[
-            str,
-            optionally_keyed_by(
-                "platform",
-                JobDescriptionSchema.__annotations__["fetches"],
-                use_msgspec=True,
-            ),
-        ]
-    ] = None
-
+    Optional("fetches"): {
+        str: optionally_keyed_by("platform", job_description_schema["fetches"][str]),
+    },
+})
 
 transforms = TransformSequence()
 
-transforms.add_validate(SourceTestDescriptionSchema)
+transforms.add_validate(source_test_description_schema)
 
 
 @transforms.add
@@ -95,20 +79,6 @@ def expand_platforms(config, jobs):
             else:
                 pjob["label"] = "{}-{}".format(pjob["label"], platform)
             yield pjob
-
-
-@transforms.add
-def nightly_only_codereview(config, jobs):
-    for job in jobs:
-        # No easy way to determine if the try run is from nightly, or another
-        # branch like beta/release/esr
-        if "perfdocs-verify" in job["name"] and (
-            config.params.get("release_type", "").lower() != "nightly"
-            or "a" not in config.params.get("version", "150.0a0")
-        ):
-            job.setdefault("attributes", {})["code-review"] = False
-            job["always-target"] = False
-        yield job
 
 
 @transforms.add

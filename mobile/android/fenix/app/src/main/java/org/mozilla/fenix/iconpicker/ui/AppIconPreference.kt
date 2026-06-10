@@ -19,11 +19,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.navigation.findNavController
+import androidx.preference.Preference
+import androidx.preference.PreferenceViewHolder
 import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import org.mozilla.fenix.GleanMetrics.CustomizationSettings
 import org.mozilla.fenix.R
@@ -31,11 +33,10 @@ import org.mozilla.fenix.iconpicker.AppIcon
 import org.mozilla.fenix.iconpicker.AppIconRepository
 import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
 import org.mozilla.fenix.iconpicker.DefaultPackageManagerWrapper
-import org.mozilla.fenix.settings.ComposePreference
 import org.mozilla.fenix.settings.CustomizationFragmentDirections
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 
 private val IconSize = 40.dp
 
@@ -45,7 +46,7 @@ private val IconSize = 40.dp
 class AppIconPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-) : ComposePreference(context, attrs) {
+) : Preference(context, attrs) {
 
     private val appIconRepository: AppIconRepository by lazy {
         DefaultAppIconRepository(
@@ -54,19 +55,28 @@ class AppIconPreference @JvmOverloads constructor(
         )
     }
 
-    @Composable
-    override fun Content() {
-        val view = LocalView.current
+    init {
+        layoutResource = R.layout.app_icon_preference
+    }
 
-        SelectAppIcon(
-            appIcon = appIconRepository.selectedAppIcon,
-            onClick = {
-                CustomizationSettings.appIconSelectionTapped.record()
-                view.findNavController().navigate(
-                    CustomizationFragmentDirections.actionCustomizationFragmentAppIconSelectionFragment(),
+    override fun onBindViewHolder(holder: PreferenceViewHolder) {
+        super.onBindViewHolder(holder)
+
+        (holder.findViewById(R.id.compose_view) as ComposeView).setContent {
+            FirefoxTheme {
+                SelectAppIcon(
+                    appIcon = appIconRepository.selectedAppIcon,
+                    onClick = {
+                        CustomizationSettings.appIconSelectionTapped.record()
+
+                        val navController = holder.itemView.findNavController()
+                        navController.navigate(
+                            CustomizationFragmentDirections.actionCustomizationFragmentAppIconSelectionFragment(),
+                        )
+                    },
                 )
-            },
-        )
+            }
+        }
     }
 }
 
@@ -112,7 +122,7 @@ private fun SelectAppIcon(
 @FlexibleWindowPreview
 @Composable
 private fun SelectAppIconPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         SelectAppIcon(AppIcon.AppDefault) {}

@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // For the most part the mappings from IANA are a subset of the CLDR mappings.
 // So there are mappings which are consistent across both databases.
 assertEq(Intl.getCanonicalLocales("de-DD")[0], "de-DE");

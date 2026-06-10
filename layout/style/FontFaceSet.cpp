@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -104,9 +106,9 @@ FontFaceSet::~FontFaceSet() {
 
 /* static */ already_AddRefed<FontFaceSet> FontFaceSet::CreateForDocument(
     dom::Document* aDocument) {
-  RefPtr<FontFaceSet> set =
-      do_AddRef(new FontFaceSet(aDocument->GetScopeObject()));
-  auto impl = MakeRefPtr<FontFaceSetDocumentImpl>(set, aDocument);
+  RefPtr<FontFaceSet> set = new FontFaceSet(aDocument->GetScopeObject());
+  RefPtr<FontFaceSetDocumentImpl> impl =
+      new FontFaceSetDocumentImpl(set, aDocument);
   set->mImpl = impl;
   impl->Initialize();
   return set.forget();
@@ -114,8 +116,8 @@ FontFaceSet::~FontFaceSet() {
 
 /* static */ already_AddRefed<FontFaceSet> FontFaceSet::CreateForWorker(
     nsIGlobalObject* aParent, WorkerPrivate* aWorkerPrivate) {
-  RefPtr<FontFaceSet> set = do_AddRef(new FontFaceSet(aParent));
-  auto impl = MakeRefPtr<FontFaceSetWorkerImpl>(set);
+  RefPtr<FontFaceSet> set = new FontFaceSet(aParent);
+  RefPtr<FontFaceSetWorkerImpl> impl = new FontFaceSetWorkerImpl(set);
   set->mImpl = impl;
   if (NS_WARN_IF(!impl->Initialize(aWorkerPrivate))) {
     return nullptr;
@@ -330,11 +332,13 @@ uint32_t FontFaceSet::SizeIncludingNonAuthorOrigins() {
 }
 
 already_AddRefed<FontFaceSetIterator> FontFaceSet::Entries() {
-  return MakeAndAddRef<FontFaceSetIterator>(this, true);
+  RefPtr<FontFaceSetIterator> it = new FontFaceSetIterator(this, true);
+  return it.forget();
 }
 
 already_AddRefed<FontFaceSetIterator> FontFaceSet::Values() {
-  return MakeAndAddRef<FontFaceSetIterator>(this, false);
+  RefPtr<FontFaceSetIterator> it = new FontFaceSetIterator(this, false);
+  return it.forget();
 }
 
 void FontFaceSet::ForEach(JSContext* aCx, FontFaceSetForEachCallback& aCallback,
@@ -385,18 +389,18 @@ void FontFaceSet::DispatchLoadingEventAndReplaceReadyPromise() {
     // refcounting.  (Also, the Promise object creation must be done on
     // the main thread.)
     set->AppendTask(
-        PostTraversalTask::DispatchLoadingEventAndReplaceReadyPromise(
-            do_AddRef(mImpl)));
+        PostTraversalTask::DispatchLoadingEventAndReplaceReadyPromise(this));
     return;
   }
 
   (new AsyncEventDispatcher(this, u"loading"_ns, CanBubble::eNo))
       ->PostDOMEvent();
 
-  if (mReady && mReady->State() != Promise::PromiseState::Pending &&
-      GetParentObject()) {
-    IgnoredErrorResult rv;
-    mReady = Promise::Create(GetParentObject(), rv);
+  if (mReady && mReady->State() != Promise::PromiseState::Pending) {
+    if (GetParentObject()) {
+      ErrorResult rv;
+      mReady = Promise::Create(GetParentObject(), rv);
+    }
   }
 
   // We may previously have been in a state where all fonts had finished

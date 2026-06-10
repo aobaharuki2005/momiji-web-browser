@@ -384,7 +384,7 @@ impl Semaphore {
             let new = curr.saturating_sub(n);
             match self.permits.compare_exchange_weak(
                 curr_bits,
-                (new << Self::PERMIT_SHIFT) | (curr_bits & Self::CLOSED),
+                new << Self::PERMIT_SHIFT,
                 AcqRel,
                 Acquire,
             ) {
@@ -502,7 +502,7 @@ impl Semaphore {
                 .as_ref()
                 .map_or(true, |waker| !waker.will_wake(cx.waker()))
             {
-                old_waker = waker.replace(cx.waker().clone());
+                old_waker = std::mem::replace(waker, Some(cx.waker().clone()));
             }
         });
 
@@ -775,6 +775,6 @@ unsafe impl linked_list::Link for Waiter {
     }
 
     unsafe fn pointers(target: NonNull<Waiter>) -> NonNull<linked_list::Pointers<Waiter>> {
-        unsafe { Waiter::addr_of_pointers(target) }
+        Waiter::addr_of_pointers(target)
     }
 }

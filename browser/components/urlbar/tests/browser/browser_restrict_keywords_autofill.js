@@ -7,6 +7,11 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarTokenizer:
+    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
+});
+
 let gFluentStrings = new Localization(["browser/browser.ftl"]);
 
 add_setup(async function () {
@@ -59,10 +64,10 @@ add_task(async function test_autofill_enters_search_mode() {
   let [bookmarks, tabs, history, actions] = await getSearchModeKeywords();
 
   const keywordToToken = new Map([
-    [history, UrlbarShared.RESTRICT_TOKENS.HISTORY],
-    [bookmarks, UrlbarShared.RESTRICT_TOKENS.BOOKMARK],
-    [tabs, UrlbarShared.RESTRICT_TOKENS.OPENPAGE],
-    [actions, UrlbarShared.RESTRICT_TOKENS.ACTION],
+    [history, UrlbarTokenizer.RESTRICT.HISTORY],
+    [bookmarks, UrlbarTokenizer.RESTRICT.BOOKMARK],
+    [tabs, UrlbarTokenizer.RESTRICT.OPENPAGE],
+    [actions, UrlbarTokenizer.RESTRICT.ACTION],
   ]);
 
   for (const [keyword, token] of keywordToToken) {

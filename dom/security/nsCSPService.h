@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCSPService_h_
-#define nsCSPService_h_
+#ifndef nsCSPService_h___
+#define nsCSPService_h___
 
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
@@ -37,4 +39,4 @@ class CSPService : public nsIContentPolicy, public nsIChannelEventSink {
  protected:
   virtual ~CSPService();
 };
-#endif /* nsCSPService_h_ */
+#endif /* nsCSPService_h___ */

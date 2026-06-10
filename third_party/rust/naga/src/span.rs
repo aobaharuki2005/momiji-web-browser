@@ -178,6 +178,7 @@ impl<E> WithSpan<E> {
     }
 
     /// Reverse of [`Self::new`], discards span information and returns an inner error.
+    #[allow(clippy::missing_const_for_fn)] // ignore due to requirement of #![feature(const_precise_live_drops)]
     pub fn into_inner(self) -> E {
         self.inner
     }
@@ -294,14 +295,13 @@ impl<E> WithSpan<E> {
         cfg_if::cfg_if! {
             if #[cfg(feature = "termcolor")] {
                 let writer = term::termcolor::StandardStream::stderr(term::termcolor::ColorChoice::Auto);
-                term::emit_to_write_style(&mut writer.lock(), &config, &files, &self.diagnostic())
-                    .expect("cannot write error");
             } else {
                 let writer = std::io::stderr();
-                term::emit_to_io_write(&mut writer.lock(), &config, &files, &self.diagnostic())
-                    .expect("cannot write error");
             }
         }
+
+        term::emit(&mut writer.lock(), &config, &files, &self.diagnostic())
+            .expect("cannot write error");
     }
 
     /// Emits a summary of the error to a string.
@@ -323,8 +323,7 @@ impl<E> WithSpan<E> {
         let config = term::Config::default();
 
         let mut writer = crate::error::DiagnosticBuffer::new();
-        writer
-            .emit_to_self(&config, &files, &self.diagnostic())
+        term::emit(writer.inner_mut(), &config, &files, &self.diagnostic())
             .expect("cannot write error");
         writer.into_string()
     }

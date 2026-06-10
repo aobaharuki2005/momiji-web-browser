@@ -13,16 +13,22 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <span>
 
-#include "test/gmock.h"
+#include "api/array_view.h"
 #include "test/gtest.h"
 
 namespace webrtc {
 namespace rnn_vad {
 namespace {
 
-using ::testing::ElementsAreArray;
+// Compare the elements of two given array views.
+template <typename T, std::ptrdiff_t S>
+void ExpectEq(ArrayView<const T, S> a, ArrayView<const T, S> b) {
+  for (int i = 0; i < S; ++i) {
+    SCOPED_TRACE(i);
+    EXPECT_EQ(a[i], b[i]);
+  }
+}
 
 // Test push/read sequences.
 template <typename T, int S, int N>
@@ -31,14 +37,14 @@ void TestRingBuffer() {
   SCOPED_TRACE(S);
   std::array<T, S> prev_pushed_array;
   std::array<T, S> pushed_array;
-  std::span<const T, S> pushed_array_view(pushed_array.data(), S);
+  ArrayView<const T, S> pushed_array_view(pushed_array.data(), S);
 
   // Init.
   RingBuffer<T, S, N> ring_buf;
   ring_buf.GetArrayView(0);
   pushed_array.fill(0);
   ring_buf.Push(pushed_array_view);
-  EXPECT_THAT(ring_buf.GetArrayView(0), ElementsAreArray(pushed_array_view));
+  ExpectEq(pushed_array_view, ring_buf.GetArrayView(0));
 
   // Push N times and check most recent and second most recent.
   for (T v = 1; v <= static_cast<T>(N); ++v) {
@@ -46,11 +52,10 @@ void TestRingBuffer() {
     prev_pushed_array = pushed_array;
     pushed_array.fill(v);
     ring_buf.Push(pushed_array_view);
-    EXPECT_THAT(ring_buf.GetArrayView(0), ElementsAreArray(pushed_array_view));
+    ExpectEq(pushed_array_view, ring_buf.GetArrayView(0));
     if (N > 1) {
       pushed_array.fill(v - 1);
-      EXPECT_THAT(ring_buf.GetArrayView(1),
-                  ElementsAreArray(pushed_array_view));
+      ExpectEq(pushed_array_view, ring_buf.GetArrayView(1));
     }
   }
 
@@ -59,8 +64,7 @@ void TestRingBuffer() {
     SCOPED_TRACE(delay);
     T expected_value = N - static_cast<T>(delay);
     pushed_array.fill(expected_value);
-    EXPECT_THAT(ring_buf.GetArrayView(delay),
-                ElementsAreArray(pushed_array_view));
+    ExpectEq(pushed_array_view, ring_buf.GetArrayView(delay));
   }
 }
 
@@ -80,7 +84,7 @@ TEST(RnnVadTest, RingBufferArrayViews) {
       for (int j = i + 1; j < n; ++j) {
         SCOPED_TRACE(j);
         auto view_j = ring_buf.GetArrayView(j);
-        EXPECT_NE(view_i.data(), view_j.data());
+        EXPECT_NE(view_i, view_j);
       }
     }
     ring_buf.Push(pushed_array);

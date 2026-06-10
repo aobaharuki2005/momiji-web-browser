@@ -9,7 +9,6 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from functools import cached_property
 from io import StringIO
 
 from buildconfig import topobjdir, topsrcdir
@@ -17,7 +16,7 @@ from mozfile import json
 from mozpack import path as mozpath
 
 from mozbuild.configure import ConfigureSandbox
-from mozbuild.util import ReadOnlyNamespace
+from mozbuild.util import ReadOnlyNamespace, memoized_property
 
 
 def fake_short_path(path):
@@ -118,23 +117,17 @@ class ConfigureTestSandbox(ConfigureSandbox):
         os_contents["environ"] = dict(environ)
         self.imported_os = ReadOnlyNamespace(**os_contents)
 
-        self._dependency_overrides = {}
         super().__init__(config, environ, *args, **kwargs)
 
-    def _value_for_depends(self, obj):
-        if obj in self._dependency_overrides:
-            return self._dependency_overrides[obj]
-        return super()._value_for_depends(obj)
-
-    @cached_property
+    @memoized_property
     def _wrapped_mozfile(self):
         return ReadOnlyNamespace(which=self.which, json=json)
 
-    @cached_property
+    @memoized_property
     def _wrapped_os(self):
         return self.imported_os
 
-    @cached_property
+    @memoized_property
     def _wrapped_subprocess(self):
         return ReadOnlyNamespace(
             CalledProcessError=subprocess.CalledProcessError,
@@ -145,7 +138,7 @@ class ConfigureTestSandbox(ConfigureSandbox):
             Popen=self.Popen,
         )
 
-    @cached_property
+    @memoized_property
     def _wrapped_ctypes(self):
         class CTypesFunc:
             def __init__(self, func):
@@ -164,7 +157,7 @@ class ConfigureTestSandbox(ConfigureSandbox):
             wintypes=ReadOnlyNamespace(LPCWSTR=0, LPWSTR=1, DWORD=2),
         )
 
-    @cached_property
+    @memoized_property
     def _wrapped__winreg(self):
         def OpenKey(*args, **kwargs):
             raise OSError()

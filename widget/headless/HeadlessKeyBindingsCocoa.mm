@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -28,7 +29,7 @@ nsresult HeadlessKeyBindings::AttachNativeKeyEvent(
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   aEvent.mNativeKeyEvent =
-      nsCocoaUtils::MakeNewCocoaEventFromWidgetEvent(aEvent, 0, nil);
+      nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(aEvent, 0, nil);
 
   return NS_OK;
 
@@ -42,7 +43,7 @@ void HeadlessKeyBindings::GetEditCommands(
   // into commands in the NativeKeyBindings.
   WidgetKeyboardEvent modifiedEvent(aEvent);
   modifiedEvent.mNativeKeyEvent =
-      nsCocoaUtils::MakeNewCocoaEventFromWidgetEvent(aEvent, 0, nil);
+      nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(aEvent, 0, nil);
 
   NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
   keyBindings->GetEditCommands(modifiedEvent, aWritingMode, aCommands);

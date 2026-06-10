@@ -22,9 +22,6 @@ for (const [input, expected] of tests) {
 
   const implicit = time.toString();
   assert.sameValue(implicit, expected, "default precision is auto and no rounding");
-
-  const lambda = time.toString(() => {});
-  assert.sameValue(lambda, expected, "default precision is auto and no rounding");
 }
 
 reportCompare(0, 0);

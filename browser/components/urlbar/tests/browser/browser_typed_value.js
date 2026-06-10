@@ -16,14 +16,8 @@ add_setup(async function () {
   Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
 
   await PlacesTestUtils.addVisits([
-    {
-      url: "http://example.com/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
-    {
-      url: "http://example.com/foo",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
+    "http://example.com/",
+    "http://example.com/foo",
   ]);
 });
 

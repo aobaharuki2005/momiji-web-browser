@@ -44,7 +44,6 @@ add_task(
 
     await IOUtils.writeJSON(PathUtils.join(profile, "times.json"), {
       created: CREATED_TIME,
-      source: "profileage-tests",
     });
 
     let times = await ProfileAge(profile);
@@ -61,7 +60,6 @@ add_task(
 
     let times2 = await ProfileAge(profile);
     Assert.equal(times, times2, "Should have got the same instance.");
-    Assert.equal(times.source, "profileage-tests", "Should expose the source.");
 
     let promise = times.recordProfileReset(RESET_TIME);
     Assert.equal(
@@ -86,7 +84,6 @@ add_task(
         created: CREATED_TIME,
         reset: RESET_TIME,
         recoveredFromBackup: RECOVERY_TIME,
-        source: "backup",
       },
       "Should have seen the right results."
     );
@@ -110,7 +107,6 @@ add_task(
     Assert.deepEqual(
       results,
       {
-        source: "reset",
         reset: RESET_TIME2,
       },
       "Should have seen the right results."

@@ -17,12 +17,12 @@
 #include <memory>
 #include <numeric>
 #include <optional>
-#include <span>
 #include <utility>
 #include <vector>
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/candidate.h"
 #include "api/dtls_transport_interface.h"
 #include "api/rtc_event_log/rtc_event_log.h"
@@ -30,7 +30,6 @@
 #include "api/rtp_parameters.h"
 #include "api/transport/bandwidth_usage.h"
 #include "api/units/data_rate.h"
-#include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_codec_type.h"
@@ -43,11 +42,12 @@
 #include "logging/rtc_event_log/events/rtc_event_begin_log.h"
 #include "logging/rtc_event_log/events/rtc_event_bwe_update_delay_based.h"
 #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
-#include "logging/rtc_event_log/events/rtc_event_bwe_update_scream.h"
 #include "logging/rtc_event_log/events/rtc_event_dtls_transport_state.h"
 #include "logging/rtc_event_log/events/rtc_event_dtls_writable_state.h"
 #include "logging/rtc_event_log/events/rtc_event_end_log.h"
 #include "logging/rtc_event_log/events/rtc_event_frame_decoded.h"
+#include "logging/rtc_event_log/events/rtc_event_generic_packet_received.h"
+#include "logging/rtc_event_log/events/rtc_event_generic_packet_sent.h"
 #include "logging/rtc_event_log/events/rtc_event_ice_candidate_pair.h"
 #include "logging/rtc_event_log/events/rtc_event_ice_candidate_pair_config.h"
 #include "logging/rtc_event_log/events/rtc_event_neteq_set_minimum_delay.h"
@@ -87,10 +87,10 @@
 #include "rtc_base/buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/random.h"
+#include "rtc_base/time_utils.h"
 #include "system_wrappers/include/ntp_time.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-#include "test/near_matcher.h"
 
 namespace webrtc {
 
@@ -126,8 +126,12 @@ constexpr ExtensionPair kExtensions[kMaxNumExtensions] = {
     {.type = RTPExtensionType::kRtpExtensionDependencyDescriptor,
      .name = RtpExtension::kDependencyDescriptorUri}};
 
+MATCHER_P2(Near, value, margin, "") {
+  return value - margin < arg && arg < value + margin;
+}
+
 template <typename T>
-void ShuffleInPlace(Random* prng, std::span<T> array) {
+void ShuffleInPlace(Random* prng, ArrayView<T> array) {
   RTC_DCHECK_LE(array.size(), std::numeric_limits<uint32_t>::max());
   for (uint32_t i = 0; i + 1 < array.size(); i++) {
     uint32_t other = prng->Rand(i, static_cast<uint32_t>(array.size() - 1));
@@ -147,31 +151,32 @@ std::optional<int> GetExtensionId(const std::vector<RtpExtension>& extensions,
 }  // namespace
 
 std::unique_ptr<RtcEventAlrState> EventGenerator::NewAlrState() {
-  return Create<RtcEventAlrState>(prng_.Rand<bool>());
+  return std::make_unique<RtcEventAlrState>(prng_.Rand<bool>());
 }
 
 std::unique_ptr<RtcEventAudioPlayout> EventGenerator::NewAudioPlayout(
     uint32_t ssrc) {
-  return Create<RtcEventAudioPlayout>(ssrc);
+  return std::make_unique<RtcEventAudioPlayout>(ssrc);
 }
 
 std::unique_ptr<RtcEventAudioNetworkAdaptation>
 EventGenerator::NewAudioNetworkAdaptation() {
-  AudioEncoderRuntimeConfig config;
+  std::unique_ptr<AudioEncoderRuntimeConfig> config =
+      std::make_unique<AudioEncoderRuntimeConfig>();
 
-  config.bitrate_bps = prng_.Rand(0, 3000000);
-  config.enable_fec = prng_.Rand<bool>();
-  config.enable_dtx = prng_.Rand<bool>();
-  config.frame_length_ms = prng_.Rand(10, 120);
-  config.num_channels = prng_.Rand(1, 2);
-  config.uplink_packet_loss_fraction = prng_.Rand<float>();
+  config->bitrate_bps = prng_.Rand(0, 3000000);
+  config->enable_fec = prng_.Rand<bool>();
+  config->enable_dtx = prng_.Rand<bool>();
+  config->frame_length_ms = prng_.Rand(10, 120);
+  config->num_channels = prng_.Rand(1, 2);
+  config->uplink_packet_loss_fraction = prng_.Rand<float>();
 
-  return Create<RtcEventAudioNetworkAdaptation>(config);
+  return std::make_unique<RtcEventAudioNetworkAdaptation>(std::move(config));
 }
 
 std::unique_ptr<RtcEventNetEqSetMinimumDelay>
 EventGenerator::NewNetEqSetMinimumDelay(uint32_t ssrc) {
-  return Create<RtcEventNetEqSetMinimumDelay>(
+  return std::make_unique<RtcEventNetEqSetMinimumDelay>(
       ssrc, prng_.Rand(std::numeric_limits<int>::max()));
 }
 
@@ -181,7 +186,7 @@ EventGenerator::NewBweUpdateDelayBased() {
   int32_t bitrate_bps = prng_.Rand(0, kMaxBweBps);
   BandwidthUsage state = static_cast<BandwidthUsage>(
       prng_.Rand(static_cast<uint32_t>(BandwidthUsage::kLast) - 1));
-  return Create<RtcEventBweUpdateDelayBased>(bitrate_bps, state);
+  return std::make_unique<RtcEventBweUpdateDelayBased>(bitrate_bps, state);
 }
 
 std::unique_ptr<RtcEventBweUpdateLossBased>
@@ -192,22 +197,8 @@ EventGenerator::NewBweUpdateLossBased() {
   uint8_t fraction_lost = prng_.Rand<uint8_t>();
   int32_t total_packets = prng_.Rand(1, kMaxPackets);
 
-  return Create<RtcEventBweUpdateLossBased>(bitrate_bps, fraction_lost,
-                                            total_packets);
-}
-
-std::unique_ptr<RtcEventBweUpdateScream> EventGenerator::NewBweUpdateScream() {
-  uint32_t ref_window_bytes = prng_.Rand(0u, 100000u);
-  uint32_t data_in_flight_bytes = prng_.Rand(0u, 100000u);
-  uint32_t target_rate_kbps = prng_.Rand(0u, 40000u);
-  uint32_t smoothed_rtt_ms = prng_.Rand(0u, 10000u);
-  uint32_t avg_queue_delay_ms = prng_.Rand(0u, 5000u);
-  uint32_t l4s_marked_permille = prng_.Rand(0u, 1000u);
-  return Create<RtcEventBweUpdateScream>(
-      DataSize::Bytes(ref_window_bytes), DataSize::Bytes(data_in_flight_bytes),
-      DataRate::KilobitsPerSec(target_rate_kbps),
-      TimeDelta::Millis(smoothed_rtt_ms), TimeDelta::Millis(avg_queue_delay_ms),
-      l4s_marked_permille);
+  return std::make_unique<RtcEventBweUpdateLossBased>(
+      bitrate_bps, fraction_lost, total_packets);
 }
 
 std::unique_ptr<RtcEventDtlsTransportState>
@@ -215,13 +206,13 @@ EventGenerator::NewDtlsTransportState() {
   DtlsTransportState state = static_cast<DtlsTransportState>(
       prng_.Rand(static_cast<uint32_t>(DtlsTransportState::kNumValues) - 1));
 
-  return Create<RtcEventDtlsTransportState>(state);
+  return std::make_unique<RtcEventDtlsTransportState>(state);
 }
 
 std::unique_ptr<RtcEventDtlsWritableState>
 EventGenerator::NewDtlsWritableState() {
   bool writable = prng_.Rand<bool>();
-  return Create<RtcEventDtlsWritableState>(writable);
+  return std::make_unique<RtcEventDtlsWritableState>(writable);
 }
 
 std::unique_ptr<RtcEventFrameDecoded> EventGenerator::NewFrameDecodedEvent(
@@ -237,15 +228,14 @@ std::unique_ptr<RtcEventFrameDecoded> EventGenerator::NewFrameDecodedEvent(
   constexpr VideoCodecType kCodecList[kNumCodecTypes] = {
       kVideoCodecGeneric, kVideoCodecVP8,  kVideoCodecVP9,
       kVideoCodecAV1,     kVideoCodecH264, kVideoCodecH265};
-  const Timestamp render_time =
-      clock_.CurrentTime() +
-      TimeDelta::Millis(prng_.Rand(kMinRenderDelayMs, kMaxRenderDelayMs));
+  const int64_t render_time_ms =
+      TimeMillis() + prng_.Rand(kMinRenderDelayMs, kMaxRenderDelayMs);
   const int width = prng_.Rand(kMinWidth, kMaxWidth);
   const int height = prng_.Rand(kMinHeight, kMaxHeight);
   const VideoCodecType codec = kCodecList[prng_.Rand(0, kNumCodecTypes - 1)];
   const uint8_t qp = prng_.Rand<uint8_t>();
-  return Create<RtcEventFrameDecoded>(render_time.ms(), ssrc, width, height,
-                                      codec, qp);
+  return std::make_unique<RtcEventFrameDecoded>(render_time_ms, ssrc, width,
+                                                height, codec, qp);
 }
 
 std::unique_ptr<RtcEventProbeClusterCreated>
@@ -257,8 +247,8 @@ EventGenerator::NewProbeClusterCreated() {
   int min_probes = prng_.Rand(5, 50);
   int min_bytes = prng_.Rand(500, 50000);
 
-  return Create<RtcEventProbeClusterCreated>(id, bitrate_bps, min_probes,
-                                             min_bytes);
+  return std::make_unique<RtcEventProbeClusterCreated>(id, bitrate_bps,
+                                                       min_probes, min_bytes);
 }
 
 std::unique_ptr<RtcEventProbeResultFailure>
@@ -268,7 +258,7 @@ EventGenerator::NewProbeResultFailure() {
   ProbeFailureReason reason = static_cast<ProbeFailureReason>(
       prng_.Rand(static_cast<uint32_t>(ProbeFailureReason::kLast) - 1));
 
-  return Create<RtcEventProbeResultFailure>(id, reason);
+  return std::make_unique<RtcEventProbeResultFailure>(id, reason);
 }
 
 std::unique_ptr<RtcEventProbeResultSuccess>
@@ -278,7 +268,7 @@ EventGenerator::NewProbeResultSuccess() {
   int id = prng_.Rand(1, kMaxNumProbes);
   int bitrate_bps = prng_.Rand(0, kMaxBweBps);
 
-  return Create<RtcEventProbeResultSuccess>(id, bitrate_bps);
+  return std::make_unique<RtcEventProbeResultSuccess>(id, bitrate_bps);
 }
 
 constexpr uint32_t CandidateTypeCount() {
@@ -330,7 +320,7 @@ EventGenerator::NewIceCandidatePairConfig() {
       static_cast<IceCandidatePairConfigType>(prng_.Rand(
           static_cast<uint32_t>(IceCandidatePairConfigType::kNumValues) - 1));
   uint32_t pair_id = prng_.Rand<uint32_t>();
-  return Create<RtcEventIceCandidatePairConfig>(type, pair_id, desc);
+  return std::make_unique<RtcEventIceCandidatePairConfig>(type, pair_id, desc);
 }
 
 std::unique_ptr<RtcEventIceCandidatePair>
@@ -341,7 +331,8 @@ EventGenerator::NewIceCandidatePair() {
   uint32_t pair_id = prng_.Rand<uint32_t>();
   uint32_t transaction_id = prng_.Rand<uint32_t>();
 
-  return Create<RtcEventIceCandidatePair>(type, pair_id, transaction_id);
+  return std::make_unique<RtcEventIceCandidatePair>(type, pair_id,
+                                                    transaction_id);
 }
 
 rtcp::ReportBlock EventGenerator::NewReportBlock() {
@@ -480,38 +471,164 @@ rtcp::LossNotification EventGenerator::NewLossNotification() {
 }
 
 std::unique_ptr<RtcEventRouteChange> EventGenerator::NewRouteChange() {
-  return Create<RtcEventRouteChange>(prng_.Rand<bool>(), prng_.Rand(0, 128));
+  return std::make_unique<RtcEventRouteChange>(prng_.Rand<bool>(),
+                                               prng_.Rand(0, 128));
 }
 
 std::unique_ptr<RtcEventRemoteEstimate> EventGenerator::NewRemoteEstimate() {
-  return Create<RtcEventRemoteEstimate>(
+  return std::make_unique<RtcEventRemoteEstimate>(
       DataRate::KilobitsPerSec(prng_.Rand(0, 100000)),
       DataRate::KilobitsPerSec(prng_.Rand(0, 100000)));
 }
 
-Buffer EventGenerator::NewRtcpPacket() {
-  static constexpr Buffer (*kSupportedRtcp[])(EventGenerator*) = {
-      [](EventGenerator* thiz) { return thiz->NewSenderReport().Build(); },
-      [](EventGenerator* thiz) { return thiz->NewReceiverReport().Build(); },
-      [](EventGenerator* thiz) { return thiz->NewExtendedReports().Build(); },
-      [](EventGenerator* thiz) { return thiz->NewFir().Build(); },
-      [](EventGenerator* thiz) { return thiz->NewPli().Build(); },
-      [](EventGenerator* thiz) { return thiz->NewNack().Build(); },
-      [](EventGenerator* thiz) { return thiz->NewRemb().Build(); },
-      [](EventGenerator* thiz) { return thiz->NewBye().Build(); },
-      [](EventGenerator* thiz) { return thiz->NewTransportFeedback().Build(); },
-  };
-  return kSupportedRtcp[prng_.Rand(std::size(kSupportedRtcp) - 1)](this);
-}
-
 std::unique_ptr<RtcEventRtcpPacketIncoming>
 EventGenerator::NewRtcpPacketIncoming() {
-  return Create<RtcEventRtcpPacketIncoming>(NewRtcpPacket());
+  enum class SupportedRtcpTypes {
+    kSenderReport = 0,
+    kReceiverReport,
+    kExtendedReports,
+    kFir,
+    kPli,
+    kNack,
+    kRemb,
+    kBye,
+    kTransportFeedback,
+    kNumValues
+  };
+  SupportedRtcpTypes type = static_cast<SupportedRtcpTypes>(
+      prng_.Rand(0, static_cast<int>(SupportedRtcpTypes::kNumValues) - 1));
+  switch (type) {
+    case SupportedRtcpTypes::kSenderReport: {
+      rtcp::SenderReport sender_report = NewSenderReport();
+      Buffer buffer = sender_report.Build();
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+    }
+    case SupportedRtcpTypes::kReceiverReport: {
+      rtcp::ReceiverReport receiver_report = NewReceiverReport();
+      Buffer buffer = receiver_report.Build();
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+    }
+    case SupportedRtcpTypes::kExtendedReports: {
+      rtcp::ExtendedReports extended_report = NewExtendedReports();
+      Buffer buffer = extended_report.Build();
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+    }
+    case SupportedRtcpTypes::kFir: {
+      rtcp::Fir fir = NewFir();
+      Buffer buffer = fir.Build();
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+    }
+    case SupportedRtcpTypes::kPli: {
+      rtcp::Pli pli = NewPli();
+      Buffer buffer = pli.Build();
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+    }
+    case SupportedRtcpTypes::kNack: {
+      rtcp::Nack nack = NewNack();
+      Buffer buffer = nack.Build();
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+    }
+    case SupportedRtcpTypes::kRemb: {
+      rtcp::Remb remb = NewRemb();
+      Buffer buffer = remb.Build();
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+    }
+    case SupportedRtcpTypes::kBye: {
+      rtcp::Bye bye = NewBye();
+      Buffer buffer = bye.Build();
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+    }
+    case SupportedRtcpTypes::kTransportFeedback: {
+      rtcp::TransportFeedback transport_feedback = NewTransportFeedback();
+      Buffer buffer = transport_feedback.Build();
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+    }
+    default:
+      RTC_DCHECK_NOTREACHED();
+      Buffer buffer;
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+  }
 }
 
 std::unique_ptr<RtcEventRtcpPacketOutgoing>
 EventGenerator::NewRtcpPacketOutgoing() {
-  return Create<RtcEventRtcpPacketOutgoing>(NewRtcpPacket());
+  enum class SupportedRtcpTypes {
+    kSenderReport = 0,
+    kReceiverReport,
+    kExtendedReports,
+    kFir,
+    kPli,
+    kNack,
+    kRemb,
+    kBye,
+    kTransportFeedback,
+    kNumValues
+  };
+  SupportedRtcpTypes type = static_cast<SupportedRtcpTypes>(
+      prng_.Rand(0, static_cast<int>(SupportedRtcpTypes::kNumValues) - 1));
+  switch (type) {
+    case SupportedRtcpTypes::kSenderReport: {
+      rtcp::SenderReport sender_report = NewSenderReport();
+      Buffer buffer = sender_report.Build();
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+    }
+    case SupportedRtcpTypes::kReceiverReport: {
+      rtcp::ReceiverReport receiver_report = NewReceiverReport();
+      Buffer buffer = receiver_report.Build();
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+    }
+    case SupportedRtcpTypes::kExtendedReports: {
+      rtcp::ExtendedReports extended_report = NewExtendedReports();
+      Buffer buffer = extended_report.Build();
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+    }
+    case SupportedRtcpTypes::kFir: {
+      rtcp::Fir fir = NewFir();
+      Buffer buffer = fir.Build();
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+    }
+    case SupportedRtcpTypes::kPli: {
+      rtcp::Pli pli = NewPli();
+      Buffer buffer = pli.Build();
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+    }
+    case SupportedRtcpTypes::kNack: {
+      rtcp::Nack nack = NewNack();
+      Buffer buffer = nack.Build();
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+    }
+    case SupportedRtcpTypes::kRemb: {
+      rtcp::Remb remb = NewRemb();
+      Buffer buffer = remb.Build();
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+    }
+    case SupportedRtcpTypes::kBye: {
+      rtcp::Bye bye = NewBye();
+      Buffer buffer = bye.Build();
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+    }
+    case SupportedRtcpTypes::kTransportFeedback: {
+      rtcp::TransportFeedback transport_feedback = NewTransportFeedback();
+      Buffer buffer = transport_feedback.Build();
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+    }
+    default:
+      RTC_DCHECK_NOTREACHED();
+      Buffer buffer;
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+  }
+}
+
+std::unique_ptr<RtcEventGenericPacketSent>
+EventGenerator::NewGenericPacketSent() {
+  return std::make_unique<RtcEventGenericPacketSent>(
+      sent_packet_number_++, prng_.Rand(40, 50), prng_.Rand(0, 150),
+      prng_.Rand(0, 1000));
+}
+std::unique_ptr<RtcEventGenericPacketReceived>
+EventGenerator::NewGenericPacketReceived() {
+  return std::make_unique<RtcEventGenericPacketReceived>(
+      received_packet_number_++, prng_.Rand(40, 250));
 }
 
 void EventGenerator::RandomizeRtpPacket(
@@ -606,12 +723,7 @@ std::unique_ptr<RtcEventRtpPacketIncoming> EventGenerator::NewRtpPacketIncoming(
   RandomizeRtpPacket(payload_size, padding_size, ssrc, extension_map,
                      &rtp_packet, all_configured_exts);
 
-  std::optional<uint16_t> rtx_osn = std::nullopt;
-  if (prng_.Rand(0, 9) == 0) {
-    rtx_osn = prng_.Rand(
-        0u, static_cast<uint32_t>(std::numeric_limits<uint16_t>::max()));
-  }
-  return Create<RtcEventRtpPacketIncoming>(rtp_packet, rtx_osn);
+  return std::make_unique<RtcEventRtpPacketIncoming>(rtp_packet);
 }
 
 std::unique_ptr<RtcEventRtpPacketOutgoing> EventGenerator::NewRtpPacketOutgoing(
@@ -641,13 +753,8 @@ std::unique_ptr<RtcEventRtpPacketOutgoing> EventGenerator::NewRtpPacketOutgoing(
                      &rtp_packet, all_configured_exts);
 
   int probe_cluster_id = prng_.Rand(0, 100000);
-  std::optional<uint16_t> rtx_osn = std::nullopt;
-  if (prng_.Rand(0, 9) == 0) {
-    rtx_osn = prng_.Rand(
-        0u, static_cast<uint32_t>(std::numeric_limits<uint16_t>::max()));
-  }
-  return Create<RtcEventRtpPacketOutgoing>(rtp_packet, probe_cluster_id,
-                                           rtx_osn);
+  return std::make_unique<RtcEventRtpPacketOutgoing>(rtp_packet,
+                                                     probe_cluster_id);
 }
 
 RtpHeaderExtensionMap EventGenerator::NewRtpHeaderExtensionMap(
@@ -657,7 +764,7 @@ RtpHeaderExtensionMap EventGenerator::NewRtpHeaderExtensionMap(
   std::vector<int> id(RtpExtension::kOneByteHeaderExtensionMaxId -
                       RtpExtension::kMinId + 1);
   std::iota(id.begin(), id.end(), RtpExtension::kMinId);
-  ShuffleInPlace(&prng_, std::span<int>(id));
+  ShuffleInPlace(&prng_, ArrayView<int>(id));
 
   auto not_excluded = [&](RTPExtensionType type) -> bool {
     return !absl::c_linear_search(excluded_extensions, type);
@@ -707,7 +814,7 @@ EventGenerator::NewAudioReceiveStreamConfig(
     }
   }
 
-  return Create<RtcEventAudioReceiveStreamConfig>(std::move(config));
+  return std::make_unique<RtcEventAudioReceiveStreamConfig>(std::move(config));
 }
 
 std::unique_ptr<RtcEventAudioSendStreamConfig>
@@ -724,7 +831,7 @@ EventGenerator::NewAudioSendStreamConfig(
       config->rtp_extensions.emplace_back(kExtensions[i].name, id);
     }
   }
-  return Create<RtcEventAudioSendStreamConfig>(std::move(config));
+  return std::make_unique<RtcEventAudioSendStreamConfig>(std::move(config));
 }
 
 std::unique_ptr<RtcEventVideoReceiveStreamConfig>
@@ -750,7 +857,7 @@ EventGenerator::NewVideoReceiveStreamConfig(
       config->rtp_extensions.emplace_back(kExtensions[i].name, id);
     }
   }
-  return Create<RtcEventVideoReceiveStreamConfig>(std::move(config));
+  return std::make_unique<RtcEventVideoReceiveStreamConfig>(std::move(config));
 }
 
 std::unique_ptr<RtcEventVideoSendStreamConfig>
@@ -770,46 +877,43 @@ EventGenerator::NewVideoSendStreamConfig(
       config->rtp_extensions.emplace_back(kExtensions[i].name, id);
     }
   }
-  return Create<RtcEventVideoSendStreamConfig>(std::move(config));
+  return std::make_unique<RtcEventVideoSendStreamConfig>(std::move(config));
 }
 
 void EventVerifier::VerifyLoggedAlrStateEvent(
     const RtcEventAlrState& original_event,
     const LoggedAlrStateEvent& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.in_alr(), logged_event.in_alr);
 }
 
 void EventVerifier::VerifyLoggedAudioPlayoutEvent(
     const RtcEventAudioPlayout& original_event,
     const LoggedAudioPlayoutEvent& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.ssrc(), logged_event.ssrc);
 }
 
 void EventVerifier::VerifyLoggedAudioNetworkAdaptationEvent(
     const RtcEventAudioNetworkAdaptation& original_event,
     const LoggedAudioNetworkAdaptationEvent& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
 
-  EXPECT_EQ(original_event.bitrate_bps(), logged_event.config.bitrate_bps);
-  EXPECT_EQ(original_event.enable_dtx(), logged_event.config.enable_dtx);
-  EXPECT_EQ(original_event.enable_fec(), logged_event.config.enable_fec);
-  EXPECT_EQ(original_event.frame_length_ms(),
+  EXPECT_EQ(original_event.config().bitrate_bps,
+            logged_event.config.bitrate_bps);
+  EXPECT_EQ(original_event.config().enable_dtx, logged_event.config.enable_dtx);
+  EXPECT_EQ(original_event.config().enable_fec, logged_event.config.enable_fec);
+  EXPECT_EQ(original_event.config().frame_length_ms,
             logged_event.config.frame_length_ms);
-  EXPECT_EQ(original_event.num_channels(), logged_event.config.num_channels);
+  EXPECT_EQ(original_event.config().num_channels,
+            logged_event.config.num_channels);
 
   // uplink_packet_loss_fraction
-  ASSERT_EQ(original_event.uplink_packet_loss_fraction().has_value(),
+  ASSERT_EQ(original_event.config().uplink_packet_loss_fraction.has_value(),
             logged_event.config.uplink_packet_loss_fraction.has_value());
-  if (original_event.uplink_packet_loss_fraction().has_value()) {
-    const float original = original_event.uplink_packet_loss_fraction().value();
+  if (original_event.config().uplink_packet_loss_fraction.has_value()) {
+    const float original =
+        original_event.config().uplink_packet_loss_fraction.value();
     const float logged =
         logged_event.config.uplink_packet_loss_fraction.value();
     const float uplink_packet_loss_fraction_delta = std::abs(original - logged);
@@ -820,9 +924,7 @@ void EventVerifier::VerifyLoggedAudioNetworkAdaptationEvent(
 void EventVerifier::VerifyLoggedBweDelayBasedUpdate(
     const RtcEventBweUpdateDelayBased& original_event,
     const LoggedBweDelayBasedUpdate& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.bitrate_bps(), logged_event.bitrate_bps);
   EXPECT_EQ(original_event.detector_state(), logged_event.detector_state);
 }
@@ -830,37 +932,16 @@ void EventVerifier::VerifyLoggedBweDelayBasedUpdate(
 void EventVerifier::VerifyLoggedBweLossBasedUpdate(
     const RtcEventBweUpdateLossBased& original_event,
     const LoggedBweLossBasedUpdate& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.bitrate_bps(), logged_event.bitrate_bps);
   EXPECT_EQ(original_event.fraction_loss(), logged_event.fraction_lost);
   EXPECT_EQ(original_event.total_packets(), logged_event.expected_packets);
 }
 
-void EventVerifier::VerifyLoggedBweScreamUpdate(
-    const RtcEventBweUpdateScream& original_event,
-    const LoggedBweScreamUpdate& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
-  EXPECT_EQ(original_event.ref_window_bytes(), logged_event.ref_window.bytes());
-  EXPECT_EQ(original_event.data_in_flight_bytes(),
-            logged_event.data_in_flight.bytes());
-  EXPECT_EQ(original_event.target_rate_kbps(), logged_event.target_rate.kbps());
-  EXPECT_EQ(original_event.smoothed_rtt_ms(), logged_event.smoothed_rtt.ms());
-  EXPECT_EQ(original_event.avg_queue_delay_ms(),
-            logged_event.avg_queue_delay.ms());
-  EXPECT_EQ(original_event.l4s_marked_permille(),
-            logged_event.l4s_marked_permille);
-}
-
 void EventVerifier::VerifyLoggedBweProbeClusterCreatedEvent(
     const RtcEventProbeClusterCreated& original_event,
     const LoggedBweProbeClusterCreatedEvent& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.id(), logged_event.id);
   EXPECT_EQ(original_event.bitrate_bps(), logged_event.bitrate_bps);
   EXPECT_EQ(original_event.min_probes(), logged_event.min_packets);
@@ -870,9 +951,7 @@ void EventVerifier::VerifyLoggedBweProbeClusterCreatedEvent(
 void EventVerifier::VerifyLoggedBweProbeFailureEvent(
     const RtcEventProbeResultFailure& original_event,
     const LoggedBweProbeFailureEvent& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.id(), logged_event.id);
   EXPECT_EQ(original_event.failure_reason(), logged_event.failure_reason);
 }
@@ -880,9 +959,7 @@ void EventVerifier::VerifyLoggedBweProbeFailureEvent(
 void EventVerifier::VerifyLoggedBweProbeSuccessEvent(
     const RtcEventProbeResultSuccess& original_event,
     const LoggedBweProbeSuccessEvent& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.id(), logged_event.id);
   EXPECT_EQ(original_event.bitrate_bps(), logged_event.bitrate_bps);
 }
@@ -890,9 +967,7 @@ void EventVerifier::VerifyLoggedBweProbeSuccessEvent(
 void EventVerifier::VerifyLoggedDtlsTransportState(
     const RtcEventDtlsTransportState& original_event,
     const LoggedDtlsTransportState& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.dtls_transport_state(),
             logged_event.dtls_transport_state);
 }
@@ -900,18 +975,14 @@ void EventVerifier::VerifyLoggedDtlsTransportState(
 void EventVerifier::VerifyLoggedDtlsWritableState(
     const RtcEventDtlsWritableState& original_event,
     const LoggedDtlsWritableState& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.writable(), logged_event.writable);
 }
 
 void EventVerifier::VerifyLoggedFrameDecoded(
     const RtcEventFrameDecoded& original_event,
     const LoggedFrameDecoded& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.ssrc(), logged_event.ssrc);
   EXPECT_EQ(original_event.render_time_ms(), logged_event.render_time_ms);
   EXPECT_EQ(original_event.width(), logged_event.width);
@@ -923,9 +994,7 @@ void EventVerifier::VerifyLoggedFrameDecoded(
 void EventVerifier::VerifyLoggedIceCandidatePairConfig(
     const RtcEventIceCandidatePairConfig& original_event,
     const LoggedIceCandidatePairConfig& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
 
   EXPECT_EQ(original_event.type(), logged_event.type);
   EXPECT_EQ(original_event.candidate_pair_id(), logged_event.candidate_pair_id);
@@ -948,9 +1017,7 @@ void EventVerifier::VerifyLoggedIceCandidatePairConfig(
 void EventVerifier::VerifyLoggedIceCandidatePairEvent(
     const RtcEventIceCandidatePair& original_event,
     const LoggedIceCandidatePairEvent& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
 
   EXPECT_EQ(original_event.type(), logged_event.type);
   EXPECT_EQ(original_event.candidate_pair_id(), logged_event.candidate_pair_id);
@@ -1031,7 +1098,7 @@ void EventVerifier::VerifyLoggedDependencyDescriptor(
     const Event& packet,
     const std::vector<uint8_t>& logged_dd) const {
   if (expect_dependency_descriptor_rtp_header_extension_is_set_) {
-    std::span<const uint8_t> original =
+    ArrayView<const uint8_t> original =
         packet.template GetRawExtension<RtpDependencyDescriptorExtension>();
     EXPECT_THAT(logged_dd, ElementsAreArray(original));
   } else {
@@ -1042,9 +1109,7 @@ void EventVerifier::VerifyLoggedDependencyDescriptor(
 void EventVerifier::VerifyLoggedRouteChangeEvent(
     const RtcEventRouteChange& original_event,
     const LoggedRouteChangeEvent& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.connected(), logged_event.connected);
   EXPECT_EQ(original_event.overhead(), logged_event.overhead);
 }
@@ -1052,9 +1117,7 @@ void EventVerifier::VerifyLoggedRouteChangeEvent(
 void EventVerifier::VerifyLoggedRemoteEstimateEvent(
     const RtcEventRemoteEstimate& original_event,
     const LoggedRemoteEstimateEvent& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   EXPECT_EQ(original_event.link_capacity_lower_,
             logged_event.link_capacity_lower);
   EXPECT_EQ(original_event.link_capacity_upper_,
@@ -1064,9 +1127,7 @@ void EventVerifier::VerifyLoggedRemoteEstimateEvent(
 void EventVerifier::VerifyLoggedRtpPacketIncoming(
     const RtcEventRtpPacketIncoming& original_event,
     const LoggedRtpPacketIncoming& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
 
   EXPECT_EQ(original_event.header_length(), logged_event.rtp.header_length);
 
@@ -1080,18 +1141,12 @@ void EventVerifier::VerifyLoggedRtpPacketIncoming(
   VerifyLoggedRtpHeader(original_event, logged_event.rtp.header);
   VerifyLoggedDependencyDescriptor(
       original_event, logged_event.rtp.dependency_descriptor_wire_format);
-  if (encoding_type_ == RtcEventLog::EncodingType::NewFormat) {
-    EXPECT_EQ(original_event.rtx_original_sequence_number(),
-              logged_event.rtp.rtx_original_sequence_number);
-  }
 }
 
 void EventVerifier::VerifyLoggedRtpPacketOutgoing(
     const RtcEventRtpPacketOutgoing& original_event,
     const LoggedRtpPacketOutgoing& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
 
   EXPECT_EQ(original_event.header_length(), logged_event.rtp.header_length);
 
@@ -1108,18 +1163,31 @@ void EventVerifier::VerifyLoggedRtpPacketOutgoing(
   VerifyLoggedRtpHeader(original_event, logged_event.rtp.header);
   VerifyLoggedDependencyDescriptor(
       original_event, logged_event.rtp.dependency_descriptor_wire_format);
-  if (encoding_type_ == RtcEventLog::EncodingType::NewFormat) {
-    EXPECT_EQ(original_event.rtx_original_sequence_number(),
-              logged_event.rtp.rtx_original_sequence_number);
-  }
+}
+
+void EventVerifier::VerifyLoggedGenericPacketSent(
+    const RtcEventGenericPacketSent& original_event,
+    const LoggedGenericPacketSent& logged_event) const {
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
+  EXPECT_EQ(original_event.packet_number(), logged_event.packet_number);
+  EXPECT_EQ(original_event.overhead_length(), logged_event.overhead_length);
+  EXPECT_EQ(original_event.payload_length(), logged_event.payload_length);
+  EXPECT_EQ(original_event.padding_length(), logged_event.padding_length);
+}
+
+void EventVerifier::VerifyLoggedGenericPacketReceived(
+    const RtcEventGenericPacketReceived& original_event,
+    const LoggedGenericPacketReceived& logged_event) const {
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
+  EXPECT_EQ(original_event.packet_number(), logged_event.packet_number);
+  EXPECT_EQ(static_cast<int>(original_event.packet_length()),
+            logged_event.packet_length);
 }
 
 void EventVerifier::VerifyLoggedRtcpPacketIncoming(
     const RtcEventRtcpPacketIncoming& original_event,
     const LoggedRtcpPacketIncoming& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
 
   ASSERT_EQ(original_event.packet().size(), logged_event.rtcp.raw_data.size());
   EXPECT_EQ(
@@ -1131,9 +1199,7 @@ void EventVerifier::VerifyLoggedRtcpPacketIncoming(
 void EventVerifier::VerifyLoggedRtcpPacketOutgoing(
     const RtcEventRtcpPacketOutgoing& original_event,
     const LoggedRtcpPacketOutgoing& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
 
   ASSERT_EQ(original_event.packet().size(), logged_event.rtcp.raw_data.size());
   EXPECT_EQ(
@@ -1160,11 +1226,10 @@ void EventVerifier::VerifyReportBlock(
 }
 
 void EventVerifier::VerifyLoggedSenderReport(
-    Timestamp log_time,
+    int64_t log_time_ms,
     const rtcp::SenderReport& original_sr,
     const LoggedRtcpPacketSenderReport& logged_sr) {
-  EXPECT_THAT(logged_sr.log_time(),
-              Near(log_time, /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(log_time_ms, logged_sr.log_time_ms());
   EXPECT_EQ(original_sr.sender_ssrc(), logged_sr.sr.sender_ssrc());
   EXPECT_EQ(original_sr.ntp(), logged_sr.sr.ntp());
   EXPECT_EQ(original_sr.rtp_timestamp(), logged_sr.sr.rtp_timestamp());
@@ -1181,11 +1246,10 @@ void EventVerifier::VerifyLoggedSenderReport(
 }
 
 void EventVerifier::VerifyLoggedReceiverReport(
-    Timestamp log_time,
+    int64_t log_time_ms,
     const rtcp::ReceiverReport& original_rr,
     const LoggedRtcpPacketReceiverReport& logged_rr) {
-  EXPECT_THAT(logged_rr.log_time(),
-              Near(log_time, /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(log_time_ms, logged_rr.log_time_ms());
   EXPECT_EQ(original_rr.sender_ssrc(), logged_rr.rr.sender_ssrc());
   ASSERT_EQ(original_rr.report_blocks().size(),
             logged_rr.rr.report_blocks().size());
@@ -1196,11 +1260,10 @@ void EventVerifier::VerifyLoggedReceiverReport(
 }
 
 void EventVerifier::VerifyLoggedExtendedReports(
-    Timestamp log_time,
+    int64_t log_time_ms,
     const rtcp::ExtendedReports& original_xr,
     const LoggedRtcpPacketExtendedReports& logged_xr) {
-  EXPECT_THAT(logged_xr.log_time(),
-              Near(log_time, /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(log_time_ms, logged_xr.log_time_ms());
   EXPECT_EQ(original_xr.sender_ssrc(), logged_xr.xr.sender_ssrc());
 
   EXPECT_EQ(original_xr.rrtr().has_value(), logged_xr.xr.rrtr().has_value());
@@ -1238,11 +1301,10 @@ void EventVerifier::VerifyLoggedExtendedReports(
   }
 }
 
-void EventVerifier::VerifyLoggedFir(Timestamp log_time,
+void EventVerifier::VerifyLoggedFir(int64_t log_time_ms,
                                     const rtcp::Fir& original_fir,
                                     const LoggedRtcpPacketFir& logged_fir) {
-  EXPECT_THAT(logged_fir.log_time(),
-              Near(log_time, /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(log_time_ms, logged_fir.log_time_ms());
   EXPECT_EQ(original_fir.sender_ssrc(), logged_fir.fir.sender_ssrc());
   const auto& original_requests = original_fir.requests();
   const auto& logged_requests = logged_fir.fir.requests();
@@ -1253,39 +1315,35 @@ void EventVerifier::VerifyLoggedFir(Timestamp log_time,
   }
 }
 
-void EventVerifier::VerifyLoggedPli(Timestamp log_time,
+void EventVerifier::VerifyLoggedPli(int64_t log_time_ms,
                                     const rtcp::Pli& original_pli,
                                     const LoggedRtcpPacketPli& logged_pli) {
-  EXPECT_THAT(logged_pli.log_time(),
-              Near(log_time, /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(log_time_ms, logged_pli.log_time_ms());
   EXPECT_EQ(original_pli.sender_ssrc(), logged_pli.pli.sender_ssrc());
   EXPECT_EQ(original_pli.media_ssrc(), logged_pli.pli.media_ssrc());
 }
 
-void EventVerifier::VerifyLoggedBye(Timestamp log_time,
+void EventVerifier::VerifyLoggedBye(int64_t log_time_ms,
                                     const rtcp::Bye& original_bye,
                                     const LoggedRtcpPacketBye& logged_bye) {
-  EXPECT_THAT(logged_bye.log_time(),
-              Near(log_time, /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(log_time_ms, logged_bye.log_time_ms());
   EXPECT_EQ(original_bye.sender_ssrc(), logged_bye.bye.sender_ssrc());
   EXPECT_EQ(original_bye.csrcs(), logged_bye.bye.csrcs());
   EXPECT_EQ(original_bye.reason(), logged_bye.bye.reason());
 }
 
-void EventVerifier::VerifyLoggedNack(Timestamp log_time,
+void EventVerifier::VerifyLoggedNack(int64_t log_time_ms,
                                      const rtcp::Nack& original_nack,
                                      const LoggedRtcpPacketNack& logged_nack) {
-  EXPECT_THAT(logged_nack.log_time(),
-              Near(log_time, /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(log_time_ms, logged_nack.log_time_ms());
   EXPECT_EQ(original_nack.packet_ids(), logged_nack.nack.packet_ids());
 }
 
 void EventVerifier::VerifyLoggedTransportFeedback(
-    Timestamp log_time,
+    int64_t log_time_ms,
     const rtcp::TransportFeedback& original_transport_feedback,
     const LoggedRtcpPacketTransportFeedback& logged_transport_feedback) {
-  EXPECT_THAT(logged_transport_feedback.log_time(),
-              Near(log_time, /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(log_time_ms, logged_transport_feedback.log_time_ms());
   ASSERT_EQ(
       original_transport_feedback.GetReceivedPackets().size(),
       logged_transport_feedback.transport_feedback.GetReceivedPackets().size());
@@ -1302,21 +1360,19 @@ void EventVerifier::VerifyLoggedTransportFeedback(
   }
 }
 
-void EventVerifier::VerifyLoggedRemb(Timestamp log_time,
+void EventVerifier::VerifyLoggedRemb(int64_t log_time_ms,
                                      const rtcp::Remb& original_remb,
                                      const LoggedRtcpPacketRemb& logged_remb) {
-  EXPECT_THAT(logged_remb.log_time(),
-              Near(log_time, /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(log_time_ms, logged_remb.log_time_ms());
   EXPECT_EQ(original_remb.ssrcs(), logged_remb.remb.ssrcs());
   EXPECT_EQ(original_remb.bitrate_bps(), logged_remb.remb.bitrate_bps());
 }
 
 void EventVerifier::VerifyLoggedLossNotification(
-    Timestamp log_time,
+    int64_t log_time_ms,
     const rtcp::LossNotification& original_loss_notification,
     const LoggedRtcpPacketLossNotification& logged_loss_notification) {
-  EXPECT_THAT(logged_loss_notification.log_time(),
-              Near(log_time, /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(log_time_ms, logged_loss_notification.log_time_ms());
   EXPECT_EQ(original_loss_notification.last_decoded(),
             logged_loss_notification.loss_notification.last_decoded());
   EXPECT_EQ(original_loss_notification.last_received(),
@@ -1331,12 +1387,11 @@ void EventVerifier::VerifyLoggedStartEvent(
     const LoggedStartEvent& logged_event) const {
   // Use approximate comparison to support various roundings to milliseconds.
   EXPECT_THAT(logged_event.log_time(),
-              Near(Timestamp::Micros(start_time_us),
-                   /*max_error=*/TimeDelta::Millis(1)));
+              Near(Timestamp::Micros(start_time_us), TimeDelta::Millis(1)));
   if (encoding_type_ == RtcEventLog::EncodingType::NewFormat) {
-    EXPECT_THAT(logged_event.utc_start_time,
-                Near(Timestamp::Micros(utc_start_time_us),
-                     /*max_error=*/TimeDelta::Millis(1)));
+    EXPECT_THAT(
+        logged_event.utc_start_time,
+        Near(Timestamp::Micros(utc_start_time_us), TimeDelta::Millis(1)));
   }
 }
 
@@ -1345,8 +1400,7 @@ void EventVerifier::VerifyLoggedStopEvent(
     const LoggedStopEvent& logged_event) const {
   // Use approximate comparison to support various roundings to milliseconds.
   EXPECT_THAT(logged_event.log_time(),
-              Near(Timestamp::Micros(stop_time_us),
-                   /*max_error=*/TimeDelta::Millis(1)));
+              Near(Timestamp::Micros(stop_time_us), TimeDelta::Millis(1)));
 }
 
 void VerifyLoggedStreamConfig(const rtclog::StreamConfig& original_config,
@@ -1377,36 +1431,28 @@ void VerifyLoggedStreamConfig(const rtclog::StreamConfig& original_config,
 void EventVerifier::VerifyLoggedAudioRecvConfig(
     const RtcEventAudioReceiveStreamConfig& original_event,
     const LoggedAudioRecvConfig& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   VerifyLoggedStreamConfig(original_event.config(), logged_event.config);
 }
 
 void EventVerifier::VerifyLoggedAudioSendConfig(
     const RtcEventAudioSendStreamConfig& original_event,
     const LoggedAudioSendConfig& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   VerifyLoggedStreamConfig(original_event.config(), logged_event.config);
 }
 
 void EventVerifier::VerifyLoggedVideoRecvConfig(
     const RtcEventVideoReceiveStreamConfig& original_event,
     const LoggedVideoRecvConfig& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   VerifyLoggedStreamConfig(original_event.config(), logged_event.config);
 }
 
 void EventVerifier::VerifyLoggedVideoSendConfig(
     const RtcEventVideoSendStreamConfig& original_event,
     const LoggedVideoSendConfig& logged_event) const {
-  EXPECT_THAT(
-      logged_event.log_time(),
-      Near(original_event.timestamp(), /*max_error=*/TimeDelta::Millis(1)));
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   VerifyLoggedStreamConfig(original_event.config(), logged_event.config);
 }
 

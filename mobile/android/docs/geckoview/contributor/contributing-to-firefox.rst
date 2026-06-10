@@ -1,3 +1,5 @@
+.. -*- Mode: rst; fill-column: 80; -*-
+
 =========================
 Firefox Contributor Guide
 =========================
@@ -33,13 +35,13 @@ list to find something you want to work on.
 
 .. code:: bash
 
-   git remote update && git pull --rebase
+   git remote update
 
--  Create a new feature branch. Most new feature branches should target the ``autoland`` branch, and ``moz-phab`` does so by default.
+-  Create a new feature branch tracking either main or autoland.
 
 .. code:: bash
 
-   git checkout -b bugxxxxxxx [autoland]/default
+   git checkout -b bugxxxxxxx [main|autoland]/default
 
 -  Work on your bug, checking into git according to your preferred
    workflow. *Try to ensure that each individual commit compiles and
@@ -74,7 +76,7 @@ formatted.
 
 .. code:: bash
 
-   mach format path/to/file.cpp
+   mach clang-format -p path/to/file.cpp
 
 Note that ``./mach bootstrap`` will offer to set up a commit hook that
 will automatically do this for you.

@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -183,12 +185,12 @@ EXPORTS.mozilla += [
     "ClipboardWriteRequestChild.h",
     "ClipboardWriteRequestParent.h",
     "ColorScheme.h",
-    "CommandList.inc",
+    "CommandList.h",
     "ContentCache.h",
     "ContentData.h",
     "ContentEvents.h",
     "DimensionRequest.h",
-    "EventClassList.inc",
+    "EventClassList.h",
     "EventForwards.h",
     "EventMessageList.h",
     "FontRange.h",
@@ -209,14 +211,14 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.widget += [
     "CompositorWidget.h",
-    "GfxInfoDeviceVendorDefs.inc",
-    "GfxInfoDriverVendorDefs.inc",
-    "GfxInfoDriverVersionCmpDefs.inc",
-    "GfxInfoFeatureDefs.inc",
-    "GfxInfoFeatureStatusDefs.inc",
-    "GfxInfoOperatingSystemDefs.inc",
-    "GfxInfoRefreshRateStatusDefs.inc",
-    "GfxInfoWindowProtocolDefs.inc",
+    "GfxInfoDeviceVendorDefs.h",
+    "GfxInfoDriverVendorDefs.h",
+    "GfxInfoDriverVersionCmpDefs.h",
+    "GfxInfoFeatureDefs.h",
+    "GfxInfoFeatureStatusDefs.h",
+    "GfxInfoOperatingSystemDefs.h",
+    "GfxInfoRefreshRateStatusDefs.h",
+    "GfxInfoWindowProtocolDefs.h",
     "IconLoader.h",
     "IMEData.h",
     "InitData.h",

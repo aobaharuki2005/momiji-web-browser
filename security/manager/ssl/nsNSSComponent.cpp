@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -22,7 +23,6 @@
 #include "mozilla/Base64.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FilePreferences.h"
-#include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
@@ -33,6 +33,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Vector.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/glean/SecurityManagerSslMetrics.h"
 #include "mozilla/net/SocketProcessParent.h"
@@ -51,19 +52,18 @@
 #include "nsISerialEventTarget.h"
 #include "nsISiteSecurityService.h"
 #include "nsITimer.h"
+#include "nsITokenPasswordDialogs.h"
 #include "nsIWindowWatcher.h"
 #include "nsIXULRuntime.h"
 #include "nsLiteralString.h"
 #include "nsNSSHelper.h"
 #include "nsNSSIOLayer.h"
 #include "nsNetCID.h"
+#include "nsPK11TokenDB.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
-#ifdef ENABLE_TESTS
-#  include "nsISSLTokensCacheTest.h"
-#endif
 #include "nss.h"
 #include "p12plcy.h"
 #include "pk11pub.h"
@@ -270,18 +270,15 @@ nsNSSComponent::nsNSSComponent()
   MOZ_ASSERT(mInstanceCount == 0,
              "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
-
-  MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
-      "NSS task queue", getter_AddRefs(mNSSTaskQueue)));
 }
-
-bool sPrepareForShutdownRan = false;
 
 nsNSSComponent::~nsNSSComponent() {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::dtor\n"));
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(sPrepareForShutdownRan);
 
+  // All cleanup code requiring services needs to happen in xpcom_shutdown
+
+  PrepareForShutdown();
   nsSSLIOLayerHelpers::GlobalCleanup();
   --mInstanceCount;
 
@@ -331,7 +328,8 @@ void nsNSSComponent::MaybeImportEnterpriseRoots() {
   }
   bool importEnterpriseRoots = StaticPrefs::security_enterprise_roots_enabled();
   if (importEnterpriseRoots) {
-    RefPtr task = MakeRefPtr<BackgroundImportEnterpriseCertsTask>(this);
+    RefPtr<BackgroundImportEnterpriseCertsTask> task =
+        new BackgroundImportEnterpriseCertsTask(this);
     (void)task->Dispatch();
   }
 }
@@ -463,6 +461,8 @@ class LoadLoadableCertsTask final : public Runnable {
 
   ~LoadLoadableCertsTask() = default;
 
+  nsresult Dispatch();
+
  private:
   NS_IMETHOD Run() override;
   nsresult LoadLoadableRoots();
@@ -470,6 +470,18 @@ class LoadLoadableCertsTask final : public Runnable {
   bool mImportEnterpriseRoots;
   nsAutoCString mGreBinDir;
 };
+
+nsresult LoadLoadableCertsTask::Dispatch() {
+  // The stream transport service (note: not the socket transport service) can
+  // be used to perform background tasks or I/O that would otherwise block the
+  // main thread.
+  nsCOMPtr<nsIEventTarget> target(
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID));
+  if (!target) {
+    return NS_ERROR_FAILURE;
+  }
+  return target->Dispatch(this, NS_DISPATCH_NORMAL);
+}
 
 NS_IMETHODIMP
 LoadLoadableCertsTask::Run() {
@@ -520,33 +532,34 @@ LoadLoadableCertsTask::Run() {
   return NS_OK;
 }
 
-class LoadOrUnloadOSClientCertsTask final : public Runnable {
+class BackgroundLoadOSClientCertsModuleTask final : public CryptoTask {
  public:
-  explicit LoadOrUnloadOSClientCertsTask(bool load)
-      : Runnable("LoadOrUnloadOSClientCertsTask"), mLoad(load) {}
-
-  ~LoadOrUnloadOSClientCertsTask() = default;
+  explicit BackgroundLoadOSClientCertsModuleTask() {}
 
  private:
-  NS_IMETHOD Run() override;
-  bool mLoad;  // true if loading the module, false if unloading it.
-};
-
-NS_IMETHODIMP LoadOrUnloadOSClientCertsTask::Run() {
-  if (mLoad) {
+  virtual nsresult CalculateResult() override {
     bool success = LoadOSClientCertsModule();
+    return success ? NS_OK : NS_ERROR_FAILURE;
+  }
+
+  virtual void CallCallback(nsresult rv) override {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("loading OS client certs module %s",
-             success ? "succeeded" : "failed"));
-    NS_DispatchToMainThread(
-        NS_NewRunnableFunction("load osclientcerts module task callback", []() {
-          nsCOMPtr<nsIObserverService> observerService =
-              mozilla::services::GetObserverService();
-          if (observerService) {
-            observerService->NotifyObservers(
-                nullptr, "psm:load-os-client-certs-module-task-ran", nullptr);
-          }
-        }));
+             NS_SUCCEEDED(rv) ? "succeeded" : "failed"));
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->NotifyObservers(
+          nullptr, "psm:load-os-client-certs-module-task-ran", nullptr);
+    }
+  }
+};
+
+void AsyncLoadOrUnloadOSClientCertsModule(bool load) {
+  if (load) {
+    RefPtr<BackgroundLoadOSClientCertsModuleTask> task =
+        new BackgroundLoadOSClientCertsModuleTask();
+    (void)task->Dispatch();
   } else {
     UniqueSECMODModule osClientCertsModule(
         SECMOD_FindModule(kOSClientCertsModuleName.get()));
@@ -554,8 +567,6 @@ NS_IMETHODIMP LoadOrUnloadOSClientCertsTask::Run() {
       SECMOD_UnloadUserModule(osClientCertsModule.get());
     }
   }
-
-  return NS_OK;
 }
 
 nsresult nsNSSComponent::BlockUntilLoadableCertsLoaded() {
@@ -573,18 +584,8 @@ static StaticMutex sCheckForSmartCardChangesMutex MOZ_UNANNOTATED;
 MOZ_RUNINIT static TimeStamp sLastCheckedForSmartCardChanges = TimeStamp::Now();
 #endif
 
-nsresult CheckForSmartCardChanges() {
+nsresult nsNSSComponent::CheckForSmartCardChanges() {
 #ifndef MOZ_NO_SMART_CARDS
-
-#  ifdef NIGHTLY_BUILD
-  // If this is the parent process and PKCS#11 modules are loaded in the
-  // utility process, this is a no-op.
-  if (XRE_IsParentProcess() &&
-      StaticPrefs::security_utility_pkcs11_module_process_enabled_AtStartup()) {
-    return NS_OK;
-  }
-#  endif
-
   {
     StaticMutexAutoLock lock(sCheckForSmartCardChangesMutex);
     // Do this at most once every 3 seconds.
@@ -598,14 +599,16 @@ nsresult CheckForSmartCardChanges() {
 
   // SECMOD_UpdateSlotList attempts to acquire the list lock as well, so we
   // have to do this in three steps.
-  nsTArray<UniqueSECMODModule> modulesWithRemovableSlots;
+  Vector<UniqueSECMODModule> modulesWithRemovableSlots;
   {
     AutoSECMODListReadLock secmodLock;
     SECMODModuleList* list = SECMOD_GetDefaultModuleList();
     while (list) {
       if (SECMOD_LockedModuleHasRemovableSlots(list->module)) {
         UniqueSECMODModule module(SECMOD_ReferenceModule(list->module));
-        modulesWithRemovableSlots.AppendElement(std::move(module));
+        if (!modulesWithRemovableSlots.append(std::move(module))) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
       }
       list = list->next;
     }
@@ -1199,7 +1202,7 @@ static void SetNSSDatabaseCacheModeAsAppropriate() {
 }
 #endif  // defined(XP_WIN) || (defined(XP_LINUX) && !defined(ANDROID))
 
-nsresult GetNSSProfilePath(nsAutoCString& aProfilePath) {
+static nsresult GetNSSProfilePath(nsAutoCString& aProfilePath) {
   aProfilePath.Truncate();
   nsCOMPtr<nsIFile> profileFile;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
@@ -1344,7 +1347,6 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
   srv = ::mozilla::psm::InitializeNSS(profilePath, NSSDBConfig::ReadOnly,
                                       safeModeDBConfig);
   if (srv == SECSuccess) {
-    mozilla::glean::nss::initialization_fallbacks.Get("READ_ONLY"_ns).Add(1);
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized NSS in r-o mode"));
     return NS_OK;
   }
@@ -1400,17 +1402,12 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
       srv = ::mozilla::psm::InitializeNSS(profilePath, NSSDBConfig::ReadWrite,
                                           PKCS11DBConfig::LoadModules);
       if (srv == SECSuccess) {
-        mozilla::glean::nss::initialization_fallbacks.Get("RENAME_MODULE_DB"_ns)
-            .Add(1);
         MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized in r/w mode"));
         return NS_OK;
       }
       srv = ::mozilla::psm::InitializeNSS(profilePath, NSSDBConfig::ReadOnly,
                                           PKCS11DBConfig::LoadModules);
       if (srv == SECSuccess) {
-        mozilla::glean::nss::initialization_fallbacks
-            .Get("RENAME_MODULE_DB_READ_ONLY"_ns)
-            .Add(1);
         MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized in r-o mode"));
         return NS_OK;
       }
@@ -1426,11 +1423,7 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
                             PR_GetError());
   }
 #endif
-  if (srv == SECSuccess) {
-    mozilla::glean::nss::initialization_fallbacks.Get("NO_DB_INIT"_ns).Add(1);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  return srv == SECSuccess ? NS_OK : NS_ERROR_FAILURE;
 }
 
 #if defined(NIGHTLY_BUILD) && !defined(ANDROID)
@@ -1481,18 +1474,6 @@ void UnmigrateFromPrefixedCertDBs() {
 }
 #endif  // defined(NIGHTLY_BUILD) && !defined(ANDROID)
 
-bool GetInSafeMode() {
-  bool inSafeMode = true;
-  nsCOMPtr<nsIXULRuntime> runtime(do_GetService("@mozilla.org/xre/runtime;1"));
-  // There might not be an nsIXULRuntime in embedded situations. This will
-  // default to assuming we are in safe mode (as a result, no external PKCS11
-  // modules will be loaded).
-  if (runtime) {
-    MOZ_ALWAYS_SUCCEEDS(runtime->GetInSafeMode(&inSafeMode));
-  }
-  return inSafeMode;
-}
-
 nsresult nsNSSComponent::InitializeNSS() {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::InitializeNSS\n"));
   AUTO_PROFILER_LABEL("nsNSSComponent::InitializeNSS", OTHER);
@@ -1525,7 +1506,18 @@ nsresult nsNSSComponent::InitializeNSS() {
 #endif
 
   bool nocertdb = StaticPrefs::security_nocertdb_AtStartup();
-  bool inSafeMode = GetInSafeMode();
+  bool inSafeMode = true;
+  nsCOMPtr<nsIXULRuntime> runtime(do_GetService("@mozilla.org/xre/runtime;1"));
+  // There might not be an nsIXULRuntime in embedded situations. This will
+  // default to assuming we are in safe mode (as a result, no external PKCS11
+  // modules will be loaded).
+  if (runtime) {
+    rv = runtime->GetInSafeMode(&inSafeMode);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("inSafeMode: %u\n", inSafeMode));
 
   rv = InitializeNSSWithFallbacks(profileStr, nocertdb, inSafeMode);
@@ -1587,7 +1579,7 @@ nsresult nsNSSComponent::InitializeNSS() {
     RefPtr<LoadLoadableCertsTask> loadLoadableCertsTask(
         new LoadLoadableCertsTask(this, importEnterpriseRoots,
                                   std::move(greBinDir)));
-    rv = mNSSTaskQueue->Dispatch(loadLoadableCertsTask.forget());
+    rv = loadLoadableCertsTask->Dispatch();
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     if (NS_FAILED(rv)) {
       return rv;
@@ -1614,14 +1606,11 @@ void nsNSSComponent::PrepareForShutdown() {
 
   // Unload osclientcerts so it drops any held resources and stops its
   // background thread.
-  RefPtr task = MakeRefPtr<LoadOrUnloadOSClientCertsTask>(false);
-  (void)mNSSTaskQueue->Dispatch(task.forget());
+  AsyncLoadOrUnloadOSClientCertsModule(false);
 
   // We don't actually shut down NSS - XPCOM does, after all threads have been
   // joined and the component manager has been shut down (and so there shouldn't
   // be any XPCOM objects holding NSS resources).
-
-  sPrepareForShutdownRan = true;
 }
 
 nsresult nsNSSComponent::Init() {
@@ -1655,12 +1644,7 @@ nsresult nsNSSComponent::Init() {
 }
 
 // nsISupports Implementation for the class
-#ifdef ENABLE_TESTS
-NS_IMPL_ISUPPORTS(nsNSSComponent, nsINSSComponent, nsIObserver,
-                  nsISSLTokensCacheTest)
-#else
 NS_IMPL_ISUPPORTS(nsNSSComponent, nsINSSComponent, nsIObserver)
-#endif
 
 static const char* const PROFILE_BEFORE_CHANGE_TOPIC = "profile-before-change";
 
@@ -1711,9 +1695,7 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
     } else if (prefName.Equals("security.osclientcerts.autoload")) {
       bool loadOSClientCertsModule =
           StaticPrefs::security_osclientcerts_autoload();
-      RefPtr task =
-          MakeRefPtr<LoadOrUnloadOSClientCertsTask>(loadOSClientCertsModule);
-      (void)mNSSTaskQueue->Dispatch(task.forget());
+      AsyncLoadOrUnloadOSClientCertsModule(loadOSClientCertsModule);
     } else if (prefName.EqualsLiteral("security.pki.mitm_canary_issuer")) {
       MutexAutoLock lock(mMutex);
       mMitmCanaryIssuer.Truncate();
@@ -1731,7 +1713,7 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
       ClearSSLExternalAndInternalSessionCache();
     }
   } else if (!nsCRT::strcmp(aTopic, "last-pb-context-exited")) {
-    return ClearSSLExternalAndInternalSessionCache();
+    nsNSSComponent::DoClearSSLExternalAndInternalSessionCache();
   }
 
   return NS_OK;
@@ -1752,7 +1734,7 @@ nsresult nsNSSComponent::GetNewPrompter(nsIPrompt** result) {
       do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = wwatch->GetNewPrompter(nullptr, result);
+  rv = wwatch->GetNewPrompter(0, result);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
@@ -1861,52 +1843,6 @@ void nsNSSComponent::DoClearSSLExternalAndInternalSessionCache() {
   mozilla::net::SSLTokensCache::Clear();
 }
 
-template <typename F>
-static nsresult WithParsedOAPattern(const nsAString& aPatternJson, F&& aFunc) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  if (!XRE_IsParentProcess()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  mozilla::OriginAttributesPattern pattern;
-  if (!pattern.Init(aPatternJson)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  aFunc(pattern);
-  return NS_OK;
-}
-
-#ifdef ENABLE_TESTS
-
-NS_IMETHODIMP
-nsNSSComponent::CountSSLTokens(uint32_t* aCount) {
-  *aCount = mozilla::net::SSLTokensCache::CountForTest();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::PutSSLTokenForTest(const nsACString& aKey) {
-  mozilla::net::SSLTokensCache::PutForTest(aKey);
-  return NS_OK;
-}
-
-#endif  // ENABLE_TESTS
-
-NS_IMETHODIMP
-nsNSSComponent::RemoveSSLTokensByHostAndOriginAttributesPattern(
-    const nsACString& aHost, const nsAString& aPattern) {
-  return WithParsedOAPattern(aPattern, [&aHost](const auto& pattern) {
-    mozilla::net::SSLTokensCache::RemoveByHostAndOAPattern(aHost, pattern);
-  });
-}
-
-NS_IMETHODIMP
-nsNSSComponent::RemoveSSLTokensBySiteAndOriginAttributesPattern(
-    const nsACString& aSite, const nsAString& aPattern) {
-  return WithParsedOAPattern(aPattern, [&aSite](const auto& pattern) {
-    mozilla::net::SSLTokensCache::RemoveBySiteAndOAPattern(aSite, pattern);
-  });
-}
-
 NS_IMETHODIMP
 nsNSSComponent::ClearSSLExternalAndInternalSessionCache() {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -1963,16 +1899,6 @@ nsNSSComponent::AsyncClearSSLExternalAndInternalSessionCache(
   }
   DoClearSSLExternalAndInternalSessionCache();
   promise.forget(aPromise);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::GetNssTaskQueue(nsISerialEventTarget** result) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-  *result = do_AddRef(mNSSTaskQueue).take();
   return NS_OK;
 }
 
@@ -2223,6 +2149,36 @@ nsresult getNSSDialogs(void** _result, REFNSIID aIID, const char* contract) {
   rv = svc->QueryInterface(aIID, _result);
 
   return rv;
+}
+
+nsresult setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx) {
+  MOZ_ASSERT(slot);
+  MOZ_ASSERT(ctx);
+  NS_ENSURE_ARG_POINTER(slot);
+  NS_ENSURE_ARG_POINTER(ctx);
+
+  if (PK11_NeedUserInit(slot)) {
+    nsCOMPtr<nsITokenPasswordDialogs> dialogs;
+    nsresult rv = getNSSDialogs(getter_AddRefs(dialogs),
+                                NS_GET_IID(nsITokenPasswordDialogs),
+                                NS_TOKENPASSWORDSDIALOG_CONTRACTID);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    bool canceled;
+    nsCOMPtr<nsIPK11Token> token = new nsPK11Token(slot);
+    rv = dialogs->SetPassword(ctx, token, &canceled);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (canceled) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
+  return NS_OK;
 }
 
 static PRBool ConvertBetweenUCS2andASCII(PRBool toUnicode, unsigned char* inBuf,

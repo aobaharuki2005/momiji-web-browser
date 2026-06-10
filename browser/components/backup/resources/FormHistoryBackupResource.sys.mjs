@@ -28,7 +28,21 @@ XPCOMUtils.defineLazyPreferenceGetter(
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "isFormDataClearedOnShutdown",
+  "privacy.clearOnShutdown.formdata",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isFormDataClearedOnShutdown2",
   "privacy.clearOnShutdown_v2.formdata",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "useOldClearHistoryDialog",
+  "privacy.sanitize.useOldClearHistoryDialog",
   false
 );
 
@@ -56,7 +70,10 @@ export class FormHistoryBackupResource extends BackupResource {
       return true;
     }
 
-    return !lazy.isFormDataClearedOnShutdown;
+    if (lazy.useOldClearHistoryDialog) {
+      return !lazy.isFormDataClearedOnShutdown;
+    }
+    return !lazy.isFormDataClearedOnShutdown2;
   }
 
   async backup(

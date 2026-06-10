@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -38,7 +40,6 @@
 #include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DisplayPortUtils.h"
@@ -439,35 +440,38 @@ class SimpleTimerBasedRefreshDriverTimer : public RefreshDriverTimer {
 class VsyncRefreshDriverTimer : public RefreshDriverTimer {
  public:
   // This is used in the parent process for all platforms except Linux Wayland.
-  static already_AddRefed<VsyncRefreshDriverTimer>
+  static RefPtr<VsyncRefreshDriverTimer>
   CreateForParentProcessWithGlobalVsync() {
     MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     RefPtr<VsyncDispatcher> vsyncDispatcher =
         gfxPlatform::GetPlatform()->GetGlobalVsyncDispatcher();
-    return do_AddRef(
-        new VsyncRefreshDriverTimer(std::move(vsyncDispatcher), nullptr));
+    RefPtr<VsyncRefreshDriverTimer> timer =
+        new VsyncRefreshDriverTimer(std::move(vsyncDispatcher), nullptr);
+    return timer.forget();
   }
 
   // This is used in the parent process for Linux Wayland only, where we have a
   // per-widget VsyncSource which is independent from the gfxPlatform's global
   // VsyncSource.
-  static already_AddRefed<VsyncRefreshDriverTimer>
+  static RefPtr<VsyncRefreshDriverTimer>
   CreateForParentProcessWithLocalVsyncDispatcher(
       RefPtr<VsyncDispatcher>&& aVsyncDispatcher) {
     MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    return do_AddRef(
-        new VsyncRefreshDriverTimer(std::move(aVsyncDispatcher), nullptr));
+    RefPtr<VsyncRefreshDriverTimer> timer =
+        new VsyncRefreshDriverTimer(std::move(aVsyncDispatcher), nullptr);
+    return timer.forget();
   }
 
   // This is used in the content process.
-  static already_AddRefed<VsyncRefreshDriverTimer> CreateForContentProcess(
+  static RefPtr<VsyncRefreshDriverTimer> CreateForContentProcess(
       RefPtr<VsyncMainChild>&& aVsyncChild) {
     MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    return do_AddRef(
-        new VsyncRefreshDriverTimer(nullptr, std::move(aVsyncChild)));
+    RefPtr<VsyncRefreshDriverTimer> timer =
+        new VsyncRefreshDriverTimer(nullptr, std::move(aVsyncChild));
+    return timer.forget();
   }
 
   TimeDuration GetTimerRate() override {
@@ -552,7 +556,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       // TODO: On Linux Wayland, the vsync thread is currently the main thread,
       // and yet we still dispatch the runnable. Do we need to?
       bool useVsyncPriority = mozilla::BrowserTabsRemoteAutostart();
-      nsCOMPtr<nsIRunnable> vsyncEvent = MakeAndAddRef<PrioritizableRunnable>(
+      nsCOMPtr<nsIRunnable> vsyncEvent = new PrioritizableRunnable(
           NS_NewRunnableFunction(
               "RefreshDriverVsyncObserver::NotifyVsyncTimerOnMainThread",
               [self = RefPtr{this}]() {
@@ -625,7 +629,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         mLastRunOutOfMTTasksCount(0),
         mProcessedVsync(true),
         mHasPendingLowPrioTask(false) {
-    mVsyncObserver = MakeRefPtr<RefreshDriverVsyncObserver>(this);
+    mVsyncObserver = new RefreshDriverVsyncObserver(this);
   }
 
   ~VsyncRefreshDriverTimer() override {
@@ -1250,7 +1254,6 @@ static uint32_t GetFirstFrameDelay(imgIRequest* req) {
 }
 
 static constexpr nsLiteralCString sRenderingPhaseNames[] = {
-    "Reveal"_ns,                                     // Reveal
     "Flush autofocus candidates"_ns,                 // FlushAutoFocusCandidates
     "Resize steps"_ns,                               // ResizeSteps
     "Scroll steps"_ns,                               // ScrollSteps
@@ -1379,7 +1382,7 @@ TimeDuration nsRefreshDriver::GetMinRecomputeVisibilityInterval() {
 RefreshDriverTimer* nsRefreshDriver::ChooseTimer() {
   if (mThrottled) {
     if (!sThrottledRateTimer) {
-      sThrottledRateTimer = MakeRefPtr<InactiveRefreshDriverTimer>(
+      sThrottledRateTimer = new InactiveRefreshDriverTimer(
           GetThrottledTimerInterval(),
           DEFAULT_INACTIVE_TIMER_DISABLE_SECONDS * 1000.0);
     }
@@ -1396,7 +1399,7 @@ RefreshDriverTimer* nsRefreshDriver::ChooseTimer() {
 
   if (!sRegularRateTimer) {
     double rate = GetRegularTimerInterval();
-    sRegularRateTimer = MakeRefPtr<StartupRefreshDriverTimer>(rate);
+    sRegularRateTimer = new StartupRefreshDriverTimer(rate);
   }
 
   return sRegularRateTimer;
@@ -1408,31 +1411,6 @@ static nsDocShell* GetDocShell(nsPresContext* aPresContext) {
   }
   return static_cast<nsDocShell*>(aPresContext->GetDocShell());
 }
-
-namespace mozilla {
-
-class PaintPendingHangAnnotator final : public BackgroundHangAnnotator {
- public:
-  explicit PaintPendingHangAnnotator(nsRefreshDriver& aDriver)
-      : mDriver(aDriver) {
-    BackgroundHangMonitor::RegisterAnnotator(*this);
-  }
-
-  ~PaintPendingHangAnnotator() {
-    BackgroundHangMonitor::UnregisterAnnotator(*this);
-  }
-
-  void AnnotateHang(BackgroundHangAnnotations& aAnnotations) override {
-    if (mDriver.IsPaintPending()) {
-      aAnnotations.AddAnnotation(u"PaintPending"_ns, true);
-    }
-  }
-
- private:
-  nsRefreshDriver& mDriver;
-};
-
-}  // namespace mozilla
 
 nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
     : mActiveTimer(nullptr),
@@ -1468,10 +1446,6 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
     sRegularRateTimerList = new nsTArray<RefreshDriverTimer*>();
   }
   ++sRefreshDriverCount;
-
-  if (aPresContext->IsRoot()) {
-    mHangAnnotator = MakeUnique<PaintPendingHangAnnotator>(*this);
-  }
 }
 
 nsRefreshDriver::~nsRefreshDriver() {
@@ -1909,10 +1883,6 @@ bool nsRefreshDriver::ComputeHasImageAnimations() const {
   }
 
   return false;
-}
-
-bool nsRefreshDriver::HasReasonsToTick() const {
-  return GetReasonsToTick() != TickReasons::None;
 }
 
 auto nsRefreshDriver::GetReasonsToTick() const -> TickReasons {
@@ -2425,12 +2395,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   if (!mPresContext || !mPresContext->GetPresShell()) {
     return StopTimer();
   }
-
-  // Step 6, For each doc of docs, reveal doc.
-  RunRenderingPhase(RenderingPhase::Reveal,
-                    [](Document& aDoc) MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
-                      MOZ_KnownLive(aDoc).Reveal();
-                    });
 
   // Step 7. For each doc of docs, flush autofocus candidates for doc if its
   // node navigable is a top-level traversable.

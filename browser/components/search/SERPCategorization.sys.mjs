@@ -90,13 +90,13 @@ export const CATEGORIZATION_SETTINGS = {
  * @property {string} organic_num_unknown
  *  The number of unknown domains when determining the organic result.
  * @property {string} sponsored_category
- *  The category for the sponsored result.
+ *  The category for the organic result.
  * @property {string} sponsored_num_domains
  *  The number of domains examined to determine the sponsored category.
  * @property {string} sponsored_num_inconclusive
  *  The number of inconclusive domains when determining the sponsored category.
  * @property {string} sponsored_num_unknown
- *  The number of unknown domains when determining the sponsored category.
+ *  The category for the sponsored result.
  * @property {string} mappings_version
  *  The category mapping version used to determine the categories.
  */
@@ -1273,6 +1273,7 @@ export class DomainToCategoriesStore {
     if (this.#init) {
       lazy.logConsole.debug("Un-initializing domain-to-categories store.");
       await this.#closeConnection();
+      this.#asyncShutdownBlocker = null;
       lazy.logConsole.debug("Un-initialized domain-to-categories store.");
     }
   }
@@ -1321,7 +1322,7 @@ export class DomainToCategoriesStore {
                   TEXT PRIMARY KEY NOT NULL,
                 categories
                   TEXT
-              ) WITHOUT ROWID;
+              );
             `;
         await this.#connection.execute(createDomainToCategoriesTable);
         await this.#connection.execute(`DELETE FROM moz_meta`);
@@ -1517,6 +1518,10 @@ export class DomainToCategoriesStore {
   async #closeConnection() {
     this.#init = false;
     this.#empty = true;
+    if (this.#asyncShutdownBlocker) {
+      lazy.Sqlite.shutdown.removeBlocker(this.#asyncShutdownBlocker);
+      this.#asyncShutdownBlocker = null;
+    }
 
     if (this.#connection) {
       lazy.logConsole.debug("Closing connection.");
@@ -1528,11 +1533,6 @@ export class DomainToCategoriesStore {
         lazy.logConsole.error(ex);
       }
       this.#connection = null;
-    }
-
-    if (this.#asyncShutdownBlocker) {
-      lazy.Sqlite.shutdown.removeBlocker(this.#asyncShutdownBlocker);
-      this.#asyncShutdownBlocker = null;
     }
   }
 

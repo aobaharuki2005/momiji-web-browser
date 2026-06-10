@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -943,7 +945,7 @@ bool ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
 
   // Step 22.
   if (!uncheckedResultKeys.empty()) {
-    RootedId id(cx, uncheckedResultKeys.iter().get());
+    RootedId id(cx, uncheckedResultKeys.all().front());
     return js::Throw(cx, id, JSMSG_CANT_REPORT_NEW);
   }
 
@@ -1171,7 +1173,7 @@ void ScriptedProxyHandler::reportGetTrapValidationError(
       js::Throw(cx, id, JSMSG_MUST_REPORT_SAME_VALUE);
       return;
     case GetTrapValidationResult::MustReportUndefined:
-      js::Throw(cx, id, JSMSG_MUST_REPORT_UNDEFINED);
+      js::Throw(cx, id, JSMSG_MUST_REPORT_SAME_VALUE);
       return;
     case GetTrapValidationResult::Exception:
       return;

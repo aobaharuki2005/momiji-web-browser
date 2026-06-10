@@ -22,10 +22,10 @@
 #include "api/sequence_checker.h"
 #include "api/transport/stun.h"
 #include "p2p/base/basic_packet_socket_factory.h"
+#include "p2p/base/port_interface.h"
 #include "p2p/test/turn_server.h"
 #include "rtc_base/async_udp_socket.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/net_helper.h"
 #include "rtc_base/net_helpers.h"
 #include "rtc_base/socket.h"
 #include "rtc_base/socket_address.h"
@@ -46,7 +46,7 @@ class TestTurnRedirector : public TurnRedirectInterface {
       : alternate_server_addresses_(addresses),
         iter_(alternate_server_addresses_.begin()) {}
 
-  bool ShouldRedirect(const SocketAddress&, SocketAddress* out) override {
+  virtual bool ShouldRedirect(const SocketAddress&, SocketAddress* out) {
     if (!out || iter_ == alternate_server_addresses_.end()) {
       return false;
     }
@@ -78,7 +78,7 @@ class TestTurnServer : public TurnAuthInterface {
     server_.set_auth_hook(this);
   }
 
-  ~TestTurnServer() override { RTC_DCHECK(thread_checker_.IsCurrent()); }
+  ~TestTurnServer() { RTC_DCHECK(thread_checker_.IsCurrent()); }
 
   void set_enable_otu_nonce(bool enable) {
     RTC_DCHECK(thread_checker_.IsCurrent());
@@ -106,10 +106,8 @@ class TestTurnServer : public TurnAuthInterface {
                          absl::string_view common_name = "test turn server") {
     RTC_DCHECK(thread_checker_.IsCurrent());
     if (proto == PROTO_UDP) {
-      std::unique_ptr<AsyncUDPSocket> socket =
-          AsyncUDPSocket::Create(env_, int_addr, *socket_factory_);
-      socket->SetOption(Socket::OPT_RECV_ECN, 1);
-      server_.AddInternalSocket(std::move(socket), proto);
+      server_.AddInternalSocket(
+          AsyncUDPSocket::Create(env_, int_addr, *socket_factory_), proto);
     } else if (proto == PROTO_TCP || proto == PROTO_TLS) {
       // For TCP we need to create a server socket which can listen for incoming
       // new connections.
@@ -155,9 +153,9 @@ class TestTurnServer : public TurnAuthInterface {
  private:
   // For this test server, succeed if the password is the same as the username.
   // Obviously, do not use this in a production environment.
-  bool GetKey(absl::string_view username,
-              absl::string_view realm,
-              std::string* key) override {
+  virtual bool GetKey(absl::string_view username,
+                      absl::string_view realm,
+                      std::string* key) {
     RTC_DCHECK(thread_checker_.IsCurrent());
     return ComputeStunCredentialHash(std::string(username), std::string(realm),
                                      std::string(username), key);

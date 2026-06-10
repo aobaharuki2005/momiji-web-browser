@@ -22,13 +22,8 @@ class AtomicUniquePtr
 {
 public:
   AtomicUniquePtr() noexcept {}
-  AtomicUniquePtr(const AtomicUniquePtr &)            = delete;
-  AtomicUniquePtr(AtomicUniquePtr &&)                 = delete;
-  AtomicUniquePtr &operator=(const AtomicUniquePtr &) = delete;
-  AtomicUniquePtr &operator=(AtomicUniquePtr &&)      = delete;
 
-  explicit AtomicUniquePtr(std::unique_ptr<T> &&other) noexcept : ptr_(std::move(other).release())
-  {}
+  explicit AtomicUniquePtr(std::unique_ptr<T> &&other) noexcept : ptr_(other.release()) {}
 
   ~AtomicUniquePtr() noexcept { Reset(); }
 

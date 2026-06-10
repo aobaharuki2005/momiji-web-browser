@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint-env node */
 
 /**
  * This file contains a webpack loader which rewrites JS source files to use
@@ -163,11 +164,9 @@ async function rewriteCssUris(source) {
       .basename(localPath, ".css")
       .replaceAll("-", "")}Styles`;
 
-    // Handle special cases where we don't use a template.
+    // MozTextLabel is a special case for now since we don't use a template.
     if (
-      ["moz-label.mjs", "panel-list.mjs"].includes(
-        path.basename(this.resourcePath)
-      ) ||
+      path.basename(this.resourcePath) == "moz-label.mjs" ||
       this.resourcePath.endsWith(".js")
     ) {
       rewrittenSource = rewrittenSource.replaceAll(`"${cssUri}"`, cssImport);

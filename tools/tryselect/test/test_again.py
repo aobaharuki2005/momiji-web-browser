@@ -4,7 +4,6 @@
 
 import os
 from importlib import reload
-from unittest.mock import MagicMock
 
 import mozunit
 import pytest
@@ -19,13 +18,9 @@ def patch_history_path(tmpdir, monkeypatch):
 
 
 def test_try_again(monkeypatch):
-    monkeypatch.setattr(push, "MACH_TRY_REMOTE", "ssh://hg.mozilla.org/try")
-
-    metrics = MagicMock()
     push.push_to_try(
         "fuzzy",
         "Fuzzy message",
-        metrics,
         try_task_config=push.generate_try_task_config(
             "fuzzy",
             ["foo", "bar"],
@@ -45,7 +40,7 @@ def test_try_again(monkeypatch):
     monkeypatch.setattr(push, "push_to_try", fake_push_to_try)
     reload(again)
 
-    args, kwargs = again.run(metrics)
+    args, kwargs = again.run()
 
     assert args[0] == "again"
     assert args[1] == "Fuzzy message"
@@ -62,11 +57,9 @@ def test_try_again(monkeypatch):
 def test_no_push_does_not_generate_history(tmpdir):
     assert not os.path.isfile(push.history_path)
 
-    metrics = MagicMock()
     push.push_to_try(
         "fuzzy",
         "Fuzzy",
-        metrics,
         try_task_config=push.generate_try_task_config(
             "fuzzy",
             ["foo", "bar"],
@@ -75,7 +68,7 @@ def test_no_push_does_not_generate_history(tmpdir):
         dry_run=True,
     )
     assert not os.path.isfile(push.history_path)
-    assert again.run(metrics) == 1
+    assert again.run() == 1
 
 
 if __name__ == "__main__":

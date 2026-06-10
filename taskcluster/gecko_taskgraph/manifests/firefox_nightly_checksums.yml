@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-bucket_paths:
+s3_bucket_paths:
     by-platform:
         .*devedition.*:
             - pub/devedition/nightly
@@ -19,6 +19,7 @@ platform_names:
             linux64-aarch64-shippable: 'linux-aarch64'
             linux64-aarch64-devedition: 'linux-aarch64'
             linux64-devedition: 'linux-x86_64'
+            linux64-asan-reporter-shippable: 'linux-x86_64-asan-reporter'
             macosx64-shippable: 'mac'
             macosx64-devedition: 'mac'
             win32-shippable: 'win32'
@@ -27,10 +28,11 @@ platform_names:
             win64-devedition: 'win64'
             win64-aarch64-shippable: 'win64-aarch64'
             win64-aarch64-devedition: 'win64-aarch64'
+            win64-asan-reporter-shippable: 'win64-asan-reporter'
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
-# bucket_paths + destinations + locale_prefix + pretty_name
+# s3_bucket_paths + destinations + locale_prefix + pretty_name
 default: &default
     from:
         - beetmover-repackage

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +9,6 @@
 
 #include "Link.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/EnumSet.h"
 #include "nsStyledElement.h"
 
 class nsCSSValue;
@@ -32,18 +33,6 @@ class MathMLElement final : public MathMLElementBase, public Link {
 
   NS_IMPL_FROMNODE(MathMLElement, kNameSpaceID_MathML)
 
-  void SetNonce(const nsAString& aNonce) {
-    SetProperty(nsGkAtoms::nonce, new nsString(aNonce),
-                nsINode::DeleteProperty<nsString>, /* aTransfer = */ true);
-  }
-  void RemoveNonce() { RemoveProperty(nsGkAtoms::nonce); }
-  void GetNonce(nsAString& aNonce) const {
-    nsString* cspNonce = static_cast<nsString*>(GetProperty(nsGkAtoms::nonce));
-    if (cspNonce) {
-      aNonce = *cspNonce;
-    }
-  }
-
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(UnbindContext&) override;
 
@@ -55,19 +44,16 @@ class MathMLElement final : public MathMLElementBase, public Link {
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
 
-  enum class ParseFlag : uint8_t {
-    AllowNegative,
-    SuppressWarnings,
+  enum {
+    PARSE_ALLOW_NEGATIVE = 0x02,
+    PARSE_SUPPRESS_WARNINGS = 0x04,
   };
-  using ParseFlags = mozilla::EnumSet<ParseFlag>;
   static bool ParseNamedSpaceValue(const nsString& aString,
-                                   nsCSSValue& aCSSValue,
-                                   const Document& aDocument,
-                                   ParseFlags aFlags = ParseFlags());
+                                   nsCSSValue& aCSSValue, uint32_t aFlags,
+                                   const Document& aDocument);
 
   static bool ParseNumericValue(const nsString& aString, nsCSSValue& aCSSValue,
-                                Document* aDocument,
-                                ParseFlags aFlags = ParseFlags());
+                                uint32_t aFlags, Document* aDocument);
 
   static void MapGlobalMathMLAttributesInto(
       mozilla::MappedDeclarationsBuilder&);
@@ -78,7 +64,6 @@ class MathMLElement final : public MathMLElementBase, public Link {
   MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
   nsresult Clone(mozilla::dom::NodeInfo*, nsINode** aResult) const override;
-  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   // Set during reflow as necessary. Does a style change notification,
   // aNotify must be true.
@@ -118,12 +103,6 @@ class MathMLElement final : public MathMLElementBase, public Link {
   void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                     const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                     nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
-
- private:
-  bool SupportsHrefAttribute() const;
-  bool ElementHasHref() const final {
-    return SupportsHrefAttribute() && Link::ElementHasHref();
-  }
 };
 
 }  // namespace dom

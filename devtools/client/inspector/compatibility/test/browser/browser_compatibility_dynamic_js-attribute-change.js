@@ -115,7 +115,7 @@ async function testAttributeMutation(
     waitForDispatch(inspector.store, COMPATIBILITY_UPDATE_NODE_COMPLETE),
   ]);
   info("Run the task in webpage context");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], contentTaskFunction);
+  await ContentTask.spawn(tab.linkedBrowser, {}, contentTaskFunction);
   info("Wait for changes to reflect");
   await onPanelUpdate;
 

@@ -16,8 +16,8 @@ includes: [testTypedArray.js]
 features: [Reflect, TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg(2));
+testWithTypedArrayConstructors(function(TA) {
+  var sample = new TA(2);
 
   assert.sameValue(
     Reflect.defineProperty(sample, "0.1", {
@@ -121,6 +121,6 @@ testWithTypedArrayConstructors(function(TA, makeCtorArg) {
     "'-Infinity' - does not define a value for ['-Infinity']"
   );
 
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

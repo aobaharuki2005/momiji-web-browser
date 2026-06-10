@@ -23,8 +23,6 @@ pub struct Attrs {
     ///
     /// This attribute is always inherited except to variants
     pub disable: bool,
-    /// Mark this item deprecated in FFI.
-    pub deprecated: Option<String>,
     /// An optional namespace. None is equivalent to the root namespace.
     ///
     /// This attribute is inherited to types (and is not allowed elsewhere)
@@ -46,19 +44,10 @@ pub struct Attrs {
     /// This user-defined type can be used as the error type in a Result.
     pub custom_errors: bool,
 
-    /// This user-defined type has a "default" state that can be computed purely foreign-language-side
-    ///
-    /// Can be applied to enum variants to signal the default
-    pub default: bool,
-
     /// From #[diplomat::demo()]. Created from [`crate::ast::attrs::Attrs::demo_attrs`].
     /// List of attributes specific to automatic demo generation.
     /// Currently just for demo_gen in diplomat-tool (which generates sample webpages), but could be used for broader purposes (i.e., demo Android apps)
     pub demo_attrs: DemoInfo,
-    /// From #[diplomat::attr()]. If true, generates a mocking interface for this type.
-    pub generate_mocking_interface: bool,
-    /// From #[diplomat::attr()]. If true, Diplomat will check that this struct has the same memory layout in backends which support it. Allows this struct to be used in slices ([`super::Slice::Struct`]) and to be borrowed in function parameters.
-    pub abi_compatible: bool,
 }
 
 // #region: Demo specific attributes.
@@ -228,8 +217,7 @@ pub enum AttributeContext<'a, 'b> {
     Type(TypeDef<'a>),
     Trait(&'a TraitDef),
     EnumVariant(&'a EnumVariant),
-    Method(&'a Method, Option<TypeId>, &'b mut SpecialMethodPresence),
-    Function(&'a Method),
+    Method(&'a Method, TypeId, &'b mut SpecialMethodPresence),
     Module,
     Param,
     SelfParam,
@@ -259,8 +247,6 @@ impl Attrs {
         // Backends must support this since it applies to the macro/C code.
         // No special inheritance, was already appropriately inherited in AST
         this.abi_rename = ast.abi_rename.clone();
-
-        this.deprecated = ast.deprecated.clone();
 
         let support = validator.attrs_supported();
         let backend = validator.primary_name();
@@ -322,21 +308,6 @@ impl Attrs {
                             }
                             warn_auto(errors);
                         }
-                        "default" => {
-                            if let Meta::Path(_) = attr.meta {
-                                if this.default {
-                                    errors.push(LoweringError::Other(
-                                        "Duplicate `default` attribute".into(),
-                                    ));
-                                } else {
-                                    this.default = true;
-                                }
-                            } else {
-                                errors.push(LoweringError::Other(
-                                    "`default` must be a simple path".into(),
-                                ))
-                            }
-                        }
                         "rename" => {
                             match RenameAttr::from_meta(&attr.meta) {
                                 Ok(rename) => {
@@ -364,30 +335,6 @@ impl Attrs {
                         },
                         "error" => {
                             this.custom_errors = true;
-                        }
-                        "generate_mocking_interface" => {
-                            if !support.generate_mocking_interface {
-                                maybe_error_unsupported(
-                                    auto_found,
-                                    "generate_mocking_interface",
-                                    backend,
-                                    errors,
-                                );
-                                continue;
-                            }
-                            this.generate_mocking_interface = true;
-                        }
-                        "abi_compatible" => {
-                            if !support.abi_compatibles {
-                                maybe_error_unsupported(
-                                    auto_found,
-                                    "abi_compatible",
-                                    backend,
-                                    errors,
-                                );
-                                continue;
-                            }
-                            this.abi_compatible = true;
                         }
                         _ => {
                             errors.push(LoweringError::Other(format!(
@@ -486,16 +433,12 @@ impl Attrs {
         // use an exhaustive destructure so new attributes are handled
         let Attrs {
             disable,
-            deprecated: _deprecated,
             namespace,
             rename,
             abi_rename,
             special_method,
             custom_errors,
-            default,
             demo_attrs: _,
-            generate_mocking_interface,
-            abi_compatible,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -547,7 +490,7 @@ impl Attrs {
                         }
 
                         if let SuccessType::OutType(t) = &output {
-                            if t.id() != self_id || self_id.is_none() {
+                            if t.id() != Some(self_id) {
                                 errors.push(LoweringError::Other(
                                     "Constructors must return Self!".to_string(),
                                 ));
@@ -638,22 +581,6 @@ impl Attrs {
                                         if p.tcx_id != p2.tcx_id {
                                             errors.push(LoweringError::Other(
                                                 COMPARATOR_ERROR.into(),
-                                            ));
-                                        }
-
-                                        if p.owner
-                                            .as_borrowed()
-                                            .map(|o| !o.mutability.is_immutable())
-                                            .unwrap_or(false)
-                                            || p2
-                                                .owner
-                                                .as_borrowed()
-                                                .map(|o| !o.mutability.is_immutable())
-                                                .unwrap_or(false)
-                                        {
-                                            errors.push(LoweringError::Other(
-                                                "comparators must accept immutable parameters"
-                                                    .into(),
                                             ));
                                         }
                                     }
@@ -819,11 +746,7 @@ impl Attrs {
                 "`namespace` can only be used on types".to_string(),
             ));
         }
-        if *default && !matches!(context, AttributeContext::EnumVariant(..)) {
-            errors.push(LoweringError::Other(
-                "`default` can only be used on types and enum variants".to_string(),
-            ));
-        }
+
         if matches!(
             context,
             AttributeContext::Param | AttributeContext::SelfParam | AttributeContext::Field
@@ -856,26 +779,11 @@ impl Attrs {
         if *custom_errors
             && !matches!(
                 context,
-                AttributeContext::Type(..)
-                    | AttributeContext::Trait(..)
-                    | AttributeContext::Function(..)
+                AttributeContext::Type(..) | AttributeContext::Trait(..)
             )
         {
             errors.push(LoweringError::Other(
                 "`error` can only be used on types".to_string(),
-            ));
-        }
-        if *generate_mocking_interface
-            && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
-        {
-            errors.push(LoweringError::Other(
-                "`generate_mocking_interface` can only be used on opaque types".to_string(),
-            ));
-        }
-
-        if *abi_compatible && !matches!(context, AttributeContext::Type(TypeDef::Struct(..))) {
-            errors.push(LoweringError::Other(
-                "`abi_compatible` can only be used on non-output-only struct types.".into(),
             ));
         }
     }
@@ -900,11 +808,8 @@ impl Attrs {
 
         Attrs {
             disable,
-            deprecated: None,
             rename,
             namespace,
-            // Should not inherit from enums to their variants
-            default: false,
             // Was already inherited on the AST side
             abi_rename: Default::default(),
             // Never inherited
@@ -912,9 +817,6 @@ impl Attrs {
             // Not inherited
             custom_errors: false,
             demo_attrs: Default::default(),
-            // Not inherited
-            generate_mocking_interface: false,
-            abi_compatible: false,
         }
     }
 }
@@ -962,9 +864,6 @@ pub struct BackendAttrSupport {
     /// Whether the language supports using slices with 'static lifetimes.
     pub static_slices: bool,
 
-    /// Whether the language supports marking types as having a default value
-    pub defaults: bool,
-
     // Special methods
     /// Marking a method as a constructor to generate special constructor methods.
     pub constructors: bool,
@@ -1002,15 +901,6 @@ pub struct BackendAttrSupport {
     pub traits_are_send: bool,
     /// Traits are safe to Sync between threads (safe to mark as std::marker::Sync)
     pub traits_are_sync: bool,
-    /// Whether to generate mocking interface.
-    pub generate_mocking_interface: bool,
-    /// Passing of structs that only hold (non-slice) primitive types
-    /// (for use in slices and languages that support taking direct pointers to structs):
-    pub abi_compatibles: bool,
-    /// Whether or not the language supports &Struct or &mut Struct
-    pub struct_refs: bool,
-    /// Whether the language supports generating functions not associated with any type.
-    pub free_functions: bool,
 }
 
 impl BackendAttrSupport {
@@ -1024,7 +914,6 @@ impl BackendAttrSupport {
             utf8_strings: true,
             utf16_strings: true,
             static_slices: true,
-            defaults: true,
 
             constructors: true,
             named_constructors: true,
@@ -1043,10 +932,6 @@ impl BackendAttrSupport {
             custom_errors: true,
             traits_are_send: true,
             traits_are_sync: true,
-            generate_mocking_interface: true,
-            abi_compatibles: true,
-            struct_refs: true,
-            free_functions: true,
         }
     }
 
@@ -1059,7 +944,6 @@ impl BackendAttrSupport {
             "utf8_strings" => Some(self.utf8_strings),
             "utf16_strings" => Some(self.utf16_strings),
             "static_slices" => Some(self.static_slices),
-            "default" => Some(self.defaults),
             "constructors" => Some(self.constructors),
             "named_constructors" => Some(self.named_constructors),
             "fallible_constructors" => Some(self.fallible_constructors),
@@ -1076,9 +960,6 @@ impl BackendAttrSupport {
             "custom_errors" => Some(self.custom_errors),
             "traits_are_send" => Some(self.traits_are_send),
             "traits_are_sync" => Some(self.traits_are_sync),
-            "abi_compatibles" => Some(self.abi_compatibles),
-            "struct_refs" => Some(self.struct_refs),
-            "free_functions" => Some(self.free_functions),
             _ => None,
         }
     }
@@ -1199,7 +1080,6 @@ impl AttributeValidator for BasicAttributeValidator {
                 utf8_strings,
                 utf16_strings,
                 static_slices,
-                defaults,
 
                 constructors,
                 named_constructors,
@@ -1218,10 +1098,6 @@ impl AttributeValidator for BasicAttributeValidator {
                 custom_errors,
                 traits_are_send,
                 traits_are_sync,
-                generate_mocking_interface,
-                abi_compatibles,
-                struct_refs,
-                free_functions,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1231,7 +1107,6 @@ impl AttributeValidator for BasicAttributeValidator {
                 "utf8_strings" => utf8_strings,
                 "utf16_strings" => utf16_strings,
                 "static_slices" => static_slices,
-                "defaults" => defaults,
 
                 "constructors" => constructors,
                 "named_constructors" => named_constructors,
@@ -1250,10 +1125,6 @@ impl AttributeValidator for BasicAttributeValidator {
                 "custom_errors" => custom_errors,
                 "traits_are_send" => traits_are_send,
                 "traits_are_sync" => traits_are_sync,
-                "generate_mocking_interface" => generate_mocking_interface,
-                "abi_compatibles" => abi_compatibles,
-                "struct_refs" => struct_refs,
-                "free_functions" => free_functions,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1392,16 +1263,6 @@ mod tests {
                     pub fn comparison_correct(self, other: Self) -> cmp::Ordering {
                         todo!()
                     }
-
-                    #[diplomat::attr(auto, comparison)]
-                    pub fn comparison_ref(&self, other: &Self) -> cmp::Ordering {
-                        todo!()
-                    }
-
-                    #[diplomat::attr(auto, comparison)]
-                    pub fn comparison_mut(&mut self, other: &Self) -> cmp::Ordering {
-                        todo!()
-                    }
                 }
             }
         }
@@ -1499,151 +1360,6 @@ mod tests {
                     }
                 }
 
-            }
-        }
-    }
-
-    #[test]
-    fn test_mocking_interface_for_opaque_type() {
-        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque]
-                #[diplomat::attr(tests, generate_mocking_interface)]
-                pub struct Foo {
-                    pub x: u32,
-                    pub y: u32,
-                }
-
-                impl Foo {
-                    pub fn new() -> Box<Self> {
-                        Box::new(Self { x: 0, y: 0 })
-                    }
-
-                    pub fn get_x(&self) -> u32 {
-                        self.x
-                    }
-
-                    pub fn get_y(&self) -> u32 {
-                        self.y
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn test_mocking_interface_for_non_opaque_type() {
-        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::attr(tests, generate_mocking_interface)]
-                pub struct Foo {
-                    pub x: u32,
-                    pub y: u32,
-                }
-
-                impl Foo {
-                    pub fn new() -> Self {
-                        Self { x: 0, y: 0 }
-                    }
-
-                    pub fn get_x(self) -> u32 {
-                        self.x
-                    }
-
-                    pub fn get_y(self) -> u32 {
-                        self.y
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn test_mocking_interface_for_unsupported_backend() {
-        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::attr(tests, generate_mocking_interface)]
-                pub struct Foo {
-                    pub x: u32,
-                    pub y: u32,
-                }
-
-                impl Foo {
-                    pub fn new() -> Self {
-                        Self { x: 0, y: 0 }
-                    }
-
-                    pub fn get_x(self) -> u32 {
-                        self.x
-                    }
-
-                    pub fn get_y(self) -> u32 {
-                        self.y
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn test_primitive_struct_slices() {
-        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::attr(auto, abi_compatible)]
-                pub struct Foo {
-                    pub x: u32,
-                    pub y: u32
-                }
-
-                impl Foo {
-                    pub fn takes_slice(sl : &[Foo]) {
-                        todo!()
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn test_primitive_struct_slices_for_unsupported_backend() {
-        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::attr(auto, abi_compatible)]
-                pub struct Foo {
-                    pub x: u32,
-                    pub y: u32
-                }
-
-                impl Foo {
-                    pub fn takes_slice(sl : &[Foo]) {
-                        todo!()
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn test_struct_ref_for_unsupported_backend() {
-        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::attr(auto, abi_compatible)]
-                pub struct Foo {
-                    pub x: u32,
-                    pub y: u32
-                }
-
-                impl Foo {
-                    pub fn takes_mut(&mut self) {
-                        todo!()
-                    }
-                }
             }
         }
     }

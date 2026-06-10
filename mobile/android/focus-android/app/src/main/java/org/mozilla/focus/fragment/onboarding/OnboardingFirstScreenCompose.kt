@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.focus.R
 import org.mozilla.focus.ui.theme.FocusTheme
-import org.mozilla.focus.ui.theme.focusDimensions
 import org.mozilla.focus.ui.theme.focusTypography
 import org.mozilla.focus.ui.theme.gradientBackground
 
@@ -123,11 +122,7 @@ private fun TitleContent() {
             R.string.onboarding_first_screen_title,
             stringResource(R.string.app_name),
         ),
-        modifier = Modifier.padding(
-            top = focusDimensions.paddingExtraLarge,
-            start = focusDimensions.paddingDefault,
-            end = focusDimensions.paddingDefault,
-        ),
+        modifier = Modifier.padding(top = 32.dp, start = 16.dp, end = 16.dp),
         textAlign = TextAlign.Center,
         style = focusTypography.onboardingTitle,
     )
@@ -136,11 +131,7 @@ private fun TitleContent() {
         text = stringResource(
             R.string.onboarding_first_screen_subtitle,
         ),
-        modifier = Modifier.padding(
-            top = focusDimensions.paddingDefault,
-            start = focusDimensions.paddingDefault,
-            end = focusDimensions.paddingDefault,
-        ),
+        modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
         textAlign = TextAlign.Center,
         style = focusTypography.onboardingSubtitle,
     )
@@ -179,7 +170,7 @@ private fun LinkText(text: String, linkText: String, onClick: () -> Unit) {
 
                 contentDescription = "$textWithClickableLink $linkAvailableText"
             }
-            .padding(horizontal = focusDimensions.paddingDefault)
+            .padding(horizontal = 16.dp)
             .minimumInteractiveComponentSize(),
         textAlign = TextAlign.Center,
         style = focusTypography.onboardingDescription,
@@ -191,12 +182,7 @@ private fun ComponentGoToOnBoardingSecondScreen(goToOnBoardingSecondScreen: () -
     Button(
         onClick = goToOnBoardingSecondScreen,
         modifier = Modifier
-            .padding(
-                top = focusDimensions.paddingDefault,
-                start = focusDimensions.paddingDefault,
-                end = focusDimensions.paddingDefault,
-                bottom = focusDimensions.paddingOnboardingBottom,
-            )
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 74.dp)
             .fillMaxWidth(),
         colors = ButtonDefaults.textButtonColors(
             containerColor = colorResource(R.color.onboardingButtonOneColor),

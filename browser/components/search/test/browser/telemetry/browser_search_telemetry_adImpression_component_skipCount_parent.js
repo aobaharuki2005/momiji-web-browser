@@ -19,6 +19,17 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
+const IMPRESSION = {
+  provider: "example",
+  tagged: "true",
+  partner_code: "ff",
+  source: "unknown",
+  is_shopping_page: "false",
+  is_private: "false",
+  shopping_tab_displayed: "false",
+  is_signed_in: "false",
+};
+
 /**
  * This HTML contains non-sponsored links that wouldn't be picked up via a
  * bottom up search and thus, requires topdown inspection to find them.
@@ -99,6 +110,7 @@ add_task(async function test_skip_count_not_provided() {
 
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       adImpressions: [
         {
           component: SearchSERPTelemetryUtils.COMPONENTS.AD_SIDEBAR,
@@ -139,6 +151,7 @@ add_task(async function test_skip_count_is_false() {
 
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       adImpressions: [
         {
           component: SearchSERPTelemetryUtils.COMPONENTS.AD_SIDEBAR,
@@ -179,6 +192,7 @@ add_task(async function test_skip_count_is_true() {
 
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       adImpressions: [],
     },
   ]);

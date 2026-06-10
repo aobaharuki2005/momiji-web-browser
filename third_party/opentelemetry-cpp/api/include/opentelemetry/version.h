@@ -7,16 +7,13 @@
 #include "opentelemetry/detail/preprocessor.h"
 
 #ifndef OPENTELEMETRY_ABI_VERSION_NO
-// NOLINTNEXTLINE(cppcoreguidelines-macro-to-enum)
 #  define OPENTELEMETRY_ABI_VERSION_NO 1
 #endif
 
-// NOLINTBEGIN(cppcoreguidelines-macro-to-enum)
-#define OPENTELEMETRY_VERSION "1.27.0"
+#define OPENTELEMETRY_VERSION "1.23.0"
 #define OPENTELEMETRY_VERSION_MAJOR 1
-#define OPENTELEMETRY_VERSION_MINOR 27
+#define OPENTELEMETRY_VERSION_MINOR 23
 #define OPENTELEMETRY_VERSION_PATCH 0
-// NOLINTEND(cppcoreguidelines-macro-to-enum)
 
 #define OPENTELEMETRY_ABI_VERSION OPENTELEMETRY_STRINGIFY(OPENTELEMETRY_ABI_VERSION_NO)
 

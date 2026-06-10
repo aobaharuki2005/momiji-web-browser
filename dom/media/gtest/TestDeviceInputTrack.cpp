@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -172,7 +174,10 @@ TEST_F(TestDeviceInputTrack, DeviceInputConsumerTrack) {
   EXPECT_TRUE(track2->ConnectedToNonNativeDevice());
 
   track2->Destroy();
+  mGraph->RemoveTrackGraphThread(track2);
+
   track1->Destroy();
+  mGraph->RemoveTrackGraphThread(track1);
 }
 
 TEST_F(TestDeviceInputTrack, NativeInputTrackData) {
@@ -229,8 +234,9 @@ TEST_F(TestDeviceInputTrack, NativeInputTrackData) {
     EXPECT_EQ(chunk.mPrincipalHandle, testPrincipal);
   }
 
-  // Tear down: Destroy the NativeInputTrack.
+  // Tear down: Destroy the NativeInputTrack and remove it from mGraph.
   track->Destroy();
+  mGraph->RemoveTrackGraphThread(track);
 }
 
 class MockEventListener : public AudioInputSource::EventListener {
@@ -344,8 +350,9 @@ TEST_F(TestDeviceInputTrack, StartAndStop) {
     (void)WaitFor(cubeb->StreamDestroyEvent());
   }
 
-  // Tear down: Destroy the NativeInputTrack.
+  // Tear down: Destroy the NativeInputTrack and remove it from mGraph.
   track->Destroy();
+  mGraph->RemoveTrackGraphThread(track);
 }
 
 TEST_F(TestDeviceInputTrack, NonNativeInputTrackData) {
@@ -439,8 +446,9 @@ TEST_F(TestDeviceInputTrack, NonNativeInputTrackData) {
     EXPECT_TRUE(data.IsNull());
   }
 
-  // Tear down: Destroy the NonNativeInputTrack.
+  // Tear down: Destroy the NonNativeInputTrack and remove it from mGraph.
   track->Destroy();
+  mGraph->RemoveTrackGraphThread(track);
 }
 
 TEST_F(TestDeviceInputTrack, NonNativeDeviceChangedCallback) {
@@ -496,8 +504,9 @@ TEST_F(TestDeviceInputTrack, NonNativeDeviceChangedCallback) {
   DispatchFunction([&] { track->StopAudio(); });
   (void)WaitFor(cubeb->StreamDestroyEvent());
 
-  // Tear down: Destroy the NonNativeInputTrack.
+  // Tear down: Destroy the NonNativeInputTrack and remove it from mGraph.
   track->Destroy();
+  mGraph->RemoveTrackGraphThread(track);
 }
 
 TEST_F(TestDeviceInputTrack, NonNativeErrorCallback) {
@@ -555,6 +564,7 @@ TEST_F(TestDeviceInputTrack, NonNativeErrorCallback) {
   DispatchFunction([&] { track->StopAudio(); });
   (void)WaitFor(cubeb->StreamDestroyEvent());
 
-  // Tear down: Destroy the NonNativeInputTrack.
+  // Tear down: Destroy the NonNativeInputTrack and remove it from mGraph.
   track->Destroy();
+  mGraph->RemoveTrackGraphThread(track);
 }

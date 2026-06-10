@@ -7,8 +7,7 @@ TODO(#4297): enable Float16Array
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import {
   kTypedArrayBufferViews,
-  kTypedArrayBufferViewKeys,
-  supportsImmediateData } from
+  kTypedArrayBufferViewKeys } from
 '../../../../../common/util/util.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../../gpu_test.js';
 import { kProgrammableEncoderTypes } from '../../../../util/command_buffer_maker.js';
@@ -16,7 +15,13 @@ import { kProgrammableEncoderTypes } from '../../../../util/command_buffer_maker
 class SetImmediatesTest extends AllFeaturesMaxLimitsGPUTest {
   async init() {
     await super.init();
-    if (!supportsImmediateData(getGPU(this.rec))) {
+    if (
+    !('setImmediates' in GPURenderPassEncoder.prototype) &&
+    !('setImmediates' in GPUComputePassEncoder.prototype) &&
+    !('setImmediates' in GPURenderBundleEncoder.prototype) &&
+    !('maxImmediateSize' in GPUSupportedLimits.prototype) &&
+    !getGPU(this.rec).wgslLanguageFeatures.has('immediate_address_space'))
+    {
       this.skip('setImmediates not supported');
     }
   }
@@ -61,6 +66,9 @@ fn((t) => {
   const data = new arrayBufferType(elementCount);
 
   t.shouldThrow(isContentSizeAligned ? false : 'RangeError', () => {
+    // Cast to any to avoid Float16Array issues
+    // MAINTENANCE_TODO: remove this cast when the types are updated.
+
     encoder.setImmediates(rangeOffset, data, 0, elementCount);
   });
 
@@ -120,6 +128,9 @@ fn((t) => {
   const data = new arrayBufferType(elementCount);
 
   const doSetImmediates = () => {
+    // Cast to any to avoid Float16Array issues
+    // MAINTENANCE_TODO: remove this cast when the types are updated.
+
     encoder.setImmediates(rangeOffset, data, dataOffset, elementCount);
   };
 
@@ -157,6 +168,8 @@ fn((t) => {
   const arrayBufferType = kTypedArrayBufferViews[arrayType];
   const elementSize = arrayBufferType.BYTES_PER_ELEMENT;
 
+  // MAINTENANCE_TODO: remove this cast when the types are updated.
+
   const maxImmediateSize = t.device.limits.maxImmediateSize;
   if (maxImmediateSize === undefined) {
     t.skip('maxImmediateSize not found');
@@ -178,6 +191,8 @@ fn((t) => {
   const dataOverLimit = elementCount > dataLength;
 
   t.shouldThrow(dataOverLimit ? 'RangeError' : false, () => {
+    // MAINTENANCE_TODO: remove this cast when the types are updated.
+
     encoder.setImmediates(rangeOffset, data, 0, elementCount);
   });
 

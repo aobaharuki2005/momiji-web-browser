@@ -35,14 +35,17 @@ add_setup(async function () {
   gEngine2 = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE2_BASENAME,
   });
-  let oldDefaultEngine = await SearchService.getDefault();
-  await SearchService.moveEngine(gEngine2, 0);
-  await SearchService.moveEngine(gEngine, 0);
-  await SearchService.setDefault(gEngine, SearchService.CHANGE_REASON.UNKNOWN);
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.moveEngine(gEngine2, 0);
+  await Services.search.moveEngine(gEngine, 0);
+  await Services.search.setDefault(
+    gEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
   registerCleanupFunction(async function () {
-    await SearchService.setDefault(
+    await Services.search.setDefault(
       oldDefaultEngine,
-      SearchService.CHANGE_REASON.UNKNOWN
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
 
     await PlacesUtils.history.clear();

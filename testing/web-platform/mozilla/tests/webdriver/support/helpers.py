@@ -120,21 +120,13 @@ class Browser:
 class Geckodriver:
     PORT_RE = re.compile(rb".*Listening on [^ :]*:(\d+)")
 
-    def __init__(
-        self,
-        configuration,
-        hostname=None,
-        extra_args=None,
-        extra_env=None,
-        popen_kwargs=None,
-    ):
+    def __init__(self, configuration, hostname=None, extra_args=None, extra_env=None):
         self.config = configuration["webdriver"]
         self.requested_capabilities = configuration["capabilities"]
         self.hostname = hostname or configuration["host"]
         self.extra_args = extra_args or []
         self.env = configuration["browser"]["env"]
         self.extra_env = extra_env or {}
-        self.popen_kwargs = popen_kwargs or {}
 
         self.command = None
         self.proc = None
@@ -162,9 +154,7 @@ class Geckodriver:
         all_env = deepcopy(self.env)
         all_env.update(self.extra_env)
 
-        self.proc = subprocess.Popen(
-            self.command, env=all_env, stdout=subprocess.PIPE, **self.popen_kwargs
-        )
+        self.proc = subprocess.Popen(self.command, env=all_env, stdout=subprocess.PIPE)
 
         self.reader_thread = threading.Thread(
             target=readOutputLine,

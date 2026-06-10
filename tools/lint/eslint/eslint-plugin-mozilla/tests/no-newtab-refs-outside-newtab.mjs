@@ -14,6 +14,7 @@ function invalidCode(code, url) {
       {
         messageId: "noNewtabRefs",
         data: { url },
+        type: "Literal",
       },
     ],
   };

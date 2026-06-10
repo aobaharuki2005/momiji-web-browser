@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -13,11 +15,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "jsnum.h"
 #include "jspubtd.h"
 #include "NamespaceImports.h"
 
 #include "builtin/intl/DateTimeFormat.h"
-#include "builtin/Number.h"
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/Duration.h"
 #include "builtin/temporal/Int96.h"
@@ -81,10 +83,9 @@ static bool AbsoluteValueIsLessOrEqual(const BigInt* bigInt) {
   }
 
   // Compare each digit when the input has the same number of digits.
-  auto bigIntDigits = bigInt->digits();
   size_t index = std::size(digits);
   for (auto digit : digits) {
-    auto d = bigIntDigits[--index];
+    auto d = bigInt->digit(--index);
     if (d < digit) {
       return true;
     }
@@ -231,11 +232,11 @@ static BigInt* CreateBigInt(JSContext* cx,
     if (!result) {
       return nullptr;
     }
-    if (length > 1) {
-      result->setIndividualDigit(1, y);
+    if (y) {
+      result->setDigit(1, y);
     }
-    if (length > 0) {
-      result->setIndividualDigit(0, x);
+    if (x) {
+      result->setDigit(0, x);
     }
     return result;
   } else {
@@ -244,9 +245,8 @@ static BigInt* CreateBigInt(JSContext* cx,
     if (!result) {
       return nullptr;
     }
-    auto resultDigits = result->digits();
     while (length--) {
-      resultDigits[length] = digits[length];
+      result->setDigit(length, digits[length]);
     }
     return result;
   }
@@ -315,7 +315,7 @@ BigInt* js::temporal::ToBigInt(JSContext* cx,
  */
 EpochNanoseconds js::temporal::GetUTCEpochNanoseconds(
     const ISODateTime& isoDateTime) {
-  MOZ_ASSERT(IsValidISODateTime(isoDateTime));
+  MOZ_ASSERT(ISODateTimeWithinLimits(isoDateTime));
 
   const auto& [date, time] = isoDateTime;
 

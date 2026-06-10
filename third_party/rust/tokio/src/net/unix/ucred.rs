@@ -24,8 +24,8 @@ impl UCred {
 
     /// Gets PID (process ID) of the process.
     ///
-    /// This is only implemented under Linux, Android, iOS, macOS, Solaris,
-    /// Illumos and Cygwin. On other platforms this will always return `None`.
+    /// This is only implemented under Linux, Android, iOS, macOS, Solaris and
+    /// Illumos. On other platforms this will always return `None`.
     pub fn pid(&self) -> Option<unix::pid_t> {
         self.pid
     }
@@ -36,8 +36,7 @@ impl UCred {
     target_os = "redox",
     target_os = "android",
     target_os = "openbsd",
-    target_os = "haiku",
-    target_os = "cygwin"
+    target_os = "haiku"
 ))]
 pub(crate) use self::impl_linux::get_peer_cred;
 
@@ -62,7 +61,7 @@ pub(crate) use self::impl_solaris::get_peer_cred;
 #[cfg(target_os = "aix")]
 pub(crate) use self::impl_aix::get_peer_cred;
 
-#[cfg(any(target_os = "espidf", target_os = "vita", target_os = "hurd"))]
+#[cfg(any(target_os = "espidf", target_os = "vita"))]
 pub(crate) use self::impl_noproc::get_peer_cred;
 
 #[cfg(any(
@@ -70,8 +69,7 @@ pub(crate) use self::impl_noproc::get_peer_cred;
     target_os = "redox",
     target_os = "android",
     target_os = "openbsd",
-    target_os = "haiku",
-    target_os = "cygwin"
+    target_os = "haiku"
 ))]
 pub(crate) mod impl_linux {
     use crate::net::unix::{self, UnixStream};
@@ -85,8 +83,7 @@ pub(crate) mod impl_linux {
         target_os = "linux",
         target_os = "redox",
         target_os = "android",
-        target_os = "haiku",
-        target_os = "cygwin"
+        target_os = "haiku"
     ))]
     use libc::ucred;
 
@@ -317,7 +314,7 @@ pub(crate) mod impl_aix {
     }
 }
 
-#[cfg(any(target_os = "espidf", target_os = "vita", target_os = "hurd"))]
+#[cfg(any(target_os = "espidf", target_os = "vita"))]
 pub(crate) mod impl_noproc {
     use crate::net::unix::UnixStream;
     use std::io;

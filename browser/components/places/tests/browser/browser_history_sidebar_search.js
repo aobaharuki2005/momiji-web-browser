@@ -27,7 +27,7 @@ add_task(async function test() {
   let places = [];
   for (let i = 0; i < pages.length; i++) {
     places.push({
-      uri: Services.io.newURI(pages[i]),
+      uri: NetUtil.newURI(pages[i]),
       visitDate: (time - i) * 1000,
       transition: PlacesUtils.history.TRANSITION_TYPED,
     });

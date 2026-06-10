@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -24,7 +26,7 @@ class WeakMapBase;
 
 namespace gc {
 
-class Cell;
+struct Cell;
 
 /*** Liveness ***/
 
@@ -77,6 +79,8 @@ inline bool IsAboutToBeFinalizedUnbarriered(const T& thing) {
   return IsAboutToBeFinalizedInternal(thing);
 }
 
+inline bool IsAboutToBeFinalizedDuringMinorSweep(Cell* cell);
+
 inline Cell* ToMarkable(const Value& v) {
   if (v.isGCThing()) {
     return (Cell*)v.toGCThing();
@@ -117,8 +121,8 @@ inline Value Forwarded(const JS::Value& value);
 template <typename T>
 inline T MaybeForwarded(const T& t);
 
-// Helper functions for use in situations where the object's Shape or BaseShape
-// might be forwarded, for example while marking.
+// Helper functions for use in situations where the object's group might be
+// forwarded, for example while marking.
 
 inline const JSClass* MaybeForwardedObjectClass(const JSObject* obj);
 

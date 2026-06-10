@@ -638,7 +638,6 @@ function $DONOTEVALUATE() {
         evalScript: global.evaluateScript || global.evaluate,
         global,
         IsHTMLDDA,
-        AbstractModuleSource: global.getAbstractModuleSource?.(),
         gc() {
             gc();
         },

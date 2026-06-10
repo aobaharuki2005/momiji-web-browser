@@ -7,9 +7,7 @@ use alloc::string::String;
 use alloc::string::ToString;
 use alloc::vec::Vec;
 use core::fmt::{self, Display};
-use core::hint;
 use core::num::FpCategory;
-use core::str;
 use serde::ser::{self, Impossible, Serialize};
 
 /// A structure for serializing Rust values into JSON.
@@ -1536,6 +1534,23 @@ pub enum CharEscape {
     AsciiControl(u8),
 }
 
+impl CharEscape {
+    #[inline]
+    fn from_escape_table(escape: u8, byte: u8) -> CharEscape {
+        match escape {
+            self::BB => CharEscape::Backspace,
+            self::TT => CharEscape::Tab,
+            self::NN => CharEscape::LineFeed,
+            self::FF => CharEscape::FormFeed,
+            self::RR => CharEscape::CarriageReturn,
+            self::QU => CharEscape::Quote,
+            self::BS => CharEscape::ReverseSolidus,
+            self::UU => CharEscape::AsciiControl(byte),
+            _ => unreachable!(),
+        }
+    }
+}
+
 /// This trait abstracts away serializing the JSON control characters, which allows the user to
 /// optionally pretty print the JSON output.
 pub trait Formatter {
@@ -1692,7 +1707,7 @@ pub trait Formatter {
     where
         W: ?Sized + io::Write,
     {
-        let mut buffer = zmij::Buffer::new();
+        let mut buffer = ryu::Buffer::new();
         let s = buffer.format_finite(value);
         writer.write_all(s.as_bytes())
     }
@@ -1717,7 +1732,7 @@ pub trait Formatter {
     where
         W: ?Sized + io::Write,
     {
-        let mut buffer = zmij::Buffer::new();
+        let mut buffer = ryu::Buffer::new();
         let s = buffer.format_finite(value);
         writer.write_all(s.as_bytes())
     }
@@ -1769,33 +1784,30 @@ pub trait Formatter {
     {
         use self::CharEscape::*;
 
-        let escape_char = match char_escape {
-            Quote => b'"',
-            ReverseSolidus => b'\\',
-            Solidus => b'/',
-            Backspace => b'b',
-            FormFeed => b'f',
-            LineFeed => b'n',
-            CarriageReturn => b'r',
-            Tab => b't',
-            AsciiControl(_) => b'u',
-        };
-
-        match char_escape {
+        let s = match char_escape {
+            Quote => b"\\\"",
+            ReverseSolidus => b"\\\\",
+            Solidus => b"\\/",
+            Backspace => b"\\b",
+            FormFeed => b"\\f",
+            LineFeed => b"\\n",
+            CarriageReturn => b"\\r",
+            Tab => b"\\t",
             AsciiControl(byte) => {
                 static HEX_DIGITS: [u8; 16] = *b"0123456789abcdef";
                 let bytes = &[
                     b'\\',
-                    escape_char,
+                    b'u',
                     b'0',
                     b'0',
                     HEX_DIGITS[(byte >> 4) as usize],
                     HEX_DIGITS[(byte & 0xF) as usize],
                 ];
-                writer.write_all(bytes)
+                return writer.write_all(bytes);
             }
-            _ => writer.write_all(&[b'\\', escape_char]),
-        }
+        };
+
+        writer.write_all(s)
     }
 
     /// Writes the representation of a byte array. Formatters can choose whether
@@ -1935,7 +1947,7 @@ pub trait Formatter {
 }
 
 /// This structure compacts a JSON value with no extra whitespace.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct CompactFormatter;
 
 impl Formatter for CompactFormatter {}
@@ -2085,51 +2097,31 @@ where
     W: ?Sized + io::Write,
     F: ?Sized + Formatter,
 {
-    let mut bytes = value.as_bytes();
+    let bytes = value.as_bytes();
 
-    let mut i = 0;
-    while i < bytes.len() {
-        let (string_run, rest) = bytes.split_at(i);
-        let (&byte, rest) = rest.split_first().unwrap();
+    let mut start = 0;
 
+    for (i, &byte) in bytes.iter().enumerate() {
         let escape = ESCAPE[byte as usize];
-
-        i += 1;
         if escape == 0 {
             continue;
         }
 
-        bytes = rest;
-        i = 0;
-
-        // Safety: string_run is a valid utf8 string, since we only split on ascii sequences
-        let string_run = unsafe { str::from_utf8_unchecked(string_run) };
-        if !string_run.is_empty() {
-            tri!(formatter.write_string_fragment(writer, string_run));
+        if start < i {
+            tri!(formatter.write_string_fragment(writer, &value[start..i]));
         }
 
-        let char_escape = match escape {
-            self::BB => CharEscape::Backspace,
-            self::TT => CharEscape::Tab,
-            self::NN => CharEscape::LineFeed,
-            self::FF => CharEscape::FormFeed,
-            self::RR => CharEscape::CarriageReturn,
-            self::QU => CharEscape::Quote,
-            self::BS => CharEscape::ReverseSolidus,
-            self::UU => CharEscape::AsciiControl(byte),
-            // Safety: the escape table does not contain any other type of character.
-            _ => unsafe { hint::unreachable_unchecked() },
-        };
+        let char_escape = CharEscape::from_escape_table(escape, byte);
         tri!(formatter.write_char_escape(writer, char_escape));
+
+        start = i + 1;
     }
 
-    // Safety: bytes is a valid utf8 string, since we only split on ascii sequences
-    let string_run = unsafe { str::from_utf8_unchecked(bytes) };
-    if string_run.is_empty() {
+    if start == bytes.len() {
         return Ok(());
     }
 
-    formatter.write_string_fragment(writer, string_run)
+    formatter.write_string_fragment(writer, &value[start..])
 }
 
 const BB: u8 = b'b'; // \x08

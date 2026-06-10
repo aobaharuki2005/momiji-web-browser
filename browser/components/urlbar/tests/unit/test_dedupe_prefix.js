@@ -18,23 +18,19 @@ add_task(async function dedupe_prefix() {
     {
       uri: "http://example.com/foo/",
       title: "Example Page",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
     {
       uri: "http://www.example.com/foo/",
       title: "Example Page",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
     {
       uri: "https://example.com/foo/",
       title: "Example Page",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
     // Note that we add https://www.example.com/foo/ twice here.
     {
       uri: "https://www.example.com/foo/",
       title: "Example Page",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
     {
       uri: "https://www.example.com/foo/",
@@ -159,23 +155,19 @@ add_task(async function hideHeuristic() {
     {
       uri: "http://example.com/foo/",
       title: "Example Page",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
     {
       uri: "http://www.example.com/foo/",
       title: "Example Page",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
     {
       uri: "https://example.com/foo/",
       title: "Example Page",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
     // Note that we add https://www.example.com/foo/ twice here.
     {
       uri: "https://www.example.com/foo/",
       title: "Example Page",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
     {
       uri: "https://www.example.com/foo/",

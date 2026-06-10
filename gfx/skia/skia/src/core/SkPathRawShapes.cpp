@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Google LLC
+ * Copyright 2025 Google LLC.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -32,7 +32,7 @@ static void set_as_rect(SkPathRaw* raw, SkSpan<SkPoint> storage,
     raw->fConics = {};
     raw->fBounds = r;
     raw->fFillType = kDefFillType;
-    raw->fConvexity = SkPathDirection_ToConvexity(dir);
+    raw->fIsConvex = true;
     raw->fSegmentMask = gRectSegMask;
 
     SkPath_RectPointIterator iter(r, dir, index);
@@ -72,7 +72,7 @@ static void set_as_oval(SkPathRaw* raw, SkSpan<SkPoint> storage,
     raw->fConics = gFourQuarterCircleConics;
     raw->fBounds = r;
     raw->fFillType = kDefFillType;
-    raw->fConvexity = SkPathDirection_ToConvexity(dir);
+    raw->fIsConvex = true;
     raw->fSegmentMask = gOvalSegMask;
 
     SkPath_OvalPointIterator ovalIter(r, dir, index);
@@ -126,7 +126,7 @@ static void set_as_rrect(SkPathRaw* raw, SkSpan<SkPoint> storage,
     raw->fConics = gFourQuarterCircleConics;
     raw->fBounds = bounds;
     raw->fFillType = kDefFillType;
-    raw->fConvexity = SkPathDirection_ToConvexity(dir);
+    raw->fIsConvex = true;
     raw->fSegmentMask = gRRectSegMask;
 
     SkPath_RRectPointIterator rrectIter(rrect, dir, index);
@@ -193,19 +193,9 @@ const SkPathVerb gTriangle_Verbs[] = {
     SkPathVerb::kClose
 };
 
-static SkPathConvexity tri_to_convexity(SkSpan<const SkPoint> pts) {
-    SkVector u = pts[1] - pts[0],
-             v = pts[2] - pts[1];
-    float cross = u.fX * v.fY - u.fY * v.fX;
-
-    return cross > 0 ? SkPathConvexity::kConvex_CW
-                     : (cross < 0) ? SkPathConvexity::kConvex_CCW
-                                   : SkPathConvexity::kConvex_Degenerate;
-}
-
 SkPathRawShapes::Triangle::Triangle(SkSpan<const SkPoint> threePoints, const SkRect& bounds)
     : SkPathRaw{threePoints, gTriangle_Verbs, {}, bounds,
-                SkPathFillType::kDefault, tri_to_convexity(threePoints), kLine_SkPathSegmentMask}
+                SkPathFillType::kDefault, true, kLine_SkPathSegmentMask}
 {
     SkASSERT(threePoints.size() == 3);
     SkASSERT(SkRect::Bounds(threePoints).value() == bounds);

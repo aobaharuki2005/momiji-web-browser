@@ -63,7 +63,7 @@ async function checkErrorForInvalidUriLoad_feltPrivacyToTrue(l10nId) {
     );
 
     Assert.strictEqual(
-      netErrorCard.errorTitle.dataset.l10nId,
+      netErrorCard.netErrorTitleText.dataset.l10nId,
       expectedl10nId,
       "Correct error page title is set"
     );
@@ -80,7 +80,9 @@ registerCleanupFunction(function () {
 add_task(async function test_offline_mode() {
   Services.io.offline = true;
   await checkErrorForInvalidUriLoad("netOffline-title");
-  await checkErrorForInvalidUriLoad_feltPrivacyToTrue("netOffline-title");
+  await checkErrorForInvalidUriLoad_feltPrivacyToTrue(
+    "fp-neterror-offline-body-title"
+  );
 });
 
 add_task(async function test_internet_connection_offline() {

@@ -407,7 +407,22 @@ function background(events) {
 
   for (let [name, args] of Object.entries(events)) {
     browser.test.log(`adding listener for ${name}`);
-    browser.webRequest[name].addListener(getListener(name), ...args);
+    try {
+      browser.webRequest[name].addListener(getListener(name), ...args);
+    } catch (e) {
+      browser.test.assertTrue(
+        /\brequestBody\b/.test(e.message),
+        "Request body is unsupported"
+      );
+
+      // RequestBody is disabled in release builds.
+      if (!/\brequestBody\b/.test(e.message)) {
+        throw e;
+      }
+
+      args.splice(args.indexOf("requestBody"), 1);
+      browser.webRequest[name].addListener(getListener(name), ...args);
+    }
   }
 }
 

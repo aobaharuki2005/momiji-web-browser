@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -439,7 +441,13 @@ class DataChannel {
   // Called when there will be no more data sent
   void EndOfStream();
 
-  RefPtr<dom::RTCDataChannel> GetDomDataChannel() const;
+  dom::RTCDataChannel* GetDomDataChannel() const {
+    MOZ_ASSERT(mDomEventTarget->IsOnCurrentThread());
+    if (NS_IsMainThread()) {
+      return mMainthreadDomDataChannel;
+    }
+    return mWorkerDomDataChannel;
+  }
 
  private:
   nsresult AddDataToBinaryMsg(const char* data, uint32_t size);
@@ -457,7 +465,6 @@ class DataChannel {
   dom::RTCDataChannel* mMainthreadDomDataChannel = nullptr;
   bool mHasWorkerDomDataChannel = false;
   bool mEverOpened = false;
-  bool mAnnouncedOpen = false;
   bool mAnnouncedClosed = false;
   uint16_t mStream;
   RefPtr<GenericNonExclusivePromise> mMessagesSentPromise;

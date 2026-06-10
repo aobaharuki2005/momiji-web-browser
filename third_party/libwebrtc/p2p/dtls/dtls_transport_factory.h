@@ -14,12 +14,11 @@
 #include <memory>
 
 #include "api/crypto/crypto_options.h"
-#include "api/ice_transport_interface.h"
-#include "api/scoped_refptr.h"
+#include "p2p/base/ice_transport_internal.h"
+#include "p2p/dtls/dtls_transport_internal.h"
 #include "rtc_base/ssl_stream_adapter.h"
 
 namespace webrtc {
-class DtlsTransportInternal;
 
 // This interface is used to create DTLS transports. The external transports
 // can be injected into the JsepTransportController through it.
@@ -32,7 +31,7 @@ class DtlsTransportFactory {
   virtual ~DtlsTransportFactory() = default;
 
   virtual std::unique_ptr<DtlsTransportInternal> CreateDtlsTransport(
-      scoped_refptr<IceTransportInterface> ice,
+      IceTransportInternal* ice,
       const CryptoOptions& crypto_options,
       SSLProtocolVersion max_version) = 0;
 };

@@ -6,13 +6,13 @@
 //! For a usage example, see the [UrlPattern] documentation.
 
 mod canonicalize_and_process;
-pub mod component;
+mod component;
 mod constructor_parser;
 mod error;
-pub mod matcher;
-pub mod parser;
+mod matcher;
+mod parser;
 pub mod quirks;
-pub mod regexp;
+mod regexp;
 mod tokenizer;
 
 pub use error::Error;
@@ -20,21 +20,17 @@ use serde::Deserialize;
 use serde::Serialize;
 use url::Url;
 
-use crate::canonicalize_and_process::ProcessType;
 use crate::canonicalize_and_process::is_special_scheme;
 use crate::canonicalize_and_process::process_base_url;
 use crate::canonicalize_and_process::special_scheme_default_port;
+use crate::canonicalize_and_process::ProcessType;
 use crate::component::Component;
 use crate::regexp::RegExp;
-
-pub use parser::RegexSyntax;
 
 /// Options to create a URL pattern.
 #[derive(Debug, Default, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UrlPatternOptions {
-  #[serde(default)]
-  pub regex_syntax: RegexSyntax,
   pub ignore_case: bool,
 }
 
@@ -214,7 +210,7 @@ impl UrlPatternInit {
           let baseurl_path = url::quirks::pathname(base_url);
           let slash_index = baseurl_path.rfind('/');
           if let Some(slash_index) = slash_index {
-            let new_pathname = &baseurl_path[..=slash_index];
+            let new_pathname = baseurl_path[..=slash_index].to_string();
             result.pathname =
               Some(format!("{}{}", new_pathname, result.pathname.unwrap()));
           }
@@ -288,14 +284,14 @@ fn is_absolute_pathname(
 /// ```
 #[derive(Debug)]
 pub struct UrlPattern<R: RegExp = regex::Regex> {
-  pub protocol: Component<R>,
-  pub username: Component<R>,
-  pub password: Component<R>,
-  pub hostname: Component<R>,
-  pub port: Component<R>,
-  pub pathname: Component<R>,
-  pub search: Component<R>,
-  pub hash: Component<R>,
+  protocol: Component<R>,
+  username: Component<R>,
+  password: Component<R>,
+  hostname: Component<R>,
+  port: Component<R>,
+  pathname: Component<R>,
+  search: Component<R>,
+  hash: Component<R>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -344,10 +340,7 @@ impl<R: RegExp> UrlPattern<R> {
     let protocol = Component::compile(
       processed_init.protocol.as_deref(),
       canonicalize_and_process::canonicalize_protocol,
-      parser::Options {
-        regex_syntax: options.regex_syntax,
-        ..parser::Options::default()
-      },
+      parser::Options::default(),
     )?
     .optionally_transpose_regex_error(report_regex_errors)?;
 
@@ -361,27 +354,20 @@ impl<R: RegExp> UrlPattern<R> {
       Component::compile(
         processed_init.hostname.as_deref(),
         canonicalize_and_process::canonicalize_ipv6_hostname,
-        parser::Options {
-          regex_syntax: options.regex_syntax,
-          ..parser::Options::hostname()
-        },
+        parser::Options::hostname(),
       )?
       .optionally_transpose_regex_error(report_regex_errors)?
     } else {
       Component::compile(
         processed_init.hostname.as_deref(),
         canonicalize_and_process::canonicalize_hostname,
-        parser::Options {
-          regex_syntax: options.regex_syntax,
-          ..parser::Options::hostname()
-        },
+        parser::Options::hostname(),
       )?
       .optionally_transpose_regex_error(report_regex_errors)?
     };
 
     let compile_options = parser::Options {
       ignore_case: options.ignore_case,
-      regex_syntax: options.regex_syntax,
       ..Default::default()
     };
 
@@ -405,7 +391,6 @@ impl<R: RegExp> UrlPattern<R> {
           canonicalize_and_process::canonicalize_pathname,
           parser::Options {
             ignore_case: options.ignore_case,
-            regex_syntax: options.regex_syntax,
             ..parser::Options::pathname()
           },
         )?
@@ -425,29 +410,20 @@ impl<R: RegExp> UrlPattern<R> {
       username: Component::compile(
         processed_init.username.as_deref(),
         canonicalize_and_process::canonicalize_username,
-        parser::Options {
-          regex_syntax: options.regex_syntax,
-          ..parser::Options::default()
-        },
+        parser::Options::default(),
       )?
       .optionally_transpose_regex_error(report_regex_errors)?,
       password: Component::compile(
         processed_init.password.as_deref(),
         canonicalize_and_process::canonicalize_password,
-        parser::Options {
-          regex_syntax: options.regex_syntax,
-          ..parser::Options::default()
-        },
+        parser::Options::default(),
       )?
       .optionally_transpose_regex_error(report_regex_errors)?,
       hostname,
       port: Component::compile(
         processed_init.port.as_deref(),
         |port| canonicalize_and_process::canonicalize_port(port, None),
-        parser::Options {
-          regex_syntax: options.regex_syntax,
-          ..parser::Options::default()
-        },
+        parser::Options::default(),
       )?
       .optionally_transpose_regex_error(report_regex_errors)?,
       pathname,
@@ -648,22 +624,21 @@ mod tests {
   use serde::Serialize;
   use url::Url;
 
+  use crate::quirks;
+  use crate::quirks::StringOrInit;
   use crate::UrlPatternComponentResult;
   use crate::UrlPatternOptions;
   use crate::UrlPatternResult;
-  use crate::quirks;
-  use crate::quirks::StringOrInit;
 
   use super::UrlPattern;
   use super::UrlPatternInit;
 
   #[derive(Debug, Deserialize)]
   #[serde(untagged)]
-  #[serde(bound(deserialize = "'de: 'a"))]
   #[allow(clippy::large_enum_variant)]
-  enum ExpectedMatch<'a> {
+  enum ExpectedMatch {
     String(String),
-    MatchResult(MatchResult<'a>),
+    MatchResult(MatchResult),
   }
 
   #[derive(Debug, Deserialize)]
@@ -675,30 +650,28 @@ mod tests {
   #[allow(clippy::large_enum_variant)]
   #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
   #[serde(untagged)]
-  pub enum StringOrInitOrOptions<'a> {
+  pub enum StringOrInitOrOptions {
     Options(UrlPatternOptions),
-    StringOrInit(quirks::StringOrInit<'a>),
+    StringOrInit(quirks::StringOrInit),
   }
 
   #[derive(Debug, Deserialize)]
-  #[serde(bound(deserialize = "'de: 'a"))]
-  struct TestCase<'a> {
+  struct TestCase {
     skip: Option<String>,
-    pattern: Vec<StringOrInitOrOptions<'a>>,
+    pattern: Vec<StringOrInitOrOptions>,
     #[serde(default)]
-    inputs: Vec<quirks::StringOrInit<'a>>,
-    expected_obj: Option<quirks::StringOrInit<'a>>,
-    expected_match: Option<ExpectedMatch<'a>>,
+    inputs: Vec<quirks::StringOrInit>,
+    expected_obj: Option<quirks::StringOrInit>,
+    expected_match: Option<ExpectedMatch>,
     #[serde(default)]
     exactly_empty_components: Vec<String>,
   }
 
   #[derive(Debug, Deserialize)]
-  #[serde(bound(deserialize = "'de: 'a"))]
-  struct MatchResult<'a> {
+  struct MatchResult {
     #[serde(deserialize_with = "deserialize_match_result_inputs")]
     #[serde(default)]
-    inputs: Option<(quirks::StringOrInit<'a>, Option<String>)>,
+    inputs: Option<(quirks::StringOrInit, Option<String>)>,
 
     protocol: Option<ComponentResult>,
     username: Option<ComponentResult>,
@@ -710,17 +683,17 @@ mod tests {
     hash: Option<ComponentResult>,
   }
 
-  fn deserialize_match_result_inputs<'a, D>(
+  fn deserialize_match_result_inputs<'de, D>(
     deserializer: D,
-  ) -> Result<Option<(quirks::StringOrInit<'a>, Option<String>)>, D::Error>
+  ) -> Result<Option<(quirks::StringOrInit, Option<String>)>, D::Error>
   where
-    D: serde::Deserializer<'a>,
+    D: serde::Deserializer<'de>,
   {
     #[derive(Debug, Deserialize)]
     #[serde(untagged)]
-    enum MatchResultInputs<'a> {
-      OneArgument((quirks::StringOrInit<'a>,)),
-      TwoArguments(quirks::StringOrInit<'a>, String),
+    enum MatchResultInputs {
+      OneArgument((quirks::StringOrInit,)),
+      TwoArguments(quirks::StringOrInit, String),
     }
 
     let res = Option::<MatchResultInputs>::deserialize(deserializer)?;
@@ -814,7 +787,7 @@ mod tests {
       ..
     }) = &input
     {
-      base_url = Some(url.clone().into())
+      base_url = Some(url.clone())
     }
 
     macro_rules! assert_field {
@@ -924,8 +897,7 @@ mod tests {
 
     let input = input.unwrap_or_else(|| StringOrInit::Init(Default::default()));
 
-    let expected_input =
-      (input.clone(), base_url.clone().map(|s| s.to_string()));
+    let expected_input = (input.clone(), base_url.clone());
 
     let match_input = quirks::process_match_input(input, base_url.as_deref());
 
@@ -935,7 +907,7 @@ mod tests {
         println!("✅ Passed");
         return;
       }
-    }
+    };
 
     let input = match_input.expect("failed to parse match input");
 
@@ -961,7 +933,7 @@ mod tests {
         println!("✅ Passed");
         return;
       }
-    }
+    };
 
     let expected_match = case.expected_match.map(|x| match x {
       ExpectedMatch::String(_) => unreachable!(),
@@ -1062,7 +1034,7 @@ mod tests {
   #[test]
   fn issue46() {
     quirks::process_construct_pattern_input(
-      quirks::StringOrInit::String(":café://:foo".to_owned().into()),
+      quirks::StringOrInit::String(":café://:foo".to_owned()),
       None,
     )
     .unwrap();
@@ -1165,17 +1137,5 @@ mod tests {
   fn issue78() {
     use crate::canonicalize_and_process::canonicalize_pathname;
     assert!(canonicalize_pathname("3�/..").is_ok());
-  }
-
-  #[test]
-  fn matcher_matches_doesnt_crash() {
-    let input = "(H\\PH)e:*) (emH\\<N)E*(elNH\\PH)e�{}?u";
-    let base = "example.com";
-    let base_url = Url::parse(base).ok();
-    let init =
-      UrlPatternInit::parse_constructor_string::<regex::Regex>(input, base_url);
-    let _ = init.and_then(|init_res| {
-      UrlPattern::<Regex>::parse(init_res, Default::default())
-    });
   }
 }

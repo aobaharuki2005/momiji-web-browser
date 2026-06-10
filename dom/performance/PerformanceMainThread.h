@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -114,14 +116,6 @@ class PerformanceMainThread final : public Performance,
 
   bool IsGlobalObjectWindow() const override { return true; };
 
-  void RecordModalFallbackTime() override;
-  DOMHighResTimeStamp GetLastModalFallbackTime() const override {
-    return mLastModalFallbackTime;
-  }
-
-  void SetCurrentEventTimingEntry(PerformanceEventTiming* aEntry);
-  PerformanceEventTiming* GetCurrentEventTimingEntry() const;
-
   bool HasDispatchedInputEvent() const { return mHasDispatchedInputEvent; }
 
   void SetHasDispatchedScrollEvent();
@@ -186,12 +180,6 @@ class PerformanceMainThread final : public Performance,
   void SetHasDispatchedInputEvent();
 
   bool mHasQueuedRefreshdriverObserver = false;
-  DOMHighResTimeStamp mLastModalFallbackTime = 0;
-
-  // The event timing entry currently being dispatched. Managed by
-  // EventDispatcher via SetCurrentEventTimingEntry to support
-  // RecordModalFallbackTime being called from modal dialog code.
-  RefPtr<PerformanceEventTiming> mCurrentEventTimingEntry;
 
   RefPtr<class EventCounts> mEventCounts;
   void IncEventCount(const nsAtom* aType);

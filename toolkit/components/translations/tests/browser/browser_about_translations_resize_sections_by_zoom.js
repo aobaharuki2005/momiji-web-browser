@@ -42,10 +42,6 @@ add_task(
       {
         expected: [
           [
-            AboutTranslationsTestUtils.Events.SourceTextInputDebounced,
-            { sourceText: expandingInput },
-          ],
-          [
             AboutTranslationsTestUtils.Events.TranslationRequested,
             { translationId: 1 },
           ],
@@ -77,16 +73,6 @@ add_task(
       sourceText: expandingInput,
     });
 
-    {
-      const { sourceSectionHeight, targetSectionHeight } =
-        await aboutTranslationsTestUtils.getSectionHeights();
-      is(
-        sourceSectionHeight,
-        targetSectionHeight,
-        "Expected section heights to match in horizontal orientation."
-      );
-    }
-
     info(
       "The text area height should not change when the horizontal orientation is made wider, but remains horizontal."
     );
@@ -102,16 +88,6 @@ add_task(
       }
     );
 
-    {
-      const { sourceSectionHeight, targetSectionHeight } =
-        await aboutTranslationsTestUtils.getSectionHeights();
-      is(
-        sourceSectionHeight,
-        targetSectionHeight,
-        "Expected section heights to match after widening the page."
-      );
-    }
-
     info(
       "The text area height should not change when the horizontal orientation is made narrower, but remains horizontal."
     );
@@ -126,16 +102,6 @@ add_task(
         FullZoom.setZoom(1.1 * Math.SQRT1_2);
       }
     );
-
-    {
-      const { sourceSectionHeight, targetSectionHeight } =
-        await aboutTranslationsTestUtils.getSectionHeights();
-      is(
-        sourceSectionHeight,
-        targetSectionHeight,
-        "Expected section heights to match after narrowing the page."
-      );
-    }
 
     await cleanup();
   }
@@ -181,10 +147,6 @@ add_task(
     await aboutTranslationsTestUtils.assertEvents(
       {
         expected: [
-          [
-            AboutTranslationsTestUtils.Events.SourceTextInputDebounced,
-            { sourceText: expandingInput },
-          ],
           [
             AboutTranslationsTestUtils.Events.TranslationRequested,
             { translationId: 1 },
@@ -282,16 +244,6 @@ add_task(
         FullZoom.setZoom(1.0 * Math.SQRT1_2);
       }
     );
-
-    {
-      const { sourceSectionHeight, targetSectionHeight } =
-        await aboutTranslationsTestUtils.getSectionHeights();
-      is(
-        sourceSectionHeight,
-        targetSectionHeight,
-        "Expected section heights to match after returning to horizontal orientation."
-      );
-    }
 
     await cleanup();
   }

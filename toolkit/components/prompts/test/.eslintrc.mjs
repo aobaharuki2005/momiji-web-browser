@@ -5,8 +5,8 @@
 export default [
   {
     rules: {
-      // documentGlobal doesn't exist in content privileged windows.
-      "mozilla/use-documentGlobal": "off",
+      // ownerGlobal doesn't exist in content privileged windows.
+      "mozilla/use-ownerGlobal": "off",
     },
   },
 ];

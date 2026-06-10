@@ -11,59 +11,45 @@ add_task(async function testDirtyEnable() {
   // when the add-on is enabled, it doesn't do anything - DoH remains turned on.
   setFailingHeuristics();
   let prefPromise = TestUtils.waitForPrefChange(prefs.DISABLED_PREF);
-  Services.prefs.setIntPref(prefs.NETWORK_TRR_MODE_PREF, 2);
-  Services.prefs.setBoolPref(prefs.ENABLED_PREF, true);
+  Preferences.set(prefs.NETWORK_TRR_MODE_PREF, 2);
+  Preferences.set(prefs.ENABLED_PREF, true);
   await prefPromise;
   is(
-    Services.prefs.getBoolPref(prefs.DISABLED_PREF),
+    Preferences.get(prefs.DISABLED_PREF, false),
     true,
     "Disabled state recorded."
   );
-  ok(
-    !Services.prefs.prefHasUserValue(prefs.BREADCRUMB_PREF),
+  is(
+    Preferences.get(prefs.BREADCRUMB_PREF),
+    undefined,
     "Breadcrumb not saved."
   );
-  ok(
-    !Services.prefs.prefHasUserValue(prefs.TRR_SELECT_URI_PREF),
+  is(
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
+    undefined,
     "TRR selection not performed."
   );
-  is(
-    Services.prefs.getIntPref(prefs.NETWORK_TRR_MODE_PREF),
-    2,
-    "TRR mode preserved."
-  );
-  await ensureNoTRRSelectionTelemetry();
+  is(Preferences.get(prefs.NETWORK_TRR_MODE_PREF), 2, "TRR mode preserved.");
+  ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(undefined);
-  await ensureNoHeuristicsTelemetry();
+  ensureNoHeuristicsTelemetry();
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(undefined);
-  await ensureNoHeuristicsTelemetry();
-  is(
-    Services.prefs.getIntPref(prefs.NETWORK_TRR_MODE_PREF),
-    2,
-    "TRR mode preserved."
-  );
+  ensureNoHeuristicsTelemetry();
+  is(Preferences.get(prefs.NETWORK_TRR_MODE_PREF), 2, "TRR mode preserved.");
 
   // Restart the controller for good measure.
   await restartDoHController();
   await ensureNoTRRModeChange(undefined);
-  await ensureNoTRRSelectionTelemetry();
-  await ensureNoHeuristicsTelemetry();
-  is(
-    Services.prefs.getIntPref(prefs.NETWORK_TRR_MODE_PREF),
-    2,
-    "TRR mode preserved."
-  );
+  ensureNoTRRSelectionTelemetry();
+  ensureNoHeuristicsTelemetry();
+  is(Preferences.get(prefs.NETWORK_TRR_MODE_PREF), 2, "TRR mode preserved.");
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(undefined);
-  is(
-    Services.prefs.getIntPref(prefs.NETWORK_TRR_MODE_PREF),
-    2,
-    "TRR mode preserved."
-  );
-  await ensureNoHeuristicsTelemetry();
+  is(Preferences.get(prefs.NETWORK_TRR_MODE_PREF), 2, "TRR mode preserved.");
+  ensureNoHeuristicsTelemetry();
 });

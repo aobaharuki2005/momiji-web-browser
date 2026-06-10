@@ -7,10 +7,11 @@ import unittest
 from io import StringIO
 
 import mozfile
+import mozunit
 from mozlog import commandline, formatters, handlers, reader, stdadapter, structuredlog
 
 
-class Handler:
+class TestHandler:
     def __init__(self):
         self.items = []
 
@@ -29,7 +30,7 @@ class Handler:
 class BaseStructuredTest(unittest.TestCase):
     def setUp(self):
         self.logger = structuredlog.StructuredLogger("test")
-        self.handler = Handler()
+        self.handler = TestHandler()
         self.logger.add_handler(self.handler)
 
     def pop_last_item(self):
@@ -608,7 +609,7 @@ class TestStructuredLog(BaseStructuredTest):
             logging.root.setLevel(old_level)
 
     def test_add_remove_handlers(self):
-        handler = Handler()
+        handler = TestHandler()
         self.logger.add_handler(handler)
         self.logger.info("test1")
 
@@ -875,9 +876,13 @@ class TestComponentFilter(BaseStructuredTest):
 
 
 class TestCommandline(unittest.TestCase):
-    def log_lines(self, log_file):
-        log_file.seek(0)
-        return [line.rstrip() for line in log_file.readlines()]
+    def setUp(self):
+        self.logfile = mozfile.NamedTemporaryFile()
+
+    @property
+    def loglines(self):
+        self.logfile.seek(0)
+        return [line.rstrip() for line in self.logfile.readlines()]
 
     def test_setup_logging(self):
         parser = argparse.ArgumentParser()
@@ -922,53 +927,44 @@ class TestCommandline(unittest.TestCase):
         parser = argparse.ArgumentParser()
         commandline.add_logging_group(parser)
 
-        with mozfile.NamedTemporaryFile() as log_file:
-            args = parser.parse_args(["--log-tbpl=%s" % log_file.name])
-            logger = commandline.setup_logging("test_fmtopts", args, {})
-            logger.info("INFO message")
-            logger.debug("DEBUG message")
-            logger.error("ERROR message")
-            # The debug level is not logged by default.
-            self.assertEqual(
-                [b"INFO message", b"ERROR message"], self.log_lines(log_file)
-            )
-            logger.handlers[0].stream.close()
+        args = parser.parse_args(["--log-tbpl=%s" % self.logfile.name])
+        logger = commandline.setup_logging("test_fmtopts", args, {})
+        logger.info("INFO message")
+        logger.debug("DEBUG message")
+        logger.error("ERROR message")
+        # The debug level is not logged by default.
+        self.assertEqual([b"INFO message", b"ERROR message"], self.loglines)
 
     def test_logging_errorlevel(self):
         parser = argparse.ArgumentParser()
         commandline.add_logging_group(parser)
-        with mozfile.NamedTemporaryFile() as log_file:
-            args = parser.parse_args([
-                "--log-tbpl=%s" % log_file.name,
-                "--log-tbpl-level=error",
-            ])
-            logger = commandline.setup_logging("test_fmtopts", args, {})
-            logger.info("INFO message")
-            logger.debug("DEBUG message")
-            logger.error("ERROR message")
+        args = parser.parse_args([
+            "--log-tbpl=%s" % self.logfile.name,
+            "--log-tbpl-level=error",
+        ])
+        logger = commandline.setup_logging("test_fmtopts", args, {})
+        logger.info("INFO message")
+        logger.debug("DEBUG message")
+        logger.error("ERROR message")
 
-            # Only the error level and above were requested.
-            self.assertEqual([b"ERROR message"], self.log_lines(log_file))
-            logger.handlers[0].stream.close()
+        # Only the error level and above were requested.
+        self.assertEqual([b"ERROR message"], self.loglines)
 
     def test_logging_debuglevel(self):
         parser = argparse.ArgumentParser()
         commandline.add_logging_group(parser)
-        with mozfile.NamedTemporaryFile() as log_file:
-            args = parser.parse_args([
-                "--log-tbpl=%s" % log_file.name,
-                "--log-tbpl-level=debug",
-            ])
-            logger = commandline.setup_logging("test_fmtopts", args, {})
-            logger.info("INFO message")
-            logger.debug("DEBUG message")
-            logger.error("ERROR message")
-            # Requesting a lower log level than default works as expected.
-            self.assertEqual(
-                [b"INFO message", b"DEBUG message", b"ERROR message"],
-                self.log_lines(log_file),
-            )
-            logger.handlers[0].stream.close()
+        args = parser.parse_args([
+            "--log-tbpl=%s" % self.logfile.name,
+            "--log-tbpl-level=debug",
+        ])
+        logger = commandline.setup_logging("test_fmtopts", args, {})
+        logger.info("INFO message")
+        logger.debug("DEBUG message")
+        logger.error("ERROR message")
+        # Requesting a lower log level than default works as expected.
+        self.assertEqual(
+            [b"INFO message", b"DEBUG message", b"ERROR message"], self.loglines
+        )
 
     def test_unused_options(self):
         parser = argparse.ArgumentParser()
@@ -999,7 +995,7 @@ class TestBuffer(BaseStructuredTest):
 
     def setUp(self):
         self.logger = structuredlog.StructuredLogger("testBuffer")
-        self.handler = handlers.BufferHandler(Handler(), message_limit=4)
+        self.handler = handlers.BufferHandler(TestHandler(), message_limit=4)
         self.logger.add_handler(self.handler)
 
     def tearDown(self):
@@ -1172,6 +1168,4 @@ class TestReader(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import mozunit
-
     mozunit.main()

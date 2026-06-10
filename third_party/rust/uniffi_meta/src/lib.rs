@@ -9,7 +9,7 @@ mod ffi_names;
 pub use ffi_names::*;
 
 mod group;
-pub use group::{create_metadata_groups, group_metadata, MetadataGroup, MetadataGroupMap};
+pub use group::{create_metadata_groups, group_metadata, MetadataGroup};
 
 mod reader;
 pub use reader::{read_metadata, read_metadata_type};
@@ -23,7 +23,7 @@ mod metadata;
 // `docs/uniffi-versioning.md` for details.
 //
 // Once we get to 1.0, then we'll need to update the scheme to something like 100 + major_version
-pub const UNIFFI_CONTRACT_VERSION: u32 = 30;
+pub const UNIFFI_CONTRACT_VERSION: u32 = 29;
 
 /// Similar to std::hash::Hash.
 ///
@@ -233,30 +233,13 @@ impl TraitMethodMetadata {
     }
 }
 
-impl From<TraitMethodMetadata> for MethodMetadata {
-    fn from(meta: TraitMethodMetadata) -> Self {
-        MethodMetadata {
-            module_path: meta.module_path,
-            self_name: meta.trait_name,
-            name: meta.name,
-            is_async: meta.is_async,
-            inputs: meta.inputs,
-            return_type: meta.return_type,
-            throws: meta.throws,
-            takes_self_by_arc: meta.takes_self_by_arc,
-            checksum: meta.checksum,
-            docstring: meta.docstring,
-        }
-    }
-}
-
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Node)]
 pub struct FnParamMetadata {
     pub name: String,
     pub ty: Type,
     pub by_ref: bool,
     pub optional: bool,
-    pub default: Option<DefaultValueMetadata>,
+    pub default: Option<LiteralMetadata>,
 }
 
 impl FnParamMetadata {
@@ -289,7 +272,7 @@ pub enum LiteralMetadata {
     EmptySequence,
     EmptyMap,
     None,
-    Some { inner: Box<DefaultValueMetadata> },
+    Some { inner: Box<LiteralMetadata> },
 }
 
 impl LiteralMetadata {
@@ -310,14 +293,6 @@ pub enum Radix {
     Hexadecimal = 16,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Checksum, Node)]
-pub enum DefaultValueMetadata {
-    // unspecified default value
-    Default,
-    // an explicit literal value.
-    Literal(LiteralMetadata),
-}
-
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Node)]
 pub struct RecordMetadata {
     pub module_path: String,
@@ -331,7 +306,7 @@ pub struct RecordMetadata {
 pub struct FieldMetadata {
     pub name: String,
     pub ty: Type,
-    pub default: Option<DefaultValueMetadata>,
+    pub default: Option<LiteralMetadata>,
     pub docstring: Option<String>,
 }
 
@@ -416,7 +391,6 @@ impl ObjectMetadata {
 /// The list of "builtin" traits we support generating helper methods for.
 /// Some interesting overlap with ObjectTraitImplMetadata, but quite different
 /// implementations for now.
-#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Node)]
 pub enum UniffiTraitMetadata {
     Debug {
@@ -432,41 +406,35 @@ pub enum UniffiTraitMetadata {
     Hash {
         hash: MethodMetadata,
     },
-    Ord {
-        cmp: MethodMetadata,
-    },
 }
 
 impl UniffiTraitMetadata {
-    fn module_path(&self) -> &str {
+    fn module_path(&self) -> &String {
         &match self {
             UniffiTraitMetadata::Debug { fmt } => fmt,
             UniffiTraitMetadata::Display { fmt } => fmt,
             UniffiTraitMetadata::Eq { eq, .. } => eq,
             UniffiTraitMetadata::Hash { hash } => hash,
-            UniffiTraitMetadata::Ord { cmp } => cmp,
         }
         .module_path
     }
 
-    pub fn self_name(&self) -> &str {
+    pub fn self_name(&self) -> &String {
         &match self {
             UniffiTraitMetadata::Debug { fmt } => fmt,
             UniffiTraitMetadata::Display { fmt } => fmt,
             UniffiTraitMetadata::Eq { eq, .. } => eq,
             UniffiTraitMetadata::Hash { hash } => hash,
-            UniffiTraitMetadata::Ord { cmp } => cmp,
         }
         .self_name
     }
 
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> &String {
         &match self {
             UniffiTraitMetadata::Debug { fmt } => fmt,
             UniffiTraitMetadata::Display { fmt } => fmt,
             UniffiTraitMetadata::Eq { eq, .. } => eq,
             UniffiTraitMetadata::Hash { hash } => hash,
-            UniffiTraitMetadata::Ord { cmp } => cmp,
         }
         .name
     }
@@ -479,7 +447,6 @@ pub enum UniffiTraitDiscriminants {
     Display,
     Eq,
     Hash,
-    Ord,
 }
 
 impl UniffiTraitDiscriminants {
@@ -489,24 +456,25 @@ impl UniffiTraitDiscriminants {
             1 => UniffiTraitDiscriminants::Display,
             2 => UniffiTraitDiscriminants::Eq,
             3 => UniffiTraitDiscriminants::Hash,
-            4 => UniffiTraitDiscriminants::Ord,
             _ => anyhow::bail!("invalid trait discriminant {v}"),
         })
     }
 }
 
 /// This notes that a type implements a Trait.
-/// eg, an `impl Tr for Ob` block.
+/// eg, an `impl Tr for Ob` block. Not many types will support this.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Node)]
 pub struct ObjectTraitImplMetadata {
     pub ty: Type,
-    pub trait_ty: Type,
+    pub trait_name: String,
+    pub tr_module_path: Option<String>,
 }
 
 impl Checksum for ObjectTraitImplMetadata {
     fn checksum<H: Hasher>(&self, state: &mut H) {
         Checksum::checksum(&self.ty, state);
-        Checksum::checksum(&self.trait_ty, state);
+        Checksum::checksum(&self.trait_name, state);
+        Checksum::checksum(&self.tr_module_path, state);
     }
 }
 
@@ -529,7 +497,6 @@ pub fn checksum<T: Checksum>(val: &T) -> u16 {
 }
 
 /// Enum covering all the possible metadata types
-#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Node)]
 pub enum Metadata {
     Namespace(NamespaceMetadata),
@@ -566,7 +533,7 @@ impl Metadata {
             Metadata::TraitMethod(meta) => &meta.module_path,
             Metadata::CustomType(meta) => &meta.module_path,
             Metadata::UniffiTrait(meta) => meta.module_path(),
-            Metadata::ObjectTraitImpl(t) => t.ty.crate_name().expect("type has no crate name"),
+            Metadata::ObjectTraitImpl(t) => t.ty.module_path().expect("type has no module"),
         }
     }
 }
@@ -647,8 +614,4 @@ impl From<ObjectTraitImplMetadata> for Metadata {
     fn from(t: ObjectTraitImplMetadata) -> Self {
         Self::ObjectTraitImpl(t)
     }
-}
-
-pub fn crate_name(module_path: &str) -> &str {
-    module_path.split("::").next().unwrap()
 }

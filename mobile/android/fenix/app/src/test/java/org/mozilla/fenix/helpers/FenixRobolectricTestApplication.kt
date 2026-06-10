@@ -26,7 +26,7 @@ class FenixRobolectricTestApplication : FenixApplication() {
         setApplicationTheme()
     }
 
-    override val components = mockk<Components>(relaxed = true)
+    override val components = mockk<Components>()
     override fun initializeFenixProcess() = Unit
 
     private fun setApplicationTheme() {

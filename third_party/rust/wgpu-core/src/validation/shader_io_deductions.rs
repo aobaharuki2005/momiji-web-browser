@@ -12,32 +12,18 @@ pub enum MaxVertexShaderOutputDeduction {
     /// When a pipeline's [`crate::pipeline::RenderPipelineDescriptor::primitive`] is set to
     /// [`wgt::PrimitiveTopology::PointList`].
     PointListPrimitiveTopology,
-    /// When a clip distances array primitive is used in an output.
-    ClipDistances { array_size: u32 },
-}
-
-impl MaxVertexShaderOutputDeduction {
-    fn variables_from_clip_distance_slot(num_slots: u32) -> u32 {
-        num_slots.div_ceil(4)
-    }
 }
 
 impl MaxVertexShaderOutputDeduction {
     pub fn for_variables(self) -> u32 {
         match self {
             Self::PointListPrimitiveTopology => 1,
-            Self::ClipDistances { array_size } => {
-                Self::variables_from_clip_distance_slot(array_size)
-            }
         }
     }
 
     pub fn for_location(self) -> u32 {
         match self {
             Self::PointListPrimitiveTopology => 0,
-            Self::ClipDistances { array_size } => {
-                Self::variables_from_clip_distance_slot(array_size)
-            }
         }
     }
 }
@@ -63,7 +49,7 @@ impl MaxFragmentShaderInputDeduction {
                 | InterStageBuiltIn::ViewIndex
                 | InterStageBuiltIn::PointCoord => 1,
                 InterStageBuiltIn::Barycentric => 3,
-                InterStageBuiltIn::Position => 0,
+                InterStageBuiltIn::Position => 4,
             },
         }
     }
@@ -72,24 +58,26 @@ impl MaxFragmentShaderInputDeduction {
         use naga::BuiltIn;
 
         Some(Self::InterStageBuiltIn(match builtin {
-            BuiltIn::Position { .. } => InterStageBuiltIn::Position,
             BuiltIn::FrontFacing => InterStageBuiltIn::FrontFacing,
             BuiltIn::SampleIndex => InterStageBuiltIn::SampleIndex,
             BuiltIn::SampleMask => InterStageBuiltIn::SampleMask,
             BuiltIn::PrimitiveIndex => InterStageBuiltIn::PrimitiveIndex,
             BuiltIn::SubgroupSize => InterStageBuiltIn::SubgroupSize,
             BuiltIn::SubgroupInvocationId => InterStageBuiltIn::SubgroupInvocationId,
+
             BuiltIn::PointCoord => InterStageBuiltIn::PointCoord,
-            BuiltIn::Barycentric { .. } => InterStageBuiltIn::Barycentric,
+            BuiltIn::Barycentric => InterStageBuiltIn::Barycentric,
+            BuiltIn::Position { .. } => InterStageBuiltIn::Position,
             BuiltIn::ViewIndex => InterStageBuiltIn::ViewIndex,
+
             BuiltIn::BaseInstance
             | BuiltIn::BaseVertex
-            | BuiltIn::ClipDistances
+            | BuiltIn::ClipDistance
             | BuiltIn::CullDistance
             | BuiltIn::InstanceIndex
             | BuiltIn::PointSize
             | BuiltIn::VertexIndex
-            | BuiltIn::DrawIndex
+            | BuiltIn::DrawID
             | BuiltIn::FragDepth
             | BuiltIn::GlobalInvocationId
             | BuiltIn::LocalInvocationId
@@ -107,20 +95,7 @@ impl MaxFragmentShaderInputDeduction {
             | BuiltIn::VertexCount
             | BuiltIn::Vertices
             | BuiltIn::PrimitiveCount
-            | BuiltIn::Primitives
-            | BuiltIn::RayInvocationId
-            | BuiltIn::NumRayInvocations
-            | BuiltIn::InstanceCustomData
-            | BuiltIn::GeometryIndex
-            | BuiltIn::WorldRayOrigin
-            | BuiltIn::WorldRayDirection
-            | BuiltIn::ObjectRayOrigin
-            | BuiltIn::ObjectRayDirection
-            | BuiltIn::RayTmin
-            | BuiltIn::RayTCurrentMax
-            | BuiltIn::ObjectToWorld
-            | BuiltIn::WorldToObject
-            | BuiltIn::HitKind => return None,
+            | BuiltIn::Primitives => return None,
         }))
     }
 }
@@ -132,7 +107,6 @@ impl MaxFragmentShaderInputDeduction {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum InterStageBuiltIn {
     // Standard for WebGPU
-    Position,
     FrontFacing,
     SampleIndex,
     SampleMask,
@@ -143,6 +117,7 @@ pub enum InterStageBuiltIn {
     // Non-standard
     PointCoord,
     Barycentric,
+    Position,
     ViewIndex,
 }
 
@@ -172,18 +147,9 @@ where
             .filter(|(_, effective_deduction)| *effective_deduction > 0);
         if relevant_deductions.clone().next().is_some() {
             writeln!(f, "; note that some deductions apply during validation:")?;
-            let mut wrote_something = false;
             for deduction in deductions {
-                let deducted_amount = accessor(deduction);
-                if deducted_amount > 0 {
-                    writeln!(f, "\n- {deduction:?}: {}", accessor(deduction))?;
-                    wrote_something = true;
-                }
+                writeln!(f, "\n- {deduction:?}: {}", accessor(deduction))?;
             }
-            debug_assert!(
-                wrote_something,
-                "no substantial deductions found in error display"
-            );
         }
         Ok(())
     })

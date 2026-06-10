@@ -1,9 +1,12 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerProxy.h"
 
+#include "ServiceWorkerCloneData.h"
 #include "ServiceWorkerInfo.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerParent.h"
@@ -97,16 +100,16 @@ void ServiceWorkerProxy::RevokeActor(ServiceWorkerParent* aActor) {
   MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 }
 
-void ServiceWorkerProxy::PostMessage(ipc::StructuredCloneData* aData,
+void ServiceWorkerProxy::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
                                      const PostMessageSource& aSource) {
   AssertIsOnBackgroundThread();
   RefPtr<ServiceWorkerProxy> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      __func__, [self, data = RefPtr{aData}, aSource]() mutable {
+      __func__, [self, data = std::move(aData), aSource]() mutable {
         if (!self->mInfo) {
           return;
         }
-        self->mInfo->PostMessage(data, aSource);
+        self->mInfo->PostMessage(std::move(data), aSource);
       });
   MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 }

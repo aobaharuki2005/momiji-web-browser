@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef CANDIDATE_INFO_H_
-#define CANDIDATE_INFO_H_
+#ifndef _CANDIDATE_INFO_H__
+#define _CANDIDATE_INFO_H__
 
 #include <cstdint>
 #include <string>
@@ -22,14 +22,6 @@ struct CandidateInfo {
   uint16_t mDefaultPortRtcp = 0;
 };
 
-struct IceCandidateErrorInfo {
-  std::string mAddress;
-  uint16_t mPort = 0;
-  std::string mUrl;
-  uint16_t mErrorCode = 0;
-  std::string mErrorText;
-};
-
 }  // namespace mozilla
 
-#endif  // CANDIDATE_INFO_H_
+#endif  //_CANDIDATE_INFO_H__

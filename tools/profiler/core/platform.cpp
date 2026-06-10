@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -65,6 +67,7 @@
 #include "memory_hooks.h"
 #include "memory_markers.h"
 #include "mozilla/ArrayAlgorithm.h"
+#include "mozilla/AutoProfilerLabel.h"
 #include "mozilla/BaseAndGeckoProfilerDetail.h"
 #include "mozilla/BaseProfiler.h"
 #include "mozilla/CycleCollectedJSContext.h"
@@ -118,6 +121,7 @@
 #include <algorithm>
 #include <errno.h>
 #include <fstream>
+#include <ostream>
 #include <set>
 #include <sstream>
 #include <string_view>
@@ -357,7 +361,7 @@ class GeckoJavaSampler
     // devtools/client/performance-new/shared/background.sys.mjs
     auto filtersTempPtr =
         mozilla::TransformIntoNewArray(filtersTemp, convertToPtr);
-    profiler_start(PowerOfTwo32(128u * 1024 * 1024), 5.0, features,
+    profiler_start(PowerOfTwo32(128 * 1024 * 1024), 5.0, features,
                    filtersTempPtr.Elements(), filtersTempPtr.Length(), 0,
                    Nothing());
   }
@@ -486,7 +490,7 @@ Json::String ToCompactString(const Json::Value& aJsonValue) {
 
 MOZ_RUNINIT /* static */ mozilla::baseprofiler::detail::BaseProfilerMutex
     ProfilingLog::gMutex;
-constinit /* static */ mozilla::UniquePtr<Json::Value> ProfilingLog::gLog;
+MOZ_RUNINIT /* static */ mozilla::UniquePtr<Json::Value> ProfilingLog::gLog;
 
 /* static */ void ProfilingLog::Init() {
   mozilla::baseprofiler::detail::BaseProfilerAutoLock lock{gMutex};
@@ -855,8 +859,8 @@ class CorePS {
 #endif
 #ifdef USE_LUL_STACKWALK
     delete sInstance->mLul;
-#endif
     delete mMaybeBandwidthCounter;
+#endif
   }
 
  public:
@@ -1601,8 +1605,9 @@ class ActivePS {
   // shared between all threads.
   static nsTArray<mozilla::JSSourceEntry> GatherJSSources(PSLockRef aLock) {
     nsTArray<mozilla::JSSourceEntry> jsSourceEntries;
-    bool gatherSourceText =
-        ProfilerFeature::HasJSSources(ActivePS::Features(aLock));
+    if (!ProfilerFeature::HasJSSources(ActivePS::Features(aLock))) {
+      return jsSourceEntries;
+    }
 
     ThreadRegistry::LockedRegistry lockedRegistry;
     ActivePS::ProfiledThreadList threads =
@@ -1621,18 +1626,14 @@ class ActivePS {
     }
     JSContext* jsContext = mainThread->mJSContext;
 
-    // Always gather source metadata (filename, sourceMapURL), but only gather
-    // actual source text if the JS sources feature is enabled.
-    js::ProfilerJSSources threadSources = js::GetProfilerScriptSources(
-        JS_GetRuntime(jsContext), gatherSourceText);
+    js::ProfilerJSSources threadSources =
+        js::GetProfilerScriptSources(JS_GetRuntime(jsContext));
 
-    // Compute hash for each source based on filepath and source text.
-    // This replaces random UUIDs with deterministic hashes, which enables us to
-    // deduplicate sources with identical content.
+    // Generate UUIDs and build mappings for each source
     for (ProfilerJSSourceData& sourceData : threadSources) {
-      nsCString hash = nsPrintfCString("%08x", sourceData.hash());
-      jsSourceEntries.AppendElement(
-          JSSourceEntry(std::move(hash), std::move(sourceData)));
+      // Generate UUID for this source and store it in the global array.
+      jsSourceEntries.AppendElement(JSSourceEntry(
+          NSID_TrimBracketsASCII(nsID::GenerateUUID()), std::move(sourceData)));
     }
 
     return jsSourceEntries;
@@ -1815,30 +1816,25 @@ class ActivePS {
     return std::move(sInstance->mBaseProfileThreads);
   }
 
-  static void AddExitProfile(
-      PSLockRef aLock,
-      ProfileAndAdditionalInformation&& aExitProfileAndAdditionalInfo) {
+  static void AddExitProfile(PSLockRef aLock, const nsACString& aExitProfile) {
     MOZ_ASSERT(sInstance);
 
     ClearExpiredExitProfiles(aLock);
 
-    MOZ_RELEASE_ASSERT(sInstance->mExitProfiles.append(
-        ExitProfile{std::move(aExitProfileAndAdditionalInfo),
-                    sInstance->mProfileBuffer.BufferRangeEnd()}));
+    MOZ_RELEASE_ASSERT(sInstance->mExitProfiles.append(ExitProfile{
+        nsCString(aExitProfile), sInstance->mProfileBuffer.BufferRangeEnd()}));
   }
 
-  static Vector<ProfileAndAdditionalInformation> MoveExitProfiles(
-      PSLockRef aLock) {
+  static Vector<nsCString> MoveExitProfiles(PSLockRef aLock) {
     MOZ_ASSERT(sInstance);
 
     ClearExpiredExitProfiles(aLock);
 
-    Vector<ProfileAndAdditionalInformation> profiles;
+    Vector<nsCString> profiles;
     MOZ_RELEASE_ASSERT(
         profiles.initCapacity(sInstance->mExitProfiles.length()));
     for (auto& profile : sInstance->mExitProfiles) {
-      MOZ_RELEASE_ASSERT(
-          profiles.append(std::move(profile.mProfileAndAdditionalInformation)));
+      MOZ_RELEASE_ASSERT(profiles.append(std::move(profile.mJSON)));
     }
     sInstance->mExitProfiles.clear();
     return profiles;
@@ -1953,7 +1949,7 @@ class ActivePS {
   ProfileBufferBlockIndex mGeckoIndexWhenBaseProfileAdded;
 
   struct ExitProfile {
-    ProfileAndAdditionalInformation mProfileAndAdditionalInformation;
+    nsCString mJSON;
     uint64_t mBufferPositionAtGatherTime;
   };
   Vector<ExitProfile> mExitProfiles;
@@ -2090,38 +2086,57 @@ static const char* const kMainThreadName = "GeckoMain";
 // The ctor does nothing; users are responsible for filling in the fields.
 class Registers {
  public:
-  Registers() = default;
+  Registers()
+      : mPC{nullptr},
+        mSP{nullptr},
+        mFP{nullptr}
+#if defined(UNWINDING_REGS_HAVE_ECX_EDX)
+        ,
+        mEcx{nullptr},
+        mEdx{nullptr}
+#elif defined(UNWINDING_REGS_HAVE_R10_R12)
+        ,
+        mR10{nullptr},
+        mR12{nullptr}
+#elif defined(UNWINDING_REGS_HAVE_LR_R7)
+        ,
+        mLR{nullptr},
+        mR7{nullptr}
+#elif defined(UNWINDING_REGS_HAVE_LR_R11)
+        ,
+        mLR{nullptr},
+        mR11{nullptr}
+#endif
+  {
+  }
 
   void Clear() { memset(this, 0, sizeof(*this)); }
 
   // These fields are filled in by
   // Sampler::SuspendAndSampleAndResumeThread() for periodic and backtrace
   // samples, and by REGISTERS_SYNC_POPULATE for synchronous samples.
-  Address mPC{nullptr};  // Instruction pointer.
-  Address mSP{nullptr};  // Stack pointer.
-  Address mFP{nullptr};  // Frame pointer.
+  Address mPC;  // Instruction pointer.
+  Address mSP;  // Stack pointer.
+  Address mFP;  // Frame pointer.
 #if defined(UNWINDING_REGS_HAVE_ECX_EDX)
-  Address mEcx{nullptr};  // Temp for return address.
-  Address mEdx{nullptr};  // Temp for frame pointer.
+  Address mEcx;  // Temp for return address.
+  Address mEdx;  // Temp for frame pointer.
 #elif defined(UNWINDING_REGS_HAVE_R10_R12)
-  Address mR10{nullptr};  // Temp for return address.
-  Address mR12{nullptr};  // Temp for frame pointer.
+  Address mR10;  // Temp for return address.
+  Address mR12;  // Temp for frame pointer.
 #elif defined(UNWINDING_REGS_HAVE_LR_R7)
-  Address mLR{nullptr};  // ARM link register, or temp for return address.
-  Address mR7{nullptr};  // Temp for frame pointer.
+  Address mLR;  // ARM link register, or temp for return address.
+  Address mR7;  // Temp for frame pointer.
 #elif defined(UNWINDING_REGS_HAVE_LR_R11)
-  Address mLR{nullptr};   // ARM link register, or temp for return address.
-  Address mR11{nullptr};  // Temp for frame pointer.
+  Address mLR;   // ARM link register, or temp for return address.
+  Address mR11;  // Temp for frame pointer.
 #endif
 
 #if defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
   // This contains all the registers, which means it duplicates the four fields
   // above. This is ok.
-
-  // The context from the signal handler or below.
-  ucontext_t* mContext{nullptr};
-  // Storage for sync stack unwinding.
-  ucontext_t mContextSyncStorage;
+  ucontext_t* mContext;  // The context from the signal handler or below.
+  ucontext_t mContextSyncStorage;  // Storage for sync stack unwinding.
 #endif
 };
 
@@ -2834,21 +2849,21 @@ static void DoLULBacktrace(
   {
 #  if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_amd64_android) || \
       defined(GP_PLAT_amd64_freebsd)
-    uintptr_t REDZONE_SIZE = 128;
-    uintptr_t start = startRegs.xsp.Value() - REDZONE_SIZE;
+    uintptr_t rEDZONE_SIZE = 128;
+    uintptr_t start = startRegs.xsp.Value() - rEDZONE_SIZE;
 #  elif defined(GP_PLAT_arm_linux) || defined(GP_PLAT_arm_android)
-    uintptr_t REDZONE_SIZE = 0;
-    uintptr_t start = startRegs.r13.Value() - REDZONE_SIZE;
+    uintptr_t rEDZONE_SIZE = 0;
+    uintptr_t start = startRegs.r13.Value() - rEDZONE_SIZE;
 #  elif defined(GP_PLAT_arm64_linux) || defined(GP_PLAT_arm64_android) || \
       defined(GP_PLAT_arm64_freebsd)
-    uintptr_t REDZONE_SIZE = 0;
-    uintptr_t start = startRegs.sp.Value() - REDZONE_SIZE;
+    uintptr_t rEDZONE_SIZE = 0;
+    uintptr_t start = startRegs.sp.Value() - rEDZONE_SIZE;
 #  elif defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
-    uintptr_t REDZONE_SIZE = 0;
-    uintptr_t start = startRegs.xsp.Value() - REDZONE_SIZE;
+    uintptr_t rEDZONE_SIZE = 0;
+    uintptr_t start = startRegs.xsp.Value() - rEDZONE_SIZE;
 #  elif defined(GP_PLAT_mips64_linux)
-    uintptr_t REDZONE_SIZE = 0;
-    uintptr_t start = startRegs.sp.Value() - REDZONE_SIZE;
+    uintptr_t rEDZONE_SIZE = 0;
+    uintptr_t start = startRegs.sp.Value() - rEDZONE_SIZE;
 #  else
 #    error "Unknown plat"
 #  endif
@@ -2992,11 +3007,6 @@ void DoNativeBacktraceDirect(const void* stackTop, NativeStack& aNativeStack,
 #  else
   aNativeStack.mCount = 0;
 #  endif
-}
-#else
-void DoNativeBacktraceDirect(const void* stackTop, NativeStack& aNativeStack,
-                             StackWalkControl* aStackWalkControlIfSupported) {
-  aNativeStack.mCount = 0;
 }
 #endif
 
@@ -3185,43 +3195,6 @@ static void StreamCategories(SpliceableJSONWriter& aWriter) {
   }
 }
 
-static mozilla::StaticMutex sCustomMarkerSchemasMutex;
-static mozilla::StaticAutoPtr<nsTHashMap<nsCStringHashKey, nsString>>
-    sCustomMarkerSchemas;
-
-void profiler_register_marker_schema(const nsCString& aSchemaName,
-                                     const nsString& aSchemaJSON) {
-  mozilla::StaticMutexAutoLock lock(sCustomMarkerSchemasMutex);
-  if (!sCustomMarkerSchemas) {
-    sCustomMarkerSchemas = new nsTHashMap<nsCStringHashKey, nsString>();
-  }
-
-  sCustomMarkerSchemas->InsertOrUpdate(aSchemaName, aSchemaJSON);
-}
-
-static void StreamCustomMarkerSchemas(
-    baseprofiler::SpliceableJSONWriter& aWriter) {
-  mozilla::StaticMutexAutoLock lock(sCustomMarkerSchemasMutex);
-  if (!sCustomMarkerSchemas) {
-    return;
-  }
-
-  for (auto iter = sCustomMarkerSchemas->Iter(); !iter.Done(); iter.Next()) {
-    const nsString& jsonSchema = iter.Data();
-    NS_ConvertUTF16toUTF8 utf8Schema(jsonSchema);
-
-    aWriter.Splice(utf8Schema.get(), utf8Schema.Length());
-  }
-}
-
-static void ClearCustomMarkerSchemas() {
-  mozilla::StaticMutexAutoLock lock(sCustomMarkerSchemasMutex);
-  if (sCustomMarkerSchemas) {
-    sCustomMarkerSchemas->Clear();
-    sCustomMarkerSchemas = nullptr;
-  }
-}
-
 static void StreamMarkerSchema(SpliceableJSONWriter& aWriter) {
   // Get an array view with all registered marker-type-specific functions.
   base_profiler_markers_detail::Streaming::LockedMarkerTypeFunctionsList
@@ -3232,11 +3205,6 @@ static void StreamMarkerSchema(SpliceableJSONWriter& aWriter) {
   // from the same code potentially living in different libraries.)
   for (const auto& markerTypeFunctions : markerTypeFunctionsArray) {
     auto name = markerTypeFunctions.mMarkerTypeNameFunction();
-    // Skip markers with empty names (used for wrapper types like
-    // JSCustomMarker)
-    if (name.empty()) {
-      continue;
-    }
     // std::set.insert(T&&) returns a pair, its `second` is true if the element
     // was actually inserted (i.e., it was not there yet.)
     const bool didInsert =
@@ -3456,7 +3424,6 @@ static void StreamMetaJSCustomObject(
 
   aWriter.StartArrayProperty("markerSchema");
   StreamMarkerSchema(aWriter);
-  StreamCustomMarkerSchemas(aWriter);
   aWriter.EndArray();
 
   ActivePS::WriteActiveConfiguration(aLock, aWriter,
@@ -3665,7 +3632,8 @@ struct JavaMarkerWithDetails {
     schema.SetTooltipLabel("{marker.name}");
     schema.SetChartLabel("{marker.data.name}");
     schema.SetTableLabel("{marker.data.name}");
-    schema.AddKeyLabelFormat("name", "Details", MS::Format::String);
+    schema.AddKeyLabelFormat("name", "Details", MS::Format::String,
+                             MS::PayloadFlags::Searchable);
     return schema;
   }
 };
@@ -3907,10 +3875,13 @@ locked_profiler_stream_json_for_this_process(
   nsTArray<mozilla::JSSourceEntry> jsSourceEntries =
       ActivePS::GatherJSSources(aLock);
 
-  // Always stream the sources table that is shared between the threads, and get
-  // the UUID to index mappings needed for frame serialization.
-  nsTHashMap<SourceId, IndexIntoSourceTable> sourceIdToIndexMap =
-      buffer.StreamSourceTableToJSON(aWriter, jsSourceEntries);
+  // If there are sources, stream the sources table that is shared between the
+  // threads, and get the UUID to index mappings needed for frame serialization.
+  Maybe<nsTHashMap<SourceId, IndexIntoSourceTable>> sourceIdToIndexMap;
+  if (!jsSourceEntries.IsEmpty()) {
+    sourceIdToIndexMap.emplace(
+        buffer.StreamSourceTableToJSON(aWriter, jsSourceEntries));
+  }
 
   // Lists the samples for each thread profile
   aWriter.StartArrayProperty("threads");
@@ -3939,7 +3910,8 @@ locked_profiler_stream_json_for_this_process(
       MOZ_RELEASE_ASSERT(thread.mProfiledThreadData);
       processStreamingContext.AddThreadStreamingContext(
           *thread.mProfiledThreadData, buffer, thread.mJSContext, aService,
-          std::move(progressLogger), &sourceIdToIndexMap);
+          std::move(progressLogger),
+          sourceIdToIndexMap.isSome() ? sourceIdToIndexMap.ptr() : nullptr);
       if (aWriter.Failed()) {
         return Err(ProfilerError::JsonGenerationFailed);
       }
@@ -3983,7 +3955,7 @@ locked_profiler_stream_json_for_this_process(
       for (java::GeckoJavaSampler::ThreadInfo::LocalRef& threadInfo :
            javaThreads) {
         ProfiledThreadData threadData(ThreadRegistrationInfo{
-            threadInfo->GetName()->ToCString().get(),
+            threadInfo->GetName()->ToCString().BeginReading(),
             ProfilerThreadId::FromNumber(threadInfo->GetId()), false,
             CorePS::ProcessStartTime()});
 
@@ -4360,11 +4332,11 @@ RunningTimes GetRunningTimesWithTightTimestamp(
     TimeDuration durations[loops];
     RunningTimes runningTimes;
     TimeStamp before = TimeStamp::Now();
-    for (auto& duration : durations) {
+    for (int i = 0; i < loops; ++i) {
       AUTO_PROFILER_STATS(GetRunningTimes_MaxRunningTimesReadDuration);
       aGetCPURunningTimesFunction(runningTimes);
       const TimeStamp after = TimeStamp::Now();
-      duration = after - before;
+      durations[i] = after - before;
       before = after;
     }
     // Move median duration to the middle.
@@ -4449,9 +4421,6 @@ class SamplerThread {
     mPostSamplingCallbackList = MakeUnique<PostSamplingCallbackListItem>(
         std::move(mPostSamplingCallbackList), std::move(aCallback));
   }
-
-  SamplerThread(const SamplerThread&) = delete;
-  void operator=(const SamplerThread&) = delete;
 
  private:
   void SpyOnUnregisteredThreads();
@@ -4575,6 +4544,9 @@ class SamplerThread {
   // Unregistered threads that have been found, and are being spied on.
   using SpiedThreads = AutoTArray<SpiedThread, 128>;
   SpiedThreads mSpiedThreads;
+
+  SamplerThread(const SamplerThread&) = delete;
+  void operator=(const SamplerThread&) = delete;
 };
 
 namespace geckoprofiler::markers {
@@ -5298,8 +5270,10 @@ struct UnregisteredThreadLifetimeMarker {
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyFormat("Thread Id", MS::Format::Integer);
-    schema.AddKeyFormat("Thread Name", MS::Format::String);
+    schema.AddKeyFormat("Thread Id", MS::Format::Integer,
+                        MS::PayloadFlags::Searchable);
+    schema.AddKeyFormat("Thread Name", MS::Format::String,
+                        MS::PayloadFlags::Searchable);
     schema.AddKeyFormat("End Event", MS::Format::String);
     schema.AddStaticLabelValue(
         "Note",
@@ -5328,7 +5302,8 @@ struct UnregisteredThreadCPUMarker {
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyFormat("Thread Id", MS::Format::Integer);
+    schema.AddKeyFormat("Thread Id", MS::Format::Integer,
+                        MS::PayloadFlags::Searchable);
     schema.AddKeyFormat("CPU Time", MS::Format::Nanoseconds);
     schema.AddKeyFormat("CPU Utilization", MS::Format::Percentage);
     schema.SetChartLabel("{marker.data.CPU Utilization}");
@@ -5539,7 +5514,7 @@ void SamplerThread::SpyOnUnregisteredThreads() {
 #elif defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
 #  include "platform-linux-android.cpp"
 #else
-#  include "platform-noop.cpp"
+#  error "bad platform"
 #endif
 
 // END SamplerThread
@@ -5713,6 +5688,28 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   const char** aFilters, uint32_t aFilterCount,
                                   uint64_t aActiveTabID,
                                   const Maybe<double>& aDuration);
+
+// This basically duplicates AutoProfilerLabel's constructor.
+static void* MozGlueLabelEnter(const char* aLabel, const char* aDynamicString,
+                               void* aSp) {
+  ThreadRegistration::OnThreadPtr onThreadPtr =
+      ThreadRegistration::GetOnThreadPtr();
+  if (!onThreadPtr) {
+    return nullptr;
+  }
+  ProfilingStack& profilingStack =
+      onThreadPtr->UnlockedConstReaderAndAtomicRWRef().ProfilingStackRef();
+  profilingStack.pushLabelFrame(aLabel, aDynamicString, aSp,
+                                JS::ProfilingCategoryPair::OTHER);
+  return &profilingStack;
+}
+
+// This basically duplicates AutoProfilerLabel's destructor.
+static void MozGlueLabelExit(void* aProfilingStack) {
+  if (aProfilingStack) {
+    reinterpret_cast<ProfilingStack*>(aProfilingStack)->pop();
+  }
+}
 
 static Vector<const char*> SplitAtCommas(const char* aString,
                                          UniquePtr<char[]>& aStorage) {
@@ -6321,10 +6318,6 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
     delete samplerThread;
   }
 
-  // Clear custom marker schemas to avoid StringBuffer leaks at shutdown.
-  // This is done after all profiling operations and notifications are complete.
-  ClearCustomMarkerSchemas();
-
   // Reverse the registration done in profiler_init.
   ThreadRegistration::UnregisterThread();
 }
@@ -6369,9 +6362,8 @@ WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
 
 void profiler_set_process_name(const nsACString& aProcessName,
                                const nsACString* aETLDplus1) {
-  LOG("profiler_set_process_name(\"%s\", \"%s\")",
-      PromiseFlatCString(aProcessName).get(),
-      aETLDplus1 ? PromiseFlatCString(*aETLDplus1).get() : "<none>");
+  LOG("profiler_set_process_name(\"%s\", \"%s\")", aProcessName.Data(),
+      aETLDplus1 ? aETLDplus1->Data() : "<none>");
   PSAutoLock lock;
   CorePS::SetProcessName(lock, aProcessName);
   if (aETLDplus1) {
@@ -6518,21 +6510,20 @@ void GetProfilerEnvVarsForChildProcess(
 
 }  // namespace mozilla
 
-void profiler_received_exit_profile(
-    ProfileAndAdditionalInformation&& aExitProfileAndAdditionalInfo) {
+void profiler_received_exit_profile(const nsACString& aExitProfile) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
   PSAutoLock lock;
   if (!ActivePS::Exists(lock)) {
     return;
   }
-  ActivePS::AddExitProfile(lock, std::move(aExitProfileAndAdditionalInfo));
+  ActivePS::AddExitProfile(lock, aExitProfile);
 }
 
-Vector<ProfileAndAdditionalInformation> profiler_move_exit_profiles() {
+Vector<nsCString> profiler_move_exit_profiles() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
   PSAutoLock lock;
-  Vector<ProfileAndAdditionalInformation> profiles;
+  Vector<nsCString> profiles;
   if (ActivePS::Exists(lock)) {
     profiles = ActivePS::MoveExitProfiles(lock);
   }
@@ -6570,11 +6561,10 @@ static void locked_profiler_save_profile_to_file(
           aIsShuttingDown, nullptr, ProgressLogger{});
 
       w.StartArrayProperty("processes");
-      Vector<ProfileAndAdditionalInformation> exitProfiles =
-          ActivePS::MoveExitProfiles(aLock);
+      Vector<nsCString> exitProfiles = ActivePS::MoveExitProfiles(aLock);
       for (auto& exitProfile : exitProfiles) {
-        if (!exitProfile.mProfile.IsEmpty() && exitProfile.mProfile[0] != '*') {
-          w.Splice(exitProfile.mProfile);
+        if (!exitProfile.IsEmpty() && exitProfile[0] != '*') {
+          w.Splice(exitProfile);
         }
       }
       w.EndArray();
@@ -6793,6 +6783,9 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
     }
   }
 
+  // Setup support for pushing/popping labels in mozglue.
+  RegisterProfilerLabelEnterExit(MozGlueLabelEnter, MozGlueLabelExit);
+
 #if defined(GP_OS_android)
   if (ActivePS::FeatureJava(aLock)) {
     int javaInterval = interval;
@@ -6977,6 +6970,9 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
     java::GeckoJavaSampler::Stop();
   }
 #endif
+
+  // Remove support for pushing/popping labels in mozglue.
+  RegisterProfilerLabelEnterExit(nullptr, nullptr);
 
   // Stop sampling live threads.
   ThreadRegistry::LockedRegistry lockedRegistry;
@@ -7330,6 +7326,8 @@ RefPtr<GenericPromise> profiler_resume_sampling() {
 bool profiler_feature_active(uint32_t aFeature) {
   // This function runs both on and off the main thread.
 
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
   // This function is hot enough that we use RacyFeatures, not ActivePS.
   return RacyFeatures::IsActiveWithFeature(aFeature);
 }
@@ -7553,11 +7551,7 @@ struct CPUAwakeMarker {
     return MakeStringSpan("Awake");
   }
   static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
-                                   int64_t aCPUTimeNs
-#if !defined(GP_PLAT_unknown) && !defined(GP_PLAT_arm64_darwin)
-                                   ,
-                                   int64_t aCPUId
-#endif
+                                   int64_t aCPUTimeNs, int64_t aCPUId
 #ifdef GP_OS_darwin
                                    ,
                                    uint32_t aQoS
@@ -7577,7 +7571,7 @@ struct CPUAwakeMarker {
       return;
     }
 
-#if !defined(GP_PLAT_unknown) && !defined(GP_PLAT_arm64_darwin)
+#ifndef GP_PLAT_arm64_darwin
     aWriter.IntProperty("CPU Id", aCPUId);
 #endif
 #ifdef GP_OS_windows
@@ -7620,7 +7614,7 @@ struct CPUAwakeMarker {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.AddKeyFormat("CPU Time", MS::Format::Duration);
-#if !defined(GP_PLAT_unknown) && !defined(GP_PLAT_arm64_darwin)
+#ifndef GP_PLAT_arm64_darwin
     schema.AddKeyFormat("CPU Id", MS::Format::Integer);
     schema.SetTableLabel("Awake - CPU Id = {marker.data.CPU Id}");
 #endif
@@ -7652,19 +7646,16 @@ void profiler_mark_thread_asleep() {
             .GetNewCpuTimeInNs();
       },
       0);
-  PROFILER_MARKER(
-      "Awake", OTHER, MarkerTiming::IntervalEnd(), CPUAwakeMarker, cpuTimeNs
-#if !defined(GP_PLAT_unknown) && !defined(GP_PLAT_arm64_darwin)
-      ,
-      0 /* cpuId */
-#endif
+  PROFILER_MARKER("Awake", OTHER, MarkerTiming::IntervalEnd(), CPUAwakeMarker,
+                  cpuTimeNs, 0 /* cpuId */
 #if defined(GP_OS_darwin)
-      ,
-      0 /* qos_class */
+                  ,
+                  0 /* qos_class */
 #endif
 #if defined(GP_OS_windows)
-      ,
-      0 /* priority */, 0 /* thread priority */, 0 /* current priority */
+                  ,
+                  0 /* priority */, 0 /* thread priority */,
+                  0 /* current priority */
 #endif
   );
 }
@@ -7712,7 +7703,6 @@ struct WakeUpCountMarker {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.AddKeyFormat("Count", MS::Format::Integer);
-    schema.AddKeyFormat("label", MS::Format::String, MS::PayloadFlags::Hidden);
     schema.SetTooltipLabel("{marker.name} - {marker.data.label}");
     schema.SetTableLabel("{marker.data.label}: {marker.data.count}");
     return schema;
@@ -7753,12 +7743,11 @@ void profiler_mark_thread_awake() {
     return;
   }
 
-#if !defined(GP_PLAT_unknown) && !defined(GP_PLAT_arm64_darwin)
   int64_t cpuId = 0;
-#  if defined(GP_OS_windows)
+#if defined(GP_OS_windows)
   cpuId = GetCurrentProcessorNumber();
-#  elif defined(GP_OS_darwin)
-#    ifdef GP_PLAT_amd64_darwin
+#elif defined(GP_OS_darwin)
+#  ifdef GP_PLAT_amd64_darwin
   unsigned int eax, ebx, ecx, edx;
   __cpuid_count(1, 0, eax, ebx, ecx, edx);
   // Check if we have an APIC.
@@ -7766,10 +7755,9 @@ void profiler_mark_thread_awake() {
     // APIC ID is bits 24-31 of EBX
     cpuId = ebx >> 24;
   }
-#    endif
-#  else
-  cpuId = sched_getcpu();
 #  endif
+#else
+  cpuId = sched_getcpu();
 #endif
 
 #if defined(GP_OS_windows)
@@ -7799,22 +7787,11 @@ void profiler_mark_thread_awake() {
     }
   }
 #endif
-#if defined(GP_OS_darwin)
-  size_t qos_self_retval;
-  if(__builtin_available(macOS 10.10, *)) 
-    qos_self_retval = qos_class_self();
-  else
-    qos_self_retval = QOS_CLASS_UNSPECIFIED;
-#endif
   PROFILER_MARKER("Awake", OTHER, MarkerTiming::IntervalStart(), CPUAwakeMarker,
-                  0 /* CPU time */
-#if !defined(GP_PLAT_unknown) && !defined(GP_PLAT_arm64_darwin)
-                  ,
-                  cpuId
-#endif
+                  0 /* CPU time */, cpuId
 #if defined(GP_OS_darwin)
                   ,
-                  qos_self_retval
+                  qos_class_self()
 #endif
 #if defined(GP_OS_windows)
                       ,
@@ -7908,7 +7885,7 @@ bool profiler_backtrace_into_buffer(ProfileChunkedBuffer& aChunkedBuffer,
         ProfileBufferCollector collector(profileBuffer, samplePos,
                                          bufferRangeStart);
 
-        for (int nativeIndex = (int)(aNativeStack.mCount) - 1; nativeIndex >= 0;
+        for (int nativeIndex = (int)(aNativeStack.mCount); nativeIndex >= 0;
              --nativeIndex) {
           collector.CollectNativeLeafAddr(
               (void*)aNativeStack.mPCs[nativeIndex]);
@@ -7995,11 +7972,9 @@ void profiler_set_js_context(CycleCollectedJSContext* aCx) {
                   profiledThreadData) {
                 profiledThreadData->NotifyReceivedJSContext(
                     ActivePS::Buffer(lock).BufferRangeEnd());
-#ifdef MOZ_EXECUTION_TRACING
                 if (ActivePS::FeatureTracing(lock)) {
-                  JS_TracerBeginTracing(aCx->Context());
+                  aCx->BeginExecutionTracingAsync();
                 }
-#endif
               }
             });
       });
@@ -8042,11 +8017,9 @@ void profiler_clear_js_context() {
           profiledThreadData->NotifyAboutToLoseJSContext(
               cx, CorePS::ProcessStartTime(), ActivePS::Buffer(lock));
 
-#ifdef MOZ_EXECUTION_TRACING
           if (ActivePS::FeatureTracing(lock)) {
-            JS_TracerEndTracing(cx);
+            cccx->EndExecutionTracingAsync();
           }
-#endif
 
           // Notify the JS context that profiling for this context has
           // stopped. Do this by calling StopJSSampling and PollJSSampling

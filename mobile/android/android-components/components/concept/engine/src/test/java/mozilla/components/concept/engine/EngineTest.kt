@@ -14,11 +14,10 @@ import mozilla.components.concept.engine.utils.EngineVersion
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.lang.UnsupportedOperationException
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 
 class EngineTest {
 
@@ -97,17 +96,17 @@ class EngineTest {
         var exception: Throwable? = null
         testEngine.installWebExtension("resource://path", onError = { e -> exception = e })
         assertNotNull(exception)
-        assertIs<UnsupportedOperationException>(exception)
+        assertTrue(exception is UnsupportedOperationException)
 
         exception = null
         testEngine.installBuiltInWebExtension("a-built-in", "resource://path", onError = { e -> exception = e })
         assertNotNull(exception)
-        assertIs<UnsupportedOperationException>(exception)
+        assertTrue(exception is UnsupportedOperationException)
 
         exception = null
         testEngine.listInstalledWebExtensions(onSuccess = { }, onError = { e -> exception = e })
         assertNotNull(exception)
-        assertIs<UnsupportedOperationException>(exception)
+        assertTrue(exception is UnsupportedOperationException)
     }
 
     @Test
@@ -115,7 +114,7 @@ class EngineTest {
         var exception: Throwable? = null
         testEngine.clearData(Engine.BrowsingData.all(), onError = { exception = it })
         assertNotNull(exception)
-        assertIs<UnsupportedOperationException>(exception)
+        assertTrue(exception is UnsupportedOperationException)
     }
 
     @Test

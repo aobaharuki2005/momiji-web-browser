@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -370,8 +372,8 @@ nscoord SizeComputationInput::ComputeISizeValue(
   const auto borderPadding = ComputedLogicalBorderPadding(wm);
   const auto margin = ComputedLogicalMargin(wm);
   const LogicalSize contentEdgeToBoxSizing =
-      aBoxSizing == StyleBoxSizing::BorderBox ? borderPadding.Size(wm)
-                                              : LogicalSize(wm);
+      aBoxSizing == StyleBoxSizing::Border ? borderPadding.Size(wm)
+                                           : LogicalSize(wm);
   const nscoord boxSizingToMarginEdgeISize = borderPadding.IStartEnd(wm) +
                                              margin.IStartEnd(wm) -
                                              contentEdgeToBoxSizing.ISize(wm);
@@ -419,7 +421,7 @@ nscoord SizeComputationInput::ComputeBSizeValue(
     const LengthPercentage& aSize) const {
   WritingMode wm = GetWritingMode();
   nscoord inside = 0;
-  if (aBoxSizing == StyleBoxSizing::BorderBox) {
+  if (aBoxSizing == StyleBoxSizing::Border) {
     inside = ComputedLogicalBorderPadding(wm).BStartEnd(wm);
   }
   return nsLayoutUtils::ComputeBSizeValue(aContainingBlockBSize, inside, aSize);
@@ -1299,7 +1301,7 @@ void ReflowInput::CalculateBorderPaddingMargin(
 
   nscoord outside = paddingStartEnd + borderStartEnd + marginStartEnd;
   nscoord inside = 0;
-  if (mStylePosition->mBoxSizing == StyleBoxSizing::BorderBox) {
+  if (mStylePosition->mBoxSizing == StyleBoxSizing::Border) {
     inside = borderStartEnd + paddingStartEnd;
   }
   outside -= inside;
@@ -1954,10 +1956,8 @@ static nscoord CalcQuirkContainingBlockHeight(
       // If the current frame we're looking at is positioned, we don't want to
       // go any further (see bug 221784).  The behavior we want here is: 1) If
       // not auto-height, use this as the percentage base.  2) If auto-height,
-      // or treating the height as indefinite, keep looking, unless the frame is
-      // positioned.
-      if (ri->ComputedHeight() == NS_UNCONSTRAINEDSIZE ||
-          ri->mFlags.mTreatBSizeAsIndefinite) {
+      // keep looking, unless the frame is positioned.
+      if (NS_UNCONSTRAINEDSIZE == ri->ComputedHeight()) {
         if (ri->mFrame->IsAbsolutelyPositioned(ri->mStyleDisplay)) {
           break;
         } else {
@@ -2109,6 +2109,19 @@ void ReflowInput::InitConstraints(
     // If we weren't given a containing block size, then compute one.
     if (aContainingBlockSize.isNothing()) {
       cbSize = ComputeContainingBlockRectangle(aPresContext, cbri);
+    } else if (aPresContext->FragmentainerAwarePositioningEnabled() &&
+               mFrame->IsAbsolutelyPositioned(mStyleDisplay) &&
+               mFrame->GetPrevInFlow()) {
+      // AbsoluteContainingBlock always provides a containing-block size to
+      // ReflowInput. However, if the delegating frame is a continuation or an
+      // overflow container (i.e. it has zero block-size), we'll need a
+      // containing-block size (padding-box size) suitable for resolving the
+      // abspos continuation's percentage block-size.
+      //
+      // Bug 1998818 is to fix the containing-block size for resolving
+      // percentage block-size for abspos's first-in-flow.
+      cbSize = ComputeContainingBlockRectangle(aPresContext, cbri) +
+               cbri->ComputedLogicalPadding(wm).Size(wm);
     }
 
     // See if the containing block height is based on the size of its
@@ -2280,29 +2293,13 @@ void ReflowInput::InitConstraints(
     } else {
       AutoMaybeDisableFontInflation an(mFrame);
 
-      auto* const alignCB = [&] {
-        auto* cb = mFrame->GetParent();
+      nsIFrame* const alignCB = [&] {
+        nsIFrame* cb = mFrame->GetParent();
         if (cb->IsTableWrapperFrame()) {
-          auto* alignCBParent = cb->GetParent();
+          nsIFrame* alignCBParent = cb->GetParent();
           if (alignCBParent && alignCBParent->IsGridContainerFrame()) {
             return alignCBParent;
           }
-        }
-        if (cb->Style()->GetPseudoType() ==
-            PseudoStyleType::MozColumnSpanWrapper) {
-          MOZ_ASSERT(mFrame->StyleColumn()->mColumnSpan !=
-                     StyleColumnSpan::None);
-          // Note(dshin, bug 2013429): `:-moz-column-span-wrapper` is a
-          // non-inheriting anon box, so it doesn't inherit writing-mode either.
-          auto* p = cb->GetParent();
-          while (p) {
-            if (p->Style()->GetPseudoType() !=
-                PseudoStyleType::MozColumnSpanWrapper) {
-              return p;
-            }
-            p = p->GetParent();
-          }
-          MOZ_ASSERT_UNREACHABLE("No parent above :-moz-column-span-wrapper?");
         }
         return cb;
       }();
@@ -2412,13 +2409,13 @@ void ReflowInput::InitConstraints(
           return false;
         }
         const auto pseudoType = mFrame->Style()->GetPseudoType();
-        if (pseudoType == PseudoStyleType::Marker &&
+        if (pseudoType == PseudoStyleType::marker &&
             mFrame->GetParent()->StyleList()->mListStylePosition ==
                 StyleListStylePosition::Outside) {
           // Exclude outside ::markers.
           return false;
         }
-        if (pseudoType == PseudoStyleType::MozColumnContent) {
+        if (pseudoType == PseudoStyleType::columnContent) {
           // Exclude -moz-column-content since it cannot have any margin.
           return false;
         }

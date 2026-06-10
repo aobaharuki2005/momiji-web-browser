@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -85,7 +87,7 @@ static nsresult IsEligible(nsIChannel* aChannel,
   GetReferrerSpec(aChannel, referrer);
   aReporter->AddConsoleReport(
       nsIScriptError::errorFlag, "Sub-resource Integrity"_ns,
-      PropertiesFile::SECURITY_PROPERTIES, referrer, 0, 0,
+      nsContentUtils::eSECURITY_PROPERTIES, referrer, 0, 0,
       "IneligibleResource"_ns, {NS_ConvertUTF8toUTF16(requestSpec)});
   return NS_ERROR_SRI_NOT_ELIGIBLE;
 }
@@ -113,14 +115,14 @@ nsresult SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
     if (aReporter && metadata.IsMalformed()) {
       aReporter->AddConsoleReport(
           nsIScriptError::warningFlag, "Sub-resource Integrity"_ns,
-          PropertiesFile::SECURITY_PROPERTIES, aSourceFileURI, 0, 0,
+          nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
           "MalformedIntegrityHash"_ns, {NS_ConvertUTF8toUTF16(token)});
     } else if (aReporter && !metadata.IsAlgorithmSupported()) {
       nsAutoCString alg;
       metadata.GetAlgorithm(&alg);
       aReporter->AddConsoleReport(
           nsIScriptError::warningFlag, "Sub-resource Integrity"_ns,
-          PropertiesFile::SECURITY_PROPERTIES, aSourceFileURI, 0, 0,
+          nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
           "UnsupportedHashAlg"_ns, {NS_ConvertUTF8toUTF16(alg)});
     }
 
@@ -136,8 +138,7 @@ nsresult SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
     } else if (*outMetadata < metadata) {
       SRILOG(("SRICheck::IntegrityMetadata, alg '%s' is weaker than '%s'",
               alg1.get(), alg2.get()));
-      *outMetadata =
-          std::move(metadata);  // replace strongest metadata with current
+      *outMetadata = metadata;  // replace strongest metadata with current
     }
   }
 
@@ -177,7 +178,7 @@ SRICheckDataVerifier::SRICheckDataVerifier(const SRIMetadata& aMetadata,
     GetReferrerSpec(aChannel, referrer);
     aReporter->AddConsoleReport(nsIScriptError::warningFlag,
                                 "Sub-resource Integrity"_ns,
-                                PropertiesFile::SECURITY_PROPERTIES, referrer,
+                                nsContentUtils::eSECURITY_PROPERTIES, referrer,
                                 0, 0, "NoValidMetadata"_ns, {});
     mInvalidMetadata = true;
     return;  // ignore invalid metadata for forward-compatibility
@@ -197,7 +198,7 @@ nsresult SRICheckDataVerifier::EnsureCryptoHash() {
   nsresult rv = NS_NewCryptoHash(mHashType, getter_AddRefs(cryptoHash));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCryptoHash = std::move(cryptoHash);
+  mCryptoHash = cryptoHash;
   return NS_OK;
 }
 
@@ -265,10 +266,10 @@ nsresult SRICheckDataVerifier::VerifyHash(
       nsAutoCString referrer;
       GetReferrerSpec(aChannel, referrer);
       // if neither succeeded, we can bail out and warn
-      aReporter->AddConsoleReport(nsIScriptError::errorFlag,
-                                  "Sub-resource Integrity"_ns,
-                                  PropertiesFile::SECURITY_PROPERTIES, referrer,
-                                  0, 0, "InvalidIntegrityBase64"_ns, {});
+      aReporter->AddConsoleReport(
+          nsIScriptError::errorFlag, "Sub-resource Integrity"_ns,
+          nsContentUtils::eSECURITY_PROPERTIES, referrer, 0, 0,
+          "InvalidIntegrityBase64"_ns, {});
       return NS_ERROR_SRI_CORRUPT;
     }
     binaryHash.Assign(reinterpret_cast<const char*>(decoded.Elements()),
@@ -293,7 +294,7 @@ nsresult SRICheckDataVerifier::VerifyHash(
     GetReferrerSpec(aChannel, referrer);
     aReporter->AddConsoleReport(nsIScriptError::errorFlag,
                                 "Sub-resource Integrity"_ns,
-                                PropertiesFile::SECURITY_PROPERTIES, referrer,
+                                nsContentUtils::eSECURITY_PROPERTIES, referrer,
                                 0, 0, "InvalidIntegrityLength"_ns, {});
     return NS_ERROR_SRI_CORRUPT;
   }
@@ -367,7 +368,7 @@ nsresult SRICheckDataVerifier::Verify(const SRIMetadata& aMetadata,
 
   aReporter->AddConsoleReport(
       nsIScriptError::errorFlag, "Sub-resource Integrity"_ns,
-      PropertiesFile::SECURITY_PROPERTIES, referrer, 0, 0,
+      nsContentUtils::eSECURITY_PROPERTIES, referrer, 0, 0,
       "IntegrityMismatch3"_ns,
       {NS_ConvertUTF8toUTF16(alg), NS_ConvertUTF8toUTF16(requestSpec),
        NS_ConvertUTF8toUTF16(encodedHash)});

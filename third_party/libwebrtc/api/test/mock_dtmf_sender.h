@@ -26,8 +26,9 @@ class MockDtmfSenderObserver : public DtmfSenderObserverInterface {
  public:
   MOCK_METHOD(void,
               OnToneChange,
-              (const std::string& tone, const std::string& tone_buffer),
+              (const std::string&, const std::string&),
               (override));
+  MOCK_METHOD(void, OnToneChange, (const std::string&), (override));
 };
 
 static_assert(!std::is_abstract_v<MockDtmfSenderObserver>, "");

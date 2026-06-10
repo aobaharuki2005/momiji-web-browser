@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -20,7 +22,7 @@
 bool js::intl::ParseLocale(JSContext* cx, Handle<JSLinearString*> str,
                            mozilla::intl::Locale& result) {
   if (StringIsAscii(str)) {
-    StringAsciiChars chars(str);
+    intl::StringAsciiChars chars(str);
     if (!chars.init(cx)) {
       return false;
     }
@@ -240,11 +242,23 @@ JS::Result<JSLinearString*> js::intl::ParseStandaloneISO639LanguageTag(
 }
 
 JS::UniqueChars js::intl::FormatLocale(
-    JSContext* cx, JS::Handle<JSLinearString*> locale,
+    JSContext* cx, JS::Handle<JSObject*> internals,
     JS::HandleVector<UnicodeExtensionKeyword> keywords) {
-  mozilla::intl::Locale tag;
-  if (!ParseLocale(cx, locale, tag)) {
+  RootedValue value(cx);
+  if (!GetProperty(cx, internals, internals, cx->names().locale, &value)) {
     return nullptr;
+  }
+
+  mozilla::intl::Locale tag;
+  {
+    Rooted<JSLinearString*> locale(cx, value.toString()->ensureLinear(cx));
+    if (!locale) {
+      return nullptr;
+    }
+
+    if (!ParseLocale(cx, locale, tag)) {
+      return nullptr;
+    }
   }
 
   // |ApplyUnicodeExtensionToTag| applies the new keywords to the front of

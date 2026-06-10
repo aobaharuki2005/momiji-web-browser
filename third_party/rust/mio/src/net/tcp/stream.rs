@@ -2,18 +2,16 @@ use std::fmt;
 use std::io::{self, IoSlice, IoSliceMut, Read, Write};
 use std::net::{self, Shutdown, SocketAddr};
 #[cfg(any(unix, target_os = "wasi"))]
-use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
 // TODO: once <https://github.com/rust-lang/rust/issues/126198> is fixed this
 // can use `std::os::fd` and be merged with the above.
 #[cfg(target_os = "hermit")]
-use std::os::hermit::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+use std::os::hermit::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
 #[cfg(windows)]
-use std::os::windows::io::{
-    AsRawSocket, AsSocket, BorrowedSocket, FromRawSocket, IntoRawSocket, OwnedSocket, RawSocket,
-};
+use std::os::windows::io::{AsRawSocket, FromRawSocket, IntoRawSocket, RawSocket};
 
 use crate::io_source::IoSource;
-#[cfg(not(all(target_os = "wasi", target_env = "p1")))]
+#[cfg(not(target_os = "wasi"))]
 use crate::sys::tcp::{connect, new_for_addr};
 use crate::{event, Interest, Registry, Token};
 
@@ -87,10 +85,10 @@ impl TcpStream {
     /// entries in the routing cache.
     ///
     /// [write interest]: Interest::WRITABLE
-    #[cfg(not(all(target_os = "wasi", target_env = "p1")))]
+    #[cfg(not(target_os = "wasi"))]
     pub fn connect(addr: SocketAddr) -> io::Result<TcpStream> {
         let socket = new_for_addr(addr)?;
-        #[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
+        #[cfg(any(unix, target_os = "hermit"))]
         let stream = unsafe { TcpStream::from_raw_fd(socket) };
         #[cfg(windows)]
         let stream = unsafe { TcpStream::from_raw_socket(socket as _) };
@@ -212,9 +210,7 @@ impl TcpStream {
     /// Successive calls return the same data. This is accomplished by passing
     /// `MSG_PEEK` as a flag to the underlying recv system call.
     pub fn peek(&self, buf: &mut [u8]) -> io::Result<usize> {
-        // Need to re-register if `peek` returns `WouldBlock`
-        // to ensure the socket will receive more events once it is ready again.
-        self.inner.do_io(|inner| inner.peek(buf))
+        self.inner.peek(buf)
     }
 
     /// Execute an I/O operation ensuring that the socket receives more events
@@ -286,7 +282,7 @@ impl Read for TcpStream {
     }
 }
 
-impl Read for &'_ TcpStream {
+impl<'a> Read for &'a TcpStream {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.inner.do_io(|mut inner| inner.read(buf))
     }
@@ -310,7 +306,7 @@ impl Write for TcpStream {
     }
 }
 
-impl Write for &'_ TcpStream {
+impl<'a> Write for &'a TcpStream {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.inner.do_io(|mut inner| inner.write(buf))
     }
@@ -382,29 +378,9 @@ impl FromRawFd for TcpStream {
 }
 
 #[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
-impl From<TcpStream> for OwnedFd {
-    fn from(tcp_stream: TcpStream) -> Self {
-        tcp_stream.inner.into_inner().into()
-    }
-}
-
-#[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
 impl AsFd for TcpStream {
     fn as_fd(&self) -> BorrowedFd<'_> {
         self.inner.as_fd()
-    }
-}
-
-#[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
-impl From<OwnedFd> for TcpStream {
-    /// Converts a `RawFd` to a `TcpStream`.
-    ///
-    /// # Notes
-    ///
-    /// The caller is responsible for ensuring that the socket is in
-    /// non-blocking mode.
-    fn from(fd: OwnedFd) -> Self {
-        TcpStream::from_std(From::from(fd))
     }
 }
 
@@ -432,33 +408,6 @@ impl FromRawSocket for TcpStream {
     /// non-blocking mode.
     unsafe fn from_raw_socket(socket: RawSocket) -> TcpStream {
         TcpStream::from_std(FromRawSocket::from_raw_socket(socket))
-    }
-}
-
-#[cfg(windows)]
-impl From<TcpStream> for OwnedSocket {
-    fn from(tcp_stream: TcpStream) -> Self {
-        tcp_stream.inner.into_inner().into()
-    }
-}
-
-#[cfg(windows)]
-impl AsSocket for TcpStream {
-    fn as_socket(&self) -> BorrowedSocket<'_> {
-        self.inner.as_socket()
-    }
-}
-
-#[cfg(windows)]
-impl From<OwnedSocket> for TcpStream {
-    /// Converts a `RawSocket` to a `TcpStream`.
-    ///
-    /// # Notes
-    ///
-    /// The caller is responsible for ensuring that the socket is in
-    /// non-blocking mode.
-    fn from(socket: OwnedSocket) -> Self {
-        TcpStream::from_std(From::from(socket))
     }
 }
 

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set sw=2 ts=4 expandtab:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -43,8 +45,7 @@ static already_AddRefed<Screen> MakePrimaryScreen() {
   return MakeAndAddRef<Screen>(
       bounds, bounds, depth, depth, refreshRate,
       DesktopToLayoutDeviceScale(density), CSSToLayoutDeviceScale(1.0f), dpi,
-      Screen::IsPseudoDisplay::No, Screen::IsHDR(isHDR), Screen::IsHDR(isHDR),
-      orientation, angle);
+      Screen::IsPseudoDisplay::No, Screen::IsHDR(isHDR), orientation, angle);
 }
 
 ScreenHelperAndroid::ScreenHelperAndroid() {

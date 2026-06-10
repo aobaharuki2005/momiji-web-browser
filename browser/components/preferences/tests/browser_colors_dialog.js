@@ -2,7 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 async function launchPreferences() {
-  return openPrefsTab("accessibility");
+  let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
+  Assert.equal(prefs.selectedPane, "paneGeneral", "General pane was selected");
 }
 
 async function reset() {
@@ -31,24 +34,17 @@ add_setup(async function () {
 });
 
 add_task(async function testColorPicker() {
-  let tab = await launchPreferences();
-  let doc = tab.linkedBrowser.contentDocument;
+  await launchPreferences();
 
-  // Wait for the contrast setting-group to render before querying its elements.
-  await TestUtils.waitForCondition(
-    () => doc.querySelector("setting-group[groupid='contrast']"),
-    "Wait for contrast setting-group to render."
-  );
+  const button = gBrowser.contentDocument.getElementById("colors");
 
-  const button = doc.getElementById("colors");
-
-  const radioOff = doc.getElementById("contrastSettingsOff");
-  const radioCustom = doc.getElementById("contrastSettingsOn");
+  const radioOff = content.document.getElementById("contrastSettingsOff");
+  const radioCustom = content.document.getElementById("contrastSettingsOn");
 
   radioOff.focus();
   Assert.equal(
     radioOff,
-    doc.activeElement,
+    gBrowser.contentDocument.activeElement,
     "Radio group for Custom Colors is focused"
   );
   Assert.ok(button.buttonEl.disabled, "Manage Colors button is disabled");
@@ -57,7 +53,7 @@ add_task(async function testColorPicker() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(
     radioCustom,
-    doc.activeElement,
+    gBrowser.contentDocument.activeElement,
     "Radio group with option 'Custom' is focused"
   );
   await new Promise(r => requestAnimationFrame(r));
@@ -65,7 +61,11 @@ add_task(async function testColorPicker() {
 
   // Focus "Manage Colors" button:
   EventUtils.synthesizeKey("KEY_Tab");
-  Assert.equal(button, doc.activeElement, "Manage Colors button is focused");
+  Assert.equal(
+    button,
+    gBrowser.contentDocument.activeElement,
+    "Manage Colors button is focused"
+  );
 
   info("Open Colors dialog");
   // Open Colors sub-dialog:
@@ -206,5 +206,9 @@ add_task(async function testColorPicker() {
   EventUtils.synthesizeKey("KEY_Enter");
 
   // Confirm the focus is returned to the "Manage Colors" button:
-  Assert.equal(button, doc.activeElement, "Manage Colors button is focused");
+  Assert.equal(
+    button,
+    gBrowser.contentDocument.activeElement,
+    "Manage Colors button is focused"
+  );
 });

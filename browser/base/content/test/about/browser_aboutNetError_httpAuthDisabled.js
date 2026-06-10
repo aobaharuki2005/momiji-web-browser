@@ -13,7 +13,7 @@ add_task(async function checkHttpAuthDisabledCopy() {
 
   await SpecialPowers.spawn(browser, [], async function () {
     const mockErrorInfo = {
-      errorCodeString: "basicHttpAuthDisabled",
+      errorCodeString: "NS_ERROR_BASIC_HTTP_AUTH_DISABLED",
       channelStatus: 0,
       errorMessage: "Unauthorized",
       responseStatusText: "Unauthorized",
@@ -26,8 +26,6 @@ add_task(async function checkHttpAuthDisabledCopy() {
       content.document.querySelector("net-error-card").wrappedJSObject;
     const info = Cu.cloneInto(mockErrorInfo, netErrorCard);
     netErrorCard.errorInfo = info;
-    netErrorCard.resolvedErrorId = "basicHttpAuthDisabled";
-    netErrorCard.errorConfig = netErrorCard.getErrorConfig();
     netErrorCard.hideExceptionButton = netErrorCard.shouldHideExceptionButton(
       info.errorCodeString
     );

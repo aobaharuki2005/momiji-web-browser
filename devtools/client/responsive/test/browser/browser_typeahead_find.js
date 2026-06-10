@@ -40,12 +40,9 @@ addRDMTask(TEST_URL, async function ({ ui }) {
     await SpecialPowers.spawn(browser, [{ e }], async function (args) {
       const { e: values } = args;
       const element = content.document.getElementById(values.id);
+
       // Set focus on the desired element.
       element.focus();
-      await ContentTaskUtils.waitForCondition(
-        () => content.document.activeElement === element,
-        "Wait for the focused element to be the document activeElement"
-      );
     });
 
     // Press the 'T' key and see if find is triggered.
@@ -53,8 +50,10 @@ addRDMTask(TEST_URL, async function ({ ui }) {
 
     const findBar = await gBrowser.getFindBar();
 
-    await waitFor(
-      () => e.findTriggered == (findBar._findField.value == "t"),
+    const findIsTriggered = findBar._findField.value == "t";
+    is(
+      findIsTriggered,
+      e.findTriggered,
       "Text input with focused element " +
         e.id +
         " should " +

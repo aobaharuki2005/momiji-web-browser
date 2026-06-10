@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * Copyright 2019 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -131,81 +133,6 @@ bool wasm::CreateStackMapForFunctionEntryTrap(
   return true;
 }
 
-#ifdef JS_JITSPEW
-void StackMap::show(uint32_t codeOffset) const {
-  uint32_t nWords = numMappedWords();
-  uint32_t nTotal = nWords + 64;
-  char* str = (char*)js_malloc(nTotal);
-  if (!str) {
-    return;
-  }
-  memset(str, 0, nTotal);
-  sprintf(str, "%u words: LO{ ", nWords);
-  uint32_t offs = strlen(str);
-  for (uint32_t i = 0; i < nWords; i++) {
-    char c = '.';
-    switch (get(i)) {
-      case StackMap::Kind::POD:
-        break;
-      case StackMap::Kind::AnyRef:
-        c = 'R';
-        break;
-      case StackMap::Kind::StructDataPointer:
-        c = 'S';
-        break;
-      case StackMap::Kind::ArrayDataPointer:
-        c = 'A';
-        break;
-      case StackMap::Kind::Limit:
-      default:
-        MOZ_CRASH();
-    }
-    MOZ_RELEASE_ASSERT(offs < nTotal);
-    str[offs++] = c;
-  }
-  sprintf(&str[offs], " }HI");
-  MOZ_RELEASE_ASSERT(str[nTotal - 1] == 0);
-  JitSpew(jit::JitSpew_Codegen, "%06x  # <-- @ w::StackMap: %s", codeOffset,
-          str);
-  js_free(str);
-}
-
-const char* wasm::NameOfTrap(Trap t) {
-  switch (t) {
-    case Trap::Unreachable:
-      return "Unreachable";
-    case Trap::IntegerOverflow:
-      return "IntegerOverflow";
-    case Trap::InvalidConversionToInteger:
-      return "InvalidConversionToInteger";
-    case Trap::IntegerDivideByZero:
-      return "IntegerDivideByZero";
-    case Trap::OutOfBounds:
-      return "OutOfBounds";
-    case Trap::UnalignedAccess:
-      return "UnalignedAccess";
-    case Trap::IndirectCallToNull:
-      return "IndirectCallToNull";
-    case Trap::IndirectCallBadSig:
-      return "IndirectCallBadSig";
-    case Trap::NullPointerDereference:
-      return "NullPointerDereference";
-    case Trap::BadCast:
-      return "BadCast";
-    case Trap::StackOverflow:
-      return "StackOverflow";
-    case Trap::CheckInterrupt:
-      return "CheckInterrupt";
-    case Trap::ThrowReported:
-      return "ThrowReported";
-    case Trap::Limit:
-      return "Limit";
-    default:
-      MOZ_CRASH();
-  }
-}
-#endif
-
 bool wasm::GenerateStackmapEntriesForTrapExit(
     const ArgTypeVector& args, const RegisterOffsets& trapExitLayout,
     const size_t trapExitLayoutNumWords, ExitStubMapVector* extras) {
@@ -245,7 +172,7 @@ void wasm::EmitWasmPreBarrierGuard(MacroAssembler& masm, Register instance,
                                    MaybeTrapSiteDesc trapSiteDesc) {
   // If no incremental GC has started, we don't need the barrier.
   masm.loadPtr(
-      Address(instance, Instance::offsetOfAddressOfNeedsMarkingBarrier()),
+      Address(instance, Instance::offsetOfAddressOfNeedsIncrementalBarrier()),
       scratch);
   masm.branchTest32(Assembler::Zero, Address(scratch, 0), Imm32(0x1),
                     skipBarrier);
@@ -280,9 +207,9 @@ void wasm::EmitWasmPreBarrierCallImmediate(MacroAssembler& masm,
   }
 
 #if defined(DEBUG) && defined(JS_CODEGEN_ARM64)
-  // The prebarrier assumes that x20 == sp.
+  // The prebarrier assumes that x28 == sp.
   Label ok;
-  masm.Cmp(sp, vixl::Operand(x20));
+  masm.Cmp(sp, vixl::Operand(x28));
   masm.B(&ok, Assembler::Equal);
   masm.breakpoint();
   masm.bind(&ok);
@@ -312,9 +239,9 @@ void wasm::EmitWasmPreBarrierCallIndex(MacroAssembler& masm, Register instance,
   masm.computeEffectiveAddress(addr, PreBarrierReg);
 
 #if defined(DEBUG) && defined(JS_CODEGEN_ARM64)
-  // The prebarrier assumes that x20 == sp.
+  // The prebarrier assumes that x28 == sp.
   Label ok;
-  masm.Cmp(sp, vixl::Operand(x20));
+  masm.Cmp(sp, vixl::Operand(x28));
   masm.B(&ok, Assembler::Equal);
   masm.breakpoint();
   masm.bind(&ok);
@@ -329,69 +256,19 @@ void wasm::EmitWasmPreBarrierCallIndex(MacroAssembler& masm, Register instance,
   masm.movePtr(scratch2, AsRegister(addr.base));
 }
 
-#ifdef ENABLE_WASM_JSPI
-void wasm::EmitWasmResumeBarrierGuard(MacroAssembler& masm, Register instance,
-                                      Register scratch, Label* enterBarrier) {
-  // If an incremental GC has started, we need the barrier.
-  masm.loadPtr(
-      Address(instance, Instance::offsetOfAddressOfNeedsMarkingBarrier()),
-      scratch);
-  masm.branchTest32(Assembler::NonZero, Address(scratch, 0), Imm32(0x1),
-                    enterBarrier);
-}
-
-void wasm::EmitWasmResumeBarrier(MacroAssembler& masm, Register instance,
-                                 Register cont) {
-  // The builtin thunk will assume that instance is in InstanceReg.
-  MOZ_ASSERT(instance == InstanceReg);
-
-  // Reserve stack space for the call.
-  unsigned argDecrement;
-  {
-    ABIArgGenerator abi(ABIKind::Wasm);
-    ABIArg arg;
-    arg = abi.next(MIRType::Pointer);
-    argDecrement = StackDecrementForCall(
-        WasmStackAlignment, sizeof(wasm::Frame) + masm.framePushed(),
-        abi.stackBytesConsumedSoFar());
-  }
-  masm.reserveStack(argDecrement);
-  masm.assertStackAlignment(WasmStackAlignment);
-
-  // Pass the cont argument.
-  ABIArgGenerator abi(ABIKind::Wasm);
-  ABIArg arg;
-  arg = abi.next(MIRType::Pointer);
-  if (arg.kind() == ABIArg::GPR) {
-    masm.movePtr(cont, arg.gpr());
-  } else {
-    MOZ_ASSERT(arg.kind() == ABIArg::Stack);
-    masm.storePtr(cont,
-                  Address(masm.getStackPointer(), arg.offsetFromArgBase()));
-  }
-
-  masm.storePtr(InstanceReg, Address(masm.getStackPointer(),
-                                     WasmCallerInstanceOffsetBeforeCall));
-
-  masm.call(SymbolicAddress::ResumeBarrier);
-
-  masm.freeStack(argDecrement);
-}
-#endif
-
 void wasm::EmitWasmPostBarrierGuard(MacroAssembler& masm,
                                     const mozilla::Maybe<Register>& object,
                                     Register otherScratch, Register setValue,
                                     Label* skipBarrier) {
-  // If the pointer being stored is to a tenured object, no barrier.
-  masm.branchWasmAnyRefIsNurseryCell(false, setValue, otherScratch,
-                                     skipBarrier);
-
   // If there is a containing object and it is in the nursery, no barrier.
   if (object) {
     masm.branchPtrInNurseryChunk(Assembler::Equal, *object, otherScratch,
                                  skipBarrier);
   }
+
+  // If the pointer being stored is to a tenured object, no barrier.
+  masm.branchWasmAnyRefIsNurseryCell(false, setValue, otherScratch,
+                                     skipBarrier);
 }
 
 void wasm::CheckWholeCellLastElementCache(MacroAssembler& masm,

@@ -18,6 +18,7 @@ use std::collections::HashMap;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 // local imports
 use crate::display_item as di;
+use crate::display_item_cache::*;
 use crate::{APZScrollGeneration, HasScrollLinkedEffect, PipelineId, PropertyBinding};
 use crate::gradient_builder::GradientBuilder;
 use crate::color::ColorF;
@@ -116,6 +117,9 @@ pub struct DisplayListPayload {
     /// Serde encoded bytes. Mostly DisplayItems, but some mixed in slices.
     pub items_data: Vec<u8>,
 
+    /// Serde encoded DisplayItemCache structs
+    pub cache_data: Vec<u8>,
+
     /// Serde encoded SpatialTreeItem structs
     pub spatial_tree: Vec<u8>,
 }
@@ -124,6 +128,7 @@ impl DisplayListPayload {
     fn default() -> Self {
         DisplayListPayload {
             items_data: Vec::new(),
+            cache_data: Vec::new(),
             spatial_tree: Vec::new(),
         }
     }
@@ -137,6 +142,9 @@ impl DisplayListPayload {
         if payload.items_data.try_reserve(capacity.items_size).is_err() {
             return Self::default();
         }
+        if payload.cache_data.try_reserve(capacity.cache_size).is_err() {
+            return Self::default();
+        }
         if payload.spatial_tree.try_reserve(capacity.spatial_tree_size).is_err() {
             return Self::default();
         }
@@ -145,11 +153,13 @@ impl DisplayListPayload {
 
     fn clear(&mut self) {
         self.items_data.clear();
+        self.cache_data.clear();
         self.spatial_tree.clear();
     }
 
     fn size_in_bytes(&self) -> usize {
         self.items_data.len() +
+        self.cache_data.len() +
         self.spatial_tree.len()
     }
 
@@ -168,6 +178,7 @@ impl DisplayListPayload {
 impl MallocSizeOf for DisplayListPayload {
     fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
         self.items_data.size_of(ops) +
+        self.cache_data.size_of(ops) +
         self.spatial_tree.size_of(ops)
     }
 }
@@ -177,12 +188,6 @@ impl MallocSizeOf for DisplayListPayload {
 pub struct BuiltDisplayList {
     payload: DisplayListPayload,
     descriptor: BuiltDisplayListDescriptor,
-}
-
-impl MallocSizeOf for BuiltDisplayList {
-    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
-        self.payload.size_of(ops)
-    }
 }
 
 #[repr(C)]
@@ -213,8 +218,54 @@ pub struct BuiltDisplayListDescriptor {
     total_clip_nodes: usize,
     /// The amount of spatial nodes created while building this display list.
     total_spatial_nodes: usize,
+    /// The size of the cache for this display list.
+    cache_size: usize,
 }
 
+#[derive(Clone)]
+pub struct DisplayListWithCache {
+    pub display_list: BuiltDisplayList,
+    cache: DisplayItemCache,
+}
+
+impl DisplayListWithCache {
+    pub fn iter(&self) -> BuiltDisplayListIter {
+        self.display_list.iter_with_cache(&self.cache)
+    }
+
+    pub fn new_from_list(display_list: BuiltDisplayList) -> Self {
+        let mut cache = DisplayItemCache::new();
+        cache.update(&display_list);
+
+        DisplayListWithCache {
+            display_list,
+            cache
+        }
+    }
+
+    pub fn update(&mut self, display_list: BuiltDisplayList) {
+        self.cache.update(&display_list);
+        self.display_list = display_list;
+    }
+
+    pub fn descriptor(&self) -> &BuiltDisplayListDescriptor {
+        self.display_list.descriptor()
+    }
+
+    pub fn times(&self) -> (u64, u64, u64) {
+        self.display_list.times()
+    }
+
+    pub fn items_data(&self) -> &[u8] {
+        self.display_list.items_data()
+    }
+}
+
+impl MallocSizeOf for DisplayListWithCache {
+    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+        self.display_list.payload.size_of(ops) + self.cache.size_of(ops)
+    }
+}
 
 /// A debug (human-readable) representation of a built display list that
 /// can be used for capture and replay.
@@ -228,18 +279,18 @@ struct DisplayListCapture {
 }
 
 #[cfg(feature = "serialize")]
-impl Serialize for BuiltDisplayList {
+impl Serialize for DisplayListWithCache {
     fn serialize<S: Serializer>(
         &self,
         serializer: S
     ) -> Result<S::Ok, S::Error> {
         let display_items = BuiltDisplayList::create_debug_display_items(self.iter());
-        let spatial_tree_items = self.payload.create_debug_spatial_tree_items();
+        let spatial_tree_items = self.display_list.payload.create_debug_spatial_tree_items();
 
         let dl = DisplayListCapture {
             display_items,
             spatial_tree_items,
-            descriptor: self.descriptor,
+            descriptor: self.display_list.descriptor,
         };
 
         dl.serialize(serializer)
@@ -247,7 +298,7 @@ impl Serialize for BuiltDisplayList {
 }
 
 #[cfg(feature = "deserialize")]
-impl<'de> Deserialize<'de> for BuiltDisplayList {
+impl<'de> Deserialize<'de> for DisplayListWithCache {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -339,18 +390,25 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
         // serialization.
         ensure_red_zone::<di::DisplayItem>(&mut items_data);
 
-        Ok(BuiltDisplayList {
-            descriptor: capture.descriptor,
-            payload: DisplayListPayload {
-                items_data,
-                spatial_tree,
+        Ok(DisplayListWithCache {
+            display_list: BuiltDisplayList {
+                descriptor: capture.descriptor,
+                payload: DisplayListPayload {
+                    cache_data: Vec::new(),
+                    items_data,
+                    spatial_tree,
+                },
             },
+            cache: DisplayItemCache::new(),
         })
     }
 }
 
 pub struct BuiltDisplayListIter<'a> {
     data: &'a [u8],
+    cache: Option<&'a DisplayItemCache>,
+    pending_items: std::slice::Iter<'a, CachedDisplayItem>,
+    cur_cached_item: Option<&'a CachedDisplayItem>,
     cur_item: di::DisplayItem,
     cur_stops: ItemRange<'a, di::GradientStop>,
     cur_glyphs: ItemRange<'a, GlyphInstance>,
@@ -502,6 +560,10 @@ impl BuiltDisplayList {
         &self.payload.items_data
     }
 
+    pub fn cache_data(&self) -> &[u8] {
+        &self.payload.cache_data
+    }
+
     pub fn descriptor(&self) -> &BuiltDisplayListDescriptor {
         &self.descriptor
     }
@@ -535,7 +597,22 @@ impl BuiltDisplayList {
     }
 
     pub fn iter(&self) -> BuiltDisplayListIter {
-        BuiltDisplayListIter::new(self.items_data())
+        BuiltDisplayListIter::new(self.items_data(), None)
+    }
+
+    pub fn cache_data_iter(&self) -> BuiltDisplayListIter {
+        BuiltDisplayListIter::new(self.cache_data(), None)
+    }
+
+    pub fn iter_with_cache<'a>(
+        &'a self,
+        cache: &'a DisplayItemCache
+    ) -> BuiltDisplayListIter<'a> {
+        BuiltDisplayListIter::new(self.items_data(), Some(cache))
+    }
+
+    pub fn cache_size(&self) -> usize {
+        self.descriptor.cache_size
     }
 
     pub fn size_in_bytes(&self) -> usize {
@@ -616,6 +693,8 @@ impl BuiltDisplayList {
                 Real::PopReferenceFrame => Debug::PopReferenceFrame,
                 Real::PopStackingContext => Debug::PopStackingContext,
                 Real::PopAllShadows => Debug::PopAllShadows,
+                Real::ReuseItems(_) |
+                Real::RetainedItems(_) => unreachable!("Unexpected item"),
                 Real::DebugMarker(val) => Debug::DebugMarker(val),
             };
             debug_items.push(serial_di);
@@ -643,9 +722,13 @@ fn skip_slice<'a, T: peek_poke::Peek>(data: &mut &'a [u8]) -> ItemRange<'a, T> {
 impl<'a> BuiltDisplayListIter<'a> {
     pub fn new(
         data: &'a [u8],
+        cache: Option<&'a DisplayItemCache>,
     ) -> Self {
         Self {
             data,
+            cache,
+            pending_items: [].iter(),
+            cur_cached_item: None,
             cur_item: di::DisplayItem::PopStackingContext,
             cur_stops: ItemRange::default(),
             cur_glyphs: ItemRange::default(),
@@ -662,19 +745,41 @@ impl<'a> BuiltDisplayListIter<'a> {
     }
 
     pub fn sub_iter(&self) -> Self {
-        BuiltDisplayListIter::new(self.data)
+        let mut iter = BuiltDisplayListIter::new(
+            self.data, self.cache
+        );
+        iter.pending_items = self.pending_items.clone();
+        iter
     }
 
     pub fn current_item(&self) -> &di::DisplayItem {
-        &self.cur_item
+        match self.cur_cached_item {
+            Some(cached_item) => cached_item.display_item(),
+            None => &self.cur_item
+        }
+    }
+
+    fn cached_item_range_or<T>(
+        &self,
+        data: ItemRange<'a, T>
+    ) -> ItemRange<'a, T> {
+        match self.cur_cached_item {
+            Some(cached_item) => cached_item.data_as_item_range(),
+            None => data,
+        }
     }
 
     pub fn glyphs(&self) -> ItemRange<GlyphInstance> {
-        self.cur_glyphs
+        self.cached_item_range_or(self.cur_glyphs)
     }
 
     pub fn gradient_stops(&self) -> ItemRange<di::GradientStop> {
-        self.cur_stops
+        self.cached_item_range_or(self.cur_stops)
+    }
+
+    fn advance_pending_items(&mut self) -> bool {
+        self.cur_cached_item = self.pending_items.next();
+        self.cur_cached_item.is_some()
     }
 
     pub fn next<'b>(&'b mut self) -> Option<DisplayItemRef<'a, 'b>> {
@@ -723,6 +828,10 @@ impl<'a> BuiltDisplayListIter<'a> {
     pub fn next_raw<'b>(&'b mut self) -> Option<DisplayItemRef<'a, 'b>> {
         use crate::DisplayItem::*;
 
+        if self.advance_pending_items() {
+            return Some(self.as_ref());
+        }
+
         // A "red zone" of DisplayItem::max_size() bytes has been added to the
         // end of the serialized display list. If this amount, or less, is
         // remaining then we've reached the end of the display list.
@@ -769,6 +878,17 @@ impl<'a> BuiltDisplayListIter<'a> {
             Text(_) => {
                 self.cur_glyphs = skip_slice::<GlyphInstance>(&mut self.data);
                 self.debug_stats.log_slice("text.glyphs", &self.cur_glyphs);
+            }
+            ReuseItems(key) => {
+                match self.cache {
+                    Some(cache) => {
+                        self.pending_items = cache.get_items(key).iter();
+                        self.advance_pending_items();
+                    }
+                    None => {
+                        unreachable!("Cache marker without cache!");
+                    }
+                }
             }
             _ => { /* do nothing */ }
         }
@@ -878,6 +998,7 @@ impl<'a, T: Copy + peek_poke::Peek> ::std::iter::ExactSizeIterator for AuxIter<'
 #[derive(Clone, Debug)]
 pub struct SaveState {
     dl_items_len: usize,
+    dl_cache_len: usize,
     next_clip_index: usize,
     next_spatial_index: usize,
     next_clip_chain_id: u64,
@@ -885,13 +1006,21 @@ pub struct SaveState {
 
 /// DisplayListSection determines the target buffer for the display items.
 pub enum DisplayListSection {
-    /// The main/default buffer: contains item data.
+    /// The main/default buffer: contains item data and item group markers.
     Data,
+    /// Auxiliary buffer: contains the item data for item groups.
+    CacheData,
+    /// Temporary buffer: contains the data for pending item group. Flushed to
+    /// one of the buffers above, after item grouping finishes.
+    Chunk,
 }
 
 pub struct DisplayListBuilder {
     payload: DisplayListPayload,
     pub pipeline_id: PipelineId,
+
+    pending_chunk: Vec<u8>,
+    writing_to_chunk: bool,
 
     next_clip_index: usize,
     next_spatial_index: usize,
@@ -900,14 +1029,18 @@ pub struct DisplayListBuilder {
 
     save_state: Option<SaveState>,
 
+    cache_size: usize,
     serialized_content_buffer: Option<String>,
     state: BuildState,
 
+    /// Helper struct to map stacking context coords <-> reference frame coords.
+    rf_mapper: ReferenceFrameMapper,
 }
 
 #[repr(C)]
 struct DisplayListCapacity {
     items_size: usize,
+    cache_size: usize,
     spatial_tree_size: usize,
 }
 
@@ -915,6 +1048,7 @@ impl DisplayListCapacity {
     fn empty() -> Self {
         DisplayListCapacity {
             items_size: 0,
+            cache_size: 0,
             spatial_tree_size: 0,
         }
     }
@@ -926,25 +1060,36 @@ impl DisplayListBuilder {
             payload: DisplayListPayload::new(DisplayListCapacity::empty()),
             pipeline_id,
 
+            pending_chunk: Vec::new(),
+            writing_to_chunk: false,
+
             next_clip_index: FIRST_CLIP_NODE_INDEX,
             next_spatial_index: FIRST_SPATIAL_NODE_INDEX,
             next_clip_chain_id: 0,
             builder_start_time: 0,
             save_state: None,
+            cache_size: 0,
             serialized_content_buffer: None,
             state: BuildState::Idle,
+
+            rf_mapper: ReferenceFrameMapper::new(),
         }
     }
 
     fn reset(&mut self) {
         self.payload.clear();
+        self.pending_chunk.clear();
+        self.writing_to_chunk = false;
 
         self.next_clip_index = FIRST_CLIP_NODE_INDEX;
         self.next_spatial_index = FIRST_SPATIAL_NODE_INDEX;
         self.next_clip_chain_id = 0;
 
         self.save_state = None;
+        self.cache_size = 0;
         self.serialized_content_buffer = None;
+
+        self.rf_mapper = ReferenceFrameMapper::new();
     }
 
     /// Saves the current display list state, so it may be `restore()`'d.
@@ -959,6 +1104,7 @@ impl DisplayListBuilder {
 
         self.save_state = Some(SaveState {
             dl_items_len: self.payload.items_data.len(),
+            dl_cache_len: self.payload.cache_data.len(),
             next_clip_index: self.next_clip_index,
             next_spatial_index: self.next_spatial_index,
             next_clip_chain_id: self.next_clip_chain_id,
@@ -970,6 +1116,7 @@ impl DisplayListBuilder {
         let state = self.save_state.take().expect("No save to restore DisplayListBuilder from");
 
         self.payload.items_data.truncate(state.dl_items_len);
+        self.payload.cache_data.truncate(state.dl_cache_len);
         self.next_clip_index = state.next_clip_index;
         self.next_spatial_index = state.next_spatial_index;
         self.next_clip_chain_id = state.next_clip_chain_id;
@@ -1002,11 +1149,14 @@ impl DisplayListBuilder {
     {
         let mut temp = BuiltDisplayList::default();
         ensure_red_zone::<di::DisplayItem>(&mut self.payload.items_data);
+        ensure_red_zone::<di::DisplayItem>(&mut self.payload.cache_data);
         mem::swap(&mut temp.payload, &mut self.payload);
 
         let mut index: usize = 0;
         {
-            let mut iter = temp.iter();
+            let mut cache = DisplayItemCache::new();
+            cache.update(&temp);
+            let mut iter = temp.iter_with_cache(&cache);
             while let Some(item) = iter.next_raw() {
                 if index >= range.start.unwrap_or(0) && range.end.map_or(true, |e| index < e) {
                     writeln!(sink, "{}{:?}", "  ".repeat(indent), item.item()).unwrap();
@@ -1017,6 +1167,7 @@ impl DisplayListBuilder {
 
         self.payload = temp.payload;
         strip_red_zone::<di::DisplayItem>(&mut self.payload.items_data);
+        strip_red_zone::<di::DisplayItem>(&mut self.payload.cache_data);
         index
     }
 
@@ -1035,7 +1186,11 @@ impl DisplayListBuilder {
     /// Returns the default section that DisplayListBuilder will write to,
     /// if no section is specified explicitly.
     fn default_section(&self) -> DisplayListSection {
-        DisplayListSection::Data
+        if self.writing_to_chunk {
+            DisplayListSection::Chunk
+        } else {
+            DisplayListSection::Data
+        }
     }
 
     fn buffer_from_section(
@@ -1044,6 +1199,8 @@ impl DisplayListBuilder {
     ) -> &mut Vec<u8> {
         match section {
             DisplayListSection::Data => &mut self.payload.items_data,
+            DisplayListSection::CacheData => &mut self.payload.cache_data,
+            DisplayListSection::Chunk => &mut self.pending_chunk,
         }
     }
 
@@ -1123,14 +1280,43 @@ impl DisplayListBuilder {
         Self::push_iter_impl(buffer, iter);
     }
 
+    // Remap a clip/bounds from stacking context coords to reference frame relative
+    fn remap_common_coordinates_and_bounds(
+        &self,
+        common: &di::CommonItemProperties,
+        bounds: LayoutRect,
+    ) -> (di::CommonItemProperties, LayoutRect) {
+        let offset = self.rf_mapper.current_offset();
+
+        (
+            di::CommonItemProperties {
+                clip_rect: common.clip_rect.translate(offset),
+                ..*common
+            },
+            bounds.translate(offset),
+        )
+    }
+
+    // Remap a bounds from stacking context coords to reference frame relative
+    fn remap_bounds(
+        &self,
+        bounds: LayoutRect,
+    ) -> LayoutRect {
+        let offset = self.rf_mapper.current_offset();
+
+        bounds.translate(offset)
+    }
+
     pub fn push_rect(
         &mut self,
         common: &di::CommonItemProperties,
         bounds: LayoutRect,
         color: ColorF,
     ) {
+        let (common, bounds) = self.remap_common_coordinates_and_bounds(common, bounds);
+
         let item = di::DisplayItem::Rectangle(di::RectangleDisplayItem {
-            common: *common,
+            common,
             color: PropertyBinding::Value(color),
             bounds,
         });
@@ -1143,8 +1329,10 @@ impl DisplayListBuilder {
         bounds: LayoutRect,
         color: PropertyBinding<ColorF>,
     ) {
+        let (common, bounds) = self.remap_common_coordinates_and_bounds(common, bounds);
+
         let item = di::DisplayItem::Rectangle(di::RectangleDisplayItem {
-            common: *common,
+            common,
             color,
             bounds,
         });
@@ -1159,6 +1347,8 @@ impl DisplayListBuilder {
         flags: di::PrimitiveFlags,
         tag: di::ItemTag,
     ) {
+        let rect = self.remap_bounds(rect);
+
         let item = di::DisplayItem::HitTest(di::HitTestDisplayItem {
             rect,
             clip_chain_id,
@@ -1178,10 +1368,10 @@ impl DisplayListBuilder {
         color: &ColorF,
         style: di::LineStyle,
     ) {
-        let area = *area;
+        let (common, area) = self.remap_common_coordinates_and_bounds(common, *area);
 
         let item = di::DisplayItem::Line(di::LineDisplayItem {
-            common: *common,
+            common,
             area,
             wavy_line_thickness,
             orientation,
@@ -1201,8 +1391,10 @@ impl DisplayListBuilder {
         key: ImageKey,
         color: ColorF,
     ) {
+        let (common, bounds) = self.remap_common_coordinates_and_bounds(common, bounds);
+
         let item = di::DisplayItem::Image(di::ImageDisplayItem {
-            common: *common,
+            common,
             bounds,
             image_key: key,
             image_rendering,
@@ -1224,8 +1416,10 @@ impl DisplayListBuilder {
         key: ImageKey,
         color: ColorF,
     ) {
+        let (common, bounds) = self.remap_common_coordinates_and_bounds(common, bounds);
+
         let item = di::DisplayItem::RepeatingImage(di::RepeatingImageDisplayItem {
-            common: *common,
+            common,
             bounds,
             image_key: key,
             stretch_size,
@@ -1249,8 +1443,10 @@ impl DisplayListBuilder {
         color_range: di::ColorRange,
         image_rendering: di::ImageRendering,
     ) {
+        let (common, bounds) = self.remap_common_coordinates_and_bounds(common, bounds);
+
         let item = di::DisplayItem::YuvImage(di::YuvImageDisplayItem {
-            common: *common,
+            common,
             bounds,
             yuv_data,
             color_depth,
@@ -1270,12 +1466,16 @@ impl DisplayListBuilder {
         color: ColorF,
         glyph_options: Option<GlyphOptions>,
     ) {
+        let (common, bounds) = self.remap_common_coordinates_and_bounds(common, bounds);
+        let ref_frame_offset = self.rf_mapper.current_offset();
+
         let item = di::DisplayItem::Text(di::TextDisplayItem {
-            common: *common,
+            common,
             bounds,
             color,
             font_key,
             glyph_options,
+            ref_frame_offset,
         });
 
         for split_glyphs in glyphs.chunks(MAX_TEXT_RUN_LENGTH) {
@@ -1336,8 +1536,10 @@ impl DisplayListBuilder {
         widths: LayoutSideOffsets,
         details: di::BorderDetails,
     ) {
+        let (common, bounds) = self.remap_common_coordinates_and_bounds(common, bounds);
+
         let item = di::DisplayItem::Border(di::BorderDisplayItem {
-            common: *common,
+            common,
             bounds,
             details,
             widths,
@@ -1355,18 +1557,18 @@ impl DisplayListBuilder {
         blur_radius: f32,
         spread_radius: f32,
         border_radius: di::BorderRadius,
-        shadow_radius: di::BorderRadius,
         clip_mode: di::BoxShadowClipMode,
     ) {
+        let (common, box_bounds) = self.remap_common_coordinates_and_bounds(common, box_bounds);
+
         let item = di::DisplayItem::BoxShadow(di::BoxShadowDisplayItem {
-            common: *common,
+            common,
             box_bounds,
             offset,
             color,
             blur_radius,
             spread_radius,
             border_radius,
-            shadow_radius,
             clip_mode,
         });
 
@@ -1395,8 +1597,10 @@ impl DisplayListBuilder {
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
     ) {
+        let (common, bounds) = self.remap_common_coordinates_and_bounds(common, bounds);
+
         let item = di::DisplayItem::Gradient(di::GradientDisplayItem {
-            common: *common,
+            common,
             bounds,
             gradient,
             tile_size,
@@ -1417,8 +1621,10 @@ impl DisplayListBuilder {
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
     ) {
+        let (common, bounds) = self.remap_common_coordinates_and_bounds(common, bounds);
+
         let item = di::DisplayItem::RadialGradient(di::RadialGradientDisplayItem {
-            common: *common,
+            common,
             bounds,
             gradient,
             tile_size,
@@ -1439,8 +1645,10 @@ impl DisplayListBuilder {
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
     ) {
+        let (common, bounds) = self.remap_common_coordinates_and_bounds(common, bounds);
+
         let item = di::DisplayItem::ConicGradient(di::ConicGradientDisplayItem {
-            common: *common,
+            common,
             bounds,
             gradient,
             tile_size,
@@ -1457,8 +1665,12 @@ impl DisplayListBuilder {
         transform_style: di::TransformStyle,
         transform: PropertyBinding<LayoutTransform>,
         kind: di::ReferenceFrameKind,
+        key: di::SpatialTreeItemKey,
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
+
+        let current_offset = self.rf_mapper.current_offset();
+        let origin = origin + current_offset;
 
         let descriptor = di::SpatialTreeItem::ReferenceFrame(di::ReferenceFrameDescriptor {
             parent_spatial_id,
@@ -1470,9 +1682,12 @@ impl DisplayListBuilder {
                 },
                 kind,
                 id,
+                key,
             },
         });
         self.push_spatial_tree_item(&descriptor);
+
+        self.rf_mapper.push_scope();
 
         let item = di::DisplayItem::PushReferenceFrame(di::ReferenceFrameDisplayListItem {
         });
@@ -1488,8 +1703,12 @@ impl DisplayListBuilder {
         scale_from: Option<LayoutSize>,
         vertical_flip: bool,
         rotation: di::Rotation,
+        key: di::SpatialTreeItemKey,
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
+
+        let current_offset = self.rf_mapper.current_offset();
+        let origin = origin + current_offset;
 
         let descriptor = di::SpatialTreeItem::ReferenceFrame(di::ReferenceFrameDescriptor {
             parent_spatial_id,
@@ -1507,9 +1726,12 @@ impl DisplayListBuilder {
                     paired_with_perspective: false,
                 },
                 id,
+                key,
             },
         });
         self.push_spatial_tree_item(&descriptor);
+
+        self.rf_mapper.push_scope();
 
         let item = di::DisplayItem::PushReferenceFrame(di::ReferenceFrameDisplayListItem {
         });
@@ -1519,11 +1741,13 @@ impl DisplayListBuilder {
     }
 
     pub fn pop_reference_frame(&mut self) {
+        self.rf_mapper.pop_scope();
         self.push_item(&di::DisplayItem::PopReferenceFrame);
     }
 
     pub fn push_stacking_context(
         &mut self,
+        origin: LayoutPoint,
         spatial_id: di::SpatialId,
         prim_flags: di::PrimitiveFlags,
         clip_chain_id: Option<di::ClipChainId>,
@@ -1535,12 +1759,15 @@ impl DisplayListBuilder {
         flags: di::StackingContextFlags,
         snapshot: Option<di::SnapshotInfo>
     ) {
+        let ref_frame_offset = self.rf_mapper.current_offset();
         self.push_filters(filters, filter_datas);
 
         let item = di::DisplayItem::PushStackingContext(di::PushStackingContextDisplayItem {
+            origin,
             spatial_id,
             snapshot,
             prim_flags,
+            ref_frame_offset,
             stacking_context: di::StackingContext {
                 transform_style,
                 mix_blend_mode,
@@ -1550,16 +1777,19 @@ impl DisplayListBuilder {
             },
         });
 
+        self.rf_mapper.push_offset(origin.to_vector());
         self.push_item(&item);
     }
 
     /// Helper for examples/ code.
     pub fn push_simple_stacking_context(
         &mut self,
+        origin: LayoutPoint,
         spatial_id: di::SpatialId,
         prim_flags: di::PrimitiveFlags,
     ) {
         self.push_simple_stacking_context_with_filters(
+            origin,
             spatial_id,
             prim_flags,
             &[],
@@ -1570,12 +1800,14 @@ impl DisplayListBuilder {
     /// Helper for examples/ code.
     pub fn push_simple_stacking_context_with_filters(
         &mut self,
+        origin: LayoutPoint,
         spatial_id: di::SpatialId,
         prim_flags: di::PrimitiveFlags,
         filters: &[di::FilterOp],
         filter_datas: &[di::FilterData],
     ) {
         self.push_stacking_context(
+            origin,
             spatial_id,
             prim_flags,
             None,
@@ -1590,6 +1822,7 @@ impl DisplayListBuilder {
     }
 
     pub fn pop_stacking_context(&mut self) {
+        self.rf_mapper.pop_offset();
         self.push_item(&di::DisplayItem::PopStackingContext);
     }
 
@@ -1607,10 +1840,15 @@ impl DisplayListBuilder {
         filters: &[di::FilterOp],
         filter_datas: &[di::FilterData],
     ) {
+        let common = di::CommonItemProperties {
+            clip_rect: self.remap_bounds(common.clip_rect),
+            ..*common
+        };
+
         self.push_filters(filters, filter_datas);
 
         let item = di::DisplayItem::BackdropFilter(di::BackdropFilterDisplayItem {
-            common: *common,
+            common,
         });
         self.push_item(&item);
     }
@@ -1666,18 +1904,21 @@ impl DisplayListBuilder {
         external_scroll_offset: LayoutVector2D,
         scroll_offset_generation: APZScrollGeneration,
         has_scroll_linked_effect: HasScrollLinkedEffect,
+        key: di::SpatialTreeItemKey,
     ) -> di::SpatialId {
         let scroll_frame_id = self.generate_spatial_index();
+        let current_offset = self.rf_mapper.current_offset();
 
         let descriptor = di::SpatialTreeItem::ScrollFrame(di::ScrollFrameDescriptor {
             content_rect,
-            frame_rect,
+            frame_rect: frame_rect.translate(current_offset),
             parent_space,
             scroll_frame_id,
             external_id,
             external_scroll_offset,
             scroll_offset_generation,
             has_scroll_linked_effect,
+            key,
         });
 
         self.push_spatial_tree_item(&descriptor);
@@ -1709,6 +1950,13 @@ impl DisplayListBuilder {
     ) -> di::ClipId {
         let id = self.generate_clip_index();
 
+        let current_offset = self.rf_mapper.current_offset();
+
+        let image_mask = di::ImageMask {
+            rect: image_mask.rect.translate(current_offset),
+            ..image_mask
+        };
+
         let item = di::DisplayItem::ImageMaskClip(di::ImageMaskClipDisplayItem {
             id,
             spatial_id,
@@ -1735,6 +1983,9 @@ impl DisplayListBuilder {
     ) -> di::ClipId {
         let id = self.generate_clip_index();
 
+        let current_offset = self.rf_mapper.current_offset();
+        let clip_rect = clip_rect.translate(current_offset);
+
         let item = di::DisplayItem::RectClip(di::RectClipDisplayItem {
             id,
             spatial_id,
@@ -1751,6 +2002,13 @@ impl DisplayListBuilder {
         clip: di::ComplexClipRegion,
     ) -> di::ClipId {
         let id = self.generate_clip_index();
+
+        let current_offset = self.rf_mapper.current_offset();
+
+        let clip = di::ComplexClipRegion {
+            rect: clip.rect.translate(current_offset),
+            ..clip
+        };
 
         let item = di::DisplayItem::RoundedRectClip(di::RoundedRectClipDisplayItem {
             id,
@@ -1770,20 +2028,23 @@ impl DisplayListBuilder {
         vertical_offset_bounds: di::StickyOffsetBounds,
         horizontal_offset_bounds: di::StickyOffsetBounds,
         previously_applied_offset: LayoutVector2D,
+        key: di::SpatialTreeItemKey,
         // TODO: The caller only ever passes an identity transform.
         // Could we pass just an (optional) animation id instead?
         transform: Option<PropertyBinding<LayoutTransform>>
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
+        let current_offset = self.rf_mapper.current_offset();
 
         let descriptor = di::SpatialTreeItem::StickyFrame(di::StickyFrameDescriptor {
             parent_spatial_id,
             id,
-            bounds: frame_rect,
+            bounds: frame_rect.translate(current_offset),
             margins,
             vertical_offset_bounds,
             horizontal_offset_bounds,
             previously_applied_offset,
+            key,
             transform,
         });
 
@@ -1799,6 +2060,10 @@ impl DisplayListBuilder {
         pipeline_id: PipelineId,
         ignore_missing_pipeline: bool
     ) {
+        let current_offset = self.rf_mapper.current_offset();
+        let bounds = bounds.translate(current_offset);
+        let clip_rect = clip_rect.translate(current_offset);
+
         let item = di::DisplayItem::Iframe(di::IframeDisplayItem {
             bounds,
             clip_rect,
@@ -1827,6 +2092,66 @@ impl DisplayListBuilder {
         self.push_item(&di::DisplayItem::PopAllShadows);
     }
 
+    pub fn start_item_group(&mut self) {
+        debug_assert!(!self.writing_to_chunk);
+        debug_assert!(self.pending_chunk.is_empty());
+
+        self.writing_to_chunk = true;
+    }
+
+    fn flush_pending_item_group(&mut self, key: di::ItemKey) {
+        // Push RetainedItems-marker to cache_data section.
+        self.push_retained_items(key);
+
+        // Push pending chunk to cache_data section.
+        self.payload.cache_data.append(&mut self.pending_chunk);
+
+        // Push ReuseItems-marker to data section.
+        self.push_reuse_items(key);
+    }
+
+    pub fn finish_item_group(&mut self, key: di::ItemKey) -> bool {
+        debug_assert!(self.writing_to_chunk);
+        self.writing_to_chunk = false;
+
+        if self.pending_chunk.is_empty() {
+            return false;
+        }
+
+        self.flush_pending_item_group(key);
+        true
+    }
+
+    pub fn cancel_item_group(&mut self, discard: bool) {
+        debug_assert!(self.writing_to_chunk);
+        self.writing_to_chunk = false;
+
+        if discard {
+            self.pending_chunk.clear();
+        } else {
+            // Push pending chunk to data section.
+            self.payload.items_data.append(&mut self.pending_chunk);
+        }
+    }
+
+    pub fn push_reuse_items(&mut self, key: di::ItemKey) {
+        self.push_item_to_section(
+            &di::DisplayItem::ReuseItems(key),
+            DisplayListSection::Data
+        );
+    }
+
+    fn push_retained_items(&mut self, key: di::ItemKey) {
+        self.push_item_to_section(
+            &di::DisplayItem::RetainedItems(key),
+            DisplayListSection::CacheData
+        );
+    }
+
+    pub fn set_cache_size(&mut self, cache_size: usize) {
+        self.cache_size = cache_size;
+    }
+
     pub fn begin(&mut self) {
         assert_eq!(self.state, BuildState::Idle);
         self.state = BuildState::Build;
@@ -1847,6 +2172,7 @@ impl DisplayListBuilder {
         // so there is at least this amount available in the display list during
         // serialization.
         ensure_red_zone::<di::DisplayItem>(&mut self.payload.items_data);
+        ensure_red_zone::<di::DisplayItem>(&mut self.payload.cache_data);
         ensure_red_zone::<di::SpatialTreeItem>(&mut self.payload.spatial_tree);
 
         // While the first display list after tab-switch can be large, the
@@ -1855,6 +2181,7 @@ impl DisplayListBuilder {
         // pressure events will cause us to release our buffers if we ask for
         // too much. See bug 1531819 for related OOM issues.
         let next_capacity = DisplayListCapacity {
+            cache_size: self.payload.cache_data.len(),
             items_size: self.payload.items_data.len(),
             spatial_tree_size: self.payload.spatial_tree.len(),
         };
@@ -1876,6 +2203,7 @@ impl DisplayListBuilder {
                     send_start_time: end_time,
                     total_clip_nodes: self.next_clip_index,
                     total_spatial_nodes: self.next_spatial_index,
+                    cache_size: self.cache_size,
                 },
                 payload,
             },
@@ -1893,3 +2221,76 @@ fn iter_spatial_tree<F>(spatial_tree: &[u8], mut f: F) where F: FnMut(&di::Spati
     }
 }
 
+/// The offset stack for a given reference frame.
+#[derive(Clone)]
+struct ReferenceFrameState {
+    /// A stack of current offsets from the current reference frame scope.
+    offsets: Vec<LayoutVector2D>,
+}
+
+/// Maps from stacking context layout coordinates into reference frame
+/// relative coordinates.
+#[derive(Clone)]
+pub struct ReferenceFrameMapper {
+    /// A stack of reference frame scopes.
+    frames: Vec<ReferenceFrameState>,
+}
+
+impl ReferenceFrameMapper {
+    pub fn new() -> Self {
+        ReferenceFrameMapper {
+            frames: vec![
+                ReferenceFrameState {
+                    offsets: vec![
+                        LayoutVector2D::zero(),
+                    ],
+                }
+            ],
+        }
+    }
+
+    /// Push a new scope. This resets the current offset to zero, and is
+    /// used when a new reference frame or iframe is pushed.
+    pub fn push_scope(&mut self) {
+        self.frames.push(ReferenceFrameState {
+            offsets: vec![
+                LayoutVector2D::zero(),
+            ],
+        });
+    }
+
+    /// Pop a reference frame scope off the stack.
+    pub fn pop_scope(&mut self) {
+        self.frames.pop().unwrap();
+    }
+
+    /// Push a new offset for the current scope. This is used when
+    /// a new stacking context is pushed.
+    pub fn push_offset(&mut self, offset: LayoutVector2D) {
+        let frame = self.frames.last_mut().unwrap();
+        let current_offset = *frame.offsets.last().unwrap();
+        frame.offsets.push(current_offset + offset);
+    }
+
+    /// Pop a local stacking context offset from the current scope.
+    pub fn pop_offset(&mut self) {
+        let frame = self.frames.last_mut().unwrap();
+        frame.offsets.pop().unwrap();
+    }
+
+    /// Retrieve the current offset to allow converting a stacking context
+    /// relative coordinate to be relative to the owing reference frame.
+    /// TODO(gw): We could perhaps have separate coordinate spaces for this,
+    ///           however that's going to either mean a lot of changes to
+    ///           public API code, or a lot of changes to internal code.
+    ///           Before doing that, we should revisit how Gecko would
+    ///           prefer to provide coordinates.
+    /// TODO(gw): For now, this includes only the reference frame relative
+    ///           offset. Soon, we will expand this to include the initial
+    ///           scroll offsets that are now available on scroll nodes. This
+    ///           will allow normalizing the coordinates even between display
+    ///           lists where APZ has scrolled the content.
+    pub fn current_offset(&self) -> LayoutVector2D {
+        *self.frames.last().unwrap().offsets.last().unwrap()
+    }
+}

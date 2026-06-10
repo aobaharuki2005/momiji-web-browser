@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -13,6 +14,6 @@
  Exposed=Window]
 interface AudioListener {
     // Uses a 3D cartesian coordinate system
-    undefined setPosition(float x, float y, float z);
-    undefined setOrientation(float x, float y, float z, float xUp, float yUp, float zUp);
+    undefined setPosition(double x, double y, double z);
+    undefined setOrientation(double x, double y, double z, double xUp, double yUp, double zUp);
 };

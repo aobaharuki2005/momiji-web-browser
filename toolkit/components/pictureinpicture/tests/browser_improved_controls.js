@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
 const TEST_PAGE_LONG = TEST_ROOT + "test-video-selection.html";
 
 const IMPROVED_CONTROLS_ENABLED_PREF =

@@ -11,30 +11,24 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.mozilla.fenix.settings.datastore.RecentSettingsSearchItem
 import org.mozilla.fenix.settings.datastore.RecentSettingsSearches
+import org.mozilla.fenix.settings.settingssearch.DefaultFenixSettingsIndexer.Companion.preferenceFileInformationList
 
-internal val Context.recentSearchesDataStore: DataStore<RecentSettingsSearches> by dataStore(
+private val Context.recentSearchesDataStore: DataStore<RecentSettingsSearches> by dataStore(
     fileName = "recent_searches.pb",
-    serializer = RecentSettingsSearchesSerializer,
-)
-
-internal val Context.secretRecentSearchesDataStore: DataStore<RecentSettingsSearches> by dataStore(
-    fileName = "secret_settings_recent_searches.pb",
     serializer = RecentSettingsSearchesSerializer,
 )
 
 /**
  * Repository for recent searches.
  *
- * @param dataStore The DataStore for persisting recent searches.
- * @param preferenceFileInformationList The list of preference file information used to resolve items.
+ * @param context The application context.
  */
 class FenixRecentSettingsSearchesRepository(
-    private val dataStore: DataStore<RecentSettingsSearches>,
-    private val preferenceFileInformationList: List<PreferenceFileInformation>,
+    private val context: Context,
 ) : RecentSettingsSearchesRepository {
 
     override val recentSearches: Flow<List<SettingsSearchItem>> =
-        dataStore.data.map { protoResult ->
+        context.recentSearchesDataStore.data.map { protoResult ->
             protoResult.itemsList.mapNotNull { protoItem ->
                 val prefInfo = preferenceFileInformationList.find {
                     it.xmlResourceId == protoItem.xmlResourceId
@@ -56,7 +50,7 @@ class FenixRecentSettingsSearchesRepository(
      * @param item The [SettingsSearchItem] to add.
      */
     override suspend fun addRecentSearchItem(item: SettingsSearchItem) {
-        dataStore.updateData { currentRecents ->
+        context.recentSearchesDataStore.updateData { currentRecents ->
             val currentItems = currentRecents.itemsList.toMutableList()
 
             currentItems.removeIf { it.preferenceKey == item.preferenceKey }
@@ -78,7 +72,7 @@ class FenixRecentSettingsSearchesRepository(
      * Clears all recent search items from the repository.
      */
     override suspend fun clearRecentSearches() {
-        dataStore.updateData {
+        context.recentSearchesDataStore.updateData {
             it.toBuilder().clearItems().build()
         }
     }

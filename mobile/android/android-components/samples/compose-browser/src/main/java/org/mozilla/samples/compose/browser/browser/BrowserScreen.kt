@@ -15,11 +15,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,21 +29,20 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBar
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction
-import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
 import mozilla.components.compose.engine.WebContent
 import mozilla.components.compose.tabstray.TabList
 import mozilla.components.concept.awesomebar.AwesomeBar
-import mozilla.components.concept.awesomebar.AwesomeBar.GroupedSuggestion
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchActionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.fxsuggest.FxSuggestSuggestionProvider
 import mozilla.components.lib.state.Store
+import mozilla.components.lib.state.ext.composableStore
 import mozilla.components.lib.state.ext.observeAsComposableState
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.composableStore
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.samples.compose.browser.browser.BrowserToolbarMiddleware.Companion.Dependencies
 import org.mozilla.samples.compose.browser.components
 import mozilla.components.feature.awesomebar.R as awesomebarR
@@ -60,12 +56,11 @@ import mozilla.components.feature.fxsuggest.R as fxsuggestR
 fun BrowserScreen(navController: NavController) {
     val context = LocalContext.current
 
-    val store by composableStore(BrowserScreenState()) { restoredState ->
-        BrowserScreenStore(restoredState)
+    val store = composableStore<BrowserScreenState, BrowserScreenAction> { restoredState ->
+        BrowserScreenStore(restoredState ?: BrowserScreenState())
     }
-    val toolbarStore by composableStore(BrowserToolbarState()) { restoredState ->
+    val toolbarStore = remember {
         BrowserToolbarStore(
-            initialState = restoredState,
             middleware = listOf(
                 BrowserToolbarMiddleware(
                     initialDependencies = Dependencies(
@@ -78,7 +73,7 @@ fun BrowserScreen(navController: NavController) {
         )
     }
 
-    val toolbarState by toolbarStore.stateFlow.collectAsState()
+    val toolbarState by toolbarStore.observeAsState(initialValue = toolbarStore.state) { it }
     val showTabs = store.observeAsComposableState { state -> state.showTabs }
 
     BackHandler(enabled = toolbarState.isEditMode()) {
@@ -184,7 +179,7 @@ fun TabsTray(
 @Composable
 private fun Suggestions(
     url: String,
-    onSuggestionClicked: (AwesomeBar.SuggestionItem) -> Unit,
+    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.Suggestion) -> Unit,
 ) {
     val context = LocalContext.current
@@ -192,7 +187,6 @@ private fun Suggestions(
     val keyboardController = LocalSoftwareKeyboardController.current
     val switchToTabDescription = stringResource(awesomebarR.string.switch_to_tab_description)
     val sponsoredSuggestionDescription = stringResource(fxsuggestR.string.sponsored_suggestion_description)
-    var hiddenSuggestions by remember { mutableStateOf(emptySet<GroupedSuggestion>()) }
 
     val sessionSuggestionProvider = remember(
         components.store,
@@ -251,10 +245,8 @@ private fun Suggestions(
             searchSuggestionProvider,
             clipboardSuggestionProvider,
         ),
-        hiddenSuggestions = hiddenSuggestions,
         onSuggestionClicked = { suggestion -> onSuggestionClicked(suggestion) },
         onAutoComplete = { suggestion -> onAutoComplete(suggestion) },
-        onRemoveClicked = { suggestion -> hiddenSuggestions = hiddenSuggestions + suggestion },
         onScroll = { keyboardController?.hide() },
     )
 }

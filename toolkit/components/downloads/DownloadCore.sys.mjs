@@ -853,6 +853,10 @@ Download.prototype = {
     }
 
     if (this.error?.becauseBlockedByReputationCheck) {
+      // We have to record the telemetry in both DownloadsCommon.deleteDownload
+      // and confirmBlock here. The former is for cases where users click
+      // "Remove file" in the download panel and the latter is when
+      // users click "X" button in about:downloads.
       Glean.downloads.userActionOnBlockedDownload[
         this.error.reputationCheckVerdict
       ].accumulateSingleSample(1); // confirm block
@@ -874,7 +878,6 @@ Download.prototype = {
       // data remains stored on disk in the ".part" file.
       await this.saver.removeData();
 
-      this.deleted = true;
       this.hasBlockedData = false;
       this._notifyChange();
     })();
@@ -1442,7 +1445,6 @@ Download.prototype = {
 const kPlainSerializableDownloadProperties = [
   "succeeded",
   "canceled",
-  "deleted",
   "totalBytes",
   "hasPartialData",
   "hasBlockedData",
@@ -1572,12 +1574,6 @@ DownloadSource.prototype = {
   originalUrl: null,
 
   /**
-   * Indicates whether the download was triggered by the request
-   * with `Content-Disposition` header.
-   */
-  triggeredByContentDispositionHeader: false,
-
-  /**
    * Indicates whether the download originated from a private window.  This
    * determines the context of the network request that is made to retrieve the
    * resource.
@@ -1682,10 +1678,6 @@ DownloadSource.prototype = {
         : lazy.E10SUtils.serializeCookieJarSettings(this.cookieJarSettings);
     }
 
-    if (this.triggeredByContentDispositionHeader) {
-      serializable.triggeredByContentDispositionHeader = true;
-    }
-
     serializeUnknownProperties(this, serializable);
 
     // Simplify the representation if we don't have other details.
@@ -1708,9 +1700,6 @@ DownloadSource.prototype = {
  *          url: String containing the URI for the download source.
  *          isPrivate: Indicates whether the download originated from a private
  *                     window.  If omitted, the download is public.
- *          triggeredByContentDispositionHeader: Indicates whether the download
- *                                               was triggered by the request
- *                                               with `Content-Disposition` header.
  *          referrerInfo: represents the referrerInfo of the download source.
  *                        Can be omitted or null for example if the download
  *                        source is not HTTP.
@@ -1740,12 +1729,7 @@ DownloadSource.fromSerializable = function (aSerializable) {
   } else {
     // Convert String objects to primitive strings at this point.
     source.url = aSerializable.url.toString();
-    for (let propName of [
-      "isPrivate",
-      "userContextId",
-      "browsingContextId",
-      "triggeredByContentDispositionHeader",
-    ]) {
+    for (let propName of ["isPrivate", "userContextId", "browsingContextId"]) {
       if (propName in aSerializable) {
         source[propName] = aSerializable[propName];
       }

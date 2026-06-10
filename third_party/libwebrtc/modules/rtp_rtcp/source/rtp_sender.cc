@@ -16,12 +16,12 @@
 #include <cstring>
 #include <memory>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/environment/environment.h"
 #include "api/rtp_headers.h"
 #include "api/rtp_packet_sender.h"
@@ -206,15 +206,15 @@ RTPSender::~RTPSender() {
   // to understand performance attributes and possibly remove locks.
 }
 
-std::span<const RtpExtensionSize> RTPSender::FecExtensionSizes() {
+ArrayView<const RtpExtensionSize> RTPSender::FecExtensionSizes() {
   return kFecOrPaddingExtensionSizes;
 }
 
-std::span<const RtpExtensionSize> RTPSender::VideoExtensionSizes() {
+ArrayView<const RtpExtensionSize> RTPSender::VideoExtensionSizes() {
   return kVideoExtensionSizes;
 }
 
-std::span<const RtpExtensionSize> RTPSender::AudioExtensionSizes() {
+ArrayView<const RtpExtensionSize> RTPSender::AudioExtensionSizes() {
   return kAudioExtensionSizes;
 }
 
@@ -521,7 +521,7 @@ size_t RTPSender::ExpectedPerPacketOverhead() const {
 }
 
 std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket(
-    std::span<const uint32_t> csrcs) {
+    ArrayView<const uint32_t> csrcs) {
   MutexLock lock(&send_mutex_);
   RTC_DCHECK_LE(csrcs.size(), kRtpCsrcSize);
   if (csrcs.size() > max_num_csrcs_) {
@@ -657,9 +657,9 @@ static void CopyHeaderAndExtensionsToRtxPacket(const RtpPacketToSend& packet,
       continue;
     }
 
-    std::span<const uint8_t> source = packet.FindExtension(extension);
+    ArrayView<const uint8_t> source = packet.FindExtension(extension);
 
-    std::span<uint8_t> destination =
+    ArrayView<uint8_t> destination =
         rtx_packet->AllocateExtension(extension, source.size());
 
     // Could happen if any:
@@ -670,7 +670,7 @@ static void CopyHeaderAndExtensionsToRtxPacket(const RtpPacketToSend& packet,
       continue;
     }
 
-    std::memcpy(destination.data(), source.data(), destination.size());
+    std::memcpy(destination.begin(), source.begin(), destination.size());
   }
 }
 

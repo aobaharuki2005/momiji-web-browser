@@ -18,26 +18,32 @@ import org.junit.runner.RunWith
 class ErrorPagesTest {
 
     @Test
-    fun `createUrlEncodedErrorPage adds isPrivate query parameter`() {
-        val privatePage = createUrlEncodedErrorPage(
+    fun `createUrlEncodedErrorPage allows overriding title and description`() {
+        val errorPage = createUrlEncodedErrorPage(
             testContext,
             ErrorType.ERROR_HTTPS_ONLY,
             "https://localhost/",
-            isPrivate = true,
         )
 
-        assertFalse(privatePage.contains("isPrivate=false"))
-        assertTrue(privatePage.contains("isPrivate=true"))
+        assertFalse(errorPage.contains("radio"))
+        assertFalse(errorPage.contains("spider"))
 
-        val nonPrivatePage = createUrlEncodedErrorPage(
+        val customErrorPage = createUrlEncodedErrorPage(
             testContext,
             ErrorType.ERROR_HTTPS_ONLY,
             "https://localhost/",
-            isPrivate = false,
+            titleOverride = { errorType ->
+                assertEquals(ErrorType.ERROR_HTTPS_ONLY, errorType)
+                "radio"
+            },
+            descriptionOverride = { errorType ->
+                assertEquals(ErrorType.ERROR_HTTPS_ONLY, errorType)
+                "spider"
+            },
         )
 
-        assertFalse(nonPrivatePage.contains("isPrivate=true"))
-        assertTrue(nonPrivatePage.contains("isPrivate=false"))
+        assertTrue(customErrorPage.contains("radio"))
+        assertTrue(customErrorPage.contains("spider"))
     }
 
     @Test
@@ -71,35 +77,6 @@ class ErrorPagesTest {
         assertUrlEncodingIsValid(ErrorType.ERROR_HARMFULADDON_URI)
         assertUrlEncodingIsValid(ErrorType.ERROR_HTTPS_ONLY)
         assertUrlEncodingIsValid(ErrorType.ERROR_BAD_HSTS_CERT)
-    }
-
-    @Test
-    fun `createUrlEncodedErrorPage allows overriding title and description`() {
-        val errorPage = createUrlEncodedErrorPage(
-            testContext,
-            ErrorType.ERROR_HTTPS_ONLY,
-            "https://localhost/",
-        )
-
-        assertFalse(errorPage.contains("radio"))
-        assertFalse(errorPage.contains("spider"))
-
-        val customErrorPage = createUrlEncodedErrorPage(
-            testContext,
-            ErrorType.ERROR_HTTPS_ONLY,
-            "https://localhost/",
-            titleOverride = { errorType ->
-                assertEquals(ErrorType.ERROR_HTTPS_ONLY, errorType)
-                "radio"
-            },
-            descriptionOverride = { errorType ->
-                assertEquals(ErrorType.ERROR_HTTPS_ONLY, errorType)
-                "spider"
-            },
-        )
-
-        assertTrue(customErrorPage.contains("radio"))
-        assertTrue(customErrorPage.contains("spider"))
     }
 
     private fun assertUrlEncodingIsValid(errorType: ErrorType) {

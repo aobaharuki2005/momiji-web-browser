@@ -94,7 +94,7 @@ async function testWatchingCachedCssMessages() {
   // emit warnings. But it does not automatically emit warnings for the existing CSS
   // errors in the stylesheets. So here we reload the tab, which will make the Parser
   // parse the stylesheets again, this time emitting warnings.
-  await reloadSelectedTab();
+  await reloadBrowser();
   // and trigger more CSS warnings
   await triggerCSSWarning(tab);
 
@@ -207,7 +207,7 @@ function setupOnAvailableFunction(
  * Sets invalid values for width and height on the document's body style attribute.
  */
 function triggerCSSWarning(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], function frameScript() {
+  return ContentTask.spawn(tab.linkedBrowser, null, function frameScript() {
     content.document.body.style.width = "red";
     content.document.body.style.height = "blue";
   });

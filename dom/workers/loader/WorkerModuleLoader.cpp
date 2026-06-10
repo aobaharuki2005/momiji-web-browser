@@ -1,10 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WorkerModuleLoader.h"
 
-#include "js/Modules.h"
 #include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileModuleScriptToStencil, JS::InstantiateModuleStencil
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/loader/ModuleLoadRequest.h"
@@ -107,10 +108,11 @@ bool WorkerModuleLoader::CreateDynamicImportLoader() {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   workerPrivate->AssertIsOnWorkerThread();
 
+  IgnoredErrorResult rv;
   RefPtr<WorkerScriptLoader> loader = loader::WorkerScriptLoader::Create(
       workerPrivate, nullptr, nullptr,
-      GetCurrentScriptLoader()->GetWorkerScriptType());
-  if (NS_WARN_IF(!loader)) {
+      GetCurrentScriptLoader()->GetWorkerScriptType(), rv);
+  if (NS_WARN_IF(rv.Failed())) {
     return false;
   }
 
@@ -157,8 +159,6 @@ nsresult WorkerModuleLoader::CompileFetchedModule(
       return CompileJsonModule(aCx, aOptions, aRequest, aModuleScript);
     case JS::ModuleType::CSS:
       MOZ_CRASH("CSS modules are not supported in workers");
-    case JS::ModuleType::Text:
-      return CreateTextModule(aCx, aOptions, aRequest, aModuleScript);
   }
 
   MOZ_CRASH("Unhandled module type");
@@ -167,17 +167,19 @@ nsresult WorkerModuleLoader::CompileFetchedModule(
 nsresult WorkerModuleLoader::CompileJavaScriptOrWasmModule(
     JSContext* aCx, JS::CompileOptions& aOptions, ModuleLoadRequest* aRequest,
     JS::MutableHandle<JSObject*> aModuleScript) {
+  MOZ_ASSERT(aRequest->IsTextSource());
+  MaybeSourceText maybeSource;
+  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource,
+                                          aRequest->mLoadContext.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
 #ifdef NIGHTLY_BUILD
   if (aRequest->HasWasmMimeTypeEssence()) {
-    MOZ_ASSERT(aRequest->IsWasmBytes());
-    JS::Rooted<JSObject*> moduleReq(aCx, aRequest->mModuleRequestObj);
-    JSObject* wasmModule;
-    if (moduleReq && JS::ModuleRequestIsSourcePhase(aCx, moduleReq)) {
-      wasmModule =
-          JS::CompileWasmModuleAsSource(aCx, aOptions, aRequest->WasmBytes());
-    } else {
-      wasmModule = JS::CompileWasmModule(aCx, aOptions, aRequest->WasmBytes());
-    }
+    auto compile = [&](auto& source) {
+      return JS::CompileWasmModule(aCx, aOptions, source);
+    };
+
+    auto* wasmModule = maybeSource.mapNonEmpty(compile);
     if (!wasmModule) {
       return NS_ERROR_FAILURE;
     }
@@ -186,11 +188,6 @@ nsresult WorkerModuleLoader::CompileJavaScriptOrWasmModule(
     return NS_OK;
   }
 #endif
-  MOZ_ASSERT(aRequest->IsFetchedAsTextSource());
-  MaybeSourceText maybeSource;
-  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource,
-                                          aRequest->mLoadContext.get());
-  NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<JS::Stencil> stencil;
 
@@ -216,7 +213,7 @@ nsresult WorkerModuleLoader::CompileJavaScriptOrWasmModule(
 nsresult WorkerModuleLoader::CompileJsonModule(
     JSContext* aCx, JS::CompileOptions& aOptions, ModuleLoadRequest* aRequest,
     JS::MutableHandle<JSObject*> aModuleScript) {
-  MOZ_ASSERT(aRequest->IsFetchedAsTextSource());
+  MOZ_ASSERT(aRequest->IsTextSource());
   MaybeSourceText maybeSource;
   nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource,
                                           aRequest->mLoadContext.get());
@@ -232,42 +229,6 @@ nsresult WorkerModuleLoader::CompileJsonModule(
   }
 
   aModuleScript.set(jsonModule);
-  return NS_OK;
-}
-
-nsresult WorkerModuleLoader::CreateTextModule(
-    JSContext* aCx, JS::CompileOptions& aOptions, ModuleLoadRequest* aRequest,
-    JS::MutableHandle<JSObject*> aModuleScript) {
-  MOZ_ASSERT(aRequest->IsFetchedAsTextSource());
-
-  MaybeSourceText maybeSource;
-  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource,
-                                          aRequest->mLoadContext.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  auto compile = [&](auto& source) {
-    using T = decltype(source);
-    static_assert(std::is_same_v<T, JS::SourceText<char16_t>&> ||
-                  std::is_same_v<T, JS::SourceText<Utf8Unit>&>);
-
-    JSString* str;
-    if constexpr (std::is_same_v<T, JS::SourceText<Utf8Unit>&>) {
-      str = JS_NewStringCopyUTF8N(aCx,
-                                  JS::UTF8Chars(source.get(), source.length()));
-    } else {
-      str = JS_NewUCStringCopyN(aCx, source.get(), source.length());
-    }
-
-    JS::Rooted<JS::Value> defaultExport(aCx, JS::StringValue(str));
-    return JS::CreateDefaultExportSyntheticModule(aCx, defaultExport);
-  };
-
-  auto* textModule = maybeSource.mapNonEmpty(compile);
-  if (!textModule) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aModuleScript.set(textModule);
   return NS_OK;
 }
 

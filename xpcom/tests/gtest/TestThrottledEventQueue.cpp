@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,6 +42,7 @@ static void Enqueue(nsIEventTarget* target, std::function<void()>&& aCallable) {
 
 }  // namespace TestThrottledEventQueue
 
+using namespace TestThrottledEventQueue;
 using testing::RunnableQueue;
 
 TEST(ThrottledEventQueue, RunnableQueue)
@@ -47,9 +50,9 @@ TEST(ThrottledEventQueue, RunnableQueue)
   std::string log;
 
   RefPtr<RunnableQueue> queue = MakeRefPtr<RunnableQueue>();
-  TestThrottledEventQueue::Enqueue(queue, [&]() { log += 'a'; });
-  TestThrottledEventQueue::Enqueue(queue, [&]() { log += 'b'; });
-  TestThrottledEventQueue::Enqueue(queue, [&]() { log += 'c'; });
+  Enqueue(queue, [&]() { log += 'a'; });
+  Enqueue(queue, [&]() { log += 'b'; });
+  Enqueue(queue, [&]() { log += 'c'; });
 
   ASSERT_EQ(log, "");
   ASSERT_NS_SUCCEEDED(queue->Run());
@@ -64,7 +67,7 @@ TEST(ThrottledEventQueue, SimpleDispatch)
   RefPtr<ThrottledEventQueue> throttled =
       ThrottledEventQueue::Create(base, "test queue 1");
 
-  TestThrottledEventQueue::Enqueue(throttled, [&]() { log += 'a'; });
+  Enqueue(throttled, [&]() { log += 'a'; });
   ASSERT_NS_SUCCEEDED(base->Run());
   ASSERT_EQ(log, "a");
 
@@ -90,17 +93,17 @@ TEST(ThrottledEventQueue, MixedDispatch)
 
   // Queue an event on the ThrottledEventQueue. This also queues the "executor"
   // event on the base.
-  TestThrottledEventQueue::Enqueue(throttled, [&]() { log += 'a'; });
+  Enqueue(throttled, [&]() { log += 'a'; });
   ASSERT_EQ(throttled->Length(), 1U);
   ASSERT_EQ(base->Length(), 1U);
 
   // Add a second event to the throttled queue. The executor is already queued.
-  TestThrottledEventQueue::Enqueue(throttled, [&]() { log += 'b'; });
+  Enqueue(throttled, [&]() { log += 'b'; });
   ASSERT_EQ(throttled->Length(), 2U);
   ASSERT_EQ(base->Length(), 1U);
 
   // Add an event directly to the base, after the executor.
-  TestThrottledEventQueue::Enqueue(base, [&]() { log += 'c'; });
+  Enqueue(base, [&]() { log += 'c'; });
   ASSERT_EQ(throttled->Length(), 2U);
   ASSERT_EQ(base->Length(), 2U);
 
@@ -129,12 +132,12 @@ TEST(ThrottledEventQueue, EnqueueFromRun)
   // When an event from the throttled queue dispatches a new event directly to
   // the base target, it is queued after the executor, so the next event from
   // the throttled queue will run before it.
-  TestThrottledEventQueue::Enqueue(base, [&]() { log += 'a'; });
-  TestThrottledEventQueue::Enqueue(throttled, [&]() {
+  Enqueue(base, [&]() { log += 'a'; });
+  Enqueue(throttled, [&]() {
     log += 'b';
-    TestThrottledEventQueue::Enqueue(base, [&]() { log += 'c'; });
+    Enqueue(base, [&]() { log += 'c'; });
   });
-  TestThrottledEventQueue::Enqueue(throttled, [&]() { log += 'd'; });
+  Enqueue(throttled, [&]() { log += 'd'; });
 
   ASSERT_EQ(log, "");
   ASSERT_NS_SUCCEEDED(base->Run());
@@ -154,14 +157,14 @@ TEST(ThrottledEventQueue, RunFromRun)
 
   // Running the event queue from within an event (i.e., a nested event loop)
   // does not stall the ThrottledEventQueue.
-  TestThrottledEventQueue::Enqueue(throttled, [&]() {
+  Enqueue(throttled, [&]() {
     log += '(';
     // This should run subsequent events from throttled.
     ASSERT_NS_SUCCEEDED(base->Run());
     log += ')';
   });
 
-  TestThrottledEventQueue::Enqueue(throttled, [&]() { log += 'a'; });
+  Enqueue(throttled, [&]() { log += 'a'; });
 
   ASSERT_EQ(log, "");
   ASSERT_NS_SUCCEEDED(base->Run());
@@ -181,7 +184,7 @@ TEST(ThrottledEventQueue, DropWhileRunning)
   {
     RefPtr<ThrottledEventQueue> throttled =
         ThrottledEventQueue::Create(base, "test queue 5");
-    TestThrottledEventQueue::Enqueue(throttled, [&]() { log += 'a'; });
+    Enqueue(throttled, [&]() { log += 'a'; });
   }
 
   ASSERT_EQ(log, "");
@@ -203,8 +206,7 @@ TEST(ThrottledEventQueue, AwaitIdle)
       ThrottledEventQueue::Create(base, "test queue 6");
 
   // Put an event in the queue so the AwaitIdle might block.
-  TestThrottledEventQueue::Enqueue(throttled,
-                                   [&]() { runnableFinished = true; });
+  Enqueue(throttled, [&]() { runnableFinished = true; });
 
   // Create a separate thread that waits for the queue to become idle, and
   // then takes observable action.
@@ -267,12 +269,12 @@ TEST(ThrottledEventQueue, AwaitIdleMixed)
   RefPtr<ThrottledEventQueue> throttled =
       ThrottledEventQueue::Create(base, "test queue 7");
 
-  TestThrottledEventQueue::Enqueue(throttled, [&]() {
+  Enqueue(throttled, [&]() {
     MutexAutoLock lock(mutex);
     log += 'a';
   });
 
-  TestThrottledEventQueue::Enqueue(throttled, [&]() {
+  Enqueue(throttled, [&]() {
     MutexAutoLock lock(mutex);
     log += 'b';
   });
@@ -349,7 +351,7 @@ TEST(ThrottledEventQueue, SimplePauseResume)
 
   ASSERT_FALSE(throttled->IsPaused());
 
-  TestThrottledEventQueue::Enqueue(throttled, [&]() { log += 'a'; });
+  Enqueue(throttled, [&]() { log += 'a'; });
 
   ASSERT_EQ(log, "");
   ASSERT_NS_SUCCEEDED(base->Run());
@@ -358,7 +360,7 @@ TEST(ThrottledEventQueue, SimplePauseResume)
   ASSERT_NS_SUCCEEDED(throttled->SetIsPaused(true));
   ASSERT_TRUE(throttled->IsPaused());
 
-  TestThrottledEventQueue::Enqueue(throttled, [&]() { log += 'b'; });
+  Enqueue(throttled, [&]() { log += 'b'; });
 
   ASSERT_EQ(log, "a");
   ASSERT_NS_SUCCEEDED(base->Run());
@@ -385,13 +387,13 @@ TEST(ThrottledEventQueue, MixedPauseResume)
 
   ASSERT_FALSE(throttled->IsPaused());
 
-  TestThrottledEventQueue::Enqueue(base, [&]() { log += 'A'; });
-  TestThrottledEventQueue::Enqueue(throttled, [&]() {
+  Enqueue(base, [&]() { log += 'A'; });
+  Enqueue(throttled, [&]() {
     log += 'b';
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(true)));
   });
-  TestThrottledEventQueue::Enqueue(throttled, [&]() { log += 'c'; });
-  TestThrottledEventQueue::Enqueue(base, [&]() { log += 'D'; });
+  Enqueue(throttled, [&]() { log += 'c'; });
+  Enqueue(base, [&]() { log += 'D'; });
 
   ASSERT_EQ(log, "");
   ASSERT_NS_SUCCEEDED(base->Run());
@@ -402,9 +404,9 @@ TEST(ThrottledEventQueue, MixedPauseResume)
   ASSERT_FALSE(throttled->IsEmpty());
   ASSERT_TRUE(throttled->IsPaused());
 
-  TestThrottledEventQueue::Enqueue(base, [&]() { log += 'E'; });
+  Enqueue(base, [&]() { log += 'E'; });
   ASSERT_NS_SUCCEEDED(throttled->SetIsPaused(false));
-  TestThrottledEventQueue::Enqueue(base, [&]() { log += 'F'; });
+  Enqueue(base, [&]() { log += 'F'; });
   ASSERT_FALSE(throttled->IsPaused());
 
   ASSERT_NS_SUCCEEDED(base->Run());
@@ -433,8 +435,7 @@ TEST(ThrottledEventQueue, AwaitIdlePaused)
 
   // Put an event in the queue so the AwaitIdle might block. Since throttled is
   // paused, this should not enqueue an executor in the base target.
-  TestThrottledEventQueue::Enqueue(throttled,
-                                   [&]() { runnableFinished = true; });
+  Enqueue(throttled, [&]() { runnableFinished = true; });
   ASSERT_TRUE(base->IsEmpty());
 
   // Create a separate thread that waits for the queue to become idle, and
@@ -503,7 +504,7 @@ TEST(ThrottledEventQueue, ExecutorTransitions)
 
   // Since we're paused, queueing an event on throttled shouldn't queue the
   // executor on the base target.
-  TestThrottledEventQueue::Enqueue(throttled, [&]() { log += 'a'; });
+  Enqueue(throttled, [&]() { log += 'a'; });
   ASSERT_EQ(throttled->Length(), 1U);
   ASSERT_EQ(base->Length(), 0U);
 

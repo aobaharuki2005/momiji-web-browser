@@ -1,4 +1,4 @@
-// META: global=window,dedicatedworker
+// META: global=window,dedicatedworker,shadowrealm
 // META: title=Encoding API: Fatal flag
 
 var bad = [

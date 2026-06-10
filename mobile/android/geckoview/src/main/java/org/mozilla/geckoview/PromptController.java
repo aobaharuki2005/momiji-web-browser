@@ -44,7 +44,6 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.RedirectPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.RepostConfirmPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.SharePrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.WebAuthnRelatedOriginPrompt;
 
 /* package */ class PromptController {
   private static final String LOGTAG = "Prompts";
@@ -206,27 +205,6 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.WebAuthnRelatedOriginPr
         final GeckoSession session,
         final PromptDelegate delegate) {
       return delegate.onBeforeUnloadPrompt(session, prompt);
-    }
-  }
-
-  private static final class WebAuthnRelatedOriginHandler
-      implements PromptHandler<WebAuthnRelatedOriginPrompt> {
-    @Override
-    public WebAuthnRelatedOriginPrompt newPrompt(final GeckoBundle info, final Observer observer) {
-      return new WebAuthnRelatedOriginPrompt(
-          info.getString("id"),
-          info.getString("origin"),
-          info.getString("rpId"),
-          info.getBoolean("isCreate"),
-          observer);
-    }
-
-    @Override
-    public GeckoResult<PromptResponse> callDelegate(
-        final WebAuthnRelatedOriginPrompt prompt,
-        final GeckoSession session,
-        final PromptDelegate delegate) {
-      return delegate.onWebAuthnRelatedOriginPrompt(session, prompt);
     }
   }
 
@@ -812,7 +790,6 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.WebAuthnRelatedOriginPr
   static {
     sPromptHandlers.register(new AlertHandler(), "alert");
     sPromptHandlers.register(new BeforeUnloadHandler(), "beforeUnload");
-    sPromptHandlers.register(new WebAuthnRelatedOriginHandler(), "webauthn-related-origin");
     sPromptHandlers.register(new ButtonHandler(), "button");
     sPromptHandlers.register(new TextHandler(), "text");
     sPromptHandlers.register(new AuthHandler(), "auth");

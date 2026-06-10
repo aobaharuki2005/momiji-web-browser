@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,16 +12,11 @@
 #include "AppleATDecoder.h"
 #include "AppleVTDecoder.h"
 #include "H265.h"
-#include "AppleVDADecoder.h"
-#include "AppleVDALinker.h"
-#include "AppleCMLinker.h"
-#include "AppleCVLinker.h"
-#include "AppleVTLinker.h"
-
 #include "MP4Decoder.h"
 #include "VPXDecoder.h"
 #include "VideoUtils.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/gfxVars.h"
 
@@ -27,8 +24,6 @@ extern "C" {
 // Only exists from MacOS 11
 extern void VTRegisterSupplementalVideoDecoderIfAvailable(
     CMVideoCodecType codecType) __attribute__((weak_import));
-extern Boolean VTIsHardwareDecodeSupported(CMVideoCodecType codecType)
-    __attribute__((weak_import));
 }
 
 namespace mozilla {
@@ -37,11 +32,6 @@ using media::DecodeSupport;
 using media::DecodeSupportSet;
 using media::MCSInfo;
 using media::MediaCodec;
-
-bool AppleDecoderModule::sIsCoreMediaAvailable = false;
-bool AppleDecoderModule::sIsCoreVideoAvailable = false;
-bool AppleDecoderModule::sIsVTAvailable = false;
-bool AppleDecoderModule::sIsVDAAvailable = false;
 
 static inline CMVideoCodecType GetCMVideoCodecType(const MediaCodec& aCodec) {
   switch (aCodec) {
@@ -57,18 +47,13 @@ static inline CMVideoCodecType GetCMVideoCodecType(const MediaCodec& aCodec) {
       return static_cast<CMVideoCodecType>(0);
   }
 }
+
 /* static */
 void AppleDecoderModule::Init() {
   if (sInitialized) {
     return;
   }
 
-  //10.7.3 - > 10.7 need these (thanks jya)
-  sIsCoreMediaAvailable = AppleCMLinker::Link();
-  sIsCoreVideoAvailable = AppleCVLinker::Link();
-  sIsVDAAvailable = AppleVDALinker::Link();
-  sIsVTAvailable = AppleVTLinker::Link();
-  
   // Initialize all values to false first.
   for (auto& support : sCanUseHWDecoder) {
     support = false;
@@ -103,19 +88,11 @@ already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateVideoDecoder(
           .isEmpty()) {
     return nullptr;
   }
-  
   RefPtr<MediaDataDecoder> decoder;
-
-  if(__builtin_available(macOS 10.7, *)) {
-    if (IsVideoSupported(aParams.VideoConfig(), aParams.mOptions)) {
-      decoder = new AppleVTDecoder(aParams.VideoConfig(), aParams.mImageContainer,
-          aParams.mOptions, aParams.mKnowsCompositor,
-          aParams.mTrackingId);
-    }
-  } else {
-      decoder = new AppleVDADecoder(aParams.VideoConfig(), aParams.mImageContainer,
-          aParams.mOptions, aParams.mKnowsCompositor,
-          aParams.mTrackingId);
+  if (IsVideoSupported(aParams.VideoConfig(), aParams.mOptions)) {
+    decoder = new AppleVTDecoder(aParams.VideoConfig(), aParams.mImageContainer,
+                                 aParams.mOptions, aParams.mKnowsCompositor,
+                                 aParams.mTrackingId);
   }
   return decoder.forget();
 }
@@ -150,7 +127,7 @@ DecodeSupportSet AppleDecoderModule::SupportsMimeType(
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("Apple decoder %s requested type '%s'",
            supportType.isEmpty() ? "rejects" : "supports",
-           PromiseFlatCString(aMimeType).get()));
+           aMimeType.BeginReading()));
   return supportType;
 }
 
@@ -225,7 +202,7 @@ bool AppleDecoderModule::IsVideoSupported(
     return profile == 0;
   }
 
-  if (!VPXDecoder::IsVP9(aConfig.mMimeType) || 
+  if (!VPXDecoder::IsVP9(aConfig.mMimeType) ||
       !sCanUseHWDecoder[MediaCodec::VP9] ||
       aOptions.contains(
           CreateDecoderParams::Option::HardwareDecoderNotAllowed)) {
@@ -264,13 +241,8 @@ bool AppleDecoderModule::CanCreateHWDecoder(const MediaCodec& aCodec) {
     return false;
   }
 
-  if (__builtin_available(macOS 10.13, *)) {
-      if (!VTIsHardwareDecodeSupported) {
-        return false;
-      }
-      if (!VTIsHardwareDecodeSupported(GetCMVideoCodecType(aCodec))) {
-        return false;
-      }
+  if (!VTIsHardwareDecodeSupported(GetCMVideoCodecType(aCodec))) {
+    return false;
   }
 
   // H264 hardware decoding has been supported since macOS 10.6 on most Intel
@@ -279,7 +251,7 @@ bool AppleDecoderModule::CanCreateHWDecoder(const MediaCodec& aCodec) {
   if (aCodec == MediaCodec::H264) {
     return true;
   }
-    
+
   // Build up a fake extradata to create an actual decoder to verify
   VideoInfo info(1920, 1080);
   if (aCodec == MediaCodec::AV1) {
@@ -312,8 +284,9 @@ bool AppleDecoderModule::CanCreateHWDecoder(const MediaCodec& aCodec) {
   nsAutoCString failureReason;
   bool hwSupport = decoder->IsHardwareAccelerated(failureReason);
   if (!hwSupport) {
-    MOZ_LOG(sPDMLog, LogLevel::Debug,
-            ("VT decoder failed to use HW : '%s'", failureReason.get()));
+    MOZ_LOG(
+        sPDMLog, LogLevel::Debug,
+        ("VT decoder failed to use HW : '%s'", failureReason.BeginReading()));
   }
   return hwSupport;
 }

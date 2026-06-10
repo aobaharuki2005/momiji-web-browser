@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsMathMLmencloseFrame_h_
-#define nsMathMLmencloseFrame_h_
+#ifndef nsMathMLmencloseFrame_h___
+#define nsMathMLmencloseFrame_h___
 
 #include "mozilla/EnumSet.h"
 #include "nsMathMLChar.h"
@@ -27,20 +29,20 @@ class PresShell;
   containing its arguments, as described in Section 3.1.3 Required Arguments.
 */
 
-enum class MencloseNotation : uint16_t {
-  LongDiv,
-  RoundedBox,
-  Circle,
-  Left,
-  Right,
-  Top,
-  Bottom,
-  UpDiagonalStrike,
-  DownDiagonalStrike,
-  VerticalStrike,
-  HorizontalStrike,
-  UpDiagonalArrow,
-  PhasorAngle,
+enum nsMencloseNotation {
+  NOTATION_LONGDIV,
+  NOTATION_ROUNDEDBOX,
+  NOTATION_CIRCLE,
+  NOTATION_LEFT,
+  NOTATION_RIGHT,
+  NOTATION_TOP,
+  NOTATION_BOTTOM,
+  NOTATION_UPDIAGONALSTRIKE,
+  NOTATION_DOWNDIAGONALSTRIKE,
+  NOTATION_VERTICALSTRIKE,
+  NOTATION_HORIZONTALSTRIKE,
+  NOTATION_UPDIAGONALARROW,
+  NOTATION_PHASORANGLE
 };
 
 class nsMathMLmencloseFrame : public nsMathMLContainerFrame {
@@ -80,8 +82,8 @@ class nsMathMLmencloseFrame : public nsMathMLContainerFrame {
   void InitNotations();
 
   // Description of the notations to draw
-  mozilla::EnumSet<MencloseNotation> mNotationsToDraw;
-  bool IsToDraw(MencloseNotation notation) {
+  mozilla::EnumSet<nsMencloseNotation> mNotationsToDraw;
+  bool IsToDraw(nsMencloseNotation notation) {
     return mNotationsToDraw.contains(notation);
   }
 
@@ -89,13 +91,13 @@ class nsMathMLmencloseFrame : public nsMathMLContainerFrame {
   nsTArray<nsMathMLChar> mMathMLChar;
   int8_t mLongDivCharIndex;
   nscoord mContentWidth;
-  nsresult AllocateMathMLChar(MencloseNotation mask);
+  nsresult AllocateMathMLChar(nsMencloseNotation mask);
 
   // Display a frame of the specified type.
   // @param aType Type of frame to display
   void DisplayNotation(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                        const nsRect& aRect, const nsDisplayListSet& aLists,
-                       nscoord aThickness, MencloseNotation aType);
+                       nscoord aThickness, nsMencloseNotation aType);
 };
 
-#endif /* nsMathMLmencloseFrame_h_ */
+#endif /* nsMathMLmencloseFrame_h___ */

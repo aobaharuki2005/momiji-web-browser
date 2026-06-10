@@ -1,5 +1,4 @@
 [DEFAULT]
-prefs = ["dom.tcpsocket_in_child.enabled=true"]
 support-files = [
   "tcpsocket_test.sys.mjs",
   "test_tcpsocket_client_and_server_basics.js",
@@ -14,6 +13,3 @@ support-files = [
 ["test_tcpsocket_legacy.html"]
 
 ["test_udpsocket.html"]
-skip-if = [
-  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 2023967
-]

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- indent-tabs-mode: nil; js-indent-level: 4 -*-
+ * vim: sw=4 ts=4 sts=4 et
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -8,6 +10,7 @@
 
 const {AppConstants} = ChromeUtils.importESModule("resource://gre/modules/AppConstants.sys.mjs");
 const {ComponentUtils} = ChromeUtils.importESModule("resource://gre/modules/ComponentUtils.sys.mjs");
+const {Preferences} = ChromeUtils.importESModule("resource://gre/modules/Preferences.sys.mjs");
 const {TestUtils} = ChromeUtils.importESModule("resource://testing-common/TestUtils.sys.mjs");
 const {XPCOMUtils} = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
 
@@ -69,7 +72,7 @@ add_test(function test_defineLazyPreferenceGetter()
 
     equal(obj.pref, "defaultValue", "Should return the default value before pref is set");
 
-    Services.prefs.setStringPref(PREF, "currentValue");
+    Preferences.set(PREF, "currentValue");
 
 
     info("Create second getter on new object");
@@ -80,16 +83,16 @@ add_test(function test_defineLazyPreferenceGetter()
 
     equal(obj.pref, "currentValue", "Should return the current value on initial read when pref is already set");
 
-    Services.prefs.setStringPref(PREF, "newValue");
+    Preferences.set(PREF, "newValue");
 
     equal(obj.pref, "newValue", "Should return new value after preference change");
 
-    Services.prefs.setStringPref(PREF, "currentValue");
+    Preferences.set(PREF, "currentValue");
 
     equal(obj.pref, "currentValue", "Should return new value after second preference change");
 
 
-    Services.prefs.clearUserPref(PREF);
+    Preferences.reset(PREF);
 
     equal(obj.pref, "defaultValue", "Should return default value after pref is reset");
 
@@ -99,10 +102,10 @@ add_test(function test_defineLazyPreferenceGetter()
 
     deepEqual(obj.pref, ["a", "b"], "transform is applied to default value");
 
-    Services.prefs.setStringPref(PREF, "x,y,z");
+    Preferences.set(PREF, "x,y,z");
     deepEqual(obj.pref, ["x", "y", "z"], "transform is applied to updated value");
 
-    Services.prefs.clearUserPref(PREF);
+    Preferences.reset(PREF);
     deepEqual(obj.pref, ["a", "b"], "transform is applied to reset default");
 
     if (AppConstants.DEBUG) {

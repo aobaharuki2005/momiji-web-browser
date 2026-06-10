@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+import CloseButton from "./CloseButton";
 import CommandBarButton, { debugBtn } from "./CommandBarButton";
 import PaneToggleButton from "./PaneToggleButton";
 
-export { CommandBarButton, debugBtn, PaneToggleButton };
+export { CloseButton, CommandBarButton, debugBtn, PaneToggleButton };

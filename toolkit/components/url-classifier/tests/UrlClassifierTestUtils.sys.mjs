@@ -30,10 +30,6 @@ const MALWARE_TABLE_PREF = "urlclassifier.malwareTable";
 const MALWARE_V5_TABLE_NAME = "test-google5-malware-proto";
 const MALWARE_HOST = "malware.example.com/";
 
-const GLOBALCACHE_TABLE_PREF = "urlclassifier.globalCacheTable";
-const GLOBALCACHE_V5_TABLE_NAME = "test-globalcache-proto";
-const GLOBALCACHE_HOST = "globalcache-test.example.com/";
-
 let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
 export var UrlClassifierTestUtils = {
@@ -268,50 +264,20 @@ export var UrlClassifierTestUtils = {
     Services.prefs.clearUserPref(ENTITYLIST_TABLE_PREF);
   },
 
-  /**
-   * Add test entries to V5 SafeBrowsing tables.
-   * Adds entries to both the malware table (4-byte hash) and the globalcache
-   * table (32-byte hash).
-   *
-   * @param {string} [globalCacheHost] - The host for the globalcache table entry.
-   *                                     Defaults to GLOBALCACHE_HOST.
-   * @returns {Promise}
-   */
-  async addTestV5Entry(globalCacheHost = GLOBALCACHE_HOST) {
+  addTestV5Entry() {
     let urlClassifierTestUtils = Cc[
       "@mozilla.org/url-classifier/test-utils;1"
     ].getService(Ci.nsIUrlClassifierTestUtils);
-
-    // Generate hashes for both tables.
     let lookupHash = urlClassifierTestUtils.generateLookupHash(MALWARE_HOST);
-    let fullHash = urlClassifierTestUtils.generateFullHashRaw(globalCacheHost);
 
-    let updateData4b = urlClassifierTestUtils.makeUpdateResponseV5(
+    let updateData = urlClassifierTestUtils.makeUpdateResponseV5(
       "test",
       lookupHash
     );
-    let updateData32b = urlClassifierTestUtils.makeUpdateResponseV5_32b(
-      "test",
-      fullHash
-    );
 
-    // Set up the provider lists and table prefs.
-    let tableNames = MALWARE_V5_TABLE_NAME + "," + GLOBALCACHE_V5_TABLE_NAME;
-    Services.prefs.setCharPref(PROVIDER_V5_LISTS_PREF, tableNames);
+    Services.prefs.setCharPref(PROVIDER_V5_LISTS_PREF, MALWARE_V5_TABLE_NAME);
     Services.prefs.setCharPref(MALWARE_TABLE_PREF, MALWARE_V5_TABLE_NAME);
-    Services.prefs.setCharPref(
-      GLOBALCACHE_TABLE_PREF,
-      GLOBALCACHE_V5_TABLE_NAME
-    );
 
-    // Update malware table (4-byte hash).
-    await this.doV5Update(MALWARE_V5_TABLE_NAME, updateData4b);
-
-    // Update globalcache table (32-byte hash).
-    await this.doV5Update(GLOBALCACHE_V5_TABLE_NAME, updateData32b);
-  },
-
-  doV5Update(tableName, updateData) {
     return new Promise((resolve, reject) => {
       let dbService = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(
         Ci.nsIUrlClassifierDBService
@@ -330,7 +296,7 @@ export var UrlClassifierTestUtils = {
         updateUrlRequested: () => {},
         streamFinished: () => {},
         updateError: () => {
-          reject("Got updateError when updating " + tableName);
+          reject("Got updateError when updating test-google5-malware-proto");
         },
         updateSuccess: () => {
           resolve();
@@ -338,13 +304,17 @@ export var UrlClassifierTestUtils = {
       };
 
       try {
-        dbService.beginUpdate(listener, tableName, "google5");
+        dbService.beginUpdate(
+          listener,
+          "test-google5-malware-proto",
+          "google5"
+        );
         dbService.beginStream("", "");
         dbService.updateStream(updateData);
         dbService.finishStream();
         dbService.finishUpdate();
       } catch (e) {
-        reject("Failed to update " + tableName + ": " + e);
+        reject("Failed to do a V5 update with dbService.");
       }
     });
   },
@@ -352,7 +322,6 @@ export var UrlClassifierTestUtils = {
   cleanupTestV5Entry() {
     Services.prefs.clearUserPref(PROVIDER_V5_LISTS_PREF);
     Services.prefs.clearUserPref(MALWARE_TABLE_PREF);
-    Services.prefs.clearUserPref(GLOBALCACHE_TABLE_PREF);
   },
 
   /**
@@ -458,19 +427,5 @@ export var UrlClassifierTestUtils = {
     };
     channelClassifierService.addListener(observer);
     return promise;
-  },
-
-  cleanRealTimeSimulatorCache() {
-    let dbService = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(
-      Ci.nsIUrlClassifierDBService
-    );
-    dbService.cleanRealTimeSimulatorCache();
-  },
-
-  expireRealTimeSimulatorCache() {
-    let dbService = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(
-      Ci.nsIUrlClassifierDBService
-    );
-    dbService.expireRealTimeSimulatorCache();
   },
 };

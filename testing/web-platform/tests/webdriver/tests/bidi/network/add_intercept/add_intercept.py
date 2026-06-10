@@ -15,9 +15,8 @@ from .. import (
     RESPONSE_STARTED_EVENT,
 )
 
-pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.asyncio
 @pytest.mark.parametrize("phase", ["beforeRequestSent", "responseStarted"])
 async def test_other_url(
     url,
@@ -50,6 +49,7 @@ async def test_other_url(
     await fetch(url(PAGE_OTHER_TEXT))
 
 
+@pytest.mark.asyncio
 async def test_return_value(add_intercept):
     intercept = await add_intercept(phases=["beforeRequestSent"], url_patterns=[])
 
@@ -57,6 +57,7 @@ async def test_return_value(add_intercept):
     uuid.UUID(hex=intercept)
 
 
+@pytest.mark.asyncio
 async def test_two_intercepts(
     bidi_session,
     wait_for_event,
@@ -92,11 +93,7 @@ async def test_two_intercepts(
     event = await wait_for_future_safe(on_network_event)
 
     assert_before_request_sent_event(
-        event,
-        expected_event={
-            "isBlocked": True,
-            "intercepts": [string_intercept, global_intercept],
-        },
+        event, is_blocked=True, intercepts=[string_intercept, global_intercept]
     )
 
     # Perform a request to PAGE_OTHER_TEXT, which should only match one intercept
@@ -107,7 +104,7 @@ async def test_two_intercepts(
     event = await wait_for_future_safe(on_network_event)
 
     assert_before_request_sent_event(
-        event, expected_event={"isBlocked": True, "intercepts": [global_intercept]}
+        event, is_blocked=True, intercepts=[global_intercept]
     )
 
     # Remove the global intercept, requests to PAGE_OTHER_TEXT should no longer
@@ -122,7 +119,7 @@ async def test_two_intercepts(
     event = await wait_for_future_safe(on_network_event)
 
     assert_before_request_sent_event(
-        event, expected_event={"isBlocked": True, "intercepts": [string_intercept]}
+        event, is_blocked=True, intercepts=[string_intercept]
     )
 
     # Remove the string intercept, requests to PAGE_EMPTY_TEXT should no longer

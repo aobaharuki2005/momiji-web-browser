@@ -1,9 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef mozilla_ipc_CrashReporterHost_h
 #define mozilla_ipc_CrashReporterHost_h
+
+#include <functional>
 
 #include "base/process.h"
 #include "nsExceptionHandler.h"
@@ -26,7 +30,7 @@ class CrashReporterHost {
   typedef CrashReporter::AnnotationTable AnnotationTable;
 
  public:
-  CrashReporterHost(GeckoProcessType aProcessType, GeckoChildID aChildID,
+  CrashReporterHost(GeckoProcessType aProcessType, base::ProcessId aPid,
                     const CrashReporter::CrashReporterInitArgs& aInitArgs);
   ~CrashReporterHost();
 
@@ -118,7 +122,7 @@ class CrashReporterHost {
 
  private:
   GeckoProcessType mProcessType;
-  GeckoChildID mChildID;
+  base::ProcessId mPid;
   CrashReporter::ThreadId mThreadId;
   time_t mStartTime;
   AnnotationTable mExtraAnnotations;

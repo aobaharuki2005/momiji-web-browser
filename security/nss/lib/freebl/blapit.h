@@ -311,7 +311,6 @@ struct RSAPublicKeyStr {
     PLArenaPool *arena;
     SECItem modulus;
     SECItem publicExponent;
-    PRBool needVerify;
 };
 typedef struct RSAPublicKeyStr RSAPublicKey;
 

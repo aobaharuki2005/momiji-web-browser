@@ -41,7 +41,7 @@ pub enum SeekFrom {
     ///
     /// [`Errno::NXIO`]: crate::io::Errno::NXIO
     #[cfg(any(apple, freebsdlike, linux_kernel, solarish))]
-    Data(u64),
+    Data(i64),
 
     /// Sets the offset to the current position plus the specified number of
     /// bytes, plus the distance to the next byte which is in a hole.
@@ -49,5 +49,5 @@ pub enum SeekFrom {
     /// If there is no hole past the offset, it will be set to the end of the
     /// file i.e. there is an implicit hole at the end of any file.
     #[cfg(any(apple, freebsdlike, linux_kernel, solarish))]
-    Hole(u64),
+    Hole(i64),
 }

@@ -160,9 +160,8 @@ int32_t FakeEncoder::Encode(const VideoFrame& input_image,
     encoded.SetEncodedData(buffer);
 
     encoded.SetRtpTimestamp(input_image.rtp_timestamp());
-    encoded.set_frame_type(frame_info.keyframe
-                               ? VideoFrameType::kVideoFrameKey
-                               : VideoFrameType::kVideoFrameDelta);
+    encoded._frameType = frame_info.keyframe ? VideoFrameType::kVideoFrameKey
+                                             : VideoFrameType::kVideoFrameDelta;
     encoded._encodedWidth = simulcast_streams[i].width;
     encoded._encodedHeight = simulcast_streams[i].height;
     if (qp)
@@ -418,9 +417,9 @@ int32_t MultithreadedFakeH264Encoder::InitEncode(const VideoCodec* config,
   RTC_DCHECK_RUN_ON(&sequence_checker_);
 
   queue1_ = env_.task_queue_factory().CreateTaskQueue(
-      "Queue 1", TaskQueueFactory::Priority::kNormal);
+      "Queue 1", TaskQueueFactory::Priority::NORMAL);
   queue2_ = env_.task_queue_factory().CreateTaskQueue(
-      "Queue 2", TaskQueueFactory::Priority::kNormal);
+      "Queue 2", TaskQueueFactory::Priority::NORMAL);
 
   return FakeH264Encoder::InitEncode(config, settings);
 }

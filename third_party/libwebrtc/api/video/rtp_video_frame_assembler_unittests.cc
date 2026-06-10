@@ -11,12 +11,14 @@
 #include <cstdint>
 #include <iterator>
 #include <memory>
-#include <span>
+#include <optional>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/transport/rtp/dependency_descriptor.h"
 #include "api/video/encoded_frame.h"
 #include "api/video/rtp_video_frame_assembler.h"
+#include "api/video/video_codec_type.h"
 #include "api/video/video_frame_type.h"
 #include "modules/rtp_rtcp/source/rtp_dependency_descriptor_extension.h"
 #include "modules/rtp_rtcp/source/rtp_format.h"
@@ -28,6 +30,7 @@
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 #include "modules/video_coding/codecs/vp8/include/vp8_globals.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
+#include "rtc_base/checks.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -42,7 +45,6 @@ using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedElementsAreArray;
 using PayloadFormat = RtpVideoFrameAssembler::PayloadFormat;
-using PacketizationFormat = RtpPacketizer::PacketizationFormat;
 
 class PacketBuilder {
  public:
@@ -54,7 +56,7 @@ class PacketBuilder {
     return *this;
   }
 
-  PacketBuilder& WithPayload(std::span<const uint8_t> payload) {
+  PacketBuilder& WithPayload(ArrayView<const uint8_t> payload) {
     payload_.assign(payload.begin(), payload.end());
     return *this;
   }
@@ -73,8 +75,8 @@ class PacketBuilder {
   }
 
   RtpPacketReceived Build() {
-    auto packetizer = RtpPacketizer::Create(GetPacketizationFormat(), payload_,
-                                            {}, video_header_);
+    auto packetizer =
+        RtpPacketizer::Create(GetVideoCodecType(), payload_, {}, video_header_);
     packetizer->NextPacket(&packet_to_send_);
     packet_to_send_.SetSequenceNumber(seq_num_);
 
@@ -84,30 +86,32 @@ class PacketBuilder {
   }
 
  private:
-  PacketizationFormat GetPacketizationFormat() {
+  std::optional<VideoCodecType> GetVideoCodecType() {
     switch (format_) {
+      case PayloadFormat::kRaw: {
+        return std::nullopt;
+      }
       case PayloadFormat::kH264: {
-        return PacketizationFormat::kH264;
+        return kVideoCodecH264;
       }
       case PayloadFormat::kVp8: {
-        return PacketizationFormat::kVP8;
+        return kVideoCodecVP8;
       }
       case PayloadFormat::kVp9: {
-        return PacketizationFormat::kVP9;
+        return kVideoCodecVP9;
       }
       case PayloadFormat::kAv1: {
-        return PacketizationFormat::kAV1;
+        return kVideoCodecAV1;
       }
       case PayloadFormat::kH265: {
-        return PacketizationFormat::kH265;
+        return kVideoCodecH265;
       }
       case PayloadFormat::kGeneric: {
-        return PacketizationFormat::kGeneric;
-      }
-      case PayloadFormat::kRaw: {
-        return PacketizationFormat::kRaw;
+        return kVideoCodecGeneric;
       }
     }
+    RTC_DCHECK_NOTREACHED();
+    return std::nullopt;
   }
 
   const RtpVideoFrameAssembler::PayloadFormat format_;
@@ -131,11 +135,11 @@ void AppendFrames(RtpVideoFrameAssembler::FrameVector from,
             std::make_move_iterator(from.end()));
 }
 
-std::span<int64_t> References(const std::unique_ptr<EncodedFrame>& frame) {
-  return std::span(frame->references, frame->num_references);
+ArrayView<int64_t> References(const std::unique_ptr<EncodedFrame>& frame) {
+  return MakeArrayView(frame->references, frame->num_references);
 }
 
-std::span<const uint8_t> Payload(const std::unique_ptr<EncodedFrame>& frame) {
+ArrayView<const uint8_t> Payload(const std::unique_ptr<EncodedFrame>& frame) {
   return *frame->GetEncodedData();
 }
 
@@ -514,8 +518,8 @@ TEST(RtpVideoFrameAssembler, SeqNumStartAndSeqNumEndSet) {
   RtpPacketizer::PayloadSizeLimits limits;
   limits.max_payload_len = sizeof(kPayload) - 1;
 
-  auto packetizer = RtpPacketizer::Create(PacketizationFormat::kGeneric,
-                                          kPayload, limits, video_header);
+  auto packetizer =
+      RtpPacketizer::Create(kVideoCodecGeneric, kPayload, limits, video_header);
   ASSERT_THAT(packetizer->NumPackets(), Eq(2U));
 
   RtpPacketReceived::ExtensionManager extension_manager;
@@ -563,8 +567,8 @@ TEST(RtpVideoFrameAssembler, SeqNumStartAndSeqNumEndSetWhenPaddingReceived) {
   RtpPacketizer::PayloadSizeLimits limits;
   limits.max_payload_len = sizeof(kPayload) - 1;
 
-  auto packetizer = RtpPacketizer::Create(PacketizationFormat::kGeneric,
-                                          kPayload, limits, video_header);
+  auto packetizer =
+      RtpPacketizer::Create(kVideoCodecGeneric, kPayload, limits, video_header);
   ASSERT_THAT(packetizer->NumPackets(), Eq(2U));
 
   {

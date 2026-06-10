@@ -7,7 +7,6 @@ package org.mozilla.fenix.tabstray.ui.tabpage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -15,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,20 +22,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import org.mozilla.fenix.R
+import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
-import org.mozilla.fenix.tabstray.controller.TabInteractionHandler
-import org.mozilla.fenix.tabstray.data.TabsTrayItem
-import org.mozilla.fenix.tabstray.redux.state.TabsTrayState
 import org.mozilla.fenix.tabstray.ui.inactivetabs.InactiveTabsList
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.trackingprotection.TrackersBlockedCard
 import mozilla.components.ui.icons.R as iconsR
 
 private val EmptyPageWidth = 170.dp
@@ -43,20 +40,15 @@ private val EmptyPageWidth = 170.dp
 /**
  * UI for displaying the Normal Tabs Page in the Tab Manager.
  *
- * @param items The list of active tabs to display.
+ * @param normalTabs The list of active tabs to display.
  * @param inactiveTabs The list of inactive tabs to display.
- * @param selectedItemIndex The index of the currently selected tab. This will be scrolled to on first-render.
+ * @param selectedTabId The ID of the currently selected tab.
  * @param selectionMode [TabsTrayState.Mode] indicating whether the Tab Manager is in single selection.
  * @param inactiveTabsExpanded Whether the Inactive Tabs section is expanded.
  * @param displayTabsInGrid Whether the normal and private tabs should be displayed in a grid.
- * @param dragAndDropEnabled Whether the grid supports dragging and dropping for tab groups.
- * @param displayTabGroupOnboarding Whether onboarding for tab groups should be shown.
- * @param tabInteractionHandler Handles tab interactions, such as moves and drag and drop.
- * @param trackersBlockedCount The number of trackers blocked to display in the footer card.
- * @param focusEnabled Whether the focus indicator is enabled.
  * @param onTabClose Invoked when the user clicks to close a tab.
- * @param onItemClick Invoked when the user clicks on a tab.
- * @param onItemLongClick Invoked when the user long clicks a tab.
+ * @param onTabClick Invoked when the user clicks on a tab.
+ * @param onTabLongClick Invoked when the user long clicks a tab.
  * @param shouldShowInactiveTabsAutoCloseDialog Whether the inactive tabs auto close dialog should be displayed.
  * @param onInactiveTabsHeaderClick Invoked when the user clicks on the inactive tabs section header.
  * @param onDeleteAllInactiveTabsClick Invoked when the user clicks on the delete all inactive tabs button.
@@ -68,51 +60,48 @@ private val EmptyPageWidth = 170.dp
  * close dialog's enable button.
  * @param onInactiveTabClick Invoked when the user clicks on an inactive tab.
  * @param onInactiveTabClose Invoked when the user clicks on an inactive tab's close button.
+ * @param onMove Invoked after the drag and drop gesture completed. Swaps position of two tabs.
  * @param shouldShowInactiveTabsCFR Returns whether the inactive tabs CFR is displayed.
  * @param onInactiveTabsCFRShown Invoked when the inactive tabs CFR is displayed.
  * @param onInactiveTabsCFRClick Invoked when the inactive tabs CFR is clicked.
  * @param onInactiveTabsCFRDismiss Invoked when the inactive tabs CFR is dismissed.
- * @param onDeleteTabGroupClick Invoked when the user clicks on delete tab group.
- * @param onEditTabGroupClick Invoked when the user clicks to edit a tab group.
- * @param onCloseTabGroupClick Invoked when the user clicks to close a tab group.
- * @param onPrivacyReportTapped Invoked when the trackers blocked pill is tapped.
+ * @param onTabDragStart Invoked when a tab drag has been started.
  */
 @Composable
 @Suppress("LongParameterList")
 internal fun NormalTabsPage(
-    items: List<TabsTrayItem>,
-    inactiveTabs: List<TabsTrayItem.Tab>,
-    selectedItemIndex: Int,
+    normalTabs: List<TabSessionState>,
+    inactiveTabs: List<TabSessionState>,
+    selectedTabId: String?,
     selectionMode: TabsTrayState.Mode,
     inactiveTabsExpanded: Boolean,
     displayTabsInGrid: Boolean,
-    dragAndDropEnabled: Boolean,
-    displayTabGroupOnboarding: Boolean,
-    tabInteractionHandler: TabInteractionHandler,
-    trackersBlockedCount: Int? = null,
-    focusEnabled: Boolean,
-    onTabClose: (TabsTrayItem.Tab) -> Unit,
-    onItemClick: (TabsTrayItem) -> Unit,
-    onItemLongClick: (TabsTrayItem) -> Unit,
-    shouldShowInactiveTabsAutoCloseDialog: Boolean,
+    onTabClose: (TabSessionState) -> Unit,
+    onTabClick: (TabSessionState) -> Unit,
+    onTabLongClick: (TabSessionState) -> Unit,
+    shouldShowInactiveTabsAutoCloseDialog: (Int) -> Boolean,
     onInactiveTabsHeaderClick: (Boolean) -> Unit,
     onDeleteAllInactiveTabsClick: () -> Unit,
     onInactiveTabsAutoCloseDialogShown: () -> Unit,
     onInactiveTabAutoCloseDialogCloseButtonClick: () -> Unit,
     onEnableInactiveTabAutoCloseClick: () -> Unit,
-    onInactiveTabClick: (TabsTrayItem.Tab) -> Unit,
-    onInactiveTabClose: (TabsTrayItem.Tab) -> Unit,
-    shouldShowInactiveTabsCFR: Boolean,
+    onInactiveTabClick: (TabSessionState) -> Unit,
+    onInactiveTabClose: (TabSessionState) -> Unit,
+    onMove: (String, String?, Boolean) -> Unit,
+    shouldShowInactiveTabsCFR: () -> Boolean,
     onInactiveTabsCFRShown: () -> Unit,
     onInactiveTabsCFRClick: () -> Unit,
     onInactiveTabsCFRDismiss: () -> Unit,
-    onDeleteTabGroupClick: (TabsTrayItem.TabGroup) -> Unit,
-    onEditTabGroupClick: (TabsTrayItem.TabGroup) -> Unit,
-    onCloseTabGroupClick: (TabsTrayItem.TabGroup) -> Unit,
-    onPrivacyReportTapped: (() -> Unit)? = null,
+    onTabDragStart: () -> Unit,
 ) {
-    if (items.isNotEmpty() || inactiveTabs.isNotEmpty()) {
-        var showAutoCloseDialog by remember { mutableStateOf(shouldShowInactiveTabsAutoCloseDialog) }
+    if (normalTabs.isNotEmpty() || inactiveTabs.isNotEmpty()) {
+        val showInactiveTabsAutoCloseDialog by remember(inactiveTabs) {
+            derivedStateOf {
+                shouldShowInactiveTabsAutoCloseDialog(inactiveTabs.size)
+            }
+        }
+
+        var showAutoCloseDialog by remember { mutableStateOf(showInactiveTabsAutoCloseDialog) }
 
         val optionalInactiveTabsHeader: (@Composable () -> Unit)? = if (inactiveTabs.isEmpty()) {
             null
@@ -122,7 +111,7 @@ internal fun NormalTabsPage(
                     inactiveTabs = inactiveTabs,
                     expanded = inactiveTabsExpanded,
                     showAutoCloseDialog = showAutoCloseDialog,
-                    showCFR = shouldShowInactiveTabsCFR,
+                    showCFR = shouldShowInactiveTabsCFR(),
                     onHeaderClick = onInactiveTabsHeaderClick,
                     onDeleteAllButtonClick = onDeleteAllInactiveTabsClick,
                     onAutoCloseDismissClick = {
@@ -142,35 +131,25 @@ internal fun NormalTabsPage(
             }
         }
 
-        if (shouldShowInactiveTabsAutoCloseDialog) {
+        if (showInactiveTabsAutoCloseDialog) {
             onInactiveTabsAutoCloseDialogShown()
         }
 
         TabLayout(
-            tabs = items,
+            tabs = normalTabs,
             displayTabsInGrid = displayTabsInGrid,
-            dragAndDropEnabled = dragAndDropEnabled,
-            displayTabGroupOnboarding = displayTabGroupOnboarding,
-            selectedItemIndex = selectedItemIndex,
+            selectedTabId = selectedTabId,
             selectionMode = selectionMode,
-            trackersBlockedCount = trackersBlockedCount,
             modifier = Modifier.testTag(TabsTrayTestTag.NORMAL_TABS_LIST),
             onTabClose = onTabClose,
-            onItemClick = onItemClick,
-            onItemLongClick = onItemLongClick,
+            onTabClick = onTabClick,
+            onTabLongClick = onTabLongClick,
             header = optionalInactiveTabsHeader,
-            onDeleteTabGroupClick = onDeleteTabGroupClick,
-            onEditTabGroupClick = onEditTabGroupClick,
-            onCloseTabGroupClick = onCloseTabGroupClick,
-            tabInteractionHandler = tabInteractionHandler,
-            focusEnabled = focusEnabled,
-            onPrivacyReportTapped = onPrivacyReportTapped,
+            onTabDragStart = onTabDragStart,
+            onMove = onMove,
         )
     } else {
-        EmptyNormalTabsPage(
-            trackersBlockedCount = trackersBlockedCount,
-            onPrivacyReportTapped = onPrivacyReportTapped,
-        )
+        EmptyNormalTabsPage()
     }
 }
 
@@ -178,50 +157,31 @@ internal fun NormalTabsPage(
  * UI for displaying the empty state of the Normal Tabs Page in the Tab Manager.
  *
  * @param modifier The [Modifier] to be applied to the layout.
- * @param trackersBlockedCount The number of trackers blocked to display in the footer card.
- * @param onPrivacyReportTapped Invoked when the trackers blocked pill is tapped.
  */
 @Composable
 private fun EmptyNormalTabsPage(
     modifier: Modifier = Modifier,
-    trackersBlockedCount: Int? = null,
-    onPrivacyReportTapped: (() -> Unit)? = null,
 ) {
-    val bottomBarHeight = dimensionResource(id = R.dimen.browser_toolbar_height)
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .testTag(TabsTrayTestTag.EMPTY_NORMAL_TABS_LIST),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    EmptyTabPage(
+        modifier = modifier.testTag(TabsTrayTestTag.EMPTY_NORMAL_TABS_LIST),
     ) {
-        EmptyTabPage(modifier = Modifier.weight(1f)) {
-            Column(
-                modifier = Modifier.width(EmptyPageWidth),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Icon(
-                    painter = painterResource(id = iconsR.drawable.mozac_ic_tab_24),
-                    contentDescription = null,
-                    modifier = Modifier.size(72.dp),
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(id = R.string.tab_manager_empty_normal_tabs_page_header),
-                    textAlign = TextAlign.Center,
-                    style = FirefoxTheme.typography.headline7,
-                )
-            }
-        }
-
-        if (trackersBlockedCount != null) {
-            TrackersBlockedCard(
-                trackersBlockedCount = trackersBlockedCount,
-                onPrivacyReportTapped = onPrivacyReportTapped,
+        Column(
+            modifier = Modifier.width(EmptyPageWidth),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                painter = painterResource(id = iconsR.drawable.mozac_ic_tab_24),
+                contentDescription = null,
+                modifier = Modifier.size(72.dp),
             )
-            Spacer(modifier = Modifier.height(bottomBarHeight + 32.dp))
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(id = R.string.tab_manager_empty_normal_tabs_page_header),
+                textAlign = TextAlign.Center,
+                style = FirefoxTheme.typography.headline7,
+            )
         }
     }
 }

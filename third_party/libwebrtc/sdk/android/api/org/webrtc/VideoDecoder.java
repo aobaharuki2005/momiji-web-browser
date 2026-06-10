@@ -21,7 +21,7 @@ public interface VideoDecoder {
     public final int width;
     public final int height;
 
-    @CalledByNative
+    @CalledByNative("Settings")
     public Settings(int numberOfCores, int width, int height) {
       this.numberOfCores = numberOfCores;
       this.width = width;

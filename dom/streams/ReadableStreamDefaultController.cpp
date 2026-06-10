@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ReadableStreamAbstract.h"
-#include "ReadableStreamDefaultControllerAbstract.h"
+#include "mozilla/dom/ReadableStreamDefaultController.h"
+
 #include "js/Exception.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
@@ -12,6 +14,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/ReadableStreamControllerBase.h"
 #include "mozilla/dom/ReadableStreamDefaultControllerBinding.h"
 #include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
@@ -293,11 +296,6 @@ void ReadableStreamDefaultControllerEnqueue(
       JS::Rooted<JS::Value> errorValue(aCx);
 
       JS_GetPendingException(aCx, &errorValue);
-
-      // Clear the pending exception before calling into
-      // ReadableStreamDefaultControllerError as it will try to do AutoJSAPI,
-      // which demands no pending exception.
-      JS_ClearPendingException(aCx);
 
       // Step 4.2.1
 
@@ -618,10 +616,7 @@ void ReadableStreamDefaultController::PullSteps(JSContext* aCx,
   if (!mQueue.isEmpty()) {
     // Step 2.1
     JS::Rooted<JS::Value> chunk(aCx);
-    DequeueValue(aCx, this, &chunk, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+    DequeueValue(this, &chunk);
 
     // Step 2.2
     if (CloseRequested() && mQueue.isEmpty()) {

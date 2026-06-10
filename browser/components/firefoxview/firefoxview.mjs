@@ -2,30 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/firefoxview/recentbrowsing.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/firefoxview/history.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/firefoxview/opentabs.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/firefoxview/recentlyclosed.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/firefoxview/syncedtabs.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://global/content/elements/moz-page-nav.mjs";
-
 let pageList = [];
 let viewsDeck = null;
 let pageNav = null;
 let activeComponent = null;
 let searchKeyboardShortcut = null;
-
-const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  AIWindow:
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
-});
 
 const { topChromeWindow } = window.browsingContext;
 
@@ -45,10 +26,10 @@ function changeView(view) {
 function onViewsDeckViewChange() {
   for (const child of viewsDeck.children) {
     if (child.getAttribute("name") == viewsDeck.selectedViewName) {
-      child.enter?.();
+      child.enter();
       activeComponent = child;
     } else {
-      child.exit?.();
+      child.exit();
     }
   }
 }
@@ -74,7 +55,6 @@ async function updateSearchTextboxSize() {
     { id: "firefoxview-search-text-box-recentlyclosed" },
     { id: "firefoxview-search-text-box-tabs" },
     { id: "firefoxview-search-text-box-history" },
-    { id: "firefoxview-search-text-box-chats" },
   ];
   let maxLength = 30;
   for (const msg of await document.l10n.formatMessages(msgs)) {
@@ -106,12 +86,6 @@ function updateSyncVisibility() {
 
 window.addEventListener("DOMContentLoaded", async () => {
   recordEnteredTelemetry();
-
-  if (isAIWindow()) {
-    await import("chrome://browser/content/firefoxview/chats.mjs");
-    document.getElementById("firefoxview-chats-nav").hidden = false;
-    document.querySelector("view-chats").hidden = false;
-  }
 
   pageNav = document.querySelector("moz-page-nav");
   viewsDeck = document.querySelector("named-deck");
@@ -204,8 +178,4 @@ function onLocalesChanged() {
     updateSearchTextboxSize();
     updateSearchKeyboardShortcut();
   });
-}
-
-function isAIWindow() {
-  return lazy.AIWindow.isAIWindowActiveAndEnabled(topChromeWindow);
 }

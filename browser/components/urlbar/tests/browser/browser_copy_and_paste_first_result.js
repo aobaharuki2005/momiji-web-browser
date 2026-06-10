@@ -17,14 +17,8 @@ add_setup(async function () {
 
   await PlacesUtils.history.clear();
   await PlacesTestUtils.addVisits([
-    {
-      url: "https://example.com/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
-    {
-      url: "https://example.com/foo",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
+    "https://example.com/",
+    "https://example.com/foo",
   ]);
 });
 

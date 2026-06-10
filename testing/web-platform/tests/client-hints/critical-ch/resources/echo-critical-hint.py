@@ -1,3 +1,5 @@
+import sys
+
 def main(request, response):
     """
     Simple handler that sets a response header based on which client hint

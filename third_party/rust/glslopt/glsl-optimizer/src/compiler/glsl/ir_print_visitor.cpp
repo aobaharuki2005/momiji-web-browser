@@ -381,7 +381,7 @@ void ir_print_visitor::visit(ir_texture *ir)
       ir->lod_info.component->accept(this);
       break;
    case ir_samples_identical:
-      UNREACHABLE("ir_samples_identical was already handled");
+      unreachable("ir_samples_identical was already handled");
    };
    fprintf(f, ")");
 }
@@ -522,7 +522,7 @@ void ir_print_visitor::visit(ir_constant *ir)
                fprintf(f, "%f", ir->value.d[i]);
             break;
 	 default:
-            UNREACHABLE("Invalid constant type");
+            unreachable("Invalid constant type");
 	 }
       }
    }

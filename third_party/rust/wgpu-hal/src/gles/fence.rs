@@ -1,29 +1,20 @@
-use alloc::{sync::Arc, vec::Vec};
+use alloc::vec::Vec;
 use core::sync::atomic::Ordering;
-use parking_lot::RwLock;
 
 use glow::HasContext;
 
 use crate::AtomicFenceValue;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct GLFence {
-    // Since a fence can be `Copy`ed, there can exist some
-    // cases where a fence could be destroyed while something
-    // else is still using it. Therefore, while a function is
-    // using this fence (and doesn't keep pending read locked),
-    // it should clone the `Arc` to show it needs this to
-    // stay alive.
-    //
-    // The arc should not be kept after a function has finished
-    sync: Arc<glow::Fence>,
+    sync: glow::Fence,
     value: crate::FenceValue,
 }
 
 #[derive(Debug)]
 pub struct Fence {
     last_completed: AtomicFenceValue,
-    pending: RwLock<Vec<GLFence>>,
+    pending: Vec<GLFence>,
     fence_behavior: wgt::GlFenceBehavior,
 }
 
@@ -38,27 +29,24 @@ impl Fence {
     pub fn new(options: &wgt::GlBackendOptions) -> Self {
         Self {
             last_completed: AtomicFenceValue::new(0),
-            pending: RwLock::new(Vec::new()),
+            pending: Vec::new(),
             fence_behavior: options.fence_behavior,
         }
     }
 
     pub fn signal(
-        &self,
+        &mut self,
         gl: &glow::Context,
         value: crate::FenceValue,
     ) -> Result<(), crate::DeviceError> {
         if self.fence_behavior.is_auto_finish() {
-            self.last_completed.store(value, Ordering::Release);
+            *self.last_completed.get_mut() = value;
             return Ok(());
         }
 
         let sync = unsafe { gl.fence_sync(glow::SYNC_GPU_COMMANDS_COMPLETE, 0) }
             .map_err(|_| crate::DeviceError::OutOfMemory)?;
-        self.pending.write().push(GLFence {
-            sync: Arc::new(sync),
-            value,
-        });
+        self.pending.push(GLFence { sync, value });
 
         Ok(())
     }
@@ -74,15 +62,12 @@ impl Fence {
             return max_value;
         }
 
-        let pending = self.pending.read();
-
-        for gl_fence in pending.iter() {
+        for gl_fence in self.pending.iter() {
             if gl_fence.value <= max_value {
                 // We already know this was good, no need to check again
                 continue;
             }
-            // We have pending `read` locked, so we shouldn't have to clone it.
-            let status = unsafe { gl.get_sync_status(*gl_fence.sync) };
+            let status = unsafe { gl.get_sync_status(gl_fence.sync) };
             if status == glow::SIGNALED {
                 max_value = gl_fence.value;
             } else {
@@ -97,29 +82,20 @@ impl Fence {
         max_value
     }
 
-    pub fn maintain(&self, gl: &glow::Context) {
+    pub fn maintain(&mut self, gl: &glow::Context) {
         if self.fence_behavior.is_auto_finish() {
             return;
         }
 
         let latest = self.get_latest(gl);
-        let mut pending = self.pending.write();
-        pending.retain_mut(|gl_fence| {
-            if gl_fence.value > latest {
-                true
-            } else if let Some(fence) = Arc::get_mut(&mut gl_fence.sync) {
+        for &gl_fence in self.pending.iter() {
+            if gl_fence.value <= latest {
                 unsafe {
-                    gl.delete_sync(*fence);
+                    gl.delete_sync(gl_fence.sync);
                 }
-                false
-            } else {
-                // Another function is currently using this value. In general, these should finish
-                // very quickly (for wait because the fence should already be signaled, an all
-                // others are just fast), but submit should be very fast, so we shouldn't block on
-                // this.
-                true
             }
-        });
+        }
+        self.pending.retain(|&gl_fence| gl_fence.value > latest);
     }
 
     pub fn wait(
@@ -139,31 +115,28 @@ impl Fence {
             return Ok(true);
         }
 
-        let pending = self.pending.read();
-
         // Find a matching fence
-        let gl_fence = pending.iter().find(|gl_fence| gl_fence.value >= wait_value);
+        let gl_fence = self
+            .pending
+            .iter()
+            // Greater or equal as an abundance of caution, but there should be one fence per value
+            .find(|gl_fence| gl_fence.value >= wait_value);
 
         let Some(gl_fence) = gl_fence else {
             log::warn!("Tried to wait for {wait_value} but that value has not been signalled yet");
             return Ok(false);
         };
 
-        // clone to show we're using the fence
-        let sync = gl_fence.sync.clone();
-        let fence_value = gl_fence.value;
-
-        drop(pending);
+        // We should have found a fence with the exact value.
+        debug_assert_eq!(gl_fence.value, wait_value);
 
         let status = unsafe {
             gl.client_wait_sync(
-                *sync,
+                gl_fence.sync,
                 glow::SYNC_FLUSH_COMMANDS_BIT,
                 timeout_ns.min(i32::MAX as u32) as i32,
             )
         };
-
-        drop(sync);
 
         let signalled = match status {
             glow::ALREADY_SIGNALED | glow::CONDITION_SATISFIED => true,
@@ -175,7 +148,7 @@ impl Fence {
         };
 
         if signalled {
-            self.last_completed.fetch_max(fence_value, Ordering::AcqRel);
+            self.last_completed.fetch_max(wait_value, Ordering::AcqRel);
         }
 
         Ok(signalled)
@@ -186,12 +159,9 @@ impl Fence {
             return;
         }
 
-        for gl_fence in self.pending.into_inner() {
+        for gl_fence in self.pending {
             unsafe {
-                gl.delete_sync(
-                    Arc::into_inner(gl_fence.sync)
-                        .expect("A function has failed to drop all its references to this"),
-                );
+                gl.delete_sync(gl_fence.sync);
             }
         }
     }

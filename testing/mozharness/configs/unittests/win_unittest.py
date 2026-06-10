@@ -148,12 +148,12 @@ config = {
     },
     # local mochi suites
     "all_mochitest_suites": {
-        "mochitest-plain": [],
+        "mochitest-plain": ["--chunk-by-dir=4"],
         "mochitest-plain-gpu": ["--subsuite=gpu"],
         "mochitest-media": ["--subsuite=media"],
-        "mochitest-chrome": ["--flavor=chrome", "--disable-e10s"],
+        "mochitest-chrome": ["--flavor=chrome", "--chunk-by-dir=4", "--disable-e10s"],
         "mochitest-chrome-gpu": ["--flavor=chrome", "--subsuite=gpu", "--disable-e10s"],
-        "mochitest-browser-chrome": ["--flavor=browser"],
+        "mochitest-browser-chrome": ["--flavor=browser", "--chunk-by-runtime"],
         "mochitest-browser-screenshots": [
             "--flavor=browser",
             "--subsuite=screenshots",
@@ -167,6 +167,7 @@ config = {
         "mochitest-devtools-chrome": [
             "--flavor=browser",
             "--subsuite=devtools",
+            "--chunk-by-runtime",
         ],
         "mochitest-browser-a11y": ["--flavor=browser", "--subsuite=a11y"],
         "mochitest-browser-media": ["--flavor=browser", "--subsuite=media-bc"],
@@ -244,8 +245,7 @@ config = {
                     if REQUIRE_GPU and (platform.uname().version == "10.0.19045")
                     else (
                         "--platform=win11-hw"
-                        if REQUIRE_GPU
-                        and platform.uname().version in ("10.0.26100", "10.0.26200")
+                        if REQUIRE_GPU and (platform.uname().version == "10.0.26100")
                         else "--platform=win7"
                     )
                 ),
@@ -480,6 +480,8 @@ config = {
     "vcs_output_timeout": 1000,
     "minidump_save_path": "%(abs_work_dir)s/../minidumps",
     "unstructured_flavors": {
+        "gtest": [],
+        "cppunittest": [],
         "jittest": [],
     },
     "nodejs_path": NODEJS_PATH,

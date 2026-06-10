@@ -48,17 +48,20 @@
 #data
 <!DOCTYPE html><body><select><math></math></select>
 #errors
+(1,35) unexpected-start-tag-in-select
+(1,42) unexpected-end-tag-in-select
 #document
 | <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
 |     <select>
-|       <math math>
 
 #data
 <!DOCTYPE html><body><select><option><math></math></option></select>
 #errors
+(1,43) unexpected-start-tag-in-select
+(1,50) unexpected-end-tag-in-select
 #document
 | <!DOCTYPE html>
 | <html>
@@ -66,7 +69,6 @@
 |   <body>
 |     <select>
 |       <option>
-|         <math math>
 
 #data
 <!DOCTYPE html><body><table><math></math></table>
@@ -300,6 +302,12 @@
 #data
 <!DOCTYPE html><body><table><tr><td><select><math><mi>foo</mi><mi>bar</mi><p>baz</table><p>quux
 #errors
+(1,50) unexpected-start-tag-in-select
+(1,54) unexpected-start-tag-in-select
+(1,62) unexpected-end-tag-in-select
+(1,66) unexpected-start-tag-in-select
+(1,74) unexpected-end-tag-in-select
+(1,77) unexpected-start-tag-in-select
 (1,88) unexpected-table-element-end-tag-in-select-in-table
 #document
 | <!DOCTYPE html>
@@ -311,13 +319,7 @@
 |         <tr>
 |           <td>
 |             <select>
-|               <math math>
-|                 <math mi>
-|                   "foo"
-|                 <math mi>
-|                   "bar"
-|               <p>
-|                 "baz"
+|               "foobarbaz"
 |     <p>
 |       "quux"
 
@@ -325,6 +327,12 @@
 <!DOCTYPE html><body><table><select><math><mi>foo</mi><mi>bar</mi><p>baz</table><p>quux
 #errors
 (1,36) unexpected-start-tag-implies-table-voodoo
+(1,42) unexpected-start-tag-in-select
+(1,46) unexpected-start-tag-in-select
+(1,54) unexpected-end-tag-in-select
+(1,58) unexpected-start-tag-in-select
+(1,66) unexpected-end-tag-in-select
+(1,69) unexpected-start-tag-in-select
 (1,80) unexpected-table-element-end-tag-in-select-in-table
 #document
 | <!DOCTYPE html>
@@ -332,13 +340,7 @@
 |   <head>
 |   <body>
 |     <select>
-|       <math math>
-|         <math mi>
-|           "foo"
-|         <math mi>
-|           "bar"
-|       <p>
-|         "baz"
+|       "foobarbaz"
 |     <table>
 |     <p>
 |       "quux"

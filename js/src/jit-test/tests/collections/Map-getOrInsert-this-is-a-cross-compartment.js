@@ -1,3 +1,5 @@
+// |jit-test| --enable-upsert; skip-if: !Map.prototype.getOrInsert
+
 const g = newGlobal({ newCompartment: true });
 
 var map = g.eval("new Map()");

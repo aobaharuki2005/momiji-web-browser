@@ -8,7 +8,7 @@ add_setup(async () => {
     set: [[SIDEBAR_VISIBILITY_PREF, "hide-sidebar"]],
   });
   await SidebarController.waitUntilStable();
-  await SidebarController.updateUIState({
+  await SidebarController.initializeUIState({
     launcherExpanded: false,
     launcherVisible: false,
   });

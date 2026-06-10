@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -57,20 +59,19 @@ nsresult SMILTimeValueSpec::SetSpec(const nsAString& aStringSpec,
   if (!SMILParserUtils::ParseTimeValueSpecParams(aStringSpec, params))
     return NS_ERROR_FAILURE;
 
-  mParams = std::move(params);
+  mParams = params;
 
   // According to SMIL 3.0:
   //   The special value "indefinite" does not yield an instance time in the
   //   begin list. It will, however yield a single instance with the value
   //   "indefinite" in an end list. This value is not removed by a reset.
-  if (mParams.mType == SMILTimeValueSpecParams::Type::Offset ||
-      (!mIsBegin &&
-       mParams.mType == SMILTimeValueSpecParams::Type::Indefinite)) {
+  if (mParams.mType == SMILTimeValueSpecParams::OFFSET ||
+      (!mIsBegin && mParams.mType == SMILTimeValueSpecParams::INDEFINITE)) {
     mOwner->AddInstanceTime(new SMILInstanceTime(mParams.mOffset), mIsBegin);
   }
 
   // Fill in the event symbol to simplify handling later
-  if (mParams.mType == SMILTimeValueSpecParams::Type::Repeat) {
+  if (mParams.mType == SMILTimeValueSpecParams::REPEAT) {
     mParams.mEventSymbol = nsGkAtoms::repeatEvent;
   }
 
@@ -80,8 +81,7 @@ nsresult SMILTimeValueSpec::SetSpec(const nsAString& aStringSpec,
 }
 
 void SMILTimeValueSpec::ResolveReferences(Element& aContextElement) {
-  if (mParams.mType != SMILTimeValueSpecParams::Type::Syncbase &&
-      !IsEventBased()) {
+  if (mParams.mType != SMILTimeValueSpecParams::SYNCBASE && !IsEventBased()) {
     return;
   }
 
@@ -96,7 +96,7 @@ void SMILTimeValueSpec::ResolveReferences(Element& aContextElement) {
 
   if (mParams.mDependentElemID) {
     mReferencedElement.ResetToID(aContextElement, mParams.mDependentElemID);
-  } else if (mParams.mType == SMILTimeValueSpecParams::Type::Event) {
+  } else if (mParams.mType == SMILTimeValueSpecParams::EVENT) {
     Element* target = mOwner->GetTargetElement();
     mReferencedElement.ResetWithElement(target);
   } else {
@@ -106,8 +106,8 @@ void SMILTimeValueSpec::ResolveReferences(Element& aContextElement) {
 }
 
 bool SMILTimeValueSpec::IsEventBased() const {
-  return mParams.mType == SMILTimeValueSpecParams::Type::Event ||
-         mParams.mType == SMILTimeValueSpecParams::Type::Repeat;
+  return mParams.mType == SMILTimeValueSpecParams::EVENT ||
+         mParams.mType == SMILTimeValueSpecParams::REPEAT;
 }
 
 void SMILTimeValueSpec::HandleNewInterval(
@@ -125,8 +125,7 @@ void SMILTimeValueSpec::HandleNewInterval(
 
   // Create the instance time and register it with the interval
   RefPtr<SMILInstanceTime> newInstance = new SMILInstanceTime(
-      newTime, SMILInstanceTime::SMILInstanceTimeSource::Syncbase, this,
-      &aInterval);
+      newTime, SMILInstanceTime::SOURCE_SYNCBASE, this, &aInterval);
   mOwner->AddInstanceTime(newInstance, mIsBegin);
 }
 
@@ -185,15 +184,15 @@ void SMILTimeValueSpec::UpdateReferencedElement(Element* aFrom, Element* aTo) {
   UnregisterFromReferencedElement(aFrom);
 
   switch (mParams.mType) {
-    case SMILTimeValueSpecParams::Type::Syncbase: {
+    case SMILTimeValueSpecParams::SYNCBASE: {
       SMILTimedElement* to = GetTimedElement(aTo);
       if (to) {
         to->AddDependent(*this);
       }
     } break;
 
-    case SMILTimeValueSpecParams::Type::Event:
-    case SMILTimeValueSpecParams::Type::Repeat:
+    case SMILTimeValueSpecParams::EVENT:
+    case SMILTimeValueSpecParams::REPEAT:
       RegisterEventListener(aTo);
       break;
 
@@ -206,7 +205,7 @@ void SMILTimeValueSpec::UpdateReferencedElement(Element* aFrom, Element* aTo) {
 void SMILTimeValueSpec::UnregisterFromReferencedElement(Element* aElement) {
   if (!aElement) return;
 
-  if (mParams.mType == SMILTimeValueSpecParams::Type::Syncbase) {
+  if (mParams.mType == SMILTimeValueSpecParams::SYNCBASE) {
     SMILTimedElement* timedElement = GetTimedElement(aElement);
     if (timedElement) {
       timedElement->RemoveDependent(*this);
@@ -226,12 +225,12 @@ SMILTimedElement* SMILTimeValueSpec::GetTimedElement(Element* aElement) {
 // when scripting is disabled.
 bool SMILTimeValueSpec::IsEventAllowedWhenScriptingIsDisabled() {
   // The category of (SMIL-specific) "repeat(n)" events are allowed.
-  if (mParams.mType == SMILTimeValueSpecParams::Type::Repeat) {
+  if (mParams.mType == SMILTimeValueSpecParams::REPEAT) {
     return true;
   }
 
   // A specific list of other SMIL-related events are allowed, too.
-  if (mParams.mType == SMILTimeValueSpecParams::Type::Event &&
+  if (mParams.mType == SMILTimeValueSpecParams::EVENT &&
       (mParams.mEventSymbol == nsGkAtoms::repeat ||
        mParams.mEventSymbol == nsGkAtoms::repeatEvent ||
        mParams.mEventSymbol == nsGkAtoms::beginEvent ||
@@ -298,7 +297,7 @@ void SMILTimeValueSpec::HandleEvent(Event* aEvent) {
   SMILTimeContainer* container = mOwner->GetTimeContainer();
   if (!container) return;
 
-  if (mParams.mType == SMILTimeValueSpecParams::Type::Repeat &&
+  if (mParams.mType == SMILTimeValueSpecParams::REPEAT &&
       !CheckRepeatEventDetail(aEvent)) {
     return;
   }
@@ -310,8 +309,8 @@ void SMILTimeValueSpec::HandleEvent(Event* aEvent) {
     return;
   }
 
-  RefPtr<SMILInstanceTime> newInstance = new SMILInstanceTime(
-      newTime, SMILInstanceTime::SMILInstanceTimeSource::Event);
+  RefPtr<SMILInstanceTime> newInstance =
+      new SMILInstanceTime(newTime, SMILInstanceTime::SOURCE_EVENT);
   mOwner->AddInstanceTime(newInstance, mIsBegin);
 }
 

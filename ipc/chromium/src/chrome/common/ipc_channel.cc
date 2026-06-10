@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -12,12 +14,9 @@
 #else
 #  include "chrome/common/ipc_channel_posix.h"
 #endif
-//it ain't workin. sorry nika
-/*
 #ifdef XP_DARWIN
 #  include "chrome/common/ipc_channel_mach.h"
 #endif
-*/
 
 namespace IPC {
 
@@ -38,8 +37,7 @@ already_AddRefed<Channel> Channel::Create(ChannelHandle pipe, Mode mode,
                                                 other_pid);
 #endif
   }
-//it ain't workin. sorry nika
-/*#if XP_DARWIN
+#if XP_DARWIN
   if (auto* receive = std::get_if<mozilla::UniqueMachReceiveRight>(&pipe)) {
     return mozilla::MakeAndAddRef<ChannelMach>(std::move(*receive), nullptr,
                                                mode, other_pid);
@@ -49,7 +47,6 @@ already_AddRefed<Channel> Channel::Create(ChannelHandle pipe, Mode mode,
                                                other_pid);
   }
 #endif
-*/
   MOZ_ASSERT_UNREACHABLE("unhandled pipe type");
   return nullptr;
 }

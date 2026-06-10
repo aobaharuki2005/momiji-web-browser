@@ -1,5 +1,4 @@
 // META: title=WebCryptoAPI: encrypt() Using AES-CTR
-// META: script=../util/helpers.js
 // META: script=aes_ctr_vectors.js
 // META: script=aes.js
 // META: timeout=long

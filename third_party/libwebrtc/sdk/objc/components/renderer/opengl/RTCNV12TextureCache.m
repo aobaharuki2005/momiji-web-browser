@@ -105,8 +105,6 @@
 }
 
 - (void)releaseTextures {
-  CVOpenGLESTextureCacheFlush(_textureCache, 0);
-
   if (_uvTextureRef) {
     CFRelease(_uvTextureRef);
     _uvTextureRef = nil;

@@ -41,7 +41,7 @@ struct SkRect;
 
 class SkWriteBuffer {
 public:
-    explicit SkWriteBuffer(const SkSerialProcs& p) : fProcs(p) {}
+    SkWriteBuffer(const SkSerialProcs& p): fProcs(p) {}
     virtual ~SkWriteBuffer() {}
 
     virtual void writePad32(const void* buffer, size_t bytes) = 0;
@@ -97,7 +97,7 @@ protected:
  */
 class SkBinaryWriteBuffer : public SkWriteBuffer {
 public:
-    explicit SkBinaryWriteBuffer(const SkSerialProcs&);
+    SkBinaryWriteBuffer(const SkSerialProcs&);
     SkBinaryWriteBuffer(void* initialStorage, size_t storageSize, const SkSerialProcs&);
     ~SkBinaryWriteBuffer() override;
 

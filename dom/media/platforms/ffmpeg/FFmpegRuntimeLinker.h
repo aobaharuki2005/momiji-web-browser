@@ -1,19 +1,20 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef FFmpegRuntimeLinker_h_
-#define FFmpegRuntimeLinker_h_
+#ifndef __FFmpegRuntimeLinker_h__
+#define __FFmpegRuntimeLinker_h__
 
 #include "PlatformDecoderModule.h"
 #include "PlatformEncoderModule.h"
-#include "mozilla/StaticMutex.h"
 
 namespace mozilla {
 
 class FFmpegRuntimeLinker {
  public:
-  static bool Init() MOZ_EXCLUDES(sMutex);
+  static bool Init();
   static already_AddRefed<PlatformDecoderModule> CreateDecoder();
   static already_AddRefed<PlatformEncoderModule> CreateEncoder();
   enum LinkStatus {
@@ -31,25 +32,18 @@ class FFmpegRuntimeLinker {
     LinkStatus_INVALID_CANDIDATE,  // Found some lib with unexpected contents.
     LinkStatus_NOT_FOUND,  // Haven't found any library with an expected name.
   };
-  static LinkStatus LinkStatusCode() {
-    StaticMutexAutoLock lock(sMutex);
-    return sLinkStatus;
-  }
+  static LinkStatus LinkStatusCode() { return sLinkStatus; }
   static const char* LinkStatusString();
   // Library name to which the sLinkStatus applies, or "" if not applicable.
-  static const char* LinkStatusLibraryName() {
-    StaticMutexAutoLock lock(sMutex);
-    return sLinkStatusLibraryName;
-  }
+  static const char* LinkStatusLibraryName() { return sLinkStatusLibraryName; }
 
  private:
   static void PrefCallbackLogLevel(const char* aPref, void* aData);
 
-  static StaticMutex sMutex;
-  static LinkStatus sLinkStatus MOZ_GUARDED_BY(sMutex);
-  static const char* sLinkStatusLibraryName MOZ_GUARDED_BY(sMutex);
+  static LinkStatus sLinkStatus;
+  static const char* sLinkStatusLibraryName;
 };
 
 }  // namespace mozilla
 
-#endif  // FFmpegRuntimeLinker_h_
+#endif  // __FFmpegRuntimeLinker_h__

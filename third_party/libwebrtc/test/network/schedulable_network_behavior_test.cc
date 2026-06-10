@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "api/test/create_network_emulation_manager.h"
-#include "api/test/network_emulation/leaky_bucket_network_queue.h"
 #include "api/test/network_emulation/network_config_schedule.pb.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/simulated_network.h"
@@ -65,10 +64,8 @@ TEST(SchedulableNetworkBehaviorTest, NoSchedule) {
   SchedulableNetworkBehaviorTestFixture fixture;
 
   network_behaviour::NetworkConfigSchedule schedule;
-  SchedulableNetworkBehavior network_behaviour(
-      schedule, kRandomSeed, fixture.clock(),
-      [](webrtc::Timestamp) { return true; },
-      std::make_unique<LeakyBucketNetworkQueue>());
+  SchedulableNetworkBehavior network_behaviour(schedule, kRandomSeed,
+                                               fixture.clock());
   webrtc::Timestamp send_time = fixture.TimeNow();
   EXPECT_TRUE(network_behaviour.EnqueuePacket({/*size=*/1000 / 8,
                                                /*send_time_us=*/send_time.us(),
@@ -88,10 +85,8 @@ TEST(SchedulableNetworkBehaviorTest, ScheduleWithoutUpdates) {
   initial_config->set_link_capacity_kbps(10);
   initial_config->set_queue_delay_ms(70);
 
-  SchedulableNetworkBehavior network_behaviour(
-      schedule, kRandomSeed, fixture.clock(),
-      [](webrtc::Timestamp) { return true; },
-      std::make_unique<LeakyBucketNetworkQueue>());
+  SchedulableNetworkBehavior network_behaviour(schedule, kRandomSeed,
+                                               fixture.clock());
   webrtc::Timestamp send_time = fixture.TimeNow();
   EXPECT_TRUE(network_behaviour.EnqueuePacket({/*size=*/1000 / 8,
                                                /*send_time_us=*/send_time.us(),
@@ -129,10 +124,8 @@ TEST(SchedulableNetworkBehaviorTest,
   // 55ms.
   updated_capacity->set_link_capacity_kbps(100);
 
-  SchedulableNetworkBehavior network_behaviour(
-      schedule, kRandomSeed, fixture.clock(),
-      [](webrtc::Timestamp) { return true; },
-      std::make_unique<LeakyBucketNetworkQueue>());
+  SchedulableNetworkBehavior network_behaviour(schedule, kRandomSeed,
+                                               fixture.clock());
   MockFunction<void()> delivery_time_changed_callback;
   network_behaviour.RegisterDeliveryTimeChangedCallback(
       delivery_time_changed_callback.AsStdFunction());
@@ -184,8 +177,7 @@ TEST(SchedulableNetworkBehaviorTest, ScheduleStartedWhenStartConditionTrue) {
       .InSequence(s)
       .WillOnce(Return(true));
   SchedulableNetworkBehavior network_behaviour(
-      schedule, kRandomSeed, fixture.clock(), start_condition.AsStdFunction(),
-      std::make_unique<LeakyBucketNetworkQueue>());
+      schedule, kRandomSeed, fixture.clock(), start_condition.AsStdFunction());
 
   EXPECT_TRUE(network_behaviour.EnqueuePacket(
       {/*size=*/1000 / 8,
@@ -221,10 +213,8 @@ TEST(SchedulableNetworkBehaviorTest, ScheduleWithRepeat) {
   // config should again take 100ms to send.
   schedule.set_repeat_schedule_after_last_ms(200);
 
-  SchedulableNetworkBehavior network_behaviour(
-      schedule, kRandomSeed, fixture.clock(),
-      [](webrtc::Timestamp) { return true; },
-      std::make_unique<LeakyBucketNetworkQueue>());
+  SchedulableNetworkBehavior network_behaviour(schedule, kRandomSeed,
+                                               fixture.clock());
 
   webrtc::Timestamp first_packet_send_time = fixture.TimeNow();
   EXPECT_TRUE(network_behaviour.EnqueuePacket(
@@ -264,10 +254,8 @@ TEST(SchedulableNetworkBehaviorTest, ScheduleWithoutRepeat) {
   // A packet of size 1000 bits should take 10ms to send.
   updated_capacity->set_link_capacity_kbps(100);
 
-  SchedulableNetworkBehavior network_behaviour(
-      schedule, kRandomSeed, fixture.clock(),
-      [](webrtc::Timestamp) { return true; },
-      std::make_unique<LeakyBucketNetworkQueue>());
+  SchedulableNetworkBehavior network_behaviour(schedule, kRandomSeed,
+                                               fixture.clock());
 
   webrtc::Timestamp first_packet_send_time = fixture.TimeNow();
   EXPECT_TRUE(network_behaviour.EnqueuePacket(

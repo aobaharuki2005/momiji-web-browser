@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,15 +27,15 @@ SVGElement::NumberInfo SVGFEDisplacementMapElement::sNumberInfo[1] = {
 };
 
 SVGEnumMapping SVGFEDisplacementMapElement::sChannelMap[] = {
-    {nsGkAtoms::R, uint8_t(SVGChannel::R)},
-    {nsGkAtoms::G, uint8_t(SVGChannel::G)},
-    {nsGkAtoms::B, uint8_t(SVGChannel::B)},
-    {nsGkAtoms::A, uint8_t(SVGChannel::A)},
+    {nsGkAtoms::R, SVG_CHANNEL_R},
+    {nsGkAtoms::G, SVG_CHANNEL_G},
+    {nsGkAtoms::B, SVG_CHANNEL_B},
+    {nsGkAtoms::A, SVG_CHANNEL_A},
     {nullptr, 0}};
 
 SVGElement::EnumInfo SVGFEDisplacementMapElement::sEnumInfo[2] = {
-    {nsGkAtoms::xChannelSelector, sChannelMap, uint8_t(SVGChannel::A)},
-    {nsGkAtoms::yChannelSelector, sChannelMap, uint8_t(SVGChannel::A)}};
+    {nsGkAtoms::xChannelSelector, sChannelMap, SVG_CHANNEL_A},
+    {nsGkAtoms::yChannelSelector, sChannelMap, SVG_CHANNEL_A}};
 
 SVGElement::StringInfo SVGFEDisplacementMapElement::sStringInfo[3] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
@@ -81,12 +83,14 @@ FilterPrimitiveDescription SVGFEDisplacementMapElement::GetPrimitiveDescription(
     return FilterPrimitiveDescription(AsVariant(std::move(atts)));
   }
 
-  float scale = aInstance->GetPrimitiveNumber(SVGLength::Axis::XY,
+  float scale = aInstance->GetPrimitiveNumber(SVGContentUtils::XY,
                                               &mNumberAttributes[SCALE]);
+  uint32_t xChannel = mEnumAttributes[CHANNEL_X].GetAnimValue();
+  uint32_t yChannel = mEnumAttributes[CHANNEL_Y].GetAnimValue();
   DisplacementMapAttributes atts;
   atts.mScale = scale;
-  atts.mXChannel = SVGChannel(mEnumAttributes[CHANNEL_X].GetAnimValue());
-  atts.mYChannel = SVGChannel(mEnumAttributes[CHANNEL_Y].GetAnimValue());
+  atts.mXChannel = xChannel;
+  atts.mYChannel = yChannel;
   return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 

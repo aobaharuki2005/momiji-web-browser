@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -26,8 +28,8 @@
 //   DispatchToMethod(&foo, &Foo::SomeMeth, MakeTuple(1, 2, 3));
 //   // foo->SomeMeth(1, 2, 3);
 
-#ifndef BASE_TUPLE_H_
-#define BASE_TUPLE_H_
+#ifndef BASE_TUPLE_H__
+#define BASE_TUPLE_H__
 
 // Traits ----------------------------------------------------------------------
 //
@@ -833,4 +835,4 @@ inline void DispatchToMethod(ObjT* obj, Method method,
                  &out->d, &out->e);
 }
 
-#endif  // BASE_TUPLE_H_
+#endif  // BASE_TUPLE_H__

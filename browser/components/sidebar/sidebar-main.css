@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+/* stylelint-disable-next-line media-query-no-invalid */
 @media -moz-pref("sidebar.verticalTabs") {
   :host {
     --button-size-icon: var(--tab-min-height);
@@ -25,6 +26,7 @@
   max-width: 100%;
   padding-inline: 0;
 
+  /* stylelint-disable-next-line media-query-no-invalid */
   @media -moz-pref("sidebar.verticalTabs") {
     display: flex;
     flex-direction: column;
@@ -48,19 +50,13 @@
   margin-inline: var(--tab-inner-inline-margin);
   margin-block-end: var(--space-small);
   min-height: 2px;
-  @media -moz-pref("browser.nova.enabled") {
-    min-height: 4px;
-  }
-
-  @media -moz-pref("browser.nova.enabled") {
-    min-height: 4px;
-  }
 
   &:hover {
     background-color: var(--focus-outline-color);
     border-radius: var(--border-radius-medium);
   }
 
+  /* stylelint-disable-next-line media-query-no-invalid */
   @media not -moz-pref("sidebar.visibility", "expand-on-hover") {
     /* We need these rules to apply at all times when the sidebar.visibility
     pref is not set to "expand-on-hover" as opposed to when the "sidebar-expand-on-hover" attribute
@@ -99,7 +95,7 @@
 
   moz-button:not([type~="ghost"]):not(:hover) {
     &::part(button) {
-      background-color: var(--toolbarbutton-background-color-active);
+      background-color: var(--toolbarbutton-active-background);
     }
   }
 
@@ -123,10 +119,7 @@
     padding-inline: var(--space-medium);
     padding-block-end: var(--space-small);
 
-    @media -moz-pref("browser.nova.enabled") {
-      gap: 12.5px;
-    }
-
+    /* stylelint-disable-next-line media-query-no-invalid */
     @media -moz-pref("sidebar.visibility", "expand-on-hover") {
       /* We need these rules to apply at all times when the sidebar.visibility
       pref is set to "expand-on-hover" as opposed to when the "sidebar-expand-on-hover" attribute
@@ -159,6 +152,7 @@
     align-items: flex-end;
   }
 
+  /* stylelint-disable-next-line media-query-no-invalid */
   @media -moz-pref("sidebar.visibility", "expand-on-hover") {
     /* We need these rules to apply at all times when the sidebar.visibility
     pref is set to "expand-on-hover" as opposed to when the "sidebar-expand-on-hover" attribute

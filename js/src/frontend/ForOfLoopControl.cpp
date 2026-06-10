@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -61,24 +63,7 @@ bool ForOfLoopControl::emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce) {
   // Step 9.i.i.1 Set result to
   // Completion(DisposeResources(iterationEnv.[[DisposeCapability]], result)).
   if (forOfDisposalEmitter_.isSome()) {
-    //              [stack] ITER ... EXCEPTION STACK
-    if (!bce->emit1(JSOp::Swap)) {
-      //              [stack] ITER ... STACK EXCEPTION
-      return false;
-    }
-    if (!bce->emit1(JSOp::True)) {
-      //              [stack] ITER ... STACK EXCEPTION THROWING
-      return false;
-    }
-    if (!forOfDisposalEmitter_->prepareForForOfIteratorClose()) {
-      //              [stack] ITER ... STACK EXCEPTION THROWING
-      return false;
-    }
-    if (!bce->emit1(JSOp::Pop)) {
-      //              [stack] ITER ... STACK EXCEPTION
-      return false;
-    }
-    if (!bce->emit1(JSOp::Swap)) {
+    if (!forOfDisposalEmitter_->emitEnd()) {
       //              [stack] ITER ... EXCEPTION STACK
       return false;
     }
@@ -126,22 +111,6 @@ bool ForOfLoopControl::emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce) {
       //            [stack] ITER ... FSTACK FTHROWING FVALUE
       return false;
     }
-#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
-    if (forOfDisposalEmitter_.isSome()) {
-      if (!bce->emit1(JSOp::Swap)) {
-        //          [stack] ITER ... FSTACK FVALUE FTHROWING
-        return false;
-      }
-      if (!forOfDisposalEmitter_->prepareForForOfIteratorClose()) {
-        //          [stack] ITER ... FSTACK FVALUE FTHROWING
-        return false;
-      }
-      if (!bce->emit1(JSOp::Swap)) {
-        //          [stack] ITER ... FSTACK FTHROWING FVALUE
-        return false;
-      }
-    }
-#endif
     if (!bce->emitDupAt(slotFromTop + 1)) {
       //            [stack] ITER ... FSTACK FTHROWING FVALUE ITER
       return false;

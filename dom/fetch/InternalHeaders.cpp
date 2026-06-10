@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -292,9 +294,9 @@ void InternalHeaders::Set(const nsACString& aName, const nsACString& aValue,
   if (firstIndex < INT32_MAX) {
     Entry* entry = mList.InsertElementAt(firstIndex);
     entry->mName = aName;
-    entry->mValue = std::move(trimValue);
+    entry->mValue = trimValue;
   } else {
-    mList.AppendElement(Entry(aName, std::move(trimValue)));
+    mList.AppendElement(Entry(aName, trimValue));
   }
 
   // Step 8

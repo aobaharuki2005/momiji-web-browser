@@ -19,7 +19,7 @@ async function done() {
   ChromeUtils.unregisterWindowActor("ForceRefresh");
   let tab = gBrowser.selectedTab;
   let tabBrowser = gBrowser.getBrowserForTab(tab);
-  await SpecialPowers.spawn(tabBrowser, [], async function () {
+  await ContentTask.spawn(tabBrowser, null, async function () {
     const swr = await content.navigator.serviceWorker.getRegistration();
     await swr.unregister();
   });

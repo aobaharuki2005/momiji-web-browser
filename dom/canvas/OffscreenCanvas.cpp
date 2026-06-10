@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,11 +37,10 @@ namespace mozilla::dom {
 static mozilla::LazyLogModule gFingerprinterDetection("FingerprinterDetection");
 
 OffscreenCanvasCloneData::OffscreenCanvasCloneData(
-    OffscreenCanvasDisplayHelper* aDisplay, nsAtom* aLang, uint32_t aWidth,
-    uint32_t aHeight, layers::LayersBackend aCompositorBackend, bool aNeutered,
-    bool aIsWriteOnly, nsIPrincipal* aExpandedReader)
+    OffscreenCanvasDisplayHelper* aDisplay, uint32_t aWidth, uint32_t aHeight,
+    layers::LayersBackend aCompositorBackend, bool aNeutered, bool aIsWriteOnly,
+    nsIPrincipal* aExpandedReader)
     : mDisplay(aDisplay),
-      mLang(aLang),
       mWidth(aWidth),
       mHeight(aHeight),
       mCompositorBackendType(aCompositorBackend),
@@ -62,13 +63,12 @@ OffscreenCanvas::OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth,
 OffscreenCanvas::OffscreenCanvas(
     nsIGlobalObject* aGlobal, uint32_t aWidth, uint32_t aHeight,
     layers::LayersBackend aCompositorBackend,
-    already_AddRefed<OffscreenCanvasDisplayHelper> aDisplay, nsAtom* aLang)
+    already_AddRefed<OffscreenCanvasDisplayHelper> aDisplay)
     : DOMEventTargetHelper(aGlobal),
       mWidth(aWidth),
       mHeight(aHeight),
       mCompositorBackendType(aCompositorBackend),
       mDisplay(aDisplay),
-      mLang(aLang),
       mFontVisibility(ComputeFontVisibility()) {}
 
 OffscreenCanvas::~OffscreenCanvas() {
@@ -289,7 +289,7 @@ OffscreenCanvas::CreateContext(CanvasContextType aContextType) {
 
 Maybe<uint64_t> OffscreenCanvas::GetWindowID() const {
   if (NS_IsMainThread()) {
-    if (nsIGlobalObject* global = GetRelevantGlobal()) {
+    if (nsIGlobalObject* global = GetOwnerGlobal()) {
       if (auto* window = global->GetAsInnerWindow()) {
         return Some(window->WindowID());
       }
@@ -380,7 +380,7 @@ UniquePtr<OffscreenCanvasCloneData> OffscreenCanvas::ToCloneData(
   }
 
   auto cloneData = MakeUnique<OffscreenCanvasCloneData>(
-      mDisplay, mLang, mWidth, mHeight, mCompositorBackendType, mNeutered,
+      mDisplay, mWidth, mHeight, mCompositorBackendType, mNeutered,
       mIsWriteOnly, mExpandedReader);
   SetNeutered();
   return cloneData;
@@ -401,7 +401,7 @@ already_AddRefed<ImageBitmap> OffscreenCanvas::TransferToImageBitmap(
   }
 
   RefPtr<ImageBitmap> result =
-      ImageBitmap::CreateFromOffscreenCanvas(GetRelevantGlobal(), *this, aRv);
+      ImageBitmap::CreateFromOffscreenCanvas(GetOwnerGlobal(), *this, aRv);
   if (!result) {
     return nullptr;
   }
@@ -491,7 +491,7 @@ already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = GetRelevantGlobal();
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
 
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
@@ -556,7 +556,7 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = GetRelevantGlobal();
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
 
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
@@ -619,8 +619,7 @@ bool OffscreenCanvas::CallerCanRead(nsIPrincipal& aPrincipal) const {
 }
 
 bool OffscreenCanvas::ShouldResistFingerprinting(RFPTarget aTarget) const {
-  return nsContentUtils::ShouldResistFingerprinting(GetRelevantGlobal(),
-                                                    aTarget);
+  return nsContentUtils::ShouldResistFingerprinting(GetOwnerGlobal(), aTarget);
 }
 
 /* static */
@@ -629,7 +628,7 @@ already_AddRefed<OffscreenCanvas> OffscreenCanvas::CreateFromCloneData(
   MOZ_ASSERT(aData);
   RefPtr<OffscreenCanvas> wc = new OffscreenCanvas(
       aGlobal, aData->mWidth, aData->mHeight, aData->mCompositorBackendType,
-      aData->mDisplay.forget(), aData->mLang);
+      aData->mDisplay.forget());
   if (aData->mNeutered) {
     wc->SetNeutered();
   }
@@ -656,7 +655,7 @@ void OffscreenCanvas::ReportBlockedFontFamily(const nsCString& aMsg) const {
 
 bool OffscreenCanvas::IsChrome() const {
   if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetRelevantGlobal());
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetOwnerGlobal());
     NS_ENSURE_TRUE(win, false);
 
     nsCOMPtr<Document> doc = win->GetExtantDoc();
@@ -673,7 +672,7 @@ bool OffscreenCanvas::IsChrome() const {
 
 bool OffscreenCanvas::IsPrivateBrowsing() const {
   if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetRelevantGlobal());
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetOwnerGlobal());
     NS_ENSURE_TRUE(win, false);
 
     nsCOMPtr<Document> doc = win->GetExtantDoc();
@@ -689,8 +688,7 @@ bool OffscreenCanvas::IsPrivateBrowsing() const {
 }
 
 nsICookieJarSettings* OffscreenCanvas::GetCookieJarSettings() const {
-  if (nsCOMPtr<nsPIDOMWindowInner> win =
-          do_QueryInterface(GetRelevantGlobal())) {
+  if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetOwnerGlobal())) {
     if (nsCOMPtr<Document> doc = win->GetExtantDoc()) {
       return doc->CookieJarSettings();
     }
@@ -705,7 +703,7 @@ nsICookieJarSettings* OffscreenCanvas::GetCookieJarSettings() const {
 
 Maybe<FontVisibility> OffscreenCanvas::MaybeInheritFontVisibility() const {
   if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetRelevantGlobal());
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetOwnerGlobal());
     NS_ENSURE_TRUE(win, Nothing());
 
     nsCOMPtr<Document> doc = win->GetExtantDoc();

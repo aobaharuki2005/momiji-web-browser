@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: c++; c-basic-offset: 2; tab-width: 4; indent-tabs-mode: nil; -*-
+ * vim: set sw=2 ts=4 expandtab:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -261,7 +263,7 @@ static KeyNameIndex ConvertAndroidKeyCodeToKeyNameIndex(
   case aNativeKey:                                                     \
     return aKeyNameIndex;
 
-#include "NativeKeyToDOMKeyName.inc"
+#include "NativeKeyToDOMKeyName.h"
 
 #undef NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
 
@@ -372,7 +374,7 @@ static CodeNameIndex ConvertAndroidScanCodeToCodeNameIndex(int32_t scanCode) {
   case aNativeKey:                                                       \
     return aCodeNameIndex;
 
-#include "NativeKeyToDOMCodeName.inc"
+#include "NativeKeyToDOMCodeName.h"
 
 #undef NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX
 
@@ -647,7 +649,7 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
                                  mIMEPendingTextChange.mCausedOnlyByComposition;
   mIMETextChangedDuringFlush = false;
 
-  auto shouldAbort = [=, this](bool aForce) -> bool {
+  auto shouldAbort = [=](bool aForce) -> bool {
     if (!aForce && !mIMETextChangedDuringFlush) {
       return false;
     }
@@ -734,7 +736,7 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
   }
 
   JNIEnv* const env = jni::GetGeckoThreadEnv();
-  auto flushOnException = [=, this]() -> bool {
+  auto flushOnException = [=]() -> bool {
     if (!env->ExceptionCheck()) {
       return false;
     }
@@ -1472,7 +1474,7 @@ void GeckoEditableSupport::WillDispatchKeyboardEvent(
 
 NS_IMETHODIMP_(IMENotificationRequests)
 GeckoEditableSupport::GetIMENotificationRequests() {
-  return {IMENotificationRequest::TextChange};
+  return IMENotificationRequests(IMENotificationRequests::NOTIFY_TEXT_CHANGE);
 }
 
 static bool ShouldKeyboardDismiss(const nsAString& aInputType,
@@ -1641,8 +1643,8 @@ void GeckoEditableSupport::SetOnBrowserChild(dom::BrowserChild* aBrowserChild) {
   // We expect the existing TextEventDispatcherListener to be a
   // GeckoEditableSupport object, so we perform a sanity check to make
   // sure, by comparing their respective vtable pointers.
-  const auto dummy =
-      MakeRefPtr<widget::GeckoEditableSupport>(/* child */ nullptr);
+  const RefPtr<widget::GeckoEditableSupport> dummy =
+      new widget::GeckoEditableSupport(/* child */ nullptr);
   NS_ENSURE_TRUE_VOID(*reinterpret_cast<const uintptr_t*>(listener.get()) ==
                       *reinterpret_cast<const uintptr_t*>(dummy.get()));
 

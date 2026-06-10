@@ -15,7 +15,7 @@ function getCrashDumpId(subject) {
     "Subject needs to be a nsIPropertyBag2 to clean up properly"
   );
 
-  return subject.get("dumpID");
+  return subject.getPropertyAsAString("dumpID");
 }
 
 /**

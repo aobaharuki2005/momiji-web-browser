@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -856,22 +858,17 @@ Maybe<ScrollDirection> TouchBlockState::GetBestGuessPanDirection(
       aInput.mTouches.Length() != 1) {
     return Nothing();
   }
-  RefPtr<AsyncPanZoomController> apzc = GetTargetApzc();
-  if (!apzc) {
-    return Nothing();
-  }
-  ScreenPoint screenVector =
-      ScreenPoint(aInput.mTouches[0].mScreenPoint - mSlopOrigin);
-  ParentLayerPoint vector =
-      apzc->ToParentLayerCoordinates(screenVector, ScreenPoint(mSlopOrigin));
+  ScreenPoint vector = aInput.mTouches[0].mScreenPoint - mSlopOrigin;
+  double angle = atan2(vector.y, vector.x);  // range [-pi, pi]
+  angle = fabs(angle);                       // range [0, pi]
 
   double angleThreshold = TouchActionAllowsPanningXY()
                               ? StaticPrefs::apz_axis_lock_lock_angle()
                               : StaticPrefs::apz_axis_lock_direct_pan_angle();
-  if (apz::IsCloseToHorizontal(vector, angleThreshold)) {
+  if (apz::IsCloseToHorizontal(angle, angleThreshold)) {
     return Some(ScrollDirection::eHorizontal);
   }
-  if (apz::IsCloseToVertical(vector, angleThreshold)) {
+  if (apz::IsCloseToVertical(angle, angleThreshold)) {
     return Some(ScrollDirection::eVertical);
   }
   return Nothing();

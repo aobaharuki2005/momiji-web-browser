@@ -12,8 +12,6 @@
 
 #include <cstdint>
 
-namespace webrtc {
-
 namespace {
 // clang-format off
 #define kMaskBursty1_1 \
@@ -641,6 +639,7 @@ namespace {
 // clang-format on
 }  // namespace
 
+namespace webrtc {
 namespace fec_private_tables {
 
 const uint8_t kPacketMaskBurstyTbl[] = {

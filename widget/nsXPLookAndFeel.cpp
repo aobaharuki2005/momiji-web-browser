@@ -1,3 +1,4 @@
+/* -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -79,8 +80,8 @@ static EnumeratedArray<FloatID, RelaxedAtomicUint32, size_t(FloatID::End)>
 constexpr int32_t kNoInt = INT32_MIN;
 static EnumeratedArray<IntID, RelaxedAtomicInt32, size_t(IntID::End)> sIntStore;
 StaticRWLock sFontStoreLock;
-constinit static EnumeratedArray<FontID, widget::LookAndFeelFont,
-                                 size_t(FontID::End)>
+MOZ_RUNINIT static EnumeratedArray<FontID, widget::LookAndFeelFont,
+                                   size_t(FontID::End)>
     sFontStore MOZ_GUARDED_BY(sFontStoreLock);
 
 // To make one of these prefs toggleable from a reftest add a user
@@ -117,9 +118,6 @@ static const char sIntPrefs[][45] = {
     "ui.windowsAccentColorInTitlebar",
     "ui.windowsMica",
     "ui.windowsMicaPopups",
-    "ui.macGraphiteTheme",
-    "ui.macLionTheme",
-    "ui.macYosemiteTheme",
     "ui.macBigSurTheme",
     "ui.macTahoeTheme",
     "ui.alertNotificationOrigin",
@@ -255,17 +253,6 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-sidebar",
     "ui.-moz-sidebartext",
     "ui.-moz-sidebarborder",
-    "ui.-moz-mac-vibrancy-light",
-    "ui.-moz-mac-vibrancy-dark",
-    "ui.-moz-mac-vibrant-titlebar-light",
-    "ui.-moz-mac-vibrant-titlebar-dark",
-    "ui.-moz-mac-menupopup",
-    "ui.-moz-mac-menuitem",
-    "ui.-moz-mac-active-menuitem",
-    "ui.-moz-mac-source-list",
-    "ui.-moz-mac-source-list-selection",
-    "ui.-moz-mac-active-source-list-selection",
-    "ui.-moz-mac-tooltip",
     "ui.accentcolor",
     "ui.accentcolortext",
     "ui.-moz-autofill-background",
@@ -723,17 +710,6 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(Linktext, 0x00, 0x00, 0xee)
       COLOR(Activetext, 0xee, 0x00, 0x00)
       COLOR(Visitedtext, 0x55, 0x1A, 0x8B)
-      COLOR(MozMacVibrancyLight, 0xf7, 0xf7, 0xf7)
-      COLOR(MozMacVibrantTitlebarLight, 0xf7, 0xf7, 0xf7)
-      COLOR(MozMacVibrancyDark, 0x28, 0x28, 0x28)
-      COLOR(MozMacVibrantTitlebarDark, 0x28, 0x28, 0x28)
-      COLOR(MozMacMenupopup, 0xe6, 0xe6, 0xe6)
-      COLOR(MozMacMenuitem, 0xe6, 0xe6, 0xe6)
-      COLOR(MozMacActiveMenuitem, 0x0a, 0x64, 0xdc)
-      COLOR(MozMacSourceList, 0xf7, 0xf7, 0xf7)
-      COLOR(MozMacSourceListSelection, 0xc8, 0xc8, 0xc8)
-      COLOR(MozMacActiveSourceListSelection, 0x0a, 0x64, 0xdc)
-      COLOR(MozMacTooltip, 0xf7, 0xf7, 0xf7)
       COLOR(MozAutofillBackground, 0xff, 0xfc, 0xc8)
       COLOR(TargetTextBackground, 0xf5, 0xcc, 0x58)  // --yellow-20
       COLOR(TargetTextForeground, 0x00, 0x00, 0x00)
@@ -824,8 +800,8 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       color = NS_RGB(0xb1, 0xb1, 0xb1);
       break;
     case ColorID::MozCellhighlight:
-    case ColorID::Selecteditem:  // --color-accent-primary-selected
-      color = NS_RGB(0, 221, 255);
+    case ColorID::Selecteditem:
+      color = NS_RGBA(249, 249, 250, 26);
       break;
     case ColorID::MozSidebar:
     case ColorID::Field:
@@ -835,8 +811,6 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::MozColheader:
     case ColorID::Threedface:
     case ColorID::MozCombobox:
-    case ColorID::MozCellhighlighttext:
-    case ColorID::Selecteditemtext:  // --text-color-accent-primary-selected
       color = NS_RGB(43, 42, 51);
       break;
     case ColorID::Threeddarkshadow:  // Same as Threedlightshadow but with the
@@ -857,13 +831,15 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::Highlight:
       color = NS_RGBA(0, 221, 255, 78);
       break;
+    case ColorID::MozCellhighlighttext:
+    case ColorID::Selecteditemtext:
     case ColorID::Highlighttext:
       color = NS_SAME_AS_FOREGROUND_COLOR;
       break;
     case ColorID::Linktext:
       // If you change this color, you probably also want to change the default
       // value of browser.anchor_color.dark.
-      color = NS_RGB(0x00, 0xca, 0xdb);
+      color = NS_RGB(0x8c, 0x8c, 0xff);
       break;
     case ColorID::Activetext:
     case ColorID::SpellCheckerUnderline:
@@ -1096,10 +1072,9 @@ widget::LookAndFeelFont nsXPLookAndFeel::StyleToLookAndFeelFont(
 #ifdef DEBUG
   {
     // Assert that all the remaining font style properties have their
-    // default values, except `systemFont` which should be true.
+    // default values.
     gfxFontStyle candidate = aStyle;
     gfxFontStyle defaults{};
-    defaults.systemFont = true;
     candidate.size = defaults.size;
     candidate.weight = defaults.weight;
     candidate.style = defaults.style;

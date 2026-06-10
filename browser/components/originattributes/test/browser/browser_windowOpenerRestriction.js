@@ -27,7 +27,7 @@ async function testPref(aIsPrefEnabled) {
 
   // Select this tab and make sure its browser is loaded and focused.
   gBrowser.selectedTab = tab;
-  tab.documentGlobal.focus();
+  tab.ownerGlobal.focus();
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);

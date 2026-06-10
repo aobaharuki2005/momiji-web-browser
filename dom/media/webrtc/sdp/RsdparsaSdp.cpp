@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 
 #include "mozilla/Assertions.h"
 #include "nsError.h"
-#include "nsString.h"
 #include "sdp/RsdparsaSdpInc.h"
 #include "sdp/RsdparsaSdpMediaSection.h"
 
@@ -17,8 +18,6 @@
 
 namespace mozilla {
 
-namespace ffi = mozilla::sdp::ffi;
-
 RsdparsaSdp::RsdparsaSdp(RsdparsaSessionHandle session, const SdpOrigin& origin)
     : mSession(std::move(session)), mOrigin(origin) {
   RsdparsaSessionHandle attributeSession(sdp_new_reference(mSession.get()));
@@ -27,9 +26,18 @@ RsdparsaSdp::RsdparsaSdp(RsdparsaSessionHandle session, const SdpOrigin& origin)
 
   size_t section_count = sdp_media_section_count(mSession.get());
   for (size_t level = 0; level < section_count; level++) {
+    RustMediaSection* mediaSection =
+        sdp_get_media_section(mSession.get(), level);
+    if (!mediaSection) {
+      MOZ_ASSERT(false,
+                 "sdp_get_media_section failed because level was out of"
+                 " bounds, but we did a bounds check!");
+      break;
+    }
     RsdparsaSessionHandle newSession(sdp_new_reference(mSession.get()));
-    auto* sdpMediaSection = new RsdparsaSdpMediaSection(
-        level, std::move(newSession), mAttributeList.get());
+    RsdparsaSdpMediaSection* sdpMediaSection;
+    sdpMediaSection = new RsdparsaSdpMediaSection(
+        level, std::move(newSession), mediaSection, mAttributeList.get());
     mMediaSections.emplace_back(sdpMediaSection);
   }
 }
@@ -43,27 +51,28 @@ Sdp* RsdparsaSdp::Clone() const { return new RsdparsaSdp(*this); }
 const SdpOrigin& RsdparsaSdp::GetOrigin() const { return mOrigin; }
 
 uint32_t RsdparsaSdp::GetBandwidth(const std::string& type) const {
-  nsDependentCString bwType(type.data(), type.size());
-  return get_sdp_bandwidth(mSession.get(), &bwType);
+  return get_sdp_bandwidth(mSession.get(), type.c_str());
 }
 
 const SdpMediaSection& RsdparsaSdp::GetMediaSection(size_t level) const {
-  MOZ_RELEASE_ASSERT(mMediaSections.size() > level);
+  if (level > mMediaSections.size()) {
+    MOZ_CRASH();
+  }
   return *mMediaSections[level];
 }
 
 SdpMediaSection& RsdparsaSdp::GetMediaSection(size_t level) {
-  MOZ_RELEASE_ASSERT(mMediaSections.size() > level);
+  if (level > mMediaSections.size()) {
+    MOZ_CRASH();
+  }
   return *mMediaSections[level];
 }
 
 SdpMediaSection& RsdparsaSdp::AddMediaSection(
-    const SdpMediaSection::MediaType mediaType,
-    const SdpDirectionAttribute::Direction dir, const uint16_t port,
-    const SdpMediaSection::Protocol protocol, const sdp::AddrType addrType,
+    SdpMediaSection::MediaType mediaType, SdpDirectionAttribute::Direction dir,
+    uint16_t port, SdpMediaSection::Protocol protocol, sdp::AddrType addrType,
     const std::string& addr) {
-  sdp::ffi::StringView rustAddr{reinterpret_cast<const uint8_t*>(addr.c_str()),
-                                addr.size()};
+  StringView rustAddr{addr.c_str(), addr.size()};
   auto nr = sdp_add_media_section(mSession.get(), mediaType, dir, port,
                                   protocol, addrType, rustAddr);
 
@@ -71,8 +80,10 @@ SdpMediaSection& RsdparsaSdp::AddMediaSection(
     size_t level = mMediaSections.size();
     RsdparsaSessionHandle newSessHandle(sdp_new_reference(mSession.get()));
 
-    auto* mediaSection = new RsdparsaSdpMediaSection(
-        level, std::move(newSessHandle), mAttributeList.get());
+    auto rustMediaSection = sdp_get_media_section(mSession.get(), level);
+    auto mediaSection =
+        new RsdparsaSdpMediaSection(level, std::move(newSessHandle),
+                                    rustMediaSection, mAttributeList.get());
     mMediaSections.emplace_back(mediaSection);
 
     return *mediaSection;
@@ -88,10 +99,12 @@ void RsdparsaSdp::Serialize(std::ostream& os) const {
   // We don't support creating i=, u=, e=, p=
   // We don't generate c= at the session level (only in media)
 
-  nsAutoCString bwString;
-  sdp_serialize_bandwidth(sdp_get_session_bandwidth_vec(mSession.get()),
-                          &bwString);
-  os << bwString.get();
+  BandwidthVec* bwVec = sdp_get_session_bandwidth_vec(mSession.get());
+  char* bwString = sdp_serialize_bandwidth(bwVec);
+  if (bwString) {
+    os << bwString;
+    sdp_free_string(bwString);
+  }
 
   os << "t=0 0" << CRLF;
 

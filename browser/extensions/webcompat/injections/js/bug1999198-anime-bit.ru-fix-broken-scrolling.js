@@ -11,27 +11,19 @@
  * will not load more content as the page is scrolled down. This fixes it.
  */
 
-if (!window.__firefoxWebCompatFixBug1756970) {
-  Object.defineProperty(window, "__firefoxWebCompatFixBug1756970", {
-    configurable: false,
-    value: true,
-  });
+/* globals exportFunction */
 
-  console.info(
-    "documentElement.clientHeight has been overridden for compatibility reasons. See https://bugzilla.mozilla.org/show_bug.cgi?id=1999198 for details."
-  );
+console.info(
+  "documentElement.clientHeight has been overridden for compatibility reasons. See https://bugzilla.mozilla.org/show_bug.cgi?id=1999198 for details."
+);
 
-  const { prototype } = Element;
-  const clientHeightDesc = Object.getOwnPropertyDescriptor(
-    prototype,
-    "clientHeight"
-  );
-  const origHeight = clientHeightDesc.get;
-  clientHeightDesc.get = function () {
-    if (this === document.documentElement) {
-      return this.scrollHeight;
-    }
-    return origHeight.call(this);
-  };
-  Object.defineProperty(prototype, "clientHeight", clientHeightDesc);
-}
+const proto = Element.prototype.wrappedJSObject;
+const clientHeightDesc = Object.getOwnPropertyDescriptor(proto, "clientHeight");
+const origHeight = clientHeightDesc.get;
+clientHeightDesc.get = exportFunction(function () {
+  if (this === document.documentElement) {
+    return this.scrollHeight;
+  }
+  return origHeight.call(this);
+}, window);
+Object.defineProperty(proto, "clientHeight", clientHeightDesc);

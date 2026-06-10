@@ -49,8 +49,7 @@ class CompilerPreprocessor(Preprocessor):
 
         def normalize_has_feature_or_builtin(expr):
             return (
-                self.HAS_FEATURE_OR_BUILTIN
-                .sub(r"\1\2", expr)
+                self.HAS_FEATURE_OR_BUILTIN.sub(r"\1\2", expr)
                 .replace("-", "_")
                 .replace("+", "_")
             )

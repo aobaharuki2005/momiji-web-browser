@@ -3,12 +3,11 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
- * 🚧 This API is experimental and may experience breaking changes outside major releases.
- *
- * See the [Rust documentation for `Style`](https://docs.rs/icu/2.1.1/icu/experimental/displaynames/enum.Style.html) for more information.
+ * See the [Rust documentation for `Style`](https://docs.rs/icu/latest/icu/experimental/displaynames/options/enum.Style.html) for more information.
  */
+
+
 export class DisplayNamesStyle {
     #value = undefined;
 
@@ -48,7 +47,6 @@ export class DisplayNamesStyle {
         throw TypeError(value + " is not a DisplayNamesStyle and does not correspond to any of its enumerator values.");
     }
 
-    /** @internal */
     static fromValue(value) {
         return new DisplayNamesStyle(value);
     }
@@ -57,7 +55,6 @@ export class DisplayNamesStyle {
         return [...DisplayNamesStyle.#values.keys()][this.#value];
     }
 
-    /** @internal */
     get ffiValue(){
         return this.#value;
     }

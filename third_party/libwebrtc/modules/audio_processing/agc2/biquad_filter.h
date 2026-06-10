@@ -11,7 +11,7 @@
 #ifndef MODULES_AUDIO_PROCESSING_AGC2_BIQUAD_FILTER_H_
 #define MODULES_AUDIO_PROCESSING_AGC2_BIQUAD_FILTER_H_
 
-#include <span>
+#include "api/array_view.h"
 
 namespace webrtc {
 
@@ -41,7 +41,7 @@ class BiQuadFilter {
 
   // Filters `x` and writes the output in `y`, which must have the same length
   // of `x`. In-place processing is supported.
-  void Process(std::span<const float> x, std::span<float> y);
+  void Process(ArrayView<const float> x, ArrayView<float> y);
 
  private:
   Config config_;

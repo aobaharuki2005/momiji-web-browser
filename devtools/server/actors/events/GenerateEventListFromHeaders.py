@@ -3,19 +3,18 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 """
-This script parses mozilla-central's EventNameList.inc and writes a JSON-formatted equivalent
+This script parses mozilla-central's EventNameList.h and writes a JSON-formatted equivalent
 in order to guess if a DOM Event name is implemented by Gecko:
   "devtools/server/event-list.json"
 
 Run this script via
 
-> ./mach python devtools/server/GenerateEventListFromHeaders.py dom/events/EventNameList.inc
+> ./mach python devtools/server/GenerateEventListFromHeaders.py dom/events/EventNameList.h
 """
 
+import json
 import re
 import sys
-
-from mozfile import json
 
 
 def main(output_file, event_name_list_h):

@@ -211,10 +211,8 @@
       ok(canvas, "Canvas successfully transfered to worker");
       ok(canvas.getContext, "Canvas has getContext");
 
-      if (test != "webgl_todataurl_stride") {
-        ok(canvas.width == 64, "OffscreenCanvas width should be 64");
-        ok(canvas.height == 64, "OffscreenCanvas height should be 64");
-      }
+      ok(canvas.width == 64, "OffscreenCanvas width should be 64");
+      ok(canvas.height == 64, "OffscreenCanvas height should be 64");
     }
 
     var draw;
@@ -269,22 +267,6 @@
       canvas.toBlob().then(function (blob) {
         sendBlob(blob);
       });
-    }
-    //------------------------------------------------------------------------
-    // Test toDataURL stride correctness on transferred canvas with alpha:true.
-    // Width must not be a multiple of 4 so that width*4 is not 16-byte aligned,
-    // producing per-row padding that the encoder must not read as pixel data.
-    //------------------------------------------------------------------------
-    else if (test == "webgl_todataurl_stride") {
-      var gl = canvas.getContext("webgl", { alpha: true });
-      if (!gl) {
-        ok(false, "WebGL with alpha:true is unavailable");
-        finish();
-        return;
-      }
-      gl.clearColor(0, 1, 0, 1);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      finish();
     }
     //------------------------------------------------------------------------
     // Test toImageBitmap

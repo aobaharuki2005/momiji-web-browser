@@ -21,7 +21,7 @@ object SettingsEnhancedTrackingProtectionSelectors {
         strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
         value = "Exceptions",
         description = "Enhanced tracking protection Exceptions button",
-        groups = listOf("ETPSection", "requiresScroll"),
+        groups = listOf("requiredForPage"),
     )
 
     val all = listOf(

@@ -24,7 +24,7 @@ inline fun CustomPlacementPopup.CustomPlacementPopupHorizontalContent(
 ) {
     LazyRow(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.surfaceBright)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .height(48.dp),
     ) {
         content()

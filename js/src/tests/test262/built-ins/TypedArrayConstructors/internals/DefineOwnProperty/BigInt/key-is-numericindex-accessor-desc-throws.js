@@ -13,12 +13,12 @@ info: |
     b. If numericIndex is not undefined, then
       [...]
       iv. If IsAccessorDescriptor(Desc) is true, return false.
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg([0n]));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA([0n]);
 
   assert.throws(TypeError, function() {
     Object.defineProperty(sample, "0", {
@@ -41,6 +41,6 @@ testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
     });
   }, "get and set accessors");
   assert.sameValue(sample[0], 0n, "get and set accessors - side effect check");
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

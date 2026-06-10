@@ -637,7 +637,7 @@ struct FeatureParamsCharacterVariants
     return characters.len;
   }
 
-  size_t get_size () const
+  unsigned get_size () const
   { return min_size + characters.len * HBUINT24::static_size; }
 
   void collect_name_ids (hb_set_t *nameids_to_retain /* OUT */) const
@@ -1272,7 +1272,7 @@ struct Lookup
   TSubTable& get_subtable (unsigned int i)
   { return this+get_subtables<TSubTable> ()[i]; }
 
-  size_t get_size () const
+  unsigned int get_size () const
   {
     const HBUINT16 &markFilteringSet = StructAfter<const HBUINT16> (subTable);
     if (lookupFlag & LookupFlag::UseMarkFilteringSet)
@@ -2480,7 +2480,7 @@ struct VarRegionAxis
     /* TODO Move these to sanitize(). */
     if (unlikely (start > peak || peak > end))
       return 1.f;
-    if (unlikely (start < 0 && end > 0))
+    if (unlikely (start < 0 && end > 0 && peak != 0))
       return 1.f;
 
     if (coord <= start || end <= coord)
@@ -2543,13 +2543,13 @@ struct SparseVarRegionAxis
 struct hb_scalar_cache_t
 {
   private:
-  static constexpr unsigned STATIC_LENGTH = 128;
+  static constexpr unsigned STATIC_LENGTH = 16;
   static constexpr int INVALID = INT_MIN;
   static constexpr float MULTIPLIER = 1 << ((sizeof (int) * 8) - 2);
   static constexpr float DIVISOR = 1.f / MULTIPLIER;
 
   public:
-  hb_scalar_cache_t () {}
+  hb_scalar_cache_t () : length (STATIC_LENGTH) { clear (); }
 
   hb_scalar_cache_t (const hb_scalar_cache_t&) = delete;
   hb_scalar_cache_t (hb_scalar_cache_t&&) = delete;
@@ -2561,9 +2561,8 @@ struct hb_scalar_cache_t
   {
     if (!count) return (hb_scalar_cache_t *) &Null(hb_scalar_cache_t);
 
-    if (scratch_cache && count <= STATIC_LENGTH)
+    if (scratch_cache && count <= scratch_cache->length)
     {
-      scratch_cache->length = count;
       scratch_cache->clear ();
       return scratch_cache;
     }
@@ -2791,7 +2790,7 @@ struct VarRegionList
     return !regions.in_error ();
   }
 
-  size_t get_size () const { return min_size + VarRegionAxis::static_size * axisCount * regionCount; }
+  unsigned int get_size () const { return min_size + VarRegionAxis::static_size * axisCount * regionCount; }
 
   public:
   HBUINT16	axisCount;
@@ -2871,7 +2870,7 @@ struct VarData
   unsigned int get_row_size () const
   { return (wordCount () + regionIndices.len) * (longWords () ? 2 : 1); }
 
-  size_t get_size () const
+  unsigned int get_size () const
   { return min_size
 	 - regionIndices.min_size + regionIndices.get_size ()
 	 + itemCount * get_row_size ();
@@ -2971,9 +2970,7 @@ struct VarData
     }
 
     if (unlikely (!c->extend_min (this))) return_trace (false);
-    if (unlikely (!c->check_assign (itemCount, row_count,
-                                    HB_SERIALIZE_ERROR_INT_OVERFLOW)))
-      return_trace (false);
+    itemCount = row_count;
 
     int min_threshold = has_long ? -65536 : -128;
     int max_threshold = has_long ? +65535 : +127;
@@ -3243,7 +3240,7 @@ struct VarData
 
 struct MultiVarData
 {
-  size_t get_size () const
+  unsigned int get_size () const
   { return min_size
 	 - regionIndices.min_size + regionIndices.get_size ()
 	 + StructAfter<CFF2Index> (regionIndices).get_size ();
@@ -3259,24 +3256,12 @@ struct MultiVarData
 
     auto values_iter = deltaSets.fetcher (inner);
     unsigned regionCount = regionIndices.len;
-    unsigned skip = 0;
     for (unsigned regionIndex = 0; regionIndex < regionCount; regionIndex++)
     {
       float scalar = regions.evaluate (regionIndices.arrayZ[regionIndex],
 				       coords, coord_count,
 				       cache);
-      // We skip lazily. Helps with the tail end.
-      if (scalar == 0.0f)
-        skip += out.length;
-      else
-      {
-        if (skip)
-	{
-	  values_iter.skip (skip);
-	  skip = 0;
-	}
-	values_iter.add_to (out, scalar);
-      }
+      values_iter.add_to (out, scalar);
     }
   }
 
@@ -3638,7 +3623,7 @@ struct DeltaSetIndexMapFormat01
 {
   friend struct DeltaSetIndexMap;
 
-  size_t get_size () const
+  unsigned get_size () const
   { return min_size + mapCount * get_width (); }
 
   private:
@@ -4056,7 +4041,7 @@ struct ConditionValue
   bool evaluate (const int *coords, unsigned int coord_len,
 		 Instancer *instancer) const
   {
-    float value = defaultValue;
+    signed value = defaultValue;
     value += (*instancer)[varIdx];
     return value > 0;
   }
@@ -4804,7 +4789,7 @@ struct HintingDevice
 
   public:
 
-  size_t get_size () const
+  unsigned int get_size () const
   {
     unsigned int f = deltaFormat;
     if (unlikely (f < 1 || f > 3 || startSize > endSize)) return 3 * HBUINT16::static_size;

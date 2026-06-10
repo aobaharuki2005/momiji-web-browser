@@ -7,8 +7,9 @@ use super::{
     Frontend, Result, Span,
 };
 use crate::{
-    AddressSpace, Binding, BuiltIn, Constant, Expression, GlobalVariable, Handle, LocalVariable,
-    Override, ResourceBinding, Scalar, ShaderStage, SwizzleComponent, Type, TypeInner, VectorSize,
+    AddressSpace, Binding, BuiltIn, Constant, Expression, GlobalVariable, Handle, Interpolation,
+    LocalVariable, Override, ResourceBinding, Scalar, ScalarKind, ShaderStage, SwizzleComponent,
+    Type, TypeInner, VectorSize,
 };
 
 pub struct VarDeclaration<'a, 'key> {
@@ -61,7 +62,6 @@ impl Frontend {
                 binding: None,
                 ty,
                 init: None,
-                memory_decorations: crate::MemoryDecorations::empty(),
             },
             meta,
         );
@@ -188,7 +188,7 @@ impl Frontend {
                         stride: 4,
                     },
                     builtin: match name {
-                        "gl_ClipDistance" => BuiltIn::ClipDistances,
+                        "gl_ClipDistance" => BuiltIn::ClipDistance,
                         "gl_CullDistance" => BuiltIn::CullDistance,
                         _ => unreachable!(),
                     },
@@ -201,13 +201,12 @@ impl Frontend {
                     "gl_BaseVertex" => BuiltIn::BaseVertex,
                     "gl_BaseInstance" => BuiltIn::BaseInstance,
                     "gl_PrimitiveID" => BuiltIn::PrimitiveIndex,
-                    "gl_BaryCoordEXT" => BuiltIn::Barycentric { perspective: true },
-                    "gl_BaryCoordNoPerspEXT" => BuiltIn::Barycentric { perspective: false },
+                    "gl_BaryCoordEXT" => BuiltIn::Barycentric,
                     "gl_InstanceIndex" => BuiltIn::InstanceIndex,
                     "gl_VertexIndex" => BuiltIn::VertexIndex,
                     "gl_SampleID" => BuiltIn::SampleIndex,
                     "gl_LocalInvocationIndex" => BuiltIn::LocalInvocationIndex,
-                    "gl_DrawID" => BuiltIn::DrawIndex,
+                    "gl_DrawID" => BuiltIn::DrawID,
                     _ => return Ok(None),
                 };
 
@@ -432,8 +431,13 @@ impl Frontend {
                 let location = qualifiers
                     .uint_layout_qualifier("location", &mut self.errors)
                     .unwrap_or(0);
-
-                let interpolation = qualifiers.interpolation.take().map(|(i, _)| i);
+                let interpolation = qualifiers.interpolation.take().map(|(i, _)| i).or_else(|| {
+                    let kind = ctx.module.types[ty].inner.scalar_kind()?;
+                    Some(match kind {
+                        ScalarKind::Float => Interpolation::Perspective,
+                        _ => Interpolation::Flat,
+                    })
+                });
                 let sampling = qualifiers.sampling.take().map(|(s, _)| s);
 
                 let handle = ctx.module.global_variables.append(
@@ -443,7 +447,6 @@ impl Frontend {
                         binding: None,
                         ty,
                         init,
-                        memory_decorations: crate::MemoryDecorations::empty(),
                     },
                     meta,
                 );
@@ -456,20 +459,16 @@ impl Frontend {
                         _ => None,
                     });
 
-                let mut binding = Binding::Location {
-                    location,
-                    interpolation,
-                    sampling,
-                    blend_src,
-                    per_primitive: false,
-                };
-
-                binding.apply_default_interpolation(&ctx.module.types[ty].inner);
-
                 let idx = self.entry_args.len();
                 self.entry_args.push(EntryArg {
                     name: name.clone(),
-                    binding,
+                    binding: Binding::Location {
+                        location,
+                        interpolation,
+                        sampling,
+                        blend_src,
+                        per_primitive: false,
+                    },
                     handle,
                     storage,
                 });
@@ -636,7 +635,6 @@ impl Frontend {
                         binding,
                         ty,
                         init,
-                        memory_decorations: crate::MemoryDecorations::empty(),
                     },
                     meta,
                 );

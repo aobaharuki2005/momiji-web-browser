@@ -2,6 +2,3 @@ features:
 - name: cascade-layers
   files:
   - layer.html
-- name: import
-  files:
-  - supports-import-parsing.html

@@ -9,6 +9,8 @@ ChromeUtils.defineESModuleGetters(this, {
   DownloadTracker: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
 });
 
+Cu.importGlobalProperties(["PathUtils"]);
+
 var { ignoreEvent } = ExtensionCommon;
 
 const REQUEST_DOWNLOAD_MESSAGE = "GeckoView:WebExtension:Download";
@@ -238,7 +240,8 @@ this.downloads = class extends ExtensionAPIPersistent {
           }
 
           return EventDispatcher.instance
-            .sendRequestForResult(REQUEST_DOWNLOAD_MESSAGE, {
+            .sendRequestForResult({
+              type: REQUEST_DOWNLOAD_MESSAGE,
               options,
               extensionId: extension.id,
             })

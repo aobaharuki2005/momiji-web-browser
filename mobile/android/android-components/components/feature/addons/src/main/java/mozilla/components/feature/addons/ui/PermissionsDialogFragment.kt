@@ -27,20 +27,12 @@ import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.ext.getParcelableCompat
-import kotlin.time.Duration.Companion.seconds
 
 internal const val KEY_ADDON = "KEY_ADDON"
 private const val KEY_DIALOG_GRAVITY = "KEY_DIALOG_GRAVITY"
@@ -57,17 +49,11 @@ internal const val KEY_ORIGINS = "KEY_ORIGINS"
 internal const val KEY_DATA_COLLECTION_PERMISSIONS = "KEY_DATA_COLLECTION_PERMISSIONS"
 private const val DEFAULT_VALUE = Int.MAX_VALUE
 private const val TECHNICAL_AND_INTERACTION_PERM = "technicalAndInteraction"
-private val POSITIVE_BUTTON_ENABLE_DELAY = 1.seconds
 
 /**
  * A dialog that shows a set of permission required by an [Addon].
  */
-class PermissionsDialogFragment
-@JvmOverloads constructor(
-    mainDispatcher: CoroutineDispatcher? = null,
-) : AddonDialogFragment() {
-
-    private val mainDispatcher = mainDispatcher ?: Dispatchers.Main.immediate
+class PermissionsDialogFragment : AddonDialogFragment() {
 
     /**
      * A lambda called when the allow button is clicked which contains the [Addon] and
@@ -159,10 +145,6 @@ class PermissionsDialogFragment
         )
     internal val hasDataCollectionOnly
         get() = permissions.isEmpty() && origins.isEmpty() && dataCollectionPermissions.isNotEmpty()
-
-    private var initialDelayElapsed = false
-    private var userScriptsPermissionOptInMissing = true
-    private val shouldEnablePositiveButton: Boolean get() = initialDelayElapsed && !userScriptsPermissionOptInMissing
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val sheetDialog = Dialog(requireContext())
@@ -280,8 +262,7 @@ class PermissionsDialogFragment
             permissions = listPermissions,
             permissionRequiresOptIn = isUserScriptsPermission,
             onPermissionOptInChanged = { enabled ->
-                userScriptsPermissionOptInMissing = !enabled
-                setButtonEnabled(positiveButton, shouldEnablePositiveButton)
+                setButtonEnabled(positiveButton, enabled)
             },
             domains = displayDomainList,
             domainsHeaderText = requireContext().resources
@@ -324,23 +305,12 @@ class PermissionsDialogFragment
             dismiss()
         }
 
-        // "userScripts" permission requires double-confirmation.
-        // Disable "Add" button until the user confirmed via opt-in.
-        userScriptsPermissionOptInMissing = isUserScriptsPermission
-        setButtonEnabled(positiveButton, shouldEnablePositiveButton)
-
-        // Disable "Add" button until an initial delay elapses
-        // when dialog is first created and any time it goes out of foreground.
-        lifecycleScope.launch(mainDispatcher) {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                initialDelayElapsed = false
-                setButtonEnabled(positiveButton, shouldEnablePositiveButton)
-
-                delay(POSITIVE_BUTTON_ENABLE_DELAY)
-
-                initialDelayElapsed = true
-                setButtonEnabled(positiveButton, shouldEnablePositiveButton)
-            }
+        if (isUserScriptsPermission) {
+            // "userScripts" permission requires double-confirmation.
+            // Disable "Allow" button until the user confirmed via opt-in.
+            setButtonEnabled(positiveButton, false)
+        } else {
+            setButtonEnabled(positiveButton, true)
         }
 
         negativeButton.setOnClickListener {
@@ -557,9 +527,8 @@ class PermissionsDialogFragment
             onPositiveButtonClicked: ((Addon, Boolean, Boolean) -> Unit)? = null,
             onNegativeButtonClicked: (() -> Unit)? = null,
             onLearnMoreClicked: (() -> Unit)? = null,
-            mainDispatcher: CoroutineDispatcher? = null,
         ): PermissionsDialogFragment {
-            val fragment = PermissionsDialogFragment(mainDispatcher)
+            val fragment = PermissionsDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 
             arguments.apply {

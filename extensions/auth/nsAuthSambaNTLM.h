@@ -1,9 +1,10 @@
+/* vim:set ts=4 sw=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsAuthSambaNTLM_h_
-#define nsAuthSambaNTLM_h_
+#ifndef nsAuthSambaNTLM_h__
+#define nsAuthSambaNTLM_h__
 
 #include "nsIAuthModule.h"
 #include "nsString.h"
@@ -47,4 +48,4 @@ class nsAuthSambaNTLM final : public nsIAuthModule {
   mozilla::UniqueFileHandle mToChildFD;
 };
 
-#endif /* nsAuthSambaNTLM_h_ */
+#endif /* nsAuthSambaNTLM_h__ */

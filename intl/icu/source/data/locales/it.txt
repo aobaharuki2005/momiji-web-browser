@@ -276,7 +276,7 @@ it{
                 GyMMMEd{"E d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 GyMd{"d/M/y GGGGG"}
-                Hv{"HH v"}
+                Hv{"'h'HH v"}
                 MEd{"E d/M"}
                 MMMEd{"E d MMM"}
                 MMMMd{"d MMMM"}
@@ -470,7 +470,7 @@ it{
                 GyMMMd{"d MMM y G"}
                 GyMd{"dd/MM/y G"}
                 H{"H"}
-                Hv{"HH v"}
+                Hv{"'h'HH v"}
                 MEd{"E dd/MM"}
                 MMMEd{"E d MMM"}
                 MMMMW{

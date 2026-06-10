@@ -4,7 +4,6 @@
 /* global gTestTab:true, gContentAPI:true, tests:false */
 
 ChromeUtils.defineESModuleGetters(this, {
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   UITour: "moz-src:///browser/components/uitour/UITour.sys.mjs",
 });
 
@@ -67,7 +66,7 @@ function taskify(fun) {
 }
 
 function is_hidden(element) {
-  let win = element.documentGlobal;
+  let win = element.ownerGlobal;
   let style = win.getComputedStyle(element);
   if (style.display == "none") {
     return true;
@@ -88,7 +87,7 @@ function is_hidden(element) {
 }
 
 function is_visible(element) {
-  let win = element.documentGlobal;
+  let win = element.ownerGlobal;
   let style = win.getComputedStyle(element);
   if (style.display == "none") {
     return false;
@@ -290,7 +289,7 @@ function is_element_hidden(element, msg) {
 }
 
 function isTourBrowser(aBrowser) {
-  let chromeWindow = aBrowser.documentGlobal;
+  let chromeWindow = aBrowser.ownerGlobal;
   return (
     UITour.tourBrowsersByWindow.has(chromeWindow) &&
     UITour.tourBrowsersByWindow.get(chromeWindow).has(aBrowser)

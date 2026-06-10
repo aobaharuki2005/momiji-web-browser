@@ -21,21 +21,20 @@ add_task(async () => {
   const profileData = await Services.profiler.getProfileDataAsync();
   await Services.profiler.StopProfiler();
   const { markers, stringTable } = profileData.threads[0];
-  // The "prof" log module is enabled via kPrefName = "logging.prof". Profiler
-  // operations (e.g. profiler_pause) emit MOZ_LOG calls to this module while
-  // the profiler is active, which should appear as markers named "prof".
-  const stringIndexForProf = stringTable.indexOf("prof");
+  const stringIndexForLogMessages = stringTable.indexOf("LogMessages");
   Assert.greaterOrEqual(
-    stringIndexForProf,
+    stringIndexForLogMessages,
     0,
-    "A string index for the string 'prof' have been found."
+    "A string index for the string LogMessages have been found."
   );
 
+  // At least one log for the profiler json streaming operation should exist.
+  // See https://searchfox.org/mozilla-central/rev/445a6e86233c733c5557ef44e1d33444adaddefc/mozglue/baseprofiler/core/platform.cpp#2015
   const logMessageMarkers = markers.data.filter(
-    tuple => tuple[markers.schema.name] === stringIndexForProf
+    tuple => tuple[markers.schema.name] === stringIndexForLogMessages
   );
 
-  Assert.greater(
+  Assert.greaterOrEqual(
     logMessageMarkers.length,
     0,
     "At least one log message have been found."

@@ -61,12 +61,6 @@ export class PdfJsTelemetry {
       case "commentSidebar":
         this.onCommentSidebar(aData.data);
         break;
-      case "taggedPDF":
-        Glean.pdfjs.tagged.add(1);
-        break;
-      case "pageOrganization":
-        this.onPageOrganization(aData.data);
-        break;
     }
   }
 
@@ -311,10 +305,5 @@ export class PdfJsTelemetry {
 
   static onCommentSidebar({ numberOfAnnotations }) {
     Glean.pdfjsComment.sidebar.record({ comments_count: numberOfAnnotations });
-  }
-
-  static onPageOrganization({ action }) {
-    const label = action.replace(/([A-Z])/g, c => `_${c.toLowerCase()}`);
-    Glean.pdfjsOrganize.action[label].add(1);
   }
 }

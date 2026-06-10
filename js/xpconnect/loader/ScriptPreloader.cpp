@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,7 +15,6 @@
 
 #include "mozilla/Components.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/EndianUtils.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/IOBuffers.h"
 #include "mozilla/Logging.h"
@@ -28,7 +29,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/scache/StartupCache.h"
-#include "mozilla/scache/StartupCacheUtils.h"
 
 #include "crc32c.h"
 #include "js/CompileOptions.h"              // JS::ReadOnlyCompileOptions
@@ -47,16 +47,6 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "xpcpublic.h"
-
-#if defined(XP_LINUX)
-#  include <sys/mman.h>
-// MADV_COLD was added in Linux 5.4 / Android API 30; define it for older SDKs
-// so we can call madvise() unconditionally (the kernel will return EINVAL and
-// we ignore it).
-#  ifndef MADV_COLD
-#    define MADV_COLD 20
-#  endif
-#endif
 
 #define STARTUP_COMPLETE_TOPIC "browser-delayed-startup-finished"
 #define DOC_ELEM_INSERTED_TOPIC "document-element-inserted"
@@ -216,15 +206,8 @@ void ScriptPreloader::InitContentChild(ContentParent& parent) {
   // should be a sufficiently rare occurrence that it's not worth trying to
   // handle specially.
   auto processType = GetChildProcessType(parent.GetRemoteType());
-  bool wantScriptData =
-      !cache.mRequestedChildProcessStencils.contains(processType);
-  cache.mRequestedChildProcessStencils += processType;
-
-  // If we're starting a web process (e.g. a preload process during startup),
-  // make sure we receive its script data before kicking off the cache write.
-  if (processType == ProcessType::Web) {
-    cache.mRequiredChildProcessStencils += processType;
-  }
+  bool wantScriptData = !cache.mInitializedProcesses.contains(processType);
+  cache.mInitializedProcesses += processType;
 
   auto fd = cache.mCacheData->cloneFileDescriptor();
   // Don't send original cache data to new processes if the cache has been
@@ -276,34 +259,6 @@ ScriptPreloader::~ScriptPreloader() { Cleanup(); }
 void ScriptPreloader::Cleanup() {
   mScripts.Clear();
   UnregisterWeakMemoryReporter(this);
-}
-
-void ScriptPreloader::StartCacheWriteIfReady() {
-  // Check if we're the right cache. Only the this-process ScriptPreloader in
-  // the parent process should do any cache writing.
-  if (!mChildCache) {
-    // If we don't have a child cache then we're not the right ScriptPreloader.
-    return;
-  }
-
-  if (mSaveComplete || mSaveThread) {
-    // We've already written the cache or are in the process of doing so.
-    return;
-  }
-
-  if (!mStartupHasAdvancedToCacheWritingStage) {
-    // Too early to write.
-    return;
-  }
-
-  if (!mChildCache->mReceivedChildProcessStencils.contains(
-          mChildCache->mRequiredChildProcessStencils)) {
-    // Still missing some expected child process script data.
-    return;
-  }
-
-  // Everything's ready, let's kick off the write task.
-  StartCacheWrite();
 }
 
 void ScriptPreloader::StartCacheWrite() {
@@ -374,19 +329,10 @@ nsresult ScriptPreloader::Observe(nsISupports* subject, const char* topic,
 
     MOZ_ASSERT(mStartupFinished);
     MOZ_ASSERT(XRE_IsParentProcess());
-    mStartupHasAdvancedToCacheWritingStage = true;
 
-#if defined(XP_LINUX)
-    // Startup is complete; mark the cache mapping cold so the kernel can
-    // reclaim these pages under memory pressure without unmapping them.
-    if (mCacheData->initialized()) {
-      // MADV_COLD may return EINVAL on kernels older than 5.4.
-      (void)madvise(mCacheData->get<uint8_t>().get(), mCacheData->size(),
-                    MADV_COLD);
+    if (mChildCache && !mSaveComplete && !mSaveThread) {
+      StartCacheWrite();
     }
-#endif
-
-    StartCacheWriteIfReady();
   } else if (mContentStartupFinishedTopic.Equals(topic)) {
     // If this is an uninitialized about:blank viewer or a chrome: document
     // (which should always be an XBL binding document), ignore it. We don't
@@ -452,23 +398,6 @@ void ScriptPreloader::FinishContentStartup() {
 
 bool ScriptPreloader::WillWriteScripts() {
   return !mDataPrepared && (XRE_IsParentProcess() || mChildActor);
-}
-
-bool ScriptPreloader::Active() const {
-  if (!mCacheInitialized) {
-    return false;
-  }
-
-  if (!mStartupFinished) {
-    return true;
-  }
-
-  if (StaticPrefs::javascript_options_force_preloader_active() &&
-      xpc::IsInAutomation()) {
-    return true;
-  }
-
-  return false;
 }
 
 Result<nsCOMPtr<nsIFile>, nsresult> ScriptPreloader::GetCacheFile(
@@ -901,12 +830,12 @@ nsresult ScriptPreloader::Run() {
   MonitorAutoLock mal(mSaveMonitor.Lock());
   mSaveMonitor.NoteLockHeld();
 
-  // Wait about 3 seconds before saving, to avoid unnecessary IO
+  // Ideally wait about 10 seconds before saving, to avoid unnecessary IO
   // during early startup. But only if the cache hasn't been invalidated,
   // since that can trigger a new write during shutdown, and we don't want to
   // cause shutdown hangs.
   if (!mCacheInvalidated) {
-    mal.Wait(TimeDuration::FromSeconds(3));
+    mal.Wait(TimeDuration::FromSeconds(10));
   }
 
   auto result = URLPreloader::GetSingleton().WriteCache();
@@ -1025,14 +954,6 @@ void ScriptPreloader::NoteStencil(const nsCString& url,
   script->mProcessTypes += processType;
 }
 
-void ScriptPreloader::NoteReceivedAllChildStencilsForProcess(
-    ProcessType aProcessType) {
-  mReceivedChildProcessStencils += aProcessType;
-
-  // We're the child cache. Tell the root cache to trigger a write if ready.
-  GetSingleton().StartCacheWriteIfReady();
-}
-
 /* static */
 void ScriptPreloader::FillCompileOptionsForCachedStencil(
     JS::CompileOptions& options) {
@@ -1066,36 +987,24 @@ already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencil(
       "ScriptPreloader must be initialized before getting cached "
       "scripts in the content process.");
 
-#ifdef DEBUG
-  // All callers should have already checked that the script is from omni.ja
-  // (Gre or App resource type) before calling GetCachedStencil.
-  MOZ_ASSERT(path.Find("/resource/gre/"_ns) != kNotFound ||
-                 path.Find("/resource/app/"_ns) != kNotFound,
-             "GetCachedStencil should only be called for omni.ja scripts");
-#endif
-
   // If a script is used by both the parent and the child, it's stored only
   // in the child cache.
   if (mChildCache) {
     RefPtr<JS::Stencil> stencil =
         mChildCache->GetCachedStencilInternal(cx, options, path);
     if (stencil) {
-#ifndef ANDROID
       glean::script_preloader::requests
           .EnumGet(glean::script_preloader::RequestsLabel::eHitchild)
           .Add();
-#endif
       return stencil.forget();
     }
   }
 
   RefPtr<JS::Stencil> stencil = GetCachedStencilInternal(cx, options, path);
-#ifndef ANDROID
   glean::script_preloader::requests
       .EnumGet(stencil ? glean::script_preloader::RequestsLabel::eHit
                        : glean::script_preloader::RequestsLabel::eMiss)
       .Add();
-#endif
 
   return stencil.forget();
 }

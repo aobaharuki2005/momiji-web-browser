@@ -10,14 +10,20 @@
 //! The foreign side should:
 //!   * Input a [ForeignFutureCallback] and a `u64` handle in their scaffolding function.
 //!     This is the sender, converted to a raw pointer, and an extern "C" function that sends the result.
+//!   * Return a [ForeignFuture], which represents the foreign task object corresponding to the async function.
 //!   * Call the [ForeignFutureCallback] when the async function completes with:
 //!     * The `u64` handle initially passed in
-//!     * The `ForeignFutureResult` struct for the call
-//!   * Optionally, set the `ForeignFutureDroppedCallback` value if you want to be notified when the
-//!     Future is dropped in Rust.  For languages that support it, this can be hooked up to
-//!     cancelling the async task for the method.
+//!     * The `ForeignFutureResult` for the call
+//!   * Wait for the [ForeignFutureHandle::free] function to be called to free the task object.
+//!     If this is called before the task completes, then the task will be cancelled.
 
 use crate::{oneshot, LiftReturn, RustCallStatus};
+
+/// Handle for a foreign future
+pub type ForeignFutureHandle = u64;
+
+/// Handle for a callback data associated with a foreign future.
+pub type ForeignFutureCallbackData = *mut ();
 
 /// Callback that's passed to a foreign async functions.
 ///
@@ -34,58 +40,33 @@ pub struct ForeignFutureResult<T> {
     call_status: RustCallStatus,
 }
 
-/// C callback function that's called when the Rust side of a foreign future is dropped
-pub type ForeignFutureDroppedCallback = extern "C" fn(data: u64);
-
-/// C struct that represents a foreign future dropped callback.
+/// C struct that represents a foreign future, used to perform a call to a foreign async method.
+///
+/// This is what's returned by the async scaffolding functions.
 #[repr(C)]
-pub struct ForeignFutureDroppedCallbackStruct {
-    pub callback_data: u64,
-    pub callback: ForeignFutureDroppedCallback,
+pub struct ForeignFuture {
+    pub handle: ForeignFutureHandle,
+    pub free: extern "C" fn(handle: ForeignFutureHandle),
 }
 
-impl Default for ForeignFutureDroppedCallbackStruct {
-    /// The default value implements a no-op callback.
-    /// This will be used for languages that don't set their own callbacks.
-    fn default() -> Self {
-        extern "C" fn callback(_data: u64) {}
-        Self {
-            callback_data: 0,
-            callback,
-        }
-    }
-}
-
-impl Drop for ForeignFutureDroppedCallbackStruct {
+impl Drop for ForeignFuture {
     fn drop(&mut self) {
-        (self.callback)(self.callback_data)
+        (self.free)(self.handle)
     }
 }
 
-unsafe impl Send for ForeignFutureDroppedCallbackStruct {}
+unsafe impl Send for ForeignFuture {}
 
 pub async fn foreign_async_call<F, T, UT>(call_scaffolding_function: F) -> T
 where
-    F: FnOnce(ForeignFutureCallback<T::ReturnType>, u64, &mut ForeignFutureDroppedCallbackStruct),
+    F: FnOnce(ForeignFutureCallback<T::ReturnType>, u64) -> ForeignFuture,
     T: LiftReturn<UT>,
 {
-    // Create a oneshot channel that will receive the result of the callback method
     let (sender, receiver) = oneshot::channel::<ForeignFutureResult<T::ReturnType>>();
-    // Create complete callback/data from the oneshot channel
-    let complete_callback = foreign_future_complete::<T, UT>;
-    let complete_callback_data = sender.into_raw() as u64;
-    // Create a `ForeignFutureDroppedCallback`.
-    // Since this is owned by the `Future` that we're generating, when the future is dropped it
-    // will be dropped to.
-    // future is.
-    let mut foreign_future_dropped_callback = ForeignFutureDroppedCallbackStruct::default();
-    // Call the async method
-    call_scaffolding_function(
-        complete_callback,
-        complete_callback_data,
-        &mut foreign_future_dropped_callback,
-    );
-    // Await the result and use it to return a value
+    // Keep the ForeignFuture around, even though we don't ever use it.
+    // The important thing is that the ForeignFuture will be dropped when this Future is.
+    let _foreign_future =
+        call_scaffolding_function(foreign_future_complete::<T, UT>, sender.into_raw() as u64);
     let result = receiver.await;
     T::lift_foreign_return(result.return_value, result.call_status)
 }
@@ -122,25 +103,24 @@ mod test {
     impl MockForeignFuture {
         fn new() -> Self {
             let callback_info = Arc::new(OnceCell::new());
-            let future_dropped_call_count = Arc::new(AtomicU32::new(0));
+            let freed = Arc::new(AtomicU32::new(0));
 
             let rust_future: Pin<Box<dyn Future<Output = String>>> = {
                 let callback_info = callback_info.clone();
-                let future_dropped_call_count = future_dropped_call_count.clone();
+                let freed = freed.clone();
                 Box::pin(foreign_async_call::<_, String, crate::UniFfiTag>(
-                    move |callback, data, out_dropped_callback| {
+                    move |callback, data| {
                         callback_info.set((callback, data)).unwrap();
-                        *out_dropped_callback = ForeignFutureDroppedCallbackStruct {
-                            callback_data: Arc::into_raw(future_dropped_call_count) as *mut ()
-                                as u64,
-                            callback: Self::future_drapped_callback,
-                        };
+                        ForeignFuture {
+                            handle: Arc::into_raw(freed) as *mut () as u64,
+                            free: Self::free,
+                        }
                     },
                 ))
             };
             let rust_future = Some(rust_future);
             let mut mock_foreign_future = Self {
-                freed: future_dropped_call_count,
+                freed,
                 callback_info,
                 rust_future,
             };
@@ -189,7 +169,7 @@ mod test {
             self.freed.load(Ordering::Relaxed)
         }
 
-        extern "C" fn future_drapped_callback(handle: u64) {
+        extern "C" fn free(handle: u64) {
             let flag = unsafe { Arc::from_raw(handle as *mut AtomicU32) };
             flag.fetch_add(1, Ordering::Relaxed);
         }

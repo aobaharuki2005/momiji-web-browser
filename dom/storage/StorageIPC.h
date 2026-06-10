@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -199,7 +201,7 @@ class SessionStorageObserverChild final : public PSessionStorageObserverChild {
 
  public:
   void AssertIsOnOwningThread() const {
-    NS_ASSERT_OWNINGTHREAD(SessionStorageObserverChild);
+    NS_ASSERT_OWNINGTHREAD(LocalStorageCacheChild);
   }
 
  private:
@@ -237,7 +239,7 @@ class SessionStorageCacheChild final
 
  public:
   void AssertIsOnOwningThread() const {
-    NS_ASSERT_OWNINGTHREAD(SessionStorageCacheChild);
+    NS_ASSERT_OWNINGTHREAD(SesionStoragManagerChild);
   }
 
  private:
@@ -272,7 +274,7 @@ class SessionStorageManagerChild final
 
  public:
   void AssertIsOnOwningThread() const {
-    NS_ASSERT_OWNINGTHREAD(SessionStorageManagerChild);
+    NS_ASSERT_OWNINGTHREAD(SesionStoragManagerChild);
   }
 
  private:
@@ -364,7 +366,7 @@ class StorageDBParent final : public PBackgroundStorageParent {
     virtual ~CacheParentBridge() = default;
 
     // LocalStorageCacheBridge
-    virtual nsCString Origin() const override;
+    virtual const nsCString Origin() const override;
     virtual const nsCString& OriginNoSuffix() const override {
       return mOriginNoSuffix;
     }
@@ -560,7 +562,7 @@ class SessionStorageManagerParent final
 
   mozilla::ipc::IPCResult RecvClearStorages(
       const OriginAttributesPattern& aPattern, const nsACString& aOriginScope,
-      const DomainMatchingMode& aMode) override;
+      const uint32_t& aMode) override;
 
  private:
   ~SessionStorageManagerParent();

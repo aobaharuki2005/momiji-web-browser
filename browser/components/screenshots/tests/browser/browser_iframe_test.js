@@ -35,8 +35,8 @@ add_task(async function test_selectingElementsInIframes() {
 
               // Element within the first iframe
               iframeDivDims = {
-                left: iframeDivDims.left,
-                top: iframeDivDims.top,
+                left: iframeDivDims.left + content.window.mozInnerScreenX,
+                top: iframeDivDims.top + content.window.mozInnerScreenY,
                 width: iframeDivDims.width,
                 height: iframeDivDims.height,
               };
@@ -52,8 +52,12 @@ add_task(async function test_selectingElementsInIframes() {
 
                   // Element within the nested iframe
                   secondIframeDivDims = {
-                    left: secondIframeDivDims.left,
-                    top: secondIframeDivDims.top,
+                    left:
+                      secondIframeDivDims.left +
+                      content.document.defaultView.mozInnerScreenX,
+                    top:
+                      secondIframeDivDims.top +
+                      content.document.defaultView.mozInnerScreenY,
                     width: secondIframeDivDims.width,
                     height: secondIframeDivDims.height,
                   };
@@ -62,30 +66,23 @@ add_task(async function test_selectingElementsInIframes() {
                 }
               );
 
-              const nestedIframeRect = nestedIframe.getBoundingClientRect();
-              nestedIframeDivDims.left +=
-                nestedIframeRect.left + nestedIframe.clientLeft;
-              nestedIframeDivDims.top +=
-                nestedIframeRect.top + nestedIframe.clientTop;
-
               return [iframeDivDims, nestedIframeDivDims];
             }
           );
 
-          const iframeRect = iframe.getBoundingClientRect();
           // Offset each element position for the browser window
           for (let dims of iframesDivsDimArr) {
-            dims.left += iframeRect.left + iframe.clientLeft;
-            dims.top += iframeRect.top + iframe.clientTop;
+            dims.left -= content.window.mozInnerScreenX;
+            dims.top -= content.window.mozInnerScreenY;
           }
 
           return [divDims].concat(iframesDivsDimArr);
         }
       );
 
-      for (let el of elementDimensions) {
-        await helper.waitForStateChange(["crosshairs"]);
+      info(JSON.stringify(elementDimensions, null, 2));
 
+      for (let el of elementDimensions) {
         let x = el.left + el.width / 2;
         let y = el.top + el.height / 2;
 

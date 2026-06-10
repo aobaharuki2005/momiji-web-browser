@@ -37,7 +37,7 @@ class ResponsiveActor extends Actor {
   }
 
   get win() {
-    return this.docShell.chromeEventHandler.documentGlobal;
+    return this.docShell.chromeEventHandler.ownerGlobal;
   }
 
   /* Touch events override */

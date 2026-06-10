@@ -43,14 +43,14 @@ info: |
   Return NormalCompletion(undefined).
 
 
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var sample;
 
-  sample = new TA(makeCtorArg([42n]));
+  sample = new TA([42n]);
 
   assert.throws(TypeError, function() {
     sample.fill(undefined);

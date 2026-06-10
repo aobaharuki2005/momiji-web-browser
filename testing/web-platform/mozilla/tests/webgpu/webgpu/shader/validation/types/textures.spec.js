@@ -110,7 +110,7 @@ combine('comma', ['', ','])
 fn((t) => {
   const { format, access, comma } = t.params;
   const isFormatValid = isTextureFormatUsableAsStorageFormatInCreateShaderModule(
-    t.device.features,
+    t.device,
     format
   );
   const isAccessValid = kAccessModes.includes(access);

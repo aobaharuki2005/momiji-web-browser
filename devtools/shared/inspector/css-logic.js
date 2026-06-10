@@ -71,7 +71,6 @@ exports.STATUS = {
  * Mapping of CSS at-Rule className to CSSRule type name.
  */
 exports.CSSAtRuleClassNameType = {
-  CSSAppearanceBaseRule: "appearance-base",
   CSSContainerRule: "container",
   CSSCounterStyleRule: "counter-style",
   CSSDocumentRule: "document",
@@ -681,7 +680,7 @@ const findCssSelector = function (ele) {
     return "";
   }
 
-  const cssEscape = ele.documentGlobal.CSS.escape;
+  const cssEscape = ele.ownerGlobal.CSS.escape;
 
   // document.querySelectorAll("#id") returns multiple if elements share an ID
   if (
@@ -752,7 +751,7 @@ function getCssPath(ele) {
     return "";
   }
 
-  const nodeGlobal = ele.documentGlobal.Node;
+  const nodeGlobal = ele.ownerGlobal.Node;
 
   const getElementSelector = element => {
     if (!element.localName) {
@@ -814,7 +813,7 @@ function getXPath(ele) {
   // Otherwise walk the DOM up and create a part for each ancestor.
   const parts = [];
 
-  const nodeGlobal = ele.documentGlobal.Node;
+  const nodeGlobal = ele.ownerGlobal.Node;
   // Use nodeName (instead of localName) so namespace prefix is included (if any).
   while (ele && ele.nodeType === nodeGlobal.ELEMENT_NODE) {
     let nbOfPreviousSiblings = 0;

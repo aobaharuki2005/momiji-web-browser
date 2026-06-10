@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmJSPromiseIntegrationEnabled()
-
 // Create a bunch of outstanding suspended stacks and test GC behaviour.
 
 let promises = [];

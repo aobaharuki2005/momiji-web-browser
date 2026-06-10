@@ -4,13 +4,11 @@
 
 package org.mozilla.fenix.ui.efficiency.tests
 
-import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.ui.efficiency.helpers.BaseTest
 
 class SettingsLanguageTest : BaseTest() {
 
-    @Ignore("Covered by verifyNavigationReachability[1: SettingsLanguagePage (TBD) — Navigation Reachability]")
     @Test
     fun verifyTheSettingsLanguageSectionTest() {
         on.settingsLanguage.navigateToPage()

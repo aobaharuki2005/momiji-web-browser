@@ -47,8 +47,8 @@ def main(header, fallback_table):
 
     # Glean mappings from decompositions
 
-    for codepoint in range(UNICODE_LIMIT):
-        char = chr(codepoint)
+    for char in range(UNICODE_LIMIT):
+        char = chr(char)
         if is_combining_diacritic(char) or is_math_or_music_symbol(char):
             continue
         decomposition = normalize("NFD", char)
@@ -102,8 +102,8 @@ def main(header, fallback_table):
                 and mappings[i].char >> 8 == mappings[i + 1].char >> 8
                 and mappings[i + 1].char - mappings[i].char > 1
             ):
-                c = mappings[i].char + 1
-                mappings.insert(i + 1, BaseCharMapping(c, c))
+                char = mappings[i].char + 1
+                mappings.insert(i + 1, BaseCharMapping(char, char))
                 i += 1
             i += 1
         last = mappings[i].char & 0xFF

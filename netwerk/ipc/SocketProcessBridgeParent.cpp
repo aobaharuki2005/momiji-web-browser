@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -46,8 +47,8 @@ mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitBackgroundDataBridge(
   transportQueue->Dispatch(NS_NewRunnableFunction(
       "BackgroundDataBridgeParent::Bind",
       [endpoint = std::move(aEndpoint), aChannelID]() mutable {
-        RefPtr<BackgroundDataBridgeParent> actor =
-            BackgroundDataBridgeParent::Create(aChannelID);
+        RefPtr<net::BackgroundDataBridgeParent> actor =
+            new net::BackgroundDataBridgeParent(aChannelID);
         endpoint.Bind(actor);
       }));
   return IPC_OK();

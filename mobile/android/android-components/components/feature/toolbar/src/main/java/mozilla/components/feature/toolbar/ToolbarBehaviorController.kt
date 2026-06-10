@@ -5,9 +5,7 @@
 package mozilla.components.feature.toolbar
 
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
@@ -27,7 +25,6 @@ class ToolbarBehaviorController(
     private val toolbar: ScrollableToolbar,
     private val store: BrowserStore,
     private val customTabId: String? = null,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) {
     @VisibleForTesting
     internal var updatesScope: CoroutineScope? = null
@@ -36,7 +33,7 @@ class ToolbarBehaviorController(
      * Starts listening for changes in the current tab and updates how the toolbar should behave.
      */
     fun start() {
-        updatesScope = store.flowScoped(dispatcher = mainDispatcher) { flow ->
+        updatesScope = store.flowScoped { flow ->
             flow.mapNotNull { state ->
                 state.findCustomTabOrSelectedTab(customTabId)
             }.distinctUntilChangedBy {

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -98,7 +100,6 @@ static const char* const sExtensionNames[] = {
     "GL_ARB_color_buffer_float",
     "GL_ARB_compatibility",
     "GL_ARB_copy_buffer",
-    "GL_ARB_copy_image",
     "GL_ARB_depth_clamp",
     "GL_ARB_depth_texture",
     "GL_ARB_draw_buffers",
@@ -354,7 +355,7 @@ static bool LoadSymbolsWithDesc(const SymbolLoader& loader,
 
   if (desc) {
     const nsPrintfCString err("Failed to load symbols for %s.", desc);
-    NS_ERROR(err.get());
+    NS_ERROR(err.BeginReading());
   }
   return false;
 }
@@ -573,11 +574,7 @@ bool GLContext::InitImpl() {
   MOZ_ASSERT(majorVer < 10);
   MOZ_ASSERT(minorVer < 10);
   mVersion = majorVer * 100 + minorVer * 10;
-  if (mVersion < 200) {
-    // Mac OSX 10.6/10.7 machines with Intel GPUs claim only OpenGL 1.4 but
-    // have all the GL2+ extensions that we need.
-    mVersion = 200;
-  }
+  if (mVersion < 200) return false;
 
   ////
 
@@ -631,14 +628,9 @@ bool GLContext::InitImpl() {
 
   ////////////////
 
-  const char* glVendorString =
-      reinterpret_cast<const char*>(fGetString(LOCAL_GL_VENDOR));
-  const char* glRendererString =
-      reinterpret_cast<const char*>(fGetString(LOCAL_GL_RENDERER));
+  const char* glVendorString = (const char*)fGetString(LOCAL_GL_VENDOR);
+  const char* glRendererString = (const char*)fGetString(LOCAL_GL_RENDERER);
   if (!glVendorString || !glRendererString) return false;
-
-  mVendorString.Assign(glVendorString);
-  mRendererString.Assign(glRendererString);
 
   // The order of these strings must match up with the order of the enum
   // defined in GLContext.h for vendor IDs.
@@ -674,7 +666,6 @@ bool GLContext::InitImpl() {
       "NVIDIA Tegra",
       "Android Emulator",
       "Gallium 0.4 on llvmpipe",
-      "Intel HD Graphics 3000 OpenGL Engine",
       "Microsoft Basic Render Driver",
       "Samsung Xclipse",
       "Unknown"};
@@ -688,9 +679,7 @@ bool GLContext::InitImpl() {
   }
 
   {
-    const auto versionStr =
-        reinterpret_cast<const char*>(fGetString(LOCAL_GL_VERSION));
-    mVersionString.Assign(versionStr);
+    const auto versionStr = (const char*)fGetString(LOCAL_GL_VERSION);
     if (strstr(versionStr, "Mesa")) {
       mIsMesa = true;
     }
@@ -757,7 +746,7 @@ bool GLContext::InitImpl() {
 
     if (Renderer() == GLRenderer::AndroidEmulator) {
       // Bug 1665300
-      mSymbols.fGetGraphicsResetStatus = nullptr;
+      mSymbols.fGetGraphicsResetStatus = 0;
     }
 
     if (Vendor() == GLVendor::Vivante) {
@@ -899,30 +888,12 @@ bool GLContext::InitImpl() {
     int maxTexSize = INT32_MAX;
     int maxCubeSize = INT32_MAX;
 #ifdef XP_MACOSX
-    if (!nsCocoaFeatures::IsAtLeastVersion(10, 12)) {
-      if (mVendor == GLVendor::Intel) {
-        // see bug 737182 for 2D textures, bug 684882 for cube map textures.
-        maxTexSize = 4096;
-        maxCubeSize = 512;
-      } else if (mVendor == GLVendor::NVIDIA) {
-        if (nsCocoaFeatures::OnMountainLionOrLater()) {
-          // See bug 879656.  8192 fails, 8191 works.
-          mMaxTextureSize = std::min(mMaxTextureSize, 8191);
-          mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 8191);
-        } else {
-          // See bug 877949.
-          mMaxTextureSize = std::min(mMaxTextureSize, 4096);
-          mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
-        }
-      }
-    } else {
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1544446
-      // Mojave exposes 16k textures, but gives FRAMEBUFFER_UNSUPPORTED for any
-      // 16k*16k FB except rgba8 without depth/stencil.
-      // The max supported sizes changes based on involved formats.
-      // (RGBA32F more restrictive than RGBA16F)
-      maxTexSize = 8192;
-    }
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1544446
+    // Mojave exposes 16k textures, but gives FRAMEBUFFER_UNSUPPORTED for any
+    // 16k*16k FB except rgba8 without depth/stencil.
+    // The max supported sizes changes based on involved formats.
+    // (RGBA32F more restrictive than RGBA16F)
+    maxTexSize = 8192;
 #endif
 #ifdef MOZ_X11
     if (mVendor == GLVendor::Nouveau) {
@@ -1122,13 +1093,6 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_storage);
-    }
-
-    if (IsSupported(GLFeature::copy_image)) {
-        const SymLoadStruct symbols[] = {
-            {(PRFuncPtr*)&mSymbols.fCopyImageSubData, {{"glCopyImageSubData"}}},
-            END_SYMBOLS};
-        fnLoadForFeature(symbols, GLFeature::copy_image);
     }
 
     if (IsSupported(GLFeature::sampler_objects)) {
@@ -1703,12 +1667,14 @@ void GLContext::DebugCallback(GLenum source, GLenum type, GLuint id,
   }
 
   printf_stderr("[KHR_debug: 0x%" PRIxPTR "] ID %u: %s, %s, %s:\n    %s\n",
-                (uintptr_t)this, id, sourceStr.get(), typeStr.get(),
-                sevStr.get(), message);
+                (uintptr_t)this, id, sourceStr.BeginReading(),
+                typeStr.BeginReading(), sevStr.BeginReading(), message);
 }
 
 void GLContext::InitExtensions() {
   MOZ_GL_ASSERT(this, IsCurrent());
+
+  std::vector<nsCString> driverExtensionList;
 
   [&]() {
     if (mSymbols.fGetStringi) {
@@ -1716,27 +1682,22 @@ void GLContext::InitExtensions() {
       if (GetPotentialInteger(LOCAL_GL_NUM_EXTENSIONS, (GLint*)&count)) {
         for (GLuint i = 0; i < count; i++) {
           // This is UTF-8.
-          const char* rawExt = reinterpret_cast<const char*>(
-              fGetStringi(LOCAL_GL_EXTENSIONS, i));
+          const char* rawExt = (const char*)fGetStringi(LOCAL_GL_EXTENSIONS, i);
 
           // We CANNOT use nsDependentCString here, because the spec doesn't
           // guarantee that the pointers returned are different, only that their
           // contents are. On Flame, each of these index string queries returns
           // the same address.
-          mExtensionStrings.AppendElement(nsCString(rawExt));
+          driverExtensionList.push_back(nsCString(rawExt));
         }
         return;
       }
     }
 
-    const char* rawExts =
-        reinterpret_cast<const char*>(fGetString(LOCAL_GL_EXTENSIONS));
+    const char* rawExts = (const char*)fGetString(LOCAL_GL_EXTENSIONS);
     if (rawExts) {
-      for (const auto& extension : nsDependentCString(rawExts).Split(' ')) {
-        if (!extension.IsEmpty()) {
-          mExtensionStrings.AppendElement(extension);
-        }
-      }
+      nsDependentCString exts(rawExts);
+      SplitByChar(exts, ' ', &driverExtensionList);
     }
   }();
   const auto err = fGetError();
@@ -1745,10 +1706,10 @@ void GLContext::InitExtensions() {
   const bool shouldDumpExts = ShouldDumpExts();
   if (shouldDumpExts) {
     printf_stderr("%i GL driver extensions: (*: recognized)\n",
-                  (uint32_t)mExtensionStrings.Length());
+                  (uint32_t)driverExtensionList.size());
   }
 
-  MarkBitfieldByStrings(mExtensionStrings, shouldDumpExts, sExtensionNames,
+  MarkBitfieldByStrings(driverExtensionList, shouldDumpExts, sExtensionNames,
                         &mAvailableExtensions);
 
   if (WorkAroundDriverBugs()) {
@@ -1795,15 +1756,6 @@ void GLContext::InitExtensions() {
     }
 
 #ifdef XP_MACOSX
-    // Bug 1009642: On OSX Mavericks (10.9), the driver for Intel HD
-    // 3000 appears to be buggy WRT updating sub-images of S3TC
-    // textures with glCompressedTexSubImage2D. Works on Intel HD 4000
-    // and Intel HD 5000/Iris that I tested.
-    // Bug 1124996: Appears to be the same on OSX Yosemite (10.10)
-    if (Renderer() == GLRenderer::IntelHD3000) {
-      MarkExtensionUnsupported(EXT_texture_compression_s3tc);
-    }
-
     // OSX supports EXT_texture_sRGB in Legacy contexts, but not in Core
     // contexts. Though EXT_texture_sRGB was included into GL2.1, it *excludes*
     // the interactions with s3tc. Strictly speaking, you must advertize support
@@ -1826,7 +1778,7 @@ void GLContext::InitExtensions() {
 }
 
 void GLContext::PlatformStartup() {
-  RegisterStrongMemoryReporter(MakeAndAddRef<GfxTexturesReporter>());
+  RegisterStrongMemoryReporter(new GfxTexturesReporter());
 }
 
 // Common code for checking for both GL extensions and GLX extensions.
@@ -2041,18 +1993,10 @@ void GLContext::AssertNotPassingStackBufferToTheGL(const void* ptr) {
   // approach of only asserting when address and someStackAddress are
   // on the same page.
   bool isStackAddress = pageDistance <= 1;
-
-#  if !(defined(_WIN32) && !defined(_WIN64))
-  // On 32-bit Windows, heap and stack are adjacent in the limited 2GB address
-  // space, causing false positives where legitimate heap allocations appear
-  // within 1 page of the stack. Disable this assertion there.
   MOZ_ASSERT(!isStackAddress,
              "Please don't pass stack arrays to the GL. "
              "Consider using HeapCopyOfStackArray. "
              "See bug 1005658.");
-#  else
-  (void)isStackAddress;
-#  endif
 }
 
 void GLContext::CreatedProgram(GLContext* aOrigin, GLuint aName) {
@@ -2181,7 +2125,7 @@ static void ReportArrayContents(
   for (uint32_t i = 0; i < copy.Length(); ++i) {
     if (lastContext != copy[i].origin) {
       if (lastContext) {
-        printf_stderr("%s\n", line.get());
+        printf_stderr("%s\n", line.BeginReading());
         line.Assign("");
       }
       line.Append(nsPrintfCString("  [%p - %s] ", copy[i].origin,
@@ -2191,7 +2135,7 @@ static void ReportArrayContents(
     line.AppendInt(copy[i].name);
     line.Append(' ');
   }
-  printf_stderr("%s\n", line.get());
+  printf_stderr("%s\n", line.BeginReading());
 }
 
 void GLContext::ReportOutstandingNames() {
@@ -2688,7 +2632,7 @@ void GLContext::OnContextLostError() const {
   }
 
   const nsPrintfCString hex("<enum 0x%04x>", err);
-  return std::string(hex.View());
+  return hex.BeginReading();
 }
 
 // --
@@ -2727,11 +2671,11 @@ void GLContext::AfterGLCall_Debug(const char* const funcName) const {
     const auto errStr = GLErrorToString(err);
     const auto text = nsPrintfCString("%s: Generated unexpected %s error",
                                       funcName, errStr.c_str());
-    printf_stderr("[gl:%p] %s.\n", this, text.get());
+    printf_stderr("[gl:%p] %s.\n", this, text.BeginReading());
 
     const bool abortOnError = mDebugFlags & DebugFlagAbortOnError;
     if (abortOnError && err != LOCAL_GL_CONTEXT_LOST) {
-      gfxCriticalErrorOnce() << text.get();
+      gfxCriticalErrorOnce() << text.BeginReading();
       MOZ_CRASH(
           "Aborting... (Run with MOZ_GL_DEBUG_ABORT_ON_ERROR=0 to disable)");
     }

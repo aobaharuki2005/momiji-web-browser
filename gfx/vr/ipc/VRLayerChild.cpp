@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -106,6 +108,8 @@ void VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo) {
   SendSubmitFrame(*mThisFrameTextureDesc, frameId, mLeftEyeRect, mRightEyeRect);
 }
 
+bool VRLayerChild::IsIPCOpen() { return mIPCOpen; }
+
 void VRLayerChild::ClearSurfaces() {
   mThisFrameTextureDesc = Nothing();
   mLastFrameTextureDesc = Nothing();
@@ -115,13 +119,33 @@ void VRLayerChild::ClearSurfaces() {
   }
 }
 
+void VRLayerChild::ActorDestroy(ActorDestroyReason aWhy) { mIPCOpen = false; }
+
 // static
-already_AddRefed<VRLayerChild> VRLayerChild::CreateIPDLActor() {
+PVRLayerChild* VRLayerChild::CreateIPDLActor() {
   if (!StaticPrefs::dom_vr_enabled() && !StaticPrefs::dom_vr_webxr_enabled()) {
     return nullptr;
   }
 
-  return MakeAndAddRef<VRLayerChild>();
+  VRLayerChild* c = new VRLayerChild();
+  c->AddIPDLReference();
+  return c;
+}
+
+// static
+bool VRLayerChild::DestroyIPDLActor(PVRLayerChild* actor) {
+  static_cast<VRLayerChild*>(actor)->ReleaseIPDLReference();
+  return true;
+}
+
+void VRLayerChild::AddIPDLReference() {
+  MOZ_ASSERT(mIPCOpen == false);
+  mIPCOpen = true;
+  AddRef();
+}
+void VRLayerChild::ReleaseIPDLReference() {
+  MOZ_ASSERT(mIPCOpen == false);
+  Release();
 }
 
 }  // namespace mozilla::gfx

@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 var log;
 var proxy = new Proxy({
     year: "numeric",

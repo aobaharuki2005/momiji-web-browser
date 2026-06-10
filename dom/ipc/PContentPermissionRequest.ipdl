@@ -16,6 +16,7 @@ protocol PContentPermissionRequest
   manager PContent;
 
 parent:
+  async prompt();
   async Destroy();
 
 child:

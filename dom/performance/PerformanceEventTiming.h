@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_PerformanceEventTiming_h_
-#define mozilla_dom_PerformanceEventTiming_h_
+#ifndef mozilla_dom_PerformanceEventTiming_h___
+#define mozilla_dom_PerformanceEventTiming_h___
 
 #include "Performance.h"
 #include "mozilla/EventForwards.h"
@@ -61,7 +63,7 @@ class PerformanceEventTiming final
   bool HasKnownInteractionId() const { return mInteractionId.isSome(); }
 
   void SetInteractionId(Maybe<uint64_t> aInteractionId) {
-    mInteractionId = std::move(aInteractionId);
+    mInteractionId = aInteractionId;
   }
 
   void SetInteractionId(uint64_t aInteractionId) {
@@ -112,16 +114,6 @@ class PerformanceEventTiming final
 
   void FinalizeEventTiming(const WidgetEvent* aEvent);
 
-  // Records the time of first modal dialog appearance during event processing.
-  // Only the earliest time is kept to handle sequential or nested dialogs.
-  void SetFallbackTimeIfNotSet(DOMHighResTimeStamp aTime) {
-    if (mFallbackTime.isNothing()) {
-      mFallbackTime = Some(aTime);
-    }
-  }
-
-  Maybe<DOMHighResTimeStamp> GetFallbackTime() const { return mFallbackTime; }
-
   EventMessage GetMessage() const { return mMessage; }
 
  private:
@@ -152,8 +144,6 @@ class PerformanceEventTiming final
   bool mCancelable;
 
   Maybe<uint64_t> mInteractionId;
-
-  Maybe<DOMHighResTimeStamp> mFallbackTime;
 
   EventMessage mMessage;
 };

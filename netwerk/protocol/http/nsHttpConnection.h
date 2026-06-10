@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHttpConnection_h_
-#define nsHttpConnection_h_
+#ifndef nsHttpConnection_h__
+#define nsHttpConnection_h__
 
 #include <functional>
 #include "HttpConnectionBase.h"
@@ -92,14 +93,6 @@ class nsHttpConnection final : public HttpConnectionBase,
            (mKeepAliveMask && mKeepAlive);
   }
 
-  // Cheap reuse check without the IsAlive() socket probe. Used by
-  // AvailableForDispatchNow() to avoid a redundant probe before
-  // GetIdleConnection() performs the definitive check.
-  bool CanReuseLikely();
-  // Returns a short string naming which CanDirectlyActivate() condition is
-  // false, for use in diagnostic logs. Returns "ok" when all pass.
-  const char* CanDirectlyActivateReason() const;
-
   // Returns time in seconds for how long connection can be reused.
   uint32_t TimeToLive();
 
@@ -122,12 +115,6 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   int64_t MaxBytesRead() { return mMaxBytesRead; }
   HttpVersion GetLastHttpResponseVersion() { return mLastHttpResponseVersion; }
-
-  nsresult HandshakeError() const { return mHandshakeError; }
-
-  // Retry ECH config captured at TLS handshake error time. Cached because the
-  // NSS SSL state is no longer queryable by HE's failed-connection callback.
-  const nsACString& CachedRetryEchConfig() const { return mRetryEchConfig; }
 
   friend class HttpConnectionForceIO;
   friend class TlsHandshaker;
@@ -210,20 +197,14 @@ class nsHttpConnection final : public HttpConnectionBase,
                               HttpConnectionBase** aHttpConnection,
                               bool aIsExtendedCONNECT = false) override;
 
-  // Replace the transaction this H1 connection is currently driving.
-  // Analog of Http2Session::SwapTransaction / Http3Session::SwapTransaction:
-  // used by the HE / 0-RTT adopt path when a HappyEyeballsTransaction shim
-  // is replaced by the real nsHttpTransaction on an already-activated H1
-  // connection. No-op if `aOld` isn't the current mTransaction.
-  void SwapTransaction(nsAHttpTransaction* aOld, nsAHttpTransaction* aNew);
+  bool RequestDone() { return mRequestDone; }
 
  private:
   void SetTunnelSetupDone() override;
   nsresult SetupProxyConnectStream() override;
   nsresult SendConnectRequest(void* closure, uint32_t* transactionBytes);
 
-  void HandleTunnelResponse(const nsHttpResponseHead& responseHead,
-                            bool* reset);
+  void HandleTunnelResponse(uint16_t responseStatus, bool* reset);
   void HandleWebSocketResponse(nsHttpRequestHead* requestHead,
                                nsHttpResponseHead* responseHead,
                                uint16_t responseStatus);
@@ -349,16 +330,6 @@ class nsHttpConnection final : public HttpConnectionBase,
   // mLastHttpResponseVersion stores the last response's http version seen.
   HttpVersion mLastHttpResponseVersion{HttpVersion::v1_1};
 
-  // Set by PostProcessNPNSetup on TLS handshake failure (translated from
-  // the security info's PRErrorCode via psm::GetXPCOMFromNSSError). Read
-  // by HappyEyeballsTransaction::ReadSegments to surface the cert/TLS
-  // error instead of NS_BASE_STREAM_CLOSED.
-  nsresult mHandshakeError{NS_OK};
-
-  // Set in PostProcessNPNSetup on SSL_ERROR_ECH_RETRY_WITH_ECH. See
-  // CachedRetryEchConfig().
-  nsCString mRetryEchConfig;
-
   // If a large keepalive has been requested for any trans,
   // scale the default by this factor
   uint32_t mDefaultTimeoutFactor{1};
@@ -395,6 +366,7 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   nsCOMPtr<nsIInputStream> mProxyConnectStream;
 
+  bool mRequestDone{false};
   bool mHasTLSTransportLayer{false};
   bool mTransactionDisallowHttp3{false};
 };
@@ -402,4 +374,4 @@ class nsHttpConnection final : public HttpConnectionBase,
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // nsHttpConnection_h_
+#endif  // nsHttpConnection_h__

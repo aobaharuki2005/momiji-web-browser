@@ -15,6 +15,7 @@ NSS Tools cmsutil
    operations, such as encryption and decryption, on `Cryptographic Message
    Syntax (CMS) <http://www.ietf.org/rfc/rfc2630.txt>`__ messages.
 
+.. _syntax_2:
 
 ` <#syntax_2>`__ Syntax
 -----------------------
@@ -26,6 +27,7 @@ NSS Tools cmsutil
    Each command takes one option. Each option may take zero or more arguments. To see a usage
    string, issue the command without options.
 
+.. _options_and_arguments:
 
 `Options and Arguments <#options_and_arguments>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,7 +86,6 @@ NSS Tools cmsutil
    | -p *password*                                  | Use password as key database password.         |
    +------------------------------------------------+------------------------------------------------+
    | -                                              | Specify list of recipients (email addresses)   |
-   |                                                |                                                |
    | r&nbsp\ *recipient1*,\ *recipient2, . .&nbsp.* | for an encrypted or enveloped message. For     |
    |                                                | certificates-only message, list of             |
    |                                                | certificates to send.                          |

@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 // Helper file for shared image functionality
 //
 // Note that this is use by tests elsewhere in the source tree. When in doubt,

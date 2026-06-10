@@ -12,6 +12,8 @@
 
 SimpleTest.waitForExplicitFinish();
 
+addMSEPrefs(["media.mediasource.webm.enabled", true]);
+
 runWithMSE(async (ms, v) => {
   await once(ms, "sourceopen");
   const sb = ms.addSourceBuffer("video/webm");

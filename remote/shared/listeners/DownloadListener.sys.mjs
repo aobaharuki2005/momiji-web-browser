@@ -168,14 +168,7 @@ export class DownloadListener {
 
     // canceled + hasPartialData corresponds to a paused download.
     const paused = download.canceled && download.hasPartialData;
-    // intercepted flag means that the download was paused by `DownloadBehaviorManager`
-    // to cleanup potential partial data.
-    if (
-      !state.stopped &&
-      download.stopped &&
-      !paused &&
-      !download.intercepted
-    ) {
+    if (!state.stopped && download.stopped && !paused) {
       state.stopped = true;
       this.emit("download-stopped", {
         download,

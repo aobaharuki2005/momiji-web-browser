@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef CacheStorageService_h_
-#define CacheStorageService_h_
+#ifndef CacheStorageService__h__
+#define CacheStorageService__h__
 
 #include "mozilla/LinkedList.h"
 #include "nsICacheStorageService.h"
@@ -25,7 +25,6 @@
 #include "mozilla/TimeStamp.h"
 #include "nsTArray.h"
 
-class nsICacheEntry;
 class nsIURI;
 class nsICacheEntryDoomCallback;
 class nsICacheStorageVisitor;
@@ -46,9 +45,6 @@ class CacheEntryHandle;
 class CacheEntryTable;
 
 class CacheMemoryConsumer {
- public:
-  CacheMemoryConsumer() = delete;
-
  private:
   friend class CacheStorageService;
   // clang-format off
@@ -57,6 +53,9 @@ class CacheMemoryConsumer {
     (uint32_t, Flags, 2)
   ))
   // clang-format on
+
+ private:
+  CacheMemoryConsumer() = delete;
 
  protected:
   enum {
@@ -154,11 +153,6 @@ class CacheStorageService final : public nsICacheStorageService,
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
-
-  void NoteNoVarySearchEntry(const nsACString& aContextKey,
-                             const nsACString& aBasePath,
-                             const nsACString& aFullKey);
-  void NoteNoVarySearchEntry(nsICacheEntry* aEntry, nsIURI* aURI);
 
  private:
   virtual ~CacheStorageService();
@@ -370,8 +364,6 @@ class CacheStorageService final : public nsICacheStorageService,
     explicit MemoryPool(EType aType);
     ~MemoryPool();
 
-    MemoryPool() = delete;
-
     // We want to have constant O(1) for removal from this list.
     LinkedList<RefPtr<CacheEntry>> mManagedEntries;
     Atomic<uint32_t, Relaxed> mMemorySize{0};
@@ -388,6 +380,7 @@ class CacheStorageService final : public nsICacheStorageService,
 
    private:
     uint32_t Limit() const;
+    MemoryPool() = delete;
   };
 
   MemoryPool mDiskPool{MemoryPool::DISK};
@@ -443,8 +436,8 @@ class CacheStorageService final : public nsICacheStorageService,
     virtual ~IOThreadSuspender() = default;
     NS_IMETHOD Run() override;
 
-    Monitor mMon;
-    bool mSignaled MOZ_GUARDED_BY(mMon){false};
+    Monitor mMon MOZ_UNANNOTATED;
+    bool mSignaled{false};
   };
 
   RefPtr<IOThreadSuspender> mActiveIOSuspender;

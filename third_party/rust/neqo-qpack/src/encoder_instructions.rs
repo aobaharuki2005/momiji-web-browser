@@ -12,13 +12,13 @@ use std::{
 use neqo_common::{qdebug, qtrace};
 
 use crate::{
-    Res,
     prefix::{
         ENCODER_CAPACITY, ENCODER_DUPLICATE, ENCODER_INSERT_WITH_NAME_LITERAL,
         ENCODER_INSERT_WITH_NAME_REF_DYNAMIC, ENCODER_INSERT_WITH_NAME_REF_STATIC, NO_PREFIX,
     },
     qpack_send_buf::Encoder,
     reader::{IntReader, LiteralReader, ReadByte, Reader},
+    Res,
 };
 
 // The encoder only uses InsertWithNameLiteral.
@@ -81,43 +81,22 @@ impl EncoderInstruction<'_> {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 enum EncoderInstructionReaderState {
-    #[default]
     ReadInstruction,
-    ReadFirstInt {
-        reader: IntReader,
-    },
-    ReadFirstLiteral {
-        reader: LiteralReader,
-    },
-    ReadSecondLiteral {
-        reader: LiteralReader,
-    },
+    ReadFirstInt { reader: IntReader },
+    ReadFirstLiteral { reader: LiteralReader },
+    ReadSecondLiteral { reader: LiteralReader },
     Done,
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum DecodedEncoderInstruction {
-    Capacity {
-        value: u64,
-    },
-    InsertWithNameRefStatic {
-        index: u64,
-        value: Vec<u8>,
-    },
-    InsertWithNameRefDynamic {
-        index: u64,
-        value: Vec<u8>,
-    },
-    InsertWithNameLiteral {
-        name: Vec<u8>,
-        value: Vec<u8>,
-    },
-    Duplicate {
-        index: u64,
-    },
-    #[default]
+    Capacity { value: u64 },
+    InsertWithNameRefStatic { index: u64, value: Vec<u8> },
+    InsertWithNameRefDynamic { index: u64, value: Vec<u8> },
+    InsertWithNameLiteral { name: Vec<u8>, value: Vec<u8> },
+    Duplicate { index: u64 },
     NoInstruction,
 }
 
@@ -153,7 +132,7 @@ impl<'a> From<&'a EncoderInstruction<'a>> for DecodedEncoderInstruction {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct EncoderInstructionReader {
     state: EncoderInstructionReaderState,
     instruction: DecodedEncoderInstruction,
@@ -163,13 +142,20 @@ impl Display for EncoderInstructionReader {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "EncoderInstructionReader state={:?} instruction: {:?}",
+            "EncoderInstructionReader state={:?} instruction:{:?}",
             self.state, self.instruction
         )
     }
 }
 
 impl EncoderInstructionReader {
+    pub const fn new() -> Self {
+        Self {
+            state: EncoderInstructionReaderState::ReadInstruction,
+            instruction: DecodedEncoderInstruction::NoInstruction,
+        }
+    }
+
     fn decode_instruction_from_byte(&mut self, b: u8) {
         self.instruction = if ENCODER_INSERT_WITH_NAME_REF_STATIC.cmp_prefix(b) {
             DecodedEncoderInstruction::InsertWithNameRefStatic {
@@ -312,14 +298,14 @@ impl EncoderInstructionReader {
 mod test {
 
     use super::{EncoderInstruction, EncoderInstructionReader};
-    use crate::{Error, reader::test_receiver::TestReceiver};
+    use crate::{reader::test_receiver::TestReceiver, Error};
 
     fn test_encoding_decoding(instruction: &EncoderInstruction, use_huffman: bool) {
         let mut buf = neqo_common::Encoder::default();
         instruction.marshal(&mut buf, use_huffman);
         let mut test_receiver: TestReceiver = TestReceiver::default();
         test_receiver.write(buf.as_ref());
-        let mut reader = EncoderInstructionReader::default();
+        let mut reader = EncoderInstructionReader::new();
         assert_eq!(
             reader.read_instructions(&mut test_receiver).unwrap(),
             instruction.into()
@@ -412,7 +398,7 @@ mod test {
         let mut buf = neqo_common::Encoder::default();
         instruction.marshal(&mut buf, use_huffman);
         let mut test_receiver: TestReceiver = TestReceiver::default();
-        let mut decoder = EncoderInstructionReader::default();
+        let mut decoder = EncoderInstructionReader::new();
         for i in 0..buf.len() - 1 {
             test_receiver.write(&buf.as_ref()[i..=i]);
             assert_eq!(
@@ -516,7 +502,7 @@ mod test {
         test_receiver.write(&[
             0x3f, 0xc1, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xff, 0x02,
         ]);
-        let mut decoder = EncoderInstructionReader::default();
+        let mut decoder = EncoderInstructionReader::new();
         assert_eq!(
             decoder.read_instructions(&mut test_receiver),
             Err(Error::IntegerOverflow)
@@ -527,7 +513,7 @@ mod test {
         test_receiver.write(&[
             0xff, 0xc1, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xff, 0x02, 0x00, 0x00,
         ]);
-        let mut decoder = EncoderInstructionReader::default();
+        let mut decoder = EncoderInstructionReader::new();
         assert_eq!(
             decoder.read_instructions(&mut test_receiver),
             Err(Error::IntegerOverflow)
@@ -536,7 +522,7 @@ mod test {
         let mut test_receiver: TestReceiver = TestReceiver::default();
         // EncoderInstruction::InsertWithNameRefStatic with a garbage value.
         test_receiver.write(&[0xc1, 0x81, 0x00]);
-        let mut decoder = EncoderInstructionReader::default();
+        let mut decoder = EncoderInstructionReader::new();
         assert_eq!(
             decoder.read_instructions(&mut test_receiver),
             Err(Error::HuffmanDecompression)

@@ -7,13 +7,12 @@ export var CrashReports = {
   reportsDir: null,
   submittedDir: null,
   getReports: function CrashReports_getReports() {
-    let reports = {};
-    let ignored = [];
+    let reports = [];
 
     try {
       // Ignore any non http/https urls
       if (!/^https?:/i.test(Services.prefs.getCharPref("breakpad.reportURL"))) {
-        return [];
+        return reports;
       }
     } catch (e) {}
 
@@ -27,9 +26,8 @@ export var CrashReports = {
             id: leaf.slice(0, -4),
             date: file.lastModifiedTime,
             pending: false,
-            ignored: false,
           };
-          reports[entry.id] = entry;
+          reports.push(entry);
         }
       }
     }
@@ -41,34 +39,20 @@ export var CrashReports = {
       while (entries.hasMoreElements()) {
         let file = entries.nextFile;
         let leaf = file.leafName;
-        let id = leaf.slice(0, 36);
-        let extension = leaf.slice(36);
-        if (!uuidRegex.test(id)) {
-          continue;
-        }
-        if (extension === ".dmp") {
+        let id = leaf.slice(0, -4);
+        if (leaf.endsWith(".dmp") && uuidRegex.test(id)) {
           let entry = {
             id,
             date: file.lastModifiedTime,
             pending: true,
-            ignored: false,
           };
-          reports[id] = entry;
-        } else if (extension === ".dmp.ignore") {
-          ignored.push(id);
+          reports.push(entry);
         }
       }
     }
 
-    for (let id of ignored) {
-      let report = reports[id];
-      if (report) {
-        report.ignored = true;
-      }
-    }
-
     // Sort reports descending by date
-    return Object.values(reports).sort((a, b) => b.date - a.date);
+    return reports.sort((a, b) => b.date - a.date);
   },
 };
 

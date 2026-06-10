@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -12,7 +13,6 @@
 #include "gfxHarfBuzzShaper.h"
 #include <algorithm>
 #include <dlfcn.h>
-#include <limits>
 
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_TABLES_H
@@ -47,19 +47,8 @@ FT_Face gfxFT2FontBase::LockFTFace() const
   if (!mFTFace->Lock(this)) {
     FT_Set_Transform(mFTFace->GetFace(), nullptr, nullptr);
 
-    // This more closely matches the conversion to fixed-point happening in
-    // Cairo and Skia. Avoid overflow during the conversion. FT_Set_Char_Size
-    // may still decide the value is out of range and reject the scale as being
-    // too large or not matching a strike.
-    FT_F26Dot6 charSize =
-        (int32_t)std::min(std::max(mFTSize * 64.0 + 0.5, 0.0),
-                          (double)std::numeric_limits<int32_t>::max());
-    FT_Error error =
-        FT_Set_Char_Size(mFTFace->GetFace(), charSize, charSize, 0, 0);
-    if (error) {
-      // Even if this returns null, caller must ensure UnlockFTFace is called.
-      return nullptr;
-    }
+    FT_F26Dot6 charSize = NS_lround(mFTSize * 64.0);
+    FT_Set_Char_Size(mFTFace->GetFace(), charSize, charSize, 0, 0);
   }
   return mFTFace->GetFace();
 }
@@ -352,12 +341,6 @@ void gfxFT2FontBase::InitMetrics() {
   mMetrics.maxDescent = -FLOAT_FROM_26_6(ftMetrics.descender);
   mMetrics.maxAdvance = FLOAT_FROM_26_6(ftMetrics.max_advance);
   gfxFloat lineHeight = FLOAT_FROM_26_6(ftMetrics.height);
-
-  // Negative maxDescent here almost certainly indicates a font with a sign
-  // error in the descent field of the 'hhea' table; invert it.
-  if (mMetrics.maxDescent < 0.0) {
-    mMetrics.maxDescent = -mMetrics.maxDescent;
-  }
 
   gfxFloat emHeight;
   // Scale for vertical design metric conversion: pixels per design unit.
@@ -777,7 +760,7 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
  * Get the cached glyph metrics for the glyph id if available. Otherwise, query
  * FreeType for the glyph extents and initialize the glyph metrics.
  */
-gfxFT2FontBase::GlyphMetrics gfxFT2FontBase::GetCachedGlyphMetrics(
+const gfxFT2FontBase::GlyphMetrics& gfxFT2FontBase::GetCachedGlyphMetrics(
     uint16_t aGID, IntRect* aBounds) {
   {
     // Try to read cached metrics without exclusive locking.
@@ -812,7 +795,7 @@ gfxFT2FontBase::GlyphMetrics gfxFT2FontBase::GetCachedGlyphMetrics(
 bool gfxFT2FontBase::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
                                     bool aTight) {
   IntRect bounds;
-  const GlyphMetrics metrics = GetCachedGlyphMetrics(aGID, &bounds);
+  const GlyphMetrics& metrics = GetCachedGlyphMetrics(aGID, &bounds);
   if (!metrics.HasValidBounds()) {
     return false;
   }

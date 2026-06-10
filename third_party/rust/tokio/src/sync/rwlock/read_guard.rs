@@ -66,7 +66,7 @@ impl<'a, T: ?Sized> RwLockReadGuard<'a, T> {
     /// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     /// struct Foo(u32);
     ///
-    /// # #[tokio::main(flavor = "current_thread")]
+    /// # #[tokio::main]
     /// # async fn main() {
     /// let lock = RwLock::new(Foo(1));
     ///
@@ -118,7 +118,7 @@ impl<'a, T: ?Sized> RwLockReadGuard<'a, T> {
     /// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     /// struct Foo(u32);
     ///
-    /// # #[tokio::main(flavor = "current_thread")]
+    /// # #[tokio::main]
     /// # async fn main() {
     /// let lock = RwLock::new(Foo(1));
     ///

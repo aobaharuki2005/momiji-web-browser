@@ -47,7 +47,7 @@ add_task(async function () {
   );
 
   const wait = waitForNetworkEvents(monitor, 1);
-  await reloadSelectedTab();
+  await reloadBrowser();
   await wait;
 
   // Make sure the DOMContentLoaded and load markers don't interfere with

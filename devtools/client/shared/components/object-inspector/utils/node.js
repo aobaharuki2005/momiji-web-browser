@@ -33,8 +33,7 @@ const NODE_TYPES = {
   SET: Symbol("<set>"),
   PROTOTYPE: Symbol("<prototype>"),
   BLOCK: Symbol("☲"),
-  PRIMITIVE_VALUE: Symbol("<primitive value>"),
-  GLOBAL: Symbol("<global>"),
+  PRIMITIVE_VALUE: Symbol("<primitive value>")
 };
 
 let WINDOW_PROPERTIES = {};
@@ -201,10 +200,6 @@ function nodeIsProxy(item) {
 
 function nodeIsPrototype(item) {
   return getType(item) === NODE_TYPES.PROTOTYPE;
-}
-
-function nodeIsGlobal(item) {
-  return getType(item) === NODE_TYPES.GLOBAL;
 }
 
 function nodeIsWindow(item) {
@@ -557,7 +552,6 @@ function makeNodesForProperties(objProps, parent) {
     privateProperties,
     prototype,
     safeGetterValues,
-    global,
   } = objProps;
 
   const parentValue = getValue(parent);
@@ -686,11 +680,6 @@ function makeNodesForProperties(objProps, parent) {
     nodes.push(makeNodeForPrototype(objProps, parent));
   }
 
-  // Add the global if it exists and is not null
-  if (global && global.type !== "null") {
-    nodes.push(makeNodeForGlobal(objProps, parent));
-  }
-
   return nodes;
 }
 
@@ -722,25 +711,6 @@ function makeNodeForPrototype(objProps, parent) {
         front: prototype.getGrip ? prototype : null,
       },
       type: NODE_TYPES.PROTOTYPE,
-    });
-  }
-
-  return null;
-}
-
-function makeNodeForGlobal(objProps, parent) {
-  const { global } = objProps || {};
-
-  // Add the global if it exists and is not null
-  if (global && global.type !== "null") {
-    return createNode({
-      parent,
-      name: "<global>",
-      contents: {
-        value: global.getGrip ? global.getGrip() : global,
-        front: global.getGrip ? global : null,
-      },
-      type: NODE_TYPES.GLOBAL,
     });
   }
 
@@ -1070,7 +1040,6 @@ module.exports = {
   nodeHasFullText,
   nodeIsFunction,
   nodeIsGetter,
-  nodeIsGlobal,
   nodeIsMapEntry,
   nodeIsMissingArguments,
   nodeIsObject,

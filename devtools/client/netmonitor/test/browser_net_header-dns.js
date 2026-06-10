@@ -22,7 +22,7 @@ add_task(async function testCheckDNSResolution() {
   const { document } = monitor.panelWin;
 
   const requestsComplete = waitForNetworkEvents(monitor, 1);
-  await reloadSelectedTab();
+  await reloadBrowser();
   await requestsComplete;
 
   // Wait until the tab panel summary is displayed

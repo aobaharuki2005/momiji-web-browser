@@ -1,3 +1,4 @@
+//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -121,8 +122,7 @@ nsresult nsUrlClassifierStreamUpdater::FetchUpdate(
   // UrlClassifierRemoteSettingsService.
   if (aUpdateUrl->SchemeIs("moz-sbrs")) {
 #ifdef DEBUG
-    LOG(("Fetching update %s from RemoteSettings",
-         PromiseFlatCString(aRequestPayload).get()));
+    LOG(("Fetching update %s from RemoteSettings", aRequestPayload.Data()));
 #endif
     nsCOMPtr<nsIUrlClassifierRemoteSettingsService> rsService =
         do_GetService("@mozilla.org/url-classifier/list-service;1");
@@ -136,8 +136,7 @@ nsresult nsUrlClassifierStreamUpdater::FetchUpdate(
     }
   } else {
 #ifdef DEBUG
-    LOG(("Fetching update %s from %s",
-         PromiseFlatCString(aRequestPayload).get(),
+    LOG(("Fetching update %s from %s", aRequestPayload.Data(),
          aUpdateUrl->GetSpecOrDefault().get()));
 #endif
     uint32_t loadFlags = nsIChannel::INHIBIT_CACHING |
@@ -275,9 +274,8 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
   NS_ENSURE_ARG(aDownloadErrorCallback);
 
   if (mIsUpdating) {
-    LOG(("Already updating, queueing update %s from %s",
-         PromiseFlatCString(aRequestPayload).get(),
-         PromiseFlatCString(aUpdateUrl).get()));
+    LOG(("Already updating, queueing update %s from %s", aRequestPayload.Data(),
+         aUpdateUrl.Data()));
     *_retval = false;
     UpdateRequest* request = mPendingRequests.AppendElement(fallible);
     if (!request) {
@@ -315,8 +313,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
   rv = mDBService->BeginUpdate(this, aRequestTables, aProvider);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     LOG(("Service busy, already updating, queuing update %s from %s",
-         PromiseFlatCString(aRequestPayload).get(),
-         PromiseFlatCString(aUpdateUrl).get()));
+         aRequestPayload.Data(), aUpdateUrl.Data()));
     *_retval = false;
     UpdateRequest* request = mPendingRequests.AppendElement(fallible);
     if (!request) {
@@ -357,7 +354,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
   mIsUpdating = true;
   *_retval = true;
 
-  LOG(("FetchUpdate: %s", mCurrentRequest->mUrl.get()));
+  LOG(("FetchUpdate: %s", mCurrentRequest->mUrl.Data()));
 
   return FetchUpdate(aUpdateUrl, aRequestPayload, aRequestQueryParameters,
                      aIsPostRequest, ""_ns);
@@ -668,7 +665,7 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest* request) {
   if (downloadError) {
     LOG(("nsUrlClassifierStreamUpdater::Download error [this=%p]", this));
     mDownloadError = true;
-    mDownloadErrorStatusStr = std::move(strStatus);
+    mDownloadErrorStatusStr = strStatus;
     status = NS_ERROR_ABORT;
   } else if (NS_SUCCEEDED(status)) {
     MOZ_ASSERT(mCurrentRequest->mDownloadErrorCallback);

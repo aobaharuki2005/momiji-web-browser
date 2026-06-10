@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.customtabs.CustomTabWindowFeature
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
@@ -61,7 +60,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 components.customTabsStore,
                 sessionId,
                 manifest,
-                scope = viewLifecycleOwner.lifecycleScope,
             ) { toolbarVisible ->
                 binding.toolbar.isVisible = toolbarVisible
             },

@@ -3,7 +3,7 @@
   <head>
     <title>CSS Mixins: Shadow DOM</title>
     <link rel="help" href="https://drafts.csswg.org/css-mixins-1/#defining-mixins">
-    <link rel="help" href="https://drafts.csswg.org/css-shadow-1/#css-tree-scoped-name">
+    <link rel="help" href="https://drafts.csswg.org/css-scoping-1/#css-tree-scoped-name">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
   </head>
@@ -11,9 +11,7 @@
 
     <style>
       @mixin --exists-only-outside-shadow() {
-        @result {
-          color: green;
-        }
+        color: green;
       }
     </style>
     <div id="host1">
@@ -45,9 +43,7 @@
         </style>
         <style>
           @mixin --m1() {
-            @result {
-              color: green;
-            }
+            color: green;
           }
         </style>
         <div id="e2">This text should be green.</div>
@@ -77,7 +73,7 @@
     <script>
       test(() => {
         const sheet = new CSSStyleSheet();
-        sheet.replaceSync('@mixin --exists-only-in-adopted() { @result { color: green; } }');
+        sheet.replaceSync('@mixin --exists-only-in-adopted() { color: green; }');
         document.getElementById('host3').shadowRoot.adoptedStyleSheets = [sheet];
 
         let target = document.getElementById('host3').shadowRoot.getElementById('e3');
@@ -90,9 +86,7 @@
       <template shadowrootmode="open">
         <style>
           @mixin --in-shadow() {
-            @result {
-              color: red;
-            }
+            color: red;
           }
         </style>
       </template>

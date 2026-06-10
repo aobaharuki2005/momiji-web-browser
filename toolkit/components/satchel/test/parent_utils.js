@@ -1,3 +1,5 @@
+/* eslint-env mozilla/chrome-script */
+
 const { FormHistory } = ChromeUtils.importESModule(
   "resource://gre/modules/FormHistory.sys.mjs"
 );
@@ -104,7 +106,7 @@ var ParentUtils = {
         return false;
       }
 
-      let win = el.documentGlobal;
+      let win = el.ownerGlobal;
       return win.customElements.getName(el.constructor) == is;
     }, "Testing menu entry").then(() => {
       sendAsyncMessage("menuEntryTested");

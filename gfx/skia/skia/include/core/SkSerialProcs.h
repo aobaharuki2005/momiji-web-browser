@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google LLC
+ * Copyright 2017 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -19,13 +19,11 @@ class SkImage;
 class SkPicture;
 class SkTypeface;
 class SkReadBuffer;
-class SkStream;
 enum SkAlphaType : int;
 namespace sktext::gpu {
     class Slug;
 }
 
-using SkSerialReturnType = sk_sp<const SkData>;
 /**
  *  A serial-proc is asked to serialize the specified object (e.g. picture or image).
  *  If a data object is returned, it will be used (even if it is zero-length).
@@ -35,9 +33,10 @@ using SkSerialReturnType = sk_sp<const SkData>;
  *  The default action for images is to encode either in its native format or PNG.
  *  The default action for typefaces is to use Skia's internal format.
  */
-using SkSerialPictureProc = SkSerialReturnType (*)(SkPicture*, void* ctx);
-using SkSerialImageProc = SkSerialReturnType (*)(SkImage*, void* ctx);
-using SkSerialTypefaceProc = SkSerialReturnType (*)(SkTypeface*, void* ctx);
+
+using SkSerialPictureProc = sk_sp<SkData> (*)(SkPicture*, void* ctx);
+using SkSerialImageProc = sk_sp<SkData> (*)(SkImage*, void* ctx);
+using SkSerialTypefaceProc = sk_sp<SkData> (*)(SkTypeface*, void* ctx);
 
 /**
  *  Called with the encoded form of a picture (previously written with a custom
@@ -81,9 +80,7 @@ using SkSlugProc = sk_sp<sktext::gpu::Slug> (*)(SkReadBuffer&, void* ctx);
 /**
  *  Called with the encoded form of a typeface (previously written with a custom
  *  SkSerialTypefaceProc proc). Return a typeface object, or nullptr indicating failure.
- *  TODO: Users must not attempt to fork or duplicate the passed stream and hold on to the result.
  */
-using SkDeserialTypefaceStreamProc = sk_sp<SkTypeface> (*)(SkStream&, void* ctx);
 using SkDeserialTypefaceProc = sk_sp<SkTypeface> (*)(const void* data, size_t length, void* ctx);
 
 struct SK_API SkSerialProcs {
@@ -108,7 +105,7 @@ struct SK_API SkDeserialProcs {
     SkSlugProc                   fSlugProc = nullptr;
     void*                        fSlugCtx = nullptr;
 
-    SkDeserialTypefaceStreamProc fTypefaceStreamProc = nullptr;
+    SkDeserialTypefaceProc       fTypefaceProc = nullptr;
     void*                        fTypefaceCtx = nullptr;
 
     // This looks like a flag, but it could be considered a proc as well (one that takes no

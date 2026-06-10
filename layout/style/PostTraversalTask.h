@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,13 +7,16 @@
 #ifndef mozilla_PostTraversalTask_h
 #define mozilla_PostTraversalTask_h
 
-#include "mozilla/AlreadyAddRefed.h"
+#include "nsString.h"
+#include "nscore.h"
 
 /* a task to be performed immediately after a Servo traversal */
 
 namespace mozilla {
 class ServoStyleSet;
 namespace dom {
+enum class FontFaceLoadedRejectReason : uint8_t;
+class FontFace;
 class FontFaceSet;
 class FontFaceSetImpl;
 }  // namespace dom
@@ -33,45 +38,93 @@ namespace mozilla {
  */
 class PostTraversalTask {
  public:
-  static PostTraversalTask DispatchLoadingEventAndReplaceReadyPromise(
-      already_AddRefed<dom::FontFaceSetImpl> aFontFaceSetImpl) {
-    PostTraversalTask task(Type::DispatchLoadingEventAndReplaceReadyPromise);
-    task.mTarget = aFontFaceSetImpl.take();
+  static PostTraversalTask ResolveFontFaceLoadedPromise(
+      dom::FontFace* aFontFace) {
+    auto task = PostTraversalTask(Type::ResolveFontFaceLoadedPromise);
+    task.mTarget = aFontFace;
     return task;
   }
 
-  static PostTraversalTask LoadFontEntry(
-      already_AddRefed<gfxUserFontEntry> aFontEntry) {
-    PostTraversalTask task(Type::LoadFontEntry);
-    task.mTarget = aFontEntry.take();
+  static PostTraversalTask RejectFontFaceLoadedPromise(
+      dom::FontFace* aFontFace, dom::FontFaceLoadedRejectReason aReason,
+      nsCString&& aMessage) {
+    auto task = PostTraversalTask(Type::ResolveFontFaceLoadedPromise);
+    task.mTarget = aFontFace;
+    task.mResult.emplace(aReason);
+    task.mMessage = std::move(aMessage);
+    return task;
+  }
+
+  static PostTraversalTask DispatchLoadingEventAndReplaceReadyPromise(
+      dom::FontFaceSet* aFontFaceSet) {
+    auto task =
+        PostTraversalTask(Type::DispatchLoadingEventAndReplaceReadyPromise);
+    task.mTarget = aFontFaceSet;
+    return task;
+  }
+
+  static PostTraversalTask DispatchFontFaceSetCheckLoadingFinishedAfterDelay(
+      dom::FontFaceSetImpl* aFontFaceSet) {
+    auto task = PostTraversalTask(
+        Type::DispatchFontFaceSetCheckLoadingFinishedAfterDelay);
+    task.mTarget = aFontFaceSet;
+    return task;
+  }
+
+  static PostTraversalTask LoadFontEntry(gfxUserFontEntry* aFontEntry) {
+    auto task = PostTraversalTask(Type::LoadFontEntry);
+    task.mTarget = aFontEntry;
+    return task;
+  }
+
+  static PostTraversalTask InitializeFamily(fontlist::Family* aFamily) {
+    auto task = PostTraversalTask(Type::InitializeFamily);
+    task.mTarget = aFamily;
+    return task;
+  }
+
+  static PostTraversalTask FontInfoUpdate(ServoStyleSet* aSet) {
+    auto task = PostTraversalTask(Type::FontInfoUpdate);
+    task.mTarget = aSet;
     return task;
   }
 
   void Run();
 
-  PostTraversalTask(const PostTraversalTask&) = delete;
-  PostTraversalTask(PostTraversalTask&& aOther)
-      : PostTraversalTask(aOther.mType) {
-    mTarget = aOther.mTarget;
-    aOther.mTarget = nullptr;
-  };
-
-  ~PostTraversalTask();
-
  private:
+  // For any new raw pointer type that we need to store in a PostTraversalTask,
+  // please add an assertion that class' destructor that we are not in a Servo
+  // traversal, to protect against the possibility of having dangling pointers.
   enum class Type {
-    // mTarget (FontFaceSetImpl*)
+    // mTarget (FontFace*)
+    ResolveFontFaceLoadedPromise,
+
+    // mTarget (FontFace*)
+    // mResult / mMessage
+    RejectFontFaceLoadedPromise,
+
+    // mTarget (FontFaceSet*)
     DispatchLoadingEventAndReplaceReadyPromise,
+
+    // mTarget (FontFaceSetImpl*)
+    DispatchFontFaceSetCheckLoadingFinishedAfterDelay,
 
     // mTarget (gfxUserFontEntry*)
     LoadFontEntry,
+
+    // mTarget (fontlist::Family*)
+    InitializeFamily,
+
+    // mTarget (ServoStyleSet*)
+    FontInfoUpdate,
   };
 
   explicit PostTraversalTask(Type aType) : mType(aType) {}
 
   const Type mType;
-  // Note that this is a strong reference of the relevant target
   void* mTarget = nullptr;
+  nsCString mMessage;
+  Maybe<dom::FontFaceLoadedRejectReason> mResult;
 };
 
 }  // namespace mozilla

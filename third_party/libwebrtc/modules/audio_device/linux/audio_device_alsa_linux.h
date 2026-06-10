@@ -41,7 +41,7 @@ namespace webrtc {
 class AudioDeviceLinuxALSA : public AudioDeviceGeneric {
  public:
   AudioDeviceLinuxALSA();
-  ~AudioDeviceLinuxALSA() override;
+  virtual ~AudioDeviceLinuxALSA();
 
   // Retrieve the currently utilized audio layer
   int32_t ActiveAudioLayer(

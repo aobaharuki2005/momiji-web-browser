@@ -15,8 +15,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <span>
-
+#include "api/array_view.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/app.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/bye.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
@@ -48,7 +47,7 @@ bool ParseSinglePacket(const uint8_t* buffer, size_t size, Packet* packet) {
 }
 // Same function, but takes raw buffer as single argument instead of pair.
 template <typename Packet>
-bool ParseSinglePacket(std::span<const uint8_t> buffer, Packet* packet) {
+bool ParseSinglePacket(ArrayView<const uint8_t> buffer, Packet* packet) {
   return ParseSinglePacket(buffer.data(), buffer.size(), packet);
 }
 
@@ -80,7 +79,7 @@ class RtcpPacketParser {
   RtcpPacketParser();
   ~RtcpPacketParser();
 
-  bool Parse(std::span<const uint8_t> packet);
+  bool Parse(ArrayView<const uint8_t> packet);
 
   PacketCounter<rtcp::App>* app() { return &app_; }
   PacketCounter<rtcp::Bye>* bye() { return &bye_; }

@@ -8,21 +8,23 @@ import android.view.View
 import android.widget.FrameLayout
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
-import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
@@ -38,11 +40,12 @@ class CookieBannerHandlingDetailsViewTest {
     private lateinit var binding: ComponentCookieBannerDetailsPanelBinding
     private lateinit var interactor: CookieBannerDetailsInteractor
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var publicSuffixList: PublicSuffixList
 
-    private val testDispatcher = StandardTestDispatcher()
-    private val testScope = TestScope(testDispatcher)
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
 
     @Before
     fun setup() {
@@ -54,8 +57,7 @@ class CookieBannerHandlingDetailsViewTest {
                 context = testContext,
                 publicSuffixList = publicSuffixList,
                 interactor = interactor,
-                scope = testScope,
-                ioDispatcher = testDispatcher,
+                ioScope = scope,
                 onDismiss = {},
             ),
         )
@@ -87,13 +89,12 @@ class CookieBannerHandlingDetailsViewTest {
 
     @Test
     fun `GIVEN cookie banner handling mode is enabled WHEN biding title THEN title view must have the expected string`() =
-        runTest(testDispatcher) {
+        runTestOnMain {
             coEvery { publicSuffixList.getPublicSuffixPlusOne(any()) } returns CompletableDeferred("mozilla.org")
 
             val websiteUrl = "https://mozilla.org"
 
             view.bindTitle(url = websiteUrl, state = CookieBannerUIMode.ENABLE)
-            testDispatcher.scheduler.advanceUntilIdle()
 
             val expectedText =
                 testContext.getString(
@@ -106,13 +107,12 @@ class CookieBannerHandlingDetailsViewTest {
 
     @Test
     fun `GIVEN cookie banner handling mode is site not supported WHEN biding title THEN title view must have the expected string`() =
-        runTest(testDispatcher) {
+        runTestOnMain {
             coEvery { publicSuffixList.getPublicSuffixPlusOne(any()) } returns CompletableDeferred("mozilla.org")
 
             val websiteUrl = "https://mozilla.org"
 
             view.bindTitle(url = websiteUrl, state = CookieBannerUIMode.SITE_NOT_SUPPORTED)
-            testDispatcher.scheduler.advanceUntilIdle()
 
             val expectedText =
                 testContext.getString(
@@ -122,9 +122,10 @@ class CookieBannerHandlingDetailsViewTest {
             assertEquals(expectedText, view.binding.title.text)
         }
 
+    @OptIn(ExperimentalCoroutinesApi::class) // advanceUntilIdle
     @Test
     fun `GIVEN cookie banner handling mode is disabled WHEN biding title THEN title view must have the expected string`() =
-        runTest(testDispatcher) {
+        runTestOnMain {
             coEvery { publicSuffixList.getPublicSuffixPlusOne(any()) } returns CompletableDeferred("mozilla.org")
 
             val websiteUrl = "https://mozilla.org"
@@ -134,7 +135,7 @@ class CookieBannerHandlingDetailsViewTest {
                 state = CookieBannerUIMode.DISABLE,
             )
 
-            testDispatcher.scheduler.advanceUntilIdle()
+            advanceUntilIdle()
 
             val expectedText =
                 testContext.getString(

@@ -29,9 +29,8 @@ RtpTransportConfig CallConfig::ExtractTransportConfig() const {
           : network_controller_factory;
   transport_config.network_state_predictor_factory =
       network_state_predictor_factory;
-  if (pacer_burst_interval.has_value()) {
-    transport_config.default_pacing_time_window = *pacer_burst_interval;
-  }
+  transport_config.pacer_burst_interval = pacer_burst_interval;
+
   return transport_config;
 }
 

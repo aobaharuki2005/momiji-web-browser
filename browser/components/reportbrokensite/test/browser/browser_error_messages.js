@@ -10,91 +10,55 @@
 
 add_common_setup();
 
-add_task(async function test_invalid_user_inputs() {
+add_task(async function test() {
   ensureReportBrokenSitePreffedOn();
+  ensureReasonRequired();
 
-  await withNewTab(REPORTABLE_PAGE_URL, async () => {
+  await BrowserTestUtils.withNewTab(REPORTABLE_PAGE_URL, async function () {
     for (const menu of [AppMenu(), ProtectionsPanel(), HelpMenu()]) {
       const rbs = await menu.openReportBrokenSite();
+      const { sendButton, URLInput } = rbs;
 
-      // test that the first slide only allows progression if the URL is valid.
-      await isNotVisible(
-        rbs.urlComponent.errorMessage,
-        "no URL error message by default"
-      );
+      rbs.isURLInvalidMessageHidden();
+      rbs.isReasonNeededMessageHidden();
 
-      let test = "empty URL";
       rbs.setURL("");
-      await isVisible(rbs.urlComponent.errorMessage, test);
-      await isDisabled(rbs.progressionButtons, test);
+      window.document.activeElement.blur();
+      rbs.isURLInvalidMessageShown();
+      rbs.isReasonNeededMessageHidden();
 
-      test = "valid URL";
       rbs.setURL("https://asdf");
-      await isNotVisible(rbs.urlComponent.errorMessage, test);
-      await isNotDisabled(rbs.progressionButtons, test);
+      window.document.activeElement.blur();
+      rbs.isURLInvalidMessageHidden();
+      rbs.isReasonNeededMessageHidden();
 
-      test = "invalid URL";
       rbs.setURL("http:/ /asdf");
-      await isVisible(rbs.urlComponent.errorMessage, test);
-      await isDisabled(rbs.progressionButtons, test);
+      window.document.activeElement.blur();
+      rbs.isURLInvalidMessageShown();
+      rbs.isReasonNeededMessageHidden();
 
-      test = "back to valid URL";
       rbs.setURL("https://asdf");
-      await isNotVisible(rbs.urlComponent.errorMessage, test);
-      await isNotDisabled(rbs.progressionButtons, test);
+      const selectPromise = BrowserTestUtils.waitForSelectPopupShown(window);
+      EventUtils.synthesizeMouseAtCenter(sendButton, {}, window);
+      await selectPromise;
+      rbs.isURLInvalidMessageHidden();
+      rbs.isReasonNeededMessageShown();
+      await rbs.dismissDropdownPopup();
 
-      await rbs.clickReason("load");
+      rbs.chooseReason("slow");
+      rbs.isURLInvalidMessageHidden();
+      rbs.isReasonNeededMessageHidden();
 
-      // test that the second slide only allows progression if the URL and description are both valid.
-      test = "empty URL";
       rbs.setURL("");
-      await isNotVisible(rbs.descriptionInvalidMessage, test);
-      await isDisabled(rbs.progressionButtons, test);
+      rbs.chooseReason("choose");
+      window.ownerGlobal.document.activeElement?.blur();
+      const focusPromise = BrowserTestUtils.waitForEvent(URLInput, "focus");
+      EventUtils.synthesizeMouseAtCenter(sendButton, {}, window);
+      await focusPromise;
+      rbs.isURLInvalidMessageShown();
+      rbs.isReasonNeededMessageShown();
 
-      // all-whitespace comments are invalid
-      test = "all-whitespace comment";
-      rbs.setDescription("            ");
-      await isVisible(rbs.urlComponent.errorMessage, test);
-      await isVisible(rbs.descriptionInvalidMessage, test);
-      await isDisabled(rbs.progressionButtons, test);
-
-      test = "still all-whitespace comment";
-      rbs.setURL("https://asdf");
-      await isNotVisible(rbs.urlComponent.errorMessage, test);
-      await isVisible(rbs.descriptionInvalidMessage, test);
-      await isDisabled(rbs.progressionButtons, test);
-
-      test = "comment too short";
-      // a minimum number of non-space characters is required
-      rbs.setDescription("   ___");
-      await isNotVisible(rbs.urlComponent.errorMessage, test);
-      await isVisible(rbs.descriptionInvalidMessage, test);
-      await isDisabled(rbs.progressionButtons, test);
-
-      // if adding a comment, must have minimum number of valid characters
-      test = "valid URL and comment";
-      rbs.setDescription("    ____________");
-      await isNotVisible(rbs.urlComponent.errorMessage, test);
-      await isNotVisible(rbs.descriptionInvalidMessage, test);
-      await isNotDisabled(rbs.progressionButtons, test);
-
-      test = "empty but required comment";
-      await rbs.clickBack("");
-      await rbs.clickReason("other");
-
-      // test that the second slide requires a comment if "something else" is chosen.
-      rbs.setDescription("");
-      await isNotVisible(rbs.urlComponent.errorMessage, test);
-      await isVisible(rbs.descriptionInvalidMessage, test);
-      await isDisabled(rbs.progressionButtons, test);
-
-      test = "valid comment";
-      rbs.setDescription("    ____________");
-      await isNotVisible(rbs.urlComponent.errorMessage, test);
-      await isNotVisible(rbs.descriptionInvalidMessage, test);
-      await isNotDisabled(rbs.progressionButtons, test);
-
-      await rbs.clickCancel();
+      rbs.clickCancel();
     }
   });
 });

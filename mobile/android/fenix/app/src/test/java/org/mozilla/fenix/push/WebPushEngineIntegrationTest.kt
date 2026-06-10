@@ -10,7 +10,6 @@ import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
@@ -26,13 +25,13 @@ import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.AutoPushSubscription
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.MockkRetryTestRule
-import kotlin.test.assertNotNull
 
 class WebPushEngineIntegrationTest {
 
@@ -42,7 +41,7 @@ class WebPushEngineIntegrationTest {
 
     @MockK private lateinit var pushFeature: AutoPushFeature
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var handler: WebPushHandler
     private lateinit var delegate: CapturingSlot<WebPushDelegate>
     private lateinit var integration: WebPushEngineIntegration
@@ -223,7 +222,7 @@ class WebPushEngineIntegrationTest {
         onUnsubscribeErrorFn!!(mockk())
         assertTrue(onUnsubscribeInvoked)
         assertNotNull(unsubscribeSuccess)
-        assertFalse(unsubscribeSuccess)
+        assertFalse(unsubscribeSuccess!!)
 
         onUnsubscribeInvoked = false // Reset for next callback
         unsubscribeSuccess = null

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,7 +13,7 @@
 #include "mozilla/BounceTrackingState.h"
 #include "mozilla/Components.h"
 #include "mozilla/glean/AntitrackingMetrics.h"
-#include "mozilla/net/ChannelClassifierUtils.h"
+#include "mozilla/net/UrlClassifierCommon.h"
 #include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
 #include "nsNetUtil.h"
@@ -35,7 +37,7 @@ bool IsFirstPartyTrackingChannel(nsIChannel* aChannel) {
   uint32_t firstPartyClassificationFlags =
       classifiedChannel->GetFirstPartyClassificationFlags();
 
-  if (net::ChannelClassifierUtils::IsTrackingClassificationFlag(
+  if (net::UrlClassifierCommon::IsTrackingClassificationFlag(
           firstPartyClassificationFlags, NS_UsePrivateBrowsing(aChannel))) {
     return true;
   }
@@ -78,10 +80,12 @@ void DynamicFpiNavigationHeuristic::MaybeGrantStorageAccess(
     return;
   }
 
-  BounceTrackingRecord* record = bounceTrackingState->GetBounceTrackingRecord();
-  if (!record) {
+  const Maybe<BounceTrackingRecord>& maybeRecord =
+      bounceTrackingState->GetBounceTrackingRecord();
+  if (maybeRecord.isNothing()) {
     return;
   }
+  const BounceTrackingRecord& record = maybeRecord.ref();
 
   // Get the session history and the current index (of the opening document)
   nsCOMPtr<nsISHistory> shistory = aBrowsingContext->GetSessionHistory();
@@ -147,7 +151,7 @@ void DynamicFpiNavigationHeuristic::MaybeGrantStorageAccess(
     if (NS_FAILED(rv)) {
       continue;
     }
-    if (record->GetUserActivationHosts().Contains(entrySiteHost)) {
+    if (record.GetUserActivationHosts().Contains(entrySiteHost)) {
       candidateURIs.AppendElement(entryURI);
     }
   }

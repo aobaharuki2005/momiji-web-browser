@@ -39,6 +39,15 @@ tasks:
         symbol: I(ub18-pkg)
         definition: debian-packages
         parent: ubuntu1804-raw
+    ubuntu1804-i386-raw:
+        symbol: I(ub18-32-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: i386/ubuntu:bionic
+    ubuntu1804-i386-packages:
+        symbol: I(ub18-32-pkg)
+        definition: debian-packages
+        parent: ubuntu1804-i386-raw
     ubuntu1804-base:
         symbol: I(ub18-base)
         parent: ubuntu1804-raw
@@ -47,6 +56,18 @@ tasks:
             - ub18-mercurial
             - ub18-python-zstandard
             - ub18-python-psutil
+    ubuntu1804-test-base:
+        symbol: I(ub18-test-base)
+        parent: ubuntu1804-base
+        packages:
+            - ub18-libc6
+            - ub18-pygobject
+            - ub18-pyatspi
+            - ub18-python-dbus
+            - ub18-32-libc6
+    ubuntu1804-test:
+        symbol: I(ub18-test)
+        parent: ubuntu1804-test-base
     ubuntu1804-build-python:
         symbol: I(ub18-build-python)
         parent: ubuntu1804-base
@@ -235,7 +256,7 @@ tasks:
             - deb12-valgrind
     lint:
         symbol: I(lnt)
-        parent: debian13-base
+        parent: debian12-base
     # Neither the debian12-raw nor the debian12-packages images can have
     # packages dependencies.
     debian12-raw:
@@ -328,7 +349,9 @@ tasks:
             - deb12-python-zstandard
     fetch:
         symbol: I(fetch)
-        parent: debian13-raw
+        parent: debian12-raw
+        packages:
+            - deb12-python-zstandard
     fetch-more:
         symbol: I(fetch-more)
         parent: fetch
@@ -342,10 +365,6 @@ tasks:
         symbol: I(idx)
     funsize-update-generator:
         symbol: I(pg)
-    partials-zuc:
-        symbol: I(pz)
-        parent: debian13-base
-        definition: partials-zucchini
     update-verify:
         symbol: I(uv)
         parent: debian12-base

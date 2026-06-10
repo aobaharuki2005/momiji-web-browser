@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -14,7 +16,6 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // char16_t, uint8_t, uint16_t, uint32_t
 
-#include "builtin/ModuleObject.h"       // ImportPhase
 #include "frontend/AbstractScopePtr.h"  // AbstractScopePtr, ScopeIndex
 #include "frontend/ObjLiteral.h"        // ObjLiteralStencil
 #include "frontend/ParserAtom.h"        // TaggedParserAtomIndex
@@ -554,10 +555,6 @@ class StencilModuleRequest {
       Vector<StencilModuleImportAttribute, 0, js::SystemAllocPolicy>;
   ImportAttributeVector attributes;
 
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
-  js::ImportPhase phase = ImportPhase::Evaluation;
-#endif
-
   // For XDR only.
   StencilModuleRequest() = default;
 
@@ -568,12 +565,7 @@ class StencilModuleRequest {
 
   StencilModuleRequest(const StencilModuleRequest& other)
       : specifier(other.specifier),
-        firstUnsupportedAttributeKey(other.firstUnsupportedAttributeKey)
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
-        ,
-        phase(other.phase)
-#endif
-  {
+        firstUnsupportedAttributeKey(other.firstUnsupportedAttributeKey) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!attributes.appendAll(other.attributes)) {
       oomUnsafe.crash("StencilModuleRequest::StencilModuleRequest");
@@ -583,21 +575,19 @@ class StencilModuleRequest {
   StencilModuleRequest(StencilModuleRequest&& other) noexcept
       : specifier(other.specifier),
         firstUnsupportedAttributeKey(other.firstUnsupportedAttributeKey),
-        attributes(std::move(other.attributes))
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
-        ,
-        phase(other.phase)
-#endif
-  {
+        attributes(std::move(other.attributes)) {}
+
+  StencilModuleRequest& operator=(StencilModuleRequest& other) {
+    specifier = other.specifier;
+    firstUnsupportedAttributeKey = other.firstUnsupportedAttributeKey;
+    attributes = std::move(other.attributes);
+    return *this;
   }
 
   StencilModuleRequest& operator=(StencilModuleRequest&& other) noexcept {
     specifier = other.specifier;
     firstUnsupportedAttributeKey = other.firstUnsupportedAttributeKey;
     attributes = std::move(other.attributes);
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
-    phase = other.phase;
-#endif
     return *this;
   }
 
@@ -605,11 +595,7 @@ class StencilModuleRequest {
     size_t attrLen = attributes.length();
     if (specifier != other.specifier ||
         firstUnsupportedAttributeKey != other.firstUnsupportedAttributeKey ||
-        attrLen != other.attributes.length()
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
-        || phase != other.phase
-#endif
-    ) {
+        attrLen != other.attributes.length()) {
       return false;
     }
 
@@ -639,12 +625,8 @@ struct StencilModuleRequestHasher {
           hash, TaggedParserAtomIndexHasher::hash(l.attributes[i].key),
           TaggedParserAtomIndexHasher::hash(l.attributes[i].value));
     }
-    hash = mozilla::AddToHash(hash,
+    return mozilla::AddToHash(hash,
                               TaggedParserAtomIndexHasher::hash(l.specifier));
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
-    hash = mozilla::AddToHash(hash, l.phase);
-#endif
-    return hash;
   }
 
   static bool match(const Key& k, const Lookup& l) { return k == l; }
@@ -722,8 +704,12 @@ class StencilModuleEntry {
   StencilModuleEntry() = default;
 
   StencilModuleEntry(const StencilModuleEntry& other)
-
-      = default;
+      : moduleRequest(other.moduleRequest),
+        localName(other.localName),
+        importName(other.importName),
+        exportName(other.exportName),
+        lineno(other.lineno),
+        column(other.column) {}
 
   StencilModuleEntry(StencilModuleEntry&& other) noexcept
       : moduleRequest(other.moduleRequest),
@@ -733,7 +719,15 @@ class StencilModuleEntry {
         lineno(other.lineno),
         column(other.column) {}
 
-  StencilModuleEntry& operator=(StencilModuleEntry& other) = default;
+  StencilModuleEntry& operator=(StencilModuleEntry& other) {
+    moduleRequest = other.moduleRequest;
+    localName = other.localName;
+    importName = other.importName;
+    exportName = other.exportName;
+    lineno = other.lineno;
+    column = other.column;
+    return *this;
+  }
 
   StencilModuleEntry& operator=(StencilModuleEntry&& other) noexcept {
     moduleRequest = other.moduleRequest;
@@ -849,7 +843,6 @@ class StencilModuleMetadata
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this) +
-           moduleRequests.sizeOfExcludingThis(mallocSizeOf) +
            requestedModules.sizeOfExcludingThis(mallocSizeOf) +
            importEntries.sizeOfExcludingThis(mallocSizeOf) +
            localExportEntries.sizeOfExcludingThis(mallocSizeOf) +

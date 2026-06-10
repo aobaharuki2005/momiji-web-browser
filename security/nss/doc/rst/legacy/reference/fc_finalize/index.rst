@@ -40,6 +40,7 @@ FC_Finalize
 
    The ``pReserved`` argument is not used and must be ``NULL``.
 
+.. _return_value:
 
 `Return value <#return_value>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,6 +77,7 @@ FC_Finalize
       /* invoke FC_Finalize as pFunctionList->C_Finalize */
       crv = pFunctionList->C_Finalize(NULL);
 
+.. _see_also:
 
 `See also <#see_also>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~

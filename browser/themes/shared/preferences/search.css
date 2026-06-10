@@ -8,10 +8,6 @@
 }
 
 #engineList {
-  --box-group-max-height: 500px;
-}
-
-#oneClickSearchProvidersGroup > #engineList {
   margin: 0.5em 0;
 }
 

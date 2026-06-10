@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -107,7 +109,7 @@ nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass)
               browser_download_always_ask_before_handling_new_types() ||
           aClass != eMIMEInfo) {}
 
-nsMIMEInfoBase::~nsMIMEInfoBase() = default;
+nsMIMEInfoBase::~nsMIMEInfoBase() {}
 
 NS_IMETHODIMP
 nsMIMEInfoBase::GetFileExtensions(nsIUTF8StringEnumerator** aResult) {

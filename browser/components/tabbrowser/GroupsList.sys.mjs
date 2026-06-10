@@ -12,7 +12,7 @@ export class GroupsPanel {
     this.view = view;
     this.#showAll = showAll;
     this.containerNode = containerNode;
-    this.win = containerNode.documentGlobal;
+    this.win = containerNode.ownerGlobal;
     this.doc = containerNode.ownerDocument;
     this.panelMultiView = null;
     this.view.addEventListener("ViewShowing", this);
@@ -73,7 +73,7 @@ export class GroupsPanel {
       case "allTabsGroupView_selectGroup": {
         let group = this.win.gBrowser.getTabGroupById(tabGroupId);
         group.select();
-        group.documentGlobal.focus();
+        group.ownerGlobal.focus();
         break;
       }
 
@@ -177,10 +177,6 @@ export class GroupsPanel {
     row.style.setProperty(
       "--tab-group-color-pale",
       `var(--tab-group-color-${group.color}-pale)`
-    );
-    row.style.setProperty(
-      "--tab-group-background-color",
-      `var(--tab-group-${group.color})`
     );
     let button = doc.createXULElement("toolbarbutton");
     button.setAttribute(

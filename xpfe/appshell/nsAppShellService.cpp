@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,6 +41,7 @@
 #include "nsEmbedCID.h"
 #include "nsIWebBrowser.h"
 #include "nsIDocShell.h"
+#include "gfxPlatform.h"
 
 #include "nsWebBrowser.h"
 #include "nsDocShell.h"
@@ -64,7 +66,7 @@ nsAppShellService::nsAppShellService()
   }
 }
 
-nsAppShellService::~nsAppShellService() = default;
+nsAppShellService::~nsAppShellService() {}
 
 /*
  * Implement the nsISupports methods...
@@ -285,7 +287,7 @@ class BrowserDestroyer final : public Runnable {
   }
 
  protected:
-  virtual ~BrowserDestroyer() = default;
+  virtual ~BrowserDestroyer() {}
 
  private:
   nsCOMPtr<nsIWebBrowser> mBrowser;
@@ -392,10 +394,15 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, uint32_t aChromeMask,
 
   /* A windowless web browser doesn't have an associated OS level window. To
    * accomplish this, we initialize the window associated with our instance of
-   * nsWebBrowser with an instance of PuppetWidget, which provides a stub
-   * implementation of nsIWidget.
+   * nsWebBrowser with an instance of HeadlessWidget/PuppetWidget, which provide
+   * a stub implementation of nsIWidget.
    */
-  nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(nullptr);
+  nsCOMPtr<nsIWidget> widget;
+  if (gfxPlatform::IsHeadless()) {
+    widget = nsIWidget::CreateHeadlessWidget();
+  } else {
+    widget = nsIWidget::CreatePuppetWidget(nullptr);
+  }
   if (!widget) {
     NS_ERROR("Couldn't create instance of stub widget");
     return NS_ERROR_FAILURE;
@@ -431,10 +438,9 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, uint32_t aChromeMask,
   /* Next, we create an instance of nsWebBrowser. Instances of this class have
    * an associated doc shell, which is what we're interested in.
    */
-  RefPtr<nsWebBrowser> browser;
-  MOZ_TRY(nsWebBrowser::Create(stub, widget, browsingContext,
-                               nullptr /* initialWindowChild */, openWindowInfo,
-                               getter_AddRefs(browser)));
+  nsCOMPtr<nsIWebBrowser> browser =
+      nsWebBrowser::Create(stub, widget, browsingContext,
+                           nullptr /* initialWindowChild */, openWindowInfo);
 
   if (NS_WARN_IF(!browser)) {
     NS_ERROR("Couldn't create instance of nsWebBrowser!");
@@ -521,7 +527,8 @@ nsresult nsAppShellService::JustCreateTopWindow(
 #endif
 
   if (widgetInitData.mWindowType == widget::WindowType::TopLevel &&
-      (aChromeMask & nsIWebBrowserChrome::CHROME_DOCUMENT_PIP)) {
+      (aChromeMask & nsIWebBrowserChrome::CHROME_DOCUMENT_PICTURE_IN_PICTURE) ==
+          nsIWebBrowserChrome::CHROME_DOCUMENT_PICTURE_IN_PICTURE) {
     widgetInitData.mPiPType = mozilla::widget::PiPType::DocumentPiP;
   }
 
@@ -634,29 +641,23 @@ nsresult nsAppShellService::JustCreateTopWindow(
     isPrivateBrowsingWindow = parentContext->UsePrivateBrowsing();
   }
 
-  RefPtr<nsDocShell> docShell = window->GetDocShell();
-  NS_ENSURE_TRUE(docShell, NS_ERROR_UNEXPECTED);
+  if (RefPtr<nsDocShell> docShell = window->GetDocShell()) {
+    MOZ_ASSERT(docShell->GetBrowsingContext()->IsChrome());
 
-  MOZ_ASSERT(docShell->GetBrowsingContext()->IsChrome());
+    docShell->SetPrivateBrowsing(isPrivateBrowsingWindow);
+    docShell->SetRemoteTabs(aChromeMask &
+                            nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
+    docShell->SetRemoteSubframes(aChromeMask &
+                                 nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
 
-  docShell->SetPrivateBrowsing(isPrivateBrowsingWindow);
-  docShell->SetRemoteTabs(aChromeMask &
-                          nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
-  docShell->SetRemoteSubframes(aChromeMask &
-                               nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
-
-  if ((aChromeMask & nsIWebBrowserChrome::CHROME_DOCUMENT_PIP)) {
-    rv = docShell->GetBrowsingContext()->SetIsDocumentPiP(true);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Begin loading the URL provided.
-  if (aUrl) {
-    RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aUrl);
-    loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
-    loadState->SetFirstParty(true);
-    rv = docShell->LoadURI(loadState, /* aSetNavigating */ true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Begin loading the URL provided.
+    if (aUrl) {
+      RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aUrl);
+      loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
+      loadState->SetFirstParty(true);
+      rv = docShell->LoadURI(loadState, /* aSetNavigating */ true);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   window.forget(aResult);

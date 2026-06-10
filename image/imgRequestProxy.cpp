@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -752,8 +753,8 @@ imgRequestProxy::GetFileName(nsACString& aFileName) {
   return NS_OK;
 }
 
-already_AddRefed<imgRequestProxy> imgRequestProxy::NewClonedProxy() {
-  return mozilla::MakeAndAddRef<imgRequestProxy>();
+imgRequestProxy* imgRequestProxy::NewClonedProxy() {
+  return new imgRequestProxy();
 }
 
 NS_IMETHODIMP
@@ -1103,9 +1104,9 @@ already_AddRefed<imgRequestProxy> imgRequestProxy::GetStaticRequest(
   bool hadCrossOriginRedirects = true;
   GetHadCrossOriginRedirects(&hadCrossOriginRedirects);
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = GetTriggeringPrincipal();
-  auto req = MakeRefPtr<imgRequestProxyStatic>(frozenImage, currentPrincipal,
-                                               triggeringPrincipal,
-                                               hadCrossOriginRedirects);
+  RefPtr<imgRequestProxy> req =
+      new imgRequestProxyStatic(frozenImage, currentPrincipal,
+                                triggeringPrincipal, hadCrossOriginRedirects);
   req->Init(nullptr, nullptr, mURI, nullptr);
 
   return req.forget();
@@ -1257,7 +1258,7 @@ imgRequestProxyStatic::GetHadCrossOriginRedirects(
   return NS_OK;
 }
 
-already_AddRefed<imgRequestProxy> imgRequestProxyStatic::NewClonedProxy() {
+imgRequestProxy* imgRequestProxyStatic::NewClonedProxy() {
   nsCOMPtr<nsIPrincipal> currentPrincipal;
   GetImagePrincipal(getter_AddRefs(currentPrincipal));
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
@@ -1265,6 +1266,6 @@ already_AddRefed<imgRequestProxy> imgRequestProxyStatic::NewClonedProxy() {
   bool hadCrossOriginRedirects = true;
   GetHadCrossOriginRedirects(&hadCrossOriginRedirects);
   RefPtr<mozilla::image::Image> image = GetImage();
-  return mozilla::MakeAndAddRef<imgRequestProxyStatic>(
-      image, currentPrincipal, triggeringPrincipal, hadCrossOriginRedirects);
+  return new imgRequestProxyStatic(image, currentPrincipal, triggeringPrincipal,
+                                   hadCrossOriginRedirects);
 }

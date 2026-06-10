@@ -24,7 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.theme.AcornTheme
 import androidx.compose.material3.FloatingActionButton as M3FloatingActionButton
@@ -85,7 +85,7 @@ fun FloatingActionButton(
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun FloatingActionButtonPreview() {
     var label by remember { mutableStateOf<String?>("LABEL") }
@@ -103,7 +103,26 @@ private fun FloatingActionButtonPreview() {
     }
 }
 
-@PreviewLightDark
+@Preview
+@Composable
+private fun SurfaceFloatingActionButtonPreview() {
+    var label by remember { mutableStateOf<String?>("LABEL") }
+
+    AcornTheme {
+        Box(Modifier.wrapContentSize()) {
+            FloatingActionButton(
+                label = label,
+                icon = painterResource(iconsR.drawable.mozac_ic_plus_24),
+                colors = FloatingActionButtonDefaults.colorsSurface(),
+                onClick = {
+                    label = if (label == null) "LABEL" else null
+                },
+            )
+        }
+    }
+}
+
+@Preview
 @Composable
 private fun CustomFloatingActionButtonPreview() {
     var label by remember { mutableStateOf<String?>("LABEL") }

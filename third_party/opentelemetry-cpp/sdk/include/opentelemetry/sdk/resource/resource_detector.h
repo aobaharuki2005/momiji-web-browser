@@ -20,16 +20,9 @@ namespace resource
 class ResourceDetector
 {
 public:
-  ResourceDetector() = default;
-
-  ResourceDetector(const ResourceDetector &)            = delete;
-  ResourceDetector(ResourceDetector &&)                 = delete;
-  ResourceDetector &operator=(const ResourceDetector &) = delete;
-  ResourceDetector &operator=(ResourceDetector &&)      = delete;
-
+  ResourceDetector()          = default;
   virtual ~ResourceDetector() = default;
-
-  virtual Resource Detect() = 0;
+  virtual Resource Detect()   = 0;
 
 protected:
   static Resource Create(const ResourceAttributes &attributes,

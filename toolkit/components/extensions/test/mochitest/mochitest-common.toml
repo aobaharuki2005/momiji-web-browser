@@ -2,7 +2,6 @@
 tags = "condprof"
 support-files = [
   "chrome_cleanup_script.js",
-  "file_204_no_content.sjs",
   "file_WebNavigation_page1.html",
   "file_WebNavigation_page2.html",
   "file_WebNavigation_page3.html",
@@ -93,11 +92,6 @@ prefs = [
 
 ["test_ext_action.html"]
 
-["test_ext_action_openPopup_multiple.html"]
-skip-if = [
-  "os == 'android'", # bug 2016283
-]
-
 ["test_ext_activityLog.html"]
 skip-if = [
   "http2",
@@ -142,7 +136,7 @@ skip-if = [
 
 ["test_ext_browserAction_openPopup_windowId.html"]
 skip-if = [
-  "os == 'linux' && os_version == '22.04' && arch == 'x86_64' && display == 'wayland'", # Bug 1855364, https://bugzilla.mozilla.org/show_bug.cgi?id=1855364#c42
+  "os == 'android'", # only the current window is supported - bug 1795956
 ]
 
 ["test_ext_browserAction_openPopup_without_pref.html"]
@@ -222,7 +216,7 @@ skip-if = [
 
 ["test_ext_contentscript_data_url.html"]
 skip-if = [
-  "os == 'android' && os_version == '14' && arch == 'x86_64'", # Bug 1897040
+  "os == 'android' && os_version == '14' && processor == 'x86_64'", # Bug 1897040
 ]
 
 ["test_ext_contentscript_devtools_metadata.html"]
@@ -304,8 +298,6 @@ skip-if = [
   "http2",
   "http3",
 ]
-
-["test_ext_executeScript_mozextension.html"]
 
 ["test_ext_extension_getViews.html"]
 
@@ -522,10 +514,6 @@ skip-if = [
   "http3",
 ]
 
-["test_ext_tabs_splitViewId.html"]
-
-["test_ext_tabs_tabTracker_awaitTabReady.html"]
-
 ["test_ext_test.html"]
 skip-if = [
   "http2",
@@ -543,8 +531,6 @@ skip-if = [
 skip-if = [
   "os == 'android' && debug", # bug 1397615
 ]
-
-["test_ext_webauthn.html"]
 
 ["test_ext_webnavigation.html"]
 skip-if = [
@@ -566,8 +552,6 @@ skip-if = [
   "http3",
   "os == 'android'", # Bug 1513544 (GeckoView is missing the windows API and ability to open private tabs)
 ]
-
-["test_ext_webnavigation_onCommitted.html"]
 
 ["test_ext_webrequest_and_proxy_filter.html"]
 skip-if = [

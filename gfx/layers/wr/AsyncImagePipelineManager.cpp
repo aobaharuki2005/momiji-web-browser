@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -460,6 +462,10 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
       float(aPipeline->mCurrentTexture->GetSize().width),
       float(aPipeline->mCurrentTexture->GetSize().height)};
   computedTransform.rotation = aPipeline->mRotation;
+  // We don't have a frame / per-frame key here, but we can use the pipeline id
+  // and the key kind to create a unique stable key.
+  computedTransform.key = wr::SpatialKey(
+      aPipelineId.mNamespace, aPipelineId.mHandle, wr::SpatialKeyKind::APZ);
   params.computed_transform = &computedTransform;
 
   Maybe<wr::WrSpatialId> referenceFrameId =
@@ -512,7 +518,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   wr::BuiltDisplayList dl;
   aPipeline->mDLBuilder.End(dl);
   aSceneBuilderTxn.SetDisplayList(aEpoch, aPipelineId, dl.dl_desc, dl.dl_items,
-                                  dl.dl_spatial_tree);
+                                  dl.dl_cache, dl.dl_spatial_tree);
 }
 
 void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
@@ -604,7 +610,7 @@ void AsyncImagePipelineManager::SetEmptyDisplayList(
 
   wr::BuiltDisplayList dl;
   builder.End(dl);
-  txn.SetDisplayList(epoch, aPipelineId, dl.dl_desc, dl.dl_items,
+  txn.SetDisplayList(epoch, aPipelineId, dl.dl_desc, dl.dl_items, dl.dl_cache,
                      dl.dl_spatial_tree);
 }
 

@@ -14,7 +14,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//modules/video_coding:video_codec_perf_tests",
         "name": "video_codec_perf_tests",
         "resultdb": {
           "enable": true,
@@ -49,7 +48,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//:webrtc_perf_tests",
         "name": "webrtc_perf_tests",
         "resultdb": {
           "enable": true,
@@ -87,7 +85,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//modules/video_coding:video_codec_perf_tests",
         "name": "video_codec_perf_tests",
         "resultdb": {
           "enable": true,
@@ -122,7 +119,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//:webrtc_perf_tests",
         "name": "webrtc_perf_tests",
         "resultdb": {
           "enable": true,
@@ -164,7 +160,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//modules/video_coding:video_codec_perf_tests",
         "name": "video_codec_perf_tests",
         "resultdb": {
           "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
@@ -201,7 +196,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//:webrtc_perf_tests",
         "name": "webrtc_perf_tests",
         "resultdb": {
           "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
@@ -237,7 +231,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//modules/video_coding:video_codec_perf_tests",
         "name": "video_codec_perf_tests",
         "resultdb": {
           "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
@@ -271,7 +264,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//:webrtc_perf_tests",
         "name": "webrtc_perf_tests",
         "resultdb": {
           "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
@@ -281,6 +273,75 @@
           "dimensions": {
             "gce": "0",
             "os": "Ubuntu-22.04",
+            "pool": "WebRTC-perf"
+          },
+          "expiration": 10800,
+          "hard_timeout": 10800,
+          "idempotent": false,
+          "io_timeout": 10800
+        },
+        "test": "webrtc_perf_tests",
+        "test_id_prefix": "ninja://:webrtc_perf_tests/"
+      }
+    ]
+  },
+  "Perf Mac 11": {
+    "isolated_scripts": [
+      {
+        "args": [
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
+        "merge": {
+          "args": [
+            "--test-suite",
+            "video_codec_perf_tests"
+          ],
+          "script": "//tools_webrtc/perf/process_perf_results.py"
+        },
+        "name": "video_codec_perf_tests",
+        "resultdb": {
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
+        },
+        "swarming": {
+          "dimensions": {
+            "cpu": "x86-64",
+            "gce": "0",
+            "os": "Mac-11",
+            "pool": "WebRTC-perf"
+          },
+          "expiration": 10800,
+          "hard_timeout": 10800,
+          "idempotent": false,
+          "io_timeout": 10800
+        },
+        "test": "video_codec_perf_tests",
+        "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
+      },
+      {
+        "args": [
+          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
+          "--save_worst_frame",
+          "--nologs",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
+        "merge": {
+          "args": [
+            "--test-suite",
+            "webrtc_perf_tests"
+          ],
+          "script": "//tools_webrtc/perf/process_perf_results.py"
+        },
+        "name": "webrtc_perf_tests",
+        "resultdb": {
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
+        },
+        "swarming": {
+          "dimensions": {
+            "cpu": "x86-64",
+            "gce": "0",
+            "os": "Mac-11",
             "pool": "WebRTC-perf"
           },
           "expiration": 10800,
@@ -306,7 +367,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//modules/video_coding:video_codec_perf_tests",
         "name": "video_codec_perf_tests",
         "resultdb": {
           "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
@@ -341,7 +401,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//:webrtc_perf_tests",
         "name": "webrtc_perf_tests",
         "resultdb": {
           "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
@@ -377,7 +436,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//modules/video_coding:video_codec_perf_tests",
         "name": "video_codec_perf_tests",
         "resultdb": {
           "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
@@ -411,7 +469,6 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "module_name": "//:webrtc_perf_tests",
         "name": "webrtc_perf_tests",
         "resultdb": {
           "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",

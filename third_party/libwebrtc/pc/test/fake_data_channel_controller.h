@@ -32,12 +32,11 @@
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/weak_ptr.h"
 
-namespace webrtc {
-
-class FakeDataChannelController : public SctpDataChannelControllerInterface {
+class FakeDataChannelController
+    : public webrtc::SctpDataChannelControllerInterface {
  public:
-  explicit FakeDataChannelController(Thread* network_thread)
-      : signaling_thread_(Thread::Current()),
+  explicit FakeDataChannelController(webrtc::Thread* network_thread)
+      : signaling_thread_(webrtc::Thread::Current()),
         network_thread_(network_thread),
         send_blocked_(false),
         transport_available_(false),
@@ -51,33 +50,35 @@ class FakeDataChannelController : public SctpDataChannelControllerInterface {
     });
   }
 
-  WeakPtr<FakeDataChannelController> weak_ptr() {
+  webrtc::WeakPtr<FakeDataChannelController> weak_ptr() {
     RTC_DCHECK_RUN_ON(network_thread_);
     return weak_factory_.GetWeakPtr();
   }
 
-  scoped_refptr<SctpDataChannel> CreateDataChannel(
+  webrtc::scoped_refptr<webrtc::SctpDataChannel> CreateDataChannel(
       absl::string_view label,
-      InternalDataChannelInit init) {
-    scoped_refptr<SctpDataChannel> channel =
+      webrtc::InternalDataChannelInit init) {
+    webrtc::scoped_refptr<webrtc::SctpDataChannel> channel =
         network_thread_->BlockingCall([&]() {
           RTC_DCHECK_RUN_ON(network_thread_);
-          WeakPtr<FakeDataChannelController> my_weak_ptr = weak_ptr();
+          webrtc::WeakPtr<FakeDataChannelController> my_weak_ptr = weak_ptr();
           // Explicitly associate the weak ptr instance with the current thread
           // to catch early any inappropriate referencing of it on the network
           // thread.
           RTC_CHECK(my_weak_ptr);
 
-          scoped_refptr<SctpDataChannel> channel = SctpDataChannel::Create(
-              std::move(my_weak_ptr), std::string(label), transport_available_,
-              init, signaling_thread_, network_thread_);
+          webrtc::scoped_refptr<webrtc::SctpDataChannel> channel =
+              webrtc::SctpDataChannel::Create(
+                  std::move(my_weak_ptr), std::string(label),
+                  transport_available_, init, signaling_thread_,
+                  network_thread_);
           if (transport_available_ && channel->sid_n().has_value()) {
             AddSctpDataStream(*channel->sid_n(), channel->priority());
           }
           if (ready_to_send_) {
             network_thread_->PostTask([channel = channel] {
               if (channel->state() !=
-                  DataChannelInterface::DataState::kClosed) {
+                  webrtc::DataChannelInterface::DataState::kClosed) {
                 channel->OnTransportReady();
               }
             });
@@ -88,34 +89,35 @@ class FakeDataChannelController : public SctpDataChannelControllerInterface {
     return channel;
   }
 
-  RTCError SendData(StreamId sid,
-                    const SendDataParams& params,
-                    const CopyOnWriteBuffer& payload) override {
+  webrtc::RTCError SendData(webrtc::StreamId sid,
+                            const webrtc::SendDataParams& params,
+                            const webrtc::CopyOnWriteBuffer& payload) override {
     RTC_DCHECK_RUN_ON(network_thread_);
     RTC_CHECK(ready_to_send_);
     RTC_CHECK(transport_available_);
     if (send_blocked_) {
-      return RTCError(RTCErrorType::RESOURCE_EXHAUSTED);
+      return webrtc::RTCError(webrtc::RTCErrorType::RESOURCE_EXHAUSTED);
     }
 
     if (transport_error_) {
-      return RTCError(RTCErrorType::INTERNAL_ERROR);
+      return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR);
     }
 
     last_sid_ = sid;
     last_send_data_params_ = params;
-    return RTCError::OK();
+    return webrtc::RTCError::OK();
   }
 
-  RTCError AddSctpDataStream(StreamId sid, PriorityValue priority) override {
+  void AddSctpDataStream(webrtc::StreamId sid,
+                         webrtc::PriorityValue priority) override {
     RTC_DCHECK_RUN_ON(network_thread_);
-    if (transport_available_) {
-      known_stream_ids_.insert(sid);
+    if (!transport_available_) {
+      return;
     }
-    return RTCError::OK();
+    known_stream_ids_.insert(sid);
   }
 
-  void RemoveSctpDataStream(StreamId sid) override {
+  void RemoveSctpDataStream(webrtc::StreamId sid) override {
     RTC_DCHECK_RUN_ON(network_thread_);
     known_stream_ids_.erase(sid);
     // Unlike the real SCTP transport, act like the closing procedure finished
@@ -128,22 +130,24 @@ class FakeDataChannelController : public SctpDataChannelControllerInterface {
       (*it)->OnClosingProcedureComplete();
   }
 
-  void OnChannelStateChanged(SctpDataChannel* data_channel,
-                             DataChannelInterface::DataState state) override {
+  void OnChannelStateChanged(
+      webrtc::SctpDataChannel* data_channel,
+      webrtc::DataChannelInterface::DataState state) override {
     RTC_DCHECK_RUN_ON(network_thread_);
-    if (state == DataChannelInterface::DataState::kOpen) {
+    if (state == webrtc::DataChannelInterface::DataState::kOpen) {
       ++channels_opened_;
-    } else if (state == DataChannelInterface::DataState::kClosed) {
+    } else if (state == webrtc::DataChannelInterface::DataState::kClosed) {
       ++channels_closed_;
       connected_channels_.erase(data_channel);
     }
   }
 
-  size_t buffered_amount(StreamId sid) const override { return 0; }
-  size_t buffered_amount_low_threshold(StreamId sid) const override {
+  size_t buffered_amount(webrtc::StreamId sid) const override { return 0; }
+  size_t buffered_amount_low_threshold(webrtc::StreamId sid) const override {
     return 0;
   }
-  void SetBufferedAmountLowThreshold(StreamId sid, size_t bytes) override {}
+  void SetBufferedAmountLowThreshold(webrtc::StreamId sid,
+                                     size_t bytes) override {}
 
   // Set true to emulate the SCTP stream being blocked by congestion control.
   void set_send_blocked(bool blocked) {
@@ -155,7 +159,7 @@ class FakeDataChannelController : public SctpDataChannelControllerInterface {
         // Make a copy since `connected_channels_` may change while
         // OnTransportReady is called.
         auto copy = connected_channels_;
-        for (SctpDataChannel* ch : copy) {
+        for (webrtc::SctpDataChannel* ch : copy) {
           ch->OnTransportReady();
         }
       }
@@ -179,7 +183,7 @@ class FakeDataChannelController : public SctpDataChannelControllerInterface {
       RTC_CHECK(transport_available_);
       ready_to_send_ = ready;
       if (ready) {
-        std::set<SctpDataChannel*>::iterator it;
+        std::set<webrtc::SctpDataChannel*>::iterator it;
         for (it = connected_channels_.begin(); it != connected_channels_.end();
              ++it) {
           (*it)->OnTransportReady();
@@ -202,14 +206,14 @@ class FakeDataChannelController : public SctpDataChannelControllerInterface {
     });
   }
 
-  SendDataParams last_send_data_params() const {
+  webrtc::SendDataParams last_send_data_params() const {
     return network_thread_->BlockingCall([&]() {
       RTC_DCHECK_RUN_ON(network_thread_);
       return last_send_data_params_;
     });
   }
 
-  bool IsConnected(SctpDataChannel* data_channel) const {
+  bool IsConnected(webrtc::SctpDataChannel* data_channel) const {
     return network_thread_->BlockingCall([&]() {
       RTC_DCHECK_RUN_ON(network_thread_);
       return connected_channels_.find(data_channel) !=
@@ -217,7 +221,7 @@ class FakeDataChannelController : public SctpDataChannelControllerInterface {
     });
   }
 
-  bool IsStreamAdded(StreamId id) const {
+  bool IsStreamAdded(webrtc::StreamId id) const {
     return network_thread_->BlockingCall([&]() {
       RTC_DCHECK_RUN_ON(network_thread_);
       return known_stream_ids_.find(id) != known_stream_ids_.end();
@@ -234,22 +238,20 @@ class FakeDataChannelController : public SctpDataChannelControllerInterface {
   }
 
  private:
-  Thread* const signaling_thread_;
-  Thread* const network_thread_;
-  StreamId last_sid_ RTC_GUARDED_BY(network_thread_);
-  SendDataParams last_send_data_params_ RTC_GUARDED_BY(network_thread_);
+  webrtc::Thread* const signaling_thread_;
+  webrtc::Thread* const network_thread_;
+  webrtc::StreamId last_sid_ RTC_GUARDED_BY(network_thread_);
+  webrtc::SendDataParams last_send_data_params_ RTC_GUARDED_BY(network_thread_);
   bool send_blocked_ RTC_GUARDED_BY(network_thread_);
   bool transport_available_ RTC_GUARDED_BY(network_thread_);
   bool ready_to_send_ RTC_GUARDED_BY(network_thread_);
   bool transport_error_ RTC_GUARDED_BY(network_thread_);
   int channels_closed_ RTC_GUARDED_BY(network_thread_) = 0;
   int channels_opened_ RTC_GUARDED_BY(network_thread_) = 0;
-  std::set<SctpDataChannel*> connected_channels_
+  std::set<webrtc::SctpDataChannel*> connected_channels_
       RTC_GUARDED_BY(network_thread_);
-  std::set<StreamId> known_stream_ids_ RTC_GUARDED_BY(network_thread_);
-  WeakPtrFactory<FakeDataChannelController> weak_factory_
+  std::set<webrtc::StreamId> known_stream_ids_ RTC_GUARDED_BY(network_thread_);
+  webrtc::WeakPtrFactory<FakeDataChannelController> weak_factory_
       RTC_GUARDED_BY(network_thread_){this};
 };
-
-}  // namespace webrtc
 #endif  // PC_TEST_FAKE_DATA_CHANNEL_CONTROLLER_H_

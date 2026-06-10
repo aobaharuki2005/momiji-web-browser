@@ -23,7 +23,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
-import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -74,7 +73,6 @@ class SiteSecurityRobot {
         Log.i(TAG, "clickQuickActionSheetClearSiteData: Trying to click the \"Clear cookies and site data\" button")
         quickActionSheetClearSiteData().click()
         Log.i(TAG, "clickQuickActionSheetClearSiteData: Clicked the \"Clear cookies and site data\" button")
-        waitForAppWindowToBeUpdated()
     }
     fun verifyClearSiteDataPrompt(url: String) {
         assertUIObjectExists(clearSiteDataPrompt(url))
@@ -126,9 +124,9 @@ class SiteSecurityRobot {
         }
 
         fun toggleEnhancedTrackingProtectionFromSheet(interact: SiteSecurityRobot.() -> Unit): SiteSecurityRobot.Transition {
-            itemWithResId("$packageName:id/trackingProtectionLayout").waitForExists(waitingTime)
+            waitForAppWindowToBeUpdated()
             Log.i(TAG, "toggleEnhancedTrackingProtectionFromSheet: Trying to click ETP switch")
-            itemWithResId("$packageName:id/trackingProtectionSwitch").click()
+            enhancedTrackingProtectionSwitch().click()
             Log.i(TAG, "toggleEnhancedTrackingProtectionFromSheet: Clicked ETP switch")
 
             SiteSecurityRobot().interact()
@@ -244,7 +242,7 @@ private fun cancelClearSiteDataButton() = onView(withId(android.R.id.button2)).i
 private fun deleteSiteDataButton() = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
 
 private fun enhancedTrackingProtectionSwitch() =
-    onView(withId(R.id.trackingProtectionSwitch))
+    onView(ViewMatchers.withResourceName("switch_widget"))
 
 private fun openEnhancedTrackingProtectionDetails() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/trackingProtectionDetails"))

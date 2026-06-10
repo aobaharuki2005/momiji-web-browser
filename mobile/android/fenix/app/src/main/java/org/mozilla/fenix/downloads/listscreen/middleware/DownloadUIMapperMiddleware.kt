@@ -12,12 +12,11 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.lib.publicsuffixlist.PublicSuffixList
+import mozilla.components.feature.downloads.DateTimeProvider
+import mozilla.components.feature.downloads.DefaultDateTimeProvider
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.ext.flow
-import mozilla.components.support.utils.DateTimeProvider
-import mozilla.components.support.utils.DefaultDateTimeProvider
 import org.mozilla.fenix.downloads.listscreen.store.DownloadUIAction
 import org.mozilla.fenix.downloads.listscreen.store.DownloadUIState
 import org.mozilla.fenix.downloads.listscreen.store.FileItem
@@ -29,7 +28,6 @@ import java.time.Instant
  * Middleware for loading and mapping download items from the browser store.
  *
  * @param browserStore [BrowserStore] instance to get the download items from.
- * @param publicSuffixList [PublicSuffixList] used to accurately extract base domains.
  * @param fileItemDescriptionProvider [FileItemDescriptionProvider] used to format the description
  * of the file item.
  * @param scope The [CoroutineScope] that will be used to launch coroutines.
@@ -37,7 +35,6 @@ import java.time.Instant
  */
 class DownloadUIMapperMiddleware(
     private val browserStore: BrowserStore,
-    private val publicSuffixList: PublicSuffixList,
     private val fileItemDescriptionProvider: FileItemDescriptionProvider,
     private val scope: CoroutineScope,
     private val dateTimeProvider: DateTimeProvider = DefaultDateTimeProvider(),
@@ -72,30 +69,31 @@ class DownloadUIMapperMiddleware(
         }
     }
 
-    private suspend fun Map<String, DownloadState>.toFileItemsList(): List<FileItem> = values
-        .filter { isDisplayableItem(it.status) }
-        .sortedByDescending { it.createdTime }
-        .distinctBy { Triple(it.fileName, it.status, it.directoryPath) }
-        .map { it.toFileItem() }
+    private fun Map<String, DownloadState>.toFileItemsList(): List<FileItem> =
+        values
+            .filter { isDisplayableItem(it.status) }
+            .distinctBy { Pair(it.fileName, it.status) }
+            .sortedByDescending { it.createdTime } // sort from newest to oldest
+            .map { it.toFileItem() }
 
     private fun isDisplayableItem(status: DownloadState.Status) =
         status != DownloadState.Status.CANCELLED
 
-    private suspend fun DownloadState.toFileItem() = FileItem(
-        id = id,
-        url = url,
-        fileName = fileName,
-        filePath = filePath,
-        directoryPath = directoryPath,
-        displayedShortUrl = url.getBaseDomainUrl(publicSuffixList),
-        contentType = contentType,
-        status = status.toFileItemStatus(progress = progress),
-        timeCategory = categorizeGroup(
-            epochMillis = createdTime,
-            status = status,
-        ),
-        description = fileItemDescriptionProvider.getDescription(downloadState = this),
-    )
+    private fun DownloadState.toFileItem() =
+        FileItem(
+            id = id,
+            url = url,
+            fileName = fileName,
+            filePath = filePath,
+            displayedShortUrl = url.getBaseDomainUrl(),
+            contentType = contentType,
+            status = status.toFileItemStatus(progress = progress),
+            timeCategory = categorizeGroup(
+                epochMillis = createdTime,
+                status = status,
+            ),
+            description = fileItemDescriptionProvider.getDescription(downloadState = this),
+        )
 
     private fun DownloadState.Status.toFileItemStatus(
         @FloatRange(from = 0.0, to = 1.0) progress: Float?,

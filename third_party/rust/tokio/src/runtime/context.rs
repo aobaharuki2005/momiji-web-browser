@@ -66,7 +66,7 @@ struct Context {
 
     #[cfg(all(
         tokio_unstable,
-        feature = "taskdump",
+        tokio_taskdump,
         feature = "rt",
         target_os = "linux",
         any(target_arch = "aarch64", target_arch = "x86", target_arch = "x86_64")
@@ -107,7 +107,7 @@ tokio_thread_local! {
 
             #[cfg(all(
                 tokio_unstable,
-                feature = "taskdump",
+                tokio_taskdump,
                 feature = "rt",
                 target_os = "linux",
                 any(
@@ -157,11 +157,6 @@ cfg_rt! {
 
     pub(crate) fn current_task_id() -> Option<Id> {
         CONTEXT.try_with(|ctx| ctx.current_task_id.get()).unwrap_or(None)
-    }
-
-    #[cfg(tokio_unstable)]
-    pub(crate) fn worker_index() -> Option<usize> {
-        with_scheduler(|ctx| ctx.and_then(|c| c.worker_index()))
     }
 
     #[track_caller]

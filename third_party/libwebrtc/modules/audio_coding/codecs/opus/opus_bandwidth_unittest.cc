@@ -15,7 +15,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "api/audio_codecs/audio_decoder.h"
@@ -93,7 +92,7 @@ float EncodedPowerRatio(AudioEncoder* encoder,
   // Encode and decode.
   uint32_t rtp_timestamp = 0u;
   constexpr size_t kBufferSize = 500;
-  Buffer encoded = Buffer::CreateWithCapacity(kBufferSize);
+  Buffer encoded(kBufferSize);
   std::vector<int16_t> decoded(kOutputBlockSizeSamples);
   std::vector<float> decoded_float(kOutputBlockSizeSamples);
   AudioDecoder::SpeechType speech_type = AudioDecoder::kSpeech;
@@ -130,13 +129,13 @@ TEST(BandwidthAdaptationTest, BandwidthAdaptationTest) {
   AudioEncoderOpusConfig enc_config;
   enc_config.bitrate_bps = std::optional<int>(7999);
   enc_config.num_channels = kNumChannels;
-  auto encoder = AudioEncoderOpus::MakeAudioEncoder(env, std::move(enc_config),
-                                                    {.payload_type = 17});
+  auto encoder =
+      AudioEncoderOpus::MakeAudioEncoder(env, enc_config, {.payload_type = 17});
 
   // Create decoder.
   AudioDecoderOpus::Config dec_config;
   dec_config.num_channels = kNumChannels;
-  auto decoder = AudioDecoderOpus::MakeAudioDecoder(env, std::move(dec_config));
+  auto decoder = AudioDecoderOpus::MakeAudioDecoder(env, dec_config);
 
   // Open speech file.
   const std::string kInputFileName =

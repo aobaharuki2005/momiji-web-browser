@@ -31,7 +31,7 @@ class OutputAudioFile : public AudioSink {
     out_file_ = fopen(std::string(file_name).c_str(), "wb");
   }
 
-  ~OutputAudioFile() override {
+  virtual ~OutputAudioFile() {
     if (out_file_)
       fclose(out_file_);
   }

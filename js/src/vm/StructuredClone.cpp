@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -37,8 +39,9 @@
 #include <memory>
 #include <utility>
 
+#include "jsdate.h"
+
 #include "builtin/DataViewObject.h"
-#include "builtin/Date.h"
 #include "builtin/MapObject.h"
 #include "gc/GC.h"           // AutoSelectGCHeap
 #include "js/Array.h"        // JS::GetArrayLength, JS::IsArrayObject
@@ -489,10 +492,6 @@ struct JSStructuredCloneReader {
 
   [[nodiscard]] bool readObjectField(HandleObject obj, HandleValue key);
 
-  [[nodiscard]] bool startReadUnchecked(MutableHandleValue vp,
-                                        ShouldAtomizeStrings atomizeStrings,
-                                        bool* usedBackRef);
-
   [[nodiscard]] bool startRead(
       MutableHandleValue vp,
       ShouldAtomizeStrings atomizeStrings = DontAtomizeStrings);
@@ -529,18 +528,14 @@ struct JSStructuredCloneReader {
   // Array of all objects read during this deserialization, for resolving
   // backreferences.
   //
-  // For backreferences to work correctly, objects must be added to this array
-  // in exactly the order expected by the version of the Writer that created the
-  // serialized data, even across years and format versions. This is usually no
-  // problem, since both algorithms do a single linear pass over the serialized
-  // data. However, when a serialized object stores multiple objects that could
-  // be backreferences such as with a TypedArray and its ArrayBuffer (see
-  // readTypedArray), it is very important that the writer and reader use
-  // exactly the same ordering so that backref indexes are consistent.
+  // For backreferences to work correctly, objects must be added to this
+  // array in exactly the order expected by the version of the Writer that
+  // created the serialized data, even across years and format versions. This
+  // is usually no problem, since both algorithms do a single linear pass
+  // over the serialized data. There is one hitch; see readTypedArray.
   //
-  // The values in this vector are objects, except it can temporarily have an
-  // `undefined` placeholder value (for the multiple-object cases like typed
-  // arrays).
+  // The values in this vector are objects, except it can temporarily have
+  // one `undefined` placeholder value (the readTypedArray hack).
   RootedValueVector allObjs;
 
   size_t numItemsRead;
@@ -608,10 +603,11 @@ struct JSStructuredCloneWriter {
   void extractBuffer(JSStructuredCloneData* newData) {
     out.extractBuffer(newData);
   }
+
+ private:
   JSStructuredCloneWriter() = delete;
   JSStructuredCloneWriter(const JSStructuredCloneWriter&) = delete;
 
- private:
   JSContext* context() { return out.context(); }
 
   bool writeHeader();
@@ -1592,17 +1588,12 @@ bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
 
   Rooted<WasmMemoryObject*> memoryObj(context(),
                                       &obj->unwrapAs<WasmMemoryObject>());
-  JSAutoRealm ar(context(), memoryObj);
+  Rooted<SharedArrayBufferObject*> sab(
+      context(), &memoryObj->buffer().as<SharedArrayBufferObject>());
 
-  if (!out.writePair(SCTAG_SHARED_WASM_MEMORY_OBJECT, 0) ||
-      !out.writePair(SCTAG_BOOLEAN, memoryObj->isHuge())) {
-    return false;
-  }
-
-  // Use startWrite to register in memory map for back-reference support.
-  MOZ_RELEASE_ASSERT(memoryObj->buffer().is<SharedArrayBufferObject>());
-  RootedValue bufferVal(context(), ObjectValue(memoryObj->buffer()));
-  return startWrite(bufferVal);
+  return out.writePair(SCTAG_SHARED_WASM_MEMORY_OBJECT, 0) &&
+         out.writePair(SCTAG_BOOLEAN, memoryObj->isHuge()) &&
+         writeSharedArrayBuffer(sab);
 }
 
 bool JSStructuredCloneWriter::startObject(HandleObject obj, bool* backref) {
@@ -1910,12 +1901,12 @@ bool JSStructuredCloneWriter::traverseSavedFrame(HandleObject obj) {
     return false;
   }
 
-  val = Int32Value(savedFrame->getLine());
+  val = NumberValue(savedFrame->getLine());
   if (!writePrimitive(val)) {
     return false;
   }
 
-  val = Int32Value(*savedFrame->getColumn().addressOfValueForTranscode());
+  val = NumberValue(*savedFrame->getColumn().addressOfValueForTranscode());
   if (!writePrimitive(val)) {
     return false;
   }
@@ -2012,13 +2003,8 @@ bool JSStructuredCloneWriter::traverseError(HandleObject obj) {
     return false;
   }
 
-  // ToString can call arbitrary JS so we have to check for nuked CCWs.
-  if (!obj->canUnwrapAs<ErrorObject>()) {
-    MOZ_ASSERT(JS_IsDeadWrapper(CheckedUnwrapStatic(obj)));
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
-    return false;
-  }
-  Rooted<ErrorObject*> unwrapped(cx, &obj->unwrapAs<ErrorObject>());
+  Rooted<ErrorObject*> unwrapped(cx, obj->maybeUnwrapAs<ErrorObject>());
+  MOZ_ASSERT(unwrapped);
 
   // Non-standard: Serialize |stack|.
   // The Error stack property is saved as SavedFrames.
@@ -2547,7 +2533,7 @@ bool JSStructuredCloneWriter::write(HandleValue v) {
 
         if (found) {
 #if FUZZING_JS_FUZZILLI
-          // suppress calls into user code
+          // supress calls into user code
           if (js::SupportDifferentialTesting()) {
             fprintf(stderr, "Differential testing: cannot call GetProperty\n");
             return false;
@@ -2587,10 +2573,6 @@ JSStructuredCloneReader::JSStructuredCloneReader(
       callbacks(cb),
       closure(cbClosure),
       gcHeap(in.context()) {
-  // Readers should never enable SAB for a DifferentProcess scope.
-  MOZ_RELEASE_ASSERT(!(scope == JS::StructuredCloneScope::DifferentProcess &&
-                       cloneDataPolicy.areSharedMemoryObjectsAllowed()));
-
   // Avoid the need to bounds check by keeping a never-matching element at the
   // base of the `objState` stack. This append() will always succeed because
   // the objState vector has a nonzero MinInlineCapacity.
@@ -2693,11 +2675,8 @@ BigInt* JSStructuredCloneReader::readBigInt(uint32_t data) {
   if (!result) {
     return nullptr;
   }
-  {
-    auto digits = result->unguardedDigits();
-    if (!in.readArray(digits.data(), length)) {
-      return nullptr;
-    }
+  if (!in.readArray(result->digits().data(), length)) {
+    return nullptr;
   }
   return JS::BigInt::destructivelyTrimHighZeroDigits(context(), result);
 }
@@ -2991,12 +2970,6 @@ bool JSStructuredCloneReader::readSharedArrayBuffer(StructuredDataType type,
     return false;
   }
 
-  // Add the SharedArrayBuffer to allObjs so that later references can use
-  // back-references.
-  if (!allObjs.append(ObjectValue(*obj))) {
-    return false;
-  }
-
   vp.setObject(*obj);
   return true;
 }
@@ -3020,24 +2993,9 @@ bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
     return false;
   }
 
-  // Reserve a slot in allObjs for this WasmMemoryObject before reading the
-  // embedded SAB.  The writer calls startObject() on the memory first, so the
-  // memory occupies writer-index N while the SAB occupies N+1.  Mirroring that
-  // order here keeps back-reference indices consistent.
-  uint32_t placeholderIndex = allObjs.length();
-  if (!allObjs.append(UndefinedValue())) {
-    return false;
-  }
-
   // Read the isHuge flag
   RootedValue isHuge(cx);
   if (!startRead(&isHuge)) {
-    return false;
-  }
-  if (!isHuge.isBoolean()) {
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                              JSMSG_SC_BAD_SERIALIZED_DATA,
-                              "isHuge must be a boolean");
     return false;
   }
 
@@ -3056,9 +3014,8 @@ bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
     return false;
   }
 
-  Rooted<SharedArrayBufferObject*> sab(
+  Rooted<ArrayBufferObjectMaybeShared*> sab(
       cx, &payload.toObject().as<SharedArrayBufferObject>());
-  MOZ_RELEASE_ASSERT(sab->isWasm());
 
   // Construct the memory.
   RootedObject proto(
@@ -3073,7 +3030,6 @@ bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
   }
 
   vp.setObject(*memory);
-  allObjs[placeholderIndex].set(vp);
   return true;
 }
 
@@ -3140,10 +3096,10 @@ static bool PrimitiveToObject(JSContext* cx, MutableHandleValue vp) {
   return true;
 }
 
-bool JSStructuredCloneReader::startReadUnchecked(
-    MutableHandleValue vp, ShouldAtomizeStrings atomizeStrings,
-    bool* usedBackRef) {
+bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
+                                        ShouldAtomizeStrings atomizeStrings) {
   uint32_t tag, data;
+  bool alreadAppended = false;
 
   AutoCheckRecursionLimit recursion(in.context());
   if (!recursion.check(in.context())) {
@@ -3297,7 +3253,6 @@ bool JSStructuredCloneReader::startReadUnchecked(
         return false;
       }
       vp.set(allObjs[data]);
-      *usedBackRef = true;
       return true;
     }
 
@@ -3319,10 +3274,16 @@ bool JSStructuredCloneReader::startReadUnchecked(
 
     case SCTAG_SHARED_ARRAY_BUFFER_OBJECT:
     case SCTAG_GROWABLE_SHARED_ARRAY_BUFFER_OBJECT:
-      return readSharedArrayBuffer(StructuredDataType(tag), vp);
+      if (!readSharedArrayBuffer(StructuredDataType(tag), vp)) {
+        return false;
+      }
+      break;
 
     case SCTAG_SHARED_WASM_MEMORY_OBJECT:
-      return readSharedWasmMemory(data, vp);
+      if (!readSharedWasmMemory(data, vp)) {
+        return false;
+      }
+      break;
 
     case SCTAG_TYPED_ARRAY_OBJECT_V2: {
       // readTypedArray adds the array to allObjs.
@@ -3443,57 +3404,14 @@ bool JSStructuredCloneReader::startReadUnchecked(
       }
       vp.setObject(*obj);
       allObjs[placeholderIndex].set(vp);
-      return true;
+      alreadAppended = true;
     }
   }
 
-  if (vp.isObject() && !allObjs.append(vp)) {
+  if (!alreadAppended && vp.isObject() && !allObjs.append(vp)) {
     return false;
   }
 
-  return true;
-}
-
-// Wrapper function to verify that objects are properly recorded in allObjs in
-// the order expected.
-bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
-                                        ShouldAtomizeStrings atomizeStrings) {
-  mozilla::DebugOnly<uint32_t> allObjIndex = allObjs.length();
-  bool usedBackRef = false;
-  if (!startReadUnchecked(vp, atomizeStrings, &usedBackRef)) {
-    return false;
-  }
-
-  if (vp.isObject()) {
-    // The convention is that when serializing a compound object (an object
-    // containing at least one other back-referenceable object), that the outer
-    // object will be written and read first and therefore its allObjs slot will
-    // come first.
-    if (usedBackRef) {
-      // `usedBackRef` only refers to the toplevel object here. This branch will
-      // not be taken eg if a TypedArray gets a backref for its ArrayBuffer,
-      // only if the whole TypedArray is a backref.
-      MOZ_ASSERT(allObjs.length() == allObjIndex,
-                 "backrefs should not mutate allObjs");
-    } else {
-      // If you get this assert, make sure your that your object and its
-      // constituents are serialized and deserialized in the same order. On the
-      // reading side, that often requires pushing a placeholder onto allObs,
-      // reading the other things necessary to construct the object, then
-      // storing the constructed object at the placeholder index. (The outer
-      // object tag is written first because if an inner tag were written first,
-      // then we'd need yet another signal to know that the inner object is part
-      // of an outer object rather than just the next object in the stream.)
-      //
-      // Note that this can happen via custom callbacks.
-      MOZ_ASSERT(vp.get() == allObjs[allObjIndex],
-                 "startRead() returned an object that is not stored at the "
-                 "earliest allObjs offset");
-    }
-  } else {
-    MOZ_ASSERT(allObjs.length() == allObjIndex,
-               "startRead() added an allObjs object for a non-object read");
-  }
   return true;
 }
 
@@ -3512,24 +3430,12 @@ bool JSStructuredCloneReader::readHeader() {
     storedScope = JS::StructuredCloneScope::DifferentProcessForIndexedDB;
   }
 
-  if (allowedScope == JS::StructuredCloneScope::DifferentProcessForIndexedDB) {
-    // Bug 1434308 and bug 1458320 - the scopes stored in old IndexedDB clones
-    // are incorrect. IndexedDB callers will pass in the special
-    // DifferentProcessForIndexedDB allowedScope, which means: act like
-    // allowedScope=DifferentProcess and if an old stored scope of 0 is
-    // detected, pretend like it was DifferentProcess instead. Value '0' was
-    // SameProcessSameThread scope and incorrectly used back when the old clones
-    // were written.
-    allowedScope = JS::StructuredCloneScope::DifferentProcess;
-    if (int(storedScope) == 0) {
-      storedScope = JS::StructuredCloneScope::DifferentProcess;
-    }
+  // Backward compatibility with old structured clone buffers. Value '0' was
+  // used for SameProcessSameThread scope.
+  if ((int)storedScope == 0) {
+    storedScope = JS::StructuredCloneScope::SameProcess;
   }
 
-  // Note that various tests have the scope stored in them as
-  // DifferentProcessForIndexedDB, which shouldn't ever have made it to disk.
-  // Given the number of test failures if I forbid it, I'm not confident it
-  // didn't make it into users' data, so will allow it without erroring.
   if (storedScope < JS::StructuredCloneScope::SameProcess ||
       storedScope > JS::StructuredCloneScope::DifferentProcessForIndexedDB) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
@@ -3538,17 +3444,18 @@ bool JSStructuredCloneReader::readHeader() {
     return false;
   }
 
+  if (allowedScope == JS::StructuredCloneScope::DifferentProcessForIndexedDB) {
+    // Bug 1434308 and bug 1458320 - the scopes stored in old IndexedDB
+    // clones are incorrect. Treat them as if they were DifferentProcess.
+    allowedScope = JS::StructuredCloneScope::DifferentProcess;
+    return true;
+  }
+
   if (storedScope < allowedScope) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA,
                               "incompatible structured clone scope");
     return false;
-  }
-
-  if (allowedScope == JS::StructuredCloneScope::DifferentProcess) {
-    MOZ_RELEASE_ASSERT(
-        !cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed());
-    MOZ_RELEASE_ASSERT(!cloneDataPolicy.areSharedMemoryObjectsAllowed());
   }
 
   return true;
@@ -3913,13 +3820,7 @@ JSObject* JSStructuredCloneReader::readErrorHeader(uint32_t type) {
   if (!startRead(&val)) {
     return nullptr;
   }
-  if (!val.isBoolean()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_SC_BAD_SERIALIZED_DATA,
-                              "hasCause must be a boolean");
-    return nullptr;
-  }
-  bool hasCause = val.toBoolean();
+  bool hasCause = ToBoolean(val);
   Rooted<Maybe<Value>> cause(cx, mozilla::Nothing());
   if (hasCause) {
     cause = mozilla::Some(BooleanValue(true));
@@ -3985,12 +3886,6 @@ bool JSStructuredCloneReader::readErrorFields(Handle<ErrorObject*> errorObj,
   }
 
   if (errorObj->type() == JSEXN_AGGREGATEERR) {
-    if (!errors.isObject() || !errors.toObject().is<ArrayObject>()) {
-      JS_ReportErrorNumberASCII(
-          cx, GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
-          "AggregateError 'errors' field must be an Array");
-      return false;
-    }
     if (!DefineDataProperty(context(), errorObj, cx->names().errors, errors,
                             0)) {
       return false;
@@ -4058,8 +3953,8 @@ bool JSStructuredCloneReader::readObjectField(HandleObject obj,
   // corrupt or malicious data.
   if (id.isString() && obj->is<PlainObject>() &&
       MOZ_LIKELY(!obj->as<PlainObject>().contains(context(), id))) {
-    return AddDataPropertyToNativeObjectNoHooks(context(),
-                                                obj.as<PlainObject>(), id, val);
+    return AddDataPropertyToPlainObject(context(), obj.as<PlainObject>(), id,
+                                        val);
   }
 
   // Fast path for adding an array element. The index shouldn't exceed the
@@ -4380,11 +4275,14 @@ bool JSAutoStructuredCloneBuffer::write(
     const JS::CloneDataPolicy& cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure) {
   clear();
-  version_ = JS_STRUCTURED_CLONE_VERSION;
-  return JS_WriteStructuredClone(
+  bool ok = JS_WriteStructuredClone(
       cx, value, &data_, data_.scopeForInternalWriting(), cloneDataPolicy,
       optionalCallbacks ? optionalCallbacks : data_.callbacks_,
       optionalCallbacks ? closure : data_.closure_, transferable);
+  if (!ok) {
+    version_ = JS_STRUCTURED_CLONE_VERSION;
+  }
+  return ok;
 }
 
 JS_PUBLIC_API bool JS_ReadUint32Pair(JSStructuredCloneReader* r, uint32_t* p1,
@@ -4460,8 +4358,8 @@ JS_PUBLIC_API bool JS_ReadTypedArray(JSStructuredCloneReader* r,
   return false;
 }
 
-JS_PUBLIC_API bool JS_WriteUint32PairUnchecked(JSStructuredCloneWriter* w,
-                                               uint32_t tag, uint32_t data) {
+JS_PUBLIC_API bool JS_WriteUint32Pair(JSStructuredCloneWriter* w, uint32_t tag,
+                                      uint32_t data) {
   return w->output().writePair(tag, data);
 }
 

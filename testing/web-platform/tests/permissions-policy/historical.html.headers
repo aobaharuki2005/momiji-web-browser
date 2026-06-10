@@ -1,2 +1,0 @@
-Permissions-Policy: sync-xhr=*
-Feature-Policy: sync-xhr 'none'

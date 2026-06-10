@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -94,7 +96,7 @@ void PreventGCDuringInteractiveDebug() { TlsContext.get()->suppressGC++; }
 void js::ReleaseAllJITCode(JS::GCContext* gcx) {
   js::CancelOffThreadCompile(gcx->runtime());
 
-  for (ZonesIter zone(gcx->gcRuntime(), SkipAtoms); !zone.done(); zone.next()) {
+  for (ZonesIter zone(gcx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
     zone->forceDiscardJitCode(gcx);
     if (jit::JitZone* jitZone = zone->jitZone()) {
       jitZone->discardStubs();
@@ -835,14 +837,14 @@ void AutoSelectGCHeap::onNurseryCollectionEnd() {
   heap_ = gc::Heap::Tenured;
 }
 
-JS_PUBLIC_API void js::gc::LockSweepingLock(JSRuntime* runtime) {
+JS_PUBLIC_API void js::gc::LockStoreBuffer(JSRuntime* runtime) {
   MOZ_ASSERT(runtime);
-  runtime->gc.lockSweepingLock();
+  runtime->gc.lockStoreBuffer();
 }
 
-JS_PUBLIC_API void js::gc::UnlockSweepingLock(JSRuntime* runtime) {
+JS_PUBLIC_API void js::gc::UnlockStoreBuffer(JSRuntime* runtime) {
   MOZ_ASSERT(runtime);
-  runtime->gc.unlockSweepingLock();
+  runtime->gc.unlockStoreBuffer();
 }
 
 #ifdef JS_GC_ZEAL

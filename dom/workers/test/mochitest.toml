@@ -328,7 +328,7 @@ skip-if = [
 
 ["test_sharedworker_event_listener_leaks.html"]
 skip-if = [
-  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && asan", # Disabled on Linux64 opt asan, bug 1493563
+  "arch == 'x86_64' && os == 'linux' && os_version == '24.04' && display == 'x11' && asan", # Disabled on Linux64 opt asan, bug 1493563
   "os == 'win' && debug && xorigin", # high frequency intermittent
 ]
 
@@ -340,9 +340,6 @@ skip-if = [
 
 ["test_subworkers_suspended.html"]
 scheme = "https"
-skip-if = [
-  "xorigin", # tests bfcache recovery of workers, so xorigin iframes are out of scope.
-]
 
 ["test_suspend.html"]
 
@@ -353,8 +350,6 @@ skip-if = [
 ["test_threadTimeouts.html"]
 
 ["test_throwingOnerror.html"]
-
-["test_timeZoneOverride.html"]
 
 ["test_timeoutTracing.html"]
 

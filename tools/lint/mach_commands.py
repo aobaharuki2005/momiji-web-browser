@@ -10,7 +10,6 @@ import os
 from mach.decorators import Command, CommandArgument
 from mozbuild.base import BuildEnvironmentNotFoundException
 from mozbuild.base import MachCommandConditions as conditions
-from mozbuild.util import construct_log_filename
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -57,12 +56,10 @@ def get_global_excludes(**lintargs):
         if name.startswith("obj") and os.path.isdir(name)
     ])
 
-    return excludes
-
-
-def get_third_party_excludes(**lintargs):
-    excludes = []
-    topsrcdir = lintargs["root"]
+    if lintargs.get("include_third-party"):
+        # For some linters, we want to include the thirdparty code too.
+        # Example: trojan-source linter should run also on third party code.
+        return excludes
 
     for path in EXCLUSION_FILES + EXCLUSION_FILES_OPTIONAL:
         with open(os.path.join(topsrcdir, path)) as fh:
@@ -94,7 +91,6 @@ def lint(command_context, *runargs, **lintargs):
 
     lintargs.setdefault("root", command_context.topsrcdir)
     lintargs["exclude"] = get_global_excludes(**lintargs)
-    lintargs["third_party_exclude"] = get_third_party_excludes(**lintargs)
     lintargs["config_paths"].insert(0, here)
     lintargs["virtualenv_bin_path"] = command_context.virtualenv_manager.bin_path
     lintargs["virtualenv_manager"] = command_context.virtualenv_manager
@@ -119,10 +115,9 @@ def lint(command_context, *runargs, **lintargs):
         if os.environ.get("MOZ_AUTOMATION") == "1":
             profile_path = "/builds/worker/profile_resource-usage.json"
         else:
-            log_subdir = os.path.join("logs", "lint")
-            command_context._ensure_state_subdir_exists(log_subdir)
+            command_context._ensure_state_subdir_exists(".")
             profile_path = command_context._get_state_filename(
-                construct_log_filename("profile"), subdir=log_subdir
+                "profile_build_resources.json"
             )
 
         with open(profile_path, "w", encoding="utf-8", newline="\n") as f:
@@ -214,14 +209,7 @@ def prettier(command_context, paths, extra_args=[], **kwargs):
 @Command(
     "format",
     category="devenv",
-    description=(
-        "Format files, alternative to 'lint --fix'. "
-        "Runs the following formatters: "
-        + ", ".join(sorted(VALID_FORMATTERS))
-        + " (plus "
-        + ", ".join(sorted(VALID_ANDROID_FORMATTERS))
-        + " on Android, unless --skip-android is passed)."
-    ),
+    description="Format files, alternative to 'lint --fix' ",
     parser=setup_argument_parser,
 )
 @CommandArgument(

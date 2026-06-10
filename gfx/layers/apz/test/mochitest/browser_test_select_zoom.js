@@ -10,7 +10,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_setup(async () => {
+add_task(async function setup_pref() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["test.wait300msAfterTabSwitch", true],
@@ -22,9 +22,6 @@ add_setup(async () => {
       // want those pans to turn into fling animations, so we increase the
       // fling-min threshold velocity to an arbitrarily large value.
       ["apz.fling_min_velocity_threshold", "10000"],
-      // The OS controls positioning of native menus; we are interested only
-      // about how non-native menu popups are positioned.
-      ["widget.macos.allow-native-select", false],
     ],
   });
 });

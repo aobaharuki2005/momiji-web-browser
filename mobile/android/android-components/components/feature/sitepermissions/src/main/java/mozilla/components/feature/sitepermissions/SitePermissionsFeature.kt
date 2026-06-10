@@ -15,7 +15,6 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -116,8 +115,6 @@ class SitePermissionsFeature(
     private val store: BrowserStore,
     private val exitFullscreenUseCase: SessionUseCases.ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
     private val shouldShowDoNotAskAgainCheckBox: Boolean = true,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : LifecycleAwareFeature, PermissionsFeature {
     @VisibleForTesting
     internal val selectOrAddUseCase by lazy {
@@ -137,7 +134,7 @@ class SitePermissionsFeature(
     internal val ioCoroutineScope by lazy { coroutineScopeInitializer() }
 
     internal var coroutineScopeInitializer = {
-        CoroutineScope(ioDispatcher)
+        CoroutineScope(Dispatchers.IO)
     }
     private var sitePermissionScope: CoroutineScope? = null
     private var appPermissionScope: CoroutineScope? = null
@@ -173,7 +170,7 @@ class SitePermissionsFeature(
 
     @VisibleForTesting
     internal fun setupLoadingCollector() {
-        loadingScope = store.flowScoped(dispatcher = mainDispatcher) { flow ->
+        loadingScope = store.flowScoped { flow ->
             flow.mapNotNull { state ->
                 state.findTabOrCustomTabOrSelectedTab(sessionId)
             }.distinctUntilChangedBy { it.content.loading }.collect { tab ->
@@ -190,7 +187,7 @@ class SitePermissionsFeature(
     @VisibleForTesting
     internal fun setupAppPermissionRequestsCollector() {
         appPermissionScope =
-            store.flowScoped(dispatcher = mainDispatcher) { flow ->
+            store.flowScoped { flow ->
                 flow.mapNotNull { state ->
                     state.findTabOrCustomTabOrSelectedTab(sessionId)?.content?.appPermissionRequestsList
                 }
@@ -205,7 +202,7 @@ class SitePermissionsFeature(
     @VisibleForTesting
     internal fun setupPermissionRequestsCollector() {
         sitePermissionScope =
-            store.flowScoped(dispatcher = mainDispatcher) { flow ->
+            store.flowScoped { flow ->
                 flow.mapNotNull { state ->
                     state.findTabOrCustomTabOrSelectedTab(sessionId)?.content?.permissionRequestsList
                 }
@@ -971,7 +968,7 @@ class SitePermissionsFeature(
                     origin,
                     permissionRequest,
                     titleId = R.string.mozac_feature_sitepermissions_local_network_access_title,
-                    iconId = iconsR.drawable.mozac_ic_local_network_24,
+                    iconId = iconsR.drawable.mozac_ic_router_24,
                     showDoNotAskAgainCheckBox = true,
                     doNotAskAgainCheckBoxLabel = R.string.mozac_feature_sitepermissions_do_not_ask_again_on_this_site4,
                     shouldSelectRememberChoice = false,

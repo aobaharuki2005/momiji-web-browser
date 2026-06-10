@@ -6,6 +6,7 @@
  */
 
 ChromeUtils.defineESModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
@@ -128,13 +129,11 @@ add_task(async function removeEntriesForName() {
 });
 
 add_task(async function removeEntriesByTimeframe() {
-  let timerPrecision = Services.prefs.getBoolPref(
-    "privacy.reduceTimerPrecision"
-  );
-  Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
+  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  Preferences.set("privacy.reduceTimerPrecision", false);
 
   registerCleanupFunction(function () {
-    Services.prefs.setBoolPref("privacy.reduceTimerPrecision", timerPrecision);
+    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 
   await promiseAddEntry(entry1[0], entry1[1]);

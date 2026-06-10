@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -24,12 +26,8 @@ def configure_error(message):
 @imports("subprocess")
 @imports(_from="mozshellutil", _import="quote")
 @imports(_from="mozbuild.util", _import="system_encoding")
-@imports(_from="mozbuild.util", _import="sanitize_shell_env")
 def get_cmd_output(*args, **kwargs):
     log.debug("Executing: `%s`", quote(*args))
-    env = kwargs.get("env") or os.environ
-    if env:
-        kwargs["env"] = sanitize_shell_env(env)
     proc = subprocess.Popen(
         args,
         stdout=subprocess.PIPE,

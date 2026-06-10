@@ -6,6 +6,10 @@
 /**
  * Tests the log persistence telemetry event
  */
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
 function togglePersistLogsOption(monitor) {
   clickSettingsMenuItem(monitor, "persist-logs");
 }
@@ -28,7 +32,10 @@ add_task(async function () {
   await waitForAllNetworkUpdateEvents();
 
   // Clear all events
-  Services.fog.testResetFOG();
+  Services.telemetry.clearEvents();
+
+  // Ensure no events have been logged
+  TelemetryTestUtils.assertNumberOfEvents(0);
 
   // Click on the toggle - "true" and make sure it was set to correct value
   let onPersistChanged = monitor.panelWin.api.once(TEST_EVENTS.PERSIST_CHANGED);
@@ -42,11 +49,30 @@ add_task(async function () {
   await waitUntil(() => ensurePersistLogsCheckedState(monitor, false));
   await onPersistChanged;
 
+  const expectedEvents = [
+    {
+      category: "devtools.main",
+      method: "persist_changed",
+      object: "netmonitor",
+      value: "true",
+    },
+    {
+      category: "devtools.main",
+      method: "persist_changed",
+      object: "netmonitor",
+      value: "false",
+    },
+  ];
+
+  const filter = {
+    category: "devtools.main",
+    method: "persist_changed",
+    object: "netmonitor",
+  };
+
   await waitForAllNetworkUpdateEvents();
-  const persists = Glean.devtoolsMain.persistChangedNetmonitor.testGetValue();
-  is(2, persists.length);
-  is("true", persists[0].extra.value);
-  is("false", persists[1].extra.value);
+  // Will compare filtered events to event list above
+  await TelemetryTestUtils.assertEvents(expectedEvents, filter);
 
   // Set Persist log preference back to false
   Services.prefs.setBoolPref("devtools.netmonitor.persistlog", false);

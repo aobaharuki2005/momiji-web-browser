@@ -1,16 +1,19 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/StylePropertyMap.h"
 
-#include "mozilla/CSSPropertyId.h"
+#include "CSSUnsupportedValue.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/URLExtraData.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/CSSStyleRule.h"
+#include "mozilla/dom/CSSKeywordValue.h"
+#include "mozilla/dom/CSSMathSum.h"
 #include "mozilla/dom/CSSStyleValue.h"
+#include "mozilla/dom/CSSUnitValue.h"
 #include "mozilla/dom/StylePropertyMapBinding.h"
 #include "nsCOMPtr.h"
 #include "nsCSSProps.h"
@@ -21,46 +24,10 @@
 
 namespace mozilla::dom {
 
-namespace {
-
-template <typename Source>
-struct DeclarationTraits;
-
-// Specialization for inline style (specified values)
-struct MutableInlineStyleDeclarations {};
-
-template <>
-struct DeclarationTraits<MutableInlineStyleDeclarations> {
-  static void Set(nsStyledElement* aStyledElement,
-                  const CSSPropertyId& aPropertyId, const nsACString& aValue,
-                  ErrorResult& aRv) {
-    MOZ_ASSERT(aStyledElement);
-
-    nsCOMPtr<nsDOMCSSDeclaration> declaration = aStyledElement->Style();
-
-    declaration->SetPropertyTypedValue(aPropertyId, aValue, aRv);
-  }
-};
-
-// Specialization for style rule
-struct MutableStyleRuleDeclarations {};
-
-template <>
-struct DeclarationTraits<MutableStyleRuleDeclarations> {
-  static void Set(CSSStyleRule* aRule, const CSSPropertyId& aPropertyId,
-                  const nsACString& aValue, ErrorResult& aRv) {
-    MOZ_ASSERT(aRule);
-
-    nsCOMPtr<nsDOMCSSDeclaration> declaration = aRule->Style();
-
-    declaration->SetPropertyTypedValue(aPropertyId, aValue, aRv);
-  }
-};
-
-}  // namespace
-
-StylePropertyMap::StylePropertyMap(nsStyledElement* aStyledElement)
-    : StylePropertyMapReadOnly(aStyledElement) {}
+StylePropertyMap::StylePropertyMap(Element* aElement, bool aComputed)
+    : StylePropertyMapReadOnly(aElement, aComputed) {
+  MOZ_DIAGNOSTIC_ASSERT(!aComputed);
+}
 
 StylePropertyMap::StylePropertyMap(CSSStyleRule* aRule)
     : StylePropertyMapReadOnly(aRule) {}
@@ -96,28 +63,16 @@ void StylePropertyMap::Set(
 
   const auto& styleValueOrString = aValues[0];
 
-  RefPtr<CSSStyleValue> styleValue;
-
-  if (styleValueOrString.IsCSSStyleValue()) {
-    styleValue = styleValueOrString.GetAsCSSStyleValue();
-  } else {
-    RefPtr<URLExtraData> urlExtraData = mDeclarations.GetURLExtraData();
-    if (!urlExtraData) {
-      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-      return;
-    }
-
-    styleValue = CSSStyleValue::ParseStyleValue(
-        mParent, aProperty, styleValueOrString.GetAsUTF8String(), urlExtraData,
-        /* aStyleValues */ nullptr, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+  if (!styleValueOrString.IsCSSStyleValue()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
   }
+
+  CSSStyleValue& styleValue = styleValueOrString.GetAsCSSStyleValue();
 
   // Step 4
 
-  const auto* valuePropertyId = styleValue->GetPropertyId();
+  const auto* valuePropertyId = styleValue.GetPropertyId();
 
   if (valuePropertyId && *valuePropertyId != propertyId) {
     aRv.ThrowTypeError("Invalid type for property"_ns);
@@ -125,17 +80,57 @@ void StylePropertyMap::Set(
   }
 
   nsAutoCString cssText;
-  styleValue->ToCssTextWithProperty(propertyId, cssText);
+
+  switch (styleValue.GetValueType()) {
+    case CSSStyleValue::ValueType::MathSum: {
+      CSSMathSum& mathSum = styleValue.GetAsCSSMathSum();
+
+      mathSum.ToCssTextWithProperty(propertyId, cssText);
+      break;
+    }
+
+    case CSSStyleValue::ValueType::UnitValue: {
+      CSSUnitValue& unitValue = styleValue.GetAsCSSUnitValue();
+
+      unitValue.ToCssTextWithProperty(propertyId, cssText);
+      break;
+    }
+
+    case CSSStyleValue::ValueType::KeywordValue: {
+      CSSKeywordValue& keywordValue = styleValue.GetAsCSSKeywordValue();
+
+      keywordValue.ToCssTextWithProperty(propertyId, cssText);
+      break;
+    }
+
+    case CSSStyleValue::ValueType::UnsupportedValue: {
+      CSSUnsupportedValue& unsupportedValue =
+          styleValue.GetAsCSSUnsupportedValue();
+
+      unsupportedValue.ToCssTextWithProperty(propertyId, cssText);
+      break;
+    }
+
+    case CSSStyleValue::ValueType::Uninitialized:
+      break;
+  }
+
   if (cssText.IsEmpty()) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return;
   }
 
   // Step 6.
-  Declarations& declarations = mDeclarations;
 
-  // Step 7 & 8 & 9 & 10.
-  declarations.Set(propertyId, cssText, aRv);
+  RefPtr<nsStyledElement> styledElement = do_QueryObject(mParent);
+  if (!styledElement) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
+  }
+
+  nsCOMPtr<nsDOMCSSDeclaration> declaration = styledElement->Style();
+
+  declaration->SetProperty(aProperty, cssText, ""_ns, aRv);
 }
 
 void StylePropertyMap::Append(
@@ -156,26 +151,6 @@ void StylePropertyMap::Clear() {}
 size_t StylePropertyMap::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return StylePropertyMapReadOnly::SizeOfExcludingThis(aMallocSizeOf) +
          aMallocSizeOf(this);
-}
-
-void StylePropertyMapReadOnly::Declarations::Set(
-    const CSSPropertyId& aPropertyId, const nsACString& aValue,
-    ErrorResult& aRv) {
-  switch (mKind) {
-    case Kind::Inline:
-      DeclarationTraits<MutableInlineStyleDeclarations>::Set(
-          mStyledElement, aPropertyId, aValue, aRv);
-      return;
-
-    case Kind::Computed:
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-
-    case Kind::Rule:
-      DeclarationTraits<MutableStyleRuleDeclarations>::Set(mRule, aPropertyId,
-                                                           aValue, aRv);
-      return;
-  }
 }
 
 }  // namespace mozilla::dom

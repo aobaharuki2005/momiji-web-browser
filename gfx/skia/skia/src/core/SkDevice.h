@@ -357,7 +357,8 @@ public:
      *  path on the stack to hold the representation of the oval.
      */
     virtual void drawPath(const SkPath& path,
-                          const SkPaint& paint) = 0;
+                          const SkPaint& paint,
+                          bool pathIsMutable) = 0;
 
     virtual void drawImageRect(const SkImage*, const SkRect* src, const SkRect& dst,
                                const SkSamplingOptions&, const SkPaint&,
@@ -600,7 +601,7 @@ protected:
     void drawRect(const SkRect&, const SkPaint&) override {}
     void drawOval(const SkRect&, const SkPaint&) override {}
     void drawRRect(const SkRRect&, const SkPaint&) override {}
-    void drawPath(const SkPath&, const SkPaint&) override {}
+    void drawPath(const SkPath&, const SkPaint&, bool) override {}
     void drawDevice(SkDevice*, const SkSamplingOptions&, const SkPaint&) override {}
     void drawVertices(const SkVertices*, sk_sp<SkBlender>, const SkPaint&, bool) override {}
     void drawMesh(const SkMesh&, sk_sp<SkBlender>, const SkPaint&) override {}
@@ -635,7 +636,7 @@ private:
     skia_private::STArray<4, ClipState> fClipStack;
 };
 
-class [[nodiscard]] SkAutoDeviceTransformRestore : SkNoncopyable {
+class SkAutoDeviceTransformRestore : SkNoncopyable {
 public:
     SkAutoDeviceTransformRestore(SkDevice* device, const SkM44& localToDevice)
         : fDevice(device)

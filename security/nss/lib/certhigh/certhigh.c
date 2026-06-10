@@ -1035,7 +1035,7 @@ CERT_CertChainFromCert(CERTCertificate *cert, SECCertUsage usage,
     NSSCertificate *stanCert;
     PLArenaPool *arena;
     NSSUsage nssUsage;
-    int i = 0, len;
+    int i, len;
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     NSSCryptoContext *cc = STAN_GetDefaultCryptoContext();
 
@@ -1072,6 +1072,7 @@ CERT_CertChainFromCert(CERTCertificate *cert, SECCertUsage usage,
     chain->certs = (SECItem *)PORT_ArenaAlloc(arena, len * sizeof(SECItem));
     if (!chain->certs)
         goto loser;
+    i = 0;
     stanCert = stanChain[i];
     while (stanCert) {
         SECItem derCert;
@@ -1083,7 +1084,7 @@ CERT_CertChainFromCert(CERTCertificate *cert, SECCertUsage usage,
         derCert.data = (unsigned char *)stanCert->encoding.data;
         derCert.type = siBuffer;
         if (SECITEM_CopyItem(arena, &chain->certs[i], &derCert) != SECSuccess) {
-            /* loser: will release stanChain[i]; don't release it here too. */
+            CERT_DestroyCertificate(cCert);
             goto loser;
         }
         stanCert = stanChain[++i];
@@ -1105,9 +1106,7 @@ CERT_CertChainFromCert(CERTCertificate *cert, SECCertUsage usage,
     nss_ZFreeIf(stanChain);
     return chain;
 loser:
-    /* Release only the chain entries not already released by the copy
-     * loop above; entries 0..i-1 have already had their BuildChain
-     * reference dropped, so start at i to avoid an over-release. */
+    i = 0;
     stanCert = stanChain[i];
     while (stanCert) {
         CERTCertificate *cCert = STAN_GetCERTCertificate(stanCert);

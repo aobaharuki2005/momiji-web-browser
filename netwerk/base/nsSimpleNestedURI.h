@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,8 +9,8 @@
  * happens.
  */
 
-#ifndef nsSimpleNestedURI_h_
-#define nsSimpleNestedURI_h_
+#ifndef nsSimpleNestedURI_h__
+#define nsSimpleNestedURI_h__
 
 #include "nsCOMPtr.h"
 #include "nsSimpleURI.h"
@@ -38,7 +39,7 @@ class nsSimpleNestedURI : public nsSimpleURI, public nsINestedURI {
                                   bool* result) override;
   virtual already_AddRefed<nsSimpleURI> StartClone() override;
   NS_IMETHOD Mutate(nsIURIMutator** _retval) override;
-  virtual void Serialize(ipc::URIParams& aParams) override;
+  NS_IMETHOD_(void) Serialize(ipc::URIParams& aParams) override;
 
   // nsISerializable overrides
   NS_IMETHOD Read(nsIObjectInputStream* aStream) override;
@@ -107,4 +108,4 @@ class nsSimpleNestedURI : public nsSimpleURI, public nsINestedURI {
 }  // namespace net
 }  // namespace mozilla
 
-#endif /* nsSimpleNestedURI_h_ */
+#endif /* nsSimpleNestedURI_h__ */

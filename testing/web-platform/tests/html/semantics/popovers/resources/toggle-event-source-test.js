@@ -25,7 +25,8 @@ function createToggleEventSourceTest({
     });
 
     await openFunc();
-    await new Promise(resolve => step_timeout(resolve, 0));
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
     if (!skipBeforetoggle) {
       assert_true(!!beforetoggleEvent,
         'An opening beforetoggle event should have been fired.');
@@ -50,7 +51,8 @@ function createToggleEventSourceTest({
     toggleDuplicate = false;
 
     await closeFunc();
-    await new Promise(resolve => step_timeout(resolve, 0));
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
 
     if (!skipBeforetoggle) {
       assert_true(!!beforetoggleEvent,

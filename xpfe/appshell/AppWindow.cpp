@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 ci et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -47,7 +49,7 @@
 #include "nsXULTooltipListener.h"
 #include "nsXULPopupManager.h"
 #include "nsFocusManager.h"
-#include "mozilla/dom/ContentList.h"
+#include "nsContentList.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsServiceManagerUtils.h"
 
@@ -1555,18 +1557,10 @@ void AppWindow::SyncAttributesToWidget() {
       windowElement->HasAttribute(u"toggletoolbar"_ns));
   NS_ENSURE_TRUE_VOID(mWindow);
 
-  // "macnativefullscreen" attribute. Only override the creation-time default
-  // when the attribute is actually present; absence means "use the
-  // window-creation default" (set in nsCocoaWindow::CreateNativeWindow), not
-  // "force off". Read the attribute value as a boolean so an explicit
-  // macnativefullscreen="false" correctly turns native fullscreen off, rather
-  // than just turning it on the way HasAttribute would (bug 2038980).
-  if (windowElement->HasAttribute(u"macnativefullscreen"_ns)) {
-    nsAutoString value;
-    windowElement->GetAttribute(u"macnativefullscreen"_ns, value);
-    mWindow->SetSupportsNativeFullscreen(!value.EqualsLiteral("false"));
-    NS_ENSURE_TRUE_VOID(mWindow);
-  }
+  // "macnativefullscreen" attribute
+  mWindow->SetSupportsNativeFullscreen(
+      windowElement->HasAttribute(u"macnativefullscreen"_ns));
+  NS_ENSURE_TRUE_VOID(mWindow);
 
   // "macanimationtype" attribute
   windowElement->GetAttribute(u"macanimationtype"_ns, attr);
@@ -1794,7 +1788,7 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
   settings.menubarShown = attributeValue.EqualsLiteral("false");
 
   ErrorResult err;
-  RefPtr<dom::HTMLCollection> toolbarSprings = navbar->GetElementsByTagNameNS(
+  nsCOMPtr<nsIHTMLCollection> toolbarSprings = navbar->GetElementsByTagNameNS(
       u"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"_ns,
       u"toolbarspring"_ns, err);
   if (err.Failed()) {
@@ -1994,7 +1988,9 @@ void AppWindow::MaybeSavePersistentMiscAttributes(
       (void)SetPersistentValue(nsGkAtoms::sizemode, sizeString);
     }
   }
-  aRootElement.SetBoolAttr(nsGkAtoms::gtktiledwindow, mWindow->IsTiled());
+  aRootElement.SetAttribute(u"gtktiledwindow"_ns,
+                            mWindow->IsTiled() ? u"true"_ns : u"false"_ns,
+                            IgnoreErrors());
 }
 
 void AppWindow::SavePersistentAttributes(
@@ -2186,14 +2182,6 @@ NS_IMETHODIMP AppWindow::CreateNewWindow(int32_t aChromeFlags,
                                          nsIAppWindow** _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  // If a position change is pending (e.g. this window was just dragged to a
-  // different display), flush it now so the new window reads our current
-  // position from the XULStore rather than the stale one still queued behind
-  // the SIZE_PERSISTENCE_TIMEOUT timer.
-  if (mPersistentAttributesDirty.contains(PersistentAttribute::Position)) {
-    PersistentAttributesDirty(PersistentAttribute::Position, Sync);
-  }
-
   if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME) {
     MOZ_RELEASE_ASSERT(
         !aOpenWindowInfo,
@@ -2351,6 +2339,18 @@ void AppWindow::ApplyChromeFlags() {
   // so no need to compare to the old value.
   IgnoredErrorResult rv;
   root->SetAttribute(u"chromehidden"_ns, newvalue, rv);
+
+  // Also set the IsDocumentPiP on the chrome browsing context
+  if ((mChromeFlags &
+       nsIWebBrowserChrome::CHROME_DOCUMENT_PICTURE_IN_PICTURE) ==
+      nsIWebBrowserChrome::CHROME_DOCUMENT_PICTURE_IN_PICTURE) {
+    nsCOMPtr<mozIDOMWindowProxy> windowProxy;
+    GetWindowDOMWindow(getter_AddRefs(windowProxy));
+    if (nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(windowProxy)) {
+      nsresult rv = window->GetBrowsingContext()->SetIsDocumentPiP(true);
+      NS_ENSURE_SUCCESS_VOID(rv);
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -2975,7 +2975,7 @@ class AppWindowTimerCallback final : public nsITimerCallback, public nsINamed {
   }
 
  private:
-  ~AppWindowTimerCallback() = default;
+  ~AppWindowTimerCallback() {}
 
   RefPtr<AppWindow> mWindow;
 };
@@ -3024,31 +3024,7 @@ void AppWindow::OnChromeLoaded() {
   ///////////////////////////////
   if (!gfxPlatform::IsHeadless()) {
     if (RefPtr<Document> menubarDoc = mDocShell->GetExtantDocument()) {
-      nsCOMPtr<nsIAppShellService> appShellService(
-          do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-      bool hasHiddenWindow = false;
-      if (appShellService) {
-        appShellService->GetHasHiddenWindow(&hasHiddenWindow);
-      }
-
-      // Load this window's native menus immediately if any of the
-      // following hold; otherwise queue them to be loaded once the
-      // hidden window has loaded its own menus first.
-      //
-      //   (a) This window IS the hidden window. Its menus must load
-      //       first so the application menu is set up before any
-      //       other window's <menubar>.
-      //   (b) The hidden window has already loaded its native menus
-      //       (sWaitingForHiddenWindowToLoadNativeMenus is false).
-      //   (c) No hidden window has been (or will be) created. This
-      //       happens in flows that run before normal startup, e.g.
-      //       Profile Manager / Profile Downgrade (bug 1154697).
-      //       Without this check we would queue indefinitely and the
-      //       early-startup window's <menubar> would render in-window.
-      bool shouldLoadNativeMenus = mIsHiddenWindow ||
-                                   !sWaitingForHiddenWindowToLoadNativeMenus ||
-                                   !hasHiddenWindow;
-      if (shouldLoadNativeMenus) {
+      if (mIsHiddenWindow || !sWaitingForHiddenWindowToLoadNativeMenus) {
         BeginLoadNativeMenus(menubarDoc, mWindow);
       } else {
         sLoadNativeMenusListeners.EmplaceBack(menubarDoc, mWindow);

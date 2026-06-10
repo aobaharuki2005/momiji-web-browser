@@ -26,7 +26,6 @@ use fallible_collections::TryRead;
 use fallible_collections::TryReserveError;
 
 use num_traits::Num;
-use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto as _};
 use std::fmt;
 use std::io::Cursor;
@@ -185,7 +184,6 @@ pub enum Status {
     BoxBadWideSize,
     CheckParserStateErr,
     ColrBadQuantity,
-    ColrBadQuantityBMFF,
     ColrBadSize,
     ColrBadType,
     ColrReservedNonzero,
@@ -465,10 +463,6 @@ impl From<Status> for &str {
                 "Each item shall have at most one property association with a
                  ColourInformationBox (colr) for a given value of colour_type \
                  per HEIF (ISO/IEC DIS 23008-12) § 6.5.5.1"
-            }
-            Status::ColrBadQuantityBMFF => {
-                "Each sample entry shall have at most one ColourInformationBox (colr) \
-                 per ISOBMFF (ISO 14496-12:2020) § 12.1.5"
             }
             Status::ColrBadSize => {
                 "Unexpected size for colr box"
@@ -1170,30 +1164,6 @@ pub enum VideoCodecSpecific {
     HEVCConfig(TryVec<u8>),
 }
 
-/// Mastering display colour volume from an `mdcv` box (ISO 14496-12).
-/// Primary indices are R\[0\], G\[1\], B\[2\]. Divide chromaticity values by 50000
-/// and luminance values by 10000 to obtain physical units.
-#[derive(Debug, Clone)]
-pub struct MasteringDisplayColourVolume {
-    pub display_primaries_x: [u16; 3],
-    pub display_primaries_y: [u16; 3],
-    pub white_point_x: u16,
-    pub white_point_y: u16,
-    /// In units of 0.0001 cd/m²
-    pub max_display_mastering_luminance: u32,
-    /// In units of 0.0001 cd/m²
-    pub min_display_mastering_luminance: u32,
-}
-
-/// Content light level from a `clli` box (ISO 14496-12).
-#[derive(Debug, Clone)]
-pub struct ContentLightLevel {
-    /// Maximum content light level in cd/m²
-    pub max_content_light_level: u16,
-    /// Maximum picture average light level in cd/m²
-    pub max_pic_average_light_level: u16,
-}
-
 #[derive(Debug)]
 pub struct VideoSampleEntry {
     pub codec_type: CodecType,
@@ -1204,13 +1174,6 @@ pub struct VideoSampleEntry {
     pub codec_specific: VideoCodecSpecific,
     pub protection_info: TryVec<ProtectionSchemeInfoBox>,
     pub pixel_aspect_ratio: Option<f32>,
-    /// Only `ColourInformation::Nclx` is currently surfaced through the C API;
-    /// `ColourInformation::Icc` is stored but not exposed to C consumers.
-    pub colour_info: Option<ColourInformation>,
-    /// Mastering display colour volume from the `mdcv` box (ISO 14496-12).
-    pub hdr_mastering_display: Option<MasteringDisplayColourVolume>,
-    /// Content light level from the `clli` box (ISO 14496-12).
-    pub hdr_content_light_level: Option<ContentLightLevel>,
 }
 
 /// Represent a Video Partition Codec Configuration 'vpcC' box (aka vp9). The meaning of each
@@ -3636,13 +3599,7 @@ fn read_ipco<T: Read>(
         let property = match b.head.name {
             BoxType::AuxiliaryTypeProperty => ItemProperty::AuxiliaryType(read_auxc(&mut b)?),
             BoxType::AV1CodecConfigurationBox => ItemProperty::AV1Config(read_av1c(&mut b)?),
-            BoxType::ColourInformationBox => match read_colr(&mut b, strictness)? {
-                ParsedColourInformation::Supported(colr) => ItemProperty::Colour(colr),
-                ParsedColourInformation::Unsupported(colour_type) => {
-                    error!("read_colr colour_type: {colour_type:?}");
-                    return Status::ColrBadType.into();
-                }
-            },
+            BoxType::ColourInformationBox => ItemProperty::Colour(read_colr(&mut b, strictness)?),
             BoxType::ImageMirror => ItemProperty::Mirroring(read_imir(&mut b)?),
             BoxType::ImageRotation => ItemProperty::Rotation(read_irot(&mut b)?),
             BoxType::ImageSpatialExtentsProperty => {
@@ -3729,36 +3686,6 @@ fn read_pasp<T: Read>(src: &mut BMFFBox<T>) -> Result<PixelAspectRatio> {
     })
 }
 
-/// Parse mastering display colour volume box (ISO 14496-12).
-fn read_mdcv<T: Read>(src: &mut BMFFBox<T>) -> Result<MasteringDisplayColourVolume> {
-    // Wire order is G, B, R (per ISO 14496-12); remap to R[0], G[1], B[2].
-    let (gx, gy) = (be_u16(src)?, be_u16(src)?);
-    let (bx, by) = (be_u16(src)?, be_u16(src)?);
-    let (rx, ry) = (be_u16(src)?, be_u16(src)?);
-    let display_primaries_x = [rx, gx, bx];
-    let display_primaries_y = [ry, gy, by];
-    let white_point_x = be_u16(src)?;
-    let white_point_y = be_u16(src)?;
-    let max_display_mastering_luminance = be_u32(src)?;
-    let min_display_mastering_luminance = be_u32(src)?;
-    Ok(MasteringDisplayColourVolume {
-        display_primaries_x,
-        display_primaries_y,
-        white_point_x,
-        white_point_y,
-        max_display_mastering_luminance,
-        min_display_mastering_luminance,
-    })
-}
-
-/// Parse content light level box (ISO 14496-12).
-fn read_clli<T: Read>(src: &mut BMFFBox<T>) -> Result<ContentLightLevel> {
-    Ok(ContentLightLevel {
-        max_content_light_level: be_u16(src)?,
-        max_pic_average_light_level: be_u16(src)?,
-    })
-}
-
 #[derive(Debug)]
 pub struct PixelInformation {
     bits_per_channel: TryVec<u8>,
@@ -3794,10 +3721,10 @@ fn read_pixi<T: Read>(src: &mut BMFFBox<T>) -> Result<PixelInformation> {
 #[repr(C)]
 #[derive(Debug)]
 pub struct NclxColourInformation {
-    pub colour_primaries: u8,
-    pub transfer_characteristics: u8,
-    pub matrix_coefficients: u8,
-    pub full_range_flag: bool,
+    colour_primaries: u8,
+    transfer_characteristics: u8,
+    matrix_coefficients: u8,
+    full_range_flag: bool,
 }
 
 /// The raw bytes of the ICC profile
@@ -3830,17 +3757,12 @@ impl ColourInformation {
     }
 }
 
-enum ParsedColourInformation {
-    Supported(ColourInformation),
-    Unsupported(FourCC),
-}
-
 /// Parse colour information
 /// See ISOBMFF (ISO 14496-12:2020) § 12.1.5
 fn read_colr<T: Read>(
     src: &mut BMFFBox<T>,
     strictness: ParseStrictness,
-) -> Result<ParsedColourInformation> {
+) -> Result<ColourInformation> {
     let colour_type = be_u32(src)?.to_be_bytes();
 
     match &colour_type {
@@ -3867,26 +3789,22 @@ fn read_colr<T: Read>(
                 )?;
             }
 
-            Ok(ParsedColourInformation::Supported(ColourInformation::Nclx(
-                NclxColourInformation {
-                    colour_primaries,
-                    transfer_characteristics,
-                    matrix_coefficients,
-                    full_range_flag,
-                },
-            )))
+            Ok(ColourInformation::Nclx(NclxColourInformation {
+                colour_primaries,
+                transfer_characteristics,
+                matrix_coefficients,
+                full_range_flag,
+            }))
         }
-        b"rICC" | b"prof" => Ok(ParsedColourInformation::Supported(ColourInformation::Icc(
+        b"rICC" | b"prof" => Ok(ColourInformation::Icc(
             IccColourInformation {
                 bytes: src.read_into_try_vec()?,
             },
             FourCC::from(colour_type),
-        ))),
+        )),
         _ => {
-            let four_cc = FourCC::from(colour_type);
-            warn!("read_colr: unsupported colour_type {four_cc:?}, skipping");
-            skip_box_remain(src)?;
-            Ok(ParsedColourInformation::Unsupported(four_cc))
+            error!("read_colr colour_type: {colour_type:?}");
+            Status::ColrBadType.into()
         }
     }
 }
@@ -4257,22 +4175,6 @@ pub fn read_moov<T: Read>(
         check_parser_state!(b.content);
     }
 
-    // ISO/IEC 14496-12 §6.1.4 (Track Identifiers) and §8.5.3 (tkhd semantics):
-    // track_ID values are unique within a file/presentation and must not be reused.
-    let mut track_ids = HashSet::new();
-    for track in &tracks {
-        if let Some(track_id) = track.track_id {
-            if !track_ids.insert(track_id) {
-                if strictness == ParseStrictness::Strict {
-                    return Err(Error::from(Status::Invalid));
-                }
-                warn!(
-                    "Duplicate track_id {track_id} found; track_id-based lookups will use first occurrence"
-                );
-            }
-        }
-    }
-
     Ok(MediaContext {
         timescale,
         tracks,
@@ -4583,7 +4485,6 @@ fn read_ftyp<T: Read>(src: &mut BMFFBox<T>) -> Result<FileTypeBox> {
     let major = be_u32(src)?;
     let minor = be_u32(src)?;
     let bytes_left = src.bytes_left();
-    #[allow(clippy::manual_is_multiple_of)] // Allow until Gecko's MSRV is 1.87.
     if bytes_left % 4 != 0 {
         return Status::FtypBadSize.into();
     }
@@ -5614,10 +5515,7 @@ fn read_hdlr<T: Read>(src: &mut BMFFBox<T>, strictness: ParseStrictness) -> Resu
 }
 
 /// Parse an video description inside an stsd box.
-fn read_video_sample_entry<T: Read>(
-    src: &mut BMFFBox<T>,
-    strictness: ParseStrictness,
-) -> Result<SampleEntry> {
+fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleEntry> {
     let name = src.get_header().name;
     let codec_type = match name {
         BoxType::AVCSampleEntry | BoxType::AVC3SampleEntry => CodecType::H264,
@@ -5651,9 +5549,6 @@ fn read_video_sample_entry<T: Read>(
     // Skip clap/pasp/etc. for now.
     let mut codec_specific = None;
     let mut pixel_aspect_ratio = None;
-    let mut colour_info = None;
-    let mut hdr_mastering_display = None;
-    let mut hdr_content_light_level = None;
     let mut protection_info = TryVec::new();
     let mut iter = src.box_iter();
     while let Some(mut b) = iter.next_box()? {
@@ -5770,31 +5665,6 @@ fn read_video_sample_entry<T: Read>(
                 }
                 debug!("Parsed pasp box: {pasp:?}, PAR {pixel_aspect_ratio:?}");
             }
-            BoxType::ColourInformationBox => {
-                if colour_info.is_some() {
-                    warn!("Multiple colr boxes in video sample entry, keeping first");
-                    fail_with_status_if(
-                        strictness != ParseStrictness::Permissive,
-                        Status::ColrBadQuantityBMFF,
-                    )?;
-                    skip_box_content(&mut b)?;
-                } else if let ParsedColourInformation::Supported(colr) =
-                    read_colr(&mut b, strictness)?
-                {
-                    debug!("Parsed colr box: {colr:?}");
-                    colour_info = Some(colr);
-                }
-            }
-            BoxType::MasteringDisplayColourVolumeBox => {
-                let mdcv = read_mdcv(&mut b)?;
-                debug!("Parsed mdcv box: {mdcv:?}");
-                hdr_mastering_display = Some(mdcv);
-            }
-            BoxType::ContentLightLevelBox => {
-                let clli = read_clli(&mut b)?;
-                debug!("Parsed clli box: {clli:?}");
-                hdr_content_light_level = Some(clli);
-            }
             _ => {
                 debug!("Unsupported video codec, box {:?} found", b.head.name);
                 skip_box_content(&mut b)?;
@@ -5813,9 +5683,6 @@ fn read_video_sample_entry<T: Read>(
                 codec_specific,
                 protection_info,
                 pixel_aspect_ratio,
-                colour_info,
-                hdr_mastering_display,
-                hdr_content_light_level,
             })
         }),
     )
@@ -6023,9 +5890,9 @@ fn read_stsd<T: Read>(
     while descriptions.len() < description_count {
         if let Some(mut b) = iter.next_box()? {
             let description = match track.track_type {
-                TrackType::Video => read_video_sample_entry(&mut b, strictness),
-                TrackType::Picture => read_video_sample_entry(&mut b, strictness),
-                TrackType::AuxiliaryVideo => read_video_sample_entry(&mut b, strictness),
+                TrackType::Video => read_video_sample_entry(&mut b),
+                TrackType::Picture => read_video_sample_entry(&mut b),
+                TrackType::AuxiliaryVideo => read_video_sample_entry(&mut b),
                 TrackType::Audio => read_audio_sample_entry(&mut b, strictness),
                 TrackType::Metadata => Err(Error::Unsupported("metadata track")),
                 TrackType::Unknown => Err(Error::Unsupported("unknown track type")),

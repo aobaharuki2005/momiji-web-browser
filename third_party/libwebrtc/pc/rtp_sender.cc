@@ -22,8 +22,6 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
-#include "absl/functional/any_invocable.h"
-#include "absl/strings/string_view.h"
 #include "api/audio_options.h"
 #include "api/crypto/frame_encryptor_interface.h"
 #include "api/dtmf_sender_interface.h"
@@ -31,16 +29,12 @@
 #include "api/frame_transformer_interface.h"
 #include "api/make_ref_counted.h"
 #include "api/media_stream_interface.h"
-#include "api/media_types.h"
 #include "api/priority.h"
 #include "api/rtc_error.h"
 #include "api/rtp_parameters.h"
 #include "api/rtp_sender_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
-#include "api/sframe/sframe_encrypter_interface.h"
-#include "api/task_queue/pending_task_safety_flag.h"
-#include "api/task_queue/task_queue_base.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "media/base/audio_source.h"
 #include "media/base/codec.h"
@@ -48,8 +42,6 @@
 #include "media/base/media_engine.h"
 #include "pc/dtmf_sender.h"
 #include "pc/legacy_stats_collector_interface.h"
-#include "pc/scoped_operations_batcher.h"
-#include "pc/simulcast_description.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/crypto_random.h"
 #include "rtc_base/event.h"
@@ -89,37 +81,6 @@ bool PerSenderRtpEncodingParameterHasValue(
   return false;
 }
 
-std::vector<RtpEncodingParameters> CalculateInitialEncodings(
-    const std::vector<RtpEncodingParameters>& default_encodings,
-    const std::vector<RtpEncodingParameters>& init_send_encodings,
-    const std::vector<SimulcastLayer>& initial_simulcast_layers,
-    bool simulcast_rejected) {
-  if (init_send_encodings.empty()) {
-    return default_encodings;
-  }
-  std::vector<RtpEncodingParameters> encodings = init_send_encodings;
-
-  if (!initial_simulcast_layers.empty()) {
-    for (auto it = encodings.begin(); it != encodings.end();) {
-      auto iter = std::find_if(
-          initial_simulcast_layers.begin(), initial_simulcast_layers.end(),
-          [&](const SimulcastLayer& layer) { return layer.rid == it->rid; });
-      if (iter == initial_simulcast_layers.end()) {
-        it = encodings.erase(it);
-      } else {
-        it->active = !iter->is_paused;
-        ++it;
-      }
-    }
-  }
-
-  if (simulcast_rejected && encodings.size() > 1) {
-    encodings.erase(encodings.begin() + 1, encodings.end());
-  }
-
-  return encodings;
-}
-
 void RemoveEncodingLayers(const std::vector<std::string>& rids,
                           std::vector<RtpEncodingParameters>* encodings) {
   RTC_DCHECK(encodings);
@@ -147,60 +108,45 @@ RtpParameters RestoreEncodingLayers(
   return result;
 }
 
-// Checks that the codec parameters are valid.
-RTCError CheckCodecParameters(const RtpParameters& parameters,
-                              const std::vector<Codec>& send_codecs,
-                              const std::optional<Codec>& send_codec) {
-  // Match the currently used codec against the codec preferences to gather
-  // the SVC capabilities.
-  std::optional<Codec> send_codec_with_svc_info;
-  if (send_codec && send_codec->type == Codec::Type::kVideo) {
-    auto codec_match = absl::c_find_if(
-        send_codecs, [&](auto& codec) { return send_codec->Matches(codec); });
-    if (codec_match != send_codecs.end()) {
-      send_codec_with_svc_info = *codec_match;
+class SignalingThreadCallback {
+ public:
+  SignalingThreadCallback(Thread* signaling_thread,
+                          SetParametersCallback callback)
+      : signaling_thread_(signaling_thread), callback_(std::move(callback)) {}
+  SignalingThreadCallback(SignalingThreadCallback&& other)
+      : signaling_thread_(other.signaling_thread_),
+        callback_(std::move(other.callback_)) {
+    other.callback_ = nullptr;
+  }
+
+  ~SignalingThreadCallback() {
+    if (callback_) {
+      Resolve(RTCError(RTCErrorType::INTERNAL_ERROR));
+
+      RTC_CHECK_NOTREACHED();
     }
   }
 
-  return CheckScalabilityModeValues(parameters, send_codecs,
-                                    send_codec_with_svc_info);
-}
+  void operator()(const RTCError& error) { Resolve(error); }
 
-// Logic that runs on the worker thread to set the parameters.
-// Returns an error if the parameters check failed or if the set failed.
-void SetRtpParametersOnWorkerThread(
-    MediaSendChannelInterface* media_channel,
-    const std::vector<Codec>& send_codecs,
-    const std::vector<std::string>& disabled_rids,
-    const Environment& env,
-    uint32_t ssrc,
-    RtpParameters parameters,
-    SetParametersCallback callback) {
-  RTC_DCHECK(media_channel);
-  RtpParameters old_parameters = media_channel->GetRtpSendParameters(ssrc);
-  // Add the inactive layers if disabled_rids isn't empty.
-  RtpParameters rtp_parameters =
-      disabled_rids.empty() ? parameters
-                            : RestoreEncodingLayers(parameters, disabled_rids,
-                                                    old_parameters.encodings);
+ private:
+  void Resolve(const RTCError& error) {
+    if (!signaling_thread_->IsCurrent()) {
+      signaling_thread_->PostTask(
+          [callback = std::move(callback_), error]() mutable {
+            InvokeSetParametersCallback(callback, error);
+          });
+      callback_ = nullptr;
+      return;
+    }
 
-  RTCError result = CheckRtpParametersInvalidModificationAndValues(
-      old_parameters, rtp_parameters, env.field_trials());
-  if (!result.ok()) {
-    std::move(callback)(std::move(result));
-    return;
+    InvokeSetParametersCallback(callback_, error);
+    callback_ = nullptr;
   }
 
-  result = CheckCodecParameters(rtp_parameters, send_codecs,
-                                media_channel->GetSendCodec());
-  if (!result.ok()) {
-    std::move(callback)(std::move(result));
-    return;
-  }
-
-  media_channel->SetRtpSendParameters(ssrc, rtp_parameters,
-                                      std::move(callback));
-}
+  Thread* signaling_thread_;
+  SetParametersCallback callback_;
+};
 
 }  // namespace
 
@@ -221,73 +167,32 @@ bool UnimplementedRtpParameterHasValue(const RtpParameters& parameters) {
   return false;
 }
 
-RtpSenderBase::RtpSenderBase(
-    const Environment& env,
-    Thread* signaling_thread,
-    Thread* worker_thread,
-    absl::string_view id,
-    MediaType media_type,
-    SetStreamsObserver* set_streams_observer,
-    absl::AnyInvocable<RTCError()> enable_sframe_at_owner,
-    MediaSendChannelInterface* media_channel)
+RtpSenderBase::RtpSenderBase(const Environment& env,
+                             Thread* worker_thread,
+                             const std::string& id,
+                             SetStreamsObserver* set_streams_observer)
     : env_(env),
-      signaling_thread_(signaling_thread),
+      signaling_thread_(Thread::Current()),
       worker_thread_(worker_thread),
       id_(id),
-      media_type_(media_type),
-      media_channel_(nullptr),  // Will be set in SetMediaChannel().
-      set_streams_observer_(set_streams_observer),
-      worker_safety_(PendingTaskSafetyFlag::CreateAttachedToTaskQueue(
-          /*alive=*/media_channel != nullptr,
-          worker_thread_)),
-      signaling_safety_(
-          PendingTaskSafetyFlag::CreateAttachedToTaskQueue(/*alive=*/true,
-                                                           signaling_thread_)),
-      enable_sframe_at_owner_(std::move(enable_sframe_at_owner)) {
-  RTC_DCHECK(worker_thread_);
+      set_streams_observer_(set_streams_observer) {
+  RTC_DCHECK(worker_thread);
   init_parameters_.encodings.emplace_back();
-  if (media_channel) {
-    // When initialized with a valid media channel, we need to be running on the
-    // worker thread in order to set things up properly.
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    SetMediaChannel(media_channel);
-  } else {
-    // Otherwise, we're less picky (but probably running on the signaling
-    // thread).
-  }
-}
-
-RtpSenderBase::~RtpSenderBase() {
-  RTC_DCHECK(!media_channel_) << "Missing call to SetMediaChannel(nullptr)";
 }
 
 void RtpSenderBase::SetFrameEncryptor(
     scoped_refptr<FrameEncryptorInterface> frame_encryptor) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (stopped_) {
-    return;
-  }
+  frame_encryptor_ = std::move(frame_encryptor);
   // Special Case: Set the frame encryptor to any value on any existing channel.
-  worker_thread_->BlockingCall([&, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    frame_encryptor_ = std::move(frame_encryptor);
-    if (media_channel_) {
-      media_channel_->SetFrameEncryptor(ssrc, frame_encryptor_);
-    }
-  });
+  if (media_channel_ && ssrc_ && !stopped_) {
+    worker_thread_->BlockingCall(
+        [&] { media_channel_->SetFrameEncryptor(ssrc_, frame_encryptor_); });
+  }
 }
 
 void RtpSenderBase::SetEncoderSelector(
     std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface>
-        encoder_selector) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  SetEncoderSelector(
-      scoped_refptr<VideoEncoderFactory::EncoderSelectorInterface>(
-          encoder_selector.release()));
-}
-
-void RtpSenderBase::SetEncoderSelector(
-    scoped_refptr<VideoEncoderFactory::EncoderSelectorInterface>
         encoder_selector) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   encoder_selector_ = std::move(encoder_selector);
@@ -296,160 +201,124 @@ void RtpSenderBase::SetEncoderSelector(
 
 void RtpSenderBase::SetEncoderSelectorOnChannel() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (stopped_ || ssrc_ == 0) {
-    return;
-  }
-
-  worker_thread_->BlockingCall([&, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    if (media_channel_)
-      media_channel_->SetEncoderSelector(ssrc, encoder_selector_);
-  });
-}
-
-void RtpSenderBase::SetCachedParameters(
-    std::optional<RtpParameters> parameters) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (parameters.has_value()) {
-    cached_parameters_ = std::move(*parameters);
-  } else {
-    cached_parameters_.reset();
-    last_transaction_id_.reset();
+  if (media_channel_ && ssrc_ && !stopped_) {
+    worker_thread_->BlockingCall([&] {
+      media_channel_->SetEncoderSelector(ssrc_, encoder_selector_.get());
+    });
   }
 }
 
 void RtpSenderBase::SetMediaChannel(MediaSendChannelInterface* media_channel) {
-  RTC_DCHECK_RUN_ON(worker_thread_);
-  RTC_DCHECK(!media_channel || media_channel->media_type() == media_type_);
-  if (media_channel_ == media_channel) {
-    return;
-  }
-
-  if (media_channel_) {
-    media_channel_->SetParametersChangedCallback(nullptr);
-  }
-
-  // Note that setting the media_channel_ to nullptr and clearing the send state
-  // via ClearSend_w, are separate operations. Stopping the actual send
-  // operation, needs to be done via any of the paths that end up with a call to
-  // ClearSend_w(), such as DetachTrackAndGetStopTask().
+  RTC_DCHECK(media_channel == nullptr ||
+             media_channel->media_type() == media_type());
   media_channel_ = media_channel;
-  if (media_channel_) {
-    media_channel_->SetParametersChangedCallback(
-        [this] { OnParametersChanged(); });
-  }
-  media_channel_ ? worker_safety_->SetAlive() : worker_safety_->SetNotAlive();
 }
 
-void RtpSenderBase::OnParametersChanged() {
-  RTC_DCHECK_RUN_ON(worker_thread_);
-  RTC_LOG(LS_INFO) << "RtpSender: OnParametersChanged signaled.";
-  signaling_thread_->PostTask(SafeTask(signaling_safety_.flag(), [this] {
-    RTC_DCHECK_RUN_ON(signaling_thread_);
-    cached_parameters_.reset();
-    last_transaction_id_.reset();
-    RTC_LOG(LS_INFO) << "RtpSender: OnParametersChanged cache cleared.";
-  }));
-}
-
-RtpParameters RtpSenderBase::GetParametersInternal(bool may_use_cache,
-                                                   bool with_all_layers) const {
+RtpParameters RtpSenderBase::GetParametersInternal() const {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   if (stopped_) {
     return RtpParameters();
   }
-  if (ssrc_ == 0) {
+  if (!media_channel_ || !ssrc_) {
     return init_parameters_;
   }
-
-  RtpParameters result;
-  if (may_use_cache && cached_parameters_) {
-    result = *cached_parameters_;
-  } else {
-    bool success = worker_thread_->BlockingCall([&, ssrc = ssrc_]() {
-      RTC_DCHECK_RUN_ON(worker_thread_);
-      if (!media_channel_) {
-        return false;
-      }
-      result = media_channel_->GetRtpSendParameters(ssrc);
-      return true;
-    });
-    if (!success) {
-      cached_parameters_.reset();
-      return init_parameters_;
-    }
-    cached_parameters_ = result;
-  }
-
-  if (!with_all_layers) {
+  return worker_thread_->BlockingCall([&] {
+    RtpParameters result = media_channel_->GetRtpSendParameters(ssrc_);
     RemoveEncodingLayers(disabled_rids_, &result.encodings);
-  }
-  return result;
+    return result;
+  });
 }
 
 RtpParameters RtpSenderBase::GetParametersInternalWithAllLayers() const {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  return GetParametersInternal(/*may_use_cache=*/true,
-                               /*with_all_layers=*/true);
+  if (stopped_) {
+    return RtpParameters();
+  }
+  if (!media_channel_ || !ssrc_) {
+    return init_parameters_;
+  }
+  return worker_thread_->BlockingCall([&] {
+    RtpParameters result = media_channel_->GetRtpSendParameters(ssrc_);
+    return result;
+  });
 }
 
 RtpParameters RtpSenderBase::GetParameters() const {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-#if RTC_DCHECK_IS_ON
-  // TODO(tommi): Here, we can use `last_transaction_id_` to allow for
-  // multiple GetParameters() calls in a row return cached parameters
-  // (we could still generate a new transaction_id every time). Since
-  // `last_transaction_id_` will be reset whenever the parameters change, we
-  // could reliably cache the currently active parameters and whenever
-  // `last_transaction_id_` has been reset, only then take the penalty of
-  // refreshing the cached value (or even rely on the `changed` callback to
-  // refresh the cached parameters). Alternatively, we could maintain such a
-  // cache only at the GetParametersInternal() level that's used internally in
-  // webrtc, e.g. for stats purposes, and use the cache only when
-  // GetParametersInternal() is called directly and not via GetParameters().
-  //
-  // This `cached` variable and the `RTC_DCHECK` below are here temporarily
-  // to verify the correctness of the cache as the first implementation of it
-  // lands. Once we have confidence that the cache is reliably up to date,
-  // we can update GetParameters() to use the cache without having to thread
-  // hop.
-  auto cached = cached_parameters_;
-#endif
-
-  RtpParameters result = GetParametersInternal(/*may_use_cache=*/false,
-                                               /*with_all_layers=*/false);
-  // Start a new transaction. `last_transaction_id_` will be reset whenever
-  // the parameters change.
+  RtpParameters result = GetParametersInternal();
   last_transaction_id_ = CreateRandomUuid();
   result.transaction_id = last_transaction_id_.value();
-
-#if RTC_DCHECK_IS_ON
-  // The internal cache is only used when not stopped and ssrc_ is not 0.
-  // `cached_parameters_` might get reset if the media channel is gone.
-  if (cached && !stopped_ && ssrc_ != 0 && cached_parameters_) {
-    RtpParameters cached_filtered = *cached;
-    RemoveEncodingLayers(disabled_rids_, &cached_filtered.encodings);
-    if (cached_filtered != result) {
-      RTC_LOG(LS_ERROR)
-          << "Cached send params not equal to worker thread state.\n"
-          << "Cached: " << cached_filtered << "\n"
-          << "Result: " << result;
-    }
-    RTC_DCHECK(cached_filtered == result)
-        << "The cached value should have been equal (filtered)";
-  }
-#endif
   return result;
 }
 
-std::optional<RTCError> RtpSenderBase::ValidateAndMaybeUpdateInitParameters(
-    const RtpParameters& parameters) {
+void RtpSenderBase::SetParametersInternal(const RtpParameters& parameters,
+                                          SetParametersCallback callback,
+                                          bool blocking) {
+  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK(!stopped_);
+
   if (UnimplementedRtpParameterHasValue(parameters)) {
-    return LOG_ERROR(RTCError::UnsupportedParameter()
-                     << "Attempted to set an unimplemented parameter of "
-                        "RtpParameters.");
+    RTCError error(
+        RTCErrorType::UNSUPPORTED_PARAMETER,
+        "Attempted to set an unimplemented parameter of RtpParameters.");
+    RTC_LOG(LS_ERROR) << error.message() << " (" << ToString(error.type())
+                      << ")";
+    InvokeSetParametersCallback(callback, error);
+    return;
   }
-  if (ssrc_ == 0) {
+  if (!media_channel_ || !ssrc_) {
+    auto result = CheckRtpParametersInvalidModificationAndValues(
+        init_parameters_, parameters, send_codecs_, std::nullopt,
+        env_.field_trials());
+    if (result.ok()) {
+      init_parameters_ = parameters;
+    }
+    InvokeSetParametersCallback(callback, result);
+    return;
+  }
+  auto task = [&, callback = std::move(callback),
+               parameters = std::move(parameters)]() mutable {
+    RtpParameters rtp_parameters = parameters;
+    RtpParameters old_parameters = media_channel_->GetRtpSendParameters(ssrc_);
+    if (!disabled_rids_.empty()) {
+      // Need to add the inactive layers.
+      rtp_parameters = RestoreEncodingLayers(parameters, disabled_rids_,
+                                             old_parameters.encodings);
+    }
+
+    RTCError result = CheckRtpParametersInvalidModificationAndValues(
+        old_parameters, rtp_parameters, env_.field_trials());
+    if (!result.ok()) {
+      InvokeSetParametersCallback(callback, result);
+      return;
+    }
+
+    result = CheckCodecParameters(rtp_parameters);
+    if (!result.ok()) {
+      InvokeSetParametersCallback(callback, result);
+      return;
+    }
+
+    media_channel_->SetRtpSendParameters(ssrc_, rtp_parameters,
+                                         std::move(callback));
+  };
+  if (blocking)
+    worker_thread_->BlockingCall(task);
+  else
+    worker_thread_->PostTask(std::move(task));
+}
+
+RTCError RtpSenderBase::SetParametersInternalWithAllLayers(
+    const RtpParameters& parameters) {
+  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK(!stopped_);
+
+  if (UnimplementedRtpParameterHasValue(parameters)) {
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::UNSUPPORTED_PARAMETER,
+        "Attempted to set an unimplemented parameter of RtpParameters.");
+  }
+  if (!media_channel_ || !ssrc_) {
     auto result = CheckRtpParametersInvalidModificationAndValues(
         init_parameters_, parameters, send_codecs_, std::nullopt,
         env_.field_trials());
@@ -458,198 +327,55 @@ std::optional<RTCError> RtpSenderBase::ValidateAndMaybeUpdateInitParameters(
     }
     return result;
   }
-  return std::nullopt;
-}
-
-RTCError RtpSenderBase::SetParametersInternalWorkaround(
-    const RtpParameters& parameters) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTCError error = RTCError::InvalidState();
-  RtpParameters fetched_parameters;
-  worker_thread_->BlockingCall([&, ssrc = ssrc_]() {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    if (!media_channel_)
-      return;
-    Event done_event;
-    SetRtpParametersOnWorkerThread(media_channel_, send_codecs_, disabled_rids_,
-                                   env_, ssrc, parameters, [&](RTCError err) {
-                                     error = std::move(err);
-                                     done_event.Set();
-                                   });
-    done_event.Wait(Event::kForever);
-    if (error.ok()) {
-      fetched_parameters = media_channel_->GetRtpSendParameters(ssrc);
-    }
+  return worker_thread_->BlockingCall([&] {
+    RtpParameters rtp_parameters = parameters;
+    return media_channel_->SetRtpSendParameters(ssrc_, rtp_parameters, nullptr);
   });
-  if (error.ok()) {
-    init_parameters_ = fetched_parameters;
-    cached_parameters_ = std::move(fetched_parameters);
-  }
-  return error;
-}
-
-RTCError RtpSenderBase::SetParametersInternal(const RtpParameters& parameters,
-                                              SetParametersCallback callback,
-                                              bool blocking) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTC_DCHECK(!stopped_);
-  RTC_DCHECK(!blocking || !callback) << "Callback must be null if blocking";
-
-  if (auto error = ValidateAndMaybeUpdateInitParameters(parameters)) {
-    if (callback) {
-      std::move(callback)(*error);
-    }
-    return *error;
-  }
-
-  // Invalidate the cache to ensure that GetParameters() doesn't use a stale
-  // cache while the worker thread is updating the parameters.
-  cached_parameters_.reset();
-
-  if (blocking && worker_thread_ == signaling_thread_) {
-    return SetParametersInternalWorkaround(parameters);
-  }
-
-  // Specific handling for when a blocking operation is requested.
-  Event done_event;
-  RTCError blocking_error = RTCError::OK();
-  std::unique_ptr<RtpParameters> blocking_applied_parameters;
-  if (blocking) {
-    callback = [&done_event, &blocking_error](RTCError error) {
-      blocking_error = std::move(error);
-      done_event.Set();
-    };
-  }
-
-  // A wrapper callback that fetches the parameters on the worker thread
-  // immediately after they have been set, then posts a task to the signaling
-  // thread to update the cache and invoke the original callback.
-  // This ensures strict ordering: Set -> Fetch -> Update Cache -> Callback.
-  //
-  // Note: The callback might be invoked on a thread other than the worker
-  // thread (e.g. the encoder queue). In that case, we must post a task back
-  // to the worker thread to safely access `media_channel_`.
-  auto callback_wrapper =
-      [this, blocking, &blocking_applied_parameters,
-       signaling_safety = signaling_safety_.flag(),
-       worker_safety_flag = worker_safety_, input_parameters = parameters,
-       callback = std::move(callback), ssrc = ssrc_](RTCError error) mutable {
-        auto on_worker_thread = [this, blocking, &blocking_applied_parameters,
-                                 signaling_safety = std::move(signaling_safety),
-                                 input_parameters = std::move(input_parameters),
-                                 callback = std::move(callback), ssrc,
-                                 error = std::move(error)]() mutable {
-          RTC_DCHECK_RUN_ON(worker_thread_);
-          std::unique_ptr<RtpParameters> fetched_parameters;
-          if (error.ok()) {
-            fetched_parameters = std::make_unique<RtpParameters>(
-                media_channel_->GetRtpSendParameters(ssrc));
-          }
-
-          if (blocking) {
-            blocking_applied_parameters = std::move(fetched_parameters);
-            std::move(callback)(std::move(error));
-          } else {
-            signaling_thread_->PostTask(SafeTask(
-                std::move(signaling_safety),
-                [this, callback = std::move(callback), error = std::move(error),
-                 fetched_parameters = std::move(fetched_parameters),
-                 input_parameters = std::move(input_parameters)]() mutable {
-                  RTC_DCHECK_RUN_ON(signaling_thread_);
-                  if (error.ok()) {
-                    if (ssrc_ == 0) {
-                      init_parameters_ = std::move(input_parameters);
-                    }
-                    cached_parameters_ = *fetched_parameters;
-                  }
-                  std::move(callback)(std::move(error));
-                }));
-          }
-        };
-
-        if (worker_thread_->IsCurrent()) {
-          on_worker_thread();
-        } else {
-          worker_thread_->PostTask(SafeTask(std::move(worker_safety_flag),
-                                            std::move(on_worker_thread)));
-        }
-      };
-
-  auto task = [&, callback = std::move(callback_wrapper),
-               parameters = parameters, ssrc = ssrc_]() mutable {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    if (media_channel_) {
-      SetRtpParametersOnWorkerThread(media_channel_, send_codecs_,
-                                     disabled_rids_, env_, ssrc, parameters,
-                                     std::move(callback));
-    } else {
-      std::move(callback)(RTCError::InvalidState());
-    }
-  };
-
-  if (blocking) {
-    worker_thread_->BlockingCall(task);
-    done_event.Wait(Event::kForever);
-    if (blocking_error.ok()) {
-      cached_parameters_ = std::move(*blocking_applied_parameters);
-      if (ssrc_ == 0) {
-        init_parameters_ = *cached_parameters_;
-      }
-    }
-    return blocking_error;
-  }
-
-  worker_thread_->PostTask(SafeTask(worker_safety_, std::move(task)));
-  return RTCError::OK();
-}
-
-RTCError RtpSenderBase::SetParametersInternalWithAllLayers(
-    const RtpParameters& parameters) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTC_DCHECK(!stopped_);
-
-  if (auto error = ValidateAndMaybeUpdateInitParameters(parameters)) {
-    return *error;
-  }
-  RtpParameters applied_parameters;
-  RTCError error = worker_thread_->BlockingCall([&, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    RTCError err = media_channel_ ? media_channel_->SetRtpSendParameters(
-                                        ssrc, parameters, nullptr)
-                                  : RTCError::InvalidState();
-    if (err.ok()) {
-      applied_parameters = media_channel_->GetRtpSendParameters(ssrc);
-    }
-    return err;
-  });
-
-  if (error.ok()) {
-    cached_parameters_ = std::move(applied_parameters);
-  }
-
-  return error;
 }
 
 RTCError RtpSenderBase::CheckSetParameters(const RtpParameters& parameters) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
+  if (is_transceiver_stopped_) {
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::INVALID_STATE,
+        "Cannot set parameters on sender of a stopped transceiver.");
+  }
   if (stopped_) {
-    return LOG_ERROR(RTCError::InvalidState()
-                     << "Cannot set parameters on a stopped sender.");
+    LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_STATE,
+                         "Cannot set parameters on a stopped sender.");
   }
   if (!last_transaction_id_) {
-    return LOG_ERROR(RTCError::InvalidState()
-                     << "Failed to set parameters since getParameters() has "
-                        "never been called"
-                        " on this sender");
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::INVALID_STATE,
+        "Failed to set parameters since getParameters() has never been called"
+        " on this sender");
   }
   if (last_transaction_id_ != parameters.transaction_id) {
-    return LOG_ERROR(RTCError::InvalidModification()
-                     << "Failed to set parameters since the transaction_id "
-                        "doesn't match"
-                        " the last value returned from getParameters()");
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::INVALID_MODIFICATION,
+        "Failed to set parameters since the transaction_id doesn't match"
+        " the last value returned from getParameters()");
   }
 
   return RTCError::OK();
+}
+
+RTCError RtpSenderBase::CheckCodecParameters(const RtpParameters& parameters) {
+  std::optional<Codec> send_codec = media_channel_->GetSendCodec();
+
+  // Match the currently used codec against the codec preferences to gather
+  // the SVC capabilities.
+  std::optional<Codec> send_codec_with_svc_info;
+  if (send_codec && send_codec->type == Codec::Type::kVideo) {
+    auto codec_match = absl::c_find_if(
+        send_codecs_, [&](auto& codec) { return send_codec->Matches(codec); });
+    if (codec_match != send_codecs_.end()) {
+      send_codec_with_svc_info = *codec_match;
+    }
+  }
+
+  return CheckScalabilityModeValues(parameters, send_codecs_,
+                                    send_codec_with_svc_info);
 }
 
 RTCError RtpSenderBase::SetParameters(const RtpParameters& parameters) {
@@ -659,7 +385,19 @@ RTCError RtpSenderBase::SetParameters(const RtpParameters& parameters) {
   if (!result.ok())
     return result;
 
-  result = SetParametersInternal(parameters, nullptr, /*blocking=*/true);
+  // Some tests rely on working in single thread mode without a run loop and a
+  // blocking call is required to keep them working. The encoder configuration
+  // also involves another thread with an asynchronous task, thus we still do
+  // need to wait for the callback to be resolved this way.
+  std::unique_ptr<Event> done_event = std::make_unique<Event>();
+  SetParametersInternal(
+      parameters,
+      [done = done_event.get(), &result](RTCError error) {
+        result = error;
+        done->Set();
+      },
+      true);
+  done_event->Wait(Event::kForever);
   last_transaction_id_.reset();
   return result;
 }
@@ -671,18 +409,19 @@ void RtpSenderBase::SetParametersAsync(const RtpParameters& parameters,
   TRACE_EVENT0("webrtc", "RtpSenderBase::SetParametersAsync");
   RTCError result = CheckSetParameters(parameters);
   if (!result.ok()) {
-    std::move(callback)(result);
+    InvokeSetParametersCallback(callback, result);
     return;
   }
 
   SetParametersInternal(
       parameters,
-      [this, callback = std::move(callback)](RTCError error) mutable {
-        RTC_DCHECK_RUN_ON(signaling_thread_);
-        last_transaction_id_.reset();
-        std::move(callback)(error);
-      },
-      /*blocking=*/false);
+      SignalingThreadCallback(
+          signaling_thread_,
+          [this, callback = std::move(callback)](RTCError error) mutable {
+            last_transaction_id_.reset();
+            InvokeSetParametersCallback(callback, error);
+          }),
+      false);
 }
 
 void RtpSenderBase::SetObserver(RtpSenderObserverInterface* observer) {
@@ -711,16 +450,14 @@ void RtpSenderBase::set_stream_ids(const std::vector<std::string>& stream_ids) {
 }
 
 void RtpSenderBase::SetStreams(const std::vector<std::string>& stream_ids) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
   set_stream_ids(stream_ids);
-  if (set_streams_observer_ && !stopped_)
+  if (set_streams_observer_)
     set_streams_observer_->OnSetStreams();
 }
 
 bool RtpSenderBase::SetTrack(MediaStreamTrackInterface* track) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   TRACE_EVENT0("webrtc", "RtpSenderBase::SetTrack");
-
   if (stopped_) {
     RTC_LOG(LS_ERROR) << "SetTrack can't be called on a stopped RtpSender.";
     return false;
@@ -766,9 +503,6 @@ void RtpSenderBase::SetSsrc(uint32_t ssrc) {
   if (stopped_ || ssrc == ssrc_) {
     return;
   }
-
-  cached_parameters_.reset();
-
   // If we are already sending with a particular SSRC, stop sending.
   if (can_send_track()) {
     ClearSend();
@@ -779,23 +513,21 @@ void RtpSenderBase::SetSsrc(uint32_t ssrc) {
     SetSend();
     AddTrackToStats();
   }
-
-  RtpParameters current_parameters;
-  bool params_modified = false;
-  worker_thread_->BlockingCall([&, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    if (!init_parameters_.encodings.empty() ||
-        init_parameters_.degradation_preference.has_value()) {
+  if (!init_parameters_.encodings.empty() ||
+      init_parameters_.degradation_preference.has_value()) {
+    worker_thread_->BlockingCall([&] {
+      RTC_DCHECK(media_channel_);
+      // Get the current parameters, which are constructed from the SDP.
+      // The number of layers in the SDP is currently authoritative to support
+      // SDP munging for Plan-B simulcast with "a=ssrc-group:SIM <ssrc-id>..."
+      // lines as described in RFC 5576.
+      // All fields should be default constructed and the SSRC field set, which
+      // we need to copy.
+      RtpParameters current_parameters =
+          media_channel_->GetRtpSendParameters(ssrc_);
+      // SSRC 0 has special meaning as "no stream".
+      // In this case, current_parameters may have size 0.
       if (ssrc != 0) {
-        RTC_DCHECK(media_channel_);
-        // Get the current parameters, which are constructed from the SDP. The
-        // number of layers in the SDP is currently authoritative to support SDP
-        // munging for Plan-B simulcast with "a=ssrc-group:SIM <ssrc-id>..."
-        // lines as described in RFC 5576. All fields should be default
-        // constructed and the SSRC field set, which we need to copy.
-        current_parameters = media_channel_->GetRtpSendParameters(ssrc);
-        // SSRC 0 has special meaning as "no stream". In this case,
-        // current_parameters may have size 0.
         RTC_CHECK_GE(current_parameters.encodings.size(),
                      init_parameters_.encodings.size());
         for (size_t i = 0; i < init_parameters_.encodings.size(); ++i) {
@@ -807,137 +539,23 @@ void RtpSenderBase::SetSsrc(uint32_t ssrc) {
         }
         current_parameters.degradation_preference =
             init_parameters_.degradation_preference;
-        params_modified =
-            media_channel_
-                ->SetRtpSendParameters(ssrc, current_parameters, nullptr)
-                .ok();
-        if (params_modified) {
-          // The parameters may change as they're applied.
-          current_parameters = media_channel_->GetRtpSendParameters(ssrc);
-        }
+        media_channel_->SetRtpSendParameters(ssrc_, current_parameters,
+                                             nullptr);
       }
-      // Clear the `init_parameters_` after they have been applied to the
-      // media channel. This prevents stale values from being used in
-      // subsequent calls to `SetSsrc`, which could happen if `SetSsrc` is
-      // called multiple times on the same sender. See
-      // https://issues.webrtc.org/issues/500993975 for details.
       init_parameters_.encodings.clear();
       init_parameters_.degradation_preference = std::nullopt;
-    }
-
-    // While we're on the worker thread, attach the frame decryptor, transformer
-    // and selector to the current media channel.
-    if (frame_encryptor_) {
-      media_channel_->SetFrameEncryptor(ssrc, frame_encryptor_);
-    }
-    if (frame_transformer_) {
-      media_channel_->SetEncoderToPacketizerFrameTransformer(
-          ssrc, frame_transformer_);
-    }
-    if (encoder_selector_) {
-      media_channel_->SetEncoderSelector(ssrc, encoder_selector_);
-    }
-  });
-  if (params_modified) {
-    // As a result of the `SetRtpSendParameters` call, an async task will be
-    // queued to update `cached_parameters_` - unless the parameters didn't
-    // really change. In any case, we might as well stash away the current
-    // parameters right away.
-    cached_parameters_ = std::move(current_parameters);
+    });
   }
-}
-
-ScopedOperationsBatcher::BatchTaskWithFinalizer RtpSenderBase::SetSsrcTask(
-    uint32_t ssrc) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (stopped_ || ssrc == ssrc_) {
-    return nullptr;
+  // Attempt to attach the frame decryptor to the current media channel.
+  if (frame_encryptor_) {
+    SetFrameEncryptor(frame_encryptor_);
   }
-
-  cached_parameters_.reset();
-
-  // If we are already sending with a particular SSRC, stop sending.
-  if (can_send_track()) {
-    ClearSend();
-    RemoveTrackFromStats();
+  if (frame_transformer_) {
+    SetFrameTransformer(frame_transformer_);
   }
-  ssrc_ = ssrc;
-  if (can_send_track()) {
-    SetSend();
-    AddTrackToStats();
+  if (encoder_selector_) {
+    SetEncoderSelectorOnChannel();
   }
-
-  return [this, ssrc]() mutable
-             -> RTCErrorOr<ScopedOperationsBatcher::FinalizerTask> {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-
-    RtpParameters current_parameters;
-    bool params_modified = false;
-
-    if (!init_parameters_.encodings.empty() ||
-        init_parameters_.degradation_preference.has_value()) {
-      if (ssrc != 0) {
-        RTC_DCHECK(media_channel_);
-        // Get the current parameters, which are constructed from the SDP. The
-        // number of layers in the SDP is currently authoritative to support SDP
-        // munging for Plan-B simulcast with "a=ssrc-group:SIM <ssrc-id>..."
-        // lines as described in RFC 5576. All fields should be default
-        // constructed and the SSRC field set, which we need to copy.
-        current_parameters = media_channel_->GetRtpSendParameters(ssrc);
-        // SSRC 0 has special meaning as "no stream". In this case,
-        // current_parameters may have size 0.
-        RTC_CHECK_GE(current_parameters.encodings.size(),
-                     init_parameters_.encodings.size());
-        for (size_t i = 0; i < init_parameters_.encodings.size(); ++i) {
-          init_parameters_.encodings[i].ssrc =
-              current_parameters.encodings[i].ssrc;
-          init_parameters_.encodings[i].rid =
-              current_parameters.encodings[i].rid;
-          current_parameters.encodings[i] = init_parameters_.encodings[i];
-        }
-        current_parameters.degradation_preference =
-            init_parameters_.degradation_preference;
-        params_modified =
-            media_channel_
-                ->SetRtpSendParameters(ssrc, current_parameters, nullptr)
-                .ok();
-        if (params_modified) {
-          // The parameters may change as they're applied.
-          current_parameters = media_channel_->GetRtpSendParameters(ssrc);
-        }
-      }
-      // Clear the `init_parameters_` after they have been applied to the
-      // media channel. This prevents stale values from being used in
-      // subsequent calls to `SetSsrc`, which could happen if `SetSsrc` is
-      // called multiple times on the same sender. See
-      // https://issues.webrtc.org/issues/500993975 for details.
-      init_parameters_.encodings.clear();
-      init_parameters_.degradation_preference = std::nullopt;
-    }
-
-    // While we're on the worker thread, attach the frame decryptor, transformer
-    // and selector to the current media channel.
-    if (frame_encryptor_ != nullptr) {
-      media_channel_->SetFrameEncryptor(ssrc, frame_encryptor_);
-    }
-    if (frame_transformer_ != nullptr) {
-      media_channel_->SetEncoderToPacketizerFrameTransformer(
-          ssrc, frame_transformer_);
-    }
-    if (encoder_selector_ != nullptr) {
-      media_channel_->SetEncoderSelector(ssrc, encoder_selector_);
-    }
-
-    if (params_modified) {
-      return ScopedOperationsBatcher::FinalizerTask(
-          [this, current_parameters = std::move(current_parameters)]() mutable {
-            RTC_DCHECK_RUN_ON(signaling_thread_);
-            cached_parameters_ = std::move(current_parameters);
-          });
-    } else {
-      return ScopedOperationsBatcher::FinalizerTask();
-    }
-  };
 }
 
 void RtpSenderBase::Stop() {
@@ -951,69 +569,24 @@ void RtpSenderBase::Stop() {
     DetachTrack();
     track_->UnregisterObserver(this);
   }
-
-  bool clear_send = can_send_track();
-  if (clear_send) {
+  if (can_send_track()) {
+    ClearSend();
     RemoveTrackFromStats();
   }
-
-  worker_thread_->BlockingCall([this, clear_send, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    if (clear_send) {
-      ClearSend_w(ssrc);
-    }
-    SetMediaChannel(nullptr);
-  });
-
+  media_channel_ = nullptr;
+  set_streams_observer_ = nullptr;
   stopped_ = true;
-  cached_parameters_.reset();
-}
-
-absl::AnyInvocable<void() &&> RtpSenderBase::DetachTrackAndGetStopTask() {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTC_DCHECK_DISALLOW_THREAD_BLOCKING_CALLS();
-  TRACE_EVENT0("webrtc", "RtpSenderBase::DetachTrackAndGetStopTask");
-  if (stopped_) {
-    return nullptr;
-  }
-  if (track_) {
-    DetachTrack();
-    track_->UnregisterObserver(this);
-  }
-
-  bool clear_send = can_send_track();
-  if (clear_send) {
-    RemoveTrackFromStats();
-  }
-
-  stopped_ = true;
-  cached_parameters_.reset();
-
-  return [this, clear_send, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    if (clear_send) {
-      ClearSend_w(ssrc);
-    }
-    SetMediaChannel(nullptr);
-  };
 }
 
 RTCError RtpSenderBase::DisableEncodingLayers(
     const std::vector<std::string>& rids) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   if (stopped_) {
-    return LOG_ERROR(RTCError::InvalidState()
-                     << "Cannot disable encodings on a stopped sender.");
+    LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_STATE,
+                         "Cannot disable encodings on a stopped sender.");
   }
 
-  bool all_already_disabled = true;
-  for (const std::string& rid : rids) {
-    if (!absl::c_linear_search(disabled_rids_, rid)) {
-      all_already_disabled = false;
-      break;
-    }
-  }
-  if (all_already_disabled) {
+  if (rids.empty()) {
     return RTCError::OK();
   }
 
@@ -1024,13 +597,12 @@ RTCError RtpSenderBase::DisableEncodingLayers(
                         [&rid](const RtpEncodingParameters& encoding) {
                           return encoding.rid == rid;
                         })) {
-      return LOG_ERROR(RTCError::InvalidParameter()
-                       << "RID: " << rid
-                       << " does not refer to a valid layer.");
+      LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                           "RID: " + rid + " does not refer to a valid layer.");
     }
   }
 
-  if (ssrc_ == 0) {
+  if (!media_channel_ || !ssrc_) {
     RemoveEncodingLayers(rids, &init_parameters_.encodings);
     // Invalidate any transaction upon success.
     last_transaction_id_.reset();
@@ -1063,35 +635,12 @@ void RtpSenderBase::SetFrameTransformer(
     scoped_refptr<FrameTransformerInterface> frame_transformer) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   frame_transformer_ = std::move(frame_transformer);
-  if (ssrc_ && !stopped_) {
-    worker_thread_->BlockingCall([&, ssrc = ssrc_] {
-      RTC_DCHECK_RUN_ON(worker_thread_);
-      if (media_channel_) {
-        media_channel_->SetEncoderToPacketizerFrameTransformer(
-            ssrc, frame_transformer_);
-      }
+  if (media_channel_ && ssrc_ && !stopped_) {
+    worker_thread_->BlockingCall([&] {
+      media_channel_->SetEncoderToPacketizerFrameTransformer(
+          ssrc_, frame_transformer_);
     });
   }
-}
-
-RTCErrorOr<scoped_refptr<SframeEncrypterInterface>>
-RtpSenderBase::CreateSframeEncrypterOrError(
-    const SframeEncrypterInit& options) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-
-  if (!enable_sframe_at_owner_) {
-    return RTCError(RTCErrorType::INTERNAL_ERROR,
-                    "Sender is not associated with a transceiver");
-  }
-
-  RTCError error = enable_sframe_at_owner_();
-  if (!error.ok()) {
-    return error;
-  }
-
-  // TODO(bugs.webrtc.org/479862368): Implement Sframe encrypter creation.
-  return RTCError(RTCErrorType::UNSUPPORTED_OPERATION,
-                  "Sframe encrypter not yet implemented");
 }
 
 LocalAudioSinkAdapter::LocalAudioSinkAdapter() : sink_(nullptr) {}
@@ -1127,39 +676,24 @@ void LocalAudioSinkAdapter::SetSink(AudioSource::Sink* sink) {
 
 scoped_refptr<AudioRtpSender> AudioRtpSender::Create(
     const Environment& env,
-    Thread* signaling_thread,
     Thread* worker_thread,
-    absl::string_view id,
+    const std::string& id,
     LegacyStatsCollectorInterface* stats,
-    SetStreamsObserver* set_streams_observer,
-    absl::AnyInvocable<RTCError()> enable_sframe_at_owner,
-    MediaSendChannelInterface* media_channel) {
-  return make_ref_counted<AudioRtpSender>(
-      env, signaling_thread, worker_thread, id, stats, set_streams_observer,
-      std::move(enable_sframe_at_owner), media_channel);
+    SetStreamsObserver* set_streams_observer) {
+  return make_ref_counted<AudioRtpSender>(env, worker_thread, id, stats,
+                                          set_streams_observer);
 }
 
-AudioRtpSender::AudioRtpSender(
-    const Environment& env,
-    Thread* signaling_thread,
-    Thread* worker_thread,
-    absl::string_view id,
-    LegacyStatsCollectorInterface* stats,
-    SetStreamsObserver* set_streams_observer,
-    absl::AnyInvocable<RTCError()> enable_sframe_at_owner,
-    MediaSendChannelInterface* media_channel)
-    : RtpSenderBase(env,
-                    signaling_thread,
-                    worker_thread,
-                    id,
-                    MediaType::AUDIO,
-                    set_streams_observer,
-                    std::move(enable_sframe_at_owner),
-                    media_channel),
-      legacy_stats_(stats),
-      dtmf_sender_(DtmfSender::Create(signaling_thread, this)),
+AudioRtpSender::AudioRtpSender(const Environment& env,
+                               Thread* worker_thread,
+                               const std::string& id,
+                               LegacyStatsCollectorInterface* legacy_stats,
+                               SetStreamsObserver* set_streams_observer)
+    : RtpSenderBase(env, worker_thread, id, set_streams_observer),
+      legacy_stats_(legacy_stats),
+      dtmf_sender_(DtmfSender::Create(Thread::Current(), this)),
       dtmf_sender_proxy_(
-          DtmfSenderProxy::Create(signaling_thread, dtmf_sender_)),
+          DtmfSenderProxy::Create(Thread::Current(), dtmf_sender_)),
       sink_adapter_(new LocalAudioSinkAdapter()) {}
 
 AudioRtpSender::~AudioRtpSender() {
@@ -1168,37 +702,35 @@ AudioRtpSender::~AudioRtpSender() {
 }
 
 bool AudioRtpSender::CanInsertDtmf() {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (stopped_) {
+  if (!media_channel_) {
+    RTC_LOG(LS_ERROR) << "CanInsertDtmf: No audio channel exists.";
     return false;
   }
   // Check that this RTP sender is active (description has been applied that
   // matches an SSRC to its ID).
-  if (ssrc_ == 0) {
+  if (!ssrc_) {
     RTC_LOG(LS_ERROR) << "CanInsertDtmf: Sender does not have SSRC.";
     return false;
   }
-  return worker_thread_->BlockingCall([&] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    return media_channel_ ? voice_media_channel()->CanInsertDtmf() : false;
-  });
+  return worker_thread_->BlockingCall(
+      [&] { return voice_media_channel()->CanInsertDtmf(); });
 }
 
 bool AudioRtpSender::InsertDtmf(int code, int duration) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (stopped_) {
+  if (!media_channel_) {
+    RTC_LOG(LS_ERROR) << "InsertDtmf: No audio channel exists.";
     return false;
   }
-  if (ssrc_ == 0) {
+  if (!ssrc_) {
     RTC_LOG(LS_ERROR) << "InsertDtmf: Sender does not have SSRC.";
     return false;
   }
-  return worker_thread_->BlockingCall([&, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    return media_channel_
-               ? voice_media_channel()->InsertDtmf(ssrc, code, duration)
-               : false;
-  });
+  bool success = worker_thread_->BlockingCall(
+      [&] { return voice_media_channel()->InsertDtmf(ssrc_, code, duration); });
+  if (!success) {
+    RTC_LOG(LS_ERROR) << "Failed to insert DTMF to channel.";
+  }
+  return success;
 }
 
 void AudioRtpSender::OnChanged() {
@@ -1225,14 +757,12 @@ void AudioRtpSender::AttachTrack() {
 }
 
 void AudioRtpSender::AddTrackToStats() {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
   if (can_send_track() && legacy_stats_) {
     legacy_stats_->AddLocalAudioTrack(audio_track().get(), ssrc_);
   }
 }
 
 void AudioRtpSender::RemoveTrackFromStats() {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
   if (can_send_track() && legacy_stats_) {
     legacy_stats_->RemoveLocalAudioTrack(audio_track().get(), ssrc_);
   }
@@ -1247,15 +777,16 @@ RTCError AudioRtpSender::GenerateKeyFrame(
     const std::vector<std::string>& rids) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DLOG(LS_ERROR) << "Tried to get generate a key frame for audio.";
-  return RTCError::UnsupportedOperation()
-         << "Generating key frames for audio is not supported.";
+  return RTCError(RTCErrorType::UNSUPPORTED_OPERATION,
+                  "Generating key frames for audio is not supported.");
 }
 
 void AudioRtpSender::SetSend() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DCHECK(!stopped_);
   RTC_DCHECK(can_send_track());
-  if (stopped_) {
+  if (!media_channel_) {
+    RTC_LOG(LS_ERROR) << "SetAudioSend: No audio channel exists.";
     return;
   }
   AudioOptions options;
@@ -1272,13 +803,9 @@ void AudioRtpSender::SetSend() {
   // `track_->enabled()` hops to the signaling thread, so call it before we hop
   // to the worker thread or else it will deadlock.
   bool track_enabled = track_->enabled();
-  InvalidateCache();
-  bool success = worker_thread_->BlockingCall([&, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    return media_channel_
-               ? voice_media_channel()->SetAudioSend(
-                     ssrc, track_enabled, &options, sink_adapter_.get())
-               : false;
+  bool success = worker_thread_->BlockingCall([&] {
+    return voice_media_channel()->SetAudioSend(ssrc_, track_enabled, &options,
+                                               sink_adapter_.get());
   });
   if (!success) {
     RTC_LOG(LS_ERROR) << "SetAudioSend: ssrc is incorrect: " << ssrc_;
@@ -1289,59 +816,33 @@ void AudioRtpSender::ClearSend() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DCHECK(ssrc_ != 0);
   RTC_DCHECK(!stopped_);
-  worker_thread_->BlockingCall([&, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    ClearSend_w(ssrc);
+  if (!media_channel_) {
+    RTC_LOG(LS_WARNING) << "ClearAudioSend: No audio channel exists.";
+    return;
+  }
+  AudioOptions options;
+  bool success = worker_thread_->BlockingCall([&] {
+    return voice_media_channel()->SetAudioSend(ssrc_, false, &options, nullptr);
   });
-}
-
-void AudioRtpSender::ClearSend_w(uint32_t ssrc) {
-  if (media_channel_) {
-    AudioOptions options;
-    voice_media_channel()->SetAudioSend(ssrc, false, &options, nullptr);
+  if (!success) {
+    RTC_LOG(LS_WARNING) << "ClearAudioSend: ssrc is incorrect: " << ssrc_;
   }
 }
 
 scoped_refptr<VideoRtpSender> VideoRtpSender::Create(
     const Environment& env,
-    Thread* signaling_thread,
     Thread* worker_thread,
-    absl::string_view id,
-    SetStreamsObserver* set_streams_observer,
-    absl::AnyInvocable<RTCError()> enable_sframe_at_owner,
-    MediaSendChannelInterface* media_channel,
-    const std::vector<RtpEncodingParameters>& init_send_encodings,
-    bool simulcast_rejected,
-    const std::vector<SimulcastLayer>& initial_simulcast_layers) {
-  return make_ref_counted<VideoRtpSender>(
-      env, signaling_thread, worker_thread, id, set_streams_observer,
-      std::move(enable_sframe_at_owner), media_channel, init_send_encodings,
-      simulcast_rejected, initial_simulcast_layers);
+    const std::string& id,
+    SetStreamsObserver* set_streams_observer) {
+  return make_ref_counted<VideoRtpSender>(env, worker_thread, id,
+                                          set_streams_observer);
 }
 
-VideoRtpSender::VideoRtpSender(
-    const Environment& env,
-    Thread* signaling_thread,
-    Thread* worker_thread,
-    absl::string_view id,
-    SetStreamsObserver* set_streams_observer,
-    absl::AnyInvocable<RTCError()> enable_sframe_at_owner,
-    MediaSendChannelInterface* media_channel,
-    const std::vector<RtpEncodingParameters>& init_send_encodings,
-    bool simulcast_rejected,
-    const std::vector<SimulcastLayer>& initial_simulcast_layers)
-    : RtpSenderBase(env,
-                    signaling_thread,
-                    worker_thread,
-                    id,
-                    MediaType::VIDEO,
-                    set_streams_observer,
-                    std::move(enable_sframe_at_owner),
-                    media_channel) {
-  set_init_send_encodings(
-      CalculateInitialEncodings(init_parameters_.encodings, init_send_encodings,
-                                initial_simulcast_layers, simulcast_rejected));
-}
+VideoRtpSender::VideoRtpSender(const Environment& env,
+                               Thread* worker_thread,
+                               const std::string& id,
+                               SetStreamsObserver* set_streams_observer)
+    : RtpSenderBase(env, worker_thread, id, set_streams_observer) {}
 
 VideoRtpSender::~VideoRtpSender() {
   Stop();
@@ -1375,34 +876,28 @@ scoped_refptr<DtmfSenderInterface> VideoRtpSender::GetDtmfSender() const {
 RTCError VideoRtpSender::GenerateKeyFrame(
     const std::vector<std::string>& rids) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (stopped_ || ssrc_ == 0) {
+  if (video_media_channel() && ssrc_ && !stopped_) {
+    const auto parameters = GetParametersInternal();
+    for (const auto& rid : rids) {
+      if (rid.empty()) {
+        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                             "Attempted to specify an empty rid.");
+      }
+      if (!absl::c_any_of(parameters.encodings,
+                          [&rid](const RtpEncodingParameters& parameters) {
+                            return parameters.rid == rid;
+                          })) {
+        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                             "Attempted to specify a rid not configured.");
+      }
+    }
+    worker_thread_->PostTask([&, rids] {
+      video_media_channel()->GenerateSendKeyFrame(ssrc_, rids);
+    });
+  } else {
     RTC_LOG(LS_WARNING) << "Tried to generate key frame for sender that is "
                            "stopped or has no media channel.";
-    // Wouldn't it be more correct to return an error?
-    return RTCError::OK();
   }
-
-  const auto parameters = GetParametersInternal();
-  for (const auto& rid : rids) {
-    if (rid.empty()) {
-      return LOG_ERROR(RTCError::InvalidParameter()
-                       << "Attempted to specify an empty rid.");
-    }
-    if (!absl::c_any_of(parameters.encodings,
-                        [&rid](const RtpEncodingParameters& parameters) {
-                          return parameters.rid == rid;
-                        })) {
-      return LOG_ERROR(RTCError::InvalidParameter()
-                       << "Attempted to specify a rid not configured.");
-    }
-  }
-  worker_thread_->PostTask(SafeTask(worker_safety_, [this, rids, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    if (video_media_channel()) {
-      video_media_channel()->GenerateSendKeyFrame(ssrc, rids);
-    }
-  }));
-
   return RTCError::OK();
 }
 
@@ -1410,6 +905,10 @@ void VideoRtpSender::SetSend() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DCHECK(!stopped_);
   RTC_DCHECK(can_send_track());
+  if (!media_channel_) {
+    RTC_LOG(LS_ERROR) << "SetVideoSend: No video channel exists.";
+    return;
+  }
   VideoOptions options;
   VideoTrackSourceInterface* source = video_track()->GetSource();
   if (source) {
@@ -1428,13 +927,9 @@ void VideoRtpSender::SetSend() {
       options.is_screencast = true;
       break;
   }
-  auto* video_track = static_cast<VideoTrackInterface*>(track_.get());
-  InvalidateCache();
-  bool success = worker_thread_->BlockingCall([&, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    return media_channel_ ? video_media_channel()->SetVideoSend(ssrc, &options,
-                                                                video_track)
-                          : false;
+  bool success = worker_thread_->BlockingCall([&] {
+    return video_media_channel()->SetVideoSend(ssrc_, &options,
+                                               video_track().get());
   });
   RTC_DCHECK(success);
 }
@@ -1443,19 +938,15 @@ void VideoRtpSender::ClearSend() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DCHECK(ssrc_ != 0);
   RTC_DCHECK(!stopped_);
+  if (!media_channel_) {
+    RTC_LOG(LS_WARNING) << "SetVideoSend: No video channel exists.";
+    return;
+  }
   // Allow SetVideoSend to fail since `enable` is false and `source` is null.
   // This the normal case when the underlying media channel has already been
   // deleted.
-  worker_thread_->BlockingCall([&, ssrc = ssrc_] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    ClearSend_w(ssrc);
-  });
-}
-
-void VideoRtpSender::ClearSend_w(uint32_t ssrc) {
-  if (media_channel_) {
-    video_media_channel()->SetVideoSend(ssrc, nullptr, nullptr);
-  }
+  worker_thread_->BlockingCall(
+      [&] { video_media_channel()->SetVideoSend(ssrc_, nullptr, nullptr); });
 }
 
 }  // namespace webrtc

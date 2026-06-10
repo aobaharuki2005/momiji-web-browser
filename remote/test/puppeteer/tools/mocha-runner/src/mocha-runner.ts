@@ -189,9 +189,9 @@ async function main() {
       console.log('Running', JSON.stringify(parameters), tmpFilename);
       const args = [
         '-u',
-        path.join(import.meta.dirname, 'interface.cjs'),
+        path.join(__dirname, 'interface.js'),
         '-R',
-        !reporter ? path.join(import.meta.dirname, 'reporter.cjs') : reporter,
+        !reporter ? path.join(__dirname, 'reporter.js') : reporter,
         '-O',
         `output=${tmpFilename}`,
         '-n',
@@ -208,7 +208,6 @@ async function main() {
       }).sort((a, b) => {
         return a.localeCompare(b);
       });
-
       if (shard) {
         // Shard ID is 1-based.
         const [shardId, shards] = shard.split('-').map(s => {
@@ -231,20 +230,23 @@ async function main() {
       } else {
         args.push(...specs);
       }
-      const mochaCommand = [
-        ...(useCoverage
-          ? ['c8', '--check-coverage', '--lines', '90', 'npx']
-          : []),
-        'mocha',
-        ...mochaArgs.map(String),
-        ...args,
-      ];
-      const handle = spawn('npx', mochaCommand, {
-        shell: true,
-        cwd: process.cwd(),
-        stdio: 'inherit',
-        env,
-      });
+      const handle = spawn(
+        'npx',
+        [
+          ...(useCoverage
+            ? ['c8', '--check-coverage', '--lines', '90', 'npx']
+            : []),
+          'mocha',
+          ...mochaArgs.map(String),
+          ...args,
+        ],
+        {
+          shell: true,
+          cwd: process.cwd(),
+          stdio: 'inherit',
+          env,
+        },
+      );
       await new Promise<void>((resolve, reject) => {
         handle.on('error', err => {
           reject(err);

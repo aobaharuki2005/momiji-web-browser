@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ipc_backgroundparentimpl_h_
-#define mozilla_ipc_backgroundparentimpl_h_
+#ifndef mozilla_ipc_backgroundparentimpl_h__
+#define mozilla_ipc_backgroundparentimpl_h__
 
 #include "mozilla/ipc/PBackgroundParent.h"
 
@@ -211,11 +213,12 @@ class BackgroundParentImpl : public PBackgroundParent {
       const dom::cache::Namespace& aNamespace,
       const PrincipalInfo& aPrincipalInfo) override;
 
-  already_AddRefed<PUDPSocketParent> AllocPUDPSocketParent(
-      const Maybe<PrincipalInfo>& pInfo, const nsACString& aFilter) override;
+  PUDPSocketParent* AllocPUDPSocketParent(const Maybe<PrincipalInfo>& pInfo,
+                                          const nsACString& aFilter) override;
   mozilla::ipc::IPCResult RecvPUDPSocketConstructor(
       PUDPSocketParent*, const Maybe<PrincipalInfo>& aPrincipalInfo,
       const nsACString& aFilter) override;
+  bool DeallocPUDPSocketParent(PUDPSocketParent*) override;
 
   PMessagePortParent* AllocPMessagePortParent(
       const nsID& aUUID, const nsID& aDestinationUUID,
@@ -327,6 +330,14 @@ class BackgroundParentImpl : public PBackgroundParent {
       const IPCServiceWorkerRegistrationDescriptor& aDescriptor,
       const IPCClientInfo& aForClient) override;
 
+  PEndpointForReportParent* AllocPEndpointForReportParent(
+      const nsAString& aGroupName,
+      const PrincipalInfo& aPrincipalInfo) override;
+
+  mozilla::ipc::IPCResult RecvPEndpointForReportConstructor(
+      PEndpointForReportParent* actor, const nsAString& aGroupName,
+      const PrincipalInfo& aPrincipalInfo) override;
+
   mozilla::ipc::IPCResult RecvEnsureRDDProcessAndCreateBridge(
       EnsureRDDProcessAndCreateBridgeResolver&& aResolver) override;
 
@@ -337,6 +348,13 @@ class BackgroundParentImpl : public PBackgroundParent {
   mozilla::ipc::IPCResult RecvRequestCameraAccess(
       const bool& aAllowPermissionRequest,
       RequestCameraAccessResolver&& aResolver) override;
+
+  bool DeallocPEndpointForReportParent(
+      PEndpointForReportParent* aActor) override;
+
+  mozilla::ipc::IPCResult RecvRemoveEndpoint(
+      const nsAString& aGroupName, const nsACString& aEndpointURL,
+      const PrincipalInfo& aPrincipalInfo) override;
 
   mozilla::ipc::IPCResult RecvPLockManagerConstructor(
       PLockManagerParent* actor, mozilla::NotNull<nsIPrincipal*> aPrincipalInfo,
@@ -350,4 +368,4 @@ class BackgroundParentImpl : public PBackgroundParent {
 
 }  // namespace mozilla::ipc
 
-#endif  // mozilla_ipc_backgroundparentimpl_h_
+#endif  // mozilla_ipc_backgroundparentimpl_h__

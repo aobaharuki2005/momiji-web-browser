@@ -1,8 +1,12 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGViewportElement.h"
+
+#include <stdint.h>
 
 #include <algorithm>
 
@@ -31,13 +35,13 @@ namespace mozilla::dom {
 
 SVGElement::LengthInfo SVGViewportElement::sLengthInfo[4] = {
     {nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGLength::Axis::Y},
+     SVGContentUtils::Y},
     {nsGkAtoms::width, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::X},
+     SVGContentUtils::X},
     {nsGkAtoms::height, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGLength::Axis::Y},
+     SVGContentUtils::Y},
 };
 
 //----------------------------------------------------------------------
@@ -45,7 +49,8 @@ SVGElement::LengthInfo SVGViewportElement::sLengthInfo[4] = {
 
 SVGViewportElement::SVGViewportElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : SVGGraphicsElement(std::move(aNodeInfo)) {}
+    : SVGGraphicsElement(std::move(aNodeInfo)),
+      mHasChildrenOnlyTransform(false) {}
 
 //----------------------------------------------------------------------
 
@@ -173,46 +178,56 @@ gfx::Matrix SVGViewportElement::GetViewBoxTransform() const {
 //----------------------------------------------------------------------
 // SVGViewportElement
 
-float SVGViewportElement::GetLength(SVGLength::Axis aAxis) const {
+float SVGViewportElement::GetLength(uint8_t aCtxType) const {
   const auto& animatedViewBox = GetViewBoxInternal();
-  gfxSize size;
+  float h = 0.0f, w = 0.0f;
   bool shouldComputeWidth =
-           (aAxis == SVGLength::Axis::X || aAxis == SVGLength::Axis::XY),
+           (aCtxType == SVGContentUtils::X || aCtxType == SVGContentUtils::XY),
        shouldComputeHeight =
-           (aAxis == SVGLength::Axis::Y || aAxis == SVGLength::Axis::XY);
+           (aCtxType == SVGContentUtils::Y || aCtxType == SVGContentUtils::XY);
 
   if (animatedViewBox.HasRect()) {
     float zoom = UserSpaceMetrics::GetZoom(this);
-    size = ThebesSize(animatedViewBox.GetAnimValue().Size() * zoom);
+    const auto& viewbox = animatedViewBox.GetAnimValue() * zoom;
+    w = viewbox.width;
+    h = viewbox.height;
   } else if (IsInner()) {
     // Resolving length for inner <svg> is exactly the same as other
     // ordinary element. We shouldn't use the SVGViewportElement overload
     // of GetAnimValue().
     SVGElementMetrics metrics(this);
     if (shouldComputeWidth) {
-      size.width = mLengthAttributes[ATTR_WIDTH].GetAnimValueWithZoom(metrics);
+      w = mLengthAttributes[ATTR_WIDTH].GetAnimValueWithZoom(metrics);
     }
     if (shouldComputeHeight) {
-      size.height =
-          mLengthAttributes[ATTR_HEIGHT].GetAnimValueWithZoom(metrics);
+      h = mLengthAttributes[ATTR_HEIGHT].GetAnimValueWithZoom(metrics);
     }
   } else if (ShouldSynthesizeViewBox()) {
     if (shouldComputeWidth) {
-      size.width = ComputeSynthesizedViewBoxDimension(
-          mLengthAttributes[ATTR_WIDTH], mViewportSize.width, this);
+      w = ComputeSynthesizedViewBoxDimension(mLengthAttributes[ATTR_WIDTH],
+                                             mViewportSize.width, this);
     }
     if (shouldComputeHeight) {
-      size.height = ComputeSynthesizedViewBoxDimension(
-          mLengthAttributes[ATTR_HEIGHT], mViewportSize.height, this);
+      h = ComputeSynthesizedViewBoxDimension(mLengthAttributes[ATTR_HEIGHT],
+                                             mViewportSize.height, this);
     }
   } else {
-    size = ThebesSize(mViewportSize);
+    w = mViewportSize.width;
+    h = mViewportSize.height;
   }
 
-  size.width = std::max(size.width, 0.0);
-  size.height = std::max(size.height, 0.0);
+  w = std::max(w, 0.0f);
+  h = std::max(h, 0.0f);
 
-  return float(SVGContentUtils::AxisLength(size, aAxis));
+  switch (aCtxType) {
+    case SVGContentUtils::X:
+      return w;
+    case SVGContentUtils::Y:
+      return h;
+    case SVGContentUtils::XY:
+      return float(SVGContentUtils::ComputeNormalizedHypotenuse(w, h));
+  }
+  return 0;
 }
 
 //----------------------------------------------------------------------

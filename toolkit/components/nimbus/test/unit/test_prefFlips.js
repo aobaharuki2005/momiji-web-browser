@@ -2177,6 +2177,14 @@ add_task(async function test_prefFlip_setPref_restore() {
   for (const [i, { name, ...testCase }] of TEST_CASES.entries()) {
     info(`Running test case ${i}: ${name}`);
 
+    Services.fog.applyServerKnobsConfig(
+      JSON.stringify({
+        metrics_enabled: {
+          "nimbus_events.enrollment_status": true,
+        },
+      })
+    );
+
     const { setPrefsBefore = {}, enrollmentOrder, expectedPrefs } = testCase;
 
     info("Setting prefs before enrollment...");
@@ -2283,7 +2291,7 @@ add_task(async function test_prefFlip_setPref_restore() {
   }
 });
 
-add_task(async function test_prefFlips_cacheOriginalValues() {
+async function test_prefFlips_cacheOriginalValues() {
   const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
     "prefFlips-test",
     {
@@ -2346,9 +2354,18 @@ add_task(async function test_prefFlips_cacheOriginalValues() {
   );
 
   await cleanup();
+}
+
+add_task(test_prefFlips_cacheOriginalValues);
+add_task(async function test_prefFlips_cacheOriginalValues_db() {
+  const resetNimbusEnrollmentPrefs = NimbusTestUtils.enableNimbusEnrollments({
+    read: true,
+  });
+  await test_prefFlips_cacheOriginalValues();
+  resetNimbusEnrollmentPrefs();
 });
 
-add_task(async function test_prefFlips_restore_unenroll() {
+async function test_prefFlips_restore_unenroll() {
   const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
     "prefFlips-test",
     {
@@ -2369,7 +2386,7 @@ add_task(async function test_prefFlips_restore_unenroll() {
       NimbusTestUtils.addEnrollmentForRecipe(recipe, {
         store,
         extra: {
-          source: "test",
+          source: "rs-loader",
           prefFlips: {
             originalValues: {
               "test.pref.please.ignore": null,
@@ -2400,6 +2417,15 @@ add_task(async function test_prefFlips_restore_unenroll() {
   );
 
   await cleanup();
+}
+
+add_task(test_prefFlips_restore_unenroll);
+add_task(async function test_prefFlips_restore_unenroll_db() {
+  const resetNimbusEnrollmentPrefs = NimbusTestUtils.enableNimbusEnrollments({
+    read: true,
+  });
+  await test_prefFlips_restore_unenroll();
+  resetNimbusEnrollmentPrefs();
 });
 
 add_task(async function test_prefFlips_failed() {
@@ -2837,7 +2863,7 @@ add_task(async function test_prefFlips_update_failure() {
   await cleanup();
 });
 
-add_task(async function test_prefFlips_restore() {
+async function test_prefFlips_restore() {
   const PREF_1 = "pref.one";
   const PREF_2 = "pref.two";
   const PREF_3 = "pref.three";
@@ -2860,7 +2886,6 @@ add_task(async function test_prefFlips_restore() {
       {
         store,
         extra: {
-          source: "test",
           prefFlips: {
             originalValues: {
               [PREF_1]: null,
@@ -2882,7 +2907,6 @@ add_task(async function test_prefFlips_restore() {
       {
         store,
         extra: {
-          source: "test",
           prefFlips: {
             originalValues: {
               [PREF_2]: "original-pref-2-value",
@@ -2904,7 +2928,6 @@ add_task(async function test_prefFlips_restore() {
       {
         store,
         extra: {
-          source: "test",
           prefFlips: {
             originalValues: {
               [PREF_3]: null,
@@ -2926,7 +2949,6 @@ add_task(async function test_prefFlips_restore() {
       {
         store,
         extra: {
-          source: "test",
           prefFlips: {
             originalValues: {
               [PREF_4]: "original-pref-4-value",
@@ -2995,9 +3017,18 @@ add_task(async function test_prefFlips_restore() {
   );
 
   await cleanup();
+}
+
+add_task(test_prefFlips_restore);
+add_task(async function test_prefFlips_restore_db() {
+  const resetNimbusEnrollmentPrefs = NimbusTestUtils.enableNimbusEnrollments({
+    read: true,
+  });
+  await test_prefFlips_restore();
+  resetNimbusEnrollmentPrefs();
 });
 
-add_task(async function test_prefFlips_restore_failure_conflict() {
+async function test_prefFlips_restore_failure_conflict() {
   const PREF = "pref.foo.bar";
 
   const storePath = await NimbusTestUtils.createStoreWith(store => {
@@ -3013,7 +3044,6 @@ add_task(async function test_prefFlips_restore_failure_conflict() {
       {
         store,
         extra: {
-          source: "test",
           prefFlips: {
             originalValues: {
               [PREF]: null,
@@ -3039,7 +3069,6 @@ add_task(async function test_prefFlips_restore_failure_conflict() {
       {
         store,
         extra: {
-          source: "test",
           prefFlips: {
             originalValues: {
               [PREF]: null,
@@ -3065,7 +3094,6 @@ add_task(async function test_prefFlips_restore_failure_conflict() {
       {
         store,
         extra: {
-          source: "test",
           prefFlips: {
             originalValues: {
               [PREF]: null,
@@ -3111,11 +3139,20 @@ add_task(async function test_prefFlips_restore_failure_conflict() {
   );
 
   await cleanup();
+}
+
+add_task(test_prefFlips_restore_failure_conflict);
+add_task(async function test_prefFlips_restore_failure_conflict_db() {
+  const resetNimbusEnrollmentPrefs = NimbusTestUtils.enableNimbusEnrollments({
+    read: true,
+  });
+  await test_prefFlips_restore_failure_conflict();
+  resetNimbusEnrollmentPrefs();
 });
 
 // Test the case where an experiment sets a default branch pref, but the user
 // changed their user.js between restarts.
-add_task(async function test_prefFlips_restore_failure_wrong_type() {
+async function test_prefFlips_restore_failure_wrong_type() {
   const PREF_1 = "foo.bar.baz";
   const PREF_2 = "qux.quux.corge.grault";
 
@@ -3146,7 +3183,7 @@ add_task(async function test_prefFlips_restore_failure_wrong_type() {
     await NimbusTestUtils.addEnrollmentForRecipe(recipe, {
       store,
       extra: {
-        source: "test",
+        source: "rs-loader",
         prefFlips: {
           originalValues: {
             [PREF_1]: "original-value",
@@ -3193,6 +3230,15 @@ add_task(async function test_prefFlips_restore_failure_wrong_type() {
   Services.prefs.deleteBranch(PREF_1);
   Services.prefs.deleteBranch(PREF_2);
   await cleanup();
+}
+
+add_task(test_prefFlips_restore_failure_wrong_type);
+add_task(async function test_prefFlips_restore_failure_wrong_type_db() {
+  const resetNimbusEnrollmentPrefs = NimbusTestUtils.enableNimbusEnrollments({
+    read: true,
+  });
+  await test_prefFlips_restore_failure_wrong_type();
+  resetNimbusEnrollmentPrefs();
 });
 
 add_task(

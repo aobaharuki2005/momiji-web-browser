@@ -6,11 +6,10 @@ task-defaults:
     suite: awsy
     max-run-time: 7200
     instance-size: xlarge-noscratch
-    worker-type:
+    virtualization:
         by-test-platform:
-            windows.*/.*: win11-64-25h2
-            default: default
-    virtualization: virtual
+            windows.*(?:-shippable)?.*/.*: virtual-with-gpu
+            default: virtual
     allow-software-gl-layers: false
     mozharness:
         script: awsy_script.py

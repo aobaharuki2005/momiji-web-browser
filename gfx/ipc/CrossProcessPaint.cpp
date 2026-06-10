@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -131,9 +133,6 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
   }
   if (aFlags & CrossProcessPaintFlags::UseHighQualityScaling) {
     renderDocFlags |= RenderDocumentFlags::UseHighQualityScaling;
-  }
-  if (aFlags & CrossProcessPaintFlags::ForPrinting) {
-    renderDocFlags |= RenderDocumentFlags::ForPrinting;
   }
 
   // Perform the actual rendering
@@ -306,10 +305,10 @@ bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
 
 /* static */
 RefPtr<CrossProcessPaint::ResolvePromise> CrossProcessPaint::Start(
-    nsTHashSet<uint64_t>&& aDependencies, CrossProcessPaintFlags aFlags) {
+    nsTHashSet<uint64_t>&& aDependencies) {
   MOZ_ASSERT(!aDependencies.IsEmpty());
   RefPtr<CrossProcessPaint> resolver =
-      new CrossProcessPaint(1.0, dom::TabId(0), aFlags);
+      new CrossProcessPaint(1.0, dom::TabId(0), CrossProcessPaintFlags::None);
 
   RefPtr<CrossProcessPaint::ResolvePromise> promise = resolver->Init();
 
@@ -413,7 +412,8 @@ void CrossProcessPaint::QueuePaint(dom::WindowGlobalParent* aWGP,
 
   CPP_LOG("Queueing paint for WindowGlobalParent(%p).\n", aWGP);
 
-  aWGP->DrawSnapshotInternal(this, aRect, mScale, aBackgroundColor, aFlags);
+  aWGP->DrawSnapshotInternal(this, aRect, mScale, aBackgroundColor,
+                             (uint32_t)aFlags);
   mPendingFragments += 1;
 }
 
@@ -451,7 +451,7 @@ void CrossProcessPaint::QueuePaint(dom::CanonicalBrowsingContext* aBc) {
         // 1562720)
         wgp->DrawSnapshotInternal(self, Nothing(), self->mScale,
                                   NS_RGBA(0, 0, 0, 0),
-                                  self->GetFlagsForDependencies());
+                                  (uint32_t)self->GetFlagsForDependencies());
       },
       [self = RefPtr{this}]() {
         CPP_LOG(

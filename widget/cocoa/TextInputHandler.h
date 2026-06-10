@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -27,9 +29,6 @@ namespace widget {
 
 // Key code constants
 enum {
-#if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
-  kVK_RightCommand = 0x36,  // right command key
-#endif
   kVK_PC_PrintScreen = kVK_F13,
   kVK_PC_ScrollLock = kVK_F14,
   kVK_PC_Pause = kVK_F15,
@@ -454,7 +453,7 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
    */
   nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                     int32_t aNativeKeyCode,
-                                    nsIWidget::NativeModifiers aModifierFlags,
+                                    uint32_t aModifierFlags,
                                     const nsAString& aCharacters,
                                     const nsAString& aUnmodifiedCharacters);
 
@@ -511,12 +510,12 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
   /**
    * mWidget must not be destroyed without OnDestroyWidget being called.
    *
-   * @param aDestroyingWidget     Destroying widget. This might not be mWidget.
+   * @param aDestroyingWidget     Destroying widget.  This might not be mWidget.
    * @return                      This result doesn't have any meaning for
-   *                              callers.  When aDestroyingWidget isn't the
-   *                              same as mWidget, FALSE.  Then, inherited
-   *                              methods in sub classes should return from
-   *                              this method without cleaning up.
+   *                              callers.  When aDstroyingWidget isn't the same
+   *                              as mWidget, FALSE.  Then, inherited methods in
+   *                              sub classes should return from this method
+   *                              without cleaning up.
    */
   virtual bool OnDestroyWidget(nsCocoaWindow* aDestroyingWidget);
 
@@ -669,11 +668,9 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
           return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
                  modifiers == (MODIFIER_ALT | MODIFIER_SHIFT);
         case Command::EndLine:
-        case Command::MoveRight3:
           return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
                  modifiers == MODIFIER_META;
         case Command::SelectEndLine:
-        case Command::SelectRight3:
           return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
                  modifiers == (MODIFIER_META | MODIFIER_SHIFT);
         case Command::CharPrevious:
@@ -689,11 +686,9 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
           return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
                  modifiers == (MODIFIER_ALT | MODIFIER_SHIFT);
         case Command::BeginLine:
-        case Command::MoveLeft3:
           return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
                  modifiers == MODIFIER_META;
         case Command::SelectBeginLine:
-        case Command::SelectLeft3:
           return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
                  modifiers == (MODIFIER_META | MODIFIER_SHIFT);
         case Command::LinePrevious:
@@ -945,13 +940,12 @@ class IMEInputHandler : public TextInputHandlerBase {
   /**
    * SetMarkedText() is a handler of setMarkedText of NSTextInput.
    *
-   * @param aAttrString           This must be an instance of
-   *                              NSAttributedString. If the aString parameter
-   *                              to ChildView's
-   *                              setMarkedText:setSelectedRange: isn't an
-   *                              instance of NSAttributedString, create an
-   *                              NSAttributedString from it and pass that
-   *                              instead.
+   * @param aAttrString           This mut be an instance of NSAttributedString.
+   *                              If the aString parameter to
+   *                              [ChildView setMarkedText:setSelectedRange:]
+   *                              isn't an instance of NSAttributedString,
+   *                              create an NSAttributedString from it and pass
+   *                              that instead.
    * @param aSelectedRange        Current selected range (or caret position).
    * @param aReplacementRange     The range which will be replaced with the
    *                              aAttrString instead of current marked range.
@@ -1050,7 +1044,7 @@ class IMEInputHandler : public TextInputHandlerBase {
   void SetASCIICapableOnly(bool aASCIICapableOnly);
 
   /**
-   * True if macOS believes that our view has keyboard focus.
+   * True if OSX believes that our view has keyboard focus.
    */
   bool IsFocused();
 
@@ -1078,7 +1072,6 @@ class IMEInputHandler : public TextInputHandlerBase {
   NSTextCheckingResult* mCandidatedTextSubstitutionResult;
   bool mProcessTextSubstitution;
   bool mBlockDismissTextSubstitutionPanel = false;
-  bool mPendingDismissTextSubstitution = false;
 
   IMEInputHandler(nsCocoaWindow* aWidget, NSView<mozView>* aNativeView);
   virtual ~IMEInputHandler();
@@ -1260,14 +1253,14 @@ class IMEInputHandler : public TextInputHandlerBase {
                                       NSString* aString, const NSRange& aRange,
                                       PreventSetSelection aPreventSetSelection);
 
-  // The focused IME handler.  Please note that the handler might lose the
+  // The focused IME handler.  Please note that the handler might lost the
   // actual focus by deactivating the application.  If we are active, this
   // must have the actual focused handle.
-  // We cannot access the NSInputManager while we aren't active, so the
-  // focused handler can have an IME transaction even if we are deactivated.
+  // We cannot access to the NSInputManager during we aren't active, so, the
+  // focused handler can have an IME transaction even if we are deactive.
   static IMEInputHandler* sFocusedIMEHandler;
 
-  static bool sCachedIsForRTLLanguage;
+  static bool sCachedIsForRTLLangage;
 };
 
 /**

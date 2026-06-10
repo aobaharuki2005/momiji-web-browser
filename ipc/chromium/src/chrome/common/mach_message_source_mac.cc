@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -18,9 +20,9 @@ MachMessageSource::MachMessageSource(mach_port_t port,
 
   scoped_cftyperef<CFMachPortRef> cf_mach_port_ref(CFMachPortCreateWithPort(
       kCFAllocatorDefault, port, MachMessageSource::OnReceiveMachMessage,
-      &port_context, nullptr));
+      &port_context, NULL));
 
-  if (cf_mach_port_ref.get() == nullptr) {
+  if (cf_mach_port_ref.get() == NULL) {
     CHROMIUM_LOG(WARNING) << "CFMachPortCreate failed";
     *success = false;
     return;
@@ -30,7 +32,7 @@ MachMessageSource::MachMessageSource(mach_port_t port,
   machport_runloop_ref_.reset(CFMachPortCreateRunLoopSource(
       kCFAllocatorDefault, cf_mach_port_ref.get(), 0));
 
-  if (machport_runloop_ref_.get() == nullptr) {
+  if (machport_runloop_ref_.get() == NULL) {
     CHROMIUM_LOG(WARNING) << "CFMachPortCreateRunLoopSource failed";
     *success = false;
     return;

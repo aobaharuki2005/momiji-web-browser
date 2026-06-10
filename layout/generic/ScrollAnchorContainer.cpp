@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -57,6 +59,8 @@ ScrollAnchorContainer::ScrollAnchorContainer(ScrollContainerFrame* aScrollFrame)
       mSuppressAnchorAdjustment(false) {
   MOZ_ASSERT(aScrollFrame == Frame());
 }
+
+ScrollAnchorContainer::~ScrollAnchorContainer() = default;
 
 ScrollAnchorContainer* ScrollAnchorContainer::FindFor(nsIFrame* aFrame) {
   aFrame = aFrame->GetParent();
@@ -407,7 +411,7 @@ bool ScrollAnchorContainer::DisablingHeuristic::AdjustmentMade(
 
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Layout"_ns,
                                   aAnchor.Frame()->PresContext()->Document(),
-                                  PropertiesFile::LAYOUT_PROPERTIES,
+                                  nsContentUtils::eLAYOUT_PROPERTIES,
                                   "ScrollAnchoringDisabledInContainer",
                                   arguments);
   return true;
@@ -718,6 +722,7 @@ nsIFrame* ScrollAnchorContainer::FindAnchorIn(nsIFrame* aFrame) const {
     // XXX do we actually need to exclude FrameChildListID::OverflowOutOfFlow
     // too?
     if (listID == FrameChildListID::Absolute ||
+        listID == FrameChildListID::Fixed ||
         listID == FrameChildListID::Float ||
         listID == FrameChildListID::OverflowOutOfFlow) {
       continue;

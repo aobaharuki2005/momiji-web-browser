@@ -13,7 +13,7 @@ Access to the setSinkId of the Audio API with an invalid value is deferred
 
 <body>
 <script>
-setup(() => assertSpeculationRulesIsSupported('prerender'));
+setup(() => assertSpeculationRulesIsSupported());
 
 promise_test(async t => {
   const uid = token();

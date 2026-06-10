@@ -1,4 +1,6 @@
-use {super::*, mach2::exception_types as et};
+use super::*;
+
+use mach2::exception_types as et;
 
 impl MinidumpWriter {
     /// Writes the [`minidump_common::format::MINIDUMP_EXCEPTION_STREAM`] stream.

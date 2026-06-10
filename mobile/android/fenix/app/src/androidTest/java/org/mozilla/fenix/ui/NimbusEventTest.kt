@@ -14,15 +14,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.components.TelemetryAccountObserver
 import org.mozilla.fenix.helpers.Experimentation
-import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestSetup
 
-class NimbusEventTest {
-    @get:Rule(order = 0)
-    val fenixTestRule: FenixTestRule = FenixTestRule()
-
+class NimbusEventTest : TestSetup() {
     @get:Rule
     val homeActivityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
         .withIntent(

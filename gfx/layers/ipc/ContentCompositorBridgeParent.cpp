@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -45,7 +47,7 @@ void ContentCompositorBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
       &ContentCompositorBridgeParent::DeferredDestroy));
 }
 
-already_AddRefed<PAPZCTreeManagerParent>
+PAPZCTreeManagerParent*
 ContentCompositorBridgeParent::AllocPAPZCTreeManagerParent(
     const LayersId& aLayersId) {
   // Check to see if this child process has access to this layer tree.
@@ -69,9 +71,9 @@ ContentCompositorBridgeParent::AllocPAPZCTreeManagerParent(
     LayersId dummyId{0};
     const bool connectedToWebRender = false;
     RefPtr<APZCTreeManager> temp = APZCTreeManager::Create(dummyId);
-    RefPtr tempUpdater = MakeRefPtr<APZUpdater>(temp, connectedToWebRender);
+    RefPtr<APZUpdater> tempUpdater = new APZUpdater(temp, connectedToWebRender);
     tempUpdater->ClearTree(dummyId);
-    return MakeAndAddRef<APZCTreeManagerParent>(aLayersId, temp, tempUpdater);
+    return new APZCTreeManagerParent(aLayersId, temp, tempUpdater);
   }
 
   // If we do not have APZ enabled, we should gracefully fail.
@@ -79,10 +81,29 @@ ContentCompositorBridgeParent::AllocPAPZCTreeManagerParent(
     return nullptr;
   }
 
-  return state.mParent->AllocateAPZCTreeManagerParent(lock, aLayersId, state);
+  state.mParent->AllocateAPZCTreeManagerParent(lock, aLayersId, state);
+  return state.mApzcTreeManagerParent;
 }
 
-already_AddRefed<PAPZParent> ContentCompositorBridgeParent::AllocPAPZParent(
+bool ContentCompositorBridgeParent::DeallocPAPZCTreeManagerParent(
+    PAPZCTreeManagerParent* aActor) {
+  APZCTreeManagerParent* parent = static_cast<APZCTreeManagerParent*>(aActor);
+
+  StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
+  auto iter =
+      CompositorBridgeParent::sIndirectLayerTrees.find(parent->GetLayersId());
+  if (iter != CompositorBridgeParent::sIndirectLayerTrees.end()) {
+    CompositorBridgeParent::LayerTreeState& state = iter->second;
+    MOZ_ASSERT(state.mApzcTreeManagerParent == parent);
+    state.mApzcTreeManagerParent = nullptr;
+  }
+
+  delete parent;
+
+  return true;
+}
+
+PAPZParent* ContentCompositorBridgeParent::AllocPAPZParent(
     const LayersId& aLayersId) {
   // Check to see if this child process has access to this layer tree.
   if (!LayerTreeOwnerTracker::Get()->IsMapped(aLayersId, OtherPid())) {
@@ -90,7 +111,11 @@ already_AddRefed<PAPZParent> ContentCompositorBridgeParent::AllocPAPZParent(
     return nullptr;
   }
 
-  auto controller = MakeRefPtr<RemoteContentController>();
+  RemoteContentController* controller = new RemoteContentController();
+
+  // Increment the controller's refcount before we return it. This will keep the
+  // controller alive until it is released by IPDL in DeallocPAPZParent.
+  controller->AddRef();
 
   StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState& state =
@@ -98,10 +123,17 @@ already_AddRefed<PAPZParent> ContentCompositorBridgeParent::AllocPAPZParent(
   MOZ_ASSERT(!state.mController);
   state.mController = controller;
 
-  return controller.forget();
+  return controller;
 }
 
-already_AddRefed<PWebRenderBridgeParent>
+bool ContentCompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor) {
+  RemoteContentController* controller =
+      static_cast<RemoteContentController*>(aActor);
+  controller->Release();
+  return true;
+}
+
+PWebRenderBridgeParent*
 ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
     const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize& aSize,
     const WindowKind& aWindowKind) {
@@ -145,15 +177,18 @@ ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
                         root.get())
             .get());
     nsCString error("NO_PARENT");
-    return WebRenderBridgeParent::CreateDestroyed(aPipelineId,
-                                                  std::move(error));
+    WebRenderBridgeParent* parent =
+        WebRenderBridgeParent::CreateDestroyed(aPipelineId, std::move(error));
+    parent->AddRef();  // IPDL reference
+    return parent;
   }
 
   api = api->Clone();
   RefPtr<AsyncImagePipelineManager> holder = root->AsyncImageManager();
-  auto parent = MakeRefPtr<WebRenderBridgeParent>(
-      this, aPipelineId, root->CompositorScheduler(), std::move(api),
+  WebRenderBridgeParent* parent = new WebRenderBridgeParent(
+      this, aPipelineId, nullptr, root->CompositorScheduler(), std::move(api),
       std::move(holder), cbp->GetVsyncInterval());
+  parent->AddRef();  // IPDL reference
 
   {  // scope lock
     StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
@@ -162,15 +197,19 @@ ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
     CompositorBridgeParent::sIndirectLayerTrees[layersId].mWrBridge = parent;
   }
 
-  return parent.forget();
+  return parent;
+}
+
+bool ContentCompositorBridgeParent::DeallocPWebRenderBridgeParent(
+    PWebRenderBridgeParent* aActor) {
+  WebRenderBridgeParent* parent = static_cast<WebRenderBridgeParent*>(aActor);
+  EraseLayerState(wr::AsLayersId(parent->PipelineId()));
+  parent->Release();  // IPDL reference
+  return true;
 }
 
 mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvNotifyChildCreated(
     const LayersId& child, CompositorOptions* aOptions) {
-  if (NS_WARN_IF(!LayerTreeOwnerTracker::Get()->IsMapped(child, OtherPid()))) {
-    return IPC_OK();
-  }
-
   StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
   for (auto it = CompositorBridgeParent::sIndirectLayerTrees.begin();
        it != CompositorBridgeParent::sIndirectLayerTrees.end(); it++) {
@@ -220,40 +259,6 @@ mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvCheckContentOnlyTDR(
   return IPC_OK();
 };
 
-mozilla::ipc::IPCResult
-ContentCompositorBridgeParent::RecvCheckAndClearWRDidRasterize(
-    const LayersId& aId, bool* aDidRasterize) {
-  if (NS_WARN_IF(!LayerTreeOwnerTracker::Get()->IsMapped(aId, OtherPid()))) {
-    return IPC_OK();
-  }
-
-  *aDidRasterize = false;
-
-  const CompositorBridgeParent::LayerTreeState* state =
-      CompositorBridgeParent::GetLayerTreeState(aId);
-  if (!state || !state->mParent) {
-    return IPC_OK();
-  }
-
-  // Forward to the parent compositor which owns the renderer
-  RefPtr<wr::WebRenderAPI> api;
-  {
-    StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
-    LayersId rootId = state->mParent->RootLayerTreeId();
-    const CompositorBridgeParent::LayerTreeState& rootState =
-        CompositorBridgeParent::sIndirectLayerTrees[rootId];
-    if (rootState.mWrBridge) {
-      api = rootState.mWrBridge->GetWebRenderAPI();
-    }
-  }
-
-  if (api) {
-    *aDidRasterize = api->CheckAndClearDidRasterize();
-  }
-
-  return IPC_OK();
-}
-
 void ContentCompositorBridgeParent::DidCompositeLocked(
     LayersId aId, const VsyncId& aVsyncId, TimeStamp& aCompositeStart,
     TimeStamp& aCompositeEnd) {
@@ -267,7 +272,7 @@ bool ContentCompositorBridgeParent::SetTestSampleTime(const LayersId& aId,
                                                       const TimeStamp& aTime) {
   MOZ_ASSERT(aId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
-      CompositorBridgeParent::GetLayerTreeState(aId);
+      CompositorBridgeParent::GetIndirectShadowTree(aId);
   if (!state) {
     return false;
   }
@@ -279,7 +284,7 @@ bool ContentCompositorBridgeParent::SetTestSampleTime(const LayersId& aId,
 void ContentCompositorBridgeParent::LeaveTestMode(const LayersId& aId) {
   MOZ_ASSERT(aId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
-      CompositorBridgeParent::GetLayerTreeState(aId);
+      CompositorBridgeParent::GetIndirectShadowTree(aId);
   if (!state) {
     return;
   }
@@ -293,7 +298,7 @@ void ContentCompositorBridgeParent::SetTestAsyncScrollOffset(
     const CSSPoint& aPoint) {
   MOZ_ASSERT(aLayersId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
-      CompositorBridgeParent::GetLayerTreeState(aLayersId);
+      CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   if (!state) {
     return;
   }
@@ -307,7 +312,7 @@ void ContentCompositorBridgeParent::SetTestAsyncZoom(
     const LayerToParentLayerScale& aZoom) {
   MOZ_ASSERT(aLayersId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
-      CompositorBridgeParent::GetLayerTreeState(aLayersId);
+      CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   if (!state) {
     return;
   }
@@ -320,7 +325,7 @@ void ContentCompositorBridgeParent::FlushApzRepaints(
     const LayersId& aLayersId) {
   MOZ_ASSERT(aLayersId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
-      CompositorBridgeParent::GetLayerTreeState(aLayersId);
+      CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   if (!state || !state->mParent) {
     return;
   }
@@ -332,7 +337,7 @@ void ContentCompositorBridgeParent::GetAPZTestData(const LayersId& aLayersId,
                                                    APZTestData* aOutData) {
   MOZ_ASSERT(aLayersId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
-      CompositorBridgeParent::GetLayerTreeState(aLayersId);
+      CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   if (!state || !state->mParent) {
     return;
   }
@@ -344,7 +349,7 @@ void ContentCompositorBridgeParent::GetFrameUniformity(
     const LayersId& aLayersId, FrameUniformityData* aOutData) {
   MOZ_ASSERT(aLayersId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
-      CompositorBridgeParent::GetLayerTreeState(aLayersId);
+      CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   if (!state || !state->mParent) {
     return;
   }
@@ -357,7 +362,7 @@ void ContentCompositorBridgeParent::SetConfirmedTargetAPZC(
     nsTArray<ScrollableLayerGuid>&& aTargets) {
   MOZ_ASSERT(aLayersId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
-      CompositorBridgeParent::GetLayerTreeState(aLayersId);
+      CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   if (!state || !state->mParent) {
     return;
   }
@@ -371,11 +376,8 @@ void ContentCompositorBridgeParent::EndWheelTransaction(
     PWebRenderBridgeParent::EndWheelTransactionResolver&& aResolve) {
   MOZ_ASSERT(aLayersId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
-      CompositorBridgeParent::GetLayerTreeState(aLayersId);
+      CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   if (!state || !state->mParent) {
-    // The boolean value will never used so it doesn't matter whether it's true
-    // or false.
-    aResolve(true);
     return;
   }
 
@@ -388,22 +390,43 @@ ContentCompositorBridgeParent::~ContentCompositorBridgeParent() {
   MOZ_ASSERT(XRE_GetAsyncIOEventTarget());
 }
 
-already_AddRefed<PTextureParent>
-ContentCompositorBridgeParent::AllocPTextureParent(
+PTextureParent* ContentCompositorBridgeParent::AllocPTextureParent(
     const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
     const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
-    const uint64_t& aSerial, const wr::MaybeExternalImageId& aExternalImageId) {
-  if (aSharedData.type() == SurfaceDescriptor::TSurfaceDescriptorDcompSurface) {
-    return nullptr;
+    const LayersId& aId, const uint64_t& aSerial,
+    const wr::MaybeExternalImageId& aExternalImageId) {
+  CompositorBridgeParent::LayerTreeState* state = nullptr;
+
+  StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
+  auto itr = CompositorBridgeParent::sIndirectLayerTrees.find(aId);
+  if (CompositorBridgeParent::sIndirectLayerTrees.end() != itr) {
+    state = &itr->second;
   }
-  if (aExternalImageId.isSome() &&
-      !OwnsExternalImageId(aExternalImageId.ref())) {
-    NS_ERROR("We do not own this external image id.");
-    return nullptr;
+
+  TextureFlags flags = aFlags;
+
+  LayersBackend actualBackend = LayersBackend::LAYERS_NONE;
+  if (!state) {
+    // The compositor was recreated, and we're receiving layers updates for a
+    // a layer manager that will soon be discarded or invalidated. We can't
+    // return null because this will mess up deserialization later and we'll
+    // kill the content process. Instead, we signal that the underlying
+    // TextureHost should not attempt to access the compositor.
+    flags |= TextureFlags::INVALID_COMPOSITOR;
+  } else if (actualBackend != LayersBackend::LAYERS_NONE &&
+             aLayersBackend != actualBackend) {
+    gfxDevCrash(gfx::LogReason::PAllocTextureBackendMismatch)
+        << "Texture backend is wrong";
   }
+
   return TextureHost::CreateIPDLActor(
       this, aSharedData, std::move(aReadLock), aLayersBackend, aFlags,
       mCompositorManager->GetContentId(), aSerial, aExternalImageId);
+}
+
+bool ContentCompositorBridgeParent::DeallocPTextureParent(
+    PTextureParent* actor) {
+  return TextureHost::DestroyIPDLActor(actor);
 }
 
 bool ContentCompositorBridgeParent::IsSameProcess() const {
@@ -415,7 +438,7 @@ void ContentCompositorBridgeParent::ObserveLayersUpdate(LayersId aLayersId,
   MOZ_ASSERT(aLayersId.IsValid());
 
   CompositorBridgeParent::LayerTreeState* state =
-      CompositorBridgeParent::GetLayerTreeState(aLayersId);
+      CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   if (!state || !state->mParent) {
     return;
   }

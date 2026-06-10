@@ -9,7 +9,6 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.ThemeManager
-import androidx.appcompat.R as appcompatR
 
 class SearchEngineMenu(
     private val context: Context,
@@ -41,7 +40,7 @@ class SearchEngineMenu(
             items.add(
                 SimpleBrowserMenuItem(
                     context.getString(R.string.search_engine_delete),
-                    textColorResource = ThemeManager.resolveAttribute(appcompatR.attr.colorError, context),
+                    textColorResource = ThemeManager.resolveAttribute(R.attr.textCritical, context),
                 ) {
                     onItemTapped.invoke(Item.Delete)
                 },

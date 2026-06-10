@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -18,18 +20,17 @@
 #include <string.h>
 
 #include "jsapi.h"
+#include "jsnum.h"
 
 #include "builtin/Array.h"
 #include "builtin/Eval.h"
 #include "builtin/ModuleObject.h"
-#include "builtin/Number.h"
 #include "builtin/Object.h"
 #include "builtin/Promise.h"
 #include "gc/GC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Jit.h"
 #include "jit/JitRuntime.h"
-#include "jit/JitZone.h"
 #include "js/EnvironmentChain.h"      // JS::SupportUnscopables
 #include "js/experimental/JitInfo.h"  // JSJitInfo
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -66,7 +67,6 @@
 #endif
 #include "builtin/Boolean-inl.h"
 #include "debugger/DebugAPI-inl.h"
-#include "gc/WeakMap-inl.h"
 #include "vm/ArgumentsObject-inl.h"
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
 #  include "vm/DisposableRecord-inl.h"
@@ -349,40 +349,32 @@ InterpreterFrame* RunState::pushInterpreterFrame(JSContext* cx) {
 
 static MOZ_ALWAYS_INLINE bool MaybeEnterInterpreterTrampoline(JSContext* cx,
                                                               RunState& state) {
-  AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx)) {
-    return false;
-  }
-
 #ifdef NIGHTLY_BUILD
   if (jit::JitOptions.emitInterpreterEntryTrampoline &&
       cx->runtime()->hasJitRuntime()) {
+    js::jit::JitRuntime* jitRuntime = cx->runtime()->jitRuntime();
     JSScript* script = state.script();
-    Zone* zone = script->zone();
-    jit::JitZone* jitZone = zone->getOrCreateJitZone(cx);
-    if (!jitZone) {
-      return false;
-    }
 
-    jit::EntryTrampolineMap* map =
-        jitZone->getOrCreateInterpreterEntryMap(zone);
-    if (!map) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-
-    jit::JitRuntime* jitRuntime = cx->runtime()->jitRuntime();
-    auto ptr = map->lookupForAdd(script);
-    if (!ptr) {
-      jit::JitCode* code =
+    uint8_t* codeRaw = nullptr;
+    auto p = jitRuntime->getInterpreterEntryMap()->lookup(script);
+    if (p) {
+      codeRaw = p->value().raw();
+    } else {
+      js::jit::JitCode* code =
           jitRuntime->generateEntryTrampolineForScript(cx, script);
-      if (!code || !map->relookupOrAdd(ptr, script, code)) {
+      if (!code) {
         ReportOutOfMemory(cx);
         return false;
       }
+
+      js::jit::EntryTrampoline entry(cx, code);
+      if (!jitRuntime->getInterpreterEntryMap()->put(script, entry)) {
+        ReportOutOfMemory(cx);
+        return false;
+      }
+      codeRaw = code->raw();
     }
 
-    uint8_t* codeRaw = ptr->value()->raw();
     MOZ_ASSERT(codeRaw, "Should have a valid trampoline here.");
     // The C++ entry thunk is located at the vmInterpreterEntryOffset offset.
     codeRaw += jitRuntime->vmInterpreterEntryOffset();
@@ -4278,7 +4270,6 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
       // AbstractGeneratorObject::resume takes care of setting the frame's
       // debuggee flag.
       MOZ_ASSERT_IF(REGS.fp()->script()->isDebuggee(), REGS.fp()->isDebuggee());
-      INIT_COVERAGE();
       COUNT_COVERAGE();
     }
     END_CASE(AfterYield)
@@ -4384,8 +4375,6 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
     END_CASE(ImportMeta)
 
     CASE(DynamicImport) {
-      ImportPhase phase = ImportPhase(GET_UINT8(REGS.pc));
-
       ReservedRooted<Value> options(&rootValue0, REGS.sp[-1]);
       REGS.sp--;
 
@@ -4393,7 +4382,7 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
       POP_COPY_TO(specifier);
 
       JSObject* promise =
-          StartDynamicModuleImport(cx, script, specifier, options, phase);
+          StartDynamicModuleImport(cx, script, specifier, options);
       if (!promise) goto error;
 
       PUSH_OBJECT(*promise);
@@ -4499,8 +4488,8 @@ error:
       ReservedRooted<Value> exceptionStack(&rootValue1);
       if (!cx->getPendingException(&exception) ||
           !cx->getPendingExceptionStack(&exceptionStack)) {
-        exception = UndefinedValue();
-        exceptionStack = NullValue();
+        interpReturnOK = false;
+        goto return_continuation;
       }
       PUSH_COPY(exception);
       PUSH_COPY(exceptionStack);
@@ -5053,9 +5042,9 @@ bool js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
   return true;
 }
 
-static bool OptimizeGetIteratorForArray(JSObject* obj, JSContext* cx) {
-  // Implementation of JSOp::OptimizeSpreadCall and JSOp::GetIterator for packed
-  // arrays. Ensures the following conditions are met:
+static bool OptimizeArrayIteration(JSObject* obj, JSContext* cx) {
+  // Optimize spread call by skipping spread operation when following
+  // conditions are met:
   //   * the argument is an array
   //   * the array has no hole
   //   * array[@@iterator] is not modified
@@ -5064,12 +5053,7 @@ static bool OptimizeGetIteratorForArray(JSObject* obj, JSContext* cx) {
   //   * %ArrayIteratorPrototype%.next is not modified
   //   * %ArrayIteratorPrototype%.return is not defined
   //   * return is nowhere on the proto chain
-  if (!IsArrayWithDefaultIterator<MustBePacked::Yes>(obj, cx)) {
-    return false;
-  }
-  // Also check optimizeGetIteratorBytecodeFuse for the current realm. See the
-  // OptimizeGetIteratorBytecodeFuse comment for why this is necessary.
-  return cx->realm()->realmFuses.optimizeGetIteratorBytecodeFuse.intact();
+  return IsArrayWithDefaultIterator<MustBePacked::Yes>(obj, cx);
 }
 
 static bool OptimizeArgumentsSpreadCall(JSContext* cx, HandleObject obj,
@@ -5123,7 +5107,7 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg,
   }
 
   RootedObject obj(cx, &arg.toObject());
-  if (OptimizeGetIteratorForArray(obj, cx)) {
+  if (OptimizeArrayIteration(obj, cx)) {
     result.setObject(*obj);
     return true;
   }
@@ -5143,7 +5127,7 @@ bool js::OptimizeGetIterator(Value arg, JSContext* cx) {
   if (!arg.isObject()) {
     return false;
   }
-  return OptimizeGetIteratorForArray(&arg.toObject(), cx);
+  return OptimizeArrayIteration(&arg.toObject(), cx);
 }
 
 ArrayObject* js::ArrayFromArgumentsObject(JSContext* cx,

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -23,7 +25,6 @@
 #include "debugger/Script.h"     // for DebuggerScript
 #include "debugger/Source.h"     // for DebuggerSource
 #include "gc/Tracer.h"        // for TraceManuallyBarrieredCrossCompartmentEdge
-#include "jit/JitOptions.h"   // for jit::HasJitBackend
 #include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 #include "js/CompilationAndEvaluation.h"  //  for Compile
 #include "js/Conversions.h"               // for ToObject
@@ -84,7 +85,16 @@ using mozilla::Nothing;
 using mozilla::Some;
 
 const JSClassOps DebuggerObject::classOps_ = {
-    .trace = CallTraceMethod<DebuggerObject>,
+    nullptr,                          // addProperty
+    nullptr,                          // delProperty
+    nullptr,                          // enumerate
+    nullptr,                          // newEnumerate
+    nullptr,                          // resolve
+    nullptr,                          // mayResolve
+    nullptr,                          // finalize
+    nullptr,                          // call
+    nullptr,                          // construct
+    CallTraceMethod<DebuggerObject>,  // trace
 };
 
 const JSClass DebuggerObject::class_ = {
@@ -1272,11 +1282,6 @@ bool DebuggerObject::CallData::createSource() {
   }
 
   bool forceEnableAsmJS = ToBoolean(v);
-  if (forceEnableAsmJS && !jit::HasJitBackend()) {
-    JS_ReportErrorASCII(cx,
-                        "forceEnableAsmJS cannot be used with no JIT backend");
-    return false;
-  }
 
   RootedScript script(cx);
   {
@@ -2555,7 +2560,6 @@ bool DebuggerObject::forceLexicalInitializationByName(
         v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
       globalLexical->as<NativeObject>().setSlot(propInfo.slot(),
                                                 UndefinedValue());
-      cx->hasDebuggerForcedLexicalInit = true;
       result = true;
     }
   }

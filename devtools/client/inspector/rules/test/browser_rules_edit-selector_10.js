@@ -30,14 +30,19 @@ add_task(async function () {
 });
 
 async function testEditSelector(view) {
-  let ruleEditor = getRuleViewRuleEditorAt(view, 1);
-  await editSelectorForRuleEditor(view, ruleEditor, "#testid span");
+  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  const editor = await focusEditableField(view, ruleEditor.selectorText);
+
+  editor.input.value = "#testid span";
+  const onRuleViewChanged = once(view, "ruleview-changed");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await onRuleViewChanged;
 
   // Get the new rule editor that replaced the original
-  ruleEditor = getRuleViewRuleEditorAt(view, 1);
+  ruleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Check that the correct rules are visible");
-  assertDisplayedRulesCount(view, 3);
+  is(view._elementStyle.rules.length, 3, "Should have 3 rules.");
   is(
     ruleEditor.element.getAttribute("unmatched"),
     "false",
@@ -49,7 +54,7 @@ async function testEditSelector(view) {
   is(props[0].name, "background", "Found background property");
   ok(!props[0].overridden, "Background property is not overridden");
 
-  ruleEditor = getRuleViewRuleEditorAt(view, 2);
+  ruleEditor = getRuleViewRuleEditor(view, 2);
   props = ruleEditor.rule.textProps;
   is(props.length, 1, "Rule has correct number of properties");
   is(props[0].name, "background", "Found background property");

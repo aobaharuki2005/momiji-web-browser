@@ -601,8 +601,9 @@ pub trait _UnwindSectionPrivate<R: Reader> {
     /// Get the underlying section data.
     fn section(&self) -> &R;
 
-    /// Returns true if the section allows a zero terminator.
-    fn has_zero_terminator() -> bool;
+    /// Returns true if the given length value should be considered an
+    /// end-of-entries sentinel.
+    fn length_value_is_end_of_entries(length: R::Offset) -> bool;
 
     /// Return true if the given offset if the CIE sentinel, false otherwise.
     fn is_cie(format: Format, id: u64) -> bool;
@@ -790,7 +791,7 @@ impl<R: Reader> _UnwindSectionPrivate<R> for DebugFrame<R> {
         &self.section
     }
 
-    fn has_zero_terminator() -> bool {
+    fn length_value_is_end_of_entries(_: R::Offset) -> bool {
         false
     }
 
@@ -834,8 +835,8 @@ impl<R: Reader> _UnwindSectionPrivate<R> for EhFrame<R> {
         &self.section
     }
 
-    fn has_zero_terminator() -> bool {
-        true
+    fn length_value_is_end_of_entries(length: R::Offset) -> bool {
+        length.into_u64() == 0
     }
 
     fn is_cie(_: Format, id: u64) -> bool {
@@ -1012,30 +1013,20 @@ where
 {
     /// Advance the iterator to the next entry.
     pub fn next(&mut self) -> Result<Option<CieOrFde<'bases, Section, R>>> {
-        loop {
-            if self.input.is_empty() {
-                return Ok(None);
-            }
+        if self.input.is_empty() {
+            return Ok(None);
+        }
 
-            match parse_cfi_entry(self.bases, &self.section, &mut self.input) {
-                Ok(Some(entry)) => return Ok(Some(entry)),
-                Err(e) => {
-                    self.input.empty();
-                    return Err(e);
-                }
-                Ok(None) => {
-                    if Section::has_zero_terminator() {
-                        self.input.empty();
-                        return Ok(None);
-                    }
-
-                    // Hack: If we get to here, then we're reading `.debug_frame` and
-                    // encountered a length of 0. This is a compiler or linker bug
-                    // (originally seen for NASM, fixed in 2.15rc9).
-                    // Skip this value and try again.
-                    continue;
-                }
+        match parse_cfi_entry(self.bases, &self.section, &mut self.input) {
+            Err(e) => {
+                self.input.empty();
+                Err(e)
             }
+            Ok(None) => {
+                self.input.empty();
+                Ok(None)
+            }
+            Ok(Some(entry)) => Ok(Some(entry)),
         }
     }
 }
@@ -1078,11 +1069,23 @@ where
     R: Reader,
     Section: UnwindSection<R>,
 {
-    let offset = input.offset_from(section.section());
-    let (length, format) = input.read_initial_length()?;
-    if length.into_u64() == 0 {
-        return Ok(None);
-    }
+    let (offset, length, format) = loop {
+        let offset = input.offset_from(section.section());
+        let (length, format) = input.read_initial_length()?;
+
+        if Section::length_value_is_end_of_entries(length) {
+            return Ok(None);
+        }
+
+        // Hack: skip zero padding inserted by buggy compilers/linkers.
+        // We require that the padding is a multiple of 32-bits, otherwise
+        // there is no reliable way to determine when the padding ends. This
+        // should be okay since CFI entries must be aligned to the address size.
+
+        if length.into_u64() != 0 || format != Format::Dwarf32 {
+            break (offset, length, format);
+        }
+    };
 
     let mut rest = input.split(length)?;
     let cie_offset_base = rest.offset_from(section.section());
@@ -2233,7 +2236,7 @@ where
         ctx: &'ctx mut UnwindContext<R::Offset, S>,
         fde: &FrameDescriptionEntry<R>,
     ) -> Self {
-        assert!(!ctx.stack.is_empty());
+        assert!(ctx.stack.len() >= 1);
         UnwindTable {
             code_alignment_factor: Wrapping(fde.cie().code_alignment_factor()),
             data_alignment_factor: Wrapping(fde.cie().data_alignment_factor()),
@@ -2253,7 +2256,7 @@ where
         ctx: &'ctx mut UnwindContext<R::Offset, S>,
         cie: &CommonInformationEntry<R>,
     ) -> Self {
-        assert!(!ctx.stack.is_empty());
+        assert!(ctx.stack.len() >= 1);
         UnwindTable {
             code_alignment_factor: Wrapping(cie.code_alignment_factor()),
             data_alignment_factor: Wrapping(cie.data_alignment_factor()),
@@ -2273,7 +2276,7 @@ where
     /// Unfortunately, this cannot be used with `FallibleIterator` because of
     /// the restricted lifetime of the yielded item.
     pub fn next_row(&mut self) -> Result<Option<&UnwindTableRow<R::Offset, S>>> {
-        assert!(!self.ctx.stack.is_empty());
+        assert!(self.ctx.stack.len() >= 1);
         self.ctx.set_start_address(self.next_start_address);
         self.current_row_valid = false;
 
@@ -2958,6 +2961,7 @@ impl<T: ReaderOffset> RegisterRule<T> {
 
 /// A parsed call frame instruction.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum CallFrameInstruction<T: ReaderOffset> {
     // 6.4.2.1 Row Creation Methods
     /// > 1. DW_CFA_set_loc
@@ -6682,43 +6686,18 @@ mod tests {
 
     #[test]
     fn test_eh_frame_stops_at_zero_length() {
-        let mut cie = make_test_cie();
-        let kind = eh_frame_le();
-        let section = Section::with_endian(Endian::Little)
-            .L32(0)
-            .cie(kind, None, &mut cie)
-            .L32(0);
-        let contents = section.get_contents().unwrap();
-        let eh_frame = kind.section(&contents);
+        let section = Section::with_endian(Endian::Little).L32(0);
+        let section = section.get_contents().unwrap();
+        let rest = &mut EndianSlice::new(&section, LittleEndian);
         let bases = Default::default();
 
-        let mut entries = eh_frame.entries(&bases);
-        assert_eq!(entries.next(), Ok(None));
-
         assert_eq!(
-            eh_frame.cie_from_offset(&bases, EhFrameOffset(0)),
-            Err(Error::NoEntryAtGivenOffset)
+            parse_cfi_entry(&bases, &EhFrame::new(&section, LittleEndian), rest),
+            Ok(None)
         );
-    }
-
-    #[test]
-    fn test_debug_frame_skips_zero_length() {
-        let mut cie = make_test_cie();
-        let kind = debug_frame_le();
-        let section = Section::with_endian(Endian::Little)
-            .L32(0)
-            .cie(kind, None, &mut cie)
-            .L32(0);
-        let contents = section.get_contents().unwrap();
-        let debug_frame = kind.section(&contents);
-        let bases = Default::default();
-
-        let mut entries = debug_frame.entries(&bases);
-        assert_eq!(entries.next(), Ok(Some(CieOrFde::Cie(cie))));
-        assert_eq!(entries.next(), Ok(None));
 
         assert_eq!(
-            debug_frame.cie_from_offset(&bases, DebugFrameOffset(0)),
+            EhFrame::new(&section, LittleEndian).cie_from_offset(&bases, EhFrameOffset(0)),
             Err(Error::NoEntryAtGivenOffset)
         );
     }

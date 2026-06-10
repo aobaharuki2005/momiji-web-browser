@@ -34,7 +34,6 @@ import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.concept.sync.TabPrivacy
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fxa.FxaAuthData
@@ -157,8 +156,7 @@ class MainActivity :
                     targets?.forEach {
                         constellation.sendCommandToDevice(
                             it.id,
-                            // NOTE: a real app would pass actual private browsing state.
-                            DeviceCommandOutgoing.SendTab("Sample tab", "https://www.mozilla.org", TabPrivacy.Normal),
+                            DeviceCommandOutgoing.SendTab("Sample tab", "https://www.mozilla.org"),
                         )
                     }
 

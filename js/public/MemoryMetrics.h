@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -11,6 +13,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 
+#include <string.h>
 #include <type_traits>
 
 #include "jstypes.h"
@@ -178,20 +181,18 @@ struct InefficientNonFlatteningStringHashPolicy {
 namespace JS {
 
 struct ClassInfo {
-#define FOR_EACH_SIZE(MACRO)                                       \
-  MACRO(Objects, GCHeapUsed, objectsGCHeap)                        \
-  MACRO(Objects, NonHeap, objectsGCBufferSlots)                    \
-  MACRO(Objects, NonHeap, objectsGCBufferElementsNormal)           \
-  MACRO(Objects, MallocHeap, objectsMallocHeapElementsArrayBuffer) \
-  MACRO(Objects, MallocHeap, objectsMallocHeapElementsAsmJS)       \
-  MACRO(Objects, MallocHeap, objectsMallocHeapGlobalData)          \
-  MACRO(Objects, MallocHeap, objectsMallocHeapMisc)                \
-  MACRO(Objects, NonHeap, objectsNonHeapElementsNormal)            \
-  MACRO(Objects, NonHeap, objectsNonHeapElementsShared)            \
-  MACRO(Objects, NonHeap, objectsNonHeapElementsWasm)              \
-  MACRO(Objects, NonHeap, objectsNonHeapElementsWasmShared)        \
-  MACRO(Objects, NonHeap, objectsNonHeapCodeWasm)                  \
-  MACRO(Objects, NonHeap, objectsGCBufferMisc)
+#define FOR_EACH_SIZE(MACRO)                                  \
+  MACRO(Objects, GCHeapUsed, objectsGCHeap)                   \
+  MACRO(Objects, MallocHeap, objectsMallocHeapSlots)          \
+  MACRO(Objects, MallocHeap, objectsMallocHeapElementsNormal) \
+  MACRO(Objects, MallocHeap, objectsMallocHeapElementsAsmJS)  \
+  MACRO(Objects, MallocHeap, objectsMallocHeapGlobalData)     \
+  MACRO(Objects, MallocHeap, objectsMallocHeapMisc)           \
+  MACRO(Objects, NonHeap, objectsNonHeapElementsNormal)       \
+  MACRO(Objects, NonHeap, objectsNonHeapElementsShared)       \
+  MACRO(Objects, NonHeap, objectsNonHeapElementsWasm)         \
+  MACRO(Objects, NonHeap, objectsNonHeapElementsWasmShared)   \
+  MACRO(Objects, NonHeap, objectsNonHeapCodeWasm)
 
   ClassInfo() = default;
 
@@ -305,15 +306,17 @@ struct CodeSizes {
 struct GCSizes {
   // |nurseryDecommitted| is marked as NonHeap rather than GCHeapDecommitted
   // because we don't consider the nursery to be part of the GC heap.
-#define FOR_EACH_SIZE(MACRO)                   \
-  MACRO(_, MallocHeap, marker)                 \
-  MACRO(_, NonHeap, nurseryCommitted)          \
-  MACRO(_, MallocHeap, nurseryMallocedBuffers) \
-  MACRO(_, MallocHeap, storeBufferVals)        \
-  MACRO(_, MallocHeap, storeBufferCells)       \
-  MACRO(_, MallocHeap, storeBufferSlots)       \
-  MACRO(_, MallocHeap, storeBufferWasmAnyRefs) \
-  MACRO(_, MallocHeap, storeBufferWholeCells)  \
+#define FOR_EACH_SIZE(MACRO)                      \
+  MACRO(_, MallocHeap, marker)                    \
+  MACRO(_, NonHeap, nurseryCommitted)             \
+  MACRO(_, MallocHeap, nurseryMallocedBuffers)    \
+  MACRO(_, MallocHeap, nurseryMallocedBlockCache) \
+  MACRO(_, MallocHeap, nurseryTrailerBlockSets)   \
+  MACRO(_, MallocHeap, storeBufferVals)           \
+  MACRO(_, MallocHeap, storeBufferCells)          \
+  MACRO(_, MallocHeap, storeBufferSlots)          \
+  MACRO(_, MallocHeap, storeBufferWasmAnyRefs)    \
+  MACRO(_, MallocHeap, storeBufferWholeCells)     \
   MACRO(_, MallocHeap, storeBufferGenerics)
 
   GCSizes() = default;
@@ -503,7 +506,6 @@ struct RuntimeSizes {
   MACRO(_, MallocHeap, scriptData)                  \
   MACRO(_, MallocHeap, wasmRuntime)                 \
   MACRO(_, Ignore, wasmGuardPages)                  \
-  MACRO(_, NonHeap, wasmContStacks)                 \
   MACRO(_, MallocHeap, jitLazyLink)
 
   RuntimeSizes() { allScriptSources.emplace(); }
@@ -551,7 +553,8 @@ struct UnusedGCThingSizes {
   MACRO(Other, GCHeapUnused, bigInt)       \
   MACRO(Other, GCHeapUnused, jitcode)      \
   MACRO(Other, GCHeapUnused, scope)        \
-  MACRO(Other, GCHeapUnused, regExpShared)
+  MACRO(Other, GCHeapUnused, regExpShared) \
+  MACRO(Other, GCHeapUnused, smallBuffer)
 
   UnusedGCThingSizes() = default;
   UnusedGCThingSizes(UnusedGCThingSizes&& other) = default;
@@ -623,13 +626,10 @@ struct UnusedGCThingSizes {
 };
 
 struct GCBufferStats {
-#define FOR_EACH_SIZE(MACRO)           \
-  MACRO(Other, MallocHeap, usedBytes)  \
-  MACRO(Other, MallocHeap, freeBytes)  \
-  MACRO(Other, MallocHeap, adminBytes) \
-  MACRO(Other, Ignore, totalChunks)    \
-  MACRO(Other, Ignore, freeRegions)    \
-  MACRO(Other, Ignore, largeAllocs)
+#define FOR_EACH_SIZE(MACRO)          \
+  MACRO(Other, MallocHeap, usedBytes) \
+  MACRO(Other, MallocHeap, freeBytes) \
+  MACRO(Other, MallocHeap, adminBytes)
 
   GCBufferStats() = default;
   GCBufferStats(GCBufferStats&& other) = default;
@@ -659,7 +659,7 @@ struct ZoneStats {
 #define FOR_EACH_SIZE(MACRO)                               \
   MACRO(Other, GCHeapUsed, symbolsGCHeap)                  \
   MACRO(Other, GCHeapUsed, bigIntsGCHeap)                  \
-  MACRO(Other, NonHeap, bigIntsGCBuffers)                  \
+  MACRO(Other, MallocHeap, bigIntsMallocHeap)              \
   MACRO(Other, GCHeapAdmin, gcHeapArenaAdmin)              \
   MACRO(Other, GCHeapUsed, jitCodesGCHeap)                 \
   MACRO(Other, GCHeapUsed, getterSettersGCHeap)            \
@@ -669,7 +669,7 @@ struct ZoneStats {
   MACRO(Other, MallocHeap, propMapChildren)                \
   MACRO(Other, MallocHeap, propMapTables)                  \
   MACRO(Other, GCHeapUsed, scopesGCHeap)                   \
-  MACRO(Other, NonHeap, scopesGCBuffers)                   \
+  MACRO(Other, MallocHeap, scopesMallocHeap)               \
   MACRO(Other, GCHeapUsed, regExpSharedsGCHeap)            \
   MACRO(Other, MallocHeap, regExpSharedsMallocHeap)        \
   MACRO(Other, MallocHeap, zoneObject)                     \
@@ -754,11 +754,6 @@ struct ZoneStats {
   js::Vector<NotableStringInfo, 0, js::SystemAllocPolicy> notableStrings;
   bool isTotals = true;
 
-  // Set when string deduplication was stopped early due to a time budget.
-  // When true, |notableStrings| only reflects strings seen before the cutoff.
-  bool stringsDeduplicationTruncated = false;
-  size_t stringsTotalCount = 0;
-
 #undef FOR_EACH_SIZE
 };
 
@@ -767,19 +762,19 @@ struct RealmStats {
   // actually guaranteed. But for Servo, at least, it's a moot point because
   // it doesn't provide an ObjectPrivateVisitor so the value will always be
   // zero.
-#define FOR_EACH_SIZE(MACRO)                    \
-  MACRO(Private, MallocHeap, objectsPrivate)    \
-  MACRO(Other, GCHeapUsed, scriptsGCHeap)       \
-  MACRO(Other, NonHeap, scriptsGCBuffers)       \
-  MACRO(Other, MallocHeap, baselineData)        \
-  MACRO(Other, MallocHeap, allocSites)          \
-  MACRO(Other, MallocHeap, ionData)             \
-  MACRO(Other, MallocHeap, jitScripts)          \
-  MACRO(Other, MallocHeap, realmObject)         \
-  MACRO(Other, MallocHeap, realmTables)         \
-  MACRO(Other, MallocHeap, innerViewsTable)     \
-  MACRO(Other, MallocHeap, objectMetadataTable) \
-  MACRO(Other, MallocHeap, savedStacksSet)      \
+#define FOR_EACH_SIZE(MACRO)                      \
+  MACRO(Private, MallocHeap, objectsPrivate)      \
+  MACRO(Other, GCHeapUsed, scriptsGCHeap)         \
+  MACRO(Other, MallocHeap, scriptsMallocHeapData) \
+  MACRO(Other, MallocHeap, baselineData)          \
+  MACRO(Other, MallocHeap, allocSites)            \
+  MACRO(Other, MallocHeap, ionData)               \
+  MACRO(Other, MallocHeap, jitScripts)            \
+  MACRO(Other, MallocHeap, realmObject)           \
+  MACRO(Other, MallocHeap, realmTables)           \
+  MACRO(Other, MallocHeap, innerViewsTable)       \
+  MACRO(Other, MallocHeap, objectMetadataTable)   \
+  MACRO(Other, MallocHeap, savedStacksSet)        \
   MACRO(Other, MallocHeap, nonSyntacticLexicalScopesTable)
 
   RealmStats() = default;

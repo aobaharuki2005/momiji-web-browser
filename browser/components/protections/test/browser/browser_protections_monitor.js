@@ -125,7 +125,7 @@ add_task(async function () {
     );
 
     // remove logins
-    await Services.logins.removeLoginAsync(TEST_LOGIN1);
+    Services.logins.removeLogin(TEST_LOGIN1);
 
     // restore original test functions
     AboutProtectionsParent.setTestOverride(null);

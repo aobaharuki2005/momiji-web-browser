@@ -27,9 +27,9 @@ var sourceObj = {
   length: 2
 };
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   var result;
-  var custom = new TA(makeCtorArg(2));
+  var custom = new TA(2);
   var ctor = function() {
     return custom;
   };
@@ -40,7 +40,7 @@ testWithTypedArrayConstructors(function(TA, makeCtorArg) {
   result = TypedArray.from.call(ctor, sourceObj);
   assert.sameValue(result, custom, "not using iterator, same length");
 
-  custom = new TA(makeCtorArg(3));
+  custom = new TA(3);
 
   result = TypedArray.from.call(ctor, sourceItor);
   assert.sameValue(result, custom, "using iterator, higher length");

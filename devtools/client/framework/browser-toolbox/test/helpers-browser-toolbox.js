@@ -218,7 +218,6 @@ async function initBrowserToolboxTask({ existingProcessClose } = {}) {
   registerCleanupFunction(destroy);
 
   return {
-    evaluateExpression,
     importFunctions,
     importScript,
     spawn,

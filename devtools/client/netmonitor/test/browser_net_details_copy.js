@@ -18,7 +18,7 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   const wait = waitForNetworkEvents(monitor, 1);
-  await reloadSelectedTab();
+  await reloadBrowser();
   await wait;
 
   store.dispatch(Actions.toggleNetworkDetails());
@@ -85,7 +85,7 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   const wait = waitForNetworkEvents(monitor, 1);
-  await reloadSelectedTab();
+  await reloadBrowser();
   await wait;
 
   store.dispatch(Actions.toggleNetworkDetails());
@@ -222,7 +222,7 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  await reloadSelectedTab();
+  await reloadBrowser();
   await wait;
 
   wait = waitForDOM(document, ".headers-overview");

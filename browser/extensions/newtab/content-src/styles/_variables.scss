@@ -1,12 +1,10 @@
 @use 'sass:math';
 
 // newtab only variables, otherwise use https://firefoxux.github.io/firefox-desktop-components/?path=/story/docs-tokens-table--default
-
 :root {
   --newtab-card-height: 282px;
   --newtab-card-width-medium: 300px;
   --newtab-card-grid-layout-width: 296px; // Matches widget used in Base.jsx
-  --newtab-card-height-small: 133px; // Card height for small-sized widgets in the widgets pane
 }
 
 $primary-blue: var(--color-accent-primary);
@@ -48,7 +46,9 @@ $email-input-invalid: var(--color-red-10);
 $newtab-wordmark-default-color: #20123A;
 $newtab-wordmark-darktheme-color: rgb(251, 251, 254);
 
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
 $in-content-page-color: var(--text-color);
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
 $in-content-page-color-dark: var(--text-color);
 
 // -------------------------------------------------------------------------- //
@@ -136,6 +136,7 @@ $debug-breakpoint-colors: (
   ultra-wide: violet
 );
 
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
 $section-title-font-size: var(--font-size-large);
 
 $card-width: $grid-unit-small * 2 + $base-gutter;

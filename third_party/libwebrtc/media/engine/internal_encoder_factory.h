@@ -17,7 +17,6 @@
 #include <vector>
 
 #include "api/environment/environment.h"
-#include "api/video/resolution.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
@@ -26,12 +25,10 @@
 namespace webrtc {
 class RTC_EXPORT InternalEncoderFactory : public VideoEncoderFactory {
  public:
-  using VideoEncoderFactory::QueryCodecSupport;
   std::vector<SdpVideoFormat> GetSupportedFormats() const override;
   CodecSupport QueryCodecSupport(
       const SdpVideoFormat& format,
-      std::optional<std::string> scalability_mode,
-      std::optional<Resolution> resolution) const override;
+      std::optional<std::string> scalability_mode) const override;
   std::unique_ptr<VideoEncoder> Create(const Environment& env,
                                        const SdpVideoFormat& format) override;
 };

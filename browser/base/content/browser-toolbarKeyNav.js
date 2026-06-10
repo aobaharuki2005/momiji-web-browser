@@ -37,9 +37,7 @@ ToolbarKeyboardNavigator = {
       return false;
     }
     return (
-      aElem.tagName == "toolbarbutton" ||
-      aElem.tagName == "html:moz-button" ||
-      aElem.getAttribute("role") == "button"
+      aElem.tagName == "toolbarbutton" || aElem.getAttribute("role") == "button"
     );
   },
 
@@ -109,10 +107,6 @@ ToolbarKeyboardNavigator = {
   },
 
   init() {
-    if (!gToolbarKeyNavEnabled || this._initialized) {
-      return;
-    }
-    this._initialized = true;
     for (let id of this.kToolbars) {
       let toolbar = document.getElementById(id);
       // When enabled, no toolbar buttons should themselves be tabbable.
@@ -127,10 +121,6 @@ ToolbarKeyboardNavigator = {
   },
 
   uninit() {
-    if (!this._initialized) {
-      return;
-    }
-    this._initialized = false;
     for (let id of this.kToolbars) {
       let toolbar = document.getElementById(id);
       for (let stop of toolbar.getElementsByTagName("toolbartabstop")) {
@@ -395,12 +385,6 @@ ToolbarKeyboardNavigator = {
 
     if (focus.getAttribute("type") == "menu") {
       focus.open = true;
-      return;
-    }
-
-    // moz-button uses an html button internally
-    // which already receives a click event on enter.
-    if (focus.localName == "moz-button") {
       return;
     }
 

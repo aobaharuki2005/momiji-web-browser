@@ -9,13 +9,13 @@ add_task(setupRegion);
 
 async function setPrefAndWaitForConfigFlush(pref, value) {
   let configFlushedPromise = DoHTestUtils.waitForConfigFlush();
-  Services.prefs.setBoolPref(pref, value);
+  Preferences.set(pref, value);
   await configFlushedPromise;
 }
 
 async function clearPrefAndWaitForConfigFlush(pref) {
   let configFlushedPromise = DoHTestUtils.waitForConfigFlush();
-  Services.prefs.clearUserPref(pref);
+  Preferences.reset(pref);
   await configFlushedPromise;
 }
 
@@ -30,7 +30,6 @@ add_task(async function testNewProfile() {
     id: "provider1",
     uri: "https://example.org/1",
     autoDefault: true,
-    http3First: true,
   };
   let provider2 = {
     id: "provider2",

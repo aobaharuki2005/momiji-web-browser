@@ -29,9 +29,7 @@ pub(crate) unsafe fn io_uring_register(
     arg: *const c_void,
     nr_args: u32,
 ) -> io::Result<u32> {
-    // This is not `syscall_readonly` because when `opcode` is
-    // `IoringRegisterOp::RegisterRingFds`, `arg`'s pointee is mutated.
-    ret_c_uint(syscall!(
+    ret_c_uint(syscall_readonly!(
         __NR_io_uring_register,
         fd,
         c_uint(opcode as u32),
@@ -48,9 +46,7 @@ pub(crate) unsafe fn io_uring_register_with(
     arg: *const c_void,
     nr_args: u32,
 ) -> io::Result<u32> {
-    // This is not `syscall_readonly` because when `opcode` is
-    // `IoringRegisterOp::RegisterRingFds`, `arg`'s pointee is mutated.
-    ret_c_uint(syscall!(
+    ret_c_uint(syscall_readonly!(
         __NR_io_uring_register,
         fd,
         c_uint((opcode as u32) | bitflags_bits!(flags)),

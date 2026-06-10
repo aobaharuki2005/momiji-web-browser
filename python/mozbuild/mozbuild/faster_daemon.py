@@ -8,7 +8,6 @@ Use pywatchman to watch source directories and perform partial
 """
 
 import datetime
-import functools
 import sys
 import time
 
@@ -20,6 +19,7 @@ import pywatchman
 from mozpack.copier import FileCopier
 from mozpack.manifests import InstallManifest
 
+import mozbuild.util
 from mozbuild.backend import get_backend_class
 
 
@@ -76,7 +76,7 @@ class Daemon:
         })
         return defines
 
-    @functools.cached_property
+    @mozbuild.util.memoized_property
     def file_copier(self):
         # TODO: invalidate the file copier when the build system
         # itself changes, i.e., the underlying unified manifest

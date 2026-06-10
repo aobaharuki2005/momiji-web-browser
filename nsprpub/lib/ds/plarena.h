@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -103,12 +104,6 @@ struct PLArenaPool {
 #define PL_ASAN_VISIBILITY(type_) PR_IMPORT(type_)
 #endif
 
-/*
- * Size of the poisoned redzone placed after each arena allocation.
- * Matches ASan's default redzone to catch intra-arena buffer overflows.
- */
-#define PL_ARENA_REDZONE_SIZE 16
-
 /* These definitions are usually provided through the
  * sanitizer/asan_interface.h header installed by ASan.
  * See https://github.com/google/sanitizers/wiki/AddressSanitizerManualPoisoning
@@ -129,8 +124,6 @@ PL_ASAN_VISIBILITY(void) __asan_unpoison_memory_region(
     __asan_unpoison_memory_region((addr), (size))
 
 #else
-
-#define PL_ARENA_REDZONE_SIZE 0
 
 #define PL_MAKE_MEM_NOACCESS(addr, size)
 #define PL_MAKE_MEM_UNDEFINED(addr, size)
@@ -156,7 +149,7 @@ PL_ASAN_VISIBILITY(void) __asan_unpoison_memory_region(
 #define PL_ARENA_ALLOCATE(p, pool, nb) \
     PR_BEGIN_MACRO \
         PLArena *_a = (pool)->current; \
-        PRUint32 _nb = PL_ARENA_ALIGN(pool, (PRUint32)(nb) + PL_ARENA_REDZONE_SIZE); \
+        PRUint32 _nb = PL_ARENA_ALIGN(pool, (PRUint32)nb); \
         PRUword _p = _a->avail; \
         if (_nb < (PRUint32)nb) { \
             _p = 0; \
@@ -178,12 +171,10 @@ PL_ASAN_VISIBILITY(void) __asan_unpoison_memory_region(
         PRUint32 _incr = PL_ARENA_ALIGN(pool, (PRUint32)incr); \
         if (_incr < (PRUint32)incr) { \
             p = NULL; \
-        } else if (_a->avail == (PRUword)(p) + \
-                   PL_ARENA_ALIGN(pool, size + PL_ARENA_REDZONE_SIZE) && \
-                   _incr <= (_a->limit - _a->avail)) { \
+        } else if (_a->avail == (PRUword)(p) + PL_ARENA_ALIGN(pool, size) && \
+            _incr <= (_a->limit - _a->avail)) { \
             PL_MAKE_MEM_UNDEFINED((unsigned char *)(p) + size, (PRUint32)incr); \
             _a->avail += _incr; \
-            PL_MAKE_MEM_NOACCESS((unsigned char *)(p) + size + incr, PL_ARENA_REDZONE_SIZE); \
             PL_ArenaCountInplaceGrowth(pool, size, (PRUint32)incr); \
         } else { \
             p = PL_ArenaGrow(pool, p, size, (PRUint32)incr); \

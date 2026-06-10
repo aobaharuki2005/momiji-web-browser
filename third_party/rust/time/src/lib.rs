@@ -41,33 +41,20 @@
 //!
 //! - `serde`
 //!
-//!   Enables [`serde`](https://docs.rs/serde) support for all types.
+//!   Enables [serde](https://docs.rs/serde) support for all types.
 //!
 //! - `serde-human-readable` (_implicitly enables `serde`, `formatting`, and `parsing`_)
 //!
-//!   Allows `serde` representations to use a human-readable format. This is determined by the
+//!   Allows serde representations to use a human-readable format. This is determined by the
 //!   serializer, not the user. If this feature is not enabled or if the serializer requests a
 //!   non-human-readable format, a format optimized for binary representation will be used.
 //!
 //!   Libraries should never enable this feature, as the decision of what format to use should be up
 //!   to the user.
 //!
-//! - `rand` (_implicitly enables `rand08` and `rand09`_)
+//! - `rand`
 //!
-//!   Previously, this would enable support for `rand` 0.8. Since the release of `rand` 0.9, the
-//!   feature has been split into `rand08` and `rand09` to allow support for both versions. For
-//!   backwards compatibility and simplicity, this feature enables support for _both_ series.
-//!
-//!   It is strongly recommended to enable `rand08` or `rand09` directly, as enabling `rand` will
-//!   needlessly pull in both versions.
-//!
-//! - `rand08`
-//!
-//!   Enables [`rand` 0.8](https://docs.rs/rand/0.8) support for all types.
-//!
-//! - `rand09`
-//!
-//!   Enables [`rand` 0.9](https://docs.rs/rand/0.9) support for all types.
+//!   Enables [rand](https://docs.rs/rand) support for all types.
 //!
 //! - `quickcheck` (_implicitly enables `alloc`_)
 //!
@@ -75,12 +62,12 @@
 //!
 //! - `wasm-bindgen`
 //!
-//!   Enables [`wasm-bindgen`](https://github.com/rustwasm/wasm-bindgen) support for converting
+//!   Enables [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) support for converting
 //!   [JavaScript dates](https://rustwasm.github.io/wasm-bindgen/api/js_sys/struct.Date.html), as
 //!   well as obtaining the UTC offset from JavaScript.
 
 #![doc(html_playground_url = "https://play.rust-lang.org")]
-#![cfg_attr(docsrs, feature(doc_cfg, doc_notable_trait))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg, doc_notable_trait))]
 #![no_std]
 #![doc(html_favicon_url = "https://avatars0.githubusercontent.com/u/55999857")]
 #![doc(html_logo_url = "https://avatars0.githubusercontent.com/u/55999857")]
@@ -115,10 +102,8 @@ pub mod parsing;
 mod primitive_date_time;
 #[cfg(feature = "quickcheck")]
 mod quickcheck;
-#[cfg(feature = "rand08")]
-mod rand08;
-#[cfg(feature = "rand09")]
-mod rand09;
+#[cfg(feature = "rand")]
+mod rand;
 #[cfg(feature = "serde")]
 pub mod serde;
 mod sys;
@@ -137,7 +122,7 @@ pub use crate::duration::Duration;
 pub use crate::error::Error;
 #[doc(hidden)]
 #[cfg(feature = "std")]
-#[expect(deprecated)]
+#[allow(deprecated)]
 pub use crate::instant::Instant;
 pub use crate::month::Month;
 pub use crate::offset_date_time::OffsetDateTime;
@@ -149,3 +134,20 @@ pub use crate::weekday::Weekday;
 
 /// An alias for [`std::result::Result`] with a generic error from the time crate.
 pub type Result<T> = core::result::Result<T, Error>;
+
+/// This is a separate function to reduce the code size of `expect_opt!`.
+#[inline(never)]
+#[cold]
+#[track_caller]
+const fn expect_failed(message: &str) -> ! {
+    panic!("{}", message)
+}
+
+/// Returns the size of the pointed-to value in bytes.
+///
+/// This is a `const fn` in the standard library starting in Rust 1.85. When MSRV is at least that,
+/// this can be removed.
+#[allow(unused_qualifications)] // added to prelude after MSRV
+const fn size_of_val<T>(_: &T) -> usize {
+    core::mem::size_of::<T>()
+}

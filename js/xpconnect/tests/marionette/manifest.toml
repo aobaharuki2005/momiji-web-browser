@@ -1,7 +1,3 @@
 [DEFAULT]
-subsuite = "integration"
-tags = "os_integration"
-
-["test_preloader_cache_bypass.py"]
 
 ["test_preloader_without_parallel_parsing.py"]

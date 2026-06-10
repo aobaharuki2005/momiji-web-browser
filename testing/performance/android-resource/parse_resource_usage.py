@@ -79,9 +79,7 @@ def get_fenix_process_category(process, binary):
         return "main"
     elif "zygote" in process:
         return "zygote"
-    # Process names may be tagged with "_disable_art_image_" (see bug 2005825)
-    # but that should be ignored for our category names.
-    return process.replace("_disable_art_image_", "")
+    return process
 
 
 def get_category_for_process(process, binary):

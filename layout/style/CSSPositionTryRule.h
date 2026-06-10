@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,7 +15,10 @@
 // TODO: Ideally it would only be included from there.
 #include "nsCSSProps.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+class DeclarationBlock;
+
+namespace dom {
 
 class CSSPositionTryRule;
 class CSSPositionTryRuleDeclaration final : public nsDOMCSSDeclaration {
@@ -28,9 +32,9 @@ class CSSPositionTryRuleDeclaration final : public nsDOMCSSDeclaration {
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
  protected:
-  Block* GetOrCreateCSSDeclaration(Operation aOperation,
-                                   Block** aCreated) final;
-  nsresult SetCSSDeclaration(Block* aDecl,
+  DeclarationBlock* GetOrCreateCSSDeclaration(
+      Operation aOperation, DeclarationBlock** aCreated) final;
+  nsresult SetCSSDeclaration(DeclarationBlock* aDecl,
                              MutationClosureData* aClosureData) final;
   nsDOMCSSDeclaration::ParsingEnvironment GetParsingEnvironment(
       nsIPrincipal* aSubjectPrincipal) const final;
@@ -39,15 +43,16 @@ class CSSPositionTryRuleDeclaration final : public nsDOMCSSDeclaration {
   // For accessing the constructor.
   friend class CSSPositionTryRule;
 
-  explicit CSSPositionTryRuleDeclaration(already_AddRefed<Block> aDecls);
-  void SetRawAfterClone(RefPtr<Block>);
+  explicit CSSPositionTryRuleDeclaration(
+      already_AddRefed<StyleLockedDeclarationBlock> aDecls);
+  void SetRawAfterClone(RefPtr<StyleLockedDeclarationBlock>);
 
   ~CSSPositionTryRuleDeclaration();
 
   inline CSSPositionTryRule* Rule();
   inline const CSSPositionTryRule* Rule() const;
 
-  RefPtr<Block> mDecls;
+  RefPtr<DeclarationBlock> mDecls;
 };
 
 class CSSPositionTryRule final : public css::Rule {
@@ -91,6 +96,7 @@ class CSSPositionTryRule final : public css::Rule {
   CSSPositionTryRuleDeclaration mDecls;
 };
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // mozilla_dom_CSSPositionTryRule_h

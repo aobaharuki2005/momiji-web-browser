@@ -29,10 +29,6 @@ bool NeedsReturnStatement(TIntermFunctionDefinition *node, TType *returnType)
     }
 
     TIntermBlock *bodyNode    = node->getBody();
-    if (bodyNode->getSequence()->empty())
-    {
-       return true;
-    }
     TIntermBranch *returnNode = bodyNode->getSequence()->back()->getAsBranchNode();
     if (returnNode != nullptr && returnNode->getFlowOp() == EOpReturn)
     {

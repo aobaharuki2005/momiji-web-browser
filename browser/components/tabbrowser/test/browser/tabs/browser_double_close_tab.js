@@ -26,7 +26,7 @@ function waitForDialogDestroyed(node, callback) {
   });
   observer.observe(node.parentNode, { childList: true });
 
-  node.documentGlobal.addEventListener("unload", done);
+  node.ownerGlobal.addEventListener("unload", done);
 
   let failureTimeout = setTimeout(function () {
     ok(false, "Dialog should have been destroyed");
@@ -38,7 +38,7 @@ function waitForDialogDestroyed(node, callback) {
     observer.disconnect();
     observer = null;
 
-    node.documentGlobal.removeEventListener("unload", done);
+    node.ownerGlobal.removeEventListener("unload", done);
     SimpleTest.executeSoon(callback);
   }
 }
@@ -62,10 +62,10 @@ add_task(async function () {
         info("Now checking if dialog is destroyed");
 
         ok(
-          !dialogNode.documentGlobal || dialogNode.documentGlobal.closed,
+          !dialogNode.ownerGlobal || dialogNode.ownerGlobal.closed,
           "onbeforeunload dialog should be gone."
         );
-        if (dialogNode.documentGlobal && !dialogNode.documentGlobal.closed) {
+        if (dialogNode.ownerGlobal && !dialogNode.ownerGlobal.closed) {
           dialogNode.acceptDialog();
         }
 

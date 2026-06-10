@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=4 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -48,12 +50,49 @@ static LazyLogModule gLoadGroupLog("LoadGroup");
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class RequestMapEntry : public PLDHashEntryHdr {
+ public:
+  explicit RequestMapEntry(nsIRequest* aRequest) : mKey(aRequest) {}
+
+  nsCOMPtr<nsIRequest> mKey;
+};
+
+static bool RequestHashMatchEntry(const PLDHashEntryHdr* entry,
+                                  const void* key) {
+  const RequestMapEntry* e = static_cast<const RequestMapEntry*>(entry);
+  const nsIRequest* request = static_cast<const nsIRequest*>(key);
+
+  return e->mKey == request;
+}
+
+static void RequestHashClearEntry(PLDHashTable* table, PLDHashEntryHdr* entry) {
+  RequestMapEntry* e = static_cast<RequestMapEntry*>(entry);
+
+  // An entry is being cleared, let the entry do its own cleanup.
+  e->~RequestMapEntry();
+}
+
+static void RequestHashInitEntry(PLDHashEntryHdr* entry, const void* key) {
+  const nsIRequest* const_request = static_cast<const nsIRequest*>(key);
+  nsIRequest* request = const_cast<nsIRequest*>(const_request);
+
+  // Initialize the entry with placement new
+  new (entry) RequestMapEntry(request);
+}
+
+static const PLDHashTableOps sRequestHashOps = {
+    PLDHashTable::HashVoidPtrKeyStub, RequestHashMatchEntry,
+    PLDHashTable::MoveEntryStub, RequestHashClearEntry, RequestHashInitEntry};
+
 static void RescheduleRequest(nsIRequest* aRequest, int32_t delta) {
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(aRequest);
   if (p) p->AdjustPriority(delta);
 }
 
-nsLoadGroup::nsLoadGroup() { LOG(("LOADGROUP [%p]: Created.\n", this)); }
+nsLoadGroup::nsLoadGroup()
+    : mRequests(&sRequestHashOps, sizeof(RequestMapEntry)) {
+  LOG(("LOADGROUP [%p]: Created.\n", this));
+}
 
 nsLoadGroup::~nsLoadGroup() {
   DebugOnly<nsresult> rv =
@@ -122,6 +161,28 @@ nsLoadGroup::GetStatus(nsresult* status) {
   return NS_OK;
 }
 
+static bool AppendRequestsToArray(PLDHashTable* aTable,
+                                  nsTArray<nsIRequest*>* aArray) {
+  for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
+    auto* e = static_cast<RequestMapEntry*>(iter.Get());
+    nsIRequest* request = e->mKey;
+    MOZ_DIAGNOSTIC_ASSERT(request, "Null key in mRequests PLDHashTable entry");
+
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    aArray->AppendElement(request);
+    NS_ADDREF(request);
+  }
+
+  if (aArray->Length() != aTable->EntryCount()) {
+    for (uint32_t i = 0, len = aArray->Length(); i < len; ++i) {
+      NS_RELEASE((*aArray)[i]);
+    }
+    return false;
+  }
+  return true;
+}
+
 NS_IMETHODIMP nsLoadGroup::SetCanceledReason(const nsACString& aReason) {
   return SetCanceledReasonImpl(aReason);
 }
@@ -141,10 +202,13 @@ nsLoadGroup::Cancel(nsresult status) {
 
   NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
   nsresult rv;
-  uint32_t count = mRequests.Count();
+  uint32_t count = mRequests.EntryCount();
 
-  auto requests = ToTArray<AutoTArray<nsCOMPtr<nsIRequest>, 8>>(mRequests);
-  MOZ_ASSERT(requests.Length() == count);
+  AutoTArray<nsIRequest*, 8> requests;
+
+  if (!AppendRequestsToArray(&mRequests, &requests)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // set the load group status to our cancel status while we cancel
   // all our requests...once the cancel is done, we'll reset it...
@@ -162,10 +226,11 @@ nsLoadGroup::Cancel(nsresult status) {
 
     NS_ASSERTION(request, "NULL request found in list.");
 
-    if (!mRequests.Contains(request)) {
+    if (!mRequests.Search(request)) {
       // |request| was removed already
       // We need to null out the entry in the request array so we don't try
       // to notify the observers for this request.
+      nsCOMPtr<nsIRequest> request = dont_AddRef(requests.ElementAt(count));
       requests.ElementAt(count) = nullptr;
 
       continue;
@@ -189,6 +254,7 @@ nsLoadGroup::Cancel(nsresult status) {
       // from the loadgroup causing RemoveRequestFromHashtable to fail.
       // In that case we shouldn't call NotifyRemovalObservers or decrement
       // mForegroundCount since that has already happened.
+      nsCOMPtr<nsIRequest> request = dont_AddRef(requests.ElementAt(count));
       requests.ElementAt(count) = nullptr;
 
       continue;
@@ -196,7 +262,7 @@ nsLoadGroup::Cancel(nsresult status) {
   }
 
   for (count = requests.Length(); count > 0;) {
-    nsCOMPtr<nsIRequest> request = requests.ElementAt(--count).forget();
+    nsCOMPtr<nsIRequest> request = dont_AddRef(requests.ElementAt(--count));
     (void)NotifyRemovalObservers(request, status);
   }
 
@@ -205,13 +271,12 @@ nsLoadGroup::Cancel(nsresult status) {
   }
 
 #if defined(DEBUG)
-  NS_ASSERTION(mRequests.IsEmpty(), "Request list is not empty.");
+  NS_ASSERTION(mRequests.EntryCount() == 0, "Request list is not empty.");
   NS_ASSERTION(mForegroundCount == 0, "Foreground URLs are active.");
 #endif
 
   mStatus = NS_OK;
   mIsCanceling = false;
-  mCanceledReason.Truncate();
 
   return firstError;
 }
@@ -219,9 +284,13 @@ nsLoadGroup::Cancel(nsresult status) {
 NS_IMETHODIMP
 nsLoadGroup::Suspend() {
   nsresult rv, firstError;
-  uint32_t count = mRequests.Count();
+  uint32_t count = mRequests.EntryCount();
 
-  auto requests = ToTArray<AutoTArray<nsCOMPtr<nsIRequest>, 8>>(mRequests);
+  AutoTArray<nsIRequest*, 8> requests;
+
+  if (!AppendRequestsToArray(&mRequests, &requests)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   firstError = NS_OK;
   //
@@ -229,7 +298,7 @@ nsLoadGroup::Suspend() {
   // get removed from the list it won't affect our iteration
   //
   while (count > 0) {
-    nsCOMPtr<nsIRequest> request = requests.ElementAt(--count).forget();
+    nsCOMPtr<nsIRequest> request = dont_AddRef(requests.ElementAt(--count));
 
     NS_ASSERTION(request, "NULL request found in list.");
     if (!request) continue;
@@ -254,9 +323,13 @@ nsLoadGroup::Suspend() {
 NS_IMETHODIMP
 nsLoadGroup::Resume() {
   nsresult rv, firstError;
-  uint32_t count = mRequests.Count();
+  uint32_t count = mRequests.EntryCount();
 
-  auto requests = ToTArray<AutoTArray<nsCOMPtr<nsIRequest>, 8>>(mRequests);
+  AutoTArray<nsIRequest*, 8> requests;
+
+  if (!AppendRequestsToArray(&mRequests, &requests)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   firstError = NS_OK;
   //
@@ -264,7 +337,7 @@ nsLoadGroup::Resume() {
   // get removed from the list it won't affect our iteration
   //
   while (count > 0) {
-    nsCOMPtr<nsIRequest> request = requests.ElementAt(--count).forget();
+    nsCOMPtr<nsIRequest> request = dont_AddRef(requests.ElementAt(--count));
 
     NS_ASSERTION(request, "NULL request found in list.");
     if (!request) continue;
@@ -344,7 +417,7 @@ nsLoadGroup::SetDefaultLoadRequest(nsIRequest* aRequest) {
     // Mask off any bits that are not part of the nsIRequest flags.
     // in particular, nsIChannel::LOAD_DOCUMENT_URI...
     //
-    mLoadFlags &= nsIRequest::LOAD_INHERIT_MASK;
+    mLoadFlags &= nsIRequest::LOAD_REQUESTMASK;
 
     nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(aRequest);
     mDefaultLoadIsTimed = timedChannel != nullptr;
@@ -364,10 +437,10 @@ nsLoadGroup::AddRequest(nsIRequest* request, nsISupports* ctxt) {
     nsAutoCString nameStr;
     request->GetName(nameStr);
     LOG(("LOADGROUP [%p]: Adding request %p %s (count=%d).\n", this, request,
-         nameStr.get(), mRequests.Count()));
+         nameStr.get(), mRequests.EntryCount()));
   }
 
-  NS_ASSERTION(!mRequests.Contains(request),
+  NS_ASSERTION(!mRequests.Search(request),
                "Entry added to loadgroup twice, don't do that");
 
   //
@@ -397,7 +470,10 @@ nsLoadGroup::AddRequest(nsIRequest* request, nsISupports* ctxt) {
   // Add the request to the list of active requests...
   //
 
-  mRequests.Insert(request);
+  auto* entry = static_cast<RequestMapEntry*>(mRequests.Add(request, fallible));
+  if (!entry) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   if (mPriority != 0) RescheduleRequest(request, mPriority);
 
@@ -415,7 +491,6 @@ nsLoadGroup::AddRequest(nsIRequest* request, nsISupports* ctxt) {
     // the load group.
     //
     nsCOMPtr<nsIRequestObserver> observer = do_QueryReferent(mObserver);
-    RefPtr<nsLoadGroup> self{this};
     if (observer) {
       LOG(
           ("LOADGROUP [%p]: Firing OnStartRequest for request %p."
@@ -486,7 +561,7 @@ nsresult nsLoadGroup::RemoveRequestFromHashtable(nsIRequest* request,
     LOG(("LOADGROUP [%p]: Removing request %p %s status %" PRIx32
          " (count=%d).\n",
          this, request, nameStr.get(), static_cast<uint32_t>(aStatus),
-         mRequests.Count() - 1));
+         mRequests.EntryCount() - 1));
   }
 
   //
@@ -494,14 +569,16 @@ nsresult nsLoadGroup::RemoveRequestFromHashtable(nsIRequest* request,
   // the request was *not* in the group so do not update the foreground
   // count or it will get messed up...
   //
-  bool found = mRequests.EnsureRemoved(request);
+  auto* entry = static_cast<RequestMapEntry*>(mRequests.Search(request));
 
-  if (!found) {
+  if (!entry) {
     LOG(("LOADGROUP [%p]: Unable to remove request %p. Not in group!\n", this,
          request));
 
     return NS_ERROR_FAILURE;
   }
+
+  mRequests.RemoveEntry(entry);
 
   // Cache the status of mDefaultLoadRequest, It'll be used later in
   // TelemetryReport.
@@ -544,7 +621,7 @@ nsresult nsLoadGroup::RemoveRequestFromHashtable(nsIRequest* request,
     }
   }
 
-  if (mRequests.Count() == 0) {
+  if (mRequests.EntryCount() == 0) {
     TelemetryReport();
   }
 
@@ -570,7 +647,6 @@ nsresult nsLoadGroup::NotifyRemovalObservers(nsIRequest* request,
   if (foreground || mNotifyObserverAboutBackgroundRequests) {
     // Fire the OnStopRequest out to the observer...
     nsCOMPtr<nsIRequestObserver> observer = do_QueryReferent(mObserver);
-    RefPtr<nsLoadGroup> self{this};
     if (observer) {
       LOG(
           ("LOADGROUP [%p]: Firing OnStopRequest for request %p."
@@ -597,10 +673,11 @@ nsresult nsLoadGroup::NotifyRemovalObservers(nsIRequest* request,
 NS_IMETHODIMP
 nsLoadGroup::GetRequests(nsISimpleEnumerator** aRequests) {
   nsCOMArray<nsIRequest> requests;
-  requests.SetCapacity(mRequests.Count());
+  requests.SetCapacity(mRequests.EntryCount());
 
-  for (nsIRequest* request : mRequests) {
-    requests.AppendObject(request);
+  for (auto iter = mRequests.Iter(); !iter.Done(); iter.Next()) {
+    auto* e = static_cast<RequestMapEntry*>(iter.Get());
+    requests.AppendObject(e->mKey);
   }
 
   return NS_NewArrayEnumerator(aRequests, requests, NS_GET_IID(nsIRequest));
@@ -725,8 +802,9 @@ nsLoadGroup::AdjustPriority(int32_t aDelta) {
   // Update the priority for each request that supports nsISupportsPriority
   if (aDelta != 0) {
     mPriority += aDelta;
-    for (nsIRequest* request : mRequests) {
-      RescheduleRequest(request, aDelta);
+    for (auto iter = mRequests.Iter(); !iter.Done(); iter.Next()) {
+      auto* e = static_cast<RequestMapEntry*>(iter.Get());
+      RescheduleRequest(e->mKey, aDelta);
     }
   }
   return NS_OK;

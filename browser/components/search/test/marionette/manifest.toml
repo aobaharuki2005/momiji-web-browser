@@ -2,8 +2,6 @@
 run-if = [
   "buildapp == 'browser'",
 ]
-subsuite = "integration"
-tags = "os_integration"
 
 ["include:telemetry/manifest.toml"]
 

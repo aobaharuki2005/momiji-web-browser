@@ -194,7 +194,7 @@ impl Extensions {
             && self.other.is_empty()
     }
 
-    #[expect(clippy::type_complexity)]
+    #[allow(clippy::type_complexity)]
     pub(crate) fn as_tuple(
         &self,
     ) -> (
@@ -231,8 +231,6 @@ impl Extensions {
 
     /// Retains the specified extension types, clearing all others.
     ///
-    /// ✨ *Enabled with the `alloc` Cargo feature.*
-    ///
     /// # Examples
     ///
     /// ```
@@ -254,7 +252,6 @@ impl Extensions {
     /// });
     /// assert_eq!(only_t_z, "und-t-mul-z-zzz".parse().unwrap());
     /// ```
-    #[cfg(feature = "alloc")]
     pub fn retain_by_type<F>(&mut self, mut predicate: F)
     where
         F: FnMut(ExtensionType) -> bool,
@@ -363,6 +360,7 @@ impl Extensions {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl_writeable_for_each_subtag_str_no_test!(Extensions);
 
 #[test]

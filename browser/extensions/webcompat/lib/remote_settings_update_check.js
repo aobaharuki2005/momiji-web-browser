@@ -59,7 +59,6 @@ function listenForRemoteSettingsUpdates(interventions, shims) {
         "Ignoring older version of webcompat interventions",
         update.version
       );
-      window.latestReceivedUpdate = update.version;
       return;
     }
 
@@ -73,14 +72,11 @@ function listenForRemoteSettingsUpdates(interventions, shims) {
     if (update.shims) {
       await shims.onRemoteSettingsUpdate(update.shims);
     }
-
-    window.latestUpdate = update.version;
-    window.latestReceivedUpdate = update.version;
   });
 
   window._downgradeForTesting = async () => {
     currentVersion = browser.runtime.getManifest().version;
-    await interventions.resetToDefaultInterventions();
+    await interventions._resetToDefaultInterventions();
     await shims._resetToDefaultShims();
   };
 }

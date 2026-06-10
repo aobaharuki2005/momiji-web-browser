@@ -17,37 +17,44 @@ class Autofill {
   }
 
   start() {
-    this.eventDispatcher.sendRequest("GeckoView:StartAutofill", {
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:StartAutofill",
       sessionId: this.sessionId,
     });
   }
 
   add(node) {
-    return this.eventDispatcher.sendRequestForResult("GeckoView:AddAutofill", {
+    return this.eventDispatcher.sendRequestForResult({
+      type: "GeckoView:AddAutofill",
       node,
     });
   }
 
   focus(node) {
-    this.eventDispatcher.sendRequest("GeckoView:OnAutofillFocus", {
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:OnAutofillFocus",
       node,
     });
   }
 
   update(node) {
-    this.eventDispatcher.sendRequest("GeckoView:UpdateAutofill", {
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:UpdateAutofill",
       node,
     });
   }
 
   commit(node) {
-    this.eventDispatcher.sendRequest("GeckoView:CommitAutofill", {
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:CommitAutofill",
       node,
     });
   }
 
   clear() {
-    this.eventDispatcher.sendRequest("GeckoView:ClearAutofill");
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:ClearAutofill",
+    });
   }
 }
 

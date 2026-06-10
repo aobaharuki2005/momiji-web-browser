@@ -214,7 +214,7 @@ add_task(async function test_customize_visibility_setting() {
   await SpecialPowers.pushPrefEnv({
     set: [[VERTICAL_TABS_PREF, true]],
   });
-  await SidebarTestUtils.waitForTabstripOrientation(window, "vertical");
+  await waitForTabstripOrientation("vertical");
 
   const deferredPrefChange = Promise.withResolvers();
   const prefObserver = () => deferredPrefChange.resolve();
@@ -270,13 +270,13 @@ add_task(async function test_vertical_tabs_setting() {
   panel.verticalTabsInput.click();
   await panel.updateComplete;
   ok(panel.verticalTabsInput.checked, "Vertical tabs is enabled.");
-  await SidebarTestUtils.waitForTabstripOrientation(window, "vertical");
+  await waitForTabstripOrientation("vertical", window);
 
   const newPrefValue = Services.prefs.getBoolPref(VERTICAL_TABS_PREF);
   is(newPrefValue, true, "Vertical tabs pref updated.");
 
   const newWin = await BrowserTestUtils.openNewBrowserWindow();
-  await SidebarTestUtils.waitForTabstripOrientation(newWin, "vertical");
+  await waitForTabstripOrientation("vertical", newWin);
   const newPanel = await showCustomizePanel(newWin);
   info("Waiting for vertical tabs input checked");
   await BrowserTestUtils.waitForMutationCondition(

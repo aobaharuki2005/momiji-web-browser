@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -219,9 +220,6 @@ MediaEngineRemoteVideoSource::CreateFrom(
 }
 
 MediaEngineRemoteVideoSource::~MediaEngineRemoteVideoSource() {
-  if (mCaptureId >= 0) {
-    camera::CamerasChild::RemoveCallbackIfExists(mCaptureId);
-  }
   mFirstFramePromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
 }
 
@@ -256,10 +254,8 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
 
   NormalizedConstraints c(aConstraints);
   const auto resizeMode = MediaConstraintsHelper::GetResizeMode(c, aPrefs);
-  const auto legacyDistanceMode =
-      mCapEngine == camera::CameraEngine ? kFitness : kFeasibility;
   const auto distanceMode =
-      resizeMode.map(&ToDistanceCalculation).valueOr(legacyDistanceMode);
+      resizeMode.map(&ToDistanceCalculation).valueOr(kFitness);
   webrtc::CaptureCapability newCapability;
   LOG("ChooseCapability(%s) for mCapability (Allocate) ++",
       ToString(distanceMode));
@@ -286,7 +282,7 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
   {
     MutexAutoLock lock(mMutex);
     mState = kAllocated;
-    mCapability = std::move(newCapability);
+    mCapability = newCapability;
     mCalculation = distanceMode;
     mConstraints = Some(c);
     *mPrefs = aPrefs;
@@ -514,10 +510,8 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
 
   NormalizedConstraints c(aConstraints);
   const auto resizeMode = MediaConstraintsHelper::GetResizeMode(c, aPrefs);
-  const auto legacyDistanceMode =
-      mCapEngine == camera::CameraEngine ? kFitness : kFeasibility;
   const auto distanceMode =
-      resizeMode.map(&ToDistanceCalculation).valueOr(legacyDistanceMode);
+      resizeMode.map(&ToDistanceCalculation).valueOr(kFitness);
   webrtc::CaptureCapability newCapability;
   LOG("ChooseCapability(%s) for mTargetCapability (Reconfigure) ++",
       ToString(distanceMode));
@@ -542,7 +536,7 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
                    !(*mPrefs == aPrefs);
 
     // StartCapture() applies mCapability on the device.
-    mCapability = std::move(newCapability);
+    mCapability = newCapability;
     mCalculation = distanceMode;
     mConstraints = Some(c);
     *mPrefs = aPrefs;
@@ -574,7 +568,7 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
       GetErrorName(rv, name);
       LOG("Video source %p for video device %d Reconfigure() failed "
           "unexpectedly in Start(). rv=%s",
-          this, mCaptureId, name.get());
+          this, mCaptureId, name.Data());
       return NS_ERROR_UNEXPECTED;
     }
   }
@@ -582,17 +576,22 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
   mSettingsUpdatedByFrame->mValue = false;
   gfx::IntSize dstSize = CalculateDesiredSize(input);
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__, [settings = mSettings, updated = mSettingsUpdatedByFrame,
-                 dstSize, framerate, resizeMode]() mutable {
+      __func__,
+      [settings = mSettings, updated = mSettingsUpdatedByFrame, dstSize,
+       framerate, resizeModeEnabled = mPrefs->mResizeModeEnabled,
+       distanceMode]() mutable {
+        const bool cropAndScale = distanceMode == kFeasibility;
         if (!updated->mValue) {
           settings->mWidth.Value() = dstSize.width;
           settings->mHeight.Value() = dstSize.height;
         }
         settings->mFrameRate.Value() = framerate;
-        if (resizeMode) {
+        if (resizeModeEnabled) {
+          auto resizeMode = cropAndScale ? VideoResizeModeEnum::Crop_and_scale
+                                         : VideoResizeModeEnum::None;
           settings->mResizeMode.Reset();
           settings->mResizeMode.Construct(
-              NS_ConvertASCIItoUTF16(dom::GetEnumString(*resizeMode)));
+              NS_ConvertASCIItoUTF16(dom::GetEnumString(resizeMode)));
         }
       }));
 
@@ -699,7 +698,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
       return 0;
     }
     scaledBuffer->CropAndScaleFrom(*buffer);
-    buffer = std::move(scaledBuffer);
+    buffer = scaledBuffer;
     rec.Record();
   }
 
@@ -946,34 +945,33 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
     }
   }
 
-  MOZ_ASSERT_IF(aOutBadConstraint, !*aOutBadConstraint);
-  FlattenedConstraints c(aConstraints);
-  const auto checkConstraint = [](const auto& aConstraint) {
-    return aConstraint.mMin <= aConstraint.mMax && aConstraint.mMax > 0;
-  };
-  if (!checkConstraint(c.mWidth)) {
-    if (aOutBadConstraint) {
-      *aOutBadConstraint = "width";
-    }
-    return false;
-  }
-  if (!checkConstraint(c.mHeight)) {
-    if (aOutBadConstraint) {
-      *aOutBadConstraint = "height";
-    }
-    return false;
-  }
-  if (!checkConstraint(c.mFrameRate)) {
-    if (aOutBadConstraint) {
-      *aOutBadConstraint = "frameRate";
-    }
-    return false;
-  }
-
   switch (mCapEngine) {
     case camera::ScreenEngine:
     case camera::WinEngine:
     case camera::BrowserEngine: {
+      MOZ_ASSERT_IF(aOutBadConstraint, !*aOutBadConstraint);
+      FlattenedConstraints c(aConstraints);
+      const auto checkConstraint = [](const auto& aConstraint) {
+        return aConstraint.mMin <= aConstraint.mMax && aConstraint.mMax > 0;
+      };
+      if (!checkConstraint(c.mWidth)) {
+        if (aOutBadConstraint) {
+          *aOutBadConstraint = "width";
+        }
+        return false;
+      }
+      if (!checkConstraint(c.mHeight)) {
+        if (aOutBadConstraint) {
+          *aOutBadConstraint = "height";
+        }
+        return false;
+      }
+      if (!checkConstraint(c.mFrameRate)) {
+        if (aOutBadConstraint) {
+          *aOutBadConstraint = "frameRate";
+        }
+        return false;
+      }
       // DesktopCaptureImpl polls for frames and so must know the framerate to
       // capture at. This is signaled through CamerasParent as the capability's
       // maxFPS. Note that DesktopCaptureImpl does not expose any capabilities.

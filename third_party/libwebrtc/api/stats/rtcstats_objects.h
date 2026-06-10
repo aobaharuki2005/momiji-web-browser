@@ -135,7 +135,6 @@ class RTC_EXPORT RTCIceCandidateStats : public RTCStats {
   // standardizing or removing them.
   std::optional<bool> vpn;
   std::optional<std::string> network_adapter_type;
-  std::optional<std::string> network_slice;
 
  protected:
   RTCIceCandidateStats(std::string id, Timestamp timestamp, bool is_remote);
@@ -201,10 +200,6 @@ class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRtpStreamStats {
   std::optional<int64_t> packets_received_with_ect1;
   // https://w3c.github.io/webrtc-stats/#dom-rtcreceivedrtpstreamstats-packetsreceivedwithce
   std::optional<int64_t> packets_received_with_ce;
-  // https://w3c.github.io/webrtc-stats/#dom-rtcreceivedrtpstreamstats-packetsreportedaslost
-  std::optional<int64_t> packets_reported_as_lost;
-  // https://w3c.github.io/webrtc-stats/#dom-rtcreceivedrtpstreamstats-packetsreportedaslostbutrecovered
-  std::optional<int64_t> packets_reported_as_lost_but_recovered;
 
  protected:
   RTCReceivedRtpStreamStats(std::string id, Timestamp timestamp);
@@ -399,7 +394,6 @@ class RTC_EXPORT RTCRemoteInboundRtpStreamStats final
   std::optional<double> fraction_lost;
   std::optional<double> total_round_trip_time;
   std::optional<int32_t> round_trip_time_measurements;
-  std::optional<int64_t> packets_with_bleached_ect1_marking;
 };
 
 // https://w3c.github.io/webrtc-stats/#remoteoutboundrtpstats-dict*

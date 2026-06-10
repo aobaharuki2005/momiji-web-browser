@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,7 +36,6 @@ using gfx::IntSize;
 
 using layers::FrameMetrics;
 using layers::ScrollableLayerGuid;
-using NonZeroScrollRangeOnly = ScrollContainerFrame::NonZeroScrollRangeOnly;
 
 typedef ScrollableLayerGuid::ViewID ViewID;
 
@@ -823,7 +824,7 @@ bool DisplayPortUtils::MaybeCreateDisplayPort(
   // will get a displayport.
   MOZ_ASSERT(nsLayoutUtils::AsyncPanZoomEnabled(aScrollContainerFrame));
   if (!aBuilder->HaveScrollableDisplayPort() &&
-      aScrollContainerFrame->WantAsyncScroll(NonZeroScrollRangeOnly::Yes)) {
+      aScrollContainerFrame->WantAsyncScroll()) {
     bool haveDisplayPort = HasNonMinimalNonZeroDisplayPort(content);
     // If we don't already have a displayport, calculate and set one.
     if (!haveDisplayPort) {
@@ -837,7 +838,6 @@ bool DisplayPortUtils::MaybeCreateDisplayPort(
           ("Setting DP on first-encountered scrollId=%" PRIu64 "\n", viewId));
 
       CalculateAndSetDisplayPortMargins(aScrollContainerFrame, aRepaintMode);
-      SetZeroMarginDisplayPortOnAsyncScrollableAncestors(aScrollContainerFrame);
 #ifdef DEBUG
       haveDisplayPort = HasNonMinimalDisplayPort(content);
       MOZ_ASSERT(haveDisplayPort,

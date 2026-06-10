@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -97,7 +99,6 @@
 #include <time.h>
 
 #include <algorithm>
-#include <bit>
 
 #ifdef XP_WIN
 #  include <process.h>
@@ -109,8 +110,6 @@
 #endif
 
 #include "mozjemalloc.h"
-#include "BaseArray.h"
-#include "BaseAlloc.h"
 #include "Chunk.h"
 #include "FdPrintf.h"
 #include "Mutex.h"
@@ -140,6 +139,41 @@ extern "C" MOZ_EXPORT int pthread_atfork(void (*)(void), void (*)(void),
     T(const T&);                      \
     void operator=(const T&)
 #endif
+
+// This class provides infallible operations for the small number of heap
+// allocations that PHC does for itself. It would be nice if we could use the
+// InfallibleAllocPolicy from mozalloc, but PHC cannot use mozalloc.
+class InfallibleAllocPolicy {
+ public:
+  static void AbortOnFailure(const void* aP) {
+    if (!aP) {
+      MOZ_CRASH("PHC failed to allocate");
+    }
+  }
+
+  template <class T>
+  static T* new_() {
+    void* p = MozJemalloc::malloc(sizeof(T));
+    AbortOnFailure(p);
+    return new (p) T;
+  }
+
+  template <class T>
+  static T* new_(size_t n) {
+    void* p = MozJemalloc::malloc(sizeof(T) * n);
+    AbortOnFailure(p);
+    return new (p) T[n];
+  }
+
+  // Realloc for arrays, because we don't know the original size we can't
+  // initialize the elements past that size.  The caller must do that.
+  template <class T>
+  static T* realloc(T* aOldArray, size_t n) {
+    void* p = MozJemalloc::realloc(aOldArray, sizeof(T) * n);
+    AbortOnFailure(p);
+    return reinterpret_cast<T*>(p);
+  }
+};
 
 //---------------------------------------------------------------------------
 // Stack traces
@@ -232,6 +266,69 @@ void StackTrace::Fill() {
 static void Log(const char* fmt, ...);
 
 //---------------------------------------------------------------------------
+// Array implementation
+//---------------------------------------------------------------------------
+
+// Unlike mfbt/Array.h this array has a dynamic size, but unlike a vector its
+// size is set explicitly rather than grown as needed.
+template <typename T>
+class PHCArray {
+ private:
+  size_t mCapacity = 0;
+  T* mArray = nullptr;
+
+ public:
+  PHCArray() {}
+
+  ~PHCArray() {
+    for (size_t i = 0; i < mCapacity; i++) {
+      mArray[i].~T();
+    }
+    MozJemalloc::free(mArray);
+  }
+
+  const T& operator[](size_t aIndex) const {
+    MOZ_ASSERT(aIndex < mCapacity);
+    return mArray[aIndex];
+  }
+  T& operator[](size_t aIndex) {
+    MOZ_ASSERT(aIndex < mCapacity);
+    return mArray[aIndex];
+  }
+
+  T* begin() { return mArray; }
+  const T* begin() const { return mArray; }
+  const T* end() const { return &mArray[mCapacity]; }
+
+  void Init(size_t aCapacity) {
+    MOZ_ASSERT(mCapacity == 0);
+    MOZ_ASSERT(mArray == nullptr);
+
+    mArray = InfallibleAllocPolicy::new_<T>(aCapacity);
+    mCapacity = aCapacity;
+  }
+
+  size_t Capacity() const { return mCapacity; }
+
+  void GrowTo(size_t aNewCapacity) {
+    MOZ_ASSERT(aNewCapacity > mCapacity);
+    if (mCapacity == 0) {
+      Init(aNewCapacity);
+      return;
+    }
+    mArray = InfallibleAllocPolicy::realloc<T>(mArray, aNewCapacity);
+    for (size_t i = mCapacity; i < aNewCapacity; i++) {
+      new (&mArray[i]) T();
+    }
+    mCapacity = aNewCapacity;
+  }
+
+  size_t SizeOfExcludingThis() {
+    return MozJemalloc::malloc_usable_size(mArray);
+  }
+};
+
+//---------------------------------------------------------------------------
 // Global state
 //---------------------------------------------------------------------------
 
@@ -239,8 +336,8 @@ static void Log(const char* fmt, ...);
 // allocations performed (by PHC and mozjemalloc combined). `Time` is 64-bit
 // because we could have more than 2**32 allocations in a long-running session.
 // `Delay` is 32-bit because the delays used within PHC are always much smaller
-// than 2**32.  Delay must be unsigned so that std::has_single_bit() can work on
-// some Delay values.
+// than 2**32.  Delay must be unsigned so that IsPowerOfTwo() can work on some
+// Delay values.
 using Time = uint64_t;   // A moment in time.
 using Delay = uint32_t;  // A time duration.
 static constexpr Delay DELAY_MAX = UINT32_MAX / 2;
@@ -249,7 +346,7 @@ static constexpr Delay DELAY_MAX = UINT32_MAX / 2;
 // use too much memory. So we hardwire this size for all platforms but macOS
 // on ARM processors. For the latter we make an exception because the minimum
 // page size supported is 16KiB so there's no way to go below that.
-static const size_t kPhcPageSize =
+static const size_t kPageSize =
 #if defined(XP_DARWIN) && defined(__aarch64__)
     16384
 #else
@@ -263,8 +360,8 @@ static const size_t kPhcPageSize =
 // attached to a crash report.
 static const size_t kPhcAlign = 1024 * 1024;
 
-static_assert(std::has_single_bit(kPhcAlign));
-static_assert((kPhcAlign % kPhcPageSize) == 0);
+static_assert(IsPowerOfTwo(kPhcAlign));
+static_assert((kPhcAlign % kPageSize) == 0);
 
 // PHC will reserve some address space this large, then depending on runtime
 // configuration will use a smaller fraction of it.  Making
@@ -306,7 +403,7 @@ static const Time kMaxTime = ~(Time(0));
 // results in an average value of aAvgDelay + 0.5, which is close enough to
 // aAvgDelay. aAvgDelay must be a power-of-two for speed.
 constexpr Delay Rnd64ToDelay(Delay aAvgDelay, uint64_t aRnd) {
-  MOZ_ASSERT(std::has_single_bit(aAvgDelay), "must be a power of two");
+  MOZ_ASSERT(IsPowerOfTwo(aAvgDelay), "must be a power of two");
 
   return (aRnd & (uint64_t(aAvgDelay) * 2 - 1)) + 1;
 }
@@ -377,14 +474,14 @@ class AllocPageInfo {
   size_t UsableSize() const {
     return mState == AllocPageState::NeverAllocated
                ? 0
-               : kPhcPageSize - (reinterpret_cast<uintptr_t>(mBaseAddr) &
-                                 (kPhcPageSize - 1));
+               : kPageSize -
+                     (reinterpret_cast<uintptr_t>(mBaseAddr) & (kPageSize - 1));
   }
 
   // The internal fragmentation for this allocation.
   size_t FragmentationBytes() const {
-    MOZ_ASSERT(kPhcPageSize >= UsableSize());
-    return mState == AllocPageState::InUse ? kPhcPageSize - UsableSize() : 0;
+    MOZ_ASSERT(kPageSize >= UsableSize());
+    return mState == AllocPageState::InUse ? kPageSize - UsableSize() : 0;
   }
 
   // The allocation stack.
@@ -536,20 +633,11 @@ class PHCRegion {
     return true;
   }
 
-  void ReleaseVirtualAddresses() {
-    MOZ_ASSERT(!!mPagesStart && !!mPagesLimit);
-
-    pages_unmap(mPagesStart, reinterpret_cast<uintptr_t>(mPagesLimit) -
-                                 reinterpret_cast<uintptr_t>(mPagesStart));
-    mPagesStart = nullptr;
-    mPagesLimit = nullptr;
-  }
-
   constexpr PHCRegion() {}
 
   bool IsInFirstGuardPage(const void* aPtr) {
     MOZ_ASSERT(mPagesStart != nullptr && mPagesLimit != nullptr);
-    return mPagesStart <= aPtr && aPtr < mPagesStart + kPhcPageSize;
+    return mPagesStart <= aPtr && aPtr < mPagesStart + kPageSize;
   }
 
   // Get the address of the allocation page referred to via an index. Used when
@@ -558,7 +646,7 @@ class PHCRegion {
     MOZ_ASSERT(mPagesStart != nullptr && mPagesLimit != nullptr);
     // Multiply by two and add one to account for allocation pages *and* guard
     // pages.
-    return mPagesStart + (2 * aIndex + 1) * kPhcPageSize;
+    return mPagesStart + (2 * aIndex + 1) * kPageSize;
   }
 
   MOZ_ALWAYS_INLINE bool WithinBounds(const void* aPtr) const {
@@ -569,7 +657,7 @@ class PHCRegion {
   const uint8_t* PagesStart() const { return mPagesStart; }
 
   size_t ReservedBytes() const {
-    return mPagesStart ? kPhcVirtualReservation - kPhcPageSize : 0;
+    return mPagesStart ? kPhcVirtualReservation - kPageSize : 0;
   }
 };
 
@@ -578,7 +666,7 @@ class PtrKind;
 // Shared, mutable global state.  Many fields are protected by sMutex; functions
 // that access those feilds should take a PHCLock as proof that mMutex is held.
 // Other fields are TLS or Atomic and don't need the lock.
-class PHC : public BaseAllocClass {
+class PHC {
  public:
   // The RNG seeds here are poor, but non-reentrant since this can be called
   // from malloc().  SetState() will reset the RNG later.
@@ -617,8 +705,8 @@ class PHC : public BaseAllocClass {
 
   void Resize(size_t aSizeBytes) {
     // -1 since the last page in the virtual address space must be a guard page.
-    size_t max_pages = (kPhcVirtualReservation / kPhcPageSize / 2) - 1;
-    size_t size_pages = aSizeBytes / kPhcPageSize;
+    size_t max_pages = (kPhcVirtualReservation / kPageSize / 2) - 1;
+    size_t size_pages = aSizeBytes / kPageSize;
     size_pages = std::min(size_pages, max_pages);
 
     MutexAutoLock lock(mMutex);
@@ -626,10 +714,9 @@ class PHC : public BaseAllocClass {
     size_t old_size_pages = NumAllocPages();
     if (size_pages > old_size_pages) {
       Log("Growing PHC storage from %zu to %zu\n", old_size_pages, size_pages);
-      if (mAllocPages.GrowTo(size_pages)) {
-        for (size_t i = old_size_pages; i < size_pages; i++) {
-          AppendPageToFreeList(i);
-        }
+      mAllocPages.GrowTo(size_pages);
+      for (size_t i = old_size_pages; i < size_pages; i++) {
+        AppendPageToFreeList(i);
       }
     } else if (size_pages < old_size_pages) {
       Log("Shrink requested and ignored.");
@@ -1250,7 +1337,7 @@ class PHC : public BaseAllocClass {
   static PHC_THREAD_LOCAL(Delay) tlsLastDelay;
 
   // Using mfbt/Array.h makes MOZ_GUARDED_BY more reliable than a C array.
-  BaseArray<AllocPageInfo> mAllocPages MOZ_GUARDED_BY(mMutex);
+  PHCArray<AllocPageInfo> mAllocPages MOZ_GUARDED_BY(mMutex);
 
  public:
   // There are two kinds of page.
@@ -1315,7 +1402,7 @@ class PtrKind {
   // jemalloc_ptr_info().
   PtrKind(const void* aPtr, const uint8_t* aPagesStart) {
     uintptr_t offset = static_cast<const uint8_t*>(aPtr) - aPagesStart;
-    uintptr_t allPageIndex = offset / kPhcPageSize;
+    uintptr_t allPageIndex = offset / kPageSize;
 
     if (allPageIndex & 1) {
       // Odd-indexed pages are allocation pages.
@@ -1397,7 +1484,7 @@ void phc_init() {
   // We must only initialise once.
   MOZ_ASSERT(!PHC::sPHC);
 
-  if (GetKernelPageSize() != kPhcPageSize) {
+  if (GetKernelPageSize() != kPageSize) {
     return;
   }
 
@@ -1406,11 +1493,7 @@ void phc_init() {
   }
 
   // sPHC is never freed. It lives for the life of the process.
-  PHC::sPHC = new (fallible) PHC();
-  if (!PHC::sPHC) {
-    PHC::sRegion.ReleaseVirtualAddresses();
-    return;
-  }
+  PHC::sPHC = InfallibleAllocPolicy::new_<PHC>();
 
 #ifndef XP_WIN
   // Avoid deadlocks when forking by acquiring our state lock prior to forking
@@ -1432,7 +1515,7 @@ static MOZ_ALWAYS_INLINE bool ShouldPageAllocHot(size_t aReqSize) {
     return false;
   }
 
-  if (MOZ_UNLIKELY(aReqSize > kPhcPageSize)) {
+  if (MOZ_UNLIKELY(aReqSize > kPageSize)) {
     return false;
   }
 
@@ -1460,7 +1543,7 @@ void PHC::LogNoAlloc(size_t aReqSize, size_t aAlignment, Delay newAllocDelay)
 
 void* PHC::MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
                           size_t aAlignment, bool aZero) {
-  MOZ_ASSERT(std::has_single_bit(aAlignment));
+  MOZ_ASSERT(IsPowerOfTwo(aAlignment));
   if (!ShouldMakeNewAllocations()) {
     // Reset the allocation delay so that we take the fast path most of the
     // time.  Rather than take the lock and use the RNG which are unnecessary
@@ -1520,9 +1603,9 @@ void* PHC::MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
   MOZ_ASSERT(pagePtr);
   bool ok =
 #ifdef XP_WIN
-      !!VirtualAlloc(pagePtr, kPhcPageSize, MEM_COMMIT, PAGE_READWRITE);
+      !!VirtualAlloc(pagePtr, kPageSize, MEM_COMMIT, PAGE_READWRITE);
 #else
-      mprotect(pagePtr, kPhcPageSize, PROT_READ | PROT_WRITE) == 0;
+      mprotect(pagePtr, kPageSize, PROT_READ | PROT_WRITE) == 0;
 #endif
 
   if (!ok) {
@@ -1537,7 +1620,7 @@ void* PHC::MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
 
   // Put the allocation as close to the end of the page as possible,
   // allowing for alignment requirements.
-  uint8_t* ptr = pagePtr + kPhcPageSize - usableSize;
+  uint8_t* ptr = pagePtr + kPageSize - usableSize;
   if (aAlignment != 1) {
     ptr = reinterpret_cast<uint8_t*>(
         (reinterpret_cast<uintptr_t>(ptr) & ~(aAlignment - 1)));
@@ -1578,11 +1661,11 @@ void PHC::FreePage(uintptr_t aIndex, const Maybe<arena_id_t>& aArenaId,
   void* pagePtr = sRegion.AllocPagePtr(aIndex);
 
 #ifdef XP_WIN
-  if (!VirtualFree(pagePtr, kPhcPageSize, MEM_DECOMMIT)) {
+  if (!VirtualFree(pagePtr, kPageSize, MEM_DECOMMIT)) {
     Crash("VirtualFree failed");
   }
 #else
-  if (mmap(pagePtr, kPhcPageSize, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON,
+  if (mmap(pagePtr, kPageSize, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON,
            -1, 0) == MAP_FAILED) {
     Crash("mmap failed");
   }
@@ -1729,7 +1812,7 @@ Maybe<void*> PHC::PageRealloc(const Maybe<arena_id_t>& aArenaId, void* aOldPtr,
   // Check for realloc() of a freed block.
   EnsureValidAndInUse(aOldPtr, index);
 
-  if (aNewSize <= kPhcPageSize && ShouldMakeNewAllocations()) {
+  if (aNewSize <= kPageSize && ShouldMakeNewAllocations()) {
     // A page-to-page transition. Just keep using the page allocation. We do
     // this even if the thread is disabled, because it doesn't create a new
     // page allocation. Note that ResizePageInUse() checks aArenaId.
@@ -1741,7 +1824,7 @@ Maybe<void*> PHC::PageRealloc(const Maybe<arena_id_t>& aArenaId, void* aOldPtr,
     size_t oldUsableSize = PageUsableSize(index);
     size_t newUsableSize = MozJemalloc::malloc_good_size(aNewSize);
     uint8_t* pagePtr = sRegion.AllocPagePtr(index);
-    uint8_t* newPtr = pagePtr + kPhcPageSize - newUsableSize;
+    uint8_t* newPtr = pagePtr + kPageSize - newUsableSize;
     memmove(newPtr, aOldPtr, std::min(oldUsableSize, aNewSize));
     ResizePageInUse(index, aArenaId, newPtr, stack);
     Log("PageRealloc-Reuse(%p, %zu) -> %p\n", aOldPtr, aNewSize, newPtr);
@@ -1858,12 +1941,12 @@ inline void MozJemallocPHC::free(void* aPtr) { PageFree(Nothing(), aPtr); }
 MOZ_ALWAYS_INLINE static void* PageMemalign(const Maybe<arena_id_t>& aArenaId,
                                             size_t aAlignment,
                                             size_t aReqSize) {
-  MOZ_RELEASE_ASSERT(std::has_single_bit(aAlignment));
+  MOZ_RELEASE_ASSERT(IsPowerOfTwo(aAlignment));
 
   // PHC can't satisfy an alignment greater than a page size, so fall back to
   // mozjemalloc in that case.
   void* ptr = nullptr;
-  if (ShouldPageAllocHot(aReqSize) && aAlignment <= kPhcPageSize) {
+  if (ShouldPageAllocHot(aReqSize) && aAlignment <= kPageSize) {
     // The test on aArenaId here helps the compiler optimise away
     // the construction of Nothing() in the caller.
     ptr = PHC::sPHC->MaybePageAlloc(aArenaId.isSome() ? aArenaId : Nothing(),
@@ -1941,7 +2024,11 @@ inline void MozJemallocPHC::jemalloc_stats_internal(
   // aStats.page_cache and aStats.bin_unused are left unchanged because PHC
   // doesn't have anything corresponding to those.
 
-  // The metadata is `bookkeeping`.
+  // The metadata is stored in normal heap allocations, so they're measured by
+  // mozjemalloc as `allocated`. Move them into `bookkeeping`.
+  // They're also reported under explicit/heap-overhead/phc/fragmentation in
+  // about:memory.
+  aStats->allocated -= mem_info.mMetadataBytes;
   aStats->bookkeeping += mem_info.mMetadataBytes;
 }
 
@@ -2022,7 +2109,7 @@ bool PHC::IsPHCAllocation(const void* aPtr, mozilla::phc::AddrInfo* aOut) {
 
   bool isGuardPage = false;
   if (pk.IsGuardPage()) {
-    if ((uintptr_t(aPtr) % kPhcPageSize) < (kPhcPageSize / 2)) {
+    if ((uintptr_t(aPtr) % kPageSize) < (kPageSize / 2)) {
       // The address is in the lower half of a guard page, so it's probably an
       // overflow. But first check that it is not on the very first guard
       // page, in which case it cannot be an overflow, and we ignore it.
@@ -2031,12 +2118,12 @@ bool PHC::IsPHCAllocation(const void* aPtr, mozilla::phc::AddrInfo* aOut) {
       }
 
       // Get the allocation page preceding this guard page.
-      pk = GetPtrKind(static_cast<const uint8_t*>(aPtr) - kPhcPageSize);
+      pk = GetPtrKind(static_cast<const uint8_t*>(aPtr) - kPageSize);
 
     } else {
       // The address is in the upper half of a guard page, so it's probably an
       // underflow. Get the allocation page following this guard page.
-      pk = GetPtrKind(static_cast<const uint8_t*>(aPtr) + kPhcPageSize);
+      pk = GetPtrKind(static_cast<const uint8_t*>(aPtr) + kPageSize);
     }
 
     // Make a note of the fact that we hit a guard page.

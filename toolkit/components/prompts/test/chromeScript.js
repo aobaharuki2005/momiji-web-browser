@@ -1,3 +1,5 @@
+/* eslint-env mozilla/chrome-script */
+
 const { clearInterval, setInterval, setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );

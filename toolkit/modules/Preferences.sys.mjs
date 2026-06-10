@@ -246,7 +246,7 @@ Preferences.lock = function (prefName) {
  * Unlock a pref so it can be changed.
  *
  * @param   prefName  {String|Array}
- *          the pref to unlock, or an array of prefs to unlock
+ *          the pref to lock, or an array of prefs to lock
  */
 Preferences.unlock = function (prefName) {
   if (Array.isArray(prefName)) {

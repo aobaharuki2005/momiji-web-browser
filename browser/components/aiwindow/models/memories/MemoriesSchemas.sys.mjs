@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import {
-  CATEGORIES_LIST,
-  INTENTS_LIST,
-  MAX_MEMORY_SUMMARY_LENGTH,
-} from "./MemoriesConstants.sys.mjs";
+import { CATEGORIES_LIST, INTENTS_LIST } from "./MemoriesConstants.sys.mjs";
 
 /**
  * JSON Schema for initial memories generation
@@ -22,9 +18,8 @@ export const INITIAL_MEMORIES_SCHEMA = {
       "intent",
       "memory_summary",
       "score",
-      "reasoning",
+      "why",
       "evidence",
-      "entities",
     ],
     properties: {
       category: {
@@ -35,13 +30,10 @@ export const INITIAL_MEMORIES_SCHEMA = {
         type: ["string", "null"],
         enum: [...INTENTS_LIST, null],
       },
-      memory_summary: {
-        type: ["string", "null"],
-        maxLength: MAX_MEMORY_SUMMARY_LENGTH,
-      },
+      memory_summary: { type: ["string", "null"] },
       score: { type: "integer" },
 
-      reasoning: { type: "string", minLength: 12, maxLength: 200 },
+      why: { type: "string", minLength: 12, maxLength: 200 },
 
       evidence: {
         type: "array",
@@ -64,13 +56,6 @@ export const INITIAL_MEMORIES_SCHEMA = {
             },
           },
         },
-      },
-
-      entities: {
-        type: "array",
-        minItems: 0,
-        maxItems: 3,
-        items: { type: "string", minLength: 1 },
       },
     },
   },
@@ -109,17 +94,17 @@ export const MEMORIES_DEDUPLICATION_SCHEMA = {
 };
 
 /**
- * JSON schema for the quality + sensitivity filter
+ * JSON schema for filtering sensitive memories
  */
-export const MEMORIES_QUALITY_AND_SENSITIVITY_FILTER_SCHEMA = {
+export const MEMORIES_NON_SENSITIVE_SCHEMA = {
   type: "array",
   minItems: 1,
   items: {
     type: "object",
     additionalProperties: false,
-    required: ["kept_memories"],
+    required: ["non_sensitive_memories"],
     properties: {
-      kept_memories: {
+      non_sensitive_memories: {
         type: "array",
         minItems: 1,
         items: { type: "string" },

@@ -111,9 +111,10 @@ namespace {
 }
 
 std::string ToString(const EncodedImage& encoded_image) {
-  StringBuilder ss;
+  char buffer[1024];
+  SimpleStringBuilder ss(buffer);
 
-  ss << VideoFrameTypeToString(encoded_image.frame_type())
+  ss << VideoFrameTypeToString(encoded_image._frameType)
      << ", size=" << encoded_image.size() << ", qp=" << encoded_image.qp_
      << ", timestamp=" << encoded_image.RtpTimestamp();
 
@@ -129,12 +130,13 @@ std::string ToString(const EncodedImage& encoded_image) {
     ss << ", TemporalIndex=" << *encoded_image.TemporalIndex();
   }
 
-  return ss.Release();
+  return ss.str();
 }
 
 [[maybe_unused]] std::string ToString(
     const CodecSpecificInfo& codec_specific_info) {
-  StringBuilder ss;
+  char buffer[1024];
+  SimpleStringBuilder ss(buffer);
 
   ss << CodecTypeToPayloadString(codec_specific_info.codecType);
 
@@ -158,7 +160,7 @@ std::string ToString(const EncodedImage& encoded_image) {
        << ", num_chains=" << template_structure->num_chains;
   }
 
-  return ss.Release();
+  return ss.str();
 }
 
 // This follows
@@ -340,10 +342,6 @@ class BitstreamProcessor final : public EncodedImageCallback,
     return Result(Result::Error::OK);
   }
 
-  void OnFrameDropped(uint32_t /*rtp_timestamp*/,
-                      int /*spatial_id*/,
-                      bool /*is_end_of_temporal_unit*/) override {}
-
   VideoCodec video_codec_setting_;
   int32_t frames_ = 0;
 
@@ -392,8 +390,7 @@ class TestVideoEncoderFactoryWrapper final {
     // VP9 profile2 is not implemented at this moment.
     VideoEncoderFactory::CodecSupport support =
         builtin_video_encoder_factory_->QueryCodecSupport(
-            SdpVideoFormat(video_codec_string), scalability_mode_string,
-            /*resolution=*/std::nullopt);
+            SdpVideoFormat(video_codec_string), scalability_mode_string);
     return support.is_supported;
   }
 

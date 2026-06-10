@@ -12,10 +12,10 @@ import mozilla.components.browser.state.state.SearchState
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.test.assertNotNull
 
 class SearchActionTest {
     @Test
@@ -36,7 +36,6 @@ class SearchActionTest {
         var state = BrowserState()
         val searchEngineList = listOf(engine1, engine2)
         assertTrue(state.search.regionSearchEngines.isEmpty())
-        assertTrue(state.search.isNewSearchConfigurationAvailable)
 
         state = BrowserStateReducer.reduce(
             state,
@@ -46,14 +45,11 @@ class SearchActionTest {
                 customSearchEngines = emptyList(),
                 userSelectedSearchEngineId = null,
                 userSelectedSearchEngineName = null,
-                userSelectedPrivateSearchEngineId = null,
-                userSelectedPrivateSearchEngineName = null,
                 hiddenSearchEngines = emptyList(),
                 disabledSearchEngineIds = emptyList(),
                 additionalSearchEngines = emptyList(),
                 additionalAvailableSearchEngines = emptyList(),
                 regionSearchEnginesOrder = listOf("id1", "id2"),
-                searchEnginesConfigurationId = 33,
             ),
         )
 
@@ -62,8 +58,6 @@ class SearchActionTest {
         assertEquals(2, searchEngines.size)
         assertEquals(engine1, searchEngines[0])
         assertEquals(engine2, searchEngines[1])
-        assertEquals(33, state.search.searchEnvironmentId)
-        assertFalse(state.search.isNewSearchConfigurationAvailable)
     }
 
     @Test
@@ -114,7 +108,6 @@ class SearchActionTest {
 
         val searchEngineList = listOf(engine1, engine2)
         assertTrue(state.search.customSearchEngines.isEmpty())
-        assertTrue(state.search.isNewSearchConfigurationAvailable)
 
         state = BrowserStateReducer.reduce(
             state,
@@ -124,14 +117,11 @@ class SearchActionTest {
                 regionDefaultSearchEngineId = "default",
                 userSelectedSearchEngineId = null,
                 userSelectedSearchEngineName = null,
-                userSelectedPrivateSearchEngineId = null,
-                userSelectedPrivateSearchEngineName = null,
                 hiddenSearchEngines = emptyList(),
                 disabledSearchEngineIds = emptyList(),
                 additionalSearchEngines = emptyList(),
                 additionalAvailableSearchEngines = emptyList(),
                 regionSearchEnginesOrder = emptyList(),
-                searchEnginesConfigurationId = 21,
             ),
         )
 
@@ -140,8 +130,6 @@ class SearchActionTest {
         assertEquals(2, searchEngines.size)
         assertEquals(engine1, searchEngines[0])
         assertEquals(engine2, searchEngines[1])
-        assertEquals(21, state.search.searchEnvironmentId)
-        assertFalse(state.search.isNewSearchConfigurationAvailable)
     }
 
     @Test
@@ -285,7 +273,7 @@ class SearchActionTest {
         )
 
         assertNotNull(state.search.region)
-        assertEquals("DE", state.search.region.home)
+        assertEquals("DE", state.search.region!!.home)
         assertEquals("FR", state.search.region.current)
     }
 
@@ -550,115 +538,5 @@ class SearchActionTest {
             BrowserStateReducer.reduce(initialState, SearchAction.RefreshSearchEnginesAction)
 
         assertEquals(initialState.search, state.search)
-    }
-
-    @Test
-    fun `GIVEN the search state of the browser WHEN selecting a private search engine THEN update the state`() {
-        val searchEngine = SearchEngine(
-            id = "id1",
-            name = "search1",
-            icon = mock(),
-            type = SearchEngine.Type.BUNDLED,
-        )
-
-        var state = BrowserState(
-            search = SearchState(
-                regionSearchEngines = listOf(searchEngine),
-            ),
-        )
-
-        assertNull(state.search.userSelectedPrivateSearchEngineId)
-        assertNull(state.search.userSelectedPrivateSearchEngineName)
-
-        state = BrowserStateReducer.reduce(
-            state,
-            SearchAction.SelectPrivateSearchEngineAction(searchEngine.id, searchEngine.name),
-        )
-
-        assertEquals(searchEngine.id, state.search.userSelectedPrivateSearchEngineId)
-        assertEquals(searchEngine.name, state.search.userSelectedPrivateSearchEngineName)
-    }
-
-    @Test
-    fun `GIVEN a selected private default search engine WHEN clearing the private search engine THEN clear the private default search engine`() {
-        var state = BrowserState(
-            search = SearchState(
-                userSelectedPrivateSearchEngineId = "id1",
-                userSelectedPrivateSearchEngineName = "search1",
-            ),
-        )
-
-        assertEquals("id1", state.search.userSelectedPrivateSearchEngineId)
-        assertEquals("search1", state.search.userSelectedPrivateSearchEngineName)
-
-        state = BrowserStateReducer.reduce(
-            state,
-            SearchAction.ClearPrivateSearchEngineAction,
-        )
-
-        assertNull(state.search.userSelectedPrivateSearchEngineId)
-        assertNull(state.search.userSelectedPrivateSearchEngineName)
-    }
-
-    @Test
-    fun `GIVEN no selected private search engine WHEN setting search engines with private search engine fields THEN update the state`() {
-        var state = BrowserState()
-
-        assertNull(state.search.userSelectedPrivateSearchEngineId)
-        assertNull(state.search.userSelectedPrivateSearchEngineName)
-
-        state = BrowserStateReducer.reduce(
-            state,
-            SearchAction.SetSearchEnginesAction(
-                regionSearchEngines = emptyList(),
-                regionDefaultSearchEngineId = "default",
-                customSearchEngines = emptyList(),
-                userSelectedSearchEngineId = null,
-                userSelectedSearchEngineName = null,
-                userSelectedPrivateSearchEngineId = "private-id",
-                userSelectedPrivateSearchEngineName = "Private Engine",
-                hiddenSearchEngines = emptyList(),
-                disabledSearchEngineIds = emptyList(),
-                additionalSearchEngines = emptyList(),
-                additionalAvailableSearchEngines = emptyList(),
-                regionSearchEnginesOrder = emptyList(),
-                searchEnginesConfigurationId = null,
-            ),
-        )
-
-        assertEquals("private-id", state.search.userSelectedPrivateSearchEngineId)
-        assertEquals("Private Engine", state.search.userSelectedPrivateSearchEngineName)
-    }
-
-    @Test
-    fun `GIVEN a new search configuration isn't available WHEN this changes THEN update this in the state`() {
-        val initialState = BrowserState(
-            search = SearchState(
-                isNewSearchConfigurationAvailable = false,
-            ),
-        )
-
-        val updatedState = BrowserStateReducer.reduce(
-            initialState,
-            SearchAction.SearchConfigurationAvailabilityChanged(true),
-        )
-
-        assertTrue(updatedState.search.isNewSearchConfigurationAvailable)
-    }
-
-    @Test
-    fun `GIVEN a new search configuration is available WHEN this changes THEN update this in the state`() {
-        val initialState = BrowserState(
-            search = SearchState(
-                isNewSearchConfigurationAvailable = true,
-            ),
-        )
-
-        val updatedState = BrowserStateReducer.reduce(
-            initialState,
-            SearchAction.SearchConfigurationAvailabilityChanged(false),
-        )
-
-        assertFalse(updatedState.search.isNewSearchConfigurationAvailable)
     }
 }

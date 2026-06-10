@@ -11,6 +11,7 @@ import path from 'node:path';
 import {
   computeSystemExecutablePath,
   Browser as SupportedBrowsers,
+  ChromeReleaseChannel as BrowsersChromeReleaseChannel,
 } from '@puppeteer/browsers';
 
 import type {Browser} from '../api/Browser.js';
@@ -18,11 +19,7 @@ import {debugError} from '../common/util.js';
 import {assert} from '../util/assert.js';
 
 import {BrowserLauncher, type ResolvedLaunchArgs} from './BrowserLauncher.js';
-import {
-  convertPuppeteerChannelToBrowsersChannel,
-  type ChromeReleaseChannel,
-  type LaunchOptions,
-} from './LaunchOptions.js';
+import type {ChromeReleaseChannel, LaunchOptions} from './LaunchOptions.js';
 import type {PuppeteerNode} from './PuppeteerNode.js';
 import {rm} from './util/fs.js';
 
@@ -177,7 +174,6 @@ export class ChromeLauncher extends BrowserLauncher {
       'AcceptCHFrame',
       'MediaRouter',
       'OptimizationHints',
-      'RenderDocument', // https://crbug.com/444150315
       ...(turnOnExperimentalFeaturesForTesting
         ? []
         : [
@@ -285,6 +281,21 @@ export class ChromeLauncher extends BrowserLauncher {
     } else {
       return this.resolveExecutablePath(undefined, validatePath);
     }
+  }
+}
+
+function convertPuppeteerChannelToBrowsersChannel(
+  channel: ChromeReleaseChannel,
+): BrowsersChromeReleaseChannel {
+  switch (channel) {
+    case 'chrome':
+      return BrowsersChromeReleaseChannel.STABLE;
+    case 'chrome-dev':
+      return BrowsersChromeReleaseChannel.DEV;
+    case 'chrome-beta':
+      return BrowsersChromeReleaseChannel.BETA;
+    case 'chrome-canary':
+      return BrowsersChromeReleaseChannel.CANARY;
   }
 }
 

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -150,19 +152,19 @@ void doMemoryReport(const uint8_t aRecvSig) {
   // Dump our memory reports (but run this on the main thread!).
   bool minimize = aRecvSig == sDumpAboutMemoryAfterMMUSignum;
   LOG("SignalWatcher(sig %d) dispatching memory report runnable.", aRecvSig);
-  RefPtr runnable = MakeRefPtr<DumpMemoryInfoToTempDirRunnable>(
-      /* identifier = */ u""_ns,
-      /* anonymize = */ false, minimize);
+  RefPtr<DumpMemoryInfoToTempDirRunnable> runnable =
+      new DumpMemoryInfoToTempDirRunnable(/* identifier = */ u""_ns,
+                                          /* anonymize = */ false, minimize);
   NS_DispatchToMainThread(runnable);
 }
 
 void doGCCCDump(const uint8_t aRecvSig) {
   LOG("SignalWatcher(sig %d) dispatching GC/CC log runnable.", aRecvSig);
   // Dump GC and CC logs (from the main thread).
-  RefPtr runnable =
-      MakeRefPtr<GCAndCCLogDumpRunnable>(/* identifier = */ u""_ns,
-                                         /* allTraces = */ true,
-                                         /* dumpChildProcesses = */ true);
+  RefPtr<GCAndCCLogDumpRunnable> runnable =
+      new GCAndCCLogDumpRunnable(/* identifier = */ u""_ns,
+                                 /* allTraces = */ true,
+                                 /* dumpChildProcesses = */ true);
   NS_DispatchToMainThread(runnable);
 }
 
@@ -176,9 +178,9 @@ void doMemoryReport(const nsCString& aInputStr) {
   bool minimize = aInputStr.EqualsLiteral("minimize memory report");
   LOG("FifoWatcher(command:%s) dispatching memory report runnable.",
       aInputStr.get());
-  RefPtr runnable = MakeRefPtr<DumpMemoryInfoToTempDirRunnable>(
-      /* identifier = */ u""_ns,
-      /* anonymize = */ false, minimize);
+  RefPtr<DumpMemoryInfoToTempDirRunnable> runnable =
+      new DumpMemoryInfoToTempDirRunnable(/* identifier = */ u""_ns,
+                                          /* anonymize = */ false, minimize);
   NS_DispatchToMainThread(runnable);
 }
 
@@ -186,7 +188,7 @@ void doGCCCDump(const nsCString& aInputStr) {
   bool doAllTracesGCCCDump = aInputStr.EqualsLiteral("gc log");
   LOG("FifoWatcher(command:%s) dispatching GC/CC log runnable.",
       aInputStr.get());
-  RefPtr runnable = MakeRefPtr<GCAndCCLogDumpRunnable>(
+  RefPtr<GCAndCCLogDumpRunnable> runnable = new GCAndCCLogDumpRunnable(
       /* identifier = */ u""_ns, doAllTracesGCCCDump,
       /* dumpChildProcesses = */ true);
   NS_DispatchToMainThread(runnable);
@@ -329,7 +331,7 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToFile(
   if (aDumpAllTraces) {
     nsCOMPtr<nsICycleCollectorListener> allTracesLogger;
     logger->AllTraces(getter_AddRefs(allTracesLogger));
-    logger = std::move(allTracesLogger);
+    logger = allTracesLogger;
   }
 
   nsCOMPtr<nsICycleCollectorLogSink> logSink;
@@ -355,7 +357,7 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToSink(bool aDumpAllTraces,
   if (aDumpAllTraces) {
     nsCOMPtr<nsICycleCollectorListener> allTracesLogger;
     logger->AllTraces(getter_AddRefs(allTracesLogger));
-    logger = std::move(allTracesLogger);
+    logger = allTracesLogger;
   }
 
   logger->SetLogSink(aSink);
@@ -564,7 +566,7 @@ static nsresult DumpMemoryInfoToFile(nsIFile* aReportsFile,
                                      nsISupports* aFinishDumpingData,
                                      bool aAnonymize, bool aMinimizeMemoryUsage,
                                      nsAString& aDMDIdentifier) {
-  RefPtr gzWriter = MakeRefPtr<nsGZFileWriter>();
+  RefPtr<nsGZFileWriter> gzWriter = new nsGZFileWriter();
   nsresult rv = gzWriter->Init(aReportsFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -668,8 +670,8 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
     return rv;
   }
 
-  RefPtr finishDumping =
-      MakeRefPtr<TempDirFinishCallback>(reportsTmpFile, reportsFinalFilename);
+  RefPtr<TempDirFinishCallback> finishDumping =
+      new TempDirFinishCallback(reportsTmpFile, reportsFinalFilename);
 
   return DumpMemoryInfoToFile(reportsTmpFile, finishDumping, nullptr,
                               aAnonymize, aMinimizeMemoryUsage, identifier);
@@ -712,7 +714,7 @@ nsresult nsMemoryInfoDumper::OpenDMDFile(const nsAString& aIdentifier, int aPid,
 }
 
 nsresult nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile) {
-  RefPtr gzWriter = MakeRefPtr<nsGZFileWriter>();
+  RefPtr<nsGZFileWriter> gzWriter = new nsGZFileWriter();
   nsresult rv = gzWriter->InitANSIFileDesc(aFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

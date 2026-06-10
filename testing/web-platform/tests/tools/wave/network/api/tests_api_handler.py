@@ -111,8 +111,7 @@ class TestsApiHandler(ApiHandler):
             test_timeout = self._tests_manager.get_test_timeout(
                 test=test, session=session)
 
-            test = self._sessions_manager.get_test_path_with_query(
-                test, session)
+            test = self._sessions_manager.get_test_path_with_query(test, session)
             url = self._generate_test_url(
                 test=test,
                 token=token,
@@ -266,7 +265,13 @@ class TestsApiHandler(ApiHandler):
             test = split[0]
             test_query = split[1]
 
-        query = f"token={token}&timeout={test_timeout}&https_port={self._wpt_ssl_port}&web_root={self._web_root}&{test_query}"
+        query = "token={}&timeout={}&https_port={}&web_root={}&{}".format(
+                token,
+                test_timeout,
+                self._wpt_ssl_port,
+                self._web_root,
+                test_query
+        )
 
         return self._generate_url(
             protocol=protocol,

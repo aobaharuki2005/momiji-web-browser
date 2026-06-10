@@ -27,39 +27,25 @@ assert_unlinkable(
   () => instantiate(`(module
     (import "test" "unknown" (func))
     (memory 0xFFFF_FFFF (pagesize 1)))`),
-  `incompatible import type`,
+  `unknown import`,
 );
 
 // ./test/core/custom-page-sizes/memory_max.wast:25
 assert_unlinkable(
   () => instantiate(`(module
-    (import "test" "unknown" (memory 0xFFFF_FFFF (pagesize 1))))`),
-  `incompatible import type`,
-);
-
-// ./test/core/custom-page-sizes/memory_max.wast:31
-assert_unlinkable(
-  () => instantiate(`(module
     (import "test" "unknown" (func))
     (memory 65536 (pagesize 65536)))`),
-  `incompatible import type`,
+  `unknown import`,
 );
 
-// ./test/core/custom-page-sizes/memory_max.wast:38
-assert_unlinkable(
-  () => instantiate(`(module
-    (import "test" "unknown" (memory 65536 (pagesize 65536))))`),
-  `incompatible import type`,
-);
-
-// ./test/core/custom-page-sizes/memory_max.wast:46
+// ./test/core/custom-page-sizes/memory_max.wast:34
 assert_invalid(
   () => instantiate(`(module
     (memory 0x1_0000_0000 (pagesize 1)))`),
   `memory size must be at most`,
 );
 
-// ./test/core/custom-page-sizes/memory_max.wast:52
+// ./test/core/custom-page-sizes/memory_max.wast:40
 assert_invalid(
   () => instantiate(`(module
     (memory 65537 (pagesize 65536)))`),

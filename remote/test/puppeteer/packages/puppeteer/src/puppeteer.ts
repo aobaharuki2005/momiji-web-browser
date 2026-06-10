@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export * from 'puppeteer-core';
+export type {Protocol} from 'puppeteer-core';
 
-import {PuppeteerNode} from 'puppeteer-core';
+export * from 'puppeteer-core/internal/puppeteer-core.js';
+
+import * as PuppeteerCore from 'puppeteer-core/internal/puppeteer-core.js';
 
 import {getConfiguration} from './getConfiguration.js';
 
@@ -15,8 +17,7 @@ const configuration = getConfiguration();
 /**
  * @public
  */
-// @ts-expect-error using internal API.
-const puppeteer = new PuppeteerNode({
+const puppeteer = new PuppeteerCore.PuppeteerNode({
   isPuppeteerCore: false,
   configuration,
 });

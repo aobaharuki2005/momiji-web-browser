@@ -16,23 +16,33 @@ function task({ contentIds, expected, hasForm = true }) {
     Assert.ok(false, "Received a " + evt.type + " event on content");
   }
 
-  let gDoc = content.document;
-  let ceh = content.docShell.chromeEventHandler;
-  ceh.addEventListener("DOMPossibleUsernameInputAdded", unexpectedContentEvent);
-  content.setTimeout(test_inputAdd, 0);
+  var gDoc = null;
+
+  addEventListener("load", tabLoad, true);
+
+  function tabLoad() {
+    if (content.location.href == "about:blank") {
+      return;
+    }
+    removeEventListener("load", tabLoad, true);
+
+    gDoc = content.document;
+    gDoc.addEventListener(
+      "DOMPossibleUsernameInputAdded",
+      unexpectedContentEvent
+    );
+    addEventListener("DOMPossibleUsernameInputAdded", unexpectedContentEvent);
+    gDoc.defaultView.setTimeout(test_inputAdd, 0);
+  }
 
   function test_inputAdd() {
     if (expected) {
-      ceh.addEventListener(
-        "DOMPossibleUsernameInputAdded",
-        test_inputAddHandler,
-        {
-          once: true,
-          capture: true,
-        }
-      );
+      addEventListener("DOMPossibleUsernameInputAdded", test_inputAddHandler, {
+        once: true,
+        capture: true,
+      });
     } else {
-      content.setTimeout(test_inputAddHandler, 0);
+      gDoc.defaultView.setTimeout(test_inputAddHandler, 0);
     }
     let input = gDoc.createElementNS("http://www.w3.org/1999/xhtml", "input");
     input.setAttribute("type", contentIds.INPUT_TYPE);
@@ -57,7 +67,7 @@ function task({ contentIds, expected, hasForm = true }) {
         );
       } else {
         Assert.ok(
-          content.HTMLDocument.isInstance(evt.target),
+          HTMLDocument.isInstance(evt.target),
           evt.type + " event targets document"
         );
       }
@@ -71,18 +81,18 @@ function task({ contentIds, expected, hasForm = true }) {
     } else {
       nextTask = finish;
     }
-    content.setTimeout(nextTask, 0);
+    gDoc.defaultView.setTimeout(nextTask, 0);
   }
 
   function test_inputChangeForm() {
     if (expected) {
-      ceh.addEventListener(
+      addEventListener(
         "DOMPossibleUsernameInputAdded",
         test_inputChangeFormHandler,
         { once: true, capture: true }
       );
     } else {
-      content.setTimeout(test_inputChangeFormHandler, 0);
+      gDoc.defaultView.setTimeout(test_inputChangeFormHandler, 0);
     }
     let input = gDoc.getElementById(contentIds.INPUT_ID);
     input.setAttribute("form", contentIds.FORM2_ID);
@@ -103,18 +113,18 @@ function task({ contentIds, expected, hasForm = true }) {
       expected && contentIds.INPUT_TYPE === "text"
         ? finish
         : test_inputChangesType;
-    content.setTimeout(nextTask, 0);
+    gDoc.defaultView.setTimeout(nextTask, 0);
   }
 
   function test_inputChangesType() {
     if (expected) {
-      ceh.addEventListener(
+      addEventListener(
         "DOMPossibleUsernameInputAdded",
         test_inputChangesTypeHandler,
         { once: true, capture: true }
       );
     } else {
-      content.setTimeout(test_inputChangesTypeHandler, 0);
+      gDoc.defaultView.setTimeout(test_inputChangesTypeHandler, 0);
     }
     let input = gDoc.getElementById(contentIds.CHANGE_INPUT_ID);
     input.setAttribute("type", contentIds.INPUT_TYPE);
@@ -131,16 +141,20 @@ function task({ contentIds, expected, hasForm = true }) {
         );
       } else {
         Assert.ok(
-          content.HTMLDocument.isInstance(evt.target),
+          HTMLDocument.isInstance(evt.target),
           evt.type + " event targets document"
         );
       }
     }
-    content.setTimeout(finish, 0);
+    gDoc.defaultView.setTimeout(finish, 0);
   }
 
   function finish() {
-    ceh.removeEventListener(
+    removeEventListener(
+      "DOMPossibleUsernameInputAdded",
+      unexpectedContentEvent
+    );
+    gDoc.removeEventListener(
       "DOMPossibleUsernameInputAdded",
       unexpectedContentEvent
     );
@@ -159,7 +173,7 @@ add_setup(async function () {
 
 add_task(async function test_disconnectedInputs() {
   const tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+  await ContentTask.spawn(tab.linkedBrowser, [], async () => {
     const unexpectedEvent = evt => {
       Assert.ok(
         false,
@@ -167,8 +181,7 @@ add_task(async function test_disconnectedInputs() {
       );
     };
 
-    let ceh = content.docShell.chromeEventHandler;
-    ceh.addEventListener("DOMPossibleUsernameInputAdded", unexpectedEvent);
+    addEventListener("DOMPossibleUsernameInputAdded", unexpectedEvent);
     const form = content.document.createElement("form");
     const textInput = content.document.createElement("input");
     textInput.setAttribute("type", "text");
@@ -180,8 +193,8 @@ add_task(async function test_disconnectedInputs() {
     // and we want to ensure that if they are dispatched, they are captured
     // before we remove the event listener.
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    await new Promise(resolve => content.setTimeout(resolve, 50));
-    ceh.removeEventListener("DOMPossibleUsernameInputAdded", unexpectedEvent);
+    await new Promise(resolve => setTimeout(resolve, 50));
+    removeEventListener("DOMPossibleUsernameInputAdded", unexpectedEvent);
   });
 
   Assert.ok(true, "Test completed");
@@ -193,6 +206,11 @@ add_task(async function test_usernameOnlyForm() {
     let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
 
     ids.INPUT_TYPE = type;
+    let promise = ContentTask.spawn(
+      tab.linkedBrowser,
+      { contentIds: ids, expected: true },
+      task
+    );
     BrowserTestUtils.startLoadingURIString(
       tab.linkedBrowser,
       `data:text/html;charset=utf-8,
@@ -203,12 +221,7 @@ add_task(async function test_usernameOnlyForm() {
         <form id="${ids.FORM2_ID}"></form>
         </body></html>`
     );
-    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-    await SpecialPowers.spawn(
-      tab.linkedBrowser,
-      [{ contentIds: ids, expected: true }],
-      task
-    );
+    await promise;
 
     Assert.ok(true, "Test completed");
     gBrowser.removeCurrentTab();
@@ -220,6 +233,11 @@ add_task(async function test_formlessUsernameInput() {
     let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
 
     ids.INPUT_TYPE = type;
+    let promise = ContentTask.spawn(
+      tab.linkedBrowser,
+      { contentIds: ids, expected: true, hasForm: false },
+      task
+    );
     BrowserTestUtils.startLoadingURIString(
       tab.linkedBrowser,
       `data:text/html;charset=utf-8,
@@ -227,12 +245,7 @@ add_task(async function test_formlessUsernameInput() {
           <input id="${ids.CHANGE_INPUT_ID}" autocomplete="username">
         </body></html>`
     );
-    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-    await SpecialPowers.spawn(
-      tab.linkedBrowser,
-      [{ contentIds: ids, expected: true, hasForm: false }],
-      task
-    );
+    await promise;
 
     Assert.ok(true, "Test completed");
     gBrowser.removeCurrentTab();
@@ -244,6 +257,11 @@ add_task(async function test_nonSupportedInputType() {
     let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
 
     ids.INPUT_TYPE = type;
+    let promise = ContentTask.spawn(
+      tab.linkedBrowser,
+      { contentIds: ids, expected: false },
+      task
+    );
     BrowserTestUtils.startLoadingURIString(
       tab.linkedBrowser,
       `data:text/html;charset=utf-8,
@@ -254,12 +272,7 @@ add_task(async function test_nonSupportedInputType() {
         <form id="${ids.FORM2_ID}"></form>
         </body></html>`
     );
-    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-    await SpecialPowers.spawn(
-      tab.linkedBrowser,
-      [{ contentIds: ids, expected: false }],
-      task
-    );
+    await promise;
 
     Assert.ok(true, "Test completed");
     gBrowser.removeCurrentTab();
@@ -273,6 +286,11 @@ add_task(async function test_usernameOnlyFormPrefOff() {
     let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
 
     ids.INPUT_TYPE = type;
+    let promise = ContentTask.spawn(
+      tab.linkedBrowser,
+      { contentIds: ids, expected: false },
+      task
+    );
     BrowserTestUtils.startLoadingURIString(
       tab.linkedBrowser,
       `data:text/html;charset=utf-8,
@@ -283,12 +301,7 @@ add_task(async function test_usernameOnlyFormPrefOff() {
         <form id="${ids.FORM2_ID}"></form>
         </body></html>`
     );
-    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-    await SpecialPowers.spawn(
-      tab.linkedBrowser,
-      [{ contentIds: ids, expected: false }],
-      task
-    );
+    await promise;
 
     Assert.ok(true, "Test completed");
     gBrowser.removeCurrentTab();

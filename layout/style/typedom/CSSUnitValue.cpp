@@ -1,16 +1,15 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/CSSUnitValue.h"
 
-#include <math.h>
-
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/CSSPropertyId.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CSSUnitValueBinding.h"
 
@@ -18,28 +17,9 @@ namespace mozilla::dom {
 
 CSSUnitValue::CSSUnitValue(nsCOMPtr<nsISupports> aParent, double aValue,
                            const nsACString& aUnit)
-    : CSSNumericValue(std::move(aParent), NumericValueType::UnitValue),
+    : CSSNumericValue(std::move(aParent), ValueType::UnitValue),
       mValue(aValue),
       mUnit(aUnit) {}
-
-// static
-RefPtr<CSSUnitValue> CSSUnitValue::Create(nsCOMPtr<nsISupports> aParent,
-                                          double aValue,
-                                          const nsACString& aUnit) {
-  return MakeRefPtr<CSSUnitValue>(std::move(aParent), aValue, aUnit);
-}
-
-// static
-RefPtr<CSSUnitValue> CSSUnitValue::Create(nsCOMPtr<nsISupports> aParent,
-                                          double aValue) {
-  return Create(std::move(aParent), aValue, "number"_ns);
-}
-
-// static
-RefPtr<CSSUnitValue> CSSUnitValue::Create(nsCOMPtr<nsISupports> aParent,
-                                          const StyleUnitValue& aUnitValue) {
-  return Create(std::move(aParent), aUnitValue.value, aUnitValue.unit);
-}
 
 JSObject* CSSUnitValue::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -93,48 +73,8 @@ void CSSUnitValue::ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
   // and fully spec-compliant manner. See bug 2005142
   const bool isValueOutOfRange = [](NonCustomCSSPropertyId aId, double aValue) {
     switch (aId) {
-      case eCSSProperty_order:
-      case eCSSProperty_z_index:
-        return round(aValue) != aValue;
-
-      case eCSSProperty_border_image_outset:
-      case eCSSProperty_border_image_slice:
-      case eCSSProperty_border_image_width:
-      case eCSSProperty_font_size_adjust:
-      case eCSSProperty_font_stretch:
-      case eCSSProperty_flex_grow:
-      case eCSSProperty_flex_shrink:
-      case eCSSProperty_stroke_miterlimit:
-      case eCSSProperty_animation_duration:
-      case eCSSProperty_animation_iteration_count:
-      case eCSSProperty_background_size:
       case eCSSProperty_column_width:
-      case eCSSProperty_flex_basis:
-      case eCSSProperty_font_size:
-      case eCSSProperty_line_height:
       case eCSSProperty_perspective:
-      case eCSSProperty_stroke_dasharray:
-      case eCSSProperty_stroke_width:
-      case eCSSProperty_tab_size:
-      case eCSSProperty_transition_duration:
-      case eCSSProperty_grid_template_columns:
-      case eCSSProperty_grid_template_rows:
-      case eCSSProperty_grid_auto_columns:
-      case eCSSProperty_grid_auto_rows:
-      case eCSSProperty_column_gap:
-      case eCSSProperty_row_gap:
-      case eCSSProperty_max_block_size:
-      case eCSSProperty_max_height:
-      case eCSSProperty_max_inline_size:
-      case eCSSProperty_max_width:
-      case eCSSProperty_block_size:
-      case eCSSProperty_height:
-      case eCSSProperty_inline_size:
-      case eCSSProperty_min_block_size:
-      case eCSSProperty_min_height:
-      case eCSSProperty_min_inline_size:
-      case eCSSProperty_min_width:
-      case eCSSProperty_width:
       case eCSSProperty_border_block_end_width:
       case eCSSProperty_border_block_start_width:
       case eCSSProperty_border_bottom_width:
@@ -144,30 +84,7 @@ void CSSUnitValue::ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
       case eCSSProperty_border_right_width:
       case eCSSProperty_border_top_width:
       case eCSSProperty_outline_width:
-      case eCSSProperty_padding_block_end:
-      case eCSSProperty_padding_block_start:
-      case eCSSProperty_padding_bottom:
-      case eCSSProperty_padding_inline_end:
-      case eCSSProperty_padding_inline_start:
-      case eCSSProperty_padding_left:
-      case eCSSProperty_padding_right:
-      case eCSSProperty_padding_top:
-      case eCSSProperty_r:
-      case eCSSProperty_shape_margin:
-      case eCSSProperty_rx:
-      case eCSSProperty_ry:
-      case eCSSProperty_scroll_padding_block_end:
-      case eCSSProperty_scroll_padding_block_start:
-      case eCSSProperty_scroll_padding_bottom:
-      case eCSSProperty_scroll_padding_inline_end:
-      case eCSSProperty_scroll_padding_inline_start:
-      case eCSSProperty_scroll_padding_left:
-      case eCSSProperty_scroll_padding_right:
-      case eCSSProperty_scroll_padding_top:
         return aValue < 0;
-
-      case eCSSProperty_font_weight:
-        return aValue < 1 || aValue > 1000;
 
       default:
         return false;
@@ -179,30 +96,15 @@ void CSSUnitValue::ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
   }
 
   aDest.AppendFloat(mValue);
-
-  if (mUnit.Equals("percent"_ns)) {
-    aDest.Append("%"_ns);
-  } else if (!mUnit.Equals("number"_ns)) {
-    aDest.Append(mUnit);
-  }
+  aDest.Append(mUnit);
 
   if (isValueOutOfRange) {
     aDest.Append(")"_ns);
   }
 }
 
-StyleUnitValue CSSUnitValue::ToStyleUnitValue() const {
-  return StyleUnitValue(mValue, StyleCssString(mUnit));
-}
-
-const CSSUnitValue& CSSNumericValue::GetAsCSSUnitValue() const {
-  MOZ_DIAGNOSTIC_ASSERT(mNumericValueType == NumericValueType::UnitValue);
-
-  return *static_cast<const CSSUnitValue*>(this);
-}
-
-CSSUnitValue& CSSNumericValue::GetAsCSSUnitValue() {
-  MOZ_DIAGNOSTIC_ASSERT(mNumericValueType == NumericValueType::UnitValue);
+CSSUnitValue& CSSStyleValue::GetAsCSSUnitValue() {
+  MOZ_DIAGNOSTIC_ASSERT(mValueType == ValueType::UnitValue);
 
   return *static_cast<CSSUnitValue*>(this);
 }

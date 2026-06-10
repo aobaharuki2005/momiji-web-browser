@@ -16,7 +16,7 @@ includes: [nans.js, compareArray.js, testTypedArray.js]
 features: [TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function body(FloatArray) {
+function body(FloatArray) {
   var subject = new FloatArray(NaNs.length * 2);
 
   NaNs.forEach(function(v, i) {
@@ -39,6 +39,8 @@ testWithTypedArrayConstructors(function body(FloatArray) {
   );
 
   assert(compareArray(originalBytes, copiedBytes));
-}, floatArrayConstructors);
+}
+
+testWithTypedArrayConstructors(body, floatArrayConstructors);
 
 reportCompare(0, 0);

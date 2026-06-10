@@ -37,7 +37,7 @@ add_task(async function () {
   );
 
   const networkEvent = waitForNetworkEvents(monitor, 1);
-  await reloadSelectedTab();
+  await reloadBrowser();
   await networkEvent;
 
   ok(

@@ -6,7 +6,10 @@
 #![allow(unsafe_code)]
 #![allow(clippy::undocumented_unsafe_blocks)]
 
-use crate::backend::conv::{ret, ret_owned_fd, slice, zero};
+use crate::backend::conv::ret;
+#[cfg(feature = "mount")]
+use crate::backend::conv::{ret_owned_fd, slice, zero};
+#[cfg(feature = "mount")]
 use crate::fd::{BorrowedFd, OwnedFd};
 use crate::ffi::CStr;
 use crate::io;
@@ -36,11 +39,13 @@ pub(crate) fn unmount(target: &CStr, flags: super::types::UnmountFlags) -> io::R
     unsafe { ret(syscall_readonly!(__NR_umount2, target, flags)) }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn fsopen(fs_name: &CStr, flags: super::types::FsOpenFlags) -> io::Result<OwnedFd> {
     unsafe { ret_owned_fd(syscall_readonly!(__NR_fsopen, fs_name, flags)) }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn fsmount(
     fs_fd: BorrowedFd<'_>,
@@ -50,6 +55,7 @@ pub(crate) fn fsmount(
     unsafe { ret_owned_fd(syscall_readonly!(__NR_fsmount, fs_fd, flags, attr_flags)) }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn move_mount(
     from_dfd: BorrowedFd<'_>,
@@ -70,6 +76,7 @@ pub(crate) fn move_mount(
     }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn open_tree(
     dfd: BorrowedFd<'_>,
@@ -79,6 +86,7 @@ pub(crate) fn open_tree(
     unsafe { ret_owned_fd(syscall_readonly!(__NR_open_tree, dfd, filename, flags)) }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn fspick(
     dfd: BorrowedFd<'_>,
@@ -88,6 +96,7 @@ pub(crate) fn fspick(
     unsafe { ret_owned_fd(syscall_readonly!(__NR_fspick, dfd, path, flags)) }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn fsconfig_set_flag(fs_fd: BorrowedFd<'_>, key: &CStr) -> io::Result<()> {
     unsafe {
@@ -102,6 +111,7 @@ pub(crate) fn fsconfig_set_flag(fs_fd: BorrowedFd<'_>, key: &CStr) -> io::Result
     }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn fsconfig_set_string(
     fs_fd: BorrowedFd<'_>,
@@ -120,6 +130,7 @@ pub(crate) fn fsconfig_set_string(
     }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn fsconfig_set_binary(
     fs_fd: BorrowedFd<'_>,
@@ -139,6 +150,7 @@ pub(crate) fn fsconfig_set_binary(
     }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn fsconfig_set_fd(
     fs_fd: BorrowedFd<'_>,
@@ -157,6 +169,7 @@ pub(crate) fn fsconfig_set_fd(
     }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn fsconfig_set_path(
     fs_fd: BorrowedFd<'_>,
@@ -176,6 +189,7 @@ pub(crate) fn fsconfig_set_path(
     }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn fsconfig_set_path_empty(
     fs_fd: BorrowedFd<'_>,
@@ -194,6 +208,7 @@ pub(crate) fn fsconfig_set_path_empty(
     }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn fsconfig_create(fs_fd: BorrowedFd<'_>) -> io::Result<()> {
     unsafe {
@@ -208,6 +223,7 @@ pub(crate) fn fsconfig_create(fs_fd: BorrowedFd<'_>) -> io::Result<()> {
     }
 }
 
+#[cfg(feature = "mount")]
 #[inline]
 pub(crate) fn fsconfig_reconfigure(fs_fd: BorrowedFd<'_>) -> io::Result<()> {
     unsafe {
@@ -215,20 +231,6 @@ pub(crate) fn fsconfig_reconfigure(fs_fd: BorrowedFd<'_>) -> io::Result<()> {
             __NR_fsconfig,
             fs_fd,
             super::types::FsConfigCmd::Reconfigure,
-            zero(),
-            zero(),
-            zero()
-        ))
-    }
-}
-
-#[inline]
-pub(crate) fn fsconfig_create_excl(fs_fd: BorrowedFd<'_>) -> io::Result<()> {
-    unsafe {
-        ret(syscall_readonly!(
-            __NR_fsconfig,
-            fs_fd,
-            super::types::FsConfigCmd::CreateExclusive,
             zero(),
             zero(),
             zero()

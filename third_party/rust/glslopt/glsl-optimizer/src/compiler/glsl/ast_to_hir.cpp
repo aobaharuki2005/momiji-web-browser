@@ -1413,7 +1413,7 @@ ast_expression::do_hir(exec_list *instructions,
 
    switch (this->oper) {
    case ast_aggregate:
-      UNREACHABLE("ast_aggregate: Should never get here.");
+      unreachable("ast_aggregate: Should never get here.");
 
    case ast_assign: {
       this->subexpressions[0]->set_is_lhs(true);
@@ -2004,13 +2004,13 @@ ast_expression::do_hir(exec_list *instructions,
    }
 
    case ast_unsized_array_dim:
-      UNREACHABLE("ast_unsized_array_dim: Should never get here.");
+      unreachable("ast_unsized_array_dim: Should never get here.");
 
    case ast_function_call:
       /* Should *NEVER* get here.  ast_function_call should always be handled
        * by ast_function_expression::hir.
        */
-      UNREACHABLE("ast_function_call: handled elsewhere ");
+      unreachable("ast_function_call: handled elsewhere ");
 
    case ast_identifier: {
       /* ast_identifier can appear several places in a full abstract syntax
@@ -2225,10 +2225,10 @@ ast_expression::has_sequence_subexpression() const
       return false;
 
    case ast_function_call:
-      UNREACHABLE("should be handled by ast_function_expression::hir");
+      unreachable("should be handled by ast_function_expression::hir");
 
    case ast_unsized_array_dim:
-      UNREACHABLE("ast_unsized_array_dim: Should never get here.");
+      unreachable("ast_unsized_array_dim: Should never get here.");
    }
 
    return false;
@@ -2529,7 +2529,7 @@ get_type_name_for_precision_qualifier(const glsl_type *type)
             return names[type_idx];
          }
          default:
-            UNREACHABLE("Unsupported sampler/image dimensionality");
+            unreachable("Unsupported sampler/image dimensionality");
          } /* sampler/image float dimensionality */
          break;
       case GLSL_TYPE_INT:
@@ -2584,7 +2584,7 @@ get_type_name_for_precision_qualifier(const glsl_type *type)
             return names[offset + type_idx];
          }
          default:
-            UNREACHABLE("Unsupported isampler/iimage dimensionality");
+            unreachable("Unsupported isampler/iimage dimensionality");
          } /* sampler/image int dimensionality */
          break;
       case GLSL_TYPE_UINT:
@@ -2639,17 +2639,17 @@ get_type_name_for_precision_qualifier(const glsl_type *type)
             return names[offset + type_idx];
          }
          default:
-            UNREACHABLE("Unsupported usampler/uimage dimensionality");
+            unreachable("Unsupported usampler/uimage dimensionality");
          } /* sampler/image uint dimensionality */
          break;
       default:
-         UNREACHABLE("Unsupported sampler/image type");
+         unreachable("Unsupported sampler/image type");
       } /* sampler/image type */
       break;
    } /* GLSL_TYPE_SAMPLER/GLSL_TYPE_IMAGE */
    break;
    default:
-      UNREACHABLE("Unsupported type");
+      unreachable("Unsupported type");
    } /* base type */
 }
 
@@ -5013,7 +5013,7 @@ ast_declarator_list::hir(exec_list *instructions,
             this->type->qualifier.image_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
             break;
          default:
-            UNREACHABLE("Unknown image format");
+            unreachable("Unknown image format");
          }
          this->type->qualifier.image_base_type = GLSL_TYPE_FLOAT;
       } else if (strncmp(this->type->specifier->type_name, "uimage", strlen("uimage")) == 0) {
@@ -5034,7 +5034,7 @@ ast_declarator_list::hir(exec_list *instructions,
             this->type->qualifier.image_format = PIPE_FORMAT_R32G32B32A32_UINT;
             break;
          default:
-            UNREACHABLE("Unknown image format");
+            unreachable("Unknown image format");
          }
          this->type->qualifier.image_base_type = GLSL_TYPE_UINT;
       } else if (strncmp(this->type->specifier->type_name, "iimage", strlen("iimage")) == 0) {

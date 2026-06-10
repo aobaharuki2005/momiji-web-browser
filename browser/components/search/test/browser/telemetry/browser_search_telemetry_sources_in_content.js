@@ -77,6 +77,16 @@ add_task(async function test_source_opened_in_new_tab_via_middle_click() {
 
   assertSERPTelemetry([
     {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
+      },
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
@@ -94,9 +104,14 @@ add_task(async function test_source_opened_in_new_tab_via_middle_click() {
     },
     {
       impression: {
+        provider: "example",
         tagged: "false",
         partner_code: "",
         source: "opened_in_new_tab",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -138,6 +153,16 @@ add_task(async function test_source_opened_in_new_tab_via_target_blank() {
 
   assertSERPTelemetry([
     {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
+      },
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
@@ -155,9 +180,14 @@ add_task(async function test_source_opened_in_new_tab_via_target_blank() {
     },
     {
       impression: {
+        provider: "example",
         tagged: "false",
         partner_code: "",
         source: "opened_in_new_tab",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -213,6 +243,16 @@ add_task(async function test_source_opened_in_new_tab_via_context_menu() {
 
   assertSERPTelemetry([
     {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
+      },
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
@@ -230,9 +270,14 @@ add_task(async function test_source_opened_in_new_tab_via_context_menu() {
     },
     {
       impression: {
+        provider: "example",
         tagged: "false",
         partner_code: "",
         source: "opened_in_new_tab",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -267,6 +312,16 @@ add_task(
 
     assertSERPTelemetry([
       {
+        impression: {
+          provider: "example",
+          tagged: "true",
+          partner_code: "ff",
+          source: "unknown",
+          is_shopping_page: "false",
+          is_private: "false",
+          shopping_tab_displayed: "false",
+          is_signed_in: "false",
+        },
         engagements: [
           {
             action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
@@ -285,9 +340,14 @@ add_task(
       },
       {
         impression: {
+          provider: "example",
           tagged: "false",
           partner_code: "",
           source: "follow_on_from_refine_on_SERP",
+          is_shopping_page: "false",
+          is_private: "false",
+          shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         adImpressions: [
           {
@@ -323,6 +383,16 @@ add_task(
 
     assertSERPTelemetry([
       {
+        impression: {
+          provider: "example",
+          tagged: "true",
+          partner_code: "ff",
+          source: "unknown",
+          is_shopping_page: "false",
+          is_private: "false",
+          shopping_tab_displayed: "false",
+          is_signed_in: "false",
+        },
         engagements: [
           {
             action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
@@ -341,7 +411,14 @@ add_task(
       },
       {
         impression: {
+          provider: "example",
+          tagged: "true",
+          partner_code: "ff",
           source: "follow_on_from_refine_on_SERP",
+          is_shopping_page: "false",
+          is_private: "false",
+          shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         adImpressions: [
           {
@@ -386,6 +463,16 @@ add_task(async function test_refinement_button_vs_opened_in_new_tab() {
 
   assertSERPTelemetry([
     {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
+      },
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
@@ -403,7 +490,14 @@ add_task(async function test_refinement_button_vs_opened_in_new_tab() {
     },
     {
       impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
         source: "follow_on_from_refine_on_SERP",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {

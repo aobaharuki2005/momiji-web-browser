@@ -7,9 +7,7 @@ package org.mozilla.fenix.settings.account
 import android.content.Intent
 import androidx.navigation.NavController
 import io.mockk.Called
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -30,7 +28,7 @@ class AuthCustomTabActivityTest {
         val settings: Settings = mockk()
         every { settings.shouldReturnToBrowser } returns true
         every { activity.components.settings.shouldReturnToBrowser } returns true
-        every { activity.openToBrowser(any(), any()) } just Runs
+        every { activity.openToBrowser(any(), any()) } returns Unit
 
         activity.navigateToBrowserOnColdStart()
 

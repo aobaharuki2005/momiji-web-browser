@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +43,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.R
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
-import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.theme.AcornTheme
 import androidx.compose.material3.SearchBar as M3SearchBar
 import androidx.compose.material3.TopSearchBar as M3TopSearchBar
@@ -242,15 +242,12 @@ private fun SearchBarInputField(
                             !expanded -> trailingIcon?.invoke()
                             expanded && query.isEmpty() -> Unit
                             expanded && query.isNotEmpty() -> {
-                                IconButton(
-                                    onClick = { onQueryChange("") },
-                                    contentDescription = stringResource(
-                                        R.string.text_field_cross_trailing_icon_default_content_description,
-                                    ),
-                                ) {
+                                IconButton(onClick = { onQueryChange("") }) {
                                     Icon(
                                         painterResource(iconsR.drawable.mozac_ic_cross_circle_fill_24),
-                                        contentDescription = null,
+                                        contentDescription = stringResource(
+                                            R.string.text_field_cross_trailing_icon_default_content_description,
+                                        ),
                                     )
                                 }
                             }
@@ -346,22 +343,20 @@ private fun SearchBarPreview(
                             if (previewState.showTrailing) {
                                 IconButton(
                                     onClick = {},
-                                    contentDescription = "content description",
                                 ) {
                                     Icon(
                                         painter = painterResource(id = iconsR.drawable.mozac_ic_qr_code_24),
-                                        contentDescription = null,
+                                        contentDescription = "content description",
                                     )
                                 }
                             }
                             if (previewState.showSecondaryTrailing) {
                                 IconButton(
                                     onClick = {},
-                                    contentDescription = "content description",
                                 ) {
                                     Icon(
                                         painter = painterResource(id = iconsR.drawable.mozac_ic_microphone_24),
-                                        contentDescription = null,
+                                        contentDescription = "content description",
                                     )
                                 }
                             }
@@ -409,11 +404,10 @@ private fun TopSearchBarPreview() {
                     leadingIcon = {
                         IconButton(
                             onClick = {},
-                            contentDescription = "content description",
                         ) {
                             Icon(
                                 painter = painterResource(id = iconsR.drawable.mozac_ic_search_24),
-                                contentDescription = null,
+                                contentDescription = "content description",
                             )
                         }
                     },
@@ -421,20 +415,18 @@ private fun TopSearchBarPreview() {
                         Row {
                             IconButton(
                                 onClick = {},
-                                contentDescription = "content description",
                             ) {
                                 Icon(
                                     painter = painterResource(id = iconsR.drawable.mozac_ic_qr_code_24),
-                                    contentDescription = null,
+                                    contentDescription = "content description",
                                 )
                             }
                             IconButton(
                                 onClick = {},
-                                contentDescription = "content description",
                             ) {
                                 Icon(
                                     painter = painterResource(id = iconsR.drawable.mozac_ic_microphone_24),
-                                    contentDescription = null,
+                                    contentDescription = "content description",
                                 )
                             }
                         }

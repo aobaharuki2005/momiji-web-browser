@@ -249,7 +249,10 @@ async function testIframeNavigation() {
 }
 
 function isBfCacheInParentEnabled() {
-  return Services.prefs.getBoolPref("fission.bfcacheInParent", false);
+  return (
+    Services.appinfo.sessionHistoryInParent &&
+    Services.prefs.getBoolPref("fission.bfcacheInParent", false)
+  );
 }
 
 async function testBfCacheNavigation() {

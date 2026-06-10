@@ -1,6 +1,9 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
 });
 
@@ -49,7 +52,7 @@ add_task(async function testSettingsProperties() {
   let dataTypeSet = settings.dataToRemove;
   for (let key of Object.keys(dataTypeSet)) {
     equal(
-      Services.prefs.getBoolPref(`${PREF_DOMAIN}${key.toLowerCase()}`),
+      Preferences.get(`${PREF_DOMAIN}${key.toLowerCase()}`),
       dataTypeSet[key],
       `${key} property of dataToRemove matches the expected pref.`
     );
@@ -69,10 +72,10 @@ add_task(async function testSettingsProperties() {
   const SINGLE_PREF = "privacy.cpd.cache";
 
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(SINGLE_PREF);
+    Preferences.reset(SINGLE_PREF);
   });
 
-  Services.prefs.setBoolPref(SINGLE_PREF, true);
+  Preferences.set(SINGLE_PREF, true);
 
   extension.sendMessage("settings");
   settings = await extension.awaitMessage("settings");
@@ -82,7 +85,7 @@ add_task(async function testSettingsProperties() {
     "Preference that was set to true returns true."
   );
 
-  Services.prefs.setBoolPref(SINGLE_PREF, false);
+  Preferences.set(SINGLE_PREF, false);
 
   extension.sendMessage("settings");
   settings = await extension.awaitMessage("settings");
@@ -122,11 +125,11 @@ add_task(async function testSettingsSince() {
   await extension.startup();
 
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(TIMESPAN_PREF);
+    Preferences.reset(TIMESPAN_PREF);
   });
 
   for (let timespan in TEST_DATA) {
-    Services.prefs.setIntPref(TIMESPAN_PREF, Sanitizer[timespan]);
+    Preferences.set(TIMESPAN_PREF, Sanitizer[timespan]);
 
     extension.sendMessage("settings");
     let settings = await extension.awaitMessage("settings");

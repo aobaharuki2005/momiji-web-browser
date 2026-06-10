@@ -10,27 +10,13 @@ from marionette_driver.errors import (
 )
 from marionette_driver.marionette import WebElement
 
-from marionette_harness import (
-    MarionetteTestCase,
-    WindowManagerMixin,
-    run_if_manage_instance,
-)
+from marionette_harness import MarionetteTestCase, run_if_manage_instance
 
 
-class TestTimeouts(WindowManagerMixin, MarionetteTestCase):
-    def setUp(self):
-        super(TestTimeouts, self).setUp()
-
-        # Always use a new tab to ensure a clean state
-        # and avoid leftover navigations.
-        self.new_tab = self.open_tab()
-        self.marionette.switch_to_window(self.new_tab)
-
+class TestTimeouts(MarionetteTestCase):
     def tearDown(self):
         self.marionette.timeout.reset()
-        self.close_all_tabs()
-
-        super(TestTimeouts, self).tearDown()
+        MarionetteTestCase.tearDown(self)
 
     def test_get_timeout_fraction(self):
         self.marionette.timeout.script = 0.5

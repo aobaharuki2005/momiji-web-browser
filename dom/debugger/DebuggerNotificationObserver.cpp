@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,7 +13,7 @@
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DebuggerNotificationObserver,
-                                      mRelevantGlobal, mEventListenerCallbacks)
+                                      mOwnerGlobal, mEventListenerCallbacks)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DebuggerNotificationObserver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DebuggerNotificationObserver)
@@ -36,8 +38,8 @@ DebuggerNotificationObserver::Constructor(GlobalObject& aGlobal,
 }
 
 DebuggerNotificationObserver::DebuggerNotificationObserver(
-    nsIGlobalObject* aRelevantGlobal)
-    : mRelevantGlobal(aRelevantGlobal) {}
+    nsIGlobalObject* aOwnerGlobal)
+    : mOwnerGlobal(aOwnerGlobal) {}
 
 JSObject* DebuggerNotificationObserver::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -134,7 +136,7 @@ void DebuggerNotificationObserver::NotifyListeners(
   // as the observer, we create a new instance of the notification before
   // an observer dispatches the event listeners.
   RefPtr<DebuggerNotification> debuggerNotification(
-      aNotification->CloneInto(mRelevantGlobal));
+      aNotification->CloneInto(mOwnerGlobal));
 
   for (RefPtr<DebuggerNotificationCallback> callback :
        mEventListenerCallbacks.ForwardRange()) {

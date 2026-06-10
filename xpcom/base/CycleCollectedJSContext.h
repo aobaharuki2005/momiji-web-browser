@@ -1,9 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef mozilla_CycleCollectedJSContext_h
 #define mozilla_CycleCollectedJSContext_h
+
+#include <deque>
 
 #include "js/TracingAPI.h"
 #include "mozilla/Attributes.h"
@@ -28,6 +32,7 @@ class AutoSlowOperation;
 
 class CycleCollectedJSContext;
 class CycleCollectedJSRuntime;
+class PromiseJobRunnable;
 
 namespace dom {
 class Exception;
@@ -87,80 +92,18 @@ class MicroTaskRunnable : public LinkedListElement<MicroTaskRunnable> {
   }
 };
 
-// A wrapper for JS::MicroTaskType. Defines the interface for data access.
-// Base class that holds the microtask data and provides information-gathering
-// methods. Can't be instantiated directly.
-class MOZ_STACK_CLASS MayConsumeMicroTask {
+// Store the suppressed mictotasks in another microtask so that operations
+// for the microtask queue as a whole keep working.
+class SuppressedMicroTasks : public MicroTaskRunnable {
  public:
-  virtual ~MayConsumeMicroTask() = default;
+  explicit SuppressedMicroTasks(CycleCollectedJSContext* aContext);
 
-  // Check if this holds a "JS Microtask" (see MicroTask.h),
-  // which is a task enqueued by the JS engine rather than
-  // Gecko.
-  bool IsJSMicroTask() const { return JS::IsJSMicroTask(mMicroTask); }
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Run(AutoSlowOperation& aAso) final {}
+  virtual bool Suppressed();
 
-  // Unwrap (without interacting with refcounting) a Gecko MicroTaskRunnable if
-  // the task is not a JS MicroTask (see MicroTask.h for "JS MicroTask");
-  //  otherwise, return nullptr.
-  //
-  // This is a non-owning conversion: This class still owns the refcount.
-  MicroTaskRunnable* MaybeUnwrapTaskToRunnable() const;
-
-  // Get the execution global for this task without
-  // consuming the contents.
-  JSObject* GetExecutionGlobalFromJSMicroTask() const {
-    MOZ_ASSERT(IsJSMicroTask());
-    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
-    MOZ_ASSERT(task);
-    return JS::GetExecutionGlobalFromJSMicroTask(task);
-  }
-
-  // Below: A number of wrappers to allow working with a MicroTask without
-  // exposing the contained task which could then be misused.
-  //
-  // These are documented in MicroTask.h.
-
-  bool GetFlowIdFromJSMicroTask(uint64_t* aFlowId) const {
-    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
-    MOZ_ASSERT(task);
-    return JS::GetFlowIdFromJSMicroTask(task, aFlowId);
-  }
-
-  JSObject* MaybeGetPromiseFromJSMicroTask() const {
-    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
-    MOZ_ASSERT(task);
-    return JS::MaybeGetPromiseFromJSMicroTask(task);
-  }
-
-  bool MaybeGetHostDefinedDataFromJSMicroTask(
-      JS::MutableHandle<JSObject*> aIncumbentGlobal,
-      JS::MutableHandle<JSObject*> aOptionalHostDefinedData) const {
-    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
-    if (!task) {
-      return false;
-    }
-    return JS::MaybeGetHostDefinedDataFromJSMicroTask(task, aIncumbentGlobal,
-                                                      aOptionalHostDefinedData);
-  }
-
-  bool MaybeGetAllocationSiteFromJSMicroTask(
-      JS::MutableHandle<JSObject*> out) const {
-    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
-    if (!task) {
-      return false;
-    }
-    return JS::MaybeGetAllocationSiteFromJSMicroTask(task, out);
-  }
-
-  void trace(JSTracer* aTrc) {
-    TraceRoot(aTrc, &mMicroTask, "MayConsumeMicroTask value");
-  }
-
- protected:
-  explicit MayConsumeMicroTask(JS::GenericMicroTask aMicroTask)
-      : mMicroTask(aMicroTask) {}
-
-  JS::GenericMicroTask mMicroTask;
+  CycleCollectedJSContext* mContext;
+  uint64_t mSuppressionGeneration;
+  std::deque<RefPtr<MicroTaskRunnable>> mSuppressedMicroTaskRunnables;
 };
 
 // A gecko wrapper for the JS::MicroTask type. Used to enforce both
@@ -168,10 +111,10 @@ class MOZ_STACK_CLASS MayConsumeMicroTask {
 // consumed this microtask before destruction.
 //
 // This type must be rooted, it holds onto a JS reference.
-class MOZ_STACK_CLASS MustConsumeMicroTask : public MayConsumeMicroTask {
+class MOZ_STACK_CLASS MustConsumeMicroTask {
  public:
   // We need a public constructor to allow forward declared Rooted
-  MustConsumeMicroTask() : MayConsumeMicroTask(JS::GenericMicroTask()) {}
+  MustConsumeMicroTask() = default;
 
   // The only way to get a (filled) MustConsumeMicroTask is through these
   // mechanisms.
@@ -179,7 +122,7 @@ class MOZ_STACK_CLASS MustConsumeMicroTask : public MayConsumeMicroTask {
   friend MustConsumeMicroTask DequeueNextRegularMicroTask(JSContext* aCx);
   friend MustConsumeMicroTask DequeueNextDebuggerMicroTask(JSContext* aCx);
 
-  ~MustConsumeMicroTask() override {
+  ~MustConsumeMicroTask() {
     if (!mMicroTask.isUndefined()) {
       MOZ_CRASH("Didn't consume MicroTask");
     }
@@ -188,8 +131,8 @@ class MOZ_STACK_CLASS MustConsumeMicroTask : public MayConsumeMicroTask {
   // Move only semantics
   MustConsumeMicroTask(const MustConsumeMicroTask&) = delete;
   MustConsumeMicroTask& operator=(const MustConsumeMicroTask&) = delete;
-  MustConsumeMicroTask(MustConsumeMicroTask&& other)
-      : MayConsumeMicroTask(other.mMicroTask) {
+  MustConsumeMicroTask(MustConsumeMicroTask&& other) {
+    mMicroTask = other.mMicroTask;
     other.mMicroTask.setUndefined();
   }
   MustConsumeMicroTask& operator=(MustConsumeMicroTask&& other) noexcept {
@@ -205,6 +148,18 @@ class MOZ_STACK_CLASS MustConsumeMicroTask : public MayConsumeMicroTask {
 
   // Allow testing for contentfulness.
   explicit operator bool() const { return !IsConsumed(); }
+
+  // Check if this holds a "JS Microtask" (see MicroTask.h),
+  // which is a task enqueued by the JS engine rather than
+  // Gecko.
+  bool IsJSMicroTask() const { return JS::IsJSMicroTask(mMicroTask); }
+
+  // Unwrap (without interacting with refcounting) a Gecko MicroTaskRunnable if
+  // the task is not a JS MicroTask (see MicroTask.h for "JS MicroTask");
+  //  otherwise, return nullptr.
+  //
+  // This is a non-owning conversion: This class still owns the refcount.
+  MicroTaskRunnable* MaybeUnwrapTaskToRunnable() const;
 
   // Take ownership of a non-JS task inside a JS::GenericMicroTask - This clears
   // the contents of the value to make it clear that we've transfered ownership.
@@ -239,8 +194,58 @@ class MOZ_STACK_CLASS MustConsumeMicroTask : public MayConsumeMicroTask {
     mMicroTask.setUndefined();
   }
 
+  // Get the execution global for this task without
+  // consuming the contents.
+  JSObject* GetExecutionGlobalFromJSMicroTask(JSContext* aCx) const {
+    MOZ_ASSERT(IsJSMicroTask());
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    MOZ_ASSERT(task);
+    return JS::GetExecutionGlobalFromJSMicroTask(task);
+  }
+
+  // Below: A number of wrappers to allow working with a MustConsume without
+  // exposing the contained task which could then be misused.
+  //
+  // These are documented in MicroTask.h.
+
+  bool GetFlowIdFromJSMicroTask(uint64_t* aFlowId) {
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    MOZ_ASSERT(task);
+    return JS::GetFlowIdFromJSMicroTask(task, aFlowId);
+  }
+
+  JSObject* MaybeGetPromiseFromJSMicroTask() {
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    MOZ_ASSERT(task);
+    return JS::MaybeGetPromiseFromJSMicroTask(task);
+  }
+
+  bool MaybeGetHostDefinedDataFromJSMicroTask(
+      JS::MutableHandle<JSObject*> out) {
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    if (!task) {
+      return false;
+    }
+    return JS::MaybeGetHostDefinedDataFromJSMicroTask(task, out);
+  }
+
+  bool MaybeGetAllocationSiteFromJSMicroTask(JS::MutableHandle<JSObject*> out) {
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    if (!task) {
+      return false;
+    }
+    return JS::MaybeGetAllocationSiteFromJSMicroTask(task, out);
+  }
+
+  JSObject* MaybeGetHostDefinedGlobalFromJSMicroTask() {
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    if (!task) {
+      return nullptr;
+    }
+    return JS::MaybeGetHostDefinedGlobalFromJSMicroTask(task);
+  }
+
   bool RunAndConsumeJSMicroTask(JSContext* aCx) {
-    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
     JS::Rooted<JS::JSMicroTask*> task(
         aCx, JS::ToMaybeWrappedJSMicroTask(mMicroTask));
     MOZ_ASSERT(task);
@@ -249,31 +254,15 @@ class MOZ_STACK_CLASS MustConsumeMicroTask : public MayConsumeMicroTask {
     return v;
   }
 
- private:
-  explicit MustConsumeMicroTask(JS::GenericMicroTask aMicroTask)
-      : MayConsumeMicroTask(aMicroTask) {}
-};
-
-// To allow using the same accessors for data as MustConsumeMicroTask
-// we create this subclass which will never consume the microtask
-// for the purposes of peeking.
-//
-// This type must be rooted, it holds onto a JS reference.
-class MOZ_STACK_CLASS WontConsumeMicroTask : public MayConsumeMicroTask {
- public:
-  // // We need a public constructor to allow forward declared Rooted
-  WontConsumeMicroTask() : MayConsumeMicroTask(JS::GenericMicroTask()) {}
-
-  // The only way to get a (filled) WontConsumeMicroTask is through peeking.
-  friend WontConsumeMicroTask PeekNextMicroTask(JSContext* aCx);
-
-  ~WontConsumeMicroTask() = default;
-
- private:
-  explicit WontConsumeMicroTask(JS::GenericMicroTask aMicroTask)
-      : MayConsumeMicroTask(aMicroTask) {
-    MOZ_RELEASE_ASSERT(!aMicroTask.isNullOrUndefined());
+  void trace(JSTracer* aTrc) {
+    TraceRoot(aTrc, &mMicroTask, "MustConsumeMicroTask value");
   }
+
+ private:
+  explicit MustConsumeMicroTask(JS::GenericMicroTask&& aMicroTask)
+      : mMicroTask(aMicroTask) {}
+
+  JS::GenericMicroTask mMicroTask;
 };
 
 class SuppressedMicroTaskList final : public MicroTaskRunnable {
@@ -307,11 +296,11 @@ class FinalizationRegistryCleanup {
   explicit FinalizationRegistryCleanup(CycleCollectedJSContext* aContext);
   void Init();
   void Destroy();
-  void QueueCallback(JSFunction* aDoCleanup, JSObject* aIncumbentGlobal);
+  void QueueCallback(JSFunction* aDoCleanup, JSObject* aHostDefinedData);
   MOZ_CAN_RUN_SCRIPT void DoCleanup();
 
  private:
-  static void QueueCallback(JSFunction* aDoCleanup, JSObject* aIncumbentGlobal,
+  static void QueueCallback(JSFunction* aDoCleanup, JSObject* aHostDefinedData,
                             void* aData);
 
   class CleanupRunnable;
@@ -326,11 +315,7 @@ class FinalizationRegistryCleanup {
   // pointer to its containing context here.
   CycleCollectedJSContext* mContext;
 
-  // Weak pointer to a previously dispatched runnable. The CleanupRunnable::Run
-  // method will null out this pointer.
-  CleanupRunnable* mPendingRunnable = nullptr;
-
-  using CallbackVector = JS::GCVector<Callback, 0, JSInfallibleAllocPolicy>;
+  using CallbackVector = JS::GCVector<Callback, 0, InfallibleAllocPolicy>;
   JS::PersistentRooted<CallbackVector> mCallbacks;
 };
 
@@ -342,8 +327,6 @@ bool EnqueueDebugMicroTask(JSContext* aCx,
 MustConsumeMicroTask DequeueNextMicroTask(JSContext* aCx);
 MustConsumeMicroTask DequeueNextRegularMicroTask(JSContext* aCx);
 MustConsumeMicroTask DequeueNextDebuggerMicroTask(JSContext* aCx);
-
-WontConsumeMicroTask PeekNextMicroTask(JSContext* aCx);
 
 class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
   friend class CycleCollectedJSRuntime;
@@ -389,6 +372,9 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
 
   already_AddRefed<dom::Exception> GetPendingException() const;
   void SetPendingException(dom::Exception* aException);
+
+  std::deque<RefPtr<MicroTaskRunnable>>& GetMicroTaskQueue();
+  std::deque<RefPtr<MicroTaskRunnable>>& GetDebuggerMicroTaskQueue();
 
   void TraceMicroTasks(JSTracer* aTracer);
 
@@ -451,10 +437,7 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
 
   // Call EnterMicroTask when you're entering JS execution.
   // Usually the best way to do this is to use nsAutoMicroTask.
-  //
-  // Returns true if we expect to call PerformMicroTaskCheckpoint
-  // will occur on the next call to LeaveMicroTask
-  bool EnterMicroTask() { return (mMicroTaskLevel++ == 0); }
+  void EnterMicroTask() { ++mMicroTaskLevel; }
 
   MOZ_CAN_RUN_SCRIPT
   void LeaveMicroTask() {
@@ -470,8 +453,6 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
   void EnterSyncOperation() { ++mSyncOperations; }
   void LeaveSyncOperation() { --mSyncOperations; }
   bool IsInSyncOperation() const { return mSyncOperations > 0; }
-
-  bool CheckRecursionDepth(uint32_t aCurrentDepth, bool aForce = false);
 
   MOZ_CAN_RUN_SCRIPT
   bool PerformMicroTaskCheckPoint(bool aForce = false);
@@ -525,9 +506,8 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
   // Others protect the debuggee microtask queue from the debugger's
   // interruptions; see the comments on JS::AutoDebuggerJobQueueInterruption for
   // details.
-  bool getHostDefinedData(
-      JSContext* aCx, JS::MutableHandle<JSObject*> aIncumbentGlobal,
-      JS::MutableHandle<JSObject*> aOptionalHostDefinedData) const override;
+  bool getHostDefinedData(JSContext* cx,
+                          JS::MutableHandle<JSObject*> aData) const override;
 
   // Fills in the JS Object used to represent the current incumbent global.
   // Used when running MicroTasks which don't have host-defined data as
@@ -535,12 +515,16 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
   bool getHostDefinedGlobal(JSContext* cx,
                             JS::MutableHandle<JSObject*>) const override;
 
+  bool enqueuePromiseJob(JSContext* cx, JS::Handle<JSObject*> promise,
+                         JS::Handle<JSObject*> job,
+                         JS::Handle<JSObject*> allocationSite,
+                         JS::Handle<JSObject*> hostDefinedData) override;
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY for now so we don't have to change SpiderMonkey
   // headers.  The caller presumably knows this can run script (like everything
   // in SpiderMonkey!) and will deal.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void runJobs(JSContext* cx) override;
-
+  bool empty() const override;
   bool isDrainingStopped() const override { return false; }
 
   // Trace hook for non-GCThing microtask values (e.g., Private values
@@ -576,6 +560,10 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
 
   uint32_t mSyncOperations;
 
+  std::deque<RefPtr<MicroTaskRunnable>> mPendingMicroTaskRunnables;
+  std::deque<RefPtr<MicroTaskRunnable>> mDebuggerMicroTaskQueue;
+  RefPtr<SuppressedMicroTasks> mSuppressedMicroTasks;
+
   RefPtr<SuppressedMicroTaskList> mSuppressedMicroTaskList;
 
   uint64_t mSuppressionGeneration;
@@ -584,6 +572,9 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
   mozilla::LinkedList<MicroTaskRunnable> mMicrotasksToTrace;
 
  private:
+  friend class PromiseJobRunnable;
+  RefPtr<PromiseJobRunnable> mRecycledPromiseJob;
+
   // How many times the debugger has interrupted execution, possibly creating
   // microtask checkpoints in places that they would not normally occur.
   uint32_t mDebuggerRecursionDepth;

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,7 +35,7 @@ class Cookie final : public nsICookie {
 
  public:
   // nsISupports
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSICOOKIE
 
   static Cookie* Cast(nsICookie* aCookie) {
@@ -48,7 +49,8 @@ class Cookie final : public nsICookie {
  private:
   // for internal use only. see Cookie::Create().
   Cookie(const CookieStruct& aCookieData,
-         const OriginAttributes& aOriginAttributes);
+         const OriginAttributes& aOriginAttributes)
+      : mData(aCookieData), mOriginAttributes(aOriginAttributes) {}
 
   static already_AddRefed<Cookie> FromCookieStruct(
       const CookieStruct& aCookieData,
@@ -58,10 +60,6 @@ class Cookie final : public nsICookie {
   // Generate a unique and monotonically increasing creation time. See comment
   // in Cookie.cpp.
   static int64_t GenerateUniqueCreationTimeInUSec(int64_t aCreationTimeInUSec);
-
-  static uint32_t ComputeKeyHash(const nsACString& aName,
-                                 const nsACString& aHost,
-                                 const nsACString& aPath);
 
   // public helper to create an Cookie object.
   static already_AddRefed<Cookie> Create(
@@ -130,12 +128,7 @@ class Cookie final : public nsICookie {
     mData.schemeMap() = aSchemeMap;
   }
   inline void SetSameSite(int32_t aSameSite) { mData.sameSite() = aSameSite; }
-  inline void SetHost(const nsACString& aHost) {
-    mData.host() = aHost;
-    mKeyHash = ComputeKeyHash(mData.name(), mData.host(), mData.path());
-  }
-
-  inline uint32_t KeyHash() const { return mKeyHash; }
+  inline void SetHost(const nsACString& aHost) { mData.host() = aHost; }
 
   uint32_t NameAndValueBytes() {
     return mData.name().Length() + mData.value().Length();
@@ -156,7 +149,6 @@ class Cookie final : public nsICookie {
   // Please update SizeOfIncludingThis if this strategy changes.
   CookieStruct mData;
   OriginAttributes mOriginAttributes;
-  uint32_t mKeyHash{0};
 };
 
 // Comparator class for sorting cookies before sending to a server.

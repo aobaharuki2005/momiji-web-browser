@@ -55,8 +55,6 @@ support-files = ["file_navigator_resolve_identity_xrays.xhtml"]
 
 ["test_sendQueryContentAndSelectionSetEvent.html"]
 
-["test_sendSelectionSetEvent_after_reframe.html"]
-
 ["test_sendSelectionSetEvent_with_same_range.html"]
 
 ["test_serializer_noscript.html"]

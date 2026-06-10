@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -83,8 +85,7 @@ class ClientHandle final : public ClientThing<ClientHandleChild> {
   // it triggers an error handled in the Client's context.  Other errors
   // will result in the promise rejecting.
   RefPtr<GenericErrorResultPromise> PostMessage(
-      NotNull<ipc::StructuredCloneData*> aData,
-      const ServiceWorkerDescriptor& aSource);
+      ipc::StructuredCloneData& aData, const ServiceWorkerDescriptor& aSource);
 
   // Return a Promise that resolves when the ClientHandle object is detached
   // from its remote actors.  This will happen if the ClientSource is destroyed

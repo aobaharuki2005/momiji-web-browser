@@ -79,7 +79,7 @@ impl IanaParser {
     ///
     /// [📚 Help choosing a constructor](icu_provider::constructors)
     #[cfg(feature = "compiled_data")]
-    #[expect(clippy::new_ret_no_self)]
+    #[allow(clippy::new_ret_no_self)]
     pub fn new() -> IanaParserBorrowed<'static> {
         IanaParserBorrowed::new()
     }
@@ -111,7 +111,7 @@ impl IanaParser {
     /// Returns a borrowed version of the parser that can be queried.
     ///
     /// This avoids a small potential indirection cost when querying the parser.
-    pub fn as_borrowed(&self) -> IanaParserBorrowed<'_> {
+    pub fn as_borrowed(&self) -> IanaParserBorrowed {
         IanaParserBorrowed {
             data: self.data.get(),
             checksum: self.checksum,
@@ -270,7 +270,7 @@ impl IanaParserExtended<IanaParser> {
     ///
     /// [📚 Help choosing a constructor](icu_provider::constructors)
     #[cfg(feature = "compiled_data")]
-    #[expect(clippy::new_ret_no_self)]
+    #[allow(clippy::new_ret_no_self)]
     pub fn new() -> IanaParserExtendedBorrowed<'static> {
         IanaParserExtendedBorrowed::new()
     }
@@ -358,7 +358,7 @@ where
     /// Returns a borrowed version of the parser that can be queried.
     ///
     /// This avoids a small potential indirection cost when querying the parser.
-    pub fn as_borrowed(&self) -> IanaParserExtendedBorrowed<'_> {
+    pub fn as_borrowed(&self) -> IanaParserExtendedBorrowed {
         IanaParserExtendedBorrowed {
             inner: self.inner.as_ref().as_borrowed(),
             data: self.data.get(),

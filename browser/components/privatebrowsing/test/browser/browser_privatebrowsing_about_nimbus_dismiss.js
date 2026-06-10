@@ -18,7 +18,10 @@ add_task(async function test_experiment_messaging_system_dismiss() {
     content: {
       hideDefault: true,
       promoEnabled: true,
+      infoEnabled: true,
+      infoBody: "fluent:about-private-browsing-info-title",
       promoLinkText: "fluent:about-private-browsing-prominent-cta",
+      infoLinkUrl: "http://foo.example.com/%LOCALE%",
       promoLinkType: "link",
       promoButton: {
         action: {
@@ -42,6 +45,13 @@ add_task(async function test_experiment_messaging_system_dismiss() {
     content.document.querySelector("#dismiss-btn").click();
     info("button clicked");
   });
+
+  let telemetryEvent = await waitForTelemetryEvent("aboutprivatebrowsing");
+
+  ok(
+    telemetryEvent[2] == "click" && telemetryEvent[3] == "dismiss_button",
+    "recorded the dismiss button click"
+  );
 
   let { win: win2, tab: tab2 } = await openTabAndWaitForRender();
 
@@ -68,7 +78,10 @@ add_task(async function test_experiment_messaging_show_default_on_dismiss() {
     content: {
       hideDefault: false,
       promoEnabled: true,
+      infoEnabled: true,
+      infoBody: "fluent:about-private-browsing-info-title",
       promoLinkText: "fluent:about-private-browsing-prominent-cta",
+      infoLinkUrl: "http://foo.example.com",
       promoLinkType: "link",
       promoButton: {
         action: {
@@ -97,6 +110,13 @@ add_task(async function test_experiment_messaging_show_default_on_dismiss() {
     content.document.querySelector("#dismiss-btn").click();
     info("button clicked");
   });
+
+  let telemetryEvent = await waitForTelemetryEvent("aboutprivatebrowsing");
+
+  ok(
+    telemetryEvent[2] == "click" && telemetryEvent[3] == "dismiss_button",
+    "recorded the dismiss button click"
+  );
 
   let { win: win2, tab: tab2 } = await openTabAndWaitForRender();
 

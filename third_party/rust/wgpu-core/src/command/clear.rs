@@ -81,13 +81,13 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
 
 impl WebGpuError for ClearError {
     fn webgpu_error_type(&self) -> ErrorType {
-        match self {
-            Self::DestroyedResource(e) => e.webgpu_error_type(),
-            Self::MissingFeatures(e) => e.webgpu_error_type(),
-            Self::MissingBufferUsage(e) => e.webgpu_error_type(),
-            Self::Device(e) => e.webgpu_error_type(),
-            Self::EncoderState(e) => e.webgpu_error_type(),
-            Self::InvalidResource(e) => e.webgpu_error_type(),
+        let e: &dyn WebGpuError = match self {
+            Self::DestroyedResource(e) => e,
+            Self::MissingFeatures(e) => e,
+            Self::MissingBufferUsage(e) => e,
+            Self::Device(e) => e,
+            Self::EncoderState(e) => e,
+            Self::InvalidResource(e) => e,
             Self::NoValidTextureClearMode(..)
             | Self::UnalignedFillSize(..)
             | Self::UnalignedBufferOffset(..)
@@ -95,8 +95,9 @@ impl WebGpuError for ClearError {
             | Self::BufferOverrun { .. }
             | Self::MissingTextureAspect { .. }
             | Self::InvalidTextureLevelRange { .. }
-            | Self::InvalidTextureLayerRange { .. } => ErrorType::Validation,
-        }
+            | Self::InvalidTextureLayerRange { .. } => return ErrorType::Validation,
+        };
+        e.webgpu_error_type()
     }
 }
 
@@ -165,12 +166,12 @@ pub(super) fn clear_buffer(
     dst_buffer.check_usage(BufferUsages::COPY_DST)?;
 
     // Check if offset & size are valid.
-    if !offset.is_multiple_of(wgt::COPY_BUFFER_ALIGNMENT) {
+    if offset % wgt::COPY_BUFFER_ALIGNMENT != 0 {
         return Err(ClearError::UnalignedBufferOffset(offset));
     }
 
     let size = size.unwrap_or(dst_buffer.size.saturating_sub(offset));
-    if !size.is_multiple_of(wgt::COPY_BUFFER_ALIGNMENT) {
+    if size % wgt::COPY_BUFFER_ALIGNMENT != 0 {
         return Err(ClearError::UnalignedFillSize(size));
     }
     let end_offset =

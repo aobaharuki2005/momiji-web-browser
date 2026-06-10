@@ -19,8 +19,7 @@
 #include <string>
 
 #include "absl/functional/any_invocable.h"
-#include "absl/strings/string_view.h"
-#include "api/environment/environment.h"
+#include "api/field_trials_view.h"
 #include "api/jsep.h"
 #include "api/peer_connection_interface.h"
 #include "api/rtc_error.h"
@@ -57,7 +56,7 @@ class WebRtcSessionDescriptionFactory {
       std::function<void(const scoped_refptr<RTCCertificate>&)>
           on_certificate_ready,
       CodecLookupHelper* codec_lookup_helper,
-      const Environment& env);
+      const FieldTrialsView& field_trials);
   ~WebRtcSessionDescriptionFactory();
 
   WebRtcSessionDescriptionFactory(const WebRtcSessionDescriptionFactory&) =
@@ -67,7 +66,7 @@ class WebRtcSessionDescriptionFactory {
 
   static void CopyCandidatesFromSessionDescription(
       const SessionDescriptionInterface* source_desc,
-      absl::string_view content_name,
+      const std::string& content_name,
       SessionDescriptionInterface* dest_desc);
 
   void CreateOffer(
@@ -143,7 +142,6 @@ class WebRtcSessionDescriptionFactory {
   const std::unique_ptr<RTCCertificateGeneratorInterface> cert_generator_;
   const SdpStateProvider* sdp_info_;
   const std::string session_id_;
-  const Environment env_;
   CertificateRequestState certificate_request_state_;
   std::queue<absl::AnyInvocable<void() &&>> callbacks_;
 

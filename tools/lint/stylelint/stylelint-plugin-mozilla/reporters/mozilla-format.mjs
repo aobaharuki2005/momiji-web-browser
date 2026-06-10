@@ -4,6 +4,7 @@
 
 // This is a non-production file that needs to log.
 /* eslint-disable no-console */
+/* eslint-env node */
 
 import { Transform, finished } from "node:stream";
 import path, { dirname } from "node:path";

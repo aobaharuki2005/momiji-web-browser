@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 const { AddonTestUtils } = ChromeUtils.importESModule(
@@ -14,9 +16,6 @@ const { sinon } = ChromeUtils.importESModule(
 );
 const { AppProvidedConfigEngine } = ChromeUtils.importESModule(
   "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs"
-);
-const { SearchService } = ChromeUtils.importESModule(
-  "moz-src:///toolkit/components/search/SearchService.sys.mjs"
 );
 
 AddonTestUtils.initMochitest(this);
@@ -70,12 +69,13 @@ add_setup(async () => {
 async function promiseEngineIconLoaded(engineName) {
   await TestUtils.topicObserved(
     "browser-search-engine-modified",
-    (subject, verb) =>
-      verb == "engine-icon-changed" &&
-      subject.wrappedJSObject.name == engineName
+    (engine, verb) => {
+      engine.QueryInterface(Ci.nsISearchEngine);
+      return verb == "engine-icon-changed" && engine.name == engineName;
+    }
   );
   Assert.ok(
-    await SearchService.getEngineByName(engineName).getIconURL(),
+    await Services.search.getEngineByName(engineName).getIconURL(),
     "Should have a valid icon URL"
   );
 }

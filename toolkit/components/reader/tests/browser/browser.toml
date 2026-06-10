@@ -51,8 +51,6 @@ support-files = [
   "readerModeArticle.html",
   "readerModeArticleShort.html",
   "readerModeArticleMedium.html",
-  "readerModeArticleLong.html",
-  "readerModeArticleVeryLong.html",
 ]
 
 ["browser_readerMode_refresh.js"]

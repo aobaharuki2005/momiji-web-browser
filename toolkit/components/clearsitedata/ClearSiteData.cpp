@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -27,7 +29,6 @@ using namespace mozilla;
 LazyLogModule gClearSiteDataLog("ClearSiteData");
 
 #define LOG(args) MOZ_LOG(gClearSiteDataLog, mozilla::LogLevel::Debug, args)
-#define CLEAR_SITE_DATA_TOPIC "clear-site-data"
 
 namespace {
 
@@ -108,7 +109,7 @@ void ClearSiteData::Initialize() {
     return;
   }
 
-  obs->AddObserver(service, CLEAR_SITE_DATA_TOPIC, false);
+  obs->AddObserver(service, NS_HTTP_ON_AFTER_EXAMINE_RESPONSE_TOPIC, false);
   obs->AddObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   gClearSiteData = service;
 }
@@ -129,7 +130,7 @@ void ClearSiteData::Shutdown() {
     return;
   }
 
-  obs->RemoveObserver(service, CLEAR_SITE_DATA_TOPIC);
+  obs->RemoveObserver(service, NS_HTTP_ON_AFTER_EXAMINE_RESPONSE_TOPIC);
   obs->RemoveObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 }
 
@@ -144,7 +145,7 @@ ClearSiteData::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  MOZ_ASSERT(!strcmp(aTopic, CLEAR_SITE_DATA_TOPIC));
+  MOZ_ASSERT(!strcmp(aTopic, NS_HTTP_ON_AFTER_EXAMINE_RESPONSE_TOPIC));
 
   nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aSubject);
   if (NS_WARN_IF(!channel)) {
@@ -353,7 +354,7 @@ void ClearSiteData::LogToConsoleInternal(
   }
 
   httpChannel->AddConsoleReport(nsIScriptError::infoFlag, "Clear-Site-Data"_ns,
-                                PropertiesFile::SECURITY_PROPERTIES, uri, 0, 0,
+                                nsContentUtils::eSECURITY_PROPERTIES, uri, 0, 0,
                                 nsDependentCString(aMsg), aParams);
 }
 

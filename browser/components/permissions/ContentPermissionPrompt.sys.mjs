@@ -57,14 +57,11 @@ const ContentPermissionIntegration = {
       case "midi": {
         return new lazy.PermissionUI.MIDIPermissionPrompt(request);
       }
-      case "serial": {
-        return new lazy.PermissionUI.SerialPermissionPrompt(request);
-      }
       case "storage-access": {
         return new lazy.PermissionUI.StorageAccessPermissionPrompt(request);
       }
-      case "loopback-network": {
-        return new lazy.PermissionUI.LoopbackNetworkPermissionPrompt(request);
+      case "localhost": {
+        return new lazy.PermissionUI.LocalHostPermissionPrompt(request);
       }
       case "local-network": {
         return new lazy.PermissionUI.LocalNetworkPermissionPrompt(request);

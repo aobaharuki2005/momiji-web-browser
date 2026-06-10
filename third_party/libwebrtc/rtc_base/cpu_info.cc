@@ -45,11 +45,9 @@
 
 // Parts of this file derived from Chromium's base/cpu.cc.
 
-namespace webrtc {
-
 namespace {
 
-uint32_t DetectNumberOfCoresHelper() {
+uint32_t DetectNumberOfCores() {
   int number_of_cores = 0;
 
 #if defined(WEBRTC_WIN)
@@ -125,6 +123,8 @@ inline void __cpuid(int cpu_info[4], int info_type) {
 
 }  // namespace
 
+namespace webrtc {
+
 namespace cpu_info {
 
 uint32_t DetectNumberOfCores() {
@@ -132,7 +132,7 @@ uint32_t DetectNumberOfCores() {
   // is running in a sandbox, we may only be able to read the value once (before
   // the sandbox is initialized) and not thereafter.
   // For more information see crbug.com/176522.
-  static const uint32_t logical_cpus = DetectNumberOfCoresHelper();
+  static const uint32_t logical_cpus = ::DetectNumberOfCores();
   return logical_cpus;
 }
 

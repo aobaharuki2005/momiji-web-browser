@@ -77,14 +77,14 @@ internal fun menuItemComposable(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surfaceBright)
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
                         .thenConditional(
                             Modifier.clickable(
                                 role = Role.Button,
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = ripple(
                                     bounded = true,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = AcornTheme.colors.ripple,
                                 ),
                                 onClick = {
                                     view.playSoundEffect(SoundEffectConstants.CLICK)

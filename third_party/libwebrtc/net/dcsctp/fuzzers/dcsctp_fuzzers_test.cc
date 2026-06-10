@@ -11,6 +11,7 @@
 
 #include <cstdint>
 
+#include "api/array_view.h"
 #include "net/dcsctp/public/dcsctp_options.h"
 #include "net/dcsctp/socket/dcsctp_socket.h"
 #include "test/gtest.h"

@@ -16,94 +16,73 @@
 
   <script type="application/javascript">
     // //////////////////////////////////////////////////////////////////////////
-    // Helpers
+    // Invokers
 
     const kRemoval = false;
     const kInsertion = true;
     const kUnexpected = true;
 
-    function expStr(x, doublings) {
-      for (let i = 0; i < doublings; ++i)
-        x = x + x;
-      return x;
+    function changeText(aContainerID, aValue, aEventList) {
+      this.containerNode = getNode(aContainerID);
+      this.textNode = this.containerNode.firstChild;
+      this.textData = this.textNode.data;
+
+      this.eventSeq = [ ];
+      this.unexpectedEventSeq = [ ];
+
+      for (var i = 0; i < aEventList.length; i++) {
+        var event = aEventList[i];
+
+        var isInserted = event[0];
+        var str = event[1];
+        var offset = event[2];
+        var checker = new textChangeChecker(this.containerNode, offset,
+                                            offset + str.length, str,
+                                            isInserted);
+
+        if (event[3] == kUnexpected)
+          this.unexpectedEventSeq.push(checker);
+        else
+          this.eventSeq.push(checker);
+      }
+
+      this.invoke = function changeText_invoke() {
+        this.textNode.data = aValue;
+      };
+
+      this.getID = function changeText_getID() {
+        return "change text '" + shortenString(this.textData) + "' -> '" +
+          shortenString(this.textNode.data) + "' for " +
+          prettyName(this.containerNode);
+      };
     }
 
-    async function changeText(aContainerID, aValue, aEventList) {
-      let containerNode = getNode(aContainerID);
-      let textNode = containerNode.firstChild;
-
-      let expected = [];
-      let unexpected = [];
-      let expectedChecks = [];
-
-      for (let event of aEventList) {
-        let isInserted = event[0];
-        let str = event[1];
-        let offset = event[2];
-        let isUnexpected = event[3] == kUnexpected;
-
-        let evtType = isInserted ? EVENT_TEXT_INSERTED : EVENT_TEXT_REMOVED;
-        let capturedStr = str;
-        let criteria = e => {
-          if (e.accessible !== getAccessible(containerNode)) return false;
-          e.QueryInterface(nsIAccessibleTextChangeEvent);
-          return e.modifiedText === capturedStr;
-        };
-
-        if (isUnexpected) {
-          unexpected.push([evtType, criteria]);
-        } else {
-          expected.push([evtType, criteria]);
-          expectedChecks.push({ isInserted, str, offset });
-        }
-      }
-
-      let eventsObj = { expected, unexpected };
-      let p = waitForEvents(eventsObj, null, false, window);
-      textNode.data = aValue;
-      let results = await p;
-
-      for (let i = 0; i < expectedChecks.length; i++) {
-        let { isInserted, str, offset } = expectedChecks[i];
-        let evtResult = results[i];
-        evtResult.QueryInterface(nsIAccessibleTextChangeEvent);
-        is(
-          evtResult.start,
-          offset,
-          "Wrong start offset for " + prettyName(containerNode)
-        );
-        is(
-          evtResult.length,
-          str.length,
-          "Wrong length for " + prettyName(containerNode)
-        );
-        is(
-          evtResult.isInserted,
-          isInserted,
-          "Wrong isInserted for " + prettyName(containerNode)
-        );
-        is(
-          evtResult.modifiedText,
-          str,
-          "Wrong text for " + prettyName(containerNode)
-        );
-      }
+    function expStr(x, doublings) {
+      for (var i = 0; i < doublings; ++i)
+        x = x + x;
+      return x;
     }
 
     // //////////////////////////////////////////////////////////////////////////
     // Do tests
 
-    async function doTests() {
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+    function doTests() {
+      gQueue = new eventQueue();
+
       // ////////////////////////////////////////////////////////////////////////
       // wqrema -> tqb: substitution coalesced with removal
 
-      let events = [
+      var events = [
         [ kRemoval, "w", 0 ], // wqrema -> qrema
         [ kInsertion, "t", 0], // qrema -> tqrema
         [ kRemoval, "rema", 2 ], // tqrema -> tq
         [ kInsertion, "b", 2], // tq -> tqb
       ];
-      await changeText("p1", "tqb", events);
+      gQueue.push(new changeText("p1", "tqb", events));
 
       // ////////////////////////////////////////////////////////////////////////
       // b -> insa: substitution coalesced with insertion (complex substitution)
@@ -112,7 +91,7 @@
         [ kRemoval, "b", 0 ], // b ->
         [ kInsertion, "insa", 0], //  -> insa
       ];
-      await changeText("p2", "insa", events);
+      gQueue.push(new changeText("p2", "insa", events));
 
       // ////////////////////////////////////////////////////////////////////////
       // abc -> def: coalesced substitutions
@@ -121,7 +100,7 @@
         [ kRemoval, "abc", 0 ], // abc ->
         [ kInsertion, "def", 0], //  -> def
       ];
-      await changeText("p3", "def", events);
+      gQueue.push(new changeText("p3", "def", events));
 
       // ////////////////////////////////////////////////////////////////////////
       // abcabc -> abcDEFabc: coalesced insertions
@@ -129,7 +108,7 @@
       events = [
         [ kInsertion, "DEF", 3], // abcabc -> abcDEFabc
       ];
-      await changeText("p4", "abcDEFabc", events);
+      gQueue.push(new changeText("p4", "abcDEFabc", events));
 
       // ////////////////////////////////////////////////////////////////////////
       // abc -> defabc: insertion into begin
@@ -137,7 +116,7 @@
       events = [
         [ kInsertion, "def", 0], // abc -> defabc
       ];
-      await changeText("p5", "defabc", events);
+      gQueue.push(new changeText("p5", "defabc", events));
 
       // ////////////////////////////////////////////////////////////////////////
       // abc -> abcdef: insertion into end
@@ -145,7 +124,7 @@
       events = [
         [ kInsertion, "def", 3], // abc -> abcdef
       ];
-      await changeText("p6", "abcdef", events);
+      gQueue.push(new changeText("p6", "abcdef", events));
 
       // ////////////////////////////////////////////////////////////////////////
       // defabc -> abc: removal from begin
@@ -153,7 +132,7 @@
       events = [
         [ kRemoval, "def", 0], // defabc -> abc
       ];
-      await changeText("p7", "abc", events);
+      gQueue.push(new changeText("p7", "abc", events));
 
       // ////////////////////////////////////////////////////////////////////////
       // abcdef -> abc: removal from the end
@@ -161,7 +140,7 @@
       events = [
         [ kRemoval, "def", 3], // abcdef -> abc
       ];
-      await changeText("p8", "abc", events);
+      gQueue.push(new changeText("p8", "abc", events));
 
       // ////////////////////////////////////////////////////////////////////////
       // abcDEFabc -> abcabc: coalesced removals
@@ -169,7 +148,7 @@
       events = [
         [ kRemoval, "DEF", 3], // abcDEFabc -> abcabc
       ];
-      await changeText("p9", "abcabc", events);
+      gQueue.push(new changeText("p9", "abcabc", events));
 
       // ////////////////////////////////////////////////////////////////////////
       // !abcdef@ -> @axbcef!: insertion, deletion and substitutions
@@ -182,7 +161,7 @@
         [ kRemoval, "@", 7 ], // @axbcef@ -> @axbcef
         [ kInsertion, "!", 7 ], // @axbcef -> @axbcef!
       ];
-      await changeText("p10", "@axbcef!", events);
+      gQueue.push(new changeText("p10", "@axbcef!", events));
 
       // ////////////////////////////////////////////////////////////////////////
       // meilenstein -> levenshtein: insertion, complex and simple substitutions
@@ -194,37 +173,41 @@
         [ kInsertion, "v", 2], // leenstein -> levenstein
         [ kInsertion, "h", 6 ], // levenstein -> levenshtein
       ];
-      await changeText("p11", "levenshtein", events);
+      gQueue.push(new changeText("p11", "levenshtein", events));
 
       // ////////////////////////////////////////////////////////////////////////
       // long strings, remove/insert pair as the old string was replaced on
       // new one
 
-      let longStr1 = expStr("x", 16);
-      let longStr2 = expStr("X", 16);
+      var longStr1 = expStr("x", 16);
+      var longStr2 = expStr("X", 16);
 
-      let newStr = "a" + longStr1 + "b";
+      var newStr = "a" + longStr1 + "b", insStr = longStr1, rmStr = "";
       events = [
-        [ kRemoval, "", 1, kUnexpected ],
-        [ kInsertion, longStr1, 1 ],
+        [ kRemoval, rmStr, 1, kUnexpected ],
+        [ kInsertion, insStr, 1 ],
       ];
-      await changeText("p12", newStr, events);
+      gQueue.push(new changeText("p12", newStr, events));
 
       newStr = "a" + longStr2 + "b";
+      insStr = longStr2;
+      rmStr = longStr1;
       events = [
-        [ kRemoval, longStr1, 1 ],
-        [ kInsertion, longStr2, 1],
+        [ kRemoval, rmStr, 1 ],
+        [ kInsertion, insStr, 1],
       ];
-      await changeText("p12", newStr, events);
+      gQueue.push(new changeText("p12", newStr, events));
 
       newStr = "ab";
+      insStr = "";
+      rmStr = longStr2;
       events = [
-        [ kRemoval, longStr2, 1 ],
-        [ kInsertion, "", 1, kUnexpected ],
+        [ kRemoval, rmStr, 1 ],
+        [ kInsertion, insStr, 1, kUnexpected ],
       ];
-      await changeText("p12", newStr, events);
+      gQueue.push(new changeText("p12", newStr, events));
 
-      SimpleTest.finish();
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

@@ -11,9 +11,8 @@
 #import <Foundation/Foundation.h>
 #import <XCTest/XCTest.h>
 
-#include "test/gtest.h"
-
 #include "api/jsep.h"
+#include "rtc_base/gunit.h"
 
 #import "api/peerconnection/RTCSessionDescription+Private.h"
 #import "api/peerconnection/RTCSessionDescription.h"

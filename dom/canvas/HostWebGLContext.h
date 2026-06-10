@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,7 +20,6 @@
 #include "WebGLTypes.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/dom/BindingUtils.h"
 
 namespace mozilla {
@@ -68,12 +68,17 @@ class HostWebGLContext final : public SupportsWeakPtr {
   }
 
  public:
+  struct OwnerData final {
+    ClientWebGLContext* inProcess = nullptr;
+    dom::WebGLParent* outOfProcess = nullptr;
+  };
+
   static std::unique_ptr<HostWebGLContext> Create(
-      dom::WebGLParent*, const webgl::InitContextDesc&,
+      const OwnerData&, const webgl::InitContextDesc&,
       webgl::InitContextResult* out);
 
  private:
-  explicit HostWebGLContext(dom::WebGLParent*);
+  explicit HostWebGLContext(const OwnerData&);
 
  public:
   virtual ~HostWebGLContext();
@@ -81,7 +86,7 @@ class HostWebGLContext final : public SupportsWeakPtr {
   WebGLContext* GetWebGLContext() const { return mContext; }
 
  public:
-  dom::WebGLParent* const mOwner;
+  const OwnerData mOwnerData;
 
  private:
   RefPtr<WebGLContext> mContext;

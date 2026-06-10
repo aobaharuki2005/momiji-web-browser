@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,8 +32,7 @@ class Screen final : public nsIScreen {
          uint32_t aPixelDepth, uint32_t aColorDepth, uint32_t aRefreshRate,
          DesktopToLayoutDeviceScale aContentsScale,
          CSSToLayoutDeviceScale aDefaultCssScale, float aDpi, IsPseudoDisplay,
-         IsHDR aIsHDR, IsHDR aIsVideoHDR,
-         hal::ScreenOrientation = hal::ScreenOrientation::None,
+         IsHDR, hal::ScreenOrientation = hal::ScreenOrientation::None,
          OrientationAngle = 0);
   explicit Screen(const dom::ScreenDetails& aScreenDetails);
   Screen(const Screen& aOther);
@@ -61,7 +62,6 @@ class Screen final : public nsIScreen {
   CSSToLayoutDeviceScale GetCSSToLayoutDeviceScale(IncludeOSZoom) const;
 
   bool GetIsHDR() const { return mIsHDR; }
-  bool GetIsVideoHDR() const { return mIsVideoHDR; }
 
  private:
   virtual ~Screen() = default;
@@ -80,7 +80,6 @@ class Screen final : public nsIScreen {
   const OrientationAngle mOrientationAngle;
   const bool mIsPseudoDisplay;
   const bool mIsHDR;
-  const bool mIsVideoHDR;
 };
 
 }  // namespace widget

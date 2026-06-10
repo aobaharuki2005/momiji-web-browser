@@ -6,20 +6,18 @@
 
 use super::*;
 
-pub fn pass(namespace: &mut Namespace) -> Result<()> {
-    namespace.ffi_rustbuffer_alloc =
-        RustFfiFunctionName(format!("ffi_{}_rustbuffer_alloc", &namespace.crate_name));
-    namespace.ffi_rustbuffer_from_bytes = RustFfiFunctionName(format!(
-        "ffi_{}_rustbuffer_from_bytes",
-        &namespace.crate_name
-    ));
-    namespace.ffi_rustbuffer_free =
-        RustFfiFunctionName(format!("ffi_{}_rustbuffer_free", &namespace.crate_name));
-    namespace.ffi_rustbuffer_reserve =
-        RustFfiFunctionName(format!("ffi_{}_rustbuffer_reserve", &namespace.crate_name));
-    namespace.ffi_definitions.extend([
+pub fn pass(module: &mut Module) -> Result<()> {
+    module.ffi_rustbuffer_alloc =
+        RustFfiFunctionName(format!("ffi_{}_rustbuffer_alloc", &module.crate_name));
+    module.ffi_rustbuffer_from_bytes =
+        RustFfiFunctionName(format!("ffi_{}_rustbuffer_from_bytes", &module.crate_name));
+    module.ffi_rustbuffer_free =
+        RustFfiFunctionName(format!("ffi_{}_rustbuffer_free", &module.crate_name));
+    module.ffi_rustbuffer_reserve =
+        RustFfiFunctionName(format!("ffi_{}_rustbuffer_reserve", &module.crate_name));
+    module.ffi_definitions.extend([
         FfiFunction {
-            name: RustFfiFunctionName(format!("ffi_{}_rustbuffer_alloc", &namespace.crate_name)),
+            name: RustFfiFunctionName(format!("ffi_{}_rustbuffer_alloc", &module.crate_name)),
             async_data: None,
             arguments: vec![FfiArgument {
                 name: "size".to_string(),
@@ -34,10 +32,7 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
         }
         .into(),
         FfiFunction {
-            name: RustFfiFunctionName(format!(
-                "ffi_{}_rustbuffer_from_bytes",
-                &namespace.crate_name
-            )),
+            name: RustFfiFunctionName(format!("ffi_{}_rustbuffer_from_bytes", &module.crate_name)),
             async_data: None,
             arguments: vec![FfiArgument {
                 name: "bytes".to_string(),
@@ -52,7 +47,7 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
         }
         .into(),
         FfiFunction {
-            name: RustFfiFunctionName(format!("ffi_{}_rustbuffer_free", &namespace.crate_name)),
+            name: RustFfiFunctionName(format!("ffi_{}_rustbuffer_free", &module.crate_name)),
             async_data: None,
             arguments: vec![FfiArgument {
                 name: "buf".to_string(),
@@ -65,7 +60,7 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
         }
         .into(),
         FfiFunction {
-            name: RustFfiFunctionName(format!("ffi_{}_rustbuffer_reserve", &namespace.crate_name)),
+            name: RustFfiFunctionName(format!("ffi_{}_rustbuffer_reserve", &module.crate_name)),
             async_data: None,
             arguments: vec![
                 FfiArgument {

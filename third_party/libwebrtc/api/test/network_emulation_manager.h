@@ -15,13 +15,13 @@
 #include <functional>
 #include <memory>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/base/nullability.h"
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/field_trials_view.h"
 #include "api/test/network_emulation/cross_traffic.h"
 #include "api/test/network_emulation/network_emulation_interfaces.h"
@@ -186,6 +186,7 @@ class NetworkEmulationManager {
     class Builder {
      public:
       explicit Builder(NetworkEmulationManager* net) : net_(net) {}
+      Builder() : net_(nullptr) {}
       Builder(const Builder&) = default;
       // Sets the config state, note that this will replace any previously set
       // values.
@@ -203,6 +204,8 @@ class NetworkEmulationManager {
       Builder& avg_burst_loss_length(int avg_burst_loss_length);
       Builder& packet_overhead(int packet_overhead);
       SimulatedNetworkNode Build(uint64_t random_seed = 1) const;
+      SimulatedNetworkNode Build(NetworkEmulationManager* net,
+                                 uint64_t random_seed = 1) const;
 
      private:
       NetworkEmulationManager* const net_;
@@ -346,14 +349,14 @@ class NetworkEmulationManager {
   // `stats_callback`. Callback will be executed on network emulation
   // internal task queue.
   virtual void GetStats(
-      std::span<EmulatedEndpoint* const> endpoints,
+      ArrayView<EmulatedEndpoint* const> endpoints,
       std::function<void(EmulatedNetworkStats)> stats_callback) = 0;
 
   // Passes combined network stats for all specified `nodes` into specified
   // `stats_callback`. Callback will be executed on network emulation
   // internal task queue.
   virtual void GetStats(
-      std::span<EmulatedNetworkNode* const> nodes,
+      ArrayView<EmulatedNetworkNode* const> nodes,
       std::function<void(EmulatedNetworkNodeStats)> stats_callback) = 0;
 
   // Create a EmulatedTURNServer.
@@ -365,9 +368,8 @@ class NetworkEmulationManager {
 
   // Create a pair of EmulatedNetworkManagerInterfaces connected to each other.
   std::pair<EmulatedNetworkManagerInterface*, EmulatedNetworkManagerInterface*>
-  CreateEndpointPairWithTwoWayRoutes(const BuiltInNetworkBehaviorConfig& config,
-                                     int alice_interface_count = 1,
-                                     int bob_interface_count = 1);
+  CreateEndpointPairWithTwoWayRoutes(
+      const BuiltInNetworkBehaviorConfig& config);
 };
 
 }  // namespace webrtc

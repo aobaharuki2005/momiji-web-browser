@@ -50,6 +50,7 @@
 #include "src/core/SkDevice.h"
 #include "src/core/SkImageFilterTypes.h"
 #include "src/core/SkImageFilter_Base.h"
+#include "src/core/SkImagePriv.h"
 #include "src/core/SkLatticeIter.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkMatrixPriv.h"
@@ -60,7 +61,6 @@
 #include "src/core/SkVerticesPriv.h"
 #include "src/effects/colorfilters/SkColorFilterBase.h"
 #include "src/image/SkSurface_Base.h"
-#include "src/shaders/SkImageShader.h"
 #include "src/text/GlyphRun.h"
 #include "src/utils/SkPatchUtils.h"
 
@@ -500,7 +500,7 @@ int SkCanvas::saveLayer(const SkRect* bounds, const SkPaint* paint) {
 
 int SkCanvas::saveLayer(const SaveLayerRec& rec) {
     TRACE_EVENT0("skia", TRACE_FUNC);
-    if (rec.fPaint && this->nothingToDraw(*rec.fPaint)) {
+    if (rec.fPaint && rec.fPaint->nothingToDraw()) {
         // no need for the layer (or any of the draws until the matching restore()
         this->save();
         this->clipRect({0,0,0,0});
@@ -1589,13 +1589,9 @@ bool SkCanvas::quickReject(const SkPath& path) const {
     return path.isEmpty() || this->quickReject(path.getBounds());
 }
 
-bool SkCanvas::nothingToDraw(const SkPaint& paint) const {
-    return !this->topDevice()->surfaceProps().preservesTransparentDraws() && paint.nothingToDraw();
-}
-
 bool SkCanvas::internalQuickReject(const SkRect& bounds, const SkPaint& paint,
                                    const SkMatrix* matrix) {
-    if (!bounds.isFinite() || this->nothingToDraw(paint)) {
+    if (!bounds.isFinite() || paint.nothingToDraw()) {
         return true;
     }
 
@@ -1929,7 +1925,7 @@ void SkCanvas::onDrawPaint(const SkPaint& paint) {
 void SkCanvas::internalDrawPaint(const SkPaint& paint) {
     // drawPaint does not call internalQuickReject() because computing its geometry is not free
     // (see getLocalClipBounds(), and the two conditions below are sufficient.
-    if (this->nothingToDraw(paint) || this->isClipEmpty()) {
+    if (paint.nothingToDraw() || this->isClipEmpty()) {
         return;
     }
 
@@ -1941,7 +1937,7 @@ void SkCanvas::internalDrawPaint(const SkPaint& paint) {
 
 void SkCanvas::onDrawPoints(PointMode mode, size_t count, const SkPoint pts[],
                             const SkPaint& paint) {
-    if ((long)count <= 0 || this->nothingToDraw(paint)) {
+    if ((long)count <= 0 || paint.nothingToDraw()) {
         return;
     }
     SkASSERT(pts != nullptr);
@@ -2227,7 +2223,7 @@ void SkCanvas::onDrawPath(const SkPath& path, const SkPaint& paint) {
 
     auto layer = this->aboutToDraw(paint, path.isInverseFillType() ? nullptr : &pathBounds);
     if (layer) {
-        this->topDevice()->drawPath(path, layer->paint());
+        this->topDevice()->drawPath(path, layer->paint(), false);
     }
 }
 
@@ -2351,14 +2347,14 @@ void SkCanvas::onDrawImageRect2(const SkImage* image, const SkRect& src, const S
     if (realPaint.getMaskFilter() && this->topDevice()->useDrawCoverageMaskForMaskFilters()) {
         // Route mask-filtered drawImages to drawRect() to use the auto-layer for mask filters,
         // which require all shading to be encoded in the paint.
-        auto [drawDstRect, shader] = SkImageShader::MakeForDrawRect(
-                image, realPaint, sampling, src, dst, constraint == kStrict_SrcRectConstraint);
-        if (drawDstRect.isEmpty() || !shader) {
+        SkRect drawDst = SkModifyPaintAndDstForDrawImageRect(
+                image, sampling, src, dst, constraint == kStrict_SrcRectConstraint, &realPaint);
+        if (drawDst.isEmpty()) {
+            return;
+        } else {
+            this->drawRect(drawDst, realPaint);
             return;
         }
-        realPaint.setShader(std::move(shader));
-        this->drawRect(drawDstRect, realPaint);
-        return;
     }
 
     auto layer = this->aboutToDraw(realPaint, &dst,
@@ -2447,7 +2443,7 @@ sk_sp<Slug> SkCanvas::convertBlobToSlug(
 sk_sp<Slug> SkCanvas::onConvertGlyphRunListToSlug(const sktext::GlyphRunList& glyphRunList,
                                                   const SkPaint& paint) {
     SkRect bounds = glyphRunList.sourceBoundsWithOrigin();
-    if (bounds.isEmpty() || !bounds.isFinite() || this->nothingToDraw(paint)) {
+    if (bounds.isEmpty() || !bounds.isFinite() || paint.nothingToDraw()) {
         return nullptr;
     }
     // See comment in onDrawGlyphRunList()
@@ -2679,8 +2675,7 @@ void SkCanvas::onDrawAtlas2(const SkImage* atlas, const SkRSXform xform[], const
     SkASSERT(!realPaint.getMaskFilter());
     auto layer = this->aboutToDraw(realPaint);
     if (layer) {
-        size_t N = SkToSizeT(count);
-        this->topDevice()->drawAtlas({xform, N}, {tex, N}, {colors, colors ? N : 0},
+        this->topDevice()->drawAtlas({xform, count}, {tex, count}, {colors, colors ? count : 0},
                                      SkBlender::Mode(bmode), layer->paint());
     }
 }
@@ -2753,18 +2748,15 @@ void SkCanvas::onDrawEdgeAAImageSet2(const ImageSetEntry imageSet[], int count,
         int dstClipIndex = 0;
         for (int i = 0; i < count; ++i) {
             SkPaint imagePaint = realPaint;
-            auto [drawDstRect, shader] =
-                    SkImageShader::MakeForDrawRect(imageSet[i].fImage.get(),
-                                                   imagePaint,
-                                                   sampling,
-                                                   imageSet[i].fSrcRect,
-                                                   imageSet[i].fDstRect,
-                                                   constraint == kStrict_SrcRectConstraint);
-            if (drawDstRect.isEmpty() || !shader) {
+            SkRect drawDst = SkModifyPaintAndDstForDrawImageRect(
+                                imageSet[i].fImage.get(), sampling,
+                                imageSet[i].fSrcRect, imageSet[i].fDstRect,
+                                constraint == kStrict_SrcRectConstraint, &imagePaint);
+            if (drawDst.isEmpty()) {
                 return;
             }
-            imagePaint.setShader(std::move(shader));
-            auto layer = this->aboutToDraw(imagePaint, &drawDstRect);
+
+            auto layer = this->aboutToDraw(imagePaint, &drawDst);
             if (layer) {
                 // Since we can't call mapRect to apply any preview matrix and drawEdgeAAQuad
                 // doesn't take an optional matrix, we can modify the local-to-device matrix
@@ -2777,7 +2769,7 @@ void SkCanvas::onDrawEdgeAAImageSet2(const ImageSetEntry imageSet[], int count,
 
                 // Call drawEdgeAAImageSet on each image one at a time, to correctly
                 // paint the image.
-                this->topDevice()->drawEdgeAAQuad(drawDstRect,
+                this->topDevice()->drawEdgeAAQuad(drawDst,
                                                   imageSet[i].fHasClip ? dstClips + dstClipIndex
                                                                         : nullptr,
                                                   (QuadAAFlags)imageSet[i].fAAFlags,

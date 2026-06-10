@@ -10,16 +10,12 @@
 
 toolbar {
   min-width: 1px;
-  /* In theory, if toolbars have no contents, we want a min-height so things can be dragged into them. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   min-height: 20px;
 
   /* TODO(emilio): Consider making this consistent across platforms. */
   @media (-moz-platform: linux) {
     background-color: -moz-headerbar;
     color: -moz-headerbartext;
-    /* Prefer pixels over rem spacing in chrome */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     padding: 2px 0;
 
     &:where(:-moz-window-inactive) {
@@ -35,12 +31,10 @@ toolbar {
 }
 
 toolbarseparator {
-  color: var(--toolbarseparator-color);
+  color: color-mix(in srgb, currentColor 60%, transparent);
   /* NOTE: we use padding + a pseudo-element, rather than margin, so that
    * separators are draggable. This is useful for the personal bookmarks
    * toolbar */
-  /* Prefer pixels over rem spacing in chrome */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   padding: 2px;
 
   &::before {
@@ -59,8 +53,6 @@ toolbarseparator {
 }
 
 toolbarspacer {
-  /* Prefer pixels over rem spacing in chrome */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   width: 15px;
 }
 
@@ -71,16 +63,14 @@ toolbarpaletteitem {
 /* Drag and drop feedback */
 
 toolbarpaletteitem[place="toolbar"] {
-  /* Prefer pixels over rem spacing in chrome */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   margin-inline: -2px;
   border-inline: 2px solid transparent;
 }
 
 toolbarpaletteitem[dragover="left"] {
-  border-left-color: currentColor;
+  border-left-color: #000000;
 }
 
 toolbarpaletteitem[dragover="right"] {
-  border-right-color: currentColor;
+  border-right-color: #000000;
 }

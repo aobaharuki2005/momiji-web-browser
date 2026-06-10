@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsgnomeshellservice_h_
-#define nsgnomeshellservice_h_
+#ifndef nsgnomeshellservice_h____
+#define nsgnomeshellservice_h____
 
 #include "nsIGNOMEShellService.h"
 #include "nsToolkitShellService.h"
@@ -26,7 +27,7 @@ class nsGNOMEShellService final : public nsIGNOMEShellService,
   nsresult Init();
 
  private:
-  ~nsGNOMEShellService() = default;
+  ~nsGNOMEShellService() {}
 
   bool KeyMatchesAppName(const char* aKeyValue) const;
   bool CheckHandlerMatchesAppName(const nsACString& handler) const;
@@ -42,4 +43,4 @@ class nsGNOMEShellService final : public nsIGNOMEShellService,
   bool mAppIsInPath;
 };
 
-#endif  // nsgnomeshellservice_h_
+#endif  // nsgnomeshellservice_h____

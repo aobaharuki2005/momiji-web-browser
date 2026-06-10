@@ -106,12 +106,12 @@ add_task(async () => {
           await video.play();
 
           info("Hover over the video to show the Picture-in-Picture toggle");
-          EventUtils.synthesizeMouseAtCenter(
+          await EventUtils.synthesizeMouseAtCenter(
             video,
             { type: "mousemove" },
             this.content.window
           );
-          EventUtils.synthesizeMouseAtCenter(
+          await EventUtils.synthesizeMouseAtCenter(
             video,
             { type: "mouseover" },
             this.content.window
@@ -137,39 +137,33 @@ add_task(async () => {
           let tiltY = 0;
           let twist = 0;
 
-          let defaultPrevented = EventUtils.synthesizeTouchAtPoint(
-            toggleCenterX,
-            toggleCenterY,
-            {
-              type: "touchstart",
-              id,
-              rx,
-              ry,
-              angle,
-              force,
-              tiltX,
-              tiltY,
-              twist,
-              modifiers: 0,
-            },
-            this.content.window
+          let defaultPrevented = utils.sendTouchEvent(
+            "touchstart",
+            [id],
+            [toggleCenterX],
+            [toggleCenterY],
+            [rx],
+            [ry],
+            [angle],
+            [force],
+            [tiltX],
+            [tiltY],
+            [twist],
+            0 /* modifiers */
           );
-          EventUtils.synthesizeTouchAtPoint(
-            toggleCenterX,
-            toggleCenterY,
-            {
-              type: "touchend",
-              id,
-              rx,
-              ry,
-              angle,
-              force,
-              tiltX,
-              tiltY,
-              twist,
-              modifiers: 0,
-            },
-            this.content.window
+          utils.sendTouchEvent(
+            "touchend",
+            [id],
+            [toggleCenterX],
+            [toggleCenterY],
+            [rx],
+            [ry],
+            [angle],
+            [force],
+            [tiltX],
+            [tiltY],
+            [twist],
+            0 /* modifiers */
           );
 
           ok(
@@ -188,39 +182,33 @@ add_task(async () => {
           let buttonCenterY = buttonRect.top + buttonRect.height / 2;
 
           info("Simulating touch event on new button");
-          defaultPrevented = EventUtils.synthesizeTouchAtPoint(
-            buttonCenterX,
-            buttonCenterY,
-            {
-              type: "touchstart",
-              id,
-              rx,
-              ry,
-              angle,
-              force,
-              tiltX,
-              tiltY,
-              twist,
-              modifiers: 0,
-            },
-            this.content.window
+          defaultPrevented = utils.sendTouchEvent(
+            "touchstart",
+            [id],
+            [buttonCenterX],
+            [buttonCenterY],
+            [rx],
+            [ry],
+            [angle],
+            [force],
+            [tiltX],
+            [tiltY],
+            [twist],
+            0 /* modifiers */
           );
-          EventUtils.synthesizeTouchAtPoint(
-            buttonCenterX,
-            buttonCenterY,
-            {
-              type: "touchend",
-              id,
-              rx,
-              ry,
-              angle,
-              force,
-              tiltX,
-              tiltY,
-              twist,
-              modifiers: 0,
-            },
-            this.content.window
+          utils.sendTouchEvent(
+            "touchend",
+            [id],
+            [buttonCenterX],
+            [buttonCenterY],
+            [rx],
+            [ry],
+            [angle],
+            [force],
+            [tiltX],
+            [tiltY],
+            [twist],
+            0 /* modifiers */
           );
 
           ok(

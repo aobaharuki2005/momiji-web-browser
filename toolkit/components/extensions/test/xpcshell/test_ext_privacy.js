@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
@@ -324,7 +326,7 @@ add_task(async function test_privacy_other_prefs() {
     case cookieSvc.BEHAVIOR_REJECT_TRACKER:
       defaultBehavior = "reject_trackers";
       break;
-    case cookieSvc.BEHAVIOR_PARTITION_FOREIGN:
+    case cookieSvc.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
       defaultBehavior = "reject_trackers_and_partition_foreign";
       break;
     default:
@@ -598,7 +600,8 @@ add_task(async function test_privacy_other_prefs() {
     "websites.cookieConfig",
     { behavior: "reject_trackers_and_partition_foreign" },
     {
-      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_PARTITION_FOREIGN,
+      "network.cookie.cookieBehavior":
+        cookieSvc.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
     },
     {
       behavior: "reject_trackers_and_partition_foreign",
@@ -645,7 +648,8 @@ add_task(async function test_privacy_other_prefs() {
   await testGetting(
     "websites.cookieConfig",
     {
-      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_PARTITION_FOREIGN,
+      "network.cookie.cookieBehavior":
+        cookieSvc.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
     },
     {
       behavior: "reject_trackers_and_partition_foreign",
@@ -661,7 +665,8 @@ add_task(async function test_privacy_other_prefs() {
     "websites.cookieConfig",
     { behavior: "reject_trackers_and_partition_foreign" },
     {
-      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_PARTITION_FOREIGN,
+      "network.cookie.cookieBehavior":
+        cookieSvc.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
     },
     {
       behavior: "reject_trackers_and_partition_foreign",

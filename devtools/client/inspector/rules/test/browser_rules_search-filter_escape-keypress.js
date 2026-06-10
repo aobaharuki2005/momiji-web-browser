@@ -32,14 +32,14 @@ async function testAddTextInFilter(inspector, view) {
   await setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
-  assertDisplayedRulesCount(view, 2);
+  is(view.element.children.length, 2, "Should have 2 rules.");
   is(
-    getRuleViewRuleEditorAt(view, 0).rule.selectorText,
+    getRuleViewRuleEditor(view, 0).rule.selectorText,
     "element",
     "First rule is inline element."
   );
 
-  const rule = getRuleViewRuleEditorAt(view, 1).rule;
+  const rule = getRuleViewRuleEditor(view, 1).rule;
   const prop = getTextProperty(view, 1, { "background-color": "#00F" });
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
@@ -62,7 +62,7 @@ async function testEscapeKeypress(inspector, view) {
   await onRuleViewFiltered;
 
   info("Check the search filter is cleared and no rules are highlighted");
-  assertDisplayedRulesCount(view, 3);
+  is(view.element.children.length, 3, "Should have 3 rules.");
   ok(!searchField.value, "Search filter is cleared");
   ok(
     !doc.querySelectorAll(".ruleview-highlight").length,

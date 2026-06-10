@@ -6,25 +6,22 @@
 
 use crate::{
     assert_syntax,
-    core::EncodingType,
     parsers::{
         grammar::{
             is_ascii_sign, is_day_designator, is_duration_designator, is_hour_designator,
             is_minute_designator, is_month_designator, is_second_designator, is_time_designator,
             is_week_designator, is_year_designator,
         },
+        records::{DateDurationRecord, DurationParseRecord, Fraction, TimeDurationRecord},
         time::parse_fraction,
         Cursor,
     },
-    records::{DateDurationRecord, DurationParseRecord, Fraction, TimeDurationRecord},
     ParseError, ParserResult,
 };
 
-pub(crate) fn parse_duration<T: EncodingType>(
-    cursor: &mut Cursor<T>,
-) -> ParserResult<DurationParseRecord> {
+pub(crate) fn parse_duration(cursor: &mut Cursor) -> ParserResult<DurationParseRecord> {
     let sign = if cursor
-        .check(is_ascii_sign)?
+        .check(is_ascii_sign)
         .ok_or_else(|| ParseError::abrupt_end("DurationStart"))?
     {
         cursor.next_or(ParseError::ImplAssert)? == b'+'
@@ -37,10 +34,7 @@ pub(crate) fn parse_duration<T: EncodingType>(
         DurationDisgnator,
     );
 
-    let date = if cursor
-        .check(is_time_designator)?
-        .ok_or(ParseError::abrupt_end("Duration"))?
-    {
+    let date = if cursor.check_or(false, is_time_designator) {
         None
     } else {
         Some(parse_date_duration(cursor)?)
@@ -66,15 +60,13 @@ enum DateUnit {
     Day,
 }
 
-pub(crate) fn parse_date_duration<T: EncodingType>(
-    cursor: &mut Cursor<T>,
-) -> ParserResult<DateDurationRecord> {
+pub(crate) fn parse_date_duration(cursor: &mut Cursor) -> ParserResult<DateDurationRecord> {
     let mut date = DateDurationRecord::default();
     let mut previous_unit = DateUnit::None;
 
-    while cursor.check_or(false, |ch| ch.is_ascii_digit())? {
+    while cursor.check_or(false, |ch| ch.is_ascii_digit()) {
         let mut value: u64 = 0;
-        while cursor.check_or(false, |ch| ch.is_ascii_digit())? {
+        while cursor.check_or(false, |ch| ch.is_ascii_digit()) {
             let digit = cursor
                 .next_digit()?
                 .ok_or_else(|| ParseError::abrupt_end("DateDuration"))?;
@@ -84,7 +76,7 @@ pub(crate) fn parse_date_duration<T: EncodingType>(
                 .ok_or(ParseError::DurationValueExceededRange)?
         }
 
-        match cursor.next()? {
+        match cursor.next() {
             Some(ch) if is_year_designator(ch) => {
                 if previous_unit > DateUnit::Year {
                     return Err(ParseError::DateDurationPartOrder);
@@ -131,24 +123,22 @@ enum TimeUnit {
     Second,
 }
 
-pub(crate) fn parse_time_duration<T: EncodingType>(
-    cursor: &mut Cursor<T>,
-) -> ParserResult<Option<TimeDurationRecord>> {
-    if !cursor.check_or(false, is_time_designator)? {
+pub(crate) fn parse_time_duration(cursor: &mut Cursor) -> ParserResult<Option<TimeDurationRecord>> {
+    if !cursor.check_or(false, is_time_designator) {
         return Ok(None);
     };
 
     cursor.advance();
     assert_syntax!(
-        cursor.check_or(false, |c| c.is_ascii_digit())?,
+        cursor.check_or(false, |c| c.is_ascii_digit()),
         TimeDurationDesignator,
     );
 
     let mut time: (u64, u64, u64, Option<Fraction>) = (0, 0, 0, None);
     let mut previous_unit = TimeUnit::None;
-    while cursor.check_or(false, |c| c.is_ascii_digit())? {
+    while cursor.check_or(false, |c| c.is_ascii_digit()) {
         let mut value: u64 = 0;
-        while cursor.check_or(false, |c| c.is_ascii_digit())? {
+        while cursor.check_or(false, |c| c.is_ascii_digit()) {
             let digit = cursor
                 .next_digit()?
                 .ok_or_else(|| ParseError::abrupt_end("TimeDurationDigit"))?;
@@ -160,7 +150,7 @@ pub(crate) fn parse_time_duration<T: EncodingType>(
 
         let fraction = parse_fraction(cursor)?;
 
-        match cursor.next()? {
+        match cursor.next() {
             Some(ch) if is_hour_designator(ch) => {
                 if previous_unit > TimeUnit::Hour {
                     return Err(ParseError::TimeDurationPartOrder);
@@ -195,10 +185,7 @@ pub(crate) fn parse_time_duration<T: EncodingType>(
         }
 
         if fraction.is_some() {
-            assert_syntax!(
-                cursor.check_or(true, |ch| !ch.is_ascii_digit())?,
-                InvalidEnd,
-            );
+            assert_syntax!(cursor.check_or(true, |ch| !ch.is_ascii_digit()), InvalidEnd,);
             break;
         }
     }

@@ -121,12 +121,12 @@ def install(src, dest):
         if src.lower().endswith(".msix"):
             # MSIX packages _are_ ZIP files, so we need to look for them first.
             install_dir = _install_msix(src)
+        elif zipfile.is_zipfile(src) or tarfile.is_tarfile(src):
+            install_dir = mozfile.extract(src, dest)[0]
         elif src.lower().endswith(".dmg"):
             install_dir = _install_dmg(src, dest)
         elif src.lower().endswith(".exe"):
             install_dir = _install_exe(src, dest)
-        elif zipfile.is_zipfile(src) or tarfile.is_tarfile(src):
-            install_dir = mozfile.extract(src, dest)[0]
         else:
             raise InvalidSource(f"{src} is not a valid installer file")
 
@@ -285,7 +285,7 @@ def _install_url(url, dest):
     return result
 
 
-def _install_dmg(src, dest_app):
+def _install_dmg(src, dest):
     """Extract a dmg file into the destination folder and return the
     application folder.
 
@@ -294,66 +294,44 @@ def _install_dmg(src, dest_app):
 
     """
     if mozinfo.isLinux:
-        return _install_dmg_cross(src, dest_app)
+        return _install_dmg_cross(src, dest)
 
-    def _detach_with_retry(volume, retries=4, delay=0.25):
-        for i in range(retries):
-            try:
-                subprocess.check_call(f'hdiutil detach "{volume}" -quiet', shell=True)
-                return
-            except subprocess.CalledProcessError as e:
-                # 16 == EBUSY
-                if e.returncode != 16 or i == retries - 1:
-                    raise
-                time.sleep(delay)
-
-        # Final fallback (CI-safe)
-        subprocess.check_call(f'hdiutil detach "{volume}" -force -quiet', shell=True)
-
-    app_dir = None
+    appDir = None
     try:
         # According to the Apple doc, the hdiutil output is stable and is based on the tab
         # separators
         # Therefor, $3 should give us the mounted path
-        app_dir = (
-            subprocess
-            .check_output(
-                f'hdiutil attach -noautoopen -nobrowse -readonly "{src}"'
-                "| grep /Volumes/ | awk 'BEGIN{FS=\"\t\"} {print $3}'",
+        appDir = (
+            subprocess.check_output(
+                'hdiutil attach -nobrowse -noautoopen "%s"'
+                "|grep /Volumes/"
+                "|awk 'BEGIN{FS=\"\t\"} {print $3}'" % str(src),
                 shell=True,
-                stderr=subprocess.STDOUT,
             )
             .strip()
-            .decode("utf-8")
+            .decode("ascii")
         )
 
-        app_name = None
-        for entry in os.listdir(app_dir):
-            if entry.endswith(".app"):
-                app_name = entry
+        for appFile in os.listdir(appDir):
+            if appFile.endswith(".app"):
+                appName = appFile
                 break
 
-        if not app_name:
-            raise InstallError(f"No .app bundle found in {src}")
+        mounted_path = os.path.join(appDir, appName)
 
-        src_app = os.path.join(app_dir, app_name)
-        dest_app = os.path.join(dest_app, app_name)
+        dest = os.path.join(dest, appName)
 
         # copytree() would fail if dest already exists.
-        if os.path.exists(dest_app):
-            raise InstallError(f"App bundle already exists: {dest_app}")
+        if os.path.exists(dest):
+            raise InstallError('App bundle "%s" already exists.' % dest)
 
-        shutil.copytree(src_app, dest_app, False)
+        shutil.copytree(mounted_path, dest, False)
 
     finally:
-        if app_dir:
-            try:
-                _detach_with_retry(app_dir)
-            except Exception as e:
-                # Log, but do not override the original exception
-                print(f"Warning: failed to detach {app_dir}: {e}")
+        if appDir:
+            subprocess.check_call('hdiutil detach "%s" -quiet' % appDir, shell=True)
 
-    return dest_app
+    return dest
 
 
 def _install_dmg_cross(src, dest):
@@ -448,8 +426,7 @@ def _get_msix_install_location(pkg):
                             # line. (Not in this comment, due to linting.)
                             location = None
                             for line in (
-                                subprocess
-                                .check_output(cmd)
+                                subprocess.check_output(cmd)
                                 .decode("utf-8")
                                 .splitlines()
                             ):

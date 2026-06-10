@@ -6,7 +6,7 @@ use http::method::Method;
 
 use std::collections::VecDeque;
 use std::hash::{Hash, Hasher};
-use std::{cmp, mem};
+use std::{cmp, mem, usize};
 
 /// HPACK encoder table
 #[derive(Debug)]

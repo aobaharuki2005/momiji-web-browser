@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -97,10 +99,6 @@ bool DOMPointReadOnly::ReadStructuredClone(JSStructuredCloneReader* aReader) {
 
   return true;
 #undef ReadDouble
-}
-
-gfx::Point DOMPointReadOnly::ToPoint(const DOMPointInit& aPoint) {
-  return gfx::Point(aPoint.mX, aPoint.mY);
 }
 
 already_AddRefed<DOMPoint> DOMPoint::FromPoint(const GlobalObject& aGlobal,

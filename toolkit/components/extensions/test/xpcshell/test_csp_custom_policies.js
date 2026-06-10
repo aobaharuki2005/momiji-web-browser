@@ -1,4 +1,10 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
+
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
+);
 
 const ADDON_ID = "test@web.extension";
 
@@ -6,15 +12,15 @@ const aps = Cc["@mozilla.org/addons/policy-service;1"].getService(
   Ci.nsIAddonPolicyService
 );
 
-const v2_csp = Services.prefs.getStringPref(
+const v2_csp = Preferences.get(
   "extensions.webextensions.base-content-security-policy"
 );
 
-const v3_csp = Services.prefs.getStringPref(
+const v3_csp = Preferences.get(
   "extensions.webextensions.base-content-security-policy.v3"
 );
 
-const v3_with_localhost_csp = Services.prefs.getStringPref(
+const v3_with_localhost_csp = Preferences.get(
   "extensions.webextensions.base-content-security-policy.v3-with-localhost"
 );
 
@@ -46,9 +52,7 @@ add_task(async function test_invalid_addon_csp() {
 add_task(async function test_policy_csp() {
   equal(
     aps.defaultCSP,
-    Services.prefs.getStringPref(
-      "extensions.webextensions.default-content-security-policy"
-    ),
+    Preferences.get("extensions.webextensions.default-content-security-policy"),
     "Expected default CSP value"
   );
 

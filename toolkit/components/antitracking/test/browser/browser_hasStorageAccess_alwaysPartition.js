@@ -157,16 +157,16 @@ var testCases = [
     ],
   },
   {
-    behavior: BEHAVIOR_PARTITION_FOREIGN, // 5
+    behavior: BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN, // 5
     cases: [
       [true] /* same-origin non-tracker */,
       [false] /* 3rd-party non-tracker */,
       [false] /* 3rd-party non-tracker with permission */,
-      [false] /* 3rd-party tracker */,
-      [false] /* 3rd-party tracker with permission */,
+      [false, trackerBlocked] /* 3rd-party tracker */,
+      [false, trackerBlocked] /* 3rd-party tracker with permission */,
       [true] /* same-site tracker */,
       [true] /* same-origin tracker */,
-      [false] /* insecure tracker */,
+      [false, trackerBlocked] /* insecure tracker */,
     ],
   },
 ];
@@ -178,6 +178,19 @@ var testCases = [
       add_task(async _ => {
         setting.setup();
       });
+    }
+
+    // Override the expected blocking notifications if the tracker cookie
+    // blocking
+    let isTrackerCookieBlocked = Services.prefs.getBoolPref(
+      "network.cookie.cookieBehavior.trackerCookieBlocking"
+    );
+
+    if (!isTrackerCookieBlocked) {
+      // Override for BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN.
+      testCases[5].cases[3] = [false]; /* 3rd-party tracker */
+      testCases[5].cases[4] = [false]; /* 3rd-party tracker with permission */
+      testCases[5].cases[7] = [false]; /* insecure tracker */
     }
 
     testCases.forEach(test => {
@@ -200,6 +213,10 @@ var testCases = [
         allowList: false,
         callback,
         extraPrefs: [
+          [
+            "privacy.partition.always_partition_third_party_non_cookie_storage",
+            true,
+          ],
           // Testing Storage Access API grants constrained to secure contexts
           ["dom.storage_access.dont_grant_insecure_contexts", true],
         ],

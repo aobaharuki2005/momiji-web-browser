@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -15,7 +17,6 @@
 #include "mozilla/Maybe.h"
 
 #include <algorithm>
-#include <bit>
 #include <cmath>
 
 #include "fdlibm.h"
@@ -23,7 +24,6 @@
 
 #include "builtin/DataViewObject.h"
 #include "builtin/MapObject.h"
-#include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
 #include "builtin/RegExp.h"
 #include "builtin/String.h"
@@ -543,9 +543,8 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
 #  define CACHEOP_CASE(name) cacheop_##name : CACHEOP_TRACE(name)
 #  define CACHEOP_CASE_FALLTHROUGH(name) CACHEOP_CASE(name)
 
-#  define DISPATCH_CACHEOP()                                                \
-    cacheop =                                                               \
-        cacheIRReader.more() ? cacheIRReader.readOp() : CacheOp::PblReturn; \
+#  define DISPATCH_CACHEOP()          \
+    cacheop = cacheIRReader.readOp(); \
     goto* addresses[long(cacheop)];
 
 #else  // ENABLE_COMPUTED_GOTO_DISPATCH
@@ -557,9 +556,8 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
     [[fallthrough]];                     \
     CACHEOP_CASE(name)
 
-#  define DISPATCH_CACHEOP()                                                \
-    cacheop =                                                               \
-        cacheIRReader.more() ? cacheIRReader.readOp() : CacheOp::PblReturn; \
+#  define DISPATCH_CACHEOP()          \
+    cacheop = cacheIRReader.readOp(); \
     goto dispatch;
 
 #endif  // !ENABLE_COMPUTED_GOTO_DISPATCH
@@ -578,7 +576,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
     ctx.icregs.icTags[(index)] = 0;                   \
   } while (0)
 
-    DECLARE_CACHEOP_CASE(PblReturn);
+    DECLARE_CACHEOP_CASE(ReturnFromIC);
     DECLARE_CACHEOP_CASE(GuardToObject);
     DECLARE_CACHEOP_CASE(GuardIsNullOrUndefined);
     DECLARE_CACHEOP_CASE(GuardIsNull);
@@ -611,6 +609,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
     DECLARE_CACHEOP_CASE(GuardIsProxy);
     DECLARE_CACHEOP_CASE(GuardIsNotProxy);
     DECLARE_CACHEOP_CASE(GuardIsNotArrayBufferMaybeShared);
+    DECLARE_CACHEOP_CASE(GuardIsTypedArray);
     DECLARE_CACHEOP_CASE(GuardHasProxyHandler);
     DECLARE_CACHEOP_CASE(GuardIsNotDOMProxy);
     DECLARE_CACHEOP_CASE(GuardSpecificObject);
@@ -667,7 +666,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
     DECLARE_CACHEOP_CASE(CallInt32ToString);
     DECLARE_CACHEOP_CASE(CallScriptedFunction);
     DECLARE_CACHEOP_CASE(CallNativeFunction);
-    DECLARE_CACHEOP_CASE(MetaCreateThis);
+    DECLARE_CACHEOP_CASE(MetaScriptedThisShape);
     DECLARE_CACHEOP_CASE(LoadFixedSlotResult);
     DECLARE_CACHEOP_CASE(LoadDynamicSlotResult);
     DECLARE_CACHEOP_CASE(LoadDenseElementResult);
@@ -869,16 +868,15 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
 #define BOUNDSCHECK(resultId) \
   if (resultId.id() >= ICRegs::kMaxICVals) FAIL_IC();
 
-#define PREDICT_NEXT(name)                            \
-  static_assert(CacheOp::name != CacheOp::PblReturn); \
-  if (cacheIRReader.peekOp() == CacheOp::name) {      \
-    cacheIRReader.readOp();                           \
-    cacheop = CacheOp::name;                          \
-    goto cacheop_##name;                              \
+#define PREDICT_NEXT(name)                       \
+  if (cacheIRReader.peekOp() == CacheOp::name) { \
+    cacheIRReader.readOp();                      \
+    cacheop = CacheOp::name;                     \
+    goto cacheop_##name;                         \
   }
 
 #define PREDICT_RETURN()                                 \
-  if (!cacheIRReader.more()) {                           \
+  if (cacheIRReader.peekOp() == CacheOp::ReturnFromIC) { \
     TRACE_PRINTF("stub successful, predicted return\n"); \
     return retValue;                                     \
   }
@@ -901,7 +899,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
 #endif
     {
 
-      CACHEOP_CASE(PblReturn) {
+      CACHEOP_CASE(ReturnFromIC) {
         TRACE_PRINTF("stub successful!\n");
         return retValue;
       }
@@ -1351,6 +1349,15 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
             clasp == &FixedLengthSharedArrayBufferObject::class_ ||
             clasp == &ResizableArrayBufferObject::class_ ||
             clasp == &GrowableSharedArrayBufferObject::class_) {
+          FAIL_IC();
+        }
+        DISPATCH_CACHEOP();
+      }
+
+      CACHEOP_CASE(GuardIsTypedArray) {
+        ObjOperandId objId = cacheIRReader.objOperandId();
+        JSObject* obj = reinterpret_cast<JSObject*>(READ_REG(objId.id()));
+        if (!IsTypedArrayClass(obj->getClass())) {
           FAIL_IC();
         }
         DISPATCH_CACHEOP();
@@ -2319,11 +2326,8 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
               ReservedRooted<JSObject*> calleeObj(&ctx.state.obj0, callee);
               ReservedRooted<JSObject*> newTargetRooted(
                   &ctx.state.obj1, &origArgs[0].asValue().toObject());
-              ReservedRooted<Value> result(&ctx.state.value0,
-                                           MagicValue(JS_IS_CONSTRUCTING));
-              HandleFunction fun = calleeObj.as<JSFunction>();
-              if (!js::CreateThis(cx, fun, newTargetRooted, GenericObject,
-                                  &result)) {
+              ReservedRooted<Value> result(&ctx.state.value0);
+              if (!CreateThisFromIC(cx, calleeObj, newTargetRooted, &result)) {
                 ctx.error = PBIResult::Error;
                 return IC_ERROR_SENTINEL();
               }
@@ -2607,10 +2611,10 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
         DISPATCH_CACHEOP();
       }
 
-      CACHEOP_CASE(MetaCreateThis) {
+      CACHEOP_CASE(MetaScriptedThisShape) {
         // This op is only metadata for the Warp Transpiler and should be
         // ignored.
-        cacheIRReader.argsForMetaCreateThis();
+        cacheIRReader.argsForMetaScriptedThisShape();
         PREDICT_NEXT(CallScriptedFunction);
         DISPATCH_CACHEOP();
       }
@@ -3635,8 +3639,9 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
 
       CACHEOP_CASE(MathClz32Result) {
         Int32OperandId inputId = cacheIRReader.int32OperandId();
-        uint32_t input = uint32_t(READ_REG(inputId.id()));
-        int32_t result = std::countl_zero(input);
+        int32_t input = int32_t(READ_REG(inputId.id()));
+        int32_t result =
+            (input == 0) ? 32 : mozilla::CountLeadingZeroes32(input);
         retValue = Int32Value(result).asRawBits();
         PREDICT_RETURN();
         DISPATCH_CACHEOP();
@@ -5042,8 +5047,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
       }
 
       CACHEOP_CASE(ObjectKeysResult) {
-        auto args = cacheIRReader.argsForObjectKeysResult();
-        ObjOperandId objId = args.objId;
+        ObjOperandId objId = cacheIRReader.objOperandId();
         JSObject* obj = reinterpret_cast<JSObject*>(READ_REG(objId.id()));
         {
           PUSH_IC_FRAME();
@@ -7056,7 +7060,6 @@ PBIResult PortableBaselineInterpret(
 
       CASE(DynamicImport) {
         {
-          ImportPhase phase = ImportPhase(GET_UINT8(pc));
           ReservedRooted<Value> value0(&state.value0,
                                        VIRTPOP().asValue());  // options
           ReservedRooted<Value> value1(&state.value1,
@@ -7065,8 +7068,7 @@ PBIResult PortableBaselineInterpret(
           {
             PUSH_EXIT_FRAME();
             ReservedRooted<JSScript*> script0(&state.script0, frame->script());
-            promise =
-                StartDynamicModuleImport(cx, script0, value1, value0, phase);
+            promise = StartDynamicModuleImport(cx, script0, value1, value0);
             if (!promise) {
               GOTO_ERROR();
             }

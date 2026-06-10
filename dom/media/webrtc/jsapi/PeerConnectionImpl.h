@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef PEER_CONNECTION_IMPL_H_
-#define PEER_CONNECTION_IMPL_H_
+#ifndef _PEER_CONNECTION_IMPL_H_
+#define _PEER_CONNECTION_IMPL_H_
 
+#include <cmath>
 #include <map>
 #include <string>
 #include <vector>
@@ -91,7 +92,11 @@ typedef NS_ConvertUTF8toUTF16 PCObserverString;
 }  // namespace dom
 }  // namespace mozilla
 
+#if defined(__cplusplus) && __cplusplus >= 201103L
 typedef struct Timecard Timecard;
+#else
+#  include "common/time_profiling/timecard.h"
+#endif
 
 // To preserve blame, convert nsresult to ErrorResult with wrappers. These
 // macros help declare wrappers w/function being wrapped when there are no
@@ -223,7 +228,6 @@ class PeerConnectionImpl final
                                dom::RTCIceGathererState state);
   void OnCandidateFound(const std::string& aTransportId,
                         const CandidateInfo& aCandidateInfo);
-  void OnCandidateError(const IceCandidateErrorInfo& aErrorInfo);
   void UpdateDefaultCandidate(const std::string& defaultAddr,
                               uint16_t defaultPort,
                               const std::string& defaultRtcpAddr,
@@ -402,9 +406,10 @@ class PeerConnectionImpl final
   MOZ_CAN_RUN_SCRIPT_BOUNDARY bool PluginCrash(uint32_t aPluginID,
                                                const nsAString& aPluginName);
 
-  NS_IMETHODIMP SetConfiguration(const RTCConfiguration& aConfiguration);
-  void SetConfiguration(const RTCConfiguration& aConfiguration,
-                        ErrorResult& rv);
+  NS_IMETHODIMP_TO_ERRORRESULT(SetConfiguration, ErrorResult& rv,
+                               const RTCConfiguration& aConfiguration) {
+    rv = SetConfiguration(aConfiguration);
+  }
 
   dom::RTCSctpTransport* GetSctp() const;
 
@@ -597,9 +602,6 @@ class PeerConnectionImpl final
       nsTHashMap<nsCStringHashKey, RefPtr<dom::RTCDtlsTransport>>;
 
  private:
-  void ParseIceServers(const nsTArray<dom::RTCIceServer>& aIceServers,
-                       ErrorResult& aRv);
-
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
@@ -719,7 +721,6 @@ class PeerConnectionImpl final
   unsigned int mDataChannelsClosed = 0;
 
   bool mForceIceTcp;
-  Maybe<dom::RTCRtcpMuxPolicy> mRtcpMuxPolicy;
   RefPtr<MediaTransportHandler> mTransportHandler;
 
   // The JSEP negotiation session.
@@ -793,7 +794,7 @@ class PeerConnectionImpl final
     // This class is not cycle-collected, so we must avoid grabbing a strong
     // reference.
     const std::string mPcHandle;
-    virtual ~StunAddrsHandler() = default;
+    virtual ~StunAddrsHandler() {}
   };
 
   // Manage ICE transports.
@@ -929,7 +930,6 @@ class PeerConnectionImpl final
   MediaEventListener mGatheringStateChangeListener;
   MediaEventListener mConnectionStateChangeListener;
   MediaEventListener mCandidateListener;
-  MediaEventListener mCandidateErrorListener;
   MediaEventListener mAlpnNegotiatedListener;
   MediaEventListener mStateChangeListener;
   MediaEventListener mRtcpStateChangeListener;
@@ -962,4 +962,4 @@ class PeerConnectionWrapper {
 
 #undef NS_IMETHODIMP_TO_ERRORRESULT
 #undef NS_IMETHODIMP_TO_ERRORRESULT_RETREF
-#endif  // PEER_CONNECTION_IMPL_H_
+#endif  // _PEER_CONNECTION_IMPL_H_

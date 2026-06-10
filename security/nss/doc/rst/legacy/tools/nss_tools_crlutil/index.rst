@@ -25,6 +25,7 @@ NSS Tools crlutil
    For information on certificate and key database management, see `Using the Certificate Database
    Tool <NSS_Tools_certutil>`__.
 
+.. _availability_2:
 
 ` <#availability_2>`__ Availability
 -----------------------------------
@@ -33,6 +34,7 @@ NSS Tools crlutil
 
    See the :ref:`mozilla_projects_nss_releases` for the platforms this tool is available on.
 
+.. _syntax_2:
 
 ` <#syntax_2>`__ Syntax
 -----------------------
@@ -47,6 +49,7 @@ NSS Tools crlutil
    following section. Each command takes one option. Each option may take zero or more arguments. To
    see a usage string, issue the command without options, or with the ``-H`` option.
 
+.. _options_and_arguments:
 
 `Options and Arguments <#options_and_arguments>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -309,6 +312,7 @@ NSS Tools crlutil
          invalidity date of a cert. Date should be represented in GeneralizedTime format
          (YYYYMMDDhhmmssZ).
 
+.. _usage_2:
 
 ` <#usage_2>`__ Usage
 ---------------------
@@ -339,6 +343,7 @@ NSS Tools crlutil
    -  Erasing CRLs from db:
    -  Import CRL from file:
 
+.. _examples_2:
 
 ` <#examples_2>`__ Examples
 ---------------------------
@@ -432,3 +437,5 @@ NSS Tools crlutil
    The CRL Management Tool extracts existing CRL from a database, will modify and sign with
    certificate *cert-nickname* and will store it in database. To modify while importing CRL from
    file user should supply ``-i``\ *import-crl-file* option.
+
+   --------------

@@ -36,7 +36,7 @@ enum class NetworkPreference {
   NOT_PREFERRED = -1,
 };
 
-absl::string_view NetworkPreferenceToString(NetworkPreference preference);
+const char* NetworkPreferenceToString(NetworkPreference preference);
 
 // This interface is set onto a socket server,
 // where only the ip address is known at the time of binding.
@@ -92,9 +92,6 @@ class NetworkMonitorInterface {
     // cards, where attempting to use all interfaces returned from getifaddrs
     // caused the connection to be dropped.
     bool available = true;
-
-    // Is this network using network slicing.
-    NetworkSlice slice = NetworkSlice::NO_SLICE;
   };
 
   NetworkMonitorInterface();

@@ -10,15 +10,16 @@ import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 export var Preferences = {
   init() {
     let panes = [
-      ["paneSync"],
+      ["paneGeneral"],
+      ["paneGeneral", browsingGroup],
+      ["paneGeneral", connectionDialog],
       ["paneSearch"],
       ["panePrivacy"],
       ["panePrivacy", cacheGroup],
       ["panePrivacy", clearRecentHistoryDialog],
-      ["paneConnectionSecurity", connectionDialog],
-      ["paneConnectionSecurity", certManager],
-      ["paneConnectionSecurity", deviceManager],
-      ["paneTabsBrowsing", tabsGroup],
+      ["panePrivacy", certManager],
+      ["panePrivacy", deviceManager],
+      ["paneSync"],
     ];
 
     for (let [primary, customFn] of panes) {
@@ -50,7 +51,7 @@ let prefHelper = async function (primary, customFn = null) {
   let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
 
   // close any dialog that might still be open
-  await selectedBrowser.documentGlobal.SpecialPowers.spawn(
+  await selectedBrowser.ownerGlobal.SpecialPowers.spawn(
     selectedBrowser,
     [],
     async function () {
@@ -103,32 +104,28 @@ function paintPromise(browserWindow) {
   });
 }
 
-async function tabsGroup(aBrowser) {
-  await aBrowser.documentGlobal.SpecialPowers.spawn(
+async function browsingGroup(aBrowser) {
+  await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
     async function () {
-      content.document
-        .querySelector('setting-group[groupid="tabs"]')
-        .scrollIntoView();
+      content.document.getElementById("browsingGroup").scrollIntoView();
     }
   );
 }
 
 async function cacheGroup(aBrowser) {
-  await aBrowser.documentGlobal.SpecialPowers.spawn(
+  await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
     async function () {
-      content.document
-        .querySelector('setting-group[groupid="cookiesAndSiteData2"]')
-        .scrollIntoView();
+      content.document.getElementById("cacheGroup").scrollIntoView();
     }
   );
 }
 
 async function connectionDialog(aBrowser) {
-  await aBrowser.documentGlobal.SpecialPowers.spawn(
+  await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
     async function () {
@@ -138,17 +135,17 @@ async function connectionDialog(aBrowser) {
 }
 
 async function clearRecentHistoryDialog(aBrowser) {
-  await aBrowser.documentGlobal.SpecialPowers.spawn(
+  await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
     async function () {
-      content.document.getElementById("clearSiteDataButton").click();
+      content.document.getElementById("clearHistoryButton").click();
     }
   );
 }
 
 async function certManager(aBrowser) {
-  await aBrowser.documentGlobal.SpecialPowers.spawn(
+  await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
     async function () {
@@ -158,7 +155,7 @@ async function certManager(aBrowser) {
 }
 
 async function deviceManager(aBrowser) {
-  await aBrowser.documentGlobal.SpecialPowers.spawn(
+  await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
     async function () {

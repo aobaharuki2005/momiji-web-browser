@@ -1,9 +1,10 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef AndroidSystemFontIterator_h_
-#define AndroidSystemFontIterator_h_
+#ifndef AndroidSystemFontIterator_h__
+#define AndroidSystemFontIterator_h__
 
 #include "mozilla/Maybe.h"
 
@@ -12,8 +13,8 @@
 
 namespace mozilla {
 
-class __attribute__((availability(android, introduced = 29)))
-AndroidFont final {
+class __attribute__((
+    availability(android, introduced = 29))) AndroidFont final {
  public:
   explicit AndroidFont(AFont* _Nullable aFont) : mFont(aFont) {};
 
@@ -33,8 +34,8 @@ AndroidFont final {
   AFont* _Nullable mFont;
 };
 
-class __attribute__((availability(android, introduced = 29)))
-AndroidSystemFontIterator final {
+class __attribute__((
+    availability(android, introduced = 29))) AndroidSystemFontIterator final {
  public:
   AndroidSystemFontIterator();
   ~AndroidSystemFontIterator();

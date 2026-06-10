@@ -1,3 +1,4 @@
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
 "use strict";
@@ -205,22 +206,16 @@ async function testHelper(
   );
 
   if (expectStringInPage) {
-    let found = await SpecialPowers.spawn(
+    let pageContent = await SpecialPowers.spawn(
       win.gBrowser.selectedBrowser,
-      [expectStringInPage],
-      async function (expectedString) {
-        const netErrorCard = content.document.querySelector("net-error-card");
-        if (netErrorCard) {
-          const card = netErrorCard.wrappedJSObject;
-          await card.getUpdateComplete();
-          return card.errorInfo.errorCodeString === expectedString;
-        }
-        return content.document.body.textContent.includes(expectedString);
+      [],
+      async function () {
+        return content.document.body.textContent;
       }
     );
     Assert.ok(
-      found,
-      `page should reference the string '${expectStringInPage}'`
+      pageContent.includes(expectStringInPage),
+      `page should contain the string '${expectStringInPage}' (was '${pageContent}')`
     );
   }
 

@@ -50,7 +50,7 @@ TEST(SimpleEncoderWrapper, SupportedSvcModesOnlyL1T1) {
       .buffer_space_type =
           PredictionConstraints::BufferSpaceType::kSingleKeyframe,
       .max_spatial_layers = 1,
-      .scaling_factors = {{.numerator = 1, .denominator = 1}},
+      .scaling_factors = {{1, 1}},
   };
 
   EXPECT_THAT(SimpleEncoderWrapper::SupportedWebrtcSvcModes(constraints),
@@ -65,8 +65,7 @@ TEST(SimpleEncoderWrapper, SupportedSvcModesUpToL1T3) {
       .buffer_space_type =
           PredictionConstraints::BufferSpaceType::kSingleKeyframe,
       .max_spatial_layers = 1,
-      .scaling_factors = {{.numerator = 1, .denominator = 1},
-                          {.numerator = 1, .denominator = 2}},
+      .scaling_factors = {{1, 1}, {1, 2}},
   };
 
   EXPECT_THAT(SimpleEncoderWrapper::SupportedWebrtcSvcModes(constraints),
@@ -81,8 +80,7 @@ TEST(SimpleEncoderWrapper, SupportedSvcModesUpToL3T3Key) {
       .buffer_space_type =
           PredictionConstraints::BufferSpaceType::kSingleKeyframe,
       .max_spatial_layers = 3,
-      .scaling_factors = {{.numerator = 1, .denominator = 1},
-                          {.numerator = 1, .denominator = 2}},
+      .scaling_factors = {{1, 1}, {1, 2}},
   };
 
   EXPECT_THAT(
@@ -101,8 +99,7 @@ TEST(SimpleEncoderWrapper, SupportedSvcModesUpToS3T3) {
       .buffer_space_type =
           PredictionConstraints::BufferSpaceType::kMultiInstance,
       .max_spatial_layers = 3,
-      .scaling_factors = {{.numerator = 1, .denominator = 1},
-                          {.numerator = 1, .denominator = 2}},
+      .scaling_factors = {{1, 1}, {1, 2}},
   };
 
   EXPECT_THAT(SimpleEncoderWrapper::SupportedWebrtcSvcModes(constraints),
@@ -118,9 +115,7 @@ TEST(SimpleEncoderWrapper, SupportedSvcModesUpToL3T3KeyWithHScaling) {
       .buffer_space_type =
           PredictionConstraints::BufferSpaceType::kSingleKeyframe,
       .max_spatial_layers = 3,
-      .scaling_factors = {{.numerator = 1, .denominator = 1},
-                          {.numerator = 1, .denominator = 2},
-                          {.numerator = 2, .denominator = 3}},
+      .scaling_factors = {{1, 1}, {1, 2}, {2, 3}},
   };
 
   EXPECT_THAT(

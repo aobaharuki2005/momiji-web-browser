@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
 "use strict";
@@ -6,6 +7,24 @@
 
 // Ensure that the appropriate initialization has happened.
 do_get_profile();
+
+function find_slot_by_name(module, name) {
+  for (let slot of module.listSlots()) {
+    if (slot.name == name) {
+      return slot;
+    }
+  }
+  return null;
+}
+
+function find_module_by_name(moduleDB, name) {
+  for (let slot of moduleDB.listModules()) {
+    if (slot.name == name) {
+      return slot;
+    }
+  }
+  return null;
+}
 
 var gPrompt = {
   QueryInterface: ChromeUtils.generateQI(["nsIPrompt"]),
@@ -28,20 +47,20 @@ const gPromptFactory = {
   getPrompt: () => gPrompt,
 };
 
-add_task(async function run_test() {
+function run_test() {
   MockRegistrar.register("@mozilla.org/prompter;1", gPromptFactory);
 
   let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   libraryFile.append("pkcs11testmodule");
   libraryFile.append(ctypes.libraryName("pkcs11testmodule"));
-  await loadPKCS11Module(libraryFile, "PKCS11 Test Module", false);
+  loadPKCS11Module(libraryFile, "PKCS11 Test Module", false);
 
   let moduleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
     Ci.nsIPKCS11ModuleDB
   );
-  let testModule = await findModuleByName(moduleDB, "PKCS11 Test Module");
+  let testModule = find_module_by_name(moduleDB, "PKCS11 Test Module");
   notEqual(testModule, null, "should be able to find test module");
-  let testSlot = findSlotByName(testModule, "Test PKCS11 Slot 二");
+  let testSlot = find_slot_by_name(testModule, "Test PKCS11 Slot 二");
   notEqual(testSlot, null, "should be able to find 'Test PKCS11 Slot 二'");
 
   equal(
@@ -92,7 +111,7 @@ add_task(async function run_test() {
   testToken.login(true);
   ok(testToken.isLoggedIn(), "Should have 'logged in' successfully");
 
-  testSlot = findSlotByName(testModule, "Empty PKCS11 Slot");
+  testSlot = find_slot_by_name(testModule, "Empty PKCS11 Slot");
   notEqual(testSlot, null, "should be able to find 'Empty PKCS11 Slot'");
   equal(testSlot.tokenName, null, "Empty slot is empty");
   equal(
@@ -104,12 +123,12 @@ add_task(async function run_test() {
   let bundle = Services.strings.createBundle(
     "chrome://pipnss/locale/pipnss.properties"
   );
-  let internalModule = await findModuleByName(
+  let internalModule = find_module_by_name(
     moduleDB,
     "NSS Internal PKCS #11 Module"
   );
   notEqual(internalModule, null, "should be able to find internal module");
-  let cryptoSlot = findSlotByName(
+  let cryptoSlot = find_slot_by_name(
     internalModule,
     bundle.GetStringFromName("TokenDescription")
   );
@@ -124,7 +143,7 @@ add_task(async function run_test() {
     bundle.GetStringFromName("ManufacturerID"),
     "crypto slot should have expected 'manID'"
   );
-  let keySlot = findSlotByName(
+  let keySlot = find_slot_by_name(
     internalModule,
     bundle.GetStringFromName("PrivateTokenDescription")
   );
@@ -139,4 +158,4 @@ add_task(async function run_test() {
     bundle.GetStringFromName("ManufacturerID"),
     "key slot should have expected 'manID'"
   );
-});
+}

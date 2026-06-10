@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -310,35 +312,27 @@ class LUse : public LAllocation {
 
 static const uint32_t MAX_VIRTUAL_REGISTERS = LUse::VREG_MASK;
 
-template <class ValT>
-class LBoxValue {
+class LBoxAllocation {
 #ifdef JS_NUNBOX32
-  ValT type_;
-  ValT payload_;
+  LAllocation type_;
+  LAllocation payload_;
 #else
-  ValT value_;
+  LAllocation value_;
 #endif
 
  public:
-  LBoxValue() = default;
-
 #ifdef JS_NUNBOX32
-  LBoxValue(ValT type, ValT payload) : type_(type), payload_(payload) {}
+  LBoxAllocation(LAllocation type, LAllocation payload)
+      : type_(type), payload_(payload) {}
 
-  ValT type() const { return type_; }
-  ValT payload() const { return payload_; }
-
-  const ValT* pointerType() const { return &type_; }
-  const ValT* pointerPayload() const { return &payload_; }
+  LAllocation type() const { return type_; }
+  LAllocation payload() const { return payload_; }
 #else
-  explicit LBoxValue(ValT value) : value_(value) {}
+  explicit LBoxAllocation(LAllocation value) : value_(value) {}
 
-  ValT value() const { return value_; }
-  const ValT* pointer() const { return &value_; }
+  LAllocation value() const { return value_; }
 #endif
 };
-
-using LBoxAllocation = LBoxValue<LAllocation>;
 
 template <class ValT>
 class LInt64Value {
@@ -749,22 +743,6 @@ class LInt64Definition : public LInt64Value<LDefinition> {
 #if JS_BITS_PER_WORD == 32
     MOZ_ASSERT(high().isBogusTemp() == low().isBogusTemp());
     return high().isBogusTemp();
-#else
-    return value().isBogusTemp();
-#endif
-  }
-};
-
-class LBoxDefinition : public LBoxValue<LDefinition> {
- public:
-  using LBoxValue<LDefinition>::LBoxValue;
-
-  static LBoxDefinition BogusTemp() { return LBoxDefinition(); }
-
-  bool isBogusTemp() const {
-#ifdef JS_NUNBOX32
-    MOZ_ASSERT(type().isBogusTemp() == payload().isBogusTemp());
-    return type().isBogusTemp();
 #else
     return value().isBogusTemp();
 #endif
@@ -1252,15 +1230,6 @@ class LInstructionFixedDefsTempsHelper : public LInstruction {
     return LInt64Definition(defsAndTemps_[Defs + index]);
 #endif
   }
-  LBoxDefinition getBoxTemp(size_t index) {
-    MOZ_ASSERT(index + BOX_PIECES <= Temps);
-#ifdef JS_NUNBOX32
-    return LBoxDefinition(defsAndTemps_[Defs + index + TYPE_INDEX],
-                          defsAndTemps_[Defs + index + PAYLOAD_INDEX]);
-#elif JS_PUNBOX64
-    return LBoxDefinition(defsAndTemps_[Defs + index]);
-#endif
-  }
 
   void setDef(size_t index, const LDefinition& def) {
     MOZ_ASSERT(index < Defs);
@@ -1274,14 +1243,6 @@ class LInstructionFixedDefsTempsHelper : public LInstruction {
 #if JS_BITS_PER_WORD == 32
     setTemp(index, a.low());
     setTemp(index + 1, a.high());
-#else
-    setTemp(index, a.value());
-#endif
-  }
-  void setBoxTemp(size_t index, const LBoxDefinition& a) {
-#ifdef JS_NUNBOX32
-    setTemp(index, a.type());
-    setTemp(index + 1, a.payload());
 #else
     setTemp(index, a.value());
 #endif

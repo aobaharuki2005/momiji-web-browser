@@ -110,7 +110,7 @@ macro_rules! xpcom_method {
     // doesn't (yet?) support out-parameters (*mut nsIFoo).  The xpcom_method
     // macro itself does, however, support the return value out-parameter.
     (@ensure_param $name:ident) => {
-        let $name = match unsafe { $crate::Ensure::ensure($name) } {
+        let $name = match $crate::Ensure::ensure($name) {
             Ok(val) => val,
             Err(result) => return result,
         };
@@ -129,7 +129,7 @@ macro_rules! xpcom_method {
             $(xpcom_method!(@ensure_param $param_name);)*
             match self.$rust_name($($param_name, )*) {
                 Ok(val) => {
-                    unsafe { val.forget(&mut *retval) };
+                    val.forget(&mut *retval);
                     NS_OK
                 }
                 Err(error) => {
@@ -147,7 +147,7 @@ macro_rules! xpcom_method {
             $(xpcom_method!(@ensure_param $param_name);)*
             match self.$rust_name($($param_name, )*) {
                 Ok(val) => {
-                    unsafe { (*retval).assign(&val) };
+                    (*retval).assign(&val);
                     NS_OK
                 }
                 Err(error) => {
@@ -165,7 +165,7 @@ macro_rules! xpcom_method {
             $(xpcom_method!(@ensure_param $param_name);)*
             match self.$rust_name($($param_name, )*) {
                 Ok(val) => {
-                    unsafe { (*retval).assign(&val) };
+                    (*retval).assign(&val);
                     NS_OK
                 }
                 Err(error) => {
@@ -183,7 +183,7 @@ macro_rules! xpcom_method {
             $(xpcom_method!(@ensure_param $param_name);)*
             match self.$rust_name($($param_name, )*) {
                 Ok(val) => {
-                    unsafe { *retval = val };
+                    *retval = val;
                     NS_OK
                 }
                 Err(error) => {

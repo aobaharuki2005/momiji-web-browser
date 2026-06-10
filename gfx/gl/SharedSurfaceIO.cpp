@@ -1,3 +1,4 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 4; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -48,8 +49,8 @@ static bool BackTextureWithIOSurf(GLContext* const gl, const GLuint tex,
 UniquePtr<SharedSurface_IOSurface> SharedSurface_IOSurface::Create(
     const SharedSurfaceDesc& desc) {
   const auto& size = desc.size;
-  const RefPtr<MacIOSurface> ioSurf = MacIOSurface::CreateIOSurface(
-      size.width, size.height, MacIOSurface::AllowAlpha::Yes);
+  const RefPtr<MacIOSurface> ioSurf =
+      MacIOSurface::CreateIOSurface(size.width, size.height, true);
   if (!ioSurf) {
     NS_WARNING("Failed to create MacIOSurface.");
     return nullptr;
@@ -94,7 +95,7 @@ SharedSurface_IOSurface::ToSurfaceDescriptor() {
   const bool isOpaque = false;  // RGBA
   return Some(layers::SurfaceDescriptorMacIOSurface(
       mIOSurf->GetIOSurfaceID(), isOpaque, mIOSurf->GetYUVColorSpace(),
-      mIOSurf->GetTransferFunction(), (layers::GpuFence*)nullptr));
+      (layers::GpuFence*)nullptr));
 }
 
 }  // namespace gl

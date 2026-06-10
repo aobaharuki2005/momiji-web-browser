@@ -15,7 +15,7 @@
   :root {
     /* In high-contrast mode on Windows, ThreeDLightShadow provides more
        contrast than ThreeDShadow. See bug 1022564. */
-    --panel-border-color: ThreeDLightShadow;
+    --arrowpanel-border-color: ThreeDLightShadow;
   }
 }
 
@@ -91,6 +91,10 @@ xul|separator.groove[orient="vertical"] {
 
 /* Content select */
 
+.contentSelectDropdown-ingroup > .menu-text {
+  padding-inline-start: 20px;
+}
+
 #ContentSelectDropdown > menupopup {
   font: -moz-list;
 
@@ -113,10 +117,6 @@ xul|separator.groove[orient="vertical"] {
   > menuitem[_moz-menuactive="true"][disabled] {
     color: GrayText;
     background-color: unset;
-  }
-
-  > menuitem[indented] > .menu-text {
-    padding-inline-start: 20px;
   }
 
   > menucaption[disabled] {

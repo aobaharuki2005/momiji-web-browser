@@ -5,7 +5,6 @@
 import os
 import re
 import subprocess
-from importlib.metadata import version
 
 from mozfile import which
 from mozlint import result
@@ -59,10 +58,6 @@ def parse_with_split(errors):
     return filename, lineno, level, message
 
 
-def get_rstcheck_version():
-    return version("rstcheck")
-
-
 def lint(files, config, **lintargs):
     log = lintargs["log"]
     config["root"] = lintargs["root"]
@@ -70,8 +65,6 @@ def lint(files, config, **lintargs):
     paths = list(paths)
     chunk_size = 50
     binary = get_rstcheck_binary()
-
-    log.debug(f"Version: {get_rstcheck_version()}")
 
     while paths:
         # Config for rstcheck is stored in `/.rstcheck.cfg`.

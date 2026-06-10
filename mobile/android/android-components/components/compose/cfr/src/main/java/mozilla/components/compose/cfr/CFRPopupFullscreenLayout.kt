@@ -34,8 +34,6 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.compose.cfr.CFRPopup.IndicatorDirection.DOWN
@@ -85,7 +83,6 @@ internal data class PopupHorizontalBounds(
  * @param title Optional [Text] composable to show just above the popup text.
  * @param text [Text] already styled and ready to be shown in the popup.
  * @param action Optional other composable to show just below the popup text.
- * @param mainDispatcher [CoroutineDispatcher] used for scheduling coroutines.
  */
 @SuppressLint("ViewConstructor") // Intended to be used only in code, don't need a View constructor
 internal class CFRPopupFullscreenLayout(
@@ -95,7 +92,6 @@ internal class CFRPopupFullscreenLayout(
     private val title: @Composable (() -> Unit)? = null,
     private val text: @Composable (() -> Unit),
     private val action: @Composable (() -> Unit) = {},
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : AbstractComposeView(anchor.context), ViewRootForInspector {
     private val windowManager = anchor.context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
@@ -542,7 +538,7 @@ internal class CFRPopupFullscreenLayout(
 
     private fun getDisplayOrientationListener(context: Context) = DisplayOrientationListener(context) {
         dismiss()
-        anchor.toScope(mainDispatcher = mainDispatcher).launch {
+        anchor.toScope().launch {
             delay(SHOW_AFTER_SCREEN_ORIENTATION_CHANGE_DELAY)
             show()
         }

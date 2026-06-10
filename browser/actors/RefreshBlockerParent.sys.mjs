@@ -7,7 +7,7 @@ export class RefreshBlockerParent extends JSWindowActorParent {
     if (message.name == "RefreshBlocker:Blocked") {
       let browser = this.browsingContext.top.embedderElement;
       if (browser) {
-        let gBrowser = browser.documentGlobal.gBrowser;
+        let gBrowser = browser.ownerGlobal.gBrowser;
         if (gBrowser) {
           gBrowser.refreshBlocked(this, browser, message.data);
         }

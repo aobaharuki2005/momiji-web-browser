@@ -98,7 +98,7 @@ Scenario::Scenario(
       task_queue_(network_manager_.time_controller()
                       ->GetTaskQueueFactory()
                       ->CreateTaskQueue("Scenario",
-                                        TaskQueueFactory::Priority::kNormal)) {}
+                                        TaskQueueFactory::Priority::NORMAL)) {}
 
 Scenario::~Scenario() {
   if (start_time_.IsFinite())
@@ -112,7 +112,7 @@ Scenario::~Scenario() {
 ColumnPrinter Scenario::TimePrinter() {
   return ColumnPrinter::Lambda(
       "time",
-      [this](StringBuilder& sb) {
+      [this](SimpleStringBuilder& sb) {
         sb.AppendFormat("%.3lf", Now().seconds<double>());
       },
       32);

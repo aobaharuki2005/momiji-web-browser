@@ -1,25 +1,21 @@
-use std::{
-    error::Error as StdError,
-    future::Future,
-    marker::Unpin,
-    pin::Pin,
-    task::{Context, Poll},
-};
+use std::error::Error as StdError;
+use std::future::Future;
+use std::marker::Unpin;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 
-use crate::rt::{Read, Write};
 use bytes::{Buf, Bytes};
-use futures_core::ready;
 use http::Request;
+use tokio::io::{AsyncRead, AsyncWrite};
+use tracing::{debug, trace};
 
 use super::{Http1Transaction, Wants};
-use crate::body::{Body, DecodedLength, Incoming as IncomingBody};
-#[cfg(feature = "client")]
-use crate::client::dispatch::TrySendError;
-use crate::common::task;
+use crate::body::{Body, DecodedLength, HttpBody};
+use crate::common;
 use crate::proto::{BodyLength, Conn, Dispatched, MessageHead, RequestHead};
 use crate::upgrade::OnUpgrade;
 
-pub(crate) struct Dispatcher<D, Bs: Body, I, T> {
+pub(crate) struct Dispatcher<D, Bs: HttpBody, I, T> {
     conn: Conn<I, Bs::Data, T>,
     dispatch: D,
     body_tx: Option<crate::body::Sender>,
@@ -36,8 +32,7 @@ pub(crate) trait Dispatch {
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
     ) -> Poll<Option<Result<(Self::PollItem, Self::PollBody), Self::PollError>>>;
-    fn recv_msg(&mut self, msg: crate::Result<(Self::RecvItem, IncomingBody)>)
-        -> crate::Result<()>;
+    fn recv_msg(&mut self, msg: crate::Result<(Self::RecvItem, Body)>) -> crate::Result<()>;
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), ()>>;
     fn should_poll(&self) -> bool;
 }
@@ -54,14 +49,14 @@ cfg_server! {
 cfg_client! {
     pin_project_lite::pin_project! {
         pub(crate) struct Client<B> {
-            callback: Option<crate::client::dispatch::Callback<Request<B>, http::Response<IncomingBody>>>,
+            callback: Option<crate::client::dispatch::Callback<Request<B>, http::Response<Body>>>,
             #[pin]
             rx: ClientRx<B>,
             rx_closed: bool,
         }
     }
 
-    type ClientRx<B> = crate::client::dispatch::Receiver<Request<B>, http::Response<IncomingBody>>;
+    type ClientRx<B> = crate::client::dispatch::Receiver<Request<B>, http::Response<Body>>;
 }
 
 impl<D, Bs, I, T> Dispatcher<D, Bs, I, T>
@@ -72,9 +67,9 @@ where
             RecvItem = MessageHead<T::Incoming>,
         > + Unpin,
     D::PollError: Into<Box<dyn StdError + Send + Sync>>,
-    I: Read + Write + Unpin,
+    I: AsyncRead + AsyncWrite + Unpin,
     T: Http1Transaction + Unpin,
-    Bs: Body + 'static,
+    Bs: HttpBody + 'static,
     Bs::Error: Into<Box<dyn StdError + Send + Sync>>,
 {
     pub(crate) fn new(dispatch: D, conn: Conn<I, Bs::Data, T>) -> Self {
@@ -90,11 +85,7 @@ where
     #[cfg(feature = "server")]
     pub(crate) fn disable_keep_alive(&mut self) {
         self.conn.disable_keep_alive();
-
-        // If keep alive has been disabled and no read or write has been seen on
-        // the connection yet, we must be in a state where the server is being asked to
-        // shut down before any data has been seen on the connection
-        if self.conn.is_write_closed() || self.conn.has_initial_read_write_state() {
+        if self.conn.is_write_closed() {
             self.close();
         }
     }
@@ -105,14 +96,14 @@ where
     }
 
     /// Run this dispatcher until HTTP says this connection is done,
-    /// but don't call `Write::shutdown` on the underlying IO.
+    /// but don't call `AsyncWrite::shutdown` on the underlying IO.
     ///
     /// This is useful for old-style HTTP upgrades, but ignores
     /// newer-style upgrade API.
-    pub(crate) fn poll_without_shutdown(
-        &mut self,
-        cx: &mut Context<'_>,
-    ) -> Poll<crate::Result<()>> {
+    pub(crate) fn poll_without_shutdown(&mut self, cx: &mut Context<'_>) -> Poll<crate::Result<()>>
+    where
+        Self: Unpin,
+    {
         Pin::new(self).poll_catch(cx, false).map_ok(|ds| {
             if let Dispatched::Upgrade(pending) = ds {
                 pending.manual();
@@ -189,7 +180,7 @@ where
 
         trace!("poll_loop yielding (self = {:p})", self);
 
-        task::yield_now(cx).map(|never| match never {})
+        common::task::yield_now(cx).map(|never| match never {})
     }
 
     fn poll_read(&mut self, cx: &mut Context<'_>) -> Poll<crate::Result<()>> {
@@ -215,39 +206,17 @@ where
                         }
                     }
                     match self.conn.poll_read_body(cx) {
-                        Poll::Ready(Some(Ok(frame))) => {
-                            if frame.is_data() {
-                                let chunk = frame.into_data().unwrap_or_else(|_| unreachable!());
-                                match body.try_send_data(chunk) {
-                                    Ok(()) => {
-                                        self.body_tx = Some(body);
-                                    }
-                                    Err(_canceled) => {
-                                        if self.conn.can_read_body() {
-                                            trace!("body receiver dropped before eof, closing");
-                                            self.conn.close_read();
-                                        }
-                                    }
-                                }
-                            } else if frame.is_trailers() {
-                                let trailers =
-                                    frame.into_trailers().unwrap_or_else(|_| unreachable!());
-                                match body.try_send_trailers(trailers) {
-                                    Ok(()) => {
-                                        self.body_tx = Some(body);
-                                    }
-                                    Err(_canceled) => {
-                                        if self.conn.can_read_body() {
-                                            trace!("body receiver dropped before eof, closing");
-                                            self.conn.close_read();
-                                        }
-                                    }
-                                }
-                            } else {
-                                // we should have dropped all unknown frames in poll_read_body
-                                error!("unexpected frame");
+                        Poll::Ready(Some(Ok(chunk))) => match body.try_send_data(chunk) {
+                            Ok(()) => {
+                                self.body_tx = Some(body);
                             }
-                        }
+                            Err(_canceled) => {
+                                if self.conn.can_read_body() {
+                                    trace!("body receiver dropped before eof, closing");
+                                    self.conn.close_read();
+                                }
+                            }
+                        },
                         Poll::Ready(None) => {
                             // just drop, the body will close automatically
                         }
@@ -269,7 +238,7 @@ where
     }
 
     fn poll_read_head(&mut self, cx: &mut Context<'_>) -> Poll<crate::Result<()>> {
-        // can dispatch receive, or does it still care about other incoming message?
+        // can dispatch receive, or does it still care about, an incoming message?
         match ready!(self.dispatch.poll_ready(cx)) {
             Ok(()) => (),
             Err(()) => {
@@ -278,15 +247,13 @@ where
                 return Poll::Ready(Ok(()));
             }
         }
-
         // dispatch is ready for a message, try to read one
         match ready!(self.conn.poll_read_head(cx)) {
             Some(Ok((mut head, body_len, wants))) => {
                 let body = match body_len {
-                    DecodedLength::ZERO => IncomingBody::empty(),
+                    DecodedLength::ZERO => Body::empty(),
                     other => {
-                        let (tx, rx) =
-                            IncomingBody::new_channel(other, wants.contains(Wants::EXPECT));
+                        let (tx, rx) = Body::new_channel(other, wants.contains(Wants::EXPECT));
                         self.body_tx = Some(tx);
                         rx
                     }
@@ -334,7 +301,16 @@ where
                 && self.dispatch.should_poll()
             {
                 if let Some(msg) = ready!(Pin::new(&mut self.dispatch).poll_msg(cx)) {
-                    let (head, body) = msg.map_err(crate::Error::new_user_service)?;
+                    let (head, mut body) = msg.map_err(crate::Error::new_user_service)?;
+
+                    // Check if the body knows its full data immediately.
+                    //
+                    // If so, we can skip a bit of bookkeeping that streaming
+                    // bodies need to do.
+                    if let Some(full) = crate::body::take_full_data(&mut body) {
+                        self.conn.write_full_msg(head, full);
+                        return Poll::Ready(Ok(()));
+                    }
 
                     let body_type = if body.is_end_stream() {
                         self.body_rx.set(None);
@@ -344,7 +320,7 @@ where
                             .size_hint()
                             .exact()
                             .map(BodyLength::Known)
-                            .or(Some(BodyLength::Unknown));
+                            .or_else(|| Some(BodyLength::Unknown));
                         self.body_rx.set(Some(body));
                         btype
                     };
@@ -370,39 +346,27 @@ where
                         continue;
                     }
 
-                    let item = ready!(body.as_mut().poll_frame(cx));
+                    let item = ready!(body.as_mut().poll_data(cx));
                     if let Some(item) = item {
-                        let frame = item.map_err(|e| {
+                        let chunk = item.map_err(|e| {
                             *clear_body = true;
                             crate::Error::new_user_body(e)
                         })?;
-
-                        if frame.is_data() {
-                            let chunk = frame.into_data().unwrap_or_else(|_| unreachable!());
-                            let eos = body.is_end_stream();
-                            if eos {
-                                *clear_body = true;
-                                if chunk.remaining() == 0 {
-                                    trace!("discarding empty chunk");
-                                    self.conn.end_body()?;
-                                } else {
-                                    self.conn.write_body_and_end(chunk);
-                                }
-                            } else {
-                                if chunk.remaining() == 0 {
-                                    trace!("discarding empty chunk");
-                                    continue;
-                                }
-                                self.conn.write_body(chunk);
-                            }
-                        } else if frame.is_trailers() {
+                        let eos = body.is_end_stream();
+                        if eos {
                             *clear_body = true;
-                            self.conn.write_trailers(
-                                frame.into_trailers().unwrap_or_else(|_| unreachable!()),
-                            );
+                            if chunk.remaining() == 0 {
+                                trace!("discarding empty chunk");
+                                self.conn.end_body()?;
+                            } else {
+                                self.conn.write_body_and_end(chunk);
+                            }
                         } else {
-                            trace!("discarding unknown frame");
-                            continue;
+                            if chunk.remaining() == 0 {
+                                trace!("discarding empty chunk");
+                                continue;
+                            }
+                            self.conn.write_body(chunk);
                         }
                     } else {
                         *clear_body = true;
@@ -459,9 +423,9 @@ where
             RecvItem = MessageHead<T::Incoming>,
         > + Unpin,
     D::PollError: Into<Box<dyn StdError + Send + Sync>>,
-    I: Read + Write + Unpin,
+    I: AsyncRead + AsyncWrite + Unpin,
     T: Http1Transaction + Unpin,
-    Bs: Body + 'static,
+    Bs: HttpBody + 'static,
     Bs::Error: Into<Box<dyn StdError + Send + Sync>>,
 {
     type Output = crate::Result<Dispatched>;
@@ -488,7 +452,7 @@ impl<'a, T> OptGuard<'a, T> {
     }
 }
 
-impl<T> Drop for OptGuard<'_, T> {
+impl<'a, T> Drop for OptGuard<'a, T> {
     fn drop(&mut self) {
         if self.1 {
             self.0.set(None);
@@ -518,11 +482,11 @@ cfg_server! {
     // Service is never pinned
     impl<S: HttpService<B>, B> Unpin for Server<S, B> {}
 
-    impl<S, Bs> Dispatch for Server<S, IncomingBody>
+    impl<S, Bs> Dispatch for Server<S, Body>
     where
-        S: HttpService<IncomingBody, ResBody = Bs>,
+        S: HttpService<Body, ResBody = Bs>,
         S::Error: Into<Box<dyn StdError + Send + Sync>>,
-        Bs: Body,
+        Bs: HttpBody,
     {
         type PollItem = MessageHead<http::StatusCode>;
         type PollBody = Bs;
@@ -553,7 +517,7 @@ cfg_server! {
             ret
         }
 
-        fn recv_msg(&mut self, msg: crate::Result<(Self::RecvItem, IncomingBody)>) -> crate::Result<()> {
+        fn recv_msg(&mut self, msg: crate::Result<(Self::RecvItem, Body)>) -> crate::Result<()> {
             let (msg, body) = msg?;
             let mut req = Request::new(body);
             *req.method_mut() = msg.subject.0;
@@ -566,11 +530,14 @@ cfg_server! {
             Ok(())
         }
 
-        fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), ()>> {
+        fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), ()>> {
             if self.in_flight.is_some() {
                 Poll::Pending
             } else {
-                Poll::Ready(Ok(()))
+                self.service.poll_ready(cx).map_err(|_e| {
+                    // FIXME: return error value.
+                    trace!("service closed");
+                })
             }
         }
 
@@ -583,8 +550,6 @@ cfg_server! {
 // ===== impl Client =====
 
 cfg_client! {
-    use std::convert::Infallible;
-
     impl<B> Client<B> {
         pub(crate) fn new(rx: ClientRx<B>) -> Client<B> {
             Client {
@@ -597,17 +562,17 @@ cfg_client! {
 
     impl<B> Dispatch for Client<B>
     where
-        B: Body,
+        B: HttpBody,
     {
         type PollItem = RequestHead;
         type PollBody = B;
-        type PollError = Infallible;
+        type PollError = std::convert::Infallible;
         type RecvItem = crate::proto::ResponseHead;
 
         fn poll_msg(
             mut self: Pin<&mut Self>,
             cx: &mut Context<'_>,
-        ) -> Poll<Option<Result<(Self::PollItem, Self::PollBody), Infallible>>> {
+        ) -> Poll<Option<Result<(Self::PollItem, Self::PollBody), Self::PollError>>> {
             let mut this = self.as_mut();
             debug_assert!(!this.rx_closed);
             match this.rx.poll_recv(cx) {
@@ -641,7 +606,7 @@ cfg_client! {
             }
         }
 
-        fn recv_msg(&mut self, msg: crate::Result<(Self::RecvItem, IncomingBody)>) -> crate::Result<()> {
+        fn recv_msg(&mut self, msg: crate::Result<(Self::RecvItem, Body)>) -> crate::Result<()> {
             match msg {
                 Ok((msg, body)) => {
                     if let Some(cb) = self.callback.take() {
@@ -657,10 +622,7 @@ cfg_client! {
                 }
                 Err(err) => {
                     if let Some(cb) = self.callback.take() {
-                        cb.send(Err(TrySendError {
-                            error: err,
-                            message: None,
-                        }));
+                        cb.send(Err((err, None)));
                         Ok(())
                     } else if !self.rx_closed {
                         self.rx.close();
@@ -668,10 +630,7 @@ cfg_client! {
                             trace!("canceling queued request with connection error: {}", err);
                             // in this case, the message was never even started, so it's safe to tell
                             // the user that the request was completely canceled
-                            cb.send(Err(TrySendError {
-                                error: crate::Error::new_canceled().with(err),
-                                message: Some(req),
-                            }));
+                            cb.send(Err((crate::Error::new_canceled().with(err), Some(req))));
                             Ok(())
                         } else {
                             Err(err)
@@ -705,7 +664,6 @@ cfg_client! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::io::Compat;
     use crate::proto::h1::ClientTransaction;
     use std::time::Duration;
 
@@ -719,7 +677,7 @@ mod tests {
             // Block at 0 for now, but we will release this response before
             // the request is ready to write later...
             let (mut tx, rx) = crate::client::dispatch::channel();
-            let conn = Conn::<_, bytes::Bytes, ClientTransaction>::new(Compat::new(io));
+            let conn = Conn::<_, bytes::Bytes, ClientTransaction>::new(io);
             let mut dispatcher = Dispatcher::new(Client::new(rx), conn);
 
             // First poll is needed to allow tx to send...
@@ -730,21 +688,20 @@ mod tests {
             handle.read(b"HTTP/1.1 200 OK\r\n\r\n");
 
             let mut res_rx = tx
-                .try_send(crate::Request::new(IncomingBody::empty()))
+                .try_send(crate::Request::new(crate::Body::empty()))
                 .unwrap();
 
             tokio_test::assert_ready_ok!(Pin::new(&mut dispatcher).poll(cx));
             let err = tokio_test::assert_ready_ok!(Pin::new(&mut res_rx).poll(cx))
                 .expect_err("callback should send error");
 
-            match (err.error.is_canceled(), err.message.as_ref()) {
-                (true, Some(_)) => (),
-                _ => panic!("expected Canceled, got {:?}", err),
+            match (err.0.kind(), err.1) {
+                (&crate::error::Kind::Canceled, Some(_)) => (),
+                other => panic!("expected Canceled, got {:?}", other),
             }
         });
     }
 
-    #[cfg(not(miri))]
     #[tokio::test]
     async fn client_flushing_is_not_ready_for_next_request() {
         let _ = pretty_env_logger::try_init();
@@ -756,19 +713,16 @@ mod tests {
             .build_with_handle();
 
         let (mut tx, rx) = crate::client::dispatch::channel();
-        let mut conn = Conn::<_, bytes::Bytes, ClientTransaction>::new(Compat::new(io));
+        let mut conn = Conn::<_, bytes::Bytes, ClientTransaction>::new(io);
         conn.set_write_strategy_queue();
 
         let dispatcher = Dispatcher::new(Client::new(rx), conn);
         let _dispatcher = tokio::spawn(async move { dispatcher.await });
 
-        let body = {
-            let (mut tx, body) = IncomingBody::new_channel(DecodedLength::new(4), false);
-            tx.try_send_data("reee".into()).unwrap();
-            body
-        };
-
-        let req = crate::Request::builder().method("POST").body(body).unwrap();
+        let req = crate::Request::builder()
+            .method("POST")
+            .body(crate::Body::from("reee"))
+            .unwrap();
 
         let res = tx.try_send(req).unwrap().await.expect("response");
         drop(res);
@@ -776,7 +730,6 @@ mod tests {
         assert!(!tx.is_ready());
     }
 
-    #[cfg(not(miri))]
     #[tokio::test]
     async fn body_empty_chunks_ignored() {
         let _ = pretty_env_logger::try_init();
@@ -787,14 +740,14 @@ mod tests {
             .build();
 
         let (mut tx, rx) = crate::client::dispatch::channel();
-        let conn = Conn::<_, bytes::Bytes, ClientTransaction>::new(Compat::new(io));
+        let conn = Conn::<_, bytes::Bytes, ClientTransaction>::new(io);
         let mut dispatcher = tokio_test::task::spawn(Dispatcher::new(Client::new(rx), conn));
 
         // First poll is needed to allow tx to send...
         assert!(dispatcher.poll().is_pending());
 
         let body = {
-            let (mut tx, body) = IncomingBody::channel();
+            let (mut tx, body) = crate::Body::channel();
             tx.try_send_data("".into()).unwrap();
             body
         };

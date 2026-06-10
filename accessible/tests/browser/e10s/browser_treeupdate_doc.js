@@ -277,10 +277,7 @@ addAccessibleTask(
     testAccessibleTree(iframe, tree);
 
     /* ================= Change source ======================================== */
-    reorderEventPromise = waitForEvent(
-      EVENT_REORDER,
-      evt => evt.accessible.id === "iframe" && evt.accessible.firstChild
-    );
+    reorderEventPromise = waitForEvent(EVENT_REORDER, "iframe");
     await invokeSetAttribute(
       browser,
       "iframe",

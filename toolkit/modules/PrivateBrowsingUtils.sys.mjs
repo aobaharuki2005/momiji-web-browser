@@ -33,7 +33,7 @@ export var PrivateBrowsingUtils = {
   },
 
   isBrowserPrivate(aBrowser) {
-    let chromeWin = aBrowser.documentGlobal;
+    let chromeWin = aBrowser.ownerGlobal;
     if (chromeWin.gMultiProcessBrowser || !aBrowser.contentWindow) {
       // In e10s we have to look at the chrome window's private
       // browsing status since the only alternative is to check the

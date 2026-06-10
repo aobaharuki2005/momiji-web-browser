@@ -1,8 +1,0 @@
-features:
-- name: svg
-  files:
-  - abspos.html
-  - out-of-flow-svg-root.html
-  - outer-svg-intrinsic-size-001.html
-  - outer-svg-intrinsic-size-002.html
-  - viewBox-*

@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -17,6 +20,9 @@
 #include "mozilla/net/CookieServiceParent.h"
 #include "mozilla/net/WebSocketChannelParent.h"
 #include "mozilla/net/WebSocketEventListenerParent.h"
+#ifdef MOZ_WIDGET_GTK
+#  include "mozilla/net/GIOChannelParent.h"
+#endif
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/net/GeckoViewContentChannelParent.h"
 #endif
@@ -72,34 +78,6 @@ namespace mozilla {
 namespace net {
 
 // C++ file contents
-
-namespace {
-
-class SpeculativeConnectCallbackWrapper final : public nsIInterfaceRequestor {
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIINTERFACEREQUESTOR
-
-  explicit SpeculativeConnectCallbackWrapper(nsILoadContext* aLoadContext)
-      : mLoadContext(aLoadContext) {}
-
- private:
-  virtual ~SpeculativeConnectCallbackWrapper() = default;
-
-  nsCOMPtr<nsILoadContext> mLoadContext;
-};
-NS_IMPL_ISUPPORTS(SpeculativeConnectCallbackWrapper, nsIInterfaceRequestor)
-
-NS_IMETHODIMP
-SpeculativeConnectCallbackWrapper::GetInterface(const nsIID& aIID,
-                                                void** result) {
-  if (mLoadContext && aIID.Equals(NS_GET_IID(nsILoadContext))) {
-    return mLoadContext->QueryInterface(aIID, result);
-  }
-  return NS_ERROR_NO_INTERFACE;
-}
-}  // anonymous namespace
-
 NeckoParent::NeckoParent() : mSocketProcessBridgeInited(false) {
   // Init HTTP protocol handler now since we need atomTable up and running very
   // early (IPDL argument handling for PHttpChannel constructor needs it) so
@@ -208,22 +186,43 @@ mozilla::ipc::IPCResult NeckoParent::RecvPHttpChannelConstructor(
   return IPC_OK();
 }
 
-already_AddRefed<PStunAddrsRequestParent>
-NeckoParent::AllocPStunAddrsRequestParent() {
+PStunAddrsRequestParent* NeckoParent::AllocPStunAddrsRequestParent() {
 #ifdef MOZ_WEBRTC
-  return do_AddRef(new StunAddrsRequestParent());
+  StunAddrsRequestParent* p = new StunAddrsRequestParent();
+  p->AddRef();
+  return p;
 #else
   return nullptr;
 #endif
 }
 
-already_AddRefed<PWebrtcTCPSocketParent>
-NeckoParent::AllocPWebrtcTCPSocketParent(const Maybe<TabId>& aTabId) {
+bool NeckoParent::DeallocPStunAddrsRequestParent(
+    PStunAddrsRequestParent* aActor) {
 #ifdef MOZ_WEBRTC
-  return do_AddRef(new WebrtcTCPSocketParent(aTabId));
+  StunAddrsRequestParent* p = static_cast<StunAddrsRequestParent*>(aActor);
+  p->Release();
+#endif
+  return true;
+}
+
+PWebrtcTCPSocketParent* NeckoParent::AllocPWebrtcTCPSocketParent(
+    const Maybe<TabId>& aTabId) {
+#ifdef MOZ_WEBRTC
+  WebrtcTCPSocketParent* parent = new WebrtcTCPSocketParent(aTabId);
+  parent->AddRef();
+  return parent;
 #else
   return nullptr;
 #endif
+}
+
+bool NeckoParent::DeallocPWebrtcTCPSocketParent(
+    PWebrtcTCPSocketParent* aActor) {
+#ifdef MOZ_WEBRTC
+  WebrtcTCPSocketParent* parent = static_cast<WebrtcTCPSocketParent*>(aActor);
+  parent->Release();
+#endif
+  return true;
 }
 
 PCacheEntryWriteHandleParent* NeckoParent::AllocPCacheEntryWriteHandleParent(
@@ -358,6 +357,51 @@ mozilla::ipc::IPCResult NeckoParent::RecvConnectBaseChannel(
   return IPC_OK();
 }
 
+#ifdef MOZ_WIDGET_GTK
+static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
+    const GIOChannelCreationArgs& aArgs) {
+  if (aArgs.type() != GIOChannelCreationArgs::TGIOChannelOpenArgs) {
+    return nullptr;
+  }
+
+  const GIOChannelOpenArgs& args = aArgs.get_GIOChannelOpenArgs();
+  return GetRequestingPrincipal(args.loadInfo());
+}
+
+PGIOChannelParent* NeckoParent::AllocPGIOChannelParent(
+    PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
+    const GIOChannelCreationArgs& aOpenArgs) {
+  nsCOMPtr<nsIPrincipal> requestingPrincipal =
+      GetRequestingPrincipal(aOpenArgs);
+
+  nsCOMPtr<nsILoadContext> loadContext;
+  CreateChannelLoadContext(aBrowser, Manager(), aSerialized,
+                           requestingPrincipal, loadContext);
+  PBOverrideStatus overrideStatus =
+      PBOverrideStatusFromLoadContext(aSerialized);
+  GIOChannelParent* p = new GIOChannelParent(BrowserParent::GetFrom(aBrowser),
+                                             loadContext, overrideStatus);
+  p->AddRef();
+  return p;
+}
+
+bool NeckoParent::DeallocPGIOChannelParent(PGIOChannelParent* channel) {
+  GIOChannelParent* p = static_cast<GIOChannelParent*>(channel);
+  p->Release();
+  return true;
+}
+
+mozilla::ipc::IPCResult NeckoParent::RecvPGIOChannelConstructor(
+    PGIOChannelParent* actor, PBrowserParent* aBrowser,
+    const SerializedLoadContext& aSerialized,
+    const GIOChannelCreationArgs& aOpenArgs) {
+  GIOChannelParent* p = static_cast<GIOChannelParent*>(actor);
+  DebugOnly<bool> rv = p->Init(aOpenArgs);
+  MOZ_ASSERT(rv);
+  return IPC_OK();
+}
+#endif
+
 #ifdef MOZ_WIDGET_ANDROID
 static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
     const GeckoViewContentChannelArgs& aArgs) {
@@ -421,39 +465,48 @@ bool NeckoParent::DeallocPTCPSocketParent(PTCPSocketParent* actor) {
   return true;
 }
 
-already_AddRefed<PTCPServerSocketParent>
-NeckoParent::AllocPTCPServerSocketParent(const uint16_t& aLocalPort,
-                                         const uint16_t& aBacklog,
-                                         const bool& aUseArrayBuffers) {
-  return do_AddRef(
-      new TCPServerSocketParent(this, aLocalPort, aBacklog, aUseArrayBuffers));
+PTCPServerSocketParent* NeckoParent::AllocPTCPServerSocketParent(
+    const uint16_t& aLocalPort, const uint16_t& aBacklog,
+    const bool& aUseArrayBuffers) {
+  TCPServerSocketParent* p =
+      new TCPServerSocketParent(this, aLocalPort, aBacklog, aUseArrayBuffers);
+  p->AddIPDLReference();
+  return p;
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPTCPServerSocketConstructor(
     PTCPServerSocketParent* aActor, const uint16_t& aLocalPort,
     const uint16_t& aBacklog, const bool& aUseArrayBuffers) {
-  if (!StaticPrefs::dom_tcpsocket_in_child_enabled()) {
-    return IPC_FAIL(this, "tcp socket not enabled");
-  }
   static_cast<TCPServerSocketParent*>(aActor)->Init();
   return IPC_OK();
 }
 
-already_AddRefed<PUDPSocketParent> NeckoParent::AllocPUDPSocketParent(
+bool NeckoParent::DeallocPTCPServerSocketParent(PTCPServerSocketParent* actor) {
+  TCPServerSocketParent* p = static_cast<TCPServerSocketParent*>(actor);
+  p->ReleaseIPDLReference();
+  return true;
+}
+
+PUDPSocketParent* NeckoParent::AllocPUDPSocketParent(
     nsIPrincipal* /* unused */, const nsACString& /* unused */) {
-  return do_AddRef(new UDPSocketParent(this));
+  RefPtr<UDPSocketParent> p = new UDPSocketParent(this);
+
+  return p.forget().take();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPUDPSocketConstructor(
     PUDPSocketParent* aActor, nsIPrincipal* aPrincipal,
     const nsACString& aFilter) {
-  if (!StaticPrefs::dom_udpsocket_enabled() && aFilter.IsEmpty()) {
-    return IPC_FAIL(this, "udp socket not enabled");
-  }
   if (!static_cast<UDPSocketParent*>(aActor)->Init(aPrincipal, aFilter)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
+}
+
+bool NeckoParent::DeallocPUDPSocketParent(PUDPSocketParent* actor) {
+  UDPSocketParent* p = static_cast<UDPSocketParent*>(actor);
+  p->Release();
+  return true;
 }
 
 already_AddRefed<PDNSRequestParent> NeckoParent::AllocPDNSRequestParent(
@@ -470,10 +523,6 @@ mozilla::ipc::IPCResult NeckoParent::RecvPDNSRequestConstructor(
     const nsACString& aTrrServer, const int32_t& aPort, const uint16_t& aType,
     const OriginAttributes& aOriginAttributes,
     const nsIDNSService::DNSFlags& aFlags) {
-  if (!aTrrServer.IsEmpty()) {
-    return IPC_FAIL(this, "Content process should not specify TRR server");
-  }
-
   RefPtr<DNSRequestParent> actor = static_cast<DNSRequestParent*>(aActor);
   RefPtr<DNSRequestHandler> handler =
       actor->GetDNSRequest()->AsDNSRequestHandler();
@@ -483,7 +532,6 @@ mozilla::ipc::IPCResult NeckoParent::RecvPDNSRequestConstructor(
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvSpeculativeConnect(
-    PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
     nsIURI* aURI, nsIPrincipal* aPrincipal,
     Maybe<OriginAttributes>&& aOriginAttributes, const bool& aAnonymous) {
   nsCOMPtr<nsISpeculativeConnect> speculator(gIOService);
@@ -491,20 +539,12 @@ mozilla::ipc::IPCResult NeckoParent::RecvSpeculativeConnect(
   if (!aURI) {
     return IPC_FAIL(this, "aURI must not be null");
   }
-
-  nsCOMPtr<nsILoadContext> loadContext;
-  CreateChannelLoadContext(aBrowser, Manager(), aSerialized, principal,
-                           loadContext);
-
-  RefPtr<SpeculativeConnectCallbackWrapper> callback =
-      new SpeculativeConnectCallbackWrapper(loadContext);
-
-  if (speculator) {
+  if (aURI && speculator) {
     if (aOriginAttributes) {
       speculator->SpeculativeConnectWithOriginAttributesNative(
-          aURI, std::move(aOriginAttributes.ref()), callback, aAnonymous);
+          aURI, std::move(aOriginAttributes.ref()), nullptr, aAnonymous);
     } else {
-      speculator->SpeculativeConnect(aURI, principal, callback, aAnonymous);
+      speculator->SpeculativeConnect(aURI, principal, nullptr, aAnonymous);
     }
   }
   return IPC_OK();
@@ -515,15 +555,6 @@ mozilla::ipc::IPCResult NeckoParent::RecvHTMLDNSPrefetch(
     const OriginAttributes& aOriginAttributes,
     const nsIDNSService::DNSFlags& flags) {
   dom::HTMLDNSPrefetch::Prefetch(hostname, isHttps, aOriginAttributes, flags);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult NeckoParent::RecvHTMLDNSPrefetchBatch(
-    nsTArray<HTMLDNSPrefetchArgs>&& aPrefetches) {
-  for (const auto& entry : aPrefetches) {
-    dom::HTMLDNSPrefetch::Prefetch(entry.hostname(), entry.isHttps(),
-                                   entry.originAttributes(), entry.flags());
-  }
   return IPC_OK();
 }
 

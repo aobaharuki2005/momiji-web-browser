@@ -1,23 +1,20 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "stun_socket_filter.h"
-
 #include <iomanip>
 #include <set>
 
-// clang-format off
-// For Windows builds, nr_api.h needs to appear before
-// mozilla/net/DNS.h
+extern "C" {
 #include "nr_api.h"
-// clang-format on
+#include "stun.h"
+#include "transport_addr.h"
+}
 
 #include "logging.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/net/DNS.h"
 #include "nr_socket_prsock.h"
-#include "stun.h"
-#include "transport_addr.h"
+#include "stun_socket_filter.h"
 
 namespace {
 
@@ -336,10 +333,6 @@ bool STUNTCPSocketFilter::filter_incoming_packet(const uint8_t* data,
   UCHAR* stun = const_cast<uint8_t*>(data);
   uint32_t length = len;
   if (!nr_is_stun_message(stun, length)) {
-    if (length < 2) {
-      // Definitely not stun
-      return true;
-    }
     stun += 2;
     length -= 2;
     if (!nr_is_stun_message(stun, length)) {
@@ -384,10 +377,6 @@ bool STUNTCPSocketFilter::filter_outgoing_packet(const uint8_t* data,
   UCHAR* stun = const_cast<uint8_t*>(data);
   uint32_t length = len;
   if (!nr_is_stun_message(stun, length)) {
-    if (length < 2) {
-      // Definitely not stun
-      return true;
-    }
     stun += 2;
     length -= 2;
     if (!nr_is_stun_message(stun, length)) {

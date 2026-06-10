@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -46,23 +48,10 @@ class InvalidatingRealmFuse : public InvalidatingFuse {
 // Popped when one of the following fuses is popped:
 // - ArrayPrototypeIteratorFuse (for `Array.prototype[@@iterator]`)
 // - OptimizeArrayIteratorPrototypeFuse (for `%ArrayIteratorPrototype%`)
-struct OptimizeGetIteratorFuse final : public RealmFuse {
+struct OptimizeGetIteratorFuse final : public InvalidatingRealmFuse {
   virtual const char* name() override { return "OptimizeGetIteratorFuse"; }
   virtual bool checkInvariant(JSContext* cx) override;
   virtual void popFuse(JSContext* cx, RealmFuses& realmFuses) override;
-};
-
-// This fuse is similar to OptimizeGetIteratorFuse, but additionally guards
-// there are no DebugScripts in this realm.
-//
-// This ensures JSOp::OptimizeSpreadCall and JSOp::OptimizeGetIterator only
-// optimize packed arrays when no debugger hooks can run before later bytecode
-// ops that rely on the array still being packed.
-struct OptimizeGetIteratorBytecodeFuse final : public InvalidatingRealmFuse {
-  virtual const char* name() override {
-    return "OptimizeGetIteratorBytecodeFuse";
-  }
-  virtual bool checkInvariant(JSContext* cx) override;
 };
 
 struct PopsOptimizedGetIteratorFuse : public RealmFuse {
@@ -324,7 +313,6 @@ struct OptimizeWeakSetPrototypeAddFuse final : public RealmFuse {
 
 #define FOR_EACH_REALM_FUSE(FUSE)                                              \
   FUSE(OptimizeGetIteratorFuse, optimizeGetIteratorFuse)                       \
-  FUSE(OptimizeGetIteratorBytecodeFuse, optimizeGetIteratorBytecodeFuse)       \
   FUSE(OptimizeArrayIteratorPrototypeFuse, optimizeArrayIteratorPrototypeFuse) \
   FUSE(ArrayPrototypeIteratorFuse, arrayPrototypeIteratorFuse)                 \
   FUSE(ArrayPrototypeIteratorNextFuse, arrayPrototypeIteratorNextFuse)         \
@@ -395,20 +383,22 @@ struct RealmFuses {
   static int32_t offsetOfFuseWordRelativeToRealm(FuseIndex index);
   static const char* getFuseName(FuseIndex index);
 
+#ifdef DEBUG
   static bool isInvalidatingFuse(FuseIndex index) {
     switch (index) {
-#define FUSE(Name, LowerName)                                      \
-  case FuseIndex::Name:                                            \
-    static_assert(std::is_base_of_v<RealmFuse, Name> ||            \
-                  std::is_base_of_v<InvalidatingRealmFuse, Name>); \
-    return std::is_base_of_v<InvalidatingRealmFuse, Name>;
+#  define FUSE(Name, LowerName)                                      \
+    case FuseIndex::Name:                                            \
+      static_assert(std::is_base_of_v<RealmFuse, Name> ||            \
+                    std::is_base_of_v<InvalidatingRealmFuse, Name>); \
+      return std::is_base_of_v<InvalidatingRealmFuse, Name>;
       FOR_EACH_REALM_FUSE(FUSE)
-#undef FUSE
+#  undef FUSE
       default:
         break;
     }
     MOZ_CRASH("Fuse Not Found");
   }
+#endif
 };
 
 }  // namespace js

@@ -1,6 +1,5 @@
 // META: title=Language Model Destroy
 // META: script=/resources/testdriver.js
-// META: script=/resources/testdriver-vendor.js
 // META: script=../resources/util.js
 // META: timeout=long
 
@@ -30,10 +29,19 @@ promise_test(async t => {
 
   // After destroying the session, the properties should be still accessible.
   assert_equals(
-      typeof session.contextWindow, 'number',
-      'contextWindow must be accessible.');
+    typeof session.inputQuota, "number",
+    "inputQuota must be accessible."
+  );
   assert_equals(
-      typeof session.contextUsage, 'number',
-      'contextUsage must be accessible.');
-
+    typeof session.inputUsage, "number",
+    "inputUsage must be accessible."
+  );
+  assert_equals(
+    typeof session.temperature, "number",
+    "temperature must be accessible."
+  );
+  assert_equals(
+    typeof session.topK, "number",
+    "topK must be accessible."
+  );
 });

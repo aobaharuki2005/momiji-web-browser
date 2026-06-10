@@ -6,6 +6,9 @@
 /**
  * Tests the select_ws_frame telemetry event.
  */
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
 
 add_task(async function () {
   const { tab, monitor } = await initNetMonitor(WS_PAGE_URL, {
@@ -19,7 +22,10 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   // Clear all events.
-  Services.fog.testResetFOG();
+  Services.telemetry.clearEvents();
+
+  // Ensure no events have been logged.
+  TelemetryTestUtils.assertNumberOfEvents(0);
 
   // Wait for WS connection to be established + send messages.
   const onNetworkEvents = waitForNetworkEvents(monitor, 1);
@@ -66,7 +72,12 @@ add_task(async function () {
   await payloadResolved;
 
   // Verify existence of the telemetry event.
-  is(1, Glean.devtoolsMain.selectWsFrameNetmonitor.testGetValue().length);
+  checkTelemetryEvent(
+    {},
+    {
+      method: "select_ws_frame",
+    }
+  );
 
   return teardown(monitor);
 });

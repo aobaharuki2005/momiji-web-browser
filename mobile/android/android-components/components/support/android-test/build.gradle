@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-plugins {
-    alias(libs.plugins.dependency.analysis)
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -14,14 +10,11 @@ android {
 }
 
 dependencies {
-    api libs.mockwebserver
-
     implementation libs.androidx.arch.core.common
     implementation libs.androidx.test.core
     implementation libs.androidx.test.espresso.core
     implementation libs.leakcanary.instrumentation
-    implementation libs.okhttp
-    implementation libs.okio
+    implementation libs.mockwebserver
 }
 
 apply from: '../../../common-config.gradle'

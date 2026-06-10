@@ -5,11 +5,9 @@
 //! Generic values for UI properties.
 
 use crate::derives::*;
-use crate::typed_om::{ToTyped, TypedValue};
 use crate::values::specified::ui::CursorKind;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
-use thin_vec::ThinVec;
 
 /// A generic value for the `cursor` property.
 ///
@@ -23,6 +21,7 @@ use thin_vec::ThinVec;
     ToComputedValue,
     ToResolvedValue,
     ToShmem,
+    ToTyped,
 )]
 #[repr(C)]
 pub struct GenericCursor<Image> {
@@ -55,20 +54,6 @@ impl<Image: ToCss> ToCss for Cursor<Image> {
             dest.write_str(", ")?;
         }
         self.keyword.to_css(dest)
-    }
-}
-
-impl<Image> ToTyped for Cursor<Image> {
-    // Note: The specification does not currently define how cursor should be
-    // reified into Typed OM. The current behavior follows existing WPT
-    // coverage (cursor.html). Syncing spec with UA/WPT behavior tracked in
-    // https://github.com/w3c/csswg-drafts/issues/13907
-    fn to_typed(&self, dest: &mut ThinVec<TypedValue>) -> Result<(), ()> {
-        if self.images.len() != 0 {
-            return Err(());
-        }
-
-        self.keyword.to_typed(dest)
     }
 }
 

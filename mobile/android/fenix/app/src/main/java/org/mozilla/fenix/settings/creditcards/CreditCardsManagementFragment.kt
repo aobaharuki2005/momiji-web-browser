@@ -17,7 +17,6 @@ import mozilla.components.lib.state.helpers.StoreProvider.Companion.storeProvide
 import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.databinding.ComponentCreditCardsBinding
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.showToolbar
@@ -32,7 +31,7 @@ import org.mozilla.fenix.settings.creditcards.view.CreditCardsManagementView
 /**
  * Displays a list of saved credit cards.
  */
-class CreditCardsManagementFragment : SecureFragment(), SystemInsetsPaddedFragment {
+class CreditCardsManagementFragment : SecureFragment() {
 
     private lateinit var store: AutofillFragmentStore
     private lateinit var interactor: CreditCardsManagementInteractor

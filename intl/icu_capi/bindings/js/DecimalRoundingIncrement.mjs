@@ -3,12 +3,13 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
  * Increment used in a rounding operation.
  *
- * See the [Rust documentation for `RoundingIncrement`](https://docs.rs/fixed_decimal/0.7.0/fixed_decimal/enum.RoundingIncrement.html) for more information.
+ * See the [Rust documentation for `RoundingIncrement`](https://docs.rs/fixed_decimal/latest/fixed_decimal/enum.RoundingIncrement.html) for more information.
  */
+
+
 export class DecimalRoundingIncrement {
     #value = undefined;
 
@@ -48,7 +49,6 @@ export class DecimalRoundingIncrement {
         throw TypeError(value + " is not a DecimalRoundingIncrement and does not correspond to any of its enumerator values.");
     }
 
-    /** @internal */
     static fromValue(value) {
         return new DecimalRoundingIncrement(value);
     }
@@ -57,7 +57,6 @@ export class DecimalRoundingIncrement {
         return [...DecimalRoundingIncrement.#values.keys()][this.#value];
     }
 
-    /** @internal */
     get ffiValue(){
         return this.#value;
     }

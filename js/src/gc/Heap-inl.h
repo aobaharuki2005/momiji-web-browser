@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -12,19 +14,21 @@
 #include "util/Poison.h"
 #include "vm/Runtime.h"
 
-inline void js::gc::Arena::init(GCRuntime* gc, AllocKind kind) {
+inline void js::gc::Arena::init(GCRuntime* gc, JS::Zone* zone, AllocKind kind) {
+  MOZ_ASSERT(zone);
   MOZ_ASSERT(IsValidAllocKind(kind));
 
   MOZ_MAKE_MEM_UNDEFINED(this, ArenaSize);
 
   allocKind = kind;
+  zone_ = zone;
   next = nullptr;
   isNewlyCreated_ = 1;
   onDelayedMarkingList_ = 0;
   hasDelayedBlackMarking_ = 0;
   hasDelayedGrayMarking_ = 0;
   nextDelayedMarkingArena_ = 0;
-  if (zone()->isAtomsZone()) {
+  if (zone_->isAtomsZone()) {
     atomBitmapStart() = gc->atomMarking.allocateIndex(gc);
   } else {
     bufferedCells() = &ArenaCellSet::Empty;
@@ -37,11 +41,9 @@ inline void js::gc::Arena::init(GCRuntime* gc, AllocKind kind) {
 #endif
 }
 
-inline JS::Zone* js::gc::Arena::zone() const { return chunk()->info.zone; }
-
 inline void js::gc::Arena::freeAtomMarkingBitmapIndex(GCRuntime* gc,
                                                       const AutoLockGC& lock) {
-  MOZ_ASSERT(zone()->isAtomsZone());
+  MOZ_ASSERT(zone_->isAtomsZone());
   gc->atomMarking.freeIndex(atomBitmapStart(), lock);
 #ifdef DEBUG
   atomBitmapStart() = 0;  // Also zeroed by write to bufferedCells_ in release.
@@ -52,7 +54,11 @@ inline void js::gc::Arena::release() {
   MOZ_ASSERT(allocated());
 
   // Clients should call freeAtomMarkingBitmapIndex() if necessary.
-  MOZ_ASSERT_IF(zone()->isAtomsZone(), atomBitmapStart_ == 0);
+  MOZ_ASSERT_IF(zone_->isAtomsZone(), atomBitmapStart_ == 0);
+
+  // Poison zone pointer to highlight UAF on released arenas in crash data.
+  AlwaysPoison(&zone_, JS_FREED_ARENA_PATTERN, sizeof(zone_),
+               MemCheckKind::MakeNoAccess);
 
   firstFreeSpan.initAsEmpty();
   allocKind = AllocKind::LIMIT;
@@ -66,12 +72,12 @@ inline void js::gc::Arena::release() {
 }
 
 inline js::gc::ArenaCellSet*& js::gc::Arena::bufferedCells() {
-  MOZ_ASSERT(!zone()->isAtomsZone());
+  MOZ_ASSERT(zone_ && !zone_->isAtomsZone());
   return bufferedCells_;
 }
 
 inline size_t& js::gc::Arena::atomBitmapStart() {
-  MOZ_ASSERT(zone()->isAtomsZone());
+  MOZ_ASSERT(zone_ && zone_->isAtomsZone());
   return atomBitmapStart_;
 }
 

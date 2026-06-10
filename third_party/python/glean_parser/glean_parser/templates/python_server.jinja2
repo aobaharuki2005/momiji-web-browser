@@ -12,7 +12,6 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 import json
-import sys
 
 GLEAN_EVENT_MOZLOG_TYPE = "glean-server-event"
 
@@ -35,34 +34,29 @@ class {{ ping|camelize }}ServerEventLogger:
 
     def record(
         self,
-        user_agent: str | None = None,
-        ip_address: str | None = None,
+        user_agent: str,
+        ip_address: str,
         {% for metric_type, metrics in metrics_by_type.items() %}
         {% if metric_type != 'event' %}
         {% for metric in metrics %}
-        {{ metric.category }}_{{ metric.name }}: {{ metric.type|py_metric_type }} | None = None,
+        {{ metric.category }}_{{ metric.name }}: {{ metric.type|py_metric_type }},
         {% endfor %}
         {% endif %}
         {% endfor %}
-        events: list[dict[str, Any]] | None = None,
+        events: list[dict[str, Any]]
     ) -> None:
         now = datetime.now(timezone.utc)
         timestamp = now.isoformat()
-        events = [] if events is None else events
         for event in events:
-            event["timestamp"] = 0
+            event["timestamp"] = int(1000.0 * now.timestamp())  # Milliseconds since epoch
         event_payload = {
             "metrics": {
                 {% for metric_type, metrics in metrics_by_type.items() %}
                 {% if metric_type != 'event' %}
                 "{{ metric_type }}": {
-                    key: value
-                    for key, value in [
-                        {% for metric in metrics %}
-                        ("{{ metric.category }}.{{ metric.name }}", {{ metric.category }}_{{ metric.name }}),
-                        {% endfor %}
-                    ]
-                    if value is not None
+                    {% for metric in metrics %}
+                    "{{ metric.category }}.{{ metric.name }}": {{ metric.category }}_{{ metric.name }},
+                    {% endfor %}
                 },
                 {% endif %}
                 {% endfor %}
@@ -117,28 +111,28 @@ class {{ ping|camelize }}ServerEventLogger:
         }
         ping_envelope_serialized = json.dumps(ping_envelope)
 
-        sys.stdout.write(f"{ping_envelope_serialized}\n")
+        print(ping_envelope_serialized)
 
     {% for event in metrics_by_type["event"] %}
     def {{ event|record_event_function_name }}(
         self,
-        user_agent: str | None = None,
-        ip_address: str | None = None,
+        user_agent: str,
+        ip_address: str,
         {% for metric_type, metrics in metrics_by_type.items() %}
         {% if metric_type != 'event' %}
         {% for metric in metrics %}
-        {{ metric.category }}_{{ metric.name }}: {{ metric.type|py_metric_type }} | None = None,
+        {{ metric.category }}_{{ metric.name }}: {{ metric.type|py_metric_type }},
         {% endfor %}
         {% endif %}
         {% endfor %}
         {% for extra, metadata in event.extra_keys.items() %}
-        {{ extra }}: {{ metadata.type|py_metric_type }} | None = None,
+        {{ extra }}: {{ metadata.type|py_metric_type }},
         {% endfor %}
     ) -> None:
         """
         Record and submit a {{ event.category }}_{{ event.name }} event:
         {{ event.description|clean_string }}
-        Event is logged to STDOUT via `sys.stdout.write`.
+        Event is logged to STDOUT via `print`.
 
         :param str user_agent: The user agent.
         :param str ip_address: The IP address. Will be used to decode Geo information
@@ -161,13 +155,9 @@ class {{ ping|camelize }}ServerEventLogger:
             "name": "{{ event.name }}",
             {% if event.extra_keys %}
             "extra": {
-                key: value
-                for key, value in [
-                    {% for extra, metadata in event.extra_keys.items() %}
-                    ("{{ extra }}", str({{ extra }}){% if 'bool' == metadata.type|py_metric_type %}.lower(){% endif %}),
-                    {% endfor %}
-                ]
-                if value is not None
+                {% for extra, metadata in event.extra_keys.items() %}
+                "{{ extra }}": str({{ extra }}){% if 'bool' == metadata.type|py_metric_type %}.lower(){% endif %},
+                {% endfor %}
             },
             {% endif %}
         }

@@ -26,11 +26,11 @@ const invalidRefNullHeapBody = moduleWithSections([
 checkInvalid(invalidRefNullHeapBody, /invalid heap type/);
 
 const invalidRefNullHeapElem = moduleWithSections([
-    elemSection([
+    generalElemSection([
         {
-            mode: "passive",
-            elemType: [FuncRefCode],
-            exprs: [
+            flag: PassiveElemExpr,
+            typeCode: FuncRefCode,
+            elems: [
                 [RefNullCode, OptRefCode, FuncRefCode, EndCode]
             ]
         }
@@ -54,15 +54,14 @@ checkInvalid(invalidRefNullHeapGlobal, /invalid heap type/);
 const invalidImportedTableInit = moduleWithSections([
     importSection([
         {
-            module: "", item: "", type: externtype({
-                // Hand-encode a table type with an init expression, which should
-                // only appear in the table section proper:
-                // https://webassembly.github.io/spec/core/binary/modules.html#table-section
-                tableType: [
-                    0x40, 0x00, ...tableType(FuncRefCode, limits({ min: 0 })),
-                    RefFuncCode, ...varS32(123), EndCode,
-                ],
-            }),
+            module: "", item: "",
+            // Hand-encode a table type with an init expression, which should
+            // only appear in the table section proper:
+            // https://wasm-dsl.github.io/spectec/core/binary/modules.html#table-section
+            tableType: [
+                0x40, 0x00, ...tableType(FuncRefCode, limits({ min: 0 })),
+                RefFuncCode, ...varS32(123), EndCode,
+            ],
         },
     ]),
 ]);

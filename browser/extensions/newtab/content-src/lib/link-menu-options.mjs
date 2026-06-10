@@ -82,6 +82,7 @@ export const LinkMenuOptions = {
         is_sponsored: !!site.sponsored_tile_id,
         event_source: "CONTEXT_MENU",
         topic: site.topic,
+        firstVisibleTimestamp: site.firstVisibleTimestamp,
         tile_id: site.tile_id,
         recommendation_id: site.recommendation_id,
         scheduled_corpus_item_id: site.scheduled_corpus_item_id,
@@ -205,7 +206,6 @@ export const LinkMenuOptions = {
   DeleteUrl: (site, index, eventSource, isEnabled, siteInfo) => ({
     id: "newtab-menu-delete-history",
     icon: "delete",
-    ariaHasPopup: "dialog",
     action: {
       type: at.DIALOG_OPEN,
       data: {
@@ -216,7 +216,6 @@ export const LinkMenuOptions = {
               url: site.url,
               pocket_id: site.pocket_id,
               forceBlock: site.bookmarkGuid,
-              original_url: site.original_url,
             },
           }),
           ac.UserEvent(
@@ -308,7 +307,6 @@ export const LinkMenuOptions = {
   EditTopSite: (site, index) => ({
     id: "newtab-menu-edit-topsites",
     icon: "edit",
-    ariaHasPopup: "dialog",
     action: {
       type: at.TOP_SITES_EDIT,
       data: { index },
@@ -324,6 +322,77 @@ export const LinkMenuOptions = {
       : LinkMenuOptions.PinTopSite(site, index),
   OpenInPrivateWindow: (site, index, eventSource, isEnabled) =>
     isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem(),
+  ChangeWeatherLocation: () => ({
+    id: "newtab-weather-menu-change-location",
+    action: ac.BroadcastToContent({
+      type: at.WEATHER_SEARCH_ACTIVE,
+      data: true,
+    }),
+  }),
+  DetectLocation: () => ({
+    id: "newtab-weather-menu-detect-my-location",
+    action: ac.AlsoToMain({
+      type: at.WEATHER_USER_OPT_IN_LOCATION,
+    }),
+    userEvent: "WEATHER_DETECT_LOCATION",
+  }),
+  ChangeWeatherDisplaySimple: () => ({
+    id: "newtab-weather-menu-change-weather-display-simple",
+    action: ac.OnlyToMain({
+      type: at.SET_PREF,
+      data: {
+        name: "weather.display",
+        value: "simple",
+      },
+    }),
+  }),
+  ChangeWeatherDisplayDetailed: () => ({
+    id: "newtab-weather-menu-change-weather-display-detailed",
+    action: ac.OnlyToMain({
+      type: at.SET_PREF,
+      data: {
+        name: "weather.display",
+        value: "detailed",
+      },
+    }),
+  }),
+  ChangeTempUnitFahrenheit: () => ({
+    id: "newtab-weather-menu-change-temperature-units-fahrenheit",
+    action: ac.OnlyToMain({
+      type: at.SET_PREF,
+      data: {
+        name: "weather.temperatureUnits",
+        value: "f",
+      },
+    }),
+  }),
+  ChangeTempUnitCelsius: () => ({
+    id: "newtab-weather-menu-change-temperature-units-celsius",
+    action: ac.OnlyToMain({
+      type: at.SET_PREF,
+      data: {
+        name: "weather.temperatureUnits",
+        value: "c",
+      },
+    }),
+  }),
+  HideWeather: () => ({
+    id: "newtab-weather-menu-hide-weather",
+    action: ac.OnlyToMain({
+      type: at.SET_PREF,
+      data: {
+        name: "showWeather",
+        value: false,
+      },
+    }),
+  }),
+  OpenLearnMoreURL: site => ({
+    id: "newtab-weather-menu-learn-more",
+    action: ac.OnlyToMain({
+      type: at.OPEN_LINK,
+      data: { url: site.url },
+    }),
+  }),
   SectionBlock: ({
     sectionPersonalization,
     sectionKey,
@@ -332,7 +401,6 @@ export const LinkMenuOptions = {
   }) => ({
     id: "newtab-menu-section-block",
     icon: "delete",
-    ariaHasPopup: "dialog",
     action: {
       // Open the confirmation dialog to block a section.
       type: at.DIALOG_OPEN,
@@ -347,7 +415,6 @@ export const LinkMenuOptions = {
               [sectionKey]: {
                 isBlocked: true,
                 isFollowed: false,
-                title,
               },
             },
           }),
@@ -365,20 +432,6 @@ export const LinkMenuOptions = {
           ac.AlsoToMain({
             type: at.DIALOG_CLOSE,
           }),
-          ac.OnlyToOneContent(
-            {
-              type: at.SHOW_TOAST_MESSAGE,
-              data: {
-                toastId: "blockSectionToast",
-                showNotifications: true,
-                toastData: {
-                  l10nId: "newtab-section-toast-block",
-                  topic: title,
-                },
-              },
-            },
-            "ActivityStream:Content"
-          ),
         ],
         // Pass Fluent strings to ConfirmDialog component for the copy
         // of the prompt to block sections.
@@ -388,7 +441,7 @@ export const LinkMenuOptions = {
         ],
         confirm_button_string_id: "newtab-section-block-topic-button",
         confirm_button_string_args: { topic: title },
-        cancel_button_string_id: "newtab-section-block-cancel-button",
+        cancel_button_string_id: "newtab-section-cancel-button",
       },
     },
     userEvent: "DIALOG_OPEN",
@@ -397,9 +450,8 @@ export const LinkMenuOptions = {
     sectionPersonalization,
     sectionKey,
     sectionPosition,
-    title,
   }) => ({
-    id: "newtab-menu-section-unfollow-topic",
+    id: "newtab-menu-section-unfollow",
     action: ac.AlsoToMain({
       type: at.SECTION_PERSONALIZATION_SET,
       data: (({ [sectionKey]: _sectionKey, ...remaining }) => remaining)(
@@ -414,39 +466,18 @@ export const LinkMenuOptions = {
         event_source: "CONTEXT_MENU",
       },
     }),
-    toast: ac.OnlyToOneContent(
-      {
-        type: at.SHOW_TOAST_MESSAGE,
-        data: {
-          toastId: "unfollowSectionToast",
-          showNotifications: true,
-          toastData: { l10nId: "newtab-section-toast-unfollow", topic: title },
-        },
-      },
-      "ActivityStream:Content"
-    ),
-    userEvent: "SECTION_UNFOLLOW",
   }),
   ManageSponsoredContent: () => ({
     id: "newtab-menu-manage-sponsored-content",
     action: ac.OnlyToMain({ type: at.SETTINGS_OPEN }),
     userEvent: "OPEN_NEWTAB_PREFS",
   }),
-  // eslint-disable-next-line max-params
-  OurSponsorsAndYourPrivacy: (
-    site,
-    index,
-    source,
-    isPrivateBrowsingEnabled,
-    siteInfo,
-    platform,
-    privacyInfoUrl
-  ) => ({
+  OurSponsorsAndYourPrivacy: () => ({
     id: "newtab-menu-our-sponsors-and-your-privacy",
     action: ac.OnlyToMain({
       type: at.OPEN_LINK,
       data: {
-        url: privacyInfoUrl,
+        url: "https://support.mozilla.org/kb/pocket-sponsored-stories-new-tabs",
       },
     }),
     userEvent: "CLICK_PRIVACY_INFO",

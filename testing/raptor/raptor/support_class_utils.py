@@ -27,11 +27,9 @@ def import_support_class(path):
 
     members = inspect.getmembers(
         module,
-        lambda c: (
-            inspect.isclass(c)
-            and c != BasePythonSupport
-            and issubclass(c, BasePythonSupport)
-        ),
+        lambda c: inspect.isclass(c)
+        and c != BasePythonSupport
+        and issubclass(c, BasePythonSupport),
     )
 
     if not members:

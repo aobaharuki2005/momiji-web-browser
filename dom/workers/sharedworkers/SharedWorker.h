@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_sharedworker_h_
-#define mozilla_dom_workers_sharedworker_h_
+#ifndef mozilla_dom_workers_sharedworker_h__
+#define mozilla_dom_workers_sharedworker_h__
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -81,9 +83,6 @@ class SharedWorker final : public DOMEventTargetHelper {
 
   void Thaw();
 
-  void UpdateLanguageOverride(const nsACString& aLanguageOverride,
-                              const nsTArray<nsString>& aLanguages);
-
  private:
   MOZ_CAN_RUN_SCRIPT static already_AddRefed<SharedWorker> Constructor(
       const GlobalObject& aGlobal,
@@ -104,4 +103,4 @@ class SharedWorker final : public DOMEventTargetHelper {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_workers_sharedworker_h_
+#endif  // mozilla_dom_workers_sharedworker_h__

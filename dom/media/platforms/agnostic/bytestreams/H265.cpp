@@ -6,6 +6,8 @@
 
 #include <stdint.h>
 
+#include <cmath>
+
 #include "AnnexB.h"
 #include "BitReader.h"
 #include "BitWriter.h"
@@ -192,14 +194,15 @@ bool HVCCConfig::HasSPS() const {
 
 nsCString HVCCConfig::ToString() const {
   return nsFmtCString(
-      "HVCCConfig - version={}, profile_space={}, tier={}, "
-      "profile_idc={}, profile_compatibility_flags={:#08x}, "
-      "constraint_indicator_flags={:#016x}, level_idc={}, "
-      "min_spatial_segmentation_idc={}, parallelismType={}, "
-      "chroma_format_idc={}, bit_depth_luma_minus8={}, "
-      "bit_depth_chroma_minus8={}, avgFrameRate={}, constantFrameRate={}, "
-      "numTemporalLayers={}, temporalIdNested={}, lengthSizeMinusOne={}, "
-      "nalus={}, buffer={}(bytes), NaluSize={}, NumSPS={}",
+      FMT_STRING(
+          "HVCCConfig - version={}, profile_space={}, tier={}, "
+          "profile_idc={}, profile_compatibility_flags={:#08x}, "
+          "constraint_indicator_flags={:#016x}, level_idc={}, "
+          "min_spatial_segmentation_idc={}, parallelismType={}, "
+          "chroma_format_idc={}, bit_depth_luma_minus8={}, "
+          "bit_depth_chroma_minus8={}, avgFrameRate={}, constantFrameRate={}, "
+          "numTemporalLayers={}, temporalIdNested={}, lengthSizeMinusOne={}, "
+          "nalus={}, buffer={}(bytes), NaluSize={}, NumSPS={}"),
       configurationVersion, general_profile_space, general_tier_flag,
       general_profile_idc, general_profile_compatibility_flags,
       general_constraint_indicator_flags, general_level_idc,
@@ -626,8 +629,6 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
   if (aStRpsIdx != 0) {
     inter_ref_pic_set_prediction_flag = aReader.ReadBit();
   }
-  const uint32_t spsMaxDecPicBufferingMinus1 =
-      aSPS.sps_max_dec_pic_buffering_minus1[aSPS.sps_max_sub_layers_minus1];
   if (inter_ref_pic_set_prediction_flag) {
     int delta_idx_minus1 = 0;
     if (aStRpsIdx == aSPS.num_short_term_ref_pic_sets) {
@@ -705,20 +706,11 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
       }
     }
     curStRefPicSet.num_positive_pics = i;
-    // 7.4.8 - num_negative_pics shall be in the range of 0 to
-    // sps_max_dec_pic_buffering_minus1[sps_max_sub_layers_minus1], inclusive.
-    // num_positive_pics shall be in the range of 0 to
-    // sps_max_dec_pic_buffering_minus1[sps_max_sub_layers_minus1] -
-    // num_negative_pics, inclusive.
-    IN_RANGE_OR_RETURN(curStRefPicSet.num_negative_pics, 0,
-                       spsMaxDecPicBufferingMinus1);
-    CheckedUint32 maxPositivePics{spsMaxDecPicBufferingMinus1};
-    maxPositivePics -= curStRefPicSet.num_negative_pics;
-    IN_RANGE_OR_RETURN(curStRefPicSet.num_positive_pics, 0,
-                       maxPositivePics.value());
   } else {
     curStRefPicSet.num_negative_pics = aReader.ReadUE();
     curStRefPicSet.num_positive_pics = aReader.ReadUE();
+    const uint32_t spsMaxDecPicBufferingMinus1 =
+        aSPS.sps_max_dec_pic_buffering_minus1[aSPS.sps_max_sub_layers_minus1];
     IN_RANGE_OR_RETURN(curStRefPicSet.num_negative_pics, 0,
                        spsMaxDecPicBufferingMinus1);
     CheckedUint32 maxPositivePics{spsMaxDecPicBufferingMinus1};
@@ -755,10 +747,6 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
   // (7-71)
   curStRefPicSet.numDeltaPocs =
       curStRefPicSet.num_negative_pics + curStRefPicSet.num_positive_pics;
-  // 7.4.8 - NumDeltaPocs = num_negative_pics + num_positive_pics counts DPB
-  // entries, bounded by sps_max_dec_pic_buffering_minus1.
-  IN_RANGE_OR_RETURN(curStRefPicSet.numDeltaPocs, 0,
-                     spsMaxDecPicBufferingMinus1);
   return Ok();
 }
 
@@ -1226,229 +1214,6 @@ already_AddRefed<mozilla::MediaByteBuffer> H265::DecodeNALUnit(
   }
   return rbsp.forget();
 }
-
-/* static */
-mozilla::Maybe<mozilla::gfx::HDRMetadata> H265::ParseSEIHDRMetadata(
-    const H265NALU& aNALU) {
-  MOZ_ASSERT(aNALU.mNalUnitType == H265NALU::NAL_TYPES::PREFIX_SEI_NUT ||
-             aNALU.mNalUnitType == H265NALU::NAL_TYPES::SUFFIX_SEI_NUT);
-
-  RefPtr<MediaByteBuffer> rbsp = H265::DecodeNALUnit(aNALU.mNALU);
-  if (!rbsp) {
-    return Nothing();
-  }
-
-  const Span<const uint8_t> data(rbsp->Elements(), rbsp->Length());
-  size_t offset = 0;
-
-  // SEI type 137 (mastering display colour volume) and type 144 (content light
-  // level info) are defined in ITU-T H.265 (08/2021) §D.3.26 and §D.3.27.
-  static constexpr uint8_t kSEIMasteringDisplayType = 137;
-  static constexpr uint8_t kSEIContentLightLevelType = 144;
-  // Fixed-point conversion factors per ITU-T H.265 (08/2021) §D.3.26:
-  static constexpr float kPrimariesDivisor = 50000.0f;
-  static constexpr float kLuminanceDivisor = 10000.0f;
-
-  gfx::HDRMetadata hdr;
-  bool hasMasteringDisplay = false;
-  bool hasCLL = false;
-
-  while (offset < data.Length()) {
-    // rbsp_trailing_bits() ends with a stop bit (0x80) per H.265 §7.4.1.
-    if (offset + 1 == data.Length() && data[offset] == 0x80) {
-      break;
-    }
-
-    // SEI payloadType and payloadSize use 0xff-prefix multi-byte encoding
-    // (ff_byte in ITU-T H.265 §7.3.2.4): accumulate 0xff-valued bytes, then
-    // add the terminating non-0xff byte.
-    size_t payloadType = 0;
-    while (offset < data.Length() && data[offset] == 0xff) {
-      payloadType += 0xff;
-      offset++;
-    }
-    if (offset >= data.Length()) {
-      break;
-    }
-    payloadType += data[offset++];
-
-    size_t payloadSize = 0;
-    while (offset < data.Length() && data[offset] == 0xff) {
-      payloadSize += 0xff;
-      offset++;
-    }
-    if (offset >= data.Length()) {
-      break;
-    }
-    payloadSize += data[offset++];
-
-    if (offset + payloadSize > data.Length()) {
-      break;
-    }
-
-    if (payloadType == kSEIMasteringDisplayType) {
-      if (payloadSize != 24) {
-        NS_WARNING("H265 SEI mastering display: unexpected payload size");
-        offset += payloadSize;
-        continue;
-      }
-      // ITU-T H.265 (08/2021) §D.3.26 Table D.2 primary order: G[0], B[1], R[2]
-      // Each chromaticity is u16 big-endian / 50000.0f
-      BufferReader br(data.Elements() + offset, payloadSize);
-      auto g0x = br.ReadU16();
-      auto g0y = br.ReadU16();
-      auto b1x = br.ReadU16();
-      auto b1y = br.ReadU16();
-      auto r2x = br.ReadU16();
-      auto r2y = br.ReadU16();
-      auto wpx = br.ReadU16();
-      auto wpy = br.ReadU16();
-      auto maxL = br.ReadU32();
-      auto minL = br.ReadU32();
-      if (g0x.isErr() || g0y.isErr() || b1x.isErr() || b1y.isErr() ||
-          r2x.isErr() || r2y.isErr() || wpx.isErr() || wpy.isErr() ||
-          maxL.isErr() || minL.isErr()) {
-        LOG("H265 SEI mastering display: failed to read fields");
-        offset += payloadSize;
-        continue;
-      }
-      gfx::Chromaticity green{g0x.unwrap() / kPrimariesDivisor,
-                              g0y.unwrap() / kPrimariesDivisor};
-      gfx::Chromaticity blue{b1x.unwrap() / kPrimariesDivisor,
-                             b1y.unwrap() / kPrimariesDivisor};
-      gfx::Chromaticity red{r2x.unwrap() / kPrimariesDivisor,
-                            r2y.unwrap() / kPrimariesDivisor};
-      gfx::Chromaticity whitePoint{wpx.unwrap() / kPrimariesDivisor,
-                                   wpy.unwrap() / kPrimariesDivisor};
-      float maxLuminance = maxL.unwrap() / kLuminanceDivisor;
-      float minLuminance = minL.unwrap() / kLuminanceDivisor;
-
-      hdr.mSmpte2086 = Some(gfx::Smpte2086Metadata{red, green, blue, whitePoint,
-                                                   maxLuminance, minLuminance});
-      hasMasteringDisplay = true;
-    } else if (payloadType == kSEIContentLightLevelType) {
-      if (payloadSize != 4) {
-        NS_WARNING("H265 SEI content light level: unexpected payload size");
-        offset += payloadSize;
-        continue;
-      }
-      BufferReader br(data.Elements() + offset, payloadSize);
-      auto maxCLL = br.ReadU16();
-      auto maxFALL = br.ReadU16();
-      if (maxCLL.isErr() || maxFALL.isErr()) {
-        LOG("H265 SEI content light level: failed to read fields");
-        offset += payloadSize;
-        continue;
-      }
-      hdr.mContentLightLevel =
-          Some(gfx::ContentLightLevel{maxCLL.unwrap(), maxFALL.unwrap()});
-      hasCLL = true;
-    }
-
-    offset += payloadSize;
-  }
-
-  if (!hasMasteringDisplay && !hasCLL) {
-    return Nothing();
-  }
-  MOZ_ASSERT(hdr.IsValid());
-  return Some(hdr);
-}
-
-#ifdef MOZ_WMF
-static void AppendSEIInt(MediaByteBuffer* aDest, size_t aValue) {
-  while (aValue >= 0xff) {
-    aDest->AppendElement(0xff);
-    aValue -= 0xff;
-  }
-  aDest->AppendElement(static_cast<uint8_t>(aValue));
-}
-
-static already_AddRefed<MediaByteBuffer> EncodeH265NALUnit(
-    const uint8_t* aHeader, const MediaByteBuffer* aRBSP) {
-  RefPtr<MediaByteBuffer> nalu = new MediaByteBuffer;
-  nalu->AppendElements(aHeader, 2);
-  BufferReader reader(aRBSP);
-  while (reader.Remaining()) {
-    auto res = reader.ReadU8();
-    if (res.isErr()) {
-      return nullptr;
-    }
-    uint8_t b = res.unwrap();
-    if (b <= 0x03 && nalu->ElementAt(nalu->Length() - 2) == 0 &&
-        nalu->ElementAt(nalu->Length() - 1) == 0) {
-      nalu->AppendElement(0x03);
-    }
-    nalu->AppendElement(b);
-  }
-  return nalu.forget();
-}
-
-/* static */
-already_AddRefed<mozilla::MediaByteBuffer> H265::FilterPrefixSEIForWindows(
-    const H265NALU& aNALU) {
-  MOZ_ASSERT(aNALU.mNalUnitType == H265NALU::NAL_TYPES::PREFIX_SEI_NUT);
-  // user_data_unregistered (H.265 Annex D.2.1, payloadType=5) carries no
-  // normative decoding information — H.265 Annex D.1 explicitly states that
-  // decoders are not required to process SEI for output conformance, and
-  // Table D.1 lists its persistence scope as "Unspecified". Stripping it is
-  // safe while preserving other SEI types (e.g. HDR metadata, buffering
-  // period) that do carry normative data.
-  static constexpr uint8_t kSEIUserDataUnregisteredPayloadType = 5;
-
-  RefPtr<MediaByteBuffer> rbsp = H265::DecodeNALUnit(aNALU.mNALU);
-  if (!rbsp) {
-    return nullptr;
-  }
-
-  const Span<const uint8_t> data(rbsp->Elements(), rbsp->Length());
-  RefPtr<MediaByteBuffer> filteredRBSP = new MediaByteBuffer;
-  size_t offset = 0;
-  while (offset < data.Length()) {
-    if (offset + 1 == data.Length() && data[offset] == 0x80) {
-      break;
-    }
-
-    size_t payloadType = 0;
-    while (offset < data.Length() && data[offset] == 0xff) {
-      payloadType += 0xff;
-      offset++;
-    }
-    if (offset >= data.Length()) {
-      return nullptr;
-    }
-    payloadType += data[offset++];
-
-    size_t payloadSize = 0;
-    while (offset < data.Length() && data[offset] == 0xff) {
-      payloadSize += 0xff;
-      offset++;
-    }
-    if (offset >= data.Length()) {
-      return nullptr;
-    }
-    payloadSize += data[offset++];
-
-    if (offset + payloadSize > data.Length()) {
-      return nullptr;
-    }
-    if (payloadType != kSEIUserDataUnregisteredPayloadType) {
-      AppendSEIInt(filteredRBSP, payloadType);
-      AppendSEIInt(filteredRBSP, payloadSize);
-      filteredRBSP->AppendElements(data.Elements() + offset, payloadSize);
-    }
-
-    offset += payloadSize;
-  }
-
-  if (filteredRBSP->IsEmpty()) {
-    return nullptr;
-  }
-
-  filteredRBSP->AppendElement(0x80);
-  return EncodeH265NALUnit(aNALU.mNALU.Elements(), filteredRBSP);
-}
-#endif
 
 /* static */
 already_AddRefed<mozilla::MediaByteBuffer> H265::ExtractHVCCExtraData(

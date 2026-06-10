@@ -14,9 +14,7 @@ let gContainersPane = {
     document
       .getElementById("backContainersButton")
       .addEventListener("command", function () {
-        Services.prefs.getBoolPref("browser.settings-redesign.enabled", false)
-          ? gotoPref("tabsBrowsing")
-          : gotoPref("general");
+        gotoPref("general");
       });
 
     document

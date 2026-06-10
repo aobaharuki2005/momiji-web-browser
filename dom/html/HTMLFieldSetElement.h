@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -82,7 +84,7 @@ class HTMLFieldSetElement final : public nsGenericHTMLFormControlElement,
 
   void GetType(nsAString& aType) const;
 
-  HTMLCollection* Elements();
+  nsIHTMLCollection* Elements();
 
   // XPCOM WillValidate is OK for us
 
@@ -119,17 +121,17 @@ class HTMLFieldSetElement final : public nsGenericHTMLFormControlElement,
    */
   void NotifyElementsForFirstLegendChange(bool aNotify);
 
-  // This function is used to generate the ContentList (listed form elements).
+  // This function is used to generate the nsContentList (listed form elements).
   static bool MatchListedElements(Element* aElement, int32_t aNamespaceID,
                                   nsAtom* aAtom, void* aData);
 
   // listed form controls elements.
-  RefPtr<ContentList> mElements;
+  RefPtr<nsContentList> mElements;
 
   // List of elements which have this fieldset as first fieldset ancestor.
   nsTArray<nsGenericHTMLFormElement*> mDependentElements;
 
-  RefPtr<nsIContent> mFirstLegend;
+  nsIContent* mFirstLegend;
 
   /**
    * Number of invalid and candidate for constraint validation

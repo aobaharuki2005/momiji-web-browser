@@ -17,17 +17,8 @@ Add `bitflags` to your `Cargo.toml`:
 
 ```toml
 [dependencies.bitflags]
-version = "2.10.0"
+version = "2.9.0"
 ```
-
-## Crate features
-
-The `bitflags` library defines a few Cargo features that you can opt-in to:
-
-- `std`: Implement the `Error` trait on error types used by `bitflags`.
-- `serde`: Support deriving `serde` traits on generated flags types.
-- `arbitrary`: Support deriving `arbitrary` traits on generated flags types.
-- `bytemuck`: Support deriving `bytemuck` traits on generated flags types.
 
 ## Generating flags types
 
@@ -604,31 +595,28 @@ macro_rules! bitflags {
 #[doc(hidden)]
 macro_rules! __impl_bitflags {
     (
-        // These param names must be passed in to make the macro work.
-        // Just use `params: self, bits, name, other, value;`.
-        params: $self:ident, $bits:ident, $name:ident, $other:ident, $value:ident;
         $(#[$outer:meta])*
         $PublicBitFlags:ident: $T:ty {
-            fn empty() $empty_body:block
-            fn all() $all_body:block
-            fn bits(&self) $bits_body:block
-            fn from_bits(bits) $from_bits_body:block
-            fn from_bits_truncate(bits) $from_bits_truncate_body:block
-            fn from_bits_retain(bits) $from_bits_retain_body:block
-            fn from_name(name) $from_name_body:block
-            fn is_empty(&self) $is_empty_body:block
-            fn is_all(&self) $is_all_body:block
-            fn intersects(&self, other) $intersects_body:block
-            fn contains(&self, other) $contains_body:block
-            fn insert(&mut self, other) $insert_body:block
-            fn remove(&mut self, other) $remove_body:block
-            fn toggle(&mut self, other) $toggle_body:block
-            fn set(&mut self, other, value) $set_body:block
-            fn intersection(self, other) $intersection_body:block
-            fn union(self, other) $union_body:block
-            fn difference(self, other) $difference_body:block
-            fn symmetric_difference(self, other) $symmetric_difference_body:block
-            fn complement(self) $complement_body:block
+            fn empty() $empty:block
+            fn all() $all:block
+            fn bits($bits0:ident) $bits:block
+            fn from_bits($from_bits0:ident) $from_bits:block
+            fn from_bits_truncate($from_bits_truncate0:ident) $from_bits_truncate:block
+            fn from_bits_retain($from_bits_retain0:ident) $from_bits_retain:block
+            fn from_name($from_name0:ident) $from_name:block
+            fn is_empty($is_empty0:ident) $is_empty:block
+            fn is_all($is_all0:ident) $is_all:block
+            fn intersects($intersects0:ident, $intersects1:ident) $intersects:block
+            fn contains($contains0:ident, $contains1:ident) $contains:block
+            fn insert($insert0:ident, $insert1:ident) $insert:block
+            fn remove($remove0:ident, $remove1:ident) $remove:block
+            fn toggle($toggle0:ident, $toggle1:ident) $toggle:block
+            fn set($set0:ident, $set1:ident, $set2:ident) $set:block
+            fn intersection($intersection0:ident, $intersection1:ident) $intersection:block
+            fn union($union0:ident, $union1:ident) $union:block
+            fn difference($difference0:ident, $difference1:ident) $difference:block
+            fn symmetric_difference($symmetric_difference0:ident, $symmetric_difference1:ident) $symmetric_difference:block
+            fn complement($complement0:ident) $complement:block
         }
     ) => {
         #[allow(dead_code, deprecated, unused_attributes)]
@@ -636,123 +624,170 @@ macro_rules! __impl_bitflags {
         impl $PublicBitFlags {
             /// Get a flags value with all bits unset.
             #[inline]
-            pub const fn empty() -> Self
-                $empty_body
+            pub const fn empty() -> Self {
+                $empty
+            }
 
             /// Get a flags value with all known bits set.
             #[inline]
-            pub const fn all() -> Self
-                $all_body
+            pub const fn all() -> Self {
+                $all
+            }
 
             /// Get the underlying bits value.
             ///
             /// The returned value is exactly the bits set in this flags value.
             #[inline]
-            pub const fn bits(&$self) -> $T
-                $bits_body
+            pub const fn bits(&self) -> $T {
+                let $bits0 = self;
+                $bits
+            }
 
             /// Convert from a bits value.
             ///
             /// This method will return `None` if any unknown bits are set.
             #[inline]
-            pub const fn from_bits($bits: $T) -> $crate::__private::core::option::Option<Self>
-                $from_bits_body
+            pub const fn from_bits(bits: $T) -> $crate::__private::core::option::Option<Self> {
+                let $from_bits0 = bits;
+                $from_bits
+            }
 
             /// Convert from a bits value, unsetting any unknown bits.
             #[inline]
-            pub const fn from_bits_truncate($bits: $T) -> Self
-                $from_bits_truncate_body
+            pub const fn from_bits_truncate(bits: $T) -> Self {
+                let $from_bits_truncate0 = bits;
+                $from_bits_truncate
+            }
 
             /// Convert from a bits value exactly.
             #[inline]
-            pub const fn from_bits_retain($bits: $T) -> Self
-                $from_bits_retain_body
+            pub const fn from_bits_retain(bits: $T) -> Self {
+                let $from_bits_retain0 = bits;
+                $from_bits_retain
+            }
 
             /// Get a flags value with the bits of a flag with the given name set.
             ///
             /// This method will return `None` if `name` is empty or doesn't
             /// correspond to any named flag.
             #[inline]
-            pub fn from_name($name: &str) -> $crate::__private::core::option::Option<Self>
-                $from_name_body
+            pub fn from_name(name: &str) -> $crate::__private::core::option::Option<Self> {
+                let $from_name0 = name;
+                $from_name
+            }
 
             /// Whether all bits in this flags value are unset.
             #[inline]
-            pub const fn is_empty(&$self) -> bool
-                $is_empty_body
+            pub const fn is_empty(&self) -> bool {
+                let $is_empty0 = self;
+                $is_empty
+            }
 
             /// Whether all known bits in this flags value are set.
             #[inline]
-            pub const fn is_all(&$self) -> bool
-                $is_all_body
+            pub const fn is_all(&self) -> bool {
+                let $is_all0 = self;
+                $is_all
+            }
 
             /// Whether any set bits in a source flags value are also set in a target flags value.
             #[inline]
-            pub const fn intersects(&$self, $other: Self) -> bool
-                $intersects_body
+            pub const fn intersects(&self, other: Self) -> bool {
+                let $intersects0 = self;
+                let $intersects1 = other;
+                $intersects
+            }
 
             /// Whether all set bits in a source flags value are also set in a target flags value.
             #[inline]
-            pub const fn contains(&$self, $other: Self) -> bool
-                $contains_body
+            pub const fn contains(&self, other: Self) -> bool {
+                let $contains0 = self;
+                let $contains1 = other;
+                $contains
+            }
 
             /// The bitwise or (`|`) of the bits in two flags values.
             #[inline]
-            pub fn insert(&mut $self, $other: Self)
-                $insert_body
+            pub fn insert(&mut self, other: Self) {
+                let $insert0 = self;
+                let $insert1 = other;
+                $insert
+            }
 
-            /// The intersection of a source flags value with the complement of a target flags
-            /// value (`&!`).
+            /// The intersection of a source flags value with the complement of a target flags value (`&!`).
             ///
             /// This method is not equivalent to `self & !other` when `other` has unknown bits set.
             /// `remove` won't truncate `other`, but the `!` operator will.
             #[inline]
-            pub fn remove(&mut $self, $other: Self)
-                $remove_body
+            pub fn remove(&mut self, other: Self) {
+                let $remove0 = self;
+                let $remove1 = other;
+                $remove
+            }
 
             /// The bitwise exclusive-or (`^`) of the bits in two flags values.
             #[inline]
-            pub fn toggle(&mut $self, $other: Self)
-                $toggle_body
+            pub fn toggle(&mut self, other: Self) {
+                let $toggle0 = self;
+                let $toggle1 = other;
+                $toggle
+            }
 
             /// Call `insert` when `value` is `true` or `remove` when `value` is `false`.
             #[inline]
-            pub fn set(&mut $self, $other: Self, $value: bool)
-                $set_body
+            pub fn set(&mut self, other: Self, value: bool) {
+                let $set0 = self;
+                let $set1 = other;
+                let $set2 = value;
+                $set
+            }
 
             /// The bitwise and (`&`) of the bits in two flags values.
             #[inline]
             #[must_use]
-            pub const fn intersection($self, $other: Self) -> Self
-                $intersection_body
+            pub const fn intersection(self, other: Self) -> Self {
+                let $intersection0 = self;
+                let $intersection1 = other;
+                $intersection
+            }
 
             /// The bitwise or (`|`) of the bits in two flags values.
             #[inline]
             #[must_use]
-            pub const fn union($self, $other: Self) -> Self
-                $union_body
+            pub const fn union(self, other: Self) -> Self {
+                let $union0 = self;
+                let $union1 = other;
+                $union
+            }
 
-            /// The intersection of a source flags value with the complement of a target flags
-            /// value (`&!`).
+            /// The intersection of a source flags value with the complement of a target flags value (`&!`).
             ///
             /// This method is not equivalent to `self & !other` when `other` has unknown bits set.
             /// `difference` won't truncate `other`, but the `!` operator will.
             #[inline]
             #[must_use]
-            pub const fn difference($self, $other: Self) -> Self
-                $difference_body
+            pub const fn difference(self, other: Self) -> Self {
+                let $difference0 = self;
+                let $difference1 = other;
+                $difference
+            }
 
             /// The bitwise exclusive-or (`^`) of the bits in two flags values.
             #[inline]
             #[must_use]
-            pub const fn symmetric_difference($self, $other: Self) -> Self
-                $symmetric_difference_body
+            pub const fn symmetric_difference(self, other: Self) -> Self {
+                let $symmetric_difference0 = self;
+                let $symmetric_difference1 = other;
+                $symmetric_difference
+            }
 
             /// The bitwise negation (`!`) of the bits in a flags value, truncating the result.
             #[inline]
             #[must_use]
-            pub const fn complement($self) -> Self
-                $complement_body
+            pub const fn complement(self) -> Self {
+                let $complement0 = self;
+                $complement
+            }
         }
     };
 }
@@ -793,26 +828,19 @@ macro_rules! __impl_bitflags {
 ///
 /// let flags = Flags::A | Flags::B;
 ///
-/// // Prints `the value is A and B`
 /// bitflags_match!(flags, {
-///     Flags::A | Flags::B => println!("the value is A and B"),
-///     _ => println!("the value is not A and B"),
-/// });
-///
-/// // Prints `the value is not A`
-/// bitflags_match!(flags, {
-///     Flags::A => println!("the value is A"),
-///     _ => println!("the value is not A"),
-/// });
+///     Flags::A | Flags::B => println!("A and/or B are set"),
+///     _ => println!("neither A nor B are set"),
+/// })
 /// ```
 ///
 /// # How it works
 ///
-/// The macro expands to a series of `if` statements, **checking equality** between the input expression
+/// The macro expands to a series of `if` statements, checking equality between the input expression
 /// and each pattern. This allows for correct matching of bitflag combinations, which is not possible
 /// with a regular match expression due to the way bitflags are implemented.
 ///
-/// Patterns are evaluated in the order they appear in the macro.
+/// Patterns are evaluated in order.
 #[macro_export]
 macro_rules! bitflags_match {
     ($operation:expr, {

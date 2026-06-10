@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -65,7 +67,7 @@ void js::GCParallelTask::start() {
 }
 
 void js::GCParallelTask::startOrRunIfIdle(AutoLockHelperThreadState& lock) {
-  if (isQueued(lock) || wasStarted(lock)) {
+  if (wasStarted(lock)) {
     return;
   }
 
@@ -81,24 +83,23 @@ void js::GCParallelTask::startOrRunIfIdle(AutoLockHelperThreadState& lock) {
   startWithLockHeld(lock);
 }
 
-bool js::GCParallelTask::cancelAndWait() {
+void js::GCParallelTask::cancelAndWait() {
   MOZ_ASSERT(!isCancelled());
   cancel_ = true;
-  bool waited = join();
+  join();
   cancel_ = false;
-  return waited;
 }
 
-bool js::GCParallelTask::join(Maybe<TimeStamp> deadline) {
+void js::GCParallelTask::join(Maybe<TimeStamp> deadline) {
   AutoLockHelperThreadState lock;
-  return joinWithLockHeld(lock, deadline);
+  joinWithLockHeld(lock, deadline);
 }
 
-bool js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock,
+void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock,
                                           Maybe<TimeStamp> deadline) {
   // Task has not been started; there's nothing to do.
   if (isIdle(lock)) {
-    return false;
+    return;
   }
 
   if (lock.hasQueuedTasks()) {
@@ -125,8 +126,6 @@ bool js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock,
   if (isIdle(lock)) {
     recordDuration();
   }
-
-  return true;
 }
 
 void GCParallelTask::recordDuration() {
@@ -180,7 +179,7 @@ class MOZ_RAII AutoGCContext {
   JS::GCContext context;
 
  public:
-  explicit AutoGCContext(JSRuntime* runtime) : context(&runtime->gc) {
+  explicit AutoGCContext(JSRuntime* runtime) : context(runtime) {
     MOZ_RELEASE_ASSERT(TlsGCContext.init(),
                        "Failed to initialize TLS for GC context");
 

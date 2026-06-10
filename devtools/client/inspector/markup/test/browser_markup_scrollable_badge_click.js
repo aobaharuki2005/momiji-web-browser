@@ -36,7 +36,6 @@ const TEST_URI = `
 `;
 
 add_task(async function () {
-  Services.fog.testResetFOG();
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );
@@ -69,7 +68,7 @@ add_task(async function () {
     "Scrollable badge is pressed"
   );
 
-  is(1, Glean.devtoolsMarkupScrollableBadge.clicked.testGetValue());
+  checkTelemetry("devtools.markup.scrollable.badge.clicked", "", 1, "scalar");
 
   info(
     "Changing CSS so elements update their overflow highlights accordingly."
@@ -108,11 +107,11 @@ add_task(async function () {
     "Scrollable badge is not pressed anymore"
   );
 
-  is(2, Glean.devtoolsMarkupScrollableBadge.clicked.testGetValue());
+  checkTelemetry("devtools.markup.scrollable.badge.clicked", "", 2, "scalar");
 
   info("Triggering badge with the keyboard");
   scrollableBage.focus();
-  EventUtils.synthesizeKey("VK_RETURN", {}, scrollableBage.documentGlobal);
+  EventUtils.synthesizeKey("VK_RETURN", {}, scrollableBage.ownerGlobal);
   await checkOverflowHighlight(
     ["#child2", "#child3"],
     ["#child1", "#child4"],
@@ -128,7 +127,7 @@ add_task(async function () {
     "Scrollable badge is pressed"
   );
 
-  EventUtils.synthesizeKey("VK_RETURN", {}, scrollableBage.documentGlobal);
+  EventUtils.synthesizeKey("VK_RETURN", {}, scrollableBage.ownerGlobal);
   await checkOverflowHighlight(
     [],
     ["#child1", "#child2", "#child3", "#child4"],

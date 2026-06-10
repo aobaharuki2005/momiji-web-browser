@@ -12,14 +12,15 @@ var { ExtensionError } = ExtensionUtils;
 const spellColour = color => (color === "grey" ? "gray" : color);
 
 /**
- * Validates whether the tab group can move to the specified index.
- *
  * @param {MozTabbrowserTabGroup} group Group to move.
  * @param {DOMWindow} window Browser window to move to.
- * @param {integer} tabIndex The desired position of the group in the window
+ * @param {integer} index The desired position of the group within the window
+ * @returns {integer} The tab index that the group should move to, such that
+ *   after the move operation, the group's position is at the given index.
  */
-function validateTabIndexForMove(group, window, tabIndex) {
-  if (group.documentGlobal === window) {
+function adjustIndexForMove(group, window, index) {
+  let tabIndex = index < 0 ? window.gBrowser.tabs.length : index;
+  if (group.ownerGlobal === window) {
     let group_tabs = group.tabs;
     if (tabIndex > group_tabs[0]._tPos) {
       // When group is moving to a higher index, we need to increase the
@@ -42,6 +43,8 @@ function validateTabIndexForMove(group, window, tabIndex) {
       "Cannot move the group to an index that is in the middle of another group."
     );
   }
+
+  return tabIndex;
 }
 
 this.tabGroups = class extends ExtensionAPIPersistent {
@@ -86,7 +89,7 @@ this.tabGroups = class extends ExtensionAPIPersistent {
       color: group.color === "gray" ? "grey" : group.color,
       id: getExtTabGroupIdForInternalTabGroupId(group.id),
       title: group.name,
-      windowId: windowTracker.getId(group.documentGlobal),
+      windowId: windowTracker.getId(group.ownerGlobal),
     };
   }
 
@@ -97,9 +100,7 @@ this.tabGroups = class extends ExtensionAPIPersistent {
           // Tab group moved from a different window.
           return;
         }
-        if (
-          !this.extension.canAccessWindow(event.originalTarget.documentGlobal)
-        ) {
+        if (!this.extension.canAccessWindow(event.originalTarget.ownerGlobal)) {
           return;
         }
         fire.async(this.convert(event.originalTarget));
@@ -116,9 +117,7 @@ this.tabGroups = class extends ExtensionAPIPersistent {
     },
     onMoved({ fire }) {
       let onMove = event => {
-        if (
-          !this.extension.canAccessWindow(event.originalTarget.documentGlobal)
-        ) {
+        if (!this.extension.canAccessWindow(event.originalTarget.ownerGlobal)) {
           return;
         }
         fire.async(this.convert(event.originalTarget));
@@ -128,9 +127,7 @@ this.tabGroups = class extends ExtensionAPIPersistent {
           // We are only interested in tab groups moved from a different window.
           return;
         }
-        if (
-          !this.extension.canAccessWindow(event.originalTarget.documentGlobal)
-        ) {
+        if (!this.extension.canAccessWindow(event.originalTarget.ownerGlobal)) {
           return;
         }
         fire.async(this.convert(event.originalTarget));
@@ -153,9 +150,7 @@ this.tabGroups = class extends ExtensionAPIPersistent {
           // Tab group moved to a different window.
           return;
         }
-        if (
-          !this.extension.canAccessWindow(event.originalTarget.documentGlobal)
-        ) {
+        if (!this.extension.canAccessWindow(event.originalTarget.ownerGlobal)) {
           return;
         }
         fire.async(this.convert(event.originalTarget), {
@@ -184,9 +179,7 @@ this.tabGroups = class extends ExtensionAPIPersistent {
     },
     onUpdated({ fire }) {
       let onUpdate = event => {
-        if (
-          !this.extension.canAccessWindow(event.originalTarget.documentGlobal)
-        ) {
+        if (!this.extension.canAccessWindow(event.originalTarget.ownerGlobal)) {
           return;
         }
         fire.async(this.convert(event.originalTarget));
@@ -217,12 +210,12 @@ this.tabGroups = class extends ExtensionAPIPersistent {
 
         move: (groupId, { index, windowId }) => {
           let group = this.get(groupId);
-          let win = group.documentGlobal;
+          let win = group.ownerGlobal;
 
           if (windowId != null) {
             win = windowTracker.getWindow(windowId, context);
             if (
-              PrivateBrowsingUtils.isWindowPrivate(group.documentGlobal) !==
+              PrivateBrowsingUtils.isWindowPrivate(group.ownerGlobal) !==
               PrivateBrowsingUtils.isWindowPrivate(win)
             ) {
               throw new ExtensionError(
@@ -236,10 +229,8 @@ this.tabGroups = class extends ExtensionAPIPersistent {
             }
           }
 
-          let maxIndex = win.gBrowser.tabs.length;
-          let tabIndex = index === -1 ? maxIndex : Math.min(maxIndex, index);
-          validateTabIndexForMove(group, win, tabIndex);
-          if (win !== group.documentGlobal) {
+          let tabIndex = adjustIndexForMove(group, win, index);
+          if (win !== group.ownerGlobal) {
             group = win.gBrowser.adoptTabGroup(group, { tabIndex });
           } else {
             win.gBrowser.moveTabTo(group, { tabIndex });

@@ -21,7 +21,7 @@ import mozilla.components.lib.crash.service.GleanCrashReporterService
 import mozilla.components.lib.crash.service.socorro.MozillaSocorroService
 import mozilla.components.lib.crash.store.CrashReportOption
 import mozilla.components.support.ktx.android.content.isMainProcess
-import mozilla.components.support.utils.Browsers
+import mozilla.components.support.utils.BrowsersCache
 import mozilla.components.support.utils.RunWhenReadyQueue
 import mozilla.components.support.utils.ext.packageManagerCompatHelper
 import org.mozilla.fenix.BuildConfig
@@ -31,7 +31,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.components.metrics.AdjustMetricsService
 import org.mozilla.fenix.components.metrics.DefaultMetricsStorage
-import org.mozilla.fenix.components.metrics.FirstSessionMetricsService
 import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.GleanProfileIdPreferenceStore
 import org.mozilla.fenix.components.metrics.GleanUsageReportingMetricsService
@@ -128,7 +127,6 @@ class Analytics(
                     appChannel = MOZ_UPDATE_CHANNEL,
                     appVersion = MOZ_APP_VERSION,
                     appBuildId = MOZ_APP_BUILDID,
-                    isUploadEnabled = context.settings().isTelemetryEnabled,
                 ),
             ),
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
@@ -140,7 +138,7 @@ class Analytics(
             nonFatalCrashIntent = pendingIntent,
             useLegacyReporting =
                 context.settings().crashReportOption() != CrashReportOption.Auto &&
-                !context.settings().useNewCrashReporterFlow,
+                !context.settings().useNewCrashReporterDialog,
             runtimeTagProviders = listOf(
                 ReleaseRuntimeTagProvider(),
                 BuildRuntimeTagProvider(context.versionInfoProvider),
@@ -162,7 +160,7 @@ class Analytics(
         DefaultMetricsStorage(
             context = context,
             settings = context.settings(),
-            checkDefaultBrowser = { Browsers.isDefaultBrowser(context) },
+            checkDefaultBrowser = { BrowsersCache.all(context).isDefaultBrowser },
         )
     }
 
@@ -175,7 +173,6 @@ class Analytics(
                     storage = metricsStorage,
                     crashReporter = crashReporter,
                 ),
-                FirstSessionMetricsService(context),
                 InstallReferrerMetricsService(context),
                 GleanUsageReportingMetricsService(gleanProfileIdStore = GleanProfileIdPreferenceStore(context)),
             ),

@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,8 +32,8 @@ function isPrivateTab(nativeTab) {
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("uninstalling", (msg, extension) => {
   if (extension.uninstallURL) {
-    let gBrowser = windowTracker.topWindow.gBrowser;
-    gBrowser.addTab(extension.uninstallURL, {
+    let browser = windowTracker.topWindow.gBrowser;
+    browser.addTab(extension.uninstallURL, {
       relatedToCurrent: true,
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
         {}
@@ -41,25 +43,19 @@ extensions.on("uninstalling", (msg, extension) => {
 });
 
 extensions.on("page-shutdown", (type, context) => {
-  // The logic here aims to close extension tabs when an extension unloads, but
-  // due to lazy context creation, this does not always happen (bug 1399655).
   if (context.viewType == "tab") {
-    // Extension pages default to viewType "tab" unless specified otherwise,
-    // including the context for embedded options pages in about:addons.
     if (context.extension.id !== context.xulBrowser.contentPrincipal.addonId) {
       // Only close extension tabs.
-      // This check prevents us from closing a web page that embeds a
-      // privileged extension page, if we ever implement that (bug 1443253).
-      // See also: https://bugzilla.mozilla.org/show_bug.cgi?id=1443253#c17
+      // This check prevents about:addons from closing when it contains a
+      // WebExtension as an embedded inline options page.
       return;
     }
-    let { gBrowser } = context.xulBrowser.documentGlobal;
-    // gBrowser is sometimes null, e.g. with <browser> of embedded options
-    // pages inside about:addons. We do not want to close the about:addons tab,
-    // even if it contains a WebExtension as an embedded inline options page.
-    let nativeTab = gBrowser?.getTabForBrowser(context.xulBrowser);
-    if (nativeTab) {
-      gBrowser.removeTab(nativeTab);
+    let { gBrowser } = context.xulBrowser.ownerGlobal;
+    if (gBrowser && gBrowser.getTabForBrowser) {
+      let nativeTab = gBrowser.getTabForBrowser(context.xulBrowser);
+      if (nativeTab) {
+        gBrowser.removeTab(nativeTab);
+      }
     }
   }
 });
@@ -119,7 +115,7 @@ global.waitForTabLoaded = (tab, url) => {
       onLocationChange(browser, webProgress, request, locationURI) {
         if (
           webProgress.isTopLevel &&
-          browser.documentGlobal.gBrowser.getTabForBrowser(browser) == tab &&
+          browser.ownerGlobal.gBrowser.getTabForBrowser(browser) == tab &&
           (!url || locationURI.spec == url)
         ) {
           windowTracker.removeListener("progress", this);
@@ -248,7 +244,7 @@ global.TabContext = class extends EventEmitter {
       // location changes related to the top level frame (See Bug 1493470 for a rationale).
       return;
     }
-    let gBrowser = browser.documentGlobal.gBrowser;
+    let gBrowser = browser.ownerGlobal.gBrowser;
     let tab = gBrowser.getTabForBrowser(browser);
     // fromBrowse will be false in case of e.g. a hash change or history.pushState
     let fromBrowse = !(
@@ -323,6 +319,7 @@ class TabTracker extends TabTrackerBase {
     super();
 
     this._tabs = new WeakMap();
+    this._browsers = new WeakMap();
     this._tabIds = new Map();
     this._nextId = 1;
     this._deferredTabOpenEvents = new WeakMap();
@@ -369,29 +366,33 @@ class TabTracker extends TabTrackerBase {
     return id;
   }
 
-  getTabForBrowser(browser) {
-    let { gBrowser } = browser.documentGlobal;
-    if (!gBrowser) {
-      if (browser.id === "addon-inline-options") {
-        // When we're loaded into a <browser> inside about:addons, we need to
-        // go up one more level.
-        browser = browser.documentGlobal.docShell.chromeEventHandler;
-        return browser.documentGlobal.gBrowser.getTabForBrowser(browser);
-      }
-      return null;
+  getBrowserTabId(browser) {
+    let id = this._browsers.get(browser);
+    if (id) {
+      return id;
     }
-    return gBrowser.getTabForBrowser(browser);
+
+    let tab = browser.ownerGlobal.gBrowser.getTabForBrowser(browser);
+    if (tab) {
+      id = this.getId(tab);
+      this._browsers.set(browser, id);
+      return id;
+    }
+    return -1;
   }
 
   setId(nativeTab, id) {
     if (!nativeTab.parentNode) {
       throw new Error("Cannot attach ID to a destroyed tab.");
     }
-    if (nativeTab.documentGlobal.closed) {
+    if (nativeTab.ownerGlobal.closed) {
       throw new Error("Cannot attach ID to a tab in a closed window.");
     }
 
     this._tabs.set(nativeTab, id);
+    if (nativeTab.linkedBrowser) {
+      this._browsers.set(nativeTab.linkedBrowser, id);
+    }
     this._tabIds.set(id, nativeTab);
   }
 
@@ -417,7 +418,7 @@ class TabTracker extends TabTrackerBase {
     if (this.has("tab-detached")) {
       let nativeTab = adoptedTab;
       let adoptedBy = adoptingTab;
-      let oldWindowId = windowTracker.getId(nativeTab.documentGlobal);
+      let oldWindowId = windowTracker.getId(nativeTab.ownerGlobal);
       let oldPosition = nativeTab._tPos;
       this.emit("tab-detached", {
         nativeTab,
@@ -429,7 +430,7 @@ class TabTracker extends TabTrackerBase {
     }
     if (this.has("tab-attached")) {
       let nativeTab = adoptingTab;
-      let newWindowId = windowTracker.getId(nativeTab.documentGlobal);
+      let newWindowId = windowTracker.getId(nativeTab.ownerGlobal);
       let newPosition = nativeTab._tPos;
       this.emit("tab-attached", {
         nativeTab,
@@ -535,7 +536,7 @@ class TabTracker extends TabTrackerBase {
           // Save the size of the current tab, since the newly-created tab will
           // likely be active by the time the promise below resolves and the
           // event is dispatched.
-          const currentTab = nativeTab.documentGlobal.gBrowser.selectedTab;
+          const currentTab = nativeTab.ownerGlobal.gBrowser.selectedTab;
           const { frameLoader } = currentTab.linkedBrowser;
           const currentTabSize = {
             width: frameLoader.lazyWidth,
@@ -576,7 +577,7 @@ class TabTracker extends TabTrackerBase {
         // Because we are delaying calling emitCreated above, we also need to
         // delay sending this event because it shouldn't fire before onCreated.
         this.maybeWaitForTabOpen(nativeTab).then(() => {
-          if (!nativeTab.parentNode || this.adoptedTabs.has(nativeTab)) {
+          if (!nativeTab.parentNode) {
             // If the tab is already be destroyed, do nothing.
             return;
           }
@@ -590,7 +591,7 @@ class TabTracker extends TabTrackerBase {
           // delay sending this event because it shouldn't fire before onCreated.
           // event.target is gBrowser, so we don't use maybeWaitForTabOpen.
           Promise.resolve().then(() => {
-            this.emitHighlighted(event.target.documentGlobal);
+            this.emitHighlighted(event.target.ownerGlobal);
           });
         }
         break;
@@ -680,7 +681,7 @@ class TabTracker extends TabTrackerBase {
       tabId: this.getId(nativeTab),
       previousTabId,
       previousTabIsPrivate,
-      windowId: windowTracker.getId(nativeTab.documentGlobal),
+      windowId: windowTracker.getId(nativeTab.ownerGlobal),
       nativeTab,
     });
   }
@@ -728,7 +729,7 @@ class TabTracker extends TabTrackerBase {
    * @private
    */
   emitRemoved(nativeTab, isWindowClosing) {
-    let windowId = windowTracker.getId(nativeTab.documentGlobal);
+    let windowId = windowTracker.getId(nativeTab.ownerGlobal);
     let tabId = this.getId(nativeTab);
 
     this.emit("tab-removed", {
@@ -740,31 +741,51 @@ class TabTracker extends TabTrackerBase {
   }
 
   getBrowserData(browser) {
-    let window = browser.documentGlobal;
+    let window = browser.ownerGlobal;
     if (!window) {
       return {
         tabId: -1,
         windowId: -1,
       };
     }
+    let { gBrowser } = window;
+    // Some non-browser windows have gBrowser but not getTabForBrowser!
+    if (!gBrowser || !gBrowser.getTabForBrowser) {
+      if (window.top.document.documentURI === "about:addons") {
+        // When we're loaded into a <browser> inside about:addons, we need to go up
+        // one more level.
+        browser = window.docShell.chromeEventHandler;
 
-    const nativeTab = this.getTabForBrowser(browser);
-    if (nativeTab) {
-      // If window was about:addons, use the browser window instead.
-      window = nativeTab.documentGlobal;
-    } else {
-      // Even without a tab we may have a windowId, e.g. with extension popups
-      // and sidebars. For sidebars in webext-panels.xhtml, look up the parent:
-      window = window.browsingContext.topChromeWindow;
-      if (!windowTracker.isBrowserWindow(window)) {
-        // E.g. an extension background page.
-        return { tabId: -1, windowId: -1 };
+        ({ gBrowser } = browser.ownerGlobal);
+      } else {
+        return {
+          tabId: -1,
+          windowId: -1,
+        };
       }
     }
+
     return {
-      tabId: nativeTab ? this.getId(nativeTab) : -1,
-      windowId: windowTracker.getId(window),
+      tabId: this.getBrowserTabId(browser),
+      windowId: windowTracker.getId(browser.ownerGlobal),
     };
+  }
+
+  getBrowserDataForContext(context) {
+    if (["tab", "background"].includes(context.viewType)) {
+      return this.getBrowserData(context.xulBrowser);
+    } else if (["popup", "sidebar"].includes(context.viewType)) {
+      // popups and sidebars are nested inside a browser element
+      // (with url "chrome://browser/content/webext-panels.xhtml")
+      // and so we look for the corresponding topChromeWindow to
+      // determine the windowId the panel belongs to.
+      const chromeWindow =
+        context.xulBrowser?.ownerGlobal?.browsingContext?.topChromeWindow;
+      const windowId = chromeWindow ? windowTracker.getId(chromeWindow) : -1;
+      return { tabId: -1, windowId };
+    }
+
+    return { tabId: -1, windowId: -1 };
   }
 
   get activeTab() {
@@ -887,7 +908,7 @@ class Tab extends TabBase {
   }
 
   get window() {
-    return this.nativeTab.documentGlobal;
+    return this.nativeTab.ownerGlobal;
   }
 
   get windowId() {
@@ -910,11 +931,6 @@ class Tab extends TabBase {
   get groupId() {
     const { group } = this.nativeTab;
     return group ? getExtTabGroupIdForInternalTabGroupId(group.id) : -1;
-  }
-
-  get splitViewId() {
-    const { splitview } = this.nativeTab;
-    return splitview ? splitview.splitViewId : -1;
   }
 
   /**
@@ -1258,7 +1274,7 @@ class TabManager extends TabManagerBase {
 
   canAccessTab(nativeTab) {
     // Check private browsing access at browser window level.
-    if (!this.extension.canAccessWindow(nativeTab.documentGlobal)) {
+    if (!this.extension.canAccessWindow(nativeTab.ownerGlobal)) {
       return false;
     }
     if (
@@ -1275,7 +1291,7 @@ class TabManager extends TabManagerBase {
   }
 
   getWrapper(nativeTab) {
-    if (!nativeTab.documentGlobal.gBrowserInit.isAdoptingTab()) {
+    if (!nativeTab.ownerGlobal.gBrowserInit.isAdoptingTab()) {
       return super.getWrapper(nativeTab);
     }
   }

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -239,7 +241,7 @@ void WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport) {
 /* static */
 void WorkerErrorReport::ReportError(
     JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aFireAtScope,
-    RefPtr<DOMEventTargetHelper> aTarget, UniquePtr<WorkerErrorReport> aReport,
+    DOMEventTargetHelper* aTarget, UniquePtr<WorkerErrorReport> aReport,
     uint64_t aInnerWindowId, JS::Handle<JS::Value> aException) {
   if (aWorkerPrivate) {
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -321,7 +323,7 @@ void WorkerErrorReport::ReportError(
         MOZ_ASSERT(globalScope->GetWrapperPreserveColor() == global);
 
         RefPtr<ErrorEvent> event = ErrorEvent::Constructor(
-            aTarget ? aTarget.get() : globalScope, u"error"_ns, init);
+            aTarget ? aTarget : globalScope, u"error"_ns, init);
         event->SetTrusted(true);
 
         if (NS_FAILED(EventDispatcher::DispatchDOMEvent(
@@ -415,8 +417,8 @@ void WorkerErrorReport::LogErrorToConsole(const ErrorData& aReport,
         return;
       }
       NS_WARNING("LogMessage failed!");
-    } else if (NS_SUCCEEDED(
-                   consoleService->LogStringMessage(aReport.message().get()))) {
+    } else if (NS_SUCCEEDED(consoleService->LogStringMessage(
+                   aReport.message().BeginReading()))) {
       return;
     }
     NS_WARNING("LogStringMessage failed!");
@@ -444,7 +446,7 @@ void WorkerErrorReport::LogErrorToConsole(const nsAString& aMessage) {
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   NS_WARNING_ASSERTION(consoleService, "Failed to get console service!");
 
-  consoleService->LogStringMessage(PromiseFlatString(aMessage).get());
+  consoleService->LogStringMessage(aMessage.BeginReading());
 }
 
 /* static */

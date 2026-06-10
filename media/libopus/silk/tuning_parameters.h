@@ -28,6 +28,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef SILK_TUNING_PARAMETERS_H
 #define SILK_TUNING_PARAMETERS_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* Decay time for bitreservoir */
 #define BITRESERVOIR_DECAY_TIME_MS                      500
 
@@ -142,5 +147,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 /* Maximum time before allowing a bandwidth transition */
 #define MAX_BANDWIDTH_SWITCH_DELAY_MS                   5000
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SILK_TUNING_PARAMETERS_H */

@@ -1,10 +1,9 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
+
 ChromeUtils.defineESModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
-  AppProvidedConfigEngine:
-    "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
-  ConfigSearchEngine:
-    "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
   EnterprisePolicyTesting:
     "resource://testing-common/EnterprisePolicyTesting.sys.mjs",
   ExtensionTestUtils:
@@ -17,11 +16,9 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
   SearchEngineClassification:
     "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/components/generated/RustSearch.sys.mjs",
-  SearchEngineInstallError:
-    "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
   SearchEngineSelector:
     "moz-src:///toolkit/components/search/SearchEngineSelector.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
+  SearchService: "resource://gre/modules/SearchService.sys.mjs",
   SearchSettings: "moz-src:///toolkit/components/search/SearchSettings.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
@@ -418,20 +415,16 @@ function useCustomGeoServer(region, waitToRespond = Promise.resolve()) {
 
 /**
  * @typedef {object} TelemetryDetails
- * @property {string} providerId
- *   The provider id of the search engine.
- * @property {string} partnerCode
- *   The partner code of the search engine.
- * @property {boolean} overriddenByThirdParty
- *   If the engine is overridden by a third party.
  * @property {string} engineId
  *   The telemetry ID for the search engine.
- * @property {string} displayName
+ * @property {string} [displayName]
  *   The search engine's display name.
- * @property {string} loadPath
+ * @property {string} [loadPath]
  *   The load path for the search engine.
- * @property {string} submissionUrl
+ * @property {string} [submissionUrl]
  *   The submission URL for the search engine.
+ * @property {string} [verified]
+ *   Whether the search engine is verified.
  */
 
 /**
@@ -440,9 +433,9 @@ function useCustomGeoServer(region, waitToRespond = Promise.resolve()) {
  *
  * @param {object} expected
  *   An object containing telemetry details for normal and private engines.
- * @param {Partial<TelemetryDetails>} expected.normal
+ * @param {TelemetryDetails} expected.normal
  *   An object with the expected details for the normal search engine.
- * @param {Partial<TelemetryDetails>} [expected.private]
+ * @param {TelemetryDetails} [expected.private]
  *   An object with the expected details for the private search engine.
  */
 async function assertGleanDefaultEngine(expected) {
@@ -462,21 +455,7 @@ async function assertGleanDefaultEngine(expected) {
         `Should have set ${property} correctly`
       );
     }
-    if (!expected.private) {
-      let expectedValue;
-      if (property === "overriddenByThirdParty") {
-        expectedValue = false;
-      } else if (property === "submissionUrl") {
-        expectedValue = "blank:";
-      } else {
-        expectedValue = "";
-      }
-      Assert.equal(
-        Glean.searchEnginePrivate[property].testGetValue(),
-        expectedValue,
-        `Private engine ${property} should be unset`
-      );
-    } else if (property in expected.private) {
+    if (expected.private && property in expected.private) {
       Assert.equal(
         Glean.searchEnginePrivate[property].testGetValue(),
         expected.private[property] ?? "",
@@ -487,7 +466,7 @@ async function assertGleanDefaultEngine(expected) {
 }
 
 /**
- * Loads a new enterprise policy, and re-initialises the search service
+ * Loads a new enterprise policy, and re-initialise the search service
  * with the new policy. Also waits for the search service to write the settings
  * file to disk.
  *
@@ -495,7 +474,15 @@ async function assertGleanDefaultEngine(expected) {
  *   The enterprise policy to use.
  */
 async function setupPolicyEngineWithJson(policy) {
-  await this.EnterprisePolicyTesting.setupPolicyEngineWithJsonForSearch(policy);
+  Services.search.wrappedJSObject.reset();
+
+  await this.EnterprisePolicyTesting.setupPolicyEngineWithJson(policy);
+
+  let settingsWritten = SearchTestUtils.promiseSearchNotification(
+    "write-settings-to-disk-complete"
+  );
+  await Services.search.init();
+  await settingsWritten;
 }
 
 /**
@@ -564,8 +551,8 @@ class SearchObserver {
       "Should be expecting a notification"
     );
 
-    let engine = subject.wrappedJSObject;
-    let engineName = engine.name;
+    let maybeEngine = subject.QueryInterface(Ci.nsISearchEngine);
+    let engineName = maybeEngine?.name ?? null;
     this.receivedNotifications.push({ type: data, engineName });
 
     let matchIndex = this.expectedNotifications.findIndex(
@@ -605,7 +592,7 @@ let updatePromise = SearchTestUtils.promiseSearchNotification(
 );
 
 registerCleanupFunction(async () => {
-  if (SearchService.isInitialized) {
+  if (Services.search.isInitialized) {
     await updatePromise;
   }
 });

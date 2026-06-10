@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -76,9 +77,6 @@ RefPtr<ChromiumCDMParent::InitPromise> ChromiumCDMParent::Init(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self, aCDMCallback](bool aSuccess) {
-            if (self->mIsShutdown) {
-              return;
-            }
             if (!aSuccess) {
               GMP_LOG_DEBUG(
                   "ChromiumCDMParent::Init() failed with callback from "
@@ -126,8 +124,8 @@ RefPtr<ChromiumCDMParent::InitPromise> ChromiumCDMParent::Init(
 }
 
 void ChromiumCDMParent::CreateSession(uint32_t aCreateSessionToken,
-                                      cdm::SessionType aSessionType,
-                                      cdm::InitDataType aInitDataType,
+                                      uint32_t aSessionType,
+                                      uint32_t aInitDataType,
                                       uint32_t aPromiseId,
                                       const nsTArray<uint8_t>& aInitData) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
@@ -145,13 +143,12 @@ void ChromiumCDMParent::CreateSession(uint32_t aCreateSessionToken,
   mPromiseToCreateSessionToken.InsertOrUpdate(aPromiseId, aCreateSessionToken);
 }
 
-void ChromiumCDMParent::LoadSession(uint32_t aPromiseId,
-                                    cdm::SessionType aSessionType,
+void ChromiumCDMParent::LoadSession(uint32_t aPromiseId, uint32_t aSessionType,
                                     nsString aSessionId) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   GMP_LOG_DEBUG("ChromiumCDMParent::LoadSession(this=%p, pid=%" PRIu32
                 ", type=%" PRIu32 ", sid=%s)",
-                this, aPromiseId, static_cast<uint32_t>(aSessionType),
+                this, aPromiseId, aSessionType,
                 NS_ConvertUTF16toUTF8(aSessionId).get());
   if (mIsShutdown) {
     RejectPromiseShutdown(aPromiseId);
@@ -426,7 +423,7 @@ ipc::IPCResult ChromiumCDMParent::Recv__delete__() {
 }
 
 ipc::IPCResult ChromiumCDMParent::RecvOnResolvePromiseWithKeyStatus(
-    const uint32_t& aPromiseId, const cdm::KeyStatus& aKeyStatus) {
+    const uint32_t& aPromiseId, const uint32_t& aKeyStatus) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   GMP_LOG_DEBUG(
       "ChromiumCDMParent::RecvOnResolvePromiseWithKeyStatus(this=%p, "
@@ -534,12 +531,12 @@ void ChromiumCDMParent::RejectPromiseWithStateError(
   RejectPromise(aPromiseId, std::move(rv), aErrorMessage);
 }
 
-static ErrorResult ToErrorResult(cdm::Exception aException,
+static ErrorResult ToErrorResult(uint32_t aException,
                                  const nsCString& aErrorMessage) {
   // XXXbz could we have a CopyableErrorResult sent to us with a better error
   // message?
   ErrorResult rv;
-  switch (aException) {
+  switch (static_cast<cdm::Exception>(aException)) {
     case cdm::Exception::kExceptionNotSupportedError:
       rv.ThrowNotSupportedError(aErrorMessage);
       break;
@@ -561,7 +558,7 @@ static ErrorResult ToErrorResult(cdm::Exception aException,
 }
 
 ipc::IPCResult ChromiumCDMParent::RecvOnRejectPromise(
-    const uint32_t& aPromiseId, const cdm::Exception& aException,
+    const uint32_t& aPromiseId, const uint32_t& aException,
     const uint32_t& aSystemCode, const nsCString& aErrorMessage) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   RejectPromise(aPromiseId, ToErrorResult(aException, aErrorMessage),
@@ -570,7 +567,7 @@ ipc::IPCResult ChromiumCDMParent::RecvOnRejectPromise(
 }
 
 ipc::IPCResult ChromiumCDMParent::RecvOnSessionMessage(
-    const nsCString& aSessionId, const cdm::MessageType& aMessageType,
+    const nsCString& aSessionId, const uint32_t& aMessageType,
     nsTArray<uint8_t>&& aMessage) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   GMP_LOG_DEBUG("ChromiumCDMParent::RecvOnSessionMessage(this=%p, sid=%s)",
@@ -655,8 +652,8 @@ ipc::IPCResult ChromiumCDMParent::RecvOnQueryOutputProtectionStatus() {
   return IPC_OK();
 }
 
-DecryptStatus ToDecryptStatus(cdm::Status aStatus) {
-  switch (aStatus) {
+DecryptStatus ToDecryptStatus(uint32_t aStatus) {
+  switch (static_cast<cdm::Status>(aStatus)) {
     case cdm::kSuccess:
       return DecryptStatus::Ok;
     case cdm::kNoKey:
@@ -666,8 +663,8 @@ DecryptStatus ToDecryptStatus(cdm::Status aStatus) {
   }
 }
 
-ipc::IPCResult ChromiumCDMParent::RecvDecryptFailed(
-    const uint32_t& aId, const cdm::Status& aStatus) {
+ipc::IPCResult ChromiumCDMParent::RecvDecryptFailed(const uint32_t& aId,
+                                                    const uint32_t& aStatus) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   GMP_LOG_DEBUG("ChromiumCDMParent::RecvDecryptFailed(this=%p, id=%" PRIu32
                 ", status=%" PRIu32 ")",
@@ -689,7 +686,7 @@ ipc::IPCResult ChromiumCDMParent::RecvDecryptFailed(
 }
 
 ipc::IPCResult ChromiumCDMParent::RecvDecryptedShmem(const uint32_t& aId,
-                                                     const cdm::Status& aStatus,
+                                                     const uint32_t& aStatus,
                                                      ipc::Shmem&& aShmem) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   GMP_LOG_DEBUG("ChromiumCDMParent::RecvDecryptedShmem(this=%p, id=%" PRIu32
@@ -719,7 +716,7 @@ ipc::IPCResult ChromiumCDMParent::RecvDecryptedShmem(const uint32_t& aId,
 }
 
 ipc::IPCResult ChromiumCDMParent::RecvDecryptedData(const uint32_t& aId,
-                                                    const cdm::Status& aStatus,
+                                                    const uint32_t& aStatus,
                                                     nsTArray<uint8_t>&& aData) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   GMP_LOG_DEBUG("ChromiumCDMParent::RecvDecryptedData(this=%p, id=%" PRIu32
@@ -1066,8 +1063,10 @@ already_AddRefed<VideoData> ChromiumCDMParent::CreateVideoFrame(
     }
   }
 
-  b.mYUVColorSpace = mVideoInfo.mColorSpace.refOr(
-      DefaultColorSpace({aFrame.mImageWidth(), aFrame.mImageHeight()}));
+  // We unfortunately can't know which colorspace the video is using at this
+  // stage.
+  b.mYUVColorSpace =
+      DefaultColorSpace({aFrame.mImageWidth(), aFrame.mImageHeight()});
 
   gfx::IntRect pictureRegion(0, 0, aFrame.mImageWidth(), aFrame.mImageHeight());
 
@@ -1093,7 +1092,7 @@ already_AddRefed<VideoData> ChromiumCDMParent::CreateVideoFrame(
   return v.forget();
 }
 
-ipc::IPCResult ChromiumCDMParent::RecvDecodeFailed(const cdm::Status& aStatus) {
+ipc::IPCResult ChromiumCDMParent::RecvDecodeFailed(const uint32_t& aStatus) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   GMP_LOG_DEBUG("ChromiumCDMParent::RecvDecodeFailed(this=%p status=%" PRIu32
                 ")",
@@ -1114,7 +1113,7 @@ ipc::IPCResult ChromiumCDMParent::RecvDecodeFailed(const cdm::Status& aStatus) {
           RESULT_DETAIL(
               "ChromiumCDMParent::RecvDecodeFailed with status %s (%" PRIu32
               ")",
-              cdm::EnumValueToString(aStatus), aStatus)),
+              cdm::EnumValueToString(cdm::Status(aStatus)), aStatus)),
       __func__);
   return IPC_OK();
 }
@@ -1211,7 +1210,7 @@ RefPtr<MediaDataDecoder::InitPromise> ChromiumCDMParent::InitializeVideoDecoder(
 }
 
 ipc::IPCResult ChromiumCDMParent::RecvOnDecoderInitDone(
-    const cdm::Status& aStatus) {
+    const uint32_t& aStatus) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   GMP_LOG_DEBUG(
       "ChromiumCDMParent::RecvOnDecoderInitDone(this=%p, status=%" PRIu32 ")",
@@ -1220,15 +1219,15 @@ ipc::IPCResult ChromiumCDMParent::RecvOnDecoderInitDone(
     MOZ_ASSERT(mInitVideoDecoderPromise.IsEmpty());
     return IPC_OK();
   }
-  if (aStatus == cdm::kSuccess) {
+  if (aStatus == static_cast<uint32_t>(cdm::kSuccess)) {
     mInitVideoDecoderPromise.ResolveIfExists(TrackInfo::kVideoTrack, __func__);
   } else {
     mVideoDecoderInitialized = false;
     mInitVideoDecoderPromise.RejectIfExists(
-        MediaResult(
-            NS_ERROR_DOM_MEDIA_FATAL_ERR,
-            RESULT_DETAIL("CDM init decode failed with status %s (%" PRIu32 ")",
-                          cdm::EnumValueToString(aStatus), aStatus)),
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    RESULT_DETAIL(
+                        "CDM init decode failed with status %s (%" PRIu32 ")",
+                        cdm::EnumValueToString(cdm::Status(aStatus)), aStatus)),
         __func__);
   }
   return IPC_OK();

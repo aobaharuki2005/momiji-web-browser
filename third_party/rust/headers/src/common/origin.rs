@@ -3,10 +3,9 @@ use std::fmt;
 
 use bytes::Bytes;
 use http::uri::{self, Authority, Scheme, Uri};
-use http::HeaderValue;
 
-use crate::util::{IterExt, TryFromValues};
-use crate::Error;
+use util::{IterExt, TryFromValues};
+use HeaderValue;
 
 /// The `Origin` header.
 ///
@@ -21,6 +20,7 @@ use crate::Error;
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::Origin;
 ///
 /// let origin = Origin::NULL;
@@ -46,7 +46,10 @@ impl Origin {
     /// Checks if `Origin` is `null`.
     #[inline]
     pub fn is_null(&self) -> bool {
-        matches!(self.0, OriginOrNull::Null)
+        match self.0 {
+            OriginOrNull::Null => true,
+            _ => false,
+        }
     }
 
     /// Get the "scheme" part of this origin.
@@ -98,7 +101,7 @@ impl Origin {
         HeaderValue::from_maybe_shared(bytes)
             .ok()
             .and_then(|val| Self::try_from_value(&val))
-            .ok_or(InvalidOrigin { _inner: () })
+            .ok_or_else(|| InvalidOrigin { _inner: () })
     }
 
     // Used in AccessControlAllowOrigin
@@ -106,7 +109,7 @@ impl Origin {
         OriginOrNull::try_from_value(value).map(Origin)
     }
 
-    pub(super) fn to_value(&self) -> HeaderValue {
+    pub(super) fn into_value(&self) -> HeaderValue {
         (&self.0).into()
     }
 }
@@ -153,14 +156,14 @@ impl OriginOrNull {
 }
 
 impl TryFromValues for OriginOrNull {
-    fn try_from_values<'i, I>(values: &mut I) -> Result<Self, Error>
+    fn try_from_values<'i, I>(values: &mut I) -> Result<Self, ::Error>
     where
         I: Iterator<Item = &'i HeaderValue>,
     {
         values
             .just_one()
             .and_then(OriginOrNull::try_from_value)
-            .ok_or_else(Error::invalid)
+            .ok_or_else(::Error::invalid)
     }
 }
 

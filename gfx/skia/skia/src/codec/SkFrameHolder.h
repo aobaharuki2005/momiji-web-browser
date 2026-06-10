@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google LLC
+ * Copyright 2017 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -23,13 +23,14 @@
  */
 class SkFrame : public SkNoncopyable {
 public:
-    explicit SkFrame(int id)
-            : fId(id)
-            , fHasAlpha(false)
-            , fRequiredFrame(kUninitialized)
-            , fDisposalMethod(SkCodecAnimation::DisposalMethod::kKeep)
-            , fDuration(0)
-            , fBlend(SkCodecAnimation::Blend::kSrcOver) {
+    SkFrame(int id)
+        : fId(id)
+        , fHasAlpha(false)
+        , fRequiredFrame(kUninitialized)
+        , fDisposalMethod(SkCodecAnimation::DisposalMethod::kKeep)
+        , fDuration(0)
+        , fBlend(SkCodecAnimation::Blend::kSrcOver)
+    {
         fRect.setEmpty();
     }
 

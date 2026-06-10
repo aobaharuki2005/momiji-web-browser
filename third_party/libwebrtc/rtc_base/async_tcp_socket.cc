@@ -15,11 +15,11 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
-#include <span>
 #include <utility>
 
 #include "absl/base/nullability.h"
 #include "absl/memory/memory.h"
+#include "api/array_view.h"
 #include "api/environment/environment.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/byte_order.h"
@@ -58,14 +58,11 @@ AsyncTCPSocketBase::AsyncTCPSocketBase(
       max_outsize_(max_packet_size) {
   inbuf_.EnsureCapacity(kMinimumRecvSize);
 
-  socket_->SubscribeConnectEvent(
-      this, [this](Socket* socket) { OnConnectEvent(socket); });
-  socket_->SubscribeReadEvent(this,
-                              [this](Socket* socket) { OnReadEvent(socket); });
-  socket_->SubscribeWriteEvent(
-      this, [this](Socket* socket) { OnWriteEvent(socket); });
-  socket_->SubscribeCloseEvent(
-      this, [this](Socket* socket, int error) { OnCloseEvent(socket, error); });
+  socket_->SignalConnectEvent.connect(this,
+                                      &AsyncTCPSocketBase::OnConnectEvent);
+  socket_->SignalReadEvent.connect(this, &AsyncTCPSocketBase::OnReadEvent);
+  socket_->SignalWriteEvent.connect(this, &AsyncTCPSocketBase::OnWriteEvent);
+  socket_->SignalCloseEvent.connect(this, &AsyncTCPSocketBase::OnCloseEvent);
 }
 
 AsyncTCPSocketBase::~AsyncTCPSocketBase() {}
@@ -127,7 +124,7 @@ int AsyncTCPSocketBase::SendTo(const void* pv,
 
 int AsyncTCPSocketBase::FlushOutBuffer() {
   RTC_DCHECK_GT(outbuf_.size(), 0);
-  std::span<uint8_t> view = outbuf_;
+  ArrayView<uint8_t> view = outbuf_;
   int res;
   while (!view.empty()) {
     res = socket_->Send(view.data(), view.size());
@@ -139,7 +136,7 @@ int AsyncTCPSocketBase::FlushOutBuffer() {
       res = -1;
       break;
     }
-    view = view.subspan(res);
+    view = view.subview(res);
   }
   if (res > 0) {
     // The output buffer may have been written out over multiple partial Send(),
@@ -156,7 +153,8 @@ int AsyncTCPSocketBase::FlushOutBuffer() {
       res = outbuf_.size() - view.size();
     }
     if (view.size() < outbuf_.size()) {
-      outbuf_.SetData(view);
+      memmove(outbuf_.data(), view.data(), view.size());
+      outbuf_.SetSize(view.size());
     }
   }
   return res;
@@ -211,11 +209,9 @@ void AsyncTCPSocketBase::OnReadEvent(Socket* socket) {
     inbuf_.Clear();
   } else {
     if (bytes_remaining > 0) {
-      // Move remaining bytes to beginning of buffer.
-      inbuf_.SetData(std::span<uint8_t>(inbuf_).subspan(processed));
-    } else {
-      inbuf_.Clear();
+      memmove(inbuf_.data(), inbuf_.data() + processed, bytes_remaining);
     }
+    inbuf_.SetSize(bytes_remaining);
   }
 }
 
@@ -227,7 +223,7 @@ void AsyncTCPSocketBase::OnWriteEvent(Socket* socket) {
   }
 
   if (outbuf_.empty()) {
-    NotifyReadyToSend(this);
+    SignalReadyToSend(this);
   }
 }
 
@@ -266,13 +262,13 @@ int AsyncTCPSocket::Send(const void* pv,
                              env_.clock().TimeInMilliseconds(),
                              options.info_signaled_after_sent);
   CopySocketInformationToPacketInfo(cb, *this, &sent_packet.info);
-  NotifySentPacket(this, sent_packet);
+  SignalSentPacket(this, sent_packet);
 
   // We claim to have sent the whole thing, even if we only sent partial
   return static_cast<int>(cb);
 }
 
-size_t AsyncTCPSocket::ProcessInput(std::span<const uint8_t> data) {
+size_t AsyncTCPSocket::ProcessInput(ArrayView<const uint8_t> data) {
   SocketAddress remote_addr(GetRemoteAddress());
 
   size_t processed_bytes = 0;
@@ -281,13 +277,12 @@ size_t AsyncTCPSocket::ProcessInput(std::span<const uint8_t> data) {
     if (bytes_left < kPacketLenSize)
       return processed_bytes;
 
-    PacketLength pkt_len =
-        GetBE16(data.subspan(processed_bytes, kPacketLenSize));
+    PacketLength pkt_len = GetBE16(data.data() + processed_bytes);
     if (bytes_left < kPacketLenSize + pkt_len)
       return processed_bytes;
 
     ReceivedIpPacket received_packet(
-        data.subspan(processed_bytes + kPacketLenSize, pkt_len), remote_addr,
+        data.subview(processed_bytes + kPacketLenSize, pkt_len), remote_addr,
         env_.clock().CurrentTime());
     NotifyPacketReceived(received_packet);
     processed_bytes += kPacketLenSize + pkt_len;
@@ -298,8 +293,7 @@ AsyncTcpListenSocket::AsyncTcpListenSocket(const Environment& env,
                                            std::unique_ptr<Socket> socket)
     : env_(env), socket_(std::move(socket)) {
   RTC_DCHECK(socket_.get() != nullptr);
-  socket_->SubscribeReadEvent(this,
-                              [this](Socket* socket) { OnReadEvent(socket); });
+  socket_->SignalReadEvent.connect(this, &AsyncTcpListenSocket::OnReadEvent);
   if (socket_->Listen(kListenBacklog) < 0) {
     RTC_LOG(LS_ERROR) << "Listen() failed with error " << socket_->GetError();
   }
@@ -336,12 +330,12 @@ void AsyncTcpListenSocket::OnReadEvent(Socket* socket) {
   HandleIncomingConnection(absl::WrapUnique(new_socket));
 
   // Prime a read event in case data is waiting.
-  new_socket->NotifyReadEvent(new_socket);
+  new_socket->SignalReadEvent(new_socket);
 }
 
 void AsyncTcpListenSocket::HandleIncomingConnection(
     std::unique_ptr<Socket> socket) {
-  NotifyNewConnection(this, new AsyncTCPSocket(env_, std::move(socket)));
+  SignalNewConnection(this, new AsyncTCPSocket(env_, std::move(socket)));
 }
 
 }  // namespace webrtc

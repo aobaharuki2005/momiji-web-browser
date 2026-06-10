@@ -1,14 +1,21 @@
-use alloc::{borrow::ToOwned as _, boxed::Box, string::String, sync::Arc, vec, vec::Vec};
+use alloc::{
+    borrow::{Cow, ToOwned as _},
+    boxed::Box,
+    string::String,
+    sync::Arc,
+    vec,
+    vec::Vec,
+};
 
 use hashbrown::HashMap;
 use thiserror::Error;
+use wgt::error::{ErrorType, WebGpuError};
 
 use crate::{
     api_log, api_log_debug,
     device::{queue::Queue, resource::Device, DeviceDescriptor, DeviceError},
     global::Global,
     id::{markers, AdapterId, DeviceId, QueueId, SurfaceId},
-    limits::{self, check_limits, FailedLimit},
     lock::{rank, Mutex},
     present::Presentation,
     resource::ResourceType,
@@ -21,6 +28,35 @@ use wgt::{Backend, Backends, PowerPreference};
 
 pub type RequestAdapterOptions = wgt::RequestAdapterOptions<SurfaceId>;
 
+#[derive(Clone, Debug, Error)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[error("Limit '{name}' value {requested} is better than allowed {allowed}")]
+pub struct FailedLimit {
+    name: Cow<'static, str>,
+    requested: u64,
+    allowed: u64,
+}
+
+impl WebGpuError for FailedLimit {
+    fn webgpu_error_type(&self) -> ErrorType {
+        ErrorType::Validation
+    }
+}
+
+fn check_limits(requested: &wgt::Limits, allowed: &wgt::Limits) -> Vec<FailedLimit> {
+    let mut failed = Vec::new();
+
+    requested.check_limits_with_fail_fn(allowed, false, |name, requested, allowed| {
+        failed.push(FailedLimit {
+            name: Cow::Borrowed(name),
+            requested,
+            allowed,
+        })
+    });
+
+    failed
+}
+
 #[test]
 fn downlevel_default_limits_less_than_default_limits() {
     let res = check_limits(&wgt::Limits::downlevel_defaults(), &wgt::Limits::default());
@@ -32,7 +68,8 @@ fn downlevel_default_limits_less_than_default_limits() {
 
 #[derive(Default)]
 pub struct Instance {
-    _name: String,
+    #[allow(dead_code)]
+    name: String,
 
     /// List of instances per `wgpu-hal` backend.
     ///
@@ -68,7 +105,7 @@ impl Instance {
         telemetry: Option<hal::Telemetry>,
     ) -> Self {
         let mut this = Self {
-            _name: name.to_owned(),
+            name: name.to_owned(),
             instance_per_backend: Vec::new(),
             requested_backends: instance_desc.backends,
             supported_backends: Backends::empty(),
@@ -79,7 +116,7 @@ impl Instance {
             display: instance_desc.display.take(),
         };
 
-        #[cfg(all(vulkan, not(target_os = "netbsd")))]
+        #[cfg(vulkan)]
         this.try_add_hal(hal::api::Vulkan, &instance_desc, telemetry);
         #[cfg(metal)]
         this.try_add_hal(hal::api::Metal, &instance_desc, telemetry);
@@ -149,7 +186,7 @@ impl Instance {
         hal_instance: <A as hal::Api>::Instance,
     ) -> Self {
         Self {
-            _name: name,
+            name,
             instance_per_backend: vec![(A::VARIANT, Box::new(hal_instance))],
             requested_backends: A::VARIANT.into(),
             supported_backends: A::VARIANT.into(),
@@ -190,33 +227,26 @@ impl Instance {
     ///
     /// # Safety
     ///
-    /// - `display_handle` must be a valid object to create a surface upon,
-    ///   falls back to the instance display handle otherwise.
+    /// - `display_handle` must be a valid object to create a surface upon.
     /// - `window_handle` must remain valid as long as the returned
     ///   [`SurfaceId`] is being used.
     pub unsafe fn create_surface(
         &self,
-        display_handle: Option<raw_window_handle::RawDisplayHandle>,
+        display_handle: raw_window_handle::RawDisplayHandle,
         window_handle: raw_window_handle::RawWindowHandle,
     ) -> Result<Surface, CreateSurfaceError> {
         profiling::scope!("Instance::create_surface");
 
-        let instance_display_handle = self.display.as_ref().map(|d| {
-            d.display_handle()
+        if let Some(instance_display_handle) = &self.display {
+            if instance_display_handle
+                .display_handle()
                 .expect("Implementation did not provide a DisplayHandle")
                 .as_raw()
-        });
-        let display_handle = match (instance_display_handle, display_handle) {
-            (Some(a), Some(b)) => {
-                if a != b {
-                    return Err(CreateSurfaceError::MismatchingDisplayHandle);
-                }
-                a
+                != display_handle
+            {
+                return Err(CreateSurfaceError::MismatchingDisplayHandle);
             }
-            (Some(hnd), None) => hnd,
-            (None, Some(hnd)) => hnd,
-            (None, None) => return Err(CreateSurfaceError::MissingDisplayHandle),
-        };
+        }
 
         let mut errors = HashMap::default();
         let mut surface_per_backend = HashMap::default();
@@ -261,11 +291,10 @@ impl Instance {
     ///
     /// # Platform Support
     ///
-    /// This function requires the `"drm"` feature. It is only available on
-    /// non-apple Unix-like platforms (Linux, FreeBSD) and currently only works
-    /// with the Vulkan backend.
-    #[cfg(drm)]
-    #[cfg_attr(not(vulkan), expect(unused_variables, unused_mut))]
+    /// This function is only available on non-apple Unix-like platforms (Linux, FreeBSD) and
+    /// currently only works with the Vulkan backend.
+    #[cfg(all(unix, not(target_vendor = "apple"), not(target_family = "wasm")))]
+    #[cfg_attr(not(vulkan), expect(unused_variables))]
     pub unsafe fn create_surface_from_drm(
         &self,
         fd: i32,
@@ -414,11 +443,7 @@ impl Instance {
         })
     }
 
-    pub fn enumerate_adapters(
-        &self,
-        backends: Backends,
-        apply_limit_buckets: bool,
-    ) -> Vec<Adapter> {
+    pub fn enumerate_adapters(&self, backends: Backends) -> Vec<Adapter> {
         profiling::scope!("Instance::enumerate_adapters");
         api_log!("Instance::enumerate_adapters");
 
@@ -433,23 +458,11 @@ impl Instance {
             profiling::scope!("enumerating", &*alloc::format!("{_backend:?}"));
 
             let hal_adapters = unsafe { instance.enumerate_adapters(None) };
-
-            adapters.extend(
-                hal_adapters
-                    .into_iter()
-                    .filter_map(|raw| {
-                        if apply_limit_buckets {
-                            limits::apply_limit_buckets(raw)
-                        } else {
-                            Some(raw)
-                        }
-                    })
-                    .map(|raw| {
-                        let adapter = Adapter::new(raw);
-                        api_log_debug!("Adapter {:?}", adapter.raw.info);
-                        adapter
-                    }),
-            );
+            for raw in hal_adapters {
+                let adapter = Adapter::new(raw);
+                api_log_debug!("Adapter {:?}", adapter.raw.info);
+                adapters.push(adapter);
+            }
         }
         adapters
     }
@@ -521,16 +534,7 @@ impl Instance {
                     continue;
                 }
             }
-
-            if desc.apply_limit_buckets {
-                adapters.extend(
-                    backend_adapters
-                        .into_iter()
-                        .filter_map(limits::apply_limit_buckets),
-                );
-            } else {
-                adapters.append(&mut backend_adapters);
-            }
+            adapters.extend(backend_adapters);
         }
 
         match desc.power_preference {
@@ -663,7 +667,19 @@ pub struct Adapter {
 }
 
 impl Adapter {
-    pub fn new(raw: hal::DynExposedAdapter) -> Self {
+    pub fn new(mut raw: hal::DynExposedAdapter) -> Self {
+        // WebGPU requires this offset alignment as lower bound on all adapters.
+        const MIN_BUFFER_OFFSET_ALIGNMENT_LOWER_BOUND: u32 = 32;
+
+        let limits = &mut raw.capabilities.limits;
+
+        limits.min_uniform_buffer_offset_alignment = limits
+            .min_uniform_buffer_offset_alignment
+            .max(MIN_BUFFER_OFFSET_ALIGNMENT_LOWER_BOUND);
+        limits.min_storage_buffer_offset_alignment = limits
+            .min_storage_buffer_offset_alignment
+            .max(MIN_BUFFER_OFFSET_ALIGNMENT_LOWER_BOUND);
+
         Self { raw }
     }
 
@@ -794,6 +810,7 @@ impl Adapter {
         }
     }
 
+    #[allow(clippy::type_complexity)]
     fn create_device_and_queue_from_hal(
         self: &Arc<Self>,
         hal_device: hal::DynOpenDevice,
@@ -915,13 +932,6 @@ pub enum CreateSurfaceError {
     FailedToCreateSurfaceForAnyBackend(HashMap<Backend, hal::InstanceError>),
     #[error("The display handle used to create this Instance does not match the one used to create a surface on it")]
     MismatchingDisplayHandle,
-    #[error(
-        "No `DisplayHandle` is available to create this surface with.  When creating a surface with `create_surface()` \
-        you must specify a display handle in `InstanceDescriptor::display`.  \
-        Rarely, if you need to create surfaces from different `DisplayHandle`s (ex. different Wayland or X11 connections), \
-        you must use `create_surface_unsafe()`."
-    )]
-    MissingDisplayHandle,
 }
 
 impl Global {
@@ -939,13 +949,12 @@ impl Global {
     ///
     /// # Safety
     ///
-    /// - `display_handle` must be a valid object to create a surface upon,
-    ///   falls back to the instance display handle otherwise.
+    /// - `display_handle` must be a valid object to create a surface upon.
     /// - `window_handle` must remain valid as long as the returned
     ///   [`SurfaceId`] is being used.
     pub unsafe fn instance_create_surface(
         &self,
-        display_handle: Option<raw_window_handle::RawDisplayHandle>,
+        display_handle: raw_window_handle::RawDisplayHandle,
         window_handle: raw_window_handle::RawWindowHandle,
         id_in: Option<SurfaceId>,
     ) -> Result<SurfaceId, CreateSurfaceError> {
@@ -962,10 +971,9 @@ impl Global {
     ///
     /// # Platform Support
     ///
-    /// This function requires the `"drm"` feature, and is only available on
-    /// non-apple Unix-like platforms (Linux, FreeBSD) and currently only works
-    /// with the Vulkan backend.
-    #[cfg(drm)]
+    /// This function is only available on non-apple Unix-like platforms (Linux, FreeBSD) and
+    /// currently only works with the Vulkan backend.
+    #[cfg(all(unix, not(target_vendor = "apple"), not(target_family = "wasm")))]
     pub unsafe fn instance_create_surface_from_drm(
         &self,
         fd: i32,
@@ -1061,14 +1069,8 @@ impl Global {
         self.surfaces.remove(id);
     }
 
-    pub fn enumerate_adapters(
-        &self,
-        backends: Backends,
-        apply_limit_buckets: bool,
-    ) -> Vec<AdapterId> {
-        let adapters = self
-            .instance
-            .enumerate_adapters(backends, apply_limit_buckets);
+    pub fn enumerate_adapters(&self, backends: Backends) -> Vec<AdapterId> {
+        let adapters = self.instance.enumerate_adapters(backends);
         adapters
             .into_iter()
             .map(|adapter| self.hub.adapters.prepare(None).assign(Arc::new(adapter)))
@@ -1086,26 +1088,15 @@ impl Global {
             power_preference: desc.power_preference,
             force_fallback_adapter: desc.force_fallback_adapter,
             compatible_surface: compatible_surface.as_deref(),
-            apply_limit_buckets: desc.apply_limit_buckets,
         };
         let adapter = self.instance.request_adapter(&desc, backends)?;
         let id = self.hub.adapters.prepare(id_in).assign(Arc::new(adapter));
         Ok(id)
     }
 
-    /// Create an adapter from a HAL adapter.
-    ///
-    /// The HAL adapter may be obtained e.g. by calling `enumerate_adapters` on
-    /// the HAL directly.
-    ///
-    /// If [limit bucketing][lt] is desired, [`crate::limits::apply_limit_buckets`]
-    /// should be called with the HAL adapter before calling this function.
-    ///
     /// # Safety
     ///
     /// `hal_adapter` must be created from this global internal instance handle.
-    ///
-    /// [lt]: crate::limits#Limit-bucketing
     pub unsafe fn create_adapter_from_hal(
         &self,
         hal_adapter: hal::DynExposedAdapter,

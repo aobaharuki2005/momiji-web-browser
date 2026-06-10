@@ -31,8 +31,8 @@
  *
  ******* END LICENSE BLOCK *******/
 
-#ifndef alloc_hooks_h_
-#define alloc_hooks_h_
+#ifndef alloc_hooks_h__
+#define alloc_hooks_h__
 
 /**
  * This file is force-included in hunspell code.  Its purpose is to add memory

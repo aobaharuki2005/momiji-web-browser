@@ -119,8 +119,7 @@ WEBRTC_RTCSTATS_IMPL(RTCIceCandidateStats, RTCStats, "abstract-ice-candidate",
     AttributeInit("usernameFragment", &username_fragment),
     AttributeInit("tcpType", &tcp_type),
     AttributeInit("vpn", &vpn),
-    AttributeInit("networkAdapterType", &network_adapter_type),
-    AttributeInit("networkSlice", &network_slice))
+    AttributeInit("networkAdapterType", &network_adapter_type))
 // clang-format on
 
 RTCIceCandidateStats::RTCIceCandidateStats(std::string id,
@@ -189,10 +188,7 @@ WEBRTC_RTCSTATS_IMPL(
     AttributeInit("jitter", &jitter),
     AttributeInit("packetsLost", &packets_lost),
     AttributeInit("packetsReceivedWithEct1", &packets_received_with_ect1),
-    AttributeInit("packetsReceivedWithCe", &packets_received_with_ce),
-    AttributeInit("packetsReportedAsLost", &packets_reported_as_lost),
-    AttributeInit("packetsReportedAsLostButRecovered",
-                  &packets_reported_as_lost_but_recovered))
+    AttributeInit("packetsReceivedWithCe", &packets_received_with_ce))
 // clang-format on
 
 RTCReceivedRtpStreamStats::RTCReceivedRtpStreamStats(std::string id,
@@ -342,17 +338,16 @@ RTCOutboundRtpStreamStats::RTCOutboundRtpStreamStats(std::string id,
 
 RTCOutboundRtpStreamStats::~RTCOutboundRtpStreamStats() {}
 
-WEBRTC_RTCSTATS_IMPL(  //
-    RTCRemoteInboundRtpStreamStats,
-    RTCReceivedRtpStreamStats,
-    "remote-inbound-rtp",
+// clang-format off
+WEBRTC_RTCSTATS_IMPL(
+    RTCRemoteInboundRtpStreamStats, RTCReceivedRtpStreamStats,
+        "remote-inbound-rtp",
     AttributeInit("localId", &local_id),
     AttributeInit("roundTripTime", &round_trip_time),
     AttributeInit("fractionLost", &fraction_lost),
     AttributeInit("totalRoundTripTime", &total_round_trip_time),
-    AttributeInit("roundTripTimeMeasurements", &round_trip_time_measurements),
-    AttributeInit("packetsWithBleachedEct1Marking",
-                  &packets_with_bleached_ect1_marking))
+    AttributeInit("roundTripTimeMeasurements", &round_trip_time_measurements))
+// clang-format on
 
 RTCRemoteInboundRtpStreamStats::RTCRemoteInboundRtpStreamStats(
     std::string id,

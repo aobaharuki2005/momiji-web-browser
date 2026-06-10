@@ -25,7 +25,7 @@ class SkReadBuffer;
 struct SkRect;
 class SkWriteBuffer;
 
-class [[nodiscard]] SkAutoCanvasMatrixPaint : SkNoncopyable {
+class SkAutoCanvasMatrixPaint : SkNoncopyable {
 public:
     SkAutoCanvasMatrixPaint(SkCanvas*, const SkMatrix*, const SkPaint*, const SkRect& bounds);
     ~SkAutoCanvasMatrixPaint();
@@ -38,7 +38,7 @@ private:
 class SkCanvasPriv {
 public:
     // The lattice has pointers directly into the readbuffer
-    [[nodiscard]] static bool ReadLattice(SkReadBuffer&, SkCanvas::Lattice*);
+    static bool ReadLattice(SkReadBuffer&, SkCanvas::Lattice*);
 
     static void WriteLattice(SkWriteBuffer&, const SkCanvas::Lattice&);
 

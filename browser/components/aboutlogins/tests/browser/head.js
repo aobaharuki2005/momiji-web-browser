@@ -94,7 +94,7 @@ async function addLogin(login) {
     // in case the initial login object was changed by the test code,
     // since removeLogin makes sure that the login argument exactly
     // matches the login that it will be removing.
-    await Services.logins.removeLoginAsync(logins[0]);
+    Services.logins.removeLogin(logins[0]);
   });
   return result;
 }

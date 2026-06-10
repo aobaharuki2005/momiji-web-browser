@@ -78,20 +78,18 @@ async function testNewWindow(client, win) {
 }
 
 async function testFocusFirst(client) {
-  try {
-    const tab = window.gBrowser.selectedTab;
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-      const onFocus = new Promise(resolve => {
-        content.addEventListener("focus", resolve, { once: true });
-      });
-      await onFocus;
+  const tab = window.gBrowser.selectedTab;
+  await ContentTask.spawn(tab.linkedBrowser, null, async function () {
+    const onFocus = new Promise(resolve => {
+      content.addEventListener("focus", resolve, { once: true });
     });
+    await onFocus;
+  });
 
-    const tabs = await client.mainRoot.listTabs();
-    ok(!tabs[0].selected, "The previously opened tab isn't selected.");
-    ok(!tabs[1].selected, "The first tab is selected after focusing on i.");
-    ok(tabs[2].selected, "The second tab isn't selected.");
-  } catch (e) {}
+  const tabs = await client.mainRoot.listTabs();
+  ok(!tabs[0].selected, "The previously opened tab isn't selected.");
+  ok(!tabs[1].selected, "The first tab is selected after focusing on i.");
+  ok(tabs[2].selected, "The second tab isn't selected.");
 }
 
 async function testRemoveTab(client, win, tab) {

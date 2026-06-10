@@ -6,7 +6,7 @@ ADD_PROMPT_CSS = ".ql-editor.textarea.new-input-ui"
 SEND_CSS = "[data-mat-icon-name=send]"
 SIGNED_OUT_TEXT = "been signed out"
 RESPONSE_CSS = "message-content"
-EDIT_OLD_PROMPT_CSS = ".mdc-icon-button:has([fonticon=edit])"
+EDIT_OLD_PROMPT_CSS = "[data-mat-icon-name=edit]"
 OLD_PROMPT_CSS = "textarea[id^=mat-input-]"
 CANCEL_CSS = "button.cancel-button"
 
@@ -22,7 +22,6 @@ async def check_paste_works(client):
     if signed_out:
         pytest.skip("Blocked from accessing site. Please try testing manually.")
         return
-    await client.stall(2)
     client.soft_click(client.await_css(EDIT_OLD_PROMPT_CSS))
     client.await_css(OLD_PROMPT_CSS, is_displayed=True).click()
     client.execute_script("document.execCommand('selectAll')")

@@ -20,7 +20,6 @@ enum class ShortcutType(val value: String) {
     TRANSLATE("translate"),
     HOMEPAGE("homepage"),
     BACK("back"),
-    NONE("none"),
     ;
 
     companion object {
@@ -39,7 +38,7 @@ internal enum class ShortcutAvailability {
 
 internal data class ShortcutOption(
     val key: ShortcutType,
-    @param:DrawableRes val icon: Int?,
+    @param:DrawableRes val icon: Int,
     @param:StringRes val label: Int,
     val availability: Set<ShortcutAvailability>,
 )
@@ -80,12 +79,6 @@ internal val allShortcutOptions: List<ShortcutOption> = listOf(
         iconsR.drawable.mozac_ic_back_24,
         R.string.toolbar_customize_shortcut_back,
         setOf(ShortcutAvailability.SIMPLE, ShortcutAvailability.EXPANDED),
-    ),
-    ShortcutOption(
-        ShortcutType.NONE,
-        null,
-        R.string.toolbar_customize_shortcut_none,
-        setOf(ShortcutAvailability.SIMPLE),
     ),
 )
 

@@ -12,9 +12,9 @@
 <body>
 
 <script>
-  async function testBlobTimecode(t, constraints) {
+  promise_test(async t => {
     await setMediaPermission();
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    const stream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
     t.add_cleanup(() => stream.getTracks().forEach(tr => tr.stop()));
     const recorder = new MediaRecorder(stream);
 
@@ -33,19 +33,7 @@
       combinedSize += data.size;
     }
     recorder.stop();
-  }
-
-  promise_test(async t => {
-    await testBlobTimecode(t, {video:true});
-  }, "MediaRecorder Blob timecode for first chunk must be 0 and monotonically increasing for video-only");
-
-  promise_test(async t => {
-    await testBlobTimecode(t, {audio:true});
-  }, "MediaRecorder Blob timecode for first chunk must be 0 and monotonically increasing for audio-only");
-
-  promise_test(async t => {
-    await testBlobTimecode(t, {video:true, audio:true});
-  }, "MediaRecorder Blob timecode for first chunk must be 0 and monotonically increasing for audio/video");
+  }, "MediaRecorder Blob timecode for first chunk must be 0 and monotonically increasing");
 
 </script>
 </body>

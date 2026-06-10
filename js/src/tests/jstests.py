@@ -18,10 +18,7 @@ import shlex
 import sys
 import tempfile
 from contextlib import contextmanager
-from copy import (
-    copy,
-    deepcopy,
-)
+from copy import copy
 from datetime import datetime
 from itertools import chain
 from os.path import abspath, dirname, isfile, realpath
@@ -58,11 +55,7 @@ def changedir(dirname):
 
 
 class PathOptions:
-    def __init__(self, topsrc_dir, location, requested_paths, excluded_paths):
-        self.topsrc_dir = topsrc_dir
-        self.test_prefix = (
-            os.path.abspath(os.path.relpath(location, topsrc_dir)) + os.sep
-        )
+    def __init__(self, location, requested_paths, excluded_paths):
         self.requested_paths = requested_paths
         self.excluded_files, self.excluded_dirs = PathOptions._split_files_and_dirs(
             location, excluded_paths
@@ -86,7 +79,7 @@ class PathOptions:
     def should_run(self, filename):
         # If any tests are requested by name, skip tests that do not match.
         if self.requested_paths and not any(
-            req in (self.test_prefix + filename) for req in self.requested_paths
+            req in filename for req in self.requested_paths
         ):
             return False
 
@@ -525,7 +518,6 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths, update_manifest=
         "testing/mozbase/mozrunner",
         "testing/mozbase/mozversion",
         "testing/web-platform/",
-        "testing/web-platform/tests",
         "testing/web-platform/tests/tools",
         "testing/web-platform/tests/tools/third_party/html5lib",
         "testing/web-platform/tests/tools/third_party/webencodings",
@@ -581,7 +573,7 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths, update_manifest=
             if tests:
                 yield item_type, path, tests
 
-    run_info_extras = products.Product.from_product_name("firefox").run_info_extras(
+    run_info_extras = products.Product(kwargs["config"], "firefox").run_info_extras(
         logger, **kwargs
     )
     run_info = wpttest.get_run_info(
@@ -691,15 +683,7 @@ def load_tests(options, requested_paths, excluded_paths):
         xul_tester = manifest.XULInfoTester(xul_info, options, feature_args)
 
     test_dir = dirname(abspath(__file__))
-
-    # Given this file is js/src/tests/jstests.py, let's compute
-    # the base path directory as test_dir/../../../
-    #
-    # This has precedent in WPT loading and jorendb stuff
-    # despite being surprising :)
-    topsrc_dir = os.path.normpath(os.path.join(test_dir, "..", "..", ".."))
-
-    path_options = PathOptions(topsrc_dir, test_dir, requested_paths, excluded_paths)
+    path_options = PathOptions(test_dir, requested_paths, excluded_paths)
     test_count = manifest.count_tests(test_dir, path_options)
     test_gen = manifest.load_reftests(test_dir, path_options, xul_tester)
 
@@ -775,7 +759,7 @@ def load_tests(options, requested_paths, excluded_paths):
         test_gen = (_ for _ in test_gen if not _.slow)
 
     if options.repeat:
-        test_gen = (deepcopy(test) for test in test_gen for _ in range(options.repeat))
+        test_gen = (test for test in test_gen for i in range(options.repeat))
         test_count *= options.repeat
 
     return test_count, test_gen

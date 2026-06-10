@@ -1,10 +1,7 @@
 import asyncio
 
 import pytest
-from webdriver.error import (
-    ElementClickInterceptedException,
-    StaleElementReferenceException,
-)
+from webdriver.error import StaleElementReferenceException
 
 URL = "https://es.wallapop.com/search"
 MOBILE_FILTERS_CSS = "walla-button[data-testid=single-access-filters].hydrated"
@@ -13,7 +10,7 @@ LEFT_SLIDER_CSS = "#fromSelector"
 
 async def does_left_slider_work(client):
     await client.navigate(URL)
-    client.hide_elements("#onetrust-consent-sdk,#cmpwrapper,#credential_picker_iframe")
+    client.hide_elements("#onetrust-consent-sdk")
     client.await_css(MOBILE_FILTERS_CSS, is_displayed=True).click()
     for i in range(5):
         try:
@@ -23,8 +20,6 @@ async def does_left_slider_work(client):
                 is_displayed=True,
             ).click()
             break
-        except ElementClickInterceptedException:
-            await client.stall(0.5)
         except StaleElementReferenceException:
             await client.stall(0.5)
     slider = client.await_css(LEFT_SLIDER_CSS, is_displayed=True)

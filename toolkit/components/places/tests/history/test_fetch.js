@@ -6,9 +6,7 @@ add_task(async function test_fetch_existent() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   // Populate places and historyvisits.
-  let uri = Services.io.newURI(
-    `http://mozilla.com/test_browserhistory/test_fetch`
-  );
+  let uri = NetUtil.newURI(`http://mozilla.com/test_browserhistory/test_fetch`);
   let title = `Test Visit ${Math.random()}`;
   let dates = [];
   let visits = [];
@@ -92,11 +90,9 @@ add_task(async function test_fetch_existent() {
 add_task(async function test_fetch_page_meta_info() {
   await PlacesUtils.history.clear();
 
-  let TEST_URI = Services.io.newURI(
-    "http://mozilla.com/test_fetch_page_meta_info"
-  );
+  let TEST_URI = NetUtil.newURI("http://mozilla.com/test_fetch_page_meta_info");
   await PlacesTestUtils.addVisits(TEST_URI);
-  Assert.ok(await page_in_database(TEST_URI));
+  Assert.ok(page_in_database(TEST_URI));
 
   // Test fetching the null values
   let includeMeta = true;
@@ -163,7 +159,7 @@ add_task(async function test_fetch_annotations() {
 
   const TEST_URI = "http://mozilla.com/test_fetch_page_meta_info";
   await PlacesTestUtils.addVisits(TEST_URI);
-  Assert.ok(await page_in_database(TEST_URI));
+  Assert.ok(page_in_database(TEST_URI));
 
   let includeAnnotations = true;
   let pageInfo = await PlacesUtils.history.fetch(TEST_URI, {
@@ -227,7 +223,7 @@ add_task(async function test_fetch_nonexistent() {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 
-  let uri = Services.io.newURI("http://doesntexist.in.db");
+  let uri = NetUtil.newURI("http://doesntexist.in.db");
   let pageInfo = await PlacesUtils.history.fetch(uri);
   Assert.equal(pageInfo, null);
 });

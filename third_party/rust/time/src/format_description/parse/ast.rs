@@ -5,7 +5,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::iter;
 
-use super::{Error, Location, Spanned, SpannedValue, Unused, lexer, unused};
+use super::{lexer, unused, Error, Location, Spanned, SpannedValue, Unused};
 use crate::internal_macros::bug;
 
 /// One part of a complete format description.
@@ -95,27 +95,28 @@ pub(super) struct Modifier<'a> {
 }
 
 /// Parse the provided tokens into an AST.
-#[inline]
-pub(super) fn parse<'item, 'iter, I, const VERSION: usize>(
-    tokens: &'iter mut lexer::Lexed<I>,
-) -> impl Iterator<Item = Result<Item<'item>, Error>> + use<'item, 'iter, I, VERSION>
-where
+pub(super) fn parse<
     'item: 'iter,
+    'iter,
     I: Iterator<Item = Result<lexer::Token<'item>, Error>>,
-{
+    const VERSION: usize,
+>(
+    tokens: &'iter mut lexer::Lexed<I>,
+) -> impl Iterator<Item = Result<Item<'item>, Error>> + 'iter {
     validate_version!(VERSION);
     parse_inner::<_, false, VERSION>(tokens)
 }
 
 /// Parse the provided tokens into an AST. The const generic indicates whether the resulting
 /// [`Item`] will be used directly or as part of a [`NestedFormatDescription`].
-#[inline]
-fn parse_inner<'item, I, const NESTED: bool, const VERSION: usize>(
-    tokens: &mut lexer::Lexed<I>,
-) -> impl Iterator<Item = Result<Item<'item>, Error>> + use<'_, 'item, I, NESTED, VERSION>
-where
+fn parse_inner<
+    'item,
     I: Iterator<Item = Result<lexer::Token<'item>, Error>>,
-{
+    const NESTED: bool,
+    const VERSION: usize,
+>(
+    tokens: &mut lexer::Lexed<I>,
+) -> impl Iterator<Item = Result<Item<'item>, Error>> + '_ {
     validate_version!(VERSION);
     iter::from_fn(move || {
         if NESTED && tokens.peek_closing_bracket().is_some() {
@@ -173,13 +174,14 @@ where
 }
 
 /// Parse a component. This assumes that the opening bracket has already been consumed.
-fn parse_component<'a, I, const VERSION: usize>(
+fn parse_component<
+    'a,
+    I: Iterator<Item = Result<lexer::Token<'a>, Error>>,
+    const VERSION: usize,
+>(
     opening_bracket: Location,
     tokens: &mut lexer::Lexed<I>,
-) -> Result<Item<'a>, Error>
-where
-    I: Iterator<Item = Result<lexer::Token<'a>, Error>>,
-{
+) -> Result<Item<'a>, Error> {
     validate_version!(VERSION);
     let leading_whitespace = tokens.next_if_whitespace();
 
@@ -347,15 +349,11 @@ where
     })
 }
 
-/// Parse a nested format description. The location provided is the most recent one consumed.
-#[inline]
-fn parse_nested<'a, I, const VERSION: usize>(
+/// Parse a nested format description. The location provided is the the most recent one consumed.
+fn parse_nested<'a, I: Iterator<Item = Result<lexer::Token<'a>, Error>>, const VERSION: usize>(
     last_location: Location,
     tokens: &mut lexer::Lexed<I>,
-) -> Result<NestedFormatDescription<'a>, Error>
-where
-    I: Iterator<Item = Result<lexer::Token<'a>, Error>>,
-{
+) -> Result<NestedFormatDescription<'a>, Error> {
     validate_version!(VERSION);
     let Some(opening_bracket) = tokens.next_if_opening_bracket() else {
         return Err(Error {

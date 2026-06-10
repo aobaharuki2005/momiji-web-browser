@@ -26,29 +26,23 @@ use style_traits::{CssWriter, ToCss};
     ToCss,
     ToResolvedValue,
     ToShmem,
-    ToTyped,
 )]
 #[repr(u8)]
 #[allow(missing_docs)]
-pub enum BaselineShiftKeyword {
-    /// Lower by the offset appropriate for subscripts of the parent’s box. The UA may use the
-    /// parent’s font metrics to find this offset; otherwise it defaults to dropping by one
-    /// fifth of the parent’s used font-size.
+pub enum VerticalAlignKeyword {
+    Baseline,
     Sub,
-    /// Raise by the offset appropriate for superscripts of the parent’s box. The UA may use the
-    /// parent’s font metrics to find this offset; otherwise it defaults to raising by one third
-    /// of the parent’s used font-size.
     Super,
-    /// Align the line-over edge of the aligned subtree with the line-over edge of the line box.
     Top,
-    /// Align the center of the aligned subtree with the center of the line box.
-    Center,
-    /// Align the line-under edge of the aligned subtree with the line-under edge of the line box.
+    TextTop,
+    Middle,
     Bottom,
+    TextBottom,
+    #[cfg(feature = "gecko")]
+    MozMiddleWithBaseline,
 }
 
-/// A generic value for the `baseline-shift` property.
-/// https://drafts.csswg.org/css-inline-3/#baseline-shift
+/// A generic value for the `vertical-align` property.
 #[derive(
     Animate,
     Clone,
@@ -66,24 +60,24 @@ pub enum BaselineShiftKeyword {
     ToTyped,
 )]
 #[repr(C, u8)]
-pub enum GenericBaselineShift<LengthPercentage> {
-    /// One of the baseline-shift keywords
-    Keyword(BaselineShiftKeyword),
-    /// Raise (positive value) or lower (negative value) by the specified length or specified percentage of the line-height.
+pub enum GenericVerticalAlign<LengthPercentage> {
+    /// One of the vertical-align keywords.
+    Keyword(VerticalAlignKeyword),
+    /// `<length-percentage>`
     Length(LengthPercentage),
 }
 
-pub use self::GenericBaselineShift as BaselineShift;
+pub use self::GenericVerticalAlign as VerticalAlign;
 
-impl<L: Zero> BaselineShift<L> {
-    /// Returns the initial `0` value.
+impl<L> VerticalAlign<L> {
+    /// Returns `baseline`.
     #[inline]
-    pub fn zero() -> Self {
-        BaselineShift::Length(Zero::zero())
+    pub fn baseline() -> Self {
+        VerticalAlign::Keyword(VerticalAlignKeyword::Baseline)
     }
 }
 
-impl<L> ToAnimatedZero for BaselineShift<L> {
+impl<L> ToAnimatedZero for VerticalAlign<L> {
     fn to_animated_zero(&self) -> Result<Self, ()> {
         Err(())
     }
@@ -207,6 +201,7 @@ impl<I: Zero + ToCss> ToCss for LineClamp<I> {
     ToTyped,
 )]
 #[repr(C, u8)]
+#[typed_value(derive_fields)]
 pub enum GenericPerspective<NonNegativeLength> {
     /// A non-negative length.
     Length(NonNegativeLength),

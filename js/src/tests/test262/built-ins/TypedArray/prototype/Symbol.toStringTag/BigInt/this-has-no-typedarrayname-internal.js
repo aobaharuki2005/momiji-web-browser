@@ -11,7 +11,7 @@ info: |
   ...
   3. If O does not have a [[TypedArrayName]] internal slot, return undefined.
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Symbol.toStringTag, DataView, TypedArray]
 ---*/
 

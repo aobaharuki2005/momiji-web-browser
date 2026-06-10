@@ -11,8 +11,6 @@ subsuite = "try"
 
 ["test_mozharness_integration.py"]
 
-["test_lando_api.py"]
-
 ["test_perf.py"]
 
 ["test_perfcomparators.py"]

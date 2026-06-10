@@ -1,3 +1,5 @@
+use std::u64;
+
 /// A `Body` size hint
 ///
 /// The default implementation returns:

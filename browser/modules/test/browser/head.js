@@ -54,8 +54,8 @@ function waitForCondition(condition, nextTest, errorMsg) {
 let typeInSearchField = async function (browser, text, fieldName) {
   await SpecialPowers.spawn(
     browser,
-    [fieldName, text],
-    async function (contentFieldName, contentText) {
+    [[fieldName, text]],
+    async function ([contentFieldName, contentText]) {
       // Put the focus on the search box.
       let searchInput = content.document.getElementById(contentFieldName);
       searchInput.focus();
@@ -121,13 +121,12 @@ function makeMockPermissionRequest(browser) {
  *         Resolves once the panel has fired the "popuphidden"
  *         event.
  */
-async function clickMainAction() {
+function clickMainAction() {
   let removePromise = BrowserTestUtils.waitForEvent(
     PopupNotifications.panel,
     "popuphidden"
   );
   let popupNotification = getPopupNotificationNode();
-  await popupNotification.button.updateComplete;
   popupNotification.button.click();
   return removePromise;
 }
@@ -162,11 +161,7 @@ function clickSecondaryAction(actionIndex) {
       popupNotification.menupopup,
       "popupshown"
     );
-    await popupNotification.secondaryButton.updateComplete;
-    await EventUtils.synthesizeMouseAtCenter(
-      popupNotification.secondaryButton.chevronButtonEl,
-      {}
-    );
+    await EventUtils.synthesizeMouseAtCenter(popupNotification.menubutton, {});
     await dropdownPromise;
 
     // The menuitems in the dropdown are accessible as direct children of the panel,
@@ -175,11 +170,7 @@ function clickSecondaryAction(actionIndex) {
     // secondary action (index 0) is the button shown directly in the panel.
     let actionMenuItem =
       popupNotification.querySelectorAll("menuitem")[actionIndex - 1];
-    if (popupNotification.menupopup.isNativeMenu) {
-      popupNotification.menupopup.activateItem(actionMenuItem);
-    } else {
-      EventUtils.synthesizeMouseAtCenter(actionMenuItem, {});
-    }
+    await EventUtils.synthesizeMouseAtCenter(actionMenuItem, {});
     await removePromise;
   })();
 }

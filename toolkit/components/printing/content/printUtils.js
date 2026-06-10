@@ -1,3 +1,5 @@
+// -*- tab-width: 2; indent-tabs-mode: nil; js-indent-level: 2 -*-
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -114,12 +116,15 @@ var PrintUtils = {
         );
       }
     }
-    var PRINTDIALOGSVC = Cc[
-      "@mozilla.org/widget/printdialog-service;1"
-    ].getService(Ci.nsIPrintDialogService);
-    PRINTDIALOGSVC.showPageSetupDialog(window, printSettings).catch(e => {
+    try {
+      var PRINTDIALOGSVC = Cc[
+        "@mozilla.org/widget/printdialog-service;1"
+      ].getService(Ci.nsIPrintDialogService);
+      PRINTDIALOGSVC.showPageSetupDialog(window, printSettings, null);
+    } catch (e) {
       dump("showPageSetup " + e + "\n");
-    });
+      return false;
+    }
     return true;
   },
 

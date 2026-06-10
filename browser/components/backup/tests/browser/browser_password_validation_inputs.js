@@ -15,20 +15,14 @@ add_task(async function password_validation() {
       set: [[SCHEDULED_BACKUPS_ENABLED_PREF, true]],
     });
     let sandbox = sinon.createSandbox();
-    let settings = await waitForBackupSettings(browser);
+    let settings = browser.contentDocument.querySelector("backup-settings");
 
-    settings.backupServiceState.archiveEnabledStatus = true;
-    settings.backupServiceState.scheduledBackupsEnabled = true;
     settings.backupServiceState.encryptionEnabled = true;
     await settings.requestUpdate();
     await settings.updateComplete;
 
     let changePasswordButton = settings.changePasswordButtonEl;
     Assert.ok(changePasswordButton, "Change password button should be found");
-    Assert.ok(
-      !changePasswordButton.disabled,
-      "Change password button should be enabled"
-    );
 
     changePasswordButton.click();
     await settings.updateComplete;

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,7 +12,6 @@
 #include "mozilla/layers/SharedSurfacesChild.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "nsDebug.h"  // for NS_ABORT_OOM
-#include "mozilla/image/SurfaceCache.h"
 
 #include "base/process_util.h"
 
@@ -44,7 +45,7 @@ void SourceSurfaceSharedDataWrapper::Init(
     MOZ_CRASH("Invalid shared memory handle!");
   }
 
-  bool mapped = EnsureMapped();
+  bool mapped = EnsureMapped(len);
   if ((sizeof(uintptr_t) <= 4 ||
        StaticPrefs::image_mem_shared_unmap_force_enabled_AtStartup()) &&
       len / 1024 >
@@ -75,17 +76,10 @@ void SourceSurfaceSharedDataWrapper::Init(SourceSurfaceSharedData* aSurface) {
   mBuf = aSurface->mBuf;
 }
 
-bool SourceSurfaceSharedDataWrapper::EnsureMapped() {
+bool SourceSurfaceSharedDataWrapper::EnsureMapped(size_t aLength) {
   MOZ_ASSERT(!GetData());
 
-  auto computedStride =
-      CheckedInt<int32_t>(mSize.width) * BytesPerPixel(mFormat);
-  auto computedLength = CheckedInt<int32_t>(mSize.height) * mStride;
-  if (mSize.width < 0 || mSize.height < 0 || mStride < 0 ||
-      !computedStride.isValid() || computedStride.value() <= 0 ||
-      mStride < computedStride.value() || !computedLength.isValid() ||
-      computedLength.value() <= 0 || !image::SurfaceCache::IsLegalSize(mSize) ||
-      mBufHandle.Size() < GetAlignedDataLength()) {
+  if (mBufHandle.Size() < aLength) {
     return false;
   }
 
@@ -123,8 +117,9 @@ bool SourceSurfaceSharedDataWrapper::Map(MapType aMapType,
         SharedSurfacesParent::RemoveTracking(this);
       }
       if (!dataPtr) {
-        if (!EnsureMapped()) {
-          NS_ABORT_OOM(GetAlignedDataLength());
+        size_t len = GetAlignedDataLength();
+        if (!EnsureMapped(len)) {
+          NS_ABORT_OOM(len);
         }
         dataPtr = GetData();
       }

@@ -54,6 +54,10 @@
 #include "lpcnet.h"
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CELTEncoder OpusCustomEncoder
 #define CELTDecoder OpusCustomDecoder
 #define CELTMode OpusCustomMode
@@ -269,6 +273,10 @@ void celt_synthesis(const CELTMode *mode, celt_norm *X, celt_sig * out_syn[],
 #else
 #define QEXT_SCALE(x) (x)
 #define QEXT_SCALE2(x, qext_scale) (x)
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* CELT_H */

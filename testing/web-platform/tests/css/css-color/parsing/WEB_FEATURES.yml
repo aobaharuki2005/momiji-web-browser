@@ -12,7 +12,7 @@ features:
   - color-valid-system-color.html
 - name: contrast-color
   files:
-  - "*contrast-color*.html"
+  - color-*-contrast-color-function.html
 - name: hsl
   files:
   - color-computed-hsl.html

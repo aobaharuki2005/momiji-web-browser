@@ -73,7 +73,7 @@ const TESTS = [
   { selector: "*", propertyName: "background", nb: 26 },
   { selector: "*", propertyName: "box-shadow", nb: 2 },
   { selector: "*", propertyName: "filter", nb: 1 },
-  { selector: "*", propertyName: "text-shadow", nb: 5 },
+  { selector: "*", propertyName: "text-shadow", nb: 3 },
 ];
 
 add_task(async function () {
@@ -81,7 +81,12 @@ add_task(async function () {
   const { view } = await openRuleView();
 
   for (const { selector, propertyName, nb } of TESTS) {
-    info(`Looking for color swatches in "${propertyName}" in "${selector}"`);
+    info(
+      "Looking for color swatches in property " +
+        propertyName +
+        " in selector " +
+        selector
+    );
 
     const prop = (
       await getRuleViewProperty(view, selector, propertyName, { wait: true })
@@ -89,10 +94,6 @@ add_task(async function () {
     const swatches = prop.querySelectorAll(".inspector-colorswatch");
 
     ok(swatches.length, "Swatches found in the property");
-    is(
-      swatches.length,
-      nb,
-      `Correct number of swatches found in "${propertyName}"`
-    );
+    is(swatches.length, nb, "Correct number of swatches found in the property");
   }
 });

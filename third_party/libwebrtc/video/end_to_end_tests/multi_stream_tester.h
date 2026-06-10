@@ -16,7 +16,6 @@
 #include <map>
 #include <memory>
 
-#include "api/environment/environment.h"
 #include "api/media_types.h"
 #include "api/task_queue/task_queue_base.h"
 #include "call/call.h"
@@ -61,11 +60,9 @@ class MultiStreamTester {
       size_t stream_index,
       VideoReceiveStreamInterface::Config* receive_config);
   virtual std::unique_ptr<test::DirectTransport> CreateSendTransport(
-      const Environment& env,
       TaskQueueBase* task_queue,
       Call* sender_call);
   virtual std::unique_ptr<test::DirectTransport> CreateReceiveTransport(
-      const Environment& env,
       TaskQueueBase* task_queue,
       Call* receiver_call);
 };

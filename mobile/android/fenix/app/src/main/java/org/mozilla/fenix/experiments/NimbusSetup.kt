@@ -9,13 +9,12 @@ import mozilla.appservices.remotesettings.RemoteSettingsService
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusBuilder
+import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
 import mozilla.components.service.nimbus.messaging.NimbusSystem
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.experiments.nimbus.NimbusInterface
-import org.mozilla.experiments.nimbus.internal.GeckoPrefHandler
 import org.mozilla.experiments.nimbus.internal.NimbusException
-import org.mozilla.experiments.nimbus.internal.NimbusServerSettings
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -41,7 +40,6 @@ fun createNimbus(
     context: Context,
     urlString: String?,
     remoteSettingsService: RemoteSettingsService?,
-    geckoPrefHandler: GeckoPrefHandler,
 ): NimbusApi {
     // These values can be used in the JEXL expressions when targeting experiments.
     val customTargetingAttributes = CustomAttributeProvider.getCustomTargetingAttributes(context)
@@ -58,8 +56,8 @@ fun createNimbus(
 
     val serverSettings: NimbusServerSettings? = remoteSettingsService?.let { service ->
         NimbusServerSettings(
-            rsService = service,
-            collectionName = if (context.settings().nimbusUsePreview) {
+            remoteSettingsService = service,
+            collection = if (context.settings().nimbusUsePreview) {
                 "nimbus-preview"
             } else {
                 "nimbus-mobile-experiments"
@@ -94,7 +92,6 @@ fun createNimbus(
             context.settings().nimbusExperimentsFetched = true
         }
         recordedContext = recordedNimbusContext
-        this.geckoPrefHandler = geckoPrefHandler
     }.build(appInfo, serverSettings).also { nimbusApi ->
         nimbusApi.recordIsReady(FxNimbus.features.nimbusIsReady.value().eventCount)
     }

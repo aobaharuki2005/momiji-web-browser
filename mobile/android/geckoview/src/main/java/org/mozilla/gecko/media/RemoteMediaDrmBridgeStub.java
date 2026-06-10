@@ -142,7 +142,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub
 
   RemoteMediaDrmBridgeStub(final String keySystem, final String stubId) throws RemoteException {
     try {
-      mBridge = new GeckoMediaDrmBridge(keySystem);
+      mBridge = new GeckoMediaDrmBridgeV23(keySystem);
       mStubId = stubId;
       mBridgeStubs.add(this);
     } catch (final Exception e) {
@@ -237,16 +237,6 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub
       mBridge.setServerCertificate(cert);
     } catch (final IllegalStateException e) {
       Log.e(LOGTAG, "Failed to setServerCertificate.", e);
-      throw e;
-    }
-  }
-
-  @Override
-  public synchronized void setOriginID(final String originID) {
-    try {
-      mBridge.setOriginID(originID);
-    } catch (final IllegalStateException e) {
-      Log.e(LOGTAG, "Failed to setOriginID.", e);
       throw e;
     }
   }

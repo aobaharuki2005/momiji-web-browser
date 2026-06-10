@@ -22,6 +22,7 @@ use util::FlatCsv;
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// #[macro_use] extern crate language_tags;
 /// use headers::ContentLanguage;
 /// #

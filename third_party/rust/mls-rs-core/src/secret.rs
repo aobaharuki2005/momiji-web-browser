@@ -9,16 +9,21 @@ use core::{
 };
 use zeroize::Zeroizing;
 
+// #[cfg_attr(
+//     all(feature = "ffi", not(test)),
+//     safer_ffi_gen::ffi_type(clone, opaque)
+// )]
 #[derive(Clone, Eq, PartialEq)]
 /// Wrapper struct that represents a zeroize-on-drop `Vec<u8>`
 pub struct Secret(Zeroizing<Vec<u8>>);
 
 impl Debug for Secret {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Secret").finish()
+        crate::debug::pretty_bytes(&self.0).named("Secret").fmt(f)
     }
 }
 
+// #[cfg_attr(all(feature = "ffi", not(test)), safer_ffi_gen::safer_ffi_gen)]
 impl Secret {
     pub fn as_bytes(&self) -> &[u8] {
         &self.0

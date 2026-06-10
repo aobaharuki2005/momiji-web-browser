@@ -3,10 +3,11 @@
 #errors
 6: HTML start tag “nobr” in a foreign namespace context.
 7: End of file seen and there were open elements.
+6: Unclosed element “nobr”.
 #document-fragment
 svg path
 #document
-| <nobr>
+| <svg nobr>
 |   "X"
 
 #data
@@ -16,7 +17,7 @@ svg path
 #document-fragment
 svg path
 #document
-| <font>
+| <svg font>
 |   color=""
 | "X"
 
@@ -34,6 +35,7 @@ svg path
 #errors
 10: End tag “path” did not match the name of the current open element (“g”).
 11: End of file seen and there were open elements.
+3: Unclosed element “g”.
 #document-fragment
 svg path
 #document
@@ -171,8 +173,7 @@ math ms
 #errors
 51: Self-closing syntax (“/>”) used on a non-void HTML element. Ignoring the slash and treating as a start tag.
 52: End of file seen and there were open elements.
-#new-errors
-(1:44-1:49) non-void-html-element-start-tag-with-trailing-solidus
+51: Unclosed element “ms”.
 #document-fragment
 math ms
 #document
@@ -213,8 +214,7 @@ math ms
 #errors
 51: Self-closing syntax (“/>”) used on a non-void HTML element. Ignoring the slash and treating as a start tag.
 52: End of file seen and there were open elements.
-#new-errors
-(1:44-1:49) non-void-html-element-start-tag-with-trailing-solidus
+51: Unclosed element “mn”.
 #document-fragment
 math mn
 #document
@@ -255,8 +255,7 @@ math mn
 #errors
 51: Self-closing syntax (“/>”) used on a non-void HTML element. Ignoring the slash and treating as a start tag.
 52: End of file seen and there were open elements.
-#new-errors
-(1:44-1:49) non-void-html-element-start-tag-with-trailing-solidus
+51: Unclosed element “mo”.
 #document-fragment
 math mo
 #document
@@ -297,8 +296,7 @@ math mo
 #errors
 51: Self-closing syntax (“/>”) used on a non-void HTML element. Ignoring the slash and treating as a start tag.
 52: End of file seen and there were open elements.
-#new-errors
-(1:44-1:49) non-void-html-element-start-tag-with-trailing-solidus
+51: Unclosed element “mi”.
 #document-fragment
 math mi
 #document
@@ -339,8 +337,7 @@ math mi
 #errors
 51: Self-closing syntax (“/>”) used on a non-void HTML element. Ignoring the slash and treating as a start tag.
 52: End of file seen and there were open elements.
-#new-errors
-(1:44-1:52) non-void-html-element-start-tag-with-trailing-solidus
+51: Unclosed element “mtext”.
 #document-fragment
 math mtext
 #document
@@ -383,7 +380,7 @@ math mtext
 #document-fragment
 math annotation-xml
 #document
-| <div>
+| <math div>
 
 #data
 <figure></figure>
@@ -400,7 +397,7 @@ math annotation-xml
 #document-fragment
 math math
 #document
-| <div>
+| <math div>
 
 #data
 <figure></figure>
@@ -454,11 +451,12 @@ svg desc
 <div><h1>X</h1></div>
 #errors
 5: HTML start tag “div” in a foreign namespace context.
+9: HTML start tag “h1” in a foreign namespace context.
 #document-fragment
 svg svg
 #document
-| <div>
-|   <h1>
+| <svg div>
+|   <svg h1>
 |     "X"
 
 #data
@@ -468,7 +466,7 @@ svg svg
 #document-fragment
 svg svg
 #document
-| <div>
+| <svg div>
 
 #data
 <div></div>
@@ -479,9 +477,18 @@ svg desc
 | <div>
 
 #data
+<figure></figure>
+#errors
+#document-fragment
+svg desc
+#document
+| <figure>
+
+#data
 <plaintext><foo>
 #errors
-(1,16): expected-closing-tag-but-got-eof
+16: End of file seen and there were open elements.
+11: Unclosed element “plaintext”.
 #document-fragment
 svg desc
 #document
@@ -541,105 +548,3 @@ svg desc
 svg desc
 #document
 | "X"
-
-#data
-<svg><p>
-#errors
-8: HTML start tag “p” in a foreign namespace context.
-#document-fragment
-div
-#document
-| <svg svg>
-| <p>
-
-#data
-<p>
-#errors
-3: HTML start tag “p” in a foreign namespace context.
-#document-fragment
-svg svg
-#document
-| <p>
-
-#data
-<svg></p><foo>
-#errors
-9: HTML end tag “p” in a foreign namespace context.
-(1:6) Unexpected </p> from in body insertion mode
-(1:15) Unexpected EOF
-#document-fragment
-div
-#document
-| <svg svg>
-| <p>
-| <foo>
-
-#data
-<svg></br><foo>
-#errors
-10: HTML end tag “br” in a foreign namespace context.
-(1:6) Unexpected </br> from in body insertion mode
-(1:16) Unexpected EOF
-#document-fragment
-div
-#document
-| <svg svg>
-| <br>
-| <foo>
-
-#data
-</p><foo>
-#errors
-4: HTML end tag “p” in a foreign namespace context.
-(1:1) Unexpected </p> from in body insertion mode
-(1:10) Unexpected EOF
-#document-fragment
-svg svg
-#document
-| <p>
-| <svg foo>
-
-#data
-</br><foo>
-#errors
-5: HTML end tag “br” in a foreign namespace context.
-(1:1) Unexpected </br> from in body insertion mode
-(1:11) Unexpected EOF
-#document-fragment
-svg svg
-#document
-| <br>
-| <svg foo>
-
-#data
-<body><foo>
-#errors
-6: HTML start tag “body” in a foreign namespace context.
-(1:1) Unexpected <body> from in body insertion mode
-(1:12) Unexpected EOF
-#document-fragment
-svg svg
-#document
-| <svg foo>
-
-#data
-<p><foo>
-#errors
-3: HTML start tag “p” in a foreign namespace context.
-(1:9) Unexpected EOF
-#document-fragment
-svg svg
-#document
-| <p>
-|   <foo>
-
-#data
-<p></p><foo>
-#errors
-3: HTML start tag “p” in a foreign namespace context.
-(1:13) Unexpected EOF
-#document-fragment
-svg svg
-#document
-| <p>
-| <svg foo>

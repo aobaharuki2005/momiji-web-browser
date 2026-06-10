@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -316,9 +318,9 @@ bool CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite* site) {
 void CodeGeneratorShared::dumpNativeToBytecodeEntries() {
 #ifdef JS_JITSPEW
   InlineScriptTree* topTree = gen->outerInfo().inlineScriptTree();
-  JitSpew(JitSpew_Profiling, "Native To Bytecode Entries for %s:%u:%u",
-          topTree->script()->filename(), topTree->script()->lineno(),
-          topTree->script()->column().oneOriginValue());
+  JitSpewStart(JitSpew_Profiling, "Native To Bytecode Entries for %s:%u:%u\n",
+               topTree->script()->filename(), topTree->script()->lineno(),
+               topTree->script()->column().oneOriginValue());
   for (unsigned i = 0; i < nativeToBytecodeList_.length(); i++) {
     dumpNativeToBytecodeEntry(i);
   }
@@ -340,18 +342,19 @@ void CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx) {
       pcDelta = nextRef->pc - ref.pc;
     }
   }
-  AutoJitSpewMessage msg(
+  JitSpewStart(
       JitSpew_Profiling, "    %08zx [+%-6u] => %-6ld [%-4u] {%-10s} (%s:%u:%u",
       ref.nativeOffset.offset(), nativeDelta, (long)(ref.pc - script->code()),
       pcDelta, CodeName(JSOp(*ref.pc)), script->filename(), script->lineno(),
       script->column().oneOriginValue());
 
   for (tree = tree->caller(); tree; tree = tree->caller()) {
-    msg.append(" <= %s:%u:%u", tree->script()->filename(),
-               tree->script()->lineno(),
-               tree->script()->column().oneOriginValue());
+    JitSpewCont(JitSpew_Profiling, " <= %s:%u:%u", tree->script()->filename(),
+                tree->script()->lineno(),
+                tree->script()->column().oneOriginValue());
   }
-  msg.append(")");
+  JitSpewCont(JitSpew_Profiling, ")");
+  JitSpewFin(JitSpew_Profiling);
 #endif
 }
 
@@ -596,14 +599,9 @@ void CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot,
       if (payload->isGeneralReg()) {
         alloc = RValueAllocation::Int64(ToRegister(payload));
       } else if (payload->isStackSlot()) {
-        LStackSlot::Width width = payload->toStackSlot()->width();
-        MOZ_ASSERT(width == LStackSlot::width(LDefinition::GENERAL) ||
-                   width == LStackSlot::width(LDefinition::INT32));
-        if (width == LStackSlot::width(LDefinition::GENERAL)) {
-          alloc = RValueAllocation::Int64(ToStackIndex(payload));
-        } else {
-          alloc = RValueAllocation::Int64Int32(ToStackIndex(payload));
-        }
+        MOZ_ASSERT(payload->toStackSlot()->width() ==
+                   LStackSlot::width(LDefinition::GENERAL));
+        alloc = RValueAllocation::Int64(ToStackIndex(payload));
       } else {
         MOZ_CRASH("Unexpected payload type.");
       }
@@ -757,7 +755,7 @@ bool CodeGeneratorShared::createNativeToBytecodeScriptList(
     // Add script from current tree.
     bool found = false;
     for (uint32_t i = 0; i < scripts.length(); i++) {
-      if (scripts[i].scriptData.scriptKey.matches(tree->script())) {
+      if (scripts[i].sourceAndExtent.matches(tree->script())) {
         found = true;
         break;
       }

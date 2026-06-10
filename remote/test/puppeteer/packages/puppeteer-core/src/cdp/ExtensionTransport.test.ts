@@ -99,10 +99,6 @@ describe('ExtensionTransport', function () {
       const onmessageFake = sinon.fake();
       transport.onmessage = onmessageFake;
       transport.send(JSON.stringify(command));
-      // Drain microtasks scheduled by send.
-      await new Promise(resolve => {
-        return setTimeout(resolve, 0);
-      });
       expect(fakeSendCommand.notCalled).toBeTruthy();
       return onmessageFake.getCalls().map(call => {
         return call.args[0];
@@ -164,7 +160,7 @@ describe('ExtensionTransport', function () {
           sessionId: 'tabTargetSessionId',
         }),
       ).toStrictEqual([
-        '{"method":"Target.attachedToTarget","sessionId":"tabTargetSessionId","params":{"targetInfo":{"targetId":"pageTargetId","type":"page","title":"page","url":"about:blank","attached":false,"canAccessOpener":false},"sessionId":"pageTargetSessionId"}}',
+        '{"method":"Target.attachedToTarget","params":{"targetInfo":{"targetId":"pageTargetId","type":"page","title":"page","url":"about:blank","attached":false,"canAccessOpener":false},"sessionId":"pageTargetSessionId"}}',
         '{"id":1,"sessionId":"tabTargetSessionId","method":"Target.setAutoAttach","result":{}}',
       ]);
     });
@@ -212,11 +208,7 @@ describe('ExtensionTransport', function () {
           sessionId: 'testSessionId',
         }),
       );
-      // Drain microtasks scheduled by send.
-      await new Promise(resolve => {
-        return setTimeout(resolve, 0);
-      });
-      // Drain response message tasks by dispatchResponse.
+      // Drain task queue.
       await new Promise(resolve => {
         return setTimeout(resolve, 0);
       });

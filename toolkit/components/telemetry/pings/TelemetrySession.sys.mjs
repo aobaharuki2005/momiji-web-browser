@@ -1,3 +1,4 @@
+/* -*- js-indent-level: 2; indent-tabs-mode: nil -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -50,6 +51,8 @@ const IS_UNIFIED_TELEMETRY = Services.prefs.getBoolPref(
   TelemetryUtils.Preferences.Unified,
   false
 );
+
+var gWasDebuggerAttached = false;
 
 function generateUUID() {
   let str = Services.uuid.generateUUID().toString();
@@ -379,11 +382,6 @@ var Impl = {
     isSubsession,
     clearSubsession
   ) {
-    // Only activeTicks, blankWindowShown, firstPaint, main, sessionRestored,
-    // and totalTime are recognized by the pipeline, so only report those.
-
-    // Supplies `process` for calculations, `firstPaint`, `main`,
-    // `sessionRestored`.
     let si = Services.startup.getStartupInfo();
 
     // Measurements common to chrome and content processes.
@@ -398,9 +396,15 @@ var Impl = {
       let { TelemetryTimestamps } = ChromeUtils.importESModule(
         "resource://gre/modules/TelemetryTimestamps.sys.mjs"
       );
-      // Supplies `blankWindowShown`
       appTimestamps = TelemetryTimestamps.get();
     } catch (ex) {}
+
+    // Only submit this if the extended set is enabled.
+    if (!Utils.isContentProcess && Services.telemetry.canRecordExtended) {
+      try {
+        ret.addonManager = lazy.AddonManagerPrivate.getSimpleMeasures();
+      } catch (ex) {}
+    }
 
     if (si.process) {
       for (let field of Object.keys(si)) {
@@ -417,20 +421,32 @@ var Impl = {
       }
     }
 
-    // Remove all fields in `ret` that the pipeline doesn't know about:
-    const knownFields = [
-      "blankWindowShown",
-      "firstPaint",
-      "main",
-      "sessionRestored",
-      "totalTime",
-    ];
-    ret = Object.fromEntries(
-      Object.entries(ret).filter(([key, _v]) => knownFields.includes(key))
-    );
-
     if (Utils.isContentProcess) {
       return ret;
+    }
+
+    // Measurements specific to chrome process
+
+    // Update debuggerAttached flag
+    let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(
+      Ci.nsIDebug2
+    );
+    let isDebuggerAttached = debugService.isDebuggerAttached;
+    gWasDebuggerAttached = gWasDebuggerAttached || isDebuggerAttached;
+    ret.debuggerAttached = Number(gWasDebuggerAttached);
+
+    let shutdownDuration = Services.telemetry.lastShutdownDuration;
+    if (shutdownDuration) {
+      ret.shutdownDuration = shutdownDuration;
+    }
+
+    let failedProfileLockCount = Services.telemetry.failedProfileLockCount;
+    if (failedProfileLockCount) {
+      ret.failedProfileLockCount = failedProfileLockCount;
+    }
+
+    for (let ioCounter in this._startupIO) {
+      ret[ioCounter] = this._startupIO[ioCounter];
     }
 
     let activeTicks = this._sessionActiveTicks;
@@ -665,14 +681,21 @@ var Impl = {
       key => "socket" in measurements[key]
     );
 
+    let measurementsContainUtility = Object.keys(measurements).some(
+      key => "utility" in measurements[key]
+    );
+
     payloadObj.processes = {};
-    let processTypes = ["parent", "content", "dynamic"];
+    let processTypes = ["parent", "content", "extension", "dynamic"];
     // Only include the GPU process if we've accumulated data for it.
     if (measurementsContainGPU) {
       processTypes.push("gpu");
     }
     if (measurementsContainSocket) {
       processTypes.push("socket");
+    }
+    if (measurementsContainUtility) {
+      processTypes.push("utility");
     }
 
     // Collect per-process measurements.
@@ -1171,13 +1194,23 @@ var Impl = {
         break;
       case "sessionstore-windows-restored": {
         this.removeObserver("sessionstore-windows-restored");
+        // Check whether debugger was attached during startup
+        let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(
+          Ci.nsIDebug2
+        );
+        gWasDebuggerAttached = debugService.isDebuggerAttached;
         this.gatherStartup();
         break;
       }
       case "idle-daily":
         // Enqueue to main-thread, otherwise components may be inited by the
-        // idle-daily category and miss the notification.
-        Services.tm.dispatchToMainThread(function () {});
+        // idle-daily category and miss the gather-telemetry notification.
+        Services.tm.dispatchToMainThread(function () {
+          // Notify that data should be gathered now.
+          // TODO: We are keeping this behaviour for now but it will be removed as soon as
+          // bug 1127907 lands.
+          Services.obs.notifyObservers(null, "gather-telemetry");
+        });
         break;
 
       case "application-background": {

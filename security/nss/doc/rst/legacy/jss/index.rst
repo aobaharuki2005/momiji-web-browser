@@ -81,17 +81,24 @@ JSS
    | understanding of the crypto technologies it     |    :name: Community                             |
    | uses. You might want to read these documents:   |                                                 |
    |                                                 | -  View Mozilla Cryptography forums...          |
-   | -  `Introduction to Public-Key Cryptography`_.  |                                                 |
-   |    Explains the basic concepts of public-key    |    -  `Mailing list`_                           |
-   |    cryptography that underlie NSS and JSS.      |    -  `Newsgroup (dev.tech.crypto)`_            |
-   | -  `Introduction to SSL`_.                      |    -  `RSS feed`_                               |
+   | -  `Introduction to Public-Key                  |                                                 |
+   |    Crypt                                        |    -  `Mailing                                  |
+   | ography <https://developer.mozilla.org/en-US/do |       list <https:/                             |
+   | cs/Introduction_to_Public-Key_Cryptography>`__. | /lists.mozilla.org/listinfo/dev-tech-crypto>`__ |
+   |    Explains the basic concepts of public-key    |    -  `Newsgroup <http://grou                   |
+   |    cryptography that underlie NSS and JSS.      | ps.google.com/group/mozilla.dev.tech.crypto>`__ |
+   | -  `Introduction to                             |    -  `RSS                                      |
+   |    SSL <https://developer.                      |       feed <http://groups.goo                   |
+   | mozilla.org/en-US/docs/Introduction_to_SSL>`__. | gle.com/group/mozilla.dev.tech.crypto/feeds>`__ |
    |    Introduces the SSL protocol, including       |                                                 |
    |    information about cryptographic ciphers      | .. rubric:: Related Topics                      |
    |    supported by SSL and the steps involved in   |    :name: Related_Topics                        |
    |    the SSL handshake.                           |                                                 |
-   |                                                 | -  `Security`_                                  |
-   | For information on downloading NSS releases,    |                                                 |
-   | see `NSS sources building testing`_.            |                                                 |
+   |                                                 | -  `Security <https:                            |
+   | For information on downloading NSS releases,    | //developer.mozilla.org/en-US/docs/Security>`__ |
+   | see `NSS sources building                       |                                                 |
+   | testing <NSS_Sources_Building_Te                |                                                 |
+   | sting>`__\ `. <NSS_Sources_Building_Testing>`__ |                                                 |
    |                                                 |                                                 |
    | Read `Using JSS <JSS/Using_JSS>`__ to get you   |                                                 |
    | started with development after you've built and |                                                 |
@@ -100,27 +107,44 @@ JSS
    | .. rubric:: Release Notes                       |                                                 |
    |    :name: Release_Notes                         |                                                 |
    |                                                 |                                                 |
-   | -  `4.3.1 Release Notes`_                       |                                                 |
-   | -  `4.3 Release Notes`_                         |                                                 |
-   | -  `Older Release Notes`_                       |                                                 |
+   | -  `4.3.1 Release                               |                                                 |
+   |    Notes </4.3.1_Release_Notes>`__              |                                                 |
+   | -  `4.3 Release                                 |                                                 |
+   |    Notes <https://developer.                    |                                                 |
+   | mozilla.org/en-US/docs/JSS/4_3_ReleaseNotes>`__ |                                                 |
+   | -  `Older Release                               |                                                 |
+   |    Notes <http://www-archive.mozil              |                                                 |
+   | la.org/projects/security/pki/jss/index.html>`__ |                                                 |
    |                                                 |                                                 |
    | .. rubric:: Build Instructions                  |                                                 |
    |    :name: Build_Instructions                    |                                                 |
    |                                                 |                                                 |
-   | -  `Build Instructions for JSS 4.4.x`_          |                                                 |
-   | -  `Building JSS 4.3.x`_                        |                                                 |
-   | -  `Older Build Instructions`_                  |                                                 |
+   | -  :re                                          |                                                 |
+   | f:`mozilla_projects_nss_jss_build_instructions_ |                                                 |
+   | for_jss_4_4_x#build_instructions_for_jss_4_4_x` |                                                 |
+   | -  `Building JSS                                |                                                 |
+   |    4.3.x <https://developer.mozilla.org/en-U    |                                                 |
+   | S/docs/JSS/Build_instructions_for_JSS_4.3.x>`__ |                                                 |
+   | -  `Older Build                                 |                                                 |
+   |    Instructions <http://www-archive.mozil       |                                                 |
+   | la.org/projects/security/pki/jss/index.html>`__ |                                                 |
    |                                                 |                                                 |
    | .. rubric:: Download or View Source             |                                                 |
    |    :name: Download_or_View_Source               |                                                 |
    |                                                 |                                                 |
-   | -  `Download binaries, source, and javadoc`_    |                                                 |
-   | -  `View the source online`_                    |                                                 |
+   | -  `Download binaries, source, and              |                                                 |
+   |    javadoc <ftp://ftp.mozilla                   |                                                 |
+   | .org/pub/mozilla.org/security/jss/releases/>`__ |                                                 |
+   | -  `View the source                             |                                                 |
+   |    online <http://m                             |                                                 |
+   | xr.mozilla.org/mozilla/source/security/jss/>`__ |                                                 |
    |                                                 |                                                 |
    | .. rubric:: Testing                             |                                                 |
    |    :name: Testing                               |                                                 |
    |                                                 |                                                 |
-   | -  `JSS tests`_                                 |                                                 |
+   | -  `JSS                                         |                                                 |
+   |    tests <https://                              |                                                 |
+   | hg.mozilla.org/projects/jss/file/tip/README>`__ |                                                 |
    |                                                 |                                                 |
    | .. rubric:: Frequently Asked Questions          |                                                 |
    |    :name: Frequently_Asked_Questions            |                                                 |
@@ -128,28 +152,14 @@ JSS
    | -  `JSS FAQ <JSS/JSS_FAQ>`__                    |                                                 |
    |                                                 |                                                 |
    | Information on JSS planning can be found at     |                                                 |
-   | `wiki.mozilla.org (NSS)`_, including:           |                                                 |
+   | `wik                                            |                                                 |
+   | i.mozilla.org <http://wiki.mozilla.org/NSS>`__, |                                                 |
+   | including:                                      |                                                 |
    |                                                 |                                                 |
-   | -  `NSS FIPS Validation`_                       |                                                 |
-   | -  `NSS Roadmap page`_                          |                                                 |
+   | -  `NSS FIPS                                    |                                                 |
+   |    Validati                                     |                                                 |
+   | on <http://wiki.mozilla.org/FIPS_Validation>`__ |                                                 |
+   | -  `NSS Roadmap                                 |                                                 |
+   |                                                 |                                                 |
+   |   page <http://wiki.mozilla.org/NSS:Roadmap>`__ |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-
-.. _Introduction to Public-Key Cryptography: https://developer.mozilla.org/en-US/docs/Introduction_to_Public-Key_Cryptography
-.. _Introduction to SSL: https://developer.mozilla.org/en-US/docs/Introduction_to_SSL
-.. _NSS sources building testing: NSS_Sources_Building_Testing
-.. _4.3.1 Release Notes: /4.3.1_Release_Notes
-.. _4.3 Release Notes: https://developer.mozilla.org/en-US/docs/JSS/4_3_ReleaseNotes
-.. _Older Release Notes: http://www-archive.mozilla.org/projects/security/pki/jss/index.html
-.. _Build Instructions for JSS 4.4.x: https://developer.mozilla.org/en-US/docs/JSS/Build_instructions_for_JSS_4.4.x
-.. _Building JSS 4.3.x: https://developer.mozilla.org/en-US/docs/JSS/Build_instructions_for_JSS_4.3.x
-.. _Older Build Instructions: http://www-archive.mozilla.org/projects/security/pki/jss/index.html
-.. _Download binaries, source, and javadoc: ftp://ftp.mozilla.org/pub/mozilla.org/security/jss/releases/
-.. _View the source online: http://mxr.mozilla.org/mozilla/source/security/jss/
-.. _JSS tests: https://hg.mozilla.org/projects/jss/file/tip/README
-.. _wiki.mozilla.org (NSS): http://wiki.mozilla.org/NSS
-.. _NSS FIPS Validation: http://wiki.mozilla.org/FIPS_Validation
-.. _NSS Roadmap page: http://wiki.mozilla.org/NSS:Roadmap
-.. _Mailing list: https://lists.mozilla.org/listinfo/dev-tech-crypto
-.. _Newsgroup (dev.tech.crypto): http://groups.google.com/group/mozilla.dev.tech.crypto
-.. _RSS feed: http://groups.google.com/group/mozilla.dev.tech.crypto/feeds
-.. _Security: https://developer.mozilla.org/en-US/docs/Security

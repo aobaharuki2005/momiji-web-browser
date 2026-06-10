@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -108,17 +110,17 @@ bool SVGFilterInstance::ComputeBounds() {
 }
 
 float SVGFilterInstance::GetPrimitiveUserSpaceUnitValue(
-    SVGLength::Axis aAxis) const {
+    uint8_t aCtxType) const {
   SVGAnimatedLength val;
-  val.Init(aAxis, 0xff, 1.0f, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
+  val.Init(aCtxType, 0xff, 1.0f, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
 
-  return UserSpaceToFilterSpace(aAxis, SVGUtils::UserSpace(mMetrics, &val));
+  return UserSpaceToFilterSpace(aCtxType, SVGUtils::UserSpace(mMetrics, &val));
 }
 
-float SVGFilterInstance::GetPrimitiveNumber(SVGLength::Axis aAxis,
+float SVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType,
                                             float aValue) const {
   SVGAnimatedLength val;
-  val.Init(aAxis, 0xff, aValue, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
+  val.Init(aCtxType, 0xff, aValue, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
 
   float value;
   if (mPrimitiveUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
@@ -130,31 +132,40 @@ float SVGFilterInstance::GetPrimitiveNumber(SVGLength::Axis aAxis,
     value = SVGUtils::UserSpace(mMetrics, &val);
   }
 
-  return UserSpaceToFilterSpace(aAxis, value);
+  return UserSpaceToFilterSpace(aCtxType, value);
 }
 
 Point3D SVGFilterInstance::ConvertLocation(const Point3D& aPoint) const {
   SVGAnimatedLength val[4];
-  val[0].Init(SVGLength::Axis::X, 0xff, aPoint.x,
+  val[0].Init(SVGContentUtils::X, 0xff, aPoint.x,
               SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
-  val[1].Init(SVGLength::Axis::Y, 0xff, aPoint.y,
+  val[1].Init(SVGContentUtils::Y, 0xff, aPoint.y,
               SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
   // Dummy width/height values
-  val[2].Init(SVGLength::Axis::X, 0xff, 0,
+  val[2].Init(SVGContentUtils::X, 0xff, 0,
               SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
-  val[3].Init(SVGLength::Axis::Y, 0xff, 0,
+  val[3].Init(SVGContentUtils::Y, 0xff, 0,
               SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
 
   gfxRect feArea = SVGUtils::GetRelativeRect(mPrimitiveUnits, val, mTargetBBox,
                                              nullptr, mMetrics);
   gfxRect r = UserSpaceToFilterSpace(feArea);
-  return Point3D(r.x, r.y, GetPrimitiveNumber(SVGLength::Axis::XY, aPoint.z));
+  return Point3D(r.x, r.y, GetPrimitiveNumber(SVGContentUtils::XY, aPoint.z));
 }
 
-float SVGFilterInstance::UserSpaceToFilterSpace(SVGLength::Axis aAxis,
+float SVGFilterInstance::UserSpaceToFilterSpace(uint8_t aCtxType,
                                                 float aValue) const {
-  return aValue * float(SVGContentUtils::AxisLength(
-                      mUserSpaceToFilterSpaceScale.ToSize(), aAxis));
+  switch (aCtxType) {
+    case SVGContentUtils::X:
+      return aValue * static_cast<float>(mUserSpaceToFilterSpaceScale.xScale);
+    case SVGContentUtils::Y:
+      return aValue * static_cast<float>(mUserSpaceToFilterSpaceScale.yScale);
+    case SVGContentUtils::XY:
+    default:
+      return aValue * SVGContentUtils::ComputeNormalizedHypotenuse(
+                          mUserSpaceToFilterSpaceScale.xScale,
+                          mUserSpaceToFilterSpaceScale.yScale);
+  }
 }
 
 gfxRect SVGFilterInstance::UserSpaceToFilterSpace(

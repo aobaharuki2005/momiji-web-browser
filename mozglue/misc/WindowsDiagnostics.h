@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 #define mozilla_WindowsDiagnostics_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/SEH.h"
 #include "mozilla/Types.h"
 
 // Bug 1898761: NativeNt.h depends on headers that live outside mozglue/misc/
@@ -125,24 +126,12 @@ CollectSingleStepData(CallbackToRun aCallbackToRun,
     return WindowsDiagnosticsError::InternalFailure;
   }
 
-  auto result = WindowsDiagnosticsError::None;
-  MOZ_SEH_TRY {
-    EnableTrapFlag();
-    aCallbackToRun();
-    DisableTrapFlag();
-  }
-  MOZ_SEH_EXCEPT(::GetExceptionCode() == EXCEPTION_SINGLE_STEP
-                     ? EXCEPTION_EXECUTE_HANDLER
-                     : EXCEPTION_CONTINUE_SEARCH) {
-    // Bug 1932088: If something prevents our VEH from running, the single-step
-    // exception can get through the VEH chain. Catch it through SEH and fail
-    // cleanly.
-    result = WindowsDiagnosticsError::InternalFailure;
-  }
-
+  EnableTrapFlag();
+  aCallbackToRun();
+  DisableTrapFlag();
   ::RemoveVectoredExceptionHandler(veh);
 
-  return result;
+  return WindowsDiagnosticsError::None;
 }
 
 // This block uses nt::PEHeaders and thus depends on NativeNt.h.

@@ -13,7 +13,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "api/audio_codecs/audio_decoder.h"
@@ -125,14 +124,13 @@ TEST(AudioDecoderMultiOpusTest, CodecsCanBeCreated) {
                                    {"coupled_streams", "2"},
                                    {"num_streams", "2"}});
 
-  std::optional<AudioDecoderMultiChannelOpus::Config> decoder_config =
+  const std::optional<AudioDecoderMultiChannelOpus::Config> decoder_config =
       AudioDecoderMultiChannelOpus::SdpToConfig(sdp_format);
 
   ASSERT_TRUE(decoder_config.has_value());
 
   const std::unique_ptr<AudioDecoder> opus_decoder =
-      AudioDecoderMultiChannelOpus::MakeAudioDecoder(
-          *std::move(decoder_config));
+      AudioDecoderMultiChannelOpus::MakeAudioDecoder(*decoder_config);
 
   EXPECT_TRUE(opus_decoder);
 }
@@ -144,13 +142,12 @@ TEST(AudioDecoderMultiOpusTest, AdvertisedCodecsCanBeCreated) {
   EXPECT_FALSE(specs.empty());
 
   for (const AudioCodecSpec& spec : specs) {
-    std::optional<AudioDecoderMultiChannelOpus::Config> decoder_config =
+    const std::optional<AudioDecoderMultiChannelOpus::Config> decoder_config =
         AudioDecoderMultiChannelOpus::SdpToConfig(spec.format);
     ASSERT_TRUE(decoder_config.has_value());
 
     const std::unique_ptr<AudioDecoder> opus_decoder =
-        AudioDecoderMultiChannelOpus::MakeAudioDecoder(
-            *std::move(decoder_config));
+        AudioDecoderMultiChannelOpus::MakeAudioDecoder(*decoder_config);
 
     EXPECT_TRUE(opus_decoder);
   }

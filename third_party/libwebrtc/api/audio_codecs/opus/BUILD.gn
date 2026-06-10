@@ -34,14 +34,8 @@ rtc_library("audio_encoder_opus_config") {
 
 rtc_source_set("audio_decoder_opus_config") {
   visibility = [ "*" ]
-  sources = [
-    "audio_decoder_multi_channel_opus_config.h",
-    "audio_decoder_opus_config.h",
-  ]
-  deps = [
-    "..:audio_codecs_api",
-    "../../../rtc_base/system:rtc_export",
-  ]
+  sources = [ "audio_decoder_multi_channel_opus_config.h" ]
+  deps = [ "..:audio_codecs_api" ]
 }
 
 rtc_library("audio_encoder_opus") {
@@ -69,7 +63,6 @@ rtc_library("audio_decoder_opus") {
     "audio_decoder_opus.h",
   ]
   deps = [
-    ":audio_decoder_opus_config",
     "..:audio_codecs_api",
     "../..:field_trials_view",
     "../../../modules/audio_coding:webrtc_opus",
@@ -88,11 +81,11 @@ rtc_library("audio_encoder_multiopus") {
     "audio_encoder_multi_channel_opus.h",
   ]
   deps = [
-    ":audio_encoder_opus_config",
     "..:audio_codecs_api",
-    "../..:field_trials_view",
+    "../../../api:field_trials_view",
     "../../../modules/audio_coding:webrtc_multiopus",
     "../../../rtc_base/system:rtc_export",
+    "../opus:audio_encoder_opus_config",
   ]
 }
 
@@ -106,7 +99,7 @@ rtc_library("audio_decoder_multiopus") {
   deps = [
     ":audio_decoder_opus_config",
     "..:audio_codecs_api",
-    "../..:field_trials_view",
+    "../../../api:field_trials_view",
     "../../../modules/audio_coding:webrtc_multiopus",
     "../../../rtc_base/system:rtc_export",
     "//third_party/abseil-cpp/absl/memory",
@@ -121,6 +114,7 @@ rtc_library("unittests") {
   deps = [
     ":audio_decoder_opus",
     "..:audio_codecs_api",
+    "../..:field_trials",
     "../../../test:create_test_field_trials",
     "../../../test:test_support",
     "../../environment",

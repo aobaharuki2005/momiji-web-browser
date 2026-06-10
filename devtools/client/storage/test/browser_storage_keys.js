@@ -18,7 +18,9 @@
 const LONG_WORD = "a".repeat(1000);
 
 add_task(async function () {
-  await openTabAndSetupStorage(MAIN_URL_SECURED + "storage-complex-keys.html");
+  await openTabAndSetupStorage(
+    MAIN_DOMAIN_SECURED + "storage-complex-keys.html"
+  );
 
   gUI.tree.expandAll();
 
@@ -31,7 +33,7 @@ async function testLocalStorage() {
   const tests = [
     {
       action: "selectTreeItem",
-      ids: ["localStorage", MAIN_ORIGIN_SECURED],
+      ids: ["localStorage", "https://test1.example.org"],
     },
     {
       action: "assertTableItem",
@@ -52,7 +54,7 @@ async function testSessionStorage() {
   const tests = [
     {
       action: "selectTreeItem",
-      ids: ["sessionStorage", MAIN_ORIGIN_SECURED],
+      ids: ["sessionStorage", "https://test1.example.org"],
     },
     {
       action: "assertTableItem",
@@ -78,7 +80,7 @@ async function testIndexedDB() {
   const tests = [
     {
       action: "selectTreeItem",
-      ids: ["indexedDB", MAIN_ORIGIN_SECURED, "idb (default)", "obj"],
+      ids: ["indexedDB", "https://test1.example.org", "idb (default)", "obj"],
     },
     {
       action: "assertTableItem",

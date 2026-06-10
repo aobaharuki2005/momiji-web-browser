@@ -7,11 +7,6 @@
  */
 
 import { JSONFile } from "resource://gre/modules/JSONFile.sys.mjs";
-import {
-  CATEGORY_TO_ID_PREFIX,
-  HISTORY,
-  CONVERSATION,
-} from "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs";
 
 /**
  * MemoryStore
@@ -31,9 +26,6 @@ import {
 
 const MEMORY_STORE_FILE = "memories.json.lz4";
 const MEMORY_STORE_VERSION = 1;
-
-// Observer notification topic
-const MEMORY_STORE_CHANGED = "memory-store-changed";
 
 // In-memory state
 let gState = {
@@ -70,16 +62,6 @@ async function loadMemories() {
     sanitizedBasename: "memories",
   });
 
-  let markerData = null;
-  if (Services.profiler.IsActive()) {
-    let sizeLabel = "0 B";
-    try {
-      const stat = await IOUtils.stat(lazy.gStorePath);
-      sizeLabel = `${(stat.size / 1048576).toFixed(1)} MiB`;
-    } catch (_e) {}
-    markerData = { startTime: ChromeUtils.now(), sizeLabel };
-  }
-
   try {
     await gJSONFile.load();
   } catch (ex) {
@@ -88,14 +70,6 @@ async function loadMemories() {
     gJSONFile.data = gState;
     gInitialized = true;
     return;
-  } finally {
-    if (markerData) {
-      ChromeUtils.addProfilerMarker(
-        "SmartWindow",
-        { startTime: markerData.startTime },
-        `MemoryStore:load_db(${markerData.sizeLabel})`
-      );
-    }
   }
 
   // Normalize the loaded data into our expected shape.
@@ -121,9 +95,6 @@ async function loadMemories() {
 
 // Public API object
 export const MemoryStore = {
-  // Observer notification topic
-  MEMORY_STORE_CHANGED,
-
   /**
    * Initialize the store: set up JSONFile and load from disk.
    *
@@ -160,8 +131,6 @@ export const MemoryStore = {
    * @property {string} memory_summary - Short human-readable summary of the memory.
    * @property {string} category - Category label for the memory.
    * @property {string} intent - Intent label associated with the memory.
-   * @property {string} reasoning - Explanation of why this memory was created.
-   * @property {string} source - Where the memory originated (history or conversation).
    * @property {number} score - Numeric score representing the memory's relevance.
    * @property {number} updated_at - Last-updated time in milliseconds since Unix epoch.
    * @property {boolean} is_deleted - Whether the memory is marked as deleted.
@@ -172,8 +141,6 @@ export const MemoryStore = {
    * @property {string} [memory_summary] Optional summary; defaults to an empty string.
    * @property {string} [category] Optional category label; defaults to an empty string.
    * @property {string} [intent] Optional intent label; defaults to an empty string.
-   * @property {string} [reasoning] Optional reasoning explanation; defaults to an empty string.
-   * @property {string} [source] Optional source label; defaults to "history".
    * @property {number} [score] Optional numeric score; non-finite values are ignored.
    * @property {number} [updated_at] Optional last-updated time in milliseconds since Unix epoch.
    * @property {boolean} [is_deleted] Optional deleted flag; defaults to false.
@@ -195,13 +162,7 @@ export const MemoryStore = {
     let memory = gState.memories.find(i => i.id === id);
 
     if (memory) {
-      const simpleProperties = [
-        "memory_summary",
-        "category",
-        "intent",
-        "reasoning",
-        "source",
-      ];
+      const simpleProperties = ["memory_summary", "category", "intent"];
       for (const prop of simpleProperties) {
         if (prop in memoryPartial) {
           memory[prop] = memoryPartial[prop];
@@ -222,8 +183,6 @@ export const MemoryStore = {
       memory.updated_at = memoryPartial.updated_at || now;
 
       gJSONFile?.saveSoon();
-      Services.obs.notifyObservers(null, MEMORY_STORE_CHANGED);
-      updateMemoriesCountMetric();
       return memory;
     }
 
@@ -233,8 +192,6 @@ export const MemoryStore = {
       memory_summary: memoryPartial.memory_summary || "",
       category: memoryPartial.category || "",
       intent: memoryPartial.intent || "",
-      reasoning: memoryPartial.reasoning || "",
-      source: memoryPartial.source || HISTORY,
       score: Number.isFinite(memoryPartial.score) ? memoryPartial.score : 0,
       updated_at: memoryPartial.updated_at || now,
       is_deleted: memoryPartial.is_deleted ?? false,
@@ -242,8 +199,6 @@ export const MemoryStore = {
 
     gState.memories.push(memory);
     gJSONFile?.saveSoon();
-    Services.obs.notifyObservers(null, MEMORY_STORE_CHANGED);
-    updateMemoriesCountMetric();
     return memory;
   },
 
@@ -262,12 +217,7 @@ export const MemoryStore = {
       return null;
     }
 
-    const simpleProperties = [
-      "memory_summary",
-      "category",
-      "intent",
-      "reasoning",
-    ];
+    const simpleProperties = ["memory_summary", "category", "intent"];
     for (const prop of simpleProperties) {
       if (prop in updates) {
         memory[prop] = updates[prop];
@@ -288,7 +238,6 @@ export const MemoryStore = {
     memory.updated_at = updates.updated_at || Date.now();
 
     gJSONFile?.saveSoon();
-    Services.obs.notifyObservers(null, MEMORY_STORE_CHANGED);
     return memory;
   },
 
@@ -301,21 +250,16 @@ export const MemoryStore = {
    * @returns {Promise<Memory|null>}
    */
   async softDeleteMemory(id) {
-    let memory = await this.updateMemory(id, { is_deleted: true });
-    Services.obs.notifyObservers(null, MEMORY_STORE_CHANGED);
-    updateMemoriesCountMetric();
-    return memory;
+    return this.updateMemory(id, { is_deleted: true });
   },
 
   /**
    * hard delete (remove from array).
    *
    * @param {string} id
-   * @param {string} trigger
-   * @param {number|null} inUse
    * @returns {Promise<boolean>}
    */
-  async hardDeleteMemory(id, trigger = "other", inUse = null) {
+  async hardDeleteMemory(id) {
     await this.ensureInitialized();
     const idx = gState.memories.findIndex(i => i.id === id);
     if (idx === -1) {
@@ -323,13 +267,6 @@ export const MemoryStore = {
     }
     gState.memories.splice(idx, 1);
     gJSONFile?.saveSoon();
-    Glean.smartWindow.memoryRemovedPanel.record({
-      memories: gState.memories.length,
-      trigger,
-      in_use: inUse,
-    });
-    Services.obs.notifyObservers(null, MEMORY_STORE_CHANGED);
-    updateMemoriesCountMetric();
     return true;
   },
 
@@ -344,15 +281,12 @@ export const MemoryStore = {
    *   Sort direction.
    * @param {boolean} [options.includeSoftDeleted=false]
    *   Whether to include soft-deleted memories.
-   * @param {Set<string>} [options.memoryIds=new Set()]
-   *   Optional set of memory IDs; will return all if set is empty
    * @returns {Promise<Memory[]>}
    */
   async getMemories({
     sortBy = "updated_at",
     sortDir = "desc",
     includeSoftDeleted = false,
-    memoryIds = new Set(),
   } = {}) {
     await this.ensureInitialized();
 
@@ -360,10 +294,6 @@ export const MemoryStore = {
 
     if (!includeSoftDeleted) {
       res = res.filter(i => !i.is_deleted);
-    }
-
-    if (memoryIds.size) {
-      res = res.filter(i => memoryIds.has(i.id));
     }
 
     if (sortBy) {
@@ -417,42 +347,8 @@ export const MemoryStore = {
     }
 
     gJSONFile?.saveSoon();
-    updateMemoriesLastUpdatedMetric();
   },
 };
-
-function updateMemoriesCountMetric() {
-  let historyCount = 0;
-  let conversationCount = 0;
-
-  for (const memory of gState.memories) {
-    if (memory.is_deleted) {
-      continue;
-    }
-    if (memory.source === CONVERSATION) {
-      conversationCount++;
-    } else if (memory.source === HISTORY) {
-      historyCount++;
-    }
-  }
-
-  Glean.smartWindow.memoriesCount.history.set(historyCount);
-  Glean.smartWindow.memoriesCount.conversation.set(conversationCount);
-
-  updateMemoriesLastUpdatedMetric();
-}
-
-function updateMemoriesLastUpdatedMetric() {
-  const lastUpdated =
-    Math.max(
-      gState.meta.last_history_memory_ts || 0,
-      gState.meta.last_chat_memory_ts || 0
-    ) || Date.now();
-  if (!lastUpdated || lastUpdated <= 0) {
-    return;
-  }
-  Glean.smartWindow.memoriesLastUpdated.set(new Date(lastUpdated));
-}
 
 /**
  * Simple deterministic hash of a string → 8-char hex.
@@ -479,17 +375,9 @@ function hashStringToHex(str) {
  *
  * @param {object} memoryPartial
  */
-export function makeMemoryId(memoryPartial) {
+function makeMemoryId(memoryPartial) {
   if (memoryPartial.id) {
     return memoryPartial.id;
-  }
-
-  let id_prefix;
-  if (CATEGORY_TO_ID_PREFIX.hasOwnProperty(memoryPartial.category)) {
-    id_prefix = CATEGORY_TO_ID_PREFIX[memoryPartial.category];
-  } else {
-    // Fallback in case the model returns an invalid category
-    id_prefix = "mem";
   }
 
   const summary = (memoryPartial.memory_summary || "").trim().toLowerCase();
@@ -499,5 +387,5 @@ export function makeMemoryId(memoryPartial) {
   const key = `${summary}||${category}||${intent}`;
   const hex = hashStringToHex(key);
 
-  return `${id_prefix}.${hex}`;
+  return `ins-${hex}`;
 }

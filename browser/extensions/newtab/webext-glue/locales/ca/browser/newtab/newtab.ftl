@@ -8,13 +8,9 @@
 newtab-page-title = Pestanya nova
 newtab-settings-button =
     .title = Personalitzeu la pàgina de pestanya nova
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Personalitza aquesta pàgina
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Personalitza
-newtab-customize-panel-label =
-    .label = Personalitza
 newtab-personalize-settings-icon-label =
     .title = Personalitza la pestanya nova
     .aria-label = Paràmetres
@@ -53,7 +49,7 @@ newtab-search-box-input =
     .placeholder = Cerca al web
     .aria-label = Cerca al web
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = Afegeix un motor de cerca
 newtab-topsites-add-shortcut-header = Drecera nova
@@ -307,21 +303,9 @@ newtab-error-fallback-refresh-link = Actualitzeu la pàgina per tornar-ho a prov
 
 newtab-custom-shortcuts-title = Dreceres
 newtab-custom-shortcuts-subtitle = Llocs que deseu o visiteu
-#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Dreceres
     .description = Llocs que deseu o visiteu
-newtab-custom-shortcuts-nova =
-    .label = Dreceres
-# Variables
-#   $num (number) - Number of rows to display
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
-newtab-custom-row-selector2 =
-    .label =
-        { $num ->
-            [one] { $num } fila
-           *[other] { $num } files
-        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -332,12 +316,9 @@ newtab-custom-row-selector =
 newtab-custom-sponsored-sites = Dreceres patrocinades
 newtab-custom-pocket-title = Recomanat per { -pocket-brand-name }
 newtab-custom-pocket-subtitle = Contingut excepcional seleccionat per { -pocket-brand-name }, part de la família de { -brand-product-name }
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be having a description under "Recommended stories" anymore
 newtab-custom-stories-toggle =
     .label = Articles recomanats
     .description = Contingut excepcional seleccionat per la família del { -brand-product-name }
-newtab-recommended-stories-toggle =
-    .label = Articles recomanats
 newtab-custom-stories-personalized-toggle =
     .label = Articles
 newtab-custom-stories-personalized-checkbox-label = Articles personalitzats basats en la vostra activitat
@@ -348,16 +329,18 @@ newtab-custom-recent-subtitle = Una selecció de llocs i continguts recents
 newtab-custom-weather-toggle =
     .label = Informació meteorològica
     .description = La previsió d’avui d’un cop d’ull
+newtab-custom-trending-search-toggle =
+    .label = Cerques que són tendència
+    .description = Temes populars i cercats freqüentment
 newtab-custom-widget-weather-toggle =
     .label = Informació meteorològica
+newtab-custom-widget-trending-search-toggle =
+    .label = Cerques que són tendència
 newtab-custom-widget-lists-toggle =
     .label = Llistes
 newtab-custom-widget-timer-toggle =
     .label = Temporitzador
 newtab-custom-widget-section-title = Ginys
-newtab-custom-widget-section-toggle =
-    .label = Ginys
-newtab-widget-manage-title = Ginys
 # Tooltip for close button
 newtab-custom-close-menu-button =
     .title = Tanca
@@ -369,11 +352,8 @@ newtab-custom-settings = Gestiona més paràmetres
 
 newtab-wallpaper-title = Fons de pantalla
 newtab-wallpaper-reset = Reinicia als valors per defecte
-#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Puja una imatge
 newtab-wallpaper-custom-color = Trieu un color
-newtab-wallpaper-toggle-title =
-    .label = Fons de pantalla
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = La imatge supera el límit de mida de fitxer de { $file_size } MB. Proveu de pujar un fitxer més petit.
@@ -396,7 +376,6 @@ newtab-wallpaper-light-fox-anniversary = Una guineu en un camp d'herba amb un pa
 
 ## Solid Colors
 
-#  (developer note): @nova-cleanup(remove-string): Remove old "Solid colors" string once Nova lands. The simplified "Colors" string will take over
 newtab-wallpaper-category-title-colors = Colors sòlids
 newtab-wallpaper-blue = Blau
 newtab-wallpaper-light-blue = Blau clar
@@ -513,11 +492,6 @@ newtab-weather-opt-in-yes =
     .label = Sí
 # We'll be showing static (fake) weather data if the user has not opted in to using their location
 newtab-weather-static-city = Nova York
-# Variables:
-#   $provider (string) - Service provider for weather data
-newtab-weather-see-forecast-description =
-    .title = Mostra la previsió meteorològica de { $provider }
-    .aria-description = { $provider } ∙ Patrocinat
 
 ## Topic Labels
 
@@ -622,7 +596,7 @@ newtab-download-mobile-highlight-image =
 newtab-shortcuts-highlight-title = Els vostres favorits a l'abast de la mà
 newtab-shortcuts-highlight-subtitle = Afegiu una drecera per a tenir els vostres llocs favorits a un sol clic.
 
-## Strings for reporting issues with ads and content
+## Strings for reporting ads and content
 
 newtab-report-content-why-reporting-this =
     .label = Per què ho denuncieu?
@@ -640,13 +614,21 @@ newtab-report-content-inappropriate-offensive =
     .label = Inadequat o ofensiu
 newtab-report-content-spam-misleading =
     .label = Correu brossa o enganyós
-newtab-report-content-requires-payment-subscription =
-    .label = El pagament o la subscripció són obligatoris
-newtab-report-content-requires-payment-subscription-learn-more = Més informació
 newtab-report-cancel = Cancel·la
 newtab-report-submit = Envia
 newtab-toast-thanks-for-reporting =
     .message = Gràcies per denunciar-ho.
+
+## Strings for trending searches
+
+newtab-trending-searches-show-trending =
+    .title = Mostra les cerques que són tendència
+newtab-trending-searches-hide-trending =
+    .title = Amaga les cerques que són tendència
+newtab-trending-searches-learn-more = Més informació
+newtab-trending-searches-dismiss = Amaga les cerques que són tendència
+# "Trending searches refers to popular searches from search engines
+newtab-trending-searches-title = Cerques que són tendència
 
 ## Strings for task / to-do list productivity widget
 
@@ -663,16 +645,11 @@ newtab-widget-lists-label-beta =
 newtab-widget-lists-completed-list = Completats ({ $number })
 newtab-widget-task-list-menu-copy = Copia
 newtab-widget-lists-menu-edit = Edita el nom de la llista
-newtab-widget-lists-menu-edit2 =
-    .aria-label = Edita el nom de la llista
 newtab-widget-lists-menu-create = Crea una llista nova
 newtab-widget-lists-menu-delete = Suprimeix aquesta llista
 newtab-widget-lists-menu-copy = Copia la llista al porta-retalls
+newtab-widget-lists-menu-hide = Amaga totes les llistes
 newtab-widget-lists-menu-learn-more = Més informació
-newtab-widget-lists-button-add-item = Afegeix un element
-newtab-widget-lists-input-add-an-item2 =
-    .placeholder = Afegeix un element
-    .aria-label = Afegeix un element
 newtab-widget-lists-input-add-an-item =
     .placeholder = Afegeix un element
 newtab-widget-lists-input-error = Incloeu text per a afegir un element.
@@ -689,25 +666,11 @@ newtab-widget-lists-name-label-default =
 newtab-widget-lists-name-placeholder-default =
     .placeholder = Llista de tasques
 # The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new2 =
-    .placeholder = Llista nova
-    .aria-label = Edita el nom de la llista
-# The placeholder value of the name field for a newly created list
 newtab-widget-lists-name-placeholder-new =
     .placeholder = Llista nova
-newtab-widget-section-title = Ginys
-# Tooltip for hide all widgets button
-newtab-widget-section-hide-all-button =
-    .title = Amaga els ginys
-    .aria-label = Amaga tots els ginys
-newtab-widget-section-maximize =
-    .title = Amplia els ginys
-    .aria-label = Amplia tots els ginys al màxim
-newtab-widget-section-minimize =
-    .title = Minimitza els widgets
-    .aria-label = Minimitza tots els widgets a mida compacta
 
-## Strings introduced by the Nova redesign of the Timer widget
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
 
 newtab-widget-timer-notification-title = Temporitzador
 newtab-widget-timer-notification-focus = S'ha acabat el temps de concentració. Et felicito. Vols fer una pausa?
@@ -717,18 +680,3 @@ newtab-widget-timer-mode-focus =
     .label = Concentració
 newtab-widget-timer-mode-break =
     .label = Pausa
-newtab-widget-timer-label-play =
-    .label = Reprodueix
-newtab-widget-timer-reset =
-    .title = Reinicia
-newtab-widget-timer-menu-notifications = Desactiva les notificacions
-newtab-widget-timer-menu-notifications-on = Activa les notificacions
-newtab-widget-timer-menu-learn-more = Més informació
-newtab-widget-message-title = Mantingueu la concentració amb les llistes i amb un temporitzador integrat
-# to-dos stands for "things to do".
-newtab-widget-message-copy = Des de recordatoris ràpids fins a tasques diàries pendents, sessions de concentració o pauses d'estirament: manteniu la productivitat i la puntualitat.
-newtab-promo-card-body = Els nostres patrocinadors donen suport a la nostra missió de crear un web millor
-newtab-promo-card-cta = Més informació
-newtab-promo-card-dismiss-button =
-    .title = Ignora
-    .aria-label = Ignora

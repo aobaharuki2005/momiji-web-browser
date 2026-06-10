@@ -17,9 +17,9 @@ const { debounce } = require("resource://devtools/shared/debounce.js");
  *
  * It is instantiated once in HighlightersOverlay by calls to .getInContextEditor().
  */
-class ShapesInContextEditor extends EventEmitter {
+class ShapesInContextEditor {
   constructor(highlighter, inspector, state) {
-    super();
+    EventEmitter.decorate(this);
 
     this.inspector = inspector;
     this.highlighter = highlighter;

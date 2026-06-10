@@ -1,5 +1,9 @@
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
+
 async function check_keyword(aExpectExists, aHref, aKeyword, aPostData = null) {
   // Check case-insensitivity.
   aKeyword = aKeyword.toUpperCase();
@@ -245,10 +249,11 @@ add_task(async function test_addKeyword() {
 });
 
 add_task(async function test_addBookmarkAndKeyword() {
-  Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
+  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  Preferences.set("privacy.reduceTimerPrecision", false);
 
   registerCleanupFunction(function () {
-    Services.prefs.clearUserPref("privacy.reduceTimerPrecision");
+    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 
   await check_keyword(false, "http://example.com/", "keyword");

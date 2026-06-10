@@ -5,8 +5,8 @@
 //! A centralized set of stylesheets for a document.
 
 use crate::derives::*;
-use crate::device::Device;
 use crate::invalidation::stylesheets::{RuleChangeKind, StylesheetInvalidationSet};
+use crate::media_queries::Device;
 use crate::shared_lock::SharedRwLockReadGuard;
 use crate::stylesheets::{
     CssRule, CssRuleRef, CustomMediaMap, Origin, OriginSet, PerOrigin, StylesheetInDocument,
@@ -518,7 +518,7 @@ where
         debug!("DocumentStylesheetSet::flush_without_invalidation");
 
         let mut origins = OriginSet::empty();
-        std::mem::take(&mut self.invalidations);
+        self.invalidations.clear();
 
         for (collection, origin) in self.collections.iter_mut_origins() {
             if collection.flush().dirty() {

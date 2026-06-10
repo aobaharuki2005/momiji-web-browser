@@ -127,7 +127,7 @@ function RegExpMatch(string) {
 
     if (global) {
       // Step 6.a.
-      var fullUnicode = !!(flags & REGEXP_ANY_UNICODE_MASK);
+      var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG) || !!(flags & REGEXP_UNICODESETS_FLAG);
 
       // Steps 6.b-e.
       return RegExpGlobalMatchOpt(rx, S, fullUnicode);
@@ -723,7 +723,7 @@ function RegExpGetFunctionalReplacement(result, S, position, replaceValue) {
 //   * replaceValue is a string without "$"
 function RegExpGlobalReplaceOptSimple(rx, S, lengthS, replaceValue, flags) {
   // Step 9.a.
-  var fullUnicode = !!(flags & REGEXP_ANY_UNICODE_MASK);
+  var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG) || !!(flags &  REGEXP_UNICODESETS_FLAG);
 
   // Step 9.b.
   var lastIndex = 0;
@@ -954,7 +954,7 @@ function RegExpSplit(string, limit) {
            "Legacy features must be enabled in optimized path");
     #endif
     // Steps 6-7.
-    unicodeMatching = !!(flags & REGEXP_ANY_UNICODE_MASK);
+    unicodeMatching = !!(flags & REGEXP_UNICODE_FLAG);
 
     // Steps 8-10.
     // If split operation is optimizable, perform non-sticky match.
@@ -970,7 +970,7 @@ function RegExpSplit(string, limit) {
     flags = ToString(rx.flags);
 
     // Steps 6-7.
-    unicodeMatching = callFunction(std_String_includes, flags, "u") || callFunction(std_String_includes, flags, "v");
+    unicodeMatching = callFunction(std_String_includes, flags, "u");
 
     // Steps 8-9.
     var newFlags;
@@ -1328,7 +1328,7 @@ function RegExpStringIteratorNext() {
     REGEXP_STRING_ITERATOR_FLAGS_SLOT
   );
   var global = !!(flags & REGEXP_GLOBAL_FLAG);
-  var fullUnicode = !!(flags & REGEXP_ANY_UNICODE_MASK);
+  var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG) || !!(flags & REGEXP_UNICODESETS_FLAG);
 
   if (lastIndex >= 0) {
     assert(IsRegExpObject(regexp), "|regexp| is a RegExp object");

@@ -1,3 +1,4 @@
+// |jit-test| --setpref=use_js_microtask_queue=true;
 
 // Promise microtask queue smoke tests
 // Test basic promise resolution and microtask ordering

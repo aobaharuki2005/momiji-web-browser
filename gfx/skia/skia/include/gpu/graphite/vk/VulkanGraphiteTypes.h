@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Google LLC
+ * Copyright 2022 Google LLC.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -13,14 +13,16 @@
 #include "include/gpu/graphite/TextureInfo.h"
 #include "include/gpu/vk/VulkanTypes.h"
 
+class SkStream;
+class SkWStream;
+
 namespace skgpu::graphite {
 
 class SK_API VulkanTextureInfo final : public TextureInfo::Data {
 public:
     // VkImageCreateInfo properties
-    // Currently the only supported flags are VK_IMAGE_CREATE_PROTECTED_BIT and, when
-    // VK_EXT_multisampled_render_to_single_sampled is present and enabled,
-    // VK_IMAGE_CREATE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_BIT_EXT. Other flags are not accepted.
+    // Currently the only supported flag is VK_IMAGE_CREATE_PROTECTED_BIT. Any other flag will not
+    // be accepted
     VkImageCreateFlags fFlags = 0;
     VkFormat           fFormat = VK_FORMAT_UNDEFINED;
     VkImageTiling      fImageTiling = VK_IMAGE_TILING_OPTIMAL;
@@ -38,7 +40,7 @@ public:
     VulkanYcbcrConversionInfo fYcbcrConversionInfo;
 
     VulkanTextureInfo() = default;
-    VulkanTextureInfo(VkSampleCountFlagBits sampleCount,
+    VulkanTextureInfo(uint32_t sampleCount,
                       Mipmapped mipmapped,
                       VkImageCreateFlags flags,
                       VkFormat format,
@@ -47,8 +49,7 @@ public:
                       VkSharingMode sharingMode,
                       VkImageAspectFlags aspectMask,
                       VulkanYcbcrConversionInfo ycbcrConversionInfo)
-            // VkSampleCountFlagBits is value equivalent to SampleCount
-            : Data(static_cast<SampleCount>(sampleCount), mipmapped)
+            : Data(sampleCount, mipmapped)
             , fFlags(flags)
             , fFormat(format)
             , fImageTiling(imageTiling)
@@ -68,6 +69,9 @@ private:
         return fFlags & VK_IMAGE_CREATE_PROTECTED_BIT ? Protected::kYes : Protected::kNo;
     }
     TextureFormat viewFormat() const;
+
+    bool serialize(SkWStream*) const;
+    bool deserialize(SkStream*);
 
     // Virtual API when the specific backend type is not available.
     SkString toBackendString() const override;

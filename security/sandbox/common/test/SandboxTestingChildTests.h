@@ -1,16 +1,12 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef SECURITY_SANDBOX_COMMON_TEST_SANDBOXTESTINGCHILDTESTS_H_
-#define SECURITY_SANDBOX_COMMON_TEST_SANDBOXTESTINGCHILDTESTS_H_
-
 #include "SandboxTestingChild.h"
 
 #include "mozilla/ipc/UtilityProcessSandboxing.h"
-#ifdef XP_MACOSX
-#  include "nsCocoaFeatures.h"
-#endif
 #include "nsXULAppAPI.h"
 
 #ifdef XP_UNIX
@@ -293,12 +289,7 @@ void RunMacTestLaunchProcess(SandboxTestingChild* child,
   });
 
   // Test that launching an application using LSOpenCFURLRef fails
-  char* uri;
-  if (nsCocoaFeatures::OnCatalinaOrLater()) {
-    uri = const_cast<char*>("/System/Applications/Utilities/Console.app");
-  } else {
-    uri = const_cast<char*>("/Applications/Utilities/Console.app");
-  }
+  char* uri = const_cast<char*>("/System/Applications/Utilities/Console.app");
   CFStringRef filePath = ::CFStringCreateWithCString(kCFAllocatorDefault, uri,
                                                      kCFStringEncodingUTF8);
   CFURLRef urlRef = ::CFURLCreateWithFileSystemPath(
@@ -633,12 +624,6 @@ void RunTestsContent(SandboxTestingChild* child) {
     }
     // Returning a closed fd is fine; it's just going to be tested for >= 0.
     return fd;
-  });
-
-  child->ErrnoValueTest("symlink"_ns, EPERM,
-                        [] { return symlink("something", "/tmp/testlink"); });
-  child->ErrnoValueTest("symlinkat"_ns, EPERM, [] {
-    return symlinkat("something", AT_FDCWD, "/tmp/testlink");
   });
 
 #  endif  // XP_LINUX
@@ -1364,5 +1349,3 @@ void RunTestsGPU(SandboxTestingChild* child) {
 }
 
 }  // namespace mozilla
-
-#endif  // SECURITY_SANDBOX_COMMON_TEST_SANDBOXTESTINGCHILDTESTS_H_

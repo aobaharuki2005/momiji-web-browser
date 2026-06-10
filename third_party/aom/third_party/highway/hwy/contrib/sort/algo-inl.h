@@ -24,7 +24,6 @@
 #include <functional>  // std::less, std::greater
 #include <vector>
 
-#include "third_party/highway/hwy/base.h"
 #include "third_party/highway/hwy/contrib/sort/vqsort.h"
 #include "third_party/highway/hwy/highway.h"
 #include "third_party/highway/hwy/print.h"
@@ -208,18 +207,36 @@ enum class Algo {
 };
 
 static inline bool IsVQ(Algo algo) {
-  return algo == Algo::kVQSort || algo == Algo::kVQPartialSort ||
-         algo == Algo::kVQSelect;
+  switch (algo) {
+    case Algo::kVQSort:
+    case Algo::kVQPartialSort:
+    case Algo::kVQSelect:
+      return true;
+    default:
+      return false;
+  }
 }
 
 static inline bool IsSelect(Algo algo) {
-  return algo == Algo::kStdSelect || algo == Algo::kVQSelect ||
-         algo == Algo::kHeapSelect;
+  switch (algo) {
+    case Algo::kStdSelect:
+    case Algo::kVQSelect:
+    case Algo::kHeapSelect:
+      return true;
+    default:
+      return false;
+  }
 }
 
 static inline bool IsPartialSort(Algo algo) {
-  return algo == Algo::kStdPartialSort || algo == Algo::kVQPartialSort ||
-         algo == Algo::kHeapPartialSort;
+  switch (algo) {
+    case Algo::kStdPartialSort:
+    case Algo::kVQPartialSort:
+    case Algo::kHeapPartialSort:
+      return true;
+    default:
+      return false;
+  }
 }
 
 static inline Algo ReferenceAlgoFor(Algo algo) {
@@ -434,8 +451,8 @@ InputStats<T> GenerateInput(const Dist dist, T* v, size_t num_lanes) {
   }
 
   InputStats<T> input_stats;
-  for (size_t j = 0; j < num_lanes; ++j) {
-    input_stats.Notify(v[j]);
+  for (size_t i = 0; i < num_lanes; ++i) {
+    input_stats.Notify(v[i]);
   }
   return input_stats;
 }
@@ -589,6 +606,9 @@ void Run(Algo algo, KeyType* inout, size_t num_keys, SharedState& shared,
       return CallHeapPartialSort(inout, num_keys, k_keys, Order());
     case Algo::kHeapSelect:
       return CallHeapSelect(inout, num_keys, k_keys, Order());
+
+    default:
+      HWY_ABORT("Not implemented");
   }
 }
 

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -138,7 +140,7 @@ static void CloseLiveIteratorIon(JSContext* cx,
   RootedObject iterObject(cx, &v.toObject());
 
   if (isDestructuring) {
-    RootedValue doneValue(cx, si.maybeRead(recover));
+    RootedValue doneValue(cx, si.read());
     MOZ_RELEASE_ASSERT(!doneValue.isMagic());
     bool done = ToBoolean(doneValue);
     // Do not call IteratorClose if the destructuring iterator is already
@@ -279,10 +281,7 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
     *hitBailoutException = true;
   }
 
-  RootedTuple<JSScript*, Value, Value> ionRoots(cx);
-  RootedField<JSScript*> script(ionRoots, frame.script());
-  RootedField<Value, 1> exception(ionRoots);
-  RootedField<Value, 2> exceptionStack(ionRoots);
+  RootedScript script(cx, frame.script());
 
   for (TryNoteIterIon tni(cx, frame); !tni.done(); ++tni) {
     const TryNote* tn = *tni;
@@ -344,8 +343,8 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
         ExceptionBailoutInfo excInfo(cx, frame.frameNo(), finallyPC,
                                      tn->stackDepth);
 
-        exception = UndefinedValue();
-        exceptionStack = UndefinedValue();
+        RootedValue exception(cx);
+        RootedValue exceptionStack(cx);
         if (!cx->getPendingException(&exception) ||
             !cx->getPendingExceptionStack(&exceptionStack)) {
           exception = UndefinedValue();
@@ -474,12 +473,7 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
   MOZ_ASSERT(frame.baselineFrame()->runningInInterpreter(),
              "Caller must ensure frame is an interpreter frame");
 
-  RootedTuple<JSScript*, Value, Value, Value, JSObject*> baselineRoots(cx);
-  RootedField<JSScript*> script(baselineRoots, frame.baselineFrame()->script());
-  RootedField<Value, 1> exception(baselineRoots);
-  RootedField<Value, 2> exceptionStack(baselineRoots);
-  RootedField<Value, 3> doneValue(baselineRoots);
-  RootedField<JSObject*> iterObject(baselineRoots);
+  RootedScript script(cx, frame.baselineFrame()->script());
 
   for (TryNoteIterBaseline tni(cx, frame, *pc); !tni.done(); ++tni) {
     const TryNote* tn = *tni;
@@ -522,8 +516,8 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
         }
 
         // Drop the exception instead of leaking cross compartment data.
-        exception = UndefinedValue();
-        exceptionStack = UndefinedValue();
+        RootedValue exception(cx);
+        RootedValue exceptionStack(cx);
         if (!cx->getPendingException(&exception) ||
             !cx->getPendingExceptionStack(&exceptionStack)) {
           rfe->exception = UndefinedValue();
@@ -554,12 +548,12 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
                                                  &stackPointer);
         // Note: if this ever changes, also update the
         // TryNoteKind::Destructuring code in WarpBuilder.cpp!
-        doneValue = *(reinterpret_cast<Value*>(stackPointer));
+        RootedValue doneValue(cx, *(reinterpret_cast<Value*>(stackPointer)));
         MOZ_RELEASE_ASSERT(!doneValue.isMagic());
         bool done = ToBoolean(doneValue);
         if (!done) {
           Value iterValue(*(reinterpret_cast<Value*>(stackPointer) + 1));
-          iterObject = &iterValue.toObject();
+          RootedObject iterObject(cx, &iterValue.toObject());
           if (!IteratorCloseForException(cx, iterObject)) {
             SettleOnTryNote(cx, tn, frame, ei, rfe, pc);
             return false;
@@ -1416,7 +1410,7 @@ static void TraceTrampolineNativeFrame(JSTracer* trc,
   }
 }
 
-void TraceJitFrames(JSTracer* trc, JitActivation* activation) {
+static void TraceJitActivation(JSTracer* trc, JitActivation* activation) {
 #ifdef CHECK_OSIPOINT_REGISTERS
   if (JitOptions.checkOsiPointRegisters) {
     // GC can modify spilled registers, breaking our register checks.
@@ -1425,6 +1419,8 @@ void TraceJitFrames(JSTracer* trc, JitActivation* activation) {
     activation->setCheckRegs(false);
   }
 #endif
+
+  activation->trace(trc);
 
   // This is used for sanity checking continuity of the sequence of wasm stack
   // maps as we unwind.  It has no functional purpose.
@@ -1471,16 +1467,11 @@ void TraceJitFrames(JSTracer* trc, JitActivation* activation) {
       gc::AssertRootMarkingPhase(trc);
       MOZ_ASSERT(frames.isWasm());
       uint8_t* nextPC = frames.resumePCinCurrentFrame();
-      MOZ_ASSERT(nextPC != nullptr);
+      MOZ_ASSERT(nextPC != 0);
       wasm::WasmFrameIter& wasmFrameIter = frames.asWasm();
 #ifdef ENABLE_WASM_JSPI
       if (wasmFrameIter.currentFrameStackSwitched()) {
         highestByteVisitedInPrevWasmFrame = 0;
-        if (wasmFrameIter.contStack()) {
-          // Trace the fields on the continuation stack itself. The frames on
-          // the stack will be traced below.
-          wasmFrameIter.contStack()->traceFields(trc);
-        }
       }
 #endif
       wasm::Instance* instance = wasmFrameIter.instance();
@@ -1491,27 +1482,15 @@ void TraceJitFrames(JSTracer* trc, JitActivation* activation) {
   }
 }
 
-#ifdef ENABLE_WASM_JSPI
-void TraceWasmSuspendedContStacks(JSContext* cx, JSTracer* trc) {
-  gc::AssertRootMarkingPhase(trc);
-
-  // If we're tenuring, then unconditionally trace all suspended stacks. This
-  // is needed as they may point at nursery entries, but also don't have any
-  // store buffer entries.
-  //
-  // If we're not tenuring, then the suspended ones will be traced through
-  // references to their continuation object.
-  if (!trc->isTenuringTracer()) {
-    return;
+void TraceJitActivations(JSContext* cx, JSTracer* trc) {
+  for (JitActivationIterator activations(cx); !activations.done();
+       ++activations) {
+    TraceJitActivation(trc, activations->asJit());
   }
-
-  cx->wasm().contStacks().forEachAllocatedStack([trc](wasm::ContStack* stack) {
-    if (stack->canResume()) {
-      stack->traceSuspended(trc);
-    }
-  });
-}
+#ifdef ENABLE_WASM_JSPI
+  cx->wasm().traceRoots(trc);
 #endif
+}
 
 void TraceWeakJitActivationsInSweepingZones(JSContext* cx, JSTracer* trc) {
   for (JitActivationIterator activation(cx); !activation.done(); ++activation) {
@@ -1547,14 +1526,6 @@ void UpdateJitActivationsForMinorGC(JSRuntime* rt) {
       }
     }
   }
-#ifdef ENABLE_WASM_JSPI
-  cx->wasm().contStacks().forEachAllocatedStack(
-      [&nursery](wasm::ContStack* stack) {
-        if (stack->canResume()) {
-          stack->updateSuspendedForMovingGC(nursery);
-        }
-      });
-#endif
 }
 
 void UpdateJitActivationsForCompactingGC(JSRuntime* rt) {
@@ -1571,14 +1542,6 @@ void UpdateJitActivationsForCompactingGC(JSRuntime* rt) {
       }
     }
   }
-#ifdef ENABLE_WASM_JSPI
-  cx->wasm().contStacks().forEachAllocatedStack(
-      [&nursery](wasm::ContStack* stack) {
-        if (stack->canResume()) {
-          stack->updateSuspendedForMovingGC(nursery);
-        }
-      });
-#endif
 }
 
 JSScript* GetTopJitJSScript(JSContext* cx) {
@@ -1612,8 +1575,9 @@ RInstructionResults& RInstructionResults::operator=(RInstructionResults&& rhs) {
   return *this;
 }
 
-// results_ is freed by the UniquePtr.
-RInstructionResults::~RInstructionResults() = default;
+RInstructionResults::~RInstructionResults() {
+  // results_ is freed by the UniquePtr.
+}
 
 bool RInstructionResults::init(JSContext* cx, uint32_t numResults) {
   if (numResults) {
@@ -1728,15 +1692,10 @@ bool SnapshotIterator::allocationReadable(const RValueAllocation& alloc,
 
   switch (alloc.mode()) {
     case RValueAllocation::DOUBLE_REG:
-    case RValueAllocation::FLOAT32_REG:
       return hasRegister(alloc.fpuReg());
-    case RValueAllocation::FLOAT32_STACK:
-      return hasStack(alloc.stackOffset());
 
     case RValueAllocation::TYPED_REG:
       return hasRegister(alloc.reg2());
-    case RValueAllocation::TYPED_STACK:
-      return hasStack(alloc.stackOffset2());
 
 #if defined(JS_NUNBOX32)
     case RValueAllocation::UNTYPED_REG_REG:
@@ -1779,19 +1738,11 @@ bool SnapshotIterator::allocationReadable(const RValueAllocation& alloc,
     case RValueAllocation::INT64_REG:
       return hasRegister(alloc.reg());
     case RValueAllocation::INT64_STACK:
-    case RValueAllocation::INT64_INT32_STACK:
       return hasStack(alloc.stackOffset());
 #endif
 
-    case RValueAllocation::CONSTANT:
-    case RValueAllocation::CST_UNDEFINED:
-    case RValueAllocation::CST_NULL:
-    case RValueAllocation::INTPTR_CST:
-    case RValueAllocation::INT64_CST:
-      return true;
-
     default:
-      MOZ_CRASH("Unexpected mode");
+      return true;
   }
 }
 
@@ -1897,7 +1848,6 @@ Value SnapshotIterator::allocationValue(const RValueAllocation& alloc,
 #elif defined(JS_PUNBOX64)
     case RValueAllocation::INT64_REG:
     case RValueAllocation::INT64_STACK:
-    case RValueAllocation::INT64_INT32_STACK:
 #endif
       MOZ_CRASH("Can't read Int64 as Value");
 
@@ -1954,7 +1904,6 @@ bool SnapshotIterator::readMaybeUnpackedBigInt(JSContext* cx,
 #elif defined(JS_PUNBOX64)
     case RValueAllocation::INT64_REG:
     case RValueAllocation::INT64_STACK:
-    case RValueAllocation::INT64_INT32_STACK:
 #endif
     {
       auto* bigInt = JS::BigInt::createFromInt64(cx, allocationInt64(alloc));
@@ -2021,9 +1970,6 @@ int64_t SnapshotIterator::allocationInt64(const RValueAllocation& alloc) {
     }
     case RValueAllocation::INT64_STACK: {
       return static_cast<int64_t>(fromStack(alloc.stackOffset()));
-    }
-    case RValueAllocation::INT64_INT32_STACK: {
-      return static_cast<int64_t>(ReadFrameInt32Slot(fp_, alloc.stackOffset()));
     }
 #endif
     default:
@@ -2098,7 +2044,6 @@ void SnapshotIterator::writeAllocationValuePayload(
 #elif defined(JS_PUNBOX64)
     case RValueAllocation::INT64_REG:
     case RValueAllocation::INT64_STACK:
-    case RValueAllocation::INT64_INT32_STACK:
 #endif
       MOZ_CRASH("Not a GC thing: Unexpected write");
       break;
@@ -2309,11 +2254,8 @@ void SnapshotIterator::storeInstructionResult(const Value& v) {
 }
 
 Value SnapshotIterator::fromInstructionResult(uint32_t index) const {
-  MOZ_RELEASE_ASSERT(instructionResults_,
-                     "missing instruction results for recovered allocation");
-  Value v = (*instructionResults_)[index];
-  MOZ_RELEASE_ASSERT(!v.isMagic());
-  return v;
+  MOZ_ASSERT(!(*instructionResults_)[index].isMagic(JS_ION_BAILOUT));
+  return (*instructionResults_)[index];
 }
 
 void SnapshotIterator::settleOnFrame() {
@@ -2565,10 +2507,6 @@ char* MachineState::SafepointState::addressOfRegister(FloatRegister reg) const {
   char* ptr = floatSpillBase;
   for (FloatRegisterBackwardIterator iter(floatRegs); iter.more(); ++iter) {
     ptr -= (*iter).size();
-    if ((*iter).size() < reg.size()) {
-      // The spilled slot is too small to hold |reg|.
-      continue;
-    }
     for (uint32_t a = 0; a < (*iter).numAlignedAliased(); a++) {
       // Only say that registers that actually start here start here.
       // e.g. d0 should not start at s1, only at s0.
@@ -2579,24 +2517,6 @@ char* MachineState::SafepointState::addressOfRegister(FloatRegister reg) const {
     }
   }
   MOZ_CRASH("Invalid register");
-}
-
-bool MachineState::has(FloatRegister reg) const {
-  if (state_.is<BailoutState>()) {
-    return true;
-  }
-  // ReduceSetForPush may represent a register using a wider alias in the
-  // spill set (for example, on arm64 a float32 register is spilled using its
-  // double-precision alias). Look for any aligned alias of |reg| that's at
-  // least as wide as |reg|. This must match addressOfRegister above.
-  const auto& s = state_.as<SafepointState>();
-  for (uint32_t a = 0; a < reg.numAlignedAliased(); a++) {
-    FloatRegister alias = reg.alignedAliased(a);
-    if (alias.size() >= reg.size() && s.floatRegs.hasRegisterIndex(alias)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 uintptr_t MachineState::read(Register reg) const {
@@ -2790,14 +2710,10 @@ void AssertJitStackInvariants(JSContext* cx) {
               frameSize % JitStackAlignment == 0,
               "The blinterp entry frame should keep the alignment");
 
-          size_t numArgs = frames.numActualArgs();
-          if (frames.isFunctionFrame()) {
-            // The caller pushes `undefined` for missing formals.
-            numArgs = std::max(numArgs, frames.callee()->nargs());
-          }
           size_t expectedFrameSize =
-              sizeof(Value) * (numArgs + 1 /* |this| argument */ +
-                               frames.isConstructing() /* new.target */) +
+              sizeof(Value) *
+                  (frames.callee()->nargs() + 1 /* |this| argument */ +
+                   frames.isConstructing() /* new.target */) +
               sizeof(JitFrameLayout);
           MOZ_RELEASE_ASSERT(frameSize >= expectedFrameSize,
                              "The frame is large enough to hold all arguments");

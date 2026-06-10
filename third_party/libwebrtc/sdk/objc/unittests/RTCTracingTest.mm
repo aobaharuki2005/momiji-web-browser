@@ -11,9 +11,9 @@
 #import <Foundation/Foundation.h>
 #import <XCTest/XCTest.h>
 
-#include "test/gtest.h"
-
 #include <vector>
+
+#include "rtc_base/gunit.h"
 
 #import "api/peerconnection/RTCTracing.h"
 #import "helpers/NSString+StdString.h"

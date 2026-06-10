@@ -33,7 +33,6 @@ apt-get install -y --no-install-recommends \
     python3-setuptools \
     openssh-client \
     rsync \
-    unzip \
     wget
 
 mkdir -p /builds/worker/.mozbuild

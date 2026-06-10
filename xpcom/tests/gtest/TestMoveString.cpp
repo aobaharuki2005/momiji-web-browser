@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,12 +23,12 @@ static void SetAsOwned(nsACString& aStr, const char* aValue) {
   memcpy(data, aValue, len + 1);
   aStr.Adopt(data, len);
   EXPECT_EQ(aStr.GetDataFlags(), Df::OWNED | Df::TERMINATED);
-  EXPECT_STREQ(PromiseFlatCString(aStr).get(), aValue);
+  EXPECT_STREQ(aStr.BeginReading(), aValue);
 }
 
 static void ExpectTruncated(const nsACString& aStr) {
   EXPECT_EQ(aStr.Length(), uint32_t(0));
-  EXPECT_STREQ(PromiseFlatCString(aStr).get(), "");
+  EXPECT_STREQ(aStr.BeginReading(), "");
   EXPECT_EQ(aStr.GetDataFlags(), Df::TERMINATED);
 }
 
@@ -43,14 +45,14 @@ TEST(MoveString, SharedIntoOwned)
 
   nsCString in;
   in.Assign(NEW_VAL);
-  EXPECT_EQ(in.GetDataFlags(), Df::STRINGBUFFER | Df::OWNED | Df::TERMINATED);
+  EXPECT_EQ(in.GetDataFlags(), Df::REFCOUNTED | Df::TERMINATED);
   const char* data = in.get();
 
   out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
-  EXPECT_EQ(out.GetDataFlags(), Df::STRINGBUFFER | Df::OWNED | Df::TERMINATED);
+  EXPECT_EQ(out.GetDataFlags(), Df::REFCOUNTED | Df::TERMINATED);
   EXPECT_EQ(out.get(), data);
 }
 
@@ -107,7 +109,7 @@ TEST(MoveString, AutoIntoOwned)
   ExpectTruncated(in);
   ExpectNew(out);
 
-  EXPECT_EQ(out.GetDataFlags(), Df::STRINGBUFFER | Df::OWNED | Df::TERMINATED);
+  EXPECT_EQ(out.GetDataFlags(), Df::REFCOUNTED | Df::TERMINATED);
   EXPECT_NE(out.get(), data);
 }
 
@@ -124,7 +126,7 @@ TEST(MoveString, DepIntoOwned)
   ExpectTruncated(in);
   ExpectNew(out);
 
-  EXPECT_EQ(out.GetDataFlags(), Df::STRINGBUFFER | Df::OWNED | Df::TERMINATED);
+  EXPECT_EQ(out.GetDataFlags(), Df::REFCOUNTED | Df::TERMINATED);
 }
 
 TEST(MoveString, VoidIntoOwned)
@@ -152,14 +154,14 @@ TEST(MoveString, SharedIntoAuto)
 
   nsCString in;
   in.Assign(NEW_VAL);
-  EXPECT_EQ(in.GetDataFlags(), Df::STRINGBUFFER | Df::OWNED | Df::TERMINATED);
+  EXPECT_EQ(in.GetDataFlags(), Df::REFCOUNTED | Df::TERMINATED);
   const char* data = in.get();
 
   out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
-  EXPECT_EQ(out.GetDataFlags(), Df::STRINGBUFFER | Df::OWNED | Df::TERMINATED);
+  EXPECT_EQ(out.GetDataFlags(), Df::REFCOUNTED | Df::TERMINATED);
   EXPECT_EQ(out.get(), data);
 }
 

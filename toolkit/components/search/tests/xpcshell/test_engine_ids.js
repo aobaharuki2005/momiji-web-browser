@@ -17,11 +17,11 @@ const CONFIG = [
 add_setup(async function () {
   useHttpServer();
   SearchTestUtils.setRemoteSettingsConfig(CONFIG);
-  await SearchService.init();
+  await Services.search.init();
 });
 
 add_task(async function test_app_provided_engine_id() {
-  let appDefault = SearchService.defaultEngine;
+  let appDefault = Services.search.defaultEngine;
 
   Assert.equal(
     appDefault.name,
@@ -41,7 +41,7 @@ add_task(async function test_addon_engine_id() {
     id: "addon@tests.mozilla.org",
   });
 
-  let addonEngine = SearchService.getEngineByName("AddonEngine");
+  let addonEngine = Services.search.getEngineByName("AddonEngine");
   Assert.equal(
     addonEngine.id,
     "addon@tests.mozilla.orgdefault",
@@ -55,14 +55,14 @@ add_task(async function test_user_engine_id() {
     SearchUtils.TOPIC_ENGINE_MODIFIED
   );
 
-  await SearchService.addUserEngine({
+  await Services.search.addUserEngine({
     name: "user",
     url: "https://example.com/user?q={searchTerms}",
     alias: "u",
   });
 
   await promiseEngineAdded;
-  let userEngine = SearchService.getEngineByName("user");
+  let userEngine = Services.search.getEngineByName("user");
 
   Assert.ok(userEngine, "Should have installed the User Search Engine.");
   Assert.ok(userEngine.id, "The User Search Engine should have an id.");
@@ -105,7 +105,7 @@ add_task(async function test_enterprise_policy_engine_id() {
     },
   });
 
-  let policyEngine = SearchService.getEngineByName("policy");
+  let policyEngine = Services.search.getEngineByName("policy");
 
   Assert.ok(policyEngine, "Should have installed the Policy Engine.");
   Assert.ok(policyEngine.id, "The Policy Engine should have an id.");

@@ -10,8 +10,8 @@
 
 var interventions, shims;
 
-// Note that this variable is expanded during build-time. See bz2019069 for details.
-const AVAILABLE_INTERVENTIONS = {};
+const AVAILABLE_INTERVENTIONS =
+#include data/interventions.json
 
 try {
   interventions = new Interventions(AVAILABLE_INTERVENTIONS, CUSTOM_FUNCTIONS);

@@ -11,8 +11,7 @@
 #ifndef P2P_TEST_MOCK_ICE_AGENT_H_
 #define P2P_TEST_MOCK_ICE_AGENT_H_
 
-#include <span>
-
+#include "api/array_view.h"
 #include "api/units/timestamp.h"
 #include "p2p/base/connection.h"
 #include "p2p/base/ice_agent_interface.h"
@@ -33,7 +32,7 @@ class MockIceAgent : public IceAgentInterface {
   MOCK_METHOD(void, UpdateState, (), (override));
   MOCK_METHOD(void,
               ForgetLearnedStateForConnections,
-              (std::span<const Connection* const>),
+              (ArrayView<const Connection* const>),
               (override));
   MOCK_METHOD(void, SendPingRequest, (const Connection*), (override));
   MOCK_METHOD(void,
@@ -42,7 +41,7 @@ class MockIceAgent : public IceAgentInterface {
               (override));
   MOCK_METHOD(bool,
               PruneConnections,
-              (std::span<const Connection* const>),
+              (ArrayView<const Connection* const>),
               (override));
 };
 

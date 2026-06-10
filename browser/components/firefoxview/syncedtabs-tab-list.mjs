@@ -14,6 +14,18 @@ import {
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/elements/moz-button.mjs";
 
+const lazy = {};
+let XPCOMUtils;
+
+XPCOMUtils = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+).XPCOMUtils;
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "virtualListEnabledPref",
+  "browser.firefox-view.virtual-list.enabled"
+);
+
 /**
  * A list of synced tabs that are clickable and able to be remotely closed
  */
@@ -57,10 +69,7 @@ export class SyncedTabsTabList extends FxviewTabListBase {
         .url=${tabItem.url}
         .searchQuery=${ifDefined(this.searchQuery)}
         .hasPopup=${this.hasPopup}
-        .time=${ifDefined(tabItem.time)}
-        .timeMsPref=${ifDefined(this.timeMsPref)}
-        .dateTimeFormat=${ifDefined(this.dateTimeFormat)}
-      ></syncedtabs-tab-row>
+      ></fxview-tab-row>
     `;
   };
 
@@ -87,11 +96,20 @@ export class SyncedTabsTabList extends FxviewTabListBase {
         role="list"
         @keydown=${this.handleFocusElementInRow}
       >
-        <virtual-list
-          .activeIndex=${this.activeIndex}
-          .items=${this.tabItems}
-          .template=${this.itemTemplate}
-        ></virtual-list>
+        ${when(
+          lazy.virtualListEnabledPref,
+          () => html`
+            <virtual-list
+              .activeIndex=${this.activeIndex}
+              .items=${this.tabItems}
+              .template=${this.itemTemplate}
+            ></virtual-list>
+          `,
+          () =>
+            html`${this.tabItems.map((tabItem, i) =>
+              this.itemTemplate(tabItem, i)
+            )}`
+        )}
       </div>
       <slot name="menu"></slot>
     `;

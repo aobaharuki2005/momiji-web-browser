@@ -1,3 +1,5 @@
+/* -*- mode: js; indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ts=2 sw=2 sts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -62,15 +64,6 @@ export class ContextMenuChild extends JSWindowActorChild {
             let blobURL = URL.createObjectURL(blob);
             resolve(blobURL);
           });
-        });
-      }
-
-      case "ContextMenu:Canvas:CopyImage": {
-        let target = lazy.ContentDOMReference.resolve(
-          message.data.targetIdentifier
-        );
-        return new Promise(resolve => {
-          target.toBlob(blob => resolve(blob.arrayBuffer()));
         });
       }
 
@@ -247,20 +240,15 @@ export class ContextMenuChild extends JSWindowActorChild {
 
         if (!disable) {
           try {
-            let canvas;
-            if (this.contentWindow.HTMLCanvasElement.isInstance(target)) {
-              canvas = target;
-            } else {
-              Services.scriptSecurityManager.checkLoadURIWithPrincipal(
-                target.ownerDocument.nodePrincipal,
-                target.currentURI
-              );
-              canvas = this.document.createElement("canvas");
-              canvas.width = target.naturalWidth;
-              canvas.height = target.naturalHeight;
-              let ctx = canvas.getContext("2d");
-              ctx.drawImage(target, 0, 0);
-            }
+            Services.scriptSecurityManager.checkLoadURIWithPrincipal(
+              target.ownerDocument.nodePrincipal,
+              target.currentURI
+            );
+            let canvas = this.document.createElement("canvas");
+            canvas.width = target.naturalWidth;
+            canvas.height = target.naturalHeight;
+            let ctx = canvas.getContext("2d");
+            ctx.drawImage(target, 0, 0);
             let dataURL = canvas.toDataURL();
             let url = target.ownerDocument.location;
             let imageName = url.pathname.substr(
@@ -413,20 +401,50 @@ export class ContextMenuChild extends JSWindowActorChild {
   }
 
   // Gather all descendent text under given document node.
-  // NOTE: Keep this in sync with gatherTextUnder in
-  // browser/base/content/utilityOverlay.js
   _gatherTextUnder(root) {
-    const encoder = Cu.createDocumentEncoder("text/plain");
-    encoder.init(root.ownerDocument, "text/plain", 0);
-    encoder.setContainerNode(root);
-    return encoder.encodeToString().trim();
+    let text = "";
+    let node = root.firstChild;
+    let depth = 1;
+    while (node && depth > 0) {
+      // See if this node is text.
+      if (node.nodeType == node.TEXT_NODE) {
+        // Add this text to our collection.
+        text += " " + node.data;
+      } else if (this.contentWindow.HTMLImageElement.isInstance(node)) {
+        // If it has an "alt" attribute, add that.
+        let altText = node.getAttribute("alt");
+        if (altText && altText != "") {
+          text += " " + altText;
+        }
+      }
+      // Find next node to test.
+      // First, see if this node has children.
+      if (node.hasChildNodes()) {
+        // Go to first child.
+        node = node.firstChild;
+        depth++;
+      } else {
+        // No children, try next sibling (or parent next sibling).
+        while (depth > 0 && !node.nextSibling) {
+          node = node.parentNode;
+          depth--;
+        }
+        if (node.nextSibling) {
+          node = node.nextSibling;
+        }
+      }
+    }
+
+    // Strip leading and tailing whitespace.
+    text = text.trim();
+    // Compress remaining whitespace.
+    text = text.replace(/\s+/g, " ");
+    return text;
   }
 
   // Returns a "url"-type computed style attribute value, with the url() stripped.
   _getComputedURL(aElem, aProp) {
-    let urls = aElem.documentGlobal
-      .getComputedStyle(aElem)
-      .getCSSImageURLs(aProp);
+    let urls = aElem.ownerGlobal.getComputedStyle(aElem).getCSSImageURLs(aProp);
 
     if (!urls.length) {
       return null;
@@ -453,44 +471,6 @@ export class ContextMenuChild extends JSWindowActorChild {
     }
 
     return true;
-  }
-
-  /**
-   * Finds a video element at the given coordinates using nodesFromRect,
-   * which can detect videos beneath overlays (e.g. custom player controls).
-   *
-   * @param {number} clientX
-   * @param {number} clientY
-   * @returns {HTMLVideoElement|null}
-   */
-  _maybeGetVideoElementAtPoint(clientX, clientY) {
-    if (
-      !Services.prefs.getBoolPref(
-        "media.contextmenu.video-overlay-detection",
-        false
-      )
-    ) {
-      return null;
-    }
-
-    let elements = this.contentWindow.windowUtils.nodesFromRect(
-      clientX,
-      clientY,
-      1,
-      1,
-      1,
-      1,
-      true,
-      false,
-      true,
-      0
-    );
-    for (let el of elements) {
-      if (this.contentWindow.HTMLVideoElement.isInstance(el)) {
-        return el;
-      }
-    }
-    return null;
   }
 
   _isTargetATextBox(node) {
@@ -523,10 +503,6 @@ export class ContextMenuChild extends JSWindowActorChild {
   }
 
   _disableSetDesktopBackground(aTarget) {
-    if (this.contentWindow.HTMLCanvasElement.isInstance(aTarget)) {
-      return false;
-    }
-
     // Disable the Set as Desktop Background menu item if we're still trying
     // to load the image or the load failed.
     if (!(aTarget instanceof Ci.nsIImageLoadingContent)) {
@@ -601,42 +577,37 @@ export class ContextMenuChild extends JSWindowActorChild {
     // Media related cache info parent needs for saving
     let contentType = null;
     let contentDisposition = null;
-    let composedTarget = aEvent.composedTarget;
-    if (composedTarget.nodeType == composedTarget.ELEMENT_NODE) {
-      let isImage =
-        composedTarget instanceof Ci.nsIImageLoadingContent &&
-        composedTarget.currentURI;
-      if (
-        isImage ||
-        this.contentWindow.HTMLCanvasElement.isInstance(composedTarget)
-      ) {
-        disableSetDesktopBackground =
-          this._disableSetDesktopBackground(composedTarget);
-      }
-      if (isImage) {
+    if (
+      aEvent.composedTarget.nodeType == aEvent.composedTarget.ELEMENT_NODE &&
+      aEvent.composedTarget instanceof Ci.nsIImageLoadingContent &&
+      aEvent.composedTarget.currentURI
+    ) {
+      disableSetDesktopBackground = this._disableSetDesktopBackground(
+        aEvent.composedTarget
+      );
+
+      try {
+        let imageCache = Cc["@mozilla.org/image/tools;1"]
+          .getService(Ci.imgITools)
+          .getImgCacheForDocument(doc);
+        // The image cache's notion of where this image is located is
+        // the currentURI of the image loading content.
+        let props = imageCache.findEntryProperties(
+          aEvent.composedTarget.currentURI,
+          doc
+        );
+
         try {
-          let imageCache = Cc["@mozilla.org/image/tools;1"]
-            .getService(Ci.imgITools)
-            .getImgCacheForDocument(doc);
-          // The image cache's notion of where this image is located is
-          // the currentURI of the image loading content.
-          let props = imageCache.findEntryProperties(
-            aEvent.composedTarget.currentURI,
-            doc
-          );
-
-          try {
-            contentType = props.get("type", Ci.nsISupportsCString).data;
-          } catch (e) {}
-
-          try {
-            contentDisposition = props.get(
-              "content-disposition",
-              Ci.nsISupportsCString
-            ).data;
-          } catch (e) {}
+          contentType = props.get("type", Ci.nsISupportsCString).data;
         } catch (e) {}
-      }
+
+        try {
+          contentDisposition = props.get(
+            "content-disposition",
+            Ci.nsISupportsCString
+          ).data;
+        } catch (e) {}
+      } catch (e) {}
     }
 
     let selectionInfo = lazy.SelectionUtils.getSelectionDetails(
@@ -690,7 +661,7 @@ export class ContextMenuChild extends JSWindowActorChild {
     this.docShell.docViewer
       .QueryInterface(Ci.nsIDocumentViewerEdit)
       .setCommandNode(aEvent.composedTarget);
-    aEvent.composedTarget.documentGlobal.updateCommands("contentcontextmenu");
+    aEvent.composedTarget.ownerGlobal.updateCommands("contentcontextmenu");
 
     let data = {
       context,
@@ -810,8 +781,6 @@ export class ContextMenuChild extends JSWindowActorChild {
     context.screenXDevPx = aEvent.screenX * this.contentWindow.devicePixelRatio;
     context.screenYDevPx = aEvent.screenY * this.contentWindow.devicePixelRatio;
     context.inputSource = aEvent.inputSource;
-    context.clientX = aEvent.clientX;
-    context.clientY = aEvent.clientY;
 
     let node = aEvent.composedTarget;
 
@@ -904,6 +873,7 @@ export class ContextMenuChild extends JSWindowActorChild {
     context.onSpellcheckable = false;
     context.onTextInput = false;
     context.onVideo = false;
+    context.inPDFEditor = false;
 
     const textDirectiveRanges =
       this.document.fragmentDirective?.getTextDirectiveRanges?.() || [];
@@ -924,7 +894,8 @@ export class ContextMenuChild extends JSWindowActorChild {
       context.target.ownerDocument.nodePrincipal.originNoSuffix ==
       "resource://pdf.js";
     if (context.inPDFViewer) {
-      context.pdfStates = context.target.ownerDocument.pdfStates;
+      context.pdfEditorStates = context.target.ownerDocument.editorStates;
+      context.inPDFEditor = !!context.pdfEditorStates?.isEditing;
     }
 
     // Check if we are in a synthetic document (stand alone image, video, etc.).
@@ -975,8 +946,6 @@ export class ContextMenuChild extends JSWindowActorChild {
     if (context.target.nodeType != context.target.ELEMENT_NODE) {
       return;
     }
-
-    let videoElement;
 
     // See if the user clicked on an image. This check mirrors
     // nsDocumentViewer::GetInImage. Make sure to update both if this is
@@ -1061,18 +1030,7 @@ export class ContextMenuChild extends JSWindowActorChild {
       this.contentWindow.HTMLCanvasElement.isInstance(context.target)
     ) {
       context.onCanvas = true;
-    } else if (
-      (videoElement = this.contentWindow.HTMLVideoElement.isInstance(
-        context.target
-      )
-        ? context.target
-        : this._maybeGetVideoElementAtPoint(context.clientX, context.clientY))
-    ) {
-      // If the target isn't already a video, it means we found one under an
-      // overlay via nodesFromRect. Update target and targetIdentifier so that
-      // context menu actions (play, pause, mute, etc.) operate on the video.
-      context.target = videoElement;
-      context.targetIdentifier = lazy.ContentDOMReference.get(videoElement);
+    } else if (this.contentWindow.HTMLVideoElement.isInstance(context.target)) {
       const mediaURL = context.target.currentSrc || context.target.src;
 
       if (this._isMediaURLReusable(mediaURL)) {
@@ -1182,22 +1140,16 @@ export class ContextMenuChild extends JSWindowActorChild {
         if (
           !context.onLink &&
           // Be consistent with what hrefAndLinkNodeForClickEvent
-          // does in BrowserUtils.sys.msj
-          ((this.contentWindow.HTMLAnchorElement.isInstance(elem) &&
-            elem.href) ||
+          // does in browser.js
+          (this._isXULTextLinkLabel(elem) ||
+            (this.contentWindow.HTMLAnchorElement.isInstance(elem) &&
+              elem.href) ||
+            (this.contentWindow.SVGAElement.isInstance(elem) &&
+              (elem.href || elem.hasAttributeNS(XLINK_NS, "href"))) ||
             (this.contentWindow.HTMLAreaElement.isInstance(elem) &&
               elem.href) ||
             this.contentWindow.HTMLLinkElement.isInstance(elem) ||
-            (this.contentWindow.SVGAElement.isInstance(elem) &&
-              (elem.href || elem.hasAttributeNS(XLINK_NS, "href"))) ||
-            (this.contentWindow.MathMLElement.isInstance(elem) &&
-              (elem.localName == "a" ||
-                !Services.prefs.getBoolPref(
-                  "mathml.href_link_on_non_anchor_element.disabled"
-                )) &&
-              elem.hasAttribute("href")) ||
-            elem.getAttributeNS(XLINK_NS, "type") == "simple" ||
-            this._isXULTextLinkLabel(elem))
+            elem.getAttributeNS(XLINK_NS, "type") == "simple")
         ) {
           // Target is a link or a descendant of a link.
           context.onLink = true;
@@ -1254,7 +1206,7 @@ export class ContextMenuChild extends JSWindowActorChild {
     }
 
     // See if the user clicked in a frame.
-    const docDefaultView = context.target.documentGlobal;
+    const docDefaultView = context.target.ownerGlobal;
 
     if (docDefaultView != docDefaultView.top) {
       context.inFrame = true;

@@ -6,19 +6,17 @@
 
 namespace v8 {
 namespace internal {
-namespace regexp {
 
-const char* const kErrorStrings[] = {
+const char* const kRegExpErrorStrings[] = {
 #define TEMPLATE(NAME, STRING) STRING,
     REGEXP_ERROR_MESSAGES(TEMPLATE)
 #undef TEMPLATE
 };
 
-const char* ErrorString(Error error) {
-  DCHECK_LT(error, Error::NumErrors);
-  return kErrorStrings[static_cast<int>(error)];
+const char* RegExpErrorString(RegExpError error) {
+  DCHECK_LT(error, RegExpError::NumErrors);
+  return kRegExpErrorStrings[static_cast<int>(error)];
 }
 
-}  // namespace regexp
 }  // namespace internal
 }  // namespace v8

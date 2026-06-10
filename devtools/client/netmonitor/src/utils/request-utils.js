@@ -83,6 +83,7 @@ async function getFormDataSections(
       }
     }
   }
+
   return formDataSections;
 }
 
@@ -93,8 +94,8 @@ async function getFormDataSections(
  * @return {object} a headers object with updated content payload
  */
 async function fetchHeaders(headers, getLongString) {
-  for (const header of headers.headers) {
-    header.value = await getLongString(header.value);
+  for (const { value } of headers.headers) {
+    headers.headers.value = await getLongString(value);
   }
   return headers;
 }
@@ -427,29 +428,28 @@ function parseQueryString(query) {
 /**
  * Parse a string of formdata sections into its components
  *
- * @param {Array<string>} sections Array of sections of formdata
- *                                 e.g ["", "a=x&b=y", "c=z"]
- * @return {Array<object>}  Array of formdata params
- *                          e.g [{ name: 'a', value: 'x' }, { name: 'b', value: 'y'}, { name: 'c', value: 'z'}]
+ * @param {string} sections - sections of formdata joined by &
+ * @return {Array} array of formdata params { name, value }
  */
 function parseFormData(sections) {
-  if (!sections || !sections.length) {
+  if (!sections) {
     return [];
   }
-  const formDataParams = [];
-  const searchStr = sections
-    // Filter out empty sections
-    .filter(str => /\S/.test(str))
-    .join("&");
 
-  const params = new URLSearchParams(searchStr);
-  for (const [key, value] of params) {
-    formDataParams.push({
-      name: getUnicodeUrlPath(key),
-      value: getUnicodeUrlPath(value),
+  return sections
+    .replace(/^&/, "")
+    .split("&")
+    .map(e => {
+      const firstEqualSignIndex = e.indexOf("=");
+      const paramName =
+        firstEqualSignIndex !== -1 ? e.slice(0, firstEqualSignIndex) : e;
+      const paramValue =
+        firstEqualSignIndex !== -1 ? e.slice(firstEqualSignIndex + 1) : "";
+      return {
+        name: paramName ? getUnicodeUrlPath(paramName) : "",
+        value: paramValue ? getUnicodeUrlPath(paramValue) : "",
+      };
     });
-  }
-  return formDataParams;
 }
 
 /**

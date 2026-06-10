@@ -1,6 +1,3 @@
-
-load(libdir + "asserts.js");
-
 class A {
   #x = 10
 
@@ -96,39 +93,36 @@ for (var i = 0; i < 1000; i++) {
   }
 }
 
+function assertThrows(fun, errorType) {
+  try {
+    fun();
+    throw 'Expected error, but none was thrown';
+  } catch (e) {
+    if (!(e instanceof errorType)) {
+      throw 'Wrong error type thrown';
+    }
+  }
+}
+
 function testTypeErrors(v) {
-  assertThrowsInstanceOf(() => A.readx(v), TypeError);  // Read value
-  assertThrowsInstanceOf(() => A.six(v), TypeError);    // increment
-  assertThrowsInstanceOf(() => A.dix(v), TypeError);    // decrement
+  assertThrows(() => A.readx(v), TypeError);  // Read value
+  assertThrows(() => A.six(v), TypeError);    // increment
+  assertThrows(() => A.dix(v), TypeError);    // decrement
 }
 
 testTypeErrors(undefined);  // Undefined
 testTypeErrors({});         // Random object
 testTypeErrors(1);          // Random primitive
 
-assertThrowsInstanceOf(
+assertThrows(
   () => eval('class B extends class { #x; } { g() { return super.#x; } }'),
   SyntaxError);  // Access super.#private
-assertThrowsInstanceOf(
+assertThrows(
   () => eval('class C { #x = 10; static #x = 14; }'),
   SyntaxError);  // Duplicate name declaration.
-assertThrowsInstanceOf(
+assertThrows(
   () => eval('delete this.#x'),
   SyntaxError);  // deleting a private field in non-strict mode.
-assertThrowsInstanceOf(
-  () => evaluate(`
-  class C {
-    #x() {}
-    m() { delete this?.#x; }
-  }
-`, {forceFullParse: false}), SyntaxError);
-assertThrowsInstanceOf(
-  () => evaluate(`
-  class C {
-    #x() {}
-    m() { delete this.a?.b.#x; }
-  }
-`, {forceFullParse: false}), SyntaxError);
 
 class B extends class {
   constructor(o) {
@@ -182,9 +176,9 @@ for (var i = 1; i < 1000; i++) {
 }
 
 // Successfully catch double initialization type error.
-assertThrowsInstanceOf(() => initIC(alreadyConstructedB), TypeError);
+assertThrows(() => initIC(alreadyConstructedB), TypeError);
 // Do it again, to make sure we didn't attach a stub that is invalid.
-assertThrowsInstanceOf(() => initIC(alreadyConstructedB), TypeError);
+assertThrows(() => initIC(alreadyConstructedB), TypeError);
 
 // Test getters work, and ICs can't be tricked. Setup an array of
 //
@@ -243,7 +237,7 @@ for (var index in elements) {
   if (index < elements.length - 2) {
     assertEq(B.gx(elements[index]), 13);
   } else {
-    assertThrowsInstanceOf(() => {
+    assertThrows(() => {
       B.gx(elements[index]);
     }, TypeError);
   }
@@ -253,8 +247,8 @@ for (var index in elements) {
 for (var i = 0; i < 100; i++) {
   var inputs = [{ a: 1 }, { b: 2 }, { c: 3 }, { d: 4 }, { e: 5 }, new Proxy({}, {})];
   for (var o of inputs) {
-    assertThrowsInstanceOf(() => B.gx(o), TypeError);
-    assertThrowsInstanceOf(() => B.sx(o), TypeError);
+    assertThrows(() => B.gx(o), TypeError);
+    assertThrows(() => B.sx(o), TypeError);
     new B(o);
     assertEq(B.gx(o), 12);
     B.sx(o);

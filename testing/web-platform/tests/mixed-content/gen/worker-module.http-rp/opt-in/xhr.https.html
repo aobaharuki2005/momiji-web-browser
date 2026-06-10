@@ -120,6 +120,27 @@
           },
           {
             "expectation": "blocked",
+            "origin": "cross-https",
+            "redirection": "swap-scheme",
+            "source_context_list": [
+              {
+                "policyDeliveries": [
+                  {
+                    "deliveryType": "http-rp",
+                    "key": "mixedContent",
+                    "value": "opt-in"
+                  }
+                ],
+                "sourceContextType": "worker-module"
+              }
+            ],
+            "source_scheme": "https",
+            "subresource": "xhr",
+            "subresource_policy_deliveries": [],
+            "test_description": "Mixed-Content: Expects blocked for xhr to cross-https origin and swap-scheme redirection from https context."
+          },
+          {
+            "expectation": "blocked",
             "origin": "same-http",
             "redirection": "keep-scheme",
             "source_context_list": [
@@ -180,6 +201,27 @@
             "subresource": "xhr",
             "subresource_policy_deliveries": [],
             "test_description": "Mixed-Content: Expects blocked for xhr to same-http origin and swap-scheme redirection from https context."
+          },
+          {
+            "expectation": "blocked",
+            "origin": "same-https",
+            "redirection": "swap-scheme",
+            "source_context_list": [
+              {
+                "policyDeliveries": [
+                  {
+                    "deliveryType": "http-rp",
+                    "key": "mixedContent",
+                    "value": "opt-in"
+                  }
+                ],
+                "sourceContextType": "worker-module"
+              }
+            ],
+            "source_scheme": "https",
+            "subresource": "xhr",
+            "subresource_policy_deliveries": [],
+            "test_description": "Mixed-Content: Expects blocked for xhr to same-https origin and swap-scheme redirection from https context."
           }
         ],
         new SanityChecker()

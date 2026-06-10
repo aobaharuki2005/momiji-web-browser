@@ -32,15 +32,15 @@ info: |
       kValue, k, O »).
     d. Decrease k by 1.
   9. Return accumulator.
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var calls, result;
 
   calls = 0;
-  result = new TA(makeCtorArg([1n, 2n, 3n])).reduceRight(function() {
+  result = new TA([1n, 2n, 3n]).reduceRight(function() {
     calls++;
 
     if (calls == 2) {
@@ -50,7 +50,7 @@ testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
   assert.sameValue(result, 42, "using default accumulator");
 
   calls = 0;
-  result = new TA(makeCtorArg([1n, 2n, 3n])).reduceRight(function() {
+  result = new TA([1n, 2n, 3n]).reduceRight(function() {
     calls++;
 
     if (calls == 3) {

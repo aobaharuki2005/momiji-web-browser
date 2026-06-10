@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,7 +23,7 @@ NotificationChild::NotificationChild(Notification* aNonPersistentNotification,
                                      WindowGlobalChild* aWindow)
     : mNonPersistentNotification(aNonPersistentNotification), mWindow(aWindow) {
   if (mWindow) {
-    BindToGlobal(mWindow->GetWindowGlobal()->AsGlobal());
+    BindToOwner(mWindow->GetWindowGlobal()->AsGlobal());
     return;
   }
 }
@@ -100,7 +102,7 @@ void NotificationChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-void NotificationChild::FrozenCallback(nsIGlobalObject* aGlobal) {
+void NotificationChild::FrozenCallback(nsIGlobalObject* aOwner) {
   // Make sure the closure below won't dispatch close event and still allow
   // explicit close() call.
   mNonPersistentNotification = nullptr;

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -23,8 +25,7 @@ using namespace js;
 using namespace js::jit;
 
 static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
-                                  JSScript* script, ICScript* icScript,
-                                  gc::AutoMarkingLock& lock) {
+                                  JSScript* script, ICScript* icScript) {
   // Try folding similar stubs with GuardShapes
   // into GuardMultipleShapes or GuardMultipleShapesToOffset
 
@@ -108,15 +109,14 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
           script->column().oneOriginValue());
 
   if (JitSpewEnabled(JitSpew_StubFoldingDetails)) {
+    Fprinter& printer(JitSpewPrinter());
     uint32_t i = 0;
     for (ICCacheIRStub* stub = firstStub; stub; stub = stub->nextCacheIR()) {
-      JitSpew(JitSpew_StubFoldingDetails, "- stub %d (enteredCount: %d)", i,
-              stub->enteredCount());
+      printer.printf("- stub %d (enteredCount: %d)\n", i, stub->enteredCount());
 
 #  ifdef JS_CACHEIR_SPEW
-      AutoJitSpewMessage msg(JitSpew_StubFoldingDetails);
       ICCacheIRStub* cache_stub = stub->toCacheIRStub();
-      SpewCacheIROps(msg.printer(), "  ", cache_stub->stubInfo());
+      SpewCacheIROps(printer, "  ", cache_stub->stubInfo());
 #  endif
       i++;
     }
@@ -194,12 +194,9 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
     return true;
   }
 
-  uint32_t totalEnteredCount = 0;
-
   // Make sure the shape and offset is the only value that differ.
   // Collect the shape and offset values at the same time.
   for (ICCacheIRStub* stub = firstStub; stub; stub = stub->nextCacheIR()) {
-    totalEnteredCount += stub->enteredCount();
     const uint8_t* stubData = stub->stubDataStart();
     uint32_t fieldIndex = 0;
     size_t offset = 0;
@@ -281,12 +278,12 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
     MOZ_ASSERT_IF(hasSlotOffsets, shapeList.length() == offsetList.length());
 
     for (uint32_t i = 0; i < shapeList.length(); i++) {
+      if (!shapeObj->append(cx, shapeList[i])) {
+        return false;
+      }
+
       if (hasSlotOffsets) {
-        if (!shapeObj->append(cx, shapeList[i], offsetList[i])) {
-          return false;
-        }
-      } else {
-        if (!shapeObj->append(cx, shapeList[i])) {
+        if (!shapeObj->append(cx, offsetList[i])) {
           return false;
         }
       }
@@ -317,20 +314,6 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
           offsetId.emplace(writer.guardMultipleShapesToOffset(objId, shapeObj));
         } else {
           writer.guardMultipleShapes(objId, shapeObj);
-        }
-        if (shapeSuccess) {
-          // If a stub contains duplicate GuardShape ops that share a stub field
-          // because of stub field deduplication, then we could reach this point
-          // more than once. We could technically support this case, but it is
-          // rare enough, and hard enough to reason about, that it is simplest
-          // to give up here.
-          JitSpew(JitSpew_StubFolding,
-                  "Shape field at offset %u was used by multiple GuardShapes "
-                  "(icScript: %p) with %zu shapes (%s:%u:%u)",
-                  fallback->pcOffset(), icScript, shapeList.length(),
-                  script->filename(), script->lineno(),
-                  script->column().oneOriginValue());
-          return true;
         }
         shapeSuccess = true;
         break;
@@ -425,17 +408,13 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
   // Replace the existing stubs with the new folded stub.
   fallback->discardStubs(cx->zone(), icEntry);
 
-  ICAttachResult result = AttachBaselineCacheIRStubLocked(
-      cx, writer, cacheKind, script, icScript, fallback, "StubFold", lock);
+  ICAttachResult result = AttachBaselineCacheIRStub(
+      cx, writer, cacheKind, script, icScript, fallback, "StubFold");
   if (result == ICAttachResult::OOM) {
     ReportOutOfMemory(cx);
     return false;
   }
   MOZ_ASSERT(result == ICAttachResult::Attached);
-
-  // We preserve the total entry count while folding stubs to help guide
-  // inlining heuristics.
-  icEntry->firstStub()->setEnteredCount(totalEnteredCount);
 
   JitSpew(JitSpew_StubFolding,
           "Folded stub at offset %u (icScript: %p) with %zu shapes (%s:%u:%u)",
@@ -447,12 +426,12 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
   if (JitSpewEnabled(JitSpew_StubFoldingDetails)) {
     ICStub* newEntryStub = icEntry->firstStub();
 
-    JitSpew(JitSpew_StubFoldingDetails, "- stub 0 (enteredCount: %d)",
-            newEntryStub->enteredCount());
+    Fprinter& printer(JitSpewPrinter());
+    printer.printf("- stub 0 (enteredCount: %d)\n",
+                   newEntryStub->enteredCount());
 #  ifdef JS_CACHEIR_SPEW
-    AutoJitSpewMessage msg(JitSpew_StubFoldingDetails);
     ICCacheIRStub* newStub = newEntryStub->toCacheIRStub();
-    SpewCacheIROps(msg.printer(), "  ", newStub->stubInfo());
+    SpewCacheIROps(printer, "  ", newStub->stubInfo());
 #  endif
   }
 #endif
@@ -464,13 +443,6 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
 
 bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
                               JSScript* script, ICScript* icScript) {
-  gc::AutoMarkingLock lock(cx->zone(), icScript->markingLock());
-  return TryFoldingStubsLocked(cx, fallback, script, icScript, lock);
-}
-
-bool js::jit::TryFoldingStubsLocked(JSContext* cx, ICFallbackStub* fallback,
-                                    JSScript* script, ICScript* icScript,
-                                    gc::AutoMarkingLock& lock) {
   ICEntry* icEntry = icScript->icEntryForStub(fallback);
   ICStub* entryStub = icEntry->firstStub();
 
@@ -488,9 +460,7 @@ bool js::jit::TryFoldingStubsLocked(JSContext* cx, ICFallbackStub* fallback,
     return true;
   }
 
-  if (!TryFoldingGuardShapes(cx, fallback, script, icScript, lock)) {
-    return false;
-  }
+  if (!TryFoldingGuardShapes(cx, fallback, script, icScript)) return false;
 
   return true;
 }
@@ -695,8 +665,8 @@ bool js::jit::AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
           return false;
         }
 
-        MOZ_ASSERT(!stubReader.more());
-        MOZ_ASSERT(!newReader.more());
+        MOZ_ASSERT(stubReader.peekOp() == CacheOp::ReturnFromIC);
+        MOZ_ASSERT(newReader.peekOp() == CacheOp::ReturnFromIC);
         break;
       }
       default: {
@@ -733,23 +703,22 @@ bool js::jit::AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
 
   // Limit the maximum number of shapes we will add before giving up.
   // If we give up, transition the stub.
-  size_t maxLength = offsetFieldOffset.isSome()
-                         ? ShapeListWithOffsetsObject::MaxLength
-                         : ShapeListObject::MaxLength;
-  if (numShapes == maxLength) {
+  if (numShapes == ShapeListObject::MaxLength) {
     MOZ_ASSERT(fallback->state().mode() != ICState::Mode::Generic);
     fallback->state().forceTransition();
     fallback->discardStubs(cx->zone(), icEntry);
     return false;
   }
 
+  if (!shapeList->append(cx, newShape)) {
+    cx->recoverFromOutOfMemory();
+    return false;
+  }
+
   if (offsetFieldOffset.isSome()) {
-    if (!shapeList->append(cx, newShape, newOffset)) {
-      cx->recoverFromOutOfMemory();
-      return false;
-    }
-  } else {
-    if (!shapeList->append(cx, newShape)) {
+    if (!shapeList->append(cx, newOffset)) {
+      // Drop corresponding shape if we failed adding offset.
+      shapeList->shrinkElements(cx, shapeList->length() - 1);
       cx->recoverFromOutOfMemory();
       return false;
     }

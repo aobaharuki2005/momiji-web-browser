@@ -49,9 +49,7 @@ runTestWhenReady(async () => {
   await sourceAudioReady;
   info("Source Audio content ok");
 
- (canvas.captureStream?.(0) || canvas.mozCaptureStream(0))
-  .getVideoTracks()
-  .forEach(t => stream.addTrack(t));
+  canvas.captureStream(0).getVideoTracks().forEach(t => stream.addTrack(t));
 
   const blobs = [];
 

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,10 +37,9 @@ void JSWindowActorParent::Init(const nsACString& aName,
   JSActor::Init(aName, /* aSendTyped= */ false);
 }
 
-void JSWindowActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
-                                         JSIPCValue&& aData,
-                                         ipc::StructuredCloneData* aStack,
-                                         ErrorResult& aRv) {
+void JSWindowActorParent::SendRawMessage(
+    const JSActorMessageMeta& aMeta, JSIPCValue&& aData,
+    UniquePtr<ipc::StructuredCloneData> aStack, ErrorResult& aRv) {
   if (NS_WARN_IF(!CanSend() || !mManager || !mManager->CanSend())) {
     aRv.ThrowInvalidStateError("JSWindowActorParent cannot send at the moment");
     return;
@@ -51,7 +52,24 @@ void JSWindowActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
     return;
   }
 
-  if (NS_WARN_IF(!mManager->SendRawMessage(aMeta, aData, aStack))) {
+  JSIPCValueUtils::SCDHolder holder;
+  if (NS_WARN_IF(!JSIPCValueUtils::PrepareForSending(holder, aData))) {
+    aRv.ThrowDataCloneError(
+        nsPrintfCString("JSWindowActorParent serialization error: cannot "
+                        "clone, in actor '%s'",
+                        PromiseFlatCString(aMeta.actorName()).get()));
+    return;
+  }
+
+  UniquePtr<ClonedMessageData> stackData;
+  if (aStack) {
+    stackData = MakeUnique<ClonedMessageData>();
+    if (!aStack->BuildClonedMessageData(*stackData)) {
+      stackData.reset();
+    }
+  }
+
+  if (NS_WARN_IF(!mManager->SendRawMessage(aMeta, aData, stackData))) {
     aRv.ThrowOperationError(
         nsPrintfCString("JSWindowActorParent send error in actor '%s'",
                         PromiseFlatCString(aMeta.actorName()).get()));

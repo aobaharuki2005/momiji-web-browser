@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -11,11 +13,11 @@
 
 #include "jstypes.h"  // JS_BIT
 
-#include "ds/BitArray.h"
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
 #include "frontend/SharedContext.h"    // StatementKind
 #include "js/friend/ErrorMessages.h"   // JSMSG_*
 #include "js/TypeDecls.h"              // jsbytecode
+#include "util/BitArray.h"
 #include "vm/BytecodeUtil.h"  // SET_JUMP_OFFSET, JUMP_OFFSET_LEN, SET_RESUMEINDEX
 #include "vm/Opcodes.h"       // JSOp, JSOpLength_TableSwitch
 #include "vm/Runtime.h"       // ReportOutOfMemory
@@ -47,20 +49,19 @@ bool SwitchEmitter::TableGenerator::addNumber(int32_t caseValue) {
     caseValue += Bit(16);
   }
   if (caseValue >= intmapBitLength_) {
-    size_t newLength = BitArray::NumWordsForLength(caseValue + 1);
+    size_t newLength = NumWordsForBitArrayOfLength(caseValue + 1);
     if (!intmap_->resize(newLength)) {
       ReportOutOfMemory(bce_->fc);
       return false;
     }
-    intmapBitLength_ = BitArray::LengthForNumWords(newLength);
+    intmapBitLength_ = newLength * BitArrayElementBits;
   }
-  BitArray bitArray(intmap_->begin(), intmapBitLength_);
-  if (bitArray.get(caseValue)) {
+  if (IsBitArrayElementSet(intmap_->begin(), intmap_->length(), caseValue)) {
     // Duplicate entry is not supported in table switch.
     setInvalid();
     return true;
   }
-  bitArray.set(caseValue);
+  SetBitArrayElement(intmap_->begin(), intmap_->length(), caseValue);
   return true;
 }
 

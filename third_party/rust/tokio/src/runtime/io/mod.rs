@@ -1,7 +1,4 @@
-#![cfg_attr(
-    not(all(feature = "rt", feature = "net", feature = "io-uring", tokio_unstable)),
-    allow(dead_code)
-)]
+#![cfg_attr(not(all(feature = "rt", feature = "net")), allow(dead_code))]
 mod driver;
 use driver::{Direction, Tick};
 pub(crate) use driver::{Driver, Handle, ReadyEvent};

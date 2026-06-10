@@ -51,11 +51,7 @@ Some further documentation can be found here:
 Bugs
 ====
 
-Bugs for the Marionette server are tracked in the
-`Remote Protocol :: Marionette <https://bugzilla.mozilla.org/buglist.cgi?product=Remote%20Protocol&component=Marionette&resolution=--->`__
-component. Bugs for the Python client and test harness are tracked in the
-`Testing :: Marionette Client and Harness <https://bugzilla.mozilla.org/buglist.cgi?product=Testing&component=Marionette%20Client%20and%20Harness&resolution=--->`__
-component.
+Bugs are tracked in the `Testing :: Marionette` component.
 
 
 Communication

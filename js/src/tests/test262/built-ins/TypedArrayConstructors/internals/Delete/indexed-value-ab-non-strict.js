@@ -22,7 +22,7 @@ includes: [testTypedArray.js]
 features: [align-detached-buffer-semantics-with-web-reality, TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   let proto = TypedArray.prototype;
   let descriptorGetterThrows = {
     configurable: true,
@@ -35,7 +35,7 @@ testWithTypedArrayConstructors(function(TA, makeCtorArg) {
     ["1"]: descriptorGetterThrows,
   });
 
-  let sample = new TA(makeCtorArg(2));
+  let sample = new TA(2);
 
   assert.sameValue(delete sample["0"], false, 'The value of `delete sample["0"]` is false');
   assert.sameValue(delete sample[0], false, 'The value of `delete sample[0]` is false');

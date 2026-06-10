@@ -3,7 +3,7 @@ Search Configuration Schema (Archived)
 ======================================
 
 This document outlines the details of the schema and how the various sub-parts
-interact. For the full fields and descriptions, please see the :searchfox:`schema itself <toolkit/components/search/schema/>`.
+interact. For the full fields and descriptions, please see the `schema itself`_.
 
 .. note::
     In the examples, only relevant properties are displayed.
@@ -120,11 +120,12 @@ For example, in this code block:
 There should exist a ``us`` and ``uk`` folder in the ``locales`` directory
 of the extension, ``web``.
 
-If a locale is not provided, ``webExtension.locales`` is set to ``default``.
+If a locale is not provided, ``webExtension.locales`` is set to
+``SearchUtils.DEFAULT_TAG``.
 
-:searchfox:`Search Extensions directory <browser/components/search/extensions>`
+`Search Extensions directory <https://searchfox.org/mozilla-central/source/browser/components/search/extensions>`__
 
-:searchfox:`Example of a locales directory <browser/components/search/extensions/wikipedia/_locales>`
+`Example of a locales directory <https://searchfox.org/mozilla-central/source/browser/components/search/extensions/wikipedia/_locales>`__
 
 
 Special Attributes
@@ -581,4 +582,5 @@ Example:
 
 This would result in the order: ``engine2@ext, engine1@ext, engine3@ext``.
 
+.. _schema itself: https://searchfox.org/mozilla-central/source/toolkit/components/search/schema/
 .. _the version comparator: https://developer.mozilla.org/en-US/docs/Mozilla/Toolkit_version_format

@@ -1,11 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* state and methods used while laying out a single line of a block frame */
 
-#ifndef nsLineLayout_h_
-#define nsLineLayout_h_
+#ifndef nsLineLayout_h___
+#define nsLineLayout_h___
 
 #include "BlockReflowState.h"
 #include "JustificationUtils.h"
@@ -652,18 +654,8 @@ class nsLineLayout {
                                   nscoord aBStartEdge);
   void VerticalAlignFrames(PerSpanData* psd);
 
-  nscoord ComputeTopAlignFrameStart(const PerFrameData* pfd,
-                                    const mozilla::WritingMode& aWM,
-                                    nscoord aDistanceFromStart,
-                                    nscoord aLineBSize);
-
-  nscoord ComputeBottomAlignFrameStart(const PerFrameData* pfd,
-                                       const mozilla::WritingMode& aWM,
-                                       nscoord aDistanceFromStart,
-                                       nscoord aLineBSize);
-
-  void PlaceTopBottomCenterFrames(PerSpanData* psd, nscoord aDistanceFromStart,
-                                  nscoord aLineBSize);
+  void PlaceTopBottomFrames(PerSpanData* psd, nscoord aDistanceFromStart,
+                            nscoord aLineBSize);
 
   void ApplyRelativePositioning(PerFrameData* aPFD);
 
@@ -714,4 +706,4 @@ class nsLineLayout {
   static bool ShouldApplyLineHeightInPreserveWhiteSpace(const PerSpanData* psd);
 };
 
-#endif /* nsLineLayout_h_ */
+#endif /* nsLineLayout_h___ */

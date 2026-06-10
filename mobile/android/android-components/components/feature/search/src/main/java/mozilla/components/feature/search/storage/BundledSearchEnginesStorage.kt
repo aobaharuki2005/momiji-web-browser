@@ -75,7 +75,6 @@ internal class BundledSearchEnginesStorage(
         SearchMiddleware.BundleStorage.Bundle(
             list = orderedList + unorderedRest,
             defaultSearchEngineId = defaultEngine.id,
-            searchEnvironmentId = null,
         )
     }
 

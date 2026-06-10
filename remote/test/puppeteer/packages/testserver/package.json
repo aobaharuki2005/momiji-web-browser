@@ -2,7 +2,6 @@
   "name": "@pptr/testserver",
   "version": "0.6.1",
   "description": "testing server",
-  "type": "module",
   "main": "lib/index.js",
   "scripts": {
     "build": "wireit",
@@ -28,10 +27,11 @@
   "author": "The Chromium Authors",
   "license": "Apache-2.0",
   "dependencies": {
-    "mime": "4.1.0",
-    "ws": "8.19.0"
+    "mime": "3.0.0",
+    "ws": "8.18.2"
   },
   "devDependencies": {
+    "@types/mime": "3.0.4",
     "@types/ws": "8.18.1"
   }
 }

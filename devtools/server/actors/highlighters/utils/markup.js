@@ -582,7 +582,7 @@ function waitForContentLoaded(iframeOrWindow) {
   // highlighter that is not browser toolbox, we must wait for IFRAME's "load".
   if (
     iframeOrWindow.contentWindow &&
-    iframeOrWindow.documentGlobal !==
+    iframeOrWindow.ownerGlobal !==
       iframeOrWindow.contentWindow.browsingContext.topChromeWindow
   ) {
     loadEvent = "load";

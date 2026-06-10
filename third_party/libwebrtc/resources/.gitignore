@@ -10,7 +10,6 @@
 **/*.pb
 **/*.pcap
 **/*.pcm
-**/*.rtceventlog
 **/*.rtp
 **/*.rtpdump
 **/*.rx

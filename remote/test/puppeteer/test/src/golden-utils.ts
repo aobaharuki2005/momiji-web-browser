@@ -95,7 +95,7 @@ const compareText = (
       return text;
     },
     `<link rel="stylesheet" href="file://${path.join(
-      import.meta.dirname,
+      __dirname,
       'diffstyle.css',
     )}">`,
   );

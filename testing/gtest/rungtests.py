@@ -13,14 +13,14 @@ import sys
 
 import mozcrash
 import mozinfo
+import mozlog
 import mozprocess
 from mozfile import load_source
-from mozlog import commandline
 from mozrunner.utils import get_stack_fixer_function
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-log = None
+log = mozlog.unstructured.getLogger("gtest")
 
 
 class GTests:
@@ -110,14 +110,16 @@ class GTests:
 
         def proc_timeout_handler(proc):
             GTests.run_gtest.timed_out = True
-            log.error("gtest | timed out after %d seconds" % self.gtest_timeout_value())
+            log.testFail(
+                "gtest | timed out after %d seconds", self.gtest_timeout_value()
+            )
             mozcrash.kill_and_get_minidump(proc.pid, cwd, utility_path)
 
         def output_timeout_handler(proc):
             GTests.run_gtest.timed_out = True
-            log.error(
-                "gtest | timed out after %d seconds without output"
-                % GTests.TEST_PROC_NO_OUTPUT_TIMEOUT
+            log.testFail(
+                "gtest | timed out after %d seconds without output",
+                GTests.TEST_PROC_NO_OUTPUT_TIMEOUT,
             )
             mozcrash.kill_and_get_minidump(proc.pid, cwd, utility_path)
 
@@ -154,7 +156,7 @@ class GTests:
             return False
         result = proc.returncode == 0
         if not result:
-            log.error("gtest | test failed with return code %d" % proc.returncode)
+            log.testFail("gtest | test failed with return code %d", proc.returncode)
         return result
 
     def build_core_environment(self, env={}):
@@ -171,6 +173,8 @@ class GTests:
         env["MOZ_CRASHREPORTER"] = "1"
         env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
         env["MOZ_RUN_GTEST"] = "1"
+        # Normally we run with GTest default output, override this to use the TBPL test format.
+        env["MOZ_TBPL_PARSER"] = "1"
 
         if not mozinfo.has_sandbox:
             # Bug 1082193 - This is horrible. Our linux build boxes run CentOS 6,
@@ -223,9 +227,10 @@ class GTests:
                 )
             if os.path.isfile(llvmsym):
                 env[symbolizer_path] = llvmsym
-                log.info("Using LLVM symbolizer at %s" % llvmsym)
+                log.info("Using LLVM symbolizer at %s", llvmsym)
             else:
-                log.info("Failed to find LLVM symbolizer at %s" % llvmsym)
+                # This should be |testFail| instead of |info|. See bug 1050891.
+                log.info("Failed to find LLVM symbolizer at %s", llvmsym)
 
         # webrender needs gfx.webrender.all=true, gtest doesn't use prefs
         env["MOZ_WEBRENDER"] = "1"
@@ -245,9 +250,9 @@ class GTests:
             gtest_filter_for_filter_set = gtest_filter_sets.get(filter_set)
             if gtest_filter_for_filter_set:
                 env["GTEST_FILTER"] = gtest_filter_for_filter_set
-                log.info("Using gtest filter for %s" % filter_set)
+                log.info("Using gtest filter for %s", filter_set)
             else:
-                log.info("Failed to get gtest filter for %s" % filter_set)
+                log.info("Failed to get gtest filter for %s", filter_set)
 
         return env
 
@@ -255,7 +260,6 @@ class GTests:
 class gtestOptions(argparse.ArgumentParser):
     def __init__(self):
         super().__init__()
-        commandline.add_logging_group(self)
 
         self.add_argument(
             "--cwd",
@@ -312,10 +316,8 @@ def update_mozinfo():
 
 
 def main():
-    global log
     parser = gtestOptions()
     options = parser.parse_args()
-    log = commandline.setup_logging("gtest", options, {"raw": sys.stdout})
     args = options.args
     if not args:
         print("Usage: %s <binary>" % sys.argv[0])

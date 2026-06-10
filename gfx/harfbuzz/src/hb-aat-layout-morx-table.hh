@@ -987,16 +987,9 @@ struct hb_aat_layout_chain_accelerator_t
   {
     unsigned count = chain.get_subtable_count ();
 
-    unsigned product;
-    if (unlikely (hb_unsigned_mul_overflows (count,
-        sizeof (hb_accelerate_subtables_context_t::hb_applicable_t), &product)))
-      return nullptr;
-
-    unsigned size;
-    if (unlikely (hb_unsigned_add_overflows (sizeof (hb_aat_layout_chain_accelerator_t) -
-        HB_VAR_ARRAY * sizeof (hb_accelerate_subtables_context_t::hb_applicable_t), product, &size))) {
-      return nullptr;
-    }
+    unsigned size = sizeof (hb_aat_layout_chain_accelerator_t) -
+		    HB_VAR_ARRAY * sizeof (hb_accelerate_subtables_context_t::hb_applicable_t) +
+		    count * sizeof (hb_accelerate_subtables_context_t::hb_applicable_t);
 
     /* The following is a calloc because when we are collecting subtables,
      * some of them might be invalid and hence not collect; as a result,
@@ -1033,7 +1026,7 @@ struct ChainSubtable
   template <typename T>
   friend struct Chain;
 
-  size_t get_size () const     { return length; }
+  unsigned int get_size () const     { return length; }
   unsigned int get_type () const     { return coverage & 0xFF; }
   unsigned int get_coverage () const { return coverage >> (sizeof (HBUINT) * 8 - 8); }
 
@@ -1243,7 +1236,7 @@ struct Chain
       c->reverse_buffer ();
   }
 
-  size_t get_size () const { return length; }
+  unsigned int get_size () const { return length; }
 
   template <typename context_t, typename ...Ts>
   typename context_t::return_t dispatch (context_t *c, Ts&&... ds) const

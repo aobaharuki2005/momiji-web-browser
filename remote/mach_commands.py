@@ -71,8 +71,8 @@ def vendor_puppeteer(command_context, repository, commitish, install):
 
     # Preserve our custom mocha reporter
     shutil.move(
-        os.path.join(puppeteer_dir, "json-mocha-reporter.cjs"),
-        os.path.join(remotedir(command_context), "json-mocha-reporter.cjs"),
+        os.path.join(puppeteer_dir, "json-mocha-reporter.js"),
+        os.path.join(remotedir(command_context), "json-mocha-reporter.js"),
     )
 
     print("Removing folders for current Puppeteer version…")
@@ -106,7 +106,7 @@ def vendor_puppeteer(command_context, repository, commitish, install):
             shutil.rmtree(dir_path)
 
     shutil.move(
-        os.path.join(remotedir(command_context), "json-mocha-reporter.cjs"),
+        os.path.join(remotedir(command_context), "json-mocha-reporter.js"),
         puppeteer_dir,
     )
 
@@ -422,7 +422,7 @@ class PuppeteerRunner(MozbuildObject):
         # Override upstream defaults: no retries, shorter timeout
         mocha_options = [
             "--reporter",
-            "./json-mocha-reporter.cjs",
+            "./json-mocha-reporter.js",
             "--retries",
             "0",
             "--fullTrace",
@@ -623,7 +623,6 @@ def is_relevant_expectation(
     else:
         is_expected_product = "firefox" not in parameters
 
-    is_expected_connection = "pipe" not in parameters
     is_expected_protocol = "cdp" not in parameters
 
     if is_headless == "True":
@@ -635,10 +634,9 @@ def is_relevant_expectation(
 
     return (
         is_expected_product
-        and is_expected_connection
+        and is_expected_protocol
         and is_expected_mode
         and is_expected_platform
-        and is_expected_protocol
     )
 
 

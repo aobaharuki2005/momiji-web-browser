@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -6,8 +8,6 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
-
-#include <bit>
 
 #include "jit/CodeGenerator.h"
 #include "jit/InlineScriptTree.h"
@@ -796,7 +796,7 @@ void CodeGenerator::visitMulI(LMulI* ins) {
           return;
         default:
           // Use shift if cannot overflow and constant is power of 2
-          int32_t shift = FloorLog2(uint32_t(constant));
+          int32_t shift = FloorLog2(constant);
           if (constant > 0 && (1 << shift) == constant) {
             if (lhs != out) {
               masm.movl(lhs, out);
@@ -1001,7 +1001,7 @@ static void UnsignedDivideWithConstant(MacroAssembler& masm, LUDivOrUMod* ins,
 #endif
 
   // The denominator isn't a power of 2 (see LDivPowTwoI and LModPowTwoI).
-  MOZ_ASSERT(!std::has_single_bit(d));
+  MOZ_ASSERT(!mozilla::IsPowerOfTwo(d));
 
   auto rmc = ReciprocalMulConstants::computeUnsignedDivisionConstants(d);
 
@@ -1231,7 +1231,7 @@ static void DivideWithConstant(MacroAssembler& masm, LDivOrMod* ins,
 
   // The absolute value of the denominator isn't a power of 2 (see LDivPowTwoI
   // and LModPowTwoI).
-  MOZ_ASSERT(!std::has_single_bit(mozilla::Abs(d)));
+  MOZ_ASSERT(!mozilla::IsPowerOfTwo(mozilla::Abs(d)));
 
   auto* mir = ins->mir();
 

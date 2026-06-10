@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -335,8 +336,9 @@ uint64_t Http3WebTransportSession::GetStreamId() const {
 
 void Http3WebTransportSession::Close(nsresult aResult) {
   LOG(("Http3WebTransportSession::Close %p", this));
-  if (RefPtr<WebTransportSessionEventListener> listener = TakeListener()) {
-    listener->OnSessionClosed(NS_SUCCEEDED(aResult), 0, ""_ns);
+  if (mListener) {
+    mListener->OnSessionClosed(NS_SUCCEEDED(aResult), 0, ""_ns);
+    mListener = nullptr;
   }
   if (mTransaction) {
     mTransaction->Close(aResult);
@@ -361,8 +363,9 @@ void Http3WebTransportSession::OnSessionClosed(bool aCleanly, uint32_t aStatus,
     mTransaction->Close(NS_BASE_STREAM_CLOSED);
     mTransaction = nullptr;
   }
-  if (RefPtr<WebTransportSessionEventListener> listener = TakeListener()) {
-    listener->OnSessionClosed(aCleanly, aStatus, aReason);
+  if (mListener) {
+    mListener->OnSessionClosed(aCleanly, aStatus, aReason);
+    mListener = nullptr;
   }
   mRecvState = RECV_DONE;
   mSendState = SEND_DONE;
@@ -379,8 +382,7 @@ void Http3WebTransportSession::CloseSession(uint32_t aStatus,
     mRecvState = CLOSE_PENDING;
     mSendState = SEND_DONE;
   }
-  RefPtr<WebTransportSessionEventListener> listener = TakeListener();
-  // let it drop
+  mListener = nullptr;
 }
 
 void Http3WebTransportSession::CreateOutgoingBidirectionalStream(
@@ -456,13 +458,12 @@ Http3WebTransportSession::OnIncomingWebTransportStream(
     }
   }
 
-  RefPtr<WebTransportSessionEventListener> baseListener = GetListener();
-  if (!baseListener) {
+  if (!mListener) {
     return nullptr;
   }
 
   if (nsCOMPtr<WebTransportSessionEventListenerInternal> listener =
-          do_QueryInterface(baseListener)) {
+          do_QueryInterface(mListener)) {
     listener->OnIncomingStreamAvailableInternal(stream);
   }
   return stream.forget();
@@ -483,26 +484,24 @@ void Http3WebTransportSession::SendDatagram(nsTArray<uint8_t>&& aData,
 void Http3WebTransportSession::OnDatagramReceived(nsTArray<uint8_t>&& aData) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("Http3WebTransportSession::OnDatagramReceived this=%p", this));
-  RefPtr<WebTransportSessionEventListener> baseListener2 = GetListener();
-  if (mRecvState != ACTIVE || !baseListener2) {
+  if (mRecvState != ACTIVE || !mListener) {
     return;
   }
 
   if (nsCOMPtr<WebTransportSessionEventListenerInternal> listener =
-          do_QueryInterface(baseListener2)) {
+          do_QueryInterface(mListener)) {
     listener->OnDatagramReceivedInternal(std::move(aData));
   }
 }
 
 void Http3WebTransportSession::GetMaxDatagramSize() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  RefPtr<WebTransportSessionEventListener> listener = GetListener();
-  if (mRecvState != ACTIVE || !listener) {
+  if (mRecvState != ACTIVE || !mListener) {
     return;
   }
 
   uint64_t size = mSession->MaxDatagramSize(mStreamId);
-  listener->OnMaxDatagramSize(size);
+  mListener->OnMaxDatagramSize(size);
 }
 
 void Http3WebTransportSession::OnOutgoingDatagramOutCome(
@@ -511,33 +510,30 @@ void Http3WebTransportSession::OnOutgoingDatagramOutCome(
   LOG(("Http3WebTransportSession::OnOutgoingDatagramOutCome this=%p id=%" PRIx64
        ", outCome=%d mRecvState=%d",
        this, aId, static_cast<uint32_t>(aOutCome), mRecvState));
-  RefPtr<WebTransportSessionEventListener> listener = GetListener();
-  if (mRecvState != ACTIVE || !listener || !aId) {
+  if (mRecvState != ACTIVE || !mListener || !aId) {
     return;
   }
 
-  listener->OnOutgoingDatagramOutCome(aId, aOutCome);
+  mListener->OnOutgoingDatagramOutCome(aId, aOutCome);
 }
 
 void Http3WebTransportSession::OnStreamStopSending(uint64_t aId,
                                                    nsresult aError) {
   LOG(("OnStreamStopSending id:%" PRId64, aId));
-  RefPtr<WebTransportSessionEventListener> listener = GetListener();
-  if (!listener) {
+  if (!mListener) {
     return;
   }
 
-  listener->OnStopSending(aId, aError);
+  mListener->OnStopSending(aId, aError);
 }
 
 void Http3WebTransportSession::OnStreamReset(uint64_t aId, nsresult aError) {
   LOG(("OnStreamReset id:%" PRId64, aId));
-  RefPtr<WebTransportSessionEventListener> listener = GetListener();
-  if (!listener) {
+  if (!mListener) {
     return;
   }
 
-  listener->OnResetReceived(aId, aError);
+  mListener->OnResetReceived(aId, aError);
 }
 
 }  // namespace mozilla::net

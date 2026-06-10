@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -40,8 +42,12 @@ struct SharedDataContainer;
 template <typename DataT>
 struct CanCopyDataToDisk {
   // Check that the object is fully packed, to save disk space.
+#ifdef __cpp_lib_has_unique_object_representations
   static constexpr bool unique_repr =
       std::has_unique_object_representations<DataT>();
+#else
+  static constexpr bool unique_repr = true;
+#endif
 
   // Approximation which assumes that 32bits variant of the class would not
   // have pointers if the 64bits variant does not have pointer.

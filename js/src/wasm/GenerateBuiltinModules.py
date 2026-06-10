@@ -53,7 +53,7 @@ def specTypeToMIRType(specType):
         return "MIRType::WasmAnyRef"
     if specType in {"i32", "i64", "f32", "f64"}:
         return f"ValType::{specType}().toMIRType()"
-    if specType in {"externref", "anyref", "funcref", "contref", "exnref"}:
+    if specType in {"externref", "anyref", "funcref", "exnref"}:
         return "MIRType::WasmAnyRef"
     raise ValueError()
 
@@ -67,8 +67,6 @@ def specHeapTypeToTypeCode(specHeapType):
         return "Extern"
     if specHeapType == "exn":
         return "Exn"
-    if specHeapType == "cont":
-        return "Cont"
     if specHeapType == "array":
         return "Array"
     if specHeapType == "struct":
@@ -94,9 +92,6 @@ def specTypeToValType(specType):
 
     if specType == "exnref":
         return "ValType(RefType::exn())"
-
-    if specType == "contref":
-        return "ValType(RefType::cont())"
 
     if specType == "anyref":
         return "ValType(RefType::any())"
@@ -135,16 +130,7 @@ def main(c_out, yaml_path):
     for op in data:
         # Define DECLARE_BUILTIN_MODULE_FUNC_PARAM_VALTYPES_<op> as:
         # `{ValType::I32, ValType::I32, ...}`.
-        if "params" in op:
-            params = op["params"]
-        else:
-            params = []
-
-        contents += (
-            f"#define DECLARE_BUILTIN_MODULE_FUNC_NUM_PARAMS_{op['op']} {len(params)}\n"
-        )
-
-        valTypes = ", ".join(specTypeToValType(p) for p in params)
+        valTypes = ", ".join(specTypeToValType(p) for p in op["params"])
         contents += (
             f"#define DECLARE_BUILTIN_MODULE_FUNC_PARAM_VALTYPES_{op['op']} "
             f"{{{valTypes}}}\n"
@@ -152,9 +138,9 @@ def main(c_out, yaml_path):
 
         # Define DECLARE_BUILTIN_MODULE_FUNC_PARAM_MIRTYPES_<op> as:
         # `<num_types>, {MIRType::Pointer, _I32, ..., MIRType::Pointer, _END}`.
-        num_types = len(params) + 1
+        num_types = len(op["params"]) + 1
         mir_types = "{MIRType::Pointer"
-        mir_types += "".join(", " + specTypeToMIRType(p) for p in params)
+        mir_types += "".join(", " + specTypeToMIRType(p) for p in op["params"])
         if op["uses_memory"]:
             mir_types += ", MIRType::Pointer"
             num_types += 1

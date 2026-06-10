@@ -4,38 +4,38 @@
 
 package org.mozilla.fenix.termsofuse.experimentation.utils
 
-import io.mockk.every
-import io.mockk.mockk
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.Engine.HttpsOnlyMode
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.Mockito.mock
 import org.mozilla.fenix.utils.Settings
 
 class DefaultTermsOfUseDataProviderTest {
     @Test
     fun `useStrictTrackingProtection returns the same as the referenced Settings value`() {
-        val settings = mockk<Settings>()
+        val settings = mock<Settings>()
 
-        every { settings.useStrictTrackingProtection } returns true
+        whenever(settings.useStrictTrackingProtection).thenReturn(true)
         val defaultTermsOfUseDataProvider1 = DefaultTermsOfUseDataProvider(settings)
         assertTrue(defaultTermsOfUseDataProvider1.useStrictTrackingProtection)
 
-        every { settings.useStrictTrackingProtection } returns false
+        whenever(settings.useStrictTrackingProtection).thenReturn(false)
         val defaultTermsOfUseDataProvider2 = DefaultTermsOfUseDataProvider(settings)
         assertFalse(defaultTermsOfUseDataProvider2.useStrictTrackingProtection)
     }
 
     @Test
     fun `shouldEnableGlobalPrivacyControl returns the same as the referenced Settings value`() {
-        val settings = mockk<Settings>()
+        val settings = mock<Settings>()
 
-        every { settings.shouldEnableGlobalPrivacyControl } returns true
+        whenever(settings.shouldEnableGlobalPrivacyControl).thenReturn(true)
         val defaultTermsOfUseDataProvider1 = DefaultTermsOfUseDataProvider(settings)
         assertTrue(defaultTermsOfUseDataProvider1.shouldEnableGlobalPrivacyControl)
 
-        every { settings.shouldEnableGlobalPrivacyControl } returns false
+        whenever(settings.shouldEnableGlobalPrivacyControl).thenReturn(false)
         val defaultTermsOfUseDataProvider2 = DefaultTermsOfUseDataProvider(settings)
         assertFalse(defaultTermsOfUseDataProvider2.shouldEnableGlobalPrivacyControl)
     }
@@ -43,8 +43,8 @@ class DefaultTermsOfUseDataProviderTest {
     @Test
     fun `isIncreasedDohProtectionEnabled returns true if the referenced Settings value is increased or max`() {
         Engine.DohSettingsMode.entries.forEach {
-            val settings = mockk<Settings>()
-            every { settings.getDohSettingsMode() } returns it
+            val settings = mock<Settings>()
+            whenever(settings.getDohSettingsMode()).thenReturn(it)
             val defaultTermsOfUseDataProvider = DefaultTermsOfUseDataProvider(settings)
 
             val result = defaultTermsOfUseDataProvider.isIncreasedDohProtectionEnabled()
@@ -63,8 +63,8 @@ class DefaultTermsOfUseDataProviderTest {
     @Test
     fun `enabledHttpsOnlyMode returns true if the referenced Settings value is increased or max`() {
         HttpsOnlyMode.entries.forEach {
-            val settings = mockk<Settings>()
-            every { settings.getHttpsOnlyMode() } returns it
+            val settings = mock<Settings>()
+            whenever(settings.getHttpsOnlyMode()).thenReturn(it)
             val defaultTermsOfUseDataProvider = DefaultTermsOfUseDataProvider(settings)
 
             val result = defaultTermsOfUseDataProvider.enabledHttpsOnlyMode()
@@ -80,52 +80,52 @@ class DefaultTermsOfUseDataProviderTest {
 
     @Test
     fun `showSponsoredShortcuts returns the same as the referenced Settings value`() {
-        val settings = mockk<Settings>()
+        val settings = mock<Settings>()
 
-        every { settings.showContileFeature } returns true
+        whenever(settings.showContileFeature).thenReturn(true)
         val defaultTermsOfUseDataProvider1 = DefaultTermsOfUseDataProvider(settings)
         assertTrue(defaultTermsOfUseDataProvider1.showSponsoredShortcuts)
 
-        every { settings.showContileFeature } returns false
+        whenever(settings.showContileFeature).thenReturn(false)
         val defaultTermsOfUseDataProvider2 = DefaultTermsOfUseDataProvider(settings)
         assertFalse(defaultTermsOfUseDataProvider2.showSponsoredShortcuts)
     }
 
     @Test
     fun `showShortcutsFeature returns the same as the referenced Settings value`() {
-        val settings = mockk<Settings>()
+        val settings = mock<Settings>()
 
-        every { settings.showTopSitesFeature } returns true
+        whenever(settings.showTopSitesFeature).thenReturn(true)
         val defaultTermsOfUseDataProvider1 = DefaultTermsOfUseDataProvider(settings)
         assertTrue(defaultTermsOfUseDataProvider1.showShortcutsFeature)
 
-        every { settings.showTopSitesFeature } returns false
+        whenever(settings.showTopSitesFeature).thenReturn(false)
         val defaultTermsOfUseDataProvider2 = DefaultTermsOfUseDataProvider(settings)
         assertFalse(defaultTermsOfUseDataProvider2.showShortcutsFeature)
     }
 
     @Test
     fun `showSponsoredStories returns the same as the referenced Settings value`() {
-        val settings = mockk<Settings>()
+        val settings = mock<Settings>()
 
-        every { settings.showPocketSponsoredStories } returns true
+        whenever(settings.showPocketSponsoredStories).thenReturn(true)
         val defaultTermsOfUseDataProvider1 = DefaultTermsOfUseDataProvider(settings)
         assertTrue(defaultTermsOfUseDataProvider1.showSponsoredStories)
 
-        every { settings.showPocketSponsoredStories } returns false
+        whenever(settings.showPocketSponsoredStories).thenReturn(false)
         val defaultTermsOfUseDataProvider2 = DefaultTermsOfUseDataProvider(settings)
         assertFalse(defaultTermsOfUseDataProvider2.showSponsoredStories)
     }
 
     @Test
     fun `showRecommendationsFeature returns the same as the referenced Settings value`() {
-        val settings = mockk<Settings>()
+        val settings = mock<Settings>()
 
-        every { settings.showPocketRecommendationsFeature } returns true
+        whenever(settings.showPocketRecommendationsFeature).thenReturn(true)
         val defaultTermsOfUseDataProvider1 = DefaultTermsOfUseDataProvider(settings)
         assertTrue(defaultTermsOfUseDataProvider1.showStoriesFeature)
 
-        every { settings.showPocketRecommendationsFeature } returns false
+        whenever(settings.showPocketRecommendationsFeature).thenReturn(false)
         val defaultTermsOfUseDataProvider2 = DefaultTermsOfUseDataProvider(settings)
         assertFalse(defaultTermsOfUseDataProvider2.showStoriesFeature)
     }

@@ -27,6 +27,7 @@ const SIZE_UNAVAILABLE_TITLE = L10N.getStr("networkMenu.sizeUnavailable.title");
 const UPDATED_TRANSFERRED_PROPS = [
   "transferredSize",
   "fromCache",
+  "isRacing",
   "fromServiceWorker",
   "blockedReason",
   "extension",
@@ -55,6 +56,7 @@ class RequestListColumnTransferredSize extends Component {
       fromServiceWorker,
       status,
       transferredSize,
+      isRacing,
     } = this.props.item;
     let text;
 
@@ -66,6 +68,9 @@ class RequestListColumnTransferredSize extends Component {
       text = SIZE_SERVICE_WORKER;
     } else if (typeof transferredSize == "number") {
       text = getFormattedSize(transferredSize);
+      if (isRacing && typeof isRacing == "boolean") {
+        text = L10N.getFormatStr("networkMenu.raced", text);
+      }
     } else if (transferredSize === null) {
       text = SIZE_UNAVAILABLE;
     }

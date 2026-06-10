@@ -34,12 +34,12 @@ async function checkFaviconDataConversion(
   aExpectConversion,
   aVaryOnWindows
 ) {
-  let pageURI = Services.io.newURI("http://places.test/page/" + aFileName);
+  let pageURI = NetUtil.newURI("http://places.test/page/" + aFileName);
   await PlacesTestUtils.addVisits({
     uri: pageURI,
     transition: TRANSITION_TYPED,
   });
-  let faviconURI = Services.io.newURI("http://places.test/icon/" + aFileName);
+  let faviconURI = NetUtil.newURI("http://places.test/icon/" + aFileName);
   let fileData = readFileOfLength(aFileName, aFileLength);
   let fileDataURL = await PlacesTestUtils.fileDataToDataURL(
     fileData,

@@ -30,16 +30,6 @@ partial interface PaymentRequest {
     static Promise<SecurePaymentConfirmationAvailability> securePaymentConfirmationAvailability();
 };
 
-partial interface PaymentRequest {
-    static Promise<SecurePaymentConfirmationCapabilities> getSecurePaymentConfirmationCapabilities();
-};
-
-typedef record<DOMString, boolean> SecurePaymentConfirmationCapabilities;
-
-enum SecurePaymentConfirmationCapability {
-  "browserBoundKeyHardware",
-};
-
 partial dictionary AuthenticationExtensionsClientInputs {
   AuthenticationExtensionsPaymentInputs payment;
 };

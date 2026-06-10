@@ -2,7 +2,7 @@
 
 import pytest
 
-from tests.support.classic.asserts import (
+from tests.support.asserts import (
     assert_error,
     assert_same_element,
     assert_success,

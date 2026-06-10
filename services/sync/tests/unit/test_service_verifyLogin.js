@@ -32,7 +32,7 @@ function run_test() {
 
 add_task(async function test_verifyLogin() {
   // This test expects a clean slate -- no saved passphrase.
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
   let johnHelper = track_collections_helper();
   let johnU = johnHelper.with_updated_collection;
 

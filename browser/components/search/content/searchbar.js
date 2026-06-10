@@ -16,14 +16,9 @@
       "moz-src:///browser/components/search/BrowserSearchTelemetry.sys.mjs",
     BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
     FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
-    SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
     SearchSuggestionController:
       "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs",
   });
-
-  /**
-   * @import {SearchEngine} from "moz-src:///toolkit/components/search/SearchEngine.sys.mjs"
-   */
 
   /**
    * Defines the search bar element.
@@ -59,7 +54,7 @@
       this._setupEventListeners();
       let searchbar = this;
       this.observer = {
-        observe(_aSubject, aTopic, aData) {
+        observe(aEngine, aTopic, aData) {
           if (aTopic == "browser-search-engine-modified") {
             // Make sure the engine list is refetched next time it's needed
             searchbar._engines = null;
@@ -139,7 +134,8 @@
 
       (window.delayedStartupPromise || Promise.resolve()).then(() => {
         window.requestIdleCallback(() => {
-          lazy.SearchService.init()
+          Services.search
+            .init()
             .then(() => {
               // Bail out if the binding's been destroyed
               if (!this._initialized) {
@@ -189,21 +185,21 @@
 
     async getEngines() {
       if (!this._engines) {
-        this._engines = await lazy.SearchService.getVisibleEngines();
+        this._engines = await Services.search.getVisibleEngines();
       }
       return this._engines;
     }
 
     set currentEngine(val) {
       if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-        lazy.SearchService.setDefaultPrivate(
+        Services.search.setDefaultPrivate(
           val,
-          lazy.SearchService.CHANGE_REASON.USER_SEARCHBAR
+          Ci.nsISearchService.CHANGE_REASON_USER_SEARCHBAR
         );
       } else {
-        lazy.SearchService.setDefault(
+        Services.search.setDefault(
           val,
-          lazy.SearchService.CHANGE_REASON.USER_SEARCHBAR
+          Ci.nsISearchService.CHANGE_REASON_USER_SEARCHBAR
         );
       }
     }
@@ -211,9 +207,9 @@
     get currentEngine() {
       let currentEngine;
       if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-        currentEngine = lazy.SearchService.defaultPrivateEngine;
+        currentEngine = Services.search.defaultPrivateEngine;
       } else {
-        currentEngine = lazy.SearchService.defaultEngine;
+        currentEngine = Services.search.defaultEngine;
       }
       // Return a dummy engine if there is no currentEngine
       return currentEngine || { name: "", uri: null };
@@ -524,7 +520,7 @@
      *
      * @param {event} aEvent
      *        The event causing the searchForm to be opened.
-     * @param {SearchEngine} [aEngine]
+     * @param {nsISearchEngine} [aEngine]
      *        The search engine or undefined to use the current engine.
      * @param {string} where
      *        Where the search form should be opened.

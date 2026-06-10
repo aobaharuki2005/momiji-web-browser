@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -106,16 +108,16 @@ class SVGFilterInstance {
       nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
       nsTArray<RefPtr<SourceSurface>>& aInputImages, bool aInputIsTainted);
 
-  float GetPrimitiveUserSpaceUnitValue(SVGLength::Axis aAxis) const;
+  float GetPrimitiveUserSpaceUnitValue(uint8_t aCtxType) const;
 
-  float GetPrimitiveNumber(SVGLength::Axis aAxis,
+  float GetPrimitiveNumber(uint8_t aCtxType,
                            const SVGAnimatedNumber* aNumber) const {
-    return GetPrimitiveNumber(aAxis, aNumber->GetAnimValue());
+    return GetPrimitiveNumber(aCtxType, aNumber->GetAnimValue());
   }
-  float GetPrimitiveNumber(SVGLength::Axis aAxis,
+  float GetPrimitiveNumber(uint8_t aCtxType,
                            const SVGAnimatedNumberPair* aNumberPair,
-                           SVGAnimatedNumberPairWhichOne aPairWhichOne) const {
-    return GetPrimitiveNumber(aAxis, aNumberPair->GetAnimValue(aPairWhichOne));
+                           SVGAnimatedNumberPair::PairIndex aIndex) const {
+    return GetPrimitiveNumber(aCtxType, aNumberPair->GetAnimValue(aIndex));
   }
 
   /**
@@ -129,7 +131,7 @@ class SVGFilterInstance {
    * Transform a float in a particular direction between user space
    * and filter space.
    */
-  float UserSpaceToFilterSpace(SVGLength::Axis aAxis, float aValue) const;
+  float UserSpaceToFilterSpace(uint8_t aCtxType, float aValue) const;
 
   /**
    * Transform a rect between user space and filter space.
@@ -158,7 +160,7 @@ class SVGFilterInstance {
    * Scales a numeric filter primitive length in the X, Y or "XY" directions
    * into a length in filter space (no offset is applied).
    */
-  float GetPrimitiveNumber(SVGLength::Axis aAxis, float aValue) const;
+  float GetPrimitiveNumber(uint8_t aCtxType, float aValue) const;
 
   /**
    * Returns the transform from frame space to the coordinate space that

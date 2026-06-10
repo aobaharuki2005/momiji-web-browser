@@ -1,10 +1,13 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/arm64/Assembler-arm64.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
 #include "gc/Marking.h"
@@ -21,6 +24,7 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::CountLeadingZeroes32;
 using mozilla::DebugOnly;
 
 ABIArg ABIArgGenerator::next(MIRType type) {
@@ -115,9 +119,6 @@ BufferOffset Assembler::emitExtendedJumpTable() {
   if (!pendingJumps_.length() || oom()) {
     return BufferOffset();
   }
-
-  // Prevent nop sequences in the jump table.
-  AutoForbidNops afn(this);
 
   armbuffer_.flushPool();
   armbuffer_.align(SizeOfJumpTableEntry);
@@ -269,7 +270,6 @@ void Assembler::bind(Label* label, BufferOffset targetOffset) {
     ptrdiff_t relativeByteOffset =
         targetOffset.getOffset() - branchOffset.getOffset();
     Instruction* link = getInstructionAt(branchOffset);
-    MOZ_ASSERT(link->IsImmBranch() || link->IsPCRelAddressing());
 
     // This branch may still be registered for callbacks. Stop tracking it.
     vixl::ImmBranchType branchType = link->BranchType();

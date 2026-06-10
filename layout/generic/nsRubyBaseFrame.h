@@ -1,11 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* rendering object for CSS "display: ruby-base" */
 
-#ifndef nsRubyBaseFrame_h_
-#define nsRubyBaseFrame_h_
+#ifndef nsRubyBaseFrame_h___
+#define nsRubyBaseFrame_h___
 
 #include "nsRubyContentFrame.h"
 
@@ -41,4 +43,4 @@ class nsRubyBaseFrame final : public nsRubyContentFrame {
       : nsRubyContentFrame(aStyle, aPresContext, kClassID) {}
 };
 
-#endif /* nsRubyBaseFrame_h_ */
+#endif /* nsRubyBaseFrame_h___ */

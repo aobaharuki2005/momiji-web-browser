@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,10 +9,6 @@
 #include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "mozilla/ipc/UtilityMediaServiceParent.h"
 #include "ChildProfilerController.h"
-
-#if defined(NIGHTLY_BUILD) && !defined(MOZ_NO_SMART_CARDS)
-#  include "mozilla/psm/PKCS11ModuleChild.h"
-#endif  // NIGHTLY_BUILD && !MOZ_NO_SMART_CARDS
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 #  include "mozilla/PSandboxTestingChild.h"
@@ -40,7 +38,7 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   SandboxingKind mSandbox{};
 
   bool Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
-            const nsCString& aParentBuildID, SandboxingKind aSandboxingKind);
+            const nsCString& aParentBuildID, uint64_t aSandboxingKind);
 
   mozilla::ipc::IPCResult RecvInit(const Maybe<ipc::FileDescriptor>& aBrokerFd,
                                    const bool& aCanRecordReleaseTelemetry,
@@ -84,11 +82,6 @@ class UtilityProcessChild final : public PUtilityProcessChild {
 
   AsyncBlockers& AsyncShutdownService() { return mShutdownBlockers; }
 
-#if defined(NIGHTLY_BUILD) && !defined(MOZ_NO_SMART_CARDS)
-  IPCResult RecvStartPKCS11ModuleService(
-      Endpoint<PPKCS11ModuleChild>&& aEndpoint, nsCString&& aProfilePath);
-#endif  // NIGHTLY_BUILD && !MOZ_NO_SMART_CARDS
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
@@ -112,9 +105,6 @@ class UtilityProcessChild final : public PUtilityProcessChild {
 #ifdef XP_WIN
   RefPtr<PWindowsUtilsChild> mWindowsUtilsInstance;
 #endif
-#if defined(NIGHTLY_BUILD) && !defined(MOZ_NO_SMART_CARDS)
-  RefPtr<psm::PKCS11ModuleChild> mPKCS11ModuleInstance;
-#endif  // NIGHTLY_BUILD && !MOZ_NO_SMART_CARDS
 
   AsyncBlockers mShutdownBlockers;
 };

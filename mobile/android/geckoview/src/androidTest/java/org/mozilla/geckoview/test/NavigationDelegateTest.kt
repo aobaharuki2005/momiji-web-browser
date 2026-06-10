@@ -1,4 +1,5 @@
-/* Any copyright is dedicated to the Public Domain.
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
+ * Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 package org.mozilla.geckoview.test
@@ -3007,7 +3008,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat(
                     "Location should be replaced to replacedUrl",
                     url,
-                    endsWith("/replacedUrl"),
+                    equalTo("replacedUrl"),
                 )
             }
         })
@@ -3384,30 +3385,5 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Scroll offset is 0", session.evaluateJS("window.scrollY") as Double, equalTo(0.0))
             }
         }
-    }
-
-    @Test
-    fun textDirectiveUserActivationExternalLoad() {
-        // External app links (LOAD_FLAGS_EXTERNAL) are always user-initiated, so
-        // text fragment directives should be allowed to scroll.
-        sessionRule.setPrefsUntilTestEnd(
-            mapOf(
-                "dom.text_fragments.enabled" to true,
-            ),
-        )
-
-        val session = sessionRule.createOpenSession()
-        session.load(
-            Loader()
-                .uri(createTestUrl(TRANSLATIONS_ES + "#:~:text=moverse"))
-                .flags(GeckoSession.LOAD_FLAGS_EXTERNAL),
-        )
-        session.waitForPageStop()
-
-        assertThat(
-            "External load should scroll to text fragment",
-            session.evaluateJS("window.scrollY") as Double,
-            not(equalTo(0.0)),
-        )
     }
 }

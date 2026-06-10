@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -22,7 +23,7 @@ NS_IMPL_ISUPPORTS(nsBMPEncoder, imgIEncoder, nsIInputStream,
 nsBMPEncoder::nsBMPEncoder()
     : mBMPInfoHeader{},
       mImageBufferStart(nullptr),
-      mImageBufferCurr(nullptr),
+      mImageBufferCurr(0),
       mImageBufferSize(0),
       mImageBufferReadPoint(0),
       mFinished(false),
@@ -40,13 +41,6 @@ nsBMPEncoder::~nsBMPEncoder() {
     mImageBufferStart = nullptr;
     mImageBufferCurr = nullptr;
   }
-}
-
-NS_IMETHODIMP
-nsBMPEncoder::SetColorSpaceInfo(imgIEncoder::CICPColourPrimaries,
-                                imgIEncoder::CICPTransferCharacteristics,
-                                imgIEncoder::CICPMatrixCoefficients, bool) {
-  return NS_OK;
 }
 
 // nsBMPEncoder::InitFromData

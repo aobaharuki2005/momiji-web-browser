@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.tabstray.browser
 
-import org.mozilla.fenix.tabstray.data.TabsTrayItem
+import mozilla.components.browser.state.state.TabSessionState
 
 /**
  * Interactor for all things related to inactive tabs in the tabs tray.
@@ -20,16 +20,16 @@ interface InactiveTabsInteractor {
     /**
      * Invoked when an inactive tab is clicked.
      *
-     * @param tab [TabsTrayItem.Tab] that was clicked.
+     * @param tab [TabSessionState] that was clicked.
      */
-    fun onInactiveTabClicked(tab: TabsTrayItem.Tab)
+    fun onInactiveTabClicked(tab: TabSessionState)
 
     /**
      * Invoked when an inactive tab is closed.
      *
-     * @param tab [TabsTrayItem.Tab] that was closed.
+     * @param tab [TabSessionState] that was closed.
      */
-    fun onInactiveTabClosed(tab: TabsTrayItem.Tab)
+    fun onInactiveTabClosed(tab: TabSessionState)
 
     /**
      * Invoked when the user clicks on the delete all inactive tabs button.

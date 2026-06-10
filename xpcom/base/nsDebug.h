@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDebug_h_
-#define nsDebug_h_
+#ifndef nsDebug_h___
+#define nsDebug_h___
 
 #include "nscore.h"
 #include "nsError.h"
@@ -323,4 +325,4 @@ void NS_ABORT_OOM(size_t aSize);
 inline void NS_ABORT_OOM(size_t) { MOZ_CRASH(); }
 #endif
 
-#endif /* nsDebug_h_ */
+#endif /* nsDebug_h___ */

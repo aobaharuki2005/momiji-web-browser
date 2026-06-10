@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -339,7 +341,6 @@ MsaaRootAccessible* LazyInstantiator::ResolveMsaaRoot() {
 void LazyInstantiator::TransplantRefCnt() {
   MOZ_ASSERT(mRefCnt > 0);
   MOZ_ASSERT(mRealRootUnk);
-  mTransplantLock.AssertCurrentThreadOwns();
 
   while (mRefCnt > 0) {
     mRealRootUnk.get()->AddRef();
@@ -360,18 +361,14 @@ LazyInstantiator::MaybeResolveRoot() {
     }
 
     // Wrap ourselves around the root accessible wrap
-    RefPtr<IUnknown> realRootUnk =
-        mWeakMsaaRoot->Aggregate(static_cast<IAccessible*>(this));
-    if (!realRootUnk) {
+    mRealRootUnk = mWeakMsaaRoot->Aggregate(static_cast<IAccessible*>(this));
+    if (!mRealRootUnk) {
       return E_FAIL;
     }
-    {  // Scope for lock
-      MutexAutoLock lock(mTransplantLock);
-      mRealRootUnk = std::move(realRootUnk);
-      // Move our strong references into the root accessible (see the comments
-      // above TransplantRefCnt for explanation).
-      TransplantRefCnt();
-    }
+
+    // Move our strong references into the root accessible (see the comments
+    // above TransplantRefCnt for explanation).
+    TransplantRefCnt();
 
     // Now obtain mWeakAccessible which we use to forward our incoming calls
     // to the real accessible.
@@ -450,9 +447,7 @@ IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mRealRootUnk)
 
 ULONG
 LazyInstantiator::AddRef() {
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   // Always delegate refcounting to mRealRootUnk when it exists
-  MutexAutoLock lock(mTransplantLock);
   if (mRealRootUnk) {
     return mRealRootUnk.get()->AddRef();
   }
@@ -462,24 +457,20 @@ LazyInstantiator::AddRef() {
 
 ULONG
 LazyInstantiator::Release() {
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   ULONG result;
 
   // Always delegate refcounting to mRealRootUnk when it exists
-  {  // Scope for lock
-    MutexAutoLock lock(mTransplantLock);
-    if (mRealRootUnk) {
-      result = mRealRootUnk.get()->Release();
-      if (result == 1) {
-        // mRealRootUnk is the only strong reference left, so nothing else holds
-        // a strong reference to us. Drop result to zero so that we destroy
-        // ourselves (See the comments above LazyInstantiator::TransplantRefCnt
-        // for more info).
-        --result;
-      }
-    } else {
-      result = --mRefCnt;
+  if (mRealRootUnk) {
+    result = mRealRootUnk.get()->Release();
+    if (result == 1) {
+      // mRealRootUnk is the only strong reference left, so nothing else holds
+      // a strong reference to us. Drop result to zero so that we destroy
+      // ourselves (See the comments above LazyInstantiator::TransplantRefCnt
+      // for more info).
+      --result;
     }
+  } else {
+    result = --mRefCnt;
   }
 
   if (!result) {

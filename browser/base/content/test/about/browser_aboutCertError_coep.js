@@ -6,7 +6,7 @@
 const AUTH_ROUTE =
   "https://example.com/browser/browser/base/content/test/about/sandbox_corp_iframe.sjs";
 
-add_task(async function test_coepError_legacy() {
+add_task(async function test_coepError() {
   let browser;
   let pageLoaded;
 
@@ -55,7 +55,7 @@ add_task(async function test_coepError_legacy() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(async function test_coepError() {
+add_task(async function test_coepError_feltPrivacyToTrue() {
   let browser;
   let pageLoaded;
 
@@ -86,21 +86,21 @@ add_task(async function test_coepError() {
     await netErrorCard.getUpdateComplete();
 
     Assert.strictEqual(
-      netErrorCard.errorTitle.dataset.l10nId,
+      netErrorCard.netErrorTitleText.dataset.l10nId,
       "fp-certerror-body-title",
       "Correct error link title (CORP) is set"
     );
 
     await ContentTaskUtils.waitForCondition(() => {
       return (
-        netErrorCard.learnMoreLink &&
-        netErrorCard.learnMoreLink.textContent != "" &&
-        netErrorCard.learnMoreLink.tagName.toLowerCase() === "a"
+        netErrorCard.netErrorLearnMoreLink &&
+        netErrorCard.netErrorLearnMoreLink.textContent != "" &&
+        netErrorCard.netErrorLearnMoreLink.tagName.toLowerCase() === "a"
       );
     }, "learn more link is visible and is a link");
 
     Assert.strictEqual(
-      netErrorCard.learnMoreLink.dataset.l10nId,
+      netErrorCard.netErrorLearnMoreLink.dataset.l10nId,
       "certerror-coep-learn-more",
       "Learn more element is a link and has COEP text"
     );

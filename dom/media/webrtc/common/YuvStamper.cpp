@@ -13,7 +13,9 @@
 #include "mozilla/Sprintf.h"
 
 typedef uint32_t UINT4;  // Needed for r_crc32() call
+extern "C" {
 #include "r_crc32.h"
+}
 
 namespace mozilla {
 

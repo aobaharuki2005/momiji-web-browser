@@ -43,7 +43,7 @@
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/port_allocator.h"
 #include "p2p/base/transport_info.h"
-#include "pc/jsep_transport_controller.h"
+#include "pc/channel.h"
 #include "pc/peer_connection.h"
 #include "pc/peer_connection_wrapper.h"
 #include "pc/rtp_transceiver.h"
@@ -63,7 +63,6 @@
 #include "rtc_base/virtual_socket_server.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-#include "test/run_loop.h"
 #include "test/wait_until.h"
 
 #ifdef WEBRTC_ANDROID
@@ -122,24 +121,28 @@ class PeerConnectionWrapperForBundleTest : public PeerConnectionWrapper {
   }
 
   RtpTransportInternal* voice_rtp_transport() {
+    return (voice_channel() ? voice_channel()->rtp_transport() : nullptr);
+  }
+
+  VoiceChannel* voice_channel() {
     auto transceivers = GetInternalPeerConnection()->GetTransceiversInternal();
     for (const auto& transceiver : transceivers) {
-      if (transceiver->media_type() == MediaType::AUDIO && transceiver->mid()) {
-        return GetInternalPeerConnection()
-            ->transport_controller_n()
-            ->GetRtpTransport(*transceiver->mid());
+      if (transceiver->media_type() == MediaType::AUDIO) {
+        return static_cast<VoiceChannel*>(transceiver->internal()->channel());
       }
     }
     return nullptr;
   }
 
   RtpTransportInternal* video_rtp_transport() {
+    return (video_channel() ? video_channel()->rtp_transport() : nullptr);
+  }
+
+  VideoChannel* video_channel() {
     auto transceivers = GetInternalPeerConnection()->GetTransceiversInternal();
     for (const auto& transceiver : transceivers) {
-      if (transceiver->media_type() == MediaType::VIDEO && transceiver->mid()) {
-        return GetInternalPeerConnection()
-            ->transport_controller_n()
-            ->GetRtpTransport(*transceiver->mid());
+      if (transceiver->media_type() == MediaType::VIDEO) {
+        return static_cast<VideoChannel*>(transceiver->internal()->channel());
       }
     }
     return nullptr;
@@ -265,7 +268,7 @@ class PeerConnectionBundleBaseTest : public ::testing::Test {
   }
 
   VirtualSocketServer vss_;
-  test::RunLoop main_;
+  AutoSocketServerThread main_;
   const SdpSemantics sdp_semantics_;
 };
 
@@ -319,7 +322,8 @@ TEST_P(PeerConnectionBundleTest,
   std::unique_ptr<SessionDescriptionInterface> answer =
       callee->CreateAnswer(options_no_bundle);
   SdpContentsForEach(RemoveRtcpMux(), answer->description());
-  ASSERT_TRUE(callee->SetLocalDescription(answer->Clone()));
+  ASSERT_TRUE(
+      callee->SetLocalDescription(CloneSessionDescription(answer.get())));
   ASSERT_TRUE(caller->SetRemoteDescription(std::move(answer)));
 
   // Check that caller has separate RTP and RTCP candidates for each media.
@@ -613,7 +617,8 @@ TEST_P(PeerConnectionBundleTest, FailToSetDescriptionWithBundleAndNoRtcpMux) {
   SdpContentsForEach(RemoveRtcpMux(), offer->description());
 
   std::string error;
-  EXPECT_FALSE(caller->SetLocalDescription(offer->Clone(), &error));
+  EXPECT_FALSE(caller->SetLocalDescription(CloneSessionDescription(offer.get()),
+                                           &error));
   EXPECT_EQ(
       "Failed to set local offer sdp: rtcp-mux must be enabled when BUNDLE is "
       "enabled.",
@@ -723,7 +728,8 @@ TEST_P(PeerConnectionBundleTest, ApplyDescriptionWithSameSsrcsBundledFails) {
   options.use_rtp_mux = true;
   std::unique_ptr<SessionDescriptionInterface> offer =
       caller->CreateOffer(options);
-  EXPECT_TRUE(caller->SetLocalDescription(offer->Clone()));
+  EXPECT_TRUE(
+      caller->SetLocalDescription(CloneSessionDescription(offer.get())));
   // Modify the remote SDP to make two m= sections have the same SSRC.
   ASSERT_GE(offer->description()->contents().size(), 2U);
   ReplaceFirstSsrc(offer->description()
@@ -755,7 +761,8 @@ TEST_P(PeerConnectionBundleTest,
   options.use_rtp_mux = false;
   std::unique_ptr<SessionDescriptionInterface> offer =
       caller->CreateOffer(options);
-  EXPECT_TRUE(caller->SetLocalDescription(offer->Clone()));
+  EXPECT_TRUE(
+      caller->SetLocalDescription(CloneSessionDescription(offer.get())));
   // Modify the remote SDP to make two m= sections have the same SSRC.
   ASSERT_GE(offer->description()->contents().size(), 2U);
   ReplaceFirstSsrc(offer->description()
@@ -796,7 +803,7 @@ TEST_P(PeerConnectionBundleTest, RejectDescriptionChangingBundleTag) {
   ContentGroup new_bundle_group(GROUP_TYPE_BUNDLE);
   new_bundle_group.AddContentName(second_mid);
 
-  auto re_offer = offer->Clone();
+  auto re_offer = CloneSessionDescription(offer.get());
   callee->SetRemoteDescription(std::move(offer));
   std::unique_ptr<SessionDescriptionInterface> answer =
       callee->CreateAnswer(options);
@@ -828,7 +835,7 @@ TEST_P(PeerConnectionBundleTest, RemovingContentAndRejectBundleGroup) {
 
   std::unique_ptr<SessionDescriptionInterface> offer =
       caller->CreateOfferAndSetAsLocal();
-  auto re_offer = offer->Clone();
+  auto re_offer = CloneSessionDescription(offer.get());
 
   // Removing the second MID from the BUNDLE group.
   auto* old_bundle_group =
@@ -863,7 +870,8 @@ TEST_P(PeerConnectionBundleTest, AddContentToBundleGroupInAnswerNotSupported) {
   bundle_group.AddContentName(first_mid);
   offer->description()->RemoveGroupByName(GROUP_TYPE_BUNDLE);
   offer->description()->AddGroup(bundle_group);
-  EXPECT_TRUE(caller->SetLocalDescription(offer->Clone()));
+  EXPECT_TRUE(
+      caller->SetLocalDescription(CloneSessionDescription(offer.get())));
   EXPECT_TRUE(callee->SetRemoteDescription(std::move(offer)));
 
   std::unique_ptr<SessionDescriptionInterface> answer = callee->CreateAnswer();
@@ -888,7 +896,8 @@ TEST_P(PeerConnectionBundleTest, RejectBundleGroupWithNonExistingMid) {
   offer->description()->RemoveGroupByName(GROUP_TYPE_BUNDLE);
   offer->description()->AddGroup(invalid_bundle_group);
 
-  EXPECT_FALSE(caller->SetLocalDescription(offer->Clone()));
+  EXPECT_FALSE(
+      caller->SetLocalDescription(CloneSessionDescription(offer.get())));
   EXPECT_FALSE(callee->SetRemoteDescription(std::move(offer)));
 }
 
@@ -912,7 +921,8 @@ TEST_P(PeerConnectionBundleTest, RemoveContentFromBundleGroup) {
   answer->description()->RemoveGroupByName(GROUP_TYPE_BUNDLE);
   answer->description()->AddGroup(invalid_bundle_group);
 
-  EXPECT_FALSE(callee->SetLocalDescription(answer->Clone()));
+  EXPECT_FALSE(
+      callee->SetLocalDescription(CloneSessionDescription(answer.get())));
 }
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionBundleTest,
@@ -972,10 +982,12 @@ TEST_F(PeerConnectionBundleTestUnifiedPlan, MultipleBundleGroups) {
   offer->description()->AddGroup(bundle_group1);
   offer->description()->AddGroup(bundle_group2);
 
-  EXPECT_TRUE(caller->SetLocalDescription(offer->Clone()));
+  EXPECT_TRUE(
+      caller->SetLocalDescription(CloneSessionDescription(offer.get())));
   EXPECT_TRUE(callee->SetRemoteDescription(std::move(offer)));
   std::unique_ptr<SessionDescriptionInterface> answer = callee->CreateAnswer();
-  EXPECT_TRUE(callee->SetLocalDescription(answer->Clone()));
+  EXPECT_TRUE(
+      callee->SetLocalDescription(CloneSessionDescription(answer.get())));
   EXPECT_TRUE(caller->SetRemoteDescription(std::move(answer)));
 
   // Verify bundling on sender side.
@@ -1014,10 +1026,12 @@ TEST_F(PeerConnectionBundleTestUnifiedPlan, AddNonBundledSection) {
   // Establish an existing BUNDLE group.
   std::unique_ptr<SessionDescriptionInterface> offer =
       caller->CreateOffer(RTCOfferAnswerOptions());
-  EXPECT_TRUE(caller->SetLocalDescription(offer->Clone()));
+  EXPECT_TRUE(
+      caller->SetLocalDescription(CloneSessionDescription(offer.get())));
   EXPECT_TRUE(callee->SetRemoteDescription(std::move(offer)));
   std::unique_ptr<SessionDescriptionInterface> answer = callee->CreateAnswer();
-  EXPECT_TRUE(callee->SetLocalDescription(answer->Clone()));
+  EXPECT_TRUE(
+      callee->SetLocalDescription(CloneSessionDescription(answer.get())));
   EXPECT_TRUE(caller->SetRemoteDescription(std::move(answer)));
 
   // Add a track but munge SDP so it's not part of the bundle group.
@@ -1028,10 +1042,12 @@ TEST_F(PeerConnectionBundleTestUnifiedPlan, AddNonBundledSection) {
   bundle_group.AddContentName("0");
   bundle_group.AddContentName("1");
   offer->description()->AddGroup(bundle_group);
-  EXPECT_TRUE(caller->SetLocalDescription(offer->Clone()));
+  EXPECT_TRUE(
+      caller->SetLocalDescription(CloneSessionDescription(offer.get())));
   EXPECT_TRUE(callee->SetRemoteDescription(std::move(offer)));
   answer = callee->CreateAnswer();
-  EXPECT_TRUE(callee->SetLocalDescription(answer->Clone()));
+  EXPECT_TRUE(
+      callee->SetLocalDescription(CloneSessionDescription(answer.get())));
   EXPECT_TRUE(caller->SetRemoteDescription(std::move(answer)));
 
   // Verify bundling on the sender side.

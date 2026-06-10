@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -29,7 +31,7 @@ class CodeGeneratorARM64 : public CodeGeneratorShared {
   MoveOperand toMoveOperand(const LAllocation a) const;
 
   void bailoutIf(Assembler::Condition condition, LSnapshot* snapshot);
-  void bailoutIfTest(Assembler::Condition condition, ARMRegister rt,
+  void bailoutIfZero(Assembler::Condition condition, ARMRegister rt,
                      LSnapshot* snapshot);
   void bailoutFrom(Label* label, LSnapshot* snapshot);
   void bailout(LSnapshot* snapshot);
@@ -41,23 +43,13 @@ class CodeGeneratorARM64 : public CodeGeneratorShared {
                   (std::is_same_v<T2, Imm32> || std::is_same_v<T2, Imm64> ||
                    std::is_same_v<T2, ImmWord> || std::is_same_v<T2, ImmPtr>)) {
       if (rhs.value == 0) {
-        switch (c) {
-          case Assembler::Equal:
-          case Assembler::BelowOrEqual:
-            bailoutIfTest(Assembler::Zero, ARMRegister(lhs, 64), snapshot);
-            return;
-          case Assembler::NotEqual:
-          case Assembler::Above:
-            bailoutIfTest(Assembler::NonZero, ARMRegister(lhs, 64), snapshot);
-            return;
-          case Assembler::LessThan:
-            bailoutIfTest(Assembler::Signed, ARMRegister(lhs, 64), snapshot);
-            return;
-          case Assembler::GreaterThanOrEqual:
-            bailoutIfTest(Assembler::NotSigned, ARMRegister(lhs, 64), snapshot);
-            return;
-          default:
-            break;
+        if (c == Assembler::Equal) {
+          bailoutIfZero(Assembler::Zero, ARMRegister(lhs, 64), snapshot);
+          return;
+        }
+        if (c == Assembler::NotEqual) {
+          bailoutIfZero(Assembler::NonZero, ARMRegister(lhs, 64), snapshot);
+          return;
         }
       }
     }
@@ -69,23 +61,13 @@ class CodeGeneratorARM64 : public CodeGeneratorShared {
                     LSnapshot* snapshot) {
     if constexpr (std::is_same_v<T1, Register> && std::is_same_v<T2, Imm32>) {
       if (rhs.value == 0) {
-        switch (c) {
-          case Assembler::Equal:
-          case Assembler::BelowOrEqual:
-            bailoutIfTest(Assembler::Zero, ARMRegister(lhs, 32), snapshot);
-            return;
-          case Assembler::NotEqual:
-          case Assembler::Above:
-            bailoutIfTest(Assembler::NonZero, ARMRegister(lhs, 32), snapshot);
-            return;
-          case Assembler::LessThan:
-            bailoutIfTest(Assembler::Signed, ARMRegister(lhs, 32), snapshot);
-            return;
-          case Assembler::GreaterThanOrEqual:
-            bailoutIfTest(Assembler::NotSigned, ARMRegister(lhs, 32), snapshot);
-            return;
-          default:
-            break;
+        if (c == Assembler::Equal) {
+          bailoutIfZero(Assembler::Zero, ARMRegister(lhs, 32), snapshot);
+          return;
+        }
+        if (c == Assembler::NotEqual) {
+          bailoutIfZero(Assembler::NonZero, ARMRegister(lhs, 32), snapshot);
+          return;
         }
       }
     }
@@ -97,17 +79,9 @@ class CodeGeneratorARM64 : public CodeGeneratorShared {
                      LSnapshot* snapshot) {
     if constexpr (std::is_same_v<T1, Register> &&
                   std::is_same_v<T2, Register>) {
-      if (lhs == rhs) {
-        switch (c) {
-          case Assembler::Zero:
-          case Assembler::NonZero:
-          case Assembler::Signed:
-          case Assembler::NotSigned:
-            bailoutIfTest(c, ARMRegister(lhs, 32), snapshot);
-            return;
-          default:
-            break;
-        }
+      if (lhs == rhs && (c == Assembler::Zero || c == Assembler::NonZero)) {
+        bailoutIfZero(c, ARMRegister(lhs, 32), snapshot);
+        return;
       }
     }
     masm.test32(lhs, rhs);

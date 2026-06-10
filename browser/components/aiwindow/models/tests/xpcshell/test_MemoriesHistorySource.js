@@ -8,7 +8,6 @@ const {
   generateProfileInputs,
   aggregateSessions,
   topkAggregates,
-  _sanitizeTitleForTesting,
 } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/memories/MemoriesHistorySource.sys.mjs"
 );
@@ -180,10 +179,6 @@ add_task(async function test_basic_history_fetch_and_shape() {
 
   // Insert via high-level API; Places will populate moz_origins/visits.
   await PlacesUtils.history.insertMany(seeded);
-  // page_visits reads moz_places_metadata; search URLs are never recorded there.
-  for (const { url, visits } of [seeded[1], seeded[2], seeded[4]]) {
-    await insertPlacesMetadata(url, visits[0].date.getTime());
-  }
 
   const rows = await getRecentHistory({ days: 1, maxResults: 100 });
   Assert.ok(Array.isArray(rows), "Should return an array");
@@ -253,9 +248,6 @@ add_task(async function test_maxResults_is_respected() {
     );
   }
   await PlacesUtils.history.insertMany(toInsert);
-  for (const { url, visits } of toInsert) {
-    await insertPlacesMetadata(url, visits[0].date.getTime());
-  }
 
   const rows10 = await getRecentHistory({ days: 1, maxResults: 10 });
   Assert.equal(rows10.length, 10, "maxResults=10 respected");
@@ -269,7 +261,7 @@ add_task(async function test_days_cutoff_is_respected() {
 
   // One old (2 days), one recent (within 1 hour)
   const now = Date.now();
-  const visits = [
+  await PlacesUtils.history.insertMany([
     makeVisit(
       "https://old.example.com/",
       "Old Visit",
@@ -282,11 +274,7 @@ add_task(async function test_days_cutoff_is_respected() {
       now,
       -30 * 60 * 1000
     ),
-  ];
-  await PlacesUtils.history.insertMany(visits);
-  for (const { url, visits: v } of visits) {
-    await insertPlacesMetadata(url, v[0].date.getTime());
-  }
+  ]);
 
   const rows = await getRecentHistory({ days: 1, maxResults: 50 });
   const urls = rows.map(r => r.url);
@@ -297,62 +285,6 @@ add_task(async function test_days_cutoff_is_respected() {
   Assert.ok(
     !urls.includes("https://old.example.com/"),
     "Old visit filtered by days cutoff"
-  );
-});
-
-add_task(async function test_minPageViewtime_filter() {
-  await PlacesUtils.history.clear();
-
-  const now = Date.now();
-  const visits = [
-    makeVisit(
-      "https://low-viewtime.example.com/",
-      "Low View Time",
-      now,
-      -5 * 60 * 1000
-    ),
-    makeVisit(
-      "https://high-viewtime.example.com/",
-      "High View Time",
-      now,
-      -10 * 60 * 1000
-    ),
-  ];
-  await PlacesUtils.history.insertMany(visits);
-
-  // Insert metadata: one page below the 5000ms default threshold, one above.
-  await insertPlacesMetadata(
-    visits[0].url,
-    visits[0].visits[0].date.getTime(),
-    1000
-  );
-  await insertPlacesMetadata(
-    visits[1].url,
-    visits[1].visits[0].date.getTime(),
-    30_000
-  );
-
-  const rows = await getRecentHistory({ days: 1, maxResults: 50 });
-  const urls = rows.map(r => r.url);
-  Assert.ok(
-    !urls.includes("https://low-viewtime.example.com/"),
-    "Page below DEFAULT_PAGE_VIEWTIME (5000ms) is filtered out"
-  );
-  Assert.ok(
-    urls.includes("https://high-viewtime.example.com/"),
-    "Page above DEFAULT_PAGE_VIEWTIME (5000ms) is included"
-  );
-
-  // Custom minPageViewtime overrides the default.
-  const rowsCustom = await getRecentHistory({
-    days: 1,
-    maxResults: 50,
-    minPageViewtime: 500,
-  });
-  const urlsCustom = rowsCustom.map(r => r.url);
-  Assert.ok(
-    urlsCustom.includes("https://low-viewtime.example.com/"),
-    "Page with 1000ms view time included when minPageViewtime=500"
   );
 });
 
@@ -462,8 +394,6 @@ add_task(async function test_sinceMicros_cutoff_and_overrides_days() {
   );
 
   await PlacesUtils.history.insertMany([early, late]);
-  await insertPlacesMetadata(early.url, early.visits[0].date.getTime());
-  await insertPlacesMetadata(late.url, late.visits[0].date.getTime());
 
   // Get the raw visitDateMicros so we can compute a watermark between them.
   const allRows = await getRecentHistory({ days: 1, maxResults: 10 });
@@ -828,288 +758,4 @@ add_task(function test_topkAggregates_recency_and_ranking() {
     "More recent domain outranks older one"
   );
   Assert.equal(secondDomain, "old.com", "Older domain comes second");
-});
-
-add_task(function test_sanitizeTitle_basic() {
-  // Normal title - should pass through unchanged
-  const normal = "Example Page Title";
-  Assert.equal(
-    _sanitizeTitleForTesting(normal),
-    normal,
-    "Normal title unchanged"
-  );
-});
-
-add_task(function test_sanitizeTitle_backslash() {
-  // Backslash - primary issue that caused JSON parse failures
-  const withBackslash = "Claude's new constitution \\ Anthropic";
-  const expected = "Claude's new constitution / Anthropic";
-  Assert.equal(
-    _sanitizeTitleForTesting(withBackslash),
-    expected,
-    "Backslash replaced with forward slash"
-  );
-
-  // Multiple backslashes
-  const multipleBackslashes = "Path\\to\\file\\name.txt";
-  const expectedMultiple = "Path/to/file/name.txt";
-  Assert.equal(
-    _sanitizeTitleForTesting(multipleBackslashes),
-    expectedMultiple,
-    "Multiple backslashes replaced"
-  );
-
-  // Windows path
-  const windowsPath = "C:\\Users\\Documents\\file.txt";
-  const expectedPath = "C:/Users/Documents/file.txt";
-  Assert.equal(
-    _sanitizeTitleForTesting(windowsPath),
-    expectedPath,
-    "Windows path backslashes replaced"
-  );
-});
-
-add_task(function test_sanitizeTitle_control_characters() {
-  // Newline
-  const withNewline = "Title\nwith\nnewlines";
-  Assert.equal(
-    _sanitizeTitleForTesting(withNewline),
-    "Title with newlines",
-    "Newlines replaced with spaces"
-  );
-
-  // Tab
-  const withTab = "Title\twith\ttabs";
-  Assert.equal(
-    _sanitizeTitleForTesting(withTab),
-    "Title with tabs",
-    "Tabs replaced with spaces"
-  );
-
-  // Carriage return
-  const withCarriageReturn = "Title\rwith\rCR";
-  Assert.equal(
-    _sanitizeTitleForTesting(withCarriageReturn),
-    "Title with CR",
-    "Carriage returns replaced with spaces"
-  );
-
-  // Mixed control characters
-  const mixed = "Title\n\t\rwith\x00mixed\x1Fcontrols";
-  Assert.equal(
-    _sanitizeTitleForTesting(mixed),
-    "Title with mixed controls",
-    "Mixed control characters replaced and collapsed"
-  );
-});
-
-add_task(function test_sanitizeTitle_multiple_spaces() {
-  // Multiple spaces should collapse to single space
-  const multipleSpaces = "Title    with    many    spaces";
-  Assert.equal(
-    _sanitizeTitleForTesting(multipleSpaces),
-    "Title with many spaces",
-    "Multiple spaces collapsed to single space"
-  );
-
-  // Mixed spacing
-  const mixedSpacing = "Title  \t\n  with  \r  mixed   spacing";
-  Assert.equal(
-    _sanitizeTitleForTesting(mixedSpacing),
-    "Title with mixed spacing",
-    "Mixed spacing collapsed"
-  );
-});
-
-add_task(function test_sanitizeTitle_whitespace_trim() {
-  // Leading whitespace
-  const leading = "   Title with leading spaces";
-  Assert.equal(
-    _sanitizeTitleForTesting(leading),
-    "Title with leading spaces",
-    "Leading whitespace trimmed"
-  );
-
-  // Trailing whitespace
-  const trailing = "Title with trailing spaces   ";
-  Assert.equal(
-    _sanitizeTitleForTesting(trailing),
-    "Title with trailing spaces",
-    "Trailing whitespace trimmed"
-  );
-
-  // Both
-  const both = "   Title with both   ";
-  Assert.equal(
-    _sanitizeTitleForTesting(both),
-    "Title with both",
-    "Both leading and trailing whitespace trimmed"
-  );
-});
-
-add_task(async function test_sensitive_info_filtering() {
-  await PlacesUtils.history.clear();
-  const now = Date.now();
-
-  const seeded = [
-    makeVisit(
-      "https://example.com/page",
-      "Normal Page Title",
-      now,
-      -5 * 60 * 1000
-    ),
-    makeVisit(
-      "https://example.com/contact",
-      "Contact me at user@example.com",
-      now,
-      -10 * 60 * 1000
-    ),
-    makeVisit(
-      "https://example.com/phone",
-      "Call 555-123-4567 for support",
-      now,
-      -15 * 60 * 1000
-    ),
-    makeVisit(
-      "https://example.com/user?email=sensitive@test.com",
-      "User Profile",
-      now,
-      -20 * 60 * 1000
-    ),
-    makeVisit(
-      "https://example.com/ssn",
-      "SSN: 123-45-6789 on file",
-      now,
-      -25 * 60 * 1000
-    ),
-  ];
-
-  await PlacesUtils.history.insertMany(seeded);
-  for (const { url, visits } of seeded) {
-    await insertPlacesMetadata(url, visits[0].date.getTime());
-  }
-
-  const rows = await getRecentHistory({ days: 1, maxResults: 100 });
-
-  const urls = rows.map(r => r.url);
-  const titles = rows.map(r => r.title);
-
-  Assert.ok(
-    urls.includes("https://example.com/page"),
-    "Normal page without sensitive info included"
-  );
-
-  Assert.ok(
-    !titles.some(t => t.includes("user@example.com")),
-    "Title with email address filtered out"
-  );
-
-  Assert.ok(
-    !titles.some(t => t.includes("555-123-4567")),
-    "Title with phone number filtered out"
-  );
-
-  Assert.ok(
-    !urls.includes("https://example.com/user?email=sensitive@test.com"),
-    "URL with email parameter filtered out"
-  );
-
-  Assert.ok(
-    !titles.some(t => t.includes("123-45-6789")),
-    "Title with SSN filtered out"
-  );
-});
-
-add_task(async function test_sensitive_keywords_filtering() {
-  await PlacesUtils.history.clear();
-  const now = Date.now();
-
-  const seeded = [
-    makeVisit(
-      "https://example.com/normal",
-      "Best restaurants in Seattle",
-      now,
-      -5 * 60 * 1000
-    ),
-    makeVisit(
-      "https://example.com/medical",
-      "Cancer treatment options and therapy",
-      now,
-      -10 * 60 * 1000
-    ),
-    makeVisit(
-      "https://example.com/finance",
-      "How to improve credit score and mortgage rates",
-      now,
-      -15 * 60 * 1000
-    ),
-    makeVisit(
-      "https://example.com/legal",
-      "Divorce attorney in California",
-      now,
-      -20 * 60 * 1000
-    ),
-    makeVisit(
-      "https://example.com/political",
-      "Democrat vs Republican policies comparison",
-      now,
-      -25 * 60 * 1000
-    ),
-    makeVisit(
-      "https://healthcenter.com/pregnancy-test",
-      "Normal page title",
-      now,
-      -30 * 60 * 1000
-    ),
-  ];
-
-  await PlacesUtils.history.insertMany(seeded);
-  for (const { url, visits } of seeded) {
-    await insertPlacesMetadata(url, visits[0].date.getTime());
-  }
-
-  const rows = await getRecentHistory({ days: 1, maxResults: 100 });
-
-  const urls = rows.map(r => r.url);
-  const titles = rows.map(r => r.title);
-
-  Assert.ok(
-    urls.includes("https://example.com/normal"),
-    "Normal page without sensitive keywords included"
-  );
-
-  Assert.ok(
-    !titles.some(t => t.toLowerCase().includes("cancer")),
-    "Title with medical keyword (cancer) filtered out"
-  );
-
-  Assert.ok(
-    !titles.some(t => t.toLowerCase().includes("therapy")),
-    "Title with medical keyword (therapy) filtered out"
-  );
-
-  Assert.ok(
-    !titles.some(t => t.toLowerCase().includes("credit score")),
-    "Title with finance keyword (credit score) filtered out"
-  );
-
-  Assert.ok(
-    !titles.some(t => t.toLowerCase().includes("mortgage")),
-    "Title with finance keyword (mortgage) filtered out"
-  );
-
-  Assert.ok(
-    !titles.some(t => t.toLowerCase().includes("divorce")),
-    "Title with legal keyword (divorce) filtered out"
-  );
-
-  Assert.ok(
-    !titles.some(t => t.toLowerCase().includes("democrat")),
-    "Title with political keyword (democrat) filtered out"
-  );
-
-  Assert.ok(
-    !urls.includes("https://healthcenter.com/pregnancy-test"),
-    "URL with sensitive keyword (pregnancy) filtered out"
-  );
 });

@@ -172,7 +172,7 @@ function translateCallees(edge)
     return callees;
 }
 
-function getCallees(ffg, body, edge, scopeAttrs) {
+function getCallees(body, edge, scopeAttrs, functionBodies) {
     const calls = [];
 
     // getCallEdgeProperties can set the ATTR_REPLACED attribute, which
@@ -186,7 +186,7 @@ function getCallees(ffg, body, edge, scopeAttrs) {
         if (callee.kind != "direct") {
             calls.push({ callee, attrs: scopeAttrs });
         } else {
-            const edgeInfo = getCallEdgeProperties(ffg, body, edge, callee.name);
+            const edgeInfo = getCallEdgeProperties(body, edge, callee.name, functionBodies);
             for (const extra of (edgeInfo.extraCalls || [])) {
                 calls.push({ attrs: scopeAttrs | extra.attrs, callee: { name: extra.name, 'kind': "direct", } });
             }

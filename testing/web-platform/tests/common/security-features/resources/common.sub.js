@@ -1061,12 +1061,13 @@ function getSubresourceOrigin(originType) {
     "cross-wss": wssProtocol + "://" + crossOriginHost + wssPort,
     "cross-ws": wsProtocol + "://" + crossOriginHost + wsPort,
 
-    // The following origin types are used for upgrade-insecure-requests and
-    // mixed content tests tests. These rely on some unintuitive cleverness due
-    // to WPT's test setup: 'Upgrade-Insecure-Requests' does not upgrade the
-    // port number, so we use URLs in the form `http://[domain]:[https-port]`,
-    // which will be upgraded to `https://[domain]:[https-port]`. If the upgrade
-    // fails, the load will fail, as we don't serve HTTP over the secure port.
+    // The following origin types are used for upgrade-insecure-requests tests:
+    // These rely on some unintuitive cleverness due to WPT's test setup:
+    // 'Upgrade-Insecure-Requests' does not upgrade the port number,
+    // so we use URLs in the form `http://[domain]:[https-port]`,
+    // which will be upgraded to `https://[domain]:[https-port]`.
+    // If the upgrade fails, the load will fail, as we don't serve HTTP over
+    // the secure port.
     "same-http-downgrade":
         httpProtocol + "://" + sameOriginHost + ":" + httpsRawPort,
     "cross-http-downgrade":
@@ -1086,7 +1087,6 @@ function getSubresourceOrigin(originType) {
   @param {SubresourceType} subresourceType
   @param {OriginType} originType
   @param {RedirectionType} redirectionType
-  @param {boolean} checkScheme Optional
   @returns {object} with following properties:
     {string} testUrl
       The subresource request URL.
@@ -1097,12 +1097,10 @@ function getSubresourceOrigin(originType) {
       1. Fetch `announceUrl` first,
       2. then possibly fetch `testUrl`, and
       3. finally fetch `assertUrl`.
-         The fetch result of `assertUrl` should indicate whether `testUrl` is
-         actually sent to the server or not, or if `checkScheme` is specified
-         and this is a insecure origin type, whether the request was upgraded or
-         not.
+         The fetch result of `assertUrl` should indicate whether
+         `testUrl` is actually sent to the server or not.
 */
-function getRequestURLs(subresourceType, originType, redirectionType, checkScheme = false) {
+function getRequestURLs(subresourceType, originType, redirectionType) {
   const key = guid();
   const value = guid();
 
@@ -1116,8 +1114,7 @@ function getRequestURLs(subresourceType, originType, redirectionType, checkSchem
       getSubresourceOrigin(originType) +
         subresourceMap[subresourceType].path +
         "?redirection=" + encodeURIComponent(redirectionType) +
-        "&action=" + (checkScheme && !["https", "wss"].includes(originType.split("-").pop()) ? "check-scheme" : "purge") +
-        "&key=" + key +
+        "&action=purge&key=" + key +
         "&path=" + stashPath,
     announceUrl: stashEndpoint + "&action=put&value=" + value,
     assertUrl: stashEndpoint + "&action=take",
@@ -1192,9 +1189,6 @@ function invokeRequest(subresource, sourceContextList) {
       invoker: invokeFromIframe,
     },
     "iframe-blank": { // <iframe></iframe>
-      invoker: invokeFromIframe,
-    },
-    "iframe-data": {
       invoker: invokeFromIframe,
     },
     "worker-classic": {
@@ -1340,15 +1334,6 @@ function invokeFromIframe(subresource, sourceContextList) {
 
           iframe.contentDocument.write(frameContent);
           iframe.contentDocument.close();
-          return iframe.eventPromise;
-        });
-  } else if (currentSourceContext.sourceContextType === 'iframe-data') {
-    promise = fetch(frameUrl)
-      .then(r => r.text())
-      .then(content => {
-          let dataSrc = "data:text/html;base64," + btoa(content)
-          iframe = createElement(
-              "iframe", {src: dataSrc}, document.body, true);
           return iframe.eventPromise;
         });
   }

@@ -43,7 +43,7 @@ add_task(async function testHostnameDisplayedCorrectly() {
         await netErrorCard.getUpdateComplete();
 
         Assert.equal(
-          netErrorCard.errorConfig.errorCode,
+          netErrorCard.errorInfo.errorCodeString,
           "NS_ERROR_BASIC_HTTP_AUTH_DISABLED",
           "Shows HTTP auth disabled error"
         );

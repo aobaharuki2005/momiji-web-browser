@@ -12,10 +12,7 @@ def generate_report(
         output_html_directory_path=None,
         spec_name=None,
         is_multi=None,
-        reference_dir=None,
-        tests_base_url=None):
-    if not is_wptreport_installed():
-        return
+        reference_dir=None):
     if is_multi is None:
         is_multi = False
     try:
@@ -28,15 +25,14 @@ def generate_report(
             "--failures", "true",
             "--tokenFileName", "true" if is_multi else "false",
             "--pass", "100",
-            "--ref", reference_dir if reference_dir is not None else "",
-            "--testsBaseUrl", tests_base_url
-        ]
+            "--ref", reference_dir if reference_dir is not None else ""]
+        whole_command = ""
+        for command_part in command:
+            whole_command += command_part + " "
         subprocess.call(command, shell=False)
     except subprocess.CalledProcessError as e:
         info = sys.exc_info()
         raise Exception("Failed to execute wptreport: " + str(info[0].__name__) + ": " + e.output)
-    except FileNotFoundError:
-        raise Exception("Failed to execute wptreport: " + " ".join(command))
 
 
 def generate_multi_report(
@@ -44,8 +40,6 @@ def generate_multi_report(
         spec_name=None,
         result_json_files=None,
         reference_dir=None):
-    if not is_wptreport_installed():
-        return
     for file in result_json_files:
         if not os.path.isfile(file["path"]):
             continue
@@ -61,10 +55,3 @@ def generate_multi_report(
         spec_name=spec_name,
         is_multi=True,
         reference_dir=reference_dir)
-
-def is_wptreport_installed():
-    try:
-        subprocess.check_output(["wptreport", "--help"])
-        return True
-    except Exception:
-        return False

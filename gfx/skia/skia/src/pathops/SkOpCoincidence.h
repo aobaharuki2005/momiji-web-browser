@@ -282,13 +282,13 @@ private:
     void debugAddEndMovedSpans(SkPathOpsDebug::GlitchLog* ,
                                const SkOpPtT* ptT) const;
 #endif
-    void fixUp(SkCoincidentSpans** headPtr, SkOpPtT* deleted, const SkOpPtT* kept);
-    void markCollapsed(SkCoincidentSpans** headPtr, SkOpPtT* test);
+    void fixUp(SkCoincidentSpans* coin, SkOpPtT* deleted, const SkOpPtT* kept);
+    void markCollapsed(SkCoincidentSpans* head, SkOpPtT* test);
     bool overlap(const SkOpPtT* coinStart1, const SkOpPtT* coinEnd1,
                  const SkOpPtT* coinStart2, const SkOpPtT* coinEnd2,
                  double* overS, double* overE) const;
-    bool release(SkCoincidentSpans** headPtr, SkCoincidentSpans* );
-    void releaseDeleted(SkCoincidentSpans** headPtr);
+    bool release(SkCoincidentSpans* coin, SkCoincidentSpans* );
+    void releaseDeleted(SkCoincidentSpans* );
     void restoreHead();
     // return coinPtT->segment()->t mapped from overS->fT <= t <= overE->fT
     static double TRange(const SkOpPtT* overS, double t, const SkOpSegment* coinPtT

@@ -4,31 +4,37 @@
 
 package org.mozilla.focus.activity
 
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
-import org.mozilla.focus.helpers.FocusTestRule
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.MockWebServerHelper
+import org.mozilla.focus.helpers.TestSetup
 
-class AboutURITest {
+class AboutURITest : TestSetup() {
+    private lateinit var webServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
-
-    @get:Rule(order = 0)
-    val focusTestRule: FocusTestRule = FocusTestRule()
 
     @get:Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
     }
 
     @After
     fun tearDown() {
+        webServer.shutdown()
         featureSettingsHelper.resetAllFeatureFlags()
     }
 

@@ -37,7 +37,6 @@ pub(crate) fn pipe() -> io::Result<(OwnedFd, OwnedFd)> {
     target_os = "aix",
     target_os = "espidf",
     target_os = "haiku",
-    target_os = "horizon",
     target_os = "nto",
     target_os = "wasi"
 )))]
@@ -119,8 +118,11 @@ pub(crate) fn fcntl_getpipe_size(fd: BorrowedFd<'_>) -> io::Result<usize> {
 
 #[cfg(linux_kernel)]
 #[inline]
-pub(crate) fn fcntl_setpipe_size(fd: BorrowedFd<'_>, size: usize) -> io::Result<usize> {
+pub(crate) fn fcntl_setpipe_size(fd: BorrowedFd<'_>, size: usize) -> io::Result<()> {
     let size: c::c_int = size.try_into().map_err(|_| io::Errno::PERM)?;
 
-    unsafe { ret_c_int(c::fcntl(borrowed_fd(fd), c::F_SETPIPE_SZ, size)).map(|size| size as usize) }
+    unsafe {
+        let _ = ret_c_int(c::fcntl(borrowed_fd(fd), c::F_SETPIPE_SZ, size))?;
+    }
+    Ok(())
 }

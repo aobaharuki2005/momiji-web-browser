@@ -346,23 +346,6 @@ impl ReftestManifest {
         for line in file.lines() {
             let l = line.unwrap();
 
-            let expect_usize = &|opt: Option<usize>, msg| {
-                match opt {
-                    Some(val) => val,
-                    None => {
-                        panic!("Parsing error in {}. {:?}: {:?}", msg, manifest, l)
-                    }
-                }
-            };
-            let expect_bool = &|opt: Option<bool>, msg| {
-                match opt {
-                    Some(val) => val,
-                    None => {
-                        panic!("Parsing error in {}. {:?}: {:?}", msg, manifest, l)
-                    }
-                }
-            };
-
             // strip the comments
             let s = &l[0 .. l.find('#').unwrap_or(l.len())];
             let s = s.trim();
@@ -390,7 +373,7 @@ impl ReftestManifest {
                                 function.starts_with("fuzzy-range-if(") => {
                         let (_, mut args, _) = parse_function(function);
                         if function.starts_with("fuzzy-range-if(") {
-                            if !expect_bool(environment.parse_condition(args.remove(0)), "unknown condition") {
+                            if !environment.parse_condition(args.remove(0)).expect("unknown condition") {
                                 return true;
                             }
                             fuzziness.clear();
@@ -414,13 +397,13 @@ impl ReftestManifest {
                                 function.starts_with("fuzzy-if(") => {
                         let (_, mut args, _) = parse_function(function);
                         if function.starts_with("fuzzy-if(") {
-                            if !expect_bool(environment.parse_condition(args.remove(0)), "unknown condition") {
+                            if !environment.parse_condition(args.remove(0)).expect("unknown condition") {
                                 return true;
                             }
                             fuzziness.clear();
                         }
-                        let max_difference = expect_usize(args[0].parse().ok(), "max difference");
-                        let num_differences = expect_usize(args[1].parse().ok(), "num differing pixels");
+                        let max_difference = args[0].parse().unwrap();
+                        let num_differences = args[1].parse().unwrap();
                         assert!(fuzziness.is_empty()); // if this fires, consider fuzzy-range instead
                         fuzziness.push(RefTestFuzzy { max_difference, num_differences });
                     }
@@ -484,7 +467,7 @@ impl ReftestManifest {
                     }
                     cond if cond.starts_with("if(") => {
                         let (_, args, _) = parse_function(cond);
-                        if expect_bool(environment.parse_condition(args[0]), "unknown condition") {
+                        if environment.parse_condition(args[0]).expect("unknown condition") {
                             for command in &args[1..] {
                                 parse_command(command);
                             }
@@ -681,29 +664,15 @@ impl ReftestEnvironment {
             }
             op if op.starts_with("not(") => {
                 let (_, args, _) = parse_function(op);
-                Some(!self.parse_condition(args[0])?)
+                Some(!self.parse_condition(args[0]).expect("unknown condition"))
             }
             op if op.starts_with("or(") => {
                 let (_, args, _) = parse_function(op);
-                if args.is_empty() {
-                    return None;
-                }
-                let mut any = false;
-                for arg in args.iter() {
-                    any = any | self.parse_condition(arg)?
-                }
-                Some(any)
+                Some(args.iter().any(|arg| self.parse_condition(arg).expect("unknown condition")))
             }
             op if op.starts_with("and(") => {
                 let (_, args, _) = parse_function(op);
-                if args.is_empty() {
-                    return None;
-                }
-                let mut all = true;
-                for arg in args.iter() {
-                    all = all & self.parse_condition(arg)?
-                }
-                Some(all)
+                Some(args.iter().all(|arg| self.parse_condition(arg).expect("unknown condition")))
             }
             _ => None,
         }

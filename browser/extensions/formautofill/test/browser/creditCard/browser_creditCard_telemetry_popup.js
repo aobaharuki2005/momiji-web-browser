@@ -31,6 +31,7 @@ add_task(async function test_popup_opened() {
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
     ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
   ];
+  await assertTelemetry(undefined, expectedFormEvents);
   assertFormInteractionEventsInGlean(expectedFormEvents);
   assertDetectedCcNumberFieldsCountInGlean([
     { label: "cc_number_fields_1", count: 1 },
@@ -72,6 +73,7 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
     ),
     ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
   ];
+  await assertTelemetry(undefined, expectedFormEvents);
   assertFormInteractionEventsInGlean(expectedFormEvents);
 
   await cleanupFunc();

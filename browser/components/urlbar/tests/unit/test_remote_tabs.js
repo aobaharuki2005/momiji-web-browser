@@ -1,3 +1,6 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * vim:set ts=2 sw=2 sts=2 et:
+ */
 "use strict";
 
 const { Weave } = ChromeUtils.importESModule(
@@ -128,7 +131,7 @@ add_task(async function test_maximal() {
         uri: "http://example.com/",
         device: "My Phone",
         title: "An Example",
-        iconUri: "page-icon:http://example.com/",
+        iconUri: "cached-favicon:http://favicon/",
       }),
     ],
   });
@@ -577,7 +580,7 @@ add_task(async function test_restrictionCharacter() {
   await addOpenPages(uri, 1);
 
   // We expect the open tab to flex to the bottom.
-  let query = UrlbarShared.RESTRICT_TOKENS.OPENPAGE;
+  let query = UrlbarTokenizer.RESTRICT.OPENPAGE;
   let context = createContext(query, { isPrivate: false });
   await check_results({
     context,
@@ -643,7 +646,7 @@ add_task(async function test_duplicate_remote_tabs() {
   ]);
 
   // We expect the duplicate tabs to be deduped.
-  let query = UrlbarShared.RESTRICT_TOKENS.OPENPAGE;
+  let query = UrlbarTokenizer.RESTRICT.OPENPAGE;
   let context = createContext(query, { isPrivate: false });
   await check_results({
     context,

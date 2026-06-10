@@ -249,7 +249,7 @@ function getLastContentDisplayportFor(
   aOptions = { expectPainted: true, popupElement: null }
 ) {
   var contentTestData = SpecialPowers.getDOMWindowUtils(
-    aOptions.popupElement ? aOptions.popupElement.documentGlobal : window
+    aOptions.popupElement ? aOptions.popupElement.ownerGlobal : window
   ).getContentAPZTestData(aOptions.popupElement);
   if (contentTestData == undefined) {
     ok(!aOptions.expectPainted, "expected to have apz test data (1)");
@@ -373,7 +373,7 @@ async function promiseApzFlushedRepaints(aPopupElement = null) {
   }
   await promiseAllPaintsDone();
   await promiseOnlyApzControllerFlushed(
-    aPopupElement ? aPopupElement.documentGlobal : window,
+    aPopupElement ? aPopupElement.ownerGlobal : window,
     aPopupElement
   );
   await promiseAllPaintsDone();
@@ -664,6 +664,7 @@ function isKeyApzEnabled() {
 // The snapshot is returned in the form of a data URL.
 function getSnapshot(rect) {
   function parentProcessSnapshot() {
+    /* eslint-env mozilla/chrome-script */
     addMessageListener("snapshot", function (parentRect) {
       var topWin = Services.wm.getMostRecentWindow("navigator:browser");
       if (!topWin) {
@@ -1094,10 +1095,6 @@ function promiseOneEvent(eventTarget, eventType, filter) {
   });
 }
 
-function promiseScrollend(aTarget = window) {
-  return promiseOneEvent(aTarget, "scrollend");
-}
-
 function visualViewportAsZoomedRect() {
   let vv = window.visualViewport;
   return {
@@ -1223,7 +1220,7 @@ async function cancelScrollAnimation(aElement, aWindow = window) {
 
 function collectSampledScrollOffsets(aElement, aPopupElement = null) {
   const utils = SpecialPowers.getDOMWindowUtils(
-    aPopupElement ? aPopupElement.documentGlobal : window
+    aPopupElement ? aPopupElement.ownerGlobal : window
   );
   let data = utils.getCompositorAPZTestData(aPopupElement);
   let sampledResults = data.sampledResults;

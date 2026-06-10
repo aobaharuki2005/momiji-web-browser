@@ -12,7 +12,6 @@
 
 #include <memory>
 #include <optional>
-#include <utility>
 #include <vector>
 
 #include "api/audio_codecs/L16/audio_encoder_L16.h"
@@ -49,11 +48,11 @@ struct NotAdvertised {
     return T::QueryAudioEncoder(config);
   }
   static std::unique_ptr<AudioEncoder> MakeAudioEncoder(
-      Config config,
+      const Config& config,
       int payload_type,
       std::optional<AudioCodecPairId> codec_pair_id = std::nullopt,
       const FieldTrialsView* field_trials = nullptr) {
-    return T::MakeAudioEncoder(std::move(config), payload_type, codec_pair_id,
+    return T::MakeAudioEncoder(config, payload_type, codec_pair_id,
                                field_trials);
   }
 };

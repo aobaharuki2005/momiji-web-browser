@@ -179,7 +179,7 @@ constexpr Int128 operator""_i128() {
   return Int128{operator""_u128 < DIGITS...>()};
 }
 
-class ConversionFixture : public jsapitest::RuntimeTest {
+class ConversionFixture : public JSAPIRuntimeTest {
  public:
   virtual ~ConversionFixture() = default;
 
@@ -251,7 +251,7 @@ BEGIN_FIXTURE_TEST(ConversionFixture, testUint128_conversion) {
 }
 END_FIXTURE_TEST(ConversionFixture, testUint128_conversion)
 
-class OperatorFixture : public jsapitest::RuntimeTest {
+class OperatorFixture : public JSAPIRuntimeTest {
  public:
   virtual ~OperatorFixture() = default;
 

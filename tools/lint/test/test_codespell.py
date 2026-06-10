@@ -12,7 +12,7 @@ aparent (aParent).
 but detects mistakes like mozila
 """.lstrip()
 
-    path = create_temp_file(contents, "test_fix_temp.rst")
+    path = create_temp_file(contents, "ignore.rst")
     lint([path], fix=True)
 
     assert fixed == 2

@@ -1,8 +1,4 @@
 [DEFAULT]
-dupe-manifest=true
-prefs = [
-  "browser.settings-redesign.enabled=false",
-]
 support-files = [
   "head.js",
   "site_data_test.html",
@@ -11,6 +7,8 @@ support-files = [
   "offline/offline.html",
   "offline/manifest.appcache",
 ]
+
+["browser_clearSiteData.js"]
 
 ["browser_clearSiteData_v2.js"]
 
@@ -27,5 +25,3 @@ skip-if = [
 skip-if = [
   "tsan", # Bug 1683730
 ]
-
-["browser_siteData_search.js"]

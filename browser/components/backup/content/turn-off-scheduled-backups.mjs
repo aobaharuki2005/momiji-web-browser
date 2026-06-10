@@ -6,21 +6,10 @@ import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 /**
- * The widget for showing available options when users want to turn off
+ * The widget for showing available options when users want to turn on
  * scheduled backups.
  */
 export default class TurnOffScheduledBackups extends MozLitElement {
-  static properties = {
-    // Identifier of the message, surface, or code path that hosted this
-    // widget. Forwarded to BackupService.setScheduledBackups so that
-    // browser.backup.scheduler_toggle_source can attribute the disable.
-    source: {
-      type: String,
-      reflect: true,
-      attribute: "source",
-    },
-  };
-
   static get queries() {
     return {
       cancelButtonEl: "#backup-turn-off-scheduled-cancel-button",
@@ -41,9 +30,6 @@ export default class TurnOffScheduledBackups extends MozLitElement {
     this.dispatchEvent(
       new CustomEvent("BackupUI:DisableScheduledBackups", {
         bubbles: true,
-        detail: {
-          source: this.source,
-        },
       })
     );
   }

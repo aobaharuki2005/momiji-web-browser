@@ -27,7 +27,7 @@ class NetEq;
 class TestPack : public AudioPacketizationCallback {
  public:
   TestPack();
-  ~TestPack() override;
+  ~TestPack();
 
   void RegisterReceiverNetEq(NetEq* neteq);
 

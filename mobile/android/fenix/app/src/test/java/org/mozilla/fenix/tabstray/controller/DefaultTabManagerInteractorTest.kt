@@ -10,29 +10,29 @@ import io.mockk.verify
 import io.mockk.verifySequence
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.browser.state.state.createTab
 import org.junit.Test
-import org.mozilla.fenix.tabstray.data.TabsTrayItem
 
 class DefaultTabManagerInteractorTest {
 
     private val controller: TabManagerController = mockk(relaxed = true)
     private val interactor = DefaultTabManagerInteractor(controller)
 
-    private val testTab = TabsTrayItem.Tab(tab = createTab(id = "testTabId", url = "url"))
-
-        @Test
+    @Test
     fun `WHEN user selects a new browser tab THEN the Interactor delegates to the controller`() {
-        interactor.onTabSelected(testTab, null)
+        val tab: TabSessionState = mockk()
+        interactor.onTabSelected(tab, null)
 
-        verifySequence { controller.handleTabSelected(testTab, null) }
+        verifySequence { controller.handleTabSelected(tab, null) }
     }
 
     @Test
     fun `WHEN user deletes one browser tab page THEN the Interactor delegates to the controller`() {
-        interactor.onTabClosed(testTab)
+        val tab: TabSessionState = mockk()
+        val id = "testTabId"
+        every { tab.id } returns id
+        interactor.onTabClosed(tab)
 
-        verifySequence { controller.handleTabDeletion(testTab.id) }
+        verifySequence { controller.handleTabDeletion(id) }
     }
 
     @Test
@@ -100,16 +100,30 @@ class DefaultTabManagerInteractorTest {
 
     @Test
     fun `WHEN an inactive tab is clicked THEN open the tab`() {
-        interactor.onInactiveTabClicked(testTab)
+        val tab = TabSessionState(
+            id = "tabId",
+            content = ContentState(
+                url = "www.mozilla.com",
+            ),
+        )
 
-        verify { controller.handleInactiveTabClicked(testTab) }
+        interactor.onInactiveTabClicked(tab)
+
+        verify { controller.handleInactiveTabClicked(tab) }
     }
 
     @Test
     fun `WHEN an inactive tab is clicked to be closed THEN close the tab`() {
-        interactor.onInactiveTabClosed(testTab)
+        val tab = TabSessionState(
+            id = "tabId",
+            content = ContentState(
+                url = "www.mozilla.com",
+            ),
+        )
 
-        verify { controller.handleCloseInactiveTabClicked(testTab) }
+        interactor.onInactiveTabClosed(tab)
+
+        verify { controller.handleCloseInactiveTabClicked(tab) }
     }
 
     @Test

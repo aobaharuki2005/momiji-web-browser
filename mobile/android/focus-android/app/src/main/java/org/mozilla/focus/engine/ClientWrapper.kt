@@ -22,9 +22,6 @@ class ClientWrapper(
         }
     }
 
-    /**
-     * Unwraps the [Client] and returns the actual [Client] instance.
-     */
     @Deprecated("Non-private Client usage should be prevented")
     fun unwrap(): Client {
         return actual

@@ -23,21 +23,20 @@ function* do_run_test() {
 
   let now = Number(Date.now());
 
-  // add a permission with *now* expiration (minus 10ms to ensure timing doesn't
-  // treat them as still valid)
+  // add a permission with *now* expiration
   pm.addFromPrincipal(
     principal,
     "test/expiration-perm-exp",
     1,
     pm.EXPIRE_TIME,
-    now - 10
+    now
   );
   pm.addFromPrincipal(
     principal,
     "test/expiration-session-exp",
     1,
     pm.EXPIRE_SESSION,
-    now - 10
+    now
   );
 
   // add a permission with future expiration (100 milliseconds)

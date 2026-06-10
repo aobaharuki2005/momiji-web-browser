@@ -55,8 +55,6 @@ Object.defineProperty(this, "EVENTS", {
  *
  */
 class TableWidget extends EventEmitter {
-  #parent;
-  #editableFieldsEngine = null;
   static EVENTS = EVENTS;
 
   /**
@@ -83,7 +81,7 @@ class TableWidget extends EventEmitter {
 
     this.document = node.ownerDocument;
     this.window = this.document.defaultView;
-    this.#parent = node;
+    this._parent = node;
 
     const {
       initialColumns,
@@ -109,14 +107,14 @@ class TableWidget extends EventEmitter {
     this.tbody.className = "table-widget-body theme-body";
     this.tbody.setAttribute("flex", "1");
     this.tbody.setAttribute("tabindex", "0");
-    this.#parent.appendChild(this.tbody);
+    this._parent.appendChild(this.tbody);
     this.afterScroll = this.afterScroll.bind(this);
     this.tbody.addEventListener("scroll", this.onScroll.bind(this));
 
     // Prepare placeholder
     this.placeholder = this.document.createElement("div");
     this.placeholder.className = "table-widget-empty-text";
-    this.#parent.appendChild(this.placeholder);
+    this._parent.appendChild(this.placeholder);
     this.setPlaceholder(this.emptyText);
 
     this.items = new Map();
@@ -152,14 +150,6 @@ class TableWidget extends EventEmitter {
   items = null;
   editBookmark = null;
   scrollIntoViewOnUpdate = null;
-
-  /**
-   * Return editableFieldsEngine.
-   */
-  get editableFieldsEngine() {
-    return this.#editableFieldsEngine;
-  }
-
   /**
    * Return true if the table body has a scrollbar.
    */
@@ -248,7 +238,7 @@ class TableWidget extends EventEmitter {
    */
   get firstVisibleColumn() {
     for (const column of this.columns.values()) {
-      if (column.private) {
+      if (column._private) {
         continue;
       }
 
@@ -272,7 +262,7 @@ class TableWidget extends EventEmitter {
 
         const cell = col.querySelector(".table-widget-cell");
 
-        for (const selector of this.editableFieldsEngine.selectors) {
+        for (const selector of this._editableFieldsEngine.selectors) {
           if (cell.matches(selector)) {
             return true;
           }
@@ -284,7 +274,7 @@ class TableWidget extends EventEmitter {
       return columns;
     };
 
-    const columns = this.#parent.querySelectorAll(".table-widget-column");
+    const columns = this._parent.querySelectorAll(".table-widget-column");
     return filter(columns);
   }
 
@@ -369,7 +359,7 @@ class TableWidget extends EventEmitter {
   }
 
   onEditorDestroyed() {
-    this.#editableFieldsEngine = null;
+    this._editableFieldsEngine = null;
   }
 
   /**
@@ -385,7 +375,7 @@ class TableWidget extends EventEmitter {
    */
   onEditorTab(event) {
     const textbox = event.target;
-    const editor = this.#editableFieldsEngine;
+    const editor = this._editableFieldsEngine;
 
     if (textbox.id !== editor.INPUT_ID) {
       return;
@@ -494,7 +484,7 @@ class TableWidget extends EventEmitter {
       // Navigate backwards on shift tab.
       if (colIndex === 0) {
         if (rowIndex === 0) {
-          this.#editableFieldsEngine.completeEdit();
+          this._editableFieldsEngine.completeEdit();
           return null;
         }
 
@@ -512,7 +502,7 @@ class TableWidget extends EventEmitter {
     } else if (colIndex === maxCol) {
       // If in the rightmost column on the last row stop editing.
       if (rowIndex === maxRow) {
-        this.#editableFieldsEngine.completeEdit();
+        this._editableFieldsEngine.completeEdit();
         return null;
       }
 
@@ -543,7 +533,7 @@ class TableWidget extends EventEmitter {
    *         The values from the removed row.
    */
   onRowRemoved(row) {
-    if (!this.#editableFieldsEngine || !this.#editableFieldsEngine.isEditing) {
+    if (!this._editableFieldsEngine || !this._editableFieldsEngine.isEditing) {
       return;
     }
 
@@ -563,7 +553,7 @@ class TableWidget extends EventEmitter {
    * Cancel an edit because the edit target has been lost.
    */
   onEditorTargetLost() {
-    const editor = this.#editableFieldsEngine;
+    const editor = this._editableFieldsEngine;
 
     if (!editor || !editor.isEditing) {
       return;
@@ -578,7 +568,7 @@ class TableWidget extends EventEmitter {
    */
   onKeydown(event) {
     // If we are in edit mode bail out.
-    if (this.#editableFieldsEngine && this.#editableFieldsEngine.isEditing) {
+    if (this._editableFieldsEngine && this._editableFieldsEngine.isEditing) {
       return;
     }
 
@@ -650,12 +640,12 @@ class TableWidget extends EventEmitter {
   onMousedown({ target }) {
     const localName = target.localName;
 
-    if (localName === "input" || !this.#editableFieldsEngine) {
+    if (localName === "input" || !this._editableFieldsEngine) {
       return;
     }
 
     // Force any editor fields to hide due to XUL focus quirks.
-    this.#editableFieldsEngine.blur();
+    this._editableFieldsEngine.blur();
   }
 
   /**
@@ -681,11 +671,11 @@ class TableWidget extends EventEmitter {
       }
     }
 
-    if (this.#editableFieldsEngine) {
-      this.#editableFieldsEngine.selectors = selectors;
-      this.#editableFieldsEngine.items = this.items;
+    if (this._editableFieldsEngine) {
+      this._editableFieldsEngine.selectors = selectors;
+      this._editableFieldsEngine.items = this.items;
     } else {
-      this.#editableFieldsEngine = new EditableFieldsEngine({
+      this._editableFieldsEngine = new EditableFieldsEngine({
         root: this.tbody,
         onTab: this.onEditorTab,
         onTriggerEvent: "dblclick",
@@ -693,13 +683,13 @@ class TableWidget extends EventEmitter {
         items: this.items,
       });
 
-      this.#editableFieldsEngine.on("change", this.onChange);
-      this.#editableFieldsEngine.on("destroyed", this.onEditorDestroyed);
+      this._editableFieldsEngine.on("change", this.onChange);
+      this._editableFieldsEngine.on("destroyed", this.onEditorDestroyed);
 
       this.on(EVENTS.ROW_REMOVED, this.onRowRemoved);
-      this.on(EVENTS.TABLE_CLEARED, this.#editableFieldsEngine.cancelEdit);
+      this.on(EVENTS.TABLE_CLEARED, this._editableFieldsEngine.cancelEdit);
 
-      this.emit(EVENTS.FIELDS_EDITABLE, this.#editableFieldsEngine);
+      this.emit(EVENTS.FIELDS_EDITABLE, this._editableFieldsEngine);
     }
   }
 
@@ -710,12 +700,12 @@ class TableWidget extends EventEmitter {
     this.document.removeEventListener("keydown", this.onKeydown);
     this.document.removeEventListener("mousedown", this.onMousedown);
 
-    if (this.#editableFieldsEngine) {
-      this.off(EVENTS.TABLE_CLEARED, this.#editableFieldsEngine.cancelEdit);
-      this.#editableFieldsEngine.off("change", this.onChange);
-      this.#editableFieldsEngine.off("destroyed", this.onEditorDestroyed);
-      this.#editableFieldsEngine.destroy();
-      this.#editableFieldsEngine = null;
+    if (this._editableFieldsEngine) {
+      this.off(EVENTS.TABLE_CLEARED, this._editableFieldsEngine.cancelEdit);
+      this._editableFieldsEngine.off("change", this.onChange);
+      this._editableFieldsEngine.off("destroyed", this.onEditorDestroyed);
+      this._editableFieldsEngine.destroy();
+      this._editableFieldsEngine = null;
     }
 
     if (this.menupopup) {
@@ -1089,8 +1079,8 @@ class TableWidget extends EventEmitter {
     if (this.filteredValue == value) {
       return;
     }
-    if (this.#editableFieldsEngine) {
-      this.#editableFieldsEngine.completeEdit();
+    if (this._editableFieldsEngine) {
+      this._editableFieldsEngine.completeEdit();
     }
 
     this.filteredValue = value;
@@ -1146,10 +1136,6 @@ module.exports.TableWidget = TableWidget;
  * A single column object in the table.
  */
 class Column {
-  #private = false;
-  #itemsDirty = false;
-  #sortState = 0;
-
   /**
    * @param {TableWidget} table
    *        The table object to which the column belongs.
@@ -1160,7 +1146,7 @@ class Column {
    */
   constructor(table, id, header) {
     // By default cells are visible in the UI.
-    this.#private = false;
+    this._private = false;
 
     this.tbody = table.tbody;
     this.document = table.document;
@@ -1216,6 +1202,10 @@ class Column {
   // out of sync with this.cells.
   items = null;
 
+  // _itemsDirty is a flag which becomes true when this.items goes out of sync
+  // with this.cells
+  _itemsDirty = null;
+
   selectedRow = null;
 
   cells = null;
@@ -1227,7 +1217,7 @@ class Column {
    * 2 - descending order
    */
   get sorted() {
-    return this.#sortState || 0;
+    return this._sortState || 0;
   }
 
   /**
@@ -1241,7 +1231,7 @@ class Column {
    * Get the private state of the column (visibility in the UI).
    */
   get private() {
-    return this.#private;
+    return this._private;
   }
 
   /**
@@ -1251,7 +1241,7 @@ class Column {
    *         Private (true or false)
    */
   set private(state) {
-    this.#private = state;
+    this._private = state;
   }
 
   /**
@@ -1266,7 +1256,7 @@ class Column {
         value == 1 ? "ascending" : "descending"
       );
     }
-    this.#sortState = value;
+    this._sortState = value;
   }
 
   /**
@@ -1284,7 +1274,7 @@ class Column {
   }
 
   get visibleCellNodes() {
-    const editor = this.table.editableFieldsEngine;
+    const editor = this.table._editableFieldsEngine;
     const nodes = this.cellNodes.filter(node => {
       // If the cell is currently being edited we should class it as visible.
       if (editor && editor.currentTarget === node) {
@@ -1315,7 +1305,7 @@ class Column {
   }
 
   onTableFiltered(itemsToHide) {
-    this.#updateItems();
+    this._updateItems();
     if (!this.cells) {
       return;
     }
@@ -1339,7 +1329,7 @@ class Column {
    *        The unique id of the object associated with the row.
    */
   onRowUpdated(id) {
-    this.#updateItems();
+    this._updateItems();
 
     if (this.highlightUpdated && this.items[id] != null) {
       if (this.table.scrollIntoViewOnUpdate) {
@@ -1411,7 +1401,7 @@ class Column {
    * Selects the row with the object having the `uniqueId` value as `id`
    */
   selectRow(id) {
-    this.#updateItems();
+    this._updateItems();
     this.selectRowAt(this.items[id]);
   }
 
@@ -1419,7 +1409,7 @@ class Column {
    * Selects the next row. Cycles to first if last row is selected.
    */
   selectNextRow() {
-    this.#updateItems();
+    this._updateItems();
     let index = this.items[this.selectedRow] + 1;
     if (index == this.cells.length) {
       index = 0;
@@ -1431,7 +1421,7 @@ class Column {
    * Selects the previous row. Cycles to last if first row is selected.
    */
   selectPreviousRow() {
-    this.#updateItems();
+    this._updateItems();
     let index = this.items[this.selectedRow] - 1;
     if (index == -1) {
       index = this.cells.length - 1;
@@ -1475,7 +1465,7 @@ class Column {
       }
       index = index >= 0 ? index : this.cells.length;
       if (index < this.cells.length) {
-        this.#itemsDirty = true;
+        this._itemsDirty = true;
       }
       this.items[item[this.uniqueId]] = index;
       this.cells.splice(index, 0, new Cell(this, item, this.cells[index]));
@@ -1491,7 +1481,7 @@ class Column {
    */
   insertAt(item, index) {
     if (index < this.cells.length) {
-      this.#itemsDirty = true;
+      this._itemsDirty = true;
     }
     this.items[item[this.uniqueId]] = index;
     this.cells.splice(index, 0, new Cell(this, item, this.cells[index]));
@@ -1534,14 +1524,14 @@ class Column {
    * splitter with CSS, so we do not add splitter elements for hidden columns.
    */
   remove(item) {
-    this.#updateItems();
+    this._updateItems();
     const index = this.items[item[this.uniqueId]];
     if (index == null) {
       return;
     }
 
     if (index < this.cells.length) {
-      this.#itemsDirty = true;
+      this._itemsDirty = true;
     }
     this.cells[index].destroy();
     this.cells.splice(index, 1);
@@ -1552,7 +1542,7 @@ class Column {
    * Updates the corresponding item from the column.
    */
   update(item) {
-    this.#updateItems();
+    this._updateItems();
 
     const index = this.items[item[this.uniqueId]];
     if (index == null) {
@@ -1566,14 +1556,14 @@ class Column {
    * Updates the `this.items` cell-id vs cell-index map to be in sync with
    * `this.cells`.
    */
-  #updateItems() {
-    if (!this.#itemsDirty) {
+  _updateItems() {
+    if (!this._itemsDirty) {
       return;
     }
     for (let i = 0; i < this.cells.length; i++) {
       this.items[this.cells[i].id] = i;
     }
-    this.#itemsDirty = false;
+    this._itemsDirty = false;
   }
 
   /**
@@ -1582,7 +1572,7 @@ class Column {
   clear() {
     this.cells = [];
     this.items = {};
-    this.#itemsDirty = false;
+    this._itemsDirty = false;
     while (this.header.nextSibling) {
       this.header.nextSibling.remove();
     }
@@ -1638,13 +1628,13 @@ class Column {
     if (this.selectedRow) {
       this.cells[this.items[this.selectedRow]].classList.add("theme-selected");
     }
-    this.#itemsDirty = false;
+    this._itemsDirty = false;
     this.updateZebra();
     return items;
   }
 
   updateZebra() {
-    this.#updateItems();
+    this._updateItems();
     let i = 0;
     for (const cell of this.cells) {
       if (!cell.hidden) {
@@ -1722,9 +1712,6 @@ class Column {
  * A single cell in a column
  */
 class Cell {
-  #id;
-  #value;
-
   /**
    * @param {Column} column
    *        The column object to which the cell belongs.
@@ -1764,12 +1751,12 @@ class Cell {
   }
 
   set id(value) {
-    this.#id = value;
+    this._id = value;
     this.label.setAttribute("data-id", value);
   }
 
   get id() {
-    return this.#id;
+    return this._id;
   }
 
   get hidden() {
@@ -1781,7 +1768,7 @@ class Cell {
   }
 
   set value(value) {
-    this.#value = value;
+    this._value = value;
     if (value == null) {
       this.label.setAttribute("value", "");
       return;
@@ -1802,7 +1789,7 @@ class Cell {
   }
 
   get value() {
-    return this.#value;
+    return this._value;
   }
 
   get classList() {
@@ -1846,8 +1833,6 @@ class Cell {
  * Simple widget to make nodes matching a CSS selector editable.
  */
 class EditableFieldsEngine extends EventEmitter {
-  #textbox = null;
-
   /**
    * @param {object} options
    *        An object with the following format:
@@ -1903,19 +1888,19 @@ class EditableFieldsEngine extends EventEmitter {
   }
 
   get textbox() {
-    if (!this.#textbox) {
+    if (!this._textbox) {
       const doc = this.root.ownerDocument;
-      this.#textbox = doc.createElementNS(HTML_NS, "input");
-      this.#textbox.id = this.INPUT_ID;
+      this._textbox = doc.createElementNS(HTML_NS, "input");
+      this._textbox.id = this.INPUT_ID;
 
       this.onKeydown = this.onKeydown.bind(this);
-      this.#textbox.addEventListener("keydown", this.onKeydown);
+      this._textbox.addEventListener("keydown", this.onKeydown);
 
       this.completeEdit = this.completeEdit.bind(this);
       doc.addEventListener("blur", this.completeEdit);
     }
 
-    return this.#textbox;
+    return this._textbox;
   }
 
   /**
@@ -2105,7 +2090,7 @@ class EditableFieldsEngine extends EventEmitter {
       this.root.ownerDocument.removeEventListener("blur", this.completeEdit);
     }
 
-    this.#textbox = this.root = this.selectors = this.onTab = null;
+    this._textbox = this.root = this.selectors = this.onTab = null;
     this.currentTarget = this.currentValue = null;
 
     this.emit("destroyed");

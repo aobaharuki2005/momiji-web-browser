@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsRFPService_h_
-#define _nsRFPService_h_
+#ifndef __nsRFPService_h__
+#define __nsRFPService_h__
 
 #include <cstdint>
 #include <bitset>
@@ -22,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsIRFPService.h"
 #include "nsStringFwd.h"
+#include <queue>
 
 // Defines regarding spoofed values of Navigator object. These spoofed values
 // are returned when 'privacy.resistFingerprinting' is true.
@@ -56,7 +58,7 @@
 #  define SPOOFED_UA_OS SPOOFED_UA_OS_OTHER
 #  define SPOOFED_APPVERSION "5.0 (X11)"
 #  define SPOOFED_OSCPU "Linux x86_64"
-#  define SPOOFED_MAX_TOUCH_POINTS 5
+#  define SPOOFED_MAX_TOUCH_POINTS 0
 #endif
 
 #define LEGACY_BUILD_ID "20181001000000"
@@ -114,7 +116,7 @@ class KeyboardHashKey : public PLDHashEntryHdr {
   typedef const KeyboardHashKey* KeyTypePointer;
 
   KeyboardHashKey(const KeyboardLangs aLang, const KeyboardRegions aRegion,
-                  const KeyNameIndex aKeyIdx, const nsAString& aKey);
+                  const KeyNameIndexType aKeyIdx, const nsAString& aKey);
 
   explicit KeyboardHashKey(KeyTypePointer aOther);
 
@@ -132,7 +134,7 @@ class KeyboardHashKey : public PLDHashEntryHdr {
 
   KeyboardLangs mLang;
   KeyboardRegions mRegion;
-  KeyNameIndex mKeyIdx;
+  KeyNameIndexType mKeyIdx;
   nsString mKey;
 };
 
@@ -741,4 +743,4 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
 
 }  // namespace mozilla
 
-#endif /* _nsRFPService_h_ */
+#endif /* __nsRFPService_h__ */

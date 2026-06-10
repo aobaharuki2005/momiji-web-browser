@@ -1,8 +1,12 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/AliasAnalysis.h"
+
+#include "mozilla/DebugOnly.h"
 
 #include "jit/JitSpewer.h"
 #include "jit/MIR-wasm.h"
@@ -44,7 +48,9 @@ class LoopAliasInfo : public TempObject {
 void AliasAnalysis::spewDependencyList() {
 #ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_AliasSummaries)) {
-    JitSpew(JitSpew_AliasSummaries, "Dependency list for other passes:");
+    Fprinter& print = JitSpewPrinter();
+    JitSpewHeader(JitSpew_AliasSummaries);
+    print.printf("Dependency list for other passes:\n");
 
     for (ReversePostorderIterator block(graph_.rpoBegin());
          block != graph_.rpoEnd(); block++) {
@@ -58,11 +64,12 @@ void AliasAnalysis::spewDependencyList() {
           continue;
         }
 
-        AutoJitSpewMessage msg(JitSpew_AliasSummaries, " ");
-        MDefinition::PrintOpcodeName(msg.printer(), def->op());
-        msg.append("%u marked depending on ", def->id());
-        MDefinition::PrintOpcodeName(msg.printer(), def->dependency()->op());
-        msg.append("%u", def->dependency()->id());
+        JitSpewHeader(JitSpew_AliasSummaries);
+        print.printf(" ");
+        MDefinition::PrintOpcodeName(print, def->op());
+        print.printf("%u marked depending on ", def->id());
+        MDefinition::PrintOpcodeName(print, def->dependency()->op());
+        print.printf("%u\n", def->dependency()->id());
       }
     }
   }
@@ -102,11 +109,13 @@ static void IonSpewDependency(MInstruction* load, MInstruction* store,
     return;
   }
 
-  AutoJitSpewMessage msg(JitSpew_Alias, "  Load ");
-  load->printName(msg.printer());
-  msg.append(" %s on store ", verb);
-  store->printName(msg.printer());
-  msg.append(" (%s)", reason);
+  JitSpewHeader(JitSpew_Alias);
+  Fprinter& out = JitSpewPrinter();
+  out.printf("  Load ");
+  load->printName(out);
+  out.printf(" %s on store ", verb);
+  store->printName(out);
+  out.printf(" (%s)\n", reason);
 #endif
 }
 
@@ -117,9 +126,11 @@ static void IonSpewAliasInfo(const char* pre, MInstruction* ins,
     return;
   }
 
-  AutoJitSpewMessage msg(JitSpew_Alias, "  %s ", pre);
-  ins->printName(msg.printer());
-  msg.append(" %s", post);
+  JitSpewHeader(JitSpew_Alias);
+  Fprinter& out = JitSpewPrinter();
+  out.printf("  %s ", pre);
+  ins->printName(out);
+  out.printf(" %s\n", post);
 #endif
 }
 
@@ -185,25 +196,18 @@ bool AliasAnalysis::analyze() {
       // "The last instruction is a control instruction"
       MOZ_ASSERT(block->hasLastIns());
       // "The only control instructions that can have a non-empty alias set
-      //  are MWasmCallCatchable, MWasmReturnCall, and MWasmResume".
+      //  are MWasmCallCatchable and MWasmReturnCall".
       // Note, this isn't a requirement that is intrinsic to MIR.  In
       // principle, any control instruction can have a non-empty alias set,
       // and that should be correctly handled by this routine.  The assertion
       // merely reflects the current state of usage of MIR, in which
-      // MWasmCallCatchable, MWasmReturnCall, and MWasmResume are the only
-      // control instructions we generate that have non-empty alias sets.
+      // MWasmCallCatchable and MWasmReturnCall are the only control
+      // instructions we generate that have non-empty alias sets.
       // See bug 1837686.
-#ifdef DEBUG
-      MControlInstruction* lastIns = block->lastIns();
-      bool isWasmCallOrResume =
-          lastIns->isWasmCallCatchable() || lastIns->isWasmReturnCall();
-#  ifdef ENABLE_WASM_JSPI
-      if (lastIns->isWasmResume()) {
-        isWasmCallOrResume = true;
-      }
-#  endif
-      MOZ_ASSERT_IF(!isWasmCallOrResume, lastIns->getAliasSet().isNone());
-#endif
+      mozilla::DebugOnly<MControlInstruction*> lastIns = block->lastIns();
+      MOZ_ASSERT_IF(
+          !lastIns->isWasmCallCatchable() && !lastIns->isWasmReturnCall(),
+          lastIns->getAliasSet().isNone());
     }
 
     for (MInstructionIterator def(block->begin()), end(block->end());
@@ -231,9 +235,11 @@ bool AliasAnalysis::analyze() {
 
 #ifdef JS_JITSPEW
         if (JitSpewEnabled(JitSpew_Alias)) {
-          AutoJitSpewMessage msg(JitSpew_Alias, "Processing store ");
-          def->printName(msg.printer());
-          msg.append(" (flags %x)", set.flags());
+          JitSpewHeader(JitSpew_Alias);
+          Fprinter& out = JitSpewPrinter();
+          out.printf("Processing store ");
+          def->printName(out);
+          out.printf(" (flags %x)\n", set.flags());
         }
 #endif
       } else {

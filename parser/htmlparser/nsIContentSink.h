@@ -1,8 +1,9 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsIContentSink_h_
-#define nsIContentSink_h_
+#ifndef nsIContentSink_h___
+#define nsIContentSink_h___
 
 /**
  * MODULE NOTES:
@@ -134,4 +135,4 @@ class nsIContentSink : public nsISupports {
   virtual void InitialTranslationCompleted() {}
 };
 
-#endif /* nsIContentSink_h_ */
+#endif /* nsIContentSink_h___ */

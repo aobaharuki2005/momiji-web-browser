@@ -66,7 +66,7 @@ add_task(async function testOfflineSupportPage() {
       );
       learnMoreLink.scrollIntoView();
       Assert.ok(ContentTaskUtils.isVisible(learnMoreLink));
-      EventUtils.synthesizeMouseAtCenter(learnMoreLink, {}, content);
+      await EventUtils.synthesizeMouseAtCenter(learnMoreLink, {}, content);
     }
   );
   let offlineSupportTab = await offlineSupportPromise;

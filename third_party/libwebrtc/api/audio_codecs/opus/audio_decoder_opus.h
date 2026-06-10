@@ -13,13 +13,11 @@
 
 #include <memory>
 #include <optional>
-#include <utility>
 #include <vector>
 
 #include "api/audio_codecs/audio_codec_pair_id.h"
 #include "api/audio_codecs/audio_decoder.h"
 #include "api/audio_codecs/audio_format.h"
-#include "api/audio_codecs/opus/audio_decoder_opus_config.h"
 #include "api/environment/environment.h"
 #include "rtc_base/system/rtc_export.h"
 
@@ -28,7 +26,11 @@ namespace webrtc {
 // Opus decoder API for use as a template parameter to
 // CreateAudioDecoderFactory<...>().
 struct RTC_EXPORT AudioDecoderOpus {
-  using Config = AudioDecoderOpusConfig;
+  struct Config {
+    bool IsOk() const;  // Checks if the values are currently OK.
+    int sample_rate_hz = 48000;
+    std::optional<int> num_channels;
+  };
   static std::optional<Config> SdpToConfig(const SdpAudioFormat& audio_format);
   static void AppendSupportedDecoders(std::vector<AudioCodecSpec>* specs);
 
@@ -38,7 +40,7 @@ struct RTC_EXPORT AudioDecoderOpus {
       const Environment& env,
       Config config,
       std::optional<AudioCodecPairId> /*codec_pair_id*/) {
-    return MakeAudioDecoder(env, std::move(config));
+    return MakeAudioDecoder(env, config);
   }
 };
 

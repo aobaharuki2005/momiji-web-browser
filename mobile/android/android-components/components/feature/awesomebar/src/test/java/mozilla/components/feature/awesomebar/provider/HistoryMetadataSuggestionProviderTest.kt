@@ -106,6 +106,7 @@ class HistoryMetadataSuggestionProviderTest {
         provider.onInputChanged("moz")
 
         verify(storage).queryHistoryMetadata("moz", 5)
+        Unit
     }
 
     @Test
@@ -121,6 +122,7 @@ class HistoryMetadataSuggestionProviderTest {
         provider.onInputChanged("moz")
 
         verify(storage).queryHistoryMetadata("moz", 2)
+        Unit
     }
 
     @Test
@@ -136,6 +138,7 @@ class HistoryMetadataSuggestionProviderTest {
         provider.onInputChanged("moz")
 
         verify(storage).queryHistoryMetadata("moz", 8)
+        Unit
     }
 
     @Test

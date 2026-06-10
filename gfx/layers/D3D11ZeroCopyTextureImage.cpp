@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,13 +20,6 @@ namespace layers {
 
 using namespace gfx;
 
-void ZeroCopyUsageInfo::DisableZeroCopyNV12Texture(DisableReason aReason) {
-  mSupportsZeroCopyNV12Texture = false;
-  if (aReason == DisableReason::UsingTooManyFrames) {
-    gfxCriticalNoteOnce << "Disable zero copy by using too many video frames";
-  }
-}
-
 /* static */
 RefPtr<IMFSampleWrapper> IMFSampleWrapper::Create(IMFSample* aVideoSample) {
   RefPtr<IMFSampleWrapper> wrapper = new IMFSampleWrapper(aVideoSample);
@@ -42,10 +37,7 @@ D3D11ZeroCopyTextureImage::D3D11ZeroCopyTextureImage(
     ID3D11Texture2D* aTexture, const uint32_t aArrayIndex,
     const gfx::IntSize& aSize, const gfx::IntRect& aRect,
     const gfx::SurfaceFormat aFormat, const gfx::ColorSpace2 aColorSpace,
-    const gfx::ColorRange aColorRange,
-    const gfx::TransferFunction aTransferFunction,
-    const Maybe<gfx::HDRMetadata>& aHDRMetadata,
-    const gfx::ColorDepth aColorDepth)
+    const gfx::ColorRange aColorRange, const gfx::ColorDepth aColorDepth)
     : Image(nullptr, ImageFormat::D3D11_TEXTURE_ZERO_COPY),
       mTexture(aTexture),
       mArrayIndex(aArrayIndex),
@@ -54,8 +46,6 @@ D3D11ZeroCopyTextureImage::D3D11ZeroCopyTextureImage(
       mFormat(aFormat),
       mColorSpace(aColorSpace),
       mColorRange(aColorRange),
-      mTransferFunction(aTransferFunction),
-      mHDRMetadata(aHDRMetadata),
       mColorDepth(aColorDepth) {
   MOZ_ASSERT(XRE_IsGPUProcess());
   MOZ_ASSERT(mFormat == gfx::SurfaceFormat::NV12 ||
@@ -68,15 +58,14 @@ D3D11ZeroCopyTextureImage::~D3D11ZeroCopyTextureImage() {
 }
 
 void D3D11ZeroCopyTextureImage::AllocateTextureClient(
-    KnowsCompositor* aKnowsCompositor, ZeroCopyUsageInfo* aUsageInfo,
+    KnowsCompositor* aKnowsCompositor, RefPtr<ZeroCopyUsageInfo> aUsageInfo,
     const RefPtr<FenceD3D11> aWriteFence) {
   if (aWriteFence) {
     aWriteFence->IncrementAndSignal();
   }
   mTextureClient = D3D11TextureData::CreateTextureClient(
       mTexture, mArrayIndex, mSize, mFormat, mColorSpace, mColorRange,
-      mTransferFunction, mHDRMetadata, aKnowsCompositor, aUsageInfo,
-      aWriteFence);
+      aKnowsCompositor, aUsageInfo, aWriteFence);
   MOZ_ASSERT(mTextureClient);
 }
 
@@ -98,7 +87,7 @@ D3D11ZeroCopyTextureImage::GetAsSourceSurface() {
 
   RefPtr<gfx::SourceSurface> sourceSurface =
       gfx::Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(
-          src, mArrayIndex, mColorSpace, mColorRange, mTransferFunction);
+          src, mArrayIndex, mColorSpace, mColorRange);
 
   // There is a case that mSize and size of mTexture are different. In this
   // case, size of sourceSurface is different from mSize.
@@ -151,12 +140,9 @@ D3D11TextureIMFSampleImage::D3D11TextureIMFSampleImage(
     const uint32_t aArrayIndex, const gfx::IntSize& aSize,
     const gfx::IntRect& aRect, const gfx::SurfaceFormat aFormat,
     const gfx::ColorSpace2 aColorSpace, const gfx::ColorRange aColorRange,
-    const gfx::TransferFunction aTransferFunction,
-    const Maybe<gfx::HDRMetadata>& aHDRMetadata,
     const gfx::ColorDepth aColorDepth)
     : D3D11ZeroCopyTextureImage(aTexture, aArrayIndex, aSize, aRect, aFormat,
-                                aColorSpace, aColorRange, aTransferFunction,
-                                aHDRMetadata, aColorDepth),
+                                aColorSpace, aColorRange, aColorDepth),
       mVideoSample(IMFSampleWrapper::Create(aVideoSample)) {
   MOZ_ASSERT(XRE_IsGPUProcess());
 }
@@ -168,14 +154,10 @@ RefPtr<IMFSampleWrapper> D3D11TextureIMFSampleImage::GetIMFSampleWrapper() {
 D3D11TextureAVFrameImage::D3D11TextureAVFrameImage(
     D3D11TextureWrapper* aWrapper, const gfx::IntSize& aSize,
     const gfx::IntRect& aRect, const gfx::ColorSpace2 aColorSpace,
-    const gfx::ColorRange aColorRange,
-    const gfx::TransferFunction aTransferFunction,
-    const Maybe<gfx::HDRMetadata>& aHDRMetadata,
-    const gfx::ColorDepth aColorDepth)
+    const gfx::ColorRange aColorRange, const gfx::ColorDepth aColorDepth)
     : D3D11ZeroCopyTextureImage(aWrapper->GetTexture(), aWrapper->mArrayIdx,
                                 aSize, aRect, aWrapper->mFormat, aColorSpace,
-                                aColorRange, aTransferFunction, aHDRMetadata,
-                                aColorDepth),
+                                aColorRange, aColorDepth),
       mWrapper(aWrapper) {
   MOZ_ASSERT(XRE_IsGPUProcess());
 }

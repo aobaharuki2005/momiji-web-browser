@@ -30,21 +30,21 @@
 #include "src/core/SkTypefaceCache.h"
 #include "src/sfnt/SkOTTable_OS_2.h"
 
-#if defined(SK_TYPEFACE_FACTORY_FREETYPE)
+#ifdef SK_TYPEFACE_FACTORY_FREETYPE
 #include "src/ports/SkTypeface_FreeType.h"
 #endif
 
-#if defined(SK_TYPEFACE_FACTORY_CORETEXT)
+#ifdef SK_TYPEFACE_FACTORY_CORETEXT
 #include "src/ports/SkTypeface_mac_ct.h"
 #endif
 
-#if defined(SK_TYPEFACE_FACTORY_DIRECTWRITE)
+#ifdef SK_TYPEFACE_FACTORY_DIRECTWRITE
 #include "src/ports/SkTypeface_win_dw.h"
 #endif
 
-#if defined(SK_TYPEFACE_FACTORY_FONTATIONS)
-#include "include/ports/SkTypeface_fontations.h"
-#include "src/ports/SkTypeface_fontations_factory.h"
+// TODO(skbug.com/40045343): This needs to be set by Bazel rules.
+#ifdef SK_TYPEFACE_FACTORY_FONTATIONS
+#include "src/ports/SkTypeface_fontations_priv.h"
 #endif
 
 #include <algorithm>
@@ -178,7 +178,7 @@ namespace {
             { SkTypeface_FreeType::FactoryId, SkTypeface_FreeType::MakeFromStream },
 #endif
 #ifdef SK_TYPEFACE_FACTORY_FONTATIONS
-            { SkTypefaces::Fontations::FactoryId, SkTypeface_Make_Fontations },
+            { SkTypeface_Fontations::FactoryId, SkTypeface_Fontations::MakeFromStream },
 #endif
         }};
         return decoders.get();
@@ -198,7 +198,7 @@ void SkTypeface::Register(
     decoders()->push_back(DecoderProc{id, make});
 }
 
-bool SkTypeface::serialize(SkWStream* wstream, SerializeBehavior behavior) const {
+void SkTypeface::serialize(SkWStream* wstream, SerializeBehavior behavior) const {
     bool isLocalData = false;
     SkFontDescriptor desc;
     this->onGetFontDescriptor(&desc, &isLocalData);
@@ -222,19 +222,19 @@ bool SkTypeface::serialize(SkWStream* wstream, SerializeBehavior behavior) const
 
         int numAxes = this->getVariationDesignPosition({});
         if (0 < numAxes) {
-            numAxes = this->getVariationDesignPosition({desc.setVariationCoordinates(numAxes),
-                                                        (size_t)numAxes});
+            numAxes = this->getVariationDesignPosition({desc.setVariationCoordinates(numAxes), numAxes});
             if (numAxes <= 0) {
                 desc.setVariationCoordinates(0);
             }
         }
     }
-    return desc.serialize(wstream);
+    desc.serialize(wstream);
 }
 
 sk_sp<SkData> SkTypeface::serialize(SerializeBehavior behavior) const {
     SkDynamicMemoryWStream stream;
-    return this->serialize(&stream, behavior) ? stream.detachAsData() : nullptr;
+    this->serialize(&stream, behavior);
+    return stream.detachAsData();
 }
 
 sk_sp<SkTypeface> SkTypeface::MakeDeserialize(SkStream* stream, sk_sp<SkFontMgr> lastResortMgr) {
@@ -501,11 +501,6 @@ bool SkTypeface::isFixedPitch() const {
 bool SkTypeface::onGetFixedPitch() const {
     return fIsFixedPitch;
 }
-
-bool SkTypeface::isSyntheticBold() const { return this->onIsSyntheticBold(); }
-bool SkTypeface::isSyntheticOblique() const { return this->onIsSyntheticOblique(); }
-bool SkTypeface::onIsSyntheticBold() const { return false; }
-bool SkTypeface::onIsSyntheticOblique() const { return false; }
 
 void SkTypeface::getGlyphToUnicodeMap(SkSpan<SkUnichar> dst) const {
     sk_bzero(dst.data(), dst.size_bytes());

@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.83"
+rust-version = "1.82"
 name = "icu_calendar"
-version = "2.1.1"
+version = "2.0.2"
 authors = ["The ICU4X Project Developers"]
 build = false
 include = [
@@ -42,15 +42,8 @@ repository = "https://github.com/unicode-org/icu4x"
 [package.metadata.docs.rs]
 all-features = true
 
-[package.metadata.cargo-semver-checks.lints]
-workspace = true
-
 [features]
-alloc = [
-    "icu_locale_core/alloc",
-    "tinystr/alloc",
-    "serde?/alloc",
-]
+alloc = []
 compiled_data = [
     "dep:icu_calendar_data",
     "dep:icu_locale",
@@ -77,28 +70,10 @@ serde = [
     "tinystr/serde",
     "icu_provider/serde",
 ]
-unstable = []
 
 [lib]
 name = "icu_calendar"
 path = "src/lib.rs"
-
-[[test]]
-name = "arithmetic"
-path = "tests/arithmetic.rs"
-required-features = ["ixdtf"]
-
-[[test]]
-name = "exhaustive"
-path = "tests/exhaustive.rs"
-
-[[test]]
-name = "extended_year"
-path = "tests/extended_year.rs"
-
-[[test]]
-name = "reference_year"
-path = "tests/reference_year.rs"
 
 [[bench]]
 name = "convert"
@@ -111,7 +86,7 @@ path = "benches/date.rs"
 harness = false
 
 [dependencies.calendrical_calculations]
-version = "0.2.3"
+version = "0.2.0"
 default-features = false
 
 [dependencies.databake]
@@ -125,49 +100,57 @@ version = "0.2.3"
 default-features = false
 
 [dependencies.icu_calendar_data]
-version = "~2.1.1"
+version = "~2.0.0"
 optional = true
 default-features = false
 
 [dependencies.icu_locale]
-version = "~2.1.1"
+version = "~2.0.0"
 optional = true
 default-features = false
 
 [dependencies.icu_locale_core]
-version = "2.1.1"
+version = "2.0.0"
+features = ["alloc"]
 default-features = false
 
 [dependencies.icu_provider]
-version = "2.1.1"
+version = "2.0.0"
 default-features = false
 
 [dependencies.ixdtf]
-version = "0.6.0"
+version = "0.5.0"
 optional = true
 default-features = false
 
 [dependencies.serde]
-version = "1.0.220"
-features = ["derive"]
+version = "1.0.110"
+features = [
+    "derive",
+    "alloc",
+]
 optional = true
 default-features = false
 
 [dependencies.tinystr]
 version = "0.8.0"
-features = ["zerovec"]
+features = [
+    "alloc",
+    "zerovec",
+]
+default-features = false
+
+[dependencies.writeable]
+version = "0.6.0"
 default-features = false
 
 [dependencies.zerovec]
-version = "0.11.3"
+version = "0.11.1"
 features = ["derive"]
 default-features = false
 
-[dev-dependencies.itertools]
-version = "0.14.0"
-
 [dev-dependencies.serde]
-version = "1.0.220"
+version = "1.0.110"
 features = [
     "derive",
     "alloc",
@@ -179,9 +162,6 @@ version = "1.0.45"
 
 [dev-dependencies.simple_logger]
 version = "5.0.0"
-
-[dev-dependencies.ureq]
-version = "3.0.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies.criterion]
 version = "0.5.0"

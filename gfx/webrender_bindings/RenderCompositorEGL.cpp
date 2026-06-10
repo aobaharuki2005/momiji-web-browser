@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -70,25 +72,6 @@ RenderCompositorEGL::RenderCompositorEGL(
     : RenderCompositor(aWidget), mGL(aGL), mEGLSurface(EGL_NO_SURFACE) {
   MOZ_ASSERT(mGL);
   LOG("RenderCompositorEGL::RenderCompositorEGL()");
-#ifdef MOZ_WAYLAND
-  if (widget::GdkIsWaylandDisplay()) {
-    mEGLSurface = CreateEGLSurface();
-    if (!mEGLSurface) {
-      RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
-      return;
-    }
-    // We have a new EGL surface, which on wayland needs to be configured for
-    // non-blocking buffer swaps. We need MakeCurrent() to set our current EGL
-    // context before we call eglSwapInterval, which is why we do it here
-    // rather than where the surface was created.
-    const auto& gle = gl::GLContextEGL::Cast(gl());
-    const auto& egl = gle->mEgl;
-    MakeCurrent();
-
-    const int interval = gfx::gfxVars::SwapIntervalEGL() ? 1 : 0;
-    egl->fSwapInterval(interval);
-  }
-#endif
 }
 
 RenderCompositorEGL::~RenderCompositorEGL() {
@@ -100,7 +83,6 @@ RenderCompositorEGL::~RenderCompositorEGL() {
 }
 
 bool RenderCompositorEGL::BeginFrame() {
-  LOG("RenderCompositorEGL::BeginFrame()");
   if (kIsLinux && mEGLSurface == EGL_NO_SURFACE) {
     gfxCriticalNote
         << "We don't have EGLSurface to draw into. Called too early?";
@@ -126,13 +108,12 @@ bool RenderCompositorEGL::BeginFrame() {
 
 RenderedFrameId RenderCompositorEGL::EndFrame(
     const nsTArray<DeviceIntRect>& aDirtyRects) {
-  LOG("RenderCompositorEGL::EndFrame()");
 #ifdef MOZ_WIDGET_ANDROID
   const auto& gle = gl::GLContextEGL::Cast(gl());
   const auto& egl = gle->mEgl;
 
   EGLSync sync = nullptr;
-  if (layers::AndroidHardwareBufferManager::Get()) {
+  if (layers::AndroidHardwareBufferApi::Get()) {
     sync = egl->fCreateSync(LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, nullptr);
   }
   if (sync) {
@@ -170,7 +151,7 @@ RenderedFrameId RenderCompositorEGL::EndFrame(
     gl()->SetDamage(bufferInvalid);
   }
 
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
   // Rendering on Wayland has to be atomic (buffer attach + commit) and
   // wayland surface is also used by main thread so lock it before
   // we paint at SwapBuffers().
@@ -183,14 +164,9 @@ RenderedFrameId RenderCompositorEGL::EndFrame(
   return frameId;
 }
 
-void RenderCompositorEGL::Pause() {
-  if (kIsAndroid) {
-    DestroyEGLSurface();
-  }
-}
+void RenderCompositorEGL::Pause() { DestroyEGLSurface(); }
 
 bool RenderCompositorEGL::Resume() {
-  LOG("RenderCompositorEGL::Resume()");
   if (kIsAndroid) {
     // Destroy EGLSurface if it exists.
     DestroyEGLSurface();
@@ -227,27 +203,25 @@ bool RenderCompositorEGL::Resume() {
 
     gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
   } else if (kIsLinux) {
-#ifdef MOZ_X11
-    if (widget::GdkIsX11Display()) {
-      DestroyEGLSurface();
-      mEGLSurface = CreateEGLSurface();
-      if (mEGLSurface != EGL_NO_SURFACE) {
-        // We have a new EGL surface, which on wayland needs to be configured
-        // for non-blocking buffer swaps. We need MakeCurrent() to set our
-        // current EGL context before we call eglSwapInterval, which is why we
-        // do it here rather than where the surface was created.
-        const auto& gle = gl::GLContextEGL::Cast(gl());
-        const auto& egl = gle->mEgl;
-        MakeCurrent();
+    // Destroy EGLSurface if it exists and create a new one. We will set the
+    // swap interval after MakeCurrent() has been called.
+    DestroyEGLSurface();
+    mEGLSurface = CreateEGLSurface();
+    if (mEGLSurface != EGL_NO_SURFACE) {
+      // We have a new EGL surface, which on wayland needs to be configured for
+      // non-blocking buffer swaps. We need MakeCurrent() to set our current EGL
+      // context before we call eglSwapInterval, which is why we do it here
+      // rather than where the surface was created.
+      const auto& gle = gl::GLContextEGL::Cast(gl());
+      const auto& egl = gle->mEgl;
+      MakeCurrent();
 
-        const int interval = gfx::gfxVars::SwapIntervalEGL() ? 1 : 0;
-        egl->fSwapInterval(interval);
-      } else {
-        RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
-        return false;
-      }
+      const int interval = gfx::gfxVars::SwapIntervalEGL() ? 1 : 0;
+      egl->fSwapInterval(interval);
+    } else {
+      RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
+      return false;
     }
-#endif
   }
   return true;
 }
@@ -283,7 +257,7 @@ void RenderCompositorEGL::DestroyEGLSurface() {
 
 RefPtr<layers::Fence> RenderCompositorEGL::GetAndResetReleaseFence() {
 #ifdef MOZ_WIDGET_ANDROID
-  MOZ_ASSERT(!layers::AndroidHardwareBufferManager::Get() || mReleaseFence);
+  MOZ_ASSERT(!layers::AndroidHardwareBufferApi::Get() || mReleaseFence);
   return mReleaseFence.forget();
 #else
   return nullptr;

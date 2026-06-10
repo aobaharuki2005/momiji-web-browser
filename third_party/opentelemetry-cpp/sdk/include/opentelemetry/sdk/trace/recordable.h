@@ -44,13 +44,6 @@ class SpanData;
 class Recordable
 {
 public:
-  Recordable() = default;
-
-  Recordable(const Recordable &)            = delete;
-  Recordable(Recordable &&)                 = delete;
-  Recordable &operator=(const Recordable &) = delete;
-  Recordable &operator=(Recordable &&)      = delete;
-
   virtual ~Recordable() = default;
 
   /**
@@ -123,7 +116,7 @@ public:
    * Add a link to a span with default (empty) attributes.
    * @param span_context the span context of the linked span
    */
-  void AddLink(const opentelemetry::trace::SpanContext &span_context)
+  void AddLink(opentelemetry::trace::SpanContext span_context)
   {
     AddLink(span_context, opentelemetry::sdk::GetEmptyAttributes());
   }

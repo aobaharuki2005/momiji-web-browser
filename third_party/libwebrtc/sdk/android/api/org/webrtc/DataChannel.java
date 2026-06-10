@@ -26,32 +26,32 @@ public class DataChannel {
     // Optional unsigned short in WebIDL, -1 means unspecified.
     public int id = -1;
 
-    @CalledByNative
+    @CalledByNative("Init")
     boolean getOrdered() {
       return ordered;
     }
 
-    @CalledByNative
+    @CalledByNative("Init")
     int getMaxRetransmitTimeMs() {
       return maxRetransmitTimeMs;
     }
 
-    @CalledByNative
+    @CalledByNative("Init")
     int getMaxRetransmits() {
       return maxRetransmits;
     }
 
-    @CalledByNative
+    @CalledByNative("Init")
     String getProtocol() {
       return protocol;
     }
 
-    @CalledByNative
+    @CalledByNative("Init")
     boolean getNegotiated() {
       return negotiated;
     }
 
-    @CalledByNative
+    @CalledByNative("Init")
     int getId() {
       return id;
     }
@@ -68,7 +68,7 @@ public class DataChannel {
      */
     public final boolean binary;
 
-    @CalledByNative
+    @CalledByNative("Buffer")
     public Buffer(ByteBuffer data, boolean binary) {
       this.data = data;
       this.binary = binary;
@@ -78,15 +78,15 @@ public class DataChannel {
   /** Java version of C++ DataChannelObserver. */
   public interface Observer {
     /** The data channel's bufferedAmount has changed. */
-    @CalledByNative public void onBufferedAmountChange(long previousAmount);
+    @CalledByNative("Observer") public void onBufferedAmountChange(long previousAmount);
     /** The data channel state has changed. */
-    @CalledByNative public void onStateChange();
+    @CalledByNative("Observer") public void onStateChange();
     /**
      * A data buffer was successfully received.  NOTE: `buffer.data` will be
      * freed once this function returns so callers who want to use the data
      * asynchronously must make sure to copy it first.
      */
-    @CalledByNative public void onMessage(Buffer buffer);
+    @CalledByNative("Observer") public void onMessage(Buffer buffer);
   }
 
   /** Keep in sync with DataChannelInterface::DataState. */
@@ -96,7 +96,7 @@ public class DataChannel {
     CLOSING,
     CLOSED;
 
-    @CalledByNative
+    @CalledByNative("State")
     static State fromNativeIndex(int nativeIndex) {
       return values()[nativeIndex];
     }

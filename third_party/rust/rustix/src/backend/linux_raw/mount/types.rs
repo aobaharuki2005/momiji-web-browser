@@ -1,4 +1,4 @@
-use crate::ffi;
+use crate::backend::c;
 use bitflags::bitflags;
 
 bitflags! {
@@ -7,7 +7,7 @@ bitflags! {
     /// [`mount`]: crate::mount::mount
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct MountFlags: ffi::c_uint {
+    pub struct MountFlags: c::c_uint {
         /// `MS_BIND`
         const BIND = linux_raw_sys::general::MS_BIND;
 
@@ -68,7 +68,7 @@ bitflags! {
     /// [`unmount`]: crate::mount::unmount
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct UnmountFlags: ffi::c_uint {
+    pub struct UnmountFlags: c::c_uint {
         /// `MNT_FORCE`
         const FORCE = linux_raw_sys::general::MNT_FORCE;
         /// `MNT_DETACH`
@@ -83,13 +83,14 @@ bitflags! {
     }
 }
 
+#[cfg(feature = "mount")]
 bitflags! {
     /// `FSOPEN_*` constants for use with [`fsopen`].
     ///
     /// [`fsopen`]: crate::mount::fsopen
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct FsOpenFlags: ffi::c_uint {
+    pub struct FsOpenFlags: c::c_uint {
         /// `FSOPEN_CLOEXEC`
         const FSOPEN_CLOEXEC = linux_raw_sys::general::FSOPEN_CLOEXEC;
 
@@ -98,13 +99,14 @@ bitflags! {
     }
 }
 
+#[cfg(feature = "mount")]
 bitflags! {
     /// `FSMOUNT_*` constants for use with [`fsmount`].
     ///
     /// [`fsmount`]: crate::mount::fsmount
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct FsMountFlags: ffi::c_uint {
+    pub struct FsMountFlags: c::c_uint {
         /// `FSMOUNT_CLOEXEC`
         const FSMOUNT_CLOEXEC = linux_raw_sys::general::FSMOUNT_CLOEXEC;
 
@@ -114,6 +116,7 @@ bitflags! {
 }
 
 /// `FSCONFIG_*` constants for use with the `fsconfig` syscall.
+#[cfg(feature = "mount")]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u32)]
 pub(crate) enum FsConfigCmd {
@@ -140,18 +143,16 @@ pub(crate) enum FsConfigCmd {
 
     /// `FSCONFIG_CMD_RECONFIGURE`
     Reconfigure = linux_raw_sys::general::fsconfig_command::FSCONFIG_CMD_RECONFIGURE as u32,
-
-    /// `FSCONFIG_CMD_CREATE_EXCL` (since Linux 6.6)
-    CreateExclusive = linux_raw_sys::general::fsconfig_command::FSCONFIG_CMD_CREATE_EXCL as u32,
 }
 
+#[cfg(feature = "mount")]
 bitflags! {
     /// `MOUNT_ATTR_*` constants for use with [`fsmount`].
     ///
     /// [`fsmount`]: crate::mount::fsmount
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct MountAttrFlags: ffi::c_uint {
+    pub struct MountAttrFlags: c::c_uint {
         /// `MOUNT_ATTR_RDONLY`
         const MOUNT_ATTR_RDONLY = linux_raw_sys::general::MOUNT_ATTR_RDONLY;
 
@@ -193,13 +194,14 @@ bitflags! {
     }
 }
 
+#[cfg(feature = "mount")]
 bitflags! {
     /// `MOVE_MOUNT_*` constants for use with [`move_mount`].
     ///
     /// [`move_mount`]: crate::mount::move_mount
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct MoveMountFlags: ffi::c_uint {
+    pub struct MoveMountFlags: c::c_uint {
         /// `MOVE_MOUNT_F_EMPTY_PATH`
         const MOVE_MOUNT_F_SYMLINKS = linux_raw_sys::general::MOVE_MOUNT_F_SYMLINKS;
 
@@ -222,7 +224,7 @@ bitflags! {
         const MOVE_MOUNT_SET_GROUP = linux_raw_sys::general::MOVE_MOUNT_SET_GROUP;
 
         /// `MOVE_MOUNT_BENEATH` (since Linux 6.5)
-        const MOVE_MOUNT_BENEATH = linux_raw_sys::general::MOVE_MOUNT_BENEATH;
+        const MOVE_MOUNT_BENEATH = c::MOVE_MOUNT_BENEATH;
 
         /// `MOVE_MOUNT__MASK`
         const MOVE_MOUNT__MASK = linux_raw_sys::general::MOVE_MOUNT__MASK;
@@ -232,13 +234,14 @@ bitflags! {
     }
 }
 
+#[cfg(feature = "mount")]
 bitflags! {
     /// `OPENTREE_*` constants for use with [`open_tree`].
     ///
     /// [`open_tree`]: crate::mount::open_tree
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct OpenTreeFlags: ffi::c_uint {
+    pub struct OpenTreeFlags: c::c_uint {
         /// `OPENTREE_CLONE`
         const OPEN_TREE_CLONE = linux_raw_sys::general::OPEN_TREE_CLONE;
 
@@ -262,13 +265,14 @@ bitflags! {
     }
 }
 
+#[cfg(feature = "mount")]
 bitflags! {
     /// `FSPICK_*` constants for use with [`fspick`].
     ///
     /// [`fspick`]: crate::mount::fspick
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct FsPickFlags: ffi::c_uint {
+    pub struct FsPickFlags: c::c_uint {
         /// `FSPICK_CLOEXEC`
         const FSPICK_CLOEXEC = linux_raw_sys::general::FSPICK_CLOEXEC;
 
@@ -292,23 +296,15 @@ bitflags! {
     /// [`mount_change`]: crate::mount::mount_change
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct MountPropagationFlags: ffi::c_uint {
+    pub struct MountPropagationFlags: c::c_uint {
         /// `MS_SILENT`
         const SILENT = linux_raw_sys::general::MS_SILENT;
         /// `MS_SHARED`
         const SHARED = linux_raw_sys::general::MS_SHARED;
         /// `MS_PRIVATE`
         const PRIVATE = linux_raw_sys::general::MS_PRIVATE;
-        /// Mark a mount as a downstream of its current peer group.
-        ///
-        /// Mount and unmount events propagate from the upstream peer group
-        /// into the downstream.
-        ///
-        /// In Linux documentation, this flag is named `MS_SLAVE`, and the
-        /// concepts of “upstream” and “downstream” are called
-        /// “master” and “slave”.
-        #[doc(alias = "SLAVE")]
-        const DOWNSTREAM = linux_raw_sys::general::MS_SLAVE;
+        /// `MS_SLAVE`
+        const SLAVE = linux_raw_sys::general::MS_SLAVE;
         /// `MS_UNBINDABLE`
         const UNBINDABLE = linux_raw_sys::general::MS_UNBINDABLE;
         /// `MS_REC`
@@ -322,7 +318,7 @@ bitflags! {
 bitflags! {
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub(crate) struct InternalMountFlags: ffi::c_uint {
+    pub(crate) struct InternalMountFlags: c::c_uint {
         const REMOUNT = linux_raw_sys::general::MS_REMOUNT;
         const MOVE = linux_raw_sys::general::MS_MOVE;
 
@@ -332,4 +328,4 @@ bitflags! {
 }
 
 #[repr(transparent)]
-pub(crate) struct MountFlagsArg(pub(crate) ffi::c_uint);
+pub(crate) struct MountFlagsArg(pub(crate) c::c_uint);

@@ -41,7 +41,7 @@ use crate::loom::sync::Arc;
 use crate::runtime::{
     blocking,
     driver::{self, Driver},
-    scheduler, Config, TimerFlavor,
+    scheduler, Config,
 };
 use crate::util::RngSeedGenerator;
 
@@ -54,7 +54,6 @@ pub(crate) struct MultiThread;
 // ===== impl MultiThread =====
 
 impl MultiThread {
-    #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         size: usize,
         driver: Driver,
@@ -62,8 +61,6 @@ impl MultiThread {
         blocking_spawner: blocking::Spawner,
         seed_generator: RngSeedGenerator,
         config: Config,
-        timer_flavor: TimerFlavor,
-        name: Option<String>,
     ) -> (MultiThread, Arc<Handle>, Launch) {
         let parker = Parker::new(driver);
         let (handle, launch) = worker::create(
@@ -73,8 +70,6 @@ impl MultiThread {
             blocking_spawner,
             seed_generator,
             config,
-            timer_flavor,
-            name,
         );
 
         (MultiThread, handle, launch)

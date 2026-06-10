@@ -26,7 +26,7 @@ export let CanvasPermissionPromptHelper = {
       browser = aSubject;
     }
 
-    let window = browser?.documentGlobal;
+    let window = browser?.ownerGlobal;
     if (!window) {
       // Without knowing where this came from, we can't show the prompt.
       return;

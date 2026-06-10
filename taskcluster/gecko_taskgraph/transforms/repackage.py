@@ -5,149 +5,112 @@
 Transform the repackage task into an actual task description.
 """
 
-from typing import Optional, Union
-
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.copy import deepcopy
 from taskgraph.util.dependencies import get_primary_dependency
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.taskcluster import get_artifact_prefix
+from voluptuous import Any, Extra, Optional, Required
 
-from gecko_taskgraph.transforms.job import JobDescriptionSchema
+from gecko_taskgraph.transforms.job import job_description_schema
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 from gecko_taskgraph.util.platforms import architecture, archive_format
 from gecko_taskgraph.util.workertypes import worker_type_implementation
 
-
-class MozharnessSchema(Schema, forbid_unknown_fields=False, kw_only=True):
-    # Config files passed to the mozharness script
-    config: optionally_keyed_by("build-platform", list[str], use_msgspec=True)  # type: ignore  # noqa: F821
-    # Additional paths to look for mozharness configs in. These should be
-    # relative to the base of the source checkout
-    config_paths: Optional[list[str]] = None
-    # if true, perform a checkout of a comm-central based branch inside the
-    # gecko checkout
-    comm_checkout: Optional[bool] = None
-    run_as_root: Optional[bool] = None
-    use_caches: Optional[Union[bool, list[str]]] = None
-
-
-class MsiSchema(Schema, kw_only=True):
-    display_name: Optional[  # type: ignore
-        optionally_keyed_by(
-            "shipping-product",
-            "release-type",
-            str,
-            use_msgspec=True,
-        )
-    ] = None
-
-
-class MsixSchema(Schema, kw_only=True):
-    channel: Optional[  # type: ignore
-        optionally_keyed_by(
-            "package-format",
-            "level",
-            "build-platform",
-            "release-type",
-            "shipping-product",
-            str,
-            use_msgspec=True,
-        )
-    ] = None
-    identity_name: Optional[  # type: ignore
-        optionally_keyed_by(
-            "package-format",
-            "level",
-            "build-platform",
-            "release-type",
-            "shipping-product",
-            str,
-            use_msgspec=True,
-        )
-    ] = None
-    publisher: Optional[  # type: ignore
-        optionally_keyed_by(
-            "package-format",
-            "level",
-            "build-platform",
-            "release-type",
-            "shipping-product",
-            str,
-            use_msgspec=True,
-        )
-    ] = None
-    publisher_display_name: Optional[  # type: ignore
-        optionally_keyed_by(
-            "package-format",
-            "level",
-            "build-platform",
-            "release-type",
-            "shipping-product",
-            str,
-            use_msgspec=True,
-        )
-    ] = None
-    vendor: Optional[str] = None
-
-
-class FlatpakSchema(Schema, kw_only=True):
-    name: optionally_keyed_by(  # type: ignore  # noqa: F821
-        "level",
-        "build-platform",
-        "release-type",
-        "shipping-product",
-        str,
-        use_msgspec=True,
-    )
-    branch: optionally_keyed_by(  # type: ignore  # noqa: F821
-        "level",
-        "build-platform",
-        "release-type",
-        "shipping-product",
-        str,
-        use_msgspec=True,
-    )
-
-
-class PackagingDescriptionSchema(Schema, kw_only=True):
+packaging_description_schema = Schema({
     # unique label to describe this repackaging task
-    label: Optional[str] = None
-    worker_type: Optional[str] = None
-    worker: Optional[object] = None
-    attributes: JobDescriptionSchema.__annotations__["attributes"] = None
-    dependencies: JobDescriptionSchema.__annotations__["dependencies"] = None
+    Optional("label"): str,
+    Optional("worker-type"): str,
+    Optional("worker"): object,
+    Optional("attributes"): job_description_schema["attributes"],
+    Optional("dependencies"): job_description_schema["dependencies"],
     # treeherder is allowed here to override any defaults we use for repackaging.  See
     # taskcluster/gecko_taskgraph/transforms/task.py for the schema details, and the
     # below transforms for defaults of various values.
-    treeherder: JobDescriptionSchema.__annotations__["treeherder"] = None
+    Optional("treeherder"): job_description_schema["treeherder"],
     # If a l10n task, the corresponding locale
-    locale: Optional[str] = None
+    Optional("locale"): str,
     # Routes specific to this task, if defined
-    routes: Optional[list[str]] = None
+    Optional("routes"): [str],
     # passed through directly to the job description
-    extra: JobDescriptionSchema.__annotations__["extra"] = None
+    Optional("extra"): job_description_schema["extra"],
     # passed through to job description
-    fetches: JobDescriptionSchema.__annotations__["fetches"] = None
-    run_on_projects: JobDescriptionSchema.__annotations__["run_on_projects"] = None
-    run_on_repo_type: JobDescriptionSchema.__annotations__["run_on_repo_type"] = None
+    Optional("fetches"): job_description_schema["fetches"],
+    Optional("run-on-projects"): job_description_schema["run-on-projects"],
+    Optional("run-on-repo-type"): job_description_schema["run-on-repo-type"],
     # Shipping product and phase
-    shipping_product: JobDescriptionSchema.__annotations__["shipping_product"] = None
-    shipping_phase: JobDescriptionSchema.__annotations__["shipping_phase"] = None
-    package_formats: optionally_keyed_by(  # type: ignore  # noqa: F821
-        "build-platform",
-        "release-type",
-        "build-type",
-        list[str],
-        use_msgspec=True,
-    )
-    msi: Optional[MsiSchema] = None
-    msix: Optional[MsixSchema] = None
-    flatpak: Optional[FlatpakSchema] = None
+    Optional("shipping-product"): job_description_schema["shipping-product"],
+    Optional("shipping-phase"): job_description_schema["shipping-phase"],
+    Required("package-formats"): optionally_keyed_by(
+        "build-platform", "release-type", "build-type", [str]
+    ),
+    Optional("msix"): {
+        Optional("channel"): optionally_keyed_by(
+            "package-format",
+            "level",
+            "build-platform",
+            "release-type",
+            "shipping-product",
+            str,
+        ),
+        Optional("identity-name"): optionally_keyed_by(
+            "package-format",
+            "level",
+            "build-platform",
+            "release-type",
+            "shipping-product",
+            str,
+        ),
+        Optional("publisher"): optionally_keyed_by(
+            "package-format",
+            "level",
+            "build-platform",
+            "release-type",
+            "shipping-product",
+            str,
+        ),
+        Optional("publisher-display-name"): optionally_keyed_by(
+            "package-format",
+            "level",
+            "build-platform",
+            "release-type",
+            "shipping-product",
+            str,
+        ),
+        Optional("vendor"): str,
+    },
+    Optional("flatpak"): {
+        Required("name"): optionally_keyed_by(
+            "level",
+            "build-platform",
+            "release-type",
+            "shipping-product",
+            str,
+        ),
+        Required("branch"): optionally_keyed_by(
+            "level",
+            "build-platform",
+            "release-type",
+            "shipping-product",
+            str,
+        ),
+    },
     # All l10n jobs use mozharness
-    mozharness: MozharnessSchema  # noqa: F821
-    task_from: JobDescriptionSchema.__annotations__["task_from"] = None
-
+    Required("mozharness"): {
+        Extra: object,
+        # Config files passed to the mozharness script
+        Required("config"): optionally_keyed_by("build-platform", [str]),
+        # Additional paths to look for mozharness configs in. These should be
+        # relative to the base of the source checkout
+        Optional("config-paths"): [str],
+        # if true, perform a checkout of a comm-central based branch inside the
+        # gecko checkout
+        Optional("comm-checkout"): bool,
+        Optional("run-as-root"): bool,
+        Optional("use-caches"): Any(bool, [str]),
+    },
+    Optional("task-from"): job_description_schema["task-from"],
+})
 
 # The configuration passed to the mozharness repackage script. This defines the
 # arguments passed to `mach repackage`
@@ -424,7 +387,7 @@ def remove_name(config, jobs):
         yield job
 
 
-transforms.add_validate(PackagingDescriptionSchema)
+transforms.add_validate(packaging_description_schema)
 
 
 @transforms.add
@@ -447,7 +410,6 @@ def handle_keyed_by(config, jobs):
     """
     fields = [
         "mozharness.config",
-        "msi.display-name",
         "package-formats",
         "worker.max-run-time",
         "flatpak.name",
@@ -463,7 +425,6 @@ def handle_keyed_by(config, jobs):
                 **{
                     "release-type": config.params["release_type"],
                     "level": config.params["level"],
-                    "shipping-product": job.get("shipping-product"),
                 },
             )
         yield job
@@ -526,8 +487,6 @@ def make_job_description(config, jobs):
 
         if config.kind == "repackage-msi":
             treeherder["symbol"] = "MSI({})".format(locale or "N")
-            if display_name := job.get("msi", {}).get("display-name"):
-                attributes["msi_display_name"] = display_name
 
         elif config.kind == "repackage-msix":
             assert not locale
@@ -595,13 +554,6 @@ def make_job_description(config, jobs):
                 package=config.kind.split("-")[1],
             )
 
-        elif config.kind == "repackage-flatpak":
-            build_platform = attributes["build_platform"]
-            build_type = attributes["build_type"]
-            description = f"Flatpak repackaging for build {build_platform}/{build_type}"
-            attributes["flatpak_name"] = job["flatpak"]["name"]
-
-        langpack_locales = []
         if config.kind in ("repackage-flatpak", "repackage-rpm"):
             assert not locale
 
@@ -631,10 +583,9 @@ def make_job_description(config, jobs):
                 if t.attributes["build_type"] != "opt":
                     continue
 
-                chunk_locales = t.attributes.get(
+                locales = t.attributes.get(
                     "chunk_locales", t.attributes.get("all_locales")
                 )
-                langpack_locales.extend(chunk_locales)
 
                 dependencies.update({t.label: t.label})
 
@@ -646,7 +597,7 @@ def make_job_description(config, jobs):
                             # Otherwise we can't disambiguate locales!
                             "dest": f"extensions/{loc}",
                         }
-                        for loc in chunk_locales
+                        for loc in locales
                     ]
                 })
 
@@ -753,12 +704,6 @@ def make_job_description(config, jobs):
         attributes["release_artifacts"] = [
             artifact["name"] for artifact in worker["artifacts"]
         ]
-        if config.kind == "repackage-rpm":
-            artifact_prefix = get_artifact_prefix(dep_job)
-            for loc in langpack_locales:
-                attributes["release_artifacts"].append(
-                    f"{artifact_prefix}/langpack-{loc}.noarch.rpm"
-                )
 
         task = {
             "label": job["label"],

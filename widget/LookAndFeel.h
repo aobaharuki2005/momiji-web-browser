@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef LookAndFeel_h_
-#define LookAndFeel_h_
+#ifndef __LookAndFeel
+#define __LookAndFeel
 
 #ifndef MOZILLA_INTERNAL_API
 #  error "This header is only usable from within libxul (MOZILLA_INTERNAL_API)."
@@ -103,35 +104,6 @@ class LookAndFeel {
      * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
      */
     WindowsAccentColorInTitlebar,
-    /*
-     * A Boolean value to determine whether the Mac graphite theme is
-     * being used.
-     *
-     * The value of this metric is not used on other platforms. These platforms
-     * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
-     */
-    MacGraphiteTheme,
-
-    /*
-     * A Boolean value to determine whether the Mac OS X Lion-specific theming
-     * should be used.
-     *
-     * The value of this metric is not used on non-Mac platforms. These
-     * platforms should return NS_ERROR_NOT_IMPLEMENTED when queried for this
-     * metric.
-     */
-    MacLionTheme,
-
-   /*
-    * A Boolean value to determine whether the Mac OS X Yosemite-specific theming
-    * should be used.
-    *
-    * The value of this metric is not used on non-Mac platforms. These
-    * platforms should return NS_ERROR_NOT_IMPLEMENTED when queried for this
-    * metric.
-    */
-
-    MacYosemiteTheme,
 
     /* Whether Windows mica effect is enabled and available */
     WindowsMica,
@@ -652,4 +624,4 @@ constexpr nscolor NS_40PERCENT_FOREGROUND_COLOR =
 #define NS_ALERT_LEFT 2
 #define NS_ALERT_TOP 4
 
-#endif /* LookAndFeel_h_ */
+#endif /* __LookAndFeel */

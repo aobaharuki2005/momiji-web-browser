@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -25,7 +26,7 @@ enum HighlightType {
  *
  * See https://drafts.csswg.org/css-highlight-api-1/#highlight
  */
-[Exposed=Window]
+[Pref="dom.customHighlightAPI.enabled", Exposed=Window]
 interface Highlight {
 
   [Throws]
@@ -45,4 +46,26 @@ partial interface Highlight {
   undefined clear();
   [Throws]
   boolean delete(AbstractRange range);
+};
+
+/**
+ * Registry object that contains all Highlights associated with a Document.
+ *
+ * See https://drafts.csswg.org/css-highlight-api-1/#highlightregistry
+ */
+[Pref="dom.customHighlightAPI.enabled", Exposed=Window]
+interface HighlightRegistry {
+  maplike<DOMString, Highlight>;
+};
+
+partial interface HighlightRegistry {
+  // Maplike interface methods need to be overridden.
+  // Iterating a maplike is not possible from C++ yet.
+  // Therefore, a separate data structure must be held and kept in sync.
+  [Throws]
+  HighlightRegistry set(DOMString key, Highlight value);
+  [Throws]
+  undefined clear();
+  [Throws]
+  boolean delete(DOMString key);
 };

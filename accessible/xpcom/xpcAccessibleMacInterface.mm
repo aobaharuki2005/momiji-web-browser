@@ -1,5 +1,7 @@
 /* clang-format off */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* clang-format on */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -17,7 +19,6 @@
 #include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetElement, JS_GetProperty, JS_GetPropertyById, JS_HasOwnProperty, JS_SetUCProperty
 
 #import <Accessibility/Accessibility.h>
-#import <objc/runtime.h>
 
 #import "mozAccessible.h"
 
@@ -48,26 +49,12 @@ NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleMacInterface,
 xpcAccessibleMacInterface::xpcAccessibleMacInterface(Accessible* aObj)
     : xpcAccessibleMacNSObjectWrapper(GetNativeFromGeckoAccessible(aObj)) {}
 
-static BOOL IsNativeObjectAvailable(id aObj) {
-  if (!aObj) {
-    return NO;
-  }
-
-  // If the object is a wrapper around an expired gecko accessible, we want to
-  // treat it as unavailable.
-  if ([aObj respondsToSelector:@selector(isExpired)] && [aObj isExpired]) {
-    return NO;
-  }
-
-  return YES;
-}
-
 NS_IMETHODIMP
 xpcAccessibleMacInterface::GetAttributeNames(
     nsTArray<nsString>& aAttributeNames) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
-  if (!IsNativeObjectAvailable(mNativeObject)) {
+  if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -87,7 +74,7 @@ xpcAccessibleMacInterface::GetParameterizedAttributeNames(
     nsTArray<nsString>& aAttributeNames) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
-  if (!IsNativeObjectAvailable(mNativeObject)) {
+  if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -103,11 +90,18 @@ xpcAccessibleMacInterface::GetParameterizedAttributeNames(
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
 }
 
+// Return a string that uniquely identifies a custom action.
+static NSString* GetCustomActionName(NSAccessibilityCustomAction* action) {
+  return [NSString stringWithFormat:@"Name:%@ Target:%@ Selector:%@",
+                                    [action name], [action target],
+                                    NSStringFromSelector([action selector])];
+}
+
 NS_IMETHODIMP
 xpcAccessibleMacInterface::GetActionNames(nsTArray<nsString>& aActionNames) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
-  if (!IsNativeObjectAvailable(mNativeObject)) {
+  if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -117,19 +111,15 @@ xpcAccessibleMacInterface::GetActionNames(nsTArray<nsString>& aActionNames) {
     aActionNames.AppendElement(actionName);
   }
 
-  // custom actions are only available on 10.13 and up
-  if (@available(macOS 10.13, *)) {
-    if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
-      for (id action in customActions) {
-        nsAutoString actionName;
-        NSString* actionNameStr = [NSString stringWithFormat:@"Name:%@ Target:%@ Selector:%@",
-                           [action name], [action target],
-                           NSStringFromSelector([action selector])];
-        nsCocoaUtils::GetStringForNSString(actionNameStr, actionName);
-        aActionNames.AppendElement(actionName);
-      }
+  if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
+    for (id action in customActions) {
+      nsAutoString actionName;
+      NSString* actionNameStr = GetCustomActionName(action);
+      nsCocoaUtils::GetStringForNSString(actionNameStr, actionName);
+      aActionNames.AppendElement(actionName);
     }
   }
+
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
@@ -140,7 +130,7 @@ xpcAccessibleMacInterface::GetActionDescription(const nsAString& aActionName,
                                                 nsAString& aDescription) {
   aDescription.Truncate();
 
-  if (!IsNativeObjectAvailable(mNativeObject)) {
+  if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -148,17 +138,12 @@ xpcAccessibleMacInterface::GetActionDescription(const nsAString& aActionName,
 
   // First search custom actions, since `accessibilityActionDescription` will
   // just return the provided name if no description is found.
-  //custom actions are only available on 10.13 and up.
-  if (@available(macos 10.13, *)) {
-    if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
-      for (id action in customActions) {
-        NSString* actionNameStr = [NSString stringWithFormat:@"Name:%@ Target:%@ Selector:%@",
-                           [action name], [action target],
-                           NSStringFromSelector([action selector])];
-        if ([actionNameStr isEqualToString:actionName]) {
-          nsCocoaUtils::GetStringForNSString([action name], aDescription);
-          return NS_OK;
-        }
+  if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
+    for (id action in customActions) {
+      NSString* actionNameStr = GetCustomActionName(action);
+      if ([actionNameStr isEqualToString:actionName]) {
+        nsCocoaUtils::GetStringForNSString([action name], aDescription);
+        return NS_OK;
       }
     }
   }
@@ -174,7 +159,7 @@ NS_IMETHODIMP
 xpcAccessibleMacInterface::PerformAction(const nsAString& aActionName) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
-  if (!IsNativeObjectAvailable(mNativeObject)) {
+  if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -182,17 +167,12 @@ xpcAccessibleMacInterface::PerformAction(const nsAString& aActionName) {
 
   // First search custom actions, since `accessibilityPerformAction` will
   // silently fail on unknown action names.
-  // custom actions are only available on 10.13 and up
-  if (@available(macOS 10.13, *)) {
-    if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
-      for (id action in customActions) {
-        NSString* actionNameStr = [NSString stringWithFormat:@"Name:%@ Target:%@ Selector:%@",
-                           [action name], [action target],
-                           NSStringFromSelector([action selector])];
-        if ([actionNameStr isEqualToString:actionName]) {
-          [[action target] performSelector:[action selector]];
-          return NS_OK;
-        }
+  if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
+    for (id action in customActions) {
+      NSString* actionNameStr = GetCustomActionName(action);
+      if ([actionNameStr isEqualToString:actionName]) {
+        [[action target] performSelector:[action selector]];
+        return NS_OK;
       }
     }
   }
@@ -210,7 +190,7 @@ xpcAccessibleMacInterface::GetAttributeValue(const nsAString& aAttributeName,
                                              JS::MutableHandleValue aResult) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
-  if (!IsNativeObjectAvailable(mNativeObject)) {
+  if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -340,7 +320,7 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(
       return NS_ERROR_FAILURE;
     }
     for (size_t i = 0; i < [objArr count]; ++i) {
-      nsresult rv = NSObjectToJsValue([objArr objectAtIndex:i], aCx, v[i]);
+      nsresult rv = NSObjectToJsValue(objArr[i], aCx, v[i]);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -378,7 +358,7 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(
 
                           NSMutableDictionary* attrRun =
                               [attributes mutableCopy];
-                          [attrRun setObject:str forKey:@"string"];
+                          attrRun[@"string"] = str;
 
                           [attrRunArray addObject:attrRun];
                         }];
@@ -394,11 +374,10 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(
                          (int)(components[1] * 0xff),
                          (int)(components[2] * 0xff)];
     return NSObjectToJsValue(hexString, aCx, aResult);
-  } else if ([aObj
-                 respondsToSelector:@selector(accessibilityAttributeValue:)]) {
+  } else if ([aObj respondsToSelector:@selector(isAccessibilityElement)]) {
     // We expect all of our accessibility objects to implement
-    // accessibilityAttributeValue at the very least. If it is implemented we
-    // will assume its an accessibility object.
+    // isAccessibilityElement at the very least. If it is implemented we will
+    // assume its an accessibility object.
     nsCOMPtr<nsIAccessibleMacInterface> obj =
         new xpcAccessibleMacInterface(aObj);
     return nsContentUtils::WrapNative(
@@ -610,7 +589,7 @@ id xpcAccessibleMacInterface::JsValueToSpecifiedNSObject(
       JS_GetPropertyById(aCx, object, ids[i], &currentValue);
       id unwrappedValue = JsValueToNSObject(currentValue, aCx, &rv);
       NS_ENSURE_SUCCESS(rv, nil);
-      [dict setObject:unwrappedValue forKey:unwrappedKey];
+      dict[unwrappedKey] = unwrappedValue;
     }
 
     *aResult = NS_OK;

@@ -75,42 +75,6 @@ pub mod test {
             }
         }
     }
-
-    #[test]
-    fn restart_command_no_extra() {
-        let extra = serde_json::from_str("{}").unwrap();
-        assert!(!super::Config::should_suppress_restart(&extra));
-    }
-
-    #[test]
-    fn restart_command_wer() {
-        let extra = serde_json::from_str(r#"{"WindowsErrorReporting": "1"}"#).unwrap();
-        assert!(super::Config::should_suppress_restart(&extra));
-    }
-
-    #[test]
-    fn restart_command_standard_shutdown() {
-        let extra = serde_json::from_str(
-            r#"{
-            "ShutdownProgress": "quit-application",
-            "ShutdownReason": "AppClose"
-        }"#,
-        )
-        .unwrap();
-        assert!(super::Config::should_suppress_restart(&extra));
-    }
-
-    #[test]
-    fn restart_command_shutdown_for_restart() {
-        let extra = serde_json::from_str(
-            r#"{
-            "ShutdownProgress": "quit-application",
-            "ShutdownReason": "AppRestart"
-        }"#,
-        )
-        .unwrap();
-        assert!(!super::Config::should_suppress_restart(&extra));
-    }
 }
 
 mod buildid_section {
@@ -136,6 +100,8 @@ pub struct Config {
     pub data_dir: Option<PathBuf>,
     /// The events directory.
     pub events_dir: Option<PathBuf>,
+    /// The ping directory.
+    pub ping_dir: Option<PathBuf>,
     /// The profile directory in use when the crash occurred.
     pub profile_dir: Option<PathBuf>,
     /// The dump file.
@@ -185,6 +151,7 @@ impl Config {
         self.run_memtest = env_bool(ekey!("RUN_MEMTEST"));
         self.data_dir = env_path(ekey!("DATA_DIRECTORY"));
         self.events_dir = env_path(ekey!("EVENTS_DIRECTORY"));
+        self.ping_dir = env_path(ekey!("PING_DIRECTORY"));
         self.app_file = std::env::var_os(ekey!("RESTART_XUL_APP_FILE"));
 
         self.update_log_file();
@@ -278,20 +245,15 @@ impl Config {
             self.update_log_file();
         }
 
-        if Self::should_suppress_restart(&extra) {
+        // Clear the restart command if WER handled the crash. This prevents restarting the
+        // program. See bug 1872920.
+        if extra.get("WindowsErrorReporting").is_some() {
             self.restart_command = None;
         }
 
         self.load_profile_directory_from_extra(&extra);
-        Ok(extra)
-    }
 
-    // Clear the restart command if the browser was already shutting down or if WER handled the
-    // crash. This prevents restarting the program. See bugs 1872920 and 2012347.
-    fn should_suppress_restart(extra: &serde_json::Value) -> bool {
-        extra.get("WindowsErrorReporting").is_some()
-            || (extra.get("ShutdownProgress").is_some()
-                && extra.get("ShutdownReason").and_then(|v| v.as_str()) != Some("AppRestart"))
+        Ok(extra)
     }
 
     /// Load the profile directory from the extra file information.
@@ -628,7 +590,7 @@ impl Config {
                 };
 
                 let mut path: PWSTR = std::ptr::null_mut();
-                let result = unsafe { SHGetKnownFolderPath(&FOLDERID_RoamingAppData, 0, std::ptr::null_mut(), &mut path) };
+                let result = unsafe { SHGetKnownFolderPath(&FOLDERID_RoamingAppData, 0, 0, &mut path) };
                 if result != 0 {
                     unsafe { CoTaskMemFree(path as _) };
                     anyhow::bail!("failed to get known path for roaming appdata");

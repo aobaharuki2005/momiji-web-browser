@@ -31,11 +31,11 @@ We automatically run code coverage builds and tests on all
 mozilla-central runs, for Linux and Windows. C/C++, Rust and JavaScript
 are supported.
 
-The generated reports can be found on Searchfox. The
+The generated reports can be found at https://coverage.moz.tools/. The
 reports can be filtered by platform and/or test suite.
 
 We also generate a report of all totally uncovered files, which can be
-found at https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relman.code-coverage.production.cron.latest/artifacts/public/zero_coverage_report.json. You can use this to find
+found at https://coverage.moz.tools/#view=zero. You can use this to find
 areas of code that should be tested, or code that is no longer used
 (dead code, which could be removed).
 
@@ -86,18 +86,28 @@ working directory.
 Generate report locally
 ^^^^^^^^^^^^^^^^^^^^^^^
 
+Prerequisites:
+
+-  Create and activate a new `virtualenv`_, then run:
+
+.. code:: shell
+
+   pip install firefox-code-coverage
+
 Given a treeherder linux64-ccov build (with its branch, e.g.
 \`mozilla-central\` or \`try`, and revision, the tip commit hash of your
 push), run the following command:
 
 .. code:: shell
 
-   ./mach coverage-report --branch BRANCH --revision REVISION
+   firefox-code-coverage PATH/TO/MOZILLA/SRC/DIR/ BRANCH REVISION
 
 This command will automatically download code coverage artifacts from
 the treeherder build and generate an HTML report of the code coverage
-information. The report will be stored in the **ccov-report** subdirectory in
+information. The report will be stored in the **report** subdirectory in
 your current working directory.
+
+.. _virtualenv: https://docs.python.org/3/tutorial/venv.html
 
 Creating your own Coverage Build
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -143,7 +153,7 @@ format for analysis. Anytime a code coverage run generates \*.gcda and
 permanently fail when it is running on a build that is instrumented with
 GCOV. To debug these issues without overloading ActiveData with garbage
 coverage data, open the file
-:searchfox:`taskcluster/gecko_taskgraph/transforms/test/__init__.py <taskcluster/gecko_taskgraph/transforms/test/__init__.py#516>`
+`taskcluster/gecko_taskgraph/transforms/test/__init__.py <https://searchfox.org/mozilla-central/source/taskcluster/gecko_taskgraph/transforms/test/__init__.py#516>`__
 and add the following line,
 
 .. code:: python
@@ -161,52 +171,39 @@ there will not be any code coverage artifacts uploaded from the build
 machines or from the test machines.
 
 
-JavaScript Code Coverage on Firefox
------------------------------------
+JS Debugger Per Test Code Coverage on Firefox
+---------------------------------------------
+
+There are two ways to get javascript per test code coverage information
+for mozilla-central. The next sections describe these options.
+
+
+Generate Per Test Code Coverage from a try build (or any other treeherder build)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To spin a code coverage build, you need to select the linux64-jsdcov
+platform. E.g. for a try build:
+
+.. code:: shell
+
+   ./mach try fuzzy -q 'linux64-jsdcov'
+
+This produces JavaScript Object Notation (JSON) files that can be
+downloaded from the treeherder testing machines and processed or
+analyzed locally.
+
 
 Generate Per Test Code Coverage Locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To generate the LCov files containing coverage information locally,
-simply add an extra environment variable called ``JS_CODE_COVERAGE_OUTPUT_DIR``
-which accepts a directory as it's input and stores the resulting data in that
-directory. For example, to collect code coverage for the entire Mochitest suite:
+To generate the JSON files containing coverage information locally, simply
+add an extra argument called ``--jscov-dir-prefix`` which accepts a
+directory as it's input and stores the resulting data in that directory.
+For example, to collect code coverage for the entire Mochitest suite:
 
 .. code:: shell
 
-   JS_CODE_COVERAGE_OUTPUT_DIR=/PATH/TO/COVERAGE/DIR/ ./mach test path/to/test/folder/or/file
+   ./mach mochitest --jscov-dir-prefix /PATH/TO/COVERAGE/DIR/
 
-Unfortunately, these lcov files aren't usable as-is because the JS files
-are going to be referenced by their runtime URLs (chrome://... resource://...)
-instead of local source file path.
-You should first run the following command to retrieve a map of URLs to files:
-
-.. code:: shell
-
-   ./mach build-backend -b ChromeMap
-
-This will create a ``chrome-map.json`` file in your local build objdir.
-
-And then this other command to process the LCov files and convert URLs to paths
-
-.. code:: shell
-
-   ./mach python -m mozbuild.codecoverage.lcov_rewriter --chrome-map-path /YOUR/OBJ-DIR/chrome-map.json /PATH/TO/COVERAGE/DIR/*.info --output-file coverage.info
-
-This will aggregate all the JSON files into a unique one called ``coverage.info``.
-
-Finally, you can either use your IDE of preference and load the lcov files via some extension.
-Or use the following last command and cli rust tool (``grcov``) to generate an HTML report.
-
-.. code:: shell
-
-   # Either install grcov via cargo
-   cargo install grcov
-
-   # -or- find the existing build in your "mozbuild" folder, typically in:
-   ~/.mozbuild/grcov/grcov
-   # "./mach environment" can help you find this mozbuild folder (this is the "state directory")
-
-   grcov coverage.info -t html --source-dir /PATH/TO/FIREFOX/CHECKOUT/
-
-You can then open html/index.html in Firefox and browse through all the results nicely.
+Currently, only the Mochitest and Xpcshell test suites have this
+capability.

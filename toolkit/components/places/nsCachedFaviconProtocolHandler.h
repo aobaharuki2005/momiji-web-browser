@@ -1,9 +1,10 @@
+//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCachedFaviconProtocolHandler_h_
-#define nsCachedFaviconProtocolHandler_h_
+#ifndef nsCachedFaviconProtocolHandler_h___
+#define nsCachedFaviconProtocolHandler_h___
 
 #include "nsCOMPtr.h"
 #include "nsIProtocolHandler.h"
@@ -46,4 +47,4 @@ class nsCachedFaviconProtocolHandler final : public nsIProtocolHandler,
                              nsILoadInfo* aLoadInfo, nsIChannel** _channel);
 };
 
-#endif /* nsCachedFaviconProtocolHandler_h_ */
+#endif /* nsCachedFaviconProtocolHandler_h___ */

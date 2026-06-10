@@ -34,7 +34,7 @@ let html = `
   </form>`;
 
 async function prepareLogins(logins = []) {
-  await LoginManager.removeAllUserFacingLoginsAsync();
+  await LoginManager.removeAllUserFacingLogins();
 
   for (let login of logins) {
     await LoginManager.addLoginAsync(login);

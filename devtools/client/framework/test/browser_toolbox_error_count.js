@@ -51,7 +51,7 @@ add_task(async function () {
   );
 
   info("Check that calling console.clear clears the error count");
-  SpecialPowers.spawn(tab.linkedBrowser, [], function () {
+  ContentTask.spawn(tab.linkedBrowser, null, function () {
     content.console.clear();
   });
   await waitFor(
@@ -61,7 +61,7 @@ add_task(async function () {
   ok(true, "The button was hidden after calling console.clear()");
 
   info("Check that realtime errors increase the counter");
-  SpecialPowers.spawn(tab.linkedBrowser, [], function () {
+  ContentTask.spawn(tab.linkedBrowser, null, function () {
     content.console.error("Live Error1");
     content.console.error("Live Error2");
     content.console.exception("Live Exception");
@@ -108,15 +108,11 @@ add_task(async function () {
 
   info("Check that the error count is capped at 99");
   expectedErrorCount = 100;
-  SpecialPowers.spawn(
-    tab.linkedBrowser,
-    [expectedErrorCount],
-    function (count) {
-      for (let i = 0; i < count; i++) {
-        content.console.error(i);
-      }
+  ContentTask.spawn(tab.linkedBrowser, expectedErrorCount, function (count) {
+    for (let i = 0; i < count; i++) {
+      content.console.error(i);
     }
-  );
+  });
 
   // Wait until all the messages are displayed in the console
   await waitFor(
@@ -129,7 +125,7 @@ add_task(async function () {
   info(
     "Reload the page and check that the error icon has the expected content"
   );
-  await reloadSelectedTab();
+  await reloadBrowser();
 
   // (console.error, console.exception, console.assert and exception)
   expectedErrorCount = 4;
@@ -154,7 +150,7 @@ add_task(async function () {
   ok(true, "The error icon hides when disabling it from the settings panel");
 
   info("Check that emitting new errors don't show the icon");
-  SpecialPowers.spawn(tab.linkedBrowser, [], function () {
+  ContentTask.spawn(tab.linkedBrowser, null, function () {
     content.console.error("Live Error1 while disabled");
     content.console.error("Live Error2 while disabled");
   });

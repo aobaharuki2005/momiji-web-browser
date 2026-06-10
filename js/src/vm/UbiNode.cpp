@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -205,18 +207,18 @@ class EdgeVectorTracer final : public JS::CallbackTracer {
   // True if we should populate the edge's names.
   bool wantNames;
 
-  bool onChild(JS::GCCellPtr thing, const char* name) override {
+  void onChild(JS::GCCellPtr thing, const char* name) override {
     if (!okay) {
-      return true;
+      return;
     }
 
     // Don't trace permanent atoms and well-known symbols that are owned by
     // a parent JSRuntime.
     if (thing.is<JSString>() && thing.as<JSString>().isPermanentAtom()) {
-      return true;
+      return;
     }
     if (thing.is<JS::Symbol>() && thing.as<JS::Symbol>().isWellKnownSymbol()) {
-      return true;
+      return;
     }
 
     char16_t* name16 = nullptr;
@@ -230,7 +232,7 @@ class EdgeVectorTracer final : public JS::CallbackTracer {
       name16 = js_pod_malloc<char16_t>(strlen(name) + 1);
       if (!name16) {
         okay = false;
-        return true;
+        return;
       }
 
       size_t i;
@@ -246,10 +248,8 @@ class EdgeVectorTracer final : public JS::CallbackTracer {
     // retains it, and its destructor will free it.
     if (!vec->append(Edge(name16, Node(thing)))) {
       okay = false;
-      return true;
+      return;
     }
-
-    return true;
   }
 
  public:
@@ -387,8 +387,8 @@ std::pair<bool, JS::AutoCheckCannotGC> RootList::init(
   EdgeVectorTracer tracer(cx->runtime(), &allRootEdges, wantNames);
 
   ZoneSet debuggeeZones;
-  for (auto iter = debuggees.iter(); !iter.done(); iter.next()) {
-    if (!debuggeeZones.put(iter.get()->zone())) {
+  for (auto range = debuggees.all(); !range.empty(); range.popFront()) {
+    if (!debuggeeZones.put(range.front()->zone())) {
       return {false, JS::AutoCheckCannotGC(cx)};
     }
   }
@@ -430,8 +430,9 @@ std::pair<bool, JS::AutoCheckCannotGC> RootList::init(HandleObject debuggees) {
 
   CompartmentSet debuggeeCompartments;
 
-  for (auto iter = dbg->allDebuggees(); !iter.done(); iter.next()) {
-    if (!debuggeeCompartments.put(iter.get()->compartment())) {
+  for (js::WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty();
+       r.popFront()) {
+    if (!debuggeeCompartments.put(r.front()->compartment())) {
       return {false, JS::AutoCheckCannotGC(cx)};
     }
   }
@@ -442,8 +443,9 @@ std::pair<bool, JS::AutoCheckCannotGC> RootList::init(HandleObject debuggees) {
   }
 
   // Ensure that each of our debuggee globals are in the root list.
-  for (auto iter = dbg->allDebuggees(); !iter.done(); iter.next()) {
-    if (!addRoot(JS::ubi::Node(static_cast<JSObject*>(iter.get())),
+  for (js::WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty();
+       r.popFront()) {
+    if (!addRoot(JS::ubi::Node(static_cast<JSObject*>(r.front())),
                  u"debuggee global")) {
       return {false, nogc};
     }

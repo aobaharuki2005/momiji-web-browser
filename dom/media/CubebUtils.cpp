@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +7,6 @@
 #include "CubebUtils.h"
 
 #include "audio_thread_priority.h"
-#include "base/process_util.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Components.h"
 #include "mozilla/Logging.h"
@@ -25,7 +26,6 @@
 
 #include <algorithm>
 
-#include "nsAppRunner.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsIStringBundle.h"
@@ -565,7 +565,7 @@ void InitBrandName() {
     if (NS_SUCCEEDED(rv)) {
       rv = brandBundle->GetStringFromName("brandShortName", brandName);
       NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv) || mozilla::RunningGTest(),
+          NS_SUCCEEDED(rv),
           "Could not get the program name for a cubeb stream.");
     }
   }
@@ -600,7 +600,7 @@ void InitAudioIPCConnection() {
 #endif
 
 #ifdef MOZ_CUBEB_REMOTING
-ipc::FileDescriptor CreateAudioIPCConnectionUnlocked(uint32_t aRemotePid) {
+ipc::FileDescriptor CreateAudioIPCConnectionUnlocked() {
   MOZ_ASSERT(sCubebSandbox && XRE_IsParentProcess());
   if (!sServerHandle) {
     MOZ_LOG(gCubebLog, LogLevel::Debug, ("Starting cubeb server..."));
@@ -613,7 +613,7 @@ ipc::FileDescriptor CreateAudioIPCConnectionUnlocked(uint32_t aRemotePid) {
           ("%s: %d", PREF_AUDIOIPC_SHM_AREA_SIZE, (int)sAudioIPCShmAreaSize));
   MOZ_ASSERT(sServerHandle);
   ipc::FileDescriptor::PlatformHandleType rawFD;
-  rawFD = audioipc2::audioipc2_server_new_client(sServerHandle, aRemotePid,
+  rawFD = audioipc2::audioipc2_server_new_client(sServerHandle,
                                                  sAudioIPCShmAreaSize);
   ipc::FileDescriptor fd(rawFD);
   if (!fd.IsValid()) {
@@ -631,10 +631,10 @@ ipc::FileDescriptor CreateAudioIPCConnectionUnlocked(uint32_t aRemotePid) {
 }
 #endif
 
-ipc::FileDescriptor CreateAudioIPCConnection(uint32_t aRemotePid) {
+ipc::FileDescriptor CreateAudioIPCConnection() {
 #ifdef MOZ_CUBEB_REMOTING
   StaticMutexAutoLock lock(sMutex);
-  return CreateAudioIPCConnectionUnlocked(aRemotePid);
+  return CreateAudioIPCConnectionUnlocked();
 #else
   return ipc::FileDescriptor();
 #endif
@@ -655,6 +655,14 @@ RefPtr<CubebHandle> GetCubebUnlocked() {
     return sCubebHandle;
   }
 
+  if (!sBrandName && NS_IsMainThread()) {
+    InitBrandName();
+  } else {
+    NS_WARNING_ASSERTION(
+        sBrandName,
+        "Did not initialize sbrandName, and not on the main thread?");
+  }
+
   int rv = CUBEB_ERROR;
 #ifdef MOZ_CUBEB_REMOTING
   MOZ_LOG(gCubebLog, LogLevel::Info,
@@ -662,11 +670,8 @@ RefPtr<CubebHandle> GetCubebUnlocked() {
 
   if (sCubebSandbox) {
     if (XRE_IsParentProcess() && !sIPCConnection) {
-      if (!sBrandName && NS_IsMainThread()) {
-        InitBrandName();
-      }
       // TODO: Don't use audio IPC when within the same process.
-      auto fd = CreateAudioIPCConnectionUnlocked(base::GetCurrentProcId());
+      auto fd = CreateAudioIPCConnectionUnlocked();
       if (fd.IsValid()) {
         sIPCConnection = new ipc::FileDescriptor(fd);
       }
@@ -690,19 +695,12 @@ RefPtr<CubebHandle> GetCubebUnlocked() {
     initParams.mThreadDestroyCallback = []() { PROFILER_UNREGISTER_THREAD(); };
 
     cubeb* temp = nullptr;
-    rv = audioipc2::audioipc2_client_init(&temp, &initParams);
+    rv = audioipc2::audioipc2_client_init(&temp, sBrandName, &initParams);
     if (temp) {
       sCubebHandle = new CubebHandle(temp);
     }
   } else {
 #endif  // MOZ_CUBEB_REMOTING
-    // When not using the audio IPC sandbox, cubeb_init below consumes
-    // sBrandName directly. InitLibrary dispatches InitBrandName
-    // asynchronously, so initialize it here if we are on the main thread and
-    // it hasn't been set yet.
-    if (!sBrandName && NS_IsMainThread()) {
-      InitBrandName();
-    }
 #ifdef XP_WIN
     mozilla::mscom::EnsureMTA([&]() -> void {
 #endif
@@ -844,14 +842,8 @@ void InitLibrary() {
   }
 
 #ifndef MOZ_WIDGET_ANDROID
-  if (XRE_IsParentProcess()
-#  ifdef MOZ_CUBEB_REMOTING
-      || !sCubebSandbox
-#  endif
-  ) {
-    NS_DispatchToMainThread(
-        NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitBrandName));
-  }
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitBrandName));
 #endif
 #ifdef MOZ_CUBEB_REMOTING
   if (sCubebSandbox && XRE_IsContentProcess()) {
@@ -908,7 +900,7 @@ bool SandboxEnabled() {
 }
 
 already_AddRefed<SharedThreadPool> GetCubebOperationThread() {
-  RefPtr<SharedThreadPool> pool = SharedThreadPool::Get("CubebOperation", 1);
+  RefPtr<SharedThreadPool> pool = SharedThreadPool::Get("CubebOperation"_ns, 1);
   const uint32_t kIdleThreadTimeoutMs = 2000;
   pool->SetIdleThreadMaximumTimeout(
       PR_MillisecondsToInterval(kIdleThreadTimeoutMs));

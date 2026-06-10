@@ -13,16 +13,15 @@ use std::{
     time::Instant,
 };
 
-use neqo_common::{Datagram, qtrace};
+use neqo_common::{qtrace, Datagram};
+use neqo_crypto::{AntiReplay, Cipher, PrivateKey, PublicKey, ZeroRttChecker};
 use neqo_transport::{
-    ConnectionIdGenerator, Output, OutputBatch,
     server::{ConnectionRef, Server, ValidateAddress},
+    ConnectionIdGenerator, Output, OutputBatch,
 };
-use nss::{AntiReplay, Cipher, PrivateKey, PublicKey, ZeroRttChecker};
 use rustc_hash::FxHashMap as HashMap;
 
 use crate::{
-    Http3Parameters, Http3StreamInfo, Res,
     connection::Http3State,
     connection_server::Http3ServerHandler,
     server_connection_events::{ConnectUdpEvent, Http3ServerConnEvent, WebTransportEvent},
@@ -31,6 +30,7 @@ use crate::{
         WebTransportRequest,
     },
     settings::HttpZeroRttChecker,
+    Http3Parameters, Http3StreamInfo, Res,
 };
 
 type HandlerRef = Rc<RefCell<Http3ServerHandler>>;
@@ -388,15 +388,15 @@ mod tests {
         ops::{Deref, DerefMut},
     };
 
-    use neqo_common::{Encoder, event::Provider as _};
+    use neqo_common::{event::Provider as _, Encoder};
+    use neqo_crypto::{AuthenticationStatus, ResumptionToken, ZeroRttCheckResult, ZeroRttChecker};
     use neqo_qpack as qpack;
     use neqo_transport::{
         CloseReason, Connection, ConnectionEvent, State, StreamId, StreamType, ZeroRttState,
     };
-    use nss::{AuthenticationStatus, ResumptionToken, ZeroRttCheckResult, ZeroRttChecker};
     use test_fixture::{
-        CountingConnectionIdGenerator, DEFAULT_ALPN, DEFAULT_KEYS, anti_replay, default_client,
-        fixture_init, now,
+        anti_replay, default_client, fixture_init, now, CountingConnectionIdGenerator,
+        DEFAULT_ALPN, DEFAULT_KEYS,
     };
 
     use super::{Http3Server, Http3ServerEvent, Http3State, Rc, RefCell};

@@ -10,10 +10,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
-  ScheduledTask: "resource://gre/modules/ScheduledTask.sys.mjs",
-  Subprocess: "resource://gre/modules/Subprocess.sys.mjs",
-  WindowsVersionInfo:
-    "resource://gre/modules/components-utils/WindowsVersionInfo.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -28,34 +24,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "BackgroundTasks",
   "@mozilla.org/backgroundtasks;1",
   Ci.nsIBackgroundTasks
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "imgTools",
-  "@mozilla.org/image/tools;1",
-  Ci.imgITools
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "iniParserFactory",
-  "@mozilla.org/xpcom/ini-parser-factory;1",
-  Ci.nsIINIParserFactory
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "secondaryTileService",
-  "@mozilla.org/browser/secondary-tile-service;1",
-  Ci.nsISecondaryTileService
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "gioService",
-  "@mozilla.org/gio-service;1",
-  Ci.nsIGIOService
 );
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -110,8 +78,9 @@ let ShellServiceInternal = {
   async getOSUserProfileAgeInDays() {
     let currentDate = new Date();
     let homeFolderCreationDate = new Date(
-      (await IOUtils.stat(Services.dirsvc.get("Home", Ci.nsIFile).path))
-        .creationTime
+      (
+        await IOUtils.stat(Services.dirsvc.get("Home", Ci.nsIFile).path)
+      ).creationTime
     );
     // Round and return the age (=difference between today and creation) to a
     // resolution of days.
@@ -329,7 +298,7 @@ let ShellServiceInternal = {
         );
       } catch (err) {
         telemetryResult = "ErrOther";
-        this._throwForWDBAResult(err.result || Cr.NS_ERROR_FAILURE);
+        this._handleWDBAResult(err.result || Cr.NS_ERROR_FAILURE);
       }
       telemetryResult = "Success";
     } catch (ex) {
@@ -348,14 +317,30 @@ let ShellServiceInternal = {
       throw new Error("Windows-only");
     }
 
-    const aumi = lazy.XreDirProvider.getInstallHash();
+    let telemetryResult = "ErrOther";
+
     try {
-      this.defaultAgent.setDefaultExtensionHandlersUserChoice(aumi, [
-        ".pdf",
-        "FirefoxPDF",
-      ]);
-    } catch (err) {
-      this._throwForWDBAResult(err.result || Cr.NS_ERROR_FAILURE);
+      const aumi = lazy.XreDirProvider.getInstallHash();
+      try {
+        this.defaultAgent.setDefaultExtensionHandlersUserChoice(aumi, [
+          ".pdf",
+          "FirefoxPDF",
+        ]);
+      } catch (err) {
+        telemetryResult = "ErrOther";
+        this._handleWDBAResult(err.result || Cr.NS_ERROR_FAILURE);
+      }
+      telemetryResult = "Success";
+    } catch (ex) {
+      if (ex instanceof WDBAError) {
+        telemetryResult = ex.telemetryResult;
+      }
+
+      throw ex;
+    } finally {
+      Glean.browser.setDefaultPdfHandlerUserChoiceResult[telemetryResult].add(
+        1
+      );
     }
   },
 
@@ -416,104 +401,14 @@ let ShellServiceInternal = {
     Glean.browser.setDefaultError[setAsDefaultError ? "true" : "false"].add();
   },
 
-  _isWindows11() {
-    return (
-      lazy.WindowsVersionInfo.get({ throwOnError: false }).buildNumber >= 22000
-    );
-  },
-
-  async setAsDefaultPDFHandler(onlyIfKnownBrowser = false) {
-    if (AppConstants.platform != "win") {
-      throw new Error("Windows-only");
-    }
-
+  setAsDefaultPDFHandler(onlyIfKnownBrowser = false) {
     if (onlyIfKnownBrowser && !this.getDefaultPDFHandler().knownBrowser) {
       return;
     }
 
-    // Tracks the last method attempted and whether its API call succeeded.
-    // These feed into the consolidated set_default_pdf_handler_attempt event
-    // recorded at the bottom of this function.
-    let method = "user_choice";
-    let success = false;
-
-    try {
-      await this.setAsDefaultPDFHandlerUserChoice();
-      Glean.browser.setDefaultPdfHandlerUserChoiceResult.Success.add(1);
-      success = true;
-    } catch (e) {
-      const telemetryResult =
-        e instanceof WDBAError ? e.telemetryResult : "ErrOther";
-      Glean.browser.setDefaultPdfHandlerUserChoiceResult[telemetryResult].add(
-        1
-      );
-      lazy.log.debug(
-        "Setting default by user-choice failed, falling through to open with launcher",
-        e
-      );
+    if (AppConstants.platform == "win") {
+      this.setAsDefaultPDFHandlerUserChoice();
     }
-
-    const winShell = this.shellService.QueryInterface(
-      Ci.nsIWindowsShellService
-    );
-
-    // Optional second attempt via the undocumented IOpenWithLauncher API,
-    // which surfaces the OS "Open with" picker so the user can pick Firefox
-    // themselves. Gated by a pref so it can be remotely disabled if it
-    // regresses.
-    if (
-      !success &&
-      Services.prefs.getBoolPref(
-        "browser.shell.setDefaultPDFHandler.useOpenWith",
-        false
-      )
-    ) {
-      method = "open_with";
-      try {
-        winShell.launchOpenWithDefaultPickerForFileType(".pdf");
-        success = true;
-      } catch (e) {
-        // The picker API itself failed (e.g. COM error). Fall through to the
-        // modern settings dialog rather than leaving the user without any
-        // default-handler UI.
-        lazy.log.debug(
-          "Setting default by open with launcher failed, possibly falling through to modern settings",
-          e
-        );
-      }
-    }
-
-    // PDF default app settings are only available in Windows 11 (build 22000+).
-    if (!success && this._isWindows11()) {
-      method = "settings";
-      try {
-        winShell.launchModernSettingsDialogDefaultApps();
-        Glean.browser.setDefaultPdfHandlerModernSettingsResult.Success.add(1);
-        success = true;
-      } catch (e) {
-        Glean.browser.setDefaultPdfHandlerModernSettingsResult.Failure.add(1);
-        lazy.log.debug(
-          "Last attempt to set as default PDF failed through modern settings",
-          e
-        );
-      }
-    }
-
-    // Record the consolidated attempt event after a delay. For open_with and
-    // settings the user is interacting with a launched dialog out-of-process,
-    // so we wait before sampling isDefaultHandlerFor to give that interaction
-    // time to complete. For user_choice the wait is unnecessary but harmless.
-    const waitTimeMs = Services.prefs.getIntPref(
-      "browser.shell.setDefaultPDFHandler.attemptWaitTimeMs",
-      30000
-    );
-    new lazy.ScheduledTask(() => {
-      Glean.browser.setDefaultPdfHandlerAttempt.record({
-        method,
-        success,
-        result_is_default: this.isDefaultHandlerFor(".pdf"),
-      });
-    }, Date.now() + waitTimeMs).arm();
   },
 
   /**
@@ -593,14 +488,11 @@ let ShellServiceInternal = {
   /**
    * Pin Firefox app to the OS "taskbar."
    */
-  async pinToTaskbar(privateBrowsing = false, fireAndForget = false) {
+  async pinToTaskbar(privateBrowsing = false) {
     if (await this.doesAppNeedPin(privateBrowsing)) {
       try {
         if (AppConstants.platform == "win") {
-          await this.shellService.pinCurrentAppToTaskbarAsync(
-            privateBrowsing,
-            fireAndForget
-          );
+          await this.shellService.pinCurrentAppToTaskbarAsync(privateBrowsing);
         } else if (AppConstants.platform == "macosx") {
           this.macDockSupport.ensureAppIsPinnedToDock();
         }
@@ -688,7 +580,7 @@ let ShellServiceInternal = {
     }
   },
 
-  _throwForWDBAResult(exitCode) {
+  _handleWDBAResult(exitCode) {
     if (exitCode != Cr.NS_OK) {
       const telemetryResult =
         new Map([
@@ -700,309 +592,6 @@ let ShellServiceInternal = {
 
       throw new WDBAError(exitCode, telemetryResult);
     }
-
-    throw new Error(
-      `_throwForWDBAResult called with unexpected exit code: ${exitCode}`
-    );
-  },
-
-  get shortcutIconType() {
-    if (AppConstants.platform === "win") {
-      return { extension: "ico", mimeType: "image/vnd.microsoft.icon" };
-    }
-
-    if (AppConstants.platform === "linux") {
-      return { extension: "png", mimeType: "image/png" };
-    }
-
-    throw new Error("Shortcut icons are not supported on this platform");
-  },
-
-  /**
-   * This function can be used to convert compatible image formats into icons
-   * compatible with the createShortcut function.
-   *
-   * @param {nsIFile} file - The file to write to.
-   * @param {imgIContainer} imgContainer - The container holding the image.
-   */
-  async writeShortcutIcon(file, imgContainer) {
-    let stream = lazy.imgTools.encodeScaledImage(
-      imgContainer,
-      ShellService.shortcutIconType.mimeType,
-      256,
-      256
-    );
-    let streamSize = stream.available();
-
-    let bis = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
-      Ci.nsIBinaryInputStream
-    );
-    bis.setInputStream(stream);
-    let newByteArray = new Uint8Array(streamSize);
-    bis.readArrayBuffer(streamSize, newByteArray.buffer);
-    await IOUtils.write(file.path, newByteArray);
-  },
-
-  /**
-   * Creates a new Linux desktop entry for the current user.
-   *
-   * A Linux desktop entry is an INI-like file that complies with the
-   * freedesktop.org Desktop Entry Specification [0]. It's similar to a Windows
-   * shortcut, and it can appear on the desktop or application menus on
-   * supported environments.
-   *
-   * [0]: https://specifications.freedesktop.org/desktop-entry/latest/
-   *
-   * @param {string} appId - The application ID that this desktop entry will be
-   * used for. This should match the app_id or WM_CLASS that will be associated
-   * with the window.
-   * @param {string} title - The default user-visible name of the desktop
-   * entry. (Localization is currently not supported.)
-   * @param {string[]} argv - Arguments that should be passed to the Firefox
-   * executable.
-   * @param {string} iconPath - Path to the icon that should be associated with
-   * the desktop entry.
-   */
-  async createLinuxDesktopEntry(
-    appId,
-    title,
-    argv,
-    iconPath,
-    { window = null } = {}
-  ) {
-    if (AppConstants.platform !== "linux") {
-      throw new Error(
-        "createLinuxDesktopEntry is only supported on Linux-like systems"
-      );
-    }
-
-    let ini = lazy.iniParserFactory.createINIParser();
-    ini.QueryInterface(Ci.nsIINIParserWriter);
-
-    // https://specifications.freedesktop.org/desktop-entry/latest/file-naming
-    let isValidSegment = segment =>
-      !!segment.match(/^[A-Za-z-_][A-Za-z0-9-_]*$/);
-    let segments = appId.split(".");
-    if (!segments || segments.map(isValidSegment).includes(false)) {
-      throw new Error(`Desktop entry ID '${appId}' is invalid`);
-    }
-
-    ini.setString("Desktop Entry", "Type", "Application");
-    ini.setString("Desktop Entry", "Version", "1.5");
-    ini.setString("Desktop Entry", "Name", title);
-    ini.setString("Desktop Entry", "Icon", iconPath);
-
-    // All desktop files made with this must run the Firefox executable.
-    argv.unshift(await ShellService._findStartupCommand());
-
-    // https://specifications.freedesktop.org/desktop-entry/latest/exec-variables
-    // (\x60 = backtick, \x24 = dollar sign, \x22 = double quote, and
-    // \x5c = backslash; escaped to avoid messing with syntax highlighting)
-    const escapeArg = arg => arg.replaceAll(/[\x60\x24\x22\x5c]/g, "\\$&");
-
-    ini.setString(
-      "Desktop Entry",
-      "Exec",
-      argv.map(arg => `"${escapeArg(arg)}"`).join(" ")
-    );
-
-    if (
-      lazy.gioService.isRunningUnderFlatpak ||
-      lazy.gioService.isRunningUnderSnap
-    ) {
-      await ShellService.requestInstallDynamicLauncher(appId, ini, window);
-    } else {
-      await IOUtils.writeUTF8(
-        ShellService._getLinuxDesktopEntryPath(appId),
-        ini.writeToString()
-      );
-    }
-  },
-
-  /**
-   * Tries to find a command that will reliably start this installation,
-   * using the information in argv[0] if possible.
-   *
-   * For example, on NixOS the installation directory changes each update, so
-   * we should use '/run/current-system/sw/bin/firefox', and that itself points
-   * to a script which configures LD_LIBRARY_PATH so all of the dependencies
-   * can be found. See bug 2021897. If we referred to the executable directly,
-   * it'd point to a stale version and might be missing libraries
-   *
-   * Note that this won't handle cases where the script redirects over, like:
-   *     #!/bin/sh
-   *     exec ./firefox-bin "$@"
-   * since there's no good way to tell that this runs the current installation.
-   *
-   * To find the best command, we look at how the browser was run initially. If
-   * argv[0] is provided, the return value will either be
-   *   - argv[0] itself;
-   *   - the absolute path of argv[0]; or
-   *   - the absolute path of a symlink _to_ argv[0] (e.g. 'firefox' or
-   *     'firefox-esr').
-   *
-   * If argv[0] is not provided, the return value will be
-   *   - the absolute path of the executable; or
-   *   - the absolute path of a symlink _to_ the executable (e.g. 'firefox' or
-   *     'firefox-nightly').
-   *
-   * This can't be perfect, but the goal is to get the best command possible.
-   *
-   * @returns {string} A path that, when run, should reliably start the
-   * browser.
-   */
-  async _findStartupCommand() {
-    let executableFile = Services.dirsvc.get("XREExeF", Ci.nsIFile);
-
-    let wanted = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    let argv0 = ShellService.getArgv0();
-    try {
-      wanted.initWithPath(argv0);
-    } catch (e) {
-      if (argv0.includes("/")) {
-        wanted.setRelativePath(
-          Services.dirsvc.get("CurWorkD", Ci.nsIFile),
-          argv0
-        );
-      } else {
-        if (argv0 !== "") {
-          // argv[0] doesn't seem to be a path to anything, so assume it's just
-          // a command itself. If it seems to be present in the PATH, roll with
-          // it, otherwise fall back to the executable.
-          try {
-            await lazy.Subprocess.pathSearch(argv0);
-            return argv0; // if it doesn't throw
-          } catch (inner) {}
-        }
-
-        // If that didn't work, or it's empty, just refer to the executable
-        // directly.
-        wanted.initWithFile(executableFile);
-      }
-    }
-
-    let candidates = [
-      wanted.leafName,
-      // e.g. 'firefox-nightly'
-      AppConstants.MOZ_APP_NAME + "-" + AppConstants.MOZ_UPDATE_CHANNEL,
-      // e.g. 'firefox'
-      AppConstants.MOZ_APP_NAME,
-    ];
-
-    let lookupPromises = candidates.map(cmd => lazy.Subprocess.pathSearch(cmd));
-    let results = await Promise.allSettled(lookupPromises);
-
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    for (const { value } of results.filter(got => got.status === "fulfilled")) {
-      // See if it's a symlink to this installation.
-      file.initWithPath(value);
-
-      try {
-        // TODO: I think this is main thread I/O, but it looks like there's
-        // no good way around it...?
-        file.initWithPath(file.target);
-      } catch (e) {
-        // If that fails, look at the file itself (e.g. if the installation
-        // directory is in $PATH).
-      }
-
-      if (file.equals(wanted)) {
-        return PathUtils.filename(value);
-      }
-    }
-
-    return wanted.path;
-  },
-
-  /**
-   * Removes the Linux desktop entry given its app ID.
-   *
-   * This only removes entries within XDG_DATA_HOME as it is now, i.e. system
-   * shortcuts will not be removed.
-   *
-   * @param {string} appId - The appId given to createLinuxDesktopEntry.
-   */
-  async deleteLinuxDesktopEntry(appId) {
-    if (AppConstants.platform !== "linux") {
-      throw new Error(
-        "deleteLinuxDesktopEntry is only supported on Linux-like systems"
-      );
-    }
-
-    if (
-      lazy.gioService.isRunningUnderFlatpak ||
-      lazy.gioService.isRunningUnderSnap
-    ) {
-      await ShellService.requestUninstallDynamicLauncher(appId);
-    } else {
-      await IOUtils.remove(ShellService._getLinuxDesktopEntryPath(appId));
-    }
-  },
-
-  /**
-   * Determines the location of a Linux desktop entry given its app ID.
-   *
-   * @param {string} appId - The basename of the desktop file's name.
-   * @returns {string} The path to the desktop entry.
-   */
-  _getLinuxDesktopEntryPath(appId) {
-    if (
-      lazy.gioService.isRunningUnderFlatpak ||
-      lazy.gioService.isRunningUnderSnap
-    ) {
-      throw new Error(
-        "Use DynamicLauncher instead of _getLinuxDesktopEntryPath when sandboxed"
-      );
-    }
-
-    // TODO is there any way to reuse existing logic for this?
-    // Find the location of ~/.local/share/applications.
-    let dataHome = Services.env.get("XDG_DATA_HOME");
-    if (!dataHome || !PathUtils.isAbsolute(dataHome)) {
-      let home = Services.dirsvc.get("Home", Ci.nsIFile);
-      dataHome = PathUtils.join(home.path, ".local", "share");
-    }
-
-    return PathUtils.join(dataHome, "applications", `${appId}.desktop`);
-  },
-
-  async requestCreateAndPinSecondaryTile(tileId, name, iconPath, args) {
-    let resolver = Promise.withResolvers();
-
-    lazy.secondaryTileService.requestCreateAndPin(
-      tileId,
-      name,
-      iconPath,
-      args,
-      this._secondaryTileListener("Secondary tile pinning failed", resolver)
-    );
-
-    return resolver.promise;
-  },
-
-  async requestDeleteSecondaryTile(tileId) {
-    let resolver = Promise.withResolvers();
-
-    lazy.secondaryTileService.requestDelete(
-      tileId,
-      this._secondaryTileListener("Secondary tile unpinning failed", resolver)
-    );
-
-    return resolver.promise;
-  },
-
-  _secondaryTileListener(errorMessage, resolver) {
-    return {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsISecondaryTileListener]),
-      succeeded(outcome) {
-        resolver.resolve(outcome);
-      },
-      failed(hresult) {
-        let formatted = hresult.toString(16).padStart(8, "0");
-        let error = new Error(`${errorMessage} (HRESULT ${formatted})`);
-        resolver.reject(error);
-      },
-    };
   },
 };
 

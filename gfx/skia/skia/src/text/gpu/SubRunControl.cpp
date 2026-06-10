@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Google LLC
+ * Copyright 2020 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -122,13 +122,12 @@ SubRunControl::getSDFFont(const SkFont& font, const SkMatrix& viewMatrix,
 #endif
 
     dfFont.setSize(dfMaskSize);
+    dfFont.setEdging(SkFont::Edging::kAntiAlias);
     dfFont.setForceAutoHinting(false);
     dfFont.setHinting(SkFontHinting::kNormal);
 
-    // The sub-pixel position will always happen when transforming to the screen, so we effectively
-    // disable the LCD path in StrikeSpec creation by overwriting the edging here.
+    // The sub-pixel position will always happen when transforming to the screen.
     dfFont.setSubpixel(false);
-    dfFont.setEdging(SkFont::Edging::kAntiAlias);
 
     SkScalar minMatrixScale = dfMaskScaleFloor / textSize,
              maxMatrixScale = dfMaskScaleCeil  / textSize;

@@ -15,7 +15,7 @@ const PINNED_PROMO_PREF = "sidebar.verticalTabs.dragToPinPromo.dismissed";
 // New panels that are ready to be introduced to new sidebar users should be added to this list;
 // ensure your feature flag is enabled at the same time you do this and that its the same value as
 // what you added to .
-const DEFAULT_LAUNCHER_TOOLS = "aichat,syncedtabs,history,bookmarks,opentabs";
+const DEFAULT_LAUNCHER_TOOLS = "aichat,syncedtabs,history,bookmarks";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
@@ -95,7 +95,6 @@ class SidebarManager extends EventTarget {
     this.checkForPinnedTabsComplete = false;
   }
   #initialized = false;
-  #savedVisibility = null;
   init() {
     lazy.CustomizableUI.addListener(this);
 
@@ -213,7 +212,7 @@ class SidebarManager extends EventTarget {
       if (w.SidebarController.isOpen) {
         w.SidebarController.hide();
       }
-      w.SidebarController._state.loadCurrentState({
+      w.SidebarController._state.loadInitialState({
         ...lazy.SidebarState.defaultProperties,
       });
     }
@@ -224,24 +223,11 @@ class SidebarManager extends EventTarget {
    */
   handleVerticalTabsPrefChange(isEnabled, resetVisibility = true) {
     if (!isEnabled) {
-      const currentVisibility = Services.prefs.getStringPref(
-        VISIBILITY_SETTING_PREF,
-        "always-show"
-      );
-      if (currentVisibility == "expand-on-hover") {
-        this.#savedVisibility = currentVisibility;
-      }
+      // horizontal tabs can only have visibility of "hide-sidebar"
       Services.prefs.setStringPref(VISIBILITY_SETTING_PREF, "hide-sidebar");
     } else if (resetVisibility) {
-      if (this.#savedVisibility) {
-        Services.prefs.setStringPref(
-          VISIBILITY_SETTING_PREF,
-          this.#savedVisibility
-        );
-        this.#savedVisibility = null;
-      } else {
-        Services.prefs.setStringPref(VISIBILITY_SETTING_PREF, "always-show");
-      }
+      // only reset visibility pref when switching to vertical tabs and explictly indicated
+      Services.prefs.setStringPref(VISIBILITY_SETTING_PREF, "always-show");
     }
   }
 

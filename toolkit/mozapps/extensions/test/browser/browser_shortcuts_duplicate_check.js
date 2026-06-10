@@ -10,9 +10,12 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
 async function loadShortcutsView() {
   let win = await loadInitialView("extension");
 
+  // There should be a manage shortcuts link.
+  let shortcutsLink = win.document.querySelector('[action="manage-shortcuts"]');
+
   // Open the shortcuts view.
   let loaded = waitForViewLoad(win);
-  await triggerPageOptionsAction(win, "manage-shortcuts");
+  shortcutsLink.click();
   await loaded;
 
   return win;

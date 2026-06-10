@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -136,9 +138,9 @@ bool CompositorManagerChild::CreateContentCompositorBridge(
 
   CompositorBridgeOptions options = ContentCompositorOptions();
 
-  RefPtr bridge = MakeRefPtr<CompositorBridgeChild>(sInstance);
-  if (NS_WARN_IF(!sInstance->SendPCompositorBridgeConstructor(bridge, options,
-                                                              aNamespace))) {
+  RefPtr<CompositorBridgeChild> bridge = new CompositorBridgeChild(sInstance);
+  if (NS_WARN_IF(
+          !sInstance->SendPCompositorBridgeConstructor(bridge, options))) {
     return false;
   }
 
@@ -149,7 +151,8 @@ bool CompositorManagerChild::CreateContentCompositorBridge(
 /* static */
 already_AddRefed<CompositorBridgeChild>
 CompositorManagerChild::CreateWidgetCompositorBridge(
-    uint64_t aProcessToken, uint32_t aNamespace, CSSToLayoutDeviceScale aScale,
+    uint64_t aProcessToken, WebRenderLayerManager* aLayerManager,
+    uint32_t aNamespace, CSSToLayoutDeviceScale aScale,
     const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
     const gfx::IntSize& aSurfaceSize, uint64_t aInnerWindowId) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -165,20 +168,20 @@ CompositorManagerChild::CreateWidgetCompositorBridge(
       aScale, vsyncRate, aOptions, aUseExternalSurfaceSize, aSurfaceSize,
       aInnerWindowId);
 
-  RefPtr bridge = MakeRefPtr<CompositorBridgeChild>(sInstance);
-  if (NS_WARN_IF(!sInstance->SendPCompositorBridgeConstructor(bridge, options,
-                                                              aNamespace))) {
+  RefPtr<CompositorBridgeChild> bridge = new CompositorBridgeChild(sInstance);
+  if (NS_WARN_IF(
+          !sInstance->SendPCompositorBridgeConstructor(bridge, options))) {
     return nullptr;
   }
 
-  bridge->InitForWidget(aProcessToken, aNamespace);
+  bridge->InitForWidget(aProcessToken, aLayerManager, aNamespace);
   return bridge.forget();
 }
 
 /* static */
 already_AddRefed<CompositorBridgeChild>
 CompositorManagerChild::CreateSameProcessWidgetCompositorBridge(
-    uint32_t aNamespace) {
+    WebRenderLayerManager* aLayerManager, uint32_t aNamespace) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
   if (NS_WARN_IF(!sInstance || !sInstance->CanSend())) {
@@ -187,13 +190,13 @@ CompositorManagerChild::CreateSameProcessWidgetCompositorBridge(
 
   CompositorBridgeOptions options = SameProcessWidgetCompositorOptions();
 
-  RefPtr bridge = MakeRefPtr<CompositorBridgeChild>(sInstance);
-  if (NS_WARN_IF(!sInstance->SendPCompositorBridgeConstructor(bridge, options,
-                                                              aNamespace))) {
+  RefPtr<CompositorBridgeChild> bridge = new CompositorBridgeChild(sInstance);
+  if (NS_WARN_IF(
+          !sInstance->SendPCompositorBridgeConstructor(bridge, options))) {
     return nullptr;
   }
 
-  bridge->InitForWidget(1, aNamespace);
+  bridge->InitForWidget(1, aLayerManager, aNamespace);
   return bridge.forget();
 }
 

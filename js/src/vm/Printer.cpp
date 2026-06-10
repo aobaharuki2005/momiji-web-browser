@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -472,9 +474,10 @@ void Fprinter::put(const char* s, size_t len) {
 LSprinter::LSprinter(LifoAlloc* lifoAlloc)
     : alloc_(lifoAlloc), head_(nullptr), tail_(nullptr), unused_(0) {}
 
-// This LSprinter might be allocated as part of the same LifoAlloc, so we
-// should not expect the destructor to be called.
-LSprinter::~LSprinter() = default;
+LSprinter::~LSprinter() {
+  // This LSprinter might be allocated as part of the same LifoAlloc, so we
+  // should not expect the destructor to be called.
+}
 
 void LSprinter::exportInto(GenericPrinter& out) const {
   if (!head_) {

@@ -18,13 +18,12 @@ use headers::{
     IfUnmodifiedSince, LastModified, Range,
 };
 use http::StatusCode;
-use mime_guess;
+use hyper::Body;
 use percent_encoding::percent_decode_str;
 use tokio::fs::File as TkFile;
 use tokio::io::AsyncSeekExt;
 use tokio_util::io::poll_read_buf;
 
-use crate::bodyt::Body;
 use crate::filter::{Filter, FilterClone, One};
 use crate::reject::{self, Rejection};
 use crate::reply::{Reply, Response};
@@ -370,7 +369,7 @@ fn bytes_range(range: Option<Range>, max_len: u64) -> Result<(u64, u64), BadRang
     };
 
     let ret = range
-        .satisfiable_ranges(max_len)
+        .iter()
         .map(|(start, end)| {
             let start = match start {
                 Bound::Unbounded => 0,

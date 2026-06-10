@@ -6,7 +6,7 @@ package org.mozilla.fenix.helpers
 
 import android.net.Uri
 import androidx.core.net.toUri
-import mockwebserver3.MockWebServer
+import okhttp3.mockwebserver.MockWebServer
 import java.util.concurrent.TimeUnit
 
 /**
@@ -69,12 +69,6 @@ object TestAssetHelper {
 
     val MockWebServer.pdfFormAsset
         get() = createTestAsset("resources/pdfForm.pdf")
-
-    val MockWebServer.downloadPageAsset
-        get() = createTestAsset(
-            path = "pages/downloads.html",
-            title = "Download_Test_Page",
-        )
 
     val MockWebServer.saveLoginAsset
         get() = createTestAsset("pages/password.html")
@@ -159,11 +153,4 @@ object TestAssetHelper {
         content,
         title,
     )
-
-    val MockWebServer.articleSummaryAsset
-        get() = createTestAsset(
-            path = "pages/article-summary.html",
-            content = "Page content: article summary",
-            title = "Article for Testing Summarization Feature",
-        )
 }

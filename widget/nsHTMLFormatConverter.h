@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHTMLFormatConverter_h_
-#define nsHTMLFormatConverter_h_
+#ifndef nsHTMLFormatConverter_h__
+#define nsHTMLFormatConverter_h__
 
 #include "nsCOMPtr.h"
 #include "nsIFormatConverter.h"
@@ -28,4 +29,4 @@ class nsHTMLFormatConverter : public nsIFormatConverter {
                                       nsAutoString& aToStr);
 };
 
-#endif  // nsHTMLFormatConverter_h_
+#endif  // nsHTMLFormatConverter_h__

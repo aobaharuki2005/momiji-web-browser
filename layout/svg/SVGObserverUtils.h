@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,7 +10,6 @@
 #include "FrameProperties.h"
 #include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/dom/IDTracker.h"
-#include "mozilla/dom/SVGGeometryElement.h"
 #include "nsID.h"
 #include "nsIFrame.h"  // only for LayoutFrameType
 #include "nsIMutationObserver.h"
@@ -125,7 +126,7 @@ class SVGRenderingObserver : public nsStubMutationObserver {
 
   Element* GetAndObserveReferencedElement();
 
-  virtual bool ObservesReflow() const { return false; }
+  virtual bool ObservesReflow() { return false; }
 
  protected:
   void StartObserving();
@@ -145,10 +146,10 @@ class SVGRenderingObserver : public nsStubMutationObserver {
    */
   virtual void OnRenderingChange() = 0;
 
-  virtual Element* GetReferencedElementWithoutObserving() const = 0;
+  virtual Element* GetReferencedElementWithoutObserving() = 0;
 
 #ifdef DEBUG
-  void DebugObserverSet() const;
+  void DebugObserverSet();
 #endif
 
   // Whether we're in our observed element's observer set at this time.
@@ -224,17 +225,13 @@ class SVGObserverUtils {
    */
   static void InvalidateRenderingObservers(nsIFrame* aFrame);
 
-  enum class InvalidationFlag {
-    // If we know the frame is being destroyed anyway we can skip some cleanup.
-    FrameBeingDestroyed
-  };
-  using InvalidationFlags = EnumSet<InvalidationFlag>;
+  enum { INVALIDATE_REFLOW = 0x1, INVALIDATE_DESTROY = 0x2 };
 
-  enum class ReferenceState {
+  enum ReferenceState {
     /// Has no references to SVG filters (may still have CSS filter functions!)
-    HasNoRefs,
-    HasRefsAllValid,
-    HasRefsSomeInvalid,
+    eHasNoRefs,
+    eHasRefsAllValid,
+    eHasRefsSomeInvalid,
   };
 
   /**
@@ -242,9 +239,9 @@ class SVGObserverUtils {
    * (frame's) element, if any, are invalidated.
    */
   static void InvalidateDirectRenderingObservers(Element* aElement,
-                                                 InvalidationFlags aFlags = {});
+                                                 uint32_t aFlags = 0);
   static void InvalidateDirectRenderingObservers(nsIFrame* aFrame,
-                                                 InvalidationFlags aFlags = {});
+                                                 uint32_t aFlags = 0);
 
   /**
    * Get the paint server for aPaintedFrame.
@@ -258,7 +255,7 @@ class SVGObserverUtils {
    * found, false otherwise.
    */
   static bool GetAndObserveMarkers(nsIFrame* aMarkedFrame,
-                                   SVGMarkerFrames* aFrames);
+                                   SVGMarkerFrame* (*aFrames)[3]);
 
   /**
    * Get the frames of the SVG filters applied to the given frame, and add the

@@ -93,6 +93,9 @@ class LogGradleErrorForTreeHerderJupiterTest {
         val cause = IllegalStateException(null as String?)
         val exception = RuntimeException("Test message", cause)
         val actualMessage = LogGradleErrorForTreeHerder.getIndentedMessage(exception)
-        assertEqualLines("Test message\n> ", actualMessage)
+        assertEqualLines("""
+            Test message
+            >
+        """.trimIndent(), actualMessage)
     }
 }

@@ -29,11 +29,14 @@ cfg_if! {
 pub type off_t = i32;
 pub type dev_t = u32;
 pub type ino_t = u16;
-
-extern_ty! {
-    pub enum timezone {}
+#[derive(Debug)]
+pub enum timezone {}
+impl Copy for timezone {}
+impl Clone for timezone {
+    fn clone(&self) -> timezone {
+        *self
+    }
 }
-
 pub type time64_t = i64;
 
 pub type SOCKET = crate::uintptr_t;
@@ -72,13 +75,11 @@ s! {
         pub tm_isdst: c_int,
     }
 
-    #[derive(Default)]
     pub struct timeval {
         pub tv_sec: c_long,
         pub tv_usec: c_long,
     }
 
-    #[derive(Default)]
     pub struct timespec {
         pub tv_sec: time_t,
         pub tv_nsec: c_long,
@@ -242,9 +243,6 @@ pub const SIG_GET: crate::sighandler_t = 2;
 pub const SIG_SGE: crate::sighandler_t = 3;
 pub const SIG_ACK: crate::sighandler_t = 4;
 
-pub const L_tmpnam: c_uint = 260;
-pub const TMP_MAX: c_uint = 0x7fff_ffff;
-
 // DIFF(main): removed in 458c58f409
 // FIXME(msrv): done by `std` starting in 1.79.0
 // inline comment below appeases style checker
@@ -253,9 +251,21 @@ pub const TMP_MAX: c_uint = 0x7fff_ffff;
 #[link(name = "libcmt", cfg(target_feature = "crt-static"))]
 extern "C" {}
 
-extern_ty! {
-    pub enum FILE {}
-    pub enum fpos_t {} // FIXME(windows): fill this out with a struct
+#[derive(Debug)]
+pub enum FILE {}
+impl Copy for FILE {}
+impl Clone for FILE {
+    fn clone(&self) -> FILE {
+        *self
+    }
+}
+#[derive(Debug)]
+pub enum fpos_t {} // FIXME(windows): fill this out with a struct
+impl Copy for fpos_t {}
+impl Clone for fpos_t {
+    fn clone(&self) -> fpos_t {
+        *self
+    }
 }
 
 // Special handling for all print and scan type functions because of https://github.com/rust-lang/libc/issues/2860
@@ -369,7 +379,6 @@ extern "C" {
     pub fn strtok(s: *mut c_char, t: *const c_char) -> *mut c_char;
     pub fn strxfrm(s: *mut c_char, ct: *const c_char, n: size_t) -> size_t;
     pub fn wcslen(buf: *const wchar_t) -> size_t;
-    pub fn wcsnlen(str: *const wchar_t, numberOfElements: size_t) -> size_t;
     pub fn wcstombs(dest: *mut c_char, src: *const wchar_t, n: size_t) -> size_t;
 
     pub fn memchr(cx: *const c_void, c: c_int, n: size_t) -> *mut c_void;

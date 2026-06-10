@@ -32,8 +32,7 @@ add_task(async function () {
   const emptyPlaceHolderEl =
     getRootElement(panel).querySelector(".empty.placeholder");
   isnot(
-    emptyPlaceHolderEl.documentGlobal.getComputedStyle(emptyPlaceHolderEl)
-      .display,
+    emptyPlaceHolderEl.ownerGlobal.getComputedStyle(emptyPlaceHolderEl).display,
     "none",
     "showing 'no style' indicator"
   );
@@ -45,13 +44,12 @@ add_task(async function () {
   const newLink = emptyPlaceHolderEl.querySelector("a.style-editor-newButton");
 
   // Use synthesizeMouse to also check that the element is visible
-  EventUtils.synthesizeMouseAtCenter(newLink, {}, newLink.documentGlobal);
+  EventUtils.synthesizeMouseAtCenter(newLink, {}, newLink.ownerGlobal);
   await onEditorAdded;
 
   ok(true, "A stylesheet was added");
   is(
-    emptyPlaceHolderEl.documentGlobal.getComputedStyle(emptyPlaceHolderEl)
-      .display,
+    emptyPlaceHolderEl.ownerGlobal.getComputedStyle(emptyPlaceHolderEl).display,
     "none",
     "The empty placeholder element is now hidden"
   );

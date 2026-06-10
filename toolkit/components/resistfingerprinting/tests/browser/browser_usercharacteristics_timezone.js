@@ -25,16 +25,15 @@ add_task(async function test_timezone_metrics() {
           Glean.characteristics.timezoneOffsetWeb.testGetValue();
         Assert.strictEqual(
           typeof timezoneOffsetWeb,
-          "string",
-          "timezone_offset_web should be a string"
+          "number",
+          "timezone_offset_web should be a number"
         );
         info(`timezone_offset_web: ${timezoneOffsetWeb} minutes`);
 
         // Timezone offset is typically in the range of -720 to +840 minutes
         // (UTC-12 to UTC+14, though most are -12 to +12)
-        const offsetNum = Number(timezoneOffsetWeb);
         Assert.ok(
-          offsetNum >= -720 && offsetNum <= 840,
+          timezoneOffsetWeb >= -720 && timezoneOffsetWeb <= 840,
           `timezone_offset_web (${timezoneOffsetWeb}) should be in valid range`
         );
       },

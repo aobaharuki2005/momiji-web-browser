@@ -42,13 +42,13 @@ add_task(async function aboutDialog_foregroundCheck_apply_blocked() {
 
   let prefsTab;
   let handlePromise = (async () => {
-    let dialog = await PromptTestUtils.waitForPrompt(tab.linkedBrowser, {
+    let dialog = await PromptTestUtils.waitForPrompt(window, {
       modalType: Ci.nsIPrompt.MODAL_TYPE_CONTENT,
       promptType: "confirmEx",
     });
-    await SpecialPowers.spawn(prefsTab.linkedBrowser, [], () => {
+    await SpecialPowers.spawn(prefsTab.linkedBrowser, [], async () => {
       Assert.equal(
-        content.Preferences.getSetting("updateState").value,
+        content.gAppUpdater.selectedPanel.id,
         "restarting",
         "The restarting panel should be displayed"
       );

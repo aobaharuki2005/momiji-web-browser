@@ -3,9 +3,8 @@ import webdriver.bidi.error as error
 
 from webdriver.bidi.modules.script import ContextTarget
 
-pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.asyncio
 @pytest.mark.parametrize("type_hint", ["tab", "window"])
 async def test_remove_preload_script(bidi_session, type_hint):
     script = await bidi_session.script.add_preload_script(
@@ -34,6 +33,7 @@ async def test_remove_preload_script(bidi_session, type_hint):
     assert result_2 == {"type": "undefined"}
 
 
+@pytest.mark.asyncio
 async def test_remove_preload_script_twice(bidi_session):
     script = await bidi_session.script.add_preload_script(
         function_declaration="() => { window.foo='bar'; }"
@@ -46,6 +46,7 @@ async def test_remove_preload_script_twice(bidi_session):
         await bidi_session.script.remove_preload_script(script=script)
 
 
+@pytest.mark.asyncio
 async def test_remove_one_of_preload_scripts(bidi_session):
     script_1 = await bidi_session.script.add_preload_script(
         function_declaration="() => { window.bar='foo'; }"
@@ -79,6 +80,7 @@ async def test_remove_one_of_preload_scripts(bidi_session):
     await bidi_session.script.remove_preload_script(script=script_2)
 
 
+@pytest.mark.asyncio
 async def test_remove_script_set_up_for_one_context(
     bidi_session, add_preload_script, new_tab, test_page, test_page_cross_origin
 ):
@@ -118,6 +120,7 @@ async def test_remove_script_set_up_for_one_context(
     assert result == {"type": "undefined"}
 
 
+@pytest.mark.asyncio
 async def test_remove_script_set_up_for_user_context(
     bidi_session, add_preload_script, new_tab, create_user_context, inline
 ):

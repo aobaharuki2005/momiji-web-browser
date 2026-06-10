@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -14,7 +16,6 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "js/HeapAPI.h"
-#include "js/SliceBudget.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"
 #include "vm/HelperThreadState.h"
@@ -46,34 +47,16 @@ JS_PUBLIC_API size_t MemoryReportingSundriesThreshold() { return 8 * 1024; }
 
 /* static */
 HashNumber InefficientNonFlatteningStringHashPolicy::hash(const Lookup& l) {
-  // To avoid O(N) cost for long strings, hash at most kHashCharBudget chars.
-  // match() does a full byte-exact comparison, so false collisions are merely
-  // a performance concern and don't affect aggregation correctness.
-  constexpr size_t kHashCharBudget = 128;
-
-  size_t len = l->length();
-  HashNumber h = mozilla::HashGeneric(len);
-  size_t toHash = std::min(len, kHashCharBudget);
-
   if (l->isLinear()) {
-    JS::AutoCheckCannotGC nogc;
-    JSLinearString& linear = l->asLinear();
-    if (linear.hasLatin1Chars()) {
-      h = mozilla::AddToHash(
-          h, mozilla::HashString(linear.latin1Chars(nogc), toHash));
-    } else {
-      h = mozilla::AddToHash(
-          h, mozilla::HashString(linear.twoByteChars(nogc), toHash));
-    }
-    return h;
+    return HashStringChars(&l->asLinear());
   }
 
-  // Rope: hash only the first kHashCharBudget chars to bound traversal cost.
-  uint32_t ropeHash = 0;
-  if (!l->asRope().hashPrefix(kHashCharBudget, &ropeHash)) {
+  // Use rope's non-copying hash function.
+  uint32_t hash = 0;
+  if (!l->asRope().hash(&hash)) {
     MOZ_CRASH("oom");
   }
-  return mozilla::AddToHash(h, ropeHash);
+  return hash;
 }
 
 template <typename Char1, typename Char2>
@@ -198,14 +181,9 @@ struct StatsClosure {
   wasm::Code::SeenSet wasmSeenCode;
   wasm::Table::SeenSet wasmSeenTables;
   bool anonymize;
-  // Stop deduplicating strings after this many milliseconds to avoid hangs.
-  JS::SliceBudget stringBudget;
 
   StatsClosure(RuntimeStats* rt, ObjectPrivateVisitor* v, bool anon)
-      : rtStats(rt),
-        opv(v),
-        anonymize(anon),
-        stringBudget(JS::TimeBudget(mozilla::TimeDuration::FromSeconds(5))) {}
+      : rtStats(rt), opv(v), anonymize(anon) {}
 };
 
 static void DecommittedPagesChunkCallback(JSRuntime* rt, void* data,
@@ -234,11 +212,9 @@ static void StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone,
       &zStats.shapeTables, &rtStats->runtime.atomsMarkBitmaps,
       &zStats.compartmentObjects, &zStats.crossCompartmentWrappersTables,
       &zStats.compartmentsPrivateData, &zStats.scriptCountsMap);
-
-  zone->bufferAllocator.addBufferSizesAndCounts(
-      &zStats.gcBuffers.usedBytes, &zStats.gcBuffers.freeBytes,
-      &zStats.gcBuffers.adminBytes, &zStats.gcBuffers.totalChunks,
-      &zStats.gcBuffers.freeRegions, &zStats.gcBuffers.largeAllocs);
+  zone->bufferAllocator.addSizeOfExcludingThis(&zStats.gcBuffers.usedBytes,
+                                               &zStats.gcBuffers.freeBytes,
+                                               &zStats.gcBuffers.adminBytes);
 }
 
 static void StatsRealmCallback(JSContext* cx, void* data, Realm* realm,
@@ -412,7 +388,8 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
       BaseScript* base = &cellptr.as<BaseScript>();
       RealmStats& realmStats = base->realm()->realmStats();
       realmStats.scriptsGCHeap += thingSize;
-      realmStats.scriptsGCBuffers += base->sizeOfExcludingThis();
+      realmStats.scriptsMallocHeapData +=
+          base->sizeOfExcludingThis(rtStats->mallocSizeOf_);
       if (base->hasJitScript()) {
         JSScript* script = static_cast<JSScript*>(base);
         script->addSizeOfJitScript(rtStats->mallocSizeOf_,
@@ -447,26 +424,19 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
       info.numCopies = 1;
 
       zStats->stringInfo.add(info);
-      zStats->stringsTotalCount++;
 
       // The primary use case for anonymization is automated crash submission
       // (to help detect OOM crashes). In that case, we don't want to pay the
       // memory cost required to do notable string detection.
-      if (granularity == FineGrained && !closure->anonymize &&
-          !zStats->stringsDeduplicationTruncated) {
-        closure->stringBudget.step();
-        if (!closure->stringBudget.isOverBudget()) {
-          ZoneStats::StringsHashMap::AddPtr p =
-              zStats->allStrings->lookupForAdd(str);
-          if (!p) {
-            bool ok = zStats->allStrings->add(p, str, info);
-            // Ignore failure -- we just won't record the string as notable.
-            (void)ok;
-          } else {
-            p->value().add(info);
-          }
+      if (granularity == FineGrained && !closure->anonymize) {
+        ZoneStats::StringsHashMap::AddPtr p =
+            zStats->allStrings->lookupForAdd(str);
+        if (!p) {
+          bool ok = zStats->allStrings->add(p, str, info);
+          // Ignore failure -- we just won't record the string as notable.
+          (void)ok;
         } else {
-          zStats->stringsDeduplicationTruncated = true;
+          p->value().add(info);
         }
       }
       break;
@@ -483,7 +453,8 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
         size += Nursery::nurseryCellHeaderSize();
       }
       zStats->bigIntsGCHeap += size;
-      zStats->bigIntsGCBuffers += bi->sizeOfExcludingThis();
+      zStats->bigIntsMallocHeap +=
+          bi->sizeOfExcludingThis(rtStats->mallocSizeOf_);
       break;
     }
 
@@ -545,7 +516,7 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
     case JS::TraceKind::Scope: {
       Scope* scope = &cellptr.as<Scope>();
       zStats->scopesGCHeap += thingSize;
-      zStats->scopesGCBuffers += scope->sizeOfExcludingThis();
+      zStats->scopesMallocHeap += scope->sizeOfExcludingThis();
       break;
     }
 
@@ -581,9 +552,10 @@ static bool FindNotableStrings(ZoneStats& zStats) {
   // We should only run FindNotableStrings once per ZoneStats object.
   MOZ_ASSERT(zStats.notableStrings.empty());
 
-  for (auto iter = zStats.allStrings->iter(); !iter.done(); iter.next()) {
-    JSString* str = iter.get().key();
-    StringInfo& info = iter.get().value();
+  for (ZoneStats::StringsHashMap::Range r = zStats.allStrings->all();
+       !r.empty(); r.popFront()) {
+    JSString* str = r.front().key();
+    StringInfo& info = r.front().value();
 
     if (!info.isNotable()) {
       continue;
@@ -609,9 +581,10 @@ static bool FindNotableClasses(RealmStats& realmStats) {
   // We should only run FindNotableClasses once per ZoneStats object.
   MOZ_ASSERT(realmStats.notableClasses.empty());
 
-  for (auto iter = realmStats.allClasses->iter(); !iter.done(); iter.next()) {
-    const char* className = iter.get().key();
-    ClassInfo& info = iter.get().value();
+  for (RealmStats::ClassesHashMap::Range r = realmStats.allClasses->all();
+       !r.empty(); r.popFront()) {
+    const char* className = r.front().key();
+    ClassInfo& info = r.front().value();
 
     // If this class isn't notable, or if we can't grow the notableStrings
     // vector, skip this string.
@@ -639,10 +612,11 @@ static bool FindNotableScriptSources(JS::RuntimeSizes& runtime) {
   // We should only run FindNotableScriptSources once per RuntimeSizes.
   MOZ_ASSERT(runtime.notableScriptSources.empty());
 
-  for (auto iter = runtime.allScriptSources->iter(); !iter.done();
-       iter.next()) {
-    const char* filename = iter.get().key();
-    ScriptSourceInfo& info = iter.get().value();
+  for (RuntimeSizes::ScriptSourcesHashMap::Range r =
+           runtime.allScriptSources->all();
+       !r.empty(); r.popFront()) {
+    const char* filename = r.front().key();
+    ScriptSourceInfo& info = r.front().value();
 
     if (!info.isNotable()) {
       continue;

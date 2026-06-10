@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::{get_current_thread, is_on_current_thread, DispatchOptions, RunnableBuilder};
+use crate::{get_current_thread, DispatchOptions, RunnableBuilder};
 use std::{
     cell::Cell,
     fmt::Debug,
@@ -104,19 +104,7 @@ fn schedule(config: Arc<TaskSpawnConfig>, runnable: async_task::Runnable) {
 
     // SAFETY: We use the POLLING_TASK thread local to check if we meet the
     // requirements for `at_end`.
-    let mut options = unsafe { config.options.at_end(currently_polling) };
-
-    // If we're on the target thread, opt into fallible dispatch so that a
-    // failed dispatch (e.g. during shutdown when the event queue is doomed)
-    // properly releases the runnable instead of intentionally leaking it.
-    // We can only do this when on the correct thread, because spawn_local
-    // tasks use non-Send futures whose Runnables must not be dropped on a
-    // different thread.
-    if let SpawnTarget::EventTarget(target) = &config.target {
-        if is_on_current_thread(target) {
-            options = options.fallible(true);
-        }
-    }
+    let options = unsafe { config.options.at_end(currently_polling) };
 
     // Build the RunnableBuilder for our task to be dispatched.
     let config2 = config.clone();
@@ -195,7 +183,7 @@ where
         let config = Arc::new(TaskSpawnConfig {
             name: self.name,
             priority: self.priority,
-            options: self.options.fallible(true),
+            options: self.options,
             target: SpawnTarget::BackgroundTask,
         });
         let (runnable, task) = async_task::spawn(self.future, move |runnable| {
@@ -210,7 +198,7 @@ where
         let config = Arc::new(TaskSpawnConfig {
             name: self.name,
             priority: self.priority,
-            options: self.options.fallible(true),
+            options: self.options,
             target: SpawnTarget::EventTarget(RefPtr::new(target)),
         });
         let (runnable, task) = async_task::spawn(self.future, move |runnable| {

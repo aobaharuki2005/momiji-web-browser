@@ -38,7 +38,6 @@ support-files = [
   "320x240.webm",
   "VID_0001.ogg",
   "VID_0001.ogg^headers^",
-  "adts-cbr.aac",
   "allowed.sjs",
   "ambisonics.mp4",
   "ambisonics.mp4^headers^",
@@ -443,7 +442,6 @@ support-files = [
   "can_play_type_wave.js",
   "can_play_type_webm.js",
   "cancellable_request.sjs",
-  "cbr-no-xing.mp3",
   "chain.ogg",
   "chain.ogg^headers^",
   "chain.opus",
@@ -555,7 +553,6 @@ support-files = [
   "output_hevc.mkv",
   "output_mp3.mkv",
   "output_opus.mkv",
-  "output_opus_surround.mkv",
   "output_pcm.mkv",
   "output_vorbis.mkv",
   "output_vp8.mkv",
@@ -686,7 +683,6 @@ support-files = [
   "test-8-7.1.opus^headers^",
   "test-stereo-phase-inversion-180.opus",
   "test-stereo-phase-inversion-180.opus^headers^",
-  "tone_1s_nosilence.mp3",
   "variable-channel.ogg",
   "variable-channel.ogg^headers^",
   "variable-channel.opus",
@@ -768,10 +764,6 @@ support-files = [
   "padding-spanning-multiple-packets.mp3",
 ]
 
-["test_captureStream_audioLoopBack.html"]
-scheme = "https"
-tags = "capturestream"
-
 ["test_capture_stream_av_sync.html"]
 skip-if = [
   "mda_gpu", # Disabled because high intermittent failure
@@ -849,10 +841,6 @@ scheme = "https"
 
 ["test_media_sniffer.html"]
 
-["test_mediacapabilities_drm_power_efficient.html"]
-scheme = "https"
-support-files = ["mediacapabilities_drm_utils.js"]
-
 ["test_mediastream_as_eventarget.html"]
 
 ["test_mediatrack_consuming_mediastream.html"]
@@ -877,11 +865,7 @@ skip-if = [
   "os == 'mac' && os_version == '10.15' && arch == 'x86_64' && mda_gpu", # Bug 1942396
 ]
 
-["test_adts_dataurl_duration.html"]
-
 ["test_mp3_broadcast.html"]
-
-["test_mp3_dataurl_duration.html"]
 
 ["test_mp4a_32bit_samplesize.html"] # bug 1924052
 

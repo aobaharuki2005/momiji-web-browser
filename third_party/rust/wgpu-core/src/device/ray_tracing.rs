@@ -22,7 +22,7 @@ use crate::{
     LabelHelpers,
 };
 use hal::AccelerationStructureTriangleIndices;
-use wgt::{Features, AABB_GEOMETRY_MIN_STRIDE};
+use wgt::Features;
 
 impl Device {
     pub fn create_blas(
@@ -63,7 +63,7 @@ impl Device {
                                 dyn hal::DynBuffer,
                             > {
                                 format: desc.index_format.unwrap(),
-                                buffer: Some(self.zero_buffer.as_ref()),
+                                buffer: None,
                                 offset: 0,
                                 count,
                             });
@@ -98,7 +98,7 @@ impl Device {
                     }
 
                     entries.push(hal::AccelerationStructureTriangles::<dyn hal::DynBuffer> {
-                        vertex_buffer: Some(self.zero_buffer.as_ref()),
+                        vertex_buffer: None,
                         vertex_format: desc.vertex_format,
                         first_vertex: 0,
                         vertex_count: desc.vertex_count,
@@ -112,43 +112,6 @@ impl Device {
                     self.raw().get_acceleration_structure_build_sizes(
                         &hal::GetAccelerationStructureBuildSizesDescriptor {
                             entries: &hal::AccelerationStructureEntries::Triangles(entries),
-                            flags: blas_desc.flags,
-                        },
-                    )
-                }
-            }
-            wgt::BlasGeometrySizeDescriptors::AABBs { descriptors } => {
-                if descriptors.len() as u32 > self.limits.max_blas_geometry_count {
-                    return Err(CreateBlasError::TooManyGeometries(
-                        self.limits.max_blas_geometry_count,
-                        descriptors.len() as u32,
-                    ));
-                }
-
-                let mut entries =
-                    Vec::<hal::AccelerationStructureAABBs<dyn hal::DynBuffer>>::with_capacity(
-                        descriptors.len(),
-                    );
-                for desc in descriptors {
-                    if desc.primitive_count > self.limits.max_blas_primitive_count {
-                        return Err(CreateBlasError::TooManyPrimitives(
-                            self.limits.max_blas_primitive_count,
-                            desc.primitive_count,
-                        ));
-                    }
-
-                    entries.push(hal::AccelerationStructureAABBs::<dyn hal::DynBuffer> {
-                        buffer: Some(self.zero_buffer.as_ref()),
-                        offset: 0,
-                        count: desc.primitive_count,
-                        stride: AABB_GEOMETRY_MIN_STRIDE,
-                        flags: desc.flags,
-                    });
-                }
-                unsafe {
-                    self.raw().get_acceleration_structure_build_sizes(
-                        &hal::GetAccelerationStructureBuildSizesDescriptor {
-                            entries: &hal::AccelerationStructureEntries::AABBs(entries),
                             flags: blas_desc.flags,
                         },
                     )
@@ -244,7 +207,7 @@ impl Device {
                 &hal::GetAccelerationStructureBuildSizesDescriptor {
                     entries: &hal::AccelerationStructureEntries::Instances(
                         hal::AccelerationStructureInstances {
-                            buffer: Some(self.zero_buffer.as_ref()),
+                            buffer: None,
                             offset: 0,
                             count: desc.max_instances,
                         },
@@ -265,15 +228,12 @@ impl Device {
         }
         .map_err(|e| self.handle_hal_error_with_nonfatal_oom(e))?;
 
-        let instance_buffer_size = self
-            .alignments
-            .raw_tlas_instance_size
-            .checked_mul(desc.max_instances.max(1))
-            .expect("max_tlas_instance_count should not allow excessive buffer size");
+        let instance_buffer_size =
+            self.alignments.raw_tlas_instance_size * desc.max_instances.max(1) as usize;
         let instance_buffer = unsafe {
             self.raw().create_buffer(&hal::BufferDescriptor {
                 label: hal_label(Some("(wgpu-core) instances_buffer"), self.instance_flags),
-                size: u64::from(instance_buffer_size),
+                size: instance_buffer_size as u64,
                 usage: wgt::BufferUses::COPY_DST
                     | wgt::BufferUses::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT,
                 memory_flags: hal::MemoryFlags::PREFER_COHERENT,

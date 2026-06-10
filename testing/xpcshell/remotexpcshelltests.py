@@ -625,7 +625,6 @@ class XPCShellRemote(xpcshell.XPCShellTests):
             "OCSPStaplingServer",
             "GenerateOCSPResponse",
             "SanctionsTestServer",
-            "ZeroRttAcceptServer",
         ]
         for fname in binaries:
             local = os.path.join(self.localBin, fname)
@@ -688,17 +687,6 @@ class XPCShellRemote(xpcshell.XPCShellTests):
         self.device.rm(self.remoteScriptsDir, recursive=True, force=True, timeout=None)
         self.device.push(self.xpcDir, self.remoteScriptsDir, timeout=600)
         self.device.chmod(self.remoteScriptsDir, recursive=True)
-
-    def buildNodeEnvironment(self):
-        """
-        Filter self.env to avoid passing device-specific variables like HOME or
-        LD_LIBRARY_PATH to the host node process.
-        """
-        node_env = dict(os.environ)
-        for key, value in self.env.items():
-            if key.startswith("MOZ"):
-                node_env[key] = value
-        return node_env
 
     def trySetupNode(self):
         super().trySetupNode()

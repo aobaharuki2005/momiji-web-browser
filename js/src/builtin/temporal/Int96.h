@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -11,7 +13,6 @@
 
 #include <array>
 #include <climits>
-#include <compare>
 #include <stddef.h>
 #include <stdint.h>
 #include <utility>
@@ -58,28 +59,35 @@ class Int96 final {
     MOZ_ASSERT_IF((digits[0] | digits[1] | digits[2]) == 0, !negative);
   }
 
-  // Clang produces better code using this explicit operator== definition when
-  // compared to the defaulted equality operator.
   constexpr bool operator==(const Int96& other) const {
     return digits[0] == other.digits[0] && digits[1] == other.digits[1] &&
            digits[2] == other.digits[2] && negative == other.negative;
   }
 
-  constexpr auto operator<=>(const Int96& other) const {
+  constexpr bool operator<(const Int96& other) const {
     if (negative != other.negative) {
-      return negative ? std::strong_ordering::less
-                      : std::strong_ordering::greater;
+      return negative;
     }
     for (size_t i = digits.size(); i != 0; --i) {
       Digit x = digits[i - 1];
       Digit y = other.digits[i - 1];
-
-      auto r = x <=> y;
-      if (r != 0) {
-        return negative ? y <=> x : r;
+      if (x != y) {
+        return negative ? x > y : x < y;
       }
     }
-    return std::strong_ordering::equal;
+    return false;
+  }
+
+  // Other operators are implemented in terms of operator== and operator<.
+  constexpr bool operator!=(const Int96& other) const {
+    return !(*this == other);
+  }
+  constexpr bool operator>(const Int96& other) const { return other < *this; }
+  constexpr bool operator<=(const Int96& other) const {
+    return !(other < *this);
+  }
+  constexpr bool operator>=(const Int96& other) const {
+    return !(*this < other);
   }
 
   /**

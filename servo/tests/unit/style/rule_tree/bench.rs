@@ -10,7 +10,7 @@ use style::context::QuirksMode;
 use style::error_reporting::{ContextualParseError, ParseErrorReporter};
 use style::media_queries::MediaList;
 use style::properties::{longhands, Importance, PropertyDeclaration, PropertyDeclarationBlock};
-use style::rule_tree::{CascadeLevel, CascadeOrigin, RuleTree, StrongRuleNode, StyleSource};
+use style::rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
 use style::shared_lock::SharedRwLock;
 use style::stylesheets::{CssRule, Origin, Stylesheet};
 use style::thread_state::{self, ThreadState};
@@ -72,7 +72,7 @@ fn parse_rules(css: &str) -> Vec<(StyleSource, CascadeLevel)> {
         .filter_map(|rule| match *rule {
             CssRule::Style(ref style_rule) => Some((
                 StyleSource::from_rule(style_rule.clone()),
-                CascadeLevel::new(CascadeOrigin::User),
+                CascadeLevel::UserNormal,
             )),
             _ => None,
         })
@@ -96,7 +96,7 @@ fn test_insertion_style_attribute(
                 Importance::Normal,
             ),
         ))),
-        CascadeLevel::new(CascadeOrigin::User),
+        CascadeLevel::UserNormal,
     ));
     test_insertion(rule_tree, rules)
 }

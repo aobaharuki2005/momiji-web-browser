@@ -1,3 +1,5 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -147,6 +149,9 @@ add_setup(async function () {
   registerCleanupFunction(async function () {
     await blankSlate();
     await PlacesTestUtils.promiseAsyncUpdates();
+  });
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.sanitize.useOldClearHistoryDialog", false]],
   });
 
   // open preferences to trigger an updateSites()

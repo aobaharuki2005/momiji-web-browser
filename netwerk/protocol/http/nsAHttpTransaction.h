@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsAHttpTransaction_h_
-#define nsAHttpTransaction_h_
+#ifndef nsAHttpTransaction_h__
+#define nsAHttpTransaction_h__
 
 #include "nsTArray.h"
 #include "nsWeakReference.h"
@@ -34,7 +34,6 @@ class nsAHttpSegmentReader;
 class nsAHttpSegmentWriter;
 class nsHttpTransaction;
 class nsHttpRequestHead;
-class nsHttpResponseHead;
 class nsHttpConnectionInfo;
 class NullHttpTransaction;
 
@@ -109,9 +108,6 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
 
   // called to close the transaction
   virtual void Close(nsresult reason) = 0;
-
-  // called to cancel the transaction; default implementation is a no-op.
-  virtual void Cancel(nsresult aReason) {}
 
   // called to indicate a failure with proxy CONNECT
   virtual void SetProxyConnectFailed() = 0;
@@ -203,19 +199,10 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
   // the next restart.
   virtual void DoNotResetIPFamilyPreference() {}
 
-  // Signals that a PSK resumption token was offered in the ClientHello.
-  // aCanSendEarlyData is true when the server advertised max_early_data_size
-  // and the transaction may also send early data; false when a PSK was offered
-  // but no early data was sent (server didn't advertise max_early_data_size).
-  // Returns true only when early data was actually started.
-  [[nodiscard]] virtual bool Do0RTT(bool aCanSendEarlyData = true) {
-    return false;
-  }
-
-  // Called when the TLS handshake succeeds and the PSK was accepted by the
-  // server. Clears any pending PSK-retry state so that post-handshake errors
-  // (e.g. ALPN mismatch) do not trigger a spurious PSK retry.
-  virtual void OnPSKResumptionAccepted() {}
+  // Returns true if early-data is possible and transaction will remember
+  // that it is in 0RTT mode (to know should it rewide transaction or not
+  // in the case of an error).
+  [[nodiscard]] virtual bool Do0RTT() { return false; }
   // This function will be called when a tls handshake has been finished and
   // we know whether early-data that was sent has been accepted or not, e.g.
   // do we need to restart a transaction. This will be called only if Do0RTT
@@ -236,8 +223,7 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
     return 0;
   }
 
-  virtual void OnProxyConnectComplete(const nsHttpResponseHead& aResponseHead) {
-  }
+  virtual void OnProxyConnectComplete(int32_t aResponseCode) {}
 
   virtual nsresult FetchHTTPSRR() { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsresult OnHTTPSRRAvailable(nsIDNSHTTPSSVCRecord* aHTTPSSVCRecord,
@@ -324,4 +310,4 @@ class nsAHttpSegmentWriter {
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // nsAHttpTransaction_h_
+#endif  // nsAHttpTransaction_h__

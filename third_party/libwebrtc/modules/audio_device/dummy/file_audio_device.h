@@ -18,7 +18,6 @@
 #include "absl/strings/string_view.h"
 #include "api/audio/audio_device.h"
 #include "api/audio/audio_device_defines.h"
-#include "api/environment/environment.h"
 #include "modules/audio_device/audio_device_buffer.h"
 #include "modules/audio_device/audio_device_generic.h"
 #include "rtc_base/platform_thread.h"
@@ -37,10 +36,9 @@ class FileAudioDevice : public AudioDeviceGeneric {
   // The input file should be a readable 48k stereo raw file, and the output
   // file should point to a writable location. The output format will also be
   // 48k stereo raw audio.
-  FileAudioDevice(const Environment& env,
-                  absl::string_view inputFilename,
+  FileAudioDevice(absl::string_view inputFilename,
                   absl::string_view outputFilename);
-  ~FileAudioDevice() override;
+  virtual ~FileAudioDevice();
 
   // Retrieve the currently utilized audio layer
   int32_t ActiveAudioLayer(
@@ -134,7 +132,6 @@ class FileAudioDevice : public AudioDeviceGeneric {
   bool RecThreadProcess();
   bool PlayThreadProcess();
 
-  const Environment env_;
   int32_t _playout_index;
   int32_t _record_index;
   AudioDeviceBuffer* _ptrAudioBuffer;

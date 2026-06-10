@@ -34,14 +34,14 @@ pub struct Cookie {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct Credentials {
+pub struct CredentialParameters {
     pub credential_id: String,
     pub is_resident_credential: bool,
-    pub large_blob: Option<String>,
-    pub private_key: String,
     pub rp_id: String,
+    pub private_key: String,
+    #[serde(default)]
+    pub user_handle: String,
     pub sign_count: u64,
-    pub user_handle: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

@@ -800,6 +800,7 @@ THE SOFTWARE.
     FT_Error     error  = FT_Err_Ok;
     FT_Bitmap*   bitmap = &slot->bitmap;
     bdf_glyph_t  glyph;
+    int          bpp    = bdf->bdffont->bpp;
 
     FT_UNUSED( load_flags );
 
@@ -838,7 +839,7 @@ THE SOFTWARE.
     /*       we can simply point to it                         */
     ft_glyphslot_set_bitmap( slot, glyph.bitmap );
 
-    switch ( bdf->bdffont->bpp )
+    switch ( bpp )
     {
     case 1:
       bitmap->pixel_mode = FT_PIXEL_MODE_MONO;

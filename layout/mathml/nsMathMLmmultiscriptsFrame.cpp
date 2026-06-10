@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -55,9 +57,14 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData() {
   mPresentationData.baseFrame = mFrames.FirstChild();
   GetEmbellishDataFrom(mPresentationData.baseFrame, mEmbellishData);
 
+  // The TeXbook (Ch 17. p.141) says the superscript inherits the compression
+  // while the subscript is compressed. So here we collect subscripts and set
+  // the compression flag in them.
+
   int32_t count = 0;
   bool isSubScript = !mContent->IsMathMLElement(nsGkAtoms::msup);
 
+  AutoTArray<nsIFrame*, 8> subScriptFrames;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
     if (childFrame->GetContent()->IsMathMLElement(nsGkAtoms::mprescripts)) {
@@ -66,11 +73,25 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData() {
       // base frame
     } else {
       // super/subscript block
+      if (isSubScript) {
+        // subscript
+        subScriptFrames.AppendElement(childFrame);
+      } else {
+        // superscript
+      }
       PropagateFrameFlagFor(childFrame, NS_FRAME_MATHML_SCRIPT_DESCENDANT);
       isSubScript = !isSubScript;
     }
     count++;
     childFrame = childFrame->GetNextSibling();
+  }
+  if (!StaticPrefs::mathml_math_shift_enabled()) {
+    for (int32_t i = subScriptFrames.Length() - 1; i >= 0; i--) {
+      childFrame = subScriptFrames[i];
+      PropagatePresentationDataFor(childFrame,
+                                   MathMLPresentationFlag::Compressed,
+                                   MathMLPresentationFlag::Compressed);
+    }
   }
 
   return NS_OK;
@@ -195,7 +216,10 @@ void nsMathMLmmultiscriptsFrame::PlaceMultiScript(
   nscoord supScriptShift;
   nsPresentationData presentationData;
   aFrame->GetPresentationData(presentationData);
-  bool compressed = font->mMathShift == StyleMathShift::Compact;
+  bool compressed =
+      StaticPrefs::mathml_math_shift_enabled()
+          ? font->mMathShift == StyleMathShift::Compact
+          : presentationData.flags.contains(MathMLPresentationFlag::Compressed);
   if (mathFont) {
     // Try and get the super script shift from the MATH table. Note that
     // contrary to TeX we only have two parameters.
@@ -262,7 +286,6 @@ void nsMathMLmmultiscriptsFrame::PlaceMultiScript(
   bmMultiSub.ascent = bmMultiSup.ascent = -0x7FFFFFFF;
   bmMultiSub.descent = bmMultiSup.descent = -0x7FFFFFFF;
   nscoord italicCorrection = 0;
-  nscoord largeOpItalicCorrection = 0;
 
   nsBoundingMetrics boundingMetrics;
   boundingMetrics.width = 0;
@@ -315,19 +338,6 @@ void nsMathMLmmultiscriptsFrame::PlaceMultiScript(
         // (see TeXbook Ch.11, p.64), as we estimate the italic creation
         // ourselves and it isn't the same as TeX.
         italicCorrection += onePixel;
-      }
-
-      if (tag != nsGkAtoms::msup) {
-        // If the base is a largeop, determine its italic correction.
-        // https://w3c.github.io/mathml-core/#base-with-subscript
-        if (nsIMathMLFrame* mathMLFrame = do_QueryFrame(baseFrame)) {
-          nsEmbellishData baseFrameEmbellishData;
-          mathMLFrame->GetEmbellishData(baseFrameEmbellishData);
-          if (baseFrameEmbellishData.flags.contains(
-                  MathMLEmbellishFlag::LargeOp)) {
-            largeOpItalicCorrection = mathMLFrame->ItalicCorrection();
-          }
-        }
       }
 
       // we update boundingMetrics.{ascent,descent} with that
@@ -584,7 +594,8 @@ void nsMathMLmmultiscriptsFrame::PlaceMultiScript(
   // We go over the list in a circular manner, starting at <prescripts/>
 
   if (!aFlags.contains(PlaceFlag::MeasureOnly)) {
-    const bool isRTL = aFrame->GetWritingMode().IsBidiRTL();
+    const bool isRTL =
+        aFrame->StyleVisibility()->mDirection == StyleDirection::Rtl;
     nscoord dx = isRTL ? borderPadding.right : borderPadding.left;
     nscoord dy = 0;
 
@@ -663,10 +674,6 @@ void nsMathMLmmultiscriptsFrame::PlaceMultiScript(
             // https://bugzilla.mozilla.org/show_bug.cgi?id=928675
             if (isPreScript) {
               x += width - subScriptSize.Width() - subScriptMargin.LeftRight();
-            } else {
-              // post subscripts are shifted by the largeOpItalicCorrection
-              // value.
-              x -= largeOpItalicCorrection;
             }
             dy = aDesiredSize.BlockStartAscent() -
                  subScriptSize.BlockStartAscent() + maxSubScriptShift;

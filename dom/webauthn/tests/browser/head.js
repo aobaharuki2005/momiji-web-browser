@@ -6,7 +6,14 @@
 
 let exports = this;
 
-const scripts = ["browser/cbor.js", "browser/u2futil.js"];
+const scripts = [
+  "pkijs/common.js",
+  "pkijs/asn1.js",
+  "pkijs/x509_schema.js",
+  "pkijs/x509_simpl.js",
+  "browser/cbor.js",
+  "browser/u2futil.js",
+];
 
 for (let script of scripts) {
   Services.scriptloader.loadSubScript(
@@ -109,7 +116,11 @@ function arrivingHereIsBad(aResult) {
 function expectError(aType) {
   let expected = `${aType}Error`;
   return function (aResult) {
-    is(aResult.name, expected, `Expecting a ${aType}Error`);
+    is(
+      aResult.slice(0, expected.length),
+      expected,
+      `Expecting a ${aType}Error`
+    );
   };
 }
 
@@ -120,10 +131,10 @@ function promiseWebAuthnMakeCredential(
   residentKey = "discouraged",
   extensions = {}
 ) {
-  return SpecialPowers.spawn(
+  return ContentTask.spawn(
     tab.linkedBrowser,
-    [{ attestation, residentKey, extensions }],
-    function ({ attestation, residentKey, extensions }) {
+    [attestation, residentKey, extensions],
+    ([attestation, residentKey, extensions]) => {
       const cose_alg_ECDSA_w_SHA256 = -7;
 
       let challenge = content.crypto.getRandomValues(new Uint8Array(16));
@@ -152,14 +163,13 @@ function promiseWebAuthnMakeCredential(
         challenge,
       };
 
-      const copy = buf => new Uint8Array(new Uint8Array(buf)).buffer;
       return content.navigator.credentials
         .create({ publicKey })
         .then(credential => {
           return {
-            clientDataJSON: copy(credential.response.clientDataJSON),
-            attObj: copy(credential.response.attestationObject),
-            rawId: copy(credential.rawId),
+            clientDataJSON: credential.response.clientDataJSON,
+            attObj: credential.response.attestationObject,
+            rawId: credential.rawId,
           };
         });
     }
@@ -167,10 +177,10 @@ function promiseWebAuthnMakeCredential(
 }
 
 function promiseWebAuthnGetAssertion(tab, key_handle = null, extensions = {}) {
-  return SpecialPowers.spawn(
+  return ContentTask.spawn(
     tab.linkedBrowser,
-    [{ key_handle, extensions }],
-    function ({ key_handle, extensions }) {
+    [key_handle, extensions],
+    ([key_handle, extensions]) => {
       let challenge = content.crypto.getRandomValues(new Uint8Array(16));
       if (key_handle == null) {
         key_handle = content.crypto.getRandomValues(new Uint8Array(16));
@@ -189,17 +199,14 @@ function promiseWebAuthnGetAssertion(tab, key_handle = null, extensions = {}) {
         allowCredentials: [credential],
       };
 
-      const copy = buf => new Uint8Array(new Uint8Array(buf)).buffer;
       return content.navigator.credentials
         .get({ publicKey })
         .then(assertion => {
           return {
-            authenticatorData: copy(assertion.response.authenticatorData),
-            clientDataJSON: copy(assertion.response.clientDataJSON),
-            extensions: JSON.parse(
-              JSON.stringify(assertion.getClientExtensionResults())
-            ),
-            signature: copy(assertion.response.signature),
+            authenticatorData: assertion.response.authenticatorData,
+            clientDataJSON: assertion.response.clientDataJSON,
+            extensions: assertion.getClientExtensionResults(),
+            signature: assertion.response.signature,
           };
         });
     }
@@ -211,10 +218,10 @@ function promiseWebAuthnGetAssertionDiscoverable(
   mediation = "optional",
   extensions = {}
 ) {
-  return SpecialPowers.spawn(
+  return ContentTask.spawn(
     tab.linkedBrowser,
-    [{ extensions, mediation }],
-    function ({ extensions, mediation }) {
+    [extensions, mediation],
+    ([extensions, mediation]) => {
       let challenge = content.crypto.getRandomValues(new Uint8Array(16));
 
       let publicKey = {
@@ -224,9 +231,7 @@ function promiseWebAuthnGetAssertionDiscoverable(
         allowCredentials: [],
       };
 
-      return content.navigator.credentials
-        .get({ publicKey, mediation })
-        .then(() => null);
+      return content.navigator.credentials.get({ publicKey, mediation });
     }
   );
 }

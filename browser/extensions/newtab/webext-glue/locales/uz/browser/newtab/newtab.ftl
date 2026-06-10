@@ -39,7 +39,7 @@ newtab-search-box-input =
     .placeholder = Internetdan qidirish
     .aria-label = Internetdan izlash
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = Qidiruv tizimini qoʻshish
 newtab-topsites-add-shortcut-header = Yangi tugmalar birikmasi
@@ -229,9 +229,3 @@ newtab-error-fallback-refresh-link = Yana urinib ko‘rish uchun sahifani yangil
 ## Customization Menu
 
 newtab-custom-settings = Boshqa sozlamalarni boshqarish
-
-## New Tab Wallpapers
-
-newtab-wallpaper-title = Fon rasmlari
-newtab-wallpaper-toggle-title =
-    .label = Fon rasmlari

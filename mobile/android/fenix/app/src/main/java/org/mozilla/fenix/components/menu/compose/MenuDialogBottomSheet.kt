@@ -9,7 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,11 +23,11 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.BottomSheetHandle
 import mozilla.components.compose.cfr.CFRPopup
 import mozilla.components.compose.cfr.CFRPopupLayout
 import mozilla.components.compose.cfr.CFRPopupProperties
 import org.mozilla.fenix.components.appstate.OrientationMode
+import org.mozilla.fenix.compose.BottomSheetHandle
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private const val CFR_HORIZONTAL_OFFSET = 160
@@ -53,10 +53,7 @@ fun MenuDialogBottomSheet(
     onRequestDismiss: () -> Unit,
     handlebarContentDescription: String,
     isMenuDragBarDark: Boolean = false,
-    cornerShape: Shape = MaterialTheme.shapes.large.copy(
-        bottomStart = CornerSize(0.dp),
-        bottomEnd = CornerSize(0.dp),
-    ),
+    cornerShape: Shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
     menuCfrState: MenuCFRState? = null,
     content: @Composable () -> Unit,
 ) {
@@ -97,17 +94,14 @@ private fun MenuBottomSheetHandle(
     onRequestDismiss: () -> Unit,
     contentDescription: String,
     isMenuDragBarDark: Boolean = false,
-    cornerShape: Shape = MaterialTheme.shapes.large.copy(
-        bottomStart = CornerSize(0.dp),
-        bottomEnd = CornerSize(0.dp),
-    ),
+    cornerShape: Shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
                 color = if (isMenuDragBarDark) {
-                    MaterialTheme.colorScheme.surfaceContainerHigh
+                    MaterialTheme.colorScheme.surfaceContainerHighest
                 } else {
                     Color.Transparent
                 },
@@ -134,10 +128,7 @@ private fun CFRBottomSheetHandle(
     contentDescription: String,
     onRequestDismiss: () -> Unit,
     isMenuDragBarDark: Boolean,
-    cornerShape: Shape = MaterialTheme.shapes.large.copy(
-        bottomStart = CornerSize(0.dp),
-        bottomEnd = CornerSize(0.dp),
-    ),
+    cornerShape: Shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
 ) {
     val (indicatorDirection, verticalOffset) = when (state.orientation) {
         OrientationMode.Landscape -> CFRPopup.IndicatorDirection.UP to CFR_VERTICAL_OFFSET_LANDSCAPE

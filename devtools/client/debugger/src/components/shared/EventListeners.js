@@ -23,7 +23,7 @@ import {
   getEventListenerExpanded,
 } from "../../selectors/index";
 
-import DebuggerImage from "devtools/client/shared/components/DebuggerImage";
+import DebuggerImage from "../shared/DebuggerImage";
 
 const classnames = require("resource://devtools/client/shared/classnames.js");
 const isOSX = Services.appinfo.OS == "Darwin";

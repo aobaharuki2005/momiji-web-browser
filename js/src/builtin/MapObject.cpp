@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -36,7 +38,7 @@ using mozilla::NumberEqualsInt32;
 
 /*** HashableValue **********************************************************/
 
-static Value NormalizeDoubleValue(double d) {
+static PreBarriered<Value> NormalizeDoubleValue(double d) {
   int32_t i;
   if (NumberEqualsInt32(d, &i)) {
     // Normalize int32_t-valued doubles to int32_t for faster hashing and
@@ -127,7 +129,16 @@ bool HashableValue::equals(const HashableValue& other) const {
 namespace {} /* anonymous namespace */
 
 static const JSClassOps MapIteratorObjectClassOps = {
-    .finalize = MapIteratorObject::finalize,
+    nullptr,                      // addProperty
+    nullptr,                      // delProperty
+    nullptr,                      // enumerate
+    nullptr,                      // newEnumerate
+    nullptr,                      // resolve
+    nullptr,                      // mayResolve
+    MapIteratorObject::finalize,  // finalize
+    nullptr,                      // call
+    nullptr,                      // construct
+    nullptr,                      // trace
 };
 
 static const ClassExtension MapIteratorObjectClassExtension = {
@@ -319,7 +330,16 @@ static_assert(sizeof(MapObject::Table::Entry) ==
               sizeof(MapObject::PreBarrieredTable::Entry));
 
 const JSClassOps MapObject::classOps_ = {
-    .trace = trace,
+    nullptr,  // addProperty
+    nullptr,  // delProperty
+    nullptr,  // enumerate
+    nullptr,  // newEnumerate
+    nullptr,  // resolve
+    nullptr,  // mayResolve
+    nullptr,  // finalize
+    nullptr,  // call
+    nullptr,  // construct
+    trace,    // trace
 };
 
 const ClassSpec MapObject::classSpec_ = {
@@ -652,15 +672,13 @@ MapObject* GlobalObject::getOrCreateMapTemplateObject(JSContext* cx) {
   return mapObj;
 }
 
-size_t MapObject::sizeOfBufferData() {
-  return Table(this).sizeOfExcludingObject();
-}
-
-size_t MapObject::sizeOfMallocData(mozilla::MallocSizeOf mallocSizeOf) {
+size_t MapObject::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
+  size_t size = 0;
+  size += Table(this).sizeOfExcludingObject(mallocSizeOf);
   if (NurseryKeysVector* nurseryKeys = GetNurseryKeys(this)) {
-    return nurseryKeys->sizeOfIncludingThis(mallocSizeOf);
+    size += nurseryKeys->sizeOfIncludingThis(mallocSizeOf);
   }
-  return 0;
+  return size;
 }
 
 size_t MapObject::objectMoved(JSObject* obj, JSObject* old) {
@@ -682,7 +700,7 @@ void MapObject::clearNurseryIteratorsBeforeMinorGC() {
 
 /* static */
 MapObject* MapObject::sweepAfterMinorGC(JS::GCContext* gcx, MapObject* mapobj) {
-  Nursery& nursery = gcx->gcRuntime()->nursery();
+  Nursery& nursery = gcx->runtime()->gc.nursery();
   bool wasInCollectedRegion = nursery.inCollectedRegion(mapobj);
   if (wasInCollectedRegion && !IsForwarded(mapobj)) {
     // This MapObject is dead.
@@ -1026,7 +1044,16 @@ void MapObject::clear(JSContext* cx) {
 /*** SetIterator ************************************************************/
 
 static const JSClassOps SetIteratorObjectClassOps = {
-    .finalize = SetIteratorObject::finalize,
+    nullptr,                      // addProperty
+    nullptr,                      // delProperty
+    nullptr,                      // enumerate
+    nullptr,                      // newEnumerate
+    nullptr,                      // resolve
+    nullptr,                      // mayResolve
+    SetIteratorObject::finalize,  // finalize
+    nullptr,                      // call
+    nullptr,                      // construct
+    nullptr,                      // trace
 };
 
 static const ClassExtension SetIteratorObjectClassExtension = {
@@ -1174,7 +1201,16 @@ JSObject* SetIteratorObject::createResult(JSContext* cx) {
 /*** Set ********************************************************************/
 
 const JSClassOps SetObject::classOps_ = {
-    .trace = trace,
+    nullptr,  // addProperty
+    nullptr,  // delProperty
+    nullptr,  // enumerate
+    nullptr,  // newEnumerate
+    nullptr,  // resolve
+    nullptr,  // mayResolve
+    nullptr,  // finalize
+    nullptr,  // call
+    nullptr,  // construct
+    trace,    // trace
 };
 
 const ClassSpec SetObject::classSpec_ = {
@@ -1366,15 +1402,13 @@ void SetObject::trace(JSTracer* trc, JSObject* obj) {
   Table(setobj).trace(trc);
 }
 
-size_t SetObject::sizeOfBufferData() {
-  return Table(this).sizeOfExcludingObject();
-}
-
-size_t SetObject::sizeOfMallocData(mozilla::MallocSizeOf mallocSizeOf) {
+size_t SetObject::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
+  size_t size = 0;
+  size += Table(this).sizeOfExcludingObject(mallocSizeOf);
   if (NurseryKeysVector* nurseryKeys = GetNurseryKeys(this)) {
-    return nurseryKeys->sizeOfIncludingThis(mallocSizeOf);
+    size += nurseryKeys->sizeOfIncludingThis(mallocSizeOf);
   }
-  return 0;
+  return size;
 }
 
 size_t SetObject::objectMoved(JSObject* obj, JSObject* old) {
@@ -1396,7 +1430,7 @@ void SetObject::clearNurseryIteratorsBeforeMinorGC() {
 
 /* static */
 SetObject* SetObject::sweepAfterMinorGC(JS::GCContext* gcx, SetObject* setobj) {
-  Nursery& nursery = gcx->gcRuntime()->nursery();
+  Nursery& nursery = gcx->runtime()->gc.nursery();
   bool wasInCollectedRegion = nursery.inCollectedRegion(setobj);
   if (wasInCollectedRegion && !IsForwarded(setobj)) {
     // This SetObject is dead.
@@ -1448,6 +1482,9 @@ bool SetObject::tryOptimizeCtorWithIterable(JSContext* cx,
   // Fast path for `new Set(set)`.
   if (IsSetObjectWithDefaultIterator(iterable, cx)) {
     auto* iterableSet = &iterable->as<SetObject>();
+    if (!IsSetObjectWithDefaultIterator(iterableSet, cx)) {
+      return true;
+    }
     auto addEntry = [cx, this](auto& entry) {
       return addHashableValue(cx, entry);
     };

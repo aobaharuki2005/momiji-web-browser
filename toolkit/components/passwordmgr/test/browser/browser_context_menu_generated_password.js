@@ -45,7 +45,7 @@ add_task(async function test_hidden_by_prefs() {
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
     async function (browser) {
-      await SimpleTest.promiseFocus(browser.documentGlobal);
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       await openPasswordContextMenu(browser, passwordInputSelector);
       let generatedPasswordItem = document.getElementById(
@@ -73,7 +73,7 @@ add_task(async function test_fill_hidden_by_login_saving_disabled() {
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
     async function (browser) {
-      await SimpleTest.promiseFocus(browser.documentGlobal);
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       await openPasswordContextMenu(browser, passwordInputSelector);
       let generatedPasswordItem = document.getElementById(
@@ -102,7 +102,7 @@ add_task(async function test_fill_hidden_by_locked_primary_password() {
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
     async function (browser) {
-      await SimpleTest.promiseFocus(browser.documentGlobal);
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       await openPasswordContextMenu(
         browser,
@@ -136,7 +136,7 @@ add_task(async function fill_generated_password_empty_field() {
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
     async function (browser) {
-      await SimpleTest.promiseFocus(browser.documentGlobal);
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
       await SpecialPowers.spawn(
         browser,
         [[passwordInputSelector]],
@@ -202,7 +202,7 @@ add_task(async function fill_generated_password_nonempty_field() {
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
     async function (browser) {
-      await SimpleTest.promiseFocus(browser.documentGlobal);
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
       await changeContentFormValues(browser, {
         [passwordInputSelector]: "aa",
       });
@@ -271,7 +271,7 @@ add_task(async function fill_generated_password_with_matching_logins() {
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
     async function (browser) {
-      await SimpleTest.promiseFocus(browser.documentGlobal);
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
       await formFilled;
       await SpecialPowers.spawn(
         browser,
@@ -313,10 +313,15 @@ add_task(async function fill_generated_password_with_matching_logins() {
       await openPasswordContextMenu(browser, passwordInputSelector);
 
       // Execute the command of the first login menuitem found at the context menu.
-      let passwordChangedPromise = BrowserTestUtils.waitForContentEvent(
+      let passwordChangedPromise = ContentTask.spawn(
         browser,
-        "input",
-        true
+        null,
+        async function () {
+          let passwordInput = content.document.getElementById(
+            "form-basic-password"
+          );
+          await ContentTaskUtils.waitForEvent(passwordInput, "input");
+        }
       );
 
       let popupMenu = document.getElementById("fill-login-popup");
@@ -368,7 +373,7 @@ add_task(async function fill_generated_password_with_matching_logins() {
     "Generated password shouldn't have changed to match the filled password"
   );
 
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
   LoginTestUtils.resetGeneratedPasswordsCache();
 });
 
@@ -381,7 +386,7 @@ add_task(async function test_edited_generated_password_in_new_tab() {
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
     async function (browser) {
-      await SimpleTest.promiseFocus(browser.documentGlobal);
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
       await SpecialPowers.spawn(
         browser,
         [[passwordInputSelector]],
@@ -445,7 +450,7 @@ add_task(async function test_edited_generated_password_in_new_tab() {
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
     async function (browser) {
-      await SimpleTest.promiseFocus(browser.documentGlobal);
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       await doFillGeneratedPasswordContextMenuItem(
         browser,

@@ -40,9 +40,17 @@
       gBrowser.removeEventListener("pageshow", eventListener, true);
       // Work around bug 467960
       let historyPurged;
-      let history = gBrowser.browsingContext.sessionHistory;
-      history.purgeHistory(history.count);
-      historyPurged = Promise.resolve();
+      if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+        let history = gBrowser.browsingContext.sessionHistory;
+        history.purgeHistory(history.count);
+        historyPurged = Promise.resolve();
+      } else {
+        historyPurged = SpecialPowers.spawn(gBrowser, [], () => {
+          let history = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory
+            .legacySHistory;
+          history.purgeHistory(history.count);
+        });
+      }
 
       historyPurged.then(_ => {
         window.close();

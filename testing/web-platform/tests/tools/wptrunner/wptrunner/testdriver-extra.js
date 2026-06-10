@@ -78,7 +78,7 @@
         } else {
             if (bits >= 1 && bits <= 30) {
                 return 0 | ((1 << bits) * Math.random());
-             } else {
+            } else {
                 var high = (0 | ((1 << (bits - 30)) * Math.random())) * (1 << 30);
                 var low = 0 | ((1 << 30) * Math.random());
                 return  high + low;
@@ -134,36 +134,20 @@
         } else {
             // push and then reverse to avoid O(n) unshift in the loop
             let segments = [];
-            let el = element;
-            while (el && el.parentElement) {
-                let segment = "*|" + el.localName;
-                let nth = Array.prototype.indexOf.call(el.parentNode.children, el) + 1;
+            for (let node = element;
+                 node.parentElement;
+                 node = node.parentElement) {
+                let segment = "*|" + node.localName;
+                let nth = Array.prototype.indexOf.call(node.parentElement.children, node) + 1;
                 segments.push(segment + ":nth-child(" + nth + ")");
-                el = el.parentElement;
             }
-            if (element.getRootNode() == element.ownerDocument) {
-              segments.push(":root");
-            } else {
-              segments.push(":scope");
-            }
+            segments.push(":root");
             segments.reverse();
 
             selector = segments.join(" > ");
         }
 
         return selector;
-    };
-
-    const get_selector_array = function(element) {
-        let selectors = [];
-        let current = element;
-
-        do {
-            selectors.push(get_selector(current));
-            current = current.getRootNode().host;
-        } while (current);
-
-        return selectors.reverse();
     };
 
     /**
@@ -425,15 +409,6 @@
             });
         }
 
-    window.test_driver_internal.bidi.user_agent_client_hints = { 
-        set_client_hints_override: function(params) { 
-            return create_action("bidi.user_agent_client_hints.set_client_hints_override", { 
-                contexts: [window], 
-                ...(params ?? {}) 
-            }); 
-        } 
-    };
-
     window.test_driver_internal.bidi.emulation.set_locale_override = function (params) {
         return create_action("bidi.emulation.set_locale_override", {
             // Default to the current window.
@@ -446,16 +421,6 @@
         function (params) {
             return create_action(
                 "bidi.emulation.set_screen_orientation_override", {
-                    // Default to the current window.
-                    contexts: [window],
-                    ...(params ?? {})
-                });
-        }
-
-    window.test_driver_internal.bidi.emulation.set_touch_override =
-        function (params) {
-            return create_action(
-                "bidi.emulation.set_touch_override", {
                     // Default to the current window.
                     contexts: [window],
                     ...(params ?? {})
@@ -495,9 +460,9 @@
     };
 
     window.test_driver_internal.click = function(element) {
-        const selectors = get_selector_array(element);
+        const selector = get_selector(element);
         const context = get_context(element);
-        return create_context_action("click", context, {selectors});
+        return create_context_action("click", context, {selector});
     };
 
     window.test_driver_internal.delete_all_cookies = function(context=null) {
@@ -517,25 +482,15 @@
     }
 
     window.test_driver_internal.get_computed_label = function(element) {
-        const selectors = get_selector_array(element);
+        const selector = get_selector(element);
         const context = get_context(element);
-        return create_context_action("get_computed_label", context, {selectors});
+        return create_context_action("get_computed_label", context, {selector});
     };
 
     window.test_driver_internal.get_computed_role = function(element) {
-        const selectors = get_selector_array(element);
-        const context = get_context(element);
-        return create_context_action("get_computed_role", context, {selectors});
-    };
-
-    window.test_driver_internal.get_accessibility_properties_for_element = function(element) {
         const selector = get_selector(element);
         const context = get_context(element);
-        return create_context_action("get_accessibility_properties_for_element", context, {selector});
-    };
-
-    window.test_driver_internal.get_accessibility_properties_for_accessibility_node = function(accId, context=null) {
-        return create_context_action("get_accessibility_properties_for_accessibility_node", context, { accId });
+        return create_context_action("get_computed_role", context, {selector});
     };
 
     window.test_driver_internal.get_named_cookie = function(name, context=null) {
@@ -555,9 +510,9 @@
     };
 
     window.test_driver_internal.send_keys = function(element, keys) {
-        const selectors = get_selector_array(element);
+        const selector = get_selector(element);
         const context = get_context(element);
-        return create_context_action("send_keys", context, {selectors, keys});
+        return create_context_action("send_keys", context, {selector, keys});
     };
 
     window.test_driver_internal.action_sequence = function(actions, context=null) {
@@ -567,7 +522,7 @@
                     // The origin of each action can only be an element or a string of a value "viewport" or "pointer".
                     if (action.type == "pointerMove" && typeof(action.origin) != 'string') {
                         let action_context = get_context(action.origin);
-                        action.origin = {selectors: get_selector_array(action.origin)};
+                        action.origin = {selector: get_selector(action.origin)};
                         if (context !== null && action_context !== context) {
                             throw new Error("Actions must be in a single context");
                         }

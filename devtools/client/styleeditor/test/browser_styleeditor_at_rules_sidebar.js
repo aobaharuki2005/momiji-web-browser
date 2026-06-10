@@ -93,7 +93,7 @@ async function testInlineAtRulesEditor(ui, editor) {
   is(sidebar.hidden, false, "sidebar is showing on editor with @media");
 
   const entries = sidebar.querySelectorAll(".at-rule-label");
-  is(entries.length, 16, "16 at-rules displayed in sidebar");
+  is(entries.length, 14, "14 at-rules displayed in sidebar");
 
   await testRule({
     ui,
@@ -155,25 +155,7 @@ async function testInlineAtRulesEditor(ui, editor) {
     ui,
     editor,
     rule: entries[6],
-    conditionText: "--my-container (height > 42px)",
-    line: 29,
-    type: "container",
-  });
-
-  await testRule({
-    ui,
-    editor,
-    rule: entries[7],
-    conditionText: "--my-container",
-    line: 31,
-    type: "container",
-  });
-
-  await testRule({
-    ui,
-    editor,
-    rule: entries[8],
-    line: 33,
+    line: 30,
     type: "property",
     propertyName: "--my-property",
   });
@@ -181,8 +163,8 @@ async function testInlineAtRulesEditor(ui, editor) {
   await testRule({
     ui,
     editor,
-    rule: entries[9],
-    line: 39,
+    rule: entries[7],
+    line: 36,
     type: "position-try",
     positionTryName: "--pt-custom-bottom",
   });
@@ -190,8 +172,8 @@ async function testInlineAtRulesEditor(ui, editor) {
   await testRule({
     ui,
     editor,
-    rule: entries[10],
-    line: 45,
+    rule: entries[8],
+    line: 42,
     type: "custom-media",
     customMediaName: "--mobile-breakpoint",
     customMediaQuery: [
@@ -204,8 +186,8 @@ async function testInlineAtRulesEditor(ui, editor) {
   await testRule({
     ui,
     editor,
-    rule: entries[11],
-    line: 46,
+    rule: entries[9],
+    line: 43,
     type: "custom-media",
     customMediaName: "--enabled",
     customMediaQuery: [{ text: "true" }],
@@ -214,8 +196,8 @@ async function testInlineAtRulesEditor(ui, editor) {
   await testRule({
     ui,
     editor,
-    rule: entries[12],
-    line: 47,
+    rule: entries[10],
+    line: 44,
     type: "custom-media",
     customMediaName: "--disabled",
     customMediaQuery: [{ text: "false", matches: false }],
@@ -224,8 +206,8 @@ async function testInlineAtRulesEditor(ui, editor) {
   await testRule({
     ui,
     editor,
-    rule: entries[13],
-    line: 52,
+    rule: entries[11],
+    line: 49,
     type: "media",
     conditionText: "(--mobile-breakpoint)",
     matches: false,
@@ -234,8 +216,8 @@ async function testInlineAtRulesEditor(ui, editor) {
   await testRule({
     ui,
     editor,
-    rule: entries[14],
-    line: 56,
+    rule: entries[12],
+    line: 53,
     type: "media",
     conditionText: "(--enabled)",
     matches: false,
@@ -244,8 +226,8 @@ async function testInlineAtRulesEditor(ui, editor) {
   await testRule({
     ui,
     editor,
-    rule: entries[15],
-    line: 60,
+    rule: entries[13],
+    line: 57,
     type: "media",
     conditionText: "(--disabled)",
     matches: false,

@@ -31,7 +31,7 @@ class MediaHardwareKeysEventSourceMac final
   void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) override {}
 
  private:
-  ~MediaHardwareKeysEventSourceMac() { StopEventTap(); }
+  ~MediaHardwareKeysEventSourceMac() = default;
 
   bool StartEventTap();
   void StopEventTap();

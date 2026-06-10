@@ -19,7 +19,6 @@
 #include "api/environment/environment.h"
 #include "api/sequence_checker.h"
 #include "api/units/time_delta.h"
-#include "api/units/timestamp.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -53,15 +52,8 @@ AsyncUDPSocket::AsyncUDPSocket(const Environment& env,
       sequence_checker_(SequenceChecker::kDetached),
       socket_(std::move(socket)) {
   // The socket should start out readable but not writable.
-  socket_->SubscribeReadEvent(this,
-                              [this](Socket* socket) { OnReadEvent(socket); });
-  socket_->SubscribeWriteEvent(
-      this, [this](Socket* socket) { OnWriteEvent(socket); });
-  // need to forward that also for UDP case (DTLS) once the SSL handshake is
-  // finished
-
-  socket_->SubscribeConnectEvent(
-      this, [this](Socket* socket) { OnConnectEvent(socket); });
+  socket_->SignalReadEvent.connect(this, &AsyncUDPSocket::OnReadEvent);
+  socket_->SignalWriteEvent.connect(this, &AsyncUDPSocket::OnWriteEvent);
 }
 
 SocketAddress AsyncUDPSocket::GetLocalAddress() const {
@@ -80,7 +72,7 @@ int AsyncUDPSocket::Send(const void* pv,
                              options.info_signaled_after_sent);
   CopySocketInformationToPacketInfo(cb, *this, &sent_packet.info);
   int ret = socket_->Send(pv, cb);
-  NotifySentPacket(this, sent_packet);
+  SignalSentPacket(this, sent_packet);
   return ret;
 }
 
@@ -102,7 +94,7 @@ int AsyncUDPSocket::SendTo(const void* pv,
     }
   }
   int ret = socket_->SendTo(pv, cb, addr);
-  NotifySentPacket(this, sent_packet);
+  SignalSentPacket(this, sent_packet);
   return ret;
 }
 
@@ -130,10 +122,6 @@ void AsyncUDPSocket::SetError(int error) {
   return socket_->SetError(error);
 }
 
-void AsyncUDPSocket::OnConnectEvent(Socket* socket) {
-  NotifyConnect(this);
-}
-
 void AsyncUDPSocket::OnReadEvent(Socket* socket) {
   RTC_DCHECK(socket_.get() == socket);
   RTC_DCHECK_RUN_ON(&sequence_checker_);
@@ -159,17 +147,12 @@ void AsyncUDPSocket::OnReadEvent(Socket* socket) {
     // Timestamp from socket is not available.
     receive_buffer.arrival_time = env_.clock().CurrentTime();
   } else {
-    Timestamp current_time = env_.clock().CurrentTime();
-    if (!socket_time_offset_ ||
-        *receive_buffer.arrival_time + *socket_time_offset_ > current_time) {
+    if (!socket_time_offset_) {
       // Estimate timestamp offset from first packet arrival time.
-      // This may be wrong if packets have been buffered in the socket before we
-      // read the first packet and `socket_time_offset_` may then have to be set
-      // again to ensure no arrival times are set in the future.
-      socket_time_offset_ = current_time - *receive_buffer.arrival_time;
+      socket_time_offset_ =
+          env_.clock().CurrentTime() - *receive_buffer.arrival_time;
     }
     *receive_buffer.arrival_time += *socket_time_offset_;
-    RTC_DCHECK_LE(*receive_buffer.arrival_time, current_time);
   }
   NotifyPacketReceived(
       ReceivedIpPacket(receive_buffer.payload, receive_buffer.source_address,
@@ -177,7 +160,7 @@ void AsyncUDPSocket::OnReadEvent(Socket* socket) {
 }
 
 void AsyncUDPSocket::OnWriteEvent(Socket* socket) {
-  NotifyReadyToSend(this);
+  SignalReadyToSend(this);
 }
 
 }  // namespace webrtc

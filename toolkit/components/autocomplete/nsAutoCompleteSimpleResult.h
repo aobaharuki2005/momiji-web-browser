@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsAutoCompleteSimpleResult_
-#define _nsAutoCompleteSimpleResult_
+#ifndef __nsAutoCompleteSimpleResult__
+#define __nsAutoCompleteSimpleResult__
 
 #include "nsIAutoCompleteResult.h"
 #include "nsIAutoCompleteSimpleResult.h"
@@ -59,4 +59,4 @@ class nsAutoCompleteSimpleResult final : public nsIAutoCompleteSimpleResult {
   nsCOMPtr<nsIAutoCompleteSimpleResultListener> mListener;
 };
 
-#endif  // _nsAutoCompleteSimpleResult_
+#endif  // __nsAutoCompleteSimpleResult__

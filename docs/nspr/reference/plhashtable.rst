@@ -1,7 +1,3 @@
-PLHashTable
-===========
-
-.. _plhashtable-syntax:
 
 Syntax
 ------
@@ -12,8 +8,6 @@ Syntax
 
    typedef struct PLHashTable PLHashTable;
 
-
-.. _plhashtable-description:
 
 Description
 -----------

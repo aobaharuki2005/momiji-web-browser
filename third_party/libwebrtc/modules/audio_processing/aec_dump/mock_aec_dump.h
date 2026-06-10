@@ -26,7 +26,7 @@ namespace test {
 class MockAecDump : public AecDump {
  public:
   MockAecDump();
-  ~MockAecDump() override;
+  virtual ~MockAecDump();
 
   MOCK_METHOD(void,
               WriteInitMessage,

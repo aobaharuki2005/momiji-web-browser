@@ -3,7 +3,10 @@
 
 "use strict";
 add_task(async function test() {
-  if (!SpecialPowers.Services.prefs.getBoolPref("fission.bfcacheInParent")) {
+  if (
+    !SpecialPowers.Services.appinfo.sessionHistoryInParent ||
+    !SpecialPowers.Services.prefs.getBoolPref("fission.bfcacheInParent")
+  ) {
     ok(
       true,
       "This test is currently only for the bfcache in the parent process."

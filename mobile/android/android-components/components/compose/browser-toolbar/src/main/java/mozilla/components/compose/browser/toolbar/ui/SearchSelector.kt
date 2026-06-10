@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -96,9 +95,9 @@ fun SearchSelector(
                     onInteraction(onClick)
                 }
             },
-        shape = CircleShape,
+        shape = RoundedCornerShape(90.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            containerColor = MaterialTheme.colorScheme.surfaceBright,
         ),
         elevation = CardDefaults.elevatedCardElevation(
             defaultElevation = 0.dp,
@@ -154,7 +153,7 @@ private fun SearchSelectorPreview() {
         SearchSelector(
             icon = null,
             contentDescription = "test",
-            modifier = Modifier.background(color = MaterialTheme.colorScheme.surfaceContainerHighest),
+            modifier = Modifier.background(color = MaterialTheme.colorScheme.surfaceDim),
             menu = object : BrowserToolbarMenu {
                 override fun items() = emptyList<BrowserToolbarMenuItem>()
             },

@@ -48,7 +48,6 @@ def test_webkitgtk_certificate_domain_list(product):
     kwargs["pause_on_unexpected"] = False
     kwargs["debug_test"] = False
     kwargs["subsuite"] = testloader.Subsuite("", config={})
-    kwargs["headless"] = True
     with ConfigBuilder(logger,
                        browser_host="example.net",
                        alternate_hosts={"alt": "example.org"},

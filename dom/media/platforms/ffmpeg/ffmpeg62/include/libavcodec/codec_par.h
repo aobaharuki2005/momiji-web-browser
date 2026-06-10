@@ -212,11 +212,6 @@ typedef struct AVCodecParameters {
      * Audio only. Number of samples to skip after a discontinuity.
      */
     int seek_preroll;
-
-    /**
-     * Video with alpha channel only. Alpha channel handling
-     */
-    enum AVAlphaMode alpha_mode;
 } AVCodecParameters;
 
 /**

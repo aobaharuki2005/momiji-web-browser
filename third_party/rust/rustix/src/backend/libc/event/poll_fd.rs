@@ -1,9 +1,8 @@
 use crate::backend::c;
 use crate::backend::conv::borrowed_fd;
-use crate::backend::fd::{AsFd, AsRawFd as _, BorrowedFd, LibcFd};
+use crate::backend::fd::{AsFd, AsRawFd, BorrowedFd, LibcFd};
 #[cfg(windows)]
 use crate::backend::fd::{AsSocket, RawFd};
-use crate::ffi;
 use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
@@ -14,7 +13,7 @@ bitflags! {
     /// [`poll`]: crate::event::poll
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct PollFlags: ffi::c_short {
+    pub struct PollFlags: c::c_short {
         /// `POLLIN`
         const IN = c::POLLIN;
         /// `POLLPRI`

@@ -1,9 +1,12 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebRenderLayerManager.h"
 
+#include "DisplayItemCache.h"
 #include "GeckoProfiler.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_layers.h"
@@ -36,14 +39,9 @@ using namespace gfx;
 
 namespace layers {
 
-bool WebRenderLayerManager::sHasInitialized = false;
-
-WebRenderLayerManager::WebRenderLayerManager(
-    nsIWidget* aWidget, already_AddRefed<WebRenderBridgeChild> aWrChild)
+WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
     : mWidget(aWidget),
-      mWrChild(aWrChild),
       mLatestTransactionId{0},
-      mWindowOverlayChanged(false),
       mNeedsComposite(false),
       mIsFirstPaint(false),
       mDestroyed(false),
@@ -52,55 +50,58 @@ WebRenderLayerManager::WebRenderLayerManager(
       mApzTestData(new APZTestData),
       mWebRenderCommandBuilder(this) {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
-  MOZ_RELEASE_ASSERT(mWidget);
-  MOZ_RELEASE_ASSERT(mWrChild);
   mStateManager.mLayerManager = this;
+
+  if (XRE_IsContentProcess() &&
+      StaticPrefs::gfx_webrender_enable_item_cache_AtStartup()) {
+    static const size_t kInitialCacheSize = 1024;
+    static const size_t kMaximumCacheSize = 10240;
+
+    mDisplayItemCache.SetCapacity(kInitialCacheSize, kMaximumCacheSize);
+  }
 }
 
 KnowsCompositor* WebRenderLayerManager::AsKnowsCompositor() { return mWrChild; }
 
-/* static */
-RefPtr<WebRenderLayerManager> WebRenderLayerManager::Create(
-    nsIWidget* aWidget, PCompositorBridgeChild* aCBChild,
-    wr::PipelineId aPipelineId, nsCString& aError) {
-  MOZ_RELEASE_ASSERT(aWidget);
-  MOZ_RELEASE_ASSERT(aCBChild);
+bool WebRenderLayerManager::Initialize(
+    PCompositorBridgeChild* aCBChild, wr::PipelineId aLayersId,
+    TextureFactoryIdentifier* aTextureFactoryIdentifier, nsCString& aError) {
+  MOZ_ASSERT(mWrChild == nullptr);
+  MOZ_ASSERT(aTextureFactoryIdentifier);
+
+  // When we fail to initialize WebRender, it is useful to know if it has ever
+  // succeeded, or if this is the first attempt.
+  static bool hasInitialized = false;
 
   WindowKind windowKind;
-  if (aWidget->GetWindowType() != widget::WindowType::Popup) {
+  if (mWidget->GetWindowType() != widget::WindowType::Popup) {
     windowKind = WindowKind::MAIN;
   } else {
     windowKind = WindowKind::SECONDARY;
   }
 
-  LayoutDeviceIntSize size = aWidget->GetClientSize();
+  LayoutDeviceIntSize size = mWidget->GetClientSize();
   // Check widget size
   if (!wr::WindowSizeSanityCheck(size.width, size.height)) {
     gfxCriticalNoteOnce << "Widget size is not valid " << size
                         << " isParent: " << XRE_IsParentProcess();
   }
 
-  auto bridge = MakeRefPtr<WebRenderBridgeChild>(aPipelineId);
-  if (!aCBChild->SendPWebRenderBridgeConstructor(bridge, aPipelineId, size,
-                                                 windowKind)) {
+  PWebRenderBridgeChild* bridge =
+      aCBChild->SendPWebRenderBridgeConstructor(aLayersId, size, windowKind);
+  if (!bridge) {
     // This should only fail if we attempt to access a layer we don't have
     // permission for, or more likely, the GPU process crashed again during
     // reinitialization. We can expect to be notified again to reinitialize
     // (which may or may not be using WebRender).
-    gfxCriticalNote << "Failed to send WebRenderBridgeChild.";
-    aError.Assign(sHasInitialized
+    gfxCriticalNote << "Failed to create WebRenderBridgeChild.";
+    aError.Assign(hasInitialized
                       ? "FEATURE_FAILURE_WEBRENDER_INITIALIZE_IPDL_POST"_ns
                       : "FEATURE_FAILURE_WEBRENDER_INITIALIZE_IPDL_FIRST"_ns);
-    return nullptr;
+    return false;
   }
 
-  return new WebRenderLayerManager(aWidget, bridge.forget());
-}
-
-bool WebRenderLayerManager::Initialize(
-    TextureFactoryIdentifier* aTextureFactoryIdentifier, nsCString& aError) {
-  MOZ_ASSERT(aTextureFactoryIdentifier);
-
+  mWrChild = static_cast<WebRenderBridgeChild*>(bridge);
   mHasFlushedThisChild = false;
 
   TextureFactoryIdentifier textureFactoryIdentifier;
@@ -109,7 +110,7 @@ bool WebRenderLayerManager::Initialize(
   if (!WrBridge()->SendEnsureConnected(&textureFactoryIdentifier, &idNamespace,
                                        &aError)) {
     gfxCriticalNote << "Failed as lost WebRenderBridgeChild.";
-    aError.Assign(sHasInitialized
+    aError.Assign(hasInitialized
                       ? "FEATURE_FAILURE_WEBRENDER_INITIALIZE_SYNC_POST"_ns
                       : "FEATURE_FAILURE_WEBRENDER_INITIALIZE_SYNC_FIRST"_ns);
     return false;
@@ -119,7 +120,7 @@ bool WebRenderLayerManager::Initialize(
       idNamespace.isNothing()) {
     gfxCriticalNote << "Failed to connect WebRenderBridgeChild. isParent="
                     << XRE_IsParentProcess();
-    aError.Append(sHasInitialized ? "_POST"_ns : "_FIRST"_ns);
+    aError.Append(hasInitialized ? "_POST"_ns : "_FIRST"_ns);
     return false;
   }
 
@@ -131,7 +132,7 @@ bool WebRenderLayerManager::Initialize(
   mDLBuilder = MakeUnique<wr::DisplayListBuilder>(
       WrBridge()->GetPipeline(), WrBridge()->GetWebRenderBackend());
 
-  sHasInitialized = true;
+  hasInitialized = true;
   return true;
 }
 
@@ -150,7 +151,9 @@ void WebRenderLayerManager::DoDestroy(bool aIsSync) {
 
   mStateManager.Destroy();
 
-  mWrChild->Destroy(aIsSync);
+  if (WrBridge()) {
+    WrBridge()->Destroy(aIsSync);
+  }
 
   mWebRenderCommandBuilder.Destroy();
 
@@ -254,15 +257,6 @@ bool WebRenderLayerManager::BeginTransaction(const nsCString& aURL) {
 
 bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
   auto clearTarget = MakeScopeExit([&] { mTarget = nullptr; });
-  if (mWindowOverlayChanged) {
-    // If the window overlay changed then we can't do an empty transaction
-    // because we need to repaint the window overlay which we only currently
-    // support in a full transaction.
-    // XXX If we end up hitting this branch a lot we can probably optimize it
-    // by just sending an updated window overlay image instead of rebuilding
-    // the entire WR display list.
-    return false;
-  }
 
   // If we haven't sent a display list (since creation or since the last time we
   // sent ClearDisplayList to the parent) then we can't do an empty transaction
@@ -272,8 +266,11 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
     return false;
   }
 
-  mLatestTransactionId =
-      mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
+  mDisplayItemCache.SkipWaitingForPartialDisplayList();
+
+  // Don't block on hidden windows on Linux as it may block all rendering.
+  const bool throttle = mWidget->IsMapped();
+  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(throttle);
 
   if (aFlags & EndTransactionFlags::END_NO_COMPOSITE &&
       !mWebRenderCommandBuilder.NeedsEmptyTransaction()) {
@@ -353,23 +350,26 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
   UniquePtr<wr::DisplayListBuilder> offscreenBuilder;
   wr::DisplayListBuilder* diplayListBuilder = mDLBuilder.get();
+  DisplayItemCache* itemCache = &mDisplayItemCache;
   if (aRenderOffscreen) {
     wr::PipelineId mainId = WrBridge()->GetPipeline();
     wr::PipelineId tmpPipeline = gfx::GetTemporaryWebRenderPipelineId(mainId);
     offscreenBuilder = MakeUnique<wr::DisplayListBuilder>(
         tmpPipeline, WrBridge()->GetWebRenderBackend());
     diplayListBuilder = offscreenBuilder.get();
+    itemCache = nullptr;
   }
 
-  diplayListBuilder->Begin();
+  diplayListBuilder->Begin(itemCache);
 
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
-  mWindowOverlayChanged = false;
   wr::usize builderDumpIndex = 0;
   bool containsSVGGroup = false;
   bool dumpEnabled =
       mWebRenderCommandBuilder.ShouldDumpDisplayList(aDisplayListBuilder);
+  Maybe<AutoDisplayItemCacheSuppressor> cacheSuppressor;
   if (dumpEnabled) {
+    cacheSuppressor.emplace(itemCache);
     printf_stderr("-- WebRender display list build --\n");
   }
 
@@ -380,6 +380,9 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
   if (aDisplayList) {
     MOZ_ASSERT(aDisplayListBuilder && !aBackground);
+    if (itemCache) {
+      itemCache->SetDisplayList(aDisplayListBuilder, aDisplayList);
+    }
 
     mWebRenderCommandBuilder.BuildWebRenderCommands(
         *diplayListBuilder, resourceUpdates, aDisplayList, aDisplayListBuilder,
@@ -418,8 +421,9 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   // an empty transaction.
   ClearAndNotifyOfFullTransactionPendingScrollInfoUpdate();
 
-  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(
-      /*aThrottle*/ !aRenderOffscreen);
+  // Don't block on hidden windows on Linux as it may block all rendering.
+  const bool throttle = mWidget->IsMapped() && !aRenderOffscreen;
+  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(throttle);
 
   // Get the time of when the refresh driver start its tick (if available),
   // otherwise use the time of when LayerManager::BeginTransaction was called.
@@ -485,11 +489,15 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
         1000.);
     PerfStats::RecordMeasurement(PerfStats::Metric::WrDisplayListBuilding,
                                  duration);
-    WrBridge()->EndTransaction(
+    bool ret = WrBridge()->EndTransaction(
         std::move(dlData), mLatestTransactionId, containsSVGGroup,
         mTransactionIdAllocator->GetVsyncId(), aRenderOffscreen,
         mTransactionIdAllocator->GetVsyncStart(), refreshStart,
         mTransactionStart, mURL);
+    if (!ret && itemCache) {
+      // Failed to send display list, reset display item cache state.
+      itemCache->Clear();
+    }
 
     WrBridge()->SendSetFocusTarget(mFocusTarget);
     mFocusTarget = FocusTarget();
@@ -660,6 +668,8 @@ void WebRenderLayerManager::WrUpdated() {
   mStateManager.mAsyncResourceUpdates.reset();
   mWebRenderCommandBuilder.ClearCachedResources();
   DiscardLocalImages();
+  mDisplayItemCache.Clear();
+
   if (mWidget) {
     if (dom::BrowserChild* browserChild = mWidget->GetOwningBrowserChild()) {
       browserChild->SchedulePaint();
@@ -744,7 +754,9 @@ void WebRenderLayerManager::SendInvalidRegion(const nsIntRegion& aRegion) {
   // XXX Webrender does not support invalid region yet.
 
 #ifndef XP_WIN
-  WrBridge()->SendInvalidateRenderedFrame();
+  if (WrBridge()) {
+    WrBridge()->SendInvalidateRenderedFrame();
+  }
 #endif
 }
 

@@ -7,7 +7,6 @@ projects! 🔥 🦊 <3 🤖! 🎉 👍 For a full list of projects, see
 Before contributing, please review our [Community Participation Guidelines].
 
 We welcome all types of contributions, including, but not limited to:
-
 * [Filing issues](#filing-issues)
 * [Translating our apps](#translating-our-apps)
 * [User experience design](#user-experience-design)
@@ -18,12 +17,10 @@ We welcome all types of contributions, including, but not limited to:
 Have another idea for how you can contribute? Let us know!
 
 ## Communication
-
 For each our projects, we communicate with the project's:
-
-* Issues tracker
-* Mailing list
-* [Matrix Fenix](https://chat.mozilla.org/#/room/#fenix:mozilla.org) channel. *We're available Monday-Friday
+- Issues tracker
+- Mailing list
+- [Matrix Fenix](https://chat.mozilla.org/#/room/#fenix:mozilla.org) channel. *We're available Monday-Friday
 during GMT and PST working hours.*
 
 **Be sure to join them** and don't be afraid to make postings of your
@@ -34,7 +31,6 @@ the project's README.
 
 We usually track our project's issues on GitHub (example: [focus-android][fa issues]).
 To file a bug:
-
 * Find your project's issues: these will be linked from the project's README
 or you can click directly into the issues from the project's home page
 * Create a new issue!
@@ -65,13 +61,11 @@ make it into our products.
 ## Writing documentation
 
 ### Product support documentation
-
 Each Mozilla product provides in-app support. This documentation can be found on
 [support.mozilla.org][sumo]. If you wish to contribute, please contact a core team
 member to get started.
 
 ### Developer/repository documentation
-
 See an issue with our documentation, either in a project's repository or this
 `shared-docs` repository? Please file an issue or create a pull request
 to fix it yourself!

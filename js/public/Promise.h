@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -44,34 +46,44 @@ class JS_PUBLIC_API JobQueue {
    * dom/script/ScriptSettings.h for details.
    *
    * If the embedding has the host defined data, this method should return the
-   * host defined data via the `incumbentGlobal` and
-   * `optionalHostDefinedData` out parameter and return `true`. If the
-   * embedding doesn't need the host defined data, this method should set the
-   * `incumbentGlobal` and `optionalHostDefinedData` out parameters to
-   * `nullptr` and return `true`. If any error happens while generating the host
-   * defined data, this method should set a pending exception to `cx` and return
-   * `false`.
-   *
-   * Currently optionalHostDefinedData is only processed if there is an
-   * associated incumbent global, and an assertion will fire if there's
-   * a optionalHostDefinedData without an incumbent global, in debug builds.
-   *
-   * incumbentGlobal and optionalHostDefinedData should be same compartment
-   * as cx, and will be wrapped as necessary by the JS engine.
+   * host defined data via the `data` out parameter and return `true`.
+   * The object in the `data` out parameter can belong to any compartment.
+   * If the embedding doesn't need the host defined data, this method should
+   * set the `data` out parameter to `nullptr` and return `true`.
+   * If any error happens while generating the host defined data, this method
+   * should set a pending exception to `cx` and return `false`.
    */
-  virtual bool getHostDefinedData(
-      JSContext* cx, JS::MutableHandle<JSObject*> incumbentGlobal,
-      JS::MutableHandle<JSObject*> optionalHostDefinedData) const = 0;
+  virtual bool getHostDefinedData(JSContext* cx,
+                                  JS::MutableHandle<JSObject*> data) const = 0;
 
   /**
    * If the embedding has a host-defined global, return it. This is used when
-   * we are able to optimize out the optional host defined data, as the
-   * embedding may still require this when running jobs.
+   * we are able to optimize out the host defined data, as the embedding may
+   * still require this when running jobs.
    *
    * In Gecko, this is used for dealing with the incumbent global.
    */
   virtual bool getHostDefinedGlobal(
       JSContext* cx, JS::MutableHandle<JSObject*> data) const = 0;
+
+  /**
+   * Enqueue a reaction job `job` for `promise`, which was allocated at
+   * `allocationSite`. Provide `hostDefineData` as the host defined data for
+   * the reaction job's execution.
+   *
+   * The `hostDefinedData` value comes from `getHostDefinedData` method.
+   * The object is unwrapped, and it can belong to a different compartment
+   * than the current compartment. It can be `nullptr` if `getHostDefinedData`
+   * returns `nullptr`.
+   *
+   * `promise` can be null if the promise is optimized out.
+   * `promise` is guaranteed not to be optimized out if the promise has
+   * non-default user-interaction flag.
+   */
+  virtual bool enqueuePromiseJob(JSContext* cx, JS::HandleObject promise,
+                                 JS::HandleObject job,
+                                 JS::HandleObject allocationSite,
+                                 JS::HandleObject hostDefinedData) = 0;
 
   /**
    * Run all jobs in the queue. Running one job may enqueue others; continue to
@@ -89,6 +101,11 @@ class JS_PUBLIC_API JobQueue {
    * AutoDebuggerJobQueueInterruption.
    */
   virtual void runJobs(JSContext* cx) = 0;
+
+  /**
+   * Return true if the job queue is empty, false otherwise.
+   */
+  virtual bool empty() const = 0;
 
   /**
    * Returns true if the job queue stops draining, which results in `empty()`
@@ -479,35 +496,6 @@ extern JS_PUBLIC_API bool RejectPromise(JSContext* cx,
                                         JS::HandleObject promiseObj,
                                         JS::HandleValue rejectionValue);
 
-#ifdef NIGHTLY_BUILD
-/**
- * Resolves the given Promise with `resolutionValue`, but guarantees that the
- * user-code-running portion of resolution does not execute on the caller's
- * stack.
- *
- * This corresponds to the MaybeDeferredPromiseResolve abstract operation from
- * the thenable-curtailment proposal
- * (https://tc39.es/proposal-thenable-curtailment/).
- *
- * On return, `promise`'s resolving functions are no-ops: any subsequent
- * resolve/reject call on the same promise (including a second SafeResolve) is
- * a silent no-op.
- *
- * If `resolutionValue` is definitely inert (not an object, or an object whose
- * `"then"` property cannot be reached without running user code and is not a
- * callable data property), resolution happens synchronously, exactly as for
- * `JS::ResolvePromise`.
- *
- * Otherwise, the resolving functions are made no-ops immediately and the actual
- * PerformPromiseResolution steps, including `Get(resolutionValue, "then")`,
- * are deferred to a freshly-enqueued microtask. The promise remains pending
- * until that microtask runs.
- */
-extern JS_PUBLIC_API bool SafeResolve(JSContext* cx,
-                                      JS::HandleObject promiseObj,
-                                      JS::HandleValue resolutionValue);
-#endif  // NIGHTLY_BUILD
-
 /**
  * Create a Promise with the given fulfill/reject handlers, that will be
  * fulfilled/rejected with the value/reason that the promise `promise` is
@@ -593,7 +581,7 @@ enum class PromiseUserInputEventHandlingState {
  * is a wrapper that can't safely be unwrapped.
  */
 extern JS_PUBLIC_API PromiseUserInputEventHandlingState
-GetPromiseUserInputEventHandlingState(JSObject* promise);
+GetPromiseUserInputEventHandlingState(JS::HandleObject promise);
 
 /**
  * Sets the given Promise's activation behavior state flag per above as a

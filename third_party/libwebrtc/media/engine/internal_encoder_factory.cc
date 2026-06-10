@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "api/environment/environment.h"
-#include "api/video/resolution.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
@@ -58,13 +57,11 @@ std::unique_ptr<VideoEncoder> InternalEncoderFactory::Create(
 
 VideoEncoderFactory::CodecSupport InternalEncoderFactory::QueryCodecSupport(
     const SdpVideoFormat& format,
-    std::optional<std::string> scalability_mode,
-    std::optional<Resolution> resolution) const {
+    std::optional<std::string> scalability_mode) const {
   auto original_format =
       FuzzyMatchSdpVideoFormat(Factory().GetSupportedFormats(), format);
   return original_format
-             ? Factory().QueryCodecSupport(*original_format, scalability_mode,
-                                           resolution)
+             ? Factory().QueryCodecSupport(*original_format, scalability_mode)
              : VideoEncoderFactory::CodecSupport{.is_supported = false};
 }
 

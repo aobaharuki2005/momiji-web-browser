@@ -12,28 +12,28 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.compose.content
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
+import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import mozilla.components.lib.state.helpers.StoreProvider.Companion.storeProvider
-import mozilla.components.support.utils.DefaultDownloadFileUtils
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.SupportedMenuNotifications
 import org.mozilla.fenix.compose.snackbar.Snackbar
 import org.mozilla.fenix.compose.snackbar.SnackbarState
 import org.mozilla.fenix.downloads.getCannotOpenFileErrorMessage
 import org.mozilla.fenix.downloads.listscreen.di.DownloadUIMiddlewareProvider
+import org.mozilla.fenix.downloads.listscreen.store.DownloadUIAction
 import org.mozilla.fenix.downloads.listscreen.store.DownloadUIState
 import org.mozilla.fenix.downloads.listscreen.store.DownloadUIStore
 import org.mozilla.fenix.downloads.listscreen.store.FileItem
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
-import org.mozilla.fenix.settings.downloads.DownloadLocationManager
+import org.mozilla.fenix.settings.settingssearch.PreferenceFileInformation
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Fragment for displaying and managing the downloads list.
  */
-class DownloadFragment : Fragment(), SystemInsetsPaddedFragment {
+class DownloadFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +50,6 @@ class DownloadFragment : Fragment(), SystemInsetsPaddedFragment {
             middleware = DownloadUIMiddlewareProvider.provideMiddleware(
                 coroutineScope = storeProvider.viewModelScope,
                 applicationContext = requireContext().applicationContext,
-                navController = findNavController(),
             ),
         )
     }
@@ -64,22 +63,30 @@ class DownloadFragment : Fragment(), SystemInsetsPaddedFragment {
             DownloadsScreen(
                 downloadsStore = downloadStore,
                 onItemClick = { openItem(it) },
+                onNavigationIconClick = {
+                    if (downloadStore.state.mode is DownloadUIState.Mode.Editing) {
+                        downloadStore.dispatch(DownloadUIAction.ExitEditMode)
+                    } else {
+                        this@DownloadFragment.findNavController().popBackStack()
+                    }
+                },
+                onSettingsClick = {
+                    findNavController().navigate(
+                        resId = PreferenceFileInformation.DownloadsSettingsPreferences.fragmentId,
+                    )
+                },
             )
         }
     }
 
     private fun openItem(item: FileItem) {
         context?.let {
-            val fileUtils = DefaultDownloadFileUtils(
-                context = requireContext(),
-                downloadLocation = {
-                    DownloadLocationManager(requireContext()).defaultLocation
-                },
-            )
-            val canOpenFile = fileUtils.openFile(
-                fileName = item.fileName,
-                directoryPath = item.directoryPath,
-                contentType = item.contentType,
+            val canOpenFile = AbstractFetchDownloadService.openFile(
+                applicationContext = it.applicationContext,
+                packageName = it.applicationContext.packageName,
+                downloadFileName = item.fileName,
+                downloadFilePath = item.filePath,
+                downloadContentType = item.contentType,
             )
 
             val rootView = view

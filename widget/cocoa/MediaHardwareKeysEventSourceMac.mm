@@ -53,6 +53,7 @@ static bool IsSupportedKeyCode(int aKeyCode) {
 }
 
 static MediaControlKey ToMediaControlKey(int aKeyCode) {
+  MOZ_ASSERT(IsSupportedKeyCode(aKeyCode));
   switch (aKeyCode) {
     case NX_KEYTYPE_NEXT:
     case NX_KEYTYPE_FAST:
@@ -102,7 +103,6 @@ bool MediaHardwareKeysEventSourceMac::StartEventTap() {
       CFMachPortCreateRunLoopSource(kCFAllocatorDefault, mEventTap, 0);
   if (!mEventTapSource) {
     LOG("Fail to create an event tap source.");
-    StopEventTap();  // Will clean up mEventTap
     return false;
   }
 
@@ -116,7 +116,6 @@ void MediaHardwareKeysEventSourceMac::StopEventTap() {
   LOG("StopEventTapIfNecessary");
   if (mEventTap) {
     CFMachPortInvalidate(mEventTap);
-    CFRelease(mEventTap);
     mEventTap = nullptr;
   }
   if (mEventTapSource) {
@@ -158,7 +157,9 @@ CGEventRef MediaHardwareKeysEventSourceMac::EventTapCallback(
   // - keyRepeat = (keyFlags & 0x1);
   const NSInteger data1 = [nsEvent data1];
   int keyCode = (data1 & 0xFFFF0000) >> 16;
-  if (!IsSupportedKeyCode(keyCode)) {
+  if (keyCode != NX_KEYTYPE_PLAY && keyCode != NX_KEYTYPE_NEXT &&
+      keyCode != NX_KEYTYPE_PREVIOUS && keyCode != NX_KEYTYPE_FAST &&
+      keyCode != NX_KEYTYPE_REWIND) {
     return event;
   }
 
@@ -171,6 +172,10 @@ CGEventRef MediaHardwareKeysEventSourceMac::EventTapCallback(
 
   // There is no listener waiting to process event.
   if (source->mListeners.IsEmpty()) {
+    return event;
+  }
+
+  if (!IsSupportedKeyCode(keyCode)) {
     return event;
   }
 

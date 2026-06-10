@@ -53,7 +53,7 @@ const EXPECTED_SPONSORED_URLBAR_RESULT = {
     descriptionL10n: { id: "urlbar-result-action-sponsored" },
     helpUrl: QuickSuggest.HELP_URL,
     helpL10n: {
-      id: "urlbar-result-menu-learn-more",
+      id: "urlbar-result-menu-learn-more-about-firefox-suggest",
     },
     isBlockable: true,
     source: "remote-settings",
@@ -79,7 +79,7 @@ const EXPECTED_NONSPONSORED_URLBAR_RESULT = {
     sponsoredIabCategory: "5 - Education",
     helpUrl: QuickSuggest.HELP_URL,
     helpL10n: {
-      id: "urlbar-result-menu-learn-more",
+      id: "urlbar-result-menu-learn-more-about-firefox-suggest",
     },
     isBlockable: true,
     source: "remote-settings",
@@ -3172,8 +3172,7 @@ async function doTimedCallbacks(callbacksBySecond) {
  *   The results that are expected from the search.
  */
 async function checkSearch({ name, searchString, expectedResults }) {
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  let quickSuggestProviderInstance = providersManager.getProvider(
+  let quickSuggestProviderInstance = UrlbarProvidersManager.getProvider(
     UrlbarProviderQuickSuggest.name
   );
   info(`Preparing search "${name}" with search string "${searchString}"`);

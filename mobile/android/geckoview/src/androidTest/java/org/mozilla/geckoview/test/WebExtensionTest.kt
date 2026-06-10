@@ -1,4 +1,5 @@
-/* Any copyright is dedicated to the Public Domain.
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
+ * Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 package org.mozilla.geckoview.test
@@ -14,6 +15,7 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -60,8 +62,7 @@ import java.nio.charset.Charset
 import java.util.Date
 import java.util.UUID
 import java.util.concurrent.CancellationException
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
+import kotlin.collections.HashMap
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -1783,8 +1784,9 @@ class WebExtensionTest : BaseSessionTest() {
                 // We should not be able to install the extension.
                 assertTrue(false)
             }, { exception ->
-                assertIs<InstallException>(exception)
-                assertEquals(InstallException.ErrorCodes.ERROR_USER_CANCELED, exception.code)
+                assertTrue(exception is WebExtension.InstallException)
+                val installException = exception as WebExtension.InstallException
+                assertEquals(installException.code, WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED)
             }),
         )
 
@@ -1812,7 +1814,7 @@ class WebExtensionTest : BaseSessionTest() {
             override fun onShowNotification(notification: WebNotification) {
                 assertEquals(notification.title, "Time for cake!")
                 assertEquals(notification.text, "Something something cake")
-                assertEquals(notification.imageUrl, "http://localhost:4245/assets/www/images/test.gif")
+                assertEquals(notification.imageUrl, "https://example.com/img.svg")
                 // This should be filled out, Bug 1589693
                 assertEquals(notification.source, null)
                 notification.show()
@@ -3769,8 +3771,9 @@ class WebExtensionTest : BaseSessionTest() {
                 // We should not be able to update the extension.
                 assertTrue(false)
             }, { exception ->
-                assertIs<InstallException>(exception)
-                assertEquals(InstallException.ErrorCodes.ERROR_USER_CANCELED, exception.code)
+                assertTrue(exception is WebExtension.InstallException)
+                val installException = exception as WebExtension.InstallException
+                assertEquals(installException.code, WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED)
             }),
         )
 
@@ -3887,8 +3890,9 @@ class WebExtensionTest : BaseSessionTest() {
                 // We should not be able to update the extension.
                 assertTrue(false)
             }, { exception ->
-                assertIs<InstallException>(exception)
-                assertEquals(InstallException.ErrorCodes.ERROR_POSTPONED, exception.code)
+                assertTrue(exception is WebExtension.InstallException)
+                val installException = exception as WebExtension.InstallException
+                assertEquals(installException.code, WebExtension.InstallException.ErrorCodes.ERROR_POSTPONED)
             }),
         )
 

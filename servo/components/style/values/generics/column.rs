@@ -25,7 +25,6 @@ use crate::derives::*;
     ToTyped,
 )]
 #[repr(u8)]
-#[typed(todo_derive_fields)]
 pub enum GenericColumnCount<PositiveInteger> {
     /// A positive integer.
     Integer(PositiveInteger),
@@ -38,7 +37,7 @@ pub use self::GenericColumnCount as ColumnCount;
 impl<I> ColumnCount<I> {
     /// Returns whether this value is `auto`.
     #[inline]
-    pub fn is_auto(&self) -> bool {
+    pub fn is_auto(self) -> bool {
         matches!(self, ColumnCount::Auto)
     }
 }

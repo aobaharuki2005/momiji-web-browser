@@ -24,7 +24,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AttributionCode:
     "moz-src:///browser/components/attribution/AttributionCode.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
   WindowsVersionInfo:
     "resource://gre/modules/components-utils/WindowsVersionInfo.sys.mjs",
@@ -1012,7 +1011,8 @@ EnvironmentCache.prototype = {
         }
         if (
           aData == "engine-changed" &&
-          lazy.SearchService.defaultEngine != aSubject.wrappedJSObject
+          aSubject.QueryInterface(Ci.nsISearchEngine) &&
+          Services.search.defaultEngine != aSubject
         ) {
           return;
         }
@@ -1049,7 +1049,7 @@ EnvironmentCache.prototype = {
         this._sessionWasRestored = true;
         // Make sure to initialize the search service once we've done restoring
         // the windows, so that we don't risk loosing search data.
-        lazy.SearchService.init();
+        Services.search.init();
         // The default browser check could take some time, so just call it after
         // the session was restored.
         this._updateDefaultBrowser();
@@ -1089,9 +1089,9 @@ EnvironmentCache.prototype = {
     }
 
     this._log.trace(
-      "_updateSearchEngine - isInitialized: " + lazy.SearchService.isInitialized
+      "_updateSearchEngine - isInitialized: " + Services.search.isInitialized
     );
-    if (!lazy.SearchService.isInitialized) {
+    if (!Services.search.isInitialized) {
       return;
     }
 
@@ -1099,7 +1099,7 @@ EnvironmentCache.prototype = {
     this._currentEnvironment.settings = this._currentEnvironment.settings || {};
 
     // Update the search engine entry in the current environment.
-    const defaultEngineInfo = lazy.SearchService.getDefaultEngineInfo();
+    const defaultEngineInfo = Services.search.getDefaultEngineInfo();
     this._currentEnvironment.settings.defaultSearchEngine =
       defaultEngineInfo.defaultSearchEngine;
     this._currentEnvironment.settings.defaultSearchEngineData = {
@@ -1367,7 +1367,6 @@ EnvironmentCache.prototype = {
     let resetDate = await profileAccessor.reset;
     let firstUseDate = await profileAccessor.firstUse;
     let recoveredFromBackup = await profileAccessor.recoveredFromBackup;
-    let source = profileAccessor.source;
 
     this._currentEnvironment.profile.creationDate =
       Utils.millisecondsToDays(creationDate);
@@ -1392,9 +1391,6 @@ EnvironmentCache.prototype = {
       Glean.profiles.recoveredFromBackup.set(
         this._currentEnvironment.profile.recoveredFromBackup
       );
-    }
-    if (source) {
-      Glean.profiles.source.set(source);
     }
   },
 
@@ -1446,7 +1442,6 @@ EnvironmentCache.prototype = {
       ua: attributionData.ua,
       dltoken: attributionData.dltoken,
       msstoresignedin: attributionData.msstoresignedin,
-      msclkid: attributionData.msclkid,
       dlsource: attributionData.dlsource,
     };
     Services.fog.updateAttribution(

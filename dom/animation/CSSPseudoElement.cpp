@@ -1,10 +1,12 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/CSSPseudoElement.h"
 
-#include "mozilla/AnimationUtils.h"
+#include "mozilla/AnimationComparator.h"
 #include "mozilla/dom/CSSPseudoElementBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
@@ -69,13 +71,13 @@ already_AddRefed<CSSPseudoElement> CSSPseudoElement::GetCSSPseudoElement(
 nsAtom* CSSPseudoElement::GetCSSPseudoElementPropertyAtom(
     PseudoStyleType aType) {
   switch (aType) {
-    case PseudoStyleType::Before:
+    case PseudoStyleType::before:
       return nsGkAtoms::cssPseudoElementBeforeProperty;
 
-    case PseudoStyleType::After:
+    case PseudoStyleType::after:
       return nsGkAtoms::cssPseudoElementAfterProperty;
 
-    case PseudoStyleType::Marker:
+    case PseudoStyleType::marker:
       return nsGkAtoms::cssPseudoElementMarkerProperty;
 
     default:
@@ -84,10 +86,6 @@ nsAtom* CSSPseudoElement::GetCSSPseudoElementPropertyAtom(
           "other than ::before, ::after or ::marker");
       return nullptr;
   }
-}
-
-void CSSPseudoElement::GetType(nsString& aRetVal) const {
-  PseudoStyleRequest(mPseudoType).ToString(aRetVal);
 }
 
 }  // namespace mozilla::dom

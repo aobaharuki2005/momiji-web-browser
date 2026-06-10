@@ -7,6 +7,5 @@ toolkit.jar:
   content/mozapps/preferences/fontbuilder.js
   content/mozapps/preferences/changemp.js
   content/mozapps/preferences/changemp.xhtml
-  content/mozapps/preferences/changemp.css
   content/mozapps/preferences/removemp.js
   content/mozapps/preferences/removemp.xhtml

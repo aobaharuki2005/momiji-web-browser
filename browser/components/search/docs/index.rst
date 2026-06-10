@@ -1,7 +1,5 @@
-.. _browser-search:
-
-Search UI
-=========
+Search
+======
 
 This document describes the implementation of parts of Firefox's search interfaces.
 
@@ -13,7 +11,7 @@ The search area covers:
 
 Search Engine handling is taken care of with the `toolkit Search Service`_.
 
-Most of the search code lives in :searchfox:`browser/components/search`.
+Most of the search code lives in `browser/components/search`_.
 
 .. toctree::
 
@@ -22,3 +20,4 @@ Most of the search code lives in :searchfox:`browser/components/search`.
    telemetry
 
 .. _toolkit Search Service: /toolkit/search/index.html
+.. _browser/components/search: https://searchfox.org/mozilla-central/source/browser/components/search

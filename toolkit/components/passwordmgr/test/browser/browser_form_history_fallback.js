@@ -1,14 +1,12 @@
 const { FormHistoryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/FormHistoryTestUtils.sys.mjs"
 );
-const { FormHistory } = ChromeUtils.importESModule(
-  "resource://gre/modules/FormHistory.sys.mjs"
-);
+
 const usernameFieldName = "user";
 
 async function cleanup() {
   Services.prefs.clearUserPref("signon.rememberSignons");
-  await Services.logins.removeAllLoginsAsync();
+  Services.logins.removeAllLogins();
   await FormHistoryTestUtils.clear(usernameFieldName);
 }
 
@@ -36,7 +34,7 @@ add_task(
     await storageChangedPromise;
 
     const loginEntries = (await Services.logins.getAllLogins()).length;
-    //const historyEntries = await FormHistoryTestUtils.count(usernameFieldName);
+    const historyEntries = await FormHistoryTestUtils.count(usernameFieldName);
 
     Assert.equal(
       loginEntries,
@@ -44,12 +42,11 @@ add_task(
       "Username should be saved in password manager"
     );
 
-    // TODO Bug 2012683 - FormHistory/LoginManager ordering issue
-    // Assert.equal(
-    //   historyEntries,
-    //   0,
-    //   "Username should not be saved in form history"
-    // );
+    Assert.equal(
+      historyEntries,
+      0,
+      "Username should not be saved in form history"
+    );
     await cleanup();
   }
 );

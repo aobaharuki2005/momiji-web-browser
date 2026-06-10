@@ -29,6 +29,7 @@
 
 #include "third_party/highway/hwy/aligned_allocator.h"
 #include "third_party/highway/hwy/base.h"
+#include "third_party/highway/hwy/contrib/sort/order.h"
 #include "third_party/highway/hwy/per_target.h"  // DispatchedTarget
 #include "third_party/highway/hwy/targets.h"     // TargetName
 
@@ -50,17 +51,16 @@ static inline double SummarizeMeasurements(std::vector<double>& seconds) {
 
 struct SortResult {
   SortResult() {}
-  SortResult(Algo algo_in, Dist dist_in, size_t num_keys_in,
-             size_t num_threads_in, double sec_in, size_t sizeof_key_in,
-             const char* key_name_in)
+  SortResult(const Algo algo, Dist dist, size_t num_keys, size_t num_threads,
+             double sec, size_t sizeof_key, const char* key_name)
       : target(DispatchedTarget()),
-        algo(algo_in),
-        dist(dist_in),
-        num_keys(num_keys_in),
-        num_threads(num_threads_in),
-        sec(sec_in),
-        sizeof_key(sizeof_key_in),
-        key_name(key_name_in) {}
+        algo(algo),
+        dist(dist),
+        num_keys(num_keys),
+        num_threads(num_threads),
+        sec(sec),
+        sizeof_key(sizeof_key),
+        key_name(key_name) {}
 
   void Print() const {
     const double bytes = static_cast<double>(num_keys) *

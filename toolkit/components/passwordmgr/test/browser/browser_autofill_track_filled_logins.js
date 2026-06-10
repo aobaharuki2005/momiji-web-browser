@@ -109,6 +109,6 @@ add_task(async function test() {
     BrowserTestUtils.removeTab(tab);
 
     // Reset all passwords before next iteration.
-    await Services.logins.removeAllUserFacingLoginsAsync();
+    Services.logins.removeAllUserFacingLogins();
   }
 });

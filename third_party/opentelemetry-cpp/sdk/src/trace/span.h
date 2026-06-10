@@ -35,11 +35,6 @@ public:
        const opentelemetry::trace::SpanContext &parent_span_context,
        std::unique_ptr<opentelemetry::trace::SpanContext> span_context) noexcept;
 
-  Span(const Span &)            = delete;
-  Span(Span &&)                 = delete;
-  Span &operator=(const Span &) = delete;
-  Span &operator=(Span &&)      = delete;
-
   ~Span() override;
 
   // opentelemetry::trace::Span
@@ -85,7 +80,7 @@ private:
   std::unique_ptr<Recordable> recordable_;
   opentelemetry::common::SteadyTimestamp start_steady_time;
   std::unique_ptr<opentelemetry::trace::SpanContext> span_context_;
-  bool has_ended_{false};
+  bool has_ended_;
 };
 }  // namespace trace
 }  // namespace sdk

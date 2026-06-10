@@ -14,10 +14,11 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
-#include <span>
+#include <optional>
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/audio/audio_frame.h"
 #include "api/audio_codecs/audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
@@ -29,9 +30,7 @@
 #include "api/test/mock_frame_transformer.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
-#include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "modules/audio_device/include/mock_audio_device.h"
-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/ntp_time_util.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/receiver_report.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
@@ -54,7 +53,7 @@ using ::testing::NotNull;
 using ::testing::Return;
 using ::testing::Test;
 
-constexpr uint32_t kLocalSsrc = kFallbackRtcpSsrcForAudio;
+constexpr uint32_t kLocalSsrc = 1111;
 constexpr uint32_t kRemoteSsrc = 2222;
 // We run RTP data with 8 kHz PCMA (fixed payload type 8).
 constexpr char kPayloadName[] = "PCMA";
@@ -73,13 +72,14 @@ class ChannelReceiveTest : public Test {
   std::unique_ptr<ChannelReceiveInterface> CreateTestChannelReceive() {
     CryptoOptions crypto_options;
     auto channel = CreateChannelReceive(
-        CreateEnvironment(time_controller_.GetClock(), &log_),
+        CreateEnvironment(time_controller_.GetClock()),
         /* neteq_factory= */ nullptr, audio_device_module_.get(), &transport_,
-        kRemoteSsrc,
+        kLocalSsrc, kRemoteSsrc,
         /* jitter_buffer_max_packets= */ 0,
         /* jitter_buffer_fast_playout= */ false,
         /* jitter_buffer_min_delay_ms= */ 0,
         /* enable_non_sender_rtt= */ false, audio_decoder_factory_,
+        /* codec_pair_id= */ std::nullopt,
         /* frame_decryptor_interface= */ nullptr, crypto_options,
         /* frame_transformer= */ nullptr);
     channel->SetReceiveCodecs(
@@ -142,7 +142,7 @@ class ChannelReceiveTest : public Test {
   }
 
   void HandleGeneratedRtcp(ChannelReceiveInterface& /* channel */,
-                           std::span<const uint8_t> packet) {
+                           ArrayView<const uint8_t> packet) {
     if (packet[1] == rtcp::ReceiverReport::kPacketType) {
       // Ignore RR, it requires no response
     } else {
@@ -169,7 +169,6 @@ class ChannelReceiveTest : public Test {
 
  protected:
   GlobalSimulatedTimeController time_controller_;
-  NiceMock<MockRtcEventLog> log_;
   scoped_refptr<test::MockAudioDeviceModule> audio_device_module_;
   scoped_refptr<AudioDecoderFactory> audio_decoder_factory_;
   MockTransport transport_;
@@ -185,7 +184,7 @@ TEST_F(ChannelReceiveTest, ReceiveReportGeneratedOnTime) {
 
   bool receiver_report_sent = false;
   EXPECT_CALL(transport_, SendRtcp)
-      .WillRepeatedly([&](std::span<const uint8_t> packet,
+      .WillRepeatedly([&](ArrayView<const uint8_t> packet,
                           const PacketOptions& options) {
         if (packet.size() >= 2 &&
             packet[1] == rtcp::ReceiverReport::kPacketType) {
@@ -205,7 +204,7 @@ TEST_F(ChannelReceiveTest, CaptureStartTimeBecomesValid) {
 
   EXPECT_CALL(transport_, SendRtcp)
       .WillRepeatedly(
-          [&](std::span<const uint8_t> packet, const PacketOptions& options) {
+          [&](ArrayView<const uint8_t> packet, const PacketOptions& options) {
             HandleGeneratedRtcp(*channel, packet);
             return true;
           });
@@ -274,15 +273,6 @@ TEST_F(ChannelReceiveTest, SettingFrameTransformerMultipleTimes) {
   EXPECT_CALL(*mock_frame_transformer, RegisterTransformedFrameCallback)
       .Times(0);
   channel->SetDepacketizerToDecoderFrameTransformer(mock_frame_transformer);
-}
-
-TEST_F(ChannelReceiveTest, LogsReceivedPacketToEventLog) {
-  auto channel = CreateTestChannelReceive();
-
-  RtpPacketReceived packet = CreateRtpPacket();
-
-  EXPECT_CALL(log_, LogProxy);
-  channel->OnRtpPacket(packet);
 }
 
 }  // namespace

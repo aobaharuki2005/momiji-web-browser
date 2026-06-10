@@ -27,7 +27,6 @@ add_task(async () => {
 
   let { profile: selectedProfile, didCreate } = selectStartupProfile();
   checkStartupReason("firstrun-skipped-default");
-  await checkProfileSource(selectedProfile, "firstrun-skipped-default");
 
   let profileData = readProfilesIni();
 

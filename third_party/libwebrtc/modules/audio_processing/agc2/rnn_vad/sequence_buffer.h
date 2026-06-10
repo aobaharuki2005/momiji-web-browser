@@ -13,10 +13,10 @@
 
 #include <algorithm>
 #include <cstring>
-#include <span>
 #include <type_traits>
 #include <vector>
 
+#include "api/array_view.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -50,18 +50,16 @@ class SequenceBuffer {
   // Sets the sequence buffer values to zero.
   void Reset() { std::fill(buffer_.begin(), buffer_.end(), 0); }
   // Returns a view on the whole buffer.
-  std::span<const T, S> GetBufferView() const {
-    return std::span<const T, S>(buffer_.data(), S);
-  }
+  ArrayView<const T, S> GetBufferView() const { return {buffer_.data(), S}; }
   // Returns a view on the M most recent values of the buffer.
-  std::span<const T, M> GetMostRecentValuesView() const {
+  ArrayView<const T, M> GetMostRecentValuesView() const {
     static_assert(M <= S,
                   "The number of most recent values cannot be larger than the "
                   "sequence buffer size.");
-    return std::span<const T, M>(buffer_.data() + S - M, M);
+    return {buffer_.data() + S - M, M};
   }
   // Shifts left the buffer by N items and add new N items at the end.
-  void Push(std::span<const T, N> new_values) {
+  void Push(ArrayView<const T, N> new_values) {
     // Make space for the new values.
     if (S > N)
       std::memmove(buffer_.data(), buffer_.data() + N, (S - N) * sizeof(T));

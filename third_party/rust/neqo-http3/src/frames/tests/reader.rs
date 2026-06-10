@@ -4,8 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(clippy::missing_asserts_for_indexing, reason = "OK in tests")]
-
 use std::{cmp::min, fmt::Debug};
 
 use neqo_common::Encoder;
@@ -13,11 +11,11 @@ use neqo_transport::{Connection, StreamId, StreamType};
 use test_fixture::{connect, now};
 
 use crate::{
-    Error, PushId,
     frames::{
-        FrameReader, HFrame, StreamReaderConnectionWrapper, WebTransportFrame, reader::FrameDecoder,
+        reader::FrameDecoder, FrameReader, HFrame, StreamReaderConnectionWrapper, WebTransportFrame,
     },
     settings::{HSetting, HSettingType, HSettings},
+    Error, PushId,
 };
 
 struct FrameReaderTest {
@@ -92,7 +90,7 @@ fn frame_reading_with_stream_settings2() {
     }
     let frame = fr.process(&[0x01]);
 
-    assert!(frame.is_some());
+    assert!(&frame.is_some());
     if let HFrame::Settings { settings } = frame.unwrap() {
         assert_eq!(settings.len(), 2);
         assert_eq!(
@@ -164,7 +162,7 @@ fn unknown_frame() {
     let frame = fr.process(&[0x03, 0x01, 0x05]);
     assert!(frame.is_some());
     if let HFrame::CancelPush { push_id } = frame.unwrap() {
-        assert_eq!(push_id, PushId::new(5));
+        assert!(push_id == PushId::new(5));
     } else {
         panic!("wrong frame type");
     }
@@ -186,7 +184,7 @@ fn frame_reading_with_stream_wt_close_session() {
     assert!(frame.is_some());
     let WebTransportFrame::CloseSession { error, message } = frame.unwrap();
     assert_eq!(error, 5);
-    assert_eq!(message, "Hello");
+    assert_eq!(message, "Hello".to_string());
 }
 
 // Test an unknown frame for WebTransportFrames.
@@ -211,7 +209,7 @@ fn unknown_wt_frame() {
     assert!(frame.is_some());
     let WebTransportFrame::CloseSession { error, message } = frame.unwrap();
     assert_eq!(error, 5);
-    assert_eq!(message, "Hello");
+    assert_eq!(message, "Hello".to_string());
 }
 
 enum FrameReadingTestSend {

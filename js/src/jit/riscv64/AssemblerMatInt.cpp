@@ -1,56 +1,61 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 //===- RISCVMatInt.cpp - Immediate materialisation -------------*- C++
+//-*--===//
 //
 //  Part of the LLVM Project, under the Apache License v2.0 with LLVM
 //  Exceptions. See https://llvm.org/LICENSE.txt for license information.
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+#include "mozilla/MathAlgorithms.h"
 
-#include <bit>
-
+#include "gc/Marking.h"
+#include "jit/AutoWritableJitCode.h"
+#include "jit/ExecutableAllocator.h"
 #include "jit/riscv64/Assembler-riscv64.h"
-#include "jit/riscv64/base/Integer.h"
-
+#include "jit/riscv64/disasm/Disasm-riscv64.h"
+#include "vm/Realm.h"
 namespace js {
 namespace jit {
-void Assembler::RecursiveLi(Register rd, int64_t imm) {
-  if (imm > 0 && RecursiveLiImplCount(imm) > 2) {
-    unsigned LeadingZeros = std::countl_zero((uint64_t)imm);
-    uint64_t ShiftedVal = (uint64_t)imm << LeadingZeros;
+void Assembler::RecursiveLi(Register rd, int64_t val) {
+  if (val > 0 && RecursiveLiImplCount(val) > 2) {
+    unsigned LeadingZeros = mozilla::CountLeadingZeroes64((uint64_t)val);
+    uint64_t ShiftedVal = (uint64_t)val << LeadingZeros;
     int countFillZero = RecursiveLiImplCount(ShiftedVal) + 1;
-    if (countFillZero < RecursiveLiImplCount(imm)) {
+    if (countFillZero < RecursiveLiImplCount(val)) {
       RecursiveLiImpl(rd, ShiftedVal);
       srli(rd, rd, LeadingZeros);
       return;
     }
   }
-  RecursiveLiImpl(rd, imm);
+  RecursiveLiImpl(rd, val);
 }
 
-int Assembler::RecursiveLiCount(int64_t imm) {
-  if (imm > 0 && RecursiveLiImplCount(imm) > 2) {
-    unsigned LeadingZeros = std::countl_zero((uint64_t)imm);
-    uint64_t ShiftedVal = (uint64_t)imm << LeadingZeros;
+int Assembler::RecursiveLiCount(int64_t val) {
+  if (val > 0 && RecursiveLiImplCount(val) > 2) {
+    unsigned LeadingZeros = mozilla::CountLeadingZeroes64((uint64_t)val);
+    uint64_t ShiftedVal = (uint64_t)val << LeadingZeros;
     // Fill in the bits that will be shifted out with 1s. An example where
     // this helps is trailing one masks with 32 or more ones. This will
     // generate ADDI -1 and an SRLI.
     int countFillZero = RecursiveLiImplCount(ShiftedVal) + 1;
-    if (countFillZero < RecursiveLiImplCount(imm)) {
+    if (countFillZero < RecursiveLiImplCount(val)) {
       return countFillZero;
     }
   }
-  return RecursiveLiImplCount(imm);
+  return RecursiveLiImplCount(val);
 }
 
 inline int64_t signExtend(uint64_t V, int N) {
   return int64_t(V << (64 - N)) >> (64 - N);
 }
 
-void Assembler::RecursiveLiImpl(Register rd, int64_t imm) {
-  if (is_int32(imm)) {
+void Assembler::RecursiveLiImpl(Register rd, int64_t Val) {
+  if (is_int32(Val)) {
     // Depending on the active bits in the immediate Value v, the following
     // instruction sequences are emitted:
     //
@@ -58,7 +63,8 @@ void Assembler::RecursiveLiImpl(Register rd, int64_t imm) {
     // v[0,12) != 0 && v[12,32) == 0 : ADDI
     // v[0,12) == 0 && v[12,32) != 0 : LUI
     // v[0,32) != 0                  : LUI+ADDI(W)
-    auto [Hi20, Lo12] = ToHigh20Low12(int32_t(imm));
+    int64_t Hi20 = ((Val + 0x800) >> 12) & 0xFFFFF;
+    int64_t Lo12 = Val << 52 >> 52;
 
     if (Hi20) {
       lui(rd, (int32_t)Hi20);
@@ -98,9 +104,9 @@ void Assembler::RecursiveLiImpl(Register rd, int64_t imm) {
   // it fits into 32 bits. The emission of the shifts and additions is
   // subsequently performed when the recursion returns.
 
-  int64_t Lo12 = imm << 52 >> 52;
-  int64_t Hi52 = ((uint64_t)imm + 0x800ull) >> 12;
-  int ShiftAmount = 12 + std::countr_zero((uint64_t)Hi52);
+  int64_t Lo12 = Val << 52 >> 52;
+  int64_t Hi52 = ((uint64_t)Val + 0x800ull) >> 12;
+  int ShiftAmount = 12 + mozilla::CountTrailingZeroes64((uint64_t)Hi52);
   Hi52 = signExtend(Hi52 >> (ShiftAmount - 12), 64 - ShiftAmount);
 
   // If the remaining bits don't fit in 12 bits, we might be able to reduce
@@ -125,9 +131,9 @@ void Assembler::RecursiveLiImpl(Register rd, int64_t imm) {
   }
 }
 
-int Assembler::RecursiveLiImplCount(int64_t imm) {
+int Assembler::RecursiveLiImplCount(int64_t Val) {
   int count = 0;
-  if (is_int32(imm)) {
+  if (is_int32(Val)) {
     // Depending on the active bits in the immediate Value v, the following
     // instruction sequences are emitted:
     //
@@ -135,7 +141,8 @@ int Assembler::RecursiveLiImplCount(int64_t imm) {
     // v[0,12) != 0 && v[12,32) == 0 : ADDI
     // v[0,12) == 0 && v[12,32) != 0 : LUI
     // v[0,32) != 0                  : LUI+ADDI(W)
-    auto [Hi20, Lo12] = ToHigh20Low12(int32_t(imm));
+    int64_t Hi20 = ((Val + 0x800) >> 12) & 0xFFFFF;
+    int64_t Lo12 = Val << 52 >> 52;
 
     if (Hi20) {
       // lui(rd, (int32_t)Hi20);
@@ -174,9 +181,9 @@ int Assembler::RecursiveLiImplCount(int64_t imm) {
   // it fits into 32 bits. The emission of the shifts and additions is
   // subsequently performed when the recursion returns.
 
-  int64_t Lo12 = imm << 52 >> 52;
-  int64_t Hi52 = ((uint64_t)imm + 0x800ull) >> 12;
-  int ShiftAmount = 12 + std::countr_zero((uint64_t)Hi52);
+  int64_t Lo12 = Val << 52 >> 52;
+  int64_t Hi52 = ((uint64_t)Val + 0x800ull) >> 12;
+  int ShiftAmount = 12 + mozilla::CountTrailingZeroes64((uint64_t)Hi52);
   Hi52 = signExtend(Hi52 >> (ShiftAmount - 12), 64 - ShiftAmount);
 
   // If the remaining bits don't fit in 12 bits, we might be able to reduce

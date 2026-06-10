@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDocShellLoadState_h_
-#define nsDocShellLoadState_h_
+#ifndef nsDocShellLoadState_h__
+#define nsDocShellLoadState_h__
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/NavigationBinding.h"
@@ -22,6 +24,7 @@
 #include "nsTArrayForwardDeclare.h"
 
 class nsIInputStream;
+class nsISHEntry;
 class nsIURI;
 class nsIDocShell;
 class nsIChannel;
@@ -29,14 +32,10 @@ class nsIReferrerInfo;
 struct HTTPSFirstDowngradeData;
 namespace mozilla {
 class OriginAttributes;
-namespace net {
-class DocumentLoadListener;
-}
 namespace dom {
 class FormData;
 class DocShellLoadStateInit;
 struct NavigationAPIMethodTracker;
-class SessionHistoryEntry;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -48,7 +47,6 @@ class nsDocShellLoadState final {
   using BrowsingContext = mozilla::dom::BrowsingContext;
   template <typename T>
   using MaybeDiscarded = mozilla::dom::MaybeDiscarded<T>;
-  using SessionHistoryEntry = mozilla::dom::SessionHistoryEntry;
 
  public:
   NS_INLINE_DECL_REFCOUNTING(nsDocShellLoadState);
@@ -198,13 +196,9 @@ class nsDocShellLoadState final {
   void SetUserNavigationInvolvement(
       mozilla::dom::UserNavigationInvolvement aUserNavigationInvolvement);
 
-  SessionHistoryEntry* SHEntry() const;
+  nsISHEntry* SHEntry() const;
 
-  void SetSHEntry(SessionHistoryEntry* aSHEntry);
-
-  void SetPreviousEntryForActivation(nsISHEntry* aSHEntry);
-  void SetPreviousEntryForActivation(
-      const mozilla::Maybe<mozilla::dom::PreviousSessionHistoryInfo>& aInfo);
+  void SetSHEntry(nsISHEntry* aSHEntry);
 
   const mozilla::dom::LoadingSessionHistoryInfo* GetLoadingSessionHistoryInfo()
       const;
@@ -355,9 +349,11 @@ class nsDocShellLoadState final {
 
   uint64_t GetLoadIdentifier() const { return mLoadIdentifier; }
 
-  void SetSpeculativeListener(mozilla::net::DocumentLoadListener* aListener);
-  already_AddRefed<mozilla::net::DocumentLoadListener>
-  TakeSpeculativeListener();
+  void SetChannelInitialized(bool aInitilized) {
+    mChannelInitialized = aInitilized;
+  }
+
+  bool GetChannelInitialized() const { return mChannelInitialized; }
 
   void SetIsMetaRefresh(bool aMetaRefresh) { mIsMetaRefresh = aMetaRefresh; }
 
@@ -477,15 +473,6 @@ class nsDocShellLoadState final {
   }
   bool IsInitialAboutBlankHandlingProhibited() {
     return mIsInitialAboutBlankHandlingProhibited;
-  }
-
-  void SetIsResumingInterceptedNavigation(
-      bool aIsResumingInterceptedNavigation) {
-    mIsResumingInterceptedNavigation = aIsResumingInterceptedNavigation;
-  }
-
-  bool IsResumingInterceptedNavigation() const {
-    return mIsResumingInterceptedNavigation;
   }
 
  protected:
@@ -638,7 +625,7 @@ class nsDocShellLoadState final {
       mozilla::dom::UserNavigationInvolvement::None;
 
   // Active Session History entry (if loading from SH)
-  RefPtr<SessionHistoryEntry> mSHEntry;
+  nsCOMPtr<nsISHEntry> mSHEntry;
 
   // Loading session history info for the load
   mozilla::UniquePtr<mozilla::dom::LoadingSessionHistoryInfo>
@@ -726,14 +713,9 @@ class nsDocShellLoadState final {
   // BrowsingContext::{Get, Set}CurrentLoadIdentifier)
   const uint64_t mLoadIdentifier;
 
-  // Optional DocumentLoadListener reference. This is only set in the parent
-  // process, and indicates that the channel has been pre-initialized in the
-  // parent process.
-  RefPtr<mozilla::net::DocumentLoadListener> mSpeculativeListener;
-
-  // Optional value available in content to indicate the channel has been
+  // Optional value to indicate that a channel has been
   // pre-initialized in the parent process.
-  bool mHasSpeculativeListener = false;
+  bool mChannelInitialized;
 
   // True if the load was triggered by a meta refresh.
   bool mIsMetaRefresh;
@@ -781,14 +763,6 @@ class nsDocShellLoadState final {
   // to take the regular load path. It will replace the previous document
   // and not load synchronous.
   bool mIsInitialAboutBlankHandlingProhibited;
-
-  // True when this LoadURI call is synchronously resuming a traversal
-  // navigation that was paused while the Navigation API's NavigateEvent was
-  // dispatched and intercepted. Set by Navigation::CommitNavigateEvent after
-  // the event commits, and consumed on the docshell side to keep the existing
-  // ongoing navigation in place (rather than resetting it) and to forward the
-  // flag through LoadHistoryEntry.
-  bool mIsResumingInterceptedNavigation = false;
 };
 
-#endif /* nsDocShellLoadState_h_ */
+#endif /* nsDocShellLoadState_h__ */

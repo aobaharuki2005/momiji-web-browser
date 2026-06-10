@@ -11,7 +11,6 @@
 #ifndef CALL_TEST_MOCK_AUDIO_RECEIVE_STREAM_H_
 #define CALL_TEST_MOCK_AUDIO_RECEIVE_STREAM_H_
 
-#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <vector>
@@ -48,8 +47,6 @@ class MockAudioReceiveStream : public AudioReceiveStreamInterface,
   MOCK_METHOD(void, SetNackHistory, (int), (override));
   MOCK_METHOD(void, SetRtcpMode, (RtcpMode), (override));
   MOCK_METHOD(void, SetNonSenderRttMeasurement, (bool), (override));
-  MOCK_METHOD(void, SetJitterBufferMaxPackets, (size_t), (override));
-  MOCK_METHOD(void, SetJitterBufferFastAccelerate, (bool), (override));
   MOCK_METHOD(void,
               SetFrameDecryptor,
               (scoped_refptr<FrameDecryptorInterface>),

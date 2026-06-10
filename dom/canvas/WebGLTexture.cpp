@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +6,6 @@
 #include "WebGLTexture.h"
 
 #include <algorithm>
-#include <bit>
 
 #include "GLContext.h"
 #include "ScopedGLHelpers.h"
@@ -156,7 +156,7 @@ bool WebGLTexture::IsMipAndCubeComplete(const uint32_t maxLevel,
         return false;
       }
 
-      if (ensureInit && cur.mUninitializedSlices) [[unlikely]] {
+      if (MOZ_UNLIKELY(ensureInit && cur.mUninitializedSlices)) {
         auto imageTarget = mTarget.get();
         if (imageTarget == LOCAL_GL_TEXTURE_CUBE_MAP) {
           imageTarget = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + face;
@@ -223,10 +223,10 @@ Maybe<const WebGLTexture::CompletenessInfo> WebGLTexture::CalcCompletenessInfo(
   ret->usage = baseImageInfo.mFormat;
   RefreshSwizzle();
 
-  ret->powerOfTwo = std::has_single_bit(baseImageInfo.mWidth) &&
-                    std::has_single_bit(baseImageInfo.mHeight);
+  ret->powerOfTwo = mozilla::IsPowerOfTwo(baseImageInfo.mWidth) &&
+                    mozilla::IsPowerOfTwo(baseImageInfo.mHeight);
   if (mTarget == LOCAL_GL_TEXTURE_3D) {
-    ret->powerOfTwo &= std::has_single_bit(baseImageInfo.mDepth);
+    ret->powerOfTwo &= mozilla::IsPowerOfTwo(baseImageInfo.mDepth);
   }
 
   // -

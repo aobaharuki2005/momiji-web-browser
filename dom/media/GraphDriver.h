@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -772,7 +773,7 @@ class AudioCallbackDriver final : public GraphDriver,
    * initialization and shutdown of the audio stream and for other tasks that
    * must run serially for access to mAudioStream. */
   const RefPtr<TaskQueue> mCubebOperationThread;
-  cubeb_device_pref mInputDevicePreference = CUBEB_DEVICE_PREF_NONE;
+  cubeb_device_pref mInputDevicePreference;
   /* Params that have been attempted to set on mAudioStream, after filtering by
    * supported processing params. Cubeb operation thread only. */
   cubeb_input_processing_params mConfiguredInputProcessingParams =

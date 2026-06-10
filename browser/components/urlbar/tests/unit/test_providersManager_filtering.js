@@ -22,9 +22,7 @@ add_task(async function test_filtering_disable_only_source() {
   await controller.startQuery(context);
   await promise;
   Services.prefs.clearUserPref("browser.urlbar.suggest.openpage");
-  ProvidersManager.getInstanceForSap("urlbar").unregisterProvider({
-    name: provider.name,
-  });
+  UrlbarProvidersManager.unregisterProvider({ name: provider.name });
 });
 
 add_task(async function test_filtering_disable_one_source() {
@@ -54,7 +52,7 @@ add_task(async function test_filtering_disable_one_source() {
   await promise;
   Assert.deepEqual(context.results, matches.slice(0, 1));
   Services.prefs.clearUserPref("browser.urlbar.suggest.history");
-  ProvidersManager.getInstanceForSap("urlbar").unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 });
 
 add_task(async function test_filtering_restriction_token() {
@@ -71,7 +69,7 @@ add_task(async function test_filtering_restriction_token() {
     }),
   ];
   let provider = registerBasicTestProvider(matches);
-  let context = createContext(`foo ${UrlbarShared.RESTRICT_TOKENS.OPENPAGE}`, {
+  let context = createContext(`foo ${UrlbarTokenizer.RESTRICT.OPENPAGE}`, {
     providers: [provider.name],
   });
   let controller = UrlbarTestUtils.newMockController();
@@ -84,7 +82,7 @@ add_task(async function test_filtering_restriction_token() {
   await controller.startQuery(context, controller);
   await promise;
   Assert.deepEqual(context.results, matches.slice(0, 1));
-  ProvidersManager.getInstanceForSap("urlbar").unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 });
 
 add_task(async function test_filter_javascript() {
@@ -109,10 +107,9 @@ add_task(async function test_filter_javascript() {
   Assert.deepEqual(context.results, [match]);
 
   info("Except when the user explicitly starts the search with javascript:");
-  context = createContext(
-    `javascript: ${UrlbarShared.RESTRICT_TOKENS.HISTORY}`,
-    { providers: [provider.name] }
-  );
+  context = createContext(`javascript: ${UrlbarTokenizer.RESTRICT.HISTORY}`, {
+    providers: [provider.name],
+  });
   promise = promiseControllerNotification(controller, "onQueryResults");
   await controller.startQuery(context, controller);
   await promise;
@@ -126,7 +123,7 @@ add_task(async function test_filter_javascript() {
   await promise;
   Assert.deepEqual(context.results, [match, jsMatch]);
   Services.prefs.clearUserPref("browser.urlbar.filter.javascript");
-  ProvidersManager.getInstanceForSap("urlbar").unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 });
 
 add_task(async function test_filter_isActive() {
@@ -173,8 +170,7 @@ add_task(async function test_filter_isActive() {
     }
   }
   let badProvider = new NoInvokeProvider();
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(badProvider);
+  UrlbarProvidersManager.registerProvider(badProvider);
 
   let context = createContext(undefined, {
     sources: [UrlbarUtils.RESULT_SOURCE.TABS],
@@ -192,8 +188,8 @@ add_task(async function test_filter_isActive() {
     UrlbarUtils.RESULT_SOURCE.TABS,
     "Should find only a tab match"
   );
-  providersManager.unregisterProvider(provider);
-  providersManager.unregisterProvider(badProvider);
+  UrlbarProvidersManager.unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(badProvider);
 });
 
 add_task(async function test_filter_queryContext() {
@@ -217,8 +213,7 @@ add_task(async function test_filter_queryContext() {
     }
   }
   let badProvider = new NoInvokeProvider();
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(badProvider);
+  UrlbarProvidersManager.registerProvider(badProvider);
 
   let context = createContext(undefined, {
     providers: [provider.name],
@@ -226,8 +221,8 @@ add_task(async function test_filter_queryContext() {
   let controller = UrlbarTestUtils.newMockController();
 
   await controller.startQuery(context, controller);
-  providersManager.unregisterProvider(provider);
-  providersManager.unregisterProvider(badProvider);
+  UrlbarProvidersManager.unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(badProvider);
 });
 
 add_task(async function test_nofilter_heuristic() {
@@ -272,7 +267,7 @@ add_task(async function test_nofilter_heuristic() {
     UrlbarUtils.RESULT_SOURCE.TABS,
     "Should find only a tab match"
   );
-  ProvidersManager.getInstanceForSap("urlbar").unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 });
 
 add_task(async function test_nofilter_restrict() {
@@ -318,8 +313,7 @@ add_task(async function test_nofilter_restrict() {
   }
 
   let provider = new TestProvider();
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(provider);
+  UrlbarProvidersManager.registerProvider(provider);
 
   let typeToPropertiesMap = new Map([
     ["HISTORY", { source: "HISTORY", pref: "history" }],
@@ -327,7 +321,7 @@ add_task(async function test_nofilter_restrict() {
     ["OPENPAGE", { source: "TABS", pref: "openpage" }],
     ["SEARCH", { source: "SEARCH", pref: "searches" }],
   ]);
-  for (let [type, token] of Object.entries(UrlbarShared.RESTRICT_TOKENS)) {
+  for (let [type, token] of Object.entries(UrlbarTokenizer.RESTRICT)) {
     let properties = typeToPropertiesMap.get(type);
     if (!properties) {
       continue;
@@ -350,7 +344,7 @@ add_task(async function test_nofilter_restrict() {
     );
     Services.prefs.clearUserPref(pref);
   }
-  providersManager.unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 });
 
 add_task(async function test_filter_priority() {
@@ -375,17 +369,16 @@ add_task(async function test_filter_priority() {
     new TestProvider(2, true, "a"),
     new TestProvider(2, true, "b"),
   ]);
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
   for (let providers of providerPerms) {
     for (let provider of providers) {
-      providersManager.registerProvider(provider);
+      UrlbarProvidersManager.registerProvider(provider);
     }
     let providerNames = providers.map(p => p.name);
     let context = createContext(undefined, { providers: providerNames });
     let controller = UrlbarTestUtils.newMockController();
     await controller.startQuery(context, controller);
     for (let name of providerNames) {
-      providersManager.unregisterProvider({ name });
+      UrlbarProvidersManager.unregisterProvider({ name });
     }
   }
 });

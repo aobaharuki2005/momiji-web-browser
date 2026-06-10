@@ -1,4 +1,5 @@
-/*
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,10 +7,6 @@
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const { canDeleteProfile, deleteSharedProfilesStore } =
-  ChromeUtils.importESModule(
-    "moz-src:///toolkit/profile/ProfilesDatastoreService.sys.mjs"
-  );
 
 const C = Cc;
 const I = Ci;
@@ -258,8 +255,7 @@ function CreateProfileWizard() {
     "",
     "centerscreen,chrome,modal,titlebar",
     gProfileService,
-    { CreateProfile },
-    "profile-manager"
+    { CreateProfile }
   );
 }
 
@@ -340,7 +336,7 @@ function RenameProfile() {
   return false;
 }
 
-async function ConfirmDelete() {
+function ConfirmDelete() {
   var profileList = document.getElementById("profiles");
 
   var selectedItem = profileList.selectedItem;
@@ -352,18 +348,6 @@ async function ConfirmDelete() {
   var deleteFiles = false;
 
   if (selectedProfile.rootDir.exists()) {
-    if (!(await canDeleteProfile(selectedProfile))) {
-      let title = await getFluentString(
-        "profile-has-selectable-profiles-title"
-      );
-      let msg = await getFluentString(
-        "profile-has-selectable-profiles-message"
-      );
-      Services.prompt.alert(window, title, msg);
-
-      return false;
-    }
-
     var dialogTitle = gProfileManagerBundle.getString("deleteTitle");
     var dialogText = gProfileManagerBundle.getFormattedString(
       "deleteProfileConfirm",
@@ -392,8 +376,6 @@ async function ConfirmDelete() {
     }
   }
 
-  let { storeID } = selectedProfile;
-
   try {
     selectedProfile.remove(deleteFiles);
     gNeedsFlush = true;
@@ -403,10 +385,6 @@ async function ConfirmDelete() {
     Services.prompt.alert(window, title, msg);
 
     return true;
-  }
-
-  if (deleteFiles && storeID) {
-    await deleteSharedProfilesStore(storeID);
   }
 
   profileList.removeChild(selectedItem);

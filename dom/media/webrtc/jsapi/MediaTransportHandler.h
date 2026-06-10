@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MTRANSPORTHANDLER_H_
-#define MTRANSPORTHANDLER_H_
+#ifndef _MTRANSPORTHANDLER_H__
+#define _MTRANSPORTHANDLER_H__
 
 #include <set>
 #include <string>
@@ -43,6 +43,12 @@ class MediaTransportHandler {
 
   explicit MediaTransportHandler()
       : mStateCacheMutex("MediaTransportHandler::mStateCacheMutex") {}
+
+  // Exposed so we can synchronously validate ICE servers from PeerConnection
+  static nsresult ConvertIceServers(
+      const nsTArray<dom::RTCIceServer>& aIceServers,
+      std::vector<NrIceStunServer>* aStunServers,
+      std::vector<NrIceTurnServer>* aTurnServers);
 
   typedef MozPromise<dom::Sequence<nsString>, nsresult, true> IceLogPromise;
 
@@ -130,10 +136,6 @@ class MediaTransportHandler {
     return mCandidateGathered;
   }
 
-  MediaEventSource<IceCandidateErrorInfo>& GetCandidateError() {
-    return mCandidateError;
-  }
-
   MediaEventSource<std::string, bool>& GetAlpnNegotiated() {
     return mAlpnNegotiated;
   }
@@ -159,7 +161,6 @@ class MediaTransportHandler {
  protected:
   void OnCandidate(const std::string& aTransportId,
                    CandidateInfo&& aCandidateInfo);
-  void OnCandidateError(IceCandidateErrorInfo&& aErrorInfo);
   void OnAlpnNegotiated(const std::string& aAlpn);
   void OnGatheringStateChange(const std::string& aTransportId,
                               dom::RTCIceGathererState aState);
@@ -185,7 +186,6 @@ class MediaTransportHandler {
   MediaEventProducerOneCopyPerThread<std::string, MediaPacket>
       mSctpPacketReceived;
   MediaEventProducer<std::string, CandidateInfo> mCandidateGathered;
-  MediaEventProducer<IceCandidateErrorInfo> mCandidateError;
   MediaEventProducer<std::string, bool> mAlpnNegotiated;
   MediaEventProducer<std::string, dom::RTCIceGathererState>
       mGatheringStateChange;
@@ -201,4 +201,4 @@ void TokenizeCandidate(const std::string& aCandidate,
 
 }  // namespace mozilla
 
-#endif  // MTRANSPORTHANDLER_H_
+#endif  //_MTRANSPORTHANDLER_H__

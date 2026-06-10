@@ -1,6 +1,6 @@
-use http::{HeaderName, HeaderValue};
+use util::FlatCsv;
 
-use crate::util::FlatCsv;
+use HeaderValue;
 
 /// `Vary` header, defined in [RFC7231](https://tools.ietf.org/html/rfc7231#section-7.1.4)
 ///
@@ -24,6 +24,7 @@ use crate::util::FlatCsv;
 /// # Example
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::Vary;
 ///
 /// let vary = Vary::any();
@@ -50,12 +51,6 @@ impl Vary {
     /// Iterate the header names of this `Vary`.
     pub fn iter_strs(&self) -> impl Iterator<Item = &str> {
         self.0.iter()
-    }
-}
-
-impl From<HeaderName> for Vary {
-    fn from(name: HeaderName) -> Self {
-        Vary(HeaderValue::from(name).into())
     }
 }
 

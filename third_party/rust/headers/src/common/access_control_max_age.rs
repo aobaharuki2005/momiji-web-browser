@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::util::Seconds;
+use util::Seconds;
 
 /// `Access-Control-Max-Age` header, part of
 /// [CORS](http://www.w3.org/TR/cors/#access-control-max-age-response-header)
@@ -21,6 +21,7 @@ use crate::util::Seconds;
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// use std::time::Duration;
 /// use headers::AccessControlMaxAge;
 ///

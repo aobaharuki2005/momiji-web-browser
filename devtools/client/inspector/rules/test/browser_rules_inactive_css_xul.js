@@ -14,7 +14,6 @@ const TEST_DATA = [
       {
         declaration: { "grid-column-gap": "5px" },
         ruleIndex: 0,
-        msgId: "inactive-css-not-grid-or-flex-container-or-multicol-container",
       },
     ],
     activeDeclarations: [

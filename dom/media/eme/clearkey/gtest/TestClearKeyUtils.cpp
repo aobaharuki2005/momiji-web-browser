@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -57,10 +59,8 @@ MOZ_RUNINIT const B64Test tests[] = {
     {"invalic", {0x8a, 0x7b, 0xda, 0x96, 0x27}, true},
 
     // Failure tests
-    {"A", {}, false},
-    {"_", {}, false},
-    {"A=", {}, false},
-    {"_=", {}, false},
+    {"A", {}, false},  // 1 character is too few.
+    {"_", {}, false},  // 1 character is too few.
 };
 
 TEST(ClearKey, DecodeBase64)

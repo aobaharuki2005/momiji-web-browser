@@ -55,7 +55,6 @@ async function promptNoDelegate(aThirdPartyOrgin, audio = true, video = true) {
   let indicator = promiseIndicatorWindow();
   let observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
   let observerPromise2 = expectObserverCalled("recording-device-events");
-  await notification.button.updateComplete;
   await promiseMessage("ok", () =>
     EventUtils.synthesizeMouseAtCenter(notification.button, {})
   );
@@ -130,12 +129,10 @@ async function promptNoDelegateScreenSharing(aThirdPartyOrgin) {
   const count = menulist.itemCount;
   menulist.getItemAtIndex(count - 1).doCommand();
   ok(!notification.button.disabled, "Allow button is enabled");
-  await notification.button.updateComplete;
 
   const indicator = promiseIndicatorWindow();
   const observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
   const observerPromise2 = expectObserverCalled("recording-device-events");
-  await notification.button.updateComplete;
   await promiseMessage("ok", () =>
     EventUtils.synthesizeMouseAtCenter(notification.button, {})
   );
@@ -191,7 +188,6 @@ var gTests = [
         "getUserMedia:response:allow"
       );
       const observerPromise2 = expectObserverCalled("recording-device-events");
-      await notification.button.updateComplete;
       await promiseMessage("ok", () =>
         EventUtils.synthesizeMouseAtCenter(notification.button, {})
       );
@@ -260,14 +256,12 @@ var gTests = [
 
       menulist.getItemAtIndex(count - 1).doCommand();
       ok(!notification.button.disabled, "Allow button is enabled");
-      await notification.button.updateComplete;
 
       const indicator = promiseIndicatorWindow();
       const observerPromise1 = expectObserverCalled(
         "getUserMedia:response:allow"
       );
       const observerPromise2 = expectObserverCalled("recording-device-events");
-      await notification.button.updateComplete;
       await promiseMessage("ok", () =>
         EventUtils.synthesizeMouseAtCenter(notification.button, {})
       );
@@ -636,7 +630,6 @@ var gTests = [
         "getUserMedia:response:allow"
       );
       let observerPromise2 = expectObserverCalled("recording-device-events");
-      await notification.button.updateComplete;
       await promiseMessage("ok", () =>
         EventUtils.synthesizeMouseAtCenter(notification.button, {})
       );
@@ -727,7 +720,6 @@ var gTests = [
         "getUserMedia:response:allow"
       );
       let observerPromise2 = expectObserverCalled("recording-device-events");
-      await notification.button.updateComplete;
       await promiseMessage("ok", () =>
         EventUtils.synthesizeMouseAtCenter(notification.button, {})
       );

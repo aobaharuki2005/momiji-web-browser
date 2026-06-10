@@ -40,13 +40,6 @@ pub struct AdditionalMetrics {
     /// An experimentation identifier derived and provided by the application
     /// for the purpose of experimentation enrollment.
     pub experimentation_id: StringMetric,
-
-    /// The number of times we had to clamp an event timestamp
-    /// for exceeding the range of a signed 64-bit integer (9223372036854775807).
-    pub event_timestamp_clamped: CounterMetric,
-
-    /// Server knobs configuration received from remote settings.
-    pub server_knobs_config: ObjectMetric,
 }
 
 impl CoreMetrics {
@@ -205,24 +198,6 @@ impl AdditionalMetrics {
                 disabled: false,
                 dynamic_label: None,
             }),
-
-            event_timestamp_clamped: CounterMetric::new(CommonMetricData {
-                name: "event_timestamp_clamped".into(),
-                category: "glean.error".into(),
-                send_in_pings: vec!["health".into()],
-                lifetime: Lifetime::Ping,
-                disabled: false,
-                dynamic_label: None,
-            }),
-
-            server_knobs_config: ObjectMetric::new(CommonMetricData {
-                name: "server_knobs_config".into(),
-                category: "glean.internal.metrics".into(),
-                send_in_pings: vec!["glean_internal_info".into()],
-                lifetime: Lifetime::Application,
-                disabled: false,
-                dynamic_label: None,
-            }),
         }
     }
 }
@@ -266,7 +241,7 @@ impl UploadMetrics {
 
             discarded_exceeding_pings_size: MemoryDistributionMetric::new(
                 CommonMetricData {
-                    name: "discarded_exceeding_pings_size".into(),
+                    name: "discarded_exceeding_ping_size".into(),
                     category: "glean.upload".into(),
                     send_in_pings: vec!["metrics".into(), "health".into()],
                     lifetime: Lifetime::Ping,
@@ -379,7 +354,7 @@ impl DatabaseMetrics {
 
             rkv_load_error: StringMetric::new(CommonMetricData {
                 name: "rkv_load_error".into(),
-                category: "glean.database".into(),
+                category: "glean.error".into(),
                 send_in_pings: vec!["metrics".into(), "health".into()],
                 lifetime: Lifetime::Ping,
                 disabled: false,
@@ -479,8 +454,8 @@ impl HealthMetrics {
             file_read_error: LabeledMetric::<CounterMetric>::new(
                 LabeledMetricData::Common {
                     cmd: CommonMetricData {
-                        name: "file_read_error".into(),
                         category: "glean.health".into(),
+                        name: "file_read_error".into(),
                         send_in_pings: vec!["health".into()],
                         lifetime: Lifetime::Ping,
                         disabled: false,
@@ -498,8 +473,8 @@ impl HealthMetrics {
             file_write_error: LabeledMetric::<CounterMetric>::new(
                 LabeledMetricData::Common {
                     cmd: CommonMetricData {
-                        name: "file_write_error".into(),
                         category: "glean.health".into(),
+                        name: "file_write_error".into(),
                         send_in_pings: vec!["health".into()],
                         lifetime: Lifetime::Ping,
                         disabled: false,

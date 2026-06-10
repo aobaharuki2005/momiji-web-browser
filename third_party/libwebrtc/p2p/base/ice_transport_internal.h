@@ -14,19 +14,20 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/functional/any_invocable.h"
+#include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/candidate.h"
 #include "api/peer_connection_interface.h"
 #include "api/rtc_error.h"
-#include "api/task_queue/task_queue_base.h"
 #include "api/transport/enums.h"
 #include "api/units/time_delta.h"
 #include "p2p/base/candidate_pair_interface.h"
+#include "p2p/base/connection.h"
 #include "p2p/base/connection_info.h"
 #include "p2p/base/packet_transport_internal.h"
 #include "p2p/base/port.h"
@@ -36,7 +37,9 @@
 #include "rtc_base/callback_list.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/network_constants.h"
+#include "rtc_base/sigslot_trampoline.h"
 #include "rtc_base/system/rtc_export.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
 
 namespace webrtc {
 
@@ -252,7 +255,7 @@ struct RTC_EXPORT IceConfig {
 // TODO(bugs.webrtc.org/15609): Define a public API for this.
 class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
  public:
-  explicit IceTransportInternal(TaskQueueBase* attached_queue = nullptr);
+  IceTransportInternal();
   ~IceTransportInternal() override;
 
   // This class is uncopyable and immovable.
@@ -271,6 +274,31 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
   virtual IceRole GetIceRole() const = 0;
 
   virtual void SetIceRole(IceRole role) = 0;
+
+  // Default implementation in order to allow downstream usage deletion.
+  // TODO: bugs.webrtc.org/42224914 - Remove when all downstream overrides are
+  // gone.
+  virtual void SetIceTiebreaker(uint64_t /* tiebreaker */) {
+    RTC_CHECK_NOTREACHED();
+  }
+
+  virtual void SetIceCredentials(absl::string_view ice_ufrag,
+                                 absl::string_view ice_pwd);
+
+  virtual void SetRemoteIceCredentials(absl::string_view ice_ufrag,
+                                       absl::string_view ice_pwd);
+
+  // TODO: bugs.webrtc.org/367395350 - Make virtual when all downstream
+  // overrides are gone.
+  // Returns the current local ICE parameters.
+  virtual const IceParameters* local_ice_parameters() const {
+    RTC_CHECK_NOTREACHED();
+  }
+  // Returns the latest remote ICE parameters or nullptr if there are no remote
+  // ICE parameters yet.
+  virtual const IceParameters* remote_ice_parameters() const {
+    RTC_CHECK_NOTREACHED();
+  }
 
   // The ufrag and pwd in `ice_params` must be set
   // before candidate gathering can start.
@@ -305,6 +333,9 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
   // std::optional if there is none.
   virtual std::optional<int> GetRttEstimate() = 0;
 
+  // TODO(qingsi): Remove this method once Chrome does not depend on it anymore.
+  virtual const Connection* selected_connection() const = 0;
+
   // Returns the selected candidate pair, or an empty std::optional if there is
   // none.
   virtual std::optional<const CandidatePair> GetSelectedCandidatePair()
@@ -321,17 +352,13 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
   void RemoveGatheringStateCallback(const void* removal_tag);
 
   // Handles sending and receiving of candidates.
+  sigslot::signal2<IceTransportInternal*, const Candidate&>
+      SignalCandidateGathered;
   void NotifyCandidateGathered(IceTransportInternal* transport,
                                const Candidate& candidate) {
-    candidate_gathered_callbacks_.Send(transport, candidate);
+    SignalCandidateGathered(transport, candidate);
   }
-  [[deprecated("Use SubscribeCandidateGathered(void* tag, ...)")]]
   void SubscribeCandidateGathered(
-      absl::AnyInvocable<void(IceTransportInternal*, const Candidate&)>
-          callback);
-
-  void SubscribeCandidateGathered(
-      void* tag,
       absl::AnyInvocable<void(IceTransportInternal*, const Candidate&)>
           callback);
 
@@ -349,6 +376,14 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
     candidates_removed_callback_ = std::move(callback);
   }
 
+  // Deprecated by PacketTransportInternal::SignalNetworkRouteChanged.
+  // This signal occurs when there is a change in the way that packets are
+  // being routed, i.e. to a different remote location. The candidate
+  // indicates where and how we are currently sending media.
+  // TODO(zhihuang): Update the Chrome remoting to use the new
+  // SignalNetworkRouteChanged.
+  sigslot::signal2<IceTransportInternal*, const Candidate&> SignalRouteChange;
+
   void SetCandidatePairChangeCallback(
       absl::AnyInvocable<void(const CandidatePairChangeEvent&)> callback) {
     RTC_DCHECK(!candidate_pair_change_callback_);
@@ -357,26 +392,27 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
 
   // Invoked when there is conflict in the ICE role between local and remote
   // agents.
+  sigslot::signal1<IceTransportInternal*> SignalRoleConflict;
   void NotifyRoleConflict(IceTransportInternal* transport) {
-    role_conflict_callbacks_.Send(transport);
+    SignalRoleConflict(transport);
   }
-  [[deprecated("Use SubscribeRoleConflict(void* tag, ...)")]]
   void SubscribeRoleConflict(
-      absl::AnyInvocable<void(IceTransportInternal*)> callback);
-  void SubscribeRoleConflict(
-      void* tag,
       absl::AnyInvocable<void(IceTransportInternal*)> callback);
 
   // Emitted whenever the new standards-compliant transport state changed.
+  sigslot::signal1<IceTransportInternal*> SignalIceTransportStateChanged;
   void NotifyIceTransportStateChanged(IceTransportInternal* transport) {
-    ice_transport_state_changed_callbacks_.Send(transport);
+    SignalIceTransportStateChanged(transport);
   }
-  [[deprecated("Use SubscribeIceTransportStateChanged(void* tag, ...)")]]
   void SubscribeIceTransportStateChanged(
       absl::AnyInvocable<void(IceTransportInternal*)> callback);
 
-  void SubscribeIceTransportStateChanged(
-      void* tag,
+  // Invoked when the transport is being destroyed.
+  sigslot::signal1<IceTransportInternal*> SignalDestroyed;
+  void NotifyDestroyed(IceTransportInternal* transport) {
+    SignalDestroyed(transport);
+  }
+  void SubscribeDestroyed(
       absl::AnyInvocable<void(IceTransportInternal*)> callback);
 
   // Invoked when remote dictionary has been updated,
@@ -411,7 +447,7 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
 
   CallbackList<IceTransportInternal*,
                const StunDictionaryView&,
-               std::span<uint16_t>>
+               ArrayView<uint16_t>>
       dictionary_view_updated_callback_list_;
   CallbackList<IceTransportInternal*, const StunDictionaryWriter&>
       dictionary_writer_synced_callback_list_;
@@ -428,10 +464,17 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
       candidate_pair_change_callback_;
 
  private:
-  CallbackList<IceTransportInternal*, const Candidate&>
-      candidate_gathered_callbacks_;
-  CallbackList<IceTransportInternal*> role_conflict_callbacks_;
-  CallbackList<IceTransportInternal*> ice_transport_state_changed_callbacks_;
+  SignalTrampoline<IceTransportInternal,
+                   &IceTransportInternal::SignalCandidateGathered>
+      candidate_gathered_trampoline_;
+  SignalTrampoline<IceTransportInternal,
+                   &IceTransportInternal::SignalRoleConflict>
+      role_conflict_trampoline_;
+  SignalTrampoline<IceTransportInternal,
+                   &IceTransportInternal::SignalIceTransportStateChanged>
+      ice_transport_state_changed_trampoline_;
+  SignalTrampoline<IceTransportInternal, &IceTransportInternal::SignalDestroyed>
+      destroyed_trampoline_;
 };
 
 }  //  namespace webrtc

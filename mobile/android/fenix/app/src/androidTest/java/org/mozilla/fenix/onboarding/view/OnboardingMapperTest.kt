@@ -7,7 +7,6 @@ package org.mozilla.fenix.onboarding.view
 import io.mockk.every
 import io.mockk.mockk
 import mozilla.components.service.nimbus.evalJexlSafe
-import mozilla.components.support.utils.ManufacturerChecker
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -38,17 +37,6 @@ class OnboardingMapperTest {
     private lateinit var jexlHelper: NimbusMessagingHelperInterface
     private lateinit var evalFunction: (String) -> Boolean
 
-    private var isXiaomi = false
-
-    private val testManufacturerChecker = object : ManufacturerChecker {
-        override fun isHuawei(): Boolean = false
-        override fun isSamsung(): Boolean = false
-        override fun isOnePlus(): Boolean = false
-        override fun isXiaomi(): Boolean = isXiaomi
-        override fun isLG(): Boolean = false
-        override fun isOppo(): Boolean = false
-    }
-
     @Before
     fun setup() {
         junoOnboardingFeature = FxNimbus.features.junoOnboarding.value()
@@ -59,8 +47,6 @@ class OnboardingMapperTest {
 
         every { evalFunction("true") } returns true
         every { evalFunction("false") } returns false
-
-        isXiaomi = false
     }
 
     @Test
@@ -75,7 +61,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -93,7 +78,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -108,7 +92,6 @@ class OnboardingMapperTest {
             showAddWidgetPage = false,
             showToolbarPage = false,
             jexlConditions = jexlConditions,
-            manufacturerChecker = testManufacturerChecker,
             func = evalFunction,
         )
         assertEquals(result[0].privacyCaption, privacyCaption)
@@ -120,7 +103,6 @@ class OnboardingMapperTest {
             showAddWidgetPage = false,
             showToolbarPage = false,
             jexlConditions = jexlConditions,
-            manufacturerChecker = testManufacturerChecker,
             func = evalFunction,
         )
         assertEquals(result[0].privacyCaption, privacyCaption)
@@ -133,7 +115,6 @@ class OnboardingMapperTest {
             showAddWidgetPage = false,
             showToolbarPage = false,
             jexlConditions = jexlConditions,
-            manufacturerChecker = testManufacturerChecker,
             func = evalFunction,
         )
         assertEquals(result[0].privacyCaption, privacyCaption)
@@ -147,7 +128,6 @@ class OnboardingMapperTest {
             showAddWidgetPage = true,
             showToolbarPage = false,
             jexlConditions = jexlConditions,
-            manufacturerChecker = testManufacturerChecker,
             func = evalFunction,
         )
         assertEquals(result[0].privacyCaption, privacyCaption)
@@ -160,7 +140,6 @@ class OnboardingMapperTest {
             showAddWidgetPage = false,
             showToolbarPage = true,
             jexlConditions = jexlConditions,
-            manufacturerChecker = testManufacturerChecker,
             func = evalFunction,
         )
         assertEquals(result[0].privacyCaption, privacyCaption)
@@ -179,7 +158,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = true,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -197,7 +175,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = true,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -220,7 +197,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = true,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -244,7 +220,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = true,
                 showToolbarPage = true,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -309,7 +284,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ).last(),
         )
@@ -336,7 +310,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ).last(),
         )
@@ -344,7 +317,7 @@ class OnboardingMapperTest {
 
     @Test
     fun termsOfServiceData_toPageUiData_returnsConvertedPage() {
-        val imageRes = R.drawable.ic_firefox
+        val imageRes = R.drawable.ic_extensions_onboarding
         val title = "Terms of service card title"
         val description = "Terms of service card body"
         val primaryButtonLabel = "onboarding card primary button text"
@@ -408,7 +381,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ).last(),
         )
@@ -428,7 +400,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -448,7 +419,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -468,7 +438,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -488,7 +457,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -508,7 +476,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -528,7 +495,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -548,7 +514,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -568,7 +533,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -588,7 +552,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )
@@ -608,52 +571,6 @@ class OnboardingMapperTest {
                 showAddWidgetPage = false,
                 showToolbarPage = false,
                 jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
-                func = evalFunction,
-            ),
-        )
-    }
-
-    // WHEN the manufacturer is Xiaomi THEN filter out the add search widget card
-    @Test
-    fun whenManufacturerIsXiaomi_thenFilterOutAddSearchWidgetCard() {
-        isXiaomi = true
-        val expected = listOf(defaultBrowserPageUiDataWithPrivacyCaption, syncPageUiData, notificationPageUiData)
-        assertEquals(
-            expected,
-            unsortedAllKnownCardData.toPageUiData(
-                privacyCaption = privacyCaption,
-                showDefaultBrowserPage = true,
-                showNotificationPage = true,
-                showAddWidgetPage = true,
-                showToolbarPage = false,
-                jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
-                func = evalFunction,
-            ),
-        )
-    }
-
-    // WHEN the manufacturer is not Xiaomi THEN do not filter out the add search widget card
-    @Test
-    fun whenManufacturerIsNotXiaomi_thenDoNotFilterOutAddSearchWidgetCard() {
-        isXiaomi = false
-        val expected = listOf(
-            defaultBrowserPageUiDataWithPrivacyCaption,
-            addSearchWidgetPageUiData,
-            syncPageUiData,
-            notificationPageUiData,
-        )
-        assertEquals(
-            expected,
-            unsortedAllKnownCardData.toPageUiData(
-                privacyCaption = privacyCaption,
-                showDefaultBrowserPage = true,
-                showNotificationPage = true,
-                showAddWidgetPage = true,
-                showToolbarPage = false,
-                jexlConditions = jexlConditions,
-                manufacturerChecker = testManufacturerChecker,
                 func = evalFunction,
             ),
         )

@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_devtools_DominatorTree_
-#define mozilla_devtools_DominatorTree_
+#ifndef mozilla_devtools_DominatorTree__
+#define mozilla_devtools_DominatorTree__
 
 #include "mozilla/devtools/HeapSnapshot.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -19,7 +20,7 @@ class DominatorTree final : public nsISupports, public nsWrapperCache {
  protected:
   nsCOMPtr<nsISupports> mParent;
 
-  virtual ~DominatorTree() = default;
+  virtual ~DominatorTree() {}
 
  private:
   JS::ubi::DominatorTree mDominatorTree;
@@ -61,4 +62,4 @@ class DominatorTree final : public nsISupports, public nsWrapperCache {
 }  // namespace devtools
 }  // namespace mozilla
 
-#endif  // mozilla_devtools_DominatorTree_
+#endif  // mozilla_devtools_DominatorTree__

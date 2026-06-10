@@ -92,9 +92,8 @@ void ContentMediaAgent::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
   }
 }
 
-void ContentMediaAgent::NotifyMediaAudibleChanged(
-    uint64_t aBrowsingContextId, MediaAudibleState aState, ControlType aType,
-    AudioSessionType aSessionType) {
+void ContentMediaAgent::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
+                                                  MediaAudibleState aState) {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
   if (!bc || bc->IsDiscarded()) {
@@ -106,14 +105,13 @@ void ContentMediaAgent::NotifyMediaAudibleChanged(
       bc->Id());
   if (XRE_IsContentProcess()) {
     ContentChild* contentChild = ContentChild::GetSingleton();
-    (void)contentChild->SendNotifyMediaAudibleChanged(bc, aState, aType,
-                                                      aSessionType);
+    (void)contentChild->SendNotifyMediaAudibleChanged(bc, aState);
   } else {
     // Currently this only happen when we disable e10s, otherwise all controlled
     // media would be run in the content process.
     if (RefPtr<IMediaInfoUpdater> updater =
             bc->Canonical()->GetMediaController()) {
-      updater->NotifyMediaAudibleChanged(bc->Id(), aState, aType, aSessionType);
+      updater->NotifyMediaAudibleChanged(bc->Id(), aState);
     }
   }
 }
@@ -340,34 +338,25 @@ ContentMediaController::ContentMediaController(uint64_t aId) {
 }
 
 void ContentMediaController::AddReceiver(
-    ContentMediaControlKeyReceiver* aListener, ControlType aType) {
+    ContentMediaControlKeyReceiver* aListener) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (aType == ControlType::eControllable) {
-    mControllableReceivers.AppendElement(aListener);
-  } else {
-    mUncontrollableReceivers.AppendElement(aListener);
-  }
+  mReceivers.AppendElement(aListener);
 }
 
 void ContentMediaController::RemoveReceiver(
-    ContentMediaControlKeyReceiver* aListener, ControlType aType) {
+    ContentMediaControlKeyReceiver* aListener) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (aType == ControlType::eControllable) {
-    mControllableReceivers.RemoveElement(aListener);
-  } else {
-    mUncontrollableReceivers.RemoveElement(aListener);
-  }
+  mReceivers.RemoveElement(aListener);
 }
 
-void ContentMediaController::HandleMediaKey(
-    MediaControlKey aKey, const MediaControlActionParams& aParams) {
+void ContentMediaController::HandleMediaKey(MediaControlKey aKey,
+                                            Maybe<SeekDetails> aDetails) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mControllableReceivers.IsEmpty() && mUncontrollableReceivers.IsEmpty()) {
+  if (mReceivers.IsEmpty()) {
     return;
   }
-  LOG("Handle '%s' event, controllable num=%zu, uncontrollable num=%zu",
-      GetEnumString(aKey).get(), mControllableReceivers.Length(),
-      mUncontrollableReceivers.Length());
+  LOG("Handle '%s' event, receiver num=%zu", GetEnumString(aKey).get(),
+      mReceivers.Length());
   // We have default handlers for these actions
   // https://w3c.github.io/mediasession/#ref-for-dom-mediasessionaction-play%E2%91%A3
   switch (aKey) {
@@ -375,25 +364,15 @@ void ContentMediaController::HandleMediaKey(
       PauseOrStopMedia();
       return;
     case MediaControlKey::Play:
+    case MediaControlKey::Stop:
     case MediaControlKey::Seekto:
     case MediaControlKey::Seekforward:
     case MediaControlKey::Seekbackward:
-      for (auto& receiver : Reversed(mControllableReceivers)) {
-        receiver->HandleMediaKey(aKey, aParams);
-      }
-      return;
-    case MediaControlKey::Stop:
-    case MediaControlKey::Setvolume:
-    case MediaControlKey::Mute:
-    case MediaControlKey::Unmute:
-      // Audio focus loss arrives as Stop and must silence uncontrollable
-      // sources too; volume/mute always target both lists. Iterate backward
-      // because Stop can shrink the controllable list during iteration.
-      for (auto& receiver : Reversed(mControllableReceivers)) {
-        receiver->HandleMediaKey(aKey, aParams);
-      }
-      for (auto& receiver : Reversed(mUncontrollableReceivers)) {
-        receiver->HandleMediaKey(aKey, aParams);
+      // When receiving `Stop`, the amount of receiver would vary during the
+      // iteration, so we use the backward iteration to avoid accessing the
+      // index which is over the array length.
+      for (auto& receiver : Reversed(mReceivers)) {
+        receiver->HandleMediaKey(aKey, aDetails);
       }
       return;
     default:
@@ -405,19 +384,19 @@ void ContentMediaController::PauseOrStopMedia() {
   // When receiving `pause`, if a page contains playing media and paused media
   // at that moment, that means a user intends to pause those playing
   // media, not the already paused ones. Then, we're going to stop those already
-  // paused media and keep those latest paused media in
-  // `mControllableReceivers`. The reason for doing that is, when resuming
-  // paused media, we only want to resume latest paused media, not all media, in
-  // order to get a better user experience, which matches Chrome's behavior.
+  // paused media and keep those latest paused media in `mReceivers`.
+  // The reason for doing that is, when resuming paused media, we only want to
+  // resume latest paused media, not all media, in order to get a better user
+  // experience, which matches Chrome's behavior.
   bool isAnyMediaPlaying = false;
-  for (const auto& receiver : mControllableReceivers) {
+  for (const auto& receiver : mReceivers) {
     if (receiver->IsPlaying()) {
       isAnyMediaPlaying = true;
       break;
     }
   }
 
-  for (auto& receiver : Reversed(mControllableReceivers)) {
+  for (auto& receiver : Reversed(mReceivers)) {
     if (isAnyMediaPlaying && !receiver->IsPlaying()) {
       receiver->HandleMediaKey(MediaControlKey::Stop);
     } else {

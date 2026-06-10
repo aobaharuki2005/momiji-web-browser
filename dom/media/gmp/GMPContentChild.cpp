@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -57,8 +58,7 @@ mozilla::ipc::IPCResult GMPContentChild::RecvPGMPVideoDecoderConstructor(
   auto vdc = static_cast<GMPVideoDecoderChild*>(aActor);
 
   void* vd = nullptr;
-  GMPErr err = mGMPChild->GetAPI(GMP_API_VIDEO_DECODER,
-                                 static_cast<GMPVideoHost*>(vdc), &vd);
+  GMPErr err = mGMPChild->GetAPI(GMP_API_VIDEO_DECODER, &vdc->Host(), &vd);
   if (err != GMPNoErr || !vd) {
     return IPC_FAIL(this, "GMPGetAPI call failed trying to construct decoder.");
   }
@@ -73,8 +73,7 @@ mozilla::ipc::IPCResult GMPContentChild::RecvPGMPVideoEncoderConstructor(
   auto vec = static_cast<GMPVideoEncoderChild*>(aActor);
 
   void* ve = nullptr;
-  GMPErr err = mGMPChild->GetAPI(GMP_API_VIDEO_ENCODER,
-                                 static_cast<GMPVideoHost*>(vec), &ve);
+  GMPErr err = mGMPChild->GetAPI(GMP_API_VIDEO_ENCODER, &vec->Host(), &ve);
   if (err != GMPNoErr || !ve) {
     return IPC_FAIL(this, "GMPGetAPI call failed trying to construct encoder.");
   }

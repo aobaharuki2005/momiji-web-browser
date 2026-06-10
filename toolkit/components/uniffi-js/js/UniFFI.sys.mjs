@@ -229,29 +229,6 @@ export class ArrayBufferDataStream {
     );
     this.pos += 8;
   }
-
-  // Reads either a handle or pointer from the data stream
-  //
-  // This is used for trait interfaces, which can use either one.
-  // In both cases, the data is **always** 8 bytes long. That is enforced
-  // by the C++ and Rust Scaffolding code.
-  readHandleOrPointer(pointerId) {
-    // Try to read a handle from the data stream
-    let handleOrPointer = Number(this.dataView.getBigInt64(this.pos));
-
-    if ((handleOrPointer & 1) == 0) {
-      // Actually the buffer is storing a pointer at this point, read that instead
-      const ptr = UniFFIScaffolding.readPointer(
-        pointerId,
-        this.dataView.buffer,
-        this.pos
-      );
-      this.pos += 8;
-      return ptr;
-    }
-    this.pos += 8;
-    return handleOrPointer;
-  }
 }
 
 // Base class for FFI converters
@@ -658,9 +635,13 @@ export function handleRustResult(result, liftCallback, liftErrCallback) {
   }
 }
 
-export class UniFFIError extends Error {
+export class UniFFIError {
   constructor(message) {
-    super(message);
+    this.message = message;
+  }
+
+  toString() {
+    return `UniFFIError: ${this.message}`;
   }
 }
 
@@ -688,6 +669,7 @@ export const constructUniffiObject = Symbol("constructUniffiObject");
 export class UniFFICallbackHandler {
   #name;
   #interfaceId;
+  #handleCounter;
   #handleMap;
   #methodHandlers;
   #allowNewCallbacks;
@@ -702,6 +684,7 @@ export class UniFFICallbackHandler {
   constructor(name, interfaceId, methodHandlers) {
     this.#name = name;
     this.#interfaceId = interfaceId;
+    this.#handleCounter = 0;
     this.#handleMap = new Map();
     this.#methodHandlers = methodHandlers;
     this.#allowNewCallbacks = true;
@@ -720,7 +703,10 @@ export class UniFFICallbackHandler {
     if (!this.#allowNewCallbacks) {
       throw new UniFFIError(`No new callbacks allowed for ${this.#name}`);
     }
-    const handle = UniFFIScaffolding.callbackHandleCreate();
+    // Increment first.  This way handles start at `1` and we can use `0` to represent a NULL
+    // handle.
+    this.#handleCounter += 1;
+    const handle = this.#handleCounter;
     this.#handleMap.set(
       handle,
       new UniFFICallbackHandleMapEntry(
@@ -734,41 +720,17 @@ export class UniFFICallbackHandler {
   /**
    * Get a previously stored callback object
    *
-   * This consumes the handle, decreasing it's refcount.
-   *
    * @param {int} handle - Callback object handle, returned from `storeCallbackObj()`
    * @returns {obj} - Callback object
    */
-  takeCallbackObj(handle) {
-    const entry = this.#handleMap.get(handle);
-    if (entry === undefined) {
+  getCallbackObj(handle) {
+    const callbackObj = this.#handleMap.get(handle).callbackObj;
+    if (callbackObj === undefined) {
       throw new UniFFIError(
         `${this.#name}: invalid callback handle id: ${handle}`
       );
     }
-    if (UniFFIScaffolding.callbackHandleRelease(handle) == 0) {
-      this.destroy(handle);
-    }
-    return entry.callbackObj;
-  }
-
-  /**
-   * Borrow a previously stored callback object
-   *
-   * This does not consume the handle and keeps the refcount the same.
-   * The only time we use this is when lifting the receiver for a callback interface method.
-   *
-   * @param {int} handle - Callback object handle, returned from `storeCallbackObj()`
-   * @returns {obj} - Callback object
-   */
-  borrowCallbackObj(handle) {
-    const entry = this.#handleMap.get(handle);
-    if (entry === undefined) {
-      throw new UniFFIError(
-        `${this.#name}: invalid callback handle id: ${handle}`
-      );
-    }
-    return entry.callbackObj;
+    return callbackObj;
   }
 
   /**
@@ -827,7 +789,7 @@ export class UniFFICallbackHandler {
    * @param {UniFFIScaffoldingValue[]} args - Arguments to pass to the method
    */
   callSync(handle, methodId, ...args) {
-    const callbackObj = this.borrowCallbackObj(handle);
+    const callbackObj = this.getCallbackObj(handle);
     const methodHandler = this.getMethodHandler(methodId);
     try {
       const returnValue = methodHandler.call(callbackObj, args);
@@ -845,7 +807,7 @@ export class UniFFICallbackHandler {
    * @param {UniFFIScaffoldingValue[]} args - Arguments to pass to the method
    */
   async callAsync(handle, methodId, ...args) {
-    const callbackObj = this.borrowCallbackObj(handle);
+    const callbackObj = this.getCallbackObj(handle);
     const methodHandler = this.getMethodHandler(methodId);
     try {
       const returnValue = await methodHandler.call(callbackObj, args);
@@ -862,7 +824,6 @@ export class UniFFICallbackHandler {
    */
   destroy(handle) {
     this.#handleMap.delete(handle);
-    UniFFIScaffolding.callbackHandleFree(handle);
   }
 
   /**

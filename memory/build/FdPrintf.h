@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef FdPrintf_h_
-#define FdPrintf_h_
+#ifndef __FdPrintf_h__
+#define __FdPrintf_h__
 
 #include <cstdarg>
 
@@ -18,13 +20,13 @@ typedef int platform_handle_t;
  * So use a custom and simplified version.  Only %p, %zu, %s and %% are
  * supported, %zu, %s, support width specifiers.
  */
-int VSNPrintf(char* aBuf, std::size_t aSize, const char* aFormat, va_list aArgs)
+int VSNPrintf(char* aBuf, size_t aSize, const char* aFormat, va_list aArgs)
 #ifdef __GNUC__
     __attribute__((format(printf, 3, 0)))
 #endif
     ;
 
-int SNPrintf(char* aBuf, std::size_t aSize, const char* aFormat, ...)
+int SNPrintf(char* aBuf, size_t aSize, const char* aFormat, ...)
 #ifdef __GNUC__
     __attribute__((format(printf, 3, 4)))
 #endif
@@ -51,6 +53,6 @@ void FdPrintf(platform_handle_t aFd, const char* aFormat, ...)
     ;
 
 // Write buffer contents without formatting (eg for use with SNPrintf).
-void FdPuts(platform_handle_t aFd, const char* aBuf, std::size_t aLen);
+void FdPuts(platform_handle_t aFd, const char* aBuf, size_t aLen);
 
-#endif /* FdPrintf_h_ */
+#endif /* __FdPrintf_h__ */

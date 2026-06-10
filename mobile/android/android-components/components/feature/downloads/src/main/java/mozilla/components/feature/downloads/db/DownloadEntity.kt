@@ -27,8 +27,8 @@ internal data class DownloadEntity(
     var contentLength: Long?,
     @ColumnInfo(name = "status")
     var status: DownloadState.Status,
-    @ColumnInfo(name = "directory_path")
-    var directoryPath: String,
+    @ColumnInfo(name = "destination_directory")
+    var destinationDirectory: String,
     @ColumnInfo(name = "created_at")
     var createdAt: Long,
     @ColumnInfo(name = "etag")
@@ -44,7 +44,7 @@ internal data class DownloadEntity(
             currentBytesCopied = 0,
             status = status,
             userAgent = null,
-            directoryPath = directoryPath,
+            destinationDirectory = destinationDirectory,
             referrerUrl = null,
             skipConfirmation = false,
             id = id,
@@ -75,7 +75,7 @@ internal fun DownloadState.toDownloadEntity(): DownloadEntity {
         contentType,
         contentLength,
         status = status,
-        directoryPath = directoryPath,
+        destinationDirectory = destinationDirectory,
         createdAt = createdTime,
         etag = etag,
     )

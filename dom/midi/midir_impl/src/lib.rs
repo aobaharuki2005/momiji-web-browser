@@ -223,13 +223,7 @@ impl MidirWrapper {
 
         match &mut connection_wrapper.connection {
             MidiConnection::Output(connection) => {
-                // we always send data in chunks;
-                // at max its CoreMIDI's max bytes in a MIDIPacket
-                const MAX_PACKET_LEN: usize = u16::MAX as _;
-
-                for chunk in data.chunks(MAX_PACKET_LEN) {
-                    connection.send(chunk).map_err(|_err| ())?;
-                }
+                connection.send(data).map_err(|_err| ())?;
             }
             _ => {
                 panic!("Sending on an input port!");

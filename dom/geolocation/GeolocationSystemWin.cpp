@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,7 +12,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "nsIGeolocationUIUtils.h"
+#include "nsIGeolocationUIUtilsWin.h"
 #include "nsIWifiListener.h"
 #include "nsIWifiMonitor.h"
 
@@ -37,39 +39,39 @@ ComPtr<TypeToCreate> CreateFromActivationFactory(const wchar_t* aNamespace) {
   return newObject;
 }
 
-RefPtr<IAppCapability> GetLocationAppCapability() {
+RefPtr<IAppCapability> GetWifiControlAppCapability() {
   ComPtr<IAppCapabilityStatics> appCapabilityStatics =
       CreateFromActivationFactory<IAppCapabilityStatics>(kAppCapabilityGuid);
   NS_ENSURE_TRUE(appCapabilityStatics, nullptr);
 
   RefPtr<IAppCapability> appCapability;
-  HRESULT hr = appCapabilityStatics->Create(HStringReference(L"location").Get(),
-                                            getter_AddRefs(appCapability));
+  HRESULT hr = appCapabilityStatics->Create(
+      HStringReference(L"wifiControl").Get(), getter_AddRefs(appCapability));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
   NS_ENSURE_TRUE(appCapability, nullptr);
   return appCapability;
 }
 
-Maybe<AppCapabilityAccessStatus> GetLocationAccess(
-    IAppCapability* aLocationAppCapability) {
-  NS_ENSURE_TRUE(aLocationAppCapability, Nothing());
+Maybe<AppCapabilityAccessStatus> GetWifiControlAccess(
+    IAppCapability* aWifiControlAppCapability) {
+  NS_ENSURE_TRUE(aWifiControlAppCapability, Nothing());
   AppCapabilityAccessStatus status;
-  HRESULT hr = aLocationAppCapability->CheckAccess(&status);
+  HRESULT hr = aWifiControlAppCapability->CheckAccess(&status);
   NS_ENSURE_TRUE(SUCCEEDED(hr), Nothing());
   return Some(status);
 }
 
-Maybe<AppCapabilityAccessStatus> GetLocationAccess() {
-  RefPtr locationAppCapability = GetLocationAppCapability();
+Maybe<AppCapabilityAccessStatus> GetWifiControlAccess() {
+  RefPtr wifiControlAppCapability = GetWifiControlAppCapability();
   // Hold on to the RefPtr through the lifetime of the callee
-  return GetLocationAccess(locationAppCapability.get());
+  return GetWifiControlAccess(wifiControlAppCapability.get());
 }
 
-// Takes in locationAccess instead of calculating here so we can avoid calling
-// GetLocationAccess() multiple times, which can be slow (bug 1972405).
+// Takes in wifiAccess instead of calculating here so we can avoid calling
+// GetWifiControlAccess() multiple times, which can be slow (bug 1972405).
 bool SystemWillPromptForPermissionHint(
-    Maybe<AppCapabilityAccessStatus> aLocationAccess) {
-  if (aLocationAccess !=
+    Maybe<AppCapabilityAccessStatus> aWifiAccess) {
+  if (aWifiAccess !=
       mozilla::Some(AppCapabilityAccessStatus::
                         AppCapabilityAccessStatus_UserPromptRequired)) {
     return false;
@@ -77,22 +79,19 @@ bool SystemWillPromptForPermissionHint(
 
   // If wifi is not available (e.g. because there is no wifi device present)
   // then the API may report that Windows will request geolocation permission
-  // but it can't without the wifi scanner or other location establishing
-  // device (like GPS).  Since this is just a hint, and false negatives are
-  // undesirable but false positives are terrible, only expect the prompt in
-  // the wifi (common) case.
+  // but it can't without the wifi scanner.  Check for that case.
   nsCOMPtr<nsIWifiMonitor> wifiMonitor = components::WifiMonitor::Service();
   NS_ENSURE_TRUE(wifiMonitor, false);
   return wifiMonitor->GetHasWifiAdapter();
 }
 
-// Takes in locationAccess instead of calculating here so we can avoid calling
-// GetLocationAccess() multiple times, which can be slow (bug 1972405).
-bool LocationIsPermittedHint(Maybe<AppCapabilityAccessStatus> aLocationAccess) {
+// Takes in wifiAccess instead of calculating here so we can avoid calling
+// GetWifiControlAccess() multiple times, which can be slow (bug 1972405).
+bool LocationIsPermittedHint(Maybe<AppCapabilityAccessStatus> aWifiAccess) {
   // This API wasn't available on earlier versions of Windows, so a failure to
   // get the result means that we will assume that location access is permitted.
-  return aLocationAccess.isNothing() ||
-         *aLocationAccess ==
+  return aWifiAccess.isNothing() ||
+         *aWifiAccess ==
              AppCapabilityAccessStatus::AppCapabilityAccessStatus_Allowed;
 }
 
@@ -121,7 +120,7 @@ class WindowsGeolocationPermissionRequest final
       }
     });
 
-    mAppCapability = GetLocationAppCapability();
+    mAppCapability = GetWifiControlAppCapability();
     if (!mAppCapability) {
       return;
     }
@@ -176,14 +175,14 @@ class WindowsGeolocationPermissionRequest final
   }
 
  protected:
-  void Stop(Maybe<AppCapabilityAccessStatus> aLocationAccess) {
+  void Stop(Maybe<AppCapabilityAccessStatus> aWifiAccess) {
     MOZ_ASSERT(NS_IsMainThread());
     if (!mIsRunning) {
       return;
     }
     mIsRunning = false;
 
-    if (LocationIsPermittedHint(aLocationAccess)) {
+    if (LocationIsPermittedHint(aWifiAccess)) {
       mResolver(GeolocationPermissionStatus::Granted);
     } else {
       mResolver(GeolocationPermissionStatus::Canceled);
@@ -206,7 +205,7 @@ class WindowsGeolocationPermissionRequest final
     if (!mIsRunning) {
       return;
     }
-    Stop(GetLocationAccess(mAppCapability));
+    Stop(GetWifiControlAccess(mAppCapability));
   }
 
   bool IsStopped() { return !mIsRunning; }
@@ -223,16 +222,16 @@ class WindowsGeolocationPermissionRequest final
   }
 
   void StopIfLocationIsPermitted() {
-    auto locationAccess = GetLocationAccess(mAppCapability);
-    if (LocationIsPermittedHint(locationAccess)) {
-      Stop(locationAccess);
+    auto wifiAccess = GetWifiControlAccess(mAppCapability);
+    if (LocationIsPermittedHint(wifiAccess)) {
+      Stop(wifiAccess);
     }
   }
 
   nsresult DismissPrompt() {
     nsresult rv;
-    nsCOMPtr<nsIGeolocationUIUtils> utils =
-        do_GetService("@mozilla.org/geolocation/ui-utils;1", &rv);
+    nsCOMPtr<nsIGeolocationUIUtilsWin> utils =
+        do_GetService("@mozilla.org/geolocation/ui-utils-win;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     return utils->DismissPrompts(mBrowsingContext);
   }
@@ -333,11 +332,11 @@ NS_IMPL_ISUPPORTS(LocationPermissionWifiScanListener, nsIWifiListener)
 //-----------------------------------------------------------------------------
 
 SystemGeolocationPermissionBehavior GetGeolocationPermissionBehavior() {
-  auto locationAccess = GetLocationAccess();
-  if (SystemWillPromptForPermissionHint(locationAccess)) {
+  auto wifiAccess = GetWifiControlAccess();
+  if (SystemWillPromptForPermissionHint(wifiAccess)) {
     return SystemGeolocationPermissionBehavior::SystemWillPromptUser;
   }
-  if (!LocationIsPermittedHint(locationAccess)) {
+  if (!LocationIsPermittedHint(wifiAccess)) {
     return SystemGeolocationPermissionBehavior::GeckoWillPromptUser;
   }
   return SystemGeolocationPermissionBehavior::NoPrompt;
@@ -353,7 +352,7 @@ RequestLocationPermissionFromUser(BrowsingContext* aBrowsingContext,
   if (permissionRequest->IsStopped()) {
     return nullptr;
   }
-  if (SystemWillPromptForPermissionHint(GetLocationAccess())) {
+  if (SystemWillPromptForPermissionHint(GetWifiControlAccess())) {
     // To tell the system to prompt for permission, run one wifi scan (no need
     // to poll). We won't use the result -- either the user will grant
     // geolocation permission, meaning we will not need wifi scanning, or the

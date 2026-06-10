@@ -11,10 +11,6 @@ const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
 
-const { ProfileAge } = ChromeUtils.importESModule(
-  "resource://gre/modules/ProfileAge.sys.mjs"
-);
-
 const execProcess = sinon.fake();
 const sendCommandLine = sinon.fake.throws(Cr.NS_ERROR_NOT_AVAILABLE);
 
@@ -56,13 +52,6 @@ add_task(async function test_delete_last_profile() {
   Assert.equal(profiles.length, 1, "Only 1 profile exists after deleting");
 
   profile = profiles[0];
-
-  let times = await ProfileAge(profile.path);
-  Assert.equal(
-    times.source,
-    "replace-last",
-    "Profile source should be correct"
-  );
 
   let expected = ["-new-tab", "about:newprofile"];
 

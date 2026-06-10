@@ -43,6 +43,15 @@ add_task(async function test_measure() {
   let credentialsMeasurement =
     Glean.browserBackup.credentialsDataSize.testGetValue();
   let securityMeasurement = Glean.browserBackup.securityDataSize.testGetValue();
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", false, false);
+
+  // Credentials measurements
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    "browser.backup.credentials_data_size",
+    credentialsMeasurement,
+    "Glean and telemetry measurements for credentials data should be equal"
+  );
 
   Assert.equal(
     credentialsMeasurement,
@@ -50,6 +59,13 @@ add_task(async function test_measure() {
     "Should have collected the correct glean measurement for credentials files"
   );
 
+  // Security measurements
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    "browser.backup.security_data_size",
+    securityMeasurement,
+    "Glean and telemetry measurements for security data should be equal"
+  );
   Assert.equal(
     securityMeasurement,
     EXPECTED_SECURITY_KILOBYTES_SIZE,

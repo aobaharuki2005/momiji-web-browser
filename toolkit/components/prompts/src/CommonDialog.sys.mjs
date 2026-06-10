@@ -37,8 +37,7 @@ export class CommonDialog {
    * @param [commonDialogEl] - Dialog element from commonDialog.xhtml.
    */
   async onLoad(commonDialogEl) {
-    let isEmbedded =
-      !!commonDialogEl.documentGlobal.docShell.chromeEventHandler;
+    let isEmbedded = !!commonDialogEl.ownerGlobal.docShell.chromeEventHandler;
 
     switch (this.args.promptType) {
       case "alert":

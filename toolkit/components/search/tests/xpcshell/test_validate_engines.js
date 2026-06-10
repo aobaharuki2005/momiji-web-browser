@@ -107,11 +107,11 @@ add_task(async function test_validate_all_engines_and_variants() {
   });
 
   sinon.stub(settings, "get").returns(config);
-  await SearchService.init();
+  await Services.search.init();
 
   for (let id of IDS) {
     Assert.ok(
-      !!SearchService.getEngineById(id),
+      !!Services.search.getEngineById(id),
       `Engine with id '${id}' was found.`
     );
   }

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MemMoveAnnotation_h_
-#define MemMoveAnnotation_h_
+#ifndef MemMoveAnnotation_h__
+#define MemMoveAnnotation_h__
 
 #include "CustomMatchers.h"
 #include "CustomTypeAnnotation.h"
@@ -29,7 +29,8 @@ protected:
       }
       // Extension for std::unique_ptr
       if (auto *Spec = dyn_cast<ClassTemplateSpecializationDecl>(RD)) {
-        if (D->isInStdNamespace() && (getNameChecked(D) == "unique_ptr")) {
+        if (getDeclarationNamespace(D) == "std" &&
+            (getNameChecked(D) == "unique_ptr")) {
           unsigned ParameterIndex = 0;
           const auto &TArgs = Spec->getTemplateArgs();
           if (TArgs.size() != 2) {
@@ -56,7 +57,7 @@ protected:
                                 VisitFlags &ToVisit) const override {
     // Annotate everything in ::std, with a few exceptions; see bug
     // 1201314 for discussion.
-    if (!D->isInStdNamespace()) {
+    if (getDeclarationNamespace(D) != "std") {
       return "";
     }
 

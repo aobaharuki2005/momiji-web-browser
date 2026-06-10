@@ -16,11 +16,9 @@ use crate::style_resolver::{PrimaryStyle, ResolvedElementStyles, ResolvedStyle};
 use malloc_size_of::MallocSizeOfOps;
 use selectors::matching::SelectorCaches;
 use servo_arc::Arc;
+use std::fmt;
+use std::mem;
 use std::ops::{Deref, DerefMut};
-use std::{fmt, mem};
-
-#[cfg(debug_assertions)]
-use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
 
 bitflags! {
     /// Various flags stored on ElementData.
@@ -47,6 +45,9 @@ bitflags! {
         /// The former gives us stronger transitive guarantees that allows us to
         /// apply the style sharing cache to cousins.
         const PRIMARY_STYLE_REUSED_VIA_RULE_NODE = 1 << 2;
+
+        /// Whether this element may have matched rules inside @starting-style.
+        const MAY_HAVE_STARTING_STYLE = 1 << 3;
     }
 }
 
@@ -109,7 +110,10 @@ impl fmt::Debug for EagerPseudoArray {
 
 // Can't use [None; EAGER_PSEUDO_COUNT] here because it complains
 // about Copy not being implemented for our Arc type.
+#[cfg(feature = "gecko")]
 const EMPTY_PSEUDO_ARRAY: &'static EagerPseudoArrayInner = &[None, None, None, None];
+#[cfg(feature = "servo")]
+const EMPTY_PSEUDO_ARRAY: &'static EagerPseudoArrayInner = &[None, None, None];
 
 impl EagerPseudoStyles {
     /// Returns whether there are any pseudo styles.
@@ -203,21 +207,10 @@ impl ElementStyles {
             ViewportUnitUsage::None
         }
 
-        let primary = self.primary();
-        let mut usage = usage_from_flags(primary.flags);
-
-        // Check cached lazy pseudos on the primary style.
-        primary.each_cached_lazy_pseudo(|style| {
-            usage = std::cmp::max(usage, usage_from_flags(style.flags));
-        });
-
+        let mut usage = usage_from_flags(self.primary().flags);
         for pseudo_style in self.pseudos.as_array() {
             if let Some(ref pseudo_style) = pseudo_style {
                 usage = std::cmp::max(usage, usage_from_flags(pseudo_style.flags));
-                // Also check cached lazy pseudos on eager pseudo styles.
-                pseudo_style.each_cached_lazy_pseudo(|style| {
-                    usage = std::cmp::max(usage, usage_from_flags(style.flags));
-                });
             }
         }
 
@@ -272,79 +265,6 @@ pub struct ElementData {
     pub flags: ElementDataFlags,
 }
 
-/// A struct that wraps ElementData, giving it the ability of doing thread-safety checks.
-#[derive(Debug, Default)]
-pub struct ElementDataWrapper {
-    inner: std::cell::UnsafeCell<ElementData>,
-    /// Implements optional (debug_assertions-only) thread-safety checking.
-    #[cfg(debug_assertions)]
-    refcell: AtomicRefCell<()>,
-}
-
-/// A read-only reference to ElementData.
-#[derive(Debug)]
-pub struct ElementDataMut<'a> {
-    v: &'a mut ElementData,
-    #[cfg(debug_assertions)]
-    _borrow: AtomicRefMut<'a, ()>,
-}
-
-/// A mutable reference to ElementData.
-#[derive(Debug)]
-pub struct ElementDataRef<'a> {
-    v: &'a ElementData,
-    #[cfg(debug_assertions)]
-    _borrow: AtomicRef<'a, ()>,
-}
-
-impl ElementDataWrapper {
-    /// Gets a non-exclusive reference to this ElementData.
-    #[inline(always)]
-    pub fn borrow(&self) -> ElementDataRef<'_> {
-        #[cfg(debug_assertions)]
-        let borrow = self.refcell.borrow();
-        ElementDataRef {
-            v: unsafe { &*self.inner.get() },
-            #[cfg(debug_assertions)]
-            _borrow: borrow,
-        }
-    }
-
-    /// Gets an exclusive reference to this ElementData.
-    #[inline(always)]
-    pub fn borrow_mut(&self) -> ElementDataMut<'_> {
-        #[cfg(debug_assertions)]
-        let borrow = self.refcell.borrow_mut();
-        ElementDataMut {
-            v: unsafe { &mut *self.inner.get() },
-            #[cfg(debug_assertions)]
-            _borrow: borrow,
-        }
-    }
-}
-
-impl<'a> Deref for ElementDataRef<'a> {
-    type Target = ElementData;
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &*self.v
-    }
-}
-
-impl<'a> Deref for ElementDataMut<'a> {
-    type Target = ElementData;
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &*self.v
-    }
-}
-
-impl<'a> DerefMut for ElementDataMut<'a> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut *self.v
-    }
-}
-
 // There's one of these per rendered elements so it better be small.
 size_of_test!(ElementData, 24);
 
@@ -360,49 +280,6 @@ pub enum RestyleKind {
     /// We only need to recascade, for example, because only inherited
     /// properties in the parent changed.
     CascadeOnly,
-}
-
-fn needs_to_match_self(hint: RestyleHint, style: &ComputedValues) -> bool {
-    if hint.intersects(RestyleHint::RESTYLE_SELF) {
-        return true;
-    }
-    if hint.intersects(RestyleHint::RESTYLE_SELF_IF_PSEUDO) && style.is_pseudo_style() {
-        return true;
-    }
-    if hint.intersects(RestyleHint::RESTYLE_IF_AFFECTED_BY_ANCESTOR_FONT)
-        && style
-            .flags
-            .intersects(ComputedValueFlags::USES_FONT_RELATIVE_UNITS_ON_CONTAINER_QUERIES)
-    {
-        return true;
-    }
-    hint.intersects(
-        RestyleHint::RESTYLE_IF_AFFECTED_BY_STYLE_QUERIES
-            | RestyleHint::RESTYLE_IF_AFFECTED_BY_NAMED_STYLE_CONTAINER,
-    ) && style
-        .flags
-        .intersects(ComputedValueFlags::DEPENDS_ON_CONTAINER_STYLE_QUERY)
-}
-
-fn needs_to_recascade_self(hint: RestyleHint, style: &ComputedValues) -> bool {
-    if hint.intersects(RestyleHint::RECASCADE_SELF) {
-        return true;
-    }
-    if hint.intersects(RestyleHint::RECASCADE_SELF_IF_INHERIT_RESET_STYLE)
-        && style
-            .flags
-            .contains(ComputedValueFlags::INHERITS_RESET_STYLE)
-    {
-        return true;
-    }
-    if hint.intersects(RestyleHint::RESTYLE_IF_AFFECTED_BY_ANCESTOR_FONT)
-        && style
-            .flags
-            .contains(ComputedValueFlags::USES_FONT_RELATIVE_UNITS)
-    {
-        return true;
-    }
-    return false;
 }
 
 impl ElementData {
@@ -470,25 +347,15 @@ impl ElementData {
         let reused_via_rule_node = self
             .flags
             .contains(ElementDataFlags::PRIMARY_STYLE_REUSED_VIA_RULE_NODE);
+        let may_have_starting_style = self
+            .flags
+            .contains(ElementDataFlags::MAY_HAVE_STARTING_STYLE);
 
         PrimaryStyle {
             style: ResolvedStyle(self.styles.primary().clone()),
             reused_via_rule_node,
+            may_have_starting_style,
         }
-    }
-
-    /// Return a copy of the element's primary style as a resolved style with the
-    /// given flags.
-    pub fn clone_style_with_flags(&self, flags: ComputedValueFlags) -> ResolvedStyle {
-        let primary_style = self.styles.primary();
-        // We are only using this pseudo to find the correct pseudo type so it
-        // does not matter it technically belongs to a different style.
-        let pseudo = primary_style.pseudo();
-        ResolvedStyle(
-            primary_style
-                .deref()
-                .clone_with_flags(flags, pseudo.as_ref()),
-        )
     }
 
     /// Sets a new set of styles, returning the old ones.
@@ -497,6 +364,11 @@ impl ElementData {
             ElementDataFlags::PRIMARY_STYLE_REUSED_VIA_RULE_NODE,
             new_styles.primary.reused_via_rule_node,
         );
+        self.flags.set(
+            ElementDataFlags::MAY_HAVE_STARTING_STYLE,
+            new_styles.primary.may_have_starting_style,
+        );
+
         mem::replace(&mut self.styles, new_styles.into())
     }
 
@@ -517,7 +389,9 @@ impl ElementData {
             return None;
         }
 
-        if needs_to_match_self(hint, style) {
+        let needs_to_match_self = hint.intersects(RestyleHint::RESTYLE_SELF)
+            || (hint.intersects(RestyleHint::RESTYLE_SELF_IF_PSEUDO) && style.is_pseudo_style());
+        if needs_to_match_self {
             return Some(RestyleKind::MatchAndCascade);
         }
 
@@ -531,7 +405,12 @@ impl ElementData {
             ));
         }
 
-        if needs_to_recascade_self(hint, style) {
+        let needs_to_recascade_self = hint.intersects(RestyleHint::RECASCADE_SELF)
+            || (hint.intersects(RestyleHint::RECASCADE_SELF_IF_INHERIT_RESET_STYLE)
+                && style
+                    .flags
+                    .contains(ComputedValueFlags::INHERITS_RESET_STYLE));
+        if needs_to_recascade_self {
             return Some(RestyleKind::CascadeOnly);
         }
 
@@ -568,7 +447,12 @@ impl ElementData {
             ));
         }
 
-        if needs_to_recascade_self(hint, style) {
+        let needs_to_recascade_self = hint.intersects(RestyleHint::RECASCADE_SELF)
+            || (hint.intersects(RestyleHint::RECASCADE_SELF_IF_INHERIT_RESET_STYLE)
+                && style
+                    .flags
+                    .contains(ComputedValueFlags::INHERITS_RESET_STYLE));
+        if needs_to_recascade_self {
             return Some(RestyleKind::CascadeOnly);
         }
         return None;
@@ -662,5 +546,13 @@ impl ElementData {
         // We may measure more fields in the future if DMD says it's worth it.
 
         n
+    }
+
+    /// Returns true if this element data may need to compute the starting style for CSS
+    /// transitions.
+    #[inline]
+    pub fn may_have_starting_style(&self) -> bool {
+        self.flags
+            .contains(ElementDataFlags::MAY_HAVE_STARTING_STYLE)
     }
 }

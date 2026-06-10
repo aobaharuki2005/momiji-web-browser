@@ -232,8 +232,6 @@ bitflags::bitflags! {
         ///
         /// When this is true, instance offset emulation via vertex buffer rebinding and a shader uniform will be disabled.
         const FULLY_FEATURED_INSTANCING = 1 << 16;
-        /// Supports direct multisampled rendering to a texture without needing a resolve texture.
-        const MULTISAMPLED_RENDER_TO_TEXTURE = 1 << 17;
     }
 }
 
@@ -344,23 +342,14 @@ pub struct Buffer {
     size: wgt::BufferAddress,
     /// Flags to use within calls to [`Device::map_buffer`](crate::Device::map_buffer).
     map_flags: u32,
-    /// Buffer mapping state.
-    ///
-    /// If locked concurrently with the GL context, the GL context should be locked first.
-    map_state: Arc<MaybeMutex<BufferMapState>>,
-}
-
-#[derive(Clone, Debug)]
-struct BufferMapState {
-    /// True if the GL buffer is actually mapped, i.e. not "fake-mapped" with
-    /// an empty slice
-    mapped: bool,
-    data: Option<Vec<u8>>,
-    offset_of_current_mapping: wgt::BufferAddress,
+    data: Option<Arc<MaybeMutex<Vec<u8>>>>,
+    offset_of_current_mapping: Arc<MaybeMutex<wgt::BufferAddress>>,
 }
 
 #[cfg(send_sync)]
-static_assertions::assert_impl_all!(Buffer: Send, Sync);
+unsafe impl Sync for Buffer {}
+#[cfg(send_sync)]
+unsafe impl Send for Buffer {}
 
 impl crate::DynBuffer for Buffer {}
 
@@ -418,6 +407,7 @@ pub struct Texture {
     pub mip_level_count: u32,
     pub array_layer_count: u32,
     pub format: wgt::TextureFormat,
+    #[allow(unused)]
     pub format_desc: TextureFormatDesc,
     pub copy_size: CopyExtent,
 
@@ -564,18 +554,15 @@ struct BindGroupLayoutInfo {
 
 #[derive(Debug)]
 pub struct PipelineLayout {
-    group_infos: Box<[Option<BindGroupLayoutInfo>]>,
+    group_infos: Box<[BindGroupLayoutInfo]>,
     naga_options: naga::back::glsl::Options,
 }
 
 impl crate::DynPipelineLayout for PipelineLayout {}
 
 impl PipelineLayout {
-    /// # Panics
-    /// If the pipeline layout does not contain a bind group layout used by
-    /// the resource binding.
     fn get_slot(&self, br: &naga::ResourceBinding) -> u8 {
-        let group_info = self.group_infos[br.group as usize].as_ref().unwrap();
+        let group_info = &self.group_infos[br.group as usize];
         group_info.binding_to_slot[br.binding as usize]
     }
 }
@@ -616,14 +603,8 @@ impl crate::DynBindGroup for BindGroup {}
 type ShaderId = u32;
 
 #[derive(Debug)]
-pub enum ShaderModuleSource {
-    Naga(crate::NagaShader),
-    Passthrough { source: String },
-}
-
-#[derive(Debug)]
 pub struct ShaderModule {
-    source: ShaderModuleSource,
+    source: crate::NagaShader,
     label: Option<String>,
     id: ShaderId,
 }
@@ -692,11 +673,6 @@ struct PipelineInner {
     clip_distance_count: u32,
 }
 
-#[cfg(send_sync)]
-unsafe impl Sync for PipelineInner {}
-#[cfg(send_sync)]
-unsafe impl Send for PipelineInner {}
-
 #[derive(Clone, Debug)]
 struct DepthState {
     function: u32,
@@ -728,13 +704,12 @@ struct ProgramStage {
     shader_id: ShaderId,
     entry_point: String,
     zero_initialize_workgroup_memory: bool,
-    constant_hash: Vec<u8>,
 }
 
 #[derive(PartialEq, Eq, Hash)]
 struct ProgramCacheKey {
     stages: ArrayVec<ProgramStage, 3>,
-    group_to_binding_to_slot: Box<[Option<Box<[u8]>>]>,
+    group_to_binding_to_slot: Box<[Box<[u8]>]>,
 }
 
 type ProgramCache = FastHashMap<ProgramCacheKey, Result<Arc<PipelineInner>, crate::PipelineError>>;
@@ -743,7 +718,7 @@ type ProgramCache = FastHashMap<ProgramCacheKey, Result<Arc<PipelineInner>, crat
 pub struct RenderPipeline {
     inner: Arc<PipelineInner>,
     primitive: wgt::PrimitiveState,
-    vertex_buffers: Box<[Option<VertexBufferDesc>]>,
+    vertex_buffers: Box<[VertexBufferDesc]>,
     vertex_attributes: Box<[AttributeDesc]>,
     color_targets: Box<[ColorTargetDesc]>,
     depth: Option<DepthState>,
@@ -755,7 +730,9 @@ pub struct RenderPipeline {
 impl crate::DynRenderPipeline for RenderPipeline {}
 
 #[cfg(send_sync)]
-static_assertions::assert_impl_all!(RenderPipeline: Send, Sync);
+unsafe impl Sync for RenderPipeline {}
+#[cfg(send_sync)]
+unsafe impl Send for RenderPipeline {}
 
 #[derive(Debug)]
 pub struct ComputePipeline {
@@ -765,7 +742,9 @@ pub struct ComputePipeline {
 impl crate::DynComputePipeline for ComputePipeline {}
 
 #[cfg(send_sync)]
-static_assertions::assert_impl_all!(ComputePipeline: Send, Sync);
+unsafe impl Sync for ComputePipeline {}
+#[cfg(send_sync)]
+unsafe impl Send for ComputePipeline {}
 
 #[derive(Debug)]
 pub struct QuerySet {
@@ -940,7 +919,6 @@ enum Command {
         attachment: u32,
         view: TextureView,
         depth_slice: Option<u32>,
-        sample_count: u32,
     },
     ResolveAttachment {
         attachment: u32,

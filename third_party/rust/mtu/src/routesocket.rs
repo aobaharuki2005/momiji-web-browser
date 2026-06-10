@@ -11,7 +11,7 @@ use std::{
     sync::atomic::Ordering,
 };
 
-use libc::{SOCK_RAW, fsync, read, socket, write};
+use libc::{fsync, read, socket, write, SOCK_RAW};
 
 use crate::unlikely_err;
 
@@ -83,6 +83,7 @@ impl Read for RouteSocket {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod test {
+    #![expect(clippy::unwrap_used, reason = "OK in tests.")]
     use super::*;
 
     #[test]

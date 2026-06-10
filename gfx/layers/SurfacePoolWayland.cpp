@@ -1,11 +1,12 @@
-/* License, v. 2.0. If a copy of the MPL was not distributed with this
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nullptr; c-basic-offset: 2
+ * -*- This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/SurfacePoolWayland.h"
 
 #include "GLBlitHelper.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
-#include "mozilla/webrender/RenderThread.h"
 
 #ifdef MOZ_LOGGING
 #  undef LOG
@@ -58,7 +59,6 @@ void SurfacePoolWayland::ForEachEntry(F aFn) {
 }
 
 void SurfacePoolWayland::DestroyGLResourcesForContext(GLContext* aGL) {
-  MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
   MutexAutoLock lock(mMutex);
 
   ForEachEntry([&](SurfacePoolEntry& entry) {
@@ -73,16 +73,8 @@ void SurfacePoolWayland::DestroyGLResourcesForContext(GLContext* aGL) {
 
 bool SurfacePoolWayland::CanRecycleSurfaceForRequest(
     const MutexAutoLock& aProofOfLock, const SurfacePoolEntry& aEntry,
-    const widget::WaylandSurfaceLock& aWaylandSurfaceLock, const IntSize& aSize,
-    GLContext* aGL) {
-  if (aEntry.mWaylandSurface != aWaylandSurfaceLock.GetWaylandSurface()) {
-    LOGVERBOSE(
-        "SurfacePoolWayland::CanRecycleSurfaceForRequest(): can't recycle due "
-        "to different WaylandSurface.");
-    return false;
-  }
-  MOZ_DIAGNOSTIC_ASSERT(
-      !aEntry.mWaylandBuffer->IsAttached(aWaylandSurfaceLock));
+    const IntSize& aSize, GLContext* aGL) {
+  MOZ_DIAGNOSTIC_ASSERT(!aEntry.mWaylandBuffer->IsAttached());
   if (aEntry.mSize != aSize) {
     LOGVERBOSE(
         "SurfacePoolWayland::CanRecycleSurfaceForRequest(): can't recycle due "
@@ -103,16 +95,14 @@ bool SurfacePoolWayland::CanRecycleSurfaceForRequest(
 }
 
 RefPtr<WaylandBuffer> SurfacePoolWayland::ObtainBufferFromPool(
-    const widget::WaylandSurfaceLock& aWaylandSurfaceLock, const IntSize& aSize,
-    GLContext* aGL, RefPtr<widget::DRMFormat> aFormat) {
+    const IntSize& aSize, GLContext* aGL, RefPtr<widget::DRMFormat> aFormat) {
   MutexAutoLock lock(mMutex);
 
-  auto iterToRecycle =
-      std::find_if(mAvailableEntries.begin(), mAvailableEntries.end(),
-                   [&](const SurfacePoolEntry& aEntry) {
-                     return CanRecycleSurfaceForRequest(
-                         lock, aEntry, aWaylandSurfaceLock, aSize, aGL);
-                   });
+  auto iterToRecycle = std::find_if(
+      mAvailableEntries.begin(), mAvailableEntries.end(),
+      [&](const SurfacePoolEntry& aEntry) {
+        return CanRecycleSurfaceForRequest(lock, aEntry, aSize, aGL);
+      });
   if (iterToRecycle != mAvailableEntries.end()) {
     RefPtr<WaylandBuffer> buffer = iterToRecycle->mWaylandBuffer;
     mInUseEntries.insert({buffer.get(), std::move(*iterToRecycle)});
@@ -135,10 +125,7 @@ RefPtr<WaylandBuffer> SurfacePoolWayland::ObtainBufferFromPool(
         LayoutDeviceIntSize::FromUnknownSize(aSize));
   }
   if (buffer) {
-    mInUseEntries.insert(
-        {buffer.get(),
-         SurfacePoolEntry{
-             aSize, aWaylandSurfaceLock.GetWaylandSurface(), buffer, {}}});
+    mInUseEntries.insert({buffer.get(), SurfacePoolEntry{aSize, buffer, {}}});
   }
   LOGVERBOSE(
       "SurfacePoolWayland::ObtainBufferFromPool() created [%p] U[%d] P[%d] "
@@ -149,14 +136,13 @@ RefPtr<WaylandBuffer> SurfacePoolWayland::ObtainBufferFromPool(
 }
 
 void SurfacePoolWayland::ReturnBufferToPool(
-    const widget::WaylandSurfaceLock& aWaylandSurfaceLock,
     const RefPtr<WaylandBuffer>& aBuffer) {
   MutexAutoLock lock(mMutex);
 
   auto inUseEntryIter = mInUseEntries.find(aBuffer);
   MOZ_RELEASE_ASSERT(inUseEntryIter != mInUseEntries.end());
 
-  if (aBuffer->IsAttached(aWaylandSurfaceLock)) {
+  if (aBuffer->IsAttached()) {
     mPendingEntries.AppendElement(std::move(inUseEntryIter->second));
   } else {
     mAvailableEntries.AppendElement(std::move(inUseEntryIter->second));
@@ -191,46 +177,20 @@ void SurfacePoolWayland::EnforcePoolSizeLimit() {
 }
 
 void SurfacePoolWayland::CollectPendingSurfaces() {
-  // Move pending entries to a local array so we can check each surface's
-  // IsAttached() without holding mMutex. This is safe because:
-  // - Only this method removes from mPendingEntries, and it runs on a single
-  //   thread (the render thread), so no concurrent removals can occur.
-  // - ReturnBufferToPool() may append new entries while mMutex is released;
-  //   those are merged back in the final lock section below and will be picked
-  //   up by the next run.
-  // - DestroyGLResourcesForContext() also runs on the render thread, so it
-  //   cannot race with this method.
-  MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
-  nsTArray<SurfacePoolEntry> pendingEntries;
-  {
-    MutexAutoLock lock(mMutex);
-    pendingEntries = std::move(mPendingEntries);
-  }
-
-  nsTArray<SurfacePoolEntry> stillPending(pendingEntries.Length());
-  nsTArray<SurfacePoolEntry> nowAvailable;
-
-  for (auto& entry : pendingEntries) {
-    widget::WaylandSurfaceLock lock(entry.mWaylandSurface);
+  MutexAutoLock lock(mMutex);
+  mPendingEntries.RemoveElementsBy([&](auto& entry) {
     LOGVERBOSE(
         "SurfacePoolWayland::CollectPendingSurfaces() [%p] attached [%d]",
-        entry.mWaylandBuffer.get(), entry.mWaylandBuffer->IsAttached(lock));
-    if (!entry.mWaylandBuffer->IsAttached(lock)) {
-      nowAvailable.AppendElement(std::move(entry));
-    } else {
-      stillPending.AppendElement(std::move(entry));
+        entry.mWaylandBuffer.get(), entry.mWaylandBuffer->IsAttached());
+    if (!entry.mWaylandBuffer->IsAttached()) {
+      mAvailableEntries.AppendElement(std::move(entry));
+      return true;
     }
-  }
-
-  {
-    MutexAutoLock lock(mMutex);
-    stillPending.AppendElements(std::move(mPendingEntries));
-    mPendingEntries = std::move(stillPending);
-    mAvailableEntries.AppendElements(std::move(nowAvailable));
-    LOGVERBOSE("SurfacePoolWayland::CollectPendingSurfaces() U[%d] P[%d] A[%d]",
-               (int)mInUseEntries.size(), (int)mPendingEntries.Length(),
-               (int)mAvailableEntries.Length());
-  }
+    return false;
+  });
+  LOGVERBOSE("SurfacePoolWayland::CollectPendingSurfaces() U[%d] P[%d] A[%d]",
+             (int)mInUseEntries.size(), (int)mPendingEntries.Length(),
+             (int)mAvailableEntries.Length());
 }
 
 Maybe<GLuint> SurfacePoolWayland::GetFramebufferForBuffer(
@@ -324,15 +284,13 @@ void SurfacePoolHandleWayland::OnBeginFrame() {
 void SurfacePoolHandleWayland::OnEndFrame() { mPool->EnforcePoolSizeLimit(); }
 
 RefPtr<WaylandBuffer> SurfacePoolHandleWayland::ObtainBufferFromPool(
-    const widget::WaylandSurfaceLock& aWaylandSurfaceLock, const IntSize& aSize,
-    RefPtr<widget::DRMFormat> aFormat) {
-  return mPool->ObtainBufferFromPool(aWaylandSurfaceLock, aSize, mGL, aFormat);
+    const IntSize& aSize, RefPtr<widget::DRMFormat> aFormat) {
+  return mPool->ObtainBufferFromPool(aSize, mGL, aFormat);
 }
 
 void SurfacePoolHandleWayland::ReturnBufferToPool(
-    const widget::WaylandSurfaceLock& aProofOfLock,
     const RefPtr<WaylandBuffer>& aBuffer) {
-  mPool->ReturnBufferToPool(aProofOfLock, aBuffer);
+  mPool->ReturnBufferToPool(aBuffer);
 }
 
 Maybe<GLuint> SurfacePoolHandleWayland::GetFramebufferForBuffer(
@@ -341,5 +299,3 @@ Maybe<GLuint> SurfacePoolHandleWayland::GetFramebufferForBuffer(
 }
 
 }  // namespace mozilla::layers
-#undef LOG
-#undef LOGVERBOSE

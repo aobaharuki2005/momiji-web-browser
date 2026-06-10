@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -37,21 +39,21 @@ EXPORTS.mozilla += [
     "DOMEventTargetHelper.h",
     "EventDispatcher.h",
     "EventListenerManager.h",
-    "EventNameList.inc",
+    "EventNameList.h",
     "EventStateManager.h",
     "GlobalKeyListener.h",
     "IMEContentObserver.h",
     "IMEStateManager.h",
     "InputEventOptions.h",
-    "InputTypeList.inc",
+    "InputTypeList.h",
     "JSEventHandler.h",
     "KeyEventHandler.h",
-    "KeyNameList.inc",
+    "KeyNameList.h",
     "PendingFullscreenEvent.h",
-    "PhysicalKeyCodeNameList.inc",
+    "PhysicalKeyCodeNameList.h",
     "ShortcutKeys.h",
     "TextComposition.h",
-    "VirtualKeyCodeList.inc",
+    "VirtualKeyCodeList.h",
     "WheelHandlingHelper.h",
 ]
 
@@ -90,8 +92,6 @@ EXPORTS.mozilla.dom += [
     "StorageEvent.h",
     "TextClause.h",
     "TextEvent.h",
-    "TextFormat.h",
-    "TextFormatUpdateEvent.h",
     "ToggleEvent.h",
     "Touch.h",
     "TouchEvent.h",
@@ -153,8 +153,6 @@ UNIFIED_SOURCES += [
     "TextClause.cpp",
     "TextComposition.cpp",
     "TextEvent.cpp",
-    "TextFormat.cpp",
-    "TextFormatUpdateEvent.cpp",
     "ToggleEvent.cpp",
     "Touch.cpp",
     "TouchEvent.cpp",

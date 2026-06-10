@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,8 +9,8 @@
 
 */
 
-#ifndef nsXULControllers_h_
-#define nsXULControllers_h_
+#ifndef nsXULControllers_h__
+#define nsXULControllers_h__
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -47,4 +48,4 @@ class nsXULControllers final : public nsIControllers {
   uint32_t mCurControllerID;
 };
 
-#endif  // nsXULControllers_h_
+#endif  // nsXULControllers_h__

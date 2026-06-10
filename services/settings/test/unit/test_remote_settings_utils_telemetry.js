@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { TelemetryController } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryController.sys.mjs"
+);
+
 const server = new HttpServer();
 server.start(-1);
 registerCleanupFunction(() => server.stop(() => {}));
@@ -17,17 +21,16 @@ server.registerPathHandler("/destination", (request, response) => {
   response.setStatusLine(null, 412);
 });
 
-function assertBypassTelemetryEvents(expectedEvents) {
-  const events = Glean.serviceRequest.bypassProxyInfo.testGetValue() ?? [];
-  Assert.equal(events.length, expectedEvents.length);
-  for (let i = 0; i < expectedEvents.length; i++) {
-    Assert.deepEqual(events[i].extra, {
-      value: expectedEvents[i].value,
-      ...expectedEvents[i].extra,
-    });
-  }
-  Services.fog.testResetFOG();
+async function assertTelemetryEvents(expectedEvents) {
+  await TelemetryTestUtils.assertEvents(expectedEvents, {
+    category: "service_request",
+    method: "bypass",
+  });
 }
+
+add_setup(async () => {
+  await TelemetryController.testSetup();
+});
 
 add_task(async function test_telemetry() {
   const DESTINATION_URL = `${SERVER_BASE_URL}/destination`;
@@ -36,7 +39,7 @@ add_task(async function test_telemetry() {
     let res = await Utils.fetch(DESTINATION_URL);
     Assert.equal(res.status, 412, "fetch without proxy succeeded");
   }
-  assertBypassTelemetryEvents([]);
+  await assertTelemetryEvents([]);
 
   Services.prefs.setIntPref("network.proxy.type", 1);
   Services.prefs.setStringPref("network.proxy.http", "127.0.0.1");
@@ -48,7 +51,7 @@ add_task(async function test_telemetry() {
     Assert.equal(res.status, 412, "fetch with broken proxy succeeded");
   }
   // Note: failover handled by HttpChannel, hence no failover here.
-  assertBypassTelemetryEvents([]);
+  await assertTelemetryEvents([]);
 
   // Disable HttpChannel failover in favor of Utils.fetch's implementation.
   Services.prefs.setBoolPref("network.proxy.failover_direct", false);
@@ -56,7 +59,7 @@ add_task(async function test_telemetry() {
     let res = await Utils.fetch(DESTINATION_URL);
     Assert.equal(res.status, 412, "fetch succeeded with bypassProxy feature");
   }
-  assertBypassTelemetryEvents([
+  await assertTelemetryEvents([
     {
       category: "service_request",
       method: "bypass",
@@ -75,5 +78,5 @@ add_task(async function test_telemetry() {
     /NetworkError/,
     "Request without failover fails"
   );
-  assertBypassTelemetryEvents([]);
+  await assertTelemetryEvents([]);
 });

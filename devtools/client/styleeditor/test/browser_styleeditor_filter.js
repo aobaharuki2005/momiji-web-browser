@@ -91,7 +91,7 @@ add_task(async function () {
   );
 
   is(
-    filterInput.documentGlobal.document.activeElement,
+    filterInput.ownerGlobal.document.activeElement,
     filterInput,
     "Even when a stylesheet was automatically opened, the filter input is still focused"
   );

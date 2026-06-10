@@ -140,77 +140,78 @@ function isInXULDocument(el) {
 }
 
 /**
- * Returns a tree walker filter function that is used to filter the nodes of a nodes tree.
- * Whitespace nodes that do not impact the layout are always skipped.
- *
- * @param {object} options
- *        - {boolean} includeNativeAnonymousContent - Include nodes of native anonymous
- *                    content (excluding pseudo-elements).
- *        - {boolean} includePseudoElements: Include pseudo-elements like ::marker,
- *                    ::before, and ::after, plus anonymous content in XUL document.
- *        - {boolean} includeComments: Include comment nodes.
- *
- * @return {Function} A tree walker filter function that takes a node as argument and returns a
- *                    node filter constant.
+ * This DeepTreeWalker filter skips whitespace text nodes and anonymous content (unless
+ * we want them visible in the markup view, e.g. ::before, ::after, ::marker, …),
+ * plus anonymous content in XUL document (needed to show all elements in the browser toolbox).
  */
-function getTreeWalkerFilter(options) {
-  return function (node) {
-    // Ignore empty whitespace text nodes that do not impact the layout.
-    if (isWhitespaceTextNode(node)) {
-      return nodeHasSize(node)
-        ? nodeFilterConstants.FILTER_ACCEPT
-        : nodeFilterConstants.FILTER_SKIP;
+function standardTreeWalkerFilter(node) {
+  // There are a few native anonymous content that we want to show in markup
+  if (
+    node.nodeName === "_moz_generated_content_marker" ||
+    node.nodeName === "_moz_generated_content_before" ||
+    node.nodeName === "_moz_generated_content_after" ||
+    node.nodeName === "_moz_generated_content_backdrop"
+  ) {
+    return nodeFilterConstants.FILTER_ACCEPT;
+  }
+
+  // Ignore empty whitespace text nodes that do not impact the layout.
+  if (isWhitespaceTextNode(node)) {
+    return nodeHasSize(node)
+      ? nodeFilterConstants.FILTER_ACCEPT
+      : nodeFilterConstants.FILTER_SKIP;
+  }
+
+  if (node.isNativeAnonymous && !isInXULDocument(node)) {
+    const nodeTypeAttribute = node.getAttribute && node.getAttribute("type");
+    // The ::view-transition pseudo element node has a <div type=":-moz-snapshot-containing-block">
+    // parent element that we don't want to display in the markup view.
+    // Instead, we want to directly display the ::view-transition pseudo-element.
+    if (nodeTypeAttribute === ":-moz-snapshot-containing-block") {
+      // FILTER_ACCEPT_CHILDREN means that the node won't be returned, but its children
+      // will be instead
+      return nodeFilterConstants.FILTER_ACCEPT_CHILDREN;
     }
 
-    // If comments should be excluded, ignore comment nodes.
-    if (!options.includeComments && isCommentNode(node)) {
-      return nodeFilterConstants.FILTER_SKIP;
-    }
-
-    // There are a few native anonymous content pseudo-elements that we want to show in markup
-    // if pseudo-elements should be included.
-    if (
-      options.includePseudoElements &&
-      (options.includeNativeAnonymousContent ||
-        node.nodeName === "_moz_generated_content_marker" ||
-        node.nodeName === "_moz_generated_content_before" ||
-        node.nodeName === "_moz_generated_content_after" ||
-        node.nodeName === "_moz_generated_content_backdrop")
-    ) {
+    // Display all the ::view-transition* nodes
+    if (nodeTypeAttribute && nodeTypeAttribute.startsWith(":view-transition")) {
       return nodeFilterConstants.FILTER_ACCEPT;
     }
 
-    if (
-      !options.includeNativeAnonymousContent &&
-      node.isNativeAnonymous &&
-      !isInXULDocument(node)
-    ) {
-      const nodeTypeAttribute = node.getAttribute && node.getAttribute("type");
-      // The ::view-transition pseudo element node has a <div type=":-moz-snapshot-containing-block">
-      // parent element that we don't want to display in the markup view.
-      // Instead, we want to directly display the ::view-transition pseudo-element.
-      if (nodeTypeAttribute === ":-moz-snapshot-containing-block") {
-        // FILTER_ACCEPT_CHILDREN means that the node won't be returned, but its children
-        // will be instead
-        return nodeFilterConstants.FILTER_ACCEPT_CHILDREN;
-      }
+    // Ignore all other native anonymous roots inside a non-XUL document.
+    // We need to do this to skip things like form controls, scrollbars,
+    // video controls, etc (see bug 1187482).
+    return nodeFilterConstants.FILTER_SKIP;
+  }
 
-      // Display all the ::view-transition* nodes
-      if (
-        nodeTypeAttribute &&
-        nodeTypeAttribute.startsWith(":view-transition")
-      ) {
-        return nodeFilterConstants.FILTER_ACCEPT;
-      }
+  return nodeFilterConstants.FILTER_ACCEPT;
+}
 
-      // Ignore all other native anonymous roots inside a non-XUL document.
-      // We need to do this to skip things like form controls, scrollbars,
-      // video controls, etc. (see bug 1187482).
-      return nodeFilterConstants.FILTER_SKIP;
-    }
+/**
+ * This DeepTreeWalker filter ignores anonymous content.
+ */
+function noAnonymousContentTreeWalkerFilter(node) {
+  // Ignore all native anonymous content inside a non-XUL document.
+  // We need to do this to skip things like form controls, scrollbars,
+  // video controls, etc (see bug 1187482).
+  if (!isInXULDocument(node) && node.isNativeAnonymous) {
+    return nodeFilterConstants.FILTER_SKIP;
+  }
 
-    return nodeFilterConstants.FILTER_ACCEPT;
-  };
+  return nodeFilterConstants.FILTER_ACCEPT;
+}
+/**
+ * This DeepTreeWalker filter is like standardTreeWalkerFilter except that
+ * it also includes all anonymous content (like internal form controls).
+ */
+function allAnonymousContentTreeWalkerFilter(node) {
+  // Ignore empty whitespace text nodes that do not impact the layout.
+  if (isWhitespaceTextNode(node)) {
+    return nodeHasSize(node)
+      ? nodeFilterConstants.FILTER_ACCEPT
+      : nodeFilterConstants.FILTER_SKIP;
+  }
+  return nodeFilterConstants.FILTER_ACCEPT;
 }
 
 /**
@@ -221,16 +222,6 @@ function getTreeWalkerFilter(options) {
  */
 function isWhitespaceTextNode(node) {
   return node.nodeType == Node.TEXT_NODE && !/[^\s]/.exec(node.nodeValue);
-}
-
-/**
- * Is the given node a comment node?
- *
- * @param {DOMNode} node
- * @return {boolean}
- */
-function isCommentNode(node) {
-  return node.nodeType === Node.COMMENT_NODE;
 }
 
 /**
@@ -265,7 +256,7 @@ function nodeHasSize(node) {
  * fails to load or the load takes too long, the promise is rejected.
  */
 function ensureImageLoaded(image, timeout) {
-  const { HTMLImageElement } = image.documentGlobal;
+  const { HTMLImageElement } = image.ownerGlobal;
   if (!(image instanceof HTMLImageElement)) {
     return Promise.reject("image must be an HTMLImageELement");
   }
@@ -320,7 +311,7 @@ function ensureImageLoaded(image, timeout) {
  * If something goes wrong, the promise is rejected.
  */
 const imageToImageData = async function (node, maxDim) {
-  const { HTMLCanvasElement, HTMLImageElement } = node.documentGlobal;
+  const { HTMLCanvasElement, HTMLImageElement } = node.ownerGlobal;
 
   const isImg = node instanceof HTMLImageElement;
   const isCanvas = node instanceof HTMLCanvasElement;
@@ -441,7 +432,7 @@ function getClosestBackgroundImage(node) {
 function findGridParentContainerForNode(node) {
   try {
     while ((node = node.parentNode)) {
-      const display = node.documentGlobal.getComputedStyle(node).display;
+      const display = node.ownerGlobal.getComputedStyle(node).display;
 
       if (display.includes("grid")) {
         return node;
@@ -497,11 +488,7 @@ async function getBackgroundColor({ rawNode: node, walker }) {
     };
   }
 
-  const quads = getAdjustedQuads(
-    node.documentGlobal,
-    node.firstChild,
-    "content"
-  );
+  const quads = getAdjustedQuads(node.ownerGlobal, node.firstChild, "content");
 
   // Fall back to calculating contrast against closest bg if there are no bounds for text node.
   // Avoid creating doc walker by returning early.
@@ -530,7 +517,7 @@ async function getBackgroundColor({ rawNode: node, walker }) {
   }
 
   // Try calculating complex backgrounds for node
-  const win = node.documentGlobal;
+  const win = node.ownerGlobal;
   loadSheetForBackgroundCalculation(win);
   const computedStyle = CssLogic.getComputedStyle(node);
   const props = computedStyle ? getTextProperties(computedStyle) : null;
@@ -595,6 +582,7 @@ function isDocumentReady(document) {
 }
 
 module.exports = {
+  allAnonymousContentTreeWalkerFilter,
   isDocumentReady,
   isWhitespaceTextNode,
   findGridParentContainerForNode,
@@ -606,5 +594,6 @@ module.exports = {
   imageToImageData,
   isNodeDead,
   nodeDocument,
-  getTreeWalkerFilter,
+  standardTreeWalkerFilter,
+  noAnonymousContentTreeWalkerFilter,
 };

@@ -6,6 +6,8 @@
  * succeeded.
  */
 
+const searchService = Services.search.wrappedJSObject;
+
 add_setup(async () => {
   consoleAllowList.push("#init: failure initializing search:");
   SearchTestUtils.setRemoteSettingsConfig([{ identifier: "unused" }]);
@@ -14,15 +16,15 @@ add_setup(async () => {
 
 add_task(async function test_init_success_telemetry() {
   Assert.equal(
-    SearchService.isInitialized,
+    searchService.isInitialized,
     false,
     "Search Service should not be initialized."
   );
 
-  await SearchService.init();
+  await Services.search.init();
 
   Assert.equal(
-    SearchService.hasSuccessfullyInitialized,
+    searchService.hasSuccessfullyInitialized,
     true,
     "Search Service should have initialized successfully."
   );
@@ -78,12 +80,12 @@ add_task(async function test_init_failure_telemetry() {
 
 add_task(async function test_corrupt_settings() {
   consoleAllowList.push("get: Settings file empty or corrupt.");
-  SearchService.reset();
+  searchService.reset();
 
   // Prevent `SearchUIUtils.searchSettingsResetNotificationBox` from
   // running because it would fail since there is no window.
   let notificationBoxStub = sinon.stub(
-    SearchService,
+    searchService,
     "_showSearchSettingsResetNotificationBox"
   );
 
@@ -94,13 +96,13 @@ add_task(async function test_corrupt_settings() {
   );
 
   Assert.equal(
-    SearchService.isInitialized,
+    searchService.isInitialized,
     false,
     "Search Service should not be initialized."
   );
-  await SearchService.init();
+  await Services.search.init();
   Assert.equal(
-    SearchService.hasSuccessfullyInitialized,
+    searchService.hasSuccessfullyInitialized,
     true,
     "Search Service should have initialized successfully."
   );
@@ -114,12 +116,12 @@ add_task(async function test_corrupt_settings() {
 });
 
 async function startInitFailure(errorType, errorMessage) {
-  SearchService.reset();
-  SearchService.errorToThrowInTest.type = errorType;
-  SearchService.errorToThrowInTest.message = errorMessage;
+  searchService.reset();
+  searchService.errorToThrowInTest.type = errorType;
+  searchService.errorToThrowInTest.message = errorMessage;
 
   Assert.equal(
-    SearchService.isInitialized,
+    searchService.isInitialized,
     false,
     "Search Service should not be initialized."
   );
@@ -130,16 +132,16 @@ async function startInitFailure(errorType, errorMessage) {
   );
 
   await Assert.rejects(
-    SearchService.init(),
+    Services.search.init(),
     messageRegex,
     "Should have thrown an error on init."
   );
 
   await Assert.rejects(
-    SearchService.promiseInitialized,
+    Services.search.promiseInitialized,
     messageRegex,
     "Should have rejected the promise."
   );
 
-  SearchService.errorToThrowInTest = { type: null, message: null };
+  searchService.errorToThrowInTest = { type: null, message: null };
 }

@@ -91,7 +91,7 @@ use std::pin::Pin;
 #[cfg(feature = "websocket")]
 use std::task::Context;
 #[cfg(feature = "websocket")]
-use std::task::Poll;
+use std::task::{self, Poll};
 
 use bytes::Bytes;
 #[cfg(feature = "websocket")]
@@ -103,7 +103,6 @@ use http::{
     header::{HeaderName, HeaderValue},
     Response,
 };
-use http_body_util::BodyExt;
 use serde::Serialize;
 #[cfg(feature = "websocket")]
 use tokio::sync::oneshot;
@@ -256,7 +255,7 @@ impl RequestBuilder {
     /// Add a type to the request's `http::Extensions`.
     pub fn extension<T>(mut self, ext: T) -> Self
     where
-        T: Clone + Send + Sync + 'static,
+        T: Send + Sync + 'static,
     {
         self.req.extensions_mut().insert(ext);
         self
@@ -376,7 +375,7 @@ impl RequestBuilder {
         // TODO: de-duplicate this and apply_filter()
         assert!(!route::is_set(), "nested test filter calls");
 
-        let route = Route::new(self.req);
+        let route = Route::new(self.req, self.remote_addr);
         let mut fut = Box::pin(
             route::set(&route, move || f.filter(crate::filter::Internal)).then(|result| {
                 let res = match result {
@@ -387,10 +386,7 @@ impl RequestBuilder {
                     }
                 };
                 let (parts, body) = res.into_parts();
-                {
-                    body.collect()
-                        .map_ok(|chunk| Response::from_parts(parts, chunk.to_bytes()))
-                }
+                hyper::body::to_bytes(body).map_ok(|chunk| Response::from_parts(parts, chunk))
             }),
         );
 
@@ -408,7 +404,7 @@ impl RequestBuilder {
     {
         assert!(!route::is_set(), "nested test filter calls");
 
-        let route = Route::new(self.req);
+        let route = Route::new(self.req, self.remote_addr);
         let mut fut = Box::pin(route::set(&route, move || {
             f.filter(crate::filter::Internal)
         }));
@@ -499,13 +495,7 @@ impl WsBuilder {
         tokio::spawn(async move {
             use tokio_tungstenite::tungstenite::protocol;
 
-            let listener = tokio::net::TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], 0)))
-                .await
-                .expect("binding");
-            let addr = listener.local_addr().unwrap();
-            tokio::spawn(async move {
-                crate::serve(f).incoming(listener).run().await;
-            });
+            let (addr, srv) = crate::serve(f).bind_ephemeral(([127, 0, 0, 1], 0));
 
             let mut req = self
                 .req
@@ -526,18 +516,13 @@ impl WsBuilder {
 
             *req.uri_mut() = uri;
 
-            let upgrade = async move {
-                let io = tokio::net::TcpStream::connect(addr).await?;
-                let io = hyper_util::rt::TokioIo::new(io);
-                let (mut tx, conn) = hyper::client::conn::http1::handshake(io).await?;
-                tokio::spawn(async move {
-                    let _ = conn.with_upgrades().await;
-                });
-                let res = tx.send_request(req).await?;
-                hyper::upgrade::on(res)
-                    .await
-                    .map_err(|e| Box::new(e) as Box<dyn StdError + Send + Sync>)
-            };
+            // let mut rt = current_thread::Runtime::new().unwrap();
+            tokio::spawn(srv);
+
+            let upgrade = ::hyper::Client::builder()
+                .build(AddrConnect(addr))
+                .request(req)
+                .and_then(hyper::upgrade::on);
 
             let upgraded = match upgrade.await {
                 Ok(up) => {
@@ -587,7 +572,7 @@ impl WsBuilder {
 impl WsClient {
     /// Send a "text" websocket message to the server.
     pub async fn send_text(&mut self, text: impl Into<String>) {
-        self.send(crate::ws::Message::text(text.into())).await;
+        self.send(crate::ws::Message::text(text)).await;
     }
 
     /// Send a websocket message to the server.
@@ -700,6 +685,27 @@ impl fmt::Display for WsError {
 impl StdError for WsError {
     fn description(&self) -> &str {
         "websocket error"
+    }
+}
+
+// ===== impl AddrConnect =====
+
+#[cfg(feature = "websocket")]
+#[derive(Clone)]
+struct AddrConnect(SocketAddr);
+
+#[cfg(feature = "websocket")]
+impl tower_service::Service<::http::Uri> for AddrConnect {
+    type Response = ::tokio::net::TcpStream;
+    type Error = ::std::io::Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, _cx: &mut task::Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, _: ::http::Uri) -> Self::Future {
+        Box::pin(tokio::net::TcpStream::connect(self.0))
     }
 }
 

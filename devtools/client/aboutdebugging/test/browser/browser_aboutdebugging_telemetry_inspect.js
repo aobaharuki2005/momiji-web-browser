@@ -3,20 +3,24 @@
 
 "use strict";
 
+/* import-globals-from helper-telemetry.js */
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-telemetry.js",
+  this
+);
+
 const TAB_URL = "data:text/html,<title>TEST_TAB</title>";
 
 /**
  * Check that telemetry events are recorded when inspecting a target.
  */
 add_task(async function () {
-  Services.fog.testResetFOG();
+  setupTelemetryTest();
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  const sessionId =
-    Glean.devtoolsMain.openAdbgAboutdebugging.testGetValue()[0].extra
-      .session_id;
+  const sessionId = getOpenEventSessionId();
   ok(!isNaN(sessionId), "Open event has a valid session id");
 
   info("Open a new background tab TEST_TAB");
@@ -32,20 +36,20 @@ add_task(async function () {
     "TEST_TAB"
   );
 
-  const evts = Glean.devtoolsMain.inspectAboutdebugging.testGetValue();
+  const evts = readAboutDebuggingEvents().filter(e => e.method === "inspect");
   is(evts.length, 1, "Exactly one Inspect event found");
   is(
-    evts[0].extra.target_type,
+    evts[0].extras.target_type,
     "TAB",
     "Inspect event has the expected target type"
   );
   is(
-    evts[0].extra.runtime_type,
+    evts[0].extras.runtime_type,
     "this-firefox",
     "Inspect event has the expected runtime type"
   );
   is(
-    evts[0].extra.session_id,
+    evts[0].extras.session_id,
     sessionId,
     "Inspect event has the expected session"
   );

@@ -48,13 +48,6 @@ private class DummyProperty : ReadWriteProperty<PreferencesHolder, Boolean> {
  * )
  * ```
  */
-@Deprecated(
-    "Use booleanPreference instead and control the feature flag through Nimbus.",
-    ReplaceWith(
-        "booleanPreference(key, defaultValue)",
-        "mozilla.components.support.ktx.android.content.booleanPreference",
-    ),
-)
 fun featureFlagBooleanPreference(key: String, defaultValue: Boolean, featureFlag: Boolean) =
     if (featureFlag) {
         booleanPreference(key, defaultValue)
@@ -105,13 +98,6 @@ private class LazyBooleanPreference(val key: String, val defaultValue: () -> Boo
  *
  * @param defaultValue The default value to return when the preference is unset.
  */
-@Deprecated(
-    "Use booleanPreference with a lambda default instead.",
-    ReplaceWith(
-        "booleanPreference(key, defaultValue)",
-        "mozilla.components.support.ktx.android.content.booleanPreference",
-    ),
-)
 fun lazyFeatureFlagBooleanPreference(key: String, featureFlag: Boolean, defaultValue: () -> Boolean) =
     if (featureFlag) {
         LazyBooleanPreference(key, defaultValue)

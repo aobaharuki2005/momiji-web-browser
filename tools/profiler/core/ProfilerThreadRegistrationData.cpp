@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,9 +16,6 @@
 #if defined(XP_WIN)
 #  include <windows.h>
 #elif defined(XP_DARWIN)
-#  include <pthread.h>
-#elif defined(XP_LINUX) && !defined(ANDROID)
-#  include "mozilla/ScopeExit.h"
 #  include <pthread.h>
 #endif
 
@@ -43,7 +42,6 @@ struct ThreadCpuUseMarker {
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.AddKeyLabelFormat("time", "CPU Time", MS::Format::Milliseconds);
     schema.AddKeyLabelFormat("wakeups", "Wake ups", MS::Format::Integer);
-    schema.AddKeyFormat("label", MS::Format::String, MS::PayloadFlags::Hidden);
     schema.SetTooltipLabel("{marker.name} - {marker.data.label}");
     schema.SetTableLabel(
         "{marker.data.label}: {marker.data.time} of CPU time, "
@@ -56,27 +54,6 @@ struct ThreadCpuUseMarker {
 #endif
 
 namespace mozilla::profiler {
-
-#if defined(XP_LINUX) && !defined(ANDROID)
-static const void* pthread_get_stacktop_linux(const void* aStackTop) {
-  pthread_attr_t attr;
-  if (pthread_getattr_np(pthread_self(), &attr) != 0) {
-    return aStackTop;
-  }
-  auto attrGuard = MakeScopeExit([&]() { pthread_attr_destroy(&attr); });
-  void* stackBase = nullptr;
-  size_t stackSize = 0;
-  if (pthread_attr_getstack(&attr, &stackBase, &stackSize) != 0 ||
-      !(stackBase && stackSize > 0)) {
-    return aStackTop;
-  }
-  // > The base (lowest addressable byte) of the storage shall be
-  // > stackaddr, and the size of the storage shall be stacksize
-  // > bytes.
-  // <https://www.man7.org/linux/man-pages/man3/pthread_attr_getstack.3p.html>
-  return static_cast<const char*>(stackBase) + stackSize;
-}
-#endif
 
 ThreadRegistrationData::ThreadRegistrationData(const char* aName,
                                                const void* aStackTop)
@@ -91,9 +68,6 @@ ThreadRegistrationData::ThreadRegistrationData(const char* aName,
           // We don't have to guess on Mac/Darwin.
           reinterpret_cast<const void*>(
               pthread_get_stackaddr_np(pthread_self()))
-#elif defined(XP_LINUX) && !defined(ANDROID)
-          // We don't have to guess on non-Android Linux.
-          pthread_get_stacktop_linux(aStackTop)
 #else
           // Otherwise use the given guess.
           aStackTop
@@ -106,27 +80,32 @@ ThreadRegistrationData::ThreadRegistrationData(const char* aName,
 static void profiler_add_js_marker(mozilla::MarkerCategory aCategory,
                                    const char* aMarkerName,
                                    const char* aMarkerText) {
+#ifdef MOZ_GECKO_PROFILER
   AUTO_PROFILER_STATS(js_marker);
   profiler_add_marker(
       mozilla::ProfilerString8View::WrapNullTerminatedString(aMarkerName),
       aCategory, {}, ::geckoprofiler::markers::TextMarker{},
       mozilla::ProfilerString8View::WrapNullTerminatedString(aMarkerText));
+#endif
 }
 
 static void profiler_add_js_interval(mozilla::MarkerCategory aCategory,
                                      const char* aMarkerName,
                                      mozilla::TimeStamp aStartTime,
                                      const char* aMarkerText) {
+#ifdef MOZ_GECKO_PROFILER
   AUTO_PROFILER_STATS(js_interval);
   profiler_add_marker(
       mozilla::ProfilerString8View::WrapNullTerminatedString(aMarkerName),
       aCategory, mozilla::MarkerTiming::IntervalUntilNowFrom(aStartTime),
       ::geckoprofiler::markers::TextMarker{},
       mozilla::ProfilerString8View::WrapNullTerminatedString(aMarkerText));
+#endif
 }
 
 static void profiler_add_js_flow(mozilla::MarkerCategory aCategory,
                                  const char* aMarkerName, uint64_t aFlowId) {
+#ifdef MOZ_GECKO_PROFILER
   if (!profiler_feature_active(ProfilerFeature::Flows)) {
     return;
   }
@@ -135,11 +114,13 @@ static void profiler_add_js_flow(mozilla::MarkerCategory aCategory,
       mozilla::ProfilerString8View::WrapNullTerminatedString(aMarkerName),
       aCategory, {}, ::geckoprofiler::markers::FlowMarker{},
       Flow::ProcessScoped(aFlowId));
+#endif
 }
 
 static void profiler_add_js_terminating_flow(mozilla::MarkerCategory aCategory,
                                              const char* aMarkerName,
                                              uint64_t aFlowId) {
+#ifdef MOZ_GECKO_PROFILER
   if (!profiler_feature_active(ProfilerFeature::Flows)) {
     return;
   }
@@ -148,6 +129,7 @@ static void profiler_add_js_terminating_flow(mozilla::MarkerCategory aCategory,
       mozilla::ProfilerString8View::WrapNullTerminatedString(aMarkerName),
       aCategory, {}, ::geckoprofiler::markers::TerminatingFlowMarker{},
       Flow::ProcessScoped(aFlowId));
+#endif
 }
 
 static void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {

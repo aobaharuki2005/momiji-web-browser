@@ -4,7 +4,7 @@
 
 package mozilla.components.support.test.file
 
-import kotlin.test.assertNotNull
+import org.junit.Assert
 
 /**
  * Loads a file from the resources folder and returns its content as a string object.
@@ -14,6 +14,6 @@ fun Any.loadResourceAsString(path: String): String {
     return javaClass.getResourceAsStream(path)!!.bufferedReader().use {
         it.readText()
     }.also {
-        assertNotNull(it)
+        Assert.assertNotNull(it)
     }
 }

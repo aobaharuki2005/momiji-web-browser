@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -117,7 +118,7 @@ class CostEntry {
  * surface.
  */
 class CachedSurface {
-  ~CachedSurface() = default;
+  ~CachedSurface() {}
 
  public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(CachedSurface)
@@ -251,7 +252,7 @@ static int64_t AreaOfIntSize(const IntSize& aSize) {
  * decoding when a website requires many variants of the same surface.
  */
 class ImageSurfaceCache {
-  ~ImageSurfaceCache() = default;
+  ~ImageSurfaceCache() {}
 
  public:
   explicit ImageSurfaceCache(const ImageKey aImageKey)
@@ -796,14 +797,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
   }
 
  public:
-  void Init(const StaticMutexAutoLock& aAutoLock) {
-    mExpirationTracker.InitLocked(aAutoLock);
-    RegisterWeakMemoryReporter(this);
-  }
-
-  void Destroy(const StaticMutexAutoLock& aAutoLock) {
-    mExpirationTracker.DestroyLocked(aAutoLock);
-  }
+  void InitMemoryReporter() { RegisterWeakMemoryReporter(this); }
 
   InsertOutcome Insert(NotNull<ISurfaceProvider*> aProvider, bool aSetAvailable,
                        const StaticMutexAutoLock& aAutoLock) {
@@ -1516,10 +1510,12 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
   }
 
   class SurfaceTracker final
-      : public ExpirationTrackerImpl<CachedSurface, 2, StaticMutex> {
+      : public ExpirationTrackerImpl<CachedSurface, 2, StaticMutex,
+                                     StaticMutexAutoLock> {
    public:
     explicit SurfaceTracker(uint32_t aSurfaceCacheExpirationTimeMS)
-        : ExpirationTrackerImpl<CachedSurface, 2, StaticMutex>(
+        : ExpirationTrackerImpl<CachedSurface, 2, StaticMutex,
+                                StaticMutexAutoLock>(
               aSurfaceCacheExpirationTimeMS, "SurfaceTracker"_ns) {}
 
    protected:
@@ -1533,25 +1529,9 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
       sInstance->TakeDiscard(mDiscard, aAutoLock);
     }
 
-    already_AddRefed<ExpirationTrackerObserver> CreateObserver() final {
-      return mozilla::MakeAndAddRef<InternalTrackerObserver>()
-          .downcast<ExpirationTrackerObserver>();
+    void NotifyHandlerEnd() override {
+      nsTArray<RefPtr<CachedSurface>> discard(std::move(mDiscard));
     }
-
-    class InternalTrackerObserver final : public ExpirationTrackerObserver {
-     public:
-      InternalTrackerObserver() = default;
-
-      void NotifyHandlerEnd() final {
-        nsTArray<RefPtr<CachedSurface>> discard;
-        {
-          StaticMutexAutoLock lock(sInstanceMutex);
-          if (sInstance) {
-            discard = std::move(sInstance->mExpirationTracker.mDiscard);
-          }
-        }
-      }
-    };
 
     StaticMutex& GetMutex() override { return sInstanceMutex; }
 
@@ -1576,7 +1556,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     }
 
    private:
-    virtual ~MemoryPressureObserver() = default;
+    virtual ~MemoryPressureObserver() {}
   };
 
   nsTArray<CostEntry> mCosts;
@@ -1656,15 +1636,13 @@ void SurfaceCache::Initialize() {
   uint32_t finalSurfaceCacheSizeBytes =
       min(surfaceCacheSizeBytes, uint64_t(UINT32_MAX));
 
-  StaticMutexAutoLock lock(sInstanceMutex);
-
   // Create the surface cache singleton with the requested settings.  Note that
   // the size is a limit that the cache may not grow beyond, but we do not
   // actually allocate any storage for surfaces at this time.
   sInstance = new SurfaceCacheImpl(surfaceCacheExpirationTimeMS,
                                    surfaceCacheDiscardFactor,
                                    finalSurfaceCacheSizeBytes);
-  sInstance->Init(lock);
+  sInstance->InitMemoryReporter();
 }
 
 /* static */
@@ -1673,12 +1651,8 @@ void SurfaceCache::Shutdown() {
   {
     StaticMutexAutoLock lock(sInstanceMutex);
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(sInstance, "No singleton - was Shutdown() called twice?");
     cache = sInstance.forget();
-    if (cache) {
-      cache->Destroy(lock);
-    } else {
-      MOZ_ASSERT_UNREACHABLE("No singleton - was Shutdown() called twice?");
-    }
   }
 }
 
@@ -1968,10 +1942,8 @@ void SurfaceCache::ReleaseImageOnMainThread(
     return;
   }
 
-  // Don't try to dispatch the release after shutdown. This code is
-  // unreachable in release builds (process just terminates). Using
-  // (void)aImage lets the already_AddRefed destructor assert in DEBUG,
-  // helping detect leaks at their source.
+  // Don't try to dispatch the release after shutdown, we'll just leak the
+  // runnable.
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownFinal)) {
     (void)aImage;
     return;

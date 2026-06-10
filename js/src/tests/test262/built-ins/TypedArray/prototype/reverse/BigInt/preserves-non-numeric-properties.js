@@ -15,16 +15,16 @@ info: |
 
   ...
   6. Return O.
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Symbol, TypedArray]
 ---*/
 
 var s = Symbol("1");
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   var sample, result;
 
-  sample = new TA(makeCtorArg(2));
+  sample = new TA(2);
   sample.foo = 42;
   sample.bar = "bar";
   sample[s] = 1;

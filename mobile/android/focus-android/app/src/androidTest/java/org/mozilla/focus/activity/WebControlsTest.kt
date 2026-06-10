@@ -4,6 +4,7 @@
 package org.mozilla.focus.activity
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
@@ -12,8 +13,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
-import org.mozilla.focus.helpers.FocusTestRule
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
+import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.RetryTestRule
 import org.mozilla.focus.helpers.StringsHelper.GMAIL_APP
 import org.mozilla.focus.helpers.StringsHelper.PHONE_APP
@@ -21,18 +22,15 @@ import org.mozilla.focus.helpers.TestAssetHelper.getGenericTabAsset
 import org.mozilla.focus.helpers.TestAssetHelper.htmlControlsPageAsset
 import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.helpers.TestSetup
 import org.mozilla.focus.testAnnotations.SmokeTest
 
 // These tests check that various web controls work properly
 @RunWith(AndroidJUnit4ClassRunner::class)
-class WebControlsTest {
+class WebControlsTest : TestSetup() {
+    private lateinit var webServer: MockWebServer
 
     private val featureSettingsHelper = FeatureSettingsHelper()
-
-    @get:Rule(order = 0)
-    val focusTestRule: FocusTestRule = FocusTestRule()
-
-    private val webServerRule get() = focusTestRule.mockWebServerRule
 
     @get:Rule
     val mActivityTestRule = MainActivityIntentsTestRule(showFirstRun = false)
@@ -42,20 +40,26 @@ class WebControlsTest {
     val retryTestRule = RetryTestRule(3)
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setSearchWidgetDialogEnabled(false)
     }
 
     @After
     fun tearDown() {
+        webServer.shutdown()
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SmokeTest
     @Test
     fun verifyTextInputTest() {
-        val htmlControlsPage = webServerRule.server.htmlControlsPageAsset.url
+        val htmlControlsPage = webServer.htmlControlsPageAsset.url
 
         searchScreen {
         }.loadPage(htmlControlsPage) {
@@ -69,7 +73,7 @@ class WebControlsTest {
     @SmokeTest
     @Test
     fun verifyDropdownMenuTest() {
-        val htmlControlsPage = webServerRule.server.htmlControlsPageAsset.url
+        val htmlControlsPage = webServer.htmlControlsPageAsset.url
 
         searchScreen {
         }.loadPage(htmlControlsPage) {
@@ -84,7 +88,7 @@ class WebControlsTest {
     @SmokeTest
     @Test
     fun verifyExternalLinksTest() {
-        val htmlControlsPage = webServerRule.server.htmlControlsPageAsset.url
+        val htmlControlsPage = webServer.htmlControlsPageAsset.url
 
         searchScreen {
         }.loadPage(htmlControlsPage) {
@@ -98,7 +102,7 @@ class WebControlsTest {
     @SmokeTest
     @Test
     fun emailLinkTest() {
-        val htmlControlsPage = webServerRule.server.htmlControlsPageAsset.url
+        val htmlControlsPage = webServer.htmlControlsPageAsset.url
 
         searchScreen {
         }.loadPage(htmlControlsPage) {
@@ -111,7 +115,7 @@ class WebControlsTest {
     @SmokeTest
     @Test
     fun telephoneLinkTest() {
-        val htmlControlsPage = webServerRule.server.htmlControlsPageAsset.url
+        val htmlControlsPage = webServer.htmlControlsPageAsset.url
 
         searchScreen {
         }.loadPage(htmlControlsPage) {
@@ -124,8 +128,8 @@ class WebControlsTest {
     @SmokeTest
     @Test
     fun verifyDismissTextSelectionToolbarTest() {
-        val tab1Url = webServerRule.server.getGenericTabAsset(1).url
-        val htmlControlsPage = webServerRule.server.htmlControlsPageAsset.url
+        val tab1Url = webServer.getGenericTabAsset(1).url
+        val htmlControlsPage = webServer.htmlControlsPageAsset.url
 
         searchScreen {
         }.loadPage(tab1Url) {
@@ -143,7 +147,7 @@ class WebControlsTest {
     @SmokeTest
     @Test
     fun verifySelectTextTest() {
-        val htmlControlsPage = webServerRule.server.htmlControlsPageAsset.url
+        val htmlControlsPage = webServer.htmlControlsPageAsset.url
 
         searchScreen {
         }.loadPage(htmlControlsPage) {
@@ -158,7 +162,7 @@ class WebControlsTest {
     @SmokeTest
     @Test
     fun verifyCalendarFormTest() {
-        val htmlControlsPage = webServerRule.server.htmlControlsPageAsset.url
+        val htmlControlsPage = webServer.htmlControlsPageAsset.url
 
         searchScreen {
         }.loadPage(htmlControlsPage) {

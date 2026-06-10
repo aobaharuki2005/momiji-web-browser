@@ -282,6 +282,7 @@ const DOMAPIs = [
       CSS.highlights.set("anchor", new Highlight());
       CSS.highlights;
     `,
+    prefs: [["dom.customHighlightAPI.enabled", true]],
   },
   {
     context: CONTEXTS.PAGE,
@@ -298,21 +299,6 @@ const DOMAPIs = [
       ["g", 10],
       ["h", 11],
     ])`,
-  },
-  {
-    context: CONTEXTS.PAGE,
-    expression: `
-      const el = document.createElement("h1");
-      el.setAttribute("class", "test-class-a test-class-b");
-      el.setAttribute("id", "my-element");
-      el.setAttribute("aria-collapsed", "false");
-      el.setAttribute("hidden", "");
-      el;
-    `,
-  },
-  {
-    context: CONTEXTS.PAGE,
-    expression: `new Document()`,
   },
 ];
 

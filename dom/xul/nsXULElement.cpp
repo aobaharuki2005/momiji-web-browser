@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -103,7 +104,6 @@
 #include "nsIScriptContext.h"
 #include "nsISupportsUtils.h"
 #include "nsIURI.h"
-#include "nsIURIWithSizeOf.h"
 #include "nsIXPConnect.h"
 #include "nsMenuPopupFrame.h"
 #include "nsNodeInfoManager.h"
@@ -209,7 +209,6 @@ nsXULElement* nsXULElement::Construct(
       nodeInfo->Equals(nsGkAtoms::thumb) ||
       nodeInfo->Equals(nsGkAtoms::button) ||
       nodeInfo->Equals(nsGkAtoms::menuitem) ||
-      nodeInfo->Equals(nsGkAtoms::richlistitem) ||
       nodeInfo->Equals(nsGkAtoms::toolbarbutton) ||
       nodeInfo->Equals(nsGkAtoms::toolbarpaletteitem) ||
       nodeInfo->Equals(nsGkAtoms::scrollbarbutton)) {
@@ -288,11 +287,18 @@ NS_INTERFACE_MAP_END_INHERITING(nsStyledElement)
 nsresult nsXULElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
                              nsINode** aResult) const {
   *aResult = nullptr;
-  RefPtr<nsXULElement> element = Construct(do_AddRef(aNodeInfo));
-  MOZ_TRY(const_cast<nsXULElement*>(this)->CopyInnerTo(element));
+
+  RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+  RefPtr<nsXULElement> element = Construct(ni.forget());
+
+  nsresult rv = const_cast<nsXULElement*>(this)->CopyInnerTo(
+      element, ReparseAttributes::No);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Note that we're _not_ copying mControllers.
+
   element.forget(aResult);
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -532,8 +538,7 @@ nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   Document& doc = aContext.OwnerDoc();
   if (!IsInNativeAnonymousSubtree() && !doc.AllowXULXBL() &&
       !doc.HasWarnedAbout(DeprecatedOperations::eImportXULIntoContent)) {
-    nsContentUtils::AddScriptRunner(
-        MakeAndAddRef<XULInContentErrorReporter>(doc));
+    nsContentUtils::AddScriptRunner(new XULInContentErrorReporter(doc));
   }
 
 #ifdef DEBUG
@@ -822,7 +827,7 @@ nsresult nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
         nullptr, orig->IsControl(), orig->IsAlt(), orig->IsShift(),
         orig->IsMeta(), inputSource, button);
   } else {
-    NS_WARNING("A XUL element is attached to a command that doesn't exist!");
+    NS_WARNING("A XUL element is attached to a command that doesn't exist!\n");
   }
   return NS_OK;
 }
@@ -1326,19 +1331,6 @@ nsresult nsXULPrototypeElement::SetAttrAt(uint32_t aPos,
     return NS_OK;
   } else if (mAttributes[aPos].mName.Equals(nsGkAtoms::aria_activedescendant)) {
     mAttributes[aPos].mValue.ParseAtom(aValue);
-
-    return NS_OK;
-  } else if (mAttributes[aPos].mName.Equals(nsGkAtoms::aria_controls) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_describedby) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_details) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_errormessage) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_flowto) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_labelledby) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_owns) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::control) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::_for) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::headers)) {
-    mAttributes[aPos].mValue.ParseAtomArray(aValue);
 
     return NS_OK;
   } else if (mAttributes[aPos].mName.Equals(nsGkAtoms::is)) {
@@ -1966,10 +1958,9 @@ void nsXULPrototypeScript::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
   // strong references from elsewhere because the URI was created for this
   // object, in XULContentSinkImpl::OpenScript() or
   // nsXULPrototypeElement::Deserialize(). Only objects that created their own
-  // URI will call nsIURIWithSizeOf::SizeOfIncludingThis().
+  // URI will call nsIURI::SizeOfIncludingThis().
   if (mSrcURI) {
-    *aNodeSize += SizeOfIncludingThisIfURIWithSizeOf(
-        mSrcURI, aSizes.mState.mMallocSizeOf);
+    *aNodeSize += mSrcURI->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
 }
 

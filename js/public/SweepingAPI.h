@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -17,17 +19,17 @@
 namespace js {
 namespace gc {
 
-JS_PUBLIC_API void LockSweepingLock(JSRuntime* runtime);
-JS_PUBLIC_API void UnlockSweepingLock(JSRuntime* runtim);
+JS_PUBLIC_API void LockStoreBuffer(JSRuntime* runtime);
+JS_PUBLIC_API void UnlockStoreBuffer(JSRuntime* runtim);
 
-class AutoLockSweepingLock {
+class AutoLockStoreBuffer {
   JSRuntime* runtime;
 
  public:
-  explicit AutoLockSweepingLock(JSRuntime* runtime) : runtime(runtime) {
-    LockSweepingLock(runtime);
+  explicit AutoLockStoreBuffer(JSRuntime* runtime) : runtime(runtime) {
+    LockStoreBuffer(runtime);
   }
-  ~AutoLockSweepingLock() { UnlockSweepingLock(runtime); }
+  ~AutoLockStoreBuffer() { UnlockStoreBuffer(runtime); }
 };
 
 }  // namespace gc
@@ -52,7 +54,7 @@ class WeakCacheBase : public mozilla::LinkedListElement<WeakCacheBase> {
   explicit WeakCacheBase(const WeakCacheBase&) = delete;
 
  public:
-  enum NeedsLock : bool { Lock = true, DontLock = false };
+  enum NeedsLock : bool { LockStoreBuffer = true, DontLockStoreBuffer = false };
 
   explicit WeakCacheBase(JS::Zone* zone) {
     shadow::RegisterWeakCache(zone, this);
@@ -72,7 +74,7 @@ class WeakCacheBase : public mozilla::LinkedListElement<WeakCacheBase> {
     // Derived classes do not support incremental barriers by default.
     return false;
   }
-  virtual bool needsMarkingBarrier() const {
+  virtual bool needsIncrementalBarrier() const {
     // Derived classes do not support incremental barriers by default.
     return false;
   }
@@ -103,10 +105,10 @@ class WeakCache : protected detail::WeakCacheBase,
   T& get() { return cache; }
 
   size_t traceWeak(JSTracer* trc, NeedsLock needsLock) override {
-    // Take the sweeping lock in case sweeping triggers any generational post
-    // barriers. This is not always required and WeakCache specializations may
-    // delay or skip taking the lock as appropriate.
-    mozilla::Maybe<js::gc::AutoLockSweepingLock> lock;
+    // Take the store buffer lock in case sweeping triggers any generational
+    // post barriers. This is not always required and WeakCache specializations
+    // may delay or skip taking the lock as appropriate.
+    mozilla::Maybe<js::gc::AutoLockStoreBuffer> lock;
     if (needsLock) {
       lock.emplace(trc->runtime());
     }

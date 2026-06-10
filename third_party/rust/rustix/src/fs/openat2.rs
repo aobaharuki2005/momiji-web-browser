@@ -3,8 +3,7 @@ use crate::{backend, io, path};
 use backend::fd::AsFd;
 use backend::fs::types::{Mode, OFlags, ResolveFlags};
 
-/// `openat2(dirfd, path, OpenHow { oflags, mode, resolve }, sizeof(OpenHow))`—
-/// Opens a file with more options.
+/// `openat2(dirfd, path, OpenHow { oflags, mode, resolve }, sizeof(OpenHow))`
 ///
 /// # References
 ///  - [Linux]

@@ -14,10 +14,11 @@
     feature = "serde",
 ))]
 #![allow(
+    let_underscore_drop,
+    clippy::clone_on_copy,
     clippy::cognitive_complexity,
-    reason = "many tests in one function is okay"
+    clippy::std_instead_of_core
 )]
-#![allow(clippy::std_instead_of_core, reason = "irrelevant for tests")]
 
 //! Tests for internal details.
 //!
@@ -25,10 +26,12 @@
 //! reasonable manner externally.
 
 use std::format;
+use std::num::NonZeroU8;
 
 use crate::ext::DigitCount;
 use crate::parsing::combinator::rfc::iso8601;
-use crate::{duration, format_description, parsing};
+use crate::parsing::shim::Integer;
+use crate::{duration, parsing};
 
 #[test]
 fn digit_count() {
@@ -69,24 +72,19 @@ fn digit_count() {
     assert_eq!(1_000_000_000_u32.num_digits(), 10);
 }
 
-#[expect(
-    let_underscore_drop,
-    reason = "no need for the resulting value, which is #![must_use]"
-)]
 #[test]
 fn debug() {
     let _ = format!("{:?}", duration::Padding::Optimize);
     let _ = format!("{:?}", parsing::ParsedItem(b"", 0));
-    let _ = format!("{:?}", format_description::Period::Am);
+    let _ = format!("{:?}", parsing::component::Period::Am);
     let _ = format!("{:?}", iso8601::ExtendedKind::Basic);
 }
 
-#[expect(clippy::clone_on_copy, reason = "purpose of the test")]
 #[test]
 fn clone() {
     assert_eq!(
-        format_description::Period::Am.clone(),
-        format_description::Period::Am
+        parsing::component::Period::Am.clone(),
+        parsing::component::Period::Am
     );
     // does not impl Debug
     assert!(crate::time::Padding::Optimize.clone() == crate::time::Padding::Optimize);
@@ -99,9 +97,8 @@ fn clone() {
 
 #[test]
 fn parsing_internals() {
-    assert!(
-        parsing::ParsedItem(b"", ())
-            .flat_map(|_| None::<()>)
-            .is_none()
-    );
+    assert!(parsing::ParsedItem(b"", ())
+        .flat_map(|_| None::<()>)
+        .is_none());
+    assert!(<NonZeroU8 as Integer>::parse_bytes(b"256").is_none());
 }

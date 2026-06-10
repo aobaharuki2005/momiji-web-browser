@@ -21,7 +21,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
-import androidx.preference.SwitchPreferenceCompat
+import androidx.preference.SwitchPreference
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +39,6 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.LogMiddleware
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.requireComponents
@@ -66,7 +65,7 @@ import mozilla.components.ui.icons.R as iconsR
  * syncing credit cards and addresses.
  */
 @SuppressWarnings("TooManyFunctions")
-class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInsetsPaddedFragment {
+class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
 
     private lateinit var store: AutofillFragmentStore
 
@@ -135,7 +134,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
      * Updates save and autofill cards preference switch state depending on the saved user preference.
      */
     internal fun updateSaveAndAutofillCardsSwitch() {
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_credit_cards_save_and_autofill_cards).apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_credit_cards_save_and_autofill_cards).apply {
             isChecked = context.settings().shouldAutofillCreditCardDetails
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
@@ -145,7 +144,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
      * Updates save and autofill addresses preference switch state depending on the saved user preference.
      */
     internal fun updateSaveAndAutofillAddressesSwitch() {
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_addresses_save_and_autofill_addresses).apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_addresses_save_and_autofill_addresses).apply {
             isChecked = context.settings().shouldAutofillAddressDetails
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
@@ -156,13 +155,12 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             val buildStore = { _: NavHostController ->
 
-                val syncEnginesStatus = SyncEnginesStorage(requireContext()).getStatus()
                 val autofillStore by fragmentStore(
                     AutofillSettingsState.default.copy(
                         saveFillAddresses = requireContext().settings().shouldAutofillAddressDetails,
                         saveFillCards = requireContext().settings().shouldAutofillCreditCardDetails,
-                        syncAddresses = syncEnginesStatus.getOrElse(SyncEngine.Addresses) { false },
-                        syncCreditCards = syncEnginesStatus.getOrElse(SyncEngine.CreditCards) { false },
+                        syncAddresses = requireContext().settings().shouldSyncAddressesAcrossDevices,
+                        syncCreditCards = requireContext().settings().shouldSyncCreditCardsAcrossDevices,
                         accountAuthState = if (requireContext().settings().signedInFxaAccount) {
                             AccountAuthState.Authenticated
                         } else {
@@ -218,7 +216,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
             return
         }
 
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_credit_cards_save_and_autofill_cards).summary =
+        requirePreference<SwitchPreference>(R.string.pref_key_credit_cards_save_and_autofill_cards).summary =
             getString(R.string.preferences_credit_cards_save_and_autofill_cards_summary_2, getString(R.string.app_name))
 
         consumeFrom(store) { state ->
@@ -253,7 +251,6 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
         SyncPreferenceView(
             syncPreference = requirePreference(R.string.pref_key_credit_cards_sync_cards_across_devices),
             lifecycleOwner = viewLifecycleOwner,
-            coroutineScope = viewLifecycleOwner.lifecycleScope,
             accountManager = requireComponents.backgroundServices.accountManager,
             syncEngine = SyncEngine.CreditCards,
             loggedOffTitle = requireContext()
@@ -278,7 +275,6 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
             SyncPreferenceView(
                 syncPreference = requirePreference(R.string.pref_key_addresses_sync_cards_across_devices),
                 lifecycleOwner = viewLifecycleOwner,
-                coroutineScope = viewLifecycleOwner.lifecycleScope,
                 accountManager = requireComponents.backgroundServices.accountManager,
                 syncEngine = SyncEngine.Addresses,
                 loggedOffTitle = requireContext()
@@ -512,13 +508,18 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
     }
 
     private fun updateSyncStatusAcrossDevices(destination: String, newValue: Boolean) {
-        val engine = when (destination) {
-            AutofillScreenDestination.ADDRESS -> SyncEngine.Addresses
-            AutofillScreenDestination.CREDIT_CARD -> SyncEngine.CreditCards
-            else -> return
-        }
-        viewLifecycleOwner.lifecycleScope.launch {
-            requireComponents.backgroundServices.accountManager.setEngineEnabled(engine, newValue)
+        when (destination) {
+            AutofillScreenDestination.ADDRESS -> {
+                SyncEnginesStorage(requireContext()).setStatus(SyncEngine.Addresses, newValue)
+                requireContext().settings().shouldSyncAddressesAcrossDevices =
+                    newValue
+            }
+
+            AutofillScreenDestination.CREDIT_CARD -> {
+                SyncEnginesStorage(requireContext()).setStatus(SyncEngine.CreditCards, newValue)
+                requireContext().settings().shouldSyncCreditCardsAcrossDevices =
+                    newValue
+            }
         }
     }
 

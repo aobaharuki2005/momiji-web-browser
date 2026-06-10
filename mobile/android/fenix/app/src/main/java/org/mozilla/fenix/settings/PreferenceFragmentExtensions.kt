@@ -3,17 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.fenix.settings
 
-import android.text.Editable
-import android.text.TextWatcher
+import android.widget.EditText
 import android.widget.FrameLayout
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.pixelSizeFor
 
 /**
  * Displays a custom [MaterialAlertDialogBuilder] for an [EditTextPreference].
@@ -21,68 +17,39 @@ import org.mozilla.fenix.ext.pixelSizeFor
  *
  * @param preference The [Preference] that was clicked.
  * @param onSuccess An optional lambda to execute custom actions after the value is successfully changed.
- * @param errorMessage A callback to provide an error message if the input is invalid.
  * @return `true` if the dialog was handled for an [EditTextPreference], `false` otherwise.
  */
 fun PreferenceFragmentCompat.showCustomEditTextPreferenceDialog(
     preference: Preference,
     onSuccess: () -> Unit = {},
-    errorMessage: (String) -> Int? = { null },
 ): Boolean {
-    if (preference !is EditTextPreference) return false
+    if (preference !is EditTextPreference) {
+        return false
+    }
 
     val context = requireContext()
-
-    val textInputLayout = TextInputLayout(context).apply { isErrorEnabled = true }
-
-    val editText = TextInputEditText(context).apply {
+    val editText = EditText(context).apply {
         setText(preference.text)
-        addTextChangedListener(
-            object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                    // No-op
-                }
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    textInputLayout.error = null
-                }
-                override fun afterTextChanged(s: Editable?) {
-                    // No-op
-                }
-            },
-        )
     }
-
-    textInputLayout.addView(editText)
 
     val container = FrameLayout(context).apply {
-        val horizontalPadding = context.pixelSizeFor(R.dimen.dialog_edit_text_horizontal_padding)
+        val horizontalPadding = context.resources.getDimensionPixelSize(R.dimen.dialog_edit_text_horizontal_padding)
         setPadding(horizontalPadding, 0, horizontalPadding, 0)
-        addView(textInputLayout)
+        addView(editText)
     }
 
-    val dialog = MaterialAlertDialogBuilder(context)
+    MaterialAlertDialogBuilder(context)
         .setTitle(preference.dialogTitle ?: preference.title)
         .setView(container)
-        .setPositiveButton(android.R.string.ok, null)
-        .setNegativeButton(android.R.string.cancel, null)
-        .create()
-
-    dialog.show()
-
-    dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-        val newValue = editText.text.toString()
-        val errorResId = errorMessage(newValue)
-
-        if (errorResId != null) {
-            textInputLayout.error = context.getString(errorResId)
-        } else {
+        .setPositiveButton(android.R.string.ok) { _, _ ->
+            val newValue = editText.text.toString()
             if (preference.callChangeListener(newValue)) {
                 preference.text = newValue
                 onSuccess()
             }
-            dialog.dismiss()
         }
-    }
+        .setNegativeButton(android.R.string.cancel, null)
+        .show()
 
     return true
 }

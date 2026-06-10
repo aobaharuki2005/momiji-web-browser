@@ -9,10 +9,6 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
-const { AboutAddonsTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/AboutAddonsTestUtils.sys.mjs"
-);
-
 let { AddonManagerPrivate } = ChromeUtils.importESModule(
   "resource://gre/modules/AddonManager.sys.mjs"
 );
@@ -277,7 +273,7 @@ function check_all_in_list(aManager, aIds, aIgnoreExtras) {
 }
 
 function getAddonCard(win, id) {
-  return AboutAddonsTestUtils.getAddonCard(win, id);
+  return win.document.querySelector(`addon-card[addon-id="${id}"]`);
 }
 
 async function wait_for_view_load(
@@ -451,7 +447,7 @@ function formatDate(aDate) {
 }
 
 function is_hidden(aElement) {
-  var style = aElement.documentGlobal.getComputedStyle(aElement);
+  var style = aElement.ownerGlobal.getComputedStyle(aElement);
   if (style.display == "none") {
     return true;
   }
@@ -501,6 +497,98 @@ async function install_addon(path, cb, pathPrefix = TESTROOT) {
 
   return log_callback(p, cb);
 }
+
+function CategoryUtilities(aManagerWindow) {
+  this.window = aManagerWindow;
+  this.window.addEventListener("unload", () => (this.window = null), {
+    once: true,
+  });
+}
+
+CategoryUtilities.prototype = {
+  window: null,
+
+  get _categoriesBox() {
+    return this.window.document.querySelector("categories-box");
+  },
+
+  getSelectedViewId() {
+    let selectedItem = this._categoriesBox.querySelector("[selected]");
+    isnot(selectedItem, null, "A category should be selected");
+    return selectedItem.getAttribute("viewid");
+  },
+
+  get selectedCategory() {
+    isnot(
+      this.window,
+      null,
+      "Should not get selected category when manager window is not loaded"
+    );
+    let viewId = this.getSelectedViewId();
+    let view = this.window.gViewController.parseViewId(viewId);
+    return view.type == "list" ? view.param : view.type;
+  },
+
+  get(categoryType) {
+    isnot(
+      this.window,
+      null,
+      "Should not get category when manager window is not loaded"
+    );
+
+    let button = this._categoriesBox.querySelector(`[name="${categoryType}"]`);
+    if (button) {
+      return button;
+    }
+
+    ok(false, "Should have found a category with type " + categoryType);
+    return null;
+  },
+
+  isVisible(categoryButton) {
+    isnot(
+      this.window,
+      null,
+      "Should not check visible state when manager window is not loaded"
+    );
+
+    // There are some tests checking this before the categories have loaded.
+    if (!categoryButton) {
+      return false;
+    }
+
+    if (categoryButton.disabled || categoryButton.hidden) {
+      return false;
+    }
+
+    return !is_hidden(categoryButton);
+  },
+
+  isTypeVisible(categoryType) {
+    return this.isVisible(this.get(categoryType));
+  },
+
+  open(categoryButton) {
+    isnot(
+      this.window,
+      null,
+      "Should not open category when manager window is not loaded"
+    );
+    ok(
+      this.isVisible(categoryButton),
+      "Category should be visible if attempting to open it"
+    );
+
+    EventUtils.synthesizeMouseAtCenter(categoryButton, {}, this.window);
+
+    // Use wait_for_view_load until all open_manager calls are gone.
+    return wait_for_view_load(this.window);
+  },
+
+  openType(categoryType) {
+    return this.open(this.get(categoryType));
+  },
+};
 
 // Returns a promise that will resolve when the certificate error override has been added, or reject
 // if there is some failure.
@@ -1535,9 +1623,11 @@ function closeView(win) {
 }
 
 function switchView(win, type) {
-  const categoryButton = AboutAddonsTestUtils.getCategoryButton(win, type);
-  EventUtils.synthesizeMouseAtCenter(categoryButton, {}, win);
-  return wait_for_view_load(win);
+  return new CategoryUtilities(win).openType(type);
+}
+
+function isCategoryVisible(win, type) {
+  return new CategoryUtilities(win).isTypeVisible(type);
 }
 
 function mockPromptService() {
@@ -1677,17 +1767,4 @@ async function switchToDetailView({ id, win }) {
   card = getAddonCard(win, id);
   ok(card.querySelector("addon-details"), "The card does have details");
   return card;
-}
-
-/**
- * Trigger an action from the page options menu.
- */
-async function triggerPageOptionsAction(win, action) {
-  let button = win.document.querySelector(`#page-options [action="${action}"]`);
-  // Button is temporarily disabled on click. Wait in case we just clicked.
-  await BrowserTestUtils.waitForCondition(
-    () => !button.disabled,
-    "Wait for button to become enabled"
-  );
-  button.click();
 }

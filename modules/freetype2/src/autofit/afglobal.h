@@ -5,7 +5,7 @@
  *   Auto-fitter routines to compute global hinting values
  *   (specification).
  *
- * Copyright (C) 2003-2026 by
+ * Copyright (C) 2003-2025 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -116,9 +116,7 @@ FT_BEGIN_HEADER
 
     /* The GSUB table. */
     FT_Byte*         gsub;
-    /* An array of lookup offsets (of `gsub_lookup_count` elements), */
-    /* with only SingleSubst and AlternateSubst lookups non-NULL.    */
-    FT_UShort        gsub_lookup_count;
+    /* Lookup offsets, with only SingleSubst and AlternateSubst non-NULL. */
     FT_UInt32*       gsub_lookups_single_alternate;
 #endif
 

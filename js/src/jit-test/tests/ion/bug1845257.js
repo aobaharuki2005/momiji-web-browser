@@ -1,9 +1,5 @@
 // |jit-test| --no-threads; --baseline-warmup-threshold=10; --ion-warmup-threshold=100; --fuzzing-safe; --gc-zeal=10
 
-if (getJitCompilerOptions()['blinterp.enable'] === 0) {
-  quit();
-}
-
 const v7 = {};
 
 function foo(n) {

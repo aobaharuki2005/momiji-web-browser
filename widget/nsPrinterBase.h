@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPrinterBase_h_
-#define nsPrinterBase_h_
+#ifndef nsPrinterBase_h__
+#define nsPrinterBase_h__
 
 #include "mozilla/gfx/Rect.h"
 #include "nsIPrinter.h"
@@ -32,10 +33,6 @@ class nsPrinterBase : public nsIPrinter {
 
   NS_IMETHOD CopyFromWithValidation(nsIPrintSettings*, JSContext*,
                                     Promise**) override;
-  NS_IMETHOD GetSortAfterLocal(bool* aSortAfterLocal) final {
-    *aSortAfterLocal = mSortAfterLocal;
-    return NS_OK;
-  }
   NS_IMETHOD GetSupportsDuplex(JSContext*, Promise**) final;
   NS_IMETHOD GetSupportsColor(JSContext*, Promise**) final;
   NS_IMETHOD GetSupportsMonochrome(JSContext*, Promise**) final;
@@ -90,8 +87,7 @@ class nsPrinterBase : public nsIPrinter {
                                        Args... aArgs);
 
  protected:
-  nsPrinterBase(const mozilla::CommonPaperInfoArray* aPaperInfoArray,
-                bool aSortAfterLocal = false);
+  nsPrinterBase(const mozilla::CommonPaperInfoArray* aPaperInfoArray);
   virtual ~nsPrinterBase();
 
   // Implementation-specific methods. These must not make assumptions about
@@ -113,7 +109,6 @@ class nsPrinterBase : public nsIPrinter {
       mAsyncAttributePromises;
   // List of built-in, commonly used paper sizes.
   const RefPtr<const mozilla::CommonPaperInfoArray> mCommonPaperInfo;
-  const bool mSortAfterLocal;
 };
 
 #endif

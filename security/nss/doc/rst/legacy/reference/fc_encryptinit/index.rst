@@ -44,6 +44,7 @@ FC_EncryptInit
 
    A user must log into the token (to assume the NSS User role) before calling ``FC_EncryptInit``.
 
+.. _return_value:
 
 `Return value <#return_value>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,6 +59,9 @@ FC_EncryptInit
 `Examples <#examples>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. container::
+
+.. _see_also:
 
 `See also <#see_also>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~

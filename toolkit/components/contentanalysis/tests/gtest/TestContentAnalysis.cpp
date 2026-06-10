@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -140,7 +141,7 @@ class ContentAnalysisTest : public testing::Test {
   };
 };
 
-MOZ_GLIBCXX_CONSTINIT nsString ContentAnalysisTest::mPipeName;
+MOZ_RUNINIT nsString ContentAnalysisTest::mPipeName;
 MOZ_RUNINIT MozAgentInfo ContentAnalysisTest::mAgentInfo;
 
 TEST_F(ContentAnalysisTest, AllowUrlList) {

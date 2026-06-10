@@ -16,10 +16,12 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
-  UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
+  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
+  UrlbarTokenizer:
+    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
 });
 
 // By default, we add remote tabs that have been used more recently than this
@@ -187,15 +189,22 @@ export class UrlbarProviderRemoteTabs extends UrlbarProvider {
     for (let { tab, client } of tabsData) {
       if (
         !searchString ||
-        searchString == lazy.UrlbarShared.RESTRICT_TOKENS.OPENPAGE ||
+        searchString == lazy.UrlbarTokenizer.RESTRICT.OPENPAGE ||
         re.test(tab.url) ||
         (tab.title && re.test(tab.title))
       ) {
-        // Bug 2017798 - we need to determine how to safely show remote favicons here,
-        // but until then, we show a generic favicon for the site if possible.
-        let icon = lazy.showRemoteIconsPref
-          ? UrlbarUtils.getIconForUrl(tab.url)
-          : "";
+        if (lazy.showRemoteIconsPref) {
+          if (!tab.icon) {
+            // It's rare that Sync supplies the icon for the page. If it does, it is a
+            // string URL.
+            tab.icon = UrlbarUtils.getIconForUrl(tab.url);
+          } else {
+            tab.icon = lazy.PlacesUtils.favicons.getFaviconLinkForIcon(
+              Services.io.newURI(tab.icon)
+            ).spec;
+          }
+        }
+
         let result = new lazy.UrlbarResult({
           type: UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
           source: UrlbarUtils.RESULT_SOURCE.TABS,
@@ -203,7 +212,7 @@ export class UrlbarProviderRemoteTabs extends UrlbarProvider {
             url: tab.url,
             title: tab.title,
             device: client.name,
-            icon,
+            icon: lazy.showRemoteIconsPref ? tab.icon : "",
             lastUsed: (tab.lastUsed || 0) * 1000,
           },
           highlights: {

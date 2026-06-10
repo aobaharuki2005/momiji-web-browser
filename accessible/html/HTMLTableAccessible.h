@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_a11y_HTMLTableAccessible_h_
-#define mozilla_a11y_HTMLTableAccessible_h_
+#ifndef mozilla_a11y_HTMLTableAccessible_h__
+#define mozilla_a11y_HTMLTableAccessible_h__
 
 #include "HyperTextAccessible.h"
 
@@ -52,7 +53,7 @@ class HTMLTableCellAccessible : public HyperTextAccessible {
   }
 
  protected:
-  virtual ~HTMLTableCellAccessible() = default;
+  virtual ~HTMLTableCellAccessible() {}
 };
 
 /**
@@ -81,7 +82,7 @@ class HTMLTableRowAccessible : public HyperTextAccessible {
                                        HyperTextAccessible)
 
  protected:
-  virtual ~HTMLTableRowAccessible() = default;
+  virtual ~HTMLTableRowAccessible() {}
 };
 
 /**
@@ -126,7 +127,7 @@ class HTMLTableAccessible : public HyperTextAccessible {
   virtual bool InsertChildAt(uint32_t aIndex, LocalAccessible* aChild) override;
 
  protected:
-  virtual ~HTMLTableAccessible() = default;
+  virtual ~HTMLTableAccessible() {}
 
   // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
@@ -164,7 +165,7 @@ class HTMLCaptionAccessible : public HyperTextAccessible {
   virtual Relation RelationByType(RelationType aRelationType) const override;
 
  protected:
-  virtual ~HTMLCaptionAccessible() = default;
+  virtual ~HTMLCaptionAccessible() {}
 };
 
 }  // namespace a11y

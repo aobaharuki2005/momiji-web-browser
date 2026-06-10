@@ -29,9 +29,7 @@
 //!
 //! When all [`Sender`] handles have been dropped, it is no longer
 //! possible to send values into the channel. This is considered the termination
-//! event of the stream. Once all senders have been dropped and any remaining
-//! buffered values have been received, `Receiver::recv` returns `None`
-//! (and `Receiver::poll_recv` returns `Poll::Ready(None)`).
+//! event of the stream. As such, `Receiver::poll` returns `Ok(Ready(None))`.
 //!
 //! If the [`Receiver`] handle is dropped, then messages can no longer
 //! be read out of the channel. In this case, all further attempts to send will
@@ -137,10 +135,10 @@ pub mod error;
 /// This value must be a power of 2. It also must be smaller than the number of
 /// bits in `usize`.
 #[cfg(all(target_pointer_width = "64", not(loom)))]
-pub(crate) const BLOCK_CAP: usize = 32;
+const BLOCK_CAP: usize = 32;
 
 #[cfg(all(not(target_pointer_width = "64"), not(loom)))]
-pub(crate) const BLOCK_CAP: usize = 16;
+const BLOCK_CAP: usize = 16;
 
 #[cfg(loom)]
-pub(crate) const BLOCK_CAP: usize = 2;
+const BLOCK_CAP: usize = 2;

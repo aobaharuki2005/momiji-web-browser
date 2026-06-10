@@ -1,7 +1,12 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 const { AddonManager } = ChromeUtils.importESModule(
   "resource://gre/modules/AddonManager.sys.mjs"
+);
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 
 const {
@@ -110,7 +115,7 @@ async function expectEvents(
 }
 
 add_task(async function test_should_fire_on_addon_update() {
-  Services.prefs.setBoolPref("extensions.logging.enabled", false);
+  Preferences.set("extensions.logging.enabled", false);
 
   await promiseStartupManager();
 

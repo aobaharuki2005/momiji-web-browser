@@ -28,11 +28,11 @@ const CONFIG = [
 
 add_setup(async function () {
   SearchTestUtils.setRemoteSettingsConfig(CONFIG);
-  await SearchService.init();
+  await Services.search.init();
 });
 
 add_task(async function test_custom_suggest_param() {
-  let engine = SearchService.getEngineByName("Get Engine");
+  let engine = Services.search.getEngineByName("Get Engine");
   Assert.notEqual(engine, null, "Should have found an engine");
 
   let submissionSuggest = engine.getSubmission(

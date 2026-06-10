@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,10 +23,12 @@
 #include "prenv.h"
 #include "replace_malloc.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef XP_WIN
 #  include <windows.h>
@@ -205,6 +209,9 @@ class MOZ_CAPABILITY("mutex") Mutex : private ::mozilla::detail::MutexImpl {
 };
 
 class MOZ_SCOPED_CAPABILITY MutexAutoLock {
+  MutexAutoLock(const MutexAutoLock&) = delete;
+  void operator=(const MutexAutoLock&) = delete;
+
   Mutex& mMutex;
 
  public:
@@ -213,8 +220,6 @@ class MOZ_SCOPED_CAPABILITY MutexAutoLock {
     mMutex.Lock();
   }
   ~MutexAutoLock() MOZ_CAPABILITY_RELEASE() { mMutex.Unlock(); }
-  MutexAutoLock(const MutexAutoLock&) = delete;
-  void operator=(const MutexAutoLock&) = delete;
 };
 
 //---------------------------------------------------------------------------

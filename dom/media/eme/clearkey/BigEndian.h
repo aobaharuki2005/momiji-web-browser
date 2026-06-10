@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef BigEndian_h_
-#define BigEndian_h_
+#ifndef __BigEndian_h__
+#define __BigEndian_h__
 
 #include <stdint.h>
 
@@ -56,4 +56,4 @@ class BigEndian {
 
 }  // namespace mozilla
 
-#endif  // BigEndian_h_
+#endif  // __BigEndian_h__

@@ -32,8 +32,6 @@
       this.addEventListener("TabShow", this);
       this.addEventListener("TabHoverStart", this);
       this.addEventListener("TabHoverEnd", this);
-      this.addEventListener("TabNoteIconHoverStart", this);
-      this.addEventListener("TabNoteIconHoverEnd", this);
       this.addEventListener("TabGroupLabelHoverStart", this);
       this.addEventListener("TabGroupLabelHoverEnd", this);
       // Capture collapse/expand early so we mark animating groups before
@@ -136,6 +134,16 @@
 
       this.allTabs[0].label = this.emptyTabTitle;
 
+      // Hide the secondary text for locales where it is unsupported due to size constraints.
+      const language = Services.locale.appLocaleAsBCP47;
+      const unsupportedLocales = Services.prefs.getCharPref(
+        "browser.tabs.secondaryTextUnsupportedLocales"
+      );
+      this.toggleAttribute(
+        "secondarytext-unsupported",
+        unsupportedLocales.split(",").includes(language.split("-")[0])
+      );
+
       this.newTabButton.setAttribute(
         "aria-label",
         DynamicShortcutTooltip.getText("tabs-newtab-button")
@@ -150,7 +158,6 @@
       this._fullscreenMutationObserver.observe(document.documentElement, {
         attributeFilter: ["inFullscreen", "inDOMFullscreen"],
       });
-      window.addEventListener("uidensitychanged", this);
 
       this.boundObserve = (...args) => this.observe(...args);
       Services.prefs.addObserver("privacy.userContext", this.boundObserve);
@@ -220,7 +227,24 @@
 
       this.tooltip = "tabbrowser-tab-tooltip";
 
-      this.tabDragAndDrop = new window.TabDragAndDrop(this);
+      Services.prefs.addObserver(
+        "browser.tabs.dragDrop.multiselectStacking",
+        this.boundObserve
+      );
+      this.observe(
+        null,
+        "nsPref:changed",
+        "browser.tabs.dragDrop.multiselectStacking"
+      );
+    }
+
+    #initializeDragAndDrop() {
+      this.tabDragAndDrop = Services.prefs.getBoolPref(
+        "browser.tabs.dragDrop.multiselectStacking",
+        true
+      )
+        ? new window.TabStacking(this)
+        : new window.TabDragAndDrop(this);
       this.tabDragAndDrop.init();
     }
 
@@ -329,24 +353,6 @@
 
     on_TabHoverEnd(event) {
       this.previewPanel?.deactivate(event.target);
-    }
-
-    on_TabNoteIconHoverStart(event) {
-      if (!this._showTabHoverPreview) {
-        return;
-      }
-      this.ensureTabPreviewPanelLoaded();
-      this.previewPanel.activateNotePanel(
-        event.target,
-        event.detail.noteIconElement
-      );
-    }
-
-    on_TabNoteIconHoverEnd(event) {
-      this.previewPanel?.deactivateNotePanel(event.target);
-      if (event.detail.returningToTab) {
-        this.previewPanel?.activate(event.target);
-      }
     }
 
     cancelTabGroupPreview() {
@@ -799,12 +805,6 @@
       }
     }
 
-    on_uidensitychanged() {
-      this._updateCloseButtons();
-      this.#updateTabMinHeight();
-      this._handleTabSelect(true);
-    }
-
     // Utilities
 
     get emptyTabTitle() {
@@ -874,23 +874,6 @@
     get allGroups() {
       let children = Array.from(this.arrowScrollbox.children);
       return children.filter(node => node.tagName == "tab-group");
-    }
-
-    get allSplitViews() {
-      let children = Array.from(this.arrowScrollbox.children);
-      let splitViews = [];
-      for (let node of children) {
-        if (node.tagName == "tab-split-view-wrapper") {
-          splitViews.push(node);
-        } else if (node.tagName == "tab-group") {
-          splitViews.push(
-            ...Array.from(node.children).filter(
-              child => child.tagName == "tab-split-view-wrapper"
-            )
-          );
-        }
-      }
-      return splitViews;
     }
 
     /**
@@ -1253,9 +1236,12 @@
       }
     }
 
-    observe(aSubject, aTopic) {
+    observe(aSubject, aTopic, aData) {
       switch (aTopic) {
         case "nsPref:changed": {
+          if (aData == "browser.tabs.dragDrop.multiselectStacking") {
+            this.#initializeDragAndDrop();
+          }
           // This is has to deal with changes in
           // privacy.userContext.enabled and
           // privacy.userContext.newTabContainerOnLeftClick.enabled.
@@ -1357,11 +1343,7 @@
           let rect = ele => {
             return window.windowUtils.getBoundsWithoutFlushing(ele);
           };
-          // See bug 2007766, we need to find the first tab that isn't
-          // inside a split view, because those can be narrower than the threshold.
-          let tab = this.visibleTabs
-            .slice(gBrowser.pinnedTabCount)
-            .find(t => !t.splitview);
+          let tab = this.visibleTabs[gBrowser.pinnedTabCount];
           if (tab && rect(tab).width <= this._tabClipWidth) {
             this.setAttribute("closebuttons", "activetab");
           } else {
@@ -1510,6 +1492,12 @@
         this.removeAttribute("using-closing-tabs-spacer");
         this._closingTabsSpacer.style.width = 0;
       }
+    }
+
+    uiDensityChanged() {
+      this._updateCloseButtons();
+      this.#updateTabMinHeight();
+      this._handleTabSelect(true);
     }
 
     _notifyBackgroundTab(aTab) {
@@ -1728,6 +1716,10 @@
     destroy() {
       if (this.boundObserve) {
         Services.prefs.removeObserver("privacy.userContext", this.boundObserve);
+        Services.prefs.removeObserver(
+          "browser.tabs.dragDrop.multiselectStacking",
+          this.boundObserve
+        );
       }
       CustomizableUI.removeListener(this);
     }

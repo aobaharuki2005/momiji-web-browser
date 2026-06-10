@@ -5,6 +5,7 @@
  */
 
 import * as BidiMapper from 'chromium-bidi/lib/cjs/bidiMapper/BidiMapper.js';
+import type * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
 import type {ProtocolMapping} from 'devtools-protocol/types/protocol-mapping.js';
 
 import type {CDPEvents, CDPSession} from '../api/CDPSession.js';
@@ -48,7 +49,6 @@ export async function connectBidiOverCdp(
   const pptrBiDiConnection = new BidiConnection(
     cdp.url(),
     pptrTransport,
-    cdp._idGenerator,
     cdp.delay,
     cdp.timeout,
   );
@@ -178,30 +178,31 @@ class CDPClientAdapter<T extends CDPSession | CdpConnection>
  */
 class NoOpTransport
   extends BidiMapper.EventEmitter<{
-    bidiResponse: any;
+    bidiResponse: Bidi.ChromiumBidi.Message;
   }>
   implements BidiMapper.BidiTransport
 {
-  #onMessage: (message: any) => Promise<void> | void = async (
-    _m: any,
-  ): Promise<void> => {
-    return;
-  };
+  #onMessage: (message: Bidi.ChromiumBidi.Command) => Promise<void> | void =
+    async (_m: Bidi.ChromiumBidi.Command): Promise<void> => {
+      return;
+    };
 
-  emitMessage(message: any) {
+  emitMessage(message: Bidi.ChromiumBidi.Command) {
     void this.#onMessage(message);
   }
 
-  setOnMessage(onMessage: (message: any) => Promise<void> | void): void {
+  setOnMessage(
+    onMessage: (message: Bidi.ChromiumBidi.Command) => Promise<void> | void,
+  ): void {
     this.#onMessage = onMessage;
   }
 
-  async sendMessage(message: any): Promise<void> {
+  async sendMessage(message: Bidi.ChromiumBidi.Message): Promise<void> {
     this.emit('bidiResponse', message);
   }
 
   close() {
-    this.#onMessage = async (_m: any): Promise<void> => {
+    this.#onMessage = async (_m: Bidi.ChromiumBidi.Command): Promise<void> => {
       return;
     };
   }

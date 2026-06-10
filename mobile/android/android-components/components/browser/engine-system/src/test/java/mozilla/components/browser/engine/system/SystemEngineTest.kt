@@ -16,7 +16,6 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.assertIs
 
 @RunWith(AndroidJUnit4::class)
 class SystemEngineTest {
@@ -31,13 +30,13 @@ class SystemEngineTest {
     @Test
     fun createView() {
         val engine = SystemEngine(testContext)
-        assertIs<SystemEngineView>(engine.createView(testContext))
+        assertTrue(engine.createView(testContext) is SystemEngineView)
     }
 
     @Test
     fun createSession() {
         val engine = SystemEngine(testContext)
-        assertIs<SystemEngineSession>(engine.createSession())
+        assertTrue(engine.createSession() is SystemEngineSession)
 
         try {
             engine.createSession(true)

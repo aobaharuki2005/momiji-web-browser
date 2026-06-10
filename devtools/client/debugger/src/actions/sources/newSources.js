@@ -9,10 +9,10 @@
  */
 import { insertSourceActors } from "../../actions/source-actors";
 import {
-  makeScriptSourceId,
+  makeSourceId,
   createGeneratedSource,
   createSourceMapOriginalSource,
-  createScriptSourceActor,
+  createSourceActor,
 } from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
 import { syncPendingBreakpoint } from "../breakpoints/index";
@@ -28,6 +28,7 @@ import {
   getSource,
   getSourceFromId,
   hasSourceActor,
+  getSourceByActorId,
   getPendingSelectedLocation,
   getPendingBreakpointsForSource,
   getSelectedLocation,
@@ -70,16 +71,17 @@ function loadSourceMap(sourceActor) {
     try {
       // Ignore sourceMapURL on scripts that are part of HTML files, since
       // we currently treat sourcemaps as Source-wide, not SourceActor-specific.
-      if (sourceActor.sourceObject) {
+      const source = getSourceByActorId(getState(), sourceActor.id);
+      if (source) {
         ({ sources, ignoreListUrls, resolvedSourceMapURL, exception } =
           await sourceMapLoader.loadSourceMap({
             // Using source ID here is historical and eventually we'll want to
             // switch to all of this being per-source-actor.
-            id: sourceActor.sourceObject.id,
-            url: sourceActor.sourceObject.url || "",
+            id: source.id,
+            url: sourceActor.url || "",
             sourceMapBaseURL: sourceActor.sourceMapBaseURL || "",
             sourceMapURL: sourceActor.sourceMapURL || "",
-            isWasm: sourceActor.sourceObject.isWasm,
+            isWasm: sourceActor.introductionType === "wasm",
           }));
       }
     } catch (e) {
@@ -106,7 +108,7 @@ function loadSourceMap(sourceActor) {
       const message = L10N.getFormatStr(
         "toolbox.sourceMapFailure",
         exception,
-        sourceActor.sourceObject.url,
+        sourceActor.url,
         sourceActor.sourceMapURL
       );
       panel.toolbox.commands.targetCommand.targetFront.logWarningInPage(
@@ -311,7 +313,7 @@ export function newGeneratedSources(sourceResources) {
       if (sourceResource.targetFront.isDestroyed()) {
         continue;
       }
-      const id = makeScriptSourceId(sourceResource);
+      const id = makeSourceId(sourceResource);
 
       if (!getSource(getState(), id) && !newSourcesObj[id]) {
         newSourcesObj[id] = createGeneratedSource(sourceResource);
@@ -323,7 +325,7 @@ export function newGeneratedSources(sourceResources) {
       // request a new source list and also get a source event from the server.
       if (!hasSourceActor(getState(), actorId)) {
         newSourceActors.push(
-          createScriptSourceActor(
+          createSourceActor(
             sourceResource,
             getSource(getState(), id) || newSourcesObj[id]
           )

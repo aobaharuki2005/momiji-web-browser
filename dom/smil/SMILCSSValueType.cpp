@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,6 +8,7 @@
 
 #include "SMILCSSValueType.h"
 
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/SMILParserUtils.h"
@@ -435,7 +438,7 @@ void SMILCSSValueType::ValueFromString(NonCustomCSSPropertyId aPropId,
   }
 
   RefPtr<const ComputedStyle> computedStyle =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(aTargetElement);
+      nsComputedDOMStyle::GetComputedStyle(aTargetElement);
   if (!computedStyle) {
     return;
   }
@@ -480,18 +483,19 @@ SMILValue SMILCSSValueType::ValueFromAnimationValue(
 // static
 bool SMILCSSValueType::SetPropertyValues(NonCustomCSSPropertyId aPropertyId,
                                          const SMILValue& aValue,
-                                         StyleLockedDeclarationBlock& aDecl) {
+                                         DeclarationBlock& aDecl) {
   MOZ_ASSERT(aValue.mType == &SMILCSSValueType::sSingleton,
              "Unexpected SMIL value type");
   const ValueWrapper* wrapper = ExtractValueWrapper(aValue);
   if (!wrapper) {
-    return Servo_DeclarationBlock_RemovePropertyById(&aDecl, aPropertyId, {});
+    return Servo_DeclarationBlock_RemovePropertyById(aDecl.Raw(), aPropertyId,
+                                                     {});
   }
 
   bool changed = false;
   for (const auto& value : wrapper->mServoValues) {
-    changed |=
-        Servo_DeclarationBlock_SetPropertyToAnimationValue(&aDecl, value, {});
+    changed |= Servo_DeclarationBlock_SetPropertyToAnimationValue(aDecl.Raw(),
+                                                                  value, {});
   }
 
   return changed;

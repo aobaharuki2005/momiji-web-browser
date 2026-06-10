@@ -12,16 +12,13 @@
 
 #include <atomic>
 #include <cstdint>
-#include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "api/make_ref_counted.h"
 #include "api/scoped_refptr.h"
 #include "api/test/rtc_error_matchers.h"
 #include "api/units/time_delta.h"
-#include "media/base/media_channel.h"
 #include "pc/test/mock_voice_media_receive_channel_interface.h"
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
@@ -43,29 +40,22 @@ namespace webrtc {
 class AudioRtpReceiverTest : public ::testing::Test {
  protected:
   AudioRtpReceiverTest()
-      : worker_thread_(Thread::Create()),
-        receiver_(make_ref_counted<AudioRtpReceiver>(
-            worker_thread_.get(),
-            std::string(),
-            std::vector<std::string>(),
-            /*enable_sframe_at_owner=*/nullptr)) {
-    worker_thread_->Start();
+      : worker_(Thread::Current()),
+        receiver_(make_ref_counted<AudioRtpReceiver>(worker_,
+                                                     std::string(),
+                                                     std::vector<std::string>(),
+                                                     false)) {
     EXPECT_CALL(receive_channel_, SetRawAudioSink(kSsrc, _));
     EXPECT_CALL(receive_channel_, SetBaseMinimumPlayoutDelayMs(kSsrc, _));
   }
 
   ~AudioRtpReceiverTest() override {
     EXPECT_CALL(receive_channel_, SetOutputVolume(kSsrc, kVolumeMuted));
-    SetMediaChannel(nullptr);
+    receiver_->SetMediaChannel(nullptr);
   }
 
-  void SetMediaChannel(MediaReceiveChannelInterface* media_channel) {
-    worker_thread_->BlockingCall(
-        [&]() { receiver_->SetMediaChannel(media_channel); });
-  }
-
-  test::RunLoop loop_;
-  std::unique_ptr<Thread> worker_thread_;
+  AutoThread main_thread_;
+  Thread* worker_;
   scoped_refptr<AudioRtpReceiver> receiver_;
   MockVoiceMediaReceiveChannelInterface receive_channel_;
 };
@@ -81,10 +71,9 @@ TEST_F(AudioRtpReceiverTest, SetOutputVolumeIsCalled) {
 
   receiver_->track();
   receiver_->track()->set_enabled(true);
-  SetMediaChannel(&receive_channel_);
+  receiver_->SetMediaChannel(&receive_channel_);
   EXPECT_CALL(receive_channel_, SetDefaultRawAudioSink(_)).Times(0);
-  auto setup_task = receiver_->GetSetupForMediaChannel(kSsrc);
-  worker_thread_->BlockingCall([&]() { std::move(setup_task)(); });
+  receiver_->SetupMediaChannel(kSsrc);
 
   EXPECT_CALL(receive_channel_, SetOutputVolume(kSsrc, kVolume))
       .WillOnce(InvokeWithoutArgs([&] {
@@ -104,14 +93,13 @@ TEST_F(AudioRtpReceiverTest, VolumesSetBeforeStartingAreRespected) {
   receiver_->OnSetVolume(kVolume);
 
   receiver_->track()->set_enabled(true);
-  SetMediaChannel(&receive_channel_);
+  receiver_->SetMediaChannel(&receive_channel_);
 
   // The previosly set initial volume should be propagated to the provided
-  // media_channel_ as soon as GetSetupForMediaChannel is called.
+  // media_channel_ as soon as SetupMediaChannel is called.
   EXPECT_CALL(receive_channel_, SetOutputVolume(kSsrc, kVolume));
 
-  auto setup_task = receiver_->GetSetupForMediaChannel(kSsrc);
-  worker_thread_->BlockingCall([&]() { std::move(setup_task)(); });
+  receiver_->SetupMediaChannel(kSsrc);
 }
 
 // Tests that OnChanged notifications are processed correctly on the worker
@@ -119,33 +107,29 @@ TEST_F(AudioRtpReceiverTest, VolumesSetBeforeStartingAreRespected) {
 // constructor.
 TEST(AudioRtpReceiver, OnChangedNotificationsAfterConstruction) {
   test::RunLoop loop;
-
-  std::unique_ptr<Thread> worker_thread = Thread::Create();
-  worker_thread->Start();
+  auto* thread = Thread::Current();  // Points to loop's thread.
   MockVoiceMediaReceiveChannelInterface receive_channel;
-  auto receiver = make_ref_counted<AudioRtpReceiver>(
-      worker_thread.get(), std::string(), std::vector<std::string>(),
-      /*enable_sframe_at_owner=*/nullptr, &receive_channel);
+  auto receiver = make_ref_counted<AudioRtpReceiver>(thread, std::string(),
+                                                     std::vector<std::string>(),
+                                                     true, &receive_channel);
 
   EXPECT_CALL(receive_channel, SetDefaultRawAudioSink(_)).Times(1);
   EXPECT_CALL(receive_channel, SetDefaultOutputVolume(kDefaultVolume)).Times(1);
-  auto setup_task = receiver->GetSetupForUnsignaledMediaChannel();
-  worker_thread->BlockingCall([&]() { std::move(setup_task)(); });
-
-  // When the track is marked as disabled, an async notification is queued
-  // for the worker thread. This notification should trigger the volume
-  // of the media channel to be set to kVolumeMuted.
-  // Set the expectation first for the call, before changing the track state.
-  EXPECT_CALL(receive_channel, SetDefaultOutputVolume(kVolumeMuted)).Times(1);
+  receiver->SetupUnsignaledMediaChannel();
+  loop.Flush();
 
   // Mark the track as disabled.
   receiver->track()->set_enabled(false);
 
-  // Flush the worker thread.
-  worker_thread->BlockingCall([] {});
+  // When the track was marked as disabled, an async notification was queued
+  // for the worker thread. This notification should trigger the volume
+  // of the media channel to be set to kVolumeMuted.
+  // Flush the worker thread, but set the expectation first for the call.
+  EXPECT_CALL(receive_channel, SetDefaultOutputVolume(kVolumeMuted)).Times(1);
+  loop.Flush();
 
   EXPECT_CALL(receive_channel, SetDefaultOutputVolume(kVolumeMuted)).Times(1);
-  worker_thread->BlockingCall([&]() { receiver->SetMediaChannel(nullptr); });
+  receiver->SetMediaChannel(nullptr);
 }
 
 }  // namespace webrtc

@@ -46,8 +46,7 @@ addAccessibleTask(
 );
 
 /**
- * Verify fieldset and radio group with aria-describedby
- * expose description via AXCustomContent, not AXHelp.
+ * Test AXHelp on fieldset and radio group
  */
 addAccessibleTask(
   `
@@ -73,22 +72,14 @@ addAccessibleTask(
       getNativeInterface(accDoc, id).getAttributeValue("AXCustomContent")[0]
         .description;
 
-    is(
-      getHelp("fieldset"),
-      null,
-      "No AXHelp for fieldset with aria-describedby"
-    );
+    is(getHelp("fieldset"), "This is a hinto", "AXHelp for fieldset");
     is(
       getCustomDescription("fieldset"),
       "This is a hinto",
       "Custom description for fieldset"
     );
 
-    is(
-      getHelp("radiogroup"),
-      null,
-      "No AXHelp for radiogroup with aria-describedby"
-    );
+    is(getHelp("radiogroup"), "This is a hinto", "AXHelp for radiogroup");
     is(
       getCustomDescription("radiogroup"),
       "This is a hinto",

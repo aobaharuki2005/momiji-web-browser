@@ -5,8 +5,8 @@ The documentation relies on Sphinx and many Sphinx extensions.
 
 The documentation code is in two main directories:
 
-* :searchfox:`docs`
-* :searchfox:`tools/moztreedocs`
+* https://searchfox.org/mozilla-central/source/docs
+* https://searchfox.org/mozilla-central/source/tools/moztreedocs
 
 Our documentation supports both rst & markdown syntaxes.
 
@@ -15,13 +15,13 @@ Configuration
 
 The main configuration file is:
 
-:searchfox:`docs/config.yml`
+https://searchfox.org/mozilla-central/source/docs/config.yml
 
 It contains the categories, the redirects, the warnings and others configuration aspects.
 
 The dependencies are listed in:
 
-:searchfox:`tools/moztreedocs/requirements.in`
+https://searchfox.org/mozilla-central/source/tools/moztreedocs/requirements.in
 
 Be aware that Python libraries stored in `third_party/python` are used in priority (not always for good reasons). See :ref:`Vendor the source of the Python package in-tree <python-vendor>` for more details.
 
@@ -30,7 +30,7 @@ Architecture
 ------------
 
 
-:searchfox:`mach_commands <tools/moztreedocs/mach_commands.py>`
+`mach_commands <https://searchfox.org/mozilla-central/source/tools/moztreedocs/mach_commands.py>`__
 contains:
 
 * `mach doc` arguments managements
@@ -40,7 +40,7 @@ contains:
 * Starts the sphinx build (and serve it if the option is set)
 * Manages telemetry
 
-:searchfox:`docs/conf.py` defines:
+`docs/conf.py <https://searchfox.org/mozilla-central/source/docs/conf.py>`__ defines:
 
 * The list of extensions
 * JS source paths
@@ -48,4 +48,4 @@ contains:
 
 At the end of the build documentation process, files will be uploaded to a CDN:
 
-:searchfox:`tools/moztreedocs/upload.py`
+https://searchfox.org/mozilla-central/source/tools/moztreedocs/upload.py

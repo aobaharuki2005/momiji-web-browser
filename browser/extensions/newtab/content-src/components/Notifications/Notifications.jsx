@@ -5,14 +5,11 @@
 import React, { useCallback, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
-import { SectionToast } from "./Toasts/SectionToast";
-import { HideWidgetsToast } from "./Toasts/HideWidgetsToast";
 import { ReportContentToast } from "./Toasts/ReportContentToast";
 
 function Notifications({ dispatch }) {
   const toastQueue = useSelector(state => state.Notifications.toastQueue);
   const toastCounter = useSelector(state => state.Notifications.toastCounter);
-  const toastData = useSelector(state => state.Notifications.toastData);
 
   /**
    * Syncs {@link toastQueue} array so it can be used to
@@ -47,17 +44,6 @@ function Notifications({ dispatch }) {
     }
 
     switch (latestToastItem) {
-      case "blockSectionToast":
-      case "followSectionToast":
-      case "unfollowSectionToast":
-        return (
-          <SectionToast
-            onDismissClick={syncHiddenToastData}
-            onAnimationEnd={syncHiddenToastData}
-            toastData={toastData}
-            key={toastCounter}
-          />
-        );
       case "reportSuccessToast":
         return (
           <ReportContentToast
@@ -66,18 +52,10 @@ function Notifications({ dispatch }) {
             key={toastCounter}
           />
         );
-      case "hideWidgetsToast":
-        return (
-          <HideWidgetsToast
-            onDismissClick={syncHiddenToastData}
-            onAnimationEnd={syncHiddenToastData}
-            key={toastCounter}
-          />
-        );
       default:
         throw new Error(`Unexpected toast type: ${latestToastItem}`);
     }
-  }, [syncHiddenToastData, toastCounter, toastData, toastQueue]);
+  }, [syncHiddenToastData, toastCounter, toastQueue]);
 
   useEffect(() => {
     getToast();

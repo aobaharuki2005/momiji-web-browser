@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,6 +14,20 @@
 #include "mozilla/SMILTimedElement.h"
 
 namespace mozilla {
+
+SMILTimeContainer::SMILTimeContainer()
+    : mParent(nullptr),
+      mCurrentTime(0L),
+      mParentOffset(0L),
+      mPauseStart(0L),
+      mNeedsPauseSample(false),
+      mNeedsRewind(false),
+      mIsSeeking(false),
+#ifdef DEBUG
+      mHoldingEntries(false),
+#endif
+      mPauseState(PAUSE_BEGIN) {
+}
 
 SMILTimeContainer::~SMILTimeContainer() {
   if (mParent) {
@@ -38,8 +54,8 @@ SMILTimeValue SMILTimeContainer::ParentToContainerTime(
 }
 
 void SMILTimeContainer::Begin() {
-  Resume(PauseType::Begin);
-  if (IsPaused()) {
+  Resume(PAUSE_BEGIN);
+  if (mPauseState) {
     mNeedsPauseSample = true;
   }
 
@@ -53,16 +69,16 @@ void SMILTimeContainer::Begin() {
   UpdateCurrentTime();
 }
 
-void SMILTimeContainer::Pause(PauseType aType) {
+void SMILTimeContainer::Pause(uint32_t aType) {
   bool didStartPause = false;
 
-  if (!IsPaused()) {
+  if (!mPauseState && aType) {
     mPauseStart = GetParentTime();
     mNeedsPauseSample = true;
     didStartPause = true;
   }
 
-  mPauseTypes += aType;
+  mPauseState |= aType;
 
   if (didStartPause) {
     NotifyTimeChange();
@@ -73,14 +89,12 @@ void SMILTimeContainer::PauseAt(SMILTime aTime) {
   mPauseTime = Some(std::max<SMILTime>(0, aTime));
 }
 
-void SMILTimeContainer::Resume(PauseType aType) {
-  if (!IsPaused()) {
-    return;
-  }
+void SMILTimeContainer::Resume(uint32_t aType) {
+  if (!mPauseState) return;
 
-  mPauseTypes -= aType;
+  mPauseState &= ~aType;
 
-  if (!IsPaused()) {
+  if (!mPauseState) {
     SMILTime extraOffset = GetParentTime() - mPauseStart;
     mParentOffset += extraOffset;
     NotifyTimeChange();
@@ -93,9 +107,7 @@ SMILTime SMILTimeContainer::GetCurrentTimeAsSMILTime() const {
   //  #getCurrentTime_setCurrentTime_undefined_before_document_timeline_begin
   // which says that if GetCurrentTime is called before the document timeline
   // has begun we should just return 0.
-  if (IsPausedByType(PauseType::Begin)) {
-    return 0L;
-  }
+  if (IsPausedByType(PAUSE_BEGIN)) return 0L;
 
   return mCurrentTime;
 }
@@ -157,7 +169,7 @@ void SMILTimeContainer::Sample() {
   mNeedsPauseSample = false;
 
   if (mPauseTime && mCurrentTime >= mPauseTime.value()) {
-    Pause(PauseType::Script);
+    Pause(PAUSE_SCRIPT);
   }
 }
 

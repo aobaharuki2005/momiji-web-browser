@@ -1,3 +1,5 @@
+.. -*- Mode: rst; fill-column: 80; -*-
+
 Getting Started with GeckoView
 ######################################
 
@@ -121,4 +123,4 @@ You're done!
 
 Your application should now load and display a webpage inside of GeckoView.
 
-To learn more about GeckoView's capabilities, review GeckoView's `JavaDoc <https://mozilla.github.io/geckoview/javadoc/mozilla-central/>`_ or the :searchfox:`reference application <mobile/android/geckoview_example>`.
+To learn more about GeckoView's capabilities, review GeckoView's `JavaDoc <https://mozilla.github.io/geckoview/javadoc/mozilla-central/>`_ or the `reference application <https://searchfox.org/mozilla-central/source/mobile/android/geckoview_example>`_.

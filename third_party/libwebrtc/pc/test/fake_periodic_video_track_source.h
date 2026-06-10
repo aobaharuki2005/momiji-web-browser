@@ -29,7 +29,7 @@ class FakePeriodicVideoTrackSource : public VideoTrackSource {
                                bool remote)
       : VideoTrackSource(remote), source_(config) {}
 
-  ~FakePeriodicVideoTrackSource() override = default;
+  ~FakePeriodicVideoTrackSource() = default;
 
   FakePeriodicVideoSource& fake_periodic_source() { return source_; }
   const FakePeriodicVideoSource& fake_periodic_source() const {

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -77,9 +79,10 @@ AudioDecoderInputTrack* CreateTrack(MediaTrackGraph* aGraph,
                                     nsISerialEventTarget* aThread,
                                     const AudioInfo& aInfo,
                                     float aPlaybackRate = 1.0,
+                                    float aVolume = 1.0,
                                     bool aPreservesPitch = true) {
   return AudioDecoderInputTrack::Create(aGraph, aThread, aInfo, aPlaybackRate,
-                                        aPreservesPitch);
+                                        aVolume, aPreservesPitch);
 }
 
 class TestAudioDecoderInputTrack : public testing::Test {
@@ -99,7 +102,9 @@ class TestAudioDecoderInputTrack : public testing::Test {
     // before the `Destroy()`.
     mTrack->Close();
     mTrack->Destroy();
-    // Release the self-reference of mock graph.
+    // Remove the reference of the track from the mock graph, and then release
+    // the self-reference of mock graph.
+    mGraph->RemoveTrackGraphThread(mTrack);
     mGraph->Destroy();
   }
 
@@ -311,6 +316,39 @@ TEST_F(TestAudioDecoderInputTrack, ChannelChange) {
   EXPECT_EQ(mTrack->NumberOfChannels(), audioWithFiveChannels->mChannels);
   EXPECT_EQ(mTrack->WrittenFrames(),
             audioMono->Frames() + audioWithFiveChannels->Frames());
+}
+
+TEST_F(TestAudioDecoderInputTrack, VolumeChange) {
+  // In order to run the volume change directly without using a real graph.
+  // one for setting the track's volume, another for the track destruction.
+  EXPECT_CALL(*mGraph, AppendMessage)
+      .Times(2)
+      .WillOnce(
+          [](UniquePtr<ControlMessageInterface> aMessage) { aMessage->Run(); })
+      .WillOnce([](UniquePtr<ControlMessageInterface> aMessage) {});
+
+  // The default volume is 1.0.
+  float expectedVolume = 1.0;
+  RefPtr<AudioData> audio = CreateAudioData(20);
+  TrackTime start = 0;
+  TrackTime end = 10;
+  mTrack->AppendData(audio, nullptr);
+  mTrack->ProcessInput(start, end, kNoFlags);
+  EXPECT_PRED_FORMAT2(ExpectSegmentNonSilence, start, end);
+  EXPECT_TRUE(GetTrackSegment()->GetLastChunk()->mVolume == expectedVolume);
+
+  // After setting volume on the track, the data in the output chunk should be
+  // changed as well.
+  expectedVolume = 0.1;
+  mTrack->SetVolume(expectedVolume);
+  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+      "TEST_F(TestAudioDecoderInputTrack, VolumeChange)"_ns,
+      [&] { return mTrack->Volume() == expectedVolume; });
+  start = end;
+  end += 10;
+  mTrack->ProcessInput(start, end, kNoFlags);
+  EXPECT_PRED_FORMAT2(ExpectSegmentNonSilence, start, end);
+  EXPECT_TRUE(GetTrackSegment()->GetLastChunk()->mVolume == expectedVolume);
 }
 
 TEST_F(TestAudioDecoderInputTrack, BatchedData) {

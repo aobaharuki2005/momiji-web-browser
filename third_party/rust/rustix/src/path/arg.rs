@@ -8,9 +8,11 @@
 
 use crate::ffi::CStr;
 use crate::io;
-use crate::path::{DecInt, SMALL_PATH_BUFFER_SIZE};
-#[cfg(feature = "alloc")]
-use alloc::borrow::ToOwned as _;
+#[cfg(feature = "itoa")]
+use crate::path::DecInt;
+use crate::path::SMALL_PATH_BUFFER_SIZE;
+#[cfg(all(feature = "alloc", feature = "itoa"))]
+use alloc::borrow::ToOwned;
 use core::mem::MaybeUninit;
 use core::{ptr, slice, str};
 #[cfg(feature = "std")]
@@ -18,14 +20,10 @@ use std::ffi::{OsStr, OsString};
 #[cfg(all(feature = "std", target_os = "hermit"))]
 use std::os::hermit::ext::ffi::{OsStrExt, OsStringExt};
 #[cfg(all(feature = "std", unix))]
-use std::os::unix::ffi::{OsStrExt as _, OsStringExt as _};
+use std::os::unix::ffi::{OsStrExt, OsStringExt};
 #[cfg(all(feature = "std", target_os = "vxworks"))]
 use std::os::vxworks::ext::ffi::{OsStrExt, OsStringExt};
-#[cfg(all(
-    feature = "std",
-    target_os = "wasi",
-    any(not(target_env = "p2"), wasip2)
-))]
+#[cfg(all(feature = "std", target_os = "wasi"))]
 use std::os::wasi::ffi::{OsStrExt, OsStringExt};
 #[cfg(feature = "std")]
 use std::path::{Component, Components, Iter, Path, PathBuf};
@@ -235,25 +233,29 @@ impl Arg for &OsStr {
         self.to_str().ok_or(io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         OsStr::to_string_lossy(self)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
-        self.into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_bytes()).map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
         Self: 'b,
     {
-        #[cfg(all(target_os = "wasi", target_env = "p2", not(wasip2)))]
-        return self.to_str().ok_or(io::Errno::INVAL)?.into_c_str();
-        #[cfg(any(wasip2, not(all(target_os = "wasi", target_env = "p2"))))]
-        return self.as_bytes().into_c_str();
+        Ok(Cow::Owned(
+            CString::new(self.as_bytes()).map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
     #[inline]
@@ -262,11 +264,7 @@ impl Arg for &OsStr {
         Self: Sized,
         F: FnOnce(&CStr) -> io::Result<T>,
     {
-        #[cfg(all(target_os = "wasi", target_env = "p2", not(wasip2)))]
-        return self.as_str()?.into_with_c_str(f);
-
-        #[cfg(any(wasip2, not(all(target_os = "wasi", target_env = "p2"))))]
-        return self.as_bytes().into_with_c_str(f);
+        with_c_str(self.as_bytes(), f)
     }
 }
 
@@ -277,16 +275,22 @@ impl Arg for &OsString {
         OsString::as_os_str(self).to_str().ok_or(io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         self.as_os_str().to_string_lossy()
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
-        self.as_os_str().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(OsString::as_os_str(self).as_bytes())
+                .map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
@@ -301,7 +305,7 @@ impl Arg for &OsString {
         Self: Sized,
         F: FnOnce(&CStr) -> io::Result<T>,
     {
-        self.as_os_str().into_with_c_str(f)
+        with_c_str(self.as_bytes(), f)
     }
 }
 
@@ -312,28 +316,29 @@ impl Arg for OsString {
         self.as_os_str().to_str().ok_or(io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         self.as_os_str().to_string_lossy()
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
-        self.as_os_str().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_bytes()).map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
         Self: 'b,
     {
-        #[cfg(all(target_os = "wasi", target_env = "p2", not(wasip2)))]
-        return self
-            .into_string()
-            .map_err(|_strng_err| io::Errno::INVAL)?
-            .into_c_str();
-        #[cfg(any(wasip2, not(all(target_os = "wasi", target_env = "p2"))))]
-        self.into_vec().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.into_vec()).map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
     #[inline]
@@ -342,7 +347,7 @@ impl Arg for OsString {
         Self: Sized,
         F: FnOnce(&CStr) -> io::Result<T>,
     {
-        f(&self.into_c_str()?)
+        f(&CString::new(self.into_vec()).map_err(|_cstr_err| io::Errno::INVAL)?)
     }
 }
 
@@ -353,22 +358,29 @@ impl Arg for &Path {
         self.as_os_str().to_str().ok_or(io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         Path::to_string_lossy(self)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
-        self.as_os_str().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_os_str().as_bytes()).map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
         Self: 'b,
     {
-        self.as_os_str().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_os_str().as_bytes()).map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
     #[inline]
@@ -377,7 +389,7 @@ impl Arg for &Path {
         Self: Sized,
         F: FnOnce(&CStr) -> io::Result<T>,
     {
-        self.as_os_str().into_with_c_str(f)
+        with_c_str(self.as_os_str().as_bytes(), f)
     }
 }
 
@@ -385,19 +397,28 @@ impl Arg for &Path {
 impl Arg for &PathBuf {
     #[inline]
     fn as_str(&self) -> io::Result<&str> {
-        self.as_os_str().to_str().ok_or(io::Errno::INVAL)
+        PathBuf::as_path(self)
+            .as_os_str()
+            .to_str()
+            .ok_or(io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         self.as_path().to_string_lossy()
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
-        self.as_os_str().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(PathBuf::as_path(self).as_os_str().as_bytes())
+                .map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
@@ -412,7 +433,7 @@ impl Arg for &PathBuf {
         Self: Sized,
         F: FnOnce(&CStr) -> io::Result<T>,
     {
-        self.as_os_str().into_with_c_str(f)
+        with_c_str(self.as_os_str().as_bytes(), f)
     }
 }
 
@@ -423,22 +444,29 @@ impl Arg for PathBuf {
         self.as_os_str().to_str().ok_or(io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         self.as_os_str().to_string_lossy()
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
-        self.as_os_str().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_os_str().as_bytes()).map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
         Self: 'b,
     {
-        self.into_os_string().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.into_os_string().into_vec()).map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
     #[inline]
@@ -447,7 +475,10 @@ impl Arg for PathBuf {
         Self: Sized,
         F: FnOnce(&CStr) -> io::Result<T>,
     {
-        self.into_os_string().into_with_c_str(f)
+        f(
+            &CString::new(self.into_os_string().into_vec())
+                .map_err(|_cstr_err| io::Errno::INVAL)?,
+        )
     }
 }
 
@@ -492,19 +523,22 @@ impl Arg for &CStr {
 impl Arg for &CString {
     #[inline]
     fn as_str(&self) -> io::Result<&str> {
-        self.to_str().map_err(|_utf8_err| io::Errno::INVAL)
+        unimplemented!()
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
-        CStr::to_string_lossy(self)
+        unimplemented!()
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
         Ok(Cow::Borrowed(self))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
@@ -530,16 +564,19 @@ impl Arg for CString {
         self.to_str().map_err(|_utf8_err| io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         CStr::to_string_lossy(self)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
         Ok(Cow::Borrowed(self))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
@@ -565,11 +602,13 @@ impl<'a> Arg for Cow<'a, str> {
         Ok(self)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         Cow::Borrowed(self)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
         Ok(Cow::Owned(
@@ -577,6 +616,7 @@ impl<'a> Arg for Cow<'a, str> {
         ))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
@@ -602,31 +642,40 @@ impl<'a> Arg for Cow<'a, str> {
 }
 
 #[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 impl<'a> Arg for Cow<'a, OsStr> {
     #[inline]
     fn as_str(&self) -> io::Result<&str> {
         (**self).to_str().ok_or(io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         (**self).to_string_lossy()
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
-        (&**self).into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_bytes()).map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
         Self: 'b,
     {
-        match self {
-            Cow::Owned(os) => os.into_c_str(),
-            Cow::Borrowed(os) => os.into_c_str(),
-        }
+        Ok(Cow::Owned(
+            match self {
+                Cow::Owned(os) => CString::new(os.into_vec()),
+                Cow::Borrowed(os) => CString::new(os.as_bytes()),
+            }
+            .map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
     #[inline]
@@ -635,7 +684,7 @@ impl<'a> Arg for Cow<'a, OsStr> {
         Self: Sized,
         F: FnOnce(&CStr) -> io::Result<T>,
     {
-        (&*self).into_with_c_str(f)
+        with_c_str(self.as_bytes(), f)
     }
 }
 
@@ -646,17 +695,20 @@ impl<'a> Arg for Cow<'a, CStr> {
         self.to_str().map_err(|_utf8_err| io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         let borrow: &CStr = core::borrow::Borrow::borrow(self);
         borrow.to_string_lossy()
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
         Ok(Cow::Borrowed(self))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
@@ -682,22 +734,29 @@ impl<'a> Arg for Component<'a> {
         self.as_os_str().to_str().ok_or(io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         self.as_os_str().to_string_lossy()
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
-        self.as_os_str().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_os_str().as_bytes()).map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
         Self: 'b,
     {
-        self.as_os_str().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_os_str().as_bytes()).map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
     #[inline]
@@ -706,7 +765,7 @@ impl<'a> Arg for Component<'a> {
         Self: Sized,
         F: FnOnce(&CStr) -> io::Result<T>,
     {
-        self.as_os_str().into_with_c_str(f)
+        with_c_str(self.as_os_str().as_bytes(), f)
     }
 }
 
@@ -717,22 +776,31 @@ impl<'a> Arg for Components<'a> {
         self.as_path().to_str().ok_or(io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         self.as_path().to_string_lossy()
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
-        self.as_path().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_path().as_os_str().as_bytes())
+                .map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
         Self: 'b,
     {
-        self.as_path().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_path().as_os_str().as_bytes())
+                .map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
     #[inline]
@@ -741,7 +809,7 @@ impl<'a> Arg for Components<'a> {
         Self: Sized,
         F: FnOnce(&CStr) -> io::Result<T>,
     {
-        self.as_path().into_with_c_str(f)
+        with_c_str(self.as_path().as_os_str().as_bytes(), f)
     }
 }
 
@@ -752,22 +820,31 @@ impl<'a> Arg for Iter<'a> {
         self.as_path().to_str().ok_or(io::Errno::INVAL)
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_string_lossy(&self) -> Cow<'_, str> {
         self.as_path().to_string_lossy()
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn as_cow_c_str(&self) -> io::Result<Cow<'_, CStr>> {
-        self.as_path().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_path().as_os_str().as_bytes())
+                .map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
+    #[cfg(feature = "alloc")]
     #[inline]
     fn into_c_str<'b>(self) -> io::Result<Cow<'b, CStr>>
     where
         Self: 'b,
     {
-        self.as_path().into_c_str()
+        Ok(Cow::Owned(
+            CString::new(self.as_path().as_os_str().as_bytes())
+                .map_err(|_cstr_err| io::Errno::INVAL)?,
+        ))
     }
 
     #[inline]
@@ -776,7 +853,7 @@ impl<'a> Arg for Iter<'a> {
         Self: Sized,
         F: FnOnce(&CStr) -> io::Result<T>,
     {
-        self.as_path().into_with_c_str(f)
+        with_c_str(self.as_path().as_os_str().as_bytes(), f)
     }
 }
 
@@ -905,6 +982,7 @@ impl Arg for Vec<u8> {
     }
 }
 
+#[cfg(feature = "itoa")]
 impl Arg for DecInt {
     #[inline]
     fn as_str(&self) -> io::Result<&str> {
@@ -969,14 +1047,14 @@ where
     debug_assert!(bytes.len() + 1 <= SMALL_PATH_BUFFER_SIZE);
 
     // SAFETY: `bytes.len() < SMALL_PATH_BUFFER_SIZE` which means we have space
-    // for `bytes.len() + 1` `u8`s:
+    // for `bytes.len() + 1` u8s:
     unsafe {
         ptr::copy_nonoverlapping(bytes.as_ptr(), buf_ptr, bytes.len());
-        buf_ptr.add(bytes.len()).write(b'\0');
+        buf_ptr.add(bytes.len()).write(0);
     }
 
     // SAFETY: We just wrote the bytes above and they will remain valid for the
-    // duration of `f` because `buf` doesn't get dropped until the end of the
+    // duration of `f` b/c buf doesn't get dropped until the end of the
     // function.
     match CStr::from_bytes_with_nul(unsafe { slice::from_raw_parts(buf_ptr, bytes.len() + 1) }) {
         Ok(s) => f(s),
@@ -999,26 +1077,11 @@ where
 
     #[cfg(not(feature = "alloc"))]
     {
-        #[cfg(all(
-            libc,
-            not(any(
-                target_os = "espidf",
-                target_os = "horizon",
-                target_os = "hurd",
-                target_os = "vita",
-                target_os = "wasi"
-            ))
-        ))]
+        #[cfg(all(libc, not(any(target_os = "hurd", target_os = "wasi"))))]
         const LARGE_PATH_BUFFER_SIZE: usize = libc::PATH_MAX as usize;
         #[cfg(linux_raw)]
         const LARGE_PATH_BUFFER_SIZE: usize = linux_raw_sys::general::PATH_MAX as usize;
-        #[cfg(any(
-            target_os = "espidf",
-            target_os = "horizon",
-            target_os = "hurd",
-            target_os = "vita",
-            target_os = "wasi"
-        ))]
+        #[cfg(any(target_os = "hurd", target_os = "wasi"))]
         const LARGE_PATH_BUFFER_SIZE: usize = 4096 as usize; // TODO: upstream this
 
         // Taken from
@@ -1032,15 +1095,15 @@ where
         }
 
         // SAFETY: `bytes.len() < LARGE_PATH_BUFFER_SIZE` which means we have
-        // space for `bytes.len() + 1` `u8`s:
+        // space for `bytes.len() + 1` u8s:
         unsafe {
             ptr::copy_nonoverlapping(bytes.as_ptr(), buf_ptr, bytes.len());
-            buf_ptr.add(bytes.len()).write(b'\0');
+            buf_ptr.add(bytes.len()).write(0);
         }
 
         // SAFETY: We just wrote the bytes above and they will remain valid for
-        // the duration of `f` because `buf` doesn't get dropped until the end
-        // of the function.
+        // the duration of `f` b/c buf doesn't get dropped until the end of the
+        // function.
         match CStr::from_bytes_with_nul(unsafe { slice::from_raw_parts(buf_ptr, bytes.len() + 1) })
         {
             Ok(s) => f(s),

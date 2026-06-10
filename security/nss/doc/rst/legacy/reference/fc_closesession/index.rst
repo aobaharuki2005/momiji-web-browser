@@ -38,13 +38,19 @@ FC_CloseSession
 
    A user may call ``FC_CloseSession`` without logging into the token (to assume the NSS User role).
 
+.. _return_value:
 
 `Return value <#return_value>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. container::
+
 `Examples <#examples>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. container::
+
+.. _see_also:
 
 `See also <#see_also>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~

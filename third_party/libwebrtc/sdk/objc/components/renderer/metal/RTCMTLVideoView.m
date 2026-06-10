@@ -25,26 +25,15 @@
 // To avoid unreconized symbol linker errors, we're taking advantage of the objc
 // runtime. Linking errors occur when compiling for architectures that don't
 // support Metal.
-#define RTC_OBJC_TYPE_PREFIX_STRING_HELPER(x) #x
-#define RTC_OBJC_TYPE_PREFIX_STRING(x) \
-  RTC_OBJC_TYPE_PREFIX_STRING_HELPER(x)
-
 #define MTKViewClass NSClassFromString(@"MTKView")
-#define RTCMTLNV12RendererClass                      \
-  NSClassFromString(@"" RTC_OBJC_TYPE_PREFIX_STRING( \
-      RTC_OBJC_TYPE_PREFIX) @"RTCMTLNV12Renderer")
-#define RTCMTLI420RendererClass                      \
-  NSClassFromString(@"" RTC_OBJC_TYPE_PREFIX_STRING( \
-      RTC_OBJC_TYPE_PREFIX) @"RTCMTLI420Renderer")
-#define RTCMTLRGBRendererClass                       \
-  NSClassFromString(@"" RTC_OBJC_TYPE_PREFIX_STRING( \
-      RTC_OBJC_TYPE_PREFIX) @"RTCMTLRGBRenderer")
+#define RTCMTLNV12RendererClass NSClassFromString(@"RTCMTLNV12Renderer")
+#define RTCMTLI420RendererClass NSClassFromString(@"RTCMTLI420Renderer")
+#define RTCMTLRGBRendererClass NSClassFromString(@"RTCMTLRGBRenderer")
 
 @interface RTC_OBJC_TYPE (RTCMTLVideoView)
-()<MTKViewDelegate> @property(nonatomic) RTC_OBJC_TYPE(RTCMTLI420Renderer) *
-    rendererI420;
-@property(nonatomic) RTC_OBJC_TYPE(RTCMTLNV12Renderer) * rendererNV12;
-@property(nonatomic) RTC_OBJC_TYPE(RTCMTLRGBRenderer) * rendererRGB;
+()<MTKViewDelegate> @property(nonatomic) RTCMTLI420Renderer *rendererI420;
+@property(nonatomic) RTCMTLNV12Renderer *rendererNV12;
+@property(nonatomic) RTCMTLRGBRenderer *rendererRGB;
 @property(nonatomic) MTKView *metalView;
 @property(atomic) RTC_OBJC_TYPE(RTCVideoFrame) * videoFrame;
 @property(nonatomic) CGSize videoFrameSize;
@@ -105,16 +94,16 @@
   return [[MTKViewClass alloc] initWithFrame:frame];
 }
 
-+ (RTC_OBJC_TYPE(RTCMTLNV12Renderer) *)createNV12Renderer {
++ (RTCMTLNV12Renderer *)createNV12Renderer {
   return [[RTCMTLNV12RendererClass alloc] init];
 }
 
-+ (RTC_OBJC_TYPE(RTCMTLI420Renderer) *)createI420Renderer {
++ (RTCMTLI420Renderer *)createI420Renderer {
   return [[RTCMTLI420RendererClass alloc] init];
 }
 
-+ (RTC_OBJC_TYPE(RTCMTLRGBRenderer) *)createRGBRenderer {
-  return [[RTCMTLRGBRendererClass alloc] init];
++ (RTCMTLRGBRenderer *)createRGBRenderer {
+  return [[RTCMTLRGBRenderer alloc] init];
 }
 
 - (void)configure {
@@ -161,7 +150,7 @@
     return;
   }
 
-  RTC_OBJC_TYPE(RTCMTLRenderer) * renderer;
+  RTCMTLRenderer *renderer;
   if ([videoFrame.buffer
           isKindOfClass:[RTC_OBJC_TYPE(RTCCVPixelBuffer) class]]) {
     RTC_OBJC_TYPE(RTCCVPixelBuffer) *buffer =

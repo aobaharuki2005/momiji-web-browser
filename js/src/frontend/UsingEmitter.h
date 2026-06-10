@@ -172,31 +172,33 @@ class MOZ_STACK_CLASS UsingEmitter {
 //     disposeBeforeIter.prepareForForOfLoopIteration();
 //     emit_Loop();
 //
-//   before each iterator-close emitted by ForOfLoopControl
-//   (with the throwing flag pushed on the stack just above EXC)
-//     disposeBeforeIter.prepareForForOfIteratorClose();
-//     emit_IteratorClose();
+//   at the point of loop end
+//     prepare_IteratorClose();
+//     disposeBeforeIter.emitEnd();
 //
 class MOZ_STACK_CLASS ForOfDisposalEmitter : protected UsingEmitter {
  private:
 #ifdef DEBUG
   // The state of this emitter.
-  // +-------+  prepareForForOfLoopIteration       +-----------+
-  // | Start |-------------------------------->+-->| Iteration |--+
-  // +-------+                                 ^   +-----------+  |
-  //                                           |                  |
-  //                             +-------------+                  |
-  //                             |                                |
-  //                             |  prepareForForOfIteratorClose  |
-  //                             +--------------------------------+
   //
+  // +-------+  prepareForForOfLoopIteration   +-----------+
+  // | Start |-------------------------------->| Iteration |--+
+  // +-------+                                 +-----------+  |
+  //                                                          |
+  //   +------------------------------------------------------+
+  //   |
+  //   |  emitEnd  +-----+
+  //   +---------->| End |
+  //               +-----+
   enum class State {
     // The initial state.
     Start,
 
-    // After calling prepareForForOfLoopIteration and
-    // prepareForForOfIteratorClose
+    // After calling prepareForForOfLoopIteration.
     Iteration,
+
+    // After calling emitEnd.
+    End
   };
   State state_ = State::Start;
 #endif
@@ -208,7 +210,7 @@ class MOZ_STACK_CLASS ForOfDisposalEmitter : protected UsingEmitter {
 
   [[nodiscard]] bool prepareForForOfLoopIteration();
 
-  [[nodiscard]] bool prepareForForOfIteratorClose();
+  [[nodiscard]] bool emitEnd();
 };
 
 // This is a version of UsingEmitter specialized to help emit code for

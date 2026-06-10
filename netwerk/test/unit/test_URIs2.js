@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 "use strict";
 
 // Run by: cd objdir;  make -C netwerk/test/ xpcshell-tests

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// @ts-nocheck - TODO - Remove this to type check this file.
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(
@@ -60,23 +58,8 @@ export async function getBackend(consumer, wasm, options) {
       factory = lazy.ONNXPipeline.initialize;
   }
 
-  let initStart = ChromeUtils.now();
-
   const BackendErrorWithName = err => new BackendError(backendName, err);
-  const pipeline = await factory(
-    consumer,
-    wasm,
-    pipelineOptions,
-    BackendErrorWithName
-  );
-
-  ChromeUtils.addProfilerMarker(
-    "MLEngine:Pipeline",
-    { startTime: initStart },
-    `Initialize ${backendName} backend`
-  );
-
-  return pipeline;
+  return await factory(consumer, wasm, pipelineOptions, BackendErrorWithName);
 }
 
 /**

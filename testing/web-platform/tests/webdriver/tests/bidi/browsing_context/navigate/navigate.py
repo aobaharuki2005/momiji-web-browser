@@ -4,7 +4,8 @@ import pytest
 import webdriver.bidi.error as error
 from webdriver.bidi.modules.script import ContextTarget
 
-from .. import assert_navigation_info, navigate_and_assert
+from . import navigate_and_assert
+from .. import assert_navigation_info
 from ... import any_string
 
 pytestmark = pytest.mark.asyncio

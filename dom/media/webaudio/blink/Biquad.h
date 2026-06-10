@@ -43,7 +43,7 @@ typedef std::complex<double> Complex;
 class Biquad {
  public:
   Biquad();
-  ~Biquad() = default;
+  ~Biquad();
 
   void process(const float* sourceP, float* destP, size_t framesToProcess);
 

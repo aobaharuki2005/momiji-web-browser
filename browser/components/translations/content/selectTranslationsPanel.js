@@ -138,6 +138,7 @@ var SelectTranslationsPanel = new (class {
   #languageInfo = {
     docLangTag: undefined,
     isDocLangTagSupported: undefined,
+    topPreferredLanguage: undefined,
   };
 
   /**
@@ -357,6 +358,7 @@ var SelectTranslationsPanel = new (class {
     this.#languageInfo = {
       docLangTag: undefined,
       isDocLangTagSupported: undefined,
+      topPreferredLanguage: undefined,
     };
 
     try {
@@ -366,6 +368,8 @@ var SelectTranslationsPanel = new (class {
       const {
         detectedLanguages: { docLangTag, isDocLangTagSupported },
       } = actor.languageState;
+      const preferredLanguages = TranslationsParent.getPreferredLanguages();
+      const topPreferredLanguage = preferredLanguages?.[0];
       this.#languageInfo = {
         docLangTag:
           // If Full-Page Translations (FPT) is active, we need to assume that the effective
@@ -373,6 +377,7 @@ var SelectTranslationsPanel = new (class {
           // if FPT is not active, we can take the real docLangTag value.
           this.#activeFullPageTranslationsTargetLanguage ?? docLangTag,
         isDocLangTagSupported,
+        topPreferredLanguage,
       };
     } catch (error) {
       // Failed to retrieve the Translations actor to detect the document language.
@@ -571,7 +576,7 @@ var SelectTranslationsPanel = new (class {
     }
 
     const { sourceLanguage, targetLanguage } = await langPairPromise;
-    const { docLangTag } = this.#getLanguageInfo();
+    const { docLangTag, topPreferredLanguage } = this.#getLanguageInfo();
 
     TranslationsParent.telemetry()
       .selectTranslationsPanel()
@@ -580,6 +585,7 @@ var SelectTranslationsPanel = new (class {
         docLangTag,
         sourceLanguage,
         targetLanguage,
+        topPreferredLanguage,
         textSource: isTextSelected ? "selection" : "hyperlink",
       });
 
@@ -785,8 +791,7 @@ var SelectTranslationsPanel = new (class {
 
     this.close();
     const window =
-      gBrowser.selectedBrowser.browsingContext.top.embedderElement
-        .documentGlobal;
+      gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
     window.openTrustedLinkIn(
       "https://support.mozilla.org/kb/website-translation",
       "tab",
@@ -808,8 +813,7 @@ var SelectTranslationsPanel = new (class {
 
     this.close();
     const window =
-      gBrowser.selectedBrowser.browsingContext.top.embedderElement
-        .documentGlobal;
+      gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
     window.openTrustedLinkIn("about:preferences#general-translations", "tab");
   }
 
@@ -1065,8 +1069,7 @@ var SelectTranslationsPanel = new (class {
         panel.getOuterScreenRect();
 
     const window =
-      gBrowser.selectedBrowser.browsingContext.top.embedderElement
-        .documentGlobal;
+      gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
 
     if (isWayland) {
       if (panelTop < 0) {
@@ -1893,8 +1896,7 @@ var SelectTranslationsPanel = new (class {
     this.#maybeEnableTextAreaResizer();
 
     const window =
-      gBrowser.selectedBrowser.browsingContext.top.embedderElement
-        .documentGlobal;
+      gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
     window.A11yUtils.announce({
       id: "select-translations-panel-translation-complete-announcement",
     });
@@ -2147,7 +2149,7 @@ var SelectTranslationsPanel = new (class {
       if (language) {
         document.l10n.setAttributes(
           unsupportedLanguageMessageBar,
-          "select-translations-panel-unsupported-language-message-known-2",
+          "select-translations-panel-unsupported-language-message-known",
           { language }
         );
       } else {
@@ -2159,7 +2161,7 @@ var SelectTranslationsPanel = new (class {
       // In either case, localize the message for an unknown language.
       document.l10n.setAttributes(
         unsupportedLanguageMessageBar,
-        "select-translations-panel-unsupported-language-message-unknown-2"
+        "select-translations-panel-unsupported-language-message-unknown"
       );
     }
     this.#updateConditionalUIEnabledState();
@@ -2233,7 +2235,7 @@ var SelectTranslationsPanel = new (class {
       return;
     }
 
-    const { docLangTag } = this.#getLanguageInfo();
+    const { docLangTag, topPreferredLanguage } = this.#getLanguageInfo();
     const sourceText = this.getSourceText();
     const translationId = ++this.#translationId;
 
@@ -2287,6 +2289,7 @@ var SelectTranslationsPanel = new (class {
       docLangTag,
       sourceLanguage,
       targetLanguage,
+      topPreferredLanguage,
       autoTranslate: false,
       requestTarget: "select",
       sourceTextCodeUnits: sourceText.length,

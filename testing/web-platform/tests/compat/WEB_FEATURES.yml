@@ -2,6 +2,3 @@ features:
 - name: text-stroke-fill
   files:
   - webkit-text-fill-color-*
-- name: gradients
-  files:
-  - webkit-*-gradient*

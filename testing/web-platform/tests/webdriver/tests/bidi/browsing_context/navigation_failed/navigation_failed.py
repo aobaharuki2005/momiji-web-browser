@@ -2,6 +2,7 @@ import asyncio
 import pytest
 from webdriver.error import TimeoutException
 
+from tests.bidi import wait_for_bidi_events
 from .. import assert_navigation_info
 
 
@@ -13,7 +14,7 @@ NAVIGATION_STARTED_EVENT = "browsingContext.navigationStarted"
 USER_PROMPT_OPENED_EVENT = "browsingContext.userPromptOpened"
 
 
-async def test_unsubscribe(bidi_session, inline, new_tab, wait_for_bidi_events, iframe):
+async def test_unsubscribe(bidi_session, inline, new_tab):
     await bidi_session.session.subscribe(events=[NAVIGATION_FAILED_EVENT])
     await bidi_session.session.unsubscribe(events=[NAVIGATION_FAILED_EVENT])
 
@@ -25,9 +26,10 @@ async def test_unsubscribe(bidi_session, inline, new_tab, wait_for_bidi_events, 
 
     remove_listener = bidi_session.add_event_listener(NAVIGATION_FAILED_EVENT, on_event)
 
+    iframe_url = inline("<div>foo</div>", domain="alt")
     page_url = inline(
-        iframe("<div>foo</div>", domain="alt"),
-        parameters={"pipe": "header(Content-Security-Policy, default-src 'self')"}
+        f"""<iframe src={iframe_url}></iframe>""",
+        parameters={"pipe": "header(Content-Security-Policy, default-src 'self')"},
     )
 
     await bidi_session.browsing_context.navigate(
@@ -35,7 +37,7 @@ async def test_unsubscribe(bidi_session, inline, new_tab, wait_for_bidi_events, 
     )
 
     with pytest.raises(TimeoutException):
-        await wait_for_bidi_events(events, 1, timeout=0.5)
+        await wait_for_bidi_events(bidi_session, events, 1, timeout=0.5)
 
     remove_listener()
 
@@ -47,10 +49,8 @@ async def test_with_csp_meta_tag(
     new_tab,
     wait_for_event,
     wait_for_future_safe,
-    iframe
 ):
-    iframe_html = "<div>foo</div>"
-    iframe_url = inline(iframe_html, domain="alt")
+    iframe_url = inline("<div>foo</div>", domain="alt")
     page_url = inline(
         f"""
 <!DOCTYPE html>
@@ -60,7 +60,7 @@ async def test_with_csp_meta_tag(
   http-equiv="Content-Security-Policy"
   content="default-src 'self'" />
     </head>
-    <body>{iframe(iframe_html, domain="alt")}</body>
+    <body><iframe src="{iframe_url}"></iframe></body>
 </html>
 """
     )
@@ -117,13 +117,11 @@ async def test_with_content_blocking_header_in_top_context(
     wait_for_event,
     wait_for_future_safe,
     header,
-    iframe
 ):
-    iframe_html = "<div>foo</div>"
-    iframe_url = inline(iframe_html, domain="alt")
+    iframe_url = inline("<div>foo</div>", domain="alt")
     page_url = inline(
-        iframe(iframe_html, domain="alt"),
-        parameters={"pipe": f"header({header})"}
+        f"""<iframe src={iframe_url}></iframe>""",
+        parameters={"pipe": f"header({header})"},
     )
     await subscribe_events(events=[NAVIGATION_FAILED_EVENT, NAVIGATION_STARTED_EVENT])
 
@@ -177,19 +175,13 @@ async def test_with_x_frame_options_header(
     new_tab,
     wait_for_event,
     wait_for_future_safe,
-    header_value,
-    iframe
+    header_value
 ):
-    iframe_html = "<div>foo</div>"
     iframe_url = inline(
-        iframe_html,
+        "<div>foo</div>",
         parameters={"pipe": f"header(X-Frame-Options, {header_value})"},
     )
-    page_url = inline(
-        iframe(iframe_html,
-        parameters={"pipe": f"header(X-Frame-Options, {header_value})"}),
-        domain="alt"
-    )
+    page_url = inline(f"""<iframe src={iframe_url}></iframe>""", domain="alt")
     await subscribe_events(events=[NAVIGATION_FAILED_EVENT, NAVIGATION_STARTED_EVENT])
 
     # Track all received browsingContext.navigationStarted events in the events array.
@@ -235,7 +227,6 @@ async def test_with_new_navigation(
     url,
     new_tab,
     wait_for_event,
-    wait_for_bidi_events,
     wait_for_future_safe,
 ):
     slow_page_url = url(
@@ -268,7 +259,7 @@ async def test_with_new_navigation(
         context=new_tab["context"], url=second_url, wait="none"
     )
 
-    await wait_for_bidi_events(events, 1, timeout=1)
+    await wait_for_bidi_events(bidi_session, events, 1, timeout=1)
 
     # Make sure that the first navigation failed or aborted.
     assert_navigation_info(
@@ -290,7 +281,6 @@ async def test_with_new_navigation_inside_page(
     inline,
     new_tab,
     wait_for_event,
-    wait_for_bidi_events,
     wait_for_future_safe,
 ):
     second_url = inline("<div>foo</div>")
@@ -329,7 +319,7 @@ async def test_with_new_navigation_inside_page(
         context=new_tab["context"], url=slow_page_url, wait="none"
     )
 
-    await wait_for_bidi_events(events, 1, timeout=1)
+    await wait_for_bidi_events(bidi_session, events, 1, timeout=1)
 
     # Make sure that the first navigation failed.
     assert_navigation_info(
@@ -351,7 +341,6 @@ async def test_close_context(
     subscribe_events,
     url,
     wait_for_event,
-    wait_for_bidi_events,
     wait_for_future_safe,
     type_hint,
 ):
@@ -381,7 +370,7 @@ async def test_close_context(
 
     await bidi_session.browsing_context.close(context=new_context["context"])
 
-    await wait_for_bidi_events(events, 1, timeout=1)
+    await wait_for_bidi_events(bidi_session, events, 1, timeout=1)
 
     # Make sure that the navigation failed.
     assert_navigation_info(
@@ -404,11 +393,10 @@ async def test_close_iframe(
     url,
     new_tab,
     wait_for_event,
-    wait_for_bidi_events,
     wait_for_future_safe,
-    iframe
 ):
-    page_url = inline(iframe("<div>foo</div>"))
+    iframe_url = inline("<div>foo</div>")
+    page_url = inline(f"<iframe src={iframe_url}></iframe")
 
     # Depending on implementation, the `trickle(d10)` page can or can not yet
     # create a new document. Depending on this, `aborted` or `failed` event
@@ -444,7 +432,7 @@ async def test_close_iframe(
     # Reload the top context to destroy the iframe.
     await bidi_session.browsing_context.reload(context=new_tab["context"], wait="none")
 
-    await wait_for_bidi_events(events, 1, timeout=1)
+    await wait_for_bidi_events(bidi_session, events, 1, timeout=1)
 
     # Make sure that the iframe navigation failed.
     assert_navigation_info(

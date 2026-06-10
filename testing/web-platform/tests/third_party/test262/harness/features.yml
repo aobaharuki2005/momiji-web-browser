@@ -1,4 +1,0 @@
-atomicsHelper: [Atomics]
-testAtomics.js: [ArrayBuffer, Atomics, DataView, SharedArrayBuffer, Symbol, TypedArray]
-testTypedArray.js: [TypedArray]
-isConstructor.js: [Reflect.construct]

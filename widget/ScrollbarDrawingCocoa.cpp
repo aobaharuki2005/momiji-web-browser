@@ -1,3 +1,5 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 2; -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -49,10 +51,10 @@ static ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame,
                                               const ThemeColors& aColors,
                                               ScrollbarKind aScrollbarKind) {
   ScrollbarParams params;
-  params.isOverlay = nsLayoutUtils::UseOverlayScrollbars(aFrame);
+  params.isOverlay = aFrame->PresContext()->UseOverlayScrollbars();
   params.isRolledOver = ScrollbarDrawing::IsParentScrollbarRolledOver(aFrame);
   params.isSmall =
-      nsLayoutUtils::ScrollbarWidthFor(aFrame) == StyleScrollbarWidth::Thin;
+      aStyle.StyleUIReset()->ScrollbarWidth() == StyleScrollbarWidth::Thin;
   params.isRtl = aScrollbarKind == ScrollbarKind::VerticalLeft;
   params.isHorizontal = aScrollbarKind == ScrollbarKind::Horizontal;
   params.isDark = aColors.IsDark();
@@ -81,10 +83,10 @@ LayoutDeviceIntSize ScrollbarDrawingCocoa::GetMinimumWidgetSize(
         return {0, 26};
       case StyleAppearance::ScrollbarVertical:
       case StyleAppearance::ScrollbarHorizontal: {
-        auto scrollbarWidth = nsLayoutUtils::ScrollbarWidthFor(aFrame);
+        ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+        auto scrollbarWidth = style->StyleUIReset()->ScrollbarWidth();
         auto size = GetCSSScrollbarSize(
-            scrollbarWidth,
-            Overlay(nsLayoutUtils::UseOverlayScrollbars(aFrame)));
+            scrollbarWidth, Overlay(aPresContext->UseOverlayScrollbars()));
         return {size, size};
       }
       case StyleAppearance::ScrollbarbuttonUp:

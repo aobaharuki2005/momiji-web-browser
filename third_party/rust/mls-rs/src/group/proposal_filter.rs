@@ -2,7 +2,7 @@
 // Copyright by contributors to this project.
 // SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-pub(crate) mod bundle;
+mod bundle;
 mod filtering_common;
 
 #[cfg(feature = "by_ref_proposal")]

@@ -8,17 +8,16 @@
 use crate::backend::c;
 use crate::backend::conv::{by_ref, c_uint, ret};
 use crate::fd::BorrowedFd;
-#[cfg(feature = "alloc")]
-use crate::ffi::CStr;
 use crate::io;
 use crate::pid::Pid;
+#[cfg(all(feature = "alloc", feature = "procfs"))]
+use crate::procfs;
 use crate::termios::{
     speed, Action, ControlModes, InputModes, LocalModes, OptionalActions, OutputModes,
     QueueSelector, SpecialCodeIndex, Termios, Winsize,
 };
-#[cfg(feature = "alloc")]
-#[cfg(feature = "fs")]
-use crate::{fs::FileType, path::DecInt};
+#[cfg(all(feature = "alloc", feature = "procfs"))]
+use crate::{ffi::CStr, fs::FileType, path::DecInt};
 use core::mem::MaybeUninit;
 
 #[inline]
@@ -367,8 +366,7 @@ pub(crate) fn isatty(fd: BorrowedFd<'_>) -> bool {
     tcgetwinsize(fd).is_ok()
 }
 
-#[cfg(feature = "alloc")]
-#[cfg(feature = "fs")]
+#[cfg(all(feature = "alloc", feature = "procfs"))]
 pub(crate) fn ttyname(fd: BorrowedFd<'_>, buf: &mut [MaybeUninit<u8>]) -> io::Result<usize> {
     let fd_stat = crate::backend::fs::syscalls::fstat(fd)?;
 
@@ -380,39 +378,31 @@ pub(crate) fn ttyname(fd: BorrowedFd<'_>, buf: &mut [MaybeUninit<u8>]) -> io::Re
     // Check that `fd` is really a tty.
     tcgetwinsize(fd)?;
 
-    // Create the "/proc/self/fd/<fd>" string.
-    let mut proc_self_fd_buf: [u8; 25] = *b"/proc/self/fd/\0\0\0\0\0\0\0\0\0\0\0";
-    let dec_int = DecInt::from_fd(fd);
-    let bytes_with_nul = dec_int.as_bytes_with_nul();
-    proc_self_fd_buf[b"/proc/self/fd/".len()..][..bytes_with_nul.len()]
-        .copy_from_slice(bytes_with_nul);
+    // Get a fd to "/proc/self/fd".
+    let proc_self_fd = procfs::proc_self_fd()?;
 
-    // SAFETY: We just wrote a valid C String.
-    let proc_self_fd_path = unsafe { CStr::from_ptr(proc_self_fd_buf.as_ptr().cast()) };
+    // Gather the ttyname by reading the "fd" file inside `proc_self_fd`.
+    let r = crate::backend::fs::syscalls::readlinkat(
+        proc_self_fd,
+        DecInt::from_fd(fd).as_c_str(),
+        buf,
+    )?;
 
-    let ptr = buf.as_mut_ptr();
-    let len = {
-        // Gather the ttyname by reading the "fd" file inside `proc_self_fd`.
-        let (init, uninit) = crate::fs::readlinkat_raw(crate::fs::CWD, proc_self_fd_path, buf)?;
+    // If the number of bytes is equal to the buffer length, truncation may
+    // have occurred. This check also ensures that we have enough space for
+    // adding a NUL terminator.
+    if r == buf.len() {
+        return Err(io::Errno::RANGE);
+    }
 
-        // If the number of bytes is equal to the buffer length, truncation may
-        // have occurred. This check also ensures that we have enough space for
-        // adding a NUL terminator.
-        if uninit.is_empty() {
-            return Err(io::Errno::RANGE);
-        }
-
-        // `readlinkat` returns the number of bytes placed in the buffer.
-        // NUL-terminate the string at that offset.
-        uninit[0].write(b'\0');
-
-        init.len()
-    };
+    // `readlinkat` returns the number of bytes placed in the buffer.
+    // NUL-terminate the string at that offset.
+    buf[r].write(b'\0');
 
     // Check that the path we read refers to the same file as `fd`.
     {
-        // SAFETY: We just wrote the NUL byte above.
-        let path = unsafe { CStr::from_ptr(ptr.cast()) };
+        // SAFETY: We just wrote the NUL byte above
+        let path = unsafe { CStr::from_ptr(buf.as_ptr().cast()) };
 
         let path_stat = crate::backend::fs::syscalls::stat(path)?;
         if path_stat.st_dev != fd_stat.st_dev || path_stat.st_ino != fd_stat.st_ino {
@@ -420,6 +410,5 @@ pub(crate) fn ttyname(fd: BorrowedFd<'_>, buf: &mut [MaybeUninit<u8>]) -> io::Re
         }
     }
 
-    // Return the length, excluding the NUL terminator.
-    Ok(len)
+    Ok(r)
 }

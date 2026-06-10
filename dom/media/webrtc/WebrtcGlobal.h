@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBRTC_GLOBAL_H_
-#define WEBRTC_GLOBAL_H_
+#ifndef _WEBRTC_GLOBAL_H_
+#define _WEBRTC_GLOBAL_H_
 
 #include "WebrtcIPCTraits.h"
 #include "ipc/EnumSerializer.h"
@@ -37,7 +37,7 @@ static auto ForAllPublicRTCStatsCollectionMembers(Collection& aStats,
       aStats.mPeerConnectionStats, aStats.mRtpContributingSourceStats,
       aStats.mIceCandidatePairStats, aStats.mIceCandidateStats,
       aStats.mTrickledIceCandidateStats, aStats.mDataChannelStats,
-      aStats.mCodecStats, aStats.mTransportStats);
+      aStats.mCodecStats);
 }
 
 // Calls aFunction with all members of aStats, including internal ones.
@@ -79,11 +79,6 @@ template <>
 struct ParamTraits<mozilla::dom::RTCBundlePolicy>
     : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::RTCBundlePolicy> {
 };
-
-template <>
-struct ParamTraits<mozilla::dom::RTCIceTcpCandidateType>
-    : public mozilla::dom::WebIDLEnumSerializer<
-          mozilla::dom::RTCIceTcpCandidateType> {};
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCIceServerInternal, mUrls,
                                   mCredentialProvided, mUserNameProvided);
@@ -133,8 +128,8 @@ DEFINE_IPC_SERIALIZER_WITH_SUPER_CLASS_AND_FIELDS(
 
 DEFINE_IPC_SERIALIZER_WITH_SUPER_CLASS_AND_FIELDS(
     mozilla::dom::RTCIceCandidateStats, mozilla::dom::RTCStats, mCandidateType,
-    mPriority, mTransportId, mAddress, mRelayProtocol, mUsernameFragment,
-    mFoundation, mPort, mProtocol, mTcpType, mProxied);
+    mPriority, mTransportId, mAddress, mRelayProtocol, mPort, mProtocol,
+    mProxied);
 
 DEFINE_IPC_SERIALIZER_WITH_SUPER_CLASS_AND_FIELDS(
     mozilla::dom::RTCReceivedRtpStreamStats, mozilla::dom::RTCRtpStreamStats,
@@ -226,27 +221,9 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCCodecStats, mTimestamp,
                                   mTransportId, mMimeType, mClockRate,
                                   mChannels, mSdpFmtpLine)
 
-DEFINE_IPC_SERIALIZER_WITH_SUPER_CLASS_AND_FIELDS(
-    mozilla::dom::RTCTransportStats, mozilla::dom::RTCStats, mIceRole,
-    mIceLocalUsernameFragment, mDtlsState, mIceState, mSelectedCandidatePairId,
-    mTlsVersion, mDtlsCipher, mDtlsRole, mSrtpCipher)
-
-template <>
-struct ParamTraits<mozilla::dom::RTCIceRole>
-    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::RTCIceRole> {};
-
-template <>
-struct ParamTraits<mozilla::dom::RTCDtlsRole>
-    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::RTCDtlsRole> {};
-
-template <>
-struct ParamTraits<mozilla::dom::RTCDtlsTransportState>
-    : public mozilla::dom::WebIDLEnumSerializer<
-          mozilla::dom::RTCDtlsTransportState> {};
-
 template <>
 struct ParamTraits<mozilla::dom::RTCCodecType>
     : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::RTCCodecType> {};
 }  // namespace IPC
 
-#endif  // WEBRTC_GLOBAL_H_
+#endif  // _WEBRTC_GLOBAL_H_

@@ -327,7 +327,7 @@ The special value ``NONE`` could occur if there is no default search engine.
 
 The special value ``UNDEFINED`` could occur if a default search engine exists but its identifier could not be determined.
 
-This field's contents are ``SearchService.defaultEngine.identifier`` (if defined) or ``"other-"`` + ``SearchService.defaultEngine.name`` if not. In other words, search engines without an ``.identifier`` are prefixed with ``other-``.
+This field's contents are ``Services.search.defaultEngine.identifier`` (if defined) or ``"other-"`` + ``Services.search.defaultEngine.name`` if not. In other words, search engines without an ``.identifier`` are prefixed with ``other-``.
 
 defaultSearchEngineData
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -480,7 +480,7 @@ Specific keys are:
   - MissingWebRender = 2
   - OperatingSystemNotSupported = 3
   - PrefNotSet = 4 - After Firefox 98, this value will no longer appear in Telemetry.
-  - MissingRemoteWebGL = 5 - From Firefox 152 onwards, this value will no longer appear in Telemetry.
+  - MissingRemoteWebGL = 5
   - MissingNonNativeTheming = 6
   - DisabledByEnvVar = 7 - MOZ_ENABLE_WIN32K is set
   - DisabledBySafeMode = 8 - From Firefox 140 onwards, this value will no longer appear in Telemetry.

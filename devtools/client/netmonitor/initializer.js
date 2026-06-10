@@ -46,6 +46,7 @@ function initialize(api) {
 
 /**
  * The following code is used to open Network monitor in a tab.
+ * Like the Launchpad, but without Launchpad.
  *
  * For example:
  * chrome://devtools/content/netmonitor/index.html?type=process

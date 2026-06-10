@@ -15,7 +15,7 @@
 }
 
 .import-report-heading {
-  font-weight: var(--font-weight-heading);
+  font-weight: var(--heading-font-weight);
   margin-block: auto;
   margin-inline-start: 48px;
 }

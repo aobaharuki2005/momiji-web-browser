@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,6 +28,7 @@ https://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06
 #include "nsString.h"
 #include "nsIDataStorage.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIStreamListener.h"
 #include "nsISpeculativeConnect.h"
 #include "mozilla/BasePrincipal.h"
 #include "SpeculativeTransaction.h"
@@ -38,6 +41,8 @@ namespace net {
 class nsProxyInfo;
 class nsHttpConnectionInfo;
 class nsHttpTransaction;
+class nsHttpChannel;
+class WellKnownChecker;
 
 class AltSvcMapping {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AltSvcMapping)
@@ -79,8 +84,8 @@ class AltSvcMapping {
   bool RouteEquals(AltSvcMapping* map);
   bool HTTPS() { return mHttps; }
 
-  virtual void GetConnectionInfo(nsHttpConnectionInfo** outCI, nsProxyInfo* pi,
-                                 const OriginAttributes& originAttributes);
+  void GetConnectionInfo(nsHttpConnectionInfo** outCI, nsProxyInfo* pi,
+                         const OriginAttributes& originAttributes);
 
   int32_t TTL();
   int32_t StorageEpoch() { return mStorageEpoch; }
@@ -101,23 +106,13 @@ class AltSvcMapping {
 
   bool IsHttp3() { return mIsHttp3; }
   const nsCString& NPNToken() const { return mNPNToken; }
-  const OriginAttributes& GetOriginAttributes() const {
-    return mOriginAttributes;
-  }
   SupportedAlpnRank AlpnRank() const { return mAlpnRank; }
 
- protected:
-  // Used by Http3FirstAltSvcMapping
-  AltSvcMapping(const nsACString& originScheme, const nsACString& originHost,
-                int32_t originPort, const nsACString& username,
-                bool privateBrowsing, const nsACString& alternateHost,
-                int32_t alternatePort, const nsACString& npnToken,
-                const OriginAttributes& originAttributes, bool aIsHttp3,
-                SupportedAlpnRank aRank);
+ private:
   virtual ~AltSvcMapping() = default;
   void SyncString(const nsCString& str);
   nsCOMPtr<nsIDataStorage> mStorage;
-  int32_t mStorageEpoch = 0;
+  int32_t mStorageEpoch;
   void Serialize(nsCString& out);
 
   nsCString mHashKey;
@@ -150,22 +145,6 @@ class AltSvcMapping {
   SupportedAlpnRank mAlpnRank{SupportedAlpnRank::NOT_SUPPORTED};
 };
 
-class Http3FirstAltSvcMapping : public AltSvcMapping {
- public:
-  Http3FirstAltSvcMapping(const nsACString& originScheme,
-                          const nsACString& originHost, int32_t originPort,
-                          const nsACString& username, bool privateBrowsing,
-                          const nsACString& alternateHost,
-                          int32_t alternatePort, const nsACString& npnToken,
-                          const OriginAttributes& originAttributes,
-                          bool aIsHttp3, SupportedAlpnRank aRank);
-  void GetConnectionInfo(nsHttpConnectionInfo** outCI, nsProxyInfo* pi,
-                         const OriginAttributes& originAttributes) override;
-
- private:
-  ~Http3FirstAltSvcMapping();
-};
-
 class AltSvcOverride : public nsIInterfaceRequestor,
                        public nsISpeculativeConnectionOverrider {
  public:
@@ -179,6 +158,31 @@ class AltSvcOverride : public nsIInterfaceRequestor,
  private:
   virtual ~AltSvcOverride() = default;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+};
+
+class TransactionObserver final : public nsIStreamListener {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIREQUESTOBSERVER
+
+  TransactionObserver(nsHttpChannel* channel, WellKnownChecker* checker);
+  void Complete(bool versionOK, bool authOK, nsresult reason);
+
+ private:
+  friend class WellKnownChecker;
+  virtual ~TransactionObserver() = default;
+
+  nsCOMPtr<nsISupports> mChannelRef;
+  nsHttpChannel* mChannel;
+  WellKnownChecker* mChecker;
+  nsCString mWKResponse;
+
+  bool mRanOnce;
+  bool mStatusOK;  // HTTP Status 200
+  // These two values could be accessed on sts thread.
+  Atomic<bool> mAuthOK;     // confirmed no TLS failure
+  Atomic<bool> mVersionOK;  // connection h2
 };
 
 class AltSvcCache {
@@ -196,7 +200,7 @@ class AltSvcCache {
   already_AddRefed<AltSvcMapping> GetAltServiceMapping(
       const nsACString& scheme, const nsACString& host, int32_t port,
       bool privateBrowsing, const OriginAttributes& originAttributes,
-      bool aHttp2Allowed, bool aHttp3Allowed, bool aForceHttp3First = false);
+      bool aHttp2Allowed, bool aHttp3Allowed);
   void ClearAltServiceMappings();
   void ClearHostMapping(const nsACString& host, int32_t port,
                         const OriginAttributes& originAttributes);

@@ -1,15 +1,16 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(_nsHTTPCompressConv_h_)
-#  define _nsHTTPCompressConv_h_ 1
+#if !defined(__nsHTTPCompressConv__h__)
+#  define __nsHTTPCompressConv__h__ 1
 
 #  include "nsIStreamConverter.h"
 #  include "nsICompressConvStats.h"
 #  include "nsIThreadRetargetableStreamListener.h"
 #  include "nsCOMPtr.h"
-#  include "nsString.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Mutex.h"
 
@@ -36,18 +37,6 @@ class nsIStringInputStream;
 #  define HTTP_ZST_TYPE "zst"
 #  define HTTP_BROTLI_DICTIONARY_TYPE "dcb"
 #  define HTTP_ZSTD_DICTIONARY_TYPE "dcz"
-
-#  define GZIP_MAGIC_0 0x1f
-#  define GZIP_MAGIC_1 0x8b
-
-#  define ZSTD_MAGIC_0 0x28
-#  define ZSTD_MAGIC_1 0xb5
-#  define ZSTD_MAGIC_2 0x2f
-#  define ZSTD_MAGIC_3 0xfd
-
-// Not magic bytes, but common brotli first bytes
-#  define BROTLI_BYTE_0 0xce
-#  define BROTLI_BYTE_1 0xb2
 
 namespace mozilla {
 namespace net {
@@ -84,8 +73,8 @@ class nsHTTPCompressConv : public nsIStreamConverter,
  private:
   virtual ~nsHTTPCompressConv();
 
-  nsCOMPtr<nsIStreamListener> mListener
-      MOZ_GUARDED_BY(mMutex);  // gets converted data via OnDataAvailable()
+  nsCOMPtr<nsIStreamListener>
+      mListener;  // this guy gets the converted data via his OnDataAvailable ()
   Atomic<CompressMode, Relaxed> mMode{HTTP_COMPRESS_IDENTITY};
 
   unsigned char* mOutBuffer{nullptr};
@@ -115,21 +104,16 @@ class nsHTTPCompressConv : public nsIStreamConverter,
   bool mStreamInitialized{false};
   bool mDummyStreamInitialised{false};
   bool mFailUncleanStops;
-  Atomic<bool> mDispatchToMainThread{false};
+  bool mDispatchToMainThread{false};
 
   z_stream d_stream{};
   unsigned mLen{0}, hMode{0}, mSkipCount{0}, mFlags{0};
 
   uint32_t check_header(nsIInputStream* iStr, uint32_t streamLen, nsresult* rs);
 
-  void ReportDecodingErrorWithSite(const nsACString& aLabel);
   Atomic<uint32_t, Relaxed> mDecodedDataLength{0};
 
-  // Cached on main thread in OnStartRequest; read from any thread thereafter.
-  Atomic<bool, Relaxed> mIsPrivateBrowsing{false};
-  nsCString mSite;
-
-  mutable mozilla::Mutex mMutex{"nsHTTPCompressConv"};
+  mutable mozilla::Mutex mMutex MOZ_UNANNOTATED{"nsHTTPCompressConv"};
 };
 
 }  // namespace net

@@ -60,6 +60,18 @@ bool SkPathMeasure::nextContour() {
     return !!fContour;
 }
 
+#ifdef SK_SUPPORT_MUTABLE_PATHEFFECT
+bool SkPathMeasure::getSegment(SkScalar startD, SkScalar stopD, SkPath* dst,
+                               bool startWithMoveTo) {
+    SkPathBuilder builder;
+    if (this->getSegment(startD, stopD, &builder, startWithMoveTo)) {
+        *dst = builder.detach();
+        return true;
+    }
+    return false;
+}
+#endif
+
 #ifdef SK_DEBUG
 void SkPathMeasure::dump() {}
 #endif

@@ -137,13 +137,6 @@ export class NetworkRequest {
     return this.#rawHeaders.length;
   }
 
-  get host() {
-    if (this.isHttpChannel) {
-      return this.#channel.URI.host;
-    }
-    return null;
-  }
-
   get initiatorType() {
     const initiatorType = this.#timedChannel.initiatorType;
     if (initiatorType === "") {
@@ -167,10 +160,6 @@ export class NetworkRequest {
 
   get navigationId() {
     return this.#navigationId;
-  }
-
-  get originAttributesString() {
-    return JSON.stringify(this.#channel.loadInfo?.originAttributes ?? {});
   }
 
   get postData() {
@@ -365,11 +354,9 @@ export class NetworkRequest {
       destination: this.destination,
       headers: this.headers,
       headersSize: this.headersSize,
-      host: this.host,
       initiatorType: this.initiatorType,
       method: this.method,
       navigationId: this.navigationId,
-      originAttributesString: this.originAttributesString,
       postData: this.postData,
       postDataSize: this.postDataSize,
       redirectCount: this.redirectCount,

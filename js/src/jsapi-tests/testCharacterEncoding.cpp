@@ -35,7 +35,6 @@ static bool EqualsIgnoreCase(const char* xs, const char* ys) {
 
 class ToUTF8Locale {
   const char* previousLocale_ = nullptr;
-  const char* defaultLocale_ = nullptr;
   bool supported_ = false;
 
  public:
@@ -43,16 +42,9 @@ class ToUTF8Locale {
     // Store the old locale so we can reset it in the destructor.
     previousLocale_ = std::setlocale(LC_ALL, nullptr);
 
-    // Query the system default locale.  It appears the returned string is
-    // valid only up until the next call to std::setlocale, but we need it to
-    // stay alive beyond that, hence the strdup.  The POSIX spec for setlocale
-    // says "The returned string pointer might be invalidated or the string
-    // content might be overwritten by a subsequent call to setlocale()".
-    defaultLocale_ = std::setlocale(LC_ALL, "");
-    if (defaultLocale_) {
-      defaultLocale_ = strdup(defaultLocale_);
-    }
-    if (!defaultLocale_) {
+    // Query the system default locale.
+    const char* defaultLocale = std::setlocale(LC_ALL, "");
+    if (!defaultLocale) {
       // std::setlocale returns nullptr on failure.
       return;
     }
@@ -64,7 +56,7 @@ class ToUTF8Locale {
       return;
     }
 
-    const char* defaultCodepage = std::strchr(defaultLocale_, '.');
+    const char* defaultCodepage = std::strchr(defaultLocale, '.');
     const char* newCodepage = std::strchr(newLocale, '.');
 
     // Return if either the default or new locale don't contain a code-page.
@@ -93,10 +85,6 @@ class ToUTF8Locale {
     // Restore the previous locale.
     if (previousLocale_) {
       std::setlocale(LC_ALL, previousLocale_);
-    }
-    if (defaultLocale_) {
-      free((void*)defaultLocale_);
-      defaultLocale_ = nullptr;
     }
   }
 };

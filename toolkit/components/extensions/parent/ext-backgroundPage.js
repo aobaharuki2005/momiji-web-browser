@@ -800,8 +800,7 @@ class BackgroundBuilder {
         return;
       }
 
-      // Keep in sync with the labels listed in the extensions.counters.event_page_idle_result
-      // Glean metric.
+      // Keep in sync with categories in WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT.
       let KNOWN = ["nativeapp", "streamfilter", "listeners"];
       ExtensionTelemetry.eventPageIdleResult.histogramAdd({
         extension,

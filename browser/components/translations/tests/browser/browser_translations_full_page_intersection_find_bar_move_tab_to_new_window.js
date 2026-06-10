@@ -11,7 +11,6 @@
 add_task(
   async function test_findbar_open_switches_to_content_eager_mode_after_moving_tab_to_new_window() {
     const window1 = window;
-    await focusWindow(window1);
     const { cleanup, resolveDownloads, runInPage, tab } = await loadTestPage({
       page: SPANISH_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
@@ -52,17 +51,12 @@ add_task(
       "SwapDocShells"
     );
     await swapDocShellPromise;
-    await focusWindow(window2);
-
-    await SpecialPowers.pushPrefEnv({
-      set: [["security.allow_eval_with_system_principal", true]],
-    });
 
     const tab2 = window2.gBrowser.selectedTab;
     function runInPage2(callback, data = {}) {
-      return SpecialPowers.spawn(
+      return ContentTask.spawn(
         tab2.linkedBrowser,
-        [{ contentData: data, callbackSource: callback.toString() }],
+        { contentData: data, callbackSource: callback.toString() },
         function ({ contentData, callbackSource }) {
           const TranslationsTest = ChromeUtils.importESModule(
             "chrome://mochitests/content/browser/toolkit/components/translations/tests/browser/translations-test.mjs"
@@ -113,9 +107,7 @@ add_task(
       }
     );
 
-    await SpecialPowers.popPrefEnv();
-
-    await cleanup({ browser: window2.gBrowser.selectedBrowser });
+    await cleanup();
     await BrowserTestUtils.closeWindow(window2);
   }
 );
@@ -128,7 +120,6 @@ add_task(
 add_task(
   async function test_findbar_close_switches_to_lazy_mode_after_moving_tab_to_new_window() {
     const window1 = window;
-    await focusWindow(window1);
     const { cleanup, resolveDownloads, runInPage, tab } = await loadTestPage({
       page: SPANISH_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
@@ -138,10 +129,7 @@ add_task(
     // Moving a tab to a new window with the findbar open appears to modify this pref.
     // Pushing it to a pref env ensures that a failure will not be reported due to the pref changing.
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["accessibility.typeaheadfind.flashBar", 0],
-        ["security.allow_eval_with_system_principal", true],
-      ],
+      set: [["accessibility.typeaheadfind.flashBar", 0]],
     });
 
     await FullPageTranslationsTestUtils.assertTranslationsButton(
@@ -177,13 +165,12 @@ add_task(
       "SwapDocShells"
     );
     await swapDocShellPromise;
-    await focusWindow(window2);
 
     const tab2 = window2.gBrowser.selectedTab;
     function runInPage2(callback, data = {}) {
-      return SpecialPowers.spawn(
+      return ContentTask.spawn(
         tab2.linkedBrowser,
-        [{ contentData: data, callbackSource: callback.toString() }],
+        { contentData: data, callbackSource: callback.toString() },
         function ({ contentData, callbackSource }) {
           const TranslationsTest = ChromeUtils.importESModule(
             "chrome://mochitests/content/browser/toolkit/components/translations/tests/browser/translations-test.mjs"
@@ -274,7 +261,7 @@ add_task(
 
     await SpecialPowers.popPrefEnv();
 
-    await cleanup({ browser: window2.gBrowser.selectedBrowser });
+    await cleanup();
     await BrowserTestUtils.closeWindow(window2);
   }
 );

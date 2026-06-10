@@ -1,7 +1,9 @@
-commit a6f387de323eb9ae56448bdb71c5d315df631ce4
-Author: Ioanna M Dimitriou H <idimitriou@igalia.com>
-Date:   Tue Mar 17 22:33:58 2026 +0100
+commit 4869a68f71f9ea4c1b50ac7b1283e1fc81525581
+Author: Frank Yung-Fong Tang <ftang@chromium.org>
+Date:   Wed Dec 10 08:37:46 2025 -0800
 
-    [Temporal] Add function as acceptable undefined options object (#4990)
+    Add test for ECMA402 PR 1015 to verify  (new Intl.Segmenter()).segment("123")[Symbol.iterator].name (#4635)
     
-    * [Temporal] Add function as acceptable undefined options object
+    * Add test for ECMA402 PR 1015
+    
+    https://github.com/tc39/ecma402/pull/1015

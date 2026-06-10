@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +6,6 @@
 #ifndef mozilla_net_CookiePersistentStorage_h
 #define mozilla_net_CookiePersistentStorage_h
 
-#include "Cookie.h"
 #include "CookieStorage.h"
 
 #include "mozilla/Atomics.h"
@@ -15,25 +15,19 @@
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageStatementCallback.h"
-#include "nsIAsyncShutdown.h"
 
 class mozIStorageAsyncStatement;
 class mozIStorageService;
 class nsICookieTransactionCallback;
 class nsIEffectiveTLDService;
-class nsIURI;
 
 namespace mozilla {
 namespace net {
 
-class CookiePersistentStorage final : public CookieStorage,
-                                      public nsIAsyncShutdownBlocker {
+class CookiePersistentStorage final : public CookieStorage {
  public:
   // Result codes for TryInitDB() and Read().
   enum OpenDBResult { RESULT_OK, RESULT_RETRY, RESULT_FAILURE };
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
   static already_AddRefed<CookiePersistentStorage> Create();
 
@@ -91,7 +85,6 @@ class CookiePersistentStorage final : public CookieStorage,
 
  private:
   CookiePersistentStorage();
-  ~CookiePersistentStorage() = default;
 
   static void UpdateCookieInList(Cookie* aCookie, int64_t aLastAccessed,
                                  mozIStorageBindingParamsArray* aParamsArray);
@@ -128,26 +121,19 @@ class CookiePersistentStorage final : public CookieStorage,
   nsCOMPtr<nsIThread> mThread;
   nsCOMPtr<mozIStorageService> mStorageService;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
-  // Created on the main thread in Activate(); used read-only in Read() on the
-  // Cookie thread for hostname validation via Mutate()->SetHost().
-  nsCOMPtr<nsIURI> mPlaceholderURI;
 
   // encapsulates a (key, Cookie) tuple for temporary storage purposes.
   struct CookieDomainTuple {
     CookieKey key;
     OriginAttributes originAttributes;
-    RefPtr<Cookie> cookie;
+    UniquePtr<CookieStruct> cookie;
   };
 
   // thread
   TimeStamp mEndInitDBConn;
   nsTArray<CookieDomainTuple> mReadArray;
-  // Cookies with invalid hostnames found during Read(), to be removed from DB
-  // on the main thread after InitDBConn() sets up the DB connection.
-  // Synchronized by the same mMonitor + mInitialized pattern as mReadArray.
-  nsTArray<CookieDomainTuple> mCleanupArray;
 
-  Monitor mMonitor MOZ_ANNOTATED;
+  Monitor mMonitor MOZ_UNANNOTATED;
 
   Atomic<bool> mInitialized;
   Atomic<bool> mInitializedDBConn;
@@ -158,7 +144,7 @@ class CookiePersistentStorage final : public CookieStorage,
   nsCOMPtr<mozIStorageAsyncStatement> mStmtDelete;
   nsCOMPtr<mozIStorageAsyncStatement> mStmtUpdate;
 
-  Atomic<CorruptFlag, Relaxed> mCorruptFlag;
+  CorruptFlag mCorruptFlag;
 
   // Various parts representing asynchronous read state. These are useful
   // while the background read is taking place.
@@ -169,9 +155,6 @@ class CookiePersistentStorage final : public CookieStorage,
   nsCOMPtr<mozIStorageStatementCallback> mUpdateListener;
   nsCOMPtr<mozIStorageStatementCallback> mRemoveListener;
   nsCOMPtr<mozIStorageCompletionCallback> mCloseListener;
-
-  nsCOMPtr<nsIAsyncShutdownClient> mShutdownBarrier;
-  void RemoveShutdownBlocker();
 };
 
 }  // namespace net

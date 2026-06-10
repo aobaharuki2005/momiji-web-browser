@@ -72,7 +72,7 @@ fn((t) => {
     `${colorFormatCount} > maxColorAttachments: ${maxColorAttachments}`
   );
   const shouldError =
-  !isTextureFormatColorRenderable(t.device.features, format) ||
+  !isTextureFormatColorRenderable(t.device, format) ||
   getColorRenderByteCost(format) * colorFormatCount >
   t.device.limits.maxColorAttachmentBytesPerSample;
 
@@ -168,7 +168,7 @@ fn((t) => {
   const { format, attachment } = t.params;
   t.skipIfTextureFormatNotSupported(format);
 
-  const colorRenderable = isTextureFormatColorRenderable(t.device.features, format);
+  const colorRenderable = isTextureFormatColorRenderable(t.device, format);
   const depthStencil = isDepthOrStencilTextureFormat(format);
 
   switch (attachment) {

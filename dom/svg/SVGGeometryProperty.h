@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,11 +26,12 @@ struct LengthPercentWidthHeight {};
 
 namespace Tags {
 
-#define SVGGEOMETRYPROPERTY_GENERATETAG(tagName, resolver, axis, styleStruct) \
-  struct tagName {                                                            \
-    using ResolverType = ResolverTypes::resolver;                             \
-    constexpr static auto Axis = SVGLength::Axis::axis;                       \
-    constexpr static auto Getter = &styleStruct::m##tagName;                  \
+#define SVGGEOMETRYPROPERTY_GENERATETAG(tagName, resolver, direction, \
+                                        styleStruct)                  \
+  struct tagName {                                                    \
+    using ResolverType = ResolverTypes::resolver;                     \
+    constexpr static auto CtxDirection = SVGContentUtils::direction;  \
+    constexpr static auto Getter = &styleStruct::m##tagName;          \
   }
 
 SVGGEOMETRYPROPERTY_GENERATETAG(X, LengthPercentNoAuto, X, nsStyleSVGReset);
@@ -45,7 +48,7 @@ using StyleSizeGetter = AnchorResolvedSize (nsStylePosition::*)(
 struct Height;
 struct Width {
   using ResolverType = ResolverTypes::LengthPercentWidthHeight;
-  constexpr static auto Axis = SVGLength::Axis::X;
+  constexpr static auto CtxDirection = SVGContentUtils::X;
   constexpr static StyleSizeGetter Getter = &nsStylePosition::GetWidth;
   constexpr static auto SizeGetter = &gfx::Size::width;
   static AspectRatio AspectRatioRelative(AspectRatio aAspectRatio) {
@@ -56,7 +59,7 @@ struct Width {
 };
 struct Height {
   using ResolverType = ResolverTypes::LengthPercentWidthHeight;
-  constexpr static auto Axis = SVGLength::Axis::Y;
+  constexpr static auto CtxDirection = SVGContentUtils::Y;
   constexpr static StyleSizeGetter Getter = &nsStylePosition::GetHeight;
   constexpr static auto SizeGetter = &gfx::Size::height;
   static AspectRatio AspectRatioRelative(AspectRatio aAspectRatio) {
@@ -70,13 +73,13 @@ struct Height {
 struct Ry;
 struct Rx {
   using ResolverType = ResolverTypes::LengthPercentRXY;
-  constexpr static auto Axis = SVGLength::Axis::X;
+  constexpr static auto CtxDirection = SVGContentUtils::X;
   constexpr static auto Getter = &nsStyleSVGReset::mRx;
   using CounterPart = Ry;
 };
 struct Ry {
   using ResolverType = ResolverTypes::LengthPercentRXY;
-  constexpr static auto Axis = SVGLength::Axis::Y;
+  constexpr static auto CtxDirection = SVGContentUtils::Y;
   constexpr static auto Getter = &nsStyleSVGReset::mRy;
   using CounterPart = Rx;
 };
@@ -88,9 +91,9 @@ template <class T>
 using AlwaysFloat = float;
 using dummy = int[];
 
-using AxisType = decltype(SVGLength::Axis::X);
+using CtxDirectionType = decltype(SVGContentUtils::X);
 
-template <AxisType CTD>
+template <CtxDirectionType CTD>
 float ResolvePureLengthPercentage(const SVGElement* aElement,
                                   const LengthPercentage& aLP) {
   return aLP.ResolveToCSSPixelsWith(
@@ -101,7 +104,7 @@ template <class Tag>
 float ResolveImpl(ComputedStyle const& aStyle, const SVGElement* aElement,
                   ResolverTypes::LengthPercentNoAuto) {
   auto const& value = aStyle.StyleSVGReset()->*Tag::Getter;
-  return ResolvePureLengthPercentage<Tag::Axis>(aElement, value);
+  return ResolvePureLengthPercentage<Tag::CtxDirection>(aElement, value);
 }
 
 template <class Tag>
@@ -115,8 +118,8 @@ float ResolveImpl(ComputedStyle const& aStyle, const SVGElement* aElement,
       Tag::Getter, aStyle.StylePosition(),
       AnchorPosResolutionParams{nullptr, aStyle.StyleDisplay()->mPosition});
   if (value->IsLengthPercentage()) {
-    return ResolvePureLengthPercentage<Tag::Axis>(aElement,
-                                                  value->AsLengthPercentage());
+    return ResolvePureLengthPercentage<Tag::CtxDirection>(
+        aElement, value->AsLengthPercentage());
   }
 
   if (aElement->IsSVGElement(nsGkAtoms::image)) {
@@ -146,7 +149,7 @@ float ResolveImpl(ComputedStyle const& aStyle, const SVGElement* aElement,
 
     if (valueOther->IsLengthPercentage()) {
       // We are |auto|, but the other side has specifed length.
-      float lengthOther = ResolvePureLengthPercentage<Other::Axis>(
+      float lengthOther = ResolvePureLengthPercentage<Other::CtxDirection>(
           aElement, valueOther->AsLengthPercentage());
 
       if (aspectRatio) {
@@ -206,8 +209,8 @@ float ResolveImpl(ComputedStyle const& aStyle, const SVGElement* aElement,
 
   auto const& value = aStyle.StyleSVGReset()->*Tag::Getter;
   if (value.IsLengthPercentage()) {
-    return ResolvePureLengthPercentage<Tag::Axis>(aElement,
-                                                  value.AsLengthPercentage());
+    return ResolvePureLengthPercentage<Tag::CtxDirection>(
+        aElement, value.AsLengthPercentage());
   }
 
   MOZ_ASSERT(value.IsAuto());
@@ -220,7 +223,7 @@ float ResolveImpl(ComputedStyle const& aStyle, const SVGElement* aElement,
   }
 
   // If |Rx| is auto while |Ry| not, |Rx| gets the value of |Ry|.
-  return ResolvePureLengthPercentage<Rother::Axis>(
+  return ResolvePureLengthPercentage<Rother::CtxDirection>(
       aElement, valueOther.AsLengthPercentage());
 }
 
@@ -274,7 +277,7 @@ bool ResolveAll(const SVGElement* aElement,
 
 #undef SVGGEOMETRYPROPERTY_EVAL_ALL
 
-nsCSSUnit SpecifiedUnitTypeToCSSUnit(uint16_t aSpecifiedUnit);
+nsCSSUnit SpecifiedUnitTypeToCSSUnit(uint8_t aSpecifiedUnit);
 NonCustomCSSPropertyId AttrEnumToCSSPropId(const SVGElement* aElement,
                                            uint8_t aAttrEnum);
 

@@ -1,16 +1,18 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* A namespace class for static content security utilities. */
 
-#ifndef nsContentSecurityUtils_h_
-#define nsContentSecurityUtils_h_
+#ifndef nsContentSecurityUtils_h___
+#define nsContentSecurityUtils_h___
 
 #include <utility>
 
 #include "mozilla/Maybe.h"
-#include "nsLiteralString.h"
+#include "nsStringFwd.h"
 
 struct JSContext;
 class nsIChannel;
@@ -90,21 +92,16 @@ class nsContentSecurityUtils {
   static nsCString SmartFormatCrashString(char* part1, char* part2,
                                           const char* format_string);
 
-  // Everything that is allowed by AllowBuiltinSrcVisitor.
-  static constexpr nsLiteralString kBaselineChromeCSP =
-      u"script-src chrome: resource: moz-src:"_ns;
-
-  static bool IsExemptedFromBaselineChromeCSP(nsACString& aSpec);
-
 #if defined(DEBUG)
   static void AssertAboutPageHasCSP(mozilla::dom::Document* aDocument);
   static void AssertChromePageHasCSP(mozilla::dom::Document* aDocument);
 #endif
 
   static bool ValidateScriptFilename(JSContext* cx, const char* aFilename);
+  static nsresult GetVeryFirstUnexpectedScriptFilename(nsACString& aFilename);
 
   // Helper Function to Post a message to the corresponding JS-Console
   static void LogMessageToConsole(nsIHttpChannel* aChannel, const char* aMsg);
 };
 
-#endif /* nsContentSecurityUtils_h_ */
+#endif /* nsContentSecurityUtils_h___ */

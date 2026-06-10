@@ -24,7 +24,7 @@ add_task(async function () {
 
   info("Switching to the computed-view");
   const onComputedViewReady = inspector.once("computed-view-refreshed");
-  await selectComputedView(inspector);
+  selectComputedView(inspector);
   await onComputedViewReady;
   const cView = inspector.getPanel("computedview").computedView;
 

@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef PollableEvent_h_
-#define PollableEvent_h_
+#ifndef PollableEvent_h__
+#define PollableEvent_h__
 
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
@@ -20,7 +22,7 @@ class PollableEvent {
   ~PollableEvent();
 
   // Signal/Clear return false only if they fail
-  bool Signal(bool aForce = false);
+  bool Signal();
   // This is called only when we get non-null out_flags for the socket pair
   bool Clear();
   bool Valid() { return mWriteFD && mReadFD; }

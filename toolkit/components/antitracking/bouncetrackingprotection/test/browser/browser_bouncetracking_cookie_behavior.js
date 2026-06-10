@@ -54,6 +54,7 @@ add_setup(async function () {
         "privacy.bounceTrackingProtection.mode",
         Ci.nsIBounceTrackingProtection.MODE_ENABLED,
       ],
+      ["privacy.bounceTrackingProtection.requireStatefulBounces", true],
       ["privacy.bounceTrackingProtection.bounceTrackingGracePeriodSec", 0],
     ],
   });
@@ -93,13 +94,13 @@ add_task(async function test_cookie_behaviors() {
       true
     );
     await runTestCookieBehavior(
-      Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN,
+      Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
       pbId,
       true
     );
   }
   Assert.equal(
-    Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN,
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
     Ci.nsICookieService.BEHAVIOR_LAST,
     "test covers all cookie behaviors"
   );

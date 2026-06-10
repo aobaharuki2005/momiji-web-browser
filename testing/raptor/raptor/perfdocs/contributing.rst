@@ -12,7 +12,7 @@ For mobile projects, Raptor tests are on the following repositories:
 
 **Fenix**:
 
-- Repository: :searchfox:`Mozilla Central <mobile/android/fenix>`
+- Repository: `Mozilla Central <https://searchfox.org/mozilla-central/source/mobile/android/fenix>`__
 - Tests results: `Treeherder view <https://treeherder.mozilla.org/#/jobs?repo=fenix>`__
 - Schedule: Every 24 hours `Taskcluster force hook <https://tools.taskcluster.net/hooks/project-releng/cron-task-mozilla-mobile-fenix%2Fraptor>`_
 

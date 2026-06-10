@@ -168,7 +168,6 @@ pub enum AxisDirection {
 )]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[repr(C)]
-#[typed(todo_derive_fields)]
 pub struct ContentDistribution {
     primary: AlignFlags,
     // FIXME(https://github.com/w3c/csswg-drafts/issues/1002): This will need to
@@ -303,7 +302,6 @@ impl SpecifiedValueInfo for ContentDistribution {
 )]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[repr(C)]
-#[typed(todo_derive_fields)]
 pub struct SelfAlignment(pub AlignFlags);
 
 impl SelfAlignment {
@@ -441,7 +439,6 @@ impl SpecifiedValueInfo for SelfAlignment {
 )]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[repr(C)]
-#[typed(todo_derive_fields)]
 pub struct ItemPlacement(pub AlignFlags);
 
 impl ItemPlacement {

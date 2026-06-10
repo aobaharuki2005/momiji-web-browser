@@ -4,12 +4,13 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
  * Collection of configurations for the ICU4X fallback algorithm.
  *
- * See the [Rust documentation for `LocaleFallbackConfig`](https://docs.rs/icu/2.1.1/icu/locale/fallback/struct.LocaleFallbackConfig.html) for more information.
+ * See the [Rust documentation for `LocaleFallbackConfig`](https://docs.rs/icu/latest/icu/locale/fallback/struct.LocaleFallbackConfig.html) for more information.
  */
+
+
 export class LocaleFallbackConfig {
     #priority;
     get priority() {
@@ -18,7 +19,9 @@ export class LocaleFallbackConfig {
     set priority(value){
         this.#priority = value;
     }
-    /** @internal */
+    /** Create `LocaleFallbackConfig` from an object that contains all of `LocaleFallbackConfig`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
     static fromFields(structObj) {
         return new LocaleFallbackConfig(structObj);
     }
@@ -43,13 +46,7 @@ export class LocaleFallbackConfig {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 4, 4);
-
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-
-        functionCleanupArena.alloc(buffer);
-
-        return buffer.ptr;
+        return [this.#priority.ffiValue]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

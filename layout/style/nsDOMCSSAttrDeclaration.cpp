@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,6 +10,7 @@
 
 #include "ActiveLayerTracker.h"
 #include "mozAutoDocUpdate.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/SMILCSSValueType.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/dom/Document.h"
@@ -61,7 +64,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMCSSAttributeDeclaration)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCSSAttributeDeclaration)
 
 nsresult nsDOMCSSAttributeDeclaration::SetCSSDeclaration(
-    Block* aDecl, MutationClosureData* aClosureData) {
+    DeclarationBlock* aDecl, MutationClosureData* aClosureData) {
   NS_ASSERTION(mElement, "Must have Element to set the declaration!");
 
   // Whenever changing element.style values, aClosureData must be non-null.
@@ -73,6 +76,8 @@ nsresult nsDOMCSSAttributeDeclaration::SetCSSDeclaration(
   // getting here when the attribute hasn't changed.
   MOZ_ASSERT_IF(aClosureData && aClosureData->mShouldBeCalled,
                 aClosureData->mWasCalled);
+
+  aDecl->SetDirty();
   if (mIsSMILOverride) {
     mElement->SetSMILOverrideStyleDeclaration(*aDecl);
     return NS_OK;
@@ -86,16 +91,15 @@ Document* nsDOMCSSAttributeDeclaration::DocToUpdate() {
   return mElement->OwnerDoc();
 }
 
-StyleLockedDeclarationBlock*
-nsDOMCSSAttributeDeclaration::GetOrCreateCSSDeclaration(Operation aOperation,
-                                                        Block** aCreated) {
+DeclarationBlock* nsDOMCSSAttributeDeclaration::GetOrCreateCSSDeclaration(
+    Operation aOperation, DeclarationBlock** aCreated) {
   MOZ_ASSERT(aOperation != Operation::Modify || aCreated);
 
   if (!mElement) {
     return nullptr;
   }
 
-  StyleLockedDeclarationBlock* declaration;
+  DeclarationBlock* declaration;
   if (mIsSMILOverride) {
     declaration = mElement->GetSMILOverrideStyleDeclaration();
   } else {
@@ -111,7 +115,14 @@ nsDOMCSSAttributeDeclaration::GetOrCreateCSSDeclaration(Operation aOperation,
   }
 
   // cannot fail
-  RefPtr decl = Servo_DeclarationBlock_CreateEmpty().Consume();
+  auto decl = MakeRefPtr<DeclarationBlock>();
+  // Mark the declaration dirty so that it can be reused by the caller.
+  // Normally SetDirty is called later in SetCSSDeclaration.
+  decl->SetDirty();
+#ifdef DEBUG
+  RefPtr<DeclarationBlock> mutableDecl = decl->EnsureMutable();
+  MOZ_ASSERT(mutableDecl == decl);
+#endif
   decl.swap(*aCreated);
   return *aCreated;
 }
@@ -133,14 +144,14 @@ nsresult nsDOMCSSAttributeDeclaration::SetSMILValueHelper(SetterFunc aFunc) {
   // No need to do the ActiveLayerTracker / ScrollLinkedEffectDetector bits,
   // since we're in a SMIL animation anyway, no need to try to detect we're a
   // scripted animation.
-  RefPtr<Block> created;
-  Block* olddecl =
+  RefPtr<DeclarationBlock> created;
+  DeclarationBlock* olddecl =
       GetOrCreateCSSDeclaration(Operation::Modify, getter_AddRefs(created));
   if (!olddecl) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   mozAutoDocUpdate autoUpdate(DocToUpdate(), true);
-  RefPtr<Block> decl = EnsureBlockMutable(olddecl);
+  RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
 
   bool changed = aFunc(*decl);
 
@@ -156,26 +167,27 @@ nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
     const NonCustomCSSPropertyId aPropId, const SMILValue& aValue) {
   MOZ_ASSERT(aValue.mType == &SMILCSSValueType::sSingleton,
              "We should only try setting a CSS value type");
-  return SetSMILValueHelper([&](StyleLockedDeclarationBlock& aDecl) {
+  return SetSMILValueHelper([&](DeclarationBlock& aDecl) {
     return SMILCSSValueType::SetPropertyValues(aPropId, aValue, aDecl);
   });
 }
 
 nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
     const NonCustomCSSPropertyId aPropId, const SVGAnimatedLength& aLength) {
-  return SetSMILValueHelper(
-      [aPropId, &aLength](StyleLockedDeclarationBlock& aDecl) {
-        return SVGElement::UpdateDeclarationBlockFromLength(
-            aDecl, aPropId, aLength, SVGElement::ValToUse::Anim);
-      });
+  return SetSMILValueHelper([aPropId, &aLength](DeclarationBlock& aDecl) {
+    MOZ_ASSERT(aDecl.IsMutable());
+    return SVGElement::UpdateDeclarationBlockFromLength(
+        *aDecl.Raw(), aPropId, aLength, SVGElement::ValToUse::Anim);
+  });
 }
 
 nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
     const NonCustomCSSPropertyId aPropId, const SVGAnimatedPathSegList& aPath) {
   MOZ_ASSERT(aPropId == eCSSProperty_d);
-  return SetSMILValueHelper([&aPath](StyleLockedDeclarationBlock& aDecl) {
+  return SetSMILValueHelper([&aPath](DeclarationBlock& aDecl) {
+    MOZ_ASSERT(aDecl.IsMutable());
     return SVGElement::UpdateDeclarationBlockFromPath(
-        aDecl, aPath, SVGElement::ValToUse::Anim);
+        *aDecl.Raw(), aPath, SVGElement::ValToUse::Anim);
   });
 }
 
@@ -184,11 +196,13 @@ nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
     const SVGAnimatedTransformList* aTransform,
     const gfx::Matrix* aAnimateMotionTransform) {
   MOZ_ASSERT(aPropId == eCSSProperty_transform);
-  return SetSMILValueHelper([aTransform, aAnimateMotionTransform](
-                                StyleLockedDeclarationBlock& aDecl) {
-    return SVGElement::UpdateDeclarationBlockFromTransform(
-        aDecl, aTransform, aAnimateMotionTransform, SVGElement::ValToUse::Anim);
-  });
+  return SetSMILValueHelper(
+      [aTransform, aAnimateMotionTransform](DeclarationBlock& aDecl) {
+        MOZ_ASSERT(aDecl.IsMutable());
+        return SVGElement::UpdateDeclarationBlockFromTransform(
+            *aDecl.Raw(), aTransform, aAnimateMotionTransform,
+            SVGElement::ValToUse::Anim);
+      });
 }
 
 // Scripted modifications to style.opacity or style.transform (or other

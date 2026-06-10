@@ -1,5 +1,5 @@
-#ifndef FuzzingStreamListener_h_
-#define FuzzingStreamListener_h_
+#ifndef FuzzingStreamListener_h__
+#define FuzzingStreamListener_h__
 
 #include "mozilla/SpinEventLoopUntil.h"
 #include "nsCOMPtr.h"

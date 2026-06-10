@@ -53,7 +53,7 @@ add_task(async function () {
   );
   const waitForReload = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  await reloadSelectedTab();
+  await reloadBrowser();
 
   await Promise.all([
     waitForNetworkEventsToComplete,

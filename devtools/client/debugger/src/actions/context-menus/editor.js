@@ -53,7 +53,6 @@ export function showEditorContextMenu(event, editor, lineObject, location) {
       isSourceMapIgnoreListEnabled(state) &&
       isSourceOnSourceMapIgnoreList(state, source);
     const editorWrappingEnabled = getEditorWrapping(state);
-    const endColumn = editor.getText(lineObject.to.line).length;
 
     showMenu(
       event,
@@ -68,7 +67,6 @@ export function showEditorContextMenu(event, editor, lineObject, location) {
         lineObject,
         isSourceOnIgnoreList,
         dispatch,
-        endColumn,
       })
     );
   };
@@ -95,8 +93,7 @@ export function showEditorGutterContextMenu(event, line, location, lineText) {
         blackboxedRanges,
         isSourceOnIgnoreList,
         location.line,
-        dispatch,
-        lineText.length
+        dispatch
       ),
     ]);
   };
@@ -187,8 +184,7 @@ const blackBoxLineMenuItem = (
   // is opened from the gutter, it is not available when the
   // the context menu is opened from the editor.
   clickedLine = null,
-  dispatch,
-  endColumn
+  dispatch
 ) => {
   const startLine = clickedLine ?? toSourceLine(selectedSource, from.line);
   const endLine = clickedLine ?? toSourceLine(selectedSource, to.line);
@@ -229,11 +225,11 @@ const blackBoxLineMenuItem = (
       const selectionRange = {
         start: {
           line: startLine,
-          column: 0,
+          column: clickedLine == null ? from.ch : 0,
         },
         end: {
           line: endLine,
-          column: endColumn,
+          column: clickedLine == null ? to.ch : 0,
         },
       };
 
@@ -254,8 +250,7 @@ const blackBoxLinesMenuItem = (
   blackboxedRanges,
   isSourceOnIgnoreList,
   clickedLine,
-  dispatch,
-  endColumn
+  dispatch
 ) => {
   const startLine = toSourceLine(selectedSource, from.line);
   const endLine = toSourceLine(selectedSource, to.line);
@@ -280,11 +275,11 @@ const blackBoxLinesMenuItem = (
       const selectionRange = {
         start: {
           line: startLine,
-          column: 0,
+          column: from.ch,
         },
         end: {
           line: endLine,
-          column: endColumn,
+          column: to.ch,
         },
       };
 
@@ -346,7 +341,6 @@ function editorMenuItems({
   lineObject,
   isSourceOnIgnoreList,
   dispatch,
-  endColumn,
 }) {
   const items = [];
 
@@ -403,8 +397,7 @@ function editorMenuItems({
         blackboxedRanges,
         isSourceOnIgnoreList,
         null,
-        dispatch,
-        endColumn
+        dispatch
       )
     );
   }

@@ -119,8 +119,7 @@ impl RegistrationSet {
         let io = unsafe { NonNull::new_unchecked(Arc::as_ptr(io).cast_mut()) };
 
         super::EXPOSE_IO.unexpose_provenance(io.as_ptr());
-        // SAFETY: the caller guarantees that `io` is part of this list.
-        let _ = unsafe { synced.registrations.remove(io) };
+        let _ = synced.registrations.remove(io);
     }
 }
 
@@ -142,8 +141,6 @@ unsafe impl linked_list::Link for Arc<ScheduledIo> {
     unsafe fn pointers(
         target: NonNull<Self::Target>,
     ) -> NonNull<linked_list::Pointers<ScheduledIo>> {
-        // safety: `target.as_ref().linked_list_pointers` is a `UnsafeCell` that
-        // always returns a non-null pointer.
-        unsafe { NonNull::new_unchecked(target.as_ref().linked_list_pointers.get()) }
+        NonNull::new_unchecked(target.as_ref().linked_list_pointers.get())
     }
 }

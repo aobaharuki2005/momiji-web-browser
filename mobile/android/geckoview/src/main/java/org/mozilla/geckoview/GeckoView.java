@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * vim: ts=4 sw=4 expandtab:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -14,7 +16,6 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Insets;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -41,7 +42,6 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStructure;
-import android.view.WindowInsets;
 import android.view.autofill.AutofillManager;
 import android.view.autofill.AutofillValue;
 import android.view.inputmethod.EditorInfo;
@@ -63,7 +63,6 @@ import java.util.HashMap;
 import java.util.Objects;
 import org.mozilla.gecko.AndroidGamepadManager;
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.SurfaceViewWrapper;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -192,15 +191,8 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
       if (GeckoView.this.mSurfaceWrapper != null) {
         GeckoView.this.mSurfaceWrapper.getView().getLocationOnScreen(mOrigin);
         mDisplay.screenOriginChanged(mOrigin[0], mOrigin[1]);
-        // cutout / edge to edge support
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-          final WindowInsets windowInsets =
-              GeckoView.this.mSurfaceWrapper.getView().getRootWindowInsets();
-          final Insets insets =
-              windowInsets.getInsets(
-                  WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
-          mDisplay.safeAreaInsetsChanged(insets.top, insets.right, insets.bottom, insets.left);
-        } else if (Build.VERSION.SDK_INT >= 28) {
+        // cutout support
+        if (Build.VERSION.SDK_INT >= 28) {
           final DisplayCutout cutout =
               GeckoView.this.mSurfaceWrapper.getView().getRootWindowInsets().getDisplayCutout();
           if (cutout != null) {
@@ -521,10 +513,6 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
       session.getMagnifier().setView(null);
     }
 
-    if (mSession.getHapticFeedbackController().getView() == this) {
-      mSession.getHapticFeedbackController().setView(null);
-    }
-
     if (isFocused()) {
       mSession.setFocused(false);
     }
@@ -621,10 +609,6 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
 
     if (session.getMagnifier().getView() == null) {
       session.getMagnifier().setView(mSurfaceWrapper.getView());
-    }
-
-    if (session.getHapticFeedbackController().getView() == null) {
-      session.getHapticFeedbackController().setView(this);
     }
 
     if (session.getPrintDelegate() == null && mPrintDelegate != null) {
@@ -735,6 +719,12 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
     if (mIsSessionPoisoned) {
       throw new IllegalStateException("Trying to display a view with invalid session.");
     }
+    if (mSession != null) {
+      final GeckoRuntime runtime = mSession.getRuntime();
+      if (runtime != null) {
+        runtime.orientationChanged();
+      }
+    }
 
     if (mSession != null) {
       mDisplay.acquire(mSession.acquireDisplay());
@@ -745,7 +735,6 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
     // This needs to be called after the `super.onAttachedToWindow()`.
     addWindowInsetsListener(KEYBOARD_WINDOW_INSETS_LISTENER, mDisplay);
     attachWindowInsetsListener(getActivityFromContext(getContext()));
-    GeckoAppShell.setDisplayId(getDisplay().getDisplayId());
   }
 
   @Override

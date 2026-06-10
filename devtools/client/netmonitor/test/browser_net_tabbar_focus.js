@@ -30,21 +30,21 @@ add_task(async function () {
 
   const splitter = document.querySelector(".splitter");
 
-  EventUtils.synthesizeMouse(
+  await EventUtils.synthesizeMouse(
     splitter,
     0,
     1,
     { type: "mousedown" },
     monitor.panelWin
   );
-  EventUtils.synthesizeMouse(
+  await EventUtils.synthesizeMouse(
     splitter,
     300,
     1,
     { type: "mousemove" },
     monitor.panelWin
   );
-  EventUtils.synthesizeMouse(
+  await EventUtils.synthesizeMouse(
     splitter,
     300,
     1,

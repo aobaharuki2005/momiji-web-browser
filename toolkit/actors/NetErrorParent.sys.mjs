@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -58,7 +59,7 @@ export class EscapablePageParent extends JSWindowActorParent {
 
       // Ideally we use the homepage...
       if (AppConstants.MOZ_BUILD_APP == "browser") {
-        safePage = lazy.HomePage.getForErrorPage(browser.documentGlobal);
+        safePage = lazy.HomePage.getForErrorPage(browser.ownerGlobal);
       }
       browser.fixupAndLoadURIString(safePage, {
         triggeringPrincipal:
@@ -203,7 +204,7 @@ export class NetErrorParent extends EscapablePageParent {
         this.browser.reload();
         break;
       case "Browser:OpenCaptivePortalPage":
-        this.browser.documentGlobal.CaptivePortalWatcher.ensureCaptivePortalTab();
+        this.browser.ownerGlobal.CaptivePortalWatcher.ensureCaptivePortalTab();
         break;
       case "Browser:PrimeMitm":
         this.primeMitm(this.browser);
@@ -245,7 +246,7 @@ export class NetErrorParent extends EscapablePageParent {
             certsStringURL = certsStringURL.join("&");
             let url = `about:certificate?${certsStringURL}`;
 
-            let window = this.browser.documentGlobal;
+            let window = this.browser.ownerGlobal;
             if (AppConstants.MOZ_BUILD_APP === "browser") {
               window.switchToTabHavingURI(url, true, {});
             } else {
@@ -256,14 +257,11 @@ export class NetErrorParent extends EscapablePageParent {
         }
         break;
       case "Browser:AddTRRExcludedDomain": {
-        let uri = this.browsingContext.currentURI;
-        if (uri instanceof Ci.nsINestedURI) {
-          uri = uri.QueryInterface(Ci.nsINestedURI).innermostURI;
-        }
+        let domain = message.data.hostname;
         let excludedDomains = Services.prefs.getStringPref(
           "network.trr.excluded-domains"
         );
-        excludedDomains += `, ${uri.asciiHost}`;
+        excludedDomains += `, ${domain}`;
         Services.prefs.setStringPref(
           "network.trr.excluded-domains",
           excludedDomains
@@ -276,7 +274,7 @@ export class NetErrorParent extends EscapablePageParent {
           break;
         }
 
-        let win = browser.documentGlobal;
+        let win = browser.ownerGlobal;
         win.openPreferences("privacy-doh");
         break;
       }

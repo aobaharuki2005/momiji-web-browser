@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { PrintUtils, Services, AppConstants } =
-  window.docShell.chromeEventHandler.documentGlobal;
+  window.docShell.chromeEventHandler.ownerGlobal;
 
 ChromeUtils.defineESModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
@@ -959,22 +959,12 @@ var PrintEventHandler = {
       lastUsedPrinter = saveToPdfPrinter;
     }
 
-    for (let printer of printers) {
-      printer.QueryInterface(Ci.nsIPrinter);
-    }
-    const collator = new Intl.Collator(undefined, { sensitivity: "base" });
-    printers.sort((a, b) => {
-      if (a.sortAfterLocal !== b.sortAfterLocal) {
-        return a.sortAfterLocal ? 1 : -1;
-      }
-      return collator.compare(a.name, b.name);
-    });
-
     let destinations = [
       saveToPdfPrinter,
       ...printers.map(printer => {
+        printer.QueryInterface(Ci.nsIPrinter);
         const { name } = printer;
-        printersByName[name] = { printer };
+        printersByName[printer.name] = { printer };
         const destination = { name, value: name };
 
         if (name == lastUsedPrinterName) {
@@ -2806,7 +2796,7 @@ async function pickFileName(contentTitle, currentURI) {
   filename = DownloadPaths.sanitize(filename);
 
   picker.init(
-    window.docShell.chromeEventHandler.documentGlobal.browsingContext,
+    window.docShell.chromeEventHandler.ownerGlobal.browsingContext,
     title,
     Ci.nsIFilePicker.modeSave
   );

@@ -34,39 +34,80 @@ export var UnitTestObjs = {
 };
 /**
  * registerEventSink
- * @param {EventSinkSpecification} targets
+ * @param {string} target
+ * @param {TracingLevel} level
  * @param {EventSink} sink
- * @returns {EventSinkId}
  */
 export function registerEventSink(
-    targets, 
+    target, 
+    level, 
     sink) {
    
-FfiConverterTypeEventSinkSpecification.checkType(targets);
+FfiConverterString.checkType(target);
+FfiConverterTypeTracingLevel.checkType(level);
 FfiConverterTypeEventSink.checkType(sink);
 const result = UniFFIScaffolding.callSync(
-    146, // uniffi_tracing_support_fn_func_register_event_sink
-    FfiConverterTypeEventSinkSpecification.lower(targets),
+    136, // uniffi_tracing_support_fn_func_register_event_sink
+    FfiConverterString.lower(target),
+    FfiConverterTypeTracingLevel.lower(level),
     FfiConverterTypeEventSink.lower(sink),
 )
 return handleRustResult(
     result,
-    FfiConverterTypeEventSinkId.lift.bind(FfiConverterTypeEventSinkId),
+    (result) => undefined,
+    null,
+)
+}
+
+/**
+ * registerMinLevelEventSink
+ * @param {TracingLevel} level
+ * @param {EventSink} sink
+ */
+export function registerMinLevelEventSink(
+    level, 
+    sink) {
+   
+FfiConverterTypeTracingLevel.checkType(level);
+FfiConverterTypeEventSink.checkType(sink);
+const result = UniFFIScaffolding.callSync(
+    137, // uniffi_tracing_support_fn_func_register_min_level_event_sink
+    FfiConverterTypeTracingLevel.lower(level),
+    FfiConverterTypeEventSink.lower(sink),
+)
+return handleRustResult(
+    result,
+    (result) => undefined,
     null,
 )
 }
 
 /**
  * unregisterEventSink
- * @param {EventSinkId} id
+ * @param {string} target
  */
 export function unregisterEventSink(
-    id) {
+    target) {
    
-FfiConverterTypeEventSinkId.checkType(id);
+FfiConverterString.checkType(target);
 const result = UniFFIScaffolding.callSync(
-    147, // uniffi_tracing_support_fn_func_unregister_event_sink
-    FfiConverterTypeEventSinkId.lower(id),
+    138, // uniffi_tracing_support_fn_func_unregister_event_sink
+    FfiConverterString.lower(target),
+)
+return handleRustResult(
+    result,
+    (result) => undefined,
+    null,
+)
+}
+
+/**
+ * Remove the sink registered with [register_min_level_event_sink], if any.
+ */
+export function unregisterMinLevelEventSink() {
+   
+const result = UniFFIScaffolding.callSync(
+    139, // uniffi_tracing_support_fn_func_unregister_min_level_event_sink
 )
 return handleRustResult(
     result,
@@ -77,12 +118,10 @@ return handleRustResult(
 
 
 
-
-
 /**
  * TracingLevel
  */
-export const TracingLevel = Object.freeze({
+export const TracingLevel = {
     /**
      * ERROR
      */
@@ -103,7 +142,8 @@ export const TracingLevel = Object.freeze({
      * TRACE
      */
     TRACE: 4,
-});
+};
+Object.freeze(TracingLevel);
 
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeTracingLevel extends FfiConverterArrayBuffer {
@@ -163,265 +203,8 @@ export class FfiConverterTypeTracingLevel extends FfiConverterArrayBuffer {
       }
     }
 }
-/**
- * EventTarget
- */
-export class EventTarget {
-    constructor(
-        {
-            target, 
-            level
-        } = {
-            target: undefined, 
-            level: undefined
-        }
-    ) {
-        try {
-            FfiConverterString.checkType(target)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("target");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterTypeTracingLevel.checkType(level)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("level");
-            }
-            throw e;
-        }
-        /**
-         * @type {string}
-         */
-        this.target = target;
-        /**
-         * @type {TracingLevel[keyof TracingLevel]}
-         */
-        this.level = level;
-    }
 
-    equals(other) {
-        return (
-            this.target == other.target
-            && this.level == other.level
-        )
-    }
-}
 
-// Export the FFIConverter object to make external types work.
-export class FfiConverterTypeEventTarget extends FfiConverterArrayBuffer {
-    static read(dataStream) {
-        return new EventTarget({
-            target: FfiConverterString.read(dataStream),
-            level: FfiConverterTypeTracingLevel.read(dataStream),
-        });
-    }
-    static write(dataStream, value) {
-        FfiConverterString.write(dataStream, value.target);
-        FfiConverterTypeTracingLevel.write(dataStream, value.level);
-    }
-
-    static computeSize(value) {
-        let totalSize = 0;
-        totalSize += FfiConverterString.computeSize(value.target);
-        totalSize += FfiConverterTypeTracingLevel.computeSize(value.level);
-        return totalSize
-    }
-
-    static checkType(value) {
-        super.checkType(value);
-        if (!(value instanceof EventTarget)) {
-            throw new UniFFITypeError(`Expected 'EventTarget', found '${typeof value}'`);
-        }
-        try {
-            FfiConverterString.checkType(value.target);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".target");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterTypeTracingLevel.checkType(value.level);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".level");
-            }
-            throw e;
-        }
-    }
-}
-// Export the FFIConverter object to make external types work.
-export class FfiConverterSequenceTypeEventTarget extends FfiConverterArrayBuffer {
-    static read(dataStream) {
-        const len = dataStream.readInt32();
-        const arr = [];
-        for (let i = 0; i < len; i++) {
-            arr.push(FfiConverterTypeEventTarget.read(dataStream));
-        }
-        return arr;
-    }
-
-    static write(dataStream, value) {
-        dataStream.writeInt32(value.length);
-        value.forEach((innerValue) => {
-            FfiConverterTypeEventTarget.write(dataStream, innerValue);
-        })
-    }
-
-    static computeSize(value) {
-        // The size of the length
-        let size = 4;
-        for (const innerValue of value) {
-            size += FfiConverterTypeEventTarget.computeSize(innerValue);
-        }
-        return size;
-    }
-
-    static checkType(value) {
-        if (!Array.isArray(value)) {
-            throw new UniFFITypeError(`${value} is not an array`);
-        }
-        value.forEach((innerValue, idx) => {
-            try {
-                FfiConverterTypeEventTarget.checkType(innerValue);
-            } catch (e) {
-                if (e instanceof UniFFITypeError) {
-                    e.addItemDescriptionPart(`[${idx}]`);
-                }
-                throw e;
-            }
-        })
-    }
-}
-// Export the FFIConverter object to make external types work.
-export class FfiConverterOptionalTypeTracingLevel extends FfiConverterArrayBuffer {
-    static checkType(value) {
-        if (value !== undefined && value !== null) {
-            FfiConverterTypeTracingLevel.checkType(value)
-        }
-    }
-
-    static read(dataStream) {
-        const code = dataStream.readUint8(0);
-        switch (code) {
-            case 0:
-                return null
-            case 1:
-                return FfiConverterTypeTracingLevel.read(dataStream)
-            default:
-                throw new UniFFIError(`Unexpected code: ${code}`);
-        }
-    }
-
-    static write(dataStream, value) {
-        if (value === null || value === undefined) {
-            dataStream.writeUint8(0);
-            return;
-        }
-        dataStream.writeUint8(1);
-        FfiConverterTypeTracingLevel.write(dataStream, value)
-    }
-
-    static computeSize(value) {
-        if (value === null || value === undefined) {
-            return 1;
-        }
-        return 1 + FfiConverterTypeTracingLevel.computeSize(value)
-    }
-}
-/**
- * Describes which events to an EventSink
- */
-export class EventSinkSpecification {
-    constructor(
-        {
-            targets= [], 
-            minLevel= null
-        } = {
-            targets: undefined, 
-            minLevel: undefined
-        }
-    ) {
-        try {
-            FfiConverterSequenceTypeEventTarget.checkType(targets)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("targets");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterOptionalTypeTracingLevel.checkType(minLevel)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("minLevel");
-            }
-            throw e;
-        }
-        /**
-         * @type {Array.<EventTarget>}
-         */
-        this.targets = targets;
-        /**
-         * @type {?TracingLevel[keyof TracingLevel]}
-         */
-        this.minLevel = minLevel;
-    }
-
-    equals(other) {
-        return (
-            this.targets == other.targets
-            && this.minLevel == other.minLevel
-        )
-    }
-}
-
-// Export the FFIConverter object to make external types work.
-export class FfiConverterTypeEventSinkSpecification extends FfiConverterArrayBuffer {
-    static read(dataStream) {
-        return new EventSinkSpecification({
-            targets: FfiConverterSequenceTypeEventTarget.read(dataStream),
-            minLevel: FfiConverterOptionalTypeTracingLevel.read(dataStream),
-        });
-    }
-    static write(dataStream, value) {
-        FfiConverterSequenceTypeEventTarget.write(dataStream, value.targets);
-        FfiConverterOptionalTypeTracingLevel.write(dataStream, value.minLevel);
-    }
-
-    static computeSize(value) {
-        let totalSize = 0;
-        totalSize += FfiConverterSequenceTypeEventTarget.computeSize(value.targets);
-        totalSize += FfiConverterOptionalTypeTracingLevel.computeSize(value.minLevel);
-        return totalSize
-    }
-
-    static checkType(value) {
-        super.checkType(value);
-        if (!(value instanceof EventSinkSpecification)) {
-            throw new UniFFITypeError(`Expected 'EventSinkSpecification', found '${typeof value}'`);
-        }
-        try {
-            FfiConverterSequenceTypeEventTarget.checkType(value.targets);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".targets");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterOptionalTypeTracingLevel.checkType(value.minLevel);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".minLevel");
-            }
-            throw e;
-        }
-    }
-}
 export class FfiConverterTypeTracingJsonValue extends FfiConverter {
     static lift(value) {
         return FfiConverterString.lift(value);
@@ -510,23 +293,23 @@ export class TracingEvent {
             throw e;
         }
         /**
-         * @type {TracingLevel[keyof TracingLevel]}
+         * level
          */
         this.level = level;
         /**
-         * @type {string}
+         * target
          */
         this.target = target;
         /**
-         * @type {string}
+         * name
          */
         this.name = name;
         /**
-         * @type {string}
+         * message
          */
         this.message = message;
         /**
-         * @type {TracingJsonValue}
+         * fields
          */
         this.fields = fields;
     }
@@ -619,36 +402,6 @@ export class FfiConverterTypeTracingEvent extends FfiConverterArrayBuffer {
     }
 }
 
-
-export class FfiConverterTypeEventSinkId extends FfiConverter {
-    static lift(value) {
-        return FfiConverterUInt32.lift(value);
-    }
-
-    static lower(value) {
-        return FfiConverterUInt32.lower(value);
-    }
-
-    static write(dataStream, value) {
-        FfiConverterUInt32.write(dataStream, value);
-    }
-
-    static read(dataStream) {
-        const builtinVal = FfiConverterUInt32.read(dataStream);
-        return builtinVal;
-    }
-
-    static computeSize(value) {
-        return FfiConverterUInt32.computeSize(value);
-    }
-
-    static checkType(value) {
-        if (value === null || value === undefined) {
-            throw new TypeError("value is null or undefined");
-        }
-    }
-}
-
 /**
  * EventSink
  */
@@ -674,7 +427,7 @@ export class FfiConverterTypeEventSink extends FfiConverter {
     }
 
     static lift(handleId) {
-        return uniffiCallbackHandlerTracingEventSink.takeCallbackObj(handleId)
+        return uniffiCallbackHandlerTracingEventSink.getCallbackObj(handleId)
     }
 
     static read(dataStream) {

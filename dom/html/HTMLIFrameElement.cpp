@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -48,7 +50,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLFrameElement)
 const DOMTokenListSupportedToken HTMLIFrameElement::sSupportedSandboxTokens[] =
     {
 #define SANDBOX_KEYWORD(string, atom, flags) string,
-#include "IframeSandboxKeywordList.inc"
+#include "IframeSandboxKeywordList.h"
 #undef SANDBOX_KEYWORD
         nullptr};
 
@@ -170,7 +172,7 @@ void HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         SetLazyLoading();
       } else if (aOldValue &&
                  Loading(aOldValue->GetEnumValue()) == Loading::Lazy) {
-        StopLazyLoading(TriggerLoad::Yes);
+        StopLazyLoading();
       }
     }
 
@@ -338,55 +340,71 @@ void HTMLIFrameElement::UpdateLazyLoadState() {
 
 nsresult HTMLIFrameElement::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
+  // Update lazy load state on bind to tree again if lazy loading, as the
+  // loading attribute could be set before others.
   if (mLazyLoading) {
-    LazyLoadingElementBindToTree(aContext);
-    // Update lazy load state on bind to tree if lazy loading, as the
-    // loading attribute could be set before others.
     UpdateLazyLoadState();
   }
+
   return nsGenericHTMLFrameElement::BindToTree(aContext, aParent);
 }
 
-void HTMLIFrameElement::UnbindFromTree(UnbindContext& aContext) {
+void HTMLIFrameElement::SetLazyLoading() {
   if (mLazyLoading) {
-    LazyLoadingElementUnbindFromTree(aContext);
+    return;
   }
-  nsGenericHTMLFrameElement::UnbindFromTree(aContext);
+
+  // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#will-lazy-load-element-steps
+  // "If scripting is disabled for element, then return false."
+  Document* doc = OwnerDoc();
+  if (!doc->IsScriptEnabled() || doc->IsStaticDocument()) {
+    return;
+  }
+
+  doc->EnsureLazyLoadObserver().Observe(*this);
+  mLazyLoading = true;
+
+  UpdateLazyLoadState();
+}
+
+void HTMLIFrameElement::StopLazyLoading() {
+  CancelLazyLoading(false /* aClearLazyLoadState */);
+
+  LoadSrc();
+
+  mLazyLoadState.Clear();
+  if (nsSubDocumentFrame* ourFrame = do_QueryFrame(GetPrimaryFrame())) {
+    ourFrame->ResetFrameLoader(nsSubDocumentFrame::RetainPaintData::No);
+  }
 }
 
 void HTMLIFrameElement::NodeInfoChanged(Document* aOldDoc) {
-  nsGenericHTMLFrameElement::NodeInfoChanged(aOldDoc);
-  // We might be moving from a document with lazyload disabled to one with
-  // lazyload enabled.
-  StopLazyLoading(TriggerLoad::No);
+  nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
+
+  if (mLazyLoading) {
+    aOldDoc->GetLazyLoadObserver()->Unobserve(*this);
+    mLazyLoading = false;
+  }
+
   if (LoadingState() == Loading::Lazy) {
     SetLazyLoading();
   }
 }
 
-void HTMLIFrameElement::SetLazyLoading() {
-  if (mLazyLoading || !MaybeStartLazyLoading()) {
-    return;
-  }
-
-  mLazyLoading = true;
-  UpdateLazyLoadState();
-}
-
-void HTMLIFrameElement::StopLazyLoading(TriggerLoad aTriggerLoad) {
+void HTMLIFrameElement::CancelLazyLoading(bool aClearLazyLoadState) {
   if (!mLazyLoading) {
     return;
   }
-  Element::StopLazyLoading();
-  mLazyLoading = false;
-  if (aTriggerLoad == TriggerLoad::Yes) {
-    LoadSrc();
+
+  Document* doc = OwnerDoc();
+  if (auto* obs = doc->GetLazyLoadObserver()) {
+    obs->Unobserve(*this);
   }
-  mLazyLoadState.Clear();
-  if (aTriggerLoad == TriggerLoad::Yes) {
-    if (nsSubDocumentFrame* ourFrame = do_QueryFrame(GetPrimaryFrame())) {
-      ourFrame->ResetFrameLoader(nsSubDocumentFrame::RetainPaintData::No);
-    }
+
+  mLazyLoading = false;
+
+  if (aClearLazyLoadState) {
+    mLazyLoadState.Clear();
   }
 }
 

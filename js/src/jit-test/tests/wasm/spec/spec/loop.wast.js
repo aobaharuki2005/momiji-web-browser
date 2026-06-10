@@ -441,329 +441,315 @@ let $0 = instantiate(`(module
     )
     (drop) (drop) (drop)
   )
-
-  (func (export "br-implicit-drop") (result i32)
-    (local \$i i32)
-    (i32.const 1)
-    (loop \$loop
-      (local.set \$i (i32.add (local.get \$i) (i32.const 1)))
-      (i32.const 2)
-      (br_if \$loop (i32.lt_s (local.get \$i) (i32.const 10)))
-      (drop)
-    )
-  )
 )`);
 
-// ./test/core/loop.wast:441
+// ./test/core/loop.wast:430
 assert_return(() => invoke($0, `empty`, []), []);
 
-// ./test/core/loop.wast:442
+// ./test/core/loop.wast:431
 assert_return(() => invoke($0, `singular`, []), [value("i32", 7)]);
 
-// ./test/core/loop.wast:443
+// ./test/core/loop.wast:432
 assert_return(() => invoke($0, `multi`, []), [value("i32", 8)]);
 
-// ./test/core/loop.wast:444
+// ./test/core/loop.wast:433
 assert_return(() => invoke($0, `nested`, []), [value("i32", 9)]);
 
-// ./test/core/loop.wast:445
+// ./test/core/loop.wast:434
 assert_return(() => invoke($0, `deep`, []), [value("i32", 150)]);
 
-// ./test/core/loop.wast:447
+// ./test/core/loop.wast:436
 assert_return(() => invoke($0, `as-select-first`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:448
+// ./test/core/loop.wast:437
 assert_return(() => invoke($0, `as-select-mid`, []), [value("i32", 2)]);
 
-// ./test/core/loop.wast:449
+// ./test/core/loop.wast:438
 assert_return(() => invoke($0, `as-select-last`, []), [value("i32", 2)]);
 
-// ./test/core/loop.wast:451
+// ./test/core/loop.wast:440
 assert_return(() => invoke($0, `as-if-condition`, []), []);
 
-// ./test/core/loop.wast:452
+// ./test/core/loop.wast:441
 assert_return(() => invoke($0, `as-if-then`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:453
+// ./test/core/loop.wast:442
 assert_return(() => invoke($0, `as-if-else`, []), [value("i32", 2)]);
 
-// ./test/core/loop.wast:455
+// ./test/core/loop.wast:444
 assert_return(() => invoke($0, `as-br_if-first`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:456
+// ./test/core/loop.wast:445
 assert_return(() => invoke($0, `as-br_if-last`, []), [value("i32", 2)]);
 
-// ./test/core/loop.wast:458
+// ./test/core/loop.wast:447
 assert_return(() => invoke($0, `as-br_table-first`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:459
+// ./test/core/loop.wast:448
 assert_return(() => invoke($0, `as-br_table-last`, []), [value("i32", 2)]);
 
-// ./test/core/loop.wast:461
+// ./test/core/loop.wast:450
 assert_return(() => invoke($0, `as-call_indirect-first`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:462
+// ./test/core/loop.wast:451
 assert_return(() => invoke($0, `as-call_indirect-mid`, []), [value("i32", 2)]);
 
-// ./test/core/loop.wast:463
+// ./test/core/loop.wast:452
 assert_return(() => invoke($0, `as-call_indirect-last`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:465
+// ./test/core/loop.wast:454
 assert_return(() => invoke($0, `as-store-first`, []), []);
 
-// ./test/core/loop.wast:466
+// ./test/core/loop.wast:455
 assert_return(() => invoke($0, `as-store-last`, []), []);
 
-// ./test/core/loop.wast:468
+// ./test/core/loop.wast:457
 assert_return(() => invoke($0, `as-memory.grow-value`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:469
+// ./test/core/loop.wast:458
 assert_return(() => invoke($0, `as-call-value`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:470
+// ./test/core/loop.wast:459
 assert_return(() => invoke($0, `as-return-value`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:471
+// ./test/core/loop.wast:460
 assert_return(() => invoke($0, `as-drop-operand`, []), []);
 
-// ./test/core/loop.wast:472
+// ./test/core/loop.wast:461
 assert_return(() => invoke($0, `as-br-value`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:473
+// ./test/core/loop.wast:462
 assert_return(() => invoke($0, `as-local.set-value`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:474
+// ./test/core/loop.wast:463
 assert_return(() => invoke($0, `as-local.tee-value`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:475
+// ./test/core/loop.wast:464
 assert_return(() => invoke($0, `as-global.set-value`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:476
+// ./test/core/loop.wast:465
 assert_return(() => invoke($0, `as-load-operand`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:478
+// ./test/core/loop.wast:467
 assert_return(() => invoke($0, `as-unary-operand`, []), [value("i32", 0)]);
 
-// ./test/core/loop.wast:479
+// ./test/core/loop.wast:468
 assert_return(() => invoke($0, `as-binary-operand`, []), [value("i32", 12)]);
 
-// ./test/core/loop.wast:480
+// ./test/core/loop.wast:469
 assert_return(() => invoke($0, `as-test-operand`, []), [value("i32", 0)]);
 
-// ./test/core/loop.wast:481
+// ./test/core/loop.wast:470
 assert_return(() => invoke($0, `as-compare-operand`, []), [value("i32", 0)]);
 
-// ./test/core/loop.wast:482
+// ./test/core/loop.wast:471
 assert_return(() => invoke($0, `as-binary-operands`, []), [value("i32", 12)]);
 
-// ./test/core/loop.wast:483
+// ./test/core/loop.wast:472
 assert_return(() => invoke($0, `as-compare-operands`, []), [value("i32", 0)]);
 
-// ./test/core/loop.wast:484
+// ./test/core/loop.wast:473
 assert_return(() => invoke($0, `as-mixed-operands`, []), [value("i32", 27)]);
 
-// ./test/core/loop.wast:486
+// ./test/core/loop.wast:475
 assert_return(() => invoke($0, `break-bare`, []), [value("i32", 19)]);
 
-// ./test/core/loop.wast:487
+// ./test/core/loop.wast:476
 assert_return(() => invoke($0, `break-value`, []), [value("i32", 18)]);
 
-// ./test/core/loop.wast:488
+// ./test/core/loop.wast:477
 assert_return(
   () => invoke($0, `break-multi-value`, []),
   [value("i32", 18), value("i32", -18), value("i64", 18n)],
 );
 
-// ./test/core/loop.wast:491
+// ./test/core/loop.wast:480
 assert_return(() => invoke($0, `break-repeated`, []), [value("i32", 18)]);
 
-// ./test/core/loop.wast:492
+// ./test/core/loop.wast:481
 assert_return(() => invoke($0, `break-inner`, []), [value("i32", 31)]);
 
-// ./test/core/loop.wast:494
+// ./test/core/loop.wast:483
 assert_return(() => invoke($0, `param`, []), [value("i32", 3)]);
 
-// ./test/core/loop.wast:495
+// ./test/core/loop.wast:484
 assert_return(() => invoke($0, `params`, []), [value("i32", 3)]);
 
-// ./test/core/loop.wast:496
+// ./test/core/loop.wast:485
 assert_return(() => invoke($0, `params-id`, []), [value("i32", 3)]);
 
-// ./test/core/loop.wast:497
+// ./test/core/loop.wast:486
 assert_return(() => invoke($0, `param-break`, []), [value("i32", 13)]);
 
-// ./test/core/loop.wast:498
+// ./test/core/loop.wast:487
 assert_return(() => invoke($0, `params-break`, []), [value("i32", 12)]);
 
-// ./test/core/loop.wast:499
+// ./test/core/loop.wast:488
 assert_return(() => invoke($0, `params-id-break`, []), [value("i32", 3)]);
 
-// ./test/core/loop.wast:501
+// ./test/core/loop.wast:490
 assert_return(() => invoke($0, `effects`, []), [value("i32", 1)]);
 
-// ./test/core/loop.wast:503
+// ./test/core/loop.wast:492
 assert_return(() => invoke($0, `while`, [0n]), [value("i64", 1n)]);
 
-// ./test/core/loop.wast:504
+// ./test/core/loop.wast:493
 assert_return(() => invoke($0, `while`, [1n]), [value("i64", 1n)]);
 
-// ./test/core/loop.wast:505
+// ./test/core/loop.wast:494
 assert_return(() => invoke($0, `while`, [2n]), [value("i64", 2n)]);
 
-// ./test/core/loop.wast:506
+// ./test/core/loop.wast:495
 assert_return(() => invoke($0, `while`, [3n]), [value("i64", 6n)]);
 
-// ./test/core/loop.wast:507
+// ./test/core/loop.wast:496
 assert_return(() => invoke($0, `while`, [5n]), [value("i64", 120n)]);
 
-// ./test/core/loop.wast:508
+// ./test/core/loop.wast:497
 assert_return(() => invoke($0, `while`, [20n]), [value("i64", 2432902008176640000n)]);
 
-// ./test/core/loop.wast:510
+// ./test/core/loop.wast:499
 assert_return(() => invoke($0, `for`, [0n]), [value("i64", 1n)]);
 
-// ./test/core/loop.wast:511
+// ./test/core/loop.wast:500
 assert_return(() => invoke($0, `for`, [1n]), [value("i64", 1n)]);
 
-// ./test/core/loop.wast:512
+// ./test/core/loop.wast:501
 assert_return(() => invoke($0, `for`, [2n]), [value("i64", 2n)]);
 
-// ./test/core/loop.wast:513
+// ./test/core/loop.wast:502
 assert_return(() => invoke($0, `for`, [3n]), [value("i64", 6n)]);
 
-// ./test/core/loop.wast:514
+// ./test/core/loop.wast:503
 assert_return(() => invoke($0, `for`, [5n]), [value("i64", 120n)]);
 
-// ./test/core/loop.wast:515
+// ./test/core/loop.wast:504
 assert_return(() => invoke($0, `for`, [20n]), [value("i64", 2432902008176640000n)]);
 
-// ./test/core/loop.wast:517
+// ./test/core/loop.wast:506
 assert_return(() => invoke($0, `nesting`, [value("f32", 0), value("f32", 7)]), [value("f32", 0)]);
 
-// ./test/core/loop.wast:518
+// ./test/core/loop.wast:507
 assert_return(() => invoke($0, `nesting`, [value("f32", 7), value("f32", 0)]), [value("f32", 0)]);
 
-// ./test/core/loop.wast:519
+// ./test/core/loop.wast:508
 assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 1)]), [value("f32", 1)]);
 
-// ./test/core/loop.wast:520
+// ./test/core/loop.wast:509
 assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 2)]), [value("f32", 2)]);
 
-// ./test/core/loop.wast:521
+// ./test/core/loop.wast:510
 assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 3)]), [value("f32", 4)]);
 
-// ./test/core/loop.wast:522
+// ./test/core/loop.wast:511
 assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 4)]), [value("f32", 6)]);
 
-// ./test/core/loop.wast:523
+// ./test/core/loop.wast:512
 assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 100)]), [value("f32", 2550)]);
 
-// ./test/core/loop.wast:524
+// ./test/core/loop.wast:513
 assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 101)]), [value("f32", 2601)]);
 
-// ./test/core/loop.wast:525
+// ./test/core/loop.wast:514
 assert_return(() => invoke($0, `nesting`, [value("f32", 2), value("f32", 1)]), [value("f32", 1)]);
 
-// ./test/core/loop.wast:526
+// ./test/core/loop.wast:515
 assert_return(() => invoke($0, `nesting`, [value("f32", 3), value("f32", 1)]), [value("f32", 1)]);
 
-// ./test/core/loop.wast:527
+// ./test/core/loop.wast:516
 assert_return(() => invoke($0, `nesting`, [value("f32", 10), value("f32", 1)]), [value("f32", 1)]);
 
-// ./test/core/loop.wast:528
+// ./test/core/loop.wast:517
 assert_return(() => invoke($0, `nesting`, [value("f32", 2), value("f32", 2)]), [value("f32", 3)]);
 
-// ./test/core/loop.wast:529
+// ./test/core/loop.wast:518
 assert_return(() => invoke($0, `nesting`, [value("f32", 2), value("f32", 3)]), [value("f32", 4)]);
 
-// ./test/core/loop.wast:530
+// ./test/core/loop.wast:519
 assert_return(
   () => invoke($0, `nesting`, [value("f32", 7), value("f32", 4)]),
   [value("f32", 10.309524)],
 );
 
-// ./test/core/loop.wast:531
+// ./test/core/loop.wast:520
 assert_return(
   () => invoke($0, `nesting`, [value("f32", 7), value("f32", 100)]),
   [value("f32", 4381.548)],
 );
 
-// ./test/core/loop.wast:532
+// ./test/core/loop.wast:521
 assert_return(() => invoke($0, `nesting`, [value("f32", 7), value("f32", 101)]), [value("f32", 2601)]);
 
-// ./test/core/loop.wast:534
+// ./test/core/loop.wast:523
 assert_return(() => invoke($0, `type-use`, []), []);
 
-// ./test/core/loop.wast:536
-assert_return(() => invoke($0, `br-implicit-drop`, []), [value("i32", 1)]);
-
-// ./test/core/loop.wast:538
+// ./test/core/loop.wast:525
 assert_malformed(
   () => instantiate(`(type \$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (type \$sig) (result i32) (param i32))) `),
   `unexpected token`,
 );
 
-// ./test/core/loop.wast:545
+// ./test/core/loop.wast:532
 assert_malformed(
   () => instantiate(`(type \$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (param i32) (type \$sig) (result i32))) `),
   `unexpected token`,
 );
 
-// ./test/core/loop.wast:552
+// ./test/core/loop.wast:539
 assert_malformed(
   () => instantiate(`(type \$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (param i32) (result i32) (type \$sig))) `),
   `unexpected token`,
 );
 
-// ./test/core/loop.wast:559
+// ./test/core/loop.wast:546
 assert_malformed(
   () => instantiate(`(type \$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (result i32) (type \$sig) (param i32))) `),
   `unexpected token`,
 );
 
-// ./test/core/loop.wast:566
+// ./test/core/loop.wast:553
 assert_malformed(
   () => instantiate(`(type \$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (result i32) (param i32) (type \$sig))) `),
   `unexpected token`,
 );
 
-// ./test/core/loop.wast:573
+// ./test/core/loop.wast:560
 assert_malformed(
   () => instantiate(`(func (i32.const 0) (loop (result i32) (param i32))) `),
   `unexpected token`,
 );
 
-// ./test/core/loop.wast:580
+// ./test/core/loop.wast:567
 assert_malformed(
   () => instantiate(`(func (i32.const 0) (loop (param \$x i32) (drop))) `),
   `unexpected token`,
 );
 
-// ./test/core/loop.wast:584
+// ./test/core/loop.wast:571
 assert_malformed(
   () => instantiate(`(type \$sig (func)) (func (loop (type \$sig) (result i32) (i32.const 0)) (unreachable)) `),
   `inline function type`,
 );
 
-// ./test/core/loop.wast:591
+// ./test/core/loop.wast:578
 assert_malformed(
   () => instantiate(`(type \$sig (func (param i32) (result i32))) (func (loop (type \$sig) (result i32) (i32.const 0)) (unreachable)) `),
   `inline function type`,
 );
 
-// ./test/core/loop.wast:598
+// ./test/core/loop.wast:585
 assert_malformed(
   () => instantiate(`(type \$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (type \$sig) (param i32) (drop)) (unreachable)) `),
   `inline function type`,
 );
 
-// ./test/core/loop.wast:605
+// ./test/core/loop.wast:592
 assert_malformed(
   () => instantiate(`(type \$sig (func (param i32 i32) (result i32))) (func (i32.const 0) (loop (type \$sig) (param i32) (result i32)) (unreachable)) `),
   `inline function type`,
 );
 
-// ./test/core/loop.wast:613
+// ./test/core/loop.wast:600
 assert_invalid(
   () => instantiate(`(module
     (type \$sig (func))
@@ -772,31 +758,31 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:621
+// ./test/core/loop.wast:608
 assert_invalid(
   () => instantiate(`(module (func \$type-empty-i32 (result i32) (loop)))`),
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:625
+// ./test/core/loop.wast:612
 assert_invalid(
   () => instantiate(`(module (func \$type-empty-i64 (result i64) (loop)))`),
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:629
+// ./test/core/loop.wast:616
 assert_invalid(
   () => instantiate(`(module (func \$type-empty-f32 (result f32) (loop)))`),
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:633
+// ./test/core/loop.wast:620
 assert_invalid(
   () => instantiate(`(module (func \$type-empty-f64 (result f64) (loop)))`),
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:638
+// ./test/core/loop.wast:625
 assert_invalid(
   () => instantiate(`(module (func \$type-value-num-vs-void
     (loop (i32.const 1))
@@ -804,7 +790,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:644
+// ./test/core/loop.wast:631
 assert_invalid(
   () => instantiate(`(module (func \$type-value-nums-vs-void
     (loop (i32.const 1) (i32.const 2))
@@ -812,7 +798,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:650
+// ./test/core/loop.wast:637
 assert_invalid(
   () => instantiate(`(module (func \$type-value-empty-vs-num (result i32)
     (loop (result i32))
@@ -820,7 +806,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:656
+// ./test/core/loop.wast:643
 assert_invalid(
   () => instantiate(`(module (func \$type-value-empty-vs-nums (result i32 i32)
     (loop (result i32 i32))
@@ -828,7 +814,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:662
+// ./test/core/loop.wast:649
 assert_invalid(
   () => instantiate(`(module (func \$type-value-void-vs-num (result i32)
     (loop (result i32) (nop))
@@ -836,7 +822,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:668
+// ./test/core/loop.wast:655
 assert_invalid(
   () => instantiate(`(module (func \$type-value-void-vs-nums (result i32 i32)
     (loop (result i32 i32) (nop))
@@ -844,7 +830,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:674
+// ./test/core/loop.wast:661
 assert_invalid(
   () => instantiate(`(module (func \$type-value-num-vs-num (result i32)
     (loop (result i32) (f32.const 0))
@@ -852,7 +838,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:680
+// ./test/core/loop.wast:667
 assert_invalid(
   () => instantiate(`(module (func \$type-value-num-vs-nums (result i32 i32)
     (loop (result i32 i32) (i32.const 0))
@@ -860,7 +846,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:686
+// ./test/core/loop.wast:673
 assert_invalid(
   () => instantiate(`(module (func \$type-value-partial-vs-nums (result i32 i32)
     (i32.const 1) (loop (result i32 i32) (i32.const 2))
@@ -868,7 +854,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:692
+// ./test/core/loop.wast:679
 assert_invalid(
   () => instantiate(`(module (func \$type-value-nums-vs-num (result i32)
     (loop (result i32) (i32.const 1) (i32.const 2))
@@ -876,7 +862,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:698
+// ./test/core/loop.wast:685
 assert_invalid(
   () => instantiate(`(module (func \$type-value-unreached-select (result i32)
     (loop (result i64) (select (unreachable) (unreachable) (unreachable)))
@@ -884,7 +870,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:705
+// ./test/core/loop.wast:692
 assert_invalid(
   () => instantiate(`(module
     (func \$type-value-empty-in-block
@@ -895,7 +881,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:714
+// ./test/core/loop.wast:701
 assert_invalid(
   () => instantiate(`(module
     (func \$type-value-empty-in-loop
@@ -906,7 +892,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:723
+// ./test/core/loop.wast:710
 assert_invalid(
   () => instantiate(`(module
     (func \$type-value-empty-in-then
@@ -917,7 +903,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:733
+// ./test/core/loop.wast:720
 assert_invalid(
   () => instantiate(`(module (func \$type-param-void-vs-num
     (loop (param i32) (drop))
@@ -925,7 +911,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:739
+// ./test/core/loop.wast:726
 assert_invalid(
   () => instantiate(`(module (func \$type-param-void-vs-nums
     (loop (param i32 f64) (drop) (drop))
@@ -933,7 +919,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:745
+// ./test/core/loop.wast:732
 assert_invalid(
   () => instantiate(`(module (func \$type-param-num-vs-num
     (f32.const 0) (loop (param i32) (drop))
@@ -941,7 +927,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:751
+// ./test/core/loop.wast:738
 assert_invalid(
   () => instantiate(`(module (func \$type-param-num-vs-nums
     (f32.const 0) (loop (param f32 i32) (drop) (drop))
@@ -949,7 +935,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:757
+// ./test/core/loop.wast:744
 assert_invalid(
   () => instantiate(`(module (func \$type-param-nested-void-vs-num
     (block (loop (param i32) (drop)))
@@ -957,7 +943,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:763
+// ./test/core/loop.wast:750
 assert_invalid(
   () => instantiate(`(module (func \$type-param-void-vs-nums
     (block (loop (param i32 f64) (drop) (drop)))
@@ -965,7 +951,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:769
+// ./test/core/loop.wast:756
 assert_invalid(
   () => instantiate(`(module (func \$type-param-num-vs-num
     (block (f32.const 0) (loop (param i32) (drop)))
@@ -973,7 +959,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:775
+// ./test/core/loop.wast:762
 assert_invalid(
   () => instantiate(`(module (func \$type-param-num-vs-nums
     (block (f32.const 0) (loop (param f32 i32) (drop) (drop)))
@@ -981,20 +967,20 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/loop.wast:782
+// ./test/core/loop.wast:769
 assert_malformed(
   () => instantiate(`(func (param i32) (result i32) loop (param \$x i32) end) `),
   `unexpected token`,
 );
 
-// ./test/core/loop.wast:786
+// ./test/core/loop.wast:773
 assert_malformed(
   () => instantiate(`(func (param i32) (result i32) (loop (param \$x i32))) `),
   `unexpected token`,
 );
 
-// ./test/core/loop.wast:791
+// ./test/core/loop.wast:778
 assert_malformed(() => instantiate(`(func loop end \$l) `), `mismatching label`);
 
-// ./test/core/loop.wast:795
+// ./test/core/loop.wast:782
 assert_malformed(() => instantiate(`(func loop \$a end \$l) `), `mismatching label`);

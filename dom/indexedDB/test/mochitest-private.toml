@@ -18,3 +18,6 @@ skip-if = [
 
 ["test_storage_manager_estimate.html"]
 scheme = "https"
+skip-if = [
+  "xorigin",
+]

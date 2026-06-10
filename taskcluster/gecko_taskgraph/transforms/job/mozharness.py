@@ -8,13 +8,13 @@ way, and certainly anything using mozharness should use this approach.
 
 """
 
-import re
 from textwrap import dedent
-from typing import Literal, Optional, Union
 
 from mozpack import path as mozpath
 from taskgraph.util import json
 from taskgraph.util.schema import Schema
+from voluptuous import Any, Optional, Required
+from voluptuous.validators import Match
 
 from gecko_taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
 from gecko_taskgraph.transforms.job.common import (
@@ -23,79 +23,72 @@ from gecko_taskgraph.transforms.job.common import (
     get_expiration,
     setup_secrets,
 )
+from gecko_taskgraph.util.attributes import is_try
 
-
-class MozharnessRunSchema(Schema, kw_only=True):
-    using: Literal["mozharness"]
+mozharness_run_schema = Schema({
+    Required("using"): "mozharness",
     # the mozharness script used to run this task, relative to the testing/
     # directory and using forward slashes even on Windows
-    script: str
+    Required("script"): str,
     # Additional paths to look for mozharness configs in. These should be
     # relative to the base of the source checkout
-    config_paths: Optional[list[str]] = None
+    Optional("config-paths"): [str],
     # the config files required for the task, relative to
     # testing/mozharness/configs or one of the paths specified in
     # `config-paths` and using forward slashes even on Windows
-    config: list[str]
+    Required("config"): [str],
     # any additional actions to pass to the mozharness command
-    actions: Optional[list[str]] = None
+    Optional("actions"): [
+        Match("^[a-z0-9-]+$", "actions must be `-` seperated alphanumeric strings")
+    ],
     # any additional options (without leading --) to be passed to mozharness
-    options: Optional[list[str]] = None
+    Optional("options"): [
+        Match(
+            "^[a-z0-9-]+(=[^ ]+)?$",
+            "options must be `-` seperated alphanumeric strings (with optional argument)",
+        )
+    ],
     # --custom-build-variant-cfg value
-    custom_build_variant_cfg: Optional[str] = None
+    Optional("custom-build-variant-cfg"): str,
     # Extra configuration options to pass to mozharness.
-    extra_config: Optional[dict] = None
+    Optional("extra-config"): dict,
     # If not false, tooltool downloads will be enabled via relengAPIProxy
     # for either just public files, or all files.  Not supported on Windows
-    tooltool_downloads: Union[bool, Literal["public", "internal"]]
+    Required("tooltool-downloads"): Any(
+        False,
+        "public",
+        "internal",
+    ),
     # The set of secret names to which the task has access; these are prefixed
     # with `project/releng/gecko/{treeherder.kind}/level-{level}/`.  Setting
     # this will enable any worker features required and set the task's scopes
     # appropriately.  `true` here means ['*'], all secrets.  Not supported on
     # Windows
-    secrets: Union[bool, list[str]]
+    Required("secrets"): Any(bool, [str]),
     # If true, taskcluster proxy will be enabled; note that it may also be enabled
     # automatically e.g., for secrets support.  Not supported on Windows.
-    taskcluster_proxy: bool
+    Required("taskcluster-proxy"): bool,
     # If false, indicate that builds should skip producing artifacts.  Not
     # supported on Windows.
-    keep_artifacts: bool
+    Required("keep-artifacts"): bool,
     # If specified, use the in-tree job script specified.
-    job_script: Optional[str] = None
-    requires_signed_builds: bool
+    Optional("job-script"): str,
+    Required("requires-signed-builds"): bool,
     # Whether or not to use caches.
-    use_caches: Optional[Union[bool, list[str]]] = None
+    Optional("use-caches"): Any(bool, [str]),
     # If false, don't set MOZ_SIMPLE_PACKAGE_NAME
     # Only disableable on windows
-    use_simple_package: bool
+    Required("use-simple-package"): bool,
     # If false don't pass --branch mozharness script
     # Only disableable on windows
-    use_magic_mh_args: bool
+    Required("use-magic-mh-args"): bool,
     # if true, perform a checkout of a comm-central based branch inside the
     # gecko checkout
-    comm_checkout: bool
+    Required("comm-checkout"): bool,
     # Base work directory used to set up the task.
-    workdir: Optional[str] = None
-    run_as_root: Optional[bool] = None
-
-    def __post_init__(self):
-        if self.tooltool_downloads is True:
-            raise ValueError(
-                "tooltool-downloads must be False, 'public', or 'internal'"
-            )
-        if self.actions:
-            for action in self.actions:
-                if not re.match(r"^[a-z0-9-]+$", action):
-                    raise ValueError(
-                        "actions must be `-` separated alphanumeric strings"
-                    )
-        if self.options:
-            for option in self.options:
-                if not re.match(r"^[a-z0-9-]+(=[^ ]+)?$", option):
-                    raise ValueError(
-                        "options must be `-` separated alphanumeric strings"
-                        " (with optional argument)"
-                    )
+    Optional("workdir"): str,
+    Optional("run-as-root"): bool,
+})
 
 
 mozharness_defaults = {
@@ -114,7 +107,7 @@ mozharness_defaults = {
 @run_job_using(
     "docker-worker",
     "mozharness",
-    schema=MozharnessRunSchema,
+    schema=mozharness_run_schema,
     defaults=mozharness_defaults,
 )
 def mozharness_on_docker_worker_setup(config, job, taskdesc):
@@ -134,9 +127,9 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         )
 
     # Running via mozharness assumes an image that contains build.sh:
-    # by default, debian13-amd64-build, but it could be another image (like
+    # by default, debian12-amd64-build, but it could be another image (like
     # android-build).
-    worker.setdefault("docker-image", {"in-tree": "debian13-amd64-build"})
+    worker.setdefault("docker-image", {"in-tree": "debian12-amd64-build"})
 
     worker.setdefault("artifacts", []).append({
         "name": "public/logs",
@@ -177,6 +170,9 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     if "job-script" in run:
         env["JOB_SCRIPT"] = run["job-script"]
 
+    if is_try(config.params):
+        env["TRY_COMMIT_MSG"] = config.params["message"]
+
     # if we're not keeping artifacts, set some env variables to empty values
     # that will cause the build process to skip copying the results to the
     # artifacts directory.  This will have no effect for operations that are
@@ -204,7 +200,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
 @run_job_using(
     "generic-worker",
     "mozharness",
-    schema=MozharnessRunSchema,
+    schema=mozharness_run_schema,
     defaults=mozharness_defaults,
 )
 def mozharness_on_generic_worker(config, job, taskdesc):
@@ -251,6 +247,13 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     extra_config = run.pop("extra-config", {})
     extra_config["objdir"] = "obj-build"
     env["EXTRA_MOZHARNESS_CONFIG"] = json.dumps(extra_config, sort_keys=True)
+
+    # The windows generic worker uses batch files to pass environment variables
+    # to commands.  Setting a variable to empty in a batch file unsets, so if
+    # there is no `TRY_COMMIT_MESSAGE`, pass a space instead, so that
+    # mozharness doesn't try to find the commit message on its own.
+    if is_try(config.params):
+        env["TRY_COMMIT_MSG"] = config.params["message"] or "no commit message"
 
     if not job["attributes"]["build_platform"].startswith(("win", "macosx")):
         raise Exception(

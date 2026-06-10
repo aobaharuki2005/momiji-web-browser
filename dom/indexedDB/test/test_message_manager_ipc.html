@@ -12,6 +12,7 @@
 
 async function chromeScriptFunc() {
   function childFrameScript() {
+    /* eslint-env mozilla/frame-script */
     "use strict";
 
     const mmName = "test:idb-and-mm";

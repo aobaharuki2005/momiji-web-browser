@@ -71,7 +71,7 @@ The ``remoteType`` field is a string denoting the type of content process that
 hung. As such it is only non-null if ``processType`` contains the ``tab`` value.
 
 The supported ``remoteType`` values are documented in the crash ping
-documentation.
+documentation: :ref:`remote-process-types`.
 
 Stack Traces
 ------------
@@ -158,3 +158,5 @@ The following annotations are currently present in tree:
 +-----------------+-------------------------------------------------+
 | Unrecovered     | "true" if the hang persisted until process exit |
 +-----------------+-------------------------------------------------+
+
+Additional annotations can be added at run-time via :doc:`../collection/user-interactions`.

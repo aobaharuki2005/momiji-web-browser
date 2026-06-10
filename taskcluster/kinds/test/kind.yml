@@ -5,7 +5,6 @@
 loader: gecko_taskgraph.loader.test:loader
 
 kind-dependencies:
-    - artifact-build
     - build
     - build-signing
     - repackage-signing-shippable-l10n-msix
@@ -60,13 +59,12 @@ task-defaults:
                         default: false
                 default: false
     docker-image:
-        in-tree: ubuntu2404-test
+        by-test-platform:
+            linux1804.*:
+                in-tree: ubuntu1804-test
+            default:
+                in-tree: ubuntu2404-test
     fetches:
-        fetch:
-            by-test-platform:
-                win.*:
-                    - win64-ffmpeg-7.1
-                default: []
         toolchain:
             by-test-platform:
                 win.*:
@@ -92,4 +90,3 @@ task-defaults:
                 default:
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
-                    - linux64-2404-dbus-python

@@ -21,11 +21,11 @@ info: |
   Return ? OrdinaryDelete(O, P).
 
 flags: [onlyStrict]
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [align-detached-buffer-semantics-with-web-reality, BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
   let proto = TypedArray.prototype;
   let descriptorGetterThrows = {
     configurable: true,
@@ -38,7 +38,7 @@ testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
     ["1"]: descriptorGetterThrows,
   });
 
-  let sample = new TA(makeCtorArg(1));
+  let sample = new TA(1);
   assert.sameValue(delete sample["-1"], true, 'The value of `delete sample["-1"]` is true');
   assert.sameValue(delete sample[-1], true, 'The value of `delete sample[-1]` is true');
 

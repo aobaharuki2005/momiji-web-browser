@@ -10,20 +10,20 @@ pub use crate::kv::Error;
 /// A type that can be converted into a [`Value`](struct.Value.html).
 pub trait ToValue {
     /// Perform the conversion.
-    fn to_value(&self) -> Value<'_>;
+    fn to_value(&self) -> Value;
 }
 
-impl<T> ToValue for &T
+impl<'a, T> ToValue for &'a T
 where
     T: ToValue + ?Sized,
 {
-    fn to_value(&self) -> Value<'_> {
+    fn to_value(&self) -> Value {
         (**self).to_value()
     }
 }
 
 impl<'v> ToValue for Value<'v> {
-    fn to_value(&self) -> Value<'_> {
+    fn to_value(&self) -> Value {
         Value {
             inner: self.inner.clone(),
         }
@@ -153,7 +153,7 @@ impl<'v> Value<'v> {
     #[cfg(feature = "kv_serde")]
     pub fn from_serde<T>(value: &'v T) -> Self
     where
-        T: serde_core::Serialize,
+        T: serde::Serialize,
     {
         Value {
             inner: inner::Inner::from_serde1(value),
@@ -232,10 +232,10 @@ impl<'v> fmt::Display for Value<'v> {
 }
 
 #[cfg(feature = "kv_serde")]
-impl<'v> serde_core::Serialize for Value<'v> {
+impl<'v> serde::Serialize for Value<'v> {
     fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
     where
-        S: serde_core::Serializer,
+        S: serde::Serializer,
     {
         self.inner.serialize(s)
     }
@@ -256,7 +256,7 @@ impl<'v> sval_ref::ValueRef<'v> for Value<'v> {
 }
 
 impl ToValue for str {
-    fn to_value(&self) -> Value<'_> {
+    fn to_value(&self) -> Value {
         Value::from(self)
     }
 }
@@ -268,7 +268,7 @@ impl<'v> From<&'v str> for Value<'v> {
 }
 
 impl ToValue for () {
-    fn to_value(&self) -> Value<'_> {
+    fn to_value(&self) -> Value {
         Value::from_inner(())
     }
 }
@@ -277,7 +277,7 @@ impl<T> ToValue for Option<T>
 where
     T: ToValue,
 {
-    fn to_value(&self) -> Value<'_> {
+    fn to_value(&self) -> Value {
         match *self {
             Some(ref value) => value.to_value(),
             None => Value::from_inner(()),
@@ -289,7 +289,7 @@ macro_rules! impl_to_value_primitive {
     ($($into_ty:ty,)*) => {
         $(
             impl ToValue for $into_ty {
-                fn to_value(&self) -> Value<'_> {
+                fn to_value(&self) -> Value {
                     Value::from(*self)
                 }
             }
@@ -313,7 +313,7 @@ macro_rules! impl_to_value_nonzero_primitive {
     ($($into_ty:ident,)*) => {
         $(
             impl ToValue for std::num::$into_ty {
-                fn to_value(&self) -> Value<'_> {
+                fn to_value(&self) -> Value {
                     Value::from(self.get())
                 }
             }
@@ -398,7 +398,7 @@ mod std_support {
     where
         T: ToValue + ?Sized,
     {
-        fn to_value(&self) -> Value<'_> {
+        fn to_value(&self) -> Value {
             (**self).to_value()
         }
     }
@@ -407,7 +407,7 @@ mod std_support {
     where
         T: ToValue + ?Sized,
     {
-        fn to_value(&self) -> Value<'_> {
+        fn to_value(&self) -> Value {
             (**self).to_value()
         }
     }
@@ -416,19 +416,19 @@ mod std_support {
     where
         T: ToValue + ?Sized,
     {
-        fn to_value(&self) -> Value<'_> {
+        fn to_value(&self) -> Value {
             (**self).to_value()
         }
     }
 
     impl ToValue for String {
-        fn to_value(&self) -> Value<'_> {
+        fn to_value(&self) -> Value {
             Value::from(&**self)
         }
     }
 
     impl<'v> ToValue for Cow<'v, str> {
-        fn to_value(&self) -> Value<'_> {
+        fn to_value(&self) -> Value {
             Value::from(&**self)
         }
     }
@@ -449,7 +449,7 @@ mod std_support {
 
 /// A visitor for a [`Value`].
 ///
-/// Also see [`Value`'s documentation on serialization]. Value visitors are a simple alternative
+/// Also see [`Value`'s documentation on seralization]. Value visitors are a simple alternative
 /// to a more fully-featured serialization framework like `serde` or `sval`. A value visitor
 /// can differentiate primitive types through methods like [`VisitValue::visit_bool`] and
 /// [`VisitValue::visit_str`], but more complex types like maps and sequences
@@ -458,7 +458,7 @@ mod std_support {
 /// If you're trying to serialize a value to a format like JSON, you can use either `serde`
 /// or `sval` directly with the value. You don't need a visitor.
 ///
-/// [`Value`'s documentation on serialization]: Value#serialization
+/// [`Value`'s documentation on seralization]: Value#serialization
 pub trait VisitValue<'v> {
     /// Visit a `Value`.
     ///
@@ -535,7 +535,6 @@ pub trait VisitValue<'v> {
     }
 }
 
-#[allow(clippy::needless_lifetimes)] // Not needless.
 impl<'a, 'v, T: ?Sized> VisitValue<'v> for &'a mut T
 where
     T: VisitValue<'v>,
@@ -1084,7 +1083,7 @@ impl<'v> Value<'v> {
     #[deprecated(note = "use `from_serde` instead")]
     pub fn capture_serde<T>(value: &'v T) -> Self
     where
-        T: serde_core::Serialize + 'static,
+        T: serde::Serialize + 'static,
     {
         Value::from_serde(value)
     }

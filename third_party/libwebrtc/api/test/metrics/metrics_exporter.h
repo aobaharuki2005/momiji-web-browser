@@ -11,8 +11,7 @@
 #ifndef API_TEST_METRICS_METRICS_EXPORTER_H_
 #define API_TEST_METRICS_METRICS_EXPORTER_H_
 
-#include <span>
-
+#include "api/array_view.h"
 #include "api/test/metrics/metric.h"
 
 namespace webrtc {
@@ -25,7 +24,7 @@ class MetricsExporter {
 
   // Exports specified metrics in a format that depends on the implementation.
   // Returns true if export succeeded, false otherwise.
-  virtual bool Export(std::span<const Metric> metrics) = 0;
+  virtual bool Export(ArrayView<const Metric> metrics) = 0;
 };
 
 }  // namespace test

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,7 +20,7 @@
 #include "PDMFactory.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/EMEUtils.h"
-#include "mozilla/RemoteCDMProxy.h"
+#include "mozilla/RemoteCDMChild.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
@@ -397,7 +399,7 @@ EMEDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
 
   // If the CDMProxy is a RemoteCDMChild actor, then we know that the CDM
   // functionality will be exercised by the decoder in the remote process.
-  if (auto* cdm = static_cast<PRemoteCDMActor*>(mProxy->AsRemoteCDMProxy())) {
+  if (auto* cdm = static_cast<PRemoteCDMActor*>(mProxy->AsRemoteCDMChild())) {
     return mPDM->CreateDecoder(CreateDecoderParams{aParams, cdm});
   }
 
@@ -411,21 +413,10 @@ EMEDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
                                                                       __func__);
     }
 
-    const bool gmpSupported =
-        !SupportsMimeType(aParams.mConfig.mMimeType, nullptr).isEmpty();
-
-    // Pre-create the GMP decoder wrapper before aParams is moved into the
-    // resolve lambda below. CreateDecoderWrapper does not call Init(), so
-    // creating an unused wrapper is safe.
-    RefPtr<MediaDataDecoder> gmpFallback =
-        gmpSupported ? CreateDecoderWrapper(mProxy, aParams) : nullptr;
-
-    if (gmpSupported &&
-        !StaticPrefs::media_eme_video_prefer_platform_decoder()) {
+    if (!SupportsMimeType(aParams.mConfig.mMimeType, nullptr).isEmpty()) {
       // GMP decodes. Assume that means it can decrypt too.
-      EME_LOG("EMEDecoderModule::AsyncCreateDecoder() using GMP decoder.");
       return EMEDecoderModule::CreateDecoderPromise::CreateAndResolve(
-          gmpFallback, __func__);
+          CreateDecoderWrapper(mProxy, aParams), __func__);
     }
 
     RefPtr<EMEDecoderModule::CreateDecoderPromise> p =
@@ -434,23 +425,13 @@ EMEDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
             [self = RefPtr{this},
              params = CreateDecoderParamsForAsync(aParams)](
                 RefPtr<MediaDataDecoder>&& aDecoder) {
-              EME_LOG(
-                  "EMEDecoderModule::AsyncCreateDecoder() using platform "
-                  "decoder.");
               RefPtr<MediaDataDecoder> emeDecoder(
                   new EMEDecryptor(aDecoder, self->mProxy, params.mType,
                                    params.mOnWaitingForKeyEvent));
               return EMEDecoderModule::CreateDecoderPromise::CreateAndResolve(
                   emeDecoder, __func__);
             },
-            [gmpFallback](const MediaResult& aError) {
-              if (gmpFallback) {
-                EME_LOG(
-                    "EMEDecoderModule::AsyncCreateDecoder() platform decoder "
-                    "failed, falling back to GMP decoder.");
-                return EMEDecoderModule::CreateDecoderPromise::CreateAndResolve(
-                    gmpFallback, __func__);
-              }
+            [](const MediaResult& aError) {
               return EMEDecoderModule::CreateDecoderPromise::CreateAndReject(
                   aError, __func__);
             });

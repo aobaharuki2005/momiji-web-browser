@@ -161,7 +161,8 @@ constexpr char kMinMicLevelFieldTrial[] =
     "WebRTC-Audio-2ndAgcMinMicLevelExperiment";
 
 std::string GetAgcMinMicLevelExperimentFieldTrial(const std::string& value) {
-  StringBuilder builder;
+  char field_trial_buffer[64];
+  SimpleStringBuilder builder(field_trial_buffer);
   builder << kMinMicLevelFieldTrial << "/" << value << "/";
   return builder.str();
 }
@@ -171,7 +172,8 @@ std::string GetAgcMinMicLevelExperimentFieldTrialEnabled(
     const std::string& suffix = "") {
   RTC_DCHECK_GE(enabled_value, 0);
   RTC_DCHECK_LE(enabled_value, 255);
-  StringBuilder builder;
+  char field_trial_buffer[64];
+  SimpleStringBuilder builder(field_trial_buffer);
   builder << kMinMicLevelFieldTrial << "/Enabled-" << enabled_value << suffix
           << "/";
   return builder.str();
@@ -379,7 +381,7 @@ class AgcManagerDirectTestHelper {
     manager.AnalyzePreProcess(audio_buffer);
     manager.Process(audio_buffer, speech_probability_override,
                     speech_level_override);
-    std::optional<int> digital_gain = manager.GetDigitalCompressionGain();
+    std::optional<int> digital_gain = manager.GetDigitalComressionGain();
     if (digital_gain) {
       mock_gain_control.set_compression_gain_db(*digital_gain);
     }
@@ -398,7 +400,7 @@ class AgcManagerDirectTestHelper {
       EXPECT_CALL(*mock_agc, Process(_)).WillOnce(Return());
       manager.Process(audio_buffer, speech_probability_override,
                       speech_level_override);
-      std::optional<int> new_digital_gain = manager.GetDigitalCompressionGain();
+      std::optional<int> new_digital_gain = manager.GetDigitalComressionGain();
       if (new_digital_gain) {
         mock_gain_control.set_compression_gain_db(*new_digital_gain);
       }
@@ -925,7 +927,7 @@ TEST_P(AgcManagerDirectParametrizedTest, NoActionWhileMuted) {
                          GetOverrideOrEmpty(kSpeechLevelDbfs));
 
   std::optional<int> new_digital_gain =
-      helper.manager.GetDigitalCompressionGain();
+      helper.manager.GetDigitalComressionGain();
   if (new_digital_gain) {
     helper.mock_gain_control.set_compression_gain_db(*new_digital_gain);
   }

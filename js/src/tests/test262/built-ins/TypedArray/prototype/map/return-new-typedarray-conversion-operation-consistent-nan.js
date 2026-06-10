@@ -53,7 +53,7 @@ includes: [nans.js, testTypedArray.js, compareArray.js]
 features: [TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function body(FloatArray) {
+function body(FloatArray) {
   var sample = new FloatArray(NaNs);
   var sampleBytes, resultBytes;
   var i = 0;
@@ -66,6 +66,8 @@ testWithTypedArrayConstructors(function body(FloatArray) {
   resultBytes = new Uint8Array(result.buffer);
 
   assert(compareArray(sampleBytes, resultBytes));
-}, floatArrayConstructors);
+}
+
+testWithTypedArrayConstructors(body, floatArrayConstructors);
 
 reportCompare(0, 0);

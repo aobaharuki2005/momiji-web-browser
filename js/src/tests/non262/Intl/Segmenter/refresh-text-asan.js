@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||!this.Intl.Segmenter)
+
 // Test fails in ASan builds when ubrk_refreshUText isn't called.
 
 let string = "A. ";

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -99,11 +101,13 @@ static_assert(sizeof(Foo32) >= sizeof(uintptr_t) ||
                   sizeof(Result<Foo16, Foo32>) <= sizeof(uintptr_t),
               "Result with small types should be pointer-sized");
 
-static_assert(__is_literal_type(Result<int*, Failed>));
-static_assert(__is_literal_type(Result<Ok, Failed>));
-static_assert(__is_literal_type(Result<Ok, Foo8>));
-static_assert(__is_literal_type(Result<Foo8, Foo16>));
-static_assert(!__is_literal_type(Result<Ok, UniquePtr<int>>));
+#if __cplusplus < 202002L
+static_assert(std::is_literal_type_v<Result<int*, Failed>>);
+static_assert(std::is_literal_type_v<Result<Ok, Failed>>);
+static_assert(std::is_literal_type_v<Result<Ok, Foo8>>);
+static_assert(std::is_literal_type_v<Result<Foo8, Foo16>>);
+static_assert(!std::is_literal_type_v<Result<Ok, UniquePtr<int>>>);
+#endif
 
 static constexpr GenericErrorResult<Failed> Fail() { return Err(Failed{}); }
 

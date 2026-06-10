@@ -162,13 +162,6 @@ add_task(async function test_SelectableProfileLifecycle() {
 
   badgingService.assertNotBadged();
 
-  // Add an ignored shared pref to the database to ensure it gets filtered out
-  // when creating a new profile.
-  await SelectableProfileService.setDBPref(
-    "browser.urlbar.quicksuggest.dataCollection.enabled",
-    true
-  );
-
   let newProfile = await createTestProfile({ name: "New profile" });
 
   await updateNotified();
@@ -216,13 +209,6 @@ add_task(async function test_SelectableProfileLifecycle() {
     // Strip the windows \r
     line = line.trim();
 
-    Assert.ok(
-      !line.includes(
-        `user_pref("browser.urlbar.quicksuggest.dataCollection.enabled",`
-      ),
-      "Ignored shared prefs should be filtered out of new profile's prefs.js"
-    );
-
     if (line == `user_pref("browser.profiles.enabled", true);`) {
       sawEnabled = true;
     }
@@ -259,9 +245,5 @@ add_task(async function test_SelectableProfileLifecycle() {
   Assert.ok(
     !profileLocalDirExists,
     "Profile local dir was successfully removed"
-  );
-
-  await SelectableProfileService.deleteDBPref(
-    "browser.urlbar.quicksuggest.dataCollection.enabled"
   );
 });

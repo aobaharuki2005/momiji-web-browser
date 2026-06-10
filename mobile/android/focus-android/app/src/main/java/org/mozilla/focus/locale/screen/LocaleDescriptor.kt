@@ -10,9 +10,6 @@ import org.mozilla.focus.locale.Locales
 import java.text.Collator
 import java.util.Locale
 
-/**
- * Represents a locale and its native name.
- */
 class LocaleDescriptor(private val localeTag: String) : Comparable<LocaleDescriptor> {
 
     private val languageCodeAndNameMap: HashMap<String, String> = HashMap()
@@ -44,8 +41,8 @@ class LocaleDescriptor(private val localeTag: String) : Comparable<LocaleDescrip
         languageCodeAndNameMap["jv"] = "Basa Jawa"
         languageCodeAndNameMap["meh"] = "Tu'un Savi Yucuhiti"
         languageCodeAndNameMap["mix"] = "Tu'un savi"
-        languageCodeAndNameMap["nv"] = "Diné bizaad"
-        languageCodeAndNameMap["oc"] = "Occitan"
+        languageCodeAndNameMap["nv"] = "Navajo"
+        languageCodeAndNameMap["oc"] = "occitan"
         languageCodeAndNameMap["pai"] = "Paa ipai"
         languageCodeAndNameMap["ppl"] = "Náhuat Pipil"
         languageCodeAndNameMap["quc"] = "K'iche'"
@@ -59,8 +56,7 @@ class LocaleDescriptor(private val localeTag: String) : Comparable<LocaleDescrip
         languageCodeAndNameMap["wo"] = "Wolof"
         languageCodeAndNameMap["yua"] = "Maayat’aan"
         languageCodeAndNameMap["zam"] = "DíɁztè"
-        languageCodeAndNameMap["zh-CN"] = "简体中文"
-        languageCodeAndNameMap["zh-TW"] = "正體中文"
+        languageCodeAndNameMap["zh-CN"] = "中文 (中国大陆)"
     }
 
     private fun setupLocaleDescriptor() {
@@ -103,16 +99,10 @@ class LocaleDescriptor(private val localeTag: String) : Comparable<LocaleDescrip
         return Locales.parseLocaleCode(localeTag)
     }
 
-    /**
-     * Returns the locale tag (e.g. "en-US").
-     */
     fun getTag(): String {
         return localeTag
     }
 
-    /**
-     * Returns the native name of the locale (e.g. "Deutsch" for "de").
-     */
     fun getNativeName(): String? {
         return nativeName
     }

@@ -71,7 +71,7 @@ function addNetworkLocation(location, document) {
   const networkLocationInput = document.querySelector(".qa-network-form-input");
   networkLocationInput.value = "";
   networkLocationInput.focus();
-  EventUtils.sendString(location, networkLocationInput.documentGlobal);
+  EventUtils.sendString(location, networkLocationInput.ownerGlobal);
 
   info("Click on network form submit button");
   const networkLocationSubmitButton = document.querySelector(

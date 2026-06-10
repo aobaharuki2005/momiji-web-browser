@@ -15,7 +15,7 @@ export interface Attachment {
   // e.g. "2f7c0f7bbc...ca79f0850c4de",
   hash: string;
   // e.g. 5047568,
-  size: number;
+  size: string;
   // e.g. "lex.50.50.deen.s2t.bin",
   filename: string;
   // e.g. "main-workspace/translations-models/316ebb3a-0682-42cc-8e73-a3ba4bbb280f.bin",
@@ -88,8 +88,6 @@ export interface WasmRecord {
   // See: https://remote-settings.readthedocs.io/en/latest/target-filters.html#filter-expressions
   filter_expression: string;
 }
-
-export type TranslationsRecord = TranslationModelRecord | WasmRecord;
 
 /**
  * The following are the types that are provided by the Bergamot wasm library.
@@ -203,29 +201,11 @@ export namespace Bergamot {
  * The client to interact with RemoteSettings.
  * See services/settings/RemoteSettingsClient.sys.mjs
  */
-export interface RemoteSettingsClient {
+interface RemoteSettingsClient {
   on: Function;
   get: Function;
+  attachments: any;
   sync: Function;
-  attachments: Attachments;
-}
-
-export interface AttachmentDownloadResult {
-  buffer: ArrayBuffer;
-  blob?: Blob;
-  record?: TranslationsRecord;
-  _source?: string;
-}
-
-/**
- * Attachments API for Remote Settings.
- * Implemented by services/settings/Attachments.sys.mjs
- */
-export interface Attachments {
-  download(record: TranslationsRecord): Promise<AttachmentDownloadResult>;
-  isDownloaded(record: TranslationsRecord): Promise<boolean>;
-  deleteAll(): Promise<void>;
-  deleteDownloaded(record: TranslationsRecord): Promise<void>;
 }
 
 /**
@@ -256,6 +236,8 @@ interface LanguageTranslationModelFiles {
   // The lexical shortlist that limits possible output of the decoder and makes
   // inference faster.
   lex?: LanguageTranslationModelFile;
+  // A model that can generate a translation quality estimation.
+  qualityModel?: LanguageTranslationModelFile;
 
   // There is either a single vocab file:
   vocab?: LanguageTranslationModelFile;

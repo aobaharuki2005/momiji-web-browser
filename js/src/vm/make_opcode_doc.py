@@ -65,7 +65,7 @@ except ImportError as exc:
     raise exc
 
 
-SOURCE_BASE = "https://searchfox.org/firefox-main/source"
+SOURCE_BASE = "https://searchfox.org/mozilla-central/source"
 
 FORMAT_TO_IGNORE = {
     "JOF_BYTE",

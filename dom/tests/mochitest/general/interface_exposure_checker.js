@@ -13,6 +13,7 @@ function entryDisabled(
     isInsecureContext,
     isFennec,
     isCrossOriginIsolated,
+    isSessionHistoryInParent,
   }
 ) {
   return (
@@ -35,6 +36,7 @@ function entryDisabled(
     (isInsecureContext && !entry.insecureContext) ||
     entry.earlyBetaOrEarlier === !isEarlyBetaOrEarlier ||
     entry.crossOriginIsolated === !isCrossOriginIsolated ||
+    entry.sessionHistoryInParent === !isSessionHistoryInParent ||
     entry.disabled
   );
 }
@@ -153,6 +155,7 @@ if (typeof window !== "undefined") {
           SpecialPowers.Ci.nsIGeckoViewBridge
         ).isFennec,
       isCrossOriginIsolated: window.crossOriginIsolated,
+      isSessionHistoryInParent: appinfo.sessionHistoryInParent,
     };
   };
 }

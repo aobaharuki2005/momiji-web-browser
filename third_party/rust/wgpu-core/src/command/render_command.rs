@@ -27,7 +27,7 @@ pub enum RenderCommand<R: ReferenceType> {
     },
     SetVertexBuffer {
         slot: u32,
-        buffer: Option<R::Buffer>,
+        buffer: R::Buffer,
         offset: BufferAddress,
         size: Option<BufferSize>,
     },

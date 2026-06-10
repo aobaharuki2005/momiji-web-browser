@@ -4,29 +4,31 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.filters.SdkSuppress
 import mozilla.components.concept.engine.mediasession.MediaSession
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.customannotations.SkipLeaks
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AppAndSystemHelper.grantSystemPermission
-import org.mozilla.fenix.helpers.FenixTestRule
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
-import org.mozilla.fenix.helpers.RetryTestRule
-import org.mozilla.fenix.helpers.RetryableComposeTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.mutedVideoPageAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.videoPageAsset
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
 /**
  *  Tests for verifying
@@ -34,36 +36,22 @@ import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidCompo
  *  - the settings effects on the app behavior
  *
  */
-class SettingsSitePermissionsTest {
+class SettingsSitePermissionsTest : TestSetup() {
     // Test page created and handled by the Mozilla mobile test-eng team
-    @get:Rule(order = 0)
-    val fenixTestRule: FenixTestRule = FenixTestRule()
-
-    private val mockWebServer get() = fenixTestRule.mockWebServer
-
-    private val browserStore get() = fenixTestRule.browserStore
-
     private val permissionsTestPage = "https://mozilla-mobile.github.io/testapp/v2.0/permissions"
     private val permissionsTestPageOrigin = "https://mozilla-mobile.github.io"
     private val permissionsTestPageHost = "mozilla-mobile.github.io"
 
-    @get:Rule(order = 1)
-    val retryTestRule = RetryTestRule(3)
+    @get:Rule
+    val composeTestRule = AndroidComposeTestRule(
+        HomeActivityTestRule(
+            isPWAsPromptEnabled = false,
+            isDeleteSitePermissionsEnabled = true,
+        ),
+    ) { it.activity }
 
-    @get:Rule(order = 2)
-    val retryableComposeTestRule = RetryableComposeTestRule {
-        AndroidComposeTestRuleV2(
-            HomeActivityTestRule(
-                isPWAsPromptEnabled = false,
-                isDeleteSitePermissionsEnabled = true,
-            ),
-        ) { it.activity }
-    }
-
-    private val composeTestRule get() = retryableComposeTestRule.current
-
-    @get:Rule(order = 3)
-    val memoryLeaksRule = DetectMemoryLeaksRule(composeTestRule = { composeTestRule })
+    @get:Rule
+    val memoryLeaksRule = DetectMemoryLeaksRule()
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/246974
     @Test
@@ -194,6 +182,7 @@ class SettingsSitePermissionsTest {
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2095124
     @Test
+    @SkipLeaks
     fun verifyAutoplayAllowAudioVideoSettingOnNotMutedVideoTestTest() {
         val genericPage = mockWebServer.getGenericAsset(1)
         val videoTestPage = mockWebServer.videoPageAsset
@@ -255,6 +244,7 @@ class SettingsSitePermissionsTest {
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2095126
     @Test
+    @SkipLeaks
     fun verifyAutoplayBlockAudioAndVideoSettingOnNotMutedVideoTest() {
         val videoTestPage = mockWebServer.videoPageAsset
 
@@ -286,6 +276,7 @@ class SettingsSitePermissionsTest {
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2286808
     @Test
+    @SkipLeaks
     fun verifyAutoplayBlockAudioAndVideoSettingOnMutedVideoTest() {
         val mutedVideoTestPage = mockWebServer.mutedVideoPageAsset
 

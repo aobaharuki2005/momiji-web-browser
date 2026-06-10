@@ -20,9 +20,9 @@ add_task(async function () {
     "contentAreaContextMenu"
   );
 
-  const originalPrivateDefault = await SearchService.getDefaultPrivate();
+  const originalPrivateDefault = await Services.search.getDefaultPrivate();
   let otherPrivateDefault;
-  for (let engine of await SearchService.getVisibleEngines()) {
+  for (let engine of await Services.search.getVisibleEngines()) {
     if (engine.name != originalPrivateDefault.name) {
       otherPrivateDefault = engine;
       break;
@@ -138,9 +138,9 @@ add_task(async function () {
 
   for (let test of tests) {
     if (test.changePrivateDefaultEngine) {
-      await SearchService.setDefaultPrivate(
+      await Services.search.setDefaultPrivate(
         otherPrivateDefault,
-        SearchService.CHANGE_REASON.UNKNOWN
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
       );
     }
 
@@ -218,9 +218,9 @@ add_task(async function () {
     await popupHiddenPromise;
 
     if (test.changePrivateDefaultEngine) {
-      await SearchService.setDefaultPrivate(
+      await Services.search.setDefaultPrivate(
         originalPrivateDefault,
-        SearchService.CHANGE_REASON.UNKNOWN
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
       );
     }
   }

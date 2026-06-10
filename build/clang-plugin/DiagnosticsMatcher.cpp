@@ -6,10 +6,8 @@
 
 DiagnosticsMatcher::DiagnosticsMatcher(CompilerInstance &CI) {
 #define CHECK(cls, name)                                                       \
-  if (cls##_.isLanguageVersionSupported(CI.getLangOpts())) {                   \
-    cls##_.registerMatchers(&AstMatcher);                                      \
-    cls##_.registerPPCallbacks(CI);                                            \
-  }
+  cls##_.registerMatchers(&AstMatcher);                                        \
+  cls##_.registerPPCallbacks(CI);
 #include "Checks.inc"
 #include "external/ExternalChecks.inc"
 #ifdef MOZ_CLANG_PLUGIN_ALPHA

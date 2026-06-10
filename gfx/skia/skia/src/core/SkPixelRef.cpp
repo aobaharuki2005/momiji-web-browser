@@ -7,7 +7,6 @@
 
 #include "include/core/SkPixelRef.h"
 
-#include "include/private/SkPixelStorage.h"
 #include "include/private/base/SkAssert.h"
 #include "include/private/base/SkDebug.h"
 #include "src/core/SkBitmapCache.h"
@@ -43,10 +42,6 @@ SkPixelRef::SkPixelRef(int width, int height, void* pixels, size_t rowBytes)
 
 SkPixelRef::~SkPixelRef() {
     this->callGenIDChangeListeners();
-}
-
-SkPixelStorage::Type SkPixelRef::type() const {
-    return SkPixelStorage::Type::kPixelRef;
 }
 
 // This is undefined if there are clients in-flight trying to use us

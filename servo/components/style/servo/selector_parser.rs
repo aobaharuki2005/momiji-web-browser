@@ -49,14 +49,14 @@ pub enum PseudoElement {
 
     // If/when :first-line is added, update is_first_line accordingly.
 
-    // If/when ::first-letter or ::first-line are added, adjust our
-    // property_restriction implementation to do property filtering for them.
-    // Also, make sure the UA sheet has the !important rules some of the
+    // If/when ::first-letter, ::first-line, or ::placeholder are added, adjust
+    // our property_restriction implementation to do property filtering for
+    // them.  Also, make sure the UA sheet has the !important rules some of the
     // APPLIES_TO_PLACEHOLDER properties expect!
-    FirstLetter,
 
     // Non-eager pseudos.
     Backdrop,
+    DetailsSummary,
     DetailsContent,
     Marker,
 
@@ -64,11 +64,7 @@ pub enum PseudoElement {
     // elements within an UA shadow DOM, and matching the elements with
     // their appropriate styles.
     ColorSwatch,
-    FileSelectorButton,
     Placeholder,
-    SliderFill,
-    SliderThumb,
-    SliderTrack,
 
     // Private, Servo-specific implemented pseudos. Only matchable in UA sheet.
     ServoTextControlInnerContainer,
@@ -96,16 +92,12 @@ impl ToCss for PseudoElement {
             After => "::after",
             Before => "::before",
             Selection => "::selection",
-            FirstLetter => "::first-letter",
             Backdrop => "::backdrop",
-            DetailsContent => "::details-content",
+            DetailsSummary => "::-servo-details-summary",
+            DetailsContent => "::-servo-details-content",
             Marker => "::marker",
             ColorSwatch => "::color-swatch",
-            FileSelectorButton => "::file-selector-button",
             Placeholder => "::placeholder",
-            SliderFill => "::slider-fill",
-            SliderTrack => "::slider-track",
-            SliderThumb => "::slider-thumb",
             ServoTextControlInnerContainer => "::-servo-text-control-inner-container",
             ServoTextControlInnerEditor => "::-servo-text-control-inner-editor",
             ServoAnonymousBox => "::-servo-anonymous-box",
@@ -120,14 +112,10 @@ impl ToCss for PseudoElement {
 
 impl ::selectors::parser::PseudoElement for PseudoElement {
     type Impl = SelectorImpl;
-
-    fn parses_as_element_backed(&self) -> bool {
-        matches!(self, Self::DetailsContent)
-    }
 }
 
 /// The number of eager pseudo-elements. Keep this in sync with cascade_type.
-pub const EAGER_PSEUDO_COUNT: usize = 4;
+pub const EAGER_PSEUDO_COUNT: usize = 3;
 
 impl PseudoElement {
     /// Gets the canonical index of this eagerly-cascaded pseudo-element.
@@ -196,7 +184,7 @@ impl PseudoElement {
     /// Whether the current pseudo element is :first-letter
     #[inline]
     pub fn is_first_letter(&self) -> bool {
-        *self == PseudoElement::FirstLetter
+        false
     }
 
     /// Whether the current pseudo element is :first-line
@@ -252,22 +240,18 @@ impl PseudoElement {
     #[inline]
     pub fn cascade_type(&self) -> PseudoElementCascadeType {
         match *self {
-            PseudoElement::After
-            | PseudoElement::Before
-            | PseudoElement::FirstLetter
-            | PseudoElement::Selection => PseudoElementCascadeType::Eager,
+            PseudoElement::After | PseudoElement::Before | PseudoElement::Selection => {
+                PseudoElementCascadeType::Eager
+            },
             PseudoElement::Backdrop
             | PseudoElement::ColorSwatch
-            | PseudoElement::FileSelectorButton
+            | PseudoElement::DetailsSummary
             | PseudoElement::Marker
             | PseudoElement::Placeholder
-            | PseudoElement::DetailsContent
-            | PseudoElement::SliderFill
-            | PseudoElement::SliderThumb
-            | PseudoElement::SliderTrack
             | PseudoElement::ServoTextControlInnerContainer
             | PseudoElement::ServoTextControlInnerEditor => PseudoElementCascadeType::Lazy,
-            PseudoElement::ServoAnonymousBox
+            PseudoElement::DetailsContent
+            | PseudoElement::ServoAnonymousBox
             | PseudoElement::ServoAnonymousTable
             | PseudoElement::ServoAnonymousTableCell
             | PseudoElement::ServoAnonymousTableRow
@@ -290,14 +274,7 @@ impl PseudoElement {
     /// Property flag that properties must have to apply to this pseudo-element.
     #[inline]
     pub fn property_restriction(&self) -> Option<PropertyFlags> {
-        Some(match self {
-            PseudoElement::FirstLetter => PropertyFlags::APPLIES_TO_FIRST_LETTER,
-            PseudoElement::Marker if static_prefs::pref!("layout.css.marker.restricted") => {
-                PropertyFlags::APPLIES_TO_MARKER
-            },
-            PseudoElement::Placeholder => PropertyFlags::APPLIES_TO_PLACEHOLDER,
-            _ => return None,
-        })
+        None
     }
 
     /// Whether this pseudo-element should actually exist if it has
@@ -312,44 +289,6 @@ impl PseudoElement {
         }
 
         true
-    }
-
-    /// Whether this pseudo-element is the ::highlight pseudo.
-    pub fn is_highlight(&self) -> bool {
-        false
-    }
-
-    /// Whether this pseudo-element is the ::target-text pseudo.
-    #[inline]
-    pub fn is_target_text(&self) -> bool {
-        false
-    }
-
-    /// Whether this is a highlight pseudo-element that is styled lazily during
-    /// painting rather than during the restyle traversal. These pseudos need
-    /// explicit repaint triggering when their styles change.
-    #[inline]
-    pub fn is_lazy_painted_highlight_pseudo(&self) -> bool {
-        self.is_selection() || self.is_highlight() || self.is_target_text()
-    }
-
-    /// Whether this pseudo-element is "element-backed", which means that it inherits from its regular
-    /// flat tree parent, which might not be the originating element.
-    #[inline]
-    pub fn is_element_backed(&self) -> bool {
-        use selectors::parser::PseudoElement;
-        self.parses_as_element_backed()
-            || matches!(
-                self,
-                Self::Placeholder
-                    | Self::ColorSwatch
-                    | Self::FileSelectorButton
-                    | Self::SliderFill
-                    | Self::SliderThumb
-                    | Self::SliderTrack
-                    | Self::ServoTextControlInnerContainer
-                    | Self::ServoTextControlInnerEditor,
-            )
     }
 }
 
@@ -389,7 +328,6 @@ pub enum NonTSPseudoClass {
     MozMeterOptimum,
     MozMeterSubOptimum,
     MozMeterSubSubOptimum,
-    Open,
     Optional,
     OutOfRange,
     PlaceholderShown,
@@ -468,7 +406,6 @@ impl ToCss for NonTSPseudoClass {
             Self::MozMeterOptimum => ":-moz-meter-optimum",
             Self::MozMeterSubOptimum => ":-moz-meter-sub-optimum",
             Self::MozMeterSubSubOptimum => ":-moz-meter-sub-sub-optimum",
-            Self::Open => ":open",
             Self::Optional => ":optional",
             Self::OutOfRange => ":out-of-range",
             Self::PlaceholderShown => ":placeholder-shown",
@@ -513,7 +450,6 @@ impl NonTSPseudoClass {
             Self::MozMeterOptimum => ElementState::OPTIMUM,
             Self::MozMeterSubOptimum => ElementState::SUB_OPTIMUM,
             Self::MozMeterSubSubOptimum => ElementState::SUB_SUB_OPTIMUM,
-            Self::Open => ElementState::OPEN,
             Self::Optional => ElementState::OPTIONAL_,
             Self::OutOfRange => ElementState::OUTOFRANGE,
             Self::PlaceholderShown => ElementState::PLACEHOLDER_SHOWN,
@@ -635,8 +571,6 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
             "indeterminate" => NonTSPseudoClass::Indeterminate,
             "invalid" => NonTSPseudoClass::Invalid,
             "link" => NonTSPseudoClass::Link,
-            "modal" => NonTSPseudoClass::Modal,
-            "open" => NonTSPseudoClass::Open,
             "optional" => NonTSPseudoClass::Optional,
             "out-of-range" => NonTSPseudoClass::OutOfRange,
             "placeholder-shown" => NonTSPseudoClass::PlaceholderShown,
@@ -697,12 +631,26 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
             "after" => After,
             "backdrop" => Backdrop,
             "selection" => Selection,
-            "file-selector-button" => FileSelectorButton,
-            "first-letter" => FirstLetter,
             "marker" => Marker,
-            "details-content" => DetailsContent,
+            "-servo-details-summary" => {
+                if !self.in_user_agent_stylesheet() {
+                    return Err(location.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(name.clone())))
+                }
+                DetailsSummary
+            },
+            "-servo-details-content" => {
+                if !self.in_user_agent_stylesheet() {
+                    return Err(location.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(name.clone())))
+                }
+                DetailsContent
+            },
             "color-swatch" => ColorSwatch,
-            "placeholder" => Placeholder,
+            "placeholder" => {
+                if !self.in_user_agent_stylesheet() {
+                    return Err(location.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(name.clone())))
+                }
+                Placeholder
+            },
             "-servo-text-control-inner-container" => {
                 if !self.in_user_agent_stylesheet() {
                     return Err(location.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(name.clone())))
@@ -715,9 +663,6 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
                 }
                 ServoTextControlInnerEditor
             },
-            "slider-fill" => SliderFill,
-            "slider-thumb" => SliderThumb,
-            "slider-track" => SliderTrack,
             "-servo-anonymous-box" => {
                 if !self.in_user_agent_stylesheet() {
                     return Err(location.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(name.clone())))

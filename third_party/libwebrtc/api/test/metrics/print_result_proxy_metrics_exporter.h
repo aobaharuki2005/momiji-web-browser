@@ -11,8 +11,7 @@
 #ifndef API_TEST_METRICS_PRINT_RESULT_PROXY_METRICS_EXPORTER_H_
 #define API_TEST_METRICS_PRINT_RESULT_PROXY_METRICS_EXPORTER_H_
 
-#include <span>
-
+#include "api/array_view.h"
 #include "api/test/metrics/metric.h"
 #include "api/test/metrics/metrics_exporter.h"
 
@@ -24,7 +23,7 @@ class PrintResultProxyMetricsExporter : public MetricsExporter {
  public:
   ~PrintResultProxyMetricsExporter() override = default;
 
-  bool Export(std::span<const Metric> metrics) override;
+  bool Export(ArrayView<const Metric> metrics) override;
 };
 
 }  // namespace test

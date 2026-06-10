@@ -1,7 +1,0 @@
----
-channels:
-  - release
-  - beta
-  - nightly
-includes:
-  - 01-neck.yaml

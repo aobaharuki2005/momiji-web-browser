@@ -13,7 +13,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-errno = "0.3"
+errno = "*"
 ```
 
 
@@ -56,7 +56,7 @@ Enable `#![no_std]` support by disabling the default `std` feature:
 
 ```toml
 [dependencies]
-errno = { version = "0.3", default-features = false }
+errno = { version = "*", default-features = false }
 ```
 
 The `Error` impl will be unavailable.

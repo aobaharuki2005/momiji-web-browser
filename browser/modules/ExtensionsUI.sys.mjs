@@ -46,12 +46,10 @@ const DEFAULT_EXTENSION_ICON =
   "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 
 function getTabBrowser(browser) {
-  while (
-    browser.documentGlobal.docShell.itemType !== Ci.nsIDocShell.typeChrome
-  ) {
-    browser = browser.documentGlobal.docShell.chromeEventHandler;
+  while (browser.ownerGlobal.docShell.itemType !== Ci.nsIDocShell.typeChrome) {
+    browser = browser.ownerGlobal.docShell.chromeEventHandler;
   }
-  let window = browser.documentGlobal;
+  let window = browser.ownerGlobal;
   let viewType = browser.getAttribute("webextension-view-type");
   if (viewType == "sidebar") {
     window = window.browsingContext.topChromeWindow;
@@ -144,7 +142,7 @@ export var ExtensionsUI = {
       shouldShowTechnicalAndInteractionCheckbox = false,
     } = {}
   ) {
-    let global = tabbrowser.selectedBrowser.documentGlobal;
+    let global = tabbrowser.selectedBrowser.ownerGlobal;
     return global.BrowserAddonUI.openAddonsMgr("addons://list/extension").then(
       aomWin => {
         let aomBrowser = aomWin.docShell.chromeEventHandler;
@@ -244,14 +242,7 @@ export var ExtensionsUI = {
         );
       }
 
-      let strings;
-      try {
-        strings = this._buildStrings(info);
-      } catch (err) {
-        console.error(err);
-        info.reject();
-        return;
-      }
+      let strings = this._buildStrings(info);
 
       // If this is an update with no promptable permissions, just apply it
       if (
@@ -301,15 +292,7 @@ export var ExtensionsUI = {
     } else if (topic == "webextension-update-permission-prompt") {
       let info = subject.wrappedJSObject;
       info.type = "update";
-
-      let strings;
-      try {
-        strings = this._buildStrings(info);
-      } catch (err) {
-        console.error(err);
-        info.reject();
-        return;
-      }
+      let strings = this._buildStrings(info);
 
       // If we don't prompt for any new permissions, just apply it
       if (!strings.msgs.length && !strings.dataCollectionPermissions?.msg) {
@@ -408,11 +391,6 @@ export var ExtensionsUI = {
     const strings = lazy.ExtensionData.formatPermissionStrings(info, {
       fullDomainsList: true,
     });
-    if (!strings) {
-      throw new Error(
-        "ExtensionData.formatPermissionStrings failed to return localized strings"
-      );
-    }
     strings.addonName = info.addon.name;
     return strings;
   },
@@ -558,7 +536,7 @@ export var ExtensionsUI = {
         browser,
         "addon-webext-permissions",
         strings.header,
-        browser.documentGlobal.gUnifiedExtensions.getPopupAnchorID(
+        browser.ownerGlobal.gUnifiedExtensions.getPopupAnchorID(
           browser,
           window
         ),
@@ -790,7 +768,7 @@ export var ExtensionsUI = {
   originControlsMenu(popup, extensionId) {
     let policy = WebExtensionPolicy.getByID(extensionId);
 
-    let win = popup.documentGlobal;
+    let win = popup.ownerGlobal;
     let doc = popup.ownerDocument;
     let tab = win.gBrowser.selectedTab;
     let uri = tab.linkedBrowser?.currentURI;

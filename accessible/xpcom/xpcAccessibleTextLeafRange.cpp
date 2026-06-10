@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -66,7 +68,7 @@ NS_IMETHODIMP xpcAccessibleTextLeafPoint::FindBoundary(
   TextLeafPoint result = thisPoint.FindBoundary(
       aBoundaryType, static_cast<nsDirection>(aDirection),
       static_cast<TextLeafPoint::BoundaryFlags>(aFlags));
-  auto point = MakeRefPtr<xpcAccessibleTextLeafPoint>(
+  RefPtr<xpcAccessibleTextLeafPoint> point = new xpcAccessibleTextLeafPoint(
       result ? ToXPC(result.mAcc) : nullptr, result ? result.mOffset : 0);
   point.forget(aPoint);
   return NS_OK;

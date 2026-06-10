@@ -45,7 +45,6 @@ static char sccsid[] = "@(#)realpath.c	8.1 (Berkeley) 2/16/94";
 
 #include "base/string_util.h"
 #include "SandboxBroker.h"
-#include "SandboxLogging.h"
 
 // Original copy in, but not usable from here:
 // toolkit/crashreporter/google-breakpad/src/common/linux/linux_libc_support.cc
@@ -75,7 +74,7 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
                                  char* __restrict resolved, int* perms) {
   struct stat sb;
   char *p, *q, *s;
-  size_t left_len, resolved_len, backup_allowed, path_len;
+  size_t left_len, resolved_len, backup_allowed;
   unsigned symlinks;
   int m, slen;
   char left[PATH_MAX], next_token[PATH_MAX], symlink[PATH_MAX];
@@ -83,24 +82,17 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
   if (*perms) {
     *perms = 0;
   }
-  if (path == nullptr) {
+  if (path == NULL) {
     errno = EINVAL;
-    return (nullptr);
+    return (NULL);
   }
   if (path[0] == '\0') {
     errno = ENOENT;
-    return (nullptr);
+    return (NULL);
   }
-  path_len = strlen(path);
-  if (strstr(path, "/../") || strcmp(path, "..") == 0 ||
-      strncmp(path, "../", 3) == 0 ||
-      (path_len >= 3 && strcmp(path + path_len - 3, "/..") == 0)) {
-    errno = EPERM;
-    return (nullptr);
-  }
-  if (resolved == nullptr) {
+  if (resolved == NULL) {
     resolved = (char*)malloc(PATH_MAX);
-    if (resolved == nullptr) return (nullptr);
+    if (resolved == NULL) return (NULL);
     m = 1;
   } else
     m = 0;
@@ -113,14 +105,14 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
     resolved_len = 1;
     left_len = base::strlcpy(left, path + 1, sizeof(left));
   } else {
-    if (getcwd(resolved, PATH_MAX) == nullptr) {
+    if (getcwd(resolved, PATH_MAX) == NULL) {
       if (m)
         free(resolved);
       else {
         resolved[0] = '.';
         resolved[1] = '\0';
       }
-      return (nullptr);
+      return (NULL);
     }
     resolved_len = strlen(resolved);
     left_len = base::strlcpy(left, path, sizeof(left));
@@ -128,7 +120,7 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
   if (left_len >= sizeof(left) || resolved_len >= PATH_MAX) {
     if (m) free(resolved);
     errno = ENAMETOOLONG;
-    return (nullptr);
+    return (NULL);
   }
 
   /*
@@ -144,17 +136,17 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
     if (s - left >= (ssize_t)sizeof(next_token)) {
       if (m) free(resolved);
       errno = ENAMETOOLONG;
-      return (nullptr);
+      return (NULL);
     }
     memcpy(next_token, left, s - left);
     next_token[s - left] = '\0';
     left_len -= s - left;
-    if (p != nullptr) memmove(left, s + 1, left_len + 1);
+    if (p != NULL) memmove(left, s + 1, left_len + 1);
     if (resolved[resolved_len - 1] != '/') {
       if (resolved_len + 1 >= PATH_MAX) {
         if (m) free(resolved);
         errno = ENAMETOOLONG;
-        return (nullptr);
+        return (NULL);
       }
       resolved[resolved_len++] = '/';
       resolved[resolved_len] = '\0';
@@ -182,7 +174,7 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
           // permissions we accumulated while descending.
           if (m) free(resolved);
           errno = EPERM;
-          return (nullptr);
+          return (NULL);
         }
       }
       continue;
@@ -196,17 +188,17 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
     if (resolved_len >= PATH_MAX) {
       if (m) free(resolved);
       errno = ENAMETOOLONG;
-      return (nullptr);
+      return (NULL);
     }
     if (lstat(resolved, &sb) != 0) {
       if (m) free(resolved);
-      return (nullptr);
+      return (NULL);
     }
     if (S_ISLNK(sb.st_mode)) {
       if (symlinks++ > MAXSYMLINKS) {
         if (m) free(resolved);
         errno = ELOOP;
-        return (nullptr);
+        return (NULL);
       }
       /* Our changes start here:
        * It's a symlink, check for write permissions on the path where
@@ -215,7 +207,7 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
       if (link_path_perms & MAY_WRITE) {
         if (m) free(resolved);
         errno = EPERM;
-        return (nullptr);
+        return (NULL);
       } else {
         /* Accumulate permissions so far */
         *perms |= link_path_perms;
@@ -224,7 +216,7 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
       slen = readlink(resolved, symlink, sizeof(symlink) - 1);
       if (slen < 0) {
         if (m) free(resolved);
-        return (nullptr);
+        return (NULL);
       }
       symlink[slen] = '\0';
       if (symlink[0] == '/') {
@@ -243,12 +235,12 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
        * append them to symlink. The result is placed
        * in `left'.
        */
-      if (p != nullptr) {
+      if (p != NULL) {
         if (symlink[slen - 1] != '/') {
           if (slen + 1 >= (ssize_t)sizeof(symlink)) {
             if (m) free(resolved);
             errno = ENAMETOOLONG;
-            return (nullptr);
+            return (NULL);
           }
           symlink[slen] = '/';
           symlink[slen + 1] = 0;
@@ -257,15 +249,15 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
         if (left_len >= sizeof(left)) {
           if (m) free(resolved);
           errno = ENAMETOOLONG;
-          return (nullptr);
+          return (NULL);
         }
       }
       left_len = base::strlcpy(left, symlink, sizeof(left));
       backup_allowed = 0;
-    } else if (!S_ISDIR(sb.st_mode) && p != nullptr) {
+    } else if (!S_ISDIR(sb.st_mode) && p != NULL) {
       if (m) free(resolved);
       errno = ENOTDIR;
-      return (nullptr);
+      return (NULL);
     }
   }
 

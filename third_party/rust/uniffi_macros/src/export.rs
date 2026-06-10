@@ -22,7 +22,6 @@ use self::{
 use crate::util::{create_metadata_items, ident_to_string, mod_path};
 pub use attributes::{AsyncRuntime, DefaultMap, ExportFnArgs};
 pub use callback_interface::ffi_converter_callback_interface_impl;
-pub use trait_interface::alter_trait;
 
 // TODO(jplatte): Ensure no generics, …
 // TODO(jplatte): Aggregate errors instead of short-circuiting, wherever possible
@@ -39,9 +38,6 @@ pub(crate) fn expand_export(
     // new functions outside of the `impl`).
     rewrite_self_type(&mut item);
 
-    // trying to split `udl_mode` into "no meta" and "other"
-    let include_meta = !udl_mode;
-
     let metadata = ExportItem::new(item, all_args)?;
 
     match metadata {
@@ -55,12 +51,10 @@ pub(crate) fn expand_export(
             trait_,
         } => {
             if let Some(rt) = &args.async_runtime {
-                let has_async_methods = items.iter().any(|item| {
-                    matches!(item, ImplItem::Method(sig) if sig.is_async)
-                        || matches!(item, ImplItem::Constructor(sig) if sig.is_async)
-                });
-
-                if !has_async_methods {
+                if items
+                    .iter()
+                    .all(|item| !matches!(item, ImplItem::Method(sig) if sig.is_async))
+                {
                     return Err(syn::Error::new_spanned(
                         rt,
                         "no async methods in this impl block",
@@ -79,28 +73,22 @@ pub(crate) fn expand_export(
                     ImplItem::Method(sig) => {
                         let async_runtime =
                             sig.async_runtime.clone().or(args.async_runtime.clone());
-                        gen_method_scaffolding(
-                            sig,
-                            async_runtime.as_ref(),
-                            udl_mode,
-                            trait_.as_ref(),
-                        )
+                        gen_method_scaffolding(sig, async_runtime.as_ref(), udl_mode)
                     }
                 })
                 .collect::<syn::Result<_>>()?;
             let trait_impl_tokens = trait_.map(|t| {
                 let object_name = ident_to_string(&self_ident);
-                let trait_ident = t.segments
-                    .last()
-                    .map(|s| &s.ident)
-                    .expect("no ident in trait");
-                let trait_name = ident_to_string(trait_ident);
+                // TODO: parse trait path?
+                let trait_name = ident_to_string(t.get_ident().expect("not a simple trait path"));
+                let trait_path = "";
                 let metadata_expr = quote! {
                     ::uniffi::MetadataBuffer::from_code(::uniffi::metadata::codes::OBJECT_TRAIT_IMPL)
                         .concat(::uniffi::MetadataBuffer::from_code(::uniffi::metadata::codes::TYPE_INTERFACE))
-                        .concat_str(module_path!())
+                        .concat_str(#mod_path)
                         .concat_str(#object_name)
-                        .concat(<dyn #t as ::uniffi::TypeId<crate::UniFfiTag>>::TYPE_ID_META)
+                        .concat_str(#trait_name)
+                        .concat_str(#trait_path)
                 };
                 create_metadata_items(
                     "object_trait_impl",
@@ -136,11 +124,12 @@ pub(crate) fn expand_export(
         } => {
             let trait_name = ident_to_string(&self_ident);
             let trait_impl_ident = callback_interface::trait_impl_ident(&trait_name);
-            let trait_impl = callback_interface::trait_impl(&mod_path, &self_ident, &items, false)
+            let trait_impl = callback_interface::trait_impl(&mod_path, &self_ident, &items)
                 .unwrap_or_else(|e| e.into_compile_error());
             let metadata_items = (!udl_mode).then(|| {
-                let items = callback_interface::metadata_items(&self_ident, &items, docstring)
-                    .unwrap_or_else(|e| vec![e.into_compile_error()]);
+                let items =
+                    callback_interface::metadata_items(&self_ident, &items, &mod_path, docstring)
+                        .unwrap_or_else(|e| vec![e.into_compile_error()]);
                 quote! { #(#items)* }
             });
             let ffi_converter_tokens =
@@ -158,12 +147,10 @@ pub(crate) fn expand_export(
             self_ident,
             uniffi_traits,
             ..
-        } => utrait::expand_uniffi_trait_export(self_ident, uniffi_traits, include_meta),
-        ExportItem::Enum {
-            self_ident,
-            uniffi_traits,
-            ..
-        } => utrait::expand_uniffi_trait_export(self_ident, uniffi_traits, include_meta),
+        } => {
+            assert!(!udl_mode);
+            utrait::expand_uniffi_trait_export(self_ident, uniffi_traits)
+        }
     }
 }
 
@@ -216,13 +203,5 @@ pub fn rewrite_self_type(item: &mut Item) {
     let mut visitor = RewriteSelfVisitor(&item.self_ty);
     for item in &mut item.items {
         visitor.visit_impl_item_mut(item);
-    }
-}
-
-/// Alter the tokens wrapped with the `[uniffi::export]` if needed
-pub fn alter_input(item: &Item) -> TokenStream {
-    match item {
-        Item::Trait(item_trait) => alter_trait(item_trait),
-        _ => quote! { #item },
     }
 }

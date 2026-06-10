@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +10,6 @@
 #include "CertVerifier.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/net/SocketProcessBackgroundChild.h"
-#include "mozilla/psm/EnabledSignatureSchemes.h"
 #include "mozilla/psm/PVerifySSLServerCertParent.h"
 #include "mozilla/psm/PVerifySSLServerCertChild.h"
 #include "nsNSSIOLayer.h"
@@ -19,23 +21,6 @@ extern mozilla::LazyLogModule gPIPNSSLog;
 
 namespace mozilla {
 namespace psm {
-
-namespace {
-
-EnabledSignatureScheme ToIPCSignatureScheme(SSLSignatureScheme aScheme) {
-  switch (aScheme) {
-#define CASE_SSL_TO_IPC_SCHEME(NAME, _) \
-  case NAME:                            \
-    return EnabledSignatureScheme::NAME;
-    FOR_EACH_ENABLED_SIGNATURE_SCHEME(CASE_SSL_TO_IPC_SCHEME)
-#undef CASE_SSL_TO_IPC_SCHEME
-    default:
-      break;
-  }
-  MOZ_CRASH("Unexpected SSLSignatureScheme value");
-}
-
-}  // namespace
 
 VerifySSLServerCertChild::VerifySSLServerCertChild(
     SSLServerCertVerificationResult* aResultTask,
@@ -106,8 +91,8 @@ SECStatus RemoteProcessCertVerification(
   Maybe<DelegatedCredentialInfoArg> dcInfo;
   if (aDcInfo) {
     dcInfo.emplace();
-    dcInfo.ref().scheme() = ToIPCSignatureScheme(aDcInfo->scheme);
-    dcInfo.ref().authKeyBits() = aDcInfo->authKeyBits;
+    dcInfo.ref().scheme() = static_cast<uint32_t>(aDcInfo->scheme);
+    dcInfo.ref().authKeyBits() = static_cast<uint32_t>(aDcInfo->authKeyBits);
   }
 
   ipc::Endpoint<PVerifySSLServerCertParent> parentEndpoint;
@@ -138,7 +123,7 @@ SECStatus RemoteProcessCertVerification(
     return SECFailure;
   }
 
-  RefPtr authCert = MakeRefPtr<VerifySSLServerCertChild>(
+  RefPtr<VerifySSLServerCertChild> authCert = new VerifySSLServerCertChild(
       aResultTask, std::move(aPeerCertChain), aProviderFlags);
   if (!childEndpoint.Bind(authCert)) {
     PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);

@@ -4,9 +4,6 @@
 
 import { ContentProcessWatcherRegistry } from "resource://devtools/server/connectors/js-process-actor/ContentProcessWatcherRegistry.sys.mjs";
 
-// Do not import Targets/index.js to prevent having to load DevTools module loader.
-const FRAME = "frame";
-
 const lazy = {};
 ChromeUtils.defineESModuleGetters(
   lazy,
@@ -43,8 +40,12 @@ function watch() {
   // If the page we navigate from supports being stored in bfcache,
   // the navigation will use a new BrowsingContext. And so force spawning
   // a new top-level target.
-  ChromeUtils.defineLazyGetter(lazy, "isBfcacheInParentEnabled", () =>
-    Services.prefs.getBoolPref("fission.bfcacheInParent", false)
+  ChromeUtils.defineLazyGetter(
+    lazy,
+    "isBfcacheInParentEnabled",
+    () =>
+      Services.appinfo.sessionHistoryInParent &&
+      Services.prefs.getBoolPref("fission.bfcacheInParent", false)
   );
 
   // Observe for all necessary event to track new and destroyed WindowGlobals.
@@ -239,6 +240,14 @@ function onWindowGlobalCreated(
       "frame"
     )) {
       const { sessionContext } = watcherDataObject;
+      /*
+      try {
+        windowGlobal.browsingContext.watchedByDevTools = true;
+      } catch (e) {}
+      try {
+        windowGlobal.browsingContext.top.watchedByDevTools = true;
+      } catch (e) {}
+      */
       if (
         lazy.isWindowGlobalPartOfContext(windowGlobal, sessionContext, {
           forceAcceptTopLevelTarget,
@@ -360,8 +369,7 @@ function onWindowGlobalDestroyed(innerWindowId) {
     // be created and managed by the watcher universe, like all the others.
     const isTopLevelActorRegisteredOutsideOfWatcherActor =
       !watcherDataObject.actors.find(
-        actor =>
-          actor.innerWindowId == innerWindowId && actor.targetType == FRAME
+        actor => actor.innerWindowId == innerWindowId
       );
     const targetActorForm = isTopLevelActorRegisteredOutsideOfWatcherActor
       ? existingTarget.form()
@@ -614,10 +622,8 @@ function findTargetActor({
   //
   // And start by checking if there is a perfect match first by doing a WindowGlobal / innerWindowId lookup,
   // before falling back to a BrowsingContext / browsingContextID lookup.
-  // Check the actorType to avoid considering ContentScript targets which might
-  // have the same innerWindowId.
   let targetActor = watcherDataObject.actors.find(
-    actor => actor.innerWindowId == innerWindowId && actor.targetType == FRAME
+    actor => actor.innerWindowId == innerWindowId
   );
   if (!targetActor && browsingContextID) {
     targetActor = watcherDataObject.actors.find(
@@ -640,9 +646,7 @@ function findTargetActor({
     connectionPrefix
   );
 
-  return targetActors.find(
-    actor => actor.innerWindowId == innerWindowId && actor.targetType == FRAME
-  );
+  return targetActors.find(actor => actor.innerWindowId == innerWindowId);
 }
 
 export const WindowGlobalTargetWatcher = {

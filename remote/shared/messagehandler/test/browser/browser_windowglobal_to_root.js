@@ -21,7 +21,6 @@ add_task(async function test_windowGlobal_to_root_command() {
     "session-id-windowglobal-to-rootModule"
   );
 
-  info("Test commands which call getValueFromRoot from windowglobal to root");
   for (const commandName of [
     "testHandleCommandToRoot",
     "testSendRootCommand",
@@ -40,30 +39,6 @@ add_task(async function test_windowGlobal_to_root_command() {
       "root-value-called-from-windowglobal",
       "Retrieved the expected value from windowglobaltoroot using " +
         commandName
-    );
-  }
-
-  info(
-    "Test commands which call getValueFromRootUnlisted from windowglobal to root"
-  );
-  for (const commandName of [
-    "testHandleCommandToRootUnlisted",
-    "testSendRootCommandUnlisted",
-  ]) {
-    await Assert.rejects(
-      rootMessageHandler.handleCommand({
-        moduleName: "windowglobaltoroot",
-        commandName,
-        destination: {
-          type: WindowGlobalMessageHandler.type,
-          id: browsingContextId,
-        },
-      }),
-      err =>
-        err.message.includes(
-          `Command windowglobaltoroot.getValueFromRootUnlisted can not be called from a windowglobal module`
-        ),
-      "Error received when windowglobal tried to call an unlisted method"
     );
   }
 

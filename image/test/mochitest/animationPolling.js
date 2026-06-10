@@ -1,5 +1,6 @@
 // This file expects imgutils.js to be loaded as well.
 /* import-globals-from imgutils.js */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 var currentTest;
 var gIsRefImageLoaded = false;
 const gShouldOutputDebugInfo = false;
@@ -413,7 +414,7 @@ AnimationTest.prototype.enableDisplay = function (element) {
   if (!this.xulTest) {
     element.style.display = "";
   } else {
-    element.removeAttribute("hidden");
+    element.setAttribute("hidden", "false");
   }
 };
 

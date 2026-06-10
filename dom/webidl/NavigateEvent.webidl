@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -16,14 +17,14 @@ interface NavigateEvent : Event {
   readonly attribute boolean userInitiated;
   readonly attribute boolean hashChange;
   readonly attribute AbortSignal signal;
-  [UseCounter] readonly attribute FormData? formData;
-  [UseCounter] readonly attribute DOMString? downloadRequest;
+  readonly attribute FormData? formData;
+  readonly attribute DOMString? downloadRequest;
   readonly attribute any info;
-  [UseCounter] readonly attribute boolean hasUAVisualTransition;
-  [UseCounter] readonly attribute Element? sourceElement;
+  readonly attribute boolean hasUAVisualTransition;
+  readonly attribute Element? sourceElement;
 
-  [Throws, UseCounter] undefined intercept(optional NavigationInterceptOptions options = {});
-  [Throws, UseCounter] undefined scroll();
+  [Throws] undefined intercept(optional NavigationInterceptOptions options = {});
+  [Throws] undefined scroll();
 };
 
 dictionary NavigateEventInit : EventInit {

@@ -282,11 +282,12 @@ async function onStorageChanged(type) {
   });
 }
 
-function makeAddressComment({ primary, secondary }) {
+function makeAddressComment({ primary, secondary, status }) {
   return JSON.stringify({
     primary,
     secondary,
-    ariaLabel: primary + " " + secondary,
+    status,
+    ariaLabel: primary + " " + secondary + " " + status,
   });
 }
 
@@ -450,7 +451,7 @@ async function waitForOSKeyStoreLogin(login = false) {
 }
 
 function patchRecordCCNumber(record) {
-  const ccNumberFmt = "••••" + record.cc["cc-number"].substr(-4);
+  const ccNumberFmt = "****" + record.cc["cc-number"].substr(-4);
 
   return {
     cc: Object.assign({}, record.cc, { ccNumberFmt }),

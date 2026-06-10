@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.library.history
 
-import android.os.Build
-import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isInvisible
@@ -93,9 +91,6 @@ class HistoryView(
         }
 
         binding.swipeRefresh.setOnRefreshListener {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                binding.swipeRefresh.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-            }
             store.dispatch(HistoryFragmentAction.StartSync)
             scope.launch {
                 accountManager.syncNow(

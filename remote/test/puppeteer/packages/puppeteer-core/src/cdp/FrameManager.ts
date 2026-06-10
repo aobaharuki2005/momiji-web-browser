@@ -21,7 +21,7 @@ import type {Binding} from './Binding.js';
 import {CdpPreloadScript} from './CdpPreloadScript.js';
 import type {CdpCDPSession} from './CdpSession.js';
 import {isTargetClosedError} from './Connection.js';
-import {CdpDeviceRequestPromptManager} from './DeviceRequestPrompt.js';
+import {DeviceRequestPromptManager} from './DeviceRequestPrompt.js';
 import {ExecutionContext} from './ExecutionContext.js';
 import {CdpFrame} from './Frame.js';
 import type {FrameManagerEvents} from './FrameManagerEvents.js';
@@ -60,7 +60,7 @@ export class FrameManager extends EventEmitter<FrameManagerEvents> {
 
   #deviceRequestPromptManagerMap = new WeakMap<
     CDPSession,
-    CdpDeviceRequestPromptManager
+    DeviceRequestPromptManager
   >();
 
   #frameTreeHandled?: Deferred<void>;
@@ -85,10 +85,7 @@ export class FrameManager extends EventEmitter<FrameManagerEvents> {
     super();
     this.#client = client;
     this.#page = page;
-    this.#networkManager = new NetworkManager(
-      this,
-      page.browser().isNetworkEnabled(),
-    );
+    this.#networkManager = new NetworkManager(this);
     this.#timeoutSettings = timeoutSettings;
     this.setupEventListeners(this.#client);
     client.once(CDPSessionEvent.Disconnected, () => {
@@ -344,15 +341,10 @@ export class FrameManager extends EventEmitter<FrameManagerEvents> {
     void this.initialize(target._session()!, frame);
   }
 
-  _deviceRequestPromptManager(
-    client: CDPSession,
-  ): CdpDeviceRequestPromptManager {
+  _deviceRequestPromptManager(client: CDPSession): DeviceRequestPromptManager {
     let manager = this.#deviceRequestPromptManagerMap.get(client);
     if (manager === undefined) {
-      manager = new CdpDeviceRequestPromptManager(
-        client,
-        this.#timeoutSettings,
-      );
+      manager = new DeviceRequestPromptManager(client, this.#timeoutSettings);
       this.#deviceRequestPromptManagerMap.set(client, manager);
     }
     return manager;

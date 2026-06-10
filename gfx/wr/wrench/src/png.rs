@@ -12,7 +12,6 @@ use webrender::api::units::*;
 use crate::wrench::{Wrench, WrenchThing};
 use crate::yaml_frame_reader::YamlFrameReader;
 
-#[derive(Copy, Clone)]
 pub enum ReadSurface {
     Screen,
 }

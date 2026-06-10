@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef HashStore_h_
-#define HashStore_h_
+#ifndef HashStore_h__
+#define HashStore_h__
 
 #include "Entries.h"
 #include "ChunkSet.h"
@@ -181,7 +181,7 @@ class TableUpdateV4 : public TableUpdate {
  private:
   virtual int Tag() const override { return TAG; }
 
-  bool mFullUpdate = false;
+  bool mFullUpdate;
   PrefixStringMap mPrefixesMap;
   RemovalIndiceArray mRemovalIndiceArray;
   nsCString mClientState;

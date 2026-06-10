@@ -13,9 +13,10 @@
  *
  * Focus: Critical paths and edge cases that affect security
  */
-const { normalizeUrl, TabLedger, SessionLedger } = ChromeUtils.importESModule(
-  "chrome://global/content/ml/security/SecurityUtils.sys.mjs"
-);
+const { normalizeUrl, areSameSite, TabLedger, SessionLedger } =
+  ChromeUtils.importESModule(
+    "chrome://global/content/ml/security/SecurityUtils.sys.mjs"
+  );
 
 /**
  * Test: valid HTTP URLs normalize successfully.
@@ -192,6 +193,90 @@ add_task(async function test_normalizeUrl_relative_with_base() {
 });
 
 /**
+ * Test: same domain returns true for areSameSite.
+ *
+ * Reason:
+ * Identical domains share the same eTLD+1. This is the baseline case
+ * for same-site validation.
+ */
+add_task(async function test_areSameSite_same_domain() {
+  const result = areSameSite("https://example.com", "https://example.com");
+
+  Assert.ok(result, "Should return true for same domain");
+});
+
+/**
+ * Test: subdomain and apex domain return true.
+ *
+ * Reason:
+ * www.example.com and example.com share the same eTLD+1 (example.com).
+ * They should be considered same-site for security purposes.
+ */
+add_task(async function test_areSameSite_subdomain() {
+  const result = areSameSite("https://www.example.com", "https://example.com");
+
+  Assert.ok(result, "Should return true for subdomain vs apex");
+});
+
+/**
+ * Test: different subdomains of same eTLD+1 return true.
+ *
+ * Reason:
+ * blog.example.com and shop.example.com share the same eTLD+1.
+ * They should be considered same-site for security purposes.
+ */
+add_task(async function test_areSameSite_different_subdomains() {
+  const result = areSameSite(
+    "https://blog.example.com",
+    "https://shop.example.com"
+  );
+
+  Assert.ok(result, "Should return true for different subdomains");
+});
+
+/**
+ * Test: different domains return false.
+ *
+ * Reason:
+ * example.com and evil.com have different eTLD+1 values. They must
+ * be treated as different sites to prevent cross-site attacks.
+ */
+add_task(async function test_areSameSite_different_domains() {
+  const result = areSameSite("https://example.com", "https://evil.com");
+
+  Assert.ok(!result, "Should return false for different domains");
+});
+
+/**
+ * Test: subdomain injection attempt returns false.
+ *
+ * Reason:
+ * example.com.evil.com has eTLD+1 of evil.com, not example.com.
+ * This attack pattern must be detected and rejected.
+ */
+add_task(async function test_areSameSite_injection_attempt() {
+  const result = areSameSite(
+    "https://example.com",
+    "https://example.com.evil.com"
+  );
+
+  Assert.ok(!result, "Should return false for subdomain injection attempt");
+});
+
+/**
+ * Test: invalid URLs return false (fail-closed).
+ *
+ * Reason:
+ * If either URL is invalid, same-site comparison should return false.
+ * Fail-closed behavior ensures malformed input doesn't bypass checks.
+ */
+add_task(async function test_areSameSite_invalid_urls() {
+  const result = areSameSite("not-a-url", "https://example.com");
+
+  Assert.ok(!result, "Should return false for invalid URL (fail-closed)");
+});
+
+/**
  * Test: TabLedger can be created.
  *
  * Reason:
@@ -219,15 +304,10 @@ add_task(async function test_TabLedger_seed() {
 
   ledger.seed(urls);
 
-  Assert.equal(
-    ledger.lookup("https://example.com"),
-    "https://example.com/",
-    "Should return normalized URL"
-  );
-  Assert.equal(
-    ledger.lookup("https://example.com/page"),
-    "https://example.com/page",
-    "Should return normalized URL"
+  Assert.ok(ledger.has("https://example.com"), "Should contain first URL");
+  Assert.ok(
+    ledger.has("https://example.com/page"),
+    "Should contain second URL"
   );
   Assert.equal(ledger.size(), 2, "Should have correct size");
 });
@@ -244,11 +324,7 @@ add_task(async function test_TabLedger_add() {
 
   ledger.add("https://example.com");
 
-  Assert.equal(
-    ledger.lookup("https://example.com"),
-    "https://example.com/",
-    "Should return normalized URL"
-  );
+  Assert.ok(ledger.has("https://example.com"), "Should contain added URL");
   Assert.equal(ledger.size(), 1, "Should have size 1");
 });
 
@@ -263,10 +339,9 @@ add_task(async function test_TabLedger_has_missing() {
   const ledger = new TabLedger("tab-123");
   ledger.add("https://example.com");
 
-  Assert.equal(
-    ledger.lookup("https://evil.com"),
-    null,
-    "Should return null for missing URL"
+  Assert.ok(
+    !ledger.has("https://evil.com"),
+    "Should return false for missing URL"
   );
 });
 
@@ -284,10 +359,9 @@ add_task(async function test_TabLedger_clear() {
   ledger.clear();
 
   Assert.equal(ledger.size(), 0, "Should be empty after clear");
-  Assert.equal(
-    ledger.lookup("https://example.com"),
-    null,
-    "Should return null after clear"
+  Assert.ok(
+    !ledger.has("https://example.com"),
+    "Should not contain URLs after clear"
   );
 });
 
@@ -400,15 +474,13 @@ add_task(async function test_SessionLedger_merge() {
 
   const merged = session.merge(["tab-1", "tab-2"]);
 
-  Assert.equal(
-    merged.lookup("https://example.com/page1"),
-    "https://example.com/page1",
-    "Should return normalized URL from tab-1"
+  Assert.ok(
+    merged.has("https://example.com/page1"),
+    "Should have URL from tab-1"
   );
-  Assert.equal(
-    merged.lookup("https://example.com/page2"),
-    "https://example.com/page2",
-    "Should return normalized URL from tab-2"
+  Assert.ok(
+    merged.has("https://example.com/page2"),
+    "Should have URL from tab-2"
   );
   Assert.equal(merged.size(), 2, "Should have 2 URLs");
 });
@@ -472,116 +544,8 @@ add_task(async function test_ledger_normalizes_urls() {
   ledger.add("https://example.com/page#section");
 
   // Check without fragment (should still match after normalization)
-  Assert.equal(
-    ledger.lookup("https://example.com/page"),
-    "https://example.com/page",
-    "Should return normalized URL without fragment"
-  );
-});
-
-/**
- * Test: mergeAll returns empty view for empty ledger.
- *
- * Reason:
- * When no tabs have been seeded, mergeAll should return an empty view
- * with size() === 0.
- */
-add_task(async function test_mergeAll_empty_ledger() {
-  const sessionLedger = new SessionLedger("session-1");
-  const result = sessionLedger.mergeAll();
-
-  Assert.equal(result.size(), 0, "Empty ledger should return empty view");
-});
-
-/**
- * Test: mergeAll includes URLs from a single tab.
- *
- * Reason:
- * mergeAll should include all URLs from all tabs. With one tab,
- * it should return all URLs from that tab.
- */
-add_task(async function test_mergeAll_single_tab() {
-  const sessionLedger = new SessionLedger("session-1");
-  sessionLedger.forTab("tab-1").add("https://mozilla.org");
-  sessionLedger.forTab("tab-1").add("https://example.com");
-
-  const result = sessionLedger.mergeAll();
-
-  Assert.equal(result.size(), 2, "Should contain both URLs");
-  // Note: lookup() normalizes URLs internally, so trailing slash is added
-  Assert.equal(
-    result.lookup("https://mozilla.org/"),
-    "https://mozilla.org/",
-    "Should have mozilla.org"
-  );
-  Assert.equal(
-    result.lookup("https://example.com/"),
-    "https://example.com/",
-    "Should have example.com"
-  );
-});
-
-/**
- * Test: mergeAll deduplicates URLs across tabs.
- *
- * Reason:
- * The same URL trusted in multiple tabs should only appear once
- * in the merged view.
- */
-add_task(async function test_mergeAll_multiple_tabs_deduped() {
-  const sessionLedger = new SessionLedger("session-1");
-  sessionLedger.forTab("tab-1").add("https://mozilla.org");
-  sessionLedger.forTab("tab-2").add("https://mozilla.org");
-  sessionLedger.forTab("tab-2").add("https://github.com");
-
-  const result = sessionLedger.mergeAll();
-
-  Assert.equal(result.size(), 2, "Duplicate URLs should be deduped");
-  // Note: lookup() normalizes URLs internally, so trailing slash is added
-  Assert.equal(
-    result.lookup("https://mozilla.org/"),
-    "https://mozilla.org/",
-    "Should have mozilla.org"
-  );
-  Assert.equal(
-    result.lookup("https://github.com/"),
-    "https://github.com/",
-    "Should have github.com"
-  );
-});
-
-/**
- * Test: mergeAll returns same API as merge().
- *
- * Reason:
- * mergeAll should return the same type of view as merge() for
- * API consistency - an object with has() and size() methods.
- */
-add_task(async function test_mergeAll_returns_same_api_as_merge() {
-  const sessionLedger = new SessionLedger("session-1");
-  sessionLedger.forTab("tab-1").add("https://mozilla.org");
-
-  const mergeAllResult = sessionLedger.mergeAll();
-  const mergeResult = sessionLedger.merge(["tab-1"]);
-
-  Assert.equal(
-    typeof mergeAllResult.lookup,
-    "function",
-    "mergeAll should return object with lookup()"
-  );
-  Assert.equal(
-    typeof mergeResult.lookup,
-    "function",
-    "merge should return object with lookup()"
-  );
-  Assert.equal(
-    typeof mergeAllResult.size,
-    "function",
-    "mergeAll should return object with size()"
-  );
-  Assert.equal(
-    typeof mergeResult.size,
-    "function",
-    "merge should return object with size()"
+  Assert.ok(
+    ledger.has("https://example.com/page"),
+    "Should match normalized URL without fragment"
   );
 });

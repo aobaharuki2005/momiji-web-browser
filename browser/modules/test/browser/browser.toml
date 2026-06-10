@@ -9,8 +9,6 @@ prefs = [
 
 ["browser_BrowserWindowTracker.js"]
 
-["browser_BrowserWindowTracker_minimize.js"]
-
 ["browser_EveryWindow.js"]
 
 ["browser_HomePage_add_button.js"]
@@ -26,11 +24,6 @@ prefs = [
 ["browser_PermissionUI_prompts.js"]
 
 ["browser_ProcessHangNotifications.js"]
-
-["browser_ReducedProtectionNotification.js"]
-https_first_disabled = true
-
-["browser_ReducedProtectionNotification_permanentPB.js"]
 
 ["browser_SitePermissions.js"]
 
@@ -68,9 +61,6 @@ run-if = [
   "crashreporter",
 ]
 
-["browser_UpdatePolicyEnforcer.js"]
-
-
 ["browser_UsageTelemetry.js"]
 https_first_disabled = true
 
@@ -81,7 +71,6 @@ https_first_disabled = true
 https_first_disabled = true
 skip-if = [
   "os == 'win' && os_version == '11.26100' && opt && verify-standalone",
-  "os == 'win' && os_version == '11.26200' && opt && verify-standalone",
 ]
 
 ["browser_UsageTelemetry_private_and_restore.js"]

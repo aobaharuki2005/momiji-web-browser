@@ -1,5 +1,5 @@
-#ifndef ICU4X_DecimalParseError_D_HPP
-#define ICU4X_DecimalParseError_D_HPP
+#ifndef icu4x_DecimalParseError_D_HPP
+#define icu4x_DecimalParseError_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -9,7 +9,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 
 namespace icu4x {
@@ -26,29 +26,28 @@ namespace capi {
 
 namespace icu4x {
 /**
- * Additional information: [1](https://docs.rs/fixed_decimal/0.7.0/fixed_decimal/enum.ParseError.html)
+ * Additional information: [1](https://docs.rs/fixed_decimal/latest/fixed_decimal/enum.ParseError.html)
  */
 class DecimalParseError {
 public:
-    enum Value {
-        Unknown = 0,
-        Limit = 1,
-        Syntax = 2,
-    };
+  enum Value {
+    Unknown = 0,
+    Limit = 1,
+    Syntax = 2,
+  };
 
-    DecimalParseError(): value(Value::Unknown) {}
+  DecimalParseError() = default;
+  // Implicit conversions between enum and ::Value
+  constexpr DecimalParseError(Value v) : value(v) {}
+  constexpr operator Value() const { return value; }
+  // Prevent usage as boolean value
+  explicit operator bool() const = delete;
 
-    // Implicit conversions between enum and ::Value
-    constexpr DecimalParseError(Value v) : value(v) {}
-    constexpr operator Value() const { return value; }
-    // Prevent usage as boolean value
-    explicit operator bool() const = delete;
-
-    inline icu4x::capi::DecimalParseError AsFFI() const;
-    inline static icu4x::DecimalParseError FromFFI(icu4x::capi::DecimalParseError c_enum);
+  inline icu4x::capi::DecimalParseError AsFFI() const;
+  inline static icu4x::DecimalParseError FromFFI(icu4x::capi::DecimalParseError c_enum);
 private:
     Value value;
 };
 
 } // namespace
-#endif // ICU4X_DecimalParseError_D_HPP
+#endif // icu4x_DecimalParseError_D_HPP

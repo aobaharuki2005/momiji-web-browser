@@ -165,7 +165,8 @@ public:
 private:
     class CompilerErrorReporter : public ErrorReporter {
     public:
-        explicit CompilerErrorReporter(Compiler* compiler) : fCompiler(*compiler) {}
+        CompilerErrorReporter(Compiler* compiler)
+            : fCompiler(*compiler) {}
 
         void handleError(std::string_view msg, Position pos) override {
             fCompiler.handleError(msg, pos);

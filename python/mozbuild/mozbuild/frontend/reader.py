@@ -42,6 +42,7 @@ from mozbuild.util import (
     HierarchicalStringList,
     ReadOnlyDefaultDict,
     cpu_count,
+    memoize,
 )
 
 from .context import (
@@ -288,7 +289,7 @@ class MozbuildSandbox(Sandbox):
 
         self.templates[name] = TemplateFunction(func, self)
 
-    @functools.cache
+    @memoize
     def _create_subcontext(self, cls):
         """Return a function object that creates SubContext instances."""
 
@@ -297,7 +298,7 @@ class MozbuildSandbox(Sandbox):
 
         return fn
 
-    @functools.cache
+    @memoize
     def _create_function(self, function_def):
         """Returns a function object for use within the sandbox for the given
         function definition.
@@ -320,7 +321,7 @@ class MozbuildSandbox(Sandbox):
 
         return function
 
-    @functools.cache
+    @memoize
     def _create_template_wrapper(self, template):
         """Returns a function object for use within the sandbox for the given
         TemplateFunction instance..
@@ -1082,7 +1083,7 @@ class BuildReader:
         for p in mozbuild_paths:
             full = os.path.join(self.config.topsrcdir, p)
 
-            with open(full, encoding="utf-8") as fh:
+            with open(full) as fh:
                 source = fh.read()
 
             # No need to do the heavy parsing if there is no literal mention of
@@ -1309,11 +1310,11 @@ class BuildReader:
         is relevant to that path. Let's say we have the following files on disk::
 
            moz.build
-           foo / moz.build
-           foo / baz / moz.build
-           foo / baz / file1
-           other / moz.build
-           other / file2
+           foo/moz.build
+           foo/baz/moz.build
+           foo/baz/file1
+           other/moz.build
+           other/file2
 
         If ``foo/baz/file1`` is passed in, the relevant moz.build files are
         ``moz.build``, ``foo/moz.build``, and ``foo/baz/moz.build``. For
@@ -1326,7 +1327,7 @@ class BuildReader:
         root = self.config.topsrcdir
         result = {}
 
-        @functools.cache
+        @memoize
         def exists(path):
             return self._relevant_mozbuild_finder.get(path) is not None
 

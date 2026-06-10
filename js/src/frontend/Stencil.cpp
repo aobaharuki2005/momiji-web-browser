@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -6,7 +8,6 @@
 
 #include "mozilla/Assertions.h"             // MOZ_RELEASE_ASSERT
 #include "mozilla/CheckedInt.h"             // mozilla::CheckedInt
-#include "mozilla/glean/JsSrcMetrics.h"     // javascript_self_hosted_cache
 #include "mozilla/Maybe.h"                  // mozilla::Maybe
 #include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
 #include "mozilla/PodOperations.h"          // mozilla::PodCopy
@@ -29,9 +30,9 @@
 #include "frontend/SharedContext.h"
 #include "frontend/StencilXdr.h"  // XDRStencilEncoder, XDRStencilDecoder
 #include "gc/AllocKind.h"         // gc::AllocKind
-#include "gc/Tracer.h"            // TraceRoot
+#include "gc/Tracer.h"            // TraceNullableRoot
 #include "jit/BaselineCompileTask.h"  // BaselineCompileTask::OffThreadBaselineCompilationAvailable
-#include "jit/BaselineJIT.h"  // jit::BaselineScript, jit::CanBaselineCompileScript
+#include "jit/BaselineJIT.h"  // jit::BaselineScript, jit::CanBaselineInterpretScript
 #include "jit/JitContext.h"     // jit::MethodStatus
 #include "jit/JitRuntime.h"     // jit::JitRuntime
 #include "jit/JitScript.h"      // AutoKeepJitScripts
@@ -77,62 +78,6 @@
 
 using namespace js;
 using namespace js::frontend;
-
-mozilla::Result<ScopeStencilRef, ScopeStencilRef::EnclosingFailure>
-ScopeStencilRef::enclosing() const {
-  auto& scope = this->scope();
-  if (scope.hasEnclosing()) {
-#ifdef DEBUG
-    // Assert that checking for the same stencil is equivalent to checking for
-    // being encoded in the initial stencil.
-    if (scriptIndex_ != 0) {
-      auto enclosingScript = script().enclosingScript();
-      bool same = context() == enclosingScript.context();
-      MOZ_ASSERT(same == script().isEagerlyCompiledInInitial());
-    }
-#endif
-
-    // By default we are walking the scope within the same function.
-    ScriptIndex scriptIndex = scriptIndex_;
-
-    // `scope.enclosing()` and `scope` would have the same scriptIndex unless
-    // `scope` is the first scope of the script. In which case, the returned
-    // enclosing scope index should be returned with the enclosing script index.
-    //
-    // This can only happen in the initial stencil, as only the initial stencil
-    // can have multiple scripts compiled in the same stencil.
-    if (script().isEagerlyCompiledInInitial()) {
-      auto gcThingsFromContext = script().gcThingsFromInitial();
-      if (gcThingsFromContext[0].toScope() == scopeIndex_) {
-        scriptIndex = script().enclosingScript().scriptIndex_;
-      }
-    }
-
-    return ScopeStencilRef{stencils_, scriptIndex, scope.enclosing()};
-  }
-
-  // By default the previous condition (scope.hasEnclosing()) should trigger,
-  // except when we are at the top-level of a delazification, in which case we
-  // have to find the enclosing script in the stencil of the enclosing script,
-  // to find the lazyFunctionEnclosingScopeIndex which is valid in the stencil
-  // of the enclosing script.
-  //
-  // Note, at one point the enclosing script would be the initial stencil.
-  if (!script().isEagerlyCompiledInInitial()) {
-    auto enclosing = script().enclosingScript();
-    auto& scriptData = script().scriptDataFromEnclosing();
-    MOZ_ASSERT(scriptData.hasLazyFunctionEnclosingScopeIndex());
-    return ScopeStencilRef{stencils_, enclosing.scriptIndex_,
-                           scriptData.lazyFunctionEnclosingScopeIndex()};
-  }
-
-  // The global scope is not known by the Stencil, while parsing inner functions
-  // from Stencils where they are known at the execution using the GlobalScope.
-  if (scope.kind() == ScopeKind::Module) {
-    return mozilla::Err(EnclosingFailure::ModuleScope);
-  }
-  return mozilla::Err(EnclosingFailure::GlobalScope);
-}
 
 // These 2 functions are used to write the same code with lambda using auto
 // arguments. The auto argument type is set by the Variant.match function of the
@@ -1524,7 +1469,7 @@ void InputScope::trace(JSTracer* trc) {
   using ScopePtr = Scope*;
   if (scope_.is<ScopePtr>()) {
     ScopePtr* ptrAddr = &scope_.as<ScopePtr>();
-    TraceRoot(trc, ptrAddr, "compilation-input-scope");
+    TraceNullableRoot(trc, ptrAddr, "compilation-input-scope");
   }
 }
 
@@ -1532,7 +1477,7 @@ void InputScript::trace(JSTracer* trc) {
   using ScriptPtr = BaseScript*;
   if (script_.is<ScriptPtr>()) {
     ScriptPtr* ptrAddr = &script_.as<ScriptPtr>();
-    TraceRoot(trc, ptrAddr, "compilation-input-lazy");
+    TraceNullableRoot(trc, ptrAddr, "compilation-input-lazy");
   }
 }
 
@@ -1904,12 +1849,12 @@ void PreAllocateableGCArray<T>::trace(JSTracer* trc) {
   }
 
   if (isInline()) {
-    TraceRoot(trc, &inlineElem_, "PreAllocateableGCArray::inlineElem_");
+    TraceNullableRoot(trc, &inlineElem_, "PreAllocateableGCArray::inlineElem_");
     return;
   }
 
   for (size_t i = 0; i < length_; i++) {
-    TraceRoot(trc, &elems_[i], "PreAllocateableGCArray::elems_");
+    TraceNullableRoot(trc, &elems_[i], "PreAllocateableGCArray::elems_");
   }
 }
 
@@ -1945,9 +1890,9 @@ template struct js::frontend::PreAllocateableGCArray<js::Scope*>;
 void CompilationAtomCache::trace(JSTracer* trc) { atoms_.trace(trc); }
 
 void CompilationGCOutput::trace(JSTracer* trc) {
-  TraceRoot(trc, &script, "compilation-gc-output-script");
-  TraceRoot(trc, &module, "compilation-gc-output-module");
-  TraceRoot(trc, &sourceObject, "compilation-gc-output-source");
+  TraceNullableRoot(trc, &script, "compilation-gc-output-script");
+  TraceNullableRoot(trc, &module, "compilation-gc-output-module");
+  TraceNullableRoot(trc, &sourceObject, "compilation-gc-output-source");
   functions.trace(trc);
   scopes.trace(trc);
 }
@@ -2721,7 +2666,7 @@ static bool MaybeDoEagerBaselineCompilations(JSContext* cx,
                                              const CompilationStencil& stencil,
                                              CompilationGCOutput& gcOutput,
                                              bool doAggressive) {
-  if (!jit::IsBaselineJitEnabled(cx)) {
+  if (!jit::IsBaselineInterpreterEnabled()) {
     return true;
   }
 
@@ -2760,7 +2705,11 @@ static bool MaybeDoEagerBaselineCompilations(JSContext* cx,
       }
     }
 
-    if (!jit::CanBaselineCompileScript(cx, script)) {
+    if (script->baselineDisabled()) {
+      continue;
+    }
+
+    if (!jit::CanBaselineInterpretScript(script)) {
       continue;
     }
 
@@ -2777,9 +2726,10 @@ static bool MaybeDoEagerBaselineCompilations(JSContext* cx,
       TRACE_FOR_TEST_DOM(cx, "omt_eager_baseline_dispatch");
     }
 
-    // Add script to queue. DispatchOffThreadBaselineBatch guarantees
-    // that there will be room.
-    MOZ_ALWAYS_TRUE(queue.enqueue(script));
+    // Add script to queue
+    if (!queue.enqueue(script)) {
+      return false;
+    }
     TRACE_FOR_TEST_DOM(cx, "omt_eager_baseline_function", script);
   }
 
@@ -2808,12 +2758,10 @@ bool CompilationStencil::instantiateStencils(JSContext* cx,
     return false;
   }
 
-  // While eager baseline is not supported during delazifications,
-  // we instantiate delazifications as a part of
-  // InitialStencilAndDelazifications::instantiateStencils.
-  // Just skip them.
-  if (input.options.eagerBaselineStrategy() != JS::EagerBaselineOption::None &&
-      !input.isDelazifying()) {
+  if (input.options.eagerBaselineStrategy() != JS::EagerBaselineOption::None) {
+    MOZ_ASSERT(!input.isDelazifying(),
+               "No current support for eager baseline during delazifications.");
+
     bool doAggressive = input.options.eagerBaselineStrategy() ==
                         JS::EagerBaselineOption::Aggressive;
     if (!MaybeDoEagerBaselineCompilations(cx, stencil, gcOutput,
@@ -3138,8 +3086,6 @@ bool CompilationStencil::delazifySelfHostedFunction(
       JS_LOG(selfHosted, Debug,
              "self_hosted_cache: reusing JIT code for script '%s'",
              nameStr.get());
-      mozilla::glean::javascript_self_hosted_cache::hits.AddToNumerator();
-      mozilla::glean::javascript_self_hosted_cache::total.Add();
 
       if (!cx->zone()->ensureJitZoneExists(cx)) {
         return false;
@@ -3169,7 +3115,6 @@ bool CompilationStencil::delazifySelfHostedFunction(
       JS_LOG(selfHosted, Debug,
              "self_hosted_cache: new JIT code entry for script '%s'",
              nameStr.get());
-      mozilla::glean::javascript_self_hosted_cache::total.Add();
 
       if (!cx->zone()->ensureJitZoneExists(cx)) {
         return false;
@@ -5543,7 +5488,7 @@ void InitialStencilAndDelazifications::dumpFields(js::JSONPrinter& json) const {
 
 JSString* CompilationAtomCache::getExistingStringAt(
     ParserAtomIndex index) const {
-  MOZ_RELEASE_ASSERT(index < atoms_.length());
+  MOZ_RELEASE_ASSERT(atoms_.length() >= index);
   return atoms_[index];
 }
 
@@ -6275,19 +6220,4 @@ JS_PUBLIC_API size_t JS::GetScriptSourceLength(JS::Stencil* stencil) {
     return 0;
   }
   return source->length();
-}
-
-JS_PUBLIC_API bool JS::GetScriptSourceText(
-    JSContext* cx, JS::Stencil* stencil, JS::MutableHandle<JS::Value> result) {
-  ScriptSource* source = stencil->getInitial()->source;
-  if (!source->hasSourceText()) {
-    result.setUndefined();
-    return true;
-  }
-  JSLinearString* s = source->substring(cx, 0, source->length());
-  if (!s) {
-    return false;
-  }
-  result.setString(s);
-  return true;
 }

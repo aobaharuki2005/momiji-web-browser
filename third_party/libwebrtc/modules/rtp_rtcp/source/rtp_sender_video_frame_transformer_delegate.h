@@ -14,10 +14,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <span>
+#include <optional>
 #include <string>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/frame_transformer_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
@@ -40,10 +41,10 @@ namespace webrtc {
 class RTPVideoFrameSenderInterface {
  public:
   virtual bool SendVideo(int payload_type,
-                         VideoCodecType codec_type,
+                         std::optional<VideoCodecType> codec_type,
                          uint32_t rtp_timestamp,
                          Timestamp capture_time,
-                         std::span<const uint8_t> payload,
+                         ArrayView<const uint8_t> payload,
                          size_t encoder_output_size,
                          RTPVideoHeader video_header,
                          TimeDelta expected_retransmission_time,
@@ -68,15 +69,13 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
       scoped_refptr<FrameTransformerInterface> frame_transformer,
       uint32_t ssrc,
       std::string rid,
-      TaskQueueFactory* send_transport_queue,
-      TaskQueueFactory::Priority transformation_queue_priority =
-          TaskQueueFactory::Priority::kNormal);
+      TaskQueueFactory* send_transport_queue);
 
   void Init();
 
   // Delegates the call to FrameTransformerInterface::TransformFrame.
   bool TransformFrame(int payload_type,
-                      VideoCodecType codec_type,
+                      std::optional<VideoCodecType> codec_type,
                       uint32_t rtp_timestamp,
                       const EncodedImage& encoded_image,
                       RTPVideoHeader video_header,

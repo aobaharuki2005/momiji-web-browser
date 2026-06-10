@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -427,31 +428,6 @@ JumpListBuilder::PopulateJumpList(JS::Handle<JS::Value> aTaskDescriptions,
 }
 
 NS_IMETHODIMP
-JumpListBuilder::ClearRecentsList() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mIOThread);
-  return mIOThread->Dispatch(
-      NS_NewRunnableFunction(
-          "ClearRecentsList",
-          [appUserModelId = mAppUserModelId]() {
-            RefPtr<IApplicationDestinations> destinations;
-            if (SUCCEEDED(CoCreateInstance(CLSID_ApplicationDestinations,
-                                           nullptr, CLSCTX_INPROC_SERVER,
-                                           IID_IApplicationDestinations,
-                                           getter_AddRefs(destinations)))) {
-              if (FAILED(destinations->SetAppID(appUserModelId.get())) ||
-                  FAILED(destinations->RemoveAllDestinations())) {
-                NS_WARNING(
-                    "Failed to clear recents with IApplicationDestinations");
-              }
-            } else {
-              NS_WARNING("Failed to get IApplicationDestinations service");
-            }
-          }),
-      NS_DISPATCH_NORMAL);
-}
-
-NS_IMETHODIMP
 JumpListBuilder::ClearJumpList(JSContext* aCx, Promise** aPromise) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPromise);
@@ -672,7 +648,8 @@ void JumpListBuilder::DoPopulateJumpList(
     }
 
     hr = mJumpListBackend->AppendCategory(
-        PromiseFlatString(aCustomTitle).getW(), pCustomArray);
+        reinterpret_cast<const wchar_t*>(aCustomTitle.BeginReading()),
+        pCustomArray);
 
     // E_ACCESSDENIED might be returned if Windows is configured not to show
     // recently opened items in the start menu or jump lists. In that case, we

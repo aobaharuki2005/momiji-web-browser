@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -235,15 +237,8 @@ void GPUProcessManager::MaybeCrashIfGpuProcessOnceStable() {
     return;
   }
   MOZ_RELEASE_ASSERT(!gfxConfig::IsEnabled(Feature::GPU_PROCESS));
-  if (!mProcessStableOnce) {
-    return;
-  }
-  // If the last launch error was suspected to be an OOM failure, let's annotate
-  // this as an OOM crash.
-  if (mProcess && mProcess->IsLaunchOomError()) {
-    CrashReporter::AnnotateOOMAllocationSize(1);
-  }
-  MOZ_CRASH("Fallback to parent process not allowed!");
+  MOZ_RELEASE_ASSERT(!mProcessStableOnce,
+                     "Fallback to parent process not allowed!");
 }
 
 void GPUProcessManager::ResetProcessStable() {
@@ -522,9 +517,9 @@ bool GPUProcessManager::EnsureImageBridgeChild() {
     return true;
   }
 
-  uint32_t ibNamespace = AllocateNamespace();
-  mGPUChild->SendInitImageBridge(std::move(parentPipe), ibNamespace);
-  ImageBridgeChild::InitWithGPUProcess(std::move(childPipe), ibNamespace);
+  mGPUChild->SendInitImageBridge(std::move(parentPipe));
+  ImageBridgeChild::InitWithGPUProcess(std::move(childPipe),
+                                       AllocateNamespace());
   return true;
 }
 
@@ -536,7 +531,7 @@ bool GPUProcessManager::EnsureVRManager() {
   }
 
   if (!mGPUChild) {
-    VRManagerChild::InitSameProcess(AllocateNamespace());
+    VRManagerChild::InitSameProcess();
     return true;
   }
 
@@ -550,9 +545,8 @@ bool GPUProcessManager::EnsureVRManager() {
     return true;
   }
 
-  uint32_t vrNamespace = AllocateNamespace();
-  mGPUChild->SendInitVRManager(std::move(parentPipe), vrNamespace);
-  VRManagerChild::InitWithGPUProcess(std::move(childPipe), vrNamespace);
+  mGPUChild->SendInitVRManager(std::move(parentPipe));
+  VRManagerChild::InitWithGPUProcess(std::move(childPipe));
   return true;
 }
 
@@ -1260,10 +1254,10 @@ void GPUProcessManager::StopBatteryObserving() {
 }
 
 already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
-    nsIWidget* aWidget, CSSToLayoutDeviceScale aScale,
-    const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
-    const gfx::IntSize& aSurfaceSize, uint64_t aInnerWindowId,
-    bool* aRetryOut) {
+    nsIWidget* aWidget, WebRenderLayerManager* aLayerManager,
+    CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
+    bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
+    uint64_t aInnerWindowId, bool* aRetryOut) {
   MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
   MOZ_ASSERT(aRetryOut);
 
@@ -1275,9 +1269,9 @@ already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
   LayersId layerTreeId = AllocateLayerTreeId();
   RefPtr<CompositorSession> session;
   if (mGPUChild) {
-    session = CreateRemoteSession(aWidget, layerTreeId, aScale, aOptions,
-                                  aUseExternalSurfaceSize, aSurfaceSize,
-                                  aInnerWindowId);
+    session = CreateRemoteSession(aWidget, aLayerManager, layerTreeId, aScale,
+                                  aOptions, aUseExternalSurfaceSize,
+                                  aSurfaceSize, aInnerWindowId);
     if (NS_WARN_IF(!session)) {
       // This may have failed for intermittent reasons, or perhaps indicates we
       // are fundamentally unable to use acceleration.
@@ -1291,8 +1285,9 @@ already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
     }
   } else {
     session = InProcessCompositorSession::Create(
-        aWidget, layerTreeId, aScale, aOptions, aUseExternalSurfaceSize,
-        aSurfaceSize, AllocateNamespace(), aInnerWindowId);
+        aWidget, aLayerManager, layerTreeId, aScale, aOptions,
+        aUseExternalSurfaceSize, aSurfaceSize, AllocateNamespace(),
+        aInnerWindowId);
   }
 
 #if defined(MOZ_WIDGET_ANDROID)
@@ -1310,17 +1305,17 @@ already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
 }
 
 RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
-    nsIWidget* aWidget, const LayersId& aRootLayerTreeId,
-    CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
-    bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
-    uint64_t aInnerWindowId) {
+    nsIWidget* aWidget, WebRenderLayerManager* aLayerManager,
+    const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,
+    const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
+    const gfx::IntSize& aSurfaceSize, uint64_t aInnerWindowId) {
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
   widget::CompositorWidgetInitData initData;
   aWidget->GetCompositorWidgetInitData(&initData);
 
   RefPtr<CompositorBridgeChild> child =
       CompositorManagerChild::CreateWidgetCompositorBridge(
-          mProcessToken, AllocateNamespace(), aScale, aOptions,
+          mProcessToken, aLayerManager, AllocateNamespace(), aScale, aOptions,
           aUseExternalSurfaceSize, aSurfaceSize, aInnerWindowId);
   if (!child) {
     gfxCriticalNote << "Failed to create CompositorBridgeChild";
@@ -1346,10 +1341,12 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
 
   RefPtr<APZCTreeManagerChild> apz = nullptr;
   if (aOptions.UseAPZ()) {
-    apz = MakeRefPtr<APZCTreeManagerChild>();
-    if (!child->SendPAPZCTreeManagerConstructor(apz, LayersId{0})) {
+    PAPZCTreeManagerChild* papz =
+        child->SendPAPZCTreeManagerConstructor(LayersId{0});
+    if (!papz) {
       return nullptr;
     }
+    apz = static_cast<APZCTreeManagerChild*>(papz);
 
     ipc::Endpoint<PAPZInputBridgeParent> parentPipe;
     ipc::Endpoint<PAPZInputBridgeChild> childPipe;
@@ -1367,11 +1364,11 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
       return nullptr;
     }
 
-    apz->SetInputBridge(std::move(inputBridge));
+    apz->SetInputBridge(inputBridge);
   }
 
-  return MakeRefPtr<RemoteCompositorSession>(aWidget, child, widget,
-                                             std::move(apz), aRootLayerTreeId);
+  return new RemoteCompositorSession(aWidget, child, widget, apz,
+                                     aRootLayerTreeId);
 #else
   gfxCriticalNote << "Platform does not support out-of-process compositing";
   return nullptr;
@@ -1385,29 +1382,21 @@ bool GPUProcessManager::CreateContentBridges(
     ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
     ipc::Endpoint<PRemoteMediaManagerChild>* aOutVideoManager,
     dom::ContentParentId aChildId, nsTArray<uint32_t>* aNamespaces) {
-  const uint32_t compositorManagerNamespace = AllocateNamespace();
-  const uint32_t compositorBridgeNamespace = AllocateNamespace();
-  const uint32_t imageBridgeNamespace = AllocateNamespace();
-  const uint32_t vrManagerNamespace = AllocateNamespace();
-  if (!CreateContentCompositorManager(aOtherProcess, aChildId,
-                                      compositorManagerNamespace,
+  const uint32_t cmNamespace = AllocateNamespace();
+  if (!CreateContentCompositorManager(aOtherProcess, aChildId, cmNamespace,
                                       aOutCompositor) ||
-      !CreateContentImageBridge(aOtherProcess, aChildId, imageBridgeNamespace,
-                                aOutImageBridge) ||
-      !CreateContentVRManager(aOtherProcess, aChildId, vrManagerNamespace,
-                              aOutVRBridge)) {
+      !CreateContentImageBridge(aOtherProcess, aChildId, aOutImageBridge) ||
+      !CreateContentVRManager(aOtherProcess, aChildId, aOutVRBridge)) {
     return false;
   }
   // RemoteMediaManager is only supported in the GPU process, so we allow this
   // to be fallible.
   CreateContentRemoteMediaManager(aOtherProcess, aChildId, aOutVideoManager);
-
-  // The order of the outparam namespaces must be kept in sync with
-  // ContentChild::RecvInitRendering and ContentChild::RecvReinitRendering.
-  aNamespaces->AppendElement(compositorManagerNamespace);
-  aNamespaces->AppendElement(compositorBridgeNamespace);
-  aNamespaces->AppendElement(imageBridgeNamespace);
-  aNamespaces->AppendElement(vrManagerNamespace);
+  // Allocates 3 namespaces(for CompositorManagerChild, CompositorBridgeChild
+  // and ImageBridgeChild)
+  aNamespaces->AppendElement(cmNamespace);
+  aNamespaces->AppendElement(AllocateNamespace());
+  aNamespaces->AppendElement(AllocateNamespace());
   return true;
 }
 
@@ -1446,7 +1435,7 @@ bool GPUProcessManager::CreateContentCompositorManager(
 
 bool GPUProcessManager::CreateContentImageBridge(
     ipc::EndpointProcInfo aOtherProcess, dom::ContentParentId aChildId,
-    uint32_t aNamespace, ipc::Endpoint<PImageBridgeChild>* aOutEndpoint) {
+    ipc::Endpoint<PImageBridgeChild>* aOutEndpoint) {
   MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
 
   if (!EnsureImageBridgeChild()) {
@@ -1468,11 +1457,9 @@ bool GPUProcessManager::CreateContentImageBridge(
   }
 
   if (mGPUChild) {
-    mGPUChild->SendNewContentImageBridge(std::move(parentPipe), aChildId,
-                                         aNamespace);
+    mGPUChild->SendNewContentImageBridge(std::move(parentPipe), aChildId);
   } else {
-    if (!ImageBridgeParent::CreateForContent(std::move(parentPipe), aChildId,
-                                             aNamespace)) {
+    if (!ImageBridgeParent::CreateForContent(std::move(parentPipe), aChildId)) {
       return false;
     }
   }
@@ -1494,7 +1481,7 @@ ipc::EndpointProcInfo GPUProcessManager::GPUEndpointProcInfo() {
 
 bool GPUProcessManager::CreateContentVRManager(
     ipc::EndpointProcInfo aOtherProcess, dom::ContentParentId aChildId,
-    uint32_t aNamespace, ipc::Endpoint<PVRManagerChild>* aOutEndpoint) {
+    ipc::Endpoint<PVRManagerChild>* aOutEndpoint) {
   MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
 
   if (NS_WARN_IF(!EnsureVRManager())) {
@@ -1516,11 +1503,9 @@ bool GPUProcessManager::CreateContentVRManager(
   }
 
   if (mGPUChild) {
-    mGPUChild->SendNewContentVRManager(std::move(parentPipe), aChildId,
-                                       aNamespace);
+    mGPUChild->SendNewContentVRManager(std::move(parentPipe), aChildId);
   } else {
-    if (!VRManagerParent::CreateForContent(std::move(parentPipe), aChildId,
-                                           aNamespace)) {
+    if (!VRManagerParent::CreateForContent(std::move(parentPipe), aChildId)) {
       return false;
     }
   }
@@ -1765,9 +1750,10 @@ void GPUProcessManager::RemoveListener(GPUProcessListener* aListener) {
   mListeners.RemoveElement(aListener);
 }
 
-bool GPUProcessManager::FlushActiveCheckerboardReports() {
+bool GPUProcessManager::NotifyGpuObservers(const char* aTopic) {
   if (mGPUChild) {
-    mGPUChild->SendFlushActiveCheckerboardReports();
+    nsCString topic(aTopic);
+    mGPUChild->SendNotifyGpuObservers(topic);
     return true;
   }
 
@@ -1776,7 +1762,7 @@ bool GPUProcessManager::FlushActiveCheckerboardReports() {
         mozilla::services::GetObserverService();
     MOZ_ASSERT(obsSvc);
     if (obsSvc) {
-      obsSvc->NotifyObservers(nullptr, "APZ:FlushActiveCheckerboard", nullptr);
+      obsSvc->NotifyObservers(nullptr, aTopic, nullptr);
     }
     return true;
   }

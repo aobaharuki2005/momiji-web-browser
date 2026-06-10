@@ -19,7 +19,8 @@ ICU4XChineseBasedCalendar::ICU4XChineseBasedCalendar(
     : ICU4XCalendar(kind, timeZone, locale, success) {}
 
 ICU4XChineseBasedCalendar::ICU4XChineseBasedCalendar(
-    const ICU4XChineseBasedCalendar& other) = default;
+    const ICU4XChineseBasedCalendar& other)
+    : ICU4XCalendar(other) {}
 
 ICU4XChineseBasedCalendar::~ICU4XChineseBasedCalendar() = default;
 
@@ -31,6 +32,18 @@ bool ICU4XChineseBasedCalendar::hasLeapMonths() const { return true; }
 
 bool ICU4XChineseBasedCalendar::hasMonthCode(MonthCode monthCode) const {
   return monthCode.ordinal() <= 12;
+}
+
+bool ICU4XChineseBasedCalendar::requiresFallbackForExtendedYear(
+    int32_t year) const {
+  // Same limits as in js/src/builtin/temporal/Calendar.cpp.
+  return std::abs(year) > 10'000;
+}
+
+bool ICU4XChineseBasedCalendar::requiresFallbackForGregorianYear(
+    int32_t year) const {
+  // Same limits as in js/src/builtin/temporal/Calendar.cpp.
+  return std::abs(year) > 10'000;
 }
 
 ////////////////////////////////////////////
@@ -51,6 +64,13 @@ bool ICU4XChineseBasedCalendar::inTemporalLeapYear(UErrorCode& status) const {
 void ICU4XChineseBasedCalendar::handleComputeFields(int32_t julianDay,
                                                     UErrorCode& status) {
   int32_t gyear = getGregorianYear();
+
+  // Use the fallback calendar for years outside the range supported by ICU4X.
+  if (requiresFallbackForGregorianYear(gyear)) {
+    handleComputeFieldsFromFallback(julianDay, status);
+    return;
+  }
+
   int32_t gmonth = getGregorianMonth() + 1;
   int32_t gday = getGregorianDayOfMonth();
 

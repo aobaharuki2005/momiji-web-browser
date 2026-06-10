@@ -2,10 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import functools
 from collections import namedtuple
 from types import FunctionType
 
+from mozbuild.util import memoize
 from taskgraph import create
 from taskgraph.config import load_graph_config
 from taskgraph.parameters import Parameters
@@ -29,13 +29,13 @@ def is_json(data):
     return True
 
 
-@functools.cache
+@memoize
 def read_taskcluster_yml(filename):
     """Load and parse .taskcluster.yml, memoized to save some time"""
     return yaml.load_yaml(filename)
 
 
-@functools.cache
+@memoize
 def hash_taskcluster_yml(filename):
     """
     Generate a hash of the given .taskcluster.yml.  This is the first 10 digits
@@ -190,12 +190,6 @@ def register_callback_action(
                 "base_revision": base_revision,
             }
 
-            if branch := parameters.get("head_ref"):
-                push["branch"] = branch
-
-            if (base_branch := parameters.get("base_ref")) and branch != base_branch:
-                push["base_branch"] = base_branch
-
             action = {
                 "name": name,
                 "title": title,
@@ -204,13 +198,6 @@ def register_callback_action(
                 "taskGroupId": decision_task_id,
                 "cb_name": cb_name,
                 "symbol": symbol,
-            }
-
-            # The full parameter set is too large, and gets duplicated in
-            # `actions.json` once per hook. So only pass in what's actually
-            # necessary.
-            filtered_params = {
-                "repository_type": parameters["repository_type"],
             }
 
             rv = {
@@ -246,7 +233,6 @@ def register_callback_action(
                         "action": action,
                         "repository": repository,
                         "push": push,
-                        "parameters": filtered_params,
                     },
                     # and pass everything else through from our own context
                     "user": {
@@ -314,6 +300,7 @@ def sanity_check_task_scope(callback, parameters, graph_config):
 
     repo_param = "{}head_repository".format(graph_config["project-repo-param-prefix"])
     head_repository = parameters[repo_param]
+    assert head_repository.startswith("https://hg.mozilla.org/")
     expected_scope = f"assume:repo:{head_repository[8:]}:action:{action.permission}"
 
     # the scope should appear literally; no need for a satisfaction check. The use of

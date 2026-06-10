@@ -172,7 +172,7 @@ class TranslationsBannerBehaviorTest {
         val child = mockk<View> {
             every { height } returns 100
             every { translationY } returns 0f
-            every { translationY = any() } just Runs
+            every { translationY = any() } returns Unit
         }
 
         behavior.onNestedPreScroll(
@@ -268,6 +268,16 @@ class TranslationsBannerBehaviorTest {
     @Test
     fun `GIVEN just a toolbar shown at top WHEN the banner is shown THEN don't anchor it`() {
         dependency.id = R.id.toolbar
+        val behavior = TranslationsBannerBehavior<View>(testContext, false, false)
+
+        behavior.layoutDependsOn(parent, banner, dependency)
+
+        assertBannerIsPlacedAtTheBottomOfTheScreen()
+    }
+
+    @Test
+    fun `GIVEN just a toolbar layout shown at top WHEN the banner is shown THEN don't anchor it`() {
+        dependency.id = R.id.toolbarLayout
         val behavior = TranslationsBannerBehavior<View>(testContext, false, false)
 
         behavior.layoutDependsOn(parent, banner, dependency)

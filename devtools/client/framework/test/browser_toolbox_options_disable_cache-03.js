@@ -17,6 +17,8 @@ const TEST_PAGE = `<html>
 
 add_task(async function () {
   info("Setup preferences for testing");
+  // Disable rcwn to make cache behavior deterministic.
+  await pushPref("network.http.rcwn.enabled", false);
   // Disable the cache.
   await pushPref("devtools.cache.disabled", true);
 
@@ -53,6 +55,6 @@ async function getInspectorContent(inspector) {
 async function getWebContent() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     const doc = content.document;
-    return doc.documentGlobal.getComputedStyle(doc.body, "::before").content;
+    return doc.ownerGlobal.getComputedStyle(doc.body, "::before").content;
   });
 }

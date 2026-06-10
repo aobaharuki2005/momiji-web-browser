@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-plugins {
-    alias(libs.plugins.dependency.analysis)
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -23,7 +19,6 @@ dependencies {
     implementation libs.androidx.fragment
     implementation libs.kotlinx.coroutines
     implementation libs.google.material
-    implementation project(':components:ui-widgets')
 }
 
 apply from: '../../../common-config.gradle'

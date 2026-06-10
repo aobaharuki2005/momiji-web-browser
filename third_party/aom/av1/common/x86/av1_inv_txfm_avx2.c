@@ -9,8 +9,6 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include <assert.h>
-
 #include "config/aom_config.h"
 
 #include "config/av1_rtcd.h"
@@ -2228,8 +2226,16 @@ void av1_lowbd_inv_txfm2d_add_avx2(const int32_t *input, uint8_t *output,
       lowbd_inv_txfm2d_add_8x8_avx2(input, output, stride, tx_type, tx_size,
                                     eob);
       break;
+    case TX_16X16:
+    case TX_32X32:
+    case TX_64X64:
+    case TX_16X32:
+    case TX_32X16:
+    case TX_32X64:
+    case TX_64X32:
+    case TX_16X64:
+    case TX_64X16:
     default:
-      assert(tx_size < TX_SIZES_ALL);
       lowbd_inv_txfm2d_add_universe_avx2(input, output, stride, tx_type,
                                          tx_size, eob);
       break;

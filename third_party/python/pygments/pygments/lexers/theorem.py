@@ -6,7 +6,7 @@
 
     See also :mod:`pygments.lexers.lean`
 
-    :copyright: Copyright 2006-present by the Pygments team, see AUTHORS.
+    :copyright: Copyright 2006-2025 by the Pygments team, see AUTHORS.
     :license: BSD, see LICENSE for details.
 """
 
@@ -16,19 +16,19 @@ from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
 # compatibility import
 from pygments.lexers.lean import LeanLexer # noqa: F401
 
-__all__ = ['RocqLexer', 'IsabelleLexer']
+__all__ = ['CoqLexer', 'IsabelleLexer']
 
 
-class RocqLexer(RegexLexer):
+class CoqLexer(RegexLexer):
     """
-    For the Rocq Prover.
+    For the Coq theorem prover.
     """
 
-    name = 'Rocq Prover'
-    url = 'https://rocq-prover.org/'
-    aliases = ['coq', 'rocq', 'rocq-prover']
+    name = 'Coq'
+    url = 'http://coq.inria.fr/'
+    aliases = ['coq']
     filenames = ['*.v']
-    mimetypes = ['text/x-coq', 'text/x-rocq']
+    mimetypes = ['text/x-coq']
     version_added = '1.5'
 
     flags = 0 # no re.MULTILINE

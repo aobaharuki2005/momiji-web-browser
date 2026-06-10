@@ -55,11 +55,8 @@ class nsHtml5HtmlAttributes {
 
  private:
   AutoTArray<nsHtml5AttributeEntry, 5> mStorage;
+  int32_t mMode;
   bool mDuplicateAttributeError = false;
-#ifdef DEBUG
-  bool mMovedFrom = false;
-#endif
-
   void AddEntry(nsHtml5AttributeEntry&& aEntry);
 
  public:
@@ -69,31 +66,27 @@ class nsHtml5HtmlAttributes {
   void setDuplicateAttributeError() { mDuplicateAttributeError = true; }
   bool getDuplicateAttributeError() { return mDuplicateAttributeError; }
 
-  // We know we don't add/remove attributes during iteration,
-  // so using raw pointer iterator for performance.
-  nsHtml5AttributeEntry* begin() { return mStorage.Elements(); }
-
-  nsHtml5AttributeEntry* end() {
-    return mStorage.Elements() + mStorage.Length();
-  }
-
-#ifdef DEBUG
-  void MarkAsMovedFrom() {
-    // Don't mark the empty attributes as moved from
-    MOZ_ASSERT(!mStorage.IsEmpty());
-    mMovedFrom = true;
-  }
-#endif
+  // Remove getIndex when removing isindex support
+  int32_t getIndex(nsHtml5AttributeName* aName);
 
   nsHtml5String getValue(nsHtml5AttributeName* aName);
   int32_t getLength();
-  bool isEmpty() { return getLength() == 0; }
+  nsAtom* getLocalNameNoBoundsCheck(int32_t aIndex);
+  int32_t getURINoBoundsCheck(int32_t aIndex);
+  nsAtom* getPrefixNoBoundsCheck(int32_t aIndex);
+  nsHtml5String getValueNoBoundsCheck(int32_t aIndex);
+  nsHtml5AttributeName* getAttributeNameNoBoundsCheck(int32_t aIndex);
+  int32_t getLineNoBoundsCheck(int32_t aIndex);
   void addAttribute(nsHtml5AttributeName* aName, nsHtml5String aValue,
                     int32_t aLine);
+  void AddAttributeWithLocal(nsAtom* aName, nsHtml5String aValue,
+                             int32_t aLine);
   void clear(int32_t aMode);
+  void releaseValue(int32_t aIndex);
+  void clearWithoutReleasingContents();
   bool contains(nsHtml5AttributeName* aName);
-  void adjustForMath() {};
-  void adjustForSvg() {};
+  void adjustForMath();
+  void adjustForSvg();
   nsHtml5HtmlAttributes* cloneAttributes();
   bool equalsAnother(nsHtml5HtmlAttributes* aOther);
   static void initializeStatics();

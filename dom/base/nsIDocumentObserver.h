@@ -1,8 +1,10 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsIDocumentObserver_h_
-#define nsIDocumentObserver_h_
+#ifndef nsIDocumentObserver_h___
+#define nsIDocumentObserver_h___
 
 #include "mozilla/dom/RustTypes.h"
 #include "nsIMutationObserver.h"
@@ -109,4 +111,4 @@ class nsIDocumentObserver : public nsIMutationObserver {
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(_class) \
   NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(_class)
 
-#endif /* nsIDocumentObserver_h_ */
+#endif /* nsIDocumentObserver_h___ */

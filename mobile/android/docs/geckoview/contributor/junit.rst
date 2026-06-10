@@ -1,9 +1,13 @@
+.. -*- Mode: rst; fill-column: 80; -*-
+
 ====================
 Junit Test Framework
 ====================
 
-GeckoView has :searchfox:`a lot <mozilla-central/rev/36904ac58d2528fc59f640db57cc9429103368d3:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java>`
-of :searchfox:`custom <mobile/android/geckoview/src/androidTest/assets/web_extensions/test-support>`
+GeckoView has `a lot
+<https://searchfox.org/mozilla-central/rev/36904ac58d2528fc59f640db57cc9429103368d3/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java>`_
+of `custom
+<https://searchfox.org/mozilla-central/source/mobile/android/geckoview/src/androidTest/assets/web_extensions/test-support>`_
 code that is used to run junit tests. This document is an overview of what this
 code does and how it works.
 
@@ -55,9 +59,11 @@ is fully installed:
 
   public GeckoResult<WebExtension> install(...)
 
-To simplify memory safety, ``GeckoResult`` will always :searchfox:`execute callbacks <mozilla-central/rev/36904ac58d2528fc59f640db57cc9429103368d3:mobile/android/geckoview/src/main/java/org/mozilla/geckoview/GeckoResult.java#740-744>`
+To simplify memory safety, ``GeckoResult`` will always `execute callbacks
+<https://searchfox.org/mozilla-central/rev/36904ac58d2528fc59f640db57cc9429103368d3/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/GeckoResult.java#740-744>`_
 in the same thread where it was created, turning asynchronous code into
-single-threaded javascript-style code. This is currently :searchfox:`implemented <mozilla-central/rev/36904ac58d2528fc59f640db57cc9429103368d3:mobile/android/geckoview/src/main/java/org/mozilla/geckoview/GeckoResult.java#285>`
+single-threaded javascript-style code. This is currently `implemented
+<https://searchfox.org/mozilla-central/rev/36904ac58d2528fc59f640db57cc9429103368d3/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/GeckoResult.java#285>`_
 using the Android Looper for the thread, which restricts ``GeckoResult`` to
 threads that have a looper, like the Android UI thread.
 
@@ -76,7 +82,8 @@ and most of the test framework is built around making sure that these
 interactions are easy to write and verify.
 
 Tests in GeckoView can be run using the ``mach`` interface, which is used by
-most Gecko tests. E.g. to run the :searchfox:`loadUnknownHost <mozilla-central/rev/36904ac58d2528fc59f640db57cc9429103368d3:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/NavigationDelegateTest.kt#186-196>`
+most Gecko tests. E.g. to run the `loadUnknownHost
+<https://searchfox.org/mozilla-central/rev/36904ac58d2528fc59f640db57cc9429103368d3/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/NavigationDelegateTest.kt#186-196>`_
 test in ``NavigationDelegateTest`` you would type on your terminal:
 
 .. code:: shell
@@ -114,7 +121,8 @@ through Android Studio, the prefs will be inherited from the default GeckoView
 prefs (i.e. the same prefs that would be enabled in a consumer's build of
 GeckoView) and the mochitest web server will not be available.
 
-Tests account for this using the :searchfox:`isAutomation <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/util/Environment.java#36-38>`
+Tests account for this using the `isAutomation
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/util/Environment.java#36-38>`_
 check, which essentially checks whether the test is running under ``mach`` or
 via Android Studio.
 
@@ -124,8 +132,10 @@ thread. Without this, every test would most likely include a lot of blocks that
 run code in the UI thread, adding significant boilerplate.
 
 Running tests on the UI thread is achieved by registering a custom ``TestRule``
-called :searchfox:`GeckoSessionTestRule <mozilla-central/rev/36904ac58d2528fc59f640db57cc9429103368d3:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/NavigationDelegateTest.kt#186-196>`,
-which, among other things, :searchfox:`overrides the evaluate <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1307,1312>`
+called `GeckoSessionTestRule
+<https://searchfox.org/mozilla-central/rev/36904ac58d2528fc59f640db57cc9429103368d3/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/NavigationDelegateTest.kt#186-196>`_,
+which, among other things, `overrides the evaluate
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1307,1312>`_
 method and wraps everything into a ``instrumentation.runOnMainSync`` call.
 
 Verifying delegates
@@ -173,16 +183,23 @@ Tracking delegate calls
 One thing you might have noticed in the above section is that
 ``forCallbacksDuringWait`` moves "backward" in time by replaying the delegates
 called that happened while the wait was being executed.
-``GeckoSessionTestRule`` achieves this by :searchfox:`injecting a proxy object <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1137>`
-into every delegate, and :searchfox:`proxying every call <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1091-1092>`
+``GeckoSessionTestRule`` achieves this by `injecting a proxy object
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1137>`_
+into every delegate, and `proxying every call
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1091-1092>`_
 to the current delegate according to the ``delegate`` test calls.
 
-The proxy delegate :searchfox:`is built <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1105-1106>`
-using the Java reflection's ``Proxy.newProxyInstance`` method and receives :searchfox:`a callback <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1030-1031>`
+The proxy delegate `is built
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1105-1106>`_
+using the Java reflection's ``Proxy.newProxyInstance`` method and receives `a
+callback
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1030-1031>`_
 every time a method on the delegate is being executed.
 
-``GeckoSessionTestRule`` maintains a list of :searchfox:`"default" delegates <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#743-752>`
-used in GeckoView, and will :searchfox:`use reflection <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#585>`
+``GeckoSessionTestRule`` maintains a list of `"default" delegates
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#743-752>`_
+used in GeckoView, and will `use reflection
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#585>`_
 to match the object passed into the ``delegate*`` calls to the proxy delegates.
 
 For example, when calling
@@ -207,7 +224,8 @@ continue or not. When replaying delegates, however, we don't know what the
 value of ``onLoadRequest`` will be (or if the test is going to install a
 delegate for it, either!).
 
-What ``GeckoSessionTestRule`` does, instead, is to :searchfox:`return the default value <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1092>`
+What ``GeckoSessionTestRule`` does, instead, is to `return the default value
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1092>`_
 for the delegate method, and ignore the replayed delegate method return value.
 This can be a little confusing for test writers, for example this code `will
 not` stop the page from loading:
@@ -231,16 +249,21 @@ Tracking Waits
 --------------
 
 To track when a ``wait`` occurs and to know when to replay delegate calls,
-``GeckoSessionTestRule`` :searchfox:`stores <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1075>`
+``GeckoSessionTestRule`` `stores
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1075>`_
 the list of delegate calls in a ``List<CallRecord>`` object, where
 ``CallRecord`` is a class that has enough information to replay a delegate
-call. The test rule will track the :searchfox:`start and end index <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1619>`
-of the last wait's delegate calls and :searchfox:`replay it <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1697-1724>`
+call. The test rule will track the `start and end index
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1619>`_
+of the last wait's delegate calls and `replay it
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1697-1724>`_
 when ``forCallbacksDuringWait`` is called.
 
-To wait until a delegate call happens, the test rule will first :searchfox:`examine <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1585>`
+To wait until a delegate call happens, the test rule will first `examine
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1585>`_
 the already executed delegate calls using the call record list described above.
-If none of the calls match, then it will :searchfox:`wait for new calls <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1589>`
+If none of the calls match, then it will `wait for new calls
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1589>`_
 to happen, using ``UiThreadUtils.waitForCondition``.
 
 ``waitForCondition`` is also used to implement other type of ``wait*`` methods
@@ -248,9 +271,11 @@ like ``waitForResult``, which waits until a ``GeckoResult`` is executed.
 
 ``waitForCondition`` runs on the UI thread, and it synchronously waits for an
 event to occur. The events it waits for normally execute on the UI thread as
-well, so it :searchfox:`injects itself <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/util/UiThreadUtils.java#145,153>`
+well, so it `injects itself
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/util/UiThreadUtils.java#145,153>`_
 in the Android event loop, checking for the condition after every event has
-executed. If no more events remain in the queue, :searchfox:`it posts a delayed 100ms <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/util/UiThreadUtils.java#136-141>`
+executed. If no more events remain in the queue, `it posts a delayed 100ms
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/util/UiThreadUtils.java#136-141>`_
 task to avoid clogging the event loop.
 
 Executing Javascript
@@ -273,7 +298,8 @@ and install it. This was done intentionally to avoid having to rewrite a lot of
 the Web-Content-related APIs that the WebExtension API offers.
 
 GeckoView extends the WebExtension API to allow embedders to communicate to the
-extension by :searchfox:`overloading <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/modules/geckoview/GeckoViewWebExtension.jsm#221>`
+extension by `overloading
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/modules/geckoview/GeckoViewWebExtension.jsm#221>`_
 the native messaging API (which is not normally implemented on mobile).
 Embedders can register themselves as a `native app
 <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.MessageDelegate.html>`_
@@ -291,20 +317,28 @@ WebView offers, but nothing has been developed so far.
 The test runner extension
 -------------------------
 
-To run arbitrary javascript in GeckoView, the test runner installs a :searchfox:`support extension <mobile/android/geckoview/src/androidTest/assets/web_extensions/test-support>`.
+To run arbitrary javascript in GeckoView, the test runner installs a `support
+extension
+<https://searchfox.org/mozilla-central/source/mobile/android/geckoview/src/androidTest/assets/web_extensions/test-support>`_.
 
-The test framework then :searchfox:`establishes <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1827>`
+The test framework then `establishes
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1827>`_
 a port for the background script, used to run code in the main process, and a
 port for every window, to be able to run javascript on test web pages.
 
-When ``evaluateJS`` is called, the test framework will send :searchfox:`a message <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1912>`
-to the extension which then :searchfox:`calls eval <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/assets/web_extensions/test-support/test-support.js#21>`
-on it and returns the `JSON`-stringified version of the result :searchfox:`back <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1952-1956>`
+When ``evaluateJS`` is called, the test framework will send `a message
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1912>`_
+to the extension which then `calls eval
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/assets/web_extensions/test-support/test-support.js#21>`_
+on it and returns the `JSON`-stringified version of the result `back
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1952-1956>`_
 to the test framework.
 
-The test framework also supports promises with :searchfox:`evaluatePromiseJS <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1888>`.
+The test framework also supports promises with `evaluatePromiseJS
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1888>`_.
 It works similarly to ``evaluateJS`` but instead of returning the stringified
-value, it :searchfox:`sets <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1879>`
+value, it `sets
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1879>`_
 the return value of the ``eval`` call into the ``this`` object, keyed by a
 randomly-generated UUID.
 
@@ -313,7 +347,9 @@ randomly-generated UUID.
   this[uuid] = eval(...)
 
 ``evaluatePromiseJS`` then returns an ``ExtensionPromise`` Java object which
-has a ``getValue`` method on it, which will essentially execute :searchfox:`await this[uuid] <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1883-1885>`
+has a ``getValue`` method on it, which will essentially execute `await
+this[uuid]
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#1883-1885>`_
 to get the value from the promise when needed.
 
 Beyond executing javascript
@@ -325,92 +361,13 @@ Gecko front-end, which is written in JavaScript, and don't have limits on what
 they can do. Experiment extensions are essentially what old add-ons used to be
 in Firefox, very powerful and very dangerous.
 
-The test runner uses experiments to offer :searchfox:`privileged APIs <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/assets/web_extensions/test-support/test-api.js>`
+The test runner uses experiments to offer `privileged APIs
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/assets/web_extensions/test-support/test-api.js>`_
 to tests like ``setPref`` or ``getLinkColor`` (which is not normally available
 to websites for privacy concerns).
 
-Each privileged API is exposed as an :searchfox:`ordinary Java API <mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b:mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#2101>`
+Each privileged API is exposed as an `ordinary Java API
+<https://searchfox.org/mozilla-central/rev/95d8478112eecdd0ee249a941788e03f47df240b/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java#2101>`_
 and the test framework doesn't offer a way to run arbitrary chrome code to
 discourage developers from relying too much on implementation-dependent
 privileged code.
-
-Running activity-bound GeckoView tests
-======================================
-
-By default, GeckoSession tests are run headless, i.e. they don't necessarily run
-within an Android Activity UI.
-
-For most tests, this is probably fine. However, there may be specific cases where
-an activity is required. One example we have seen in the past is with
-`PrintDelegateTest <https://searchfox.org/firefox-main/rev/a1a18390a28e813dbd98189ee23e7ee4447541b0/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/PrintDelegateTest.kt#43>`_. The behaviors that the tests
-are verifying depend on the GeckoSession being rendered in a GeckoView view.
-
-To add activity-bound tests, you need to follow these steps:
-
-Define the activity test rule
------------------------------
-
-We need both the ``GeckoSessionTestRule`` and the
-``ActivityTestRule`` to play with each other. The simplest way is to use
-a Junit `RuleChain <https://junit.org/junit4/javadoc/4.12/org/junit/rules/RuleChain.html>`_ as shown below:
-
-.. code-block:: kotlin
-
-   // define the activity rule for GeckoViewTestActivity
-   private val activityRule =
-       ActivityScenarioRule(GeckoViewTestActivity::class.java)
-
-   // define the order of the rules (this matters for orderly cleanup)
-   @get:Rule
-   override val rules: RuleChain =
-       RuleChain.outerRule(activityRule).around(sessionRule)
-
-Bind the Activity's GeckoView to the test session rule's mainSession
---------------------------------------------------------------------
-
-The next step is to connect the activity's GeckoView instance to the
-``GeckoSessionTestRule``'s ``mainSession`` and properly clean up the
-binding after each test run.
-
-.. code-block:: kotlin
-
-   @Before
-   fun setup() {
-       activityRule.scenario.onActivity { activity ->
-           // connect the view to the test session
-           activity.view.setSession(mainSession)
-       }
-   }
-
-   @After
-   fun cleanup() {
-       try {
-           activityRule.scenario.onActivity { activity ->
-               // release the session
-               activity.view.releaseSession()
-           }
-       } catch (_: Exception) {
-       }
-   }
-
-Proceed with your test
-----------------------
-
-Now, you can proceed with your test as usual and you can be sure that this
-session will be bound to the activity.
-
-Troubleshooting
-===============
-
-Using ``dump`` to add logs while troubleshooting
-------------------------------------------------
-
-Sometimes, you may need to troubleshoot your tests, and this may require
-observing what debug logs are happening in the JavaScript layer of GeckoView
-or Toolkit. The typical ``debug`` does not always work reliably in the test
-environment for GeckoView.
-
-It is recommended that you temporarily use `dump <https://developer.mozilla.org/en-US/docs/Web/API/Window/dump>`_ to add logs. This ensures
-that those logs show up in the Android ``logcat`` while running the GeckoView
-JUnit tests. This can be of great help in diagnosing issues with your tests, but
-be sure to remove the logs after you are done troubleshooting.

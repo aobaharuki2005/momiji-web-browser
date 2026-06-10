@@ -1,12 +1,15 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef jit_loong64_Architecture_loong64_h
 #define jit_loong64_Architecture_loong64_h
 
+#include "mozilla/MathAlgorithms.h"
+
 #include <algorithm>
-#include <bit>
 
 #include "jit/shared/Architecture-shared.h"
 
@@ -124,14 +127,15 @@ class Registers {
     uintptr_t r;
   };
 
-  static uint32_t SetSize(SetType x) { return std::popcount(x); }
+  static uint32_t SetSize(SetType x) {
+    static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
+    return mozilla::CountPopulation32(x);
+  }
   static uint32_t FirstBit(SetType x) {
-    MOZ_ASSERT(x);
-    return std::countr_zero(x);
+    return mozilla::CountTrailingZeroes32(x);
   }
   static uint32_t LastBit(SetType x) {
-    MOZ_ASSERT(x);
-    return std::bit_width(x) - 1;
+    return 31 - mozilla::CountLeadingZeroes32(x);
   }
 
   static const char* GetName(uint32_t code) {
@@ -350,18 +354,19 @@ struct FloatRegister {
   typedef Codes::SetType SetType;
 
   static uint32_t SetSize(SetType x) {
+    static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
     x |= x >> FloatRegisters::TotalPhys;
     x &= FloatRegisters::AllPhysMask;
-    return std::popcount(x);
+    return mozilla::CountPopulation32(x);
   }
 
   static uint32_t FirstBit(SetType x) {
-    MOZ_ASSERT(x);
-    return std::countr_zero(x);
+    static_assert(sizeof(SetType) == 8, "SetType");
+    return mozilla::CountTrailingZeroes64(x);
   }
   static uint32_t LastBit(SetType x) {
-    MOZ_ASSERT(x);
-    return std::bit_width(x) - 1;
+    static_assert(sizeof(SetType) == 8, "SetType");
+    return 63 - mozilla::CountLeadingZeroes64(x);
   }
 
  private:

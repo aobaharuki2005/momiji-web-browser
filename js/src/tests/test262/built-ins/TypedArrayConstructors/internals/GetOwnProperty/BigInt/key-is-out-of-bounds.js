@@ -20,12 +20,12 @@ info: |
   7. Let length be the value of O's [[ArrayLength]] internal slot.
   8. If index < 0 or index ≥ length, return undefined.
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg([42n]));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA([42n]);
 
   assert.sameValue(Object.getOwnPropertyDescriptor(sample, "-1"), undefined);
   assert.sameValue(Object.getOwnPropertyDescriptor(sample, "-42"), undefined);

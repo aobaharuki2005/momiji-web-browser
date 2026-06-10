@@ -27,9 +27,9 @@ add_setup(async function () {
     entryPoint: "preferences",
   });
   await tabOpenedPromise;
-  registerCleanupFunction(async () => {
+  registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
-    await Services.logins.removeAllUserFacingLoginsAsync();
+    Services.logins.removeAllUserFacingLogins();
   });
 });
 
@@ -273,13 +273,13 @@ add_task(async function test_query_parameter_filter_no_login_until_backspace() {
     Assert.ok(!loginItem.dataset.isNewLogin, "should not be in create mode");
     Assert.ok(!loginItem.dataset.editing, "should not be in edit mode");
     Assert.ok(
-      ContentTaskUtils.isVisible(loginItem),
-      "login-item should be visible when the first matching login is selected"
+      ContentTaskUtils.isHidden(loginItem),
+      "login-item should be hidden when a login is not selected and we're not in create mode"
     );
     let loginIntro = content.document.querySelector("login-intro");
     Assert.ok(
       ContentTaskUtils.isHidden(loginIntro),
-      "login-intro should be hidden when a login is selected"
+      "login-intro should be hidden when a login is not selected and we're not in create mode"
     );
 
     loginList._createLoginButton.click();

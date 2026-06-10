@@ -6,7 +6,6 @@ package org.mozilla.fenix.components.toolbar
 
 import io.mockk.mockk
 import io.mockk.verify
-import mozilla.components.browser.state.store.BrowserStore
 import org.junit.Before
 import org.junit.Test
 
@@ -17,7 +16,7 @@ class BottomToolbarContainerIntegrationTest {
     fun setup() {
         feature = BottomToolbarContainerIntegration(
             toolbar = mockk(),
-            store = BrowserStore(),
+            store = mockk(),
             sessionId = null,
         ).apply {
             toolbarController = mockk(relaxed = true)

@@ -18,8 +18,6 @@ tags = "webextensions"
 
 ["test_ext_downloads_event_page.html"]
 
-["test_ext_options_ui.html"]
-
 ["test_ext_tab_runtimeConnect.html"]
 
 ["test_ext_tabs_autoDiscardable.html"]
@@ -49,7 +47,7 @@ skip-if = [
 
 ["test_ext_tabs_lastAccessed.html"]
 skip-if = [
-  "true", # Bug 2032927 - tab.lastAccessed not implemented
+  "true", # tab.lastAccessed not implemented
 ]
 
 ["test_ext_tabs_onUpdated.html"]
@@ -63,3 +61,5 @@ skip-if = [
 ["test_ext_tabs_sendMessage.html"]
 
 ["test_ext_tabs_update_url.html"]
+
+["test_ext_webNavigation_onCommitted.html"]

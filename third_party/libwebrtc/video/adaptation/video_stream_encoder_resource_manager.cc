@@ -284,8 +284,7 @@ VideoStreamEncoderResourceManager::VideoStreamEncoderResourceManager(
       input_state_provider_(input_state_provider),
       adaptation_processor_(nullptr),
       encoder_stats_observer_(encoder_stats_observer),
-      degradation_preference_(
-          DegradationPreference::MAINTAIN_FRAMERATE_AND_RESOLUTION),
+      degradation_preference_(DegradationPreference::DISABLED),
       video_source_restrictions_(),
       balanced_settings_(field_trials),
       clock_(clock),
@@ -341,15 +340,6 @@ VideoStreamEncoderResourceManager::degradation_preference() const {
 void VideoStreamEncoderResourceManager::ConfigureEncodeUsageResource() {
   RTC_DCHECK_RUN_ON(encoder_queue_);
   RTC_DCHECK(encoder_settings_.has_value());
-  if (!encoder_settings_->encoder_info().enable_cpu_overuse_detection) {
-    if (encode_usage_resource_->is_started()) {
-      encode_usage_resource_->StopCheckForOveruse();
-    }
-    if (resources_.find(encode_usage_resource_) != resources_.end()) {
-      RemoveResource(encode_usage_resource_);
-    }
-    return;
-  }
   if (encode_usage_resource_->is_started()) {
     encode_usage_resource_->StopCheckForOveruse();
   } else {
@@ -366,8 +356,7 @@ void VideoStreamEncoderResourceManager::MaybeInitializePixelLimitResource() {
   pixel_limit_resource_ = PixelLimitResource::CreateIfFieldTrialEnabled(
       field_trials_, encoder_queue_, input_state_provider_);
   if (pixel_limit_resource_) {
-    AddResource(pixel_limit_resource_,
-                pixel_limit_resource_->adaptation_reason());
+    AddResource(pixel_limit_resource_, VideoAdaptationReason::kCpu);
   }
 }
 
@@ -505,7 +494,7 @@ void VideoStreamEncoderResourceManager::OnEncodeCompleted(
 }
 
 void VideoStreamEncoderResourceManager::OnFrameDropped(
-    VideoStreamEncoderObserver::DropReason reason) {
+    EncodedImageCallback::DropReason reason) {
   RTC_DCHECK_RUN_ON(encoder_queue_);
   quality_scaler_resource_->OnFrameDropped(reason);
 }

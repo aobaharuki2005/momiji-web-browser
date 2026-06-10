@@ -23,7 +23,7 @@ namespace trace
 
 /**
  * Factory class for TracerProvider.
- * See @ref opentelemetry::trace::TracerProvider
+ * See @ref TracerProvider.
  */
 class OPENTELEMETRY_EXPORT TracerProviderFactory
 {

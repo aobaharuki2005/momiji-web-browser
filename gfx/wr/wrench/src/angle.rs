@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use winit::{event_loop::ActiveEventLoop, window::Window};
+use glutin::{self, ContextBuilder, ContextCurrentState, CreationError};
+use winit::{event_loop::EventLoop, window::Window, window::WindowBuilder};
 
 #[cfg(not(windows))]
 pub enum Context {}
@@ -12,39 +13,37 @@ pub use crate::egl::Context;
 
 impl Context {
     #[cfg(not(windows))]
-    pub fn with_window(
-        _: winit::window::WindowAttributes,
-        _: &crate::GlApiRequest,
-        _: &ActiveEventLoop,
+    pub fn with_window<T: ContextCurrentState>(
+        _: WindowBuilder,
+        _: ContextBuilder<'_, T>,
+        _: &EventLoop<()>,
         _: bool,
-    ) -> Result<(Window, Self), String> {
-        Err("ANGLE rendering is only supported on Windows".into())
+    ) -> Result<(Window, Self), CreationError> {
+        Err(CreationError::PlatformSpecific(
+            "ANGLE rendering is only supported on Windows".into(),
+        ))
     }
 
     #[cfg(windows)]
-    pub fn with_window(
-        window_attrs: winit::window::WindowAttributes,
-        gl_request: &crate::GlApiRequest,
-        event_loop: &ActiveEventLoop,
+    pub fn with_window<T: ContextCurrentState>(
+        window_builder: WindowBuilder,
+        context_builder: ContextBuilder<'_, T>,
+        events_loop: &EventLoop<()>,
         using_compositor: bool,
-    ) -> Result<(Window, Self), crate::egl::CreationError> {
-        use winit::raw_window_handle::{HasWindowHandle, RawWindowHandle};
-        use crate::egl::{PixelFormatRequirements, Robustness};
+    ) -> Result<(Window, Self), CreationError> {
+        use winit::platform::windows::WindowExtWindows;
 
-        let pf_reqs = &PixelFormatRequirements::default();
-        let window = event_loop.create_window(window_attrs)
-            .map_err(|e| crate::egl::CreationError::OsError(e.to_string()))?;
-        let hwnd = match window.window_handle().unwrap().as_raw() {
-            RawWindowHandle::Win32(h) => h.hwnd.get() as *const _,
-            _ => unreachable!(),
-        };
-        Self::new(pf_reqs, gl_request, false, Robustness::NotRobust)
-            .and_then(|p| p.finish(hwnd, using_compositor))
+        // FIXME: &context_builder.pf_reqs  https://github.com/tomaka/glutin/pull/1002
+        let pf_reqs = &glutin::PixelFormatRequirements::default();
+        let gl_attr = &context_builder.gl_attr.map_sharing(|_| unimplemented!());
+        let window = window_builder.build(events_loop)?;
+        Self::new(pf_reqs, gl_attr)
+            .and_then(|p| p.finish(window.hwnd() as _, using_compositor))
             .map(|context| (window, context))
     }
 
     #[cfg(not(windows))]
-    pub unsafe fn make_current(&self) -> Result<(), String> {
+    pub unsafe fn make_current(&self) -> Result<(), glutin::ContextError> {
         match *self {}
     }
 
@@ -54,17 +53,12 @@ impl Context {
     }
 
     #[cfg(not(windows))]
-    pub fn swap_buffers(&self) -> Result<(), String> {
+    pub fn swap_buffers(&self) -> Result<(), glutin::ContextError> {
         match *self {}
     }
 
     #[cfg(not(windows))]
-    pub fn is_gles(&self) -> bool {
-        match *self {}
-    }
-
-    #[cfg(not(windows))]
-    pub fn get_d3d11_device(&self) -> *const std::os::raw::c_void {
+    pub fn get_api(&self) -> glutin::Api {
         match *self {}
     }
 }

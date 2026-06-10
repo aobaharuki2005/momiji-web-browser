@@ -8,6 +8,7 @@
     <ID>ForbiddenSuppress:AcornColorGrid.kt$@Suppress("LongMethod", "MagicNumber")</ID>
     <ID>ForbiddenSuppress:AcornColorGrid.kt$@Suppress("LongParameterList", "LongMethod", "MagicNumber")</ID>
     <ID>ForbiddenSuppress:AcornColors.kt$@file:Suppress("MagicNumber")</ID>
+    <ID>ForbiddenSuppress:AcornColors.kt$AcornColors$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:AcornTheme.kt$@file:Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:ActionButton.kt$@Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:Addon.kt$Addon.Companion$@Suppress("MagicNumber", "CognitiveComplexMethod", "CyclomaticComplexMethod")</ID>
@@ -44,6 +45,7 @@
     <ID>ForbiddenSuppress:EngineSession.kt$EngineSession.CookieBannerHandlingMode$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:EngineSession.kt$EngineSession.SessionPriority$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:EngineSession.kt$EngineSession.TrackingProtectionPolicy.CookiePolicy$@Suppress("MagicNumber")</ID>
+    <ID>ForbiddenSuppress:EngineStateReducer.kt$EngineStateReducer$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:EngineVersion.kt$EngineVersion.Companion$@Suppress("MagicNumber", "ReturnCount")</ID>
     <ID>ForbiddenSuppress:ExpandableLayout.kt$ExpandableLayout$@Suppress("ReturnCount", "CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:FullDisplayToolbar.kt$@Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod", "CognitiveComplexMethod")</ID>
@@ -100,10 +102,10 @@
     <ID>ForbiddenSuppress:SystemEngineView.kt$SystemEngineView.&lt;no name provided&gt;$@Suppress("ReturnCount", "NestedBlockDepth", "LongMethod")</ID>
     <ID>ForbiddenSuppress:TabCounter.kt$@Suppress("CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:TabListReducer.kt$TabListReducer$@Suppress("LongMethod", "CognitiveComplexMethod")</ID>
+    <ID>ForbiddenSuppress:TextField.kt$@Suppress("LongMethod", "CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:ToolbarActivity.kt$ToolbarActivity$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:ToolbarActivity.kt$ToolbarActivity$@Suppress("TooGenericExceptionCaught", "CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:TopSiteDatabase.kt$Migrations$@Suppress("MagicNumber")</ID>
-    <ID>ForbiddenSuppress:TrackerProtectionDashboard.kt$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:TranslationsMiddleware.kt$TranslationsMiddleware$@Suppress("CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:TranslationsMiddleware.kt$TranslationsMiddleware$@Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:TranslationsStateReducer.kt$TranslationsStateReducer$@Suppress("LongMethod", "CognitiveComplexMethod")</ID>
@@ -115,118 +117,10 @@
     <ID>ForbiddenSuppress:WebPush.kt$WebPushSubscription$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:WebURLFinder.kt$WebURLFinder.Companion$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:WorkManagerSyncManager.kt$WorkManagerSyncWorker$@Suppress("LongMethod", "CyclomaticComplexMethod")</ID>
-    <ID>HardcodedPaddingUsage:AcornColorGrid.kt$(all = 12.dp)</ID>
-    <ID>HardcodedPaddingUsage:AcornColorGrid.kt$(all = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:AcornElevation.kt$(all = 12.dp)</ID>
-    <ID>HardcodedPaddingUsage:AcornElevation.kt$(horizontal = 16.dp, vertical = 4.dp)</ID>
-    <ID>HardcodedPaddingUsage:AcornShapes.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:AcornShapes.kt$(vertical = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:AcornTypography.kt$(all = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:AcornTypography.kt$(bottom = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:AnimatedPillButton.kt$(horizontal = 4.dp)</ID>
-    <ID>HardcodedPaddingUsage:AnimatedPillButton.kt$(horizontal = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:AnimationLayer.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:BadgedIcon.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:BannerScreen.kt$(horizontal = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:BannerScreen.kt$(vertical = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:BrowserEditToolbar.kt$(all = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:Button.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:ButtonsScreen.kt$(horizontal = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:ButtonsScreen.kt$(vertical = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:CFRBox.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:CFRPopupContent.kt$( end = 6.dp, )</ID>
-    <ID>HardcodedPaddingUsage:CFRPopupContent.kt$( end = if (showDismissButton) 24.dp else 16.dp, // 8.dp extra padding to the "X" icon )</ID>
-    <ID>HardcodedPaddingUsage:CFRPopupContent.kt$( start = 16.dp, top = 16.dp + if (indicatorDirection == CFRPopup.IndicatorDirection.UP) { CFRPopup.DEFAULT_INDICATOR_HEIGHT.dp } else { 0.dp }, end = 16.dp, bottom = 16.dp + if (indicatorDirection == CFRPopup.IndicatorDirection.DOWN) { CFRPopup.DEFAULT_INDICATOR_HEIGHT.dp } else { 0.dp }, )</ID>
-    <ID>HardcodedPaddingUsage:CFRPopupContent.kt$( top = if (indicatorDirection == CFRPopup.IndicatorDirection.UP) 9.dp else 0.dp, )</ID>
-    <ID>HardcodedPaddingUsage:CheckmarkBadge.kt$(8.dp)</ID>
-    <ID>HardcodedPaddingUsage:ColorsScreen.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:ColorsScreen.kt$(horizontal = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:ColorsScreen.kt$(vertical = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:ComponentListScreen.kt$(all = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:ContentTooLongError.kt$(end = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:DownloadError.kt$(end = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:DownloadProgress.kt$(8.dp)</ID>
-    <ID>HardcodedPaddingUsage:EmailMaskPrompt.kt$(horizontal = 12.dp)</ID>
-    <ID>HardcodedPaddingUsage:EmailMaskPrompt.kt$(horizontal = 12.dp, vertical = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:EmailMaskPrompt.kt$(horizontal = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:FlightSuggestion.kt$( bottom = 4.dp, top = if (airlineName == null) 8.dp else 4.dp, )</ID>
-    <ID>HardcodedPaddingUsage:FlightSuggestion.kt$(end = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:FlightSuggestion.kt$(horizontal = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:FloatingActionButton.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:FullDisplayToolbar.kt$( horizontal = when (isSmallWidthScreen) { true -&gt; NO_TOOLBAR_PADDING_DP.dp else -&gt; LARGE_TOOLBAR_PADDING_DP.dp }, )</ID>
-    <ID>HardcodedPaddingUsage:FullDisplayToolbar.kt$( start = when (browserActionsStart.isEmpty()) { true -&gt; TOOLBAR_PADDING_DP.dp false -&gt; NO_TOOLBAR_PADDING_DP.dp }, top = TOOLBAR_PADDING_DP.dp, end = when (browserActionsEnd.isEmpty()) { true -&gt; TOOLBAR_PADDING_DP.dp false -&gt; NO_TOOLBAR_PADDING_DP.dp }, bottom = when (gravity) { Top -&gt; TOOLBAR_PADDING_DP Bottom -&gt; if (browserActionsEnd.isEmpty()) NO_TOOLBAR_PADDING_DP else TOOLBAR_PADDING_DP }.dp, )</ID>
-    <ID>HardcodedPaddingUsage:FullDisplayToolbar.kt$( start = when (pageActionsStart.isEmpty()) { true -&gt; TOOLBAR_PADDING_DP.dp false -&gt; NO_TOOLBAR_PADDING_DP.dp }, top = NO_TOOLBAR_PADDING_DP.dp, end = when (pageActionsEnd.isEmpty()) { true -&gt; TOOLBAR_PADDING_DP.dp false -&gt; NO_TOOLBAR_PADDING_DP.dp }, bottom = NO_TOOLBAR_PADDING_DP.dp, )</ID>
-    <ID>HardcodedPaddingUsage:IconButton.kt$(all = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:IconsScreen.kt$(horizontal = 12.dp)</ID>
-    <ID>HardcodedPaddingUsage:IconsScreen.kt$(horizontal = 16.dp, vertical = 12.dp)</ID>
-    <ID>HardcodedPaddingUsage:IconsScreen.kt$(horizontal = 16.dp, vertical = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:IconsScreen.kt$(vertical = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:IdentityCredentialItem.kt$(horizontal = 16.dp, vertical = 6.dp)</ID>
-    <ID>HardcodedPaddingUsage:InfoCard.kt$(all = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:InfoCardContainer.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:InfoError.kt$(end = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:LinkText.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:LoginPickerView.kt$(horizontal = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:LoginPickerView.kt$(start = 64.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:LoginPickerView.kt$(vertical = 48.dp)</ID>
-    <ID>HardcodedPaddingUsage:NavigationBar.kt$(horizontal = 12.dp)</ID>
-    <ID>HardcodedPaddingUsage:NovaColorsPreview.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:NovaColorsPreview.kt$(24.dp)</ID>
-    <ID>HardcodedPaddingUsage:NovaColorsPreview.kt$(bottom = 12.dp)</ID>
-    <ID>HardcodedPaddingUsage:PagerIndicator.kt$(32.dp)</ID>
-    <ID>HardcodedPaddingUsage:PasswordGeneratorDialogBottomSheet.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:PasswordGeneratorDialogBottomSheet.kt$(4.dp)</ID>
-    <ID>HardcodedPaddingUsage:PasswordGeneratorDialogBottomSheet.kt$(8.dp)</ID>
-    <ID>HardcodedPaddingUsage:PasswordGeneratorDialogBottomSheet.kt$(all = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:PasswordGeneratorDialogBottomSheet.kt$(horizontal = 12.dp, vertical = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:PasswordGeneratorDialogBottomSheet.kt$(start = 40.dp, top = 0.dp, end = 12.dp, bottom = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:PasswordGeneratorDialogBottomSheet.kt$(start = 40.dp, top = 8.dp, end = 12.dp, bottom = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:PasswordGeneratorPrompt.kt$(horizontal = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:PopupToMenuItemsMapper.kt$(horizontal = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:RadioButton.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:RadioButton.kt$(horizontal = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:RichText.kt$(horizontal = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:SearchBar.kt$(horizontal = 16.dp, vertical = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:SearchSelector.kt$(horizontal = 4.dp)</ID>
-    <ID>HardcodedPaddingUsage:SelectAccountDialog.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:SelectAccountDialog.kt$(horizontal = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:SelectProviderDialog.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:SelectProviderDialog.kt$(horizontal = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:SnackbarScreen.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:SportSuggestion.kt$(horizontal = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:StockSuggestion.kt$(end = 16.dp)</ID>
-    <ID>HardcodedPaddingUsage:StockSuggestion.kt$(start = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:Suggestion.kt$(12.dp)</ID>
-    <ID>HardcodedPaddingUsage:Suggestion.kt$(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:Suggestion.kt$(start = 2.dp, end = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:Suggestion.kt$(top = 22.dp, start = 14.dp)</ID>
-    <ID>HardcodedPaddingUsage:Suggestion.kt$(top = 8.dp)</ID>
-    <ID>HardcodedPaddingUsage:SuggestionGroup.kt$( vertical = 12.dp, horizontal = 16.dp, )</ID>
-    <ID>HardcodedPaddingUsage:SummarizingContent.kt$(top = 80.dp)</ID>
-    <ID>HardcodedPaddingUsage:Tab.kt$(8.dp)</ID>
-    <ID>HardcodedPaddingUsage:TabCounterButton.kt$(16.dp)</ID>
-    <ID>HardcodedPaddingUsage:TextField.kt$(8.dp)</ID>
-    <ID>HardcodedPaddingUsage:TrailingIconScope.kt$(8.dp)</ID>
-    <ID>MaterialTextButtonUsage:CFRPopupLayout.kt$import androidx.compose.material3.TextButton</ID>
-    <ID>MaterialTextButtonUsage:ImporterDialog.kt$import androidx.compose.material3.TextButton</ID>
-    <ID>MaterialTextButtonUsage:PasswordsImporterDialog.kt$import androidx.compose.material3.TextButton</ID>
-    <ID>MaterialTypographyUsage:AcornColorGrid.kt$MaterialTheme.typography</ID>
-    <ID>MaterialTypographyUsage:AnimatedPillButton.kt$MaterialTheme.typography</ID>
-    <ID>MaterialTypographyUsage:AnimationLayer.kt$MaterialTheme.typography</ID>
-    <ID>MaterialTypographyUsage:BadgedIcon.kt$MaterialTheme.typography</ID>
-    <ID>MaterialTypographyUsage:CFRBox.kt$MaterialTheme.typography</ID>
-    <ID>MaterialTypographyUsage:IPProtectionStateDebug.kt$MaterialTheme.typography</ID>
-    <ID>MaterialTypographyUsage:ImporterDialog.kt$MaterialTheme.typography</ID>
-    <ID>MaterialTypographyUsage:LoginPickerView.kt$MaterialTheme.typography</ID>
-    <ID>MaterialTypographyUsage:PasswordGeneratorPrompt.kt$MaterialTheme.typography</ID>
-    <ID>MaterialTypographyUsage:SummarizeSettingsScreen.kt$MaterialTheme.typography</ID>
-    <ID>MaterialTypographyUsage:Tab.kt$MaterialTheme.typography</ID>
-    <ID>MaterialTypographyUsage:TrackerProtectionDashboard.kt$MaterialTheme.typography</ID>
     <ID>MaxLineLength:ContextCompatDetector.kt$ContextCompatDetector.Companion$explanation = "Using this method can lead to crashes in older Android versions as newer features might not be available"</ID>
     <ID>MaxLineLength:IconDirectoryEntry.kt$@Suppress("MagicNumber", "ReturnCount", "CognitiveComplexMethod", "NestedBlockDepth", "ComplexCondition", "CyclomaticComplexMethod")</ID>
     <ID>MayBeConst:ConstraintLayoutPerfDetector.kt$private val CUSTOM_VIEW_ISSUE_DESCRIPTION = "Caution regarding custom views extending `ConstraintLayout`"</ID>
     <ID>MayBeConst:ConstraintLayoutPerfDetector.kt$private val CUSTOM_VIEW_ISSUE_MESSAGE = "Custom views extending `ConstraintLayout` are less " + "efficient because they cannot share other `ConstraintLayout` defined in file."</ID>
-    <ID>TooManyFunctions:Engine.kt$Engine : WebExtensionRuntimeTranslationsRuntimeBrowserPreferencesRuntimeAddressStructureRuntimeDataCleanable</ID>
     <ID>UndocumentedPublicClass:AutoSave.kt$AutoSave</ID>
     <ID>UndocumentedPublicClass:AutoSave.kt$AutoSave$Storage</ID>
     <ID>UndocumentedPublicClass:Base64.kt$Base64</ID>
@@ -404,6 +298,7 @@
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onProgress(progress: Int)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onPromptRequest(promptRequest: PromptRequest)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onRecordingStateChanged(devices: List&lt;RecordingDevice&gt;)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTitleChange(title: String)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerBlocked(tracker: Tracker)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerBlockingEnabledChange(enabled: Boolean)</ID>

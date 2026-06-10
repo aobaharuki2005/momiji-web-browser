@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -79,8 +81,7 @@ class ImageDecoder::SelectTrackMessage final
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ImageDecoder)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ImageDecoder)
-  tmp->CloseWithoutRef(
-      MediaResult(NS_ERROR_DOM_ABORT_ERR, "Cycle-collected decoder"_ns));
+  tmp->Destroy();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTracks)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadRequest)
@@ -119,13 +120,40 @@ ImageDecoder::ImageDecoder(nsCOMPtr<nsIGlobalObject>&& aParent,
 ImageDecoder::~ImageDecoder() {
   MOZ_LOG(gWebCodecsLog, LogLevel::Debug,
           ("ImageDecoder %p ~ImageDecoder", this));
-  CloseWithoutRef(MediaResult(NS_ERROR_DOM_ABORT_ERR, "Destroyed decoder"_ns));
+  Destroy();
 }
 
 JSObject* ImageDecoder::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
   AssertIsOnOwningThread();
   return ImageDecoder_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void ImageDecoder::Destroy() {
+  MOZ_LOG(gWebCodecsLog, LogLevel::Debug, ("ImageDecoder %p Destroy", this));
+  MOZ_ASSERT(mOutstandingDecodes.IsEmpty());
+
+  if (mReadRequest) {
+    mReadRequest->Destroy(/* aCancel */ false);
+    mReadRequest = nullptr;
+  }
+
+  if (mDecoder) {
+    mDecoder->Destroy();
+  }
+
+  if (mTracks) {
+    mTracks->Destroy();
+  }
+
+  if (mShutdownWatcher) {
+    mShutdownWatcher->Destroy();
+    mShutdownWatcher = nullptr;
+  }
+
+  mSourceBuffer = nullptr;
+  mDecoder = nullptr;
+  mParent = nullptr;
 }
 
 void ImageDecoder::QueueConfigureMessage(
@@ -154,7 +182,7 @@ void ImageDecoder::ResumeControlMessageQueue() {
 }
 
 void ImageDecoder::ProcessControlMessageQueue() {
-  while (!mClosed && !mMessageQueueBlocked && !mControlMessageQueue.empty()) {
+  while (!mMessageQueueBlocked && !mControlMessageQueue.empty()) {
     auto& msg = mControlMessageQueue.front();
     auto result = MessageProcessedResult::Processed;
     if (auto* submsg = msg->AsConfigureMessage()) {
@@ -314,7 +342,7 @@ void ImageDecoder::CheckOutstandingDecodes() {
     return;
   }
 
-  RefPtr<ImageTrack> track = mTracks->GetDefaultTrack();
+  ImageTrack* track = mTracks->GetDefaultTrack();
   if (!track) {
     return;
   }
@@ -384,31 +412,19 @@ void ImageDecoder::CheckOutstandingDecodes() {
 
   // 4. Resolve promise with result.
   for (const auto& i : resolved) {
-    if (!mClosed) {
-      ImageDecodeResult result;
-      result.mImage = track->GetDecodedFrame(i.mFrameIndex);
-      // TODO(aosmond): progressive images
-      result.mComplete = true;
-      i.mPromise->MaybeResolve(result);
-    } else {
-      i.mPromise->MaybeRejectWithAbortError("Closed decoder"_ns);
-    }
+    ImageDecodeResult result;
+    result.mImage = track->GetDecodedFrame(i.mFrameIndex);
+    // TODO(aosmond): progressive images
+    result.mComplete = true;
+    i.mPromise->MaybeResolve(result);
   }
 
   for (const auto& i : rejectedRange) {
-    if (!mClosed) {
-      i.mPromise->MaybeRejectWithRangeError("No more frames available"_ns);
-    } else {
-      i.mPromise->MaybeRejectWithAbortError("Closed decoder"_ns);
-    }
+    i.mPromise->MaybeRejectWithRangeError("No more frames available"_ns);
   }
 
   for (const auto& i : rejectedState) {
-    if (!mClosed) {
-      i.mPromise->MaybeRejectWithInvalidStateError("Error decoding frame"_ns);
-    } else {
-      i.mPromise->MaybeRejectWithAbortError("Closed decoder"_ns);
-    }
+    i.mPromise->MaybeRejectWithInvalidStateError("Error decoding frame"_ns);
   }
 }
 
@@ -424,6 +440,8 @@ void ImageDecoder::CheckOutstandingDecodes() {
     aRv.ThrowTypeError("Invalid MIME type, must be 'image'");
     return nullptr;
   }
+
+  RefPtr<ImageDecoderReadRequest> readRequest;
 
   if (aInit.mData.IsReadableStream()) {
     const auto& stream = aInit.mData.GetAsReadableStream();
@@ -964,7 +982,6 @@ already_AddRefed<Promise> ImageDecoder::Decode(
   QueueDecodeFrameMessage();
 
   // 7. Process the control message queue.
-  RefPtr<ImageDecoder> kungFuDeathGrip(this);
   ProcessControlMessageQueue();
 
   // 8. Return promise.
@@ -1011,9 +1028,8 @@ void ImageDecoder::OnDecodeFramesFailed(const nsresult& aErr) {
   }
 }
 
-void ImageDecoder::ResetWithoutRef(const MediaResult& aResult) {
-  MOZ_LOG(gWebCodecsLog, LogLevel::Debug,
-          ("ImageDecoder %p Reset '%s'", this, aResult.Message().get()));
+void ImageDecoder::Reset(const MediaResult& aResult) {
+  MOZ_LOG(gWebCodecsLog, LogLevel::Debug, ("ImageDecoder %p Reset", this));
   // 10.2.5. Reset ImageDecoder (with exception)
 
   // 1. Signal [[codec implementation]] to abort any active decoding operation.
@@ -1033,24 +1049,14 @@ void ImageDecoder::ResetWithoutRef(const MediaResult& aResult) {
 }
 
 void ImageDecoder::Close(const MediaResult& aResult) {
-  RefPtr<ImageDecoder> kungFuDeathGrip(this);
-  CloseWithoutRef(aResult);
-}
-
-void ImageDecoder::CloseWithoutRef(const MediaResult& aResult) {
-  if (mClosed) {
-    return;
-  }
-
-  MOZ_LOG(gWebCodecsLog, LogLevel::Debug,
-          ("ImageDecoder %p Close '%s'", this, aResult.Message().get()));
+  MOZ_LOG(gWebCodecsLog, LogLevel::Debug, ("ImageDecoder %p Close", this));
 
   // 10.2.5. Algorithms - Close ImageDecoder (with exception)
   mClosed = true;
   mTypeNotSupported = aResult.Code() == NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
   // 1. Run the Reset ImageDecoder algorithm with exception.
-  ResetWithoutRef(aResult);
+  Reset(aResult);
 
   // 3. Clear [[codec implementation]] and release associated system resources.
   if (mDecoder) {
@@ -1074,9 +1080,7 @@ void ImageDecoder::CloseWithoutRef(const MediaResult& aResult) {
   }
 
   if (!mComplete) {
-    if (mCompletePromise) {
-      aResult.RejectTo(mCompletePromise);
-    }
+    aResult.RejectTo(mCompletePromise);
     mComplete = true;
   }
 
@@ -1087,8 +1091,7 @@ void ImageDecoder::CloseWithoutRef(const MediaResult& aResult) {
 }
 
 void ImageDecoder::Reset() {
-  RefPtr<ImageDecoder> kungFuDeathGrip(this);
-  ResetWithoutRef(MediaResult(NS_ERROR_DOM_ABORT_ERR, "Reset decoder"_ns));
+  Reset(MediaResult(NS_ERROR_DOM_ABORT_ERR, "Reset decoder"_ns));
 }
 
 void ImageDecoder::Close() {

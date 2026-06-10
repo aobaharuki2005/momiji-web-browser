@@ -19,7 +19,7 @@ add_task(async function () {
 
   store.dispatch(Actions.batchEnable(false));
 
-  await pushPref("devtools.netmonitor.persistlog", false);
+  Services.prefs.setBoolPref("devtools.netmonitor.persistlog", false);
 
   await reloadAndWait();
 
@@ -49,7 +49,7 @@ add_task(async function () {
   );
 
   // Now we toggle the persistence logs on
-  await pushPref("devtools.netmonitor.persistlog", true);
+  Services.prefs.setBoolPref("devtools.netmonitor.persistlog", true);
 
   await reloadAndWait();
 
@@ -63,6 +63,7 @@ add_task(async function () {
     "The request list should now have four items at this point."
   );
 
+  Services.prefs.setBoolPref("devtools.netmonitor.persistlog", false);
   return teardown(monitor);
 
   /**
@@ -70,7 +71,7 @@ add_task(async function () {
    */
   async function reloadAndWait() {
     const wait = waitForNetworkEvents(monitor, 2);
-    await reloadSelectedTab();
+    await reloadBrowser();
     return wait;
   }
 });

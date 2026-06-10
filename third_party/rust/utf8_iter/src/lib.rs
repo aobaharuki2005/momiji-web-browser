@@ -33,25 +33,9 @@
 //! assert_eq!(from_iter, from_std);
 //! ```
 
-#[cfg(feature = "icu_collections")]
-mod cptrie;
-#[cfg(feature = "icu_collections")]
-mod cptrie_indices;
 mod indices;
 mod report;
 
-#[cfg(feature = "icu_collections")]
-pub use crate::cptrie::Utf8CharsWithTrie;
-#[cfg(feature = "icu_collections")]
-pub use crate::cptrie::Utf8CharsWithTrieDefaultForAscii;
-#[cfg(feature = "icu_collections")]
-pub use crate::cptrie::Utf8CharsWithTrieDefaultForAsciiEx;
-#[cfg(feature = "icu_collections")]
-pub use crate::cptrie::Utf8CharsWithTrieEx;
-#[cfg(feature = "icu_collections")]
-pub use crate::cptrie_indices::Utf8CharIndicesWithTrie;
-#[cfg(feature = "icu_collections")]
-pub use crate::cptrie_indices::Utf8CharIndicesWithTrieDefaultForAscii;
 pub use crate::indices::Utf8CharIndices;
 pub use crate::report::ErrorReportingUtf8Chars;
 pub use crate::report::Utf8CharsError;
@@ -66,7 +50,7 @@ struct Utf8Data {
 // Please don't edit by hand but instead regenerate as instructed in that
 // file.
 
-pub(crate) static UTF8_DATA: Utf8Data = Utf8Data {
+static UTF8_DATA: Utf8Data = Utf8Data {
     table: [
         252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
         252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
@@ -93,7 +77,7 @@ pub(crate) static UTF8_DATA: Utf8Data = Utf8Data {
 // End manually copypasted generated code.
 
 #[inline(always)]
-pub(crate) fn in_inclusive_range8(i: u8, start: u8, end: u8) -> bool {
+fn in_inclusive_range8(i: u8, start: u8, end: u8) -> bool {
     i.wrapping_sub(start) <= (end - start)
 }
 

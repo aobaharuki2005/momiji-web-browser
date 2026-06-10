@@ -39,7 +39,6 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import kotlin.test.assertIs
 
 @RunWith(AndroidJUnit4::class)
 class ExpandableLayoutTest {
@@ -477,7 +476,7 @@ class ExpandableLayoutTest {
 
         val result = expandableLayout.getExpandViewAnimator(100)
 
-        assertIs<AccelerateDecelerateInterpolator>(result.interpolator)
+        assertTrue(result.interpolator is AccelerateDecelerateInterpolator)
         assertEquals(ExpandableLayout.DEFAULT_DURATION_EXPAND_ANIMATOR, result.duration)
     }
 

@@ -51,28 +51,22 @@ fn waker_vtable<W: Wake>() -> &'static RawWakerVTable {
 }
 
 unsafe fn clone_arc_raw<T: Wake>(data: *const ()) -> RawWaker {
-    // Safety: `data` was created from an `Arc::as_ptr` in function `waker_ref`.
-    unsafe {
-        Arc::<T>::increment_strong_count(data as *const T);
-    }
+    Arc::<T>::increment_strong_count(data as *const T);
     RawWaker::new(data, waker_vtable::<T>())
 }
 
 unsafe fn wake_arc_raw<T: Wake>(data: *const ()) {
-    // Safety: `data` was created from an `Arc::as_ptr` in function `waker_ref`.
-    let arc: Arc<T> = unsafe { Arc::from_raw(data as *const T) };
+    let arc: Arc<T> = Arc::from_raw(data as *const T);
     Wake::wake(arc);
 }
 
 // used by `waker_ref`
 unsafe fn wake_by_ref_arc_raw<T: Wake>(data: *const ()) {
     // Retain Arc, but don't touch refcount by wrapping in ManuallyDrop
-    // Safety: `data` was created from an `Arc::as_ptr` in function `waker_ref`.
-    let arc = ManuallyDrop::new(unsafe { Arc::<T>::from_raw(data.cast()) });
+    let arc = ManuallyDrop::new(Arc::<T>::from_raw(data.cast()));
     Wake::wake_by_ref(&arc);
 }
 
 unsafe fn drop_arc_raw<T: Wake>(data: *const ()) {
-    // Safety: `data` was created from an `Arc::as_ptr` in function `waker_ref`.
-    drop(unsafe { Arc::<T>::from_raw(data.cast()) });
+    drop(Arc::<T>::from_raw(data.cast()));
 }

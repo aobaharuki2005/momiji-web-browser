@@ -4,25 +4,31 @@
 
 package org.mozilla.fenix.bindings
 
-import io.mockk.spyk
-import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Test
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.tabstray.InactiveTabsBinding
-import org.mozilla.fenix.tabstray.redux.action.TabsTrayAction
-import org.mozilla.fenix.tabstray.redux.state.TabsTrayState
-import org.mozilla.fenix.tabstray.redux.store.TabsTrayStore
+import org.mozilla.fenix.tabstray.TabsTrayAction
+import org.mozilla.fenix.tabstray.TabsTrayState
+import org.mozilla.fenix.tabstray.TabsTrayStore
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class InactiveTabsBindingTest {
 
     private val testDispatcher = StandardTestDispatcher()
     lateinit var tabsTrayStore: TabsTrayStore
     lateinit var appStore: AppStore
+
+    private val tabId1 = "1"
+    private val tab1 = createTab(url = tabId1, id = tabId1)
 
     @Test
     fun `WHEN inactiveTabsExpanded changes THEN tabs tray action dispatched with update`() = runTest(testDispatcher) {
@@ -31,12 +37,11 @@ class InactiveTabsBindingTest {
                 inactiveTabsExpanded = false,
             ),
         )
-        tabsTrayStore = spyk(
+        tabsTrayStore = spy(
             TabsTrayStore(
                 TabsTrayState(
-                    inactiveTabs = TabsTrayState.InactiveTabsState(
-                        isExpanded = false,
-                    ),
+                    inactiveTabs = listOf(tab1),
+                    inactiveTabsExpanded = false,
                 ),
             ),
         )
@@ -50,6 +55,6 @@ class InactiveTabsBindingTest {
         appStore.dispatch(AppAction.UpdateInactiveExpanded(true))
         testDispatcher.scheduler.advanceUntilIdle()
 
-        verify { tabsTrayStore.dispatch(TabsTrayAction.UpdateInactiveExpanded(true)) }
+        verify(tabsTrayStore).dispatch(TabsTrayAction.UpdateInactiveExpanded(true))
     }
 }

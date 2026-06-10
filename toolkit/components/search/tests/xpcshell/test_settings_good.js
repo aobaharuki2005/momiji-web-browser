@@ -84,7 +84,7 @@ add_setup(async function () {
 add_task(async function test_cached_engine_properties() {
   info("init search service");
 
-  const initResult = await SearchService.init();
+  const initResult = await Services.search.init();
 
   info("init'd search service");
   Assert.ok(
@@ -92,9 +92,9 @@ add_task(async function test_cached_engine_properties() {
     "Should have successfully created the search service"
   );
 
-  const engines = await SearchService.getEngines();
+  const engines = await Services.search.getEngines();
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     "other",
     "Should have the expected default engine"
   );

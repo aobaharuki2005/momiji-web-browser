@@ -29,7 +29,7 @@
 #ifndef TOOLS_PLATFORM_H_
 #define TOOLS_PLATFORM_H_
 
-#include "mozilla/ProfilerPlatformMacros.h"
+#include "PlatformMacros.h"
 
 #include "json/json.h"
 #include "mozilla/Atomics.h"
@@ -48,6 +48,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 
 class ProfilerCodeAddressService;
 
@@ -173,11 +174,8 @@ enum class JSInstrumentationFlags {
 void profiler_write_active_configuration(mozilla::JSONWriter& aWriter);
 
 // Extract all received exit profiles that have not yet expired (i.e., they
-// still intersect with this process' buffer range). Each returned entry
-// carries both the profile JSON and optional additional information (shared
-// libraries, JS sources) gathered with it.
-mozilla::Vector<mozilla::ProfileAndAdditionalInformation>
-profiler_move_exit_profiles();
+// still intersect with this process' buffer range).
+mozilla::Vector<nsCString> profiler_move_exit_profiles();
 
 // If the "MOZ_PROFILER_SYMBOLICATE" env-var is set, we return a new
 // ProfilerCodeAddressService object to use for local symbolication of profiles.

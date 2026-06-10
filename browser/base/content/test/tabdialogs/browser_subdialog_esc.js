@@ -103,14 +103,9 @@ add_task(async function test_subdialog_esc_on_dropdown_does_not_close_dialog() {
         dialogClose.then(() => false),
       ]);
 
-      // Close the dropdown
-      if (selectPopup.isNativeMenu) {
-        info("Hiding menupopup.");
-        await selectPopup.hidePopup();
-      } else {
-        info("Hitting escape key.");
-        await EventUtils.synthesizeKey("KEY_Escape");
-      }
+      // Close the dropdown with esc key
+      info("Hitting escape key.");
+      await EventUtils.synthesizeKey("KEY_Escape");
 
       let result = await race;
       ok(result, "Select closed first");

@@ -226,40 +226,39 @@ export class RemoteTabRecord {
             throw e;
         }
         /**
-         * @type {string}
+         * title
          */
         this.title = title;
         /**
-         * @type {Array.<string>}
+         * urlHistory
          */
         this.urlHistory = urlHistory;
         /**
-         * @type {?string}
+         * icon
          */
         this.icon = icon;
         /**
-         * @type {number}
+         * lastUsed
          */
         this.lastUsed = lastUsed;
         /**
-         * @type {boolean}
+         * inactive
          */
         this.inactive = inactive;
         /**
-         * @type {boolean}
+         * pinned
          */
         this.pinned = pinned;
         /**
          * The index within the window_id.
-         * @type {number}
          */
         this.index = index;
         /**
-         * @type {string}
+         * windowId
          */
         this.windowId = windowId;
         /**
-         * @type {string}
+         * tabGroupId
          */
         this.tabGroupId = tabGroupId;
     }
@@ -492,19 +491,19 @@ export class TabGroup {
             throw e;
         }
         /**
-         * @type {string}
+         * id
          */
         this.id = id;
         /**
-         * @type {string}
+         * name
          */
         this.name = name;
         /**
-         * @type {string}
+         * color
          */
         this.color = color;
         /**
-         * @type {boolean}
+         * collapsed
          */
         this.collapsed = collapsed;
     }
@@ -670,12 +669,13 @@ export class FfiConverterTypeTimestamp extends FfiConverter {
 /**
  * WindowType
  */
-export const WindowType = Object.freeze({
+export const WindowType = {
     /**
      * NORMAL
      */
     NORMAL: 0,
-});
+};
+Object.freeze(WindowType);
 
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeWindowType extends FfiConverterArrayBuffer {
@@ -761,19 +761,19 @@ export class Window {
             throw e;
         }
         /**
-         * @type {string}
+         * id
          */
         this.id = id;
         /**
-         * @type {Timestamp}
+         * lastUsed
          */
         this.lastUsed = lastUsed;
         /**
-         * @type {number}
+         * index
          */
         this.index = index;
         /**
-         * @type {WindowType[keyof WindowType]}
+         * windowType
          */
         this.windowType = windowType;
     }
@@ -988,32 +988,30 @@ export class ClientRemoteTabs {
         }
         /**
          * misnamed: this is the fxa_device_id of the client (which may or may not be the same as the corresponding ID in the `clients` collection)
-         * @type {string}
          */
         this.clientId = clientId;
         /**
-         * @type {string}
+         * clientName
          */
         this.clientName = clientName;
         /**
-         * @type {DeviceType[keyof DeviceType]}
+         * deviceType
          */
         this.deviceType = deviceType;
         /**
          * Number of ms since the unix epoch (as reported by the server's clock)
-         * @type {number}
          */
         this.lastModified = lastModified;
         /**
-         * @type {Array.<RemoteTabRecord>}
+         * remoteTabs
          */
         this.remoteTabs = remoteTabs;
         /**
-         * @type {object}
+         * tabGroups
          */
         this.tabGroups = tabGroups;
         /**
-         * @type {object}
+         * windows
          */
         this.windows = windows;
     }
@@ -1169,15 +1167,15 @@ export class LocalTabsInfo {
             throw e;
         }
         /**
-         * @type {Array.<RemoteTabRecord>}
+         * tabs
          */
         this.tabs = tabs;
         /**
-         * @type {object}
+         * tabGroups
          */
         this.tabGroups = tabGroups;
         /**
-         * @type {object}
+         * windows
          */
         this.windows = windows;
     }
@@ -1394,19 +1392,19 @@ export class PendingCommand {
             throw e;
         }
         /**
-         * @type {string}
+         * deviceId
          */
         this.deviceId = deviceId;
         /**
-         * @type {RemoteCommand[keyof RemoteCommand]}
+         * command
          */
         this.command = command;
         /**
-         * @type {Timestamp}
+         * timeRequested
          */
         this.timeRequested = timeRequested;
         /**
-         * @type {?Timestamp}
+         * timeSent
          */
         this.timeSent = timeSent;
     }
@@ -1684,7 +1682,7 @@ export class RemoteCommandStoreInterface {
     /**
      * Add a new command, after which it will be pending. Returns false if the command is already active.
      * @param {string} deviceId
-     * @param {RemoteCommand[keyof RemoteCommand]} command
+     * @param {RemoteCommand} command
      * @returns {Promise<boolean>}}
      */
     async addRemoteCommand(
@@ -1695,7 +1693,7 @@ export class RemoteCommandStoreInterface {
     /**
      * Add a new command with an explicit timestamp. Primarily used by tests.
      * @param {string} deviceId
-     * @param {RemoteCommand[keyof RemoteCommand]} command
+     * @param {RemoteCommand} command
      * @param {Timestamp} when
      * @returns {Promise<boolean>}}
      */
@@ -1716,7 +1714,7 @@ export class RemoteCommandStoreInterface {
      * Removes the remote command. Typically used to implement "undo" but may also be used by the queue
      * processor when it gives up trying to send a command.
      * @param {string} deviceId
-     * @param {RemoteCommand[keyof RemoteCommand]} command
+     * @param {RemoteCommand} command
      * @returns {Promise<boolean>}}
      */
     async removeRemoteCommand(
@@ -1757,7 +1755,7 @@ export class RemoteCommandStore extends RemoteCommandStoreInterface {
     /**
      * Add a new command, after which it will be pending. Returns false if the command is already active.
      * @param {string} deviceId
-     * @param {RemoteCommand[keyof RemoteCommand]} command
+     * @param {RemoteCommand} command
      * @returns {Promise<boolean>}}
      */
     async addRemoteCommand(
@@ -1767,7 +1765,7 @@ export class RemoteCommandStore extends RemoteCommandStoreInterface {
         FfiConverterString.checkType(deviceId);
         FfiConverterTypeRemoteCommand.checkType(command);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            120, // uniffi_tabs_fn_method_remotecommandstore_add_remote_command
+            110, // uniffi_tabs_fn_method_remotecommandstore_add_remote_command
             FfiConverterTypeRemoteCommandStore.lowerReceiver(this),
             FfiConverterString.lower(deviceId),
             FfiConverterTypeRemoteCommand.lower(command),
@@ -1782,7 +1780,7 @@ export class RemoteCommandStore extends RemoteCommandStoreInterface {
     /**
      * Add a new command with an explicit timestamp. Primarily used by tests.
      * @param {string} deviceId
-     * @param {RemoteCommand[keyof RemoteCommand]} command
+     * @param {RemoteCommand} command
      * @param {Timestamp} when
      * @returns {Promise<boolean>}}
      */
@@ -1795,7 +1793,7 @@ export class RemoteCommandStore extends RemoteCommandStoreInterface {
         FfiConverterTypeRemoteCommand.checkType(command);
         FfiConverterTypeTimestamp.checkType(when);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            121, // uniffi_tabs_fn_method_remotecommandstore_add_remote_command_at
+            111, // uniffi_tabs_fn_method_remotecommandstore_add_remote_command_at
             FfiConverterTypeRemoteCommandStore.lowerReceiver(this),
             FfiConverterString.lower(deviceId),
             FfiConverterTypeRemoteCommand.lower(command),
@@ -1815,7 +1813,7 @@ export class RemoteCommandStore extends RemoteCommandStoreInterface {
     async getUnsentCommands() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            122, // uniffi_tabs_fn_method_remotecommandstore_get_unsent_commands
+            112, // uniffi_tabs_fn_method_remotecommandstore_get_unsent_commands
             FfiConverterTypeRemoteCommandStore.lowerReceiver(this),
         )
         return handleRustResult(
@@ -1829,7 +1827,7 @@ export class RemoteCommandStore extends RemoteCommandStoreInterface {
      * Removes the remote command. Typically used to implement "undo" but may also be used by the queue
      * processor when it gives up trying to send a command.
      * @param {string} deviceId
-     * @param {RemoteCommand[keyof RemoteCommand]} command
+     * @param {RemoteCommand} command
      * @returns {Promise<boolean>}}
      */
     async removeRemoteCommand(
@@ -1839,7 +1837,7 @@ export class RemoteCommandStore extends RemoteCommandStoreInterface {
         FfiConverterString.checkType(deviceId);
         FfiConverterTypeRemoteCommand.checkType(command);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            123, // uniffi_tabs_fn_method_remotecommandstore_remove_remote_command
+            113, // uniffi_tabs_fn_method_remotecommandstore_remove_remote_command
             FfiConverterTypeRemoteCommandStore.lowerReceiver(this),
             FfiConverterString.lower(deviceId),
             FfiConverterTypeRemoteCommand.lower(command),
@@ -1861,7 +1859,7 @@ export class RemoteCommandStore extends RemoteCommandStoreInterface {
        
         FfiConverterTypePendingCommand.checkType(command);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            124, // uniffi_tabs_fn_method_remotecommandstore_set_pending_command_sent
+            114, // uniffi_tabs_fn_method_remotecommandstore_set_pending_command_sent
             FfiConverterTypeRemoteCommandStore.lowerReceiver(this),
             FfiConverterTypePendingCommand.lower(command),
         )
@@ -2083,7 +2081,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
     async apply() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            125, // uniffi_tabs_fn_method_tabsbridgedengine_apply
+            115, // uniffi_tabs_fn_method_tabsbridgedengine_apply
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2103,7 +2101,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
        
         FfiConverterString.checkType(newSyncId);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            126, // uniffi_tabs_fn_method_tabsbridgedengine_ensure_current_sync_id
+            116, // uniffi_tabs_fn_method_tabsbridgedengine_ensure_current_sync_id
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
             FfiConverterString.lower(newSyncId),
         )
@@ -2121,7 +2119,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
     async lastSync() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            127, // uniffi_tabs_fn_method_tabsbridgedengine_last_sync
+            117, // uniffi_tabs_fn_method_tabsbridgedengine_last_sync
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2140,7 +2138,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
        
         FfiConverterString.checkType(clientData);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            128, // uniffi_tabs_fn_method_tabsbridgedengine_prepare_for_sync
+            118, // uniffi_tabs_fn_method_tabsbridgedengine_prepare_for_sync
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
             FfiConverterString.lower(clientData),
         )
@@ -2157,7 +2155,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
     async reset() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            129, // uniffi_tabs_fn_method_tabsbridgedengine_reset
+            119, // uniffi_tabs_fn_method_tabsbridgedengine_reset
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2174,7 +2172,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
     async resetSyncId() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            130, // uniffi_tabs_fn_method_tabsbridgedengine_reset_sync_id
+            120, // uniffi_tabs_fn_method_tabsbridgedengine_reset_sync_id
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2193,7 +2191,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
        
         FfiConverterInt64.checkType(lastSync);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            131, // uniffi_tabs_fn_method_tabsbridgedengine_set_last_sync
+            121, // uniffi_tabs_fn_method_tabsbridgedengine_set_last_sync
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
             FfiConverterInt64.lower(lastSync),
         )
@@ -2216,7 +2214,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
         FfiConverterInt64.checkType(newTimestamp);
         FfiConverterSequenceTypeTabsGuid.checkType(uploadedIds);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            132, // uniffi_tabs_fn_method_tabsbridgedengine_set_uploaded
+            122, // uniffi_tabs_fn_method_tabsbridgedengine_set_uploaded
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
             FfiConverterInt64.lower(newTimestamp),
             FfiConverterSequenceTypeTabsGuid.lower(uploadedIds),
@@ -2237,7 +2235,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
        
         FfiConverterSequenceString.checkType(incomingEnvelopesAsJson);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            133, // uniffi_tabs_fn_method_tabsbridgedengine_store_incoming
+            123, // uniffi_tabs_fn_method_tabsbridgedengine_store_incoming
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
             FfiConverterSequenceString.lower(incomingEnvelopesAsJson),
         )
@@ -2254,7 +2252,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
     async syncFinished() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            134, // uniffi_tabs_fn_method_tabsbridgedengine_sync_finished
+            124, // uniffi_tabs_fn_method_tabsbridgedengine_sync_finished
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2271,7 +2269,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
     async syncId() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            135, // uniffi_tabs_fn_method_tabsbridgedengine_sync_id
+            125, // uniffi_tabs_fn_method_tabsbridgedengine_sync_id
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2287,7 +2285,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
     async syncStarted() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            136, // uniffi_tabs_fn_method_tabsbridgedengine_sync_started
+            126, // uniffi_tabs_fn_method_tabsbridgedengine_sync_started
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2303,7 +2301,7 @@ export class TabsBridgedEngine extends TabsBridgedEngineInterface {
     async wipe() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            137, // uniffi_tabs_fn_method_tabsbridgedengine_wipe
+            127, // uniffi_tabs_fn_method_tabsbridgedengine_wipe
             FfiConverterTypeTabsBridgedEngine.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2476,7 +2474,7 @@ export class TabsStore extends TabsStoreInterface {
        
         FfiConverterString.checkType(path);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            138, // uniffi_tabs_fn_constructor_tabsstore_new
+            128, // uniffi_tabs_fn_constructor_tabsstore_new
             FfiConverterString.lower(path),
         )
         return handleRustResult(
@@ -2493,7 +2491,7 @@ export class TabsStore extends TabsStoreInterface {
     async bridgedEngine() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            139, // uniffi_tabs_fn_method_tabsstore_bridged_engine
+            129, // uniffi_tabs_fn_method_tabsstore_bridged_engine
             FfiConverterTypeTabsStore.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2509,7 +2507,7 @@ export class TabsStore extends TabsStoreInterface {
     async closeConnection() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            140, // uniffi_tabs_fn_method_tabsstore_close_connection
+            130, // uniffi_tabs_fn_method_tabsstore_close_connection
             FfiConverterTypeTabsStore.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2526,7 +2524,7 @@ export class TabsStore extends TabsStoreInterface {
     async getAll() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            141, // uniffi_tabs_fn_method_tabsstore_get_all
+            131, // uniffi_tabs_fn_method_tabsstore_get_all
             FfiConverterTypeTabsStore.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2543,7 +2541,7 @@ export class TabsStore extends TabsStoreInterface {
     async newRemoteCommandStore() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            142, // uniffi_tabs_fn_method_tabsstore_new_remote_command_store
+            132, // uniffi_tabs_fn_method_tabsstore_new_remote_command_store
             FfiConverterTypeTabsStore.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2559,7 +2557,7 @@ export class TabsStore extends TabsStoreInterface {
     async registerWithSyncManager() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            143, // uniffi_tabs_fn_method_tabsstore_register_with_sync_manager
+            133, // uniffi_tabs_fn_method_tabsstore_register_with_sync_manager
             FfiConverterTypeTabsStore.lowerReceiver(this),
         )
         return handleRustResult(
@@ -2578,7 +2576,7 @@ export class TabsStore extends TabsStoreInterface {
        
         FfiConverterSequenceTypeRemoteTabRecord.checkType(remoteTabs);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            144, // uniffi_tabs_fn_method_tabsstore_set_local_tabs
+            134, // uniffi_tabs_fn_method_tabsstore_set_local_tabs
             FfiConverterTypeTabsStore.lowerReceiver(this),
             FfiConverterSequenceTypeRemoteTabRecord.lower(remoteTabs),
         )
@@ -2598,7 +2596,7 @@ export class TabsStore extends TabsStoreInterface {
        
         FfiConverterTypeLocalTabsInfo.checkType(info);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            145, // uniffi_tabs_fn_method_tabsstore_set_local_tabs_info
+            135, // uniffi_tabs_fn_method_tabsstore_set_local_tabs_info
             FfiConverterTypeTabsStore.lowerReceiver(this),
             FfiConverterTypeLocalTabsInfo.lower(info),
         )

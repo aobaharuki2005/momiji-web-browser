@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -22,8 +24,7 @@ namespace jit {
 uint32_t OptimizationInfo::baseWarmUpThresholdForScript(JSContext* cx,
                                                         JSScript* script) {
   // If an Ion counter hint is present, override the threshold.
-  if (MOZ_LIKELY(cx->runtime()->hasJitRuntime()) &&
-      cx->runtime()->jitRuntime()->hasJitHintsMap()) {
+  if (cx->runtime()->jitRuntime()->hasJitHintsMap()) {
     JitHintsMap* jitHints = cx->runtime()->jitRuntime()->getJitHintsMap();
     uint32_t hintThreshold;
     if (jitHints->getIonThresholdHint(script, hintThreshold)) {

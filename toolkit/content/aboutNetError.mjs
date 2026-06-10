@@ -10,7 +10,6 @@ import {
   isCaptive,
   gErrorCode,
   gHasSts,
-  gOffline,
   searchParams,
   getHostName,
   getSubjectAltNames,
@@ -20,13 +19,11 @@ import {
   gNoConnectivity,
   retryThis,
   handleNSSFailure,
-  detectClockSkew,
-} from "chrome://global/content/aboutNetErrorHelpers.mjs";
-import { initializeRegistry } from "chrome://global/content/errors/error-registry.mjs";
-import {
   errorHasNoUserFix,
-  getResolvedErrorConfig,
-} from "chrome://global/content/errors/error-lookup.mjs";
+  COOP_MDN_DOCS,
+  COEP_MDN_DOCS,
+  HTTPS_UPGRADES_MDN_DOCS,
+} from "chrome://global/content/aboutNetErrorHelpers.mjs";
 
 const formatter = new Intl.DateTimeFormat();
 
@@ -458,21 +455,6 @@ function initPage() {
 
   document.body.classList.add("neterror");
 
-  // nssFailure2 are TLS errors which are tracked by load_abouttlserror
-  if (gErrorCode !== "nssFailure2" && !isCaptive()) {
-    try {
-      let netErrorInfo = document.getNetErrorInfo();
-      if (!netErrorInfo.errorCodeString) {
-        netErrorInfo.errorCodeString = gErrorCode;
-      }
-      void recordSecurityUITelemetry(
-        "securityUiNeterror",
-        "loadAboutneterror",
-        netErrorInfo
-      );
-    } catch (ex) {}
-  }
-
   const tryAgain = document.getElementById("netErrorButtonContainer");
   tryAgain.hidden = false;
   const learnMoreLink = document.getElementById("learnMoreLink");
@@ -510,7 +492,9 @@ function initPage() {
       // enable buttons
       let trrExceptionButton = document.getElementById("trrExceptionButton");
       trrExceptionButton.addEventListener("click", () => {
-        RPMSendQuery("Browser:AddTRRExcludedDomain").then(() => {
+        RPMSendQuery("Browser:AddTRRExcludedDomain", {
+          hostname: HOST_NAME,
+        }).then(() => {
           retryThis(trrExceptionButton);
         });
       });
@@ -676,37 +660,140 @@ function setNetErrorMessageFromParts(parentElement, parts) {
  * @returns { Array<["li" | "p" | "span" | "a", string, Record<string, string> | undefined]> }
  */
 function getNetErrorDescParts(noConnectivity) {
-  // Build context for resolving description parts
-  const context = {
-    hostname: HOST_NAME,
-    noConnectivity,
-    showOSXPermissionWarning: RPMShowOSXLocalNetworkPermissionWarning(),
-    offline: gOffline,
-  };
+  switch (gErrorCode) {
+    case "connectionFailure":
+    case "netInterrupt":
+    case "netReset":
+    case "netTimeout": {
+      let errorTags = [
+        ["li", "neterror-load-error-try-again"],
+        ["li", "neterror-load-error-connection"],
+        ["li", "neterror-load-error-firewall"],
+      ];
+      if (RPMShowOSXLocalNetworkPermissionWarning()) {
+        errorTags.push(["li", "neterror-load-osx-permission"]);
+      }
+      return errorTags;
+    }
 
-  // The legacy page looks up configs by gErrorCode (the URL e= parameter).
-  // MITM is registered under its C++ error string, not the URL code.
-  let configId = gErrorCode;
-  if (gErrorCode === "mitm") {
-    configId = "MOZILLA_PKIX_ERROR_MITM_DETECTED";
-    try {
+    case "httpErrorPage": // 4xx
+      return [["li", "neterror-http-error-page"]];
+    case "serverError": // 5xx
+      return [["li", "neterror-load-error-try-again"]];
+    case "blockedByCOOP": {
+      return [
+        ["p", "certerror-blocked-by-corp-headers-description"],
+        ["a", "certerror-coop-learn-more", COOP_MDN_DOCS],
+      ];
+    }
+    case "blockedByCOEP": {
+      return [
+        ["p", "certerror-blocked-by-corp-headers-description"],
+        ["a", "certerror-coep-learn-more", COEP_MDN_DOCS],
+      ];
+    }
+    case "blockedByPolicy":
+    case "deniedPortAccess":
+    case "malformedURI":
+      return [];
+
+    case "captivePortal":
+      return [["p", ""]];
+    case "contentEncodingError":
+      return [["li", "neterror-content-encoding-error"]];
+    case "corruptedContentErrorv2":
+      return [
+        ["p", "neterror-corrupted-content-intro"],
+        ["li", "neterror-corrupted-content-contact-website"],
+      ];
+    case "dnsNotFound":
+      if (noConnectivity) {
+        return [
+          ["span", "neterror-dns-not-found-offline-hint-header"],
+          ["li", "neterror-dns-not-found-offline-hint-different-device"],
+          ["li", "neterror-dns-not-found-offline-hint-modem"],
+          ["li", "neterror-dns-not-found-offline-hint-reconnect"],
+        ];
+      }
+      return [
+        ["span", "neterror-dns-not-found-hint-header"],
+        ["li", "neterror-dns-not-found-hint-try-again"],
+        ["li", "neterror-dns-not-found-hint-check-network"],
+        ["li", "neterror-dns-not-found-hint-firewall"],
+      ];
+    case "fileAccessDenied":
+      return [["li", "neterror-access-denied"]];
+    case "fileNotFound":
+      return [
+        ["li", "neterror-file-not-found-filename"],
+        ["li", "neterror-file-not-found-moved"],
+      ];
+    case "inadequateSecurityError":
+      return [
+        ["p", "neterror-inadequate-security-intro", { hostname: HOST_NAME }],
+        ["p", "neterror-inadequate-security-code"],
+      ];
+    case "invalidHeaderValue": {
+      return [["li", "neterror-http-error-page"]];
+    }
+    case "mitm": {
       const failedCertInfo = document.getFailedCertSecurityInfo();
-      context.mitmName = getMitmName(failedCertInfo);
-    } catch {
-      context.mitmName = "";
+      const errArgs = {
+        hostname: HOST_NAME,
+        mitm: getMitmName(failedCertInfo),
+      };
+      return [["span", "certerror-mitm", errArgs]];
     }
+    case "netOffline":
+      return [["li", "neterror-net-offline"]];
+    case "networkProtocolError":
+      return [
+        ["p", "neterror-network-protocol-error-intro"],
+        ["li", "neterror-network-protocol-error-contact-website"],
+      ];
+    case "notCached":
+      return [
+        ["p", "neterror-not-cached-intro"],
+        ["li", "neterror-not-cached-sensitive"],
+        ["li", "neterror-not-cached-try-again"],
+      ];
+    case "nssFailure2":
+      return [
+        ["li", "neterror-nss-failure-not-verified"],
+        ["li", "neterror-nss-failure-contact-website"],
+      ];
+    case "proxyConnectFailure":
+      return [
+        ["li", "neterror-proxy-connect-failure-settings"],
+        ["li", "neterror-proxy-connect-failure-contact-admin"],
+      ];
+    case "proxyResolveFailure":
+      return [
+        ["li", "neterror-proxy-resolve-failure-settings"],
+        ["li", "neterror-proxy-resolve-failure-connection"],
+        ["li", "neterror-proxy-resolve-failure-firewall"],
+      ];
+    case "redirectLoop":
+      return [["li", "neterror-redirect-loop"]];
+    case "sslv3Used":
+      return [["span", "neterror-sslv3-used"]];
+    case "unknownProtocolFound":
+      return [["li", "neterror-unknown-protocol"]];
+    case "unknownSocketType":
+      return [
+        ["li", "neterror-unknown-socket-type-psm-installed"],
+        ["li", "neterror-unknown-socket-type-server-config"],
+      ];
+    case "unsafeContentType":
+      return [["li", "neterror-unsafe-content-type"]];
+    case "basicHttpAuthDisabled":
+      return [
+        ["li", "neterror-basic-http-auth", { hostname: HOST_NAME }],
+        ["a", "neterror-learn-more-link", HTTPS_UPGRADES_MDN_DOCS],
+      ];
+    default:
+      return [["p", "neterror-generic-error"]];
   }
-
-  const config = getResolvedErrorConfig(configId, context);
-
-  // Convert config descriptionParts to legacy tuple format
-  const parts = config.descriptionParts || [];
-  return parts.map(part => {
-    if (part.tag === "a") {
-      return [part.tag, part.dataL10nId, part.href];
-    }
-    return [part.tag, part.dataL10nId, part.dataL10nArgs];
-  });
 }
 
 function setNetErrorMessageFromCode() {
@@ -940,15 +1027,53 @@ function setCertErrorDetails() {
     case "MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE": {
       learnMoreLink.href = baseURL + "time-errors";
 
+      // We check against the remote-settings server time first if available, because that allows us
+      // to give the user an approximation of what the correct time is.
       const difference = RPMGetIntPref(
         "services.settings.clock_skew_seconds",
         0
       );
       const lastFetched =
         RPMGetIntPref("services.settings.last_update_seconds", 0) * 1000;
-      const now = Date.now();
 
-      if (detectClockSkew(failedCertInfo, now)) {
+      // This is set to true later if the user's system clock is at fault for this error.
+      let clockSkew = false;
+
+      const now = Date.now();
+      const certRange = {
+        notBefore: failedCertInfo.certValidityRangeNotBefore,
+        notAfter: failedCertInfo.certValidityRangeNotAfter,
+      };
+      const approximateDate = now - difference * 1000;
+      // If the difference is more than a day, we last fetched the date in the last 5 days,
+      // and adjusting the date per the interval would make the cert valid, warn the user:
+      if (
+        Math.abs(difference) > 60 * 60 * 24 &&
+        now - lastFetched <= 60 * 60 * 24 * 5 * 1000 &&
+        certRange.notBefore < approximateDate &&
+        certRange.notAfter > approximateDate
+      ) {
+        clockSkew = true;
+        // If there is no clock skew with Kinto servers, check against the build date.
+        // (The Kinto ping could have happened when the time was still right, or not at all)
+      } else {
+        const appBuildID = RPMGetAppBuildID();
+        const year = parseInt(appBuildID.substr(0, 4), 10);
+        const month = parseInt(appBuildID.substr(4, 2), 10) - 1;
+        const day = parseInt(appBuildID.substr(6, 2), 10);
+
+        const buildDate = new Date(year, month, day);
+
+        // We don't check the notBefore of the cert with the build date,
+        // as it is of course almost certain that it is now later than the build date,
+        // so we shouldn't exclude the possibility that the cert has become valid
+        // since the build date.
+        if (buildDate > now && new Date(certRange.notAfter) > buildDate) {
+          clockSkew = true;
+        }
+      }
+
+      if (clockSkew) {
         document.body.classList.add("clockSkewError");
         document.l10n.setAttributes(bodyTitle, "clockSkewError-title");
         document.l10n.setAttributes(shortDesc, "neterror-clock-skew-error", {
@@ -1153,11 +1278,6 @@ function setTechnicalDetailsOnCertError(
           // get anyone anywhere useful. bug 432491
           const okHost = altName.replace(/^\*\./, "www.");
 
-          // We can't use HOST_NAME for the comparison, as that is
-          // display-formatted and can include a port. We need the ascii host as
-          // that is what the cert's SAN value would also contain.
-          const asciiHostname = RPMGetInnermostAsciiHost();
-
           // Let's check if we want to make this a link.
           const showLink =
             /* case #1:
@@ -1173,13 +1293,13 @@ function setTechnicalDetailsOnCertError(
              * domain names are famous for having '.' characters in them,
              * which would allow spurious and possibly hostile matches.
              */
-            okHost.endsWith("." + asciiHostname) ||
+            okHost.endsWith("." + HOST_NAME) ||
             /* case #2:
              * browser.garage.maemo.org uses an invalid security certificate.
              *
              * The certificate is only valid for garage.maemo.org
              */
-            asciiHostname.endsWith("." + okHost);
+            HOST_NAME.endsWith("." + okHost);
 
           const l10nArgs = { hostname: HOST_NAME, "alt-name": altName };
           if (showLink) {
@@ -1268,40 +1388,37 @@ function setFocus(selector, position = "afterbegin") {
   }
 }
 
-async function getCertErrorCode() {
+async function getErrorCode() {
   try {
-    return document.getFailedCertSecurityInfo().errorCodeString;
+    const errorInfo = gIsCertError
+      ? document.getFailedCertSecurityInfo()
+      : document.getNetErrorInfo();
+    return errorInfo.errorCodeString;
   } catch (e) {
     return undefined;
   }
 }
 
-async function retryCertErrorCode() {
+async function retryErrorCode() {
   return new Promise(res => {
     setTimeout(() => {
-      res(getCertErrorCode());
+      res(getErrorCode());
     }, 100);
   });
 }
 
-async function ensureCertErrorCode() {
-  if (!gIsCertError) {
-    return;
-  }
-  let errorCode = await getCertErrorCode();
+async function init() {
+  let errorCode = await getErrorCode();
   let i = 0;
   while (!errorCode && i < 3) {
     i++;
-    errorCode = await retryCertErrorCode();
+    errorCode = await retryErrorCode();
   }
 }
 
 async function main() {
-  await ensureCertErrorCode();
+  await init();
   if (!NetErrorCard.isSupported()) {
-    // Initialize the error registry for legacy path
-    initializeRegistry();
-
     for (let button of document.querySelectorAll(".try-again")) {
       button.addEventListener("click", function () {
         retryThis(this);

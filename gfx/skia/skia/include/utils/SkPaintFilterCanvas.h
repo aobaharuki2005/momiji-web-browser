@@ -57,7 +57,7 @@ public:
      * The new SkPaintFilterCanvas is configured for forwarding to the
      * specified canvas.  Also copies the target canvas matrix and clip bounds.
      */
-    explicit SkPaintFilterCanvas(SkCanvas* canvas);
+    SkPaintFilterCanvas(SkCanvas* canvas);
 
     enum Type {
         kPicture_Type,

@@ -70,9 +70,7 @@ class SinglePageAppUtils {
 
   static async clickRedirectAdInNewTab(tab) {
     info("Clicking redirect ad in new tab.");
-    let tabPromise = BrowserTestUtils.waitForNewTab(
-      tab.documentGlobal.gBrowser
-    );
+    let tabPromise = BrowserTestUtils.waitForNewTab(tab.ownerGlobal.gBrowser);
     await BrowserTestUtils.synthesizeMouseAtCenter(
       "#ad-redirect",
       { button: 1 },
@@ -83,7 +81,7 @@ class SinglePageAppUtils {
   }
 
   static async clickRedirectAdInNewWindow(tab) {
-    let contextMenu = tab.linkedBrowser.documentGlobal.document.getElementById(
+    let contextMenu = tab.linkedBrowser.ownerGlobal.document.getElementById(
       "contentAreaContextMenu"
     );
     let contextMenuPromise = BrowserTestUtils.waitForEvent(

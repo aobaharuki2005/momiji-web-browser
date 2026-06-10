@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2009 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -21,10 +23,9 @@
 
 #if defined(XP_DARWIN)
 #  include "base/message_pump_mac.h"
-//it ain't workin'. sorry nika 
-//#  include "base/message_pump_kqueue.h"
+#  include "base/message_pump_kqueue.h"
 #endif
-#if defined(XP_UNIX) // /*it ain't workin. sorry nika*/ && !defined(XP_DARWIN)
+#if defined(XP_UNIX) && !defined(XP_DARWIN)
 #  include "base/message_pump_libevent.h"
 #endif
 #if defined(XP_LINUX) || defined(__DragonFly__) || defined(XP_FREEBSD) || \
@@ -195,11 +196,6 @@ MessageLoop::EventTarget::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
   return mShutdownTasks.RemoveTask(aTask);
 }
 
-nsIEventTarget::FeatureFlags MessageLoop::EventTarget::GetFeatures() {
-  // MessageLoop::EventTarget does not SUPPORTS_SHUTDOWN_TASK_DISPATCH.
-  return FeatureFlags::SUPPORTS_SHUTDOWN_TASKS;
-}
-
 //------------------------------------------------------------------------------
 
 // static
@@ -216,7 +212,7 @@ MessageLoop::MessageLoop(Type type, nsISerialEventTarget* aEventTarget)
       nestable_tasks_allowed_(true),
       exception_restoration_(false),
       incoming_queue_lock_("MessageLoop Incoming Queue Lock"),
-      state_(nullptr),
+      state_(NULL),
       run_depth_base_(1),
       shutting_down_(false),
 #ifdef XP_WIN
@@ -283,12 +279,11 @@ MessageLoop::MessageLoop(Type type, nsISerialEventTarget* aEventTarget)
     pump_ = new base::MessagePumpForUI();
 #  endif  // XP_LINUX
   } else if (type_ == TYPE_IO) {
-// it ain't workin. sorry nika
-/*#  if defined(XP_DARWIN)
+#  if defined(XP_DARWIN)
     pump_ = new base::MessagePumpKqueue();
-#  else */
+#  else
     pump_ = new base::MessagePumpLibevent();
-//#  endif
+#  endif
   } else {
     pump_ = new base::MessagePumpDefault();
   }
@@ -330,7 +325,7 @@ MessageLoop::~MessageLoop() {
   DCHECK(!did_work);
 
   // OK, now make it so that no one can find us.
-  get_tls_ptr().Set(nullptr);
+  get_tls_ptr().Set(NULL);
 }
 
 void MessageLoop::AddDestructionObserver(DestructionObserver* obs) {
@@ -633,7 +628,7 @@ MessageLoop::AutoRunState::AutoRunState(MessageLoop* loop) : loop_(loop) {
   // Initialize the other fields:
   quit_received = false;
 #if defined(XP_WIN)
-  dispatcher = nullptr;
+  dispatcher = NULL;
 #endif
 }
 
@@ -710,8 +705,7 @@ bool MessageLoopForIO::WaitForIOCompletion(DWORD timeout, IOHandler* filter) {
   return pump_io()->WaitForIOCompletion(timeout, filter);
 }
 
-//it ain't workin. sorry nika
-/*#elif defined(XP_DARWIN)
+#elif defined(XP_DARWIN)
 
 bool MessageLoopForIO::WatchFileDescriptor(int fd, bool persistent, Mode mode,
                                            FileDescriptorWatcher* controller,
@@ -726,8 +720,9 @@ bool MessageLoopForIO::WatchMachReceivePort(mach_port_t port,
                                             MachPortWatcher* delegate) {
   return pump_kqueue()->WatchMachReceivePort(port, controller, delegate);
 }
-*/
+
 #else
+
 bool MessageLoopForIO::WatchFileDescriptor(int fd, bool persistent, Mode mode,
                                            FileDescriptorWatcher* controller,
                                            Watcher* delegate) {

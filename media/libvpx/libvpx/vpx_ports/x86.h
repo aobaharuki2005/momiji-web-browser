@@ -250,11 +250,11 @@ static INLINE int x86_simd_caps(void) {
 static INLINE unsigned int x86_readtsc(void) {
 #if defined(__GNUC__)
   unsigned int tsc;
-  __asm__ __volatile__("rdtsc\n\t" : "=a"(tsc) : : "edx");
+  __asm__ __volatile__("rdtsc\n\t" : "=a"(tsc) :);
   return tsc;
 #elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
   unsigned int tsc;
-  asm volatile("rdtsc\n\t" : "=a"(tsc) : : "edx");
+  asm volatile("rdtsc\n\t" : "=a"(tsc) :);
   return tsc;
 #else
 #if VPX_ARCH_X86_64
@@ -287,11 +287,11 @@ static INLINE uint64_t x86_readtsc64(void) {
 static INLINE unsigned int x86_readtscp(void) {
 #if defined(__GNUC__)
   unsigned int tscp;
-  __asm__ __volatile__("rdtscp\n\t" : "=a"(tscp) : : "edx");
+  __asm__ __volatile__("rdtscp\n\t" : "=a"(tscp) :);
   return tscp;
 #elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
   unsigned int tscp;
-  asm volatile("rdtscp\n\t" : "=a"(tscp) : : "edx");
+  asm volatile("rdtscp\n\t" : "=a"(tscp) :);
   return tscp;
 #elif defined(_MSC_VER)
   unsigned int ui;

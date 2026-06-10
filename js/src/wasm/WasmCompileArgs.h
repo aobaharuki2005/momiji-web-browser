@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * Copyright 2021 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +22,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/TypedEnumBits.h"
-#include "mozilla/Variant.h"
 
 #include "js/Utility.h"
 #include "js/WasmFeatures.h"
@@ -187,27 +188,12 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(FeatureUsage);
 
 // Describes the JS scripted caller of a request to compile a wasm module.
 
-enum class ScriptedCallerKind : uint8_t {
-  IntroducedFilename,
-  Url,
-  SelfHosted,
-};
-
 struct ScriptedCaller {
-  UniqueChars source;  // UTF-8 encoded filename or URL
+  UniqueChars filename;  // UTF-8 encoded
+  bool filenameIsURL;
   uint32_t line;
-  ScriptedCallerKind kind;
 
-  ScriptedCaller() : line(0), kind(ScriptedCallerKind::IntroducedFilename) {}
-  ScriptedCaller(UniqueChars&& source, ScriptedCallerKind kind, uint32_t line)
-      : source(std::move(source)), line(line), kind(kind) {}
-
-  // Use a ScriptedCaller that is 'self-hosted'. Frames from this module will
-  // be treated like JS self-hosted frames and hidden from user facing error
-  // stacks.
-  static ScriptedCaller selfHosted(JSContext* cx);
-
-  bool isSelfHosted() const { return kind == ScriptedCallerKind::SelfHosted; }
+  ScriptedCaller() : filenameIsURL(false), line(0) {}
 };
 
 // Describes the reasons we cannot compute compile args
@@ -508,29 +494,39 @@ class BytecodeBuffer {
 // Utility for passing either a bytecode buffer (which owns the bytecode) or
 // just the source (which does not own the bytecode).
 class BytecodeBufferOrSource {
-  mozilla::Variant<BytecodeBuffer, BytecodeSource> data_;
+  union {
+    const BytecodeBuffer* buffer_;
+    BytecodeSource source_;
+  };
+  bool hasBuffer_;
 
  public:
-  BytecodeBufferOrSource() : data_(BytecodeSource()) {}
-  explicit BytecodeBufferOrSource(BytecodeBuffer&& buffer)
-      : data_(std::move(buffer)) {}
+  BytecodeBufferOrSource() : source_(BytecodeSource()), hasBuffer_(false) {}
+  explicit BytecodeBufferOrSource(const BytecodeBuffer& buffer)
+      : buffer_(&buffer), hasBuffer_(true) {}
   explicit BytecodeBufferOrSource(const BytecodeSource& source)
-      : data_(source) {}
+      : source_(source), hasBuffer_(false) {}
 
-  BytecodeBufferOrSource(const BytecodeBufferOrSource&) = default;
-  BytecodeBufferOrSource& operator=(const BytecodeBufferOrSource&) = default;
+  BytecodeBufferOrSource(const BytecodeBufferOrSource&) = delete;
+  const BytecodeBufferOrSource& operator=(const BytecodeBufferOrSource&) =
+      delete;
 
-  bool hasBuffer() const { return data_.is<BytecodeBuffer>(); }
+  ~BytecodeBufferOrSource() {
+    if (!hasBuffer_) {
+      source_.~BytecodeSource();
+    }
+  }
+
+  bool hasBuffer() const { return hasBuffer_; }
   const BytecodeBuffer& buffer() const {
-    MOZ_RELEASE_ASSERT(hasBuffer());
-    return data_.as<BytecodeBuffer>();
+    MOZ_ASSERT(hasBuffer());
+    return *buffer_;
   }
   const BytecodeSource& source() const {
-    if (data_.is<BytecodeSource>()) {
-      return data_.as<BytecodeSource>();
+    if (hasBuffer_) {
+      return buffer_->source();
     }
-    MOZ_RELEASE_ASSERT(data_.is<BytecodeBuffer>());
-    return data_.as<BytecodeBuffer>().source();
+    return source_;
   }
 
   [[nodiscard]] bool getOrCreateBuffer(BytecodeBuffer* result) const {

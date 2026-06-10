@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsStreamListenerWrapper_h_
-#define nsStreamListenerWrapper_h_
+#ifndef nsStreamListenerWrapper_h__
+#define nsStreamListenerWrapper_h__
 
 #include "nsCOMPtr.h"
 #include "nsIRequest.h"
@@ -61,4 +61,4 @@ class nsStreamListenerWrapper final
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // nsStreamListenerWrapper_h_
+#endif  // nsStreamListenerWrapper_h__

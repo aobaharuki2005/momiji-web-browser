@@ -19,23 +19,23 @@ use std::{
 };
 
 use neqo_common::{
-    Datagram, Role, Tos, event::Provider as _, hex, qdebug, qerror, qinfo, qlog::Qlog, qtrace,
-    qwarn,
+    event::Provider as _, hex, qdebug, qerror, qinfo, qlog::Qlog, qtrace, qwarn, Datagram, Role,
+    Tos,
 };
-use nss::{
-    AntiReplay, Cipher, PrivateKey, PublicKey, ZeroRttCheckResult, ZeroRttChecker,
-    encode_ech_config,
+use neqo_crypto::{
+    encode_ech_config, AntiReplay, Cipher, PrivateKey, PublicKey, ZeroRttCheckResult,
+    ZeroRttChecker,
 };
 use rustc_hash::FxHashSet as HashSet;
 
 pub use crate::addr_valid::ValidateAddress;
 use crate::{
-    ConnectionParameters, OutputBatch, Res, Version,
     addr_valid::{AddressValidation, AddressValidationResult},
     cid::{ConnectionId, ConnectionIdGenerator, ConnectionIdRef},
     connection::{Connection, Output, State},
-    packet::{self, MIN_INITIAL_PACKET_SIZE, Public},
+    packet::{self, Public, MIN_INITIAL_PACKET_SIZE},
     saved::SavedDatagram,
+    ConnectionParameters, OutputBatch, Res, Version,
 };
 
 /// A `ServerZeroRttChecker` is a simple wrapper around a single checker.
@@ -247,17 +247,6 @@ impl Server {
             AddressValidationResult::Validate => {
                 qinfo!("[{self}] Send retry for {:?}", initial.dst_cid);
 
-                // > This Destination Connection ID MUST be at least 8 bytes in length.
-                //
-                // <https://www.rfc-editor.org/rfc/rfc9000.html#section-7.2>
-                if initial.dst_cid.len() < 8 {
-                    qerror!(
-                        "[{self}] DCID too short ({} bytes), dropping packet",
-                        initial.dst_cid.len()
-                    );
-                    return Output::None;
-                }
-
                 let res = self.address_validation.borrow().generate_retry_token(
                     &initial.dst_cid,
                     dgram.source(),
@@ -342,11 +331,12 @@ impl Server {
         }
         c.set_validation(&self.address_validation);
         c.set_qlog(self.create_qlog_trace(orig_dcid.unwrap_or(initial.dst_cid).as_cid_ref(), now));
-        if let Some(cfg) = &self.ech_config
-            && c.server_enable_ech(cfg.config, &cfg.public_name, &cfg.sk, &cfg.pk)
+        if let Some(cfg) = &self.ech_config {
+            if c.server_enable_ech(cfg.config, &cfg.public_name, &cfg.sk, &cfg.pk)
                 .is_err()
-        {
-            qwarn!("[{self}] Unable to enable ECH");
+            {
+                qwarn!("[{self}] Unable to enable ECH");
+            }
         }
     }
 
@@ -442,8 +432,7 @@ impl Server {
             let len = dgram.len();
             let destination = dgram.destination();
             let source = dgram.source();
-            let res =
-                Public::decode_server(&mut dgram[..], self.cid_generator.borrow().as_decoder());
+            let res = Public::decode(&mut dgram[..], self.cid_generator.borrow().as_decoder());
             let Ok((packet, _remainder)) = res else {
                 qtrace!("[{self}] Discarding {dgram:?}");
                 continue;
@@ -486,9 +475,11 @@ impl Server {
                     self.conn_params.get_versions().all(),
                 );
                 qdebug!(
-                    "[{self}] type={:?} path:{} {destination}->{source} {:?} len {}",
+                    "[{self}] type={:?} path:{} {}->{} {:?} len {}",
                     packet::Type::VersionNegotiation,
                     packet.dcid(),
+                    destination,
+                    source,
                     Tos::default(),
                     vn.len(),
                 );

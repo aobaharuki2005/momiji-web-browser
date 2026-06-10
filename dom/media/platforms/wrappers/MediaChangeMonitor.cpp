@@ -1,10 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaChangeMonitor.h"
 
-#include "AOMDecoder.h"
 #include "Adts.h"
 #include "AnnexB.h"
 #include "GeckoProfiler.h"
@@ -15,11 +16,14 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
+#include "nsPrintfCString.h"
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "gfxUtils.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
-#include "nsPrintfCString.h"
 
 namespace mozilla {
 
@@ -335,30 +339,15 @@ class HEVCChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
             : nullptr;
     if (!extraData || extraData->IsEmpty()) {
       // No inband parameter set in sample bitstream. Try out-of-band extradata.
-      auto sampleConfig = HVCCConfig::Parse(aSample->mExtraData);
-      if (sampleConfig.isOk()) {
-        if (!mPreviousExtraData) {
-          // First sample w/ out-of-band extradata, store it so that we can
-          // check for future change.
-          mPreviousExtraData = aSample->mExtraData;
-          return NS_OK;
-        } else if (!H265::CompareExtraData(aSample->mExtraData,
-                                           mPreviousExtraData)) {
-          extraData = aSample->mExtraData;
-        }
-      }
+      extraData = aSample->mExtraData;
     }
     // Sample doesn't contain any SPS and we already have SPS, do nothing.
     auto curConfig = HVCCConfig::Parse(mCurrentConfig.mExtraData);
-    if ((!extraData || extraData->IsEmpty()) && curConfig.isOk() &&
-        curConfig.inspect().HasSPS()) {
+    if ((!extraData || extraData->IsEmpty()) && curConfig.unwrap().HasSPS()) {
       LOG("No SPS in sample. Use existing config");
       return NS_OK;
     }
 
-    // Store the sample's extradata so we don't trigger a false positive
-    // with the out-of-band test on the next sample.
-    mPreviousExtraData = aSample->mExtraData;
     auto rv = HVCCConfig::Parse(extraData);
     // Ignore a corrupted extradata.
     if (rv.isErr()) {
@@ -370,8 +359,7 @@ class HEVCChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
          curConfig.isOk() ? curConfig.inspect().ToString().get() : "invalid",
          newConfig.ToString().get());
 
-    if (!newConfig.HasSPS() &&
-        (curConfig.isErr() || !curConfig.inspect().HasSPS())) {
+    if (!newConfig.HasSPS() && !curConfig.unwrap().HasSPS()) {
       // We don't have inband data and the original config didn't contain a SPS.
       // We can't decode this content.
       LOG("No sps found, waiting for initialization");
@@ -481,9 +469,6 @@ class HEVCChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
             hvcc.GetFirstAvaiableNALU(H265NALU::NAL_TYPES::PREFIX_SEI_NUT)) {
       mSEI.Clear();
       mSEI.AppendElements(nalu->mNALU);
-      if (auto hdrMetadata = H265::ParseSEIHDRMetadata(*nalu)) {
-        mCurrentConfig.mHDRMetadata = std::move(hdrMetadata);
-      }
     }
 
     // Construct a new extradata. A situation we encountered previously involved
@@ -528,9 +513,6 @@ class HEVCChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   // information for decoding, as some decoders, such as MediaEngine, require
   // SPS/PPS to be appended during the clearlead-to-encrypted transition.
   bool mReceivedFirstEncryptedSample = false;
-  // Hold the most recent out-of-band extradata to check for unneccesary
-  // config change.
-  RefPtr<MediaByteBuffer> mPreviousExtraData;
 };
 
 class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
@@ -681,6 +663,7 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   double mPixelAspectRatio;
 };
 
+#ifdef MOZ_AV1
 class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
  public:
   explicit AV1ChangeMonitor(const VideoInfo& aInfo)
@@ -789,10 +772,6 @@ class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
 
     UpdateConfig(info);
 
-    if (auto hdrMetadata = AOMDecoder::ReadMetadataOBUHDR(dataSpan)) {
-      mCurrentConfig.mHDRMetadata = std::move(hdrMetadata);
-    }
-
     if (rv == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER) {
       mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
     }
@@ -815,6 +794,7 @@ class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
   double mPixelAspectRatio;
 };
+#endif
 
 class AACCodecChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
  public:
@@ -902,8 +882,10 @@ RefPtr<PlatformDecoderModule::CreateDecoderPromise> MediaChangeMonitor::Create(
     const VideoInfo& config = aParams.VideoConfig();
     if (VPXDecoder::IsVPX(config.mMimeType)) {
       changeMonitor = MakeUnique<VPXChangeMonitor>(config);
+#ifdef MOZ_AV1
     } else if (AOMDecoder::IsAV1(config.mMimeType)) {
       changeMonitor = MakeUnique<AV1ChangeMonitor>(config);
+#endif
     } else if (MP4Decoder::IsHEVC(config.mMimeType)) {
       changeMonitor = MakeUnique<HEVCChangeMonitor>(config);
     } else {
@@ -1054,7 +1036,7 @@ RefPtr<MediaDataDecoder::FlushPromise> MediaChangeMonitor::Flush() {
       - The old decoder is no longer referenced by the MediaChangeMonitor.
 
     If during (4):
-      - mCreateAndInitRequest won't be empty.
+      - mDecoderRequest won't be empty.
       - mDecoder is not set. Steps will continue to (5) to set and initialize it
 
     If during (5):
@@ -1063,7 +1045,7 @@ RefPtr<MediaDataDecoder::FlushPromise> MediaChangeMonitor::Flush() {
   */
 
   if (mDrainRequest.Exists() || mFlushRequest.Exists() ||
-      mShutdownRequest.Exists() || mCreateAndInitRequest.Exists() ||
+      mShutdownRequest.Exists() || mDecoderRequest.Exists() ||
       mInitPromiseRequest.Exists()) {
     // We let the current decoder complete and will resume after.
     RefPtr<FlushPromise> p = mFlushPromise.Ensure(__func__);
@@ -1089,20 +1071,12 @@ RefPtr<ShutdownPromise> MediaChangeMonitor::Shutdown() {
   AssertOnThread();
   mInitPromiseRequest.DisconnectIfExists();
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  mCreateAndInitRequest.DisconnectIfExists();
   mDecodePromiseRequest.DisconnectIfExists();
   mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mDrainRequest.DisconnectIfExists();
   mFlushRequest.DisconnectIfExists();
   mFlushPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mShutdownRequest.DisconnectIfExists();
-
-  mCreateDecoderHolder.RejectIfExists(
-      MediaResult(NS_ERROR_DOM_MEDIA_CANCELED, __func__), __func__);
-
-  if (mCreateDecoderRequest.Exists()) {
-    return mShutdownWhileCreationPromise.Ensure(__func__);
-  }
 
   if (mShutdownPromise) {
     // We have a shutdown in progress, return that promise instead as we can't
@@ -1162,43 +1136,22 @@ MediaChangeMonitor::CreateDecoder() {
   currentParams.mWrappers -= media::Wrapper::MediaChangeMonitor;
   LOG("MediaChangeMonitor::CreateDecoder, current params = %s",
       currentParams.ToString().get());
+  RefPtr<CreateDecoderPromise> p =
+      mPDMFactory->CreateDecoder(currentParams)
+          ->Then(
+              GetCurrentSerialEventTarget(), __func__,
+              [self = RefPtr{this}, this](RefPtr<MediaDataDecoder>&& aDecoder) {
+                MutexAutoLock lock(mMutex);
+                mDecoder = std::move(aDecoder);
+                DDLINKCHILD("decoder", mDecoder.get());
+                return CreateDecoderPromise::CreateAndResolve(true, __func__);
+              },
+              [self = RefPtr{this}](const MediaResult& aError) {
+                return CreateDecoderPromise::CreateAndReject(aError, __func__);
+              });
 
   mDecoderInitialized = false;
   mNeedKeyframe = true;
-
-  RefPtr<CreateDecoderPromise> p = mCreateDecoderHolder.Ensure(__func__);
-
-  mPDMFactory->CreateDecoder(currentParams)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr{this}, this](RefPtr<MediaDataDecoder>&& aDecoder) {
-            mCreateDecoderRequest.Complete();
-            if (!mShutdownWhileCreationPromise.IsEmpty()) {
-              aDecoder->Shutdown()->Then(
-                  GetCurrentSerialEventTarget(), __func__,
-                  [self,
-                   this](const ShutdownPromise::ResolveOrRejectValue& aValue) {
-                    mShutdownWhileCreationPromise.ResolveOrReject(aValue,
-                                                                  __func__);
-                  });
-              return;
-            }
-            {
-              MutexAutoLock lock(mMutex);
-              mDecoder = std::move(aDecoder);
-              DDLINKCHILD("decoder", mDecoder.get());
-            }
-            mCreateDecoderHolder.Resolve(true, __func__);
-          },
-          [self = RefPtr{this}, this](const MediaResult& aError) {
-            mCreateDecoderRequest.Complete();
-            if (!mShutdownWhileCreationPromise.IsEmpty()) {
-              mShutdownWhileCreationPromise.Resolve(true, __func__);
-              return;
-            }
-            mCreateDecoderHolder.Reject(aError, __func__);
-          })
-      ->Track(mCreateDecoderRequest);
 
   return p;
 }
@@ -1220,7 +1173,7 @@ MediaResult MediaChangeMonitor::CreateDecoderAndInit(MediaRawData* aSample) {
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr{this}, this, sample = RefPtr{aSample}] {
-            mCreateAndInitRequest.Complete();
+            mDecoderRequest.Complete();
             mDecoder->Init()
                 ->Then(
                     GetCurrentSerialEventTarget(), __func__,
@@ -1261,7 +1214,7 @@ MediaResult MediaChangeMonitor::CreateDecoderAndInit(MediaRawData* aSample) {
                 ->Track(mInitPromiseRequest);
           },
           [self = RefPtr{this}, this](const MediaResult& aError) {
-            mCreateAndInitRequest.Complete();
+            mDecoderRequest.Complete();
             if (!mFlushPromise.IsEmpty()) {
               // A Flush is pending, abort the current operation.
               mFlushPromise.Reject(aError, __func__);
@@ -1272,7 +1225,7 @@ MediaResult MediaChangeMonitor::CreateDecoderAndInit(MediaRawData* aSample) {
                             RESULT_DETAIL("Unable to create decoder")),
                 __func__);
           })
-      ->Track(mCreateAndInitRequest);
+      ->Track(mDecoderRequest);
   return NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER;
 }
 

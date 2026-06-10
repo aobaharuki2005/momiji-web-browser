@@ -103,6 +103,7 @@ class BlocklistMiddleware(
                 topSites = topSites,
                 mode = mode,
                 collections = collections,
+                showCollectionPlaceholder = showCollectionPlaceholder,
                 recentSyncedTabState = recentSyncedTabState.filteredByBlocklist().filterContile(),
             )
         }

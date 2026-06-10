@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set et sw=2 ts=4: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -552,7 +554,11 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
           continue;
         }
 
-        LOG(("Found DNS resolver=%s", addr.ToString().get()));
+        if (LOG_ENABLED()) {
+          char buf[100];
+          addr.ToStringBuffer(buf, 100);
+          LOG(("Found DNS resolver=%s", buf));
+        }
         resolvers.AppendElement(addr);
       }
 

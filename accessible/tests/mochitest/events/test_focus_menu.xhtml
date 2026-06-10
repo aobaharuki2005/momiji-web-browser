@@ -19,85 +19,63 @@
           src="../events.js" />
 
   <script type="application/javascript">
-  <![CDATA[
-    async function doTests() {
+    // gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTests()
+    {
       // Test focus events.
+      gQueue = new eventQueue();
+
       if (WIN) {
-        let focused = waitForEvent(EVENT_FOCUS, "fruit");
-        synthesizeKey("VK_ALT", {});
-        await focused;
-
-        focused = waitForEvent(EVENT_FOCUS, "vehicle");
-        synthesizeKey("VK_RIGHT", {});
-        await focused;
-
-        focused = waitForEvent(EVENT_FOCUS, document);
-        synthesizeKey("VK_ESCAPE", {});
-        await focused;
+        gQueue.push(new toggleTopMenu("fruit", new focusChecker("fruit")));
+        gQueue.push(new synthRightKey("fruit", new focusChecker("vehicle")));
+        gQueue.push(new synthEscapeKey("vehicle", new focusChecker(document)));
       }
 
       // mouse move activate items but no focus event until menubar is active
-      synthesizeMouse(getNode("fruit"), 5, 5, {type: "mousemove"});
-      synthesizeMouse(getNode("fruit"), 6, 6, {type: "mousemove"});
+      gQueue.push(new synthMouseMove("fruit", new nofocusChecker("apple")));
 
       // mouseover and click on menuitem makes it active before menubar is
       // active
-      let focused = waitForEvent(EVENT_FOCUS, "fruit");
-      synthesizeMouseAtCenter(getNode("fruit"), {});
-      await focused;
-
-      await new Promise(resolve => requestAnimationFrame(resolve));
+      gQueue.push(new synthClick("fruit", new focusChecker("fruit"), { where: "center" }));
 
       // mouseover on menuitem when menubar is active
-      focused = waitForEvent(EVENT_FOCUS, "apple");
-      for (let i = 0; i < 20; i++) {
-        synthesizeMouse(getNode("apple"), 5 + (i % 2), 5 + (i % 2), {type: "mousemove"});
-        await new Promise(resolve => requestAnimationFrame(resolve));
-      }
-      await focused;
+      gQueue.push(new synthMouseMove("apple", new focusChecker("apple")));
 
       // keydown on disabled menuitem (disabled items are skipped on linux)
-      if (WIN) {
-        focused = waitForEvent(EVENT_FOCUS, "orange");
-        synthesizeKey("VK_DOWN", {});
-        await focused;
-      }
+      if (WIN)
+        gQueue.push(new synthDownKey("apple", new focusChecker("orange")));
 
       // menu and menuitem are both active
       // XXX: intermitent failure because two focus events may be coalesced,
       // think to workaround or fix this issue, when done enable queue invoker
       // below and remove next two.
-      focused = waitForEvent(EVENT_FOCUS, "vehicle");
-      for (let i = 0; i < 20; i++) {
-        synthesizeMouse(getNode("vehicle"), 5 + (i % 2), 5 + (i % 2), {type: "mousemove"});
-        await new Promise(resolve => requestAnimationFrame(resolve));
-      }
-      await focused;
-
-      focused = waitForEvent(EVENT_FOCUS, "cycle");
-      synthesizeKey("VK_DOWN", {});
-      await focused;
+      //gQueue.push(new synthRightKey("apple",
+      //                              [ new focusChecker("vehicle"),
+      //                                new focusChecker("cycle")]));
+      gQueue.push(new synthMouseMove("vehicle", new focusChecker("vehicle")));
+      gQueue.push(new synthDownKey("vehicle", new focusChecker("cycle")));
 
       // open submenu
-      focused = waitForEvent(EVENT_FOCUS, "tricycle");
-      synthesizeKey("VK_RIGHT", {});
-      await focused;
+      gQueue.push(new synthRightKey("cycle", new focusChecker("tricycle")));
 
       // move to first menu in cycle, DOMMenuItemActive is fired for fruit,
       // cycle and apple menuitems (bug 685191)
       todo(false, "focus is fired for 'cycle' menuitem");
+      //gQueue.push(new synthRightKey("vehicle", new focusChecker("apple")));
 
       // click menuitem to close menu, focus gets back to document
-      focused = waitForEvent(EVENT_FOCUS, document);
-      synthesizeMouseAtCenter(getNode("tricycle"), {});
-      await focused;
+      gQueue.push(new synthClick("tricycle", new focusChecker(document), { where: "center" }));
 
-      SimpleTest.finish();
+      //enableLogging("focus,DOMEvents,tree"); // logging for bug708927
+      //gQueue.onFinish = function() { disableLogging(); }
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
     addA11yLoadEvent(doTests);
-  ]]>
   </script>
 
   <hbox flex="1" style="overflow: auto;">
@@ -116,15 +94,15 @@
     <vbox flex="1">
       <menubar>
         <menu id="fruit" label="Fruit">
-          <menupopup nonnative="">
+          <menupopup>
             <menuitem id="apple" label="Apple"/>
             <menuitem id="orange" label="Orange" disabled="true"/>
           </menupopup>
         </menu>
         <menu id="vehicle" label="Vehicle">
-          <menupopup id="vehiclePopup" nonnative="">
+          <menupopup id="vehiclePopup">
             <menu id="cycle" label="cycle">
-              <menupopup nonnative="">
+              <menupopup>
                 <menuitem id="tricycle" label="tricycle"/>
               </menupopup>
             </menu>

@@ -41,16 +41,11 @@ add_task(async function test_manual_app_update_policy() {
     },
     async tab => {
       await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-        let settingControl = content.document.getElementById(
-          "setting-control-installationFieldset"
-        );
-        await ContentTaskUtils.waitForMutationCondition(
-          settingControl,
-          { attributes: true, attributeFilter: ["hidden"] },
-          () => settingControl.hidden
+        let setting = content.document.getElementById(
+          "updateSettingsContainer"
         );
         is(
-          settingControl.hidden,
+          setting.hidden,
           true,
           "Update choices should be disabled when manualUpdateOnly"
         );

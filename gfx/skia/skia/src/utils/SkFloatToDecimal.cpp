@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google LLC
+ * Copyright 2017 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -111,7 +111,7 @@ unsigned SkFloatToDecimal(float value, char output[kMaximumSkFloatToDecimalLengt
         *output_ptr = '\0';
         return static_cast<unsigned>(output_ptr - output);
     }
-    if (value < 0.0f) {
+    if (value < 0.0) {
         *output_ptr++ = '-';
         value = -value;
     }

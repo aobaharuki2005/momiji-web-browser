@@ -20,10 +20,10 @@
 #include "api/environment/environment_factory.h"
 #include "examples/turnserver/read_auth_file.h"
 #include "p2p/base/basic_packet_socket_factory.h"
+#include "p2p/base/port_interface.h"
 #include "p2p/test/turn_server.h"
 #include "rtc_base/async_udp_socket.h"
 #include "rtc_base/ip_address.h"
-#include "rtc_base/net_helper.h"
 #include "rtc_base/physical_socket_server.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/thread.h"
@@ -75,9 +75,7 @@ int main(int argc, char* argv[]) {
 
   const webrtc::Environment env = webrtc::CreateEnvironment();
   webrtc::PhysicalSocketServer socket_server;
-  std::unique_ptr<webrtc::Thread> main =
-      std::make_unique<webrtc::Thread>(&socket_server);
-  webrtc::ThreadManager::Instance()->SetCurrentThread(main.get());
+  webrtc::AutoSocketServerThread main(&socket_server);
   std::unique_ptr<webrtc::AsyncUDPSocket> int_socket =
       webrtc::AsyncUDPSocket::Create(env, int_addr, socket_server);
   if (!int_socket) {
@@ -86,7 +84,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  webrtc::TurnServer server(env, main.get());
+  webrtc::TurnServer server(env, &main);
   std::fstream auth_file(argv[4], std::fstream::in);
 
   TurnFileAuth auth(auth_file.is_open()
@@ -102,7 +100,6 @@ int main(int argc, char* argv[]) {
 
   std::cout << "Listening internally at " << int_addr.ToString() << std::endl;
 
-  main->Run();
-  webrtc::ThreadManager::Instance()->SetCurrentThread(nullptr);
+  main.Run();
   return 0;
 }

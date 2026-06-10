@@ -8,6 +8,5 @@ Runbooks
    :glob:
    :hidden:
 
-   fuzzing.rst
    releasing.rst
    rootstore.rst

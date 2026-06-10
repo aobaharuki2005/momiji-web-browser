@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google LLC
+ * Copyright 2017 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -17,11 +17,6 @@
  *  Helper class to package and trim the parameters passed to writePixels()
  */
 struct SkWritePixelsRec {
-    /**
-     *  @param x, y  The offset into the destination. Negative values are supported; the portion
-     *               of the rectangle that is "off-screen" (negative x or y) will cause the
-     *               corresponding area in the source pixels to be ignored.
-     */
     SkWritePixelsRec(const SkImageInfo& info, const void* pixels, size_t rowBytes, int x, int y)
         : fPixels(pixels)
         , fRowBytes(rowBytes)
@@ -46,8 +41,7 @@ struct SkWritePixelsRec {
 
     /*
      *  On true, may have modified its fields (except fRowBytes) to make it a legal subset
-     *  of the specified dst width/height. Negative fX or fY will cause fPixels to be
-     *  incremented and fInfo to be reduced to account for the portion that is "off-screen".
+     *  of the specified dst width/height.
      *
      *  On false, leaves self unchanged, but indicates that it does not overlap dst, or
      *  is not valid (e.g. bad fInfo) for writePixels().

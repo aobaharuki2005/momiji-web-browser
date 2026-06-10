@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -56,15 +58,9 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
   }
 
   // Intended for use in AudioNode creation, when the setter should not throw.
-  // Clamp to float range, not nominal range. See
-  // https://github.com/WebAudio/web-audio-api/issues/2671
-  void SetInitialValue(double aValue) {
+  void SetInitialValue(float aValue) {
     IgnoredErrorResult rv;
-    SetValue(
-        static_cast<float>(std::clamp(
-            aValue, static_cast<double>(std::numeric_limits<float>::lowest()),
-            static_cast<double>(std::numeric_limits<float>::max()))),
-        rv);
+    SetValue(aValue, rv);
   }
 
   void SetValue(float aValue, ErrorResult& aRv) {

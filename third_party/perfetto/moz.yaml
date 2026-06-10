@@ -4,7 +4,7 @@ schema: 1
 bugzilla:
   # Bugzilla product and component for this directory and subdirectories
   product: "Core"
-  component: "Performance: General"
+  component: "Performance"
 
 origin:
   name: "perfetto"

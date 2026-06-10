@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:expandtab:shiftwidth=2:tabstop=2:cin:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -392,29 +394,12 @@ NS_IMETHODIMP nsExternalHelperAppService::GetPreferredDownloadsDirectory(
  * set.)
  *
  * Optionally, skip availability of the directory and storage.
- *
- * Also optionally, if a CanonicalBrowsingContext is provided and its top-level
- * context has a DownloadFolderOverride set, that directory is used instead.
  */
 static Result<nsCOMPtr<nsIFile>, nsresult> GetInitialDownloadDirectory(
-    bool aSkipChecks = false,
-    CanonicalBrowsingContext* aBrowsingContext = nullptr) {
+    bool aSkipChecks = false) {
 #if defined(ANDROID)
   return Err(NS_ERROR_FAILURE);
 #else
-
-  if (aBrowsingContext) {
-    nsString folderPath;
-    aBrowsingContext->Top()->GetDownloadFolderOverride(folderPath);
-    if (!folderPath.IsEmpty()) {
-      nsCOMPtr<nsIFile> dir;
-      nsresult rv = NS_NewLocalFile(folderPath, getter_AddRefs(dir));
-      if (NS_SUCCEEDED(rv)) {
-        return dir;
-      }
-    }
-  }
-
   if (StaticPrefs::browser_download_start_downloads_in_tmp_dir()) {
     return GetOsTmpDownloadDirectory();
   }
@@ -487,7 +472,6 @@ static const nsDefaultMimeTypeEntry defaultMimeEntries[] = {
     {APPLICATION_XHTML_XML, "xhtml"},
     {APPLICATION_XHTML_XML, "xht"},
     {TEXT_PLAIN, "txt"},
-    {TEXT_CSV, "csv"},
     {APPLICATION_JSON, "json"},
     {APPLICATION_RDF, "rdf"},
     {APPLICATION_XJAVASCRIPT, "mjs"},
@@ -682,7 +666,7 @@ NS_IMPL_ISUPPORTS(nsExternalHelperAppService, nsIExternalHelperAppService,
                   nsPIExternalAppLauncher, nsIExternalProtocolService,
                   nsIMIMEService, nsIObserver, nsISupportsWeakReference)
 
-nsExternalHelperAppService::nsExternalHelperAppService() = default;
+nsExternalHelperAppService::nsExternalHelperAppService() {}
 nsresult nsExternalHelperAppService::Init() {
   // Add an observer for profile change
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -693,7 +677,7 @@ nsresult nsExternalHelperAppService::Init() {
   return obs->AddObserver(this, "last-pb-context-exited", true);
 }
 
-nsExternalHelperAppService::~nsExternalHelperAppService() = default;
+nsExternalHelperAppService::~nsExternalHelperAppService() {}
 
 nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
     const nsACString& aMimeContentType, nsIChannel* aChannel,
@@ -742,7 +726,7 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   // protocol will act as a listener on the child-side and create a "real"
   // helperAppService listener on the parent-side, via another call to
   // DoContent.
-  RefPtr childListener = MakeRefPtr<ExternalHelperAppChild>();
+  RefPtr<ExternalHelperAppChild> childListener = new ExternalHelperAppChild();
   MOZ_ALWAYS_TRUE(child->SendPExternalHelperAppConstructor(
       childListener, uri, loadInfoArgs, nsCString(aMimeContentType), disp,
       contentDisposition, fileName, aForceSave, contentLength, wasFileChannel,
@@ -750,14 +734,16 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
 
   NS_ADDREF(*aStreamListener = childListener);
 
-  nsIHelperAppLauncherDialog::reason reason =
-      nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
+  uint32_t reason = nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
 
   SanitizeFileName(fileName, 0);
 
-  RefPtr handler = MakeRefPtr<nsExternalAppHandler>(
-      nullptr, u""_ns, aContentContext, aWindowContext, this, fileName, reason,
-      aForceSave);
+  RefPtr<nsExternalAppHandler> handler =
+      new nsExternalAppHandler(nullptr, u""_ns, aContentContext, aWindowContext,
+                               this, fileName, reason, aForceSave);
+  if (!handler) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   childListener->SetHandler(handler);
   return NS_OK;
@@ -773,8 +759,7 @@ NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
 
   nsAutoString fileName;
   nsAutoCString fileExtension;
-  nsIHelperAppLauncherDialog::reason reason =
-      nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
+  uint32_t reason = nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
 
   uint32_t contentDisposition = -1;
   aChannel->GetContentDisposition(&contentDisposition);
@@ -1047,7 +1032,7 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
 
     AutoTArray<nsString, 1> params = {NS_ConvertUTF8toUTF16(spec)};
     nsresult rv = nsContentUtils::FormatLocalizedString(
-        PropertiesFile::SECURITY_PROPERTIES, "SandboxBlockedCustomProtocols",
+        nsContentUtils::eSECURITY_PROPERTIES, "SandboxBlockedCustomProtocols",
         params, localizedMsg);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1338,8 +1323,7 @@ nsExternalAppHandler::nsExternalAppHandler(
     nsIMIMEInfo* aMIMEInfo, const nsAString& aFileExtension,
     BrowsingContext* aBrowsingContext, nsIInterfaceRequestor* aWindowContext,
     nsExternalHelperAppService* aExtProtSvc,
-    const nsAString& aSuggestedFileName,
-    nsIHelperAppLauncherDialog::reason aReason, bool aForceSave)
+    const nsAString& aSuggestedFileName, uint32_t aReason, bool aForceSave)
     : mMimeInfo(aMIMEInfo),
       mBrowsingContext(aBrowsingContext),
       mWindowContext(aWindowContext),
@@ -1451,8 +1435,7 @@ void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest* request) {
 nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel* aChannel) {
   // First we need to try to get the destination directory for the temporary
   // file.
-  auto res = GetInitialDownloadDirectory(
-      false, mBrowsingContext ? mBrowsingContext->Canonical() : nullptr);
+  auto res = GetInitialDownloadDirectory();
   if (res.isErr()) return res.unwrapErr();
   mTempFile = res.unwrap();
 
@@ -1712,8 +1695,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     mCanceled = true;
     request->Cancel(transferError);
 
-    auto res = GetInitialDownloadDirectory(
-        true, mBrowsingContext ? mBrowsingContext->Canonical() : nullptr);
+    auto res = GetInitialDownloadDirectory(true);
     if (res.isErr()) {
       // Just send the file name as we can't get a download path.
       // TODO: evaluate adding a more specific error here.
@@ -2440,8 +2422,7 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
   if (!mFinalFileDestination) {
     // If we don't have a download directory we're kinda screwed but it's OK
     // we'll still report the error via the prompter.
-    auto res = GetInitialDownloadDirectory(
-        true, mBrowsingContext ? mBrowsingContext->Canonical() : nullptr);
+    auto res = GetInitialDownloadDirectory(true);
     if (res.isErr()) return res.unwrapErr();
     nsCOMPtr<nsIFile> pseudoFile = res.unwrap();
 
@@ -2571,7 +2552,7 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile* aNewFileLocation) {
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIFile> fileToUse = aNewFileLocation;
-  mFinalFileDestination = std::move(fileToUse);
+  mFinalFileDestination = fileToUse;
 
   // Move what we have in the final directory, but append .part
   // to it, to indicate that it's unfinished.  Do not call SetTarget on the
@@ -2632,7 +2613,7 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile* aNewFileLocation) {
           return NS_OK;
         }
 
-        mTempFile = std::move(movedFile);
+        mTempFile = movedFile;
       }
     }
   }
@@ -2668,8 +2649,7 @@ NS_IMETHODIMP nsExternalAppHandler::SetDownloadToLaunch(
   if (aNewFileLocation) {
     fileToUse = aNewFileLocation;
   } else {
-    auto res = GetInitialDownloadDirectory(
-        false, mBrowsingContext ? mBrowsingContext->Canonical() : nullptr);
+    auto res = GetInitialDownloadDirectory();
     if (res.isErr()) return res.unwrapErr();
     fileToUse = res.unwrap();
 
@@ -2694,7 +2674,7 @@ NS_IMETHODIMP nsExternalAppHandler::SetDownloadToLaunch(
 
   nsresult rv = fileToUse->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
   if (NS_SUCCEEDED(rv)) {
-    mFinalFileDestination = std::move(fileToUse);
+    mFinalFileDestination = fileToUse;
     // launch the progress window now that the user has picked the desired
     // action.
     rv = CreateTransfer();

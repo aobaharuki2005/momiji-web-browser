@@ -1,8 +1,10 @@
-class {{ opt.self_type.ffi_converter_name }}(_UniffiConverterRustBuffer):
+{%- let inner_ffi_converter = inner_type|ffi_converter_name %}
+
+class {{ ffi_converter_name }}(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
         if value is not None:
-            {{ opt.inner.ffi_converter_name }}.check_lower(value)
+            {{ inner_ffi_converter }}.check_lower(value)
 
     @classmethod
     def write(cls, value, buf):
@@ -11,7 +13,7 @@ class {{ opt.self_type.ffi_converter_name }}(_UniffiConverterRustBuffer):
             return
 
         buf.write_u8(1)
-        {{ opt.inner.ffi_converter_name }}.write(value, buf)
+        {{ inner_ffi_converter }}.write(value, buf)
 
     @classmethod
     def read(cls, buf):
@@ -19,6 +21,6 @@ class {{ opt.self_type.ffi_converter_name }}(_UniffiConverterRustBuffer):
         if flag == 0:
             return None
         elif flag == 1:
-            return {{ opt.inner.ffi_converter_name }}.read(buf)
+            return {{ inner_ffi_converter }}.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")

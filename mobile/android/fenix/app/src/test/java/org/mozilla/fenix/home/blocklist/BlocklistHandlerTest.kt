@@ -4,9 +4,7 @@
 
 package org.mozilla.fenix.home.blocklist
 
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import mozilla.components.browser.state.state.ContentState
@@ -40,7 +38,7 @@ class BlocklistHandlerTest {
         val addedUrl = "url"
         val updateSlot = slot<Set<String>>()
         every { mockSettings.homescreenBlocklist } returns setOf()
-        every { mockSettings.homescreenBlocklist = capture(updateSlot) } just Runs
+        every { mockSettings.homescreenBlocklist = capture(updateSlot) } returns Unit
 
         blocklistHandler.addUrlToBlocklist(addedUrl)
 

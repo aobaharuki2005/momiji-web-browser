@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -6,10 +8,10 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF
 
+#include "jsnum.h"    // js::StringToNumber
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "builtin/Number.h"  // js::StringToNumber
-#include "js/Context.h"      // js::AssertHeapIsIdle
+#include "js/Context.h"   // js::AssertHeapIsIdle
 #include "js/Equality.h"  // JS::LooselyEqual, JS::StrictlyEqual, JS::SameValue
 #include "js/Result.h"    // JS_TRY_VAR_OR_RETURN_FALSE
 #include "js/RootingAPI.h"  // JS::Rooted

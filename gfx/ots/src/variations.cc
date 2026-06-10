@@ -222,8 +222,7 @@ bool ParseVariationData(const Font* font, const uint8_t* data, size_t length,
     }
 
     if (tupleIndex & INTERMEDIATE_REGION) {
-      std::vector<int16_t> startTuple;
-      startTuple.reserve(axisCount);
+      std::vector<int16_t> startTuple(axisCount);
       for (unsigned axis = 0; axis < axisCount; axis++) {
         int16_t coordinate;
         if (!subtable.ReadS16(&coordinate)) {
@@ -235,8 +234,7 @@ bool ParseVariationData(const Font* font, const uint8_t* data, size_t length,
         startTuple.push_back(coordinate);
       }
 
-      std::vector<int16_t> endTuple;
-      endTuple.reserve(axisCount);
+      std::vector<int16_t> endTuple(axisCount);
       for (unsigned axis = 0; axis < axisCount; axis++) {
         int16_t coordinate;
         if (!subtable.ReadS16(&coordinate)) {

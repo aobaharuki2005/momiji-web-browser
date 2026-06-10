@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.rule.ActivityTestRule
 import org.junit.Rule
@@ -14,27 +15,21 @@ import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.DataGenerationHelper.createCustomTabIntent
-import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.enhancedTrackingProtectionAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.customTabScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
-class UnifiedTrustPanelTest {
-    @get:Rule(order = 0)
-    val fenixTestRule: FenixTestRule = FenixTestRule()
-
-    private val mockWebServer get() = fenixTestRule.mockWebServer
-
-    @get:Rule(order = 1)
+class UnifiedTrustPanelTest : TestSetup() {
+    @get:Rule
     val composeTestRule =
-        AndroidComposeTestRuleV2(
+        AndroidComposeTestRule(
             HomeActivityIntentTestRule(
                 isUnifiedTrustPanelEnabled = true,
                 isPWAsPromptEnabled = false,
@@ -48,8 +43,8 @@ class UnifiedTrustPanelTest {
         false,
     )
 
-    @get:Rule(order = 2)
-    val memoryLeaksRule = DetectMemoryLeaksRule(composeTestRule = { composeTestRule })
+    @get:Rule
+    val memoryLeaksRule = DetectMemoryLeaksRule()
 
     // TestRail: https://mozilla.testrail.io/index.php?/cases/view/3186718
     @SmokeTest
@@ -160,14 +155,11 @@ class UnifiedTrustPanelTest {
         // browsing a generic page to allow GV to load on a fresh run
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(genericPage.url) {
-            verifyPageContent(genericPage.content)
         }
 
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(trackingProtectionPage.toUri()) {
-            waitForPageToLoad()
             verifyPageContent("Tracker Blocking")
-            verifyPageContent("BLOCKED")
         }
         navigationToolbar(composeTestRule) {
         }.openUnifiedTrustPanel {

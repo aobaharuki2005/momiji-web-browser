@@ -30,7 +30,7 @@ pub trait DynSurface: DynResource {
         &self,
         timeout: Option<Duration>,
         fence: &dyn DynFence,
-    ) -> Result<DynAcquiredSurfaceTexture, SurfaceError>;
+    ) -> Result<Option<DynAcquiredSurfaceTexture>, SurfaceError>;
 
     unsafe fn discard_texture(&self, texture: Box<dyn DynSurfaceTexture>);
 }
@@ -54,15 +54,17 @@ impl<S: Surface + DynResource> DynSurface for S {
         &self,
         timeout: Option<Duration>,
         fence: &dyn DynFence,
-    ) -> Result<DynAcquiredSurfaceTexture, SurfaceError> {
+    ) -> Result<Option<DynAcquiredSurfaceTexture>, SurfaceError> {
         let fence = fence.expect_downcast_ref();
-        unsafe { S::acquire_texture(self, timeout, fence) }.map(|ast| {
-            let texture = Box::new(ast.texture);
-            let suboptimal = ast.suboptimal;
-            DynAcquiredSurfaceTexture {
-                texture,
-                suboptimal,
-            }
+        unsafe { S::acquire_texture(self, timeout, fence) }.map(|acquired| {
+            acquired.map(|ast| {
+                let texture = Box::new(ast.texture);
+                let suboptimal = ast.suboptimal;
+                DynAcquiredSurfaceTexture {
+                    texture,
+                    suboptimal,
+                }
+            })
         })
     }
 

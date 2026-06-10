@@ -1,10 +1,14 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPDecoderModule.h"
 
-#include "AOMDecoder.h"
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "DecoderDoctorDiagnostics.h"
 #include "GMPService.h"
 #include "GMPUtils.h"
@@ -42,7 +46,9 @@ static already_AddRefed<MediaDataDecoderProxy> CreateDecoderWrapper(
 already_AddRefed<MediaDataDecoder> GMPDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
   if (!MP4Decoder::IsH264(aParams.mConfig.mMimeType) &&
+#ifdef MOZ_AV1
       !AOMDecoder::IsAV1(aParams.mConfig.mMimeType) &&
+#endif
       !VPXDecoder::IsVP8(aParams.mConfig.mMimeType) &&
       !VPXDecoder::IsVP9(aParams.mConfig.mMimeType)) {
     return nullptr;
@@ -63,8 +69,10 @@ media::DecodeSupportSet GMPDecoderModule::SupportsMimeType(
   AutoTArray<nsCString, 2> tags;
   if (MP4Decoder::IsH264(aMimeType)) {
     tags.AppendElement("h264"_ns);
+#ifdef MOZ_AV1
   } else if (AOMDecoder::IsAV1(aMimeType)) {
     tags.AppendElement("av1"_ns);
+#endif
   } else if (VPXDecoder::IsVP9(aMimeType)) {
     tags.AppendElement("vp9"_ns);
   } else if (VPXDecoder::IsVP8(aMimeType)) {

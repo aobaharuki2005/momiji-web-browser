@@ -14,8 +14,8 @@
 namespace mozilla {
 namespace ipc {
 
-static void* sApplicationASN = nullptr;
-static void* sApplicationInfoItem = nullptr;
+static void* sApplicationASN = NULL;
+static void* sApplicationInfoItem = NULL;
 
 //
 // Sets the process name to the concatenation of the bundlekCFBundleNameKey

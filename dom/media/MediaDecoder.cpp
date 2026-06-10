@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -148,17 +150,23 @@ RefPtr<GenericPromise> MediaDecoder::SetSink(AudioDeviceInfo* aSinkDevice) {
   return GetStateMachine()->InvokeSetSink(aSinkDevice);
 }
 
-void MediaDecoder::SetOutputCaptureState(OutputCaptureInfo aInfo) {
+void MediaDecoder::SetOutputCaptureState(OutputCaptureState aState,
+                                         SharedDummyTrack* aDummyTrack) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
-  MOZ_ASSERT_IF(aInfo.mState == OutputCaptureState::Capture, aInfo.mDummyTrack);
+  MOZ_ASSERT_IF(aState == OutputCaptureState::Capture, aDummyTrack);
 
-  if (mOutputCaptureInfo.Ref().mState != aInfo.mState) {
+  if (mOutputCaptureState.Ref() != aState) {
     LOG("Capture state change from %s to %s",
-        EnumValueToString(mOutputCaptureInfo.Ref().mState),
-        EnumValueToString(aInfo.mState));
+        EnumValueToString(mOutputCaptureState.Ref()),
+        EnumValueToString(aState));
   }
-  mOutputCaptureInfo = std::move(aInfo);
+  mOutputCaptureState = aState;
+  if (mOutputDummyTrack.Ref().get() != aDummyTrack) {
+    mOutputDummyTrack = nsMainThreadPtrHandle<SharedDummyTrack>(
+        MakeAndAddRef<nsMainThreadPtrHolder<SharedDummyTrack>>(
+            "MediaDecoder::mOutputDummyTrack", aDummyTrack));
+  }
 }
 
 void MediaDecoder::AddOutputTrack(RefPtr<ProcessedMediaTrack> aTrack) {
@@ -231,8 +239,8 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
       INIT_CANONICAL(mStreamName, aInit.mStreamName),
       INIT_CANONICAL(mSinkDevice, nullptr),
       INIT_CANONICAL(mSecondaryVideoContainer, nullptr),
-      INIT_CANONICAL(mOutputCaptureInfo,
-                     OutputCaptureInfo(OutputCaptureState::None)),
+      INIT_CANONICAL(mOutputCaptureState, OutputCaptureState::None),
+      INIT_CANONICAL(mOutputDummyTrack, nullptr),
       INIT_CANONICAL(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
       INIT_CANONICAL(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),
       INIT_CANONICAL(mPlayState, PLAY_STATE_LOADING),
@@ -358,22 +366,10 @@ void MediaDecoder::OnPlaybackEvent(const MediaPlaybackEvent& aEvent) {
     case MediaPlaybackEvent::VideoOnlySeekCompleted:
       GetOwner()->QueueEvent(u"mozvideoonlyseekcompleted"_ns);
       break;
-#ifdef MOZ_WMF_CDM
-    case MediaPlaybackEvent::FrameServerMode:
-      mIsFrameServerMode = true;
-      UpdateReadyState();
-      break;
-#endif
     default:
       break;
   }
 }
-
-#ifdef MOZ_WMF_CDM
-bool MediaDecoder::IsUsingWMFClearKey() const {
-  return mIsFrameServerMode && StaticPrefs::media_eme_wmf_clearkey_enabled();
-}
-#endif
 
 bool MediaDecoder::IsVideoDecodingSuspended() const {
   return mIsVideoDecodingSuspended;
@@ -684,9 +680,8 @@ void MediaDecoder::DiscardOngoingSeekIfExists() {
 void MediaDecoder::CallSeek(const SeekTarget& aTarget) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mShouldDelaySeek) {
-    LOG("Delay seek to %f (was %f) and store it to delayed seek target",
-        aTarget.GetTime().ToSeconds(),
-        mDelayedSeekTarget ? mDelayedSeekTarget->GetTime().ToSeconds() : 0.0f);
+    LOG("Delay seek to %f and store it to delayed seek target",
+        mDelayedSeekTarget->GetTime().ToSeconds());
     mDelayedSeekTarget = Some(aTarget);
     return;
   }
@@ -788,7 +783,7 @@ void MediaDecoder::EnsureTelemetryReported() {
   }
   if (codecs.IsEmpty()) {
     codecs.AppendElement(nsPrintfCString(
-        "resource; %s", ContainerType().OriginalString().get()));
+        "resource; %s", ContainerType().OriginalString().Data()));
   }
   for (const nsCString& codec : codecs) {
     LOG("Telemetry MEDIA_CODEC_USED= '%s'", codec.get());
@@ -1043,8 +1038,6 @@ void MediaDecoder::UpdateLogicalPositionInternal() {
       // the decoder doesn't know. That means decoder still thinks it's in
       // playing. Therefore, we have to manually call those methods to notify
       // the owner about seeking.
-      MOZ_ASSERT(std::isfinite(GetDuration()) && GetDuration() > 0.0);
-      GetOwner()->UpdatePlayedRangesBeforeSeek(GetDuration());
       GetOwner()->SeekStarted();
       SetLogicalPosition(currentPosition);
       GetOwner()->SeekCompleted();
@@ -1415,14 +1408,13 @@ void MediaDecoder::DisconnectMirrors() {
 }
 
 void MediaDecoder::SetStateMachine(
-    already_AddRefed<MediaDecoderStateMachineBase> aStateMachine) {
+    MediaDecoderStateMachineBase* aStateMachine) {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr stateMachine = aStateMachine;
-  MOZ_ASSERT_IF(stateMachine, !mDecoderStateMachine);
-  if (stateMachine) {
-    mDecoderStateMachine = std::move(stateMachine);
+  MOZ_ASSERT_IF(aStateMachine, !mDecoderStateMachine);
+  if (aStateMachine) {
+    mDecoderStateMachine = aStateMachine;
     LOG("set state machine %p", mDecoderStateMachine.get());
-    ConnectMirrors(mDecoderStateMachine);
+    ConnectMirrors(aStateMachine);
     UpdateVideoDecodeMode();
   } else if (mDecoderStateMachine) {
     LOG("null out state machine %p", mDecoderStateMachine.get());
@@ -1701,48 +1693,6 @@ void MediaMemoryTracker::InitMemoryReporter() {
 MediaMemoryTracker::~MediaMemoryTracker() {
   UnregisterWeakMemoryReporter(this);
 }
-
-MediaDecoder::OutputCaptureInfo::OutputCaptureInfo(OutputCaptureState aState)
-    : mState(aState),
-      mDummyTrack(nullptr),
-      mShouldConfigAudioOutput(false),
-      mDevice(nullptr) {}
-
-MediaDecoder::OutputCaptureInfo::OutputCaptureInfo(
-    OutputCaptureState aState, SharedDummyTrack* aDummyTrack,
-    bool aShouldConfigAudioOutput, AudioDeviceInfo* aDevice)
-    : mState(aState),
-      mDummyTrack(nullptr),
-      mShouldConfigAudioOutput(aShouldConfigAudioOutput),
-      mDevice(aDevice) {
-  if (aDummyTrack) {
-    mDummyTrack = nsMainThreadPtrHandle<SharedDummyTrack>(
-        MakeAndAddRef<nsMainThreadPtrHolder<SharedDummyTrack>>(
-            "MediaDecoder::OutputCaptureInfo::mDummyTrack", aDummyTrack));
-  }
-}
-
-MediaDecoder::OutputCaptureInfo::OutputCaptureInfo(
-    const OutputCaptureInfo& aOther) = default;
-
-MediaDecoder::OutputCaptureInfo& MediaDecoder::OutputCaptureInfo::operator=(
-    const OutputCaptureInfo& aOther) = default;
-
-MediaDecoder::OutputCaptureInfo::OutputCaptureInfo(
-    OutputCaptureInfo&& aOther) noexcept = default;
-
-MediaDecoder::OutputCaptureInfo& MediaDecoder::OutputCaptureInfo::operator=(
-    OutputCaptureInfo&& aOther) noexcept = default;
-
-bool MediaDecoder::OutputCaptureInfo::operator==(
-    const OutputCaptureInfo& aOther) const {
-  return mState == aOther.mState &&
-         mShouldConfigAudioOutput == aOther.mShouldConfigAudioOutput &&
-         mDummyTrack == aOther.mDummyTrack &&
-         mDevice.get() == aOther.mDevice.get();
-}
-
-MediaDecoder::OutputCaptureInfo::~OutputCaptureInfo() = default;
 
 }  // namespace mozilla
 

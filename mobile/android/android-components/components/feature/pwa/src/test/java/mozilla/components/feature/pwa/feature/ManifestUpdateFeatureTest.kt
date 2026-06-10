@@ -5,9 +5,6 @@
 package mozilla.components.feature.pwa.feature
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createCustomTab
@@ -16,9 +13,13 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.support.test.any
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
@@ -26,6 +27,9 @@ import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class ManifestUpdateFeatureTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     private lateinit var shortcutManager: WebAppShortcutManager
     private lateinit var storage: ManifestStorage
@@ -37,9 +41,6 @@ class ManifestUpdateFeatureTest {
         startUrl = "https://mozilla.org",
         scope = "https://mozilla.org",
     )
-
-    private val testDispatcher = StandardTestDispatcher()
-    private val testScope = TestScope(testDispatcher)
 
     @Before
     fun setUp() {
@@ -56,7 +57,7 @@ class ManifestUpdateFeatureTest {
     }
 
     @Test
-    fun `start and stop handle null session`() = runTest(testDispatcher) {
+    fun `start and stop handle null session`() = runTestOnMain {
         val feature = ManifestUpdateFeature(
             testContext,
             store,
@@ -64,11 +65,9 @@ class ManifestUpdateFeatureTest {
             storage,
             "not existing",
             baseManifest,
-            mainScope = testScope,
         )
 
         feature.start()
-        testScheduler.advanceUntilIdle()
 
         feature.stop()
 
@@ -77,7 +76,7 @@ class ManifestUpdateFeatureTest {
     }
 
     @Test
-    fun `Last usage is updated when feature is started`() = runTest(testDispatcher) {
+    fun `Last usage is updated when feature is started`() = runTestOnMain {
         val feature = ManifestUpdateFeature(
             testContext,
             store,
@@ -85,7 +84,6 @@ class ManifestUpdateFeatureTest {
             storage,
             sessionId,
             baseManifest,
-            mainScope = testScope,
         )
 
         // Insert base manifest
@@ -97,15 +95,14 @@ class ManifestUpdateFeatureTest {
         )
 
         feature.start()
-        testScheduler.advanceUntilIdle()
 
-        feature.updateUsageJob!!
+        feature.updateUsageJob!!.joinBlocking()
 
         verify(storage).updateManifestUsedAt(baseManifest)
     }
 
     @Test
-    fun `updateStoredManifest is called when the manifest changes`() = runTest(testDispatcher) {
+    fun `updateStoredManifest is called when the manifest changes`() = runTestOnMain {
         val feature = ManifestUpdateFeature(
             testContext,
             store,
@@ -113,7 +110,6 @@ class ManifestUpdateFeatureTest {
             storage,
             sessionId,
             baseManifest,
-            testScope,
         )
 
         // Insert base manifest
@@ -125,7 +121,6 @@ class ManifestUpdateFeatureTest {
         )
 
         feature.start()
-        testScheduler.advanceUntilIdle()
 
         val newManifest = baseManifest.copy(shortName = "Moz")
 
@@ -136,15 +131,14 @@ class ManifestUpdateFeatureTest {
                 newManifest,
             ),
         )
-        testScheduler.advanceUntilIdle()
 
-        feature.updateJob!!
+        feature.updateJob!!.joinBlocking()
 
         verify(storage).updateManifest(newManifest)
     }
 
     @Test
-    fun `updateStoredManifest is not called when the manifest is the same`() = runTest(testDispatcher) {
+    fun `updateStoredManifest is not called when the manifest is the same`() = runTestOnMain {
         val feature = ManifestUpdateFeature(
             testContext,
             store,
@@ -152,11 +146,9 @@ class ManifestUpdateFeatureTest {
             storage,
             sessionId,
             baseManifest,
-            testScope,
         )
 
         feature.start()
-        testScheduler.advanceUntilIdle()
 
         // Update manifest
         store.dispatch(
@@ -166,13 +158,13 @@ class ManifestUpdateFeatureTest {
             ),
         )
 
-        feature.updateJob
+        feature.updateJob?.joinBlocking()
 
         verify(storage, never()).updateManifest(any())
     }
 
     @Test
-    fun `updateStoredManifest is not called when the manifest is removed`() = runTest(testDispatcher) {
+    fun `updateStoredManifest is not called when the manifest is removed`() = runTestOnMain {
         val feature = ManifestUpdateFeature(
             testContext,
             store,
@@ -180,7 +172,6 @@ class ManifestUpdateFeatureTest {
             storage,
             sessionId,
             baseManifest,
-            testScope,
         )
 
         // Insert base manifest
@@ -192,7 +183,6 @@ class ManifestUpdateFeatureTest {
         )
 
         feature.start()
-        testScheduler.advanceUntilIdle()
 
         // Update manifest
         store.dispatch(
@@ -201,13 +191,13 @@ class ManifestUpdateFeatureTest {
             ),
         )
 
-        feature.updateJob
+        feature.updateJob?.joinBlocking()
 
         verify(storage, never()).updateManifest(any())
     }
 
     @Test
-    fun `updateStoredManifest is not called when the manifest has a different start URL`() = runTest(testDispatcher) {
+    fun `updateStoredManifest is not called when the manifest has a different start URL`() = runTestOnMain {
         val feature = ManifestUpdateFeature(
             testContext,
             store,
@@ -215,7 +205,6 @@ class ManifestUpdateFeatureTest {
             storage,
             sessionId,
             baseManifest,
-            testScope,
         )
 
         // Insert base manifest
@@ -227,7 +216,6 @@ class ManifestUpdateFeatureTest {
         )
 
         feature.start()
-        testScheduler.advanceUntilIdle()
 
         // Update manifest
         store.dispatch(
@@ -237,14 +225,14 @@ class ManifestUpdateFeatureTest {
             ),
         )
 
-        feature.updateJob
+        feature.updateJob?.joinBlocking()
 
         verify(storage, never()).updateManifest(any())
     }
 
     @Test
-    fun `updateStoredManifest updates storage and shortcut`() = runTest(testDispatcher) {
-        val feature = ManifestUpdateFeature(testContext, store, shortcutManager, storage, sessionId, baseManifest, testScope)
+    fun `updateStoredManifest updates storage and shortcut`() = runTestOnMain {
+        val feature = ManifestUpdateFeature(testContext, store, shortcutManager, storage, sessionId, baseManifest)
 
         val manifest = baseManifest.copy(shortName = "Moz")
         feature.updateStoredManifest(manifest)
@@ -254,11 +242,10 @@ class ManifestUpdateFeatureTest {
     }
 
     @Test
-    fun `start updates last web app usage`() = runTest(testDispatcher) {
-        val feature = ManifestUpdateFeature(testContext, store, shortcutManager, storage, sessionId, baseManifest, testScope)
+    fun `start updates last web app usage`() = runTestOnMain {
+        val feature = ManifestUpdateFeature(testContext, store, shortcutManager, storage, sessionId, baseManifest)
 
         feature.start()
-        testScheduler.advanceUntilIdle()
 
         verify(storage).updateManifestUsedAt(baseManifest)
     }

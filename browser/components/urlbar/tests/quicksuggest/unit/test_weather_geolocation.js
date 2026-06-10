@@ -57,7 +57,6 @@ const TEST_DATA = [
     },
     expected: {
       country: "US",
-      region: "San Francisco",
       city: "San Francisco",
     },
   },
@@ -100,7 +99,6 @@ add_task(async function () {
           [MerinoTestUtils.SEARCH_PARAMS.QUERY]: "",
           [MerinoTestUtils.SEARCH_PARAMS.PROVIDERS]: "accuweather",
           [MerinoTestUtils.SEARCH_PARAMS.SEQUENCE_NUMBER]: index,
-          request_type: "weather",
           source: "urlbar",
           ...expected,
         },

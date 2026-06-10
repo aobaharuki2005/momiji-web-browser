@@ -1,1 +1,0 @@
-|jit-test| test-also=-P wasm_components; test-also=--wasm-compiler=baseline -P wasm_components; test-also=--wasm-compiler=optimizing -P wasm_components; include:wasm.js

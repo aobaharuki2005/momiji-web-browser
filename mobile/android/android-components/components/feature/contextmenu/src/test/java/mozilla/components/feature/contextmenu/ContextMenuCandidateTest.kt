@@ -38,6 +38,7 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.widgets.SnackbarDelegate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -50,7 +51,6 @@ import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class ContextMenuCandidateTest {
@@ -64,13 +64,7 @@ class ContextMenuCandidateTest {
 
     @Test
     fun `Default candidates sanity check`() {
-        val candidates = ContextMenuCandidate.defaultCandidates(
-            context = testContext,
-            tabsUseCases = mock(),
-            contextMenuUseCases = mock(),
-            snackBarParentView = mock(),
-            downloadsLocation = { "downloads" },
-            )
+        val candidates = ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock())
         // Just a sanity check: When changing the list of default candidates be aware that this will affect all
         // consumers of this component using the default list.
         assertEquals(
@@ -737,7 +731,6 @@ class ContextMenuCandidateTest {
         val saveImage = ContextMenuCandidate.createSaveImageCandidate(
             testContext,
             ContextMenuUseCases(store),
-            downloadsLocation = { "downloads" },
         )
 
         // showFor
@@ -806,10 +799,9 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Save image' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val saveImage = ContextMenuCandidate.createSaveImageCandidate(
-            context = testContext,
-            contextMenuUseCases = mock(),
-            downloadsLocation = { "downloads" },
-            additionalValidation = additionalValidation,
+            testContext,
+            mock(),
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -841,9 +833,8 @@ class ContextMenuCandidateTest {
         )
 
         val saveVideoAudio = ContextMenuCandidate.createSaveVideoAudioCandidate(
-            context = testContext,
-            contextMenuUseCases = ContextMenuUseCases(store),
-            downloadsLocation = { "downloads" },
+            testContext,
+            ContextMenuUseCases(store),
         )
 
         // showFor
@@ -917,10 +908,9 @@ class ContextMenuCandidateTest {
     fun `Candidate 'Save video and audio' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val saveVideoAudio = ContextMenuCandidate.createSaveVideoAudioCandidate(
-            context = testContext,
-            contextMenuUseCases = mock(),
-            additionalValidation = additionalValidation,
-            downloadsLocation = { "downloads" },
+            testContext,
+            mock(),
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -952,9 +942,8 @@ class ContextMenuCandidateTest {
         )
 
         val downloadLink = ContextMenuCandidate.createDownloadLinkCandidate(
-            context = testContext,
-            contextMenuUseCases = ContextMenuUseCases(store),
-            downloadsLocation = { "downloads" },
+            testContext,
+            ContextMenuUseCases(store),
         )
 
         // showFor
@@ -1057,10 +1046,9 @@ class ContextMenuCandidateTest {
     fun `Candidate 'download link' allows for an additional validation for it to be shown`() {
         val additionalValidation = { _: SessionState, _: HitResult -> false }
         val downloadLink = ContextMenuCandidate.createDownloadLinkCandidate(
-            context = testContext,
-            contextMenuUseCases = mock(),
-            additionalValidation = additionalValidation,
-            downloadsLocation = { "downloads" },
+            testContext,
+            mock(),
+            additionalValidation,
         )
 
         // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
@@ -1880,7 +1868,7 @@ class ContextMenuCandidateTest {
             HitResult.UNKNOWN("https://www.otherexample.com"),
         )
 
-        verify(openAppLinkRedirectMock, times(2)).invoke(any(), anyBoolean(), anyBoolean(), any())
+        verify(openAppLinkRedirectMock, times(2)).invoke(any(), anyBoolean(), any())
     }
 
     @Test

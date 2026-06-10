@@ -70,8 +70,7 @@ class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
                       std::optional<uint8_t> qp,
                       TimeDelta decode_time,
                       VideoContentType content_type,
-                      VideoFrameType frame_type,
-                      const TimingFrameInfo& timing_frame_info);
+                      VideoFrameType frame_type);
 
   // Called asyncronously on the worker thread as a result of a call to the
   // above OnDecodedFrame method, which is called back on the thread where
@@ -83,7 +82,6 @@ class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
                       TimeDelta assembly_time,
                       VideoContentType content_type,
                       VideoFrameType frame_type);
-  void OnTimingFrameInfoUpdated(const TimingFrameInfo& info);
 
   void OnSyncOffsetUpdated(int64_t video_playout_ntp_ms,
                            int64_t sync_offset_ms,
@@ -114,6 +112,7 @@ class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
                                    int jitter_delay_ms,
                                    int min_playout_delay_ms,
                                    int render_delay_ms) override;
+  void OnTimingFrameInfoUpdated(const TimingFrameInfo& info) override;
 
   // Implements RtcpCnameCallback.
   void OnCname(uint32_t ssrc, absl::string_view cname) override;

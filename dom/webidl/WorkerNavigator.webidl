@@ -46,10 +46,3 @@ partial interface WorkerNavigator {
   [Func="ServiceWorkersEnabled", SameObject]
   readonly attribute ServiceWorkerContainer serviceWorker;
 };
-
-// https://wicg.github.io/serial/
-[Exposed=DedicatedWorker]
-partial interface WorkerNavigator {
-  [SecureContext, SameObject, Pref="dom.webserial.enabled"]
-  readonly attribute Serial serial;
-};

@@ -274,7 +274,7 @@ export class FormHandlerChild extends JSWindowActorChild {
       if (!this.manager.isProcessRoot) {
         // The progress listener is registered after the
         // FormHandlerChild is created in the process root
-        this.document.documentGlobal.windowRoot.window.windowGlobalChild.getActor(
+        this.document.ownerGlobal.windowRoot.ownerGlobal.windowGlobalChild.getActor(
           "FormHandler"
         );
       }
@@ -410,7 +410,7 @@ const observer = {
    * @param {Window} navigatedWindow
    */
   notifyProcessRootOfNavigation(navigatedWindow) {
-    const processRootWindow = navigatedWindow.windowRoot.window;
+    const processRootWindow = navigatedWindow.windowRoot.ownerGlobal;
     const formHandlerChild =
       processRootWindow.windowGlobalChild.getExistingActor("FormHandler");
     const navigatedBrowsingContext = navigatedWindow.browsingContext;

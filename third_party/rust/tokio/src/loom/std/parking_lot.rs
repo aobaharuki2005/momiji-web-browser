@@ -6,7 +6,7 @@
 use std::fmt;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
-use std::sync::{LockResult, TryLockError};
+use std::sync::LockResult;
 use std::time::Duration;
 
 // All types in this file are marked with PhantomData to ensure that
@@ -101,9 +101,7 @@ impl<T> RwLock<T> {
     }
 
     pub(crate) fn try_read(&self) -> Option<RwLockReadGuard<'_, T>> {
-        self.1
-            .try_read()
-            .map(|guard| RwLockReadGuard(PhantomData, guard))
+        Some(RwLockReadGuard(PhantomData, self.1.read()))
     }
 
     pub(crate) fn write(&self) -> RwLockWriteGuard<'_, T> {
@@ -111,9 +109,7 @@ impl<T> RwLock<T> {
     }
 
     pub(crate) fn try_write(&self) -> Option<RwLockWriteGuard<'_, T>> {
-        self.1
-            .try_write()
-            .map(|guard| RwLockWriteGuard(PhantomData, guard))
+        Some(RwLockWriteGuard(PhantomData, self.1.write()))
     }
 }
 

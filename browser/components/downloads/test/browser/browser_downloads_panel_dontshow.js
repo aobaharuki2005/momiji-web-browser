@@ -2,7 +2,7 @@
 // download occurs but not when a user manually saves a page.
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init();
+MockFilePicker.init(window.browsingContext);
 
 function openTestPage() {
   return BrowserTestUtils.openNewForegroundTab(

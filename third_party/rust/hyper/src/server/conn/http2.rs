@@ -3,28 +3,23 @@
 use std::error::Error as StdError;
 use std::fmt;
 use std::future::Future;
+use std::marker::Unpin;
 use std::pin::Pin;
-use std::sync::Arc;
 use std::task::{Context, Poll};
 use std::time::Duration;
 
-use crate::rt::{Read, Write};
-use futures_core::ready;
 use pin_project_lite::pin_project;
+use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::body::{Body, Incoming as IncomingBody};
+use crate::body::{Body as IncomingBody, HttpBody as Body};
+use crate::common::exec::ConnStreamExec;
 use crate::proto;
-use crate::rt::bounds::Http2ServerConnExec;
 use crate::service::HttpService;
-use crate::{common::time::Time, rt::Timer};
 
 pin_project! {
-    /// A [`Future`](core::future::Future) representing an HTTP/2 connection, bound to a
-    /// [`Service`](crate::service::Service), returned from
-    /// [`Builder::serve_connection`](struct.Builder.html#method.serve_connection).
+    /// A future binding an HTTP/2 connection with a Service.
     ///
-    /// To drive HTTP on this connection this future **must be polled**, typically with
-    /// `.await`. If it isn't polled, no progress will be made on this connection.
+    /// Polling this future will drive HTTP forward.
     #[must_use = "futures do nothing unless polled"]
     pub struct Connection<T, S, E>
     where
@@ -35,13 +30,9 @@ pin_project! {
 }
 
 /// A configuration builder for HTTP/2 server connections.
-///
-/// **Note**: The default values of options are *not considered stable*. They
-/// are subject to change at any time.
 #[derive(Clone, Debug)]
 pub struct Builder<E> {
     exec: E,
-    timer: Time,
     h2_builder: proto::h2::server::Config,
 }
 
@@ -60,10 +51,10 @@ impl<I, B, S, E> Connection<I, S, E>
 where
     S: HttpService<IncomingBody, ResBody = B>,
     S::Error: Into<Box<dyn StdError + Send + Sync>>,
-    I: Read + Write + Unpin,
+    I: AsyncRead + AsyncWrite + Unpin,
     B: Body + 'static,
     B::Error: Into<Box<dyn StdError + Send + Sync>>,
-    E: Http2ServerConnExec<S::Future, B>,
+    E: ConnStreamExec<S::Future, B>,
 {
     /// Start a graceful shutdown process for this connection.
     ///
@@ -84,10 +75,10 @@ impl<I, B, S, E> Future for Connection<I, S, E>
 where
     S: HttpService<IncomingBody, ResBody = B>,
     S::Error: Into<Box<dyn StdError + Send + Sync>>,
-    I: Read + Write + Unpin,
+    I: AsyncRead + AsyncWrite + Unpin + 'static,
     B: Body + 'static,
     B::Error: Into<Box<dyn StdError + Send + Sync>>,
-    E: Http2ServerConnExec<S::Future, B>,
+    E: ConnStreamExec<S::Future, B>,
 {
     type Output = crate::Result<()>;
 
@@ -108,42 +99,12 @@ where
 impl<E> Builder<E> {
     /// Create a new connection builder.
     ///
-    /// This starts with the default options, and an executor which is a type
-    /// that implements [`Http2ServerConnExec`] trait.
-    ///
-    /// [`Http2ServerConnExec`]: crate::rt::bounds::Http2ServerConnExec
+    /// This starts with the default options, and an executor.
     pub fn new(exec: E) -> Self {
         Self {
-            exec,
-            timer: Time::Empty,
+            exec: exec,
             h2_builder: Default::default(),
         }
-    }
-
-    /// Configures the maximum number of pending reset streams allowed before a GOAWAY will be sent.
-    ///
-    /// This will default to the default value set by the [`h2` crate](https://crates.io/crates/h2).
-    /// As of v0.4.0, it is 20.
-    ///
-    /// See <https://github.com/hyperium/hyper/issues/2877> for more information.
-    pub fn max_pending_accept_reset_streams(&mut self, max: impl Into<Option<usize>>) -> &mut Self {
-        self.h2_builder.max_pending_accept_reset_streams = max.into();
-        self
-    }
-
-    /// Configures the maximum number of local reset streams allowed before a GOAWAY will be sent.
-    ///
-    /// If not set, hyper will use a default, currently of 1024.
-    ///
-    /// If `None` is supplied, hyper will not apply any limit.
-    /// This is not advised, as it can potentially expose servers to DOS vulnerabilities.
-    ///
-    /// See <https://rustsec.org/advisories/RUSTSEC-2024-0003.html> for more information.
-    #[cfg(feature = "http2")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "http2")))]
-    pub fn max_local_error_reset_streams(&mut self, max: impl Into<Option<usize>>) -> &mut Self {
-        self.h2_builder.max_local_error_reset_streams = max.into();
-        self
     }
 
     /// Sets the [`SETTINGS_INITIAL_WINDOW_SIZE`][spec] option for HTTP2
@@ -153,7 +114,7 @@ impl<E> Builder<E> {
     ///
     /// If not set, hyper will use a default.
     ///
-    /// [spec]: https://httpwg.org/specs/rfc9113.html#SETTINGS_INITIAL_WINDOW_SIZE
+    /// [spec]: https://http2.github.io/http2-spec/#SETTINGS_INITIAL_WINDOW_SIZE
     pub fn initial_stream_window_size(&mut self, sz: impl Into<Option<u32>>) -> &mut Self {
         if let Some(sz) = sz.into() {
             self.h2_builder.adaptive_window = false;
@@ -206,14 +167,22 @@ impl<E> Builder<E> {
     /// Sets the [`SETTINGS_MAX_CONCURRENT_STREAMS`][spec] option for HTTP2
     /// connections.
     ///
-    /// Default is 200, but not part of the stability of hyper. It could change
-    /// in a future release. You are encouraged to set your own limit.
+    /// Default is no limit (`std::u32::MAX`). Passing `None` will do nothing.
     ///
-    /// Passing `None` will remove any limit.
-    ///
-    /// [spec]: https://httpwg.org/specs/rfc9113.html#SETTINGS_MAX_CONCURRENT_STREAMS
+    /// [spec]: https://http2.github.io/http2-spec/#SETTINGS_MAX_CONCURRENT_STREAMS
     pub fn max_concurrent_streams(&mut self, max: impl Into<Option<u32>>) -> &mut Self {
         self.h2_builder.max_concurrent_streams = max.into();
+        self
+    }
+
+    /// Configures the maximum number of pending reset streams allowed before a GOAWAY will be sent.
+    ///
+    /// This will default to the default value set by the [`h2` crate](https://crates.io/crates/h2).
+    /// As of v0.3.17, it is 20.
+    ///
+    /// See <https://github.com/hyperium/hyper/issues/2877> for more information.
+    pub fn max_pending_accept_reset_streams(&mut self, max: impl Into<Option<usize>>) -> &mut Self {
+        self.h2_builder.max_pending_accept_reset_streams = max.into();
         self
     }
 
@@ -223,6 +192,9 @@ impl<E> Builder<E> {
     /// Pass `None` to disable HTTP2 keep-alive.
     ///
     /// Default is currently disabled.
+    ///
+    /// # Cargo Feature
+    ///
     pub fn keep_alive_interval(&mut self, interval: impl Into<Option<Duration>>) -> &mut Self {
         self.h2_builder.keep_alive_interval = interval.into();
         self
@@ -234,6 +206,9 @@ impl<E> Builder<E> {
     /// be closed. Does nothing if `keep_alive_interval` is disabled.
     ///
     /// Default is 20 seconds.
+    ///
+    /// # Cargo Feature
+    ///
     pub fn keep_alive_timeout(&mut self, timeout: Duration) -> &mut Self {
         self.h2_builder.keep_alive_timeout = timeout;
         self
@@ -247,7 +222,7 @@ impl<E> Builder<E> {
     ///
     /// The value must be no larger than `u32::MAX`.
     pub fn max_send_buf_size(&mut self, max: usize) -> &mut Self {
-        assert!(max <= u32::MAX as usize);
+        assert!(max <= std::u32::MAX as usize);
         self.h2_builder.max_send_buffer_size = max;
         self
     }
@@ -262,30 +237,20 @@ impl<E> Builder<E> {
 
     /// Sets the max size of received header frames.
     ///
-    /// Default is currently 16KB, but can change.
+    /// Default is currently ~16MB, but may change.
     pub fn max_header_list_size(&mut self, max: u32) -> &mut Self {
         self.h2_builder.max_header_list_size = max;
         self
     }
 
-    /// Set the timer used in background tasks.
-    pub fn timer<M>(&mut self, timer: M) -> &mut Self
-    where
-        M: Timer + Send + Sync + 'static,
-    {
-        self.timer = Time::Timer(Arc::new(timer));
-        self
-    }
-
-    /// Set whether the `date` header should be included in HTTP responses.
-    ///
-    /// Note that including the `date` header is recommended by RFC 7231.
-    ///
-    /// Default is true.
-    pub fn auto_date_header(&mut self, enabled: bool) -> &mut Self {
-        self.h2_builder.date_header = enabled;
-        self
-    }
+    // /// Set the timer used in background tasks.
+    // pub fn timer<M>(&mut self, timer: M) -> &mut Self
+    // where
+    //     M: Timer + Send + Sync + 'static,
+    // {
+    //     self.timer = Time::Timer(Arc::new(timer));
+    //     self
+    // }
 
     /// Bind a connection together with a [`Service`](crate::service::Service).
     ///
@@ -297,16 +262,10 @@ impl<E> Builder<E> {
         S::Error: Into<Box<dyn StdError + Send + Sync>>,
         Bd: Body + 'static,
         Bd::Error: Into<Box<dyn StdError + Send + Sync>>,
-        I: Read + Write + Unpin,
-        E: Http2ServerConnExec<S::Future, Bd>,
+        I: AsyncRead + AsyncWrite + Unpin,
+        E: ConnStreamExec<S::Future, Bd>,
     {
-        let proto = proto::h2::Server::new(
-            io,
-            service,
-            &self.h2_builder,
-            self.exec.clone(),
-            self.timer.clone(),
-        );
+        let proto = proto::h2::Server::new(io, service, &self.h2_builder, self.exec.clone());
         Connection { conn: proto }
     }
 }

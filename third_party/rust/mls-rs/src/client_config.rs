@@ -7,7 +7,6 @@ use crate::{
     group::{mls_rules::MlsRules, proposal::ProposalType},
     identity::CredentialType,
     protocol_version::ProtocolVersion,
-    time::MlsTime,
     tree_kem::{leaf_node::ConfigProperties, Capabilities, Lifetime},
     ExtensionList,
 };
@@ -38,7 +37,7 @@ pub trait ClientConfig: Send + Sync + Clone {
     fn identity_provider(&self) -> Self::IdentityProvider;
     fn crypto_provider(&self) -> Self::CryptoProvider;
 
-    fn lifetime(&self, timestamp: Option<MlsTime>) -> Lifetime;
+    fn lifetime(&self) -> Lifetime;
 
     fn capabilities(&self) -> Capabilities {
         Capabilities {

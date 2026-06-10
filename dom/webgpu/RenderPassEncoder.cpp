@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -165,19 +166,10 @@ ffi::WGPURecordedRenderPass* BeginRenderPass(
     desc.depth_stencil_attachment = &dsDesc;
   }
 
-  AutoTArray<ffi::WGPUFfiOption_FfiRenderPassColorAttachment,
-             WGPUMAX_COLOR_ATTACHMENTS>
+  AutoTArray<ffi::WGPUFfiRenderPassColorAttachment, WGPUMAX_COLOR_ATTACHMENTS>
       colorDescs;
 
-  for (const auto& caOrNull : aDesc.mColorAttachments) {
-    ffi::WGPUFfiOption_FfiRenderPassColorAttachment opt = {};
-    if (caOrNull.IsNull()) {
-      opt.tag = ffi::
-          WGPUFfiOption_FfiRenderPassColorAttachment_None_FfiRenderPassColorAttachment;
-      colorDescs.AppendElement(opt);
-      continue;
-    }
-    const auto& ca = caOrNull.Value();
+  for (const auto& ca : aDesc.mColorAttachments) {
     ffi::WGPUFfiRenderPassColorAttachment cd = {};
     // NOTE: We're assuming callers reified this to be a view.
     cd.view = ca.mView.GetAsGPUTextureView()->GetId();
@@ -208,10 +200,7 @@ ffi::WGPURecordedRenderPass* BeginRenderPass(
         }
         break;
     }
-    opt.tag = ffi::
-        WGPUFfiOption_FfiRenderPassColorAttachment_Some_FfiRenderPassColorAttachment;
-    opt.some = cd;
-    colorDescs.AppendElement(opt);
+    colorDescs.AppendElement(cd);
   }
 
   desc.color_attachments = {colorDescs.Elements(), colorDescs.Length()};
@@ -244,19 +233,8 @@ RenderPassEncoder::RenderPassEncoder(CommandEncoder* const aParent, RawId aId,
   // NOTE: We depend on callers ensuring that texture-or-view fields are reified
   // to views.
 
-  for (const auto& atOrNull : aDesc.mColorAttachments) {
-    if (!atOrNull.IsNull()) {
-      const dom::GPURenderPassColorAttachment& colorAttachment =
-          atOrNull.Value();
-
-      mUsedTextureViews.AppendElement(
-          colorAttachment.mView.GetAsGPUTextureView());
-
-      if (colorAttachment.mResolveTarget.WasPassed()) {
-        mUsedTextureViews.AppendElement(
-            colorAttachment.mResolveTarget.Value().GetAsGPUTextureView());
-      }
-    }
+  for (const auto& at : aDesc.mColorAttachments) {
+    mUsedTextureViews.AppendElement(at.mView.GetAsGPUTextureView());
   }
   if (aDesc.mDepthStencilAttachment.WasPassed()) {
     mUsedTextureViews.AppendElement(
@@ -333,21 +311,17 @@ void RenderPassEncoder::SetIndexBuffer(const Buffer& aBuffer,
                                                   iformat, aOffset, sizeRef);
 }
 
-void RenderPassEncoder::SetVertexBuffer(uint32_t aSlot,
-                                        const Buffer* const aBuffer,
+void RenderPassEncoder::SetVertexBuffer(uint32_t aSlot, const Buffer& aBuffer,
                                         uint64_t aOffset,
                                         const dom::Optional<uint64_t>& aSize) {
   if (!mValid) {
     return;
   }
-  RawId bufferId = 0;
-  if (aBuffer) {
-    mUsedBuffers.AppendElement(aBuffer);
-    bufferId = aBuffer->GetId();
-  }
+  mUsedBuffers.AppendElement(&aBuffer);
+
   const uint64_t* sizeRef = aSize.WasPassed() ? &aSize.Value() : nullptr;
-  ffi::wgpu_recorded_render_pass_set_vertex_buffer(mPass.get(), aSlot, bufferId,
-                                                   aOffset, sizeRef);
+  ffi::wgpu_recorded_render_pass_set_vertex_buffer(
+      mPass.get(), aSlot, aBuffer.GetId(), aOffset, sizeRef);
 }
 
 void RenderPassEncoder::Draw(uint32_t aVertexCount, uint32_t aInstanceCount,

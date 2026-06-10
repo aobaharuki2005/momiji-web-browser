@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -71,9 +73,7 @@ void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
   nsCString keySystem = NS_ConvertUTF16toUTF8(mKeySystem);
   RefPtr<Runnable> task(NS_NewRunnableFunction(
       "ChromiumCDMProxy::Init",
-      [self, nodeIdParts = std::move(nodeIdParts), helper = std::move(helper),
-       aPromiseId, thread = std::move(thread),
-       keySystem = std::move(keySystem)]() -> void {
+      [self, nodeIdParts, helper, aPromiseId, thread, keySystem]() -> void {
         MOZ_ASSERT(self->IsOnOwnerThread());
 
         RefPtr<gmp::GeckoMediaPluginService> service =
@@ -194,29 +194,28 @@ bool ChromiumCDMProxy::IsOnOwnerThread() {
 }
 #endif
 
-static cdm::SessionType ToCDMSessionType(
-    dom::MediaKeySessionType aSessionType) {
+static uint32_t ToCDMSessionType(dom::MediaKeySessionType aSessionType) {
   switch (aSessionType) {
     case dom::MediaKeySessionType::Temporary:
-      return cdm::SessionType::kTemporary;
+      return static_cast<uint32_t>(cdm::kTemporary);
     case dom::MediaKeySessionType::Persistent_license:
-      return cdm::SessionType::kPersistentLicense;
+      return static_cast<uint32_t>(cdm::kPersistentLicense);
     default:
-      return cdm::SessionType::kTemporary;
+      return static_cast<uint32_t>(cdm::kTemporary);
   };
 };
 
-static cdm::InitDataType ToCDMInitDataType(const nsAString& aInitDataType) {
+static uint32_t ToCDMInitDataType(const nsAString& aInitDataType) {
   if (aInitDataType.EqualsLiteral("cenc")) {
-    return cdm::InitDataType::kCenc;
+    return static_cast<uint32_t>(cdm::kCenc);
   }
   if (aInitDataType.EqualsLiteral("webm")) {
-    return cdm::InitDataType::kWebM;
+    return static_cast<uint32_t>(cdm::kWebM);
   }
   if (aInitDataType.EqualsLiteral("keyids")) {
-    return cdm::InitDataType::kKeyIds;
+    return static_cast<uint32_t>(cdm::kKeyIds);
   }
-  return cdm::InitDataType::kCenc;
+  return static_cast<uint32_t>(cdm::kCenc);
 }
 
 void ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
@@ -232,8 +231,8 @@ void ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
           this, aCreateSessionToken, (int)aSessionType, aPromiseId,
           aInitData.Length());
 
-  cdm::SessionType sessionType = ToCDMSessionType(aSessionType);
-  cdm::InitDataType initDataType = ToCDMInitDataType(aInitDataType);
+  uint32_t sessionType = ToCDMSessionType(aSessionType);
+  uint32_t initDataType = ToCDMInitDataType(aInitDataType);
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   if (!cdm) {
@@ -241,12 +240,11 @@ void ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
     return;
   }
 
-  mGMPThread->Dispatch(
-      NewRunnableMethod<uint32_t, cdm::SessionType, cdm::InitDataType, uint32_t,
-                        nsTArray<uint8_t>>(
-          "gmp::ChromiumCDMParent::CreateSession", cdm,
-          &gmp::ChromiumCDMParent::CreateSession, aCreateSessionToken,
-          sessionType, initDataType, aPromiseId, std::move(aInitData)));
+  mGMPThread->Dispatch(NewRunnableMethod<uint32_t, uint32_t, uint32_t, uint32_t,
+                                         nsTArray<uint8_t>>(
+      "gmp::ChromiumCDMParent::CreateSession", cdm,
+      &gmp::ChromiumCDMParent::CreateSession, aCreateSessionToken, sessionType,
+      initDataType, aPromiseId, std::move(aInitData)));
 }
 
 void ChromiumCDMProxy::LoadSession(PromiseId aPromiseId,
@@ -260,7 +258,7 @@ void ChromiumCDMProxy::LoadSession(PromiseId aPromiseId,
     return;
   }
 
-  mGMPThread->Dispatch(NewRunnableMethod<uint32_t, cdm::SessionType, nsString>(
+  mGMPThread->Dispatch(NewRunnableMethod<uint32_t, uint32_t, nsString>(
       "gmp::ChromiumCDMParent::LoadSession", cdm,
       &gmp::ChromiumCDMParent::LoadSession, aPromiseId,
       ToCDMSessionType(aSessionType), aSessionId));

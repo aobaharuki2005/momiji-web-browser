@@ -7,7 +7,7 @@
 /**
  * Test the AsyncContentLoaded event.
  */
-addAccessibleTask(``, async function testAsyncContentLoaded(browser) {
+addUiaTask(``, async function testAsyncContentLoaded(browser) {
   info("Loading new document");
   await setUpWaitForUiaEvent("AsyncContentLoaded", "uiaTestDoc");
   const encoded = encodeURIComponent('<body id="uiaTestDoc">test');

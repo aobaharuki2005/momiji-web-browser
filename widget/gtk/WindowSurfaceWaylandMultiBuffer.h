@@ -1,10 +1,11 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_MULTI_BUFFER_H
-#define MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_MULTI_BUFFER_H
+#ifndef _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_MULTI_BUFFER_H
+#define _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_MULTI_BUFFER_H
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
@@ -42,24 +43,23 @@ class WindowSurfaceWaylandMB : public WindowSurface {
   void Commit(const LayoutDeviceIntRegion& aInvalidRegion) final;
 
  private:
-  void Commit(const WaylandSurfaceLock& aWaylandSurfaceLock,
+  void Commit(const MutexAutoLock& aProofOfLock,
               const LayoutDeviceIntRegion& aInvalidRegion);
   RefPtr<WaylandBufferSHM> ObtainBufferFromPool(
-      const WaylandSurfaceLock& aWaylandSurfaceLock,
-      const LayoutDeviceIntSize& aSize);
-  void ReturnBufferToPool(const WaylandSurfaceLock& aWaylandSurfaceLock,
+      const MutexAutoLock& aProofOfLock, const LayoutDeviceIntSize& aSize);
+  void ReturnBufferToPool(const MutexAutoLock& aProofOfLock,
                           const RefPtr<WaylandBufferSHM>& aBuffer);
-  void EnforcePoolSizeLimit(const WaylandSurfaceLock& aWaylandSurfaceLock);
-  void CollectPendingSurfaces(const WaylandSurfaceLock& aWaylandSurfaceLock);
-  void HandlePartialUpdate(const WaylandSurfaceLock& aWaylandSurfaceLock,
+  void EnforcePoolSizeLimit(const MutexAutoLock& aProofOfLock);
+  void CollectPendingSurfaces(const MutexAutoLock& aProofOfLock);
+  void HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
                            const LayoutDeviceIntRegion& aInvalidRegion);
-  void IncrementBufferAge(const WaylandSurfaceLock& aWaylandSurfaceLock);
+  void IncrementBufferAge(const MutexAutoLock& aProofOfLock);
   // Return true if window size was updated.
   bool MaybeUpdateWindowSize();
 
-  RefPtr<nsWindow> mWindow;
-  RefPtr<WaylandSurface> mWaylandSurface;
+  mozilla::Mutex mSurfaceLock MOZ_UNANNOTATED;
 
+  RefPtr<nsWindow> mWindow;
   // WindowSurfaceWaylandMB is owned by GtkCompositorWidget so we can't
   // reference it.
   GtkCompositorWidget* mCompositorWidget;
@@ -77,4 +77,4 @@ class WindowSurfaceWaylandMB : public WindowSurface {
 
 }  // namespace mozilla::widget
 
-#endif  // MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_MULTI_BUFFER_H
+#endif  // _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_MULTI_BUFFER_H

@@ -3,9 +3,6 @@
 const { ASRouter } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/ASRouter.sys.mjs"
 );
-const { AboutWelcomeDefaults } = ChromeUtils.importESModule(
-  "resource:///modules/aboutwelcome/AboutWelcomeDefaults.sys.mjs"
-);
 const { AttributionCode } = ChromeUtils.importESModule(
   "moz-src:///browser/components/attribution/AttributionCode.sys.mjs"
 );
@@ -32,10 +29,6 @@ const TEST_ADDON_INFO = [
 
 const TEST_UA_ATTRIBUTION_DATA = {
   ua: "chrome",
-};
-
-const TEST_SMART_WINDOW_ATTRIBUTION_DATA = {
-  campaign: "smart_window",
 };
 
 const TEST_PROTON_CONTENT = [
@@ -106,9 +99,9 @@ async function test_screen_content(
   expectedSelectors = [],
   unexpectedSelectors = []
 ) {
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     browser,
-    [{ expectedSelectors, experiment, unexpectedSelectors }],
+    { expectedSelectors, experiment, unexpectedSelectors },
     async ({
       expectedSelectors: expected,
       experiment: experimentName,
@@ -129,12 +122,6 @@ async function test_screen_content(
     }
   );
 }
-
-add_setup(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.backup.restore.enabled", false]],
-  });
-});
 
 add_task(async function test_rtamo_attribution() {
   let browser = await openRTAMOWithAttribution();
@@ -182,9 +169,9 @@ async function openMultiStageWithUserAgentAttribution() {
 }
 
 async function onButtonClick(browser, elementId) {
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     browser,
-    [{ elementId }],
+    { elementId },
     async ({ elementId: buttonId }) => {
       await ContentTaskUtils.waitForCondition(
         () => content.document.querySelector(buttonId),
@@ -222,39 +209,4 @@ add_task(async function test_ua_attribution() {
     // Unexpected selectors:
     ["main.AW_STEP1"]
   );
-});
-
-add_task(async function test_smart_window_attribution() {
-  const sandbox = sinon.createSandbox();
-
-  await AttributionCode.deleteFileAsync();
-  await ASRouter.forceAttribution(TEST_SMART_WINDOW_ATTRIBUTION_DATA);
-
-  AttributionCode._clearCache();
-  const data = await AttributionCode.getAttrDataAsync();
-
-  Assert.equal(
-    data.campaign,
-    "smart_window",
-    "Attribution campaign should be set"
-  );
-
-  const attributionContent = await AboutWelcomeDefaults.getAttributionContent();
-
-  Assert.equal(
-    attributionContent.campaign,
-    "smart_window",
-    "Smart Window campaign was returned"
-  );
-  Assert.equal(
-    Services.prefs.getBoolPref("browser.smartwindow.enabled", false),
-    true,
-    "Smart Window enabled pref is set to true"
-  );
-
-  registerCleanupFunction(async () => {
-    await ASRouter.forceAttribution("");
-    Services.prefs.clearUserPref("browser.smartwindow.enabled");
-    sandbox.restore();
-  });
 });

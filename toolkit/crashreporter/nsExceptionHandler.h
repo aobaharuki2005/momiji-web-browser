@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,11 +9,12 @@
 // from this header you must update both implementations otherwise you'll break
 // builds that disable the crash reporter.
 
-#ifndef nsExceptionHandler_h_
-#define nsExceptionHandler_h_
+#ifndef nsExceptionHandler_h__
+#define nsExceptionHandler_h__
 
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtrExtensions.h"  // For UniqueFileHandle
 
 #include "CrashAnnotations.h"
 
@@ -35,10 +37,6 @@ struct DirectAuxvDumpInfo;
 
 class nsIFile;
 
-namespace mozilla::geckoargs {
-struct ChildProcessArgs;
-}
-
 namespace CrashReporter {
 
 using mozilla::Maybe;
@@ -46,16 +44,19 @@ using mozilla::Nothing;
 
 #if defined(XP_WIN)
 typedef HANDLE ProcessHandle;
+typedef DWORD ProcessId;
 typedef DWORD ThreadId;
 typedef HANDLE FileHandle;
 const FileHandle kInvalidFileHandle = INVALID_HANDLE_VALUE;
 #elif defined(XP_MACOSX)
 typedef task_t ProcessHandle;
+typedef pid_t ProcessId;
 typedef mach_port_t ThreadId;
 typedef int FileHandle;
 const FileHandle kInvalidFileHandle = -1;
 #else
 typedef int ProcessHandle;
+typedef pid_t ProcessId;
 typedef int ThreadId;
 typedef int FileHandle;
 const FileHandle kInvalidFileHandle = -1;
@@ -79,8 +80,6 @@ static inline bool IsDummy() {
 #endif
 }
 
-nsresult OOPInit(nsIFile* aXREDirectory);
-void OOPDeinit();
 nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force = false);
 nsresult UnsetExceptionHandler();
 
@@ -166,7 +165,7 @@ void ClearInactiveStateStart();
 void SetInactiveStateStart();
 
 nsresult SetRestartArgs(int argc, char** argv);
-nsresult SetupExtraData(nsIFile* aAppDataDirectory, nsIFile* aXreDirectory);
+nsresult SetupExtraData(nsIFile* aAppDataDirectory, const nsACString& aBuildID);
 // Registers an additional memory region to be included in the minidump
 nsresult RegisterAppMemory(void* ptr, size_t length);
 nsresult UnregisterAppMemory(void* ptr);
@@ -208,25 +207,25 @@ nsresult SetSubmitReports(bool aSubmitReport);
 
 // Out-of-process crash reporter API.
 
-// Return true if a dump was found for |aChildID|, and return the
+// Return true if a dump was found for |childPid|, and return the
 // path in |dump|.  The caller owns the last reference to |dump| if it
 // is non-nullptr. The annotations for the crash will be stored in
 // |aAnnotations|.
-bool TakeMinidumpForChild(GeckoChildID aChildID, nsIFile** dump,
+bool TakeMinidumpForChild(ProcessId childPid, nsIFile** dump,
                           AnnotationTable& aAnnotations);
 
 /**
- * If a dump was found for |aChildID| then write a minimal .extra file to
+ * If a dump was found for |childPid| then write a minimal .extra file to
  * complete it and remove it from the list of pending crash dumps. It's
  * required to call this method after a non-main process crash if the crash
  * report could not be finalized via the CrashReporterHost (for example because
  * it wasn't instanced yet).
  *
- * @param aChildID The id of the crashed child process
+ * @param aChildPid The pid of the crashed child process
  * @param aType The type of the crashed process
  * @param aDumpId A string that will be filled with the dump ID
  */
-[[nodiscard]] bool FinalizeOrphanedMinidump(GeckoChildID aChildID,
+[[nodiscard]] bool FinalizeOrphanedMinidump(ProcessId aChildPid,
                                             GeckoProcessType aType,
                                             nsString* aDumpId = nullptr);
 
@@ -260,20 +259,24 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
                             AnnotationTable& aTargetAnnotations,
                             nsIFile** aTargetDumpOut);
 
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_IOS)
+using CrashPipeType = const char*;
+#else
+using CrashPipeType = mozilla::UniqueFileHandle;
+#endif
+
 // Parent-side API for children
 #if defined(MOZ_WIDGET_ANDROID)
 void SetCrashHelperPipes(FileHandle breakpadFd, FileHandle crashHelperFd);
 #endif
-bool RegisterChildIPCChannel(mozilla::geckoargs::ChildProcessArgs& aArgs,
-                             GeckoChildID aID);
-#if defined(XP_WIN)
-bool ChildProcessProxyRendezvous(GeckoChildID aID, DWORD aPid, HANDLE aHandle);
-#endif  // defined(XP_WIN)
+CrashPipeType GetChildNotificationPipe();
+mozilla::UniqueFileHandle RegisterChildIPCChannel();
 
 // Child-side API
-MOZ_EXPORT bool SetRemoteExceptionHandler(int& aArgc, char** aArgv);
+MOZ_EXPORT bool SetRemoteExceptionHandler(
+    CrashPipeType aCrashPipe, mozilla::UniqueFileHandle aCrashHelperPipe);
 bool UnsetRemoteExceptionHandler(bool wasSet = true);
 
 }  // namespace CrashReporter
 
-#endif /* nsExceptionHandler_h_ */
+#endif /* nsExceptionHandler_h__ */

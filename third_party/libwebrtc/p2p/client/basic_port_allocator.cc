@@ -46,10 +46,10 @@
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/net_helper.h"
-#include "rtc_base/net_helpers.h"
 #include "rtc_base/network.h"
 #include "rtc_base/network/received_packet.h"
 #include "rtc_base/network_constants.h"
+#include "rtc_base/platform_thread_types.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/thread.h"
@@ -269,7 +269,6 @@ BasicPortAllocatorSession::BasicPortAllocatorSession(
   TRACE_EVENT0("webrtc",
                "BasicPortAllocatorSession::BasicPortAllocatorSession");
   allocator_->network_manager()->SubscribeNetworksChanged(
-      this,
       SafeInvocable(network_safety_.flag(), [this] { OnNetworksChanged(); }));
   allocator_->network_manager()->StartUpdating();
 }
@@ -279,7 +278,6 @@ BasicPortAllocatorSession::~BasicPortAllocatorSession() {
                "BasicPortAllocatorSession::~BasicPortAllocatorSession");
   RTC_DCHECK_RUN_ON(network_thread_);
   allocator_->network_manager()->StopUpdating();
-  allocator_->network_manager()->UnsubscribeNetworksChanged(this);
 
   for (uint32_t i = 0; i < sequences_.size(); ++i) {
     // AllocationSequence should clear it's map entry for turn ports before
@@ -340,7 +338,7 @@ void BasicPortAllocatorSession::SetCandidateFilter(uint32_t filter) {
           found_signalable_candidate = true;
           port_data.set_state(PortData::STATE_INPROGRESS);
         }
-        port->NotifyCandidateReady(port, c);
+        port->SignalCandidateReady(port, c);
       }
 
       if (CandidatePairable(c, port)) {
@@ -467,7 +465,7 @@ void BasicPortAllocatorSession::Regather(
   }
 
   if (allocation_started_ && network_manager_started_ && !IsStopped()) {
-    NotifyIceRegathering(this, reason);
+    SignalIceRegathering(this, reason);
 
     DoAllocate();
   }
@@ -883,7 +881,7 @@ void BasicPortAllocatorSession::OnNetworksChanged() {
   if (allocation_started_ && !IsStopped()) {
     if (network_manager_started_) {
       // If the network manager has started, it must be regathering.
-      NotifyIceRegathering(this, IceRegatheringReason::NETWORK_CHANGE);
+      SignalIceRegathering(this, IceRegatheringReason::NETWORK_CHANGE);
     }
 
     DoAllocate();
@@ -921,18 +919,16 @@ void BasicPortAllocatorSession::AddAllocatedPort(Port* port,
   ports_.emplace_back(port, seq);
 
   port->SubscribeCandidateReadyCallback(
-      this,
       [this](Port* port, const Candidate& c) { OnCandidateReady(port, c); });
   port->SubscribeCandidateError(
-      this, [this](Port* port, const IceCandidateErrorEvent& event) {
+      [this](Port* port, const IceCandidateErrorEvent& event) {
         OnCandidateError(port, event);
       });
-  port->SubscribePortComplete(this,
-                              [this](Port* port) { OnPortComplete(port); });
+  port->SubscribePortComplete([this](Port* port) { OnPortComplete(port); });
   port->SubscribePortDestroyed(
-      this, [this](PortInterface* port) { OnPortDestroyed(port); });
+      [this](PortInterface* port) { OnPortDestroyed(port); });
 
-  port->SubscribePortError(this, [this](Port* port) { OnPortError(port); });
+  port->SubscribePortError([this](Port* port) { OnPortError(port); });
 
   RTC_LOG(LS_INFO) << port->ToString() << ": Added port to allocator";
 
@@ -985,7 +981,7 @@ void BasicPortAllocatorSession::OnCandidateReady(Port* port,
     // If the current port is not pruned yet, SignalPortReady.
     if (!data->pruned()) {
       RTC_LOG(LS_INFO) << port->ToString() << ": Port ready.";
-      NotifyPortReady(this, port);
+      SignalPortReady(this, port);
       port->KeepAliveUntilPruned();
     }
   }
@@ -993,7 +989,7 @@ void BasicPortAllocatorSession::OnCandidateReady(Port* port,
   if (data->ready() && CheckCandidateFilter(c)) {
     std::vector<Candidate> candidates;
     candidates.push_back(allocator_->SanitizeCandidate(c));
-    NotifyCandidatesReady(this, candidates);
+    SignalCandidatesReady(this, candidates);
   } else {
     RTC_LOG(LS_INFO) << "Discarding candidate because it doesn't match filter.";
   }
@@ -1012,7 +1008,7 @@ void BasicPortAllocatorSession::OnCandidateError(
   if (event.address.empty()) {
     candidate_error_events_.push_back(event);
   } else {
-    NotifyCandidateError(this, event);
+    SignalCandidateError(this, event);
   }
 }
 
@@ -1174,10 +1170,10 @@ void BasicPortAllocatorSession::MaybeSignalCandidatesAllocationDone() {
                        << ":" << component() << ":" << generation();
     }
     for (const auto& event : candidate_error_events_) {
-      NotifyCandidateError(this, event);
+      SignalCandidateError(this, event);
     }
     candidate_error_events_.clear();
-    NotifyCandidatesAllocationDone(this);
+    SignalCandidatesAllocationDone(this);
   }
 }
 
@@ -1238,12 +1234,12 @@ void BasicPortAllocatorSession::PrunePortsAndRemoveCandidates(
     }
   }
   if (!pruned_ports.empty()) {
-    NotifyPortsPruned(this, pruned_ports);
+    SignalPortsPruned(this, pruned_ports);
   }
   if (!removed_candidates.empty()) {
     RTC_LOG(LS_INFO) << "Removed " << removed_candidates.size()
                      << " candidates";
-    NotifyCandidatesRemoved(this, removed_candidates);
+    SignalCandidatesRemoved(this, removed_candidates);
   }
 }
 
@@ -1484,7 +1480,7 @@ void AllocationSequence::CreateUDPPorts() {
     if (IsFlagSet(PORTALLOCATOR_ENABLE_SHARED_SOCKET)) {
       udp_port_ = port.get();
       port->SubscribePortDestroyed(
-          this, [this](PortInterface* port) { OnPortDestroyed(port); });
+          [this](PortInterface* port) { OnPortDestroyed(port); });
       // If STUN is not disabled, setting stun server address to port.
       if (!IsFlagSet(PORTALLOCATOR_DISABLE_STUN)) {
         if (config_ && !config_->StunServers().empty()) {
@@ -1645,7 +1641,7 @@ void AllocationSequence::CreateTurnPort(const RelayServerConfig& config,
       // Listen to the port destroyed signal, to allow AllocationSequence to
       // remove the entry from it's map.
       port->SubscribePortDestroyed(
-          this, [this](PortInterface* port) { OnPortDestroyed(port); });
+          [this](PortInterface* port) { OnPortDestroyed(port); });
     } else {
       port = session_->allocator()->relay_port_factory()->Create(
           args, session_->allocator()->min_port(),
@@ -1739,23 +1735,13 @@ ServerAddresses PortConfiguration::StunServers() {
   // Every UDP TURN server should also be used as a STUN server if
   // use_turn_server_as_stun_server is not disabled or the stun servers are
   // empty.
-
-  InsertStunServersForProtocol(PROTO_UDP);
-
-  // Every DTLS TURN server should also be used as a STUN server if
-  // use_turn_server_as_stun_server is not disabled or the stun servers are
-  // empty.
-  InsertStunServersForProtocol(PROTO_DTLS);
-  return stun_servers;
-}
-
-void PortConfiguration::InsertStunServersForProtocol(ProtocolType type) {
-  ServerAddresses turn_servers = GetRelayServerAddresses(type);
+  ServerAddresses turn_servers = GetRelayServerAddresses(PROTO_UDP);
   for (const SocketAddress& turn_server : turn_servers) {
     if (stun_servers.find(turn_server) == stun_servers.end()) {
       stun_servers.insert(turn_server);
     }
   }
+  return stun_servers;
 }
 
 void PortConfiguration::AddRelay(const RelayServerConfig& config) {

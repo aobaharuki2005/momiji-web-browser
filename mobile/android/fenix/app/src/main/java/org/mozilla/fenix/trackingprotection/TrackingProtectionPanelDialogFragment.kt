@@ -25,11 +25,11 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -105,7 +105,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             context = requireContext(),
             fragment = this,
             store = protectionsStore,
-            scope = viewLifecycleOwner.lifecycleScope,
+            ioScope = viewLifecycleOwner.lifecycleScope + Dispatchers.IO,
             cookieBannersStorage = requireComponents.core.cookieBannersStorage,
             navController = { findNavController() },
             openTrackingProtectionSettings = ::openTrackingProtectionSettings,
@@ -142,8 +142,8 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         super.onViewCreated(view, savedInstanceState)
         val store = requireComponents.core.store
 
-        observeUrlChange(store, mainDispatcher = Dispatchers.Main)
-        observeTrackersChange(store, mainDispatcher = Dispatchers.Main)
+        observeUrlChange(store)
+        observeTrackersChange(store)
         protectionsStore.observe(view) {
             viewLifecycleOwner.lifecycleScope.launch {
                 withStarted {
@@ -221,8 +221,8 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     }
 
     @VisibleForTesting
-    internal fun observeUrlChange(store: BrowserStore, mainDispatcher: CoroutineDispatcher) {
-        consumeFlow(store, mainDispatcher = mainDispatcher) { flow ->
+    internal fun observeUrlChange(store: BrowserStore) {
+        consumeFlow(store) { flow ->
             flow.mapNotNull { state ->
                 state.findTabOrCustomTab(provideCurrentTabId())
             }.distinctUntilChangedBy { tab -> tab.content.url }
@@ -236,8 +236,8 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     internal fun provideCurrentTabId(): String = args.sessionId
 
     @VisibleForTesting
-    internal fun observeTrackersChange(store: BrowserStore, mainDispatcher: CoroutineDispatcher) {
-        consumeFlow(store, mainDispatcher = mainDispatcher) { flow ->
+    internal fun observeTrackersChange(store: BrowserStore) {
+        consumeFlow(store) { flow ->
             flow.mapNotNull { state ->
                 state.findTabOrCustomTab(provideCurrentTabId())
             }.ifAnyChanged { tab ->

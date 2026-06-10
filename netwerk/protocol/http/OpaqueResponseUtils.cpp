@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -274,8 +276,7 @@ OpaqueResponseFilter::OnStartRequest(nsIRequest* aRequest) {
     responseHead->ClearHeaders();
   }
 
-  nsCOMPtr<nsIStreamListener> next = mNext;
-  next->OnStartRequest(aRequest);
+  mNext->OnStartRequest(aRequest);
   return NS_OK;
 }
 
@@ -295,8 +296,7 @@ NS_IMETHODIMP
 OpaqueResponseFilter::OnStopRequest(nsIRequest* aRequest,
                                     nsresult aStatusCode) {
   LOGORB();
-  nsCOMPtr<nsIStreamListener> next = mNext;
-  next->OnStopRequest(aRequest, aStatusCode);
+  mNext->OnStopRequest(aRequest, aStatusCode);
   return NS_OK;
 }
 
@@ -341,8 +341,7 @@ OpaqueResponseBlocker::OnStartRequest(nsIRequest* aRequest) {
   // before its FetchDriver::OnStartRequest is called, otherwise it'll
   // resolve the promise regardless the decision of JS validator.
   if (mState != State::Sniffing) {
-    nsCOMPtr<nsIStreamListener> next = mNext;
-    nsresult rv = next->OnStartRequest(aRequest);
+    nsresult rv = mNext->OnStartRequest(aRequest);
     return NS_SUCCEEDED(mStatus) ? rv : mStatus;
   }
 
@@ -371,8 +370,7 @@ OpaqueResponseBlocker::OnStopRequest(nsIRequest* aRequest,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIStreamListener> next = mNext;
-  return next->OnStopRequest(aRequest, statusForStop);
+  return mNext->OnStopRequest(aRequest, statusForStop);
 }
 
 NS_IMETHODIMP
@@ -382,8 +380,7 @@ OpaqueResponseBlocker::OnDataAvailable(nsIRequest* aRequest,
   LOGORB();
 
   if (mState == State::Allowed) {
-    nsCOMPtr<nsIStreamListener> next = mNext;
-    return next->OnDataAvailable(aRequest, aInputStream, aOffset, aCount);
+    return mNext->OnDataAvailable(aRequest, aInputStream, aOffset, aCount);
   }
 
   if (mState == State::Blocked) {
@@ -668,4 +665,3 @@ void OpaqueResponseBlocker::MaybeRunOnStopRequest(HttpBaseChannel* aChannel) {
 NS_IMPL_ISUPPORTS(OpaqueResponseBlocker, nsIStreamListener, nsIRequestObserver)
 
 }  // namespace mozilla::net
-#undef LOGORB

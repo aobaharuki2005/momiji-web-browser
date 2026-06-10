@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -43,7 +45,8 @@ static MOZ_THREAD_LOCAL(bool) sTLSIsMainThread;
 
 bool NS_IsMainThreadTLSInitialized() { return sTLSIsMainThread.initialized(); }
 
-class BackgroundEventTarget final : public nsIEventTarget {
+class BackgroundEventTarget final : public nsIEventTarget,
+                                    public TaskQueueTracker {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
@@ -52,21 +55,23 @@ class BackgroundEventTarget final : public nsIEventTarget {
 
   nsresult Init();
 
-  already_AddRefed<TaskQueue> CreateBackgroundTaskQueue(StaticString aName);
+  already_AddRefed<TaskQueue> CreateBackgroundTaskQueue(const char* aName);
 
-  void Shutdown();
+  void BeginShutdown(nsTArray<RefPtr<ShutdownPromise>>&);
+  void FinishShutdown();
 
  private:
   ~BackgroundEventTarget() = default;
 
-  RefPtr<nsThreadPool> mPool;
-  RefPtr<nsThreadPool> mIOPool;
+  nsCOMPtr<nsIThreadPool> mPool;
+  nsCOMPtr<nsIThreadPool> mIOPool;
 };
 
-NS_IMPL_ISUPPORTS(BackgroundEventTarget, nsIEventTarget)
+NS_IMPL_ISUPPORTS(BackgroundEventTarget, nsIEventTarget, TaskQueueTracker)
 
 nsresult BackgroundEventTarget::Init() {
-  RefPtr pool = MakeRefPtr<nsThreadPool>();
+  nsCOMPtr<nsIThreadPool> pool(new nsThreadPool());
+  NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
 
   nsresult rv = pool->SetName("BackgroundThreadPool"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -91,7 +96,8 @@ nsresult BackgroundEventTarget::Init() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize the background I/O event target.
-  RefPtr ioPool = MakeRefPtr<nsThreadPool>();
+  nsCOMPtr<nsIThreadPool> ioPool(new nsThreadPool());
+  NS_ENSURE_TRUE(ioPool, NS_ERROR_FAILURE);
 
   // The io pool spends a lot of its time blocking on io, so we want to offload
   // these jobs on a lower priority if available.
@@ -149,34 +155,21 @@ BackgroundEventTarget::IsOnCurrentThread(bool* aValue) {
 NS_IMETHODIMP
 BackgroundEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
                                 DispatchFlags aFlags) {
-  nsCOMPtr<nsIRunnable> runnable(std::move(aRunnable));
+  // Select the right destination and clear the special flag.
+  bool mayBlock = bool(aFlags & NS_DISPATCH_EVENT_MAY_BLOCK);
+  nsCOMPtr<nsIThreadPool>& pool = mayBlock ? mIOPool : mPool;
+  DispatchFlags flags = aFlags & ~NS_DISPATCH_EVENT_MAY_BLOCK;
 
-  // First, try to dispatch to `mIOPool` if we're a blocking event.
-  if (aFlags & NS_DISPATCH_EVENT_MAY_BLOCK) {
-    DispatchFlags ioPoolFlags = aFlags | ~NS_DISPATCH_EVENT_MAY_BLOCK;
-    if (ioPoolFlags & NS_DISPATCH_AT_END && !mIOPool->IsOnCurrentThread()) {
-      ioPoolFlags &= ~NS_DISPATCH_AT_END;
-    }
-
-    // First we'll try to dispatch to `mIOPool` if we're a blocking event. If
-    // this fails, we may be late enough in shutdown that `mIOPool` has been
-    // shut down, but `mPool` has not, so we'll fall through to dispatching
-    // there.
-    nsresult rv = mIOPool->Dispatch(do_AddRef(runnable),
-                                    ioPoolFlags | NS_DISPATCH_FALLIBLE);
-    if (NS_SUCCEEDED(rv)) {
-      return rv;
-    }
+  // If an event is dispatched with NS_DISPATCH_AT_END, it is intended to run
+  // on the same thread on the same pool it is dispatched from, but we might
+  // not want to run the event on the same pool depending on the above choice.
+  // If we dispatch an event with NS_DISPATCH_AT_END to the wrong pool, the
+  // pool may not process the event in a timely fashion or even deadlock.
+  if (flags & NS_DISPATCH_AT_END && !pool->IsOnCurrentThread()) {
+    flags &= ~NS_DISPATCH_AT_END;
   }
 
-  DispatchFlags poolFlags = aFlags & ~NS_DISPATCH_EVENT_MAY_BLOCK;
-  if (poolFlags & NS_DISPATCH_AT_END && !mPool->IsOnCurrentThread()) {
-    poolFlags &= ~NS_DISPATCH_AT_END;
-  }
-
-  // Either this event is not potentially blocking, or the dispatch to `mIOPool`
-  // failed - dispatch to `mPool`.
-  return mPool->Dispatch(runnable.forget(), poolFlags);
+  return pool->Dispatch(std::move(aRunnable), flags);
 }
 
 NS_IMETHODIMP
@@ -195,28 +188,32 @@ BackgroundEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aRunnable,
 
 NS_IMETHODIMP
 BackgroundEventTarget::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
-  return mPool->RegisterShutdownTask(aTask);
+  MOZ_ASSERT_UNREACHABLE(
+      "If we start to hand out direct access to"
+      "BackgroundEventTarget, we probably want to implement this.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 BackgroundEventTarget::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
-  return mPool->UnregisterShutdownTask(aTask);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsIEventTarget::FeatureFlags BackgroundEventTarget::GetFeatures() {
-  return SUPPORTS_SHUTDOWN_TASKS | SUPPORTS_SHUTDOWN_TASK_DISPATCH;
+void BackgroundEventTarget::BeginShutdown(
+    nsTArray<RefPtr<ShutdownPromise>>& promises) {
+  auto queues = GetAllTrackedTaskQueues();
+  for (auto& queue : queues) {
+    promises.AppendElement(queue->BeginShutdown());
+  }
 }
 
-void BackgroundEventTarget::Shutdown() {
-  // Note that our shutdown tasks are registered on `mPool` and will all
-  // execute there (as well as any events they may dispatch to ourselves,
-  // regardless of NS_DISPATCH_EVENT_MAY_BLOCK).
-  mIOPool->Shutdown();
+void BackgroundEventTarget::FinishShutdown() {
   mPool->Shutdown();
+  mIOPool->Shutdown();
 }
 
 already_AddRefed<TaskQueue> BackgroundEventTarget::CreateBackgroundTaskQueue(
-    StaticString aName) {
+    const char* aName) {
   return TaskQueue::Create(do_AddRef(this), aName).forget();
 }
 
@@ -324,16 +321,16 @@ nsresult nsThreadManager::Init() {
   TaskController::Initialize();
 
   // Initialize idle handling.
-  RefPtr idlePeriod = MakeRefPtr<MainThreadIdlePeriod>();
-  RefPtr idleManager = MakeRefPtr<IdleTaskManager>(idlePeriod.forget());
-  TaskController::Get()->SetIdleTaskManager(idleManager.forget());
+  nsCOMPtr<nsIIdlePeriod> idlePeriod = new MainThreadIdlePeriod();
+  TaskController::Get()->SetIdleTaskManager(
+      new IdleTaskManager(idlePeriod.forget()));
 
   // Create main thread queue that forwards events to TaskController and
   // construct main thread.
   UniquePtr<EventQueue> queue = MakeUnique<EventQueue>(true);
 
-  RefPtr synchronizedQueue =
-      MakeRefPtr<ThreadEventQueue>(std::move(queue), true);
+  RefPtr<ThreadEventQueue> synchronizedQueue =
+      new ThreadEventQueue(std::move(queue), true);
 
   mMainThread =
       new nsThread(WrapNotNull(synchronizedQueue), nsThread::MAIN_THREAD,
@@ -346,7 +343,6 @@ nsresult nsThreadManager::Init() {
   }
 #ifdef MOZ_MEMORY
   jemalloc_set_main_thread();
-  jemalloc_thread_local_arena(true);
 #endif
 
   // Init AbstractThread.
@@ -385,9 +381,26 @@ void nsThreadManager::ShutdownNonMainThreads() {
     backgroundEventTarget = mBackgroundEventTarget;
   }
 
-  // This will execute the shutdown tasks of still associated TaskQueues,
-  // if any.
-  backgroundEventTarget->Shutdown();
+  nsTArray<RefPtr<ShutdownPromise>> promises;
+  backgroundEventTarget->BeginShutdown(promises);
+
+  bool taskQueuesShutdown = false;
+  // It's fine to capture everything by reference in the Then handler since it
+  // runs before we exit the nested event loop, thanks to the SpinEventLoopUntil
+  // below.
+  ShutdownPromise::All(mMainThread, promises)->Then(mMainThread, __func__, [&] {
+    backgroundEventTarget->FinishShutdown();
+    taskQueuesShutdown = true;
+  });
+
+  // Wait for task queues to shutdown, so we don't shut down the underlying
+  // threads of the background event target in the block below, thereby
+  // preventing the task queues from emptying, preventing the shutdown promises
+  // from resolving, and prevent anything checking `taskQueuesShutdown` from
+  // working.
+  mozilla::SpinEventLoopUntil(
+      "nsThreadManager::Shutdown"_ns, [&]() { return taskQueuesShutdown; },
+      mMainThread);
 
   {
     // Prevent new nsThreads from being created, and collect a list of threads
@@ -503,8 +516,7 @@ void nsThreadManager::UnregisterCurrentThread(nsThread& aThread) {
 }
 
 // Not to be used for MainThread!
-RefPtr<nsThread> nsThreadManager::CreateCurrentThread(
-    SynchronizedEventQueue* aQueue) {
+nsThread* nsThreadManager::CreateCurrentThread(SynchronizedEventQueue* aQueue) {
   // Make sure we don't have an nsThread yet.
   MOZ_ASSERT(!PR_GetThreadPrivate(mCurThreadIndex));
 
@@ -518,10 +530,7 @@ RefPtr<nsThread> nsThreadManager::CreateCurrentThread(
     return nullptr;
   }
 
-  // Note: 'thread' now has an additional reference, held in TLS (because
-  // nsThreadManager::RegisterCurrentThread manually AddRef()s it). That keeps
-  // the object alive, even if our caller disregards our returned RefPtr.
-  return thread;
+  return thread.get();  // reference held in TLS
 }
 
 nsresult nsThreadManager::DispatchToBackgroundThread(
@@ -539,7 +548,7 @@ nsresult nsThreadManager::DispatchToBackgroundThread(
 }
 
 already_AddRefed<TaskQueue> nsThreadManager::CreateBackgroundTaskQueue(
-    mozilla::StaticString aName) {
+    const char* aName) {
   RefPtr<BackgroundEventTarget> backgroundTarget;
   {
     OffTheBooksMutexAutoLock lock(mMutex);
@@ -578,10 +587,7 @@ nsThread* nsThreadManager::GetCurrentThread() {
     return nullptr;
   }
 
-  // Note: 'thread' now has an additional reference, held in TLS (because
-  // nsThreadManager::RegisterCurrentThread manually AddRef()s it). That keeps
-  // the object alive, even though our local reference is going out of scope.
-  return thread.get();
+  return thread.get();  // reference held in TLS
 }
 
 bool nsThreadManager::IsNSThread() const {
@@ -608,9 +614,10 @@ nsThreadManager::NewNamedThread(
 
   TimeStamp startTime = TimeStamp::Now();
 
-  RefPtr queue = MakeRefPtr<ThreadEventQueue>(MakeUnique<EventQueue>());
-  RefPtr thr = MakeRefPtr<nsThread>(WrapNotNull(queue),
-                                    nsThread::NOT_MAIN_THREAD, aOptions);
+  RefPtr<ThreadEventQueue> queue =
+      new ThreadEventQueue(MakeUnique<EventQueue>());
+  RefPtr<nsThread> thr =
+      new nsThread(WrapNotNull(queue), nsThread::NOT_MAIN_THREAD, aOptions);
 
   // Note: nsThread::Init() will check AllowNewXPCOMThreads, and return an
   // error if we're too late in shutdown to create new XPCOM threads. If we
@@ -791,7 +798,8 @@ NS_IMETHODIMP
 nsThreadManager::DispatchToMainThreadWithMicroTask(nsIRunnable* aEvent,
                                                    uint32_t aPriority,
                                                    uint8_t aArgc) {
-  RefPtr runnable = MakeRefPtr<AutoMicroTaskWrapperRunnable>(aEvent);
+  RefPtr<AutoMicroTaskWrapperRunnable> runnable =
+      new AutoMicroTaskWrapperRunnable(aEvent);
 
   return DispatchToMainThread(runnable, aPriority, aArgc);
 }

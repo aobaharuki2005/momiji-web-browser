@@ -1,3 +1,5 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -23,6 +25,9 @@ include IPCStream;
 include ProtocolTypes;
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+[MoveOnly=data] using struct mozilla::SerializedStructuredCloneBuffer
+  from "mozilla/ipc/SerializedStructuredCloneBuffer.h";
 
 using struct mozilla::dom::LoadingSessionHistoryInfo
   from "mozilla/dom/SessionHistoryEntry.h";
@@ -60,8 +65,6 @@ using mozilla::dom::UserNavigationInvolvement from "mozilla/dom/UserNavigationIn
 using mozilla::net::ClassificationFlags from "nsIClassifiedChannel.h";
 using mozilla::dom::ForceMediaDocument from "mozilla/dom/LoadURIOptionsBinding.h";
 using mozilla::dom::NavigationHistoryBehavior from "mozilla/dom/NavigationBinding.h";
-[RefCounted] using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
-[RefCounted] using class nsStructuredCloneContainer from "nsStructuredCloneContainer.h";
 
 namespace mozilla {
 namespace dom {
@@ -74,10 +77,40 @@ struct MessagePortIdentifier
   bool neutered;
 };
 
-struct NavigationEntriesTruncation
+/**
+ * Cross-process representation for postMessage() style payloads where Blobs may
+ * be referenced/"cloned" and (optionally) messageports transferred.  Use
+ * StructuredCloneData in your code to convert between this wire representation
+ * and the StructuredCloneData StructuredCloneHolder-subclass.
+ */
+struct ClonedMessageData
 {
-  MaybeDiscardedBrowsingContext context;
-  uint32_t newLength;
+  SerializedStructuredCloneBuffer data;
+  IPCBlob[] blobs;
+  IPCStream[] inputStreams;
+  MessagePortIdentifier[] identifiers;
+};
+
+struct ErrorMessageData {
+};
+
+union ClonedOrErrorMessageData {
+  ClonedMessageData;
+  ErrorMessageData;
+};
+
+struct RefMessageData {
+  nsID uuid;
+};
+
+union MessageDataType {
+  ClonedMessageData;
+  RefMessageData;
+};
+
+struct MessageData {
+  nsID? agentClusterId;
+  MessageDataType data;
 };
 
 struct ScreenDetails {
@@ -95,7 +128,6 @@ struct ScreenDetails {
   uint16_t orientationAngle;
   bool isPseudoDisplay;
   bool isHDR;
-  bool isVideoHDR;
 };
 
 struct DimensionInfo
@@ -205,15 +237,14 @@ struct DocShellLoadStateInit
   HTTPSUpgradeTelemetryType HttpsUpgradeTelemetry;
 
   // https://html.spec.whatwg.org/#she-navigation-api-state
-  nullable nsStructuredCloneContainer NavigationAPIState;
+  ClonedMessageData? NavigationAPIState;
 
   // Fields missing due to lack of need or serialization
   // nsCOMPtr<nsIDocShell> mSourceDocShell;
   // bool mIsSrcDocLoad; // useless without sourcedocshell
   // nsIChannel pendingRedirectedChannel; // sent through other mechanism
-  // DocumentLoadListener mSpeculativeListener; // parent-process only
 
-  bool HasSpeculativeListener;
+  bool ChannelInitialized;
 
   bool TryToReplaceWithSessionHistoryLoad;
 
@@ -301,7 +332,6 @@ struct ParentShowInfo
   float dpi;
   int32_t widgetRounding;
   double defaultScale;
-  double desktopToDeviceScale;
 };
 
 // Struct with information to show an iframe from the process that owns the

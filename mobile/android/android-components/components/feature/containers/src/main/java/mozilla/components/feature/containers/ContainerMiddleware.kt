@@ -70,12 +70,9 @@ class ContainerMiddleware(
     private fun removeContainer(
         store: Store<BrowserState, BrowserAction>,
         action: ContainerAction.RemoveContainerAction,
-    ) {
-        val containerToRemove = store.state.containers[action.contextId]
-        scope.launch {
-            containerToRemove?.let {
-                containerStorage.removeContainer(it)
-            }
+    ) = scope.launch {
+        store.state.containers[action.contextId]?.let {
+            containerStorage.removeContainer(it)
         }
     }
 

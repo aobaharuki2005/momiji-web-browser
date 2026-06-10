@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -200,7 +201,7 @@ TEST(UrlClassifierFindFullHash, ParseRequest)
     PopulateDuration(*perHashCacheDuration, expected.mPerHashCacheDuration);
   }
   std::string s;
-  (void)r.SerializeToString(&s);
+  r.SerializeToString(&s);
 
   uint32_t callbackCount = 0;
   nsCOMPtr<nsIUrlClassifierParseFindFullHashCallback> callback =

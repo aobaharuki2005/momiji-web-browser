@@ -46,15 +46,13 @@ impl Frontend {
             options: Options::new(),
         }
     }
-
     pub const fn new_with_options(options: Options) -> Self {
         Self {
             parser: Parser::new(),
             options,
         }
     }
-
-    pub const fn set_options(&mut self, options: Options) {
+    pub fn set_options(&mut self, options: Options) {
         self.options = options;
     }
 

@@ -7,14 +7,11 @@ package org.mozilla.fenix.onboarding.store
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.GleanMetrics.Onboarding
-import org.mozilla.fenix.onboarding.OnboardingReason
 
 /**
  * [Middleware] for recording telemetry based on [PrivacyPreferencesAction]s.
  */
-class PrivacyPreferencesTelemetryMiddleware(
-    private val installSource: String,
-) :
+class PrivacyPreferencesTelemetryMiddleware :
     Middleware<PrivacyPreferencesState, PrivacyPreferencesAction> {
     override fun invoke(
         store: Store<PrivacyPreferencesState, PrivacyPreferencesAction>,
@@ -26,37 +23,19 @@ class PrivacyPreferencesTelemetryMiddleware(
         when (action) {
             is PrivacyPreferencesAction.CrashReportingPreferenceUpdatedTo ->
                 Onboarding.privacyPreferencesModalCrashReportingEnabled.record(
-                    Onboarding.PrivacyPreferencesModalCrashReportingEnabledExtra(
-                        onboardingReason = OnboardingReason.NEW_USER.value,
-                        value = action.enabled,
-                        installSource = installSource,
-                    ),
+                    Onboarding.PrivacyPreferencesModalCrashReportingEnabledExtra(action.enabled),
                 )
 
             is PrivacyPreferencesAction.UsageDataPreferenceUpdatedTo ->
                 Onboarding.privacyPreferencesModalUsageDataEnabled.record(
-                    Onboarding.PrivacyPreferencesModalUsageDataEnabledExtra(
-                        onboardingReason = OnboardingReason.NEW_USER.value,
-                        value = action.enabled,
-                        installSource = installSource,
-                    ),
+                    Onboarding.PrivacyPreferencesModalUsageDataEnabledExtra(action.enabled),
                 )
 
             is PrivacyPreferencesAction.CrashReportingLearnMore ->
-                Onboarding.privacyPreferencesModalCrashReportingLearnMore.record(
-                    extra = Onboarding.PrivacyPreferencesModalCrashReportingLearnMoreExtra(
-                        onboardingReason = OnboardingReason.NEW_USER.value,
-                        installSource = installSource,
-                    ),
-                )
+                Onboarding.privacyPreferencesModalCrashReportingLearnMore.record()
 
             is PrivacyPreferencesAction.UsageDataUserLearnMore ->
-                Onboarding.privacyPreferencesModalUsageDataLearnMore.record(
-                    extra = Onboarding.PrivacyPreferencesModalUsageDataLearnMoreExtra(
-                        onboardingReason = OnboardingReason.NEW_USER.value,
-                        installSource = installSource,
-                    ),
-                )
+                Onboarding.privacyPreferencesModalUsageDataLearnMore.record()
 
             // no-ops
             is PrivacyPreferencesAction.Init -> {}

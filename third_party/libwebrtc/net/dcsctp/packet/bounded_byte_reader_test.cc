@@ -12,6 +12,7 @@
 
 #include <cstdint>
 
+#include "api/array_view.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 

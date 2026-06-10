@@ -15,7 +15,6 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -23,6 +22,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/candidate.h"
 #include "api/environment/environment.h"
 #include "api/rtc_error.h"
@@ -248,8 +248,8 @@ Connection::Connection(const Environment& env,
       pruned_(false),
       use_candidate_attr_(false),
       requests_(port_->thread(),
-                [this](std::span<const uint8_t> data, StunRequest* request) {
-                  OnSendStunPacket(data, request);
+                [this](const void* data, size_t size, StunRequest* request) {
+                  OnSendStunPacket(data, size, request);
                 }),
       rtt_(kDefaultRtt),
       last_ping_sent_(Timestamp::Zero()),
@@ -457,13 +457,15 @@ void Connection::SetIceFieldTrials(const IceFieldTrials* field_trials) {
   rtt_estimate_.SetHalfTime(field_trials->rtt_estimate_halftime_ms);
 }
 
-void Connection::OnSendStunPacket(std::span<const uint8_t> data,
+void Connection::OnSendStunPacket(const void* data,
+                                  size_t size,
                                   StunRequest* req) {
   RTC_DCHECK_RUN_ON(network_thread_);
   AsyncSocketPacketOptions options(port_->StunDscpValue());
   options.info_signaled_after_sent.packet_type =
       PacketType::kIceConnectivityCheck;
-  auto err = port_->SendTo(data, remote_candidate_.address(), options, false);
+  auto err =
+      port_->SendTo(data, size, remote_candidate_.address(), options, false);
   if (err < 0) {
     RTC_LOG(LS_WARNING) << ToString()
                         << ": Failed to send STUN ping "
@@ -485,12 +487,19 @@ void Connection::DeregisterReceivedPacketCallback() {
   received_packet_callback_ = nullptr;
 }
 
+void Connection::OnReadPacket(const char* data,
+                              size_t size,
+                              int64_t packet_time_us) {
+  OnReadPacket(ReceivedIpPacket::CreateFromLegacy(data, size, packet_time_us));
+}
 void Connection::OnReadPacket(const ReceivedIpPacket& packet) {
   RTC_DCHECK_RUN_ON(network_thread_);
   std::unique_ptr<IceMessage> msg;
   std::string remote_ufrag;
   const SocketAddress& addr(remote_candidate_.address());
-  if (!port_->GetStunMessage(packet.payload(), addr, &msg, &remote_ufrag)) {
+  if (!port_->GetStunMessage(
+          reinterpret_cast<const char*>(packet.payload().data()),
+          packet.payload().size(), addr, &msg, &remote_ufrag)) {
     // The packet did not parse as a valid STUN message
     // This is a data packet, pass it along.
     last_data_received_ = env_.clock().CurrentTime();
@@ -644,7 +653,7 @@ void Connection::MaybeHandleDtlsPiggybackingAttributes(
       msg->GetByteString(STUN_ATTR_META_DTLS_IN_STUN);
   const StunByteStringAttribute* dtls_piggyback_ack =
       msg->GetByteString(STUN_ATTR_META_DTLS_IN_STUN_ACK);
-  std::optional<std::span<uint8_t>> piggyback_data;
+  std::optional<ArrayView<uint8_t>> piggyback_data;
   if (dtls_piggyback_attr != nullptr) {
     piggyback_data = dtls_piggyback_attr->array_view();
   }
@@ -866,7 +875,7 @@ void Connection::SendResponseMessage(const StunMessage& response) {
   AsyncSocketPacketOptions options(port_->StunDscpValue());
   options.info_signaled_after_sent.packet_type =
       PacketType::kIceConnectivityCheckResponse;
-  auto err = port_->SendTo(buf.DataView(), addr, options, false);
+  auto err = port_->SendTo(buf.Data(), buf.Length(), addr, options, false);
   if (err < 0) {
     RTC_LOG(LS_ERROR) << ToString() << ": Failed to send "
                       << StunMethodToString(response.type())
@@ -1178,15 +1187,8 @@ std::unique_ptr<IceMessage> Connection::BuildPingRequest(
 
   if (delta) {
     RTC_DCHECK(delta->type() == STUN_ATTR_GOOG_DELTA);
-    size_t msg_length = message->length();
-    if (msg_length + kStunAttributeHeaderSize + delta->length() <
-        kMaxStunBindingLength) {
-      RTC_LOG(LS_INFO) << "Sending GOOG_DELTA: len: " << delta->length();
-      message->AddAttribute(std::move(delta));
-    } else {
-      RTC_LOG(LS_WARNING) << "Not sending GOOG_DELTA, request full: len: "
-                          << delta->length() << " msg_length: " << msg_length;
-    }
+    RTC_LOG(LS_INFO) << "Sending GOOG_DELTA: len: " << delta->length();
+    message->AddAttribute(std::move(delta));
   }
 
   MaybeAddDtlsPiggybackingAttributes(message.get());
@@ -1902,20 +1904,22 @@ ProxyConnection::ProxyConnection(const Environment& env,
                                  const Candidate& remote_candidate)
     : Connection(env, std::move(port), index, remote_candidate) {}
 
-int ProxyConnection::Send(std::span<const uint8_t> data,
+int ProxyConnection::Send(const void* data,
+                          size_t size,
                           const AsyncSocketPacketOptions& options) {
   RTC_DCHECK(port() != nullptr) << ToDebugId() << ": port_ null in Send()";
   if (port() == nullptr)
     return SOCKET_ERROR;
 
   mutable_stats().sent_total_packets++;
-  int sent = port()->SendTo(data, remote_candidate().address(), options, true);
+  int sent =
+      port()->SendTo(data, size, remote_candidate().address(), options, true);
   Timestamp now = env().clock().CurrentTime();
   if (sent <= 0) {
     RTC_DCHECK(sent < 0);
     error_ = port()->GetError();
     mutable_stats().sent_discarded_packets++;
-    mutable_stats().sent_discarded_bytes += data.size();
+    mutable_stats().sent_discarded_bytes += size;
   } else {
     AddSentBytesToStats(sent, now);
   }
@@ -1925,22 +1929,6 @@ int ProxyConnection::Send(std::span<const uint8_t> data,
 
 int ProxyConnection::GetError() {
   return error_;
-}
-
-// This method is used by the FakeIceLiteAgent
-// to pretend that a Connection is writable so
-// P2PTransportChannel/FakeIceLiteAgent can be used
-// to simulate a ICE Lite agent.
-bool Connection::set_writable_for_fake_ice_lite() const {
-  if (write_state() != STATE_WRITABLE) {
-    Timestamp now = env_.clock().CurrentTime();
-    auto con = const_cast<Connection*>(this);
-    con->UpdateReceiving(now);
-    con->set_write_state(STATE_WRITABLE);
-    con->set_state(IceCandidatePairState::SUCCEEDED);
-    return true;
-  }
-  return false;
 }
 
 }  // namespace webrtc

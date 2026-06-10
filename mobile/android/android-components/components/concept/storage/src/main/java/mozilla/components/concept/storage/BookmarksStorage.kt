@@ -4,12 +4,10 @@
 
 package mozilla.components.concept.storage
 
-import mozilla.components.concept.storage.bookmarks.BookmarkInserter
-
 /**
  * An interface which defines read/write operations for bookmarks data.
  */
-interface BookmarksStorage : Storage, BookmarkInserter {
+interface BookmarksStorage : Storage {
 
     /**
      * Produces a bookmarks tree for the given guid string.

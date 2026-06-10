@@ -70,9 +70,7 @@ class NetworkEventWatcher {
     // Boolean to know if we keep previous document network events or not.
     this.persist = false;
     this.listener = new lazy.NetworkObserver({
-      // The responses will be decoded lazily when the Response details are
-      // requested by the UI.
-      decodeResponseBodies: false,
+      decodeResponseBodies: true,
       responseBodyLimit: lazy.responseBodyLimit,
       ignoreChannelFunction: this.shouldIgnoreChannel.bind(this),
       onNetworkEvent: this.onNetworkEvent.bind(this),
@@ -368,7 +366,6 @@ class NetworkEventWatcher {
         resourceUpdates.proxyHttpVersion = updateResource.proxyHttpVersion;
         resourceUpdates.proxyStatus = updateResource.proxyStatus;
         resourceUpdates.proxyStatusText = updateResource.proxyStatusText;
-        resourceUpdates.isRedirect = updateResource.isRedirect;
 
         if (resourceUpdates.earlyHintsStatus.length) {
           networkEventTypes.push(
@@ -383,9 +380,7 @@ class NetworkEventWatcher {
 
         break;
       case NETWORK_EVENT_TYPES.RESPONSE_CONTENT:
-        if (updateResource.contentSize !== undefined) {
-          resourceUpdates.contentSize = updateResource.contentSize;
-        }
+        resourceUpdates.contentSize = updateResource.contentSize;
         resourceUpdates.transferredSize = updateResource.transferredSize;
         resourceUpdates.mimeType = updateResource.mimeType;
         break;
@@ -398,6 +393,7 @@ class NetworkEventWatcher {
         break;
       case NETWORK_EVENT_TYPES.SECURITY_INFO:
         resourceUpdates.securityState = updateResource.state;
+        resourceUpdates.isRacing = updateResource.isRacing;
         break;
     }
 
@@ -421,7 +417,6 @@ class NetworkEventWatcher {
     }
 
     if (
-      updateResource.updateType == NETWORK_EVENT_TYPES.REQUEST_POSTDATA ||
       updateResource.updateType == NETWORK_EVENT_TYPES.RESPONSE_START ||
       updateResource.updateType == NETWORK_EVENT_TYPES.RESPONSE_CONTENT ||
       isResponseComplete

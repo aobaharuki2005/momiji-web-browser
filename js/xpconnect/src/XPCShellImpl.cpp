@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -865,16 +867,16 @@ static bool ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc,
    */
   argsObj = JS::NewArrayObject(cx, 0);
   if (!argsObj) {
-    return true;
+    return 1;
   }
   if (!JS_DefineProperty(cx, global, "arguments", argsObj, 0)) {
-    return true;
+    return 1;
   }
 
   for (int j = 0, length = argc - rootPosition; j < length; j++) {
     RootedString str(cx, JS_NewStringCopyZ(cx, argv[rootPosition++]));
     if (!str || !JS_DefineElement(cx, argsObj, j, str, JSPROP_ENUMERATE)) {
-      return true;
+      return 1;
     }
   }
 
@@ -1177,11 +1179,6 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
           aShellData->crashHelperSocket);
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
-      rv = CrashReporter::OOPInit(greBinDir);
-      if (NS_FAILED(rv)) {
-        printf("CrashReporter::OOPInit(): could not launch the crash helper\n");
-      }
-
       rv = CrashReporter::SetExceptionHandler(greBinDir, true);
       if (NS_FAILED(rv)) {
         printf("CrashReporter::SetExceptionHandler failed!\n");
@@ -1413,7 +1410,6 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
   // holds.
   if (CrashReporter::GetEnabled()) {
     CrashReporter::UnsetExceptionHandler();
-    CrashReporter::OOPDeinit();
   }
 
   // This must precede NS_LogTerm(), otherwise xpcshell return non-zero

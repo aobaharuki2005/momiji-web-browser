@@ -3,6 +3,8 @@
 
 "use strict";
 
+const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
+
 /**
  * Test the filters_changed telemetry event.
  */
@@ -21,8 +23,12 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   await waitForAllNetworkUpdateEvents();
-  // Remove all data (you can check about:glean).
-  Services.fog.testResetFOG();
+  // Remove all telemetry events (you can check about:telemetry).
+  Services.telemetry.clearEvents();
+
+  // Ensure no events have been logged
+  const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
+  ok(!snapshot.parent, "No events have been logged for the main process");
 
   // Reload to have one request in the list.
   const wait = waitForNetworkEvents(monitor, 1);
@@ -36,12 +42,16 @@ add_task(async function () {
     document.querySelector(".requests-list-filter-html-button")
   );
 
-  let events = Glean.devtoolsMain.filtersChangedNetmonitor.testGetValue();
-  is(1, events.length);
-  is("html", events[0].extra.trigger);
-  is("html", events[0].extra.active);
-  is("all,css,js,xhr,fonts,images,media,ws,other", events[0].extra.inactive);
-  Services.fog.testResetFOG();
+  checkTelemetryEvent(
+    {
+      trigger: "html",
+      active: "html",
+      inactive: "all,css,js,xhr,fonts,images,media,ws,other",
+    },
+    {
+      method: "filters_changed",
+    }
+  );
 
   info("Click on the 'CSS' filter");
   EventUtils.sendMouseEvent(
@@ -49,12 +59,16 @@ add_task(async function () {
     document.querySelector(".requests-list-filter-css-button")
   );
 
-  events = Glean.devtoolsMain.filtersChangedNetmonitor.testGetValue();
-  is(1, events.length);
-  is("css", events[0].extra.trigger);
-  is("html,css", events[0].extra.active);
-  is("all,js,xhr,fonts,images,media,ws,other", events[0].extra.inactive);
-  Services.fog.testResetFOG();
+  checkTelemetryEvent(
+    {
+      trigger: "css",
+      active: "html,css",
+      inactive: "all,js,xhr,fonts,images,media,ws,other",
+    },
+    {
+      method: "filters_changed",
+    }
+  );
 
   info("Filter the output using the text filter input");
   setFreetextFilter(monitor, "nomatch");
@@ -62,11 +76,16 @@ add_task(async function () {
   // Wait till the text filter is applied.
   await waitUntil(() => !getDisplayedRequests(store.getState()).length);
 
-  events = Glean.devtoolsMain.filtersChangedNetmonitor.testGetValue();
-  is(1, events.length);
-  is("text", events[0].extra.trigger);
-  is("html,css", events[0].extra.active);
-  is("all,js,xhr,fonts,images,media,ws,other", events[0].extra.inactive);
+  checkTelemetryEvent(
+    {
+      trigger: "text",
+      active: "html,css",
+      inactive: "all,js,xhr,fonts,images,media,ws,other",
+    },
+    {
+      method: "filters_changed",
+    }
+  );
 
   return teardown(monitor);
 });

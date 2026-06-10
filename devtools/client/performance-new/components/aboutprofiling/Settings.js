@@ -15,11 +15,6 @@
  */
 
 /**
- * @typedef {object} LocalizationProps
- * @property {(id: string, args?: any, fallback?: string) => string} getString
- */
-
-/**
  * @typedef {object} ThunkDispatchProps
  * @property {typeof actions.changeInterval} changeInterval
  * @property {typeof actions.changeEntries} changeEntries
@@ -41,7 +36,7 @@
  * @typedef {import("../../@types/perf").State} StoreState
  * @typedef {import("../../@types/perf").FeatureDescription} FeatureDescription
  *
- * @typedef {StateProps & DispatchProps & LocalizationProps} Props
+ * @typedef {StateProps & DispatchProps} Props
  */
 
 /**
@@ -94,8 +89,9 @@ const selectors = require("resource://devtools/client/performance-new/store/sele
 const {
   openFilePickerForObjdir,
 } = require("resource://devtools/client/performance-new/shared/browser.js");
-const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
-const Localized = createFactory(FluentReact.Localized);
+const Localized = createFactory(
+  require("resource://devtools/client/shared/vendor/fluent-react.js").Localized
+);
 
 // The Gecko Profiler interprets the "entries" setting as 8 bytes per entry.
 const PROFILE_ENTRY_SIZE = 8;
@@ -279,10 +275,7 @@ class Settings extends PureComponent {
 
   _handleAddObjdir = () => {
     const { objdirs, changeObjdirs } = this.props;
-    const pickerTitle = this.props.getString(
-      "perftools-pick-local-build-directory"
-    );
-    openFilePickerForObjdir(window, pickerTitle, objdirs, changeObjdirs);
+    openFilePickerForObjdir(window, objdirs, changeObjdirs);
   };
 
   /**
@@ -640,11 +633,10 @@ function _intervalTextDisplay(value) {
  * Format the entries number for display.
  *
  * @param {number} value
- * @return {React.ReactNode}
+ * @return {string}
  */
 function _entriesTextDisplay(value) {
-  const { size, unitL10nId } = formatFileSize(value * PROFILE_ENTRY_SIZE);
-  return Localized({ id: unitL10nId, $num: size });
+  return formatFileSize(value * PROFILE_ENTRY_SIZE);
 }
 
 /**
@@ -692,4 +684,4 @@ const SettingsConnected = connect(
   mapDispatchToProps
 )(Settings);
 
-module.exports = FluentReact.withLocalization(SettingsConnected);
+module.exports = SettingsConnected;

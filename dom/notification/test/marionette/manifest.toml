@@ -1,5 +1,3 @@
 [DEFAULT]
-subsuite = "integration"
-tags = "os_integration"
 
 ["test_persistent_notification_restart.py"]

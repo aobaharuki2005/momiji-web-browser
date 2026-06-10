@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,7 +17,7 @@
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
-#include "mozilla/dom/NodeList.h"
+#include "nsINodeList.h"
 
 using namespace mozilla::a11y;
 
@@ -171,7 +172,7 @@ uint32_t XULListboxAccessible::SelectedCellCount() {
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  RefPtr<dom::NodeList> selectedItems;
+  nsCOMPtr<nsINodeList> selectedItems;
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems) return 0;
 
@@ -215,7 +216,7 @@ void XULListboxAccessible::SelectedCells(nsTArray<Accessible*>* aCells) {
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  RefPtr<dom::NodeList> selectedItems;
+  nsCOMPtr<nsINodeList> selectedItems;
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems) return;
 
@@ -241,7 +242,7 @@ void XULListboxAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells) {
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  RefPtr<dom::NodeList> selectedItems;
+  nsCOMPtr<nsINodeList> selectedItems;
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems) return;
 
@@ -284,7 +285,7 @@ void XULListboxAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows) {
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  RefPtr<dom::NodeList> selectedItems;
+  nsCOMPtr<nsINodeList> selectedItems;
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems) return;
 
@@ -361,7 +362,7 @@ XULListitemAccessible::XULListitemAccessible(nsIContent* aContent,
   mType = eXULListItemType;
 }
 
-XULListitemAccessible::~XULListitemAccessible() = default;
+XULListitemAccessible::~XULListitemAccessible() {}
 
 LocalAccessible* XULListitemAccessible::GetListAccessible() const {
   if (IsDefunct()) return nullptr;

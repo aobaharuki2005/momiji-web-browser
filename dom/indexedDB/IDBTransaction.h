@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_idbtransaction_h_
-#define mozilla_dom_idbtransaction_h_
+#ifndef mozilla_dom_idbtransaction_h__
+#define mozilla_dom_idbtransaction_h__
 
 #include "FlippedOnce.h"
 #include "SafeRefPtr.h"
@@ -81,12 +83,6 @@ class IDBTransaction final
   nsTArray<RefPtr<IDBObjectStore>> mDeletedObjectStores;
   RefPtr<StrongWorkerRef> mWorkerRef;
   nsTArray<NotNull<IDBCursor*>> mCursors;
-  // When StructuredClone is ongoing, the transaction is inactive
-  // and we defer handling of responses until it finishes.
-  // Otherwise XHR requests may unpause event processing
-  // and lead to early completion of already done sub-requests
-  // that belong to the transaction.
-  nsTArray<nsCOMPtr<nsIRunnable>> mDeferredRunnables;
 
   // Tagged with mMode. If mMode is Mode::VersionChange then mBackgroundActor
   // will be a BackgroundVersionChangeTransactionChild. Otherwise it will be a
@@ -132,7 +128,6 @@ class IDBTransaction final
   FlippedOnce<false> mAbortedByScript;
   bool mNotedActiveTransaction;
   FlippedOnce<false> mSentCommitOrAbort;
-  bool mDeferralActive = false;
 
 #ifdef DEBUG
   FlippedOnce<false> mFiredCompleteOrAbort;
@@ -227,23 +222,10 @@ class IDBTransaction final
   bool WasExplicitlyCommitted() const { return mWasExplicitlyCommitted; }
 #endif
 
-  void TransitionToActive();
-
-  void TransitionToInactiveWithDeferral();
-
-  bool IsDeferralActive() const {
-    AssertIsOnOwningThread();
-    return mDeferralActive;
+  void TransitionToActive() {
+    MOZ_ASSERT(mReadyState == ReadyState::Inactive);
+    mReadyState = ReadyState::Active;
   }
-
-  void DeactivateDeferral() {
-    AssertIsOnOwningThread();
-    mDeferralActive = false;
-  }
-
-  void QueueDeferredResponse(already_AddRefed<nsIRunnable> aRunnable);
-
-  void DrainDeferredResponses();
 
   void TransitionToInactive() {
     MOZ_ASSERT(mReadyState == ReadyState::Active);
@@ -407,4 +389,4 @@ inline bool ReferenceEquals(const Maybe<IDBTransaction&>& aLHS,
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_idbtransaction_h_
+#endif  // mozilla_dom_idbtransaction_h__

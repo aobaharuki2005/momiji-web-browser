@@ -97,14 +97,18 @@ async function testAddTextInFilter(inspector, view) {
 
 function checkRules(view, data) {
   info("Check that the correct rules are visible");
-  assertDisplayedRulesCount(view, data.ruleCount);
   is(
-    getRuleViewRuleEditorAt(view, 0).rule.selectorText,
+    view.element.children.length,
+    data.ruleCount,
+    "Should have " + data.ruleCount + " rules."
+  );
+  is(
+    getRuleViewRuleEditor(view, 0).rule.selectorText,
     "element",
     "First rule is inline element."
   );
 
-  let rule = getRuleViewRuleEditorAt(view, 1).rule;
+  let rule = getRuleViewRuleEditor(view, 1).rule;
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
   ok(
@@ -115,7 +119,7 @@ function checkRules(view, data) {
   );
 
   if (data.ruleCount > 2) {
-    rule = getRuleViewRuleEditorAt(view, 2).rule;
+    rule = getRuleViewRuleEditor(view, 2).rule;
     is(rule.selectorText, ".testclass", "Third rule is .testclass.");
     ok(
       rule.textProps[data.propertyIndex].editor.container.classList.contains(
@@ -138,7 +142,7 @@ async function clearSearchAndCheckRules(view) {
   await onRuleviewFiltered;
 
   info("Check the search filter is cleared and no rules are highlighted");
-  assertDisplayedRulesCount(view, 3);
+  is(view.element.children.length, 3, "Should have 3 rules.");
   ok(!searchField.value, "Search filter is cleared.");
   ok(
     !doc.querySelectorAll(".ruleview-highlight").length,

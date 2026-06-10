@@ -1,7 +1,7 @@
 import pytest
 from webdriver import NoSuchElementException
 
-URL = "https://gamma.app/create/paste"
+URL = "https://gamma.app/signup"
 UNSUPPORTED_TEXT = "works best on Chrome"
 
 

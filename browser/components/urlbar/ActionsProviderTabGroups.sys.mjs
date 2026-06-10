@@ -58,7 +58,7 @@ class ProviderTabGroups extends ActionsProvider {
       sortByLastSeenActive: true,
     })) {
       if (
-        group.documentGlobal == window &&
+        group.ownerGlobal == window &&
         window.gBrowser.selectedTab.group == group
       ) {
         // This group is already the active group, so don't offer switching to it.
@@ -67,13 +67,14 @@ class ProviderTabGroups extends ActionsProvider {
       if (!this.#matches(group.label, queryContext)) {
         continue;
       }
-
       results.push(
         this.#makeResult({
           key: `tabgroup-${i++}`,
           l10nId: "urlbar-result-action-switch-to-tabgroup",
           l10nArgs: { group: group.label },
-          dataset: { groupId: group.id },
+          onPick: (_queryContext, _controller) => {
+            this.#switchToGroup(group);
+          },
           color: group.color,
         })
       );
@@ -88,39 +89,27 @@ class ProviderTabGroups extends ActionsProvider {
       if (!this.#matches(savedGroup.name, queryContext)) {
         continue;
       }
-      let result = this.#makeResult({
-        key: `tabgroup-${i++}`,
-        l10nId: "urlbar-result-action-open-saved-tabgroup",
-        l10nArgs: { group: savedGroup.name },
-        color: savedGroup.color,
-        dataset: { savedGroupId: savedGroup.id },
-      });
-      results.push(result);
+      results.push(
+        this.#makeResult({
+          key: `tabgroup-${i++}`,
+          l10nId: "urlbar-result-action-open-saved-tabgroup",
+          l10nArgs: { group: savedGroup.name },
+          onPick: (_queryContext, _controller) => {
+            let group = lazy.SessionStore.openSavedTabGroup(
+              savedGroup.id,
+              window,
+              {
+                source: lazy.TabMetrics.METRIC_SOURCE.SUGGEST,
+              }
+            );
+            this.#switchToGroup(group);
+          },
+          color: savedGroup.color,
+        })
+      );
     }
 
     return results;
-  }
-
-  onPick(_queryContext, controller, action) {
-    let group;
-    if (action.dataset.savedGroupId) {
-      group = lazy.SessionStore.openSavedTabGroup(
-        action.dataset.savedGroupId,
-        controller.browserWindow,
-        {
-          source: lazy.TabMetrics.METRIC_SOURCE.SUGGEST,
-        }
-      );
-    } else {
-      group = controller.browserWindow.gBrowser.getTabGroupById(
-        action.dataset.groupId
-      );
-    }
-
-    if (group) {
-      group.select();
-      group.documentGlobal.focus();
-    }
   }
 
   #matches(groupName, queryContext) {
@@ -133,24 +122,26 @@ class ProviderTabGroups extends ActionsProvider {
     );
   }
 
-  #makeResult({ key, l10nId, l10nArgs, color, dataset }) {
+  #makeResult({ key, l10nId, l10nArgs, onPick, color }) {
     return new ActionsResult({
       key,
       l10nId,
       l10nArgs,
+      onPick,
       icon: "chrome://browser/skin/tabbrowser/tab-groups.svg",
       dataset: {
-        ...dataset,
         style: {
           "--tab-group-color": `var(--tab-group-color-${color})`,
           "--tab-group-color-invert": `var(--tab-group-color-${color}-invert)`,
           "--tab-group-color-pale": `var(--tab-group-color-${color}-pale)`,
-          "--tab-group-background-color": `var(--tab-group-${color})`,
-          "--tab-group-text-color": `var(--tab-group-${color}-text)`,
-          "--tab-group-background-color-hover": `var(--tab-group-${color}-hover)`,
         },
       },
     });
+  }
+
+  #switchToGroup(group) {
+    group.select();
+    group.ownerGlobal.focus();
   }
 }
 

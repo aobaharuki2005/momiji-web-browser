@@ -17,11 +17,11 @@
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 
-const SkBlender* GetBlendModeSingleton(SkBlendMode mode) {
+sk_sp<SkBlender> SkBlender::Mode(SkBlendMode mode) {
 #define RETURN_SINGLETON_BLENDER(m)                            \
     case m: {                                                  \
         static SkNoDestructor<SkBlendModeBlender> sBlender(m); \
-        return sBlender.get();                                 \
+        return sk_ref_sp(sBlender.get());                      \
     }
 
     switch (mode) {
@@ -60,10 +60,6 @@ const SkBlender* GetBlendModeSingleton(SkBlendMode mode) {
     return nullptr;
 
 #undef RETURN_SINGLETON_BLENDER
-}
-
-sk_sp<SkBlender> SkBlender::Mode(SkBlendMode mode) {
-    return sk_ref_sp(GetBlendModeSingleton(mode));
 }
 
 sk_sp<SkFlattenable> SkBlendModeBlender::CreateProc(SkReadBuffer& buffer) {

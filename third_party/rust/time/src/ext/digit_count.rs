@@ -13,7 +13,6 @@ pub(crate) trait DigitCount {
 macro_rules! impl_digit_count {
     ($($t:ty),* $(,)?) => {
         $(impl DigitCount for $t {
-            #[inline]
             fn num_digits(self) -> u8 {
                 match self.checked_ilog10() {
                     Some(n) => n.truncate::<u8>() + 1,

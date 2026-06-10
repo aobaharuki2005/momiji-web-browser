@@ -41,7 +41,7 @@ async function testElementBlockedByCSP(selector, inspector) {
 
   info("Reload the page and do same assertion with the guard");
   Services.prefs.clearUserPref(BYPASS_WALKERFRONT_CHILDREN_IFRAME_GUARD_PREF);
-  await reloadSelectedTab();
+  await reloadBrowser();
 
   await inspector.markup.expandAll();
   container = await getContainerForSelector(selector, inspector);

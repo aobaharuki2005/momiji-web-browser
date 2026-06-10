@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -19,6 +21,7 @@
 #include "jit/BaselineICList.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CalleeToken.h"
+#include "jit/InterpreterEntryTrampoline.h"
 #include "jit/IonCompileTask.h"
 #include "jit/IonTypes.h"
 #include "jit/JitCode.h"
@@ -194,6 +197,10 @@ class JitRuntime {
   // Map that stores Jit Hints for each script.
   MainThreadData<JitHintsMap*> jitHintsMap_{nullptr};
 
+  // Map used to collect entry trampolines for the Interpreters which is used
+  // for external profiling to identify which functions are being interpreted.
+  MainThreadData<EntryTrampolineMap*> interpreterEntryMap_{nullptr};
+
 #ifdef DEBUG
   // The number of possible bailing places encountered before forcefully bailing
   // in that place if the counter reaches zero. Note that zero also means
@@ -309,6 +316,7 @@ class JitRuntime {
   [[nodiscard]] bool initialize(JSContext* cx);
 
   static void TraceAtomZoneRoots(JSTracer* trc);
+  [[nodiscard]] static bool MarkJitcodeGlobalTableIteratively(GCMarker* marker);
   static void TraceWeakJitcodeGlobalTable(JSRuntime* rt, JSTracer* trc);
 
   const BaselineICFallbackCode& baselineICFallbackCode() const {
@@ -447,6 +455,15 @@ class JitRuntime {
   JitHintsMap* getJitHintsMap() {
     MOZ_ASSERT(hasJitHintsMap());
     return jitHintsMap_;
+  }
+
+  bool hasInterpreterEntryMap() const {
+    return interpreterEntryMap_ != nullptr;
+  }
+
+  EntryTrampolineMap* getInterpreterEntryMap() {
+    MOZ_ASSERT(hasInterpreterEntryMap());
+    return interpreterEntryMap_;
   }
 
   bool isProfilerInstrumentationEnabled(JSRuntime* rt) {

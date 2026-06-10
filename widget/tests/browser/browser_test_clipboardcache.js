@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 requestLongerTimeout(2);
@@ -66,17 +68,13 @@ function getClipboardCacheFDCount() {
 
 async function testCopyPaste(isPrivate) {
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: isPrivate });
-  let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser);
+  let tab = await BrowserTestUtils.openNewForegroundTab(win);
   let browser = tab.linkedBrowser;
 
   // Sanitize environment
-  await SpecialPowers.spawn(
-    browser,
-    [SHORT_STRING_NO_CACHE],
-    async shortStr => {
-      await content.navigator.clipboard.writeText(shortStr);
-    }
-  );
+  await ContentTask.spawn(browser, SHORT_STRING_NO_CACHE, async shortStr => {
+    await content.navigator.clipboard.writeText(shortStr);
+  });
 
   let initialFdCount = getClipboardCacheFDCount();
 

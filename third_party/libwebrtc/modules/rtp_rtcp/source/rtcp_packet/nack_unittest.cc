@@ -13,8 +13,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
-#include <span>
 
+#include "api/array_view.h"
 #include "rtc_base/buffer.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -27,6 +27,7 @@ using rtcp::Nack;
 using ::testing::_;
 using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
+using ::testing::Invoke;
 using ::testing::make_tuple;
 using ::testing::MockFunction;
 using ::testing::UnorderedElementsAreArray;
@@ -133,22 +134,22 @@ TEST(RtcpPacketNackTest, CreateFragmented) {
 
   const size_t kBufferSize = 12 + (3 * 4);  // Fits common header + 3 nack items
 
-  MockFunction<void(std::span<const uint8_t>)> callback;
+  MockFunction<void(ArrayView<const uint8_t>)> callback;
   EXPECT_CALL(callback, Call(_))
-      .WillOnce([&](std::span<const uint8_t> packet) {
+      .WillOnce(Invoke([&](ArrayView<const uint8_t> packet) {
         Nack nack;
         EXPECT_TRUE(test::ParseSinglePacket(packet, &nack));
         EXPECT_EQ(kSenderSsrc, nack.sender_ssrc());
         EXPECT_EQ(kRemoteSsrc, nack.media_ssrc());
         EXPECT_THAT(nack.packet_ids(), ElementsAre(1, 100, 200));
-      })
-      .WillOnce([&](std::span<const uint8_t> packet) {
+      }))
+      .WillOnce(Invoke([&](ArrayView<const uint8_t> packet) {
         Nack nack;
         EXPECT_TRUE(test::ParseSinglePacket(packet, &nack));
         EXPECT_EQ(kSenderSsrc, nack.sender_ssrc());
         EXPECT_EQ(kRemoteSsrc, nack.media_ssrc());
         EXPECT_THAT(nack.packet_ids(), ElementsAre(300, 400));
-      });
+      }));
 
   EXPECT_TRUE(nack.Build(kBufferSize, callback.AsStdFunction()));
 }
@@ -161,7 +162,7 @@ TEST(RtcpPacketNackTest, CreateFailsWithTooSmallBuffer) {
   nack.SetMediaSsrc(kRemoteSsrc);
   nack.SetPacketIds(kSmallList, std::size(kSmallList));
 
-  MockFunction<void(std::span<const uint8_t>)> callback;
+  MockFunction<void(ArrayView<const uint8_t>)> callback;
   EXPECT_CALL(callback, Call(_)).Times(0);
   EXPECT_FALSE(nack.Build(kMinNackBlockSize - 1, callback.AsStdFunction()));
 }

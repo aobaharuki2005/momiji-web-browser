@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsXULPrototypeDocument_h_
-#define nsXULPrototypeDocument_h_
+#ifndef nsXULPrototypeDocument_h__
+#define nsXULPrototypeDocument_h__
 
 #include <functional>
 
@@ -123,4 +124,4 @@ class nsXULPrototypeDocument final : public nsISerializable {
   bool mWasL10nCached;
 };
 
-#endif  // nsXULPrototypeDocument_h_
+#endif  // nsXULPrototypeDocument_h__

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -76,13 +74,11 @@ export const NIMBUS_MIGRATION_PREFS = Object.fromEntries(
   Object.entries(Phase).map(([, v]) => [v, `nimbus.migrations.${v}`])
 );
 
-export const LABS_MIGRATION_FEATURE_MAP = (function () {
-  const featureMap = {
-    "urlbar-ime-search": "firefox-labs-urlbar-ime-search",
-  };
-
-  return Object.freeze(featureMap);
-})();
+export const LABS_MIGRATION_FEATURE_MAP = Object.freeze({
+  "auto-pip": "firefox-labs-auto-pip",
+  "urlbar-ime-search": "firefox-labs-urlbar-ime-search",
+  "jpeg-xl": "firefox-labs-jpeg-xl",
+});
 
 /**
  * Migrate from the legacy migration state to multi-phase migration state.
@@ -101,15 +97,6 @@ function migrateMultiphase() {
       latestMigration
     );
     Services.prefs.clearUserPref(LEGACY_NIMBUS_MIGRATION_PREF);
-  }
-}
-
-/**
- * Disable rollouts if the user has previously opted out of studies.
- */
-function migrateSeparateRolloutOptOut() {
-  if (!Services.prefs.getBoolPref("app.shield.optoutstudies.enabled")) {
-    Services.prefs.setBoolPref("nimbus.rollouts.enabled", false);
   }
 }
 
@@ -268,37 +255,7 @@ async function migrateEnrollmentsToSql() {
 }
 
 /**
- * Graduate a Firefox Labs opt-in! 🎓
- *
- * Migrations should use this function when features controlled by labs become
- * default-enabled. The user will be unenrolled from the rollout while keeping
- * the prefs set by the enrollment.
- *
- * @param {string} migration The name of the migration.
- * @param {string} slug The slug of the rollout.
- */
-function graduateLabs(migration, slug) {
-  if (isBackgroundTaskMode()) {
-    // This migration does not apply to background task mode.
-    lazy.log.debug(`${migration}: skipping (is background task mode)`);
-    return;
-  }
-
-  const enrollment = lazy.ExperimentAPI.manager.store.get(slug);
-  if (!enrollment?.active) {
-    lazy.log.debug(`${migration}: skipping (no or inactive enrollment)`);
-    return;
-  }
-
-  lazy.ExperimentAPI.manager._unenroll(
-    enrollment,
-    lazy.UnenrollmentCause.Migration(migration),
-    { unsetEnrollmentPrefs: false }
-  );
-}
-
-/**
- * Migrate enrollment from the firefox-labs-auto-pip rollout.
+ * Migrate enrollment from the firefox-labs-auto-pip rolloutl.
  *
  * This feature is becoming a regular setting in about:preferences in Firefox
  * 147. We need to unenroll users without resetting the prefs controlled by the
@@ -309,23 +266,25 @@ function graduateLabs(migration, slug) {
  * update to exactly 145.
  */
 function migrateGraduateFirefoxLabsAutoPip(migration) {
-  graduateLabs(migration, "firefox-labs-auto-pip");
-}
-
-/**
- * Migrate enrollment from the firefox-labs-jpeg-xl rollout.
- *
- * This rollout was only available in Nightly and the feature is becoming on by
- * default in Nightly. We need to unenroll users without resetting the prefs
- * controlled by the feature.
- */
-function migrateGraduateFirefoxLabsJPEGXL(migration) {
-  if (!AppConstants.MOZ_JXL) {
-    lazy.log.debug(`${migration}: skipping (MOZ_JXL disabled)`);
+  if (isBackgroundTaskMode()) {
+    // This migration does not apply to background task mode.
+    lazy.log.debug(`${migration}: skipping (is background task mode)`);
     return;
   }
 
-  graduateLabs(migration, "firefox-labs-jpeg-xl");
+  const enrollment = lazy.ExperimentAPI.manager.store.get(
+    "firefox-labs-auto-pip"
+  );
+  if (!enrollment?.active) {
+    lazy.log.debug(`${migration}: skipping (no or inactive enrollment)`);
+    return;
+  }
+
+  lazy.ExperimentAPI.manager._unenroll(
+    enrollment,
+    lazy.UnenrollmentCause.Migration(migration),
+    { unsetEnrollmentPrefs: false }
+  );
 }
 
 /**
@@ -451,23 +410,19 @@ export const NimbusMigrations = {
         `applyMigrations ${phase}: applying migration ${i}: ${migration.name}`
       );
 
-      const migrationStart = ChromeUtils.now();
-      let duration;
       try {
-        // Not all migrations are async fns, so coerce them.
-        await Promise.try(migration.fn, migration.name).finally(() => {
-          duration = Math.ceil(ChromeUtils.now() - migrationStart);
-        });
+        await migration.fn(migration.name);
       } catch (e) {
         lazy.log.error(
           `applyMigrations: error running migration ${i} (${migration.name}): ${e}`
         );
 
-        const reason =
-          e instanceof MigrationError
-            ? e.reason
-            : MigrationError.Reason.UNKNOWN;
-        lazy.NimbusTelemetry.recordMigration(migration.name, duration, reason);
+        let reason = MigrationError.Reason.UNKNOWN;
+        if (e instanceof MigrationError) {
+          reason = e.reason;
+        }
+
+        lazy.NimbusTelemetry.recordMigration(migration.name, reason);
 
         break;
       }
@@ -478,7 +433,7 @@ export const NimbusMigrations = {
         `applyMigrations: applied migration ${i}: ${migration.name}`
       );
 
-      lazy.NimbusTelemetry.recordMigration(migration.name, duration);
+      lazy.NimbusTelemetry.recordMigration(migration.name);
     }
 
     if (latestMigration != lastSuccess) {
@@ -522,7 +477,6 @@ export const NimbusMigrations = {
   MIGRATIONS: {
     [Phase.INIT_STARTED]: [
       migration("multi-phase-migrations", migrateMultiphase),
-      migration("separate-rollout-opt-out", migrateSeparateRolloutOptOut),
     ],
 
     [Phase.AFTER_STORE_INITIALIZED]: [
@@ -538,10 +492,6 @@ export const NimbusMigrations = {
       migration(
         "graduate-firefox-labs-auto-pip",
         migrateGraduateFirefoxLabsAutoPip
-      ),
-      migration(
-        "graduate-firefox-labs-jpeg-xl",
-        migrateGraduateFirefoxLabsJPEGXL
       ),
     ],
 

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -42,7 +44,9 @@ static bool LoopContainsPossibleCall(MIRGraph& graph, MBasicBlock* header,
       continue;
     }
 
-    for (auto ins : *block) {
+    for (auto insIter(block->begin()), insEnd(block->end()); insIter != insEnd;
+         ++insIter) {
+      MInstruction* ins = *insIter;
       if (ins->possiblyCalls()) {
 #ifdef JS_JITSPEW
         JitSpew(JitSpew_LICM, "    Possible call found at %s%u", ins->opName(),
@@ -75,7 +79,9 @@ static bool LoopContainsBigTableSwitch(MIRGraph& graph, MBasicBlock* header,
       continue;
     }
 
-    for (auto ins : *block) {
+    for (auto insIter(block->begin()), insEnd(block->end()); insIter != insEnd;
+         ++insIter) {
+      MInstruction* ins = *insIter;
       if (ins->isTableSwitch() &&
           ins->toTableSwitch()->numSuccessors() > LargestAllowedTableSwitch) {
         *numSuccessors = ins->toTableSwitch()->numSuccessors();

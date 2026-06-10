@@ -8,22 +8,14 @@
 <body>
   <script>
     let message_from = (w) => {
-      return new Promise((resolve, reject) => {
-        let onMsg = msg => {
+      return new Promise(resolve => {
+        let listener = msg => {
           if (msg.source != w)
             return;
-          window.removeEventListener('message', onMsg);
-          window.removeEventListener('securitypolicyviolation', abort)
+          window.removeEventListener('message', listener);
           resolve(msg.data);
         };
-        // Avoid timeout if violation events occur on the wrong window
-        let abort = evt => {
-          window.removeEventListener('message', onMsg);
-          window.removeEventListener('securitypolicyviolation', abort)
-          reject("unexpected violation in top window");
-        }
-        window.addEventListener('message', onMsg);
-        window.addEventListener('securitypolicyviolation', abort)
+        window.addEventListener('message', listener);
       });
     };
 

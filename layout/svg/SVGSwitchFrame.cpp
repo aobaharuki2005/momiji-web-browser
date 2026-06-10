@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -52,7 +54,7 @@ class SVGSwitchFrame final : public SVGGFrame {
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   void ReflowSVG() override;
   SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
-                              SVGBBoxFlags aFlags) override;
+                              uint32_t aFlags) override;
 
  private:
   nsIFrame* GetActiveChildFrame();
@@ -224,7 +226,7 @@ void SVGSwitchFrame::ReflowSVG() {
 }
 
 SVGBBox SVGSwitchFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
-                                            SVGBBoxFlags aFlags) {
+                                            uint32_t aFlags) {
   auto* kid = GetActiveChildFrame();
   if (ISVGDisplayableFrame* svgKid = do_QueryFrame(kid)) {
     nsIContent* content = kid->GetContent();

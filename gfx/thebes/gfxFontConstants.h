@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -6,8 +7,6 @@
 
 #ifndef GFX_FONT_CONSTANTS_H
 #define GFX_FONT_CONSTANTS_H
-
-#include <cstdint>
 
 /*
  * This file is separate from gfxFont.h so that layout can include it
@@ -69,11 +68,11 @@
    NS_FONT_VARIANT_ALTERNATES_ANNOTATION)
 
 #define NS_FONT_VARIANT_CAPS_NORMAL 0
-#define NS_FONT_VARIANT_CAPS_SMALL_CAPS 1
-#define NS_FONT_VARIANT_CAPS_ALL_SMALL_CAPS 2
-#define NS_FONT_VARIANT_CAPS_PETITE_CAPS 3
-#define NS_FONT_VARIANT_CAPS_ALL_PETITE_CAPS 4
-#define NS_FONT_VARIANT_CAPS_TITLING_CAPS 5
+#define NS_FONT_VARIANT_CAPS_SMALLCAPS 1
+#define NS_FONT_VARIANT_CAPS_ALLSMALL 2
+#define NS_FONT_VARIANT_CAPS_PETITECAPS 3
+#define NS_FONT_VARIANT_CAPS_ALLPETITE 4
+#define NS_FONT_VARIANT_CAPS_TITLING 5
 #define NS_FONT_VARIANT_CAPS_UNICASE 6
 
 #define NS_FONT_VARIANT_POSITION_NORMAL 0
@@ -104,7 +103,7 @@ enum class StyleFontVariantEmoji : uint8_t { Normal, Text, Emoji, Unicode };
 // pref lang id's for font prefs
 enum eFontPrefLang : uint8_t {
 #define FONT_PREF_LANG(enum_id_, str_, atom_id_) eFontPrefLang_##enum_id_
-#include "gfxFontPrefLangList.inc"
+#include "gfxFontPrefLangList.h"
 #undef FONT_PREF_LANG
 
   ,

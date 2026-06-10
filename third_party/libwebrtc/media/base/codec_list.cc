@@ -14,7 +14,6 @@
 #include <map>
 #include <vector>
 
-#include "api/payload_type.h"
 #include "api/rtc_error.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
@@ -33,14 +32,14 @@ RTCError CheckInputConsistency(const std::vector<Codec>& codecs) {
   // that there are no duplicates.
   for (size_t i = 0; i < codecs.size(); i++) {
     const Codec& codec = codecs[i];
-    if (codec.id != PayloadType::NotSet()) {
-      auto [it, success] = pt_to_index.insert({codec.id, static_cast<int>(i)});
+    if (codec.id != Codec::kIdNotSet) {
+      auto [it, success] = pt_to_index.insert({codec.id, i});
       if (!success) {
         RTC_LOG(LS_ERROR) << "Duplicate payload type in codec list, " << codec
                           << " and " << codecs[it->second]
                           << " have the same ID";
-        return LOG_ERROR(RTCError(RTCErrorType::INVALID_PARAMETER)
-                         << "Duplicate payload type in codec list");
+        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                             "Duplicate payload type in codec list");
       }
     }
   }
@@ -57,7 +56,7 @@ RTCError CheckInputConsistency(const std::vector<Codec>& codecs) {
         // TODO: https://issues.webrtc.org/384756622 - reject codec earlier and
         // enable check. RTC_DCHECK(apt_it != codec.params.end()); Until that is
         // fixed:
-        if (codec.id == PayloadType::NotSet()) {
+        if (codec.id == Codec::kIdNotSet) {
           // Should not have an apt parameter.
           if (apt_it != codec.params.end()) {
             RTC_LOG(LS_WARNING) << "Surprising condition: RTX codec without "
@@ -75,18 +74,18 @@ RTCError CheckInputConsistency(const std::vector<Codec>& codecs) {
         if (!(FromString(apt_it->second, &associated_pt))) {
           RTC_LOG(LS_ERROR) << "Non-numeric argument to rtx apt: " << codec
                             << " apt=" << apt_it->second;
-          return LOG_ERROR(RTCError(RTCErrorType::INVALID_PARAMETER)
-                           << "Non-numeric argument to rtx apt parameter");
+          LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                               "Non-numeric argument to rtx apt parameter");
         }
-        if (codec.id != PayloadType::NotSet() &&
+        if (codec.id != Codec::kIdNotSet &&
             pt_to_index.count(associated_pt) != 1) {
           RTC_LOG(LS_WARNING)
               << "Surprising condition: RTX codec APT not found: " << codec
               << " points to a PT that occurs "
               << pt_to_index.count(associated_pt) << " times";
-          return LOG_ERROR(
-              RTCError(RTCErrorType::INVALID_PARAMETER)
-              << "PT pointed to by rtx apt parameter does not exist");
+          LOG_AND_RETURN_ERROR(
+              RTCErrorType::INVALID_PARAMETER,
+              "PT pointed to by rtx apt parameter does not exist");
         }
         // const Codec& referred_codec = codecs[pt_to_index[associated_pt]];
         // Not true:
@@ -116,17 +115,6 @@ RTCErrorOr<CodecList> CodecList::Create(const std::vector<Codec>& codecs) {
     return error;
   }
   return CodecList(codecs);
-}
-
-bool CodecList::PushIfNotPresent(const Codec& codec) {
-  for (const Codec& present_codec : codecs_) {
-    if (present_codec.id == codec.id) {
-      RTC_DCHECK(present_codec == codec);
-      return false;
-    }
-  }
-  push_back(codec);
-  return true;
 }
 
 void CodecList::CheckConsistency() {

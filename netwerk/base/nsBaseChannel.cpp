@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 sts=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,7 +41,7 @@ class ScopedRequestSuspender {
   }
 
  private:
-  nsCOMPtr<nsIRequest> mRequest;
+  nsIRequest* mRequest;
 };
 
 // Used to suspend data events from mRequest within a function scope.  This is
@@ -265,9 +267,8 @@ void nsBaseChannel::ContinueHandleAsyncRedirect(nsresult result) {
 
   if (NS_FAILED(result) && mListener) {
     // Notify our consumer ourselves
-    nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStartRequest(this);
-    listener->OnStopRequest(this, mStatus);
+    mListener->OnStartRequest(this);
+    mListener->OnStopRequest(this, mStatus);
     ChannelDone();
   }
 
@@ -680,7 +681,7 @@ nsBaseChannel::AsyncOpen(nsIStreamListener* aListener) {
   // via the StreamListener methods.  However, since
   // this typically introduces a reference cycle between this and the listener,
   // we need to be sure to break the reference if this method does not succeed.
-  mListener = std::move(listener);
+  mListener = listener;
 
   // This method assigns mPump as a side-effect.  We need to clear mPump if
   // this method fails.
@@ -803,9 +804,8 @@ nsBaseChannel::OnStartRequest(nsIRequest* request) {
 
   SUSPEND_PUMP_FOR_SCOPE();
 
-  // null in case of redirect
-  if (nsCOMPtr<nsIStreamListener> listener = mListener) {
-    return listener->OnStartRequest(this);
+  if (mListener) {  // null in case of redirect
+    return mListener->OnStartRequest(this);
   }
   return NS_OK;
 }
@@ -822,9 +822,8 @@ nsBaseChannel::OnStopRequest(nsIRequest* request, nsresult status) {
   mCancelableAsyncRequest = nullptr;
   mPumpingData = false;
 
-  // null in case of redirect
-  if (nsCOMPtr<nsIStreamListener> listener = mListener) {
-    listener->OnStopRequest(this, mStatus);
+  if (mListener) {  // null in case of redirect
+    mListener->OnStopRequest(this, mStatus);
   }
   ChannelDone();
 
@@ -848,8 +847,7 @@ nsBaseChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* stream,
                                uint64_t offset, uint32_t count) {
   SUSPEND_PUMP_FOR_SCOPE();
 
-  nsCOMPtr<nsIStreamListener> listener = mListener;
-  nsresult rv = listener->OnDataAvailable(this, stream, offset, count);
+  nsresult rv = mListener->OnDataAvailable(this, stream, offset, count);
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
     int64_t prog = offset + count;
     if (NS_IsMainThread()) {
@@ -971,6 +969,20 @@ NS_IMETHODIMP nsBaseChannel::GetCanceled(bool* aCanceled) {
 
 void nsBaseChannel::SetupNeckoTarget() {
   mNeckoTarget = GetMainThreadSerialEventTarget();
+}
+
+NS_IMETHODIMP nsBaseChannel::GetContentRange(
+    RefPtr<mozilla::net::ContentRange>* aRange) {
+  if (aRange) {
+    *aRange = mContentRange;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsBaseChannel::SetContentRange(
+    RefPtr<mozilla::net::ContentRange> aRange) {
+  mContentRange = aRange;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsBaseChannel::GetFullMimeType(RefPtr<TMimeType<char>>* aOut) {

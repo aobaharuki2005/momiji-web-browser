@@ -15,12 +15,14 @@ add_task(async function () {
     set: [["browser.backup.archive.enabled", false]],
   });
 
-  let settings = gBrowser.contentDocument.querySelector(
-    "setting-group[groupid='backup']"
-  );
   ok(
-    BrowserTestUtils.isHidden(settings),
-    "backup setting-group is not visible"
+    gBrowser.contentDocument.getElementById("backupCategory").hidden,
+    "backup category hidden"
+  );
+
+  ok(
+    gBrowser.contentDocument.getElementById("dataBackupGroup").hidden,
+    "backup section is hidden"
   );
 
   // Check that we don't get any results in sync when searching:
@@ -41,13 +43,18 @@ add_task(async function () {
     leaveOpen: true,
   });
 
-  let settings = gBrowser.contentDocument.querySelector(
-    "setting-group[groupid='backup']"
+  ok(
+    !gBrowser.contentDocument.getElementById("backupCategory").hidden,
+    "backup category shown"
   );
-  ok(BrowserTestUtils.isVisible(settings), "backup setting-group is visible");
+
+  ok(
+    !gBrowser.contentDocument.getElementById("dataBackupGroup").hidden,
+    "backup section is shown"
+  );
 
   // Check that we don't get any results in sync when searching:
-  await evaluateSearchResults("backup", "backup");
+  await evaluateSearchResults("backup", "dataBackupGroup");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

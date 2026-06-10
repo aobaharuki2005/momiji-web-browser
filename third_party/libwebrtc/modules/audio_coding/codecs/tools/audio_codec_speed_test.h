@@ -31,8 +31,8 @@ class AudioCodecSpeedTest : public ::testing::TestWithParam<coding_param> {
   AudioCodecSpeedTest(int block_duration_ms,
                       int input_sampling_khz,
                       int output_sampling_khz);
-  void SetUp() override;
-  void TearDown() override;
+  virtual void SetUp();
+  virtual void TearDown();
 
   // EncodeABlock(...) does the following:
   // 1. encodes a block of audio, saved in `in_data`,

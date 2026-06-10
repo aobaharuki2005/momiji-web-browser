@@ -8,17 +8,14 @@
  */
 
 add_task(async function () {
-  // Add visits so that it can be autofilled.
-  await PlacesTestUtils.addVisits([
-    {
-      uri: "http://bug1105244.example.com/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
-  ]);
-  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://bug1105244.example.com/",
+    title: "test",
+  });
 
   registerCleanupFunction(async function () {
-    await PlacesUtils.history.clear();
+    await PlacesUtils.bookmarks.remove(bm);
   });
 
   await BrowserTestUtils.withNewTab("about:blank", testDelete);

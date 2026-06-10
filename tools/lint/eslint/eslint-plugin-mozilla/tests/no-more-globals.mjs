@@ -10,15 +10,12 @@ import { RuleTester } from "eslint";
 
 const ruleTester = new RuleTester();
 
-function makeTest(code, errors) {
-  const test = {
+function makeTest(code, errors = []) {
+  return {
     code,
+    errors,
     filename: import.meta.dirname + "/helper-no-more-globals.js",
   };
-  if (errors) {
-    test.errors = errors;
-  }
-  return test;
 }
 
 ruleTester.run("no-more-globals", rule, {

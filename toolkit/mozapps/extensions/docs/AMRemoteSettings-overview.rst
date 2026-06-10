@@ -157,8 +157,6 @@ The entries part of the ``"addons-manager-settings"`` collection are validated u
 .. literalinclude :: ./AMRemoteSettings-JSONSchema.json
    :language: json
 
-.. _UI Schema:
-
 UI Schema
 ---------
 

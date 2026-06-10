@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as Bidi from 'webdriver-bidi-protocol';
+import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
 
-import type {CreatePageOptions, Permission} from '../api/Browser.js';
+import type {Permission} from '../api/Browser.js';
 import {WEB_PERMISSION_TO_PROTOCOL_PERMISSION} from '../api/Browser.js';
 import type {BrowserContextEvents} from '../api/BrowserContext.js';
 import {BrowserContext, BrowserContextEvent} from '../api/BrowserContext.js';
@@ -181,17 +181,12 @@ export class BidiBrowserContext extends BrowserContext {
     });
   }
 
-  override async newPage(options?: CreatePageOptions): Promise<Page> {
+  override async newPage(): Promise<Page> {
     using _guard = await this.waitForScreenshotOperations();
 
-    const type =
-      options?.type === 'window'
-        ? Bidi.BrowsingContext.CreateType.Window
-        : Bidi.BrowsingContext.CreateType.Tab;
-
-    const context = await this.userContext.createBrowsingContext(type, {
-      background: options?.background,
-    });
+    const context = await this.userContext.createBrowsingContext(
+      Bidi.BrowsingContext.CreateType.Tab,
+    );
     const page = this.#pages.get(context)!;
     if (!page) {
       throw new Error('Page is not found');
@@ -226,7 +221,7 @@ export class BidiBrowserContext extends BrowserContext {
     return this.#browser;
   }
 
-  override async pages(_includeAll = false): Promise<BidiPage[]> {
+  override async pages(): Promise<BidiPage[]> {
     return [...this.userContext.browsingContexts].map(context => {
       return this.#pages.get(context)!;
     });

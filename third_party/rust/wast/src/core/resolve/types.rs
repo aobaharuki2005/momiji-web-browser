@@ -69,10 +69,8 @@ impl<'a> Expander<'a> {
             ModuleField::Type(_) => {}
             ModuleField::Rec(_) => {}
 
-            ModuleField::Import(imports) => {
-                for sig in imports.unique_sigs_mut() {
-                    self.expand_item_sig(sig);
-                }
+            ModuleField::Import(i) => {
+                self.expand_item_sig(&mut i.item);
             }
             ModuleField::Func(f) => {
                 self.expand_type_use(&mut f.ty);

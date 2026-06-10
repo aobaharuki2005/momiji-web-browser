@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -3040,12 +3042,12 @@ bool BacktrackingAllocator::splitAcrossCalls(LiveBundle* bundle) {
   MOZ_ASSERT(!bundleCallPositions.empty());
 
 #ifdef JS_JITSPEW
-  {
-    AutoJitSpewMessage msg(JitSpew_RegAlloc, "  .. split across calls at ");
-    for (size_t i = 0; i < bundleCallPositions.length(); ++i) {
-      msg.append("%s%u", i != 0 ? ", " : "", bundleCallPositions[i].bits());
-    }
+  JitSpewStart(JitSpew_RegAlloc, "  .. split across calls at ");
+  for (size_t i = 0; i < bundleCallPositions.length(); ++i) {
+    JitSpewCont(JitSpew_RegAlloc, "%s%u", i != 0 ? ", " : "",
+                bundleCallPositions[i].bits());
   }
+  JitSpewFin(JitSpew_RegAlloc);
 #endif
 
   return splitAt(bundle, bundleCallPositions);
@@ -4817,25 +4819,27 @@ UniqueChars LiveBundle::toString() const {
 void BacktrackingAllocator::dumpLiveRangesByVReg(const char* who) {
   MOZ_ASSERT(!vregs[0u].hasRanges());
 
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   JitSpew(JitSpew_RegAlloc, "Live ranges by virtual register (%s):", who);
 
   for (uint32_t i = 1; i < graph.numVirtualRegisters(); i++) {
-    AutoJitSpewMessage msg(JitSpew_RegAlloc, "  ");
+    JitSpewHeader(JitSpew_RegAlloc);
+    JitSpewCont(JitSpew_RegAlloc, "  ");
     VirtualRegister& reg = vregs[i];
     for (VirtualRegister::RangeIterator iter(reg); iter; iter++) {
       if (*iter != reg.firstRange()) {
-        msg.append(" ## ");
+        JitSpewCont(JitSpew_RegAlloc, " ## ");
       }
-      msg.append("%s", iter->toString().get());
+      JitSpewCont(JitSpew_RegAlloc, "%s", iter->toString().get());
     }
+    JitSpewCont(JitSpew_RegAlloc, "\n");
   }
 }
 
 void BacktrackingAllocator::dumpLiveRangesByBundle(const char* who) {
   MOZ_ASSERT(!vregs[0u].hasRanges());
 
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   JitSpew(JitSpew_RegAlloc, "Live ranges by bundle (%s):", who);
 
   for (uint32_t i = 1; i < graph.numVirtualRegisters(); i++) {
@@ -4855,13 +4859,13 @@ void BacktrackingAllocator::dumpAllocations() {
 
   dumpLiveRangesByBundle("in dumpAllocations()");
 
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   JitSpew(JitSpew_RegAlloc, "Allocations by physical register:");
 
   for (size_t i = 0; i < AnyRegister::Total; i++) {
     if (registers[i].allocatable && !registers[i].allocations.empty()) {
-      AutoJitSpewMessage msg(JitSpew_RegAlloc,
-                             "  %s:", AnyRegister::FromCode(i).name());
+      JitSpewHeader(JitSpew_RegAlloc);
+      JitSpewCont(JitSpew_RegAlloc, "  %s:", AnyRegister::FromCode(i).name());
       bool first = true;
       LiveRangePlusSet::Iter lrpIter(&registers[i].allocations);
       while (lrpIter.hasMore()) {
@@ -4869,14 +4873,15 @@ void BacktrackingAllocator::dumpAllocations() {
         if (first) {
           first = false;
         } else {
-          msg.append(" /");
+          fprintf(stderr, " /");
         }
-        msg.append(" %s", range->toString().get());
+        fprintf(stderr, " %s", range->toString().get());
       }
+      JitSpewCont(JitSpew_RegAlloc, "\n");
     }
   }
 
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
 }
 
 #endif  // JS_JITSPEW
@@ -4888,10 +4893,10 @@ void BacktrackingAllocator::dumpAllocations() {
 ///////////////////////////////////////////////////////////////////////////////
 
 bool BacktrackingAllocator::go() {
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   JitSpew(JitSpew_RegAlloc, "Beginning register allocation");
 
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   if (JitSpewEnabled(JitSpew_RegAlloc)) {
     dumpInstructions("(Pre-allocation LIR)");
   }
@@ -4914,7 +4919,7 @@ bool BacktrackingAllocator::go() {
     return false;
   }
 
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   JitSpew(JitSpew_RegAlloc, "Beginning grouping and queueing registers");
   if (!mergeAndQueueRegisters()) {
     return false;
@@ -4966,9 +4971,9 @@ bool BacktrackingAllocator::go() {
   // been allocated a register or is marked for spilling.  In the latter case
   // it will have been added to ::spilledBundles.
 
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   JitSpew(JitSpew_RegAlloc, "Beginning main allocation loop");
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
 
   // Allocate, spill and split bundles until finished.
   while (!allocationQueue.empty()) {
@@ -4999,19 +5004,19 @@ bool BacktrackingAllocator::go() {
   // refinement is implemented in the un-landed patch at bug 1758274 comment
   // 15.
 
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   JitSpew(JitSpew_RegAlloc,
           "Main allocation loop complete; "
           "beginning spill-bundle allocation loop");
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
 
   if (!tryAllocatingRegistersForSpillBundles()) {
     return false;
   }
 
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   JitSpew(JitSpew_RegAlloc, "Spill-bundle allocation loop complete");
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
 
   // After this point, the VirtualRegister ranges are sorted and must stay
   // sorted.
@@ -5043,7 +5048,7 @@ bool BacktrackingAllocator::go() {
     return false;
   }
 
-  JitSpew(JitSpew_RegAlloc, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   if (JitSpewEnabled(JitSpew_RegAlloc)) {
     dumpInstructions("(Post-allocation LIR)");
   }

@@ -81,7 +81,7 @@ class DefaultBrowserMenu(
             isInPrimaryState = {
                 selectedSession?.content?.loading == false
             },
-            secondaryImageResource = iconsR.drawable.mozac_ic_cross_24,
+            secondaryImageResource = iconsR.drawable.mozac_ic_stop,
             secondaryContentDescription = context.getString(R.string.content_description_stop),
             secondaryImageTintResource = context.theme.resolveAttribute(R.attr.primaryText),
             disableInSecondaryState = false,
@@ -161,7 +161,7 @@ class DefaultBrowserMenu(
 
         val openInApp = BrowserMenuImageText(
             label = context.getString(R.string.menu_open_with_a_browser2),
-            imageResource = iconsR.drawable.mozac_ic_external_link_24,
+            imageResource = iconsR.drawable.mozac_ic_open_in,
             textColorResource = context.theme.resolveAttribute(R.attr.primaryText),
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)

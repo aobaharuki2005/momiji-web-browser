@@ -9,11 +9,13 @@ import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.runTest
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.debugsettings.cfrs.CfrPreferencesRepository
@@ -25,6 +27,9 @@ import org.mozilla.fenix.debugsettings.cfrs.CfrToolsStore
 @RunWith(AndroidJUnit4::class)
 class CfrToolsPreferencesMiddlewareTest {
 
+    @get:Rule
+    val mainCoroutineTestRule = MainCoroutineRule()
+
     private lateinit var cfrPreferencesRepository: CfrPreferencesRepository
     private lateinit var middleware: CfrToolsPreferencesMiddleware
 
@@ -35,7 +40,7 @@ class CfrToolsPreferencesMiddlewareTest {
     }
 
     @Test
-    fun `WHEN the store gets initialized THEN repository is initialized`() = runTest {
+    fun `WHEN the store gets initialized THEN repository is initialized`() = runTestOnMain {
         var initCalled = false
         val repository = object : CfrPreferencesRepository {
             override val cfrPreferenceUpdates: Flow<CfrPreferencesRepository.CfrPreferenceUpdate>
@@ -67,8 +72,6 @@ class CfrToolsPreferencesMiddlewareTest {
             ),
         )
 
-        testScheduler.advanceUntilIdle()
-
         assertTrue(initCalled)
         assertTrue(store.state.inactiveTabsShown)
     }
@@ -93,6 +96,11 @@ class CfrToolsPreferencesMiddlewareTest {
 
         preferenceUpdates.forEach {
             when (it.preferenceType) {
+                CfrPreferencesRepository.CfrPreference.HomepageSearchBar -> {
+                    val actual = middleware.mapRepoUpdateToStoreAction(it) as CfrToolsAction.HomepageSearchbarCfrLoaded
+                    val actualValue = !actual.newValue
+                    assertEquals(it.value, actualValue)
+                }
                 CfrPreferencesRepository.CfrPreference.TabAutoCloseBanner -> {
                     val actual = middleware.mapRepoUpdateToStoreAction(it) as CfrToolsAction.TabAutoCloseBannerCfrLoaded
                     val actualValue = !actual.newValue
@@ -109,6 +117,48 @@ class CfrToolsPreferencesMiddlewareTest {
                     assertEquals(it.value, actualValue)
                 }
             }
+        }
+    }
+
+    @Test
+    fun `GIVEN the homepage searchbar CFR should not be shown WHEN the toggle homepage searchbar CFR action is dispatched THEN its preference is set to should be shown`() {
+        val store = CfrToolsStore(
+            initialState = CfrToolsState(
+                homepageSearchBarShown = true,
+            ),
+            middlewares = listOf(
+                middleware,
+            ),
+        )
+        store.dispatch(CfrToolsAction.HomepageSearchBarShownToggled)
+        verify {
+            cfrPreferencesRepository.updateCfrPreference(
+                CfrPreferencesRepository.CfrPreferenceUpdate(
+                    preferenceType = CfrPreferencesRepository.CfrPreference.HomepageSearchBar,
+                    value = false,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN the homepage searchbar CFR should be shown WHEN the toggle homepage searchbar CFR action is dispatched THEN its preference is set to should not be shown`() {
+        val store = CfrToolsStore(
+            initialState = CfrToolsState(
+                homepageSearchBarShown = false,
+            ),
+            middlewares = listOf(
+                middleware,
+            ),
+        )
+        store.dispatch(CfrToolsAction.HomepageSearchBarShownToggled)
+        verify {
+            cfrPreferencesRepository.updateCfrPreference(
+                CfrPreferencesRepository.CfrPreferenceUpdate(
+                    preferenceType = CfrPreferencesRepository.CfrPreference.HomepageSearchBar,
+                    value = true,
+                ),
+            )
         }
     }
 

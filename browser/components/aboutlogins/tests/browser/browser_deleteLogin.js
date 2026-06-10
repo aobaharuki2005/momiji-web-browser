@@ -49,11 +49,10 @@ add_task(async function test_show_logins() {
 add_task(async function test_login_item() {
   let browser = gBrowser.selectedBrowser;
 
-  async function waitForDelete() {
-    let numLogins = await Services.logins.countLoginsAsync("", "", "");
+  function waitForDelete() {
+    let numLogins = Services.logins.countLogins("", "", "");
     return TestUtils.waitForCondition(
-      async () =>
-        (await Services.logins.countLoginsAsync("", "", "")) < numLogins,
+      () => Services.logins.countLogins("", "", "") < numLogins,
       "Error waiting for login deletion"
     );
   }

@@ -37,12 +37,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.LinkText
-import mozilla.components.compose.base.LinkTextState
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.FilledButton
 import org.mozilla.fenix.R
-import org.mozilla.fenix.nimbus.MarketingCardVariant
+import org.mozilla.fenix.compose.LinkText
+import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -146,7 +145,7 @@ fun MarketingDataOnboardingPage(
                             modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
                             LinkText(
-                                text = marketingData.bodyOneText.updateFirstPlaceholder(marketingData.bodyOneLinkText),
+                                text = marketingData.bodyOneText,
                                 linkTextStates = listOf(
                                     LinkTextState(
                                         text = marketingData.bodyOneLinkText,
@@ -190,7 +189,6 @@ private fun MarketingDataOnboardingPagePreview() {
                     onClick = {},
                 ),
                 marketingData = OnboardingMarketingData(
-                    marketingCardVariant = MarketingCardVariant.DEFAULT,
                     bodyOneText = stringResource(id = R.string.onboarding_marketing_learn_more),
                     bodyOneLinkText = stringResource(id = R.string.onboarding_marketing_learn_more),
                     bodyTwoText = stringResource(id = R.string.onboarding_marketing_opt_out_checkbox),
@@ -202,5 +200,3 @@ private fun MarketingDataOnboardingPagePreview() {
         )
     }
 }
-
-private fun String.updateFirstPlaceholder(text: String) = replace($$"%1$s", text)

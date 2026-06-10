@@ -34,11 +34,7 @@ function createTestExtPageScript(name) {
         );
         browser.test.sendMessage(`event-received:${pageName}`);
       },
-      { types: ["main_frame"], urls: ["https://example.com/*"] },
-      // Use blocking listener to make sure that the webRequest event handler
-      // above runs for matching requests, BEFORE the openNewForegroundTab
-      // call in triggerWebRequestListener resolves.
-      ["blocking"]
+      { types: ["main_frame"], urls: ["https://example.com/*"] }
     );
     /* eslint-disable mozilla/balanced-listeners */
     window.addEventListener("pageshow", () => {
@@ -65,8 +61,6 @@ async function triggerWebRequestListener(webPageURL) {
     true /* waitForLoad */,
     true /* waitForStop */
   );
-  // When we get here, the webRequest listener is expected to have been
-  // triggered, if there is any.
   BrowserTestUtils.removeTab(webPageTab);
 }
 
@@ -84,8 +78,7 @@ add_setup(async function () {
 add_task(async function test_extension_page_sameprocess_navigation() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["webRequest", "webRequestBlocking"],
-      host_permissions: ["https://example.com/*"],
+      permissions: ["webRequest", "https://example.com/*"],
     },
     files: {
       "extpage1.html": createTestExtPage({ script: "extpage1.js" }),
@@ -103,12 +96,7 @@ add_task(async function test_extension_page_sameprocess_navigation() {
   const extPageURL2 = policy.extension.baseURI.resolve("extpage2.html");
 
   info("Opening extension page in a new tab");
-  const extPageTab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    extPageURL1,
-    true,
-    true
-  );
+  const extPageTab = await BrowserTestUtils.addTab(gBrowser, extPageURL1);
   let browser = gBrowser.getBrowserForTab(extPageTab);
   info("Wait for the extension page to be loaded");
   await extension.awaitMessage("pageshow:extpage1");
@@ -156,8 +144,7 @@ add_task(async function test_extension_page_sameprocess_navigation() {
 add_task(async function test_extension_page_context_navigated_to_web_page() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["webRequest", "webRequestBlocking"],
-      host_permissions: ["https://example.com/*"],
+      permissions: ["webRequest", "https://example.com/*"],
     },
     files: {
       "extpage.html": createTestExtPage({ script: "extpage.js" }),
@@ -180,12 +167,7 @@ add_task(async function test_extension_page_context_navigated_to_web_page() {
   const triggerWebRequestURL = "https://example.com/";
 
   info("Opening extension page in a new tab");
-  const extPageTab1 = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    extPageURL,
-    true,
-    true
-  );
+  const extPageTab1 = await BrowserTestUtils.addTab(gBrowser, extPageURL);
   let browserForTab1 = gBrowser.getBrowserForTab(extPageTab1);
   info("Wait for the extension page to be loaded");
   await extension.awaitMessage("pageshow:extpage");

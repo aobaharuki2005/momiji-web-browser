@@ -15,9 +15,11 @@ add_task(async function test_receive_punycode_result() {
         suggestedIndex: 0,
         payload: {
           url,
+          title: "www.اختبار.اختبار.org:5000",
         },
         highlights: {
           url: UrlbarUtils.HIGHLIGHT.TYPED,
+          title: UrlbarUtils.HIGHLIGHT.TYPED,
         },
       });
       addCallback(this, result);
@@ -29,13 +31,12 @@ add_task(async function test_receive_punycode_result() {
   }
   let provider = new ResultWithHighlightsProvider();
 
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
   registerCleanupFunction(async () => {
-    providersManager.unregisterProvider(provider);
+    UrlbarProvidersManager.unregisterProvider(provider);
     await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
     gURLBar.handleRevert();
   });
-  providersManager.registerProvider(provider);
+  UrlbarProvidersManager.registerProvider(provider);
 
   info("Open the result popup");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({

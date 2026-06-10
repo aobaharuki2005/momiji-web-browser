@@ -1,10 +1,11 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsBidiKeyboard
-#define _nsBidiKeyboard
+#ifndef __nsBidiKeyboard
+#define __nsBidiKeyboard
 #include "nsIBidiKeyboard.h"
 #include <windows.h>
 
@@ -30,4 +31,4 @@ class nsBidiKeyboard : public nsIBidiKeyboard {
   wchar_t mCurrentLocaleName[KL_NAMELENGTH];
 };
 
-#endif  // _nsBidiKeyboard
+#endif  // __nsBidiKeyboard

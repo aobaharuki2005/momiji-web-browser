@@ -15,7 +15,7 @@ add_task(async function slowHeuristicSelected() {
   // First, add a provider that adds a heuristic result on a delay.  Both this
   // provider and the one below have a high priority so that only they are used
   // during the test.
-  let engine = await SearchService.getDefault();
+  let engine = await Services.search.getDefault();
   let heuristicResult = new UrlbarResult({
     type: UrlbarUtils.RESULT_TYPE.SEARCH,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -31,8 +31,7 @@ add_task(async function slowHeuristicSelected() {
     priority: Infinity,
     addTimeout: 500,
   });
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(heuristicProvider);
+  UrlbarProvidersManager.registerProvider(heuristicProvider);
 
   // Second, add another provider that adds a non-heuristic result immediately
   // with suggestedIndex = 1.
@@ -42,7 +41,7 @@ add_task(async function slowHeuristicSelected() {
     name: "nonHeuristicProvider",
     priority: Infinity,
   });
-  providersManager.registerProvider(nonHeuristicProvider);
+  UrlbarProvidersManager.registerProvider(nonHeuristicProvider);
 
   // Do a search.
   const win = await BrowserTestUtils.openNewBrowserWindow();
@@ -61,8 +60,8 @@ add_task(async function slowHeuristicSelected() {
   Assert.equal(actualNonHeuristic.type, UrlbarUtils.RESULT_TYPE.TIP);
 
   await UrlbarTestUtils.promisePopupClose(win);
-  providersManager.unregisterProvider(heuristicProvider);
-  providersManager.unregisterProvider(nonHeuristicProvider);
+  UrlbarProvidersManager.unregisterProvider(heuristicProvider);
+  UrlbarProvidersManager.unregisterProvider(nonHeuristicProvider);
   await BrowserTestUtils.closeWindow(win);
 });
 
@@ -73,7 +72,7 @@ add_task(async function oneOffRemainsSelected() {
   // First, add a provider that adds a heuristic result on a delay.  Both this
   // provider and the one below have a high priority so that only they are used
   // during the test.
-  let engine = await SearchService.getDefault();
+  let engine = await Services.search.getDefault();
   let heuristicResult = new UrlbarResult({
     type: UrlbarUtils.RESULT_TYPE.SEARCH,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -89,8 +88,7 @@ add_task(async function oneOffRemainsSelected() {
     priority: Infinity,
     addTimeout: 500,
   });
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(heuristicProvider);
+  UrlbarProvidersManager.registerProvider(heuristicProvider);
 
   // Second, add another provider that adds a non-heuristic result immediately
   // with suggestedIndex = 1.
@@ -100,7 +98,7 @@ add_task(async function oneOffRemainsSelected() {
     name: "nonHeuristicProvider",
     priority: Infinity,
   });
-  providersManager.registerProvider(nonHeuristicProvider);
+  UrlbarProvidersManager.registerProvider(nonHeuristicProvider);
 
   // Do a search but don't wait for it to finish.
   const win = await BrowserTestUtils.openNewBrowserWindow();
@@ -138,8 +136,8 @@ add_task(async function oneOffRemainsSelected() {
   );
 
   await UrlbarTestUtils.promisePopupClose(win);
-  providersManager.unregisterProvider(heuristicProvider);
-  providersManager.unregisterProvider(nonHeuristicProvider);
+  UrlbarProvidersManager.unregisterProvider(heuristicProvider);
+  UrlbarProvidersManager.unregisterProvider(nonHeuristicProvider);
   await BrowserTestUtils.closeWindow(win);
 });
 

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -17,9 +19,10 @@ MessageEventRunnable::MessageEventRunnable(WorkerPrivate* aWorkerPrivate)
       StructuredCloneHolder(CloningSupported, TransferringSupported,
                             StructuredCloneScope::SameProcess) {}
 
-bool MessageEventRunnable::DispatchDOMEvent(
-    JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-    RefPtr<DOMEventTargetHelper> aTarget, bool aIsMainThread) {
+bool MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
+                                            WorkerPrivate* aWorkerPrivate,
+                                            DOMEventTargetHelper* aTarget,
+                                            bool aIsMainThread) {
   nsCOMPtr<nsIGlobalObject> parent = aTarget->GetParentObject();
 
   // For some workers without window, parent is null and we try to find it
@@ -53,7 +56,7 @@ bool MessageEventRunnable::DispatchDOMEvent(
     cloneDataPolicy.allowSharedMemoryObjects();
   }
 
-  Read(aCx, &messageData, cloneDataPolicy, rv);
+  Read(parent, aCx, &messageData, cloneDataPolicy, rv);
 
   if (NS_WARN_IF(rv.Failed())) {
     DispatchError(aCx, aTarget);
@@ -114,7 +117,7 @@ MessageEventToParentRunnable::MessageEventToParentRunnable(
 
 bool MessageEventToParentRunnable::DispatchDOMEvent(
     JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-    RefPtr<DOMEventTargetHelper> aTarget, bool aIsMainThread) {
+    DOMEventTargetHelper* aTarget, bool aIsMainThread) {
   nsCOMPtr<nsIGlobalObject> parent = aTarget->GetParentObject();
 
   // For some workers without window, parent is null and we try to find it
@@ -148,7 +151,7 @@ bool MessageEventToParentRunnable::DispatchDOMEvent(
     cloneDataPolicy.allowSharedMemoryObjects();
   }
 
-  Read(aCx, &messageData, cloneDataPolicy, rv);
+  Read(parent, aCx, &messageData, cloneDataPolicy, rv);
 
   if (NS_WARN_IF(rv.Failed())) {
     DispatchError(aCx, aTarget);

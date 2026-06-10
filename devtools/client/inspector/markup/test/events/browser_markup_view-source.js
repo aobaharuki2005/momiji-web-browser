@@ -106,13 +106,7 @@ async function clickOnJumpToDebuggerIconForNode(
   }
 
   const onDebuggerSelected = toolbox.once(`jsdebugger-selected`);
-  EventUtils.synthesizeMouse(
-    debuggerIcon,
-    2,
-    2,
-    {},
-    debuggerIcon.documentGlobal
-  );
+  EventUtils.synthesizeMouse(debuggerIcon, 2, 2, {}, debuggerIcon.ownerGlobal);
 
   const dbg = await onDebuggerSelected;
   ok(true, "The debugger was opened");

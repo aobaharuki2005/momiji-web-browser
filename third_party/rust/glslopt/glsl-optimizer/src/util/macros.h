@@ -72,30 +72,20 @@
  * Unreachable macro. Useful for suppressing "control reaches end of non-void
  * function" warnings.
  */
-/**
- * Unreachable macro. Useful for suppressing "control reaches end of non-void
- * function" warnings.
- */
 #if defined(HAVE___BUILTIN_UNREACHABLE) || __has_builtin(__builtin_unreachable)
-#define UNREACHABLE(str)    \
+#define unreachable(str)    \
 do {                        \
-   (void)"" str; /* str must be a string literal */ \
    assert(!str);            \
    __builtin_unreachable(); \
 } while (0)
 #elif defined (_MSC_VER)
-#define UNREACHABLE(str)    \
+#define unreachable(str)    \
 do {                        \
-   (void)"" str; /* str must be a string literal */ \
    assert(!str);            \
    __assume(0);             \
 } while (0)
 #else
-#define UNREACHABLE(str)    \
-do {                        \
-   (void)"" str; /* str must be a string literal */ \
-   assert(!str);            \
-} while (0)
+#define unreachable(str) assert(!str)
 #endif
 
 /**
@@ -200,10 +190,8 @@ do {                       \
  * performs no action and all member variables and base classes are
  * trivially destructible themselves.
  */
-#   if defined(__clang__)
-#      if __has_builtin(__is_trivially_destructible)
-#         define HAS_TRIVIAL_DESTRUCTOR(T) __is_trivially_destructible(T)
-#      elif (defined(__has_feature) && __has_feature(has_trivial_destructor))
+#   if (defined(__clang__) && defined(__has_feature))
+#      if __has_feature(has_trivial_destructor)
 #         define HAS_TRIVIAL_DESTRUCTOR(T) __has_trivial_destructor(T)
 #      endif
 #   elif defined(__GNUC__)

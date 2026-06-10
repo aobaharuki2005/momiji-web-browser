@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsstreamconverterservice_h_
-#define _nsstreamconverterservice_h_
+#ifndef __nsstreamconverterservice__h___
+#define __nsstreamconverterservice__h___
 
 #include "nsIStreamConverterService.h"
 
@@ -42,4 +43,4 @@ class nsStreamConverterService : public nsIStreamConverterService {
   nsClassHashtable<nsCStringHashKey, nsTArray<RefPtr<nsAtom>>> mAdjacencyList;
 };
 
-#endif  // _nsstreamconverterservice_h_
+#endif  // __nsstreamconverterservice__h___

@@ -15,9 +15,9 @@
 #include <cstdint>
 #include <cstring>
 #include <optional>
-#include <span>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/video/color_space.h"
 #include "common_video/h264/h264_common.h"
 #include "common_video/h264/sps_parser.h"
@@ -134,7 +134,7 @@ void SpsVuiRewriter::UpdateStats(ParseResult result, Direction direction) {
 }
 
 SpsVuiRewriter::ParseResult SpsVuiRewriter::ParseAndRewriteSps(
-    std::span<const uint8_t> buffer,
+    ArrayView<const uint8_t> buffer,
     std::optional<SpsParser::SpsState>* sps,
     const ColorSpace* color_space,
     Buffer* destination) {
@@ -151,9 +151,8 @@ SpsVuiRewriter::ParseResult SpsVuiRewriter::ParseAndRewriteSps(
 
   // We're going to completely muck up alignment, so we need a BitBufferWriter
   // to write with.
-  Buffer out_buffer =
-      Buffer::CreateWithCapacity(buffer.size() + kMaxVuiSpsIncrease);
-  BitBufferWriter sps_writer(out_buffer.data(), out_buffer.capacity());
+  Buffer out_buffer(buffer.size() + kMaxVuiSpsIncrease);
+  BitBufferWriter sps_writer(out_buffer.data(), out_buffer.size());
 
   // Check how far the SpsParser has read, and copy that data in bulk.
   RTC_DCHECK(source_buffer.Ok());
@@ -211,7 +210,7 @@ SpsVuiRewriter::ParseResult SpsVuiRewriter::ParseAndRewriteSps(
 }
 
 SpsVuiRewriter::ParseResult SpsVuiRewriter::ParseAndRewriteSps(
-    std::span<const uint8_t> buffer,
+    ArrayView<const uint8_t> buffer,
     std::optional<SpsParser::SpsState>* sps,
     const ColorSpace* color_space,
     Buffer* destination,
@@ -223,20 +222,20 @@ SpsVuiRewriter::ParseResult SpsVuiRewriter::ParseAndRewriteSps(
 }
 
 Buffer SpsVuiRewriter::ParseOutgoingBitstreamAndRewrite(
-    std::span<const uint8_t> buffer,
+    ArrayView<const uint8_t> buffer,
     const ColorSpace* color_space) {
   std::vector<H264::NaluIndex> nalus = H264::FindNaluIndices(buffer);
 
   // Allocate some extra space for potentially adding a missing VUI.
-  Buffer output_buffer = Buffer::CreateWithCapacity(
-      buffer.size() + nalus.size() * kMaxVuiSpsIncrease);
+  Buffer output_buffer(/*size=*/0, /*capacity=*/buffer.size() +
+                                       nalus.size() * kMaxVuiSpsIncrease);
 
   for (const H264::NaluIndex& nalu_index : nalus) {
     // Copy NAL unit start code.
-    std::span<const uint8_t> start_code = buffer.subspan(
+    ArrayView<const uint8_t> start_code = buffer.subview(
         nalu_index.start_offset,
         nalu_index.payload_start_offset - nalu_index.start_offset);
-    std::span<const uint8_t> nalu = buffer.subspan(
+    ArrayView<const uint8_t> nalu = buffer.subview(
         nalu_index.payload_start_offset, nalu_index.payload_size);
     if (nalu.empty()) {
       continue;
@@ -261,7 +260,7 @@ Buffer SpsVuiRewriter::ParseOutgoingBitstreamAndRewrite(
       output_nalu.AppendData(nalu[0]);
 
       ParseResult result =
-          ParseAndRewriteSps(nalu.subspan(H264::kNaluTypeSize), &sps,
+          ParseAndRewriteSps(nalu.subview(H264::kNaluTypeSize), &sps,
                              color_space, &output_nalu, Direction::kOutgoing);
       if (result == ParseResult::kVuiRewritten) {
         output_buffer.AppendData(start_code);

@@ -5,7 +5,6 @@
 package mozilla.components.support.rusterrors
 
 import mozilla.appservices.errorsupport.ApplicationErrorReporter
-import mozilla.appservices.errorsupport.RustComponentsErrorTelemetry
 import mozilla.appservices.errorsupport.setApplicationErrorReporter
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.base.crash.CrashReporting
@@ -25,27 +24,24 @@ public fun initializeRustErrors(crashReporter: CrashReporting) {
 
 internal class AppServicesErrorReport(
     override val typeName: String,
-    cause: Throwable,
-) : Exception(cause.message, cause), RustCrashReport {
-    override val message: String get() = cause?.message ?: "(unknown Rust error)"
-}
+    override val message: String,
+) : Exception(typeName), RustCrashReport
 
 /**
- * Report an error from a Rust component to Sentry and submit a telemetry ping.
+ * Report an error from a Rust component to sentry
  *
- * This wraps the exception in a [RustCrashReport] to customize how the crash
- * report is displayed in Sentry, while preserving the original stacktrace.
+ * Normally these error reports come from Rust, but this function provides a way to do it from
+ * Kotlin code.
  */
-fun reportRustError(typeName: String, exception: Throwable) {
-    ErrorReporter.crashReporter?.submitCaughtException(AppServicesErrorReport(typeName, exception))
-    RustComponentsErrorTelemetry.submitErrorPing(typeName, exception.toString())
+fun reportRustError(typeName: String, message: String) {
+    ErrorReporter.reportError(typeName, message)
 }
 
 internal object ErrorReporter : ApplicationErrorReporter {
     internal var crashReporter: CrashReporting? = null
 
     override fun reportError(typeName: String, message: String) {
-        crashReporter?.submitCaughtException(AppServicesErrorReport(typeName, Exception(message)))
+        crashReporter?.submitCaughtException(AppServicesErrorReport(typeName, message))
     }
 
     override fun reportBreadcrumb(message: String, module: String, line: UInt, column: UInt) {

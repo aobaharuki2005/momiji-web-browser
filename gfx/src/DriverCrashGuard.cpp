@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -98,7 +100,7 @@ void DriverCrashGuard::Initialize() {
     // Ask the parent whether or not activating the guard is okay. The parent
     // won't bother if it detected a crash.
     dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-    cc->SendBeginDriverCrashGuard(mType, &mCrashDetected);
+    cc->SendBeginDriverCrashGuard(uint32_t(mType), &mCrashDetected);
     if (mCrashDetected) {
       LogFeatureDisabled();
       return;
@@ -151,7 +153,7 @@ DriverCrashGuard::~DriverCrashGuard() {
       SetStatus(DriverInitStatus::Okay);
     }
   } else {
-    dom::ContentChild::GetSingleton()->SendEndDriverCrashGuard(mType);
+    dom::ContentChild::GetSingleton()->SendEndDriverCrashGuard(uint32_t(mType));
   }
 
   CrashReporter::UnrecordAnnotation(

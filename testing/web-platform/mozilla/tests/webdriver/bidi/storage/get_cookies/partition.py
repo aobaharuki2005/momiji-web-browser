@@ -72,12 +72,11 @@ async def test_partition_context(
 # Because of Dynamic First-Party Isolation, adding the cookie with `document.cookie`
 # works only with same-origin iframes.
 async def test_partition_context_same_origin_iframe(
-    bidi_session, new_tab, inline, domain_value, add_document_cookie, iframe
+    bidi_session, new_tab, inline, domain_value, add_document_cookie
 ):
-    iframe_html = "<div id='in-iframe'>foo</div>"
-    iframe_url = inline(iframe_html)
+    iframe_url = inline("<div id='in-iframe'>foo</div>")
     source_origin = get_origin_from_url(iframe_url)
-    page_url = inline(iframe(iframe_html))
+    page_url = inline(f"<iframe src='{iframe_url}'></iframe>")
     await bidi_session.browsing_context.navigate(
         context=new_tab["context"], url=page_url, wait="complete"
     )

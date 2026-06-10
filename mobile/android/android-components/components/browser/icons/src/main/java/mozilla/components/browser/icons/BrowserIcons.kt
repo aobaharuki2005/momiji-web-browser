@@ -49,7 +49,6 @@ import mozilla.components.browser.icons.pipeline.IconResourceComparator
 import mozilla.components.browser.icons.preparer.DiskIconPreparer
 import mozilla.components.browser.icons.preparer.IconPreprarer
 import mozilla.components.browser.icons.preparer.MemoryIconPreparer
-import mozilla.components.browser.icons.preparer.MerinoManifestIconPreparer
 import mozilla.components.browser.icons.preparer.TippyTopIconPreparer
 import mozilla.components.browser.icons.processor.DiskIconProcessor
 import mozilla.components.browser.icons.processor.IconProcessor
@@ -63,7 +62,6 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.service.merino.manifest.MerinoManifestProvider
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.images.CancelOnDetach
@@ -88,33 +86,16 @@ internal val sharedDiskCache = IconDiskCache()
 /**
  * Entry point for loading icons for websites.
  *
- * @param context The application [Context].
- * @param httpClient The [Client] used to fetch icons over the network.
  * @param generator The [IconGenerator] to generate an icon if no icon could be loaded.
- * @param memoryInfoProvider Used to check available memory when deciding whether to cache icons.
- * @param manifestProvider An instance of [MerinoManifestProvider] used to look up website metadata
- * for loading an icon.
- * @param useMerinoManifest Whether to use the embedded Merino manifest instead of the Tippy Top
- * icon list as an icon source.
- * @param preparers List of [IconPreprarer] instances that enrich an [IconRequest] before loading.
- * @param loaders List of [IconLoader] instances used to load icons.
- * @param decoders List of [ImageDecoder] instances to use when decoding a loaded icon into a [Bitmap].
- * @param processors List of [IconProcessor] instances that run after an icon is loaded.
- * @param jobDispatcher [CoroutineDispatcher] used for icon-loading work.
+ * @param decoders List of [ImageDecoder] instances to use when decoding a loaded icon into a [android.graphics.Bitmap].
  */
-class BrowserIcons(
+class BrowserIcons constructor(
     private val context: Context,
     httpClient: Client,
     private val generator: IconGenerator = DefaultIconGenerator(),
     private val memoryInfoProvider: MemoryInfoProvider = DefaultMemoryInfoProvider(context),
-    manifestProvider: MerinoManifestProvider = MerinoManifestProvider(context.assets),
-    useMerinoManifest: Boolean = false,
     private val preparers: List<IconPreprarer> = listOf(
-        if (useMerinoManifest) {
-            MerinoManifestIconPreparer(manifestProvider = manifestProvider)
-        } else {
-            TippyTopIconPreparer(context.assets)
-        },
+        TippyTopIconPreparer(context.assets),
         MemoryIconPreparer(sharedMemoryCache),
         DiskIconPreparer(sharedDiskCache),
     ),
@@ -140,7 +121,6 @@ class BrowserIcons(
         THREADS,
         NamedThreadFactory("BrowserIcons"),
     ).asCoroutineDispatcher(),
-    val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : MemoryConsumer {
     private val logger = Logger("BrowserIcons")
     private val maximumSize = context.resources.getDimensionPixelSize(R.dimen.mozac_browser_icons_maximum_size)
@@ -221,7 +201,7 @@ class BrowserIcons(
             onSuccess = { extension ->
                 Logger.debug("Installed browser-icons extension")
 
-                store.flowScoped(dispatcher = mainDispatcher) { flow -> subscribeToUpdates(store, flow, extension) }
+                store.flowScoped { flow -> subscribeToUpdates(store, flow, extension) }
             },
             onError = { throwable ->
                 Logger.error("Could not install browser-icons extension", throwable)

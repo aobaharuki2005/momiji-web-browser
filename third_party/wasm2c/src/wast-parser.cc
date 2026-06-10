@@ -3746,7 +3746,7 @@ void WastParser::TokenQueue::pop_front() {
 
 const Token& WastParser::TokenQueue::at(size_t n) const {
   assert(n <= 1);
-  return *tokens[i ^ static_cast<bool>(n)];
+  return tokens[i ^ static_cast<bool>(n)].value();
 }
 
 const Token& WastParser::TokenQueue::front() const {

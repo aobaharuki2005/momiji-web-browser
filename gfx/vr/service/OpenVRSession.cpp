@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -69,7 +71,8 @@ class ControllerManifestFile {
   }
 
   bool IsExisting() {
-    if (mFileName.IsEmpty() || !std::ifstream(mFileName.get()).good()) {
+    if (mFileName.IsEmpty() ||
+        !std::ifstream(mFileName.BeginReading()).good()) {
       return false;
     }
     return true;
@@ -77,13 +80,13 @@ class ControllerManifestFile {
 
   void SetFileName(const char* aName) { mFileName = aName; }
 
-  const char* GetFileName() const { return mFileName.get(); }
+  const char* GetFileName() const { return mFileName.BeginReading(); }
 
  private:
   ControllerManifestFile() = default;
 
   ~ControllerManifestFile() {
-    if (!mFileName.IsEmpty() && remove(mFileName.get()) != 0) {
+    if (!mFileName.IsEmpty() && remove(mFileName.BeginReading()) != 0) {
       MOZ_ASSERT(false, "Delete controller manifest file failed.");
     }
     mFileName = "";
@@ -124,7 +127,7 @@ dom::GamepadHand GetControllerHandFromControllerRole(OpenVRHand aRole) {
 }
 
 bool FileIsExisting(const nsCString& aPath) {
-  if (aPath.IsEmpty() || !std::ifstream(aPath.get()).good()) {
+  if (aPath.IsEmpty() || !std::ifstream(aPath.BeginReading()).good()) {
     return false;
   }
   return true;
@@ -309,7 +312,7 @@ bool OpenVRSession::SetupContollerActions() {
         return false;
       }
       OpenVRViveBinding viveBinding;
-      std::ofstream viveBindingFile(viveManifest.get());
+      std::ofstream viveBindingFile(viveManifest.BeginReading());
       if (viveBindingFile.is_open()) {
         viveBindingFile << viveBinding.binding;
         viveBindingFile.close();
@@ -326,7 +329,7 @@ bool OpenVRSession::SetupContollerActions() {
         return false;
       }
       OpenVRWMRBinding WMRBinding;
-      std::ofstream WMRBindingFile(WMRManifest.get());
+      std::ofstream WMRBindingFile(WMRManifest.BeginReading());
       if (WMRBindingFile.is_open()) {
         WMRBindingFile << WMRBinding.binding;
         WMRBindingFile.close();
@@ -342,7 +345,7 @@ bool OpenVRSession::SetupContollerActions() {
         return false;
       }
       OpenVRKnucklesBinding knucklesBinding;
-      std::ofstream knucklesBindingFile(knucklesManifest.get());
+      std::ofstream knucklesBindingFile(knucklesManifest.BeginReading());
       if (knucklesBindingFile.is_open()) {
         knucklesBindingFile << knucklesBinding.binding;
         knucklesBindingFile.close();
@@ -350,14 +353,14 @@ bool OpenVRSession::SetupContollerActions() {
     }
     if (vrParent->GetOpenVRControllerManifestPath(
             VRControllerType::HTCViveCosmos, &output)) {
-      cosmosManifest = std::move(output);
+      cosmosManifest = output;
     }
     if (!cosmosManifest.Length() || !FileIsExisting(cosmosManifest)) {
       if (!GenerateTempFileName(cosmosManifest)) {
         return false;
       }
       OpenVRCosmosBinding cosmosBinding;
-      std::ofstream cosmosBindingFile(cosmosManifest.get());
+      std::ofstream cosmosBindingFile(cosmosManifest.BeginReading());
       if (cosmosBindingFile.is_open()) {
         cosmosBindingFile << cosmosBinding.binding;
         cosmosBindingFile.close();
@@ -384,7 +387,7 @@ bool OpenVRSession::SetupContollerActions() {
       if (!GenerateTempFileName(viveBindingPath)) {
         return false;
       }
-      sViveBindingFile->SetFileName(viveBindingPath.get());
+      sViveBindingFile->SetFileName(viveBindingPath.BeginReading());
       OpenVRViveBinding viveBinding;
       std::ofstream viveBindingFile(sViveBindingFile->GetFileName());
       if (viveBindingFile.is_open()) {
@@ -405,7 +408,7 @@ bool OpenVRSession::SetupContollerActions() {
       if (!GenerateTempFileName(knucklesBindingPath)) {
         return false;
       }
-      sKnucklesBindingFile->SetFileName(knucklesBindingPath.get());
+      sKnucklesBindingFile->SetFileName(knucklesBindingPath.BeginReading());
       OpenVRKnucklesBinding knucklesBinding;
       std::ofstream knucklesBindingFile(sKnucklesBindingFile->GetFileName());
       if (knucklesBindingFile.is_open()) {
@@ -426,7 +429,7 @@ bool OpenVRSession::SetupContollerActions() {
       if (!GenerateTempFileName(cosmosBindingPath)) {
         return false;
       }
-      sCosmosBindingFile->SetFileName(cosmosBindingPath.get());
+      sCosmosBindingFile->SetFileName(cosmosBindingPath.BeginReading());
       OpenVRCosmosBinding cosmosBinding;
       std::ofstream cosmosBindingFile(sCosmosBindingFile->GetFileName());
       if (cosmosBindingFile.is_open()) {
@@ -447,7 +450,7 @@ bool OpenVRSession::SetupContollerActions() {
       if (!GenerateTempFileName(WMRBindingPath)) {
         return false;
       }
-      sWMRBindingFile->SetFileName(WMRBindingPath.get());
+      sWMRBindingFile->SetFileName(WMRBindingPath.BeginReading());
       OpenVRWMRBinding WMRBinding;
       std::ofstream WMRBindingFile(sWMRBindingFile->GetFileName());
       if (WMRBindingFile.is_open()) {
@@ -559,8 +562,8 @@ bool OpenVRSession::SetupContollerActions() {
   rightContollerInfo.mActionHaptic =
       CreateControllerOutAction(R, haptic, vibration);
 
-  mControllerHand[OpenVRHand::Left] = std::move(leftContollerInfo);
-  mControllerHand[OpenVRHand::Right] = std::move(rightContollerInfo);
+  mControllerHand[OpenVRHand::Left] = leftContollerInfo;
+  mControllerHand[OpenVRHand::Right] = rightContollerInfo;
 
   if (!controllerAction.Length() || !FileIsExisting(controllerAction)) {
     if (!GenerateTempFileName(controllerAction)) {
@@ -628,7 +631,7 @@ bool OpenVRSession::SetupContollerActions() {
     actionWriter.EndArray();  // End "actions": []
     actionWriter.End();
 
-    std::ofstream actionfile(controllerAction.get());
+    std::ofstream actionfile(controllerAction.BeginReading());
     if (actionfile.is_open()) {
       actionfile << actionData.StringCRef().get();
       actionfile.close();
@@ -636,7 +639,7 @@ bool OpenVRSession::SetupContollerActions() {
   }
 
   vr::EVRInputError err =
-      vr::VRInput()->SetActionManifestPath(controllerAction.get());
+      vr::VRInput()->SetActionManifestPath(controllerAction.BeginReading());
   if (err != vr::VRInputError_None) {
     NS_WARNING("OpenVR - SetActionManifestPath failed.");
     return false;
@@ -647,11 +650,8 @@ bool OpenVRSession::SetupContollerActions() {
   if (StaticPrefs::dom_vr_process_enabled_AtStartup()) {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "SendOpenVRControllerActionPathToParent",
-        [controllerAction = std::move(controllerAction),
-         viveManifest = std::move(viveManifest),
-         WMRManifest = std::move(WMRManifest),
-         knucklesManifest = std::move(knucklesManifest),
-         cosmosManifest = std::move(cosmosManifest)]() {
+        [controllerAction, viveManifest, WMRManifest, knucklesManifest,
+         cosmosManifest]() {
           VRParent* vrParent = VRProcessChild::GetVRParent();
           (void)vrParent->SendOpenVRControllerActionPathToParent(
               controllerAction);
@@ -665,7 +665,7 @@ bool OpenVRSession::SetupContollerActions() {
               VRControllerType::HTCViveCosmos, cosmosManifest);
         }));
   } else {
-    sControllerActionFile->SetFileName(controllerAction.get());
+    sControllerActionFile->SetFileName(controllerAction.BeginReading());
   }
 
   return true;
@@ -947,7 +947,8 @@ void OpenVRSession::EnumerateControllers(VRSystemState& aState) {
 
         // Get controllers' action handles.
         auto SetActionsToWriter = [&](ControllerAction& aAction) {
-          vr::VRInput()->GetActionHandle(aAction.name.get(), &aAction.handle);
+          vr::VRInput()->GetActionHandle(aAction.name.BeginReading(),
+                                         &aAction.handle);
         };
 
         SetActionsToWriter(mControllerHand[handIndex].mActionPose);
@@ -1283,9 +1284,7 @@ bool OpenVRSession::SubmitFrame(const VRLayerTextureHandle& aTextureHandle,
   // We get aTextureHandle from get_SurfaceDescriptorMacIOSurface() at
   // VRDisplayExternal. scaleFactor and opaque are skipped because they always
   // are 1.0 and false.
-  RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(
-      aTextureHandle, gfx::YUVColorSpace::Identity, gfx::TransferFunction::SRGB,
-      MacIOSurface::AllowAlpha::No);
+  RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(aTextureHandle);
   if (!surf) {
     NS_WARNING("OpenVRSession::SubmitFrame failed to get a MacIOSurface");
     return false;

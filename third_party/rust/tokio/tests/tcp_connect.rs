@@ -1,14 +1,6 @@
 #![warn(rust_2018_idioms)]
-// WASIp1 doesn't support bind
-// No `socket` on miri.
-#![cfg(all(
-    feature = "net",
-    feature = "macros",
-    feature = "rt",
-    feature = "io-util",
-    not(all(target_os = "wasi", target_env = "p1")),
-    not(miri)
-))]
+#![cfg(all(feature = "full", not(target_os = "wasi"), not(miri)))] // Wasi doesn't support bind
+                                                                   // No `socket` on miri.
 
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::oneshot;
@@ -104,13 +96,6 @@ async fn connect_addr_ip_str_slice() {
     join!(server, client);
 }
 
-// Note that WASIp2 _does_ support asynchronous name lookups without
-// requiring a worker thread, so this test could be ungated if/when that's
-// implemented.
-#[cfg_attr(
-    target_os = "wasi",
-    ignore = "net::lookup_host requires multithreading, which WASI does not yet support"
-)]
 #[tokio::test]
 async fn connect_addr_host_string() {
     let srv = assert_ok!(TcpListener::bind("127.0.0.1:0").await);
@@ -162,13 +147,6 @@ async fn connect_addr_ip_str_port_tuple() {
     join!(server, client);
 }
 
-// Note that WASIp2 _does_ support asynchronous name lookups without
-// requiring a worker thread, so this test could be ungated if/when that's
-// implemented.
-#[cfg_attr(
-    target_os = "wasi",
-    ignore = "net::lookup_host requires multithreading, which WASI does not yet support"
-)]
 #[tokio::test]
 async fn connect_addr_host_str_port_tuple() {
     let srv = assert_ok!(TcpListener::bind("127.0.0.1:0").await);
@@ -210,7 +188,7 @@ mod linux {
 
         tokio::spawn(async move {
             let (mut client, _) = assert_ok!(srv.accept().await);
-            assert_ok!(client.set_zero_linger());
+            assert_ok!(client.set_linger(Some(Duration::from_millis(0))));
             assert_ok!(client.write_all(b"hello world").await);
 
             // TODO: Drop?
@@ -219,7 +197,7 @@ mod linux {
         /*
         let t = thread::spawn(move || {
             let mut client = assert_ok!(srv.accept()).0;
-            client.set_zero_linger().unwrap();
+            client.set_linger(Some(Duration::from_millis(0))).unwrap();
             client.write(b"hello world").unwrap();
             thread::sleep(Duration::from_millis(200));
         });

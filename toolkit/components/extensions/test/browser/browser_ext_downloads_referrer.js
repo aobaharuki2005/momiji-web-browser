@@ -1,3 +1,6 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+
 "use strict";
 
 const URL_PATH = "browser/toolkit/components/extensions/test/browser/data";
@@ -25,7 +28,7 @@ add_setup(() => {
   }
 
   let MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
   registerCleanupFunction(function () {
     MockFilePicker.cleanup();
 

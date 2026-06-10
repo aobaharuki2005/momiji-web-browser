@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode:nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -17,8 +18,10 @@ NS_IMPL_ISUPPORTS(MozIntlHelper, mozIMozIntlHelper)
 
 MozIntlHelper::MozIntlHelper() = default;
 
-NS_IMETHODIMP
-MozIntlHelper::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx) {
+MozIntlHelper::~MozIntlHelper() = default;
+
+static nsresult AddFunctions(JSContext* cx, JS::Handle<JS::Value> val,
+                             const JSFunctionSpec* funcs) {
   if (!val.isObject()) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -32,11 +35,20 @@ MozIntlHelper::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx) {
 
   JSAutoRealm ar(cx, realIntlObj);
 
-  if (!JS::AddMozGetCalendarInfo(cx, realIntlObj)) {
+  if (!JS_DefineFunctions(cx, realIntlObj, funcs)) {
     return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+MozIntlHelper::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx) {
+  static const JSFunctionSpec funcs[] = {
+      JS_SELF_HOSTED_FN("getCalendarInfo", "Intl_getCalendarInfo", 1, 0),
+      JS_FS_END};
+
+  return AddFunctions(cx, val, funcs);
 }
 
 NS_IMETHODIMP

@@ -4,9 +4,7 @@
 
 package mozilla.components.feature.session.middleware.undo
 
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.UndoAction
@@ -14,19 +12,24 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class UndoMiddlewareTest {
-    private val testDispatcher = StandardTestDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
-    fun `Undo scenario - Removing single tab`() = runTest(testDispatcher) {
+    fun `Undo scenario - Removing single tab`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000, this, this),
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
@@ -48,17 +51,17 @@ class UndoMiddlewareTest {
         assertEquals(1, store.state.tabs.size)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
 
-        restoreRecoverableTabs(testDispatcher, store)
+        restoreRecoverableTabs(dispatcher, store)
 
         assertEquals(2, store.state.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
     }
 
     @Test
-    fun `Undo scenario - Removing list of tabs`() = runTest(testDispatcher) {
+    fun `Undo scenario - Removing list of tabs`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000, this, this),
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
@@ -80,17 +83,17 @@ class UndoMiddlewareTest {
         assertEquals(1, store.state.tabs.size)
         assertEquals("https://firefox.com", store.state.selectedTab!!.content.url)
 
-        restoreRecoverableTabs(testDispatcher, store)
+        restoreRecoverableTabs(dispatcher, store)
 
         assertEquals(3, store.state.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
     }
 
     @Test
-    fun `Undo scenario - Removing all normal tabs`() = runTest(testDispatcher) {
+    fun `Undo scenario - Removing all normal tabs`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000, this, this),
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
@@ -112,17 +115,17 @@ class UndoMiddlewareTest {
         assertEquals(1, store.state.tabs.size)
         assertNull(store.state.selectedTab)
 
-        restoreRecoverableTabs(testDispatcher, store)
+        restoreRecoverableTabs(dispatcher, store)
 
         assertEquals(3, store.state.tabs.size)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
     }
 
     @Test
-    fun `Undo scenario - Removing all tabs`() = runTest(testDispatcher) {
+    fun `Undo scenario - Removing all tabs`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000, this, this),
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
@@ -144,17 +147,17 @@ class UndoMiddlewareTest {
         assertEquals(0, store.state.tabs.size)
         assertNull(store.state.selectedTab)
 
-        restoreRecoverableTabs(testDispatcher, store)
+        restoreRecoverableTabs(dispatcher, store)
 
         assertEquals(3, store.state.tabs.size)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
     }
 
     @Test
-    fun `Undo scenario - Removing all tabs non-recoverable`() = runTest(testDispatcher) {
+    fun `Undo scenario - Removing all tabs non-recoverable`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000, this, this),
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
@@ -176,16 +179,16 @@ class UndoMiddlewareTest {
         assertEquals(0, store.state.tabs.size)
         assertNull(store.state.selectedTab)
 
-        restoreRecoverableTabs(testDispatcher, store)
+        restoreRecoverableTabs(dispatcher, store)
 
         assertEquals(0, store.state.tabs.size)
     }
 
     @Test
-    fun `Undo History in State is written`() = runTest(testDispatcher) {
+    fun `Undo History in State is written`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000, this, this),
+                UndoMiddleware(clearAfterMillis = 60000),
             ),
             initialState = BrowserState(
                 tabs = listOf(
@@ -220,7 +223,7 @@ class UndoMiddlewareTest {
         assertEquals("https://getpocket.com", store.state.undoHistory.tabs[1].state.url)
         assertEquals(0, store.state.tabs.size)
 
-        restoreRecoverableTabs(testDispatcher, store)
+        restoreRecoverableTabs(dispatcher, store)
 
         assertNull(store.state.undoHistory.selectedTabId)
         assertTrue(store.state.undoHistory.tabs.isEmpty())
@@ -231,10 +234,10 @@ class UndoMiddlewareTest {
     }
 
     @Test
-    fun `Undo History gets cleared after time`() = runTest(testDispatcher) {
+    fun `Undo History gets cleared after time`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
-                UndoMiddleware(clearAfterMillis = 60000, waitScope = this, mainScope = this),
+                UndoMiddleware(clearAfterMillis = 60000, waitScope = coroutinesTestRule.scope),
             ),
             initialState = BrowserState(
                 tabs = listOf(
@@ -259,14 +262,14 @@ class UndoMiddlewareTest {
         assertEquals("https://www.mozilla.org", store.state.undoHistory.tabs[0].state.url)
         assertEquals("https://getpocket.com", store.state.undoHistory.tabs[1].state.url)
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNull(store.state.undoHistory.selectedTabId)
         assertTrue(store.state.undoHistory.tabs.isEmpty())
         assertEquals(1, store.state.tabs.size)
         assertEquals("https://reddit.com/r/firefox", store.state.tabs[0].content.url)
 
-        restoreRecoverableTabs(testDispatcher, store)
+        restoreRecoverableTabs(dispatcher, store)
 
         assertEquals(1, store.state.tabs.size)
         assertEquals("https://reddit.com/r/firefox", store.state.tabs[0].content.url)

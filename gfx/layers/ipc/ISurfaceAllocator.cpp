@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,12 +18,8 @@ NS_IMPL_ISUPPORTS(GfxMemoryImageReporter, nsIMemoryReporter)
 
 mozilla::Atomic<ptrdiff_t> GfxMemoryImageReporter::sAmount(0);
 
-RefPtr<TextureForwarder> ISurfaceAllocator::GetTextureForwarder() {
-  return nullptr;
-}
-
 void HostIPCAllocator::SendPendingAsyncMessages() {
-  if (mPendingAsyncMessage.IsEmpty()) {
+  if (mPendingAsyncMessage.empty()) {
     return;
   }
 
@@ -32,15 +30,22 @@ void HostIPCAllocator::SendPendingAsyncMessages() {
   static const uint32_t kMaxMessageNumber =
       IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE;
 
-  nsTArray<AsyncParentMessageData> messages = std::move(mPendingAsyncMessage);
-  // Limit maximum number of messages.
-  Span<const AsyncParentMessageData> span(messages);
-  while (!span.IsEmpty()) {
-    auto [chunk, rest] =
-        span.SplitAt(std::min<size_t>(kMaxMessageNumber, span.Length()));
-    SendAsyncMessage(chunk);
-    span = rest;
+  nsTArray<AsyncParentMessageData> messages;
+  messages.SetCapacity(mPendingAsyncMessage.size());
+  for (size_t i = 0; i < mPendingAsyncMessage.size(); i++) {
+    messages.AppendElement(mPendingAsyncMessage[i]);
+    // Limit maximum number of messages.
+    if (messages.Length() >= kMaxMessageNumber) {
+      SendAsyncMessage(messages);
+      // Initialize Messages.
+      messages.Clear();
+    }
   }
+
+  if (messages.Length() > 0) {
+    SendAsyncMessage(messages);
+  }
+  mPendingAsyncMessage.clear();
 }
 
 // XXX - We should actually figure out the minimum shmem allocation size on
@@ -161,13 +166,10 @@ void FixedSizeSmallShmemSectionAllocator::FreeShmemSection(
     return;
   }
 
-  size_t headerSize = sizeof(ShmemSectionHeapAllocation);
-  MOZ_RELEASE_ASSERT(aShmemSection.offset() >= headerSize);
-
   ShmemSectionHeapAllocation* allocHeader =
       reinterpret_cast<ShmemSectionHeapAllocation*>(
           aShmemSection.shmem().get<char>() + aShmemSection.offset() -
-          headerSize);
+          sizeof(ShmemSectionHeapAllocation));
 
   MOZ_ASSERT(allocHeader->mSize == aShmemSection.size());
 
@@ -223,11 +225,7 @@ void FixedSizeSmallShmemSectionAllocator::ShrinkShmemSectionHeap() {
 }
 
 Maybe<ShmemSection> ShmemSection::FromUntrusted(
-    const UntrustedShmemSection& aUntrusted, size_t aMinimumSize) {
-  if (aUntrusted.size() < aMinimumSize) {
-    return Nothing();
-  }
-
+    const UntrustedShmemSection& aUntrusted) {
   ShmemSection section;
   if (!section.Init(aUntrusted.shmem(), aUntrusted.offset(),
                     aUntrusted.size())) {
@@ -255,6 +253,10 @@ bool ShmemSection::Init(const mozilla::ipc::Shmem& aShmem, uint32_t aOffset,
   mSize = aSize;
 
   return true;
+}
+
+UntrustedShmemSection ShmemSection::AsUntrusted() {
+  return UntrustedShmemSection(mShmem, mOffset, mSize);
 }
 
 }  // namespace layers

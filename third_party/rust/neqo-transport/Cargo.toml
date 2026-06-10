@@ -10,12 +10,12 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2024"
-rust-version = "1.90.0"
+edition = "2021"
+rust-version = "1.81.0"
 name = "neqo-transport"
-version = "0.28.1"
+version = "0.21.0"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
-build = false
+build = "build.rs"
 autolib = false
 autobins = false
 autoexamples = false
@@ -39,45 +39,21 @@ categories = [
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/mozilla/neqo/"
 
-[package.metadata.cargo-machete]
-ignored = ["criterion"]
-
-[[package.metadata.bench]]
-name = "transfer_walltime"
-
-[package.metadata.bench.codspeed]
-mode = "walltime"
-memory = false
-
-[[package.metadata.bench]]
-name = "transfer_simulated"
-
-[package.metadata.bench.codspeed]
-mode = "simulation"
-memory = false
-
-[[package.metadata.bench]]
-name = "min_bandwidth"
-
-[package.metadata.bench.codspeed]
-memory = false
-
 [features]
 bench = [
     "neqo-common/bench",
-    "nss/bench",
-    "test-fixture/bench",
+    "neqo-crypto/bench",
     "log/release_max_level_info",
 ]
 build-fuzzing-corpus = [
     "neqo-common/build-fuzzing-corpus",
-    "nss/disable-encryption",
-    "nss/disable-random",
+    "neqo-crypto/disable-encryption",
+    "neqo-crypto/disable-random",
     "test-fixture/disable-random",
 ]
-disable-encryption = ["nss/disable-encryption"]
+disable-encryption = ["neqo-crypto/disable-encryption"]
 draft-29 = []
-gecko = []
+gecko = ["mtu/gecko"]
 
 [lib]
 name = "neqo_transport"
@@ -137,14 +113,8 @@ harness = false
 required-features = ["bench"]
 
 [[bench]]
-name = "transfer_simulated"
-path = "benches/transfer_simulated.rs"
-harness = false
-required-features = ["bench"]
-
-[[bench]]
-name = "transfer_walltime"
-path = "benches/transfer_walltime.rs"
+name = "transfer"
+path = "benches/transfer.rs"
 harness = false
 required-features = ["bench"]
 
@@ -157,7 +127,7 @@ version = "1.1"
 default-features = false
 
 [dependencies.indexmap]
-version = "2"
+version = "2.2"
 default-features = false
 
 [dependencies.log]
@@ -170,13 +140,11 @@ path = "../mtu"
 [dependencies.neqo-common]
 path = "../neqo-common"
 
-[dependencies.nss]
-git = "https://github.com/mozilla/nss-rs"
-rev = "0.9.0"
-package = "nss-rs"
+[dependencies.neqo-crypto]
+path = "../neqo-crypto"
 
 [dependencies.qlog]
-version = "0.16.0"
+version = "0.15.1"
 default-features = false
 
 [dependencies.rustc-hash]
@@ -185,7 +153,7 @@ features = ["std"]
 default-features = false
 
 [dependencies.smallvec]
-version = "1"
+version = "1.13"
 features = [
     "union",
     "const_generics",
@@ -232,13 +200,12 @@ float_cmp_const = "warn"
 fn_to_numeric_cast_any = "warn"
 get_unwrap = "warn"
 if_then_some_else_none = "warn"
-impl_trait_in_params = "warn"
 infinite_loop = "warn"
 iter_over_hash_type = "warn"
 large_include_file = "warn"
 let_underscore_must_use = "warn"
 let_underscore_untyped = "warn"
-literal_string_with_formatting_args = "warn"
+literal_string_with_formatting_args = "allow"
 lossy_float_literal = "warn"
 map_with_unused_argument_over_ranges = "warn"
 mem_forget = "warn"
@@ -293,12 +260,10 @@ priority = -1
 
 [lints.rust]
 absolute_paths_not_starting_with_crate = "warn"
-ambiguous_negative_literals = "warn"
 explicit_outlives_requirements = "warn"
 macro_use_extern_crate = "warn"
 missing_abi = "warn"
 non_ascii_idents = "warn"
-redundant_imports = "warn"
 redundant_lifetimes = "warn"
 trivial_numeric_casts = "warn"
 unit_bindings = "warn"

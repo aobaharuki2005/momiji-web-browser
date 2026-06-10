@@ -4,8 +4,6 @@
 
 package mozilla.components.feature.tabs.tabstray
 
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabPartition
@@ -13,21 +11,24 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verifyNoMoreInteractions
-import kotlin.test.assertNotNull
 
 class TabsTrayPresenterTest {
-
-    private val testDispatcher = StandardTestDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
-    fun `initial set of sessions will be passed to tabs tray`() = runTest(testDispatcher) {
+    fun `initial set of sessions will be passed to tabs tray`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -45,14 +46,13 @@ class TabsTrayPresenterTest {
             closeTabsTray = {},
             tabPartitionsFilter = { null },
             tabsFilter = { true },
-            mainDispatcher = testDispatcher,
         )
 
         verifyNoMoreInteractions(tabsTray)
 
         presenter.start()
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNotNull(tabsTray.updateTabs)
 
@@ -65,7 +65,7 @@ class TabsTrayPresenterTest {
     }
 
     @Test
-    fun `tab tray will get updated if session gets added`() = runTest(testDispatcher) {
+    fun `tab tray will get updated if session gets added`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -83,12 +83,11 @@ class TabsTrayPresenterTest {
             closeTabsTray = {},
             tabPartitionsFilter = { null },
             tabsFilter = { true },
-            mainDispatcher = testDispatcher,
         )
 
         presenter.start()
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(2, tabsTray.updateTabs!!.size)
 
@@ -98,15 +97,13 @@ class TabsTrayPresenterTest {
             ),
         )
 
-        testDispatcher.scheduler.advanceUntilIdle()
-
         assertEquals(3, tabsTray.updateTabs!!.size)
 
         presenter.stop()
     }
 
     @Test
-    fun `tabs tray will get updated if session gets removed`() = runTest(testDispatcher) {
+    fun `tabs tray will get updated if session gets removed`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -124,22 +121,21 @@ class TabsTrayPresenterTest {
             closeTabsTray = {},
             tabPartitionsFilter = { null },
             tabsFilter = { true },
-            mainDispatcher = testDispatcher,
         )
 
         presenter.start()
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(2, tabsTray.updateTabs!!.size)
 
         store.dispatch(TabListAction.RemoveTabAction("a"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(1, tabsTray.updateTabs!!.size)
 
         store.dispatch(TabListAction.RemoveTabAction("b"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(0, tabsTray.updateTabs!!.size)
 
@@ -147,7 +143,7 @@ class TabsTrayPresenterTest {
     }
 
     @Test
-    fun `tabs tray will get updated if all sessions get removed`() = runTest(testDispatcher) {
+    fun `tabs tray will get updated if all sessions get removed`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -165,17 +161,16 @@ class TabsTrayPresenterTest {
             closeTabsTray = {},
             tabPartitionsFilter = { null },
             tabsFilter = { true },
-            mainDispatcher = testDispatcher,
         )
 
         presenter.start()
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(2, tabsTray.updateTabs!!.size)
 
         store.dispatch(TabListAction.RemoveAllTabsAction())
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(0, tabsTray.updateTabs!!.size)
 
@@ -183,7 +178,7 @@ class TabsTrayPresenterTest {
     }
 
     @Test
-    fun `tabs tray will get updated if selection changes`() = runTest(testDispatcher) {
+    fun `tabs tray will get updated if selection changes`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -204,24 +199,23 @@ class TabsTrayPresenterTest {
             closeTabsTray = {},
             tabPartitionsFilter = { null },
             tabsFilter = { true },
-            mainDispatcher = testDispatcher,
         )
 
         presenter.start()
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(5, tabsTray.updateTabs!!.size)
         assertEquals("a", tabsTray.selectedTabId)
 
         store.dispatch(TabListAction.SelectTabAction("d"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         println("Selection: " + store.state.selectedTabId)
         assertEquals("d", tabsTray.selectedTabId)
     }
 
     @Test
-    fun `presenter invokes session filtering`() = runTest(testDispatcher) {
+    fun `presenter invokes session filtering`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -239,17 +233,16 @@ class TabsTrayPresenterTest {
             closeTabsTray = {},
             tabPartitionsFilter = { null },
             tabsFilter = { it.content.private },
-            mainDispatcher = testDispatcher,
         )
 
         presenter.start()
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertTrue(tabsTray.updateTabs?.size == 1)
     }
 
     @Test
-    fun `presenter will close tabs tray when all sessions get removed`() = runTest(testDispatcher) {
+    fun `presenter will close tabs tray when all sessions get removed`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -272,16 +265,15 @@ class TabsTrayPresenterTest {
             tabPartitionsFilter = { null },
             tabsFilter = { true },
             closeTabsTray = { closed = true },
-            mainDispatcher = testDispatcher,
         )
 
         presenter.start()
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         Assert.assertFalse(closed)
 
         store.dispatch(TabListAction.RemoveAllTabsAction())
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertTrue(closed)
 
@@ -289,7 +281,7 @@ class TabsTrayPresenterTest {
     }
 
     @Test
-    fun `presenter will close tabs tray when last session gets removed`() = runTest(testDispatcher) {
+    fun `presenter will close tabs tray when last session gets removed`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -309,21 +301,20 @@ class TabsTrayPresenterTest {
             tabPartitionsFilter = { null },
             tabsFilter = { true },
             closeTabsTray = { closed = true },
-            mainDispatcher = testDispatcher,
         )
 
         presenter.start()
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         Assert.assertFalse(closed)
 
         store.dispatch(TabListAction.RemoveTabAction("a"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         Assert.assertFalse(closed)
 
         store.dispatch(TabListAction.RemoveTabAction("b"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertTrue(closed)
 
@@ -331,7 +322,7 @@ class TabsTrayPresenterTest {
     }
 
     @Test
-    fun `tabs tray should not invoke the close callback on start`() = runTest(testDispatcher) {
+    fun `tabs tray should not invoke the close callback on start`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = emptyList(),
@@ -347,11 +338,10 @@ class TabsTrayPresenterTest {
             tabPartitionsFilter = { null },
             tabsFilter = { it.content.private },
             closeTabsTray = { invoked = true },
-            mainDispatcher = testDispatcher,
         )
 
         presenter.start()
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertFalse(invoked)
     }

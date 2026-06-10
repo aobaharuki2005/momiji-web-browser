@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -85,11 +86,9 @@ class FT2FontEntry final : public gfxFT2FontEntryBase {
 
   // Get a harfbuzz face for this font, if possible. The caller is responsible
   // to destroy the face when no longer needed.
-  // Note that a face may be cached by the font entry, and a new reference
-  // returned to the caller.
   // This may be a bit expensive, so avoid calling multiple times if the same
   // face can be re-used for several purposes instead.
-  hb_face_t* CreateHBFace();
+  hb_face_t* CreateHBFace() const;
 
   /**
    * Append this face's metadata to aFaceList for storage in the FontNameCache
@@ -107,21 +106,14 @@ class FT2FontEntry final : public gfxFT2FontEntryBase {
   void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               FontListSizes* aSizes) const override;
 
-  nsCString mFilename;
-  uint8_t mFTFontIndex;
-
- protected:
-  FontTableCache* GetFontTableCache(bool aCreate) override;
-
-  mozilla::Atomic<FontTableCache*> mFontTableCache;
-
-  mozilla::Atomic<hb_face_t*> mHBFace;
-
   // Strong reference (addref'd), but held in an atomic ptr rather than a
   // normal RefPtr.
   mozilla::Atomic<mozilla::gfx::SharedFTFace*> mFTFace;
 
   FT_MM_Var* mMMVar = nullptr;
+
+  nsCString mFilename;
+  uint8_t mFTFontIndex;
 
   mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontFreeType> mUnscaledFont;
 

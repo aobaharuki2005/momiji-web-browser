@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -42,26 +44,12 @@ ICAttachResult AttachBaselineCacheIRStub(JSContext* cx,
                                          ICScript* icScript,
                                          ICFallbackStub* stub,
                                          const char* name);
-ICAttachResult AttachBaselineCacheIRStubLocked(
-    JSContext* cx, const CacheIRWriter& writer, CacheKind kind,
-    JSScript* outerScript, ICScript* icScript, ICFallbackStub* stub,
-    const char* name, const gc::AutoMarkingLock& lock);
 
 // BaselineCacheIRCompiler compiles CacheIR to BaselineIC native code.
 class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
-  struct CreateThisData {
-    uint32_t numFixedSlots;
-    uint32_t numDynamicSlots;
-    gc::AllocKind allocKind;
-    uint32_t thisShapeOffset;
-    uint32_t allocSiteOffset;
-  };
-
   bool makesGCCalls_;
   uint8_t localTracingSlots_ = 0;
   Register baselineFrameReg_ = FramePointer;
-
-  mozilla::Maybe<CreateThisData> createThisData_;
 
   // This register points to the baseline frame of the caller. It should only
   // be used before we enter a stub frame. This is normally the frame pointer
@@ -83,10 +71,10 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   bool updateArgc(CallFlags flags, Register argcReg, uint32_t argcFixed,
                   Register scratch);
   void loadStackObject(ArgumentKind kind, CallFlags flags, Register argcReg,
-                       Register dest, uint32_t extraArgs = 0);
+                       Register dest);
   void pushArguments(Register argcReg, Register calleeReg, Register scratch,
-                     Register scratch2, Register scratch3, CallFlags flags,
-                     uint32_t argcFixed, bool isJitCall);
+                     Register scratch2, CallFlags flags, uint32_t argcFixed,
+                     bool isJitCall);
   void prepareForArguments(Register argcReg, Register calleeReg,
                            Register scratch, Register scratch2, CallFlags flags,
                            uint32_t argcFixed);
@@ -107,8 +95,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
                                   CallFlags flags, uint32_t numBoundArgs,
                                   bool isJitCall);
   void createThis(Register argcReg, Register calleeReg, Register scratch,
-                  Register scratch2, Register scratch3, CallFlags flags,
-                  mozilla::Maybe<uint32_t> numBoundArgs = mozilla::Nothing());
+                  CallFlags flags, bool isBoundFunction);
+  template <typename T>
+  void storeThis(const T& newThis, Register argcReg, CallFlags flags);
   void updateReturnValue();
 
   enum class NativeCallType { Native, ClassHook };

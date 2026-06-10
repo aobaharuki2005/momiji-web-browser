@@ -1,8 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef GMPTestMonitor_h_
-#define GMPTestMonitor_h_
+#ifndef __GMPTestMonitor_h__
+#define __GMPTestMonitor_h__
 
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -35,4 +37,4 @@ class GMPTestMonitor {
   bool mFinished;
 };
 
-#endif  // GMPTestMonitor_h_
+#endif  // __GMPTestMonitor_h__

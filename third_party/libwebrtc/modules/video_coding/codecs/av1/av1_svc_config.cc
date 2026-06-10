@@ -47,13 +47,14 @@ int GetLimitedNumSpatialLayers(int width, int height) {
 
 std::optional<ScalabilityMode> BuildScalabilityMode(int num_temporal_layers,
                                                     int num_spatial_layers) {
-  StringBuilder ss;
+  char name[20];
+  SimpleStringBuilder ss(name);
   ss << "L" << num_spatial_layers << "T" << num_temporal_layers;
   if (num_spatial_layers > 1) {
     ss << "_KEY";
   }
 
-  return ScalabilityModeFromString(ss.Release());
+  return ScalabilityModeFromString(name);
 }
 }  // namespace
 

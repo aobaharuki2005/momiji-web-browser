@@ -50,8 +50,15 @@ mod ctrl_c;
 #[cfg(feature = "signal")]
 pub use ctrl_c::ctrl_c;
 
-#[cfg(unix)]
 pub(crate) mod registry;
+
+mod os {
+    #[cfg(unix)]
+    pub(crate) use super::unix::{OsExtraData, OsStorage};
+
+    #[cfg(windows)]
+    pub(crate) use super::windows::{OsExtraData, OsStorage};
+}
 
 pub mod unix;
 pub mod windows;
@@ -76,14 +83,18 @@ impl RxFuture {
         }
     }
 
-    async fn recv(&mut self) {
+    async fn recv(&mut self) -> Option<()> {
         use std::future::poll_fn;
         poll_fn(|cx| self.poll_recv(cx)).await
     }
 
-    fn poll_recv(&mut self, cx: &mut Context<'_>) -> Poll<()> {
-        self.inner
-            .poll(cx)
-            .map(|rx| self.inner.set(make_future(rx)))
+    fn poll_recv(&mut self, cx: &mut Context<'_>) -> Poll<Option<()>> {
+        match self.inner.poll(cx) {
+            Poll::Pending => Poll::Pending,
+            Poll::Ready(rx) => {
+                self.inner.set(make_future(rx));
+                Poll::Ready(Some(()))
+            }
+        }
     }
 }

@@ -1,14 +1,5 @@
 #![warn(rust_2018_idioms)]
-// WASIp1 doesn't support bind
-// No `socket` on miri.
-#![cfg(all(
-    feature = "net",
-    feature = "macros",
-    feature = "rt",
-    feature = "io-util",
-    not(all(target_os = "wasi", target_env = "p1")),
-    not(miri)
-))]
+#![cfg(all(feature = "full", not(target_os = "wasi")))] // Wasi doesn't support panic recovery or bind
 
 use tokio::net::TcpListener;
 

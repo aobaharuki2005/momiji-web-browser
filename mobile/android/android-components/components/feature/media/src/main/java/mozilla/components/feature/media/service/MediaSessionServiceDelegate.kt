@@ -23,8 +23,6 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.mediasession.MediaSession
-import mozilla.components.concept.engine.mediasession.MediaSession.PlaybackState.PAUSED
-import mozilla.components.concept.engine.mediasession.MediaSession.PlaybackState.PLAYING
 import mozilla.components.feature.media.ext.getArtistOrUrl
 import mozilla.components.feature.media.ext.getNonPrivateIcon
 import mozilla.components.feature.media.ext.getTitleOrUrl
@@ -71,7 +69,6 @@ internal class MediaSessionServiceDelegate(
     @get:VisibleForTesting internal val store: BrowserStore,
     @get:VisibleForTesting internal val crashReporter: CrashReporting?,
     @get:VisibleForTesting internal val notificationsDelegate: NotificationsDelegate,
-    @get:VisibleForTesting internal val mainScope: CoroutineScope = MainScope(),
 ) : MediaSessionDelegate {
     private val logger = Logger("MediaSessionService")
 
@@ -82,11 +79,7 @@ internal class MediaSessionServiceDelegate(
     internal var mediaSession = MediaSessionCompat(context, "MozacMediaSession")
 
     @VisibleForTesting
-    internal var audioFocus = AudioFocus(
-        context.getSystemService(Context.AUDIO_SERVICE) as AudioManager,
-        store,
-        onTransientFocusLoss = { isTransientAudioFocusLoss = it },
-    )
+    internal var audioFocus = AudioFocus(context.getSystemService(Context.AUDIO_SERVICE) as AudioManager, store)
 
     @VisibleForTesting
     internal val notificationId by lazy {
@@ -108,13 +101,10 @@ internal class MediaSessionServiceDelegate(
     @VisibleForTesting
     internal var isForegroundService: Boolean = false
 
-    @VisibleForTesting
-    internal var isTransientAudioFocusLoss: Boolean = false
-
     fun onCreate() {
         logger.debug("Service created")
         mediaSession.setCallback(MediaSessionCallback(store))
-        notificationScope = mainScope
+        notificationScope = MainScope()
     }
 
     fun onDestroy() {
@@ -154,18 +144,12 @@ internal class MediaSessionServiceDelegate(
 
         updateMediaSession(sessionState)
         registerBecomingNoisyListenerIfNeeded(sessionState)
+        audioFocus.request(sessionState.id)
         controller = sessionState.mediaSessionState?.controller
 
         if (isForegroundService) {
-            // Audio focus must be requested only while a foreground service is running.
-            // On Android 15+, requesting audio focus from the background without one
-            // silently returns AUDIOFOCUS_REQUEST_FAILED.
-            audioFocus.request(sessionState.id)
             updateNotification(sessionState)
         } else {
-            // startForeground() requests audio focus once the service is started, ensuring
-            // the foreground service has WIU (While In Use) capabilities — granted when the
-            // service is started while the app is visible — before the audio focus request.
             startForeground(sessionState)
         }
     }
@@ -174,18 +158,8 @@ internal class MediaSessionServiceDelegate(
         emitStatePauseFact()
 
         updateMediaSession(sessionState)
-        // Capture and clear the flag in a single pass. If the pause was triggered by a transient
-        // audio focus loss (e.g. a notification sound), keep the foreground service alive so its
-        // WIU (While In Use) capabilities are retained and audio focus can be reclaimed when
-        // AUDIOFOCUS_GAIN is received. Clearing the flag on every call ensures a subsequent pause
-        // (user-initiated or otherwise) always stops the foreground service, preventing it from
-        // staying alive indefinitely.
-        val wasTransientLoss = isTransientAudioFocusLoss
-        isTransientAudioFocusLoss = false
-        if (!wasTransientLoss) {
-            unregisterBecomingNoisyListenerIfNeeded()
-            stopForeground()
-        }
+        unregisterBecomingNoisyListenerIfNeeded()
+        stopForeground()
 
         updateNotification(sessionState)
     }
@@ -196,8 +170,6 @@ internal class MediaSessionServiceDelegate(
         updateMediaSession(sessionState)
         unregisterBecomingNoisyListenerIfNeeded()
         stopForeground()
-        // Playback has ended permanently; release audio focus so other apps can acquire it.
-        audioFocus.abandon()
 
         updateNotification(sessionState)
     }
@@ -209,18 +181,11 @@ internal class MediaSessionServiceDelegate(
     @VisibleForTesting
     internal fun updateNotification(sessionState: SessionState) {
         notificationScope?.launch {
-            when (sessionState.mediaSessionState?.playbackState) {
-                PLAYING, PAUSED -> {
-                    val notification = notificationHelper.create(sessionState, mediaSession)
-                    notificationsDelegate.notify(
-                        notificationId = notificationId,
-                        notification = notification,
-                    )
-                }
-                else -> {
-                    notificationsDelegate.notificationManagerCompat.cancel(notificationId)
-                }
-            }
+            val notification = notificationHelper.create(sessionState, mediaSession)
+            notificationsDelegate.notify(
+                notificationId = notificationId,
+                notification = notification,
+            )
         }
     }
 
@@ -246,18 +211,12 @@ internal class MediaSessionServiceDelegate(
                     // might be trying to start foreground services from the background.
                     // https://bugzilla.mozilla.org/show_bug.cgi?id=1802620
                     crashReporter?.submitCaughtException(e)
-                    return@launch
                 } else {
                     throw e
                 }
             }
 
             isForegroundService = true
-            // Request audio focus only after the foreground service is running. This satisfies
-            // the Android 15+ requirement that audio focus requests must come from an app that
-            // is either visible or running a foreground service with WIU (While In Use)
-            // capabilities, i.e. one that was started while the app was visible to the user.
-            audioFocus.request(sessionState.id)
         }
     }
 

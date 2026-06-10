@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: c++; c-basic-offset: 2; tab-width: 20; indent-tabs-mode: nil; -*-
+ * vim: set sw=2 ts=4 expandtab:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -41,6 +43,10 @@ class LayerViewSupport;
 class NPZCSupport;
 class PlatformCompositorWidgetDelegate;
 }  // namespace widget
+
+namespace ipc {
+class Shmem;
+}  // namespace ipc
 
 namespace a11y {
 class SessionAccessibility;
@@ -120,7 +126,7 @@ class nsWindow final : public nsIWidget {
   static mozilla::TimeStamp GetEventTimeStamp(int64_t aEventTime);
 
   void InitEvent(mozilla::WidgetGUIEvent& event,
-                 LayoutDeviceIntPoint* aPoint = nullptr);
+                 LayoutDeviceIntPoint* aPoint = 0);
 
   void UpdateOverscrollVelocity(const float aX, const float aY);
   void UpdateOverscrollOffset(const float aX, const float aY);
@@ -207,7 +213,7 @@ class nsWindow final : public nsIWidget {
       nsISynthesizedEventCallback* aCallback) override;
   nsresult SynthesizeNativeMouseEvent(
       LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
-      mozilla::MouseButton aButton, nsIWidget::NativeModifiers aModifierFlags,
+      mozilla::MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
       nsISynthesizedEventCallback* aCallback) override;
   nsresult SynthesizeNativeMouseMove(
       LayoutDeviceIntPoint aPoint,
@@ -234,6 +240,8 @@ class nsWindow final : public nsIWidget {
   void RecvToolbarAnimatorMessageFromCompositor(int32_t aMessage) override;
   void NotifyCompositorScrollUpdate(
       const mozilla::layers::CompositorScrollUpdate& aUpdate) override;
+  void RecvScreenPixels(mozilla::ipc::Shmem&& aMem, const ScreenIntSize& aSize,
+                        bool aNeedsYFlip) override;
   void UpdateDynamicToolbarMaxHeight(mozilla::ScreenIntCoord aHeight) override;
   mozilla::ScreenIntCoord GetDynamicToolbarMaxHeight() const override {
     return mDynamicToolbarMaxHeight;
@@ -254,14 +262,13 @@ class nsWindow final : public nsIWidget {
   void DoResize(double aX, double aY, double aWidth, double aHeight,
                 bool aRepaint);
 
-  void PerformHapticFeedback(mozilla::HapticFeedbackType aType) override;
-
  protected:
   void BringToFront();
   nsWindow* FindTopLevel();
   bool IsTopLevel();
 
   void ConfigureAPZControllerThread() override;
+  void DispatchHitTest(const mozilla::WidgetTouchEvent& aEvent);
 
   already_AddRefed<GeckoContentController> CreateRootContentController()
       override;

@@ -5,8 +5,7 @@
 #ifndef jit_riscv64_extension_Extension_riscv_zifencei_h_
 #define jit_riscv64_extension_Extension_riscv_zifencei_h_
 
-#include "jit/riscv64/base/base-assembler-riscv.h"
-
+#include "jit/riscv64/extension/base-assembler-riscv.h"
 namespace js {
 namespace jit {
 class AssemblerRISCVZifencei : public AssemblerRiscvBase {

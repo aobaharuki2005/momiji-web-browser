@@ -21,8 +21,6 @@ namespace trace
 class DefaultSpan : public Span
 {
 public:
-  ~DefaultSpan() noexcept override = default;
-
   // Returns an invalid span.
   static DefaultSpan GetInvalid() { return DefaultSpan(SpanContext::GetInvalid()); }
 
@@ -68,29 +66,8 @@ public:
   DefaultSpan(SpanContext span_context) noexcept : span_context_(std::move(span_context)) {}
 
   // movable and copiable
-  DefaultSpan(const DefaultSpan &other) noexcept : span_context_(other.span_context_) {}
-
-  DefaultSpan &operator=(const DefaultSpan &other) noexcept
-  {
-    if (this == &other)
-    {
-      return *this;
-    }
-    span_context_ = other.span_context_;
-    return *this;
-  }
-
-  DefaultSpan(DefaultSpan &&other) noexcept : span_context_(std::move(other.span_context_)) {}
-
-  DefaultSpan &operator=(DefaultSpan &&other) noexcept
-  {
-    if (this == &other)
-    {
-      return *this;
-    }
-    span_context_ = std::move(other.span_context_);
-    return *this;
-  }
+  DefaultSpan(DefaultSpan &&spn) noexcept : Span(), span_context_(spn.GetContext()) {}
+  DefaultSpan(const DefaultSpan &spn) noexcept : Span(), span_context_(spn.GetContext()) {}
 
 private:
   SpanContext span_context_;

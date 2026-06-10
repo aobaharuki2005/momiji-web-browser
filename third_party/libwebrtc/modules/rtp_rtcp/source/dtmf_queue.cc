@@ -15,12 +15,11 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/synchronization/mutex.h"
 
-namespace webrtc {
-
 namespace {
 constexpr size_t kDtmfOutbandMax = 20;
 }  // namespace
 
+namespace webrtc {
 DtmfQueue::DtmfQueue() {}
 
 DtmfQueue::~DtmfQueue() {}

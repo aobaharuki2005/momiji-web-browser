@@ -24,7 +24,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlbarProviderOpenTabs:
     "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs",
-  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
+  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
 });
@@ -165,7 +165,6 @@ export class UrlbarProviderTopSites extends UrlbarProvider {
         title: link.label || link.title || link.hostname || "",
         favicon: link.smallFavicon || link.favicon || undefined,
         sendAttributionRequest: !!link.sendAttributionRequest,
-        lastVisitDate: link.lastVisitDate,
       };
       if (site.isSponsored) {
         let {
@@ -185,15 +184,32 @@ export class UrlbarProviderTopSites extends UrlbarProvider {
 
     let tabUrlsToContextIds = new Map();
     if (lazy.UrlbarPrefs.get("suggest.openpage")) {
-      lazy.UrlbarProviderOpenTabs.getOpenTabUrls(
-        queryContext.isPrivate
-      ).forEach((userContextAndGroupIds, url) => {
-        let userContextIds = new Set();
-        for (let [userContextId] of userContextAndGroupIds) {
+      if (lazy.UrlbarPrefs.get("switchTabs.searchAllContainers")) {
+        lazy.UrlbarProviderOpenTabs.getOpenTabUrls(
+          queryContext.isPrivate
+        ).forEach((userContextAndGroupIds, url) => {
+          let userContextIds = new Set();
+          for (let [userContextId] of userContextAndGroupIds) {
+            userContextIds.add(userContextId);
+          }
+          tabUrlsToContextIds.set(url, userContextIds);
+        });
+      } else {
+        for (let [
+          url,
+          userContextId,
+        ] of lazy.UrlbarProviderOpenTabs.getOpenTabUrlsForUserContextId(
+          queryContext.userContextId,
+          queryContext.isPrivate
+        )) {
+          let userContextIds = tabUrlsToContextIds.get(url);
+          if (!userContextIds) {
+            userContextIds = new Set();
+          }
           userContextIds.add(userContextId);
+          tabUrlsToContextIds.set(url, userContextIds);
         }
-        tabUrlsToContextIds.set(url, userContextIds);
-      });
+      }
     }
 
     for (let site of sites) {
@@ -205,7 +221,6 @@ export class UrlbarProviderTopSites extends UrlbarProvider {
             icon: site.favicon,
             isPinned: site.isPinned,
             isSponsored: site.isSponsored,
-            lastVisit: site.lastVisitDate,
           };
 
           // Fuzzy match both the URL as-is, and the URL without ref, then
@@ -218,9 +233,13 @@ export class UrlbarProviderTopSites extends UrlbarProvider {
             if (tabUserContextIds.size) {
               let switchToTabResultAdded = false;
               for (let userContextId of tabUserContextIds) {
+                // Normally we could skip the whole for loop, but if searchAllContainers
+                // is set then the current page userContextId may differ, then we should
+                // allow switching to other ones.
                 if (
                   sameUrlIgnoringRef(queryContext.currentPage, site.url) &&
-                  queryContext.userContextId == userContextId
+                  (!lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") ||
+                    queryContext.userContextId == userContextId)
                 ) {
                   // Don't suggest switching to the current tab.
                   continue;

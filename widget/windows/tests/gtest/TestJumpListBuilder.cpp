@@ -5,6 +5,7 @@
 #include <objectarray.h>
 #include <shobjidl.h>
 #include <windows.h>
+#include <string.h>
 #include <propvarutil.h>
 #include <propkey.h>
 
@@ -441,7 +442,7 @@ TEST(JumpListBuilder, CheckForRemovals)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
 
-  auto resolver = MakeRefPtr<WaitForResolver>();
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
   promise->AppendNativeHandler(resolver);
   JS::Rooted<JS::Value> result(cx);
   resolver->SpinUntilResolvedWithResult(&result);
@@ -558,7 +559,7 @@ TEST(JumpListBuilder, CheckForRemovalsLongURL)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
 
-  auto resolver = MakeRefPtr<WaitForResolver>();
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
   promise->AppendNativeHandler(resolver);
   JS::Rooted<JS::Value> result(cx);
   resolver->SpinUntilResolvedWithResult(&result);
@@ -634,7 +635,7 @@ TEST(JumpListBuilder, PopulateJumpListEmpty)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
 
-  auto resolver = MakeRefPtr<WaitForResolver>();
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
   promise->AppendNativeHandler(resolver);
   JS::Rooted<JS::Value> result(cx);
   resolver->SpinUntilResolved();
@@ -695,7 +696,7 @@ TEST(JumpListBuilder, PopulateJumpListOnlyTasks)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
 
-  auto resolver = MakeRefPtr<WaitForResolver>();
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
   promise->AppendNativeHandler(resolver);
   JS::Rooted<JS::Value> result(cx);
   resolver->SpinUntilResolved();
@@ -760,7 +761,7 @@ TEST(JumpListBuilder, PopulateJumpListOnlyCustomItems)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
 
-  auto resolver = MakeRefPtr<WaitForResolver>();
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
   promise->AppendNativeHandler(resolver);
   JS::Rooted<JS::Value> result(cx);
   resolver->SpinUntilResolved();
@@ -828,7 +829,7 @@ TEST(JumpListBuilder, PopulateJumpList)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
 
-  auto resolver = MakeRefPtr<WaitForResolver>();
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
   promise->AppendNativeHandler(resolver);
   JS::Rooted<JS::Value> result(cx);
   resolver->SpinUntilResolved();
@@ -898,7 +899,7 @@ TEST(JumpListBuilder, PopulateJumpListNoOpenedItems)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
 
-  auto resolver = MakeRefPtr<WaitForResolver>();
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
   promise->AppendNativeHandler(resolver);
   JS::Rooted<JS::Value> result(cx);
   resolver->SpinUntilResolved();
@@ -942,7 +943,7 @@ TEST(JumpListBuilder, ClearJumpList)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
 
-  auto resolver = MakeRefPtr<WaitForResolver>();
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
   promise->AppendNativeHandler(resolver);
   JS::Rooted<JS::Value> result(cx);
   resolver->SpinUntilResolved();
@@ -1010,7 +1011,7 @@ TEST(JumpListBuilder, TruncateDescription)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
 
-  auto resolver = MakeRefPtr<WaitForResolver>();
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
   promise->AppendNativeHandler(resolver);
   JS::Rooted<JS::Value> result(cx);
   resolver->SpinUntilResolved();

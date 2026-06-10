@@ -16,7 +16,7 @@ newtab-search-box-search-button =
     .title = Cari
     .aria-label = Cari
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = Tambah Enjin Carian
 newtab-topsites-edit-topsites-header = Edit Laman Teratas

@@ -1,8 +1,7 @@
 import os
 import sys
-
-base = os.path.dirname(__file__)
-webdriver_path = os.path.abspath(os.path.join(base, "..", "..", "..", "webdriver"))
-sys.path.insert(0, os.path.join(webdriver_path))
-
+# Hack to avoid duplicating the conftest file
+wdpath = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                      "../../../webdriver/"))
+sys.path.insert(0, wdpath)
 from tests.conftest import *

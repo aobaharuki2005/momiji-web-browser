@@ -124,13 +124,6 @@ add_task(async function test_notBreachedLogin() {
 
 add_task(async function test_breachedLogin() {
   await Services.logins.addLoginAsync(BREACHED_LOGIN);
-  // Look up the stored login's GUID since addLoginAsync returns a clone.
-  const [storedBreachedLogin] = await Services.logins.searchLoginsAsync({
-    origin: BREACHED_LOGIN.origin,
-  });
-  BREACHED_LOGIN.QueryInterface(Ci.nsILoginMetaInfo).guid =
-    storedBreachedLogin.guid;
-
   const breachesByLoginGUID =
     await LoginBreaches.getPotentialBreachesByLoginGUID(
       [NOT_BREACHED_LOGIN, BREACHED_LOGIN],
@@ -217,9 +210,12 @@ add_task(async function test_breachedSiteWithoutPasswords() {
 });
 
 add_task(async function test_breachAlertHiddenAfterDismissal() {
-  await Services.logins.initializationPromise;
+  BREACHED_LOGIN.guid = "{d2de5ac1-4de6-e544-a7af-1f75abcba92b}";
 
-  await Services.logins.recordBreachAlertDismissal(BREACHED_LOGIN.guid);
+  await Services.logins.initializationPromise;
+  const storageJSON = Services.logins.wrappedJSObject._storage;
+
+  storageJSON.recordBreachAlertDismissal(BREACHED_LOGIN.guid);
 
   const breachesByLoginGUID =
     await LoginBreaches.getPotentialBreachesByLoginGUID(
@@ -233,7 +229,7 @@ add_task(async function test_breachAlertHiddenAfterDismissal() {
   );
 
   info("Clear login storage");
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
 
   const breachesByLoginGUID2 =
     await LoginBreaches.getPotentialBreachesByLoginGUID(

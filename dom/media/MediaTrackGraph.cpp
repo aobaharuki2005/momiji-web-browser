@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-*/
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -224,17 +225,9 @@ void MediaTrackGraphImpl::RemoveTrackGraphThread(MediaTrack* aTrack) {
   UnregisterAllAudioOutputs(aTrack);
 
   if (aTrack->IsSuspended()) {
-    const bool removed = mSuspendedTracks.RemoveElement(aTrack);
-    MOZ_DIAGNOSTIC_ASSERT(removed, "Suspended track not in mSuspendedTracks");
-    if (!removed) {
-      mTracks.RemoveElement(aTrack);
-    }
+    mSuspendedTracks.RemoveElement(aTrack);
   } else {
-    const bool removed = mTracks.RemoveElement(aTrack);
-    MOZ_DIAGNOSTIC_ASSERT(removed, "Non-suspended track not in mTracks");
-    if (!removed) {
-      mSuspendedTracks.RemoveElement(aTrack);
-    }
+    mTracks.RemoveElement(aTrack);
   }
 
   LOG(LogLevel::Debug, ("%p: Removed media track %p, count %zu", this, aTrack,
@@ -2194,12 +2187,10 @@ void MediaTrack::IncrementSuspendCount() {
   for (uint32_t i = 0; i < mConsumers.Length(); ++i) {
     mConsumers[i]->Suspended();
   }
-  const bool removed = graph->mTracks.RemoveElement(this);
-  MOZ_DIAGNOSTIC_ASSERT(removed, "Track not in mTracks at suspend transition");
-  if (removed) {
-    graph->mSuspendedTracks.AppendElement(this);
-    graph->SetTrackOrderDirty();
-  }
+  MOZ_ASSERT(graph->mTracks.Contains(this));
+  graph->mTracks.RemoveElement(this);
+  graph->mSuspendedTracks.AppendElement(this);
+  graph->SetTrackOrderDirty();
 }
 
 void MediaTrack::DecrementSuspendCount() {
@@ -2214,13 +2205,10 @@ void MediaTrack::DecrementSuspendCount() {
   for (uint32_t i = 0; i < mConsumers.Length(); ++i) {
     mConsumers[i]->Resumed();
   }
-  const bool removed = graph->mSuspendedTracks.RemoveElement(this);
-  MOZ_DIAGNOSTIC_ASSERT(removed,
-                        "Track not in mSuspendedTracks at resume transition");
-  if (removed) {
-    graph->mTracks.AppendElement(this);
-    graph->SetTrackOrderDirty();
-  }
+  MOZ_ASSERT(graph->mSuspendedTracks.Contains(this));
+  graph->mSuspendedTracks.RemoveElement(this);
+  graph->mTracks.AppendElement(this);
+  graph->SetTrackOrderDirty();
 }
 
 void ProcessedMediaTrack::DecrementSuspendCount() {
@@ -3742,7 +3730,7 @@ void MediaTrackGraph::AddTrack(MediaTrack* aTrack) {
     MOZ_DIAGNOSTIC_ASSERT(p, "Graph must not be shutting down");
   }
 #endif
-  if (graph->mMainThreadTrackCount == 0 && graph->mRealtime) {
+  if (graph->mMainThreadTrackCount == 0) {
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
     if (observerService) {

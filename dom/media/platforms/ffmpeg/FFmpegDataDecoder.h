@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef FFmpegDataDecoder_h_
-#define FFmpegDataDecoder_h_
+#ifndef __FFmpegDataDecoder_h__
+#define __FFmpegDataDecoder_h__
 
 #include "FFmpegLibWrapper.h"
 #include "PlatformDecoderModule.h"
@@ -58,11 +60,9 @@ class FFmpegDataDecoder<LIBAV_VER>
   virtual void InitCodecContext() MOZ_REQUIRES(sMutex) {}
   void ReleaseCodecContext() MOZ_REQUIRES(sMutex);
   AVFrame* PrepareFrame();
-  void ReleaseFrame();
   MediaResult InitSWDecoder(AVDictionary** aOptions);
   MediaResult InitDecoder(AVCodec* aCodec, AVDictionary** aOptions);
   MediaResult AllocateExtraData();
-  MediaResult AssignCodecContextExtraData(const MediaByteBuffer* aBuffer);
   MediaResult DoDecode(MediaRawData* aSample, bool* aGotFrame,
                        DecodedData& aResults);
 
@@ -112,4 +112,4 @@ class FFmpegDataDecoder<LIBAV_VER>
 
 }  // namespace mozilla
 
-#endif  // FFmpegDataDecoder_h_
+#endif  // __FFmpegDataDecoder_h__

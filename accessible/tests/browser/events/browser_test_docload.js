@@ -65,7 +65,7 @@ async function runTests(browser) {
     [EVENT_STATE_CHANGE, busyChecker(false)],
   ]);
 
-  EventUtils.synthesizeKey("VK_F5", {}, browser.documentGlobal);
+  EventUtils.synthesizeKey("VK_F5", {}, browser.ownerGlobal);
 
   await onLoadEvents;
 

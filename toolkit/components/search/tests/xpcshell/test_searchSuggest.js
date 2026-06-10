@@ -15,9 +15,6 @@ const { SearchSuggestionController } = ChromeUtils.importESModule(
   "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs"
 );
 
-const { ConfigSearchEngine } = ChromeUtils.importESModule(
-  "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs"
-);
 let getEngine;
 let postEngine;
 let unresolvableEngine;
@@ -93,7 +90,7 @@ add_setup(async function () {
       };
     })
   );
-  await SearchService.init();
+  await Services.search.init();
 
   let thirdPartyData = {
     baseURL: `${gHttpURL}/sjs/`,
@@ -104,10 +101,12 @@ add_setup(async function () {
     url: `${gHttpURL}/sjs/engineMaker.sjs?${JSON.stringify(thirdPartyData)}`,
   });
 
-  getEngine = SearchService.getEngineById("get-engine");
-  postEngine = SearchService.getEngineById("post-engine");
-  unresolvableEngine = SearchService.getEngineById("offline-engine");
-  alternateJSONEngine = SearchService.getEngineById("alternative-json-engine");
+  getEngine = Services.search.getEngineById("get-engine");
+  postEngine = Services.search.getEngineById("post-engine");
+  unresolvableEngine = Services.search.getEngineById("offline-engine");
+  alternateJSONEngine = Services.search.getEngineById(
+    "alternative-json-engine"
+  );
 
   registerCleanupFunction(async () => {
     // Remove added form history entries
@@ -1007,7 +1006,7 @@ function assertLatencyCollection(engine, shouldRecord) {
   let latencyDistribution =
     Glean.searchSuggestions.latency[
       // Third party engines are always recorded as "other".
-      engine instanceof ConfigSearchEngine ? engine.id : "other"
+      engine.isConfigEngine ? engine.id : "other"
     ].testGetValue();
 
   if (shouldRecord) {

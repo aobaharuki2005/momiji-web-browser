@@ -12,9 +12,6 @@ import androidx.core.content.withStyledAttributes
 import androidx.preference.PreferenceManager
 import org.mozilla.focus.R
 
-/**
- * A custom [SwitchCompat] that automatically persists its state to SharedPreferences.
- */
 class PreferenceSwitch(
     context: Context,
     attrs: AttributeSet,
@@ -57,9 +54,6 @@ class PreferenceSwitch(
             .getBoolean(context.getString(key), true)
     }
 
-    /**
-     * Sets a listener to be invoked when the preference is clicked.
-     */
     fun onClickListener(listener: () -> Unit) {
         clickListener = listener
     }

@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsSliderFrame_h_
-#define nsSliderFrame_h_
+#ifndef nsSliderFrame_h__
+#define nsSliderFrame_h__
 
 #include "mozilla/Attributes.h"
 #include "nsAtom.h"
@@ -99,7 +101,6 @@ class nsSliderFrame final : public nsContainerFrame {
 
   nsresult StartDrag(mozilla::dom::Event* aEvent);
   nsresult StopDrag();
-  bool ClickAndHoldActive() const;
 
   void StartAPZDrag(mozilla::WidgetGUIEvent* aEvent);
 
@@ -163,7 +164,10 @@ class nsSliderFrame final : public nsContainerFrame {
   void SuppressDisplayport();
   void UnsuppressDisplayport();
 
-  void StartRepeat();
+  void StartRepeat() {
+    nsRepeatService::GetInstance()->Start(Notify, this, mContent->OwnerDoc(),
+                                          "nsSliderFrame"_ns);
+  }
   void StopRepeat() {
     nsRepeatService::GetInstance()->Stop(Notify, this);
     mCurrentClickHoldDestination = Nothing();

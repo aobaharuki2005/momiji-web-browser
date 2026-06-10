@@ -8,35 +8,35 @@ import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.mockk.every
-import io.mockk.mockk
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 
 @RunWith(AndroidJUnit4::class)
 class ThemeUtilsTest {
 
     @Test
     fun `getAppNightMode returns MODE_NIGHT_FOLLOW_SYSTEM when shouldFollowDeviceTheme is true`() {
-        val settings = mockk<Settings>()
-        every { settings.shouldFollowDeviceTheme } returns true
+        val settings = mock<Settings>()
+        doReturn(true).`when`(settings).shouldFollowDeviceTheme
         assertEquals(MODE_NIGHT_FOLLOW_SYSTEM, settings.getAppNightMode())
     }
 
     @Test
     fun `getAppNightMode returns MODE_NIGHT_NO when shouldFollowDeviceTheme is false and shouldUseLightTheme is true`() {
-        val settings = mockk<Settings>()
-        every { settings.shouldFollowDeviceTheme } returns false
-        every { settings.shouldUseLightTheme } returns true
+        val settings = mock<Settings>()
+        doReturn(false).`when`(settings).shouldFollowDeviceTheme
+        doReturn(true).`when`(settings).shouldUseLightTheme
         assertEquals(MODE_NIGHT_NO, settings.getAppNightMode())
     }
 
     @Test
     fun `getAppNightMode returns MODE_NIGHT_YES when shouldFollowDeviceTheme is false and shouldUseLightTheme is false`() {
-        val settings = mockk<Settings>()
-        every { settings.shouldFollowDeviceTheme } returns false
-        every { settings.shouldUseLightTheme } returns false
+        val settings = mock<Settings>()
+        doReturn(false).`when`(settings).shouldFollowDeviceTheme
+        doReturn(false).`when`(settings).shouldUseLightTheme
         assertEquals(MODE_NIGHT_YES, settings.getAppNightMode())
     }
 }

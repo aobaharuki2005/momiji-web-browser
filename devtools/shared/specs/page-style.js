@@ -121,14 +121,6 @@ const pageStyleSpec = generateActorSpec({
         attributes: RetVal("array:string"),
       },
     },
-    getAnchorNames: {
-      request: {
-        node: Arg(0, "domnode"),
-      },
-      response: {
-        names: RetVal("array:string"),
-      },
-    },
   },
 });
 

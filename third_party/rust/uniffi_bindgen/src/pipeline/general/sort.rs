@@ -9,18 +9,18 @@
 
 use super::*;
 
-pub fn pass(namespace: &mut Namespace) -> Result<()> {
+pub fn pass(module: &mut Module) -> Result<()> {
     let ffi_dep_sorter = DependencySorter::new(
-        namespace.ffi_definitions.drain(..),
+        module.ffi_definitions.drain(..),
         FfiDefinitionDependencyLogic,
     );
-    namespace.ffi_definitions.extend(ffi_dep_sorter.sort());
+    module.ffi_definitions = ffi_dep_sorter.sort();
 
     let type_sorter = DependencySorter::new(
-        namespace.type_definitions.drain(..),
+        module.type_definitions.drain(..),
         TypeDefinitionDependencyLogic,
     );
-    namespace.type_definitions = type_sorter.sort();
+    module.type_definitions = type_sorter.sort();
     Ok(())
 }
 
@@ -174,7 +174,7 @@ impl DependencyLogic for TypeDefinitionDependencyLogic {
             TypeDefinition::Interface(i) => {
                 i.trait_impls
                     .iter()
-                    .map(|i| i.trait_ty.canonical_name.clone())
+                    .map(|i| format!("Type{}", i.trait_name))
                     .chain(
                         i.methods
                             .iter()

@@ -132,8 +132,7 @@ class ClangdBackend(CompileDBBackend):
         if compiler_args is None:
             return None
 
-        ccache = self.environment.substs.get("CCACHE")
-        if len(compiler_args) and compiler_args[0] == ccache:
+        if len(compiler_args) and compiler_args[0].endswith("ccache"):
             compiler_args.pop(0)
         return compiler_args
 

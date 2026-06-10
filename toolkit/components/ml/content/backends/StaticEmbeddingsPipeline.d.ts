@@ -78,9 +78,9 @@ export interface StaticEmbeddingsOptions {
   compression: boolean;
 
   /**
-   * Mock the buffer data for a url for tests.
+   * Mock the engine for tests.
    */
-  mockedValues?: Record<string, Iterable<number>>;
+  mockedValues?: {};
 }
 
 /**
@@ -89,6 +89,6 @@ export interface StaticEmbeddingsOptions {
  * @see https://huggingface.co/docs/transformers.js/api/tokenizers#module_tokenizers.PreTrainedTokenizer
  */
 interface PreTrainedTokenizer {
-  model: { vocab: Array<any> };
+  model: { vocab: list[any] };
   encode(text: string): number[];
 }

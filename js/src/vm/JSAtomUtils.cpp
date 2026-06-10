@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -12,6 +14,7 @@
 #include "mozilla/RangedPtr.h"
 
 #include <charconv>
+#include <string.h>
 
 #include "jstypes.h"
 
@@ -288,13 +291,13 @@ void js::TraceAtoms(JSTracer* trc) {
 }
 
 void AtomsTable::traceWeak(JSTracer* trc) {
-  for (auto iter = atoms.modIter(); !iter.done(); iter.next()) {
-    JSAtom* atom = iter.get().unbarrieredGet();
+  for (AtomSet::Enum e(atoms); !e.empty(); e.popFront()) {
+    JSAtom* atom = e.front().unbarrieredGet();
     MOZ_DIAGNOSTIC_ASSERT(atom);
     if (!TraceManuallyBarrieredWeakEdge(trc, &atom, "AtomsTable::atoms")) {
-      iter.remove();
+      e.removeFront();
     } else {
-      MOZ_ASSERT(atom == iter.get().unbarrieredGet());
+      MOZ_ASSERT(atom == e.front().unbarrieredGet());
     }
   }
 }
@@ -309,7 +312,7 @@ bool AtomsTable::startIncrementalSweep(Maybe<SweepIterator>& atomsToSweepOut) {
     return false;
   }
 
-  atomsToSweepOut.emplace(atoms.modIter());
+  atomsToSweepOut.emplace(atoms);
 
   return true;
 }
@@ -323,9 +326,9 @@ void AtomsTable::mergeAtomsAddedWhileSweeping() {
   auto newAtoms = atomsAddedWhileSweeping;
   atomsAddedWhileSweeping = nullptr;
 
-  for (auto iter = newAtoms->iter(); !iter.done(); iter.next()) {
-    if (!atoms.putNew(AtomHasher::Lookup(iter.get().unbarrieredGet()),
-                      iter.get())) {
+  for (auto r = newAtoms->all(); !r.empty(); r.popFront()) {
+    if (!atoms.putNew(AtomHasher::Lookup(r.front().unbarrieredGet()),
+                      r.front())) {
       oomUnsafe.crash("Adding atom from secondary table after sweep");
     }
   }
@@ -336,21 +339,21 @@ void AtomsTable::mergeAtomsAddedWhileSweeping() {
 bool AtomsTable::sweepIncrementally(SweepIterator& atomsToSweep,
                                     JS::SliceBudget& budget) {
   // Sweep the table incrementally until we run out of work or budget.
-  while (!atomsToSweep.done()) {
+  while (!atomsToSweep.empty()) {
     budget.step();
     if (budget.isOverBudget()) {
       return false;
     }
 
-    JSAtom* atom = atomsToSweep.get().unbarrieredGet();
+    JSAtom* atom = atomsToSweep.front().unbarrieredGet();
     MOZ_DIAGNOSTIC_ASSERT(atom);
     if (IsAboutToBeFinalizedUnbarriered(atom)) {
       MOZ_ASSERT(!atom->isPinned());
-      atomsToSweep.remove();
+      atomsToSweep.removeFront();
     } else {
-      MOZ_ASSERT(atom == atomsToSweep.get().unbarrieredGet());
+      MOZ_ASSERT(atom == atomsToSweep.front().unbarrieredGet());
     }
-    atomsToSweep.next();
+    atomsToSweep.popFront();
   }
 
   mergeAtomsAddedWhileSweeping();

@@ -40,8 +40,7 @@ char kLSanDefaultSuppressions[] =
 
     // ========== Leaks in third-party code not shared with Chromium ===========
 
-    // PipeWire module loading leaks
-    "leak:pw_context_load_module\n"
+    // None known so far.
 
     // ================ Leaks in WebRTC code ================
     // PLEASE DO NOT ADD SUPPRESSIONS FOR NEW LEAKS.
@@ -76,6 +75,7 @@ char kLSanDefaultSuppressions[] =
     // https://code.google.com/p/webrtc/issues/detail?id=2528
     "leak:webrtc::FakeVideoMediaChannel::~FakeVideoMediaChannel\n"
     "leak:DtmfSenderTest_InsertEmptyTonesToCancelPreviousTask_Test::TestBody\n"
+    "leak:sigslot::_signal_base2*::~_signal_base2\n"
     "leak:testing::internal::CmpHelperEQ\n"
     "leak:webrtc::AudioDeviceLinuxALSA::InitMicrophone\n"
     "leak:webrtc::AudioDeviceLinuxALSA::InitSpeaker\n"

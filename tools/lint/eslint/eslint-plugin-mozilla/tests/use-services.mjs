@@ -14,10 +14,12 @@ const ruleTester = new RuleTester();
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidCode(code, serviceName, getterName) {
+function invalidCode(code, serviceName, getterName, type = "CallExpression") {
   return {
     code,
-    errors: [{ messageId: "useServices", data: { serviceName, getterName } }],
+    errors: [
+      { messageId: "useServices", data: { serviceName, getterName }, type },
+    ],
   };
 }
 
@@ -43,7 +45,8 @@ ruleTester.run("use-services", rule, {
          uuidGen: ["@mozilla.org/uuid-generator;1", Ci.nsIUUIDGenerator],
        });`,
       "uuid",
-      "defineLazyServiceGetters"
+      "defineLazyServiceGetters",
+      "ArrayExpression"
     ),
     invalidCode(
       `XPCOMUtils.defineLazyServiceGetter(

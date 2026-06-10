@@ -9,17 +9,19 @@
  */
 
 #include <cstddef>
+#include <cstdint>
 
+#include "absl/strings/string_view.h"
 #include "api/field_trials.h"
-#include "test/fuzzers/fuzz_data_helper.h"
 
 namespace webrtc {
 
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
+void FuzzOneInput(const uint8_t* data, size_t size) {
   // FieldTrials constructor crashes on invalid input.
   // FieldTrials::Create validates input and returns nullptr when it is invalid,
   // but should never crash.
-  FieldTrials::Create(fuzz_data.ReadString());
+  FieldTrials::Create(
+      absl::string_view(reinterpret_cast<const char*>(data), size));
 }
 
 }  // namespace webrtc

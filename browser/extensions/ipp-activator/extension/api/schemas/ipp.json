@@ -6,16 +6,29 @@
       {
         "name": "showMessage",
         "type": "function",
-        "description": "Show a localized message using the browser notification box. Optionally target a specific tab by id.",
+        "description": "Show a message using the browser notification box. Accepts a string or an array of parts to render (with optional strong modifier). Optionally target a specific tab by id.",
         "async": true,
         "parameters": [
           {
             "name": "message",
-            "description": "Object with a Fluent l10n ID.",
-            "type": "object",
-            "properties": {
-              "l10nId": { "type": "string" }
-            }
+            "description": "String label or array of {text, modifier} parts.",
+            "choices": [
+              { "type": "string" },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": { "type": "string" },
+                    "modifier": {
+                      "type": "array",
+                      "optional": true,
+                      "items": { "type": "string", "enum": ["strong"] }
+                    }
+                  }
+                }
+              }
+            ]
           },
           {
             "name": "tabId",
@@ -54,16 +67,16 @@
         "parameters": [{ "name": "domain", "type": "string" }]
       },
       {
-        "name": "isIPPActive",
+        "name": "isTesting",
         "type": "function",
-        "description": "Return whether IPP connection is active.",
+        "description": "Return whether we are running in testing mode.",
         "async": true,
         "parameters": []
       },
       {
-        "name": "getRegion",
+        "name": "isIPPActive",
         "type": "function",
-        "description": "Return the user's home region as an ISO 3166-1 alpha-2 code (uppercase), or null if unknown.",
+        "description": "Return whether IPP connection is active.",
         "async": true,
         "parameters": []
       },
@@ -78,20 +91,6 @@
         "name": "getDynamicWebRequestBreakages",
         "type": "function",
         "description": "Return dynamic webRequest breakages (pref: extensions.ippactivator.dynamicWebRequestBreakages).",
-        "async": true,
-        "parameters": []
-      },
-      {
-        "name": "getTabBreakagesUrl",
-        "type": "function",
-        "description": "Return the URL to fetch the base tab breakages from (pref: extensions.ippactivator.tabBreakagesUrl). Empty string means use the built-in file.",
-        "async": true,
-        "parameters": []
-      },
-      {
-        "name": "getWebRequestBreakagesUrl",
-        "type": "function",
-        "description": "Return the URL to fetch the base webRequest breakages from (pref: extensions.ippactivator.webrequestBreakagesUrl). Empty string means use the built-in file.",
         "async": true,
         "parameters": []
       },
@@ -126,18 +125,11 @@
       {
         "name": "onIPPActivated",
         "type": "function",
-        "description": "Fired when IPProtectionService dispatches 'IPProtectionService:Started'. The listener receives the current active state.",
+        "description": "Fired when IPProtectionService dispatches 'IPProtectionService:Started'.",
         "parameters": [
           {
             "name": "listener",
-            "type": "function",
-            "parameters": [
-              {
-                "name": "active",
-                "type": "boolean",
-                "description": "Whether the IPP connection is currently active."
-              }
-            ]
+            "type": "function"
           }
         ]
       },
@@ -160,36 +152,6 @@
           {
             "name": "listener",
             "type": "function"
-          }
-        ]
-      },
-      {
-        "name": "onIPPExceptionsChanged",
-        "type": "function",
-        "description": "Fired when the ipp-vpn permission changes.",
-        "parameters": [
-          {
-            "name": "listener",
-            "type": "function"
-          }
-        ]
-      },
-      {
-        "name": "onRegionChanged",
-        "type": "function",
-        "description": "Fired when the user's home region changes (observer on 'browser-region-updated'). The listener receives the new region.",
-        "parameters": [
-          {
-            "name": "listener",
-            "type": "function",
-            "parameters": [
-              {
-                "name": "region",
-                "type": "string",
-                "optional": true,
-                "description": "The new home region as an ISO 3166-1 alpha-2 code (uppercase), or null if unknown."
-              }
-            ]
           }
         ]
       }

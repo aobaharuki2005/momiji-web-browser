@@ -34,7 +34,6 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.locale.ActivityContextWrapper
-import mozilla.components.support.utils.DefaultDownloadFileUtils
 import mozilla.components.support.utils.ext.requestInPlacePermissions
 import org.mozilla.samples.browser.databinding.FragmentBrowserBinding
 import org.mozilla.samples.browser.downloads.DownloadService
@@ -145,9 +144,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                         )
                     }
                 },
-                downloadFileUtils = DefaultDownloadFileUtils(
-                    context = requireContext(),
-                ),
             ),
             owner = this,
             view = binding.root,

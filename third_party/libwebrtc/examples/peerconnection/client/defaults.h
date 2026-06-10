@@ -26,7 +26,4 @@ std::string GetPeerConnectionString();
 std::string GetDefaultServerName();
 std::string GetPeerName();
 
-std::string GetTurnUserName();
-std::string GetTurnPassword();
-
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_DEFAULTS_H_

@@ -133,7 +133,6 @@ class WptreportFormatter(BaseFormatter):  # type: ignore
         scope_data["objects"].append({"process": data["process"],
                                       "name": data["name"],
                                       "allowed": data.get("allowed", False),
-                                      "count": data["count"],
                                       "bytes": data["bytes"],
                                       "subsuite": data.get("subsuite", "")})
 

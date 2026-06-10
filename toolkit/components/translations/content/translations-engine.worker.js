@@ -39,6 +39,7 @@ const MODEL_FILE_ALIGNMENTS = {
   model: 256,
   lex: 64,
   vocab: 64,
+  qualityModel: 64,
   srcvocab: 64,
   trgvocab: 64,
 };
@@ -523,7 +524,7 @@ class BergamotUtils {
     const { sourceLanguage, targetLanguage, languageModelFiles } =
       translationModelPayload;
 
-    const { model, lex, vocab, srcvocab, trgvocab } =
+    const { model, lex, vocab, qualityModel, srcvocab, trgvocab } =
       BergamotUtils.allocateModelMemory(bergamot, languageModelFiles);
 
     // Transform the bytes to mb, like "10.2mb"
@@ -552,6 +553,10 @@ class BergamotUtils {
       throw new Error("Vocabulary key is not found.");
     }
 
+    if (qualityModel) {
+      memoryLog += `\n  QualityModel: ${getMemory(qualityModel)}\n`;
+    }
+
     const config = BergamotUtils.generateTextConfig({
       "beam-size": "1",
       normalize: "1.0",
@@ -560,7 +565,7 @@ class BergamotUtils {
       "mini-batch-words": "1024",
       workspace: "128",
       "max-length-factor": "2.0",
-      "skip-cost": "true", // disable quality model
+      "skip-cost": (!qualityModel).toString(),
       "cpu-threads": "0",
       quiet: "true",
       "quiet-translation": "true",
@@ -582,7 +587,7 @@ class BergamotUtils {
       model,
       lex ?? null,
       vocabList,
-      null // no quality model
+      qualityModel ?? null
     );
   }
 

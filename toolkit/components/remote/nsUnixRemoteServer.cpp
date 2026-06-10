@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -65,20 +68,17 @@ const char* nsUnixRemoteServer::HandleCommandLine(
   //
   // [argc][offsetargv0][offsetargv1...]<workingdir>\0<argv[0]>\0argv[1]...\0
   // (offset is from the beginning of the buffer)
-  if (aBuffer.size() < sizeof(uint32_t) ||
-      aBuffer[aBuffer.size() - 1] != '\0') {
+  if (aBuffer.size() < sizeof(uint32_t)) {
     return "500 command not parseable";
   }
 
   uint32_t argc =
       TO_LITTLE_ENDIAN32(*reinterpret_cast<const uint32_t*>(aBuffer.data()));
-
-  mozilla::CheckedInt<uint32_t> offsetFilelist =
-      ((mozilla::CheckedInt<uint32_t>(argc) + 1) * sizeof(uint32_t));
-  if (!offsetFilelist.isValid() || offsetFilelist.value() >= aBuffer.size()) {
+  uint32_t offsetFilelist = ((argc + 1) * sizeof(uint32_t));
+  if (offsetFilelist >= aBuffer.size()) {
     return "500 command not parseable";
   }
-  const char* workingDir = aBuffer.data() + offsetFilelist.value();
+  const char* workingDir = aBuffer.data() + offsetFilelist;
 
   nsCOMPtr<nsIFile> lf;
   nsresult rv =

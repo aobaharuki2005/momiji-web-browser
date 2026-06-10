@@ -1,6 +1,16 @@
+// -*- tab-width: 2; indent-tabs-mode: nil; js-indent-level: 2 -*-
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
+const nsIPK11TokenDB = Ci.nsIPK11TokenDB;
+const nsIDialogParamBlock = Ci.nsIDialogParamBlock;
+const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";
+const nsIPKCS11ModuleDB = Ci.nsIPKCS11ModuleDB;
+const nsIPKCS11Slot = Ci.nsIPKCS11Slot;
+const nsIPK11Token = Ci.nsIPK11Token;
 
 var params;
 var pw1;
@@ -21,9 +31,10 @@ function process() {
   // If the token is unitialized, don't use the old password box.
   // Otherwise, do.
 
-  let token = Cc["@mozilla.org/security/internalkeytoken;1"].createInstance(
-    Ci.nsIPKCS11Token
+  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
+    Ci.nsIPK11TokenDB
   );
+  let token = tokenDB.getInternalKeyToken();
   if (token) {
     let oldpwbox = document.getElementById("oldpw");
     let msgBox = document.getElementById("message");
@@ -72,9 +83,8 @@ async function createAlert(titleL10nId, messageL10nId) {
 }
 
 function setPassword() {
-  var token = Cc["@mozilla.org/security/internalkeytoken;1"].createInstance(
-    Ci.nsIPKCS11Token
-  );
+  var pk11db = Cc[nsPK11TokenDB].getService(nsIPK11TokenDB);
+  var token = pk11db.getInternalKeyToken();
 
   var oldpwbox = document.getElementById("oldpw");
   var initpw = oldpwbox.getAttribute("inited");
@@ -97,10 +107,8 @@ function setPassword() {
           // we reached a case that should have been prevented by checkPasswords.
         } else {
           if (pw1.value == "") {
-            const fipsUtils = Cc[
-              "@mozilla.org/security/fipsutils;1"
-            ].getService(Ci.nsIFIPSUtils);
-            if (fipsUtils.isFIPSEnabled) {
+            var secmoddb = Cc[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
+            if (secmoddb.isFIPSEnabled) {
               // empty passwords are not allowed in FIPS mode
               createAlert(
                 "pw-change-failed-title",

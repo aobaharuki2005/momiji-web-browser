@@ -17,7 +17,7 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   const onEvents = waitForNetworkEvents(monitor, 2);
-  await reloadSelectedTab();
+  await reloadBrowser();
   await onEvents;
 
   info("Resize waterfall column a first time");

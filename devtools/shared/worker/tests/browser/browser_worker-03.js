@@ -5,37 +5,61 @@
 
 // Tests that the devtools/shared/worker can handle:
 // returned primitives (or promise or Error)
+//
+// And tests `workerify` by doing so.
 
-const { DevToolsWorker } = ChromeUtils.importESModule(
+const { workerify } = ChromeUtils.importESModule(
   "resource://devtools/shared/worker/worker.sys.mjs"
 );
+function square(x) {
+  return x * x;
+}
+
+function squarePromise(x) {
+  return new Promise(resolve => resolve(x * x));
+}
+
+function squareError() {
+  return new Error("Nope");
+}
+
+function squarePromiseReject() {
+  return new Promise((_, reject) => reject("Nope"));
+}
+
+registerCleanupFunction(function () {
+  Services.prefs.clearUserPref("security.allow_parent_unrestricted_js_loads");
+});
 
 add_task(async function () {
-  const worker = new DevToolsWorker(
-    getRootDirectory(gTestPath) + "file_worker-03.worker.js"
+  // Needed for blob:null
+  Services.prefs.setBoolPref(
+    "security.allow_parent_unrestricted_js_loads",
+    true
   );
+  let fn = workerify(square);
+  is(await fn(5), 25, "return primitives successful");
+  fn.destroy();
 
-  is(await worker.performTask("square", 5), 25, "return primitives successful");
+  fn = workerify(squarePromise);
+  is(await fn(5), 25, "promise primitives successful");
+  fn.destroy();
 
-  is(
-    await worker.performTask("squarePromise", 5),
-    25,
-    "promise primitives successful"
-  );
-
+  fn = workerify(squareError);
   try {
-    await worker.performTask("squareError", 5);
+    await fn(5);
     ok(false, "return error should reject");
   } catch (e) {
     ok(true, "return error should reject");
   }
+  fn.destroy();
 
+  fn = workerify(squarePromiseReject);
   try {
-    await worker.performTask("squarePromiseReject", 5);
+    await fn(5);
     ok(false, "returned rejected promise rejects");
   } catch (e) {
     ok(true, "returned rejected promise rejects");
   }
-
-  worker.destroy();
+  fn.destroy();
 });

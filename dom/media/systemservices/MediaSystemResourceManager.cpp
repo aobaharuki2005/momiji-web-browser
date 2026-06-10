@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -77,35 +79,43 @@ void MediaSystemResourceManager::Init() {
   }
 }
 
-MediaSystemResourceManager::MediaSystemResourceManager() {
+MediaSystemResourceManager::MediaSystemResourceManager()
+    : mReentrantMonitor("MediaSystemResourceManager.mReentrantMonitor"),
+      mShutDown(false),
+      mChild(nullptr) {
   MOZ_ASSERT(InImageBridgeChildThread());
-  if (auto imageBridge = ImageBridgeChild::GetSingleton()) {
-    if (auto* child =
-            imageBridge->SendPMediaSystemResourceManagerConstructor()) {
-      mChild = static_cast<media::MediaSystemResourceManagerChild*>(child);
-      mChild->SetManager(this);
-    }
-  }
+  OpenIPC();
 }
 
 MediaSystemResourceManager::~MediaSystemResourceManager() {
+  MOZ_ASSERT(IsIpcClosed());
+}
+
+void MediaSystemResourceManager::OpenIPC() {
+  MOZ_ASSERT(InImageBridgeChildThread());
   MOZ_ASSERT(!mChild);
+
+  media::PMediaSystemResourceManagerChild* child =
+      ImageBridgeChild::GetSingleton()
+          ->SendPMediaSystemResourceManagerConstructor();
+  mChild = static_cast<media::MediaSystemResourceManagerChild*>(child);
+  mChild->SetManager(this);
 }
 
 void MediaSystemResourceManager::CloseIPC() {
   MOZ_ASSERT(InImageBridgeChildThread());
 
-  if (mChild) {
-    mChild->Destroy();
-    mChild = nullptr;
+  if (!mChild) {
+    return;
   }
-}
-
-void MediaSystemResourceManager::OnIpcClosed() {
-  MOZ_ASSERT(InImageBridgeChildThread());
-
+  mChild->Destroy();
   mChild = nullptr;
+  mShutDown = true;
 }
+
+void MediaSystemResourceManager::OnIpcClosed() { mChild = nullptr; }
+
+bool MediaSystemResourceManager::IsIpcClosed() { return mChild ? true : false; }
 
 void MediaSystemResourceManager::Register(MediaSystemResourceClient* aClient) {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
@@ -233,7 +243,7 @@ bool MediaSystemResourceManager::AcquireSyncNoWait(
 
 void MediaSystemResourceManager::DoAcquire(uint32_t aId) {
   MOZ_ASSERT(InImageBridgeChildThread());
-  if (!mChild) {
+  if (mShutDown || !mChild) {
     HandleAcquireResult(aId, false);
     return;
   }
@@ -282,9 +292,10 @@ void MediaSystemResourceManager::ReleaseResource(
 
 void MediaSystemResourceManager::DoRelease(uint32_t aId) {
   MOZ_ASSERT(InImageBridgeChildThread());
-  if (mChild) {
-    mChild->SendRelease(aId);
+  if (mShutDown || !mChild) {
+    return;
   }
+  mChild->SendRelease(aId);
 }
 
 void MediaSystemResourceManager::RecvResponse(uint32_t aId, bool aSuccess) {

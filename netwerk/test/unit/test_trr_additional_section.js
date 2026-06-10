@@ -5,8 +5,6 @@
 "use strict";
 
 trr_test_setup();
-Services.prefs.setBoolPref("network.trr.add_additional_records", true);
-
 registerCleanupFunction(async () => {
   trr_clear_prefs();
 });

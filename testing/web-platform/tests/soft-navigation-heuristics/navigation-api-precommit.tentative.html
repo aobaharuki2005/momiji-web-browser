@@ -16,12 +16,10 @@
   <script>
     const link = document.getElementById("link");
     testNavigationApi("Test soft navigation when navigate event intecepts with a precommit handler", e => {
-        // We must not wait for the paint to happen before the precommit handler
-        // finishes. If we did, the paint would happen before the URL change
-        // is committed, and it would not be attributed to the soft navigation.
-        e.intercept({precommitHandler: () => { addImageToMain(); } });
+        e.intercept({precommitHandler: async () => addImageToMain() });
         timestamps[counter]["eventEnd"] = performance.now();
       }, link);
   </script>
 </body>
 </html>
+

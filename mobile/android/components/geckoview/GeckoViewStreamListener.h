@@ -1,9 +1,10 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: c++; c-basic-offset: 2; tab-width: 2; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GeckoViewStreamListener_h_
-#define GeckoViewStreamListener_h_
+#ifndef GeckoViewStreamListener_h__
+#define GeckoViewStreamListener_h__
 
 #include "nsIStreamListener.h"
 #include "nsIInterfaceRequestor.h"
@@ -53,4 +54,4 @@ class GeckoViewStreamListener : public nsIStreamListener,
 
 }  // namespace mozilla
 
-#endif  // GeckoViewStreamListener_h_
+#endif  // GeckoViewStreamListener_h__

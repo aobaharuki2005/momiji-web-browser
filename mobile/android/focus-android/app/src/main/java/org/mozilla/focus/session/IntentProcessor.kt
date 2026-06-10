@@ -30,30 +30,16 @@ class IntentProcessor(
     private val tabsUseCases: TabsUseCases,
     private val customTabsUseCases: CustomTabsUseCases,
 ) {
-    /**
-     * Represents the result of processing an intent.
-     */
     sealed class Result {
-        /**
-         * No action was taken.
-         */
         object None : Result()
-
-        /**
-         * A new standard tab was created.
-         */
         data class Tab(val id: String) : Result()
-
-        /**
-         * A new custom tab was created.
-         */
         data class CustomTab(val id: String) : Result()
     }
 
     /**
      * Handle this incoming intent (via onCreate()) and create a new session if required.
      */
-    fun handleIntent(intent: SafeIntent, savedInstanceState: Bundle?): Result {
+    fun handleIntent(context: Context, intent: SafeIntent, savedInstanceState: Bundle?): Result {
         if ((intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0) {
             // This Intent was launched from history (recent apps). Android will redeliver the
             // original Intent (which might be a VIEW intent). However if there's no active browsing
@@ -67,82 +53,77 @@ class IntentProcessor(
             return Result.None
         }
 
-        return createSessionFromIntent(intent)
+        return createSessionFromIntent(context, intent)
     }
 
     /**
      * Handle this incoming intent (via onNewIntent()) and create a new session if required.
      */
-    fun handleNewIntent(intent: SafeIntent) {
-        createSessionFromIntent(intent)
+    fun handleNewIntent(context: Context, intent: SafeIntent) {
+        createSessionFromIntent(context, intent)
     }
 
-    private fun createSessionFromIntent(intent: SafeIntent): Result {
-        return when (intent.action) {
-            Intent.ACTION_VIEW -> createViewSession(intent)
+    @Suppress("ReturnCount", "CognitiveComplexMethod")
+    private fun createSessionFromIntent(context: Context, intent: SafeIntent): Result {
+        when (intent.action) {
+            Intent.ACTION_VIEW -> {
+                val dataString = intent.dataString
+                if (TextUtils.isEmpty(dataString)) {
+                    // If there's no URL in the Intent then we can't create a session.
+                    return Result.None
+                }
 
-            Intent.ACTION_SEND -> createSendSession(intent)
+                return when {
+                    intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG) -> {
+                        val requestDesktop =
+                            intent.getBooleanExtra(HomeScreen.REQUEST_DESKTOP, false)
 
-            else -> Result.None
-        }
-    }
+                        // Ignoring, because exception!
+                        // HomeScreen.BLOCKING_ENABLED
 
-    private fun createViewSession(intent: SafeIntent): Result {
-        val dataString = intent.dataString
-        if (TextUtils.isEmpty(dataString)) {
-            // If there's no URL in the Intent then we can't create a session.
-            return Result.None
-        }
-
-        return when {
-            intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG) -> {
-                val requestDesktop =
-                    intent.getBooleanExtra(HomeScreen.REQUEST_DESKTOP, false)
-
-                // Ignoring, because exception!
-                // HomeScreen.BLOCKING_ENABLED
-
-                createSession(
-                    SessionState.Source.Internal.HomeScreen,
-                    intent,
-                    intent.dataString ?: "",
-                    requestDesktop,
-                )
+                        createSession(
+                            SessionState.Source.Internal.HomeScreen,
+                            intent,
+                            intent.dataString ?: "",
+                            requestDesktop,
+                        )
+                    }
+                    intent.hasExtra(TextActionActivity.EXTRA_TEXT_SELECTION) -> createSession(
+                        SessionState.Source.Internal.TextSelection,
+                        intent,
+                        intent.dataString ?: "",
+                    )
+                    else -> createSession(
+                        SessionState.Source.External.ActionView(null),
+                        intent,
+                        intent.dataString ?: "",
+                    )
+                }
             }
 
-            intent.hasExtra(TextActionActivity.EXTRA_TEXT_SELECTION) -> createSession(
-                SessionState.Source.Internal.TextSelection,
-                intent,
-                intent.dataString ?: "",
-            )
+            Intent.ACTION_SEND -> {
+                val dataString = intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (TextUtils.isEmpty(dataString)) {
+                    return Result.None
+                }
 
-            else -> createSession(
-                SessionState.Source.External.ActionView(null),
-                intent,
-                intent.dataString ?: "",
-            )
-        }
-    }
-
-    private fun createSendSession(intent: SafeIntent): Result {
-        val dataString = intent.getStringExtra(Intent.EXTRA_TEXT)
-        if (TextUtils.isEmpty(dataString)) {
-            return Result.None
-        }
-
-        return if (dataString == null || !URLStringUtils.isURLLike(dataString)) {
-            val bestURL = WebURLFinder(dataString).bestWebURL()
-            if (TextUtils.isEmpty(bestURL)) {
-                createSearchSession(
-                    SessionState.Source.External.ActionSend(null),
-                    SearchUtils.createSearchUrl(context, dataString ?: ""),
-                    dataString ?: "",
-                )
-            } else {
-                createSession(SessionState.Source.External.ActionSend(null), bestURL ?: "")
+                return if (dataString == null || !URLStringUtils.isURLLike(dataString)) {
+                    val bestURL = WebURLFinder(dataString).bestWebURL()
+                    if (TextUtils.isEmpty(bestURL)) {
+                        createSearchSession(
+                            SessionState.Source.External.ActionSend(null),
+                            SearchUtils.createSearchUrl(context, dataString ?: ""),
+                            dataString ?: "",
+                        )
+                    } else {
+                        createSession(SessionState.Source.External.ActionSend(null), bestURL ?: "")
+                    }
+                } else {
+                    createSession(SessionState.Source.External.ActionSend(null), dataString)
+                }
             }
-        } else {
-            createSession(SessionState.Source.External.ActionSend(null), dataString)
+
+            else -> return Result.None
         }
     }
 

@@ -5,6 +5,10 @@
 
 "use strict";
 
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
 const URL1 = "data:text/plain,tab1";
 const URL2 = "data:text/plain,tab2";
 const URL3 = "data:text/plain,tab3";
@@ -13,10 +17,6 @@ const URL5 = "data:text/plain,tab5";
 
 const TAB_GROUP_1 = "tab-group-1";
 const TAB_GROUP_2 = "tab-group-2";
-
-registerCleanupFunction(async () => {
-  await SpecialPowers.clearUserPref("browser.tabs.splitview.hasUsed");
-});
 
 /**
  * @param {(string|number)[]} order
@@ -245,7 +245,7 @@ function assertGroupedTab(row, tabGroup) {
 
 add_task(async function test_reorder() {
   await testWithNewWindow(async function (newWindow) {
-    Services.fog.testResetFOG();
+    Services.telemetry.clearScalars();
 
     const tabsListNode = newWindow.document.getElementById(
       "allTabsMenu-allTabsView-tabs"
@@ -285,8 +285,10 @@ add_task(async function test_reorder() {
       "after moving up again"
     );
 
-    Assert.equal(
-      Glean.browserUiInteraction.allTabsPanelDragstartTabEventCount.testGetValue(),
+    let scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+    TelemetryTestUtils.assertScalar(
+      scalars,
+      "browser.ui.interaction.all_tabs_panel_dragstart_tab_event_count",
       3
     );
   });
@@ -294,7 +296,7 @@ add_task(async function test_reorder() {
 
 add_task(async function test_move_to_tab_bar() {
   await testWithNewWindow(async function (newWindow) {
-    Services.fog.testResetFOG();
+    Services.telemetry.clearScalars();
 
     const tabsListNode = newWindow.document.getElementById(
       "allTabsMenu-allTabsView-tabs"
@@ -342,8 +344,10 @@ add_task(async function test_move_to_tab_bar() {
       "after moving down with tab bar"
     );
 
-    Assert.equal(
-      Glean.browserUiInteraction.allTabsPanelDragstartTabEventCount.testGetValue(),
+    let scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+    TelemetryTestUtils.assertScalar(
+      scalars,
+      "browser.ui.interaction.all_tabs_panel_dragstart_tab_event_count",
       2
     );
   });
@@ -353,7 +357,7 @@ add_task(async function test_move_to_different_tab_bar() {
   const newWindow2 = await BrowserTestUtils.openNewBrowserWindow();
 
   await testWithNewWindow(async function (newWindow) {
-    Services.fog.testResetFOG();
+    Services.telemetry.clearScalars();
 
     const tabsListNode = newWindow.document.getElementById(
       "allTabsMenu-allTabsView-tabs"
@@ -395,8 +399,10 @@ add_task(async function test_move_to_different_tab_bar() {
       "after moving to other window in newWindow2"
     );
 
-    Assert.equal(
-      Glean.browserUiInteraction.allTabsPanelDragstartTabEventCount.testGetValue(),
+    let scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+    TelemetryTestUtils.assertScalar(
+      scalars,
+      "browser.ui.interaction.all_tabs_panel_dragstart_tab_event_count",
       1
     );
   });
@@ -645,155 +651,4 @@ add_task(async function test_drag_and_drop_tab_groups() {
   });
 
   await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function test_drag_and_drop_split_view() {
-  await testWithNewWindow(async function (newWindow) {
-    const tabsListNode = newWindow.gTabsPanel.allTabsPanel.containerNode;
-
-    const tab3 = newWindow.gBrowser.tabs.at(3);
-    const tab4 = newWindow.gBrowser.tabs.at(4);
-    const splitview = newWindow.gBrowser.addTabSplitView([tab3, tab4], {
-      insertBefore: tab3,
-    });
-    await newWindow.gTabsPanel.allTabsPanel.domRefreshComplete;
-
-    assertOrder(
-      getTabsListOrderedIds(tabsListNode),
-      ["unknown", 1, 2, 3, 4, 5],
-      "after creating split view, order should be unchanged"
-    );
-
-    info("drag split view before tab 2");
-    let rows = tabsListNode.querySelectorAll("toolbaritem");
-    await dropBefore(rows[3], rows[2], newWindow);
-
-    assertOrder(
-      getTabsListOrderedIds(tabsListNode),
-      ["unknown", 1, 3, 4, 2, 5],
-      "after dragging split view, both tabs should appear together in the new position"
-    );
-    splitview.unsplitTabs();
-  });
-});
-
-add_task(async function test_drag_cannot_drop_between_splitview_tabs() {
-  await testWithNewWindow(async function (newWindow) {
-    const tabsListNode = newWindow.gTabsPanel.allTabsPanel.containerNode;
-
-    const tab3 = newWindow.gBrowser.tabs.at(3);
-    const tab4 = newWindow.gBrowser.tabs.at(4);
-    const splitview = newWindow.gBrowser.addTabSplitView([tab3, tab4], {
-      insertBefore: tab3,
-    });
-    await newWindow.gTabsPanel.allTabsPanel.domRefreshComplete;
-
-    assertOrder(
-      getTabsListOrderedIds(tabsListNode),
-      ["unknown", 1, 2, 3, 4, 5],
-      "verify the starting order"
-    );
-
-    info("drag tab5 to bottom half of tab3 (first splitview tab)");
-    let rows = tabsListNode.querySelectorAll("toolbaritem");
-    await dropAfter(
-      rows[5], // tab5
-      rows[3], // tab3
-      newWindow
-    );
-
-    assertOrder(
-      getTabsListOrderedIds(tabsListNode),
-      ["unknown", 1, 2, 5, 3, 4],
-      "dragging onto the bottom half of the first splitview tab should place the drop before both splitview tabs"
-    );
-
-    info("drag tab5 to bottom half of tab4 (second splitview tab)");
-    rows = tabsListNode.querySelectorAll("toolbaritem");
-    await dropAfter(
-      rows[3], // tab5
-      rows[5], // tab4
-      newWindow
-    );
-
-    assertOrder(
-      getTabsListOrderedIds(tabsListNode),
-      ["unknown", 1, 2, 3, 4, 5],
-      "dragging onto the bottom half of the second splitview tab should place the drop after both splitview tabs"
-    );
-
-    info("drag tab5 to top half of tab3 (first splitview tab)");
-    rows = tabsListNode.querySelectorAll("toolbaritem");
-    await dropBefore(
-      rows[5], // tab5
-      rows[3], // tab3
-      newWindow
-    );
-
-    assertOrder(
-      getTabsListOrderedIds(tabsListNode),
-      ["unknown", 1, 2, 5, 3, 4],
-      "dragging onto the top half of the first splitview tab should place the drop before both splitview tabs"
-    );
-
-    info("drag tab2 to top half of tab4 (second splitview tab)");
-    rows = tabsListNode.querySelectorAll("toolbaritem");
-    await dropBefore(
-      rows[2], // tab2
-      rows[5], // tab4
-      newWindow
-    );
-
-    assertOrder(
-      getTabsListOrderedIds(tabsListNode),
-      ["unknown", 1, 5, 3, 4, 2],
-      "dragging onto the top half of the second splitview tab should place the drop after both splitview tabs"
-    );
-    splitview.unsplitTabs();
-  });
-});
-
-add_task(async function test_move_split_view_from_tab_list_to_tab_bar() {
-  await testWithNewWindow(async function (newWindow) {
-    const tabsListNode = newWindow.gTabsPanel.allTabsPanel.containerNode;
-
-    const tab1 = newWindow.gBrowser.tabs.at(1);
-    const tab2 = newWindow.gBrowser.tabs.at(2);
-    const splitview = newWindow.gBrowser.addTabSplitView([tab1, tab2], {
-      insertBefore: tab1,
-    });
-    await newWindow.gTabsPanel.allTabsPanel.domRefreshComplete;
-
-    assertOrder(
-      getTabsListOrderedIds(tabsListNode),
-      ["unknown", 1, 2, 3, 4, 5],
-      "after creating split view, order should be unchanged"
-    );
-
-    info("drag split view from all tabs list to before tab5 in the tab strip");
-    const rows = tabsListNode.querySelectorAll("toolbaritem");
-    const tab5 = newWindow.gBrowser.tabs.at(5);
-    const tab5Rect = tab5.getBoundingClientRect();
-    EventUtils.synthesizeDrop(
-      rows[1],
-      tab5,
-      null,
-      "move",
-      newWindow,
-      newWindow,
-      {
-        clientX: tab5Rect.left + 1,
-        clientY: tab5Rect.top + tab5Rect.height * 0.25,
-      }
-    );
-    await newWindow.gTabsPanel.allTabsPanel.domRefreshComplete;
-
-    assertOrder(
-      getTabStripOrderedIds(newWindow),
-      ["unknown", 3, 4, 1, 2, 5],
-      "split view should be dropped before tab5, not before tab4"
-    );
-
-    splitview.unsplitTabs();
-  });
 });

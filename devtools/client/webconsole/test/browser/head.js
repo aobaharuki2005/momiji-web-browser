@@ -27,7 +27,7 @@ var {
   BrowserConsoleManager,
 } = require("resource://devtools/client/webconsole/browser-console-manager.js");
 
-var WCUL10n = require("resource://devtools/shared/webconsole/l10n.js");
+var WCUL10n = require("resource://devtools/client/webconsole/utils/l10n.js");
 const DOCS_GA_PARAMS = `?${new URLSearchParams({
   utm_source: "devtools",
   utm_medium: "firefox-console-errors",
@@ -46,21 +46,6 @@ registerCleanupFunction(async function () {
   // set a foo cookie which might have side effects on other tests.
   Services.cookies.removeAll();
 });
-
-const isCmNextEnabled = Services.prefs.getBoolPref(
-  "devtools.webconsole.codemirrorNext"
-);
-const codemirrorSelectors = {
-  cmScroller: isCmNextEnabled ? ".cm-scroller" : ".CodeMirror-scroll",
-  cmContent: isCmNextEnabled ? ".cm-content" : ".CodeMirror-wrap",
-  cmLine: isCmNextEnabled
-    ? ".cm-content .cm-line"
-    : ".CodeMirror-code pre.CodeMirror-line",
-  cmLineNumbers: isCmNextEnabled
-    ? ".cm-lineNumbers"
-    : ".CodeMirror-linenumbers",
-  cmEditor: `#response-panel .editor-row-container ${isCmNextEnabled ? ".cm-editor" : ".CodeMirror"}`,
-};
 
 /**
  * Add a new tab and open the toolbox in it, and select the webconsole.
@@ -103,9 +88,9 @@ async function openNewTabWithIframesAndConsole(tabUrl, iframes) {
   // to handle remote frames (we don't support creating frames target when the toolbox
   // is already open).
   await addTab(tabUrl);
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [iframes],
+    iframes,
     async function (urls) {
       const iframesLoadPromises = urls.map((url, i) => {
         const iframe = content.document.createElement("iframe");
@@ -1885,27 +1870,4 @@ async function getImageSizeFromClipboard() {
       };
     }
   );
-}
-
-/**
- * Perform default setup for URL classifier tests (eg used for ETP warnings).
- *
- * @param {object=} options
- * @param {boolean=} options.enableTrackingProtection
- *        If true, sets the preference privacy.trackingprotection.enabled=true.
- *        the test. Defaults to true.
- */
-async function setupUrlClassifierTest(options = {}) {
-  const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
-    "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
-  );
-  await UrlClassifierTestUtils.addTestTrackers();
-  registerCleanupFunction(function () {
-    UrlClassifierTestUtils.cleanupTestTrackers();
-  });
-
-  const { enableTrackingProtection = true } = options;
-  if (enableTrackingProtection) {
-    await pushPref("privacy.trackingprotection.enabled", true);
-  }
 }

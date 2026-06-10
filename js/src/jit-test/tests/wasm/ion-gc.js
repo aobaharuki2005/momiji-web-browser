@@ -34,7 +34,7 @@ for (let type of ['i32', 'f32', 'f64']) {
 
             if (i === EXCEPTION_ITER) {
                 x = { valueOf: function innerValueOf() {
-                    // Suppress callee.
+                    // Supress callee.
                     instance = null;
                     // Suppress other arguments.
                     otherArg = null;

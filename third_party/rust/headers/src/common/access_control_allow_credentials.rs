@@ -1,6 +1,4 @@
-use http::{HeaderName, HeaderValue};
-
-use crate::{Error, Header};
+use {Header, HeaderName, HeaderValue};
 
 /// `Access-Control-Allow-Credentials` header, part of
 /// [CORS](http://www.w3.org/TR/cors/#access-control-allow-headers-response-header)
@@ -27,6 +25,7 @@ use crate::{Error, Header};
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::AccessControlAllowCredentials;
 ///
 /// let allow_creds = AccessControlAllowCredentials;
@@ -39,7 +38,7 @@ impl Header for AccessControlAllowCredentials {
         &::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS
     }
 
-    fn decode<'i, I: Iterator<Item = &'i HeaderValue>>(values: &mut I) -> Result<Self, Error> {
+    fn decode<'i, I: Iterator<Item = &'i HeaderValue>>(values: &mut I) -> Result<Self, ::Error> {
         values
             .next()
             .and_then(|value| {
@@ -49,10 +48,10 @@ impl Header for AccessControlAllowCredentials {
                     None
                 }
             })
-            .ok_or_else(Error::invalid)
+            .ok_or_else(::Error::invalid)
     }
 
-    fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
+    fn encode<E: Extend<::HeaderValue>>(&self, values: &mut E) {
         values.extend(::std::iter::once(HeaderValue::from_static("true")));
     }
 }

@@ -10,7 +10,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 add_setup(async function () {
   Services.telemetry.clearEvents();
-  await makeProfileResettable();
+  makeProfileResettable();
 
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.scotchBonnet.enableOverride", false]],
@@ -41,19 +41,21 @@ add_task(async function refresh() {
 add_task(async function clear() {
   // Pick the tip, which should open the refresh dialog.  Click its cancel
   // button.
+  let useOldClearHistoryDialog = Services.prefs.getBoolPref(
+    "privacy.sanitize.useOldClearHistoryDialog"
+  );
+  let dialogURL = useOldClearHistoryDialog
+    ? "chrome://browser/content/sanitize.xhtml"
+    : "chrome://browser/content/sanitize_v2.xhtml";
   await checkIntervention({
     searchString: SEARCH_STRINGS.CLEAR,
     tip: UrlbarProviderInterventions.TIP_TYPE.CLEAR,
     title: "Clear your cache, cookies, history and more.",
     button: "Choose What to Clear…",
     awaitCallback() {
-      return BrowserTestUtils.promiseAlertDialog(
-        "cancel",
-        "chrome://browser/content/sanitize_v2.xhtml",
-        {
-          isSubDialog: true,
-        }
-      );
+      return BrowserTestUtils.promiseAlertDialog("cancel", dialogURL, {
+        isSubDialog: true,
+      });
     },
   });
 });
@@ -125,13 +127,12 @@ add_task(async function testIsActive() {
     },
   ];
 
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  let interventionsProviderInstance = providersManager.getProvider(
+  let interventionsProviderInstance = UrlbarProvidersManager.getProvider(
     "UrlbarProviderInterventions"
   );
   // Mock the relevent method of Query so we don't have to start a real one.
   interventionsProviderInstance.queryInstance = {
-    getProvider: name => providersManager.getProvider(name),
+    getProvider: name => UrlbarProvidersManager.getProvider(name),
   };
   for (const {
     description,

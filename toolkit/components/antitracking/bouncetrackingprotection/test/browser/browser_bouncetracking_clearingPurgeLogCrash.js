@@ -29,7 +29,10 @@ async function bounceTwice() {
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.bounceTrackingProtection.bounceTrackingGracePeriodSec", 0]],
+    set: [
+      ["privacy.bounceTrackingProtection.requireStatefulBounces", true],
+      ["privacy.bounceTrackingProtection.bounceTrackingGracePeriodSec", 0],
+    ],
   });
 });
 

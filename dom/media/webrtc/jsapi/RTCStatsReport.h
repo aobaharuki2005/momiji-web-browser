@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -13,6 +15,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/AutoEntryScript.h"
+#include "mozilla/dom/PerformanceService.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"  // RTCStatsCollection
 #include "mozilla/dom/ToJSValue.h"
 #include "nsCOMPtr.h"
@@ -32,11 +35,8 @@ namespace dom {
  * Keeps the state needed to convert RTCStatsTimestamps.
  */
 struct RTCStatsTimestampState {
-  RTCStatsTimestampState(uint64_t aRandomTimelineSeed,
-                         const TimeStamp& aStartDomRealtime,
-                         webrtc::Timestamp aStartRealtime,
-                         RTPCallerType aRTPCallerType,
-                         DOMHighResTimeStamp aStartWallClockRaw);
+  RTCStatsTimestampState();
+  explicit RTCStatsTimestampState(Performance& aPerformance);
 
   RTCStatsTimestampState(const RTCStatsTimestampState&) = default;
 
@@ -54,6 +54,10 @@ struct RTCStatsTimestampState {
   const RTPCallerType mRTPCallerType;
   // Performance.timeOrigin for mStartDomRealtime when the members were sampled.
   const DOMHighResTimeStamp mStartWallClockRaw;
+
+ protected:
+  RTCStatsTimestampState(TimeStamp aStartDomRealtime,
+                         webrtc::Timestamp aStartRealtime);
 };
 
 /**
@@ -68,13 +72,10 @@ struct RTCStatsTimestampState {
  * - Realtime   : Monotonic, unspecified (but constant) epoch.
  * - 1Jan1970   : Monotonic, unix epoch (00:00:00 UTC on 1 January 1970).
  * - Ntp        : Monotonic, ntp epoch (00:00:00 UTC on 1 January 1900).
- * - DomRealtime: Monotonic, performance.timeOrigin epoch. Corresponds to
- *                performance.now().
- * - DomNoTimeOrigin: Like DomRealtime but in milliseconds. Has reduced
- *                precision.
- * - Dom        : Like 1Jan1970 but in milliseconds, as the timestamps by
- *                webrtc-pc. Corresponds to Performance.timeOrigin +
+ * - Dom        : Monotonic, milliseconds since unix epoch, as the timestamps
+ *                defined by webrtc-pc. Corresponds to Performance.timeOrigin +
  *                Performance.now(). Has reduced precision.
+ * - DomRealtime: Like Dom, but with full precision.
  * - WallClock  : Non-monotonic, unix epoch. Not used here since it is
  *                non-monotonic and cannot be correlated to the other time
  *                bases.
@@ -87,7 +88,6 @@ class RTCStatsTimestamp {
   webrtc::Timestamp To1Jan1970() const;
   webrtc::Timestamp ToNtp() const;
   webrtc::Timestamp ToDomRealtime() const;
-  DOMHighResTimeStamp ToDomNoTimeOrigin() const;
   DOMHighResTimeStamp ToDom() const;
 
   static RTCStatsTimestamp FromMozTime(const RTCStatsTimestampMaker& aMaker,
@@ -112,10 +112,7 @@ class RTCStatsTimestamp {
 
 class RTCStatsTimestampMaker {
  public:
-  static RTCStatsTimestampMaker Create();
-  static RTCStatsTimestampMaker Create(Performance* aPerformance);
-  static RTCStatsTimestampMaker Create(nsPIDOMWindowInner* aWindow);
-  static RTCStatsTimestampMaker Create(const WorkerPrivate& aWorkerPrivate);
+  static RTCStatsTimestampMaker Create(nsPIDOMWindowInner* aWindow = nullptr);
 
   RTCStatsTimestamp GetNow() const;
 

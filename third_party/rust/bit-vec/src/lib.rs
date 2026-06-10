@@ -82,15 +82,8 @@
 //! assert_eq!(num_primes, 1_229);
 //! ```
 
-#![doc(html_root_url = "https://docs.rs/bit-vec/0.9.0/bit_vec/")]
+#![doc(html_root_url = "https://docs.rs/bit-vec/0.8.0")]
 #![no_std]
-#![deny(clippy::shadow_reuse)]
-#![deny(clippy::shadow_same)]
-#![deny(clippy::shadow_unrelated)]
-#![warn(clippy::multiple_inherent_impl)]
-#![warn(clippy::multiple_crate_versions)]
-#![warn(clippy::single_match)]
-#![warn(clippy::missing_safety_doc)]
 
 #[cfg(any(test, feature = "std"))]
 #[macro_use]
@@ -150,7 +143,6 @@ pub trait BitBlock:
     + BitOr<Self, Output = Self>
     + BitXor<Self, Output = Self>
     + Rem<Self, Output = Self>
-    + BitOrAssign<Self>
     + Eq
     + Ord
     + hash::Hash
@@ -214,9 +206,6 @@ fn reverse_bits(byte: u8) -> u8 {
 static TRUE: bool = true;
 static FALSE: bool = false;
 
-#[cfg(feature = "nanoserde")]
-type B = u32;
-
 /// The bitvector type.
 ///
 /// # Examples
@@ -240,7 +229,7 @@ type B = u32;
 /// println!("total bits set to true: {}", bv.iter().filter(|x| *x).count());
 ///
 /// // reset bitvector to empty
-/// bv.fill(false);
+/// bv.clear();
 /// println!("{:?}", bv);
 /// println!("total bits set to true: {}", bv.iter().filter(|x| *x).count());
 /// ```
@@ -301,6 +290,8 @@ fn mask_for_bits<B: BitBlock>(bits: usize) -> B {
     (!B::zero()) >> ((B::bits() - bits % B::bits()) % B::bits())
 }
 
+type B = u32;
+
 impl BitVec<u32> {
     /// Creates an empty `BitVec`.
     ///
@@ -330,8 +321,14 @@ impl BitVec<u32> {
     /// }
     /// ```
     #[inline]
-    pub fn from_elem(len: usize, bit: bool) -> Self {
-        BitVec::<u32>::from_elem_general(len, bit)
+    pub fn from_elem(nbits: usize, bit: bool) -> Self {
+        let nblocks = blocks_for_bits::<B>(nbits);
+        let mut bit_vec = BitVec {
+            storage: vec![if bit { !B::zero() } else { B::zero() }; nblocks],
+            nbits,
+        };
+        bit_vec.fix_last_block();
+        bit_vec
     }
 
     /// Constructs a new, empty `BitVec` with the specified capacity.
@@ -342,8 +339,11 @@ impl BitVec<u32> {
     /// It is important to note that this function does not specify the
     /// *length* of the returned bitvector, but only the *capacity*.
     #[inline]
-    pub fn with_capacity(capacity: usize) -> Self {
-        BitVec::<u32>::with_capacity_general(capacity)
+    pub fn with_capacity(nbits: usize) -> Self {
+        BitVec {
+            storage: Vec::with_capacity(blocks_for_bits::<B>(nbits)),
+            nbits: 0,
+        }
     }
 
     /// Transforms a byte-vector into a `BitVec`. Each byte becomes eight bits,
@@ -362,104 +362,11 @@ impl BitVec<u32> {
     ///                     false, false, true, false]));
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> Self {
-        BitVec::<u32>::from_bytes_general(bytes)
-    }
-
-    /// Creates a `BitVec` of the specified length where the value at each index
-    /// is `f(index)`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bit_vec::BitVec;
-    ///
-    /// let bv = BitVec::from_fn(5, |i| { i % 2 == 0 });
-    /// assert!(bv.eq_vec(&[true, false, true, false, true]));
-    /// ```
-    #[inline]
-    pub fn from_fn<F>(len: usize, f: F) -> Self
-    where
-        F: FnMut(usize) -> bool,
-    {
-        BitVec::<u32>::from_fn_general(len, f)
-    }
-}
-
-impl<B: BitBlock> BitVec<B> {
-    /// Creates an empty `BitVec`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bit_vec::BitVec;
-    /// let mut bv = BitVec::<usize>::new_general();
-    /// ```
-    #[inline]
-    pub fn new_general() -> Self {
-        Default::default()
-    }
-
-    /// Creates a `BitVec` that holds `nbits` elements, setting each element
-    /// to `bit`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bit_vec::BitVec;
-    ///
-    /// let mut bv = BitVec::<usize>::from_elem_general(10, false);
-    /// assert_eq!(bv.len(), 10);
-    /// for x in bv.iter() {
-    ///     assert_eq!(x, false);
-    /// }
-    /// ```
-    #[inline]
-    pub fn from_elem_general(len: usize, bit: bool) -> Self {
-        let nblocks = blocks_for_bits::<B>(len);
-        let mut bit_vec = BitVec {
-            storage: vec![if bit { !B::zero() } else { B::zero() }; nblocks],
-            nbits: len,
-        };
-        bit_vec.fix_last_block();
-        bit_vec
-    }
-
-    /// Constructs a new, empty `BitVec` with the specified capacity.
-    ///
-    /// The bitvector will be able to hold at least `capacity` bits without
-    /// reallocating. If `capacity` is 0, it will not allocate.
-    ///
-    /// It is important to note that this function does not specify the
-    /// *length* of the returned bitvector, but only the *capacity*.
-    #[inline]
-    pub fn with_capacity_general(capacity: usize) -> Self {
-        BitVec {
-            storage: Vec::with_capacity(blocks_for_bits::<B>(capacity)),
-            nbits: 0,
-        }
-    }
-
-    /// Transforms a byte-vector into a `BitVec`. Each byte becomes eight bits,
-    /// with the most significant bits of each byte coming first. Each
-    /// bit becomes `true` if equal to 1 or `false` if equal to 0.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bit_vec::BitVec;
-    ///
-    /// let bv = BitVec::<usize>::from_bytes_general(&[0b10100000, 0b00010010]);
-    /// assert!(bv.eq_vec(&[true, false, true, false,
-    ///                     false, false, false, false,
-    ///                     false, false, false, true,
-    ///                     false, false, true, false]));
-    /// ```
-    pub fn from_bytes_general(bytes: &[u8]) -> Self {
         let len = bytes
             .len()
             .checked_mul(u8::bits())
             .expect("capacity overflow");
-        let mut bit_vec = BitVec::with_capacity_general(len);
+        let mut bit_vec = BitVec::with_capacity(len);
         let complete_words = bytes.len() / B::bytes();
         let extra_bytes = bytes.len() % B::bytes();
 
@@ -492,21 +399,23 @@ impl<B: BitBlock> BitVec<B> {
     /// ```
     /// use bit_vec::BitVec;
     ///
-    /// let bv = BitVec::<usize>::from_fn_general(5, |i| { i % 2 == 0 });
+    /// let bv = BitVec::from_fn(5, |i| { i % 2 == 0 });
     /// assert!(bv.eq_vec(&[true, false, true, false, true]));
     /// ```
     #[inline]
-    pub fn from_fn_general<F>(len: usize, mut f: F) -> Self
+    pub fn from_fn<F>(len: usize, mut f: F) -> Self
     where
         F: FnMut(usize) -> bool,
     {
-        let mut bit_vec = BitVec::from_elem_general(len, false);
+        let mut bit_vec = BitVec::from_elem(len, false);
         for i in 0..len {
             bit_vec.set(i, f(i));
         }
         bit_vec
     }
+}
 
+impl<B: BitBlock> BitVec<B> {
     /// Applies the given operation to the blocks of self and other, and sets
     /// self to be the result. This relies on the caller not to corrupt the
     /// last word.
@@ -528,14 +437,14 @@ impl<B: BitBlock> BitVec<B> {
 
     /// Iterator over mutable refs to the underlying blocks of data.
     #[inline]
-    fn blocks_mut(&mut self) -> MutBlocks<'_, B> {
+    fn blocks_mut(&mut self) -> MutBlocks<B> {
         // (2)
         self.storage.iter_mut()
     }
 
     /// Iterator over the underlying blocks of data
     #[inline]
-    pub fn blocks(&self) -> Blocks<'_, B> {
+    pub fn blocks(&self) -> Blocks<B> {
         // (2)
         Blocks {
             iter: self.storage.iter(),
@@ -696,7 +605,7 @@ impl<B: BitBlock> BitVec<B> {
     /// assert_eq!(bv, BitVec::from_bytes(&[0b10100000]));
     /// ```
     #[inline]
-    pub fn get_mut(&mut self, index: usize) -> Option<MutBorrowedBit<'_, B>> {
+    pub fn get_mut(&mut self, index: usize) -> Option<MutBorrowedBit<B>> {
         self.get(index).map(move |value| MutBorrowedBit {
             vec: Rc::new(RefCell::new(self)),
             index,
@@ -726,7 +635,7 @@ impl<B: BitBlock> BitVec<B> {
     /// assert_eq!(bv, BitVec::from_bytes(&[0b10100000]));
     /// ```
     #[inline]
-    pub unsafe fn get_unchecked_mut(&mut self, index: usize) -> MutBorrowedBit<'_, B> {
+    pub unsafe fn get_unchecked_mut(&mut self, index: usize) -> MutBorrowedBit<B> {
         let value = self.get_unchecked(index);
         MutBorrowedBit {
             #[cfg(debug_assertions)]
@@ -787,7 +696,6 @@ impl<B: BitBlock> BitVec<B> {
     /// assert_eq!(bv, BitVec::from_bytes(&[after]));
     /// ```
     #[inline]
-    #[deprecated(since = "0.9.0", note = "please use `.fill(true)` instead")]
     pub fn set_all(&mut self) {
         self.ensure_invariant();
         for w in &mut self.storage {
@@ -909,7 +817,7 @@ impl<B: BitBlock> BitVec<B> {
     pub fn or(&mut self, other: &Self) -> bool {
         self.ensure_invariant();
         debug_assert!(other.is_last_block_fixed());
-        self.process(other, |w1, w2| w1 | w2)
+        self.process(other, |w1, w2| (w1 | w2))
     }
 
     /// Calculates the bitwise `and` of two bitvectors.
@@ -940,7 +848,7 @@ impl<B: BitBlock> BitVec<B> {
     pub fn and(&mut self, other: &Self) -> bool {
         self.ensure_invariant();
         debug_assert!(other.is_last_block_fixed());
-        self.process(other, |w1, w2| w1 & w2)
+        self.process(other, |w1, w2| (w1 & w2))
     }
 
     /// Calculates the difference between two bitvectors.
@@ -979,7 +887,7 @@ impl<B: BitBlock> BitVec<B> {
     pub fn difference(&mut self, other: &Self) -> bool {
         self.ensure_invariant();
         debug_assert!(other.is_last_block_fixed());
-        self.process(other, |w1, w2| w1 & !w2)
+        self.process(other, |w1, w2| (w1 & !w2))
     }
 
     /// Calculates the xor of two bitvectors.
@@ -1010,7 +918,7 @@ impl<B: BitBlock> BitVec<B> {
     pub fn xor(&mut self, other: &Self) -> bool {
         self.ensure_invariant();
         debug_assert!(other.is_last_block_fixed());
-        self.process(other, |w1, w2| w1 ^ w2)
+        self.process(other, |w1, w2| (w1 ^ w2))
     }
 
     /// Calculates the nand of two bitvectors.
@@ -1202,7 +1110,7 @@ impl<B: BitBlock> BitVec<B> {
     /// assert_eq!(bv.iter().filter(|x| *x).count(), 7);
     /// ```
     #[inline]
-    pub fn iter(&self) -> Iter<'_, B> {
+    pub fn iter(&self) -> Iter<B> {
         self.ensure_invariant();
         Iter {
             bit_vec: self,
@@ -1226,7 +1134,7 @@ impl<B: BitBlock> BitVec<B> {
     /// ]));
     /// ```
     #[inline]
-    pub fn iter_mut(&mut self) -> IterMut<'_, B> {
+    pub fn iter_mut(&mut self) -> IterMut<B> {
         self.ensure_invariant();
         let nbits = self.nbits;
         IterMut {
@@ -1405,35 +1313,30 @@ impl<B: BitBlock> BitVec<B> {
     /// assert_eq!(bv.to_bytes(), [0b00100000, 0b10000000]);
     /// ```
     pub fn to_bytes(&self) -> Vec<u8> {
-        static REVERSE_TABLE: [u8; 256] = {
-            let mut tbl = [0u8; 256];
-            let mut i: u8 = 0;
-            loop {
-                tbl[i as usize] = i.reverse_bits();
-                if i == 255 {
-                    break;
-                }
-                i += 1;
-            }
-            tbl
-        };
         self.ensure_invariant();
-
-        let len = self.nbits / 8 + if self.nbits % 8 == 0 { 0 } else { 1 };
-        let mut result = Vec::with_capacity(len);
-
-        for byte_idx in 0..len {
-            let mut byte = 0u8;
-            for bit_idx in 0..8 {
-                let offset = byte_idx * 8 + bit_idx;
-                if offset < self.nbits && self[offset] {
-                    byte |= 1 << bit_idx;
-                }
+        // Oh lord, we're mapping this to bytes bit-by-bit!
+        fn bit<B: BitBlock>(bit_vec: &BitVec<B>, byte: usize, bit: usize) -> u8 {
+            let offset = byte * 8 + bit;
+            if offset >= bit_vec.nbits {
+                0
+            } else {
+                (bit_vec[offset] as u8) << (7 - bit)
             }
-            result.push(REVERSE_TABLE[byte as usize]);
         }
 
-        result
+        let len = self.nbits / 8 + if self.nbits % 8 == 0 { 0 } else { 1 };
+        (0..len)
+            .map(|i| {
+                bit(self, i, 0)
+                    | bit(self, i, 1)
+                    | bit(self, i, 2)
+                    | bit(self, i, 3)
+                    | bit(self, i, 4)
+                    | bit(self, i, 5)
+                    | bit(self, i, 6)
+                    | bit(self, i, 7)
+            })
+            .collect()
     }
 
     /// Compares a `BitVec` to a slice of `bool`s.
@@ -1700,32 +1603,10 @@ impl<B: BitBlock> BitVec<B> {
 
     /// Clears all bits in this vector.
     #[inline]
-    #[deprecated(since = "0.9.0", note = "please use `.fill(false)` instead")]
     pub fn clear(&mut self) {
         self.ensure_invariant();
         for w in &mut self.storage {
             *w = B::zero();
-        }
-    }
-
-    /// Assigns all bits in this vector to the given boolean value.
-    ///
-    /// # Invariants
-    ///
-    /// - After a call to `.fill(true)`, the result of [`all`] is `true`.
-    /// - After a call to `.fill(false)`, the result of [`none`] is `true`.
-    ///
-    /// [`all`]: Self::all
-    /// [`none`]: Self::none
-    #[inline]
-    pub fn fill(&mut self, bit: bool) {
-        self.ensure_invariant();
-        let block = if bit { !B::zero() } else { B::zero() };
-        for w in &mut self.storage {
-            *w = block;
-        }
-        if bit {
-            self.fix_last_block();
         }
     }
 
@@ -1757,7 +1638,7 @@ impl<B: BitBlock> BitVec<B> {
     /// assert!(b.eq_vec(&[true, false, true]));
     ///```
     ///
-    /// # Time complexity
+    /// # Time complexity                                                                                                                                                         
     /// Takes O([`len`]) time. All items after the insertion index must be
     /// shifted to the right. In the worst case, all elements are shifted when
     /// the insertion index is 0.
@@ -1766,10 +1647,9 @@ impl<B: BitBlock> BitVec<B> {
     pub fn insert(&mut self, at: usize, bit: bool) {
         assert!(
             at <= self.nbits,
-            "insertion index (is {at}) should be <= len (is {nbits})",
+            "insertion index (is {at}) should be <= nbits (is {nbits})",
             nbits = self.nbits
         );
-        self.ensure_invariant();
 
         let last_block_bits = self.nbits % B::bits();
         let block_at = at / B::bits(); // needed block
@@ -1793,139 +1673,6 @@ impl<B: BitBlock> BitVec<B> {
             *block_ref = *block_ref << 1 | carry;
             carry = curr_carry;
         }
-    }
-
-    /// Remove a bit at index `at`, shifting all bits after by one.
-    ///
-    /// # Panics
-    /// Panics if `at` is out of bounds for `BitVec`'s length (that is, if `at >= BitVec::len()`)
-    ///
-    /// # Examples
-    ///```
-    /// use bit_vec::BitVec;
-    ///
-    /// let mut b = BitVec::new();
-    ///
-    /// b.push(true);
-    /// b.push(false);
-    /// b.push(false);
-    /// b.push(true);
-    /// assert!(!b.remove(1));
-    ///
-    /// assert!(b.eq_vec(&[true, false, true]));
-    ///```
-    ///
-    /// # Time complexity
-    /// Takes O([`len`]) time. All items after the removal index must be
-    /// shifted to the left. In the worst case, all elements are shifted when
-    /// the removal index is 0.
-    ///
-    /// [`len`]: Self::len
-    pub fn remove(&mut self, at: usize) -> bool {
-        assert!(
-            at < self.nbits,
-            "removal index (is {at}) should be < len (is {nbits})",
-            nbits = self.nbits
-        );
-        self.ensure_invariant();
-
-        self.nbits -= 1;
-
-        let last_block_bits = self.nbits % B::bits();
-        let block_at = at / B::bits(); // needed block
-        let bit_at = at % B::bits(); // index within the block
-
-        let lsbits_mask = (B::one() << bit_at) - B::one();
-
-        let mut carry = B::zero();
-
-        for block_ref in self.storage[block_at + 1..].iter_mut().rev() {
-            let curr_carry = *block_ref & B::one();
-            *block_ref = *block_ref >> 1 | (carry << (B::bits() - 1));
-            carry = curr_carry;
-        }
-
-        let result = (self.storage[block_at] >> bit_at) & B::one() == B::one();
-
-        self.storage[block_at] = (self.storage[block_at] & lsbits_mask)
-            | ((self.storage[block_at] & (!lsbits_mask << 1)) >> 1)
-            | carry << (B::bits() - 1);
-
-        if last_block_bits == 0 {
-            self.storage.pop();
-        }
-
-        result
-    }
-
-    /// Removes all bits in this vector.
-    ///
-    /// Note: this method is not named [`clear`] to avoid confusion whenever [`.fill(false)`]
-    /// is needed.
-    ///
-    /// [`clear`]: Self::clear
-    /// [`.fill(false)`]: Self::fill
-    pub fn remove_all(&mut self) {
-        self.storage.clear();
-        self.nbits = 0;
-    }
-
-    /// Appends an element if there is sufficient spare capacity, otherwise an error is returned
-    /// with the element.
-    ///
-    /// Unlike [`push`] this method will not reallocate when there's insufficient capacity.
-    /// The caller should use [`reserve`] to ensure that there is enough capacity.
-    ///
-    /// [`push`]: Self::push
-    /// [`reserve`]: Self::reserve
-    ///
-    /// # Examples
-    /// ```
-    /// use bit_vec::BitVec;
-    ///
-    /// let initial_capacity = 64;
-    /// let mut bitvec = BitVec::with_capacity(64);
-    ///
-    /// for _ in 0..initial_capacity - 1 {
-    ///     bitvec.push(false);
-    /// }
-    ///
-    /// assert_eq!(bitvec.len(), initial_capacity - 1); // there is space for only 1 bit
-    ///
-    /// assert_eq!(bitvec.push_within_capacity(true), Ok(())); // Successfully push a bit
-    /// assert_eq!(bitvec.len(), initial_capacity); // So we can't push within capacity anymore
-    ///
-    /// assert_eq!(bitvec.push_within_capacity(true), Err(true));
-    /// assert_eq!(bitvec.len(), initial_capacity);
-    /// assert_eq!(bitvec.capacity(), initial_capacity);
-    /// ```
-    ///
-    /// # Time Complexity
-    /// Takes *O(1)* time.
-    pub fn push_within_capacity(&mut self, bit: bool) -> Result<(), bool> {
-        let len = self.len();
-
-        if len == self.capacity() {
-            return Err(bit);
-        }
-
-        let bits = B::bits();
-
-        if len % bits == 0 {
-            self.storage.push(B::zero());
-        }
-
-        let block_at = len / bits;
-        let bit_at = len % bits;
-        let flag = if bit { B::one() << bit_at } else { B::zero() };
-
-        self.ensure_invariant();
-
-        self.nbits += 1;
-
-        self.storage[block_at] = self.storage[block_at] | flag; // set the bit
-
-        Ok(())
     }
 }
 
@@ -2083,10 +1830,11 @@ pub struct IterMut<'a, B: 'a + BitBlock = u32> {
 
 impl<'a, B: 'a + BitBlock> IterMut<'a, B> {
     fn get(&mut self, index: Option<usize>) -> Option<MutBorrowedBit<'a, B>> {
-        let value = (*self.vec).borrow().get(index?)?;
+        let index = index?;
+        let value = (*self.vec).borrow().get(index)?;
         Some(MutBorrowedBit {
             vec: self.vec.clone(),
-            index: index?,
+            index,
             #[cfg(debug_assertions)]
             old_value: value,
             new_value: value,
@@ -2094,7 +1842,7 @@ impl<'a, B: 'a + BitBlock> IterMut<'a, B> {
     }
 }
 
-impl<B: BitBlock> Deref for MutBorrowedBit<'_, B> {
+impl<'a, B: BitBlock> Deref for MutBorrowedBit<'a, B> {
     type Target = bool;
 
     fn deref(&self) -> &Self::Target {
@@ -2102,13 +1850,13 @@ impl<B: BitBlock> Deref for MutBorrowedBit<'_, B> {
     }
 }
 
-impl<B: BitBlock> DerefMut for MutBorrowedBit<'_, B> {
+impl<'a, B: BitBlock> DerefMut for MutBorrowedBit<'a, B> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.new_value
     }
 }
 
-impl<B: BitBlock> Drop for MutBorrowedBit<'_, B> {
+impl<'a, B: BitBlock> Drop for MutBorrowedBit<'a, B> {
     fn drop(&mut self) {
         let mut vec = (*self.vec).borrow_mut();
         #[cfg(debug_assertions)]
@@ -2121,7 +1869,7 @@ impl<B: BitBlock> Drop for MutBorrowedBit<'_, B> {
     }
 }
 
-impl<B: BitBlock> Iterator for Iter<'_, B> {
+impl<'a, B: BitBlock> Iterator for Iter<'a, B> {
     type Item = bool;
 
     #[inline]
@@ -2129,13 +1877,6 @@ impl<B: BitBlock> Iterator for Iter<'_, B> {
         // NB: indexing is slow for extern crates when it has to go through &TRUE or &FALSE
         // variables.  get is more direct, and unwrap is fine since we're sure of the range.
         self.range.next().map(|i| self.bit_vec.get(i).unwrap())
-    }
-
-    fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        // This override is used by the compiler to optimize Iterator::skip.
-        // Without this, the default implementation of Iterator::nth is used, which walks over
-        // the whole iterator up to n.
-        self.range.nth(n).and_then(|i| self.bit_vec.get(i))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -2157,14 +1898,14 @@ impl<'a, B: BitBlock> Iterator for IterMut<'a, B> {
     }
 }
 
-impl<B: BitBlock> DoubleEndedIterator for Iter<'_, B> {
+impl<'a, B: BitBlock> DoubleEndedIterator for Iter<'a, B> {
     #[inline]
     fn next_back(&mut self) -> Option<bool> {
         self.range.next_back().map(|i| self.bit_vec.get(i).unwrap())
     }
 }
 
-impl<B: BitBlock> DoubleEndedIterator for IterMut<'_, B> {
+impl<'a, B: BitBlock> DoubleEndedIterator for IterMut<'a, B> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back();
@@ -2172,9 +1913,9 @@ impl<B: BitBlock> DoubleEndedIterator for IterMut<'_, B> {
     }
 }
 
-impl<B: BitBlock> ExactSizeIterator for Iter<'_, B> {}
+impl<'a, B: BitBlock> ExactSizeIterator for Iter<'a, B> {}
 
-impl<B: BitBlock> ExactSizeIterator for IterMut<'_, B> {}
+impl<'a, B: BitBlock> ExactSizeIterator for IterMut<'a, B> {}
 
 impl<'a, B: BitBlock> IntoIterator for &'a BitVec<B> {
     type Item = bool;
@@ -2229,7 +1970,7 @@ pub struct Blocks<'a, B: 'a> {
     iter: slice::Iter<'a, B>,
 }
 
-impl<B: BitBlock> Iterator for Blocks<'_, B> {
+impl<'a, B: BitBlock> Iterator for Blocks<'a, B> {
     type Item = B;
 
     #[inline]
@@ -2243,21 +1984,17 @@ impl<B: BitBlock> Iterator for Blocks<'_, B> {
     }
 }
 
-impl<B: BitBlock> DoubleEndedIterator for Blocks<'_, B> {
+impl<'a, B: BitBlock> DoubleEndedIterator for Blocks<'a, B> {
     #[inline]
     fn next_back(&mut self) -> Option<B> {
         self.iter.next_back().cloned()
     }
 }
 
-impl<B: BitBlock> ExactSizeIterator for Blocks<'_, B> {}
+impl<'a, B: BitBlock> ExactSizeIterator for Blocks<'a, B> {}
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::shadow_reuse)]
-    #![allow(clippy::shadow_same)]
-    #![allow(clippy::shadow_unrelated)]
-
     use super::{BitVec, Iter, Vec};
 
     // This is stupid, but I want to differentiate from a "random" 32
@@ -2826,23 +2563,19 @@ mod tests {
     }
 
     #[test]
-    fn test_small_fill() {
+    fn test_small_clear() {
         let mut b = BitVec::from_elem(14, true);
         assert!(!b.none() && b.all());
-        b.fill(false);
+        b.clear();
         assert!(b.none() && !b.all());
-        b.fill(true);
-        assert!(!b.none() && b.all());
     }
 
     #[test]
-    fn test_big_fill() {
+    fn test_big_clear() {
         let mut b = BitVec::from_elem(140, true);
         assert!(!b.none() && b.all());
-        b.fill(false);
+        b.clear();
         assert!(b.none() && !b.all());
-        b.fill(true);
-        assert!(!b.none() && b.all());
     }
 
     #[test]
@@ -3449,123 +3182,5 @@ mod tests {
         ]));
 
         assert_eq!(v.storage().len(), 3);
-    }
-
-    #[test]
-    fn test_push_within_capacity_with_suffice_cap() {
-        let mut v = BitVec::from_elem(16, true);
-
-        assert!(v.push_within_capacity(false).is_ok());
-
-        for i in 0..16 {
-            assert_eq!(v.get(i), Some(true));
-        }
-
-        assert_eq!(v.get(16), Some(false));
-        assert_eq!(v.len(), 17);
-    }
-
-    #[test]
-    fn test_push_within_capacity_at_brink() {
-        let mut v = BitVec::from_elem(31, true);
-
-        assert!(v.push_within_capacity(false).is_ok());
-
-        assert_eq!(v.get(31), Some(false));
-        assert_eq!(v.len(), v.capacity());
-        assert_eq!(v.len(), 32);
-
-        assert_eq!(v.push_within_capacity(false), Err(false));
-        assert_eq!(v.capacity(), 32);
-
-        for i in 0..31 {
-            assert_eq!(v.get(i), Some(true));
-        }
-        assert_eq!(v.get(31), Some(false));
-    }
-
-    #[test]
-    fn test_push_within_capacity_at_brink_with_mul_blocks() {
-        let mut v = BitVec::from_elem(95, true);
-
-        assert!(v.push_within_capacity(false).is_ok());
-
-        assert_eq!(v.get(95), Some(false));
-        assert_eq!(v.len(), v.capacity());
-        assert_eq!(v.len(), 96);
-
-        assert_eq!(v.push_within_capacity(false), Err(false));
-        assert_eq!(v.capacity(), 96);
-
-        for i in 0..95 {
-            assert_eq!(v.get(i), Some(true));
-        }
-        assert_eq!(v.get(95), Some(false));
-    }
-
-    #[test]
-    fn test_push_within_capacity_storage_push() {
-        let mut v = BitVec::with_capacity(64);
-
-        for _ in 0..32 {
-            v.push(true);
-        }
-
-        assert_eq!(v.len(), 32);
-
-        assert!(v.push_within_capacity(false).is_ok());
-
-        assert_eq!(v.len(), 33);
-
-        for i in 0..32 {
-            assert_eq!(v.get(i), Some(true));
-        }
-        assert_eq!(v.get(32), Some(false));
-    }
-
-    #[test]
-    fn test_insert_remove() {
-        // two primes for no common divisors with 32
-        let mut v = BitVec::from_fn(1024, |i| i % 11 < 7);
-        for i in 0..1024 {
-            let result = v.remove(i);
-            v.insert(i, result);
-            assert_eq!(result, i % 11 < 7);
-        }
-
-        for i in 0..1024 {
-            v.insert(i, false);
-            v.remove(i);
-        }
-
-        for i in 0..1024 {
-            v.insert(i, true);
-            v.remove(i);
-        }
-
-        for (i, result) in v.into_iter().enumerate() {
-            assert_eq!(result, i % 11 < 7);
-        }
-    }
-
-    #[test]
-    fn test_remove_last() {
-        let mut v = BitVec::from_fn(1025, |i| i % 11 < 7);
-        assert_eq!(v.len(), 1025);
-        assert_eq!(v.remove(1024), 1024 % 11 < 7);
-        assert_eq!(v.len(), 1024);
-        assert_eq!(v.storage().len(), 1024 / 32);
-    }
-
-    #[test]
-    fn test_remove_all() {
-        let v = BitVec::from_elem(1024, false);
-        for _ in 0..1024 {
-            let mut v2 = v.clone();
-            v2.remove_all();
-            assert_eq!(v2.len(), 0);
-            assert_eq!(v2.get(0), None);
-            assert_eq!(v2, BitVec::new());
-        }
     }
 }

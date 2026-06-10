@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -270,18 +272,6 @@ void GPUParent::NotifyDisableRemoteCanvas() {
   (void)SendNotifyDisableRemoteCanvas();
 }
 
-void GPUParent::ReportGLStrings(GfxInfoGLStrings&& aStrings) {
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "gfx::GPUParent::ReportGLStrings",
-        [strings = std::move(aStrings)]() mutable -> void {
-          GPUParent::GetSingleton()->ReportGLStrings(std::move(strings));
-        }));
-    return;
-  }
-  (void)SendReportGLStrings(std::move(aStrings));
-}
-
 mozilla::ipc::IPCResult GPUParent::RecvInit(
     nsTArray<GfxVarUpdate>&& vars, const DevicePrefs& devicePrefs,
     nsTArray<LayerTreeIdMapping>&& aMappings,
@@ -388,6 +378,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
   SkInitCairoFT(false);
 
   if (gfxVars::UseAHardwareBufferSharedSurfaceWebglOop()) {
+    layers::AndroidHardwareBufferApi::Init();
     layers::AndroidHardwareBufferManager::Init();
   }
 
@@ -453,8 +444,8 @@ mozilla::ipc::IPCResult GPUParent::RecvInitVsyncBridge(
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvInitImageBridge(
-    Endpoint<PImageBridgeParent>&& aEndpoint, uint32_t aNamespace) {
-  ImageBridgeParent::CreateForGPUProcess(std::move(aEndpoint), aNamespace);
+    Endpoint<PImageBridgeParent>&& aEndpoint) {
+  ImageBridgeParent::CreateForGPUProcess(std::move(aEndpoint));
   return IPC_OK();
 }
 
@@ -470,8 +461,8 @@ mozilla::ipc::IPCResult GPUParent::RecvInitVideoBridge(
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvInitVRManager(
-    Endpoint<PVRManagerParent>&& aEndpoint, uint32_t aNamespace) {
-  VRManagerParent::CreateForGPUProcess(std::move(aEndpoint), aNamespace);
+    Endpoint<PVRManagerParent>&& aEndpoint) {
+  VRManagerParent::CreateForGPUProcess(std::move(aEndpoint));
   return IPC_OK();
 }
 
@@ -602,20 +593,16 @@ mozilla::ipc::IPCResult GPUParent::RecvNewContentCompositorManager(
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvNewContentImageBridge(
-    Endpoint<PImageBridgeParent>&& aEndpoint, const ContentParentId& aChildId,
-    uint32_t aNamespace) {
-  if (!ImageBridgeParent::CreateForContent(std::move(aEndpoint), aChildId,
-                                           aNamespace)) {
+    Endpoint<PImageBridgeParent>&& aEndpoint, const ContentParentId& aChildId) {
+  if (!ImageBridgeParent::CreateForContent(std::move(aEndpoint), aChildId)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvNewContentVRManager(
-    Endpoint<PVRManagerParent>&& aEndpoint, const ContentParentId& aChildId,
-    uint32_t aNamespace) {
-  if (!VRManagerParent::CreateForContent(std::move(aEndpoint), aChildId,
-                                         aNamespace)) {
+    Endpoint<PVRManagerParent>&& aEndpoint, const ContentParentId& aChildId) {
+  if (!VRManagerParent::CreateForContent(std::move(aEndpoint), aChildId)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -644,11 +631,12 @@ mozilla::ipc::IPCResult GPUParent::RecvRemoveLayerTreeIdMapping(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult GPUParent::RecvFlushActiveCheckerboardReports() {
+mozilla::ipc::IPCResult GPUParent::RecvNotifyGpuObservers(
+    const nsCString& aTopic) {
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   MOZ_ASSERT(obsSvc);
   if (obsSvc) {
-    obsSvc->NotifyObservers(nullptr, "APZ:FlushActiveCheckerboard", nullptr);
+    obsSvc->NotifyObservers(nullptr, aTopic.get(), nullptr);
   }
   return IPC_OK();
 }
@@ -685,8 +673,7 @@ mozilla::ipc::IPCResult GPUParent::RecvRequestMemoryReport(
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvShutdownVR() {
-  if (StaticPrefs::dom_vr_process_enabled_AtStartup() &&
-      StaticPrefs::dom_vr_enabled()) {
+  if (StaticPrefs::dom_vr_process_enabled_AtStartup()) {
     VRGPUChild::Shutdown();
   }
   return IPC_OK();

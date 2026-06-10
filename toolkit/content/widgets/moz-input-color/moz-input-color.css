@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
+  --moz-input-color-swatch-size: 24px;
+
   display: flex;
   align-items: center;
 }
@@ -46,8 +48,8 @@ label span {
 
 .swatch {
   appearance: none;
-  width: var(--input-swatch-size);
-  height: var(--input-swatch-size);
+  width: var(--moz-input-color-swatch-size);
+  height: var(--moz-input-color-swatch-size);
   background-color: transparent;
   border: none;
   cursor: pointer;

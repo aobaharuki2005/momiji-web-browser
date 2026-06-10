@@ -3,13 +3,6 @@
 
 "use strict";
 
-const ABOUT_PREFERENCES_URL = Services.prefs.getBoolPref(
-  "browser.settings-redesign.enabled",
-  false
-)
-  ? "about:preferences#languages"
-  : "about:preferences#general";
-
 /**
  * This test case verifies the counts and extra data sent from telemetry events when interacting
  * with the SelectTranslationsPanel's settings menu.
@@ -38,6 +31,7 @@ add_task(
           document_language: "es",
           from_language: "fr",
           to_language: "en",
+          top_preferred_language: "en-US",
           text_source: "hyperlink",
         },
       }
@@ -57,6 +51,7 @@ add_task(
           document_language: "es",
           from_language: "fr",
           to_language: "en",
+          top_preferred_language: "en-US",
           request_target: "select",
           auto_translate: false,
           source_text_code_units: 27,
@@ -75,7 +70,7 @@ add_task(
 
     SelectTranslationsTestUtils.clickTranslationsSettingsPageMenuItem();
     await waitForCondition(
-      () => gBrowser.currentURI.spec === ABOUT_PREFERENCES_URL,
+      () => gBrowser.currentURI.spec === "about:preferences#general",
       "Waiting for about:preferences to be opened."
     );
     info("Remove the about:preferences tab");

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -216,27 +218,29 @@ WinWebAuthnService::GetIsUVPAA(bool* aAvailable) {
 
 NS_IMETHODIMP
 WinWebAuthnService::Cancel(uint64_t aTransactionId) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mActiveTransaction.isSome() &&
-      mActiveTransaction.ref().transactionId == aTransactionId) {
-    Reset();
-  }
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::Reset() {
   // Reset will never be the first function to use gWinWebAuthnModule, so
   // we shouldn't try to initialize it here.
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mActiveTransaction.isSome()) {
+  auto guard = mTransactionState.Lock();
+  if (guard->isSome()) {
     StaticAutoReadLock moduleLock(gWinWebAuthnModuleLock);
     if (gWinWebAuthnModule) {
-      const GUID cancellationId = mActiveTransaction.ref().cancellationId;
+      const GUID cancellationId = guard->ref().cancellationId;
       gWinWebauthnCancelCurrentOperation(&cancellationId);
     }
-    mActiveTransaction.reset();
+    if (guard->ref().pendingSignPromise.isSome()) {
+      // This request was never dispatched to the platform API, so
+      // we need to reject the promise ourselves.
+      guard->ref().pendingSignPromise.ref()->Reject(
+          NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    }
+    guard->reset();
   }
+
   return NS_OK;
 }
 
@@ -245,20 +249,24 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
                                    uint64_t aBrowsingContextId,
                                    nsIWebAuthnRegisterArgs* aArgs,
                                    nsIWebAuthnRegisterPromise* aPromise) {
-  MOZ_ASSERT(NS_IsMainThread());
   nsresult rv = EnsureWinWebAuthnModuleLoaded();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MOZ_ASSERT(mActiveTransaction.isNothing(),
-             "WebAuthnService should reset the platform service before "
-             "dispatching MakeCredential");
+  Reset();
+  auto guard = mTransactionState.Lock();
   StaticAutoReadLock moduleLock(gWinWebAuthnModuleLock);
   GUID cancellationId;
   if (gWinWebauthnGetCancellationId(&cancellationId) != S_OK) {
     // caller will reject promise
     return NS_ERROR_DOM_UNKNOWN_ERR;
   }
-  mActiveTransaction = Some(TransactionState{aTransactionId, cancellationId});
+  *guard = Some(TransactionState{
+      aTransactionId,
+      aBrowsingContextId,
+      Nothing(),
+      Nothing(),
+      cancellationId,
+  });
 
   nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
       "WinWebAuthnService::MakeCredential",
@@ -717,13 +725,12 @@ WinWebAuthnService::GetAssertion(uint64_t aTransactionId,
                                  uint64_t aBrowsingContextId,
                                  nsIWebAuthnSignArgs* aArgs,
                                  nsIWebAuthnSignPromise* aPromise) {
-  MOZ_ASSERT(NS_IsMainThread());
   nsresult rv = EnsureWinWebAuthnModuleLoaded();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MOZ_ASSERT(mActiveTransaction.isNothing(),
-             "WebAuthnService should reset the platform service before "
-             "dispatching GetAssertion");
+  Reset();
+
+  auto guard = mTransactionState.Lock();
 
   GUID cancellationId;
   {
@@ -734,12 +741,41 @@ WinWebAuthnService::GetAssertion(uint64_t aTransactionId,
     }
   }
 
-  mActiveTransaction = Some(TransactionState{aTransactionId, cancellationId});
+  *guard = Some(TransactionState{
+      aTransactionId,
+      aBrowsingContextId,
+      Some(RefPtr{aArgs}),
+      Some(RefPtr{aPromise}),
+      cancellationId,
+  });
+
+  bool conditionallyMediated;
+  (void)aArgs->GetConditionallyMediated(&conditionallyMediated);
+  if (!conditionallyMediated) {
+    DoGetAssertion(Nothing(), guard);
+  }
+  return NS_OK;
+}
+
+void WinWebAuthnService::DoGetAssertion(
+    Maybe<nsTArray<uint8_t>>&& aSelectedCredentialId,
+    const TransactionStateMutex::AutoLock& aGuard) {
+  if (aGuard->isNothing() || aGuard->ref().pendingSignArgs.isNothing() ||
+      aGuard->ref().pendingSignPromise.isNothing()) {
+    return;
+  }
+
+  // Take the pending Args and Promise to prevent repeated calls to
+  // DoGetAssertion for this transaction.
+  RefPtr<nsIWebAuthnSignArgs> aArgs = aGuard->ref().pendingSignArgs.extract();
+  RefPtr<nsIWebAuthnSignPromise> aPromise =
+      aGuard->ref().pendingSignPromise.extract();
 
   nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
-      "WinWebAuthnService::GetAssertion",
-      [aArgs = RefPtr{aArgs}, aPromise = RefPtr{aPromise},
-       aCancellationId = cancellationId]() mutable {
+      "WinWebAuthnService::MakeCredential",
+      [self = RefPtr{this}, aArgs, aPromise,
+       aSelectedCredentialId = std::move(aSelectedCredentialId),
+       aCancellationId = aGuard->ref().cancellationId]() mutable {
         // Take a read lock on gWinWebAuthnModuleLock to prevent the module from
         // being unloaded while the operation is in progress. This does not
         // prevent the operation from being cancelled, so it does not block a
@@ -916,8 +952,14 @@ WinWebAuthnService::GetAssertion(uint64_t aTransactionId,
         // allow Credentials
         nsTArray<nsTArray<uint8_t>> allowList;
         nsTArray<uint8_t> allowListTransports;
-        (void)aArgs->GetAllowList(allowList);
-        (void)aArgs->GetAllowListTransports(allowListTransports);
+        if (aSelectedCredentialId.isSome()) {
+          allowList.AppendElement(aSelectedCredentialId.extract());
+          allowListTransports.AppendElement(
+              MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL);
+        } else {
+          (void)aArgs->GetAllowList(allowList);
+          (void)aArgs->GetAllowListTransports(allowListTransports);
+        }
 
         if (allowList.Length() != allowListTransports.Length()) {
           aPromise->Reject(NS_ERROR_DOM_UNKNOWN_ERR);
@@ -1050,54 +1092,58 @@ WinWebAuthnService::GetAssertion(uint64_t aTransactionId,
       }));
 
   NS_DispatchBackgroundTask(runnable, NS_DISPATCH_EVENT_MAY_BLOCK);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::HasPendingConditionalGet(uint64_t aBrowsingContextId,
                                              const nsAString& aOrigin,
                                              uint64_t* aRv) {
-  MOZ_ASSERT(NS_IsMainThread());
-  *aRv = 0;
+  auto guard = mTransactionState.Lock();
+  if (guard->isNothing() ||
+      guard->ref().browsingContextId != aBrowsingContextId ||
+      guard->ref().pendingSignArgs.isNothing()) {
+    *aRv = 0;
+    return NS_OK;
+  }
+
+  nsString origin;
+  (void)guard->ref().pendingSignArgs.ref()->GetOrigin(origin);
+  if (origin != aOrigin) {
+    *aRv = 0;
+    return NS_OK;
+  }
+
+  *aRv = guard->ref().transactionId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::GetAutoFillEntries(
-    uint64_t aTransactionId, nsIWebAuthnAutoFillEntriesCallback* aCallback) {
-  MOZ_ASSERT(NS_IsMainThread());
-  aCallback->Reject(NS_ERROR_NOT_AVAILABLE);
-  return NS_OK;
-}
+    uint64_t aTransactionId, nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>>& aRv) {
+  aRv.Clear();
+  nsString rpId;
 
-NS_IMETHODIMP
-WinWebAuthnService::GetAutoFillEntriesForRpId(
-    const nsAString& aRpId, const nsTArray<nsTArray<uint8_t>>& aAllowList,
-    nsIWebAuthnAutoFillEntriesCallback* aCallback) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsresult rv = EnsureWinWebAuthnModuleLoaded();
-  if (NS_FAILED(rv)) {
-    aCallback->Reject(rv);
-    return NS_OK;
+  {
+    auto guard = mTransactionState.Lock();
+    if (guard->isNothing() || guard->ref().transactionId != aTransactionId ||
+        guard->ref().pendingSignArgs.isNothing()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    (void)guard->ref().pendingSignArgs.ref()->GetRpId(rpId);
   }
 
   StaticAutoReadLock moduleLock(gWinWebAuthnModuleLock);
   if (!gWinWebAuthnModule) {
-    aCallback->Reject(NS_ERROR_NOT_AVAILABLE);
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>> entries;
   if (gWinWebauthnGetApiVersionNumber() < WEBAUTHN_API_VERSION_4) {
     // GetPlatformCredentialList was added in version 4. Earlier versions
-    // can still present a generic "Use a Passkey" autofill entry, so we
-    // resolve with an empty list rather than rejecting.
-    aCallback->Resolve(entries);
+    // can still present a generic "Use a Passkey" autofill entry, so
+    // this isn't an error.
     return NS_OK;
   }
 
-  nsString rpId(aRpId);
   WEBAUTHN_GET_CREDENTIALS_OPTIONS getCredentialsOptions{
       WEBAUTHN_GET_CREDENTIALS_OPTIONS_VERSION_1,
       rpId.get(),  // pwszRpId
@@ -1111,52 +1157,69 @@ WinWebAuthnService::GetAutoFillEntriesForRpId(
   // not found."
   if (pCredentialList == nullptr) {
     if (hr != NTE_NOT_FOUND) {
-      aCallback->Reject(NS_ERROR_FAILURE);
-      return NS_OK;
+      return NS_ERROR_FAILURE;
     }
-  } else {
-    MOZ_ASSERT(hr == S_OK);
-    for (size_t i = 0; i < pCredentialList->cCredentialDetails; i++) {
-      entries.AppendElement(
-          new WebAuthnAutoFillEntry(pCredentialList->ppCredentialDetails[i]));
-    }
-    gWinWebauthnFreePlatformCredentialList(pCredentialList);
+    return NS_OK;
   }
-  aCallback->Resolve(entries);
+  MOZ_ASSERT(hr == S_OK);
+  for (size_t i = 0; i < pCredentialList->cCredentialDetails; i++) {
+    RefPtr<nsIWebAuthnAutoFillEntry> entry(
+        new WebAuthnAutoFillEntry(pCredentialList->ppCredentialDetails[i]));
+    aRv.AppendElement(entry);
+  }
+  gWinWebauthnFreePlatformCredentialList(pCredentialList);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::SelectAutoFillEntry(
     uint64_t aTransactionId, const nsTArray<uint8_t>& aCredentialId) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return NS_ERROR_NOT_AVAILABLE;
+  auto guard = mTransactionState.Lock();
+  if (guard->isNothing() || guard->ref().transactionId != aTransactionId ||
+      guard->ref().pendingSignArgs.isNothing()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsTArray<nsTArray<uint8_t>> allowList;
+  (void)guard->ref().pendingSignArgs.ref()->GetAllowList(allowList);
+  if (!allowList.IsEmpty() && !allowList.Contains(aCredentialId)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Maybe<nsTArray<uint8_t>> id;
+  id.emplace();
+  id.ref().Assign(aCredentialId);
+  DoGetAssertion(std::move(id), guard);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::ResumeConditionalGet(uint64_t aTransactionId) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return NS_ERROR_NOT_AVAILABLE;
+  auto guard = mTransactionState.Lock();
+  if (guard->isNothing() || guard->ref().transactionId != aTransactionId ||
+      guard->ref().pendingSignArgs.isNothing()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  DoGetAssertion(Nothing(), guard);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::PinCallback(uint64_t aTransactionId,
                                 const nsACString& aPin) {
-  MOZ_ASSERT(NS_IsMainThread());
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::SetHasAttestationConsent(uint64_t aTransactionId,
                                              bool aHasConsent) {
-  MOZ_ASSERT(NS_IsMainThread());
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::SelectionCallback(uint64_t aTransactionId,
                                       uint64_t aIndex) {
-  MOZ_ASSERT(NS_IsMainThread());
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1165,14 +1228,12 @@ WinWebAuthnService::AddVirtualAuthenticator(
     const nsACString& aProtocol, const nsACString& aTransport,
     bool aHasResidentKey, bool aHasUserVerification, bool aIsUserConsenting,
     bool aIsUserVerified, nsACString& aRetval) {
-  MOZ_ASSERT(NS_IsMainThread());
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::RemoveVirtualAuthenticator(
     const nsACString& aAuthenticatorId) {
-  MOZ_ASSERT(NS_IsMainThread());
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1184,7 +1245,6 @@ WinWebAuthnService::AddCredential(const nsACString& aAuthenticatorId,
                                   const nsACString& aPrivateKey,
                                   const nsACString& aUserHandle,
                                   uint32_t aSignCount) {
-  MOZ_ASSERT(NS_IsMainThread());
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1192,39 +1252,31 @@ NS_IMETHODIMP
 WinWebAuthnService::GetCredentials(
     const nsACString& aAuthenticatorId,
     nsTArray<RefPtr<nsICredentialParameters>>& _aRetval) {
-  MOZ_ASSERT(NS_IsMainThread());
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::RemoveCredential(const nsACString& aAuthenticatorId,
                                      const nsACString& aCredentialId) {
-  MOZ_ASSERT(NS_IsMainThread());
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::RemoveAllCredentials(const nsACString& aAuthenticatorId) {
-  MOZ_ASSERT(NS_IsMainThread());
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::SetUserVerified(const nsACString& aAuthenticatorId,
                                     bool aIsUserVerified) {
-  MOZ_ASSERT(NS_IsMainThread());
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-WinWebAuthnService::Listen() {
-  MOZ_ASSERT(NS_IsMainThread());
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+WinWebAuthnService::Listen() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
 WinWebAuthnService::RunCommand(const nsACString& aCmd) {
-  MOZ_ASSERT(NS_IsMainThread());
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

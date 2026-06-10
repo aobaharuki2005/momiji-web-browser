@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHttpRequestHead_h_
-#define nsHttpRequestHead_h_
+#ifndef nsHttpRequestHead_h__
+#define nsHttpRequestHead_h__
 
 #include "nsHttp.h"
 #include "nsHttpHeaderArray.h"
@@ -147,7 +148,8 @@ class nsHttpRequestHead {
 
   // We are using RecursiveMutex instead of a Mutex because VisitHeader
   // function calls nsIHttpHeaderVisitor::VisitHeader while under lock.
-  mutable RecursiveMutex mRecursiveMutex{"nsHttpRequestHead.mRecursiveMutex"};
+  mutable RecursiveMutex mRecursiveMutex MOZ_UNANNOTATED{
+      "nsHttpRequestHead.mRecursiveMutex"};
 
   // During VisitHeader we sould not allow call to SetHeader.
   bool mInVisitHeaders MOZ_GUARDED_BY(mRecursiveMutex){false};
@@ -158,4 +160,4 @@ class nsHttpRequestHead {
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // nsHttpRequestHead_h_
+#endif  // nsHttpRequestHead_h__

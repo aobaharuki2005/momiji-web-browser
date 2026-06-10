@@ -1,8 +1,9 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
 
 #include <algorithm>
@@ -84,7 +85,7 @@ using NodeMap =
 class js::VerifyPreTracer final : public JS::CallbackTracer {
   JS::AutoDisableGenerationalGC noggc;
 
-  bool onChild(JS::GCCellPtr thing, const char* name) override;
+  void onChild(JS::GCCellPtr thing, const char* name) override;
 
  public:
   /* The gcNumber when the verification began. */
@@ -131,17 +132,17 @@ inline bool IgnoreForPreBarrierVerifier(JSRuntime* runtime,
  * This function builds up the heap snapshot by adding edges to the current
  * node.
  */
-bool VerifyPreTracer::onChild(JS::GCCellPtr thing, const char* name) {
+void VerifyPreTracer::onChild(JS::GCCellPtr thing, const char* name) {
   MOZ_ASSERT(!IsInsideNursery(thing.asCell()));
 
   if (IgnoreForPreBarrierVerifier(runtime(), thing)) {
-    return true;
+    return;
   }
 
   edgeptr += sizeof(EdgeValue);
   if (edgeptr >= term) {
     edgeptr = term;
-    return true;
+    return;
   }
 
   VerifyNode* node = curnode;
@@ -150,8 +151,6 @@ bool VerifyPreTracer::onChild(JS::GCCellPtr thing, const char* name) {
   node->edges[i].thing = thing;
   node->edges[i].label = name;
   node->count++;
-
-  return true;
 }
 
 static VerifyNode* MakeNode(VerifyPreTracer* trc, JS::GCCellPtr thing) {
@@ -271,8 +270,8 @@ void gc::GCRuntime::startVerifyPreBarriers() {
   marker().start();
 
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-    zone->changeGCState(this, Zone::NoGC, Zone::VerifyPreBarriers);
-    zone->setNeedsMarkingBarrier(this, true);
+    zone->changeGCState(Zone::NoGC, Zone::VerifyPreBarriers);
+    zone->setNeedsIncrementalBarrier(true);
     zone->arenas.clearFreeLists();
   }
 
@@ -291,10 +290,8 @@ static bool IsMarkedOrAllocated(TenuredCell* cell) {
 struct CheckEdgeTracer final : public JS::CallbackTracer {
   VerifyNode* node;
   explicit CheckEdgeTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt, JS::TracerKind::Callback,
-                           JS::WeakEdgeTraceAction::Skip),
-        node(nullptr) {}
-  bool onChild(JS::GCCellPtr thing, const char* name) override;
+      : JS::CallbackTracer(rt), node(nullptr) {}
+  void onChild(JS::GCCellPtr thing, const char* name) override;
 };
 
 static const uint32_t MAX_VERIFIER_EDGES = 1000;
@@ -306,24 +303,22 @@ static const uint32_t MAX_VERIFIER_EDGES = 1000;
  * non-nullptr edges (i.e., the ones from the original snapshot that must have
  * been modified) must point to marked objects.
  */
-bool CheckEdgeTracer::onChild(JS::GCCellPtr thing, const char* name) {
+void CheckEdgeTracer::onChild(JS::GCCellPtr thing, const char* name) {
   if (IgnoreForPreBarrierVerifier(runtime(), thing)) {
-    return true;
+    return;
   }
 
   /* Avoid n^2 behavior. */
   if (node->count > MAX_VERIFIER_EDGES) {
-    return true;
+    return;
   }
 
   for (uint32_t i = 0; i < node->count; i++) {
     if (node->edges[i].thing == thing) {
       node->edges[i].thing = JS::GCCellPtr();
-      return true;
+      return;
     }
   }
-
-  return true;
 }
 
 static bool IsMarkedOrAllocated(const EdgeValue& edge) {
@@ -363,13 +358,13 @@ void gc::GCRuntime::endVerifyPreBarriers() {
   /* We need to disable barriers before tracing, which may invoke barriers. */
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     if (zone->isVerifyingPreBarriers()) {
-      zone->changeGCState(this, Zone::VerifyPreBarriers, Zone::NoGC);
+      zone->changeGCState(Zone::VerifyPreBarriers, Zone::NoGC);
     } else {
       compartmentCreated = true;
     }
 
     MOZ_ASSERT(!zone->wasGCStarted());
-    MOZ_ASSERT(!zone->needsMarkingBarrier());
+    MOZ_ASSERT(!zone->needsIncrementalBarrier());
   }
 
   verifyPreData = nullptr;
@@ -381,7 +376,6 @@ void gc::GCRuntime::endVerifyPreBarriers() {
 
     /* Start after the roots. */
     VerifyNode* node = NextNode(trc->root);
-    size_t found = 0;
     while ((char*)node < trc->edgeptr) {
       cetrc.node = node;
       JS::TraceChildren(&cetrc, node->thing);
@@ -398,17 +392,13 @@ void gc::GCRuntime::endVerifyPreBarriers() {
                 node->thing.asCell(), edge.label,
                 JS::GCTraceKindToAscii(edge.thing.kind()), edge.thing.asCell());
             MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
-            found++;
+            MOZ_CRASH();
           }
         }
       }
 
       node = NextNode(node);
     }
-    MOZ_RELEASE_ASSERT(
-        found == 0,
-        "barrier verifier found edges to unmarked objects that were reachable "
-        "when snapshot was taken (see above)");
   }
 
   marker().reset();
@@ -503,7 +493,7 @@ struct GCChunkHasher {
 class js::gc::MarkingValidator {
  public:
   explicit MarkingValidator(GCRuntime* gc);
-  bool nonIncrementalMark(AutoGCSession& session);
+  void nonIncrementalMark(AutoGCSession& session);
   void validate();
 
  private:
@@ -518,21 +508,28 @@ class js::gc::MarkingValidator {
 js::gc::MarkingValidator::MarkingValidator(GCRuntime* gc)
     : gc(gc), initialized(false) {}
 
-bool js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
+void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
   /*
    * Perform a non-incremental mark for all collecting zones and record
    * the results for later comparison.
    */
 
   GCMarker* gcmarker = &gc->marker();
+
   MOZ_ASSERT(!gcmarker->isWeakMarking());
 
-  MOZ_ASSERT(gc->testMarkQueueRemaining() == 0);
+#  ifdef DEBUG
+  // The test mark queue can cause spurious differences if the non-incremental
+  // marking for validation happens before the full queue has been processed,
+  // since the later part of the queue may mark things during sweeping. Disable
+  // validation if there is anything left in the queue at this point.
+  if (gc->testMarkQueueRemaining() > 0) {
+    return;
+  }
+#  endif
 
   /* We require that the nursery is empty at the start of collection. */
   MOZ_ASSERT(gc->nursery().isEmpty());
-
-  MOZ_ASSERT(map.empty());
 
   /* Wait for off-thread parsing which can allocate. */
   WaitForAllHelperThreads();
@@ -543,23 +540,19 @@ bool js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
   /* Save existing mark bits. */
   {
     AutoLockGC lock(gc);
-    bool ok = true;
-    gc->forEachNonEmptyChunk(lock, [&](ArenaChunk* chunk) {
+    for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
+         chunk.next()) {
       // Bug 1842582: Allocate mark bit buffer in two stages to avoid alignment
       // restriction which we currently can't support.
       void* buffer = js_malloc(sizeof(ChunkMarkBitmap));
       if (!buffer) {
-        ok = false;
         return;
       }
       UniquePtr<ChunkMarkBitmap> entry(new (buffer) ChunkMarkBitmap);
       entry->copyFrom(chunk->markBits);
       if (!map.putNew(chunk, std::move(entry))) {
-        ok = false;
+        return;
       }
-    });
-    if (!ok) {
-      return false;
     }
   }
 
@@ -578,17 +571,17 @@ bool js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
   for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
     if (!WeakMapBase::saveZoneMarkedWeakMaps(zone, markedWeakMaps)) {
-      return false;
+      return;
     }
 
-    for (auto iter = zone->gcEphemeronEdges().iter(); !iter.done();
-         iter.next()) {
-      MOZ_ASSERT(iter.get().key()->zone() == zone);
-      if (!savedEphemeronEdges.putNew(iter.get().key(),
-                                      std::move(iter.get().value()))) {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    for (auto r = zone->gcEphemeronEdges().all(); !r.empty(); r.popFront()) {
+      MOZ_ASSERT(r.front().key()->zone() == zone);
+      if (!savedEphemeronEdges.putNew(r.front().key(),
+                                      std::move(r.front().value()))) {
         // Notice the std::move -- this could consume the moved-from value even
         // on failure, so it's unsafe to continue if putNew fails.
-        return false;
+        oomUnsafe.crash("saving weak keys table for validator");
       }
     }
 
@@ -639,8 +632,7 @@ bool js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
     /* Update zone state for gray marking. */
     for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
-      zone->changeGCState(gc, zone->initialMarkingState(),
-                          Zone::MarkBlackAndGray);
+      zone->changeGCState(zone->initialMarkingState(), Zone::MarkBlackAndGray);
     }
 
     /*
@@ -654,8 +646,7 @@ bool js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
     /* Restore zone state. */
     for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
-      zone->changeGCState(gc, Zone::MarkBlackAndGray,
-                          zone->initialMarkingState());
+      zone->changeGCState(Zone::MarkBlackAndGray, zone->initialMarkingState());
     }
     MOZ_ASSERT(gc->marker().isDrained());
   }
@@ -663,7 +654,8 @@ bool js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
   /* Take a copy of the non-incremental mark state and restore the original. */
   {
     AutoLockGC lock(gc);
-    gc->forEachNonEmptyChunk(lock, [&](ArenaChunk* chunk) {
+    for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
+         chunk.next()) {
       ChunkMarkBitmap* bitmap = &chunk->markBits;
       auto ptr = map.lookup(chunk);
       MOZ_RELEASE_ASSERT(ptr, "Chunk not found in map");
@@ -672,21 +664,22 @@ bool js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
       temp.copyFrom(*entry);
       entry->copyFrom(*bitmap);
       bitmap->copyFrom(temp);
-    });
+    }
   }
 
   for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
     WeakMapBase::unmarkZone(zone);
-    WeakMapBase::checkZoneUnmarked(zone);
+    MOZ_ASSERT(zone->gcEphemeronEdges().empty(), "unmarkZone clears the map");
   }
 
   WeakMapBase::restoreMarkedWeakMaps(markedWeakMaps);
 
-  for (auto iter = savedEphemeronEdges.iter(); !iter.done(); iter.next()) {
-    Zone* zone = iter.get().key()->asTenured().zone();
-    if (!zone->gcEphemeronEdges().putNew(iter.get().key(),
-                                         std::move(iter.get().value()))) {
-      return false;
+  for (auto r = savedEphemeronEdges.all(); !r.empty(); r.popFront()) {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    Zone* zone = r.front().key()->asTenured().zone();
+    if (!zone->gcEphemeronEdges().putNew(r.front().key(),
+                                         std::move(r.front().value()))) {
+      oomUnsafe.crash("restoring weak keys table for validator");
     }
   }
 
@@ -696,8 +689,6 @@ bool js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 #  endif
 
   gc->incrementalState = state;
-
-  return true;
 }
 
 void js::gc::MarkingValidator::validate() {
@@ -716,11 +707,10 @@ void js::gc::MarkingValidator::validate() {
 
   bool ok = true;
   AutoLockGC lock(gc->rt);
-
-  gc->forEachNonEmptyChunk(lock, [&](ArenaChunk* chunk) {
+  for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done(); chunk.next()) {
     BitmapMap::Ptr ptr = map.lookup(chunk);
     if (!ptr) {
-      return;  // Allocated after we did the non-incremental mark.
+      continue; /* Allocated after we did the non-incremental mark. */
     }
 
     ChunkMarkBitmap* bitmap = ptr->value().get();
@@ -798,37 +788,19 @@ void js::gc::MarkingValidator::validate() {
         thing += Arena::thingSize(kind);
       }
     }
-  });
+  }
 
   MOZ_RELEASE_ASSERT(ok, "Incremental marking verification failed");
 }
 
 void GCRuntime::computeNonIncrementalMarkingForValidation(
     AutoGCSession& session) {
-  MOZ_ASSERT(isIncremental);
-  MOZ_ASSERT(!markingValidator.ref());
-
-#  ifdef DEBUG
-  // The test mark queue can cause spurious differences if the non-incremental
-  // marking for validation happens before the full queue has been processed,
-  // since the later part of the queue may mark things during sweeping. Disable
-  // validation if there is anything left in the queue at this point or a forced
-  // mark color from the queue is still in effect.
-  if (testMarkQueueRemaining() > 0 || queueMarkColor.isSome()) {
-    return;
+  MOZ_ASSERT(!markingValidator);
+  if (isIncremental && hasZealMode(ZealMode::IncrementalMarkingValidator)) {
+    markingValidator = js_new<MarkingValidator>(this);
   }
-#  endif
-
-  markingValidator = js_new<MarkingValidator>(this);
-  if (!markingValidator) {
-    return;
-  }
-
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!markingValidator->nonIncrementalMark(session)) {
-    // This may have failed to restore the original state, or may not have
-    // produced valid results to compare against.
-    oomUnsafe.crash("GCRuntime::computeNonIncrementalMarkingForValidation");
+  if (markingValidator) {
+    markingValidator->nonIncrementalMark(session);
   }
 }
 
@@ -864,7 +836,7 @@ class HeapCheckTracerBase : public JS::CallbackTracer {
   size_t failures;
 
  private:
-  bool onChild(JS::GCCellPtr thing, const char* name) override;
+  void onChild(JS::GCCellPtr thing, const char* name) override;
 
   struct WorkItem {
     WorkItem(JS::GCCellPtr thing, const char* name, int parentIndex)
@@ -894,33 +866,31 @@ HeapCheckTracerBase::HeapCheckTracerBase(JSRuntime* rt,
       oom(false),
       parentIndex(-1) {}
 
-bool HeapCheckTracerBase::onChild(JS::GCCellPtr thing, const char* name) {
+void HeapCheckTracerBase::onChild(JS::GCCellPtr thing, const char* name) {
   Cell* cell = thing.asCell();
   if (visited.lookup(cell)) {
-    return true;
+    return;
   }
 
   if (!visited.put(cell)) {
     oom = true;
-    return true;
+    return;
   }
 
   if (!checkCell(cell, name)) {
     // Don't trace through known bad cell.
-    return true;
+    return;
   }
 
   // Don't trace into GC things owned by another runtime.
   if (cell->runtimeFromAnyThread() != rt) {
-    return true;
+    return;
   }
 
   WorkItem item(thing, name, parentIndex);
   if (!stack.append(item)) {
     oom = true;
   }
-
-  return true;
 }
 
 bool HeapCheckTracerBase::traceHeap(AutoHeapSession& session) {
@@ -1215,15 +1185,17 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   }
 
   JSObject* delegate = MaybeGetDelegate(key);
-  if (delegate) {
-    CellColor delegateColor = effectiveColor(delegate);
-    if (keyColor < std::min(map->mapColor(), delegateColor)) {
-      fprintf(stderr, "WeakMap key is less marked than map or delegate\n");
-      fprintf(stderr, "(map %p is %s, delegate %p is %s, key %p is %s)\n", map,
-              CellColorName(map->mapColor()), delegate,
-              CellColorName(delegateColor), key, CellColorName(keyColor));
-      ok = false;
-    }
+  if (!delegate) {
+    return ok;
+  }
+
+  CellColor delegateColor = effectiveColor(delegate);
+  if (keyColor < std::min(map->mapColor(), delegateColor)) {
+    fprintf(stderr, "WeakMap key is less marked than map or delegate\n");
+    fprintf(stderr, "(map %p is %s, delegate %p is %s, key %p is %s)\n", map,
+            CellColorName(map->mapColor()), delegate,
+            CellColorName(delegateColor), key, CellColorName(keyColor));
+    ok = false;
   }
 
   // Symbols key must be marked in the atom marking bitmap for the zone.
@@ -1284,25 +1256,20 @@ void GCRuntime::checkHeapBeforeMinorGC(AutoHeapSession& session) {
 // traceKind. Only for assertions and js::debug::* APIs.
 bool GCRuntime::isPointerWithinTenuredCell(void* ptr, JS::TraceKind traceKind) {
   AutoLockGC lock(this);
-
-  mozilla::Maybe<bool> result;
-  forEachNonEmptyChunk(lock, [&](ArenaChunk* chunk) {
-    if (result.isSome()) {
-      return;
-    }
+  for (auto chunk = allNonEmptyChunks(lock); !chunk.done(); chunk.next()) {
     MOZ_ASSERT(!chunk->isNurseryChunk());
     if (ptr >= &chunk->arenas[0] && ptr < &chunk->arenas[ArenasPerChunk]) {
-      bool found = false;
       auto* arena = reinterpret_cast<Arena*>(uintptr_t(ptr) & ~ArenaMask);
-      if (arena->allocated()) {
-        found = traceKind == JS::TraceKind::Null ||
-                MapAllocToTraceKind(arena->getAllocKind()) == traceKind;
+      if (!arena->allocated()) {
+        return false;
       }
-      result.emplace(found);
-    }
-  });
 
-  return result.valueOr(false);
+      return traceKind == JS::TraceKind::Null ||
+             MapAllocToTraceKind(arena->getAllocKind()) == traceKind;
+    }
+  }
+
+  return false;
 }
 
 bool GCRuntime::isPointerWithinBufferAlloc(void* ptr) {

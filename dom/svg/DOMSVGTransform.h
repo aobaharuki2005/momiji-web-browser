@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,11 +7,10 @@
 #ifndef DOM_SVG_DOMSVGTRANSFORM_H_
 #define DOM_SVG_DOMSVGTRANSFORM_H_
 
-#include <memory>
-
 #include "DOMSVGTransformList.h"
 #include "SVGTransform.h"
 #include "gfxMatrix.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsID.h"
@@ -97,10 +98,7 @@ class DOMSVGTransform final : public nsWrapperCache {
   }
 
   /// This method is called to notify this object that its list index changed.
-  void UpdateListIndex(uint32_t aListIndex) {
-    MOZ_RELEASE_ASSERT(aListIndex <= MaxListIndex());
-    mListIndex = aListIndex;
-  }
+  void UpdateListIndex(uint32_t aListIndex) { mListIndex = aListIndex; }
 
   /**
    * This method is called to notify this DOM object that it is about to be
@@ -171,7 +169,7 @@ class DOMSVGTransform final : public nsWrapperCache {
   // with any particular list and thus, no internal SVGTransform object. In
   // that case we allocate an SVGTransform object on the heap to store the
   // data.
-  std::unique_ptr<SVGTransform> mTransform;
+  UniquePtr<SVGTransform> mTransform;
 };
 
 }  // namespace mozilla::dom

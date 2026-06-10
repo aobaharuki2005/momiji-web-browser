@@ -44,13 +44,13 @@ async function testPointerEvents(ui) {
       "pointerdown"
     );
 
-    EventUtils.synthesizeMouseAtCenter(
+    await EventUtils.synthesizeMouseAtCenter(
       div,
       { type: "mousedown", isSynthesized: false },
       content
     );
     await pointerDownPromise;
-    EventUtils.synthesizeMouseAtCenter(
+    await EventUtils.synthesizeMouseAtCenter(
       div,
       { type: "mouseup", isSynthesized: false },
       content
@@ -59,7 +59,7 @@ async function testPointerEvents(ui) {
     info(
       "Check that a pointermove event was never dispatched from the mousemove event"
     );
-    EventUtils.synthesizeMouseAtCenter(
+    await EventUtils.synthesizeMouseAtCenter(
       div,
       { type: "mousemove", isSynthesized: false },
       content

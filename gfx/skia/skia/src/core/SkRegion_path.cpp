@@ -340,11 +340,9 @@ static bool check_inverse_on_empty_return(SkRegion* dst, const SkPath& path, con
 bool SkRegion::setPath(const SkPath& path, const SkRegion& clip) {
     SkDEBUGCODE(SkRegionPriv::Validate(*this));
 
-    const auto raw = SkPathPriv::Raw(path, SkResolveConvexity::kYes);
-
-    if (clip.isEmpty() || !raw.has_value() || path.isEmpty()) {
-        // This treats non-finite paths (no raw) as empty as well, so this returns empty or 'clip'
-        // if it's inverse-filled. If clip is also empty, path's fill type doesn't really matter
+    if (clip.isEmpty() || !path.isFinite() || path.isEmpty()) {
+        // This treats non-finite paths as empty as well, so this returns empty or 'clip' if
+        // it's inverse-filled. If clip is also empty, path's fill type doesn't really matter
         // and this region ends up empty.
         return check_inverse_on_empty_return(this, path, clip);
     }
@@ -386,13 +384,10 @@ bool SkRegion::setPath(const SkPath& path, const SkRegion& clip) {
                 tileClipBounds.offset(-left, -top);
                 SkASSERT(!SkScan::PathRequiresTiling(tileClipBounds));
                 SkRegion tile;
-                if (auto newpath = path.tryMakeOffset(-left, -top)) {
-                    tile.setPath(*newpath, SkRegion(tileClipBounds));
-                    tile.translate(left, top);
-                    this->op(tile, kUnion_Op);
-                } else {
-                    return false;
-                }
+                tile.setPath(path.makeTransform(SkMatrix::Translate(-left, -top)),
+                             SkRegion(tileClipBounds));
+                tile.translate(left, top);
+                this->op(tile, kUnion_Op);
             }
         }
         // During tiling we only applied the bounds of the tile, now that we have a full SkRegion,
@@ -425,7 +420,7 @@ bool SkRegion::setPath(const SkPath& path, const SkRegion& clip) {
         return this->setEmpty();
     }
 
-    SkScan::FillPath(*raw, clip, &builder);
+    SkScan::FillPath(SkPathPriv::Raw(path), clip, &builder);
     builder.done();
 
     int count = builder.computeRunCount();
@@ -613,3 +608,13 @@ SkPath SkRegion::getBoundaryPath() const {
     (void)this->addBoundaryPath(&builder);
     return builder.detach();
 }
+
+#ifndef SK_HIDE_PATH_EDIT_METHODS
+bool SkRegion::getBoundaryPath(SkPath* path) const {
+    if (this->isEmpty()) {
+        return false;
+    }
+    path->addPath(this->getBoundaryPath());
+    return true;
+}
+#endif

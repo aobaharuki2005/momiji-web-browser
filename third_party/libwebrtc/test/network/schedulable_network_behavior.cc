@@ -11,14 +11,12 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <memory>
 #include <utility>
 
 #include "absl/functional/any_invocable.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/test/network_emulation/network_config_schedule.pb.h"
-#include "api/test/network_emulation/network_queue.h"
 #include "api/test/simulated_network.h"
 #include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
@@ -79,13 +77,10 @@ SchedulableNetworkBehavior::SchedulableNetworkBehavior(
     network_behaviour::NetworkConfigSchedule schedule,
     uint64_t random_seed,
     Clock& clock,
-    absl::AnyInvocable<bool(Timestamp)> start_condition,
-    std::unique_ptr<NetworkQueue> queue)
-    : SimulatedNetwork(GetInitialConfig(schedule),
-                       random_seed,
-                       std::move(queue)),
+    absl::AnyInvocable<bool(Timestamp)> start_callback)
+    : SimulatedNetwork(GetInitialConfig(schedule), random_seed),
       schedule_(std::move(schedule)),
-      start_condition_(std::move(start_condition)),
+      start_condition_(std::move(start_callback)),
       clock_(clock),
       config_(GetInitialConfig(schedule_)) {
   if (schedule_.item().size() > 1) {

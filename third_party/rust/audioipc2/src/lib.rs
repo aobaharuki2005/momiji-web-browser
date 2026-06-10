@@ -170,7 +170,7 @@ pub(crate) unsafe fn close_target_handle(
     let ok = DuplicateHandle(
         target_process,
         target_handle_to_close as _,
-        std::ptr::null_mut(),
+        0,
         std::ptr::null_mut(),
         0,
         FALSE,

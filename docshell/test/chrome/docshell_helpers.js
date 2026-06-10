@@ -572,9 +572,17 @@ DocShellHelpersParent.eventListener = pageEventListener;
 function finish() {
   // Work around bug 467960.
   let historyPurged;
-  let history = TestWindow.getBrowser().browsingContext?.sessionHistory;
-  history.purgeHistory(history.count);
-  historyPurged = Promise.resolve();
+  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+    let history = TestWindow.getBrowser().browsingContext?.sessionHistory;
+    history.purgeHistory(history.count);
+    historyPurged = Promise.resolve();
+  } else {
+    historyPurged = SpecialPowers.spawn(TestWindow.getBrowser(), [], () => {
+      let history = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory
+        .legacySHistory;
+      history.purgeHistory(history.count);
+    });
+  }
 
   // If the test changed the value of max_total_viewers via a call to
   // enableBFCache(), then restore it now.

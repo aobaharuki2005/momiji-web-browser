@@ -185,82 +185,57 @@ add_task(async function test_toFetch() {
 });
 
 add_task(async function test_previousFailed() {
-  _("SyncEngine.previousFailed values correspond to file on disk");
+  _("SyncEngine.previousFailed corresponds to file on disk");
   await SyncTestingInfrastructure(server);
 
   await testSteamEngineStorage({
-    previousFailedIn: guidSetOfSize(3),
-    previousFailedOut: guidSetOfSize(3),
+    previousFailed: guidSetOfSize(3),
     setup(engine) {
       // Ensure pristine environment
-      Assert.equal(engine.previousFailedIn.size, 0);
-      Assert.equal(engine.previousFailedOut.size, 0);
+      Assert.equal(engine.previousFailed.size, 0);
 
-      // Write files to disk
-      engine.previousFailedIn = this.previousFailedIn;
-      Assert.equal(engine.previousFailedIn, this.previousFailedIn);
-      engine.previousFailedOut = this.previousFailedOut;
-      Assert.equal(engine.previousFailedOut, this.previousFailedOut);
+      // Write file to disk
+      engine.previousFailed = this.previousFailed;
+      Assert.equal(engine.previousFailed, this.previousFailed);
     },
     check(engine) {
-      // previousFailed values are written asynchronously
-      assertSetsEqual(engine.previousFailedIn, this.previousFailedIn);
-      assertSetsEqual(engine.previousFailedOut, this.previousFailedOut);
+      // previousFailed is written asynchronously
+      assertSetsEqual(engine.previousFailed, this.previousFailed);
     },
   });
 
   await testSteamEngineStorage({
-    previousFailedIn: guidSetOfSize(4),
-    previousFailedIn2: guidSetOfSize(5),
-    previousFailedOut: guidSetOfSize(4),
-    previousFailedOut2: guidSetOfSize(5),
+    previousFailed: guidSetOfSize(4),
+    previousFailed2: guidSetOfSize(5),
     setup(engine) {
-      // Make sure it works for consecutive writes before the callback is
-      // executed.
-      engine.previousFailedIn = this.previousFailedIn;
-      Assert.equal(engine.previousFailedIn, this.previousFailedIn);
-      engine.previousFailedOut = this.previousFailedOut;
-      Assert.equal(engine.previousFailedOut, this.previousFailedOut);
+      // Make sure it work for consecutive writes before the callback is executed.
+      engine.previousFailed = this.previousFailed;
+      Assert.equal(engine.previousFailed, this.previousFailed);
 
-      engine.previousFailedIn = this.previousFailedIn2;
-      Assert.equal(engine.previousFailedIn, this.previousFailedIn2);
-      engine.previousFailedOut = this.previousFailedOut2;
-      Assert.equal(engine.previousFailedOut, this.previousFailedOut2);
+      engine.previousFailed = this.previousFailed2;
+      Assert.equal(engine.previousFailed, this.previousFailed2);
     },
     check(engine) {
-      assertSetsEqual(engine.previousFailedIn, this.previousFailedIn2);
-      assertSetsEqual(engine.previousFailedOut, this.previousFailedOut2);
+      assertSetsEqual(engine.previousFailed, this.previousFailed2);
     },
   });
 
   await testSteamEngineStorage({
-    previousFailedIn: guidSetOfSize(2),
-    previousFailedOut: guidSetOfSize(2),
+    previousFailed: guidSetOfSize(2),
     async beforeCheck() {
-      let previousFailedInPath = PathUtils.join(
+      let previousFailedPath = PathUtils.join(
         PathUtils.profileDir,
         "weave",
         "failed",
         "steam.json"
       );
-      await IOUtils.writeJSON(previousFailedInPath, this.previousFailedIn, {
-        tmpPath: previousFailedInPath + ".tmp",
-      });
-
-      let previousFailedOutPath = PathUtils.join(
-        PathUtils.profileDir,
-        "weave",
-        "failedOut",
-        "steam.json"
-      );
-      await IOUtils.writeJSON(previousFailedOutPath, this.previousFailedOut, {
-        tmpPath: previousFailedOutPath + ".tmp",
+      await IOUtils.writeJSON(previousFailedPath, this.previousFailed, {
+        tmpPath: previousFailedPath + ".tmp",
       });
     },
     check(engine) {
       // Read file from disk
-      assertSetsEqual(engine.previousFailedIn, this.previousFailedIn);
-      assertSetsEqual(engine.previousFailedOut, this.previousFailedOut);
+      assertSetsEqual(engine.previousFailed, this.previousFailed);
     },
   });
 });
@@ -279,14 +254,12 @@ add_task(async function test_resetClient() {
 
     await engine.setLastSync(123.45);
     engine.toFetch = guidSetOfSize(4);
-    engine.previousFailedIn = guidSetOfSize(3);
-    engine.previousFailedOut = guidSetOfSize(3);
+    engine.previousFailed = guidSetOfSize(3);
 
     await engine.resetClient();
     Assert.equal(await engine.getLastSync(), 0);
     Assert.equal(engine.toFetch.size, 0);
-    Assert.equal(engine.previousFailedIn.size, 0);
-    Assert.equal(engine.previousFailedOut.size, 0);
+    Assert.equal(engine.previousFailed.size, 0);
   } finally {
     for (const pref of Svc.PrefBranch.getChildList("")) {
       Svc.PrefBranch.clearUserPref(pref);

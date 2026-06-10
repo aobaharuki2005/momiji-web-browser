@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -431,19 +433,18 @@ bool IProtocol::SetManagerAndRegister(IRefCountedProtocol* aManager,
   SetManager(aManager);
 
   mId = aId == kNullActorId ? mToplevel->NextId() : aId;
+  while (mToplevel->mActorMap.Contains(mId)) {
+    // The ID already existing is an error case, but we want to proceed with
+    // registration so that we can tear down the actor cleanly - generate a new
+    // ID for that case.
+    NS_WARNING("Actor already exists with the selected ID!");
+    mId = mToplevel->NextId();
+    success = false;
+  }
 
   RefPtr<ActorLifecycleProxy> proxy = ActorConnected();
+  mToplevel->mActorMap.InsertOrUpdate(mId, proxy);
   MOZ_ASSERT(proxy->Get() == this);
-
-  mToplevel->mActorMap.WithEntryHandle(mId, [&](auto entry) {
-    if (aId == kNullActorId) {
-      MOZ_RELEASE_ASSERT(!entry, "Entry must not exist for new actor ID");
-    } else {
-      MOZ_RELEASE_ASSERT(entry && !entry.Data(),
-                         "Entry must be a reservation for reserved actor ID");
-    }
-    entry.InsertOrUpdate(proxy);
-  });
 
   UntypedManagedContainer* container =
       aManager->GetManagedActors(GetProtocolId());
@@ -609,10 +610,9 @@ void IProtocol::ActorDisconnected(ActorDestroyReason aWhy) {
 }
 
 void IProtocol::DoomSubtree() {
-  // If we're already `Doomed` or `Destroyed`, there's nothing to do.
-  if (mLinkStatus != LinkStatus::Connected) {
-    return;
-  }
+  MOZ_ASSERT(
+      mLinkStatus == LinkStatus::Connected || mLinkStatus == LinkStatus::Doomed,
+      "Invalid link status for SetDoomed");
   for (ProtocolId id : ManagedProtocolIds()) {
     for (IProtocol* actor : *GetManagedActors(id)) {
       actor->DoomSubtree();
@@ -672,7 +672,7 @@ bool IToplevelProtocol::OpenOnSameThread(IToplevelProtocol* aTarget,
 }
 
 void IToplevelProtocol::NotifyImpendingShutdown() {
-  if (CanSend()) {
+  if (CanRecv()) {
     GetIPCChannel()->NotifyImpendingShutdown();
   }
 }
@@ -696,37 +696,10 @@ int64_t IToplevelProtocol::NextId() {
 }
 
 IProtocol* IToplevelProtocol::Lookup(ActorId aId) {
-  if (auto entry = mActorMap.Lookup(aId); entry && entry.Data()) {
+  if (auto entry = mActorMap.Lookup(aId)) {
     return entry.Data()->Get();
   }
   return nullptr;
-}
-
-bool IToplevelProtocol::TryReserve(ActorId aId) {
-  // The ID must be coming from the other side.
-  // This logic should check for the opposite sign as NextId().
-  if (mozilla::Abs(aId) >= MSG_ROUTING_CONTROL ||
-      (GetSide() == ChildSide && aId <= kNullActorId) ||
-      (GetSide() == ParentSide && aId >= kNullActorId)) {
-    return false;
-  }
-
-  // Ensure the entry isn't already in use, and then insert it into our map.
-  return mActorMap.WithEntryHandle(aId, [&](auto entry) {
-    if (entry) {
-      return false;
-    }
-    entry.Insert(nullptr);
-    return true;
-  });
-}
-
-void IToplevelProtocol::ClearReservation(ActorId aId) {
-  auto entry = mActorMap.Lookup(aId);
-  // Only remove if it's still a placeholder.
-  if (entry && !entry.Data()) {
-    entry.Remove();
-  }
 }
 
 Shmem IToplevelProtocol::CreateSharedMemory(size_t aSize, bool aUnsafe) {

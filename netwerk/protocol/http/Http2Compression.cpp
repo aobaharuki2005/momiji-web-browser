@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -102,17 +104,12 @@ static void AddStaticElement(const nsCString& name) {
   AddStaticElement(name, ""_ns);
 }
 
-class nvPairDeallocator : public nsDequeFunctor<nvPair> {
- public:
-  void operator()(nvPair* aPair) override { delete aPair; }
-};
-
 static void InitializeStaticHeaders() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (!gStaticHeaders) {
-    gStaticHeaders = new nsDeque<nvPair>(new nvPairDeallocator());
+    gStaticHeaders = new nsDeque<nvPair>();
     gStaticReporter = new HpackStaticTableReporter();
-    RegisterStrongMemoryReporter(do_AddRef(gStaticReporter));
+    RegisterStrongMemoryReporter(gStaticReporter);
     AddStaticElement(":authority"_ns);
     AddStaticElement(":method"_ns, "GET"_ns);
     AddStaticElement(":method"_ns, "POST"_ns);
@@ -245,7 +242,7 @@ const nvPair* nvFIFO::operator[](size_t index) const {
 
 Http2BaseCompressor::Http2BaseCompressor() {
   mDynamicReporter = new HpackDynamicTableReporter(this);
-  RegisterStrongMemoryReporter(do_AddRef(mDynamicReporter));
+  RegisterStrongMemoryReporter(mDynamicReporter);
 }
 
 Http2BaseCompressor::~Http2BaseCompressor() {
@@ -339,7 +336,7 @@ void Http2BaseCompressor::SetDumpTables(bool dumpTables) {
   mDumpTables = dumpTables;
 }
 
-Http2Decompressor::~Http2Decompressor() = default;
+Http2Decompressor::~Http2Decompressor() {}
 
 nsresult Http2Decompressor::DecodeHeaderBlock(const uint8_t* data,
                                               uint32_t datalen,
@@ -564,21 +561,20 @@ nsresult Http2Decompressor::OutputHeader(const nsACString& name,
     // frames, PUSH_PROMISE allows the other pseudo-header fields
     if (!name.EqualsLiteral(":status") && !mIsPush) {
       LOG(("HTTP Decompressor found illegal response pseudo-header %s",
-           PromiseFlatCString(name).get()));
+           name.BeginReading()));
       return NS_ERROR_ILLEGAL_VALUE;
     }
     if (mSeenNonColonHeader) {
-      LOG(("HTTP Decompressor found illegal : header %s",
-           PromiseFlatCString(name).get()));
+      LOG(("HTTP Decompressor found illegal : header %s", name.BeginReading()));
       return NS_ERROR_ILLEGAL_VALUE;
     }
     LOG(("HTTP Decompressor not gatewaying %s into http/1",
-         PromiseFlatCString(name).get()));
+         name.BeginReading()));
     return NS_OK;
   }
 
-  LOG(("Http2Decompressor::OutputHeader %s %s", PromiseFlatCString(name).get(),
-       PromiseFlatCString(value).get()));
+  LOG(("Http2Decompressor::OutputHeader %s %s", name.BeginReading(),
+       value.BeginReading()));
   mSeenNonColonHeader = true;
   mOutput->Append(name);
   mOutput->AppendLiteral(": ");
@@ -594,7 +590,7 @@ nsresult Http2Decompressor::OutputHeader(const nsACString& name,
       name.EqualsLiteral("proxy-authenticate")) {
     if (HasConnectionBasedAuth(value)) {
       LOG3(("Http2Decompressor %p connection-based auth found in %s", this,
-            PromiseFlatCString(name).get()));
+            name.BeginReading()));
       return NS_ERROR_NET_RESET;
     }
   }
@@ -870,13 +866,13 @@ nsresult Http2Decompressor::DoLiteralInternal(nsACString& name,
       }
     }
     LOG(("Http2Decompressor::DoLiteralInternal literal name %s",
-         PromiseFlatCString(name).get()));
+         name.BeginReading()));
   } else {
     // NWGH - make this index, not index - 1
     // name is from headertable
     rv = CopyHeaderString(index - 1, name);
     LOG(("Http2Decompressor::DoLiteralInternal indexed name %d %s", index,
-         PromiseFlatCString(name).get()));
+         name.BeginReading()));
   }
   if (NS_FAILED(rv)) {
     return rv;
@@ -908,7 +904,7 @@ nsresult Http2Decompressor::DoLiteralInternal(nsACString& name,
   while ((newline = value.FindChar('\n', newline)) != -1) {
     if (value[newline + 1] == ' ' || value[newline + 1] == '\t') {
       LOG(("Http2Decompressor::Disallowing folded header value %s",
-           PromiseFlatCString(value).get()));
+           value.BeginReading()));
       return NS_ERROR_ILLEGAL_VALUE;
     }
     // Increment this to avoid always finding the same newline and looping
@@ -916,8 +912,7 @@ nsresult Http2Decompressor::DoLiteralInternal(nsACString& name,
     ++newline;
   }
 
-  LOG(("Http2Decompressor::DoLiteralInternal value %s",
-       PromiseFlatCString(value).get()));
+  LOG(("Http2Decompressor::DoLiteralInternal value %s", value.BeginReading()));
   return NS_OK;
 }
 

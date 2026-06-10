@@ -1,4 +1,7 @@
 // Maps protocol (without the trailing colon) and address space to port.
+//
+// TODO(crbug.com/418737577): change keys to be consistent with new address
+// space names.
 const SERVER_PORTS = {
   "http": {
     "loopback": {{ports[http][0]}},
@@ -66,7 +69,6 @@ class Server {
   static WSS_LOOPBACK = Server.get("wss", "loopback");
 };
 
-
 // Resolves a URL relative to the current location, returning an absolute URL.
 //
 // `url` specifies the relative URL, e.g. "foo.html" or "http://foo.example".
@@ -115,52 +117,15 @@ function resolveUrl(url, options) {
   return result;
 }
 
-// Gets the name of the permission to set from the URL search parameters.
-// Returns the empty string if no name is found.
-function getPermissionName(url) {
-  permission_name = '';
-  if (url.searchParams.has('permissionName')) {
-    permission_name = url.searchParams.get('permissionName');
-  }
-  return permission_name;
-}
-
-// Gets the value to set for a permission from the URL search parameters.
-// Returns the empty string if no name is found.
-function getPermissionValue(url) {
-  permission_value = '';
-  if (url.searchParams.has('permissionValue')) {
-    permission_value = url.searchParams.get('permissionValue');
-  }
-  return permission_value;
-}
-
 // Computes options to pass to `resolveUrl()` for a source document's URL.
 //
 // `server` identifies the server from which to load the document.
-//
 // `treatAsPublic`, if set to true, specifies that the source document should
 // be artificially placed in the `public` address space using CSP.
-//
-// 'permissionName', if specified, will control what permission is set for
-//     pages/tests that set a permission. Valid values are 'local-network' and
-//     'loopback-network'
-//
-// 'permissionValue', if specified, will control what the permission (named by
-//     'permissionName') is set to. Valid values are 'granted', 'prompt', or
-//     'denied'
-function sourceResolveOptions(
-    {server, treatAsPublic, permissionName, permissionValue}) {
+function sourceResolveOptions({ server, treatAsPublic }) {
   const options = {...server};
   if (treatAsPublic) {
     options.headers = { "Content-Security-Policy": "treat-as-public-address" };
-  }
-  options.searchParams = {};
-  if (permissionName) {
-    options.searchParams.permissionName = permissionName;
-  }
-  if (permissionValue) {
-    options.searchParams.permissionValue = permissionValue;
   }
   return options;
 }
@@ -215,14 +180,8 @@ const FetchTestResult = {
 };
 
 // Helper function for checking results from fetch tests.
-function checkFetchTestResult(actual, expected) {
-  if (expected.error !== undefined) {
-    assert_true(actual.error !== undefined,
-        "expected an error but got none");
-  } else {
-    assert_equals(actual.error, undefined,
-        "unexpected error: " + actual.error);
-  }
+function checkTestResult(actual, expected) {
+  assert_equals(actual.error, expected.error, "error mismatch");
   assert_equals(actual.ok, expected.ok, "response ok mismatch");
   assert_equals(actual.body, expected.body, "response body mismatch");
 
@@ -247,15 +206,13 @@ const NavigationTestResult = {
 };
 
 async function iframeTest(
-    t, {source, target, expected, permissionName = 'local-network', permission = 'denied'}) {
+    t, {source, target, expected, permission = 'denied'}) {
   const targetUrl =
       resolveUrl('resources/openee.html', sourceResolveOptions(target));
 
-  const sourceUrlOptions = source;
-  sourceUrlOptions.permissionName = permissionName;
-  sourceUrlOptions.permissionValue = permission;
-  const sourceUrl = resolveUrl(
-      'resources/iframer.html', sourceResolveOptions(sourceUrlOptions));
+  const sourceUrl =
+      resolveUrl('resources/iframer.html', sourceResolveOptions(source));
+  sourceUrl.searchParams.set('permission', permission);
   sourceUrl.searchParams.set('url', targetUrl);
 
   const popup = window.open(sourceUrl);
@@ -295,17 +252,3 @@ async function navigateTest(t, {source, target, expected}) {
 
   assert_equals(result, expected);
 }
-
-const WebsocketTestResult = {
-  SUCCESS: 'open',
-
-  // The code is a best guess. It is not yet entirely specified, so it may need
-  // to be changed in the future based on implementation experience.
-  FAILURE: 'close: code 1006',
-};
-
-const WebTransportTestResult = {
-  SUCCESS: 'open',
-
-  FAILURE: 'error',
-};

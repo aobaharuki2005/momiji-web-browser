@@ -1,12 +1,10 @@
 {
-  "include": ["*.sys.mjs", "test/**/*.mjs", "types/*.ts"],
+  "include": ["*.sys.mjs", "types/*.ts"],
+  "exclude": ["./SearchSERPTelemetry.sys.mjs"],
   "extends": "../../../tools/@types/tsconfig.json",
 
   "compilerOptions": {
     "checkJs": true,
-    "strict": true,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
 
     "plugins": [
       {

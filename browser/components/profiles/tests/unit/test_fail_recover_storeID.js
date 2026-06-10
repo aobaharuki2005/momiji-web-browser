@@ -14,8 +14,8 @@ add_task(async function test_recover_storeID() {
   await SelectableProfileService.init();
 
   Assert.ok(
-    ProfilesDatastoreService.initialized,
-    "Initialized the datastore service"
+    !ProfilesDatastoreService.initialized,
+    "Didn't initialize the datastore service"
   );
   Assert.ok(
     !SelectableProfileService.initialized,

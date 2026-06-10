@@ -16,7 +16,4 @@ assert.sameValue(explicit.minute, 59, "default overflow is constrain");
 const implicit = Temporal.PlainTime.from(fields);
 assert.sameValue(implicit.minute, 59, "default overflow is constrain");
 
-const lambda = Temporal.PlainTime.from(fields, () => {});
-assert.sameValue(lambda.minute, 59, "default overflow is constrain");
-
 reportCompare(0, 0);

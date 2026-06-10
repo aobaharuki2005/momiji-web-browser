@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2009 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -145,7 +147,7 @@ class Thread : PlatformThread::Delegate {
 
   // We piggy-back on the startup_data_ member to know if we successfully
   // started the thread.  This way we know that we need to call Join.
-  bool thread_was_started() const { return startup_data_ != nullptr; }
+  bool thread_was_started() const { return startup_data_ != NULL; }
 
   // Used to pass data to ThreadMain.
   struct StartupData;

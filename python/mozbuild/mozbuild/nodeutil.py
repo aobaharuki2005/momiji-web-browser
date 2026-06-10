@@ -83,8 +83,9 @@ def check_executable_version(exe, wrap_call_with_node=False):
         binary, _ = find_node_executable()
         if binary:
             out = (
-                subprocess
-                .check_output([binary, exe, "--version"], universal_newlines=True)
+                subprocess.check_output(
+                    [binary, exe, "--version"], universal_newlines=True
+                )
                 .lstrip("v")
                 .rstrip()
             )
@@ -93,8 +94,7 @@ def check_executable_version(exe, wrap_call_with_node=False):
     # direct.
     if not out:
         out = (
-            subprocess
-            .check_output([exe, "--version"], universal_newlines=True)
+            subprocess.check_output([exe, "--version"], universal_newlines=True)
             .lstrip("v")
             .rstrip()
         )
@@ -135,16 +135,6 @@ def find_npm_executable(min_version=NPM_MIN_VERSION):
     could not be resolved.
     """
     return find_executable("npm", min_version, True)
-
-
-def find_npx_executable(min_version=NPM_MIN_VERSION):
-    """Find the npx executable from the mozbuild directory.
-
-    Returns a tuple containing the path to an executable binary and a
-    version tuple. Both tuple entries will be None if an npx executable
-    could not be resolved.
-    """
-    return find_executable("npx", min_version, True)
 
 
 def find_executable(name, min_version, use_node_for_version_check=False):

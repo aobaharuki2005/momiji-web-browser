@@ -1,3 +1,4 @@
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -72,7 +73,7 @@ function fullZoomLocationChangeObserver(aSubject) {
   // If the tab was the last one in its window and has been dragged to another
   // window, the original browser's window will be unavailable here. Since that
   // window is closing, we can just ignore this notification.
-  if (!aSubject.documentGlobal) {
+  if (!aSubject.ownerGlobal) {
     return;
   }
   updateZoomUI(aSubject, false);
@@ -98,7 +99,7 @@ function onZoomChange(event) {
       // an associated browser.
       return;
     }
-    browser = topDoc.documentGlobal.docShell.chromeEventHandler;
+    browser = topDoc.ownerGlobal.docShell.chromeEventHandler;
   } else {
     browser = event.originalTarget;
   }
@@ -113,11 +114,11 @@ function onZoomChange(event) {
  *   change is related to tab switching. Optional
  */
 export async function updateZoomUI(aBrowser, aAnimate = false) {
-  let win = aBrowser.documentGlobal;
+  let win = aBrowser.ownerGlobal;
   if (
     !win.gBrowser ||
     win.gBrowser.selectedBrowser != aBrowser ||
-    aBrowser.browsingContext?.topChromeWindow != win
+    aBrowser.browsingContext.topChromeWindow != win
   ) {
     return;
   }
@@ -199,7 +200,7 @@ customizationListener.onWidgetAdded =
 customizationListener.onWidgetReset = customizationListener.onWidgetUndoMove =
   function (aWidgetNode) {
     if (aWidgetNode.id == "zoom-controls") {
-      updateZoomUI(aWidgetNode.documentGlobal.gBrowser.selectedBrowser);
+      updateZoomUI(aWidgetNode.ownerGlobal.gBrowser.selectedBrowser);
     }
   };
 CustomizableUI.addListener(customizationListener);

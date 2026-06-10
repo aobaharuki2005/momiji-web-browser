@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
 const FIRST_TIME_PIP_TOGGLE_STYLES = {
   rootID: "pictureInPictureToggle",
   stages: {
@@ -22,6 +26,48 @@ const FIRST_TIME_PIP_TOGGLE_STYLES = {
   },
 };
 
+const FIRST_CONTEXT_MENU_EXPECTED_EVENTS = [
+  [
+    "pictureinpicture",
+    "opened_method",
+    "contextMenu",
+    null,
+    { firstTimeToggle: "true" },
+  ],
+];
+
+const SECOND_CONTEXT_MENU_EXPECTED_EVENTS = [
+  [
+    "pictureinpicture",
+    "opened_method",
+    "contextMenu",
+    null,
+    { firstTimeToggle: "false" },
+  ],
+];
+
+const FIRST_TOGGLE_EXPECTED_EVENTS = [
+  ["pictureinpicture", "saw_toggle", "toggle", null, { firstTime: "true" }],
+  [
+    "pictureinpicture",
+    "opened_method",
+    "toggle",
+    null,
+    { firstTimeToggle: "true" },
+  ],
+];
+
+const SECOND_TOGGLE_EXPECTED_EVENTS = [
+  ["pictureinpicture", "saw_toggle", "toggle", null, { firstTime: "false" }],
+  [
+    "pictureinpicture",
+    "opened_method",
+    "toggle",
+    null,
+    { firstTimeToggle: "false" },
+  ],
+];
+
 /**
  * This function will open the PiP window by clicking the toggle
  * and then close the PiP window
@@ -35,8 +81,7 @@ async function openAndClosePipWithToggle(browser, videoID) {
 
   await prepareForToggleClick(browser, videoID);
 
-  // Clear all data
-  Services.fog.testResetFOG();
+  await clearAllContentEvents();
 
   // Hover the mouse over the video to reveal the toggle, which is necessary
   // if we want to click on the toggle.
@@ -140,7 +185,7 @@ async function openAndClosePipWithContextMenu(browser, videoID) {
   let domWindowOpened = BrowserTestUtils.domWindowOpenedAndLoaded(null);
 
   // clear content events
-  Services.fog.testResetFOG();
+  await clearAllContentEvents();
 
   let hidden = BrowserTestUtils.waitForPopupEvent(menu, "hidden");
   menu.activateItem(menu.querySelector("#context-video-pictureinpicture"));
@@ -159,8 +204,21 @@ async function openAndClosePipWithContextMenu(browser, videoID) {
   await BrowserTestUtils.closeWindow(win);
 }
 
+async function clearAllContentEvents() {
+  // Clear everything.
+  await TestUtils.waitForCondition(() => {
+    Services.telemetry.clearEvents();
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).content;
+    return !events || !events.length;
+  });
+}
+
 add_task(async function test_eventTelemetry() {
-  Services.fog.testResetFOG();
+  Services.telemetry.clearEvents();
+  await clearAllContentEvents();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -178,10 +236,22 @@ add_task(async function test_eventTelemetry() {
       // open with context menu for first time
       await openAndClosePipWithContextMenu(browser, videoID);
 
-      await Services.fog.testFlushAllChildren();
-      let ev = Glean.pictureinpicture.openedMethodContextMenu.testGetValue();
-      Assert.equal(ev.length, 1);
-      Assert.equal(ev[0].extra.firstTimeToggle, "true");
+      let filter = {
+        category: "pictureinpicture",
+        method: "opened_method",
+        object: "contextMenu",
+      };
+      await waitForTelemeryEvents(
+        filter,
+        FIRST_CONTEXT_MENU_EXPECTED_EVENTS.length,
+        "content"
+      );
+
+      TelemetryTestUtils.assertEvents(
+        FIRST_CONTEXT_MENU_EXPECTED_EVENTS,
+        filter,
+        { clear: true, process: "content" }
+      );
 
       // open with toggle for first time
       await SpecialPowers.pushPrefEnv({
@@ -190,32 +260,56 @@ add_task(async function test_eventTelemetry() {
 
       await openAndClosePipWithToggle(browser, videoID);
 
-      await Services.fog.testFlushAllChildren();
-      ev = Glean.pictureinpicture.sawToggleToggle.testGetValue();
-      Assert.equal(ev.length, 1);
-      Assert.equal(ev[0].extra.firstTime, "true");
-      ev = Glean.pictureinpicture.openedMethodToggle.testGetValue();
-      Assert.equal(ev.length, 1);
-      Assert.equal(ev[0].extra.firstTimeToggle, "true");
+      filter = {
+        category: "pictureinpicture",
+      };
+      await waitForTelemeryEvents(
+        filter,
+        FIRST_TOGGLE_EXPECTED_EVENTS.length,
+        "content"
+      );
+
+      TelemetryTestUtils.assertEvents(FIRST_TOGGLE_EXPECTED_EVENTS, filter, {
+        clear: true,
+        process: "content",
+      });
 
       // open with toggle for not first time
       await openAndClosePipWithToggle(browser, videoID);
 
-      await Services.fog.testFlushAllChildren();
-      ev = Glean.pictureinpicture.sawToggleToggle.testGetValue();
-      Assert.equal(ev.length, 1);
-      Assert.equal(ev[0].extra.firstTime, "false");
-      ev = Glean.pictureinpicture.openedMethodToggle.testGetValue();
-      Assert.equal(ev.length, 1);
-      Assert.equal(ev[0].extra.firstTimeToggle, "false");
+      filter = {
+        category: "pictureinpicture",
+      };
+      await waitForTelemeryEvents(
+        filter,
+        SECOND_TOGGLE_EXPECTED_EVENTS.length,
+        "content"
+      );
+
+      TelemetryTestUtils.assertEvents(SECOND_TOGGLE_EXPECTED_EVENTS, filter, {
+        clear: true,
+        process: "content",
+      });
 
       // open with context menu for not first time
       await openAndClosePipWithContextMenu(browser, videoID);
 
-      await Services.fog.testFlushAllChildren();
-      ev = Glean.pictureinpicture.openedMethodContextMenu.testGetValue();
-      Assert.equal(ev.length, 1);
-      Assert.equal(ev[0].extra.firstTimeToggle, "false");
+      filter = {
+        category: "pictureinpicture",
+        method: "opened_method",
+        object: "contextMenu",
+      };
+      await waitForTelemeryEvents(
+        filter,
+        SECOND_CONTEXT_MENU_EXPECTED_EVENTS.length,
+        "content"
+      );
+
+      TelemetryTestUtils.assertEvents(
+        SECOND_CONTEXT_MENU_EXPECTED_EVENTS,
+        filter,
+        { true: false, process: "content" }
+      );
     }
   );
 });

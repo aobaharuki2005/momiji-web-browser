@@ -143,7 +143,7 @@ void EmulatedNetworkManager::NetworkManagerImpl::MaybeSignalNetworksChanged() {
   if (start_count_ == 0) {
     return;
   }
-  NotifyNetworksChanged();
+  SignalNetworksChanged();
 }
 
 }  // namespace test

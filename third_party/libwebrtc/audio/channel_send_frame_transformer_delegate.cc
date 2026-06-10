@@ -14,11 +14,11 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/frame_transformer_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
@@ -91,8 +91,8 @@ class TransformableOutgoingAudioFrame
         sequence_number_(sequence_number),
         audio_level_dbov_(audio_level_dbov) {}
   ~TransformableOutgoingAudioFrame() override = default;
-  std::span<const uint8_t> GetData() const override { return payload_; }
-  void SetData(std::span<const uint8_t> data) override {
+  ArrayView<const uint8_t> GetData() const override { return payload_; }
+  void SetData(ArrayView<const uint8_t> data) override {
     payload_.SetData(data.data(), data.size());
   }
   uint32_t GetTimestamp() const override { return rtp_timestamp_with_offset_; }
@@ -110,7 +110,7 @@ class TransformableOutgoingAudioFrame
   Direction GetDirection() const override { return Direction::kSender; }
   std::string GetMimeType() const override { return codec_mime_type_; }
 
-  std::span<const uint32_t> GetContributingSources() const override {
+  ArrayView<const uint32_t> GetContributingSources() const override {
     return csrcs_;
   }
 
@@ -171,10 +171,10 @@ class TransformableOutgoingAudioFrame
 ChannelSendFrameTransformerDelegate::ChannelSendFrameTransformerDelegate(
     SendFrameCallback send_frame_callback,
     scoped_refptr<FrameTransformerInterface> frame_transformer,
-    TaskQueueBase* send_queue)
+    TaskQueueBase* encoder_queue)
     : send_frame_callback_(send_frame_callback),
       frame_transformer_(std::move(frame_transformer)),
-      send_queue_(send_queue) {}
+      encoder_queue_(encoder_queue) {}
 
 void ChannelSendFrameTransformerDelegate::Init() {
   frame_transformer_->RegisterTransformedFrameCallback(
@@ -200,22 +200,21 @@ void ChannelSendFrameTransformerDelegate::Transform(
     const std::string& codec_mime_type,
     std::optional<uint8_t> audio_level_dbov,
     const std::vector<uint32_t>& csrcs) {
-  auto frame = std::make_unique<TransformableOutgoingAudioFrame>(
-      frame_type, payload_type, rtp_timestamp, payload_data, payload_size,
-      absolute_capture_timestamp_ms, ssrc, csrcs, codec_mime_type,
-      /*sequence_number=*/std::nullopt, audio_level_dbov);
   {
     MutexLock lock(&send_lock_);
     if (short_circuit_) {
-      scoped_refptr<ChannelSendFrameTransformerDelegate> delegate(this);
-      send_queue_->PostTask(
-          [delegate = std::move(delegate), frame = std::move(frame)]() mutable {
-            delegate->SendFrame(std::move(frame));
-          });
+      send_frame_callback_(frame_type, payload_type, rtp_timestamp,
+                           ArrayView<const uint8_t>(payload_data, payload_size),
+                           absolute_capture_timestamp_ms, csrcs,
+                           audio_level_dbov);
       return;
     }
   }
-  frame_transformer_->Transform(std::move(frame));
+  frame_transformer_->Transform(
+      std::make_unique<TransformableOutgoingAudioFrame>(
+          frame_type, payload_type, rtp_timestamp, payload_data, payload_size,
+          absolute_capture_timestamp_ms, ssrc, csrcs, codec_mime_type,
+          /*sequence_number=*/std::nullopt, audio_level_dbov));
 }
 
 void ChannelSendFrameTransformerDelegate::OnTransformedFrame(
@@ -224,7 +223,7 @@ void ChannelSendFrameTransformerDelegate::OnTransformedFrame(
   if (!send_frame_callback_)
     return;
   scoped_refptr<ChannelSendFrameTransformerDelegate> delegate(this);
-  send_queue_->PostTask(
+  encoder_queue_->PostTask(
       [delegate = std::move(delegate), frame = std::move(frame)]() mutable {
         delegate->SendFrame(std::move(frame));
       });
@@ -238,7 +237,7 @@ void ChannelSendFrameTransformerDelegate::StartShortCircuiting() {
 void ChannelSendFrameTransformerDelegate::SendFrame(
     std::unique_ptr<TransformableFrameInterface> frame) const {
   MutexLock lock(&send_lock_);
-  RTC_DCHECK_RUN_ON(send_queue_);
+  RTC_DCHECK_RUN_ON(encoder_queue_);
   if (!send_frame_callback_)
     return;
   auto* transformed_frame =

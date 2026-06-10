@@ -13,7 +13,6 @@ import {
   setupSeparateTestBrowserHooks,
   setupTestBrowserHooks,
 } from './mocha-utils.js';
-import {html} from './utils.js';
 
 describe('Screenshots', function () {
   setupTestBrowserHooks();
@@ -152,9 +151,7 @@ describe('Screenshots', function () {
       const {page} = await getTestState();
 
       // Make sure documentElement height is at least 11px.
-      await page.setContent(
-        html`<div style="width: 11px; height: 11px;"></div>`,
-      );
+      await page.setContent(`<div style="width: 11px; height: 11px;">`);
 
       const screenshot = await page.screenshot({
         clip: {
@@ -236,15 +233,14 @@ describe('Screenshots', function () {
       const {page} = await getTestState();
 
       await page.setViewport({width: 500, height: 500});
-      await page.setContent(html`
+      await page.setContent(`
         something above
-        <style>
-          div {
-            border: 2px solid blue;
-            background: green;
-            width: 50px;
-            height: 50px;
-          }
+        <style>div {
+          border: 2px solid blue;
+          background: green;
+          width: 50px;
+          height: 50px;
+        }
         </style>
         <div></div>
       `);
@@ -257,9 +253,9 @@ describe('Screenshots', function () {
 
       await page.setViewport({width: 500, height: 500});
 
-      await page.setContent(html`
-        something above
-        <style>
+      await page.setContent(`
+          something above
+          <style>
           :root {
             scrollbar-width: none;
           }
@@ -269,9 +265,9 @@ describe('Screenshots', function () {
             height: 600px;
             margin-left: 50px;
           }
-        </style>
-        <div class="to-screenshot"></div>
-      `);
+          </style>
+          <div class="to-screenshot"></div>
+        `);
       using elementHandle = (await page.$('div.to-screenshot'))!;
       const screenshot = await elementHandle.screenshot();
       expect(screenshot).toBeGolden(
@@ -291,20 +287,19 @@ describe('Screenshots', function () {
       const {page} = await getTestState();
 
       await page.setViewport({width: 500, height: 500});
-      await page.setContent(html`
+      await page.setContent(`
         something above
-        <style>
-          div.above {
-            border: 2px solid blue;
-            background: red;
-            height: 1500px;
-          }
-          div.to-screenshot {
-            border: 2px solid blue;
-            background: green;
-            width: 50px;
-            height: 50px;
-          }
+        <style>div.above {
+          border: 2px solid blue;
+          background: red;
+          height: 1500px;
+        }
+        div.to-screenshot {
+          border: 2px solid blue;
+          background: green;
+          width: 50px;
+          height: 50px;
+        }
         </style>
         <div class="above"></div>
         <div class="to-screenshot"></div>
@@ -319,20 +314,14 @@ describe('Screenshots', function () {
       const {page} = await getTestState();
 
       await page.setViewport({width: 500, height: 500});
-      await page.setContent(
-        html`<!DOCTYPE html>
-          <div
-            style="position:absolute;
+      await page.setContent(`<!DOCTYPE html>
+                             <div style="position:absolute;
                                         top: 100px;
                                         left: 100px;
                                         width: 100px;
                                         height: 100px;
                                         background: green;
-                                        transform: rotateZ(200deg);"
-          >
-            &nbsp;
-          </div>`,
-      );
+                                        transform: rotateZ(200deg);">&nbsp;</div>`);
       using elementHandle = (await page.$('div'))!;
       const screenshot = await elementHandle.screenshot();
       expect(screenshot).toBeGolden('screenshot-element-rotate.png');
@@ -340,7 +329,7 @@ describe('Screenshots', function () {
     it('should fail to screenshot a detached element', async () => {
       const {page} = await getTestState();
 
-      await page.setContent(html`<h1>remove this</h1>`);
+      await page.setContent('<h1>remove this</h1>');
       using elementHandle = (await page.$('h1'))!;
       await page.evaluate(element => {
         return element.remove();
@@ -356,7 +345,7 @@ describe('Screenshots', function () {
     it('should not hang with zero width/height element', async () => {
       const {page} = await getTestState();
 
-      await page.setContent(html`<div style="width: 50px; height: 0"></div>`);
+      await page.setContent('<div style="width: 50px; height: 0"></div>');
       using div = (await page.$('div'))!;
       const error = await div.screenshot().catch(error_ => {
         return error_;
@@ -367,9 +356,7 @@ describe('Screenshots', function () {
       const {page} = await getTestState();
 
       await page.setContent(
-        html`<div
-          style="width:48.51px;height:19.8px;border:1px solid black;"
-        ></div>`,
+        '<div style="width:48.51px;height:19.8px;border:1px solid black;"></div>',
       );
       using elementHandle = (await page.$('div'))!;
       const screenshot = await elementHandle.screenshot();
@@ -379,10 +366,7 @@ describe('Screenshots', function () {
       const {page} = await getTestState();
 
       await page.setContent(
-        html`<!DOCTYPE html>
-          <div
-            style="position:absolute; top: 10.3px; left: 20.4px;width:50.3px;height:20.2px;border:1px solid black;"
-          ></div>`,
+        '<!DOCTYPE html><div style="position:absolute; top: 10.3px; left: 20.4px;width:50.3px;height:20.2px;border:1px solid black;"></div>',
       );
       using elementHandle = (await page.$('div'))!;
       const screenshot = await elementHandle.screenshot();
@@ -465,15 +449,14 @@ describe('Screenshots', function () {
       const {page} = await getTestState();
 
       await page.setViewport({width: 500, height: 500});
-      await page.setContent(html`
+      await page.setContent(`
         something above
-        <style>
-          div {
-            border: 2px solid blue;
-            background: green;
-            width: 50px;
-            height: 50px;
-          }
+        <style>div {
+          border: 2px solid blue;
+          background: green;
+          width: 50px;
+          height: 50px;
+        }
         </style>
         <div></div>
       `);

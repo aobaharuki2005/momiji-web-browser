@@ -28,12 +28,12 @@ add_task(async function basic_multilocale_test() {
   let initPromise = new Promise(resolve => (resolver = resolve));
   useCustomGeoServer("TR", initPromise);
 
-  await SearchService.init();
-  await SearchService.getAppProvidedEngines();
+  await Services.search.init();
+  await Services.search.getAppProvidedEngines();
   resolver();
   await SearchTestUtils.promiseSearchNotification("engines-reloaded");
 
-  let engines = await SearchService.getAppProvidedEngines();
+  let engines = await Services.search.getAppProvidedEngines();
 
   Assert.deepEqual(
     engines.map(e => e._name),
@@ -46,7 +46,9 @@ add_task(async function basic_multilocale_test() {
   });
 
   Assert.equal(
-    SearchService._settings.getMetaDataAttribute("useSavedOrder"),
+    Services.search.wrappedJSObject._settings.getMetaDataAttribute(
+      "useSavedOrder"
+    ),
     false,
     "We should not set the engine order during maybeReloadEngines"
   );

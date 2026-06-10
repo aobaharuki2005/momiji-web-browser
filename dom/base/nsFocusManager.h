@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsFocusManager_h_
-#define nsFocusManager_h_
+#ifndef nsFocusManager_h___
+#define nsFocusManager_h___
 
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
@@ -49,7 +51,7 @@ class nsFocusManager final : public nsIFocusManager,
 
  public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFocusManager, nsIFocusManager)
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIFOCUSMANAGER
 
@@ -692,6 +694,9 @@ class nsFocusManager final : public nsIFocusManager,
    * from where the selection is. Similarly, if the starting element isn't
    * focusable, since it doesn't really have a defined tab index.
    *
+   * aSkipPopover should be true to avoid an invoker triggering to step into
+   * the popover that was already been visited again.
+   *
    * aNavigateByKey to move focus by keyboard as a side effect of computing the
    * next target.
    *
@@ -703,7 +708,7 @@ class nsFocusManager final : public nsIFocusManager,
       mozilla::PresShell* aPresShell, nsIContent* aRootContent,
       nsIContent* aOriginalStartContent, nsIContent* aStartContent,
       bool aForward, int32_t aCurrentTabIndex, bool aIgnoreTabIndex,
-      bool aForDocumentNavigation, bool aNavigateByKey,
+      bool aForDocumentNavigation, bool aNavigateByKey, bool aSkipPopover,
       bool aReachedToEndForDocumentNavigation, nsIContent** aResultContent);
 
   /**

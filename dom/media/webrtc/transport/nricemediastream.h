@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,10 +41,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 // This is a wrapper around the nICEr ICE stack
-#ifndef nricemediastream_h_
-#define nricemediastream_h_
+#ifndef nricemediastream_h__
+#define nricemediastream_h__
 
-#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -80,8 +81,6 @@ struct NrIceCandidate {
   TcpType tcp_type;
   std::string codeword;
   std::string label;
-  std::string foundation;
-  std::string username_fragment;
   bool trickled;
   uint32_t priority;
   bool is_proxied = false;
@@ -203,10 +202,6 @@ class NrIceMediaStream {
   // the candidate belongs to.
   const std::string& GetId() const { return id_; }
 
-  // The local ICE username fragment of the current generation, or the empty
-  // string if the stream has no active generation.
-  std::string GetUfrag() const;
-
   bool AllGenerationsDoneGathering() const;
   bool AnyGenerationIsConnected() const;
 
@@ -216,17 +211,12 @@ class NrIceMediaStream {
   sigslot::signal2<const std::string&, NrIceMediaStream::GatheringState>
       SignalGatheringStateChange;
 
-  // address, port, url, errorCode, errorText
-  sigslot::signal6<NrIceMediaStream*, const std::string&, uint16_t,
-                   const std::string&, uint16_t, const std::string&>
-      SignalCandidateError;
-
   sigslot::signal1<NrIceMediaStream*> SignalReady;   // Candidate pair ready.
   sigslot::signal1<NrIceMediaStream*> SignalFailed;  // Candidate pair failed.
   sigslot::signal4<NrIceMediaStream*, int, const unsigned char*, int>
       SignalPacketReceived;  // Incoming packet
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceMediaStream);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceMediaStream)
 
  private:
   ~NrIceMediaStream();

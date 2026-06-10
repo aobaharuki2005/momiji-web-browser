@@ -260,7 +260,7 @@ export class AboutLoginsChild extends JSWindowActorChild {
       case "AboutLogins:WaitForFocus": {
         return new Promise(resolve => {
           if (!this.document.hasFocus()) {
-            this.document.documentGlobal.addEventListener(
+            this.document.ownerGlobal.addEventListener(
               "focus",
               () => {
                 resolve();

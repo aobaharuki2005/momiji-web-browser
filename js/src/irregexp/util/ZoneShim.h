@@ -8,7 +8,6 @@
 #include <list>
 #include <map>
 #include <set>
-#include <stack>
 #include <unordered_map>
 #include <vector>
 
@@ -20,15 +19,15 @@ namespace v8 {
 namespace internal {
 
 // V8::Zone ~= LifoAlloc
-class MOZ_STACK_CLASS Zone {
+class Zone {
  public:
-  Zone(js::LifoAlloc* alloc, const char* name = "") : allocScope_(alloc) {}
+  Zone(js::LifoAlloc& alloc) : lifoAlloc_(alloc) {}
 
   template <typename T, typename... Args>
   T* New(Args&&... args) {
-    js::LifoAlloc::AutoFallibleScope fallible(&inner());
+    js::LifoAlloc::AutoFallibleScope fallible(&lifoAlloc_);
     js::AutoEnterOOMUnsafeRegion oomUnsafe;
-    void* memory = inner().alloc(sizeof(T));
+    void* memory = lifoAlloc_.alloc(sizeof(T));
     if (!memory) {
       oomUnsafe.crash("Irregexp Zone::New");
     }
@@ -37,32 +36,32 @@ class MOZ_STACK_CLASS Zone {
 
   // Allocates uninitialized memory for 'length' number of T instances.
   template <typename T>
-  T* AllocateArray(size_t length) {
-    js::LifoAlloc::AutoFallibleScope fallible(&inner());
+  T* NewArray(size_t length) {
+    js::LifoAlloc::AutoFallibleScope fallible(&lifoAlloc_);
     js::AutoEnterOOMUnsafeRegion oomUnsafe;
     size_t numBytes = length * sizeof(T);
     if (MOZ_UNLIKELY(numBytes > INT_MAX)) {
-      oomUnsafe.crash("Irregexp Zone::AllocateArray");
+      oomUnsafe.crash("Irregexp Zone::New");
     }
-    void* memory = inner().alloc(length * sizeof(T));
+    void* memory = lifoAlloc_.alloc(length * sizeof(T));
     if (MOZ_UNLIKELY(!memory)) {
       oomUnsafe.crash("Irregexp Zone::New");
     }
     return static_cast<T*>(memory);
   }
 
-  void DeleteAll() { inner().freeAll(); }
+  void DeleteAll() { lifoAlloc_.freeAll(); }
 
   // Returns true if the total memory allocated exceeds a threshold.
   static const size_t kExcessLimit = 256 * 1024 * 1024;
-  bool excess_allocation() {
-    return inner().computedSizeOfExcludingThis() > kExcessLimit;
+  bool excess_allocation() const {
+    return lifoAlloc_.computedSizeOfExcludingThis() > kExcessLimit;
   }
 
-  js::LifoAlloc& inner() { return allocScope_.alloc(); }
+  js::LifoAlloc& inner() { return lifoAlloc_; }
 
  private:
-  js::LifoAllocScope allocScope_;
+  js::LifoAlloc& lifoAlloc_;
 };
 
 // Superclass for classes allocated in a Zone.
@@ -100,7 +99,7 @@ class ZoneList final : public ZoneObject {
   // Construct a new ZoneList with the given capacity; the length is
   // always zero. The capacity must be non-negative.
   ZoneList(int capacity, Zone* zone) : capacity_(capacity) {
-    data_ = (capacity_ > 0) ? zone->AllocateArray<T>(capacity_) : nullptr;
+    data_ = (capacity_ > 0) ? zone->NewArray<T>(capacity_) : nullptr;
   }
   // Construct a new ZoneList by copying the elements of the given ZoneList.
   ZoneList(const ZoneList<T>& other, Zone* zone)
@@ -269,7 +268,7 @@ class ZoneList final : public ZoneObject {
   void Resize(int new_capacity, Zone* zone) {
     MOZ_ASSERT(length_ <= new_capacity);
     static_assert(std::is_trivially_copyable<T>::value);
-    T* new_data = zone->AllocateArray<T>(new_capacity);
+    T* new_data = zone->NewArray<T>(new_capacity);
     if (length_ > 0) {
       memcpy(new_data, data_, length_ * sizeof(T));
     }
@@ -305,7 +304,7 @@ class ZoneAllocator {
   template <typename U>
   friend class ZoneAllocator;
 
-  T* allocate(size_t n) { return zone_->AllocateArray<T>(n); }
+  T* allocate(size_t n) { return zone_->NewArray<T>(n); }
   void deallocate(T* p, size_t) {}  // noop for zones
 
   bool operator==(ZoneAllocator const& other) const {
@@ -342,11 +341,6 @@ class ZoneVector : public std::vector<T, ZoneAllocator<T>> {
   ZoneVector(size_t size, Zone* zone)
       : std::vector<T, ZoneAllocator<T>>(size, T(), ZoneAllocator<T>(zone)) {}
 
-  // Constructs a new vector and fills it with {size} elements, each
-  // having the value {def}.
-  ZoneVector(size_t size, T def, Zone* zone)
-      : std::vector<T, ZoneAllocator<T>>(size, def, ZoneAllocator<T>(zone)) {}
-
   // Constructs a new vector and fills it with the contents of the range
   // [first, last).
   template <class Iter>
@@ -363,16 +357,6 @@ class ZoneLinkedList : public std::list<T, ZoneAllocator<T>> {
   // Constructs an empty list.
   explicit ZoneLinkedList(Zone* zone)
       : std::list<T, ZoneAllocator<T>>(ZoneAllocator<T>(zone)) {}
-};
-
-// A wrapper subclass for std::stack to make it easy to construct one
-// that uses a zone allocator.
-template <typename T>
-class ZoneStack : public std::stack<T, ZoneVector<T>> {
- public:
-  // Constructs an empty stack.
-  explicit ZoneStack(Zone* zone)
-      : std::stack<T, ZoneVector<T>>(ZoneVector<T>(zone)) {}
 };
 
 // A wrapper subclass for std::set to make it easy to construct one that uses

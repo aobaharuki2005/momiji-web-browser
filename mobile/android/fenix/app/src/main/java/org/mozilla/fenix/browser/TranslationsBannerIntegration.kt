@@ -84,7 +84,7 @@ class TranslationsBannerIntegration(
     }
 
     private fun observeFullScreenMediaState() {
-        browserFlowScope = browserStore.flowScoped(dispatcher = mainDispatcher) { flow ->
+        browserFlowScope = browserStore.flowScoped { flow ->
             flow.map { state -> state.selectedTab?.mediaSessionState }
                 .distinctUntilChangedBy { it?.fullscreen }
                 .collect { mediaSessionState ->

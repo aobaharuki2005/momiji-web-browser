@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ToastNotificationHandler_h_
-#define ToastNotificationHandler_h_
+#ifndef ToastNotificationHandler_h__
+#define ToastNotificationHandler_h__
 
 #include <windows.ui.notifications.h>
 #include <windows.data.xml.dom.h>
@@ -26,9 +27,11 @@ enum class ImagePlacement {
 
 class ToastNotification;
 
-class ToastNotificationHandler final : public nsISupports {
+class ToastNotificationHandler final
+    : public nsIAlertNotificationImageListener {
  public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIALERTNOTIFICATIONIMAGELISTENER
 
   ToastNotificationHandler(
       ToastNotification* backend, const nsAString& aAumid,
@@ -38,12 +41,10 @@ class ToastNotificationHandler final : public nsISupports {
       bool aRequireInteraction,
       const nsTArray<RefPtr<nsIAlertAction>>& aActions, bool aIsSystemPrincipal,
       const nsAString& aOpaqueRelaunchData, bool aInPrivateBrowsing,
-      bool aIsSilent, ImagePlacement aImagePlacement = ImagePlacement::eInline,
-      const nsAString& aImagePathUnchecked = u""_ns)
+      bool aIsSilent, ImagePlacement aImagePlacement = ImagePlacement::eInline)
       : mBackend(backend),
         mAumid(aAumid),
-        mImageUri(aImagePathUnchecked),
-        mHasImage(!aImagePathUnchecked.IsEmpty()),
+        mHasImage(false),
         mAlertNotification(aAlertNotification),
         mAlertListener(aAlertListener),
         mName(aName),
@@ -114,6 +115,7 @@ class ToastNotificationHandler final : public nsISupports {
   nsString mAumid;
   nsString mWindowsTag;
 
+  nsCOMPtr<nsICancelable> mImageRequest;
   nsCOMPtr<nsIFile> mImageFile;
   nsString mImageUri;
   bool mHasImage;
@@ -141,7 +143,7 @@ class ToastNotificationHandler final : public nsISupports {
 
   nsresult TryShowAlert();
   bool ShowAlert();
-  nsresult AsyncSaveImage(imgIContainer* aImage);
+  nsresult AsyncSaveImage(imgIRequest* aRequest);
   nsresult OnWriteImageSuccess();
   // Pings the alert observer with alertfinish.
   void SendFinished();

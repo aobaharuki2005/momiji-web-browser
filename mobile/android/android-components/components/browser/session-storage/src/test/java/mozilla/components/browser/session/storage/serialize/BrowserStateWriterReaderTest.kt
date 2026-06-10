@@ -8,15 +8,12 @@ import android.util.AtomicFile
 import android.util.JsonReader
 import android.util.JsonWriter
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.ExternalPackage
 import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.PackageCategory
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.browser.state.state.TabGroup
-import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.Engine
@@ -28,14 +25,13 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.UUID
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class BrowserStateWriterReaderTest {
@@ -62,7 +58,7 @@ class BrowserStateWriterReaderTest {
         assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
 
         assertEquals("https://www.mozilla.org", restoredTab.state.url)
         assertEquals("Mozilla", restoredTab.state.title)
@@ -95,7 +91,7 @@ class BrowserStateWriterReaderTest {
         assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
 
         assertTrue(restoredTab.state.readerState.active)
         assertEquals("https://www.example.org", restoredTab.state.readerState.activeUrl)
@@ -119,7 +115,7 @@ class BrowserStateWriterReaderTest {
         // it is deserialized correctly. In this case, source defaults to `Internal.Restored`.
         val reader = BrowserStateReader()
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
         assertEquals(SessionState.Source.Internal.None, restoredTab.state.source)
 
         assertEquals("https://www.mozilla.org", restoredTab.state.url)
@@ -152,7 +148,7 @@ class BrowserStateWriterReaderTest {
         assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
 
         assertNotNull(restoredTab.state.historyMetadata)
         assertEquals(tab.content.url, restoredTab.state.historyMetadata!!.url)
@@ -182,13 +178,14 @@ class BrowserStateWriterReaderTest {
         assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
 
-        val restoredTabSource = restoredTab.state.source
-        assertNotNull(restoredTabSource)
-        assertIs<SessionState.Source.External.CustomTab>(restoredTabSource)
-        assertEquals("com.mozilla.test", restoredTabSource.caller!!.packageId)
-        assertEquals(PackageCategory.PRODUCTIVITY, restoredTabSource.caller!!.category)
+        assertNotNull(restoredTab.state.source)
+        assertTrue(restoredTab.state.source is SessionState.Source.External.CustomTab)
+        with(restoredTab.state.source as SessionState.Source.External.CustomTab) {
+            assertEquals("com.mozilla.test", this.caller!!.packageId)
+            assertEquals(PackageCategory.PRODUCTIVITY, this.caller!!.category)
+        }
     }
 
     @Test
@@ -215,13 +212,14 @@ class BrowserStateWriterReaderTest {
         assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
 
-        val restoredTabSource = restoredTab.state.source
-        assertNotNull(restoredTabSource)
-        assertIs<SessionState.Source.External.ActionView>(restoredTabSource)
-        assertEquals("com.mozilla.test", restoredTabSource.caller!!.packageId)
-        assertEquals(PackageCategory.UNKNOWN, restoredTabSource.caller!!.category)
+        assertNotNull(restoredTab.state.source)
+        assertTrue(restoredTab.state.source is SessionState.Source.External.ActionView)
+        with(restoredTab.state.source as SessionState.Source.External.ActionView) {
+            assertEquals("com.mozilla.test", this.caller!!.packageId)
+            assertEquals(PackageCategory.UNKNOWN, this.caller!!.category)
+        }
     }
 
     @Test
@@ -246,12 +244,13 @@ class BrowserStateWriterReaderTest {
         assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
 
-        val restoredTabSource = restoredTab.state.source
-        assertNotNull(restoredTabSource)
-        assertIs<SessionState.Source.External.ActionSend>(restoredTabSource)
-        assertNull(restoredTabSource.caller)
+        assertNotNull(restoredTab.state.source)
+        assertTrue(restoredTab.state.source is SessionState.Source.External.ActionSend)
+        with(restoredTab.state.source as SessionState.Source.External.ActionSend) {
+            assertNull(this.caller)
+        }
     }
 
     @Test
@@ -276,7 +275,7 @@ class BrowserStateWriterReaderTest {
         assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
 
         assertEquals("https://www.mozilla.org", restoredTab.state.lastMediaAccessState.lastMediaUrl)
         assertEquals(333L, restoredTab.state.lastMediaAccessState.lastMediaAccess)
@@ -306,36 +305,9 @@ class BrowserStateWriterReaderTest {
         assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
 
         assertEquals(currentTime, restoredTab.state.createdAt)
-    }
-
-    @Test
-    fun `Read and write tab with lastVisibleAt`() {
-        val engineState = createFakeEngineState()
-        val engine = createFakeEngine(engineState)
-        val currentTime = System.currentTimeMillis()
-
-        val tab = createTab(
-            url = "https://www.mozilla.org",
-            title = "Mozilla",
-            lastVisibleAt = currentTime,
-        )
-
-        val writer = BrowserStateWriter()
-        val reader = BrowserStateReader()
-
-        val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
-        )
-
-        assertTrue(writer.writeTab(tab, file))
-
-        val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
-
-        assertEquals(currentTime, restoredTab.state.lastVisibleAt)
     }
 
     @Test
@@ -359,7 +331,7 @@ class BrowserStateWriterReaderTest {
         assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
 
         assertNotNull(restoredTab.state.createdAt)
     }
@@ -386,7 +358,7 @@ class BrowserStateWriterReaderTest {
         assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
 
         assertEquals("test search", restoredTab.state.searchTerm)
     }
@@ -412,7 +384,7 @@ class BrowserStateWriterReaderTest {
         assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        assertNotNull(restoredTab)
+        assertNotNull(restoredTab!!)
 
         assertEquals("", restoredTab.state.searchTerm)
     }
@@ -441,7 +413,7 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab)
 
-        assertEquals(true, restoredTab.state.desktopMode)
+        assertEquals(true, restoredTab?.state?.desktopMode)
     }
 
     @Test
@@ -467,46 +439,7 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab)
 
-        assertEquals(false, restoredTab.state.desktopMode)
-    }
-
-    @Test
-    fun `Read and write tabs and tab partitions`() {
-        val engineState = createFakeEngineState()
-        val engine = createFakeEngine(engineState)
-
-        val tab = createTab(url = "https://www.mozilla.org", id = "mozilla")
-        val tabGroup = TabGroup(id = "group1", name = "Group 1", tabIds = setOf("mozilla"))
-        val tabPartition = TabPartition(id = "testFeaturePartition1", tabGroups = listOf(tabGroup))
-        val tabPartitions = mapOf("testFeaturePartition1" to tabPartition)
-        val state = BrowserState(
-            tabs = listOf(tab),
-            tabPartitions = tabPartitions,
-            selectedTabId = "mozilla",
-        )
-
-        val writer = BrowserStateWriter()
-        val reader = BrowserStateReader()
-
-        val file = AtomicFile(
-            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
-        )
-
-        assertTrue(writer.write(state, file))
-
-        val restoredState = reader.read(engine, file)
-        assertNotNull(restoredState)
-
-        assertEquals("https://www.mozilla.org", restoredState.tabs[0].state.url)
-        assertEquals(1, restoredState.tabPartitions.size)
-
-        val restoredPartition = restoredState.tabPartitions["testFeaturePartition1"]
-        assertNotNull(restoredPartition)
-        assertEquals("testFeaturePartition1", restoredPartition.id)
-        assertEquals(1, restoredPartition.tabGroups.size)
-        assertEquals("group1", restoredPartition.tabGroups[0].id)
-        assertEquals("Group 1", restoredPartition.tabGroups[0].name)
-        assertEquals(setOf("mozilla"), restoredPartition.tabGroups[0].tabIds)
+        assertEquals(false, restoredTab?.state?.desktopMode)
     }
 }
 

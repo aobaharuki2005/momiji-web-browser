@@ -43,14 +43,12 @@ var TEST_DATA = [
   {
     desc:
       'Try add an attribute containing a quote (") attribute by ' +
-      "clicking the empty space after a node - style becomes empty, " +
-      "and the trailing quote becomes a valid attribute name",
+      "clicking the empty space after a node - this should result " +
+      "in it being set to an empty string",
     text: 'class="newclass" style="""',
     expectedAttributes: {
       class: "newclass",
       style: "",
-      // With relaxed attribute name rules, " is now a valid attribute name
-      '"': "",
     },
   },
   {

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,8 +9,8 @@
  * columns, or pages
  */
 
-#ifndef nsSplittableFrame_h_
-#define nsSplittableFrame_h_
+#ifndef nsSplittableFrame_h___
+#define nsSplittableFrame_h___
 
 #include "nsIFrame.h"
 
@@ -168,4 +170,4 @@ class nsSplittableFrame : public nsIFrame {
   nsIFrame* mFirstInFlow = nullptr;
 };
 
-#endif /* nsSplittableFrame_h_ */
+#endif /* nsSplittableFrame_h___ */

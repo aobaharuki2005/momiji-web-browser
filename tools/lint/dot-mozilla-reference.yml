@@ -6,14 +6,9 @@ avoid-dot-mozilla-without-xdg:
         the documentation for more info.
     level: error
     include: ['.']
-    type: external
-    payload: mozcheck:lint
-    check: rejected-words
-    check-config:
-        regex-pattern: "\"\\.mozilla\"|'\\.mozilla'"
-        ignore-case: true
-    support-files:
-        - 'tools/lint/mozcheck/**'
+    type: regex
+    payload: \"\.mozilla\"|'\.mozilla'
+    ignore-case: true
     extensions:
         - js
         - mjs
@@ -36,7 +31,6 @@ avoid-dot-mozilla-without-xdg:
         - browser/components/originattributes/test/browser/browser_firstPartyIsolation_aboutPages.js
         - browser/components/originattributes/test/browser/browser_firstPartyIsolation_js_uri.js
         - caps/OriginAttributes.cpp
-        - toolkit/components/resistfingerprinting/nsRFPService.cpp
         - docshell/base/URIFixup.sys.mjs
         - netwerk/cookie/CookieCommons.cpp
         - toolkit/components/antitracking/test/browser/browser_thirdPartyChecks_sandboxed_context.js

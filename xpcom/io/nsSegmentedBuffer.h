@@ -1,11 +1,14 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsSegmentedBuffer_h_
-#define nsSegmentedBuffer_h_
+#ifndef nsSegmentedBuffer_h__
+#define nsSegmentedBuffer_h__
 
 #include <stddef.h>
+#include <functional>
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -91,4 +94,4 @@ class nsSegmentedBuffer {
 // needing to grow the segment array.
 #define NS_SEGMENTARRAY_INITIAL_COUNT 32
 
-#endif  // nsSegmentedBuffer_h_
+#endif  // nsSegmentedBuffer_h__

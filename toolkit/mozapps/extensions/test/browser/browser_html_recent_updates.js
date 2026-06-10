@@ -74,18 +74,19 @@ add_task(async function testRecentUpdatesList() {
   // Load extension view first so we can mock the startOfDay property.
   let win = await loadInitialView("extension");
   let doc = win.document;
+  let categoryUtils = new CategoryUtilities(win);
   const RECENT_URL = "addons://updates/recent";
-  let recentCat = AboutAddonsTestUtils.getCategoryButton(win, "recent-updates");
+  let recentCat = categoryUtils.get("recent-updates");
 
   ok(recentCat.hidden, "Recent updates category is initially hidden");
 
   // Load the recent updates view.
   let loaded = waitForViewLoad(win);
-  await triggerPageOptionsAction(win, "view-recent-updates");
+  doc.querySelector('#page-options [action="view-recent-updates"]').click();
   await loaded;
 
   is(
-    AboutAddonsTestUtils.getSidebarSelectedViewId(win),
+    categoryUtils.getSelectedViewId(),
     RECENT_URL,
     "Recent updates is selected"
   );
@@ -129,7 +130,7 @@ add_task(async function testRecentUpdatesList() {
 
   info("Go back to the recent updates view");
   loaded = waitForViewLoad(win);
-  await triggerPageOptionsAction(win, "view-recent-updates");
+  doc.querySelector('#page-options [action="view-recent-updates"]').click();
   await loaded;
 
   // Find the list again.
@@ -169,7 +170,7 @@ add_task(async function testRecentUpdatesList() {
   await loaded;
 
   is(
-    AboutAddonsTestUtils.getSidebarSelectedViewId(win),
+    categoryUtils.getSelectedViewId(),
     "addons://list/extension",
     "The extensions category is selected"
   );

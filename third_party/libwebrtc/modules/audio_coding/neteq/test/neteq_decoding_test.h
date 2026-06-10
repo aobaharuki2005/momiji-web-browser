@@ -40,8 +40,8 @@ class NetEqDecodingTest : public ::testing::Test {
   static constexpr int kInitSampleRateHz = 8000;
 
   NetEqDecodingTest();
-  void SetUp() override;
-  void TearDown() override;
+  virtual void SetUp();
+  virtual void TearDown();
   void OpenInputFile(absl::string_view rtp_file);
   void Process();
 

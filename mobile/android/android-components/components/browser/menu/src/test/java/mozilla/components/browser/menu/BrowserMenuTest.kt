@@ -29,6 +29,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -39,8 +40,6 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowDisplay
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class BrowserMenuTest {
@@ -145,7 +144,7 @@ class BrowserMenuTest {
         val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
         assertNotNull(recyclerView)
 
-        val recyclerAdapter = recyclerView.adapter
+        val recyclerAdapter = recyclerView.adapter!!
         assertNotNull(recyclerAdapter)
         assertEquals(2, recyclerAdapter.itemCount)
     }
@@ -308,7 +307,8 @@ class BrowserMenuTest {
         menu.menuPositioningData = MenuPositioningData(BrowserMenuPlacement.AnchoredToBottom.Dropdown(anchor))
 
         val result = menu.configureExpandableMenu(view, true)
-        assertIs<ExpandableLayout>(result)
+
+        assertTrue(result is ExpandableLayout)
         assertTrue(result.getChildAt(0) == view)
     }
 
@@ -325,7 +325,8 @@ class BrowserMenuTest {
         menu.menuPositioningData = MenuPositioningData(BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring(anchor))
 
         val result = menu.configureExpandableMenu(view, true)
-        assertIs<ExpandableLayout>(result)
+
+        assertTrue(result is ExpandableLayout)
         assertTrue(result.getChildAt(0) == view)
     }
 
@@ -358,7 +359,7 @@ class BrowserMenuTest {
         menu.configureExpandableMenu(menu.menuList!!, false)
 
         assertNotSame(initialLayoutManager, menu.menuList!!.layoutManager)
-        assertIs<StickyHeaderLinearLayoutManager<*>>(menu.menuList!!.layoutManager)
+        assertTrue(menu.menuList!!.layoutManager is StickyHeaderLinearLayoutManager<*>)
     }
 
     @Test

@@ -14,17 +14,16 @@
 use crate::char_from_u16;
 use crate::char_from_u32;
 use crate::in_inclusive_range;
+use crate::provider::CanonicalCompositions;
 use crate::provider::DecompositionData;
 use crate::provider::DecompositionTables;
 use crate::provider::NonRecursiveDecompositionSupplement;
-use crate::provider::NormalizerNfcV2;
+use crate::provider::NormalizerNfcV1;
 use crate::provider::NormalizerNfdDataV1;
 use crate::provider::NormalizerNfdSupplementV1;
 use crate::provider::NormalizerNfdTablesV1;
 use crate::trie_value_has_ccc;
 use crate::CanonicalCombiningClass;
-use crate::CanonicalCompositionsBorrowed;
-use crate::CanonicalCompositionsPayload;
 use crate::BACKWARD_COMBINING_MARKER;
 use crate::FDFA_MARKER;
 use crate::HANGUL_L_BASE;
@@ -47,7 +46,7 @@ use icu_provider::prelude::*;
 /// glyph-availability-guided custom normalizer.
 #[derive(Debug, Copy, Clone)]
 pub struct CanonicalCompositionBorrowed<'a> {
-    canonical_compositions: CanonicalCompositionsBorrowed<'a>,
+    canonical_compositions: &'a CanonicalCompositions<'a>,
 }
 
 #[cfg(feature = "compiled_data")]
@@ -64,7 +63,7 @@ impl CanonicalCompositionBorrowed<'static> {
     /// compile-time optimizations that are possible with [`CanonicalCompositionBorrowed`].
     pub const fn static_to_owned(self) -> CanonicalComposition {
         CanonicalComposition {
-            canonical_compositions: self.canonical_compositions.static_to_owned(),
+            canonical_compositions: DataPayload::from_static_ref(self.canonical_compositions),
         }
     }
 
@@ -76,9 +75,7 @@ impl CanonicalCompositionBorrowed<'static> {
     #[cfg(feature = "compiled_data")]
     pub const fn new() -> Self {
         Self {
-            canonical_compositions: CanonicalCompositionsBorrowed::Current(
-                crate::provider::Baked::SINGLETON_NORMALIZER_NFC_V2,
-            ),
+            canonical_compositions: crate::provider::Baked::SINGLETON_NORMALIZER_NFC_V1,
         }
     }
 }
@@ -103,9 +100,11 @@ impl CanonicalCompositionBorrowed<'_> {
     /// ```
     #[inline(always)]
     pub fn compose(self, starter: char, second: char) -> Option<char> {
-        self.canonical_compositions
-            .as_ref()
-            .compose(starter, second)
+        crate::compose(
+            self.canonical_compositions.canonical_compositions.iter(),
+            starter,
+            second,
+        )
     }
 }
 
@@ -117,7 +116,7 @@ impl CanonicalCompositionBorrowed<'_> {
 /// glyph-availability-guided custom normalizer.
 #[derive(Debug)]
 pub struct CanonicalComposition {
-    canonical_compositions: CanonicalCompositionsPayload,
+    canonical_compositions: DataPayload<NormalizerNfcV1>,
 }
 
 #[cfg(feature = "compiled_data")]
@@ -131,7 +130,7 @@ impl CanonicalComposition {
     /// Constructs a borrowed version of this type for more efficient querying.
     pub fn as_borrowed(&self) -> CanonicalCompositionBorrowed<'_> {
         CanonicalCompositionBorrowed {
-            canonical_compositions: self.canonical_compositions.as_borrowed(),
+            canonical_compositions: self.canonical_compositions.get(),
         }
     }
 
@@ -141,7 +140,7 @@ impl CanonicalComposition {
     ///
     /// [📚 Help choosing a constructor](icu_provider::constructors)
     #[cfg(feature = "compiled_data")]
-    #[expect(clippy::new_ret_no_self)]
+    #[allow(clippy::new_ret_no_self)]
     pub const fn new() -> CanonicalCompositionBorrowed<'static> {
         CanonicalCompositionBorrowed::new()
     }
@@ -158,12 +157,12 @@ impl CanonicalComposition {
     #[doc = icu_provider::gen_buffer_unstable_docs!(UNSTABLE, Self::new)]
     pub fn try_new_unstable<D>(provider: &D) -> Result<Self, DataError>
     where
-        D: DataProvider<NormalizerNfcV2> + ?Sized,
+        D: DataProvider<NormalizerNfcV1> + ?Sized,
     {
-        let canonical_compositions: DataPayload<NormalizerNfcV2> =
+        let canonical_compositions: DataPayload<NormalizerNfcV1> =
             provider.load(Default::default())?.payload;
         Ok(CanonicalComposition {
-            canonical_compositions: CanonicalCompositionsPayload::Current(canonical_compositions),
+            canonical_compositions,
         })
     }
 }
@@ -299,7 +298,7 @@ impl CanonicalDecompositionBorrowed<'_> {
             return Decomposed::Default;
         }
         // The loop is only broken out of as goto forward
-        #[expect(clippy::never_loop)]
+        #[allow(clippy::never_loop)]
         loop {
             let high_zeros = (decomposition & HIGH_ZEROS_MASK) == 0;
             let low_zeros = (decomposition & LOW_ZEROS_MASK) == 0;
@@ -468,7 +467,7 @@ impl CanonicalDecomposition {
     ///
     /// [📚 Help choosing a constructor](icu_provider::constructors)
     #[cfg(feature = "compiled_data")]
-    #[expect(clippy::new_ret_no_self)]
+    #[allow(clippy::new_ret_no_self)]
     pub const fn new() -> CanonicalDecompositionBorrowed<'static> {
         CanonicalDecompositionBorrowed::new()
     }
@@ -515,7 +514,7 @@ impl CanonicalDecomposition {
     }
 }
 
-/// Borrowed version of lookup of the `Canonical_Combining_Class` Unicode property.
+/// Borrowed version of lookup of the Canonical_Combining_Class Unicode property.
 ///
 /// # Example
 ///
@@ -611,7 +610,7 @@ impl CanonicalCombiningClassMapBorrowed<'_> {
     }
 }
 
-/// Lookup of the `Canonical_Combining_Class` Unicode property.
+/// Lookup of the Canonical_Combining_Class Unicode property.
 #[derive(Debug)]
 pub struct CanonicalCombiningClassMap {
     /// The data trie
@@ -639,7 +638,7 @@ impl CanonicalCombiningClassMap {
     ///
     /// [📚 Help choosing a constructor](icu_provider::constructors)
     #[cfg(feature = "compiled_data")]
-    #[expect(clippy::new_ret_no_self)]
+    #[allow(clippy::new_ret_no_self)]
     pub const fn new() -> CanonicalCombiningClassMapBorrowed<'static> {
         CanonicalCombiningClassMapBorrowed::new()
     }

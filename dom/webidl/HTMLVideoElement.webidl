@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -96,12 +97,7 @@ partial interface HTMLVideoElement {
 
 // https://w3c.github.io/picture-in-picture/#htmlvideoelement-extensions
 partial interface HTMLVideoElement {
-  [Pref="dom.media-pip.enabled", NewObject, Throws] Promise<PictureInPictureWindow> requestPictureInPicture();
-
-  [Pref="dom.media-pip.enabled"] attribute EventHandler onenterpictureinpicture;
-  [Pref="dom.media-pip.enabled"] attribute EventHandler onleavepictureinpicture;
-
-  [Pref="dom.media-pip.enabled", CEReactions, SetterThrows] attribute boolean disablePictureInPicture;
+  [CEReactions, SetterThrows] attribute boolean disablePictureInPicture;
 };
 
 // https://wicg.github.io/video-rvfc

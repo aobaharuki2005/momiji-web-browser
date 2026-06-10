@@ -19,13 +19,13 @@ includes: [testTypedArray.js]
 features: [TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   assert.throws(TypeError, function() {
     TA({});
   });
 
   assert.throws(TypeError, function() {
-    TA(makeCtorArg([]));
+    TA([]);
   });
 });
 

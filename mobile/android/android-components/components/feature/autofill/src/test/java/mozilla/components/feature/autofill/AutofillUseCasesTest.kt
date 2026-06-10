@@ -14,7 +14,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
@@ -37,14 +36,6 @@ class AutofillUseCasesTest {
         val autofillManager: AutofillManager = mock()
         doReturn(autofillManager).`when`(context).getSystemService(AutofillManager::class.java)
         doReturn(false).`when`(autofillManager).isAutofillSupported
-
-        assertFalse(AutofillUseCases().isSupported(context))
-    }
-
-    @Test
-    fun testThrows() {
-        val context: Context = mock()
-        doThrow(RuntimeException()).`when`(context).getSystemService(AutofillManager::class.java)
 
         assertFalse(AutofillUseCases().isSupported(context))
     }

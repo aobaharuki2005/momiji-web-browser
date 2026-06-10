@@ -5,12 +5,9 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  Log: "chrome://remote/content/shared/Log.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   waitForObserverTopic: "chrome://remote/content/marionette/sync.sys.mjs",
 });
-
-ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 /**
  * Quits the application with the provided flags.
@@ -85,16 +82,11 @@ export async function quit(flags = [], safeMode = false, isWindowless = false) {
 
   // If the shutdown of the application is prevented force quit it instead.
   if (cancelQuit.data) {
-    lazy.logger.trace(
-      "Forcing shutdown because attempting to quit was prevented"
-    );
     mode |= Ci.nsIAppStartup.eForceQuit;
   }
 
   // Delay response until the application is about to quit.
-  const quitApplicationPromise = lazy.waitForObserverTopic("quit-application", {
-    logging: false,
-  });
+  const quitApplication = lazy.waitForObserverTopic("quit-application");
 
   if (safeMode) {
     Services.startup.restartInSafeMode(mode);
@@ -103,7 +95,7 @@ export async function quit(flags = [], safeMode = false, isWindowless = false) {
   }
 
   return {
-    cause: (await quitApplicationPromise).data,
+    cause: (await quitApplication).data,
     forced: cancelQuit.data,
     in_app: true,
   };

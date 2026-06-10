@@ -5,8 +5,6 @@
 package org.mozilla.fenix.search.awesomebar
 
 import android.content.Context
-import androidx.lifecycle.ProcessLifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import mozilla.components.browser.state.search.DefaultSearchEngineProvider
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.ext.components
@@ -32,7 +30,6 @@ class AwesomeBarView(
     private val suggestionsProvidersBuilder by lazy(LazyThreadSafetyMode.NONE) {
         SearchSuggestionsProvidersBuilder(
             components = context.components,
-            scope = ProcessLifecycleOwner.get().lifecycleScope,
             includeSelectedTab = includeSelectedTab,
             loadUrlUseCase = AwesomeBarLoadUrlUseCase(interactor),
             searchUseCase = AwesomeBarSearchUseCase(interactor),
@@ -42,7 +39,9 @@ class AwesomeBarView(
                 DefaultSearchEngineProvider(context.components.core.store),
             ),
             suggestionIconProvider = DefaultSuggestionIconProvider(context),
+            onSearchEngineShortcutSelected = interactor::onSearchShortcutEngineSelected,
             onSearchEngineSuggestionSelected = interactor::onSearchEngineSuggestionSelected,
+            onSearchEngineSettingsClicked = interactor::onClickSearchEngineSettings,
             browsingModeManager = browsingModeManager,
         )
     }
@@ -55,8 +54,8 @@ class AwesomeBarView(
      * new search suggestions will be provided.
      */
     fun update(state: SearchFragmentState) {
-        // Do not make suggestions based on user's current URL
-        if (state.query.isNotEmpty() && state.query == state.url) {
+        // Do not make suggestions based on user's current URL unless it's a search shortcut
+        if (state.query.isNotEmpty() && state.query == state.url && !state.showSearchShortcuts) {
             return
         }
 
@@ -73,6 +72,11 @@ class AwesomeBarView(
         state: SearchFragmentState,
     ) {
         view.removeAllProviders()
+
+        if (state.showSearchShortcuts) {
+            view.addProviders(suggestionsProvidersBuilder.shortcutsEnginePickerProvider)
+            return
+        }
 
         for (provider in suggestionsProvidersBuilder.getProvidersToAdd(state.toSearchProviderState())) {
             view.addProviders(provider)

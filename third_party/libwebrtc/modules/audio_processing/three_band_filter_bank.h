@@ -13,7 +13,8 @@
 
 #include <array>
 #include <cstring>
-#include <span>
+
+#include "api/array_view.h"
 
 namespace webrtc {
 
@@ -54,13 +55,13 @@ class ThreeBandFilterBank final {
 
   // Splits `in` of size kFullBandSize into 3 downsampled frequency bands in
   // `out`, each of size 160.
-  void Analysis(std::span<const float, kFullBandSize> in,
-                std::span<const std::span<float>, kNumBands> out);
+  void Analysis(ArrayView<const float, kFullBandSize> in,
+                ArrayView<const ArrayView<float>, kNumBands> out);
 
   // Merges the 3 downsampled frequency bands in `in`, each of size 160, into
   // `out`, which is of size kFullBandSize.
-  void Synthesis(std::span<const std::span<float>, kNumBands> in,
-                 std::span<float, kFullBandSize> out);
+  void Synthesis(ArrayView<const ArrayView<float>, kNumBands> in,
+                 ArrayView<float, kFullBandSize> out);
 
  private:
   std::array<std::array<float, kMemorySize>, kNumNonZeroFilters>

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -13,10 +15,6 @@
 #include <stdint.h>
 
 #include "jstypes.h"
-
-namespace js {
-class GCMarker;
-};
 
 namespace JS {
 
@@ -94,17 +92,16 @@ class JS_PUBLIC_API SliceBudget {
   bool keepGoing = false;
 
  private:
+  explicit SliceBudget(InterruptRequestFlag* irqPtr)
+      : counter(irqPtr ? StepsPerExpensiveCheck : UnlimitedCounter),
+        interruptRequested(irqPtr),
+        budget(UnlimitedBudget()) {}
+
   bool checkOverBudget();
 
  public:
   // Use to create an unlimited budget.
-  static SliceBudget unlimited() { return SliceBudget(UnlimitedBudget()); }
-
-  explicit SliceBudget(UnlimitedBudget unlimited,
-                       InterruptRequestFlag* irqPtr = nullptr)
-      : counter(irqPtr ? StepsPerExpensiveCheck : UnlimitedCounter),
-        interruptRequested(irqPtr),
-        budget(unlimited) {}
+  static SliceBudget unlimited() { return SliceBudget(nullptr); }
 
   // Instantiate as SliceBudget(TimeBudget(n)).
   explicit SliceBudget(TimeBudget time,
@@ -163,23 +160,7 @@ class JS_PUBLIC_API SliceBudget {
     return budget.as<TimeBudget>().deadline;
   }
 
-  int64_t workRemaining() const {
-    MOZ_ASSERT(isWorkBudget());
-    return std::max(counter, int64_t(0));
-  }
-
-  InterruptRequestFlag* interruptRequestFlag() const {
-    return interruptRequested;
-  }
-
-  void clearInterrupted() { interrupted = false; }
-
   int describe(char* buffer, size_t maxlen) const;
-
- private:
-  // Interrupt the budget from inside the GC.
-  void setInterrupted() { interrupted = true; }
-  friend class js::GCMarker;
 };
 
 }  // namespace JS

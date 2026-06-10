@@ -1,10 +1,12 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef HTMLDataListElement_h_
-#define HTMLDataListElement_h_
+#ifndef HTMLDataListElement_h___
+#define HTMLDataListElement_h___
 
-#include "mozilla/dom/ContentList.h"
+#include "nsContentList.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla::dom {
@@ -22,9 +24,9 @@ class HTMLDataListElement final : public nsGenericHTMLElement {
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  ContentList* Options() {
+  nsContentList* Options() {
     if (!mOptions) {
-      mOptions = new ContentList(this, MatchOptions, nullptr, nullptr, true);
+      mOptions = new nsContentList(this, MatchOptions, nullptr, nullptr, true);
     }
 
     return mOptions;
@@ -32,7 +34,7 @@ class HTMLDataListElement final : public nsGenericHTMLElement {
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  // This function is used to generate the ContentList (option elements).
+  // This function is used to generate the nsContentList (option elements).
   static bool MatchOptions(Element* aElement, int32_t aNamespaceID,
                            nsAtom* aAtom, void* aData);
 
@@ -45,9 +47,9 @@ class HTMLDataListElement final : public nsGenericHTMLElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 
   // <option>'s list inside the datalist element.
-  RefPtr<ContentList> mOptions;
+  RefPtr<nsContentList> mOptions;
 };
 
 }  // namespace mozilla::dom
 
-#endif /* HTMLDataListElement_h_ */
+#endif /* HTMLDataListElement_h___ */

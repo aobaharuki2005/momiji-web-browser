@@ -17,10 +17,10 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <span>
 #include <utility>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/audio_codecs/audio_decoder.h"
 #include "api/neteq/tick_timer.h"
 #include "modules/audio_coding/neteq/mock/mock_decoder_database.h"
@@ -30,8 +30,6 @@
 #include "test/gmock.h"
 #include "test/gtest.h"
 
-namespace webrtc {
-
 using ::testing::_;
 using ::testing::InSequence;
 using ::testing::MockFunction;
@@ -39,7 +37,7 @@ using ::testing::Return;
 using ::testing::StrictMock;
 
 namespace {
-class MockEncodedAudioFrame : public AudioDecoder::EncodedAudioFrame {
+class MockEncodedAudioFrame : public webrtc::AudioDecoder::EncodedAudioFrame {
  public:
   MOCK_METHOD(size_t, Duration, (), (const, override));
 
@@ -47,7 +45,7 @@ class MockEncodedAudioFrame : public AudioDecoder::EncodedAudioFrame {
 
   MOCK_METHOD(std::optional<DecodeResult>,
               Decode,
-              (std::span<int16_t> decoded),
+              (webrtc::ArrayView<int16_t> decoded),
               (const, override));
 };
 
@@ -57,9 +55,9 @@ class PacketGenerator {
   PacketGenerator(uint16_t seq_no, uint32_t ts, uint8_t pt, int frame_size);
   virtual ~PacketGenerator() {}
   void Reset(uint16_t seq_no, uint32_t ts, uint8_t pt, int frame_size);
-  Packet NextPacket(
+  webrtc::Packet NextPacket(
       int payload_size_bytes,
-      std::unique_ptr<AudioDecoder::EncodedAudioFrame> audio_frame);
+      std::unique_ptr<webrtc::AudioDecoder::EncodedAudioFrame> audio_frame);
 
   uint16_t seq_no_;
   uint32_t ts_;
@@ -84,10 +82,10 @@ void PacketGenerator::Reset(uint16_t seq_no,
   frame_size_ = frame_size;
 }
 
-Packet PacketGenerator::NextPacket(
+webrtc::Packet PacketGenerator::NextPacket(
     int payload_size_bytes,
-    std::unique_ptr<AudioDecoder::EncodedAudioFrame> audio_frame) {
-  Packet packet;
+    std::unique_ptr<webrtc::AudioDecoder::EncodedAudioFrame> audio_frame) {
+  webrtc::Packet packet;
   packet.sequence_number = seq_no_;
   packet.timestamp = ts_;
   packet.payload_type = pt_;
@@ -110,6 +108,8 @@ struct PacketsToInsert {
 };
 
 }  // namespace
+
+namespace webrtc {
 
 // Start of test definitions.
 

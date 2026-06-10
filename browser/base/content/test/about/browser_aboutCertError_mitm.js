@@ -52,6 +52,14 @@ async function checkMitmPriming(useFelt) {
 
   await certErrorLoaded;
 
+  await SpecialPowers.spawn(browser, [], () => {
+    is(
+      content.document.body.getAttribute("code"),
+      "MOZILLA_PKIX_ERROR_MITM_DETECTED",
+      "MitM error page has loaded."
+    );
+  });
+
   ok(true, "Successfully loaded the MitM error page.");
 
   is(
@@ -60,50 +68,25 @@ async function checkMitmPriming(useFelt) {
     "Stored the correct issuer"
   );
 
-  if (useFelt) {
-    await SpecialPowers.spawn(browser, [], async () => {
-      const doc = content.document;
-      const netErrorCard = await ContentTaskUtils.waitForCondition(
-        () => doc.querySelector("net-error-card")?.wrappedJSObject,
-        "net-error-card should be present for MitM error"
-      );
-      await netErrorCard.getUpdateComplete();
+  await SpecialPowers.spawn(browser, [], async () => {
+    const shortDesc = content.document.querySelector("#errorShortDesc");
+    const whatToDo = content.document.querySelector("#errorWhatToDoText");
 
-      is(
-        netErrorCard.errorTitle.dataset.l10nId,
-        "certerror-mitm-title",
-        "MitM error page uses the correct title."
-      );
-    });
-  } else {
-    await SpecialPowers.spawn(browser, [], () => {
-      is(
-        content.document.body.getAttribute("code"),
-        "MOZILLA_PKIX_ERROR_MITM_DETECTED",
-        "MitM error page has loaded."
-      );
-    });
+    await ContentTaskUtils.waitForCondition(
+      () => shortDesc.textContent != "" && whatToDo.textContent != "",
+      "DOM localization has been updated"
+    );
 
-    await SpecialPowers.spawn(browser, [], async () => {
-      const shortDesc = content.document.querySelector("#errorShortDesc");
-      const whatToDo = content.document.querySelector("#errorWhatToDoText");
+    ok(
+      shortDesc.textContent.includes("Unknown CA"),
+      "Shows the name of the issuer."
+    );
 
-      await ContentTaskUtils.waitForCondition(
-        () => shortDesc.textContent != "" && whatToDo.textContent != "",
-        "DOM localization has been updated"
-      );
-
-      ok(
-        shortDesc.textContent.includes("Unknown CA"),
-        "Shows the name of the issuer."
-      );
-
-      ok(
-        whatToDo.textContent.includes("Unknown CA"),
-        "Shows the name of the issuer."
-      );
-    });
-  }
+    ok(
+      whatToDo.textContent.includes("Unknown CA"),
+      "Shows the name of the issuer."
+    );
+  });
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await SpecialPowers.clearUserPref(PREF_MITM_CANARY_ISSUER);
@@ -156,29 +139,13 @@ async function checkMitmAutoEnableEnterpriseRoots(useFelt) {
   await certErrorLoaded;
   await prefChanged;
 
-  if (useFelt) {
-    await SpecialPowers.spawn(browser, [], async () => {
-      const doc = content.document;
-      const netErrorCard = await ContentTaskUtils.waitForCondition(
-        () => doc.querySelector("net-error-card")?.wrappedJSObject,
-        "net-error-card should be present for MitM error"
-      );
-      await netErrorCard.getUpdateComplete();
-      is(
-        netErrorCard.errorTitle.dataset.l10nId,
-        "certerror-mitm-title",
-        "MitM error page has loaded."
-      );
-    });
-  } else {
-    await SpecialPowers.spawn(browser, [], () => {
-      is(
-        content.document.body.getAttribute("code"),
-        "MOZILLA_PKIX_ERROR_MITM_DETECTED",
-        "MitM error page has loaded."
-      );
-    });
-  }
+  await SpecialPowers.spawn(browser, [], () => {
+    is(
+      content.document.body.getAttribute("code"),
+      "MOZILLA_PKIX_ERROR_MITM_DETECTED",
+      "MitM error page has loaded."
+    );
+  });
 
   ok(true, "Successfully loaded the MitM error page.");
 

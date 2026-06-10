@@ -1,4 +1,4 @@
-// META: global=window,dedicatedworker,jsshell
+// META: global=window,dedicatedworker,jsshell,shadowrealm
 
 promise_test(async () => {
   const { f } = await import("./resources/js-wasm-cycle.js");

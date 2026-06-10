@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_a11y_TextLeafRange_h_
-#define mozilla_a11y_TextLeafRange_h_
+#ifndef mozilla_a11y_TextLeafRange_h__
+#define mozilla_a11y_TextLeafRange_h__
 
 #include <stdint.h>
 
@@ -186,7 +188,7 @@ class TextLeafPoint final {
   /**
    * Translate given TextLeafPoint into a DOM point.
    */
-  MOZ_CAN_RUN_SCRIPT std::pair<RefPtr<nsIContent>, uint32_t> ToDOMPoint(
+  MOZ_CAN_RUN_SCRIPT std::pair<nsIContent*, uint32_t> ToDOMPoint(
       bool aIncludeGenerated = true) const;
 
  private:
@@ -268,7 +270,7 @@ class TextLeafRange final {
       : mStart(aStart), mEnd(aEnd) {}
   explicit TextLeafRange(const TextLeafPoint& aStart)
       : mStart(aStart), mEnd(aStart) {}
-  explicit TextLeafRange() = default;
+  explicit TextLeafRange() {}
 
   // Create a TextLeafRange spanning the entire leaf.
   static TextLeafRange FromAccessible(Accessible* aAcc) {
@@ -347,8 +349,6 @@ class TextLeafRange final {
    */
   nsTArray<TextLeafRange> VisibleLines(Accessible* aContainer) const;
 
-  void GetFlattenedText(nsAString& aText) const;
-
  private:
   TextLeafPoint mStart;
   TextLeafPoint mEnd;
@@ -383,11 +383,6 @@ class TextLeafRange final {
           mSegmentStart(aOther.mSegmentStart),
           mSegmentEnd(aOther.mSegmentEnd) {}
 
-    Iterator() = delete;
-    Iterator(const Iterator&) = delete;
-    Iterator& operator=(const Iterator&) = delete;
-    Iterator& operator=(const Iterator&&) = delete;
-
     static Iterator BeginIterator(const TextLeafRange& aRange);
 
     static Iterator EndIterator(const TextLeafRange& aRange);
@@ -405,6 +400,11 @@ class TextLeafRange final {
 
    private:
     explicit Iterator(const TextLeafRange& aRange) : mRange(aRange) {}
+
+    Iterator() = delete;
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&&) = delete;
 
     const TextLeafRange& mRange;
     TextLeafPoint mSegmentStart;

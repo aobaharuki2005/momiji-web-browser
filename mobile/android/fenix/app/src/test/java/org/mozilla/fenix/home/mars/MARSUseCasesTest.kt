@@ -4,38 +4,36 @@
 
 package org.mozilla.fenix.home.mars
 
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.support.test.any
+import mozilla.components.support.test.helpers.MockResponses
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import java.io.IOException
 
 class MARSUseCasesTest {
 
-    private val testDispatcher = StandardTestDispatcher()
     private lateinit var client: Client
     private lateinit var useCases: MARSUseCases
 
     @Before
     fun setUp() {
-        client = mockk()
-        useCases = MARSUseCases(client, testDispatcher)
+        client = mock()
+        useCases = MARSUseCases(client)
     }
 
     @Test
-    fun `WHEN sending a click or impression callback THEN ensure the correct request parameters are used`() = runTest(testDispatcher) {
+    fun `WHEN sending a click or impression callback THEN ensure the correct request parameters are used`() {
         val url = "https://firefox.com/click"
 
         assertRequestParams(
@@ -52,56 +50,49 @@ class MARSUseCasesTest {
     }
 
     @Test
-    fun `WHEN sending a click or impression callback and the client throws an IOException THEN false is returned`() = runTest(testDispatcher) {
+    fun `WHEN sending a click or impression callback and the client throws an IOException THEN false is returned`() {
         val url = "https://firefox.com/click"
-        coEvery { client.fetch(any()) } throws IOException()
+        whenever(client.fetch(any())).thenThrow(IOException::class.java)
         assertFalse(useCases.recordInteraction(url))
     }
 
     @Test
-    fun `WHEN sending a click or impression callback and the response is null THEN false is returned`() = runTest(testDispatcher) {
+    fun `WHEN sending a click or impression callback and the response is null THEN false is returned`() {
         val url = "https://firefox.com/click"
-        val emptyResponse = mockk<Response>(relaxed = true)
-        coEvery { client.fetch(any()) } returns emptyResponse
-
+        whenever(client.fetch(any())).thenReturn(null)
         assertFalse(useCases.recordInteraction(url))
     }
 
     @Test
-    fun `WHEN sending a click or impression callback and the response is a failure THEN false is returned`() = runTest(testDispatcher) {
+    fun `WHEN sending a click or impression callback and the response is a failure THEN false is returned`() {
         val url = "https://firefox.com/click"
-        val errorResponse = mockk<Response>(relaxUnitFun = true).also {
-            every { it.status } returns 404
-        }
+        val errorResponse = MockResponses.getError()
 
-        coEvery { client.fetch(any()) } returns errorResponse
+        whenever(client.fetch(any())).thenReturn(errorResponse)
 
         assertFalse(useCases.recordInteraction(url))
-        verify(exactly = 1) { errorResponse.close() }
+        verify(errorResponse, times(1)).close()
     }
 
     @Test
-    fun `WHEN sending a click or impression callback and the response is success THEN true is returned`() = runTest(testDispatcher) {
+    fun `WHEN sending a click or impression callback and the response is success THEN true is returned`() {
         val url = "https://firefox.com/click"
-        val successResponse = mockk<Response>(relaxUnitFun = true).also {
-            every { it.status } returns 200
-            every { it.body } returns Response.Body.empty()
-        }
+        val successResponse = MockResponses.getSuccess()
 
-        coEvery { client.fetch(any()) } returns successResponse
+        whenever(client.fetch(any())).thenReturn(successResponse)
 
         assertTrue(useCases.recordInteraction(url))
-        verify(exactly = 1) { successResponse.close() }
+        verify(successResponse, times(1)).close()
     }
 }
 
-private suspend fun assertRequestParams(
+private fun assertRequestParams(
     client: Client,
-    makeRequest: suspend () -> Unit,
+    makeRequest: () -> Unit,
     assertParams: (Request) -> Unit,
 ) {
-    coEvery { client.fetch(any()) } answers {
-        val request = it.invocation.args[0] as Request
+    whenever(client.fetch(any())).thenAnswer {
+        val request = it.arguments[0] as Request
         assertParams(request)
         Response("https://mozilla.org", 200, MutableHeaders(), Response.Body("".byteInputStream()))
     }
@@ -109,5 +100,5 @@ private suspend fun assertRequestParams(
     makeRequest()
 
     // Ensure fetch is called so that the assertions in assertParams are called.
-    coVerify(exactly = 1) { client.fetch(any()) }
+    verify(client, times(1)).fetch(any())
 }

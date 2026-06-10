@@ -1,11 +1,12 @@
+/* vim:set ts=4 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DnsAndConnectSocket_h_
-#define DnsAndConnectSocket_h_
+#ifndef DnsAndConnectSocket_h__
+#define DnsAndConnectSocket_h__
 
-#include "ConnectionAttempt.h"
+#include "mozilla/TimeStamp.h"
 #include "nsAHttpConnection.h"
 #include "nsHttpConnection.h"
 #include "nsHttpTransaction.h"
@@ -16,6 +17,7 @@
 #include "nsIDNSService.h"
 #include "nsINamed.h"
 #include "nsITransport.h"
+#include "nsWeakReference.h"
 
 namespace mozilla {
 namespace net {
@@ -27,18 +29,18 @@ namespace net {
 class PendingTransactionInfo;
 class ConnectionEntry;
 
-class DnsAndConnectSocket final : public ConnectionAttempt,
-                                  public nsIOutputStreamCallback,
+class DnsAndConnectSocket final : public nsIOutputStreamCallback,
                                   public nsITransportEventSink,
                                   public nsIInterfaceRequestor,
                                   public nsITimerCallback,
                                   public nsINamed,
+                                  public nsSupportsWeakReference,
                                   public nsIDNSListener {
   ~DnsAndConnectSocket();
 
  public:
   NS_INLINE_DECL_STATIC_IID(NS_DNSANDCONNECTSOCKET_IID)
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
   NS_DECL_NSITRANSPORTEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -49,20 +51,26 @@ class DnsAndConnectSocket final : public ConnectionAttempt,
   DnsAndConnectSocket(nsHttpConnectionInfo* ci, nsAHttpTransaction* trans,
                       uint32_t caps, bool speculative, bool urgentStart);
 
-  nsresult Init(ConnectionEntry* ent) override;
-  void Abandon() override;
-  double Duration(TimeStamp epoch) override;
-  void OnTimeout() override;
+  [[nodiscard]] nsresult Init(ConnectionEntry* ent);
+  void Abandon();
+  double Duration(TimeStamp epoch);
+  void CloseTransports(nsresult error);
 
-  void PrintDiagnostics(nsCString& log) override;
+  bool IsSpeculative() { return mSpeculative; }
+
+  bool Allow1918() { return mAllow1918; }
+  void SetAllow1918(bool val) { mAllow1918 = val; }
+
+  bool HasConnected() { return mHasConnected; }
+
+  void PrintDiagnostics(nsCString& log);
 
   // Checks whether the transaction can be dispatched using this
   // half-open's connection.  If this half-open is marked as urgent-start,
   // it only accepts urgent start transactions.  Call only before Claim().
   bool AcceptsTransaction(nsHttpTransaction* trans);
-  bool Claim(nsHttpTransaction* newTransaction = nullptr) override;
-
-  DnsAndConnectSocket* ToDnsAndConnectSocket() override { return this; }
+  bool Claim();
+  void Unclaim();
 
  private:
   // This performs checks that the DnsAndConnectSocket has been properly cleand
@@ -208,12 +216,40 @@ class DnsAndConnectSocket final : public ConnectionAttempt,
   nsresult SetupDnsFlags(ConnectionEntry* ent);
   nsresult SetupEvent(SetupEvents event);
 
+  RefPtr<nsAHttpTransaction> mTransaction;
   bool mDispatchedMTransaction = false;
 
   PrimaryTransportSetup mPrimaryTransport;
+  uint32_t mCaps;
+
+  // mSpeculative is set if the socket was created from
+  // SpeculativeConnect(). It is cleared when a transaction would normally
+  // start a new connection from scratch but instead finds this one in
+  // the half open list and claims it for its own use. (which due to
+  // the vagaries of scheduling from the pending queue might not actually
+  // match up - but it prevents a speculative connection from opening
+  // more connections that are needed.)
+  bool mSpeculative;
+
+  // If created with a non-null urgent transaction, remember it, so we can
+  // mark the connection as urgent rightaway it's created.
+  bool mUrgentStart;
+
+  bool mAllow1918 = true;
+
+  // mHasConnected tracks whether one of the sockets has completed the
+  // connection process. It may have completed unsuccessfully.
+  bool mHasConnected = false;
 
   bool mBackupConnStatsSet = false;
 
+  // A DnsAndConnectSocket can be made for a concrete non-null transaction,
+  // but the transaction can be dispatch to another connection. In that
+  // case we can free this transaction to be claimed by other
+  // transactions.
+  bool mFreeToUse = true;
+
+  RefPtr<nsHttpConnectionInfo> mConnInfo;
   nsCOMPtr<nsITimer> mSynTimer;
   BackupTransportSetup mBackupTransport;
 
@@ -227,4 +263,4 @@ class DnsAndConnectSocket final : public ConnectionAttempt,
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // DnsAndConnectSocket_h_
+#endif  // DnsAndConnectSocket_h__

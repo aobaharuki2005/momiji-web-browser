@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -44,9 +45,6 @@ class gfxGlyphExtents {
     MOZ_COUNT_CTOR(gfxGlyphExtents);
   }
   ~gfxGlyphExtents();
-
-  gfxGlyphExtents(const gfxGlyphExtents& aOther) = delete;
-  gfxGlyphExtents& operator=(const gfxGlyphExtents& aOther) = delete;
 
   enum { INVALID_WIDTH = 0xFFFF };
 
@@ -164,6 +162,11 @@ class gfxGlyphExtents {
 
  public:
   mutable mozilla::RWLock mLock;
+
+ private:
+  // not implemented:
+  gfxGlyphExtents(const gfxGlyphExtents& aOther) = delete;
+  gfxGlyphExtents& operator=(const gfxGlyphExtents& aOther) = delete;
 };
 
 #endif

@@ -28,7 +28,7 @@ use base64::Engine;
 use cstr::cstr;
 use moz_task::{get_main_thread, RunnableBuilder};
 use nserror::{
-    nsresult, NS_ERROR_DOM_INVALID_STATE_ERR, NS_ERROR_DOM_NOT_ALLOWED_ERR,
+    nsresult, NS_ERROR_DOM_ABORT_ERR, NS_ERROR_DOM_INVALID_STATE_ERR, NS_ERROR_DOM_NOT_ALLOWED_ERR,
     NS_ERROR_DOM_OPERATION_ERR, NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG, NS_ERROR_NOT_AVAILABLE,
     NS_ERROR_NOT_IMPLEMENTED, NS_ERROR_NULL_POINTER, NS_OK,
 };
@@ -39,13 +39,12 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::sync::mpsc::{channel, Receiver, RecvError, Sender};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 use thin_vec::{thin_vec, ThinVec};
 use xpcom::interfaces::{
-    nsICredentialParameters, nsIObserverService, nsIWebAuthnAttObj,
-    nsIWebAuthnAutoFillEntriesCallback, nsIWebAuthnAutoFillEntry, nsIWebAuthnRegisterArgs,
-    nsIWebAuthnRegisterPromise, nsIWebAuthnRegisterResult, nsIWebAuthnService, nsIWebAuthnSignArgs,
-    nsIWebAuthnSignPromise, nsIWebAuthnSignResult,
+    nsICredentialParameters, nsIObserverService, nsIWebAuthnAttObj, nsIWebAuthnAutoFillEntry,
+    nsIWebAuthnRegisterArgs, nsIWebAuthnRegisterPromise, nsIWebAuthnRegisterResult,
+    nsIWebAuthnService, nsIWebAuthnSignArgs, nsIWebAuthnSignPromise, nsIWebAuthnSignResult,
 };
 use xpcom::{xpcom_method, RefPtr};
 mod about_webauthn_controller;
@@ -664,8 +663,14 @@ impl TransactionPromise {
     }
 }
 
+enum TransactionArgs {
+    Sign(/* timeout */ u64, SignArgs),
+}
+
 struct TransactionState {
     tid: u64,
+    browsing_context_id: u64,
+    pending_args: Option<TransactionArgs>,
     promise: TransactionPromise,
     pin_receiver: PinReceiver,
     selection_receiver: SelectionReceiver,
@@ -751,6 +756,8 @@ impl AuthrsService {
         args: &nsIWebAuthnRegisterArgs,
         promise: &nsIWebAuthnRegisterPromise,
     ) -> Result<(), nsresult> {
+        self.reset()?;
+
         let promise = RegisterPromise(RefPtr::new(promise));
 
         let mut origin = nsString::new();
@@ -926,12 +933,10 @@ impl AuthrsService {
         };
 
         let mut guard = self.transaction.lock().unwrap();
-        debug_assert!(
-            guard.is_none(),
-            "WebAuthnService should reset the platform service before dispatching MakeCredential"
-        );
         *guard = Some(TransactionState {
             tid,
+            browsing_context_id,
+            pending_args: None,
             promise: TransactionPromise::Register(promise),
             pin_receiver: None,
             selection_receiver: None,
@@ -955,8 +960,7 @@ impl AuthrsService {
             );
         })
         .may_block(true)
-        .dispatch_background_task()
-        .inspect_err(|_| self.discard_transaction())?;
+        .dispatch_background_task()?;
 
         let callback_transaction = self.transaction.clone();
         let callback_origin = info.origin.clone();
@@ -1001,8 +1005,7 @@ impl AuthrsService {
                 tid,
                 Some(&info.origin),
                 Some(browsing_context_id),
-            )
-            .inspect_err(|_| self.discard_transaction())?;
+            )?;
             self.usb_token_manager.lock().unwrap().register(
                 timeout_ms.into(),
                 info,
@@ -1013,7 +1016,6 @@ impl AuthrsService {
             self.test_token_manager
                 .register(timeout_ms.into(), info, status_tx, state_callback);
         } else {
-            self.discard_transaction();
             return Err(NS_ERROR_FAILURE);
         }
 
@@ -1033,6 +1035,8 @@ impl AuthrsService {
         args: &nsIWebAuthnSignArgs,
         promise: &nsIWebAuthnSignPromise,
     ) -> Result<(), nsresult> {
+        self.reset()?;
+
         let promise = SignPromise(RefPtr::new(promise));
 
         let mut origin = nsString::new();
@@ -1155,6 +1159,9 @@ impl AuthrsService {
             user_verification_req = UserVerificationRequirement::Preferred;
         }
 
+        let mut conditionally_mediated = false;
+        unsafe { args.GetConditionallyMediated(&mut conditionally_mediated) }.to_result()?;
+
         let info = SignArgs {
             client_data_hash: client_data_hash_arr,
             relying_party_id: relying_party_id.to_string(),
@@ -1172,21 +1179,56 @@ impl AuthrsService {
         };
 
         let mut guard = self.transaction.lock().unwrap();
-        debug_assert!(
-            guard.is_none(),
-            "WebAuthnService should reset the platform service before dispatching GetAssertion"
-        );
         *guard = Some(TransactionState {
             tid,
+            browsing_context_id,
+            pending_args: Some(TransactionArgs::Sign(timeout_ms as u64, info)),
             promise: TransactionPromise::Sign(promise),
             pin_receiver: None,
             selection_receiver: None,
             interactive_receiver: None,
             puat_cache: None,
         });
-        // drop the guard here to ensure we don't deadlock if the call to `sign()` below
-        // hairpins the state callback.
-        drop(guard);
+
+        if !conditionally_mediated {
+            // Immediately proceed to the modal UI flow.
+            self.do_get_assertion(None, guard)
+        } else {
+            // Cache the request and wait for the conditional UI to request autofill entries, etc.
+            Ok(())
+        }
+    }
+
+    fn do_get_assertion(
+        &self,
+        mut selected_credential_id: Option<Vec<u8>>,
+        mut guard: MutexGuard<Option<TransactionState>>,
+    ) -> Result<(), nsresult> {
+        let Some(state) = guard.as_mut() else {
+            return Err(NS_ERROR_FAILURE);
+        };
+        let browsing_context_id = state.browsing_context_id;
+        let tid = state.tid;
+        let (timeout_ms, mut info) = match state.pending_args.take() {
+            Some(TransactionArgs::Sign(timeout_ms, info)) => (timeout_ms, info),
+            _ => return Err(NS_ERROR_FAILURE),
+        };
+
+        if let Some(id) = selected_credential_id.take() {
+            if info.allow_list.is_empty() {
+                info.allow_list.push(PublicKeyCredentialDescriptor {
+                    id,
+                    transports: vec![],
+                });
+            } else {
+                // We need to ensure that the selected credential id
+                // was in the original allow_list.
+                info.allow_list.retain(|cred| cred.id == id);
+                if info.allow_list.is_empty() {
+                    return Err(NS_ERROR_FAILURE);
+                }
+            }
+        }
 
         let (status_tx, status_rx) = channel::<StatusUpdate>();
         let status_transaction = self.transaction.clone();
@@ -1201,8 +1243,7 @@ impl AuthrsService {
             );
         })
         .may_block(true)
-        .dispatch_background_task()
-        .inspect_err(|_| self.discard_transaction())?;
+        .dispatch_background_task()?;
 
         let uniq_allowed_cred = if info.allow_list.len() == 1 {
             info.allow_list.first().cloned()
@@ -1247,8 +1288,7 @@ impl AuthrsService {
             tid,
             Some(&info.origin),
             Some(browsing_context_id),
-        )
-        .inspect_err(|_| self.discard_transaction())?;
+        )?;
 
         // As in `register`, we are intentionally avoiding `AuthenticatorService` here.
         if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
@@ -1262,7 +1302,6 @@ impl AuthrsService {
             self.test_token_manager
                 .sign(timeout_ms as u64, info, status_tx, state_callback);
         } else {
-            self.discard_transaction();
             return Err(NS_ERROR_FAILURE);
         }
 
@@ -1272,78 +1311,80 @@ impl AuthrsService {
     xpcom_method!(has_pending_conditional_get => HasPendingConditionalGet(aBrowsingContextId: u64, aOrigin: *const nsAString) -> u64);
     fn has_pending_conditional_get(
         &self,
-        _browsing_context_id: u64,
-        _origin: &nsAString,
+        browsing_context_id: u64,
+        origin: &nsAString,
     ) -> Result<u64, nsresult> {
-        Ok(0)
+        let mut guard = self.transaction.lock().unwrap();
+        let Some(state) = guard.as_mut() else {
+            return Ok(0);
+        };
+        let Some(TransactionArgs::Sign(_, info)) = state.pending_args.as_ref() else {
+            return Ok(0);
+        };
+        if state.browsing_context_id != browsing_context_id {
+            return Ok(0);
+        }
+        if !info.origin.eq(&origin.to_string()) {
+            return Ok(0);
+        }
+        Ok(state.tid)
     }
 
-    xpcom_method!(get_autofill_entries => GetAutoFillEntries(aTransactionId: u64, aCallback: *const nsIWebAuthnAutoFillEntriesCallback));
+    xpcom_method!(get_autofill_entries => GetAutoFillEntries(aTransactionId: u64) -> ThinVec<Option<RefPtr<nsIWebAuthnAutoFillEntry>>>);
     fn get_autofill_entries(
         &self,
-        _tid: u64,
-        callback: &nsIWebAuthnAutoFillEntriesCallback,
-    ) -> Result<(), nsresult> {
-        unsafe { callback.Reject(NS_ERROR_NOT_AVAILABLE) };
-        Ok(())
-    }
-
-    xpcom_method!(get_autofill_entries_for_rp_id => GetAutoFillEntriesForRpId(aRpId: *const nsAString, aAllowList: *const ThinVec<ThinVec<u8>>, aCallback: *const nsIWebAuthnAutoFillEntriesCallback));
-    fn get_autofill_entries_for_rp_id(
-        &self,
-        rp_id: &nsAString,
-        allow_list: &ThinVec<ThinVec<u8>>,
-        callback: &nsIWebAuthnAutoFillEntriesCallback,
-    ) -> Result<(), nsresult> {
+        tid: u64,
+    ) -> Result<ThinVec<Option<RefPtr<nsIWebAuthnAutoFillEntry>>>, nsresult> {
+        let mut guard = self.transaction.lock().unwrap();
+        let Some(state) = guard.as_mut() else {
+            return Err(NS_ERROR_NOT_AVAILABLE);
+        };
+        if state.tid != tid {
+            return Err(NS_ERROR_NOT_AVAILABLE);
+        }
+        let Some(TransactionArgs::Sign(_, info)) = state.pending_args.as_ref() else {
+            return Err(NS_ERROR_NOT_AVAILABLE);
+        };
         if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
             // We don't currently support silent discovery for credentials on USB tokens.
-            let empty: ThinVec<Option<RefPtr<nsIWebAuthnAutoFillEntry>>> = thin_vec![];
-            unsafe { callback.Resolve(&empty) };
-            return Ok(());
+            return Ok(thin_vec![]);
         } else if static_prefs::pref!("security.webauth.webauthn_enable_softtoken") {
-            let rp_id_string = rp_id.to_string();
-            let allow_list: Vec<PublicKeyCredentialDescriptor> = allow_list
-                .iter()
-                .map(|id| PublicKeyCredentialDescriptor {
-                    id: id.to_vec(),
-                    transports: vec![],
-                })
-                .collect();
-            match self
+            return self
                 .test_token_manager
-                .get_autofill_entries(&rp_id_string, &allow_list)
-            {
-                Ok(entries) => unsafe { callback.Resolve(&entries) },
-                Err(err) => unsafe { callback.Reject(err) },
-            };
-            return Ok(());
+                .get_autofill_entries(&info.relying_party_id, &info.allow_list);
         } else {
-            unsafe { callback.Reject(NS_ERROR_FAILURE) };
-            return Ok(());
+            return Err(NS_ERROR_FAILURE);
         }
     }
 
     xpcom_method!(select_autofill_entry => SelectAutoFillEntry(aTid: u64, aCredentialId: *const ThinVec<u8>));
-    fn select_autofill_entry(
-        &self,
-        _tid: u64,
-        _credential_id: &ThinVec<u8>,
-    ) -> Result<(), nsresult> {
-        Err(NS_ERROR_NOT_AVAILABLE)
+    fn select_autofill_entry(&self, tid: u64, credential_id: &ThinVec<u8>) -> Result<(), nsresult> {
+        let mut guard = self.transaction.lock().unwrap();
+        let Some(state) = guard.as_mut() else {
+            return Err(NS_ERROR_FAILURE);
+        };
+        if tid != state.tid {
+            return Err(NS_ERROR_FAILURE);
+        }
+        self.do_get_assertion(Some(credential_id.to_vec()), guard)
     }
 
     xpcom_method!(resume_conditional_get => ResumeConditionalGet(aTid: u64));
-    fn resume_conditional_get(&self, _tid: u64) -> Result<(), nsresult> {
-        Err(NS_ERROR_NOT_AVAILABLE)
+    fn resume_conditional_get(&self, tid: u64) -> Result<(), nsresult> {
+        let mut guard = self.transaction.lock().unwrap();
+        let Some(state) = guard.as_mut() else {
+            return Err(NS_ERROR_FAILURE);
+        };
+        if tid != state.tid {
+            return Err(NS_ERROR_FAILURE);
+        }
+        self.do_get_assertion(None, guard)
     }
 
-    // Clears the active transaction state if tid matches. Returns true if
-    // the cancel matched (or if there is no active transaction, as a
-    // workaround for Bug 1864526), so the caller knows whether the
-    // usb_token_manager should also be cancelled.
+    // Clears the transaction state if tid matches the ongoing transaction ID.
+    // Returns whether the tid was a match.
     fn clear_transaction(&self, tid: u64) -> bool {
         let mut guard = self.transaction.lock().unwrap();
-
         let Some(state) = guard.as_ref() else {
             return true; // workaround for Bug 1864526.
         };
@@ -1360,13 +1401,6 @@ impl AuthrsService {
         true
     }
 
-    // Discard transaction state for a request that was never dispatched. We
-    // don't reject the promise here; the parent WebAuthnService does that after
-    // we return an error.
-    fn discard_transaction(&self) {
-        *self.transaction.lock().unwrap() = None;
-    }
-
     xpcom_method!(cancel => Cancel(aTransactionId: u64));
     fn cancel(&self, tid: u64) -> Result<(), nsresult> {
         if self.clear_transaction(tid) {
@@ -1378,11 +1412,9 @@ impl AuthrsService {
     xpcom_method!(reset => Reset());
     fn reset(&self) -> Result<(), nsresult> {
         {
-            // Reset only affects the active transaction; pending conditional
-            // gets coexist with the active modal flow and survive resets.
             if let Some(state) = self.transaction.lock().unwrap().take() {
                 cancel_prompts(state.tid)?;
-                state.promise.reject(NS_ERROR_DOM_NOT_ALLOWED_ERR)?;
+                state.promise.reject(NS_ERROR_DOM_ABORT_ERR)?;
             }
         } // release the transaction lock so a StateCallback can take it
         self.usb_token_manager.lock().unwrap().cancel();
@@ -1523,12 +1555,14 @@ impl AuthrsService {
 
         {
             let mut guard = self.transaction.lock().unwrap();
-            if guard.is_some() {
+            if guard.as_ref().is_some() {
                 // ignore listen() and continue with ongoing transaction
                 return Ok(());
             }
             *guard = Some(TransactionState {
                 tid: 0,
+                browsing_context_id: 0,
+                pending_args: None,
                 promise: TransactionPromise::Listen,
                 pin_receiver: None,
                 selection_receiver: None,
@@ -1593,8 +1627,7 @@ impl AuthrsService {
             },
         )
         .may_block(true)
-        .dispatch_background_task()
-        .inspect_err(|_| self.discard_transaction())?;
+        .dispatch_background_task()?;
         if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
             self.usb_token_manager.lock().unwrap().manage(
                 60 * 1000 * 1000,
@@ -1617,10 +1650,7 @@ impl AuthrsService {
             serde_json::from_str(&c_cmd.to_utf8()).or(Err(NS_ERROR_DOM_OPERATION_ERR))?;
         if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
             let guard = self.transaction.lock().unwrap();
-            let Some(active) = guard.as_ref() else {
-                return Err(NS_ERROR_FAILURE);
-            };
-            let puat = active.puat_cache.clone();
+            let puat = guard.as_ref().and_then(|g| g.puat_cache.clone());
             let command = match incoming {
                 RequestWrapper::Quit => InteractiveRequest::Quit,
                 RequestWrapper::ChangePIN(a, b) => InteractiveRequest::ChangePIN(a, b),
@@ -1630,7 +1660,7 @@ impl AuthrsService {
                 }
                 RequestWrapper::BioEnrollment(c) => InteractiveRequest::BioEnrollment(c, puat),
             };
-            match &active.interactive_receiver {
+            match &guard.as_ref().unwrap().interactive_receiver {
                 Some(channel) => channel.send(command).or(Err(NS_ERROR_FAILURE)),
                 // Either we weren't expecting a pin, or the controller is confused
                 // about which transaction is active. Neither is recoverable, so it's
@@ -1649,9 +1679,7 @@ impl AuthrsService {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn authrs_service_constructor(
-    result: *mut *const nsIWebAuthnService,
-) -> nsresult {
+pub extern "C" fn authrs_service_constructor(result: *mut *const nsIWebAuthnService) -> nsresult {
     let wrapper = AuthrsService::allocate(InitAuthrsService {
         usb_token_manager: Mutex::new(StateMachine::new()),
         test_token_manager: TestTokenManager::new(),
@@ -1698,7 +1726,7 @@ pub unsafe extern "C" fn authrs_service_constructor(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn authrs_webauthn_att_obj_constructor(
+pub extern "C" fn authrs_webauthn_att_obj_constructor(
     att_obj_bytes: &ThinVec<u8>,
     anonymize: bool,
     result: *mut *const nsIWebAuthnAttObj,

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -29,8 +30,9 @@ class nsReadEndCondition {
   char16_t mFilter;
   explicit nsReadEndCondition(const char16_t* aTerminateChars);
 
-  nsReadEndCondition(const nsReadEndCondition& aOther) = delete;  // No copying
-  void operator=(const nsReadEndCondition& aOther) = delete;  // No assigning
+ private:
+  nsReadEndCondition(const nsReadEndCondition& aOther);  // No copying
+  void operator=(const nsReadEndCondition& aOther);      // No assigning
 };
 
 class nsScanner final {
@@ -51,8 +53,6 @@ class nsScanner final {
   explicit nsScanner(nsIURI* aURI);
 
   ~nsScanner();
-
-  nsScanner& operator=(const nsScanner&) = delete;
 
   /**
    *  retrieve next char from internal input stream
@@ -179,6 +179,9 @@ class nsScanner final {
   int32_t mCharsetSource = kCharsetUninitialized;
   nsCString mCharset;
   mozilla::UniquePtr<mozilla::Decoder> mUnicodeDecoder;
+
+ private:
+  nsScanner& operator=(const nsScanner&);  // Not implemented.
 };
 
 #endif

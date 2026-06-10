@@ -13,6 +13,10 @@ use super::{ConfirmationTag, GroupContext};
 
 #[derive(Clone, PartialEq, MlsSize, MlsEncode, MlsDecode)]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
+// #[cfg_attr(
+//     all(feature = "ffi", not(test)),
+//     safer_ffi_gen::ffi_type(clone, opaque)
+// )]
 pub struct GroupInfo {
     pub(crate) group_context: GroupContext,
     pub(crate) extensions: ExtensionList,

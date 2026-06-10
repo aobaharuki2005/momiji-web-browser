@@ -8,13 +8,9 @@
 newtab-page-title = Iccer amaynut
 newtab-settings-button =
     .title = Sagen asebter n yiccer-ik amaynut
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Sagen asebter-a
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Sagen
-newtab-customize-panel-label =
-    .label = Sagen
 newtab-personalize-settings-icon-label =
     .title = Sagen iccer amaynut
     .aria-label = Iɣewwaren
@@ -53,7 +49,7 @@ newtab-search-box-input =
     .placeholder = Nadi di web
     .aria-label = Nadi di web
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = Rnu amsedday n unadi
 newtab-topsites-add-shortcut-header = Anegzum amaynut
@@ -294,21 +290,9 @@ newtab-error-fallback-refresh-link = Sali-d aseter akken ad talseḍ aɛraḍ.
 
 newtab-custom-shortcuts-title = Inegzumen
 newtab-custom-shortcuts-subtitle = Ismal i teskelseḍ neɣ wuɣur terziḍ
-#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Inegzumen
     .description = Ismal i teskelseḍ neɣ wuɣur terziḍ
-newtab-custom-shortcuts-nova =
-    .label = Inegzumen
-# Variables
-#   $num (number) - Number of rows to display
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
-newtab-custom-row-selector2 =
-    .label =
-        { $num ->
-            [one] { $num } yizirig
-           *[other] { $num } yizirigen
-        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -332,9 +316,6 @@ newtab-custom-widget-lists-toggle =
 newtab-custom-widget-timer-toggle =
     .label = Amakud
 newtab-custom-widget-section-title = Iwiǧiten
-newtab-custom-widget-section-toggle =
-    .label = Iwiǧiten
-newtab-widget-manage-title = Iwiǧiten
 # Tooltip for close button
 newtab-custom-close-menu-button =
     .title = Mdel
@@ -346,18 +327,14 @@ newtab-custom-settings = Sefrek ugar n yiɣewwaṛen
 
 newtab-wallpaper-title = Tugniwin n ugilal
 newtab-wallpaper-reset = Wennez ɣer umezwer
-#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Sali n tugna
 newtab-wallpaper-custom-color = Fren ini
-newtab-wallpaper-toggle-title =
-    .label = Tugniwin n ugilal
 newtab-wallpaper-light-red-panda = Apunda azewwaɣ
 newtab-wallpaper-light-mountain = Adrar amellal
 newtab-wallpaper-dark-mountain = Tugna n yidurar
 
 ## Solid Colors
 
-#  (developer note): @nova-cleanup(remove-string): Remove old "Solid colors" string once Nova lands. The simplified "Colors" string will take over
 newtab-wallpaper-category-title-colors = Initen imsariyen
 newtab-wallpaper-blue = Amidadi
 newtab-wallpaper-light-blue = Amidadi ifaw
@@ -498,7 +475,7 @@ newtab-download-mobile-highlight-title = Sader { -brand-product-name } i uziraz
 newtab-download-mobile-highlight-image =
     .aria-label = Tangalt QR i usader n { -brand-product-name } i uziraz
 
-## Strings for reporting issues with ads and content
+## Strings for reporting ads and content
 
 newtab-report-content-why-reporting-this =
     .label = Ayɣer i d-tuzneḍ aneqqis ɣef waya?
@@ -513,6 +490,10 @@ newtab-report-submit = Azen
 newtab-toast-thanks-for-reporting =
     .message = Tanemmirt imi d-temliḍ aya:
 
+## Strings for trending searches
+
+newtab-trending-searches-learn-more = Issin ugar
+
 ## Strings for task / to-do list productivity widget
 
 # A simple label next to the default list name letting users know this is a new / beta feature
@@ -526,23 +507,19 @@ newtab-widget-lists-label-beta =
 newtab-widget-lists-completed-list = Yemmed ({ $number })
 newtab-widget-task-list-menu-copy = Nɣel
 newtab-widget-lists-menu-edit = Ẓreg isem tabdart
-newtab-widget-lists-menu-edit2 =
-    .aria-label = Ẓreg isem tabdart
 newtab-widget-lists-menu-create = Rnu tabdart tamaynut
 newtab-widget-lists-menu-delete = Kkes tabdart-a
 newtab-widget-lists-menu-copy = Nɣel tabdart ɣer tecfawt
+newtab-widget-lists-menu-hide = Ffer akk tibdarin
 newtab-widget-lists-menu-learn-more = Issin ugar
-newtab-widget-lists-button-add-item = Rnu aferdis
-newtab-widget-lists-input-add-an-item2 =
-    .placeholder = Rnu aferdis
-    .aria-label = Rnu aferdis
 newtab-widget-lists-input-add-an-item =
     .placeholder = Rnu aferdis
 newtab-widget-lists-input-menu-open-link = Ldi aseɣwen
 newtab-widget-lists-input-menu-move-up = Ali
 newtab-widget-lists-input-menu-move-down = Ader
 
-## Strings introduced by the Nova redesign of the Timer widget
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
 
 newtab-widget-timer-mode-focus =
     .label = Focus
@@ -556,6 +533,7 @@ newtab-widget-timer-reset =
     .title = Wennez
 newtab-widget-timer-menu-notifications = Sens ilɣa
 newtab-widget-timer-menu-notifications-on = Rmed ilɣa
+newtab-widget-timer-menu-hide = Ffer amakud
 newtab-widget-timer-menu-learn-more = Issin ugar
 newtab-promo-card-title = Allel { -brand-product-name }
 newtab-promo-card-cta = Issin ugar

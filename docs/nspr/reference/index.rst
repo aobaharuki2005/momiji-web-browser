@@ -205,7 +205,7 @@ Dynamic Library Linking
 
 -  :ref:`Platform_Notes`
 
-   -  ``Dynamic Library Search Path``
+   -  :ref:`Dynamic_Library_Search_Path`
    -  :ref:`Exporting_Symbols_from_the_Main_Executable_Program`
 
 Process Management and Interprocess Communication
@@ -227,7 +227,7 @@ Logging
 -  :ref:`Conditional_Compilation_and_Execution`
 -  :ref:`Log_Types_and_Variables`
 
-   -  ``PRLogModuleInfo``
+   -  :ref:`PRLogModuleInfo`
    -  :ref:`PRLogModuleLevel`
    -  :ref:`NSPR_LOG_MODULES`
    -  :ref:`NSPR_LOG_FILE`
@@ -235,15 +235,15 @@ Logging
 -  :ref:`Logging_Functions_and_Macros`
 
    -  :ref:`PR_NewLogModule`
-   -  ``PR_SetLogFile``
-   -  ``PR_SetLogBuffering``
-   -  ``PR_LogPrint``
-   -  ``PR_LogFlush``
-   -  ``PR_LOG_TEST``
-   -  ``PR_LOG``
+   -  :ref:`PR_SetLogFile`
+   -  :ref:`PR_SetLogBuffering`
+   -  :ref:`PR_LogPrint`
+   -  :ref:`PR_LogFlush`
+   -  :ref:`PR_LOG_TEST`
+   -  :ref:`PR_LOG`
    -  :ref:`PR_Assert`
    -  :ref:`PR_ASSERT`
-   -  ``PR_NOT_REACHED``
+   -  :ref:`PR_NOT_REACHED`
 
 -  :ref:`Use_Example`
 

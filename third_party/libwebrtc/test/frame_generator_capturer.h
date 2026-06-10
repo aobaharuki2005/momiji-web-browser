@@ -52,7 +52,7 @@ class FrameGeneratorCapturer : public TestVideoCapturer {
       int target_fps,
       TaskQueueFactory& task_queue_factory,
       bool allow_zero_hertz = false);
-  ~FrameGeneratorCapturer() override;
+  virtual ~FrameGeneratorCapturer();
 
   void Start() override;
   void Stop() override;

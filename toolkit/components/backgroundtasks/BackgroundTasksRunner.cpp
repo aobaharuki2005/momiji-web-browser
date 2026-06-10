@@ -33,12 +33,11 @@ NS_IMETHODIMP BackgroundTasksRunner::RunInDetachedProcess(
   NS_ENSURE_SUCCESS(rv, rv);
 
   base::LaunchOptions options;
-  nsPromiseFlatCString flatTaskName(aTaskName);
 #ifdef XP_WIN
   options.start_independent = true;
 
-  nsTArray<const char*> argv = {exePath.get(), "--backgroundtask",
-                                flatTaskName.get()};
+  nsTArray<const char*> argv = {exePath.Data(), "--backgroundtask",
+                                aTaskName.Data()};
   for (const nsCString& str : aArgs) {
     argv.AppendElement(str.get());
   }
@@ -53,8 +52,8 @@ NS_IMETHODIMP BackgroundTasksRunner::RunInDetachedProcess(
     return NS_ERROR_FAILURE;
   }
 #else
-  std::vector<std::string> argv = {exePath.get(), "--backgroundtask",
-                                   flatTaskName.get()};
+  std::vector<std::string> argv = {exePath.Data(), "--backgroundtask",
+                                   aTaskName.Data()};
   for (const nsCString& str : aArgs) {
     argv.push_back(str.get());
   }

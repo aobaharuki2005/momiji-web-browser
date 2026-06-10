@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -159,12 +161,17 @@ class MOZ_STACK_CLASS MOZ_NON_PARAM CallArgsBase {
   // CALLING/CONSTRUCTING-DIFFERENTIATIONS
 
   bool isConstructing() const {
+    if (!argv_[-1].isMagic()) {
+      return false;
+    }
+
 #ifdef JS_DEBUG
-    if (constructing_ && !this->usedRval()) {
+    if (!this->usedRval()) {
       CheckIsValidConstructible(calleev());
     }
 #endif
-    return constructing_;
+
+    return true;
   }
 
   bool ignoresReturnValue() const { return ignoresReturnValue_; }

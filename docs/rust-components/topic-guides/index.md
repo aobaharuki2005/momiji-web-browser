@@ -8,4 +8,3 @@ Here are the guides on various topics related to Rust components.
 :glob:
 
 *
-```

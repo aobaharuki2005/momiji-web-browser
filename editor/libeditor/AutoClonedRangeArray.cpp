@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,7 +19,6 @@
 #include "mozilla/PresShell.h"                // for PresShell
 #include "mozilla/dom/CharacterDataBuffer.h"  // for CharacterDataBuffer
 #include "mozilla/dom/Document.h"             // for dom::Document
-#include "mozilla/dom/EditContext.h"          // for dom::EditContext
 #include "mozilla/dom/HTMLBRElement.h"        // for dom HTMLBRElement
 #include "mozilla/dom/Selection.h"            // for dom::Selection
 #include "mozilla/dom/Text.h"                 // for dom::Text
@@ -35,7 +35,6 @@ namespace mozilla {
 using namespace dom;
 
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
-using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
 using ReplaceOrVoidElementOption = HTMLEditUtils::ReplaceOrVoidElementOption;
 
 /******************************************************************************
@@ -122,14 +121,6 @@ bool AutoClonedRangeArray::IsEditableRange(const dom::AbstractRange& aRange,
 
   // HTMLEditor does not support modifying outside `<body>` element for now.
   nsINode* commonAncestor = aRange.GetClosestCommonInclusiveAncestor();
-  if (aEditingHost.HasFlag(ELEMENT_HAS_EDIT_CONTEXT)) {
-    EditContext* editContext =
-        nsGenericHTMLElement::FromNode(aEditingHost)->GetEditContext();
-    MOZ_ASSERT(editContext);
-    if (commonAncestor == &editContext->TextNode()) {
-      return true;
-    }
-  }
   return commonAncestor && commonAncestor->IsContent() &&
          commonAncestor->IsInclusiveDescendantOf(&aEditingHost);
 }
@@ -194,8 +185,9 @@ bool AutoClonedRangeArray::AdjustRangesNotInReplacedNorVoidElements(
         // range.
         if (aRangeInReplacedOrVoidElement ==
                 RangeInReplacedOrVoidElement::Delete ||
-            NS_WARN_IF(NS_FAILED(range->CollapseTo(
-                RawRangeBoundary::FromChild(*replacedOrVoidElementAtStart)))) ||
+            NS_WARN_IF(NS_FAILED(range->CollapseTo(RawRangeBoundary(
+                replacedOrVoidElementAtStart->GetParentNode(),
+                replacedOrVoidElementAtStart->GetPreviousSibling())))) ||
             MOZ_UNLIKELY(
                 !AutoClonedRangeArray::IsEditableRange(range, aEditingHost))) {
           mRanges.RemoveElementAt(index);
@@ -206,7 +198,8 @@ bool AutoClonedRangeArray::AdjustRangesNotInReplacedNorVoidElements(
         // If the range does not end in the replaced element or the void
         // element, let's treat that the range starts after the element.
         if (NS_WARN_IF(NS_FAILED(range->SetStartAndEnd(
-                RawRangeBoundary::After(*replacedOrVoidElementAtStart),
+                RawRangeBoundary(replacedOrVoidElementAtStart->GetParentNode(),
+                                 replacedOrVoidElementAtStart),
                 range->EndRef()))) ||
             MOZ_UNLIKELY(
                 !AutoClonedRangeArray::IsEditableRange(range, aEditingHost))) {
@@ -228,7 +221,9 @@ bool AutoClonedRangeArray::AdjustRangesNotInReplacedNorVoidElements(
         // treat that the range ends before the element.
         if (NS_WARN_IF(NS_FAILED(range->SetStartAndEnd(
                 range->StartRef(),
-                RawRangeBoundary::FromChild(*replacedOrVoidElementAtEnd)))) ||
+                RawRangeBoundary(
+                    replacedOrVoidElementAtEnd->GetParentNode(),
+                    replacedOrVoidElementAtEnd->GetPreviousSibling())))) ||
             MOZ_UNLIKELY(
                 !AutoClonedRangeArray::IsEditableRange(range, aEditingHost))) {
           mRanges.RemoveElementAt(index);
@@ -319,18 +314,7 @@ AutoClonedRangeArray::ShrinkRangesIfStartFromOrEndAfterAtomicContent(
                "Changing range in selection may cause running script");
     Result<bool, nsresult> result =
         WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
-            {// We need to treat non-editable node in the range as an atomic
-             // content.
-             WSRunScanner::Option::OnlyEditableNodes,
-             // The range may contain an atomic content with empty inline
-             // containers and/or comment nodes which should be treated as
-             // invisible to delete content.  Therefore, we shouldn't shrink to
-             // the only visible atomic content in such case so that we need to
-             // stop scanning if the start boundary is followed by an empty
-             // container or a comment.
-             WSRunScanner::Option::StopAtAnyEmptyInlineContainers,
-             WSRunScanner::Option::StopAtComment},
-            range);
+            {WSRunScanner::Option::OnlyEditableNodes}, range);
     if (result.isErr()) {
       NS_WARNING(
           "WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent() "
@@ -453,26 +437,20 @@ GetPointAtFirstContentOfLineOrParentHTMLBlockIfFirstContentOfBlock(
   // Look back through any further inline nodes that aren't across a <br>
   // from us, and that are enclosed in the same block.
   // I.e., looking for start of current hard line.
-  for (nsIContent* previousEditableContent =
-           HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-               point,
-               {LeafNodeOption::IgnoreNonEditableNode,
-                LeafNodeOption::TreatChildBlockAsLeafNode},
-               aBlockInlineCheck, &aAncestorLimiter);
+  constexpr HTMLEditUtils::WalkTreeOptions
+      ignoreNonEditableNodeAndStopAtBlockBoundary{
+          HTMLEditUtils::WalkTreeOption::IgnoreNonEditableNode,
+          HTMLEditUtils::WalkTreeOption::StopAtBlockBoundary};
+  for (nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           aBlockInlineCheck, &aAncestorLimiter);
        previousEditableContent && previousEditableContent->GetParentNode() &&
-       (!previousEditableContent->IsHTMLElement(nsGkAtoms::br) ||
-        // FIXME: We're scanning backward so that it does not make sense to
-        // check the following thing continuously.
-        HTMLEditUtils::IsBRElementFollowedByBlockBoundary(
-            static_cast<HTMLBRElement&>(*previousEditableContent))) &&
+       !HTMLEditUtils::IsVisibleBRElement(*previousEditableContent) &&
        !HTMLEditUtils::IsBlockElement(*previousEditableContent,
                                       aBlockInlineCheck);
-       previousEditableContent =
-           HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-               point,
-               {LeafNodeOption::IgnoreNonEditableNode,
-                LeafNodeOption::TreatChildBlockAsLeafNode},
-               aBlockInlineCheck, &aAncestorLimiter)) {
+       previousEditableContent = HTMLEditUtils::GetPreviousContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           aBlockInlineCheck, &aAncestorLimiter)) {
     EditorDOMPoint atLastPreformattedNewLine =
         HTMLEditUtils::GetPreviousPreformattedNewLineInTextNode<EditorDOMPoint>(
             EditorRawDOMPoint::AtEndOf(*previousEditableContent));
@@ -486,20 +464,14 @@ GetPointAtFirstContentOfLineOrParentHTMLBlockIfFirstContentOfBlock(
   // <br> element.  Look up the tree for as long as we are the first node in
   // the container (typically, start of nearest block ancestor), and as long
   // as we haven't hit the body node.
-  for (nsIContent* nearContent =
-           HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-               point,
-               {LeafNodeOption::IgnoreNonEditableNode,
-                LeafNodeOption::TreatChildBlockAsLeafNode},
-               aBlockInlineCheck, &aAncestorLimiter);
+  for (nsIContent* nearContent = HTMLEditUtils::GetPreviousContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           aBlockInlineCheck, &aAncestorLimiter);
        !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
        point.GetContainerParent();
-       nearContent =
-           HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-               point,
-               {LeafNodeOption::IgnoreNonEditableNode,
-                LeafNodeOption::TreatChildBlockAsLeafNode},
-               aBlockInlineCheck, &aAncestorLimiter)) {
+       nearContent = HTMLEditUtils::GetPreviousContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           aBlockInlineCheck, &aAncestorLimiter)) {
     // Don't keep looking up if we have found a blockquote element to act on
     // when we handle outdent.
     // XXX Sounds like this is hacky.  If possible, it should be check in
@@ -587,10 +559,8 @@ GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
       // invisible if it's immediately before a block boundary.  In such
       // case, we should return the block boundary.
       Element* maybeNonEditableBlockElement = nullptr;
-      if (HTMLEditUtils::IsPreformattedLineBreakFollowedByBlockBoundary(
-              atNextPreformattedNewLine,
-              HTMLEditUtils::SkipWhiteSpaceStyleCheck::Yes, nullptr,
-              &maybeNonEditableBlockElement) &&
+      if (HTMLEditUtils::IsInvisiblePreformattedNewLine(
+              atNextPreformattedNewLine, &maybeNonEditableBlockElement) &&
           maybeNonEditableBlockElement) {
         // If the block is a parent of the editing host, let's return end
         // of editing host.
@@ -631,22 +601,20 @@ GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
   //     * <div contenteditable>foo[]<b contenteditable="false">bar</b>baz</div>
   //     Only in the first case, after the caret position isn't wrapped with
   //     new <div> element.
-  for (nsIContent* nextEditableContent =
-           HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-               point,
-               {LeafNodeOption::IgnoreNonEditableNode,
-                LeafNodeOption::TreatChildBlockAsLeafNode},
-               aBlockInlineCheck, &aAncestorLimiter);
+  constexpr HTMLEditUtils::WalkTreeOptions
+      ignoreNonEditableNodeAndStopAtBlockBoundary{
+          HTMLEditUtils::WalkTreeOption::IgnoreNonEditableNode,
+          HTMLEditUtils::WalkTreeOption::StopAtBlockBoundary};
+  for (nsIContent* nextEditableContent = HTMLEditUtils::GetNextContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           aBlockInlineCheck, &aAncestorLimiter);
        nextEditableContent &&
        !HTMLEditUtils::IsBlockElement(*nextEditableContent,
                                       aBlockInlineCheck) &&
        nextEditableContent->GetParent();
-       nextEditableContent =
-           HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-               point,
-               {LeafNodeOption::IgnoreNonEditableNode,
-                LeafNodeOption::TreatChildBlockAsLeafNode},
-               aBlockInlineCheck, &aAncestorLimiter)) {
+       nextEditableContent = HTMLEditUtils::GetNextContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           aBlockInlineCheck, &aAncestorLimiter)) {
     EditorDOMPoint atFirstPreformattedNewLine =
         HTMLEditUtils::GetInclusiveNextPreformattedNewLineInTextNode<
             EditorDOMPoint>(EditorRawDOMPoint(nextEditableContent, 0));
@@ -655,10 +623,8 @@ GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
       // invisible if it's immediately before a block boundary.  In such
       // case, we should return the block boundary.
       Element* maybeNonEditableBlockElement = nullptr;
-      if (HTMLEditUtils::IsPreformattedLineBreakFollowedByBlockBoundary(
-              atFirstPreformattedNewLine,
-              HTMLEditUtils::SkipWhiteSpaceStyleCheck::Yes, nullptr,
-              &maybeNonEditableBlockElement) &&
+      if (HTMLEditUtils::IsInvisiblePreformattedNewLine(
+              atFirstPreformattedNewLine, &maybeNonEditableBlockElement) &&
           maybeNonEditableBlockElement) {
         // If the block is a parent of the editing host, let's return end
         // of editing host.
@@ -683,11 +649,8 @@ GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
     if (NS_WARN_IF(!point.IsSet())) {
       break;
     }
-    if (HTMLBRElement* const nextBRElement =
-            HTMLBRElement::FromNode(*nextEditableContent)) {
-      if (!HTMLEditUtils::IsBRElementFollowedByBlockBoundary(*nextBRElement)) {
-        break;
-      }
+    if (HTMLEditUtils::IsVisibleBRElement(*nextEditableContent)) {
+      break;
     }
   }
 
@@ -695,18 +658,13 @@ GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
   // element.  Look up the tree for as long as we are the last node in the
   // container (typically, block node), and as long as we haven't hit the body
   // node.
-  for (nsIContent* nearContent =
-           HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-               point,
-               {LeafNodeOption::IgnoreNonEditableNode,
-                LeafNodeOption::TreatChildBlockAsLeafNode},
-               aBlockInlineCheck, &aAncestorLimiter);
+  for (nsIContent* nearContent = HTMLEditUtils::GetNextContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           aBlockInlineCheck, &aAncestorLimiter);
        !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
        point.GetContainerParent();
-       nearContent = HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-           point,
-           {LeafNodeOption::IgnoreNonEditableNode,
-            LeafNodeOption::TreatChildBlockAsLeafNode},
+       nearContent = HTMLEditUtils::GetNextContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
            aBlockInlineCheck, &aAncestorLimiter)) {
     // Don't walk past the editable section. Note that we need to check before
     // walking up to a parent because we need to return the parent object, so
@@ -1055,8 +1013,7 @@ nsresult AutoClonedRangeArray::CollectEditTargetNodes(
            Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
         if (const Text* text = aOutArrayOfContents[index]->GetAsText()) {
           // Don't select empty text except to empty block
-          if (!HTMLEditUtils::IsVisibleTextNode(
-                  *text, HTMLEditUtils::TreatInvisibleLineBreakAs::Visible)) {
+          if (!HTMLEditUtils::IsVisibleTextNode(*text)) {
             aOutArrayOfContents.RemoveElementAt(index);
           }
         }
@@ -1088,10 +1045,11 @@ nsresult AutoClonedRangeArray::CollectEditTargetNodes(
       if (aOutArrayOfContents.Length() != 1) {
         break;
       }
-      Element* const deepestDivBlockquoteOrListElement =
+      Element* deepestDivBlockquoteOrListElement =
           HTMLEditUtils::GetInclusiveDeepestFirstChildWhichHasOneChild(
-              aOutArrayOfContents[0], {LeafNodeOption::IgnoreNonEditableNode},
-              BlockInlineCheck::Auto, nsGkAtoms::div, nsGkAtoms::blockquote,
+              aOutArrayOfContents[0],
+              {HTMLEditUtils::WalkTreeOption::IgnoreNonEditableNode},
+              BlockInlineCheck::Unused, nsGkAtoms::div, nsGkAtoms::blockquote,
               nsGkAtoms::ul, nsGkAtoms::ol, nsGkAtoms::dl);
       if (!deepestDivBlockquoteOrListElement) {
         break;

@@ -32,12 +32,12 @@ import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCardsAddressesStorage
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.SwitchWithLabel
 import org.mozilla.fenix.compose.list.RadioButtonListItem
-import org.mozilla.fenix.compose.list.SwitchListItem
 import org.mozilla.fenix.compose.list.TextListItem
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -144,11 +144,10 @@ private fun DebugRegionsToEnableSection(
 
     Column {
         debugRegionStates.forEach { debugLocaleState ->
-            SwitchListItem(
+            SwitchWithLabel(
                 label = debugLocaleState.region.name,
                 checked = debugLocaleState.enabled,
-                showSwitchAfter = true,
-                onClick = { onRegionToggled(debugLocaleState.region, it) },
+                onCheckedChange = { onRegionToggled(debugLocaleState.region, it) },
             )
         }
     }
@@ -235,7 +234,7 @@ private fun List<DebugRegionEnabledState>.updateRegionEnabled(regionToUpdate: De
 @Preview
 @Composable
 private fun AddressesScreenPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         AddressesTools(

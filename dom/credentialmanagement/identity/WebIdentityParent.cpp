@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,7 +36,6 @@ mozilla::ipc::IPCResult WebIdentityParent::RecvGetIdentityCredential(
   WindowGlobalParent* manager = static_cast<WindowGlobalParent*>(Manager());
   if (!manager) {
     aResolver(NS_ERROR_FAILURE);
-    return IPC_OK();
   }
   identity::GetCredentialInMainProcess(
       manager->DocumentPrincipal(), this, std::move(aOptions),
@@ -54,7 +55,6 @@ mozilla::ipc::IPCResult WebIdentityParent::RecvDisconnectIdentityCredential(
   WindowGlobalParent* manager = static_cast<WindowGlobalParent*>(Manager());
   if (!manager) {
     aResolver(NS_ERROR_FAILURE);
-    return IPC_OK();
   }
   identity::DisconnectInMainProcess(manager->DocumentPrincipal(), aOptions)
       ->Then(
@@ -69,7 +69,6 @@ mozilla::ipc::IPCResult WebIdentityParent::RecvPreventSilentAccess(
   WindowGlobalParent* manager = static_cast<WindowGlobalParent*>(Manager());
   if (!manager) {
     aResolver(NS_ERROR_FAILURE);
-    return IPC_OK();
   }
   nsIPrincipal* principal = manager->DocumentPrincipal();
   if (principal) {

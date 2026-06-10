@@ -33,8 +33,6 @@ const {
  * and used even if the Network panel UI doesn't exist.
  */
 class NetMonitorAPI extends EventEmitter {
-  #requestFinishedListeners;
-
   constructor() {
     super();
 
@@ -42,7 +40,7 @@ class NetMonitorAPI extends EventEmitter {
     this.connector = new Connector();
 
     // List of listeners for `devtools.network.onRequestFinished` WebExt API
-    this.#requestFinishedListeners = new Set();
+    this._requestFinishedListeners = new Set();
 
     // Bind event handlers
     this.onPayloadReady = this.onPayloadReady.bind(this);
@@ -113,7 +111,7 @@ class NetMonitorAPI extends EventEmitter {
    * every finished HTTP request used by WebExtensions API.
    */
   async onPayloadReady(resource) {
-    if (!this.#requestFinishedListeners.size) {
+    if (!this._requestFinishedListeners.size) {
       return;
     }
 
@@ -143,7 +141,7 @@ class NetMonitorAPI extends EventEmitter {
     const harEntry = har.log.entries[0];
     delete harEntry.pageref;
 
-    this.#requestFinishedListeners.forEach(listener =>
+    this._requestFinishedListeners.forEach(listener =>
       listener({
         harEntry,
         requestId: resource.actor,
@@ -167,15 +165,15 @@ class NetMonitorAPI extends EventEmitter {
    *        as first argument.
    */
   addRequestFinishedListener(listener) {
-    this.#requestFinishedListeners.add(listener);
+    this._requestFinishedListeners.add(listener);
   }
 
   removeRequestFinishedListener(listener) {
-    this.#requestFinishedListeners.delete(listener);
+    this._requestFinishedListeners.delete(listener);
   }
 
   hasRequestFinishedListeners() {
-    return this.#requestFinishedListeners.size > 0;
+    return this._requestFinishedListeners.size > 0;
   }
 
   /**

@@ -37,7 +37,6 @@ class ManifestUpdateFeature(
     private val storage: ManifestStorage,
     private val sessionId: String,
     private var initialManifest: WebAppManifest,
-    private val mainScope: CoroutineScope = MainScope(),
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -59,7 +58,7 @@ class ManifestUpdateFeature(
     }
 
     override fun start() {
-        scope = mainScope.also { observeManifestChanges(it) }
+        scope = MainScope().also { observeManifestChanges(it) }
         updateUsageJob?.cancel()
 
         updateUsageJob = scope?.launch {

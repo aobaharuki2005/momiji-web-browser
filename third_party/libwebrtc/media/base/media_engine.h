@@ -14,10 +14,11 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <span>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/audio/audio_device.h"
+#include "api/audio_codecs/audio_codec_pair_id.h"
 #include "api/audio_codecs/audio_decoder_factory.h"
 #include "api/audio_codecs/audio_encoder_factory.h"
 #include "api/audio_options.h"
@@ -43,13 +44,13 @@ class Call;
 // Checks that the scalability_mode value of each encoding is supported by at
 // least one video codec of the list. If the list is empty, no check is done.
 RTCError CheckScalabilityModeValues(const RtpParameters& new_parameters,
-                                    std::span<const Codec> send_codecs,
+                                    ArrayView<Codec> send_codecs,
                                     std::optional<Codec> send_codec);
 
 // Checks the parameters have valid and supported values, and checks parameters
 // with CheckScalabilityModeValues().
 RTCError CheckRtpParametersValues(const RtpParameters& new_parameters,
-                                  std::span<const Codec> send_codecs,
+                                  ArrayView<Codec> send_codecs,
                                   std::optional<Codec> send_codec,
                                   const FieldTrialsView& field_trials);
 
@@ -58,7 +59,7 @@ RTCError CheckRtpParametersValues(const RtpParameters& new_parameters,
 RTCError CheckRtpParametersInvalidModificationAndValues(
     const RtpParameters& old_parameters,
     const RtpParameters& new_parameters,
-    std::span<const Codec> send_codecs,
+    ArrayView<Codec> send_codecs,
     std::optional<Codec> send_codec,
     const FieldTrialsView& field_trials);
 
@@ -77,13 +78,13 @@ class RtpHeaderExtensionQueryInterface {
   // Returns a vector of RtpHeaderExtensionCapability, whose direction is
   // kStopped if the extension is stopped (not used) by default.
   virtual std::vector<RtpHeaderExtensionCapability> GetRtpHeaderExtensions(
-      const FieldTrialsView* field_trials) const = 0;
+      const webrtc::FieldTrialsView* field_trials) const = 0;
 };
 
 class VoiceEngineInterface : public RtpHeaderExtensionQueryInterface {
  public:
   VoiceEngineInterface() = default;
-  ~VoiceEngineInterface() override = default;
+  virtual ~VoiceEngineInterface() = default;
 
   VoiceEngineInterface(const VoiceEngineInterface&) = delete;
   VoiceEngineInterface& operator=(const VoiceEngineInterface&) = delete;
@@ -91,8 +92,6 @@ class VoiceEngineInterface : public RtpHeaderExtensionQueryInterface {
   // Initialization
   // Starts the engine.
   virtual void Init() = 0;
-  // Stops the engine.
-  virtual void Terminate() = 0;
 
   // TODO(solenberg): Remove once VoE API refactoring is done.
   virtual scoped_refptr<AudioState> GetAudioState() const = 0;
@@ -102,14 +101,16 @@ class VoiceEngineInterface : public RtpHeaderExtensionQueryInterface {
       Call* call,
       const MediaConfig& config,
       const AudioOptions& options,
-      const CryptoOptions& crypto_options) = 0;
+      const CryptoOptions& crypto_options,
+      AudioCodecPairId codec_pair_id) = 0;
 
   virtual std::unique_ptr<VoiceMediaReceiveChannelInterface>
   CreateReceiveChannel(const Environment& env,
                        Call* call,
                        const MediaConfig& config,
                        const AudioOptions& options,
-                       const CryptoOptions& crypto_options) = 0;
+                       const CryptoOptions& crypto_options,
+                       AudioCodecPairId codec_pair_id) = 0;
 
   // Legacy: Retrieve list of supported codecs.
   // + protection codecs, and assigns PT numbers that may have to be
@@ -142,7 +143,7 @@ class VoiceEngineInterface : public RtpHeaderExtensionQueryInterface {
 class VideoEngineInterface : public RtpHeaderExtensionQueryInterface {
  public:
   VideoEngineInterface() = default;
-  ~VideoEngineInterface() override = default;
+  virtual ~VideoEngineInterface() = default;
 
   VideoEngineInterface(const VideoEngineInterface&) = delete;
   VideoEngineInterface& operator=(const VideoEngineInterface&) = delete;
@@ -153,9 +154,7 @@ class VideoEngineInterface : public RtpHeaderExtensionQueryInterface {
       const MediaConfig& config,
       const VideoOptions& options,
       const CryptoOptions& crypto_options,
-      VideoBitrateAllocatorFactory* video_bitrate_allocator_factory,
-      VideoMediaSendChannelInterface::EncoderSwitchRequestCallback
-          video_encoder_switch_request_callback = nullptr) = 0;
+      VideoBitrateAllocatorFactory* video_bitrate_allocator_factory) = 0;
 
   virtual std::unique_ptr<VideoMediaReceiveChannelInterface>
   CreateReceiveChannel(const Environment& env,
@@ -196,10 +195,8 @@ class MediaEngineInterface {
  public:
   virtual ~MediaEngineInterface() {}
 
-  // Init . Needs to be called on the worker thread.
-  virtual void Init() = 0;
-  // Terminate. Needs to be called on the worker thread.
-  virtual void Terminate() = 0;
+  // Initialization. Needs to be called on the worker thread.
+  virtual bool Init() = 0;
 
   virtual VoiceEngineInterface& voice() = 0;
   virtual VideoEngineInterface& video() = 0;
@@ -219,8 +216,8 @@ class CompositeMediaEngine : public MediaEngineInterface {
                        std::unique_ptr<VideoEngineInterface> video_engine);
   ~CompositeMediaEngine() override;
 
-  void Init() override;
-  void Terminate() override;
+  // Always succeeds.
+  bool Init() override;
 
   VoiceEngineInterface& voice() override;
   VideoEngineInterface& video() override;
@@ -242,7 +239,7 @@ RtpParameters CreateRtpParametersWithEncodings(StreamParams sp);
 // GetRtpHeaderExtensions() that are not kStopped.
 std::vector<RtpExtension> GetDefaultEnabledRtpHeaderExtensions(
     const RtpHeaderExtensionQueryInterface& query_interface,
-    const FieldTrialsView* field_trials);
+    const webrtc::FieldTrialsView* field_trials);
 
 }  //  namespace webrtc
 

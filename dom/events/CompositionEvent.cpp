@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -78,7 +80,7 @@ void CompositionEvent::GetRanges(TextClauseArray& aRanges) {
   if (!textRangeArray) {
     return;
   }
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mOwner);
   const TextRange* targetRange = textRangeArray->GetTargetClause();
   for (size_t i = 0; i < textRangeArray->Length(); i++) {
     const TextRange& range = textRangeArray->ElementAt(i);

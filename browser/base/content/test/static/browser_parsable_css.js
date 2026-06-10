@@ -55,19 +55,6 @@ if (AppConstants.platform != "macosx") {
   });
 }
 
-if (!Services.prefs.getBoolPref("dom.select.customizable_select.enabled")) {
-  ignoreList.push({
-    sourceName: /\bforms\.css$/i,
-    errorMessage: /Unknown pseudo-class or pseudo-element ‘picker’./i,
-    isFromDevTools: false,
-  });
-  ignoreList.push({
-    sourceName: /\bforms\.css$/i,
-    errorMessage: /Unknown pseudo-class or pseudo-element ‘checkmark’./i,
-    isFromDevTools: false,
-  });
-}
-
 if (!Services.prefs.getBoolPref("layout.css.zoom.enabled")) {
   ignoreList.push({
     sourceName: /\bscrollbars\.css$/i,
@@ -111,20 +98,10 @@ if (!Services.prefs.getBoolPref("dom.viewTransitions.enabled")) {
   });
 }
 
-if (
-  !Services.prefs.getBoolPref("layout.css.scroll-driven-animations.enabled")
-) {
+if (!Services.prefs.getBoolPref("mathml.math_shift.enabled")) {
   ignoreList.push({
-    sourceName: /smartbar\.css$/i,
-    errorMessage: /Unknown property .*animation-timeline/i,
-    isFromDevTools: false,
-  });
-}
-
-if (!Services.prefs.getBoolPref("dom.headingoffset.enabled")) {
-  ignoreList.push({
-    sourceName: /\b(html)\.css$/i,
-    errorMessage: /Unknown pseudo-class.*heading/i,
+    sourceName: /\bmathml\.css$/i,
+    errorMessage: /Unknown property.*math-shift/i,
     isFromDevTools: false,
   });
 }
@@ -136,6 +113,7 @@ let propNameAllowlist = [
   { propName: "--clickToPlay-width", isFromDevTools: false },
   { propName: "--playButton-width", isFromDevTools: false },
   { propName: "--muteButton-width", isFromDevTools: false },
+  { propName: "--castingButton-width", isFromDevTools: false },
   { propName: "--closedCaptionButton-width", isFromDevTools: false },
   { propName: "--fullscreenButton-width", isFromDevTools: false },
   { propName: "--durationSpan-width", isFromDevTools: false },
@@ -148,6 +126,9 @@ let propNameAllowlist = [
   { propName: "--bezier-diagonal-color", isFromDevTools: true },
   { propName: "--highlighter-font-family", isFromDevTools: true },
 
+  // This variable is used from CSS embedded in JS in adjustableTitle.js
+  { propName: "--icon-url", isFromDevTools: false },
+
   // These are referenced from devtools files.
   {
     propName: "--browser-stack-z-index-devtools-splitter",
@@ -159,9 +140,10 @@ let propNameAllowlist = [
   // styles, which confuses the test.
   { propName: "--panel-border-radius", isFromDevTools: true },
   { propName: "--panel-padding", isFromDevTools: true },
-  { propName: "--panel-background-color", isFromDevTools: true },
+  { propName: "--panel-background", isFromDevTools: true },
   { propName: "--panel-border-color", isFromDevTools: true },
-  { propName: "--panel-box-shadow", isFromDevTools: true },
+  { propName: "--panel-shadow", isFromDevTools: true },
+  { propName: "--panel-shadow-margin", isFromDevTools: true },
 
   // These variables are set in host CSS but consumed in shadow DOM CSS
   // (content-search-handoff-ui component), which confuses the test.
@@ -215,74 +197,12 @@ let propNameAllowlist = [
   { propName: "--tab-group-color-gray-invert", isFromDevTools: false },
   { propName: "--tab-group-color-gray-pale", isFromDevTools: false },
 
-  { propName: "--tab-group-blue", isFromDevTools: false },
-  { propName: "--tab-group-blue-invert", isFromDevTools: false },
-  { propName: "--tab-group-blue-hover", isFromDevTools: false },
-  { propName: "--tab-group-blue-text", isFromDevTools: false },
-  { propName: "--tab-group-blue-text-invert", isFromDevTools: false },
-
-  { propName: "--tab-group-purple", isFromDevTools: false },
-  { propName: "--tab-group-purple-invert", isFromDevTools: false },
-  { propName: "--tab-group-purple-hover", isFromDevTools: false },
-  { propName: "--tab-group-purple-text", isFromDevTools: false },
-  { propName: "--tab-group-purple-text-invert", isFromDevTools: false },
-
-  { propName: "--tab-group-cyan", isFromDevTools: false },
-  { propName: "--tab-group-cyan-invert", isFromDevTools: false },
-  { propName: "--tab-group-cyan-hover", isFromDevTools: false },
-  { propName: "--tab-group-cyan-text", isFromDevTools: false },
-  { propName: "--tab-group-cyan-text-invert", isFromDevTools: false },
-
-  { propName: "--tab-group-orange", isFromDevTools: false },
-  { propName: "--tab-group-orange-invert", isFromDevTools: false },
-  { propName: "--tab-group-orange-hover", isFromDevTools: false },
-  { propName: "--tab-group-orange-text", isFromDevTools: false },
-  { propName: "--tab-group-orange-text-invert", isFromDevTools: false },
-
-  { propName: "--tab-group-yellow", isFromDevTools: false },
-  { propName: "--tab-group-yellow-invert", isFromDevTools: false },
-  { propName: "--tab-group-yellow-hover", isFromDevTools: false },
-  { propName: "--tab-group-yellow-text", isFromDevTools: false },
-  { propName: "--tab-group-yellow-text-invert", isFromDevTools: false },
-
-  { propName: "--tab-group-pink", isFromDevTools: false },
-  { propName: "--tab-group-pink-invert", isFromDevTools: false },
-  { propName: "--tab-group-pink-hover", isFromDevTools: false },
-  { propName: "--tab-group-pink-text", isFromDevTools: false },
-  { propName: "--tab-group-pink-text-invert", isFromDevTools: false },
-
-  { propName: "--tab-group-green", isFromDevTools: false },
-  { propName: "--tab-group-green-invert", isFromDevTools: false },
-  { propName: "--tab-group-green-hover", isFromDevTools: false },
-  { propName: "--tab-group-green-text", isFromDevTools: false },
-  { propName: "--tab-group-green-text-invert", isFromDevTools: false },
-
-  { propName: "--tab-group-red", isFromDevTools: false },
-  { propName: "--tab-group-red-invert", isFromDevTools: false },
-  { propName: "--tab-group-red-hover", isFromDevTools: false },
-  { propName: "--tab-group-red-text", isFromDevTools: false },
-  { propName: "--tab-group-red-text-invert", isFromDevTools: false },
-
-  { propName: "--tab-group-gray", isFromDevTools: false },
-  { propName: "--tab-group-gray-invert", isFromDevTools: false },
-  { propName: "--tab-group-gray-hover", isFromDevTools: false },
-  { propName: "--tab-group-gray-text", isFromDevTools: false },
-  { propName: "--tab-group-gray-text-invert", isFromDevTools: false },
-
   /* Allow design tokens in devtools without all variables being used there */
   { sourceName: /\/design-system\/tokens-.*\.css$/, isFromDevTools: true },
 
   // Ignore token properties that follow the patterns --color-[name], --color-[name]-[number], or --color-[name]-alpha-[number]
   // This enables us to provide our full color palette for developers.
   { propName: /--color-[a-z]+(-alpha)?(-\d+)?/, isFromDevTools: false },
-
-  // Ignore token properties that follow the patterns --dimension-[number] or --dimension-relative-[number]
-  // This enables us to provide our full size/spacing system for developers.
-  { propName: /--dimension(-relative)?-\d+/, isFromDevTools: false },
-
-  // This variable is read from JS to determine the column count when handling
-  // keyboard navigation in the New Tab sections grid.
-  { propName: "--sections-col-count", isFromDevTools: false },
 ];
 
 // Add suffix to stylesheets' URI so that we always load them here and
@@ -458,99 +378,57 @@ function processCSSRules(container) {
     if (!rule.style) {
       continue; // @layer (statement), @font-feature-values, @counter-style
     }
-
-    // We want to extract urls and variables from the css text.
-    // Let's parse the css text so we can iterate through the tokens, which is more
-    // reliable than trying to extract data with regexes.
+    // Extract urls from the css text.
+    // Note: CSSRule.style.cssText always has double quotes around URLs even
+    //       when the original CSS file didn't.
     let cssText = rule.style.cssText;
-    {
-      const lexer = new InspectorCSSParser(cssText);
-      let token;
-      let currentDeclarationName;
-      let foundVarFunc = false;
-      let foundUrlFunc = false;
+    let urls = cssText.match(/url\("[^"]*"\)/g);
+    // Extract props by searching all "--" preceded by "var(" or a non-word
+    // character.
+    let props = cssText.match(/(var\(\s*|\W|^)(--[\w\-]+)/g);
+    if (!urls && !props) {
+      continue;
+    }
 
-      while ((token = lexer.nextToken())) {
-        // At the beginning, we're looking for the declaration name
-        if (!currentDeclarationName) {
-          // which should be the first Ident token we see
-          if (token.tokenType === "Ident") {
-            currentDeclarationName = token.text;
+    for (let url of urls || []) {
+      // Remove the url(" prefix and the ") suffix.
+      url = url.replace(/url\("(.*)"\)/, "$1");
+      if (url.startsWith("data:")) {
+        continue;
+      }
 
-            // If it starts with "--", we have a custom property declaration
-            if (token.text.startsWith("--")) {
-              const prop = token.text;
-              if (!customPropsToReferencesMap.has(prop)) {
-                customPropsToReferencesMap.set(prop, undefined);
-                if (!customPropsDefinitionFileMap.has(prop)) {
-                  customPropsDefinitionFileMap.set(prop, new Set());
-                }
-                customPropsDefinitionFileMap
-                  .get(prop)
-                  .add(container.href || container.parentStyleSheet.href);
-              }
-            }
+      // Make the url absolute and remove the ref.
+      let baseURI = Services.io.newURI(rule.parentStyleSheet.href);
+      url = Services.io.newURI(url, null, baseURI).specIgnoringRef;
+
+      // Store the image url along with the css file referencing it.
+      let baseUrl = baseURI.spec.split("?always-parse-css")[0];
+      if (!imageURIsToReferencesMap.has(url)) {
+        imageURIsToReferencesMap.set(url, new Set([baseUrl]));
+      } else {
+        imageURIsToReferencesMap.get(url).add(baseUrl);
+      }
+    }
+
+    for (let prop of props || []) {
+      if (prop.startsWith("var(")) {
+        prop = prop.substring(4).trim();
+        let prevValue = customPropsToReferencesMap.get(prop) || 0;
+        customPropsToReferencesMap.set(prop, prevValue + 1);
+      } else {
+        // Remove the extra non-word character captured by the regular
+        // expression if needed.
+        if (prop[0] != "-") {
+          prop = prop.substring(1);
+        }
+        if (!customPropsToReferencesMap.has(prop)) {
+          customPropsToReferencesMap.set(prop, undefined);
+          if (!customPropsDefinitionFileMap.has(prop)) {
+            customPropsDefinitionFileMap.set(prop, new Set());
           }
-          continue;
-        }
-        // At this point, we found the declaration name, so we're parsing the declaration value
-
-        // we're looking for usages of the `var()` function to collect referenced custom property names
-        if (token.tokenType === "Function" && token.value === "var") {
-          foundVarFunc = true;
-          continue;
-        }
-        // If we saw a `var(` token before, then the next Ident should contain a custom
-        // property name
-        if (
-          foundVarFunc &&
-          token.tokenType === "Ident" &&
-          token.text.startsWith("--")
-        ) {
-          foundVarFunc = false;
-          const prop = token.text;
-          let prevValue = customPropsToReferencesMap.get(prop) || 0;
-          customPropsToReferencesMap.set(prop, prevValue + 1);
-          continue;
-        }
-
-        // we're also looking for usages of the `url()` function
-        if (token.tokenType === "Function" && token.value === "url") {
-          foundUrlFunc = true;
-          continue;
-        }
-        // If we saw a `url(` token before, then the next QuotedString should contain
-        // the actual URL (CSSRule.style.cssText always has double quotes around URLs
-        // even when the original CSS file didn't).
-        if (foundUrlFunc && token.tokenType === "QuotedString") {
-          foundUrlFunc = false;
-          let url = token.value;
-          if (url.startsWith("data:")) {
-            continue;
-          }
-
-          // Make the url absolute and remove the ref.
-          let baseURI = Services.io.newURI(rule.parentStyleSheet.href);
-          url = Services.io.newURI(url, null, baseURI).specIgnoringRef;
-
-          // Store the image url along with the css file referencing it.
-          let baseUrl = baseURI.spec.split("?always-parse-css")[0];
-          if (!imageURIsToReferencesMap.has(url)) {
-            imageURIsToReferencesMap.set(url, new Set([baseUrl]));
-          } else {
-            imageURIsToReferencesMap.get(url).add(baseUrl);
-          }
-
-          continue;
-        }
-
-        // When seeing a semi colon, we can reset the work variable so we're ready
-        // to parse the next declaration
-        if (token.tokenType === "Semicolon") {
-          foundVarFunc = false;
-          foundUrlFunc = false;
-          currentDeclarationName = null;
-          continue;
+          customPropsDefinitionFileMap
+            .get(prop)
+            .add(container.href || container.parentStyleSheet.href);
         }
       }
     }

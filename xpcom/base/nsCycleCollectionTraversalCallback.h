@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCycleCollectionTraversalCallback_h_
-#define nsCycleCollectionTraversalCallback_h_
+#ifndef nsCycleCollectionTraversalCallback_h__
+#define nsCycleCollectionTraversalCallback_h__
 
 #include <cstdint>
 #include "nscore.h"
@@ -65,4 +67,4 @@ class NS_NO_VTABLE nsCycleCollectionTraversalCallback {
   uint32_t mFlags;
 };
 
-#endif  // nsCycleCollectionTraversalCallback_h_
+#endif  // nsCycleCollectionTraversalCallback_h__

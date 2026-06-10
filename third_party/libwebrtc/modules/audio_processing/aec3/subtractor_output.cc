@@ -12,7 +12,8 @@
 
 #include <algorithm>
 #include <numeric>
-#include <span>
+
+#include "api/array_view.h"
 
 namespace webrtc {
 
@@ -35,7 +36,7 @@ void SubtractorOutput::Reset() {
   y2 = 0.f;
 }
 
-void SubtractorOutput::ComputeMetrics(std::span<const float> y) {
+void SubtractorOutput::ComputeMetrics(ArrayView<const float> y) {
   const auto sum_of_squares = [](float a, float b) { return a + b * b; };
   y2 = std::accumulate(y.begin(), y.end(), 0.f, sum_of_squares);
   e2_refined =

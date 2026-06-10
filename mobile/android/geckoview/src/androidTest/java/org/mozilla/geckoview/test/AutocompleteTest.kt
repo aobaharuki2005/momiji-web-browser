@@ -1,4 +1,5 @@
-/* Any copyright is dedicated to the Public Domain.
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
+ * Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 package org.mozilla.geckoview.test
@@ -37,17 +38,6 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class AutocompleteTest : BaseSessionTest() {
-	@org.junit.Before
-    fun setup() {
-        // Ensure programmatic focus is allowed to open the autofill popup
-        // for all tests in this class.
-        sessionRule.setPrefsUntilTestEnd(
-            mapOf(
-                "extensions.formautofill.skipProgrammaticCheckForTests" to true,
-            ),
-        )
-    }
-
     val acceptDelay: Long = 100
 
     // This is a utility to delete previous credit card and address information.
@@ -2737,96 +2727,5 @@ class AutocompleteTest : BaseSessionTest() {
                 )
             }
         }
-    }
-
-    @Test
-    fun loginSelectRelayUsername() {
-        sessionRule.setPrefsUntilTestEnd(
-            mapOf(
-                // Enable login management since it's disabled in automation.
-                "signon.rememberSignons" to true,
-                "signon.autofillForms.http" to true,
-                "signon.generation.enabled" to true,
-                "signon.generation.available" to true,
-                "dom.disable_open_during_load" to false,
-                "signon.userInputRequiredToCapture.enabled" to false,
-                "signon.testOnlyNotWaitForPaint" to true,
-                "signon.firefoxRelay.feature" to "enabled",
-            ),
-        )
-
-        // Test:
-        // 1. Load a sign-up form page.
-        // 2. Focus on the username input field.
-        //    a. Ensure onLoginSelect is called with a generate relay option.
-        //    b. Return the login entry with a hard-coded relay username.
-        // 3. Submit the login form.
-        //    a. Ensure onLoginSave is called with accordingly.
-
-        val genRelayUsername = "userRelay"
-
-        val selectHandled = GeckoResult<Void>()
-
-        mainSession.loadTestPath(FORMS4_HTML_PATH)
-        mainSession.waitForPageStop()
-
-        mainSession.delegateUntilTestEnd(object : PromptDelegate {
-            @AssertCalled
-            override fun onLoginSelect(
-                session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSelectOption>,
-            ): GeckoResult<PromptDelegate.PromptResponse>? {
-                assertThat("Session should not be null", session, notNullValue())
-
-                assertThat(
-                    "There should be one option",
-                    prompt.options.size,
-                    equalTo(1),
-                )
-
-                val option = prompt.options[0]
-                val login = option.value
-
-                // GENERATE_RELAY_USERNAME option is only offered when users are signed in to their FxAccount.
-                // However, Gecko currently doesn't detect whether the FxAccount is signed in on mobile,
-                // so this option is always OFFER_RELAY_INTEGRATION.
-                assertThat(
-                    "Hint should match",
-                    option.hint,
-                    equalTo(SelectOption.Hint.FIREFOX_RELAY),
-                )
-
-                // Change `hint` to FILL_LOGIN to instruct Gecko to fill the generated relay username.
-                val hint = SelectOption.Hint.FIREFOX_RELAY
-                val origin = GeckoSessionTestRule.TEST_ENDPOINT
-                val relayUsername = LoginEntry.Builder()
-                    .origin(origin)
-                    .formActionOrigin(origin)
-                    .username(genRelayUsername)
-                    .build()
-
-                Handler(Looper.getMainLooper()).postDelayed({
-                    selectHandled.complete(null)
-                }, acceptDelay)
-
-                return GeckoResult.fromValue(prompt.confirm(LoginSelectOption(relayUsername, hint)))
-            }
-        })
-
-        // focus on username.
-        mainSession.evaluateJS("document.querySelector('#user1').focus()")
-        sessionRule.waitForResult(selectHandled)
-
-        assertThat(
-            "Filled username should match",
-            mainSession.evaluateJS("document.querySelector('#user1').value") as String,
-            equalTo(genRelayUsername),
-        )
-
-         assertThat(
-             "Password should be empty",
-             mainSession.evaluateJS("document.querySelector('#pass1').value") as String,
-             equalTo(""),
-         )
     }
 }

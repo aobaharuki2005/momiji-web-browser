@@ -2,25 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::common::{Cookie, Credentials};
+use crate::common::{Cookie, CredentialParameters};
 use serde::ser::{Serialize, Serializer};
 use serde_json::Value;
 
 #[derive(Debug, PartialEq, Serialize)]
 #[serde(untagged, remote = "Self")]
 pub enum WebDriverResponse {
+    NewWindow(NewWindowResponse),
     CloseWindow(CloseWindowResponse),
     Cookie(CookieResponse),
     Cookies(CookiesResponse),
     DeleteSession,
     ElementRect(ElementRectResponse),
     Generic(ValueResponse),
-    NewSession(NewSessionResponse),
-    NewWindow(NewWindowResponse),
-    Timeouts(TimeoutsResponse),
-    Void,
     WebAuthnAddVirtualAuthenticator(u64),
     WebAuthnGetCredentials(GetCredentialsResponse),
+    NewSession(NewSessionResponse),
+    Timeouts(TimeoutsResponse),
+    Void,
     WindowRect(WindowRectResponse),
 }
 
@@ -81,7 +81,7 @@ pub struct ElementRectResponse {
 }
 
 #[derive(Debug, PartialEq, Serialize)]
-pub struct GetCredentialsResponse(pub Vec<Credentials>);
+pub struct GetCredentialsResponse(pub Vec<CredentialParameters>);
 
 #[derive(Debug, PartialEq, Serialize)]
 pub struct NewSessionResponse {
@@ -103,16 +103,12 @@ impl NewSessionResponse {
 pub struct TimeoutsResponse {
     pub script: Option<u64>,
     #[serde(rename = "pageLoad")]
-    pub page_load: Option<u64>,
-    pub implicit: Option<u64>,
+    pub page_load: u64,
+    pub implicit: u64,
 }
 
 impl TimeoutsResponse {
-    pub fn new(
-        script: Option<u64>,
-        page_load: Option<u64>,
-        implicit: Option<u64>,
-    ) -> TimeoutsResponse {
+    pub fn new(script: Option<u64>, page_load: u64, implicit: u64) -> TimeoutsResponse {
         TimeoutsResponse {
             script,
             page_load,
@@ -298,16 +294,16 @@ mod tests {
     #[test]
     fn test_json_timeouts_response() {
         assert_ser(
-            &WebDriverResponse::Timeouts(TimeoutsResponse::new(Some(1), Some(2), Some(3))),
+            &WebDriverResponse::Timeouts(TimeoutsResponse::new(Some(1), 2, 3)),
             json!({"value": {"script": 1, "pageLoad": 2, "implicit": 3}}),
         );
     }
 
     #[test]
-    fn test_json_timeouts_response_with_null_timeout() {
+    fn test_json_timeouts_response_with_null_script_timeout() {
         assert_ser(
-            &WebDriverResponse::Timeouts(TimeoutsResponse::new(None, None, None)),
-            json!({"value": {"script": null, "pageLoad": null, "implicit": null}}),
+            &WebDriverResponse::Timeouts(TimeoutsResponse::new(None, 2, 3)),
+            json!({"value": {"script": null, "pageLoad": 2, "implicit": 3}}),
         );
     }
 

@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <memory>
 #include <optional>
+#include <utility>
 
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "logging/rtc_event_log/events/rtc_event_audio_network_adaptation.h"
@@ -66,7 +67,9 @@ void EventLogWriter::MaybeLogEncoderConfig(
 }
 
 void EventLogWriter::LogEncoderConfig(const AudioEncoderRuntimeConfig& config) {
-  event_log_->Log(std::make_unique<RtcEventAudioNetworkAdaptation>(config));
+  auto config_copy = std::make_unique<AudioEncoderRuntimeConfig>(config);
+  event_log_->Log(
+      std::make_unique<RtcEventAudioNetworkAdaptation>(std::move(config_copy)));
   last_logged_config_ = config;
 }
 

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -206,7 +208,6 @@ class ICStub {
 
   uint32_t enteredCount() const { return enteredCount_; }
   inline void incrementEnteredCount() { enteredCount_++; }
-  void setEnteredCount(uint32_t count) { enteredCount_ = count; }
   void resetEnteredCount() { enteredCount_ = 0; }
 
   static constexpr size_t offsetOfStubCode() {
@@ -298,9 +299,7 @@ class ICCacheIRStub final : public ICStub {
   void trace(JSTracer* trc);
   bool traceWeak(JSTracer* trc);
 
-  enum class ICScriptHandling { MarkActive, AssertActive };
-  ICCacheIRStub* clone(JSRuntime* rt, ICStubSpace& newSpace,
-                       ICScriptHandling icScriptHandling);
+  ICCacheIRStub* clone(JSRuntime* rt, ICStubSpace& newSpace);
 
   // Returns true if this stub can call JS or VM code that can trigger a GC.
   bool makesGCCalls() const;

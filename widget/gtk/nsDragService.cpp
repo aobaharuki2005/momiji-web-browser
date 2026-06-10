@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=4 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -46,7 +48,6 @@
 #include "nsIFrame.h"
 #include "nsGtkUtils.h"
 #include "nsGtkKeyUtils.h"
-#include "mozilla/widget/nsGtkHtmlUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxPlatform.h"
 #include "ScreenHelperGTK.h"
@@ -195,9 +196,8 @@ static void UTF16ToNewUTF8(const char16_t* aUTF16, uint32_t aUTF16Len,
   *aUTF8 = ToNewUTF8String(utf16, aUTF8Len);
 }
 
-static nsString UTF8ToNewString(const char* aUTF8, uint32_t aUTF8DataLen = 0) {
-  nsDependentCSubstring utf8(aUTF8,
-                             aUTF8DataLen ? aUTF8DataLen : strlen(aUTF8));
+static nsString UTF8ToNewString(const char* aUTF8, uint32_t aUTF8Len = 0) {
+  nsDependentCSubstring utf8(aUTF8, aUTF8Len ? aUTF8Len : strlen(aUTF8));
   nsString ret;
   uint32_t convertedTextLen = 0;
   char16_t* convertedText = UTF8ToNewUnicode(utf8, &convertedTextLen);
@@ -348,27 +348,6 @@ bool DragData::Export(nsITransferable* aTransferable, uint32_t aItemIndex) {
 
     return NS_SUCCEEDED(
         aTransferable->SetTransferData(kTextMime, genericDataWrapper));
-  }
-
-  // text/html from external apps arrives as raw bytes in a charset that may
-  // not be UTF-16.  Detect and decode it just as the clipboard code does.
-  if (nsDependentCString(flavorName.get()).EqualsLiteral(kHTMLMime) &&
-      mDragData && mDragDataLen) {
-    LOGDRAG("  export HTML, decoding charset");
-    mozilla::Span<const char> span(static_cast<const char*>(mDragData.get()),
-                                   mDragDataLen);
-    nsAutoString unicodeData;
-    if (!mozilla::widget::DecodeHTMLData(span, unicodeData)) {
-      LOGDRAG("  failed to decode HTML data");
-      return false;
-    }
-    nsCOMPtr<nsISupports> genericDataWrapper;
-    nsPrimitiveHelpers::CreatePrimitiveForData(
-        nsLiteralCString(kHTMLMime), (const char*)unicodeData.BeginReading(),
-        unicodeData.Length() * sizeof(char16_t),
-        getter_AddRefs(genericDataWrapper));
-    return NS_SUCCEEDED(
-        aTransferable->SetTransferData(kHTMLMime, genericDataWrapper));
   }
 
   // We export obtained data directly from Gtk. In such case only
@@ -643,7 +622,7 @@ already_AddRefed<nsDragService> nsDragService::GetInstance() {
 }
 
 already_AddRefed<nsIDragSession> nsDragService::CreateDragSession() {
-  auto session = MakeRefPtr<nsDragSession>();
+  RefPtr<nsIDragSession> session = new nsDragSession();
   return session.forget();
 }
 
@@ -656,7 +635,7 @@ nsDragSession::Observe(nsISupports* aSubject, const char* aTopic,
     LOGDRAGSERVICE("nsDragSession::Observe(\"quit-application\")");
     if (mHiddenWidget) {
       gtk_widget_destroy(mHiddenWidget);
-      mHiddenWidget = nullptr;
+      mHiddenWidget = 0;
     }
   } else {
     MOZ_ASSERT_UNREACHABLE("unexpected topic");
@@ -755,8 +734,7 @@ static GtkWindow* GetGtkWindow(dom::Document* aDocument) {
     return nullptr;
   }
 
-  GtkWidget* gtkWidget =
-      GTK_WIDGET(widget->GetNativeData(NS_NATIVE_SHELLWIDGET));
+  GtkWidget* gtkWidget = static_cast<nsWindow*>(widget.get())->GetGtkWidget();
   if (!gtkWidget) return nullptr;
 
   GtkWidget* toplevel = nullptr;
@@ -797,6 +775,8 @@ nsresult nsDragSession::InvokeDragSessionImpl(
   // length of this call
   mSourceDataItems = aArrayTransferables;
 
+  LOGDRAGSERVICE("nsDragSession::InvokeDragSessionImpl");
+
   GdkDevice* device = widget::GdkGetPointer();
   GdkWindow* originGdkWindow = nullptr;
   if (widget::GdkIsWaylandDisplay() || widget::IsXWaylandProtocol()) {
@@ -810,20 +790,11 @@ nsresult nsDragSession::InvokeDragSessionImpl(
       return NS_ERROR_FAILURE;
     }
   }
-#ifdef MOZ_WAYLAND
-  if (widget::GdkIsWaylandDisplay() &&
-      !gdk_wayland_window_get_wl_surface(originGdkWindow)) {
-    NS_WARNING(
-        "nsDragSession::InvokeDragSessionImpl(): Missing origin wl_surface!");
-    return NS_ERROR_FAILURE;
-  }
-#endif
 
   // get the list of items we offer for drags
   GtkTargetList* sourceList = GetSourceList();
-  if (!sourceList) {
-    return NS_OK;
-  }
+
+  if (!sourceList) return NS_OK;
 
   // save our action type
   GdkDragAction action = GDK_ACTION_DEFAULT;
@@ -855,9 +826,6 @@ nsresult nsDragSession::InvokeDragSessionImpl(
   GtkWindowGroup* window_group =
       gtk_window_get_group(GetGtkWindow(mSourceDocument));
   gtk_window_group_add_window(window_group, GTK_WINDOW(mHiddenWidget));
-
-  LOGDRAGSERVICE("nsDragSession::InvokeDragSessionImpl() originGdkWindow [%p]",
-                 originGdkWindow);
 
   // start our drag.
   GdkDragContext* context = gtk_drag_begin_with_coordinates(
@@ -1321,16 +1289,6 @@ nsDragSession::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
     return NS_OK;
   }
 
-  // GetData can convert text/plain;charset=utf-8 to text/plain, so report it
-  // as supported here too.
-  if (requestedFlavor == sTextMimeAtom &&
-      IsDragFlavorAvailable(sTextPlainUTF8TypeAtom)) {
-    LOGDRAGSERVICE("  %s supported with conversion from %s", aDataFlavor,
-                   gTextPlainUTF8Type);
-    *_retval = true;
-    return NS_OK;
-  }
-
   // Check for file/url conversion from uri list
   if ((requestedFlavor == sURLMimeAtom || requestedFlavor == sFileMimeAtom) &&
       IsDragFlavorAvailable(sTextUriListTypeAtom)) {
@@ -1618,7 +1576,7 @@ void nsDragSession::TargetDataReceived(GtkWidget* aWidget,
     gint len = -1;
     if (IsTextFlavor(target)) {
       data = gtk_selection_data_get_text(aSelectionData);
-      len = data ? gtk_selection_data_get_length(aSelectionData) : -1;
+      len = data ? g_utf8_strlen(reinterpret_cast<const gchar*>(data), -1) : -1;
     } else {
       data = gtk_selection_data_get_data(aSelectionData);
       len = gtk_selection_data_get_length(aSelectionData);
@@ -1671,7 +1629,7 @@ GtkTargetList* nsDragSession::GetSourceList(void) {
 
   nsTArray<GtkTargetEntry*> targetArray;
   GtkTargetEntry* targets;
-  GtkTargetList* targetList = nullptr;
+  GtkTargetList* targetList = 0;
   uint32_t targetCount = 0;
   unsigned int numDragItems = 0;
 
@@ -1938,7 +1896,7 @@ static nsresult GetDownloadDetails(nsITransferable* aTransferable,
   }
 
   sourceURI.swap(*aSourceURI);
-  aFilename = std::move(srcFileName);
+  aFilename = srcFileName;
   return NS_OK;
 }
 
@@ -2030,7 +1988,7 @@ nsresult nsDragSession::CreateTempFile(nsITransferable* aItem,
   char buffer[8192];
   uint32_t readCount = 0;
   uint32_t writeCount = 0;
-  while (true) {
+  while (1) {
     rv = inputStream->Read(buffer, sizeof(buffer), &readCount);
     if (NS_FAILED(rv)) {
       LOGDRAGSERVICE("  Failed to read data from source uri");
@@ -2427,35 +2385,6 @@ void nsDragSession::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
   }
   // Just try to get and set whatever we're asked for.
   GUniquePtr<gchar> flavorName(gdk_atom_name(requestedFlavor));
-
-  // text/html is stored internally as UTF-16 but must be sent as UTF-8 over
-  // X11 DnD, matching the clipboard write path.  Prepend kHTMLMarkupPrefix so
-  // that DecodeHTMLData on the receiving side finds the charset declaration.
-  if (nsDependentCString(flavorName.get()).EqualsLiteral(kHTMLMime)) {
-    nsCOMPtr<nsISupports> data;
-    if (NS_FAILED(item->GetTransferData(kHTMLMime, getter_AddRefs(data))) ||
-        !data) {
-      LOGDRAGSERVICE("  Failed to get kHTMLMime data!");
-      return;
-    }
-    nsCOMPtr<nsISupportsString> wideString = do_QueryInterface(data);
-    if (!wideString) {
-      // Consistent with the clipboard write path: if the data is not a wide
-      // string there is nothing sensible to send.
-      LOGDRAGSERVICE("  kHTMLMime data is not nsISupportsString");
-      return;
-    }
-    nsAutoString ucs2string;
-    wideString->GetData(ucs2string);
-    nsAutoCString html;
-    html.AppendLiteral(mozilla::widget::kHTMLMarkupPrefix);
-    AppendUTF16toUTF8(ucs2string, html);
-    GdkAtom target = gtk_selection_data_get_target(aSelectionData);
-    gtk_selection_data_set(aSelectionData, target, 8, (const guchar*)html.get(),
-                           html.Length());
-    return;
-  }
-
   if (!SourceDataGetText(item, nsDependentCString(flavorName.get()),
                          /* aNeedToDoConversionToPlainText */ false,
                          aSelectionData)) {

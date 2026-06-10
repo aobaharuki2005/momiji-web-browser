@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // Test that the interval formatting uses the original skeleton, not the skeleton
 // derived from the resolved pattern.
 {

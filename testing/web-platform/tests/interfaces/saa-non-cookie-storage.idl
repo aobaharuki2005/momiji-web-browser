@@ -40,6 +40,6 @@ partial interface Document {
 
 enum SameSiteCookiesType { "all", "none" };
 
-partial dictionary SharedWorkerOptions {
+dictionary SharedWorkerOptions : WorkerOptions {
   SameSiteCookiesType sameSiteCookies;
 };

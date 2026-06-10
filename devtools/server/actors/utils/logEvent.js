@@ -65,15 +65,11 @@ function evalAndLogEvent({
         });
       } else {
         stacktrace.push({
-          asyncCause: currentFrame.asyncCause,
-          filename: currentFrame.source || "unknown",
-          functionName:
-            currentFrame.functionDisplayName ||
-            currentFrame.displayName ||
-            "anonymous",
-          lineNumber: currentFrame.line,
-          columnNumber: currentFrame.column,
-          sourceId: currentFrame.sourceId,
+          filename: "unknown",
+          functionName: currentFrame.displayName || "anonymous",
+          lineNumber: 0,
+          columnNumber: 0,
+          sourceId: "",
         });
       }
       const olderSavedFrame =
@@ -81,11 +77,7 @@ function evalAndLogEvent({
         isValidSavedFrame(threadActor, currentFrame.olderSavedFrame)
           ? currentFrame.olderSavedFrame
           : null;
-      currentFrame =
-        currentFrame.older ||
-        currentFrame.parent ||
-        currentFrame.asyncParent ||
-        olderSavedFrame;
+      currentFrame = currentFrame.older || olderSavedFrame;
     }
   }
 

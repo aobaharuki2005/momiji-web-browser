@@ -7,10 +7,6 @@
 const {
   Component,
 } = require("resource://devtools/client/shared/vendor/react.mjs");
-const {
-  L10N,
-} = require("resource://devtools/client/netmonitor/src/utils/l10n.js");
-
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.mjs");
 const {
@@ -25,14 +21,11 @@ class RequestListColumnType extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return (
-      this.props.item.mimeType !== nextProps.item.mimeType ||
-      this.props.item.isRedirect !== nextProps.item.isRedirect
-    );
+    return this.props.item.mimeType !== nextProps.item.mimeType;
   }
 
   render() {
-    const { mimeType, isRedirect } = this.props.item;
+    const { mimeType } = this.props.item;
     let abbrevType;
 
     if (mimeType) {
@@ -44,9 +37,7 @@ class RequestListColumnType extends Component {
         className: "requests-list-column requests-list-type",
         title: mimeType,
       },
-      isRedirect
-        ? L10N.getFormatStr("networkMenu.redirect", abbrevType)
-        : abbrevType
+      abbrevType
     );
   }
 }

@@ -352,10 +352,8 @@ WebRtcEncoderDecoderPicturePairProvider::OnEncodedImage(
   return EncodedImageCallback::Result(EncodedImageCallback::Result::Error::OK);
 }
 
-void WebRtcEncoderDecoderPicturePairProvider::OnFrameDropped(
-    uint32_t rtp_timestamp,
-    int spatial_id,
-    bool is_end_of_temporal_unit) {
+void WebRtcEncoderDecoderPicturePairProvider::OnDroppedFrame(
+    DropReason reason) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
 
   encoded_image_.reset();

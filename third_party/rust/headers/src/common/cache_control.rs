@@ -3,10 +3,8 @@ use std::iter::FromIterator;
 use std::str::FromStr;
 use std::time::Duration;
 
-use http::{HeaderName, HeaderValue};
-
-use crate::util::{self, csv, Seconds};
-use crate::{Error, Header};
+use util::{self, csv, Seconds};
+use HeaderValue;
 
 /// `Cache-Control` header, defined in [RFC7234](https://tools.ietf.org/html/rfc7234#section-5.2)
 /// with extensions in [RFC8246](https://www.rfc-editor.org/rfc/rfc8246)
@@ -32,6 +30,7 @@ use crate::{Error, Header};
 /// # Example
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::CacheControl;
 ///
 /// let cc = CacheControl::new();
@@ -60,7 +59,6 @@ impl Flags {
     const PRIVATE: Self = Self { bits: 0b001000000 };
     const PROXY_REVALIDATE: Self = Self { bits: 0b010000000 };
     const IMMUTABLE: Self = Self { bits: 0b100000000 };
-    const MUST_UNDERSTAND: Self = Self { bits: 0b1000000000 };
 
     fn empty() -> Self {
         Self { bits: 0 }
@@ -122,16 +120,6 @@ impl CacheControl {
     /// Check if the `immutable` directive is set.
     pub fn immutable(&self) -> bool {
         self.flags.contains(Flags::IMMUTABLE)
-    }
-
-    /// Check if the `must-revalidate` directive is set.
-    pub fn must_revalidate(&self) -> bool {
-        self.flags.contains(Flags::MUST_REVALIDATE)
-    }
-
-    /// Check if the `must-understand` directive is set.
-    pub fn must_understand(&self) -> bool {
-        self.flags.contains(Flags::MUST_UNDERSTAND)
     }
 
     /// Get the value of the `max-age` directive if set.
@@ -198,18 +186,6 @@ impl CacheControl {
         self
     }
 
-    /// Set the `must-revalidate` directive.
-    pub fn with_must_revalidate(mut self) -> Self {
-        self.flags.insert(Flags::MUST_REVALIDATE);
-        self
-    }
-
-    /// Set the `must-understand` directive.
-    pub fn with_must_understand(mut self) -> Self {
-        self.flags.insert(Flags::MUST_UNDERSTAND);
-        self
-    }
-
     /// Set the `max-age` directive.
     pub fn with_max_age(mut self, duration: Duration) -> Self {
         self.max_age = Some(duration.into());
@@ -235,16 +211,16 @@ impl CacheControl {
     }
 }
 
-impl Header for CacheControl {
-    fn name() -> &'static HeaderName {
+impl ::Header for CacheControl {
+    fn name() -> &'static ::HeaderName {
         &::http::header::CACHE_CONTROL
     }
 
-    fn decode<'i, I: Iterator<Item = &'i HeaderValue>>(values: &mut I) -> Result<Self, Error> {
+    fn decode<'i, I: Iterator<Item = &'i HeaderValue>>(values: &mut I) -> Result<Self, ::Error> {
         csv::from_comma_delimited(values).map(|FromIter(cc)| cc)
     }
 
-    fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
+    fn encode<E: Extend<::HeaderValue>>(&self, values: &mut E) {
         values.extend(::std::iter::once(util::fmt(Fmt(self))));
     }
 }
@@ -282,9 +258,6 @@ impl FromIterator<KnownDirective> for FromIter {
                 Directive::MustRevalidate => {
                     cc.flags.insert(Flags::MUST_REVALIDATE);
                 }
-                Directive::MustUnderstand => {
-                    cc.flags.insert(Flags::MUST_UNDERSTAND);
-                }
                 Directive::Public => {
                     cc.flags.insert(Flags::PUBLIC);
                 }
@@ -298,16 +271,16 @@ impl FromIterator<KnownDirective> for FromIter {
                     cc.flags.insert(Flags::PROXY_REVALIDATE);
                 }
                 Directive::MaxAge(secs) => {
-                    cc.max_age = Some(Duration::from_secs(secs).into());
+                    cc.max_age = Some(Duration::from_secs(secs.into()).into());
                 }
                 Directive::MaxStale(secs) => {
-                    cc.max_stale = Some(Duration::from_secs(secs).into());
+                    cc.max_stale = Some(Duration::from_secs(secs.into()).into());
                 }
                 Directive::MinFresh(secs) => {
-                    cc.min_fresh = Some(Duration::from_secs(secs).into());
+                    cc.min_fresh = Some(Duration::from_secs(secs.into()).into());
                 }
                 Directive::SMaxAge(secs) => {
-                    cc.s_max_age = Some(Duration::from_secs(secs).into());
+                    cc.s_max_age = Some(Duration::from_secs(secs.into()).into());
                 }
             }
         }
@@ -318,7 +291,7 @@ impl FromIterator<KnownDirective> for FromIter {
 
 struct Fmt<'a>(&'a CacheControl);
 
-impl fmt::Display for Fmt<'_> {
+impl<'a> fmt::Display for Fmt<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let if_flag = |f: Flags, dir: Directive| {
             if self.0.flags.contains(f) {
@@ -337,7 +310,6 @@ impl fmt::Display for Fmt<'_> {
             if_flag(Flags::PUBLIC, Directive::Public),
             if_flag(Flags::PRIVATE, Directive::Private),
             if_flag(Flags::IMMUTABLE, Directive::Immutable),
-            if_flag(Flags::MUST_UNDERSTAND, Directive::MustUnderstand),
             if_flag(Flags::PROXY_REVALIDATE, Directive::ProxyRevalidate),
             self.0
                 .max_age
@@ -383,7 +355,6 @@ enum Directive {
 
     // response directives
     MustRevalidate,
-    MustUnderstand,
     Public,
     Private,
     Immutable,
@@ -405,7 +376,6 @@ impl fmt::Display for Directive {
                 Directive::MinFresh(secs) => return write!(f, "min-fresh={}", secs),
 
                 Directive::MustRevalidate => "must-revalidate",
-                Directive::MustUnderstand => "must-understand",
                 Directive::Public => "public",
                 Directive::Private => "private",
                 Directive::Immutable => "immutable",
@@ -429,12 +399,11 @@ impl FromStr for KnownDirective {
             "public" => Directive::Public,
             "private" => Directive::Private,
             "immutable" => Directive::Immutable,
-            "must-understand" => Directive::MustUnderstand,
             "proxy-revalidate" => Directive::ProxyRevalidate,
             "" => return Err(()),
             _ => match s.find('=') {
                 Some(idx) if idx + 1 < s.len() => {
-                    match (&s[..idx], (s[idx + 1..]).trim_matches('"')) {
+                    match (&s[..idx], (&s[idx + 1..]).trim_matches('"')) {
                         ("max-age", secs) => secs.parse().map(Directive::MaxAge).map_err(|_| ())?,
                         ("max-stale", secs) => {
                             secs.parse().map(Directive::MaxStale).map_err(|_| ())?
@@ -501,30 +470,6 @@ mod tests {
         assert_eq!(headers["cache-control"], "immutable");
         assert_eq!(test_decode::<CacheControl>(&["immutable"]).unwrap(), cc);
         assert!(cc.immutable());
-    }
-
-    #[test]
-    fn test_must_revalidate() {
-        let cc = CacheControl::new().with_must_revalidate();
-        let headers = test_encode(cc.clone());
-        assert_eq!(headers["cache-control"], "must-revalidate");
-        assert_eq!(
-            test_decode::<CacheControl>(&["must-revalidate"]).unwrap(),
-            cc
-        );
-        assert!(cc.must_revalidate());
-    }
-
-    #[test]
-    fn test_must_understand() {
-        let cc = CacheControl::new().with_must_understand();
-        let headers = test_encode(cc.clone());
-        assert_eq!(headers["cache-control"], "must-understand");
-        assert_eq!(
-            test_decode::<CacheControl>(&["must-understand"]).unwrap(),
-            cc
-        );
-        assert!(cc.must_understand());
     }
 
     #[test]

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -32,7 +34,7 @@ BrowserBridgeChild::BrowserBridgeChild(BrowsingContext* aBrowsingContext,
                                        TabId aId, const LayersId& aLayersId)
     : mId{aId}, mLayersId{aLayersId}, mBrowsingContext(aBrowsingContext) {}
 
-BrowserBridgeChild::~BrowserBridgeChild() = default;
+BrowserBridgeChild::~BrowserBridgeChild() {}
 
 already_AddRefed<BrowserBridgeHost> BrowserBridgeChild::FinishInit(
     nsFrameLoader* aFrameLoader) {
@@ -54,6 +56,10 @@ already_AddRefed<BrowserBridgeHost> BrowserBridgeChild::FinishInit(
 #endif  // defined(ACCESSIBILITY)
 
   return MakeAndAddRef<BrowserBridgeHost>(this);
+}
+
+nsILoadContext* BrowserBridgeChild::GetLoadContext() {
+  return mBrowsingContext;
 }
 
 void BrowserBridgeChild::NavigateByKey(bool aForward,
@@ -152,8 +158,8 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvMaybeFireEmbedderLoadEvents(
 }
 
 mozilla::ipc::IPCResult BrowserBridgeChild::RecvScrollRectIntoView(
-    const nsRect& aRect, const AxisScrollParams& aVertical,
-    const AxisScrollParams& aHorizontal, const ScrollFlags& aScrollFlags,
+    const nsRect& aRect, const ScrollAxis& aVertical,
+    const ScrollAxis& aHorizontal, const ScrollFlags& aScrollFlags,
     const int32_t& aAppUnitsPerDevPixel) {
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
   if (!owner) {

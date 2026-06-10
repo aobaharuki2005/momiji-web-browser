@@ -792,8 +792,7 @@ std::unique_ptr<SkFontData> SkTypeface_FreeType::cloneFontData(const SkFontArgum
     int axisCount = axisDefinitions.size();
 
     AutoSTMalloc<4, SkFontArguments::VariationPosition::Coordinate> currentPosition(axisCount);
-    int currentAxisCount = GetVariationDesignPosition(face,
-                                                      {currentPosition.data(), (size_t)axisCount});
+    int currentAxisCount = GetVariationDesignPosition(face, {currentPosition, axisCount});
 
     SkString name;
     AutoSTMalloc<4, SkFixed> axisValues(axisCount);
@@ -1399,11 +1398,11 @@ void SkScalerContext_FreeType::generateImage(const SkGlyph& glyph, void* imageBu
         SkASSERT(glyph.maskFormat() == SkMask::kARGB32_Format);
         SkBitmap dstBitmap;
         // TODO: mark this as sRGB when the blits will be sRGB.
-        dstBitmap.installPixels(
-                SkImageInfo::Make(
-                        glyph.width(), glyph.height(), kN32_SkColorType, kPremul_SkAlphaType),
-                imageBuffer,
-                glyph.rowBytes());
+        dstBitmap.setInfo(SkImageInfo::Make(glyph.width(), glyph.height(),
+                                            kN32_SkColorType,
+                                            kPremul_SkAlphaType),
+                                            glyph.rowBytes());
+        dstBitmap.setPixels(imageBuffer);
 
         SkCanvas canvas(dstBitmap);
         if constexpr (kSkShowTextBlitCoverage) {

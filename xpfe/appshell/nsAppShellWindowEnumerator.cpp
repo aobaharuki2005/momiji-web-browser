@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -167,7 +168,7 @@ nsASDOMWindowEnumerator::nsASDOMWindowEnumerator(const char16_t* aTypeString,
                                                  nsWindowMediator& aMediator)
     : nsAppShellWindowEnumerator(aTypeString, aMediator) {}
 
-nsASDOMWindowEnumerator::~nsASDOMWindowEnumerator() = default;
+nsASDOMWindowEnumerator::~nsASDOMWindowEnumerator() {}
 
 NS_IMETHODIMP nsASDOMWindowEnumerator::GetNext(nsISupports** retval) {
   if (!retval) return NS_ERROR_INVALID_ARG;
@@ -190,7 +191,7 @@ nsASAppWindowEnumerator::nsASAppWindowEnumerator(const char16_t* aTypeString,
                                                  nsWindowMediator& aMediator)
     : nsAppShellWindowEnumerator(aTypeString, aMediator) {}
 
-nsASAppWindowEnumerator::~nsASAppWindowEnumerator() = default;
+nsASAppWindowEnumerator::~nsASAppWindowEnumerator() {}
 
 NS_IMETHODIMP nsASAppWindowEnumerator::GetNext(nsISupports** retval) {
   if (!retval) return NS_ERROR_INVALID_ARG;
@@ -215,8 +216,7 @@ nsASDOMWindowEarlyToLateEnumerator::nsASDOMWindowEarlyToLateEnumerator(
   AdjustInitialPosition();
 }
 
-nsASDOMWindowEarlyToLateEnumerator::~nsASDOMWindowEarlyToLateEnumerator() =
-    default;
+nsASDOMWindowEarlyToLateEnumerator::~nsASDOMWindowEarlyToLateEnumerator() {}
 
 nsWindowInfo* nsASDOMWindowEarlyToLateEnumerator::FindNext() {
   nsWindowInfo *info, *listEnd;
@@ -247,8 +247,7 @@ nsASAppWindowEarlyToLateEnumerator::nsASAppWindowEarlyToLateEnumerator(
   AdjustInitialPosition();
 }
 
-nsASAppWindowEarlyToLateEnumerator::~nsASAppWindowEarlyToLateEnumerator() =
-    default;
+nsASAppWindowEarlyToLateEnumerator::~nsASAppWindowEarlyToLateEnumerator() {}
 
 nsWindowInfo* nsASAppWindowEarlyToLateEnumerator::FindNext() {
   nsWindowInfo *info, *listEnd;
@@ -285,8 +284,7 @@ nsASAppWindowFrontToBackEnumerator::nsASAppWindowFrontToBackEnumerator(
   AdjustInitialPosition();
 }
 
-nsASAppWindowFrontToBackEnumerator::~nsASAppWindowFrontToBackEnumerator() =
-    default;
+nsASAppWindowFrontToBackEnumerator::~nsASAppWindowFrontToBackEnumerator() {}
 
 nsWindowInfo* nsASAppWindowFrontToBackEnumerator::FindNext() {
   nsWindowInfo *info, *listEnd;
@@ -318,8 +316,7 @@ nsASAppWindowBackToFrontEnumerator::nsASAppWindowBackToFrontEnumerator(
   AdjustInitialPosition();
 }
 
-nsASAppWindowBackToFrontEnumerator::~nsASAppWindowBackToFrontEnumerator() =
-    default;
+nsASAppWindowBackToFrontEnumerator::~nsASAppWindowBackToFrontEnumerator() {}
 
 nsWindowInfo* nsASAppWindowBackToFrontEnumerator::FindNext() {
   nsWindowInfo *info, *listEnd;

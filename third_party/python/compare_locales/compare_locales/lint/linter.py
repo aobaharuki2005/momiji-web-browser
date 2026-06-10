@@ -64,7 +64,7 @@ class EntityLinter:
         """
         lineno = col = None
         if self.key_count[current_entity.key] > 1:
-            lineno, col = current_entity.id_position()
+            lineno, col = current_entity.position()
             yield {
                 "lineno": lineno,
                 "column": col,
@@ -76,17 +76,16 @@ class EntityLinter:
             reference_entity = self.reference[current_entity.key]
             if not current_entity.equals(reference_entity):
                 if lineno is None:
-                    lineno, col = current_entity.id_position()
-                res = {
+                    lineno, col = current_entity.position()
+                msg = "Changes to string require a new ID: {}".format(
+                    current_entity.key
+                )
+                yield {
                     "lineno": lineno,
                     "column": col,
                     "level": "warning",
-                    "message": f"Changes to an existing string require a new ID: {current_entity.key}",
+                    "message": msg,
                 }
-                line_offset = current_entity.line_offset()
-                if line_offset:
-                    res["lineoffset"] = line_offset
-                yield res
 
     def lint_value(self, current_entity):
         """Checks that error on particular locations in the entity value."""

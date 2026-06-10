@@ -28,7 +28,7 @@ async function openAboutBlankTabWithExtensionOrigin(extension) {
   const loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
     wantLoad: "about:blank",
   });
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+  await ContentTask.spawn(tab.linkedBrowser, null, () => {
     // about:blank inherits the principal when opened from content.
     content.wrappedJSObject.location.assign("about:blank");
   });
@@ -295,8 +295,6 @@ add_task(async function test_eval_at_about() {
 add_task(async function test_eval_at_file() {
   // FYI: There is also an equivalent test case with a full end-to-end test at:
   // browser/components/extensions/test/browser/browser_ext_devtools_inspectedWindow_eval_file.js
-  // That test does verifies when file access is allowed and when it is denied;
-  // here we just verify that file access is disabled by default.
 
   const extension = ExtensionTestUtils.loadExtension({});
   await extension.startup();
@@ -306,21 +304,20 @@ add_task(async function test_eval_at_file() {
     "file://" +
     getTestFilePath("browser_webextension_inspected_window_access.js");
 
-  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, fileUrl);
-  const finalFileUrl = tab.linkedBrowser.currentURI.spec;
-  ok(finalFileUrl.startsWith("file:"), `Got file:-URL: ${finalFileUrl}`);
-
-  // We cannot just pass fileUrl to checkEvalDenied, because the file:-URL may
+  // checkEvalAllowed test helper cannot be used, because the file:-URL may
   // redirect elsewhere, so the comparison with the full URL fails.
-  // Therefore we loaded the tab above, verified that it is a file:-URL and use it here.
-  await checkEvalDenied({
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, fileUrl);
+  const result = await run_inspectedWindow_eval({
+    tab,
+    codeToEval: "'code executed at ' + location.protocol",
     extension,
-    description: "file access denied by default",
-    url: finalFileUrl,
-    createTab: () => tab,
   });
-
-  // Note: we do not need to call removeTab(tab) because checkEvalDenied closes it.
+  BrowserTestUtils.removeTab(tab);
+  SimpleTest.isDeeply(
+    result,
+    { value: "code executed at file:" },
+    `eval result for devtools.inspectedWindow.eval at ${fileUrl}`
+  );
 
   await extension.unload();
 });

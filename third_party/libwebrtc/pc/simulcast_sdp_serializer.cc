@@ -19,7 +19,6 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/string_view.h"
-#include "api/payload_type.h"
 #include "api/rtc_error.h"
 #include "api/rtp_parameters.h"
 #include "media/base/codec.h"
@@ -303,7 +302,7 @@ std::string SimulcastSdpSerializer::SerializeRidDescription(
     if (it == media_desc.codecs().end()) {
       break;
     }
-    if (it->id == PayloadType::NotSet()) {
+    if (it->id == Codec::kIdNotSet) {
       RTC_DCHECK_NOTREACHED();
       break;
     }

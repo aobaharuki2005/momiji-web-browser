@@ -49,8 +49,7 @@ add_task(async function extension() {
           }),
         ],
       });
-      let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-      providersManager.registerProvider(provider);
+      UrlbarProvidersManager.registerProvider(provider);
 
       // Do a search that fetches the provider's result and check it.
       let heuristic = await search({
@@ -65,7 +64,7 @@ add_task(async function extension() {
       // Press enter to verify the heuristic result is loaded.
       await synthesizeEnterAndAwaitLoad(url);
 
-      providersManager.unregisterProvider(provider);
+      UrlbarProvidersManager.unregisterProvider(provider);
     });
   });
 });
@@ -272,7 +271,7 @@ add_task(async function fallback_searchRestrictionToken() {
       await withEngine({ makeDefault: true }, async () => {
         // Do a search with `?` and check the hidden heuristic result.
         let heuristic = await search({
-          value: UrlbarShared.RESTRICT_TOKENS.SEARCH + " foo",
+          value: UrlbarTokenizer.RESTRICT.SEARCH + " foo",
           expectedGroup: UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK,
         });
         Assert.equal(
@@ -381,14 +380,7 @@ async function withVisits(callback) {
   for (let i = 0; i < UrlbarPrefs.get("maxRichResults"); i++) {
     urls.push("http://example.com/foo/" + i);
   }
-
-  let typedVisits = urls.map(url => {
-    return {
-      url,
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    };
-  });
-  await PlacesTestUtils.addVisits(typedVisits);
+  await PlacesTestUtils.addVisits(urls);
 
   // The URLs will appear in the view in reverse order so that newer visits are
   // first. Reverse the array now so callers to `checkVisitResults` or
@@ -416,20 +408,23 @@ async function withEngine(
   callback
 ) {
   await SearchTestUtils.installSearchExtension({ keyword });
-  let engine = SearchService.getEngineByName("Example");
+  let engine = Services.search.getEngineByName("Example");
   let originalEngine;
   if (makeDefault) {
-    originalEngine = await SearchService.getDefault();
-    await SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
+    originalEngine = await Services.search.getDefault();
+    await Services.search.setDefault(
+      engine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
   }
   await callback();
   if (originalEngine) {
-    await SearchService.setDefault(
+    await Services.search.setDefault(
       originalEngine,
-      SearchService.CHANGE_REASON.UNKNOWN
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
   }
-  await SearchService.removeEngine(engine);
+  await Services.search.removeEngine(engine);
 }
 
 /**

@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -361,9 +362,10 @@ interface nsISocketTransport : nsITransport
     readonly attribute nsITRRSkipReason_value trrSkipReason;
 
     /**
-     * Sets whether this socket is used for a TRR service channel connection.
+     * Indicate whether this socket is created from a private window. If yes,
+     * this socket will be closed when the last private window is closed.
      */
-    [noscript] void setIsTRRConnection(in boolean isTRRConnection);
+    [noscript] void setIsPrivate(in boolean isPrivate);
 
     /**
      * If DNS is performed externally, this flag informs the caller that it may
@@ -377,9 +379,4 @@ interface nsISocketTransport : nsITransport
      * Return the current status of the socket.
      */
     [noscript] readonly attribute nsresult status;
-
-    /**
-     * Indicates whether this socket is used for a TRR service channel connection.
-     */
-    readonly attribute boolean isTRRConnection;
 };

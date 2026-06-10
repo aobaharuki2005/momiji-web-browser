@@ -1,6 +1,8 @@
 // Type sizes
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
 $header-font-size: var(--font-size-large);
 $header-line-height: normal;
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
 $excerpt-font-size: var(--font-size-small);
 $excerpt-line-height: normal;
 $ds-card-image-gradient-fade: rgba(0, 0, 0, 0%);
@@ -23,13 +25,13 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     overflow: hidden;
 
     .placeholder-fill {
-      background: var(--newtab-card-placeholder-background-color);
+      background: var(--newtab-button-active-background);
       border-radius: var(--border-radius-small);
     }
 
     .placeholder-image {
       width: 100%;
-      height: 150px;
+      height: 140px;
       border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
     }
 
@@ -49,12 +51,22 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     .placeholder-description {
       height: 60px;
       margin-inline: var(--space-large);
-      margin-block-end: var(--space-small);
+      margin-block-end: var(--space-large);
     }
 
-    .placeholder-header {
-      width: initial;
-      margin-block-end: var(--space-large);
+    &.refined-cards {
+      .placeholder-image {
+        height: 150px;
+      }
+
+      .placeholder-description {
+        margin-block-end: var(--space-small);
+      }
+
+      .placeholder-header {
+        width: initial;
+        margin-block-end: var(--space-large);
+      }
     }
   }
 
@@ -67,10 +79,12 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       inset-inline-start: -100%;
       height: 100%;
       width: 100%;
-      background: linear-gradient(90deg,
-      rgba(255, 255, 255, 0%) 0%,
-      var(--newtab-background-color-secondary) 50%,
-      rgba(255, 255, 255, 0%) 100%);
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0%) 0%,
+        var(--newtab-background-color-secondary) 50%,
+        rgba(255, 255, 255, 0%) 100%
+      );
       z-index: 2;
 
       @media (prefers-reduced-motion: no-preference) {
@@ -232,17 +246,6 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     font-size: var(--font-size-small);
   }
 
-  .ds-card-daily-brief-topic {
-    position: absolute;
-    inset-block-end: var(--space-xsmall);
-    inset-inline-start: var(--space-xsmall);
-    background: var(--background-color-canvas);
-    border-radius: var(--border-radius-small);
-    color: var(--newtab-text-primary-color);
-    padding: var(--space-xsmall);
-    font-size: var(--font-size-small);
-  }
-
   .meta {
     display: flex;
     justify-content: space-between;
@@ -259,7 +262,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       @include limit-visible-lines(3, $header-line-height, $header-font-size);
 
       margin-block: 0;
-      font-weight: var(--font-weight-heading);
+      font-weight: var(--heading-font-weight);
     }
 
     .excerpt {
@@ -321,9 +324,11 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
 
   &.ds-card-image-gradient {
     img {
-      mask-image: linear-gradient(to top,
-      $ds-card-image-gradient-fade,
-      $ds-card-image-gradient-solid 40px);
+      mask-image: linear-gradient(
+        to top,
+        $ds-card-image-gradient-fade,
+        $ds-card-image-gradient-solid 40px
+      );
     }
 
     .meta {
@@ -375,7 +380,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     .cta-header {
       background: var(--button-background-color);
       font-size: var(--font-size-root);
-      font-weight: var(--font-weight-heading);
+      font-weight: var(--heading-font-weight);
       text-align: end;
       padding: var(--space-xsmall) var(--space-large);
       color: var(--newtab-text-primary-color);
@@ -398,7 +403,6 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
 // Class is applied to .ds-card element
 // See _CardSections.scss for large and small card style mixins
 .sections-card-ui {
-
   // Loading Animation
   &.placeholder {
     box-shadow: 0 2px 6px #15141A24;
@@ -424,14 +428,14 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
         z-index: 2;
       }
 
-      .img-wrapper>.ds-image.img>img {
+      .img-wrapper > .ds-image.img > img {
         border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
       }
     }
 
     @media (forced-colors: active) {
       &:not(.placeholder) {
-        border: var(--border-width) solid var(--card-border-color);
+        border: var(--border-width) solid var(--border-color-card);
       }
 
       &:not(.placeholder):hover {
@@ -460,7 +464,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
         -webkit-line-clamp: 3;
         font-size: var(--font-size-root);
         margin-block-end: var(--space-small);
-        font-weight: var(--font-weight-heading);
+        font-weight: var(--heading-font-weight);
       }
 
       .excerpt {
@@ -493,8 +497,6 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       margin-block-start: var(--space-small);
       position: relative;
       min-height: 28px;
-      display: flex;
-      align-items: center;
     }
 
     .ds-card-topic {
@@ -521,7 +523,6 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
 
 .ds-card-grid,
 .ds-section-grid {
-
   // Intentionally duplicated classname to increase
   // specificity to override .sections-card-ui styles
   .ds-card.ds-spoc-rectangle.ds-spoc-rectangle {
@@ -541,10 +542,11 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     }
 
     .meta {
-      padding: var(--space-small) var(--space-large);
-      padding-block-end: 0;
+      padding-inline: 0;
+      padding-block: var(--space-medium);
 
       .title {
+        text-transform: uppercase;
         font-size: var(--font-size-small);
         font-weight: var(--font-weight);
         color: var(--newtab-text-secondary-color);
@@ -562,46 +564,64 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     &.sections-card-ui {
       .img-wrapper .ds-image img {
         border-radius: var(--border-radius-large);
-        border-end-start-radius: 0;
-        border-end-end-radius: 0;
       }
     }
 
-    @include newtab-card-style;
-
-    .img-wrapper .ds-image img {
-      border-end-start-radius: 0;
-      border-end-end-radius: 0;
-    }
-
-    &:hover .img-wrapper .ds-image img {
+    &.sections-card-ui:hover {
       box-shadow: none;
+
+      .img-wrapper .ds-image img {
+        box-shadow: 0 2px 14px 0 var(--newtab-section-card-box-shadow-color);
+      }
     }
 
-    .info-wrap {
-      margin-block-start: auto;
-    }
+    &.refined-cards {
+      @include newtab-card-style;
 
-    .sections-card-footer {
-      display: none;
-    }
+      .img-wrapper .ds-image img {
+        border-end-start-radius: 0;
+        border-end-end-radius: 0;
+      }
 
-    .card-stp-button-position-wrapper {
-      z-index: 10;
-      inset-block-end: 0;
-      position: absolute;
+      &:hover .img-wrapper .ds-image img {
+        box-shadow: none;
+      }
 
-    }
+      .meta {
+        padding: var(--space-small) var(--space-large);
+        padding-block-end: 0;
 
-    .card-stp-button-position-wrapper .context-menu-position-container {
-      align-self: flex-start;
-      padding-block-start: var(--space-medium);
+      }
+
+      .info-wrap {
+        margin-block-start: auto;
+      }
+
+      .meta .title {
+        text-transform: none;
+      }
+
+      .sections-card-footer {
+        display: none;
+      }
+
+      .card-stp-button-position-wrapper {
+        z-index: 10;
+        inset-block-end: 0;
+        position: absolute;
+
+      }
+
+      .card-stp-button-position-wrapper .context-menu-position-container {
+        align-self: flex-start;
+        padding-block-start: var(--space-medium);
+      }
     }
   }
 
 }
 
-.ds-card-grid .ds-card {
+.ds-card-grid .refined-cards {
   .meta {
     color: var(--newtab-text-primary-color);
     padding: var(--space-small) var(--space-large);
@@ -615,27 +635,13 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     display: flex;
     justify-content: space-between;
     pointer-events: none;
+    max-width: 230px;
     margin-block-start: var(--space-xsmall);
-    padding-inline-end: var(--space-large);
 
     .source-wrapper {
       margin-block-end: 0;
       margin-inline-end: var(--space-xxsmall);
-      min-width: 0;
-      max-width: min(170px, 100%);
-    }
-
-    .card-stp-button-hover-background {
-      position: static;
-      width: auto;
-      padding-block-start: 0;
-      background: transparent;
-      border-radius: 0;
-    }
-
-    .card-stp-button-position-wrapper {
-      position: static;
-      inset: auto;
+      max-width: 175px;
     }
   }
 
@@ -661,7 +667,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     .card-stp-button-position-wrapper {
       inset-block-start: unset;
       // this value needs to equal the current padding of the card
-      inset-block-end: var(--space-xsmall);
+      inset-block-end: var(--space-medium);
       inset-inline-end: var(--space-large);
       background: var(--button-background-color-ghost);
     }
@@ -681,8 +687,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       color: var(--color-accent-primary);
     }
 
-    .context-menu-button:hover,
-    .context-menu-button[aria-expanded='true'] {
+    .context-menu-button:hover {
       background-color: var(--button-background-color-ghost-hover);
 
       @media (forced-colors: active) {

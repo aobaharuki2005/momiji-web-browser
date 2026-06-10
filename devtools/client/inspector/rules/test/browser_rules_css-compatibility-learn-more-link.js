@@ -1,3 +1,4 @@
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -10,7 +11,7 @@ const TEST_URI = `
 <style>
   body {
     user-select: none;
-    stroke-color: red;
+    background-repeat-x: repeat;
   }
 </style>
 <body>
@@ -29,12 +30,12 @@ const TEST_DATA_INITIAL = [
           expectedLearnMoreUrl:
             "https://developer.mozilla.org/docs/Web/CSS/Reference/Properties/user-select?utm_source=devtools&utm_medium=inspector-css-compatibility&utm_campaign=default",
         },
-        "stroke-color": {
-          value: "red",
+        "background-repeat-x": {
+          value: "repeat",
           expected: COMPATIBILITY_TOOLTIP_MESSAGE.experimental,
           // No MDN url, but a spec one
           expectedLearnMoreUrl:
-            "https://drafts.csswg.org/fill-stroke-3/#stroke-color",
+            "https://drafts.csswg.org/css-backgrounds-4/#background-repeat-longhands",
         },
         // TODO: Add a test for it when we have another property with no MDN url nor spec url Bug 1840910
       },

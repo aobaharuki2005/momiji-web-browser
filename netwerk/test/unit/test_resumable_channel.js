@@ -11,6 +11,9 @@ ChromeUtils.defineLazyGetter(this, "URL", function () {
 
 var httpserver = null;
 
+const NS_ERROR_ENTITY_CHANGED = 0x804b0020;
+const NS_ERROR_NOT_RESUMABLE = 0x804b0019;
+
 const rangeBody = "Body of the range request handler.\r\n";
 
 function make_channel(url) {
@@ -83,7 +86,7 @@ function run_test() {
 
   function try_resume(request) {
     dump("*** try_resume()\n");
-    Assert.equal(request.status, Cr.NS_ERROR_NOT_RESUMABLE);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     // Try a successful resume
     var chan = make_channel(URL + "/range");
@@ -106,7 +109,7 @@ function run_test() {
   function try_no_range(request) {
     dump("*** try_no_range()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
-    Assert.equal(request.status, Cr.NS_ERROR_NOT_RESUMABLE);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     // Try a server which supports "bytes" range requests
     var chan = make_channel(URL + "/acceptranges");
@@ -132,7 +135,7 @@ function run_test() {
   function try_foo_bar_range(request) {
     dump("*** try_foo_bar_range()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
-    Assert.equal(request.status, Cr.NS_ERROR_NOT_RESUMABLE);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     // Try a server which supports "foobar" range requests
     var chan = make_channel(URL + "/acceptranges");
@@ -146,7 +149,7 @@ function run_test() {
   function try_foobar_range(request) {
     dump("*** try_foobar_range()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
-    Assert.equal(request.status, Cr.NS_ERROR_NOT_RESUMABLE);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     // Try a server which supports "bytes" and "foobar" range requests
     var chan = make_channel(URL + "/acceptranges");
@@ -180,7 +183,7 @@ function run_test() {
   function try_bytesfoo_bar_range(request) {
     dump("*** try_bytesfoo_bar_range()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
-    Assert.equal(request.status, Cr.NS_ERROR_NOT_RESUMABLE);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     // Try a server which doesn't send Accept-Ranges header at all
     var chan = make_channel(URL + "/acceptranges");
@@ -234,7 +237,7 @@ function run_test() {
   function test_auth_nopw(request) {
     dump("*** test_auth_nopw()\n");
     Assert.ok(!request.nsIHttpChannel.requestSucceeded);
-    Assert.equal(request.status, Cr.NS_ERROR_ENTITY_CHANGED);
+    Assert.equal(request.status, NS_ERROR_ENTITY_CHANGED);
 
     // Authentication + not working resume
     var chan = make_channel(
@@ -248,7 +251,7 @@ function run_test() {
   }
   function test_auth(request) {
     dump("*** test_auth()\n");
-    Assert.equal(request.status, Cr.NS_ERROR_NOT_RESUMABLE);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
     Assert.less(request.nsIHttpChannel.responseStatus, 300);
 
     // Authentication + working resume
@@ -277,7 +280,7 @@ function run_test() {
 
   function test_404(request) {
     dump("*** test_404()\n");
-    Assert.equal(request.status, Cr.NS_ERROR_ENTITY_CHANGED);
+    Assert.equal(request.status, NS_ERROR_ENTITY_CHANGED);
     Assert.equal(request.nsIHttpChannel.responseStatus, 404);
 
     // 416 Requested Range Not Satisfiable
@@ -288,7 +291,7 @@ function run_test() {
 
   function test_416(request) {
     dump("*** test_416()\n");
-    Assert.equal(request.status, Cr.NS_ERROR_ENTITY_CHANGED);
+    Assert.equal(request.status, NS_ERROR_ENTITY_CHANGED);
     Assert.equal(request.nsIHttpChannel.responseStatus, 416);
 
     // Redirect + successful resume
@@ -315,7 +318,7 @@ function run_test() {
 
   function test_redir_noresume(request) {
     dump("*** test_redir_noresume()\n");
-    Assert.equal(request.status, Cr.NS_ERROR_NOT_RESUMABLE);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     httpserver.stop(do_test_finished);
   }

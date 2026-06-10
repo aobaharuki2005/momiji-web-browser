@@ -33,7 +33,7 @@ class VertexBuffer11 : public VertexBuffer
                                         const gl::VertexAttribute &attrib,
                                         const gl::VertexBinding &binding,
                                         gl::VertexAttribType currentValueType,
-                                        size_t start,
+                                        GLint start,
                                         size_t count,
                                         GLsizei instances,
                                         unsigned int offset,

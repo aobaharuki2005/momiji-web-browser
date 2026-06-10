@@ -4,13 +4,17 @@
 
 //! `list` specified values.
 
+#[cfg(feature = "gecko")]
 use crate::counter_style::{CounterStyle, CounterStyleParsingFlags};
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
+#[cfg(feature = "servo")]
+use crate::properties::longhands::list_style_type::SpecifiedValue as ListStyleType;
 use cssparser::{Parser, Token};
 use style_traits::{ParseError, StyleParseErrorKind};
 
 /// Specified and computed `list-style-type` property.
+#[cfg(feature = "gecko")]
 #[derive(
     Clone,
     Debug,
@@ -25,9 +29,9 @@ use style_traits::{ParseError, StyleParseErrorKind};
     ToTyped,
 )]
 #[repr(transparent)]
-#[typed(todo_derive_fields)]
 pub struct ListStyleType(pub CounterStyle);
 
+#[cfg(feature = "gecko")]
 impl ListStyleType {
     /// Initial specified value for `list-style-type`.
     #[inline]
@@ -45,7 +49,6 @@ impl ListStyleType {
     ///
     /// This should only be used for mapping type attribute to list-style-type, and thus only
     /// values possible in that attribute is considered here.
-    #[cfg(feature = "gecko")]
     pub fn from_gecko_keyword(value: u32) -> Self {
         use crate::gecko_bindings::structs;
         use crate::values::CustomIdent;
@@ -74,6 +77,7 @@ impl ListStyleType {
     }
 }
 
+#[cfg(feature = "gecko")]
 impl Parse for ListStyleType {
     fn parse<'i, 't>(
         context: &ParserContext,
@@ -81,6 +85,21 @@ impl Parse for ListStyleType {
     ) -> Result<Self, ParseError<'i>> {
         let flags = CounterStyleParsingFlags::ALLOW_NONE | CounterStyleParsingFlags::ALLOW_STRING;
         Ok(Self(CounterStyle::parse(context, input, flags)?))
+    }
+}
+
+#[cfg(feature = "servo")]
+impl ListStyleType {
+    /// Initial specified value for `list-style-type`.
+    #[inline]
+    pub fn disc() -> Self {
+        Self::Disc
+    }
+
+    /// none value.
+    #[inline]
+    pub fn none() -> Self {
+        Self::None
     }
 }
 
@@ -140,7 +159,6 @@ pub struct QuoteList(
     ToTyped,
 )]
 #[repr(C)]
-#[typed(todo_derive_fields)]
 pub enum Quotes {
     /// list of quote pairs
     QuoteList(QuoteList),

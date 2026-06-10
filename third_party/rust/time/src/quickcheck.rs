@@ -3,7 +3,7 @@
 //! This enables users to write tests such as this, and have test values provided automatically:
 //!
 //! ```ignore
-//! # #![expect(dead_code)]
+//! # #![allow(dead_code)]
 //! use quickcheck::quickcheck;
 //! use time::Date;
 //!
@@ -36,7 +36,7 @@
 
 use alloc::boxed::Box;
 
-use quickcheck::{Arbitrary, Gen, empty_shrinker, single_shrinker};
+use quickcheck::{empty_shrinker, single_shrinker, Arbitrary, Gen};
 
 use crate::{
     Date, Duration, Month, OffsetDateTime, PrimitiveDateTime, Time, UtcDateTime, UtcOffset, Weekday,
@@ -53,7 +53,6 @@ macro_rules! arbitrary_between {
 }
 
 impl Arbitrary for Date {
-    #[inline]
     fn arbitrary(g: &mut Gen) -> Self {
         // Safety: The Julian day number is in range.
         unsafe {
@@ -66,7 +65,6 @@ impl Arbitrary for Date {
         }
     }
 
-    #[inline]
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
             self.to_ordinal_date()
@@ -77,12 +75,10 @@ impl Arbitrary for Date {
 }
 
 impl Arbitrary for Duration {
-    #[inline]
     fn arbitrary(g: &mut Gen) -> Self {
         Self::new_ranged(<_>::arbitrary(g), <_>::arbitrary(g))
     }
 
-    #[inline]
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
             (self.subsec_nanoseconds_ranged(), self.whole_seconds())
@@ -102,7 +98,6 @@ impl Arbitrary for Duration {
 }
 
 impl Arbitrary for Time {
-    #[inline]
     fn arbitrary(g: &mut Gen) -> Self {
         Self::from_hms_nanos_ranged(
             <_>::arbitrary(g),
@@ -112,7 +107,6 @@ impl Arbitrary for Time {
         )
     }
 
-    #[inline]
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
             self.as_hms_nano_ranged()
@@ -125,12 +119,10 @@ impl Arbitrary for Time {
 }
 
 impl Arbitrary for PrimitiveDateTime {
-    #[inline]
     fn arbitrary(g: &mut Gen) -> Self {
         Self::new(<_>::arbitrary(g), <_>::arbitrary(g))
     }
 
-    #[inline]
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
             (self.date(), self.time())
@@ -141,12 +133,10 @@ impl Arbitrary for PrimitiveDateTime {
 }
 
 impl Arbitrary for UtcOffset {
-    #[inline]
     fn arbitrary(g: &mut Gen) -> Self {
         Self::from_hms_ranged(<_>::arbitrary(g), <_>::arbitrary(g), <_>::arbitrary(g))
     }
 
-    #[inline]
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
             self.as_hms_ranged()
@@ -157,12 +147,10 @@ impl Arbitrary for UtcOffset {
 }
 
 impl Arbitrary for OffsetDateTime {
-    #[inline]
     fn arbitrary(g: &mut Gen) -> Self {
         Self::new_in_offset(<_>::arbitrary(g), <_>::arbitrary(g), <_>::arbitrary(g))
     }
 
-    #[inline]
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
             (self.date(), self.time(), self.offset())
@@ -173,12 +161,10 @@ impl Arbitrary for OffsetDateTime {
 }
 
 impl Arbitrary for UtcDateTime {
-    #[inline]
     fn arbitrary(g: &mut Gen) -> Self {
         Self::new(<_>::arbitrary(g), <_>::arbitrary(g))
     }
 
-    #[inline]
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
             (self.date(), self.time())
@@ -189,7 +175,6 @@ impl Arbitrary for UtcDateTime {
 }
 
 impl Arbitrary for Weekday {
-    #[inline]
     fn arbitrary(g: &mut Gen) -> Self {
         use Weekday::*;
         match arbitrary_between!(u8; g, 0, 6) {
@@ -206,7 +191,6 @@ impl Arbitrary for Weekday {
         }
     }
 
-    #[inline]
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         match self {
             Self::Monday => empty_shrinker(),
@@ -216,7 +200,6 @@ impl Arbitrary for Weekday {
 }
 
 impl Arbitrary for Month {
-    #[inline]
     fn arbitrary(g: &mut Gen) -> Self {
         use Month::*;
         match arbitrary_between!(u8; g, 1, 12) {
@@ -238,7 +221,6 @@ impl Arbitrary for Month {
         }
     }
 
-    #[inline]
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         match self {
             Self::January => empty_shrinker(),

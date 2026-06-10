@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -54,7 +56,7 @@ void nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase*) {
     ent->PrintDiagnostics(mLogData, MaxPersistConnections(ent));
   }
 
-  consoleService->LogStringMessage(NS_ConvertUTF8toUTF16(mLogData).get());
+  consoleService->LogStringMessage(NS_ConvertUTF8toUTF16(mLogData).Data());
   mLogData.Truncate();
 }
 
@@ -68,7 +70,7 @@ void ConnectionEntry::PrintDiagnostics(nsCString& log,
   log.AppendPrintf("   Active Conns Length = %zu\n", mActiveConns.Length());
   log.AppendPrintf("   Idle Conns Length = %zu\n", mIdleConns.Length());
   log.AppendPrintf("   DnsAndSock Length = %zu\n",
-                   mConnectionAttemptPool->Length());
+                   mDnsAndConnectSockets.Length());
   log.AppendPrintf("   Coalescing Keys Length = %zu\n",
                    mCoalescingKeys.Length());
   log.AppendPrintf("   Spdy using = %d\n", mUsingSpdy);
@@ -82,13 +84,16 @@ void ConnectionEntry::PrintDiagnostics(nsCString& log,
     log.AppendPrintf("   :: Idle Connection #%u\n", i);
     mIdleConns[i]->PrintDiagnostics(log);
   }
-  mConnectionAttemptPool->PrintDiagnostics(log);
+  for (i = 0; i < mDnsAndConnectSockets.Length(); ++i) {
+    log.AppendPrintf("   :: Half Open #%u\n", i);
+    mDnsAndConnectSockets[i]->PrintDiagnostics(log);
+  }
 
   mPendingQ.PrintDiagnostics(log);
 
   for (i = 0; i < mCoalescingKeys.Length(); ++i) {
-    log.AppendPrintf("   :: Coalescing Key #%u %" PRIu32 "\n", i,
-                     mCoalescingKeys[i]);
+    log.AppendPrintf("   :: Coalescing Key #%u %s\n", i,
+                     mCoalescingKeys[i].get());
   }
 }
 
@@ -223,7 +228,7 @@ void nsHttpTransaction::PrintDiagnostics(nsCString& log) {
 void PendingTransactionInfo::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("     ::: Pending transaction\n");
   mTransaction->PrintDiagnostics(log);
-  RefPtr<DnsAndConnectSocket> dnsAndSock = do_QueryReferent(mConnectionAttempt);
+  RefPtr<DnsAndConnectSocket> dnsAndSock = do_QueryReferent(mDnsAndSock);
   log.AppendPrintf("     Waiting for half open sock: %p or connection: %p\n",
                    dnsAndSock.get(), mActiveConn.get());
 }

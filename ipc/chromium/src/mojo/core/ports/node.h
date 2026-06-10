@@ -195,7 +195,7 @@ class Node {
   class DelegateHolder {
    public:
     DelegateHolder(Node* node, NodeDelegate* delegate);
-    ~DelegateHolder() = default;
+    ~DelegateHolder();
 
     DelegateHolder(const DelegateHolder&) = delete;
     void operator=(const DelegateHolder&) = delete;

@@ -1,9 +1,10 @@
-/* * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * * This Source Code Form is subject to the terms of the Mozilla Public
  * * License, v. 2.0. If a copy of the MPL was not distributed with this
  * * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef FuzzerRegistry_h_
-#define FuzzerRegistry_h_
+#ifndef _FuzzerRegistry_h__
+#define _FuzzerRegistry_h__
 
 #include <cstdint>
 #include <map>
@@ -40,4 +41,4 @@ class FuzzerRegistry {
 
 }  // namespace mozilla
 
-#endif  // FuzzerRegistry_h_
+#endif  // _FuzzerRegistry_h__

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -110,8 +112,7 @@ struct JITFrameInfoForBufferRange final {
   struct JITFrameKey {
     bool operator==(const JITFrameKey& aOther) const {
       return mCanonicalAddress == aOther.mCanonicalAddress &&
-             mDepth == aOther.mDepth && mLine == aOther.mLine &&
-             mColumn == aOther.mColumn;
+             mDepth == aOther.mDepth;
     }
     bool operator!=(const JITFrameKey& aOther) const {
       return !(*this == aOther);
@@ -119,8 +120,6 @@ struct JITFrameInfoForBufferRange final {
 
     void* mCanonicalAddress;
     uint32_t mDepth;
-    uint32_t mLine;
-    uint32_t mColumn;
   };
   struct JITFrameKeyHasher {
     using Lookup = JITFrameKey;
@@ -129,8 +128,6 @@ struct JITFrameInfoForBufferRange final {
       mozilla::HashNumber hash = 0;
       hash = mozilla::AddToHash(hash, aLookup.mCanonicalAddress);
       hash = mozilla::AddToHash(hash, aLookup.mDepth);
-      hash = mozilla::AddToHash(hash, aLookup.mLine);
-      hash = mozilla::AddToHash(hash, aLookup.mColumn);
       return hash;
     }
 
@@ -237,10 +234,8 @@ class UniqueStacks final : public mozilla::FailureLatch {
                                 aInnerWindowID, aSourceId, aLine, aColumn,
                                 aCategoryPair}) {}
 
-    FrameKey(void* aJITAddress, uint32_t aJITDepth, uint32_t aRangeIndex,
-             uint32_t aLine, uint32_t aColumn)
-        : mData(JITFrameData{aJITAddress, aJITDepth, aRangeIndex, aLine,
-                             aColumn}) {}
+    FrameKey(void* aJITAddress, uint32_t aJITDepth, uint32_t aRangeIndex)
+        : mData(JITFrameData{aJITAddress, aJITDepth, aRangeIndex}) {}
 
     FrameKey(const FrameKey& aToCopy) = default;
 
@@ -282,8 +277,6 @@ class UniqueStacks final : public mozilla::FailureLatch {
       void* mCanonicalAddress;
       uint32_t mDepth;
       uint32_t mRangeIndex;
-      uint32_t mLine;
-      uint32_t mColumn;
     };
     mozilla::Variant<NormalFrameData, JITFrameData> mData;
   };
@@ -320,8 +313,6 @@ class UniqueStacks final : public mozilla::FailureLatch {
         hash = mozilla::AddToHash(hash, data.mCanonicalAddress);
         hash = mozilla::AddToHash(hash, data.mDepth);
         hash = mozilla::AddToHash(hash, data.mRangeIndex);
-        hash = mozilla::AddToHash(hash, data.mLine);
-        hash = mozilla::AddToHash(hash, data.mColumn);
       }
       return hash;
     }

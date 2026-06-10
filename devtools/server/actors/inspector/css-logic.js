@@ -83,15 +83,7 @@ class CssLogic {
    *         An array of string selectors.
    */
   static getSelectors(domRule, desugared = false) {
-    const className = ChromeUtils.getClassName(domRule);
-
-    if (className === "CSSNestedDeclarations") {
-      // CSSNestedDeclarations don't have selectorText/selectorCount/selectorTextAt.
-      // For now, only set `&`, but maybe we could include the ancestor rules' selectors
-      return ["&"];
-    }
-
-    if (className !== "CSSStyleRule") {
+    if (ChromeUtils.getClassName(domRule) !== "CSSStyleRule") {
       // Return empty array since CSSRule#selectorCount assumes only STYLE_RULE type.
       return [];
     }
@@ -130,7 +122,7 @@ class CssLogic {
       !node ||
       Cu.isDeadWrapper(node) ||
       node.nodeType !== nodeConstants.ELEMENT_NODE ||
-      !node.documentGlobal
+      !node.ownerGlobal
     ) {
       return null;
     }
@@ -147,7 +139,7 @@ class CssLogic {
       return null;
     }
 
-    return node.documentGlobal.getComputedStyle(bindingElement, pseudo);
+    return node.ownerGlobal.getComputedStyle(bindingElement, pseudo);
   }
 
   /**
@@ -553,24 +545,30 @@ class CssLogic {
 
   /**
    * Process the CssSelector objects that match the highlighted element and its
-   * parent elements.
+   * parent elements. scope.callback() is executed for each CssSelector
+   * object, being passed the CssSelector object and the match status.
    *
    * This method also includes all of the element.style properties, for each
    * highlighted element parent and for the highlighted element itself.
    *
-   * @returns {Array} An array of arrays with the following items:
-   *          - 0: {CssSelector} selector
-   *          - 1: {number} status (from STATUS)
-   *          - 2: {number} distance
+   * Note that the matched selectors are cached, such that next time your
+   * callback is invoked for the cached list of CssSelector objects.
+   *
+   * @param {function} callback the function you want to execute for each of
+   * the matched selectors.
+   * @param {object} scope the scope you want for the callback function. scope
+   * will be the this object when callback executes.
    */
-  processMatchedSelectors() {
+  processMatchedSelectors(callback, scope) {
     if (this.#matchedSelectors) {
-      this.passId++;
-      for (const [rule] of this.#matchedRules) {
-        rule.passId = this.passId;
+      if (callback) {
+        this.passId++;
+        this.#matchedSelectors.forEach(function (value) {
+          callback.call(scope, value[0], value[1]);
+          value[0].cssRule.passId = this.passId;
+        }, this);
       }
-
-      return this.#matchedSelectors;
+      return;
     }
 
     if (!this.#matchedRules) {
@@ -582,28 +580,24 @@ class CssLogic {
 
     for (const matchedRule of this.#matchedRules) {
       const [rule, status, distance] = matchedRule;
-      const includeAllSelectors =
-        rule.domRule.declarationOrigin === "style-attribute" ||
-        rule.domRule.declarationOrigin === "pres-hints" ||
-        // If we have a CSSNestedDeclaration at this point, we have a single selector
-        // (which should be `&`), and it should be included
-        ChromeUtils.getClassName(rule.domRule) === "CSSNestedDeclarations";
 
-      for (const selector of rule.selectors) {
+      rule.selectors.forEach(function (selector) {
         if (
           selector.matchId !== this.matchId &&
-          (includeAllSelectors ||
+          (rule.domRule.declarationOrigin === "style-attribute" ||
+            rule.domRule.declarationOrigin === "pres-hints" ||
             this.selectorMatchesElement(rule.domRule, selector.selectorIndex))
         ) {
           selector.matchId = this.matchId;
           this.#matchedSelectors.push([selector, status, distance]);
+          if (callback) {
+            callback.call(scope, selector, status, distance);
+          }
         }
-      }
+      }, this);
 
       rule.passId = this.passId;
     }
-
-    return this.#matchedSelectors;
   }
 
   /**
@@ -1151,9 +1145,15 @@ class CssRule {
       return this.#selectors;
     }
 
+    // Parse the CSSStyleRule.selectorText string.
     this.#selectors = [];
 
+    if (!this.domRule.selectorText) {
+      return this.#selectors;
+    }
+
     const selectors = CssLogic.getSelectors(this.domRule);
+
     for (let i = 0, len = selectors.length; i < len; i++) {
       this.#selectors.push(new CssSelector(this, selectors[i], i));
     }
@@ -1394,13 +1394,7 @@ class CssPropertyInfo {
     this.#matchedSelectors = [];
     this.needRefilter = false;
 
-    for (const [
-      selector,
-      status,
-      distance,
-    ] of this.#cssLogic.processMatchedSelectors()) {
-      this.#processMatchedSelector(selector, status, distance);
-    }
+    this.#cssLogic.processMatchedSelectors(this.#processMatchedSelector, this);
 
     // Sort the selectors by how well they match the given element.
     this.#matchedSelectors.sort((selectorInfo1, selectorInfo2) =>
@@ -1655,14 +1649,6 @@ class CssSelectorInfo {
   compareTo(that, selectorInfos) {
     const originalOrder =
       selectorInfos.indexOf(this) < selectorInfos.indexOf(that) ? -1 : 1;
-
-    // If rules are applied to different elements, the element that is the closest to the
-    // view element should be displayed before the other
-    if (this.distance !== that.distance) {
-      // Higher distance means we're closest to the viewed element (0 is when the rule is
-      // for the viewed element, -1 when it's for its parent and so on).
-      return this.distance > that.distance ? -1 : 1;
-    }
 
     // If both properties are not important, we can keep the original order
     if (!this.important && !that.important) {

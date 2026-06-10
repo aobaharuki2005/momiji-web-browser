@@ -63,15 +63,6 @@ class SearchEngineSelectorRepository(
         }
     }
 
-    override fun computeNewSearchEnvironmentId(
-        region: RegionState,
-        locale: Locale,
-        distribution: String?,
-    ): Int {
-        val searchEnvironment = buildEnvironment(region, locale, distribution)
-        return computeNewSearchEnvironmentId(searchEnvironment)
-    }
-
     /**
      * Load the [RefinedSearchConfig] for the given [region] and [locale].
      */
@@ -84,7 +75,16 @@ class SearchEngineSelectorRepository(
         coroutineContext: CoroutineContext,
     ): Bundle {
         try {
-            val config = buildEnvironment(region, locale, distribution)
+            val config = SearchUserEnvironment(
+                locale = locale.languageTag,
+                region = region.home,
+                experiment = searchEngineSelectorConfig.experiment,
+                version = searchEngineSelectorConfig.appVersion,
+                updateChannel = searchEngineSelectorConfig.updateChannel.into(),
+                distributionId = distribution ?: "",
+                appName = searchEngineSelectorConfig.appName.into(),
+                deviceType = searchEngineSelectorConfig.deviceType.into(),
+            )
             val searchConfig = selector.filterEngineConfiguration(config)
             val iconsList = searchConfigIconsUpdateService.fetchIconsRecords(searchEngineSelectorConfig.service)
             val searchEngineList = buildSearchEngineList(
@@ -97,7 +97,6 @@ class SearchEngineSelectorRepository(
             return Bundle(
                 list = searchEngineList,
                 defaultSearchEngineId = defaultEngineId,
-                searchEnvironmentId = computeNewSearchEnvironmentId(config),
             )
         } catch (_: Exception) {
             logger.error("exception in SearchEngineSelectorRepository.load")
@@ -105,27 +104,8 @@ class SearchEngineSelectorRepository(
         return Bundle(
             list = emptyList(),
             defaultSearchEngineId = "",
-            searchEnvironmentId = null,
         )
     }
-
-    private fun buildEnvironment(
-        region: RegionState,
-        locale: Locale,
-        distribution: String?,
-    ) = SearchUserEnvironment(
-        locale = locale.languageTag,
-        region = region.home,
-        experiment = searchEngineSelectorConfig.experiment,
-        version = searchEngineSelectorConfig.appVersion,
-        updateChannel = searchEngineSelectorConfig.updateChannel.into(),
-        distributionId = distribution ?: "",
-        appName = searchEngineSelectorConfig.appName.into(),
-        deviceType = searchEngineSelectorConfig.deviceType.into(),
-    )
-
-    private fun computeNewSearchEnvironmentId(searchEnvironment: SearchUserEnvironment) =
-        searchEnvironment.hashCode()
 
     private fun buildSearchEngineList(
         searchConfig: RefinedSearchConfig,

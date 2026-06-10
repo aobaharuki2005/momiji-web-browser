@@ -44,7 +44,7 @@ function handleEventLocal(aEvent) {
     return;
   }
   // Ignore <browser> element in about:preferences and any other special pages
-  if ("gBrowser" in aEvent.target.documentGlobal) {
+  if ("gBrowser" in aEvent.target.ownerGlobal) {
     xulFrameLoaderCreatedCounter.numCalledSoFar++;
   }
 }
@@ -59,31 +59,30 @@ add_setup(async function () {
       ["browser.newtab.preload", false],
     ],
   });
-  requestLongerTimeout(6);
+  requestLongerTimeout(3);
 });
 
-function setupRemoteTypes(isolateEverything) {
-  remoteTypes = {
-    regular: {},
-    1: {},
-    2: {},
-    3: {},
-    private: {},
-  };
-
-  if (isolateEverything) {
-    remoteTypes.initial = [
-      "webIsolated=https://example.com",
-      "webIsolated=https://example.com^userContextId=1",
-      "webIsolated=https://example.com^userContextId=2",
-      "webIsolated=https://example.com^userContextId=3",
-      "webIsolated=https://example.com^privateBrowsingId=1",
-      "webIsolated=https://example.org",
-      "webIsolated=https://example.org^userContextId=1",
-      "webIsolated=https://example.org^userContextId=2",
-      "webIsolated=https://example.org^userContextId=3",
-      "webIsolated=https://example.org^privateBrowsingId=1",
-    ];
+function setupRemoteTypes() {
+  if (gFissionBrowser) {
+    remoteTypes = {
+      initial: [
+        "webIsolated=https://example.com",
+        "webIsolated=https://example.com^userContextId=1",
+        "webIsolated=https://example.com^userContextId=2",
+        "webIsolated=https://example.com^userContextId=3",
+        "webIsolated=https://example.com^privateBrowsingId=1",
+        "webIsolated=https://example.org",
+        "webIsolated=https://example.org^userContextId=1",
+        "webIsolated=https://example.org^userContextId=2",
+        "webIsolated=https://example.org^userContextId=3",
+        "webIsolated=https://example.org^privateBrowsingId=1",
+      ],
+      regular: {},
+      1: {},
+      2: {},
+      3: {},
+      private: {},
+    };
     remoteTypes.regular[URI_EXAMPLECOM] = "webIsolated=https://example.com";
     remoteTypes.regular[URI_EXAMPLEORG] = "webIsolated=https://example.org";
     remoteTypes["1"][URI_EXAMPLECOM] =
@@ -103,37 +102,30 @@ function setupRemoteTypes(isolateEverything) {
     remoteTypes.private[URI_EXAMPLEORG] =
       "webIsolated=https://example.org^privateBrowsingId=1";
   } else {
-    remoteTypes.initial = [
-      "web",
-      "web=^userContextId=1",
-      "web=^userContextId=2",
-      "web=^userContextId=3",
-      "web=^privateBrowsingId=1",
-      "web",
-      "web=^userContextId=1",
-      "web=^userContextId=2",
-      "web=^userContextId=3",
-      "web=^privateBrowsingId=1",
-    ];
+    let web = Array(NUM_NAVIGATIONS).fill("web");
+    remoteTypes = {
+      initial: [...web, ...web],
+      regular: {},
+      1: {},
+      2: {},
+      3: {},
+      private: {},
+    };
     remoteTypes.regular[URI_EXAMPLECOM] = "web";
     remoteTypes.regular[URI_EXAMPLEORG] = "web";
-    remoteTypes["1"][URI_EXAMPLECOM] = "web=^userContextId=1";
-    remoteTypes["1"][URI_EXAMPLEORG] = "web=^userContextId=1";
-    remoteTypes["2"][URI_EXAMPLECOM] = "web=^userContextId=2";
-    remoteTypes["2"][URI_EXAMPLEORG] = "web=^userContextId=2";
-    remoteTypes["3"][URI_EXAMPLECOM] = "web=^userContextId=3";
-    remoteTypes["3"][URI_EXAMPLEORG] = "web=^userContextId=3";
-    remoteTypes.private[URI_EXAMPLECOM] = "web=^privateBrowsingId=1";
-    remoteTypes.private[URI_EXAMPLEORG] = "web=^privateBrowsingId=1";
+    remoteTypes["1"][URI_EXAMPLECOM] = "web";
+    remoteTypes["1"][URI_EXAMPLEORG] = "web";
+    remoteTypes["2"][URI_EXAMPLECOM] = "web";
+    remoteTypes["2"][URI_EXAMPLEORG] = "web";
+    remoteTypes["3"][URI_EXAMPLECOM] = "web";
+    remoteTypes["3"][URI_EXAMPLEORG] = "web";
+    remoteTypes.private[URI_EXAMPLECOM] = "web";
+    remoteTypes.private[URI_EXAMPLEORG] = "web";
   }
 }
 
-async function test_user_identity_simple_common(isolateEverything) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["fission.webContentIsolationStrategy", isolateEverything ? 1 : 0]],
-  });
-  setupRemoteTypes(isolateEverything);
-
+add_task(async function test_user_identity_simple() {
+  setupRemoteTypes();
   /**
    * For each test case
    * - open regular, private and container tabs and load uri
@@ -223,7 +215,7 @@ async function test_user_identity_simple_common(isolateEverything) {
     BrowserTestUtils.removeTab(page_regular.tab);
     BrowserTestUtils.removeTab(page_private.tab);
   }
-}
+});
 
 async function clickOnLink(aBrowser, aCurrURI, aLinkInfo, aIdxForRemoteTypes) {
   var remoteTypeBeforeNavigation = aBrowser.remoteType;
@@ -231,7 +223,7 @@ async function clickOnLink(aBrowser, aCurrURI, aLinkInfo, aIdxForRemoteTypes) {
 
   // Add a listener
   initXulFrameLoaderCreatedCounter(xulFrameLoaderCreatedCounter);
-  aBrowser.documentGlobal.gBrowser.addEventListener(
+  aBrowser.ownerGlobal.gBrowser.addEventListener(
     "XULFrameLoaderCreated",
     handleEventLocal
   );
@@ -242,7 +234,7 @@ async function clickOnLink(aBrowser, aCurrURI, aLinkInfo, aIdxForRemoteTypes) {
   // Click on the link
   info(`Clicking on link, expected remote type= ${expectedRemoteType}`);
   let newTabLoaded = BrowserTestUtils.waitForNewTab(
-    aBrowser.documentGlobal.gBrowser,
+    aBrowser.ownerGlobal.gBrowser,
     aLinkInfo.uri,
     true
   );
@@ -281,21 +273,10 @@ async function clickOnLink(aBrowser, aCurrURI, aLinkInfo, aIdxForRemoteTypes) {
   );
 
   // Remove the event listener
-  aBrowser.documentGlobal.gBrowser.removeEventListener(
+  aBrowser.ownerGlobal.gBrowser.removeEventListener(
     "XULFrameLoaderCreated",
     handleEventLocal
   );
 
   BrowserTestUtils.removeTab(newTab);
 }
-
-if (gFissionBrowser) {
-  // This will have no impact if fission is disabled, so we skip this test.
-  add_task(async function test_user_identity_simple_isolateEverything() {
-    await test_user_identity_simple_common(/* isolateEverything */ true);
-  });
-}
-
-add_task(async function test_user_identity_simple_isolateNothing() {
-  await test_user_identity_simple_common(/* isolateEverything */ false);
-});

@@ -16,22 +16,7 @@ export { EditorState, Plugin, PluginKey, TextSelection } from "prosemirror-state
 export { EditorView, Decoration, DecorationSet } from "prosemirror-view";
 
 // Non-core
-export {
-  defaultMarkdownParser,
-  defaultMarkdownSerializer,
-  MarkdownParser,
-  MarkdownSerializer,
-} from "prosemirror-markdown";
-
-// TODO (Bug 2030750) - Apply this with a patch in the vendoring process rather than
-// editing the file directly.
-export { default as MarkdownIt } from "markdown-it";
+export { defaultMarkdownParser } from "prosemirror-markdown";
 
 // Third-party
-export {
-  markdownParser,
-  markdownSerializer,
-  mentionNodeSpec,
-  suggestionsPlugin,
-  triggerCharacter,
-} from "./prosemirror-suggestions/src/index.js";
+export { suggestionsPlugin, triggerCharacter } from "./prosemirror-suggestions/src/index.js";

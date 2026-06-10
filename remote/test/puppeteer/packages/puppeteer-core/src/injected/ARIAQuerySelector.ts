@@ -16,9 +16,7 @@ declare global {
     __ariaQuerySelectorAll(root: Node, selector: string): Promise<Node[]>;
   }
 }
-/**
- * @internal
- */
+
 export const ariaQuerySelector = (
   root: Node,
   selector: string,
@@ -26,9 +24,6 @@ export const ariaQuerySelector = (
   // In Firefox sandboxes globalThis !== window and we expose bindings on globalThis.
   return (globalThis as unknown as Window).__ariaQuerySelector(root, selector);
 };
-/**
- * @internal
- */
 export const ariaQuerySelectorAll = async function* (
   root: Node,
   selector: string,

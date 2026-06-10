@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,6 +16,7 @@
 #endif
 
 #include <vector>
+#include <cmath>
 
 namespace mozilla {
 namespace gfx {
@@ -96,7 +99,7 @@ SkPath ScaledFontBase::GetSkiaPathForGlyphs(const GlyphBuffer& aBuffer) {
 
   struct Context {
     const Glyph* mGlyph;
-    SkPathBuilder mPathBuilder;
+    SkPath mPath;
   } ctx = {aBuffer.mGlyphs};
 
   font.getPaths(
@@ -107,13 +110,13 @@ SkPath ScaledFontBase::GetSkiaPathForGlyphs(const GlyphBuffer& aBuffer) {
           SkMatrix transMatrix(scaleMatrix);
           transMatrix.postTranslate(SkFloatToScalar(ctx.mGlyph->mPosition.x),
                                     SkFloatToScalar(ctx.mGlyph->mPosition.y));
-          ctx.mPathBuilder.addPath(*glyphPath, transMatrix);
+          ctx.mPath.addPath(*glyphPath, transMatrix);
         }
         ++ctx.mGlyph;
       },
       &ctx);
 
-  return ctx.mPathBuilder.detach();
+  return ctx.mPath;
 }
 
 already_AddRefed<Path> ScaledFontBase::GetPathForGlyphs(

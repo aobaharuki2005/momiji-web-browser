@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -48,6 +50,7 @@ MFBT_API LoadOrBranch BUncondImmDecode(const uintptr_t aPC,
 // Order is important here; more specific encoding tests must be placed before
 // less specific encoding tests.
 static const PCRelativeLoadTest gPCRelTests[] = {
+    {0xFEFF0000, 0xD63F0000, nullptr},      // BLR branch w/ link (reg)
     {0x9F000000, 0x10000000, nullptr},      // ADR
     {0x9F000000, 0x90000000, &ADRPDecode},  // ADRP
     {0xFF000000, 0x58000000, nullptr},      // LDR (literal) 64-bit GPR
@@ -57,8 +60,6 @@ static const PCRelativeLoadTest gPCRelTests[] = {
     {0xFE000000, 0x54000000, nullptr},            // B.Cond
     {0x7E000000, 0x34000000, nullptr},            // Compare and branch (imm)
     {0x7E000000, 0x36000000, nullptr},            // Test and branch (imm)
-    {0xFE000000, 0xD6000000,
-     nullptr},  // Unconditional branch (reg) - see bug 2010042
 };
 
 /**

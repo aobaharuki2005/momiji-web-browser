@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_DEVICECONTEXT_H_
-#define NS_DEVICECONTEXT_H_
+#ifndef _NS_DEVICECONTEXT_H_
+#define _NS_DEVICECONTEXT_H_
 
 #include <stdint.h>                    // for uint32_t
 #include "gfxTypes.h"                  // for gfxFloat
@@ -157,12 +158,6 @@ class nsDeviceContext final {
   bool GetScreenIsHDR();
 
   /**
-   * Get the status of HDR video playback support of the associated screen.
-   * Some displays can do HDR video but not HDR desktop mode.
-   */
-  bool GetScreenIsVideoHDR();
-
-  /**
    * Get the size of the displayable area of the output device in app units.
    */
   nsSize GetDeviceSurfaceDimensions();
@@ -205,8 +200,7 @@ class nsDeviceContext final {
    * @return error status
    */
   nsresult BeginDocument(const nsAString& aTitle,
-                         const nsAString& aPrintToFileName,
-                         uint64_t aBrowsingContextId, int32_t aStartPage,
+                         const nsAString& aPrintToFileName, int32_t aStartPage,
                          int32_t aEndPage);
 
   /**
@@ -310,7 +304,6 @@ class nsDeviceContext final {
   RefPtr<PrintTarget> mPrintTarget;
   bool mIsCurrentlyPrintingDoc;
   bool mIsInitialized = false;
-  uint64_t mBrowsingContextId = 0;
 };
 
-#endif /* NS_DEVICECONTEXT_H_ */
+#endif /* _NS_DEVICECONTEXT_H_ */

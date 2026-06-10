@@ -15,8 +15,7 @@ ChromeUtils.defineLazyGetter(lazy, "screenshotsLocalization", () => {
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
-  ScreenshotsUtils:
-    "moz-src:///browser/components/screenshots/ScreenshotsUtils.sys.mjs",
+  ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
 });
 

@@ -180,10 +180,6 @@ export class GeckoViewNavigation extends GeckoViewModule {
           appLinkLaunchType,
         } = aData;
 
-        if (appLinkLaunchType) {
-          this.moduleManager._applinkNavigation ??= Promise.withResolvers();
-        }
-
         let navFlags = convertFlags(flags);
         // For performance reasons we don't call the LoadUriDelegate.loadUri
         // from Gecko, and instead we call it directly in the loadUri Java API.
@@ -357,6 +353,7 @@ export class GeckoViewNavigation extends GeckoViewModule {
       .replace(/-/g, "");
 
     const message = {
+      type: "GeckoView:OnNewSession",
       uri: aUri ? aUri.displaySpec : "",
       newSessionId,
     };
@@ -370,7 +367,7 @@ export class GeckoViewNavigation extends GeckoViewModule {
     );
 
     return this.eventDispatcher
-      .sendRequestForResult("GeckoView:OnNewSession", message)
+      .sendRequestForResult(message)
       .then(didOpenSession => {
         if (!didOpenSession) {
           // New session cannot be opened, so we should throw NS_ERROR_ABORT.
@@ -743,6 +740,7 @@ export class GeckoViewNavigation extends GeckoViewModule {
     }
 
     const message = {
+      type: "GeckoView:LocationChange",
       uri: fixedURI.displaySpec,
       canGoBack: this.browser.canGoBack,
       canGoForward: this.browser.canGoForward,
@@ -753,12 +751,8 @@ export class GeckoViewNavigation extends GeckoViewModule {
           ? this.window.document.hasValidTransientUserGestureActivation
           : false,
     };
-    lazy.TranslationsParent.onLocationChange(
-      this.window,
-      aLocationURI,
-      aWebProgress
-    );
-    this.eventDispatcher.sendRequest("GeckoView:LocationChange", message);
+    lazy.TranslationsParent.onLocationChange(this.browser);
+    this.eventDispatcher.sendRequest(message);
   }
 }
 

@@ -80,15 +80,16 @@ impl core::fmt::Display for BuildError {
             BuildErrorKind::InsufficientCacheCapacity { minimum, given } => {
                 write!(
                     f,
-                    "given cache capacity ({given}) is smaller than \
-                     minimum required ({minimum})",
+                    "given cache capacity ({}) is smaller than \
+                     minimum required ({})",
+                    given, minimum,
                 )
             }
             BuildErrorKind::InsufficientStateIDCapacity { ref err } => {
                 err.fmt(f)
             }
             BuildErrorKind::Unsupported(ref msg) => {
-                write!(f, "unsupported regex feature for DFAs: {msg}")
+                write!(f, "unsupported regex feature for DFAs: {}", msg)
             }
         }
     }

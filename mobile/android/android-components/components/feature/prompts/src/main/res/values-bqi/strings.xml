@@ -69,8 +69,6 @@
   <string name="mozac_feature_prompts_before_unload_stay">مندن</string>
   <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
   <string name="mozac_feature_prompts_before_unload_leave">رئڌن</string>
-  <!-- Continue button label for WebAuthn related origin prompt. -->
-  <string name="webauthn_continue">رئڌن وا پؽش</string>
   <!-- Title of the month chooser dialog. -->
   <string name="mozac_feature_prompts_set_month">ی ما پسند کۊنین</string>
   <!-- January (short description), used on the month chooser dialog. -->
@@ -181,17 +179,9 @@
   <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
   <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">و کار گرؽڌن %1$s و عونوان ی جۊر کوݩ</string>
   <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
-  <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[و من ٱووڌن و %1$s وا ی هساو %2$s تئت <a href=\"%3$s\">سیاست زفت مهرمووه ای</a> وو <a href=\"%4$s\">شرتا داڌن خدمات</a> هونووݩ هڌ]]></string>
+  <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[و من ٱووڌن و %1$s وا ی هساو %2$s تئت <a href=\"%3$s\">سیاست زفت مهرموویی</a> وو <a href=\"%4$s\">شرتا داڌن خدمات</a> هونووݩ هڌ]]></string>
   <!-- Text for the positive button of the Identity Credential dialogs. -->
   <string name="mozac_feature_prompts_identity_credentials_continue">رئڌن وا پؽش</string>
   <!-- Text for the cancel button of the Identity Credential dialogs. -->
   <string name="mozac_feature_prompts_identity_credentials_cancel">لقو</string>
-  <!--
-    Email Mask Autofill
-
-    Text for the email mask prompt to allow users to fill an email input field in a sign up form with an email mask.
-  -->
-  <string name="mozac_feature_relay_chip_text">و کار گرؽڌن ماسک ایمیل</string>
-  <!-- Informational text for the contextual feature recommendation (CFR) enabling the email mask aliases. The %s is the name of the service, "Firefox Relay". -->
-  <string name="mozac_feature_relay_email_masks_cfr">نۊ! %s ماسکا ایمیل سکو من موبایل من دسرس هڌن.</string>
 </resources>

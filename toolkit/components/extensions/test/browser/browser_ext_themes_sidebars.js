@@ -3,14 +3,11 @@
 // This test checks whether the sidebar color properties work.
 const LIGHT_SALMON = "#ffa07a";
 
-// Schedule reset to the initial sidebar state after the test.
-const { SidebarTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/SidebarTestUtils.sys.mjs"
-);
-SidebarTestUtils.init(this);
-SidebarTestUtils.restoreStateAtCleanup(window);
-
-registerCleanupFunction(() => {
+registerCleanupFunction(async function () {
+  // Ensure sidebar is hidden after each test:
+  if (!document.getElementById("sidebar-box").hidden) {
+    SidebarController.hide({ dismissPanel: true });
+  }
   Services.prefs.clearUserPref(
     "browser.toolbarbuttons.introduced.sidebar-button"
   );

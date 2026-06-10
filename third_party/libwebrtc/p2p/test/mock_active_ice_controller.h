@@ -57,7 +57,7 @@ class MockActiveIceControllerFactory
   ~MockActiveIceControllerFactory() override = default;
 
   std::unique_ptr<ActiveIceControllerInterface> Create(
-      const ActiveIceControllerFactoryArgs& args) override {
+      const ActiveIceControllerFactoryArgs& args) {
     RecordActiveIceControllerCreated();
     return std::make_unique<MockActiveIceController>(args);
   }

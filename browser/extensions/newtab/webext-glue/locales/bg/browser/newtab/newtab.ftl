@@ -8,13 +8,9 @@
 newtab-page-title = Нов раздел
 newtab-settings-button =
     .title = Настройки на новия раздел
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Персонализирайте тази страница
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Персонализиране
-newtab-customize-panel-label =
-    .label = Персонализиране
 newtab-personalize-settings-icon-label =
     .title = Персонализиране на нов раздел
     .aria-label = Настройки
@@ -53,7 +49,7 @@ newtab-search-box-input =
     .placeholder = Търсене в мрежата
     .aria-label = Търсене в мрежата
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = Добавяне на търсеща машина
 newtab-topsites-add-shortcut-header = Нова клавишна комбинация
@@ -308,21 +304,9 @@ newtab-error-fallback-refresh-link = Презаредете страницата
 
 newtab-custom-shortcuts-title = Препратки
 newtab-custom-shortcuts-subtitle = Страници за преглед по-късно
-#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Препратки
     .description = Страници за преглед по-късно
-newtab-custom-shortcuts-nova =
-    .label = Препратки
-# Variables
-#   $num (number) - Number of rows to display
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
-newtab-custom-row-selector2 =
-    .label =
-        { $num ->
-            [one] { $num } ред
-           *[other] { $num } реда
-        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -333,12 +317,9 @@ newtab-custom-row-selector =
 newtab-custom-sponsored-sites = Спонсорирани препратки
 newtab-custom-pocket-title = Препоръчани от { -pocket-brand-name }
 newtab-custom-pocket-subtitle = Изключително съдържание, подбрано от { -pocket-brand-name }, част от семейството на { -brand-product-name }
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be having a description under "Recommended stories" anymore
 newtab-custom-stories-toggle =
     .label = Препоръчани истории
     .description = Изключително съдържание подбрано от семейството на { -brand-product-name }
-newtab-recommended-stories-toggle =
-    .label = Препоръчани истории
 newtab-custom-stories-personalized-toggle =
     .label = Истории
 newtab-custom-stories-personalized-checkbox-label = Персонализирани истории въз основа на вашата активност
@@ -349,8 +330,13 @@ newtab-custom-recent-subtitle = Избрани страници и съдърж�
 newtab-custom-weather-toggle =
     .label = Времето
     .description = Времето днес накратко
+newtab-custom-trending-search-toggle =
+    .label = Популярни търсения
+    .description = Популярни и често търсени теми
 newtab-custom-widget-weather-toggle =
     .label = Времето
+newtab-custom-widget-trending-search-toggle =
+    .label = Популярни търсения
 newtab-custom-widget-lists-toggle =
     .label = Списъци
 newtab-custom-widget-timer-toggle =
@@ -366,11 +352,8 @@ newtab-custom-settings = Настройки
 
 newtab-wallpaper-title = Тапети
 newtab-wallpaper-reset = Връщане на стандартни настройки
-#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Качване на изображение
 newtab-wallpaper-custom-color = Изберете цвят
-newtab-wallpaper-toggle-title =
-    .label = Тапети
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Изображението надхвърля ограничението за големина на файла от { $file_size }MB. Моля, опитайте се да качите по-малък файл.
@@ -390,7 +373,6 @@ newtab-wallpaper-dark-city = Лилав градски пейзаж
 
 ## Solid Colors
 
-#  (developer note): @nova-cleanup(remove-string): Remove old "Solid colors" string once Nova lands. The simplified "Colors" string will take over
 newtab-wallpaper-category-title-colors = Едноцветни
 newtab-wallpaper-blue = Синьо
 newtab-wallpaper-light-blue = Светлосиньо
@@ -499,13 +481,18 @@ newtab-topic-selection-button-pick-interests = Изберете вашите и�
 
 newtab-custom-wallpaper-cta = Опитайте
 
+## Strings for trending searches
+
+newtab-trending-searches-learn-more = Научете повече
+
 ## Strings for task / to-do list productivity widget
 
 newtab-widget-lists-menu-delete = Изтриване на този списък
 newtab-widget-lists-menu-learn-more = Научете повече
 newtab-widget-lists-input-menu-delete = Изтриване
 
-## Strings introduced by the Nova redesign of the Timer widget
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
 
 newtab-widget-timer-menu-learn-more = Научете повече
 newtab-promo-card-body = Нашите спонсори подкрепят мисията ни да изградим по-добра мрежа

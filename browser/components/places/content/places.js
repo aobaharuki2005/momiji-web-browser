@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -888,7 +889,7 @@ var PlacesSearchBox = {
   /**
    * The Search text field
    *
-   * @see {@link https://searchfox.org/firefox-main/source/toolkit/content/widgets/moz-input-search}
+   * @see {@link https://searchfox.org/mozilla-central/source/toolkit/content/widgets/moz-input-search}
    * @returns {HTMLInputElement}
    */
   get searchFilter() {
@@ -1344,7 +1345,7 @@ var ViewMenu = {
       splitter = null;
     }
 
-    const isChecked = element.hasAttribute("checked");
+    const isChecked = element.getAttribute("checked") == "true";
     column.hidden = !isChecked;
     if (splitter) {
       splitter.hidden = !isChecked;

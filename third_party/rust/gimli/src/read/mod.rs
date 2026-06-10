@@ -41,9 +41,7 @@
 //!
 //! Full example programs:
 //!
-//!   * [A simple `.debug_info` parser](https://github.com/gimli-rs/gimli/blob/master/crates/examples/src/bin/simple.rs)
-//!
-//!   * [A simple `.debug_line` parser](https://github.com/gimli-rs/gimli/blob/master/crates/examples/src/bin/simple_line.rs)
+//!   * [A simple parser](https://github.com/gimli-rs/gimli/blob/master/crates/examples/src/bin/simple.rs)
 //!
 //!   * [A `dwarfdump`
 //!     clone](https://github.com/gimli-rs/gimli/blob/master/crates/examples/src/bin/dwarfdump.rs)
@@ -235,11 +233,6 @@ pub use self::loclists::*;
 #[cfg(feature = "read")]
 mod lookup;
 
-#[cfg(feature = "read")]
-mod macros;
-#[cfg(feature = "read")]
-pub use self::macros::*;
-
 mod op;
 pub use self::op::*;
 
@@ -390,8 +383,6 @@ pub enum Error {
     UnsupportedTypeOperation,
     /// The shift value in an expression must be a non-negative integer.
     InvalidShiftExpression,
-    /// The size of a deref expression must not be larger than the size of an address.
-    InvalidDerefSize(u8),
     /// An unknown DW_CFA_* instruction.
     UnknownCallFrameInstruction(constants::DwCfa),
     /// The end of an address range was before the beginning.
@@ -457,12 +448,6 @@ pub enum Error {
     UnknownIndexSection(constants::DwSect),
     /// Unknown section type in version 2 `.dwp` index.
     UnknownIndexSectionV2(constants::DwSectV2),
-    /// Invalid macinfo type in `.debug_macinfo`.
-    InvalidMacinfoType(constants::DwMacinfo),
-    /// Invalid macro type in `.debug_macro`.
-    InvalidMacroType(constants::DwMacro),
-    /// The optional `opcode_operands_table` in `.debug_macro` is currently not supported.
-    UnsupportedOpcodeOperandsTable,
 }
 
 impl fmt::Display for Error {
@@ -560,10 +545,7 @@ impl Error {
             Error::InvalidShiftExpression => {
                 "The shift value in an expression must be a non-negative integer."
             }
-            Error::InvalidDerefSize(_) => {
-                "The size of a deref expression must not be larger than the size of an address."
-            }
-            Error::UnknownCallFrameInstruction(_) => "An unknown DW_CFA_* instruction",
+            Error::UnknownCallFrameInstruction(_) => "An unknown DW_CFA_* instructiion",
             Error::InvalidAddressRange => {
                 "The end of an address range must not be before the beginning."
             }
@@ -616,11 +598,6 @@ impl Error {
             Error::InvalidIndexRow => "Invalid hash row in `.dwp` index.",
             Error::UnknownIndexSection(_) => "Unknown section type in `.dwp` index.",
             Error::UnknownIndexSectionV2(_) => "Unknown section type in version 2 `.dwp` index.",
-            Error::InvalidMacinfoType(_) => "Invalid macinfo type in `.debug_macinfo`.",
-            Error::InvalidMacroType(_) => "Invalid macro type in `.debug_macro`.",
-            Error::UnsupportedOpcodeOperandsTable => {
-                "The optional `opcode_operands_table` in `.debug_macro` is currently not supported."
-            }
         }
     }
 }

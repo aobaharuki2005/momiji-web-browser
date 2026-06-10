@@ -1,3 +1,4 @@
+/* vim: set ts=2 sw=2 sts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -195,7 +196,7 @@ export class EncryptedMediaParent extends JSWindowActorParent {
 
     // Don't bother creating it if it's already there:
     if (
-      aBrowser.documentGlobal.PopupNotifications.getNotification(
+      aBrowser.ownerGlobal.PopupNotifications.getNotification(
         "drmContentPlaying",
         aBrowser
       )
@@ -242,7 +243,7 @@ export class EncryptedMediaParent extends JSWindowActorParent {
       label: manageLabel,
       accessKey: manageAccessKey,
       callback() {
-        aBrowser.documentGlobal.openPreferences("general-drm");
+        aBrowser.ownerGlobal.openPreferences("general-drm");
       },
       dismiss: true,
     };
@@ -264,7 +265,7 @@ export class EncryptedMediaParent extends JSWindowActorParent {
         "drm-content",
       hideClose: true,
     };
-    aBrowser.documentGlobal.PopupNotifications.show(
+    aBrowser.ownerGlobal.PopupNotifications.show(
       aBrowser,
       "drmContentPlaying",
       message,

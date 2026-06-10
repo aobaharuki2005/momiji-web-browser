@@ -12,14 +12,11 @@
 <body>
   <style>
     @keyframes anim {
-      0% {
+      from {
         width: 100px;
       }
-      50% {
-        width: 200px;
-      }
-      100% {
-        width: 200px;
+      to {
+        width: 100px;
       }
     }
     #scroller {
@@ -40,7 +37,7 @@
     #target {
       width: 10px;
       animation: anim 1s linear;
-      animation-trigger: --trigger play-backwards;
+      animation-trigger: --trigger play-forwards;
       background-color: tomato;
     }
   </style>
@@ -55,8 +52,8 @@
   </div>
   <script>
     promise_test(async (test) => {
-      await waitForCompositorCommit();
-      assert_equals(getComputedStyle(target).width, "200px");
+      await waitForAnimationFrames(3);
+      assert_equals(getComputedStyle(target).width, "100px");
     }, "Already in-view source triggers animation");
   </script>
 

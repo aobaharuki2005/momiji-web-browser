@@ -8,9 +8,9 @@ class ClickAction:
         self.protocol = protocol
 
     def __call__(self, payload):
-        selectors = payload["selectors"]
-        element = self.protocol.select.element_by_selector_array(selectors)
-        self.logger.debug("Clicking element: %s" % selectors)
+        selector = payload["selector"]
+        element = self.protocol.select.element_by_selector(selector)
+        self.logger.debug("Clicking element: %s" % selector)
         self.protocol.click.element(element)
 
 
@@ -24,33 +24,6 @@ class DeleteAllCookiesAction:
     def __call__(self, payload):
         self.logger.debug("Deleting all cookies")
         self.protocol.cookies.delete_all_cookies()
-
-
-class GetAccessibilityPropertiesForAccessibilityNodeAction:
-    name = "get_accessibility_properties_for_accessibility_node"
-
-    def __init__(self, logger, protocol):
-        self.logger = logger
-        self.protocol = protocol
-
-    def __call__(self, payload):
-        id = payload["accId"]
-        self.logger.debug("Getting accessibility properties: %s" % id)
-        return self.protocol.accessibility.get_accessibility_properties_for_accessibility_node(id)
-
-
-class GetAccessibilityPropertiesForElementAction:
-    name = "get_accessibility_properties_for_element"
-
-    def __init__(self, logger, protocol):
-        self.logger = logger
-        self.protocol = protocol
-
-    def __call__(self, payload):
-        selector = payload["selector"]
-        element = self.protocol.select.element_by_selector(selector)
-        self.logger.debug("Getting accessibility properties for element: %s" % element)
-        return self.protocol.accessibility.get_accessibility_properties_for_element(element)
 
 
 class GetAllCookiesAction:
@@ -73,8 +46,8 @@ class GetComputedLabelAction:
         self.protocol = protocol
 
     def __call__(self, payload):
-        selectors = payload["selectors"]
-        element = self.protocol.select.element_by_selector_array(selectors)
+        selector = payload["selector"]
+        element = self.protocol.select.element_by_selector(selector)
         self.logger.debug("Getting computed label for element: %s" % element)
         return self.protocol.accessibility.get_computed_label(element)
 
@@ -87,8 +60,8 @@ class GetComputedRoleAction:
         self.protocol = protocol
 
     def __call__(self, payload):
-        selectors = payload["selectors"]
-        element = self.protocol.select.element_by_selector_array(selectors)
+        selector = payload["selector"]
+        element = self.protocol.select.element_by_selector(selector)
         self.logger.debug("Getting computed role for element: %s" % element)
         return self.protocol.accessibility.get_computed_role(element)
 
@@ -114,10 +87,10 @@ class SendKeysAction:
         self.protocol = protocol
 
     def __call__(self, payload):
-        selectors = payload["selectors"]
+        selector = payload["selector"]
         keys = payload["keys"]
-        element = self.protocol.select.element_by_selector_array(selectors)
-        self.logger.debug("Sending keys to element: %s" % selectors)
+        element = self.protocol.select.element_by_selector(selector)
+        self.logger.debug("Sending keys to element: %s" % selector)
         self.protocol.send_keys.send_keys(element, keys)
 
 
@@ -172,11 +145,11 @@ class ActionSequenceAction:
                 for action in actionSequence["actions"]:
                     if (action["type"] == "pointerMove" and
                         isinstance(action["origin"], dict)):
-                        action["origin"] = self.get_element(action["origin"]["selectors"])
+                        action["origin"] = self.get_element(action["origin"]["selector"])
         self.protocol.action_sequence.send_actions({"actions": actions})
 
-    def get_element(self, element_selectors):
-        return self.protocol.select.element_by_selector_array(element_selectors)
+    def get_element(self, element_selector):
+        return self.protocol.select.element_by_selector(element_selector)
 
     def reset(self):
         self.protocol.action_sequence.release()
@@ -627,8 +600,6 @@ actions = [ClickAction,
            GetNamedCookieAction,
            GetComputedLabelAction,
            GetComputedRoleAction,
-           GetAccessibilityPropertiesForAccessibilityNodeAction,
-           GetAccessibilityPropertiesForElementAction,
            SendKeysAction,
            MinimizeWindowAction,
            SetWindowRectAction,

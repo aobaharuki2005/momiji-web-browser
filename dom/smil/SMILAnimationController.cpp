@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -55,7 +57,7 @@ void SMILAnimationController::Disconnect() {
   MOZ_ASSERT(mDocument, "disconnecting when we weren't connected...?");
   MOZ_ASSERT(mRefCnt.get() == 1,
              "Expecting to disconnect when doc is sole remaining owner");
-  NS_ASSERTION(IsPausedByType(PauseType::PageHide),
+  NS_ASSERTION(mPauseState & SMILTimeContainer::PAUSE_PAGEHIDE,
                "Expecting to be paused for pagehide before disconnect");
   mDocument = nullptr;  // (raw pointer)
 }
@@ -63,20 +65,20 @@ void SMILAnimationController::Disconnect() {
 //----------------------------------------------------------------------
 // SMILTimeContainer methods:
 
-void SMILAnimationController::Pause(PauseType aType) {
+void SMILAnimationController::Pause(uint32_t aType) {
   SMILTimeContainer::Pause(aType);
   UpdateSampling();
 }
 
-void SMILAnimationController::Resume(PauseType aType) {
-  bool wasPaused = IsPaused();
+void SMILAnimationController::Resume(uint32_t aType) {
+  bool wasPaused = !!mPauseState;
   // Update mCurrentSampleTime so that calls to GetParentTime--used for
   // calculating parent offsets--are accurate
   mCurrentSampleTime = mozilla::TimeStamp::Now();
 
   SMILTimeContainer::Resume(aType);
 
-  if (wasPaused && !IsPaused()) {
+  if (wasPaused && !mPauseState) {
     UpdateSampling();
   }
 }
@@ -160,9 +162,13 @@ void SMILAnimationController::UnregisterAnimationElement(
 //----------------------------------------------------------------------
 // Page show/hide
 
-void SMILAnimationController::OnPageShow() { Resume(PauseType::PageHide); }
+void SMILAnimationController::OnPageShow() {
+  Resume(SMILTimeContainer::PAUSE_PAGEHIDE);
+}
 
-void SMILAnimationController::OnPageHide() { Pause(PauseType::PageHide); }
+void SMILAnimationController::OnPageHide() {
+  Pause(SMILTimeContainer::PAUSE_PAGEHIDE);
+}
 
 //----------------------------------------------------------------------
 // Cycle-collection support
@@ -183,7 +189,7 @@ void SMILAnimationController::Unlink() { mLastCompositorTable = nullptr; }
 // Timer-related implementation helpers
 
 bool SMILAnimationController::ShouldSample() const {
-  return !IsPaused() && !mAnimationElementTable.IsEmpty() &&
+  return !mPauseState && !mAnimationElementTable.IsEmpty() &&
          !mChildContainerTable.IsEmpty();
 }
 
@@ -247,7 +253,7 @@ void SMILAnimationController::DoSample(bool aSkipUnchangedContainers) {
       continue;
     }
 
-    if (!container->IsPausedByType(PauseType::Begin) &&
+    if (!container->IsPausedByType(SMILTimeContainer::PAUSE_BEGIN) &&
         (container->NeedsSample() || !aSkipUnchangedContainers)) {
       container->ClearMilestones();
       container->Sample();
@@ -277,7 +283,7 @@ void SMILAnimationController::DoSample(bool aSkipUnchangedContainers) {
   // save iterating over the animation elements twice.
 
   // Create the compositor table
-  std::unique_ptr<SMILCompositorTable> currentCompositorTable(
+  UniquePtr<SMILCompositorTable> currentCompositorTable(
       new SMILCompositorTable(0));
   nsTArray<RefPtr<SVGAnimationElement>> animElems(
       mAnimationElementTable.Count());
@@ -395,7 +401,7 @@ void SMILAnimationController::DoMilestoneSamples() {
     // sample.
     SMILMilestone nextMilestone(GetCurrentTimeAsSMILTime() + 1, true);
     for (SMILTimeContainer* container : mChildContainerTable.Keys()) {
-      if (container->IsPausedByType(PauseType::Begin)) {
+      if (container->IsPausedByType(SMILTimeContainer::PAUSE_BEGIN)) {
         continue;
       }
       SMILMilestone thisMilestone;
@@ -412,7 +418,7 @@ void SMILAnimationController::DoMilestoneSamples() {
 
     nsTArray<RefPtr<dom::SVGAnimationElement>> elements;
     for (SMILTimeContainer* container : mChildContainerTable.Keys()) {
-      if (container->IsPausedByType(PauseType::Begin)) {
+      if (container->IsPausedByType(SMILTimeContainer::PAUSE_BEGIN)) {
         continue;
       }
       container->PopMilestoneElementsAtMilestone(nextMilestone, elements);

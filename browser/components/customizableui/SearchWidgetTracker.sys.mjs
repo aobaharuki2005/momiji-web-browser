@@ -18,7 +18,7 @@ export const SearchWidgetTracker = {
    */
   init() {
     CustomizableUI.addListener(this);
-    this._removeWidgetIfUnused();
+    this._updateSearchBarVisibilityBasedOnUsage();
   },
 
   /**
@@ -36,25 +36,9 @@ export const SearchWidgetTracker = {
    *   True iff the action that happened was the removal of the DOM node.
    */
   onWidgetAfterDOMChange(node, _nextNode, _container, wasRemoval) {
-    if (node.id == WIDGET_ID && wasRemoval) {
-      this._removePersistedWidths();
+    if (wasRemoval && node.id == WIDGET_ID) {
+      this.removePersistedWidths();
     }
-  },
-
-  onCustomizeStart() {
-    this._widgetWasInNavBar = this._widgetIsInNavBar;
-  },
-
-  onCustomizeEnd() {
-    if (!this._widgetWasInNavBar && this._widgetIsInNavBar) {
-      // We consider the widget "used" when manually placing it, so that
-      // restarting without searching first won't automatically remove it again.
-      Services.prefs.setStringPref(
-        "browser.search.widget.lastUsed",
-        new Date().toISOString()
-      );
-    }
-    delete this._widgetWasInNavBar;
   },
 
   /**
@@ -64,7 +48,7 @@ export const SearchWidgetTracker = {
    * certain threshold, the widget is moved back into the customization
    * palette.
    */
-  _removeWidgetIfUnused() {
+  _updateSearchBarVisibilityBasedOnUsage() {
     if (!this._widgetIsInNavBar) {
       return;
     }
@@ -80,15 +64,6 @@ export const SearchWidgetTracker = {
         removeAfterDaysUnused * 24 * 60 * 60 * 1000;
       if (new Date() - new Date(searchBarLastUsed) > saerchBarUnusedThreshold) {
         CustomizableUI.removeWidgetFromArea(WIDGET_ID);
-        // BrowserUsageTelemetry may silently do nothing when called too early
-        // during startup, so we call Glean directly instead. This means that we
-        // can't leverage BrowserUsageTelemetry to record the previous position
-        // of the search bar, so we use `na`; for this particular short-lived
-        // probe, we're only interested in recording that the auto-removal
-        // happened.
-        Glean.browserUi.customizedWidgets[
-          "search-container_remove_na_na_auto-unused"
-        ].add(1);
       }
     }
   },
@@ -99,7 +74,7 @@ export const SearchWidgetTracker = {
    * the URL bar). Goes through each open browser window and removes the width
    * property / style on each existant search bar.
    */
-  _removePersistedWidths() {
+  removePersistedWidths() {
     Services.xulStore.removeValue(
       AppConstants.BROWSER_CHROME_URL,
       WIDGET_ID,

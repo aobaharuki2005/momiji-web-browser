@@ -7,13 +7,12 @@ package org.mozilla.focus.telemetry
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import mozilla.components.support.utils.DefaultDateTimeProvider
 import org.mozilla.focus.telemetry.GleanUsageReportingApi.UsageReason.ACTIVE
 import org.mozilla.focus.telemetry.GleanUsageReportingApi.UsageReason.INACTIVE
 
 internal class GleanUsageReportingLifecycleObserver(
     private val gleanUsageReportingApi: GleanUsageReportingApi = GleanUsageReporting(),
-    private val currentTimeProvider: () -> Long = DefaultDateTimeProvider()::currentTimeMillis,
+    private val currentTimeProvider: () -> Long = { System.currentTimeMillis() },
 ) : LifecycleEventObserver {
 
     private var durationStartMs: Long? = null

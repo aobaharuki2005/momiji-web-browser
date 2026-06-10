@@ -9,7 +9,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
+  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
@@ -345,6 +345,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
       type: lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       isBestMatch: true,
+      hideRowLabel: true,
       ...additionalOptions,
       payload: {
         items: values.map((v, i) => this.makePayloadItem(v, i)),
@@ -399,6 +400,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
       type: lazy.UrlbarUtils.RESULT_TYPE.TIP,
       source: lazy.UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       isBestMatch: true,
+      hideRowLabel: true,
       payload: {
         // This `type` is the tip type, required for `TIP` results.
         type: "realtime_opt_in",
@@ -453,7 +455,19 @@ export class RealtimeSuggestProvider extends SuggestProvider {
           role: hasMultipleItems ? "option" : "presentation",
         },
         children: [
-          ...this.getViewTemplateForImageContainer(item, i),
+          // Create an image inside a container so that the image appears inset
+          // into a square. This is atypical because we normally use only an
+          // image and give it padding and a background color to achieve that
+          // effect, but that only works when the image size is fixed.
+          // Unfortunately Merino serves market icons of different sizes due to
+          // its reliance on a third-party API.
+          {
+            name: `image_container_${i}`,
+            tag: "span",
+            classList: ["urlbarView-realtime-image-container"],
+            children: this.getViewTemplateForImage(item, i),
+          },
+
           {
             tag: "span",
             classList: ["urlbarView-realtime-description"],
@@ -476,35 +490,23 @@ export class RealtimeSuggestProvider extends SuggestProvider {
   }
 
   /**
-   * Returns the view template for the image container. This default
-   * implementation creates a `span` with an `img` inside. Override it if you
-   * need something else.
+   * Returns the view template inside the `image_container`. This default
+   * implementation creates an `img` element. Override it if you need something
+   * else.
    *
    * @param {object} _item
    *   An item from the `result.payload.items` array.
    * @param {number} index
    *   The index of the item in the array.
    * @returns {Array}
-   *   View template for the image container, an array of objects.
+   *   View template for the image, an array of objects.
    */
-  getViewTemplateForImageContainer(_item, index) {
-    // Create an image inside a container so that the image appears inset into a
-    // square. This is atypical because we normally use only an image and give
-    // it padding and a background color to achieve that effect, but that only
-    // works when the image size is fixed. Unfortunately Merino serves market
-    // icons of different sizes due to its reliance on a third-party API.
+  getViewTemplateForImage(_item, index) {
     return [
       {
-        name: `image_container_${index}`,
-        tag: "span",
-        classList: ["urlbarView-realtime-image-container"],
-        children: [
-          {
-            name: `image_${index}`,
-            tag: "img",
-            classList: ["urlbarView-realtime-image"],
-          },
-        ],
+        name: `image_${index}`,
+        tag: "img",
+        classList: ["urlbarView-realtime-image"],
       },
     ];
   }
@@ -546,7 +548,12 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     }
 
     /** @type {UrlbarResultCommand[]} */
-    let commands = [];
+    let commands = [
+      {
+        name: "not_interested",
+        l10n: this.notInterestedCommandL10n,
+      },
+    ];
 
     if (this.canShowLessFrequently) {
       commands.push({
@@ -558,10 +565,6 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     }
 
     commands.push(
-      {
-        name: "not_interested",
-        l10n: this.notInterestedCommandL10n,
-      },
       { name: "separator" },
       {
         name: "manage",
@@ -572,7 +575,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
       {
         name: "help",
         l10n: {
-          id: "urlbar-result-menu-learn-more",
+          id: "urlbar-result-menu-learn-more-about-firefox-suggest",
         },
       }
     );

@@ -12,57 +12,52 @@
  * for the event is attached. We can mimic that behavior here.
  */
 
-if (!window.__firefoxWebCompatFixBug1287715) {
-  Object.defineProperty(window, "__firefoxWebCompatFixBug1287715", {
-    configurable: false,
-    value: true,
-  });
+/* globals exportFunction */
 
-  console.info(
-    "loadedmetadata event is being deferred until GAME_READY. See https://bugzilla.mozilla.org/show_bug.cgi?id=1287715 for details."
-  );
+console.info(
+  "loadedmetadata event is being deferred until GAME_READY. See https://bugzilla.mozilla.org/show_bug.cgi?id=1287715 for details."
+);
 
-  let loadedmetadataEvent;
-  let loadedmetadataListener;
+let loadedmetadataEvent;
+let loadedmetadataListener;
 
-  const { prototype } = EventTarget;
-  const { addEventListener, dispatchEvent } = prototype;
+const { prototype } = window.wrappedJSObject.EventTarget;
+const { addEventListener, dispatchEvent } = prototype;
 
-  Object.defineProperty(prototype, "addEventListener", {
-    value(type, listener, cfg) {
-      if (type?.toLowerCase() === "loadedmetadata") {
-        loadedmetadataListener = listener;
-        return addEventListener.call(
-          this,
-          type,
-          e => {
-            loadedmetadataEvent = e;
-          },
-          cfg
+Object.defineProperty(prototype, "addEventListener", {
+  value: exportFunction(function (type, listener, cfg) {
+    if (type?.toLowerCase() === "loadedmetadata") {
+      loadedmetadataListener = listener;
+      return addEventListener.call(
+        this,
+        type,
+        exportFunction(e => {
+          loadedmetadataEvent = e;
+        }, window),
+        cfg
+      );
+    }
+    return addEventListener.call(this, type, listener, cfg);
+  }, window),
+});
+
+Object.defineProperty(prototype, "dispatchEvent", {
+  value: exportFunction(function (e) {
+    if (
+      e?.type === "GAME_READY" &&
+      loadedmetadataEvent &&
+      loadedmetadataListener
+    ) {
+      try {
+        (loadedmetadataListener?.handleEvent ?? loadedmetadataListener)(
+          loadedmetadataEvent
         );
+      } catch (_) {
+        console.trace(_);
       }
-      return addEventListener.call(this, type, listener, cfg);
-    },
-  });
-
-  Object.defineProperty(prototype, "dispatchEvent", {
-    value(e) {
-      if (
-        e?.type === "GAME_READY" &&
-        loadedmetadataEvent &&
-        loadedmetadataListener
-      ) {
-        try {
-          (loadedmetadataListener?.handleEvent ?? loadedmetadataListener)(
-            loadedmetadataEvent
-          );
-        } catch (_) {
-          console.trace(_);
-        }
-        loadedmetadataListener = undefined;
-        loadedmetadataEvent = undefined;
-      }
-      return dispatchEvent.call(this, e);
-    },
-  });
-}
+      loadedmetadataListener = undefined;
+      loadedmetadataEvent = undefined;
+    }
+    return dispatchEvent.call(this, e);
+  }, window),
+});

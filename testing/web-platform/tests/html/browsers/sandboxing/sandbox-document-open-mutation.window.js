@@ -1,3 +1,15 @@
+// Return whether the current context is sandboxed or not. The implementation do
+// not matter much, but might have to change over time depending on what side
+// effect sandbox flag have. Feel free to update as needed.
+const is_sandboxed = () => {
+  try {
+    document.domain = document.domain;
+    return "not sandboxed";
+  } catch (error) {
+    return "sandboxed";
+  }
+};
+
 promise_test(async test => {
   const message = new Promise(r => window.addEventListener("message", r));
 
@@ -12,15 +24,8 @@ promise_test(async test => {
     <script>
       parent.frames[0].document.write(\`
         <script>
-          // Return whether the current context is sandboxed or not. The implementation does
-          // not matter much, but might have to change over time depending on what side
-          // effect sandbox flags have. Feel free to update as needed.
-          try {
-            document.domain = document.domain;
-            window.parent.postMessage("not sandboxed", "*");
-          } catch (error) {
-            window.parent.postMessage("sandboxed", "*");
-          }
+          const is_sandboxed = ${is_sandboxed};
+          window.parent.postMessage(is_sandboxed(), '*');
         </scr\`+\`ipt>
       \`);
       parent.frames[0].document.close();

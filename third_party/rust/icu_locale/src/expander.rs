@@ -310,7 +310,7 @@ impl LocaleExpander {
         })
     }
 
-    fn as_borrowed(&self) -> LocaleExpanderBorrowed<'_> {
+    fn as_borrowed(&self) -> LocaleExpanderBorrowed {
         LocaleExpanderBorrowed {
             likely_subtags_l: self.likely_subtags_l.get(),
             likely_subtags_sr: self.likely_subtags_sr.get(),

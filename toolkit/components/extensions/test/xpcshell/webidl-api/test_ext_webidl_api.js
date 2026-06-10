@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 AddonTestUtils.init(this);
@@ -481,27 +483,4 @@ add_task(async function test_get_property() {
       },
     }
   );
-});
-
-add_task(async function test_get_property_return_long_string() {
-  await runExtensionAPITest("getProperty with long string value", {
-    backgroundScript() {
-      return self.browser.mockExtensionAPI.propertyAsString;
-    },
-    mockAPIRequestHandler() {
-      const longString = new Array(200).fill("x").join("");
-      return {
-        type: Ci.mozIExtensionAPIRequestResult.RETURN_VALUE,
-        value: longString,
-      };
-    },
-    assertResults({ testError, testResult }) {
-      Assert.deepEqual(testError, null, "Got no error as expected");
-      Assert.deepEqual(
-        testResult,
-        new Array(200).fill("x").join(""),
-        "Got the expected result"
-      );
-    },
-  });
 });

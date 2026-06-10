@@ -5,9 +5,7 @@
 package mozilla.components.feature.tabs.ext
 
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.feature.tabs.TabPartitionKeys.TAB_GROUPS
 import mozilla.components.feature.tabs.tabstray.Tabs
 
 /**
@@ -38,8 +36,3 @@ internal fun BrowserState.toTabList(
 
     return Pair(tabStates, selectedTabId)
 }
-
-/**
- * Returns the [TabPartition] associated with [TAB_GROUPS].
- */
-fun BrowserState.tabGroupsPartition(): TabPartition? = this.tabPartitions[TAB_GROUPS]

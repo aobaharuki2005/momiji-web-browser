@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:set ts=2 sts=2 sw=2 et cin:
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -161,7 +163,7 @@ void AddOriginMetadataToFile(const CFStringRef filePath,
 
   typedef OSStatus (*MDItemSetAttribute_type)(MDItemRef, CFStringRef,
                                               CFTypeRef);
-  static MDItemSetAttribute_type mdItemSetAttributeFunc = nullptr;
+  static MDItemSetAttribute_type mdItemSetAttributeFunc = NULL;
 
   static bool did_symbol_lookup = false;
   if (!did_symbol_lookup) {
@@ -181,13 +183,12 @@ void AddOriginMetadataToFile(const CFStringRef filePath,
     return;
   }
 
-  MDItemRef mdItem = ::MDItemCreate(nullptr, filePath);
+  MDItemRef mdItem = ::MDItemCreate(NULL, filePath);
   if (!mdItem) {
     return;
   }
 
-  CFMutableArrayRef list =
-      ::CFArrayCreateMutable(kCFAllocatorDefault, 2, nullptr);
+  CFMutableArrayRef list = ::CFArrayCreateMutable(kCFAllocatorDefault, 2, NULL);
   if (!list) {
     ::CFRelease(mdItem);
     return;
@@ -214,25 +215,25 @@ static CFMutableDictionaryRef CreateQuarantineDictionary(
     const CFURLRef aFileURL, const bool aCreateProps) {
   nsAutoreleasePool localPool;
 
-  CFDictionaryRef quarantineProps = nullptr;
+  CFDictionaryRef quarantineProps = NULL;
   if (aCreateProps) {
-    quarantineProps = ::CFDictionaryCreate(nullptr, nullptr, nullptr, 0,
+    quarantineProps = ::CFDictionaryCreate(NULL, NULL, NULL, 0,
                                            &kCFTypeDictionaryKeyCallBacks,
                                            &kCFTypeDictionaryValueCallBacks);
   } else {
     Boolean success = ::CFURLCopyResourcePropertyForKey(
-        aFileURL, kCFURLQuarantinePropertiesKey, &quarantineProps, nullptr);
+        aFileURL, kCFURLQuarantinePropertiesKey, &quarantineProps, NULL);
     // If there aren't any quarantine properties then the user probably
     // set up an exclusion and we don't need to add metadata.
     if (!success || !quarantineProps) {
-      return nullptr;
+      return NULL;
     }
   }
 
   // We don't know what to do if the props aren't a dictionary.
   if (::CFGetTypeID(quarantineProps) != ::CFDictionaryGetTypeID()) {
     ::CFRelease(quarantineProps);
-    return nullptr;
+    return NULL;
   }
 
   // Make a mutable copy of the properties.
@@ -283,7 +284,7 @@ void AddQuarantineMetadataToFile(const CFStringRef filePath,
 
   // Set quarantine properties on file.
   ::CFURLSetResourcePropertyForKey(fileURL, kCFURLQuarantinePropertiesKey,
-                                   mutQuarantineProps, nullptr);
+                                   mutQuarantineProps, NULL);
 
   ::CFRelease(fileURL);
   ::CFRelease(mutQuarantineProps);

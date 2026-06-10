@@ -1,3 +1,5 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,13 +7,10 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 
 #include "GeckoProfiler.h"
-#include "Navigator.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/dom/AudioSession.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -25,13 +24,7 @@
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/JSWindowActorChild.h"
-#include "mozilla/dom/ModelContext.h"
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
-#include "mozilla/dom/PolicyContainer.h"
-#include "mozilla/dom/Promise-inl.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/ReportingUtils.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SecurityPolicyViolationEvent.h"
 #include "mozilla/dom/SessionStoreRestoreData.h"
 #include "mozilla/dom/WindowContext.h"
@@ -51,7 +44,6 @@
 #include "nsScriptSecurityManager.h"
 #include "nsSerializationHelper.h"
 #include "nsURLHelper.h"
-#include "xpcpublic.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::dom::ipc;
@@ -240,8 +232,6 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
   txn.SetIsThirdPartyTrackingResourceWindow(
       nsContentUtils::IsThirdPartyTrackingResourceWindow(mWindowGlobal));
   txn.SetIsSecureContext(mWindowGlobal->IsSecureContext());
-  txn.SetIsFramebustingAllowed(
-      mWindowGlobal->GetBrowsingContext()->ComputeIsFramebustingAllowed());
   if (auto policy = aDocument->GetEmbedderPolicy()) {
     txn.SetEmbedderPolicy(*policy);
   }
@@ -417,7 +407,7 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameLocal(
     return IPC_OK();
   }
 
-  if (NS_WARN_IF(embedderElt->GetDocumentGlobal() != GetWindowGlobal())) {
+  if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != GetWindowGlobal())) {
     return IPC_OK();
   }
 
@@ -483,7 +473,7 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameRemote(
     return IPC_OK();
   }
 
-  if (NS_WARN_IF(embedderElt->GetDocumentGlobal() != GetWindowGlobal())) {
+  if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != GetWindowGlobal())) {
     return IPC_OK();
   }
 
@@ -505,10 +495,11 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameRemote(
 
 mozilla::ipc::IPCResult WindowGlobalChild::RecvDrawSnapshot(
     const Maybe<IntRect>& aRect, const float& aScale,
-    const nscolor& aBackgroundColor, const gfx::CrossProcessPaintFlags& aFlags,
+    const nscolor& aBackgroundColor, const uint32_t& aFlags,
     DrawSnapshotResolver&& aResolve) {
   aResolve(gfx::PaintFragment::Record(BrowsingContext(), aRect, aScale,
-                                      aBackgroundColor, aFlags));
+                                      aBackgroundColor,
+                                      (gfx::CrossProcessPaintFlags)aFlags));
   return IPC_OK();
 }
 
@@ -523,7 +514,7 @@ WindowGlobalChild::RecvSaveStorageAccessPermissionGranted() {
 }
 
 mozilla::ipc::IPCResult WindowGlobalChild::RecvDispatchSecurityPolicyViolation(
-    const nsString& aViolationEventJSON, const nsString& aReportGroupName) {
+    const nsString& aViolationEventJSON) {
   nsGlobalWindowInner* window = GetWindowGlobal();
   if (!window) {
     return IPC_OK();
@@ -534,10 +525,15 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvDispatchSecurityPolicyViolation(
     return IPC_OK();
   }
 
-  ReportingUtils::DeserializeSecurityViolationEventAndReport(
-      doc->GetTargetForDOMEvent(), window, aViolationEventJSON,
-      aReportGroupName);
+  SecurityPolicyViolationEventInit violationEvent;
+  if (!violationEvent.Init(aViolationEventJSON)) {
+    return IPC_OK();
+  }
 
+  RefPtr<Event> event = SecurityPolicyViolationEvent::Constructor(
+      doc, u"securitypolicyviolation"_ns, violationEvent);
+  event->SetTrusted(true);
+  doc->DispatchEvent(*event, IgnoreErrors());
   return IPC_OK();
 }
 
@@ -590,22 +586,15 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvRestoreTabContent(
   return IPC_OK();
 }
 
-IPCResult WindowGlobalChild::RecvRawMessage(const JSActorMessageMeta& aMeta,
-                                            JSIPCValue&& aData,
-                                            StructuredCloneData* aStack) {
-  ReceiveRawMessage(aMeta, std::move(aData), aStack);
-  return IPC_OK();
-}
-
-IPCResult WindowGlobalChild::RecvNotifyAudioSessionStateChanged(
-    const AudioSessionState& aState) {
-  nsGlobalWindowInner* window = GetWindowGlobal();
-  if (!window) {
-    return IPC_OK();
+IPCResult WindowGlobalChild::RecvRawMessage(
+    const JSActorMessageMeta& aMeta, JSIPCValue&& aData,
+    const UniquePtr<ClonedMessageData>& aStack) {
+  UniquePtr<StructuredCloneData> stack;
+  if (aStack) {
+    stack = MakeUnique<StructuredCloneData>();
+    stack->BorrowFromClonedMessageData(*aStack);
   }
-  if (RefPtr<dom::AudioSession> session = window->Navigator()->AudioSession()) {
-    session->SetState(aState);
-  }
+  ReceiveRawMessage(aMeta, std::move(aData), std::move(stack));
   return IPC_OK();
 }
 
@@ -633,9 +622,7 @@ IPCResult WindowGlobalChild::RecvProcessCloseRequest(
   RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
   RefPtr<dom::BrowsingContext> focusedContext =
       focusManager ? focusManager->GetFocusedBrowsingContext() : nullptr;
-  if (!focusedContext) {
-    return IPC_OK();
-  }
+  MOZ_ASSERT(focusedContext, "Cannot find focused context");
   // Only the currently focused context's CloseWatcher should be processed.
   if (RefPtr<Document> doc = focusedContext->GetExtantDocument()) {
     RefPtr<nsPIDOMWindowInner> win = doc->GetInnerWindow();
@@ -644,110 +631,6 @@ IPCResult WindowGlobalChild::RecvProcessCloseRequest(
       manager->ProcessCloseRequest();
     }
   }
-  return IPC_OK();
-}
-
-IPCResult WindowGlobalChild::RecvGetModelContextTools(
-    GetModelContextToolsResolver&& aResolver) {
-  if (!IsCurrentGlobal()) {
-    aResolver(std::make_tuple(NS_ERROR_DOM_INVALID_ACCESS_ERR,
-                              nsTArray<IPCModelContextToolDefinition>()));
-    return IPC_OK();
-  }
-
-  if (!BrowsingContext()->IsTop()) {
-    aResolver(std::make_tuple(NS_ERROR_DOM_INVALID_ACCESS_ERR,
-                              nsTArray<IPCModelContextToolDefinition>()));
-    return IPC_OK();
-  }
-
-  nsTArray<IPCModelContextToolDefinition> tools;
-  if (nsGlobalWindowInner* win = GetWindowGlobal()) {
-    if (Navigator* nav = win->Navigator()) {
-      if (ModelContext* mc = nav->ModelContext()) {
-        mc->GetIPCToolDefinitions(tools);
-      }
-    }
-  }
-
-  aResolver(std::make_tuple(NS_OK, std::move(tools)));
-  return IPC_OK();
-}
-
-IPCResult WindowGlobalChild::RecvInvokeModelContextTool(
-    const nsCString& aToolName, NotNull<StructuredCloneData*> aInput,
-    InvokeModelContextToolResolver&& aResolver) {
-  if (!IsCurrentGlobal()) {
-    aResolver(std::make_tuple(
-        CopyableErrorResult(NS_ERROR_DOM_INVALID_ACCESS_ERR), nullptr));
-    return IPC_OK();
-  }
-
-  if (!BrowsingContext()->IsTop()) {
-    aResolver(std::make_tuple(
-        CopyableErrorResult(NS_ERROR_DOM_INVALID_ACCESS_ERR), nullptr));
-    return IPC_OK();
-  }
-
-  nsGlobalWindowInner* win = GetWindowGlobal();
-  Navigator* nav = win ? win->Navigator() : nullptr;
-  RefPtr<ModelContext> mc = nav ? nav->ModelContext() : nullptr;
-  if (!mc) {
-    aResolver(std::make_tuple(
-        CopyableErrorResult(NS_ERROR_DOM_INVALID_ACCESS_ERR), nullptr));
-    return IPC_OK();
-  }
-
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(win)) {
-    aResolver(std::make_tuple(CopyableErrorResult(NS_ERROR_FAILURE), nullptr));
-    return IPC_OK();
-  }
-  JSContext* cx = jsapi.cx();
-
-  JS::Rooted<JS::Value> inputVal(cx);
-  IgnoredErrorResult deserializeRv;
-  aInput->Read(cx, &inputVal, deserializeRv);
-  if (deserializeRv.Failed()) {
-    aResolver(std::make_tuple(CopyableErrorResult(NS_ERROR_DOM_DATA_CLONE_ERR),
-                              nullptr));
-    return IPC_OK();
-  }
-
-  ErrorResult rv;
-  RefPtr<Promise> domPromise = mc->InvokeToolInternal(
-      cx, NS_ConvertUTF8toUTF16(aToolName), inputVal, rv);
-  if (!domPromise) {
-    aResolver(std::make_tuple(CopyableErrorResult(std::move(rv)), nullptr));
-    return IPC_OK();
-  }
-
-  domPromise->AddCallbacksWithCycleCollectedArgs(
-      [aResolver](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult&) {
-        RefPtr<StructuredCloneData> cloneData =
-            MakeRefPtr<StructuredCloneData>();
-        IgnoredErrorResult rv;
-        cloneData->Write(aCx, aValue, rv);
-        if (rv.Failed()) {
-          aResolver(std::make_tuple(
-              CopyableErrorResult(NS_ERROR_DOM_DATA_CLONE_ERR), nullptr));
-          return;
-        }
-        aResolver(std::make_tuple(CopyableErrorResult(), std::move(cloneData)));
-      },
-      [aResolver](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult&) {
-        RefPtr<StructuredCloneData> cloneData =
-            MakeRefPtr<StructuredCloneData>();
-        IgnoredErrorResult rv;
-        cloneData->Write(aCx, aValue, rv);
-        if (rv.Failed()) {
-          aResolver(
-              std::make_tuple(CopyableErrorResult(NS_ERROR_FAILURE), nullptr));
-          return;
-        }
-        aResolver(std::make_tuple(CopyableErrorResult(NS_ERROR_FAILURE),
-                                  std::move(cloneData)));
-      });
   return IPC_OK();
 }
 
@@ -871,8 +754,66 @@ bool WindowGlobalChild::SameOriginWithTop() {
 // Bug 1810619: Crash at null in nsDocShell::ValidateOrigin
 bool WindowGlobalChild::CanNavigate(dom::BrowsingContext* aTarget,
                                     bool aConsiderOpener) {
-  return nsContentUtils::CanNavigate(BrowsingContext(), aTarget,
-                                     DocumentPrincipal(), aConsiderOpener);
+  MOZ_DIAGNOSTIC_ASSERT(WindowContext()->Group() == aTarget->Group(),
+                        "A WindowGlobalChild should never try to navigate a "
+                        "BrowsingContext from another group");
+
+  auto isFileScheme = [](nsIPrincipal* aPrincipal) -> bool {
+    // NOTE: This code previously checked for a file scheme using
+    // `nsIPrincipal::GetURI()` combined with `NS_GetInnermostURI`. We no longer
+    // use GetURI, as it has been deprecated, and it makes more sense to take
+    // advantage of the pre-computed origin, which will already use the
+    // innermost URI (bug 1810619)
+    nsAutoCString origin, scheme;
+    return NS_SUCCEEDED(aPrincipal->GetOriginNoSuffix(origin)) &&
+           NS_SUCCEEDED(net_ExtractURLScheme(origin, scheme)) &&
+           scheme == "file"_ns;
+  };
+
+  // A frame can navigate itself and its own root.
+  if (aTarget == BrowsingContext() || aTarget == BrowsingContext()->Top()) {
+    return true;
+  }
+
+  // If the target frame doesn't yet have a WindowContext, start checking
+  // principals from its direct ancestor instead. It would inherit its principal
+  // from this document upon creation.
+  dom::WindowContext* initialWc = aTarget->GetCurrentWindowContext();
+  if (!initialWc) {
+    initialWc = aTarget->GetParentWindowContext();
+  }
+
+  // A frame can navigate any frame with a same-origin ancestor.
+  bool isFileDocument = isFileScheme(DocumentPrincipal());
+  for (dom::WindowContext* wc = initialWc; wc;
+       wc = wc->GetParentWindowContext()) {
+    dom::WindowGlobalChild* wgc = wc->GetWindowGlobalChild();
+    if (!wgc) {
+      continue;  // out-of process, so not same-origin.
+    }
+
+    if (DocumentPrincipal()->Equals(wgc->DocumentPrincipal())) {
+      return true;
+    }
+
+    // Not strictly equal, special case if both are file: URIs.
+    //
+    // file: URIs are considered the same domain for the purpose of frame
+    // navigation, regardless of script accessibility (bug 420425).
+    if (isFileDocument && isFileScheme(wgc->DocumentPrincipal())) {
+      return true;
+    }
+  }
+
+  // If the target is a top-level document, a frame can navigate it if it can
+  // navigate its opener.
+  if (aConsiderOpener && !aTarget->GetParent()) {
+    if (RefPtr<dom::BrowsingContext> opener = aTarget->GetOpener()) {
+      return CanNavigate(opener, false);
+    }
+  }
+
+  return false;
 }
 
 // FindWithName follows the rules for choosing a browsing context,

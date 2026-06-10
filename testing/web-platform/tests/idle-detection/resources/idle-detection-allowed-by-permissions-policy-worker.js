@@ -2,10 +2,6 @@
 
 importScripts('/resources/testharness.js');
 
-setup(function() {
-  assert_true(typeof IdleDetector !== 'undefined', 'IdleDetector must be defined');
-});
-
 let workerType;
 
 if (typeof postMessage === 'function') {

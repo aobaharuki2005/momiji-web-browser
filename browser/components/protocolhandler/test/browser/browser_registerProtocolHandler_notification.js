@@ -80,7 +80,7 @@ add_task(async function () {
     "Clicking the button should close the notification box and register the protocol."
   );
 
-  EventUtils.synthesizeMouseAtCenter(button, {}, window);
+  await EventUtils.synthesizeMouseAtCenter(button, {}, window);
 
   await TestUtils.waitForCondition(
     () => notificationBox.currentNotification == null,

@@ -34,9 +34,9 @@ impl MapFlags {
     /// ```
     #[cfg(linux_kernel)]
     pub const fn hugetlb_with_size_log2(huge_page_size_log2: u32) -> Option<Self> {
-        use crate::backend::c;
+        use linux_raw_sys::general::{MAP_HUGETLB, MAP_HUGE_SHIFT};
         if 16 <= huge_page_size_log2 && huge_page_size_log2 <= 63 {
-            let bits = bitcast!(c::MAP_HUGETLB) | (huge_page_size_log2 << c::MAP_HUGE_SHIFT);
+            let bits = MAP_HUGETLB | (huge_page_size_log2 << MAP_HUGE_SHIFT);
             Self::from_bits(bits)
         } else {
             None
@@ -280,8 +280,6 @@ pub unsafe fn mprotect(ptr: *mut c_void, len: usize, flags: MprotectFlags) -> io
 /// requested if the memory isn't page-aligned. Other implementations fail if
 /// the memory isn't page-aligned.
 ///
-/// See [`mlock_with`] to pass additional flags.
-///
 /// # Safety
 ///
 /// The range of memory starting at `ptr`, rounded down to the applicable page
@@ -411,7 +409,7 @@ pub fn mlockall(flags: MlockAllFlags) -> io::Result<()> {
 
 /// Unlocks all pages mapped into the address space of the calling process.
 ///
-/// # Warning
+/// # Warnings
 ///
 /// This function is aware of all the memory pages in the process, as if it
 /// were a debugger. It unlocks all the pages, which could potentially

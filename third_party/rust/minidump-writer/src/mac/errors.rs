@@ -1,4 +1,6 @@
-#[derive(Debug, thiserror::Error)]
+use thiserror::Error;
+
+#[derive(Debug, Error)]
 pub enum WriterError {
     #[error(transparent)]
     TaskDumpError(#[from] crate::mac::task_dumper::TaskDumpError),

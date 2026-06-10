@@ -35,8 +35,8 @@ includes: [testTypedArray.js, compareArray.js]
 features: [Symbol.species, TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg([40]));
+testWithTypedArrayConstructors(function(TA) {
+  var sample = new TA([40]);
   var other = new Int8Array([1, 0, 1]);
   var result;
 

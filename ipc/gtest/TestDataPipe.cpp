@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -208,7 +210,7 @@ TEST(DataPipe, Write_AsyncWait)
   rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
   ASSERT_EQ(NS_BASE_STREAM_WOULD_BLOCK, rv);
 
-  RefPtr cb = MakeRefPtr<OutputStreamCallback>();
+  RefPtr<OutputStreamCallback> cb = new OutputStreamCallback();
 
   rv = writer->AsyncWait(cb, 0, 0, GetCurrentSerialEventTarget());
   ASSERT_NS_SUCCEEDED(rv);
@@ -240,7 +242,7 @@ TEST(DataPipe, Read_AsyncWait)
   nsCString inputData;
   CreateData(segmentSize, inputData);
 
-  RefPtr cb = MakeRefPtr<InputStreamCallback>();
+  RefPtr<InputStreamCallback> cb = new InputStreamCallback();
 
   rv = reader->AsyncWait(cb, 0, 0, GetCurrentSerialEventTarget());
   ASSERT_NS_SUCCEEDED(rv);
@@ -284,7 +286,7 @@ TEST(DataPipe, Write_AsyncWait_Cancel)
   rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
   ASSERT_EQ(NS_BASE_STREAM_WOULD_BLOCK, rv);
 
-  RefPtr cb = MakeRefPtr<OutputStreamCallback>();
+  RefPtr<OutputStreamCallback> cb = new OutputStreamCallback();
 
   // Register a callback and immediately cancel it.
   rv = writer->AsyncWait(cb, 0, 0, GetCurrentSerialEventTarget());
@@ -313,7 +315,7 @@ TEST(DataPipe, Read_AsyncWait_Cancel)
   nsCString inputData;
   CreateData(segmentSize, inputData);
 
-  RefPtr cb = MakeRefPtr<InputStreamCallback>();
+  RefPtr<InputStreamCallback> cb = new InputStreamCallback();
 
   // Register a callback and immediately cancel it.
   rv = reader->AsyncWait(cb, 0, 0, GetCurrentSerialEventTarget());

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,10 +23,9 @@ class nsIScriptElement;
 class nsIURI;
 
 namespace JS::loader {
-class ModuleLoaderBase;
-class ScriptFetchInfo;
-class ScriptLoadRequest;
+class LoadedScript;
 class ScriptLoaderInterface;
+class ScriptLoadRequest;
 
 /**
  * A helper class to report warning to ScriptLoaderInterface.
@@ -35,8 +36,8 @@ class ReportWarningHelper {
                       ScriptLoadRequest* aRequest)
       : mLoader(aLoader), mRequest(aRequest) {}
 
-  template <typename... Args>
-  void Report(const char* aMessageName, Args&&... aArgs) const;
+  void Report(const char* aMessageName,
+              const nsTArray<nsString>& aParams = nsTArray<nsString>()) const;
 
  private:
   RefPtr<ScriptLoaderInterface> mLoader;
@@ -66,23 +67,9 @@ class ImportMap {
   ImportMap(mozilla::UniquePtr<SpecifierMap> aImports,
             mozilla::UniquePtr<ScopeMap> aScopes,
             mozilla::UniquePtr<IntegrityMap> aIntegrity)
-      : mImports(aImports ? std::move(aImports)
-                          : mozilla::MakeUnique<SpecifierMap>()),
-        mScopes(aScopes ? std::move(aScopes) : mozilla::MakeUnique<ScopeMap>()),
-        mIntegrity(aIntegrity ? std::move(aIntegrity)
-                              : mozilla::MakeUnique<IntegrityMap>()) {}
-
-  static mozilla::UniquePtr<ImportMap> CreateEmpty() {
-    return mozilla::MakeUnique<ImportMap>(nullptr, nullptr, nullptr);
-  }
-
-  /**
-   * A helper function to get the "dom.multiple_import_maps.enabled" pref.
-   * The pref's type is of non-atomic, which can be only accessed on the main
-   * thread.
-   * If this function is called from a non-main thread, it safely returns false.
-   */
-  static bool IsMultipleImportMapsSupported();
+      : mImports(std::move(aImports)),
+        mScopes(std::move(aScopes)),
+        mIntegrity(std::move(aIntegrity)) {}
 
   /**
    * Parse the JSON string from the Import map script.
@@ -101,23 +88,24 @@ class ImportMap {
    *
    * See
    * https://html.spec.whatwg.org/multipage/webappapis.html#resolve-a-module-specifier
+   *
+   * Impl note: According to the spec, if the specifier cannot be resolved, this
+   * method will throw a TypeError(Step 13). But the tricky part is when
+   * creating a module script,
+   * see
+   * https://html.spec.whatwg.org/multipage/webappapis.html#validate-requested-module-specifiers
+   * If the resolving failed, it shall catch the exception and set to the
+   * script's parse error.
+   * For implementation we return a ResolveResult here, and the callers will
+   * need to convert the result to a TypeError if it fails.
    */
   static ResolveResult ResolveModuleSpecifier(ImportMap* aImportMap,
                                               ScriptLoaderInterface* aLoader,
-                                              ScriptFetchInfo* aFetchInfo,
+                                              LoadedScript* aScript,
                                               const nsAString& aSpecifier);
 
   static mozilla::Maybe<nsString> LookupIntegrity(ImportMap* aImportMap,
                                                   nsIURI* aURL);
-
-  /**
-   * Merge the new import map with the existing one.
-   *
-   * https://html.spec.whatwg.org/#merge-existing-and-new-import-maps
-   */
-  static void Merge(ModuleLoaderBase* aModuleLoader,
-                    mozilla::UniquePtr<ImportMap> aNewMap,
-                    const ReportWarningHelper& aWarning);
 
   // Logging
   static mozilla::LazyLogModule gImportMapLog;
@@ -126,10 +114,9 @@ class ImportMap {
   /**
    * https://html.spec.whatwg.org/multipage/webappapis.html#import-map-processing-model
    *
-   * Formally, an import map is a struct with three items:
+   * Formally, an import map is a struct with two items:
    * 1. imports, a module specifier map, and
    * 2. scopes, an ordered map of URLs to module specifier maps.
-   * 3. integrity, a module integrity map.
    */
   mozilla::UniquePtr<SpecifierMap> mImports;
   mozilla::UniquePtr<ScopeMap> mScopes;

@@ -56,8 +56,8 @@ def parseFile(results, path, config):
 
     lineno = 0
     with open(path) as f:
-        for raw_line in f:
-            line = raw_line.rstrip("\n")
+        for line in f:
+            line = line.rstrip("\n")
             lineno += 1
 
             if ignoreNextLine:

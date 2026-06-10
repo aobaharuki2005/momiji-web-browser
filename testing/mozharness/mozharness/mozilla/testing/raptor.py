@@ -17,6 +17,7 @@ import tempfile
 from shutil import copyfile, rmtree
 
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
+from six import string_types
 
 import mozharness
 from mozharness.base.errors import PythonErrorList
@@ -1124,7 +1125,7 @@ class Raptor(
                 # Check for modifications done to the instance variables
                 value = getattr(self, details["dest"], None)
             if value and arg not in self.config.get("raptor_cmd_line_args", []):
-                if isinstance(value, str):
+                if isinstance(value, string_types):
                     options.extend([arg, os.path.expandvars(value)])
                 elif isinstance(value, (tuple, list)):
                     for val in value:

@@ -73,7 +73,7 @@ loader.lazyRequireGetter(
 
 let store = null;
 
-class WebConsoleWrapper extends EventEmitter {
+class WebConsoleWrapper {
   /**
    *
    * @param {HTMLElement} parentNode
@@ -82,7 +82,7 @@ class WebConsoleWrapper extends EventEmitter {
    * @param {Document} document
    */
   constructor(parentNode, webConsoleUI, toolbox, document) {
-    super();
+    EventEmitter.decorate(this);
 
     this.parentNode = parentNode;
     this.webConsoleUI = webConsoleUI;

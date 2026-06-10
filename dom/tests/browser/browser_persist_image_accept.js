@@ -9,7 +9,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 );
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init();
+MockFilePicker.init(window.browsingContext);
 
 registerCleanupFunction(async function () {
   info("Running the cleanup code");
@@ -50,9 +50,15 @@ function expectedImageAcceptHeader() {
 
   let header = "";
 
-  header += "image/avif,";
+  // Check if AVIF is supported (compiled with MOZ_AV1)
+  try {
+    Services.catMan.getCategoryEntry("Gecko-Content-Viewers", "image/avif");
+    header += "image/avif,";
+  } catch (e) {
+    // AVIF not registered, skip it
+  }
 
-  if (Services.prefs.getBoolPref("image.jxl.enabled", false)) {
+  if (Services.prefs.getBoolPref("image.jxl.enabled")) {
     header += "image/jxl,";
   }
 

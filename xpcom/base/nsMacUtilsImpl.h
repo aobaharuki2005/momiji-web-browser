@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsMacUtilsImpl_h_
-#define nsMacUtilsImpl_h_
+#ifndef nsMacUtilsImpl_h___
+#define nsMacUtilsImpl_h___
 
 #include "nsString.h"
 #include "mozilla/Atomics.h"
@@ -68,4 +70,4 @@ CodeSignatureType GetSignatureType(const nsCString& aPath);
 
 }  // namespace nsMacUtilsImpl
 
-#endif /* nsMacUtilsImpl_h_ */
+#endif /* nsMacUtilsImpl_h___ */

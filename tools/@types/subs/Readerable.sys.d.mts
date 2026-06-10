@@ -1,16 +1,16 @@
-export var Readerable: {
-    readonly isEnabledForParseOnLoad: any;
+export namespace Readerable {
+    const isEnabledForParseOnLoad: any;
     /**
      * Decides whether or not a document is reader-able without parsing the whole thing.
      *
      * @param doc A document to parse.
      * @return boolean Whether or not we should show the reader mode button.
      */
-    isProbablyReaderable(doc: any): boolean;
-    _isNodeVisible(node: any): boolean;
-    _blockedHosts: string[];
-    shouldCheckUri(uri: any, isBaseUri?: boolean): boolean;
-};
+    function isProbablyReaderable(doc: any): boolean;
+    function _isNodeVisible(node: any): boolean;
+    let _blockedHosts: string[];
+    function shouldCheckUri(uri: any, isBaseUri?: boolean): boolean;
+}
 /**
  * Decides whether or not the document is reader-able without parsing the whole thing.
  * @param {Object} options Configuration object.
@@ -20,7 +20,7 @@ export var Readerable: {
  * @return {boolean} Whether or not we suspect Readability.parse() will suceeed at returning an article object.
  */
 export function isProbablyReaderable(doc: any, options?: {
-    minContentLength?: number | undefined;
-    minScore?: number | undefined;
-    visibilityChecker?: Function | undefined;
+    minContentLength?: number;
+    minScore?: number;
+    visibilityChecker?: Function;
 }): boolean;

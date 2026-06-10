@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,13 +27,7 @@ class PermissionStatus : public DOMEventTargetHelper {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  PermissionState State() const {
-    if (mState == PermissionState::Granted &&
-        mSystemState != PermissionState::Granted) {
-      return mSystemState;
-    }
-    return mState;
-  }
+  PermissionState State() const { return mState; }
   void SetState(PermissionState aState) { mState = aState; }
 
   IMPL_EVENT_HANDLER(change)
@@ -63,7 +59,6 @@ class PermissionStatus : public DOMEventTargetHelper {
   virtual already_AddRefed<PermissionStatusSink> CreateSink();
 
   void PermissionChanged(uint32_t aAction);
-  void SystemPermissionChanged(PermissionState aNewSystemState);
 
   PermissionState ComputeStateFromAction(uint32_t aAction);
 
@@ -71,8 +66,7 @@ class PermissionStatus : public DOMEventTargetHelper {
   RefPtr<PermissionStatusSink> mSink;
 
  protected:
-  PermissionState mState = PermissionState::Denied;
-  PermissionState mSystemState = PermissionState::Denied;
+  PermissionState mState;
 };
 
 }  // namespace mozilla::dom

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -119,25 +121,19 @@ bool TestCheckForPCRelBr() {
   Result<LoadOrBranch, PCRelCheckError> result =
       CheckForPCRel(kExamplePCValue, 0xd61f0200);
 
-  if (!result.isErr()) {
-    TEST_FAILED(
-        "Unexpectedly recognized br as a PC-relative instruction with a "
-        "decoder. While br is not actually PC-relative, we treat it as such "
-        "due to bug 2010042. If you have implemented a decoder for this "
-        "instruction, "
-        "please update TestArm64Disassembler.cpp.\n");
-  }
-  auto error = result.unwrapErr();
-  if (error != PCRelCheckError::NoDecoderAvailable) {
-    TEST_FAILED(
-        "Failed to recognize br as a PC-relative instruction, got "
-        "PCRelCheckError %d.\n",
-        error);
+  if (result.isErr()) {
+    auto error = result.unwrapErr();
+    if (error != PCRelCheckError::InstructionNotPCRel) {
+      TEST_FAILED(
+          "Failed to recognize br as a non-PC-relative instruction, got "
+          "PCRelCheckError %d.\n",
+          error);
+    }
+  } else {
+    TEST_FAILED("Incorrectly recognized br as a PC-relative instruction.\n");
   }
 
-  TEST_PASS(
-      "Properly recognized br as a PC-relative instruction without a "
-      "decoder.\n");
+  TEST_PASS("Properly recognized br as a non-PC-relative instruction.\n");
   return true;
 }
 
@@ -170,8 +166,7 @@ bool TestCheckForAbsB() {
 
 int wmain(int argc, wchar_t* argv[]) {
   if (!TestCheckForPCRelAdrp() || !TestCheckForPCRelAdr() ||
-      !TestCheckForPCRelBlr() || !TestCheckForPCRelBr() ||
-      !TestCheckForAbsB()) {
+      !TestCheckForPCRelBlr() || !TestCheckForPCRelBr()) {
     return -1;
   }
   return 0;

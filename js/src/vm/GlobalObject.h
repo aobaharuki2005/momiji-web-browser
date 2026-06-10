@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -13,6 +15,7 @@
 #include <stdint.h>
 #include <type_traits>
 
+#include "jsexn.h"
 #include "jsfriendapi.h"
 #include "jspubtd.h"
 #include "jstypes.h"
@@ -30,7 +33,6 @@
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/ArrayObject.h"
-#include "vm/ErrorObject.h"
 #include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
@@ -103,13 +105,13 @@ static PlainObjectSlotsKind PlainObjectSlotsKindFromAllocKind(
 class GlobalObjectData {
   friend class js::GlobalObject;
 
+  GlobalObjectData(const GlobalObjectData&) = delete;
+  void operator=(const GlobalObjectData&) = delete;
+
  public:
   explicit GlobalObjectData(Zone* zone);
 
   ~GlobalObjectData();
-
-  GlobalObjectData(const GlobalObjectData&) = delete;
-  void operator=(const GlobalObjectData&) = delete;
 
   // The original values for built-in constructors (with their prototype
   // objects) based on JSProtoKey.
@@ -218,6 +220,7 @@ class GlobalObjectData {
   GCPtr<SetObject*> setObjectTemplate;
 
   GCPtr<PlainObject*> iterResultTemplate;
+  GCPtr<PlainObject*> iterResultWithoutPrototypeTemplate;
 
   // Lazily initialized script source object to use for scripts cloned from the
   // self-hosting stencil.
@@ -461,6 +464,9 @@ class GlobalObject : public NativeObject {
     return inited;
   }
 
+  // Disallow use of unqualified JSObject::create in GlobalObject.
+  static GlobalObject* create(...) = delete;
+
   friend struct ::JSRuntime;
   static GlobalObject* createInternal(JSContext* cx, const JSClass* clasp);
 
@@ -469,9 +475,6 @@ class GlobalObject : public NativeObject {
                             JSPrincipals* principals,
                             JS::OnNewGlobalHookOption hookOption,
                             const JS::RealmOptions& options);
-
-  // Disallow use of unqualified JSObject::create in GlobalObject.
-  static GlobalObject* create(...) = delete;
 
   /*
    * Create a constructor function with the specified name and length using
@@ -1009,9 +1012,13 @@ class GlobalObject : public NativeObject {
   static const size_t IterResultObjectValueSlot = 0;
   static const size_t IterResultObjectDoneSlot = 1;
   static js::PlainObject* getOrCreateIterResultTemplateObject(JSContext* cx);
+  static js::PlainObject* getOrCreateIterResultWithoutPrototypeTemplateObject(
+      JSContext* cx);
 
  private:
-  static js::PlainObject* createIterResultTemplateObject(JSContext* cx);
+  enum class WithObjectPrototype { No, Yes };
+  static js::PlainObject* createIterResultTemplateObject(
+      JSContext* cx, WithObjectPrototype withProto);
 
  public:
   static ScriptSourceObject* getOrCreateSelfHostingScriptSourceObject(

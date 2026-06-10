@@ -327,14 +327,9 @@ function checkMiscPrefixed(opcode, expect_failure) {
 //-----------------------------------------------------------
 // Verification cases for memory.copy/fill opcode encodings
 
-// memory.copy src=0 dest=0
-checkMiscPrefixed([MemoryCopyCode, 0x00, 0x00], false);
-
-// memory.fill mem=0
-checkMiscPrefixed([MemoryFillCode, 0x00], false);
-
-// i64.mul_wide_u+1, which is currently unassigned
-checkMiscPrefixed([0x17], true);
+checkMiscPrefixed([MemoryCopyCode, 0x00, 0x00], false); // memory.copy src=0 dest=0
+checkMiscPrefixed([MemoryFillCode, 0x00], false); // memory.fill mem=0
+checkMiscPrefixed([0x13], true);        // table.size+1, which is currently unassigned
 
 //-----------------------------------------------------------
 // Verification cases for memory.copy/fill arguments

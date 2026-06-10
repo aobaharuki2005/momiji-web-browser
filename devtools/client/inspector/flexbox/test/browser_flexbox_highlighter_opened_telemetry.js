@@ -10,8 +10,7 @@ const TEST_URI = URL_ROOT + "doc_flexbox_specific_cases.html";
 
 add_task(async function () {
   await addTab(TEST_URI);
-  Services.fog.testResetFOG();
-
+  startTelemetry();
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
   const onFlexHighlighterToggleRendered = waitForDOM(
@@ -28,9 +27,11 @@ add_task(async function () {
 });
 
 function checkResults() {
-  Assert.equal(1, Glean.devtoolsLayoutFlexboxhighlighter.opened.testGetValue());
-  Assert.greater(
-    Glean.devtools.flexboxHighlighterTimeActive.testGetValue().sum,
-    0
+  checkTelemetry("devtools.layout.flexboxhighlighter.opened", "", 1, "scalar");
+  checkTelemetry(
+    "DEVTOOLS_FLEXBOX_HIGHLIGHTER_TIME_ACTIVE_SECONDS",
+    "",
+    null,
+    "hasentries"
   );
 }

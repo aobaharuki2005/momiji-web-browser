@@ -19,6 +19,7 @@ import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -28,8 +29,6 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.robolectric.annotation.Config
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class AndroidPhotoPickerTest {
@@ -93,7 +92,7 @@ class AndroidPhotoPickerTest {
             callbackCaptor.capture(),
         )
 
-        assertIs<ActivityResultContracts.PickVisualMedia>(contractCaptor.value)
+        assertTrue(contractCaptor.value is ActivityResultContracts.PickVisualMedia)
         assertNotNull(callbackCaptor.value)
     }
 
@@ -109,7 +108,7 @@ class AndroidPhotoPickerTest {
             callbackCaptor.capture(),
         )
 
-        assertIs<ActivityResultContracts.PickMultipleVisualMedia>(contractCaptor.value)
+        assertTrue(contractCaptor.value is ActivityResultContracts.PickMultipleVisualMedia)
         assertNotNull(callbackCaptor.value)
     }
 

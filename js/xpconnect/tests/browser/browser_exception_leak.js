@@ -6,18 +6,16 @@
 // For bug 1471989, test that an exception saved by chrome code can't leak the page.
 
 add_task(async function test() {
-  const testUrl =
+  const url =
     "http://mochi.test:8888/browser/js/xpconnect/tests/browser/browser_consoleStack.html";
-  let newTab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "http://mochi.test:8888/"
-  );
+  let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   let browser = gBrowser.selectedBrowser;
+  let innerWindowId = browser.innerWindowID;
 
-  let stackTraceEmpty = await SpecialPowers.spawn(
+  let stackTraceEmpty = await ContentTask.spawn(
     browser,
-    [testUrl],
-    async function (testUrl) {
+    { innerWindowId },
+    async function (args) {
       let { TestUtils } = ChromeUtils.importESModule(
         "resource://testing-common/TestUtils.sys.mjs"
       );
@@ -25,19 +23,10 @@ add_task(async function test() {
         "resource://testing-common/Assert.sys.mjs"
       );
 
-      let iframe = content.document.createElement("iframe");
-      iframe.src = testUrl;
-      content.document.body.appendChild(iframe);
-      await new Promise(resolve =>
-        iframe.addEventListener("load", resolve, { once: true })
-      );
-
       const ConsoleAPIStorage = Cc[
         "@mozilla.org/consoleAPI-storage;1"
       ].getService(Ci.nsIConsoleAPIStorage);
-      let iframeInnerWindowId =
-        iframe.contentWindow.windowGlobalChild.innerWindowId;
-      let consoleEvents = ConsoleAPIStorage.getEvents(iframeInnerWindowId);
+      let consoleEvents = ConsoleAPIStorage.getEvents(args.innerWindowId);
       Assert.equal(
         consoleEvents.length,
         1,
@@ -49,13 +38,13 @@ add_task(async function test() {
 
       // XXX I think this is intentionally leaking |doc|.
       // eslint-disable-next-line no-unused-vars
-      let doc = iframe.contentDocument;
+      let doc = content.document;
 
       let promise = TestUtils.topicObserved("inner-window-nuked", subject => {
         let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-        return id == iframeInnerWindowId;
+        return id == args.innerWindowId;
       });
-      iframe.remove();
+      content.location = "http://mochi.test:8888/";
       await promise;
 
       // This string should be empty. For that to happen, two things

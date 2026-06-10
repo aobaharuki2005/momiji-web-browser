@@ -1,4 +1,3 @@
-import json
 import uuid
 
 import pytest_asyncio
@@ -24,24 +23,14 @@ async def get_navigator_online(bidi_session):
 
 @pytest_asyncio.fixture
 async def get_can_fetch(bidi_session, url):
-    async def get_can_fetch(context, fetch_url=None, fetch_options=None):
-        if fetch_url is None:
-            fetch_url = url(f"/common/blank.html?{uuid.uuid4()}")
-
-        if fetch_options is None:
-            function_declaration = "(url)=>fetch(url)"
-        else:
-            function_declaration = f"(url)=>fetch(url, {json.dumps(fetch_options)})"
-
-        arguments = [{
-            "type": "string",
-            "value": fetch_url
-        }]
-
+    async def get_can_fetch(context):
         try:
             await bidi_session.script.call_function(
-                function_declaration=function_declaration,
-                arguments=arguments,
+                function_declaration=f"(url)=>fetch(url)",
+                arguments=[{
+                    "type": "string",
+                    "value": url(f"/common/blank.html?{uuid.uuid4()}")
+                }],
                 target=ContextTarget(context["context"]),
                 await_promise=True,
             )

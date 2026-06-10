@@ -149,7 +149,7 @@ async function clickOn(selector, beforeContentFn) {
     TEST_URL
   );
 
-  let { SpecialPowers } = lastTab.documentGlobal;
+  let { SpecialPowers } = lastTab.ownerGlobal;
   if (beforeContentFn) {
     await SpecialPowers.spawn(lastTab.linkedBrowser, [], beforeContentFn);
   }

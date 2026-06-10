@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -680,7 +682,7 @@ static bool DifferenceZonedDateTime(JSContext* cx, const EpochNanoseconds& ns1,
   }
 
   // Step 4.
-  if (startDateTime.date == endDateTime.date) {
+  if (CompareISODate(startDateTime.date, endDateTime.date) == 0) {
     // Step 4.a.
     auto timeDuration = TimeDurationFromEpochNanosecondsDifference(ns2, ns1);
 
@@ -2576,7 +2578,7 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
     }
 
     // Step 19.f.
-    thisNs = std::min(thisNs, endNs - EpochDuration{0, 1});
+    MOZ_ASSERT(thisNs < endNs);
 
     // Step 19.g.
     auto dayLengthNs = endNs - startNs;
@@ -2782,7 +2784,8 @@ static bool ZonedDateTime_toLocaleString(JSContext* cx, const CallArgs& args) {
       cx, ZonedDateTime{&args.thisv().toObject().as<ZonedDateTimeObject>()});
 
   // Steps 3-6.
-  Rooted<JSLinearString*> timeZone(cx, zonedDateTime.timeZone().identifier());
+  Rooted<Value> timeZone(cx,
+                         StringValue(zonedDateTime.timeZone().identifier()));
   return intl::TemporalObjectToLocaleString(
       cx, args, intl::DateTimeFormatKind::All, timeZone);
 }

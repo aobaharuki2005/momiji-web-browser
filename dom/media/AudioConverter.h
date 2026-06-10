@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 #define AudioConverter_h
 
 #include "MediaInfo.h"
-#include "mozilla/CheckedInt.h"
 
 // Forward declaration
 typedef struct SpeexResamplerState_ SpeexResamplerState;
@@ -97,7 +98,10 @@ class AudioDataBuffer {
     mBuffer = std::move(aOther.mBuffer);
     return *this;
   }
-  AudioDataBuffer& operator=(const AudioDataBuffer& aOther) = default;
+  AudioDataBuffer& operator=(const AudioDataBuffer& aOther) {
+    mBuffer = aOther.mBuffer;
+    return *this;
+  }
 
   Value* Data() const { return mBuffer.Data(); }
   size_t Length() const { return mBuffer.Length(); }
@@ -159,15 +163,10 @@ class AudioConverter {
     AlignedBuffer<Value>* outputBuffer = &temp1;
     AlignedBuffer<Value> temp2;
     if (!frames || mOut.Rate() > mIn.Rate()) {
-      uint32_t resampledFrames;
       // We are upsampling or about to drain, we can't work in place.
       // Allocate another temporary buffer where the upsampling will occur.
-      if (!ResampleRecipientFrames(frames, &resampledFrames)) {
-        return AudioDataBuffer<Format, Value>(std::move(temp2));
-      }
-      CheckedInt<size_t> outputSamples =
-          CheckedInt<size_t>(resampledFrames) * mOut.Channels();
-      if (!outputSamples.isValid() || !temp2.SetLength(outputSamples.value())) {
+      if (!temp2.SetLength(
+              FramesOutToSamples(ResampleRecipientFrames(frames)))) {
         return AudioDataBuffer<Format, Value>(std::move(temp2));
       }
       outputBuffer = &temp2;
@@ -213,19 +212,11 @@ class AudioConverter {
       return frames;
     }
     // Prepare output in cases of drain or up-sampling
-    if (!frames || mOut.Rate() > mIn.Rate()) {
-      uint32_t resampledFrames;
-      if (!ResampleRecipientFrames(frames, &resampledFrames)) {
-        MOZ_ALWAYS_TRUE(aOutBuffer.SetLength(0));
-        return 0;
-      }
-      CheckedInt<size_t> outputSamples =
-          CheckedInt<size_t>(resampledFrames) * mOut.Channels();
-      if (!outputSamples.isValid() ||
-          !aOutBuffer.SetLength(outputSamples.value())) {
-        MOZ_ALWAYS_TRUE(aOutBuffer.SetLength(0));
-        return 0;
-      }
+    if ((!frames || mOut.Rate() > mIn.Rate()) &&
+        !aOutBuffer.SetLength(
+            FramesOutToSamples(ResampleRecipientFrames(frames)))) {
+      MOZ_ALWAYS_TRUE(aOutBuffer.SetLength(0));
+      return 0;
     }
     if (!frames) {
       frames = DrainResampler(aOutBuffer.Data());
@@ -275,7 +266,7 @@ class AudioConverter {
   // Resampler context.
   SpeexResamplerState* mResampler;
   size_t ResampleAudio(void* aOut, const void* aIn, size_t aFrames);
-  bool ResampleRecipientFrames(size_t aFrames, uint32_t* aOutFrames) const;
+  size_t ResampleRecipientFrames(size_t aFrames) const;
   void RecreateResampler();
   size_t DrainResampler(void* aOut);
 };

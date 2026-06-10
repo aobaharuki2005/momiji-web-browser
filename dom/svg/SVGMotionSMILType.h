@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,12 +17,12 @@ namespace mozilla {
 class SMILValue;
 
 /**
- * RotateType: Enum to indicate the type of our "rotate" attribute.
+ * MotionRotateType: Enum to indicate the type of our "rotate" attribute.
  */
-enum class RotateType : uint8_t {
-  Explicit,    // for e.g. rotate="45"/"45deg"/"0.785rad"
-  Auto,        // for rotate="auto"
-  AutoReverse  // for rotate="auto-reverse"
+enum RotateType {
+  eRotateType_Explicit,    // for e.g. rotate="45"/"45deg"/"0.785rad"
+  eRotateType_Auto,        // for rotate="auto"
+  eRotateType_AutoReverse  // for rotate="auto-reverse"
 };
 
 /**

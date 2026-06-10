@@ -3,7 +3,8 @@ HTTP Cache
 
 This document describes the **HTTP cache implementation**.
 
-The code resides in :searchfox:`/netwerk/cache2 (searchfox) <netwerk/cache2>`
+The code resides in `/netwerk/cache2 (searchfox)
+<https://searchfox.org/mozilla-central/source/netwerk/cache2>`_
 
 API
 ---
@@ -26,7 +27,7 @@ nsICacheStorageService
 -  The HTTP cache entry-point. Accessible as a service only, fully
    thread-safe, scriptable.
 
--  :searchfox:`nsICacheStorageService.idl (searchfox) <netwerk/cache2/nsICacheStorageService.idl>`
+-  `nsICacheStorageService.idl (searchfox) <https://searchfox.org/mozilla-central/source/netwerk/cache2/nsICacheStorageService.idl>`_
 
 -   \ ``"@mozilla.org/netwerk/cache-storage-service;1"``
 
@@ -72,7 +73,7 @@ nsILoadContextInfo
 
 -  Mandatory argument to ``*Storage`` methods of :ref:`nsICacheStorageService <nsICacheStorageService>`.
 
--  :searchfox:`nsILoadContextInfo.idl (searchfox) <netwerk/base/nsILoadContextInfo.idl>`
+-  `nsILoadContextInfo.idl (searchfox) <https://searchfox.org/mozilla-central/source/netwerk/base/nsILoadContextInfo.idl>`_
 
 
 -  It is a helper interface wrapping following four arguments into a single one:
@@ -104,7 +105,7 @@ nsILoadContextInfo
 nsICacheStorage
 ---------------
 
--  :searchfox:`nsICacheStorage.idl (searchfox) <netwerk/cache2/nsICacheStorage.idl>`
+-  `nsICacheStorage.idl (searchfox) <https://searchfox.org/mozilla-central/source/netwerk/cache2/nsICacheStorage.idl>`_
 
 -  Obtained from call to one of the ``*Storage`` methods on
    :ref:`nsICacheStorageService <nsICacheStorageService>`.
@@ -119,7 +120,7 @@ nsICacheStorage
 nsICacheEntryOpenCallback
 -------------------------
 
--  :searchfox:`nsICacheEntryOpenCallback.idl (searchfox) <netwerk/cache2/nsICacheEntryOpenCallback.idl>`
+-  `nsICacheEntryOpenCallback.idl (searchfox) <https://searchfox.org/mozilla-central/source/netwerk/cache2/nsICacheEntryOpenCallback.idl>`_
 
 -  The result of ``nsICacheStorage.asyncOpenURI`` is always and only
    sent to callbacks on this interface.
@@ -144,7 +145,7 @@ nsICacheEntryOpenCallback
 nsICacheEntry
 -------------
 
--  :searchfox:`nsICacheEntry.idl (searchfox) <netwerk/cache2/nsICacheEntry.idl>`
+-  `nsICacheEntry.idl (searchfox) <https://searchfox.org/mozilla-central/source/netwerk/cache2/nsICacheEntry.idl>`_
 
 -  Obtained asynchronously or pseudo-asynchronously by a call to
    ``nsICacheStorage.asyncOpenURI``.

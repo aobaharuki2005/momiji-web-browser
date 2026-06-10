@@ -4,7 +4,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
   TaskbarTabs: "resource:///modules/taskbartabs/TaskbarTabs.sys.mjs",
   TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
@@ -117,7 +116,7 @@ add_task(async function test_user_context_id() {
     );
     await wm.ejectWindow(win);
     let tab = (await tabOpenPromise).target;
-    win = tab.documentGlobal;
+    win = tab.ownerGlobal;
     checkUserContextId(win, taskbarTab);
 
     windowPromise = BrowserTestUtils.waitForNewWindow();
@@ -165,14 +164,13 @@ add_task(async function test_window_aumid() {
   is(
     TaskbarTabsUtils.getTaskbarTabIdFromWindow(winOpen),
     taskbarTab1.id,
-    "The window's `taskbartab` attribute should match the Taskbar Tab ID when opened."
+    "The window's `tasbkartab` attribute should match the Taskbar Tab ID when opened."
   );
   is(
-    winOpen.document.documentElement.getAttribute("windowclass"),
-    "org.mozilla.firefox.webapp-" + taskbarTab1.id,
-    "The window's `windowclass` attribute should match the Taskbar Tab ID when opened."
+    WinTaskbar.getGroupIdForWindow(winOpen),
+    taskbarTab1.id,
+    "The window AUMID should match the Taskbar Tab ID when opened."
   );
-  checkWindowAumid(taskbarTab1, winOpen);
 
   let tab1_adopted = await BrowserTestUtils.addTab(window.gBrowser, url1.spec);
   windowPromise = BrowserTestUtils.waitForNewWindow();
@@ -182,43 +180,19 @@ add_task(async function test_window_aumid() {
   is(
     TaskbarTabsUtils.getTaskbarTabIdFromWindow(winReplace),
     taskbarTab1.id,
-    "The window's `taskbartab` attribute should match the Taskbar Tab ID when a tab was replaced with a Taskbar Tab window."
+    "The window's `tasbkartab` attribute should match the Taskbar Tab ID when a tab was replaced with a Tasbkar Tab window."
   );
   is(
-    winOpen.document.documentElement.getAttribute("windowclass"),
-    "org.mozilla.firefox.webapp-" + taskbarTab1.id,
-    "The window's `windowclass` attribute should match the Taskbar Tab ID when opened."
+    WinTaskbar.getGroupIdForWindow(winReplace),
+    taskbarTab1.id,
+    "The window AUMID should match the Taskbar Tab ID when a tab was replaced with a Tasbkar Tab window."
   );
-  checkWindowAumid(taskbarTab1, winReplace);
 
   await Promise.all([
     BrowserTestUtils.closeWindow(winOpen),
     BrowserTestUtils.closeWindow(winReplace),
   ]);
 });
-
-function checkWindowAumid(aTaskbarTab, aWindow) {
-  if (AppConstants.platform === "win") {
-    if (TaskbarTabsUtils.isMSIX()) {
-      // The format of this doesn't seem to be documented anywhere; I got it
-      // through a small custom utility using the undocumented IPinnedList3 API
-      // (the one we use for pinning on Windows 10). It's possible that Windows
-      // could change it, in which case the Taskbar Tab window wouldn't line up
-      // with its taskbar entry.
-      is(
-        WinTaskbar.getGroupIdForWindow(aWindow),
-        `${Services.sysinfo.getProperty("winPackageFamilyName")}!App:taskbartab-${aTaskbarTab.id}`,
-        "The window AUMID should match the ID likely assigned by Windows."
-      );
-    } else {
-      is(
-        WinTaskbar.getGroupIdForWindow(aWindow),
-        taskbarTab1.id,
-        "The window AUMID should match the Taskbar Tab ID when opened."
-      );
-    }
-  }
-}
 
 add_task(async function testTaskbarTabCount() {
   const count = () => TaskbarTabs.getCountForId(taskbarTab1.id);
@@ -262,147 +236,20 @@ add_task(async function testWindowIconSet() {
   };
   wm.testOnlyMockUIUtils(mockWindowsUIUtils);
 
-  async function check(win, cause) {
-    Assert.equal(
-      mockWindowsUIUtils.setWindowIcon.callCount,
-      1,
-      `${cause} set the window icon once`
-    );
-    Assert.equal(
-      mockWindowsUIUtils.setWindowIcon.firstCall.args[0],
-      win,
-      `${cause} passed the correct window`
-    );
-    Assert.equal(
-      mockWindowsUIUtils.setWindowIcon.firstCall.args[1],
-      img,
-      `${cause} passed the correct large icon`
-    );
-    Assert.equal(
-      mockWindowsUIUtils.setWindowIcon.firstCall.args[2],
-      img,
-      `${cause} passed the correct small icon`
-    );
+  let windowPromise = BrowserTestUtils.waitForNewWindow();
+  await wm.openWindow(taskbarTab1);
+  let win = await windowPromise;
 
-    // `sinon.spy` will hold a reference to the window by virtue of holding its
-    // arguments, causing tests to fail from a "leaked" window. Release it before
-    // closing the window.
-    sinon.resetHistory();
-    await BrowserTestUtils.closeWindow(win);
-  }
-
-  let img = await TaskbarTabsUtils._imageFromLocalURI(
-    Services.io.newURI(
-      "chrome://mochitests/content/browser/browser/components/taskbartabs/test/browser/favicon-normal16.png"
-    )
+  ok(
+    mockWindowsUIUtils.setWindowIcon.calledOnce,
+    "The Window icon should have been set."
   );
 
-  let win = await wm.openWindow(taskbarTab1, img);
-  await check(win, "openWindow (explicit)");
-
-  let tab = BrowserTestUtils.addTab(window.gBrowser, url1.spec);
-  win = await wm.replaceTabWithWindow(taskbarTab1, tab, img);
-  await check(win, "replaceTabWithWindow (explicit)");
-
+  // `sinon.spy` will hold a reference to the window by virtue of holding it's
+  // arguments, causing tests to fail from a "leaked" window. Release it before
+  // closing the window.
+  sinon.resetHistory();
   wm.testOnlyMockUIUtils(null);
-}).skip(AppConstants.platform !== "win"); // The window icon is only set on Windows.
 
-add_task(async function test_taskbarTab_persistence() {
-  const wm = new TaskbarTabsWindowManager();
-
-  // 1. Open first window
-  info("Opening first taskbar tab window");
-  let win1 = await wm.openWindow(taskbarTab1);
-
-  // Verify ID is set
-  is(
-    win1.document.documentElement.id,
-    "taskbartab-" + taskbarTab1.id,
-    "Window ID should be set to taskbar tab ID 1"
-  );
-
-  // 2. Move first window
-  let originalX1 = win1.screenX;
-  let originalY1 = win1.screenY;
-
-  let newX1 = originalX1 + 50;
-  let newY1 = originalY1 + 50;
-
-  info(
-    `Moving window 1 from ${originalX1},${originalY1} to ${newX1}, ${newY1}`
-  );
-  win1.moveTo(newX1, newY1);
-
-  await BrowserTestUtils.waitForCondition(
-    () => win1.screenX == newX1 && win1.screenY == newY1,
-    `Waiting for window 1 to move to ${newX1}, ${newY1}`
-  );
-
-  // Verify it moved
-  is(win1.screenX, newX1, "Window 1 moved to new X");
-  is(win1.screenY, newY1, "Window 1 moved to new Y");
-
-  // 3. Close first window
-  info("Closing first window");
-  await BrowserTestUtils.closeWindow(win1);
-  info("First window closed");
-
-  // 4. Open second window with DIFFERENT ID
-  info("Opening second taskbar tab window");
-  let win2 = await wm.openWindow(taskbarTab2);
-
-  // Verify ID is set
-  is(
-    win2.document.documentElement.id,
-    "taskbartab-" + taskbarTab2.id,
-    "Window ID should be set to taskbar tab ID 2"
-  );
-
-  // 5. Move second window to a DIFFERENT position
-  let originalX2 = win2.screenX;
-  let originalY2 = win2.screenY;
-
-  let newX2 = originalX1 + 100;
-  let newY2 = originalY1 + 100;
-
-  info(
-    `Moving window 2 from ${originalX2},${originalY2} to ${newX2}, ${newY2}`
-  );
-  win2.moveTo(newX2, newY2);
-
-  // Wait for move to settle and persist
-  await BrowserTestUtils.waitForCondition(
-    () => win2.screenX == newX2 && win2.screenY == newY2,
-    `Waiting for window 2 to move to ${newX2}, ${newY2}`
-  );
-
-  // Verify it moved
-  is(win2.screenX, newX2, "Window 2 moved to new X");
-  is(win2.screenY, newY2, "Window 2 moved to new Y");
-
-  // 6. Open first window AGAIN (while second is still open)
-  info("Opening first taskbar tab window AGAIN");
-  win1 = await wm.openWindow(taskbarTab1);
-
-  // 7. Verify position of first window matches its SAVED position (newX1, newY1)
-  info(`Restored window 1 position: ${win1.screenX}, ${win1.screenY}`);
-
-  is(
-    win1.screenX,
-    newX1,
-    "Window 1 screenX should be restored to its own saved position"
-  );
-  is(
-    win1.screenY,
-    newY1,
-    "Window 1 screenY should be restored to its own saved position"
-  );
-
-  isnot(win1.screenX, newX2, "Window 1 should NOT have Window 2's X position");
-  isnot(win1.screenY, newY2, "Window 1 should NOT have Window 2's Y position");
-
-  await Promise.all([
-    BrowserTestUtils.closeWindow(win1),
-    BrowserTestUtils.closeWindow(win2),
-  ]);
-}).skip(AppConstants.platform === "linux"); // We can't control the window position on Linux.
+  await BrowserTestUtils.closeWindow(win);
+});

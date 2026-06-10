@@ -5,8 +5,6 @@
 Do transforms specific to l10n kind
 """
 
-from typing import Literal, Optional, Union
-
 from mozbuild.chunkify import chunkify
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util import json
@@ -16,118 +14,111 @@ from taskgraph.util.schema import (
     Schema,
     optionally_keyed_by,
     resolve_keyed_by,
-    taskref_or_string_msgspec,
+    taskref_or_string,
 )
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.treeherder import add_suffix
+from voluptuous import Any, Optional, Required
 
-from gecko_taskgraph.transforms.job import JobDescriptionSchema
-from gecko_taskgraph.transforms.task import TaskDescriptionSchema
+from gecko_taskgraph.transforms.job import job_description_schema
+from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
+    sorted_unique_list,
     task_name,
 )
 
 
 def _by_platform(arg):
-    return optionally_keyed_by("build-platform", arg, use_msgspec=True)
+    return optionally_keyed_by("build-platform", arg)
 
 
-def _by_platform_or_project(arg):
-    return optionally_keyed_by("build-platform", "project", arg, use_msgspec=True)
-
-
-class MozharnessSchema(Schema, kw_only=True):
-    # Script to invoke for mozharness
-    script: _by_platform(str)  # type: ignore  # noqa: F821
-    # Config files passed to the mozharness script
-    config: _by_platform(list[str])  # type: ignore  # noqa: F821
-    # Additional paths to look for mozharness configs in. These should be
-    # relative to the base of the source checkout
-    config_paths: Optional[list[str]] = None
-    # Options to pass to the mozharness script
-    options: Optional[_by_platform(list[str])] = None  # type: ignore
-    # Action commands to provide to mozharness script
-    actions: _by_platform(list[str])  # type: ignore  # noqa: F821
-    # if true, perform a checkout of a comm-central based branch inside the
-    # gecko checkout
-    comm_checkout: Optional[bool] = None
-
-
-class L10nTreeherderSchema(Schema, kw_only=True):
-    # Platform to display the task on in treeherder
-    platform: _by_platform(str)  # type: ignore  # noqa: F821
-    # Symbol to use
-    symbol: str
-    # Tier this task is
-    tier: _by_platform(int)  # type: ignore  # noqa: F821
-
-
-class L10nIndexSchema(Schema, kw_only=True):
-    # Product to identify as in the taskcluster index
-    product: _by_platform(str)  # type: ignore  # noqa: F821
-    # Job name to identify as in the taskcluster index
-    job_name: _by_platform(str)  # type: ignore  # noqa: F821
-    # Type of index
-    type: Optional[_by_platform(str)] = None  # type: ignore
-
-
-class InTreeDockerImageSchema(Schema):
-    in_tree: str
-
-
-class WhenSchema(Schema, kw_only=True):
-    files_changed: Optional[list[str]] = None
-
-
-class L10nDescriptionSchema(Schema, kw_only=True):
+l10n_description_schema = Schema({
     # Name for this job, inferred from the dependent job before validation
-    name: str
+    Required("name"): str,
     # build-platform, inferred from dependent job before validation
-    build_platform: str
+    Required("build-platform"): str,
     # max run time of the task
-    run_time: _by_platform(int)  # type: ignore  # noqa: F821
+    Required("run-time"): _by_platform(int),
     # Locales not to repack for
-    ignore_locales: _by_platform(list[str])  # type: ignore  # noqa: F821
+    Required("ignore-locales"): _by_platform([str]),
     # All l10n jobs use mozharness
-    mozharness: MozharnessSchema  # noqa: F821
+    Required("mozharness"): {
+        # Script to invoke for mozharness
+        Required("script"): _by_platform(str),
+        # Config files passed to the mozharness script
+        Required("config"): _by_platform([str]),
+        # Additional paths to look for mozharness configs in. These should be
+        # relative to the base of the source checkout
+        Optional("config-paths"): [str],
+        # Options to pass to the mozharness script
+        Optional("options"): _by_platform([str]),
+        # Action commands to provide to mozharness script
+        Required("actions"): _by_platform([str]),
+        # if true, perform a checkout of a comm-central based branch inside the
+        # gecko checkout
+        Optional("comm-checkout"): bool,
+    },
     # Items for the taskcluster index
-    index: Optional[L10nIndexSchema] = None
+    Optional("index"): {
+        # Product to identify as in the taskcluster index
+        Required("product"): _by_platform(str),
+        # Job name to identify as in the taskcluster index
+        Required("job-name"): _by_platform(str),
+        # Type of index
+        Optional("type"): _by_platform(str),
+    },
     # Description of the localized task
-    description: _by_platform(str)  # type: ignore  # noqa: F821
-    run_on_projects: JobDescriptionSchema.__annotations__["run_on_projects"] = None
-    run_on_repo_type: JobDescriptionSchema.__annotations__["run_on_repo_type"] = None
+    Required("description"): _by_platform(str),
+    Optional("run-on-projects"): job_description_schema["run-on-projects"],
+    Optional("run-on-repo-type"): job_description_schema["run-on-repo-type"],
     # worker-type to utilize
-    worker_type: _by_platform(str)  # type: ignore  # noqa: F821
+    Required("worker-type"): _by_platform(str),
     # File which contains the used locales
-    locales_file: _by_platform_or_project(str)  # type: ignore  # noqa: F821
+    Required("locales-file"): _by_platform(str),
     # Tooltool visibility required for task.
-    tooltool: _by_platform(Literal["internal", "public"])  # type: ignore  # noqa: F821
+    Required("tooltool"): _by_platform(Any("internal", "public")),
     # Docker image required for task.  We accept only in-tree images
     # -- generally desktop-build or android-build -- for now.
-    docker_image: Optional[_by_platform(InTreeDockerImageSchema)] = None  # type: ignore
-    fetches: Optional[dict[str, object]] = None
-    # The set of secret names to which the task has access
-    secrets: Optional[_by_platform(Union[bool, list[str]])] = None  # type: ignore
+    Optional("docker-image"): _by_platform(
+        # an in-tree generated docker image (from `taskcluster/docker/<name>`)
+        {"in-tree": str},
+    ),
+    Optional("fetches"): {
+        str: _by_platform([str]),
+    },
+    # The set of secret names to which the task has access; these are prefixed
+    # with `project/releng/gecko/{treeherder.kind}/level-{level}/`.  Setting
+    # this will enable any worker features required and set the task's scopes
+    # appropriately.  `true` here means ['*'], all secrets.  Not supported on
+    # Windows
+    Optional("secrets"): _by_platform(Any(bool, [str])),
     # Information for treeherder
-    treeherder: L10nTreeherderSchema  # noqa: F821
+    Required("treeherder"): {
+        # Platform to display the task on in treeherder
+        Required("platform"): _by_platform(str),
+        # Symbol to use
+        Required("symbol"): str,
+        # Tier this task is
+        Required("tier"): _by_platform(int),
+    },
     # Extra environment values to pass to the worker
-    env: Optional[_by_platform(dict[str, taskref_or_string_msgspec])] = None  # type: ignore
+    Optional("env"): _by_platform({str: taskref_or_string}),
     # Max number locales per chunk
-    locales_per_chunk: Optional[_by_platform(int)] = None  # type: ignore
+    Optional("locales-per-chunk"): _by_platform(int),
     # Task deps to chain this task with, added in transforms from primary dependency
     # if this is a shippable-style build
-    dependencies: Optional[dict[str, str]] = None
+    Optional("dependencies"): {str: str},
     # Run the task when the listed files change (if present).
-    when: Optional[WhenSchema] = None
+    Optional("when"): {"files-changed": [str]},
     # passed through directly to the job description
-    attributes: JobDescriptionSchema.__annotations__["attributes"] = None
-    extra: JobDescriptionSchema.__annotations__["extra"] = None
+    Optional("attributes"): job_description_schema["attributes"],
+    Optional("extra"): job_description_schema["extra"],
     # Shipping product and phase
-    shipping_product: TaskDescriptionSchema.__annotations__["shipping_product"] = None
-    shipping_phase: TaskDescriptionSchema.__annotations__["shipping_phase"] = None
-    task_from: TaskDescriptionSchema.__annotations__["task_from"] = None
-
+    Optional("shipping-product"): task_description_schema["shipping-product"],
+    Optional("shipping-phase"): task_description_schema["shipping-phase"],
+    Optional("task-from"): task_description_schema["task-from"],
+})
 
 transforms = TransformSequence()
 
@@ -186,7 +177,19 @@ def copy_in_useful_magic(config, jobs):
         yield job
 
 
-transforms.add_validate(L10nDescriptionSchema)
+transforms.add_validate(l10n_description_schema)
+
+
+@transforms.add
+def gather_required_signoffs(config, jobs):
+    for job in jobs:
+        job.setdefault("attributes", {})["required_signoffs"] = sorted_unique_list(
+            *(
+                dep.attributes.get("required_signoffs", [])
+                for dep in get_dependencies(config, job)
+            )
+        )
+        yield job
 
 
 @transforms.add
@@ -229,12 +232,7 @@ def handle_keyed_by(config, jobs):
     for job in jobs:
         job = deepcopy(job)  # don't overwrite dict values here
         for field in fields:
-            resolve_keyed_by(
-                item=job,
-                field=field,
-                item_name=job["name"],
-                project=config.params["project"],
-            )
+            resolve_keyed_by(item=job, field=field, item_name=job["name"])
         yield job
 
 
@@ -320,7 +318,7 @@ def chunk_locales(config, jobs):
             yield job
 
 
-transforms.add_validate(L10nDescriptionSchema)
+transforms.add_validate(l10n_description_schema)
 
 
 @transforms.add

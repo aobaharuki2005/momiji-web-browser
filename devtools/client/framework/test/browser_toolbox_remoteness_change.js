@@ -28,8 +28,9 @@ add_task(async function () {
   info("Navigate to a URL supporting remote process");
   await navigateTo(URL_2);
 
-  ok(
-    tab.linkedBrowser.hasAttribute("remote"),
+  is(
+    tab.linkedBrowser.getAttribute("remote"),
+    "true",
     "Navigated to a data: URI and switching to remote"
   );
 

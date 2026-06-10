@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +7,6 @@
 #ifndef mozilla_dom_DOMStringList_h
 #define mozilla_dom_DOMStringList_h
 
-#include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -18,14 +19,12 @@ class DOMStringList : public nsISupports, public nsWrapperCache {
   virtual ~DOMStringList();
 
  public:
-  explicit DOMStringList(nsISupports* aParent = nullptr) : mParent(aParent) {}
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(DOMStringList)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
-  nsISupports* GetParentObject() { return mParent; }
+  nsISupports* GetParentObject() { return nullptr; }
 
   void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aResult) {
     EnsureFresh();
@@ -78,7 +77,6 @@ class DOMStringList : public nsISupports, public nsWrapperCache {
   // XXXbz we really want this to be a fallible array, but we end up passing it
   // to consumers who declare themselves as taking and nsTArray.  :(
   nsTArray<nsString> mNames;
-  nsCOMPtr<nsISupports> mParent;
 };
 
 }  // namespace mozilla::dom

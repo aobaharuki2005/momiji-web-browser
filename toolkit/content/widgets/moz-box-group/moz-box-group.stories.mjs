@@ -55,18 +55,15 @@ moz-box-button-footer =
   },
 };
 
-function basicTemplate({ type, hasHeader, hasFooter, hasStatic }) {
-  return html`<moz-box-group
-      type=${ifDefined(type)}
-      @reorder=${handleReorderEvent}
-    >
+function basicTemplate({ type, hasHeader, hasFooter, wrapped }) {
+  return html`<moz-box-group type=${ifDefined(type)}>
       ${hasHeader
         ? html`<moz-box-item
             slot="header"
             data-l10n-id="moz-box-item-header"
           ></moz-box-item>`
         : ""}
-      ${getInnerElements(type, hasStatic)}
+      ${getInnerElements(type, wrapped)}
       ${hasFooter
         ? html`<moz-box-button
             slot="footer"
@@ -81,39 +78,31 @@ function basicTemplate({ type, hasHeader, hasFooter, hasStatic }) {
       : ""}`;
 }
 
-function getInnerElements(type, hasStatic) {
+function getInnerElements(type) {
   if (type == GROUP_TYPES.reorderable) {
-    return reorderableElements(hasStatic);
+    return reorderableElements();
   }
 
   return basicElements();
 }
 
-function reorderableElements(hasStatic) {
-  const createItems = (length, slot, startIndex = 0) =>
-    Array.from({ length }).map(
-      (_, i) =>
-        html`<moz-box-item
-          data-l10n-id=${`moz-box-item-reorderable-${startIndex + i + 1}`}
-          slot=${ifDefined(slot)}
-        >
-          <moz-button
-            iconsrc="chrome://global/skin/icons/edit-outline.svg"
-            data-l10n-id="moz-box-edit-action"
-            slot="actions-start"
-          ></moz-button>
-          <moz-toggle
-            slot="actions"
-            pressed
-            data-l10n-id="moz-box-toggle-action"
-          ></moz-toggle>
-        </moz-box-item>`
-    );
-
-  if (hasStatic) {
-    return html`${createItems(3)}${createItems(2, "static", 3)}`;
-  }
-  return html`${createItems(5)}`;
+function reorderableElements() {
+  return Array.from({ length: 5 }).map((_, i) => {
+    return html`<moz-box-item
+      data-l10n-id=${`moz-box-item-reorderable-${i + 1}`}
+    >
+      <moz-button
+        iconsrc="chrome://global/skin/icons/edit-outline.svg"
+        data-l10n-id="moz-box-edit-action"
+        slot="actions-start"
+      ></moz-button>
+      <moz-toggle
+        slot="actions"
+        pressed
+        data-l10n-id="moz-box-toggle-action"
+      ></moz-toggle>
+    </moz-box-item>`;
+  });
 }
 
 function basicElements() {
@@ -178,31 +167,6 @@ const appendItem = event => {
   group.prepend(boxItem);
 };
 
-/**
- * Handles the reorder event from moz-box-group. Since we're not using
- * Lit for updates in this case, we need to manually reorder the elements.
- *
- * @param {CustomEvent} event - The reorder event.
- * @param {object} event.detail - Detail object containing reorder information.
- * @param {Element} event.detail.draggedElement - The element being reordered.
- * @param {Element} event.detail.targetElement - The target element to reorder relative to.
- * @param {number} event.detail.position - Position relative to target (-1 for before, 0 for after).
- */
-const handleReorderEvent = event => {
-  let group = event.target.getRootNode().querySelector("moz-box-group");
-  let { draggedElement, targetElement, position } = event.detail;
-  let moveBefore = position === -1;
-
-  if (moveBefore) {
-    group.insertBefore(draggedElement, targetElement);
-  } else {
-    group.insertBefore(draggedElement, targetElement.nextElementSibling);
-  }
-
-  draggedElement.focus();
-  group.updateItems();
-};
-
 // Example with all child elements wrapped in setting-control/setting-group,
 // which is the most common use case in Firefox preferences.
 function wrappedTemplate({ type, hasHeader, hasFooter }) {
@@ -226,7 +190,7 @@ const getConfig = ({ type, hasHeader, hasFooter }) => ({
             id: "header",
             control: "moz-box-item",
             l10nId: "moz-box-item-header",
-            slot: "header",
+            controlAttrs: { slot: "header " },
           },
         ]
       : []),
@@ -311,7 +275,7 @@ const getConfig = ({ type, hasHeader, hasFooter }) => ({
             id: "footer",
             control: "moz-box-button",
             l10nId: "moz-box-button-footer",
-            slot: "footer",
+            controlAttrs: { slot: "footer " },
           },
         ]
       : []),
@@ -340,7 +304,7 @@ function getSetting() {
   };
 }
 
-const standardTemplateHtml = ({ scrollable }) => html`
+const Template = ({ type, hasHeader, hasFooter, scrollable, wrapped }) => html`
   <style>
     moz-box-group {
       --box-group-max-height: ${scrollable ? "250px" : "unset"};
@@ -350,31 +314,9 @@ const standardTemplateHtml = ({ scrollable }) => html`
       margin-top: var(--space-medium);
     }
   </style>
-`;
-
-const Template = ({
-  type,
-  hasHeader,
-  hasFooter,
-  scrollable,
-  wrapped,
-  hasStatic,
-}) => html`
-  ${standardTemplateHtml({ scrollable })}
   ${wrapped
     ? wrappedTemplate({ type, hasHeader, hasFooter })
-    : basicTemplate({ type, hasHeader, hasFooter, hasStatic })}
-`;
-
-const ReorderableTemplate = ({
-  type,
-  hasHeader,
-  hasFooter,
-  scrollable,
-  hasStatic,
-}) => html`
-  ${standardTemplateHtml({ scrollable })}
-  ${basicTemplate({ type, hasHeader, hasFooter, hasStatic })}
+    : basicTemplate({ type, hasHeader, hasFooter, wrapped })}
 `;
 
 export const Default = Template.bind({});
@@ -384,7 +326,6 @@ Default.args = {
   hasFooter: false,
   scrollable: false,
   wrapped: false,
-  hasStatic: false,
 };
 
 export const List = Template.bind({});
@@ -393,18 +334,10 @@ List.args = {
   type: "list",
 };
 
-export const Reorderable = ReorderableTemplate.bind({});
+export const Reorderable = Template.bind({});
 Reorderable.args = {
+  ...Default.args,
   type: "reorderable",
-  hasHeader: false,
-  hasFooter: false,
-  scrollable: false,
-};
-
-export const ReorderableWithStatic = ReorderableTemplate.bind({});
-ReorderableWithStatic.args = {
-  ...Reorderable.args,
-  hasStatic: true,
 };
 
 export const ListWithHeaderAndFooter = Template.bind({});

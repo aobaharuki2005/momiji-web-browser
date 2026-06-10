@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -38,6 +40,8 @@ UNIFIED_SOURCES += [
 
 if CONFIG["TARGET_KERNEL"] == "WINNT":
     SOURCES += [
+        "src/base/condition_variable_win.cc",
+        "src/base/lock_impl_win.cc",
         "src/base/message_pump_win.cc",
         "src/base/object_watcher.cc",
         "src/base/platform_thread_win.cc",
@@ -51,19 +55,18 @@ if CONFIG["TARGET_KERNEL"] == "WINNT":
         "src/chrome/common/process_watcher_win.cc",
     ]
 
-#it ain't workin, sorry nika
-# elif CONFIG["TARGET_KERNEL"] != "Darwin":
-#     UNIFIED_SOURCES += [
-#         "src/base/message_pump_libevent.cc",
-#     ]
+elif CONFIG["TARGET_KERNEL"] != "Darwin":
+    UNIFIED_SOURCES += [
+        "src/base/message_pump_libevent.cc",
+    ]
 
-elif not CONFIG["MOZ_SYSTEM_LIBEVENT"]:
+    if not CONFIG["MOZ_SYSTEM_LIBEVENT"]:
         DIRS += ["src/third_party"]
 
 if CONFIG["TARGET_KERNEL"] != "WINNT":
     UNIFIED_SOURCES += [
-        #it ain't workin, sorry nika
-        "src/base/message_pump_libevent.cc",        
+        "src/base/condition_variable_posix.cc",
+        "src/base/lock_impl_posix.cc",
         "src/base/platform_thread_posix.cc",
         "src/base/process_util_posix.cc",
         "src/base/string16.cc",
@@ -83,14 +86,12 @@ if CONFIG["TARGET_KERNEL"] != "WINNT":
 
 if CONFIG["TARGET_KERNEL"] == "Darwin":
     UNIFIED_SOURCES += [
-        #it ain't working. sorry nika
-        #"src/base/message_pump_kqueue.cc",
+        "src/base/message_pump_kqueue.cc",
         "src/base/message_pump_mac.mm",
         "src/base/scoped_nsautorelease_pool.mm",
         "src/base/sys_string_conversions_mac.mm",
         "src/base/time_mac.cc",
-        #it ain't working. sorry nika
-        #"src/chrome/common/ipc_channel_mach.cc",
+        "src/chrome/common/ipc_channel_mach.cc",
         "src/chrome/common/mach_ipc_mac.cc",
         "src/chrome/common/mach_message_source_mac.cc",
     ]

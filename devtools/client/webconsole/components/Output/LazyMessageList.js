@@ -77,15 +77,6 @@ class LazyMessageList extends Component {
     };
   }
 
-  #initialized;
-  #topBufferRef;
-  #bottomBufferRef;
-  #viewportHeight;
-  #startIndex;
-  #resizeObserver;
-  #cachedHeights;
-  #scrollHandlerBinding;
-
   constructor(props) {
     super(props);
     this.#initialized = false;
@@ -162,6 +153,15 @@ class LazyMessageList extends Component {
   componentWillUnmount() {
     this.#removeListeners();
   }
+
+  #initialized;
+  #topBufferRef;
+  #bottomBufferRef;
+  #viewportHeight;
+  #startIndex;
+  #resizeObserver;
+  #cachedHeights;
+  #scrollHandlerBinding;
 
   get #overdrawHeight() {
     return this.props.scrollOverdrawCount * this.props.itemDefaultHeight;

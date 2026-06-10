@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -37,7 +39,36 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
               (void)PClientHandleOpParent::Send__delete__(this, rv);
               return;
             }
-            RefPtr<ClientOpPromise> p = source->StartOp(std::move(args));
+            RefPtr<ClientOpPromise> p;
+
+            // ClientPostMessageArgs can contain PBlob actors.  This means we
+            // can't just forward the args from one PBackground manager to
+            // another.  Instead, unpack the structured clone data and repack
+            // it into a new set of arguments.
+            if (args.type() ==
+                ClientOpConstructorArgs::TClientPostMessageArgs) {
+              const ClientPostMessageArgs& orig =
+                  args.get_ClientPostMessageArgs();
+
+              ClientPostMessageArgs rebuild;
+              rebuild.serviceWorker() = orig.serviceWorker();
+
+              ipc::StructuredCloneData data;
+              data.BorrowFromClonedMessageData(orig.clonedData());
+              if (!data.BuildClonedMessageData(rebuild.clonedData())) {
+                CopyableErrorResult rv;
+                rv.ThrowAbortError("Aborting client operation");
+                (void)PClientHandleOpParent::Send__delete__(this, rv);
+                return;
+              }
+
+              p = source->StartOp(std::move(rebuild));
+            }
+
+            // Other argument types can just be forwarded straight through.
+            else {
+              p = source->StartOp(std::move(args));
+            }
 
             // Capturing 'this' is safe here because we disconnect the promise
             // in ActorDestroy() which ensures neither lambda is called if the
@@ -54,7 +85,7 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
                  })
                 ->Track(mPromiseRequestHolder);
           },
-          [=, this](const CopyableErrorResult& failure) {
+          [=](const CopyableErrorResult& failure) {
             mSourcePromiseRequestHolder.Complete();
             (void)PClientHandleOpParent::Send__delete__(this, failure);
             return;

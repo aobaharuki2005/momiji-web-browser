@@ -32,7 +32,6 @@
   --weekend-font-color: -moz-activehyperlinktext;
 
   --disabled-background-color: ButtonShadow;
-  --disabled-opacity: 0.5;
 
   /* TODO: these need to be in sync (ish) with DateTimePickerPanel.sys.mjs */
   font-size: 10px;
@@ -46,7 +45,6 @@
   --day-period-spacing-width: 1rem;
   --date-picker-item-height: 2.4rem;
   --date-picker-item-width: 3.3rem;
-  --outline-width: 0.2rem;
 
   /* We need to hide the scroll bar but maintain its scrolling
      capability, so using |overflow: hidden| is not an option. */
@@ -117,12 +115,13 @@ button:where(:hover.active) {
 }
 
 button:focus-visible {
-  outline: var(--outline-width) solid SelectedItem;
-  outline-offset: var(--outline-width);
+  outline: 0.2rem solid SelectedItem;
+  outline-offset: 0.2rem;
 }
 
 #date-picker {
-  flex-grow: 1;
+  /* Add some padding so outlines would not overflow our viewport. */
+  padding: 0.4rem;
 }
 
 .month-year-nav {
@@ -209,7 +208,7 @@ button.month-year.active {
 
 .month-year-view > .spinner-container {
   width: 5.5rem;
-  margin: 3rem 0.5rem;
+  margin: 2rem 0.5rem;
 }
 
 .order-month-year > #spinner-month,
@@ -315,7 +314,6 @@ button.month-year.active {
 .spinner-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   width: var(--spinner-width);
 }
 
@@ -366,14 +364,10 @@ button.month-year.active {
   border-radius: var(--border-radius);
   user-select: none;
   scroll-snap-align: start;
+}
 
-  &.disabled {
-    opacity: var(--disabled-opacity);
-  }
-
-  &.hidden {
-    visibility: hidden;
-  }
+.spinner-container > .spinner > div.disabled {
+  visibility: hidden;
 }
 
 /* Used only in <input type="time"> */
@@ -394,9 +388,6 @@ button.month-year.active {
 #datetime-picker {
   display: flex;
   gap: 1em;
-  justify-content: center;
-  /* Add some padding so outlines would not overflow our viewport. */
-  padding: calc(var(--outline-width) * 2);
 }
 
 #date-picker,

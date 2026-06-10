@@ -14,9 +14,9 @@
  * primary password when it is not known.
  */
 function resetPrimaryPassword() {
-  let token = Cc["@mozilla.org/security/internalkeytoken;1"].createInstance(
-    Ci.nsIPKCS11Token
-  );
+  let token = Cc["@mozilla.org/security/pk11tokendb;1"]
+    .getService(Ci.nsIPK11TokenDB)
+    .getInternalKeyToken();
   token.reset();
   token.initPassword("");
 }
@@ -42,16 +42,13 @@ add_task(async function test_logins_decrypt_failure() {
     Services.logins.modifyLoginAsync(logins[0], newPropertyBag()),
     /No matching logins/
   );
-  await Assert.rejects(
-    Services.logins.removeLoginAsync(logins[0]),
+  Assert.throws(
+    () => Services.logins.removeLogin(logins[0]),
     /No matching logins/
   );
 
   // The function that counts logins sees the non-decryptable entries also.
-  Assert.equal(
-    await Services.logins.countLoginsAsync("", "", ""),
-    logins.length
-  );
+  Assert.equal(Services.logins.countLogins("", "", ""), logins.length);
 
   // Equivalent logins can be added.
   await Services.logins.addLogins(logins);
@@ -61,10 +58,7 @@ add_task(async function test_logins_decrypt_failure() {
     logins.length,
     "getAllLogins length"
   );
-  Assert.equal(
-    await Services.logins.countLoginsAsync("", "", ""),
-    logins.length * 2
-  );
+  Assert.equal(Services.logins.countLogins("", "", ""), logins.length * 2);
 
   // Finding logins doesn't return the non-decryptable duplicates.
   Assert.equal(
@@ -81,18 +75,15 @@ add_task(async function test_logins_decrypt_failure() {
 
   // Removing single logins does not remove non-decryptable logins.
   for (let loginInfo of TestData.loginList()) {
-    await Services.logins.removeLoginAsync(loginInfo);
+    Services.logins.removeLogin(loginInfo);
   }
   Assert.equal((await Services.logins.getAllLogins()).length, 0);
-  Assert.equal(
-    await Services.logins.countLoginsAsync("", "", ""),
-    logins.length
-  );
+  Assert.equal(Services.logins.countLogins("", "", ""), logins.length);
 
   // Removing all logins removes the non-decryptable entries also.
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
   Assert.equal((await Services.logins.getAllLogins()).length, 0);
-  Assert.equal(await Services.logins.countLoginsAsync("", "", ""), 0);
+  Assert.equal(Services.logins.countLogins("", "", ""), 0);
 });
 
 // Bug 621846 - If a login has a GUID but can't be decrypted, a search for
@@ -155,7 +146,7 @@ add_task(async function test_add_logins_with_decrypt_failure() {
   const result2 = await Services.logins.searchLoginsAsync({ guid: login.guid });
   equal(result2.length, 1);
 
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
 });
 
 // Test the "syncID" metadata works as expected on decryption failure.

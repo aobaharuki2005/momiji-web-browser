@@ -1,10 +1,10 @@
 use std::iter::FromIterator;
 
-use http::{HeaderValue, Method};
+use http::Method;
 
-use crate::util::FlatCsv;
+use util::FlatCsv;
 
-/// `Allow` header, defined in [RFC7231](https://datatracker.ietf.org/doc/html/rfc7231#section-7.4.1)
+/// `Allow` header, defined in [RFC7231](http://tools.ietf.org/html/rfc7231#section-7.4.1)
 ///
 /// The `Allow` header field lists the set of methods advertised as
 /// supported by the target resource.  The purpose of this field is
@@ -25,6 +25,7 @@ use crate::util::FlatCsv;
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// extern crate http;
 /// use headers::Allow;
 /// use http::Method;
@@ -43,7 +44,7 @@ derive_header! {
 
 impl Allow {
     /// Returns an iterator over `Method`s contained within.
-    pub fn iter(&self) -> impl Iterator<Item = Method> + '_ {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = Method> + 'a {
         self.0.iter().filter_map(|s| s.parse().ok())
     }
 }
@@ -58,7 +59,7 @@ impl FromIterator<Method> for Allow {
             .map(|method| {
                 method
                     .as_str()
-                    .parse::<HeaderValue>()
+                    .parse::<::HeaderValue>()
                     .expect("Method is a valid HeaderValue")
             })
             .collect();

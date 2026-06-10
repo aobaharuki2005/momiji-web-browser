@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,7 +59,7 @@ internal fun TrackersBlockedPanel(
                         numberOfTrackersBlocked,
                     ),
                     modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.tertiary,
                     style = FirefoxTheme.typography.headline8,
                 )
             }
@@ -68,7 +69,9 @@ internal fun TrackersBlockedPanel(
             MenuGroup {
                 TrackingProtectionCategory.entries
                     .filter { bucketedTrackers.get(it, true).isNotEmpty() }
-                    .forEach { trackingProtectionCategory ->
+                    .forEachIndexed { index, trackingProtectionCategory ->
+                        if (index != 0) { HorizontalDivider() }
+
                         MenuItem(
                             label = stringResource(
                                 R.string.trackers_blocked_panel_categorical_num_trackers_blocked,

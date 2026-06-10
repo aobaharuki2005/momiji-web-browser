@@ -74,14 +74,6 @@ async function getPrototype(objectFront) {
   return objectFront.getPrototype();
 }
 
-async function getGlobal(objectFront) {
-  if (typeof objectFront.getGlobal !== "function") {
-    console.error("objectFront.getGlobal is not a function");
-    return Promise.resolve({});
-  }
-  return objectFront.getGlobal();
-}
-
 async function getFullText(longStringFront, item) {
   const { initial, fullText, length } = getValue(item);
   // Return fullText property if it exists so that it can be added to the
@@ -125,9 +117,8 @@ module.exports = {
   enumNonIndexedProperties,
   enumPrivateProperties,
   enumSymbols,
-  getFullText,
-  getGlobal,
-  getPromiseState,
   getPrototype,
+  getFullText,
+  getPromiseState,
   getProxySlots,
 };

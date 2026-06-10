@@ -58,7 +58,7 @@ this.cpstartup = class extends ExtensionAPI {
 
   receiveMessage(msg) {
     let browser = msg.target;
-    let gBrowser = browser.documentGlobal.gBrowser;
+    let gBrowser = browser.ownerGlobal.gBrowser;
 
     switch (msg.name) {
       case "CPStartup:Go": {
@@ -123,7 +123,7 @@ this.cpstartup = class extends ExtensionAPI {
         }
       };
       Services.obs.addObserver(observer, BROWSER_FLUSH_TOPIC);
-      tab.documentGlobal.gBrowser.removeTab(tab);
+      tab.ownerGlobal.gBrowser.removeTab(tab);
     });
   }
 

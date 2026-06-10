@@ -17,13 +17,13 @@
 #include <optional>
 
 #include "absl/container/inlined_vector.h"
-#include "api/environment/environment.h"
 #include "api/field_trials_view.h"
 #include "api/transport/rtp/dependency_descriptor.h"
 #include "api/video/encoded_image.h"
 #include "api/video/render_resolution.h"
 #include "api/video/video_codec_constants.h"
 #include "api/video/video_codec_type.h"
+#include "api/video/video_frame_type.h"
 #include "api/video/video_timing.h"
 #include "call/rtp_config.h"
 #include "common_video/generic_frame_descriptor/generic_frame_info.h"
@@ -38,6 +38,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/random.h"
+#include "rtc_base/time_utils.h"
 
 namespace webrtc {
 namespace {
@@ -178,21 +179,21 @@ FrameDependencyStructure MinimalisticStructure(int num_spatial_layers,
 }
 }  // namespace
 
-RtpPayloadParams::RtpPayloadParams(const Environment& env,
-                                   const uint32_t ssrc,
-                                   const RtpPayloadState* state)
+RtpPayloadParams::RtpPayloadParams(const uint32_t ssrc,
+                                   const RtpPayloadState* state,
+                                   const FieldTrialsView& trials)
     : ssrc_(ssrc),
       generic_picture_id_experiment_(
-          env.field_trials().IsEnabled("WebRTC-GenericPictureId")),
-      simulate_generic_structure_(env.field_trials().IsEnabled(
-          "WebRTC-GenericCodecDependencyDescriptor")) {
+          trials.IsEnabled("WebRTC-GenericPictureId")),
+      simulate_generic_structure_(
+          trials.IsEnabled("WebRTC-GenericCodecDependencyDescriptor")) {
   for (auto& spatial_layer : last_frame_id_)
     spatial_layer.fill(-1);
 
   chain_last_frame_id_.fill(-1);
   buffer_id_to_frame_id_.fill(-1);
 
-  Random random(env.clock().TimeInMicroseconds());
+  Random random(TimeMicros());
   state_.picture_id =
       state ? state->picture_id : (random.Rand<int16_t>() & 0x7FFF);
   state_.tl0_pic_idx = state ? state->tl0_pic_idx : (random.Rand<uint8_t>());
@@ -220,7 +221,7 @@ RTPVideoHeader RtpPayloadParams::GetRtpVideoHeader(
                                   &rtp_video_header);
   }
   rtp_video_header.simulcastIdx = image.SimulcastIndex().value_or(0);
-  rtp_video_header.frame_type = image.frame_type();
+  rtp_video_header.frame_type = image._frameType;
   rtp_video_header.rotation = image.rotation_;
   rtp_video_header.content_type = image.content_type_;
   rtp_video_header.playout_delay = image.PlayoutDelay();
@@ -232,7 +233,7 @@ RTPVideoHeader RtpPayloadParams::GetRtpVideoHeader(
   rtp_video_header.video_frame_tracking_id = image.VideoFrameTrackingId();
   SetVideoTiming(image, &rtp_video_header.video_timing);
 
-  const bool is_keyframe = image.IsKey();
+  const bool is_keyframe = image._frameType == VideoFrameType::kVideoFrameKey;
   const bool first_frame_in_picture =
       (codec_specific_info && codec_specific_info->codecType == kVideoCodecVP9)
           ? codec_specific_info->codecSpecific.VP9.first_frame_in_picture

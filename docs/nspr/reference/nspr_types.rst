@@ -26,7 +26,7 @@ prototypes and implementations:
    variables.
  - :ref:`PR_IMPLEMENT` is used for definitions of external functions or
    variables.
- - ``PR_CALLBACK`` is used for definitions and declarations of functions
+ - :ref:`PR_CALLBACK` is used for definitions and declarations of functions
    that are called via function pointers. A typical example is a
    function implemented in an application but called from a shared
    library.
@@ -63,7 +63,7 @@ for algebraic operations:
 
 -  `8-, 16-, and 32-bit Integer
    Types <#8-,_16-,_and_32-bit_Integer_Types>`__
--  `64-bit Integer Types <#nspr-types-64-bit-integer-types>`__
+-  `64-bit Integer Types <#64-bit_Integer_Types>`__
 -  `Floating-Point Number Type <#Floating-Point_Number_Type>`__
 
 For convenience, NSPR also provides type definitions with
@@ -94,7 +94,7 @@ Unsigned Integers
  - :ref:`PRUint16`
  - :ref:`PRUint32`
 
-.. _nspr-types-64-bit-integer-types:
+.. _64-bit_Integer_Types:
 
 64-bit Integer Types
 ~~~~~~~~~~~~~~~~~~~~

@@ -1,9 +1,10 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://w3c.github.io/webrtc-encoded-transform
+ * https://www.w3.org/TR/webrtc-encoded-transform
  */
 
 // New enum for video frame types. Will eventually re-use the equivalent defined
@@ -14,13 +15,16 @@ enum RTCEncodedVideoFrameType {
     "delta",
 };
 
-dictionary RTCEncodedVideoFrameMetadata : RTCEncodedFrameMetadata {
+dictionary RTCEncodedVideoFrameMetadata {
     unsigned long long frameId;
     sequence<unsigned long long> dependencies;
     unsigned short width;
     unsigned short height;
     unsigned long spatialIndex;
     unsigned long temporalIndex;
+    unsigned long synchronizationSource;
+    octet payloadType;
+    sequence<unsigned long> contributingSources;
     long long timestamp;    // microseconds
 };
 
@@ -40,7 +44,7 @@ interface RTCEncodedVideoFrame {
     [Throws]
     constructor(RTCEncodedVideoFrame originalFrame, optional RTCEncodedVideoFrameOptions options = {});
     readonly attribute RTCEncodedVideoFrameType type;
-    readonly attribute unsigned long timestamp;    // legacy name of metadata rtpTimestamp
+    readonly attribute unsigned long timestamp;
     attribute ArrayBuffer data;
     RTCEncodedVideoFrameMetadata getMetadata();
 };

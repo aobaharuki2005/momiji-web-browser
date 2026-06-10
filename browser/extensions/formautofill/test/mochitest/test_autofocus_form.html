@@ -42,8 +42,9 @@ add_task(async function check_autocomplete_on_autofocus_field() {
     makeAddressComment({
       primary: address.organization,
       secondary: address["street-address"],
+      status: "Also autofills address, phone"
     })
-  ), 1);
+  ), 2);
 });
 
 </script>

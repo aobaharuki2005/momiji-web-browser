@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -865,16 +867,16 @@ void FilterNodeTableTransferWebgl::SetAttribute(uint32_t aIndex,
   std::vector<Float> table(aValues, aValues + aSize);
   switch (aIndex) {
     case ATT_TABLE_TRANSFER_TABLE_R:
-      mTableR = std::move(table);
+      mTableR = table;
       break;
     case ATT_TABLE_TRANSFER_TABLE_G:
-      mTableG = std::move(table);
+      mTableG = table;
       break;
     case ATT_TABLE_TRANSFER_TABLE_B:
-      mTableB = std::move(table);
+      mTableB = table;
       break;
     case ATT_TABLE_TRANSFER_TABLE_A:
-      mTableA = std::move(table);
+      mTableA = table;
       break;
     default:
       MOZ_ASSERT(false);

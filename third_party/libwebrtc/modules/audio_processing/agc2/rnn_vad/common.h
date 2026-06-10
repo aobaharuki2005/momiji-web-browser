@@ -13,12 +13,10 @@
 
 #include <stddef.h>
 
-#include <numbers>
-
 namespace webrtc {
 namespace rnn_vad {
 
-constexpr double kPi = std::numbers::pi;
+constexpr double kPi = 3.14159265358979323846;
 
 constexpr int kSampleRate24kHz = 24000;
 constexpr int kFrameSize10ms24kHz = kSampleRate24kHz / 100;

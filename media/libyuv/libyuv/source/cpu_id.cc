@@ -185,7 +185,6 @@ LIBYUV_API SAFEBUFFERS int ArmCpuCaps(const char* cpuinfo_name) {
 #define YUV_AARCH64_HWCAP_ASIMDDP (1UL << 20)
 #define YUV_AARCH64_HWCAP_SVE (1UL << 22)
 #define YUV_AARCH64_HWCAP2_SVE2 (1UL << 1)
-#define YUV_AARCH64_HWCAP2_SVEF32MM (1UL << 10)
 #define YUV_AARCH64_HWCAP2_I8MM (1UL << 13)
 #define YUV_AARCH64_HWCAP2_SME (1UL << 23)
 #define YUV_AARCH64_HWCAP2_SME2 (1UL << 37)
@@ -208,9 +207,6 @@ LIBYUV_API SAFEBUFFERS int AArch64CpuCaps(unsigned long hwcap,
       features |= kCpuHasNeonI8MM;
       if (hwcap & YUV_AARCH64_HWCAP_SVE) {
         features |= kCpuHasSVE;
-        if (hwcap2 & YUV_AARCH64_HWCAP2_SVEF32MM) {
-          features |= kCpuHasSVEF32MM;
-        }
         if (hwcap2 & YUV_AARCH64_HWCAP2_SVE2) {
           features |= kCpuHasSVE2;
         }
@@ -330,21 +326,16 @@ LIBYUV_API SAFEBUFFERS int RiscvCpuCaps(const char* cpuinfo_name) {
         // supervisor-level extensions.
         extensions = strpbrk(isa, "zxs");
         if (extensions) {
-          extensions_len = strlen(extensions);
           // Multi-letter extensions are seperated by a single underscore
           // as described in RISC-V User-Level ISA V2.2.
-          char* ext = extensions;
+          char* ext = strtok(extensions, "_");
+          extensions_len = strlen(extensions);
           while (ext) {
-            char* next = strchr(ext, '_');
-            if (next) {
-              *next = '\0';
-              next++;
-            }
             // Search for the ZVFH (Vector FP16) extension.
             if (!strcmp(ext, "zvfh")) {
               flag |= kCpuHasRVVZVFH;
             }
-            ext = next;
+            ext = strtok(NULL, "_");
           }
         }
         std_isa_len = isa_len - extensions_len - 5;
@@ -368,13 +359,42 @@ LIBYUV_API SAFEBUFFERS int RiscvCpuCaps(const char* cpuinfo_name) {
   return flag;
 }
 
+LIBYUV_API SAFEBUFFERS int MipsCpuCaps(const char* cpuinfo_name) {
+  char cpuinfo_line[512];
+  int flag = 0;
+  FILE* f = fopen(cpuinfo_name, "re");
+  if (!f) {
+    // Assume nothing if /proc/cpuinfo is unavailable.
+    // This will occur for Chrome sandbox for Pepper or Render process.
+    return 0;
+  }
+  memset(cpuinfo_line, 0, sizeof(cpuinfo_line));
+  while (fgets(cpuinfo_line, sizeof(cpuinfo_line), f)) {
+    if (memcmp(cpuinfo_line, "cpu model", 9) == 0) {
+      // Workaround early kernel without MSA in ASEs line.
+      if (strstr(cpuinfo_line, "Loongson-2K")) {
+        flag |= kCpuHasMSA;
+      }
+    }
+    if (memcmp(cpuinfo_line, "ASEs implemented", 16) == 0) {
+      if (strstr(cpuinfo_line, "msa")) {
+        flag |= kCpuHasMSA;
+      }
+      // ASEs is the last line, so we can break here.
+      break;
+    }
+  }
+  fclose(f);
+  return flag;
+}
+
 #if defined(__loongarch__) && defined(__linux__)
 // Define hwcap values ourselves: building with an old auxv header where these
 // hwcap values are not defined should not prevent features from being enabled.
 #define YUV_LOONGARCH_HWCAP_LSX (1 << 4)
 #define YUV_LOONGARCH_HWCAP_LASX (1 << 5)
 
-LIBYUV_API SAFEBUFFERS int LoongArchCpuCaps(void) {
+LIBYUV_API SAFEBUFFERS int LoongarchCpuCaps(void) {
   int flag = 0;
   unsigned long hwcap = getauxval(AT_HWCAP);
 
@@ -427,7 +447,7 @@ static SAFEBUFFERS int GetCpuFlags(void) {
     cpu_info |= ((cpu_amdinfo21[0] & 0x00008000) ? kCpuHasERMS : 0);
 
     // Detect AVX512bw
-    if ((GetXCR0() & 0xe0) == 0xe0 && (cpu_info7[1] & 0x00010000)) {
+    if ((GetXCR0() & 0xe0) == 0xe0) {
       cpu_info |= ((cpu_info7[1] & 0x40000000) ? kCpuHasAVX512BW : 0) |
                   ((cpu_info7[1] & 0x80000000) ? kCpuHasAVX512VL : 0) |
                   ((cpu_info7[2] & 0x00000002) ? kCpuHasAVX512VBMI : 0) |
@@ -442,8 +462,12 @@ static SAFEBUFFERS int GetCpuFlags(void) {
     }
   }
 #endif
+#if defined(__mips__) && defined(__linux__)
+  cpu_info = MipsCpuCaps("/proc/cpuinfo");
+  cpu_info |= kCpuHasMIPS;
+#endif
 #if defined(__loongarch__) && defined(__linux__)
-  cpu_info = LoongArchCpuCaps();
+  cpu_info = LoongarchCpuCaps();
   cpu_info |= kCpuHasLOONGARCH;
 #endif
 #if defined(__aarch64__)

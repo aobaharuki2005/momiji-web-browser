@@ -8,7 +8,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
-  UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
+  UrlbarTokenizer:
+    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -130,7 +131,7 @@ var gBuiltInInputs = {
   },
   Sidebar: {
     title: "open-sidebar",
-    image: "chrome://browser/skin/sidebar-collapsed.svg",
+    image: "chrome://browser/skin/sidebars.svg",
     type: kInputTypes.BUTTON,
     callback: () => {
       let win = lazy.BrowserWindowTracker.getTopWindow();
@@ -184,7 +185,7 @@ var gBuiltInInputs = {
             type: kInputTypes.BUTTON,
             callback: () =>
               lazy.touchBarHelper.insertRestrictionInUrlbar(
-                lazy.UrlbarShared.RESTRICT_TOKENS.BOOKMARK
+                lazy.UrlbarTokenizer.RESTRICT.BOOKMARK
               ),
           },
           OpenTabs: {
@@ -192,7 +193,7 @@ var gBuiltInInputs = {
             type: kInputTypes.BUTTON,
             callback: () =>
               lazy.touchBarHelper.insertRestrictionInUrlbar(
-                lazy.UrlbarShared.RESTRICT_TOKENS.OPENPAGE
+                lazy.UrlbarTokenizer.RESTRICT.OPENPAGE
               ),
           },
           History: {
@@ -200,7 +201,7 @@ var gBuiltInInputs = {
             type: kInputTypes.BUTTON,
             callback: () =>
               lazy.touchBarHelper.insertRestrictionInUrlbar(
-                lazy.UrlbarShared.RESTRICT_TOKENS.HISTORY
+                lazy.UrlbarTokenizer.RESTRICT.HISTORY
               ),
           },
           Tags: {
@@ -208,7 +209,7 @@ var gBuiltInInputs = {
             type: kInputTypes.BUTTON,
             callback: () =>
               lazy.touchBarHelper.insertRestrictionInUrlbar(
-                lazy.UrlbarShared.RESTRICT_TOKENS.TAG
+                lazy.UrlbarTokenizer.RESTRICT.TAG
               ),
           },
         },
@@ -256,26 +257,16 @@ export class TouchBarHelper {
     }
   }
 
-  get activeUrl() {
-    if (!TouchBarHelper.window) {
-      return "";
-    }
-    let tabbrowser = TouchBarHelper.window.gBrowser;
-    if (tabbrowser) {
-      return tabbrowser.selectedBrowser.currentURI.spec;
-    }
-    return "";
-  }
-
   get activeTitle() {
     if (!TouchBarHelper.window) {
       return "";
     }
-    let tabbrowser = TouchBarHelper.window.gBrowser;
+    let tabbrowser = TouchBarHelper.window.ownerGlobal.gBrowser;
+    let activeTitle;
     if (tabbrowser) {
-      return tabbrowser.selectedBrowser.contentTitle;
+      activeTitle = tabbrowser.selectedBrowser.contentTitle;
     }
-    return "";
+    return activeTitle;
   }
 
   get allItems() {
@@ -425,7 +416,7 @@ export class TouchBarHelper {
    *
    * @param {string} restrictionToken
    *        The restriction token to be inserted into the Urlbar. Preferably
-   *        sourced from RESTRICT_TOKENS.
+   *        sourced from UrlbarTokenizer.RESTRICT.
    */
   insertRestrictionInUrlbar(restrictionToken) {
     if (!TouchBarHelper.window) {
@@ -437,9 +428,7 @@ export class TouchBarHelper {
     ) {
       searchString = TouchBarHelper.window.gURLBar.lastSearchString.trimStart();
       if (
-        Object.values(lazy.UrlbarShared.RESTRICT_TOKENS).includes(
-          searchString[0]
-        )
+        Object.values(lazy.UrlbarTokenizer.RESTRICT).includes(searchString[0])
       ) {
         searchString = searchString.substring(1).trimStart();
       }
@@ -460,6 +449,7 @@ export class TouchBarHelper {
         gBuiltInInputs.Forward.disabled =
           !TouchBarHelper.window.gBrowser.canGoForward;
         if (subject.QueryInterface(Ci.nsIWebProgress)?.isTopLevel) {
+          this.activeUrl = data;
           // ReaderView button is disabled on every toplevel location change
           // since Reader View must determine if the new page can be Reader
           // Viewed.

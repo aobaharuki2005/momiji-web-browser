@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -27,7 +29,7 @@ class ParseRecordObject : public NativeObject {
   // The source text that was parsed for this record. According to the spec, we
   // don't track this for objects and arrays, so it will be a null pointer.
   JSONParseNode* getParseNode() const {
-    const Value& slot = getReservedSlot(ParseNodeSlot);
+    const Value& slot = getSlot(ParseNodeSlot);
     return slot.isUndefined() ? nullptr : slot.toString();
   }
 
@@ -39,11 +41,9 @@ class ParseRecordObject : public NativeObject {
 
   // The original value corresponding to this record, used to determine if the
   // reviver function has modified it.
-  const Value& getValue() const { return getReservedSlot(ValueSlot); }
+  const Value& getValue() const { return getSlot(ValueSlot); }
 
-  void setValue(JS::Handle<JS::Value> value) {
-    setReservedSlot(ValueSlot, value);
-  }
+  void setValue(JS::Handle<JS::Value> value) { setSlot(ValueSlot, value); }
 
   bool hasValue() const { return !getValue().isUndefined(); }
 

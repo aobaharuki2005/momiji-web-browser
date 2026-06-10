@@ -40,8 +40,7 @@ add_task(async function () {
   info("Make the current time of animation to be over its end time");
   clickOnCurrentTimeScrubberController(animationInspector, panel, 1.1);
   await waitUntilAnimationsPlayState(animationInspector, "paused");
-  info("Animation was paused");
-  await changePlaybackRateMultiplierSelector(animationInspector, panel, 0.1);
+  await changePlaybackRateSelector(animationInspector, panel, 0.1);
   info("Resume animations");
   clickOnPauseResumeButton(animationInspector, panel);
   await waitUntilAnimationsPlayState(animationInspector, "running");

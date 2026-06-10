@@ -1,11 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* rendering object for CSS "display: ruby" */
 
-#ifndef nsRubyFrame_h_
-#define nsRubyFrame_h_
+#ifndef nsRubyFrame_h___
+#define nsRubyFrame_h___
 
 #include "RubyUtils.h"
 #include "nsInlineFrame.h"
@@ -69,4 +71,4 @@ class nsRubyFrame final : public nsInlineFrame {
   mozilla::RubyMetrics mRubyMetrics;
 };
 
-#endif /* nsRubyFrame_h_ */
+#endif /* nsRubyFrame_h___ */

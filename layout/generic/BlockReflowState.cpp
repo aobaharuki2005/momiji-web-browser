@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,12 +12,9 @@
 
 #include "LayoutLogging.h"
 #include "TextOverflow.h"
-#ifdef DEBUG
-#  include "fmt/base.h"
-#endif
+#include "fmt/format.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsBlockFrame.h"
 #include "nsIFrameInlines.h"
@@ -331,8 +330,8 @@ nsFlowAreaRect BlockReflowState::GetFloatAvailableSpaceWithState(
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsIFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-    fmt::println("{} band={} hasFloats={}", __func__, ToString(result.mRect),
-                 YesOrNo(result.HasFloats()));
+    fmt::println(FMT_STRING("{} band={} hasFloats={}"), __func__,
+                 ToString(result.mRect), YesOrNo(result.HasFloats()));
   }
 #endif
   return result;
@@ -361,8 +360,8 @@ nsFlowAreaRect BlockReflowState::GetFloatAvailableSpaceForBSize(
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsIFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-    fmt::println("{} band={} hasFloats={}", __func__, ToString(result.mRect),
-                 YesOrNo(result.HasFloats()));
+    fmt::println(FMT_STRING("{} band={} hasFloats={}"), __func__,
+                 ToString(result.mRect), YesOrNo(result.HasFloats()));
   }
 #endif
   return result;

@@ -29,7 +29,7 @@ const MIN_SEARCH_PREF = "quickactions.minimumSearchString";
  *   The id of the label for the result element.
  * @property {() => boolean} [isVisible]
  *   A function to call to check if this action should be visible or not.
- * @property {(queryContext, controller, window) => null|{focusContent: boolean}} onPick
+ * @property {() => null|{focusContent: boolean}} onPick
  *   The function to call when the quick action is picked. It may return an object
  *   with property focusContent to indicate if the content area should be focussed
  *   after the pick.
@@ -88,6 +88,7 @@ class ProviderQuickActions extends ActionsProvider {
           action: key,
           inputLength: queryContext.trimmedSearchString.length,
         },
+        onPick: action.onPick,
       });
     });
   }
@@ -95,7 +96,7 @@ class ProviderQuickActions extends ActionsProvider {
   async getActions({ input, includesExactMatch = false }) {
     await lazy.QuickActionsLoaderDefault.ensureLoaded();
 
-    let results = new Set(this.#prefixes.get(input));
+    let results = this.#prefixes.get(input) ?? new Set();
 
     if (includesExactMatch) {
       let actions = this.#keywords.get(input);
@@ -109,17 +110,13 @@ class ProviderQuickActions extends ActionsProvider {
     return this.#actions.get(key);
   }
 
-  onPick(queryContext, controller, element) {
-    this.pickAction(queryContext, controller, element);
-  }
-
-  pickAction(queryContext, controller, element) {
+  pickAction(_queryContext, _controller, element) {
     let action = element.dataset.action;
     let inputLength = Math.min(element.dataset.inputLength, 10);
     Glean.urlbarQuickaction.picked[`${action}-${inputLength}`].add(1);
-    let options = this.#actions.get(action).onPick(queryContext, controller);
+    let options = this.#actions.get(action).onPick();
     if (options?.focusContent) {
-      controller.browserWindow.gBrowser.selectedBrowser.focus();
+      element.ownerGlobal.gBrowser.selectedBrowser.focus();
     }
   }
 

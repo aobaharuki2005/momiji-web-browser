@@ -4,8 +4,6 @@ import pytest
 
 from .. import assert_before_request_sent_event, BEFORE_REQUEST_SENT_EVENT
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture
 def substitute_host(server_config):
@@ -24,6 +22,7 @@ def substitute_host(server_config):
     return substitute_host
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "patterns, url_template",
     [
@@ -82,11 +81,10 @@ async def test_pattern_patterns_matching(
     asyncio.ensure_future(fetch(substitute_host(url_template), context=new_tab))
     event = await wait_for_future_safe(on_network_event)
 
-    assert_before_request_sent_event(
-        event, expected_event={"isBlocked": True, "intercepts": [intercept]}
-    )
+    assert_before_request_sent_event(event, is_blocked=True, intercepts=[intercept])
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "pattern, url_template",
     [
@@ -129,9 +127,10 @@ async def test_pattern_patterns_not_matching(
     asyncio.ensure_future(fetch(substitute_host(url_template), context=new_tab))
     event = await wait_for_future_safe(on_network_event)
 
-    assert_before_request_sent_event(event, expected_event={"isBlocked": False})
+    assert_before_request_sent_event(event, is_blocked=False)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "pattern, url_template",
     [
@@ -176,11 +175,10 @@ async def test_string_patterns_matching(
     asyncio.ensure_future(fetch(substitute_host(url_template), context=new_tab))
     event = await wait_for_future_safe(on_network_event)
 
-    assert_before_request_sent_event(
-        event, expected_event={"isBlocked": True, "intercepts": [intercept]}
-    )
+    assert_before_request_sent_event(event, is_blocked=True, intercepts=[intercept])
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "pattern, url_template",
     [
@@ -219,4 +217,4 @@ async def test_string_patterns_not_matching(
     asyncio.ensure_future(fetch(substitute_host(url_template), context=new_tab))
     event = await wait_for_future_safe(on_network_event)
 
-    assert_before_request_sent_event(event, expected_event={"isBlocked": False})
+    assert_before_request_sent_event(event, is_blocked=False)

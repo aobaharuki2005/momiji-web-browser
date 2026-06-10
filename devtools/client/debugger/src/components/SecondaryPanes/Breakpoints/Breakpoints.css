@@ -98,11 +98,11 @@
 }
 
 html .breakpoints-list .breakpoint.is-conditional {
-  border-inline-start-color: var(--theme-breakpoint-conditional-background);
+  border-inline-start-color: var(--theme-graphs-yellow);
 }
 
 html .breakpoints-list .breakpoint.is-log {
-  border-inline-start-color: var(--theme-breakpoint-logpoint);
+  border-inline-start-color: var(--theme-graphs-purple);
 }
 
 html .breakpoints-list .breakpoint.paused {

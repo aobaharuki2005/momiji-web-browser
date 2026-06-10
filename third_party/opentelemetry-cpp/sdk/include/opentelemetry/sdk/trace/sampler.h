@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
@@ -35,7 +34,7 @@ namespace trace
 /**
  * A sampling Decision for a Span to be created.
  */
-enum class Decision : std::uint8_t
+enum class Decision
 {
   // IsRecording() == false, span will not be recorded and all events and attributes will be
   // dropped.
@@ -72,15 +71,7 @@ struct SamplingResult
 class Sampler
 {
 public:
-  Sampler() = default;
-
-  Sampler(const Sampler &)            = delete;
-  Sampler(Sampler &&)                 = delete;
-  Sampler &operator=(const Sampler &) = delete;
-  Sampler &operator=(Sampler &&)      = delete;
-
   virtual ~Sampler() = default;
-
   /**
    * Called during Span creation to make a sampling decision.
    *
@@ -95,6 +86,7 @@ public:
    * @return sampling result whether span should be sampled or not.
    * @since 0.1.0
    */
+
   virtual SamplingResult ShouldSample(
       const opentelemetry::trace::SpanContext &parent_context,
       opentelemetry::trace::TraceId trace_id,

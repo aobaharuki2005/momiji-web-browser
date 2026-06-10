@@ -12,9 +12,6 @@ const { EngineProcess } = ChromeUtils.importESModule(
 const { TranslationsPanelShared } = ChromeUtils.importESModule(
   "chrome://browser/content/translations/TranslationsPanelShared.sys.mjs"
 );
-const { TranslationsFeature } = ChromeUtils.importESModule(
-  "chrome://global/content/translations/TranslationsFeature.sys.mjs"
-);
 const { TranslationsUtils } = ChromeUtils.importESModule(
   "chrome://global/content/translations/TranslationsUtils.mjs"
 );
@@ -45,10 +42,6 @@ const DIR_PATH = "toolkit/components/translations/tests/browser/";
  *   fn: (selectors: Record<string, string>, data: D) => Promise<void>,
  *   data: T
  * ) => Promise<T>} RunInPageFn
- */
-
-/**
- * @typedef {"click" | "enter" | "space"} AboutTranslationsInvokeAction
  */
 
 /**
@@ -90,12 +83,6 @@ const LANGUAGE_PAIRS = [
   { fromLang: "uk", toLang: PIVOT_LANGUAGE },
 ];
 
-const LANGUAGE_PAIRS_WITHOUT_SPANISH = LANGUAGE_PAIRS.filter(
-  // Spanish is intentionally omitted so that "es" may trigger
-  // the unsupported-language message when relevant.
-  ({ fromLang, toLang }) => fromLang !== "es" && toLang !== "es"
-);
-
 const TRANSLATIONS_PERMISSION = "translations";
 const ALWAYS_TRANSLATE_LANGS_PREF =
   "browser.translations.alwaysTranslateLanguages";
@@ -127,55 +114,6 @@ function logAction(...params) {
 }
 
 /**
- * Returns the baseline visibility expectations for the main about:translations UI.
- *
- * @param {object} [overrides={}]
- * @returns {object}
- */
-function aboutTranslationsVisibilityExpectations(overrides = {}) {
-  return {
-    pageHeader: true,
-    mainUserInterface: true,
-    sourceLanguageSelector: true,
-    targetLanguageSelector: true,
-    clearButton: undefined,
-    copyButton: true,
-    swapLanguagesButton: true,
-    sourceSectionTextArea: true,
-    targetSectionTextArea: true,
-    detectedLanguageUnsupportedMessage: false,
-    translationErrorMessage: false,
-    unsupportedInfoMessage: false,
-    policyDisabledInfoMessage: false,
-    featureBlockedInfoMessage: false,
-    languageLoadErrorMessage: false,
-    ...overrides,
-  };
-}
-
-/**
- * Returns the baseline visibility expectations for about:translations when showing
- * a stand-alone message bar.
- *
- * @param {object} [overrides={}]
- * @returns {object}
- */
-function aboutTranslationsStandaloneMessageVisibilityExpectations(
-  overrides = {}
-) {
-  return aboutTranslationsVisibilityExpectations({
-    mainUserInterface: false,
-    sourceLanguageSelector: false,
-    targetLanguageSelector: false,
-    copyButton: false,
-    swapLanguagesButton: false,
-    sourceSectionTextArea: false,
-    targetSectionTextArea: false,
-    ...overrides,
-  });
-}
-
-/**
  * Generates a sorted list of Translation model file names for the given language pairs.
  *
  * @param {Array<{ fromLang: string, toLang: string }>} languagePairs - An array of language pair objects.
@@ -195,62 +133,18 @@ function languageModelNames(languagePairs) {
 }
 
 /**
- * Start an HTTP server that serves page.html with the provided HTML.
- * Explicitly encode the text as UTF-8 to correctly handle characters outside Latin-1,
- * which the HttpServer renders incorrectly by default.
- *
- * @param {string} html
- * @param {number} statusCode
- */
-function serveOnce(html, statusCode = 200) {
-  /** @type {import("../../../../../netwerk/test/httpserver/httpd.sys.mjs")} */
-  const { HttpServer } = ChromeUtils.importESModule(
-    "resource://testing-common/httpd.sys.mjs"
-  );
-  info("Create server");
-  const server = new HttpServer();
-
-  const { promise, resolve } = Promise.withResolvers();
-  const encoder = new TextEncoder();
-  const htmlUtf8 = encoder.encode(html);
-
-  server.registerPathHandler("/page.html", (request, response) => {
-    info("Request received for: " + url);
-    response.setHeader("Content-Type", "text/html; charset=utf-8");
-    response.setStatusLine(request.httpVersion, statusCode);
-
-    const binaryOutputStream = Cc[
-      "@mozilla.org/binaryoutputstream;1"
-    ].createInstance(Ci.nsIBinaryOutputStream);
-
-    binaryOutputStream.setOutputStream(response.bodyOutputStream);
-    binaryOutputStream.writeByteArray(htmlUtf8);
-
-    resolve(server.stop());
-  });
-
-  server.start(-1);
-
-  let { primaryHost, primaryPort } = server.identity;
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  const url = `http://${primaryHost}:${primaryPort}/page.html`;
-  info("Server listening for: " + url);
-
-  return { url, serverClosed: promise };
-}
-
-/**
  * Loads a new page in the given browser at the given URL.
  *
  * @param {object} browser
  * @param {string} url
  */
 async function loadNewPage(browser, url) {
-  const loaded = BrowserTestUtils.browserLoaded(browser, {
-    wantLoad: url,
-  });
   BrowserTestUtils.startLoadingURIString(browser, url);
-  await loaded;
+  await BrowserTestUtils.browserLoaded(
+    browser,
+    /* includeSubFrames */ false,
+    url
+  );
 }
 
 /**
@@ -258,11 +152,8 @@ async function loadNewPage(browser, url) {
  * opens up about:translations, and passes the test requirements into the content process.
  *
  * @param {object} [options={}]
- * @param {boolean} [options.featureEnabled=true]
- *        Whether Translations starts enabled before opening the page.
- * @param {boolean} [options.lockEnabledState=false]
- *        When true, locks the prefs that govern the Translations feature enabled state as
- *        though they were controlled by an enterprise policy before opening the page.
+ * @param {boolean} [options.disabled]
+ *        When true, ensures that Translations is disabled via pref before opening the page.
  * @param {Array<{fromLang: string, toLang: string}>} [options.languagePairs=LANGUAGE_PAIRS]
  *        Language pairs that should be available in Remote Settings mocks.
  * @param {Array<[string, any]>} [options.prefs]
@@ -280,8 +171,7 @@ async function loadNewPage(browser, url) {
  * }>}
  */
 async function openAboutTranslations({
-  featureEnabled = true,
-  lockEnabledState = false,
+  disabled,
   languagePairs = LANGUAGE_PAIRS,
   prefs,
   autoDownloadFromRemoteSettings = false,
@@ -299,9 +189,7 @@ async function openAboutTranslations({
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enabled by default.
-      ["browser.translations.enable", featureEnabled],
-      ["browser.ai.control.default", "available"],
-      ["browser.ai.control.translations", "default"],
+      ["browser.translations.enable", !disabled],
       ["browser.translations.logLevel", "All"],
       ["browser.translations.mostRecentTargetLanguages", ""],
       ["dom.events.testing.asyncClipboard", true],
@@ -309,59 +197,26 @@ async function openAboutTranslations({
       ...(prefs ?? []),
     ],
   });
-  const lockedFeaturePrefs = [];
-
-  if (!featureEnabled) {
-    await TranslationsFeature.block();
-  }
-
-  if (lockEnabledState) {
-    for (const pref of ["browser.ai.control.translations"]) {
-      Services.prefs.lockPref(pref);
-      lockedFeaturePrefs.push(pref);
-    }
-  }
 
   /**
    * Collect any relevant selectors for the page here.
    */
   const selectors = {
     pageHeader: "header#about-translations-header",
-    learnMoreLink: "a#about-translations-learn-more-link",
     mainUserInterface: "section#about-translations-main-user-interface",
     sourceLanguageSelector: "moz-select#about-translations-source-select",
     targetLanguageSelector: "moz-select#about-translations-target-select",
     detectLanguageOption:
       "moz-option#about-translations-detect-language-label-option",
-    detectedLanguageUnsupportedHeading:
-      "#about-translations-detected-language-unsupported-heading",
-    detectedLanguageUnsupportedLearnMoreLink:
-      "a#about-translations-detected-language-unsupported-learn-more-link",
-    detectedLanguageUnsupportedMessage:
-      "moz-message-bar#about-translations-detected-language-unsupported-message",
     swapLanguagesButton: "moz-button#about-translations-swap-languages-button",
-    sourceSection: "div#about-translations-source-section",
     sourceSectionTextArea: "textarea#about-translations-source-textarea",
-    targetSection: "div#about-translations-target-section",
     targetSectionTextArea: "textarea#about-translations-target-textarea",
     clearButton: "moz-button#about-translations-clear-button",
     copyButton: "moz-button#about-translations-copy-button",
-    translationErrorMessage:
-      "moz-message-bar#about-translations-translation-error-message",
-    translationErrorButton:
-      "moz-button#about-translations-translation-error-button",
     unsupportedInfoMessage:
       "moz-message-bar#about-translations-unsupported-info-message",
-    policyDisabledInfoMessage:
-      "moz-message-bar#about-translations-policy-disabled-info-message",
-    featureBlockedInfoMessage:
-      "moz-message-bar#about-translations-feature-blocked-info-message",
-    unblockFeatureButton:
-      "moz-button#about-translations-feature-blocked-unblock-button",
     languageLoadErrorMessage:
       "moz-message-bar#about-translations-language-load-error-message",
-    languageLoadErrorButton:
-      "button#about-translations-language-load-error-button",
   };
 
   // Start the tab at a blank page.
@@ -377,7 +232,7 @@ async function openAboutTranslations({
   });
 
   // Now load the about:translations page, since the actor could be mocked.
-  await loadNewPage(tab.linkedBrowser, "about:translations#src=detect");
+  await loadNewPage(tab.linkedBrowser, "about:translations");
 
   // Ensure the window always opens with a horizontal page layout.
   // Divide everything by sqrt(2) to halve the overall content size.
@@ -388,29 +243,23 @@ async function openAboutTranslations({
    * @param {number} count - Count of the language pairs expected.
    */
   const resolveDownloads = async count => {
-    await Promise.all([
-      remoteClients.translationsWasm.resolvePendingDownloads(1),
-      remoteClients.translationModels.resolvePendingDownloads(
-        downloadedFilesPerLanguagePair() * count
-      ),
-    ]);
+    await remoteClients.translationsWasm.resolvePendingDownloads(1);
+    await remoteClients.translationModels.resolvePendingDownloads(
+      downloadedFilesPerLanguagePair() * count
+    );
   };
 
   /**
    * @param {number} count - Count of the language pairs expected.
    */
   const rejectDownloads = async count => {
-    await Promise.all([
-      remoteClients.translationsWasm.rejectPendingDownloads(1),
-      remoteClients.translationModels.rejectPendingDownloads(
-        downloadedFilesPerLanguagePair() * count
-      ),
-    ]);
+    await remoteClients.translationsWasm.rejectPendingDownloads(1);
+    await remoteClients.translationModels.rejectPendingDownloads(
+      downloadedFilesPerLanguagePair() * count
+    );
   };
 
   const runInPage = (callback, data = {}) => {
-    // TODO: Switch to SpecialPowers.spawn
-    // eslint-disable-next-line mozilla/reject-contenttask-spawn
     return ContentTask.spawn(
       tab.linkedBrowser,
       { selectors, contentData: data, callbackSource: callback.toString() }, // Data to inject.
@@ -423,47 +272,24 @@ async function openAboutTranslations({
   };
 
   const aboutTranslationsTestUtils = new AboutTranslationsTestUtils(
-    tab.linkedBrowser,
     runInPage,
     resolveDownloads,
     rejectDownloads,
     autoDownloadFromRemoteSettings
   );
 
-  await aboutTranslationsTestUtils.waitForReady();
+  let originalCopyButtonResetDelay;
 
-  if (featureEnabled) {
-    await aboutTranslationsTestUtils.setThrottleDelay(25);
-
-    const isTranslationEngineSupported =
-      TranslationsParent.getIsTranslationsEngineSupported();
-
-    if (isTranslationEngineSupported) {
-      // Consume any debounce event from startup so that test cases
-      // will only receive debounce events from within the test task.
-      await aboutTranslationsTestUtils.setDebounceDelay(0);
-      await aboutTranslationsTestUtils.assertEvents(
-        {
-          expected: [
-            [
-              AboutTranslationsTestUtils.Events.SourceTextInputDebounced,
-              { sourceText: "" },
-            ],
-          ],
-        },
-        async () => {
-          await aboutTranslationsTestUtils.setSourceTextAreaValue("");
-        }
-      );
-    }
-
-    await aboutTranslationsTestUtils.setDebounceDelay(100);
+  if (!disabled) {
+    await aboutTranslationsTestUtils.waitForReady();
 
     if (requireManualCopyButtonReset !== undefined) {
       await aboutTranslationsTestUtils.setManualCopyButtonResetEnabled(
         requireManualCopyButtonReset
       );
     } else if (copyButtonResetDelay !== undefined) {
+      originalCopyButtonResetDelay =
+        await aboutTranslationsTestUtils.getCopyButtonResetDelay();
       await aboutTranslationsTestUtils.setCopyButtonResetDelay(
         copyButtonResetDelay
       );
@@ -474,20 +300,20 @@ async function openAboutTranslations({
     aboutTranslationsTestUtils,
     async cleanup() {
       await aboutTranslationsTestUtils.setManualCopyButtonResetEnabled(false);
-      await aboutTranslationsTestUtils.clearCopyButtonResetDelayOverride();
+      if (originalCopyButtonResetDelay) {
+        await aboutTranslationsTestUtils.setCopyButtonResetDelay(
+          originalCopyButtonResetDelay
+        );
+      }
       await loadBlankPage();
       BrowserTestUtils.removeTab(tab);
 
       await removeMocks();
       await EngineProcess.destroyTranslationsEngine();
-      for (const pref of lockedFeaturePrefs) {
-        if (Services.prefs.prefIsLocked(pref)) {
-          Services.prefs.unlockPref(pref);
-        }
-      }
 
       await SpecialPowers.popPrefEnv();
-      TestTranslationsTelemetry.cleanup();
+      TestTranslationsTelemetry.reset();
+      Services.fog.testResetFOG();
     },
   };
 }
@@ -592,10 +418,10 @@ class TranslationsSettingsTestUtils {
   }
 
   async openTranslationsSubpageFromDocument() {
-    const manageButton = await waitForCondition(() => {
-      const button = this.document.getElementById("translationsManageButton");
-      return button && BrowserTestUtils.isVisible(button) ? button : null;
-    }, "Waiting for translationsManageButton");
+    const manageButton = await waitForCondition(
+      () => this.document.getElementById("translationsManageButton"),
+      "Waiting for translationsManageButton"
+    );
     manageButton.scrollIntoView({ behavior: "instant", block: "center" });
 
     await this.assertEvents(
@@ -624,10 +450,10 @@ class TranslationsSettingsTestUtils {
       });
 
     const document = gBrowser.selectedBrowser.contentDocument;
-    const manageButton = await waitForCondition(() => {
-      const button = document.getElementById("translationsManageButton");
-      return button && BrowserTestUtils.isVisible(button) ? button : null;
-    }, "Waiting for translationsManageButton");
+    const manageButton = await waitForCondition(
+      () => document.getElementById("translationsManageButton"),
+      "Waiting for translationsManageButton"
+    );
     manageButton.scrollIntoView({ behavior: "instant", block: "center" });
 
     await translationsSettingsTestUtils.assertEvents(
@@ -1155,6 +981,9 @@ class TranslationsSettingsTestUtils {
 
     const modelNames =
       TranslationsSettingsTestUtils.getLanguageModelNames(langTag);
+    await remoteClients.translationModels.waitForPendingDownloads(
+      modelNames.length
+    );
     await remoteClients.translationModels.rejectPendingDownloads(
       modelNames.length
     );
@@ -2355,8 +2184,8 @@ async function createTranslationsDoc(
  */
 function doubleRaf(doc) {
   return new Promise(resolve => {
-    doc.documentGlobal.requestAnimationFrame(() => {
-      doc.documentGlobal.requestAnimationFrame(() => {
+    doc.ownerGlobal.requestAnimationFrame(() => {
+      doc.ownerGlobal.requestAnimationFrame(() => {
         resolve(
           // Wait for a tick to be after anything that resolves with a double rAF.
           TestUtils.waitForTick()
@@ -2566,7 +2395,7 @@ async function setupActorTest({
       await EngineProcess.destroyTranslationsEngine();
       BrowserTestUtils.removeTab(tab);
       await removeMocks();
-      TestTranslationsTelemetry.cleanup();
+      TestTranslationsTelemetry.reset();
       return SpecialPowers.popPrefEnv();
     },
   };
@@ -2582,8 +2411,6 @@ async function setupActorTest({
  *  - Whether to use a mocked translator.
  * @param {boolean} [options.autoDownloadFromRemoteSettings=false]
  *  - Whether to automatically download from remote settings.
- * @param {{ interval?: number, maxTries?: number }} [options.downloadWaitOptions]
- *  - Wait options for mocked attachment downloads.
  *
  * @returns {Promise<object>} - An object containing the removeMocks function and remoteClients.
  */
@@ -2591,26 +2418,19 @@ async function createAndMockRemoteSettings({
   languagePairs = LANGUAGE_PAIRS,
   useMockedTranslator = true,
   autoDownloadFromRemoteSettings = false,
-  downloadWaitOptions,
 }) {
   if (TranslationsParent.isTranslationsEngineMocked()) {
     info("Attempt to mock the Translations Engine when it is already mocked.");
   }
 
   const remoteClients = {
-    translationModels: await createTranslationModelsRemoteClient({
-      collectionName: "test-translation-models",
-      uniquePerTestRun: true,
+    translationModels: await createTranslationModelsRemoteClient(
       autoDownloadFromRemoteSettings,
-      languagePairs,
-      downloadWaitOptions,
-    }),
-    translationsWasm: await createTranslationsWasmRemoteClient({
-      collectionName: "test-translation-wasm",
-      uniquePerTestRun: true,
-      autoDownloadFromRemoteSettings,
-      downloadWaitOptions,
-    }),
+      languagePairs
+    ),
+    translationsWasm: await createTranslationsWasmRemoteClient(
+      autoDownloadFromRemoteSettings
+    ),
   };
 
   // The TranslationsParent will pull the language pair values from the JSON dump
@@ -2843,44 +2663,11 @@ async function ensureWindowSize(win, width, height) {
   await resizePromise;
 }
 
-/**
- * Load a translations test page in a new tab and wire up utilities used by the browser tests.
- *
- * Exactly one of `page` or `html` must be provided. Supplying `page` will navigate to a
- * pre-defined test-file URL, while providing `html` serves the markup from a local server.
- *
- * @param {object} [options]
- * @param {Array<{fromLang: string, toLang: string}>} [options.languagePairs]
- * @param {boolean} [options.endToEndTest=false]
- * @param {boolean} [options.autoDownloadFromRemoteSettings=false]
- * @param {string} [options.page] - Fixture URL to load. Mutually exclusive with `html`.
- * @param {string} [options.html] - Raw HTML markup to serve once. Mutually exclusive with `page`.
- * @param {Array<[string, any]>} [options.prefs]
- * @param {boolean} [options.autoOffer]
- * @param {string[]} [options.permissionsUrls]
- * @param {string[]} [options.systemLocales=["en"]]
- * @param {string[]} [options.appLocales]
- * @param {string[]} [options.webLanguages]
- * @param {string} [options.architecture]
- * @param {boolean} [options.contentEagerMode=false]
- * @param {WindowProxy} [options.win=window]
- * @returns {Promise<{
- *   tab: object,
- *   remoteClients: (Record<string, any> | null),
- *   cleanup: (options?: { browser?: Browser }) => Promise<void>,
- *   resolveDownloads: (count: number) => Promise<void>,
- *   rejectDownloads: (count: number) => Promise<void>,
- *   resolveBulkDownloads: (expectations: { expectedWasmDownloads: number, expectedLanguagePairDownloads: number }) => Promise<void>,
- *   rejectBulkDownloads: (expectations: { expectedWasmDownloads: number, expectedLanguagePairDownloads: number }) => Promise<void>,
- *   runInPage: RunInPageFn
- * }>}
- */
 async function loadTestPage({
   languagePairs,
   endToEndTest = false,
   autoDownloadFromRemoteSettings = false,
   page,
-  html,
   prefs,
   autoOffer,
   permissionsUrls,
@@ -2891,17 +2678,7 @@ async function loadTestPage({
   contentEagerMode = false,
   win = window,
 }) {
-  // Just one argument should be set
-  const hasPage = page !== undefined;
-  const hasHtml = html !== undefined;
-
-  if (hasPage === hasHtml) {
-    throw new Error(
-      "Provide either the `page` or the `html` option when loading a test page."
-    );
-  }
-
-  const { url, serverClosed } = hasHtml ? serveOnce(html) : {};
+  info(`Loading test page starting at url: ${page}`);
 
   // If there are multiple windows, only do the first time setup on the main window.
   const isFirstTimeSetup = win === window;
@@ -2974,17 +2751,12 @@ async function loadTestPage({
     });
   }
 
-  const blankPageLoaded = BrowserTestUtils.waitForNewTab(
-    win.gBrowser,
-    BLANK_PAGE,
-    /* waitForLoad */ true
-  );
+  // Start the tab at a blank page.
   const tab = await BrowserTestUtils.openNewForegroundTab(
     win.gBrowser,
     BLANK_PAGE,
-    /* waitForLoad */ false
+    true // waitForLoad
   );
-  await blankPageLoaded;
 
   if (contentEagerMode) {
     info("Triggering content-eager translations mode by opening the find bar.");
@@ -3002,13 +2774,7 @@ async function loadTestPage({
     );
   }
 
-  if (page) {
-    info(`Loading test page starting at url: ${page}`);
-    await loadNewPage(tab.linkedBrowser, page);
-  } else {
-    info(`Loading test html at: ${url}`);
-    await loadNewPage(tab.linkedBrowser, url);
-  }
+  await loadNewPage(tab.linkedBrowser, page);
 
   if (autoOffer && TranslationsParent.shouldAlwaysOfferTranslations()) {
     info("Waiting for the popup to be automatically shown.");
@@ -3031,12 +2797,10 @@ async function loadTestPage({
      * @param {number} count - Count of the language pairs expected.
      */
     async resolveDownloads(count) {
-      await Promise.all([
-        remoteClients.translationsWasm.resolvePendingDownloads(1),
-        remoteClients.translationModels.resolvePendingDownloads(
-          downloadedFilesPerLanguagePair() * count
-        ),
-      ]);
+      await remoteClients.translationsWasm.resolvePendingDownloads(1);
+      await remoteClients.translationModels.resolvePendingDownloads(
+        downloadedFilesPerLanguagePair() * count
+      );
     },
 
     /**
@@ -3048,12 +2812,10 @@ async function loadTestPage({
      * @param {number} count - Count of the language pairs expected.
      */
     async rejectDownloads(count) {
-      await Promise.all([
-        remoteClients.translationsWasm.rejectPendingDownloads(1),
-        remoteClients.translationModels.rejectPendingDownloads(
-          downloadedFilesPerLanguagePair() * count
-        ),
-      ]);
+      await remoteClients.translationsWasm.rejectPendingDownloads(1);
+      await remoteClients.translationModels.rejectPendingDownloads(
+        downloadedFilesPerLanguagePair() * count
+      );
     },
 
     /**
@@ -3071,14 +2833,12 @@ async function loadTestPage({
       expectedWasmDownloads,
       expectedLanguagePairDownloads,
     }) {
-      await Promise.all([
-        remoteClients.translationsWasm.resolvePendingDownloads(
-          expectedWasmDownloads
-        ),
-        remoteClients.translationModels.resolvePendingDownloads(
-          downloadedFilesPerLanguagePair() * expectedLanguagePairDownloads
-        ),
-      ]);
+      await remoteClients.translationsWasm.resolvePendingDownloads(
+        expectedWasmDownloads
+      );
+      await remoteClients.translationModels.resolvePendingDownloads(
+        downloadedFilesPerLanguagePair() * expectedLanguagePairDownloads
+      );
     },
 
     /**
@@ -3096,37 +2856,31 @@ async function loadTestPage({
       expectedWasmDownloads,
       expectedLanguagePairDownloads,
     }) {
-      await Promise.all([
-        remoteClients.translationsWasm.rejectPendingDownloads(
-          expectedWasmDownloads
-        ),
-        remoteClients.translationModels.rejectPendingDownloads(
-          downloadedFilesPerLanguagePair() * expectedLanguagePairDownloads
-        ),
-      ]);
+      await remoteClients.translationsWasm.rejectPendingDownloads(
+        expectedWasmDownloads
+      );
+      await remoteClients.translationModels.rejectPendingDownloads(
+        downloadedFilesPerLanguagePair() * expectedLanguagePairDownloads
+      );
     },
 
     /**
-     * @param {object} [options]
-     * @param {Browser} [options.browser] - Browser to load with the blank page before cleanup.
      * @returns {Promise<void>}
      */
-    async cleanup({ browser = tab.linkedBrowser } = {}) {
+    async cleanup() {
       await closeAllOpenPanelsAndMenus();
-      await loadBlankPage(browser);
+      await loadBlankPage();
       await EngineProcess.destroyTranslationsEngine();
       await removeMocks();
       if (cleanupLocales) {
         await cleanupLocales();
       }
-      if (serverClosed) {
-        await serverClosed;
-      }
       restoreA11yUtils();
+      Services.fog.testResetFOG();
       TranslationsParent.testAutomaticPopup = false;
       TranslationsParent.resetHostsOffered();
       BrowserTestUtils.removeTab(tab);
-      TestTranslationsTelemetry.cleanup();
+      TestTranslationsTelemetry.reset();
       return Promise.all([
         SpecialPowers.popPrefEnv(),
         SpecialPowers.popPermissions(),
@@ -3141,8 +2895,6 @@ async function loadTestPage({
      * @type {RunInPageFn}
      */
     runInPage(callback, data = {}) {
-      // TODO: Switch to SpecialPowers.spawn
-      // eslint-disable-next-line mozilla/reject-contenttask-spawn
       return ContentTask.spawn(
         tab.linkedBrowser,
         { contentData: data, callbackSource: callback.toString() }, // Data to inject.
@@ -3250,105 +3002,36 @@ async function autoTranslatePage(options) {
  */
 
 /**
- * Creates a mocked Remote Settings attachments interface for tests.
- *
  * @param {RemoteSettingsClient} client
- * @param {string} mockedCollectionName
- * @param {boolean} autoDownloadFromRemoteSettings
- * @param {{ interval?: number, maxTries?: number }} [downloadWaitOptions]
- * @returns {AttachmentMock}
+ * @param {string} mockedCollectionName - The name of the mocked collection without
+ *  the incrementing "id" part. This is provided so that attachments can be asserted
+ *  as being of a certain version.
+ * @param {boolean} autoDownloadFromRemoteSettings - Skip the manual download process,
+ *  and automatically download the files. Normally it's preferrable to manually trigger
+ *  the downloads to trigger the download behavior, but this flag lets you bypass this
+ *  and automatically download the files.
  */
 function createAttachmentMock(
   client,
   mockedCollectionName,
-  autoDownloadFromRemoteSettings,
-  { interval = 50, maxTries = 50 } = {}
+  autoDownloadFromRemoteSettings
 ) {
   const pendingDownloads = [];
-  // Consumers claim a specific download, removing it from the queue.
-  const pendingDownloadConsumers = [];
-  // Waiters only observe queue length.
-  const pendingDownloadWaiters = [];
-  const downloadedById = new Set();
-  const pendingDownloadWaitOptions = { interval, maxTries };
-
-  client.sync = async () => {
-    info(
-      `Skipping network sync for mocked Remote Settings collection "${client.collectionName}"`
-    );
-    return { ok: true };
-  };
-
-  const realGet = client.get.bind(client);
-  client.get = async opts => {
-    const records = await realGet(opts);
-    for (const record of records) {
-      if (record.attachment) {
-        record.attachment.isDownloaded = downloadedById.has(record.id);
-      }
-    }
-    return records;
-  };
-
-  function markIsDownloaded(record, value) {
-    if (record.attachment) {
-      record.attachment.isDownloaded = value;
-    }
-    if (record.id != null) {
-      if (value) {
-        downloadedById.add(record.id);
-      } else {
-        downloadedById.delete(record.id);
-      }
-    }
-  }
-
-  client.attachments.isDownloaded = async record => {
-    const isDownloaded = !!record?.id && downloadedById.has(record.id);
-    if (record?.attachment) {
-      markIsDownloaded(record, isDownloaded);
-    }
-    return isDownloaded;
-  };
 
   client.attachments.download = record =>
     new Promise((resolve, reject) => {
-      info(
-        `Download requested: ${client.collectionName}, ${record.name} v${record.version}`
-      );
+      console.log("Download requested:", client.collectionName, record.name);
       if (autoDownloadFromRemoteSettings) {
         const encoder = new TextEncoder();
         const { buffer } = encoder.encode(
           `Mocked download: ${mockedCollectionName} ${record.name} ${record.version}`
         );
-        markIsDownloaded(record, true);
+
         resolve({ buffer });
       } else {
-        const download = {
-          record,
-          resolve: result => {
-            markIsDownloaded(record, true);
-            resolve(result);
-          },
-          reject,
-        };
-        const consumer = pendingDownloadConsumers.shift();
-        if (consumer) {
-          consumer.resolve(download);
-        } else {
-          pendingDownloads.push(download);
-          notifyPendingDownloadsChanged();
-        }
+        pendingDownloads.push({ record, resolve, reject });
       }
     });
-
-  client.attachments.deleteDownloaded = async record => {
-    markIsDownloaded(record, false);
-  };
-
-  client.attachments.deleteAll = async () => {
-    downloadedById.clear();
-  };
 
   function resolvePendingDownloads(expectedDownloadCount) {
     info(
@@ -3367,7 +3050,8 @@ function createAttachmentMock(
     const names = [];
     const waitTick = () => new Promise(resolve => setTimeout(resolve, 0));
 
-    const rejectNext = download => {
+    const rejectNext = () => {
+      const download = pendingDownloads.shift();
       if (!download) {
         return false;
       }
@@ -3380,9 +3064,12 @@ function createAttachmentMock(
     // Wait for the expected downloads to start arriving and reject them as they do.
     while (names.length < expectedDownloadCount) {
       try {
-        rejectNext(await takePendingDownload(pendingDownloadWaitOptions));
+        await waitForPendingDownloads(names.length + 1);
+        while (names.length < expectedDownloadCount && rejectNext()) {
+          // Keep rejecting until we reach the expected count.
+        }
       } catch (error) {
-        // Timeout waiting for downloads. This can happen if downloads aren't
+        // Timeout waiting for downloads - this can happen if downloads aren't
         // requested or if they complete through a different path. Log and continue.
         info(
           `Timeout or error waiting for download ${names.length + 1}: ${error.message}`
@@ -3396,7 +3083,7 @@ function createAttachmentMock(
     const idleWindow = 20;
     while (idleTicks < idleWindow) {
       await waitTick();
-      if (rejectNext(pendingDownloads.shift())) {
+      if (rejectNext()) {
         idleTicks = 0;
       } else {
         idleTicks++;
@@ -3414,17 +3101,15 @@ function createAttachmentMock(
 
   async function downloadHandler(expectedDownloadCount, action) {
     const names = [];
-    while (names.length < expectedDownloadCount) {
-      let download;
-      try {
-        download = await takePendingDownload(pendingDownloadWaitOptions);
-      } catch (error) {
-        info(
-          `Stopped resolving downloads for "${client.collectionName}" after resolving ${names.length} of ${expectedDownloadCount}: ${error.message}`
-        );
-        break;
+    let maxTries = 100;
+    while (names.length < expectedDownloadCount && maxTries-- > 0) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+      let download = pendingDownloads.shift();
+      if (!download) {
+        // Uncomment the following to debug download issues:
+        // console.log(`No pending download:`, client.collectionName, names.length);
+        continue;
       }
-
       console.log(`Handling download:`, client.collectionName);
       action(download);
       names.push(download.record.name);
@@ -3452,87 +3137,13 @@ function createAttachmentMock(
     );
   }
 
-  /**
-   * Resolves with exactly one download and removes it from the queue.
-   *
-   * If no download is pending yet, this reserves the next download request for
-   * this consumer. This differs from waitForPendingDownloads(), which only
-   * observes queue length without claiming any downloads.
-   */
-  function takePendingDownload({ interval = 100, maxTries = 50 } = {}) {
-    const download = pendingDownloads.shift();
-    if (download) {
-      return Promise.resolve(download);
-    }
-
-    const { promise, resolve, reject } = Promise.withResolvers();
-    let timeoutId;
-    const consumer = {
-      resolve: download => {
-        clearTimeout(timeoutId);
-        resolve(download);
-      },
-    };
-    timeoutId = setTimeout(() => {
-      const consumerIndex = pendingDownloadConsumers.indexOf(consumer);
-      if (consumerIndex >= 0) {
-        pendingDownloadConsumers.splice(consumerIndex, 1);
-      }
-      reject(
-        new Error(
-          `Timed out waiting for a pending download for "${client.collectionName}". Current pending downloads: ${pendingDownloads.length}`
-        )
-      );
-    }, interval * maxTries);
-
-    pendingDownloadConsumers.push(consumer);
-    return promise;
-  }
-
-  function notifyPendingDownloadsChanged() {
-    for (let i = pendingDownloadWaiters.length - 1; i >= 0; i--) {
-      const waiter = pendingDownloadWaiters[i];
-      if (pendingDownloads.length >= waiter.expectedCount) {
-        pendingDownloadWaiters.splice(i, 1);
-        waiter.resolve();
-      }
-    }
-  }
-
-  /**
-   * Resolves once enough downloads are queued, without removing any of them.
-   */
-  function waitForPendingDownloads(
-    expectedCount,
-    { interval = 100, maxTries = 50 } = {}
-  ) {
-    if (pendingDownloads.length >= expectedCount) {
-      return Promise.resolve();
-    }
-
-    const { promise, resolve, reject } = Promise.withResolvers();
-    let timeoutId;
-    const waiter = {
-      expectedCount,
-      resolve: () => {
-        clearTimeout(timeoutId);
-        resolve();
-      },
-    };
-    timeoutId = setTimeout(() => {
-      const waiterIndex = pendingDownloadWaiters.indexOf(waiter);
-      if (waiterIndex >= 0) {
-        pendingDownloadWaiters.splice(waiterIndex, 1);
-      }
-      reject(
-        new Error(
-          `Timed out waiting for ${expectedCount} pending downloads for "${client.collectionName}". Current pending downloads: ${pendingDownloads.length}`
-        )
-      );
-    }, interval * maxTries);
-
-    pendingDownloadWaiters.push(waiter);
-    return promise;
+  function waitForPendingDownloads(expectedCount) {
+    return waitForCondition(
+      () => pendingDownloads.length >= expectedCount,
+      `Waiting for ${expectedCount} pending downloads for "${client.collectionName}"`,
+      100,
+      10
+    );
   }
 
   return {
@@ -3568,29 +3179,9 @@ function downloadedFilesPerLanguagePair(splitVocab = false) {
     : expectedRecords - 1;
 }
 
-/**
- * Creates mock Remote Settings records for a single language pair.
- *
- * @param {object} options
- * @param {string} options.sourceLanguage
- * @param {string} options.targetLanguage
- * @param {boolean} [options.splitVocab=false]
- * @param {number} [options.majorVersion=TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION_MAX]
- * @returns {TranslationModelRecord[]}
- */
-function createRecordsForLanguagePair({
-  sourceLanguage,
-  targetLanguage,
-  splitVocab = false,
-  majorVersion = TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION_MAX,
-}) {
-  if (!sourceLanguage || !targetLanguage) {
-    throw new Error(
-      "Both sourceLanguage and targetLanguage must be provided to createRecordsForLanguagePair."
-    );
-  }
+function createRecordsForLanguagePair(fromLang, toLang, splitVocab = false) {
   const records = [];
-  const lang = sourceLanguage + targetLanguage;
+  const lang = fromLang + toLang;
   const models = [
     { fileType: "model", name: `model.${lang}.intgemm.alphas.bin` },
     { fileType: "lex", name: `lex.50.50.${lang}.s2t.bin` },
@@ -3625,10 +3216,10 @@ function createRecordsForLanguagePair({
     records.push({
       id: crypto.randomUUID(),
       name,
-      sourceLanguage,
-      targetLanguage,
+      sourceLanguage: fromLang,
+      targetLanguage: toLang,
       fileType,
-      version: `${majorVersion}.0`,
+      version: TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION_MAX + ".0",
       last_modified: Date.now(),
       schema: Date.now(),
       attachment: JSON.parse(JSON.stringify(attachment)), // Making a deep copy
@@ -3640,23 +3231,15 @@ function createRecordsForLanguagePair({
 /**
  * Creates a new WASM record for the Bergamot Translator to store in Remote Settings.
  *
- * @param {number} [majorVersion]
- *
  * @returns {WasmRecord}
  */
-function createWasmRecord(
-  majorVersion = TranslationsParent.BERGAMOT_MAJOR_VERSION
-) {
+function createWasmRecord() {
   return {
     id: crypto.randomUUID(),
     name: "bergamot-translator",
-    version: majorVersion + ".0",
+    version: TranslationsParent.BERGAMOT_MAJOR_VERSION + ".0",
     last_modified: Date.now(),
     schema: Date.now(),
-    attachment: {
-      size: 123,
-      isDownloaded: false,
-    },
   };
 }
 
@@ -3667,96 +3250,64 @@ function createWasmRecord(
 let _remoteSettingsMockId = 0;
 
 /**
- * Creates a RemoteSettingsClient seeded with deterministic translation model records.
+ * Creates a local RemoteSettingsClient for use within tests.
  *
- * @param {object} options
- * @param {string} options.collectionName
- * @param {boolean} [options.uniquePerTestRun=false]
- * @param {boolean} [options.autoDownloadFromRemoteSettings=false]
- * @param {Array<{fromLang?: string, toLang?: string, sourceLanguage?: string, targetLanguage?: string}>} [options.languagePairs=[]]
- * @param {number} [options.majorVersion]
- * @param {{ interval?: number, maxTries?: number }} [options.downloadWaitOptions]
- * @returns {Promise<AttachmentMock>}
+ * @param {boolean} autoDownloadFromRemoteSettings
+ * @param {object[]} langPairs
+ * @returns {RemoteSettingsClient}
  */
-async function createTranslationModelsRemoteClient({
-  collectionName,
-  uniquePerTestRun = false,
-  autoDownloadFromRemoteSettings = false,
-  languagePairs = [],
-  majorVersion = TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION_MAX,
-  downloadWaitOptions,
-}) {
+async function createTranslationModelsRemoteClient(
+  autoDownloadFromRemoteSettings,
+  langPairs
+) {
   const records = [];
-  for (const pair of languagePairs) {
-    const {
-      fromLang,
-      toLang,
-      sourceLanguage = fromLang,
-      targetLanguage = toLang,
-    } = pair;
-    records.push(
-      ...createRecordsForLanguagePair({
-        sourceLanguage,
-        targetLanguage,
-        majorVersion,
-      })
-    );
+  for (const { fromLang, toLang } of langPairs) {
+    records.push(...createRecordsForLanguagePair(fromLang, toLang));
   }
 
   const { RemoteSettings } = ChromeUtils.importESModule(
     "resource://services-settings/remote-settings.sys.mjs"
   );
-  const clientCollectionName = uniquePerTestRun
-    ? `${collectionName}-${_remoteSettingsMockId++}`
-    : collectionName;
-  const client = RemoteSettings(clientCollectionName);
+  const mockedCollectionName = "test-translation-models";
+  const client = RemoteSettings(
+    `${mockedCollectionName}-${_remoteSettingsMockId++}`
+  );
   const metadata = {};
   await client.db.clear();
   await client.db.importChanges(metadata, Date.now(), records);
 
   return createAttachmentMock(
     client,
-    collectionName,
-    autoDownloadFromRemoteSettings,
-    downloadWaitOptions
+    mockedCollectionName,
+    autoDownloadFromRemoteSettings
   );
 }
 
 /**
- * Creates a RemoteSettingsClient seeded with WASM metadata for tests.
+ * Creates a local RemoteSettingsClient for use within tests.
  *
- * @param {object} [options]
- * @param {string} [options.collectionName="test-translation-wasm"]
- * @param {boolean} [options.uniquePerTestRun=true]
- * @param {boolean} [options.autoDownloadFromRemoteSettings=false]
- * @param {number} [options.majorVersion=TranslationsParent.BERGAMOT_MAJOR_VERSION]
- * @param {{ interval?: number, maxTries?: number }} [options.downloadWaitOptions]
- * @returns {Promise<AttachmentMock>}
+ * @param {boolean} autoDownloadFromRemoteSettings
+ * @returns {RemoteSettingsClient}
  */
-async function createTranslationsWasmRemoteClient({
-  collectionName = "test-translation-wasm",
-  uniquePerTestRun = true,
-  autoDownloadFromRemoteSettings = false,
-  majorVersion = TranslationsParent.BERGAMOT_MAJOR_VERSION,
-  downloadWaitOptions,
-} = {}) {
-  const records = [createWasmRecord(majorVersion)];
+async function createTranslationsWasmRemoteClient(
+  autoDownloadFromRemoteSettings
+) {
+  const records = [createWasmRecord()];
   const { RemoteSettings } = ChromeUtils.importESModule(
     "resource://services-settings/remote-settings.sys.mjs"
   );
-  const clientCollectionName = uniquePerTestRun
-    ? `${collectionName}-${_remoteSettingsMockId++}`
-    : collectionName;
-  const client = RemoteSettings(clientCollectionName);
+  const mockedCollectionName = "test-translation-wasm";
+  const client = RemoteSettings(
+    `${mockedCollectionName}-${_remoteSettingsMockId++}`
+  );
   const metadata = {};
   await client.db.clear();
   await client.db.importChanges(metadata, Date.now(), records);
 
   return createAttachmentMock(
     client,
-    collectionName,
-    autoDownloadFromRemoteSettings,
-    downloadWaitOptions
+    mockedCollectionName,
+    autoDownloadFromRemoteSettings
   );
 }
 
@@ -3871,19 +3422,12 @@ async function modifyRemoteSettingsRecords(
   });
 }
 
-async function selectAboutPreferencesElements(redesignEnabled) {
+async function selectAboutPreferencesElements() {
   const document = gBrowser.selectedBrowser.contentDocument;
 
   const settingsButton = document.getElementById(
     "translations-manage-settings-button"
   );
-
-  if (redesignEnabled) {
-    return {
-      document,
-      settingsButton,
-    };
-  }
 
   const rows = await waitForCondition(() => {
     const elements = document.querySelectorAll(".translations-manage-language");
@@ -3894,6 +3438,7 @@ async function selectAboutPreferencesElements(redesignEnabled) {
   }, "Waiting for manage language rows.");
 
   const [downloadAllRow, frenchRow, spanishRow, ukrainianRow] = rows;
+
   const downloadAllLabel = downloadAllRow.querySelector("label");
   const downloadAll = downloadAllRow.querySelector(
     "#translations-manage-install-all"
@@ -3922,6 +3467,7 @@ async function selectAboutPreferencesElements(redesignEnabled) {
   const ukrainianDelete = ukrainianRow.querySelector(
     `[data-l10n-id="translations-manage-language-remove-button"]`
   );
+
   return {
     document,
     downloadAllLabel,
@@ -4015,16 +3561,14 @@ function assertVisibility({ message = null, visible = {}, hidden = {} }) {
 
 async function setupAboutPreferences(
   languagePairs,
-  { prefs = [], permissionsUrls = [], downloadWaitOptions } = {}
+  { prefs = [], permissionsUrls = [] } = {}
 ) {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enabled by default.
       ["browser.translations.enable", true],
       ["browser.translations.logLevel", "All"],
-      ["identity.fxaccounts.account.device.name", ""],
       [USE_LEXICAL_SHORTLIST_PREF, false],
-      ["browser.settings-redesign.enabled", true],
       ...prefs,
     ],
   });
@@ -4043,37 +3587,13 @@ async function setupAboutPreferences(
 
   const { remoteClients, removeMocks } = await createAndMockRemoteSettings({
     languagePairs,
-    downloadWaitOptions,
   });
 
   await loadNewPage(tab.linkedBrowser, "about:preferences");
 
-  // Load the Languages pane if SRD is enabled (moved from General)
+  const elements = await selectAboutPreferencesElements();
+
   const document = gBrowser.selectedBrowser.contentDocument;
-  let redesigned = Services.prefs.getBoolPref(
-    "browser.settings-redesign.enabled",
-    false
-  );
-  if (redesigned) {
-    let loaded = BrowserTestUtils.waitForEvent(document, "paneshown");
-    let categoryLanguages = document.getElementById("category-languages");
-    categoryLanguages.scrollIntoView();
-    EventUtils.synthesizeMouseAtCenter(
-      categoryLanguages,
-      {},
-      document.documentGlobal
-    );
-    EventUtils.synthesizeMouseAtCenter(
-      categoryLanguages,
-      {},
-      document.documentGlobal
-    );
-    let event = await loaded;
-    is(event.detail.category, "paneLanguages", "Loaded the correct pane");
-  }
-
-  const elements = await selectAboutPreferencesElements(redesigned);
-
   const translationsSettingsTestUtils = new TranslationsSettingsTestUtils(
     document
   );
@@ -4088,7 +3608,7 @@ async function setupAboutPreferences(
     BrowserTestUtils.removeTab(tab);
     await removeMocks();
     await SpecialPowers.popPrefEnv();
-    TestTranslationsTelemetry.cleanup();
+    TestTranslationsTelemetry.reset();
   }
 
   return {
@@ -4203,9 +3723,8 @@ async function mockLocales({ systemLocales, appLocales, webLanguages }) {
 class TestTranslationsTelemetry {
   static #previousFlowId = null;
 
-  static cleanup() {
+  static reset() {
     TestTranslationsTelemetry.#previousFlowId = null;
-    Services.fog.testResetFOG();
   }
 
   /**
@@ -4314,9 +3833,6 @@ class TestTranslationsTelemetry {
         true,
         `Telemetry event ${name} should contain values if assertForMostRecentEvent are specified`
       );
-      if (eventCount === 0) {
-        return;
-      }
       for (const [key, expected] of Object.entries(assertForAllEvents)) {
         for (const event of events) {
           if (typeof expected === "function") {
@@ -4341,9 +3857,6 @@ class TestTranslationsTelemetry {
         true,
         `Telemetry event ${name} should contain values if assertForMostRecentEvent are specified`
       );
-      if (eventCount === 0) {
-        return;
-      }
       for (const [key, expected] of Object.entries(assertForMostRecentEvent)) {
         if (typeof expected === "function") {
           ok(
@@ -4575,11 +4088,9 @@ function promiseLoadSubDialog(aURL) {
  * This is useful for resetting the state during cleanup, and also
  * before starting a test, to further help ensure that there is no
  * unintentional state left over from test case.
- *
- * @param {Browser} [browser] - Browser to load with the blank page.
  */
-async function loadBlankPage(browser) {
-  await loadNewPage(browser ?? gBrowser.selectedBrowser, BLANK_PAGE);
+async function loadBlankPage() {
+  await loadNewPage(gBrowser.selectedBrowser, BLANK_PAGE);
 }
 
 /**
@@ -4590,15 +4101,12 @@ async function destroyTranslationsEngine() {
 }
 
 class AboutTranslationsTestUtils {
+  static AnyEventDetail = Symbol("AboutTranslationsTestUtils.AnyEventDetail");
+
   /**
    * A collection of custom events that the about:translations document may dispatch.
    */
   static Events = class Events {
-    /**
-     * Event fired when the enabled state of the Translations feature changes.
-     */
-    static EnabledStateChanged = "AboutTranslationsTest:EnabledStateChanged";
-
     /**
      * Event fired when the detected language updates.
      *
@@ -4630,12 +4138,6 @@ class AboutTranslationsTestUtils {
      */
     static ShowTranslatingPlaceholder =
       "AboutTranslationsTest:ShowTranslatingPlaceholder";
-
-    /**
-     * Event fired when the debounce-delay action triggers after input to the source text.
-     */
-    static SourceTextInputDebounced =
-      "AboutTranslationsTest:SourceTextInputDebounced";
 
     /**
      * Event fired after the URL has been updated from UI interactions.
@@ -4731,82 +4233,7 @@ class AboutTranslationsTestUtils {
      * @type {string}
      */
     static ClearTargetText = "AboutTranslationsTest:ClearTargetText";
-
-    /**
-     * Event fired when the unsupported info message is shown.
-     *
-     * @type {string}
-     */
-    static UnsupportedInfoMessageShown =
-      "AboutTranslationsTest:UnsupportedInfoMessageShown";
-
-    /**
-     * Event fired when the unsupported info message is hidden.
-     *
-     * @type {string}
-     */
-    static UnsupportedInfoMessageHidden =
-      "AboutTranslationsTest:UnsupportedInfoMessageHidden";
-
-    /**
-     * Event fired when the policy-disabled info message is shown.
-     *
-     * @type {string}
-     */
-    static PolicyDisabledInfoMessageShown =
-      "AboutTranslationsTest:PolicyDisabledInfoMessageShown";
-
-    /**
-     * Event fired when the policy-disabled info message is hidden.
-     *
-     * @type {string}
-     */
-    static PolicyDisabledInfoMessageHidden =
-      "AboutTranslationsTest:PolicyDisabledInfoMessageHidden";
-
-    /**
-     * Event fired when the language-load error message is shown.
-     *
-     * @type {string}
-     */
-    static LanguageLoadErrorMessageShown =
-      "AboutTranslationsTest:LanguageLoadErrorMessageShown";
-
-    /**
-     * Event fired when the language-load error message is hidden.
-     *
-     * @type {string}
-     */
-    static LanguageLoadErrorMessageHidden =
-      "AboutTranslationsTest:LanguageLoadErrorMessageHidden";
-
-    /**
-     * Event fired when the language-load retry flow starts.
-     *
-     * @type {string}
-     */
-    static LanguageLoadRetryStarted =
-      "AboutTranslationsTest:LanguageLoadRetryStarted";
-
-    /**
-     * Event fired when the language-load retry flow succeeds.
-     *
-     * @type {string}
-     */
-    static LanguageLoadRetrySucceeded =
-      "AboutTranslationsTest:LanguageLoadRetrySucceeded";
-
-    /**
-     * Event fired when the language-load retry flow fails.
-     *
-     * @type {string}
-     */
-    static LanguageLoadRetryFailed =
-      "AboutTranslationsTest:LanguageLoadRetryFailed";
   };
-
-  /** @type {object} */
-  #browser;
 
   /**
    * A function that runs a closure in the content page.
@@ -4838,8 +4265,6 @@ class AboutTranslationsTestUtils {
   #autoDownloadFromRemoteSettings;
 
   /**
-   * @param {object} browser
-   *   The browser used for parent-process page navigation in tests.
    * @param {RunInPageFn} runInPage
    *   A function that runs a closure in the content page.
    * @param {(number) => Promise<void>} resolveDownloads
@@ -4851,13 +4276,11 @@ class AboutTranslationsTestUtils {
    *   or manually resolved by the test code.
    */
   constructor(
-    browser,
     runInPage,
     resolveDownloads,
     rejectDownloads,
     autoDownloadFromRemoteSettings
   ) {
-    this.#browser = browser;
     this.#runInPage = runInPage;
     this.#resolveDownloads = resolveDownloads;
     this.#rejectDownloads = rejectDownloads;
@@ -4872,20 +4295,6 @@ class AboutTranslationsTestUtils {
    */
   static #reportTestFailure(error) {
     ok(false, String(error));
-  }
-
-  /**
-   * Retrieves the count of words in the given text for the given language.
-   *
-   * @param {string} language
-   * @param {string} text
-   * @returns {number}
-   */
-  static getWordCount(language, text) {
-    const segmenter = new Intl.Segmenter(language, { granularity: "word" });
-    return Array.from(segmenter.segment(text)).filter(
-      segment => segment.isWordLike
-    ).length;
   }
 
   /**
@@ -4937,106 +4346,23 @@ class AboutTranslationsTestUtils {
     url.hash = hashString ? hashString : "src=detect";
 
     logAction(url);
-    await loadNewPage(this.#browser, BLANK_PAGE);
-    await loadNewPage(this.#browser, url.href);
+
+    await this.#runInPage(
+      async (_, { url }) => {
+        const { window, document: oldDocument } = content;
+
+        window.location.assign(url);
+        window.location.reload();
+
+        await ContentTaskUtils.waitForCondition(
+          () => window.document !== oldDocument,
+          "Waiting for the old document to be destroyed."
+        );
+      },
+      { url }
+    );
 
     await this.waitForReady();
-  }
-
-  /**
-   * Navigates to a new hash URL in the current about:translations document.
-   *
-   * @param {object}  [options={}]
-   * @param {string}  [options.sourceLanguage] - Value for the "src" hash parameter.
-   * @param {string}  [options.targetLanguage] - Value for the "trg" hash parameter.
-   * @param {string}  [options.sourceText]     - Value for the "text" hash parameter.
-   * @returns {Promise<void>}
-   */
-  async updateCurrentPageHash({
-    sourceLanguage,
-    targetLanguage,
-    sourceText,
-  } = {}) {
-    const searchParams = new URLSearchParams();
-
-    if (sourceLanguage) {
-      searchParams.set("src", sourceLanguage);
-    }
-
-    if (targetLanguage) {
-      searchParams.set("trg", targetLanguage);
-    }
-
-    if (sourceText) {
-      searchParams.set("text", sourceText);
-    }
-
-    const hashString = searchParams.toString();
-    const hash = hashString || "src=detect";
-    const url = new URL("about:translations");
-    url.hash = hash;
-    logAction(url);
-
-    await this.#setCurrentPageHash(hash);
-  }
-
-  /**
-   * Clears the hash in the current about:translations document.
-   *
-   * @returns {Promise<void>}
-   */
-  async clearCurrentPageHash() {
-    const url = new URL("about:translations");
-    logAction(url);
-    await this.#setCurrentPageHash("");
-  }
-
-  /**
-   * Updates the hash in the current about:translations document and waits for a hashchange.
-   *
-   * @param {string} hash
-   * @returns {Promise<void>}
-   */
-  async #setCurrentPageHash(hash) {
-    await this.#runInPage(
-      async (_, { hash }) => {
-        const { window } = content;
-        const nextHash = hash ? `#${hash}` : "";
-
-        if (window.location.hash === nextHash) {
-          return;
-        }
-
-        const hashChange = new Promise(resolve => {
-          window.addEventListener("hashchange", resolve, { once: true });
-        });
-
-        window.location.hash = hash;
-        await hashChange;
-      },
-      { hash }
-    );
-  }
-
-  /**
-   * Sets a new delay timer for the throttle on reacting to input.
-   *
-   * @param {number} ms - The delay milliseconds.
-   * @returns {Promise<void>}
-   */
-  async setThrottleDelay(ms) {
-    logAction(ms);
-    try {
-      await this.#runInPage(
-        (_, { ms }) => {
-          const { window } = content;
-          Cu.waiveXrays(window).THROTTLE_DELAY = ms;
-        },
-        { ms }
-      );
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
   }
 
   /**
@@ -5061,49 +4387,6 @@ class AboutTranslationsTestUtils {
   }
 
   /**
-   * Sets a new delay timer for translation-request telemetry throttling.
-   *
-   * @param {number} ms - The delay milliseconds.
-   * @returns {Promise<void>}
-   */
-  async setTranslationRequestTelemetryThrottleDelay(ms) {
-    logAction(ms);
-    try {
-      await this.#runInPage(
-        (_, { ms }) => {
-          const { window } = content;
-          Cu.waiveXrays(window).TRANSLATION_REQUEST_TELEMETRY_THROTTLE_DELAY =
-            ms;
-        },
-        { ms }
-      );
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-  }
-
-  /**
-   * Clears translation-request telemetry throttling in the about:translations UI.
-   *
-   * @returns {Promise<void>}
-   */
-  async clearTranslationRequestTelemetryThrottle() {
-    logAction();
-    try {
-      await this.#runInPage(() => {
-        const { window } = content;
-        const aboutTranslations = Cu.waiveXrays(window).aboutTranslations;
-        if (!aboutTranslations) {
-          throw new Error("aboutTranslations instance is unavailable.");
-        }
-        aboutTranslations.testClearTranslationRequestTelemetryThrottle();
-      });
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-  }
-
-  /**
    * Manually resolves pending RemoteSettings download requests during tests.
    *
    * @param {number} count
@@ -5115,7 +4398,7 @@ class AboutTranslationsTestUtils {
       );
     }
     try {
-      await this.#resolveDownloads(count);
+      this.#resolveDownloads(count);
     } catch (error) {
       AboutTranslationsTestUtils.#reportTestFailure(error);
     }
@@ -5133,7 +4416,7 @@ class AboutTranslationsTestUtils {
       );
     }
     try {
-      await this.#rejectDownloads(requestCount);
+      this.#rejectDownloads(requestCount);
     } catch (error) {
       AboutTranslationsTestUtils.#reportTestFailure(error);
     }
@@ -5222,11 +4505,7 @@ class AboutTranslationsTestUtils {
       await this.#runInPage(
         (_, { delayMs }) => {
           const { window } = content;
-          const aboutTranslations = Cu.waiveXrays(window).aboutTranslations;
-          if (!aboutTranslations) {
-            throw new Error("aboutTranslations instance is unavailable.");
-          }
-          aboutTranslations.testSetCopyButtonResetDelayOverride(delayMs);
+          Cu.waiveXrays(window).COPY_BUTTON_RESET_DELAY = delayMs;
         },
         { delayMs: ms }
       );
@@ -5236,21 +4515,21 @@ class AboutTranslationsTestUtils {
   }
 
   /**
-   * Clears any copy button reset delay override.
+   * Returns the current copy button reset delay applied within the page.
+   *
+   * @returns {Promise<number>}
    */
-  async clearCopyButtonResetDelayOverride() {
+  async getCopyButtonResetDelay() {
     try {
-      await this.#runInPage(() => {
+      return await this.#runInPage(() => {
         const { window } = content;
-        const aboutTranslations = Cu.waiveXrays(window).aboutTranslations;
-        if (!aboutTranslations) {
-          throw new Error("aboutTranslations instance is unavailable.");
-        }
-        aboutTranslations.testSetCopyButtonResetDelayOverride(null);
+        return Cu.waiveXrays(window).COPY_BUTTON_RESET_DELAY;
       });
     } catch (error) {
       AboutTranslationsTestUtils.#reportTestFailure(error);
     }
+
+    return NaN;
   }
 
   /**
@@ -5267,11 +4546,7 @@ class AboutTranslationsTestUtils {
       await this.#runInPage(
         (_, { enabled }) => {
           const { window } = content;
-          const aboutTranslations = Cu.waiveXrays(window).aboutTranslations;
-          if (!aboutTranslations) {
-            throw new Error("aboutTranslations instance is unavailable.");
-          }
-          aboutTranslations.testSetManualCopyButtonResetEnabled(enabled);
+          Cu.waiveXrays(window).testManualCopyButtonReset = enabled;
         },
         { enabled }
       );
@@ -5300,74 +4575,16 @@ class AboutTranslationsTestUtils {
   }
 
   /**
-   * Invokes the swap-languages button in the about:translations UI.
-   *
-   * @param {object} options
-   * @param {string} options.selectorKey
-   * @param {AboutTranslationsInvokeAction} [options.action="click"]
-   * @returns {Promise<void>}
+   * Clicks the swap-languages button in the about:translations UI.
    */
-  async #invokeElement({ selectorKey, action = "click" }) {
-    await this.#runInPage(
-      async (selectors, options) => {
-        const { selectorKey, action } = options;
-        const selector = selectors[selectorKey];
-        if (!selector) {
-          throw new Error(`Unsupported selector key: ${selectorKey}`);
-        }
-
-        const element = content.document.querySelector(selector);
-        if (!element) {
-          throw new Error(
-            `Could not find element for selector key: ${selectorKey}`
-          );
-        }
-
-        const EventUtils = ContentTaskUtils.getEventUtils(content);
-
-        if (action === "click") {
-          EventUtils.synthesizeMouseAtCenter(element, {}, content);
-          return;
-        }
-
-        const focusTarget = element.buttonEl ?? element;
-        focusTarget.focus({ focusVisible: true });
-        await new Promise(resolve =>
-          content.requestAnimationFrame(() =>
-            content.requestAnimationFrame(resolve)
-          )
+  async clickSwapLanguagesButton() {
+    logAction();
+    try {
+      await this.#runInPage(selectors => {
+        const button = content.document.querySelector(
+          selectors.swapLanguagesButton
         );
-        if (action === "enter") {
-          EventUtils.synthesizeKey("KEY_Enter", {}, content);
-          return;
-        }
-
-        if (action === "space") {
-          EventUtils.synthesizeKey(" ", {}, content);
-          return;
-        }
-
-        throw new Error(`Unsupported action: ${action}`);
-      },
-      {
-        selectorKey,
-        action,
-      }
-    );
-  }
-
-  /**
-   * Invokes the swap-languages button in the about:translations UI.
-   *
-   * @param {object} [options={}]
-   * @param {AboutTranslationsInvokeAction} [options.action="click"]
-   */
-  async invokeSwapLanguagesButton({ action = "click" } = {}) {
-    logAction(action);
-    try {
-      await this.#invokeElement({
-        selectorKey: "swapLanguagesButton",
-        action,
+        button.click();
       });
     } catch (error) {
       AboutTranslationsTestUtils.#reportTestFailure(error);
@@ -5375,71 +4592,14 @@ class AboutTranslationsTestUtils {
   }
 
   /**
-   * Invokes the copy button in the about:translations UI.
-   *
-   * @param {object} [options={}]
-   * @param {AboutTranslationsInvokeAction} [options.action="click"]
+   * Clicks the copy button in the about:translations UI.
    */
-  async invokeCopyButton({ action = "click" } = {}) {
-    logAction(action);
+  async clickCopyButton() {
+    logAction();
     try {
-      await this.#invokeElement({
-        selectorKey: "copyButton",
-        action,
-      });
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-  }
-
-  /**
-   * Invokes the translation error retry button in the about:translations UI.
-   *
-   * @param {object} [options={}]
-   * @param {AboutTranslationsInvokeAction} [options.action="click"]
-   */
-  async invokeTranslationErrorButton({ action = "click" } = {}) {
-    logAction(action);
-    try {
-      await this.#invokeElement({
-        selectorKey: "translationErrorButton",
-        action,
-      });
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-  }
-
-  /**
-   * Invokes the language-load error retry button in the about:translations UI.
-   *
-   * @param {object} [options={}]
-   * @param {AboutTranslationsInvokeAction} [options.action="click"]
-   */
-  async invokeLanguageLoadErrorButton({ action = "click" } = {}) {
-    logAction(action);
-    try {
-      await this.#invokeElement({
-        selectorKey: "languageLoadErrorButton",
-        action,
-      });
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-  }
-
-  /**
-   * Invokes the feature-blocked "unblock" button in the about:translations UI.
-   *
-   * @param {object} [options={}]
-   * @param {AboutTranslationsInvokeAction} [options.action="click"]
-   */
-  async invokeUnblockFeatureButton({ action = "click" } = {}) {
-    logAction(action);
-    try {
-      await this.#invokeElement({
-        selectorKey: "unblockFeatureButton",
-        action,
+      await this.#runInPage(selectors => {
+        const button = content.document.querySelector(selectors.copyButton);
+        button.click();
       });
     } catch (error) {
       AboutTranslationsTestUtils.#reportTestFailure(error);
@@ -5487,78 +4647,13 @@ class AboutTranslationsTestUtils {
   }
 
   /**
-   * Waits for the translation error message to match the requested visibility.
-   *
-   * @param {object} options
-   * @param {boolean} [options.visible=true]
-   * @returns {Promise<void>}
-   */
-  async waitForTranslationErrorMessage({ visible = true } = {}) {
-    try {
-      await this.#runInPage(
-        (selectors, { visible }) => {
-          const { document } = content;
-          const message = document.querySelector(
-            selectors.translationErrorMessage
-          );
-          if (!message) {
-            throw new Error("Could not find the translation error message.");
-          }
-          return ContentTaskUtils.waitForMutationCondition(
-            message,
-            { attributes: true, attributeFilter: ["hidden"] },
-            () => message.hidden === !visible
-          );
-        },
-        { visible }
-      );
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-  }
-
-  /**
-   * Waits for the detected-language unsupported message to match the requested visibility.
-   *
-   * @param {object} options
-   * @param {boolean} [options.visible=true]
-   * @returns {Promise<void>}
-   */
-  async waitForDetectedLanguageUnsupportedMessage({ visible = true } = {}) {
-    try {
-      await this.#runInPage(
-        (selectors, { visible }) => {
-          const { document } = content;
-          const message = document.querySelector(
-            selectors.detectedLanguageUnsupportedMessage
-          );
-          if (!message) {
-            throw new Error(
-              "Could not find the detected-language unsupported message."
-            );
-          }
-          return ContentTaskUtils.waitForMutationCondition(
-            message,
-            { attributes: true, attributeFilter: ["hidden"] },
-            () => message.hidden === !visible
-          );
-        },
-        { visible }
-      );
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-  }
-
-  /**
    * Asserts that expected AboutTranslations events fire (with optional details)
    * and that unexpected events do not fire during as a result of the given callback.
    *
    * @param {object} [options={}]
    * @param {Array.<[string, any]>} [options.expected=[]] — An array of
-   *        `[eventName, expectedDetail?]` pairs. `expectedDetail` may be:
-   *          - a predicate function `(detail) => boolean`,
-   *          - an exact detail object for equality comparison.
+   *        `[eventName, expectedDetail?]` pairs. `expectedDetail` is optional;
+   *        if omitted, only the fact of the event firing is asserted.
    * @param {Array.<string>} [options.unexpected=[]] — An array of event names
    *        that should *not* fire during the execution of `callback`.
    * @param {() => Promise<void>} callback — Async function to execute while
@@ -5587,27 +4682,18 @@ class AboutTranslationsTestUtils {
           });
       }
 
-      // Wait for one content-task spawn to guarantee that event waiters are fully registered.
-      await this.#runInPage(() => {});
-
       await callback();
 
       for (const [eventName, expectedDetail] of expected) {
         const actualDetail = await expectedEventWaiters[eventName];
-        const actualDetailString = JSON.stringify(actualDetail ?? {});
-
-        if (typeof expectedDetail === "function") {
-          ok(
-            expectedDetail(actualDetail ?? {}),
-            `Expected detail for "${eventName}" predicate to pass. Got ${actualDetailString}.`
-          );
-        } else {
-          is(
-            actualDetailString,
-            JSON.stringify(expectedDetail ?? {}),
-            `Expected detail for "${eventName}" to match.`
-          );
+        if (expectedDetail === AboutTranslationsTestUtils.AnyEventDetail) {
+          continue;
         }
+        is(
+          JSON.stringify(actualDetail ?? {}),
+          JSON.stringify(expectedDetail ?? {}),
+          `Expected detail for "${eventName}" to match.`
+        );
       }
 
       await TestUtils.waitForTick();
@@ -5635,11 +4721,13 @@ class AboutTranslationsTestUtils {
    * @param {string}  [options.value]
    * @param {boolean} [options.showsPlaceholder]
    * @param {string}  [options.scriptDirection]
-   * @param {string|null} [options.languageTag]
    * @returns {Promise<void>}
    */
-  async assertSourceTextArea(options = {}) {
-    const { value, showsPlaceholder, scriptDirection, languageTag } = options;
+  async assertSourceTextArea({
+    value,
+    showsPlaceholder,
+    scriptDirection,
+  } = {}) {
     // This helps the test visually render at each step without significantly slowing test speed.
     await doubleRaf(document);
 
@@ -5654,21 +4742,15 @@ class AboutTranslationsTestUtils {
             hasPlaceholder: textArea.hasAttribute("placeholder"),
             actualValue: textArea.value,
             actualScriptDirection: textArea.getAttribute("dir"),
-            actualLanguageTag: textArea.getAttribute("lang"),
           };
         },
-        { value, showsPlaceholder, scriptDirection, languageTag }
+        { value, showsPlaceholder, scriptDirection }
       );
     } catch (error) {
       AboutTranslationsTestUtils.#reportTestFailure(error);
     }
 
-    const {
-      hasPlaceholder,
-      actualValue,
-      actualScriptDirection,
-      actualLanguageTag,
-    } = pageResult;
+    const { hasPlaceholder, actualValue, actualScriptDirection } = pageResult;
 
     if (showsPlaceholder !== undefined) {
       if (showsPlaceholder) {
@@ -5698,14 +4780,6 @@ class AboutTranslationsTestUtils {
         `Expected source textarea "dir" attribute to be "${scriptDirection}", but got "${actualScriptDirection}".`
       );
     }
-
-    if (languageTag !== undefined) {
-      is(
-        actualLanguageTag,
-        languageTag,
-        `Expected source textarea "lang" attribute to be "${languageTag}", but got "${actualLanguageTag}".`
-      );
-    }
   }
 
   /**
@@ -5715,11 +4789,13 @@ class AboutTranslationsTestUtils {
    * @param {string}  [options.value]
    * @param {boolean} [options.showsPlaceholder]
    * @param {string}  [options.scriptDirection]
-   * @param {string|null} [options.languageTag]
    * @returns {Promise<void>}
    */
-  async assertTargetTextArea(options = {}) {
-    const { value, showsPlaceholder, scriptDirection, languageTag } = options;
+  async assertTargetTextArea({
+    value,
+    showsPlaceholder,
+    scriptDirection,
+  } = {}) {
     // This helps the test visually render at each step without significantly slowing test speed.
     await doubleRaf(document);
 
@@ -5734,21 +4810,15 @@ class AboutTranslationsTestUtils {
             hasPlaceholder: textArea.hasAttribute("placeholder"),
             actualValue: textArea.value,
             actualScriptDirection: textArea.getAttribute("dir"),
-            actualLanguageTag: textArea.getAttribute("lang"),
           };
         },
-        { value, showsPlaceholder, scriptDirection, languageTag }
+        { value, showsPlaceholder, scriptDirection }
       );
     } catch (error) {
       AboutTranslationsTestUtils.#reportTestFailure(error);
     }
 
-    const {
-      hasPlaceholder,
-      actualValue,
-      actualScriptDirection,
-      actualLanguageTag,
-    } = pageResult;
+    const { hasPlaceholder, actualValue, actualScriptDirection } = pageResult;
 
     if (showsPlaceholder !== undefined) {
       if (showsPlaceholder) {
@@ -5778,171 +4848,6 @@ class AboutTranslationsTestUtils {
         `Expected target textarea "dir" attribute to be "${scriptDirection}", but got "${actualScriptDirection}".`
       );
     }
-
-    if (languageTag !== undefined) {
-      is(
-        actualLanguageTag,
-        languageTag,
-        `Expected target textarea "lang" attribute to be "${languageTag}", but got "${actualLanguageTag}".`
-      );
-    }
-  }
-
-  /**
-   * Asserts properties of the translation error message.
-   *
-   * @param {object} options
-   * @param {boolean} [options.visible]
-   * @param {boolean} [options.retryButtonEnabled]
-   * @param {boolean} [options.targetTextAreaVisible]
-   * @param {boolean} [options.hasErrorClass]
-   * @returns {Promise<void>}
-   */
-  async assertTranslationErrorMessage({
-    visible,
-    retryButtonEnabled,
-    targetTextAreaVisible,
-    hasErrorClass,
-  } = {}) {
-    await doubleRaf(document);
-
-    let pageResult = {};
-    try {
-      pageResult = await this.#runInPage(selectors => {
-        const { document, window } = content;
-        const isElementVisible = selector => {
-          const element = document.querySelector(selector);
-          if (element?.offsetParent === null) {
-            return false;
-          }
-
-          const computedStyle = window.getComputedStyle(element);
-          if (!computedStyle) {
-            return false;
-          }
-
-          const { display, visibility } = computedStyle;
-          return !(display === "none" || visibility === "hidden");
-        };
-
-        const message = document.querySelector(
-          selectors.translationErrorMessage
-        );
-        const retryButton = document.querySelector(
-          selectors.translationErrorButton
-        );
-        const targetSection = document.querySelector(selectors.targetSection);
-
-        return {
-          messageExists: Boolean(message),
-          retryButtonExists: Boolean(retryButton),
-          targetSectionExists: Boolean(targetSection),
-          messageVisible: isElementVisible(selectors.translationErrorMessage),
-          targetTextAreaVisible: isElementVisible(
-            selectors.targetSectionTextArea
-          ),
-          retryButtonDisabled: retryButton?.hasAttribute("disabled") ?? true,
-          hasErrorClass:
-            targetSection?.classList.contains("has-translation-error") ?? false,
-        };
-      });
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-
-    const {
-      messageExists,
-      retryButtonExists,
-      targetSectionExists,
-      messageVisible,
-      retryButtonDisabled,
-      targetTextAreaVisible: actualTargetTextAreaVisible,
-      hasErrorClass: actualHasErrorClass,
-    } = pageResult;
-
-    ok(messageExists, "Expected translation error message to be present.");
-    ok(retryButtonExists, "Expected translation error button to be present.");
-    ok(targetSectionExists, "Expected target section to be present.");
-
-    if (visible !== undefined) {
-      visible
-        ? ok(
-            messageVisible,
-            "Expected translation error message to be visible."
-          )
-        : ok(
-            !messageVisible,
-            "Expected translation error message to be hidden."
-          );
-    }
-
-    if (retryButtonEnabled !== undefined) {
-      retryButtonEnabled
-        ? ok(
-            !retryButtonDisabled,
-            "Expected translation error button to be enabled."
-          )
-        : ok(
-            retryButtonDisabled,
-            "Expected translation error button to be disabled."
-          );
-    }
-
-    if (targetTextAreaVisible !== undefined) {
-      targetTextAreaVisible
-        ? ok(
-            actualTargetTextAreaVisible,
-            "Expected target textarea to be visible."
-          )
-        : ok(
-            !actualTargetTextAreaVisible,
-            "Expected target textarea to be hidden."
-          );
-    }
-
-    if (hasErrorClass !== undefined) {
-      hasErrorClass
-        ? ok(actualHasErrorClass, "Expected target section error styling.")
-        : ok(
-            !actualHasErrorClass,
-            "Expected target section error styling to be removed."
-          );
-    }
-  }
-
-  /**
-   * Returns the current pixel heights for the source and target sections.
-   *
-   * @returns {Promise<{ sourceSectionHeight: number, targetSectionHeight: number }>}
-   */
-  async getSectionHeights() {
-    await doubleRaf(document);
-
-    let pageResult = {
-      sourceSectionHeight: NaN,
-      targetSectionHeight: NaN,
-    };
-
-    try {
-      pageResult = await this.#runInPage(selectors => {
-        const { document } = content;
-        const sourceSection = document.querySelector(selectors.sourceSection);
-        const targetSection = document.querySelector(selectors.targetSection);
-
-        return {
-          sourceSectionHeight: Math.round(
-            sourceSection.getBoundingClientRect().height
-          ),
-          targetSectionHeight: Math.round(
-            targetSection.getBoundingClientRect().height
-          ),
-        };
-      });
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-
-    return pageResult;
   }
 
   /**
@@ -6019,138 +4924,6 @@ class AboutTranslationsTestUtils {
         detectLanguageAttribute,
         detectedLanguage,
         `Expected detect-language option "language" attribute to be "${detectedLanguage}", but got "${detectLanguageAttribute}".`
-      );
-    }
-  }
-
-  /**
-   * Asserts properties of the detected-language unsupported message.
-   *
-   * @param {object} options
-   * @param {boolean} [options.visible]
-   * @param {boolean} [options.sourceTextAreaVisible]
-   * @param {boolean} [options.targetTextAreaVisible]
-   * @param {string} [options.learnMoreSupportPage]
-   * @returns {Promise<void>}
-   */
-  async assertDetectedLanguageUnsupportedMessage({
-    visible,
-    sourceTextAreaVisible,
-    targetTextAreaVisible,
-    learnMoreSupportPage,
-  } = {}) {
-    await doubleRaf(document);
-
-    let pageResult = {};
-    try {
-      pageResult = await this.#runInPage(selectors => {
-        const { document, window } = content;
-        const isElementVisible = selector => {
-          const element = document.querySelector(selector);
-          if (element?.offsetParent === null) {
-            return false;
-          }
-
-          const computedStyle = window.getComputedStyle(element);
-          if (!computedStyle) {
-            return false;
-          }
-
-          const { display, visibility } = computedStyle;
-          return !(display === "none" || visibility === "hidden");
-        };
-
-        const message = document.querySelector(
-          selectors.detectedLanguageUnsupportedMessage
-        );
-        const heading = document.querySelector(
-          selectors.detectedLanguageUnsupportedHeading
-        );
-        const link = document.querySelector(
-          selectors.detectedLanguageUnsupportedLearnMoreLink
-        );
-
-        return {
-          messageExists: Boolean(message),
-          headingExists: Boolean(heading),
-          linkExists: Boolean(link),
-          messageVisible: isElementVisible(
-            selectors.detectedLanguageUnsupportedMessage
-          ),
-          sourceTextAreaVisible: isElementVisible(
-            selectors.sourceSectionTextArea
-          ),
-          targetTextAreaVisible: isElementVisible(
-            selectors.targetSectionTextArea
-          ),
-          learnMoreSupportPage: link?.getAttribute("support-page") ?? "",
-        };
-      });
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-
-    const {
-      messageExists,
-      headingExists,
-      linkExists,
-      messageVisible,
-      sourceTextAreaVisible: actualSourceTextAreaVisible,
-      targetTextAreaVisible: actualTargetTextAreaVisible,
-      learnMoreSupportPage: actualLearnMoreSupportPage,
-    } = pageResult;
-
-    ok(
-      messageExists,
-      "Expected detected-language unsupported message to be present."
-    );
-    ok(headingExists, "Expected unsupported message heading to be present.");
-    ok(
-      linkExists,
-      "Expected unsupported message learn-more link to be present."
-    );
-
-    if (visible !== undefined) {
-      visible
-        ? ok(
-            messageVisible,
-            "Expected detected-language unsupported message to be visible."
-          )
-        : ok(
-            !messageVisible,
-            "Expected detected-language unsupported message to be hidden."
-          );
-    }
-
-    if (sourceTextAreaVisible !== undefined) {
-      sourceTextAreaVisible
-        ? ok(
-            actualSourceTextAreaVisible,
-            "Expected source textarea to be visible."
-          )
-        : ok(
-            !actualSourceTextAreaVisible,
-            "Expected source textarea to be hidden."
-          );
-    }
-
-    if (targetTextAreaVisible !== undefined) {
-      targetTextAreaVisible
-        ? ok(
-            actualTargetTextAreaVisible,
-            "Expected target textarea to be visible."
-          )
-        : ok(
-            !actualTargetTextAreaVisible,
-            "Expected target textarea to be hidden."
-          );
-    }
-
-    if (learnMoreSupportPage !== undefined) {
-      is(
-        actualLearnMoreSupportPage,
-        learnMoreSupportPage,
-        `Expected unsupported message learn-more support-page to be "${learnMoreSupportPage}", but got "${actualLearnMoreSupportPage}".`
       );
     }
   }
@@ -6343,66 +5116,6 @@ class AboutTranslationsTestUtils {
   }
 
   /**
-   * Asserts the tab order across the provided selectors, starting from the
-   * first selector focused directly.
-   *
-   * @param {string[]} selectorKeys
-   * @returns {Promise<void>}
-   */
-  async assertTabFocusOrder(selectorKeys) {
-    await doubleRaf(document);
-    logAction(selectorKeys.join(", "));
-
-    try {
-      await this.#runInPage(
-        async (selectors, { selectorKeys }) => {
-          const { document } = content;
-          const EventUtils = ContentTaskUtils.getEventUtils(content);
-          const doubleRaf = () =>
-            new Promise(resolve => {
-              content.requestAnimationFrame(() => {
-                content.requestAnimationFrame(resolve);
-              });
-            });
-
-          const elements = selectorKeys.map(selectorKey => {
-            const selector = selectors[selectorKey];
-            const element = document.querySelector(selector);
-            if (!element) {
-              throw new Error(`Could not find element for "${selectorKey}".`);
-            }
-            return element;
-          });
-
-          const activeElementAtStart = document.activeElement;
-
-          elements[0].focus();
-          await doubleRaf();
-
-          for (let index = 0; index < elements.length; index++) {
-            const element = elements[index];
-            if (document.activeElement !== element) {
-              throw new Error(
-                `Expected "${selectorKeys[index]}" (#${element.id}) to have focus.`
-              );
-            }
-
-            if (index + 1 < elements.length) {
-              EventUtils.synthesizeKey("KEY_Tab", {}, content);
-              await doubleRaf();
-            }
-          }
-
-          activeElementAtStart?.focus?.();
-        },
-        { selectorKeys }
-      );
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-  }
-
-  /**
    * Retrieves the current state of the copy button.
    *
    * @returns {Promise<{exists: boolean, isDisabled: boolean, isCopied: boolean, l10nId: string}>}
@@ -6555,47 +5268,19 @@ class AboutTranslationsTestUtils {
   }
 
   /**
-   * Invokes the clear button.
-   *
-   * @param {object} [options={}]
-   * @param {AboutTranslationsInvokeAction} [options.action="click"]
+   * Clicks the clear button.
    *
    * @returns {Promise<void>}
    */
-  async invokeClearButton({ action = "click" } = {}) {
-    await doubleRaf(document);
-    logAction(action);
-    try {
-      await this.#invokeElement({
-        selectorKey: "clearButton",
-        action,
-      });
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-  }
-
-  /**
-   * Undoes the most recent user-input edit to the source-section
-   * text area, simulating the behavior of invoking `Ctrl/Cmd + Z`.
-   *
-   * @returns {Promise<void>}
-   */
-  async invokeSourceTextAreaUndoAction() {
-    logAction();
+  async clickClearButton() {
     await doubleRaf(document);
     try {
       await this.#runInPage(selectors => {
-        const sourceTextArea = content.document.querySelector(
-          selectors.sourceSectionTextArea
+        const clearButton = content.document.querySelector(
+          selectors.clearButton
         );
-        sourceTextArea.focus();
+        clearButton.click();
       });
-      await BrowserTestUtils.synthesizeKey(
-        "z",
-        { accelKey: true },
-        this.#browser
-      );
     } catch (error) {
       AboutTranslationsTestUtils.#reportTestFailure(error);
     }
@@ -6796,36 +5481,6 @@ class AboutTranslationsTestUtils {
   }
 
   /**
-   * Returns the current selected-browser session history entry count.
-   *
-   * @returns {number}
-   */
-  getHistoryLength() {
-    try {
-      return this.#browser.browsingContext?.sessionHistory?.count ?? NaN;
-    } catch (error) {
-      AboutTranslationsTestUtils.#reportTestFailure(error);
-    }
-
-    return NaN;
-  }
-
-  /**
-   * Asserts that the content-page history length matches the expected value.
-   *
-   * @param {object} options
-   * @param {number} options.expectedLength
-   */
-  assertHistoryLength({ expectedLength }) {
-    const actualLength = this.getHistoryLength();
-    is(
-      actualLength,
-      expectedLength,
-      "Expected history length to match the expected length."
-    );
-  }
-
-  /**
    * Asserts visibility of each element based on the provided options.
    *
    * @param {object}  options
@@ -6839,11 +5494,7 @@ class AboutTranslationsTestUtils {
    * @param {boolean} [options.swapLanguagesButton=false]
    * @param {boolean} [options.sourceSectionTextArea=false]
    * @param {boolean} [options.targetSectionTextArea=false]
-   * @param {boolean} [options.detectedLanguageUnsupportedMessage=false]
-   * @param {boolean} [options.translationErrorMessage=false]
    * @param {boolean} [options.unsupportedInfoMessage=false]
-   * @param {boolean} [options.policyDisabledInfoMessage=false]
-   * @param {boolean} [options.featureBlockedInfoMessage=false]
    * @param {boolean} [options.languageLoadErrorMessage=false]
    * @returns {Promise<void>}
    */
@@ -6857,11 +5508,7 @@ class AboutTranslationsTestUtils {
     swapLanguagesButton = false,
     sourceSectionTextArea = false,
     targetSectionTextArea = false,
-    detectedLanguageUnsupportedMessage = false,
-    translationErrorMessage = false,
     unsupportedInfoMessage = false,
-    policyDisabledInfoMessage = false,
-    featureBlockedInfoMessage = false,
     languageLoadErrorMessage = false,
   } = {}) {
     // This helps the test visually render at each step without significantly slowing test speed.
@@ -6913,20 +5560,8 @@ class AboutTranslationsTestUtils {
           targetSectionTextArea: isElementVisible(
             selectors.targetSectionTextArea
           ),
-          detectedLanguageUnsupportedMessage: isElementVisible(
-            selectors.detectedLanguageUnsupportedMessage
-          ),
-          translationErrorMessage: isElementVisible(
-            selectors.translationErrorMessage
-          ),
           unsupportedInfoMessage: isElementVisible(
             selectors.unsupportedInfoMessage
-          ),
-          policyDisabledInfoMessage: isElementVisible(
-            selectors.policyDisabledInfoMessage
-          ),
-          featureBlockedInfoMessage: isElementVisible(
-            selectors.featureBlockedInfoMessage
           ),
           languageLoadErrorMessage: isElementVisible(
             selectors.languageLoadErrorMessage
@@ -6978,29 +5613,9 @@ class AboutTranslationsTestUtils {
         "target textarea"
       );
       assertVisibility(
-        detectedLanguageUnsupportedMessage,
-        visibilityMap.detectedLanguageUnsupportedMessage,
-        "detected-language unsupported message"
-      );
-      assertVisibility(
-        translationErrorMessage,
-        visibilityMap.translationErrorMessage,
-        "translation error message"
-      );
-      assertVisibility(
         unsupportedInfoMessage,
         visibilityMap.unsupportedInfoMessage,
         "unsupported info message"
-      );
-      assertVisibility(
-        policyDisabledInfoMessage,
-        visibilityMap.policyDisabledInfoMessage,
-        "policy-disabled info message"
-      );
-      assertVisibility(
-        featureBlockedInfoMessage,
-        visibilityMap.featureBlockedInfoMessage,
-        "feature-blocked info message"
       );
       assertVisibility(
         languageLoadErrorMessage,

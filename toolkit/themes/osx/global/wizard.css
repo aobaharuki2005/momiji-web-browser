@@ -27,8 +27,8 @@
 
 :host([data-branded="true"]) .wizard-header-icon {
   list-style-image: url("chrome://branding/content/icon128.png");
-  width: var(--size-image-small);
-  height: var(--size-image-small);
+  width: 48px;
+  height: 48px;
 }
 
 html|*.wizard-page-box {

@@ -17,7 +17,6 @@
         core_intrinsics,
         dropck_eyepatch,
         min_specialization,
-        trivial_clone,
         extend_one,
         allocator_api,
         slice_ptr_get,
@@ -60,9 +59,9 @@ extern crate std;
 #[cfg_attr(feature = "rustc-dep-of-std", allow(unused_extern_crates))]
 extern crate alloc;
 
-#[doc = include_str!("../README.md")]
+#[cfg(feature = "nightly")]
 #[cfg(doctest)]
-pub struct ReadmeDoctests;
+doc_comment::doctest!("../README.md");
 
 #[macro_use]
 mod macros;

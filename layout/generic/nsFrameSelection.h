@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsFrameSelection_h_
-#define nsFrameSelection_h_
+#ifndef nsFrameSelection_h___
+#define nsFrameSelection_h___
 
 #include <stdint.h>
 
@@ -284,13 +286,7 @@ class nsFrameSelection final {
                                           FocusMode aFocusMode,
                                           CaretAssociationHint aHint);
 
-  [[nodiscard]] bool IsAvailable() const {
-    // mDomSelections is initialized at construction and cleared if the cycle
-    // collector unlink them so that if the first selection is available, the
-    // others should be fine.
-    return !!mDomSelections[0];
-  }
-
+ public:
   /**
    * Sets the type of the selection based on whether a selection is created
    * by doubleclick, long tapping a word or tripleclick.
@@ -378,6 +374,7 @@ class nsFrameSelection final {
    */
   nsresult SelectCellElement(nsIContent* aCell);
 
+ public:
   /**
    * Remove cells from selection inside of the given cell range.
    *
@@ -444,17 +441,16 @@ class nsFrameSelection final {
 
   /**
    * Sets the drag state to aState for resons of drag state.
-   * Note that only can run script when called with false as an argument.
    *
    * @param aState is the new state of drag
    */
   MOZ_CAN_RUN_SCRIPT void SetDragState(bool aState);
 
   /**
-   * Marks us as dragging. Equivalent to SetDragState(true), but without the
-   * CAN_RUN_SCRIPT implications.
+   * Gets the drag state to aState for resons of drag state.
+   *
+   * @param aState will hold the state of drag
    */
-  void RestoreDragState() { mDragState = true; }
   [[nodiscard]] bool GetDragState() const { return mDragState; }
 
   /**
@@ -659,15 +655,6 @@ class nsFrameSelection final {
    * @param aExtend continue selection
    */
   MOZ_CAN_RUN_SCRIPT nsresult IntraLineMove(bool aForward, bool aExtend);
-
-  /**
-   * ParagraphMove will generally be called from the nsiselectioncontroller
-   * implementations. the effect being the selection will move to beginning or
-   * end of paragraph
-   * @param aForward move forward in document.
-   * @param aExtend continue selection
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult ParagraphMove(bool aForward, bool aExtend);
 
   /**
    * CreateRangeExtendedToNextGraphemeClusterBoundary() returns range which is
@@ -971,27 +958,8 @@ class nsFrameSelection final {
   // Table selection support.
   static nsITableCellLayout* GetCellLayout(const nsIContent* aCellContent);
 
-  /**
-   * Called when eFocus event of aDocument will be dispatched to the DOM.
-   */
-  static void WillFocusDocument(mozilla::PresShell& aPresShell,
-                                mozilla::dom::Document& aDocument);
-
-  /**
-   * Called when eBlur event of aDocument will be dispatched to the DOM.
-   */
-  static void WillBlurDocument(mozilla::PresShell& aPresShell,
-                               mozilla::dom::Document& aDocument);
-
  private:
   ~nsFrameSelection();
-
-  /**
-   * Populates an existing highlight Selection with ranges from a Highlight.
-   * Must be called after the Selection is registered in mHighlightSelections.
-   */
-  MOZ_CAN_RUN_SCRIPT void PopulateHighlightSelection(
-      mozilla::dom::Selection& aSelection, mozilla::dom::Highlight& aHighlight);
 
   // TODO: in case an error is returned, it sometimes refers to a programming
   // error, in other cases to runtime errors. This deserves to be cleaned up.
@@ -1403,10 +1371,6 @@ struct LimitersAndCaretData {
   using Element = dom::Element;
 
   LimitersAndCaretData() = default;
-  MOZ_IMPLICIT LimitersAndCaretData(const LimitersAndCaretData&) = default;
-  LimitersAndCaretData(LimitersAndCaretData&&) = default;
-  LimitersAndCaretData& operator=(const LimitersAndCaretData&) = default;
-  LimitersAndCaretData& operator=(LimitersAndCaretData&&) = default;
   explicit LimitersAndCaretData(const nsFrameSelection& aFrameSelection)
       : mIndependentSelectionRootElement(
             aFrameSelection.GetIndependentSelectionRootElement()),
@@ -1436,4 +1400,4 @@ struct LimitersAndCaretData {
 
 }  // namespace mozilla
 
-#endif /* nsFrameSelection_h_ */
+#endif /* nsFrameSelection_h___ */

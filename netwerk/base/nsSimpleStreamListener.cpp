@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -22,14 +23,12 @@ NS_IMPL_ISUPPORTS(nsSimpleStreamListener, nsISimpleStreamListener,
 //
 NS_IMETHODIMP
 nsSimpleStreamListener::OnStartRequest(nsIRequest* aRequest) {
-  nsCOMPtr<nsIRequestObserver> observer = mObserver;
-  return observer ? observer->OnStartRequest(aRequest) : NS_OK;
+  return mObserver ? mObserver->OnStartRequest(aRequest) : NS_OK;
 }
 
 NS_IMETHODIMP
 nsSimpleStreamListener::OnStopRequest(nsIRequest* request, nsresult aStatus) {
-  nsCOMPtr<nsIRequestObserver> observer = mObserver;
-  return observer ? observer->OnStopRequest(request, aStatus) : NS_OK;
+  return mObserver ? mObserver->OnStopRequest(request, aStatus) : NS_OK;
 }
 
 //

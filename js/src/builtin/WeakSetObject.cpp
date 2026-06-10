@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -150,7 +152,7 @@ const ClassSpec WeakSetObject::classSpec_ = {
 const JSClass WeakSetObject::class_ = {
     "WeakSet",
     JSCLASS_HAS_RESERVED_SLOTS(SlotCount) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_WeakSet),
+        JSCLASS_HAS_CACHED_PROTO(JSProto_WeakSet) | JSCLASS_BACKGROUND_FINALIZE,
     &WeakCollectionObject::classOps_,
     &WeakSetObject::classSpec_,
 };
@@ -176,8 +178,7 @@ const JSFunctionSpec WeakSetObject::methods[] = {
 
 WeakSetObject* WeakSetObject::create(JSContext* cx,
                                      HandleObject proto /* = nullptr */) {
-  return NewObjectWithClassProtoAndKind<WeakSetObject>(cx, proto,
-                                                       TenuredObject);
+  return NewObjectWithClassProto<WeakSetObject>(cx, proto);
 }
 
 // static

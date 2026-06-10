@@ -1,8 +1,6 @@
-use {
-    super::*,
-    format::{MiscInfoFlags, MINIDUMP_MISC_INFO_2 as MDRawMiscInfo},
-    std::time::Duration,
-};
+use super::*;
+use format::{MiscInfoFlags, MINIDUMP_MISC_INFO_2 as MDRawMiscInfo};
+use std::time::Duration;
 
 /// From <usr/include/mach/time_value.h>
 #[repr(C)]

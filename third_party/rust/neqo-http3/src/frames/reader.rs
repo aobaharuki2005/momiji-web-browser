@@ -7,8 +7,8 @@
 use std::{cmp::min, fmt::Debug, time::Instant};
 
 use neqo_common::{
-    Decoder, IncrementalDecoderBuffer, IncrementalDecoderIgnore, IncrementalDecoderUint,
-    hex_snip_middle, hex_with_len, qtrace,
+    hex_snip_middle, hex_with_len, qtrace, Decoder, IncrementalDecoderBuffer,
+    IncrementalDecoderIgnore, IncrementalDecoderUint,
 };
 use neqo_transport::{Connection, StreamId};
 
@@ -54,7 +54,7 @@ pub struct StreamReaderConnectionWrapper<'a> {
 }
 
 impl<'a> StreamReaderConnectionWrapper<'a> {
-    pub const fn new(conn: &'a mut Connection, stream_id: StreamId) -> Self {
+    pub fn new(conn: &'a mut Connection, stream_id: StreamId) -> Self {
         Self { conn, stream_id }
     }
 }
@@ -262,38 +262,33 @@ impl FrameReader {
 
     fn frame_length_decoded<T: FrameDecoder<T>>(&mut self, len: u64) -> Res<Option<T>> {
         self.frame_len = len;
-        match T::decode(
+        if let Some(f) = T::decode(
             self.frame_type,
             self.frame_len,
             if len > 0 { None } else { Some(&[]) },
         )? {
-            Some(f) => {
-                #[cfg(feature = "build-fuzzing-corpus")]
-                if let Some(corpus) = T::FUZZING_CORPUS {
-                    // Write zero-length frames to the fuzzing corpus to test parsing of frames with
-                    // only type and length fields.
-                    self.write_item_to_fuzzing_corpus(corpus, None);
-                }
-                self.reset();
-                return Ok(Some(f));
+            #[cfg(feature = "build-fuzzing-corpus")]
+            if let Some(corpus) = T::FUZZING_CORPUS {
+                // Write zero-length frames to the fuzzing corpus to test parsing of frames with
+                // only type and length fields.
+                self.write_item_to_fuzzing_corpus(corpus, None);
             }
-            None => {
-                if T::is_known_type(self.frame_type) {
-                    self.state = FrameReaderState::GetData {
-                        decoder: IncrementalDecoderBuffer::new(
-                            usize::try_from(len).or(Err(Error::HttpFrame))?,
-                        ),
-                    };
-                } else if self.frame_len == 0 {
-                    self.reset();
-                } else {
-                    self.state = FrameReaderState::UnknownFrameDischargeData {
-                        decoder: IncrementalDecoderIgnore::new(
-                            usize::try_from(len).or(Err(Error::HttpFrame))?,
-                        ),
-                    };
-                }
-            }
+            self.reset();
+            return Ok(Some(f));
+        } else if T::is_known_type(self.frame_type) {
+            self.state = FrameReaderState::GetData {
+                decoder: IncrementalDecoderBuffer::new(
+                    usize::try_from(len).or(Err(Error::HttpFrame))?,
+                ),
+            };
+        } else if self.frame_len == 0 {
+            self.reset();
+        } else {
+            self.state = FrameReaderState::UnknownFrameDischargeData {
+                decoder: IncrementalDecoderIgnore::new(
+                    usize::try_from(len).or(Err(Error::HttpFrame))?,
+                ),
+            };
         }
         Ok(None)
     }

@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.accounts.push
 
+import androidx.annotation.WorkerThread
 import mozilla.components.concept.sync.DeviceCommandOutgoing
 import mozilla.components.concept.sync.DeviceCommandQueue
 import mozilla.components.concept.sync.DeviceConstellation
@@ -29,6 +30,7 @@ class CloseTabsUseCases(
      * @param url The URL of the tab to close.
      * @return An object that can be used to undo this operation.
      */
+    @WorkerThread
     suspend fun close(deviceId: String, url: String): UndoableOperation {
         val command = DeviceCommandOutgoing.CloseTab(listOf(url))
         commands.add(deviceId, command)
@@ -38,6 +40,7 @@ class CloseTabsUseCases(
     /** An operation that can be undone. */
     fun interface UndoableOperation {
         /** Undoes the operation. */
+        @WorkerThread
         suspend fun undo()
     }
 }

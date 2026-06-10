@@ -42,7 +42,6 @@ mr1-return-to-amo-add-extension-label = Add { $addon-name }
 onboarding-welcome-steps-indicator-label =
   .aria-label = Progress: step { $current } of { $total }
 
-
 # This button will open system settings to turn on prefers-reduced-motion
 mr1-onboarding-reduce-motion-button-label = Turn off animations
 
@@ -67,15 +66,6 @@ mr1-onboarding-theme-label-dark = Dark
 mr1-onboarding-theme-label-alpenglow = Alpenglow
 
 onboarding-theme-primary-button-label = Done
-
-## Accessible labels for the icon-only play/pause toggle that controls animated
-## illustrations on the onboarding screen. The button replaces the animation
-## with a static image when clicked.
-
-onboarding-animation-pause-button =
-  .aria-label = Pause animation
-onboarding-animation-play-button =
-  .aria-label = Play animation
 
 ## Please make sure to split the content of the title attribute into lines whose
 ## width corresponds to about 40 Latin characters, to ensure that the tooltip
@@ -558,8 +548,6 @@ restore-from-backup-title = Let’s get { -brand-short-name } back how you like 
 restore-from-backup-subtitle = Recover all your bookmarks, history, and other data to get back to browsing.
 restore-from-backup-secondary-button = Don’t restore
 
-multiple-backups-info-tile = <strong>Multiple backup files found.</strong> The most recent file is selected. Restore other profiles in <a data-l10n-name="settings-label">Settings.</a>
-
 ## Restored from Backup spotlight
 
 restored-from-backup-success-title = We’re back! Your { -brand-short-name } data has been restored.
@@ -585,20 +573,3 @@ onboarding-personalization-motivation-title = Which features of { -brand-short-n
 onboarding-personalization-motivation-privacy-option = Privacy and Security
 onboarding-personalization-motivation-productivity-option = Productivity
 onboarding-personalization-motivation-other-option = Other
-
-## Onboarding 2026 brand refresh
-
-onboarding-refresh-pin-set-default-subtitle = We protect your data and block companies from spying on your clicks — automatically.
-# "safe paws" is a play on "safe hands", meaning you're being well taken care of or protected
-# If it doesn’t translate well, you can use the alternative: “You’re safe with Firefox.”
-onboarding-refresh-pin-set-default-title = You’re in safe paws
-onboarding-refresh-import-subtitle = Bring over your passwords, bookmarks, history and more.
-onboarding-refresh-import-title = Make { -brand-short-name } feel more like home
-onboarding-refresh-onboarding-addons-subtitle = Extensions are tiny apps that let you customize { -brand-short-name }. They can power up your privacy, enhance productivity, change the way { -brand-short-name } looks, and so much more.
-# "Give your browsing a boost" means to enhance or improve the browsing experience
-onboarding-refresh-onboarding-addons-title = Give your browsing a boost
-onboarding-refresh-sync-subtitle = Grab bookmarks, passwords, and more everywhere you’re signed in to { -brand-short-name }. Plus, your data is encrypted so only you can see it.
-onboarding-refresh-sync-title = Go anywhere. Sync everything.
-onboarding-refresh-gratitude-subtitle = Thank you for using { -brand-short-name }, the only major browser backed by a non-profit. With your support, we’re working to make the internet safer and more accessible for everyone.
-# "has your back" is an idiom suggesting support and protection
-onboarding-refresh-gratitude-title = { -brand-short-name } has your back

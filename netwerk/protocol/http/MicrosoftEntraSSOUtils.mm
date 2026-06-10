@@ -93,7 +93,7 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
   NSDictionary* headers = authenticatedResponse.allHeaderFields;
   NSMutableString* headersString = [NSMutableString string];
   for (NSString* key in headers) {
-    [headersString appendFormat:@"%@: %@\n", key, [headers objectForKey:key]];
+    [headersString appendFormat:@"%@: %@\n", key, headers[key]];
   }
   MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
           ("SSORequestDelegate::didCompleteWithAuthorization: "
@@ -106,7 +106,7 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
   // {"header":{"x-ms-DeviceCredential”:”…”},”tenant_id”:”…”}],
   // ”prt_headers":[{"header":{"x-ms-RefreshTokenCredential”:”…”},
   // ”home_account_id”:”….”}]}
-  NSString* ssoCookies = [headers objectForKey:@"sso_cookies"];
+  NSString* ssoCookies = headers[@"sso_cookies"];
   if (!ssoCookies) {
     MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
             ("SSORequestDelegate::didCompleteWithAuthorization: "
@@ -134,8 +134,8 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
   NSMutableArray* allHeaders = [NSMutableArray array];
   nsCString entraSuccessLabel;
 
-  if ([ssoCookiesDict objectForKey:@"device_headers"]) {
-    [allHeaders addObject:[ssoCookiesDict objectForKey:@"device_headers"]];
+  if (ssoCookiesDict[@"device_headers"]) {
+    [allHeaders addObject:ssoCookiesDict[@"device_headers"]];
   } else {
     MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
             ("SSORequestDelegate::didCompleteWithAuthorization: "
@@ -143,8 +143,8 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
     entraSuccessLabel = "device_headers_missing"_ns;
   }
 
-  if ([ssoCookiesDict objectForKey:@"prt_headers"]) {
-    [allHeaders addObject:[ssoCookiesDict objectForKey:@"prt_headers"]];
+  if (ssoCookiesDict[@"prt_headers"]) {
+    [allHeaders addObject:ssoCookiesDict[@"prt_headers"]];
   } else {
     MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
             ("SSORequestDelegate::didCompleteWithAuthorization: "
@@ -173,12 +173,12 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
       continue;
     }
     for (NSDictionary* headerDict in headerArray) {
-      NSDictionary* headers = [headerDict objectForKey:@"header"];
+      NSDictionary* headers = headerDict[@"header"];
       if (!headers) {
         continue;
       }
       for (NSString* key in headers) {
-        NSString* value = [headers objectForKey:key];
+        NSString* value = headers[key];
         if (!value) {
           continue;
         }

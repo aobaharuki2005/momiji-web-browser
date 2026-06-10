@@ -1,13 +1,14 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsColorControlFrame_h_
-#define nsColorControlFrame_h_
+#ifndef nsColorControlFrame_h___
+#define nsColorControlFrame_h___
 
 #include "ButtonControlFrame.h"
 #include "nsCOMPtr.h"
-#include "nsIAnonymousContentCreator.h"
 
 namespace mozilla {
 class PresShell;
@@ -15,8 +16,7 @@ class PresShell;
 
 // Class which implements the input type=color
 
-class nsColorControlFrame final : public mozilla::ButtonControlFrame,
-                                  public nsIAnonymousContentCreator {
+class nsColorControlFrame final : public mozilla::ButtonControlFrame {
   typedef mozilla::dom::Element Element;
 
  public:
@@ -52,4 +52,4 @@ class nsColorControlFrame final : public mozilla::ButtonControlFrame,
   nsCOMPtr<Element> mColorContent;
 };
 
-#endif  // nsColorControlFrame_h_
+#endif  // nsColorControlFrame_h___

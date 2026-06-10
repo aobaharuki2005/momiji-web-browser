@@ -365,7 +365,6 @@ hu{
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
-                Hv{"H v"}
                 MEd{"M. d., E"}
                 MMMEd{"MMM d., E"}
                 MMMMd{"MMMM d."}
@@ -536,7 +535,6 @@ hu{
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
-                Hv{"H v"}
                 MEd{"M. d., E"}
                 MMMEd{"MMM d., E"}
                 MMMMW{

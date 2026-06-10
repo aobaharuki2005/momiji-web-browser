@@ -12,12 +12,13 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-// Loading helpers from accessible/tests/mochitest/ for all tests.
+// Loading and common.js from accessible/tests/mochitest/ for all tests, as
+// well as promisified-events.js.
 /* import-globals-from ../../mochitest/states.js */
 /* import-globals-from ../../mochitest/role.js */
 loadScripts(
   { name: "common.js", dir: MOCHITESTS_DIR },
-  { name: "events.js", dir: MOCHITESTS_DIR },
+  { name: "promisified-events.js", dir: MOCHITESTS_DIR },
   { name: "role.js", dir: MOCHITESTS_DIR },
   { name: "states.js", dir: MOCHITESTS_DIR }
 );

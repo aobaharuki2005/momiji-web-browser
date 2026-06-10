@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -112,16 +114,13 @@ static void RecordContentProcessOOMKilled() {
 
   if (NS_SUCCEEDED(rv)) {
     // Record Glean event with PSI metrics
-    mozilla::glean::memory_watcher::ProcessOomKilledExtra extra;
-    extra.psiSomeAvg10 = mozilla::Some(nsPrintfCString("%lu", psi.some_avg10));
-    extra.psiSomeAvg60 = mozilla::Some(nsPrintfCString("%lu", psi.some_avg60));
-    extra.psiFullAvg10 = mozilla::Some(nsPrintfCString("%lu", psi.full_avg10));
-    extra.psiFullAvg60 = mozilla::Some(nsPrintfCString("%lu", psi.full_avg60));
-    extra.psiAvailable = mozilla::Some(psi.psi_available);
     mozilla::glean::memory_watcher::process_oom_killed.Record(
-        mozilla::Some(extra));
-
-    mozilla::StartNonOOMPSISampling();
+        mozilla::Some(mozilla::glean::memory_watcher::ProcessOomKilledExtra{
+            mozilla::Some(nsPrintfCString("%lu", psi.some_avg10)),
+            mozilla::Some(nsPrintfCString("%lu", psi.some_avg60)),
+            mozilla::Some(nsPrintfCString("%lu", psi.full_avg10)),
+            mozilla::Some(nsPrintfCString("%lu", psi.full_avg60)),
+        }));
   }
 }
 #endif
@@ -448,9 +447,9 @@ mozilla::UniqueFileHandle ProcessWatcher::GetSignalPipe() {
   EnsureProcessWatcher();
   int fd = gSignalPipe[1];
   MOZ_ASSERT(fd >= 0);
-  auto rv = mozilla::DuplicateFileHandle(fd);
-  MOZ_ASSERT(rv);
-  return rv;
+  fd = dup(fd);
+  MOZ_ASSERT(fd >= 0);
+  return mozilla::UniqueFileHandle(fd);
 }
 
 /**

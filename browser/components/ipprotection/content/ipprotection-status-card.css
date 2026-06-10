@@ -2,38 +2,39 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-.toolbarbutton::part(moz-button-label) {
-  width: 100%;
+@import "chrome://global/skin/global.css";
+
+:host {
+  --border-color: var(--border-color-card);
 }
 
-.location-btn-content {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: var(--space-medium);
-  width: 100%;
+#ipprotection-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding-inline: var(--panel-subview-body-padding-inline);
+  padding-block: var(--panel-subview-body-padding-block);
+}
 
-  moz-badge {
-    grid-column: 1;
-    justify-self: start;
-  }
+.vpn-status-group {
+  display: block;
+  position: relative;
+  margin: var(--space-large);
+  overflow: hidden;
+}
 
-  span {
-    grid-column: 2;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.is-enabled {
+  background-color: var(--background-color-success);
+}
 
-  .arrow-icon {
-    grid-column: 3;
-    justify-self: end;
-    -moz-context-properties: fill, fill-opacity, stroke;
-    fill: currentColor;
-  }
+#status-card {
+  --box-label-font-weight: var(--font-weight-semibold);
+  -moz-context-properties: fill, stroke;
+}
 
-  :-moz-locale-dir(rtl) & .arrow-icon {
-    scale: -1 1;
-  }
+#connection-toggle {
+  margin-inline-end: var(--space-small);
+}
+
+#site-settings {
+  --box-group-border: none;
 }

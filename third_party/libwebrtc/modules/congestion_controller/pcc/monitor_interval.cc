@@ -56,9 +56,8 @@ void PccMonitorInterval::OnPacketsFeedback(
       lost_packets_sent_time_.push_back(packet_result.sent_packet.send_time);
     } else {
       received_packets_.push_back(
-          {.delay =
-               packet_result.receive_time - packet_result.sent_packet.send_time,
-           .sent_time = packet_result.sent_packet.send_time});
+          {packet_result.receive_time - packet_result.sent_packet.send_time,
+           packet_result.sent_packet.send_time});
       received_packets_size_ += packet_result.sent_packet.size;
     }
   }

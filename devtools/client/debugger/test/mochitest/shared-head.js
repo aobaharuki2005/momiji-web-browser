@@ -1027,7 +1027,7 @@ function deleteExpression(dbg, input) {
  * @static
  */
 async function reload(dbg, ...sources) {
-  await reloadSelectedTab();
+  await reloadBrowser();
   return waitForSources(dbg, ...sources);
 }
 
@@ -1437,8 +1437,6 @@ async function togglePauseOnExceptions(
  */
 function invokeInTab(fnc, ...args) {
   info(`Invoking in tab: ${fnc}(${args.map(uneval).join(",")})`);
-  // TODO: Switch to SpecialPowers.spawn
-  // eslint-disable-next-line mozilla/reject-contenttask-spawn
   return ContentTask.spawn(gBrowser.selectedBrowser, { fnc, args }, options =>
     content.wrappedJSObject[options.fnc](...options.args)
   );
@@ -1846,8 +1844,6 @@ function assertBreakpointSnippet(dbg, index, expectedSnippet) {
 
 const selectors = {
   callStackBody: ".call-stack-pane .pane",
-  domMutationEmpty: ".dom-mutation-empty",
-  domMutationEmptyOpenInspectorButton: ".dom-mutation-empty button",
   domMutationItem: ".dom-mutation-list li",
   expressionNode: i =>
     `.expressions-list .expression-container:nth-child(${i}) .object-label`,
@@ -2520,7 +2516,7 @@ function hoverToken(tokenEl) {
     {
       type: "mouseover",
     },
-    tokenEl.documentGlobal
+    tokenEl.ownerGlobal
   );
 
   // This second event helps Popover to have :hover pseudoclass set on the token element
@@ -2530,7 +2526,7 @@ function hoverToken(tokenEl) {
     {
       type: "mousemove",
     },
-    tokenEl.documentGlobal
+    tokenEl.ownerGlobal
   );
 }
 
@@ -2577,7 +2573,7 @@ async function closePreviewForToken(
     {
       type: "mouseout",
     },
-    tokenEl.documentGlobal
+    tokenEl.ownerGlobal
   );
 
   // This second event helps Popover to have :hover pseudoclass removed on the token element
@@ -2594,7 +2590,7 @@ async function closePreviewForToken(
     {
       type: "mousemove",
     },
-    element.documentGlobal
+    element.ownerGlobal
   );
 
   info(`Waiting for preview to be closed (preview type=${previewType})`);
@@ -3487,7 +3483,7 @@ async function selectBlackBoxContextMenuItem(dbg, itemName) {
 function openOutlinePanel(dbg, waitForOutlineList = true) {
   info("Select the outline panel");
   const outlineTab = findElementWithSelector(dbg, ".outline-tab a");
-  EventUtils.synthesizeMouseAtCenter(outlineTab, {}, outlineTab.documentGlobal);
+  EventUtils.synthesizeMouseAtCenter(outlineTab, {}, outlineTab.ownerGlobal);
 
   if (!waitForOutlineList) {
     return Promise.resolve();

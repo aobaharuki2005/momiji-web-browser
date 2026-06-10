@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -35,29 +36,13 @@ struct AliasData;
 }  // namespace mozilla
 class FontVisibilityProvider;
 
-// Lookup key for the shared-cmap hashtable. The hash is carried separately
-// from the gfxCharacterMap pointer so that MaybeRemoveCmap can look up an
-// entry without dereferencing the (potentially already freed) pointer.
-struct CharMapLookup {
-  // The cmap to look up. In pointer-compare mode this may be dangling and is
-  // used for pointer-equality only; in content-compare mode it must be alive.
-  gfxCharacterMap* mCharMap;
-  // The cmap's mHash, captured while the object was known to be alive.
-  uint32_t mHash;
-  // If true, KeyEquals compares by pointer identity (no deref of mCharMap).
-  // If false, KeyEquals compares by content (derefs mCharMap; must be alive).
-  bool mCompareByPointer;
-};
-
 class CharMapHashKey : public PLDHashEntryHdr {
  public:
-  typedef CharMapLookup KeyType;
-  typedef const CharMapLookup* KeyTypePointer;
+  typedef gfxCharacterMap* KeyType;
+  typedef const gfxCharacterMap* KeyTypePointer;
 
-  explicit CharMapHashKey(const CharMapLookup* aLookup)
-      : mCharMap(aLookup->mCharMap) {
-    // Only content-compare lookups (FindCharMap) insert; the cmap is alive.
-    MOZ_ASSERT(!aLookup->mCompareByPointer);
+  explicit CharMapHashKey(const gfxCharacterMap* aCharMap)
+      : mCharMap(const_cast<gfxCharacterMap*>(aCharMap)) {
     MOZ_COUNT_CTOR(CharMapHashKey);
   }
   CharMapHashKey(const CharMapHashKey& toCopy) : mCharMap(toCopy.mCharMap) {
@@ -65,29 +50,23 @@ class CharMapHashKey : public PLDHashEntryHdr {
   }
   MOZ_COUNTED_DTOR(CharMapHashKey)
 
-  gfxCharacterMap* GetCharMap() const { return mCharMap.get(); }
+  gfxCharacterMap* GetKey() const { return mCharMap.get(); }
 
-  bool KeyEquals(const CharMapLookup* aLookup) const {
-    if (aLookup->mCompareByPointer) {
-      // Pointer-identity compare for MaybeRemoveCmap. Does not dereference
-      // aLookup->mCharMap, which may be dangling.
-      return mCharMap.get() == aLookup->mCharMap;
-    }
-    // Content compare for FindCharMap. aLookup->mCharMap must be alive.
-    MOZ_ASSERT(!aLookup->mCharMap->mBuildOnTheFly && !mCharMap->mBuildOnTheFly,
+  bool KeyEquals(const gfxCharacterMap* aCharMap) const {
+    MOZ_ASSERT(!aCharMap->mBuildOnTheFly && !mCharMap->mBuildOnTheFly,
                "custom cmap used in shared cmap hashtable");
-    if (aLookup->mHash != mCharMap->mHash) {
+    // cmaps built on the fly never match
+    if (aCharMap->mHash != mCharMap->mHash) {
       return false;
     }
-    return mCharMap->Equals(aLookup->mCharMap);
+    return mCharMap->Equals(aCharMap);
   }
 
-  static const CharMapLookup* KeyToPointer(const CharMapLookup& aLookup) {
-    return &aLookup;
+  static const gfxCharacterMap* KeyToPointer(gfxCharacterMap* aCharMap) {
+    return aCharMap;
   }
-  static PLDHashNumber HashKey(const CharMapLookup* aLookup) {
-    // Use the captured hash; never dereference aLookup->mCharMap.
-    return aLookup->mHash;
+  static PLDHashNumber HashKey(const gfxCharacterMap* aCharMap) {
+    return aCharMap->mHash;
   }
 
   enum { ALLOW_MEMMOVE = true };
@@ -273,18 +252,6 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   }
 
   FontVisibility GetFontVisibility(nsCString& aFont, bool& aFound);
-
-  // Given a test string and ordered font list, determine which fonts would
-  // render each character (CSS font-fallback simulation). Returns fonts used
-  // in order of first use.
-  // Assumes x_western langGroup and normal emoji variant.
-  // aMaxVisibility filters fonts: only fonts with visibility <= aMaxVisibility
-  // are considered. Default is User which includes Base, LangPack, and User.
-  void ListFontsUsedForString(
-      const nsAString& aText, const nsTArray<nsCString>& aFontList,
-      nsTArray<nsCString>& aFontsUsed,
-      FontVisibility aMaxVisibility = FontVisibility::User);
-
   bool GetMissingFonts(nsTArray<nsCString>& aMissingFonts);
   void GetMissingFonts(nsCString& aMissingFonts);
 
@@ -390,7 +357,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       const nsACString& aFamily, const gfxFontStyle* aStyle);
 
   mozilla::fontlist::FontList* SharedFontList() const {
-    return mSharedFontList;
+    return mSharedFontList.get();
   }
 
   // Create a handle for a single shmem block (identified by index) ready to
@@ -550,9 +517,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   already_AddRefed<gfxCharacterMap> FindCharMap(gfxCharacterMap* aCmap);
 
   // Remove the cmap from the shared cmap set if it holds the only remaining
-  // reference to the object. aCharMap may be dangling; aHash is its mHash
-  // captured while it was known alive.
-  void MaybeRemoveCmap(gfxCharacterMap* aCharMap, uint32_t aHash);
+  // reference to the object.
+  void MaybeRemoveCmap(gfxCharacterMap* aCharMap);
 
   // Keep track of userfont sets to notify when global fontlist changes occur.
   void AddUserFontSet(gfxUserFontSet* aUserFontSet) {
@@ -682,7 +648,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // existing references to shared font family or face objects and character
   // maps will no longer be valid.
   // (The legacy (non-shared) list just returns 0 here.)
-  uint32_t GetGeneration() const { return mFontListGeneration; }
+  uint32_t GetGeneration() const;
 
   // Sometimes we need to know if we're on the InitFontList startup thread.
   static bool IsInitFontListThread() {
@@ -1108,9 +1074,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   nsTArray<nsCString> mEnabledFontsList;
   nsTHashSet<nsCString> mIconFontsSet;
 
-  // This is an owning reference; we are responsible to delete the FontList at
-  // appropriate times.
-  std::atomic<mozilla::fontlist::FontList*> mSharedFontList = nullptr;
+  mozilla::UniquePtr<mozilla::fontlist::FontList> mSharedFontList;
 
   nsClassHashtable<nsCStringHashKey, mozilla::fontlist::AliasData> mAliasTable;
   nsTHashMap<nsCStringHashKey, mozilla::fontlist::LocalFaceRec::InitData>
@@ -1125,9 +1089,6 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   RefPtr<LoadCmapsRunnable> mLoadCmapsRunnable;
   uint32_t mStartedLoadingCmapsFrom MOZ_GUARDED_BY(mLock) = 0xffffffffu;
-
-  // Cached value of mSharedFontList->GetGeneration(), updated by InitFontList.
-  std::atomic<uint32_t> mFontListGeneration = 0;
 
   bool mFontFamilyWhitelistActive = false;
 

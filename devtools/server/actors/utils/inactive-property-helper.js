@@ -672,27 +672,6 @@ class InactivePropertyHelper {
         fixId: "inactive-css-no-principal-box-fix",
         msgId: "inactive-css-no-principal-box",
       },
-      // position-area used on element which is not absolutely positionned and the
-      // declaration isn't in a @position-try rule.
-      {
-        invalidProperties: ["position-area"],
-        when: () =>
-          !this.isAbsolutelyPositioned &&
-          ChromeUtils.getClassName(this.cssRule) !== "CSSPositionTryRule",
-        msgId: "inactive-css-not-absolutely-positioned-item",
-        fixId: "inactive-css-not-absolutely-positioned-item-fix",
-      },
-      // position-area for absolutely positionned element without default anchor element,
-      // and the declaration isn't in a @position-try rule.
-      {
-        invalidProperties: ["position-area"],
-        when: () =>
-          this.isAbsolutelyPositioned &&
-          !this.hasDefaultAnchorElement() &&
-          ChromeUtils.getClassName(this.cssRule) !== "CSSPositionTryRule",
-        msgId: "inactive-css-no-default-anchor",
-        fixId: "inactive-css-no-default-anchor-fix",
-      },
     ];
   }
 
@@ -1557,7 +1536,7 @@ class InactivePropertyHelper {
         return p;
       }
 
-      const style = computedStyle(p, node.documentGlobal);
+      const style = computedStyle(p, node.ownerGlobal);
       const display = style.display;
 
       if (display !== "contents") {
@@ -1610,7 +1589,7 @@ class InactivePropertyHelper {
       p && p !== node.ownerDocument;
       p = p.flattenedTreeParentNode
     ) {
-      const style = computedStyle(p, node.documentGlobal);
+      const style = computedStyle(p, node.ownerGlobal);
       if (style.columnWidth !== "auto" || style.columnCount !== "auto") {
         // It's a multi-column container!
         return p;
@@ -1643,10 +1622,6 @@ class InactivePropertyHelper {
     // Only 'horizontal-tb' has a horizontal writing mode.
     // See https://drafts.csswg.org/css-writing-modes-4/#propdef-writing-mode
     return computedStyle(node).writingMode !== "horizontal-tb";
-  }
-
-  hasDefaultAnchorElement() {
-    return InspectorUtils.getAnchorFor(this.node) !== null;
   }
 
   /**
@@ -1747,7 +1722,7 @@ function allCssPropertiesExcept(propertiesToIgnore) {
  *         Optional window object. If omitted, will get the node's window.
  * @return {object}
  */
-function computedStyle(node, window = node.documentGlobal) {
+function computedStyle(node, window = node.ownerGlobal) {
   return window.getComputedStyle(node);
 }
 

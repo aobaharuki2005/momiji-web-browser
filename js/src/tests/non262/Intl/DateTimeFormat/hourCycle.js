@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 const hourCycleToH12Map = {
   "h11": true,
   "h12": true,

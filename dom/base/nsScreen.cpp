@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,6 +12,7 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nsDeviceContext.h"
 #include "nsGlobalWindowInner.h"
 #include "nsGlobalWindowOuter.h"
@@ -22,14 +25,8 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsScreen::nsScreen(nsPIDOMWindowInner* aWindow)
-    : DOMEventTargetHelper(aWindow) {}
-
-/* static */ already_AddRefed<nsScreen> nsScreen::Create(
-    nsPIDOMWindowInner* aWindow) {
-  RefPtr screen = new nsScreen(aWindow);
-  screen->mScreenOrientation = dom::ScreenOrientation::Create(aWindow, screen);
-  return screen.forget();
-}
+    : DOMEventTargetHelper(aWindow),
+      mScreenOrientation(new ScreenOrientation(aWindow, this)) {}
 
 nsScreen::~nsScreen() = default;
 
@@ -104,9 +101,17 @@ CSSIntRect nsScreen::GetAvailRect() {
     return GetTopWindowInnerRectForRFP();
   }
 
-  // Check for overrides set by WebDriver BiDi or RDM before applying
-  // fingerprinting protection. This allows developer tools to simulate
-  // specific device dimensions for testing purposes.
+  if (ShouldResistFingerprinting(RFPTarget::ScreenAvailToResolution)) {
+    nsDeviceContext* context = GetDeviceContext();
+    if (NS_WARN_IF(!context)) {
+      return {};
+    }
+    return nsRFPService::GetSpoofedScreenAvailSize(
+        context->GetRect(), context->GetFullZoom(), IsFullscreen());
+  }
+
+  // Here we manipulate the value of aRect to represent the screen size,
+  // if there is an override set with WebDriver BiDi or in RDM.
   if (nsPIDOMWindowInner* owner = GetOwnerWindow()) {
     if (Document* doc = owner->GetExtantDoc()) {
       Maybe<CSSIntSize> deviceSize =
@@ -122,26 +127,6 @@ CSSIntRect nsScreen::GetAvailRect() {
         return {{}, *size};
       }
     }
-  }
-
-  if (ShouldResistFingerprinting(RFPTarget::ScreenAvailToResolution)) {
-    nsDeviceContext* context = GetDeviceContext();
-    if (NS_WARN_IF(!context)) {
-      return {};
-    }
-
-    if (nsPIDOMWindowInner* owner = GetOwnerWindow()) {
-      if (Document* doc = owner->GetExtantDoc()) {
-        AutoTArray<nsString, 1> params;
-        params.AppendElement(
-            u"https://support.mozilla.org/kb/firefox-protection-against-fingerprinting"_ns);
-        doc->WarnOnceAbout(Document::eScreenFingerprintingProtection, false,
-                           params);
-      }
-    }
-
-    return nsRFPService::GetSpoofedScreenAvailSize(
-        context->GetRect(), context->GetFullZoom(), IsFullscreen());
   }
 
   nsDeviceContext* context = GetDeviceContext();
@@ -181,9 +166,7 @@ hal::ScreenOrientation nsScreen::GetOrientationType() const {
   return s->GetOrientationType();
 }
 
-dom::ScreenOrientation* nsScreen::Orientation() const {
-  return mScreenOrientation;
-}
+ScreenOrientation* nsScreen::Orientation() const { return mScreenOrientation; }
 
 void nsScreen::GetMozOrientation(nsString& aOrientation,
                                  CallerType aCallerType) const {
@@ -214,7 +197,7 @@ JSObject* nsScreen::WrapObject(JSContext* aCx,
 CSSIntRect nsScreen::GetTopWindowInnerRectForRFP() {
   if (nsPIDOMWindowInner* inner = GetOwnerWindow()) {
     if (BrowsingContext* bc = inner->GetBrowsingContext()) {
-      CSSIntSize size = bc->TopInnerSizeSpoofedForRFP();
+      CSSIntSize size = bc->Top()->GetTopInnerSizeForRFP();
       return {0, 0, size.width, size.height};
     }
   }

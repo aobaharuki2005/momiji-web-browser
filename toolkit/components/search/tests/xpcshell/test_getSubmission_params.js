@@ -72,12 +72,12 @@ add_setup(async function () {
   });
 
   SearchTestUtils.setRemoteSettingsConfig(config);
-  await SearchService.init();
+  await Services.search.init();
 });
 
 add_task(async function test_paramSubstitution() {
   for (let [i, test] of TESTS.entries()) {
-    let engine = await SearchService.getEngineById(`engine-${i}`);
+    let engine = await Services.search.getEngineById(`engine-${i}`);
     let submission = engine.getSubmission(TEST_SEARCH_TERM);
 
     Assert.equal(

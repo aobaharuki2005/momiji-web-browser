@@ -15,15 +15,6 @@ import {
 import { MESSAGE_ROLE } from "moz-src:///browser/components/aiwindow/ui/modules/ChatStore.sys.mjs";
 
 import { MemoriesManager } from "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs";
-import { sanitizeUntrustedContent } from "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs";
-
-const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  loadCallContext:
-    "moz-src:///browser/components/aiwindow/models/PromptLoader.sys.mjs",
-  loadPrompt:
-    "moz-src:///browser/components/aiwindow/models/PromptLoader.sys.mjs",
-});
 
 // Max number of memories to include in prompts
 const MAX_NUM_MEMORIES = 8;
@@ -66,7 +57,7 @@ export async function addMemoriesToPrompt(base, conversationMemoriesPrompt) {
     );
   if (memorySummaries.length) {
     const memoriesBlock = memorySummaries.map(s => `- ${s}`).join("\n");
-    const memoryPrompt = renderPrompt(conversationMemoriesPrompt, {
+    const memoryPrompt = await renderPrompt(conversationMemoriesPrompt, {
       memories: memoriesBlock,
     });
     return `${base}\n${memoryPrompt}`;
@@ -173,26 +164,19 @@ export const NewTabStarterGenerator = {
  * @param {Array} contextTabs - Array of tab objects with title, url, favicon
  * @param {number} n - Number of suggestions to generate (default 6)
  * @param {boolean} useMemories - Whether to include user memories in prompt (default false)
- * @param {string | null} flowId - Flow ID for correlating with firefox_ai_runtime telemetry
- * @param {AbortSignal} signal - Signal to cancel the inference request
  * @returns {Promise<Array>} Array of {text, type} suggestion objects
  */
 export async function generateConversationStartersSidebar(
   contextTabs = [],
   n = 2,
-  useMemories = false,
-  flowId = null,
-  signal = new AbortController().signal
+  useMemories = false
 ) {
   try {
     const today = new Date().toISOString().slice(0, 10);
 
     // Format current tab (first in context or empty)
     const currentTab = contextTabs.length
-      ? formatJson({
-          title: sanitizeUntrustedContent(contextTabs[0].title),
-          url: contextTabs[0].url,
-        })
+      ? formatJson({ title: contextTabs[0].title, url: contextTabs[0].url })
       : "No current tab";
 
     // Format opened tabs
@@ -202,44 +186,27 @@ export async function generateConversationStartersSidebar(
         contextTabs.length === 1
           ? "Only current tab is open"
           : formatJson(
-              contextTabs.slice(1).map(t => ({
-                title: sanitizeUntrustedContent(t.title),
-                url: t.url,
-              }))
+              contextTabs.slice(1).map(t => ({ title: t.title, url: t.url }))
             );
     } else {
       openedTabs = "No tabs available";
     }
-    // Data extracted into currentTab/openedTabs strings; release the
-    // caller-allocated array so it cannot prevent the window from being GC'd
-    // while awaiting inference.
-    contextTabs = null;
 
-    const callContext = await lazy.loadCallContext(
+    // Build engine and load prompt
+    const engineInstance = await openAIEngine.build(
       MODEL_FEATURES.CONVERSATION_SUGGESTIONS_SIDEBAR_STARTER
     );
-    const [
-      conversationStarterSystemPrompt,
-      conversationStarterPrompt,
-      assistantLimitations,
-    ] = await Promise.all([
-      lazy.loadPrompt(MODEL_FEATURES.CONVERSATION_STARTERS_SIDEBAR_SYSTEM),
-      lazy.loadPrompt(MODEL_FEATURES.CONVERSATION_SUGGESTIONS_SIDEBAR_STARTER),
-      lazy.loadPrompt(
-        MODEL_FEATURES.CONVERSATION_SUGGESTIONS_ASSISTANT_LIMITATIONS
-      ),
-    ]);
-    const engineInstance = await openAIEngine.build({
-      model: callContext.model,
-      serviceType: callContext.serviceType,
-      purpose: callContext.purpose,
-      flowId,
-      feature: MODEL_FEATURES.CONVERSATION_SUGGESTIONS_SIDEBAR_STARTER,
-    });
-    const inferenceParams = callContext.parameters;
+
+    const conversationStarterPrompt = await engineInstance.loadPrompt(
+      MODEL_FEATURES.CONVERSATION_SUGGESTIONS_SIDEBAR_STARTER
+    );
+
+    const assistantLimitations = await engineInstance.loadPrompt(
+      MODEL_FEATURES.CONVERSATION_SUGGESTIONS_ASSISTANT_LIMITATIONS
+    );
 
     // Base template
-    const base = renderPrompt(conversationStarterPrompt, {
+    const base = await renderPrompt(conversationStarterPrompt, {
       current_tab: currentTab,
       open_tabs: openedTabs,
       n: String(n),
@@ -249,50 +216,35 @@ export async function generateConversationStartersSidebar(
 
     let filled = base;
     if (useMemories) {
-      const conversationMemoriesPrompt = await lazy.loadPrompt(
+      const conversationMemoriesPrompt = await engineInstance.loadPrompt(
         MODEL_FEATURES.CONVERSATION_SUGGESTIONS_MEMORIES
       );
       filled = await addMemoriesToPrompt(base, conversationMemoriesPrompt);
     }
 
-    const fxAccountToken = await openAIEngine.getFxAccountToken();
-    signal.throwIfAborted();
+    // Get config for inference parameters
+    const config = engineInstance.getConfig(engineInstance.feature);
+    const inferenceParams = config?.parameters || {};
 
-    let runPromise = engineInstance.run({
-      args: [
+    const result = await engineInstance.run({
+      messages: [
         {
           role: "system",
-          content: conversationStarterSystemPrompt,
+          content: "Return only the requested suggestions, one per line.",
         },
         { role: "user", content: filled },
       ],
-      fxAccountToken,
       ...inferenceParams,
     });
-    runPromise = Promise.race([
-      runPromise,
-      new Promise((_, reject) => {
-        if (signal.aborted) {
-          reject(signal.reason);
-        } else {
-          signal.addEventListener("abort", () => reject(signal.reason), {
-            once: true,
-          });
-        }
-      }),
-    ]);
-    const result = await runPromise;
 
     const prompts = cleanInferenceOutput(result);
 
     return prompts.slice(0, n).map(t => ({ text: t, type: "chat" }));
   } catch (e) {
-    if (e.name !== "AbortError") {
-      console.warn(
-        "[ConversationSuggestions][sidebar-conversation-starters] failed:",
-        e
-      );
-    }
+    console.warn(
+      "[ConversationSuggestions][sidebar-conversation-starters] failed:",
+      e
+    );
     return [];
   }
 }
@@ -304,47 +256,36 @@ export async function generateConversationStartersSidebar(
  * @param {object} currentTab - Current tab object with title, url
  * @param {number} n - Number of suggestions to generate (default 6)
  * @param {boolean} useMemories - Whether to include user memories in prompt (default false)
- * @param {string | null} flowId - Flow ID for correlating with firefox_ai_runtime telemetry
  * @returns {Promise<Array>} Array of {text, type} suggestion objects
  */
 export async function generateFollowupPrompts(
   conversationHistory,
   currentTab,
   n = 2,
-  useMemories = false,
-  flowId = null
+  useMemories = false
 ) {
   try {
     const today = new Date().toISOString().slice(0, 10);
     const convo = trimConversation(conversationHistory);
     const currentTabStr =
       currentTab && Object.keys(currentTab).length
-        ? formatJson({
-            title: sanitizeUntrustedContent(currentTab.title),
-            url: currentTab.url,
-          })
+        ? formatJson({ title: currentTab.title, url: currentTab.url })
         : "No tab";
 
-    const callContext = await lazy.loadCallContext(
+    // Build engine and load prompt
+    const engineInstance = await openAIEngine.build(
       MODEL_FEATURES.CONVERSATION_SUGGESTIONS_FOLLOWUP
     );
-    const [conversationFollowupPrompt, assistantLimitationsFollowup] =
-      await Promise.all([
-        lazy.loadPrompt(MODEL_FEATURES.CONVERSATION_SUGGESTIONS_FOLLOWUP),
-        lazy.loadPrompt(
-          MODEL_FEATURES.CONVERSATION_SUGGESTIONS_ASSISTANT_LIMITATIONS
-        ),
-      ]);
-    const engineInstance = await openAIEngine.build({
-      model: callContext.model,
-      serviceType: callContext.serviceType,
-      purpose: callContext.purpose,
-      flowId,
-      feature: MODEL_FEATURES.CONVERSATION_SUGGESTIONS_FOLLOWUP,
-    });
-    const inferenceParams = callContext.parameters;
 
-    const base = renderPrompt(conversationFollowupPrompt, {
+    const conversationFollowupPrompt = await engineInstance.loadPrompt(
+      MODEL_FEATURES.CONVERSATION_SUGGESTIONS_FOLLOWUP
+    );
+
+    const assistantLimitationsFollowup = await engineInstance.loadPrompt(
+      MODEL_FEATURES.CONVERSATION_SUGGESTIONS_ASSISTANT_LIMITATIONS
+    );
+
+    const base = await renderPrompt(conversationFollowupPrompt, {
       current_tab: currentTabStr,
       conversation: formatJson(convo),
       n: String(n),
@@ -354,11 +295,17 @@ export async function generateFollowupPrompts(
 
     let filled = base;
     if (useMemories) {
-      const conversationMemoriesPrompt = await lazy.loadPrompt(
+      const conversationMemoriesPrompt = await engineInstance.loadPrompt(
         MODEL_FEATURES.CONVERSATION_SUGGESTIONS_MEMORIES
       );
       filled = await addMemoriesToPrompt(base, conversationMemoriesPrompt);
     }
+
+    // Get config for inference parameters
+    const config = engineInstance.getConfig(
+      MODEL_FEATURES.CONVERSATION_SUGGESTIONS_FOLLOWUP
+    );
+    const inferenceParams = config?.parameters || {};
 
     const result = await engineInstance.run({
       messages: [

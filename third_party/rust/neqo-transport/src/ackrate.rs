@@ -8,7 +8,7 @@
 
 use std::{cmp::max, time::Duration};
 
-use neqo_common::{Buffer, qtrace};
+use neqo_common::{qtrace, Buffer};
 
 use crate::{
     connection::params::ConnectionParameters,
@@ -124,7 +124,7 @@ impl FlexibleAckRate {
         self.current = acked.clone();
     }
 
-    const fn frame_lost(&mut self, _lost: &AckRate) {
+    fn frame_lost(&mut self, _lost: &AckRate) {
         self.frame_outstanding = false;
     }
 
@@ -184,7 +184,7 @@ impl PeerAckDelay {
         }
     }
 
-    pub const fn frame_lost(&mut self, r: &AckRate) {
+    pub fn frame_lost(&mut self, r: &AckRate) {
         if let Self::Flexible(rate) = self {
             rate.frame_lost(r);
         }

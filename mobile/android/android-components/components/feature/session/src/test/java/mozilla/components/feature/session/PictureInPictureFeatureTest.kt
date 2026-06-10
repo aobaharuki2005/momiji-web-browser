@@ -8,10 +8,8 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.TestScope
-import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.engine.EngineMiddleware
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.MediaSessionState
 import mozilla.components.browser.state.state.SessionState
@@ -20,10 +18,8 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.support.test.any
-import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -35,6 +31,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.verification.VerificationMode
 import org.robolectric.annotation.Config
 
@@ -53,12 +50,7 @@ class PictureInPictureFeatureTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.O])
     fun `on home pressed without system feature`() {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-
-        val store = BrowserStore(middleware = listOf(captureActionsMiddleware))
-        // clear InitAction
-        captureActionsMiddleware.reset()
-
+        val store = mock<BrowserStore>()
         whenever(activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
             .thenReturn(false)
 
@@ -66,9 +58,7 @@ class PictureInPictureFeatureTest {
             spy(PictureInPictureFeature(store, activity, crashReporting))
 
         assertFalse(pictureInPictureFeature.onHomePressed())
-
-        captureActionsMiddleware.assertNoActionDispatched()
-
+        verifyNoInteractions(store)
         verify(activity.packageManager).hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
         verify(pictureInPictureFeature, never()).enterPipModeCompat()
     }
@@ -212,7 +202,7 @@ class PictureInPictureFeatureTest {
             .thenReturn(false)
 
         val pictureInPictureFeature =
-            PictureInPictureFeature(BrowserStore(), activity, crashReporting)
+            PictureInPictureFeature(mock(), activity, crashReporting)
 
         assertFalse(pictureInPictureFeature.enterPipModeCompat())
         verify(activity, never()).enterPictureInPictureMode(any())
@@ -251,7 +241,7 @@ class PictureInPictureFeatureTest {
     @Config(sdk = [Build.VERSION_CODES.O])
     fun `enter pip mode compat on android o and above`() {
         val pictureInPictureFeature =
-            PictureInPictureFeature(BrowserStore(), activity, crashReporting)
+            PictureInPictureFeature(mock(), activity, crashReporting)
 
         whenever(activity.enterPictureInPictureMode(any())).thenReturn(true)
 
@@ -261,16 +251,11 @@ class PictureInPictureFeatureTest {
 
     @Test
     fun `on pip mode changed`() {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-
-        val store = BrowserStore(
-            initialState = BrowserState(),
-            middleware = listOf(captureActionsMiddleware) + EngineMiddleware.create(
-                engine = mock(),
-                TestScope(),
-            ),
-        )
-
+        val store = mock<BrowserStore>()
+        val browserState = mock<BrowserState>().apply {
+            whenever(selectedTab).thenReturn(null)
+        }
+        whenever(store.state).thenReturn(browserState)
         val pipFeature = PictureInPictureFeature(
             store,
             activity,
@@ -278,17 +263,12 @@ class PictureInPictureFeatureTest {
             tabId = "tab-id",
         )
 
-        pipFeature.onPictureInPictureModeChanged(isInPipMode = true)
-        captureActionsMiddleware.assertFirstAction(ContentAction.PictureInPictureChangedAction::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertTrue(action.pipEnabled)
-        }
+        pipFeature.onPictureInPictureModeChanged(true)
+        verify(store).dispatch(ContentAction.PictureInPictureChangedAction("tab-id", true))
 
-        pipFeature.onPictureInPictureModeChanged(isInPipMode = false)
-        captureActionsMiddleware.assertLastAction(ContentAction.PictureInPictureChangedAction::class) { action ->
-            assertEquals("tab-id", action.sessionId)
-            assertFalse(action.pipEnabled)
-        }
+        pipFeature.onPictureInPictureModeChanged(false)
+        verify(store).dispatch(ContentAction.PictureInPictureChangedAction("tab-id", false))
+
         verify(activity, never()).enterPictureInPictureMode(any())
         verifyDeprecatedPictureInPictureMode(activity, never())
     }

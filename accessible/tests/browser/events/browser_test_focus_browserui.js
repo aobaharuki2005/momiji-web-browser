@@ -18,7 +18,7 @@ async function runTests(browser) {
   });
 
   let onFocus = waitForEvent(EVENT_FOCUS, "input");
-  EventUtils.synthesizeKey("VK_TAB", {}, browser.documentGlobal);
+  EventUtils.synthesizeKey("VK_TAB", {}, browser.ownerGlobal);
   let evt = await onFocus;
   testStates(evt.accessible, STATE_FOCUSED);
 
@@ -41,12 +41,12 @@ async function runTests(browser) {
     EVENT_FOCUS,
     event => event.accessible.DOMNode == gURLBar.inputField
   );
-  EventUtils.synthesizeKey("t", { accelKey: true }, browser.documentGlobal);
+  EventUtils.synthesizeKey("t", { accelKey: true }, browser.ownerGlobal);
   evt = await onFocus;
   testStates(evt.accessible, STATE_FOCUSED);
 
   onFocus = waitForEvent(EVENT_FOCUS, "input");
-  EventUtils.synthesizeKey("w", { accelKey: true }, browser.documentGlobal);
+  EventUtils.synthesizeKey("w", { accelKey: true }, browser.ownerGlobal);
   evt = await onFocus;
   testStates(evt.accessible, STATE_FOCUSED);
 }

@@ -47,6 +47,7 @@ macro_rules! langid {
                     None => $crate::subtags::Variants::new(),
                 }
             },
+            #[allow(clippy::panic)] // const context
             _ => panic!(concat!("Invalid language code: ", $langid, " . Note langid! macro can only support up to a single variant tag. Use runtime parsing instead.")),
         }
     }};
@@ -146,6 +147,7 @@ macro_rules! locale {
                     None => $crate::extensions::Extensions::new(),
                 },
             },
+            #[allow(clippy::panic)] // const context
             _ => panic!(concat!(
                 "Invalid language code: ",
                 $locale,

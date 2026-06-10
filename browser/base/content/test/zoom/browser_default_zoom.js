@@ -92,11 +92,11 @@ add_task(async function test_enlarge_reduce_reset_local_zoom() {
   // 133% tab zoom
   await TestUtils.waitForCondition(() => {
     info("Current tab zoom is ", ZoomManager.getZoomForBrowser(tabBrowser));
-    return ZoomManager.getZoomForBrowser(tabBrowser) == 1.3;
+    return ZoomManager.getZoomForBrowser(tabBrowser) == 1.33;
   });
   is(
     ZoomManager.getZoomForBrowser(tabBrowser),
-    1.3,
+    1.33,
     "Increasing zoom changes zoom of current tab."
   );
   defaultZoom = await FullZoomHelper.getGlobalValue();

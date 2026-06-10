@@ -1,5 +1,0 @@
-error: expected string literal
- --> non_string_literal.rs:8:18
-  |
-8 |     let _ = url!(42);
-  |                  ^^

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,6 +6,7 @@
 #ifndef mozilla_net_SocketProcessBridgeChild_h
 #define mozilla_net_SocketProcessBridgeChild_h
 
+#include <functional>
 #include "mozilla/net/PSocketProcessBridgeChild.h"
 #include "nsIObserver.h"
 
@@ -39,7 +41,7 @@ class SocketProcessBridgeChild final : public PSocketProcessBridgeChild,
 
   static StaticRefPtr<SocketProcessBridgeChild> sSocketProcessBridgeChild;
   bool mShuttingDown;
-  ProcessId mSocketProcessPid = 0;
+  ProcessId mSocketProcessPid;
 };
 
 }  // namespace net

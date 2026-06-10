@@ -110,7 +110,7 @@ async function checkInstallConfirmation(
 }
 
 add_setup(() => {
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
   registerCleanupFunction(() => {
     MockFilePicker.cleanup();
   });
@@ -136,7 +136,9 @@ add_task(async function test_install_from_file() {
     "Drag Drop test 2",
   ]);
 
-  await triggerPageOptionsAction(win, "install-from-file");
+  win.document
+    .querySelector('#page-options [action="install-from-file"]')
+    .click();
 
   await pInstallURIClosed;
 
@@ -208,7 +210,7 @@ add_task(async function test_install_from_file_with_pref_set() {
     confirmInstall: true,
   });
   let addonStarted = AddonTestUtils.promiseWebExtensionStartup(addonId);
-  await triggerPageOptionsAction(win, "install-from-file");
+  installButton.click();
   await Promise.all([pInstallURIClosed, addonStarted]);
 
   let addon = await AddonManager.getAddonByID(addonId);

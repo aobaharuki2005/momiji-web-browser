@@ -5,6 +5,3 @@ features:
 - name: search
   files:
   - search-*
-- name: slot
-  files:
-  - slot-element-default-display.html

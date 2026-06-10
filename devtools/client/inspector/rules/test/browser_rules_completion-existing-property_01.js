@@ -78,7 +78,7 @@ add_task(async function () {
   await runAutocompletionTest(toolbox, inspector, view);
 
   info("Test autocompletion after page navigation");
-  await reloadSelectedTab();
+  await reloadBrowser();
   await runAutocompletionTest(toolbox, inspector, view);
 });
 

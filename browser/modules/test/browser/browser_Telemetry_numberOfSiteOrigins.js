@@ -9,13 +9,19 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+});
+
 const gTestRoot = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "http://mochi.test:8888"
 );
 
 async function run_test(count) {
-  Services.fog.testResetFOG();
+  const histogram = TelemetryTestUtils.getAndClearHistogram(
+    "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_ALL_TABS"
+  );
 
   let newTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
@@ -33,12 +39,7 @@ async function run_test(count) {
     await BrowserTestUtils.removeTab(newTab);
     await run_test(count + 1);
   } else {
-    await Services.fog.testFlushAllChildren();
-    Assert.equal(
-      Glean.geckoview.documentSiteOrigins.testGetValue().sum,
-      2,
-      "Two unique site origins recorded"
-    );
+    TelemetryTestUtils.assertHistogram(histogram, 2, 1);
     await BrowserTestUtils.removeTab(newTab);
   }
 }

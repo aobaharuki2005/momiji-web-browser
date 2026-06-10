@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-plugins {
-    alias(libs.plugins.dependency.analysis)
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -26,10 +22,8 @@ dependencies {
     api ComponentsDependencies.mozilla_appservices_tabs
 
     implementation project(':components:concept-toolbar')
-    implementation project(':components:support-appservices')
     implementation project(':components:support-utils')
 
-    implementation ComponentsDependencies.mozilla_appservices_errorsupport
     implementation ComponentsDependencies.mozilla_appservices_syncmanager
     implementation libs.androidx.work.runtime
 
@@ -42,11 +36,10 @@ dependencies {
     testImplementation libs.androidx.test.junit
     testImplementation libs.androidx.work.testing
     testImplementation libs.kotlin.reflect
-    testImplementation libs.kotlin.test
     testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.mockwebserver
     testImplementation libs.mozilla.glean.forUnitTests
     testImplementation libs.robolectric
-    testRuntimeOnly libs.okhttp
 }
 
 apply from: '../../../common-config.gradle'

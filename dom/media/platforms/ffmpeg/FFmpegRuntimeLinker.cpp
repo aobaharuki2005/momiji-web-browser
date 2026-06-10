@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,7 +12,6 @@
 
 namespace mozilla {
 
-StaticMutex FFmpegRuntimeLinker::sMutex;
 FFmpegRuntimeLinker::LinkStatus FFmpegRuntimeLinker::sLinkStatus =
     LinkStatus_INIT;
 const char* FFmpegRuntimeLinker::sLinkStatusLibraryName = "";
@@ -36,7 +37,7 @@ static FFmpegLibWrapper sLibAV;
 static const char* sLibs[] = {
 // clang-format off
 #if defined(XP_DARWIN)
-  "libavcodec." FFMPEG_MAX_MAJOR_VERSION_STR(FFMPEG_MAX_MAJOR_VERSION) ".dylib",
+  "libavcodec.62.dylib",
   "libavcodec.61.dylib",
   "libavcodec.60.dylib",
   "libavcodec.59.dylib",
@@ -50,7 +51,7 @@ static const char* sLibs[] = {
   "libavcodec.so", // OpenBSD port controls the major/minor library version
                    // of ffmpeg and update it regulary on ABI/API changes
 #else
-  "libavcodec.so." FFMPEG_MAX_MAJOR_VERSION_STR(FFMPEG_MAX_MAJOR_VERSION),
+  "libavcodec.so.62",
   "libavcodec.so.61",
   "libavcodec.so.60",
   "libavcodec.so.59",
@@ -74,7 +75,6 @@ void FFmpegRuntimeLinker::PrefCallbackLogLevel(const char* aPref, void* aData) {
 
 /* static */
 bool FFmpegRuntimeLinker::Init() {
-  StaticMutexAutoLock lock(sMutex);
   if (sLinkStatus != LinkStatus_INIT) {
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
@@ -83,7 +83,8 @@ bool FFmpegRuntimeLinker::Init() {
   // more precise error if possible.
   sLinkStatus = LinkStatus_NOT_FOUND;
 
-  for (auto lib : sLibs) {
+  for (size_t i = 0; i < std::size(sLibs); i++) {
+    const char* lib = sLibs[i];
     PRLibSpec lspec;
     lspec.type = PR_LibSpec_Pathname;
     lspec.value.pathname = lib;
@@ -276,7 +277,6 @@ already_AddRefed<PlatformEncoderModule> FFmpegRuntimeLinker::CreateEncoder() {
 }
 
 /* static */ const char* FFmpegRuntimeLinker::LinkStatusString() {
-  StaticMutexAutoLock lock(sMutex);
   switch (sLinkStatus) {
     case LinkStatus_INIT:
       return "Libavcodec not initialized yet";

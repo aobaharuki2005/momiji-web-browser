@@ -5,18 +5,18 @@
 use super::*;
 use anyhow::bail;
 
-pub fn pass(namespace: &mut Namespace) -> Result<()> {
+pub fn pass(module: &mut Module) -> Result<()> {
     // UniFFI contract version function.  This is used to check that there wasn't a breaking
     // change to `uniffi-bindgen`.
-    namespace.ffi_uniffi_contract_version = RustFfiFunctionName(format!(
+    module.ffi_uniffi_contract_version = RustFfiFunctionName(format!(
         "ffi_{}_uniffi_contract_version",
-        &namespace.crate_name
+        &module.crate_name
     ));
-    namespace.ffi_definitions.insert(
+    module.ffi_definitions.push(
         FfiFunction {
             name: RustFfiFunctionName(format!(
                 "ffi_{}_uniffi_contract_version",
-                &namespace.crate_name
+                &module.crate_name
             )),
             async_data: None,
             arguments: vec![],
@@ -40,25 +40,18 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
         };
         let fn_name = match &callable.kind {
             CallableKind::Function => {
-                uniffi_meta::fn_checksum_symbol_name(&namespace.crate_name, &callable.name)
+                uniffi_meta::fn_checksum_symbol_name(&module.crate_name, &callable.name)
             }
-            CallableKind::Method { self_type } => {
-                let name = self_type.ty.name().unwrap();
-                uniffi_meta::method_checksum_symbol_name(
-                    &namespace.crate_name,
-                    name,
-                    &callable.name,
-                )
+            CallableKind::Method {
+                interface_name: name,
             }
-            CallableKind::VTableMethod { self_type } => uniffi_meta::method_checksum_symbol_name(
-                &namespace.crate_name,
-                self_type.ty.name().unwrap(),
-                &callable.name,
-            ),
-            CallableKind::Constructor { self_type, .. } => {
+            | CallableKind::VTableMethod { trait_name: name } => {
+                uniffi_meta::method_checksum_symbol_name(&module.crate_name, name, &callable.name)
+            }
+            CallableKind::Constructor { interface_name, .. } => {
                 uniffi_meta::constructor_checksum_symbol_name(
-                    &namespace.crate_name,
-                    self_type.ty.name().unwrap(),
+                    &module.crate_name,
+                    interface_name,
                     &callable.name,
                 )
             }
@@ -82,8 +75,8 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
     // Call `visit_callable` for callables that we have checksums for
     // (functions/constructors/methods), but not ones where we don't (VTable methods and UniFFI
     // traits).
-    namespace.try_visit(|function: &Function| function.try_visit(&mut visit_callable))?;
-    namespace.try_visit(|int: &Interface| {
+    module.try_visit(|function: &Function| function.try_visit(&mut visit_callable))?;
+    module.try_visit(|int: &Interface| {
         for cons in int.constructors.iter() {
             visit_callable(&cons.callable)?;
         }
@@ -94,14 +87,14 @@ pub fn pass(namespace: &mut Namespace) -> Result<()> {
     })?;
 
     for (ffi_func, checksum) in checksums {
-        namespace.checksums.push(Checksum {
+        module.checksums.push(Checksum {
             fn_name: ffi_func.name.clone(),
             checksum,
         });
-        namespace
+        module
             .ffi_definitions
-            .insert(FfiDefinition::RustFunction(ffi_func));
+            .push(FfiDefinition::RustFunction(ffi_func));
     }
-    namespace.correct_contract_version = uniffi_meta::UNIFFI_CONTRACT_VERSION.to_string();
+    module.correct_contract_version = uniffi_meta::UNIFFI_CONTRACT_VERSION.to_string();
     Ok(())
 }

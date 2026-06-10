@@ -35,7 +35,6 @@ pub use super::specified::{ContentDistribution, ItemPlacement, SelfAlignment};
 /// See the discussion in https://bugzil.la/1384542.
 #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToCss, ToResolvedValue, ToTyped)]
 #[repr(C)]
-#[typed(todo_derive_fields)]
 pub struct ComputedJustifyItems {
     /// The specified value for the property. Can contain the bare `legacy`
     /// keyword.

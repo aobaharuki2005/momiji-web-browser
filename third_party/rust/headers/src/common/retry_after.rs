@@ -1,9 +1,7 @@
 use std::time::{Duration, SystemTime};
 
-use http::HeaderValue;
-
-use crate::util::{HttpDate, Seconds, TryFromValues};
-use crate::Error;
+use util::{HttpDate, Seconds, TryFromValues};
+use HeaderValue;
 
 /// The `Retry-After` header.
 ///
@@ -17,14 +15,15 @@ use crate::Error;
 ///
 /// # Examples
 /// ```
+/// # extern crate headers;
 /// use std::time::{Duration, SystemTime};
 /// use headers::RetryAfter;
 ///
 /// let delay = RetryAfter::delay(Duration::from_secs(300));
 /// let date = RetryAfter::date(SystemTime::now());
 /// ```
-///
-/// Retry-After header, defined in [RFC7231](https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.3)
+
+/// Retry-After header, defined in [RFC7231](http://tools.ietf.org/html/rfc7231#section-7.1.3)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RetryAfter(After);
 
@@ -54,7 +53,7 @@ impl RetryAfter {
 }
 
 impl TryFromValues for After {
-    fn try_from_values<'i, I>(values: &mut I) -> Result<Self, Error>
+    fn try_from_values<'i, I>(values: &mut I) -> Result<Self, ::Error>
     where
         I: Iterator<Item = &'i HeaderValue>,
     {
@@ -68,7 +67,7 @@ impl TryFromValues for After {
                 let date = HttpDate::from_val(val)?;
                 Some(After::DateTime(date))
             })
-            .ok_or_else(Error::invalid)
+            .ok_or_else(::Error::invalid)
     }
 }
 
@@ -83,11 +82,10 @@ impl<'a> From<&'a After> for HeaderValue {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
-
     use super::super::test_decode;
     use super::RetryAfter;
-    use crate::util::HttpDate;
+    use std::time::Duration;
+    use util::HttpDate;
 
     #[test]
     fn delay_decode() {

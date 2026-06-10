@@ -12,6 +12,8 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.plus
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.lib.state.ext.consumeFrom
@@ -66,7 +68,7 @@ class CookieBannerPanelDialogFragment : FenixDialogFragment() {
 
         val controller = DefaultCookieBannerDetailsController(
             context = requireContext(),
-            scope = viewLifecycleOwner.lifecycleScope,
+            ioScope = viewLifecycleOwner.lifecycleScope + Dispatchers.IO,
             cookieBannersStorage = requireComponents.core.cookieBannersStorage,
             protectionsStore = protectionsStore,
             browserStore = requireComponents.core.store,
@@ -83,7 +85,7 @@ class CookieBannerPanelDialogFragment : FenixDialogFragment() {
 
         cookieBannersView = CookieBannerHandlingDetailsView(
             context = requireContext(),
-            scope = viewLifecycleOwner.lifecycleScope,
+            ioScope = viewLifecycleOwner.lifecycleScope + Dispatchers.IO,
             container = binding.cookieBannerDetailsInfoLayout,
             publicSuffixList = requireComponents.publicSuffixList,
             interactor = DefaultCookieBannerDetailsInteractor(controller),

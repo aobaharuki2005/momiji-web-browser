@@ -55,11 +55,11 @@ class BoxModelEditable extends PureComponent {
     );
   }
 
-  async onMouseOver(event) {
+  onMouseOver(event) {
     const { onShowRulePreviewTooltip, property } = this.props;
 
     if (event.shiftKey && HIGHLIGHT_RULE_PREF) {
-      await onShowRulePreviewTooltip(event.target, property);
+      onShowRulePreviewTooltip(event.target, property);
     }
   }
 

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,7 +10,6 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "nsCOMPtr.h"
 #include "nsIWorkerDebugger.h"
-#include "nsProxyRelease.h"
 
 class mozIDOMWindow;
 class nsIPrincipal;
@@ -25,10 +26,9 @@ class WorkerDebugger : public nsIWorkerDebugger {
   CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
   bool mIsInitialized;
   nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> mListeners;
-  nsMainThreadPtrHandle<WorkerDebugger> mSelfHandle;
 
  public:
-  static already_AddRefed<WorkerDebugger> Create(WorkerPrivate* aWorkerPrivate);
+  explicit WorkerDebugger(WorkerPrivate* aWorkerPrivate);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWORKERDEBUGGER
@@ -43,7 +43,6 @@ class WorkerDebugger : public nsIWorkerDebugger {
                              const nsAString& aMessage);
 
  private:
-  explicit WorkerDebugger(WorkerPrivate* aWorkerPrivate);
   virtual ~WorkerDebugger();
 
   void PostMessageToDebuggerOnMainThread(const nsAString& aMessage);

@@ -27,7 +27,7 @@ namespace test {
 class MockEchoRemover : public EchoRemover {
  public:
   MockEchoRemover();
-  ~MockEchoRemover() override;
+  virtual ~MockEchoRemover();
 
   MOCK_METHOD(void,
               ProcessCapture,

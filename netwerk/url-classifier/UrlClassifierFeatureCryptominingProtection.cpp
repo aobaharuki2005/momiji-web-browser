@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,12 +7,13 @@
 #include "UrlClassifierFeatureCryptominingProtection.h"
 
 #include "mozilla/AntiTrackingUtils.h"
-#include "mozilla/net/ChannelClassifierUtils.h"
 #include "mozilla/net/UrlClassifierCommon.h"
-#include "mozilla/ScopedPrefs.h"
+#include "ChannelClassifierService.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "nsNetUtil.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIWebProgressListener.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIChannel.h"
 
 namespace mozilla {
@@ -84,9 +87,7 @@ UrlClassifierFeatureCryptominingProtection::MaybeCreate(nsIChannel* aChannel) {
       ("UrlClassifierFeatureCryptominingProtection::MaybeCreate - channel %p",
        aChannel));
 
-  if (!ScopedPrefs::BoolPrefScoped(
-          ScopedPrefs::PRIVACY_TRACKINGPROTECTION_CRYPTOMINING_ENABLED,
-          aChannel)) {
+  if (!StaticPrefs::privacy_trackingprotection_cryptomining_enabled()) {
     return nullptr;
   }
   RefPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
@@ -134,7 +135,7 @@ UrlClassifierFeatureCryptominingProtection::ProcessChannel(
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
-  bool isAllowListed = ChannelClassifierUtils::IsAllowListed(aChannel);
+  bool isAllowListed = UrlClassifierCommon::IsAllowListed(aChannel);
 
   // This is a blocking feature.
   *aShouldContinue = isAllowListed;
@@ -155,17 +156,45 @@ UrlClassifierFeatureCryptominingProtection::ProcessChannel(
   nsAutoCString list;
   UrlClassifierCommon::TablesToString(aList, list);
 
-  // We are reusing the replaced and allowed tracking content events here if
-  // the shim allowed or replaced the channel.
-  // Note: If we need to account for which kind of tracker was replaced,
-  // we need to create a new event type in nsIWebProgressListener
-  ChannelBlockDecision decision;
-  nsresult rv = ChannelClassifierUtils::MaybeBlockChannel(
-      aChannel, mName, list, NS_ERROR_CRYPTOMINING_URI,
-      nsIWebProgressListener::STATE_REPLACED_TRACKING_CONTENT,
-      nsIWebProgressListener::STATE_ALLOWED_TRACKING_CONTENT, &decision);
-  *aShouldContinue = (decision != ChannelBlockDecision::Blocked);
-  return rv;
+  ChannelBlockDecision decision =
+      ChannelClassifierService::OnBeforeBlockChannel(aChannel, mName, list);
+  if (decision != ChannelBlockDecision::Blocked) {
+    uint32_t event =
+        decision == ChannelBlockDecision::Replaced
+            ? nsIWebProgressListener::STATE_REPLACED_TRACKING_CONTENT
+            : nsIWebProgressListener::STATE_ALLOWED_TRACKING_CONTENT;
+
+    // Need to set aBlocked to True if we replace the Cryptominer with a shim,
+    //  since the shim is treated as a blocked event
+    // Note: If we need to account for which kind of tracker was replaced,
+    //  we need to create a new event type in nsIWebProgressListener
+    if (event == nsIWebProgressListener::STATE_REPLACED_TRACKING_CONTENT) {
+      ContentBlockingNotifier::OnEvent(aChannel, event, true);
+    } else {
+      ContentBlockingNotifier::OnEvent(aChannel, event, false);
+    }
+
+    *aShouldContinue = true;
+    return NS_OK;
+  }
+
+  UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_CRYPTOMINING_URI,
+                                         list, ""_ns, ""_ns);
+
+  UC_LOG(
+      ("UrlClassifierFeatureCryptominingProtection::ProcessChannel - "
+       "cancelling channel %p",
+       aChannel));
+
+  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
+
+  if (httpChannel) {
+    (void)httpChannel->CancelByURLClassifier(NS_ERROR_CRYPTOMINING_URI);
+  } else {
+    (void)aChannel->Cancel(NS_ERROR_CRYPTOMINING_URI);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // ECMA-402 includes mapping of legacy variants, as long as they're also present
 // in <variantAlias> in CLDR's supplementalMetadata.xml
 // <https://www.unicode.org/reports/tr35/#Legacy_Variants>

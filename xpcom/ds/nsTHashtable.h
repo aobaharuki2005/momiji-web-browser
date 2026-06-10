@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,8 +7,8 @@
 // See the comment at the top of mfbt/HashTable.h for a comparison between
 // PLDHashTable and mozilla::HashTable.
 
-#ifndef nsTHashtable_h_
-#define nsTHashtable_h_
+#ifndef nsTHashtable_h__
+#define nsTHashtable_h__
 
 #include <iterator>
 #include <new>
@@ -171,27 +173,6 @@ size_t RangeSizeEstimate(
   return aRange.Count();
 }
 
-// Helper type which wraps the access to EntryType::ALLOW_MEMMOVE. This is done
-// to ensure that the MOZ_NEEDS_MEMMOVABLE_TYPE attribute is applied to the
-// entry if we're going to use FixedSizeEntryMover, performing extra
-// compile-time checks against the use of non-memmoveable types.
-template <class EntryType, bool = EntryType::ALLOW_MEMMOVE>
-struct MOZ_NEEDS_MEMMOVABLE_TYPE CheckAllowMemmove : std::true_type {};
-template <class EntryType>
-struct CheckAllowMemmove<EntryType, false> : std::false_type {};
-
-// Like PLDHashTable::MoveEntryStub, but specialized for fixed N (i.e. the size
-// of the entries in the hashtable).  Saves a memory read to figure out the size
-// from the table and gives the compiler the opportunity to inline the memcpy.
-//
-// We define this outside of nsTHashtable so only one copy exists for every N,
-// rather than separate copies for every EntryType used with nsTHashtable.
-template <size_t N>
-static void FixedSizeEntryMover(PLDHashTable*, const PLDHashEntryHdr* aFrom,
-                                PLDHashEntryHdr* aTo) {
-  memcpy(aTo, aFrom, N);
-}
-
 }  // namespace detail
 
 /**
@@ -255,19 +236,18 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
  public:
   // Separate constructors instead of default aInitLength parameter since
   // otherwise the default no-arg constructor isn't found.
-  constexpr nsTHashtable()
-      : mTable(&sOps, sizeof(EntryType), PLDHashTable::kDefaultInitialLength) {}
+  nsTHashtable()
+      : mTable(Ops(), sizeof(EntryType), PLDHashTable::kDefaultInitialLength) {}
   explicit nsTHashtable(uint32_t aInitLength)
-      : mTable(&sOps, sizeof(EntryType), aInitLength) {}
+      : mTable(Ops(), sizeof(EntryType), aInitLength) {}
 
   /**
    * destructor, cleans up and deallocates
    */
   ~nsTHashtable() = default;
 
-  nsTHashtable(nsTHashtable<EntryType>&& aOther) = default;
-  nsTHashtable<EntryType>& operator=(nsTHashtable<EntryType>&& aOther) =
-      default;
+  nsTHashtable(nsTHashtable<EntryType>&& aOther);
+  nsTHashtable<EntryType>& operator=(nsTHashtable<EntryType>&& aOther);
 
   nsTHashtable(const nsTHashtable<EntryType>&) = delete;
   nsTHashtable& operator=(const nsTHashtable<EntryType>&) = delete;
@@ -645,28 +625,80 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
   // copy constructor, not implemented
   nsTHashtable(nsTHashtable<EntryType>& aToCopy) = delete;
 
-  static constexpr PLDHashTableOps sOps{
-      .hashKey = s_HashKey,
-      .matchEntry = s_MatchEntry,
-      // We intentionally indirect the access of ALLOW_MEMMOVE through
-      // CheckAllowMemmove to perform some additional static analysis.
-      .moveEntry = ::detail::CheckAllowMemmove<EntryType>::value
-                       ? ::detail::FixedSizeEntryMover<sizeof(EntryType)>
-                       : s_CopyEntry,
-      // Simplify hashtable clearing in case our entries are trivially
-      // destructible.
-      .clearEntry =
-          std::is_trivially_destructible_v<EntryType> ? nullptr : s_ClearEntry,
-      // We don't use a generic initEntry hook because we want to allow
-      // initialization of data members defined in derived classes directly
-      // in the entry constructor (for example when a member can't be
-      // default constructed).
-      .initEntry = nullptr};
+  /**
+   * Gets the table's ops.
+   */
+  static const PLDHashTableOps* Ops();
 
   // assignment operator, not implemented
   nsTHashtable<EntryType>& operator=(nsTHashtable<EntryType>& aToEqual) =
       delete;
 };
+
+namespace mozilla {
+namespace detail {
+
+// Like PLDHashTable::MoveEntryStub, but specialized for fixed N (i.e. the size
+// of the entries in the hashtable).  Saves a memory read to figure out the size
+// from the table and gives the compiler the opportunity to inline the memcpy.
+//
+// We define this outside of nsTHashtable so only one copy exists for every N,
+// rather than separate copies for every EntryType used with nsTHashtable.
+template <size_t N>
+static void FixedSizeEntryMover(PLDHashTable*, const PLDHashEntryHdr* aFrom,
+                                PLDHashEntryHdr* aTo) {
+  memcpy(aTo, aFrom, N);
+}
+
+// Helper type which wraps the access to EntryType::ALLOW_MEMMOVE. This is done
+// to ensure that the MOZ_NEEDS_MEMMOVABLE_TYPE attribute is applied to the
+// entry if we're going to use FixedSizeEntryMover, performing extra
+// compile-time checks against the use of non-memmoveable types.
+template <class EntryType, bool = EntryType::ALLOW_MEMMOVE>
+struct MOZ_NEEDS_MEMMOVABLE_TYPE CheckAllowMemmove : std::true_type {};
+template <class EntryType>
+struct CheckAllowMemmove<EntryType, false> : std::false_type {};
+
+}  // namespace detail
+}  // namespace mozilla
+
+//
+// template definitions
+//
+
+template <class EntryType>
+nsTHashtable<EntryType>::nsTHashtable(nsTHashtable<EntryType>&& aOther)
+    : mTable(std::move(aOther.mTable)) {}
+
+template <class EntryType>
+nsTHashtable<EntryType>& nsTHashtable<EntryType>::operator=(
+    nsTHashtable<EntryType>&& aOther) {
+  mTable = std::move(aOther.mTable);
+  return *this;
+}
+
+template <class EntryType>
+/* static */ const PLDHashTableOps* nsTHashtable<EntryType>::Ops() {
+  // If this variable is a global variable, we get strange start-up failures on
+  // WindowsCrtPatch.h (see bug 1166598 comment 20). But putting it inside a
+  // function avoids that problem.
+  static const PLDHashTableOps sOps = {
+      s_HashKey, s_MatchEntry,
+      // We intentionally indirect the access of ALLOW_MEMMOVE through
+      // CheckAllowMemmove to perform some additional static analysis.
+      mozilla::detail::CheckAllowMemmove<EntryType>::value
+          ? mozilla::detail::FixedSizeEntryMover<sizeof(EntryType)>
+          : s_CopyEntry,
+      // Simplify hashtable clearing in case our entries are trivially
+      // destructible.
+      std::is_trivially_destructible_v<EntryType> ? nullptr : s_ClearEntry,
+      // We don't use a generic initEntry hook because we want to allow
+      // initialization of data members defined in derived classes directly
+      // in the entry constructor (for example when a member can't be default
+      // constructed).
+      nullptr};
+  return &sOps;
+}
 
 // static definitions
 
@@ -945,4 +977,4 @@ class nsTHashtable<nsPtrHashKey<T>>
   void SwapElements(nsTHashtable& aOther) { Base::SwapElements(aOther); }
 };
 
-#endif  // nsTHashtable_h_
+#endif  // nsTHashtable_h__

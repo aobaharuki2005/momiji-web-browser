@@ -5,6 +5,7 @@
 "use strict";
 
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
+const { dumpv } = DevToolsUtils;
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 DevToolsUtils.defineLazyGetter(this, "IOUtil", () => {
@@ -17,11 +18,6 @@ DevToolsUtils.defineLazyGetter(this, "ScriptableInputStream", () => {
     "nsIScriptableInputStream",
     "init"
   );
-});
-
-const logger = console.createInstance({
-  prefix: "devtools_rdp",
-  maxLogLevel: "Warn",
 });
 
 const BUFFER_SIZE = 0x8000;
@@ -64,11 +60,11 @@ function copyStream(input, output, length) {
   return copier.copy();
 }
 
-class StreamCopier extends EventEmitter {
+class StreamCopier {
   static _nextId = 0;
 
   constructor(input, output, length) {
-    super();
+    EventEmitter.decorate(this);
     this._id = StreamCopier._nextId++;
     this.input = input;
     // Save off the base output stream, since we know it's async as we've required
@@ -199,7 +195,7 @@ class StreamCopier extends EventEmitter {
   _debug(msg) {
     // Prefix logs with the copier ID, which makes logs much easier to
     // understand when several copiers are running simultaneously
-    logger.debug("Copier: " + this._id + " " + msg);
+    dumpv("Copier: " + this._id + " " + msg);
   }
 }
 
@@ -223,7 +219,7 @@ class StreamCopier extends EventEmitter {
  *         end with it.
  */
 function delimitedRead(stream, delimiter, count) {
-  logger.debug(
+  dumpv(
     "Starting delimited read for " + delimiter + " up to " + count + " bytes"
   );
 
@@ -344,7 +340,7 @@ class AsyncStreamToArrayBufferCopier {
       await this.#waitForStreamAvailability();
       this.#syncRead();
     } while (this.#pointer < this.#count);
-    logger.debug(`Successfully read ${this.#count} bytes!`);
+    dumpv(`Successfully read ${this.#count} bytes!`);
   }
 
   /**
@@ -371,7 +367,7 @@ class AsyncStreamToArrayBufferCopier {
       return;
     }
 
-    logger.debug(
+    dumpv(
       `Will read synchronously ${count} bytes out of ${amountLeft} bytes left.`
     );
 
@@ -395,7 +391,7 @@ class AsyncStreamToArrayBufferCopier {
       this.#pointer += hasRead;
       remaining -= hasRead;
     }
-    logger.debug(
+    dumpv(
       `${count} bytes have been successfully read. Total: ${this.#pointer} / ${this.#count}`
     );
   }
@@ -477,7 +473,7 @@ class ArrayBufferToAsyncStreamCopier {
       await this.#waitForStreamAvailability();
       this.#syncWrite();
     } while (this.#pointer < this.#count);
-    logger.debug(`Successfully wrote ${this.#count} bytes!`);
+    dumpv(`Successfully wrote ${this.#count} bytes!`);
   }
 
   /**
@@ -517,7 +513,7 @@ class ArrayBufferToAsyncStreamCopier {
         this.#binaryStream.writeByteArray(subarray);
       } catch (e) {
         if (e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK) {
-          logger.debug(
+          dumpv(
             `Base stream would block, will retry. ${amountLeft - remaining} bytes have been successfully written. Total: ${this.#pointer} / ${this.#count}`
           );
           return;
@@ -528,7 +524,7 @@ class ArrayBufferToAsyncStreamCopier {
       this.#pointer += willWrite;
       remaining -= willWrite;
     }
-    logger.debug(
+    dumpv(
       `${amountLeft - remaining} bytes have been successfully written. Total: ${this.#pointer} / ${this.#count}`
     );
   }

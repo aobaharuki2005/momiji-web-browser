@@ -92,8 +92,7 @@ add_task(async function heuristicDeduplication() {
     [SUGGESTION_URL_WWW, false],
     ["http://exampledomain.com/", true],
   ];
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  let quickSuggestProviderInstance = providersManager.getProvider(
+  let quickSuggestProviderInstance = UrlbarProvidersManager.getProvider(
     UrlbarProviderQuickSuggest.name
   );
 
@@ -115,10 +114,7 @@ add_task(async function heuristicDeduplication() {
   });
 
   for (let [url, expectBestMatch] of scenarios) {
-    await PlacesTestUtils.addVisits({
-      url,
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    });
+    await PlacesTestUtils.addVisits(url);
 
     // Do a search and check the results.
     let context = createContext(SUGGESTION_SEARCH_STRING, {

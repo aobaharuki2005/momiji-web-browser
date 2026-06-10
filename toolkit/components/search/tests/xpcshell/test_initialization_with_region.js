@@ -88,7 +88,7 @@ add_task(async function test_initialization_with_region() {
   Region._setHomeRegion("", false);
   Region.init();
 
-  initPromise = SearchService.init();
+  initPromise = Services.search.init();
   await initPromise;
 
   let otherPromises = [
@@ -101,7 +101,7 @@ add_task(async function test_initialization_with_region() {
   ];
 
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     DEFAULT,
     "Test engine shouldn't be the default anymore"
   );
@@ -110,12 +110,12 @@ add_task(async function test_initialization_with_region() {
 
   // Ensure that correct engine is being reported as the default.
   Assert.equal(
-    SearchService.defaultEngine.name,
+    Services.search.defaultEngine.name,
     FR_DEFAULT,
     "everywhereEngine should be the default in FR"
   );
   Assert.equal(
-    (await SearchService.getDefaultPrivate()).name,
+    (await Services.search.getDefaultPrivate()).name,
     FR_DEFAULT,
     "everywhereEngine should be the private default in FR"
   );

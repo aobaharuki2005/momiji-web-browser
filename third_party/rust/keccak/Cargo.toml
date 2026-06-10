@@ -12,14 +12,8 @@
 [package]
 edition = "2018"
 name = "keccak"
-version = "0.1.6"
+version = "0.1.4"
 authors = ["RustCrypto Developers"]
-build = false
-autolib = false
-autobins = false
-autoexamples = false
-autotests = false
-autobenches = false
 description = """
 Pure Rust implementation of the Keccak sponge function including the keccak-f
 and keccak-p variants
@@ -45,13 +39,5 @@ asm = []
 no_unroll = []
 simd = []
 
-[lib]
-name = "keccak"
-path = "src/lib.rs"
-
-[[bench]]
-name = "mod"
-path = "benches/mod.rs"
-
-[target.'cfg(target_arch = "aarch64")'.dependencies.cpufeatures]
+[target."cfg(target_arch = \"aarch64\")".dependencies.cpufeatures]
 version = "0.2"

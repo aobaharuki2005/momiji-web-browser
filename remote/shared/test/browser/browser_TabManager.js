@@ -101,21 +101,21 @@ add_task(async function test_addTab_window() {
 
     const newTab1 = await TabManager.addTab({ window: win1 });
     is(
-      newTab1.documentGlobal,
+      newTab1.ownerGlobal,
       win1,
       "The new tab was opened in the specified window"
     );
 
     const newTab2 = await TabManager.addTab({ window: win2 });
     is(
-      newTab2.documentGlobal,
+      newTab2.ownerGlobal,
       win2,
       "The new tab was opened in the specified window"
     );
 
     const newTab3 = await TabManager.addTab();
     is(
-      newTab3.documentGlobal,
+      newTab3.ownerGlobal,
       win2,
       "The new tab was opened in the foreground window"
     );

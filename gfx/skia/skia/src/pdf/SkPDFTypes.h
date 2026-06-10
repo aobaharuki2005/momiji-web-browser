@@ -13,7 +13,6 @@
 #include "include/core/SkTypes.h"
 #include "src/pdf/SkPDFUnion.h"
 
-#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -38,16 +37,15 @@ class SkWStream;
 
 struct SkPDFIndirectReference {
     int fValue = -1;
-    explicit operator bool() const { return fValue >= 0; }
+    explicit operator bool() const { return fValue != -1; }
 
-    std::strong_ordering operator<=>(const SkPDFIndirectReference&) const = default;
-};
+    bool operator==(SkPDFIndirectReference v) const {
+        return fValue == v.fValue;
+    }
 
-struct SkPDFParentTreeKey {
-    int fValue = -1;
-    explicit operator bool() const { return fValue >= 0; }
-
-    std::strong_ordering operator<=>(const SkPDFParentTreeKey&) const = default;
+    bool operator!=(SkPDFIndirectReference v) const {
+        return fValue != v.fValue;
+    }
 };
 
 /** \class SkPDFObject

@@ -13,7 +13,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
 import java.net.URL
-import kotlin.test.assertIs
 
 @RunWith(AndroidJUnit4::class)
 class HttpUrlConnectionFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTestCases() {
@@ -24,7 +23,7 @@ class HttpUrlConnectionFetchTestCases : mozilla.components.tooling.fetch.tests.F
     @Test
     fun `Client instance`() {
         // We need at least one test case defined here so that this is recognized as test class.
-        assertIs<HttpURLConnectionClient>(createNewClient())
+        assertTrue(createNewClient() is HttpURLConnectionClient)
     }
 
     @Test

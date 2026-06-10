@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -251,14 +253,6 @@ class MediaFormatReader final
   MediaEventProducer<VideoInfo, AudioInfo>& OnTrackInfoUpdatedEvent() {
     return mTrackInfoUpdatedEvent;
   }
-
-#  ifdef MOZ_WMF_CDM
-  // Called when the MFCDM encrypted playback path signals that a decryption key
-  // is needed before decoding can proceed.
-  void NotifyWaitingForKeyForMFCDM() {
-    NotifyWaitingForKey(TrackInfo::TrackType::kVideoTrack);
-  }
-#  endif
 
   template <typename T>
   friend struct DDLoggedTypeTraits;  // For DecoderData

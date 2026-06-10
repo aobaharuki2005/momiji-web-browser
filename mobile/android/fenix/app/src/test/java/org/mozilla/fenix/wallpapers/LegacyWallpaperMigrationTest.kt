@@ -19,7 +19,6 @@ import org.mozilla.fenix.utils.toHexColor
 import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_MEI_WALLPAPER_NAME
 import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_PANDA_WALLPAPER_NAME
 import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_WALLPAPER_TEXT_COLOR
-import org.mozilla.fenix.wallpapers.Wallpaper.ImageFileState
 import java.io.File
 
 class LegacyWallpaperMigrationTest {
@@ -29,7 +28,6 @@ class LegacyWallpaperMigrationTest {
     private lateinit var settings: Settings
     private lateinit var wallpapersFolder: File
     private lateinit var downloadWallpaper: (Wallpaper) -> Wallpaper.ImageFileState
-    private lateinit var downloadedWallpapers: MutableList<Wallpaper>
     private lateinit var migrationHelper: LegacyWallpaperMigration
     private lateinit var portraitLightFolder: File
     private lateinit var portraitDarkFolder: File
@@ -40,11 +38,7 @@ class LegacyWallpaperMigrationTest {
     fun setup() {
         wallpapersFolder = File(tempFolder.root, "wallpapers")
         settings = mockk(relaxed = true)
-        downloadedWallpapers = mutableListOf()
-        downloadWallpaper = { wallpaper ->
-            downloadedWallpapers.add(wallpaper)
-            ImageFileState.Downloaded
-        }
+        downloadWallpaper = mockk(relaxed = true)
         migrationHelper = LegacyWallpaperMigration(
             storageRootDirectory = tempFolder.root,
             settings = settings,
@@ -65,7 +59,6 @@ class LegacyWallpaperMigrationTest {
         assertFalse(File(portraitDarkFolder, "$wallpaperName.png").exists())
         assertFalse(File(landscapeLightFolder, "$wallpaperName.png").exists())
         assertFalse(File(landscapeDarkFolder, "$wallpaperName.png").exists())
-        assertTrue(downloadedWallpapers.isEmpty())
     }
 
     @Test
@@ -179,29 +172,38 @@ class LegacyWallpaperMigrationTest {
         var migratedWallpaperName = migrationHelper.migrateLegacyWallpaper(Wallpaper.CERULEAN)
 
         assertEquals(Wallpaper.CERULEAN, migratedWallpaperName)
-        assertTrue(
-            downloadedWallpapers.any {
-                it.name == Wallpaper.CERULEAN && it.collection == Wallpaper.ClassicFirefoxCollection
-            },
-        )
+        verify {
+            downloadWallpaper(
+                withArg {
+                    assertEquals(Wallpaper.CERULEAN, it.name)
+                    assertEquals(Wallpaper.ClassicFirefoxCollection, it.collection)
+                },
+            )
+        }
 
         migratedWallpaperName = migrationHelper.migrateLegacyWallpaper(Wallpaper.SUNRISE)
 
         assertEquals(Wallpaper.SUNRISE, migratedWallpaperName)
-        assertTrue(
-            downloadedWallpapers.any {
-                it.name == Wallpaper.SUNRISE && it.collection == Wallpaper.ClassicFirefoxCollection
-            },
-        )
+        verify {
+            downloadWallpaper(
+                withArg {
+                    assertEquals(Wallpaper.SUNRISE, it.name)
+                    assertEquals(Wallpaper.ClassicFirefoxCollection, it.collection)
+                },
+            )
+        }
 
         migratedWallpaperName = migrationHelper.migrateLegacyWallpaper(Wallpaper.AMETHYST)
 
         assertEquals(Wallpaper.AMETHYST, migratedWallpaperName)
-        assertTrue(
-            downloadedWallpapers.any {
-                it.name == Wallpaper.AMETHYST && it.collection == Wallpaper.ClassicFirefoxCollection
-            },
-        )
+        verify {
+            downloadWallpaper(
+                withArg {
+                    assertEquals(Wallpaper.AMETHYST, it.name)
+                    assertEquals(Wallpaper.ClassicFirefoxCollection, it.collection)
+                },
+            )
+        }
     }
 
     private fun createAllLegacyFiles(name: String) {

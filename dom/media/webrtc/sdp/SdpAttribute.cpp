@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,8 +41,7 @@ static std::string ParseToken(std::istream& is, const std::string& delims,
   return token;
 }
 
-static bool SkipChar(std::istream& is, const unsigned char c,
-                     std::string* error) {
+static bool SkipChar(std::istream& is, unsigned char c, std::string* error) {
   if (PeekChar(is, error) != c) {
     *error = "Expected \'";
     error->push_back(c);
@@ -120,7 +121,7 @@ std::string SdpFingerprintAttributeList::FormatFingerprint(
   return os.str().substr(1);
 }
 
-static uint8_t FromUppercaseHex(const char ch) {
+static uint8_t FromUppercaseHex(char ch) {
   if ((ch >= '0') && (ch <= '9')) {
     return ch - '0';
   }
@@ -234,8 +235,7 @@ void SdpImageattrAttributeList::XYRange::Serialize(std::ostream& os) const {
 }
 
 template <typename T>
-bool GetUnsigned(std::istream& is, const T min, const T max, T* value,
-                 std::string* error) {
+bool GetUnsigned(std::istream& is, T min, T max, T* value, std::string* error) {
   if (PeekChar(is, error) == '-') {
     *error = "Value is less than 0";
     return false;
@@ -658,7 +658,7 @@ bool SdpImageattrAttributeList::Imageattr::ParseSets(std::istream& is,
       return false;
     }
 
-    sets->push_back(std::move(set));
+    sets->push_back(set);
     is >> std::ws;
   } while (PeekChar(is, error) == '[');
 
@@ -747,7 +747,7 @@ bool SdpImageattrAttributeList::PushEntry(const std::string& raw,
     return false;
   }
 
-  mImageattrs.push_back(std::move(imageattr));
+  mImageattrs.push_back(imageattr);
   return true;
 }
 
@@ -855,7 +855,7 @@ bool SdpRidAttributeList::Rid::ParseDepend(std::istream& is,
     if (id.empty()) {
       return false;
     }
-    dependIds.push_back(std::move(id));
+    dependIds.push_back(id);
   } while (SkipChar(is, ',', error));
 
   return true;
@@ -1042,12 +1042,11 @@ bool SdpRidAttributeList::PushEntry(const std::string& raw, std::string* error,
     return false;
   }
 
-  mRids.push_back(std::move(rid));
+  mRids.push_back(rid);
   return true;
 }
 
-void SdpRidAttributeList::PushEntry(const std::string& id,
-                                    const sdp::Direction dir,
+void SdpRidAttributeList::PushEntry(const std::string& id, sdp::Direction dir,
                                     const std::vector<uint16_t>& formats,
                                     const VideoEncodingConstraints& constraints,
                                     const std::vector<std::string>& dependIds) {
@@ -1093,8 +1092,7 @@ void SdpRtcpFbAttributeList::Serialize(std::ostream& os) const {
   }
 }
 
-static bool ShouldSerializeChannels(
-    const SdpRtpmapAttributeList::CodecType type) {
+static bool ShouldSerializeChannels(SdpRtpmapAttributeList::CodecType type) {
   switch (type) {
     case SdpRtpmapAttributeList::kOpus:
     case SdpRtpmapAttributeList::kG722:
@@ -1321,7 +1319,7 @@ void SdpNumberAttribute::Serialize(std::ostream& os) const {
   os << "a=" << mType << ":" << mValue << CRLF;
 }
 
-bool SdpAttribute::IsAllowedAtMediaLevel(const AttributeType type) {
+bool SdpAttribute::IsAllowedAtMediaLevel(AttributeType type) {
   switch (type) {
     case kBundleOnlyAttribute:
       return true;
@@ -1406,7 +1404,7 @@ bool SdpAttribute::IsAllowedAtMediaLevel(const AttributeType type) {
   MOZ_CRASH("Unknown attribute type");
 }
 
-bool SdpAttribute::IsAllowedAtSessionLevel(const AttributeType type) {
+bool SdpAttribute::IsAllowedAtSessionLevel(AttributeType type) {
   switch (type) {
     case kBundleOnlyAttribute:
       return false;
@@ -1488,8 +1486,7 @@ bool SdpAttribute::IsAllowedAtSessionLevel(const AttributeType type) {
   MOZ_CRASH("Unknown attribute type");
 }
 
-const std::string SdpAttribute::GetAttributeTypeString(
-    const AttributeType type) {
+const std::string SdpAttribute::GetAttributeTypeString(AttributeType type) {
   switch (type) {
     case kBundleOnlyAttribute:
       return "bundle-only";

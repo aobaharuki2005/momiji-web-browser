@@ -5,11 +5,9 @@ use std::task::{Context, Poll};
 
 /// Writes bytes asynchronously.
 ///
-/// This trait is analogous to the [`std::io::Write`] trait, but integrates with
-/// the asynchronous task system. In particular, the [`poll_write`] method,
-/// unlike [`Write::write`], will automatically queue the current task for wakeup
-/// and return if data is not yet available, rather than blocking the calling
-/// thread.
+/// The trait inherits from [`std::io::Write`] and indicates that an I/O object is
+/// **nonblocking**. All non-blocking I/O objects must return an error when
+/// bytes cannot be written instead of blocking the current thread.
 ///
 /// Specifically, this means that the [`poll_write`] function will return one of
 /// the following:
@@ -27,14 +25,22 @@ use std::task::{Context, Poll};
 /// * `Poll::Ready(Err(e))` for other errors are standard I/O errors coming from the
 ///   underlying object.
 ///
+/// This trait importantly means that the [`write`][stdwrite] method only works in
+/// the context of a future's task. The object may panic if used outside of a task.
+///
+/// Note that this trait also represents that the  [`Write::flush`][stdflush] method
+/// works very similarly to the `write` method, notably that `Ok(())` means that the
+/// writer has successfully been flushed, a "would block" error means that the
+/// current task is ready to receive a notification when flushing can make more
+/// progress, and otherwise normal errors can happen as well.
+///
 /// Utilities for working with `AsyncWrite` values are provided by
-/// [`AsyncWriteExt`]. Most users will interact with `AsyncWrite` types through
-/// these extension methods, which provide ergonomic async functions such as
-/// `write_all` and `flush`.
+/// [`AsyncWriteExt`].
 ///
 /// [`std::io::Write`]: std::io::Write
-/// [`Write::write`]: std::io::Write::write()
 /// [`poll_write`]: AsyncWrite::poll_write()
+/// [stdwrite]: std::io::Write::write()
+/// [stdflush]: std::io::Write::flush()
 /// [`AsyncWriteExt`]: crate::io::AsyncWriteExt
 pub trait AsyncWrite {
     /// Attempt to write bytes from `buf` into the object.
@@ -53,7 +59,7 @@ pub trait AsyncWrite {
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         buf: &[u8],
-    ) -> Poll<io::Result<usize>>;
+    ) -> Poll<Result<usize, io::Error>>;
 
     /// Attempts to flush the object, ensuring that any buffered data reach
     /// their destination.
@@ -64,7 +70,7 @@ pub trait AsyncWrite {
     /// `Poll::Pending` and arranges for the current task (via
     /// `cx.waker()`) to receive a notification when the object can make
     /// progress towards flushing.
-    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>>;
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>>;
 
     /// Initiates or attempts to shut down this writer, returning success when
     /// the I/O connection has completely shut down.
@@ -124,7 +130,7 @@ pub trait AsyncWrite {
     ///
     /// This function will panic if not called within the context of a future's
     /// task.
-    fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>>;
+    fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>>;
 
     /// Like [`poll_write`], except that it writes from a slice of buffers.
     ///
@@ -153,7 +159,7 @@ pub trait AsyncWrite {
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         bufs: &[IoSlice<'_>],
-    ) -> Poll<io::Result<usize>> {
+    ) -> Poll<Result<usize, io::Error>> {
         let buf = bufs
             .iter()
             .find(|b| !b.is_empty())

@@ -25,12 +25,12 @@ info: |
   ...
   6. If index = -0, return undefined.
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg([42n]));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA([42n]);
 
   // -0 as a number value is converted to "0" before calling [[GetOwnProperty]]
   assert.sameValue(Object.getOwnPropertyDescriptor(sample, "-0"), undefined);

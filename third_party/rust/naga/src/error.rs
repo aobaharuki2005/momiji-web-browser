@@ -44,11 +44,17 @@ impl fmt::Display for ShaderError<crate::WithSpan<crate::valid::ValidationError>
         let files = SimpleFile::new(label, replace_control_chars(&self.source));
         let config = term::Config::default();
 
-        let mut writer = DiagnosticBuffer::new();
-        writer
-            .emit_to_self(&config, &files, &self.inner.diagnostic())
+        let writer = {
+            let mut writer = DiagnosticBuffer::new();
+            term::emit(
+                writer.inner_mut(),
+                &config,
+                &files,
+                &self.inner.diagnostic(),
+            )
             .expect("cannot write error");
-        let writer = writer.into_string();
+            writer.into_string()
+        };
 
         write!(f, "\nShader validation {writer}")
     }
@@ -57,46 +63,25 @@ impl fmt::Display for ShaderError<crate::WithSpan<crate::valid::ValidationError>
 cfg_if::cfg_if! {
     if #[cfg(feature = "termcolor")] {
         type DiagnosticBufferInner = codespan_reporting::term::termcolor::NoColor<alloc::vec::Vec<u8>>;
-    } else if #[cfg(feature = "stderr")] {
-        type DiagnosticBufferInner = alloc::vec::Vec<u8>;
-    } else {
-        type DiagnosticBufferInner = String;
-    }
-}
-
-cfg_if::cfg_if! {
-    if #[cfg(all(feature = "stderr", feature = "termcolor"))] {
         pub(crate) use codespan_reporting::term::termcolor::WriteColor as _ErrorWrite;
     } else if #[cfg(feature = "stderr")] {
+        type DiagnosticBufferInner = alloc::vec::Vec<u8>;
         pub(crate) use std::io::Write as _ErrorWrite;
+    } else {
+        type DiagnosticBufferInner = String;
+        pub(crate) use core::fmt::Write as _ErrorWrite;
     }
 }
 
-#[cfg(feature = "stderr")]
-pub(crate) use _ErrorWrite as ErrorWrite;
-
-#[cfg(feature = "stderr")]
+// Using this indirect export to avoid duplicating the expect(...) for all three cases above.
 #[cfg_attr(
     not(any(feature = "spv-in", feature = "glsl-in")),
     expect(
-        dead_code,
-        reason = "only need `emit_to_writer` with an appropriate front-end."
+        unused_imports,
+        reason = "only need `ErrorWrite` with an appropriate front-end."
     )
 )]
-pub(crate) fn emit_to_writer<'files, F: codespan_reporting::files::Files<'files> + ?Sized>(
-    writer: &mut impl ErrorWrite,
-    config: &codespan_reporting::term::Config,
-    files: &'files F,
-    diagnostic: &codespan_reporting::diagnostic::Diagnostic<F::FileId>,
-) -> Result<(), codespan_reporting::files::Error> {
-    cfg_if::cfg_if! {
-        if #[cfg(feature = "termcolor")] {
-            codespan_reporting::term::emit_to_write_style(writer, config, files, diagnostic)
-        } else {
-            codespan_reporting::term::emit_to_io_write(writer, config, files, diagnostic)
-        }
-    }
-}
+pub(crate) use _ErrorWrite as ErrorWrite;
 
 pub(crate) struct DiagnosticBuffer {
     inner: DiagnosticBufferInner,
@@ -124,21 +109,8 @@ impl DiagnosticBuffer {
         Self { inner }
     }
 
-    pub fn emit_to_self<'files, F: codespan_reporting::files::Files<'files> + ?Sized>(
-        &mut self,
-        config: &codespan_reporting::term::Config,
-        files: &'files F,
-        diagnostic: &codespan_reporting::diagnostic::Diagnostic<F::FileId>,
-    ) -> Result<(), codespan_reporting::files::Error> {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "termcolor")] {
-                codespan_reporting::term::emit_to_write_style(&mut self.inner, config, files, diagnostic)
-            } else if #[cfg(feature = "stderr")] {
-                codespan_reporting::term::emit_to_io_write(&mut self.inner, config, files, diagnostic)
-            } else {
-                codespan_reporting::term::emit_to_string(&mut self.inner, config, files, diagnostic)
-            }
-        }
+    pub fn inner_mut(&mut self) -> &mut DiagnosticBufferInner {
+        &mut self.inner
     }
 
     pub fn into_string(self) -> String {

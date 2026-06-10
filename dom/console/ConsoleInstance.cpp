@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -182,8 +184,8 @@ METHOD(GroupCollapsed, u"groupCollapsed")
 #undef METHOD
 
 void ConsoleInstance::GroupEnd(JSContext* aCx) {
-  RefPtr<Console> console(mConsole);
   const Sequence<JS::Value> data;
+  RefPtr<Console> console(mConsole);
   console->MethodInternal(aCx, Console::MethodGroupEnd, u"groupEnd"_ns, data);
 }
 
@@ -256,15 +258,14 @@ void ConsoleInstance::CountReset(JSContext* aCx, const nsAString& aLabel) {
 }
 
 void ConsoleInstance::Clear(JSContext* aCx) {
-  RefPtr<Console> console(mConsole);
   const Sequence<JS::Value> data;
+  RefPtr<Console> console(mConsole);
   console->MethodInternal(aCx, Console::MethodClear, u"clear"_ns, data);
 }
 
 bool ConsoleInstance::ShouldLog(ConsoleLogLevel aLevel) {
   return mConsole->mCurrentLogLevel <=
-             mConsole->WebIDLLogLevelToInteger(aLevel) ||
-         mConsole->ShouldLogToMozLog(aLevel);
+         mConsole->WebIDLLogLevelToInteger(aLevel);
 }
 
 void ConsoleInstance::ReportForServiceWorkerScope(const nsAString& aScope,

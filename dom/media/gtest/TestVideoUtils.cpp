@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -111,17 +113,17 @@ TEST(StringListRange, StringListContains)
     nsCString list(test.mList);
     nsCString itemToSearch(test.mItemToSearch);
     EXPECT_EQ(test.mExpectedSkipEmpties, StringListContains(list, itemToSearch))
-        << "trying to find \"" << itemToSearch.get() << "\" in \"" << list.get()
-        << "\" (skipping empties)";
+        << "trying to find \"" << itemToSearch.Data() << "\" in \""
+        << list.Data() << "\" (skipping empties)";
     EXPECT_EQ(test.mExpectedProcessAll,
               StringListContains<StringListRangeEmptyItems::ProcessAll>(
                   list, itemToSearch))
-        << "trying to find \"" << itemToSearch.get() << "\" in \"" << list.get()
-        << "\" (processing everything)";
+        << "trying to find \"" << itemToSearch.Data() << "\" in \""
+        << list.Data() << "\" (processing everything)";
     EXPECT_EQ(test.mExpectedProcessEmpties,
               StringListContains<StringListRangeEmptyItems::ProcessEmptyItems>(
                   list, itemToSearch))
-        << "trying to find \"" << itemToSearch.get() << "\" in \"" << list.get()
-        << "\" (processing empties)";
+        << "trying to find \"" << itemToSearch.Data() << "\" in \""
+        << list.Data() << "\" (processing empties)";
   }
 }

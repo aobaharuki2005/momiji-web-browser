@@ -11,6 +11,7 @@
 #ifndef PC_DTLS_TRANSPORT_H_
 #define PC_DTLS_TRANSPORT_H_
 
+#include <memory>
 #include <utility>
 
 #include "api/dtls_transport_interface.h"
@@ -27,6 +28,8 @@ namespace webrtc {
 
 class IceTransportWithPointer;
 
+// This implementation wraps a webrtc::DtlsTransportInternalImpl, and takes
+// ownership of it.
 class DtlsTransport : public DtlsTransportInterface {
  public:
   // This object must be constructed and updated on a consistent thread,
@@ -34,10 +37,7 @@ class DtlsTransport : public DtlsTransportInterface {
   // lives on.
   // The Information() function can be called from a different thread,
   // such as the signalling thread.
-  // TODO(tommi): Hide this constructor and add a Create() method that returns
-  // a scoped_refptr instead.
-  explicit DtlsTransport(DtlsTransportInternal* internal,
-                         DtlsTransportObserverInterface* observer = nullptr);
+  explicit DtlsTransport(std::unique_ptr<DtlsTransportInternal> internal);
 
   scoped_refptr<IceTransportInterface> ice_transport() override;
 
@@ -47,15 +47,25 @@ class DtlsTransport : public DtlsTransportInterface {
 
   void RegisterObserver(DtlsTransportObserverInterface* observer) override;
   void UnregisterObserver() override;
-  void Clear(DtlsTransportInternal* internal);
+  void Clear();
 
-  void OnInternalDtlsState(DtlsTransportInternal* transport);
+  DtlsTransportInternal* internal() {
+    RTC_DCHECK_RUN_ON(owner_thread_);
+    return internal_dtls_transport_.get();
+  }
+
+  const DtlsTransportInternal* internal() const {
+    RTC_DCHECK_RUN_ON(owner_thread_);
+    return internal_dtls_transport_.get();
+  }
 
  protected:
-  ~DtlsTransport() override;
+  ~DtlsTransport();
 
  private:
-  void UpdateInformation(DtlsTransportInternal* transport);
+  void OnInternalDtlsState(DtlsTransportInternal* transport,
+                           DtlsTransportState state);
+  void UpdateInformation();
 
   // Called when changing `info_`. We only change the values from the
   // `owner_thread_` (a.k.a. the network thread).
@@ -65,9 +75,11 @@ class DtlsTransport : public DtlsTransportInterface {
   }
 
   DtlsTransportObserverInterface* observer_ = nullptr;
-  Thread* const owner_thread_;
+  Thread* owner_thread_;
   mutable Mutex lock_;
   DtlsTransportInformation info_ RTC_GUARDED_BY(lock_);
+  std::unique_ptr<DtlsTransportInternal> internal_dtls_transport_
+      RTC_GUARDED_BY(owner_thread_);
   const scoped_refptr<IceTransportWithPointer> ice_transport_;
 };
 

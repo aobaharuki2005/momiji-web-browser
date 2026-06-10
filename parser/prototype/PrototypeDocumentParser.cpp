@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -25,7 +27,7 @@ PrototypeDocumentParser::PrototypeDocumentParser(nsIURI* aDocumentURI,
       mPrototypeAlreadyLoaded(false),
       mIsComplete(false) {}
 
-PrototypeDocumentParser::~PrototypeDocumentParser() = default;
+PrototypeDocumentParser::~PrototypeDocumentParser() {}
 
 NS_INTERFACE_TABLE_HEAD(PrototypeDocumentParser)
   NS_INTERFACE_TABLE(PrototypeDocumentParser, nsIParser, nsIStreamListener,
@@ -98,7 +100,7 @@ PrototypeDocumentParser::Parse(nsIURI* aURL) {
     NS_ASSERTION(NS_SUCCEEDED(rv), "parser doesn't support nsIStreamListener");
     if (NS_FAILED(rv)) return rv;
 
-    mStreamListener = std::move(listener);
+    mStreamListener = listener;
 
     parser->Parse(mDocumentURI);
   }
@@ -120,8 +122,8 @@ PrototypeDocumentParser::Parse(nsIURI* aURL) {
 
 NS_IMETHODIMP
 PrototypeDocumentParser::OnStartRequest(nsIRequest* request) {
-  if (nsCOMPtr<nsIStreamListener> streamListener = mStreamListener) {
-    return streamListener->OnStartRequest(request);
+  if (mStreamListener) {
+    return mStreamListener->OnStartRequest(request);
   }
   // There's already a prototype cached, so return cached here so the original
   // request will be aborted. Either OnStopRequest or the prototype load
@@ -132,8 +134,8 @@ PrototypeDocumentParser::OnStartRequest(nsIRequest* request) {
 
 NS_IMETHODIMP
 PrototypeDocumentParser::OnStopRequest(nsIRequest* request, nsresult aStatus) {
-  if (nsCOMPtr<nsIStreamListener> streamListener = mStreamListener) {
-    return streamListener->OnStopRequest(request, aStatus);
+  if (mStreamListener) {
+    return mStreamListener->OnStopRequest(request, aStatus);
   }
   if (mPrototypeAlreadyLoaded) {
     return this->OnPrototypeLoadDone();
@@ -147,9 +149,9 @@ PrototypeDocumentParser::OnDataAvailable(nsIRequest* request,
                                          nsIInputStream* aInStr,
                                          uint64_t aSourceOffset,
                                          uint32_t aCount) {
-  if (nsCOMPtr<nsIStreamListener> streamListener = mStreamListener) {
-    return streamListener->OnDataAvailable(request, aInStr, aSourceOffset,
-                                           aCount);
+  if (mStreamListener) {
+    return mStreamListener->OnDataAvailable(request, aInStr, aSourceOffset,
+                                            aCount);
   }
   MOZ_ASSERT_UNREACHABLE("Cached prototype doesn't receive data");
   return NS_ERROR_UNEXPECTED;

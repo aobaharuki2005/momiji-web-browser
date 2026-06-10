@@ -1003,10 +1003,10 @@ def readSupplementalData(core_file):
                     # subtags are present. A single variant subtags may be present
                     # in |type|. And |i_type| definitely has a single variant subtag.
                     # Should this ever change, update this code accordingly.
-                    assert type in (
+                    assert type in {
                         (Any, None, None, None),
                         (Any, None, None, Any),
-                    )
+                    }
                     assert replacement == (Any, None, None, None)
                     assert i_type == (Any, None, None, Any)
                     assert i_replacement == (Any, None, None, None)
@@ -1091,10 +1091,10 @@ def readSupplementalData(core_file):
         if modified_rules and loop_count > 1:
             new_rules = {k for k in transitive_rules.keys() if k not in rules}
             for k in new_rules:
-                assert k in (
+                assert k in {
                     (Any, None, None, "guoyu-hakka"),
                     (Any, None, None, "guoyu-xiang"),
-                )
+                }
 
         # Merge the transitive rules.
         rules.update(transitive_rules)
@@ -1909,138 +1909,6 @@ if (typeof reportCompare === "function")
     )
 
 
-def writeAllLocalesSupportedTest(topsrcdir):
-    """Writes the supported locales test files."""
-
-    all_locales = []
-    for line in flines(os.path.join(topsrcdir, "browser/locales/all-locales")):
-        line = line.strip()
-        if line == "":
-            continue
-
-        # Special case for the legacy locale id "ja-JP-mac", which is not a valid
-        # BCP 47 locale identifier.
-        locale = line if line != "ja-JP-mac" else "ja-JP-macos"
-        all_locales.append(locale)
-
-    # List of Intl service constructors.
-    intl_constructors = [
-        "Collator",
-        "DateTimeFormat",
-        "DisplayNames",
-        "DurationFormat",
-        "ListFormat",
-        "NumberFormat",
-        "PluralRules",
-        "RelativeTimeFormat",
-        "Segmenter",
-    ]
-
-    # Firefox locales which don't have any (confirmed) CLDR data.
-    unsupported_all = [
-        ("ach", "Acoli"),
-        ("an", "Aragonese"),
-        ("bqi", "Bakhtiari"),
-        ("cak", "Cakchiquel; Kaqchikel"),
-        ("gn", "Guarani"),
-        ("hye", "Armenian (Eastern)"),
-        ("ltg", "Latgalian"),
-        ("meh", "Southwestern Tlaxiaco Mixtec"),
-        ("sco", "Scots"),
-        ("skr", "Saraiki; Seraiki"),
-        ("son", "Songhai languages"),
-        ("tl", "Tagalog"),
-        ("trs", "Chicahuaxtla Triqui"),
-    ]
-    assert set(all_locales).issuperset(locale for locale, _ in unsupported_all), (
-        "unexpected additional unsupported locales"
-    )
-
-    # Firefox locales which don't have any (confirmed) CLDR collation data.
-    unsupported_collator = unsupported_all + [
-        ("ast", "Asturian"),
-        ("brx", "Bodo (India)"),
-        ("ckb", "Central Kurdish"),
-        ("eu", "Basque"),
-        ("fur", "Friulian"),
-        ("gd", "Gaelic; Scottish Gaelic"),
-        ("ia", "Interlingua"),
-        ("kab", "Kabyle"),
-        ("oc", "Occitan"),
-        ("rm", "Romansh"),
-        ("sat", "Santali"),
-        ("sc", "Sardinian"),
-        ("scn", "Sicilian"),
-        ("szl", "Silesian"),
-        ("tg", "Tajik"),
-    ]
-    assert set(all_locales).issuperset(locale for locale, _ in unsupported_collator), (
-        "unexpected additional unsupported Intl.Collator locales"
-    )
-
-    testdir_intl = os.path.join(topsrcdir, "js/src/tests/non262/Intl")
-
-    for intl_constructor in intl_constructors:
-        test_file = os.path.join(
-            testdir_intl, intl_constructor, "supportedLocalesOf.js"
-        )
-        with open(test_file, mode="w", encoding="utf-8", newline="") as f:
-            println = partial(print, file=f)
-
-            println(
-                """
-// |reftest| skip-if(xulRuntime.shell&&getICUOptions().system)
-// -- test in browser or when not using system ICU
-""".lstrip()
-            )
-
-            println(generatedFileWarning)
-
-            println("""
-// https://searchfox.org/firefox-main/source/browser/locales/all-locales""")
-            println("const allLocales = [")
-            for locale in all_locales:
-                println(f'  "{locale}",')
-            println("];")
-
-            println("""
-// Firefox locales which don't have (confirmed) CLDR data.""")
-            println("const unsupported = [")
-            unsupported = (
-                unsupported_all
-                if intl_constructor != "Collator"
-                else unsupported_collator
-            )
-            for locale, comment in sorted(unsupported):
-                space = " " * (5 - len(locale))
-                println(f'  "{locale}",{space}// {comment}')
-            println("];")
-
-            println("""
-assertEq(
-  new Set(allLocales).isSupersetOf(new Set(unsupported)),
-  true,
-  "|allLocales| contains all locales of |unsupported|"
-);
-""")
-
-            println(
-                f"""
-const supported = Intl.{intl_constructor}.supportedLocalesOf(allLocales);
-
-// Ensure all Firefox locales are supported by Intl.{intl_constructor}, except
-// for the known unsupported locales.
-assertEqArray(
-  [...new Set(allLocales).difference(new Set(supported))].sort(),
-  unsupported
-);
-
-if (typeof reportCompare === "function")
-  reportCompare(0, 0, "ok");
-""".rstrip()
-            )
-
-
 def readCLDRVersionFromICU():
     icuDir = os.path.join(topsrcdir, "intl/icu/source")
     if not os.path.isdir(icuDir):
@@ -2060,7 +1928,7 @@ def readCLDRVersionFromICU():
     return version
 
 
-def updateCLDRLangTags(topsrcdir, args):
+def updateCLDRLangTags(args):
     """Update the LanguageTagGenerated.cpp file."""
     version = args.version
     url = args.url
@@ -2116,9 +1984,8 @@ def updateCLDRLangTags(topsrcdir, args):
     with open(test_file, mode="w", encoding="utf-8", newline="") as f:
         println = partial(print, file=f)
 
+        println("// |reftest| skip-if(!this.hasOwnProperty('Intl'))")
         writeCLDRLanguageTagLikelySubtagsTest(println, data, url)
-
-    writeAllLocalesSupportedTest(topsrcdir)
 
 
 def flines(filepath, encoding="utf-8"):
@@ -2899,6 +2766,7 @@ def generateTzDataTestLinks(tzdataDir, version, ignoreFactory, testDir):
     ) as f:
         println = partial(print, file=f)
 
+        println('// |reftest| skip-if(!this.hasOwnProperty("Intl"))')
         println("")
         println(generatedFileWarning)
         println(tzdataVersionComment.format(version))
@@ -2948,6 +2816,8 @@ def generateTzDataTestVersion(tzdataDir, version, testDir):
     ) as f:
         println = partial(print, file=f)
 
+        println('// |reftest| skip-if(!this.hasOwnProperty("Intl"))')
+        println("")
         println(generatedFileWarning)
         println(tzdataVersionComment.format(version))
         println(f"""const tzdata = "{version}";""")
@@ -2979,6 +2849,8 @@ def generateTzDataTestCanonicalZones(tzdataDir, version, ignoreFactory, testDir)
     ) as f:
         println = partial(print, file=f)
 
+        println('// |reftest| skip-if(!this.hasOwnProperty("Intl"))')
+        println("")
         println(generatedFileWarning)
         println(tzdataVersionComment.format(version))
 
@@ -3218,32 +3090,20 @@ def writeCurrencyFile(published, currencies, out):
  *
  * Spec: ISO 4217 Currency and Funds Code List.
  * http://www.currency-iso.org/en/home/tables/table-a1.html
- */
-
-#ifndef builtin_intl_CurrencyDataGenerated_h
-#define builtin_intl_CurrencyDataGenerated_h
-"""
+ */"""
         )
-
-        lines = []
-        lines.append("#define CURRENCIES_WITH_NON_DEFAULT_DIGITS(MACRO)")
+        println("var currencyDigits = {")
         for currency, entries in groupby(
             sorted(currencies, key=itemgetter(0)), itemgetter(0)
         ):
             for _, minorUnits, currencyName, countryName in entries:
-                lines.append(f"  /* {currencyName} ({countryName}) */")
-            lines.append(f"  MACRO({currency}, {minorUnits})")
-
-        line_length = max(len(line) for line in lines)
-
-        println(" \\\n".join(line.ljust(line_length) for line in lines).rstrip())
-
-        println("")
-        println("#endif  // builtin_intl_CurrencyDataGenerated_h")
+                println(f"  // {currencyName} ({countryName})")
+            println(f"  {currency}: {minorUnits},")
+        println("};")
 
 
 def updateCurrency(topsrcdir, args):
-    """Update the CurrencyDataGenerated.h file."""
+    """Update the CurrencyDataGenerated.js file."""
     import xml.etree.ElementTree as ET
     from random import randint
 
@@ -3612,8 +3472,45 @@ def readICUDataFilterForUnits(data_filter_file):
 
 def writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units):
     js_src_builtin_intl_dir = os.path.dirname(os.path.abspath(__file__))
+    intl_components_src_dir = os.path.join(
+        js_src_builtin_intl_dir, "../../../../intl/components/src"
+    )
 
-    sanctioned_h_file = os.path.join(js_src_builtin_intl_dir, "MeasureUnitGenerated.h")
+    def find_unit_type(unit):
+        result = [
+            unit_type for (unit_type, unit_name) in all_units if unit_name == unit
+        ]
+        assert result and len(result) == 1
+        return result[0]
+
+    sanctioned_js_file = os.path.join(
+        js_src_builtin_intl_dir, "SanctionedSimpleUnitIdentifiersGenerated.js"
+    )
+    with open(sanctioned_js_file, mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
+
+        sanctioned_units_object = json.dumps(
+            {unit: True for unit in sorted(sanctioned_units)},
+            sort_keys=True,
+            indent=2,
+            separators=(",", ": "),
+        )
+
+        println(generatedFileWarning)
+
+        println(
+            """
+/**
+ * The list of currently supported simple unit identifiers.
+ *
+ * Intl.NumberFormat Unified API Proposal
+ */"""
+        )
+
+        println("// prettier-ignore")
+        println(f"var sanctionedSimpleUnitIdentifiers = {sanctioned_units_object};")
+
+    sanctioned_h_file = os.path.join(intl_components_src_dir, "MeasureUnitGenerated.h")
     with open(sanctioned_h_file, mode="w", encoding="utf-8", newline="") as f:
         println = partial(print, file=f)
 
@@ -3621,33 +3518,34 @@ def writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units):
 
         println(
             """
-#ifndef builtin_intl_MeasureUnitGenerated_h
-#define builtin_intl_MeasureUnitGenerated_h
+#ifndef intl_components_MeasureUnitGenerated_h
+#define intl_components_MeasureUnitGenerated_h
 
-namespace js::intl {
+namespace mozilla::intl {
 
 struct SimpleMeasureUnit {
+  const char* const type;
   const char* const name;
 };
 
 /**
  * The list of currently supported simple unit identifiers.
  *
- * The list must be kept in alphabetical order.
+ * The list must be kept in alphabetical order of |name|.
  */
 inline constexpr SimpleMeasureUnit simpleMeasureUnits[] = {
     // clang-format off"""
         )
 
         for unit_name in sorted(sanctioned_units):
-            println(f'  {{"{unit_name}"}},')
+            println(f'  {{"{find_unit_type(unit_name)}", "{unit_name}"}},')
 
         println(
             """
     // clang-format on
 };
 
-}  // namespace js::intl
+}  // namespace mozilla::intl
 
 #endif
 """.strip("\n")
@@ -3669,6 +3567,8 @@ def writeUnitTestFiles(all_units, sanctioned_units):
         with open(file_path, mode="w", encoding="utf-8", newline="") as f:
             println = partial(print, file=f)
 
+            println('// |reftest| skip-if(!this.hasOwnProperty("Intl"))')
+            println("")
             println(generatedFileWarning)
             println("")
 
@@ -4043,7 +3943,7 @@ if __name__ == "__main__":
 
     def EnsureHttps(v):
         if not v.startswith("https:"):
-            raise argparse.ArgumentTypeError(f"URL protocol must be https: {v}")
+            raise argparse.ArgumentTypeError("URL protocol must be https: " % v)
         return v
 
     parser = argparse.ArgumentParser(description="Update intl data.")
@@ -4072,7 +3972,7 @@ if __name__ == "__main__":
     parser_cldr_tags.add_argument(
         "file", nargs="?", help="Local cldr-common.zip file, if omitted uses <URL>"
     )
-    parser_cldr_tags.set_defaults(func=partial(updateCLDRLangTags, topsrcdir))
+    parser_cldr_tags.set_defaults(func=updateCLDRLangTags)
 
     parser_tz = subparsers.add_parser("tzdata", help="Update tzdata")
     parser_tz.add_argument(
@@ -4099,7 +3999,7 @@ if __name__ == "__main__":
     )
     parser_currency.add_argument(
         "--out",
-        default=os.path.join(thisDir, "CurrencyDataGenerated.h"),
+        default=os.path.join(thisDir, "CurrencyDataGenerated.js"),
         help="Output file (default: %(default)s)",
     )
     parser_currency.add_argument(

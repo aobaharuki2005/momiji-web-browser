@@ -28,16 +28,11 @@ class MetricsMiddleware(
 
     private fun handleAction(action: AppAction) = when (action) {
         is AppAction.AppLifecycleAction.ResumeAction -> {
-            metrics.track(Event.GrowthData.ConversionEvent1)
-            metrics.track(Event.GrowthData.ConversionEvent2)
-            // Conversion event 3 handled in [TelemetryMiddleware]
-            metrics.track(Event.GrowthData.ConversionEvent4)
-            // Conversion event 5 handled in [MetricController]
-            // Conversion event 6 handled in [OnboardingFragment]
-            metrics.track(Event.GrowthData.ConversionEvent7(fromSearch = false))
-            metrics.track(Event.FirstWeekPostInstall.ConversionEvent8)
-            metrics.track(Event.FirstWeekPostInstall.ConversionEvent9)
-            metrics.track(Event.FirstWeekPostInstall.ConversionEvent10)
+            metrics.track(Event.GrowthData.SetAsDefault)
+            metrics.track(Event.GrowthData.FirstAppOpenForDay)
+            metrics.track(Event.GrowthData.FirstWeekSeriesActivity)
+            metrics.track(Event.GrowthData.UsageThreshold)
+            metrics.track(Event.GrowthData.UserActivated(fromSearch = false))
         }
 
         is AppAction.BookmarkAction.BookmarkAdded -> {

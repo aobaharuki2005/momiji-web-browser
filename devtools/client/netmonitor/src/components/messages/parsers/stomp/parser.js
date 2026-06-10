@@ -36,10 +36,10 @@ const COLON = 58;
  * A stream of Octets can be passed and whenever it recognizes
  * a complete Frame or an incoming ping it will invoke the registered callbacks.
  *
- * All incoming Octets are fed into #onByte function.
- * Depending on current state the #onByte function keeps changing.
- * Depending on the state it keeps accumulating into #token and #results.
- * State is indicated by current value of #onByte, all states are named as #collect.
+ * All incoming Octets are fed into _onByte function.
+ * Depending on current state the _onByte function keeps changing.
+ * Depending on the state it keeps accumulating into _token and _results.
+ * State is indicated by current value of _onByte, all states are named as _collect.
  *
  * STOMP standards https://stomp.github.io/stomp-specification-1.2.html
  * imply that all lengths are considered in bytes (instead of string lengths).
@@ -48,7 +48,7 @@ const COLON = 58;
  *
  * There is no peek function on the incoming data.
  * When a state change occurs based on an Octet without consuming the Octet,
- * the Octet, after state change, is fed again (#reinjectByte).
+ * the Octet, after state change, is fed again (_reinjectByte).
  * This became possible as the state change can be determined by inspecting just one Octet.
  *
  * There are two modes to collect the body, if content-length header is there then it by counting Octets
@@ -74,28 +74,20 @@ const COLON = 58;
  * @internal
  */
 class Parser {
-  #bodyBytesRemaining;
-  #decoder;
-  #encoder;
-  #headerKey;
-  #onByte;
-  #results;
-  #token;
-
   constructor(onFrame, onIncomingPing) {
     this.onFrame = onFrame;
     this.onIncomingPing = onIncomingPing;
-    this.#encoder = new TextEncoder();
-    this.#decoder = new TextDecoder();
-    this.#token = [];
-    this.#initState();
+    this._encoder = new TextEncoder();
+    this._decoder = new TextDecoder();
+    this._token = [];
+    this._initState();
   }
   parseChunk(segment, appendMissingNULLonIncoming = false) {
     let chunk;
     if (segment instanceof ArrayBuffer) {
       chunk = new Uint8Array(segment);
     } else {
-      chunk = this.#encoder.encode(segment);
+      chunk = this._encoder.encode(segment);
     }
     // See https://github.com/stomp-js/stompjs/issues/89
     // Remove when underlying issue is fixed.
@@ -110,12 +102,12 @@ class Parser {
     // tslint:disable-next-line:prefer-for-of
     for (let i = 0; i < chunk.length; i++) {
       const byte = chunk[i];
-      this.#onByte(byte);
+      this._onByte(byte);
     }
   }
   // The following implements a simple Rec Descent Parser.
   // The grammar is simple and just one byte tells what should be the next state
-  #collectFrame(byte) {
+  _collectFrame(byte) {
     if (byte === NULL) {
       // Ignore
       return;
@@ -129,109 +121,109 @@ class Parser {
       this.onIncomingPing();
       return;
     }
-    this.#onByte = this.#collectCommand;
-    this.#reinjectByte(byte);
+    this._onByte = this._collectCommand;
+    this._reinjectByte(byte);
   }
-  #collectCommand(byte) {
+  _collectCommand(byte) {
     if (byte === CR) {
       // Ignore CR
       return;
     }
     if (byte === LF) {
-      this.#results.command = this.#consumeTokenAsUTF8();
-      this.#onByte = this.#collectHeaders;
+      this._results.command = this._consumeTokenAsUTF8();
+      this._onByte = this._collectHeaders;
       return;
     }
-    this.#consumeByte(byte);
+    this._consumeByte(byte);
   }
-  #collectHeaders(byte) {
+  _collectHeaders(byte) {
     if (byte === CR) {
       // Ignore CR
       return;
     }
     if (byte === LF) {
-      this.#setupCollectBody();
+      this._setupCollectBody();
       return;
     }
-    this.#onByte = this.#collectHeaderKey;
-    this.#reinjectByte(byte);
+    this._onByte = this._collectHeaderKey;
+    this._reinjectByte(byte);
   }
-  #reinjectByte(byte) {
-    this.#onByte(byte);
+  _reinjectByte(byte) {
+    this._onByte(byte);
   }
-  #collectHeaderKey(byte) {
+  _collectHeaderKey(byte) {
     if (byte === COLON) {
-      this.#headerKey = this.#consumeTokenAsUTF8();
-      this.#onByte = this.#collectHeaderValue;
+      this._headerKey = this._consumeTokenAsUTF8();
+      this._onByte = this._collectHeaderValue;
       return;
     }
-    this.#consumeByte(byte);
+    this._consumeByte(byte);
   }
-  #collectHeaderValue(byte) {
+  _collectHeaderValue(byte) {
     if (byte === CR) {
       // Ignore CR
       return;
     }
     if (byte === LF) {
-      this.#results.headers.push([this.#headerKey, this.#consumeTokenAsUTF8()]);
-      this.#headerKey = undefined;
-      this.#onByte = this.#collectHeaders;
+      this._results.headers.push([this._headerKey, this._consumeTokenAsUTF8()]);
+      this._headerKey = undefined;
+      this._onByte = this._collectHeaders;
       return;
     }
-    this.#consumeByte(byte);
+    this._consumeByte(byte);
   }
-  #setupCollectBody() {
-    const contentLengthHeader = this.#results.headers.filter(header => {
+  _setupCollectBody() {
+    const contentLengthHeader = this._results.headers.filter(header => {
       return header[0] === "content-length";
     })[0];
     if (contentLengthHeader) {
-      this.#bodyBytesRemaining = parseInt(contentLengthHeader[1], 10);
-      this.#onByte = this.#collectBodyFixedSize;
+      this._bodyBytesRemaining = parseInt(contentLengthHeader[1], 10);
+      this._onByte = this._collectBodyFixedSize;
     } else {
-      this.#onByte = this.#collectBodyNullTerminated;
+      this._onByte = this._collectBodyNullTerminated;
     }
   }
-  #collectBodyNullTerminated(byte) {
+  _collectBodyNullTerminated(byte) {
     if (byte === NULL) {
-      this.#retrievedBody();
+      this._retrievedBody();
       return;
     }
-    this.#consumeByte(byte);
+    this._consumeByte(byte);
   }
-  #collectBodyFixedSize(byte) {
+  _collectBodyFixedSize(byte) {
     // It is post decrement, so that we discard the trailing NULL octet
-    if (this.#bodyBytesRemaining-- === 0) {
-      this.#retrievedBody();
+    if (this._bodyBytesRemaining-- === 0) {
+      this._retrievedBody();
       return;
     }
-    this.#consumeByte(byte);
+    this._consumeByte(byte);
   }
-  #retrievedBody() {
-    this.#results.binaryBody = this.#consumeTokenAsRaw();
-    this.onFrame(this.#results);
-    this.#initState();
+  _retrievedBody() {
+    this._results.binaryBody = this._consumeTokenAsRaw();
+    this.onFrame(this._results);
+    this._initState();
   }
   // Rec Descent Parser helpers
-  #consumeByte(byte) {
-    this.#token.push(byte);
+  _consumeByte(byte) {
+    this._token.push(byte);
   }
-  #consumeTokenAsUTF8() {
-    return this.#decoder.decode(this.#consumeTokenAsRaw());
+  _consumeTokenAsUTF8() {
+    return this._decoder.decode(this._consumeTokenAsRaw());
   }
-  #consumeTokenAsRaw() {
-    const rawResult = new Uint8Array(this.#token);
-    this.#token = [];
+  _consumeTokenAsRaw() {
+    const rawResult = new Uint8Array(this._token);
+    this._token = [];
     return rawResult;
   }
-  #initState() {
-    this.#results = {
+  _initState() {
+    this._results = {
       command: undefined,
       headers: [],
       binaryBody: undefined,
     };
-    this.#token = [];
-    this.#headerKey = undefined;
-    this.#onByte = this.#collectFrame;
+    this._token = [];
+    this._headerKey = undefined;
+    this._onByte = this._collectFrame;
   }
 }
 

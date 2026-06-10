@@ -71,7 +71,7 @@ async function crashUtilityProcess(utilityPid) {
     "Subject needs to be a nsIPropertyBag2 to clean up properly"
   );
 
-  const dumpID = subject.get("dumpID");
+  const dumpID = subject.getPropertyAsAString("dumpID");
   ok(dumpID, "There should be a dumpID");
 
   await crashMan.ensureCrashIsPresent(dumpID);

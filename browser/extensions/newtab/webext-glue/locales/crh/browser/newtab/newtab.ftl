@@ -16,7 +16,7 @@ newtab-search-box-search-button =
     .title = Qıdır
     .aria-label = Qıdır
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-edit-topsites-header = Üst Saytnı Tahrir Et
 newtab-topsites-title-label = Serlevha

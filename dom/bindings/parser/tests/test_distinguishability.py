@@ -98,16 +98,17 @@ def WebIDLTest(parser, harness):
                 type1 in unrelatedTypes or type2 in unrelatedTypes
             )
 
-            not_ = "" if distinguishable else "not "
             harness.check(
                 type1.isDistinguishableFrom(type2),
                 distinguishable,
-                f"Type {type1} should {not_}be distinguishable from type {type2}",
+                "Type %s should %sbe distinguishable from type %s"
+                % (type1, "" if distinguishable else "not ", type2),
             )
             harness.check(
                 type2.isDistinguishableFrom(type1),
                 distinguishable,
-                f"Type {type2} should {not_}be distinguishable from type {type1}",
+                "Type %s should %sbe distinguishable from type %s"
+                % (type2, "" if distinguishable else "not ", type1),
             )
 
     parser = parser.reset()
@@ -406,31 +407,34 @@ def WebIDLTest(parser, harness):
 
     def checkDistinguishability(parser, type1, type2):
         idlTemplate = """
-          enum Enum {{ "a", "b" }};
-          enum Enum2 {{ "c", "d" }};
-          interface Interface : AncestorInterface {{}};
-          interface AncestorInterface {{}};
-          interface UnrelatedInterface {{}};
-          callback interface CallbackInterface {{}};
-          callback interface CallbackInterface2 {{}};
+          enum Enum { "a", "b" };
+          enum Enum2 { "c", "d" };
+          interface Interface : AncestorInterface {};
+          interface AncestorInterface {};
+          interface UnrelatedInterface {};
+          callback interface CallbackInterface {};
+          callback interface CallbackInterface2 {};
           callback Callback = any();
           callback Callback2 = long(short arg);
           [LegacyTreatNonObjectAsNull] callback LegacyCallback1 = any();
           // Give our dictionaries required members so we don't need to
           // mess with optional and default values.
-          dictionary Dict {{ required long member; }};
-          dictionary Dict2 {{ required long member; }};
-          interface TestInterface {{{0}
-          }};
+          dictionary Dict { required long member; };
+          dictionary Dict2 { required long member; };
+          interface TestInterface {%s
+          };
         """
         if type1 in undefineds or type2 in undefineds:
-            methods = f"""
-                ({type1} or {type2}) myMethod();"""
+            methods = """
+                (%s or %s) myMethod();""" % (
+                type1,
+                type2,
+            )
         else:
             methodTemplate = """
-                undefined myMethod({} arg);"""
-            methods = methodTemplate.format(type1) + methodTemplate.format(type2)
-        idl = idlTemplate.format(methods)
+                undefined myMethod(%s arg);"""
+            methods = (methodTemplate % type1) + (methodTemplate % type2)
+        idl = idlTemplate % methods
 
         parser = parser.reset()
         threw = False
@@ -443,12 +447,14 @@ def WebIDLTest(parser, harness):
         if areDistinguishable(type1, type2):
             harness.ok(
                 not threw,
-                f"Should not throw for '{type1}' and '{type2}' because they are distinguishable",
+                "Should not throw for '%s' and '%s' because they are distinguishable"
+                % (type1, type2),
             )
         else:
             harness.ok(
                 threw,
-                f"Should throw for '{type1}' and '{type2}' because they are not distinguishable",
+                "Should throw for '%s' and '%s' because they are not distinguishable"
+                % (type1, type2),
             )
 
     # Enumerate over everything in both orders, since order matters in

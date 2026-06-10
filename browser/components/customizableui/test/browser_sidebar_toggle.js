@@ -4,12 +4,27 @@
 
 "use strict";
 
-// Schedule reset to the initial sidebar state after the test.
-SidebarTestUtils.restoreStateAtCleanup(window);
-
 registerCleanupFunction(async function () {
   await resetCustomization();
+
+  // Ensure sidebar is hidden after each test:
+  if (!document.getElementById("sidebar-box").hidden) {
+    SidebarController.hide();
+  }
 });
+
+async function ensureSidebarLauncherIsVisible() {
+  await TestUtils.waitForTick();
+  // Show the sidebar launcher if its hidden
+  if (SidebarController.sidebarContainer.hidden) {
+    document.getElementById("sidebar-button").doCommand();
+  }
+  await TestUtils.waitForTick();
+  Assert.ok(
+    BrowserTestUtils.isVisible(SidebarController.sidebarMain),
+    "Sidebar launcher is visible"
+  );
+}
 
 var showSidebar = async function (win = window) {
   let button = win.document.getElementById("sidebar-button");
@@ -66,7 +81,7 @@ add_task(async function () {
     await hideSidebar();
   } else {
     const sidebar = document.querySelector("sidebar-main");
-    await SidebarTestUtils.ensureLauncherVisible(window);
+    await ensureSidebarLauncherIsVisible();
     for (const [index, toolButton] of sidebar.toolButtons.entries()) {
       await SidebarController.toggle(toolButton.getAttribute("view"));
       is(
@@ -81,7 +96,10 @@ add_task(async function () {
   }
   let otherWin = await BrowserTestUtils.openNewBrowserWindow();
   info("Waiting for the sidebar to initialize in the new browser window");
-  await SidebarTestUtils.waitForInitialized(otherWin);
+  await BrowserTestUtils.waitForCondition(
+    () => otherWin.SidebarController.uiStateInitialized,
+    "The uiStateInitialized is true in the new window"
+  );
   if (!sidebarRevampEnabled) {
     ok(
       !otherWin.SidebarController.isOpen,

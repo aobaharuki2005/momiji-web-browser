@@ -4,7 +4,7 @@
  *
  *   FreeType path stroker (body).
  *
- * Copyright (C) 2002-2026 by
+ * Copyright (C) 2002-2025 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -693,7 +693,6 @@
   Fail:
     num_points   = 0;
     num_contours = 0;
-    error        = FT_THROW( Invalid_Outline );
     goto Exit;
   }
 
@@ -2252,7 +2251,7 @@
                    FT_Stroker   stroker,
                    FT_Bool      destroy )
   {
-    FT_Error  error = FT_THROW( Invalid_Argument );
+    FT_Error  error = FT_ERR( Invalid_Argument );
     FT_Glyph  glyph = NULL;
 
 
@@ -2284,9 +2283,7 @@
       if ( error )
         goto Fail;
 
-      error = FT_Stroker_GetCounts( stroker, &num_points, &num_contours );
-      if ( error )
-        goto Fail;
+      FT_Stroker_GetCounts( stroker, &num_points, &num_contours );
 
       FT_Outline_Done( glyph->library, outline );
 
@@ -2329,7 +2326,7 @@
                          FT_Bool      inside,
                          FT_Bool      destroy )
   {
-    FT_Error  error = FT_THROW( Invalid_Argument );
+    FT_Error  error = FT_ERR( Invalid_Argument );
     FT_Glyph  glyph = NULL;
 
 

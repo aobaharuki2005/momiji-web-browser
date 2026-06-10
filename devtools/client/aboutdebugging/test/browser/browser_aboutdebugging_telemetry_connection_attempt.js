@@ -3,6 +3,12 @@
 
 "use strict";
 
+/* import-globals-from helper-telemetry.js */
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-telemetry.js",
+  this
+);
+
 const USB_RUNTIME = {
   id: "runtime-id-1",
   deviceName: "Device A",
@@ -24,28 +30,23 @@ add_task(async function testSuccessfulConnectionAttempt() {
 
   await connectToRuntime(USB_RUNTIME.deviceName, doc);
 
-  const rcEvents =
-    Glean.devtoolsMain.runtimeConnectedAboutdebugging.testGetValue();
-  Assert.equal(1, rcEvents.length);
-  Assert.equal(runtimeId, rcEvents[0].extra.runtime_id);
-  Assert.equal(sessionId, rcEvents[0].extra.session_id);
-  const conEvents =
-    Glean.devtoolsMain.connectionAttemptAboutdebugging.testGetValue();
-  Assert.equal(2, conEvents.length);
-  conEvents.forEach(ev => {
-    Assert.equal(ev.extra.runtime_id, runtimeId);
-    Assert.equal(ev.extra.connection_id, conEvents[0].extra.connection_id);
-    Assert.equal(ev.extra.connection_type, "usb");
-    Assert.equal(ev.extra.session_id, sessionId);
-  });
-  Assert.equal("start", conEvents[0].extra.status);
-  Assert.equal("success", conEvents[1].extra.status);
-  const selEvents = Glean.devtoolsMain.selectPageAboutdebugging.testGetValue();
-  Assert.deepEqual(1, selEvents.length);
-  Assert.deepEqual(
-    { page_type: "runtime", session_id: sessionId },
-    selEvents[0].extra
-  );
+  const connectionEvents = checkTelemetryEvents(
+    [
+      { method: "runtime_connected", extras: { runtime_id: runtimeId } },
+      {
+        method: "connection_attempt",
+        extras: getEventExtras("start", runtimeId),
+      },
+      {
+        method: "connection_attempt",
+        extras: getEventExtras("success", runtimeId),
+      },
+      { method: "select_page", extras: { page_type: "runtime" } },
+    ],
+    sessionId
+  ).filter(({ method }) => method === "connection_attempt");
+
+  checkConnectionId(connectionEvents);
 
   await removeUsbRuntime(USB_RUNTIME, mocks, doc);
   await removeTab(tab);
@@ -72,17 +73,21 @@ add_task(async function testFailedConnectionAttempt() {
     usbRuntimeSidebarItem.querySelector(".qa-connection-error")
   );
 
-  const conEvents =
-    Glean.devtoolsMain.connectionAttemptAboutdebugging.testGetValue();
-  Assert.equal(2, conEvents.length);
-  conEvents.forEach(ev => {
-    Assert.equal(ev.extra.runtime_id, runtimeId);
-    Assert.equal(ev.extra.connection_id, conEvents[0].extra.connection_id);
-    Assert.equal(ev.extra.connection_type, "usb");
-    Assert.equal(ev.extra.session_id, sessionId);
-  });
-  Assert.equal("start", conEvents[0].extra.status);
-  Assert.equal("failed", conEvents[1].extra.status);
+  const connectionEvents = checkTelemetryEvents(
+    [
+      {
+        method: "connection_attempt",
+        extras: getEventExtras("start", runtimeId),
+      },
+      {
+        method: "connection_attempt",
+        extras: getEventExtras("failed", runtimeId),
+      },
+    ],
+    sessionId
+  ).filter(({ method }) => method === "connection_attempt");
+
+  checkConnectionId(connectionEvents);
 
   await removeUsbRuntime(USB_RUNTIME, mocks, doc);
   await removeTab(tab);
@@ -128,29 +133,26 @@ add_task(async function testPendingConnectionAttempt() {
     () => !usbRuntimeSidebarItem.querySelector(".qa-connect-button")
   );
 
-  const rcEvents =
-    Glean.devtoolsMain.runtimeConnectedAboutdebugging.testGetValue();
-  Assert.equal(1, rcEvents.length);
-  Assert.equal(runtimeId, rcEvents[0].extra.runtime_id);
-  Assert.equal(sessionId, rcEvents[0].extra.session_id);
-  const conEvents =
-    Glean.devtoolsMain.connectionAttemptAboutdebugging.testGetValue();
-  Assert.equal(3, conEvents.length);
-  conEvents.forEach(ev => {
-    Assert.equal(ev.extra.runtime_id, runtimeId);
-    Assert.equal(ev.extra.connection_id, conEvents[0].extra.connection_id);
-    Assert.equal(ev.extra.connection_type, "usb");
-    Assert.equal(ev.extra.session_id, sessionId);
-  });
-  Assert.equal("start", conEvents[0].extra.status);
-  Assert.equal("not responding", conEvents[1].extra.status);
-  Assert.equal("success", conEvents[2].extra.status);
-  const selEvents = Glean.devtoolsMain.selectPageAboutdebugging.testGetValue();
-  Assert.deepEqual(1, selEvents.length);
-  Assert.deepEqual(
-    { page_type: "runtime", session_id: sessionId },
-    selEvents[0].extra
-  );
+  const connectionEvents = checkTelemetryEvents(
+    [
+      { method: "runtime_connected", extras: { runtime_id: runtimeId } },
+      {
+        method: "connection_attempt",
+        extras: getEventExtras("start", runtimeId),
+      },
+      {
+        method: "connection_attempt",
+        extras: getEventExtras("not responding", runtimeId),
+      },
+      {
+        method: "connection_attempt",
+        extras: getEventExtras("success", runtimeId),
+      },
+      { method: "select_page", extras: { page_type: "runtime" } },
+    ],
+    sessionId
+  ).filter(({ method }) => method === "connection_attempt");
+  checkConnectionId(connectionEvents);
 
   await removeUsbRuntime(USB_RUNTIME, mocks, doc);
   await removeTab(tab);
@@ -184,33 +186,61 @@ add_task(async function testCancelledConnectionAttempt() {
     usbRuntimeSidebarItem.querySelector(".qa-connection-timeout")
   );
 
-  const conEvents =
-    Glean.devtoolsMain.connectionAttemptAboutdebugging.testGetValue();
-  Assert.equal(3, conEvents.length);
-  conEvents.forEach(ev => {
-    Assert.equal(ev.extra.runtime_id, runtimeId);
-    Assert.equal(ev.extra.connection_id, conEvents[0].extra.connection_id);
-    Assert.equal(ev.extra.connection_type, "usb");
-    Assert.equal(ev.extra.session_id, sessionId);
-  });
-  Assert.equal("start", conEvents[0].extra.status);
-  Assert.equal("not responding", conEvents[1].extra.status);
-  Assert.equal("cancelled", conEvents[2].extra.status);
+  const connectionEvents = checkTelemetryEvents(
+    [
+      {
+        method: "connection_attempt",
+        extras: getEventExtras("start", runtimeId),
+      },
+      {
+        method: "connection_attempt",
+        extras: getEventExtras("not responding", runtimeId),
+      },
+      {
+        method: "connection_attempt",
+        extras: getEventExtras("cancelled", runtimeId),
+      },
+    ],
+    sessionId
+  ).filter(({ method }) => method === "connection_attempt");
+  checkConnectionId(connectionEvents);
 
   await removeUsbRuntime(USB_RUNTIME, mocks, doc);
   await removeTab(tab);
 });
 
+function checkConnectionId(connectionEvents) {
+  const connectionId = connectionEvents[0].extras.connection_id;
+  ok(
+    !!connectionId,
+    "Found a valid connection id in the first connection_attempt event"
+  );
+  for (const evt of connectionEvents) {
+    is(
+      evt.extras.connection_id,
+      connectionId,
+      "All connection_attempt events share the same connection id"
+    );
+  }
+}
+
+// Small helper to create the expected event extras object for connection_attempt events
+function getEventExtras(status, runtimeId) {
+  return {
+    connection_type: "usb",
+    runtime_id: runtimeId,
+    status,
+  };
+}
+
 // Open about:debugging, setup telemetry, mocks and create a mocked USB runtime.
 async function setupConnectionAttemptTest() {
   const mocks = new Mocks();
-  Services.fog.testResetFOG();
+  setupTelemetryTest();
 
   const { tab, document } = await openAboutDebugging();
 
-  const sessionId =
-    Glean.devtoolsMain.openAdbgAboutdebugging.testGetValue()[0].extra
-      .session_id;
+  const sessionId = getOpenEventSessionId();
   ok(!isNaN(sessionId), "Open event has a valid session id");
 
   mocks.createUSBRuntime(USB_RUNTIME.id, {
@@ -222,17 +252,16 @@ async function setupConnectionAttemptTest() {
 
   info("Wait for the runtime to appear in the sidebar");
   await waitUntil(() => findSidebarItemByText(USB_RUNTIME.shortName, document));
-  const deviceEvents =
-    Glean.devtoolsMain.deviceAddedAboutdebugging.testGetValue();
-  Assert.equal(deviceEvents.length, 1);
-  Assert.equal(sessionId, deviceEvents[0].extra.session_id);
-  const rtEvents = Glean.devtoolsMain.runtimeAddedAboutdebugging.testGetValue();
-  Assert.equal(rtEvents.length, 1);
-  Assert.equal(sessionId, rtEvents[0].extra.session_id);
+  const evts = checkTelemetryEvents(
+    [
+      { method: "device_added", extras: {} },
+      { method: "runtime_added", extras: {} },
+    ],
+    sessionId
+  );
 
-  Services.fog.testResetFOG();
-
-  const runtimeId = rtEvents[0].extra.runtime_id;
+  const runtimeId = evts.filter(e => e.method === "runtime_added")[0].extras
+    .runtime_id;
   return { doc: document, mocks, runtimeId, sessionId, tab };
 }
 

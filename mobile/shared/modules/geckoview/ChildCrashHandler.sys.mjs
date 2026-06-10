@@ -31,12 +31,10 @@ var getPendingMinidump = function (id) {
 };
 
 export var crashPullCallback = function (matches, requestedByDevs) {
-  lazy.EventDispatcher.instance.sendRequest(
-    "GeckoView:RemoteSettingsCrashPull",
-    {
-      crashIDs: matches.map(id => PathUtils.join(getPendingDir(), `${id}.dmp`)),
-    }
-  );
+  lazy.EventDispatcher.instance.sendRequest({
+    type: "GeckoView:RemoteSettingsCrashPull",
+    crashIDs: matches.map(id => PathUtils.join(getPendingDir(), `${id}.dmp`)),
+  });
 };
 
 export var ChildCrashHandler = {
@@ -102,18 +100,16 @@ export var ChildCrashHandler = {
 
         const processType = aSubject.get("processType");
 
-        lazy.EventDispatcher.instance.sendRequest(
-          "GeckoView:ChildCrashReport",
-          {
-            minidumpPath,
-            extrasPath,
-            success: true,
-            fatal: false,
-            processVisibility,
-            processType,
-            remoteType,
-          }
-        );
+        lazy.EventDispatcher.instance.sendRequest({
+          type: "GeckoView:ChildCrashReport",
+          minidumpPath,
+          extrasPath,
+          success: true,
+          fatal: false,
+          processVisibility,
+          processType,
+          remoteType,
+        });
 
         break;
       }

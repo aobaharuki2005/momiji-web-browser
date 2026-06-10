@@ -403,10 +403,6 @@ class MachFormatter(base.BaseFormatter):
 
         return "%s LeakSanitizer: leak at %s" % (prefix, ", ".join(data["frames"]))
 
-    def tsan_error(self, data):
-        prefix = self.color_formatter.warning("WARNING")
-        return f"{prefix} ThreadSanitizer: {data['kind']} | {data['signature']}"
-
     def lsan_summary(self, data):
         allowed = data.get("allowed", False)
         if allowed:
@@ -425,7 +421,7 @@ class MachFormatter(base.BaseFormatter):
         data_log["level"] = "INFO"
         data_log["message"] = "leakcheck: %s leaked %d %s" % (
             data["process"],
-            data["count"],
+            data["bytes"],
             data["name"],
         )
         return self.log(data_log)

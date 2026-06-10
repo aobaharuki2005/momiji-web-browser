@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -18,7 +20,6 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
 #include "jit/BranchHinting.h"
-#include "jit/BranchPruning.h"
 #include "jit/CodeGenerator.h"
 #include "jit/CompileInfo.h"
 #include "jit/DominatorTree.h"
@@ -26,7 +27,6 @@
 #include "jit/EffectiveAddressAnalysis.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/FoldLinearArithConstants.h"
-#include "jit/FoldTests.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/InstructionReordering.h"
 #include "jit/Invalidation.h"
@@ -51,14 +51,11 @@
 #include "jit/ScriptFromCalleeToken.h"
 #include "jit/SimpleAllocator.h"
 #include "jit/Sink.h"
-#include "jit/TypeAnalysis.h"
 #include "jit/UnrollLoops.h"
 #include "jit/ValueNumbering.h"
 #include "jit/WarpBuilder.h"
 #include "jit/WarpOracle.h"
 #include "jit/WasmBCE.h"
-#include "jit/WasmRefTypeAnalysis.h"
-#include "js/friend/UsageStatistics.h"  // JSUseCounter
 #include "js/Printf.h"
 #include "js/UniquePtr.h"
 #include "util/Memory.h"
@@ -100,6 +97,10 @@ JitRuntime::~JitRuntime() {
   MOZ_ASSERT_IF(jitcodeGlobalTable_, jitcodeGlobalTable_->empty());
   js_delete(jitcodeGlobalTable_.ref());
 
+  // interpreterEntryMap should be cleared out during finishRoots()
+  MOZ_ASSERT_IF(interpreterEntryMap_, interpreterEntryMap_->empty());
+  js_delete(interpreterEntryMap_.ref());
+
   js_delete(jitHintsMap_.ref());
 }
 
@@ -135,6 +136,13 @@ bool JitRuntime::initialize(JSContext* cx) {
   if (!JitOptions.disableJitHints) {
     jitHintsMap_ = cx->new_<JitHintsMap>();
     if (!jitHintsMap_) {
+      return false;
+    }
+  }
+
+  if (JitOptions.emitInterpreterEntryTrampoline) {
+    interpreterEntryMap_ = cx->new_<EntryTrampolineMap>();
+    if (!interpreterEntryMap_) {
       return false;
     }
   }
@@ -405,6 +413,18 @@ void JitRuntime::TraceAtomZoneRoots(JSTracer* trc) {
 }
 
 /* static */
+bool JitRuntime::MarkJitcodeGlobalTableIteratively(GCMarker* marker) {
+  if (marker->runtime()->hasJitRuntime() &&
+      marker->runtime()->jitRuntime()->hasJitcodeGlobalTable()) {
+    return marker->runtime()
+        ->jitRuntime()
+        ->getJitcodeGlobalTable()
+        ->markIteratively(marker);
+  }
+  return false;
+}
+
+/* static */
 void JitRuntime::TraceWeakJitcodeGlobalTable(JSRuntime* rt, JSTracer* trc) {
   if (rt->hasJitRuntime() && rt->jitRuntime()->hasJitcodeGlobalTable()) {
     rt->jitRuntime()->getJitcodeGlobalTable()->traceWeak(rt, trc);
@@ -509,32 +529,16 @@ void JitZone::traceWeak(JSTracer* trc, Zone* zone) {
   MOZ_ASSERT(this == zone->jitZone());
 
   for (WeakHeapPtr<JitCode*>& stub : stubs_) {
-    TraceOrClearWeakEdge(trc, &stub, "JitZone::stubs_");
+    TraceWeakEdge(trc, &stub, "JitZone::stubs_");
   }
 
   baselineCacheIRStubCodes_.traceWeak(trc);
   inlinedCompilations_.traceWeak(trc);
 
-  TraceOrClearWeakEdge(trc, &lastStubFoldingBailoutInner_,
-                       "JitZone::lastStubFoldingBailoutInner_");
-  TraceOrClearWeakEdge(trc, &lastStubFoldingBailoutOuter_,
-                       "JitZone::lastStubFoldingBailoutOuter_");
-}
-
-void JitZone::traceScriptTableRoots(JSTracer* trc) {
-  // Trace the table used to hold interpreter entry code generated with
-  // --emit-interpreter-entry.
-  if (interpreterEntryMap) {
-    interpreterEntryMap->trace(trc);
-  }
-}
-
-void JitZone::finishScriptTableRoots() {
-  // Clear out the interpreter entry map before the final gc.
-  if (interpreterEntryMap) {
-    interpreterEntryMap->clear();
-    interpreterEntryMap.reset();
-  }
+  TraceWeakEdge(trc, &lastStubFoldingBailoutInner_,
+                "JitZone::lastStubFoldingBailoutInner_");
+  TraceWeakEdge(trc, &lastStubFoldingBailoutOuter_,
+                "JitZone::lastStubFoldingBailoutOuter_");
 }
 
 void JitZone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -620,15 +624,12 @@ void JitCode::traceChildren(JSTracer* trc) {
 }
 
 void JitCode::finalize(JS::GCContext* gcx) {
-  // If this jitcode had a bytecode map, either the entry has been removed
-  // from the table, or it has been detached (jitcode_ set to null) because
-  // the profiler buffer still references it.
+  // If this jitcode had a bytecode map, it must have already been removed.
 #ifdef DEBUG
   JSRuntime* rt = gcx->runtime();
   if (hasBytecodeMap_) {
     MOZ_ASSERT(rt->jitRuntime()->hasJitcodeGlobalTable());
-    auto* entry = rt->jitRuntime()->getJitcodeGlobalTable()->lookup(raw());
-    MOZ_ASSERT(!entry || !entry->hasJitcode());
+    MOZ_ASSERT(!rt->jitRuntime()->getJitcodeGlobalTable()->lookup(raw()));
   }
 #endif
 
@@ -919,7 +920,7 @@ void IonScript::Destroy(JS::GCContext* gcx, IonScript* script) {
   // nursery objects list or constants list in the store buffer. Because this
   // can be called during sweeping when discarding JIT code, we have to lock the
   // store buffer when we find a pointer that's (still) in the nursery.
-  mozilla::Maybe<gc::AutoLockSweepingLock> lock;
+  mozilla::Maybe<gc::AutoLockStoreBuffer> lock;
   for (size_t i = 0, len = script->numNurseryObjects(); i < len; i++) {
     JSObject* obj = script->nurseryObjects()[i];
     if (lock.isNothing() && IsInsideNursery(obj)) {
@@ -964,14 +965,13 @@ bool OptimizeMIR(MIRGenerator* mir) {
   AssertBasicGraphCoherency(graph);
 
   if (JitSpewEnabled(JitSpew_MIRExpressions)) {
-    JitSpew(JitSpew_MIRExpressions, "\n");
-    AutoJitSpewMessage msg(JitSpew_MIRExpressions);
-    DumpMIRExpressions(msg.printer(), graph, mir->outerInfo(),
+    JitSpewCont(JitSpew_MIRExpressions, "\n");
+    DumpMIRExpressions(JitSpewPrinter(), graph, mir->outerInfo(),
                        "BuildSSA (== input to OptimizeMIR)");
   }
 
   if (!JitOptions.disablePruning && !mir->compilingWasm()) {
-    JitSpew(JitSpew_Prune, "\n");
+    JitSpewCont(JitSpew_Prune, "\n");
     if (!PruneUnusedBranches(mir, graph)) {
       return false;
     }
@@ -1087,7 +1087,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   if (!JitOptions.disableRecoverIns &&
       mir->optimizationInfo().scalarReplacementEnabled() &&
       !JitOptions.disableObjectKeysScalarReplacement) {
-    JitSpew(JitSpew_Escape, "\n");
+    JitSpewCont(JitSpew_Escape, "\n");
     if (!ReplaceObjectKeys(mir, graph)) {
       return false;
     }
@@ -1113,7 +1113,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   if (!JitOptions.disableRecoverIns &&
       mir->optimizationInfo().scalarReplacementEnabled()) {
-    JitSpew(JitSpew_Escape, "\n");
+    JitSpewCont(JitSpew_Escape, "\n");
     if (!ScalarReplacement(mir, graph)) {
       return false;
     }
@@ -1172,7 +1172,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
       mir->optimizationInfo().eliminateRedundantShapeGuardsEnabled()) {
     {
       AliasAnalysis analysis(mir, graph);
-      JitSpew(JitSpew_Alias, "\n");
+      JitSpewCont(JitSpew_Alias, "\n");
       if (!analysis.analyze()) {
         return false;
       }
@@ -1202,20 +1202,8 @@ bool OptimizeMIR(MIRGenerator* mir) {
     }
   }
 
-  if (mir->compilingWasm()) {
-    if (!OptimizeWasmCasts(graph)) {
-      return false;
-    }
-    mir->spewPass("Optimize Wasm tests and casts");
-    AssertExtendedGraphCoherency(graph);
-
-    if (mir->shouldCancel("Optimize Wasm tests and casts")) {
-      return false;
-    }
-  }
-
   if (mir->optimizationInfo().gvnEnabled()) {
-    JitSpew(JitSpew_GVN, "\n");
+    JitSpewCont(JitSpew_GVN, "\n");
     if (!gvn.run(ValueNumberer::UpdateAliasAnalysis)) {
       return false;
     }
@@ -1228,7 +1216,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (mir->branchHintingEnabled()) {
-    JitSpew(JitSpew_BranchHint, "\n");
+    JitSpewCont(JitSpew_BranchHint, "\n");
     if (!BranchHinting(mir, graph)) {
       return false;
     }
@@ -1244,7 +1232,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   // trigger bailouts. Disable it if bailing out of a hoisted
   // instruction has previously invalidated this script.
   if (mir->licmEnabled()) {
-    JitSpew(JitSpew_LICM, "\n");
+    JitSpewCont(JitSpew_LICM, "\n");
     if (!LICM(mir, graph)) {
       return false;
     }
@@ -1258,7 +1246,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   RangeAnalysis r(mir, graph);
   if (mir->optimizationInfo().rangeAnalysisEnabled()) {
-    JitSpew(JitSpew_Range, "\n");
+    JitSpewCont(JitSpew_Range, "\n");
     if (!r.addBetaNodes()) {
       return false;
     }
@@ -1328,7 +1316,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (!JitOptions.disableRecoverIns) {
-    JitSpew(JitSpew_Sink, "\n");
+    JitSpewCont(JitSpew_Sink, "\n");
     if (!Sink(mir, graph)) {
       return false;
     }
@@ -1342,7 +1330,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   if (!JitOptions.disableRecoverIns &&
       mir->optimizationInfo().rangeAnalysisEnabled()) {
-    JitSpew(JitSpew_Range, "\n");
+    JitSpewCont(JitSpew_Range, "\n");
     if (!r.removeUnnecessaryBitops()) {
       return false;
     }
@@ -1355,7 +1343,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   {
-    JitSpew(JitSpew_FLAC, "\n");
+    JitSpewCont(JitSpew_FLAC, "\n");
     if (!FoldLinearArithConstants(mir, graph)) {
       return false;
     }
@@ -1370,7 +1358,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   // EAA, but only for wasm; it appears to be of minimal benefit for JS inputs.
   if (mir->compilingWasm() && mir->optimizationInfo().eaaEnabled()) {
     EffectiveAddressAnalysis eaa(mir, graph);
-    JitSpew(JitSpew_EAA, "\n");
+    JitSpewCont(JitSpew_EAA, "\n");
     if (!eaa.analyze()) {
       return false;
     }
@@ -1384,7 +1372,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   // BCE marks bounds checks as dead, so do BCE before DCE.
   if (mir->compilingWasm()) {
-    JitSpew(JitSpew_WasmBCE, "\n");
+    JitSpewCont(JitSpew_WasmBCE, "\n");
     if (!EliminateBoundsChecks(mir, graph)) {
       return false;
     }
@@ -1409,7 +1397,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (!JitOptions.disableMarkLoadsUsedAsPropertyKeys && !mir->compilingWasm()) {
-    JitSpew(JitSpew_MarkLoadsUsedAsPropertyKeys, "\n");
+    JitSpewCont(JitSpew_MarkLoadsUsedAsPropertyKeys, "\n");
     if (!MarkLoadsUsedAsPropertyKeys(graph)) {
       return false;
     }
@@ -1590,9 +1578,8 @@ bool OptimizeMIR(MIRGenerator* mir) {
   AssertGraphCoherency(graph, /* force = */ true);
 
   if (JitSpewEnabled(JitSpew_MIRExpressions)) {
-    JitSpew(JitSpew_MIRExpressions, "\n");
-    AutoJitSpewMessage msg(JitSpew_MIRExpressions);
-    DumpMIRExpressions(msg.printer(), graph, mir->outerInfo(),
+    JitSpewCont(JitSpew_MIRExpressions, "\n");
+    DumpMIRExpressions(JitSpewPrinter(), graph, mir->outerInfo(),
                        "BeforeLIR (== result of OptimizeMIR)");
   }
 
@@ -1816,7 +1803,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
   }
 
   auto clearDependencies =
-      mozilla::MakeScopeExit([mirGen]() { mirGen->cleanup(); });
+      mozilla::MakeScopeExit([mirGen]() { mirGen->tracker.reset(); });
 
   MOZ_ASSERT(!script->baselineScript()->hasPendingIonCompileTask());
   MOZ_ASSERT(!script->hasIonScript());
@@ -2003,17 +1990,6 @@ static MethodStatus Compile(JSContext* cx, HandleScript script,
     return Method_CantCompile;
   }
 
-  // TODO(Bug 2039389): Remove generator use counters
-  if (script->isGenerator()) {
-    if (script->isAsync()) {
-      cx->runtime()->setUseCounter(
-          cx->global(), JSUseCounter::ASYNC_GENERATOR_FUNCTION_ION_ELIGIBLE);
-    } else {
-      cx->runtime()->setUseCounter(
-          cx->global(), JSUseCounter::GENERATOR_FUNCTION_ION_ELIGIBLE);
-    }
-  }
-
   OptimizationLevel optimizationLevel =
       IonOptimizations.levelForScript(cx, script, osrPc);
   if (optimizationLevel == OptimizationLevel::DontCompile) {
@@ -2190,7 +2166,7 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
     }
 
     JitSpew(JitSpew_IonScripts, "Forcing OSR Mismatch Compilation");
-    Invalidate(cx, script, /* resetUses = */ false);
+    Invalidate(cx, script);
   }
 
   // Attempt compilation.

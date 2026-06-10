@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,7 +14,6 @@
 #include "Point.h"
 #include "Types.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"  // for MallocSizeOf
 
 namespace mozilla {
@@ -179,17 +180,16 @@ struct AlignedArray final {
  * implementation.
  */
 template <int alignment>
-Maybe<int32_t> GetAlignedStride(int32_t aWidth, int32_t aBytesPerPixel) {
+int32_t GetAlignedStride(int32_t aWidth, int32_t aBytesPerPixel) {
   static_assert(alignment > 0 && (alignment & (alignment - 1)) == 0,
                 "This implementation currently require power-of-two alignment");
   const int32_t mask = alignment - 1;
   CheckedInt32 stride =
       CheckedInt32(aWidth) * CheckedInt32(aBytesPerPixel) + CheckedInt32(mask);
-  if (!stride.isValid()) {
-    return Nothing();
+  if (stride.isValid()) {
+    return stride.value() & ~mask;
   }
-  int32_t aligned = stride.value() & ~mask;
-  return aligned > 0 ? Some(aligned) : Nothing();
+  return 0;
 }
 
 }  // namespace gfx

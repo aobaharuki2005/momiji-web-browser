@@ -1,8 +1,8 @@
-use crate::util::HttpDate;
 use std::time::SystemTime;
+use util::HttpDate;
 
 /// `Last-Modified` header, defined in
-/// [RFC7232](https://datatracker.ietf.org/doc/html/rfc7232#section-2.2)
+/// [RFC7232](http://tools.ietf.org/html/rfc7232#section-2.2)
 ///
 /// The `Last-Modified` header field in a response provides a timestamp
 /// indicating the date and time at which the origin server believes the
@@ -22,6 +22,7 @@ use std::time::SystemTime;
 /// # Example
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::LastModified;
 /// use std::time::{Duration, SystemTime};
 ///

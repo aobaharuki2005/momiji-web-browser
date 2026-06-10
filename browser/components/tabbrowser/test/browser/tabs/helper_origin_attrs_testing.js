@@ -18,7 +18,7 @@ function handleEvent(aEvent) {
     return;
   }
   // Ignore <browser> element in about:preferences and any other special pages
-  if ("gBrowser" in aEvent.target.documentGlobal) {
+  if ("gBrowser" in aEvent.target.ownerGlobal) {
     xulFrameLoaderCreatedListenerInfo.numCalledSoFar++;
   }
 }
@@ -104,7 +104,11 @@ async function openURIInPrivateTab(uri) {
     `XULFrameLoaderCreated was fired ${xulFrameLoaderCreatedListenerInfo.numCalledSoFar} time(s) for ${uri} in private tab`
   );
 
-  if (currRemoteType == prevRemoteType && uri == "about:blank") {
+  if (
+    SpecialPowers.Services.appinfo.sessionHistoryInParent &&
+    currRemoteType == prevRemoteType &&
+    uri == "about:blank"
+  ) {
     // about:blank page gets flagged for being eligible to go into bfcache
     // and thus we create a new XULFrameLoader for these pages
     is(
@@ -131,9 +135,9 @@ function initXulFrameLoaderCreatedCounter(aXulFrameLoaderCreatedListenerInfo) {
 // Expected remote types for the following tests:
 // browser/components/tabbrowser/test/browser/tabs/browser_navigate_through_urls_origin_attributes.js
 // browser/components/tabbrowser/test/browser/tabs/browser_origin_attrs_in_remote_type.js
-function getExpectedRemoteTypes(isolateEverything, numPagesOpen) {
+function getExpectedRemoteTypes(gFissionBrowser, numPagesOpen) {
   var remoteTypes;
-  if (isolateEverything) {
+  if (gFissionBrowser) {
     remoteTypes = [
       "webIsolated=https://example.com",
       "webIsolated=https://example.com^userContextId=1",
@@ -147,18 +151,7 @@ function getExpectedRemoteTypes(isolateEverything, numPagesOpen) {
       "webIsolated=https://example.org^privateBrowsingId=1",
     ];
   } else {
-    remoteTypes = [
-      "web",
-      "web=^userContextId=1",
-      "web=^userContextId=2",
-      "web=^userContextId=3",
-      "web=^privateBrowsingId=1",
-      "web",
-      "web=^userContextId=1",
-      "web=^userContextId=2",
-      "web=^userContextId=3",
-      "web=^privateBrowsingId=1",
-    ];
+    remoteTypes = Array(numPagesOpen * 2).fill("web"); // example.com and example.org
   }
   remoteTypes = remoteTypes.concat(Array(numPagesOpen * 2).fill(null)); // about: pages
   return remoteTypes;

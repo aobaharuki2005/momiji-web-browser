@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -157,7 +159,7 @@ class nsBMPDecoder : public Decoder {
   size_t GetImageDataLength() const { return mImageDataLength; }
 
   /// Obtains the size of the compressed image resource.
-  uint32_t GetCompressedImageSize() const;
+  int32_t GetCompressedImageSize() const;
 
   /// Mark this BMP as being within an ICO file. Only used for testing purposes
   /// because the ICO-specific constructor does this marking automatically.
@@ -203,7 +205,7 @@ class nsBMPDecoder : public Decoder {
   nsBMPDecoder(RasterImage* aImage, State aState, size_t aLength,
                bool aForClipboard);
 
-  uint32_t AbsoluteHeight() const { return abs(mH.mHeight); }
+  int32_t AbsoluteHeight() const { return abs(mH.mHeight); }
 
   uint32_t* RowBuffer();
   void ClearRowBufferRemainder();

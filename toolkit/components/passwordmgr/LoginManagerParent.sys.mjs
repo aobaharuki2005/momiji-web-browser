@@ -115,26 +115,15 @@ let gGeneratedPasswordObserver = {
       const updatedLogin = subject.GetElementAt(1);
 
       if (originalLogin && !originalLogin.username && updatedLogin?.username) {
-        // The cache key is a principal origin which may include ^userContextId
-        // when using containers or when in private mode, while the stored login
-        // uses the base origin.
-        let cacheKey;
-        let generatedPassword;
-        const guid = originalLogin.QueryInterface(Ci.nsILoginMetaInfo).guid;
-        for (const [key, pw] of gGeneratedPasswordsByPrincipalOrigin) {
-          if (pw.storageGUID === guid) {
-            cacheKey = key;
-            generatedPassword = pw;
-            break;
-          }
-        }
+        const generatedPassword = gGeneratedPasswordsByPrincipalOrigin.get(
+          originalLogin.origin
+        );
 
         if (
-          generatedPassword &&
           originalLogin.password == generatedPassword.value &&
           updatedLogin.password == generatedPassword.value
         ) {
-          gGeneratedPasswordsByPrincipalOrigin.delete(cacheKey);
+          gGeneratedPasswordsByPrincipalOrigin.delete(originalLogin.origin);
         }
       }
     }
@@ -290,30 +279,13 @@ export class LoginManagerParent extends JSWindowActorParent {
       "scheme",
       "timePasswordChanged",
     ];
-    const deduped = lazy.LoginHelper.dedupeLogins(
+    return lazy.LoginHelper.dedupeLogins(
       logins,
       ["username", "password"],
       resolveBy,
       formOrigin,
       formActionOrigin
     );
-
-    // Sort so logins whose origin scheme matches the form origin come first,
-    // regardless of the order returned by the storage backend.
-    if (formOrigin) {
-      try {
-        const formScheme = new URL(formOrigin).protocol;
-        deduped.sort(
-          (a, b) =>
-            (a.origin.startsWith(formScheme) ? 0 : 1) -
-            (b.origin.startsWith(formScheme) ? 0 : 1)
-        );
-      } catch {
-        // Ignore invalid formOrigin.
-      }
-    }
-
-    return deduped;
   }
 
   async receiveMessage(msg) {
@@ -374,7 +346,7 @@ export class LoginManagerParent extends JSWindowActorParent {
       }
 
       case "PasswordManager:removeLogin": {
-        await this.#onRemoveLogin(data.login);
+        this.#onRemoveLogin(data.login);
         break;
       }
 
@@ -433,13 +405,13 @@ export class LoginManagerParent extends JSWindowActorParent {
     }
   }
 
-  async #onRemoveLogin(login) {
+  #onRemoveLogin(login) {
     login = lazy.LoginHelper.vanillaObjectToLogin(login);
-    Services.logins.removeLoginAsync(login);
+    Services.logins.removeLogin(login);
   }
 
   #onOpenImportableLearnMore() {
-    const window = this.getRootBrowser().documentGlobal;
+    const window = this.getRootBrowser().ownerGlobal;
     window.openTrustedLinkIn(
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
         "password-import",
@@ -480,7 +452,7 @@ export class LoginManagerParent extends JSWindowActorParent {
     } else {
       // Open the migration wizard pre-selecting the appropriate browser.
       lazy.MigrationUtils.showMigrationWizard(
-        this.getRootBrowser().documentGlobal,
+        this.getRootBrowser().ownerGlobal,
         {
           entrypoint: lazy.MigrationUtils.MIGRATION_ENTRYPOINTS.PASSWORDS,
           migratorKey: browserId,
@@ -490,7 +462,7 @@ export class LoginManagerParent extends JSWindowActorParent {
   }
 
   #onOpenPreferences(hostname, entryPoint) {
-    const window = this.getRootBrowser().documentGlobal;
+    const window = this.getRootBrowser().ownerGlobal;
     lazy.LoginHelper.openPasswordManager(window, {
       filterString: hostname,
       entryPoint,
@@ -1011,8 +983,8 @@ export class LoginManagerParent extends JSWindowActorParent {
       dismissedPrompt,
     }
   ) {
-    async function recordLoginUse(login) {
-      await Services.logins.recordPasswordUseAsync(
+    function recordLoginUse(login) {
+      Services.logins.recordPasswordUse(
         login,
         browser && lazy.PrivateBrowsingUtils.isBrowserPrivate(browser),
         login.username ? "FormLogin" : "FormPassword",
@@ -1062,7 +1034,7 @@ export class LoginManagerParent extends JSWindowActorParent {
         lazy.log(
           "The filled login matches the form submission. Nothing to change."
         );
-        await recordLoginUse(loginsForGuid[0]);
+        recordLoginUse(loginsForGuid[0]);
         return;
       }
     }
@@ -1087,7 +1059,7 @@ export class LoginManagerParent extends JSWindowActorParent {
         existingLogin = logins[0];
 
         if (existingLogin.password == formLogin.password) {
-          await recordLoginUse(existingLogin);
+          recordLoginUse(existingLogin);
           lazy.log(
             "Not prompting to save/change since we have no username and the only saved password matches the new password."
           );
@@ -1149,7 +1121,7 @@ export class LoginManagerParent extends JSWindowActorParent {
           this.possibleValues
         );
       } else {
-        await recordLoginUse(existingLogin);
+        recordLoginUse(existingLogin);
       }
 
       return;
@@ -1280,11 +1252,6 @@ export class LoginManagerParent extends JSWindowActorParent {
 
     let generatedPW =
       gGeneratedPasswordsByPrincipalOrigin.get(framePrincipalOrigin);
-
-    if (triggeredByFillingGenerated && !generatedPW) {
-      // The cache entry has already been cleared before, so nothing to auto-save.
-      shouldAutoSaveLogin = false;
-    }
 
     // Below here we have one login per hostPort + action + username with the
     // matching scheme being preferred.
@@ -1488,8 +1455,7 @@ export class LoginManagerParent extends JSWindowActorParent {
       } else {
         lazy.log("No change to existing login.");
         // is there a doorhanger we should update?
-        let popupNotifications =
-          promptBrowser.documentGlobal.PopupNotifications;
+        let popupNotifications = promptBrowser.ownerGlobal.PopupNotifications;
         let notif = popupNotifications.getNotification("password", browser);
         lazy.log(
           `_onPasswordEditedOrGenerated: Has doorhanger? ${
@@ -1536,7 +1502,7 @@ export class LoginManagerParent extends JSWindowActorParent {
   }
 
   async searchAutoCompleteEntries(searchString, data) {
-    return this.doAutocompleteSearch(this.origin, data);
+    return this.doAutocompleteSearch(data.formOrigin, data);
   }
 
   onAutoCompleteEntryHovered(_message, _data) {

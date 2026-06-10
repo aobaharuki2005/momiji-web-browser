@@ -28,7 +28,7 @@ add_task(async function testInvalidURI() {
   await testMenuItemDisabled({
     url: "https://www.example.com/?stripParam=1234",
     prefEnabled: true,
-    selection: "some",
+    selection: true,
   });
 });
 
@@ -37,16 +37,20 @@ add_task(async function testPrefDisabled() {
   await testMenuItemDisabled({
     url: "https://www.example.com/?stripParam=1234",
     prefEnabled: false,
-    selection: "dontChange",
+    selection: false,
   });
 });
 
-// Menu item should not be visible when there is no selection.
-add_task(async function testNoSelection() {
-  await testMenuItemDisabled({
-    url: "https://www.example.com/?stripParam=1234",
-    prefEnabled: true,
-    selection: "none",
+// Menu item should be visible, the whole url is copied without a selection, url should be stripped.
+add_task(async function testQueryParamIsStripped() {
+  let originalUrl = "https://www.example.com/?stripParam=1234";
+  let shortenedUrl = "https://www.example.com/";
+  await testMenuItemEnabled({
+    selectWholeUrl: false,
+    validUrl: originalUrl,
+    strippedUrl: shortenedUrl,
+    useTestList: false,
+    expectedDisabled: false,
   });
 });
 
@@ -55,6 +59,7 @@ add_task(async function testQueryParamIsStrippedSelectURL() {
   let originalUrl = "https://www.example.com/?stripParam=1234";
   let shortenedUrl = "https://www.example.com/";
   await testMenuItemEnabled({
+    selectWholeUrl: true,
     validUrl: originalUrl,
     strippedUrl: shortenedUrl,
     useTestList: false,
@@ -67,6 +72,7 @@ add_task(async function testQueryParamIsStrippedWithOtherParam() {
   let originalUrl = "https://www.example.com/?keepParameter=1&stripParam=1234";
   let shortenedUrl = "https://www.example.com/?keepParameter=1";
   await testMenuItemEnabled({
+    selectWholeUrl: true,
     validUrl: originalUrl,
     strippedUrl: shortenedUrl,
     useTestList: false,
@@ -80,12 +86,13 @@ add_task(async function testQueryParamIsStrippedAfterInvalid() {
   await testMenuItemDisabled({
     url: "https://www.example.com/?stripParam=1234",
     prefEnabled: true,
-    selection: "some",
+    selection: true,
   });
   // test if menu item is visible after it getting hidden
   let originalUrl = "https://www.example.com/?stripParam=1234";
   let shortenedUrl = "https://www.example.com/";
   await testMenuItemEnabled({
+    selectWholeUrl: true,
     validUrl: originalUrl,
     strippedUrl: shortenedUrl,
     useTestList: false,
@@ -98,6 +105,7 @@ add_task(async function testURLIsCopiedWithNoParams() {
   let originalUrl = "https://www.example.com/";
   let shortenedUrl = "https://www.example.com/";
   await testMenuItemEnabled({
+    selectWholeUrl: true,
     validUrl: originalUrl,
     strippedUrl: shortenedUrl,
     useTestList: false,
@@ -110,6 +118,7 @@ add_task(async function testQueryParamIsStrippedForSiteSpecific() {
   let originalUrl = "https://www.example.com/?test_2=1234";
   let shortenedUrl = "https://www.example.com/";
   await testMenuItemEnabled({
+    selectWholeUrl: true,
     validUrl: originalUrl,
     strippedUrl: shortenedUrl,
     useTestList: true,
@@ -122,6 +131,7 @@ add_task(async function testQueryParamIsNotStrippedForWrongSiteSpecific() {
   let originalUrl = "https://www.example.com/?test_3=1234";
   let shortenedUrl = "https://www.example.com/?test_3=1234";
   await testMenuItemEnabled({
+    selectWholeUrl: true,
     validUrl: originalUrl,
     strippedUrl: shortenedUrl,
     useTestList: true,
@@ -135,6 +145,7 @@ add_task(async function testQueryParamIsStrippedWhenParamIsCapitalized() {
   let originalUrl = "https://www.example.com/?TEST_1=1234";
   let shortenedUrl = "https://www.example.com/";
   await testMenuItemEnabled({
+    selectWholeUrl: true,
     validUrl: originalUrl,
     strippedUrl: shortenedUrl,
     useTestList: true,
@@ -148,6 +159,7 @@ add_task(async function testQueryParamIsStrippedWhenParamIsLowercase() {
   let originalUrl = "https://www.example.com/?test_5=1234";
   let shortenedUrl = "https://www.example.com/";
   await testMenuItemEnabled({
+    selectWholeUrl: true,
     validUrl: originalUrl,
     strippedUrl: shortenedUrl,
     useTestList: true,
@@ -161,7 +173,7 @@ add_task(async function testQueryParamIsStrippedWhenParamIsLowercase() {
  * @param {object} options
  * @param {string} options.url - The url to be loaded.
  * @param {boolean} options.prefEnabled - If true, enable strip_on_share pref.
- * @param {"none"|"some"|"dontChange"} options.selection - If true, select only part of the url.
+ * @param {boolean} options.selection - If true, select only part of the url.
  */
 async function testMenuItemDisabled({ url, prefEnabled, selection }) {
   await SpecialPowers.pushPrefEnv({
@@ -170,35 +182,22 @@ async function testMenuItemDisabled({ url, prefEnabled, selection }) {
 
   await BrowserTestUtils.withNewTab(url, async function () {
     gURLBar.focus();
-    if (selection == "some") {
-      // Select only part of the url.
+    if (selection) {
+      //select only part of the url
       gURLBar.selectionStart = url.indexOf("example");
       gURLBar.selectionEnd = url.indexOf("4");
-    } else if (selection == "none") {
-      gURLBar.selectionStart = gURLBar.selectionEnd = 0;
-      // The `withContextMenu` call below, synthesises the `contextmenu` event,
-      // however it doesn't synthesise the `mousedown`. This would mean that
-      // `UrlbarInput.#preventClickSelectsAll` would never be set, to prevent
-      // selecting all the on right click. Hence we trigger the `mousedown` here
-      // to ensure that is set, and not select all when right-clicking.
-      EventUtils.synthesizeMouseAtCenter(
-        window.gURLBar.inputField,
-        {
-          type: "mousedown",
-          button: 2,
-        },
-        window
-      );
     }
-
-    await UrlbarTestUtils.withContextMenu(window, async popup => {
-      let mozInputBox = popup.parentNode;
-      let menuitem = mozInputBox.getMenuItem("strip-on-share");
-      Assert.ok(
-        !BrowserTestUtils.isVisible(menuitem),
-        "Menu item is not visible"
-      );
-    });
+    let menuitem = await promiseContextualMenuitem("strip-on-share");
+    Assert.ok(
+      !BrowserTestUtils.isVisible(menuitem),
+      "Menu item is not visible"
+    );
+    let hidePromise = BrowserTestUtils.waitForEvent(
+      menuitem.parentElement,
+      "popuphidden"
+    );
+    menuitem.parentElement.hidePopup();
+    await hidePromise;
   });
 }
 
@@ -207,12 +206,14 @@ async function testMenuItemDisabled({ url, prefEnabled, selection }) {
  * Checks that the stripped version of the url is copied to the clipboard.
  *
  * @param {object} options
+ * @param {boolean} options.selectWholeUrl - If true, select the whole url.
  * @param {string} options.validUrl - The original url before stripping.
  * @param {string} options.strippedUrl - The expected url after stripping.
  * @param {boolean} options.useTestList - If true, use test mode pref and list.
  * @param {boolean} options.expectedDisabled - The expected iten disabled state.
  */
 async function testMenuItemEnabled({
+  selectWholeUrl,
   validUrl,
   strippedUrl,
   useTestList,
@@ -229,15 +230,15 @@ async function testMenuItemEnabled({
     let testJson = {
       global: {
         queryParams: ["utm_ad"],
-        isGlobal: true,
+        topLevelSites: ["*"],
       },
       example: {
         queryParams: ["test_2", "test_1", "TEST_5"],
-        origins: ["www.example.com"],
+        topLevelSites: ["www.example.com"],
       },
       exampleNet: {
         queryParams: ["test_3", "test_4"],
-        origins: ["www.example.net"],
+        topLevelSites: ["www.example.net"],
       },
     };
 
@@ -246,21 +247,23 @@ async function testMenuItemEnabled({
 
   await BrowserTestUtils.withNewTab(validUrl, async function () {
     gURLBar.focus();
+    if (selectWholeUrl) {
+      gURLBar.select();
+    }
 
+    let menuitem = await promiseContextualMenuitem("strip-on-share");
+    Assert.ok(BrowserTestUtils.isVisible(menuitem), "Menu item is visible");
+    Assert.equal(menuitem.disabled, expectedDisabled, "Menu item is disabled");
+
+    let hidePromise = BrowserTestUtils.waitForEvent(
+      menuitem.parentElement,
+      "popuphidden"
+    );
     // Make sure the clean copy of the link will be copied to the clipboard
-    await SimpleTest.promiseClipboardChange(strippedUrl, async () => {
-      await UrlbarTestUtils.withContextMenu(window, async popup => {
-        let mozInputBox = popup.parentNode;
-        let menuitem = mozInputBox.getMenuItem("strip-on-share");
-        Assert.ok(BrowserTestUtils.isVisible(menuitem), "Menu item is visible");
-        Assert.equal(
-          menuitem.disabled,
-          expectedDisabled,
-          "Menu item is disabled"
-        );
-        menuitem.closest("menupopup").activateItem(menuitem);
-      });
+    await SimpleTest.promiseClipboardChange(strippedUrl, () => {
+      menuitem.closest("menupopup").activateItem(menuitem);
     });
+    await hidePromise;
   });
 
   await SpecialPowers.popPrefEnv();

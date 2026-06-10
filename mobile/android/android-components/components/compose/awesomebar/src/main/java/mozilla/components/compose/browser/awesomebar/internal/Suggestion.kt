@@ -51,7 +51,6 @@ internal fun Suggestion(
     orientation: AwesomeBarOrientation,
     onSuggestionClicked: () -> Unit,
     onAutoComplete: () -> Unit,
-    onRemoveClicked: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -80,13 +79,6 @@ internal fun Suggestion(
             AutocompleteButton(
                 onAutoComplete = onAutoComplete,
                 orientation = orientation,
-                colors = colors,
-                modifier = Modifier.align(Alignment.CenterVertically),
-            )
-        }
-        if (suggestion.isRemovalAllowed) {
-            RemoveButton(
-                onRemoveClicked = onRemoveClicked,
                 colors = colors,
                 modifier = Modifier.align(Alignment.CenterVertically),
             )
@@ -189,23 +181,6 @@ private fun AutocompleteButton(
                 },
             )
             .clickable { onAutoComplete() }
-            .padding(12.dp),
-    )
-}
-
-@Composable
-private fun RemoveButton(
-    onRemoveClicked: () -> Unit,
-    colors: AwesomeBarColors,
-    modifier: Modifier,
-) {
-    Image(
-        painterResource(iconsR.drawable.mozac_ic_cross_24),
-        colorFilter = ColorFilter.tint(colors.autocompleteIcon),
-        contentDescription = stringResource(R.string.mozac_browser_awesomebar_remove_suggestion),
-        modifier = modifier
-            .size(48.dp)
-            .clickable { onRemoveClicked() }
             .padding(12.dp),
     )
 }

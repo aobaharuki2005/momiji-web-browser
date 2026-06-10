@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,6 +20,7 @@ class nsIGlobalObject;
 
 namespace mozilla::dom {
 
+class MessageData;
 class MessagePortChild;
 class PostMessageRunnable;
 class RefMessageBodyService;
@@ -116,9 +119,8 @@ class MessagePort final : public DOMEventTargetHelper {
 
   // These methods are useful for MessagePortChild
 
-  void Entangled(nsTArray<NotNull<RefPtr<SharedMessageBody>>>& aMessages);
-  void MessagesReceived(
-      nsTArray<NotNull<RefPtr<SharedMessageBody>>>& aMessages);
+  void Entangled(nsTArray<MessageData>& aMessages);
+  void MessagesReceived(nsTArray<MessageData>& aMessages);
   void StopSendingDataConfirmed();
   void Closed();
 
@@ -145,9 +147,10 @@ class MessagePort final : public DOMEventTargetHelper {
     // We are not fully entangled yet but are already closed.
     eStateEntanglingForClose,
 
-    // When entangled() is received we change the state to StateEntangled.
-    // At this point the port is entangled with the other.
-    // We send and receive messages.
+    // When entangled() is received we send all the messages in the
+    // mMessagesForTheOtherPort to the actor and we change the state to
+    // StateEntangled. At this point the port is entangled with the other. We
+    // send and receive messages.
     // If the port queue is not enabled, the received messages are stored in
     // the mMessages.
     eStateEntangled,
@@ -210,7 +213,8 @@ class MessagePort final : public DOMEventTargetHelper {
 
   RefPtr<RefMessageBodyService> mRefMessageBodyService;
 
-  nsTArray<NotNull<RefPtr<SharedMessageBody>>> mMessages;
+  nsTArray<RefPtr<SharedMessageBody>> mMessages;
+  nsTArray<RefPtr<SharedMessageBody>> mMessagesForTheOtherPort;
 
   UniquePtr<MessagePortIdentifier> mIdentifier;
 

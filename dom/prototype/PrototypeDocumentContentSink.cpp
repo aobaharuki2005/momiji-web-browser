@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -335,7 +337,7 @@ nsresult PrototypeDocumentContentSink::PrepareToWalk() {
   mDocument->UpdateDocumentStates(DocumentState::RTL_LOCALE, true);
 
   nsContentUtils::AddScriptRunner(
-      MakeAndAddRef<nsDocElementCreatedNotificationRunner>(mDocument));
+      new nsDocElementCreatedNotificationRunner(mDocument));
 
   // There'd better not be anything on the context stack at this
   // point! This is the basis case for our "induction" in
@@ -356,8 +358,9 @@ nsresult PrototypeDocumentContentSink::CreateAndInsertPI(
   MOZ_ASSERT(aProtoPI, "null ptr");
   MOZ_ASSERT(aParent, "null ptr");
 
-  RefPtr<ProcessingInstruction> node = NS_NewXMLProcessingInstruction(
-      aParent->NodeInfoManager(), aProtoPI->mTarget, aProtoPI->mData);
+  RefPtr<ProcessingInstruction> node =
+      NS_NewXMLProcessingInstruction(aParent->OwnerDoc()->NodeInfoManager(),
+                                     aProtoPI->mTarget, aProtoPI->mData);
 
   nsresult rv;
   if (aProtoPI->mTarget.EqualsLiteral("xml-stylesheet")) {
@@ -416,7 +419,8 @@ nsresult PrototypeDocumentContentSink::InsertXMLStylesheetPI(
   return NS_OK;
 }
 
-void PrototypeDocumentContentSink::CloseElement(Element* aElement) {
+void PrototypeDocumentContentSink::CloseElement(Element* aElement,
+                                                bool aHadChildren) {
   if (nsIContent::RequiresDoneAddingChildren(
           aElement->NodeInfo()->NamespaceID(),
           aElement->NodeInfo()->NameAtom())) {
@@ -431,9 +435,14 @@ void PrototypeDocumentContentSink::CloseElement(Element* aElement) {
     return;
   }
 
-  // See bug 370111 and bug 1495946. We don't cache module scripts in the
-  // prototype cache, so we need to do this for the script to be properly
-  // processed.
+  if (!aHadChildren) {
+    return;
+  }
+
+  // See bug 370111 and bug 1495946. We don't cache inline styles nor module
+  // scripts in the prototype cache, and we don't notify on node insertion, so
+  // we need to do this for the stylesheet / script to be properly processed.
+  // This kinda sucks, but notifying was a pretty sizeable perf regression so...
   if (aElement->IsHTMLElement(nsGkAtoms::script) ||
       aElement->IsSVGElement(nsGkAtoms::script)) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aElement);
@@ -496,7 +505,7 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
       if (indx >= (int32_t)proto->mChildren.Length()) {
         if (element) {
           // We've processed all of the prototype's children.
-          CloseElement(element->AsElement());
+          CloseElement(element->AsElement(), /* aHadChildren = */ true);
         }
         // Now pop the context stack back up to the parent
         // element and continue the prototype walk.
@@ -549,7 +558,7 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
             if (NS_FAILED(rv)) return rv;
           } else {
             // If there are no children, close the element immediately.
-            CloseElement(child);
+            CloseElement(child, /* aHadChildren = */ false);
           }
         } break;
 
@@ -601,7 +610,7 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
 
             nsContentUtils::ReportToConsole(
                 nsIScriptError::warningFlag, "XUL Document"_ns, nullptr,
-                PropertiesFile::XUL_PROPERTIES, "PINotInProlog2", params,
+                nsContentUtils::eXUL_PROPERTIES, "PINotInProlog2", params,
                 SourceLocation(docURI.get()));
           }
 
@@ -1096,10 +1105,10 @@ nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
     if (aPrototype->mIsAtom &&
         newNodeInfo->NamespaceID() == kNameSpaceID_XHTML) {
       rv = NS_NewHTMLElement(getter_AddRefs(result), newNodeInfo.forget(),
-                             FROM_PARSER_NETWORK, aPrototype->mIsAtom);
+                             NOT_FROM_PARSER, aPrototype->mIsAtom);
     } else {
       rv = NS_NewElement(getter_AddRefs(result), newNodeInfo.forget(),
-                         FROM_PARSER_NETWORK);
+                         NOT_FROM_PARSER);
     }
     if (NS_FAILED(rv)) return rv;
 
@@ -1109,7 +1118,19 @@ nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
     if (isScript) {
       nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(result);
       MOZ_ASSERT(sele, "Node didn't QI to script.");
+
       sele->FreezeExecutionAttrs(doc);
+      // Script loading is handled by the this content sink, so prevent the
+      // script from loading when it is bound to the document.
+      //
+      // NOTE(emilio): This is only done for non-module scripts, because we
+      // don't support caching modules properly yet, see the comment in
+      // XULContentSinkImpl::OpenScript. For non-inline scripts, this is enough,
+      // since we can start the load when the node is inserted. Non-inline
+      // scripts need another special-case in CloseElement.
+      if (!sele->GetScriptIsModule()) {
+        sele->PreventExecution();
+      }
     }
   }
 

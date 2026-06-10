@@ -112,7 +112,7 @@ pub fn parse_language_identifier(
     parse_language_identifier_from_iter(&mut iter, mode)
 }
 
-#[expect(clippy::type_complexity)]
+#[allow(clippy::type_complexity)]
 pub const fn parse_locale_with_single_variant_single_keyword_unicode_extension_from_iter(
     mut iter: SubtagIterator,
     mode: ParserMode,
@@ -252,7 +252,7 @@ pub const fn parse_locale_with_single_variant_single_keyword_unicode_extension_f
     Ok((language, script, region, variant, keyword))
 }
 
-#[expect(clippy::type_complexity)]
+#[allow(clippy::type_complexity)]
 pub const fn parse_language_identifier_with_single_variant(
     t: &[u8],
     mode: ParserMode,

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.experimentintegration
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Before
@@ -13,14 +14,13 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.ui.robots.homeScreen
-import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
 class GenericExperimentIntegrationTest {
     private val experimentName = InstrumentationRegistry.getArguments().getString("EXP_NAME", "Viewpoint")
 
     @get:Rule
     val composeTestRule =
-        AndroidComposeTestRuleV2(
+        AndroidComposeTestRule(
             HomeActivityTestRule(
                 isPWAsPromptEnabled = false,
             ),

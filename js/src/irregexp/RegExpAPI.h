@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -28,8 +30,8 @@ namespace JS {
 class RegExpFlags;
 }
 
-namespace v8::internal::regexp {
-class Stack;
+namespace v8::internal {
+class RegExpStack;
 }
 
 namespace js {
@@ -74,7 +76,7 @@ RegExpRunStatus ExecuteForFuzzing(JSContext* cx, Handle<JSAtom*> pattern,
                                   VectorMatchPairs* matches,
                                   RegExpShared::CodeKind codeKind);
 
-bool GrowBacktrackStack(v8::internal::regexp::Stack* regexp_stack);
+bool GrowBacktrackStack(v8::internal::RegExpStack* regexp_stack);
 
 uint32_t CaseInsensitiveCompareNonUnicode(const char16_t* substring1,
                                           const char16_t* substring2,

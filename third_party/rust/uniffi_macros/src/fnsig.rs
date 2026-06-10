@@ -43,38 +43,20 @@ impl FnSignature {
 
     pub(crate) fn new_method(
         self_ident: Ident,
-        foreign_self_ident: Ident,
         sig: syn::Signature,
         args: ExportFnArgs,
         docstring: String,
     ) -> syn::Result<Self> {
-        Self::new(
-            FnKind::Method {
-                self_ident,
-                foreign_self_ident,
-            },
-            sig,
-            args,
-            docstring,
-        )
+        Self::new(FnKind::Method { self_ident }, sig, args, docstring)
     }
 
     pub(crate) fn new_constructor(
         self_ident: Ident,
-        foreign_self_ident: Ident,
         sig: syn::Signature,
         args: ExportFnArgs,
         docstring: String,
     ) -> syn::Result<Self> {
-        Self::new(
-            FnKind::Constructor {
-                self_ident,
-                foreign_self_ident,
-            },
-            sig,
-            args,
-            docstring,
-        )
+        Self::new(FnKind::Constructor { self_ident }, sig, args, docstring)
     }
 
     pub(crate) fn new_trait_method(
@@ -221,21 +203,14 @@ impl FnSignature {
         let name = &self.name;
         let name = match &self.kind {
             FnKind::Function => uniffi_meta::fn_symbol_name(&self.mod_path, name),
-            FnKind::Method {
-                foreign_self_ident, ..
-            } => {
-                let object_name = ident_to_string(foreign_self_ident);
-                uniffi_meta::method_symbol_name(&self.mod_path, &object_name, name)
-            }
-            FnKind::TraitMethod { self_ident, .. } => {
+            FnKind::Method { self_ident } | FnKind::TraitMethod { self_ident, .. } => {
                 uniffi_meta::method_symbol_name(&self.mod_path, &ident_to_string(self_ident), name)
             }
-            FnKind::Constructor {
-                foreign_self_ident, ..
-            } => {
-                let object_name = ident_to_string(foreign_self_ident);
-                uniffi_meta::constructor_symbol_name(&self.mod_path, &object_name, name)
-            }
+            FnKind::Constructor { self_ident } => uniffi_meta::constructor_symbol_name(
+                &self.mod_path,
+                &ident_to_string(self_ident),
+                name,
+            ),
         };
         Ok(Ident::new(&name, Span::call_site()))
     }
@@ -258,6 +233,7 @@ impl FnSignature {
             name,
             return_ty,
             is_async,
+            mod_path,
             docstring,
             ..
         } = &self;
@@ -278,7 +254,7 @@ impl FnSignature {
         match &self.kind {
             FnKind::Function => Ok(quote! {
                 ::uniffi::MetadataBuffer::from_code(::uniffi::metadata::codes::FUNC)
-                    .concat_str(module_path!())
+                    .concat_str(#mod_path)
                     .concat_str(#name)
                     .concat_bool(#is_async)
                     .concat_value(#args_len)
@@ -287,13 +263,11 @@ impl FnSignature {
                     .concat_long_str(#docstring)
             }),
 
-            FnKind::Method {
-                foreign_self_ident, ..
-            } => {
-                let object_name = ident_to_string(foreign_self_ident);
+            FnKind::Method { self_ident } => {
+                let object_name = ident_to_string(self_ident);
                 Ok(quote! {
                     ::uniffi::MetadataBuffer::from_code(::uniffi::metadata::codes::METHOD)
-                        .concat_str(module_path!())
+                        .concat_str(#mod_path)
                         .concat_str(#object_name)
                         .concat_str(#name)
                         .concat_bool(#is_async)
@@ -308,7 +282,7 @@ impl FnSignature {
                 let object_name = ident_to_string(self_ident);
                 Ok(quote! {
                     ::uniffi::MetadataBuffer::from_code(::uniffi::metadata::codes::TRAIT_METHOD)
-                        .concat_str(module_path!())
+                        .concat_str(#mod_path)
                         .concat_str(#object_name)
                         .concat_u32(#index)
                         .concat_str(#name)
@@ -320,13 +294,11 @@ impl FnSignature {
                 })
             }
 
-            FnKind::Constructor {
-                foreign_self_ident, ..
-            } => {
-                let object_name = ident_to_string(foreign_self_ident);
+            FnKind::Constructor { self_ident } => {
+                let object_name = ident_to_string(self_ident);
                 Ok(quote! {
                     ::uniffi::MetadataBuffer::from_code(::uniffi::metadata::codes::CONSTRUCTOR)
-                        .concat_str(module_path!())
+                        .concat_str(#mod_path)
                         .concat_str(#object_name)
                         .concat_str(#name)
                         .concat_bool(#is_async)
@@ -349,10 +321,8 @@ impl FnSignature {
                 Some(self.checksum_symbol_name()),
             )),
 
-            FnKind::Method {
-                foreign_self_ident, ..
-            } => {
-                let object_name = ident_to_string(foreign_self_ident);
+            FnKind::Method { self_ident } => {
+                let object_name = ident_to_string(self_ident);
                 Ok(create_metadata_items(
                     "method",
                     &format!("{object_name}_{name}"),
@@ -371,10 +341,8 @@ impl FnSignature {
                 ))
             }
 
-            FnKind::Constructor {
-                foreign_self_ident, ..
-            } => {
-                let object_name = ident_to_string(foreign_self_ident);
+            FnKind::Constructor { self_ident } => {
+                let object_name = ident_to_string(self_ident);
                 Ok(create_metadata_items(
                     "constructor",
                     &format!("{object_name}_{name}"),
@@ -389,23 +357,18 @@ impl FnSignature {
         let name = &self.name;
         match &self.kind {
             FnKind::Function => uniffi_meta::fn_checksum_symbol_name(&self.mod_path, name),
-            FnKind::Method {
-                foreign_self_ident, ..
-            } => {
-                let object_name = ident_to_string(foreign_self_ident);
-                uniffi_meta::method_checksum_symbol_name(&self.mod_path, &object_name, name)
+            FnKind::Method { self_ident } | FnKind::TraitMethod { self_ident, .. } => {
+                uniffi_meta::method_checksum_symbol_name(
+                    &self.mod_path,
+                    &ident_to_string(self_ident),
+                    name,
+                )
             }
-            FnKind::TraitMethod { self_ident, .. } => uniffi_meta::method_checksum_symbol_name(
+            FnKind::Constructor { self_ident } => uniffi_meta::constructor_checksum_symbol_name(
                 &self.mod_path,
                 &ident_to_string(self_ident),
                 name,
             ),
-            FnKind::Constructor {
-                foreign_self_ident, ..
-            } => {
-                let object_name = ident_to_string(foreign_self_ident);
-                uniffi_meta::constructor_checksum_symbol_name(&self.mod_path, &object_name, name)
-            }
         }
     }
 }
@@ -415,7 +378,6 @@ pub(crate) struct Arg {
     pub(crate) kind: ArgKind,
 }
 
-#[allow(clippy::large_enum_variant)]
 pub(crate) enum ArgKind {
     Receiver(ReceiverArg),
     Named(NamedArg),
@@ -528,16 +490,7 @@ fn looks_like_result(return_type: &ReturnType) -> bool {
 #[derive(Debug)]
 pub(crate) enum FnKind {
     Function,
-    Constructor {
-        self_ident: Ident,
-        foreign_self_ident: Ident,
-    },
-    Method {
-        self_ident: Ident,
-        foreign_self_ident: Ident,
-    },
-    TraitMethod {
-        self_ident: Ident,
-        index: u32,
-    },
+    Constructor { self_ident: Ident },
+    Method { self_ident: Ident },
+    TraitMethod { self_ident: Ident, index: u32 },
 }

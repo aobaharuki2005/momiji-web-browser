@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * Copyright 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,10 +29,10 @@
 #include "mozilla/Variant.h"
 
 #include <algorithm>
-#include <bit>
 #include <new>
 
-#include "builtin/Math.h"
+#include "jsmath.h"
+
 #include "frontend/BytecodeCompiler.h"    // CompileStandaloneFunction
 #include "frontend/FrontendContext.h"     // js::FrontendContext
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
@@ -94,6 +96,7 @@ using mozilla::CeilingLog2;
 using mozilla::HashGeneric;
 using mozilla::IsNegativeZero;
 using mozilla::IsPositiveZero;
+using mozilla::IsPowerOfTwo;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::PodZero;
@@ -129,7 +132,7 @@ static const uint64_t HighestValidARMImmediate = 0xff000000;
 //  or
 //    2^24 * n for n >= 1.
 static bool IsValidARMImmediate(uint32_t i) {
-  bool valid = (std::has_single_bit(i) || (i & 0x00ffffff) == 0);
+  bool valid = (IsPowerOfTwo(i) || (i & 0x00ffffff) == 0);
 
   MOZ_ASSERT_IF(valid, i % StandardPageSizeBytes == 0);
 
@@ -788,7 +791,7 @@ class NumLit {
   };
 
  private:
-  Which which_ = OutOfRangeInt;
+  Which which_;
   JS::Value value_;
 
  public:
@@ -1106,8 +1109,8 @@ static const unsigned VALIDATION_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 class MOZ_STACK_CLASS ModuleValidatorShared {
  public:
   struct Memory {
-    MemoryUsage usage = MemoryUsage::Unshared;
-    uint64_t minLength = 0;
+    MemoryUsage usage;
+    uint64_t minLength;
 
     uint64_t minPages() const {
       return DivideRoundingUp(minLength, StandardPageSizeBytes);
@@ -1577,9 +1580,8 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     MOZ_ASSERT(type == Type::canonicalize(Type::lit(lit)));
 
     uint32_t index = codeMeta_->globals.length();
-    if (!codeMeta_->globals.emplaceBack(
-            GlobalType(type.canonicalToValType(), !isConst), index,
-            ModuleKind::AsmJS)) {
+    if (!codeMeta_->globals.emplaceBack(type.canonicalToValType(), !isConst,
+                                        index, ModuleKind::AsmJS)) {
       return false;
     }
 
@@ -1614,7 +1616,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
     uint32_t index = codeMeta_->globals.length();
     ValType valType = type.canonicalToValType();
-    if (!codeMeta_->globals.emplaceBack(GlobalType(valType, !isConst), index,
+    if (!codeMeta_->globals.emplaceBack(valType, !isConst, index,
                                         ModuleKind::AsmJS)) {
       return false;
     }
@@ -2095,7 +2097,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     Limits limits =
         Limits(mask + 1, Nothing(), Shareable::False, PageSize::Standard);
     codeMeta_->asmJSSigToTableIndex[sigIndex] = codeMeta_->tables.length();
-    if (!codeMeta_->tables.emplaceBack(TableType(limits, RefType::func()),
+    if (!codeMeta_->tables.emplaceBack(limits, RefType::func(),
                                        /* initExpr */ Nothing(),
                                        /*isAsmJS*/ true)) {
       return false;
@@ -2167,9 +2169,10 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     if (!codeMeta_->funcs.resize(funcImportMap_.count() + funcDefs_.length())) {
       return nullptr;
     }
-    for (auto iter = funcImportMap_.iter(); !iter.done(); iter.next()) {
-      uint32_t funcIndex = iter.get().value();
-      uint32_t funcTypeIndex = iter.get().key().sigIndex();
+    for (FuncImportMap::Range r = funcImportMap_.all(); !r.empty();
+         r.popFront()) {
+      uint32_t funcIndex = r.front().value();
+      uint32_t funcTypeIndex = r.front().key().sigIndex();
       codeMeta_->funcs[funcIndex] = FuncDesc(funcTypeIndex);
     }
     for (const Func& func : funcDefs_) {
@@ -3594,7 +3597,7 @@ static bool WriteArrayAccessFlags(FunctionValidatorShared& f,
                                   Scalar::Type viewType) {
   // asm.js only has naturally-aligned accesses.
   size_t align = TypedArrayElemSize(viewType);
-  MOZ_ASSERT(std::has_single_bit(align));
+  MOZ_ASSERT(IsPowerOfTwo(align));
   if (!f.encoder().writeFixedU8(CeilingLog2(align))) {
     return false;
   }
@@ -4175,7 +4178,7 @@ static bool CheckFuncPtrCall(FunctionValidator<Unit>& f, ParseNode* callNode,
 
   uint32_t mask;
   if (!IsLiteralInt(f.m(), maskNode, &mask) || mask == UINT32_MAX ||
-      !std::has_single_bit(mask + 1)) {
+      !IsPowerOfTwo(mask + 1)) {
     return f.fail(maskNode,
                   "function-pointer table index mask value must be a power of "
                   "two minus 1");
@@ -6267,7 +6270,7 @@ static bool CheckFuncPtrTable(ModuleValidator<Unit>& m, ParseNode* decl) {
 
   unsigned length = ListLength(arrayLiteral);
 
-  if (!std::has_single_bit(length)) {
+  if (!IsPowerOfTwo(length)) {
     return m.failf(arrayLiteral,
                    "function-pointer table length must be a power of 2 (is %u)",
                    length);
@@ -6459,8 +6462,8 @@ static SharedModule CheckModule(FrontendContext* fc,
   ScriptedCaller scriptedCaller;
   if (parser.ss->filename()) {
     scriptedCaller.line = 0;  // unused
-    scriptedCaller.source = DuplicateString(parser.ss->filename());
-    if (!scriptedCaller.source) {
+    scriptedCaller.filename = DuplicateString(parser.ss->filename());
+    if (!scriptedCaller.filename) {
       return nullptr;
     }
   }

@@ -125,22 +125,10 @@
   margin: 0 calc(var(--tab-border-radius) / 2);
   position: relative;
 
-  @media -moz-pref("browser.nova.enabled") {
-    margin: 0;
-    /* 3px places the container line just above the selected border */
-    inset-block-start: -3px;
-  }
-
   #tabbrowser-tabs[orient="vertical"] & {
     height: auto;
     width: 2px;
     margin: calc(var(--tab-border-radius) / 2) 0;
-
-    @media -moz-pref("browser.nova.enabled") {
-      margin: 0;
-      inset-inline-end: -3px;
-      inset-block-start: 0;
-    }
   }
 }
 
@@ -157,5 +145,6 @@
 
 .menuitem-iconic[data-usercontextid] {
   --menuitem-icon: var(--identity-icon);
-  --menuitem-icon-fill: var(--identity-icon-color);
+  -moz-context-properties: fill;
+  fill: var(--identity-icon-color);
 }

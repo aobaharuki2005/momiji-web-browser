@@ -5,6 +5,7 @@
 import os
 from compare_locales import mozpath
 
+
 REFERENCE_LOCALE = "en-x-moz-reference"
 
 

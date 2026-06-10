@@ -157,22 +157,25 @@ std::string SocketAddress::PortAsString() const {
 }
 
 std::string SocketAddress::ToString() const {
-  StringBuilder sb;
+  char buf[1024];
+  SimpleStringBuilder sb(buf);
   sb << HostAsURIString() << ":" << port();
-  return sb.Release();
+  return sb.str();
 }
 
 std::string SocketAddress::ToSensitiveString() const {
-  StringBuilder sb;
+  char buf[1024];
+  SimpleStringBuilder sb(buf);
   sb << HostAsSensitiveURIString() << ":" << port();
-  return sb.Release();
+  return sb.str();
 }
 
 std::string SocketAddress::ToSensitiveNameAndAddressString() const {
   if (IsUnresolvedIP() || literal_ || hostname_.empty()) {
     return ToSensitiveString();
   }
-  StringBuilder sb;
+  char buf[1024];
+  SimpleStringBuilder sb(buf);
   sb << HostAsSensitiveURIString() << ":" << port();
   sb << " (";
   if (ip_.family() == AF_INET6) {
@@ -182,7 +185,7 @@ std::string SocketAddress::ToSensitiveNameAndAddressString() const {
   }
   sb << ":" << port() << ")";
 
-  return sb.Release();
+  return sb.str();
 }
 
 bool SocketAddress::FromString(absl::string_view str) {

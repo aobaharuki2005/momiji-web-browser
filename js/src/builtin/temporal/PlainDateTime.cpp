@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -558,8 +560,7 @@ ISODateTime js::temporal::RoundISODateTime(const ISODateTime& isoDateTime,
   MOZ_ASSERT(0 <= roundedTime.days && roundedTime.days <= 1);
 
   // Step 3.
-  auto balanceResult =
-      BalanceISODate(isoDateTime.date, static_cast<int32_t>(roundedTime.days));
+  auto balanceResult = BalanceISODate(isoDateTime.date, roundedTime.days);
 
   // Step 4.
   return {balanceResult, roundedTime.time};
@@ -655,8 +656,7 @@ bool js::temporal::DifferencePlainDateTimeWithTotal(
     // TotalRelativeDuration, step 3.
     *result = TotalTimeDuration(diff.time, unit);
     return true;
-  }
-  if (unit == TemporalUnit::Day) {
+  } else if (unit == TemporalUnit::Day) {
     // TotalRelativeDuration, step 1. (Not applicable)
 
     // TotalRelativeDuration, step 2.

@@ -7,9 +7,9 @@
 
 #if defined(XP_WIN)
 #  include <windows.h>  // for HANDLE
-#elif defined(XP_DARWIN)
-#  include <mach/port.h>  // for mach_port_t
-#elif defined(XP_LINUX)
+#endif                  // defined(XP_WIN)
+
+#if defined(XP_LINUX)
 // For DirectAuxvDumpInfo
 #  include "mozilla/toolkit/crashreporter/rust_minidump_writer_linux_ffi_generated.h"
 #endif  // defined(XP_LINUX)
@@ -56,12 +56,10 @@ static void free_breakpad_data(BreakpadRawData aData) {
 #define GET_CONNECTOR_ARG(arguments) ((arguments)[4])
 #ifdef XP_WIN
 #  define GET_LISTENER_ARG(arguments) ((arguments)[5])
-#  define GET_CLIENT_HANDLE_ARG(arguments) ((arguments)[6])
-#  define ARG_NUM (7)
+#  define ARG_NUM (6)
 #else
 static char sDummy[1] = "";
 #  define GET_LISTENER_ARG(arguments) (sDummy)
-#  define GET_CLIENT_HANDLE_ARG(arguments) (sDummy)
 #  define ARG_NUM (5)
 #endif  // XP_WIN
 
@@ -77,11 +75,9 @@ int main(int argc, char* argv[]) {
   char* minidump_path = GET_MINIDUMP_PATH_ARG(argv);
   char* connector = GET_CONNECTOR_ARG(argv);
   char* listener = GET_LISTENER_ARG(argv);
-  char* client_handle = GET_CLIENT_HANDLE_ARG(argv);
 
-  int res =
-      crash_generator_logic_desktop(client_pid, client_handle, breakpad_data,
-                                    minidump_path, listener, connector);
+  int res = crash_generator_logic_desktop(client_pid, breakpad_data,
+                                          minidump_path, listener, connector);
   free_breakpad_data(breakpad_data);
   exit(res);
 }

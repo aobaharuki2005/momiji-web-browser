@@ -13,7 +13,7 @@ const instance = new Temporal.PlainYearMonth(2000, 5);
 ["constrain", "reject"].forEach((overflow) => {
   assert.throws(
     RangeError,
-    () => instance.add({ years: 1, months: -3 }, { overflow }),
+    () => instance.add({ hours: 1, minutes: -30 }, { overflow }),
     `mixed positive and negative values always throw (overflow = "${overflow}")`
   );
 });

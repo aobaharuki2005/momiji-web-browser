@@ -23,7 +23,6 @@ Services.scriptloader.loadSubScript(
 add_task(async function () {
   // This is preffed off for now, so ensure turning it on
   await pushPref("devtools.debugger.features.javascript-tracing", true);
-  await pushPref("devtools.command-button-jstracer.enabled", true);
 
   const testTab = await addTab(TAB_URL);
 
@@ -53,7 +52,7 @@ add_task(async function () {
   await toggleJsTracer(toolbox);
 
   info("Invoke some code that will be traced");
-  await SpecialPowers.spawn(testTab.linkedBrowser, [], function () {
+  await ContentTask.spawn(testTab.linkedBrowser, {}, function () {
     content.wrappedJSObject.foo();
   });
 

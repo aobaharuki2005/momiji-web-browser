@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,6 +8,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/layers/GpuFenceMTLSharedEvent.h"
+#include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/webgpu/WebGPUParent.h"
 
 namespace mozilla::webgpu {
@@ -29,8 +31,8 @@ UniquePtr<SharedTextureMacIOSurface> SharedTextureMacIOSurface::Create(
     return nullptr;
   }
 
-  RefPtr<MacIOSurface> surface = MacIOSurface::CreateIOSurface(
-      aWidth, aHeight, MacIOSurface::AllowAlpha::Yes);
+  RefPtr<MacIOSurface> surface =
+      MacIOSurface::CreateIOSurface(aWidth, aHeight, true);
   if (!surface) {
     gfxCriticalNoteOnce << "Failed to create MacIOSurface: (" << aWidth << ", "
                         << aHeight << ")";
@@ -74,28 +76,28 @@ SharedTextureMacIOSurface::ToSurfaceDescriptor() {
 
   return Some(layers::SurfaceDescriptorMacIOSurface(
       mSurface->GetIOSurfaceID(), !mSurface->HasAlpha(),
-      mSurface->GetYUVColorSpace(), mSurface->GetTransferFunction(),
-      std::move(gpuFence)));
+      mSurface->GetYUVColorSpace(), std::move(gpuFence)));
 }
 
 void SharedTextureMacIOSurface::GetSnapshot(const ipc::Shmem& aDestShmem,
-                                            size_t aDestStride) {
+                                            const gfx::IntSize& aSize) {
   if (!mSurface->Lock()) {
     gfxCriticalNoteOnce << "Failed to lock MacIOSurface";
     return;
   }
 
   const size_t bytesPerRow = mSurface->GetBytesPerRow();
+  const uint32_t stride = layers::ImageDataSerializer::ComputeRGBStride(
+      gfx::SurfaceFormat::B8G8R8A8, aSize.width);
   uint8_t* src = (uint8_t*)mSurface->GetBaseAddress();
   uint8_t* dst = aDestShmem.get<uint8_t>();
 
-  // note that this might still copy some padding bytes
-  const size_t min_stride = std::min(bytesPerRow, aDestStride);
+  MOZ_ASSERT(stride * aSize.height <= aDestShmem.Size<uint8_t>());
 
-  for (uint32_t y = 0; y < mHeight; y++) {
-    memcpy(dst, src, min_stride);
+  for (int y = 0; y < aSize.height; y++) {
+    memcpy(dst, src, stride);
     src += bytesPerRow;
-    dst += aDestStride;
+    dst += stride;
   }
 
   mSurface->Unlock();

@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import functools
 import io
 import mimetypes
 import os
@@ -13,9 +12,10 @@ from pprint import pprint
 import boto3
 import botocore
 import requests
+from mozbuild.util import memoize
 
 
-@functools.cache
+@memoize
 def create_aws_session():
     """
     This function creates an aws session that is
@@ -53,7 +53,7 @@ def create_aws_session():
     return s3, bucket
 
 
-@functools.cache
+@memoize
 def get_s3_keys(s3, bucket):
     kwargs = {"Bucket": bucket}
     all_keys = []
@@ -138,7 +138,7 @@ def s3_upload(files, key_prefix=None):
 
     def upload(f, path, bucket, key, extra_args):
         # Need to flush to avoid buffering/interleaving from multiple threads.
-        sys.stdout.write(f"uploading {path} to {key}\n")
+        sys.stdout.write("uploading %s to %s\n" % (path, key))
         sys.stdout.flush()
         s3.upload_fileobj(f, bucket, key, ExtraArgs=extra_args)
 
@@ -155,7 +155,7 @@ def s3_upload(files, key_prefix=None):
                 extra_args["ContentEncoding"] = content_encoding
 
             if key_prefix:
-                key = f"{key_prefix}/{path}"
+                key = "%s/%s" % (key_prefix, path)
             else:
                 key = path
 

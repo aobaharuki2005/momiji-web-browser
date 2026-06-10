@@ -26,7 +26,7 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   const wait = waitForNetworkEvents(monitor, 2);
-  await reloadSelectedTab();
+  await reloadBrowser();
   await wait;
 
   const requestList = document.querySelectorAll(

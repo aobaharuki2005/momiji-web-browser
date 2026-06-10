@@ -42,8 +42,6 @@ const platformSpecificInterfaces = new Map([
   ["nsIMacSharingService", "darwin"],
   ["nsIMacUserActivityUpdater", "darwin"],
   ["nsIMacWebAppUtils", "darwin"],
-  ["nsISecondaryTileService", "windows"],
-  ["nsISecondaryTileListener", "windows"],
   ["nsIStandaloneNativeMenu", "darwin"],
   ["nsITouchBarHelper", "darwin"],
   ["nsITouchBarInput", "darwin"],

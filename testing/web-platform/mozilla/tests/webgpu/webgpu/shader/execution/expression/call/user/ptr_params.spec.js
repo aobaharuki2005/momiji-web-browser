@@ -7,34 +7,15 @@ import { GPUTest } from '../../../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-function wgslTypeDecl(
-kind)
-{
+function wgslTypeDecl(kind) {
   switch (kind) {
     case 'vec4i':
       return `
 alias T = vec4i;
-alias RT = T;
 `;
     case 'array':
       return `
 alias T = array<vec4f, 3>;
-alias RT = T;
-`;
-    case 'override_array1':
-      return `
-alias T = array<vec4f, over_no_default>;
-alias RT = array<vec4f, 3>;
-`;
-    case 'override_array2':
-      return `
-alias T = array<vec4f, over_default>;
-alias RT = array<vec4f, 3>;
-`;
-    case 'override_array3':
-      return `
-alias T = array<vec4f, over_expr>;
-alias RT = array<vec4f, 3>;
 `;
     case 'struct':
       return `
@@ -45,21 +26,15 @@ c : i32,
 d : u32,
 }
 alias T = S;
-alias RT = T;
 `;
   }
 }
 
-function valuesForType(
-kind)
-{
+function valuesForType(kind) {
   switch (kind) {
     case 'vec4i':
       return new Uint32Array([1, 2, 3, 4]);
     case 'array':
-    case 'override_array1':
-    case 'override_array2':
-    case 'override_array3':
       return new Float32Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
     case 'struct':
       return new Uint32Array([1, 2, 3, 4]);
@@ -71,15 +46,13 @@ t,
 wgsl,
 inputUsage,
 input,
-expected,
-constants = {})
+expected)
 {
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
     compute: {
       module: t.device.createShaderModule({ code: wgsl }),
-      entryPoint: 'main',
-      constants
+      entryPoint: 'main'
     }
   });
 
@@ -118,24 +91,7 @@ params((u) =>
 u.
 combine('address_space', ['function', 'private', 'workgroup', 'storage', 'uniform']).
 combine('call_indirection', [0, 1, 2]).
-combine('type', [
-'vec4i',
-'array',
-'override_array1',
-'override_array2',
-'override_array3',
-'struct']
-).
-filter((t) => {
-  switch (t.type) {
-    case 'override_array1':
-    case 'override_array2':
-    case 'override_array3':
-      return t.address_space === 'workgroup';
-    default:
-      return true;
-  }
-})
+combine('type', ['vec4i', 'array', 'struct'])
 ).
 fn((t) => {
   switch (t.params.address_space) {
@@ -143,27 +99,6 @@ fn((t) => {
     case 'storage':
     case 'uniform':
       t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
-  }
-
-  let wg_assign_input = 'W = input;';
-  let output_assign = 'output = *p;';
-  if (t.params.address_space === 'workgroup') {
-    switch (t.params.type) {
-      case 'override_array1':
-      case 'override_array2':
-      case 'override_array3':
-        wg_assign_input = `
-for (var i = 0u; i < 3; i++) {
-  W[i] = input[i];
-}`;
-        output_assign = `
-for (var i = 0u; i < 3; i++) {
-  output[i] = (*p)[i];
-}`;
-        break;
-      default:
-        break;
-    }
   }
 
   const main = {
@@ -186,7 +121,7 @@ fn main() {
 var<workgroup> W : T;
 @compute @workgroup_size(1)
 fn main() {
-  ${wg_assign_input}
+  W = input;
   f0(&W);
 }
 `,
@@ -215,21 +150,18 @@ fn f${i}(p : ptr<${t.params.address_space}, T>) {
 
   const inputVar =
   t.params.address_space === 'uniform' ?
-  `@binding(0) @group(0) var<uniform> input : RT;` :
-  `@binding(0) @group(0) var<storage, read> input : RT;`;
+  `@binding(0) @group(0) var<uniform> input : T;` :
+  `@binding(0) @group(0) var<storage, read> input : T;`;
 
   const wgsl = `
-override over_no_default : u32;
-override over_default = 1u;
-override over_expr = over_default + over_no_default - 3u;
 ${wgslTypeDecl(t.params.type)}
 
 ${inputVar}
 
-@binding(1) @group(0) var<storage, read_write> output : RT;
+@binding(1) @group(0) var<storage, read_write> output : T;
 
 fn f${t.params.call_indirection}(p : ptr<${t.params.address_space}, T>) {
-    ${output_assign}
+    output = *p;
 }
 
 ${call_chain}
@@ -239,10 +171,7 @@ ${main}
 
   const values = valuesForType(t.params.type);
 
-  run(t, wgsl, t.params.address_space === 'uniform' ? 'uniform' : 'storage', values, values, {
-    over_no_default: 3,
-    over_default: 3
-  });
+  run(t, wgsl, t.params.address_space === 'uniform' ? 'uniform' : 'storage', values, values);
 });
 
 g.test('read_ptr_to_member').
@@ -445,51 +374,13 @@ params((u) =>
 u.
 combine('address_space', ['function', 'private', 'workgroup', 'storage']).
 combine('call_indirection', [0, 1, 2]).
-combine('type', [
-'vec4i',
-'array',
-'override_array1',
-'override_array2',
-'override_array3',
-'struct']
-).
-filter((t) => {
-  switch (t.type) {
-    case 'override_array1':
-    case 'override_array2':
-    case 'override_array3':
-      return t.address_space === 'workgroup';
-    default:
-      return true;
-  }
-})
+combine('type', ['vec4i', 'array', 'struct'])
 ).
 fn((t) => {
   switch (t.params.address_space) {
     case 'workgroup':
     case 'storage':
       t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
-  }
-
-  let wg_output_assign = 'output = W;';
-  let assign_from_input = '*p = input;';
-  if (t.params.address_space === 'workgroup') {
-    switch (t.params.type) {
-      case 'override_array1':
-      case 'override_array2':
-      case 'override_array3':
-        wg_output_assign = `
-for (var i = 0u; i < 3; i++) {
-  output[i] = W[i];
-}`;
-        assign_from_input = `
-for (var i = 0u; i < 3; i++) {
-  (*p)[i] = input[i];
-}`;
-        break;
-      default:
-        break;
-    }
   }
 
   const ptr =
@@ -519,7 +410,7 @@ var<workgroup> W : T;
 @compute @workgroup_size(1)
 fn main() {
   f0(&W);
-  ${wg_output_assign}
+  output = W;
 }
 `,
     storage: `
@@ -540,16 +431,13 @@ fn f${i}(p : ${ptr}) {
   }
 
   const wgsl = `
-override over_no_default : u32;
-override over_default = 1u;
-override over_expr = over_default + over_no_default - 3u;
 ${wgslTypeDecl(t.params.type)}
 
-@binding(0) @group(0) var<uniform> input : RT;
-@binding(1) @group(0) var<storage, read_write> output : RT;
+@binding(0) @group(0) var<uniform> input : T;
+@binding(1) @group(0) var<storage, read_write> output : T;
 
 fn f${t.params.call_indirection}(p : ${ptr}) {
-  ${assign_from_input}
+  *p = input;
 }
 
 ${call_chain}
@@ -559,7 +447,7 @@ ${main}
 
   const values = valuesForType(t.params.type);
 
-  run(t, wgsl, 'uniform', values, values, { over_no_default: 3, over_default: 3 });
+  run(t, wgsl, 'uniform', values, values);
 });
 
 g.test('write_ptr_to_member').

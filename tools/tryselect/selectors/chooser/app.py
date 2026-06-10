@@ -8,9 +8,6 @@ from collections import defaultdict
 
 from flask import Flask, render_template, request
 
-from tryselect.push import LARGE_PUSH_THRESHOLD
-from tryselect.selectors.chooser import ChooserConfig
-
 SECTIONS = []
 SUPPORTED_KINDS = set()
 
@@ -169,18 +166,12 @@ class Analysis(Section):
         return True
 
 
-def create_application(tg, queue: multiprocessing.Queue, config=None):
-    config = config or ChooserConfig()
+def create_application(tg, queue: multiprocessing.Queue):
     tasks = {l: t for l, t in tg.tasks.items() if t.kind in SUPPORTED_KINDS}
     sections = [s.get_context(tasks) for s in SECTIONS]
     context = {
         "tasks": {l: t.attributes for l, t in tasks.items()},
         "sections": sections,
-        "use_artifact": config.use_artifact,
-        "pernosco_active": config.pernosco_active,
-        "large_push_threshold": LARGE_PUSH_THRESHOLD,
-        "large_push_multiplier": config.rebuild_multiplier,
-        "large_push_suppressed": config.priority_preset,
     }
 
     app = Flask(__name__)
@@ -192,16 +183,11 @@ def create_application(tg, queue: multiprocessing.Queue, config=None):
         if request.method == "GET":
             return render_template("chooser.html", **context)
 
-        result_use_artifact = False
         if request.form["action"] == "Push":
             labels = request.form["selected-tasks"].splitlines()
             app.tasks.extend(labels)
-            # The template hides the artifact checkbox when pernosco is
-            # active; guard here so a forged form can't slip it through.
-            if not config.pernosco_active:
-                result_use_artifact = bool(request.form.get("artifact"))
 
-        queue.put({"tasks": app.tasks, "use_artifact": result_use_artifact})
+        queue.put(app.tasks)
         return render_template("close.html")
 
     return app

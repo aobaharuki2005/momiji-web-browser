@@ -8,7 +8,6 @@ test-manifest-toml:
         - 'mobile/android/bors.toml'
         - 'mobile/android/fenix/bors.toml'
         - 'python/mozbuild/mozbuild/test/'
-        - 'servo/'
         - 'toolkit/components/antitracking/test/marionette/'
         - 'testing/cppunittest.toml'  # Tries to unquote entries - bug 1953009
         - 'testing/manifest/test/data/'
@@ -35,7 +34,6 @@ test-manifest-toml:
         - '**/config.toml'
         - '**/empty.toml'
         - '**/generated-mochitest.toml'
-        - '**/generated-mochitest-*.toml'
         - '**/l10n.toml'
         - '**/labels.toml'
         - '**/pyproject.toml'

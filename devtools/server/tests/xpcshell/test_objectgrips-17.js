@@ -27,22 +27,22 @@ async function testPrincipal(options, globalPrincipal, debuggeeHasXrays) {
   const sameOrigin = debuggeePrincipal.origin === globalPrincipal.origin;
   const subsumes = debuggeePrincipal.subsumes(globalPrincipal);
   for (const globalHasXrays of [true, false]) {
-    const eitherHasXrays = debuggeeHasXrays || globalHasXrays;
+    const isOpaque =
+      subsumes &&
+      globalPrincipal !== systemPrincipal &&
+      ((sameOrigin && debuggeeHasXrays) || globalHasXrays);
     for (const globalIsInvisible of [true, false]) {
       let global = Cu.Sandbox(globalPrincipal, {
         wantXrays: globalHasXrays,
         invisibleToDebugger: globalIsInvisible,
       });
-      let isOpaque =
-        subsumes &&
-        globalPrincipal !== systemPrincipal &&
-        (eitherHasXrays || debuggeePrincipal === systemPrincipal);
-      await test(options, { global, subsumes, isOpaque, globalIsInvisible });
-
-      // Run tests again, now waiving xrays on the Sandbox.
-      global = Cu.waiveXrays(global);
-      isOpaque =
-        sameOrigin && globalPrincipal !== systemPrincipal && eitherHasXrays;
+      // Previously, the Sandbox constructor would (bizarrely) waive xrays on
+      // the return Sandbox if wantXrays was false. This has now been fixed,
+      // but we need to mimic that behavior here to make the test continue
+      // to pass.
+      if (!globalHasXrays) {
+        global = Cu.waiveXrays(global);
+      }
       await test(options, { global, subsumes, isOpaque, globalIsInvisible });
     }
   }

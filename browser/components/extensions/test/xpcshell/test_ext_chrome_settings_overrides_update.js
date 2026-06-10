@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 const { AddonTestUtils } = ChromeUtils.importESModule(
@@ -8,7 +10,6 @@ ChromeUtils.defineESModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
@@ -99,7 +100,7 @@ add_task(async function test_overrides_update_removal() {
   let extension = ExtensionTestUtils.loadExtension(extensionInfo);
 
   let defaultHomepageURL = HomePage.get();
-  let defaultEngineName = (await SearchService.getDefault()).name;
+  let defaultEngineName = (await Services.search.getDefault()).name;
   Assert.notStrictEqual(
     defaultEngineName,
     "DuckDuckGo",
@@ -134,7 +135,7 @@ add_task(async function test_overrides_update_removal() {
     "Home page url is overridden by the extension."
   );
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     "DuckDuckGo",
     "Builtin default engine was set default by extension"
   );
@@ -163,7 +164,7 @@ add_task(async function test_overrides_update_removal() {
     "Home page url reverted to the default after update."
   );
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     defaultEngineName,
     "Default engine reverted to the default after update."
   );
@@ -196,7 +197,7 @@ add_task(async function test_overrides_update_adding() {
   let extension = ExtensionTestUtils.loadExtension(extensionInfo);
 
   let defaultHomepageURL = HomePage.get();
-  let defaultEngineName = (await SearchService.getDefault()).name;
+  let defaultEngineName = (await Services.search.getDefault()).name;
   Assert.notStrictEqual(
     defaultEngineName,
     "DuckDuckGo",
@@ -216,7 +217,7 @@ add_task(async function test_overrides_update_adding() {
     "Home page url is the default after startup."
   );
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     defaultEngineName,
     "Default engine is the default after startup."
   );
@@ -269,7 +270,7 @@ add_task(async function test_overrides_update_adding() {
   // An upgraded extension adding a search engine cannot override
   // the default engine.
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     defaultEngineName,
     "Default engine is still the default after startup."
   );
@@ -416,7 +417,7 @@ add_task(async function test_default_search_prompts() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionInfo);
 
-  let defaultEngineName = (await SearchService.getDefault()).name;
+  let defaultEngineName = (await Services.search.getDefault()).name;
   Assert.notStrictEqual(defaultEngineName, "Example", "Search is not Example.");
 
   // Mock a response from the default search prompt where we
@@ -432,7 +433,7 @@ add_task(async function test_default_search_prompts() {
     "The installed addon has the expected version."
   );
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     defaultEngineName,
     "Default engine is the default after startup."
   );
@@ -444,7 +445,7 @@ add_task(async function test_default_search_prompts() {
   extensionInfo.manifest.version = "2.0";
   await assertUpdateDoNotPrompt(extension, extensionInfo);
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     defaultEngineName,
     "Default engine is still the default after update."
   );
@@ -463,7 +464,7 @@ add_task(async function test_default_search_prompts() {
 
   // we still said no.
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     defaultEngineName,
     "Default engine is the default after being disabling/enabling."
   );
@@ -589,18 +590,18 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
   // for the scenario covered by the current test case.
   let initialEngine;
   if (builtinAsInitialDefault) {
-    initialEngine = SearchService.appDefaultEngine;
+    initialEngine = Services.search.appDefaultEngine;
   } else {
-    initialEngine = SearchService.getEngineByName(
+    initialEngine = Services.search.getEngineByName(
       extensionInfo.manifest.chrome_settings_overrides.search_provider.name
     );
   }
-  await SearchService.setDefault(
+  await Services.search.setDefault(
     initialEngine,
-    SearchService.CHANGE_REASON.UNKNOWN
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
-  let defaultEngineName = (await SearchService.getDefault()).name;
+  let defaultEngineName = (await Services.search.getDefault()).name;
   Assert.equal(
     defaultEngineName,
     initialEngine.name,
@@ -615,7 +616,7 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
   );
 
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     initialEngine.name,
     `Default engine should still be set to the ${
       builtinAsInitialDefault ? "app-provided" : EXTENSION_ID
@@ -638,7 +639,7 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
     tabHideNotification: {},
     default_search: {
       defaultSearch: {
-        initialValue: SearchService.appDefaultEngine.name,
+        initialValue: Services.search.appDefaultEngine.name,
         precedenceList: [
           {
             id: EXTENSION_ID2,
@@ -677,7 +678,7 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
   await ExtensionSettingsStore._reloadFile(false);
 
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     initialEngine.name,
     "Default engine is still set to the initial one."
   );
@@ -709,7 +710,7 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
   await assertUpdateDoNotPrompt(extension, extensionInfo);
 
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     initialEngine.name,
     "Default engine is still the same after updating both the test extensions."
   );
@@ -741,7 +742,7 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
 
   // we said no.
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     initialEngine.name,
     `Default engine should still be the same after disabling/enabling ${EXTENSION_ID2}.`
   );
@@ -756,8 +757,8 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
 
   // we said no.
   equal(
-    (await SearchService.getDefault()).name,
-    SearchService.appDefaultEngine.name,
+    (await Services.search.getDefault()).name,
+    Services.search.appDefaultEngine.name,
     `Default engine should be set to the app default after disabling/enabling ${EXTENSION_ID}.`
   );
 
@@ -771,7 +772,7 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
 
   // we responded yes.
   equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     extensionInfo.manifest.chrome_settings_overrides.search_provider.name,
     "Default engine should be set to the one opted-in from the last prompt."
   );

@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <vector>
 
 #include "api/environment/environment.h"
@@ -19,10 +20,10 @@
 #include "modules/include/module_fec_types.h"
 #include "modules/rtp_rtcp/include/flexfec_sender.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "modules/rtp_rtcp/source/byte_io.h"
 #include "modules/rtp_rtcp/source/rtp_header_extension_size.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "system_wrappers/include/clock.h"
-#include "test/fuzzers/fuzz_data_helper.h"
 
 namespace webrtc {
 
@@ -37,42 +38,43 @@ const std::vector<RtpExtensionSize> kNoRtpHeaderExtensionSizes;
 
 }  // namespace
 
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
+void FuzzOneInput(const uint8_t* data, size_t size) {
   // Create Environment once because creating it for each input noticably
   // reduces the speed of the fuzzer.
   static SimulatedClock* const clock = new SimulatedClock(1);
   static const Environment* const env =
       new Environment(CreateEnvironment(clock));
 
-  if (fuzz_data.size() < 5 || fuzz_data.size() > 200) {
+  size_t i = 0;
+  if (size < 5 || size > 200) {
     return;
   }
   // Set time to (1 + data[i++]);
-  clock->AdvanceTimeMicroseconds(1 + fuzz_data.Read<uint8_t>() -
-                                 clock->TimeInMicroseconds());
+  clock->AdvanceTimeMicroseconds(1 + data[i++] - clock->TimeInMicroseconds());
   FlexfecSender sender(*env, kFlexfecPayloadType, kFlexfecSsrc, kMediaSsrc,
                        kNoMid, kNoRtpHeaderExtensions,
                        kNoRtpHeaderExtensionSizes, nullptr /* rtp_state */);
   FecProtectionParams params = {
-      .fec_rate = fuzz_data.Read<uint8_t>(),
-      .max_fec_frames = static_cast<int>(fuzz_data.Read<uint8_t>() % 100),
-      .fec_mask_type =
-          fuzz_data.Read<uint8_t>() <= 127 ? kFecMaskRandom : kFecMaskBursty};
+      data[i++], static_cast<int>(data[i++] % 100),
+      data[i++] <= 127 ? kFecMaskRandom : kFecMaskBursty};
   sender.SetProtectionParameters(params, params);
-  uint16_t seq_num = fuzz_data.Read<uint8_t>();
+  uint16_t seq_num = data[i++];
 
-  while (fuzz_data.BytesLeft() >= 1) {
+  while (i + 1 < size) {
     // Everything past the base RTP header (12 bytes) is payload,
     // from the perspective of FlexFEC.
-    size_t payload_size = fuzz_data.Read<uint8_t>();
-    if (fuzz_data.BytesLeft() <= kRtpHeaderSize + payload_size)
+    size_t payload_size = data[i++];
+    if (i + kRtpHeaderSize + payload_size >= size)
       break;
+    std::unique_ptr<uint8_t[]> packet(
+        new uint8_t[kRtpHeaderSize + payload_size]);
+    memcpy(packet.get(), &data[i], kRtpHeaderSize + payload_size);
+    i += kRtpHeaderSize + payload_size;
+    ByteWriter<uint16_t>::WriteBigEndian(&packet[2], seq_num++);
+    ByteWriter<uint32_t>::WriteBigEndian(&packet[8], kMediaSsrc);
     RtpPacketToSend rtp_packet(nullptr);
-    if (!rtp_packet.Parse(
-            fuzz_data.ReadByteArray(kRtpHeaderSize + payload_size)))
+    if (!rtp_packet.Parse(packet.get(), kRtpHeaderSize + payload_size))
       break;
-    rtp_packet.SetSequenceNumber(seq_num++);
-    rtp_packet.SetSsrc(kMediaSsrc);
     sender.AddPacketAndGenerateFec(rtp_packet);
     sender.GetFecPackets();
   }

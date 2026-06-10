@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +7,7 @@
 #include "mozilla/XREAppData.h"
 #include "XREChildData.h"
 #include "XREShellData.h"
-#include "ApplicationData.h"
+#include "application.ini.h"
 #include "mozilla/Bootstrap.h"
 #include "mozilla/ProcessType.h"
 #include "mozilla/RuntimeExceptionModule.h"
@@ -179,7 +180,6 @@ static bool IsFlag(const char* arg, const char* s) {
   return false;
 }
 
-#ifdef MOZ_BACKGROUNDTASKS
 /**
  * Return true if any arguments are flags with the given string.
  *
@@ -193,7 +193,6 @@ static bool HasFlag(int argc, char* argv[], const char* s) {
   }
   return false;
 }
-#endif
 
 constinit Bootstrap::UniquePtr gBootstrap;
 
@@ -245,7 +244,7 @@ static int do_main(int argc, char* argv[], char* envp[]) {
     config.appDataPath = appDataFile;
   } else {
     // no -app flag so we use the compiled-in app data
-    config.appData = kStaticAppData;
+    config.appData = &sAppData;
     config.appDataPath = kDesktopFolder;
   }
 

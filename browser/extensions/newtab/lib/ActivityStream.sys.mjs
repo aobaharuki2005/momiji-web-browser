@@ -42,11 +42,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrefsFeed: "resource://newtab/lib/PrefsFeed.sys.mjs",
   PlacesFeed: "resource://newtab/lib/PlacesFeed.sys.mjs",
+  RecommendationProvider:
+    "resource://newtab/lib/RecommendationProvider.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
-  RemoteRenderer: "resource://newtab/lib/RemoteRenderer.sys.mjs",
   SectionsFeed: "resource://newtab/lib/SectionsManager.sys.mjs",
-  SectionsLayoutFeed: "resource://newtab/lib/SectionsLayoutFeed.sys.mjs",
-  SportsFeed: "resource://newtab/lib/Widgets/SportsFeed.sys.mjs",
   StartupCacheInit: "resource://newtab/lib/StartupCacheInit.sys.mjs",
   Store: "resource://newtab/lib/Store.sys.mjs",
   SystemTickFeed: "resource://newtab/lib/SystemTickFeed.sys.mjs",
@@ -119,11 +118,8 @@ const PREF_IMAGE_PROXY_ENABLED =
 
 const PREF_IMAGE_PROXY_ENABLED_STORE = "discoverystream.imageProxy.enabled";
 
-const PREF_NEWTAB_REMOTE_RENDERER_ENABLED =
-  "browser.newtabpage.activity-stream.remote-renderer.enabled";
-
-export const PREF_DEFAULT_VALUE_TOPSITES_ENABLED = true;
-export const PREF_DEFAULT_VALUE_TOPSTORIES_ENABLED = true;
+const PREF_SHOULD_ENABLE_EXTERNAL_COMPONENTS_FEED =
+  "browser.newtabpage.activity-stream.externalComponents.enabled";
 
 export const WEATHER_OPTIN_REGIONS = [
   "AT", // Austria
@@ -221,67 +217,6 @@ function showWeather({ geo, locale }) {
   );
 }
 
-/**
- * Returns the default size for widgets that support large/medium sizes.
- * This sets a default pref, not a user pref — if the user has explicitly
- * resized a widget via the UI, their choice takes precedence.
- *
- * In the future this will follow the same regional logic as showWeather,
- * returning different defaults based on the user's region.
- */
-function getDefaultWidgetSize() {
-  return Services.prefs.getStringPref(
-    "browser.newtabpage.activity-stream.widgets.defaultSize",
-    "large"
-  );
-}
-
-/**
- * Determines the default size for the consolidated weather widget by inferring
- * what the user previously had visible before Nova was enabled. This runs at
- * startup so that existing users are migrated to the correct size without any
- * explicit one-time migration step.
- *
- * This sets a default pref, not a user pref. Users who change their size via
- * the UI are fully migrated (their choice becomes a user pref — see the
- * sentinel approach documented in WidgetsRegistry.mjs). Users who never touch
- * the UI remain dependent on this function at every startup.
- *
- * widgets.weather.size uses getValue here instead of value: "" (the approach
- * used by other widget size prefs) because the correct initial value depends
- * on the user's prior weather configuration and cannot be a static default.
- *
- * - No forecast system pref → user had the classic weather widget → "small" (sidebar)
- * - Forecast enabled + display !== "detailed" → user switched to simple weather → "small"
- * - Forecast enabled + maximized → user had the large forecast widget → "large"
- * - Forecast enabled + not maximized → user had the medium forecast widget → "medium"
- */
-// @nova-cleanup(remove-pref): Replace this function with a _migratePref call
-// that writes the computed size as a user pref for widgets.weather.size, then
-// change widgets.weather.size in PREFS_CONFIG to value: "" (consistent with
-// other widget size prefs; new users fall through to defaultSize in the registry).
-function getWeatherWidgetSize() {
-  const forecastSystemEnabled = Services.prefs.getBoolPref(
-    "browser.newtabpage.activity-stream.widgets.system.weatherForecast.enabled",
-    false
-  );
-  if (!forecastSystemEnabled) {
-    return "small";
-  }
-  const weatherDisplay = Services.prefs.getStringPref(
-    "browser.newtabpage.activity-stream.weather.display",
-    "detailed"
-  );
-  if (weatherDisplay !== "detailed") {
-    return "small";
-  }
-  const maximized = Services.prefs.getBoolPref(
-    "browser.newtabpage.activity-stream.widgets.maximized",
-    true
-  );
-  return maximized ? getDefaultWidgetSize() : "medium";
-}
-
 function showWeatherOptIn({ geo }) {
   return WEATHER_OPTIN_REGIONS.includes(geo);
 }
@@ -323,7 +258,7 @@ export const PREFS_CONFIG = new Map([
     "feeds.topsites",
     {
       title: "Displays Top Sites on the New Tab Page",
-      value: PREF_DEFAULT_VALUE_TOPSITES_ENABLED,
+      value: true,
     },
   ],
   [
@@ -331,13 +266,6 @@ export const PREFS_CONFIG = new Map([
     {
       title:
         "Hide the top sites section's title, including the section and collapse icons",
-      value: false,
-    },
-  ],
-  [
-    "hideLogo",
-    {
-      title: "Hide the Firefox logo on new tab",
       value: false,
     },
   ],
@@ -391,6 +319,14 @@ export const PREFS_CONFIG = new Map([
     {
       title:
         "Boolean flag to turn download Firefox for mobile promo variant C on and off",
+      value: false,
+    },
+  ],
+  [
+    "discoverystream.refinedCardsLayout.enabled",
+    {
+      title:
+        "Boolean flag enable layout and styling refinements for content and ad cards across different card sizes",
       value: false,
     },
   ],
@@ -527,84 +463,15 @@ export const PREFS_CONFIG = new Map([
     {
       title:
         "Toggle the weather widget to include a text summary of the current conditions",
-      value: "detailed",
+      value: "simple",
     },
   ],
   [
-    "weather.reportEndpoint",
+    "weather.placement",
     {
       title:
-        "Temporary measure for trainhopping. This adds the Merino endpoint for the weather report",
-      value: "https://merino.services.mozilla.com/api/v1/suggest",
-    },
-  ],
-  [
-    "weather.hourlyEndpoint",
-    {
-      title:
-        "Temporary measure for trainhopping. This adds the Merino endpoint for the hourly forecasts to display in Weather Forecast widget",
-      value:
-        "https://merino.services.mozilla.com/api/v1/weather/hourly-forecasts",
-    },
-  ],
-  [
-    "sports.worldCup.teamsEndpoint",
-    {
-      title: "The Merino endpoint for fetching available World Cup teams data",
-      value: "https://merino.services.mozilla.com/api/v1/wcs/teams",
-    },
-  ],
-  [
-    "sports.worldCup.matchesEndpoint",
-    {
-      title: "The Merino endpoint for fetching World Cup match data",
-      value: "https://merino.services.mozilla.com/api/v1/wcs/matches",
-    },
-  ],
-  [
-    "sports.worldCup.liveEndpoint",
-    {
-      title: "The Merino endpoint for fetching live World Cup match data",
-      value: "https://merino.services.mozilla.com/api/v1/wcs/live",
-    },
-  ],
-  [
-    "sports.worldCup.watchLiveEndpoint",
-    {
-      title:
-        "The Merino endpoint for fetching World Cup watch-live broadcaster data",
-      value: "https://merino.services.mozilla.com/api/v1/wcs/watch-links",
-    },
-  ],
-  [
-    "widgets.sportsWidget.pollIdleMs",
-    {
-      title:
-        "Sports widget: poll interval when no games are imminent (milliseconds)",
-      value: 21600000, // 6 hours
-    },
-  ],
-  [
-    "widgets.sportsWidget.pollMatchDayMs",
-    {
-      title:
-        "Sports widget: poll interval on a match day pre-kickoff (milliseconds)",
-      value: 1800000, // 30 minutes
-    },
-  ],
-  [
-    "widgets.sportsWidget.pollLiveMs",
-    {
-      title: "Sports widget: poll interval during live play (milliseconds)",
-      value: 180000, // 3 minutes
-    },
-  ],
-  [
-    "widgets.sportsWidget.pollPregameLeadMs",
-    {
-      title:
-        "Sports widget: how early to enter LIVE polling before kickoff (milliseconds)",
-      value: 600000, // 10 minutes
+        "weather widget can be rendered in a variety of positions. Either in `header` or `sections`",
+      value: "header",
     },
   ],
   [
@@ -645,13 +512,6 @@ export const PREFS_CONFIG = new Map([
     {
       title: "Number of rows of Top Sites to display",
       value: 1,
-    },
-  ],
-  [
-    "topSitesMaxSitesPerRow",
-    {
-      title: "Max number of Top Sites to display per row",
-      value: 8,
     },
   ],
   [
@@ -737,13 +597,6 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "feeds.section.topstories",
-    {
-      title: "Whether top stories are enabled by default.",
-      value: PREF_DEFAULT_VALUE_TOPSTORIES_ENABLED,
-    },
-  ],
-  [
     "section.topstories.rows",
     {
       title: "Number of rows of Top Stories to display",
@@ -761,14 +614,6 @@ export const PREFS_CONFIG = new Map([
     "newtabWallpapers.enabled",
     {
       title: "Boolean flag to turn wallpaper functionality on and off",
-      value: false,
-    },
-  ],
-  [
-    "newtabWallpapers.user.enabled",
-    {
-      title:
-        "Boolean flag controlling wallpaper visibility -- if true the user's selected wallpaper is shown, if false it is hidden",
       value: false,
     },
   ],
@@ -886,7 +731,7 @@ export const PREFS_CONFIG = new Map([
     {
       title:
         "Boolean flag to enable personalized sections layout. Allows users to follow/unfollow topic sections.",
-      value: true,
+      value: false,
     },
   ],
   [
@@ -894,7 +739,7 @@ export const PREFS_CONFIG = new Map([
     {
       title:
         "Boolean flag to enable the setions management panel in Customize menu",
-      value: true,
+      value: false,
     },
   ],
   [
@@ -928,6 +773,13 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "discoverystream.dailyBrief.enabled",
+    {
+      title: "Boolean flag to enable the daily brief section",
+      value: false,
+    },
+  ],
+  [
     "discoverystream.dailyBrief.sectionId",
     {
       title: "sectionId for the Daily brief section",
@@ -935,24 +787,10 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "discoverystream.dailyBrief.enabled",
-    {
-      title: "Boolean flag to enable daily briefing",
-      value: false,
-    },
-  ],
-  [
-    "discoverystream.sections.layout",
-    {
-      title: "CSV string of section layouts configs",
-      value: "7-double-row-2-ad",
-    },
-  ],
-  [
     "discoverystream.shortcuts.personalization.enabled",
     {
       title: "Boolean flag to enable shortcuts personalization",
-      value: true,
+      value: false,
     },
   ],
   [
@@ -1142,14 +980,6 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "newtabWallpapers.initialWallpaper",
-    {
-      title:
-        "Initial wallpaper set by a Nimbus experiment. Persists after experiment ends.",
-      value: "",
-    },
-  ],
-  [
     "sov.enabled",
     {
       title: "Enables share of voice (SOV)",
@@ -1197,7 +1027,7 @@ export const PREFS_CONFIG = new Map([
     "widgets.enabled",
     {
       title: "Allows users to toggle all widgets on and off at once",
-      value: true,
+      value: false,
     },
   ],
   [
@@ -1254,23 +1084,14 @@ export const PREFS_CONFIG = new Map([
   [
     "widgets.maximized",
     {
-      title:
-        "Toggles maximized state for all widgets in the widgets section. It defaults to true as the default widget size is large",
-      value: true,
+      title: "Toggles maximized state for all widgets in the widgets section",
+      value: false,
     },
   ],
   [
     "widgets.system.maximized",
     {
       title: "Enables the maximize widget feature experiment in Nimbus",
-      value: false,
-    },
-  ],
-  [
-    "widgets.row.expanded",
-    {
-      title:
-        "Whether the Nova widgets row is expanded beyond its first visual row. Persists the user's Show more / Show less choice across sessions.",
       value: false,
     },
   ],
@@ -1311,20 +1132,6 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "widgets.weather.enabled",
-    {
-      title: "Enables the weather widget",
-      value: true,
-    },
-  ],
-  [
-    "widgets.system.weather.enabled",
-    {
-      title: "Enables the weather widget experiment in Nimbus",
-      getValue: showWeather,
-    },
-  ],
-  [
     "widgets.system.weatherForecast.enabled",
     {
       title: "Enables the weather forecast widget experiment in Nimbus",
@@ -1337,136 +1144,6 @@ export const PREFS_CONFIG = new Map([
       title:
         "Boolean flag for determining if a user has interacted with the weather forecast widget",
       value: false,
-    },
-  ],
-  [
-    "widgets.weather.size",
-    {
-      title: "Size of the weather forecast widget (small, medium, or large)",
-      getValue: getWeatherWidgetSize,
-    },
-  ],
-  [
-    "widgets.clocks.enabled",
-    {
-      title: "Enables the clock widget",
-      value: true,
-    },
-  ],
-  [
-    "widgets.system.clocks.enabled",
-    {
-      title: "Enables the clock widget experiment in Nimbus",
-      value: false,
-    },
-  ],
-  [
-    "widgets.defaultSize",
-    {
-      title: "Default size for widgets (medium or large)",
-      value: "medium",
-    },
-  ],
-  [
-    "widgets.lists.size",
-    {
-      title: "Size of the lists widget (medium or large)",
-      value: "",
-    },
-  ],
-  [
-    "widgets.focusTimer.size",
-    {
-      title: "Size of the focus timer widget (medium or large)",
-      value: "",
-    },
-  ],
-  [
-    "widgets.sportsWidget.enabled",
-    {
-      title: "Enables the sports widget",
-      value: true,
-    },
-  ],
-  [
-    "widgets.system.sportsWidget.enabled",
-    {
-      title: "Enables the sports widget experiment in Nimbus",
-      value: false,
-    },
-  ],
-  [
-    "widgets.sportsWidget.size",
-    {
-      title: "Size of the sports widget (medium or large)",
-      value: "",
-    },
-  ],
-  [
-    "widgets.sportsWidget.live.enabled",
-    {
-      title: "Enables live scores in the sports widget",
-      value: false,
-    },
-  ],
-  [
-    "widgets.sports.forceLiveDataTrustable",
-    {
-      title:
-        "Dev/QA only: bypass the pre-kickoff guard and treat /live data as trustable",
-      value: false,
-    },
-  ],
-  [
-    "widgets.sportsWidget.interaction",
-    {
-      title:
-        "Boolean flag for determining if a user has interacted with the sports widget",
-      value: false,
-    },
-  ],
-  [
-    "widgets.clocks.size",
-    {
-      title: "Size of the clock widget (small, medium, or large)",
-      value: "",
-    },
-  ],
-  [
-    "widgets.clocks.hourFormat",
-    {
-      title:
-        "User override for clock widget hour format ('12', '24', or empty string to use locale default)",
-      value: "",
-    },
-  ],
-  [
-    "widgets.clocks.zones",
-    {
-      title: "Saved clock widget time zones",
-      value: "",
-    },
-  ],
-  [
-    "widgets.feedback.enabled",
-    {
-      title: "Enables the feedback link in the widgets container",
-      value: false,
-    },
-  ],
-  [
-    "widgets.hideAllToast.enabled",
-    {
-      title: "Shows a toast when all widgets are hidden via the X button",
-      value: false,
-    },
-  ],
-  [
-    "widgets.order",
-    {
-      title:
-        "Widget display order as a comma-separated list of widget IDs. Empty string means use the default registry order.",
-      value: "",
     },
   ],
   [
@@ -1697,14 +1374,13 @@ export const PREFS_CONFIG = new Map([
     "discoverystream.publisherFavicon.enabled",
     {
       title: "Enables publisher favicons on recommended stories",
-      value: true,
+      value: false,
     },
   ],
   [
     "discoverystream.sections.clientLayout.enabled",
     {
-      title:
-        "Enables client side and remote settings layout for recommended stories",
+      title: "Enables client side layout for recommended stories",
       value: false,
     },
   ],
@@ -1719,20 +1395,6 @@ export const PREFS_CONFIG = new Map([
           "app.support.baseURL"
         );
         return `${baseUrl}new-tab`;
-      },
-    },
-  ],
-  [
-    "privacyInfo.url",
-    {
-      title: "Link to HNT's sponsor privacy page",
-      getValue: () => {
-        // Services.urlFormatter completes the in-product SUMO page URL:
-        // https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/sponsor-privacy
-        const baseUrl = Services.urlFormatter.formatURLPref(
-          "app.support.baseURL"
-        );
-        return `${baseUrl}sponsor-privacy`;
       },
     },
   ],
@@ -1764,60 +1426,10 @@ export const PREFS_CONFIG = new Map([
       value: true,
     },
   ],
-  [
-    "activationWindow.variant",
-    {
-      title:
-        "Set to the activation window variant if in activation window mode, otherwise the empty string.",
-      value: "",
-    },
-  ],
-  [
-    "nova.enabled",
-    {
-      title: "Boolean flag to enable Nova",
-      value: false,
-    },
-  ],
-  [
-    "selfLoading.enabled",
-    {
-      title:
-        "Communicates to AboutNewTabChild whether or not it should load the classic scripts or do nothing.",
-      value: true,
-    },
-  ],
-  [
-    "remote-renderer.enabled",
-    {
-      title:
-        "Set to true to enable the RemoteSettings backed renderer for newtab. See RemoteRenderer.sys.mjs for more details.",
-      value: false,
-    },
-  ],
-  /**
-   * @backward-compat { version 153 }
-   * Remove this pref entry after Firefox 153 hits Release — it's only
-   * needed while the 2026 World Cup logo variation is live.
-   */
-  [
-    "logo.variation",
-    {
-      title:
-        "Variant ID of a logo variation to render in place of the standard newtab logo (e.g. 'spin-ball-small'). Empty string disables. Overridden by trainhopConfig.logo.variation when set.",
-      value: "",
-    },
-  ],
 ]);
 
 // Array of each feed's FEEDS_CONFIG factory and values to add to PREFS_CONFIG
 const FEEDS_DATA = [
-  {
-    name: "startupcacheinit",
-    factory: () => new lazy.StartupCacheInit(),
-    title: "Sends a copy of the state to the startup cache newtab",
-    value: true,
-  },
   {
     name: "aboutpreferences",
     factory: () => new lazy.AboutPreferences(),
@@ -1846,6 +1458,12 @@ const FEEDS_DATA = [
     name: "sections",
     factory: () => new lazy.SectionsFeed(),
     title: "Manages sections",
+    value: true,
+  },
+  {
+    name: "startupcacheinit",
+    factory: () => new lazy.StartupCacheInit(),
+    title: "Sends a copy of the state to the startup cache newtab",
     value: true,
   },
   {
@@ -1934,21 +1552,21 @@ const FEEDS_DATA = [
     value: true,
   },
   {
+    name: "recommendationprovider",
+    factory: () => new lazy.RecommendationProvider(),
+    title: "Handles setup and interaction for the personality provider",
+    value: true,
+  },
+  {
     name: "discoverystreamfeed",
     factory: () => new lazy.DiscoveryStreamFeed(),
     title: "Handles new pocket ui for the new tab page",
     value: true,
   },
   {
-    name: "sectionslayoutfeed",
-    factory: () => new lazy.SectionsLayoutFeed(),
-    title: "Fetches section layout configurations from Remote Settings",
-    value: true,
-  },
-  {
     name: "wallpaperfeed",
     factory: () => new lazy.WallpaperFeed(),
-    title: "Handles fetching and managing wallpaper data from Remote Settings",
+    title: "Handles fetching and managing wallpaper data from RemoteSettings",
     value: true,
   },
   {
@@ -1996,12 +1614,6 @@ const FEEDS_DATA = [
     value: true,
   },
   {
-    name: "sportsfeed",
-    factory: () => new lazy.SportsFeed(),
-    title: "Handles persistent state for the Sports widget",
-    value: true,
-  },
-  {
     name: "timerfeed",
     factory: () => new lazy.TimerFeed(),
     title: "Handles the data for the Timer widget",
@@ -2011,7 +1623,15 @@ const FEEDS_DATA = [
     name: "externalcomponentsfeed",
     factory: () => new lazy.ExternalComponentsFeed(),
     title: "Handles updating the registry of external components",
-    value: true,
+    getValue() {
+      // This feed should only be enabled on versions of the app that have the
+      // AboutNewTabComponents module. Those versions of the app have this
+      // preference set to true.
+      return Services.prefs.getBoolPref(
+        PREF_SHOULD_ENABLE_EXTERNAL_COMPONENTS_FEED,
+        false
+      );
+    },
   },
 ];
 
@@ -2024,36 +1644,14 @@ for (const config of FEEDS_DATA) {
 }
 
 export class ActivityStream {
-  #createdInstant = null;
-
   /**
    * constructor - Initializes an instance of ActivityStream
-   *
-   * @param {Temporal.Instant} [createdInstant=null]
-   *   The creation time of the current user profile.
    */
-  constructor(createdInstant) {
+  constructor() {
     this.initialized = false;
     this.store = new lazy.Store();
     this._defaultPrefs = new lazy.DefaultPrefs(PREFS_CONFIG);
     this._proxyRegistered = false;
-    this.#createdInstant = createdInstant ?? null;
-
-    if (
-      Services.prefs.getBoolPref(PREF_NEWTAB_REMOTE_RENDERER_ENABLED, false)
-    ) {
-      this.remoteRenderer = new lazy.RemoteRenderer();
-    }
-  }
-
-  /**
-   * Returns a Temporal.Instant for when the user profile was created, or null
-   * if that value was never passed to us in the constructor.
-   *
-   * @type {Temporal.Instant}
-   */
-  get createdInstant() {
-    return this.#createdInstant;
   }
 
   get feeds() {
@@ -2256,7 +1854,6 @@ export class ActivityStream {
 
     this.store.uninit();
     this.unregisterNetworkProxy();
-    lazy.NewTabActorRegistry.uninit();
     this.initialized = false;
   }
 

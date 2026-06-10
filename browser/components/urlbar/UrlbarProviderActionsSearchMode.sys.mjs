@@ -21,7 +21,7 @@ const DYNAMIC_TYPE_NAME = "actions";
 ChromeUtils.defineESModuleGetters(lazy, {
   ActionsProviderQuickActions:
     "moz-src:///browser/components/urlbar/ActionsProviderQuickActions.sys.mjs",
-  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
+  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
 });
 
 /**
@@ -59,7 +59,6 @@ export class UrlbarProviderActionsSearchMode extends UrlbarProvider {
         payload: {
           key: resultKey,
           dynamicType: DYNAMIC_TYPE_NAME,
-          inputLength: queryContext.trimmedLowerCaseSearchString.length,
         },
       });
       addCallback(this, result);
@@ -67,22 +66,16 @@ export class UrlbarProviderActionsSearchMode extends UrlbarProvider {
   }
 
   onEngagement(queryContext, controller, details) {
-    if (details.element.hasAttribute("disabled")) {
-      return;
-    }
     lazy.ActionsProviderQuickActions.pickAction(
       queryContext,
       controller,
-      details.element,
-      details.element.documentGlobal
+      details.element
     );
   }
 
   getViewTemplate(result) {
     let action = lazy.ActionsProviderQuickActions.getAction(result.payload.key);
-    let inActive =
-      ("isActive" in action && !action.isActive()) ||
-      !(action.isVisible?.() ?? true);
+    let inActive = "isActive" in action && !action.isActive();
     return {
       children: [
         {
@@ -91,7 +84,7 @@ export class UrlbarProviderActionsSearchMode extends UrlbarProvider {
           attributes: {
             "data-action": result.payload.key,
             "data-input-length": result.payload.inputLength,
-            role: "button",
+            role: inActive ? "" : "button",
             disabled: inActive,
           },
           children: [

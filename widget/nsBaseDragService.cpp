@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -41,7 +42,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DragEvent.h"
-#include "mozilla/dom/NodeList.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/gfx/2D.h"
 #include "nsFrameLoader.h"
@@ -199,6 +199,31 @@ nsBaseDragSession::GetSourceNode(nsINode** aSourceNode) {
   return NS_OK;
 }
 
+void nsBaseDragSession::UpdateSource(nsINode* aNewSourceNode,
+                                     Selection* aNewSelection) {
+  MOZ_ASSERT(mSourceNode);
+  MOZ_ASSERT(aNewSourceNode);
+  MOZ_ASSERT(mSourceNode->IsInNativeAnonymousSubtree() ||
+             aNewSourceNode->IsInNativeAnonymousSubtree());
+  MOZ_ASSERT(mSourceDocument == aNewSourceNode->OwnerDoc());
+  LOGD(
+      "[%p] %s | mSourceNode: %p | aNewSourceNode: %p | mSelection: %p | "
+      "aNewSelection: %p",
+      this, __FUNCTION__, mSourceNode.get(), aNewSourceNode, mSelection.get(),
+      aNewSelection);
+  mSourceNode = aNewSourceNode;
+  // Don't set mSelection if the session was invoked without selection or
+  // making it becomes nullptr.  The latter occurs when the old frame is
+  // being destroyed.
+  if (mSelection && aNewSelection) {
+    // XXX If the dragging image is created once (e.g., at drag start), the
+    //     image won't be updated unless we notify `DrawDrag` callers.
+    //     However, it must be okay for now to keep using older image of
+    //     Selection.
+    mSelection = aNewSelection;
+  }
+}
+
 NS_IMETHODIMP
 nsBaseDragSession::GetTriggeringPrincipal(nsIPrincipal** aPrincipal) {
   NS_IF_ADDREF(*aPrincipal = mTriggeringPrincipal);
@@ -262,6 +287,10 @@ bool nsBaseDragSession::IsSynthesizedForTests() {
   return mSessionIsSynthesizedForTests;
 }
 
+bool nsBaseDragSession::IsDraggingTextInTextControl() {
+  return mIsDraggingTextInTextControl;
+}
+
 uint32_t nsBaseDragSession::GetEffectAllowedForTests() {
   MOZ_ASSERT(mSessionIsSynthesizedForTests);
   return mEffectAllowedForTests;
@@ -313,6 +342,10 @@ nsresult nsBaseDragSession::InvokeDragSession(
   mTriggeringPrincipal = aPrincipal;
   mPolicyContainer = aPolicyContainer;
   mSourceNode = aDOMNode;
+  mIsDraggingTextInTextControl =
+      mSourceNode->IsInNativeAnonymousSubtree() &&
+      TextControlElement::FromNodeOrNull(
+          mSourceNode->GetClosestNativeAnonymousSubtreeRootParentOrHost());
   mContentPolicyType = aContentPolicyType;
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);
 
@@ -342,7 +375,7 @@ nsresult nsBaseDragSession::InvokeDragSession(
         do_GetService("@mozilla.org/widget/dragservice;1");
     MOZ_ASSERT(dragService);
     MOZ_ASSERT(
-        !xpc::IsInAutomation() || dragService->GetIsMockService(),
+        !xpc::IsInAutomation() || dragService->IsMockService(),
         "About to start drag-drop native loop on which will prevent later "
         "tests from running properly.");
   }
@@ -780,6 +813,7 @@ nsresult nsBaseDragSession::EndDragSessionImpl(bool aDoneDrag,
 
   mDoingDrag = false;
   mSessionIsSynthesizedForTests = false;
+  mIsDraggingTextInTextControl = false;
   mEffectAllowedForTests = nsIDragService::DRAGDROP_ACTION_UNINITIALIZED;
   mEndingSession = false;
   mCanDrop = false;
@@ -1035,7 +1069,7 @@ nsresult nsBaseDragSession::DrawDrag(nsINode* aDOMNode,
       if (dragNode->NodeName().LowerCaseEqualsLiteral("img")) {
         renderFlags = renderFlags | RenderImageFlags::IsImage;
       } else {
-        dom::NodeList* childList = dragNode->ChildNodes();
+        nsINodeList* childList = dragNode->ChildNodes();
         uint32_t length = childList->Length();
         // check every childnode for being an img element
         // XXXbz why don't we need to check descendants recursively?
@@ -1114,8 +1148,7 @@ nsresult nsBaseDragSession::DrawDragForImage(
     ImgDrawResult res = imgContainer->Draw(
         &ctx, destSize, ImageRegion::Create(destSize),
         imgIContainer::FRAME_CURRENT, SamplingFilter::GOOD, SVGImageContext(),
-        imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY,
-        1.0);
+        imgIContainer::FLAG_SYNC_DECODE, 1.0);
     if (res == ImgDrawResult::BAD_IMAGE || res == ImgDrawResult::BAD_ARGS ||
         res == ImgDrawResult::NOT_SUPPORTED) {
       return NS_ERROR_FAILURE;

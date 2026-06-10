@@ -9,23 +9,22 @@ use crate::values::animated::{Animate, Procedure, ToAnimatedValue};
 use crate::values::computed::length::{LengthPercentage, NonNegativeLength};
 use crate::values::computed::{Context, Integer, Number, ToComputedValue};
 use crate::values::generics::box_::{
-    GenericBaselineShift, GenericContainIntrinsicSize, GenericLineClamp, GenericOverflowClipMargin,
-    GenericPerspective,
+    GenericContainIntrinsicSize, GenericLineClamp, GenericOverflowClipMargin, GenericPerspective,
+    GenericVerticalAlign,
 };
 use crate::values::specified::box_ as specified;
 use std::fmt;
 use style_traits::{CssWriter, ToCss};
 
 pub use crate::values::specified::box_::{
-    AlignmentBaseline, Appearance, BaselineSource, BreakBetween, BreakWithin, Clear, Contain,
-    ContainerName, ContainerType, ContentVisibility, Display, DominantBaseline, Float, Overflow,
-    OverflowAnchor, OverscrollBehavior, PositionProperty, ScrollSnapAlign, ScrollSnapAxis,
-    ScrollSnapStop, ScrollSnapStrictness, ScrollSnapType, ScrollbarGutter, TouchAction, WillChange,
-    WritingModeProperty,
+    Appearance, BaselineSource, BreakBetween, BreakWithin, Clear, Contain, ContainerName,
+    ContainerType, ContentVisibility, Display, Float, Overflow, OverflowAnchor, OverscrollBehavior,
+    PositionProperty, ScrollSnapAlign, ScrollSnapAxis, ScrollSnapStop, ScrollSnapStrictness,
+    ScrollSnapType, ScrollbarGutter, TouchAction, WillChange, WritingModeProperty,
 };
 
-/// A computed value for the `baseline-shift` property.
-pub type BaselineShift = GenericBaselineShift<LengthPercentage>;
+/// A computed value for the `vertical-align` property.
+pub type VerticalAlign = GenericVerticalAlign<LengthPercentage>;
 
 /// A computed value for the `overflow-clip-margin` property.
 pub type OverflowClipMargin = GenericOverflowClipMargin<NonNegativeLength>;
@@ -144,15 +143,11 @@ impl ToComputedValue for specified::Zoom {
     type ComputedValue = Zoom;
 
     #[inline]
-    fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
-        let c = match *self {
+    fn to_computed_value(&self, _: &Context) -> Self::ComputedValue {
+        let n = match *self {
             Self::Normal => return Zoom::ONE,
             Self::Document => return Zoom::DOCUMENT,
-            Self::Value(ref n) => n.0.to_computed_value(context),
-        };
-        let n = match c {
-            super::NumberOrPercentage::Percentage(p) => p.0,
-            super::NumberOrPercentage::Number(n) => n,
+            Self::Value(ref n) => n.0.to_number().get(),
         };
         if n == 0.0 {
             // For legacy reasons, zoom: 0 (and 0%) computes to 1. ¯\_(ツ)_/¯

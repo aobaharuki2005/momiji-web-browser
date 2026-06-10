@@ -251,6 +251,17 @@ export var GeckoViewUtils = {
   },
 
   /**
+   * Return the content frame message manager (aka the frame script global
+   * object) for a given DOM window, in a child process.
+   *
+   * @param aWin a DOM window.
+   */
+  getContentFrameMessageManager(aWin) {
+    const docShell = this.getRootDocShell(aWin);
+    return docShell && docShell.getInterface(Ci.nsIBrowserChild).messageManager;
+  },
+
+  /**
    * Return the per-nsWindow EventDispatcher for a given DOM window, in either
    * the parent process or a child process.
    *
@@ -258,6 +269,10 @@ export var GeckoViewUtils = {
    */
   getDispatcherForWindow(aWin) {
     try {
+      if (!this.IS_PARENT_PROCESS) {
+        const mm = this.getContentFrameMessageManager(aWin.top || aWin);
+        return mm && lazy.EventDispatcher.forMessageManager(mm);
+      }
       const win = this.getChromeWindow(aWin.top || aWin);
       if (!win.closed) {
         return win.WindowEventDispatcher || lazy.EventDispatcher.for(win);
@@ -487,7 +502,7 @@ export var GeckoViewUtils = {
               aSubject.browser.hasAttribute("remote")
             ) {
               // We cannot start in remote mode when we have an opener.
-              aSubject.browser.removeAttribute("remote");
+              aSubject.browser.setAttribute("remote", "false");
               aSubject.browser.removeAttribute("remoteType");
             }
             Services.obs.removeObserver(handler, "geckoview-window-created");

@@ -1,10 +1,11 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WebBrowserPersistLocalDocument_h_
-#define WebBrowserPersistLocalDocument_h_
+#ifndef WebBrowserPersistLocalDocument_h__
+#define WebBrowserPersistLocalDocument_h__
 
 #include "mozilla/NotNull.h"
 #include "nsCOMPtr.h"
@@ -48,4 +49,4 @@ class WebBrowserPersistLocalDocument final
 
 }  // namespace mozilla
 
-#endif  // WebBrowserPersistLocalDocument_h_
+#endif  // WebBrowserPersistLocalDocument_h__

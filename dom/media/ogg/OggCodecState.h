@@ -1,11 +1,13 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "Intervals.h"
 #if !defined(OggCodecState_h_)
 #  define OggCodecState_h_
-#  include <ogg/ogg.h>
 
-#  include "Intervals.h"
+#  include <ogg/ogg.h>
 // For MOZ_SAMPLE_TYPE_*
 #  include <nsClassHashtable.h>
 #  include <nsDeque.h>
@@ -581,4 +583,4 @@ class FlacState : public OggCodecState {
 
 }  // namespace mozilla
 
-#endif  // OggCodecState_h_
+#endif

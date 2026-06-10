@@ -6,14 +6,13 @@ import { SearchOneOffs } from "moz-src:///browser/components/search/SearchOneOff
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = XPCOMUtils.declareLazy({
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
 });
 
 /**
  * @import {LegacySearchOneOffButton} from "moz-src:///browser/components/search/SearchOneOffs.sys.mjs"
- * @import {UrlbarView} from "chrome://browser/content/urlbar/UrlbarView.mjs"
+ * @import {UrlbarView} from "moz-src:///browser/components/urlbar/UrlbarView.sys.mjs"
  */
 
 /**
@@ -201,7 +200,7 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
 
     let userTypedSearchString =
       this.input.value && this.input.getAttribute("pageproxystate") != "valid";
-    let engine = lazy.SearchService.getEngineByName(searchMode.engineName);
+    let engine = Services.search.getEngineByName(searchMode.engineName);
 
     let { where, params } = this._whereToOpen(event);
 
@@ -245,7 +244,7 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
         }
         if (!params?.inBackground) {
           this.input.window.gBrowser.selectedTab = newTab;
-          newTab.documentGlobal.gURLBar.startQuery(startQueryParams);
+          newTab.ownerGlobal.gURLBar.startQuery(startQueryParams);
         }
         break;
       }

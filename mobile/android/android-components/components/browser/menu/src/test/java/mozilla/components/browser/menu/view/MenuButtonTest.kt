@@ -13,10 +13,6 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuHighlight
@@ -27,11 +23,15 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
@@ -40,11 +40,14 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import kotlin.test.assertNotNull
 import kotlin.time.Duration.Companion.milliseconds
 
 @RunWith(AndroidJUnit4::class)
 class MenuButtonTest {
+
+    @get:Rule
+    val coroutineTestRule = MainCoroutineRule()
+
     private lateinit var menuController: MenuController
     private lateinit var menuBuilder: BrowserMenuBuilder
     private lateinit var menu: BrowserMenu
@@ -52,10 +55,6 @@ class MenuButtonTest {
     private lateinit var menuIcon: ImageView
     private lateinit var highlightView: ImageView
     private lateinit var notificationIconView: ImageView
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val testDispatcher = UnconfinedTestDispatcher()
-    private val testScope = TestScope(testDispatcher)
 
     @Before
     fun setup() {
@@ -65,8 +64,8 @@ class MenuButtonTest {
         doReturn(menu).`when`(menuBuilder).build(testContext)
 
         menuButton = MenuButton(testContext).apply {
-            backgroundTaskDispatcher = testDispatcher
-            coroutineScope = testScope
+            backgroundTaskDispatcher = coroutineTestRule.testDispatcher
+            coroutineScope = coroutineTestRule.scope
         }
 
         val images = menuButton.children.mapNotNull { it as? AppCompatImageView }.toList()
@@ -194,7 +193,7 @@ class MenuButtonTest {
 
     @Test
     fun `successive calls to setHighlightStatus within the debounce duration are debounced`() =
-        runTest(testDispatcher) {
+        runTestOnMain {
             val highlight = BrowserMenuHighlight.LowPriority(Color.YELLOW)
             val highlightMenuBuilder = spy(
                 BrowserMenuBuilder(
@@ -211,15 +210,15 @@ class MenuButtonTest {
             menuButton.menuBuilder = highlightMenuBuilder
 
             // set highlight status and move the clock forward a bit
-            menuButton.setHighlightStatus(testDispatcher)
+            menuButton.setHighlightStatus()
             testScheduler.advanceTimeBy((HIGHLIGHT_STATUS_DEBOUNCE_MS * 0.2).milliseconds)
 
             // set highlight status again before the debounce delay
-            menuButton.setHighlightStatus(testDispatcher)
+            menuButton.setHighlightStatus()
             testScheduler.advanceTimeBy((HIGHLIGHT_STATUS_DEBOUNCE_MS * 0.5).milliseconds)
 
             // set highlight status again
-            menuButton.setHighlightStatus(testDispatcher)
+            menuButton.setHighlightStatus()
             testScheduler.advanceUntilIdle()
 
             verify(menuButton.menuBuilder, times(1))!!.items
@@ -227,7 +226,7 @@ class MenuButtonTest {
 
     @Test
     fun `successive calls to setHighlightStatus within durations greater than the debounce duration are not debounced`() =
-        runTest(testDispatcher) {
+        runTestOnMain {
             val highlight = BrowserMenuHighlight.LowPriority(Color.YELLOW)
             val highlightMenuBuilder = spy(
                 BrowserMenuBuilder(
@@ -244,12 +243,11 @@ class MenuButtonTest {
             menuButton.menuBuilder = highlightMenuBuilder
 
             // set highlight status and move the clock forward to after the debounce duration
-            menuButton.setHighlightStatus(testDispatcher)
+            menuButton.setHighlightStatus()
             testScheduler.advanceTimeBy((HIGHLIGHT_STATUS_DEBOUNCE_MS * 1.2).milliseconds)
-            testScheduler.advanceUntilIdle()
 
             // set highlight status again before the debounce delay
-            menuButton.setHighlightStatus(testDispatcher)
+            menuButton.setHighlightStatus()
             testScheduler.advanceUntilIdle()
 
             // verify that there are two calls to menu builder
@@ -258,7 +256,7 @@ class MenuButtonTest {
 
     @Test
     fun `given the menu builder has no highlighted item, then no highlight is set`() =
-        runTest(testDispatcher) {
+        runTestOnMain {
             menuButton.menuBuilder = BrowserMenuBuilder(
                 listOf(
                     BrowserMenuHighlightableItem(
@@ -271,7 +269,7 @@ class MenuButtonTest {
             )
 
             // when set highlight status is called
-            menuButton.setHighlightStatus(testDispatcher)
+            menuButton.setHighlightStatus()
             testScheduler.advanceUntilIdle()
 
             assertFalse(menuButton.hasHighlight())
@@ -279,7 +277,7 @@ class MenuButtonTest {
 
     @Test
     fun `given the menu builder has an highlighted item, then a highlight is set in the view`() =
-        runTest(testDispatcher) {
+        runTestOnMain {
             menuButton.menuBuilder = BrowserMenuBuilder(
                 listOf(
                     BrowserMenuHighlightableItem(
@@ -292,7 +290,7 @@ class MenuButtonTest {
             )
 
             // when set highlight status is called
-            menuButton.setHighlightStatus(testDispatcher)
+            menuButton.setHighlightStatus()
             testScheduler.advanceUntilIdle()
 
             assertTrue(menuButton.hasHighlight())

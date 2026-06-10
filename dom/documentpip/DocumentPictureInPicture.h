@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,12 +9,15 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/DocumentPictureInPictureBinding.h"
+#include "nsIDOMEventListener.h"
 
 namespace mozilla::dom {
 
 class DocumentPictureInPicture final : public DOMEventTargetHelper,
-                                       public nsIObserver {
+                                       public nsIObserver,
+                                       public nsIDOMEventListener {
  public:
+  NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIOBSERVER
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -28,17 +33,17 @@ class DocumentPictureInPicture final : public DOMEventTargetHelper,
       const DocumentPictureInPictureOptions& aOptions, ErrorResult& aRv);
 
   // Get the current PiP window, exposed as webidl property
-  nsGlobalWindowInner* GetWindow() const;
+  nsGlobalWindowInner* GetWindow();
 
   IMPL_EVENT_HANDLER(enter);
 
   static Maybe<CSSIntRect> GetScreenRect(nsPIDOMWindowOuter* aWindow);
 
-  static CSSIntSize CalcMaxDimensions(const CSSIntRect& aScreen);
+  static CSSIntSize CalcMaxDimensions(const CSSIntRect& screen);
 
   CSSIntRect DetermineExtent(bool aPreferInitialWindowPlacement,
-                             const CSSIntSize& aRequestedSize,
-                             const CSSIntRect& aScreen);
+                             int aRequestedWidth, int aRequestedHeight,
+                             const CSSIntRect& screen);
 
  private:
   ~DocumentPictureInPicture();

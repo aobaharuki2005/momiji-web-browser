@@ -115,7 +115,7 @@ add_task(async function test_warnOnOpenLinks() {
   );
 
   // Open up the context menu and select "Open All In Tabs" (the first item in the list)
-  await synthesizeClickOnSelectedTreeCell(gLibrary.ContentTree.view, {
+  synthesizeClickOnSelectedTreeCell(gLibrary.ContentTree.view, {
     button: 2,
     type: "contextmenu",
   });

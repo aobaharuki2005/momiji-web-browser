@@ -1,9 +1,10 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsExternalHelperAppService_h_
-#define nsExternalHelperAppService_h_
+#ifndef nsExternalHelperAppService_h__
+#define nsExternalHelperAppService_h__
 
 #include "mozilla/Logging.h"
 #include "prtime.h"
@@ -313,8 +314,7 @@ class nsExternalAppHandler final : public nsIStreamListener,
                        mozilla::dom::BrowsingContext* aBrowsingContext,
                        nsIInterfaceRequestor* aWindowContext,
                        nsExternalHelperAppService* aExtProtSvc,
-                       const nsAString& aSuggestedFileName,
-                       nsIHelperAppLauncherDialog::reason aReason,
+                       const nsAString& aSuggestedFileName, uint32_t aReason,
                        bool aForceSave);
 
   /**
@@ -408,7 +408,7 @@ class nsExternalAppHandler final : public nsIStreamListener,
    * reason the dialog was shown (unknown content type, server requested it,
    * etc).
    */
-  nsIHelperAppLauncherDialog::reason mReason;
+  uint32_t mReason;
 
   /**
    * Indicates if the nsContentSecurityUtils rate this download as
@@ -572,4 +572,4 @@ class nsExternalAppHandler final : public nsIStreamListener,
   RefPtr<nsExternalHelperAppService> mExtProtSvc;
 };
 
-#endif  // nsExternalHelperAppService_h_
+#endif  // nsExternalHelperAppService_h__

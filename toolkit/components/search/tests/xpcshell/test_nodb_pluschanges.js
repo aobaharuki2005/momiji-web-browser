@@ -29,7 +29,7 @@ add_task(async function test_nodb_pluschanges() {
   });
   await promiseAfterSettings();
 
-  let search = SearchService;
+  let search = Services.search;
 
   await search.moveEngine(engine1, 0);
   await search.moveEngine(engine2, 1);

@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set et cin ts=4 sw=2 sts=2: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NetworkMarker_h_
-#define NetworkMarker_h_
+#ifndef NetworkMarker_h__
+#define NetworkMarker_h__
 
 #include "mozilla/ProfilerMarkers.h"
 #include "nsHttp.h"
@@ -41,4 +43,4 @@ void profiler_add_network_marker(
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // NetworkMarker_h_
+#endif  // NetworkMarker_h__

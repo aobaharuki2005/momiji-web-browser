@@ -2,10 +2,7 @@
 skip-if = [
   "tsan", # Bug 1804081
 ]
-support-files = [
-  "profiler_test_utils.js",
-  "file_worker.js",
-]
+support-files = ["profiler_test_utils.js"]
 
 ["test_profile_worker.html"]
 

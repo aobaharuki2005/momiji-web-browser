@@ -13,7 +13,7 @@ const TOOL_DELAY = 200;
 
 add_task(async function () {
   await addTab(TEST_URI);
-  Services.fog.testResetFOG();
+  startTelemetry();
 
   await openAndCloseToolbox(2, TOOL_DELAY, "jsdebugger");
   checkResults();
@@ -22,6 +22,18 @@ add_task(async function () {
 });
 
 function checkResults() {
-  is(2, Glean.devtools.jsdebuggerOpenedCount.testGetValue());
-  Assert.greater(Glean.devtools.jsdebuggerTimeActive.testGetValue().sum, 0);
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_JSDEBUGGER_")
+  // here.
+  checkTelemetry(
+    "DEVTOOLS_JSDEBUGGER_OPENED_COUNT",
+    "",
+    { 0: 2, 1: 0 },
+    "array"
+  );
+  checkTelemetry(
+    "DEVTOOLS_JSDEBUGGER_TIME_ACTIVE_SECONDS",
+    "",
+    null,
+    "hasentries"
+  );
 }

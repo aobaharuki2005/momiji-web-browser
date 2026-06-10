@@ -69,6 +69,7 @@ file-whitespace:
         - intl/components/gtest/TestNumberRangeFormat.cpp
         - intl/icu_segmenter_data
         - intl/lwbrk/crashtests
+        - intl/lwbrk/rulebrk.c
         - intl/uconv/crashtests
         - intl/uconv/tests
         - intl/strres/tests/unit/397093.properties
@@ -155,8 +156,6 @@ file-whitespace:
         - .kt
         - .md
         - .mn
-        - .nsh
-        - .nsi
         - .properties
         - .py
         - .rs
@@ -167,7 +166,6 @@ file-whitespace:
         - .yml
         - .xhtml
     support-files:
-        - 'tools/lint/mozcheck/**'
+        - 'tools/lint/file-whitespace/**'
     type: external
-    payload: mozcheck:lint
-    check: file-whitespace
+    payload: file-whitespace:lint

@@ -1,8 +1,8 @@
 use std::iter::FromIterator;
 
-use http::{HeaderValue, Method};
+use http::Method;
 
-use crate::util::FlatCsv;
+use util::FlatCsv;
 
 /// `Access-Control-Allow-Methods` header, part of
 /// [CORS](http://www.w3.org/TR/cors/#access-control-allow-methods-response-header)
@@ -23,6 +23,7 @@ use crate::util::FlatCsv;
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// extern crate http;
 /// use http::Method;
 /// use headers::AccessControlAllowMethods;
@@ -41,7 +42,7 @@ derive_header! {
 
 impl AccessControlAllowMethods {
     /// Returns an iterator over `Method`s contained within.
-    pub fn iter(&self) -> impl Iterator<Item = Method> + '_ {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = Method> + 'a {
         self.0.iter().filter_map(|s| s.parse().ok())
     }
 }
@@ -56,7 +57,7 @@ impl FromIterator<Method> for AccessControlAllowMethods {
             .map(|method| {
                 method
                     .as_str()
-                    .parse::<HeaderValue>()
+                    .parse::<::HeaderValue>()
                     .expect("Method is a valid HeaderValue")
             })
             .collect();

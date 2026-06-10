@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -85,7 +86,7 @@ class SVGRootRenderingObserver final : public SVGRenderingObserver {
     StopObserving();
   }
 
-  Element* GetReferencedElementWithoutObserving() const final {
+  Element* GetReferencedElementWithoutObserving() final {
     return mDocWrapper->GetSVGRootElement();
   }
 
@@ -956,7 +957,8 @@ VectorImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
   std::tie(sourceSurface, params.size) =
       LookupCachedSurface(aSize, params.svgContext, aFlags);
   if (sourceSurface) {
-    auto drawable = MakeRefPtr<gfxSurfaceDrawable>(sourceSurface, params.size);
+    RefPtr<gfxDrawable> drawable =
+        new gfxSurfaceDrawable(sourceSurface, params.size);
     Show(drawable, params);
     return ImgDrawResult::SUCCESS;
   }
@@ -979,7 +981,8 @@ VectorImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
     return ImgDrawResult::SUCCESS;
   }
 
-  auto drawable = MakeRefPtr<gfxSurfaceDrawable>(sourceSurface, params.size);
+  RefPtr<gfxDrawable> drawable =
+      new gfxSurfaceDrawable(sourceSurface, params.size);
   Show(drawable, params);
   SendFrameComplete(didCache, params.flags);
   return ImgDrawResult::SUCCESS;
@@ -1239,10 +1242,10 @@ bool VectorImage::MaybeRestrictSVGContext(SVGImageContext& aSVGContext,
 
 already_AddRefed<gfxDrawable> VectorImage::CreateSVGDrawable(
     const SVGDrawingParameters& aParams) {
-  auto cb = MakeRefPtr<SVGDrawingCallback>(
+  RefPtr<gfxDrawingCallback> cb = new SVGDrawingCallback(
       mSVGDocumentWrapper, aParams.viewportSize, aParams.size, aParams.flags);
 
-  auto svgDrawable = MakeRefPtr<gfxCallbackDrawable>(cb, aParams.size);
+  RefPtr<gfxDrawable> svgDrawable = new gfxCallbackDrawable(cb, aParams.size);
   return svgDrawable.forget();
 }
 
@@ -1453,8 +1456,7 @@ VectorImage::OnStartRequest(nsIRequest* aRequest) {
              "Repeated call to OnStartRequest -- can this happen?");
 
   mSVGDocumentWrapper = new SVGDocumentWrapper();
-  RefPtr<SVGDocumentWrapper> wrapper = mSVGDocumentWrapper;
-  nsresult rv = wrapper->OnStartRequest(aRequest);
+  nsresult rv = mSVGDocumentWrapper->OnStartRequest(aRequest);
   if (NS_FAILED(rv)) {
     mSVGDocumentWrapper = nullptr;
     mError = true;
@@ -1486,8 +1488,7 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<SVGDocumentWrapper> wrapper = mSVGDocumentWrapper;
-  return wrapper->OnStopRequest(aRequest, aStatus);
+  return mSVGDocumentWrapper->OnStopRequest(aRequest, aStatus);
 }
 
 void VectorImage::OnSVGDocumentParsed() {
@@ -1603,10 +1604,6 @@ void VectorImage::OnSVGDocumentError() {
   // invalid document.
   ReportDocumentUseCounters();
 
-  // ProgressTracker::SyncNotifyProgress may release us, so ensure we
-  // stick around long enough to complete our work.
-  RefPtr<VectorImage> kungFuDeathGrip(this);
-
   if (mProgressTracker) {
     // Notify observers about the error and unblock page load.
     Progress progress = FLAG_HAS_ERROR;
@@ -1632,8 +1629,8 @@ VectorImage::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStr,
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<SVGDocumentWrapper> wrapper = mSVGDocumentWrapper;
-  return wrapper->OnDataAvailable(aRequest, aInStr, aSourceOffset, aCount);
+  return mSVGDocumentWrapper->OnDataAvailable(aRequest, aInStr, aSourceOffset,
+                                              aCount);
 }
 
 // --------------------------

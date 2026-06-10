@@ -1,3 +1,4 @@
+/* -*- js-indent-level: 2; indent-tabs-mode: nil -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -105,7 +106,6 @@ const UI_TARGET_COMMAND_ELEMENTS = new Set([
 ]);
 const UI_TARGET_ELEMENTS = new Map([
   ["change", UI_TARGET_CHANGE_ELEMENTS],
-  ["toggle", UI_TARGET_CHANGE_ELEMENTS],
   ["click", UI_TARGET_COMMAND_ELEMENTS],
   ["command", UI_TARGET_COMMAND_ELEMENTS],
 ]);
@@ -144,24 +144,16 @@ const ENTRYPOINT_TRACKED_CONTEXT_MENU_IDS = {
 
 // A list of the expected panes in about:preferences
 const PREFERENCES_PANES = [
-  "paneAbout",
-  "paneAccessibility",
-  "paneAi",
-  "paneAppearance",
-  "paneContainers",
-  "paneDownloads",
-  "paneExperimental",
-  "paneGeneral",
   "paneHome",
-  "paneLanguages",
-  "paneMoreFromMozilla",
-  "panePasswordsAutofill",
-  "panePermissionsData",
+  "paneGeneral",
   "panePrivacy",
   "paneSearch",
   "paneSearchResults",
   "paneSync",
-  "paneTabsBrowsing",
+  "paneContainers",
+  "paneExperimental",
+  "paneMoreFromMozilla",
+  "paneAiFeatures",
 ];
 
 const IGNORABLE_EVENTS = new WeakMap();
@@ -303,7 +295,9 @@ function getPinnedTabsCount() {
   let pinnedTabs = 0;
 
   for (let win of Services.wm.getEnumerator("navigator:browser")) {
-    pinnedTabs += [...win.gBrowser.tabs].filter(t => t.pinned).length;
+    pinnedTabs += [...win.ownerGlobal.gBrowser.tabs].filter(
+      t => t.pinned
+    ).length;
   }
 
   return pinnedTabs;
@@ -367,7 +361,7 @@ export let URICountListener = {
 
     // Don't include URI and domain counts when in private mode.
     let shouldCountURI =
-      !lazy.PrivateBrowsingUtils.isWindowPrivate(browser.documentGlobal) ||
+      !lazy.PrivateBrowsingUtils.isWindowPrivate(browser.ownerGlobal) ||
       Services.prefs.getBoolPref(
         "browser.engagement.total_uri_count.pbm",
         false
@@ -388,7 +382,7 @@ export let URICountListener = {
 
     // Don't count about:blank and similar pages, as they would artificially
     // inflate the counts.
-    if (browser.documentGlobal.gInitialPages.includes(uriSpec)) {
+    if (browser.ownerGlobal.gInitialPages.includes(uriSpec)) {
       return;
     }
 
@@ -412,12 +406,16 @@ export let URICountListener = {
     }
 
     if (!(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
-      lazy.SearchSERPTelemetry.updateTrackingStatus(browser, uri, webProgress);
+      lazy.SearchSERPTelemetry.updateTrackingStatus(
+        browser,
+        uriSpec,
+        webProgress.loadType
+      );
     } else {
       lazy.SearchSERPTelemetry.updateTrackingSinglePageApp(
         browser,
         uriSpec,
-        webProgress,
+        webProgress.loadType,
         flags
       );
     }
@@ -829,27 +827,6 @@ export let BrowserUsageTelemetry = {
       return null;
     }
 
-    // Handle share menu items before checking customizable widgets,
-    // since they are children of share-tab-button.
-    if (node.classList?.contains("share-copy-link")) {
-      let shareItem = node.closest(".share-tab-url-item") ?? node;
-      return shareItem.browsersToShare !== null
-        ? "context-copy-multiple-urls"
-        : "context-copy-url";
-    }
-
-    if (node.classList?.contains("share-qrcode-item")) {
-      return "generate-qr-code";
-    }
-
-    if (node.classList?.contains("share-windows-item")) {
-      return "microsoft-system-share";
-    }
-
-    if (node.hasAttribute("data-share-name")) {
-      return "share-macos-provider";
-    }
-
     // See if this is a customizable widget.
     if (node.ownerDocument.URL == AppConstants.BROWSER_CHROME_URL) {
       // First find if it is inside one of the customizable areas.
@@ -880,23 +857,6 @@ export let BrowserUsageTelemetry = {
 
     if (node.id) {
       return node.id;
-    }
-
-    // Handle links inside shadow DOM
-    if (node.localName == "a" && node.getRootNode().host) {
-      let host = node.getRootNode().host;
-
-      // Try to find the setting-control and use its setting.id
-      let settingControl = host.closest("setting-control");
-      if (settingControl?.setting?.id) {
-        return `${settingControl.setting.id}Link`;
-      }
-
-      // Fall back to the host's widget ID
-      let hostId = this._getWidgetID(host);
-      if (hostId) {
-        return `${hostId}Link`;
-      }
     }
 
     // A couple of special cases in the tabs.
@@ -953,11 +913,6 @@ export let BrowserUsageTelemetry = {
   _getWidgetContainer(node) {
     if (node.localName == "key") {
       return "keyboard";
-    }
-
-    // If the node is a link inside shadow DOM, use the host element to find the container
-    if (node.localName == "a" && node.getRootNode().host) {
-      node = node.getRootNode().host;
     }
 
     const { URL: url } = node.ownerDocument;
@@ -1039,12 +994,7 @@ export let BrowserUsageTelemetry = {
     }
 
     // Find the actual element we're interested in.
-    // For links in shadow DOM, prefer originalTarget to get the actual link element
-    let node =
-      sourceEvent.originalTarget?.localName === "a"
-        ? sourceEvent.originalTarget
-        : sourceEvent.target;
-
+    let node = sourceEvent.target;
     const isAboutPreferences =
       node.ownerDocument.URL.startsWith("about:preferences") ||
       node.ownerDocument.URL.startsWith("about:settings");
@@ -1085,9 +1035,6 @@ export let BrowserUsageTelemetry = {
 
     if (item && source) {
       this.recordInteractionEvent(item, source);
-      if (isAboutPreferences) {
-        node.documentGlobal.recordSettingChangeTelemetry?.(item);
-      }
       let name = source
         .replace(/-/g, "_")
         .replace(/_([a-z])/g, (m, p) => p.toUpperCase());

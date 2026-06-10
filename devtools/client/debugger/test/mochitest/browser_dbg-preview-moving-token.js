@@ -86,7 +86,7 @@ add_task(async function () {
       {
         type: "mouseover",
       },
-      fooTokenEl.documentGlobal
+      fooTokenEl.ownerGlobal
     );
     await wait(1);
   }
@@ -132,7 +132,7 @@ add_task(async function () {
     EventUtils.synthesizeMouseAtCenter(
       privateStaticPopupEl.querySelector(".gap"),
       { type: "mousemove" },
-      privateStaticPopupEl.documentGlobal
+      privateStaticPopupEl.ownerGlobal
     );
     EventUtils.synthesizeMouseAtPoint(
       privateStaticTokenQuad.p2.x + 100,
@@ -140,7 +140,7 @@ add_task(async function () {
       {
         type: "mousemove",
       },
-      fooTokenEl.documentGlobal
+      fooTokenEl.ownerGlobal
     );
     info("Wait for popup to be hidden when going right");
     await waitUntil(() => findElement(dbg, "popup") == null);
@@ -152,7 +152,7 @@ add_task(async function () {
       {
         type: "mousemove",
       },
-      fooTokenEl.documentGlobal
+      fooTokenEl.ownerGlobal
     );
     info("Wait for popup to be shown on private field again");
     await waitUntil(() => !!findElement(dbg, "popup"));

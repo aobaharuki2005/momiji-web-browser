@@ -1,7 +1,5 @@
 <!DOCTYPE>
 <script>
-  var bc = SpecialPowers.wrap(BroadcastChannel).unpartitionedTestingChannel("bug674770");
-  bc.postMessage("clicked");
-  bc.close();
+  localStorage.clicked = "true";
   close();
 </script>

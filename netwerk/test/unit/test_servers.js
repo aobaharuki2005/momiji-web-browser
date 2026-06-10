@@ -60,19 +60,7 @@ function regiisterServerNamePathHandler(server, path) {
   });
 }
 
-function verifyGleanValues(aDescription, aExpected) {
-  info(aDescription);
-
-  let metric = Glean.networking.connectionAddressType;
-  Assert.equal(metric[aExpected.metricKey].testGetValue(), aExpected.value);
-}
-
-add_setup(async function setup() {
-  Services.fog.initializeFOG();
-});
-
 add_task(async function test_dual_stack() {
-  Services.fog.testResetFOG();
   let httpserv = new HttpServer();
   let content = "ok";
   httpserv.registerPathHandler("/", function handler(metadata, response) {
@@ -88,15 +76,6 @@ add_task(async function test_dual_stack() {
   chan = makeChan(`http://[::1]:${httpserv.identity.primaryPort}/`);
   [, response] = await channelOpenPromise(chan);
   Assert.equal(response, content);
-
-  verifyGleanValues("Check HTTP/1 IPv4", {
-    metricKey: "http_1_ipv4",
-    value: 1,
-  });
-  verifyGleanValues("Check HTTP/1 IPv6", {
-    metricKey: "http_1_ipv6",
-    value: 1,
-  });
   await new Promise(resolve => httpserv.stop(resolve));
 });
 
@@ -150,8 +129,6 @@ add_task(async function test_https() {
 });
 
 add_task(async function test_http2() {
-  Services.fog.testResetFOG();
-
   let server = new NodeHTTP2Server();
   await server.start();
   registerCleanupFunction(async () => {
@@ -166,43 +143,6 @@ add_task(async function test_http2() {
   await registerSimplePathHandler(server, "/test");
   chan = makeChan(`https://localhost:${server.port()}/test`);
   req = await new Promise(resolve => {
-    chan.asyncOpen(new ChannelListener(resolve, null, CL_ALLOW_UNKNOWN_CL));
-  });
-  equal(req.status, Cr.NS_OK);
-  equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
-  equal(req.QueryInterface(Ci.nsIHttpChannel).protocolVersion, "h2");
-
-  let heEnabled = Services.prefs.getBoolPref(
-    "network.http.happy_eyeballs_enabled",
-    false
-  );
-  verifyGleanValues(heEnabled ? "Check HTTP/2 IPv6" : "Check HTTP/2 IPv4", {
-    metricKey: heEnabled ? "http_2_ipv6" : "http_2_ipv4",
-    value: 1,
-  });
-
-  await server.stop();
-});
-
-add_task(async function test_http2_custom_domain() {
-  const customDomain = "custom_domain.example";
-  Services.prefs.setCharPref("network.dns.localDomains", customDomain);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("network.dns.localDomains");
-  });
-
-  let server = new NodeHTTP2Server();
-  await server.start(0, [customDomain]);
-  registerCleanupFunction(async () => {
-    await server.stop();
-  });
-
-  equal(server.domain(), customDomain);
-  equal(server.origin(), `https://${customDomain}:${server.port()}`);
-
-  await registerSimplePathHandler(server, "/test");
-  let chan = makeChan(`${server.origin()}/test`);
-  let req = await new Promise(resolve => {
     chan.asyncOpen(new ChannelListener(resolve, null, CL_ALLOW_UNKNOWN_CL));
   });
   equal(req.status, Cr.NS_OK);

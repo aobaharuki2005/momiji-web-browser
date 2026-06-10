@@ -14,9 +14,8 @@ from .. import (
     RESPONSE_STARTED_EVENT,
 )
 
-pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.asyncio
 @pytest.mark.parametrize("phase", [
     "beforeRequestSent",
     "responseStarted",
@@ -59,17 +58,15 @@ async def test_remove_intercept(
     if phase == "beforeRequestSent":
         assert len(response_started_events) == 0
         assert_before_request_sent_event(
-            before_request_sent_events[0],
-            expected_event={"isBlocked": True, "intercepts": [intercept]},
+            before_request_sent_events[0], is_blocked=True, intercepts=[intercept]
         )
     elif phase == "responseStarted":
         assert len(response_started_events) == 1
         assert_before_request_sent_event(
-            before_request_sent_events[0], expected_event={"isBlocked": False}
+            before_request_sent_events[0], is_blocked=False
         )
         assert_response_event(
-            response_started_events[0],
-            expected_event={"isBlocked": True, "intercepts": [intercept]},
+            response_started_events[0], is_blocked=True, intercepts=[intercept]
         )
 
     # Check that we did not receive response completed events.
@@ -85,27 +82,20 @@ async def test_remove_intercept(
 
     # Assert the network events have the expected interception properties
     assert len(before_request_sent_events) == 2
-    assert_before_request_sent_event(
-        before_request_sent_events[1], expected_event={"isBlocked": False}
-    )
+    assert_before_request_sent_event(before_request_sent_events[1], is_blocked=False)
 
     if phase == "beforeRequestSent":
         assert len(response_started_events) == 1
-        assert_response_event(
-            response_started_events[0], expected_event={"isBlocked": False}
-        )
+        assert_response_event(response_started_events[0], is_blocked=False)
     elif phase == "responseStarted":
         assert len(response_started_events) == 2
-        assert_response_event(
-            response_started_events[1], expected_event={"isBlocked": False}
-        )
+        assert_response_event(response_started_events[1], is_blocked=False)
 
     assert len(response_completed_events) == 1
-    assert_response_event(
-        response_completed_events[0], expected_event={"isBlocked": False}
-    )
+    assert_response_event(response_completed_events[0], is_blocked=False)
 
 
+@pytest.mark.asyncio
 async def test_return_value(bidi_session, add_intercept):
     intercept = await add_intercept(
         phases=["beforeRequestSent"],

@@ -26,9 +26,9 @@ loader.lazyRequireGetter(
  *        toolbox document
  */
 
-class SwatchBasedEditorTooltip extends EventEmitter {
+class SwatchBasedEditorTooltip {
   constructor(document) {
-    super();
+    EventEmitter.decorate(this);
 
     // This one will consume outside clicks as it makes more sense to let the user
     // close the tooltip by clicking out

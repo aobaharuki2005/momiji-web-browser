@@ -8,6 +8,8 @@ support-files = [
   "!/image/test/mochitest/animated-gif-finalframe.gif",
   "!/image/test/mochitest/animated-gif.gif"]
 
+["test_announcement.html"]
+
 ["test_aria_alert.html"]
 
 ["test_aria_menu.html"]
@@ -34,6 +36,8 @@ support-files = [
 
 ["test_dragndrop.html"]
 
+["test_flush.html"]
+
 ["test_focus_autocomplete.html"]
 
 ["test_focus_autocomplete.xhtml"]
@@ -42,9 +46,7 @@ skip-if = [
   "os == 'linux' && os_version == '22.04' && arch == 'x86_64' && display == 'wayland'",
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11'",
   "os == 'win' && os_version == '11.26100' && arch == 'x86'",
-  "os == 'win' && os_version == '11.26200' && arch == 'x86'",
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64'",
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64'",
 ]
 
 ["test_focus_canvas.html"]
@@ -97,7 +99,6 @@ skip-if = [
 ["test_selection.html"]
 skip-if = [
   "os == 'mac' && os_version == '14.70' && arch == 'x86_64'",
-  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 2023607
 ]
 
 ["test_selection.xhtml"]
@@ -120,5 +121,5 @@ skip-if = [
 
 ["test_valuechange.html"]
 skip-if = [
-  "os == 'mac'", # bug 2030038
+  "os == 'mac' && os_version == '14.70' && arch == 'x86_64'",
 ]

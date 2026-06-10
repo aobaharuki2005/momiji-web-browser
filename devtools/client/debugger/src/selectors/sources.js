@@ -45,7 +45,7 @@ export function getSourceByActorId(state, actorId) {
     return null;
   }
 
-  return getSourceActor(state, actorId).sourceObject;
+  return getSource(state, getSourceActor(state, actorId).source);
 }
 
 function getSourcesByURL(state, url) {

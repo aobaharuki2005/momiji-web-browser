@@ -2,9 +2,8 @@ import pytest
 
 from . import assert_console_entry, assert_javascript_entry
 
-pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "log_method",
     [
@@ -74,6 +73,7 @@ async def test_console_entry_sync_callstack(
     )
 
 
+@pytest.mark.asyncio
 async def test_javascript_entry_sync_callstack(
     bidi_session, subscribe_events, inline, top_context, wait_for_event, wait_for_future_safe
 ):

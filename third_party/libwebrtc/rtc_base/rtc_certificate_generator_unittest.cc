@@ -24,7 +24,6 @@
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-#include "test/run_loop.h"
 #include "test/wait_until.h"
 
 namespace webrtc {
@@ -75,7 +74,7 @@ class RTCCertificateGeneratorTest : public ::testing::Test {
  protected:
   static constexpr TimeDelta kGenerationTimeoutMs = TimeDelta::Millis(10000);
 
-  test::RunLoop main_thread_;
+  AutoThread main_thread_;
   RTCCertificateGeneratorFixture fixture_;
 };
 

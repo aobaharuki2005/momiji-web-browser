@@ -12,11 +12,10 @@
 #define PC_DTLS_SRTP_TRANSPORT_H_
 
 #include <cstdint>
-#include <memory>
+#include <functional>
 #include <optional>
 #include <vector>
 
-#include "absl/functional/any_invocable.h"
 #include "api/dtls_transport_interface.h"
 #include "api/field_trials_view.h"
 #include "p2p/base/packet_transport_internal.h"
@@ -33,14 +32,10 @@ class DtlsSrtpTransport : public SrtpTransport {
  public:
   DtlsSrtpTransport(bool rtcp_mux_enabled, const FieldTrialsView& field_trials);
 
-  DtlsSrtpTransport* AsDtlsSrtpTransport() override { return this; }
-
   // Set P2P layer RTP/RTCP DtlsTransports. When using RTCP-muxing,
   // `rtcp_dtls_transport` is null.
-  void SetDtlsTransports(DtlsTransportInternal* rtp_dtls,
-                         DtlsTransportInternal* rtcp_dtls);
-  void SetDtlsTransportsOwned(std::unique_ptr<DtlsTransportInternal> rtp_dtls,
-                              std::unique_ptr<DtlsTransportInternal> rtcp_dtls);
+  void SetDtlsTransports(DtlsTransportInternal* rtp_dtls_transport,
+                         DtlsTransportInternal* rtcp_dtls_transport);
 
   void SetRtcpMuxEnabled(bool enable) override;
 
@@ -51,14 +46,12 @@ class DtlsSrtpTransport : public SrtpTransport {
   void UpdateRecvEncryptedHeaderExtensionIds(
       const std::vector<int>& recv_extension_ids);
 
-  void SetOnDtlsStateChange(absl::AnyInvocable<void()> callback);
+  void SetOnDtlsStateChange(std::function<void(void)> callback);
 
-  DtlsTransportInternal* rtp_dtls_transport() const {
-    return static_cast<DtlsTransportInternal*>(rtp_packet_transport());
-  }
-
-  DtlsTransportInternal* rtcp_dtls_transport() const {
-    return static_cast<DtlsTransportInternal*>(rtcp_packet_transport());
+  // If `active_reset_srtp_params_` is set to be true, the SRTP parameters will
+  // be reset whenever the DtlsTransports are reset.
+  void SetActiveResetSrtpParams(bool active_reset_srtp_params) {
+    active_reset_srtp_params_ = active_reset_srtp_params;
   }
 
  private:
@@ -73,13 +66,10 @@ class DtlsSrtpTransport : public SrtpTransport {
                      int* selected_crypto_suite,
                      ZeroOnFreeBuffer<uint8_t>* send_key,
                      ZeroOnFreeBuffer<uint8_t>* recv_key);
-  // Updates the DTLS transport and manages the state subscription.
-  void SetupDtlsTransport(DtlsTransportInternal* dtls_transport, bool is_rtcp);
-
-  // Checks if the transport changed, and if so, unsubscribes from the old one.
-  // Returns true if the transport changed.
-  bool MaybeUnsubscribe(DtlsTransportInternal* old_transport,
-                        DtlsTransportInternal* new_transport);
+  void SetDtlsTransport(DtlsTransportInternal* new_dtls_transport,
+                        DtlsTransportInternal** old_dtls_transport);
+  void SetRtpDtlsTransport(DtlsTransportInternal* rtp_dtls_transport);
+  void SetRtcpDtlsTransport(DtlsTransportInternal* rtcp_dtls_transport);
 
   void OnDtlsState(DtlsTransportInternal* dtls_transport,
                    DtlsTransportState state);
@@ -87,11 +77,16 @@ class DtlsSrtpTransport : public SrtpTransport {
   // Override the SrtpTransport::OnWritableState.
   void OnWritableState(PacketTransportInternal* packet_transport) override;
 
+  // Owned by the TransportController.
+  DtlsTransportInternal* rtp_dtls_transport_ = nullptr;
+  DtlsTransportInternal* rtcp_dtls_transport_ = nullptr;
+
   // The encrypted header extension IDs.
   std::optional<std::vector<int>> send_extension_ids_;
   std::optional<std::vector<int>> recv_extension_ids_;
 
-  absl::AnyInvocable<void()> on_dtls_state_change_;
+  bool active_reset_srtp_params_ = false;
+  std::function<void(void)> on_dtls_state_change_;
 };
 
 }  // namespace webrtc

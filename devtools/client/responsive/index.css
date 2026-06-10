@@ -386,7 +386,7 @@ body,
   max-width: 750px;
   max-height: 730px;
   z-index: 1;
-  overflow: auto;
+  overflow: hidden;
 }
 
 /* Handles the opening/closing of the modal */
@@ -427,7 +427,7 @@ body,
 
   #device-form-name input,
   #device-form-user-agent input {
-    width: 29em;
+    width: 350px;
   }
 
   .device-modal-content {
@@ -519,7 +519,7 @@ body,
 .device-header {
   font-size: 17px;
   margin-bottom: 7px;
-  height: 1.2em;
+  height: 20px;
   text-transform: capitalize;
 }
 
@@ -632,7 +632,8 @@ body,
   border: 1px solid var(--theme-splitter-color);
   border-radius: 2px;
   cursor: pointer;
-  height: 2.7em;
+  width: 167px;
+  height: 32px;
 }
 
 #device-edit-button::before {
@@ -699,7 +700,7 @@ body,
 #device-form-pixel-ratio input,
 #device-form-user-agent input,
 #device-form-size input {
-  height: 2.7em;
+  height: 35px;
 }
 
 #device-form #device-form-touch {
@@ -716,6 +717,7 @@ body,
   background-color: #0060df;
   color: #fff;
   border: 1px solid #0060df;
+  width: 60px;
 
   &:focus-visible {
     /* Adjust outline so it's separated from the background color */
@@ -723,33 +725,31 @@ body,
   }
 }
 
-#device-form-save,
-#device-form-cancel {
-  margin-inline-start: 5px;
-  margin-inline-end: 3px;
-  min-width: 45%;
-  align-self: center;
-}
-
 #device-form-size {
   grid-area: size;
 }
 
-#device-form-size input {
-  width: 5em;
+#device-form-size input,
+#device-form #device-form-cancel {
+  width: 60px;
+}
+
+#device-form-save,
+#device-form-cancel {
+  align-self: center;
 }
 
 .device-form-buttons {
   display: flex;
   grid-area: buttons;
-  width: 100%;
-  flex-wrap: wrap;
+  justify-content: space-evenly;
+  width: 154px;
 }
 
 .device-form-label {
   display: inline-block;
   margin: 0 5px 5px 0;
-  min-width: 3em;
+  min-width: 35px;
   font-size: 13px;
 }
 

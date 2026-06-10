@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -96,14 +98,6 @@ MFBT_API void fprintf_stderr(FILE* aFile, const char* aFmt, ...) {
   va_end(args);
 }
 
-MFBT_API void print_stderr(const std::string& aStr) {
-  printf_stderr("%s", aStr.c_str());
-}
-
-MFBT_API void fprint_stderr(FILE* aFile, const std::string& aStr) {
-  fprintf_stderr(aFile, "%s", aStr.c_str());
-}
-
 MFBT_API void print_stderr(std::stringstream& aStr) {
 #if defined(ANDROID)
   // On Android logcat output is truncated to 1024 chars per line, and
@@ -115,7 +109,7 @@ MFBT_API void print_stderr(std::stringstream& aStr) {
     printf_stderr("%s\n", line.c_str());
   }
 #else
-  print_stderr(aStr.str());
+  printf_stderr("%s", aStr.str().c_str());
 #endif
 }
 
@@ -123,6 +117,6 @@ MFBT_API void fprint_stderr(FILE* aFile, std::stringstream& aStr) {
   if (aFile == stderr) {
     print_stderr(aStr);
   } else {
-    fprint_stderr(aFile, aStr.str());
+    fprintf_stderr(aFile, "%s", aStr.str().c_str());
   }
 }

@@ -6,9 +6,7 @@ package mozilla.components.feature.privatemode.notification
 
 import android.content.Context
 import android.content.Intent
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -28,14 +26,13 @@ class PrivateNotificationFeature<T : AbstractPrivateNotificationService>(
     context: Context,
     private val store: BrowserStore,
     private val notificationServiceClass: KClass<T>,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : LifecycleAwareFeature {
 
     private val applicationContext = context.applicationContext
     private var scope: CoroutineScope? = null
 
     override fun start() {
-        scope = store.flowScoped(dispatcher = mainDispatcher) { flow ->
+        scope = store.flowScoped { flow ->
             flow.map { state -> state.privateTabs.isNotEmpty() }
                 .distinctUntilChanged()
                 .collect { hasPrivateTabs ->

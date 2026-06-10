@@ -107,7 +107,7 @@ add_task(async function () {
   ok(rawDataToggle.checked, "Raw toggle is checked");
   wait = waitForDOM(document, "#messages-view .data-label");
   rawDataToggle.focus();
-  EventUtils.synthesizeKey("VK_SPACE", {}, rawDataToggle.documentGlobal);
+  EventUtils.synthesizeKey("VK_SPACE", {}, rawDataToggle.ownerGlobal);
   await wait;
   ok(!rawDataToggle.checked, "Raw toggle is unchecked");
 

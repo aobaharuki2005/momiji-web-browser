@@ -43,8 +43,6 @@ class BrowserToolbarToFenixSearchMapperMiddleware(
         next: (SearchFragmentAction) -> Unit,
         action: SearchFragmentAction,
     ) {
-        next(action)
-
         if (action is Init) {
             syncSearchStatus(store)
 
@@ -52,6 +50,8 @@ class BrowserToolbarToFenixSearchMapperMiddleware(
                 syncUserQuery(store)
             }
         }
+
+        next(action)
     }
 
     private fun syncSearchStatus(store: Store<SearchFragmentState, SearchFragmentAction>) {

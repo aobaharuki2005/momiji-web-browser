@@ -19,9 +19,6 @@ let profileService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
 );
 let startWithLastProfileOriginal = profileService.startWithLastProfile;
 let registry = null;
-
-const STARTUP_PANE = SRD_PREF_VALUE ? "paneHome" : "paneGeneral";
-
 add_setup(() => {
   registry = new MockRegistry();
   registry.setValue(
@@ -48,17 +45,11 @@ add_task(async function test_check_uncheck_checkbox() {
     value: { enabled: true },
   });
   await WindowsLaunchOnLogin.withLaunchOnLoginRegistryKey(async wrk => {
-    Services.fog.testResetFOG();
-
     // Open preferences to general pane
-    await openPreferencesViaOpenPreferencesAPI(STARTUP_PANE, {
+    await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
       leaveOpen: true,
     });
     let doc = gBrowser.contentDocument;
-    await TestUtils.waitForCondition(
-      () => doc.getElementById("windowsLaunchOnLogin"),
-      "windowsLaunchOnLogin checkbox rendered"
-    );
 
     let launchOnLoginCheckbox = doc.getElementById("windowsLaunchOnLogin");
     let launchOnLoginControl = launchOnLoginCheckbox.parentElement;
@@ -70,7 +61,7 @@ add_task(async function test_check_uncheck_checkbox() {
       "Autostart checkbox NOT checked by default"
     );
 
-    synthesizeClick(launchOnLoginCheckbox);
+    launchOnLoginCheckbox.click();
 
     ok(launchOnLoginCheckbox.checked, "Autostart checkbox checked after click");
 
@@ -79,24 +70,8 @@ add_task(async function test_check_uncheck_checkbox() {
       "Key exists"
     );
 
-    let toggleEvents = Glean.launchOnLogin.userToggle.testGetValue();
-    Assert.equal(toggleEvents.length, 1, "One toggle event after checking");
-    Assert.equal(
-      toggleEvents[0].extra.enabled,
-      "true",
-      "Toggle event reports enabled=true"
-    );
-
-    synthesizeClick(launchOnLoginCheckbox);
+    launchOnLoginCheckbox.click();
     ok(!launchOnLoginCheckbox.checked, "Autostart checkbox unchecked");
-
-    toggleEvents = Glean.launchOnLogin.userToggle.testGetValue();
-    Assert.equal(toggleEvents.length, 2, "Two toggle events after unchecking");
-    Assert.equal(
-      toggleEvents[1].extra.enabled,
-      "false",
-      "Toggle event reports enabled=false"
-    );
 
     await TestUtils.waitForCondition(
       () => !wrk.hasValue(WindowsLaunchOnLogin.getLaunchOnLoginRegistryName()),
@@ -137,14 +112,10 @@ add_task(async function create_external_regkey() {
     );
 
     // Open preferences to general pane
-    await openPreferencesViaOpenPreferencesAPI(STARTUP_PANE, {
+    await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
       leaveOpen: true,
     });
     let doc = gBrowser.contentDocument;
-    await TestUtils.waitForCondition(
-      () => doc.getElementById("windowsLaunchOnLogin"),
-      "windowsLaunchOnLogin checkbox rendered"
-    );
 
     let launchOnLoginCheckbox = doc.getElementById("windowsLaunchOnLogin");
     ok(
@@ -189,14 +160,10 @@ add_task(async function delete_external_regkey() {
     wrk.removeValue(WindowsLaunchOnLogin.getLaunchOnLoginRegistryName());
 
     // Open preferences to general pane
-    await openPreferencesViaOpenPreferencesAPI(STARTUP_PANE, {
+    await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
       leaveOpen: true,
     });
     let doc = gBrowser.contentDocument;
-    await TestUtils.waitForCondition(
-      () => doc.getElementById("windowsLaunchOnLogin"),
-      "windowsLaunchOnLogin checkbox rendered"
-    );
 
     let launchOnLoginCheckbox = doc.getElementById("windowsLaunchOnLogin");
     ok(
@@ -214,14 +181,10 @@ add_task(async function testDisablingLaunchOnLogin() {
     Ci.nsIToolkitProfileService
   ).startWithLastProfile = false;
 
-  await openPreferencesViaOpenPreferencesAPI(STARTUP_PANE, {
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
   let doc = gBrowser.contentDocument;
-  await TestUtils.waitForCondition(
-    () => doc.getElementById("windowsLaunchOnLogin"),
-    "windowsLaunchOnLogin checkbox rendered"
-  );
 
   let launchOnLoginCheckbox = doc.getElementById("windowsLaunchOnLogin");
   ok(launchOnLoginCheckbox.disabled, "Autostart checkbox disabled");

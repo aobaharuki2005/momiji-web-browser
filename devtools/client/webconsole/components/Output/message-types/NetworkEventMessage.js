@@ -103,7 +103,12 @@ function NetworkEventMessage({
 
   let statusCode, statusInfo;
 
-  if (httpVersion && status && statusText !== undefined) {
+  if (
+    httpVersion &&
+    status &&
+    statusText !== undefined &&
+    totalTime !== undefined
+  ) {
     const statusCodeDocURL = getHTTPStatusCodeURL(
       status.toString(),
       "webconsole"
@@ -125,10 +130,7 @@ function NetworkEventMessage({
       { className: "status-info" },
       `[${httpVersion} `,
       statusCode,
-      ` ${statusText}${
-        // We might not get a valid totalTime, in such case, don't display anything
-        typeof totalTime === "number" ? ` ${totalTime}ms` : ""
-      }]`
+      ` ${statusText} ${totalTime}ms]`
     );
   }
 
@@ -167,17 +169,10 @@ function NetworkEventMessage({
     unicodeURL
   );
   const statusBody = statusInfo
-    ? dom.span({ className: "status" }, statusInfo)
+    ? dom.a({ className: "status" }, statusInfo)
     : null;
 
-  const messageBody = [
-    xhr,
-    // Add whitespace between "XHR" and method for formatting when copying to the clipboard.
-    xhr ? " " : null,
-    requestMethod,
-    requestUrl,
-    statusBody,
-  ];
+  const messageBody = [xhr, requestMethod, requestUrl, statusBody];
 
   // API consumed by Net monitor UI components. Most of the method
   // are not needed in context of the Console panel (atm) and thus

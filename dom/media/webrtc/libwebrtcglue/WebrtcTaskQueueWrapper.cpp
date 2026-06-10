@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-*/
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,6 +9,10 @@
 #include "api/task_queue/task_queue_factory.h"
 #include "mozilla/TaskQueue.h"
 #include "nsThreadUtils.h"
+
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#  include "fmt/format.h"
+#endif
 
 namespace mozilla {
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
@@ -63,13 +68,13 @@ class InvocableRunnable final : public nsIRunnable, public nsINamed {
 
     mName.emplace();
     if (mLocation.mFunction && fileName && mLocation.mLine) {
-      mName->AppendFmt("{} - {} ({}:{})", mTaskQueueName, mLocation.mFunction,
-                       *fileName, mLocation.mLine);
+      mName->AppendFmt(FMT_STRING("{} - {} ({}:{})"), mTaskQueueName,
+                       mLocation.mFunction, *fileName, mLocation.mLine);
     } else if (fileName && mLocation.mLine) {
-      mName->AppendFmt("{} - InvocableRunnable ({}:{})", mTaskQueueName,
-                       *fileName, mLocation.mLine);
+      mName->AppendFmt(FMT_STRING("{} - InvocableRunnable ({}:{})"),
+                       mTaskQueueName, *fileName, mLocation.mLine);
     } else {
-      mName->AppendFmt("{} - InvocableRunnable", mTaskQueueName);
+      mName->AppendFmt(FMT_STRING("{} - InvocableRunnable"), mTaskQueueName);
     }
     aName = *mName;
 
@@ -171,11 +176,12 @@ class WebrtcTaskQueueWrapper : public webrtc::TaskQueueBase {
                with NS_DISPATCH_NORMAL, which is what
                DelayedDispatch below results in. */
             NS_DISPATCH_FALLIBLE))) {
-      NS_WARNING(nsFmtCString(
-                     "TaskQueue '{}' failed to dispatch a task from {} ({}:{})",
-                     mName, aLocation.mFunction, aLocation.mFile,
-                     aLocation.mLine)
-                     .get());
+      NS_WARNING(
+          nsFmtCString(
+              FMT_STRING(
+                  "TaskQueue '{}' failed to dispatch a task from {} ({}:{})"),
+              mName, aLocation.mFunction, aLocation.mFile, aLocation.mLine)
+              .get());
     };
   }
 
@@ -190,8 +196,8 @@ class WebrtcTaskQueueWrapper : public webrtc::TaskQueueBase {
     }
     if (NS_FAILED(mTaskQueue->DelayedDispatch(
             WrapInvocable(std::move(aTask), aLocation), aDelay.ms()))) {
-      NS_WARNING(nsFmtCString("TaskQueue '{}' failed to dispatch a "
-                              "delayed task from {} ({}:{})",
+      NS_WARNING(nsFmtCString(FMT_STRING("TaskQueue '{}' failed to dispatch a "
+                                         "delayed task from {} ({}:{})"),
                               mName, aLocation.mFunction, aLocation.mFile,
                               aLocation.mLine)
                      .get());
@@ -228,8 +234,8 @@ CreateWebrtcTaskQueue(already_AddRefed<nsIEventTarget> aTarget,
                       const nsACString& aName, bool aSupportsTailDispatch) {
   using Wrapper = WebrtcTaskQueueWrapper<DeletionPolicy::Blocking>;
   const auto& flat = PromiseFlatCString(aName);
-  auto tq = TaskQueue::Create(std::move(aTarget), "WebrtcTaskQueue",
-                              aSupportsTailDispatch);
+  auto tq =
+      TaskQueue::Create(std::move(aTarget), flat.get(), aSupportsTailDispatch);
   auto wrapper = MakeUnique<Wrapper>(std::move(tq), flat);
   auto observer = MakeRefPtr<Wrapper::TaskQueueObserver>(wrapper.get());
   wrapper->mTaskQueue->SetObserver(observer);
@@ -238,12 +244,13 @@ CreateWebrtcTaskQueue(already_AddRefed<nsIEventTarget> aTarget,
 }
 
 RefPtr<TaskQueue> CreateWebrtcTaskQueueWrapper(
-    already_AddRefed<nsIEventTarget> aTarget, const nsLiteralCString& aName,
+    already_AddRefed<nsIEventTarget> aTarget, const nsACString& aName,
     bool aSupportsTailDispatch) {
   using Wrapper = WebrtcTaskQueueWrapper<DeletionPolicy::NonBlocking>;
-  auto tq = TaskQueue::Create(std::move(aTarget), StaticString(aName),
-                              aSupportsTailDispatch);
-  auto wrapper = MakeUnique<Wrapper>(tq.get(), aName);
+  const auto& flat = PromiseFlatCString(aName);
+  auto tq =
+      TaskQueue::Create(std::move(aTarget), flat.get(), aSupportsTailDispatch);
+  auto wrapper = MakeUnique<Wrapper>(tq.get(), flat);
   auto observer = MakeRefPtr<Wrapper::TaskQueueObserver>(std::move(wrapper));
   tq->SetObserver(observer);
   return tq;

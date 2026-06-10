@@ -9,8 +9,26 @@ prefs = [
   "browser.ipProtection.cacheDisabled=true",
 ]
 
+["test_GuardianClient.js"]
+
+["test_IPPChannelFilter.js"]
+
+["test_IPPExceptionsManager.js"]
+
 ["test_IPPOnboardingMessageHelper.js"]
+
+["test_IPPStartupCache.js"]
+
+["test_IPProtection.js"]
 
 ["test_IPProtectionPanel.js"]
 
-["test_IPProtectionToolbarButton.js"]
+["test_IPProtectionServerlist.js"]
+
+["test_IPProtectionService.js"]
+
+["test_IPProtectionStates.js"]
+
+["test_IPProtectionUsage.js"]
+
+["test_IPProxyManager.js"]

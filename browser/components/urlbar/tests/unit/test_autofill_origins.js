@@ -29,7 +29,6 @@ add_task(async function trailingSlash() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://example.com/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
 
@@ -55,7 +54,6 @@ add_task(async function trailingSlashWWW() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://www.example.com/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(`${origin}/`, { isPrivate: false });
@@ -79,7 +77,6 @@ add_task(async function port() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://example.com:8888/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("ex", { isPrivate: false });
@@ -104,7 +101,6 @@ add_task(async function portPartial() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://example.com:8888/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(`${origin}:8`, { isPrivate: false });
@@ -129,7 +125,6 @@ add_task(async function preserveCase() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://example.com/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("EXaM", { isPrivate: false });
@@ -155,7 +150,6 @@ add_task(async function preserveCasePort() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://example.com:8888/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("EXaM", { isPrivate: false });
@@ -179,7 +173,6 @@ add_task(async function portNoMatch1() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://example.com:8888/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(`${origin}:89`, { isPrivate: false });
@@ -204,7 +197,6 @@ add_task(async function portNoMatch2() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://example.com:8888/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(`${origin}:9`, { isPrivate: false });
@@ -229,7 +221,6 @@ add_task(async function trailingSlash_2() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://example.com/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("example/", { isPrivate: false });
@@ -254,7 +245,6 @@ add_task(async function multidotted() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://www.example.co.jp:8888/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("www.example.co.", { isPrivate: false });
@@ -286,10 +276,7 @@ add_task(async function test_ip() {
     "[::1]/",
   ]) {
     info("testing " + str);
-    await PlacesTestUtils.addVisits({
-      url: "http://" + str,
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    });
+    await PlacesTestUtils.addVisits("http://" + str);
     for (let i = 1; i < str.length; ++i) {
       let context = createContext(str.substring(0, i), { isPrivate: false });
       await check_results({
@@ -315,7 +302,6 @@ add_task(async function large_number_host() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://12345example.it:8888/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("1234", { isPrivate: false });
@@ -345,19 +331,11 @@ add_task(async function groupByHost() {
   // both so that alone, neither http nor https would be autofilled, but added
   // together they should be.
   await PlacesTestUtils.addVisits([
-    {
-      uri: "http://example.com/",
-      visitDate: daysAgo(30),
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
+    { uri: "http://example.com/", visitDate: daysAgo(30) },
 
     // Have a higher frecency by being more recent. But not so recent that it
     // has a higher frecency than other visits that bump the origins threshold.
-    {
-      uri: "https://example.com/",
-      visitDate: daysAgo(7),
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
+    { uri: "https://example.com/", visitDate: daysAgo(7) },
 
     {
       uri: "https://mozilla.org/",
@@ -370,14 +348,8 @@ add_task(async function groupByHost() {
     },
 
     // Add more origins to make the threshold higher
-    {
-      uri: "https://mozilla.com/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
-    {
-      uri: "https://mozilla.ca/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
+    { uri: "https://mozilla.com/" },
+    { uri: "https://mozilla.ca/" },
   ]);
 
   let httpFrec = await getOriginFrecency("http://", "example.com");
@@ -430,6 +402,73 @@ add_task(async function groupByHost() {
   await cleanup();
 });
 
+// This is the same as the previous (groupByHost), but it changes the standard
+// deviation multiplier by setting the corresponding pref.  This makes sure that
+// the pref is respected.
+add_task(async function groupByHostNonDefaultStddevMultiplier() {
+  let stddevMultiplier = 1.5;
+  Services.prefs.setCharPref(
+    "browser.urlbar.autoFill.stddevMultiplier",
+    Number(stddevMultiplier).toFixed(1)
+  );
+
+  await PlacesTestUtils.addVisits([
+    { uri: "http://example.com/", visitDate: daysAgo(30) },
+
+    { uri: "https://example.com/", visitDate: daysAgo(7) },
+
+    { uri: "https://mozilla.org/" },
+    { uri: "https://mozilla.org/1", visitDate: daysAgo(1) },
+    { uri: "https://mozilla.org/2", visitDate: daysAgo(2) },
+
+    // Add more origins to make the threshold higher
+    { uri: "https://mozilla.com/" },
+    { uri: "https://mozilla.ca/" },
+  ]);
+
+  let httpFrec = await getOriginFrecency("http://", "example.com");
+  let httpsFrec = await getOriginFrecency("https://", "example.com");
+  let otherFrec = await getOriginFrecency("https://", "mozilla.org");
+  Assert.less(httpFrec, httpsFrec, "Sanity check");
+  Assert.less(httpsFrec, otherFrec, "Sanity check");
+
+  // Make sure the frecencies of the three origins are as expected in relation
+  // to the threshold.
+  let threshold = await getOriginAutofillThreshold();
+  Assert.less(httpFrec, threshold, "http origin should be < threshold");
+  Assert.less(httpsFrec, threshold, "https origin should be < threshold");
+  Assert.lessOrEqual(
+    threshold,
+    otherFrec,
+    "Other origin should cross threshold"
+  );
+
+  Assert.lessOrEqual(
+    threshold,
+    httpFrec + httpsFrec,
+    "http and https origin added together should cross threshold"
+  );
+
+  // The https origin should be autofilled.
+  let context = createContext("ex", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "example.com/",
+    completed: "https://example.com/",
+    matches: [
+      makeVisitResult(context, {
+        uri: "https://example.com/",
+        title: "test visit for https://example.com/",
+        heuristic: true,
+      }),
+    ],
+  });
+
+  Services.prefs.clearUserPref("browser.urlbar.autoFill.stddevMultiplier");
+
+  await cleanup();
+});
+
 // This is similar to suggestHistoryFalse_bookmark_0 in test_autofill_tasks.js,
 // but it adds unbookmarked visits for multiple URLs with the same origin.
 add_task(async function suggestHistoryFalse_bookmark_multiple() {
@@ -450,7 +489,6 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
   await PlacesTestUtils.addVisits([
     {
       uri: baseURL + "other1",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(search, { isPrivate: false });
@@ -468,7 +506,6 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
   await PlacesTestUtils.addVisits([
     {
       uri: bookmarkedURL,
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   context = createContext(search, { isPrivate: false });
@@ -486,7 +523,6 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
   await PlacesTestUtils.addVisits([
     {
       uri: baseURL + "other2",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   context = createContext(search, { isPrivate: false });
@@ -547,7 +583,6 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
   await PlacesTestUtils.addVisits([
     {
       uri: baseURL + "other1",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(search, { isPrivate: false });
@@ -568,7 +603,6 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
   await PlacesTestUtils.addVisits([
     {
       uri: bookmarkedURL,
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   context = createContext(search, { isPrivate: false });
@@ -589,7 +623,6 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
   await PlacesTestUtils.addVisits([
     {
       uri: baseURL + "other2",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   context = createContext(search, { isPrivate: false });
@@ -636,18 +669,9 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
 // not be included in the results since it dupes the autofill result.
 add_task(async function searchParams() {
   await PlacesTestUtils.addVisits([
-    {
-      url: "http://example.com/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
-    {
-      url: "http://example.com/?",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
-    {
-      url: "http://example.com/?foo",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
+    "http://example.com/",
+    "http://example.com/?",
+    "http://example.com/?foo",
   ]);
 
   // First, do a search with autofill disabled to make sure the visits were
@@ -706,18 +730,9 @@ add_task(async function searchParams() {
 // substantive difference.)
 add_task(async function searchParams_https() {
   await PlacesTestUtils.addVisits([
-    {
-      url: "https://example.com/",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
-    {
-      url: "https://example.com/?",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
-    {
-      url: "https://example.com/?foo",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
+    "https://example.com/",
+    "https://example.com/?",
+    "https://example.com/?foo",
   ]);
 
   // First, do a search with autofill disabled to make sure the visits were
@@ -774,9 +789,7 @@ add_task(async function searchParams_https() {
 add_task(async function originLooksLikePrefix() {
   let hostAndPort = "localhost:8888";
   let address = `http://${hostAndPort}/`;
-  await PlacesTestUtils.addVisits([
-    { uri: address, transition: PlacesUtils.history.TRANSITION_TYPED },
-  ]);
+  await PlacesTestUtils.addVisits([{ uri: address }]);
 
   // addTestSuggestionsEngine adds a search engine
   // with localhost as a server, so we have to disable the
@@ -954,7 +967,7 @@ add_task(async function domainTitle() {
         }),
         makeVisitResult(context, {
           uri: "https://www.example.com/",
-          title: "",
+          title: "www.example.com",
         }),
       ],
     },
@@ -1060,12 +1073,6 @@ async function doTitleTest({ visits, input, expected }) {
   permanent private browsing mode), then the only information we have is the
   number of bookmarks per origin, and we're going to use that. */
 add_task(async function just_multiple_unvisited_bookmarks() {
-  // Bookmark-driven autofill is disabled when adaptive autofill is on.
-  Services.prefs.setBoolPref(
-    "browser.urlbar.autoFill.adaptiveHistory.enabled",
-    false
-  );
-
   // These are sorted to avoid confusion with natural sorting, so the one with
   // the highest score is added in the middle.
   let filledUrl = "https://www.tld2.com/";
@@ -1124,8 +1131,5 @@ add_task(async function just_multiple_unvisited_bookmarks() {
     ],
   });
 
-  Services.prefs.clearUserPref(
-    "browser.urlbar.autoFill.adaptiveHistory.enabled"
-  );
   await cleanup();
 });

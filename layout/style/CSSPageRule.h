@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,7 +16,10 @@
 // TODO alaskanemily: Ideally it would only be included from there.
 #include "nsCSSProps.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+class DeclarationBlock;
+
+namespace dom {
 class DocGroup;
 class CSSPageRule;
 
@@ -29,9 +34,9 @@ class CSSPageRuleDeclaration final : public nsDOMCSSDeclaration {
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
  protected:
-  Block* GetOrCreateCSSDeclaration(Operation aOperation,
-                                   Block** aCreated) final;
-  nsresult SetCSSDeclaration(Block* aDecl,
+  DeclarationBlock* GetOrCreateCSSDeclaration(
+      Operation aOperation, DeclarationBlock** aCreated) final;
+  nsresult SetCSSDeclaration(DeclarationBlock* aDecl,
                              MutationClosureData* aClosureData) final;
   nsDOMCSSDeclaration::ParsingEnvironment GetParsingEnvironment(
       nsIPrincipal* aSubjectPrincipal) const final;
@@ -40,15 +45,16 @@ class CSSPageRuleDeclaration final : public nsDOMCSSDeclaration {
   // For accessing the constructor.
   friend class CSSPageRule;
 
-  explicit CSSPageRuleDeclaration(already_AddRefed<Block> aDecls);
-  void SetRawAfterClone(RefPtr<Block>);
+  explicit CSSPageRuleDeclaration(
+      already_AddRefed<StyleLockedDeclarationBlock> aDecls);
+  void SetRawAfterClone(RefPtr<StyleLockedDeclarationBlock>);
 
   ~CSSPageRuleDeclaration();
 
   inline CSSPageRule* Rule();
   inline const CSSPageRule* Rule() const;
 
-  RefPtr<Block> mDecls;
+  RefPtr<DeclarationBlock> mDecls;
 };
 
 class CSSPageRule final : public css::GroupRule {
@@ -103,6 +109,7 @@ const CSSPageRule* CSSPageRuleDeclaration::Rule() const {
       reinterpret_cast<const uint8_t*>(this) - offsetof(CSSPageRule, mDecls));
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // mozilla_dom_CSSPageRule_h

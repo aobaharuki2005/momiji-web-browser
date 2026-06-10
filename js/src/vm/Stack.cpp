@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -372,19 +374,20 @@ void InterpreterFrame::traceValues(JSTracer* trc, unsigned start,
   }
 }
 
-void InterpreterActivation::trace(JSTracer* trc) {
-  traceCommon(trc);
-
-  for (InterpreterFrameIterator frames(this); !frames.done(); ++frames) {
+static void TraceInterpreterActivation(JSTracer* trc,
+                                       InterpreterActivation* act) {
+  for (InterpreterFrameIterator frames(act); !frames.done(); ++frames) {
     InterpreterFrame* fp = frames.frame();
     fp->trace(trc, frames.sp(), frames.pc());
   }
 }
 
-void js::TraceActivations(JSContext* cx, JSTracer* trc) {
+void js::TraceInterpreterActivations(JSContext* cx, JSTracer* trc) {
   for (ActivationIterator iter(cx); !iter.done(); ++iter) {
     Activation* act = iter.activation();
-    act->trace(trc);
+    if (act->isInterpreter()) {
+      TraceInterpreterActivation(trc, act->asInterpreter());
+    }
   }
 }
 
@@ -636,7 +639,7 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
   MOZ_DIAGNOSTIC_ASSERT(endStackAddress_);
 #ifndef ENABLE_WASM_JSPI
   // The stack addresses are monotonically increasing, except when
-  // cont stacks are present (e.g. when JS PI is enabled).
+  // suspendable stacks are present (e.g. when JS PI is enabled).
   MOZ_DIAGNOSTIC_ASSERT(stackAddr >= endStackAddress_);
 #endif
 
@@ -665,8 +668,6 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
     // TODO: get the realm ID of wasm frames. Bug 1596235.
     frame.realmID = 0;
     frame.sourceId = 0;
-    frame.line = 0;
-    frame.column = 0;
     return mozilla::Some(frame);
   }
 
@@ -690,8 +691,8 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
   // fallible ones.  The proper solution to this problem is to fix all
   // the jitcode to use frame-pointers and reliably walk the stack with those.
   if (samplePositionInProfilerBuffer_) {
-    *entry =
-        table->lookupForSampler(returnAddr, *samplePositionInProfilerBuffer_);
+    *entry = table->lookupForSampler(returnAddr, cx_->runtime(),
+                                     *samplePositionInProfilerBuffer_);
   } else {
     *entry = table->lookup(returnAddr);
   }
@@ -732,10 +733,6 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
   }
   frame.activation = activation_;
   frame.endStackAddress = endStackAddress_;
-  // Initialize line and column info (will be populated later during
-  // extractStack)
-  frame.line = 0;
-  frame.column = 0;
   return mozilla::Some(frame);
 }
 
@@ -778,8 +775,6 @@ uint32_t JS::ProfilingFrameIterator::extractStack(Frame* frames,
     frames[offset + i] = physicalFrame.value();
     frames[offset + i].label = frameInfos[i].label;
     frames[offset + i].sourceId = frameInfos[i].sourceId;
-    frames[offset + i].line = frameInfos[i].line;
-    frames[offset + i].column = frameInfos[i].column;
   }
 
   return depth;

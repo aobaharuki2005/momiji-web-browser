@@ -306,11 +306,13 @@ impl<T, S: Semaphore> Rx<T, S> {
                             return Ready(Some(value));
                         }
                         Some(Read::Closed) => {
-                            // A channel is closed when all tx handles are
+                            // TODO: This check may not be required as it most
+                            // likely can only return `true` at this point. A
+                            // channel is closed when all tx handles are
                             // dropped. Dropping a tx handle releases memory,
                             // which ensures that if dropping the tx handle is
                             // visible, then all messages sent are also visible.
-                            debug_assert!(self.inner.semaphore.is_idle());
+                            assert!(self.inner.semaphore.is_idle());
                             coop.made_progress();
                             return Ready(None);
                         }
@@ -378,11 +380,13 @@ impl<T, S: Semaphore> Rx<T, S> {
                                 if number_added > 0 {
                                     self.inner.semaphore.add_permits(number_added);
                                 }
-                                // A channel is closed when all tx handles are
+                                // TODO: This check may not be required as it most
+                                // likely can only return `true` at this point. A
+                                // channel is closed when all tx handles are
                                 // dropped. Dropping a tx handle releases memory,
                                 // which ensures that if dropping the tx handle is
                                 // visible, then all messages sent are also visible.
-                                debug_assert!(self.inner.semaphore.is_idle());
+                                assert!(self.inner.semaphore.is_idle());
                                 coop.made_progress();
                                 return Ready(number_added);
                             }
@@ -411,7 +415,7 @@ impl<T, S: Semaphore> Rx<T, S> {
             try_recv!();
 
             if rx_fields.rx_closed && self.inner.semaphore.is_idle() {
-                debug_assert_eq!(buffer.len(), initial_length);
+                assert!(buffer.is_empty());
                 coop.made_progress();
                 Ready(0usize)
             } else {
@@ -435,12 +439,6 @@ impl<T, S: Semaphore> Rx<T, S> {
                             return Ok(value);
                         }
                         TryPopResult::Closed => return Err(TryRecvError::Disconnected),
-                        // If close() was called, an empty queue should report Disconnected.
-                        TryPopResult::Empty
-                            if rx_fields.rx_closed && self.inner.semaphore.is_idle() =>
-                        {
-                            return Err(TryRecvError::Disconnected)
-                        }
                         TryPopResult::Empty => return Err(TryRecvError::Empty),
                         TryPopResult::Busy => {} // fall through
                     }

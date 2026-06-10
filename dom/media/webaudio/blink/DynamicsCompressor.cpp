@@ -28,6 +28,8 @@
 
 #include "DynamicsCompressor.h"
 
+#include <cmath>
+
 #include "AlignmentUtils.h"
 #include "AudioBlock.h"
 #include "AudioNodeEngine.h"

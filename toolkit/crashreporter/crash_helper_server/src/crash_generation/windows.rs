@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use super::{BreakpadProcessId, CrashGenerator};
+use super::{finalize_crash_report, BreakpadProcessId, CrashGenerator};
 
-use crash_helper_common::messages;
+use crash_helper_common::{messages, Pid};
 use std::{
     convert::TryInto,
     fs::{create_dir_all, File},
     mem::{size_of, zeroed},
-    os::windows::io::{AsHandle, AsRawHandle, BorrowedHandle},
+    os::windows::io::AsRawHandle,
     path::PathBuf,
     ptr::{null, null_mut},
 };
@@ -27,13 +27,13 @@ use windows_sys::Win32::{
             VER_MINORVERSION, VER_SERVICEPACKMAJOR, VER_SERVICEPACKMINOR,
         },
         SystemServices::VER_GREATER_EQUAL,
-        Threading::{GetProcessId, GetThreadId},
+        Threading::{OpenProcess, PROCESS_ALL_ACCESS},
     },
 };
 
 impl CrashGenerator {
     pub(crate) fn generate_wer_minidump(
-        &mut self,
+        &self,
         message: messages::WindowsErrorReportingMinidump,
     ) -> Result<(), ()> {
         let (minidump_file, path) = self.create_minidump_file()?;
@@ -43,26 +43,22 @@ impl CrashGenerator {
         let mut exception_records = message.exception_records;
         let exception_records_ptr = link_exception_records(&mut exception_records);
 
-        let handle = message.process.as_raw_handle() as HANDLE;
-        let pid = get_process_id(message.process.as_handle())?;
+        let handle = open_process(message.pid)?;
         let mut exception_pointers = EXCEPTION_POINTERS {
             ExceptionRecord: exception_records_ptr,
             ContextRecord: &mut context as *mut _,
         };
 
         let exception = MINIDUMP_EXCEPTION_INFORMATION {
-            ThreadId: get_thread_id(message.thread.as_handle())?,
+            ThreadId: message.tid,
             ExceptionPointers: &mut exception_pointers,
             ClientPointers: FALSE,
         };
 
-        // SAFETY: `handle` is guaranteed to be a valid handle and so is
-        // `minidump_file`. The remaining pointers going into this function are
-        // taken from objects allocated on the stack.
         let res = unsafe {
             MiniDumpWriteDump(
                 handle,
-                pid,
+                message.pid,
                 minidump_file.as_raw_handle() as _,
                 minidump_type,
                 &exception,
@@ -72,9 +68,12 @@ impl CrashGenerator {
         };
 
         if res != FALSE {
-            let process_id = BreakpadProcessId { pid, handle };
+            let process_id = BreakpadProcessId {
+                pid: message.pid,
+                handle,
+            };
 
-            self.finalize_crash_report(
+            finalize_crash_report(
                 process_id,
                 None,
                 &path,
@@ -105,13 +104,13 @@ impl CrashGenerator {
 
     fn create_minidump_file(&self) -> Result<(File, PathBuf), ()> {
         // Make sure that the target directory is present
-        create_dir_all(&self.minidump_path).map_err(|_| ())?;
+        create_dir_all(&self._minidump_path).map_err(|_| ())?;
 
         let uuid = Uuid::new_v4()
             .as_hyphenated()
             .encode_lower(&mut Uuid::encode_buffer())
             .to_string();
-        let path = PathBuf::from(self.minidump_path.clone()).join(uuid + ".dmp");
+        let path = PathBuf::from(self._minidump_path.clone()).join(uuid + ".dmp");
         let file = File::create(&path).map_err(|_| ())?;
         Ok((file, path))
     }
@@ -158,18 +157,10 @@ fn is_windows8_or_later() -> bool {
     }
 }
 
-fn get_process_id(handle: BorrowedHandle) -> Result<u32, ()> {
+fn open_process(pid: Pid) -> Result<HANDLE, ()> {
     // SAFETY: No pointers involved, worst case we get an error
-    match unsafe { GetProcessId(handle.as_raw_handle() as HANDLE) } {
+    match unsafe { OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid) } {
         0 => Err(()),
-        pid => Ok(pid),
-    }
-}
-
-fn get_thread_id(handle: BorrowedHandle) -> Result<u32, ()> {
-    // SAFETY: No pointers involved, worst case we get an error
-    match unsafe { GetThreadId(handle.as_raw_handle() as HANDLE) } {
-        0 => Err(()),
-        tid => Ok(tid),
+        handle => Ok(handle),
     }
 }

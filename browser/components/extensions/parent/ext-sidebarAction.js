@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -52,10 +54,11 @@ this.sidebarAction = class extends ExtensionAPI {
     this.globals = Object.create(this.defaults);
 
     this.tabContext = new TabContext(target => {
-      if (ChromeUtils.getClassName(target) == "Window") {
+      let window = target.ownerGlobal;
+      if (target === window) {
         return this.globals;
       }
-      return this.tabContext.get(target.documentGlobal);
+      return this.tabContext.get(window);
     });
 
     // We need to ensure our elements are available before session restore.
@@ -124,7 +127,7 @@ this.sidebarAction = class extends ExtensionAPI {
   build() {
     // eslint-disable-next-line mozilla/balanced-listeners
     this.tabContext.on("tab-select", (evt, tab) => {
-      this.updateWindow(tab.documentGlobal);
+      this.updateWindow(tab.ownerGlobal);
     });
 
     let install = this.extension.startupReason === "ADDON_INSTALL";
@@ -147,7 +150,7 @@ this.sidebarAction = class extends ExtensionAPI {
     this.panel = details.panel;
     let { SidebarController, devicePixelRatio } = window;
     SidebarController.registerExtension(this.id, {
-      iconUrl: this.getMenuIcon(details, devicePixelRatio),
+      ...this.getMenuIcon(details, devicePixelRatio),
       menuId: this.menuId,
       title: details.title,
       extensionId: this.extension.id,
@@ -168,12 +171,20 @@ this.sidebarAction = class extends ExtensionAPI {
    *   Extension icons.
    * @param {number} scale
    *   Scaling factor of the icon's size.
-   * @returns {string}
+   * @returns {{ icon: string; iconUrl: string }}
    */
   getMenuIcon({ icon }, scale) {
-    return IconDetails.escapeUrl(
-      IconDetails.getPreferredIcon(icon, this.extension, 16 * scale).icon
-    );
+    let getIcon = size =>
+      IconDetails.escapeUrl(
+        IconDetails.getPreferredIcon(icon, this.extension, size).icon
+      );
+
+    const iconUrl = getIcon(16 * scale);
+    // TODO Bug 1898257 - Only return iconUrl here, remove usages of icon.
+    return {
+      icon: `image-set(url("${getIcon(16)}"), url("${getIcon(32)}") 2x)`,
+      iconUrl,
+    };
   }
 
   /**
@@ -200,7 +211,7 @@ this.sidebarAction = class extends ExtensionAPI {
     SidebarController.setExtensionAttributes(
       this.id,
       {
-        iconUrl: this.getMenuIcon(tabData, devicePixelRatio),
+        ...this.getMenuIcon(tabData, devicePixelRatio),
         label: title,
       },
       urlChanged
@@ -232,10 +243,9 @@ this.sidebarAction = class extends ExtensionAPI {
    */
   updateOnChange(target) {
     if (target) {
-      if (ChromeUtils.getClassName(target) == "Window") {
-        this.updateWindow(target);
-      } else if (target.selected) {
-        this.updateWindow(target.documentGlobal);
+      let window = target.ownerGlobal;
+      if (target === window || target.selected) {
+        this.updateWindow(window);
       }
     } else {
       for (let window of windowTracker.browserWindows()) {
@@ -269,7 +279,7 @@ this.sidebarAction = class extends ExtensionAPI {
     let target = null;
     if (tabId != null) {
       target = tabTracker.getTab(tabId);
-      if (!this.extension.canAccessWindow(target.documentGlobal)) {
+      if (!this.extension.canAccessWindow(target.ownerGlobal)) {
         throw new ExtensionError(`Invalid tab ID: ${tabId}`);
       }
     } else if (windowId != null) {

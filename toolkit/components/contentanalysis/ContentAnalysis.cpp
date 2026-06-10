@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -399,9 +401,9 @@ nsresult ContentAnalysis::CreateContentAnalysisClient(
   std::shared_ptr<content_analysis::sdk::Client> client;
   bool isShutDown = IsShutDown();
   if (!isShutDown) {
-    client.reset(
-        content_analysis::sdk::Client::Create({aPipePathName.get(), aIsPerUser})
-            .release());
+    client.reset(content_analysis::sdk::Client::Create(
+                     {aPipePathName.Data(), aIsPerUser})
+                     .release());
     LOGD("Content analysis is %s", client ? "connected" : "not available");
   } else {
     LOGD("ContentAnalysis::IsShutDown is true");
@@ -412,7 +414,7 @@ nsresult ContentAnalysis::CreateContentAnalysisClient(
     std::string agentPath = client->GetAgentInfo().binary_path;
     nsString agentWidePath = NS_ConvertUTF8toUTF16(agentPath);
     UniquePtr<wchar_t[]> orgName =
-        mozilla::DllServices::Get()->GetBinaryOrgName(agentWidePath.get());
+        mozilla::DllServices::Get()->GetBinaryOrgName(agentWidePath.Data());
     bool signatureMatches = false;
     if (orgName) {
       auto dependentOrgName = nsDependentString(orgName.get());
@@ -1257,7 +1259,7 @@ ContentAnalysis::UrlFilterResult ContentAnalysis::FilterByUrlLists(
   LOGD("Content Analysis checking URL against URL filter list | URL: %s",
        urlString.get());
 
-  std::string url = urlString.get();
+  std::string url = urlString.BeginReading();
   size_t count = 0;
   for (const auto& denyFilter : mDenyUrlList) {
     if (std::regex_match(url, denyFilter)) {
@@ -1976,9 +1978,7 @@ RefPtr<MozPromise<T, nsresult, true>> ContentAnalysis::CallClientWithRetry(
   AssertIsOnMainThread();
   auto promise =
       MakeRefPtr<typename MozPromise<T, nsresult, true>::Private>(aMethodName);
-
-  // Make a copy of aClientCallFunc using copy constructor
-  auto reconnectAndRetry = [clientCallFunc = aClientCallFunc, aMethodName,
+  auto reconnectAndRetry = [aClientCallFunc, aMethodName,
                             promise](nsresult rv) {
     AssertIsOnMainThread();
     LOGD("Failed to get client - trying to reconnect: %s",
@@ -1999,7 +1999,7 @@ RefPtr<MozPromise<T, nsresult, true>> ContentAnalysis::CallClientWithRetry(
     }
     owner->mCaClientPromise->Then(
         GetCurrentSerialEventTarget(), aMethodName,
-        [aMethodName, promise, clientCallFunc = std::move(clientCallFunc)](
+        [aMethodName, promise, clientCallFunc = std::move(aClientCallFunc)](
             std::shared_ptr<content_analysis::sdk::Client> client) mutable {
           auto contentAnalysis = GetContentAnalysisFromService();
           if (!contentAnalysis) {
@@ -2035,9 +2035,7 @@ RefPtr<MozPromise<T, nsresult, true>> ContentAnalysis::CallClientWithRetry(
 
   mCaClientPromise->Then(
       GetCurrentSerialEventTarget(), aMethodName,
-      // Make a copy of aClientCallFunc using copy or move constructor
-      [aMethodName, promise, clientCallFunc = std::forward<U>(aClientCallFunc),
-       reconnectAndRetry](
+      [aMethodName, promise, aClientCallFunc, reconnectAndRetry](
           std::shared_ptr<content_analysis::sdk::Client> client) mutable {
         auto contentAnalysis = GetContentAnalysisFromService();
         if (!contentAnalysis) {
@@ -2046,11 +2044,10 @@ RefPtr<MozPromise<T, nsresult, true>> ContentAnalysis::CallClientWithRetry(
         }
         nsresult rv = contentAnalysis->mThreadPool->Dispatch(
             NS_NewCancelableRunnableFunction(
-                aMethodName, [aMethodName, promise,
-                              clientCallFunc = std::move(clientCallFunc),
+                aMethodName, [aMethodName, promise, aClientCallFunc,
                               reconnectAndRetry = std::move(reconnectAndRetry),
                               client = std::move(client)]() mutable {
-                  auto result = clientCallFunc(client);
+                  auto result = aClientCallFunc(client);
                   if (result.isOk()) {
                     promise->Resolve(result.unwrap(), aMethodName);
                     return;
@@ -2140,8 +2137,8 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
 
   CallClientWithRetry<std::nullptr_t>(
       __func__,
-      [userActionId = userActionId, pbRequest = std::move(pbRequest),
-       aAutoAcknowledge, ignoreCanceled](
+      [userActionId, pbRequest = std::move(pbRequest), aAutoAcknowledge,
+       ignoreCanceled](
           std::shared_ptr<content_analysis::sdk::Client> client) mutable {
         MOZ_ASSERT(!NS_IsMainThread());
         return DoAnalyzeRequest(std::move(userActionId), std::move(pbRequest),
@@ -2149,8 +2146,7 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
       })
       ->Then(
           GetMainThreadSerialEventTarget(), __func__, []() { /* do nothing */ },
-          [userActionId = std::move(userActionId),
-           requestToken = std::move(requestToken)](nsresult rv) mutable {
+          [userActionId, requestToken](nsresult rv) mutable {
             LOGD(
                 "RunAnalyzeRequestTask failed to get client a second time for "
                 "requestToken=%s, userActionId=%s",
@@ -3485,7 +3481,7 @@ ContentAnalysis::CancelAllRequestsAssociatedWithUserAction(
   // end up canceling requests that are already completed here -- that is a
   // no-op.
   LOGD("Cancelling %u requests associated with user action ID: %s",
-       compoundUserAction->count(), PromiseFlatCString(aUserActionId).get());
+       compoundUserAction->count(), aUserActionId.Data());
   nsresult rv = NS_OK;
   for (auto iter = compoundUserAction->iter(); !iter.done(); iter.next()) {
     nsresult rv2 = CancelRequestsByUserAction(iter.get());
@@ -3503,7 +3499,7 @@ ContentAnalysis::CancelAllRequestsAssociatedWithUserAction(
   LOGD(
       "Cancelling compound request associated with user action ID: %s %s | "
       "Error code: %s",
-      PromiseFlatCString(aUserActionId).get(),
+      aUserActionId.Data(),
       (!mCompoundUserActions.has(compoundUserAction)) ? "succeeded" : "failed",
       SafeGetStaticErrorName(rv));
   return rv;

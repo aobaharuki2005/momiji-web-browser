@@ -69,7 +69,7 @@ add_task(async function () {
 
   info("Test disabling mixed content protection");
 
-  const { gIdentityHandler } = gBrowser.documentGlobal;
+  const { gIdentityHandler } = gBrowser.ownerGlobal;
   ok(
     gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
     "Mixed Active Content state appeared on identity box"

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -107,7 +109,7 @@ static void LogMixedContentMessage(
   AutoTArray<nsString, 1> params;
   CopyUTF8toUTF16(aContentLocation->GetSpecOrDefault(),
                   *params.AppendElement());
-  nsContentUtils::FormatLocalizedString(PropertiesFile::SECURITY_PROPERTIES,
+  nsContentUtils::FormatLocalizedString(nsContentUtils::eSECURITY_PROPERTIES,
                                         messageLookupKey.get(), params,
                                         localizedMsg);
 
@@ -580,7 +582,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     case ExtContentPolicy::TYPE_WEB_TRANSPORT:
     case ExtContentPolicy::TYPE_WEB_IDENTITY:
     case ExtContentPolicy::TYPE_JSON:
-    case ExtContentPolicy::TYPE_TEXT:
       break;
 
     case ExtContentPolicy::TYPE_INVALID:
@@ -736,16 +737,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     *aDecision = ACCEPT;
     return NS_OK;
   }
-
-  // #2 Carve-out: For now maintain the carve-out for Notification icon images
-  // that previously happened via the code above.
-  // TODO(Bug 2008728) - Remove this exception.
-  if (internalContentType ==
-      nsIContentPolicy::TYPE_INTERNAL_IMAGE_NOTIFICATION) {
-    *aDecision = ACCEPT;
-    return NS_OK;
-  }
-
   // Otherwise, we must have a window
   NS_ENSURE_TRUE(requestingWindow, NS_OK);
 

@@ -2,38 +2,48 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/content/elements/moz-badge.tokens.css");
-
 menupopup,
 panel {
   --menu-arrow-opacity: 1;
   --menu-arrow-size: 1em;
-  --menuitem-border-radius: var(--border-radius-xsmall);
-  --menuitem-margin: 0;
+  --menuitem-border-radius: 3px;
+  --menuitem-margin: 0px;
   --menuitem-padding: 0.5em 1em;
   --menuitem-max-width: 42em;
+
+  --badge-text-color: var(--text-color-deemphasized);
+  --badge-background-color: transparent;
+  --badge-border-color: currentColor;
+
+  --badge-filled-text-color: light-dark(var(--color-white), var(--color-gray-100));
+  --badge-filled-background-color: light-dark(var(--color-green-70), var(--color-green-40));
+  --badge-filled-border-color: light-dark(rgba(251, 251, 254, 0.4), rgba(21, 20, 26, 0.4));
+
+  @media (forced-colors) {
+    --badge-text-color: CanvasText;
+    --badge-background-color: Canvas;
+    --badge-filled-border-color: CanvasText;
+    --badge-filled-text-color: AccentColorText;
+    --badge-filled-background-color: AccentColor;
+  }
 
   @media (-moz-platform: linux) {
     --menuitem-padding: 0.25em 0.5em;
   }
   @media (-moz-platform: macos) {
-    /* Space tokens don't match native macOS dimensions. */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     --menuitem-padding: 3px 9px;
 
     @media (-moz-mac-tahoe-theme) {
-      /* Space tokens don't match native macOS dimensions. */
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
       --menuitem-padding: 4px 11px;
-      --menuitem-border-radius: var(--border-radius-medium);
+      --menuitem-border-radius: 7px;
     }
   }
 
   @media (-moz-platform: windows) {
-    --menu-arrow-size: max(1em, var(--size-item-small));
+    --menu-arrow-size: max(1em, 16px);
 
     @media (prefers-color-scheme: light) {
-      --menu-arrow-opacity: var(--opacity-deemphasized);
+      --menu-arrow-opacity: 0.7;
     }
   }
 }
@@ -41,7 +51,6 @@ panel {
 menupopup {
   font: menu;
 
-  --menuitem-icon-fill: currentColor;
   /* Also apply the padding in the inline axis for menus */
   --panel-padding: var(--panel-padding-block);
 
@@ -50,28 +59,18 @@ menupopup {
     -moz-default-appearance: menupopup;
     /* The mica backdrop takes care of our shadow, border, and border-radius */
     --panel-border-color: transparent;
-    --panel-box-shadow-margin: 0px;
+    --panel-shadow-margin: 0px;
     --panel-border-radius: 0px;
   }
 
   @media (-moz-platform: macos) {
     /* stylelint-disable-next-line font-family-no-missing-generic-family-keyword */
     font: -moz-pull-down-menu;
-
-    /* On macOS, native menu icons should always be black by default so that
-       they are considered template images. Template images should be used
-       whenever possible so that the OS can manage the icon color, as the OS
-       theme may differ from our theme. */
-    menubar[native] &,
-    &:not([nonnative]) {
-      --menuitem-icon-fill: black;
-    }
   }
 
   > menu > menupopup {
     /* Vertically align nested menupopups: the shadow plus the top padding plus top border */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-    margin-top: calc(-1 * (var(--panel-box-shadow-margin) + var(--panel-padding-block) + 1px));
+    margin-top: calc(-1 * (var(--panel-shadow-margin) + var(--panel-padding-block) + 1px));
   }
 }
 
@@ -84,7 +83,7 @@ menulist > menupopup {
     color: FieldText;
 
     &:not([position]) {
-      margin-inline-start: calc(-1 * var(--space-medium));
+      margin-inline-start: -13px;
       margin-top: -1px;
     }
   }
@@ -103,7 +102,7 @@ menulist > menupopup {
 
   @media (-moz-platform: windows) {
     > menuitem[_moz-menuactive][disabled] {
-      color: var(--text-color-disabled);
+      color: GrayText;
     }
   }
 }
@@ -114,11 +113,11 @@ menuseparator {
   /* Using padding instead of margin to increase the hit area, as some
      separators (e.g. in bookmarks menus) can be dragged or have a context
      menu. */
-  padding-block: var(--space-xsmall);
+  padding-block: 4px;
 
   @media (-moz-platform: macos) {
-    padding-block: var(--space-xsmall);
-    margin-inline: var(--space-small);
+    padding-block: 5px;
+    margin-inline: 9px;
   }
 
   @media (-moz-platform: windows) {
@@ -127,8 +126,6 @@ menuseparator {
   }
 
   &::before {
-    /* Color of border-top derived from currentColor */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     border-top: 1px solid var(--panel-separator-color);
     content: "";
     display: block;
@@ -149,26 +146,16 @@ menuseparator {
  * such a way that its edges are at the same position as the edges of
  * arrowscrollbox regardless of scroll button visibility.
  */
-
-.menupopup-arrowscrollbox {
-  /* Scrollbutton height derived from toolbarbutton list-style-image SVG width
-   * of 12px and padding-block of 2px as defined in arrowscrollbox.css.
-   */
-  --scrollbutton-height: calc(12px + 2px + 2px);
-}
-
 .menupopup-arrowscrollbox:not([scrolledtostart])::part(scrollbox) {
   /* scrollbutton-up is visible; shift our top edge up by its height. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-  margin-top: calc(-1 * var(--scrollbutton-height));
-  border-top: var(--scrollbutton-height) solid transparent;
+  margin-top: -16px;
+  border-top: 16px solid transparent;
 }
 
 .menupopup-arrowscrollbox:not([scrolledtoend])::part(scrollbox) {
   /* scrollbutton-down is visible; shift our bottom edge down by its height. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-  margin-bottom: calc(-1 * var(--scrollbutton-height));
-  border-bottom: var(--scrollbutton-height) solid transparent;
+  margin-bottom: -16px;
+  border-bottom: 16px solid transparent;
 }
 
 menubar {
@@ -190,16 +177,16 @@ menubar > menu {
   }
 
   @media (-moz-platform: macos) {
-    padding-block: var(--space-xxsmall);
-    padding-inline: var(--space-small) var(--space-xsmall);
+    padding-block: 2px;
+    padding-inline: 7px 5px;
     margin: 1px 0;
   }
 
   @media (-moz-platform: windows) {
-    padding: 1px var(--space-small) var(--space-xxsmall);
+    padding: 1px 6px 2px;
 
     &:-moz-window-inactive {
-      color: var(--text-color-deemphasized);
+      color: ThreeDShadow;
     }
 
     &:not([disabled]) {
@@ -227,8 +214,6 @@ menu,
 menuitem,
 menucaption {
   border-radius: var(--menuitem-border-radius);
-  /* --menuitem-padding uses px values on macOS to match native menus. */
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   padding: var(--menuitem-padding);
   margin: var(--menuitem-margin);
   align-items: center;
@@ -241,9 +226,6 @@ menucaption {
 
 menu,
 menuitem {
-  -moz-context-properties: fill;
-  fill: var(--menuitem-icon-fill);
-
   &:where([disabled]) {
     color: var(--text-color-disabled);
     text-shadow: none;
@@ -290,7 +272,7 @@ menupopup > menu::after {
     margin-inline: 0.5em 0;
   }
   @media (-moz-platform: macos) {
-    margin-inline: var(--space-xlarge) calc(-1 * var(--space-xxsmall));
+    margin-inline: 22px -3px;
   }
 }
 
@@ -305,10 +287,6 @@ menupopup > menu:-moz-locale-dir(rtl)::after {
     padding: 1px 0;
   }
   @media (-moz-platform: linux) {
-    /* --space-xxsmall (0.125rem) only equals 2px at a 16px root font, causing
-     * rounding differences in layout at other font sizes.
-     */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     margin-inline: 0 2px;
   }
 }
@@ -318,13 +296,11 @@ menupopup > menu:-moz-locale-dir(rtl)::after {
 .menu-accel {
   margin-inline: 0.74em 0.35em;
   @media (-moz-platform: macos) {
-    /* margin-inline mimics natively-rendered menus */
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     margin-inline: 25px 0;
   }
   @media (-moz-platform: linux) {
     /* Matches the margin-inline-end on iconic-left */
-    margin-inline: var(--space-small) 0;
+    margin-inline: 0.5em 0;
   }
 
   @media not (prefers-contrast) {
@@ -349,8 +325,8 @@ menuitem[highlightable] > .menu-text {
 }
 
 .menu-icon {
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: 16px;
+  height: 16px;
   box-sizing: border-box;
 
   /* Empty icons shouldn't take up any space */
@@ -364,12 +340,12 @@ menuitem[highlightable] > .menu-text {
     margin-inline-end: 0.5em;
   }
   @media (-moz-platform: windows) {
-    margin-top: var(--space-xxsmall);
-    margin-inline-end: var(--space-small);
+    margin-top: 2px;
+    margin-inline-end: 8px;
   }
   @media (-moz-platform: macos) {
-    margin-block: calc(-1 * var(--space-xxsmall));
-    margin-inline-end: var(--space-small);
+    margin-block: -2px;
+    margin-inline-end: 6px;
   }
 
   menuitem:where(.menuitem-iconic, [image]) > &,
@@ -435,7 +411,7 @@ menupopup[needsgutter] {
         vertical-align: middle;
         line-height: 0;
         visibility: hidden;
-        padding-inline: var(--space-xsmall);
+        padding-inline: 4px;
         font-weight: var(--font-weight-bold);
       }
     }
@@ -457,7 +433,7 @@ menuitem[badge]::after {
 }
 
 menuitem.badge-new::after {
-  border-color: var(--badge-border-color-filled);
-  color: var(--badge-text-color-filled);
-  background-color: var(--badge-background-color-filled);
+  border-color: var(--badge-filled-border-color);
+  color: var(--badge-filled-text-color);
+  background-color: var(--badge-filled-background-color);
 }

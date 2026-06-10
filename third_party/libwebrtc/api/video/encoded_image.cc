@@ -23,8 +23,7 @@
 
 namespace webrtc {
 
-EncodedImageBuffer::EncodedImageBuffer(size_t size)
-    : buffer_(Buffer::CreateUninitializedWithSize(size)) {}
+EncodedImageBuffer::EncodedImageBuffer(size_t size) : buffer_(size) {}
 
 EncodedImageBuffer::EncodedImageBuffer(const uint8_t* data, size_t size)
     : buffer_(data, size) {}

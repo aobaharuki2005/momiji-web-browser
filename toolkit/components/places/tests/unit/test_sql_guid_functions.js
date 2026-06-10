@@ -20,32 +20,75 @@ function check_invariants(aGuid) {
 
 // Test Functions
 
-add_task(async function test_guid_invariants() {
+function test_guid_invariants() {
+  const kExpectedChars = 64;
   const kAllowedChars =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
+  Assert.equal(kAllowedChars.length, kExpectedChars);
   const kGuidLength = 12;
 
-  let db = await PlacesUtils.promiseDBConnection();
-  // Generate enough GUIDs to verify character coverage across all positions.
-  let rows = await db.execute(
-    `WITH RECURSIVE cnt(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM cnt WHERE x < 1000)
-     SELECT GENERATE_GUID() AS guid FROM cnt`
-  );
-  Assert.equal(rows.length, 1000);
-
-  let checkedChars = Array.from({ length: kGuidLength }, () => ({}));
-  for (let row of rows) {
-    let guid = row.getResultByName("guid");
-    check_invariants(guid);
-    for (let i = 0; i < guid.length; i++) {
-      checkedChars[i][guid[i]] = true;
-    }
-  }
-
-  // Verify all allowed characters have been seen in all positions.
+  let checkedChars = [];
   for (let i = 0; i < kGuidLength; i++) {
-    for (let ch of kAllowedChars) {
-      Assert.ok(checkedChars[i][ch], `Character '${ch}' seen at position ${i}`);
+    checkedChars[i] = {};
+    for (let j = 0; j < kAllowedChars; j++) {
+      checkedChars[i][kAllowedChars[j]] = false;
     }
   }
-});
+
+  // We run this until we've seen every character that we expect to see in every
+  // position.
+  let seenChars = 0;
+  let stmt = DBConn().createStatement("SELECT GENERATE_GUID()");
+  while (seenChars != kExpectedChars * kGuidLength) {
+    Assert.ok(stmt.executeStep());
+    let guid = stmt.getString(0);
+    check_invariants(guid);
+
+    for (let i = 0; i < guid.length; i++) {
+      let character = guid[i];
+      if (!checkedChars[i][character]) {
+        checkedChars[i][character] = true;
+        seenChars++;
+      }
+    }
+    stmt.reset();
+  }
+  stmt.finalize();
+
+  // One last reality check - make sure all of our characters were seen.
+  for (let i = 0; i < kGuidLength; i++) {
+    for (let j = 0; j < kAllowedChars; j++) {
+      Assert.ok(checkedChars[i][kAllowedChars[j]]);
+    }
+  }
+
+  run_next_test();
+}
+
+function test_guid_on_background() {
+  // We should not assert if we execute this asynchronously.
+  let stmt = DBConn().createAsyncStatement("SELECT GENERATE_GUID()");
+  let checked = false;
+  stmt.executeAsync({
+    handleResult(aResult) {
+      try {
+        let row = aResult.getNextRow();
+        check_invariants(row.getResultByIndex(0));
+        Assert.equal(aResult.getNextRow(), null);
+        checked = true;
+      } catch (e) {
+        do_throw(e);
+      }
+    },
+    handleCompletion(aReason) {
+      Assert.equal(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
+      Assert.ok(checked);
+      run_next_test();
+    },
+  });
+  stmt.finalize();
+}
+
+// Test Runner
+
+[test_guid_invariants, test_guid_on_background].forEach(fn => add_test(fn));

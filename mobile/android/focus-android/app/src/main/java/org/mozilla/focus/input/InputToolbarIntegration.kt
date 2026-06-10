@@ -12,9 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
@@ -39,15 +37,11 @@ import org.mozilla.focus.ui.theme.focusTypography
 import androidx.cardview.R as cardViewR
 import mozilla.components.browser.toolbar.R as toolbarR
 
-/**
- * Integration for the URL input toolbar, managing editing and autocomplete.
- */
 class InputToolbarIntegration(
     private val toolbar: BrowserToolbar,
     private val fragment: UrlInputFragment,
     shippedDomainsProvider: ShippedDomainsProvider,
     customDomainsProvider: CustomDomainsProvider,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : LifecycleAwareFeature {
     private val settings = toolbar.context.settings
 
@@ -87,8 +81,7 @@ class InputToolbarIntegration(
                 }
 
                 override fun onTextChanged(text: String) {
-                    val lifecycleOwner = fragment.viewLifecycleOwnerLiveData.value ?: return
-                    lifecycleOwner.lifecycleScope.launch {
+                    fragment.viewLifecycleOwner.lifecycleScope.launch {
                         fragment.onTextChange(text)
                     }
                 }
@@ -150,7 +143,7 @@ class InputToolbarIntegration(
 
     @VisibleForTesting
     internal fun observeStartBrowserCfrVisibility() {
-        startBrowsingCfrScope = fragment.components?.appStore?.flowScoped(dispatcher = mainDispatcher) { flow ->
+        startBrowsingCfrScope = fragment.components?.appStore?.flowScoped { flow ->
             flow.mapNotNull { state -> state.showStartBrowsingTabsCfr }
                 .distinctUntilChanged()
                 .collect { showStartBrowsingCfr ->

@@ -31,6 +31,10 @@ impl ResourceUses for BufferUses {
         Self::bits(&self)
     }
 
+    fn all_ordered(self) -> bool {
+        Self::ORDERED.contains(self)
+    }
+
     fn any_exclusive(self) -> bool {
         self.intersects(Self::EXCLUSIVE)
     }
@@ -57,9 +61,13 @@ impl BufferBindGroupState {
             .sort_unstable_by_key(|(b, _)| b.tracker_index());
     }
 
-    /// Returns an iterator over the tracked buffers. May contain duplicates.
-    pub fn used_resources(&self) -> impl Iterator<Item = &Arc<Buffer>> {
-        self.buffers.iter().map(|(b, _)| b)
+    /// Returns a list of all buffers tracked. May contain duplicates.
+    pub fn used_tracker_indices(&self) -> impl Iterator<Item = TrackerIndex> + '_ {
+        self.buffers
+            .iter()
+            .map(|(b, _)| b.tracker_index())
+            .collect::<Vec<_>>()
+            .into_iter()
     }
 
     /// Adds the given resource with the given state.
@@ -73,7 +81,6 @@ impl BufferBindGroupState {
 pub(crate) struct BufferUsageScope {
     state: Vec<BufferUses>,
     metadata: ResourceMetadata<Arc<Buffer>>,
-    ordered_uses_mask: BufferUses,
 }
 
 impl Default for BufferUsageScope {
@@ -81,7 +88,6 @@ impl Default for BufferUsageScope {
         Self {
             state: Vec::new(),
             metadata: ResourceMetadata::new(),
-            ordered_uses_mask: BufferUses::empty(),
         }
     }
 }
@@ -103,10 +109,6 @@ impl BufferUsageScope {
     pub fn set_size(&mut self, size: usize) {
         self.state.resize(size, BufferUses::empty());
         self.metadata.set_size(size);
-    }
-
-    pub fn set_ordered_uses_mask(&mut self, ordered_uses_mask: BufferUses) {
-        self.ordered_uses_mask = ordered_uses_mask;
     }
 
     /// Extend the vectors to let the given index be valid.
@@ -285,12 +287,10 @@ pub(crate) struct BufferTracker {
     metadata: ResourceMetadata<Arc<Buffer>>,
 
     temp: Vec<PendingTransition<BufferUses>>,
-
-    ordered_uses_mask: BufferUses,
 }
 
 impl BufferTracker {
-    pub fn new(ordered_uses_mask: BufferUses) -> Self {
+    pub fn new() -> Self {
         Self {
             start: Vec::new(),
             end: Vec::new(),
@@ -298,8 +298,6 @@ impl BufferTracker {
             metadata: ResourceMetadata::new(),
 
             temp: Vec::new(),
-
-            ordered_uses_mask,
         }
     }
 
@@ -548,15 +546,7 @@ impl BufferTracker {
 
         let update_state_provider =
             end_state_provider.unwrap_or_else(|| start_state_provider.clone());
-        unsafe {
-            barrier(
-                &mut self.end,
-                index,
-                start_state_provider,
-                &mut self.temp,
-                self.ordered_uses_mask,
-            )
-        };
+        unsafe { barrier(&mut self.end, index, start_state_provider, &mut self.temp) };
 
         unsafe { update(&mut self.end, index, update_state_provider) };
     }
@@ -567,16 +557,14 @@ pub(crate) struct DeviceBufferTracker {
     current_states: Vec<BufferUses>,
     metadata: ResourceMetadata<Weak<Buffer>>,
     temp: Vec<PendingTransition<BufferUses>>,
-    ordered_uses_mask: BufferUses,
 }
 
 impl DeviceBufferTracker {
-    pub fn new(ordered_uses_mask: BufferUses) -> Self {
+    pub fn new() -> Self {
         Self {
             current_states: Vec::new(),
             metadata: ResourceMetadata::new(),
             temp: Vec::new(),
-            ordered_uses_mask,
         }
     }
 
@@ -644,7 +632,6 @@ impl DeviceBufferTracker {
                 index,
                 start_state_provider.clone(),
                 &mut self.temp,
-                self.ordered_uses_mask,
             )
         };
         unsafe { update(&mut self.current_states, index, start_state_provider) };
@@ -678,7 +665,6 @@ impl DeviceBufferTracker {
                     index,
                     start_state_provider,
                     &mut self.temp,
-                    self.ordered_uses_mask,
                 )
             };
             unsafe { update(&mut self.current_states, index, end_state_provider) };
@@ -779,12 +765,11 @@ unsafe fn barrier(
     index: usize,
     state_provider: BufferStateProvider<'_>,
     barriers: &mut Vec<PendingTransition<BufferUses>>,
-    ordered_uses_mask: BufferUses,
 ) {
     let current_state = unsafe { *current_states.get_unchecked(index) };
     let new_state = unsafe { state_provider.get_state(index) };
 
-    if skip_barrier(current_state, ordered_uses_mask, new_state) {
+    if skip_barrier(current_state, new_state) {
         return;
     }
 

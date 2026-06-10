@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -73,8 +74,6 @@ class Http3ConnectUDPStream final : public Http3TunnelStreamBase,
   uint64_t ByteCountSent() override { return mByteWriteCount; }
   uint64_t ByteCountReceived() override { return mByteReadCount; }
 
-  bool IsTRRConnection() override { return mIsTRRServiceChannel; }
-
   already_AddRefed<HttpConnectionUDP> CreateUDPConnection(
       nsIInterfaceRequestor* aCallbacks);
 
@@ -95,8 +94,6 @@ class Http3ConnectUDPStream final : public Http3TunnelStreamBase,
   mozilla::Queue<UniquePtr<UDPPayload>> mReceivedData;
   mozilla::Queue<UniquePtr<UDPPayload>> mOutputData;
   uint64_t mTrackingId{1};
-
-  bool mIsTRRServiceChannel{false};
 };
 
 }  // namespace mozilla::net

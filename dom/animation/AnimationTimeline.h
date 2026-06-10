@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 #define mozilla_dom_AnimationTimeline_h
 
 #include "mozilla/AnimationUtils.h"
-#include "mozilla/dom/CSSNumericValueBindingFwd.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
 #include "nsIGlobalObject.h"
@@ -19,9 +20,6 @@ namespace mozilla::dom {
 class Animation;
 class Document;
 class ScrollTimeline;
-class ViewTimeline;
-
-struct AnimationRange;
 
 class AnimationTimeline : public nsISupports, public nsWrapperCache {
  public:
@@ -46,14 +44,10 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   nsIGlobalObject* GetParentObject() const { return mWindow; }
 
   // AnimationTimeline methods
-  // This base implementation returns a plain double in milliseconds.
-  // The ScrollTimeline override returns a CSSUnitValue percent.
-  virtual void GetCurrentTime(Nullable<OwningCSSNumberish>& aRetVal) const;
-  void GetDuration(Nullable<OwningDoubleOrCSSNumericValue>& aRetVal,
-                   ErrorResult& aRv) const;
-
   virtual Nullable<TimeDuration> GetCurrentTimeAsDuration() const = 0;
 
+  // Wrapper functions for AnimationTimeline DOM methods when called from
+  // script.
   Nullable<double> GetCurrentTimeAsDouble() const {
     return AnimationUtils::TimeDurationToDouble(GetCurrentTimeAsDuration(),
                                                 mRTPCallerType);
@@ -119,17 +113,13 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   virtual bool IsScrollTimeline() const { return false; }
   virtual const ScrollTimeline* AsScrollTimeline() const { return nullptr; }
   virtual bool IsViewTimeline() const { return false; }
-  virtual const ViewTimeline* AsViewTimeline() const { return nullptr; }
-  virtual bool IsInactiveTimeline() const { return false; }
 
   // For a monotonic timeline, there is no upper bound on current time, and
   // timeline duration is unresolved. For a non-monotonic (e.g. scroll)
   // timeline, the duration has a fixed upper bound.
   //
   // https://drafts.csswg.org/web-animations-2/#timeline-duration
-  virtual Nullable<TimeDuration> TimelineDuration(const AnimationRange&) const {
-    return nullptr;
-  }
+  virtual Nullable<TimeDuration> TimelineDuration() const { return nullptr; }
 
  protected:
   nsCOMPtr<nsIGlobalObject> mWindow;

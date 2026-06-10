@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef AltServiceParent_h_
-#define AltServiceParent_h_
+#ifndef AltServiceParent_h__
+#define AltServiceParent_h__
 
 #include "mozilla/net/PAltServiceParent.h"
 
@@ -36,4 +37,4 @@ class AltServiceParent final : public PAltServiceParent {
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // AltServiceParent_h_
+#endif  // AltServiceParent_h__

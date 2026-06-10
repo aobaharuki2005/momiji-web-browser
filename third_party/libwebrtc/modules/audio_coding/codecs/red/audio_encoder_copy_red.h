@@ -17,10 +17,10 @@
 #include <list>
 #include <memory>
 #include <optional>
-#include <span>
 #include <utility>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/call/bitrate_allocation.h"
 #include "api/field_trials_view.h"
@@ -81,11 +81,11 @@ class AudioEncoderCopyRed final : public AudioEncoder {
   ANAStats GetANAStats() const override;
   std::optional<std::pair<TimeDelta, TimeDelta>> GetFrameLengthRange()
       const override;
-  std::span<std::unique_ptr<AudioEncoder>> ReclaimContainedEncoders() override;
+  ArrayView<std::unique_ptr<AudioEncoder>> ReclaimContainedEncoders() override;
 
  protected:
   EncodedInfo EncodeImpl(uint32_t rtp_timestamp,
-                         std::span<const int16_t> audio,
+                         ArrayView<const int16_t> audio,
                          Buffer* encoded) override;
 
  private:

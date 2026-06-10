@@ -8,7 +8,7 @@ const kExtensionID = "simple@tests.mozilla.org";
 add_setup(async function () {
   useHttpServer();
   SearchTestUtils.setRemoteSettingsConfig([{ identifier: "unused" }]);
-  await SearchService.init();
+  await Services.search.init();
 });
 
 add_task(async function test_migrateLegacyEngine() {
@@ -17,9 +17,13 @@ add_task(async function test_migrateLegacyEngine() {
   });
 
   // Modify the loadpath so it looks like a legacy plugin loadpath
-  engine._loadPath = `jar:[profile]/extensions/${kExtensionID}.xpi!/simple.xml`;
+  engine.wrappedJSObject._loadPath = `jar:[profile]/extensions/${kExtensionID}.xpi!/simple.xml`;
+  engine.wrappedJSObject._extensionID = null;
 
-  await SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // This should replace the existing engine
   let extension = await SearchTestUtils.installSearchExtension(
@@ -31,12 +35,12 @@ add_task(async function test_migrateLegacyEngine() {
     { skipUnload: true }
   );
 
-  engine = SearchService.getEngineByName("simple");
-  Assert.equal(engine._loadPath, "[addon]" + kExtensionID);
-  Assert.equal(engine.extensionID, kExtensionID);
+  engine = Services.search.getEngineByName("simple");
+  Assert.equal(engine.wrappedJSObject._loadPath, "[addon]" + kExtensionID);
+  Assert.equal(engine.wrappedJSObject._extensionID, kExtensionID);
 
   Assert.equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     "simple",
     "Should have kept the default engine the same"
   );
@@ -50,9 +54,13 @@ add_task(async function test_migrateLegacyEngineDifferentName() {
   });
 
   // Modify the loadpath so it looks like an legacy plugin loadpath
-  engine._loadPath = `jar:[profile]/extensions/${kExtensionID}.xpi!/simple.xml`;
+  engine.wrappedJSObject._loadPath = `jar:[profile]/extensions/${kExtensionID}.xpi!/simple.xml`;
+  engine.wrappedJSObject._extensionID = null;
 
-  await SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   // This should replace the existing engine - it has the same id, but a different name.
   let extension = await SearchTestUtils.installSearchExtension(
@@ -64,16 +72,16 @@ add_task(async function test_migrateLegacyEngineDifferentName() {
     { skipUnload: true }
   );
 
-  engine = SearchService.getEngineByName("simple");
+  engine = Services.search.getEngineByName("simple");
   Assert.equal(engine, null, "Should have removed the old engine");
 
   // The engine should have changed its name.
-  engine = SearchService.getEngineByName("simple search");
-  Assert.equal(engine._loadPath, "[addon]" + kExtensionID);
-  Assert.equal(engine.extensionID, kExtensionID);
+  engine = Services.search.getEngineByName("simple search");
+  Assert.equal(engine.wrappedJSObject._loadPath, "[addon]" + kExtensionID);
+  Assert.equal(engine.wrappedJSObject._extensionID, kExtensionID);
 
   Assert.equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     "simple search",
     "Should have made the new engine default"
   );

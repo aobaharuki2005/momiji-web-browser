@@ -2,3 +2,5 @@
 subsuite = "mozterm"
 
 ["test_terminal.py"]
+
+["test_widgets.py"]

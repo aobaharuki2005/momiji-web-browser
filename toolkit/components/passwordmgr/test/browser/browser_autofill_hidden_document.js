@@ -27,11 +27,10 @@ add_setup(async function () {
     set: [
       ["test.wait300msAfterTabSwitch", true],
       ["signon.usernameOnlyForm.enabled", true],
-      ["signon.rustMirror.enabled", false],
     ],
   });
 
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
   let login = LoginTestUtils.testData.formLogin({
     origin: "https://example.org",
     formActionOrigin: "https://example.org",
@@ -185,7 +184,7 @@ testUrlsWithForm.forEach(testUrl => {
       "The first tab should be backgrounded"
     );
 
-    const dialogObserved = waitForMPDialog("authenticate", tab1.documentGlobal);
+    const dialogObserved = waitForMPDialog("authenticate", tab1.ownerGlobal);
 
     // In this case we will try to autofill while hidden, so look for the passwordmgr-processed-form
     // to be observed

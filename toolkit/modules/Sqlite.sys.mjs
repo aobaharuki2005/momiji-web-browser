@@ -19,7 +19,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
 
@@ -161,7 +161,7 @@ function convertStorageErrorResult(result) {
     case Ci.mozIStorageError.MISMATCH:
     case Ci.mozIStorageError.MISUSE:
     case Ci.mozIStorageError.RANGE:
-      return Cr.NS_ERROR_UNEXPECTED;
+      return Ci.NS_ERROR_UNEXPECTED;
     case Ci.mozIStorageError.CORRUPT:
     case Ci.mozIStorageError.EMPTY:
     case Ci.mozIStorageError.FORMAT:
@@ -410,6 +410,14 @@ function ConnectionData(connection, identifier, options = {}) {
       statementCounter: this._statementCounter,
     })
   );
+
+  // We avoid creating a timer for every transaction, because in most cases they
+  // are not canceled and they are only used as a timeout.
+  // Instead the timer is reused when it's sufficiently close to the previous
+  // creation time (see `_getTimeoutPromise` for more info).
+  this._timeoutPromise = null;
+  // The last timestamp when we should consider using `this._timeoutPromise`.
+  this._timeoutPromiseExpires = 0;
 
   this._useIncrementalVacuum = !!options.incrementalVacuum;
   if (this._useIncrementalVacuum) {
@@ -785,26 +793,16 @@ ConnectionData.prototype = Object.freeze({
     }
     this.ensureOpen();
 
+    // If a transaction yields on a never resolved promise, or is mistakenly
+    // nested, it could hang the transactions queue forever.  Thus we timeout
+    // the execution after a meaningful amount of time, to ensure in any case
+    // we'll proceed after a while.
+    let timeoutPromise = this._getTimeoutPromise();
+
     let promise = this._transactionQueue.then(() => {
       if (this._closeRequested) {
         throw new Error("Transaction canceled due to a closed connection.");
       }
-      // If a transaction yields on a never resolved promise, or is mistakenly
-      // nested, it could hang the transactions queue forever.  Thus we timeout
-      // the execution after a meaningful amount of time, to ensure in any case
-      // we'll proceed after a while. The timeout is created here so that each
-      // transaction gets its own budget starting when it actually begins, not
-      // when it is enqueued.
-      let timeoutId;
-      let timeoutPromise = new Promise((_, reject) => {
-        timeoutId = setTimeout(() => {
-          let e = new Error(
-            "Transaction timeout, most likely caused by unresolved pending work."
-          );
-          e.becauseTimedOut = true;
-          reject(e);
-        }, Sqlite.TRANSACTIONS_TIMEOUT_MS);
-      });
 
       let transactionPromise = (async () => {
         // At this point we should never have an in progress transaction, since
@@ -908,7 +906,6 @@ ConnectionData.prototype = Object.freeze({
           return result;
         } finally {
           this._initiatedTransaction = false;
-          clearTimeout(timeoutId);
         }
       })();
 
@@ -1150,6 +1147,38 @@ ConnectionData.prototype = Object.freeze({
       this._idleShrinkMS,
       this._idleShrinkTimer.TYPE_ONE_SHOT
     );
+  },
+
+  /**
+   * Returns a promise that will resolve after a time comprised between 80% of
+   * `TRANSACTIONS_TIMEOUT_MS` and `TRANSACTIONS_TIMEOUT_MS`. Use
+   * this method instead of creating several individual timers that may survive
+   * longer than necessary.
+   */
+  _getTimeoutPromise() {
+    if (
+      this._timeoutPromise &&
+      ChromeUtils.now() <= this._timeoutPromiseExpires
+    ) {
+      return this._timeoutPromise;
+    }
+    let timeoutPromise = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        // Clear out this._timeoutPromise if it hasn't changed since we set it.
+        if (this._timeoutPromise == timeoutPromise) {
+          this._timeoutPromise = null;
+        }
+        let e = new Error(
+          "Transaction timeout, most likely caused by unresolved pending work."
+        );
+        e.becauseTimedOut = true;
+        reject(e);
+      }, Sqlite.TRANSACTIONS_TIMEOUT_MS);
+    });
+    this._timeoutPromise = timeoutPromise;
+    this._timeoutPromiseExpires =
+      ChromeUtils.now() + Sqlite.TRANSACTIONS_TIMEOUT_MS * 0.2;
+    return this._timeoutPromise;
   },
 
   /**

@@ -142,31 +142,16 @@ where
 /// }
 /// # }
 /// ```
-///
-/// # Panics
-///
-/// This function panics if there is no current timer set.
-///
-/// It can be triggered when [`Builder::enable_time`] or
-/// [`Builder::enable_all`] are not included in the builder.
-///
-/// It can also panic whenever a timer is created outside of a
-/// Tokio runtime. That is why `rt.block_on(sleep(...))` will panic,
-/// since the function is executed outside of the runtime.
-/// Whereas `rt.block_on(async {sleep(...).await})` doesn't panic.
-/// And this is because wrapping the function on an async makes it lazy,
-/// and so gets executed inside the runtime successfully without
-/// panicking.
-///
-/// [`Builder::enable_time`]: crate::runtime::Builder::enable_time
-/// [`Builder::enable_all`]: crate::runtime::Builder::enable_all
-#[track_caller]
 pub fn timeout_at<F>(deadline: Instant, future: F) -> Timeout<F::IntoFuture>
 where
     F: IntoFuture,
 {
     let delay = sleep_until(deadline);
-    Timeout::new_with_delay(future.into_future(), delay)
+
+    Timeout {
+        value: future.into_future(),
+        delay,
+    }
 }
 
 pin_project! {
@@ -218,32 +203,26 @@ where
             return Poll::Ready(Ok(v));
         }
 
-        poll_delay(had_budget_before, me.delay, cx).map(Err)
-    }
-}
+        let has_budget_now = coop::has_budget_remaining();
 
-// The T-invariant portion of Timeout::<T>::poll. Pulling this out reduces the
-// amount of code that gets duplicated during monomorphization.
-fn poll_delay(
-    had_budget_before: bool,
-    delay: Pin<&mut Sleep>,
-    cx: &mut task::Context<'_>,
-) -> Poll<Elapsed> {
-    let delay_poll = || match delay.poll(cx) {
-        Poll::Ready(()) => Poll::Ready(Elapsed::new()),
-        Poll::Pending => Poll::Pending,
-    };
+        let delay = me.delay;
 
-    let has_budget_now = coop::has_budget_remaining();
+        let poll_delay = || -> Poll<Self::Output> {
+            match delay.poll(cx) {
+                Poll::Ready(()) => Poll::Ready(Err(Elapsed::new())),
+                Poll::Pending => Poll::Pending,
+            }
+        };
 
-    if let (true, false) = (had_budget_before, has_budget_now) {
-        // if it is the underlying future that exhausted the budget, we poll
-        // the `delay` with an unconstrained one. This prevents pathological
-        // cases where the underlying future always exhausts the budget and
-        // we never get a chance to evaluate whether the timeout was hit or
-        // not.
-        coop::with_unconstrained(delay_poll)
-    } else {
-        delay_poll()
+        if let (true, false) = (had_budget_before, has_budget_now) {
+            // if it is the underlying future that exhausted the budget, we poll
+            // the `delay` with an unconstrained one. This prevents pathological
+            // cases where the underlying future always exhausts the budget and
+            // we never get a chance to evaluate whether the timeout was hit or
+            // not.
+            coop::with_unconstrained(poll_delay)
+        } else {
+            poll_delay()
+        }
     }
 }

@@ -1,23 +1,23 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import datetime
-import logging
 import os
-import urllib.parse
+
+import datetime
 from datetime import timezone
-
+import logging
 import requests
-
 from taskcluster.generated import _client_importer
 from taskcluster.generated.aio import _client_importer as _async_client_importer
 from taskcluster.utils import stringDate
+import urllib.parse
 
 logger = logging.getLogger(__name__)
 
 
-class TaskclusterConfig:
+class TaskclusterConfig(object):
     """
     Local configuration used to access Taskcluster service and objects
     """
@@ -25,12 +25,8 @@ class TaskclusterConfig:
     def __init__(self, url=None):
         self.options = None
         self.secrets = None
-        self.default_url = (
-            url if url is not None else os.environ.get("TASKCLUSTER_ROOT_URL")
-        )
-        assert self.default_url is not None, (
-            "You must specify a Taskcluster deployment url"
-        )
+        self.default_url = url if url is not None else os.environ.get("TASKCLUSTER_ROOT_URL")
+        assert self.default_url is not None, "You must specify a Taskcluster deployment url"
 
     def auth(self, client_id=None, access_token=None, max_retries=12):
         """
@@ -62,9 +58,7 @@ class TaskclusterConfig:
         elif "TASK_ID" in os.environ:
             # Use Taskcluster Proxy when running in a task
             logger.info("Taskcluster Proxy enabled")
-            self.options["rootUrl"] = os.environ.get(
-                "TASKCLUSTER_PROXY_URL", "http://taskcluster"
-            )
+            self.options["rootUrl"] = os.environ.get("TASKCLUSTER_PROXY_URL", "http://taskcluster")
 
         else:
             logger.info("No Taskcluster authentication.")
@@ -79,7 +73,9 @@ class TaskclusterConfig:
 
         client_importer = _async_client_importer if use_async else _client_importer
         service = getattr(client_importer, service_name.capitalize(), None)
-        assert service is not None, f"Invalid Taskcluster service {service_name}"
+        assert service is not None, "Invalid Taskcluster service {}".format(
+            service_name
+        )
         return service(self.options)
 
     def load_secrets(
@@ -87,7 +83,7 @@ class TaskclusterConfig:
     ):
         """Shortcut to use load_secrets helper with current authentication"""
         self.secrets = load_secrets(
-            self.get_service("secrets"),
+            self.get_service('secrets'),
             secret_name,
             prefixes,
             required,
@@ -99,7 +95,7 @@ class TaskclusterConfig:
     def upload_artifact(self, artifact_path, content, content_type, ttl):
         """Shortcut to use upload_artifact helper with current authentication"""
         path = upload_artifact(
-            self.get_service("queue"),
+            self.get_service('queue'),
             artifact_path,
             content,
             content_type,
@@ -110,12 +106,7 @@ class TaskclusterConfig:
 
 
 def load_secrets(
-    secrets_service,
-    secret_name,
-    prefixes=[],
-    required=[],
-    existing={},
-    local_secrets=None,
+    secrets_service, secret_name, prefixes=[], required=[], existing={}, local_secrets=None
 ):
     """
     Fetch a specific set of secrets by name and verify that the required
@@ -137,7 +128,7 @@ def load_secrets(
         # Use Taskcluster secret service
         assert secret_name is not None, "Missing Taskcluster secret secret_name"
         all_secrets = secrets_service.get(secret_name).get("secret", dict())
-        logger.info(f"Loaded Taskcluster secret {secret_name}")
+        logger.info("Loaded Taskcluster secret {}".format(secret_name))
 
     if prefixes:
         # Use secrets behind supported prefixes
@@ -151,7 +142,7 @@ def load_secrets(
     # Check required secrets
     for required_secret in required:
         if required_secret not in secrets:
-            raise Exception(f"Missing value {required_secret} in secrets.")
+            raise Exception("Missing value {} in secrets.".format(required_secret))
 
     return secrets
 
@@ -189,4 +180,8 @@ def upload_artifact(queue_service, artifact_path, content, content_type, ttl):
     push.raise_for_status()
 
     # Build the absolute url
-    return f"/api/queue/v1/task/{task_id}/runs/{run_id}/artifacts/{artifact_path}"
+    return "/api/queue/v1/task/{task_id}/runs/{run_id}/artifacts/{path}".format(
+        task_id=task_id,
+        run_id=run_id,
+        path=artifact_path,
+    )

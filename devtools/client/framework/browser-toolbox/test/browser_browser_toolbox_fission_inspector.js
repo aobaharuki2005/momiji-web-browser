@@ -45,10 +45,12 @@ add_task(async function () {
   const color = await ToolboxTask.spawn(null, async () => {
     /* global gToolbox */
     const inspector = gToolbox.getPanel("inspector");
-    await inspector.sidebar.select("computedview");
+    const onSidebarSelect = inspector.sidebar.once("select");
+    inspector.sidebar.select("computedview");
+    await onSidebarSelect;
 
     await selectNodeInFrames(
-      ["browser[remote][test-tab]", "#my-div"],
+      ['browser[remote="true"][test-tab]', "#my-div"],
       inspector
     );
 
@@ -199,7 +201,7 @@ async function pickNodeInContentPage(
   // element containing the tab we're looking at, at the position where should be the
   // content element.
   // We need to do this to mimick what's actually done in node-picker.js
-  EventUtils.synthesizeMouse(
+  await EventUtils.synthesizeMouse(
     document.querySelector(browserElementSelector),
     x + 5,
     y + 5,

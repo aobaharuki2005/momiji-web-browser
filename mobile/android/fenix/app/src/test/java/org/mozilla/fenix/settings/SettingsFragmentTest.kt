@@ -14,13 +14,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxrelay.eligibility.Eligible
-import mozilla.components.service.fxrelay.eligibility.Ineligible
-import mozilla.components.service.fxrelay.eligibility.RelayEligibilityStore
-import mozilla.components.service.fxrelay.eligibility.RelayState
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -33,7 +30,6 @@ import org.mozilla.fenix.utils.Settings
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
-import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class SettingsFragmentTest {
@@ -80,7 +76,7 @@ class SettingsFragmentTest {
             true,
         )
         assertNotNull(preferenceAmoCollectionOverride)
-        assertFalse(preferenceAmoCollectionOverride.isVisible)
+        assertFalse(preferenceAmoCollectionOverride!!.isVisible)
 
         val settings: Settings = mockk(relaxed = true)
         every { settings.showSecretDebugMenuThisSession } returns true
@@ -109,7 +105,7 @@ class SettingsFragmentTest {
 
         settingsFragment.setupInstallAddonFromFilePreference(mockk(relaxed = true))
         assertNotNull(preference)
-        assertFalse(preference.isVisible)
+        assertFalse(preference!!.isVisible)
 
         val settings: Settings = mockk(relaxed = true)
 
@@ -139,7 +135,7 @@ class SettingsFragmentTest {
             true,
         )
         assertNotNull(preferenceAmoCollectionOverride)
-        assertFalse(preferenceAmoCollectionOverride.isVisible)
+        assertFalse(preferenceAmoCollectionOverride!!.isVisible)
 
         val settings: Settings = mockk(relaxed = true)
         every { settings.showSecretDebugMenuThisSession } returns false
@@ -181,7 +177,7 @@ class SettingsFragmentTest {
             false,
         )
         assertNotNull(preferenceAmoCollectionOverride)
-        assertFalse(preferenceAmoCollectionOverride.isVisible)
+        assertFalse(preferenceAmoCollectionOverride!!.isVisible)
 
         every { settings.showSecretDebugMenuThisSession } returns true
         every { settings.amoCollectionOverrideConfigured() } returns true
@@ -412,57 +408,5 @@ class SettingsFragmentTest {
         settingsFragment.onStop()
 
         verify { accountManager.unregister(settingsFragment.accountObserver) }
-    }
-
-    @Test
-    fun `GIVEN email mask feature is available for the user WHEN relay eligibility is Eligible THEN preference is visible`() {
-        val preference = settingsFragment.requirePreference<Preference>(
-            R.string.pref_key_email_masks,
-        )
-        every { testContext.settings().isEmailMaskFeatureEnabled } returns true
-        every { testContext.components.relayEligibilityStore } returns RelayEligibilityStore(RelayState(Eligible.Premium))
-
-        settingsFragment.setupEmailMaskPreference(testContext.settings(), testContext.components)
-
-        assertTrue(preference.isVisible)
-    }
-
-    @Test
-    fun `GIVEN email mask feature is available for the user WHEN relay eligibility is Ineligible THEN preference is hidden`() {
-        val preference = settingsFragment.requirePreference<Preference>(
-            R.string.pref_key_email_masks,
-        )
-        every { testContext.settings().isEmailMaskFeatureEnabled } returns true
-        every { testContext.components.relayEligibilityStore } returns RelayEligibilityStore(RelayState(Ineligible.FirefoxAccountNotLoggedIn))
-
-        settingsFragment.setupEmailMaskPreference(testContext.settings(), testContext.components)
-
-        assertFalse(preference.isVisible)
-    }
-
-    @Test
-    fun `GIVEN email mask feature is not available for the user WHEN relay eligibility is Eligible THEN preference is hidden`() {
-        val preference = settingsFragment.requirePreference<Preference>(
-            R.string.pref_key_email_masks,
-        )
-        every { testContext.settings().isEmailMaskFeatureEnabled } returns false
-        every { testContext.components.relayEligibilityStore } returns RelayEligibilityStore(RelayState(Eligible.Premium))
-
-        settingsFragment.setupEmailMaskPreference(testContext.settings(), testContext.components)
-
-        assertFalse(preference.isVisible)
-    }
-
-    @Test
-    fun `GIVEN email mask feature is not available for the user WHEN relay eligibility is Ineligible THEN preference is hidden`() {
-        val preference = settingsFragment.requirePreference<Preference>(
-            R.string.pref_key_email_masks,
-        )
-        every { testContext.settings().isEmailMaskFeatureEnabled } returns false
-        every { testContext.components.relayEligibilityStore } returns RelayEligibilityStore(RelayState(Ineligible.FirefoxAccountNotLoggedIn))
-
-        settingsFragment.setupEmailMaskPreference(testContext.settings(), testContext.components)
-
-        assertFalse(preference.isVisible)
     }
 }

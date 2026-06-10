@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,12 +41,7 @@ class Response final : public FetchBody<Response>, public nsWrapperCache {
   }
 
   ResponseType Type() const { return mInternalResponse->Type(); }
-  void GetUrl(nsACString& aUrl) const {
-    aUrl.Truncate();
-    if (nsIURI* uri = mInternalResponse->GetURL()) {
-      MOZ_ALWAYS_SUCCEEDS(uri->GetSpec(aUrl));
-    }
-  }
+  void GetUrl(nsACString& aUrl) const { aUrl = mInternalResponse->GetURL(); }
   bool Redirected() const { return mInternalResponse->IsRedirected(); }
   uint16_t Status() const { return mInternalResponse->GetStatus(); }
 
@@ -85,9 +82,11 @@ class Response final : public FetchBody<Response>, public nsWrapperCache {
 
   using FetchBody::GetBody;
 
-  using FetchBody::BodyBlobImpl;
+  using FetchBody::BodyBlobURISpec;
 
-  BlobImpl* BodyBlobImpl() const { return mInternalResponse->BodyBlobImpl(); }
+  const nsACString& BodyBlobURISpec() const {
+    return mInternalResponse->BodyBlobURISpec();
+  }
 
   using FetchBody::BodyLocalPath;
 
@@ -113,7 +112,7 @@ class Response final : public FetchBody<Response>, public nsWrapperCache {
       const Nullable<fetch::ResponseBodyInit>& aBody, const ResponseInit& aInit,
       ErrorResult& rv);
 
-  nsIGlobalObject* GetParentObject() const { return mGlobal; }
+  nsIGlobalObject* GetParentObject() const { return mOwner; }
 
   already_AddRefed<Response> Clone(JSContext* aCx, ErrorResult& aRv);
 

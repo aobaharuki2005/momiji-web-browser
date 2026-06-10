@@ -57,7 +57,7 @@ class MediaContentDescription {
   MediaContentDescription() = default;
   virtual ~MediaContentDescription() = default;
 
-  virtual MediaType type() const = 0;
+  virtual webrtc::MediaType type() const = 0;
 
   // Try to cast this media description to an AudioContentDescription. Returns
   // nullptr if the cast fails.
@@ -87,7 +87,7 @@ class MediaContentDescription {
 
   // `protocol` is the expected media transport protocol, such as RTP/AVPF,
   // RTP/SAVPF or SCTP/DTLS.
-  const std::string& protocol() const { return protocol_; }
+  std::string protocol() const { return protocol_; }
   virtual void set_protocol(absl::string_view protocol) {
     protocol_ = std::string(protocol);
   }
@@ -116,23 +116,8 @@ class MediaContentDescription {
   // This is a transport-wide property, but is signalled in SDP
   // at the m-line level; its mux category is IDENTICAL-PER-PT,
   // and only wildcard is allowed. RFC 8888 section 6.
-  // In an answer, only one of rtcp_fb_ack_transport_cc() and rtcp_fb_ack_ccfb()
-  // can be true.
   bool rtcp_fb_ack_ccfb() const { return rtcp_fb_ack_ccfb_; }
   void set_rtcp_fb_ack_ccfb(bool enable) { rtcp_fb_ack_ccfb_ = enable; }
-
-  // Support of Transport-wide congestion control feedback.
-  // https://datatracker.ietf.org/doc/html/draft-holmer-rmcat-transport-wide-cc-extensions-01
-  // In an answer, only one of rtcp_fb_ack_transport_cc() and rtcp_fb_ack_ccfb()
-  // can be true.
-  bool rtcp_fb_ack_transport_cc() const {
-    for (const auto& codec : codecs_) {
-      if (codec.feedback_params.Has(FeedbackParam(kRtcpFbParamTransportCc))) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   // Returns the preferred RTCP ack type used for congestion control for this
   // media content or `std::nullopt` if no supported type exists.
@@ -140,17 +125,19 @@ class MediaContentDescription {
     if (rtcp_fb_ack_ccfb_) {
       return RtcpFeedbackType::CCFB;
     }
-    if (rtcp_fb_ack_transport_cc()) {
-      return RtcpFeedbackType::TRANSPORT_CC;
+    for (const auto& codec : codecs_) {
+      if (codec.feedback_params.Has(FeedbackParam(kRtcpFbParamTransportCc))) {
+        return RtcpFeedbackType::TRANSPORT_CC;
+      }
     }
     return std::nullopt;
   }
 
   int bandwidth() const { return bandwidth_; }
   void set_bandwidth(int bandwidth) { bandwidth_ = bandwidth; }
-  const std::string& bandwidth_type() const { return bandwidth_type_; }
+  std::string bandwidth_type() const { return bandwidth_type_; }
   void set_bandwidth_type(std::string bandwidth_type) {
-    bandwidth_type_ = std::move(bandwidth_type);
+    bandwidth_type_ = bandwidth_type;
   }
 
   // List of RTP header extensions. URIs are **NOT** guaranteed to be unique
@@ -227,19 +214,12 @@ class MediaContentDescription {
   bool extmap_allow_mixed() const { return extmap_allow_mixed_enum_ != kNo; }
 
   // Simulcast functionality.
-  bool HasSimulcast() const {
-    // In practice this is only supported for video, but currently
-    // tests populate the simulcast_ field for non video types.
-    return !simulcast_.empty();
-  }
+  bool HasSimulcast() const { return !simulcast_.empty(); }
   SimulcastDescription& simulcast_description() { return simulcast_; }
   const SimulcastDescription& simulcast_description() const {
-    // In practice this is only supported for video, but currently
-    // tests populate the simulcast_ field for non video types.
     return simulcast_;
   }
   void set_simulcast_description(const SimulcastDescription& simulcast) {
-    // In practice only applies to video descriptions.
     simulcast_ = simulcast;
   }
   const std::vector<RidDescription>& receive_rids() const {
@@ -247,12 +227,6 @@ class MediaContentDescription {
   }
   void set_receive_rids(const std::vector<RidDescription>& rids) {
     receive_rids_ = rids;
-  }
-
-  // Whether Sframe encryption is enabled for this media section.
-  bool sframe_enabled() const { return sframe_enabled_; }
-  void set_sframe_enabled(bool sframe_enabled) {
-    sframe_enabled_ = sframe_enabled;
   }
 
   // Codecs should be in preference order (most preferred codec first).
@@ -303,7 +277,6 @@ class MediaContentDescription {
 
   SimulcastDescription simulcast_;
   std::vector<RidDescription> receive_rids_;
-  bool sframe_enabled_ = false;
 
   // Copy function that returns a raw pointer. Caller will assert ownership.
   // Should only be called by the Clone() function. Must be implemented
@@ -315,13 +288,13 @@ class MediaContentDescription {
 
 class RtpMediaContentDescription : public MediaContentDescription {};
 
-class AudioContentDescription final : public RtpMediaContentDescription {
+class AudioContentDescription : public RtpMediaContentDescription {
  public:
   void set_protocol(absl::string_view protocol) override {
     RTC_DCHECK(IsRtpProtocol(protocol));
     protocol_ = std::string(protocol);
   }
-  MediaType type() const override { return MediaType::AUDIO; }
+  webrtc::MediaType type() const override { return webrtc::MediaType::AUDIO; }
   AudioContentDescription* as_audio() override { return this; }
   const AudioContentDescription* as_audio() const override { return this; }
 
@@ -331,13 +304,13 @@ class AudioContentDescription final : public RtpMediaContentDescription {
   }
 };
 
-class VideoContentDescription final : public RtpMediaContentDescription {
+class VideoContentDescription : public RtpMediaContentDescription {
  public:
   void set_protocol(absl::string_view protocol) override {
     RTC_DCHECK(IsRtpProtocol(protocol));
     protocol_ = std::string(protocol);
   }
-  MediaType type() const override { return MediaType::VIDEO; }
+  webrtc::MediaType type() const override { return webrtc::MediaType::VIDEO; }
   VideoContentDescription* as_video() override { return this; }
   const VideoContentDescription* as_video() const override { return this; }
 
@@ -347,16 +320,15 @@ class VideoContentDescription final : public RtpMediaContentDescription {
   }
 };
 
-class SctpDataContentDescription final : public MediaContentDescription {
+class SctpDataContentDescription : public MediaContentDescription {
  public:
   SctpDataContentDescription() {}
   SctpDataContentDescription(const SctpDataContentDescription& o)
       : MediaContentDescription(o),
         use_sctpmap_(o.use_sctpmap_),
         port_(o.port_),
-        max_message_size_(o.max_message_size_),
-        sctp_init_(o.sctp_init_) {}
-  MediaType type() const override { return MediaType::DATA; }
+        max_message_size_(o.max_message_size_) {}
+  webrtc::MediaType type() const override { return webrtc::MediaType::DATA; }
   SctpDataContentDescription* as_sctp() override { return this; }
   const SctpDataContentDescription* as_sctp() const override { return this; }
 
@@ -374,12 +346,6 @@ class SctpDataContentDescription final : public MediaContentDescription {
   void set_max_message_size(int max_message_size) {
     max_message_size_ = max_message_size;
   }
-  std::optional<const std::vector<uint8_t>> sctp_init() const {
-    return sctp_init_;
-  }
-  void set_sctp_init(std::optional<const std::vector<uint8_t>> sctp_init) {
-    sctp_init_ = sctp_init;
-  }
 
  private:
   SctpDataContentDescription* CloneInternal() const override {
@@ -390,16 +356,15 @@ class SctpDataContentDescription final : public MediaContentDescription {
   int port_ = 5000;
   // draft-ietf-mmusic-sdp-sctp-23: Max message size default is 64K
   int max_message_size_ = 64 * 1024;
-
-  // draft-hancke-tsvwg-snap
-  std::optional<std::vector<uint8_t>> sctp_init_;
 };
 
-class UnsupportedContentDescription final : public MediaContentDescription {
+class UnsupportedContentDescription : public MediaContentDescription {
  public:
   explicit UnsupportedContentDescription(absl::string_view media_type)
       : media_type_(media_type) {}
-  MediaType type() const override { return MediaType::UNSUPPORTED; }
+  webrtc::MediaType type() const override {
+    return webrtc::MediaType::UNSUPPORTED;
+  }
 
   UnsupportedContentDescription* as_unsupported() override { return this; }
   const UnsupportedContentDescription* as_unsupported() const override {
@@ -414,7 +379,7 @@ class UnsupportedContentDescription final : public MediaContentDescription {
     return new UnsupportedContentDescription(*this);
   }
 
-  const std::string media_type_;
+  std::string media_type_;
 };
 
 // Protocol used for encoding media. This is the "top level" protocol that may
@@ -431,7 +396,7 @@ enum class MediaProtocolType {
 // Represents a session description section. Most information about the section
 // is stored in the description, which is a subclass of MediaContentDescription.
 // Owns the description.
-class RTC_EXPORT ContentInfo final {
+class RTC_EXPORT ContentInfo {
  public:
   ContentInfo(MediaProtocolType type,
               absl::string_view mid,
@@ -453,6 +418,7 @@ class RTC_EXPORT ContentInfo final {
   ContentInfo(ContentInfo&& o) = default;
   ContentInfo& operator=(ContentInfo&& o) = default;
 
+  // TODO(tommi): change return type to string_view.
   const std::string& mid() const { return mid_; }
   void set_mid(absl::string_view mid) { mid_ = std::string(mid); }
 
@@ -466,6 +432,7 @@ class RTC_EXPORT ContentInfo final {
 
  private:
   std::string mid_;
+  friend class SessionDescription;
   std::unique_ptr<MediaContentDescription> description_;
 };
 
@@ -477,12 +444,11 @@ using ContentNames = std::vector<std::string>;
 // MediaDescription.
 class ContentGroup {
  public:
-  explicit ContentGroup(std::string semantics);
+  explicit ContentGroup(const std::string& semantics);
   ContentGroup(const ContentGroup&);
   ContentGroup(ContentGroup&&);
   ContentGroup& operator=(const ContentGroup&);
   ContentGroup& operator=(ContentGroup&&);
-  bool operator==(const ContentGroup& o) const = default;
   ~ContentGroup();
 
   const std::string& semantics() const { return semantics_; }
@@ -535,8 +501,8 @@ class SessionDescription {
   // Content accessors.
   const ContentInfos& contents() const { return contents_; }
   ContentInfos& contents() { return contents_; }
-  const ContentInfo* GetContentByName(absl::string_view name) const;
-  ContentInfo* GetContentByName(absl::string_view name);
+  const ContentInfo* GetContentByName(const std::string& name) const;
+  ContentInfo* GetContentByName(const std::string& name);
   const MediaContentDescription* GetContentDescriptionByName(
       absl::string_view name) const;
   MediaContentDescription* GetContentDescriptionByName(absl::string_view name);
@@ -545,29 +511,29 @@ class SessionDescription {
 
   // Content mutators.
   // Adds a content to this description. Takes ownership of ContentDescription*.
-  void AddContent(absl::string_view name,
+  void AddContent(const std::string& name,
                   MediaProtocolType type,
                   std::unique_ptr<MediaContentDescription> description);
-  void AddContent(absl::string_view name,
+  void AddContent(const std::string& name,
                   MediaProtocolType type,
                   bool rejected,
                   std::unique_ptr<MediaContentDescription> description);
-  void AddContent(absl::string_view name,
+  void AddContent(const std::string& name,
                   MediaProtocolType type,
                   bool rejected,
                   bool bundle_only,
                   std::unique_ptr<MediaContentDescription> description);
   void AddContent(ContentInfo&& content);
 
-  bool RemoveContentByName(absl::string_view name);
+  bool RemoveContentByName(const std::string& name);
 
   // Transport accessors.
   const TransportInfos& transport_infos() const { return transport_infos_; }
   TransportInfos& transport_infos() { return transport_infos_; }
-  const TransportInfo* GetTransportInfoByName(absl::string_view name) const;
-  TransportInfo* GetTransportInfoByName(absl::string_view name);
+  const TransportInfo* GetTransportInfoByName(const std::string& name) const;
+  TransportInfo* GetTransportInfoByName(const std::string& name);
   const TransportDescription* GetTransportDescriptionByName(
-      absl::string_view name) const {
+      const std::string& name) const {
     const TransportInfo* tinfo = GetTransportInfoByName(name);
     return tinfo ? &tinfo->description : NULL;
   }
@@ -578,19 +544,19 @@ class SessionDescription {
   }
   // Adds a TransportInfo to this description.
   void AddTransportInfo(const TransportInfo& transport_info);
-  bool RemoveTransportInfoByName(absl::string_view name);
+  bool RemoveTransportInfoByName(const std::string& name);
 
   // Group accessors.
   const ContentGroups& groups() const { return content_groups_; }
-  const ContentGroup* GetGroupByName(absl::string_view name) const;
+  const ContentGroup* GetGroupByName(const std::string& name) const;
   std::vector<const ContentGroup*> GetGroupsByName(
-      absl::string_view name) const;
-  bool HasGroup(absl::string_view name) const;
+      const std::string& name) const;
+  bool HasGroup(const std::string& name) const;
 
   // Group mutators.
   void AddGroup(const ContentGroup& group) { content_groups_.push_back(group); }
   // Remove the first group with the same semantics specified by `name`.
-  void RemoveGroupByName(absl::string_view name);
+  void RemoveGroupByName(const std::string& name);
 
   // Global attributes.
   // Determines how the MSIDs were/will be signaled. Flag value composed of

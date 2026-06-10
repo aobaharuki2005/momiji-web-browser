@@ -33,8 +33,6 @@ public:
 protected:
     void flatten(SkWriteBuffer& buffer) const override;
 
-    bool onIsAlphaUnchanged() const override { return true; }
-
 private:
     friend void ::SkRegisterSkColorSpaceXformColorFilterFlattenable();
     SK_FLATTENABLE_HOOKS(SkColorSpaceXformColorFilter)

@@ -411,7 +411,7 @@ def repackage_msix(
 
     first = next(values)
     if not displayname:
-        displayname = first
+        displayname = f"Mozilla {first}"
 
         # Release (official) and Beta share branding.  Differentiate Beta a little bit.
         if channel == "beta":
@@ -657,9 +657,9 @@ def repackage_msix(
 
     # Windows MSIX packages support a finite set of locales: see
     # https://docs.microsoft.com/en-us/windows/uwp/publish/supported-languages, which is encoded in
-    # https://searchfox.org/firefox-main/source/browser/installer/windows/msix/msix-all-locales.
+    # https://searchfox.org/mozilla-central/source/browser/installer/windows/msix/msix-all-locales.
     # We distribute all of the langpacks supported by the release channel in our MSIX, which is
-    # encoded in https://searchfox.org/firefox-main/source/browser/locales/all-locales.  But we
+    # encoded in https://searchfox.org/mozilla-central/source/browser/locales/all-locales.  But we
     # only advertise support in the App manifest for the intersection of that set and the set of
     # supported locales.
     #

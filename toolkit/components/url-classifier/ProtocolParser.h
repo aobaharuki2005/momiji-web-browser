@@ -1,9 +1,10 @@
+//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ProtocolParser_h_
-#define ProtocolParser_h_
+#ifndef ProtocolParser_h__
+#define ProtocolParser_h__
 
 #include "HashStore.h"
 #include "chromium/safebrowsing.pb.h"

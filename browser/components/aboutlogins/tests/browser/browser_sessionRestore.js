@@ -18,8 +18,8 @@ async function checkLoginDisplayed(browser, testGuid) {
 
 add_task(async function () {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
-  registerCleanupFunction(async () => {
-    await Services.logins.removeAllUserFacingLoginsAsync();
+  registerCleanupFunction(() => {
+    Services.logins.removeAllUserFacingLogins();
   });
 
   const testGuid = TEST_LOGIN1.guid;

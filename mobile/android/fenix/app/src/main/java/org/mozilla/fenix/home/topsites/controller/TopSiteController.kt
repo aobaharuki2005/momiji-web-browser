@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home.topsites.controller
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.widget.EditText
@@ -17,6 +16,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.availableSearchEngines
@@ -26,7 +26,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.top.sites.TopSitesUseCases
-import mozilla.components.service.mars.MozAdsUseCases
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.support.ktx.kotlin.isUrl
@@ -36,9 +35,9 @@ import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.ShortcutsLibrary
 import org.mozilla.fenix.GleanMetrics.TopSites
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.components
@@ -50,7 +49,6 @@ import org.mozilla.fenix.home.topsites.interactor.TopSiteInteractor
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 import java.lang.ref.WeakReference
-import androidx.appcompat.R as appcompatR
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -113,7 +111,7 @@ interface TopSiteController {
  */
 @Suppress("LongParameterList")
 class DefaultTopSiteController(
-    private val activityRef: WeakReference<Activity>,
+    private val activityRef: WeakReference<HomeActivity>,
     private val navControllerRef: WeakReference<NavController>,
     private val store: BrowserStore,
     private val settings: Settings,
@@ -122,11 +120,10 @@ class DefaultTopSiteController(
     private val fenixBrowserUseCases: FenixBrowserUseCases,
     private val topSitesUseCases: TopSitesUseCases,
     private val marsUseCases: MARSUseCases,
-    private val mozAdsUseCases: MozAdsUseCases,
     private val viewLifecycleScope: CoroutineScope,
 ) : TopSiteController {
 
-    private val activity: Activity
+    private val activity: HomeActivity
         get() = requireNotNull(activityRef.get())
 
     private val navController: NavController
@@ -139,9 +136,7 @@ class DefaultTopSiteController(
             TopSites.openInPrivateTab.record(NoExtras())
         }
 
-        activity.components.appStore.dispatch(
-            AppAction.BrowsingModeManagerModeChanged(BrowsingMode.Private),
-        )
+        activity.browsingModeManager.mode = BrowsingMode.Private
 
         if (navController.currentDestination?.id == R.id.shortcutsFragment) {
             navController.navigate(ShortcutsFragmentDirections.actionShortcutsFragmentToBrowserFragment())
@@ -180,7 +175,7 @@ class DefaultTopSiteController(
                     val urlText = urlEditText.text.toString()
 
                     if (urlText.isUrl()) {
-                        viewLifecycleScope.launch {
+                        viewLifecycleScope.launch(Dispatchers.IO) {
                             updateTopSite(
                                 topSite = topSite,
                                 title = titleEditText.text.toString(),
@@ -191,7 +186,7 @@ class DefaultTopSiteController(
                         dialog.dismiss()
                     } else {
                         val criticalColor = ColorStateList.valueOf(
-                            activity.getColorFromAttr(appcompatR.attr.colorError),
+                            activity.getColorFromAttr(R.attr.textCritical),
                         )
                         urlLayout.setErrorIconTintList(criticalColor)
                         urlLayout.setErrorTextColor(criticalColor)
@@ -216,7 +211,7 @@ class DefaultTopSiteController(
     }
 
     @VisibleForTesting
-    internal suspend fun updateTopSite(topSite: TopSite, title: String, url: String) {
+    internal fun updateTopSite(topSite: TopSite, title: String, url: String) {
         if (topSite is TopSite.Frecent) {
             topSitesUseCases.addPinnedSites(
                 title = title,
@@ -238,7 +233,7 @@ class DefaultTopSiteController(
             SupportUtils.GOOGLE_URL -> TopSites.googleTopSiteRemoved.record(NoExtras())
         }
 
-        viewLifecycleScope.launch {
+        viewLifecycleScope.launch(Dispatchers.IO) {
             with(activity.components.useCases.topSitesUseCase) {
                 removeTopSites(topSite)
             }
@@ -251,11 +246,7 @@ class DefaultTopSiteController(
             is TopSite.Frecent -> TopSites.openFrecency.record(NoExtras())
             is TopSite.Pinned -> TopSites.openPinned.record(NoExtras())
             is TopSite.Provided -> {
-                if (settings.enableMozillaAdsClient) {
-                    sendMozAdsClickInteraction(clickUrl = topSite.clickUrl)
-                } else {
-                    sendMarsTopSiteCallback(topSite.clickUrl)
-                }
+                sendMarsTopSiteCallback(topSite.clickUrl)
 
                 TopSites.openContileTopSite.record(NoExtras()).also {
                     recordTopSitesClickTelemetry(topSite, position)
@@ -332,11 +323,7 @@ class DefaultTopSiteController(
     }
 
     override fun handleTopSiteImpression(topSite: TopSite.Provided, position: Int) {
-        if (settings.enableMozillaAdsClient) {
-            sendMozAdsImpressionInteraction(impressionUrl = topSite.impressionUrl)
-        } else {
-            sendMarsTopSiteCallback(topSite.impressionUrl)
-        }
+        sendMarsTopSiteCallback(topSite.impressionUrl)
 
         TopSites.contileImpression.record(
             TopSites.ContileImpressionExtra(
@@ -352,20 +339,8 @@ class DefaultTopSiteController(
     }
 
     private fun sendMarsTopSiteCallback(url: String) {
-        viewLifecycleScope.launch {
+        viewLifecycleScope.launch(Dispatchers.IO) {
             marsUseCases.recordInteraction(url)
-        }
-    }
-
-    private fun sendMozAdsClickInteraction(clickUrl: String) {
-        viewLifecycleScope.launch {
-            mozAdsUseCases.recordClickInteraction(clickUrl = clickUrl)
-        }
-    }
-
-    private fun sendMozAdsImpressionInteraction(impressionUrl: String) {
-        viewLifecycleScope.launch {
-            mozAdsUseCases.recordImpressionInteraction(impressionUrl = impressionUrl)
         }
     }
 

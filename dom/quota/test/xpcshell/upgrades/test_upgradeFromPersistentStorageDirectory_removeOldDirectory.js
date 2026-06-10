@@ -8,7 +8,7 @@
  * MaybeUpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory method.
  */
 
-async function testUpgradeFromPersistentStorageDirectory_removeOldDirectory() {
+async function testSteps() {
   const url = "http://www.mozilla.org";
   const persistence = "default";
   const lastAccessed = 0x0005330925e07841;
@@ -99,18 +99,4 @@ async function testUpgradeFromPersistentStorageDirectory_removeOldDirectory() {
   const usageResult = result[0];
   Assert.equal(usageResult.origin, url, "Origin equals");
   Assert.equal(usageResult.lastAccessed, lastAccessed, "LastAccessed equals");
-}
-
-async function testSteps() {
-  add_task(
-    {
-      pref_set: [
-        [
-          "dom.quotaManager.temporaryStorage.clearNonPersistedZeroUsageOrigins",
-          false,
-        ],
-      ],
-    },
-    testUpgradeFromPersistentStorageDirectory_removeOldDirectory
-  );
 }

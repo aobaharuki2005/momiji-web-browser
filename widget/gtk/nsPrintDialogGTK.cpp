@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,11 +8,8 @@
 #include <stdlib.h>
 
 #include "mozilla/Services.h"
-#include "mozilla/dom/Promise.h"
 
-#include "GRefPtr.h"
 #include "MozContainer.h"
-#include "nsIGlobalObject.h"
 #include "nsIPrintSettings.h"
 #include "nsIWidget.h"
 #include "nsPrintDialogGTK.h"
@@ -24,11 +22,9 @@
 #include "nsPrintfCString.h"
 #include "nsIGIOService.h"
 #include "nsServiceManagerUtils.h"
-#include "nsThreadUtils.h"
 #include "WidgetUtils.h"
 #include "WidgetUtilsGtk.h"
 #include "nsIObserverService.h"
-#include "xpcpublic.h"
 
 // for gdk_x11_window_get_xid
 #include <gdk/gdk.h>
@@ -45,7 +41,6 @@
 #include "MainThreadUtils.h"
 
 using namespace mozilla;
-using namespace mozilla::dom;
 using namespace mozilla::widget;
 
 static const char header_footer_tags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
@@ -73,12 +68,12 @@ static void ShowCustomDialog(GtkComboBox* changed_box, gpointer user_data) {
   nsAutoString intlString;
 
   printBundle->GetStringFromName("headerFooterCustom", intlString);
-  RefPtr<GtkWidget> prompt_dialog = gtk_dialog_new_with_buttons(
+  GtkWidget* prompt_dialog = gtk_dialog_new_with_buttons(
       NS_ConvertUTF16toUTF8(intlString).get(), printDialog,
-      (GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT),
-      g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_REJECT,
-      g_dgettext("gtk30", "_OK"), GTK_RESPONSE_ACCEPT, nullptr);
-  gtk_dialog_set_default_response(GTK_DIALOG(prompt_dialog.get()),
+      (GtkDialogFlags)(GTK_DIALOG_MODAL), g_dgettext("gtk30", "_Cancel"),
+      GTK_RESPONSE_REJECT, g_dgettext("gtk30", "_OK"), GTK_RESPONSE_ACCEPT,
+      nullptr);
+  gtk_dialog_set_default_response(GTK_DIALOG(prompt_dialog),
                                   GTK_RESPONSE_ACCEPT);
 
   printBundle->GetStringFromName("customHeaderFooterPrompt", intlString);
@@ -111,9 +106,9 @@ static void ShowCustomDialog(GtkComboBox* changed_box, gpointer user_data) {
   gtk_widget_show_all(custom_hbox);
 
   gtk_box_pack_start(
-      GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prompt_dialog.get()))),
+      GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prompt_dialog))),
       custom_hbox, FALSE, FALSE, 0);
-  gint diag_response = gtk_dialog_run(GTK_DIALOG(prompt_dialog.get()));
+  gint diag_response = gtk_dialog_run(GTK_DIALOG(prompt_dialog));
 
   if (diag_response == GTK_RESPONSE_ACCEPT) {
     const gchar* response_text = gtk_entry_get_text(GTK_ENTRY(custom_entry));
@@ -143,7 +138,7 @@ class nsPrintDialogWidgetGTK {
   nsresult ExportSettings(nsIPrintSettings* aNSSettings);
 
  private:
-  RefPtr<GtkWidget> dialog;
+  GtkWidget* dialog;
   GtkWidget* shrink_to_fit_toggle;
   GtkWidget* print_bg_colors_toggle;
   GtkWidget* print_bg_images_toggle;
@@ -181,12 +176,9 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsPIDOMWindowOuter* aParent,
 
   dialog = gtk_print_unix_dialog_new(GetUTF8FromBundle("printTitleGTK").get(),
                                      gtkParent);
-  if (gtkParent) {
-    gtk_window_set_destroy_with_parent(GTK_WINDOW(dialog.get()), TRUE);
-  }
 
   gtk_print_unix_dialog_set_manual_capabilities(
-      GTK_PRINT_UNIX_DIALOG(dialog.get()),
+      GTK_PRINT_UNIX_DIALOG(dialog),
       GtkPrintCapabilities(
           GTK_PRINT_CAPABILITY_COPIES | GTK_PRINT_CAPABILITY_COLLATE |
           GTK_PRINT_CAPABILITY_REVERSE | GTK_PRINT_CAPABILITY_SCALE |
@@ -322,7 +314,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsPIDOMWindowOuter* aParent,
   gtk_box_pack_start(GTK_BOX(custom_options_tab),
                      header_footer_vertical_squasher, FALSE, FALSE, 0);
 
-  gtk_print_unix_dialog_add_custom_tab(GTK_PRINT_UNIX_DIALOG(dialog.get()),
+  gtk_print_unix_dialog_add_custom_tab(GTK_PRINT_UNIX_DIALOG(dialog),
                                        custom_options_tab, tab_label);
   gtk_widget_show_all(custom_options_tab);
 }
@@ -347,7 +339,7 @@ const char* nsPrintDialogWidgetGTK::OptionWidgetToString(GtkWidget* dropdown) {
 }
 
 gint nsPrintDialogWidgetGTK::Run() {
-  const gint response = gtk_dialog_run(GTK_DIALOG(dialog.get()));
+  const gint response = gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_hide(dialog);
   return response;
 }
@@ -401,10 +393,8 @@ nsresult nsPrintDialogWidgetGTK::ImportSettings(nsIPrintSettings* aNSSettings) {
   aNSSettings->GetNumPagesPerSheet(&pagesPerSide);
   gtk_print_settings_set_number_up(settings, pagesPerSide);
 
-  gtk_print_unix_dialog_set_settings(GTK_PRINT_UNIX_DIALOG(dialog.get()),
-                                     settings);
-  gtk_print_unix_dialog_set_page_setup(GTK_PRINT_UNIX_DIALOG(dialog.get()),
-                                       setup);
+  gtk_print_unix_dialog_set_settings(GTK_PRINT_UNIX_DIALOG(dialog), settings);
+  gtk_print_unix_dialog_set_page_setup(GTK_PRINT_UNIX_DIALOG(dialog), setup);
 
   return NS_OK;
 }
@@ -414,11 +404,11 @@ nsresult nsPrintDialogWidgetGTK::ExportSettings(nsIPrintSettings* aNSSettings) {
   NS_ENSURE_TRUE(aNSSettings, NS_ERROR_FAILURE);
 
   GtkPrintSettings* settings =
-      gtk_print_unix_dialog_get_settings(GTK_PRINT_UNIX_DIALOG(dialog.get()));
+      gtk_print_unix_dialog_get_settings(GTK_PRINT_UNIX_DIALOG(dialog));
   GtkPageSetup* setup =
-      gtk_print_unix_dialog_get_page_setup(GTK_PRINT_UNIX_DIALOG(dialog.get()));
-  GtkPrinter* printer = gtk_print_unix_dialog_get_selected_printer(
-      GTK_PRINT_UNIX_DIALOG(dialog.get()));
+      gtk_print_unix_dialog_get_page_setup(GTK_PRINT_UNIX_DIALOG(dialog));
+  GtkPrinter* printer =
+      gtk_print_unix_dialog_get_selected_printer(GTK_PRINT_UNIX_DIALOG(dialog));
   if (settings && setup && printer) {
     ExportHeaderFooter(aNSSettings);
 
@@ -472,9 +462,9 @@ GtkWidget* nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(
                                  "headerFooterPage",  "headerFooterPageTotal",
                                  "headerFooterCustom"};
 
-  for (const auto& hf_option : hf_options) {
+  for (unsigned int i = 0; i < std::size(hf_options); i++) {
     gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(dropdown), nullptr,
-                              GetUTF8FromBundle(hf_option).get());
+                              GetUTF8FromBundle(hf_options[i]).get());
   }
 
   bool shouldBeCustom = true;
@@ -515,30 +505,15 @@ nsPrintDialogServiceGTK::Init() { return NS_OK; }
 NS_IMETHODIMP
 nsPrintDialogServiceGTK::ShowPrintDialog(mozIDOMWindowProxy* aParent,
                                          bool aHaveSelection,
-                                         nsIPrintSettings* aSettings,
-                                         JSContext* aCx, Promise** aPromise) {
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG(aParent);
-  NS_ENSURE_ARG(aSettings);
-  NS_ENSURE_ARG(aCx);
-  NS_ENSURE_ARG(aPromise);
-
-  ErrorResult rvErr;
-  nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
-  RefPtr<Promise> promise = Promise::Create(global, rvErr);
-  if (NS_WARN_IF(rvErr.Failed())) {
-    return rvErr.StealNSResult();
-  }
+                                         nsIPrintSettings* aSettings) {
+  MOZ_ASSERT(aParent, "aParent must not be null");
+  MOZ_ASSERT(aSettings, "aSettings must not be null");
 
   nsPrintDialogWidgetGTK printDialog(nsPIDOMWindowOuter::From(aParent),
                                      aHaveSelection, aSettings);
   nsresult rv = printDialog.ImportSettings(aSettings);
 
-  if (NS_FAILED(rv)) {
-    promise->MaybeReject(rv);
-    promise.forget(aPromise);
-    return NS_OK;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   const gint response = printDialog.Run();
 
@@ -560,33 +535,15 @@ nsPrintDialogServiceGTK::ShowPrintDialog(mozIDOMWindowProxy* aParent,
       NS_WARNING("Unexpected response");
       rv = NS_ERROR_ABORT;
   }
-
-  if (NS_SUCCEEDED(rv)) {
-    promise->MaybeResolveWithUndefined();
-  } else {
-    promise->MaybeReject(rv);
-  }
-  promise.forget(aPromise);
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsPrintDialogServiceGTK::ShowPageSetupDialog(mozIDOMWindowProxy* aParent,
-                                             nsIPrintSettings* aNSSettings,
-                                             JSContext* aCx,
-                                             Promise** aPromise) {
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG(aParent);
-  NS_ENSURE_ARG(aNSSettings);
-  NS_ENSURE_ARG(aCx);
-  NS_ENSURE_ARG(aPromise);
-
-  ErrorResult rvErr;
-  nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
-  RefPtr<Promise> promise = Promise::Create(global, rvErr);
-  if (NS_WARN_IF(rvErr.Failed())) {
-    return rvErr.StealNSResult();
-  }
+                                             nsIPrintSettings* aNSSettings) {
+  MOZ_ASSERT(aParent, "aParent must not be null");
+  MOZ_ASSERT(aNSSettings, "aSettings must not be null");
+  NS_ENSURE_TRUE(aNSSettings, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIWidget> widget =
       WidgetUtils::DOMWindowToWidget(nsPIDOMWindowOuter::From(aParent));
@@ -595,11 +552,7 @@ nsPrintDialogServiceGTK::ShowPageSetupDialog(mozIDOMWindowProxy* aParent,
   NS_ASSERTION(gtkParent, "Need a GTK window for dialog to be modal.");
 
   nsCOMPtr<nsPrintSettingsGTK> aNSSettingsGTK(do_QueryInterface(aNSSettings));
-  if (!aNSSettingsGTK) {
-    promise->MaybeReject(NS_ERROR_FAILURE);
-    promise.forget(aPromise);
-    return NS_OK;
-  }
+  if (!aNSSettingsGTK) return NS_ERROR_FAILURE;
 
   // We need to init the prefs here because aNSSettings in its current form is a
   // dummy in both uses of the word
@@ -643,9 +596,7 @@ nsPrintDialogServiceGTK::ShowPageSetupDialog(mozIDOMWindowProxy* aParent,
   g_free(newData);
   if (unchanged) {
     g_object_unref(newPageSetup);
-    promise->MaybeReject(NS_ERROR_ABORT);
-    promise.forget(aPromise);
-    return NS_OK;
+    return NS_ERROR_ABORT;
   }
 
   aNSSettingsGTK->SetGtkPageSetup(newPageSetup);
@@ -660,7 +611,5 @@ nsPrintDialogServiceGTK::ShowPageSetupDialog(mozIDOMWindowProxy* aParent,
                          nsIPrintSettings::kInitSavePaperSize |
                          nsIPrintSettings::kInitSaveUnwriteableMargins);
 
-  promise->MaybeResolveWithUndefined();
-  promise.forget(aPromise);
   return NS_OK;
 }

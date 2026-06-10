@@ -78,14 +78,4 @@ bool MappedFileWriter::Keep() {
   return true;
 }
 
-#if defined(MOZ_ZUCCHINI)
-bool MappedFileWriter::Flush() {
-  bool success = buffer_.Flush();
-  if (!success) {
-    error_ = "Failed to flush changes to disk.";
-  }
-  return success;
-}
-#endif  // MOZ_ZUCCHINI
-
 }  // namespace zucchini

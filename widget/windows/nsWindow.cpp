@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sts=2 sw=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -114,6 +116,7 @@
 #include "nsRect.h"
 #include "nsThreadUtils.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsGkAtoms.h"
 #include "nsCRT.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsWidgetsCID.h"
@@ -331,9 +334,6 @@ bool nsWindow::sIsRestoringSession = false;
 
 bool nsWindow::sTouchInjectInitialized = false;
 InjectTouchInputPtr nsWindow::sInjectTouchFuncPtr;
-
-bool nsWindow::sIsNativePointLocked = false;
-bool nsWindow::sIsUsingRawInputForMouseMove = false;
 
 static SystemTimeConverter<DWORD>& TimeConverter() {
   static SystemTimeConverter<DWORD> timeConverterSingleton;
@@ -654,7 +654,7 @@ class TIPMessageHandler {
 
     mHook = ::SetWindowsHookEx(WH_GETMESSAGE, &TIPHook, nullptr,
                                ::GetCurrentThreadId());
-    NS_WARNING_ASSERTION(mHook, "SetWindowsHookEx(WH_GETMESSAGE) failed");
+    MOZ_ASSERT(mHook);
 
     if (!sSendMessageTimeoutWStub) {
       sUser32Intercept.Init("user32.dll");
@@ -819,7 +819,8 @@ nsWindow::nsWindow()
       mFrameState(std::in_place, this),
       mMicaBackdrop(false),
       mLastPaintEndTime(TimeStamp::Now()),
-      mCachedHitTestTime(TimeStamp::Now()) {
+      mCachedHitTestTime(TimeStamp::Now()),
+      mSizeConstraintsScale(GetDefaultScale().scale) {
   if (!gInitializedVirtualDesktopManager) {
     TaskController::Get()->AddTask(
         MakeAndAddRef<InitializeVirtualDesktopManagerTask>());
@@ -1309,10 +1310,6 @@ void nsWindow::Destroy() {
 
   DestroyDirectManipulation();
 
-  // Before destroying the native window, we need to clean up the resource
-  // allocated/stored for handling IME on this window.
-  IMEHandler::OnDestroyWindow(this);
-
   /**
    * On windows the LayerManagerOGL destructor wants the widget to be around for
    * cleanup. It also would like to have the HWND intact, so we nullptr it here.
@@ -1522,7 +1519,13 @@ DWORD nsWindow::WindowExStyle() {
  **************************************************************/
 
 bool nsWindow::ShouldAssociateWithWinAppSDK() const {
-  return IsTopLevelWidget();
+  // We currently don't need any SDK functionality for for PiP windows,
+  // and using the SDK on these windows causes them to go under the
+  // taskbar (bug 1995838).
+  //
+  // TODO(emilio): That might not be true anymore after bug 1993474,
+  // consider re-testing and removing that special-case.
+  return IsTopLevelWidget() && mPiPType == PiPType::NoPiP;
 }
 
 bool nsWindow::AssociateWithNativeWindow() {
@@ -1924,48 +1927,46 @@ void nsWindow::SetInputRegion(const InputRegion& aInputRegion) {
 void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
   SizeConstraints c = aConstraints;
 
-  // Constraints are in desktop pixels; convert device-pixel values coming
-  // from the OS and the compositor into desktop pixels for the comparison.
-  //
-  // TODO: If GetDesktopToDeviceScale is always 1 now we could simplify.
-  const double scale = GetDesktopToDeviceScale().scale;
-
   if (mWindowType != WindowType::Popup && mResizable) {
-    const int32_t minTrackW =
-        NSToIntRound(::GetSystemMetrics(SM_CXMINTRACK) / scale);
-    const int32_t minTrackH =
-        NSToIntRound(::GetSystemMetrics(SM_CYMINTRACK) / scale);
-    c.mMinSize.width = std::max(minTrackW, c.mMinSize.width);
-    c.mMinSize.height = std::max(minTrackH, c.mMinSize.height);
+    c.mMinSize.width =
+        std::max(int32_t(::GetSystemMetrics(SM_CXMINTRACK)), c.mMinSize.width);
+    c.mMinSize.height =
+        std::max(int32_t(::GetSystemMetrics(SM_CYMINTRACK)), c.mMinSize.height);
   }
 
   if (mMaxTextureSize > 0) {
     // We can't make ThebesLayers bigger than this anyway.. no point it letting
     // a window grow bigger as we won't be able to draw content there in
     // general.
-    const int32_t maxTexDesktop = NSToIntRound(mMaxTextureSize / scale);
-    c.mMaxSize.width = std::min(c.mMaxSize.width, maxTexDesktop);
-    c.mMaxSize.height = std::min(c.mMaxSize.height, maxTexDesktop);
+    c.mMaxSize.width = std::min(c.mMaxSize.width, mMaxTextureSize);
+    c.mMaxSize.height = std::min(c.mMaxSize.height, mMaxTextureSize);
   }
+
+  mSizeConstraintsScale = GetDefaultScale().scale;
 
   nsIWidget::SetSizeConstraints(c);
 }
 
-// Size constraints are stored in desktop pixels; convert them to device pixels
-// for use with OS messages that operate in device pixels.
-nsWindow::DeviceSizeConstraints nsWindow::GetDeviceSizeConstraints() const {
-  // TODO: If GetDesktopToDeviceScale is always 1 now we could simplify.
-  const double scale = GetDesktopToDeviceScale().scale;
-  return {
-      NSToIntRound(mSizeConstraints.mMinSize.width * scale),
-      NSToIntRound(mSizeConstraints.mMinSize.height * scale),
-      mSizeConstraints.mMaxSize.width == NS_MAXSIZE
-          ? NS_MAXSIZE
-          : NSToIntRound(mSizeConstraints.mMaxSize.width * scale),
-      mSizeConstraints.mMaxSize.height == NS_MAXSIZE
-          ? NS_MAXSIZE
-          : NSToIntRound(mSizeConstraints.mMaxSize.height * scale),
-  };
+const SizeConstraints nsWindow::GetSizeConstraints() {
+  double scale = GetDefaultScale().scale;
+  if (mSizeConstraintsScale == scale || mSizeConstraintsScale == 0.0) {
+    return mSizeConstraints;
+  }
+  scale /= mSizeConstraintsScale;
+  SizeConstraints c = mSizeConstraints;
+  if (c.mMinSize.width != NS_MAXSIZE) {
+    c.mMinSize.width = NSToIntRound(c.mMinSize.width * scale);
+  }
+  if (c.mMinSize.height != NS_MAXSIZE) {
+    c.mMinSize.height = NSToIntRound(c.mMinSize.height * scale);
+  }
+  if (c.mMaxSize.width != NS_MAXSIZE) {
+    c.mMaxSize.width = NSToIntRound(c.mMaxSize.width * scale);
+  }
+  if (c.mMaxSize.height != NS_MAXSIZE) {
+    c.mMaxSize.height = NSToIntRound(c.mMaxSize.height * scale);
+  }
+  return c;
 }
 
 // Move this component
@@ -2641,6 +2642,9 @@ void nsWindow::ResetLayout() {
   // Invalidate and update
   Invalidate();
 }
+
+#define DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 19
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 
 void nsWindow::SetColorScheme(const Maybe<ColorScheme>& aScheme) {
   BOOL dark =
@@ -3856,10 +3860,8 @@ WindowRenderer* nsWindow::GetWindowRenderer() {
     if (knowsCompositor) {
       SizeConstraints c = mSizeConstraints;
       mMaxTextureSize = knowsCompositor->GetMaxTextureSize();
-      const double scale = GetDesktopToDeviceScale().scale;
-      const int32_t maxTexDesktop = NSToIntRound(mMaxTextureSize / scale);
-      c.mMaxSize.width = std::min(c.mMaxSize.width, maxTexDesktop);
-      c.mMaxSize.height = std::min(c.mMaxSize.height, maxTexDesktop);
+      c.mMaxSize.width = std::min(c.mMaxSize.width, mMaxTextureSize);
+      c.mMaxSize.height = std::min(c.mMaxSize.height, mMaxTextureSize);
       nsIWidget::SetSizeConstraints(c);
     }
   }
@@ -4007,6 +4009,14 @@ WidgetEventTime nsWindow::CurrentMessageWidgetEventTime() const {
  *
  **************************************************************/
 
+bool nsWindow::DispatchStandardEvent(EventMessage aMsg) {
+  WidgetGUIEvent event(true, aMsg, this);
+  InitEvent(event);
+
+  bool result = DispatchWindowEvent(event);
+  return result;
+}
+
 bool nsWindow::DispatchKeyboardEvent(WidgetKeyboardEvent* event) {
   nsEventStatus status = DispatchInputEvent(event).mContentStatus;
   return ConvertStatus(status);
@@ -4117,8 +4127,7 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
                                   LPARAM lParam, bool aIsContextMenuKey,
                                   int16_t aButton, uint16_t aInputSource,
                                   WinPointerInfo* aPointerInfo,
-                                  IsNonclient aIsNonclient,
-                                  Maybe<LayoutDeviceIntPoint> aMovement) {
+                                  IsNonclient aIsNonclient) {
   ContextMenuPreventer contextMenuPreventer(this);
   bool result = false;
 
@@ -4256,10 +4265,10 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   static BYTE sLastMouseButton = 0;
 
   bool insideMovementThreshold =
-      (Abs(sLastMousePoint.x - eventPoint.x.value) <
-       (unsigned)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
-      (Abs(sLastMousePoint.y - eventPoint.y.value) <
-       (unsigned)::GetSystemMetrics(SM_CYDOUBLECLK));
+      (DeprecatedAbs(sLastMousePoint.x - eventPoint.x.value) <
+       (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
+      (DeprecatedAbs(sLastMousePoint.y - eventPoint.y.value) <
+       (short)::GetSystemMetrics(SM_CYDOUBLECLK));
 
   BYTE eventButton;
   switch (aButton) {
@@ -4310,7 +4319,6 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       if (!insideMovementThreshold) {
         sLastClickCount = 0;
       }
-      mouseOrPointerEvent.mMovement = aMovement;
       break;
     case eMouseExitFromWidget:
       mouseOrPointerEvent.mExitFrom =
@@ -5099,59 +5107,7 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       result = true;
     } break;
 
-    case WM_INPUT: {
-      if (!IsUsingRawInputForMouseMove()) {
-        break;
-      }
-      MOZ_ASSERT(IsNativePointerLocked());
-
-      HRAWINPUT inputHandle = reinterpret_cast<HRAWINPUT>(lParam);
-      UINT size = 0;
-      if (GetRawInputData(inputHandle, RID_INPUT, nullptr, &size,
-                          sizeof(RAWINPUTHEADER)) == UINT(-1)) {
-        break;
-      }
-
-      nsTArray<uint8_t> data(size);
-      data.SetLength(size);
-      if (GetRawInputData(inputHandle, RID_INPUT, data.Elements(), &size,
-                          sizeof(RAWINPUTHEADER)) == UINT(-1)) {
-        break;
-      }
-
-      PRAWINPUT raw = reinterpret_cast<PRAWINPUT>(data.Elements());
-      if (raw->header.dwType == RIM_TYPEMOUSE &&
-          raw->data.mouse.usButtonFlags != RI_MOUSE_WHEEL) {
-        // Not excluding absolute mouse position would cause analog-stick like
-        // motion for tablet devices due to mouse repositioning.
-        if (!(raw->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE)) {
-          int32_t movementX = int32_t(raw->data.mouse.lLastX);
-          int32_t movementY = int32_t(raw->data.mouse.lLastY);
-          if (movementX != 0 || movementY != 0) {
-            DWORD messagePos = ::GetMessagePos();
-            POINT cursorPos;
-            cursorPos.x = GET_X_LPARAM(messagePos);
-            cursorPos.y = GET_Y_LPARAM(messagePos);
-            ScreenToClient(mWnd, &cursorPos);
-            result = DispatchMouseEvent(
-                eMouseMove, wParamFromGlobalMouseState(),
-                MAKELPARAM(cursorPos.x, cursorPos.y), false,
-                MouseButton::ePrimary, MOUSE_INPUT_SOURCE(), nullptr,
-                IsNonclient::No,
-                Some(LayoutDeviceIntPoint(movementX, movementY)));
-            if (GET_RAWINPUT_CODE_WPARAM(wParam) == RIM_INPUT) {
-              result = false;  // should always bubble to DefWindowProc
-            }
-          }
-        }
-      }
-    } break;
-
     case WM_MOUSEMOVE: {
-      if (IsUsingRawInputForMouseMove()) {
-        break;
-      }
-
       LPARAM lParamScreen = lParamToScreen(lParam);
       mSimulatedClientArea = IsSimulatedClientArea(GET_X_LPARAM(lParamScreen),
                                                    GET_Y_LPARAM(lParamScreen));
@@ -5461,8 +5417,6 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
         LPRECT rect = (LPRECT)lParam;
         int32_t newWidth, newHeight;
 
-        const auto [minW, minH, maxW, maxH] = GetDeviceSizeConstraints();
-
         // The following conditions and switch statement borrow heavily from the
         // Chromium source code from
         // https://chromium.googlesource.com/chromium/src/+/456d6e533cfb4531995e0ef52c279d4b5aa8a352/ui/views/window/window_resize_utils.cc#45
@@ -5470,21 +5424,21 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
             wParam == WMSZ_TOPLEFT || wParam == WMSZ_BOTTOMLEFT) {
           newWidth = rect->right - rect->left;
           newHeight = newWidth / mAspectRatio;
-          if (newHeight < minH) {
-            newHeight = minH;
+          if (newHeight < mSizeConstraints.mMinSize.height) {
+            newHeight = mSizeConstraints.mMinSize.height;
             newWidth = newHeight * mAspectRatio;
-          } else if (newHeight > maxH) {
-            newHeight = maxH;
+          } else if (newHeight > mSizeConstraints.mMaxSize.height) {
+            newHeight = mSizeConstraints.mMaxSize.height;
             newWidth = newHeight * mAspectRatio;
           }
         } else {
           newHeight = rect->bottom - rect->top;
           newWidth = newHeight * mAspectRatio;
-          if (newWidth < minW) {
-            newWidth = minW;
+          if (newWidth < mSizeConstraints.mMinSize.width) {
+            newWidth = mSizeConstraints.mMinSize.width;
             newHeight = newWidth / mAspectRatio;
-          } else if (newWidth > maxW) {
-            newWidth = maxW;
+          } else if (newWidth > mSizeConstraints.mMaxSize.width) {
+            newWidth = mSizeConstraints.mMaxSize.width;
             newHeight = newWidth / mAspectRatio;
           }
         }
@@ -5711,17 +5665,20 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_GETMINMAXINFO: {
       MINMAXINFO* mmi = (MINMAXINFO*)lParam;
-      const auto [minW, minH, maxW, maxH] = GetDeviceSizeConstraints();
       // Set the constraints. The minimum size should also be constrained to the
       // default window maximum size so that it fits on screen.
       mmi->ptMinTrackSize.x =
           std::min((int32_t)mmi->ptMaxTrackSize.x,
-                   std::max((int32_t)mmi->ptMinTrackSize.x, minW));
+                   std::max((int32_t)mmi->ptMinTrackSize.x,
+                            mSizeConstraints.mMinSize.width));
       mmi->ptMinTrackSize.y =
           std::min((int32_t)mmi->ptMaxTrackSize.y,
-                   std::max((int32_t)mmi->ptMinTrackSize.y, minH));
-      mmi->ptMaxTrackSize.x = std::min((int32_t)mmi->ptMaxTrackSize.x, maxW);
-      mmi->ptMaxTrackSize.y = std::min((int32_t)mmi->ptMaxTrackSize.y, maxH);
+                   std::max((int32_t)mmi->ptMinTrackSize.y,
+                            mSizeConstraints.mMinSize.height));
+      mmi->ptMaxTrackSize.x = std::min((int32_t)mmi->ptMaxTrackSize.x,
+                                       mSizeConstraints.mMaxSize.width);
+      mmi->ptMaxTrackSize.y = std::min((int32_t)mmi->ptMaxTrackSize.y,
+                                       mSizeConstraints.mMaxSize.height);
     } break;
 
     case WM_SETFOCUS: {
@@ -6252,7 +6209,7 @@ LRESULT nsWindow::ProcessKeyDownMessage(const MSG& aMsg,
 
 nsresult nsWindow::SynthesizeNativeKeyEvent(
     int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
-    nsIWidget::NativeModifiers aModifierFlags, const nsAString& aCharacters,
+    uint32_t aModifierFlags, const nsAString& aCharacters,
     const nsAString& aUnmodifiedCharacters,
     nsISynthesizedEventCallback* aCallback) {
   AutoSynthesizedEventCallbackNotifier notifier(aCallback);
@@ -6265,7 +6222,7 @@ nsresult nsWindow::SynthesizeNativeKeyEvent(
 
 nsresult nsWindow::SynthesizeNativeMouseEvent(
     LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
-    MouseButton aButton, nsIWidget::NativeModifiers aModifierFlags,
+    MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
     nsISynthesizedEventCallback* aCallback) {
   AutoSynthesizedEventCallbackNotifier notifier(aCallback);
 
@@ -6330,7 +6287,7 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
 
 nsresult nsWindow::SynthesizeNativeMouseScrollEvent(
     LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage, double aDeltaX,
-    double aDeltaY, double aDeltaZ, nsIWidget::NativeModifiers aModifierFlags,
+    double aDeltaY, double aDeltaZ, uint32_t aModifierFlags,
     uint32_t aAdditionalFlags, nsISynthesizedEventCallback* aCallback) {
   AutoSynthesizedEventCallbackNotifier notifier(aCallback);
   return MouseScrollHandler::SynthesizeNativeMouseScrollEvent(
@@ -6839,9 +6796,11 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam) {
 
     if (mDisplayPanFeedback) {
       mGesture.UpdatePanFeedbackX(
-          mWnd, RoundDown(wheelEvent.mOverflowDeltaX) != 0, endFeedback);
+          mWnd, DeprecatedAbs(RoundDown(wheelEvent.mOverflowDeltaX)),
+          endFeedback);
       mGesture.UpdatePanFeedbackY(
-          mWnd, RoundDown(wheelEvent.mOverflowDeltaY) != 0, endFeedback);
+          mWnd, DeprecatedAbs(RoundDown(wheelEvent.mOverflowDeltaY)),
+          endFeedback);
       mGesture.PanFeedbackFinalize(mWnd, endFeedback);
     }
 
@@ -6896,10 +6855,6 @@ void nsWindow::OnDestroy() {
 
   DestroyDirectManipulation();
 
-  // Before destroying the native window, we need to clean up the resource
-  // allocated/stored for handling IME on this window.
-  IMEHandler::OnDestroyWindow(this);
-
   if (mWnd == mLastKillFocusWindow) {
     mLastKillFocusWindow = nullptr;
   }
@@ -6936,6 +6891,8 @@ void nsWindow::OnDestroy() {
     rollupListener->Rollup({});
     CaptureRollupEvents(false);
   }
+
+  IMEHandler::OnDestroyWindow(this);
 
   // Destroy any custom cursor resources.
   if (mCursor.IsCustom()) {
@@ -8042,8 +7999,8 @@ bool nsWindow::DispatchTouchEventFromWMPointer(
                             ScreenSize(1, 1),  // pixel size radius for pen
                             0.0f,              // no radius rotation
                             aPointerInfo.mPressure);
-  touchData.mTiltX = aPointerInfo.ComputeTiltX();
-  touchData.mTiltY = aPointerInfo.ComputeTiltY();
+  touchData.mTiltX = aPointerInfo.tiltX;
+  touchData.mTiltY = aPointerInfo.tiltY;
   touchData.mTwist = aPointerInfo.twist;
 
   MultiTouchInput touchInput;
@@ -8377,7 +8334,7 @@ bool nsWindow::InitTouchInjection() {
     }
 
     if (!func(TOUCH_INJECT_MAX_POINTS, TOUCH_FEEDBACK_DEFAULT)) {
-      WinUtils::Log("InitializeTouchInjection failure. GetLastError=%lu",
+      WinUtils::Log("InitializeTouchInjection failure. GetLastError=%d",
                     GetLastError());
       return false;
     }
@@ -8434,7 +8391,7 @@ bool nsWindow::InjectTouchPoint(uint32_t aId, LayoutDeviceIntPoint& aPoint,
       ::Sleep(i);
       continue;
     }
-    WinUtils::Log("InjectTouchInput failure. GetLastError=%lu", error);
+    WinUtils::Log("InjectTouchInput failure. GetLastError=%d", error);
     return false;
   }
   return true;
@@ -8666,50 +8623,6 @@ bool nsWindow::HandleAppCommandMsg(const MSG& aAppCommandMsg,
   bool consumed = nativeKey.HandleAppCommandMessage();
   *aRetValue = consumed ? 1 : 0;
   return consumed;
-}
-
-void nsWindow::LockNativePointer(NativePointerLockMode aNativePointerLockMode) {
-  if (IsNativePointerLocked()) {
-    return;
-  }
-
-  // SetNativePointerLockMode() have to be called after setting
-  // sIsNativePointLocked.
-  sIsNativePointLocked = true;
-  SetNativePointerLockMode(aNativePointerLockMode);
-}
-
-void nsWindow::UnlockNativePointer() {
-  if (NS_WARN_IF(!IsNativePointerLocked())) {
-    return;
-  }
-
-  // SetNativePointerLockMode() have to be called before resetting
-  // sIsNativePointLocked.
-  SetNativePointerLockMode(NativePointerLockMode::Regular);
-  sIsNativePointLocked = false;
-}
-
-void nsWindow::SetNativePointerLockMode(
-    NativePointerLockMode aNativePointerLockMode) {
-  if (!IsNativePointerLocked()) {
-    return;
-  }
-
-  const bool usingRawInput =
-      (aNativePointerLockMode == NativePointerLockMode::Unadjusted);
-  if (sIsUsingRawInputForMouseMove == usingRawInput) {
-    return;
-  }
-
-  RAWINPUTDEVICE device;
-  device.usUsagePage = 0x01;  // HID_USAGE_PAGE_GENERIC
-  device.usUsage = 0x02;      // HID_USAGE_GENERIC_MOUSE
-  device.dwFlags = usingRawInput ? RIDEV_INPUTSINK : RIDEV_REMOVE;
-  device.hwndTarget = usingRawInput ? mWnd : nullptr;
-  RegisterRawInputDevices(&device, 1, sizeof(device));
-
-  sIsUsingRawInputForMouseMove = usingRawInput;
 }
 
 #ifdef DEBUG

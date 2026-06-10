@@ -13,10 +13,10 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <span>
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 
 namespace webrtc {
 namespace test {
@@ -50,14 +50,14 @@ bool AudioLoop::Init(absl::string_view file_name,
   return true;
 }
 
-std::span<const int16_t> AudioLoop::GetNextBlock() {
+ArrayView<const int16_t> AudioLoop::GetNextBlock() {
   // Check that the AudioLoop is initialized.
   if (block_length_samples_ == 0)
-    return std::span<const int16_t>();
+    return ArrayView<const int16_t>();
 
   const int16_t* output_ptr = &audio_array_[next_index_];
   next_index_ = (next_index_ + block_length_samples_) % loop_length_samples_;
-  return std::span<const int16_t>(output_ptr, block_length_samples_);
+  return ArrayView<const int16_t>(output_ptr, block_length_samples_);
 }
 
 }  // namespace test

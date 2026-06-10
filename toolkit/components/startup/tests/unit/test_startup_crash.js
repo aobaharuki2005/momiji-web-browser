@@ -29,7 +29,7 @@ function run_test() {
 // reset prefs to default
 function resetTestEnv(replacedLockTime) {
   try {
-    // call begin to reset mStartupCrashAndHangTrackingEnded
+    // call begin to reset mStartupCrashTrackingEnded
     appStartup.trackStartupCrashBegin();
   } catch (x) {}
   prefService.setIntPref(pref_max_resumed_crashes, 2);

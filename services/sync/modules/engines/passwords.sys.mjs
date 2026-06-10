@@ -137,7 +137,7 @@ PasswordEngine.prototype = {
         changes[login.guid] = {
           counter: login.syncCounter, // record the initial counter value
           modified: roundTimeForSync(login.timePasswordChanged),
-          deleted: await this._store.storage.loginIsDeletedAsync(login.guid),
+          deleted: this._store.storage.loginIsDeleted(login.guid),
         };
       }
     }
@@ -338,15 +338,14 @@ PasswordStore.prototype = {
 
   async itemExists(id) {
     let login = await this._getLoginFromGUID(id);
-    let isDeleted = await this.storage.loginIsDeletedAsync(id);
-    return login && !isDeleted;
+    return login && !this.storage.loginIsDeleted(id);
   },
 
   async createRecord(id, collection) {
     let record = new LoginRec(collection, id);
     let login = await this._getLoginFromGUID(id);
 
-    if (!login || (await this.storage.loginIsDeletedAsync(id))) {
+    if (!login || this.storage.loginIsDeleted(id)) {
       record.deleted = true;
       return record;
     }
@@ -408,12 +407,12 @@ PasswordStore.prototype = {
       return;
     }
 
-    await this.storage.removeLoginAsync(loginItem, sourceSync);
+    this.storage.removeLogin(loginItem, sourceSync);
   },
 
   async update(record) {
     let loginItem = await this._getLoginFromGUID(record.id);
-    if (!loginItem || (await this.storage.loginIsDeletedAsync(record.id))) {
+    if (!loginItem || this.storage.loginIsDeleted(record.id)) {
       this._log.trace("Skipping update for unknown item: " + record.hostname);
       return;
     }
@@ -430,7 +429,7 @@ PasswordStore.prototype = {
   },
 
   async wipe() {
-    await this.storage.removeAllUserFacingLoginsAsync(true);
+    this.storage.removeAllUserFacingLogins(true);
   },
 };
 Object.setPrototypeOf(PasswordStore.prototype, Store.prototype);

@@ -23,7 +23,7 @@ interface DistributionProviderChecker {
     /**
      * Looks for the provider value
      */
-    suspend fun queryProvider(): String?
+    fun queryProvider(): String?
 }
 
 private val logger = Logger(DistributionProviderChecker::class.simpleName)
@@ -36,13 +36,10 @@ private val logger = Logger(DistributionProviderChecker::class.simpleName)
 class DefaultDistributionProviderChecker(private val context: Context) : DistributionProviderChecker {
     private val classVersion = "Default"
 
-    override suspend fun queryProvider(): String? {
+    override fun queryProvider(): String? {
         logger.info("$classVersion - Starting check...")
         val adjustProviderIntent = Intent(ADJUST_CONTENT_PROVIDER_INTENT_ACTION)
-        val contentProviders = context.packageManager.queryIntentContentProviders(
-            adjustProviderIntent,
-            0,
-        )
+        val contentProviders = context.packageManager.queryIntentContentProviders(adjustProviderIntent, 0)
         val contentResolver = context.contentResolver
 
         for (resolveInfo in contentProviders) {

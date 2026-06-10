@@ -237,21 +237,6 @@ Maybe<uint32_t> MP4Metadata::TrackTypeToGlobalTrackIndex(
       continue;
     }
     if (TrackTypeEqual(aType, track_info.track_type)) {
-      bool skip = false;
-      if (track_info.track_type == MP4PARSE_TRACK_TYPE_AUDIO) {
-        Mp4parseTrackAudioInfo audio;
-        auto rv = mp4parse_get_track_audio_info(mParser.get(), i, &audio);
-        skip = rv != MP4PARSE_STATUS_OK || audio.sample_info_count == 0 ||
-               audio.sample_info[0].codec_type == MP4PARSE_CODEC_UNKNOWN;
-      } else if (track_info.track_type == MP4PARSE_TRACK_TYPE_VIDEO) {
-        Mp4parseTrackVideoInfo video;
-        auto rv = mp4parse_get_track_video_info(mParser.get(), i, &video);
-        skip = rv != MP4PARSE_STATUS_OK || video.sample_info_count == 0 ||
-               video.sample_info[0].codec_type == MP4PARSE_CODEC_UNKNOWN;
-      }
-      if (skip) {
-        continue;
-      }
       if (perType == aTrackNumber) {
         return Some(i);
       }
@@ -358,6 +343,17 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
           ("track codec %s (%u)\n", codecString, codecType));
 #endif
 
+  Mp4parseTrackInfo track_info;
+  rv = mp4parse_get_track_info(mParser.get(), trackIndex.value(), &track_info);
+  if (rv != MP4PARSE_STATUS_OK) {
+    MOZ_LOG(gMP4MetadataLog, LogLevel::Warning,
+            ("mp4parse_get_track_info returned error %d", rv));
+    return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
+                        RESULT_DETAIL("Cannot parse %s track #%zu",
+                                      TrackTypeToStr(aType), aTrackNumber)),
+            nullptr};
+  }
+
   uint32_t timeScale = info.time_scale;
 
   // This specialization interface is wild.
@@ -444,13 +440,8 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
     if (rv == MP4PARSE_STATUS_OK) {
       // This doesn't use the time scale of the track, but the time scale
       // indicated in the mvhd box
-      if (fragmentInfo.fragment_duration > TimeUnit::MaxTicks()) {
-        e->mDuration = TimeUnit::FromInfinity();
-      } else {
-        e->mDuration =
-            TimeUnit(AssertedCast<int64_t>(fragmentInfo.fragment_duration),
-                     AssertedCast<int64_t>(fragmentInfo.time_scale));
-      }
+      e->mDuration = TimeUnit(fragmentInfo.fragment_duration,
+                              AssertedCast<int64_t>(fragmentInfo.time_scale));
     }
   }
 

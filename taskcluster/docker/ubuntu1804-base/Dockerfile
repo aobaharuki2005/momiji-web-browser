@@ -64,7 +64,10 @@ COPY topsrcdir/taskcluster/docker/recipes/dot-config /builds/worker/.config
 
 # %include taskcluster/scripts/run-task
 COPY topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task-hg
+# %include third_party/python/taskcluster_taskgraph/taskgraph/run-task/run-task
+COPY topsrcdir/third_party/python/taskcluster_taskgraph/taskgraph/run-task/run-task /builds/worker/bin/run-task-git
 
-# %include-run-task
+# %include third_party/python/taskcluster_taskgraph/taskgraph/run-task/fetch-content
+ADD topsrcdir/third_party/python/taskcluster_taskgraph/taskgraph/run-task/fetch-content /builds/worker/bin/fetch-content
 
 RUN chown -R worker:worker /builds/worker/bin && chmod 755 /builds/worker/bin/*

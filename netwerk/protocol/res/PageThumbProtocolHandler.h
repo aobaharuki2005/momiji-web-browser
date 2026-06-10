@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef PageThumbProtocolHandler_h_
-#define PageThumbProtocolHandler_h_
+#ifndef PageThumbProtocolHandler_h___
+#define PageThumbProtocolHandler_h___
 
 #include "mozilla/Result.h"
 #include "mozilla/MozPromise.h"
@@ -116,4 +117,4 @@ class PageThumbProtocolHandler final : public nsISubstitutingProtocolHandler,
 }  // namespace net
 }  // namespace mozilla
 
-#endif /* PageThumbProtocolHandler_h_ */
+#endif /* PageThumbProtocolHandler_h___ */

@@ -5,7 +5,7 @@
 import contextlib
 import os
 from pathlib import Path
-from typing import Callable, Optional, Union
+from typing import Union
 
 from mozpack.files import FileListFinder
 
@@ -25,10 +25,6 @@ class SrcRepository(Repository):
 
     @property
     def head_ref(self):
-        pass
-
-    @property
-    def head_rev(self):
         pass
 
     def is_cinnabar_repo(self) -> bool:
@@ -63,9 +59,6 @@ class SrcRepository(Repository):
 
     def get_upstream(self):
         pass
-
-    def get_remote_url(self, remote=None, push=False):
-        return None
 
     def get_changed_files(self, diff_filter="ADM", mode="unstaged", rev=None):
         return []
@@ -147,22 +140,12 @@ class SrcRepository(Repository):
     def update(self, ref):
         pass
 
-    def push(
+    def push_to_try(
         self,
-        remote: Optional[str] = None,
-        ref: Optional[str] = None,
-        dest_branch: Optional[str] = None,
-        force: bool = False,
+        message: str,
+        changed_files: dict[str, str] = {},
+        allow_log_capture: bool = False,
     ):
-        pass
-
-    def _resolve_try_branch(self):
-        pass
-
-    def _push_to_git_try(self, *args, **kwargs):
-        pass
-
-    def _push_to_hg_try(self, *args, **kwargs):
         pass
 
     def set_config(self, name, value):
@@ -176,11 +159,6 @@ class SrcRepository(Repository):
 
     def try_commit(self, commit_message: str, changed_files=None):
         return contextlib.nullcontext()
-
-    def prepare_try_push(
-        self, commit_message: str, changed_files: Optional[dict[str, str]] = None
-    ) -> tuple[Optional[str], Callable]:
-        return "", lambda: None
 
     def get_last_modified_time_for_file(self, path: Path):
         """Return last modified in VCS time for the specified file."""

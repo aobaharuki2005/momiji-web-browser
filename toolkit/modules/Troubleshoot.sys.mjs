@@ -473,14 +473,16 @@ var dataProviders = {
   },
 
   async environmentVariables(done) {
-    if (AppConstants.platform == "android") {
-      // Subprocess is not available.
+    let Subprocess;
+    try {
+      // Subprocess is not available in all builds
+      Subprocess = ChromeUtils.importESModule(
+        "resource://gre/modules/Subprocess.sys.mjs"
+      ).Subprocess;
+    } catch (ex) {
       done({});
       return;
     }
-    const { Subprocess } = ChromeUtils.importESModule(
-      "resource://gre/modules/Subprocess.sys.mjs"
-    );
 
     let environment = Subprocess.getEnvironment();
     let filteredEnvironment = {};

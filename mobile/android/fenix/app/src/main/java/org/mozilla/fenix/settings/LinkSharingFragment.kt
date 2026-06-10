@@ -7,22 +7,21 @@ package org.mozilla.fenix.settings
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreferenceCompat
+import androidx.preference.SwitchPreference
 import org.mozilla.fenix.GleanMetrics.SentFromFirefox
 import org.mozilla.fenix.R
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
 /**
  * Lets the user customize link sharing feature.
  */
-class LinkSharingFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragment {
+class LinkSharingFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.link_sharing_preferences, rootKey)
 
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_link_sharing).apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_link_sharing).apply {
             isChecked = context.settings().whatsappLinkSharingEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
 

@@ -45,14 +45,7 @@ async function testEditable(browser, acc, aBefore = "", aAfter = "") {
   await testDeleteText(acc, 5, 10, aBefore.length);
   await isFinalValueCorrect(browser, acc, [aBefore, "hello", aAfter]);
   await testDeleteText(acc, 0, 5, aBefore.length);
-  // When a contentEditable inside a document is cleared, it contains a single
-  //  line feed. See dom::HTMLBrElement::IsPaddingForEmptyEditor.
-  const clearedText =
-    acc.role == ROLE_DOCUMENT ||
-    acc.attributes.getStringProperty("tag") == "input"
-      ? ""
-      : "\n";
-  await isFinalValueCorrect(browser, acc, [aBefore, clearedText, aAfter]);
+  await isFinalValueCorrect(browser, acc, [aBefore, "", aAfter]);
 
   // XXX: clipboard operation tests don't work well with editable documents.
   if (acc.role == ROLE_DOCUMENT) {
@@ -89,7 +82,7 @@ async function testEditable(browser, acc, aBefore = "", aAfter = "") {
   await isFinalValueCorrect(browser, acc, [aBefore, "ehhlloeo", aAfter]);
 
   await testCutText(acc, 0, 8, aBefore.length);
-  await isFinalValueCorrect(browser, acc, [aBefore, clearedText, aAfter]);
+  await isFinalValueCorrect(browser, acc, [aBefore, "", aAfter]);
 
   await resetInput();
 
@@ -124,7 +117,7 @@ addAccessibleTask(
       ""
     );
   },
-  { chrome: true, topLevel: true }
+  { chrome: true, topLevel: false /* bug 1834129 */ }
 );
 
 addAccessibleTask(
@@ -142,7 +135,7 @@ addAccessibleTask(
       "pseudo element"
     );
   },
-  { chrome: true, topLevel: true }
+  { chrome: true, topLevel: false /* bug 1834129 */ }
 );
 
 addAccessibleTask(
@@ -159,7 +152,7 @@ addAccessibleTask(
       "pseudo element"
     );
   },
-  { chrome: true, topLevel: true }
+  { chrome: true, topLevel: false /* bug 1834129 */ }
 );
 
 addAccessibleTask(
@@ -180,7 +173,7 @@ addAccessibleTask(
       "after"
     );
   },
-  { chrome: true, topLevel: true }
+  { chrome: true, topLevel: false /* bug 1834129 */ }
 );
 
 addAccessibleTask(
@@ -195,7 +188,7 @@ addAccessibleTask(
     document.execCommand("delete");
     await testEditable(browser, findAccessibleChildByID(docAcc, "input"));
   },
-  { chrome: true, topLevel: true }
+  { chrome: true, topLevel: false /* bug 1834129 */ }
 );
 
 addAccessibleTask(
@@ -219,7 +212,7 @@ addAccessibleTask(
       "after"
     );
   },
-  { chrome: true, topLevel: true }
+  { chrome: true, topLevel: false /* bug 1834129 */ }
 );
 
 addAccessibleTask(

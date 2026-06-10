@@ -6,13 +6,10 @@
 const parsePropertiesFile = require("devtools/shared/node-properties/node-properties");
 const { sprintf } = require("devtools/shared/sprintfjs/sprintf");
 
-// Map between .properties file paths, e.g. "devtools/client/locales/startup.properties"
-// and objects containing all the key, value pairs for this localization file.
-const propertiesMap = new Map();
+const propertiesMap = {};
 
 // Map used to memoize Number formatters.
 const numberFormatters = new Map();
-
 const getNumberFormatter = function (decimals) {
   let formatter = numberFormatters.get(decimals);
   if (!formatter) {
@@ -27,35 +24,6 @@ const getNumberFormatter = function (decimals) {
   return formatter;
 };
 
-function getPropertiesFile(url) {
-  let isNodeEnv = false;
-  try {
-    // eslint-disable-next-line no-undef
-    isNodeEnv = process?.release?.name == "node";
-  } catch (e) {}
-
-  if (isNodeEnv) {
-    // In Node environment (e.g. when running jest test), we need to prepend the en-US
-    // to the filename in order to have the actual location of the file in source.
-    const lastDelimIndex = url.lastIndexOf("/");
-    const defaultLocaleUrl =
-      url.substring(0, lastDelimIndex) +
-      "/en-US" +
-      url.substring(lastDelimIndex);
-
-    const path = require("path");
-    // eslint-disable-next-line no-undef
-    const rootPath = path.join(__dirname, "../../");
-    const absoluteUrl = path.join(rootPath, defaultLocaleUrl);
-    const { readFileSync } = require("fs");
-    // In Node environment we directly use readFileSync to get the file content instead
-    // of relying on custom raw loader, like we do in regular environment.
-    return readFileSync(absoluteUrl, { encoding: "utf8" });
-  }
-
-  return require("raw!" + url);
-}
-
 /**
  * Memoized getter for properties files that ensures a given url is only required and
  * parsed once.
@@ -65,16 +33,39 @@ function getPropertiesFile(url) {
  * @return {object} parsed properties mapped in an object.
  */
 function getProperties(url) {
-  if (!propertiesMap.has(url)) {
+  if (!propertiesMap[url]) {
+    let propertiesFile;
+    let isNodeEnv = false;
     try {
-      propertiesMap.set(url, parsePropertiesFile(getPropertiesFile(url)));
-    } catch (e) {
-      console.error(`Failed to load localization file: ${url}`, e);
-      propertiesMap.set(url, {});
+      // eslint-disable-next-line no-undef
+      isNodeEnv = process?.release?.name == "node";
+    } catch (e) {}
+
+    if (isNodeEnv) {
+      // In Node environment (e.g. when running jest test), we need to prepend the en-US
+      // to the filename in order to have the actual location of the file in source.
+      const lastDelimIndex = url.lastIndexOf("/");
+      const defaultLocaleUrl =
+        url.substring(0, lastDelimIndex) +
+        "/en-US" +
+        url.substring(lastDelimIndex);
+
+      const path = require("path");
+      // eslint-disable-next-line no-undef
+      const rootPath = path.join(__dirname, "../../");
+      const absoluteUrl = path.join(rootPath, defaultLocaleUrl);
+      const { readFileSync } = require("fs");
+      // In Node environment we directly use readFileSync to get the file content instead
+      // of relying on custom raw loader, like we do in regular environment.
+      propertiesFile = readFileSync(absoluteUrl, { encoding: "utf8" });
+    } else {
+      propertiesFile = require("raw!" + url);
     }
+
+    propertiesMap[url] = parsePropertiesFile(propertiesFile);
   }
 
-  return propertiesMap.get(url);
+  return propertiesMap[url];
 }
 
 /**

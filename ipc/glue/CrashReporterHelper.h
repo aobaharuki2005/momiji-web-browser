@@ -44,9 +44,9 @@ class CrashReporterHelper {
   CrashReporterHelper() : mCrashReporter(nullptr) {}
   IPCResult RecvInitCrashReporter(
       const CrashReporter::CrashReporterInitArgs& aInitArgs) {
-    GeckoChildID child_id = static_cast<Derived*>(this)->OtherChildID();
+    base::ProcessId pid = static_cast<Derived*>(this)->OtherPid();
     mCrashReporter = MakeUnique<ipc::CrashReporterHost>(Derived::PROCESS_TYPE,
-                                                        child_id, aInitArgs);
+                                                        pid, aInitArgs);
     return IPC_OK();
   }
 
@@ -82,17 +82,16 @@ class CrashReporterHelper {
 
  private:
   void HandleOrphanedMinidump(nsString& aMinidumpId) {
-    GeckoChildID child_id = static_cast<Derived*>(this)->OtherChildID();
-    if (CrashReporter::FinalizeOrphanedMinidump(child_id, Derived::PROCESS_TYPE,
+    base::ProcessId pid = static_cast<Derived*>(this)->OtherPid();
+    if (CrashReporter::FinalizeOrphanedMinidump(pid, Derived::PROCESS_TYPE,
                                                 &aMinidumpId)) {
       CrashReporterHost::RecordCrash(Derived::PROCESS_TYPE,
                                      nsICrashService::CRASH_TYPE_CRASH,
                                      aMinidumpId);
     } else {
-      NS_WARNING(nsPrintfCString("child process pid = %" PRIPID " id = %d"
+      NS_WARNING(nsPrintfCString("child process pid = %" PRIPID
                                  " crashed without leaving a minidump behind",
-                                 static_cast<Derived*>(this)->OtherPid(),
-                                 child_id)
+                                 pid)
                      .get());
     }
   }

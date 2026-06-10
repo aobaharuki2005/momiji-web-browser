@@ -21,7 +21,7 @@ class WMFCDMProxyCallback;
  */
 class MFCDMChild final : public PMFCDMChild {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFCDMChild, final);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFCDMChild);
 
   explicit MFCDMChild(const nsAString& aKeySystem);
 
@@ -80,7 +80,7 @@ class MFCDMChild final : public PMFCDMChild {
   uint64_t Id() const { return mId; }
   const nsString& KeySystem() const { return mKeySystem; }
 
-  void ActorDestroy(ActorDestroyReason aWhy) override;
+  void IPDLActorDestroyed();
 
   void EnsureRemote();
   void Shutdown();
@@ -98,6 +98,7 @@ class MFCDMChild final : public PMFCDMChild {
   const nsString mKeySystem;
 
   const nsCOMPtr<nsISerialEventTarget> mManagerThread;
+  RefPtr<MFCDMChild> mIPDLSelfRef;
 
   using RemotePromise = GenericNonExclusivePromise;
   RefPtr<RemotePromise> mRemotePromise;

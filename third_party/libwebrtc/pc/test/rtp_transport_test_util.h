@@ -11,12 +11,10 @@
 #ifndef PC_TEST_RTP_TRANSPORT_TEST_UTIL_H_
 #define PC_TEST_RTP_TRANSPORT_TEST_UTIL_H_
 
-#include <optional>
+#include <cstdint>
 #include <utility>
 
 #include "absl/functional/any_invocable.h"
-#include "api/transport/ecn_marking.h"
-#include "api/units/timestamp.h"
 #include "call/rtp_packet_sink_interface.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "pc/rtp_transport_internal.h"
@@ -33,9 +31,8 @@ class TransportObserver : public RtpPacketSinkInterface {
 
   explicit TransportObserver(RtpTransportInternal* rtp_transport) {
     rtp_transport->SubscribeRtcpPacketReceived(
-        this, [this](CopyOnWriteBuffer packet,
-                     std::optional<Timestamp> arrival_time, EcnMarking ecn) {
-          OnRtcpPacketReceived(std::move(packet), arrival_time, ecn);
+        this, [this](CopyOnWriteBuffer* buffer, int64_t packet_time_ms) {
+          OnRtcpPacketReceived(buffer, packet_time_ms);
         });
     rtp_transport->SubscribeReadyToSend(
         this, [this](bool arg) { OnReadyToSend(arg); });
@@ -60,11 +57,9 @@ class TransportObserver : public RtpPacketSinkInterface {
     un_demuxable_rtp_count_++;
   }
 
-  void OnRtcpPacketReceived(CopyOnWriteBuffer packet,
-                            std::optional<Timestamp> arrival_time,
-                            EcnMarking ecn) {
+  void OnRtcpPacketReceived(CopyOnWriteBuffer* packet, int64_t packet_time_us) {
     rtcp_count_++;
-    last_recv_rtcp_packet_ = std::move(packet);
+    last_recv_rtcp_packet_ = *packet;
   }
 
   int rtp_count() const { return rtp_count_; }

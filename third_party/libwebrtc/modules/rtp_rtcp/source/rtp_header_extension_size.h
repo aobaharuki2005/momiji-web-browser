@@ -10,8 +10,7 @@
 #ifndef MODULES_RTP_RTCP_SOURCE_RTP_HEADER_EXTENSION_SIZE_H_
 #define MODULES_RTP_RTCP_SOURCE_RTP_HEADER_EXTENSION_SIZE_H_
 
-#include <span>
-
+#include "api/array_view.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
@@ -25,7 +24,7 @@ struct RtpExtensionSize {
 // Calculates rtp header extension size in bytes assuming packet contain
 // all `extensions` with provided `value_size`.
 // Counts only extensions present among `registered_extensions`.
-int RtpHeaderExtensionSize(std::span<const RtpExtensionSize> extensions,
+int RtpHeaderExtensionSize(ArrayView<const RtpExtensionSize> extensions,
                            const RtpHeaderExtensionMap& registered_extensions);
 
 }  // namespace webrtc

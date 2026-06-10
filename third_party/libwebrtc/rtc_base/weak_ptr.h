@@ -19,7 +19,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/system/no_unique_address.h"
-#include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/weak_ptr.h"
 
@@ -130,7 +129,7 @@ class WeakReference {
   scoped_refptr<const RefCountedFlag> flag_;
 };
 
-class RTC_EXPORT WeakReferenceOwner {
+class WeakReferenceOwner {
  public:
   WeakReferenceOwner();
   ~WeakReferenceOwner();

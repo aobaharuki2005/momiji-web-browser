@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -232,10 +234,9 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
     // There can be multiple previous frame types so just "unwrap" this frame
     // and try again.
     masm.loadPtr(Address(fpScratch, CallerFPOffset), fpScratch);
-    emitAssertPrevFrameType(
-        fpScratch, scratch,
-        {FrameType::IonJS, FrameType::BaselineStub, FrameType::IonICCall,
-         FrameType::CppToJSJit, FrameType::WasmToJSJit});
+    emitAssertPrevFrameType(fpScratch, scratch,
+                            {FrameType::IonJS, FrameType::BaselineStub,
+                             FrameType::CppToJSJit, FrameType::WasmToJSJit});
     masm.jump(&again);
   }
 
@@ -244,11 +245,10 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
     {
       // Unwrap the baseline interpreter entry frame and try again.
       masm.loadPtr(Address(fpScratch, CallerFPOffset), fpScratch);
-      emitAssertPrevFrameType(
-          fpScratch, scratch,
-          {FrameType::IonJS, FrameType::BaselineJS, FrameType::BaselineStub,
-           FrameType::CppToJSJit, FrameType::WasmToJSJit, FrameType::IonICCall,
-           FrameType::TrampolineNative});
+      emitAssertPrevFrameType(fpScratch, scratch,
+                              {FrameType::IonJS, FrameType::BaselineJS,
+                               FrameType::BaselineStub, FrameType::CppToJSJit,
+                               FrameType::WasmToJSJit, FrameType::IonICCall});
       masm.jump(&again);
     }
   }

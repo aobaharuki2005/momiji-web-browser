@@ -651,7 +651,6 @@ function BuildConditionSandbox(aURL) {
 
   // config specific prefs
   sandbox.appleSilicon = mozinfo.apple_silicon;
-  sandbox.macosVm = mozinfo.macos_vm;
   sandbox.os_version = mozinfo.os_version;
   sandbox.wayland = mozinfo.display == "wayland";
 

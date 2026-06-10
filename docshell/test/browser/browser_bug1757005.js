@@ -33,17 +33,13 @@ add_task(async function () {
         "Should get the correct browsingContext(1)"
       );
 
-      await SpecialPowers.spawn(
-        browser,
-        [browserId],
-        async function (browserId) {
-          Assert.equal(
-            BrowsingContext.getCurrentTopByBrowserId(browserId),
-            docShell.browsingContext
-          );
-          Assert.equal(docShell.browsingContext.browserId, browserId);
-        }
-      );
+      await ContentTask.spawn(browser, browserId, async function (browserId) {
+        Assert.equal(
+          BrowsingContext.getCurrentTopByBrowserId(browserId),
+          docShell.browsingContext
+        );
+        Assert.equal(docShell.browsingContext.browserId, browserId);
+      });
 
       let awaitPageShow = BrowserTestUtils.waitForContentEvent(
         browser,
@@ -65,17 +61,13 @@ add_task(async function () {
         "Should get the correct BrowsingContext. (2)"
       );
 
-      await SpecialPowers.spawn(
-        browser,
-        [browserId],
-        async function (browserId) {
-          Assert.equal(
-            BrowsingContext.getCurrentTopByBrowserId(browserId),
-            docShell.browsingContext
-          );
-          Assert.equal(docShell.browsingContext.browserId, browserId);
-        }
-      );
+      await ContentTask.spawn(browser, browserId, async function (browserId) {
+        Assert.equal(
+          BrowsingContext.getCurrentTopByBrowserId(browserId),
+          docShell.browsingContext
+        );
+        Assert.equal(docShell.browsingContext.browserId, browserId);
+      });
     }
   );
 });

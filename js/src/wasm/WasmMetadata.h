@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -26,8 +28,6 @@ using BuiltinModuleFuncIdVector =
 
 enum class NameContext { Standalone, BeforeLocation };
 
-using ModuleHash = uint8_t[8];
-
 // wasm::CodeMetadata contains metadata whose lifetime ends at the same time
 // that the lifetime of wasm::Code ends.  This encompasses a wide variety of
 // uses.  In practice that means metadata needed for any and all aspects of
@@ -35,6 +35,8 @@ using ModuleHash = uint8_t[8];
 // belongs to, and is kept alive by, wasm::Code.  Note also that wasm::Code is
 // in turn kept alive by wasm::Instance(s), hence this metadata will be kept
 // alive as long as any instance for it exists.
+
+using ModuleHash = uint8_t[8];
 
 struct CodeMetadata : public ShareableBase<CodeMetadata> {
   // NOTE: if you add, remove, rename or reorder fields here, be sure to
@@ -168,16 +170,11 @@ struct CodeMetadata : public ShareableBase<CodeMetadata> {
   // functionality, using special opcodes. Otherwise, it has the same rules
   // as wasm modules and so it does not get a new ModuleKind.
   bool isBuiltinModule() const { return features().isBuiltinModule; }
-  // All builtin modules are self-hosted, but not all self-hosted modules are
-  // builtin modules. JS-PI and WebAssembly.Function also produce self-hosted
-  // modules without the builtin module flag.
-  bool isSelfHostedModule() const { return scriptedCaller().isSelfHosted(); }
 
 #define WASM_FEATURE(NAME, SHORT_NAME, ...) \
   bool SHORT_NAME##Enabled() const { return features().SHORT_NAME; }
   JS_FOR_WASM_FEATURES(WASM_FEATURE)
 #undef WASM_FEATURE
-  bool v128RelaxedEnabled() const { return features().relaxedSimd; }
   Shareable sharedMemoryEnabled() const { return features().sharedMemory; }
   bool simdAvailable() const { return features().simd; }
 
@@ -200,7 +197,6 @@ struct CodeMetadata : public ShareableBase<CodeMetadata> {
   size_t numFuncs() const { return funcs.length(); }
   size_t numFuncDefs() const { return funcs.length() - numFuncImports; }
   size_t numTables() const { return tables.length(); }
-  size_t numTags() const { return tags.length(); }
   size_t numMemories() const { return memories.length(); }
 
   bool funcIsImport(uint32_t funcIndex) const {
@@ -213,11 +209,8 @@ struct CodeMetadata : public ShareableBase<CodeMetadata> {
     return getFuncTypeDef(funcIndex).funcType();
   }
 
-  const TagType& getTagType(uint32_t tagIndex) const {
-    return *tags[tagIndex].type;
-  }
-
   BuiltinModuleFuncId knownFuncImport(uint32_t funcIndex) const {
+    MOZ_ASSERT(funcIndex < numFuncImports);
     if (knownFuncImports.empty()) {
       return BuiltinModuleFuncId::None;
     }
@@ -244,24 +237,24 @@ struct CodeMetadata : public ShareableBase<CodeMetadata> {
                           UTF8Bytes* name) const;
 
   uint32_t offsetOfFuncDefInstanceData(uint32_t funcIndex) const {
-    MOZ_RELEASE_ASSERT(funcIndex >= numFuncImports && funcIndex < numFuncs());
+    MOZ_ASSERT(funcIndex >= numFuncImports && funcIndex < numFuncs());
     return funcDefsOffsetStart +
            (funcIndex - numFuncImports) * sizeof(FuncDefInstanceData);
   }
 
   uint32_t offsetOfFuncImportInstanceData(uint32_t funcIndex) const {
-    MOZ_RELEASE_ASSERT(funcIndex < numFuncImports);
+    MOZ_ASSERT(funcIndex < numFuncImports);
     return funcImportsOffsetStart + funcIndex * sizeof(FuncImportInstanceData);
   }
 
   uint32_t offsetOfFuncExportInstanceData(uint32_t funcExportIndex) const {
-    MOZ_RELEASE_ASSERT(funcExportIndex < exportedFuncIndices.length());
+    MOZ_ASSERT(funcExportIndex < exportedFuncIndices.length());
     return funcExportsOffsetStart +
            funcExportIndex * sizeof(FuncExportInstanceData);
   }
 
   uint32_t offsetOfTypeDefInstanceData(uint32_t typeIndex) const {
-    MOZ_RELEASE_ASSERT(typeIndex < types->length());
+    MOZ_ASSERT(typeIndex < types->length());
     return typeDefsOffsetStart + typeIndex * sizeof(TypeDefInstanceData);
   }
 
@@ -275,16 +268,16 @@ struct CodeMetadata : public ShareableBase<CodeMetadata> {
   }
 
   uint32_t offsetOfMemoryInstanceData(uint32_t memoryIndex) const {
-    MOZ_RELEASE_ASSERT(memoryIndex < memories.length());
+    MOZ_ASSERT(memoryIndex < memories.length());
     return memoriesOffsetStart + memoryIndex * sizeof(MemoryInstanceData);
   }
   uint32_t offsetOfTableInstanceData(uint32_t tableIndex) const {
-    MOZ_RELEASE_ASSERT(tableIndex < tables.length());
+    MOZ_ASSERT(tableIndex < tables.length());
     return tablesOffsetStart + tableIndex * sizeof(TableInstanceData);
   }
 
   uint32_t offsetOfTagInstanceData(uint32_t tagIndex) const {
-    MOZ_RELEASE_ASSERT(tagIndex < tags.length());
+    MOZ_ASSERT(tagIndex < tags.length());
     return tagsOffsetStart + tagIndex * sizeof(TagInstanceData);
   }
 
@@ -378,7 +371,7 @@ struct CodeTailMetadata : public ShareableBase<CodeTailMetadata> {
     return funcDefRanges[funcDefIndex].start;
   }
   const BytecodeRange& funcDefRange(uint32_t funcIndex) const {
-    MOZ_RELEASE_ASSERT(funcIndex >= codeMeta->numFuncImports);
+    MOZ_ASSERT(funcIndex >= codeMeta->numFuncImports);
     uint32_t funcDefIndex = funcIndex - codeMeta->numFuncImports;
     return funcDefRanges[funcDefIndex];
   }
@@ -388,19 +381,19 @@ struct CodeTailMetadata : public ShareableBase<CodeTailMetadata> {
         .toSpan(*codeSectionBytecode);
   }
   FeatureUsage funcDefFeatureUsage(uint32_t funcIndex) const {
-    MOZ_RELEASE_ASSERT(funcIndex >= codeMeta->numFuncImports);
+    MOZ_ASSERT(funcIndex >= codeMeta->numFuncImports);
     uint32_t funcDefIndex = funcIndex - codeMeta->numFuncImports;
     return funcDefFeatureUsages[funcDefIndex];
   }
 
   CallRefMetricsRange getFuncDefCallRefs(uint32_t funcIndex) const {
-    MOZ_RELEASE_ASSERT(funcIndex >= codeMeta->numFuncImports);
+    MOZ_ASSERT(funcIndex >= codeMeta->numFuncImports);
     uint32_t funcDefIndex = funcIndex - codeMeta->numFuncImports;
     return funcDefCallRefs[funcDefIndex];
   }
 
   AllocSitesRange getFuncDefAllocSites(uint32_t funcIndex) const {
-    MOZ_RELEASE_ASSERT(funcIndex >= codeMeta->numFuncImports);
+    MOZ_ASSERT(funcIndex >= codeMeta->numFuncImports);
     uint32_t funcDefIndex = funcIndex - codeMeta->numFuncImports;
     return funcDefAllocSites[funcDefIndex];
   }
@@ -487,15 +480,6 @@ struct ModuleMetadata : public ShareableBase<ModuleMetadata> {
     return codeMeta->prepareForCompile(mode);
   }
   bool isPreparedForCompile() const { return codeMeta->isPreparedForCompile(); }
-
-  mozilla::Maybe<const Export&> getExport(const CacheableName& name) const {
-    for (const Export& exp : exports) {
-      if (exp.fieldName().utf8Bytes() == name.utf8Bytes()) {
-        return mozilla::SomeRef(exp);
-      }
-    }
-    return mozilla::Nothing();
-  }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };

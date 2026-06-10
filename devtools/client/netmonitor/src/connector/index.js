@@ -38,9 +38,6 @@ const DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF = "devtools.netmonitor.persistlog";
  * Connector to Firefox backend.
  */
 class Connector {
-  #destroyed;
-  #harMetadataCollector;
-
   constructor() {
     // Public methods
     this.connect = this.connect.bind(this);
@@ -64,7 +61,6 @@ class Connector {
 
   static NETWORK_RESOURCES = [
     TYPES.NETWORK_EVENT,
-    TYPES.NETWORK_EVENT_DECODED_BODY_SIZE,
     TYPES.NETWORK_EVENT_STACKTRACE,
     TYPES.WEBSOCKET,
     TYPES.SERVER_SENT_EVENT,
@@ -110,8 +106,8 @@ class Connector {
       owner: this.owner,
     });
 
-    this.#harMetadataCollector = new HarMetadataCollector(this.commands);
-    await this.#harMetadataCollector.connect();
+    this._harMetadataCollector = new HarMetadataCollector(this.commands);
+    await this._harMetadataCollector.connect();
 
     await this.commands.resourceCommand.watchResources([TYPES.DOCUMENT_EVENT], {
       onAvailable: this.onResourceAvailable,
@@ -132,11 +128,11 @@ class Connector {
 
   disconnect() {
     // As this function might be called twice, we need to guard if already called.
-    if (this.#destroyed) {
+    if (this._destroyed) {
       return;
     }
 
-    this.#destroyed = true;
+    this._destroyed = true;
 
     this.commands.resourceCommand.unwatchResources([TYPES.DOCUMENT_EVENT], {
       onAvailable: this.onResourceAvailable,
@@ -155,7 +151,7 @@ class Connector {
 
     this.dataProvider.destroy();
     this.dataProvider = null;
-    this.#harMetadataCollector.destroy();
+    this._harMetadataCollector.destroy();
   }
 
   /**
@@ -170,7 +166,7 @@ class Connector {
     // Clear all the caches in the data provider
     this.dataProvider.clear();
 
-    this.#harMetadataCollector.clear();
+    this._harMetadataCollector.clear();
 
     if (isExplicitClear) {
       // Only clear the resources if the clear was initiated explicitly by the
@@ -215,11 +211,6 @@ class Connector {
 
       if (resource.resourceType === TYPES.NETWORK_EVENT_STACKTRACE) {
         this.dataProvider.onStackTraceAvailable(resource);
-        continue;
-      }
-
-      if (resource.resourceType === TYPES.NETWORK_EVENT_DECODED_BODY_SIZE) {
-        this.dataProvider.onDecodedBodySizeAvailable(resource);
         continue;
       }
 
@@ -496,7 +487,7 @@ class Connector {
    * Used for HAR generation.
    */
   getHarData() {
-    return this.#harMetadataCollector.getHarData();
+    return this._harMetadataCollector.getHarData();
   }
 
   /**

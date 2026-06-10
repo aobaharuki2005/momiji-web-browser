@@ -1,11 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* the caret is the text cursor used, e.g., when editing */
 
-#ifndef nsCaret_h_
-#define nsCaret_h_
+#ifndef nsCaret_h__
+#define nsCaret_h__
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SelectionMovementUtils.h"
@@ -193,7 +195,6 @@ class nsCaret final : public nsISelectionListener {
   // If we're tracking the selection, this updates the caret position and
   // invalidates paint as needed.
   void UpdateCaretPositionFromSelectionIfNeeded();
-  void UpdateHiddenDuringSelection();
 
   mozilla::WeakPtr<mozilla::dom::Selection> mDomSelectionWeak;
 
@@ -258,4 +259,4 @@ class nsCaret final : public nsISelectionListener {
   bool mHiddenDuringSelection = false;
 };
 
-#endif  // nsCaret_h_
+#endif  // nsCaret_h__

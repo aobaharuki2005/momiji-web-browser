@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,7 +10,6 @@
 #include "gfxContext.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/Document.h"
@@ -101,14 +102,14 @@ nsresult nsRangeFrame::CreateAnonymousContent(
     nsTArray<ContentInfo>& aElements) {
   Document* doc = mContent->OwnerDoc();
   // Create the ::-moz-range-track pseudo-element (a div):
-  mTrackDiv = MakeAnonymousDiv(*doc, PseudoStyleType::MozRangeTrack,
-                               PseudoStyleType::SliderTrack, aElements);
+  mTrackDiv = MakeAnonymousDiv(*doc, PseudoStyleType::mozRangeTrack,
+                               PseudoStyleType::sliderTrack, aElements);
   // Create the ::-moz-range-progress pseudo-element (a div):
-  mProgressDiv = MakeAnonymousDiv(*doc, PseudoStyleType::MozRangeProgress,
-                                  PseudoStyleType::SliderFill, aElements);
+  mProgressDiv = MakeAnonymousDiv(*doc, PseudoStyleType::mozRangeProgress,
+                                  PseudoStyleType::sliderFill, aElements);
   // Create the ::-moz-range-thumb pseudo-element (a div):
-  mThumbDiv = MakeAnonymousDiv(*doc, PseudoStyleType::MozRangeThumb,
-                               PseudoStyleType::SliderThumb, aElements);
+  mThumbDiv = MakeAnonymousDiv(*doc, PseudoStyleType::mozRangeThumb,
+                               PseudoStyleType::sliderThumb, aElements);
   return NS_OK;
 }
 
@@ -168,23 +169,27 @@ void nsRangeFrame::Reflow(nsPresContext* aPresContext,
       contentBoxSize + aReflowInput.ComputedLogicalBorderPadding(wm).Size(wm));
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
-  ReflowChildFrames(aPresContext, aDesiredSize, contentBoxSize, aReflowInput);
+  ReflowAnonymousContent(aPresContext, aDesiredSize, contentBoxSize,
+                         aReflowInput);
   FinishAndStoreOverflow(&aDesiredSize);
 
   MOZ_ASSERT(aStatus.IsEmpty(), "This type of frame can't be split.");
 }
 
-void nsRangeFrame::ReflowChildFrames(nsPresContext* aPresContext,
-                                     ReflowOutput& aDesiredSize,
-                                     const LogicalSize& aContentBoxSize,
-                                     const ReflowInput& aReflowInput) {
+void nsRangeFrame::ReflowAnonymousContent(nsPresContext* aPresContext,
+                                          ReflowOutput& aDesiredSize,
+                                          const LogicalSize& aContentBoxSize,
+                                          const ReflowInput& aReflowInput) {
   const auto parentWM = aReflowInput.GetWritingMode();
   // The width/height of our content box, which is the available width/height
   // for our anonymous content.
   const nsSize rangeFrameContentBoxSize =
       aContentBoxSize.GetPhysicalSize(parentWM);
-  for (auto* child : mFrames) {
-    auto* content = child->GetContent();
+  for (auto* div : {mTrackDiv.get(), mThumbDiv.get(), mProgressDiv.get()}) {
+    nsIFrame* child = div->GetPrimaryFrame();
+    if (!child) {
+      continue;
+    }
     const WritingMode wm = child->GetWritingMode();
     const LogicalSize parentSizeInChildWM =
         aContentBoxSize.ConvertTo(wm, parentWM);
@@ -194,7 +199,7 @@ void nsRangeFrame::ReflowChildFrames(nsPresContext* aPresContext,
                                  Some(parentSizeInChildWM));
 
     const nsPoint pos = [&] {
-      if (content != mTrackDiv) {
+      if (div != mTrackDiv) {
         // Where we position the thumb and range-progress depends on its size,
         // so we first reflow them at {0,0} to obtain the size, then position
         // them afterwards.
@@ -232,9 +237,9 @@ void nsRangeFrame::ReflowChildFrames(nsPresContext* aPresContext,
         "We gave our child unconstrained height, so it should be complete");
     FinishReflowChild(child, aPresContext, childDesiredSize, &childReflowInput,
                       pos.x, pos.y, ReflowChildFlags::Default);
-    if (content == mThumbDiv) {
+    if (div == mThumbDiv) {
       DoUpdateThumbPosition(child, rangeFrameContentBoxSize);
-    } else if (content == mProgressDiv) {
+    } else if (div == mProgressDiv) {
       DoUpdateRangeProgressFrame(child, rangeFrameContentBoxSize);
     }
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, child);
@@ -404,15 +409,19 @@ void nsRangeFrame::UpdateForValueChange() {
 nsTArray<Decimal> nsRangeFrame::TickMarks() {
   nsTArray<Decimal> tickMarks;
   auto& input = InputElement();
-  auto* list = input.GetListInternal();
+  auto* list = input.GetList();
   if (!list) {
     return tickMarks;
   }
   auto min = input.GetMinimum();
   auto max = input.GetMaximum();
-  for (nsINode* n = list->GetFirstChild(); n; n = n->GetNextNode(list)) {
-    auto* option = HTMLOptionElement::FromNode(n);
-    if (!option || option->Disabled()) {
+  auto* options = list->Options();
+  nsAutoString label;
+  for (uint32_t i = 0; i < options->Length(); ++i) {
+    auto* item = options->Item(i);
+    auto* option = HTMLOptionElement::FromNode(item);
+    MOZ_ASSERT(option);
+    if (option->Disabled()) {
       continue;
     }
     nsAutoString str;

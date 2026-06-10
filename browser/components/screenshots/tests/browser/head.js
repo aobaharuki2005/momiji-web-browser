@@ -25,11 +25,11 @@ const RTL_TEST_PAGE = TEST_ROOT + "rtl-test-page.html";
 const SHADOWROOT_TEST_PAGE = TEST_ROOT + "test-page-shadowRoot.html";
 
 const { MAX_CAPTURE_DIMENSION, MAX_CAPTURE_AREA } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/screenshots/ScreenshotsUtils.sys.mjs"
+  "resource:///modules/ScreenshotsUtils.sys.mjs"
 );
 
 const gScreenshotUISelectors = {
-  panel: ".screenshotsPagePanel",
+  panel: "#screenshotsPagePanel",
   fullPageButton: "button#full-page",
   visiblePageButton: "button#visible-page",
   copyButton: "button.#copy",
@@ -264,7 +264,7 @@ class ScreenshotsHelper {
   }
 
   getHoverElementRect() {
-    return SpecialPowers.spawn(this.browser, [], async () => {
+    return ContentTask.spawn(this.browser, null, async () => {
       let screenshotsChild = content.windowGlobalChild.getActor(
         "ScreenshotsComponent"
       );
@@ -273,7 +273,7 @@ class ScreenshotsHelper {
   }
 
   isHoverElementRegionValid() {
-    return SpecialPowers.spawn(this.browser, [], async () => {
+    return ContentTask.spawn(this.browser, null, async () => {
       let screenshotsChild = content.windowGlobalChild.getActor(
         "ScreenshotsComponent"
       );
@@ -304,17 +304,21 @@ class ScreenshotsHelper {
   }
 
   async waitForSelectionRegionSizeChange(currentWidth) {
-    await SpecialPowers.spawn(this.browser, [currentWidth], async currWidth => {
-      let screenshotsChild = content.windowGlobalChild.getActor(
-        "ScreenshotsComponent"
-      );
+    await ContentTask.spawn(
+      this.browser,
+      [currentWidth],
+      async ([currWidth]) => {
+        let screenshotsChild = content.windowGlobalChild.getActor(
+          "ScreenshotsComponent"
+        );
 
-      let dimensions = screenshotsChild.overlay.selectionRegion.dimensions;
-      await ContentTaskUtils.waitForCondition(() => {
-        dimensions = screenshotsChild.overlay.selectionRegion.dimensions;
-        return dimensions.width !== currWidth;
-      }, "Wait for selection box width change");
-    });
+        let dimensions = screenshotsChild.overlay.selectionRegion.dimensions;
+        await ContentTaskUtils.waitForCondition(() => {
+          dimensions = screenshotsChild.overlay.selectionRegion.dimensions;
+          return dimensions.width !== currWidth;
+        }, "Wait for selection box width change");
+      }
+    );
   }
 
   /**
@@ -429,10 +433,10 @@ class ScreenshotsHelper {
 
   async scrollContentWindow(x, y) {
     let contentDims = await this.getContentDimensions();
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       this.browser,
       [x, y, contentDims],
-      async (xPos, yPos, cDims) => {
+      async ([xPos, yPos, cDims]) => {
         content.window.scroll(xPos, yPos);
 
         info(JSON.stringify(cDims, null, 2));
@@ -480,7 +484,7 @@ class ScreenshotsHelper {
   }
 
   async waitForScrollTo(x, y) {
-    await SpecialPowers.spawn(this.browser, [x, y], async (xPos, yPos) => {
+    await ContentTask.spawn(this.browser, [x, y], async ([xPos, yPos]) => {
       await ContentTaskUtils.waitForCondition(() => {
         info(
           `Got scrollX: ${content.window.scrollX}. scrollY: ${content.window.scrollY}`
@@ -508,7 +512,7 @@ class ScreenshotsHelper {
   }
 
   waitForContentMousePosition(left, top) {
-    return SpecialPowers.spawn(this.browser, [left, top], async (x, y) => {
+    return ContentTask.spawn(this.browser, [left, top], async ([x, y]) => {
       function isCloseEnough(a, b, diff) {
         return Math.abs(a - b) <= diff;
       }
@@ -534,9 +538,9 @@ class ScreenshotsHelper {
   }
 
   async clickDownloadButton() {
-    let { centerX: x, centerY: y } = await SpecialPowers.spawn(
+    let { centerX: x, centerY: y } = await ContentTask.spawn(
       this.browser,
-      [],
+      null,
       async () => {
         let screenshotsChild = content.windowGlobalChild.getActor(
           "ScreenshotsComponent"
@@ -554,9 +558,9 @@ class ScreenshotsHelper {
   }
 
   async clickCopyButton() {
-    let { centerX: x, centerY: y } = await SpecialPowers.spawn(
+    let { centerX: x, centerY: y } = await ContentTask.spawn(
       this.browser,
-      [],
+      null,
       async () => {
         let screenshotsChild = content.windowGlobalChild.getActor(
           "ScreenshotsComponent"
@@ -574,9 +578,9 @@ class ScreenshotsHelper {
   }
 
   async clickCancelButton() {
-    let { centerX: x, centerY: y } = await SpecialPowers.spawn(
+    let { centerX: x, centerY: y } = await ContentTask.spawn(
       this.browser,
-      [],
+      null,
       async () => {
         let screenshotsChild = content.windowGlobalChild.getActor(
           "ScreenshotsComponent"
@@ -594,9 +598,9 @@ class ScreenshotsHelper {
   }
 
   async clickPreviewCancelButton() {
-    let { centerX: x, centerY: y } = await SpecialPowers.spawn(
+    let { centerX: x, centerY: y } = await ContentTask.spawn(
       this.browser,
-      [],
+      null,
       async () => {
         let screenshotsChild = content.windowGlobalChild.getActor(
           "ScreenshotsComponent"
@@ -620,14 +624,14 @@ class ScreenshotsHelper {
   }
 
   getTestPageElementRect(elementId = "testPageElement") {
-    return SpecialPowers.spawn(this.browser, [elementId], async id => {
+    return ContentTask.spawn(this.browser, [elementId], async id => {
       let ele = content.document.getElementById(id);
       return ele.getBoundingClientRect();
     });
   }
 
   getOverlaySelectionSizeText(elementId = "testPageElement") {
-    return SpecialPowers.spawn(this.browser, [elementId], async () => {
+    return ContentTask.spawn(this.browser, [elementId], async () => {
       let screenshotsChild = content.windowGlobalChild.getActor(
         "ScreenshotsComponent"
       );
@@ -750,11 +754,18 @@ class ScreenshotsHelper {
       let {
         innerWidth,
         innerHeight,
+        scrollMaxX,
+        scrollMaxY,
         scrollX,
         scrollY,
         scrollMinX,
         scrollMinY,
       } = content.window;
+
+      let scrollWidth = innerWidth + scrollMaxX - scrollMinX;
+      let scrollHeight = innerHeight + scrollMaxY - scrollMinY;
+      let clientHeight = innerHeight;
+      let clientWidth = innerWidth;
 
       const scrollbarHeight = {};
       const scrollbarWidth = {};
@@ -763,13 +774,10 @@ class ScreenshotsHelper {
         scrollbarWidth,
         scrollbarHeight
       );
-
-      let clientHeight = innerHeight - scrollbarHeight.value;
-      let clientWidth = innerWidth - scrollbarWidth.value;
-
-      let docEl = content.document.documentElement;
-      let scrollWidth = Math.max(docEl.scrollWidth, clientWidth);
-      let scrollHeight = Math.max(docEl.scrollHeight, clientHeight);
+      scrollWidth -= scrollbarWidth.value;
+      scrollHeight -= scrollbarHeight.value;
+      clientWidth -= scrollbarWidth.value;
+      clientHeight -= scrollbarHeight.value;
 
       return {
         clientWidth,
@@ -787,7 +795,7 @@ class ScreenshotsHelper {
   }
 
   async getScreenshotsOverlayDimensions() {
-    return SpecialPowers.spawn(this.browser, [], async () => {
+    return ContentTask.spawn(this.browser, null, async () => {
       let screenshotsChild = content.windowGlobalChild.getActor(
         "ScreenshotsComponent"
       );
@@ -813,10 +821,10 @@ class ScreenshotsHelper {
   }
 
   async waitForSelectionLayerDimensionChange(oldWidth, oldHeight) {
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       this.browser,
       [oldWidth, oldHeight],
-      async (prevWidth, prevHeight) => {
+      async ([prevWidth, prevHeight]) => {
         let screenshotsChild = content.windowGlobalChild.getActor(
           "ScreenshotsComponent"
         );
@@ -837,12 +845,22 @@ class ScreenshotsHelper {
   }
 
   waitForOverlaySizeChangeTo(width, height) {
-    return SpecialPowers.spawn(
+    return ContentTask.spawn(
       this.browser,
       [width, height],
-      async (newWidth, newHeight) => {
+      async ([newWidth, newHeight]) => {
         await ContentTaskUtils.waitForCondition(() => {
-          let { innerHeight, innerWidth } = content.window;
+          let {
+            innerHeight,
+            innerWidth,
+            scrollMaxY,
+            scrollMaxX,
+            scrollMinY,
+            scrollMinX,
+          } = content.window;
+          let scrollWidth = innerWidth + scrollMaxX - scrollMinX;
+          let scrollHeight = innerHeight + scrollMaxY - scrollMinY;
+
           const scrollbarHeight = {};
           const scrollbarWidth = {};
           content.window.windowUtils.getScrollbarSize(
@@ -850,11 +868,8 @@ class ScreenshotsHelper {
             scrollbarWidth,
             scrollbarHeight
           );
-          let clientWidth = innerWidth - scrollbarWidth.value;
-          let clientHeight = innerHeight - scrollbarHeight.value;
-          let docEl = content.document.documentElement;
-          let scrollWidth = Math.max(docEl.scrollWidth, clientWidth);
-          let scrollHeight = Math.max(docEl.scrollHeight, clientHeight);
+          scrollWidth -= scrollbarWidth.value;
+          scrollHeight -= scrollbarHeight.value;
           info(
             `${scrollHeight}, ${newHeight}, ${scrollWidth}, ${newWidth}, ${content.window.scrollMaxX}`
           );
@@ -865,7 +880,7 @@ class ScreenshotsHelper {
   }
 
   getSelectionRegionDimensions() {
-    return SpecialPowers.spawn(this.browser, [], async () => {
+    return ContentTask.spawn(this.browser, null, async () => {
       let screenshotsChild = content.windowGlobalChild.getActor(
         "ScreenshotsComponent"
       );
@@ -876,7 +891,11 @@ class ScreenshotsHelper {
   }
 
   waitForContentEventOnce(event) {
-    return BrowserTestUtils.waitForContentEvent(this.browser, event, true);
+    return ContentTask.spawn(this.browser, event, eventType => {
+      return new Promise(resolve => {
+        content.addEventListener(eventType, resolve, { once: true });
+      });
+    });
   }
 
   /**
@@ -982,18 +1001,6 @@ class ScreenshotsHelper {
       }
     );
   }
-}
-
-/**
- * Create a new tab in the current window and wait for its browser to be loaded
- *
- * @param {string} [url] Optional url to load, defaults to value of TEST_PAGE
- * @returns The tab
- */
-async function addTabAndLoadBrowser(url = TEST_PAGE) {
-  const tab = BrowserTestUtils.addTab(gBrowser, url);
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  return tab;
 }
 
 /**

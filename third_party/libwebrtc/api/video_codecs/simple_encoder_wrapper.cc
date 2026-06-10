@@ -15,7 +15,6 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <variant>
@@ -23,6 +22,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/scoped_refptr.h"
 #include "api/units/data_size.h"
 #include "api/units/frequency.h"
@@ -192,7 +192,7 @@ void SimpleEncoderWrapper::Encode(scoped_refptr<VideoFrameBuffer> frame_buffer,
     }
 
     struct FrameOut : public VideoEncoderInterface::FrameOutput {
-      std::span<uint8_t> GetBitstreamOutputBuffer(DataSize size) override {
+      ArrayView<uint8_t> GetBitstreamOutputBuffer(DataSize size) override {
         bitstream.resize(size.bytes());
         return bitstream;
       }

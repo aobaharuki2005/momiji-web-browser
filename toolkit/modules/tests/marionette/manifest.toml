@@ -2,7 +2,5 @@
 run-if = [
   "buildapp == 'browser'",
 ]
-subsuite = "integration"
-tags = "os_integration"
 
 ["test_first_startup.py"]

@@ -485,17 +485,13 @@ async_test(t => {
 
   animation.play();
 
-  animation.onfinish = async event => {
+  animation.onfinish = event => {
     scroller.scrollTop = 0;
-
-    // Wait for two animation frames - this is because the onfinish callback
-    // is executing within step 3 of the update animations and send events
-    // procedure: "perform a microtask checkpoint" so only waiting one frame
-    // would not have run the "update animations and send events" procedure
-    // with scrollTop set to 0.
-    await waitForAnimationFrames(2);
-
-    scroller.scrollTop = maxScroll;
+    window.requestAnimationFrame(function() {
+      window.requestAnimationFrame(function() {
+        scroller.scrollTop = maxScroll;
+      });
+    });
     animation.onfinish = event => {
       t.done();
     };
@@ -510,21 +506,15 @@ async_test(t => {
 
   animation.play();
 
-  animation.onfinish = async event => {
+  animation.onfinish = event => {
     scroller.scrollTop = 0;
-
-    // Wait for two animation frames - this is because the onfinish callback
-    // is executing within step 3 of the update animations and send events
-    // procedure: "perform a microtask checkpoint" so only waiting one frame
-    // would not have run the "update animations and send events" procedure
-    // with scrollTop set to 0.
-    await waitForAnimationFrames(2);
-
-    animation.play();
-    scroller.scrollTop = maxScroll;
-    animation.onfinish = event => {
-      t.done();
-    };
+    window.requestAnimationFrame(function() {
+      animation.play();
+      scroller.scrollTop = maxScroll;
+      animation.onfinish = event => {
+        t.done();
+      };
+    });
   };
   scroller.scrollTop = maxScroll;
 }, 'Animation finish event is fired again after replaying from start');

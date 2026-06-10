@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -328,7 +330,7 @@ nsFaviconService::SetFaviconForPage(nsIURI* aPageURI, nsIURI* aFaviconURI,
     rv = imgLoader::GetMimeTypeFromContent((const char*)buffer.Elements(),
                                            bufferLength, sniffedMimeType);
     if (NS_SUCCEEDED(rv)) {
-      mimeType = std::move(sniffedMimeType);
+      mimeType = sniffedMimeType;
     } else {
       // When the MIME type is not available, fall back to checking for SVG in
       // the initial part of the buffer.
@@ -360,12 +362,12 @@ nsFaviconService::SetFaviconForPage(nsIURI* aPageURI, nsIURI* aFaviconURI,
   }
 
   IconPayload payload;
-  payload.mimeType = std::move(mimeType);
+  payload.mimeType = mimeType;
   payload.data.Assign(TO_CHARBUFFER(buffer.Elements()), buffer.Length());
   if (payload.mimeType.EqualsLiteral(SVG_MIME_TYPE)) {
     payload.width = UINT16_MAX;
   }
-  icon.payloads.AppendElement(std::move(payload));
+  icon.payloads.AppendElement(payload);
 
   rv = OptimizeIconSizes(icon);
   NS_ENSURE_SUCCESS(rv, rv);

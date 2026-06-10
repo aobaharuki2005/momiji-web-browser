@@ -121,26 +121,10 @@ async function addTestTab(
     browser: tab.linkedBrowser,
     panel,
     win,
-    toolbox: panel.toolbox,
+    toolbox: panel._toolbox,
     doc,
     store,
   };
-}
-
-/**
- * Bug 2031760: Temporary helper to check if the tests are running in Linux opt.
- */
-function isLinuxOpt() {
-  const { AppConstants } = ChromeUtils.importESModule(
-    "resource://gre/modules/AppConstants.sys.mjs"
-  );
-  return (
-    Services.appinfo.OS === "Linux" &&
-    !AppConstants.DEBUG &&
-    !AppConstants.ASAN &&
-    !AppConstants.CCOV &&
-    !AppConstants.TSAN
-  );
 }
 
 /**
@@ -152,13 +136,6 @@ function isLinuxOpt() {
  * @return a promise that is resolved once the panel is open.
  */
 async function initAccessibilityPanel(tab = gBrowser.selectedTab) {
-  // Bug 2031760: We currently have a very frequent race condition which makes
-  // the panel fail to open ~50% of the time on this platform. Delaying the
-  // toolbox open seems to fix the issue.
-  if (isLinuxOpt()) {
-    await wait(1000);
-  }
-
   const toolbox = await gDevTools.showToolboxForTab(tab, {
     toolId: "accessibility",
   });

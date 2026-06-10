@@ -67,8 +67,6 @@ class RequestListHeaderContent extends Component {
     };
   }
 
-  #resizeTimerId;
-
   constructor(props) {
     super(props);
     this.requestListHeader = createRef();
@@ -244,8 +242,8 @@ class RequestListHeaderContent extends Component {
     if (waterfallHeader) {
       // Measure its width and update the 'waterfallWidth' property in the store.
       // The 'waterfallWidth' will be further updated on every window resize.
-      window.cancelIdleCallback(this.#resizeTimerId);
-      this.#resizeTimerId = window.requestIdleCallback(() => {
+      window.cancelIdleCallback(this._resizeTimerId);
+      this._resizeTimerId = window.requestIdleCallback(() => {
         if (document.visibilityState == "visible") {
           this.props.resizeWaterfall(
             waterfallHeader.getBoundingClientRect().width

@@ -26,23 +26,24 @@
         id="tabNotePanel"
         type="arrow"
         titlebar="normal"
-        class="tab-note-editor-panel panel-no-padding"
+        class="tab-note-editor-panel"
         orient="vertical"
         role="dialog"
         ignorekeys="true"
         norolluponanchor="true"
+        aria-labelledby="tab-note-editor-title"
         consumeoutsideclicks="false">
 
-        <html:div class="panel-header" id="tab-note-editor-header" >
+        <html:div class="panel-header" >
           <html:h1
             id="tab-note-editor-title">
           </html:h1>
         </html:div>
 
-        <toolbarseparator id="tab-note-editor-separator" />
+        <toolbarseparator />
 
         <html:div
-          class="panel-subview-body
+          class="panel-body
           tab-note-editor-name">
           <html:textarea
             id="tab-note-text"
@@ -54,16 +55,12 @@
         </html:div>
 
         <html:div
-          class="panel-action-row panel-footer">
-          <html:moz-button
-              id="tab-note-editor-button-delete"
-              type="icon ghost"
-              data-l10n-id="tab-note-editor-button-delete">
-          </html:moz-button>
+          class="panel-action-row">
           <html:div
             id="tab-note-overflow-indicator">
           </html:div>
           <html:moz-button-group
+              class="tab-note-create-actions tab-note-create-mode-only"
               id="tab-note-default-actions">
               <html:moz-button
                   id="tab-note-editor-button-cancel"
@@ -83,16 +80,13 @@
     #initialized = false;
     #panel;
     #noteField;
-    #headerEl;
-    #separatorEl;
     #titleNode;
     /** @type {MozTabbrowserTab} */
     #currentTab = null;
-    /** @type {boolean|null} */
-    #createMode = null;
+    /** @type {boolean} */
+    #createMode;
     #cancelButton;
     #saveButton;
-    #deleteButton;
     #overflowIndicator;
     /** @type {TabNoteTelemetrySource|null} */
     #telemetrySource = null;
@@ -108,12 +102,9 @@
 
       this.#panel = this.querySelector("panel");
       this.#noteField = document.getElementById("tab-note-text");
-      this.#headerEl = this.querySelector("#tab-note-editor-header");
-      this.#separatorEl = this.querySelector("#tab-note-editor-separator");
-      this.#titleNode = this.querySelector("#tab-note-editor-title");
+      this.#titleNode = document.getElementById("tab-note-editor-title");
       this.#cancelButton = this.querySelector("#tab-note-editor-button-cancel");
       this.#saveButton = this.querySelector("#tab-note-editor-button-save");
-      this.#deleteButton = this.querySelector("#tab-note-editor-button-delete");
       this.#overflowIndicator = this.querySelector(
         "#tab-note-overflow-indicator"
       );
@@ -123,9 +114,6 @@
       });
       this.#saveButton.addEventListener("click", () => {
         this.saveNote();
-      });
-      this.#deleteButton.addEventListener("click", () => {
-        this.#deleteNote();
       });
       this.#panel.addEventListener("keypress", this);
       this.#panel.addEventListener("popuphidden", this);
@@ -145,7 +133,7 @@
           this.#panel.hidePopup();
           break;
         case KeyEvent.DOM_VK_RETURN:
-          if (!event.shiftKey && event.target === this.#noteField) {
+          if (!event.shiftKey) {
             this.saveNote();
           }
           break;
@@ -175,14 +163,6 @@
         : "tab-note-editor-title-edit";
       this.#titleNode.innerText =
         gBrowser.tabLocalization.formatValueSync(headerL10nId);
-      this.#headerEl.hidden = !createModeEnabled;
-      this.#separatorEl.hidden = !createModeEnabled;
-      this.#deleteButton.hidden = createModeEnabled;
-      this.#panel.setAttribute(
-        "aria-label",
-        gBrowser.tabLocalization.formatValueSync(headerL10nId)
-      );
-
       this.#createMode = createModeEnabled;
     }
 
@@ -197,8 +177,6 @@
 
     #updatePanel() {
       const inputLength = this.#noteField.value.length;
-      const trimmedLength = this.#noteField.value.trim().length;
-
       let overflow;
       if (inputLength > OVERFLOW_MAX_THRESHOLD) {
         overflow = OverflowState.OVERFLOW;
@@ -209,7 +187,7 @@
       }
 
       this.#saveButton.disabled =
-        overflow == OverflowState.OVERFLOW || trimmedLength === 0;
+        overflow == OverflowState.OVERFLOW || !inputLength;
 
       if (overflow != OverflowState.NONE) {
         this.#panel.setAttribute("overflow", overflow);
@@ -229,13 +207,8 @@
       // CSS has a `field-sizing` attribute that does this automatically,
       // but it is not yet supported.
       // TODO bug2006439: Replace this with `field-sizing` after the implementation of bug1832409
-      this.#noteField.style.height = "auto"; // Reset height so previous manual adjustments do not affect calculations
-      let computedStyle = getComputedStyle(this.#noteField);
-      let contentHeight =
-        this.#noteField.scrollHeight -
-        parseFloat(computedStyle.paddingTop) -
-        parseFloat(computedStyle.paddingBottom);
-      this.#noteField.style.height = `${contentHeight}px`;
+      this.#noteField.style.height = "auto";
+      this.#noteField.style.height = `${this.#noteField.scrollHeight}px`;
     }
 
     /**
@@ -249,12 +222,10 @@
       if (!TabNotes.isEligible(tab)) {
         return;
       }
-      // Lazily set the icon to avoid loading it at startup
-      if (!this.#deleteButton.iconSrc) {
-        this.#deleteButton.iconSrc = "chrome://global/skin/icons/delete.svg";
-      }
       this.#currentTab = tab;
       this.#telemetrySource = options.telemetrySource;
+
+      this.#updatePanel();
 
       TabNotes.get(tab).then(note => {
         if (note) {
@@ -276,33 +247,18 @@
         this.#panel.openPopup(tab, {
           position: this.#panelPosition,
         });
-
-        this.#updatePanel();
       });
     }
 
     saveNote() {
       let note = this.#noteField.value;
 
-      if (
-        TabNotes.isEligible(this.#currentTab) &&
-        note.trim().length &&
-        note.length <= OVERFLOW_MAX_THRESHOLD
-      ) {
+      if (TabNotes.isEligible(this.#currentTab) && note.length) {
         TabNotes.set(this.#currentTab, note, {
           telemetrySource: this.#telemetrySource,
         });
       }
 
-      this.#panel.hidePopup();
-    }
-
-    #deleteNote() {
-      if (TabNotes.isEligible(this.#currentTab)) {
-        TabNotes.delete(this.#currentTab, {
-          telemetrySource: this.#telemetrySource,
-        });
-      }
       this.#panel.hidePopup();
     }
   }

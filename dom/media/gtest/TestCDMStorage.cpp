@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -199,9 +201,6 @@ static void SimulatePBModeExit() {
   NS_DispatchAndSpinEventLoopUntilComplete(
       "SimulatePBModeExit"_ns, GetMainThreadSerialEventTarget(),
       MakeAndAddRef<NotifyObserversTask>("last-pb-context-exited"));
-  nsCOMPtr<nsIThread> thread(GetGMPThread());
-  NS_DispatchAndSpinEventLoopUntilComplete(
-      "ClearedPBContext"_ns, thread, NS_NewRunnableFunction(__func__, [] {}));
 }
 
 class TestGetNodeIdCallback : public GetNodeIdCallback {
@@ -1110,8 +1109,7 @@ class CDMStorageTest {
     SchedulerGroup::Dispatch(task.forget());
   }
 
-  void SessionMessage(const nsACString& aSessionId,
-                      cdm::MessageType aMessageType,
+  void SessionMessage(const nsACString& aSessionId, uint32_t aMessageType,
                       const nsTArray<uint8_t>& aMessage) {
     MonitorAutoLock mon(mMonitor);
 
@@ -1164,15 +1162,14 @@ class CDMStorageTest {
                                    bool aSuccessful) override {}
 
     void ResolvePromiseWithKeyStatus(uint32_t aPromiseId,
-                                     cdm::KeyStatus aKeyStatus) override {}
+                                     uint32_t aKeyStatus) override {}
 
     void ResolvePromise(uint32_t aPromiseId) override {}
 
     void RejectPromise(uint32_t aPromiseId, ErrorResult&& aError,
                        const nsCString& aErrorMessage) override {}
 
-    void SessionMessage(const nsACString& aSessionId,
-                        cdm::MessageType aMessageType,
+    void SessionMessage(const nsACString& aSessionId, uint32_t aMessageType,
                         nsTArray<uint8_t>&& aMessage) override {
       mRunner->SessionMessage(aSessionId, aMessageType, std::move(aMessage));
     }
@@ -1279,6 +1276,8 @@ TEST(GeckoMediaPlugins, MatchBaseDomain_NoMatch)
   TestMatchBaseDomain_NoMatch();
 }
 
+// Bug 1776767 - Skip all GMP tests on Windows ASAN / CCOV
+#if !(defined(XP_WIN) && (defined(MOZ_ASAN) || defined(MOZ_CODE_COVERAGE)))
 TEST(GeckoMediaPlugins, CDMStorageGetNodeId)
 {
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
@@ -1339,10 +1338,12 @@ TEST(GeckoMediaPlugins, CDMStorageLongRecordNames)
   runner->DoTest(&CDMStorageTest::TestLongRecordNames);
 }
 
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
 TEST(GeckoMediaPlugins, GMPOutputProtection)
 {
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestOutputProtection);
 }
-#endif  // defined(XP_WIN)
+#  endif  // defined(XP_WIN)
+#endif    // !(defined(XP_WIN) && (defined(MOZ_ASAN) ||
+          // defined(MOZ_CODE_COVERAGE)))

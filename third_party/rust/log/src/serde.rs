@@ -1,10 +1,10 @@
-#![cfg(feature = "serde_core")]
+#![cfg(feature = "serde")]
 
-use serde_core::de::{
+use serde::de::{
     Deserialize, DeserializeSeed, Deserializer, EnumAccess, Error, Unexpected, VariantAccess,
     Visitor,
 };
-use serde_core::ser::{Serialize, Serializer};
+use serde::ser::{Serialize, Serializer};
 
 use crate::{Level, LevelFilter, LOG_LEVEL_NAMES};
 

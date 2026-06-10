@@ -59,7 +59,7 @@ async function checkBreakpointBeforeWatchResources() {
 
   info("Run the 'debugger' statement");
   // Note that we do not wait for the resolution of spawn as it will be paused
-  SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+  ContentTask.spawn(tab.linkedBrowser, null, () => {
     content.window.wrappedJSObject.runDebuggerStatement();
   });
 
@@ -135,7 +135,7 @@ async function checkBreakpointAfterWatchResources() {
 
   info("Run the 'debugger' statement");
   // Note that we do not wait for the resolution of spawn as it will be paused
-  SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+  ContentTask.spawn(tab.linkedBrowser, null, () => {
     content.window.wrappedJSObject.runDebuggerStatement();
   });
 
@@ -219,7 +219,7 @@ async function checkRealBreakpoint() {
 
   info("Run the test function where we set a breakpoint");
   // Note that we do not wait for the resolution of spawn as it will be paused
-  SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+  ContentTask.spawn(tab.linkedBrowser, null, () => {
     content.window.wrappedJSObject.testFunction();
   });
 
@@ -292,7 +292,7 @@ async function checkPauseOnException() {
   });
 
   info("Reload the page, in order to trigger exception on load");
-  const reloaded = reloadSelectedTab();
+  const reloaded = reloadBrowser();
 
   await waitFor(
     () => availableResources.length == 1,
@@ -365,7 +365,7 @@ async function checkSetBeforeWatch() {
 
   info("Run the test function where we set a breakpoint");
   // Note that we do not wait for the resolution of spawn as it will be paused
-  SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+  ContentTask.spawn(tab.linkedBrowser, null, () => {
     content.window.wrappedJSObject.testFunction();
   });
 
@@ -527,7 +527,7 @@ async function testMultiprocessThreadState() {
 
   info("Run the 'debugger' statement");
   // Note that we do not wait for the resolution of spawn as it will be paused
-  const onResumed = SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+  const onResumed = ContentTask.spawn(tab.linkedBrowser, null, () => {
     content.window.wrappedJSObject.runDebuggerStatement();
   });
 

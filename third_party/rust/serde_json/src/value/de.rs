@@ -155,14 +155,7 @@ impl<'de> Deserialize<'de> for Value {
 impl FromStr for Value {
     type Err = Error;
     fn from_str(s: &str) -> Result<Value, Error> {
-        crate::from_str(s)
-    }
-}
-
-impl FromStr for Map<String, Value> {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Error> {
-        crate::from_str(s)
+        super::super::de::from_str(s)
     }
 }
 

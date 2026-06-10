@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_quota_persistencetype_h_
-#define mozilla_dom_quota_persistencetype_h_
+#ifndef mozilla_dom_quota_persistencetype_h__
+#define mozilla_dom_quota_persistencetype_h__
 
 #include <array>
 #include <cstdint>
@@ -41,12 +43,6 @@ static const PersistenceType kBestEffortPersistenceTypes[] = {
 static const PersistenceType kInitializableBestEffortPersistenceTypes[] = {
     PERSISTENCE_TYPE_TEMPORARY, PERSISTENCE_TYPE_DEFAULT};
 
-static const PersistenceType kTemporaryPersistenceTypes[] = {
-    PERSISTENCE_TYPE_TEMPORARY, PERSISTENCE_TYPE_DEFAULT,
-    PERSISTENCE_TYPE_PRIVATE};
-
-bool IsTemporaryPersistenceType(const PersistenceType aPersistenceType);
-
 bool IsValidPersistenceType(PersistenceType aPersistenceType);
 
 bool IsBestEffortPersistenceType(const PersistenceType aPersistenceType);
@@ -71,4 +67,4 @@ std::array<PersistenceType, 2> ComplementaryPersistenceTypes(
 
 }  // namespace mozilla::dom::quota
 
-#endif  // mozilla_dom_quota_persistencetype_h_
+#endif  // mozilla_dom_quota_persistencetype_h__

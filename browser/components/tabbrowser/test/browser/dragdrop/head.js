@@ -1,7 +1,3 @@
-const { TabGroupTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TabGroupTestUtils.sys.mjs"
-);
-
 const LOCALE_LTR = "ltr";
 const LOCALE_RTL = "rtl";
 
@@ -56,7 +52,7 @@ async function customDragAndDrop(
  * @returns {Promise<MozTabbrowserTab>}
  * @see Tabbrowser.addTab
  */
-async function addTab(url = "http://mochi.test:8888/", params = {}) {
+async function addTab(url, params = {}) {
   params.skipAnimation = true;
   const tab = BrowserTestUtils.addTab(gBrowser, url, params);
   const browser = gBrowser.getBrowserForTab(tab);
@@ -166,27 +162,4 @@ function getDragEvent(isVertical = false) {
       : tabContainerRect.y + tabContainerRect.height / 2,
     dropEffect: "move",
   };
-}
-
-function triggerClickOn(target, options) {
-  let promise = BrowserTestUtils.waitForEvent(target, "click");
-  if (AppConstants.platform == "macosx") {
-    options = {
-      metaKey: options.ctrlKey,
-      shiftKey: options.shiftKey,
-    };
-  }
-  EventUtils.synthesizeMouseAtCenter(target, options);
-  return promise;
-}
-
-/**
- * Removes a tab group (along with its tabs). Resolves when the tab group
- * is gone.
- *
- * @param {MozTabbrowserTabGroup} group
- * @returns {Promise<void>}
- */
-async function removeTabGroup(group) {
-  return TabGroupTestUtils.removeTabGroup(group);
 }

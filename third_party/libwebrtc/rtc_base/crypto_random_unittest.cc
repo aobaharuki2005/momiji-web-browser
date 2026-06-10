@@ -25,6 +25,7 @@ namespace {
 
 using ::testing::_;
 using ::testing::DoAll;
+using ::testing::Invoke;
 using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::Return;
@@ -138,9 +139,10 @@ TEST(RandomTest, TestSetRandomGenerator) {
 
   uint32_t id = 4658;
   EXPECT_CALL(*generator, Generate(_, sizeof(uint32_t)))
-      .WillOnce(DoAll(
-          WithArg<0>([&id](void* p) { std::memcpy(p, &id, sizeof(uint32_t)); }),
-          Return(true)));
+      .WillOnce(DoAll(WithArg<0>(Invoke([&id](void* p) {
+                        std::memcpy(p, &id, sizeof(uint32_t));
+                      })),
+                      Return(true)));
   EXPECT_EQ(CreateRandomId(), id);
 
   EXPECT_CALL(*generator, Generate)

@@ -1,14 +1,16 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsBaseChannel_h_
-#define nsBaseChannel_h_
+#ifndef nsBaseChannel_h__
+#define nsBaseChannel_h__
 
 #include "mozilla/dom/MimeType.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/net/ContentRange.h"
 #include "mozilla/net/NeckoTargetHolder.h"
 #include "mozilla/net/PrivateBrowsingChannel.h"
 #include "nsHashPropertyBag.h"
@@ -290,6 +292,7 @@ class nsBaseChannel
   bool mWaitingOnAsyncRedirect{false};
   bool mOpenRedirectChannel{false};
   uint32_t mRedirectFlags{0};
+  RefPtr<mozilla::net::ContentRange> mContentRange;
   RefPtr<CMimeType> mFullMimeType;
 
  protected:
@@ -310,4 +313,4 @@ class nsBaseChannel
   friend class mozilla::net::PrivateBrowsingChannel<nsBaseChannel>;
 };
 
-#endif  // !nsBaseChannel_h_
+#endif  // !nsBaseChannel_h__

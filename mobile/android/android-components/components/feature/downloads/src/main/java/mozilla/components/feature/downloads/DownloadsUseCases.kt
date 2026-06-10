@@ -4,11 +4,11 @@
 
 package mozilla.components.feature.downloads
 
+import android.content.Context
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.support.utils.DownloadFileUtils
 
 /**
  * Contains use cases related to the downloads feature.
@@ -17,7 +17,7 @@ import mozilla.components.support.utils.DownloadFileUtils
  */
 class DownloadsUseCases(
     store: BrowserStore,
-    downloadFileUtils: DownloadFileUtils,
+    applicationContext: Context,
 ) {
 
     /**
@@ -38,10 +38,11 @@ class DownloadsUseCases(
      * Use case that opens an already downloaded file.
      *
      * @property store
+     * @property applicationContext
      */
     class OpenAlreadyDownloadedFileUseCase(
         private val store: BrowserStore,
-        private val downloadFileUtils: DownloadFileUtils,
+        private val applicationContext: Context,
     ) {
         /**
          * Opens the already downloaded file with the given [downloadId], and cancels the download
@@ -50,10 +51,12 @@ class DownloadsUseCases(
         operator fun invoke(tabId: String, download: DownloadState, filePath: String?) {
             store.dispatch(ContentAction.CancelDownloadAction(tabId, download.id))
             filePath ?: return
-            downloadFileUtils.openFile(
-                fileName = download.fileName,
-                directoryPath = download.directoryPath,
-                contentType = download.contentType,
+            AbstractFetchDownloadService.openFile(
+                applicationContext,
+                applicationContext.packageName,
+                download.fileName,
+                filePath,
+                download.contentType,
             )
         }
     }
@@ -93,12 +96,9 @@ class DownloadsUseCases(
     class RemoveDownloadUseCase(private val store: BrowserStore) {
         /**
          * Removes the download with the given [downloadId].
-         * @param downloadId The ID of the download to remove.
-         * @param removeFromDisk If true, forcibly delete the file from storage. If false,
-         * remove the download from history. If null, fall back to the global user preference.
          */
-        operator fun invoke(downloadId: String, removeFromDisk: Boolean? = null) {
-            store.dispatch(DownloadAction.RemoveDownloadAction(downloadId, removeFromDisk))
+        operator fun invoke(downloadId: String) {
+            store.dispatch(DownloadAction.RemoveDownloadAction(downloadId))
         }
     }
 
@@ -115,7 +115,7 @@ class DownloadsUseCases(
     }
 
     val cancelDownloadRequest = CancelDownloadRequestUseCase(store)
-    val openAlreadyDownloadedFile = OpenAlreadyDownloadedFileUseCase(store, downloadFileUtils)
+    val openAlreadyDownloadedFile = OpenAlreadyDownloadedFileUseCase(store, applicationContext)
     val consumeDownload = ConsumeDownloadUseCase(store)
     val restoreDownloads = RestoreDownloadsUseCase(store)
     val removeDownload = RemoveDownloadUseCase(store)

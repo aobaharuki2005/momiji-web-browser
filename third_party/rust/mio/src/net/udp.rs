@@ -9,15 +9,13 @@
 
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
 #[cfg(any(unix, target_os = "wasi"))]
-use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
 // TODO: once <https://github.com/rust-lang/rust/issues/126198> is fixed this
 // can use `std::os::fd` and be merged with the above.
 #[cfg(target_os = "hermit")]
-use std::os::hermit::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+use std::os::hermit::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
 #[cfg(windows)]
-use std::os::windows::io::{
-    AsRawSocket, AsSocket, BorrowedSocket, FromRawSocket, IntoRawSocket, OwnedSocket, RawSocket,
-};
+use std::os::windows::io::{AsRawSocket, FromRawSocket, IntoRawSocket, RawSocket};
 use std::{fmt, io, net};
 
 use crate::io_source::IoSource;
@@ -36,8 +34,6 @@ use crate::{event, sys, Interest, Registry, Token};
 /// # use std::error::Error;
 /// #
 /// # fn main() -> Result<(), Box<dyn Error>> {
-/// # // Temporarily disabled on WASI pending https://github.com/WebAssembly/wasi-libc/pull/740:
-/// # if cfg!(target_os = "wasi") { return Ok(()) }
 /// // An Echo program:
 /// // SENDER -> sends a message.
 /// // ECHOER -> listens and prints the message received.
@@ -346,8 +342,6 @@ impl UdpSocket {
     /// # use std::error::Error;
     /// #
     /// # fn main() -> Result<(), Box<dyn Error>> {
-    /// # // WASI does not yet support broadcast.
-    /// # if cfg!(target_os = "wasi") { return Ok(()) }
     /// use mio::net::UdpSocket;
     ///
     /// let broadcast_socket = UdpSocket::bind("127.0.0.1:0".parse()?)?;
@@ -378,8 +372,6 @@ impl UdpSocket {
     /// # use std::error::Error;
     /// #
     /// # fn main() -> Result<(), Box<dyn Error>> {
-    /// # // WASI does not yet support broadcast.
-    /// # if cfg!(target_os = "wasi") { return Ok(()) }
     /// use mio::net::UdpSocket;
     ///
     /// let broadcast_socket = UdpSocket::bind("127.0.0.1:0".parse()?)?;
@@ -680,29 +672,9 @@ impl FromRawFd for UdpSocket {
 }
 
 #[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
-impl From<UdpSocket> for OwnedFd {
-    fn from(udp_socket: UdpSocket) -> Self {
-        udp_socket.inner.into_inner().into()
-    }
-}
-
-#[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
 impl AsFd for UdpSocket {
     fn as_fd(&self) -> BorrowedFd<'_> {
         self.inner.as_fd()
-    }
-}
-
-#[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
-impl From<OwnedFd> for UdpSocket {
-    /// Converts a `RawFd` to a `UdpSocket`.
-    ///
-    /// # Notes
-    ///
-    /// The caller is responsible for ensuring that the socket is in
-    /// non-blocking mode.
-    fn from(fd: OwnedFd) -> Self {
-        UdpSocket::from_std(From::from(fd))
     }
 }
 
@@ -730,33 +702,6 @@ impl FromRawSocket for UdpSocket {
     /// non-blocking mode.
     unsafe fn from_raw_socket(socket: RawSocket) -> UdpSocket {
         UdpSocket::from_std(FromRawSocket::from_raw_socket(socket))
-    }
-}
-
-#[cfg(windows)]
-impl From<UdpSocket> for OwnedSocket {
-    fn from(udp_socket: UdpSocket) -> Self {
-        udp_socket.inner.into_inner().into()
-    }
-}
-
-#[cfg(windows)]
-impl AsSocket for UdpSocket {
-    fn as_socket(&self) -> BorrowedSocket<'_> {
-        self.inner.as_socket()
-    }
-}
-
-#[cfg(windows)]
-impl From<OwnedSocket> for UdpSocket {
-    /// Converts a `RawSocket` to a `UdpSocket`.
-    ///
-    /// # Notes
-    ///
-    /// The caller is responsible for ensuring that the socket is in
-    /// non-blocking mode.
-    fn from(socket: OwnedSocket) -> Self {
-        UdpSocket::from_std(From::from(socket))
     }
 }
 

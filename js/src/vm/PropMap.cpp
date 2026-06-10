@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -828,11 +830,11 @@ void SharedPropMap::fixupAfterMovingGC() {
   }
 
   SharedChildrenSet* set = childrenRef.toChildrenSet();
-  for (auto iter = set->modIter(); !iter.done(); iter.next()) {
-    SharedPropMapAndIndex child = iter.get();
+  for (SharedChildrenSet::Enum e(*set); !e.empty(); e.popFront()) {
+    SharedPropMapAndIndex child = e.front();
     if (IsForwarded(child.map())) {
       child = SharedPropMapAndIndex(Forwarded(child.map()), child.index());
-      iter.getMutable() = child;
+      e.mutableFront() = child;
     }
   }
 }
@@ -868,7 +870,8 @@ void SharedPropMap::removeChild(JS::GCContext* gcx, SharedPropMap* child) {
 
   if (set->count() == 1) {
     // Convert from set form back to single child form.
-    SharedPropMapAndIndex remainingChild = set->iter().get();
+    SharedChildrenSet::Range r = set->all();
+    SharedPropMapAndIndex remainingChild = r.front();
     childrenRef.setSingleChild(remainingChild);
     clearHasChildrenSet();
     gcx->delete_(this, set, MemoryUse::PropMapChildren);
@@ -927,11 +930,11 @@ bool PropMapTable::init(JSContext* cx, LinkedPropMap* map) {
 void PropMapTable::trace(JSTracer* trc) {
   purgeCache();
 
-  for (auto iter = set_.modIter(); !iter.done(); iter.next()) {
-    PropMap* map = iter.get().map();
+  for (Set::Enum e(set_); !e.empty(); e.popFront()) {
+    PropMap* map = e.front().map();
     TraceManuallyBarrieredEdge(trc, &map, "PropMapTable map");
-    if (map != iter.get().map()) {
-      iter.getMutable() = PropMapAndIndex(map, iter.get().index());
+    if (map != e.front().map()) {
+      e.mutableFront() = PropMapAndIndex(map, e.front().index());
     }
   }
 }
@@ -1087,13 +1090,18 @@ void PropMap::forEachPropMapFlag(uintptr_t flags, KnownF known,
 }
 
 const char* PropMapTypeToString(const js::PropMap* map) {
-  if (map->isDictionary()) {
-    return "js::DictionaryPropMap";
+  if (map->isLinked()) {
+    return "js::LinkedPropMap";
   }
-  if (map->isCompact()) {
-    return "js::CompactPropMap";
+
+  if (map->isShared()) {
+    if (map->isCompact()) {
+      return "js::CompactPropMap";
+    }
+    return "js::NormalPropMap";
   }
-  return "js::NormalPropMap";
+
+  return "js::DictionaryPropMap";
 }
 
 void PropMap::dumpFields(js::JSONPrinter& json) const {

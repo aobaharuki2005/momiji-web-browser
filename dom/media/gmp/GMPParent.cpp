@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -397,15 +398,7 @@ nsresult GMPParent::LoadProcess() {
     mProcess->SetLaunchArchitecture(mChildLaunchArch);
 #endif
 
-    // Coverage builds instrument plugin-container.exe heavily enough that
-    // startup reliably exceeds the default 30s budget; give it headroom so we
-    // don't fail to launch on a fixed-timeout race.
-#if defined(MOZ_CODE_COVERAGE)
-    constexpr int32_t kLaunchTimeoutMs = 60 * 1000;
-#else
-    constexpr int32_t kLaunchTimeoutMs = 30 * 1000;
-#endif
-    if (!mProcess->Launch(kLaunchTimeoutMs)) {
+    if (!mProcess->Launch(30 * 1000)) {
       GMP_PARENT_LOG_DEBUG("%s: Failed to launch new child process",
                            __FUNCTION__);
       mProcess->Delete();
@@ -544,14 +537,16 @@ void GMPParent::CloseIfUnused() {
        mState == GMPState::Unloading) &&
       !IsUsed()) {
     // Ensure all timers are killed.
-    for (auto* timer : ManagedPGMPTimerParent()) {
-      static_cast<GMPTimerParent*>(timer)->Shutdown();
+    for (uint32_t i = mTimers.Length(); i > 0; i--) {
+      mTimers[i - 1]->Shutdown();
     }
 
     // Shutdown GMPStorage. Given that all protocol actors must be shutdown
     // (!Used() is true), all storage operations should be complete.
-    for (auto* storage : ManagedPGMPStorageParent()) {
-      static_cast<GMPStorageParent*>(storage)->Shutdown();
+    GMP_PARENT_LOG_DEBUG("%p shutdown storage (sz=%zu)", this,
+                         mStorage.Length());
+    for (size_t i = mStorage.Length(); i > 0; i--) {
+      mStorage[i - 1]->Shutdown();
     }
     Shutdown();
   }
@@ -673,19 +668,16 @@ void GMPParent::DeleteProcess() {
       // it is easy to miss the recordings during profiling.
       SendShutdown()->Then(
           gmpEventTarget, __func__,
-          [self](ProfileAndAdditionalInformation&& aProfileAndAdditionalInfo) {
+          [self](nsCString&& aProfile) {
             GMP_LOG_DEBUG(
                 "GMPParent[%p|childPid=%d] DeleteProcess: Shutdown handshake "
                 "success, profileLen=%zu.",
-                self.get(), self->mChildPid,
-                aProfileAndAdditionalInfo.mProfile.Length());
-            if (!aProfileAndAdditionalInfo.mProfile.IsEmpty()) {
+                self.get(), self->mChildPid, aProfile.Length());
+            if (!aProfile.IsEmpty()) {
               NS_DispatchToMainThread(NS_NewRunnableFunction(
                   "GMPParent::DeleteProcess",
-                  [profileAndAdditionalInfo =
-                       std::move(aProfileAndAdditionalInfo)]() mutable {
-                    profiler_received_exit_profile(
-                        std::move(profileAndAdditionalInfo));
+                  [profile = std::move(aProfile)]() {
+                    profiler_received_exit_profile(profile);
                   }));
             }
             self->mState = GMPState::Closed;
@@ -887,17 +879,49 @@ void GMPParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-already_AddRefed<PGMPStorageParent> GMPParent::AllocPGMPStorageParent() {
-  auto p = MakeRefPtr<GMPStorageParent>(mNodeId, this);
-  if (NS_WARN_IF(NS_FAILED(p->Init()))) {
-    return nullptr;
-  }
-  return p.forget();
+PGMPStorageParent* GMPParent::AllocPGMPStorageParent() {
+  GMPStorageParent* p = new GMPStorageParent(mNodeId, this);
+  mStorage.AppendElement(p);  // Addrefs, released in DeallocPGMPStorageParent.
+  return p;
 }
 
-already_AddRefed<PGMPTimerParent> GMPParent::AllocPGMPTimerParent() {
+bool GMPParent::DeallocPGMPStorageParent(PGMPStorageParent* aActor) {
+  GMPStorageParent* p = static_cast<GMPStorageParent*>(aActor);
+  p->Shutdown();
+  mStorage.RemoveElement(p);
+  return true;
+}
+
+mozilla::ipc::IPCResult GMPParent::RecvPGMPStorageConstructor(
+    PGMPStorageParent* aActor) {
+  GMPStorageParent* p = (GMPStorageParent*)aActor;
+  if (NS_FAILED(p->Init())) {
+    // TODO: Verify if this is really a good reason to IPC_FAIL.
+    // There might be shutdown edge cases here.
+    return IPC_FAIL(this,
+                    "GMPParent::RecvPGMPStorageConstructor: p->Init() failed.");
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GMPParent::RecvPGMPTimerConstructor(
+    PGMPTimerParent* actor) {
+  return IPC_OK();
+}
+
+PGMPTimerParent* GMPParent::AllocPGMPTimerParent() {
   nsCOMPtr<nsISerialEventTarget> target = GMPEventTarget();
-  return MakeAndAddRef<GMPTimerParent>(std::move(target));
+  GMPTimerParent* p = new GMPTimerParent(target);
+  mTimers.AppendElement(
+      p);  // Released in DeallocPGMPTimerParent, or on shutdown.
+  return p;
+}
+
+bool GMPParent::DeallocPGMPTimerParent(PGMPTimerParent* aActor) {
+  GMPTimerParent* p = static_cast<GMPTimerParent*>(aActor);
+  p->Shutdown();
+  mTimers.RemoveElement(p);
+  return true;
 }
 
 bool ReadInfoField(GMPInfoFileParser& aParser, const nsCString& aKey,
@@ -1053,7 +1077,7 @@ RefPtr<GenericPromise> GMPParent::ReadGMPInfoFile(nsIFile* aFile) {
 
   nsTArray<nsCString> apiTokens;
   SplitAt(", ", apis, apiTokens);
-  for (const nsCString& api : apiTokens) {
+  for (nsCString api : apiTokens) {
     int32_t tagsStart = api.FindChar('[');
     if (tagsStart == 0) {
       // Not allowed to be the first character.
@@ -1079,7 +1103,7 @@ RefPtr<GenericPromise> GMPParent::ReadGMPInfoFile(nsIFile* aFile) {
             Substring(api, tagsStart + 1, tagsEnd - tagsStart - 1));
         nsTArray<nsCString> tagTokens;
         SplitAt(":", ts, tagTokens);
-        for (const nsCString& tag : tagTokens) {
+        for (nsCString tag : tagTokens) {
           cap.mAPITags.AppendElement(tag);
         }
       }

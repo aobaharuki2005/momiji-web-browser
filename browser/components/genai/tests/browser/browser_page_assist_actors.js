@@ -43,13 +43,17 @@ function assertCommonPageData(pageData) {
   );
 }
 
-// Schedule reset to the initial sidebar state after the test.
-SidebarTestUtils.restoreStateAtCleanup(window);
-
 registerCleanupFunction(async () => {
+  // Ensure sidebar is hidden after each test:
   try {
     await SpecialPowers.popPrefEnv(); // undo any pushPrefEnv from this test
   } catch {}
+  if (!document.getElementById("sidebar-box").hidden) {
+    info(
+      `Sidebar ${SidebarController.currentID} was left open, closing it in cleanup function`
+    );
+    SidebarController.hide({ dismissPanel: true });
+  }
 });
 
 // Waits until AboutReader has had a chance to set the flag for the selected tab.
@@ -182,7 +186,7 @@ add_task(async function test_page_assist_sidebar_integration() {
 
     // 7) Clean up stub + sidebar.
     PageAssist.fetchAiResponse = originalFetchAi;
-    SidebarTestUtils.closePanel(window);
+    SidebarController.hide();
   });
 
   await SpecialPowers.popPrefEnv();
@@ -266,7 +270,7 @@ add_task(async function test_page_assist_component_fetch_data() {
       "Should handle missing page data"
     );
     sideBarEl._fetchPageData = originalFetch;
-    SidebarTestUtils.closePanel(window);
+    SidebarController.hide();
   });
 
   await SpecialPowers.popPrefEnv();
@@ -344,7 +348,7 @@ add_task(async function test_page_assist_url_change_detection() {
       "Sidebar should mirror isArticle = false"
     );
 
-    SidebarTestUtils.closePanel(window);
+    SidebarController.hide();
   });
 
   await SpecialPowers.popPrefEnv();

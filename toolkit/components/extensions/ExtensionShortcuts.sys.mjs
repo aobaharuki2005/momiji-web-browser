@@ -467,7 +467,7 @@ export class ExtensionShortcuts {
 
       if (actionFor) {
         action = actionFor(this.extension);
-        let win = event.target.documentGlobal;
+        let win = event.target.ownerGlobal;
         action.triggerAction(win);
       } else {
         this.onCommand(name);

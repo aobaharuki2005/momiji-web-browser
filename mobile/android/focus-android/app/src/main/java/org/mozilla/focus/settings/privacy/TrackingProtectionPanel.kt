@@ -33,9 +33,6 @@ import java.util.Locale
 import com.google.android.material.R as materialR
 import mozilla.components.ui.icons.R as iconsR
 
-/**
- * A bottom sheet panel that displays tracking protection details and settings for the current site.
- */
 @SuppressWarnings("LongParameterList")
 class TrackingProtectionPanel(
     context: Context,

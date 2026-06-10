@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,7 +23,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -182,10 +183,20 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     mPopupType = PopupType::Tooltip;
   }
 
-  // Support escapecontentshell attribute to allow popups to be displayed
-  // outside of the content shell.
-  mInContentShell = !PresContext()->IsChrome() &&
-                    !el.GetBoolAttr(nsGkAtoms::escapecontentshell);
+  if (PresContext()->IsChrome()) {
+    mInContentShell = false;
+  }
+
+  // Support incontentshell=false attribute to allow popups to be displayed
+  // outside of the content shell. Chrome only.
+  if (el.NodePrincipal()->IsSystemPrincipal()) {
+    if (el.GetXULBoolAttr(nsGkAtoms::incontentshell)) {
+      mInContentShell = true;
+    } else if (el.AttrValueIs(kNameSpaceID_None, nsGkAtoms::incontentshell,
+                              nsGkAtoms::_false, eCaseMatters)) {
+      mInContentShell = false;
+    }
+  }
 
   // To improve performance, create the widget for the popup if needed. Popups
   // such as menus will create their widgets later when the popup opens.
@@ -198,7 +209,9 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 bool nsMenuPopupFrame::HasRemoteContent() const {
   return !mInContentShell && mPopupType == PopupType::Panel &&
-         mContent->AsElement()->GetBoolAttr(nsGkAtoms::remote);
+         mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                            nsGkAtoms::remote, nsGkAtoms::_true,
+                                            eIgnoreCase);
 }
 
 bool nsMenuPopupFrame::IsNoAutoHide() const {
@@ -206,7 +219,9 @@ bool nsMenuPopupFrame::IsNoAutoHide() const {
   // outside of them, or when another application is made active. Non-autohide
   // panels cannot be used in content windows.
   return !mInContentShell && mPopupType == PopupType::Panel &&
-         mContent->AsElement()->GetBoolAttr(nsGkAtoms::noautohide);
+         mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                            nsGkAtoms::noautohide,
+                                            nsGkAtoms::_true, eIgnoreCase);
 }
 
 widget::PopupLevel nsMenuPopupFrame::GetPopupLevel(bool aIsNoAutoHide) const {
@@ -584,7 +599,7 @@ void nsMenuPopupFrame::EnsureActiveMenuListItemIsVisible() {
   }
   RefPtr<mozilla::PresShell> presShell = PresShell();
   presShell->ScrollFrameIntoView(
-      frame, Nothing(), AxisScrollParams(), AxisScrollParams(),
+      frame, Nothing(), ScrollAxis(), ScrollAxis(),
       ScrollFlags::ScrollOverflowHidden | ScrollFlags::ScrollFirstAncestorOnly);
 }
 
@@ -705,7 +720,7 @@ void nsMenuPopupFrame::LayoutPopup(nsPresContext* aPresContext,
 
     // If there are no transitions, fire the popupshown event right away.
     nsCOMPtr<nsIRunnable> event =
-        MakeAndAddRef<nsXULPopupShownEvent>(GetContent(), aPresContext);
+        new nsXULPopupShownEvent(GetContent(), aPresContext);
     mContent->OwnerDoc()->Dispatch(event.forget());
   }
 }
@@ -812,11 +827,8 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
                                        const nsAString& aPosition,
                                        int32_t aXPos, int32_t aYPos,
                                        MenuPopupAnchorType aAnchorType,
-                                       bool aAttributesOverride,
-                                       enum IsNativeMenu aIsNativeMenu) {
-  if (aIsNativeMenu == IsNativeMenu::No) {
-    PrepareWidget();
-  }
+                                       bool aAttributesOverride) {
+  PrepareWidget();
 
   mPopupState = ePopupShowing;
   mAnchorContent = aAnchorContent;
@@ -836,7 +848,7 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
     mExtraMargin = {};
   }
   mTriggerContent = aTriggerContent;
-  mIsNativeMenu = aIsNativeMenu == IsNativeMenu::Yes;
+  mIsNativeMenu = false;
   mIsTopLevelContextMenu = false;
   mVFlip = false;
   mHFlip = false;
@@ -941,32 +953,12 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
       }
     }
   }
-
-  if (aIsNativeMenu == IsNativeMenu::Yes) {
-    if (nsIFrame* anchorFrame = GetAnchorFrame()) {
-      if (nsPresContext* rootPresContext =
-              PresContext()->GetRootPresContext()) {
-        mScreenRect = ComputeAnchorRect(rootPresContext, anchorFrame);
-      }
-    }
-
-    // Native menus don't call PrepareWidget(), so if we have a widget
-    // already (which generally should only be possible on tests, since
-    // otherwise we shouldn't ever mix native / non-native for the same popup)
-    // we should destroy it now.
-    if (mExpirationState.IsTracked()) {
-      PopupExpirationTracker::Get()->RemoveObject(this);
-    }
-    DestroyWidget();
-  }
 }
 
-void nsMenuPopupFrame::InitializePopupAtScreen(
-    nsIContent* aTriggerContent, int32_t aXPos, int32_t aYPos,
-    bool aIsContextMenu, enum IsNativeMenu aIsNativeMenu) {
-  if (aIsNativeMenu == IsNativeMenu::No) {
-    PrepareWidget();
-  }
+void nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
+                                               int32_t aXPos, int32_t aYPos,
+                                               bool aIsContextMenu) {
+  PrepareWidget();
 
   mPopupState = ePopupShowing;
   mAnchorContent = nullptr;
@@ -980,31 +972,46 @@ void nsMenuPopupFrame::InitializePopupAtScreen(
   mPosition = POPUPPOSITION_UNKNOWN;
   mIsContextMenu = aIsContextMenu;
   mIsTopLevelContextMenu = aIsContextMenu;
-  mIsNativeMenu = aIsNativeMenu == IsNativeMenu::Yes;
+  mIsNativeMenu = false;
   mAnchorType = MenuPopupAnchorType::Point;
   mPositionedOffset = 0;
   mPositionedByMoveToRect = false;
+}
 
-  if (aIsNativeMenu == IsNativeMenu::Yes) {
-    // Native menus don't call PrepareWidget(), so if we have a widget
-    // already (which generally should only be possible on tests, since
-    // otherwise we shouldn't ever mix native / non-native for the same popup)
-    // we should destroy it now.
-    if (mExpirationState.IsTracked()) {
-      PopupExpirationTracker::Get()->RemoveObject(this);
-    }
-    DestroyWidget();
+void nsMenuPopupFrame::InitializePopupAsNativeContextMenu(
+    nsIContent* aTriggerContent, int32_t aXPos, int32_t aYPos) {
+  mTriggerContent = aTriggerContent;
+  mPopupState = ePopupShowing;
+  mAnchorContent = nullptr;
+  mScreenRect =
+      nsRect(CSSPixel::ToAppUnits(CSSIntPoint(aXPos, aYPos)), nsSize());
+  mExtraMargin = {};
+  mFlip = FlipType::Default;
+  mPopupAnchor = POPUPALIGNMENT_NONE;
+  mPopupAlignment = POPUPALIGNMENT_NONE;
+  mPosition = POPUPPOSITION_UNKNOWN;
+  mIsContextMenu = true;
+  mIsTopLevelContextMenu = true;
+  mIsNativeMenu = true;
+  mAnchorType = MenuPopupAnchorType::Point;
+  mPositionedOffset = 0;
+  mPositionedByMoveToRect = false;
+  // Native context menus don't call PrepareWidget(), so if we have a widget
+  // already (which generally should only be possible on tests, since
+  // otherwise we shouldn't ever mix native / non-native for the same popup) we
+  // should destroy it now.
+  if (mExpirationState.IsTracked()) {
+    PopupExpirationTracker::Get()->RemoveObject(this);
   }
+  DestroyWidget();
 }
 
 void nsMenuPopupFrame::InitializePopupAtRect(nsIContent* aTriggerContent,
                                              const nsAString& aPosition,
                                              const nsIntRect& aRect,
-                                             bool aAttributesOverride,
-                                             enum IsNativeMenu aIsNativeMenu) {
+                                             bool aAttributesOverride) {
   InitializePopup(nullptr, aTriggerContent, aPosition, 0, 0,
-                  MenuPopupAnchorType::Rect, aAttributesOverride,
-                  aIsNativeMenu);
+                  MenuPopupAnchorType::Rect, aAttributesOverride);
   mScreenRect = ToAppUnits(aRect, AppUnitsPerCSSPixel());
 }
 
@@ -1082,7 +1089,7 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState,
     // it if the popup is just being made invisible as a popuphiding or command
     // event may want to retrieve it.
     ClearTriggerContentIncludingDocument();
-    ClearAnchorContent();
+    mAnchorContent = nullptr;
   }
 
   // when invisible and about to be closed, HidePopup has already been called,
@@ -2318,8 +2325,7 @@ void nsMenuPopupFrame::MoveToAnchor(nsIContent* aAnchorContent,
 
   nsPopupState oldstate = mPopupState;
   InitializePopup(aAnchorContent, mTriggerContent, aPosition, aXPos, aYPos,
-                  MenuPopupAnchorType::Node, aAttributesOverride,
-                  IsNativeMenu() ? IsNativeMenu::Yes : IsNativeMenu::No);
+                  MenuPopupAnchorType::Node, aAttributesOverride);
   // InitializePopup changed the state so reset it.
   mPopupState = oldstate;
 

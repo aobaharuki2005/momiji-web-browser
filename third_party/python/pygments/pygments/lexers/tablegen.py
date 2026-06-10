@@ -4,7 +4,7 @@
 
     Lexer for LLVM's TableGen DSL.
 
-    :copyright: Copyright 2006-present by the Pygments team, see AUTHORS.
+    :copyright: Copyright 2006-2025 by the Pygments team, see AUTHORS.
     :license: BSD, see LICENSE for details.
 """
 
@@ -118,7 +118,7 @@ class TableGenLexer(RegexLexer):
             (r'\s+', Whitespace),
 
             (r'/\*', Comment.Multiline, 'comment'),
-            (r'//.*?$', Comment.Single),
+            (r'//.*?$', Comment.SingleLine),
             (r'#(define|ifdef|ifndef|else|endif)', Comment.Preproc),
 
             # Binary/hex numbers. Note that these take priority over names,
@@ -147,7 +147,7 @@ class TableGenLexer(RegexLexer):
 
             # String literals
             (r'"', String, 'dqs'),
-            (r'\[\{', Punctuation, 'codeblock'),
+            (r'\[\{', Text, 'codeblock'),
 
             # Misc. punctuation
             (r'[-+\[\]{}()<>\.,;:=?#]+', Punctuation),
@@ -167,11 +167,11 @@ class TableGenLexer(RegexLexer):
             (r'"', String, '#pop'),
             include('strings'),
         ],
-        # NOTE: Must escape (pop Cpplexer) codeblock to avoid infinite loop.
+        # No escaping inside a code block - everything is literal
         # Assume that the code inside a code block is C++. This isn't always
         # true in TableGen, but is the far most common scenario.
         'codeblock': [
             (r'\}\]', Text, '#pop'),
-            (r'([^}]+|\}[^]])*', using(CppLexer), "#pop"),
+            (r'([^}]+|\}[^]])*', using(CppLexer)),
         ],
     }

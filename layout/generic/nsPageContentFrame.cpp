@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,12 +8,11 @@
 #include "mozilla/AbsoluteContainingBlock.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
-#include "mozilla/ReflowInput.h"
-#include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/Document.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsContentUtils.h"
+#include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsPageFrame.h"
 #include "nsPageSequenceFrame.h"
@@ -67,11 +68,7 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
     nsIFrame* const frame = mFrames.FirstChild();
     const WritingMode frameWM = frame->GetWritingMode();
     const LogicalSize logicalSize(frameWM, maxSize);
-    LogicalSize availSize = logicalSize;
-    if (aReflowInput.mFlags.mIsInFragmentainerMeasuringReflow) {
-      availSize.BSize(frameWM) = NS_UNCONSTRAINEDSIZE;
-    }
-    ReflowInput kidReflowInput(aPresContext, aReflowInput, frame, availSize);
+    ReflowInput kidReflowInput(aPresContext, aReflowInput, frame, logicalSize);
     kidReflowInput.SetComputedBSize(logicalSize.BSize(frameWM));
     ReflowOutput kidReflowOutput(kidReflowInput);
     ReflowChild(frame, aPresContext, kidReflowOutput, kidReflowInput, 0, 0,
@@ -168,8 +165,7 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
                "fixed frames can be truncated, but not incomplete");
 
   if (StaticPrefs::layout_display_list_improve_fragmentation() &&
-      mFrames.NotEmpty() &&
-      !aReflowInput.mFlags.mIsInFragmentainerMeasuringReflow) {
+      mFrames.NotEmpty()) {
     auto* const previous =
         static_cast<nsPageContentFrame*>(GetPrevContinuation());
     const nscoord previousPageOverflow =
@@ -424,12 +420,11 @@ void nsPageContentFrame::AppendDirectlyOwnedAnonBoxes(
 }
 
 void nsPageContentFrame::EnsurePageName() {
+  MOZ_ASSERT(HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
+             "Should only have been called on first reflow");
   if (mPageName) {
     return;
   }
-  MOZ_ASSERT(HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
-             "Should only have been called on first reflow");
-
   MOZ_ASSERT(!GetPrevInFlow(),
              "Only the first page should initially have a null page name.");
   // This was the first page, we need to find our own page name and then set

@@ -167,7 +167,6 @@ export default {
     Event: "readonly",
     EventSource: "readonly",
     EventTarget: "readonly",
-    ExtensionGuardSet: "readonly",
     FeaturePolicyViolationReportBody: "readonly",
     FetchObserver: "readonly",
     File: "readonly",

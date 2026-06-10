@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -429,6 +431,11 @@ extern JS_PUBLIC_API bool JS_GetPrototypeIfOrdinary(
  *
  * In cases where ES6 [[SetPrototypeOf]] returns false without an exception,
  * JS_SetPrototype throws a TypeError and returns false.
+ *
+ * Performance warning: JS_SetPrototype is very bad for performance. It may
+ * cause compiled jit-code to be invalidated. It also causes not only obj but
+ * all other objects in the same "group" as obj to be permanently deoptimized.
+ * It's better to create the object with the right prototype from the start.
  */
 extern JS_PUBLIC_API bool JS_SetPrototype(JSContext* cx, JS::HandleObject obj,
                                           JS::HandleObject proto);
@@ -912,14 +919,14 @@ class MOZ_RAII JS_PUBLIC_API AutoFilename {
   js::ScriptSource* ss_;
   mozilla::Variant<const char*, UniqueChars> filename_;
 
+  AutoFilename(const AutoFilename&) = delete;
+  AutoFilename& operator=(const AutoFilename&) = delete;
+
  public:
   AutoFilename()
       : ss_(nullptr), filename_(mozilla::AsVariant<const char*>(nullptr)) {}
 
   ~AutoFilename() { reset(); }
-
-  AutoFilename(const AutoFilename&) = delete;
-  AutoFilename& operator=(const AutoFilename&) = delete;
 
   void reset();
 

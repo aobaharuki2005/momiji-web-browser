@@ -1,3 +1,5 @@
+/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*-
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,7 +26,7 @@ namespace Library {
 JSObject* Create(JSContext* cx, JS::HandleValue path,
                  const JS::CTypesCallbacks* callbacks);
 
-bool IsLibrary(const JSObject* obj);
+bool IsLibrary(JSObject* obj);
 PRLibrary* GetLibrary(JSObject* obj);
 
 [[nodiscard]] bool Open(JSContext* cx, unsigned argc, JS::Value* vp);

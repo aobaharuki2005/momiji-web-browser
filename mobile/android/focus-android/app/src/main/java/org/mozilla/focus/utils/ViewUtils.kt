@@ -9,9 +9,6 @@ import android.view.View
 import androidx.annotation.StringRes
 import com.google.android.material.snackbar.Snackbar
 
-/**
- * Utility class for view-related operations.
- */
 object ViewUtils {
 
     private const val MENU_ITEM_ALPHA_ENABLED = 255

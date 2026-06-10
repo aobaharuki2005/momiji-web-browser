@@ -43,13 +43,14 @@ const char* VideoDecoder::ImplementationName() const {
 }
 
 std::string VideoDecoder::DecoderInfo::ToString() const {
-  StringBuilder oss;
+  char string_buf[2048];
+  SimpleStringBuilder oss(string_buf);
 
   oss << "DecoderInfo { "
       << "prefers_late_decoding = " << "implementation_name = '"
       << implementation_name << "', " << "is_hardware_accelerated = "
       << (is_hardware_accelerated ? "true" : "false") << " }";
-  return oss.Release();
+  return oss.str();
 }
 
 bool VideoDecoder::DecoderInfo::operator==(const DecoderInfo& rhs) const {

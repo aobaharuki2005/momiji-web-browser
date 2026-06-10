@@ -35,7 +35,7 @@ import {
 import { shouldBlackbox } from "../../utils/source";
 
 import { PaneToggleButton } from "../shared/Button/index";
-import DebuggerImage from "devtools/client/shared/components/DebuggerImage";
+import DebuggerImage from "../shared/DebuggerImage";
 
 const classnames = require("resource://devtools/client/shared/classnames.js");
 const MenuButton = require("resource://devtools/client/shared/components/menu/MenuButton.js");

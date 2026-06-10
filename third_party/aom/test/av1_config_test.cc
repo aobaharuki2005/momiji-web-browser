@@ -47,7 +47,8 @@ const size_t kAv1cNoConfigObusSize = 4;
 
 bool VerifyAv1c(const uint8_t *const obu_buffer, size_t obu_buffer_length,
                 bool is_annexb) {
-  Av1Config av1_config = {};
+  Av1Config av1_config;
+  memset(&av1_config, 0, sizeof(av1_config));
   bool parse_ok = get_av1config_from_obu(obu_buffer, obu_buffer_length,
                                          is_annexb, &av1_config) == 0;
   if (parse_ok) {
@@ -69,7 +70,8 @@ bool VerifyAv1c(const uint8_t *const obu_buffer, size_t obu_buffer_length,
 }
 
 TEST(Av1Config, ObuInvalidInputs) {
-  Av1Config av1_config = {};
+  Av1Config av1_config;
+  memset(&av1_config, 0, sizeof(av1_config));
   ASSERT_EQ(-1, get_av1config_from_obu(nullptr, 0, 0, nullptr));
   ASSERT_EQ(-1, get_av1config_from_obu(&kLobfFullSequenceHeaderObu[0], 0, 0,
                                        nullptr));
@@ -82,20 +84,9 @@ TEST(Av1Config, ObuInvalidInputs) {
                                        &av1_config));
 }
 
-TEST(Av1Config, Buganizer502133197) {
-  Av1Config av1_config = {};
-
-  static constexpr uint8_t kBugReproObu[] = { 0x0a, 0x10, 0x04, 0x00, 0x00,
-                                              0x00, 0x00, 0x00, 0x00, 0x00,
-                                              0x00, 0x00, 0x00, 0x00, 0x00,
-                                              0x00, 0x00, 0x00 };
-
-  EXPECT_EQ(0, get_av1config_from_obu(kBugReproObu, sizeof(kBugReproObu), false,
-                                      &av1_config));
-}
-
 TEST(Av1Config, ReadInvalidInputs) {
-  Av1Config av1_config = {};
+  Av1Config av1_config;
+  memset(&av1_config, 0, sizeof(av1_config));
   size_t bytes_read = 0;
   ASSERT_EQ(-1, read_av1config(nullptr, 0, nullptr, nullptr));
   ASSERT_EQ(-1, read_av1config(nullptr, 4, nullptr, nullptr));
@@ -105,7 +96,8 @@ TEST(Av1Config, ReadInvalidInputs) {
 }
 
 TEST(Av1Config, WriteInvalidInputs) {
-  Av1Config av1_config = {};
+  Av1Config av1_config;
+  memset(&av1_config, 0, sizeof(av1_config));
   size_t bytes_written = 0;
   uint8_t av1c_buffer[4] = { 0 };
   ASSERT_EQ(-1, write_av1config(nullptr, 0, nullptr, nullptr));
@@ -142,7 +134,8 @@ TEST(Av1Config, GetAv1ConfigFromAnnexBObu) {
 }
 
 TEST(Av1Config, ReadWriteConfig) {
-  Av1Config av1_config = {};
+  Av1Config av1_config;
+  memset(&av1_config, 0, sizeof(av1_config));
 
   // Test writing out the AV1 config.
   size_t bytes_written = 0;

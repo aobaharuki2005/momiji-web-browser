@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -43,9 +45,8 @@ static TimeDuration sAverageFrameInterval;
 
 void ReleaseVRManagerParentSingleton() { sVRManagerParentSingleton = nullptr; }
 
-VRManagerChild::VRManagerChild(uint32_t aNamespace)
-    : mNamespace(aNamespace),
-      mRuntimeCapabilities(VRDisplayCapabilityFlags::Cap_None),
+VRManagerChild::VRManagerChild()
+    : mRuntimeCapabilities(VRDisplayCapabilityFlags::Cap_None),
       mFrameRequestCallbackCounter(0),
       mWaitingForEnumeration(false),
       mBackend(layers::LayersBackend::LAYERS_NONE) {
@@ -104,11 +105,10 @@ TimeStamp VRManagerChild::GetIdleDeadlineHint(TimeStamp aDefault) {
 }
 
 /* static */
-bool VRManagerChild::InitForContent(Endpoint<PVRManagerChild>&& aEndpoint,
-                                    uint32_t aNamespace) {
+bool VRManagerChild::InitForContent(Endpoint<PVRManagerChild>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<VRManagerChild> child(new VRManagerChild(aNamespace));
+  RefPtr<VRManagerChild> child(new VRManagerChild());
   if (!aEndpoint.Bind(child)) {
     return false;
   }
@@ -117,23 +117,22 @@ bool VRManagerChild::InitForContent(Endpoint<PVRManagerChild>&& aEndpoint,
 }
 
 /*static*/
-void VRManagerChild::InitSameProcess(uint32_t aNamespace) {
+void VRManagerChild::InitSameProcess() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sVRManagerChildSingleton);
 
-  sVRManagerChildSingleton = new VRManagerChild(aNamespace);
-  sVRManagerParentSingleton = VRManagerParent::CreateSameProcess(aNamespace);
+  sVRManagerChildSingleton = new VRManagerChild();
+  sVRManagerParentSingleton = VRManagerParent::CreateSameProcess();
   sVRManagerChildSingleton->Open(sVRManagerParentSingleton, CompositorThread(),
                                  mozilla::ipc::ChildSide);
 }
 
 /* static */
-void VRManagerChild::InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint,
-                                        uint32_t aNamespace) {
+void VRManagerChild::InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sVRManagerChildSingleton);
 
-  sVRManagerChildSingleton = new VRManagerChild(aNamespace);
+  sVRManagerChildSingleton = new VRManagerChild();
   if (!aEndpoint.Bind(sVRManagerChildSingleton)) {
     MOZ_CRASH("Couldn't Open() Compositor channel.");
   }
@@ -153,6 +152,15 @@ void VRManagerChild::ActorDestroy(ActorDestroyReason aReason) {
   if (sVRManagerChildSingleton == this) {
     sVRManagerChildSingleton = nullptr;
   }
+}
+
+PVRLayerChild* VRManagerChild::AllocPVRLayerChild(const uint32_t& aDisplayID,
+                                                  const uint32_t& aGroup) {
+  return VRLayerChild::CreateIPDLActor();
+}
+
+bool VRManagerChild::DeallocPVRLayerChild(PVRLayerChild* actor) {
+  return VRLayerChild::DestroyIPDLActor(actor);
 }
 
 void VRManagerChild::UpdateDisplayInfo(const VRDisplayInfo& aDisplayInfo) {
@@ -357,13 +365,10 @@ bool VRManagerChild::EnumerateVRDisplays() {
 
 void VRManagerChild::DetectRuntimes() { (void)SendDetectRuntimes(); }
 
-already_AddRefed<VRLayerChild> VRManagerChild::CreateVRLayer(
-    uint32_t aDisplayID, uint32_t aGroup) {
-  RefPtr<VRLayerChild> vrLayerChild = VRLayerChild::CreateIPDLActor();
-  if (!SendPVRLayerConstructor(vrLayerChild, aDisplayID, aGroup)) {
-    return nullptr;
-  }
-  return vrLayerChild.forget();
+PVRLayerChild* VRManagerChild::CreateVRLayer(uint32_t aDisplayID,
+                                             uint32_t aGroup) {
+  PVRLayerChild* vrLayerChild = AllocPVRLayerChild(aDisplayID, aGroup);
+  return SendPVRLayerConstructor(vrLayerChild, aDisplayID, aGroup);
 }
 
 void VRManagerChild::XRFrameRequest::Call(
@@ -469,7 +474,7 @@ void VRManagerChild::FireDOMVRDisplayPresentChangeEvent(uint32_t aDisplayID) {
 
   if (!IsPresenting()) {
     sMostRecentFrameEnd = TimeStamp();
-    sAverageFrameInterval = nullptr;
+    sAverageFrameInterval = 0;
   }
 }
 

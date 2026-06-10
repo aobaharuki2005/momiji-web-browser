@@ -36,16 +36,19 @@ fun LocaleManager.getSupportedLocales(): List<Locale> {
  * Returns the locale that corresponds to the language stored locally by us. If no suitable one is found,
  * return default.
  */
-fun LocaleManager.getSelectedLocale(context: Context): Locale {
-    val selectedLocaleTag = getCurrentLocale(context)?.toLanguageTag()
+fun LocaleManager.getSelectedLocale(
+    context: Context,
+    localeList: List<Locale> = getSupportedLocales(),
+): Locale {
+    val selectedLocale = getCurrentLocale(context)?.toLanguageTag()
     val defaultLocale = getSystemDefault()
 
-    return if (selectedLocaleTag == null) {
+    return if (selectedLocale == null) {
         defaultLocale
-    } else if (BuildConfig.SUPPORTED_LOCALE_ARRAY.contains(selectedLocaleTag)) {
-        selectedLocaleTag.toLocale()
     } else {
-        defaultLocale
+        val supportedMatch = localeList
+            .firstOrNull { it.toLanguageTag() == selectedLocale }
+        supportedMatch ?: defaultLocale
     }
 }
 

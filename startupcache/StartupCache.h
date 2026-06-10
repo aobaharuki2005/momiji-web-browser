@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -169,15 +170,9 @@ class StartupCache : public nsIMemoryReporter {
   // switching) count these events in order to allow them.
   void CountAllowedInvalidation();
 
-  // For use during startup - if no cache was found, this kicks off an early
-  // write so that we'll have at least a minimal cache for the next startup
-  // even if the current run is terminated early (which is what happens during
-  // the warm-up run in some of our Android perf CI testing).
-  void MaybeKickOffInitialWrite();
-
   // For use during shutdown - this will write the startupcache's data
   // to disk if the timer hasn't already gone off.
-  void MaybeKickOffShutdownWrite();
+  void MaybeInitShutdownWrite();
 
   // For use during shutdown - ensure we complete the shutdown write
   // before shutdown, even in the FastShutdown case.
@@ -214,18 +209,6 @@ class StartupCache : public nsIMemoryReporter {
 
   friend class StartupCacheInfo;
 
-  enum class WriteType : uint8_t {
-    // Only used when no cache file exists. The initial write happens promptly
-    // after startup and may not capture all necessary entries because it
-    // happens
-    // so early that some cache additions haven't been observed yet by the time
-    // of the write.
-    InitialWrite,
-    // A regular cache write. Can happen at a later time because we know we
-    // already have at least a minimal startup cache on the disk.
-    RegularWrite,
-  };
-
   Result<Ok, nsresult> LoadArchive() MOZ_REQUIRES(mTableLock);
   nsresult Init();
 
@@ -236,16 +219,15 @@ class StartupCache : public nsIMemoryReporter {
   // Opens the cache file for reading.
   Result<Ok, nsresult> OpenCache();
 
-  // Writes the cache to disk.
-  Result<Ok, nsresult> WriteToDisk(WriteType aWriteType)
-      MOZ_REQUIRES(mTableLock);
+  // Writes the cache to disk
+  Result<Ok, nsresult> WriteToDisk() MOZ_REQUIRES(mTableLock);
 
   void WaitOnPrefetch();
   void StartPrefetchMemory() MOZ_REQUIRES(mTableLock);
 
   static nsresult InitSingleton();
   static void WriteTimeout(nsITimer* aTimer, void* aClosure);
-  void MaybeWriteOffMainThread(WriteType aWriteType);
+  void MaybeWriteOffMainThread();
   void ThreadedPrefetch(uint8_t* aStart, size_t aSize);
 
   Monitor mPrefetchComplete{"StartupCachePrefetch"};
@@ -260,7 +242,7 @@ class StartupCache : public nsIMemoryReporter {
   // could create dangling pointers. RefPtrs could be introduced, but it would
   // be a large amount of error-prone work to change.
   nsTArray<decltype(mTable)> mOldTables MOZ_GUARDED_BY(mTableLock);
-  size_t mAllowedInvalidationsCount = 0;
+  size_t mAllowedInvalidationsCount;
   nsCOMPtr<nsIFile> mFile;
   mozilla::loader::AutoMemMap mCacheData MOZ_GUARDED_BY(mTableLock);
   Mutex mTableLock;
@@ -270,7 +252,7 @@ class StartupCache : public nsIMemoryReporter {
   nsCOMPtr<nsITimer> mTimer;
 
   bool mDirty MOZ_GUARDED_BY(mTableLock);
-  bool mRegularWriteDone MOZ_GUARDED_BY(mTableLock);
+  bool mWrittenOnce MOZ_GUARDED_BY(mTableLock);
   bool mCurTableReferenced MOZ_GUARDED_BY(mTableLock);
 
   uint32_t mRequestedCount;
@@ -280,7 +262,6 @@ class StartupCache : public nsIMemoryReporter {
   static bool gShutdownInitiated;
   static bool gIgnoreDiskCache;
   static bool gFoundDiskCacheOnInit;
-  static bool gWantInitialWrite;
 
   UniquePtr<Compression::LZ4FrameDecompressionContext> mDecompressionContext;
 #ifdef DEBUG

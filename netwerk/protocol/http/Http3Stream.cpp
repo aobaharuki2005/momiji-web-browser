@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,7 +12,6 @@
 #include "nsHttpTransaction.h"
 #include "nsIClassOfService.h"
 #include "nsISocketTransport.h"
-#include "nsISupportsPriority.h"
 #include "nsSocketTransportService2.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/glean/NetwerkProtocolHttpMetrics.h"
@@ -52,7 +53,6 @@ void Http3Stream::Close(nsresult aResult) {
   mTransaction->Close(aResult);
   // Clear the mSession to break the cycle.
   mSession = nullptr;
-  mClosed = true;
 }
 
 bool Http3Stream::GetHeadersString(const char* buf, uint32_t avail,
@@ -472,7 +472,7 @@ nsresult Http3Stream::Finish0RTT(bool aRestart) {
     mQueued = false;
     mDataReceived = false;
     mResetRecv = false;
-    mFlatResponseHeaders.ClearAndRetainStorage();
+    mFlatResponseHeaders.TruncateLength(0);
     mTotalSent = 0;
     mTotalRead = 0;
     mFin = false;

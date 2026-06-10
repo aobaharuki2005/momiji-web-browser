@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * Copyright 2016 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -265,8 +267,9 @@ void DebugState::clearBreakpointsIn(JS::GCContext* gcx,
   if (breakpointSites_.empty()) {
     return;
   }
-  for (auto iter = breakpointSites_.modIter(); !iter.done(); iter.next()) {
-    WasmBreakpointSite* site = iter.get().value();
+  for (WasmBreakpointSiteMap::Enum e(breakpointSites_); !e.empty();
+       e.popFront()) {
+    WasmBreakpointSite* site = e.front().value();
     MOZ_ASSERT(site->instanceObject == instance);
 
     Breakpoint* nextbp;
@@ -280,7 +283,7 @@ void DebugState::clearBreakpointsIn(JS::GCContext* gcx,
     }
     if (site->isEmpty()) {
       gcx->delete_(instance, site, MemoryUse::BreakpointSite);
-      iter.remove();
+      e.removeFront();
     }
   }
 }

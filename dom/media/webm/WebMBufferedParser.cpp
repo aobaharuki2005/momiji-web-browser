@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -298,32 +300,22 @@ MediaResult WebMBufferedParser::Append(const unsigned char* aBuffer,
                   return MediaResult(NS_ERROR_FAILURE,
                                      "Timecode appeared before SegmentInfo");
                 }
-                CheckedInt<uint64_t> checkedTimecode =
-                    CheckedInt<uint64_t>(mClusterTimecode + mBlockTimecode) *
-                    mTimecodeScale;
-                if (!checkedTimecode.isValid() ||
-                    checkedTimecode.value() >
-                        static_cast<uint64_t>(INT64_MAX)) {
-                  WEBM_DEBUG("Timecode overflow: %" PRIu64
-                             " in Cluster at %" PRId64 " ignored",
-                             checkedTimecode.isValid() ? checkedTimecode.value()
-                                                       : UINT64_MAX,
-                             mClusterOffset);
+                uint64_t absTimecode = mClusterTimecode + mBlockTimecode;
+                absTimecode *= mTimecodeScale;
+                // Avoid creating an entry if the timecode is out of order
+                // (invalid according to the WebM specification) so that
+                // ordering invariants of aMapping are not violated.
+                if (idx == 0 || aMapping[idx - 1].mTimecode <= absTimecode ||
+                    (idx + 1 < aMapping.Length() &&
+                     aMapping[idx + 1].mTimecode >= absTimecode)) {
+                  WebMTimeDataOffset entry(endOffset, absTimecode,
+                                           mLastInitStartOffset, mClusterOffset,
+                                           mClusterEndOffset);
+                  aMapping.InsertElementAt(idx, entry);
                 } else {
-                  uint64_t absTimecode = checkedTimecode.value();
-                  if ((idx == 0 ||
-                       aMapping[idx - 1].mTimecode <= absTimecode) &&
-                      (idx == aMapping.Length() ||
-                       aMapping[idx].mTimecode >= absTimecode)) {
-                    WebMTimeDataOffset entry(endOffset, absTimecode,
-                                             mLastInitStartOffset,
-                                             mClusterOffset, mClusterEndOffset);
-                    aMapping.InsertElementAt(idx, entry);
-                  } else {
-                    WEBM_DEBUG("Out of order timecode %" PRIu64
-                               " in Cluster at %" PRId64 " ignored",
-                               absTimecode, mClusterOffset);
-                  }
+                  WEBM_DEBUG("Out of order timecode %" PRIu64
+                             " in Cluster at %" PRId64 " ignored",
+                             absTimecode, mClusterOffset);
                 }
               }
             }
@@ -393,16 +385,6 @@ MediaResult WebMBufferedParser::Append(const unsigned char* aBuffer,
         }
         if (!mSkipBytes) {
           mBlockEndOffset = mCurrentOffset + (p - aBuffer);
-          // Per the WebM byte-stream spec the init segment runs up to (but
-          // not including) the first Cluster, so any non-Cluster top-level
-          // element (Cues, Tags, Chapters, SeekHead, Void, ...) that
-          // appears between Tracks and the first Cluster is part of the
-          // init segment. Extend mInitEndOffset over this just-skipped
-          // element if we're past Tracks (mInitEndOffset >= 0) but haven't
-          // yet seen a Cluster (mClusterOffset < 0).
-          if (mInitEndOffset >= 0 && mClusterOffset < 0) {
-            mInitEndOffset = mBlockEndOffset;
-          }
           mState = mNextState;
         }
         break;

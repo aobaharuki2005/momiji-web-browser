@@ -1,22 +1,29 @@
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
-});
-
 function openIdentityPopup() {
   let promise = BrowserTestUtils.waitForEvent(
     window,
     "popupshown",
     true,
-    event => event.target == document.getElementById("trustpanel-popup")
+    event => event.target == gIdentityHandler._identityPopup
   );
   gIdentityHandler._identityIconBox.click();
   return promise;
 }
 
-add_setup(function () {
-  UrlbarTestUtils.init(this);
+function closeIdentityPopup() {
+  let promise = BrowserTestUtils.waitForEvent(
+    gIdentityHandler._identityPopup,
+    "popuphidden"
+  );
+  gIdentityHandler._identityPopup.hidePopup();
+  return promise;
+}
+
+add_setup(async function () {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.trustPanel.featureGate", false]],
+  });
 });
 
 // This test checks applied WebExtension themes that attempt to change
@@ -54,8 +61,8 @@ add_task(async function test_popup_styling() {
 
       // Open the information arrow panel
       await openIdentityPopup();
-      let arrowContent =
-        document.getElementById("trustpanel-popup").panelContent;
+
+      let arrowContent = gIdentityHandler._identityPopup.panelContent;
       let arrowContentComputedStyle = window.getComputedStyle(arrowContent);
       // Ensure popup background color was set properly
       Assert.equal(
@@ -74,7 +81,7 @@ add_task(async function test_popup_styling() {
       // Ensure popup border color was set properly
       testBorderColor(arrowContent, POPUP_BORDER_COLOR);
 
-      await UrlbarTestUtils.closeTrustPanel(window);
+      await closeIdentityPopup();
       await extension.unload();
     }
   );

@@ -72,11 +72,9 @@ export const LoginBreaches = {
     const baseBreachAlertURL = new URL(BREACH_ALERT_URL);
 
     await Services.logins.initializationPromise;
+    const storageJSON = Services.logins.wrappedJSObject._storage;
     const dismissedBreachAlertsByLoginGUID =
-      await Services.logins.getBreachAlertDismissalsByLoginGUID();
-    const potentiallyVulnerablePasswords = new Set(
-      await Services.logins.arePotentiallyVulnerablePasswords(logins)
-    );
+      storageJSON.getBreachAlertDismissalsByLoginGUID();
 
     // Determine potentially breached logins by checking their origin and the last time
     // they were changed. It's important to note here that we are NOT considering the
@@ -99,8 +97,8 @@ export const LoginBreaches = {
           continue;
         }
 
-        if (!potentiallyVulnerablePasswords.has(login.guid)) {
-          await Services.logins.addPotentiallyVulnerablePassword(login);
+        if (!storageJSON.isPotentiallyVulnerablePassword(login)) {
+          storageJSON.addPotentiallyVulnerablePassword(login);
         }
 
         if (
@@ -136,26 +134,35 @@ export const LoginBreaches = {
    * @returns {Map} from login GUID to `true` for logins that have a password
    *                that may be vulnerable.
    */
-  async getPotentiallyVulnerablePasswordsByLoginGUID(logins) {
+  getPotentiallyVulnerablePasswordsByLoginGUID(logins) {
     const vulnerablePasswordsByLoginGUID = new Map();
-    if (!lazy.VULNERABLE_PASSWORDS_ENABLED) {
-      return vulnerablePasswordsByLoginGUID;
-    }
-    const vulnerableGUIDs =
-      await Services.logins.arePotentiallyVulnerablePasswords(logins);
-    for (const guid of vulnerableGUIDs) {
-      vulnerablePasswordsByLoginGUID.set(guid, true);
+    const storageJSON = Services.logins.wrappedJSObject._storage;
+    for (const login of logins) {
+      if (storageJSON.isPotentiallyVulnerablePassword(login)) {
+        vulnerablePasswordsByLoginGUID.set(login.guid, true);
+      }
     }
     return vulnerablePasswordsByLoginGUID;
   },
 
-  async recordBreachAlertDismissal(loginGuid) {
-    return Services.logins.recordBreachAlertDismissal(loginGuid);
+  recordBreachAlertDismissal(loginGuid) {
+    const storageJSON = Services.logins.wrappedJSObject._storage;
+    return storageJSON.recordBreachAlertDismissal(loginGuid);
+  },
+
+  isVulnerablePassword(login) {
+    if (!lazy.VULNERABLE_PASSWORDS_ENABLED) {
+      return false;
+    }
+
+    const storageJSON = Services.logins.wrappedJSObject._storage;
+    return storageJSON.isPotentiallyVulnerablePassword(login);
   },
 
   async clearAllPotentiallyVulnerablePasswords() {
     await Services.logins.initializationPromise;
-    await Services.logins.clearAllPotentiallyVulnerablePasswords();
+    const storageJSON = Services.logins.wrappedJSObject._storage;
+    storageJSON.clearAllPotentiallyVulnerablePasswords();
   },
 
   _breachAlertIsDismissed(login, breach, dismissedBreachAlerts) {

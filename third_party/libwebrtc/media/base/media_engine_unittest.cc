@@ -78,7 +78,6 @@ class MostlyMockVoiceEngineInterface : public VoiceEngineInterface {
               (const FieldTrialsView*),
               (const, override));
   MOCK_METHOD(void, Init, (), (override));
-  MOCK_METHOD(void, Terminate, (), (override));
   MOCK_METHOD(scoped_refptr<AudioState>, GetAudioState, (), (const, override));
   MOCK_METHOD(std::vector<Codec>&, LegacySendCodecs, (), (const, override));
   MOCK_METHOD(std::vector<Codec>&, LegacyRecvCodecs, (), (const, override));

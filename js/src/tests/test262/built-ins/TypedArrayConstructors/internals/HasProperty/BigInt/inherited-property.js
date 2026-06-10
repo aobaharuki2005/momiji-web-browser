@@ -14,15 +14,15 @@ info: |
     ...
   4. Return ? OrdinaryHasProperty(O, P).
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Reflect, TypedArray]
 ---*/
 
 TypedArray.prototype.foo = 42;
 TypedArray.prototype[42] = true;
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg(1));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA(1);
 
   TA.prototype.bar = 42;
 

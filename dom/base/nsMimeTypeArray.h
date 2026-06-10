@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsMimeTypeArray_h_
-#define nsMimeTypeArray_h_
+#ifndef nsMimeTypeArray_h___
+#define nsMimeTypeArray_h___
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCOMPtr.h"
@@ -25,12 +27,12 @@ class nsMimeTypeArray final : public nsISupports, public nsWrapperCache {
   nsMimeTypeArray(nsPIDOMWindowInner* aWindow,
                   const mozilla::Array<RefPtr<nsMimeType>, 2>& aMimeTypes);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsMimeTypeArray)
 
   nsPIDOMWindowInner* GetParentObject() const;
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // MimeTypeArray WebIDL methods
   uint32_t Length() { return ForceNoPlugins() ? 0 : std::size(mMimeTypes); }
@@ -52,7 +54,7 @@ class nsMimeTypeArray final : public nsISupports, public nsWrapperCache {
   void GetSupportedNames(nsTArray<nsString>& retval);
 
  protected:
-  ~nsMimeTypeArray();
+  virtual ~nsMimeTypeArray();
 
   bool ForceNoPlugins();
 
@@ -73,25 +75,29 @@ class nsMimeType final : public nsWrapperCache {
 
   nsPluginElement* GetParentObject() const { return mPluginElement; }
 
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // MimeType WebIDL methods
   void GetDescription(mozilla::dom::DOMString& retval) const {
-    retval.AssignLiteral(u"Portable Document Format");
+    retval.SetKnownLiveString(kMimeDescription);
   }
 
   already_AddRefed<nsPluginElement> EnabledPlugin() const;
 
   void GetSuffixes(mozilla::dom::DOMString& retval) const {
-    retval.AssignLiteral(u"pdf");
+    retval.SetKnownLiveString(kMimeSuffix);
   }
 
   void GetType(nsString& retval) const { retval = mName; }
   const nsString& Name() const { return mName; }
 
  protected:
-  ~nsMimeType();
+  virtual ~nsMimeType();
+
+  static constexpr nsLiteralString kMimeDescription =
+      u"Portable Document Format"_ns;
+  static constexpr nsLiteralString kMimeSuffix = u"pdf"_ns;
 
   // Note that this creates an explicit reference cycle:
   //
@@ -103,4 +109,4 @@ class nsMimeType final : public nsWrapperCache {
   nsString mName;
 };
 
-#endif /* nsMimeTypeArray_h_ */
+#endif /* nsMimeTypeArray_h___ */

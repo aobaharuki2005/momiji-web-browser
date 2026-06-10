@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -75,7 +77,7 @@ nsresult SVGAnimatedLengthList::SetAnimValue(const SVGLengthList& aNewAnimValue,
     domWrapper->InternalAnimValListWillChangeTo(aNewAnimValue);
   }
   if (!mAnimVal) {
-    mAnimVal = std::make_unique<SVGLengthList>();
+    mAnimVal = MakeUnique<SVGLengthList>();
   }
   nsresult rv = mAnimVal->CopyFrom(aNewAnimValue);
   if (NS_FAILED(rv)) {
@@ -104,11 +106,12 @@ void SVGAnimatedLengthList::ClearAnimValue(SVGElement* aElement,
   aElement->DidAnimateLengthList(aAttrEnum);
 }
 
-std::unique_ptr<SMILAttr> SVGAnimatedLengthList::ToSMILAttr(
-    SVGElement* aSVGElement, uint8_t aAttrEnum, SVGLength::Axis aAxis,
-    bool aCanZeroPadList) {
-  return std::make_unique<SMILAnimatedLengthList>(this, aSVGElement, aAttrEnum,
-                                                  aAxis, aCanZeroPadList);
+UniquePtr<SMILAttr> SVGAnimatedLengthList::ToSMILAttr(SVGElement* aSVGElement,
+                                                      uint8_t aAttrEnum,
+                                                      uint8_t aAxis,
+                                                      bool aCanZeroPadList) {
+  return MakeUnique<SMILAnimatedLengthList>(this, aSVGElement, aAttrEnum, aAxis,
+                                            aCanZeroPadList);
 }
 
 nsresult SVGAnimatedLengthList::SMILAnimatedLengthList::ValueFromString(

@@ -26,7 +26,9 @@ class OpenRecentlyClosedIntentProcessorTest {
     private lateinit var navController: NavController
     private lateinit var out: Intent
     private lateinit var processor: OpenRecentlyClosedIntentProcessor
-    private val settings: Settings = mockk()
+    private val settings: Settings = mockk {
+        every { shouldUseComposableToolbar } returns false
+    }
 
     @Before
     fun setup() {

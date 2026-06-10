@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -215,7 +217,7 @@ class MOZ_STACK_CLASS ParseContext : public Nestable<ParseContext> {
       return declared_.acquire(pc->sc()->fc_);
     }
 
-    bool isEmpty() const { return declared_->empty(); }
+    bool isEmpty() const { return declared_->all().empty(); }
 
     uint32_t declaredCount() const {
       size_t count = declared_->count();
@@ -311,12 +313,12 @@ class MOZ_STACK_CLASS ParseContext : public Nestable<ParseContext> {
     class BindingIter {
       friend class Scope;
 
-      DeclaredNameMap::Iterator declaredIter_;
+      DeclaredNameMap::Range declaredRange_;
       mozilla::DebugOnly<uint32_t> count_;
       bool isVarScope_;
 
       BindingIter(Scope& scope, bool isVarScope)
-          : declaredIter_(scope.declared_->iter()),
+          : declaredRange_(scope.declared_->all()),
             count_(0),
             isVarScope_(isVarScope) {
         settle();
@@ -335,29 +337,29 @@ class MOZ_STACK_CLASS ParseContext : public Nestable<ParseContext> {
           return;
         }
 
-        // Otherwise, only lexically declared names are binding. Advance through
-        // the declared names until we find one.
-        while (!declaredIter_.done()) {
+        // Otherwise, only lexically declared names are binding. Pop the range
+        // until we find such a name.
+        while (!declaredRange_.empty()) {
           if (isLexicallyDeclared()) {
             break;
           }
-          declaredIter_.next();
+          declaredRange_.popFront();
         }
       }
 
      public:
-      bool done() const { return declaredIter_.done(); }
+      bool done() const { return declaredRange_.empty(); }
 
       explicit operator bool() const { return !done(); }
 
       TaggedParserAtomIndex name() {
         MOZ_ASSERT(!done());
-        return declaredIter_.get().key();
+        return declaredRange_.front().key();
       }
 
       DeclarationKind declarationKind() {
         MOZ_ASSERT(!done());
-        return declaredIter_.get().value()->kind();
+        return declaredRange_.front().value()->kind();
       }
 
       BindingKind kind() {
@@ -366,18 +368,18 @@ class MOZ_STACK_CLASS ParseContext : public Nestable<ParseContext> {
 
       bool closedOver() {
         MOZ_ASSERT(!done());
-        return declaredIter_.get().value()->closedOver();
+        return declaredRange_.front().value()->closedOver();
       }
 
       void setClosedOver() {
         MOZ_ASSERT(!done());
-        return declaredIter_.get().value()->setClosedOver();
+        return declaredRange_.front().value()->setClosedOver();
       }
 
       void operator++(int) {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(count_ != UINT32_MAX);
-        declaredIter_.next();
+        declaredRange_.popFront();
         settle();
       }
     };

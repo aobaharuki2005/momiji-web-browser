@@ -32,7 +32,6 @@ worker.onmessage = function (event) {
     "locks",
     "mediaCapabilities",
     "permissions",
-    "serial",
     "serviceWorker",
     "storage",
   ];

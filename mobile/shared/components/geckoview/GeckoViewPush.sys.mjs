@@ -9,6 +9,7 @@ const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPush");
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
   PushCrypto: "resource://gre/modules/PushCrypto.sys.mjs",
 });
 
@@ -78,16 +79,17 @@ export class PushService {
     }
 
     try {
-      const appServerKeyArg = appServerKey
-        ? ChromeUtils.base64URLEncode(keyView, { pad: true })
-        : null;
-
-      const actor = ChromeUtils.domProcessChild.getActor("GeckoViewPush");
-
-      const response = await actor.sendQuery("GeckoView:PushSubscribe", {
-        scope: scopeWithAttrs(scope, principal.originAttributes),
-        appServerKey: appServerKeyArg,
-      });
+      const response = await lazy.EventDispatcher.instance.sendRequestForResult(
+        {
+          type: "GeckoView:PushSubscribe",
+          scope: scopeWithAttrs(scope, principal.originAttributes),
+          appServerKey: appServerKey
+            ? ChromeUtils.base64URLEncode(keyView, {
+                pad: true,
+              })
+            : null,
+        }
+      );
 
       let subscription = null;
       if (response) {
@@ -107,9 +109,8 @@ export class PushService {
 
   async unsubscribe(scope, principal, callback) {
     try {
-      const actor = ChromeUtils.domProcessChild.getActor("GeckoViewPush");
-
-      await actor.sendQuery("GeckoView:PushUnsubscribe", {
+      await lazy.EventDispatcher.instance.sendRequestForResult({
+        type: "GeckoView:PushUnsubscribe",
         scope: scopeWithAttrs(scope, principal.originAttributes),
       });
 
@@ -121,11 +122,12 @@ export class PushService {
 
   async getSubscription(scope, principal, callback) {
     try {
-      const actor = ChromeUtils.domProcessChild.getActor("GeckoViewPush");
-
-      const response = await actor.sendQuery("GeckoView:PushGetSubscription", {
-        scope: scopeWithAttrs(scope, principal.originAttributes),
-      });
+      const response = await lazy.EventDispatcher.instance.sendRequestForResult(
+        {
+          type: "GeckoView:PushGetSubscription",
+          scope: scopeWithAttrs(scope, principal.originAttributes),
+        }
+      );
 
       let subscription = null;
       if (response) {

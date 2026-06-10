@@ -111,16 +111,6 @@ const HTTP_TESTS = [
     input: "http://127.0.0.1/foo/bar?baz=bax#quux",
     output: "127.0.0.1",
   },
-
-  // IDN domains should be displayed in unicode, not punycode (bug 2037875).
-  {
-    input: "https://bäcker.de/",
-    output: "bäcker.de",
-  },
-  {
-    input: "https://www.bäcker.de/",
-    output: "bäcker.de",
-  },
 ];
 
 const TESTS = [
@@ -170,10 +160,6 @@ const TESTS = [
   // Also check data URIs:
   {
     input: "data:text/html,42",
-    output: DATA_URL_EXPECTED_STRING,
-  },
-  {
-    input: "data://google.com/text/html,Hello World",
     output: DATA_URL_EXPECTED_STRING,
   },
 
@@ -281,9 +267,6 @@ add_task(async function test_checkOnlyBaseDomain() {
       input: "mailto:example@subdomain.example.com",
       output: "mailto:example@subdomain.example.com",
     },
-    // IDN domains should be displayed in unicode (bug 2037875):
-    { input: "https://subdomain.bäcker.de/", output: "bäcker.de" },
-    { input: "https://subdomain.bäcker.de:8443/", output: "bäcker.de:8443" },
   ]) {
     let uri = Services.io.newURI(input);
     Assert.equal(

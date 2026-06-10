@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -45,9 +47,6 @@
 #include "mozilla/EventQueue.h"
 #include "nsDeque.h"
 #include "mozilla/dom/Blob.h"
-#include "mozilla/dom/WorkerRef.h"
-#include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/GlobalTeardownObserver.h"
 
 namespace mozilla::dom {
 
@@ -109,8 +108,6 @@ class LlamaGenerateTask final : public mozilla::CancelableRunnable {
   // Returns the next message if available, or a promise that will resolve once
   // a message is ready. Rejects immediately if the task has failed.
   RefPtr<LlamaGenerateTaskPromise> GetMessage();
-
-  bool IsActive() const;
 
  private:
   // Attempts to push a message only if a consumer is actively waiting.
@@ -176,26 +173,21 @@ using LlamaBackend = ::mozilla::llama::LlamaBackend;
  *
  * It holds a shared strong reference to the backend (LlamaBackend),
  * which may also be retained by other components (e.g., LlamaRunner).
- * All compute-heavy work is performed by the backend's internal threadpool.
+ * All compute-heavy work is performed by the backend’s internal threadpool.
  *
  * Generation results are delivered via LlamaGenerateTask::Generate(), which
  * returns a promise. Once resolved, the result is forwarded to the JS consumer.
  *
  * The stream starts when PullCallbackImpl is first called from JS,
  * launching a background generation task and associating it with a thread.
- *
- * Inherits from GlobalTeardownObserver to receive notifications when the
- * worker/global is shutting down, allowing proper cleanup of background
- * threads.
  */
-class LlamaStreamSource final : public UnderlyingSourceAlgorithmsWrapper,
-                                public GlobalTeardownObserver {
+class LlamaStreamSource final : public UnderlyingSourceAlgorithmsWrapper {
  public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(LlamaStreamSource)
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(LlamaStreamSource,
                                            UnderlyingSourceAlgorithmsWrapper)
-  LlamaStreamSource(nsIGlobalObject* aGlobal, RefPtr<LlamaBackend> aBackend,
+  LlamaStreamSource(RefPtr<LlamaBackend> aBackend,
                     const LlamaChatOptions& aOptions);
 
   MOZ_CAN_RUN_SCRIPT
@@ -210,15 +202,8 @@ class LlamaStreamSource final : public UnderlyingSourceAlgorithmsWrapper,
   // Links the JS-side stream controller to this source
   void SetControllerStream(RefPtr<ReadableStream> aStream);
 
-  void DisconnectFromOwner() override;
-
-  bool IsActive() const;
-
  private:
   ~LlamaStreamSource();
-
-  // Helper to properly shut down the worker thread with async cleanup
-  void ShutdownWorkerThread();
 
   RefPtr<LlamaBackend> mBackend;
   const LlamaChatOptions mChatOptions;
@@ -235,13 +220,6 @@ class LlamaStreamSource final : public UnderlyingSourceAlgorithmsWrapper,
 
   // Associated JS stream object
   RefPtr<ReadableStream> mControllerStream;
-
-  // Keeps the worker alive during async operations.
-  // When using AsyncShutdown(), the worker thread cleanup happens
-  // asynchronously. If the worker context is torn down before the thread
-  // finishes shutting down, we can crash. The ThreadSafeWorkerRef keeps the
-  // worker alive until we explicitly release it after shutdown completes.
-  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
 };
 
 class MetadataCallback;
@@ -251,13 +229,11 @@ class MetadataCallback;
  *
  * It provides JavaScript with an API to format prompts, launch inference, and
  * receive output as a `ReadableStream`. It delegates inference to a
- * LlamaBackend and manages stream logic via LlamaStreamSource.
+ * thread-safe LlamaBackend and manages stream logic via LlamaStreamSource.
  *
- * This class is designed for use in JS, from a single thread.
+ * This class is designed for use in JS.
  */
-class LlamaRunner final : public nsISupports,
-                          public nsWrapperCache,
-                          public SupportsWeakPtr {
+class LlamaRunner final : public nsISupports, public nsWrapperCache {
  public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(LlamaRunner)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -294,9 +270,6 @@ class LlamaRunner final : public nsISupports,
    * @note This function is designed for use in JavaScript via WebIDL. It
    * supports streaming output for real-time use cases such as chat UIs or
    * progressive rendering.
-   *
-   * @throws DOMException via `aRv` on failure (e.g., a previously created
-   * generation stream has not finished).
    *
    * @example JavaScript usage:
    * const stream = CreateGenerationStream(chatOptions);

@@ -18,7 +18,6 @@
 #include <string.h>
 
 #include <memory>
-#include <string>
 
 #include "absl/functional/any_invocable.h"
 #include "absl/strings/string_view.h"
@@ -32,18 +31,13 @@
 namespace webrtc {
 namespace {
 
-// TODO(crbug.com/470337728): make use of QoS instead of dispatch queue
-// priorities to enable greater fidelity mapping of AUDIO and VIDEO
-// priorities.
 int TaskQueuePriorityToGCD(TaskQueueFactory::Priority priority) {
   switch (priority) {
-    case TaskQueueFactory::Priority::kNormal:
+    case TaskQueueFactory::Priority::NORMAL:
       return DISPATCH_QUEUE_PRIORITY_DEFAULT;
-    case TaskQueueFactory::Priority::kHigh:
-    case TaskQueueFactory::Priority::kAudio:
-    case TaskQueueFactory::Priority::kVideo:
+    case TaskQueueFactory::Priority::HIGH:
       return DISPATCH_QUEUE_PRIORITY_HIGH;
-    case TaskQueueFactory::Priority::kLow:
+    case TaskQueueFactory::Priority::LOW:
       return DISPATCH_QUEUE_PRIORITY_LOW;
   }
 }
@@ -52,7 +46,6 @@ class TaskQueueGcd final : public TaskQueueBase {
  public:
   TaskQueueGcd(absl::string_view queue_name, int gcd_priority);
 
-  absl::string_view queue_name() const override { return name_; }
   void Delete() override;
 
  protected:
@@ -78,15 +71,13 @@ class TaskQueueGcd final : public TaskQueueBase {
   static void SetNotActive(void* task_queue);
   static void DeleteQueue(void* task_queue);
 
-  const std::string name_;
   dispatch_queue_t queue_;
   bool is_active_;
 };
 
 TaskQueueGcd::TaskQueueGcd(absl::string_view queue_name, int gcd_priority)
-    : name_(queue_name),
-      queue_(RTCDispatchQueueCreateWithTarget(
-          name_.c_str(),
+    : queue_(RTCDispatchQueueCreateWithTarget(
+          std::string(queue_name).c_str(),
           DISPATCH_QUEUE_SERIAL,
           dispatch_get_global_queue(gcd_priority, 0))),
       is_active_(true) {
@@ -100,22 +91,17 @@ TaskQueueGcd::TaskQueueGcd(absl::string_view queue_name, int gcd_priority)
 TaskQueueGcd::~TaskQueueGcd() = default;
 
 void TaskQueueGcd::Delete() {
+  RTC_DCHECK(!IsCurrent());
   // Implementation/behavioral note:
   // Dispatch queues are reference counted via calls to dispatch_retain and
   // dispatch_release. Pending blocks submitted to a queue also hold a
   // reference to the queue until they have finished. Once all references to a
-  // queue have been released, the queue will be deallocated by the system. We
-  // check `is_active_` before running tasks to ensure they don't execute after
-  // `Delete()` has been called.
+  // queue have been released, the queue will be deallocated by the system.
+  // This is why we check the is_active_ before running tasks.
 
-  if (IsCurrent()) {
-    SetNotActive(this);
-  } else {
-    // Use dispatch_sync to set the is_active_ to guarantee that there's not a
-    // race with checking it from a task.
-    dispatch_sync_f(queue_, this, &SetNotActive);
-  }
-
+  // Use dispatch_sync to set the is_active_ to guarantee that there's not a
+  // race with checking it from a task.
+  dispatch_sync_f(queue_, this, &SetNotActive);
   dispatch_release(queue_);
 }
 

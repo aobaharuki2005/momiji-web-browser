@@ -8,13 +8,9 @@
 newtab-page-title = Thẻ mới
 newtab-settings-button =
     .title = Tùy biến trang thẻ mới
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Tuỳ chỉnh trang này
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Tùy chỉnh
-newtab-customize-panel-label =
-    .label = Tùy chỉnh
 newtab-personalize-settings-icon-label =
     .title = Cá nhân hóa thẻ mới
     .aria-label = Cài đặt
@@ -27,9 +23,6 @@ newtab-personalize-dialog-label =
     .aria-label = Cá nhân hóa
 newtab-logo-and-wordmark =
     .aria-label = { -brand-full-name }
-newtab-card-dismiss-button =
-    .title = Bỏ qua
-    .aria-label = Bỏ qua
 
 ## Search box component.
 
@@ -56,7 +49,7 @@ newtab-search-box-input =
     .placeholder = Tìm kiếm trên mạng
     .aria-label = Tìm kiếm trên mạng
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = Thêm công cụ tìm kiếm
 newtab-topsites-add-shortcut-header = Lối tắt mới
@@ -76,11 +69,6 @@ newtab-topsites-url-validation = Yêu cầu URL hợp lệ
 newtab-topsites-image-url-label = Hình ảnh Tuỳ chỉnh URL
 newtab-topsites-use-image-link = Sử dụng hình ảnh tùy chỉnh…
 newtab-topsites-image-validation = Không tải được hình ảnh. Hãy thử một URL khác.
-
-## Clear text button for the URL and image URL input fields in the Top Sites form.
-
-newtab-topsites-clear-input =
-    .aria-label = Xoá văn bản
 
 ## Top Sites - General form dialog buttons. These are verbs/actions.
 
@@ -148,9 +136,6 @@ newtab-menu-report = Báo cáo
 # Context menu option to personalize New Tab recommended stories by blocking a section of stories,
 # e.g. "Sports". "Block" is a verb here.
 newtab-menu-section-block = Chặn
-# "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
-# e.g. Following the travel section of stories.
-newtab-menu-section-unfollow-topic = Huỷ theo dõi
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Bỏ theo dõi chủ đề
@@ -318,22 +303,9 @@ newtab-error-fallback-refresh-link = Thử làm mới lại trang.
 
 newtab-custom-shortcuts-title = Lối tắt
 newtab-custom-shortcuts-subtitle = Các trang web bạn lưu hoặc truy cập
-#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Lối tắt
     .description = Các trang web bạn lưu hoặc truy cập
-newtab-custom-shortcuts-nova =
-    .label = Lối tắt
-newtab-custom-row-description =
-    .description = Số lượng hàng
-# Variables
-#   $num (number) - Number of rows to display
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
-newtab-custom-row-selector2 =
-    .label =
-        { $num ->
-           *[other] { $num } hàng
-        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -343,12 +315,9 @@ newtab-custom-row-selector =
 newtab-custom-sponsored-sites = Các lối tắt được tài trợ
 newtab-custom-pocket-title = Được đề xuất bởi { -pocket-brand-name }
 newtab-custom-pocket-subtitle = Nội dung đặc biệt do { -pocket-brand-name }, một phần của { -brand-product-name }, quản lý
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be having a description under "Recommended stories" anymore
 newtab-custom-stories-toggle =
     .label = Câu chuyện được đề xuất
     .description = Nội dung đặc biệt được quản lý bởi gia đình { -brand-product-name }
-newtab-recommended-stories-toggle =
-    .label = Câu chuyện được đề xuất
 newtab-custom-stories-personalized-toggle =
     .label = Câu chuyện
 newtab-custom-stories-personalized-checkbox-label = Câu chuyện được cá nhân hóa dựa trên hoạt động của bạn
@@ -359,24 +328,18 @@ newtab-custom-recent-subtitle = Tuyển chọn các trang và nội dung gần �
 newtab-custom-weather-toggle =
     .label = Thời tiết
     .description = Sơ lược về dự báo hôm nay
+newtab-custom-trending-search-toggle =
+    .label = Tìm kiếm thịnh hành
+    .description = Các chủ đề phổ biến và được tìm kiếm thường xuyên
 newtab-custom-widget-weather-toggle =
     .label = Thời tiết
+newtab-custom-widget-trending-search-toggle =
+    .label = Tìm kiếm thịnh hành
 newtab-custom-widget-lists-toggle =
     .label = Danh sách
 newtab-custom-widget-timer-toggle =
     .label = Bộ hẹn giờ
-newtab-custom-widget-sports-toggle =
-    .label = World Cup
-newtab-custom-widget-clock-toggle =
-    .label = Đồng hồ
-newtab-custom-widget-sports-toggle2 =
-    .label = Thể thao
 newtab-custom-widget-section-title = Widget
-newtab-custom-widget-section-toggle =
-    .label = Widget
-newtab-widget-manage-title = Widget
-newtab-widget-manage-widget-button =
-    .label = Quản lý widget
 # Tooltip for close button
 newtab-custom-close-menu-button =
     .title = Đóng
@@ -388,12 +351,8 @@ newtab-custom-settings = Quản lý các cài đặt khác
 
 newtab-wallpaper-title = Hình nền
 newtab-wallpaper-reset = Đặt lại về mặc định
-#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Tải lên một ảnh
-newtab-wallpaper-add-an-image = Thêm một ảnh
 newtab-wallpaper-custom-color = Chọn màu
-newtab-wallpaper-toggle-title =
-    .label = Hình nền
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Hình ảnh vượt quá giới hạn kích thước tập tin { $file_size }MB. Vui lòng thử tải lên một tập tin nhỏ hơn.
@@ -416,9 +375,7 @@ newtab-wallpaper-light-fox-anniversary = Một chú cáo trong cánh đồng xan
 
 ## Solid Colors
 
-#  (developer note): @nova-cleanup(remove-string): Remove old "Solid colors" string once Nova lands. The simplified "Colors" string will take over
 newtab-wallpaper-category-title-colors = Màu
-newtab-wallpaper-colors = Màu
 newtab-wallpaper-blue = Xanh dương
 newtab-wallpaper-light-blue = Xanh dương nhạt
 newtab-wallpaper-light-purple = Tím nhạt
@@ -509,12 +466,7 @@ newtab-weather-menu-change-location = Thay đổi khu vực
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Tìm kiếm khu vực
     .aria-label = Tìm kiếm khu vực
-# "Current" refers to the user's physical/geographic location detected via geolocation.
-newtab-weather-change-location-search-use-current =
-    .label = Sử dụng khu vực hiện tại
 newtab-weather-menu-weather-display = Cách hiển thị thời tiết
-newtab-weather-todays-forecast = Dự báo thời tiết hôm nay
-newtab-weather-see-full-forecast = Xem dự báo thời tiết đầy đủ
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
 # - Detailed: Include simple information plus a short text summary: e.g. "Mostly cloudy"
@@ -537,23 +489,8 @@ newtab-weather-opt-in-not-now =
     .label = Không phải bây giờ
 newtab-weather-opt-in-yes =
     .label = Đồng ý
-newtab-weather-opt-in-headline = Xem dự báo thời tiết nơi ở hiện tại của bạn
-newtab-weather-opt-in-use-location =
-    .label = Sử dụng vị trí
-newtab-weather-opt-in-choose-location = Chọn khu vực
 # We'll be showing static (fake) weather data if the user has not opted in to using their location
 newtab-weather-static-city = Thành phố New York
-# "Highest" here refers to the highest temperature of the day
-newtab-weather-high =
-    .aria-label = Cao nhất
-# "Lowest" here refers to the lowest temperature of the day
-newtab-weather-low =
-    .aria-label = Thấp nhất
-# Variables:
-#   $provider (string) - Service provider for weather data
-newtab-weather-see-forecast-description =
-    .title = Xem dự báo với { $provider }
-    .aria-description = { $provider } ∙ Được tài trợ
 
 ## Topic Labels
 
@@ -600,16 +537,8 @@ newtab-topic-selection-button-pick-interests = Chọn sở thích của bạn
 ## e.g. Following the travel section of stories.
 
 newtab-section-follow-button = Theo dõi
-# Variables:
-#   $topic (string) - Topic that the user can follow
-newtab-section-follow-button-label =
-    .aria-label = Theo dõi { $topic }
 newtab-section-following-button = Đang theo dõi
 newtab-section-unfollow-button = Huỷ theo dõi
-# Variables:
-#   $topic (string) - Topic that the user is following and can unfollow
-newtab-section-unfollow-button-label =
-    .aria-label = Đang theo dõi: Bỏ theo dõi { $topic }
 # A modal may appear next to the Follow button, directing users to try out the feature
 newtab-section-follow-highlight-title = Tinh chỉnh nguồn cấp dữ liệu của bạn
 newtab-section-follow-highlight-subtitle = Theo dõi sở thích của bạn để xem thêm những gì bạn thích.
@@ -621,22 +550,6 @@ newtab-section-follow-highlight-subtitle = Theo dõi sở thích của bạn đ�
 newtab-section-block-button = Chặn
 newtab-section-blocked-button = Đã chặn
 newtab-section-unblock-button = Bỏ chặn
-# Variables:
-#   $topic (string) - Name of topic that user is following
-newtab-section-follow-topic =
-    .aria-label = Theo dõi { $topic }
-# Variables:
-#   $topic (string) - Name of topic that user is unfollowing
-newtab-section-unfollow-topic =
-    .aria-label = Bỏ theo dõi { $topic }
-# Variables:
-#   $topic (string) - Name of topic that user is blocking
-newtab-section-block-topic =
-    .aria-label = Chặn { $topic }
-# Variables:
-#   $topic (string) - Name of topic that user is unblocking
-newtab-section-unblock-topic =
-    .aria-label = Bỏ chặn { $topic }
 
 ## Confirmation modal for blocking a section
 
@@ -646,7 +559,6 @@ newtab-section-confirm-block-topic-p2 = Chủ đề bị chặn sẽ không còn
 # Variables:
 #   $topic (string) - Name of topic that user is blocking
 newtab-section-block-topic-button = Chặn { $topic }
-newtab-section-block-cancel-button = Hủy bỏ
 
 ## Strings for custom wallpaper highlight
 
@@ -668,12 +580,6 @@ newtab-new-user-custom-wallpaper-title = Chọn một hình nền để tạo { 
 newtab-new-user-custom-wallpaper-subtitle = Khiến mọi thẻ mới trở nên thân thiện với hình nền và màu sắc tùy chỉnh.
 newtab-new-user-custom-wallpaper-cta = Thử ngay bây giờ
 
-## Strings for Nova wallpaper feature highlight
-
-newtab-wallpaper-feature-highlight-title = Những hình nền mới toanh vừa cập nhật
-newtab-wallpaper-feature-highlight-subtitle = Hãy chọn thẻ yêu thích của bạn và biến mỗi thẻ mới thành một trải nghiệm quen thuộc.
-newtab-wallpaper-feature-highlight-cta = Chọn hình nền
-
 ## Strings for download mobile highlight
 
 newtab-download-mobile-highlight-title = Tải xuống { -brand-product-name } dành cho di động
@@ -689,7 +595,7 @@ newtab-download-mobile-highlight-image =
 newtab-shortcuts-highlight-title = Những mục yêu thích của bạn trong tầm tay bạn
 newtab-shortcuts-highlight-subtitle = Thêm lối tắt để truy cập các trang web yêu thích chỉ bằng một cú nhấp chuột.
 
-## Strings for reporting issues with ads and content
+## Strings for reporting ads and content
 
 newtab-report-content-why-reporting-this =
     .label = Tại sao bạn báo cáo điều này?
@@ -707,27 +613,21 @@ newtab-report-content-inappropriate-offensive =
     .label = Không phù hợp hoặc xúc phạm
 newtab-report-content-spam-misleading =
     .label = Spam hoặc gây hiểu lầm
-newtab-report-content-requires-payment-subscription =
-    .label = Yêu cầu thanh toán hoặc gói đăng ký
-newtab-report-content-requires-payment-subscription-learn-more = Tìm hiểu thêm
 newtab-report-cancel = Hủy bỏ
 newtab-report-submit = Gửi
 newtab-toast-thanks-for-reporting =
     .message = Cảm ơn bạn đã báo cáo điều này.
-newtab-toast-widgets-hidden =
-    .message = Chọn biểu tượng bút chì để thêm lại widget bất cứ lúc nào.
-# Variables:
-#   $topic (string) - Topic that the user has followed
-newtab-section-toast-follow =
-    .message = Bạn hiện đang theo dõi { $topic }.
-# Variables:
-#   $topic (string) - Topic that the user has unfollowed
-newtab-section-toast-unfollow =
-    .message = Bạn không còn theo dõi { $topic }.
-# Variables:
-#   $topic (string) - Topic that the user has blocked
-newtab-section-toast-block =
-    .message = Bạn sẽ không còn thấy các bài viết về { $topic } nữa.
+
+## Strings for trending searches
+
+newtab-trending-searches-show-trending =
+    .title = Hiển thị tìm kiếm thịnh hành
+newtab-trending-searches-hide-trending =
+    .title = Ẩn tìm kiếm thịnh hành
+newtab-trending-searches-learn-more = Tìm hiểu thêm
+newtab-trending-searches-dismiss = Ẩn tìm kiếm thịnh hành
+# "Trending searches refers to popular searches from search engines
+newtab-trending-searches-title = Tìm kiếm thịnh hành
 
 ## Strings for task / to-do list productivity widget
 
@@ -742,20 +642,13 @@ newtab-widget-lists-label-beta =
 # Variables:
 #   $number (number) - Amount of list items marked complete
 newtab-widget-lists-completed-list = Đã hoàn thành ({ $number })
-newtab-widget-lists-celebration-headline = Làm tốt lắm
-newtab-widget-lists-celebration-subhead = Tất cả đã xong
 newtab-widget-task-list-menu-copy = Sao chép
 newtab-widget-lists-menu-edit = Chỉnh sửa tên danh sách
-newtab-widget-lists-menu-edit2 =
-    .aria-label = Chỉnh sửa tên danh sách
 newtab-widget-lists-menu-create = Tạo một danh sách mới
 newtab-widget-lists-menu-delete = Xóa danh sách này
-newtab-widget-lists-menu-copy = Sao chép danh sách vào bộ nhớ tạm
+newtab-widget-lists-menu-copy = Sao chép danh sách vào khay nhớ tạm
+newtab-widget-lists-menu-hide = Ẩn tất cả danh sách
 newtab-widget-lists-menu-learn-more = Tìm hiểu thêm
-newtab-widget-lists-button-add-item = Thêm một mục
-newtab-widget-lists-input-add-an-item2 =
-    .placeholder = Thêm một mục
-    .aria-label = Thêm một mục
 newtab-widget-lists-input-add-an-item =
     .placeholder = Thêm một mục
 newtab-widget-lists-input-error = Vui lòng thêm văn bản để thêm mục.
@@ -764,47 +657,17 @@ newtab-widget-lists-input-menu-move-up = Di chuyển lên
 newtab-widget-lists-input-menu-move-down = Di chuyển xuống
 newtab-widget-lists-input-menu-delete = Xóa
 newtab-widget-lists-input-menu-edit = Chỉnh sửa
-newtab-widget-lists-input-menu-edit2 =
-    .aria-label = Chỉnh sửa mục
-newtab-widget-lists-edit-clear =
-    .aria-label = Huỷ bỏ
-    .title = Huỷ bỏ
 # the + symbol emphasises the functionality of adding a new list
 newtab-widget-lists-dropdown-create =
     .label = + Tạo một danh sách mới
 newtab-widget-lists-name-label-default =
     .label = Danh sách nhiệm vụ
-newtab-widget-lists-name-label-checklist =
-    .label = Danh sách việc cần làm
 newtab-widget-lists-name-placeholder-default =
     .placeholder = Danh sách nhiệm vụ
-newtab-widget-lists-name-placeholder-checklist2 =
-    .placeholder = Danh sách việc cần làm
-    .aria-label = Chỉnh sửa tên danh sách
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new2 =
-    .placeholder = Danh sách mới
-    .aria-label = Chỉnh sửa tên danh sách
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Danh sách việc cần làm
 # The placeholder value of the name field for a newly created list
 newtab-widget-lists-name-placeholder-new =
     .placeholder = Danh sách mới
 newtab-widget-section-title = Widget
-newtab-widget-menu-hide = Ẩn widget
-newtab-widget-menu-change-size = Thay đổi kích thước
-# Parent label for a submenu in the widget menu that reorders the widget
-# among its siblings. "Left" and "Right" appear as items inside this submenu.
-newtab-widget-menu-move = Di chuyển
-# Submenu item under "Move"; moves the widget one position to the left.
-# RTL locales should translate this as "Right".
-newtab-widget-menu-move-left = Trái
-# Submenu item under "Move"; moves the widget one position to the right.
-# RTL locales should translate this as "Left".
-newtab-widget-menu-move-right = Phải
-newtab-widget-size-small = Nhỏ
-newtab-widget-size-medium = Trung bình
-newtab-widget-size-large = Lớn
 # Tooltip for hide all widgets button
 newtab-widget-section-hide-all-button =
     .title = Ẩn widget
@@ -815,27 +678,9 @@ newtab-widget-section-maximize =
 newtab-widget-section-minimize =
     .title = Thu nhỏ widget
     .aria-label = Thu nhỏ tất cả widget thành kích thước nhỏ gọn
-newtab-widget-section-menu-button =
-    .title = Menu widget
-    .aria-label = Mở menu widget
-newtab-widget-add-widgets-button =
-    .aria-label = Thêm widget
-    .title = Thêm widget
-newtab-widget-section-menu-manage = Quản lý widget
-newtab-widget-section-menu-hide-all = Ẩn widget
-newtab-widget-section-menu-learn-more = Tìm hiểu thêm
-newtab-widget-section-feedback = Hãy cho chúng tôi biết suy nghĩ của bạn
-# Button shown when additional widgets are hidden beyond the
-# first row, allowing users to show them.
-newtab-widget-section-show-more =
-    .label = Hiện thêm widget
-# Button shown when the widgets row is expanded to multiple rows,
-# allowing users to collapse it back to one row.
-newtab-widget-section-show-less =
-    .label = Hiện ích widget hơn
-newtab-widget-lists-name-default = Danh sách việc cần làm
 
-## Strings introduced by the Nova redesign of the Timer widget
+## Strings for timer productivity widget
+## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
 
 newtab-widget-timer-notification-title = Bộ hẹn giờ
 newtab-widget-timer-notification-focus = Đã hết thời gian tập trung. Làm tốt lắm. Bạn cần nghỉ ngơi không?
@@ -853,363 +698,14 @@ newtab-widget-timer-reset =
     .title = Đặt lại
 newtab-widget-timer-menu-notifications = Tắt thông báo
 newtab-widget-timer-menu-notifications-on = Bật thông báo
+newtab-widget-timer-menu-hide = Ẩn bộ hẹn giờ
 newtab-widget-timer-menu-learn-more = Tìm hiểu thêm
-# The title displays above a set of top news headlines.
-newtab-daily-briefing-card-title = Tin tức nổi bật
-newtab-daily-briefing-card-menu-dismiss = Bỏ qua
-# Variables:
-#   $minutes (number) - Time since the feed has been refreshed
-newtab-daily-briefing-card-timestamp = Đã cập nhật { $minutes } phút trước
 newtab-widget-message-title = Giữ tập trung với danh sách và bộ đếm thời gian tích hợp
 # to-dos stands for "things to do".
 newtab-widget-message-copy = Từ những lời nhắc nhở nhanh đến những việc cần làm hàng ngày, các buổi tập trung đến những giờ nghỉ giải lao — hãy tập trung vào nhiệm vụ và đúng giờ.
-# One spot refers to a dedicated section on new tab to manage and use widgets
-newtab-widget-message-focus-forecasts-title = Một nơi để tập trung, dự báo thời tiết và nhiều hơn nữa.
-newtab-widget-message-focus-forecasts-body = Giữ cho ngày của bạn luôn trôi chảy với các widget của { -brand-product-name }. Kiểm tra dự báo thời tiết, theo dõi công việc hoặc theo dõi thời gian trên toàn cầu.
-# "Make Firefox yours" refers to about:newtab. The call to action here ("Try it now")
-# is to customize the new tab page with a background image or color from
-# the built-in wallpaper collection or uploading your own image.
-newtab-promo-card-title-addons = Biến { -brand-product-name } thành của riêng bạn
-newtab-promo-card-body-addons = Chọn một hình nền từ bộ sưu tập của chúng tôi hoặc tự tạo hình nền của riêng bạn.
-newtab-promo-card-cta-addons = Thử ngay bây giờ
 newtab-promo-card-title = Hỗ trợ cho { -brand-product-name }
 newtab-promo-card-body = Các nhà tài trợ của chúng tôi hỗ trợ sứ mệnh của chúng tôi là xây dựng một trang web tốt hơn
 newtab-promo-card-cta = Tìm hiểu thêm
 newtab-promo-card-dismiss-button =
     .title = Bỏ qua
     .aria-label = Bỏ qua
-
-## Strings introduced by the Nova redesign of the Timer widget
-
-# Variables:
-#   $minutes (number) - The currently selected timer duration in minutes
-newtab-widget-timer-start-aria =
-    .aria-label = Bắt đầu bộ hẹn giờ { $minutes } phút
-newtab-widget-timer-pause-aria =
-    .aria-label = Tạm dừng bộ hẹn giờ
-# Variables:
-#   $minutes (number) - The currently selected timer duration in minutes
-newtab-widget-timer-spinbutton-name =
-    .aria-label = { $minutes } phút
-newtab-widget-timer-decrease-min =
-    .title = Giảm 1 phút
-newtab-widget-timer-increase-min =
-    .title = Tăng 1 phút
-newtab-widget-timer-mode-group =
-    .aria-label = Chế độ hẹn giờ
-# Small label shown beneath the live time while the focus timer is running or paused.
-newtab-widget-timer-running-focus = Tập trung
-# Small label shown beneath the live time while the break timer is running or paused.
-newtab-widget-timer-running-break = Giải lao
-# Context-menu item to hide the Timer widget. Replaces the shared "Hide widget"
-# copy with a widget-specific string per the Nova design.
-newtab-widget-timer-menu-hide = Ẩn bộ hẹn giờ
-# Heading shown inside the Timer widget after a focus session ends.
-newtab-widget-timer-celebration-heading-focus = Làm tốt lắm
-# Heading shown inside the Timer widget after a break session ends.
-newtab-widget-timer-celebration-heading-break = Giờ giải lao của bạn đã kết thúc
-# Message shown inside the Timer widget after a focus session ends.
-newtab-widget-timer-celebration-message-focus = Cần giải lao?
-# Message shown inside the Timer widget after a break session ends.
-newtab-widget-timer-celebration-message-break = Sẵn sàng tập trung trở lại?
-
-##
-
-newtab-sports-widget-menu-follow-teams = Theo dõi đội
-newtab-sports-widget-menu-view-schedule = Xem lịch trình
-newtab-sports-widget-menu-view-upcoming = Xem cái gì sắp tới
-newtab-sports-widget-menu-view-results = Hiện kết quả
-# Milestone dates (e.g. group stage, semifinals, etc.). Refers to calendar dates.
-newtab-sports-widget-menu-key-dates = Ngày quan trọng
-newtab-sports-widget-menu-learn-more = Tìm hiểu thêm
-# “Keep tabs on” is an informal expression meaning to stay updated on, stay informed on, or regularly follow something (in this case, World Cup matches and updates).
-newtab-sports-widget-keep-tabs = Cập nhật World Cup
-newtab-sports-widget-get-updates = Nhận thông tin cập nhật trực tiếp và hơn thế nữa.
-newtab-sports-widget-view-schedule =
-    .label = Xem lịch trình
-newtab-sports-widget-follow-teams =
-    .label = Theo dõi đội
-newtab-sports-widget-view-matches =
-    .label = Xem các trận đấu
-# Variables:
-#   $number (number) - Maximum number of teams a user can choose to follow in the team selection state
-newtab-sports-widget-follow-teams-title =
-    { $number ->
-       *[other] Theo dõi { $number } nhóm
-    }
-newtab-sports-widget-choose-wallpaper =
-    .label = Chọn một hình nền
-newtab-sports-widget-skip = Bỏ qua
-newtab-sports-widget-search-country =
-    .placeholder = Tìm kiếm quốc gia
-    .aria-label = Tìm kiếm quốc gia
-newtab-sports-widget-cancel = Hủy
-newtab-sports-widget-back-button =
-    .aria-label = Quay lại
-newtab-sports-widget-done-button =
-    .label = Xong
-# Shown in the follow-teams list for a team that has been knocked out of the tournament.
-# Variables:
-#   $teamName (string) - the localized team name (e.g. "Canada").
-newtab-sports-widget-team-name-eliminated = { $teamName } (đã bị loại)
-newtab-sports-widget-view-all =
-    .label = Xem tất cả
-newtab-sports-widget-show-less =
-    .label = Hiện ít hơn
-# Toggle that filters the list of teams the user follows
-newtab-sports-widget-followed-only-toggle =
-    .label = Chỉ các đội đã theo dõi
-# Watch is a verb (as in watch matches online).
-newtab-sports-widget-watch =
-    .label = Xem
-    .title = Xem trực tiếp
-# Watch is a verb (as in watch matches online).
-newtab-sports-widget-watch-icon =
-    .aria-label = Xem trực tiếp
-    .title = Xem trực tiếp
-newtab-sports-widget-watch-dialog-close =
-    .aria-label = Đóng
-    .title = Đóng
-# Tag: user can watch without paying (sign-in may still be required).
-newtab-sports-widget-watch-stream-free = Miễn phí
-# Tag: user can start watching via a trial; continued access may require payment after it ends.
-newtab-sports-widget-watch-stream-free-trial = Dùng thử miễn phí
-# Tag: provider offers both a no-cost or trial path and a paid path.
-newtab-sports-widget-watch-stream-free-paid = Miễn phí và trả phí
-# Tag: user must pay to watch (subscription, TV provider, premium plan, or add-on).
-newtab-sports-widget-watch-stream-paid = Trả phí
-# Note: provider only streams some matches, not the full tournament.
-newtab-sports-widget-watch-stream-select-games-only = Chỉ chọn trận đấu
-# Heading for the list of streaming services available in the user’s country/region.
-newtab-sports-widget-watch-available-region = Có sẵn tại khu vực của bạn
-# Heading for the list of streaming services available outside the user’s country/region.
-newtab-sports-widget-watch-available-other-regions = Các khu vực khác
-# Button that opens the provider’s stream page in a new tab.
-newtab-sports-widget-watch-play =
-    .aria-label = Xem trực tiếp
-    .title = Xem trực tiếp
-newtab-sports-widget-group-stage = Vòng bảng
-newtab-sports-widget-group-a = Bảng A
-newtab-sports-widget-group-b = Bảng B
-newtab-sports-widget-group-c = Bảng C
-newtab-sports-widget-group-d = Bảng D
-newtab-sports-widget-group-e = Bảng E
-newtab-sports-widget-group-f = Bảng F
-newtab-sports-widget-group-g = Bảng G
-newtab-sports-widget-group-h = Bảng H
-newtab-sports-widget-group-i = Bảng I
-newtab-sports-widget-group-j = Bảng J
-newtab-sports-widget-group-k = Bảng K
-newtab-sports-widget-group-l = Bảng L
-newtab-sports-widget-round-32 = Vòng 32
-newtab-sports-widget-round-16 = Vòng 16
-newtab-sports-widget-quarter-finals = Tứ kết
-# The "LIVE" string is meant to be uppercase in English, but other languages and locales may vary in how they handle this.
-newtab-sports-widget-live = TRỰC TIẾP
-newtab-custom-widget-live-refresh =
-    .title = Làm mới điểm số
-    .aria-label = Làm mới điểm số
-# Milestone dates (e.g. group stage, semifinals, etc.). Refers to calendar dates.
-newtab-sports-widget-key-dates = Ngày quan trọng
-newtab-sports-widget-upcoming = Sắp tới
-# Used for a match currently ongoing
-newtab-sports-widget-now = Bây giờ
-newtab-sports-widget-results = Kết quả
-newtab-sports-widget-semi-finals = Bán kết
-newtab-sports-widget-bronze-finals = Tranh hạng ba
-# Final is the final match for 1st place.
-newtab-sports-widget-final = Chung kết
-# Variables:
-#   $start (Date) - Start date of a tournament stage
-#   $end (Date) - End date of a tournament stage
-newtab-sports-widget-key-date-range = { DATETIME($start, month: "short", day: "numeric") } – { DATETIME($end, month: "short", day: "numeric") }
-# Variables:
-#   $date (Date) - Date of a single tournament event
-newtab-sports-widget-key-date = { DATETIME($date, month: "short", day: "numeric") }
-newtab-sports-widget-delayed = Bị lùi giờ
-newtab-sports-widget-postponed = Đã hoãn lại
-newtab-sports-widget-suspended = Đã tạm dừng
-newtab-sports-widget-cancelled = Đã huỷ trận
-newtab-sports-widget-information = Thông tin về trận đấu
-newtab-sports-widget-no-live-data = Dữ liệu trận đấu trực tiếp hiện chưa được cập nhật
-newtab-sports-widget-view-results-link = Xem kết quả
-newtab-sports-widget-third-place = Hạng ba
-# Runner-up is the team in 2nd place.
-newtab-sports-widget-runner-up = Á quân
-newtab-sports-widget-champions = Nhà vô địch
-newtab-sports-widget-world-cup-champions = Nhà vô địch World Cup 2026
-# Variables:
-#   $date (Date) - The match start time
-newtab-sports-widget-match-time = { DATETIME($date, hour: "2-digit", minute: "2-digit") }
-newtab-sports-widget-match-full-time = Hết giờ
-newtab-sports-widget-match-halftime = Nghỉ giữa hiệp
-newtab-sports-widget-match-extra-time = Hiệp phụ
-newtab-sports-widget-match-penalties = Luân lưu
-
-## Accessible labels for match rows in the sports widget. These are read by
-## screen readers to announce the match details and status.
-## Variables shared by all messages in this group:
-##   $homeTeam (String) - The full name of the home team (e.g. "Mexico")
-##   $awayTeam (String) - The full name of the away team (e.g. "Russia")
-
-# A finished match row (regular full-time result).
-# Variables:
-#   $homeScore (number) - The home team's regular-time score
-#   $awayScore (number) - The away team's regular-time score
-newtab-sports-widget-match-aria-label-results =
-    .aria-label = { $homeTeam }, { $homeScore } với { $awayTeam }, { $awayScore }
-# A finished match row that went to a penalty shootout.
-# Parenthesized values are the shootout score.
-# Variables:
-#   $homeScore (number) - The home team's regular-time score
-#   $awayScore (number) - The away team's regular-time score
-#   $homePenalty (number) - The home team's penalty shootout score
-#   $awayPenalty (number) - The away team's penalty shootout score
-newtab-sports-widget-match-aria-label-results-penalties =
-    .aria-label = { $homeTeam }, { $homeScore } ({ $homePenalty }) với { $awayTeam }, { $awayScore } ({ $awayPenalty })
-# A match that is currently in progress.
-# Variables:
-#   $homeScore (number) - The home team's current score
-#   $awayScore (number) - The away team's current score
-newtab-sports-widget-match-aria-label-now =
-    .aria-label = Trực tiếp: { $homeTeam }, { $homeScore } với { $awayTeam }, { $awayScore }
-# An upcoming scheduled match row. Announces kickoff time and date.
-# Variables:
-#   $date (Date) - The scheduled kickoff date/time
-newtab-sports-widget-match-aria-label-upcoming =
-    .aria-label = { $homeTeam } với { $awayTeam }, { DATETIME($date, hour: "numeric", minute: "numeric") }, { DATETIME($date, day: "numeric", month: "long") }
-# An upcoming match row whose status is "delayed".
-newtab-sports-widget-match-aria-label-upcoming-delayed =
-    .aria-label = { $homeTeam } với { $awayTeam }, bị lùi giờ
-# An upcoming match row whose status is "postponed".
-newtab-sports-widget-match-aria-label-upcoming-postponed =
-    .aria-label = { $homeTeam } với { $awayTeam }, đã hoãn lại
-# An upcoming match row whose status is "suspended".
-newtab-sports-widget-match-aria-label-upcoming-suspended =
-    .aria-label = { $homeTeam } với { $awayTeam }, đã tạm dừng
-# An upcoming match row whose status is "cancelled".
-newtab-sports-widget-match-aria-label-upcoming-cancelled =
-    .aria-label = { $homeTeam } với { $awayTeam }, đã huỷ trận
-
-## Sports widget — team names (FIFA country codes)
-## Only includes names not adequately covered by standard country-code
-## internationalization tooling.
-
-newtab-sports-widget-team-name-label-bih =
-    .label = Bosnia và Herzegovina
-newtab-sports-widget-team-name-label-civ =
-    .label = Bờ Biển Ngà
-newtab-sports-widget-team-name-label-cod =
-    .label = CHDC Congo
-newtab-sports-widget-team-name-label-eng =
-    .label = Anh
-newtab-sports-widget-team-name-label-sco =
-    .label = Scotland
-
-## Sports widget OMC messages
-## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.
-
-newtab-sports-widget-message-wallpapers-title = Khởi động World Cup với những hình nền mới
-newtab-sports-widget-message-wallpapers-body = Hãy mang chút năng lượng của ngày thi đấu đến trình duyệt của bạn trong suốt giải đấu.
-newtab-sports-widget-message-wallpapers-cta = Chọn hình nền
-newtab-sports-widget-message-add-widgets-cta =
-    .label = Add widgets
-newtab-sports-widget-message-day-in-play-title = Hãy giữ cho ngày của bạn luôn thú vị với các widget của { -brand-product-name }
-newtab-sports-widget-message-day-in-play-body = Theo dõi World Cup, hoàn thành công việc, theo dõi thời gian trên toàn cầu và hơn thế nữa.
-newtab-sports-widget-message-explore-widgets-cta =
-    .label = Khám phá widget
-
-## Strings for activation window message variants. In certain experiment configurations,
-## the strings from these variants may be displayed in a message below the search input
-## for the first 48 hours of a new profile's lifetime. Some messages include buttons with
-## labels, but not all.
-
-newtab-activation-window-message-dismiss-button =
-    .title = Bỏ qua
-    .aria-label = Bỏ qua
-# "This space" refers to about:newtab. The call to action here ("make it your own")
-# is to customize newtab with a background image or colour, or by tweaking the
-# existing widgetry that appears on it.
-newtab-activation-window-message-customization-focus-header = Hãy biến không gian này thành của riêng bạn.
-newtab-activation-window-message-customization-focus-message = Chọn hình nền mới, thêm lối tắt đến các trang web yêu thích của bạn và cập nhật những câu chuyện mà bạn quan tâm.
-newtab-activation-window-message-customization-focus-primary-button =
-    .label = Bắt đầu tuỳ chỉnh
-# "This space" refers to about:newtab. The sentiment of "plays by your rules" is
-# meant to evoke the idea that newtab is malleable and customizable. The call to
-# action is to customize newtab with a background image or colour, or by tweaking
-# the existing widgetry that appears on it.
-newtab-activation-window-message-values-focus-header = Không gian này tuân theo luật lệ của bạn.
-newtab-activation-window-message-values-focus-message = { -brand-product-name } cho phép bạn duyệt web theo cách bạn thích, với cách thức cá nhân hơn để bắt đầu ngày mới trực tuyến. Biến { -brand-product-name } thành của riêng bạn.
-
-## Strings for the Clock widget
-
-# Context menu item: toggle the clock card off.
-newtab-clock-widget-menu-hide = Ẩn đồng hồ
-newtab-clock-widget-menu-learn-more = Tìm hiểu thêm
-newtab-clock-widget-menu-edit = Chỉnh sửa đồng hồ
-newtab-clock-widget-menu-switch-to-12h = Chuyển sang định dạng 12 giờ
-newtab-clock-widget-menu-switch-to-24h = Chuyển sang định dạng 24 giờ
-newtab-clock-widget-label-your-clocks = Đồng hồ của bạn
-newtab-clock-widget-search-location-input =
-    .label = Vị trí
-    .placeholder = Tìm kiếm một thành phố
-    .aria-label = Tìm kiếm một thành phố
-# "Nickname (optional)" refers to a custom, user-defined label for a saved location
-# (e.g., "Home", "Office", or "School") to make it easier to recognize.
-# Not to be translated as a legal name, username, or alias used for identity verification.
-newtab-clock-widget-input-nickname =
-    .label = Tên gọi (tuỳ chọn)
-    .placeholder = Thêm một tên gọi
-    .aria-label = Tên gọi (tuỳ chọn)
-# "Add new clock" is an icon-only button in the widget toolbar — the
-# attributes are consumed as tooltip/screen-reader label only. The button
-# never renders visible text.
-newtab-clock-widget-button-add =
-    .title = Thêm đồng hồ mới
-    .aria-label = Thêm đồng hồ mới
-newtab-clock-widget-button-add-clock = Thêm
-newtab-clock-widget-button-cancel = Hủy bỏ
-newtab-clock-widget-button-back =
-    .title = Quay lại
-    .aria-label = Quay lại
-newtab-clock-widget-button-edit-clock =
-    .title = Chỉnh sửa đồng hồ
-    .aria-label = Chỉnh sửa đồng hồ
-newtab-clock-widget-button-save = Lưu
-newtab-clock-widget-button-remove-clock =
-    .title = Xoá đồng hồ
-    .aria-label = Xoá đồng hồ
-# Accessible name for a clock row in the "Your clocks" management panel
-# when the row has no user-provided nickname. Read aloud by screen
-# readers when focus lands on the row.
-# Variables:
-#   $city (string) - The city name displayed in the row.
-newtab-clock-widget-edit-item =
-    .aria-label = { $city }
-# Accessible name for a clock row when a user nickname has been set.
-# Variables:
-#   $city (string) - The city name displayed in the row.
-#   $nickname (string) - The user-provided nickname for the row.
-newtab-clock-widget-edit-item-with-nickname =
-    .aria-label = { $city }, biệt danh: { $nickname }
-newtab-clock-widget-add-clock-form =
-    .aria-label = Thêm đồng hồ
-newtab-clock-widget-edit-clock-form =
-    .aria-label = Chỉnh sửa đồng hồ
-# "Search results" is the accessible label for the listbox dropdown that appears
-# below the location search field, listing matching cities as the user types.
-# It means "results of the search", not "search within the results".
-newtab-clock-widget-search-results =
-    .aria-label = Kết quả tìm kiếm
-# Shown in place of the search results when the user's query does not match any
-# supported city — e.g. typing a misspelled name or a place not in the IANA
-# time zone list.
-newtab-clock-widget-search-no-results = Không có kết quả phù hợp
-# "Open menu for clock" is an icon-only button in the widget toolbar — the
-# attributes are consumed as tooltip/screen-reader label only. The button
-# never renders visible text.
-newtab-clock-widget-menu-button =
-    .title = Mở menu đồng hồ
-    .aria-label = Mở menu đồng hồ
-# $nickname (String) - The user-defined nickname for a saved clock location (e.g., "Home", "Office").
-newtab-clock-widget-label-nickname-with-value = Tên gọi: { $nickname }

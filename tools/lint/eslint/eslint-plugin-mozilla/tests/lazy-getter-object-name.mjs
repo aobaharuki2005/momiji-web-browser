@@ -17,7 +17,7 @@ const ruleTester = new RuleTester();
 function invalidCode(code) {
   return {
     code,
-    errors: [{ messageId: "mustUseLazy" }],
+    errors: [{ messageId: "mustUseLazy", type: "CallExpression" }],
   };
 }
 

@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef RelativeTimeline_h_
-#define RelativeTimeline_h_
+#ifndef __RelativeTimeline_h__
+#define __RelativeTimeline_h__
 
 #include <cstdint>
 
@@ -21,4 +22,4 @@ class RelativeTimeline {
 
 }  // namespace mozilla
 
-#endif /* RelativeTimeline_h_ */
+#endif /* __RelativeTimeline_h__ */

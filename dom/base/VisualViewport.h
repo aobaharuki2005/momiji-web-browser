@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,6 +9,7 @@
 
 #include "Units.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/dom/VisualViewportBinding.h"
 
 class nsPresContext;
@@ -32,7 +35,6 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
   double Scale() const;
   IMPL_EVENT_HANDLER(resize)
   IMPL_EVENT_HANDLER(scroll)
-  IMPL_EVENT_HANDLER(scrollend)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -43,10 +45,34 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
 
   void PostScrollEvent(const nsPoint& aPrevVisualOffset,
                        const nsPoint& aPrevLayoutOffset);
-  void PostScrollEndEvent();
 
-  class VisualViewportScrollEvent;
-  class VisualViewportScrollEndEvent;
+  class VisualViewportScrollEvent : public Runnable {
+   public:
+    NS_DECL_NSIRUNNABLE
+    VisualViewportScrollEvent(VisualViewport* aViewport,
+                              nsPresContext* aPresContext,
+                              const nsPoint& aPrevVisualOffset,
+                              const nsPoint& aPrevLayoutOffset);
+    bool HasPresContext(nsPresContext* aContext) const;
+    void Revoke();
+    nsPoint PrevVisualOffset() const { return mPrevVisualOffset; }
+    nsPoint PrevLayoutOffset() const { return mPrevLayoutOffset; }
+
+   private:
+    VisualViewport* mViewport;
+    WeakPtr<nsPresContext> mPresContext;
+    // The VisualViewport "scroll" event is supposed to be fired only when the
+    // *relative* offset between visual and layout viewport changes. The two
+    // viewports are updated independently from each other, though, so the only
+    // thing we can do is note the fact that one of the inputs into the relative
+    // visual viewport offset changed and then check the offset again at the
+    // next refresh driver tick, just before the event is going to fire.
+    // Hopefully, at this point both visual and layout viewport positions have
+    // been updated, so that we're able to tell whether the relative offset did
+    // in fact change or not.
+    const nsPoint mPrevVisualOffset;
+    const nsPoint mPrevLayoutOffset;
+  };
 
  private:
   virtual ~VisualViewport();
@@ -59,10 +85,8 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
   nsPresContext* GetPresContext() const;
 
   MOZ_CAN_RUN_SCRIPT void FireScrollEvent();
-  MOZ_CAN_RUN_SCRIPT void FireScrollEndEvent();
 
   RefPtr<VisualViewportScrollEvent> mScrollEvent;
-  RefPtr<VisualViewportScrollEndEvent> mScrollEndEvent;
 };
 
 }  // namespace dom

@@ -279,7 +279,7 @@ async function runTestcase({ formOrigin, savedLogins, expectedItems }) {
     "All items correctly cleared."
   );
 
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
 }
 
 /**

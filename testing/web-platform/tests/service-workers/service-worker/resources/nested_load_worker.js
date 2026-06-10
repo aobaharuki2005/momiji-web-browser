@@ -2,7 +2,7 @@
 self.onmessage = evt => {
   try {
     const worker = new Worker('load_worker.js');
-    worker.onmessage = msg => self.postMessage(msg.data);
+    worker.onmessage = evt => self.postMessage(evt.data);
     worker.postMessage(evt.data);
   } catch (err) {
     self.postMessage('Unexpected error! ' + err.message);
@@ -14,8 +14,8 @@ self.onconnect = evt => {
   evt.ports[0].onmessage = e => {
     try {
       const worker = new Worker('load_worker.js');
-      worker.onmessage = msg => evt.ports[0].postMessage(msg.data);
-      worker.postMessage(e.data);
+      worker.onmessage = e => evt.ports[0].postMessage(e.data);
+      worker.postMessage(evt.data);
     } catch (err) {
       evt.ports[0].postMessage('Unexpected error! ' + err.message);
     }

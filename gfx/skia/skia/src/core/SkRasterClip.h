@@ -131,7 +131,7 @@ private:
     bool op(const SkRasterClip&, SkClipOp);
 };
 
-class [[nodiscard]] SkAutoRasterClipValidate : SkNoncopyable {
+class SkAutoRasterClipValidate : SkNoncopyable {
 public:
     SkAutoRasterClipValidate(const SkRasterClip& rc) : fRC(rc) {
         fRC.validate();

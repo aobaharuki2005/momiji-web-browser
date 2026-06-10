@@ -59,7 +59,7 @@ class CustomElementWatcher extends EventEmitter {
       return;
     }
 
-    const registry = nodeActor.rawNode.documentGlobal.customElements;
+    const registry = nodeActor.rawNode.ownerGlobal.customElements;
     const registryMap = this._getMapForRegistry(registry);
 
     const name = nodeActor.rawNode.localName;
@@ -75,15 +75,13 @@ class CustomElementWatcher extends EventEmitter {
       return;
     }
 
-    try {
-      const win = nodeActor.rawNode.documentGlobal;
-      const registry = win.customElements;
-      const registryMap = this._getMapForRegistry(registry);
-      const name = nodeActor.rawNode.localName;
-      if (registryMap.has(name)) {
-        registryMap.get(name).delete(nodeActor);
-      }
-    } catch (ex) {}
+    const win = nodeActor.rawNode.ownerGlobal;
+    const registry = win.customElements;
+    const registryMap = this._getMapForRegistry(registry);
+    const name = nodeActor.rawNode.localName;
+    if (registryMap.has(name)) {
+      registryMap.get(name).delete(nodeActor);
+    }
   }
 
   /**
@@ -130,12 +128,16 @@ class CustomElementWatcher extends EventEmitter {
   }
 
   /**
-   * Some nodes (e.g. inside of <template> tags) don't have a documentElement
-   * and can't be watched by this helper.
+   * Some nodes (e.g. inside of <template> tags) don't have a documentElement or an
+   * ownerGlobal and can't be watched by this helper.
    */
   _isValidNode(nodeActor) {
     const node = nodeActor.rawNode;
-    return !Cu.isDeadWrapper(node) && node.ownerDocument?.documentElement;
+    return (
+      !Cu.isDeadWrapper(node) &&
+      node.ownerGlobal &&
+      node.ownerDocument?.documentElement
+    );
   }
 }
 

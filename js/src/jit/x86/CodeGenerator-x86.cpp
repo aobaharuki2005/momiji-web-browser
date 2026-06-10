@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -6,9 +8,8 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include <bit>
+#include "jsnum.h"
 
-#include "builtin/Number.h"
 #include "jit/CodeGenerator.h"
 #include "jit/MIR-wasm.h"
 #include "jit/MIR.h"
@@ -517,8 +518,10 @@ class OutOfLineTruncate : public OutOfLineCodeBase<CodeGeneratorX86> {
   LDefinition* tempFloat() { return ins_->getTemp(0); }
 
   const wasm::TrapSiteDesc& trapSiteDesc() const {
-    MOZ_ASSERT(ins_->isWasmBuiltinTruncateDToInt32(),
-               "Wasm only uses WasmBuiltinTruncateDToInt32");
+    if (ins_->isTruncateDToInt32()) {
+      return ins_->toTruncateDToInt32()->mir()->trapSiteDesc();
+    }
+
     return ins_->toWasmBuiltinTruncateDToInt32()->mir()->trapSiteDesc();
   }
 };
@@ -541,8 +544,10 @@ class OutOfLineTruncateFloat32 : public OutOfLineCodeBase<CodeGeneratorX86> {
   LDefinition* tempFloat() { return ins_->getTemp(0); }
 
   const wasm::TrapSiteDesc& trapSiteDesc() const {
-    MOZ_ASSERT(ins_->isWasmBuiltinTruncateFToInt32(),
-               "Wasm only uses WasmBuiltinTruncateFToInt32");
+    if (ins_->isTruncateFToInt32()) {
+      return ins_->toTruncateDToInt32()->mir()->trapSiteDesc();
+    }
+
     return ins_->toWasmBuiltinTruncateFToInt32()->mir()->trapSiteDesc();
   }
 };
@@ -830,7 +835,7 @@ void CodeGenerator::visitMulI64(LMulI64* lir) {
       default:
         if (constant > 0) {
           // Use shift if constant is power of 2.
-          int32_t shift = mozilla::FloorLog2(uint64_t(constant));
+          int32_t shift = mozilla::FloorLog2(constant);
           if (int64_t(1) << shift == constant) {
             masm.lshift64(Imm32(shift), lhs);
             return;
@@ -1317,8 +1322,8 @@ void CodeGenerator::visitMulIntPtr(LMulIntPtr* ins) {
     }
 
     // Use shift if constant is a power of 2.
-    if (constant > 0 && std::has_single_bit(uintptr_t(constant))) {
-      uint32_t shift = mozilla::FloorLog2(uintptr_t(constant));
+    if (constant > 0 && mozilla::IsPowerOfTwo(uintptr_t(constant))) {
+      uint32_t shift = mozilla::FloorLog2(constant);
       masm.lshiftPtr(Imm32(shift), lhs);
       return;
     }

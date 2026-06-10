@@ -148,21 +148,20 @@
 
       // Navigate to the local scheme document. We need to wait for the
       // navigation to succeed.
-      let wait = (msg) => t.step_wait(
+      let wait = () => t.step_wait(
         condition = () => {
           try {
-            return popup.location.href == testCase.url &&
-                   popup.document.readyState == "complete";
+            return popup.location.href == testCase.url;
           } catch {}
           return false;
         },
-        description = "Wait for the popup to navigate: " + msg,
+        description = "Wait for the popup to navigate.",
         timeout=3000,
         interval=50);
 
       let message = message_from(testCase.token);
       popup.location = testCase.url;
-      await wait("to test url");
+      await wait();
       if (testCase.add_img_function) {
         testCase.add_img_function(popup);
       }
@@ -170,7 +169,6 @@
       // Check that the local scheme document inherits CSP from the initiator.
       assert_equals(await message, "img blocked",
                     "Image should be blocked by CSP inherited from navigation initiator.");
-      assert_equals(popup.history.length, 2, "History entry for test url added");
 
       const token_2 = token();
       let loaded_2 = message_from(token_2, "ready");
@@ -183,10 +181,7 @@
                     "Could not navigate popup.");
 
       // We need to wait for the history navigation to be performed.
-      await Promise.race([
-        message_from(token_1).then(() => assert_unreached("Navigated back too far")),
-        wait("history.back() to test url")
-      ])
+      await wait();
 
       // Check that the "about:blank" document reloaded from history has the
       // original CSPs.

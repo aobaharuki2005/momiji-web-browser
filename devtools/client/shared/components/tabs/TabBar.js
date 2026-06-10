@@ -252,22 +252,12 @@ class Tabbar extends Component {
     );
   }
 
-  /**
-   * Selects a given tab
-   *
-   * @param {string} tabId
-   * @returns {Promise}
-   */
   select(tabId) {
     const docRef = this.tabbarRef.current.ownerDocument;
 
     const index = this.getTabIndex(tabId);
     if (index < 0) {
-      return Promise.resolve();
-    }
-
-    if (this.state.activeTab === index) {
-      return Promise.resolve();
+      return;
     }
 
     const newState = Object.assign({}, this.state, {
@@ -280,13 +270,10 @@ class Tabbar extends Component {
       tabDomElement.scrollIntoView();
     }
 
-    return new Promise(resolve => {
-      this.setState(newState, () => {
-        if (this.props.onSelect) {
-          this.props.onSelect(tabId);
-        }
-        resolve();
-      });
+    this.setState(newState, () => {
+      if (this.props.onSelect) {
+        this.props.onSelect(tabId);
+      }
     });
   }
 

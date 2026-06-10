@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -136,12 +138,12 @@ class UserFontConfigHelperTest : public testing::Test {
     SetUpPathsInKey(mTestUserFontKey, aFontPaths);
   }
 
-  bool CreateHelperAndCallAddRules() {
+  void CreateHelperAndCallAddRules() {
     UserFontConfigHelper policyHelper(sTestRegKey, sWinUserProfile,
                                       sLocalAppData, sRoamingAppData);
     sandboxing::SizeTrackingConfig trackingPolicy(&mConfig,
                                                   mNumberOfStoragePages);
-    return policyHelper.AddRules(trackingPolicy);
+    policyHelper.AddRules(trackingPolicy);
   }
 
   // StrictMock because we only expect AllowFileAccess to be called.
@@ -156,7 +158,7 @@ TEST_F(UserFontConfigHelperTest, WindowsDirRuleAddedOnKeyFailure) {
   UserFontConfigHelper policyHelper(sTestFailRegKey, sWinUserProfile,
                                     sLocalAppData, sRoamingAppData);
   sandboxing::SizeTrackingConfig trackingPolicy(&mConfig, 1);
-  EXPECT_TRUE(policyHelper.AddRules(trackingPolicy));
+  policyHelper.AddRules(trackingPolicy);
 }
 
 TEST_F(UserFontConfigHelperTest, PathsInsideUsersDirAdded) {
@@ -166,7 +168,7 @@ TEST_F(UserFontConfigHelperTest, PathsInsideUsersDirAdded) {
   EXPECT_READONLY_EQ(LR"(C:\Users\Moz User\Fonts\FontFile1.ttf)")
       .After(mWinUserFontCall);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, PathsInsideUsersDirAddedIgnoringCase) {
@@ -175,7 +177,7 @@ TEST_F(UserFontConfigHelperTest, PathsInsideUsersDirAddedIgnoringCase) {
   EXPECT_READONLY_EQ(LR"(C:\users\moz uSER\Fonts\FontFile1.ttf)")
       .After(mWinUserFontCall);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, PathsOutsideUsersDirAdded) {
@@ -187,7 +189,7 @@ TEST_F(UserFontConfigHelperTest, PathsOutsideUsersDirAdded) {
   EXPECT_READONLY_EQ(LR"(C:\programdata\Fonts\FontFile2.ttf)")
       .After(mWinUserFontCall);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, SubKeyPathsInsideUsersDirAdded) {
@@ -206,7 +208,7 @@ TEST_F(UserFontConfigHelperTest, SubKeyPathsInsideUsersDirAdded) {
   EXPECT_READONLY_EQ(LR"(C:\Users\Moz User\Fonts\FontFile2.ttf)")
       .After(fontFile1);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, PathsOutsideUsersDirAddedAtEnd) {
@@ -226,7 +228,7 @@ TEST_F(UserFontConfigHelperTest, PathsOutsideUsersDirAddedAtEnd) {
   EXPECT_READONLY_EQ(pdFont1).After(userDirFont1, userDirFont2, userDirFont3);
   EXPECT_READONLY_EQ(pdFont2).After(userDirFont1, userDirFont2, userDirFont3);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, SubKeyPathsOutsideUsersDirAddedAtEnd) {
@@ -253,7 +255,7 @@ TEST_F(UserFontConfigHelperTest, SubKeyPathsOutsideUsersDirAddedAtEnd) {
   EXPECT_READONLY_EQ(pdFont1).After(userDirFont3);
   EXPECT_READONLY_EQ(pdFont2).After(userDirFont3);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, NonStringValueIsIgnored) {
@@ -268,7 +270,7 @@ TEST_F(UserFontConfigHelperTest, NonStringValueIsIgnored) {
 
   EXPECT_READONLY_EQ(LR"(C:\Users\Moz User\Fonts\FontFile1.ttf)").Times(0);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, PathNotNullTerminated) {
@@ -282,7 +284,7 @@ TEST_F(UserFontConfigHelperTest, PathNotNullTerminated) {
   EXPECT_READONLY_EQ(LR"(C:\Users\Moz User\Fonts\FontFile1.ttf)")
       .After(mWinUserFontCall);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, PathEmpty) {
@@ -292,7 +294,7 @@ TEST_F(UserFontConfigHelperTest, PathEmpty) {
 
   EXPECT_READONLY_EQ(fontPath).Times(0);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, PathEmptyNotNullTerminated) {
@@ -304,7 +306,7 @@ TEST_F(UserFontConfigHelperTest, PathEmptyNotNullTerminated) {
 
   EXPECT_READONLY_EQ(L"").Times(0);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, DirsAreIgnored) {
@@ -312,7 +314,7 @@ TEST_F(UserFontConfigHelperTest, DirsAreIgnored) {
 
   EXPECT_READONLY_EQ(LR"(C:\Users\Moz Us]er\Fonts\)").Times(0);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, PathsInWindowsUsersFontDirNotAdded) {
@@ -328,7 +330,7 @@ TEST_F(UserFontConfigHelperTest, PathsInWindowsUsersFontDirNotAdded) {
       LR"(C:\Users\Moz User\AppData\Local\Microsoft\Windows\Fonts\Sub\FontFile2.ttf)")
       .Times(0);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest,
@@ -345,7 +347,7 @@ TEST_F(UserFontConfigHelperTest,
       LR"(c:\uSERS\moz user\aPPdATA\lOCAL\MICRosoft\WindOWS\fONTS\Sub\FontFile2.ttf)")
       .Times(0);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 auto RuleSize(const wchar_t* aRulePath) {
@@ -395,7 +397,7 @@ TEST_F(UserFontConfigHelperTest, PathsTooLongForStorage) {
   path1.pop_back();
   EXPECT_READONLY_STARTS(path1).Times(2).After(mWinUserFontCall);
 
-  EXPECT_FALSE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 TEST_F(UserFontConfigHelperTest, PathsTooLongOneOutsideUserProfile) {
@@ -416,7 +418,7 @@ TEST_F(UserFontConfigHelperTest, PathsTooLongOneOutsideUserProfile) {
   EXPECT_READONLY_EQ(path2).After(mWinUserFontCall);
   EXPECT_READONLY_EQ(path3).After(mWinUserFontCall);
 
-  EXPECT_TRUE(CreateHelperAndCallAddRules());
+  CreateHelperAndCallAddRules();
 }
 
 }  // namespace mozilla

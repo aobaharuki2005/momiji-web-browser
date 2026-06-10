@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et ft=cpp : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,18 +32,18 @@ class VideoCaptureFactory : webrtc::VideoCaptureOptions::Callback {
 
   VideoCaptureFactory();
 
-  virtual std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
-  CreateDeviceInfo(mozilla::camera::CaptureDeviceType aType);
+  std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo> CreateDeviceInfo(
+      int32_t aId, mozilla::camera::CaptureDeviceType aType);
 
   struct CreateVideoCaptureResult {
     webrtc::scoped_refptr<webrtc::VideoCaptureModule> mCapturer;
-    // Pointer to the DesktopCaptureImpl instance if mCapturer is of this
-    // type. nullptr otherwise.
+    // Pointer to the DesktopCaptureImpl instance if mCapturer is of this type.
+    // nullptr otherwise.
     webrtc::DesktopCaptureImpl* mDesktopImpl = nullptr;
   };
 
-  virtual CreateVideoCaptureResult CreateVideoCapture(
-      int32_t aCaptureId, const char* aUniqueId,
+  CreateVideoCaptureResult CreateVideoCapture(
+      int32_t aModuleId, const char* aUniqueId,
       mozilla::camera::CaptureDeviceType aType);
 
   using CameraBackendInitPromise = MozPromise<nsresult, nsresult, false>;
@@ -70,10 +72,8 @@ class VideoCaptureFactory : webrtc::VideoCaptureOptions::Callback {
    */
   void Invalidate();
 
- protected:
-  ~VideoCaptureFactory() = default;
-
  private:
+  ~VideoCaptureFactory() = default;
   // aka OnCameraBackendInitialized
   // this method override has to follow webrtc::VideoCaptureOptions::Callback
   void OnInitialized(webrtc::VideoCaptureOptions::Status status) override;

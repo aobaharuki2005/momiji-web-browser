@@ -9,7 +9,7 @@ this.tresize = class extends ExtensionAPI {
     let { baseURI } = this.extension;
 
     this.listener = function listener({ target, data }) {
-      let win = target.documentGlobal;
+      let win = target.ownerGlobal;
       Services.scriptloader.loadSubScript(
         baseURI.resolve("/content/Profiler.js"),
         win

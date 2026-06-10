@@ -4,8 +4,8 @@
 
 // Original author: nohlmeier@mozilla.com
 
-#ifndef rtplogger_h_
-#define rtplogger_h_
+#ifndef rtplogger_h__
+#define rtplogger_h__
 
 #include "transport/mediapacket.h"
 

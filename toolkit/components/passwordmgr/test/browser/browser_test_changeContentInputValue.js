@@ -70,15 +70,15 @@ async function testStringChange({
     },
     async function (browser) {
       info(`Opened tab with url: ${url}, waiting for focus`);
-      await SimpleTest.promiseFocus(browser.documentGlobal);
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
       info("Waiting for form-processed message");
       await formProcessedPromise;
       await checkForm(browser, originalValue);
       info("form checked");
 
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [{ USERNAME_INPUT_SELECTOR, expectedKeypresses }],
+        { USERNAME_INPUT_SELECTOR, expectedKeypresses },
         async function ({ USERNAME_INPUT_SELECTOR, expectedKeypresses }) {
           let input = content.document.querySelector(USERNAME_INPUT_SELECTOR);
 
@@ -102,19 +102,18 @@ async function testStringChange({
         }
       );
 
-      await changeContentInputValue(
-        browser,
-        USERNAME_INPUT_SELECTOR,
-        inputEvent
-      );
+      changeContentInputValue(browser, USERNAME_INPUT_SELECTOR, inputEvent);
     }
   );
 }
 
 async function checkForm(browser, expectedUsername) {
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     browser,
-    [{ expectedUsername, USERNAME_INPUT_SELECTOR }],
+    {
+      expectedUsername,
+      USERNAME_INPUT_SELECTOR,
+    },
     async function contentCheckForm({
       expectedUsername,
       USERNAME_INPUT_SELECTOR,

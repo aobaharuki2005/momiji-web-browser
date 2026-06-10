@@ -32,18 +32,8 @@
 
 #include <stdlib.h>
 
-
-struct ffi_aix_trampoline_struct {
-    void * code_pointer;	/* Pointer to ffi_closure_ASM */
-    void * toc;			/* TOC */
-    void * static_chain;	/* Pointer to closure */
-};
-
 extern void ffi_closure_ASM (void);
-
-#if defined (FFI_GO_CLOSURES)
 extern void ffi_go_closure_ASM (void);
-#endif
 
 enum {
   /* The assembly depends on these exact flags.  
@@ -630,50 +620,38 @@ darwin_adjust_aggregate_sizes (ffi_type *s)
 }
 
 /* Adjust the size of S to be correct for AIX.
-   Word-align double unless it is the first member of a structure recursively.
-   Return non-zero if we found a recursive first member aggregate of interest. */
+   Word-align double unless it is the first member of a structure.  */
 
-static int
-aix_adjust_aggregate_sizes (ffi_type *s, int outer_most_type_or_first_member)
+static void
+aix_adjust_aggregate_sizes (ffi_type *s)
 {
-  int i, nested_first_member=0, final_align, rc=0;
+  int i;
 
   if (s->type != FFI_TYPE_STRUCT)
-    return 0;
+    return;
 
   s->size = 0;
   for (i = 0; s->elements[i] != NULL; i++)
     {
-      ffi_type p;
+      ffi_type *p;
       int align;
-
-      /* nested aggregates layout differently on AIX, so take a copy of the type */
-      p = *(s->elements[i]);
-      if (i == 0)
-        nested_first_member = aix_adjust_aggregate_sizes(&p, outer_most_type_or_first_member);
-      else
-        aix_adjust_aggregate_sizes(&p, 0);
-      align = p.alignment;
-      if (i != 0 && p.type == FFI_TYPE_DOUBLE)
-        align = 4;
-      s->size = FFI_ALIGN(s->size, align) + p.size;
+      
+      p = s->elements[i];
+      aix_adjust_aggregate_sizes (p);
+      align = p->alignment;
+      if (i != 0 && p->type == FFI_TYPE_DOUBLE)
+	align = 4;
+      s->size = FFI_ALIGN(s->size, align) + p->size;
     }
-
-  final_align=s->alignment;
-  if ((s->elements[0]->type == FFI_TYPE_UINT64
-          || s->elements[0]->type == FFI_TYPE_SINT64
-          || s->elements[0]->type == FFI_TYPE_DOUBLE
-          || s->elements[0]->alignment == 8 || nested_first_member)) {
-      final_align = s->alignment > 8 ? s->alignment : 8;
-      rc=1;
-      /* still use the adjusted alignment to calculate tail padding, but don't adjust the types alignment if
-         we aren't in the recursive first position */
-      if (outer_most_type_or_first_member)
-        s->alignment=final_align;
-  }
-
-  s->size = FFI_ALIGN(s->size, final_align);
-  return rc;
+  
+  s->size = FFI_ALIGN(s->size, s->alignment);
+  
+  if (s->elements[0]->type == FFI_TYPE_UINT64
+      || s->elements[0]->type == FFI_TYPE_SINT64
+      || s->elements[0]->type == FFI_TYPE_DOUBLE
+      || s->elements[0]->alignment == 8)
+    s->alignment = s->alignment > 8 ? s->alignment : 8;
+  /* Do not add additional tail padding.  */
 }
 
 /* Perform machine dependent cif processing.  */
@@ -701,9 +679,9 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 
   if (cif->abi == FFI_AIX)
     {
-      aix_adjust_aggregate_sizes (cif->rtype, 1);
+      aix_adjust_aggregate_sizes (cif->rtype);
       for (i = 0; i < cif->nargs; i++)
-	aix_adjust_aggregate_sizes (cif->arg_types[i], 1);
+	aix_adjust_aggregate_sizes (cif->arg_types[i]);
     }
 
   /* Space for the frame pointer, callee's LR, CR, etc, and for
@@ -931,10 +909,8 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 extern void ffi_call_AIX(extended_cif *, long, unsigned, unsigned *,
 			 void (*fn)(void), void (*fn2)(void));
 
-#if defined (FFI_GO_CLOSURES)
 extern void ffi_call_go_AIX(extended_cif *, long, unsigned, unsigned *,
 			    void (*fn)(void), void (*fn2)(void), void *closure);
-#endif
 
 extern void ffi_call_DARWIN(extended_cif *, long, unsigned, unsigned *,
 			    void (*fn)(void), void (*fn2)(void), ffi_type*);
@@ -974,7 +950,6 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
     }
 }
 
-#if defined (FFI_GO_CLOSURES)
 void
 ffi_call_go (ffi_cif *cif, void (*fn) (void), void *rvalue, void **avalue,
 	     void *closure)
@@ -1006,7 +981,6 @@ ffi_call_go (ffi_cif *cif, void (*fn) (void), void *rvalue, void **avalue,
       break;
     }
 }
-#endif
 
 static void flush_icache(char *);
 static void flush_range(char *, int);
@@ -1136,7 +1110,6 @@ ffi_prep_closure_loc (ffi_closure* closure,
   return FFI_OK;
 }
 
-#if defined (FFI_GO_CLOSURES)
 ffi_status
 ffi_prep_go_closure (ffi_go_closure* closure,
 		     ffi_cif* cif,
@@ -1160,7 +1133,6 @@ ffi_prep_go_closure (ffi_go_closure* closure,
     }
   return FFI_OK;
 }
-#endif
 
 static void
 flush_icache(char *addr)
@@ -1196,11 +1168,9 @@ ffi_type *
 ffi_closure_helper_DARWIN (ffi_closure *, void *,
 			   unsigned long *, ffi_dblfl *);
 
-#if defined (FFI_GO_CLOSURES)
 ffi_type *
 ffi_go_closure_helper_DARWIN (ffi_go_closure*, void *,
 			      unsigned long *, ffi_dblfl *);
-#endif
 
 /* Basically the trampoline invokes ffi_closure_ASM, and on
    entry, r11 holds the address of the closure.
@@ -1449,40 +1419,7 @@ ffi_closure_helper_common (ffi_cif* cif,
   (fun) (cif, rvalue, avalue, user_data);
 
   /* Tell ffi_closure_ASM to perform return type promotions.  */
-  switch (cif->rtype->type)
-    {
-    case FFI_TYPE_VOID:
-    case FFI_TYPE_STRUCT:
-      return PPC_LD_NONE;
-    case FFI_TYPE_FLOAT:
-      return PPC_LD_F32;
-    case FFI_TYPE_DOUBLE:
-      return PPC_LD_F64;
-#if FFI_TYPE_DOUBLE != FFI_TYPE_LONGDOUBLE
-    case FFI_TYPE_LONGDOUBLE:
-      return PPC_LD_F128;
-#endif
-    case FFI_TYPE_UINT8:
-      return PPC_LD_U8;
-    case FFI_TYPE_SINT8:
-      return PPC_LD_S8;
-    case FFI_TYPE_UINT16:
-      return PPC_LD_U16;
-    case FFI_TYPE_SINT16:
-      return PPC_LD_S16;
-    case FFI_TYPE_UINT32:
-      return PPC_LD_U32;
-    case FFI_TYPE_INT:
-    case FFI_TYPE_SINT32:
-      return PPC_LD_S32;
-    case FFI_TYPE_POINTER:
-      return PPC_LD_PTR;
-    case FFI_TYPE_UINT64:
-    case FFI_TYPE_SINT64:
-      return PPC_LD_I64;
-    default:
-      abort();
-    }
+  return cif->rtype;
 }
 
 ffi_type *
@@ -1493,7 +1430,6 @@ ffi_closure_helper_DARWIN (ffi_closure *closure, void *rvalue,
 				    closure->user_data, rvalue, pgr, pfr);
 }
 
-#if defined (FFI_GO_CLOSURES)
 ffi_type *
 ffi_go_closure_helper_DARWIN (ffi_go_closure *closure, void *rvalue,
 			      unsigned long *pgr, ffi_dblfl *pfr)
@@ -1501,4 +1437,4 @@ ffi_go_closure_helper_DARWIN (ffi_go_closure *closure, void *rvalue,
   return ffi_closure_helper_common (closure->cif, closure->fun,
 				    closure, rvalue, pgr, pfr);
 }
-#endif
+

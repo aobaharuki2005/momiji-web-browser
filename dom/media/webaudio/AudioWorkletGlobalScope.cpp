@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,7 +14,6 @@
 #include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "jsapi.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/AudioParamDescriptorBinding.h"
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
 #include "mozilla/dom/AudioWorkletProcessor.h"
@@ -84,15 +85,6 @@ void AudioWorkletGlobalScope::RegisterProcessor(
         "registered.");
     return;
   }
-
-  if (!mNameToProcessorMap.InsertOrUpdate(aName, RefPtr{&aProcessorCtor},
-                                          fallible)) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
-
-  auto removeOnError =
-      MakeScopeExit([&] { mNameToProcessorMap.Remove(aName); });
 
   // We know processorConstructor is callable, so not a WindowProxy or Location.
   JS::Rooted<JSObject*> constructorUnwrapped(
@@ -177,8 +169,12 @@ void AudioWorkletGlobalScope::RegisterProcessor(
   /**
    * 8. Append the key-value pair name → processorCtor to node name to processor
    * constructor map of the associated AudioWorkletGlobalScope.
-   * (Already done earlier to prevent reentrancy issues.)
    */
+  if (!mNameToProcessorMap.InsertOrUpdate(aName, RefPtr{&aProcessorCtor},
+                                          fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
 
   /**
    * 9. Queue a task to the control thread to add the key-value pair
@@ -196,8 +192,6 @@ void AudioWorkletGlobalScope::RegisterProcessor(
         }
         destinationNode->Context()->SetParamMapForWorkletName(name, &map);
       }));
-
-  removeOnError.release();
 }
 
 uint64_t AudioWorkletGlobalScope::CurrentFrame() const {
@@ -311,7 +305,8 @@ bool AudioWorkletGlobalScope::ConstructProcessor(
   cloneDataPolicy.allowSharedMemoryObjects();
 
   JS::Rooted<JS::Value> deserializedOptions(aCx);
-  aSerializedOptions->Read(aCx, &deserializedOptions, cloneDataPolicy, rv);
+  aSerializedOptions->Read(this, aCx, &deserializedOptions, cloneDataPolicy,
+                           rv);
   if (rv.MaybeSetPendingException(aCx)) {
     return false;
   }

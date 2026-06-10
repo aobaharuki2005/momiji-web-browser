@@ -102,7 +102,7 @@ var GeoProp = {
  * @return {object}
  */
 function getOffsetParent(node) {
-  const win = node.documentGlobal;
+  const win = node.ownerGlobal;
 
   let offsetParent = node.offsetParent;
   if (offsetParent && getComputedStyle(offsetParent).position === "static") {
@@ -745,7 +745,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       }
       return (
         -1 *
-        this.currentNode.documentGlobal[
+        this.currentNode.ownerGlobal[
           "scroll" + GeoProp.axis(side).toUpperCase()
         ]
       );

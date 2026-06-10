@@ -6,22 +6,18 @@
 
 var gProvider;
 var gManagerWindow;
+var gCategoryUtilities;
 
 function getName(item) {
   return item.addonNameEl.textContent;
 }
 
-async function getUpdateButton(card) {
-  let button = card.querySelector('[action="install-update"]');
+async function getUpdateButton(item) {
+  let button = item.querySelector('[action="install-update"]');
   let panel = button.closest("panel-list");
   let shown = BrowserTestUtils.waitForEvent(panel, "shown");
-  EventUtils.synthesizeMouseAtCenter(
-    AboutAddonsTestUtils.getAddonCardMoreOptionsButton(card.documentGlobal, {
-      addonCard: card,
-    }),
-    {},
-    card.documentGlobal
-  );
+  let moreOptionsButton = item.querySelector('[action="more-options"]');
+  EventUtils.synthesizeMouseAtCenter(moreOptionsButton, {}, item.ownerGlobal);
   await shown;
   return button;
 }
@@ -48,10 +44,8 @@ add_task(async function test_updateid() {
   ]);
 
   gManagerWindow = await open_manager("addons://list/extension");
-
-  let viewLoaded = wait_for_view_load(gManagerWindow);
-  AboutAddonsTestUtils.clickCategoryButton(gManagerWindow, "extension");
-  await viewLoaded;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  await gCategoryUtilities.openType("extension");
 
   gProvider.createInstalls([
     {
@@ -66,13 +60,13 @@ add_task(async function test_updateid() {
   newAddon.pendingOperations = AddonManager.PENDING_INSTALL;
   gProvider.installs[0]._addonToInstall = newAddon;
 
-  var card = getAddonCard(gManagerWindow, "addon1@tests.mozilla.org");
+  var item = getAddonCard(gManagerWindow, "addon1@tests.mozilla.org");
   is(
-    getName(card),
+    getName(item),
     "manually updating addon",
     "Should show the old name in the list"
   );
-  const { name, version } = await get_tooltip_info(card, gManagerWindow);
+  const { name, version } = await get_tooltip_info(item, gManagerWindow);
   is(
     name,
     "manually updating addon",
@@ -80,11 +74,11 @@ add_task(async function test_updateid() {
   );
   is(version, "1.0", "Should still show the old version in the tooltip");
 
-  var update = await getUpdateButton(card);
+  var update = await getUpdateButton(item);
   is_element_visible(update, "Update button should be visible");
 
-  card = getAddonCard(gManagerWindow, "addon2@tests.mozilla.org");
-  is(card, null, "Should not show the new version in the list");
+  item = getAddonCard(gManagerWindow, "addon2@tests.mozilla.org");
+  is(item, null, "Should not show the new version in the list");
 
   await close_manager(gManagerWindow);
   gManagerWindow = null;

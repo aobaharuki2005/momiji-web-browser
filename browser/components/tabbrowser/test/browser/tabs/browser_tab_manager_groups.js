@@ -44,7 +44,6 @@ function forgetSavedTabGroups() {
  * @returns {Promise<PanelView>}
  */
 async function openTabsMenu(win = window) {
-  await BrowserTestUtils.ensureWindowActivated(win);
   let viewShown = BrowserTestUtils.waitForEvent(
     win.document.getElementById("allTabsMenu-allTabsView"),
     "ViewShown"
@@ -302,7 +301,7 @@ add_task(async function test_groupsViewShowMore() {
     !subView.querySelector("#allTabsMenu-groupsViewShowMore"),
     "Show more button should not be shown in sub view"
   );
-  EventUtils.synthesizeMouseAtCenter(subViewItems[1], {}, window);
+  await EventUtils.synthesizeMouseAtCenter(subViewItems[1], {}, window);
   ok(
     groups.at(-1).tabs[0].selected,
     "last created group's tab is selected after clicking second item in groups sub view"

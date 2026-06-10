@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ClearKeyDecryptionManager_h_
-#define ClearKeyDecryptionManager_h_
+#ifndef __ClearKeyDecryptionManager_h__
+#define __ClearKeyDecryptionManager_h__
 
 // This include is required in order for content_decryption_module to work
 // on Unix systems.
@@ -66,11 +66,11 @@ class CryptoMetaData {
     return mClearBytes.size();
   }
 
-  cdm::EncryptionScheme mEncryptionScheme = cdm::EncryptionScheme::kUnencrypted;
+  cdm::EncryptionScheme mEncryptionScheme;
   std::vector<uint8_t> mKeyId;
   std::vector<uint8_t> mIV;
-  uint32_t mCryptByteBlock = 0;
-  uint32_t mSkipByteBlock = 0;
+  uint32_t mCryptByteBlock;
+  uint32_t mSkipByteBlock;
   std::vector<uint32_t> mClearBytes;
   std::vector<uint32_t> mCipherBytes;
 };
@@ -107,4 +107,4 @@ class ClearKeyDecryptionManager : public RefCounted {
   std::map<KeyId, ClearKeyDecryptor*> mDecryptors;
 };
 
-#endif  // ClearKeyDecryptionManager_h_
+#endif  // __ClearKeyDecryptionManager_h__

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -54,7 +55,7 @@ class WebGLSync final : public WebGLContextBoundObject, public SupportsWeakPtr {
   template <class F>
   void OnCompleteTaskAdd(F&& fn) {
     MOZ_RELEASE_ASSERT(mOnCompleteTasks);
-    auto task = std::make_unique<webgl::FnTask<F>>(std::forward<F>(fn));
+    auto task = std::make_unique<webgl::FnTask<F>>(std::move(fn));
     mOnCompleteTasks->push_back(std::move(task));
   }
 

@@ -7,8 +7,6 @@ package mozilla.components.feature.tabs.toolbar
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
@@ -38,7 +36,6 @@ open class TabCounterToolbarButton(
     private val store: BrowserStore,
     private val menu: TabCounterMenu? = null,
     private val showMaskInPrivateMode: Boolean = true,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
     override val visible: () -> Boolean = { true },
     override val weight: () -> Int = { -1 },
 ) : Toolbar.Action {
@@ -46,7 +43,7 @@ open class TabCounterToolbarButton(
     private var reference = WeakReference<TabCounterView>(null)
 
     override fun createView(parent: ViewGroup): View {
-        store.flowScoped(owner = lifecycleOwner, dispatcher = mainDispatcher) { flow ->
+        store.flowScoped(lifecycleOwner) { flow ->
             flow.map { state -> getTabCount(state) }
                 .distinctUntilChanged()
                 .collect { tabs ->

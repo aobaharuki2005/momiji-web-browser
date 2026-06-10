@@ -13,7 +13,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   WindowsGPOParser: "resource://gre/modules/policies/WindowsGPOParser.sys.mjs",
   macOSPoliciesParser:
     "resource://gre/modules/policies/macOSPoliciesParser.sys.mjs",
-  SitePolicyUtils: "resource://gre/modules/SitePolicyUtils.sys.mjs",
 });
 
 // This is the file that will be searched for in the
@@ -56,14 +55,6 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
 });
 
 const isXpcshell = Services.env.exists("XPCSHELL_TEST_PROFILE_DIR");
-
-// On Nightly under a test harness, ignore real system/user policies so a
-// developer's local policies.json or registry entries don't leak into tests.
-// Restricted to Nightly so release builds never expose a way to bypass
-// enterprise policies via a test env var.
-function shouldIgnoreLocalPolicies() {
-  return AppConstants.NIGHTLY_BUILD && (Cu.isInAutomation || isXpcshell);
-}
 
 // We're only testing for empty objects, not
 // empty strings or empty arrays.
@@ -144,12 +135,6 @@ EnterprisePoliciesManager.prototype = {
     }
 
     this.status = Ci.nsIEnterprisePolicies.ACTIVE;
-
-    // Make Web Serial support be opt-in for enterprise policies.
-    Services.prefs
-      .getDefaultBranch("")
-      .setBoolPref("dom.webserial.enabled", false);
-
     this._parsedPolicies = {};
     this._activatePolicies(provider.policies);
 
@@ -278,11 +263,9 @@ EnterprisePoliciesManager.prototype = {
 
   async _restart() {
     DisallowedFeatures = {};
-    SitePolicies = [];
 
     Services.ppmm.sharedData.delete("EnterprisePolicies:Status");
     Services.ppmm.sharedData.delete("EnterprisePolicies:DisallowedFeatures");
-    Services.ppmm.sharedData.delete("EnterprisePolicies:SitePolicies");
 
     this._status = Ci.nsIEnterprisePolicies.UNINITIALIZED;
     this._parsedPolicies = undefined;
@@ -362,18 +345,6 @@ EnterprisePoliciesManager.prototype = {
     }
   },
 
-  updateSitePolicies(policies) {
-    SitePolicies = policies;
-
-    let clonable = policies.map(policy => ({
-      match: policy.match.patterns.map(p => p.pattern),
-      exceptions: policy.exceptions.patterns.map(p => p.pattern),
-      features: policy.features,
-    }));
-
-    Services.ppmm.sharedData.set("EnterprisePolicies:SitePolicies", clonable);
-  },
-
   // ------------------------------
   // public nsIEnterprisePolicies members
   // ------------------------------
@@ -391,17 +362,8 @@ EnterprisePoliciesManager.prototype = {
     return this._status;
   },
 
-  isAllowed(feature) {
+  isAllowed: function BG_sanitize(feature) {
     return !(feature in DisallowedFeatures);
-  },
-
-  isAllowedForURI(feature, uri) {
-    return lazy.SitePolicyUtils.isAllowedForURI(
-      this,
-      SitePolicies,
-      feature,
-      uri
-    );
   },
 
   getActivePolicies() {
@@ -440,34 +402,15 @@ EnterprisePoliciesManager.prototype = {
   },
 
   getExtensionSettings(extensionID) {
-    if (!ExtensionSettings) {
-      return null;
-    }
-    if (extensionID in ExtensionSettings) {
-      const settings = ExtensionSettings[extensionID];
-      if (
-        settings.installation_mode === "force_installed" &&
-        !("updates_disabled" in settings)
-      ) {
-        return { ...settings, updates_disabled: false };
+    let settings = null;
+    if (ExtensionSettings) {
+      if (extensionID in ExtensionSettings) {
+        settings = ExtensionSettings[extensionID];
+      } else if ("*" in ExtensionSettings) {
+        settings = ExtensionSettings["*"];
       }
-      return settings;
     }
-    if ("*" in ExtensionSettings) {
-      return ExtensionSettings["*"];
-    }
-    return null;
-  },
-
-  isAddonRequiredByPolicy(addonID) {
-    const policySettings = this.getExtensionSettings(addonID);
-    const legacyLockedSettings =
-      this.getActivePolicies()?.Extensions?.Locked ?? [];
-    return (
-      ["force_installed", "normal_installed"].includes(
-        policySettings?.installation_mode
-      ) || legacyLockedSettings.includes(addonID)
-    );
+    return settings;
   },
 
   mayInstallAddon(addon) {
@@ -551,7 +494,6 @@ EnterprisePoliciesManager.prototype = {
 };
 
 let DisallowedFeatures = {};
-let SitePolicies = [];
 let SupportMenu = null;
 let ExtensionPolicies = null;
 let ExtensionSettings = null;
@@ -583,10 +525,8 @@ class JSONPoliciesProvider {
     return this._failed;
   }
 
-  _getLocalConfigurationFile() {
-    if (shouldIgnoreLocalPolicies()) {
-      return null;
-    }
+  _getConfigurationFile() {
+    let configFile = null;
 
     if (AppConstants.platform == "linux" && AppConstants.MOZ_SYSTEM_POLICIES) {
       let systemConfigFile = Services.dirsvc.get("SysConfD", Ci.nsIFile);
@@ -598,7 +538,6 @@ class JSONPoliciesProvider {
     }
 
     try {
-      let configFile;
       let perUserPath = Services.prefs.getBoolPref(PREF_PER_USER_DIR, false);
       if (perUserPath) {
         configFile = Services.dirsvc.get("XREUserRunTimeDir", Ci.nsIFile);
@@ -606,16 +545,10 @@ class JSONPoliciesProvider {
         configFile = Services.dirsvc.get("XREAppDist", Ci.nsIFile);
       }
       configFile.append(POLICIES_FILENAME);
-      return configFile;
     } catch (ex) {
       // Getting the correct directory will fail in xpcshell tests. This should
       // be handled the same way as if the configFile simply does not exist.
-      return null;
     }
-  }
-
-  _getConfigurationFile() {
-    let configFile = this._getLocalConfigurationFile();
 
     let alternatePath = Services.prefs.getStringPref(PREF_ALTERNATE_PATH, "");
 
@@ -666,7 +599,6 @@ class JSONPoliciesProvider {
 
         if (!this._policies) {
           lazy.log.error("Policies file doesn't contain a 'policies' object");
-          this._policies = null;
           this._failed = true;
         }
       }
@@ -720,12 +652,9 @@ class WindowsGPOPoliciesProvider {
     try {
       let regLocation = "SOFTWARE\\Policies";
       if (Cu.isInAutomation || isXpcshell) {
-        let altLocation = Services.prefs.getStringPref(PREF_ALTERNATE_GPO, "");
-        if (altLocation) {
-          regLocation = altLocation;
-        } else if (shouldIgnoreLocalPolicies()) {
-          return;
-        }
+        try {
+          regLocation = Services.prefs.getStringPref(PREF_ALTERNATE_GPO);
+        } catch (e) {}
       }
       wrk.open(root, regLocation, wrk.ACCESS_READ);
       if (wrk.hasChild("Mozilla\\" + Services.appinfo.name)) {

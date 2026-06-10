@@ -45,7 +45,7 @@ add_task(async function test_emptybar() {
     "popupshown"
   );
 
-  EventUtils.synthesizeMouseAtCenter(
+  await EventUtils.synthesizeMouseAtCenter(
     searchbar,
     { type: "contextmenu", button: 2 },
     win
@@ -86,7 +86,7 @@ add_task(async function test_text_in_bar() {
     "popupshown"
   );
 
-  EventUtils.synthesizeMouseAtCenter(
+  await EventUtils.synthesizeMouseAtCenter(
     searchbar,
     { type: "contextmenu", button: 2 },
     win
@@ -129,7 +129,7 @@ add_task(async function test_unfocused_emptybar() {
   );
 
   searchbar.focus();
-  EventUtils.synthesizeMouseAtCenter(
+  await EventUtils.synthesizeMouseAtCenter(
     searchbar,
     { type: "contextmenu", button: 2 },
     win
@@ -171,7 +171,7 @@ add_task(async function test_text_in_unfocused_bar() {
   );
 
   searchbar.focus();
-  EventUtils.synthesizeMouseAtCenter(
+  await EventUtils.synthesizeMouseAtCenter(
     searchbar,
     { type: "contextmenu", button: 2 },
     win
@@ -220,7 +220,7 @@ add_task(async function test_paste_and_go() {
     contextMenu,
     "popupshown"
   );
-  EventUtils.synthesizeMouseAtCenter(
+  await EventUtils.synthesizeMouseAtCenter(
     searchbar,
     { type: "contextmenu", button: 2 },
     win

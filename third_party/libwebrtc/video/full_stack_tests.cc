@@ -21,7 +21,6 @@
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/vp9_profile.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
-#include "test/create_test_field_trials.h"
 #include "test/gtest.h"
 #include "test/testsupport/file_utils.h"
 #include "video/config/video_encoder_config.h"
@@ -624,8 +623,9 @@ TEST(GenericDescriptorTest,
 }
 
 TEST(FullStackTest, Foreman_Cif_Delay_50_0_Plr_5_H264_Sps_Pps_Idr) {
-  VideoQualityTest fixture({.field_trials_ptr = CreateTestFieldTrialsPtr(
-                                "WebRTC-SpsPpsIdrIsH264Keyframe/Enabled/")});
+  VideoQualityTest fixture(
+      {.field_trials = "WebRTC-SpsPpsIdrIsH264Keyframe/Enabled/"});
+
   ParamsWithLogging foreman_cif;
   foreman_cif.call.send_side_bwe = true;
   foreman_cif.video[0] = {.enabled = true,
@@ -1574,8 +1574,7 @@ TEST(FullStackTest, Screenshare_Slides_Vp9_3sl_High_Fps) {
 
 TEST(FullStackTest, Vp9ksvc_3sl_High) {
   VideoQualityTest fixture(
-      {.field_trials_ptr = CreateTestFieldTrialsPtr(
-           "WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/")});
+      {.field_trials = "WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/"});
   ParamsWithLogging simulcast;
   simulcast.call.send_side_bwe = true;
   simulcast.video[0] = SvcVp9Video();
@@ -1595,8 +1594,7 @@ TEST(FullStackTest, Vp9ksvc_3sl_High) {
 
 TEST(FullStackTest, Vp9ksvc_3sl_Low) {
   VideoQualityTest fixture(
-      {.field_trials_ptr = CreateTestFieldTrialsPtr(
-           "WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/")});
+      {.field_trials = "WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/"});
   ParamsWithLogging simulcast;
   simulcast.call.send_side_bwe = true;
   simulcast.video[0] = SvcVp9Video();
@@ -1616,8 +1614,7 @@ TEST(FullStackTest, Vp9ksvc_3sl_Low) {
 
 TEST(FullStackTest, Vp9ksvc_3sl_Low_Bw_Limited) {
   VideoQualityTest fixture(
-      {.field_trials_ptr = CreateTestFieldTrialsPtr(
-           "WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/")});
+      {.field_trials = "WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/"});
   ParamsWithLogging simulcast;
   simulcast.config->link_capacity = DataRate::KilobitsPerSec(500);
   simulcast.call.send_side_bwe = true;
@@ -1638,8 +1635,7 @@ TEST(FullStackTest, Vp9ksvc_3sl_Low_Bw_Limited) {
 
 TEST(FullStackTest, Vp9ksvc_3sl_Medium_Network_Restricted) {
   VideoQualityTest fixture(
-      {.field_trials_ptr = CreateTestFieldTrialsPtr(
-           "WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/")});
+      {.field_trials = "WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/"});
   ParamsWithLogging simulcast;
   simulcast.call.send_side_bwe = true;
   simulcast.video[0] = SvcVp9Video();
@@ -1662,8 +1658,7 @@ TEST(FullStackTest, Vp9ksvc_3sl_Medium_Network_Restricted) {
 // TODO(webrtc:9722): Remove when experiment is cleaned up.
 TEST(FullStackTest, Vp9ksvc_3sl_Medium_Network_Restricted_Trusted_Rate) {
   VideoQualityTest fixture(
-      {.field_trials_ptr = CreateTestFieldTrialsPtr(
-           "WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/")});
+      {.field_trials = "WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/"});
   ParamsWithLogging simulcast;
   simulcast.call.send_side_bwe = true;
   simulcast.video[0] = SvcVp9Video();
@@ -1697,8 +1692,8 @@ TEST(FullStackTest, Vp9ksvc_3sl_Medium_Network_Restricted_Trusted_Rate) {
 
 TEST(FullStackTest, MAYBE_Simulcast_HD_High) {
   VideoQualityTest fixture(
-      {.field_trials_ptr = CreateTestFieldTrialsPtr(
-           "WebRTC-ForceSimulatedOveruseIntervalMs/1000-50000-300/")});
+      {.field_trials =
+           "WebRTC-ForceSimulatedOveruseIntervalMs/1000-50000-300/"});
   ParamsWithLogging simulcast;
   simulcast.call.send_side_bwe = true;
   simulcast.video[0] = {.enabled = true,

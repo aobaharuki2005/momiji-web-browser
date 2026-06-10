@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _mozilla_ProcInfo_h
-#define _mozilla_ProcInfo_h
+#ifndef __mozilla_ProcInfo_h
+#define __mozilla_ProcInfo_h
 
 #include <base/process.h>
 #include <stdint.h>
@@ -81,6 +82,10 @@ using UtilityActorName = mozilla::dom::WebIDLUtilityActorName;
 
 // String that will be used e.g. to annotate crash reports
 nsCString GetUtilityActorName(const UtilityActorName aActorName);
+
+#ifdef XP_WIN
+int GetCpuFrequencyMHz();
+#endif
 
 /* Get the CPU frequency to use to convert cycle time values to actual time.
  * @returns the TSC (Time Stamp Counter) frequency in MHz, or 0 if converting
@@ -281,5 +286,4 @@ nsresult CopySysProcInfoToDOM(const ProcInfo& source, T* dest) {
 }
 
 }  // namespace mozilla
-
-#endif  // _mozilla_ProcInfo_h
+#endif  // ProcInfo_h

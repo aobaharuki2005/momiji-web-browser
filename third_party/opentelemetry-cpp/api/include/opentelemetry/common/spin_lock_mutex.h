@@ -56,8 +56,6 @@ public:
   ~SpinLockMutex() noexcept                       = default;
   SpinLockMutex(const SpinLockMutex &)            = delete;
   SpinLockMutex &operator=(const SpinLockMutex &) = delete;
-  SpinLockMutex(SpinLockMutex &&)                 = delete;
-  SpinLockMutex &operator=(SpinLockMutex &&)      = delete;
 
   static inline void fast_yield() noexcept
   {

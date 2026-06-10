@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -320,17 +322,67 @@ void ActiveLayerTracker::NotifyNeedsRepaint(nsIFrame* aFrame) {
   }
 }
 
+static bool IsMotionPathAnimated(nsDisplayListBuilder* aBuilder,
+                                 nsIFrame* aFrame) {
+  return ActiveLayerTracker::IsStyleAnimated(
+             aBuilder, aFrame, nsCSSPropertyIDSet{eCSSProperty_offset_path}) ||
+         (!aFrame->StyleDisplay()->mOffsetPath.IsNone() &&
+          ActiveLayerTracker::IsStyleAnimated(
+              aBuilder, aFrame,
+              nsCSSPropertyIDSet{
+                  eCSSProperty_offset_distance, eCSSProperty_offset_rotate,
+                  eCSSProperty_offset_anchor, eCSSProperty_offset_position}));
+}
+
 /* static */
-static bool IsStyleAnimated(nsIFrame* aFrame,
-                            const nsCSSPropertyIDSet& aPropertySet) {
+bool ActiveLayerTracker::IsTransformAnimated(nsDisplayListBuilder* aBuilder,
+                                             nsIFrame* aFrame) {
+  return IsStyleAnimated(aBuilder, aFrame,
+                         nsCSSPropertyIDSet::CSSTransformProperties()) ||
+         IsMotionPathAnimated(aBuilder, aFrame);
+}
+
+/* static */
+bool ActiveLayerTracker::IsTransformMaybeAnimated(nsIFrame* aFrame) {
+  return IsStyleAnimated(nullptr, aFrame,
+                         nsCSSPropertyIDSet::CSSTransformProperties()) ||
+         IsMotionPathAnimated(nullptr, aFrame);
+}
+
+/* static */
+bool ActiveLayerTracker::IsStyleAnimated(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+    const nsCSSPropertyIDSet& aPropertySet) {
   MOZ_ASSERT(
       aPropertySet.IsSubsetOf(nsCSSPropertyIDSet::TransformLikeProperties()) ||
           aPropertySet.IsSubsetOf(nsCSSPropertyIDSet::OpacityProperties()),
       "Only subset of opacity or transform-like properties set calls this");
+
+  // For display:table content, transforms are applied to the table wrapper
+  // (primary frame) but their will-change style will be specified on the style
+  // frame and, unlike other transform properties, not inherited.
+  // As a result, for transform properties only we need to be careful to look up
+  // the will-change style on the _style_ frame.
+  const nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aFrame);
   const nsCSSPropertyIDSet transformSet =
       nsCSSPropertyIDSet::TransformLikeProperties();
+  if ((styleFrame && (styleFrame->StyleDisplay()->mWillChange.bits &
+                      StyleWillChangeBits::TRANSFORM)) &&
+      aPropertySet.Intersects(transformSet) &&
+      (!aBuilder ||
+       aBuilder->IsInWillChangeBudget(aFrame, aFrame->GetSize()))) {
+    return true;
+  }
+  if ((aFrame->StyleDisplay()->mWillChange.bits &
+       StyleWillChangeBits::OPACITY) &&
+      aPropertySet.Intersects(nsCSSPropertyIDSet::OpacityProperties()) &&
+      (!aBuilder ||
+       aBuilder->IsInWillChangeBudget(aFrame, aFrame->GetSize()))) {
+    return !StaticPrefs::gfx_will_change_ignore_opacity();
+  }
 
-  if (LayerActivity* layerActivity = GetLayerActivity(aFrame)) {
+  LayerActivity* layerActivity = GetLayerActivity(aFrame);
+  if (layerActivity) {
     LayerActivity::ActivityIndex activityIndex =
         LayerActivity::GetActivityIndexForPropertySet(aPropertySet);
     if (layerActivity->mRestyleCounts[activityIndex] >= 2) {
@@ -343,7 +395,7 @@ static bool IsStyleAnimated(nsIFrame* aFrame,
                   ->mRestyleCounts[LayerActivity::ACTIVITY_TRIGGERED_REPAINT] <
               2 ||
           (aPropertySet.Intersects(transformSet) &&
-           ActiveLayerTracker::IsScaleSubjectToAnimation(aFrame))) {
+           IsScaleSubjectToAnimation(aFrame))) {
         return true;
       }
     }
@@ -361,22 +413,7 @@ static bool IsStyleAnimated(nsIFrame* aFrame,
   // For preserve-3d, we check if there is any transform animation on its parent
   // frames in the 3d rendering context. If there is one, this function will
   // return true.
-  return IsStyleAnimated(aFrame->GetParent(), aPropertySet);
-}
-
-/* static */
-bool ActiveLayerTracker::IsTransformAnimated(nsIFrame* aFrame) {
-  auto properties = nsCSSPropertyIDSet::CSSTransformProperties();
-  properties.AddProperty(eCSSProperty_offset_path);
-  if (!aFrame->StyleDisplay()->mOffsetPath.IsNone()) {
-    properties |= nsCSSPropertyIDSet::MotionPathProperties();
-  }
-  return IsStyleAnimated(aFrame, properties);
-}
-
-/* static */
-bool ActiveLayerTracker::IsOpacityAnimated(nsIFrame* aFrame) {
-  return IsStyleAnimated(aFrame, nsCSSPropertyIDSet::OpacityProperties());
+  return IsStyleAnimated(aBuilder, aFrame->GetParent(), aPropertySet);
 }
 
 /* static */
@@ -387,6 +424,7 @@ bool ActiveLayerTracker::IsScaleSubjectToAnimation(nsIFrame* aFrame) {
       layerActivity->mRestyleCounts[LayerActivity::ACTIVITY_SCALE] >= 2) {
     return true;
   }
+
   return AnimationUtils::FrameHasAnimatedScale(aFrame);
 }
 

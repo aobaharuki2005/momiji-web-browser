@@ -91,10 +91,6 @@ const COMMON_PREFERENCES = new Map([
   // of Firefox aren't downloaded and applied, enforce its presence.
   ["app.update.disabledForTesting", true],
 
-  // Disable scroll axis lock, WebDriver should be able to scroll arbitrary
-  // directions.
-  ["apz.axis_lock.mode", 0],
-
   // Increase the APZ content response timeout in tests to 1 minute.
   // This is to accommodate the fact that test environments tends to be
   // slower than production environments (with the b2g emulator being
@@ -205,8 +201,6 @@ const COMMON_PREFERENCES = new Map([
   // Turn off Merino suggestions in the location bar so as not to trigger
   // network connections.
   ["browser.urlbar.merino.endpointURL", ""],
-  ["browser.urlbar.merino.ohttpConfigURL", ""],
-  ["browser.urlbar.merino.ohttpRelayURL", ""],
 
   // Turn off search suggestions in the location bar so as not to trigger
   // network connections.
@@ -258,9 +252,6 @@ const COMMON_PREFERENCES = new Map([
 
   // Disable location change rate limitation
   ["dom.navigation.navigationRateLimit.count", 0],
-
-  // Disable system permission checks for navigator.permissions.query
-  ["dom.permissions.testing.enabled", true],
 
   // DOM Push
   ["dom.push.connection.enabled", false],
@@ -330,9 +321,6 @@ const COMMON_PREFERENCES = new Map([
   // Disable useragent updates
   ["general.useragent.updates.enabled", false],
 
-  // Do not open system settings when geolocation is requested without OS permission
-  ["geo.prompt.open_system_prefs", false],
-
   // Disable geolocation ping(#2)
   ["geo.provider.network.url", ""],
 
@@ -345,12 +333,6 @@ const COMMON_PREFERENCES = new Map([
 
   // Disable Firefox accounts ping
   ["identity.fxaccounts.auth.uri", "https://{server}/dummy/fxa"],
-
-  // Allow scroll amount larger than one page on a single mouse wheel event.
-  ["mousewheel.allow_scrolling_more_than_one_page", true],
-
-  // Disable captive portal service
-  ["network.captive-portal-service.enabled", false],
 
   // Disable connectivity service pings
   ["network.connectivity-service.enabled", false],
@@ -451,7 +433,7 @@ export const RecommendedPreferences = {
       // single map. Hereby the extra preferences have higher priority.
       preferences = new Map([...COMMON_PREFERENCES, ...preferences]);
 
-      Services.obs.addObserver(this, "xpcom-shutdown");
+      Services.obs.addObserver(this, "quit-application");
       this.isInitialized = true;
     }
 
@@ -474,14 +456,14 @@ export const RecommendedPreferences = {
         }
 
         // Keep track all the altered preferences to restore them on
-        // xpcom-shutdown.
+        // quit-application.
         this.alteredPrefs.add(k);
       }
     }
   },
 
   observe(subject, topic) {
-    if (topic === "xpcom-shutdown") {
+    if (topic === "quit-application") {
       this.restoreAllPreferences();
     }
   },
@@ -492,7 +474,7 @@ export const RecommendedPreferences = {
   restoreAllPreferences() {
     this.restorePreferences(this.alteredPrefs);
     if (this.isInitialized) {
-      Services.obs.removeObserver(this, "xpcom-shutdown");
+      Services.obs.removeObserver(this, "quit-application");
     }
     this.isInitialized = false;
   },

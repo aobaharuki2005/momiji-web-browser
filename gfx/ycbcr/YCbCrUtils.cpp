@@ -1,10 +1,9 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "YCbCrUtils.h"
-
-#include <bit>
 
 #include "gfx2DGlue.h"
 #include "libyuv.h"
@@ -127,15 +126,15 @@ struct YUV8BitData {
     mData.mColorRange = aData.mColorRange;
     mData.mChromaSubsampling = aData.mChromaSubsampling;
 
-    auto yMemorySize = GetAlignedStride<1>(mData.mYStride, ySize.height);
-    auto cbcrMemorySize =
+    size_t yMemorySize = GetAlignedStride<1>(mData.mYStride, ySize.height);
+    size_t cbcrMemorySize =
         GetAlignedStride<1>(mData.mCbCrStride, cbcrSize.height);
-    if (yMemorySize.isNothing()) {
-      MOZ_DIAGNOSTIC_ASSERT(cbcrMemorySize.isNothing(),
+    if (yMemorySize == 0) {
+      MOZ_DIAGNOSTIC_ASSERT(cbcrMemorySize == 0,
                             "CbCr without Y makes no sense");
       return NS_ERROR_INVALID_ARG;
     }
-    mYChannel = MakeUnique<uint8_t[]>(yMemorySize.value());
+    mYChannel = MakeUnique<uint8_t[]>(yMemorySize);
     if (!mYChannel) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -149,12 +148,12 @@ struct YUV8BitData {
                           aData.mYStride / 2, ySize.width, ySize.height,
                           bitDepth);
 
-    if (cbcrMemorySize.isSome()) {
-      mCbChannel = MakeUnique<uint8_t[]>(cbcrMemorySize.value());
+    if (cbcrMemorySize) {
+      mCbChannel = MakeUnique<uint8_t[]>(cbcrMemorySize);
       if (!mCbChannel) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      mCrChannel = MakeUnique<uint8_t[]>(cbcrMemorySize.value());
+      mCrChannel = MakeUnique<uint8_t[]>(cbcrMemorySize);
       if (!mCrChannel) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -174,12 +173,9 @@ struct YUV8BitData {
     }
     if (aData.mAlpha) {
       int32_t alphaStride8bpp = (aData.mAlpha->mSize.width + 31) & ~31;
-      auto alphaSize =
+      size_t alphaSize =
           GetAlignedStride<1>(alphaStride8bpp, aData.mAlpha->mSize.height);
-      if (alphaSize.isNothing()) {
-        return NS_ERROR_INVALID_ARG;
-      }
-      mAlphaChannel = MakeUnique<uint8_t[]>(alphaSize.value());
+      mAlphaChannel = MakeUnique<uint8_t[]>(alphaSize);
       if (!mAlphaChannel) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -316,16 +312,16 @@ nsresult ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
     return result;
   }
 
-  if constexpr (std::endian::native == std::endian::big) {
-    // libyuv makes endian-correct result, which needs to be swapped to BGRX
-    if (aDestFormat != SurfaceFormat::R5G6B5_UINT16) {
-      if (!gfx::SwizzleData(aDestBuffer, aStride, gfx::SurfaceFormat::X8R8G8B8,
-                            aDestBuffer, aStride, gfx::SurfaceFormat::B8G8R8X8,
-                            aDestSize)) {
-        return NS_ERROR_UNEXPECTED;
-      }
+#if MOZ_BIG_ENDIAN()
+  // libyuv makes endian-correct result, which needs to be swapped to BGRX
+  if (aDestFormat != SurfaceFormat::R5G6B5_UINT16) {
+    if (!gfx::SwizzleData(aDestBuffer, aStride, gfx::SurfaceFormat::X8R8G8B8,
+                          aDestBuffer, aStride, gfx::SurfaceFormat::B8G8R8X8,
+                          aDestSize)) {
+      return NS_ERROR_UNEXPECTED;
     }
   }
+#endif
   return NS_OK;
 }
 
@@ -400,15 +396,15 @@ nsresult ConvertYCbCrToRGB32(const layers::PlanarYCbCrData& aData,
     }
   }
 
-  if constexpr (std::endian::native == std::endian::big) {
-    // libyuv makes endian-correct result, which needs to be reversed to BGR* or
-    // RGB*.
-    if (!gfx::SwizzleData(aDestBuffer, aStride, gfx::SurfaceFormat::X8R8G8B8,
-                          aDestBuffer, aStride, gfx::SurfaceFormat::B8G8R8X8,
-                          aData.mPictureRect.Size())) {
-      return NS_ERROR_UNEXPECTED;
-    }
+#if MOZ_BIG_ENDIAN()
+  // libyuv makes endian-correct result, which needs to be reversed to BGR* or
+  // RGB*.
+  if (!gfx::SwizzleData(aDestBuffer, aStride, gfx::SurfaceFormat::X8R8G8B8,
+                        aDestBuffer, aStride, gfx::SurfaceFormat::B8G8R8X8,
+                        aData.mPictureRect.Size())) {
+    return NS_ERROR_UNEXPECTED;
   }
+#endif
   return NS_OK;
 }
 
@@ -423,14 +419,14 @@ nsresult ConvertI420AlphaToARGB(const uint8_t* aSrcY, const uint8_t* aSrcU,
   if (NS_FAILED(result)) {
     return result;
   }
-  if constexpr (std::endian::native == std::endian::big) {
-    // libyuv makes endian-correct result, which needs to be swapped to BGRA
-    if (!gfx::SwizzleData(aDstARGB, aDstStrideARGB, gfx::SurfaceFormat::A8R8G8B8,
-                          aDstARGB, aDstStrideARGB, gfx::SurfaceFormat::B8G8R8A8,
-                          IntSize(aWidth, aHeight))) {
-      return NS_ERROR_UNEXPECTED;
-    }
+#if MOZ_BIG_ENDIAN()
+  // libyuv makes endian-correct result, which needs to be swapped to BGRA
+  if (!gfx::SwizzleData(aDstARGB, aDstStrideARGB, gfx::SurfaceFormat::A8R8G8B8,
+                        aDstARGB, aDstStrideARGB, gfx::SurfaceFormat::B8G8R8A8,
+                        IntSize(aWidth, aHeight))) {
+    return NS_ERROR_UNEXPECTED;
   }
+#endif
   return NS_OK;
 }
 

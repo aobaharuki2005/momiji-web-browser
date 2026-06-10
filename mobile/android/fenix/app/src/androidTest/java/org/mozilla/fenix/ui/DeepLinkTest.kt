@@ -4,14 +4,14 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.DeepLinkRobot
-import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
 /**
  *  Tests for verifying basic functionality of deep links
@@ -26,18 +26,17 @@ import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidCompo
  *  - fenix://settings_logins — take the user to the settings page to do with logins (not the saved logins).
  **/
 
-class DeepLinkTest {
-    @get:Rule(order = 0)
-    val fenixTestRule: FenixTestRule = FenixTestRule()
-
-    @get:Rule(order = 1)
+class DeepLinkTest : TestSetup() {
+    @get:Rule
     val composeTestRule =
-        AndroidComposeTestRuleV2(
-            HomeActivityIntentTestRule(isMenuRedesignCFREnabled = false),
+        AndroidComposeTestRule(
+            HomeActivityIntentTestRule(
+                isMenuRedesignCFREnabled = false,
+            ),
         ) { it.activity }
 
-    @get:Rule(order = 2)
-    val memoryLeaksRule = DetectMemoryLeaksRule(composeTestRule = { composeTestRule })
+    @get:Rule
+    val memoryLeaksRule = DetectMemoryLeaksRule()
 
     private val robot = DeepLinkRobot(composeTestRule)
 
@@ -77,6 +76,13 @@ class DeepLinkTest {
     }
 
     @Test
+    fun openCollections() {
+        robot.openCollections {
+            verifyCollectionsHeader()
+        }
+    }
+
+    @Test
     fun openSettings() {
         robot.openSettings {
             verifyGeneralHeading()
@@ -96,13 +102,6 @@ class DeepLinkTest {
     fun openSettingsPrivacy() {
         robot.openSettingsPrivacy {
             verifyPrivacyHeading()
-        }
-    }
-
-    @Test
-    fun openSettingsAIControls() {
-        robot.openSettingsAIControls {
-            verifyAIControlsToolbarTitle()
         }
     }
 

@@ -1,14 +1,15 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsThreadManager_h_
-#define nsThreadManager_h_
+#ifndef nsThreadManager_h__
+#define nsThreadManager_h__
 
 #include "nsIThreadManager.h"
 #include "nsThread.h"
 #include "mozilla/ShutdownPhase.h"
-#include "mozilla/StaticString.h"
 
 class nsIRunnable;
 class nsIThread;
@@ -68,13 +69,13 @@ class nsThreadManager : public nsIThreadManager {
   // the thread that was created. GetCurrentThread() will also create a thread
   // (lazily), but it doesn't allow the queue or main-thread attributes to be
   // specified.
-  RefPtr<nsThread> CreateCurrentThread(mozilla::SynchronizedEventQueue* aQueue);
+  nsThread* CreateCurrentThread(mozilla::SynchronizedEventQueue* aQueue);
 
   nsresult DispatchToBackgroundThread(
       nsIRunnable* aEvent, nsIEventTarget::DispatchFlags aDispatchFlags);
 
   already_AddRefed<mozilla::TaskQueue> CreateBackgroundTaskQueue(
-      mozilla::StaticString aName);
+      const char* aName);
 
   ~nsThreadManager();
 
@@ -152,4 +153,4 @@ class nsThreadManager : public nsIThreadManager {
    0x4c37,                                    \
    {0x8e, 0xbb, 0x67, 0x09, 0xa2, 0x2c, 0x91, 0x7c}}
 
-#endif  // nsThreadManager_h_
+#endif  // nsThreadManager_h__

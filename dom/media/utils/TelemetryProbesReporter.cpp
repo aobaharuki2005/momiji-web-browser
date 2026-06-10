@@ -12,7 +12,6 @@
 #include "mozilla/EMEUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/glean/DomMediaEmeMetrics.h"
 #include "mozilla/glean/DomMediaMetrics.h"
 #include "mozilla/glean/DomMediaPlatformsWmfMetrics.h"
@@ -322,12 +321,7 @@ void TelemetryProbesReporter::OnFirstFrameLoaded(
     }
     LOG("%s", logMessage.get());
   }
-  // This event fires on every video playback and accounts for a significant
-  // share of media telemetry volume on release. Restrict to pre-release to
-  // retain the performance signal during development without the release cost.
-  if (Telemetry::CanRecordPrereleaseData()) {
-    glean::media_playback::first_frame_loaded.Record(Some(extraData));
-  }
+  glean::media_playback::first_frame_loaded.Record(Some(extraData));
   mOwner->DispatchAsyncTestingEvent(u"mozfirstframeloadedprobe"_ns);
 }
 

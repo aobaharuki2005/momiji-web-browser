@@ -1,3 +1,5 @@
+// /* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+// /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 const PAGE =
@@ -75,7 +77,7 @@ add_task(async function test_submenu() {
     AccessibilityUtils.setEnv({
       mustHaveAccessibleRule: false,
     });
-    EventUtils.synthesizeMouseAtCenter(parentItem, { button });
+    await EventUtils.synthesizeMouseAtCenter(parentItem, { button });
     AccessibilityUtils.resetEnv();
     await closeExtensionContextMenu(childItem, { button });
     is(
@@ -127,7 +129,7 @@ add_task(async function test_disabled_item() {
     AccessibilityUtils.setEnv({
       mustBeEnabled: false,
     });
-    EventUtils.synthesizeMouseAtCenter(items[0], { button });
+    await EventUtils.synthesizeMouseAtCenter(items[0], { button });
     AccessibilityUtils.resetEnv();
     await closeContextMenu();
     await extension.awaitMessage("onHidden");

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -245,8 +247,7 @@ class LiveSavedFrameCache {
    public:
     // If iter's frame is of a type that can be cached, construct a FramePtr
     // for its frame. Otherwise, return Nothing.
-    static inline mozilla::Maybe<FramePtr> create(JSContext* cx,
-                                                  const FrameIter& iter);
+    static inline mozilla::Maybe<FramePtr> create(const FrameIter& iter);
 
     inline bool hasCachedSavedFrame() const;
     inline void setHasCachedSavedFrame();
@@ -299,6 +300,9 @@ class LiveSavedFrameCache {
   using EntryVector = Vector<Entry, 0, SystemAllocPolicy>;
   EntryVector* frames;
 
+  LiveSavedFrameCache(const LiveSavedFrameCache&) = delete;
+  LiveSavedFrameCache& operator=(const LiveSavedFrameCache&) = delete;
+
  public:
   explicit LiveSavedFrameCache() : frames(nullptr) {}
 
@@ -313,9 +317,6 @@ class LiveSavedFrameCache {
       frames = nullptr;
     }
   }
-
-  LiveSavedFrameCache(const LiveSavedFrameCache&) = delete;
-  LiveSavedFrameCache& operator=(const LiveSavedFrameCache&) = delete;
 
   bool initialized() const { return !!frames; }
   bool init(JSContext* cx) {
@@ -373,7 +374,7 @@ static_assert(
     "should consider figuring out a way to make js::Activation have a "
     "LiveSavedFrameCache* instead of a Rooted<LiveSavedFrameCache>.");
 
-class MOZ_STACK_CLASS Activation {
+class Activation {
  protected:
   JSContext* cx_;
   JS::Compartment* compartment_;
@@ -389,7 +390,7 @@ class MOZ_STACK_CLASS Activation {
 
   // The cache of SavedFrame objects we have already captured when walking
   // this activation's stack.
-  LiveSavedFrameCache frameCache_;
+  JS::Rooted<LiveSavedFrameCache> frameCache_;
 
   // Youngest saved frame of an async stack that will be iterated during stack
   // capture in place of the actual stack of previous activations. Note that
@@ -397,7 +398,7 @@ class MOZ_STACK_CLASS Activation {
   //
   // Usually this is nullptr, meaning that normal stack capture will occur.
   // When this is set, the stack of any previous activation is ignored.
-  SavedFrame* asyncStack_;
+  JS::Rooted<SavedFrame*> asyncStack_;
 
   // Value of asyncCause to be attached to asyncStack_.
   const char* asyncCause_;
@@ -406,13 +407,11 @@ class MOZ_STACK_CLASS Activation {
   // callFunctionWithAsyncStack.
   bool asyncCallIsExplicit_;
 
-  enum Kind : bool { Interpreter, Jit };
+  enum Kind { Interpreter, Jit };
   Kind kind_;
 
   inline Activation(JSContext* cx, Kind kind);
   inline ~Activation();
-
-  void traceCommon(JSTracer* trc);
 
  public:
   JSContext* cx() const { return cx_; }
@@ -452,13 +451,12 @@ class MOZ_STACK_CLASS Activation {
   bool asyncCallIsExplicit() const { return asyncCallIsExplicit_; }
 
   inline LiveSavedFrameCache* getLiveSavedFrameCache(JSContext* cx);
-  void clearLiveSavedFrameCache() { frameCache_.clear(); }
+  void clearLiveSavedFrameCache() { frameCache_.get().clear(); }
 
-  void trace(JSTracer* trc);
-
+ private:
   Activation(const Activation& other) = delete;
   void operator=(const Activation& other) = delete;
-} JS_HAZ_ROOTED;
+};
 
 // This variable holds a special opcode value which is greater than all normal
 // opcodes, and is chosen such that the bitwise or of this value with any
@@ -515,8 +513,6 @@ class InterpreterActivation : public Activation {
     opMask_ = EnableInterruptsPseudoOpcode;
   }
   void clearInterruptsMask() { opMask_ = 0; }
-
-  void trace(JSTracer* trc);
 };
 
 // Iterates over a thread's activation list.

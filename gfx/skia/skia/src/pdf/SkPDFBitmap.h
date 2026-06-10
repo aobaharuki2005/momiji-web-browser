@@ -28,7 +28,7 @@ SkPDFIndirectReference SkPDFSerializeImage(const SkImage* img,
 size_t SkPDFSerializeImageSize(const SkImage* img, SkPDFDocument* doc, int encodingQuality);
 
 struct SkPDFIccProfileKey {
-    sk_sp<const SkData> fData;
+    sk_sp<SkData> fData;
     int fChannels;
     bool operator==(const SkPDFIccProfileKey& that) const {
         return fChannels == that.fChannels && fData->equals(that.fData.get());

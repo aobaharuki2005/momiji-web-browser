@@ -31,11 +31,6 @@
 #define CLIENT_LINUX_CRASH_GENERATION_CLIENT_INFO_H_
 
 #include <sys/types.h>
-#if defined(MOZ_OXIDIZED_BREAKPAD)
-#include "mozilla/toolkit/crashreporter/rust_minidump_writer_linux_ffi_generated.h"
-#else
-struct ExtraCrashData;
-#endif
 
 namespace google_breakpad {
 
@@ -43,37 +38,31 @@ class CrashGenerationServer;
 
 class ClientInfo {
  public:
-  ClientInfo(pid_t pid, CrashGenerationServer* crash_server, ExtraCrashData* extra_data)
+  ClientInfo(pid_t pid, CrashGenerationServer* crash_server)
     : crash_server_(crash_server),
-      pid_(pid),
-      extra_data_(extra_data) {}
-
-#if defined(MOZ_OXIDIZED_BREAKPAD)
-  ~ClientInfo() {
-    if (extra_data_) {
-      free_minidump_extra_data(extra_data_);
-    }
-  }
-  ClientInfo(const ClientInfo&) = delete;
-  ClientInfo& operator=(const ClientInfo& other) = delete;
-#endif
+      pid_(pid) {}
 
   CrashGenerationServer* crash_server() const { return crash_server_; }
   pid_t pid() const { return pid_; }
-  void set_extra_data(ExtraCrashData* extra_data) {
-      extra_data_ = extra_data;
+  void set_error_msg(char *error_msg) {
+      had_error_ = true;
+      error_msg_ = error_msg;
   }
 
-  // Internal mutation is allowed so that extra data can be collected through
-  // the callbacks. This pointer *cannot* outlive the CrashInfo object.
-  ExtraCrashData* extra_data() const {
-      return extra_data_;
+  const char* error_msg() const {
+      return error_msg_;
+  }
+
+  bool had_error() const {
+      return had_error_;
   }
 
  private:
   CrashGenerationServer* crash_server_;
   pid_t pid_;
-  ExtraCrashData* extra_data_ = nullptr; // Possible extra crash data, notably for error reporting.
+  bool had_error_ = false;
+  char* error_msg_ = nullptr; // Possible error message of the minidumper in
+                              // case there was an error during dumping
 };
 
 }

@@ -201,7 +201,6 @@ class MozillaSocorroService(
                 isFatalCrash,
                 breadcrumbsJson.toString(),
                 crashVersionName,
-                crash.uuid,
             )
 
             BufferedReader(InputStreamReader(conn.inputStream)).use { reader ->
@@ -261,7 +260,6 @@ class MozillaSocorroService(
         isFatalCrash: Boolean,
         breadcrumbs: String,
         versionName: String,
-        crashEventId: String,
     ) {
         val formDataWriter = createFormDataWriter(GZIPOutputStream(os), boundary, logger)
         formDataWriter.sendAnnotation(Annotation.ProductName, appName)
@@ -279,7 +277,6 @@ class MozillaSocorroService(
         formDataWriter.sendAnnotation(Annotation.DistributionID, distributionId)
 
         var additionalDumps: FormDataWriter.AdditionalMinidumps? = null
-        var hasCrashEventId = false
 
         extrasFilePath?.let {
             val regex = "$FILE_REGEX$EXTRAS_FILE_EXT".toRegex()
@@ -289,14 +286,9 @@ class MozillaSocorroService(
                 for (key in extrasMap.keys) {
                     formDataWriter.sendPart(key, extrasMap[key])
                 }
-                hasCrashEventId = extrasMap.containsKey(Annotation.CrashEventID.toString())
                 additionalDumps = formDataWriter.AdditionalMinidumps(extrasMap)
                 extrasFile.delete()
             }
-        }
-
-        if (!hasCrashEventId) {
-            formDataWriter.sendAnnotation(Annotation.CrashEventID, crashEventId)
         }
 
         if (throwable?.stackTrace?.isEmpty() == false) {

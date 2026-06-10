@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,6 +12,7 @@
 #include <ServiceManagement/ServiceManagement.h>
 #include <Security/Authorization.h>
 #include <spawn.h>
+#include <stdio.h>
 
 using namespace mozilla;
 using namespace mozilla::MacLaunchHelper;
@@ -40,23 +42,13 @@ static void LaunchTask(NSString* aPath, NSArray* aArguments) {
 
   @try {
     NSTask* task = [[NSTask alloc] init];
-    if (@available(macOS 10.13, *)) {
-      [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
-      if (aArguments) {
-        [task setArguments:aArguments];
-      }
-      [task launchAndReturnError:nil];
-    } else {
-      NSArray* arguments = aArguments;
-      if (!arguments) {
-        arguments = @[];
-      }
-      task = [NSTask launchedTaskWithLaunchPath:aPath arguments:arguments];
+    [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
+    if (aArguments) {
+      [task setArguments:aArguments];
     }
+    [task launchAndReturnError:nil];
     [task waitUntilExit];
-    if (@available(macOS 10.13, *)) {
-      [task release];
-    }
+    [task release];
   } @catch (NSException* e) {
     NSLog(@"%@: %@", e.name, e.reason);
   }
@@ -87,37 +79,29 @@ void LaunchMacAppWithBundle(NSString* aBundlePath, NSArray* aArguments) {
     StripQuarantineBit(launchPath);
     RegisterAppWithLaunchServices(launchPath);
 
-    if(@available(macOS 10.15, *)) {
     // We use NSWorkspace to register the application into the
     // `TALAppsToRelaunchAtLogin` list and allow for macOS session resume.
     // This API only works with `.app`s.
     __block dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-      NSWorkspaceOpenConfiguration* config =
-          [NSWorkspaceOpenConfiguration configuration];
-      [config setArguments:aArguments];
-      [config setCreatesNewApplicationInstance:YES];
-      [config setEnvironment:[[NSProcessInfo processInfo] environment]];
+    NSWorkspaceOpenConfiguration* config =
+        [NSWorkspaceOpenConfiguration configuration];
+    [config setArguments:aArguments];
+    [config setCreatesNewApplicationInstance:YES];
+    [config setEnvironment:[[NSProcessInfo processInfo] environment]];
 
-      [[NSWorkspace sharedWorkspace]
-          openApplicationAtURL:[NSURL fileURLWithPath:launchPath]
-                 configuration:config
-             completionHandler:^(NSRunningApplication* aChild, NSError* aError) {
-               if (aError) {
-                 NSLog(@"LaunchMacApp: Failed to run application. Error: %@",
-                       aError);
-               }
-               dispatch_semaphore_signal(semaphore);
-             }];
-      // We use a semaphore to wait for the application to launch.
-      dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-    } else {
-      NSError *error=nil;
-      [[NSWorkspace sharedWorkspace] launchApplicationAtURL:[NSBundle mainBundle].bundleURL
-                                                    options:NSWorkspaceLaunchAsync|NSWorkspaceLaunchNewInstance
-                                              configuration:@{NSWorkspaceLaunchConfigurationArguments:aArguments, NSWorkspaceLaunchConfigurationEnvironment:[[NSProcessInfo processInfo] environment]}
-                                                      error:&error];
+    [[NSWorkspace sharedWorkspace]
+        openApplicationAtURL:[NSURL fileURLWithPath:launchPath]
+               configuration:config
+           completionHandler:^(NSRunningApplication* aChild, NSError* aError) {
+             if (aError) {
+               NSLog(@"LaunchMacApp: Failed to run application. Error: %@",
+                     aError);
+             }
+             dispatch_semaphore_signal(semaphore);
+           }];
 
-      }
+    // We use a semaphore to wait for the application to launch.
+    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
   } @catch (NSException* e) {
     NSLog(@"%@: %@", e.name, e.reason);
   }
@@ -134,17 +118,11 @@ void LaunchChildMac(int aArgc, char** aArgv, pid_t* aPid) {
     for (int i = 1; i < aArgc; i++) {
       [arguments addObject:[NSString stringWithUTF8String:aArgv[i]]];
     }
-
     NSTask* task = [[NSTask alloc] init];
-    NSError* error = nil;
+    [task setExecutableURL:[NSURL fileURLWithPath:launchPath]];
     [task setArguments:arguments];
-    if(@available(macOS 10.13, *)) {
-      [task setExecutableURL:[NSURL fileURLWithPath:launchPath]];
-      [task launchAndReturnError:&error];
-    } else {
-      [task setLaunchPath:launchPath];
-      [task launch];
-    }
+    NSError* error = nil;
+    [task launchAndReturnError:&error];
     if (!error && aPid) {
       *aPid = [task processIdentifier];
       [task waitUntilExit];

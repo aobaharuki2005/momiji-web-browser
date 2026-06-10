@@ -13,12 +13,11 @@ import androidx.navigation.fragment.navArgs
 import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreferenceCompat
+import androidx.preference.SwitchPreference
 import org.mozilla.fenix.GleanMetrics.CustomizeHome
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.settings
@@ -33,7 +32,7 @@ import org.mozilla.fenix.utils.view.addToRadioGroup
  * User interactions with these preferences are persisted in [Settings] and may trigger
  * telemetry events via [CustomizeHome] metrics.
  */
-class HomeSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragment {
+class HomeSettingsFragment : PreferenceFragmentCompat() {
 
     private val args by navArgs<HomeSettingsFragmentArgs>()
 
@@ -68,12 +67,12 @@ class HomeSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragm
         super.onResume()
         showToolbar(getString(R.string.preferences_home_2))
         args.preferenceToScrollTo?.let {
-            scrollToPreferenceWithHighlight(it)
+            scrollToPreference(it)
         }
     }
 
     private fun setupPreferences() {
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_show_top_sites).apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_show_top_sites).apply {
             isChecked = fenixSettings.showTopSitesFeature
             onPreferenceChangeListener = createMetricPreferenceChangeListener("most_visited_sites")
         }
@@ -83,24 +82,19 @@ class HomeSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragm
             onPreferenceChangeListener = createMetricPreferenceChangeListener("contile")
         }
 
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_privacy_report).apply {
-            isChecked = fenixSettings.showPrivacyReportFeature
-            onPreferenceChangeListener = createMetricPreferenceChangeListener("privacy_report")
-        }
-
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_recent_tabs).apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_recent_tabs).apply {
             isVisible = fenixSettings.showHomepageRecentTabsSectionToggle
             isChecked = fenixSettings.showRecentTabsFeature
             onPreferenceChangeListener = createMetricPreferenceChangeListener("jump_back_in")
         }
 
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_customization_bookmarks).apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_customization_bookmarks).apply {
             isVisible = fenixSettings.showHomepageBookmarksSectionToggle
             isChecked = fenixSettings.showBookmarksHomeFeature
             onPreferenceChangeListener = createMetricPreferenceChangeListener("bookmarks")
         }
 
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_pocket_homescreen_recommendations).apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_pocket_homescreen_recommendations).apply {
             isVisible = contentRecommendationsHelper.isContentRecommendationsFeatureEnabled(requireContext())
             isChecked = fenixSettings.showPocketRecommendationsFeature
             onPreferenceChangeListener = createMetricPreferenceChangeListener("pocket")
@@ -132,11 +126,18 @@ class HomeSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragm
             }
         }
 
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_history_metadata_feature).apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_history_metadata_feature).apply {
             isVisible = fenixSettings.showHomepageRecentlyVisitedSectionToggle
             isChecked = fenixSettings.historyMetadataUIFeature
             onPreferenceChangeListener = createMetricPreferenceChangeListener("recently_visited")
         }
+
+        val openingScreenRadioHomepage =
+            requirePreference<RadioButtonPreference>(R.string.pref_key_start_on_home_always)
+        val openingScreenLastTab =
+            requirePreference<RadioButtonPreference>(R.string.pref_key_start_on_home_never)
+        val openingScreenAfterFourHours =
+            requirePreference<RadioButtonPreference>(R.string.pref_key_start_on_home_after_four_hours)
 
         requirePreference<Preference>(R.string.pref_key_wallpapers).apply {
             setOnPreferenceClickListener {
@@ -150,8 +151,11 @@ class HomeSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragm
             }
         }
 
-        setupOpeningScreenPreferences()
-        setupSportsWidgetPreferences()
+        addToRadioGroup(
+            openingScreenRadioHomepage,
+            openingScreenLastTab,
+            openingScreenAfterFourHours,
+        )
     }
 
     private fun createMetricPreferenceChangeListener(metricKey: String): Preference.OnPreferenceChangeListener {
@@ -168,51 +172,6 @@ class HomeSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragm
             fenixSettings.preferences.edit { putBoolean(preference.key, newBooleanValue) }
 
             true
-        }
-    }
-
-    private fun setupOpeningScreenPreferences() {
-        val openingScreenRadioHomepage =
-            requirePreference<RadioButtonPreference>(R.string.pref_key_start_on_home_always).apply {
-                setDefaultValue(fenixSettings.alwaysOpenTheHomepageWhenOpeningTheApp)
-            }
-        val openingScreenLastTab =
-            requirePreference<RadioButtonPreference>(R.string.pref_key_start_on_home_never).apply {
-                setDefaultValue(fenixSettings.alwaysOpenTheLastTabWhenOpeningTheApp)
-            }
-        val openingScreenAfterFourHours =
-            requirePreference<RadioButtonPreference>(R.string.pref_key_start_on_home_after_four_hours).apply {
-                setDefaultValue(fenixSettings.openHomepageAfterFourHoursOfInactivity)
-            }
-
-        addToRadioGroup(
-            openingScreenRadioHomepage,
-            openingScreenLastTab,
-            openingScreenAfterFourHours,
-        )
-    }
-
-    private fun setupSportsWidgetPreferences() {
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_show_homepage_sports_widget).apply {
-            isVisible = fenixSettings.enableHomepageSportsWidget
-            isChecked = fenixSettings.showHomepageSportsWidget
-            onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
-                val newBooleanValue = newValue as? Boolean ?: return@OnPreferenceChangeListener false
-
-                customizeHomeMetrics.preferenceToggled.record(
-                    CustomizeHome.PreferenceToggledExtra(
-                        enabled = newBooleanValue,
-                        preferenceKey = "world_cup",
-                    ),
-                )
-
-                fenixComponents.appStore.dispatch(
-                    AppAction.SportsWidgetAction.VisibilityChanged(isVisible = newBooleanValue),
-                )
-
-                fenixSettings.preferences.edit { putBoolean(preference.key, newBooleanValue) }
-                true
-            }
         }
     }
 }

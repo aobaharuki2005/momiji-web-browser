@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -9,12 +11,10 @@
 
 #include <utility>
 
-#include "gc/GCMarker.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/CacheIRCompiler.h"
-#include "jit/IonOptimizationLevels.h"  // jit::OptimizationInfo
 #include "jit/IonScript.h"
 #include "jit/JitFrames.h"
 #include "jit/JitSpewer.h"
@@ -137,10 +137,6 @@ bool JSScript::createJitScript(JSContext* cx) {
 
   cx->zone()->jitZone()->registerJitScript(jitScript.get());
 
-  uint32_t baseWarmUpThreshold =
-      jit::OptimizationInfo::baseWarmUpThresholdForScript(cx, this);
-  jitScript->setIonThreshold(baseWarmUpThreshold);
-
   warmUpData_.initJitScript(jitScript.release());
   AddCellMemory(this, allocSize.value(), MemoryUse::JitScript);
 
@@ -204,7 +200,7 @@ void JitScript::trace(JSTracer* trc) {
   }
 
   if (templateEnv_.isSome()) {
-    TraceEdge(trc, templateEnv_.ptr(), "jitscript-template-env");
+    TraceNullableEdge(trc, templateEnv_.ptr(), "jitscript-template-env");
   }
 
   if (hasInliningRoot()) {
@@ -229,8 +225,6 @@ void JitScript::traceWeak(JSTracer* trc) {
 }
 
 void ICScript::trace(JSTracer* trc) {
-  gc::AutoMarkingLock lock(trc, markingLock_);
-
   // Mark all IC stub codes hanging off the IC stub entries.
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& ent = icEntry(i);
@@ -558,8 +552,7 @@ void ICScript::purgeStubs(Zone* zone, ICStubSpace& newStubSpace) {
       ICCacheIRStub* prev = nullptr;
       ICStub* stub = entry.firstStub();
       while (stub != fallback) {
-        ICCacheIRStub* clone = stub->toCacheIRStub()->clone(
-            rt, newStubSpace, ICCacheIRStub::ICScriptHandling::AssertActive);
+        ICCacheIRStub* clone = stub->toCacheIRStub()->clone(rt, newStubSpace);
         if (prev) {
           prev->setNext(clone);
         } else {
@@ -778,15 +771,26 @@ static void MarkActiveICScriptsAndCopyStubs(
           ICCacheIRStub* stub = layout->maybeStubPtr()->toCacheIRStub();
           auto lookup = alreadyClonedStubs.lookupForAdd(stub);
           if (!lookup) {
-            ICCacheIRStub* newStub =
-                stub->clone(cx->runtime(), newStubSpace,
-                            ICCacheIRStub::ICScriptHandling::MarkActive);
+            ICCacheIRStub* newStub = stub->clone(cx->runtime(), newStubSpace);
             AutoEnterOOMUnsafeRegion oomUnsafe;
             if (!alreadyClonedStubs.add(lookup, stub, newStub)) {
               oomUnsafe.crash("MarkActiveICScriptsAndCopyStubs");
             }
           }
           layout->setStubPtr(lookup->value());
+
+          // If this is a trial-inlining call site, also preserve the callee
+          // ICScript. Inlined constructor calls invoke CreateThisFromIC (which
+          // can trigger GC) before using the inlined ICScript.
+          JSJitFrameIter parentFrame(frame);
+          ++parentFrame;
+          BaselineFrame* blFrame = parentFrame.baselineFrame();
+          jsbytecode* pc;
+          parentFrame.baselineScriptAndPc(nullptr, &pc);
+          uint32_t pcOffset = blFrame->script()->pcToOffset(pc);
+          if (blFrame->icScript()->hasInlinedChild(pcOffset)) {
+            blFrame->icScript()->findInlinedChild(pcOffset)->setActive();
+          }
         }
         break;
       }
@@ -849,8 +853,7 @@ InliningRoot* JitScript::getOrCreateInliningRoot(JSContext* cx,
 }
 
 gc::AllocSite* ICScript::getOrCreateAllocSite(JSScript* outerScript,
-                                              uint32_t pcOffset,
-                                              const gc::AutoMarkingLock& lock) {
+                                              uint32_t pcOffset) {
   // The script must be the outer script.
   MOZ_ASSERT(outerScript->jitScript()->icScript() == this ||
              (inliningRoot() && inliningRoot()->owningScript() == outerScript));
@@ -868,20 +871,19 @@ gc::AllocSite* ICScript::getOrCreateAllocSite(JSScript* outerScript,
     }
   }
 
-  Zone* zone = outerScript->zone();
   Nursery& nursery = outerScript->runtimeFromMainThread()->gc.nursery();
   if (!nursery.canCreateAllocSite()) {
     // Don't block attaching an optimized stub, but don't process allocations
     // for this site.
-    return zone->unknownAllocSite(JS::TraceKind::Object);
+    return outerScript->zone()->unknownAllocSite(JS::TraceKind::Object);
   }
 
   if (!allocSites_.reserve(allocSites_.length() + 1)) {
     return nullptr;
   }
 
-  auto* site = allocSitesSpace_.new_<gc::AllocSite>(zone, outerScript, pcOffset,
-                                                    JS::TraceKind::Object);
+  auto* site = allocSitesSpace_.new_<gc::AllocSite>(
+      outerScript->zone(), outerScript, pcOffset, JS::TraceKind::Object);
   if (!site) {
     return nullptr;
   }
@@ -893,15 +895,14 @@ gc::AllocSite* ICScript::getOrCreateAllocSite(JSScript* outerScript,
   return site;
 }
 
-void ICScript::ensureEnvAllocSite(JSScript* outerScript,
-                                  const gc::AutoMarkingLock& lock) {
+void ICScript::ensureEnvAllocSite(JSScript* outerScript) {
   if (envAllocSite_) {
     return;
   }
 
   // Use a dummy offset for this site.
   uint32_t pcoffset = gc::AllocSite::EnvSitePCOffset;
-  gc::AllocSite* site = getOrCreateAllocSite(outerScript, pcoffset, lock);
+  gc::AllocSite* site = getOrCreateAllocSite(outerScript, pcoffset);
   if (!site) {
     // Use the unknown site on failure.
     site = outerScript->zone()->unknownAllocSite(JS::TraceKind::Object);
@@ -1036,8 +1037,6 @@ HashNumber ICScript::hash(JSContext* cx) {
                 h = mozilla::AddToHash(h, shape);
                 h = mozilla::AddToHash(h, shapesObject->getOffset(i));
               }
-              // See GuardMultipleShapes above.
-              h = mozilla::AddToHash(h, cx->runtime()->gc.majorGCCount());
             }
             break;
           }

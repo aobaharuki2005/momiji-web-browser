@@ -184,10 +184,6 @@ impl Object {
         self.uniffi_traits.iter().collect()
     }
 
-    pub fn uniffi_trait_methods(&self) -> UniffiTraitMethods {
-        UniffiTraitMethods::new(&self.uniffi_traits)
-    }
-
     pub fn trait_impls(&self) -> Vec<&ObjectTraitImplMetadata> {
         self.trait_impls.iter().collect()
     }
@@ -227,8 +223,7 @@ impl Object {
                     .flat_map(|ut| match ut {
                         UniffiTrait::Display { fmt: m }
                         | UniffiTrait::Debug { fmt: m }
-                        | UniffiTrait::Hash { hash: m }
-                        | UniffiTrait::Ord { cmp: m } => vec![m],
+                        | UniffiTrait::Hash { hash: m } => vec![m],
                         UniffiTrait::Eq { eq, ne } => vec![eq, ne],
                     })
                     .map(|m| &m.ffi_func),
@@ -239,13 +234,13 @@ impl Object {
         assert!(!self.ffi_func_clone.name().is_empty());
         assert!(!self.ffi_func_free.name().is_empty());
         self.ffi_func_clone.arguments = vec![FfiArgument {
-            name: "handle".to_string(),
-            type_: FfiType::Handle,
+            name: "ptr".to_string(),
+            type_: FfiType::RustArcPtr(self.name.to_string()),
         }];
-        self.ffi_func_clone.return_type = Some(FfiType::Handle);
+        self.ffi_func_clone.return_type = Some(FfiType::RustArcPtr(self.name.to_string()));
         self.ffi_func_free.arguments = vec![FfiArgument {
-            name: "handle".to_string(),
-            type_: FfiType::Handle,
+            name: "ptr".to_string(),
+            type_: FfiType::RustArcPtr(self.name.to_string()),
         }];
         self.ffi_func_free.return_type = None;
         self.ffi_func_free.is_object_free_function = true;
@@ -354,6 +349,26 @@ impl From<uniffi_meta::ObjectMetadata> for Object {
     }
 }
 
+impl From<uniffi_meta::UniffiTraitMetadata> for UniffiTrait {
+    fn from(meta: uniffi_meta::UniffiTraitMetadata) -> Self {
+        match meta {
+            uniffi_meta::UniffiTraitMetadata::Debug { fmt } => {
+                UniffiTrait::Debug { fmt: fmt.into() }
+            }
+            uniffi_meta::UniffiTraitMetadata::Display { fmt } => {
+                UniffiTrait::Display { fmt: fmt.into() }
+            }
+            uniffi_meta::UniffiTraitMetadata::Eq { eq, ne } => UniffiTrait::Eq {
+                eq: eq.into(),
+                ne: ne.into(),
+            },
+            uniffi_meta::UniffiTraitMetadata::Hash { hash } => {
+                UniffiTrait::Hash { hash: hash.into() }
+            }
+        }
+    }
+}
+
 // Represents a constructor for an object type.
 //
 // In the FFI, this will be a function that returns a pointer to an instance
@@ -441,14 +456,12 @@ impl Constructor {
         self.name == "new"
     }
 
-    pub fn derive_ffi_func(&mut self) {
+    fn derive_ffi_func(&mut self) {
         assert!(!self.ffi_func.name().is_empty());
-        self.ffi_func
-            .init(Some(FfiType::Handle), self.arguments.iter().map(Into::into));
-    }
-
-    pub fn checksum_from_metadata(meta: uniffi_meta::ConstructorMetadata) -> u16 {
-        uniffi_meta::checksum(&Self::from(meta))
+        self.ffi_func.init(
+            Some(FfiType::RustArcPtr(self.object_name.clone())),
+            self.arguments.iter().map(Into::into),
+        );
     }
 }
 
@@ -491,11 +504,10 @@ impl From<uniffi_meta::ConstructorMetadata> for Constructor {
 #[derive(Debug, Clone, Checksum)]
 pub struct Method {
     pub(super) name: String,
+    pub(super) object_name: String,
+    pub(super) object_module_path: String,
     pub(super) is_async: bool,
-    // Ignore `self_type` for the checksum, we never compare the method checksums for methods from
-    // different objects.
-    #[checksum_ignore]
-    pub(super) self_type: Type,
+    pub(super) object_impl: ObjectImpl,
     pub(super) arguments: Vec<Argument>,
     pub(super) return_type: Option<Type>,
     // We don't include the FFIFunc in the hash calculation, because:
@@ -530,7 +542,7 @@ impl Method {
     }
 
     pub fn object_name(&self) -> &str {
-        self.self_type.name().unwrap()
+        &self.object_name
     }
 
     pub fn arguments(&self) -> Vec<&Argument> {
@@ -542,7 +554,13 @@ impl Method {
     pub fn full_arguments(&self) -> Vec<Argument> {
         vec![Argument {
             name: "ptr".to_string(),
-            type_: self.self_type.clone(),
+            // TODO: ideally we'd get this via `ci.resolve_type_expression` so that it
+            // is contained in the proper `TypeUniverse`, but this works for now.
+            type_: Type::Object {
+                name: self.object_name.clone(),
+                module_path: self.object_module_path.clone(),
+                imp: self.object_impl,
+            },
             by_ref: !self.takes_self_by_arc,
             optional: false,
             default: None,
@@ -601,25 +619,30 @@ impl Method {
     pub fn foreign_future_ffi_result_struct(&self) -> FfiStruct {
         callbacks::foreign_future_ffi_result_struct(self.return_type.as_ref().map(FfiType::from))
     }
+}
 
-    // construct from metadata - like `From<>` but with extra args
-    pub fn from_metadata(meta: uniffi_meta::MethodMetadata, receiver: Type) -> Self {
+impl From<uniffi_meta::MethodMetadata> for Method {
+    fn from(meta: uniffi_meta::MethodMetadata) -> Self {
         let ffi_name = meta.ffi_symbol_name();
         let checksum_fn_name = meta.checksum_symbol_name();
+        let is_async = meta.is_async;
+        let return_type = meta.return_type;
         let arguments = meta.inputs.into_iter().map(Into::into).collect();
 
         let ffi_func = FfiFunction {
             name: ffi_name,
-            is_async: meta.is_async,
+            is_async,
             ..FfiFunction::default()
         };
 
         Self {
             name: meta.name,
-            self_type: receiver,
-            is_async: meta.is_async,
+            object_name: meta.self_name,
+            object_module_path: meta.module_path,
+            is_async,
+            object_impl: ObjectImpl::Struct, // will be filled in later
             arguments,
-            return_type: meta.return_type,
+            return_type,
             ffi_func,
             docstring: meta.docstring.clone(),
             throws: meta.throws,
@@ -628,22 +651,45 @@ impl Method {
             checksum: meta.checksum,
         }
     }
+}
 
-    pub fn checksum_from_metadata(meta: uniffi_meta::MethodMetadata) -> u16 {
-        // We can use an arbitrary `self_type` for this, since it's ignored for the checksum
-        uniffi_meta::checksum(&Self::from_metadata(meta, Type::UInt8))
+impl From<uniffi_meta::TraitMethodMetadata> for Method {
+    fn from(meta: uniffi_meta::TraitMethodMetadata) -> Self {
+        let ffi_name = meta.ffi_symbol_name();
+        let checksum_fn_name = meta.checksum_symbol_name();
+        let is_async = meta.is_async;
+        let return_type = meta.return_type;
+        let arguments = meta.inputs.into_iter().map(Into::into).collect();
+        let ffi_func = FfiFunction {
+            name: ffi_name,
+            is_async,
+            ..FfiFunction::default()
+        };
+        Self {
+            name: meta.name,
+            object_name: meta.trait_name,
+            object_module_path: meta.module_path,
+            is_async,
+            arguments,
+            return_type,
+            docstring: meta.docstring.clone(),
+            throws: meta.throws,
+            takes_self_by_arc: meta.takes_self_by_arc,
+            checksum_fn_name,
+            checksum: meta.checksum,
+            ffi_func,
+            object_impl: ObjectImpl::Struct,
+        }
     }
 }
 
 /// The list of traits we support generating helper methods for.
-#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, Checksum)]
 pub enum UniffiTrait {
     Debug { fmt: Method },
     Display { fmt: Method },
     Eq { eq: Method, ne: Method },
     Hash { hash: Method },
-    Ord { cmp: Method },
 }
 
 impl UniffiTrait {
@@ -652,8 +698,7 @@ impl UniffiTrait {
             match self {
                 UniffiTrait::Display { fmt: m }
                 | UniffiTrait::Debug { fmt: m }
-                | UniffiTrait::Hash { hash: m }
-                | UniffiTrait::Ord { cmp: m } => vec![m.iter_types()],
+                | UniffiTrait::Hash { hash: m } => vec![m.iter_types()],
                 UniffiTrait::Eq { eq, ne } => vec![eq.iter_types(), ne.iter_types()],
             }
             .into_iter()
@@ -665,8 +710,7 @@ impl UniffiTrait {
         match self {
             UniffiTrait::Display { fmt: m }
             | UniffiTrait::Debug { fmt: m }
-            | UniffiTrait::Hash { hash: m }
-            | UniffiTrait::Ord { cmp: m } => {
+            | UniffiTrait::Hash { hash: m } => {
                 m.derive_ffi_func()?;
             }
             UniffiTrait::Eq { eq, ne } => {
@@ -675,58 +719,6 @@ impl UniffiTrait {
             }
         }
         Ok(())
-    }
-
-    // construct from metadata - like `From<>` but with extra args
-    pub fn from_metadata(meta: uniffi_meta::UniffiTraitMetadata, receiver: Type) -> Self {
-        match meta {
-            uniffi_meta::UniffiTraitMetadata::Debug { fmt } => UniffiTrait::Debug {
-                fmt: Method::from_metadata(fmt, receiver),
-            },
-            uniffi_meta::UniffiTraitMetadata::Display { fmt } => UniffiTrait::Display {
-                fmt: Method::from_metadata(fmt, receiver),
-            },
-            uniffi_meta::UniffiTraitMetadata::Eq { eq, ne } => UniffiTrait::Eq {
-                eq: Method::from_metadata(eq, receiver.clone()),
-                ne: Method::from_metadata(ne, receiver),
-            },
-            uniffi_meta::UniffiTraitMetadata::Hash { hash } => UniffiTrait::Hash {
-                hash: Method::from_metadata(hash, receiver),
-            },
-            uniffi_meta::UniffiTraitMetadata::Ord { cmp } => UniffiTrait::Ord {
-                cmp: Method::from_metadata(cmp, receiver),
-            },
-        }
-    }
-}
-
-/// flattened uniffi_traits.
-#[derive(Debug, Clone, Default)]
-pub struct UniffiTraitMethods {
-    pub debug_fmt: Option<Method>,
-    pub display_fmt: Option<Method>,
-    pub eq_eq: Option<Method>,
-    pub eq_ne: Option<Method>,
-    pub hash_hash: Option<Method>,
-    pub ord_cmp: Option<Method>,
-}
-
-impl UniffiTraitMethods {
-    pub fn new(uniffi_traits: &[UniffiTrait]) -> Self {
-        let mut new = Self::default();
-        for t in uniffi_traits {
-            match t.clone() {
-                UniffiTrait::Debug { fmt } => new.debug_fmt = Some(fmt),
-                UniffiTrait::Display { fmt } => new.display_fmt = Some(fmt),
-                UniffiTrait::Eq { eq, ne } => {
-                    new.eq_eq = Some(eq);
-                    new.eq_ne = Some(ne);
-                }
-                UniffiTrait::Hash { hash } => new.hash_hash = Some(hash),
-                UniffiTrait::Ord { cmp } => new.ord_cmp = Some(cmp),
-            }
-        }
-        new
     }
 }
 
@@ -777,12 +769,12 @@ impl Callable for Method {
         self.is_async
     }
 
-    fn ffi_func(&self) -> &FfiFunction {
-        &self.ffi_func
+    fn takes_self(&self) -> bool {
+        true
     }
 
-    fn self_type(&self) -> Option<Type> {
-        Some(self.self_type.clone())
+    fn ffi_func(&self) -> &FfiFunction {
+        &self.ffi_func
     }
 }
 
@@ -831,8 +823,7 @@ mod test {
                 constructor(u32 v);
             };
         "#;
-        let mut ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
-        ci.derive_ffi_funcs().unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.object_definitions().len(), 1);
 
         let obj = ci.get_object_definition("Testing").unwrap();
@@ -862,8 +853,7 @@ mod test {
                 constructor(u32 v);
             };
         "#;
-        let mut ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
-        ci.derive_ffi_funcs().unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.object_definitions().len(), 1);
 
         let obj = ci.get_object_definition("Testing").unwrap();

@@ -1,9 +1,10 @@
+/* vim:set ts=2 sw=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsNTLMAuthModule_h_
-#define nsNTLMAuthModule_h_
+#ifndef nsNTLMAuthModule_h__
+#define nsNTLMAuthModule_h__
 
 #include "nsIAuthModule.h"
 #include "nsString.h"
@@ -29,4 +30,4 @@ class nsNTLMAuthModule : public nsIAuthModule {
   bool mNTLMNegotiateSent;
 };
 
-#endif  // nsNTLMAuthModule_h_
+#endif  // nsNTLMAuthModule_h__

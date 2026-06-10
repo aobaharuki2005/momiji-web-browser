@@ -106,7 +106,6 @@ support-files = [
 ["test_fileSubWorker.xhtml"]
 
 ["test_readableStream_when_closing.html"]
-support-files = ["file_readableStream_when_closing_worker.js"]
 
 ["test_sharedWorker_privateBrowsing.html"]
 

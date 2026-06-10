@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,11 +8,9 @@
 #include "MediaDocument.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/dom/LoadURIOptionsBinding.h"  // For ForceMediaDocument
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
-#include "nsILoadInfo.h"
 #include "nsNodeInfoManager.h"
 
 namespace mozilla::dom {
@@ -102,13 +102,8 @@ nsresult VideoDocument::CreateVideoElement() {
 
   RefPtr<HTMLMediaElement> element = static_cast<HTMLMediaElement*>(
       NS_NewHTMLVideoElement(nodeInfo.forget(), NOT_FROM_PARSER));
-
-  // Do not autoplay when forcing this as a media document, e.g., for page info.
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
-  element->SetAutoplay(
-      loadInfo->GetForceMediaDocument() == ForceMediaDocument::None,
-      IgnoreErrors());
-
+  if (!element) return NS_ERROR_OUT_OF_MEMORY;
+  element->SetAutoplay(true, IgnoreErrors());
   element->SetControls(true, IgnoreErrors());
   element->LoadWithChannel(mChannel,
                            getter_AddRefs(mStreamListener->mNextStream));

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +7,6 @@
 #ifndef mozilla_StaticPresData_h
 #define mozilla_StaticPresData_h
 
-#include "mozilla/RWLock.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAtom.h"
@@ -18,8 +19,8 @@ namespace mozilla {
 
 struct LangGroupFontPrefs {
   // Font sizes default to zero; they will be set in GetFontPreferences
-  explicit LangGroupFontPrefs(nsStaticAtom* aLangGroupAtom)
-      : mLangGroup(aLangGroupAtom),
+  LangGroupFontPrefs()
+      : mLangGroup(nullptr),
         mMinimumFontSize({0}),
         mDefaultVariableFont(StyleGenericFontFamily::Serif, {0}),
         mDefaultSerifFont(StyleGenericFontFamily::Serif, {0}),
@@ -27,13 +28,22 @@ struct LangGroupFontPrefs {
         mDefaultMonospaceFont(StyleGenericFontFamily::Monospace, {0}),
         mDefaultCursiveFont(StyleGenericFontFamily::Cursive, {0}),
         mDefaultFantasyFont(StyleGenericFontFamily::Fantasy, {0}),
-        mDefaultSystemUiFont(StyleGenericFontFamily::SystemUi, {0}) {
-    Initialize();
-  }
+        mDefaultSystemUiFont(StyleGenericFontFamily::SystemUi, {0}) {}
 
   StyleGenericFontFamily GetDefaultGeneric() const {
     return mDefaultVariableFont.family.families.list.AsSpan()[0].AsGeneric();
   }
+
+  void Reset() {
+    // Throw away any other LangGroupFontPrefs objects:
+    mNext = nullptr;
+
+    // Make GetFontPreferences reinitialize mLangGroupFontPrefs:
+    mLangGroup = nullptr;
+  }
+
+  // Initialize this with the data for a given language
+  void Initialize(nsStaticAtom* aLangGroupAtom);
 
   /**
    * Get the default font for the given language and generic font ID.
@@ -87,9 +97,6 @@ struct LangGroupFontPrefs {
   nsFont mDefaultFantasyFont;
   nsFont mDefaultSystemUiFont;
   UniquePtr<LangGroupFontPrefs> mNext;
-
- private:
-  void Initialize();
 };
 
 /**
@@ -127,13 +134,27 @@ class StaticPresData {
    * be fine. But just to be on the safe side, we leave the old mechanism as-is,
    * with an additional per-session cache that new callers can use if they don't
    * have a PresContext.
+   *
+   * aNeedsToCache is used for two things.  If null, it indicates that
+   * it is safe for the StaticPresData to cache the result of the
+   * prefs lookup, either because we're on the main thread,
+   * or because we're on a style worker thread but the font lock has
+   * been acquired.  If non-null, it indicates that it's not safe to
+   * cache the result of the prefs lookup (because we're on
+   * a style worker thread without the lock acquired).  In this case,
+   * GetFontPrefsForLang will store true in *aNeedsToCache true if we
+   * would have cached the result of a new lookup, and false if we
+   * were able to use an existing cached result.  Thus, callers that
+   * get a true *aNeedsToCache outparam value should make an effort
+   * to re-call GetFontPrefsForLang when it is safe to cache, to avoid
+   * recomputing the prefs again later.
    */
-  const LangGroupFontPrefs* GetFontPrefsForLang(nsAtom* aLanguage);
+  const LangGroupFontPrefs* GetFontPrefsForLang(nsAtom* aLanguage,
+                                                bool* aNeedsToCache = nullptr);
+  const nsFont* GetDefaultFont(uint8_t aFontID, nsAtom* aLanguage,
+                               const LangGroupFontPrefs* aPrefs) const;
 
-  void InvalidateFontPrefs() {
-    AutoWriteLock lock(mLock);
-    mLangGroupFontPrefs.reset(nullptr);
-  }
+  void InvalidateFontPrefs() { mLangGroupFontPrefs.Reset(); }
 
  private:
   // Private constructor/destructor, to prevent other code from inadvertently
@@ -144,9 +165,7 @@ class StaticPresData {
   friend class StaticAutoPtr<StaticPresData>;
 
   nsLanguageAtomService* mLangService;
-  UniquePtr<LangGroupFontPrefs> mLangGroupFontPrefs MOZ_GUARDED_BY(mLock);
-
-  RWLock mLock{"StaticPresData::mLock"};
+  LangGroupFontPrefs mLangGroupFontPrefs;
 };
 
 }  // namespace mozilla

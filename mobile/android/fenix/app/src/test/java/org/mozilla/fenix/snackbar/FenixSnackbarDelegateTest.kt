@@ -11,7 +11,6 @@ import com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.verify
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -31,7 +30,7 @@ class FenixSnackbarDelegateTest {
     @MockK
     private lateinit var view: View
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var snackbar: Snackbar
     private lateinit var delegate: FenixSnackbarDelegate
 

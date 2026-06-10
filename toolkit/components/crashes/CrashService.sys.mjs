@@ -133,9 +133,6 @@ export var CrashServiceUtils = {
   computeMinidumpHash: async function CrashServiceUtils_computeMinidumpHash(f) {
     return computeMinidumpHash(f);
   },
-  getCrashReporterPath: function CrashServiceUtils_getCrashReporterPath() {
-    return getCrashReporterPath();
-  },
 };
 
 /**

@@ -16,12 +16,7 @@ const DIALOG_SIZE = "width=600,height=400";
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["test.wait300msAfterTabSwitch", true],
-      // Disabled so focusing a filled field reliably re-identifies it instead
-      // of being suppressed during the dynamic-form-change threshold window.
-      ["extensions.formautofill.heuristics.fillOnDynamicFormChanges", false],
-    ],
+    set: [["test.wait300msAfterTabSwitch", true]],
   });
 });
 
@@ -32,7 +27,6 @@ add_task(async function test_removingCreditCardsViaKeyboardDelete() {
     },
     TEST_CREDIT_CARD_1
   );
-  Services.fog.testResetFOG();
 
   let win = window.openDialog(
     MANAGE_CREDIT_CARDS_DIALOG_URL,
@@ -52,8 +46,10 @@ add_task(async function test_removingCreditCardsViaKeyboardDelete() {
 
   win.close();
 
-  Assert.equal(1, Glean.creditcard.showManage.testGetValue().length);
-  Assert.equal(1, Glean.creditcard.deleteManage.testGetValue().length);
+  await assertTelemetry(undefined, [
+    ["creditcard", "show", "manage"],
+    ["creditcard", "delete", "manage"],
+  ]);
 
   await cleanupFunc();
 });
@@ -62,7 +58,6 @@ add_task(async function test_saveCreditCard() {
   const cleanupFunc = await setupTask({
     set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
   });
-  Services.fog.testResetFOG();
 
   await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, win => {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -87,7 +82,7 @@ add_task(async function test_saveCreditCard() {
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
   });
 
-  Assert.equal(1, Glean.creditcard.addManage.testGetValue().length);
+  await assertTelemetry(undefined, [["creditcard", "add", "manage"]]);
 
   await cleanupFunc();
 });
@@ -100,7 +95,6 @@ add_task(async function test_editCreditCard() {
     },
     TEST_CREDIT_CARD_1
   );
-  Services.fog.testResetFOG();
 
   let creditCards = await getCreditCards();
   Assert.equal(creditCards.length, 1, "only one credit card is in storage");
@@ -119,8 +113,10 @@ add_task(async function test_editCreditCard() {
     }
   );
 
-  Assert.equal(1, Glean.creditcard.showEntryManage.testGetValue().length);
-  Assert.equal(1, Glean.creditcard.editManage.testGetValue().length);
+  await assertTelemetry(undefined, [
+    ["creditcard", "show_entry", "manage"],
+    ["creditcard", "edit", "manage"],
+  ]);
 
   await cleanupFunc();
 });
@@ -133,7 +129,6 @@ add_task(async function test_histogram() {
     );
     return;
   }
-  Services.fog.testResetFOG();
 
   const cleanupFunc = await setupTask(
     {

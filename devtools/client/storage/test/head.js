@@ -60,23 +60,16 @@ const {
 } = require("resource://devtools/client/framework/local-tab-commands-factory.js");
 const STORAGE_PREF = "devtools.storage.enabled";
 const DUMPEMIT_PREF = "devtools.dump.emit";
+const DEBUGGERLOG_PREF = "devtools.debugger.log";
 
 // Allows Cache API to be working on usage `http` test page
 const CACHES_ON_HTTP_PREF = "dom.caches.testing.enabled";
 const PATH = "browser/devtools/client/storage/test/";
-const MAIN_DOMAIN = "example.org";
-const MAIN_HOST = "test1.example.org";
-
-const MAIN_ORIGIN = "http://test1.example.org";
-const MAIN_ORIGIN_SECURED = "https://test1.example.org";
-const MAIN_URL = MAIN_ORIGIN + "/" + PATH;
-const MAIN_URL_SECURED = MAIN_ORIGIN_SECURED + "/" + PATH;
-const MAIN_URL_WITH_PORT = MAIN_ORIGIN + ":8000/" + PATH;
-
-const ALT_ORIGIN = "http://sectest1.example.org";
-const ALT_ORIGIN_SECURED = "https://sectest1.example.org";
-const ALT_URL = ALT_ORIGIN + "/" + PATH;
-const ALT_URL_SECURED = ALT_ORIGIN_SECURED + ":443/" + PATH;
+const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
+const MAIN_DOMAIN_SECURED = "https://test1.example.org/" + PATH;
+const MAIN_DOMAIN_WITH_PORT = "http://test1.example.org:8000/" + PATH;
+const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
+const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
 
 // GUID to be used as a separator in compound keys. This must match the same
 // constant in devtools/server/actors/resources/storage/index.js,
@@ -86,12 +79,14 @@ const SEPARATOR_GUID = "{9d414cc5-8319-0a04-0586-c0a6ae01670a}";
 var gToolbox, gPanelWindow, gUI;
 
 // Services.prefs.setBoolPref(DUMPEMIT_PREF, true);
+// Services.prefs.setBoolPref(DEBUGGERLOG_PREF, true);
 
 Services.prefs.setBoolPref(STORAGE_PREF, true);
 Services.prefs.setBoolPref(CACHES_ON_HTTP_PREF, true);
 registerCleanupFunction(() => {
   gToolbox = gPanelWindow = gUI = null;
   Services.prefs.clearUserPref(CACHES_ON_HTTP_PREF);
+  Services.prefs.clearUserPref(DEBUGGERLOG_PREF);
   Services.prefs.clearUserPref(DUMPEMIT_PREF);
   Services.prefs.clearUserPref(STORAGE_PREF);
 });
@@ -488,31 +483,15 @@ function matchVariablesViewProperty(prop, rule) {
  *
  * @param {[string]} ids
  *        The array id of the item in the tree
- * @param {object=} options
- * @param {boolean=} waitForItem
- *        Wait for the item to be available in the tree. Defaults to true. Force
- *        to false if selecting the item is optional AND the item is not
- *        guaranteed to be available.
  */
-async function selectTreeItem(ids, options = {}) {
-  const { waitForItem = true } = options;
-
+async function selectTreeItem(ids) {
   if (gUI.tree.isSelected(ids)) {
     info(`"${ids}" is already selected, returning.`);
     return;
   }
-
   if (!gUI.tree.exists(ids)) {
-    if (!waitForItem) {
-      info(`${ids} is unavailable and waitForItem=false, returning`);
-      return;
-    }
-
-    info(`Wait until ${ids} the expected item appears in the tree`);
-    await waitFor(
-      () => gUI.tree.exists(ids),
-      `Waiting until ${ids} exists in the storage tree`
-    );
+    info(`"${ids}" does not exist, returning.`);
+    return;
   }
 
   // The item exists but is not selected... select it.
@@ -754,7 +733,7 @@ function getCellValue(id, column) {
  */
 async function editCell(id, column, newValue, validate = true) {
   const row = getRowCells(id, true);
-  const editableFieldsEngine = gUI.table.editableFieldsEngine;
+  const editableFieldsEngine = gUI.table._editableFieldsEngine;
 
   editableFieldsEngine.edit(row[column]);
 
@@ -773,7 +752,7 @@ async function editCell(id, column, newValue, validate = true) {
  */
 function startCellEdit(id, column, selectText = true) {
   const row = getRowCells(id, true);
-  const editableFieldsEngine = gUI.table.editableFieldsEngine;
+  const editableFieldsEngine = gUI.table._editableFieldsEngine;
   const cell = row[column];
 
   info("Selecting row " + id);
@@ -783,7 +762,7 @@ function startCellEdit(id, column, selectText = true) {
   editableFieldsEngine.edit(cell);
 
   if (!selectText) {
-    const textbox = gUI.table.editableFieldsEngine.textbox;
+    const textbox = gUI.table._editableFieldsEngine.textbox;
     textbox.selectionEnd = textbox.selectionStart;
   }
 }
@@ -818,7 +797,7 @@ function checkCellUneditable(id, column) {
   const row = getRowCells(id, true);
   const cell = row[column];
 
-  const editableFieldsEngine = gUI.table.editableFieldsEngine;
+  const editableFieldsEngine = gUI.table._editableFieldsEngine;
   const textbox = editableFieldsEngine.textbox;
 
   // When a field is being edited, the cell is hidden, and the textbox is made visible.
@@ -882,7 +861,7 @@ function showAllColumns(state) {
  *         Validate result? Default true.
  */
 async function typeWithTerminator(str, terminator, validate = true) {
-  const editableFieldsEngine = gUI.table.editableFieldsEngine;
+  const editableFieldsEngine = gUI.table._editableFieldsEngine;
   const textbox = editableFieldsEngine.textbox;
   const colName = textbox.closest(".table-widget-column").id;
 
@@ -910,7 +889,7 @@ async function typeWithTerminator(str, terminator, validate = true) {
 }
 
 function getCurrentEditorValue() {
-  const editableFieldsEngine = gUI.table.editableFieldsEngine;
+  const editableFieldsEngine = gUI.table._editableFieldsEngine;
   const textbox = editableFieldsEngine.textbox;
 
   return textbox.value;
@@ -945,8 +924,7 @@ async function checkState(state) {
   for (const [store, names] of state) {
     const storeName = store.join(" > ");
     info(`Selecting tree item ${storeName}`);
-    // Item might be unavailable, set waitForItem=false.
-    await selectTreeItem(store, { waitForItem: false });
+    await selectTreeItem(store);
 
     const items = gUI.table.items;
 
@@ -1066,9 +1044,7 @@ async function performAdd(store) {
   const toolbar = gPanelWindow.document.getElementById("storage-toolbar");
   const type = store[0];
 
-  // Set waitForItem=false, there might not be any item in the table before
-  // using add.
-  await selectTreeItem(store, { waitForItem: false });
+  await selectTreeItem(store);
 
   const menuAdd = toolbar.querySelector("#add-button");
 
@@ -1095,48 +1071,6 @@ async function performAdd(store) {
   is(rowId, value, `Row '${rowId}' was successfully added.`);
 
   return rowId;
-}
-
-/**
- * Remove all items from a store.
- *
- * @param  {Array} store
- *         An array containing the path to the store from which we wish to remove all items.
- */
-async function performRemoveAll(store) {
-  const storeName = store.join(" > ");
-  const toolbar = gPanelWindow.document.getElementById("storage-toolbar");
-
-  // Set waitForItem=false, there might not be any item in the table before
-  // using remove all.
-  await selectTreeItem(store, { waitForItem: false });
-
-  const menuDeleteAll = toolbar.querySelector("#delete-all-button");
-
-  if (menuDeleteAll.hidden) {
-    is(
-      menuDeleteAll.hidden,
-      false,
-      `performRemoveAll called for ${storeName} but it is not supported`
-    );
-    return;
-  }
-
-  menuDeleteAll.click();
-
-  // Wait for the table to become empty
-  await BrowserTestUtils.waitForCondition(
-    () => getCellLength() === 0,
-    `All items removed from ${storeName}`,
-    500,
-    100
-  );
-
-  is(
-    getCellLength(),
-    0,
-    `All items were successfully removed from ${storeName}.`
-  );
 }
 
 // Cell css selector that can be used to count or select cells.

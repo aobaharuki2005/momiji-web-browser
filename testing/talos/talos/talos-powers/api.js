@@ -285,12 +285,12 @@ TalosPowersService.prototype = {
       // that would cause us to write a mostly empty cache to the
       // about:home startup cache on shutdown, which causes that test
       // to break periodically.
-      //
+      AboutNewTab.onBrowserReady();
       // There aren't currently any easily observable notifications or
       // events to let us know when the feed is ready, so we'll just poll
       // for now.
       let pollForFeed = async function () {
-        let foundFeed = AboutNewTab.activityStream?.store.feeds.get(
+        let foundFeed = AboutNewTab.activityStream.store.feeds.get(
           "feeds.system.topsites"
         );
         if (!foundFeed) {
@@ -302,12 +302,7 @@ TalosPowersService.prototype = {
       let feed = await pollForFeed();
       await feed._contile.refresh();
       await feed.refresh({ broadcast: true });
-      // Only write the about:home cache if the cache machinery has been
-      // initialized. In tests where the about:home cache is disabled, init
-      // early-returns before this.log is set, so calling cacheNow() crashes.
-      if (AboutHomeStartupCache.initted) {
-        await AboutHomeStartupCache.cacheNow();
-      }
+      await AboutHomeStartupCache.cacheNow();
     }
 
     await SessionStore.promiseAllWindowsRestored;
@@ -429,7 +424,7 @@ TalosPowersService.prototype = {
     this.ParentExecServices[command.name](
       command.data,
       sendResult,
-      msg.target.documentGlobal
+      msg.target.ownerGlobal
     );
   },
 };

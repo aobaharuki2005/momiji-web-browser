@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // Int64-BigInts which can be exactly represented as doubles receive a fast-path.
 
 const tests = {

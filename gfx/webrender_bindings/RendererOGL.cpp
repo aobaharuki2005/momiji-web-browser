@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,8 +9,6 @@
 #include "base/task.h"
 #include "GLContext.h"
 #include "mozilla/gfx/Logging.h"
-#include "mozilla/Logging.h"
-
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -19,12 +19,6 @@
 #include "mozilla/webrender/RenderCompositor.h"
 #include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/widget/CompositorWidget.h"
-
-#ifdef MOZ_WIDGET_ANDROID
-#  include "GLContextEGL.h"
-#  include "mozilla/layers/AndroidHardwareBuffer.h"
-#  include "ScopedGLHelpers.h"
-#endif
 
 namespace mozilla {
 namespace wr {
@@ -122,6 +116,7 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
       mRenderer(aRenderer),
       mBridge(aBridge),
       mWindowId(aWindowId),
+      mDisableNativeCompositor(false),
       mLastPipelineInfo(new WebRenderPipelineInfo) {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mCompositor);
@@ -132,11 +127,6 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
 
 RendererOGL::~RendererOGL() {
   MOZ_COUNT_DTOR(RendererOGL);
-#ifdef MOZ_WIDGET_ANDROID
-  if (mPendingScreenPixelsRequest) {
-    mPendingScreenPixelsRequest->mPromise->Reject(NS_ERROR_ABORT, __func__);
-  }
-#endif
   if (!mCompositor->MakeCurrent()) {
     gfxCriticalNote
         << "Failed to make render context current during destroying.";
@@ -162,6 +152,11 @@ void RendererOGL::Update() {
     wr_renderer_update(mRenderer);
     FlushPipelineInfo();
   }
+}
+
+static void DoWebRenderDisableNativeCompositor(
+    layers::CompositorBridgeParent* aBridge) {
+  aBridge->NotifyWebRenderDisableNativeCompositor();
 }
 
 RenderedFrameId RendererOGL::UpdateAndRender(
@@ -196,12 +191,6 @@ RenderedFrameId RendererOGL::UpdateAndRender(
     needPostRenderCall = true;
 
     // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
-
-    if (aReadbackBuffer.isSome() || layers::ProfilerScreenshots::IsEnabled()) {
-      if (mCompositor->UseLayerCompositor()) {
-        mCompositor->EnableAsyncScreenshot();
-      }
-    }
 
     if (!mCompositor->BeginFrame()) {
       beginFrame = false;
@@ -238,16 +227,9 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   }
 
   nsTArray<DeviceIntRect> dirtyRects;
-  bool didRasterize = false;
-  bool rendered =
-      wr_renderer_render(mRenderer, size.width, size.height, bufferAge,
-                         aOutStats, &dirtyRects, &didRasterize);
+  bool rendered = wr_renderer_render(mRenderer, size.width, size.height,
+                                     bufferAge, aOutStats, &dirtyRects);
   FlushPipelineInfo();
-
-  // Track whether any tiles were rasterized for reftest support.
-  // Use OR to accumulate - once rasterization is detected, keep it set
-  // until explicitly cleared by CheckAndClearDidRasterize().
-  mLastFrameDidRasterize = mLastFrameDidRasterize || didRasterize;
   if (!rendered) {
     if (present) {
       mCompositor->CancelFrame();
@@ -277,10 +259,6 @@ RenderedFrameId RendererOGL::UpdateAndRender(
         }
       }
     }
-
-#ifdef MOZ_WIDGET_ANDROID
-    MaybeCaptureScreenPixels();
-#endif
 
     if (size.Width() != 0 && size.Height() != 0) {
       if (!mCompositor->MaybeGrabScreenshot(size.ToUnknownSize())) {
@@ -326,7 +304,14 @@ bool RendererOGL::EnsureAsyncScreenshot() {
   if (mCompositor->SupportAsyncScreenshot()) {
     return true;
   }
-  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+  if (!mDisableNativeCompositor) {
+    layers::CompositorThread()->Dispatch(
+        NewRunnableFunction("DoWebRenderDisableNativeCompositorRunnable",
+                            &DoWebRenderDisableNativeCompositor, mBridge));
+
+    mDisableNativeCompositor = true;
+    gfxCriticalNote << "Disable native compositor for async screenshot";
+  }
   return false;
 }
 
@@ -467,77 +452,6 @@ Maybe<layers::FrameRecording> RendererOGL::EndRecording() {
   return maybeRecording;
 }
 
-#ifdef MOZ_WIDGET_ANDROID
-RefPtr<RendererOGL::ScreenPixelsPromise> RendererOGL::RequestScreenPixels(
-    gfx::IntRect aSourceRect, gfx::IntSize aDestSize) {
-  // If a new request is made we no longer care about the result of the previous
-  // one, so just reject it if it exists.
-  if (mPendingScreenPixelsRequest) {
-    mPendingScreenPixelsRequest.extract().mPromise->Reject(NS_ERROR_ABORT,
-                                                           __func__);
-  }
-  mPendingScreenPixelsRequest.emplace(ScreenPixelsRequest{
-      .mSourceRect = aSourceRect,
-      .mDestSize = aDestSize,
-      .mPromise = new ScreenPixelsPromise::Private(__func__),
-  });
-  return mPendingScreenPixelsRequest->mPromise;
-}
-
-void RendererOGL::MaybeCaptureScreenPixels() {
-  if (!mPendingScreenPixelsRequest || !EnsureAsyncScreenshot()) {
-    return;
-  }
-
-  auto request = mPendingScreenPixelsRequest.extract();
-
-  const RefPtr<layers::AndroidHardwareBuffer> hardwareBuffer =
-      layers::AndroidHardwareBuffer::Create(request.mDestSize,
-                                            gfx::SurfaceFormat::R8G8B8A8);
-
-  if (mCompositor->MaybeCaptureScreenPixels(request.mSourceRect,
-                                            hardwareBuffer)) {
-    request.mPromise->Resolve(hardwareBuffer, __func__);
-    return;
-  }
-
-  auto* const gle = gl::GLContextEGL::Cast(gl());
-  const auto& egl = gle->mEgl;
-  gl::ScopedEGLImageForAndroidHardwareBuffer eglImage(gle, hardwareBuffer);
-  gl::ScopedBindFramebuffer scopedBind(gl());
-  gl::ScopedRenderbuffer rb(gl());
-  gl()->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, rb);
-  gl()->fEGLImageTargetRenderbufferStorage(LOCAL_GL_RENDERBUFFER, eglImage);
-  gl::ScopedFramebufferForRenderbuffer fb(gl(), rb);
-
-  const auto srcRect =
-      mCompositor->SurfaceOriginIsTopLeft()
-          ? request.mSourceRect
-          : gfx::IntRect(
-                request.mSourceRect.x,
-                mCompositor->GetBufferSize().height - request.mSourceRect.y,
-                request.mSourceRect.width, -request.mSourceRect.height);
-  const auto destRect = gfx::IntRect({}, hardwareBuffer->mSize);
-  gl()->BindReadFB(0);
-  gl()->BindDrawFB(fb.FB());
-  gl()->fBlitFramebuffer(srcRect.x, srcRect.y, srcRect.XMost(), srcRect.YMost(),
-                         destRect.x, destRect.y, destRect.XMost(),
-                         destRect.YMost(), LOCAL_GL_COLOR_BUFFER_BIT,
-                         LOCAL_GL_LINEAR);
-
-  if (EGLSync sync =
-          egl->fCreateSync(LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, nullptr)) {
-    auto fence = UniqueFileHandle(egl->fDupNativeFenceFDANDROID(sync));
-    if (fence) {
-      hardwareBuffer->SetAcquireFence(std::move(fence));
-    }
-    egl->fDestroySync(sync);
-  }
-
-  request.mPromise->Resolve(hardwareBuffer, __func__);
-}
-#endif
-
 void RendererOGL::FlushPipelineInfo() {
   RefPtr<WebRenderPipelineInfo> info = new WebRenderPipelineInfo;
   wr_renderer_flush_pipeline_info(mRenderer, &info->Raw());
@@ -565,12 +479,6 @@ void RendererOGL::AccumulateMemoryReport(MemoryReport* aReport) {
 void RendererOGL::SetProfilerUI(const nsACString& aUI) {
   wr_renderer_set_profiler_ui(GetRenderer(), (const uint8_t*)aUI.BeginReading(),
                               aUI.Length());
-}
-
-bool RendererOGL::CheckAndClearDidRasterize() {
-  bool result = mLastFrameDidRasterize;
-  mLastFrameDidRasterize = false;
-  return result;
 }
 
 }  // namespace wr

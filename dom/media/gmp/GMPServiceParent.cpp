@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -315,9 +316,8 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
     // origin-pairs, if we try to open an origin-pair for non-PB mode, we'll get
     // the NodeId salt stored on-disk, and if we try to open a PB mode
     // origin-pair, we'll re-generate new salt.
-    return GMPDispatch(NewRunnableMethod(
-        "gmp::GeckoMediaPluginServiceParent::ClearTemporaryStorage", this,
-        &GeckoMediaPluginServiceParent::ClearTemporaryStorage));
+    mTempNodeIds.Clear();
+    mTempGMPStorage.Clear();
   } else if (!strcmp("browser:purge-session-history", aTopic)) {
     GMP_LOG_DEBUG(
         "Received 'browser:purge-session-history', clearing everything");
@@ -377,11 +377,10 @@ void GeckoMediaPluginServiceParent::OnPreferenceChanged(
   }
 }
 
-RefPtr<GenericNonExclusivePromise>
-GeckoMediaPluginServiceParent::EnsureInitialized() {
+RefPtr<GenericPromise> GeckoMediaPluginServiceParent::EnsureInitialized() {
   MonitorAutoLock lock(mInitPromiseMonitor);
   if (mLoadPluginsFromDiskComplete) {
-    return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
+    return GenericPromise::CreateAndResolve(true, __func__);
   }
   // We should have an init promise in flight.
   MOZ_ASSERT(!mInitPromise.IsEmpty());
@@ -417,8 +416,7 @@ GeckoMediaPluginServiceParent::GetContentParent(
        nodeIdString = std::move(nodeIdString), api = nsCString(aAPI),
        tags = aTags.Clone(), helper = RefPtr<GMPCrashHelper>(aHelper),
        holder = std::move(holder)](
-          const GenericNonExclusivePromise::ResolveOrRejectValue&
-              aValue) mutable -> void {
+          const GenericPromise::ResolveOrRejectValue& aValue) mutable -> void {
         if (aValue.IsReject()) {
           NS_WARNING("GMPService::EnsureInitialized failed.");
           holder->Reject(NS_ERROR_FAILURE, __func__);
@@ -450,7 +448,7 @@ void GeckoMediaPluginServiceParent::InitializePlugins(
   }
 
   RefPtr<GeckoMediaPluginServiceParent> self(this);
-  RefPtr<GenericNonExclusivePromise> p = mInitPromise.Ensure(__func__);
+  RefPtr<GenericPromise> p = mInitPromise.Ensure(__func__);
   InvokeAsync(aGMPThread, this, __func__,
               &GeckoMediaPluginServiceParent::LoadFromEnvironment)
       ->Then(
@@ -490,7 +488,6 @@ void GeckoMediaPluginServiceParent::UnloadPlugins() {
     std::swap(plugins, mPlugins);
 
     for (GMPServiceParent* parent : mServiceParents) {
-      parent->BeginShutdown();
       (void)parent->SendBeginShutdown();
     }
 
@@ -587,7 +584,7 @@ RefPtr<GenericPromise> GeckoMediaPluginServiceParent::LoadFromEnvironment() {
 class NotifyObserversTask final : public mozilla::Runnable {
  public:
   explicit NotifyObserversTask(const char* aTopic, nsString aData = u""_ns)
-      : Runnable(aTopic), mTopic(aTopic), mData(std::move(aData)) {}
+      : Runnable(aTopic), mTopic(aTopic), mData(aData) {}
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIObserverService> obsService =
@@ -1693,8 +1690,7 @@ void GeckoMediaPluginServiceParent::ClearNodeIdAndPlugin(
 void GeckoMediaPluginServiceParent::ForgetThisSiteOnGMPThread(
     const nsACString& aSite, const mozilla::OriginAttributesPattern& aPattern) {
   AssertOnGMPThread();
-  GMP_LOG_DEBUG("%s::%s: origin=%s", __CLASS__, __FUNCTION__,
-                PromiseFlatCString(aSite).get());
+  GMP_LOG_DEBUG("%s::%s: origin=%s", __CLASS__, __FUNCTION__, aSite.Data());
 
   struct OriginFilter : public DirectoryFilter {
     explicit OriginFilter(const nsACString& aSite,
@@ -1716,7 +1712,7 @@ void GeckoMediaPluginServiceParent::ForgetThisBaseDomainOnGMPThread(
     const nsACString& aBaseDomain) {
   AssertOnGMPThread();
   GMP_LOG_DEBUG("%s::%s: baseDomain=%s", __CLASS__, __FUNCTION__,
-                PromiseFlatCString(aBaseDomain).get());
+                aBaseDomain.Data());
 
   struct BaseDomainFilter : public DirectoryFilter {
     explicit BaseDomainFilter(const nsACString& aBaseDomain)
@@ -1864,14 +1860,6 @@ void GeckoMediaPluginServiceParent::ServiceUserDestroyed(
   mServiceParents.RemoveElement(aServiceParent);
 }
 
-void GeckoMediaPluginServiceParent::ClearTemporaryStorage() {
-  AssertOnGMPThread();
-  GMP_LOG_DEBUG("%s::%s", __CLASS__, __FUNCTION__);
-
-  mTempNodeIds.Clear();
-  mTempGMPStorage.Clear();
-}
-
 void GeckoMediaPluginServiceParent::ClearStorage() {
   AssertOnGMPThread();
   GMP_LOG_DEBUG("%s::%s", __CLASS__, __FUNCTION__);
@@ -1925,11 +1913,6 @@ GMPServiceParent::GMPServiceParent(GeckoMediaPluginServiceParent* aService)
 GMPServiceParent::~GMPServiceParent() {
   MOZ_ASSERT(NS_IsMainThread(), "Should be destroyted on the main thread");
   mService->ServiceUserDestroyed(this);
-}
-
-void GMPServiceParent::BeginShutdown() {
-  mService->mMutex.AssertCurrentThreadOwns();
-  mShutdownBlocker = nullptr;
 }
 
 mozilla::ipc::IPCResult GMPServiceParent::RecvLaunchGMP(

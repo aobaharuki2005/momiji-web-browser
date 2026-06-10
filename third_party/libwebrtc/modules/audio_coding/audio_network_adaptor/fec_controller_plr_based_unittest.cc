@@ -400,32 +400,25 @@ TEST(FecControllerPlrBasedTest, SingleThresholdCurveForEnablingAndDisabling) {
   };
 
   std::vector<NetworkState> below{
-      {.bandwidth = kBandwidthLow - 1,
-       .packet_loss = kPacketLossAtLowBw + 0.1f},  // B1
-      {.bandwidth = (kBandwidthLow + kBandwidthHigh) / 2,
-       .packet_loss =
-           (kPacketLossAtLowBw + kPacketLossAtHighBw) / 2 - kEpsilon},  // B2
-      {.bandwidth = kBandwidthHigh + 1,
-       .packet_loss = kPacketLossAtHighBw - kEpsilon}  // B3
+      {kBandwidthLow - 1, kPacketLossAtLowBw + 0.1f},  // B1
+      {(kBandwidthLow + kBandwidthHigh) / 2,
+       (kPacketLossAtLowBw + kPacketLossAtHighBw) / 2 - kEpsilon},  // B2
+      {kBandwidthHigh + 1, kPacketLossAtHighBw - kEpsilon}          // B3
   };
 
   std::vector<NetworkState> on{
-      {.bandwidth = kBandwidthLow,
-       .packet_loss = kPacketLossAtLowBw + 0.1f},                       // O1
-      {.bandwidth = kBandwidthLow, .packet_loss = kPacketLossAtLowBw},  // O2
-      {.bandwidth = (kBandwidthLow + kBandwidthHigh) / 2,
-       .packet_loss = (kPacketLossAtLowBw + kPacketLossAtHighBw) / 2},    // O3
-      {.bandwidth = kBandwidthHigh, .packet_loss = kPacketLossAtHighBw},  // O4
-      {.bandwidth = kBandwidthHigh + 1,
-       .packet_loss = kPacketLossAtHighBw},  // O5
+      {kBandwidthLow, kPacketLossAtLowBw + 0.1f},  // O1
+      {kBandwidthLow, kPacketLossAtLowBw},         // O2
+      {(kBandwidthLow + kBandwidthHigh) / 2,
+       (kPacketLossAtLowBw + kPacketLossAtHighBw) / 2},  // O3
+      {kBandwidthHigh, kPacketLossAtHighBw},             // O4
+      {kBandwidthHigh + 1, kPacketLossAtHighBw},         // O5
   };
 
   std::vector<NetworkState> above{
-      {.bandwidth = (kBandwidthLow + kBandwidthHigh) / 2,
-       .packet_loss =
-           (kPacketLossAtLowBw + kPacketLossAtHighBw) / 2 + kEpsilon},  // A1
-      {.bandwidth = kBandwidthHigh + 1,
-       .packet_loss = kPacketLossAtHighBw + kEpsilon},  // A2
+      {(kBandwidthLow + kBandwidthHigh) / 2,
+       (kPacketLossAtLowBw + kPacketLossAtHighBw) / 2 + kEpsilon},  // A1
+      {kBandwidthHigh + 1, kPacketLossAtHighBw + kEpsilon},         // A2
   };
 
   // Test that FEC is turned off whenever we're below the curve, independent

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -752,10 +754,6 @@ class ModuleEnvironmentObject : public EnvironmentObject {
                                          Handle<ModuleObject*> module);
   static ModuleEnvironmentObject* createSynthetic(JSContext* cx,
                                                   Handle<ModuleObject*> module);
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
-  static ModuleEnvironmentObject* createForWasmModule(
-      JSContext* cx, Handle<ModuleObject*> module);
-#endif
 
   ModuleObject& module() const;
   IndirectBindingMap& importBindings() const;
@@ -775,7 +773,7 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   // `env` may be a DebugEnvironmentProxy, but not a hollow environment.
   static ModuleEnvironmentObject* find(JSObject* env);
 
-  uint32_t firstSyntheticValueSlot() { return RESERVED_SLOTS + 1; }
+  uint32_t firstSyntheticValueSlot() { return RESERVED_SLOTS; }
 
  private:
   static bool lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
@@ -1177,6 +1175,9 @@ class MOZ_RAII EnvironmentIter {
   void incrementScopeIter();
   void settle();
 
+  // No value semantics.
+  EnvironmentIter(const EnvironmentIter& ei) = delete;
+
  public:
   // Constructing from a copy of an existing EnvironmentIter.
   EnvironmentIter(JSContext* cx, const EnvironmentIter& ei);
@@ -1193,9 +1194,6 @@ class MOZ_RAII EnvironmentIter {
   // to initialize to proper enclosing environment/scope.
   EnvironmentIter(JSContext* cx, JSObject* env, Scope* scope,
                   AbstractFramePtr frame);
-
-  // No value semantics.
-  EnvironmentIter(const EnvironmentIter& ei) = delete;
 
   bool done() const { return si_.done(); }
 
@@ -1498,7 +1496,7 @@ class DebugEnvironments {
   LiveEnvironmentMap liveEnvs;
 
  public:
-  explicit DebugEnvironments(JSContext* cx);
+  DebugEnvironments(JSContext* cx, Zone* zone);
   ~DebugEnvironments();
 
   Zone* zone() const { return zone_; }
@@ -1561,7 +1559,6 @@ class DebugEnvironments {
                            const jsbytecode* pc);
   static void onPopWith(AbstractFramePtr frame);
   static void onPopModule(JSContext* cx, const EnvironmentIter& ei);
-  static void onPopWasm(JSContext* cx, AbstractFramePtr frame);
   static void onRealmUnsetIsDebuggee(Realm* realm);
 };
 

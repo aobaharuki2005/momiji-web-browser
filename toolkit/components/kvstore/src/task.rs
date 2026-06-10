@@ -188,7 +188,7 @@ impl GetOrCreateWithOptionsTask {
     }
 
     fn convert(&self, result: RkvStoreTuple) -> Result<RefPtr<KeyValueDatabase>, KeyValueError> {
-        KeyValueDatabase::new(result.0, result.1)
+        Ok(KeyValueDatabase::new(result.0, result.1)?)
     }
 }
 

@@ -17,68 +17,72 @@ XPCOMUtils.defineLazyServiceGetter(
 export const webauthn = {};
 
 /**
- * Enum of supported protocol types.
+ * Add a virtual authenticator.
  *
- * @readonly
- * @enum {ProtocolType}
+ * @param {string} protocol one of "ctap1/u2f", "ctap2", "ctap2_1"
+ * @param {string} transport one of "usb", "nfc", "ble", "smart-card",
+ *                 "hybrid", "internal"
+ * @param {boolean} hasResidentKey
+ * @param {boolean} hasUserVerification
+ * @param {boolean} isUserConsenting
+ * @param {boolean} isUserVerified
+ * @returns {id} the id of the added authenticator
  */
-webauthn.ProtocolType = {
-  ctap1_u2f: "ctap1/u2f",
-  ctap2: "ctap2",
-  ctap2_1: "ctap2_1",
+webauthn.addVirtualAuthenticator = function (
+  protocol,
+  transport,
+  hasResidentKey,
+  hasUserVerification,
+  isUserConsenting,
+  isUserVerified
+) {
+  return lazy.webauthnService.addVirtualAuthenticator(
+    protocol,
+    transport,
+    hasResidentKey,
+    hasUserVerification,
+    isUserConsenting,
+    isUserVerified
+  );
 };
 
 /**
- * Enum of supported transport types.
+ * Removes a virtual authenticator.
  *
- * @readonly
- * @enum {TransportType}
+ * @param {id} authenticatorId the id of the virtual authenticator
  */
-webauthn.TransportType = {
-  ble: "ble",
-  hybrid: "hybrid",
-  internal: "internal",
-  nfc: "nfc",
-  smart_card: "smart-card",
-  usb: "usb",
+webauthn.removeVirtualAuthenticator = function (authenticatorId) {
+  lazy.webauthnService.removeVirtualAuthenticator(authenticatorId);
 };
 
 /**
- * Add a credential to a virtual authenticator.
+ * Adds a credential to a previously-added virtual authenticator.
  *
- * @param {string} authenticatorId
- *     The ID of the virtual authenticator to add the credential to.
- * @param {object} credentials
- *     The credential to add.
- * @param {string} credentials.credentialId
- *     A probabilistically-unique byte sequence identifying a public key
- *     credential source and its authentication assertions, encoded using
- *     Base64url Encoding.
- * @param {boolean} credentials.isResidentCredential
- *     If true, a client-side discoverable credential is created. If false,
- *     a server-side credential is created instead.
- * @param {string} credentials.rpId
- *     The Relying Party ID the credential is scoped to.
- * @param {string} credentials.privateKey
- *     An asymmetric key package containing a single private key per RFC5958,
- *     encoded using Base64url Encoding.
- * @param {string} [credentials.userHandle]
- *     The userHandle associated with the credential, encoded using Base64url
- *     Encoding.
- * @param {number} credentials.signCount
- *     The initial value for a signature counter associated with the public
- *     key credential source.
+ * @param {string} authenticatorId the id of the virtual authenticator
+ * @param {string} credentialId a probabilistically-unique byte sequence
+ *                 identifying a public key credential source and its
+ *                 authentication assertions (encoded using Base64url
+ *                 Encoding).
+ * @param {boolean} isResidentCredential if set to true, a client-side
+ *                  discoverable credential is created. If set to false, a
+ *                  server-side credential is created instead.
+ * @param {string} rpId The Relying Party ID the credential is scoped to.
+ * @param {string} privateKey An asymmetric key package containing a single
+ *                 private key per RFC5958, encoded using Base64url Encoding.
+ * @param {string} userHandle The userHandle associated to the credential
+ *                 encoded using Base64url Encoding.
+ * @param {number} signCount The initial value for a signature counter
+ *                 associated to the public key credential source.
  */
-webauthn.addCredential = function (authenticatorId, credentials) {
-  const {
-    credentialId,
-    isResidentCredential,
-    rpId,
-    privateKey,
-    userHandle,
-    signCount,
-  } = credentials;
-
+webauthn.addCredential = function (
+  authenticatorId,
+  credentialId,
+  isResidentCredential,
+  rpId,
+  privateKey,
+  userHandle,
+  signCount
+) {
   lazy.webauthnService.addCredential(
     authenticatorId,
     credentialId,
@@ -91,102 +95,39 @@ webauthn.addCredential = function (authenticatorId, credentials) {
 };
 
 /**
- * Add a virtual authenticator.
+ * Gets all credentials from a virtual authenticator.
  *
- * @param {object} config
- * @param {ProtocolType} config.protocol
- *     The protocol this authenticator speaks.
- * @param {TransportType} config.transport
- *     The transport this authenticator uses.
- * @param {boolean=} config.hasResidentKey
- *     Whether the authenticator supports client-side discoverable credentials.
- *     Defaults to false.
- * @param {boolean=} config.hasUserVerification
- *     Whether the authenticator supports user verification. Defaults to false.
- * @param {boolean=} config.isUserConsenting
- *     Whether the authenticator will simulate user consent for all operations.
- *     Defaults to false.
- * @param {boolean=} config.isUserVerified
- *     Whether the authenticator simulates always passing user verification.
- *     Defaults to false.
- *
- * @returns {string}
- *     The ID of the added virtual authenticator.
- */
-webauthn.addVirtualAuthenticator = function (config) {
-  const {
-    protocol,
-    transport,
-    hasResidentKey = false,
-    hasUserVerification = false,
-    isUserConsenting = true,
-    isUserVerified = false,
-  } = config;
-
-  return lazy.webauthnService.addVirtualAuthenticator(
-    protocol,
-    transport,
-    hasResidentKey,
-    hasUserVerification,
-    isUserConsenting,
-    isUserVerified
-  );
-};
-
-/**
- * Get credentials stored in a virtual authenticator.
- *
- * @param {string} authenticatorId
- *     The ID of the virtual authenticator to retrieve credentials from.
- *
- * @returns {object}
- *     The credentials stored on the virtual authenticator.
+ * @param {string} authenticatorId the id of the virtual authenticator
+ * @returns {object} the credentials on the authenticator
  */
 webauthn.getCredentials = function (authenticatorId) {
   return lazy.webauthnService.getCredentials(authenticatorId);
 };
 
 /**
- * Remove a credential from a virtual authenticator.
+ * Removes a credential from a virtual authenticator.
  *
- * @param {string} authenticatorId
- *     The ID of the virtual authenticator to remove the credential from.
- * @param {string} credentialId
- *     The ID of the credential to remove.
+ * @param {string} authenticatorId the id of the virtual authenticator
+ * @param {string} credentialId the id of the credential
  */
 webauthn.removeCredential = function (authenticatorId, credentialId) {
   lazy.webauthnService.removeCredential(authenticatorId, credentialId);
 };
 
 /**
- * Remove all credentials from a virtual authenticator.
+ * Removes all credentials from a virtual authenticator.
  *
- * @param {string} authenticatorId
- *     The ID of the virtual authenticator to remove all credentials from.
+ * @param {string} authenticatorId the id of the virtual authenticator
  */
 webauthn.removeAllCredentials = function (authenticatorId) {
   lazy.webauthnService.removeAllCredentials(authenticatorId);
 };
 
 /**
- * Remove a virtual authenticator.
+ * Sets the "isUserVerified" bit on a virtual authenticator.
  *
- * @param {string} authenticatorId
- *     The ID of the virtual authenticator to remove.
- */
-webauthn.removeVirtualAuthenticator = function (authenticatorId) {
-  lazy.webauthnService.removeVirtualAuthenticator(authenticatorId);
-};
-
-/**
- * Set the user verified flag on a virtual authenticator.
- *
- * @param {string} authenticatorId
- *     The ID of the virtual authenticator to update.
- * @param {boolean} isUserVerified
- *     The value to set the "isUserVerified" bit to on the authenticator.
- *
- * @see https://www.w3.org/TR/webauthn-3/#sctn-automation-set-user-verified
+ * @param {string} authenticatorId the id of the virtual authenticator
+ * @param {bool} isUserVerified the value to set the "isUserVerified" bit to
  */
 webauthn.setUserVerified = function (authenticatorId, isUserVerified) {
   lazy.webauthnService.setUserVerified(authenticatorId, isUserVerified);

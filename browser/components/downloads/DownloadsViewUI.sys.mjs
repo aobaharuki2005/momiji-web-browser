@@ -43,13 +43,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "A DLP agent"
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "safeBrowsingAllowOverride",
-  "browser.safebrowsing.allowOverride",
-  true
-);
-
 import { Integration } from "resource://gre/modules/Integration.sys.mjs";
 
 Integration.downloads.defineESModuleGetter(
@@ -206,9 +199,7 @@ export var DownloadsViewUI = {
     // Only show "unblock" for blocked (dirty) items that have not been
     // confirmed and have temporary data:
     contextMenu.querySelector(".downloadUnblockMenuItem").hidden =
-      state != DOWNLOAD_DIRTY ||
-      !element.classList.contains("temporary-block") ||
-      !lazy.safeBrowsingAllowOverride;
+      state != DOWNLOAD_DIRTY || !element.classList.contains("temporary-block");
 
     // Can only remove finished/failed/canceled/blocked downloads.
     contextMenu.querySelector(".downloadRemoveFromHistoryMenuItem").hidden = ![
@@ -455,14 +446,14 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     this.element.setAttribute("active", true);
     this.element.setAttribute("orient", "horizontal");
     this.element.addEventListener("click", ev => {
-      ev.target.documentGlobal.DownloadsView.onDownloadClick(ev);
+      ev.target.ownerGlobal.DownloadsView.onDownloadClick(ev);
     });
     this.element.appendChild(
       document.importNode(downloadListItemFragment, true)
     );
     let downloadButton = this.element.querySelector(".downloadButton");
     downloadButton.addEventListener("command", function (event) {
-      event.target.documentGlobal.DownloadsView.onDownloadButton(event);
+      event.target.ownerGlobal.DownloadsView.onDownloadButton(event);
     });
     for (let [propertyName, selector] of [
       ["_downloadTypeIcon", ".downloadTypeIcon"],
@@ -1005,15 +996,10 @@ DownloadsViewUI.DownloadElementShell.prototype = {
 
   showDeletedOrMissing() {
     this.element.removeAttribute("exists");
-    let stringKey;
-    if (this.download.deleted && this.download.error?.becauseBlocked) {
-      stringKey = "fileBlockedAndDeleted";
-    } else if (this.download.deleted) {
-      stringKey = "fileDeleted";
-    } else {
-      stringKey = "fileMovedOrMissing";
-    }
-    let label = lazy.DownloadsCommon.strings[stringKey];
+    let label =
+      lazy.DownloadsCommon.strings[
+        this.download.deleted ? "fileDeleted" : "fileMovedOrMissing"
+      ];
     this.showStatusWithDetails(label, label);
     this.hideButton();
   },
@@ -1105,13 +1091,12 @@ DownloadsViewUI.DownloadElementShell.prototype = {
         return !!referrer && referrer.asciiSpec != "about:blank";
       }
       case "downloadsCmd_confirmBlock":
-        return this.download.hasBlockedData;
       case "downloadsCmd_chooseUnblock":
       case "downloadsCmd_chooseOpen":
       case "downloadsCmd_unblock":
       case "downloadsCmd_unblockAndSave":
       case "downloadsCmd_unblockAndOpen":
-        return this.download.hasBlockedData && lazy.safeBrowsingAllowOverride;
+        return this.download.hasBlockedData;
       case "downloadsCmd_cancel":
         return this.download.hasPartialData || !this.download.stopped;
       case "downloadsCmd_open":
@@ -1176,7 +1161,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   downloadsCmd_openReferrer() {
-    this.element.documentGlobal.openURL(
+    this.element.ownerGlobal.openURL(
       this.download.source.referrerInfo.originalReferrer
     );
   },
@@ -1201,7 +1186,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       return;
     }
 
-    let window = this.browserWindow || this.element.documentGlobal;
+    let window = this.browserWindow || this.element.ownerGlobal;
     let document = window.document;
 
     // Do not suggest a file name if we don't know the original target.

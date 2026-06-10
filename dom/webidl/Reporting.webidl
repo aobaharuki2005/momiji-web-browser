@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -15,8 +16,8 @@ interface ReportBody {
 ();
 };
 
-// Not exposed to Window for webcompat reasons
-[Exposed=(Window,Worker), LegacyNoInterfaceObject]
+[Pref="dom.reporting.enabled",
+ Exposed=(Window,Worker)]
 interface Report {
   [Default] object toJSON
 ();
@@ -28,7 +29,7 @@ interface Report {
 [Pref="dom.reporting.enabled",
  Exposed=(Window,Worker)]
 interface ReportingObserver {
-  [UseCounter, Throws]
+  [Throws]
   constructor(ReportingObserverCallback callback, optional ReportingObserverOptions options = {});
   undefined observe();
   undefined disconnect();
@@ -44,8 +45,8 @@ dictionary ReportingObserverOptions {
 
 typedef sequence<Report> ReportList;
 
-// Not exposed to Window for webcompat reasons
-[Exposed=Window, LegacyNoInterfaceObject]
+[Pref="dom.reporting.enabled",
+ Exposed=Window]
 interface DeprecationReportBody : ReportBody {
   [Default] object toJSON();
 
@@ -84,28 +85,6 @@ interface CSPViolationReportBody : ReportBody {
   readonly attribute unsigned short statusCode;
   readonly attribute unsigned long? lineNumber;
   readonly attribute unsigned long? columnNumber;
-};
-
-enum IntegrityViolationReason {
-  "manifest_unavailable",
-  "invalid_manifest",
-  "invalid_transparency_proof",
-  "untrusted_transparency_proof",
-  "missing_from_manifest",
-  "no_manifest_match",
-};
-
-// https://w3c.github.io/webappsec-subresource-integrity/#report-violations
-[Exposed=Window, Pref="dom.reporting.enabled"]
-interface IntegrityViolationReportBody : ReportBody {
-  [Default] object toJSON();
-  readonly attribute UTF8String documentURL;
-  readonly attribute UTF8String blockedURL;
-  readonly attribute UTF8String destination;
-  readonly attribute boolean    reportOnly;
-  // TODO: Move this to a new interface.
-  [Pref="security.waict.enabled"]
-  readonly attribute IntegrityViolationReason? reason;
 };
 
 // Used internally to process the JSON

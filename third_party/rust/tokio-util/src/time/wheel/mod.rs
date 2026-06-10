@@ -7,20 +7,19 @@ pub(crate) use self::stack::Stack;
 
 use std::borrow::Borrow;
 use std::fmt::Debug;
+use std::usize;
 
 /// Timing wheel implementation.
 ///
-/// This type provides the hashed timing wheel implementation that backs
-/// [`DelayQueue`].
+/// This type provides the hashed timing wheel implementation that backs `Timer`
+/// and `DelayQueue`.
 ///
 /// The structure is generic over `T: Stack`. This allows handling timeout data
 /// being stored on the heap or in a slab. In order to support the latter case,
 /// the slab must be passed into each function allowing the implementation to
 /// lookup timer entries.
 ///
-/// See `Driver` documentation for some implementation notes.
-///
-/// [`DelayQueue`]: crate::time::DelayQueue
+/// See `Timer` documentation for some implementation notes.
 #[derive(Debug)]
 pub(crate) struct Wheel<T> {
     /// The number of milliseconds elapsed since the wheel started.
@@ -36,7 +35,7 @@ pub(crate) struct Wheel<T> {
     /// * ~ 4 min slots / ~ 4 hr range
     /// * ~ 4 hr slots / ~ 12 day range
     /// * ~ 12 day slots / ~ 2 yr range
-    levels: Box<[Level<T>]>,
+    levels: Vec<Level<T>>,
 }
 
 /// Number of levels. Each level has 64 slots. By using 6 levels with 64 slots
@@ -75,8 +74,8 @@ where
     /// # Arguments
     ///
     /// * `when`: is the instant at which the entry should be fired. It is
-    ///   represented as the number of milliseconds since the creation
-    ///   of the timing wheel.
+    ///           represented as the number of milliseconds since the creation
+    ///           of the timing wheel.
     ///
     /// * `item`: The item to insert into the wheel.
     ///
@@ -119,7 +118,6 @@ where
     }
 
     /// Remove `item` from the timing wheel.
-    #[track_caller]
     pub(crate) fn remove(&mut self, item: &T::Borrowed, store: &mut T::Store) {
         let when = T::when(item, store);
 
@@ -138,12 +136,6 @@ where
     /// Instant at which to poll
     pub(crate) fn poll_at(&self) -> Option<u64> {
         self.next_expiration().map(|expiration| expiration.deadline)
-    }
-
-    /// Next key that will expire
-    pub(crate) fn peek(&self) -> Option<T::Owned> {
-        self.next_expiration()
-            .and_then(|expiration| self.peek_entry(&expiration))
     }
 
     /// Advances the timer up to the instant represented by `now`.
@@ -251,10 +243,6 @@ where
         self.levels[expiration.level].pop_entry_slot(expiration.slot, store)
     }
 
-    fn peek_entry(&self, expiration: &Expiration) -> Option<T::Owned> {
-        self.levels[expiration.level].peek_entry_slot(expiration.slot)
-    }
-
     fn level_for(&self, when: u64) -> usize {
         level_for(self.elapsed, when)
     }
@@ -265,11 +253,8 @@ fn level_for(elapsed: u64, when: u64) -> usize {
 
     // Mask in the trailing bits ignored by the level calculation in order to cap
     // the possible leading zeros
-    let mut masked = elapsed ^ when | SLOT_MASK;
-    if masked >= MAX_DURATION {
-        // Fudge the timer into the top level
-        masked = MAX_DURATION - 1;
-    }
+    let masked = elapsed ^ when | SLOT_MASK;
+
     let leading_zeros = masked.leading_zeros() as usize;
     let significant = 63 - leading_zeros;
     significant / 6
@@ -282,7 +267,13 @@ mod test {
     #[test]
     fn test_level_for() {
         for pos in 0..64 {
-            assert_eq!(0, level_for(0, pos), "level_for({pos}) -- binary = {pos:b}");
+            assert_eq!(
+                0,
+                level_for(0, pos),
+                "level_for({}) -- binary = {:b}",
+                pos,
+                pos
+            );
         }
 
         for level in 1..5 {
@@ -291,7 +282,9 @@ mod test {
                 assert_eq!(
                     level,
                     level_for(0, a as u64),
-                    "level_for({a}) -- binary = {a:b}"
+                    "level_for({}) -- binary = {:b}",
+                    a,
+                    a
                 );
 
                 if pos > level {
@@ -299,7 +292,9 @@ mod test {
                     assert_eq!(
                         level,
                         level_for(0, a as u64),
-                        "level_for({a}) -- binary = {a:b}"
+                        "level_for({}) -- binary = {:b}",
+                        a,
+                        a
                     );
                 }
 
@@ -308,7 +303,9 @@ mod test {
                     assert_eq!(
                         level,
                         level_for(0, a as u64),
-                        "level_for({a}) -- binary = {a:b}"
+                        "level_for({}) -- binary = {:b}",
+                        a,
+                        a
                     );
                 }
             }

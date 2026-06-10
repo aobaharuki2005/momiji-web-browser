@@ -6,7 +6,6 @@ package mozilla.components.support.ktx.kotlin
 
 import org.junit.Assert
 import org.junit.Test
-import kotlin.test.assertIs
 
 class CollectionKtTest {
 
@@ -55,6 +54,7 @@ class CollectionKtTest {
         }
     }
 
+    @Suppress("USELESS_IS_CHECK")
     @Test
     fun `cross product result is list of return type`() {
         val numbers = listOf(1, 2, 3)
@@ -62,7 +62,7 @@ class CollectionKtTest {
         val result = numbers.crossProduct(letters) { number, letter ->
             number to letter
         }
-        assertIs<List<*>>(result)
+        Assert.assertTrue(result is List)
         Assert.assertEquals(Pair::class, result[0]::class)
         Assert.assertEquals(Int::class, result[0].first::class)
         Assert.assertEquals(Char::class, result[0].second::class)

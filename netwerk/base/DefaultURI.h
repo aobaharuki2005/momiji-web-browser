@@ -2,12 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DefaultURI_h_
-#define DefaultURI_h_
+#ifndef DefaultURI_h__
+#define DefaultURI_h__
 
-#include "nsIIPCSerializableURI.h"
 #include "nsIURI.h"
-#include "nsIURIWithSizeOf.h"
 #include "nsISerializable.h"
 #include "nsIURIMutator.h"
 #include "mozilla/net/MozURL.h"
@@ -15,16 +13,11 @@
 namespace mozilla {
 namespace net {
 
-class DefaultURI : public nsIURI,
-                   public nsISerializable,
-                   public nsIIPCSerializableURI,
-                   public nsIURIWithSizeOf {
+class DefaultURI : public nsIURI, public nsISerializable {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURI
   NS_DECL_NSISERIALIZABLE
-  NS_DECL_NSIIPCSERIALIZABLEURI
-  NS_DECL_NSIURIWITHSIZEOF
 
   class Mutator final : public nsIURIMutator, public nsISerializable {
     NS_DECL_ISUPPORTS
@@ -59,4 +52,4 @@ class DefaultURI : public nsIURI,
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // DefaultURI_h_
+#endif  // DefaultURI_h__

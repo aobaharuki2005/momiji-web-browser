@@ -2,10 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, {
-  createRef,
-  PureComponent,
-} from "devtools/client/shared/vendor/react";
+import React, { PureComponent } from "devtools/client/shared/vendor/react";
 import {
   div,
   input,
@@ -15,7 +12,7 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "devtools/client/shared/vendor/react-redux";
 import actions from "../../../actions/index";
 
-import CloseButton from "devtools/client/shared/components/CloseButton";
+import { CloseButton } from "../../shared/Button/index";
 
 import {
   getSelectedText,
@@ -52,27 +49,6 @@ class Breakpoint extends PureComponent {
       showBreakpointContextMenu: PropTypes.func.isRequired,
       breakpointText: PropTypes.string.isRequired,
     };
-  }
-
-  constructor() {
-    super();
-    this.breakpointTextRef = createRef();
-  }
-
-  componentDidMount() {
-    if (!this.breakpointTextRef.current) {
-      return;
-    }
-
-    const sanitizer = new Sanitizer({
-      elements: ["span"],
-      attributes: ["class"],
-    });
-    const { editor, breakpointText } = this.props;
-    this.breakpointTextRef.current.setHTML(
-      editor.highlightText(document, breakpointText),
-      { sanitizer }
-    );
   }
 
   onContextMenu = event => {
@@ -148,8 +124,13 @@ class Breakpoint extends PureComponent {
     return bpLocation;
   }
 
+  highlightText(text = "", editor) {
+    const htmlString = editor.highlightText(document, text);
+    return { __html: htmlString };
+  }
+
   render() {
-    const { breakpoint, isBreakpointLineBlackboxed, breakpointText } =
+    const { breakpoint, editor, isBreakpointLineBlackboxed, breakpointText } =
       this.props;
     const labelId = `${breakpoint.id}-label`;
     return div(
@@ -184,13 +165,10 @@ class Breakpoint extends PureComponent {
           id: labelId,
           className: "breakpoint-label cm-s-mozilla devtools-monospace",
         },
-        span(
-          {
-            className: "cm-highlighted",
-            ref: this.breakpointTextRef,
-          },
-          breakpointText
-        )
+        span({
+          className: "cm-highlighted",
+          dangerouslySetInnerHTML: this.highlightText(breakpointText, editor),
+        })
       ),
       div(
         {

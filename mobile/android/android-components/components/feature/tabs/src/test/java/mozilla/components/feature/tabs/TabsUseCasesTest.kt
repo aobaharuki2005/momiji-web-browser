@@ -4,8 +4,6 @@
 
 package mozilla.components.feature.tabs
 
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.browser.session.storage.SessionStorage
@@ -16,11 +14,8 @@ import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.selector.findNormalOrPrivateTabByUrl
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
-import mozilla.components.browser.state.state.TabGroup
-import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
-import mozilla.components.browser.state.state.getGroupById
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.state.recover.toRecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -29,26 +24,27 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.storage.HistoryMetadataKey
-import mozilla.components.feature.tabs.ext.tabGroupsPartition
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import kotlin.test.assertNotNull
 
 const val DAY_IN_MS = 24 * 60 * 60 * 1000L
 
@@ -59,8 +55,9 @@ class TabsUseCasesTest {
     private lateinit var engine: Engine
     private lateinit var engineSession: EngineSession
 
-    private val testDispatcher = StandardTestDispatcher()
-    private val testScope = TestScope(testDispatcher)
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Before
     fun setup() {
@@ -71,10 +68,9 @@ class TabsUseCasesTest {
         store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = engine,
-                scope = testScope,
             ),
         )
-        tabsUseCases = TabsUseCases(store, testDispatcher, testDispatcher)
+        tabsUseCases = TabsUseCases(store)
     }
 
     @Test
@@ -163,10 +159,10 @@ class TabsUseCasesTest {
         tabsUseCases.addTab("https://www.mozilla.org", startLoading = true)
 
         // Wait for CreateEngineSessionAction and middleware
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         // Wait for LinkEngineSessionAction and middleware
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(1, store.state.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
@@ -183,10 +179,10 @@ class TabsUseCasesTest {
         )
 
         // Wait for CreateEngineSessionAction and middleware
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         // Wait for LinkEngineSessionAction and middleware
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(1, store.state.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
@@ -282,7 +278,6 @@ class TabsUseCasesTest {
             isSearch = true,
             additionalHeaders = additionalHeaders,
         )
-        testDispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(1, store.state.tabs.size)
         assertTrue(store.state.tabs.single().content.isSearch)
@@ -302,7 +297,7 @@ class TabsUseCasesTest {
     @Test
     fun `GIVEN a tab is added with a parent loadURL will include the parent`() {
         val parentTabId = tabsUseCases.addTab(url = "https://www.firefox.com", selectTab = true)
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(engineSession, times(1)).loadUrl(
             url = "https://www.firefox.com",
@@ -315,7 +310,7 @@ class TabsUseCasesTest {
 
         tabsUseCases.addTab(url = "https://www.mozilla.org", parentId = parentTabId)
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(2, store.state.tabs.size)
         verify(engineSession, times(1)).loadUrl(
@@ -384,7 +379,7 @@ class TabsUseCasesTest {
     }
 
     @Test
-    fun `GIVEN the previous browser session has not yet been restored WHEN the user opens a new tab THEN the restored tabs should be placed before the newly opened tab`() = runTest(testDispatcher) {
+    fun `GIVEN the previous browser session has not yet been restored WHEN the user opens a new tab THEN the restored tabs should be placed before the newly opened tab`() = runTest {
         val newTab = createTab("https://www.example.org")
         val restoredTabs = listOf(
             createTab("https://mozilla.org"),
@@ -395,7 +390,6 @@ class TabsUseCasesTest {
         val recoverableBrowserState = RecoverableBrowserState(
             tabs = restoredTabs.map { it.toRecoverableTab() },
             selectedTabId = null,
-            tabPartitions = emptyMap(),
         )
         val sessionStorage: SessionStorage = mock()
         whenever(sessionStorage.restore(any())).thenReturn(recoverableBrowserState)
@@ -409,35 +403,6 @@ class TabsUseCasesTest {
 
         assertEquals(restoredTabs.first().id, store.state.tabs.first().id)
         assertEquals(newTab.id, store.state.tabs.last().id)
-    }
-
-    @Test
-    fun `GIVEN a recoverable browser state with tabs and partitions in storage WHEN browsing session is restored THEN restore the tabs and partition from storage`() = runTest(testDispatcher) {
-        val restoredTabs = listOf(
-            createTab(id = "tab1", url = "https://mozilla.org"),
-            createTab(id = "tab2", url = "https://firefox.com"),
-        )
-        val tabGroup = TabGroup("group1", tabIds = setOf("tab1"))
-        val tabPartition = TabPartition("testFeaturePartition", tabGroups = listOf(tabGroup))
-        val restoredTabPartitions = mapOf("testFeaturePartition" to tabPartition)
-        val recoverableBrowserState = RecoverableBrowserState(
-            tabs = restoredTabs.map { it.toRecoverableTab() },
-            selectedTabId = null,
-            tabPartitions = restoredTabPartitions,
-        )
-        val sessionStorage: SessionStorage = mock()
-        whenever(sessionStorage.restore(any())).thenReturn(recoverableBrowserState)
-
-        tabsUseCases.restore.invoke(
-            storage = sessionStorage,
-        )
-
-        assertEquals(restoredTabs.size, store.state.tabs.size)
-        restoredTabs.forEachIndexed { index, restoredTab ->
-            assertEquals(restoredTab.id, store.state.tabs[index].id)
-            assertEquals(restoredTab.content.url, store.state.tabs[index].content.url)
-        }
-        assertEquals(restoredTabPartitions, store.state.tabPartitions)
     }
 
     @Test
@@ -719,95 +684,5 @@ class TabsUseCasesTest {
         assertThrows(IllegalStateException::class.java) {
             tabsUseCases.migratePrivateTabUseCase("invalid-tab-id")
         }
-    }
-
-    @Test
-    fun `WHEN AddTabGroupUseCase is invoked THEN group is added to the tab groups partition`() {
-        val tab = createTab("https://mozilla.org")
-        store.dispatch(TabListAction.AddTabAction(tab))
-
-        val group = TabGroup(id = "group1", name = "Group 1", tabIds = setOf(tab.id))
-        tabsUseCases.addTabGroup(group = group)
-
-        val partition = store.state.tabGroupsPartition()
-        assertNotNull(partition)
-        assertEquals(TabPartitionKeys.TAB_GROUPS, partition.id)
-        assertEquals(1, partition.tabGroups.size)
-        assertEquals(group, partition.getGroupById("group1"))
-    }
-
-    @Test
-    fun `WHEN CloseTabGroupUseCase is invoked THEN group and tabs are removed from the tab groups partition`() {
-        val tab = createTab("https://mozilla.org")
-        store.dispatch(TabListAction.AddTabAction(tab))
-
-        val group = TabGroup(id = "group1", name = "Group 1", tabIds = setOf(tab.id))
-        tabsUseCases.addTabGroup(group = group)
-
-        assertEquals(1, store.state.tabs.size)
-        assertEquals(1, store.state.tabGroupsPartition()?.tabGroups?.size)
-        assertEquals(group, store.state.tabGroupsPartition()?.tabGroups?.first())
-
-        tabsUseCases.closeTabGroup(
-            group = "group1",
-            tabIds = listOf(tab.id),
-        )
-
-        assertEquals(0, store.state.tabs.size)
-        assertNull(store.state.tabGroupsPartition())
-    }
-
-    @Test
-    fun `WHEN RemoveTabGroupUseCase is invoked THEN group is removed from the tab groups partition`() {
-        val tab = createTab("https://mozilla.org")
-        store.dispatch(TabListAction.AddTabAction(tab))
-
-        val group = TabGroup(id = "group1", name = "Group 1", tabIds = setOf(tab.id))
-        tabsUseCases.addTabGroup(group = group)
-
-        assertEquals(1, store.state.tabs.size)
-        assertEquals(1, store.state.tabGroupsPartition()?.tabGroups?.size)
-        assertEquals(group, store.state.tabGroupsPartition()?.tabGroups?.first())
-
-        tabsUseCases.removeTabGroup(group = "group1")
-
-        assertEquals(1, store.state.tabs.size)
-        assertEquals(tab, store.state.tabs.first())
-        assertNull(store.state.tabGroupsPartition())
-    }
-
-    @Test
-    fun `WHEN AddTabsInGroupUseCase is invoked THEN tabs are added to group in the tab groups partition`() {
-        val tab1 = createTab("https://mozilla.org")
-        val tab2 = createTab("https://firefox.com")
-        store.dispatch(TabListAction.AddMultipleTabsAction(tabs = listOf(tab1, tab2)))
-
-        tabsUseCases.addTabsInGroup(group = "group1", tabId = tab1.id)
-        var group = store.state.tabGroupsPartition()?.getGroupById("group1")
-        assertNotNull(group)
-        assertEquals(setOf(tab1.id), group.tabIds)
-
-        tabsUseCases.addTabsInGroup(group = "group1", tabIds = setOf(tab2.id))
-        group = store.state.tabGroupsPartition()?.getGroupById("group1")
-        assertEquals(setOf(tab1.id, tab2.id), group?.tabIds)
-    }
-
-    @Test
-    fun `WHEN RemoveTabsInGroupUseCase is invoked THEN tabs are removed from group in the tab groups partition`() {
-        val tab1 = createTab("https://mozilla.org")
-        val tab2 = createTab("https://firefox.com")
-        store.dispatch(TabListAction.AddMultipleTabsAction(tabs = listOf(tab1, tab2)))
-        tabsUseCases.addTabsInGroup(
-            group = "group1",
-            tabIds = setOf(tab1.id, tab2.id),
-        )
-
-        tabsUseCases.removeTabsInGroup(group = "group1", tabId = tab1.id)
-        var group = store.state.tabGroupsPartition()?.getGroupById("group1")
-        assertEquals(setOf(tab2.id), group?.tabIds)
-
-        tabsUseCases.removeTabsInGroup(group = "group1", tabIds = setOf(tab2.id))
-        group = store.state.tabGroupsPartition()?.getGroupById("group1")
-        assertTrue(group?.tabIds?.isEmpty() == true)
     }
 }

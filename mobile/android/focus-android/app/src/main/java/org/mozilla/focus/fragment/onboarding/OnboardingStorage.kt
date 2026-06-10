@@ -10,9 +10,6 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import org.mozilla.focus.R
 
-/**
- * Storage for onboarding-related state.
- */
 class OnboardingStorage(val context: Context) {
 
     /**

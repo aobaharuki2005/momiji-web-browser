@@ -17,7 +17,6 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.assertIs
 
 @RunWith(AndroidJUnit4::class)
 class IconMemoryCacheTest {
@@ -44,8 +43,8 @@ class IconMemoryCacheTest {
 
         // Then load the same icon from the loader
         val result = loader.load(mock(), request, resource)
-        assertIs<IconLoader.Result.BitmapResult>(result)
-        assertSame(icon.bitmap, result.bitmap)
+        assertTrue(result is IconLoader.Result.BitmapResult)
+        assertSame(icon.bitmap, (result as IconLoader.Result.BitmapResult).bitmap)
         assertEquals(Icon.Source.MEMORY, result.source)
 
         // Prepare a new request with the same URL
@@ -56,8 +55,8 @@ class IconMemoryCacheTest {
 
         // Load prepared request
         val preparedResult = loader.load(mock(), preparedRequest, preparedRequest.resources[0])
-        assertIs<IconLoader.Result.BitmapResult>(preparedResult)
-        assertSame(icon.bitmap, preparedResult.bitmap)
+        assertTrue(preparedResult is IconLoader.Result.BitmapResult)
+        assertSame(icon.bitmap, (preparedResult as IconLoader.Result.BitmapResult).bitmap)
         assertEquals(Icon.Source.MEMORY, preparedResult.source)
     }
 }

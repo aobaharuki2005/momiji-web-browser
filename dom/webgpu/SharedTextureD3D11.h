@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,7 +41,8 @@ class SharedTextureD3D11 final : public SharedTexture {
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
 
-  void GetSnapshot(const ipc::Shmem& aDestShmem, size_t aDestStride) override;
+  void GetSnapshot(const ipc::Shmem& aDestShmem,
+                   const gfx::IntSize& aSize) override;
 
   SharedTextureD3D11* AsSharedTextureD3D11() override { return this; }
 

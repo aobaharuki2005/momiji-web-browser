@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -43,23 +45,23 @@ AssemblerShared::~AssemblerShared() {
 #ifdef DEBUG
 void AssemblerShared::pushCreator(const char* who) {
   (void)creators_.append(who);
-  AutoJitSpewMessage msg(JitSpew_Codegen, "# BEGIN creators: ");
+  JitSpewStart(JitSpew_Codegen, "# BEGIN creators: ");
   bool first = true;
   for (const char* str : creators_) {
-    msg.append("%s%s", first ? "" : "/", str);
+    JitSpewCont(JitSpew_Codegen, "%s%s", first ? "" : "/", str);
     first = false;
   }
+  JitSpewCont(JitSpew_Codegen, "\n");
 }
 
 void AssemblerShared::popCreator() {
-  {
-    AutoJitSpewMessage msg(JitSpew_Codegen, "# END   creators: ");
-    bool first = true;
-    for (const char* str : creators_) {
-      msg.append("%s%s", first ? "" : "/", str);
-      first = false;
-    }
+  JitSpewStart(JitSpew_Codegen, "# END   creators: ");
+  bool first = true;
+  for (const char* str : creators_) {
+    JitSpewCont(JitSpew_Codegen, "%s%s", first ? "" : "/", str);
+    first = false;
   }
+  JitSpewCont(JitSpew_Codegen, "\n");
   if (creators_.empty()) {
     JitSpew(JitSpew_Codegen, " ");
   }

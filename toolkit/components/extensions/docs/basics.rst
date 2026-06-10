@@ -1,4 +1,4 @@
-.. _webextensions-api-basics:
+.. _basics:
 
 API Implementation Basics
 =========================
@@ -243,13 +243,13 @@ all API scripts look to the following source:
 
 - `SchemaAPIManager _createExtGlobal method <https://searchfox.org/mozilla-central/search?q=symbol:SchemaAPIManager%23_createExtGlobal&redirect=false>`_
 - Only available in the parent Firefox process:
-  :searchfox:`toolkit/components/extensions/parent/ext-toolkit.js`
+  `toolkit/components/extensions/parent/ext-toolkit.js <https://searchfox.org/mozilla-central/source/toolkit/components/extensions/parent/ext-toolkit.js>`_
 - Only available in the child Firefox process:
-  :searchfox:`toolkit/components/extensions/child/ext-toolkit.js`
+  `toolkit/components/extensions/child/ext-toolkit.js <https://searchfox.org/mozilla-central/source/toolkit/components/extensions/child/ext-toolkit.js>`_
 - Only available in the Desktop builds:
-  :searchfox:`browser/components/extensions/parent/ext-browser.js`
+  `browser/components/extensions/parent/ext-browser.js <https://searchfox.org/mozilla-central/source/browser/components/extensions/parent/ext-browser.js>`_
 - Only available in the Android builds:
-  :searchfox:`mobile/shared/components/extensions/ext-android.js`
+  `mobile/shared/components/extensions/ext-android.js <https://searchfox.org/mozilla-central/source/mobile/shared/components/extensions/ext-android.js>`_
 
 .. warning::
    The extension API authors should never redefine these globals to avoid introducing potential

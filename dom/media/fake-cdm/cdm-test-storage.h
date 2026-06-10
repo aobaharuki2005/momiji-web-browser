@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TEST_CDM_STORAGE_H_
-#define TEST_CDM_STORAGE_H_
+#ifndef TEST_CDM_STORAGE_H__
+#define TEST_CDM_STORAGE_H__
 
 #include <cstdint>
 #include <functional>
@@ -42,4 +43,4 @@ class OpenContinuation {
 
 void OpenRecord(cdm::Host_11* aHost, const std::string& aRecordName,
                 std::function<void(bool)>&& aOpenComplete);
-#endif  // TEST_CDM_STORAGE_H_
+#endif  // TEST_CDM_STORAGE_H__

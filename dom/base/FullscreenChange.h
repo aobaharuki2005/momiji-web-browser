@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -14,7 +16,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "nsIScriptError.h"
 #include "nsRefreshDriver.h"
@@ -76,23 +77,17 @@ class FullscreenRequest : public FullscreenChange {
  public:
   static const ChangeType kType = eEnter;
 
-  static UniquePtr<FullscreenRequest> Create(
-      dom::Element* aElement,
-      dom::FullscreenKeyboardLock aFullscreenKeyboardLock,
-      dom::CallerType aCallerType, ErrorResult& aRv) {
-    RefPtr<Promise> promise =
-        Promise::Create(aElement->GetRelevantGlobal(), aRv);
-    return WrapUnique(new FullscreenRequest(aElement, promise.forget(),
-                                            aCallerType, true,
-                                            aFullscreenKeyboardLock));
+  static UniquePtr<FullscreenRequest> Create(dom::Element* aElement,
+                                             dom::CallerType aCallerType,
+                                             ErrorResult& aRv) {
+    RefPtr<Promise> promise = Promise::Create(aElement->GetOwnerGlobal(), aRv);
+    return WrapUnique(
+        new FullscreenRequest(aElement, promise.forget(), aCallerType, true));
   }
 
-  static UniquePtr<FullscreenRequest> CreateForRemote(
-      dom::Element* aElement, bool aFullscreenKeyboardLockEnabled) {
-    return WrapUnique(new FullscreenRequest(
-        aElement, nullptr, dom::CallerType::NonSystem, false,
-        aFullscreenKeyboardLockEnabled ? dom::FullscreenKeyboardLock::Browser
-                                       : dom::FullscreenKeyboardLock::None));
+  static UniquePtr<FullscreenRequest> CreateForRemote(dom::Element* aElement) {
+    return WrapUnique(new FullscreenRequest(aElement, nullptr,
+                                            dom::CallerType::NonSystem, false));
   }
 
   MOZ_COUNTED_DTOR(FullscreenRequest)
@@ -106,20 +101,12 @@ class FullscreenRequest : public FullscreenChange {
         FullscreenEventType::Error, mElement));
     MayRejectPromise("Fullscreen request denied");
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
-                                    Document(), PropertiesFile::DOM_PROPERTIES,
+                                    Document(), nsContentUtils::eDOM_PROPERTIES,
                                     aReason);
-  }
-
-  void SetShouldDispatchKeyboardLockEvent(bool aValue) {
-    mDispatchKeyboardLockEvent = aValue;
-  }
-  bool ShouldDispatchKeyboardLockEvent() const {
-    return mDispatchKeyboardLockEvent;
   }
 
  private:
   RefPtr<dom::Element> mElement;
-  bool mDispatchKeyboardLockEvent = false;
 
  public:
   // This value should be true if the fullscreen request is
@@ -133,18 +120,14 @@ class FullscreenRequest : public FullscreenChange {
   // need to send some notification itself with the real origin.
   const bool mShouldNotifyNewOrigin;
 
-  const dom::FullscreenKeyboardLock mFullscreenKeyboardLock;
-
  private:
   FullscreenRequest(dom::Element* aElement,
                     already_AddRefed<dom::Promise> aPromise,
-                    dom::CallerType aCallerType, bool aShouldNotifyNewOrigin,
-                    dom::FullscreenKeyboardLock aFullscreenKeyboardLock)
+                    dom::CallerType aCallerType, bool aShouldNotifyNewOrigin)
       : FullscreenChange(kType, aElement->OwnerDoc(), std::move(aPromise)),
         mElement(aElement),
         mCallerType(aCallerType),
-        mShouldNotifyNewOrigin(aShouldNotifyNewOrigin),
-        mFullscreenKeyboardLock(aFullscreenKeyboardLock) {
+        mShouldNotifyNewOrigin(aShouldNotifyNewOrigin) {
     MOZ_COUNT_CTOR(FullscreenRequest);
   }
 };
@@ -155,7 +138,7 @@ class FullscreenExit : public FullscreenChange {
 
   static UniquePtr<FullscreenExit> Create(dom::Document* aDoc,
                                           ErrorResult& aRv) {
-    RefPtr<Promise> promise = Promise::Create(aDoc->GetRelevantGlobal(), aRv);
+    RefPtr<Promise> promise = Promise::Create(aDoc->GetOwnerGlobal(), aRv);
     return WrapUnique(new FullscreenExit(aDoc, promise.forget()));
   }
 

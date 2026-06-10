@@ -21,7 +21,6 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import kotlin.test.assertIs
 
 @RunWith(AndroidJUnit4::class)
 class ViewYTranslationStrategyTest {
@@ -29,7 +28,7 @@ class ViewYTranslationStrategyTest {
     fun `snapAnimator should use a DecelerateInterpolator with SNAP_ANIMATION_DURATION for bottom toolbar translations`() {
         val strategy = BottomViewBehaviorStrategy()
 
-        assertIs<DecelerateInterpolator>(strategy.animator.interpolator)
+        assertTrue(strategy.animator.interpolator is DecelerateInterpolator)
         assertEquals(SNAP_ANIMATION_DURATION, strategy.animator.duration)
     }
 
@@ -37,7 +36,7 @@ class ViewYTranslationStrategyTest {
     fun `snapAnimator should use a DecelerateInterpolator with SNAP_ANIMATION_DURATION for top toolbar translations`() {
         val strategy = TopViewBehaviorStrategy()
 
-        assertIs<DecelerateInterpolator>(strategy.animator.interpolator)
+        assertTrue(strategy.animator.interpolator is DecelerateInterpolator)
         assertEquals(SNAP_ANIMATION_DURATION, strategy.animator.duration)
     }
 

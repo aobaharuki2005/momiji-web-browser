@@ -4,6 +4,7 @@
 
 @namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);
 @namespace html url(http://www.w3.org/1999/xhtml);
+@namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 /* magic -- some of these rules are important to keep pages from overriding
             them
@@ -180,6 +181,7 @@
   cursor: text;
 }
 
+/* stylelint-disable-next-line media-query-no-invalid */
 @media -moz-pref("layout.css.always_underline_links") {
   :any-link {
     text-decoration: underline !important;
@@ -231,7 +233,10 @@
   z-index: inherit;
 }
 
-*|*::-moz-scrolled-content {
+*|*::-moz-scrolled-content,
+*|*::-moz-scrolled-canvas {
+  /* e.g., text inputs, select boxes */
+  padding: inherit;
   /* The display doesn't affect the kind of frame constructed here.  This just
      affects auto-width sizing of the block we create. */
   display: block;
@@ -275,8 +280,14 @@
 
 *|*::-moz-viewport,
 *|*::-moz-viewport-scroll,
-*|*::-moz-canvas {
+*|*::-moz-canvas,
+*|*::-moz-scrolled-canvas {
   display: block;
+  background-color: inherit;
+}
+
+*|*::-moz-viewport-scroll {
+  overflow: auto;
 }
 
 *|*::-moz-column-set,
@@ -534,6 +545,7 @@ parsererror|sourcetext {
 }
 
 /* Avoid exposing these keyframe names when view transitions are disabled */
+/* stylelint-disable-next-line media-query-no-invalid */
 @media -moz-pref("dom.viewTransitions.enabled") {
   /* Default cross-fade transition */
   @keyframes -ua-view-transition-fade-out {

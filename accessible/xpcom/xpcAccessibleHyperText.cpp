@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -129,7 +131,7 @@ xpcAccessibleHyperText::GetTextAttributes(
 
   RefPtr<AccAttributes> attributes = Intl()->TextAttributes(
       aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
-  auto props = MakeRefPtr<nsPersistentProperties>();
+  RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
   nsAutoString unused;
   for (auto iter : *attributes) {
     nsAutoString name;
@@ -154,7 +156,7 @@ xpcAccessibleHyperText::GetDefaultTextAttributes(
   if (!mIntl) return NS_ERROR_FAILURE;
 
   RefPtr<AccAttributes> attributes = Intl()->DefaultTextAttributes();
-  auto props = MakeRefPtr<nsPersistentProperties>();
+  RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
   nsAutoString unused;
   for (auto iter : *attributes) {
     nsAutoString name;

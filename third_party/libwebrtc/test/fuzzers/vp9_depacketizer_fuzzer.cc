@@ -8,15 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 #include <cstddef>
+#include <cstdint>
 
+#include "api/array_view.h"
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer_vp9.h"
-#include "test/fuzzers/fuzz_data_helper.h"
 
 namespace webrtc {
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
+void FuzzOneInput(const uint8_t* data, size_t size) {
   RTPVideoHeader video_header;
-  VideoRtpDepacketizerVp9::ParseRtpPayload(fuzz_data.ReadRemaining(),
+  VideoRtpDepacketizerVp9::ParseRtpPayload(webrtc::MakeArrayView(data, size),
                                            &video_header);
 }
 }  // namespace webrtc

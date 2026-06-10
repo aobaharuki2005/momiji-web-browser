@@ -3,6 +3,7 @@ import asyncio
 import pytest
 from webdriver.error import (
     ElementClickInterceptedException,
+    NoSuchElementException,
     WebDriverException,
 )
 
@@ -16,10 +17,14 @@ BRANDS_CSS = ".filter:nth-of-type(3):has(.accordion)"
 async def are_filters_onscreen(client):
     client.set_screen_size(767, 500)
     await client.navigate(URL, wait="none")
-    client.hide_elements("#usercentrics-cmp-ui")
+    try:
+        client.await_css(COOKIES_CSS, is_displayed=True, timeout=5).click()
+        client.await_element_hidden(client.css(COOKIES_OVERLAY_CSS))
+    except NoSuchElementException:
+        pass
     for _ in range(20):
         try:
-            await asyncio.sleep(0.25)
+            await asyncio.sleep(0.1)
             client.await_css(FILTERS_CSS, is_displayed=True).click()
         except (WebDriverException, ElementClickInterceptedException):
             continue

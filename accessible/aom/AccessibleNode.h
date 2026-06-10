@@ -1,3 +1,5 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -98,9 +100,6 @@ class AccessibleNode : public nsISupports, public nsWrapperCache {
  public:
   explicit AccessibleNode(nsINode* aNode);
 
-  AccessibleNode(const AccessibleNode& aCopy) = delete;
-  AccessibleNode& operator=(const AccessibleNode& aCopy) = delete;
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS;
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(AccessibleNode);
 
@@ -136,6 +135,8 @@ class AccessibleNode : public nsISupports, public nsWrapperCache {
   ANODE_RELATION_PROPS(ActiveDescendant, Details, ErrorMessage)
 
  protected:
+  AccessibleNode(const AccessibleNode& aCopy) = delete;
+  AccessibleNode& operator=(const AccessibleNode& aCopy) = delete;
   virtual ~AccessibleNode();
 
   void GetProperty(AOMStringProperty aProperty, nsAString& aRetval) {

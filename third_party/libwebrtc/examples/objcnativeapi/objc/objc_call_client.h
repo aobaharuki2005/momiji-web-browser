@@ -16,7 +16,6 @@
 
 #import "sdk/objc/base/RTCMacros.h"
 
-#include "api/environment/environment.h"
 #include "api/peer_connection_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
@@ -60,7 +59,6 @@ class ObjCCallClient {
   void CreatePeerConnection() RTC_RUN_ON(thread_checker_);
   void Connect() RTC_RUN_ON(thread_checker_);
 
-  webrtc::Environment env_;
   webrtc::SequenceChecker thread_checker_;
 
   bool call_started_ RTC_GUARDED_BY(thread_checker_);

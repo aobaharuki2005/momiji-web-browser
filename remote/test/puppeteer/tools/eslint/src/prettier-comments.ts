@@ -102,4 +102,4 @@ const prettierCommentsRule = createRule<[], 'prettierComments'>({
   },
 });
 
-export default prettierCommentsRule;
+export = prettierCommentsRule;

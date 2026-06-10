@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google LLC
+ * Copyright 2017 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -27,7 +27,7 @@ class SkPixmap;
 // itself and one could do a static_assert using sizeof().
 using SkBlitterSizedArena = SkSTArenaAlloc<2736>;
 
-class [[nodiscard]] SkAutoBlitterChoose : SkNoncopyable {
+class SkAutoBlitterChoose : SkNoncopyable {
 public:
     SkAutoBlitterChoose() {}
     SkAutoBlitterChoose(const skcpu::Draw& draw,

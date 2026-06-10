@@ -69,7 +69,7 @@ function getRelativeProfilePath(path) {
   );
 
   if (AppConstants.platform === "win") {
-    relativePath = relativePath.replaceAll("/", "\\");
+    relativePath = relativePath.replace("/", "\\");
   }
 
   return relativePath;
@@ -106,10 +106,7 @@ async function createTestProfile(profileData = {}) {
 
   if (!path) {
     path = await SelectableProfileService.createProfileDirs(name);
-    await SelectableProfileService.createProfileInitialFiles(
-      path,
-      profileData.source ?? "tests"
-    );
+    await SelectableProfileService.createProfileInitialFiles(path);
     path = SelectableProfileService.getRelativeProfilePath(path);
   }
 

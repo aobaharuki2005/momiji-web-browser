@@ -2576,6 +2576,7 @@
               "default": "Google Lens"
             },
             "excludePartnerCodeFromTelemetry": true,
+            "isNewUntil": "2025-12-01",
             "params": [
               {
                 "name": "ep",
@@ -2588,9 +2589,9 @@
       },
       "id": "7ace4aa1-e762-4f4b-87b9-b23b3c3a930b",
       "identifier": "google",
-      "last_modified": 1774874010729,
+      "last_modified": 1761573989454,
       "recordType": "engine",
-      "schema": 1774656007453,
+      "schema": 1761358547622,
       "variants": [
         {
           "environment": {
@@ -2644,7 +2645,9 @@
           "environment": {
             "regions": [
               "ru",
-              "by"
+              "tr",
+              "by",
+              "kz"
             ]
           },
           "telemetrySuffix": "com-nocodes"
@@ -2700,8 +2703,7 @@
                 ],
                 "distributions": [
                   "dt-002",
-                  "dt-003",
-                  "xiaomi-001"
+                  "dt-003"
                 ]
               },
               "partnerCode": "firefox-b-1-dt",
@@ -2782,7 +2784,9 @@
             ],
             "excludedRegions": [
               "ru",
-              "by"
+              "tr",
+              "by",
+              "kz"
             ]
           },
           "partnerCode": "firefox-b-lm",
@@ -2846,7 +2850,9 @@
             ],
             "excludedRegions": [
               "ru",
-              "by"
+              "tr",
+              "by",
+              "kz"
             ]
           },
           "partnerCode": "firefox-b-vv",
@@ -2876,7 +2882,9 @@
             ],
             "excludedRegions": [
               "ru",
-              "by"
+              "tr",
+              "by",
+              "kz"
             ]
           },
           "partnerCode": "firefox-b-tf",
@@ -2907,7 +2915,9 @@
             "excludedRegions": [
               "us",
               "ru",
-              "by"
+              "tr",
+              "by",
+              "kz"
             ]
           },
           "partnerCode": "firefox-b-ar",
@@ -2934,13 +2944,14 @@
             ],
             "distributions": [
               "dt-002",
-              "dt-003",
-              "xiaomi-001"
+              "dt-003"
             ],
             "excludedRegions": [
               "us",
               "ru",
-              "by"
+              "tr",
+              "by",
+              "kz"
             ]
           },
           "partnerCode": "firefox-b-dt",
@@ -3420,9 +3431,9 @@
       },
       "id": "bb836721-7be9-4de6-ac18-520189a69076",
       "identifier": "perplexity",
-      "last_modified": 1772114960787,
+      "last_modified": 1763654608996,
       "recordType": "engine",
-      "schema": 1772067581442,
+      "schema": 1763604941875,
       "variants": [
         {
           "environment": {
@@ -3431,7 +3442,29 @@
               "firefox",
               "firefox-ios"
             ]
-          }
+          },
+          "isNewUntil": "2025-10-21",
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox"
+                ],
+                "minVersion": "143.0a1"
+              },
+              "urls": {
+                "trending": {
+                  "base": "https://www.perplexity.ai/rest/autosuggest/list-trending-suggest",
+                  "params": [
+                    {
+                      "name": "lang",
+                      "value": "{acceptLanguages}"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
         },
         {
           "environment": {
@@ -3843,50 +3876,6 @@
               "partnerCode": "SearchBox"
             }
           ]
-        }
-      ]
-    },
-    {
-      "base": {
-        "aliases": [
-          "startpage"
-        ],
-        "classification": "general",
-        "name": "Startpage",
-        "partnerCode": "startpage.apex.desktop",
-        "urls": {
-          "search": {
-            "base": "https://www.startpage.com/sp/search",
-            "params": [
-              {
-                "name": "segment",
-                "value": "{partnerCode}"
-              }
-            ],
-            "searchTermParamName": "q"
-          },
-          "suggestions": {
-            "base": "https://www.startpage.com/suggestions?partner=apex&format=opensearch",
-            "params": [
-              {
-                "name": "segment",
-                "value": "{partnerCode}"
-              }
-            ],
-            "searchTermParamName": "q"
-          }
-        }
-      },
-      "id": "5fb2256b-fdb0-42e8-8d8a-0d633b14e8d5",
-      "identifier": "startpage",
-      "last_modified": 1778165854657,
-      "recordType": "engine",
-      "schema": 1778115248130,
-      "variants": [
-        {
-          "environment": {
-            "experiment": "startpage"
-          }
         }
       ]
     },
@@ -8420,5 +8409,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1778165854657
+  "timestamp": 1764082724032
 }

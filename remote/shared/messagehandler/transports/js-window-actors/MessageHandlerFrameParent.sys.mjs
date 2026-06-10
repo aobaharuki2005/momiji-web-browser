@@ -108,7 +108,7 @@ export class MessageHandlerFrameParent extends JSWindowActorParent {
   }
 
   async #handleMessageHandlerEventMessage(messageData) {
-    const { data, name, relatedContexts, sessionId } = messageData;
+    const { name, contextInfo, data, sessionId } = messageData;
     const [moduleName] = name.split(".");
 
     // Re-emit the event on the RootMessageHandler.
@@ -150,15 +150,11 @@ export class MessageHandlerFrameParent extends JSWindowActorParent {
         );
       }
     }
-    messageHandler.emitEvent(name, eventPayload, relatedContexts);
+    messageHandler.emitEvent(name, eventPayload, contextInfo);
   }
 
   async #handleSendCommandMessage(messageData) {
     const { sessionId, command } = messageData;
-
-    // Flag the command as coming from windowglobal modules / content processes.
-    command.fromContentProcess = true;
-
     const messageHandler =
       lazy.RootMessageHandlerRegistry.getExistingMessageHandler(sessionId);
     try {

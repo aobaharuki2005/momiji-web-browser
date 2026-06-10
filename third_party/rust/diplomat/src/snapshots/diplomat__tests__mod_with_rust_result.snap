@@ -13,7 +13,6 @@ mod ffi {
     use diplomat_runtime::*;
     use core::ffi::c_void;
     #[no_mangle]
-    #[allow(deprecated)]
     extern "C" fn Foo_bar(this: &Foo) -> diplomat_runtime::DiplomatResult<(), ()> {
         this.bar().into()
     }

@@ -25,7 +25,7 @@ module.exports = ReactDOM;
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   MultiStageUtils: () => (/* binding */ MultiStageUtils)
+/* harmony export */   AboutWelcomeUtils: () => (/* binding */ AboutWelcomeUtils)
 /* harmony export */ });
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -39,11 +39,11 @@ const page =
     "#multi-stage-message-root.onboardingContainer[data-page]"
   )?.dataset.page || document.location.href;
 
-const MultiStageUtils = {
+const AboutWelcomeUtils = {
   handleUserAction(action) {
     return window.AWSendToParent("SPECIAL_ACTION", action);
   },
-  sendImpressionTelemetry(messageId, context = {}) {
+  sendImpressionTelemetry(messageId, context) {
     window.AWSendEventTelemetry?.({
       event: "IMPRESSION",
       event_context: {
@@ -53,28 +53,22 @@ const MultiStageUtils = {
       message_id: messageId,
     });
   },
-  sendActionTelemetry(
-    messageId,
-    elementId,
-    eventName = "CLICK_BUTTON",
-    context = {}
-  ) {
+  sendActionTelemetry(messageId, elementId, eventName = "CLICK_BUTTON") {
     const ping = {
       event: eventName,
       event_context: {
         source: elementId,
         page,
-        ...context,
       },
       message_id: messageId,
     };
     window.AWSendEventTelemetry?.(ping);
   },
-  sendDismissTelemetry(messageId, elementId, context = {}) {
+  sendDismissTelemetry(messageId, elementId) {
     // Don't send DISMISS telemetry in spotlight modals since they already send
     // their own equivalent telemetry.
     if (page !== "spotlight") {
-      this.sendActionTelemetry(messageId, elementId, "DISMISS", context);
+      this.sendActionTelemetry(messageId, elementId, "DISMISS");
     }
   },
   async fetchFlowParams(metricsFlowUri) {
@@ -105,15 +99,10 @@ const MultiStageUtils = {
   getLoadingStrategyFor(url) {
     return url?.startsWith("http") ? "lazy" : "eager";
   },
-  handleCampaignAction(action, messageId, context) {
+  handleCampaignAction(action, messageId) {
     window.AWSendToParent("HANDLE_CAMPAIGN_ACTION", action).then(handled => {
       if (handled) {
-        this.sendActionTelemetry(
-          messageId,
-          "CAMPAIGN_ACTION",
-          "CLICK_BUTTON",
-          context
-        );
+        this.sendActionTelemetry(messageId, "CAMPAIGN_ACTION");
       }
     });
   },
@@ -158,11 +147,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* harmony import */ var _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6);
 /* harmony import */ var _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
 /* harmony import */ var _SubmenuButton__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(12);
-/* harmony import */ var _lib_addUtmParams_mjs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(30);
+/* harmony import */ var _lib_addUtmParams_mjs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(28);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -222,7 +211,7 @@ const MultiStageAboutWelcome = props => {
       // blocking the thread.
       window.AWGetUnhandledCampaignAction?.().then(action => {
         if (typeof action === "string") {
-          _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.handleCampaignAction(action, props.message_id);
+          _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleCampaignAction(action, props.message_id);
         }
       }).catch(error => {
         console.error("Failed to get unhandled campaign action:", error);
@@ -235,7 +224,7 @@ const MultiStageAboutWelcome = props => {
       filteredScreens.forEach((screen, order) => {
         if (index === order) {
           const messageId = `${props.message_id}_${order}_${screen.id}_${screenInitials}`;
-          _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendImpressionTelemetry(messageId, {
+          _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(messageId, {
             screen_family: props.message_id,
             screen_index: order,
             screen_id: screen.id,
@@ -262,7 +251,7 @@ const MultiStageAboutWelcome = props => {
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     (async () => {
       if (metricsFlowUri) {
-        setFlowParams(await _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.fetchFlowParams(metricsFlowUri));
+        setFlowParams(await _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.fetchFlowParams(metricsFlowUri));
       }
     })();
   }, [metricsFlowUri]);
@@ -353,17 +342,6 @@ const MultiStageAboutWelcome = props => {
   // screens, and allows us to have multiple single selects on a screen.
   const [activeSingleSelectSelections, setActiveSingleSelectSelections] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({});
 
-  // Save textarea inputs for each screen as an object keyed by screen id. It's
-  // structured like this: { screenId: { textareaId: { value, isValid } } }
-  const [textInputs, setTextInputs] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({});
-
-  // Whether animated backgrounds/illustrations are paused for this session.
-  // Defaults to paused when the user has prefers-reduced-motion: reduce set,
-  // so we never autoplay motion for those users. The toggle stays consistent
-  // among screens once the user interacts with it.
-  const [animationsPaused, setAnimationsPaused] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(() => typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)").matches : false);
-  const toggleAnimationsPaused = () => setAnimationsPaused(prev => !prev);
-
   // Get the active theme so the rendering code can make it selected
   // by default.
   const [activeTheme, setActiveTheme] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
@@ -442,18 +420,6 @@ const MultiStageAboutWelcome = props => {
         };
       });
     };
-    const setTextInput = (value, inputId) => {
-      setTextInputs(prevState => {
-        const currentScreenInputs = prevState[currentScreen.id] || {};
-        return {
-          ...prevState,
-          [currentScreen.id]: {
-            ...currentScreenInputs,
-            [inputId]: value
-          }
-        };
-      });
-    };
     return index === order ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(WelcomeScreen, {
       key: currentScreen.id + order,
       id: currentScreen.id,
@@ -465,8 +431,6 @@ const MultiStageAboutWelcome = props => {
       previousOrder: previousOrder,
       content: currentScreen.content,
       navigate: handleTransition,
-      autoAdvance: currentScreen.auto_advance,
-      advanceOnExperimentLoad: currentScreen.advance_on_experiment_load,
       messageId: `${props.message_id}_${order}_${currentScreen.id}`,
       UTMTerm: props.utm_term,
       flowParams: flowParams,
@@ -478,15 +442,13 @@ const MultiStageAboutWelcome = props => {
       setScreenMultiSelects: setScreenMultiSelects,
       activeMultiSelect: activeMultiSelects[currentScreen.id],
       setActiveMultiSelect: setActiveMultiSelect,
+      autoAdvance: currentScreen.auto_advance,
       activeSingleSelectSelections: activeSingleSelectSelections[currentScreen.id],
       setActiveSingleSelectSelection: setActiveSingleSelectSelection,
-      textInputs: textInputs[currentScreen.id],
-      setTextInput: setTextInput,
       negotiatedLanguage: negotiatedLanguage,
       langPackInstallPhase: langPackInstallPhase,
       forceHideStepsIndicator: currentScreen.force_hide_steps_indicator,
       ariaRole: props.ariaRole,
-      requireAction: props.requireAction,
       aboveButtonStepsIndicator: currentScreen.above_button_steps_indicator,
       installedAddons: installedAddons,
       setInstalledAddons: setInstalledAddons,
@@ -496,9 +458,7 @@ const MultiStageAboutWelcome = props => {
       addonURL: props.addonURL,
       addonIconURL: props.addonIconURL,
       themeScreenshots: props.themeScreenshots,
-      isRtamo: currentScreen.content.isRtamo,
-      animationsPaused: animationsPaused,
-      toggleAnimationsPaused: toggleAnimationsPaused
+      isRtamo: currentScreen.content.isRtamo
     }) : null;
   })));
 };
@@ -509,7 +469,6 @@ const renderSingleSecondaryCTAButton = ({
   position,
   handleAction,
   activeMultiSelect,
-  textInputs,
   isArrayItem,
   index = null
 }) => {
@@ -535,14 +494,6 @@ const renderSingleSecondaryCTAButton = ({
         }
       }
       return true;
-    }
-    if (disabledValue === "hasTextInput") {
-      // For text input, we check if the user has entered any text in the
-      // textarea(s) present on the screen.
-      if (!textInputs) {
-        return true;
-      }
-      return Object.values(textInputs).every(input => !input.isValid || input.value.trim().length === 0);
     }
     return disabledValue;
   };
@@ -627,7 +578,6 @@ const SecondaryCTA = props => {
       position,
       handleAction: props.handleAction,
       activeMultiSelect: props.activeMultiSelect,
-      textInputs: props.textInputs,
       isArrayItem: true,
       index
     })));
@@ -639,7 +589,6 @@ const SecondaryCTA = props => {
     position,
     handleAction: props.handleAction,
     activeMultiSelect: props.activeMultiSelect,
-    textInputs: props.textInputs,
     isArrayItem: false
   });
 };
@@ -715,7 +664,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
         args: url.toString()
       };
     }
-    return _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.handleUserAction({
+    return _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction({
       type,
       data
     });
@@ -726,20 +675,20 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     source,
     props
   }) {
-    _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendActionTelemetry(props.messageId, source, event.name);
+    _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, source, event.name);
 
     // Send additional telemetry if a messaging surface like feature callout is
     // dismissed via the dismiss button. Other causes of dismissal will be
     // handled separately by the messaging surface's own code.
     if (value === "dismiss_button" && !event.name) {
-      _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendDismissTelemetry(props.messageId, source);
+      _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendDismissTelemetry(props.messageId, source);
     }
   }
   async handleMigrationIfNeeded(action, props) {
     const hasMigrate = a => a.type === "SHOW_MIGRATION_WIZARD" || a.type === "MULTI_ACTION" && a.data?.actions?.some(hasMigrate);
     if (hasMigrate(action)) {
       await window.AWWaitForMigrationClose();
-      _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendActionTelemetry(props.messageId, "migrate_close", "CLICK_BUTTON");
+      _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, "migrate_close");
     }
   }
   applyThemeIfNeeded(action, event) {
@@ -758,14 +707,14 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       }
       for (const opt of tile.data) {
         if (opt.id === value) {
-          _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.handleUserAction(opt.action);
+          _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction(opt.action);
           return;
         }
       }
     }
   }
   resolveActionFromContent(value, event, props) {
-    if (["submenu_button", "more_button", "tile_button"].includes(value) && event.action) {
+    if ((value === "submenu_button" || value === "tile_button") && event.action) {
       return event.action;
     }
     const {
@@ -793,10 +742,9 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     const value = event.currentTarget.value ?? event.currentTarget.getAttribute("value");
     const source = event.source || value;
     let action = providedAction || this.resolveActionFromContent(value, event, props);
-    let actionResult;
     if (!action) {
       console.error("Failed to resolve action");
-      return actionResult;
+      return;
     }
 
     // Send telemetry before waiting on actions
@@ -810,26 +758,28 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     if (action.collectSelect) {
       this.setMultiSelectActions(action);
     }
-    if (action.collectTextInput && Object.values(props.textInputs).length) {
-      this.setTextInputActions(action);
-    }
+    let actionResult;
     if (["OPEN_URL", "SHOW_FIREFOX_ACCOUNTS"].includes(action.type)) {
       this.handleOpenURL(action, props.flowParams, props.UTMTerm);
-    } else if (action.type === "INSTALL_ADDON_FROM_URL") {
-      const url = props.addonURL && props.isRtamo ? props.addonURL : action.data?.url;
-      // Set add-on url in action.data.url property from JSON
-      action.data = {
-        ...action.data,
-        url
-      };
-      _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.handleUserAction(action);
     } else if (action.type) {
-      let actionPromise = _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.handleUserAction(action);
+      let actionPromise = _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction(action);
       if (action.needsAwait) {
         actionResult = await actionPromise;
       }
       if (action.type === "FXA_SIGNIN_FLOW") {
-        _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendActionTelemetry(props.messageId, actionResult ? "sign_in" : "sign_in_cancel", "FXA_SIGNIN_FLOW");
+        _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, actionResult ? "sign_in" : "sign_in_cancel", "FXA_SIGNIN_FLOW");
+      }
+      if (action.type === "INSTALL_ADDON_FROM_URL") {
+        const url = props.addonURL;
+        if (!action.data) {
+          return;
+        }
+        // Set add-on url in action.data.url property from JSON
+        action.data = {
+          ...action.data,
+          url
+        };
+        _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction(action);
       }
       // Wait until migration closes to complete the action
       await this.handleMigrationIfNeeded(action, props);
@@ -875,7 +825,6 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     if (shouldDoBehavior(action.dismiss)) {
       window.AWFinish();
     }
-    return actionResult;
   }
   setMultiSelectActions(action) {
     let {
@@ -938,65 +887,8 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     action.data.actions.unshift(...multiSelectActions);
     for (const value of Object.values(props.activeMultiSelect)) {
       // Send telemetry with selected checkbox ids
-      _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendActionTelemetry(props.messageId, value.flat(), "SELECT_CHECKBOX");
+      _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, value.flat(), "SELECT_CHECKBOX");
     }
-  }
-  setTextInputActions(action) {
-    let {
-      props
-    } = this;
-    if (action.type !== "MULTI_ACTION") {
-      console.error("collectTextInput is only supported for MULTI_ACTION type actions");
-      action.type = "MULTI_ACTION";
-    }
-    if (!Array.isArray(action.data?.actions)) {
-      console.error("collectTextInput is only supported for MULTI_ACTION type actions with an array of actions");
-      action.data = {
-        actions: []
-      };
-    }
-    const collectedActions = [];
-
-    // If there is no character_limit, we still need to limit the size of the
-    // input to avoid sending huge payloads. We'll go with 8KB.
-    const truncateToByteSize = (str, maxBytes) => {
-      const encoder = new TextEncoder();
-      const encoded = encoder.encode(str);
-      if (encoded.length <= maxBytes) {
-        return str;
-      }
-      let end = maxBytes;
-      // Step back until we find a valid UTF-8 start byte
-      while (end > 0 && (encoded[end] & 0b11000000) === 0b10000000) {
-        end--; // this is a continuation byte
-      }
-      return new TextDecoder().decode(encoded.subarray(0, end));
-    };
-    const processTile = (tile, tileIndex) => {
-      if (tile?.type !== "textarea" || !tile.data) {
-        return;
-      }
-      const inputId = tile.data.id || `tile-${tileIndex}`;
-      const inputData = props.textInputs[inputId];
-      if (inputData?.isValid && inputData.value.trim().length) {
-        if (tile.data.action) {
-          collectedActions.push(tile.data.action);
-        }
-        _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendActionTelemetry(props.messageId, inputId, "TEXT_INPUT", {
-          value: truncateToByteSize(inputData.value, 8192)
-        });
-      }
-    };
-    if (props.content?.tiles) {
-      if (Array.isArray(props.content.tiles)) {
-        for (const [index, tile] of props.content.tiles.entries()) {
-          processTile(tile, index);
-        }
-      } else {
-        processTile(props.content.tiles, 0);
-      }
-    }
-    action.data.actions.unshift(...collectedActions);
   }
   render() {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_3__.MultiStageProtonScreen, {
@@ -1012,8 +904,6 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       setActiveMultiSelect: this.props.setActiveMultiSelect,
       activeSingleSelectSelections: this.props.activeSingleSelectSelections,
       setActiveSingleSelectSelection: this.props.setActiveSingleSelectSelection,
-      textInputs: this.props.textInputs,
-      setTextInput: this.props.setTextInput,
       totalNumberOfScreens: this.props.totalNumberOfScreens,
       appAndSystemLocaleInfo: this.props.appAndSystemLocaleInfo,
       negotiatedLanguage: this.props.negotiatedLanguage,
@@ -1025,11 +915,8 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       isSingleScreen: this.props.isSingleScreen,
       startsWithCorner: this.props.startsWithCorner,
       autoAdvance: this.props.autoAdvance,
-      advanceOnExperimentLoad: this.props.advanceOnExperimentLoad,
-      navigate: this.props.navigate,
       forceHideStepsIndicator: this.props.forceHideStepsIndicator,
       ariaRole: this.props.ariaRole,
-      requireAction: this.props.requireAction,
       aboveButtonStepsIndicator: this.props.aboveButtonStepsIndicator,
       addonId: this.props.addonId,
       addonType: this.props.addonType,
@@ -1037,9 +924,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       addonURL: this.props.addonURL,
       addonIconURL: this.props.addonIconURL,
       themeScreenshots: this.props.themeScreenshots,
-      isRtamo: this.props.content.isRtamo,
-      animationsPaused: this.props.animationsPaused,
-      toggleAnimationsPaused: this.props.toggleAnimationsPaused
+      isRtamo: this.props.content.isRtamo
     });
   }
 }
@@ -1060,7 +945,7 @@ __webpack_require__.r(__webpack_exports__);
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-const CONFIGURABLE_STYLES = ["background", "color", "display", "fontSize", "fontWeight", "letterSpacing", "lineHeight", "marginBlock", "marginBlockStart", "marginBlockEnd", "marginInline", "paddingBlock", "paddingBlockStart", "paddingBlockEnd", "paddingInline", "paddingInlineStart", "paddingInlineEnd", "textAlign", "whiteSpace", "width", "height", "borderBlockStart", "borderBlockEnd", "top", "bottom", "left", "right", "inset", "insetBlock", "insetInline", "minHeight", "minWidth"];
+const CONFIGURABLE_STYLES = ["color", "display", "fontSize", "fontWeight", "letterSpacing", "lineHeight", "marginBlock", "marginBlockStart", "marginBlockEnd", "marginInline", "paddingBlock", "paddingBlockStart", "paddingBlockEnd", "paddingInline", "paddingInlineStart", "paddingInlineEnd", "textAlign", "whiteSpace", "width", "borderBlockStart", "borderBlockEnd", "top", "bottom", "left", "right", "inset", "insetBlock", "insetInline", "minHeight", "minWidth"];
 const ZAP_SIZE_THRESHOLD = 160;
 
 /**
@@ -1169,7 +1054,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* harmony import */ var _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4);
 /* harmony import */ var _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
 /* harmony import */ var _CTAParagraph__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(8);
@@ -1179,11 +1064,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _LinkParagraph__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(13);
 /* harmony import */ var _ContentTiles__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(14);
 /* harmony import */ var _InstallButton__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(16);
-/* harmony import */ var _SubmenuButton__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(12);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 
 
 
@@ -1201,16 +1084,10 @@ const DEFAULT_AUTO_ADVANCE_MS = 20000;
 const MultiStageProtonScreen = props => {
   const {
     autoAdvance,
-    advanceOnExperimentLoad,
     handleAction,
-    messageId,
-    navigate,
     order
   } = props;
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    if (!autoAdvance && !advanceOnExperimentLoad) {
-      return () => {};
-    }
     if (autoAdvance) {
       const value = autoAdvance?.actionEl ?? autoAdvance;
       const timeout = autoAdvance?.actionTimeMS ?? DEFAULT_AUTO_ADVANCE_MS;
@@ -1224,80 +1101,8 @@ const MultiStageProtonScreen = props => {
       }, timeout);
       return () => clearTimeout(timer);
     }
-
-    // If not doing a standard auto advance, handle auto advancing when experiments load.
-
-    // Defaults for when advance_on_experiment_load is true.
-    const minMsDefault = 3000;
-    const maxMsDefault = 8000;
-    let minMs = advanceOnExperimentLoad?.minDisplayMs ?? minMsDefault;
-    let maxMs = advanceOnExperimentLoad?.maxDisplayMs ?? maxMsDefault;
-
-    // Ensure max >= min.
-    if (maxMs < minMs) {
-      maxMs = minMs;
-    }
-    const startTime = performance.now();
-    let cancelled = false;
-    let advanced = false;
-    let minDone = false;
-    let experimentsDone = false;
-    let nimbusResult = null;
-    let maxTimeoutFired = false;
-    const doAdvance = () => {
-      if (cancelled || advanced) {
-        return;
-      }
-      advanced = true;
-      const screen_duration = Math.round(performance.now() - startTime);
-      let reason;
-      if (maxTimeoutFired) {
-        reason = "max_display_timeout";
-      } else if (nimbusResult === "error") {
-        reason = "nimbus_error";
-      } else if (nimbusResult === "timeout") {
-        reason = "nimbus_timeout";
-      } else {
-        reason = "nimbus_ready";
-      }
-      _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendActionTelemetry(messageId, "advance_on_experiment_load", "SPLASH_DISMISSED", {
-        reason,
-        screen_duration
-      });
-      navigate(false);
-    };
-    const maybeAdvance = () => {
-      if (minDone && experimentsDone) {
-        doAdvance();
-      }
-    };
-    const minTimerId = window.setTimeout(() => {
-      minDone = true;
-      maybeAdvance();
-    }, minMs);
-    const maxTimerId = window.setTimeout(() => {
-      maxTimeoutFired = true;
-      doAdvance();
-    }, maxMs);
-
-    // Use an IIFE to keep the effect itself synchronous
-    (async () => {
-      try {
-        if (typeof window.AWWaitForNimbus === "function") {
-          nimbusResult = await window.AWWaitForNimbus();
-        }
-        // If AWWaitForNimbus is missing, treat as "done" immediately.
-      } catch (e) {} finally {
-        experimentsDone = true;
-        maybeAdvance();
-      }
-    })();
-    return () => {
-      cancelled = true;
-      window.clearTimeout(minTimerId);
-      window.clearTimeout(maxTimerId);
-    };
-  }, [autoAdvance, advanceOnExperimentLoad, handleAction, messageId, order, navigate]);
+    return () => {};
+  }, [autoAdvance, handleAction, order]);
 
   // Set narrow on an outer element to allow for use of SCSS outer selector and
   // consolidation of styles for small screen widths with those for messages
@@ -1331,8 +1136,6 @@ const MultiStageProtonScreen = props => {
     setActiveMultiSelect: props.setActiveMultiSelect,
     activeSingleSelectSelections: props.activeSingleSelectSelections,
     setActiveSingleSelectSelection: props.setActiveSingleSelectSelection,
-    textInputs: props.textInputs,
-    setTextInput: props.setTextInput,
     totalNumberOfScreens: props.totalNumberOfScreens,
     handleAction: props.handleAction,
     isFirstScreen: props.isFirstScreen,
@@ -1340,8 +1143,6 @@ const MultiStageProtonScreen = props => {
     isSingleScreen: props.isSingleScreen,
     previousOrder: props.previousOrder,
     autoAdvance: props.autoAdvance,
-    advanceOnExperimentLoad: props.advanceOnExperimentLoad,
-    navigate: props.navigate,
     isRtamo: props.isRtamo,
     addonId: props.addonId,
     addonType: props.addonType,
@@ -1355,10 +1156,7 @@ const MultiStageProtonScreen = props => {
     forceHideStepsIndicator: props.forceHideStepsIndicator,
     ariaRole: props.ariaRole,
     aboveButtonStepsIndicator: props.aboveButtonStepsIndicator,
-    requireAction: props.requireAction,
-    isWideScreen: isWideScreen,
-    animationsPaused: props.animationsPaused,
-    toggleAnimationsPaused: props.toggleAnimationsPaused
+    isWideScreen: isWideScreen
   });
 };
 const ProtonScreenActionButtons = props => {
@@ -1369,8 +1167,6 @@ const ProtonScreenActionButtons = props => {
     addonType,
     addonName,
     activeMultiSelect,
-    activeSingleSelectSelections,
-    textInputs,
     installedAddons
   } = props;
   const defaultValue = content.checkbox?.defaultValue;
@@ -1391,8 +1187,8 @@ const ProtonScreenActionButtons = props => {
 
   // If we have a multi-select screen, we want to disable the primary button
   // until the user has selected at least one item.
-  const isPrimaryDisabled = disabledValue => {
-    if (disabledValue === "hasActiveMultiSelect") {
+  const isPrimaryDisabled = primaryDisabledValue => {
+    if (primaryDisabledValue === "hasActiveMultiSelect") {
       if (!activeMultiSelect) {
         return true;
       }
@@ -1405,23 +1201,7 @@ const ProtonScreenActionButtons = props => {
       }
       return true;
     }
-    // Only disables the primary button until at least one single-select
-    // option is chosen.
-    if (disabledValue === "hasActiveSingleSelect") {
-      if (!activeSingleSelectSelections) {
-        return true;
-      }
-      return !Object.values(activeSingleSelectSelections).some(val => val && val !== "none");
-    }
-    if (disabledValue === "hasTextInput") {
-      // For text input, we check if the user has entered any text in the
-      // textarea(s) present on the screen.
-      if (!textInputs) {
-        return true;
-      }
-      return Object.values(textInputs).every(input => !input.isValid || input.value.trim().length === 0);
-    }
-    return disabledValue;
+    return primaryDisabledValue;
   };
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: `action-buttons ${content.additional_button ? "additional-cta-container" : ""}`,
@@ -1455,9 +1235,7 @@ const ProtonScreenActionButtons = props => {
     }) : ""
   })), content.additional_button ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AdditionalCTA__WEBPACK_IMPORTED_MODULE_8__.AdditionalCTA, {
     content: content,
-    handleAction: props.handleAction,
-    activeMultiSelect: activeMultiSelect,
-    textInputs: textInputs
+    handleAction: props.handleAction
   }) : null, content.checkbox ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "checkbox-container"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
@@ -1474,8 +1252,7 @@ const ProtonScreenActionButtons = props => {
   }))) : null, content.secondary_button ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__.SecondaryCTA, {
     content: content,
     handleAction: props.handleAction,
-    activeMultiSelect: activeMultiSelect,
-    textInputs: textInputs
+    activeMultiSelect: activeMultiSelect
   }) : null);
 };
 class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
@@ -1485,15 +1262,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     if (this.props.content?.position === "callout") {
       return;
     }
-
-    // For requireAction screens, focus the title heading instead of the
-    // alertdialog container.
-    // Prevents Orca from misreading tab navigated elements.
-    if (this.props.requireAction && this.titleHeader) {
-      this.titleHeader.focus();
-    } else {
-      this.mainContentHeader.focus();
-    }
+    this.mainContentHeader.focus();
   }
   getScreenClassName(includeNoodles, isVideoOnboarding, isAddonsPicker) {
     if (isVideoOnboarding) {
@@ -1511,9 +1280,6 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     title,
     title_logo
   }) {
-    const titleRef = this.props.requireAction ? input => {
-      this.titleHeader = input;
-    } : null;
     if (title_logo) {
       const {
         alignment,
@@ -1527,17 +1293,13 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
         text: title
       }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", {
-        id: "mainContentHeader",
-        tabIndex: this.props.requireAction ? -1 : undefined,
-        ref: titleRef
+        id: "mainContentHeader"
       })));
     }
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
       text: title
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", {
-      id: "mainContentHeader",
-      tabIndex: this.props.requireAction ? -1 : undefined,
-      ref: titleRef
+      id: "mainContentHeader"
     }));
   }
   renderPicture({
@@ -1550,25 +1312,22 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     height,
     marginBlock,
     marginInline,
-    style,
     className = "logo-container"
   }) {
     function getLoadingStrategy() {
       for (let url of [imageURL, darkModeImageURL, reducedMotionImageURL, darkModeReducedMotionImageURL]) {
-        if (_lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.getLoadingStrategyFor(url) === "lazy") {
+        if (_lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getLoadingStrategyFor(url) === "lazy") {
           return "lazy";
         }
       }
       return "eager";
     }
-    const pictureStyle = {
-      marginInline,
-      marginBlock,
-      ...style
-    };
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("picture", {
       className: className,
-      style: pictureStyle
+      style: {
+        marginInline,
+        marginBlock
+      }
     }, darkModeReducedMotionImageURL ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("source", {
       srcset: darkModeReducedMotionImageURL,
       media: "(prefers-color-scheme: dark) and (prefers-reduced-motion: reduce)"
@@ -1636,13 +1395,6 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       }
     });
   }
-  renderMoreButton() {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SubmenuButton__WEBPACK_IMPORTED_MODULE_12__.SubmenuButton, {
-      content: this.props.content,
-      handleAction: this.props.handleAction,
-      buttonType: "more"
-    });
-  }
   renderStepsIndicator() {
     const {
       order,
@@ -1676,45 +1428,11 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       totalNumberOfScreens: total
     }));
   }
-
-  // We consider a screen to have animated content when it includes both
-  // default and _static versions of its background image or hero_image url.
-  // The pause toggle swaps the rendered asset to the _static asset when activated.
-  // Without _both_ default and static, there is nothing for the toggle to
-  // switch to, so we don't render the toggle button at all.
-  hasAnimatedContent(content) {
-    return !!(content.background && content.background_static || content.hero_image?.url && content.hero_image?.static_url);
-  }
-  getEffectiveBackground(content) {
-    return this.props.animationsPaused && content.background_static ? content.background_static : content.background;
-  }
-  getEffectiveHeroImageUrl(content) {
-    if (!content.hero_image) {
-      return null;
-    }
-    return this.props.animationsPaused && content.hero_image.static_url ? content.hero_image.static_url : content.hero_image.url;
-  }
-  renderAnimationPlayPauseButton() {
-    const {
-      toggleAnimationsPaused
-    } = this.props;
-    const paused = !!this.props.animationsPaused;
-    const labelId = paused ? "onboarding-animation-play-button" : "onboarding-animation-pause-button";
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-      className: `animation-play-pause-button${paused ? " paused" : ""}`,
-      type: "button",
-      "aria-pressed": paused,
-      "data-l10n-id": labelId,
-      onClick: toggleAnimationsPaused
-    });
-  }
   renderSecondarySection(content) {
-    const background = this.getEffectiveBackground(content);
-    const heroImageUrl = this.getEffectiveHeroImageUrl(content);
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `section-secondary ${content.hide_secondary_section ? "with-secondary-section-hidden" : ""}`,
-      style: background ? {
-        background,
+      style: content.background ? {
+        background: content.background,
         "--mr-secondary-background-position-y": content.split_narrow_bkg_position
       } : {}
     }, content.dismiss_button && content.reverse_split ? this.renderDismissButton() : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
@@ -1723,8 +1441,8 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       className: "sr-only image-alt",
       role: "img"
     })), content.hero_image ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_HeroImage__WEBPACK_IMPORTED_MODULE_6__.HeroImage, {
-      url: heroImageUrl
-    }) : this.renderHeroText(content.hero_text), this.hasAnimatedContent(content) ? this.renderAnimationPlayPauseButton() : null);
+      url: content.hero_image.url
+    }) : this.renderHeroText(content.hero_text));
   }
   renderHeroText(hero_text) {
     if (!hero_text) {
@@ -1733,10 +1451,10 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
 
     // Check if hero_text is a string or an object with string_id property
     // essentially checking if we're using old or new design
-    const isSimpleText = typeof hero_text === "string" || typeof hero_text === "object" && hero_text !== null && ("string_id" in hero_text || "raw" in hero_text);
+    const isSimpleText = typeof hero_text === "string" || typeof hero_text === "object" && hero_text !== null && "string_id" in hero_text;
     const HeroTextWrapper = ({
       children,
-      className
+      className = ""
     }) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `message-text ${className}`
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
@@ -1745,9 +1463,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       className: "spacer-bottom"
     })));
     if (isSimpleText) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(HeroTextWrapper, {
-        className: "simple"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
+      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(HeroTextWrapper, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
         text: hero_text
       }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null)));
     }
@@ -1789,7 +1505,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
       className: `${addonType?.includes("theme") ? "rtamo-theme-icon" : "brand-logo"}`,
       src: addonType?.includes("theme") ? themeScreenshots[0].url : addonIconURL,
-      loading: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.getLoadingStrategyFor(addonIconURL),
+      loading: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getLoadingStrategyFor(addonIconURL),
       alt: "",
       role: "presentation"
     }));
@@ -1797,7 +1513,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
   getCombinedInnerStyles(content, isWideScreen) {
     const CONFIGURABLE_STYLES = ["overflow", "display", "paddingInline", "paddingInlineStart", "paddingInlineEnd", "paddingBlock", "paddingBlockStart", "paddingBlockEnd"];
     const innerContentStyles = isWideScreen ? content.main_content_style || {} : content.main_content_style_narrow || {};
-    const validInnerStyles = _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.getValidStyle(innerContentStyles, CONFIGURABLE_STYLES) || {};
+    const validInnerStyles = _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(innerContentStyles, CONFIGURABLE_STYLES) || {};
     return {
       ...validInnerStyles,
       justifyContent: content.split_content_justify_content
@@ -1824,9 +1540,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       addonName: this.props.addonName,
       addonType: this.props.addonType,
       handleAction: this.props.handleAction,
-      activeMultiSelect: this.props.activeMultiSelect,
-      activeSingleSelectSelections: this.props.activeSingleSelectSelections,
-      textInputs: this.props.textInputs
+      activeMultiSelect: this.props.activeMultiSelect
     }) : null;
   }
 
@@ -1859,13 +1573,12 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
           ${screenClassName} ${textColorClass}`,
       "reverse-split": content.reverse_split ? "" : null,
       fullscreen: content.fullscreen ? "" : null,
-      style: content.screen_style && _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.getValidStyle(content.screen_style, ["overflow", "display"]),
+      style: content.screen_style && _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(content.screen_style, ["overflow", "display"]),
       role: ariaRole ?? "alertdialog",
       layout: content.layout,
       pos: content.position || "center",
       tabIndex: "-1",
-      "aria-labelledby": `mainContentHeader${content.subtitle ? " mainContentSubheader" : ""}`,
-      "aria-describedby": "mainContentInner",
+      "aria-labelledby": "mainContentHeader",
       ref: input => {
         this.mainContentHeader = input;
       },
@@ -1874,22 +1587,21 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       className: `section-main ${isEmbeddedMigration ? "embedded-migration" : ""}${isSystemPromptStyleSpotlight ? "system-prompt-spotlight" : ""}`,
       "hide-secondary-section": content.hide_secondary_section ? String(content.hide_secondary_section) : null,
       role: "document",
-      style: content.screen_style && _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.getValidStyle(content.screen_style, ["width", "padding", "height"])
+      style: content.screen_style && _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(content.screen_style, ["width", "padding", "height"])
     }, content.secondary_button_top ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__.SecondaryCTA, {
       content: content,
       handleAction: this.props.handleAction,
       position: "top"
-    }) : null, includeNoodles ? this.renderNoodles() : null, content.more_button ? this.renderMoreButton() : null, content.dismiss_button && !content.reverse_split ? this.renderDismissButton() : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }) : null, includeNoodles ? this.renderNoodles() : null, content.dismiss_button && !content.reverse_split ? this.renderDismissButton() : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `main-content ${hideStepsIndicator ? "no-steps" : ""}`,
       style: {
-        background: isCenterPosition && this.getEffectiveBackground(content) ? this.getEffectiveBackground(content) : null,
+        background: content.background && isCenterPosition ? content.background : null,
         width: content.width && content.position !== "split" ? content.width : null,
         paddingBlock: content.split_content_padding_block ? content.split_content_padding_block : null,
         paddingInline: content.split_content_padding_inline ? content.split_content_padding_inline : null
       }
-    }, isCenterPosition && this.hasAnimatedContent(content) ? this.renderAnimationPlayPauseButton() : null, content.logo && !content.fullscreen ? this.renderPicture(content.logo) : null, isRtamo && !content.fullscreen ? this.renderRTAMOIcon(addonType, this.props.themeScreenshots, this.props.addonIconURL) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, content.logo && !content.fullscreen ? this.renderPicture(content.logo) : null, isRtamo && !content.fullscreen ? this.renderRTAMOIcon(addonType, this.props.themeScreenshots, this.props.addonIconURL) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "main-content-inner",
-      id: "mainContentInner",
       style: combinedStyles
     }, content.logo && content.fullscreen ? this.renderPicture(content.logo) : null, isRtamo && content.fullscreen ? this.renderRTAMOIcon(addonType, this.props.themeScreenshots, this.props.addonIconURL) : null, content.title || content.subtitle ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       id: "multi-stage-message-welcome-text",
@@ -1933,7 +1645,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -2157,7 +1869,7 @@ function LanguageSwitcher(props) {
     className: "primary",
     value: "primary_button",
     onClick: () => {
-      _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendActionTelemetry(messageId, "download_langpack", "CLICK_BUTTON");
+      _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(messageId, "download_langpack");
       setIsAwaitingLangpack(true);
     }
   }, content.languageSwitcher.switch ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
@@ -2190,7 +1902,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -2211,17 +1923,11 @@ const CTAParagraph = props => {
     event.preventDefault();
   }, [handleAction]);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", {
-    className: `cta-paragraph ${content?.info_tile ? "info-tile" : ""}`,
+    className: "cta-paragraph",
     style: {
-      ..._lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.getValidStyle(content?.style, _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.CONFIGURABLE_STYLES)
+      ..._lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(content?.style, _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.CONFIGURABLE_STYLES)
     }
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "cta-paragraph-icon-wrapper"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
-    className: "cta-paragraph-icon",
-    src: content?.icon?.iconURL,
-    style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.getValidStyle(content?.icon, _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.CONFIGURABLE_STYLES)
-  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: content.text
   }, content.text.string_name && typeof handleAction === "function" ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
     "data-l10n-id": content.text.string_id,
@@ -2245,7 +1951,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -2268,7 +1974,7 @@ const HeroImage = props => {
       height
     } : null,
     src: url,
-    loading: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.MultiStageUtils.getLoadingStrategyFor(url),
+    loading: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.getLoadingStrategyFor(url),
     alt: alt || "",
     role: alt ? null : "presentation"
   }));
@@ -2334,9 +2040,7 @@ __webpack_require__.r(__webpack_exports__);
 
 const AdditionalCTA = ({
   content,
-  handleAction,
-  activeMultiSelect,
-  textInputs
+  handleAction
 }) => {
   let buttonStyle = "";
   const isSplitButton = content.submenu_button?.attached_to === "additional_button";
@@ -2349,28 +2053,6 @@ const AdditionalCTA = ({
   } else {
     buttonStyle = content.additional_button?.style === "link" ? "cta-link" : content.additional_button?.style;
   }
-  const computeDisabled = react__WEBPACK_IMPORTED_MODULE_0___default().useCallback(disabledValue => {
-    if (disabledValue === "hasActiveMultiSelect") {
-      if (!activeMultiSelect) {
-        return true;
-      }
-      for (const key in activeMultiSelect) {
-        if (activeMultiSelect[key]?.length > 0) {
-          return false;
-        }
-      }
-      return true;
-    }
-    if (disabledValue === "hasTextInput") {
-      // For text input, we check if the user has entered any text in the
-      // textarea(s) present on the screen.
-      if (!textInputs) {
-        return true;
-      }
-      return Object.values(textInputs).every(input => !input.isValid || input.value.trim().length === 0);
-    }
-    return disabledValue;
-  }, [activeMultiSelect, textInputs]);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: className
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
@@ -2380,7 +2062,7 @@ const AdditionalCTA = ({
     className: `${buttonStyle} additional-cta`,
     onClick: handleAction,
     value: "additional_button",
-    disabled: computeDisabled(content.additional_button?.disabled)
+    disabled: content.additional_button?.disabled === true
   })), isSplitButton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SubmenuButton__WEBPACK_IMPORTED_MODULE_2__.SubmenuButton, {
     content: content,
     handleAction: handleAction
@@ -2477,22 +2159,11 @@ function addMenuitems(items, popup) {
 }
 const SubmenuButtonInner = ({
   content,
-  handleAction,
-  buttonType = "submenu"
+  handleAction
 }) => {
   const ref = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const [isSubmenuExpanded, setIsSubmenuExpanded] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-  const hasDismissButton = content.dismiss_button;
-  const buttonConfig = buttonType === "submenu" ? content.submenu_button : content.more_button;
-  const isMoreButton = buttonType === "more";
-  if (isMoreButton && hasDismissButton) {
-    return null;
-  }
-  const isPrimary = buttonConfig?.style === "primary";
-  const submenuItems = buttonConfig?.submenu || [];
-  const buttonId = isMoreButton ? "more_button" : "submenu_button";
-  const buttonValue = isMoreButton ? "more_button" : "submenu_button";
-  const buttonClassName = isMoreButton ? "more-button" : `submenu-button ${isPrimary ? "primary" : "secondary"}`;
+  const isPrimary = content.submenu_button?.style === "primary";
   const onCommand = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(event => {
     let {
       config
@@ -2521,7 +2192,7 @@ const SubmenuButtonInner = ({
     }
     let menupopup = document.createXULElement("menupopup");
     menupopup.className = "fxms-multi-stage-submenu";
-    addMenuitems(submenuItems, menupopup);
+    addMenuitems(content.submenu_button.submenu, menupopup);
     button.appendChild(menupopup);
     let stylesheet;
     if (!document.head.querySelector(`link[href="chrome://global/content/widgets.css"], link[href="chrome://global/skin/global.css"]`)) {
@@ -2552,21 +2223,17 @@ const SubmenuButtonInner = ({
     };
   }, [onCommand]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Don't render the button if there's no button config, or no items
-  if (!buttonConfig || !submenuItems.length) {
-    return null;
-  }
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: buttonConfig.label ?? {}
+    text: content.submenu_button.label ?? {}
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-    id: buttonId,
-    className: buttonClassName,
-    value: buttonValue,
+    id: "submenu_button",
+    className: `submenu-button ${isPrimary ? "primary" : "secondary"}`,
+    value: "submenu_button",
     onClick: onClick,
     ref: ref,
     "aria-haspopup": "menu",
     "aria-expanded": isSubmenuExpanded,
-    "aria-labelledby": !isMoreButton ? `${buttonConfig.attached_to || content.attached_to || ""} submenu_button`.trim() : null
+    "aria-labelledby": `${content.submenu_button.attached_to} submenu_button`
   }));
 };
 
@@ -2587,68 +2254,16 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-function renderSegment(segment, index, handleAction) {
-  if (typeof segment === "string") {
-    return segment;
-  }
-  if (segment?.href) {
-    const action = {
-      type: "OPEN_URL",
-      data: {
-        args: segment.href,
-        where: segment.where || "tab"
-      }
-    };
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", {
-      key: index,
-      href: segment.href,
-      className: "text-link",
-      onClick: event => {
-        event.preventDefault();
-        handleAction(event, action);
-      }
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-      text: segment
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null)));
-  }
-  if (segment?.link_key) {
-    return (
-      /*#__PURE__*/
-      // eslint-disable-next-line jsx-a11y/anchor-is-valid
-      react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", {
-        key: index,
-        value: segment.link_key,
-        role: "link",
-        className: "text-link",
-        tabIndex: "0",
-        onClick: handleAction,
-        onKeyPress: event => {
-          if (event.key === "Enter" && !event.repeat) {
-            handleAction(event);
-          }
-        }
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-        text: segment
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null)))
-    );
-  }
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    key: index,
-    text: segment
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null));
-}
 const LinkParagraph = props => {
   const {
     text_content,
     handleAction
   } = props;
-  const text = text_content?.text;
   const handleParagraphAction = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(event => {
-    const anchor = event.target.closest("a");
-    if (anchor) {
+    if (event.target.closest("a")) {
       handleAction({
         ...event,
-        currentTarget: anchor
+        currentTarget: event.target
       });
     }
   }, [handleAction]);
@@ -2657,23 +2272,10 @@ const LinkParagraph = props => {
       handleParagraphAction(event);
     }
   }, [handleParagraphAction]);
-  const paragraphClassName = text_content?.font_styles === "legal" ? "legal-paragraph" : "link-paragraph";
-  if (Array.isArray(text)) {
-    const style = {};
-    for (const styleProp of _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.CONFIGURABLE_STYLES) {
-      if (text_content[styleProp] !== undefined) {
-        style[styleProp] = text_content[styleProp];
-      }
-    }
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
-      className: paragraphClassName,
-      style: style
-    }, text.map((segment, index) => renderSegment(segment, index, handleAction)));
-  }
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: text
+    text: text_content.text
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
-    className: paragraphClassName,
+    className: text_content.font_styles === "legal" ? "legal-paragraph" : "link-paragraph",
     onClick: handleParagraphAction,
     value: "link_paragraph",
     onKeyPress: onKeyPress
@@ -2704,21 +2306,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _SingleSelect__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(17);
 /* harmony import */ var _MobileDownloads__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(20);
 /* harmony import */ var _MultiSelect__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(21);
-/* harmony import */ var _TextAreaTile__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(22);
-/* harmony import */ var _EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(23);
-/* harmony import */ var _EmbeddedFxBackupOptIn__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(24);
-/* harmony import */ var _ActionChecklist__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(25);
-/* harmony import */ var _EmbeddedBrowser__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(26);
-/* harmony import */ var _ConfirmationChecklist__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(27);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(3);
-/* harmony import */ var _EmbeddedBackupRestore__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(28);
-/* harmony import */ var _PinnableSitesList__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(29);
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+/* harmony import */ var _EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(22);
+/* harmony import */ var _EmbeddedFxBackupOptIn__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(23);
+/* harmony import */ var _ActionChecklist__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(24);
+/* harmony import */ var _EmbeddedBrowser__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(25);
+/* harmony import */ var _ConfirmationChecklist__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(26);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(3);
+/* harmony import */ var _EmbeddedBackupRestore__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(27);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
 
 
 
@@ -2807,13 +2404,9 @@ const ContentTiles = props => {
     let lastTilesEl = null;
     let lastTabAt = 0;
     let restoring = false;
-    let tabFromTiles = false;
     function onKeyDown(e) {
       if (e.key === "Tab") {
         lastTabAt = performance.now();
-        if (tilesEl.contains(document.activeElement)) {
-          tabFromTiles = true;
-        }
       }
     }
     function onFocusIn(event) {
@@ -2824,22 +2417,12 @@ const ContentTiles = props => {
       // Track true DOM focus inside tiles.
       if (tilesEl.contains(target)) {
         lastTilesEl = target;
-        // Reset when focus enters tiles
-        tabFromTiles = false;
         return;
       }
 
       // If focus left tiles without a recent tab, treat as a programmatic snap.
       const tabRecently = performance.now() - lastTabAt < TAB_GRACE_WINDOW_MS;
       if (tabRecently || !lastTilesEl || !document.contains(lastTilesEl) || restoring) {
-        tabFromTiles = false;
-        return;
-      }
-
-      // If tab was pressed while in tiles and focus moved to action buttons, don't restore focus for the intended keyboard navigation
-      const actionButtons = dialog.querySelector(".action-buttons");
-      if (actionButtons?.contains(target) && tabFromTiles) {
-        tabFromTiles = false;
         return;
       }
 
@@ -2864,20 +2447,12 @@ const ContentTiles = props => {
   }, []);
   const toggleTile = (index, tile) => {
     const tileId = `${tile.type}${tile.id ? "_" : ""}${tile.id ?? ""}_header`;
-    _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_12__.MultiStageUtils.sendActionTelemetry(props.messageId, tileId, "CLICK_BUTTON");
-    if (tile.type === "link" && tile.action) {
-      props.handleAction({
-        currentTarget: {
-          value: tileId
-        }
-      }, tile.action);
-    } else {
-      setExpandedTileIndex(prevIndex => prevIndex === index ? null : index);
-    }
+    setExpandedTileIndex(prevIndex => prevIndex === index ? null : index);
+    _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_11__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, tileId);
   };
   const toggleTiles = () => {
     setTilesHeaderExpanded(prev => !prev);
-    _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_12__.MultiStageUtils.sendActionTelemetry(props.messageId, "content_tiles_header", "CLICK_BUTTON");
+    _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_11__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, "content_tiles_header");
   };
   function getTileMultiSelects(screenMultiSelects, index) {
     return screenMultiSelects?.[`tile-${index}`];
@@ -2892,22 +2467,17 @@ const ContentTiles = props => {
       title,
       subtitle
     } = tile;
-    const tileHeaderProps = tile.type === "link" ? {
-      role: "link"
-    } : {
-      "aria-expanded": isExpanded,
-      "aria-controls": `tile-content-${index}`
-    };
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       key: index,
       className: `content-tile ${header ? "has-header" : ""}`,
-      style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_12__.MultiStageUtils.getTileStyle(tile, TILE_STYLES)
-    }, header?.title && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", _extends({
+      style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_11__.AboutWelcomeUtils.getTileStyle(tile, TILE_STYLES)
+    }, header?.title && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
       className: "tile-header secondary",
-      onClick: () => toggleTile(index, tile)
-    }, tileHeaderProps, {
-      style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_12__.MultiStageUtils.getValidStyle(header.style, HEADER_STYLES)
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      onClick: () => toggleTile(index, tile),
+      "aria-expanded": isExpanded,
+      "aria-controls": `tile-content-${index}`,
+      style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_11__.AboutWelcomeUtils.getValidStyle(header.style, HEADER_STYLES)
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "header-text-container"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
       text: header.title
@@ -2918,7 +2488,7 @@ const ContentTiles = props => {
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
       className: "header-subtitle"
     }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: tile.type === "link" ? "external-link-icon" : "arrow-icon"
+      className: "arrow-icon"
     })), (title || subtitle) && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "tile-title-container",
       id: `tile-title-container-${index}`
@@ -2931,7 +2501,7 @@ const ContentTiles = props => {
       text: subtitle
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
       className: "tile-subtitle"
-    }))), tile.type !== "link" && (isExpanded || !header) ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }))), isExpanded || !header ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "tile-content",
       id: `tile-content-${index}`
     }, tile.type === "addons-picker" && tile.data && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AddonsPicker__WEBPACK_IMPORTED_MODULE_2__.AddonsPicker, {
@@ -2963,46 +2533,33 @@ const ContentTiles = props => {
       activeMultiSelect: getTileActiveMultiSelect(props.activeMultiSelect, index),
       setActiveMultiSelect: props.setActiveMultiSelect,
       multiSelectId: `tile-${index}`
-    }), tile.type === "textarea" && tile.data && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_TextAreaTile__WEBPACK_IMPORTED_MODULE_6__.TextAreaTile, {
-      content: {
-        tiles: tile
-      },
-      textInputs: props.textInputs,
-      setTextInput: props.setTextInput,
-      tileIndex: index
-    }), tile.type === "migration-wizard" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_7__.EmbeddedMigrationWizard, {
+    }), tile.type === "migration-wizard" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_6__.EmbeddedMigrationWizard, {
       handleAction: props.handleAction,
       content: {
         tiles: tile
       }
-    }), tile.type === "action_checklist" && tile.data && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ActionChecklist__WEBPACK_IMPORTED_MODULE_9__.ActionChecklist, {
+    }), tile.type === "action_checklist" && tile.data && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ActionChecklist__WEBPACK_IMPORTED_MODULE_8__.ActionChecklist, {
       content: content,
       message_id: props.messageId
-    }), tile.type === "embedded_browser" && tile.data?.url && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedBrowser__WEBPACK_IMPORTED_MODULE_10__.EmbeddedBrowser, {
+    }), tile.type === "embedded_browser" && tile.data?.url && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedBrowser__WEBPACK_IMPORTED_MODULE_9__.EmbeddedBrowser, {
       url: tile.data.url,
       style: tile.data.style
-    }), tile.type === "backup_restore" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedBackupRestore__WEBPACK_IMPORTED_MODULE_13__.EmbeddedBackupRestore, {
+    }), tile.type === "backup_restore" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedBackupRestore__WEBPACK_IMPORTED_MODULE_12__.EmbeddedBackupRestore, {
       handleAction: props.handleAction,
       content: {
         tiles: tile
       },
       skipButton: props.content.skip_button
-    }), tile.type === "fx_backup_file_path" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedFxBackupOptIn__WEBPACK_IMPORTED_MODULE_8__.EmbeddedFxBackupOptIn, {
+    }), tile.type === "fx_backup_file_path" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedFxBackupOptIn__WEBPACK_IMPORTED_MODULE_7__.EmbeddedFxBackupOptIn, {
       handleAction: props.handleAction,
       isEncryptedBackup: content.isEncryptedBackup,
-      options: tile.options,
-      messageId: props.messageId
-    }), tile.type === "fx_backup_password" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedFxBackupOptIn__WEBPACK_IMPORTED_MODULE_8__.EmbeddedFxBackupOptIn, {
+      options: tile.options
+    }), tile.type === "fx_backup_password" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedFxBackupOptIn__WEBPACK_IMPORTED_MODULE_7__.EmbeddedFxBackupOptIn, {
       handleAction: props.handleAction,
       isEncryptedBackup: content.isEncryptedBackup,
-      options: tile.options,
-      messageId: props.messageId
-    }), tile.type === "confirmation-checklist" && tile.data && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ConfirmationChecklist__WEBPACK_IMPORTED_MODULE_11__.ConfirmationChecklist, {
+      options: tile.options
+    }), tile.type === "confirmation-checklist" && tile.data && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ConfirmationChecklist__WEBPACK_IMPORTED_MODULE_10__.ConfirmationChecklist, {
       content: tile.data,
-      handleAction: props.handleAction
-    }), tile.type === "pinnable_sites" && tile.data && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PinnableSitesList__WEBPACK_IMPORTED_MODULE_14__.PinnableSitesList, {
-      tile: tile,
-      messageId: props.messageId,
       handleAction: props.handleAction
     })) : null);
   };
@@ -3011,7 +2568,7 @@ const ContentTiles = props => {
       const containerStyle = content?.tiles_container?.style;
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
         id: "content-tiles-container",
-        style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_12__.MultiStageUtils.getValidStyle(containerStyle, CONTAINER_STYLES)
+        style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_11__.AboutWelcomeUtils.getValidStyle(containerStyle, CONTAINER_STYLES)
       }, tiles.map((tile, index) => renderContentTile(tile, index)));
     }
     // If tiles is not an array render the tile alone without a container
@@ -3044,7 +2601,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
 /* harmony import */ var _InstallButton__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(16);
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -3059,13 +2616,12 @@ const AddonsPicker = props => {
   const {
     content,
     installedAddons,
-    layout,
-    handleAction
+    layout
   } = props;
   if (!content) {
     return null;
   }
-  function handleInstallClick(event) {
+  function handleAction(event) {
     const {
       message_id
     } = props;
@@ -3073,17 +2629,24 @@ const AddonsPicker = props => {
       action,
       source_id
     } = content.tiles.data[event.currentTarget.value];
-    if (action.type === "INSTALL_ADDON_FROM_URL") {
-      if (!action.data) {
+    let {
+      type,
+      data
+    } = action;
+    if (type === "INSTALL_ADDON_FROM_URL") {
+      if (!data) {
         return;
       }
     }
-    handleAction(event, action);
-    _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.MultiStageUtils.sendActionTelemetry(message_id, source_id, "CLICK_BUTTON");
+    _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.handleUserAction({
+      type,
+      data
+    });
+    _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.sendActionTelemetry(message_id, source_id);
   }
   function handleAuthorClick(event, authorId) {
     event.stopPropagation();
-    _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.MultiStageUtils.handleUserAction({
+    _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.handleUserAction({
       type: "OPEN_URL",
       data: {
         args: `https://addons.mozilla.org/firefox/user/${authorId}/`,
@@ -3137,7 +2700,7 @@ const AddonsPicker = props => {
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, author.name)))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_InstallButton__WEBPACK_IMPORTED_MODULE_3__.InstallButton, {
     key: id,
     addonId: id,
-    handleAction: handleInstallClick,
+    handleAction: handleAction,
     index: index,
     installedAddons: installedAddons,
     install_label: install_label,
@@ -3161,7 +2724,7 @@ const AddonsPicker = props => {
   }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_InstallButton__WEBPACK_IMPORTED_MODULE_3__.InstallButton, {
     key: id,
     addonId: id,
-    handleAction: handleInstallClick,
+    handleAction: handleAction,
     index: index,
     installedAddons: installedAddons,
     install_label: install_label,
@@ -3267,7 +2830,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
 /* harmony import */ var _TileButton__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(18);
 /* harmony import */ var _TileList__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(19);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -3345,7 +2908,6 @@ const SingleSelect = ({
     id,
     label = "",
     body = "",
-    subtitle = "",
     theme,
     tooltip,
     type = "",
@@ -3380,7 +2942,7 @@ const SingleSelect = ({
       className: `select-item ${type}`,
       onKeyDown: e => handleKeyDown(e),
       style: {
-        ..._lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_4__.MultiStageUtils.getValidStyle(style, CONFIGURABLE_STYLES),
+        ..._lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_4__.AboutWelcomeUtils.getValidStyle(style, CONFIGURABLE_STYLES),
         ...(icon?.width ? {
           minWidth: icon.width
         } : {})
@@ -3401,7 +2963,7 @@ const SingleSelect = ({
       onClick: e => handleClick(e)
     })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `icon ${selected ? " selected" : ""} ${value}`,
-      style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_4__.MultiStageUtils.getValidStyle(icon, CONFIGURABLE_STYLES)
+      style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_4__.AboutWelcomeUtils.getValidStyle(icon, CONFIGURABLE_STYLES)
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
       text: label
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
@@ -3412,11 +2974,7 @@ const SingleSelect = ({
       text: body
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "text body-text"
-    })), subtitle && selected ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-      text: subtitle
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: "text subtitle-text"
-    })) : "", tilebutton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_TileButton__WEBPACK_IMPORTED_MODULE_2__.TileButton, {
+    })), tilebutton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_TileButton__WEBPACK_IMPORTED_MODULE_2__.TileButton, {
       content: tilebutton,
       handleAction: handleAction,
       inputName: inputName
@@ -3481,7 +3039,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -3510,7 +3068,7 @@ const TileList = props => {
     className: "tile-list-icon-wrapper"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "tile-list-icon",
-    style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.MultiStageUtils.getValidStyle(icon, CONFIGURABLE_STYLES)
+    style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.getValidStyle(icon, CONFIGURABLE_STYLES)
   })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "tile-list-text"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__.Localized, {
@@ -3532,7 +3090,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -3569,7 +3127,7 @@ const MobileDownloads = props => {
     className: "qr-code-image",
     alt: typeof QRCode.alt_text === "string" ? QRCode.alt_text : "",
     src: QRCode.image_url,
-    loading: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.getLoadingStrategyFor(QRCode.image_url)
+    loading: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getLoadingStrategyFor(QRCode.image_url)
   }) : null, showEmailLink ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: props.data.email.link_text
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
@@ -3593,7 +3151,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -3651,7 +3209,7 @@ const MultiSelect = ({
     return getOrderedIds().map(id => data.find(item => item.id === id));
   }, [] // eslint-disable-line react-hooks/exhaustive-deps
   );
-  const containerStyle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.getTileStyle(content.tiles, MULTI_SELECT_STYLES), [content.tiles]);
+  const containerStyle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getTileStyle(content.tiles, MULTI_SELECT_STYLES), [content.tiles]);
   const PickerIcon = ({
     emoji,
     bgColor,
@@ -3736,7 +3294,7 @@ const MultiSelect = ({
   }) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     key: id + label,
     className: "checkbox-container multi-select-item",
-    style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.getValidStyle(style, MULTI_SELECT_STYLES),
+    style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(style, MULTI_SELECT_STYLES),
     tabIndex: isPicker ? "0" : null,
     onClick: isPicker ? handleCheckboxContainerInteraction : null,
     onKeyDown: isPicker ? handleCheckboxContainerInteraction : null,
@@ -3749,7 +3307,7 @@ const MultiSelect = ({
     value: id,
     name: group,
     checked: activeMultiSelect?.includes(id),
-    style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.getValidStyle(icon?.style, MULTI_SELECT_ICON_STYLES),
+    style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(icon?.style, MULTI_SELECT_ICON_STYLES),
     onChange: handleChange,
     ref: el => refs.current[id] = el,
     "aria-describedby": description ? `${id}-description` : null,
@@ -3768,90 +3326,11 @@ const MultiSelect = ({
     text: description
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
     id: `${id}-description`
-  })) : null)), content.tiles.footer ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: items.some(i => activeMultiSelect?.includes(i.id)) ? content.tiles.footer.checkedLabel : content.tiles.footer.unCheckAllLabel
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", {
-    id: "multi-stage-multi-select-footer-label"
-  })) : null);
+  })) : null)));
 };
 
 /***/ }),
 /* 22 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   TextAreaTile: () => (/* binding */ TextAreaTile)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-const CONFIGURABLE_STYLES = ["color", "display", "fontSize", "fontWeight", "letterSpacing", "lineHeight", "marginBlock", "marginInline", "paddingBlock", "paddingInline", "textAlign", "whiteSpace", "width", "border", "borderRadius", "minHeight", "minWidth"];
-const TextAreaTile = ({
-  content,
-  textInputs,
-  setTextInput,
-  tileIndex
-}) => {
-  const {
-    data
-  } = content.tiles;
-  const id = data.id || `tile-${tileIndex}`;
-  const [isValid, setIsValid] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
-  const [charCounter, setCharCounter] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(data.character_limit || 0);
-  const textInput = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
-    if (textInputs) {
-      return textInputs?.[id];
-    }
-    return null;
-  }, [textInputs, id]);
-  const handleChange = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(event => {
-    let valid = isValid;
-    if (data.character_limit) {
-      setCharCounter(data.character_limit - event.target.value.length);
-      valid = event.target.value.length <= data.character_limit;
-    }
-    setIsValid(valid);
-    setTextInput({
-      value: event.target.value,
-      isValid: valid
-    }, id);
-  }, [isValid, data.character_limit, id, setTextInput]);
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    if (!textInput) {
-      setTextInput({
-        value: "",
-        isValid: true
-      }, id);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "textarea-container",
-    style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.MultiStageUtils.getValidStyle(data.container_style, CONFIGURABLE_STYLES, true)
-  }, data.character_limit && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: `textarea-char-counter ${isValid ? "" : "invalid"}`,
-    style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.MultiStageUtils.getValidStyle(data.char_counter_style, CONFIGURABLE_STYLES, true)
-  }, charCounter), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("textarea", {
-    name: id,
-    className: `textarea-input ${isValid ? "" : "invalid"}`,
-    rows: data.rows,
-    cols: data.cols,
-    onChange: handleChange,
-    value: textInput?.value || "",
-    placeholder: data.placeholder,
-    style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.MultiStageUtils.getValidStyle(data.textarea_style, CONFIGURABLE_STYLES, true)
-  }));
-};
-
-/***/ }),
-/* 23 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -3950,7 +3429,7 @@ const EmbeddedMigrationWizard = ({
 };
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -3967,8 +3446,7 @@ __webpack_require__.r(__webpack_exports__);
 const EmbeddedFxBackupOptIn = ({
   handleAction,
   isEncryptedBackup,
-  options,
-  messageId
+  options
 }) => {
   const backupRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const {
@@ -4037,7 +3515,6 @@ const EmbeddedFxBackupOptIn = ({
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("turn-on-scheduled-backups", {
     ref: backupRef,
-    source: messageId,
     "hide-headers": "",
     "hide-password-input": !isEncryptedBackup || hide_password_input ? "" : undefined,
     "hide-secondary-button": !isEncryptedBackup || hide_secondary_button ? "" : undefined,
@@ -4053,7 +3530,7 @@ const EmbeddedFxBackupOptIn = ({
 };
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -4065,7 +3542,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -4183,11 +3660,11 @@ const ActionChecklist = ({
       data
     } = action;
     setNumberOfCompletedActions(numberOfCompletedActions + 1);
-    _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.handleUserAction({
+    _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction({
       type,
       data
     });
-    _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendActionTelemetry(message_id, source_id, "CLICK_BUTTON");
+    _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(message_id, source_id);
   }
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "action-checklist"
@@ -4211,7 +3688,7 @@ const ActionChecklist = ({
 };
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -4221,7 +3698,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -4245,6 +3722,7 @@ const EmbeddedBrowserInner = ({
     }
     const browserEl = document.createXULElement("browser");
     const remoteType = window.AWPredictRemoteType({
+      browserEl,
       url
     });
     const attributes = [["disableglobalhistory", "true"], ["type", "content"], ["remote", "true"], ["maychangeremoteness", "true"], ["nodefaultsrc", "true"], ["remoteType", remoteType]];
@@ -4264,7 +3742,7 @@ const EmbeddedBrowserInner = ({
   }, [url]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     if (browserRef.current && style) {
-      const validStyles = _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.MultiStageUtils.getValidStyle(style, BROWSER_STYLES);
+      const validStyles = _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.getValidStyle(style, BROWSER_STYLES);
       Object.keys(validStyles).forEach(key => {
         browserRef.current.style.setProperty(key, style[key]);
       });
@@ -4278,7 +3756,7 @@ const EmbeddedBrowserInner = ({
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (EmbeddedBrowser);
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -4287,7 +3765,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
 /* harmony import */ var _LinkParagraph__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(13);
 /* This Source Code Form is subject to the terms of the Mozilla Public * License, v. 2.0. If a copy of the MPL was not distributed with this file, * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -4308,7 +3786,7 @@ const ConfirmationChecklist = props => {
     className: `confirmation-checklist-section`
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: `confirmation-checklist-container`,
-    style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.MultiStageUtils.getValidStyle(content.style, CONFIGURABLE_STYLES)
+    style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.getValidStyle(content.style, CONFIGURABLE_STYLES)
   }, content.items.map(({
     icon,
     text,
@@ -4321,7 +3799,7 @@ const ConfirmationChecklist = props => {
     className: "confirmation-checklist-icon-wrapper"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "confirmation-checklist-icon",
-    style: _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.MultiStageUtils.getValidStyle(icon, CONFIGURABLE_STYLES)
+    style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.getValidStyle(icon, CONFIGURABLE_STYLES)
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "confirmation-checklist-text"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__.Localized, {
@@ -4340,7 +3818,7 @@ const ConfirmationChecklist = props => {
 };
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -4349,7 +3827,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -4374,7 +3852,7 @@ const EmbeddedBackupRestore = ({
     loadRestore();
     // Clear the pref used to target the restore screen so that users will not
     // automatically see it again the next time they visit about:welcome.
-    _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.MultiStageUtils.handleUserAction({
+    _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.handleUserAction({
       type: "SET_PREF",
       data: {
         pref: {
@@ -4420,108 +3898,7 @@ const EmbeddedBackupRestore = ({
 };
 
 /***/ }),
-/* 29 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   PinnableSitesList: () => (/* binding */ PinnableSitesList)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
-/* harmony import */ var _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
-// Per-item button states.
-const IDLE = "idle";
-const PENDING = "pending";
-const PINNED = "pinned";
-const PinnableSitesList = ({
-  tile,
-  messageId,
-  handleAction
-}) => {
-  const items = tile?.data;
-  const pinButtonLabel = tile?.pinButtonLabel;
-  const [itemStates, setItemStates] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(() => Object.fromEntries((items ?? []).map(item => [item.id, IDLE])));
-  if (!items?.length) {
-    return null;
-  }
-  const setItemState = (id, state) => setItemStates(prev => ({
-    ...prev,
-    [id]: state
-  }));
-  const handlePin = async (event, item) => {
-    setItemState(item.id, PENDING);
-    _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendActionTelemetry(messageId, item.id, "CLICK_BUTTON");
-    const result = await handleAction(event, {
-      type: "PIN_TASKBAR_TAB",
-      needsAwait: true,
-      data: {
-        url: item.url,
-        name: item.name,
-        iconUrl: item.iconUrl
-      }
-    });
-    let pinResultLabel;
-    if (result === true) {
-      pinResultLabel = "success";
-    } else if (result === null) {
-      pinResultLabel = "already_pinned";
-    } else {
-      pinResultLabel = "failure";
-    }
-    _lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendActionTelemetry(messageId, item.id, "PIN_SITE", {
-      result: pinResultLabel
-    });
-
-    // Re-enable the button only on explicit failure so the user can retry.
-    setItemState(item.id, result === false ? IDLE : PINNED);
-  };
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", {
-    className: "pinnable-sites-list"
-  }, items.map(item => {
-    const nameId = `pinnable-site-name-${item.id}`;
-    const state = itemStates[item.id] ?? IDLE;
-    const isPendingOrPinned = state === PENDING || state === PINNED;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
-      key: item.id,
-      className: "pinnable-sites-item"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
-      className: "pinnable-sites-icon",
-      src: item.iconUrl,
-      alt: ""
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: "pinnable-sites-text"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-      text: item.title ?? item.name
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-      id: nameId,
-      className: "pinnable-sites-name"
-    })), item.description && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-      text: item.description
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-      className: "pinnable-sites-description"
-    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-      className: "pinnable-sites-pin-button primary",
-      disabled: isPendingOrPinned,
-      onClick: e => handlePin(e, item),
-      "aria-describedby": nameId
-    }, pinButtonLabel && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-      text: pinButtonLabel
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null))));
-  }));
-};
-
-/***/ }),
-/* 30 */
+/* 28 */
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -4642,8 +4019,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _asrouter_content_src_lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
-/* harmony import */ var _asrouter_content_src_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4);
+/* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
+/* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4);
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -4677,7 +4054,7 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
           domComplete,
           domInteractive
         } = performance.getEntriesByType("navigation").pop();
-        _asrouter_content_src_lib_multistage_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.MultiStageUtils.sendImpressionTelemetry(this.props.messageId, {
+        _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(this.props.messageId, {
           domComplete,
           domInteractive,
           mountStart: performance.getEntriesByName("mount").pop().startTime,
@@ -4705,7 +4082,7 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     const {
       props
     } = this;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_asrouter_content_src_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__.MultiStageAboutWelcome, {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__.MultiStageAboutWelcome, {
       addonId: props.addonId,
       addonType: props.type,
       addonName: props.name || "",
@@ -4722,7 +4099,6 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       startScreen: props.startScreen || 0,
       appAndSystemLocaleInfo: props.appAndSystemLocaleInfo,
       ariaRole: props.aria_role,
-      requireAction: props.requireAction,
       gateInitialPaint: true
     });
   }
@@ -4744,17 +4120,6 @@ function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
   };
 }
 async function retrieveRenderContent() {
-  // If supported, wait for Nimbus to be ready (or a maximum timeout to be
-  // reached) before loading about:welcome.
-  if (document.location.href === "about:welcome" && window.AWWaitForNimbus) {
-    try {
-      await window.AWWaitForNimbus();
-    } catch (e) {
-      // If Nimbus gating throws, proceed with whatever feature state we
-      // currently have.
-      console.error("AWWaitForNimbus failed", e);
-    }
-  }
   // Feature config includes RTAMO attribution data if exists
   // else below data in order specified
   // user prefs

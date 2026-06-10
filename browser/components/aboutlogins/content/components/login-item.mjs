@@ -209,11 +209,7 @@ export default class LoginItem extends HTMLElement {
     if (!this._breachAlert.hidden) {
       const breachDetails = this._breachesMap.get(this._login.guid);
       const breachTimestamp = new Date(breachDetails.BreachDate ?? 0).getTime();
-      this.#updateBreachAlert(
-        this._login.origin,
-        breachTimestamp,
-        breachDetails.Name
-      );
+      this.#updateBreachAlert(this._login.origin, breachTimestamp);
     }
     this._vulnerableAlert.hidden =
       !this._vulnerableLoginsMap ||
@@ -314,20 +310,6 @@ export default class LoginItem extends HTMLElement {
     this._internalUpdateMonitorData(
       "_vulnerableLoginsMap",
       vulnerableLoginsByLoginGUID
-    );
-  }
-
-  setChangePasswordURLs(changePasswordURLsByLoginGUID) {
-    this._internalSetMonitorData(
-      "_changePasswordURLsMap",
-      changePasswordURLsByLoginGUID
-    );
-  }
-
-  updateChangePasswordURLs(changePasswordURLsByLoginGUID) {
-    this._internalUpdateMonitorData(
-      "_changePasswordURLsMap",
-      changePasswordURLsByLoginGUID
     );
   }
 
@@ -1039,18 +1021,13 @@ export default class LoginItem extends HTMLElement {
   // in favour of updating the props themselves.
   // NOTE: Adding this method here instead of login-alert because this file will be
   // refactored soon.
-  #updateBreachAlert(hostname, date, breachName) {
+  #updateBreachAlert(hostname, date) {
     this._breachAlert.hostname = hostname;
     this._breachAlert.date = date;
-    this._breachAlert.breachName = breachName || "";
-    this._breachAlert.changePasswordURL =
-      this._changePasswordURLsMap?.get(this._login.guid) || null;
   }
 
   #updateVulnerablePasswordAlert(hostname) {
     this._vulnerableAlert.hostname = hostname;
-    this._vulnerableAlert.changePasswordURL =
-      this._changePasswordURLsMap?.get(this._login.guid) || null;
   }
 
   #updatePasswordMessage() {

@@ -321,13 +321,18 @@ pub fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static st
         ),
         (
             Method::POST,
-            "/session/{sessionId}/webauthn/authenticator/{authenticatorId}/credential",
-            Route::WebAuthnAddCredential,
+            "/session/{sessionId}/webauthn/authenticator",
+            Route::WebAuthnAddVirtualAuthenticator,
+        ),
+        (
+            Method::DELETE,
+            "/session/{sessionId}/webauthn/authenticator/{authenticatorId}",
+            Route::WebAuthnRemoveVirtualAuthenticator,
         ),
         (
             Method::POST,
-            "/session/{sessionId}/webauthn/authenticator",
-            Route::WebAuthnAddVirtualAuthenticator,
+            "/session/{sessionId}/webauthn/authenticator/{authenticatorId}/credential",
+            Route::WebAuthnAddCredential,
         ),
         (
             Method::GET,
@@ -336,18 +341,13 @@ pub fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static st
         ),
         (
             Method::DELETE,
-            "/session/{sessionId}/webauthn/authenticator/{authenticatorId}/credentials",
-            Route::WebAuthnRemoveAllCredentials,
-        ),
-        (
-            Method::DELETE,
             "/session/{sessionId}/webauthn/authenticator/{authenticatorId}/credentials/{credentialId}",
             Route::WebAuthnRemoveCredential,
         ),
         (
             Method::DELETE,
-            "/session/{sessionId}/webauthn/authenticator/{authenticatorId}",
-            Route::WebAuthnRemoveVirtualAuthenticator,
+            "/session/{sessionId}/webauthn/authenticator/{authenticatorId}/credentials",
+            Route::WebAuthnRemoveAllCredentials,
         ),
         (
             Method::POST,
@@ -430,12 +430,12 @@ pub enum Route<U: WebDriverExtensionRoute> {
     Extension(U),
     GPCGetGlobalPrivacyControl,
     GPCSetGlobalPrivacyControl,
-    WebAuthnAddCredential,
     WebAuthnAddVirtualAuthenticator,
-    WebAuthnGetCredentials,
-    WebAuthnRemoveAllCredentials,
-    WebAuthnRemoveCredential,
     WebAuthnRemoveVirtualAuthenticator,
+    WebAuthnAddCredential,
+    WebAuthnGetCredentials,
+    WebAuthnRemoveCredential,
+    WebAuthnRemoveAllCredentials,
     WebAuthnSetUserVerified,
 }
 

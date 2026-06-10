@@ -26,12 +26,12 @@ add_task(async function () {
   await openConsole(gBrowser.selectedTab);
 
   info(
-    "Select the first tab before reloading it in order to ensure rendering the console"
+    "Select the first tab before reloading it in order to ensure renduring the console"
   );
   gBrowser.selectedTab = tab1;
 
   info("Reloading tab 1");
-  await reloadSelectedTab();
+  await reloadBrowser({ browser: tab1.linkedBrowser });
 
   info("Waiting for messages");
   await waitFor(() => findMessageByType(hud1, TEST_IFRAME_URI, ".network"));

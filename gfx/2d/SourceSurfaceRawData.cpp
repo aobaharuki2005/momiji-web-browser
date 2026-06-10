@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -38,8 +40,7 @@ Atomic<size_t> SourceSurfaceAlignedRawDataReporter::sTotalDataBytes(0);
 
 /* static */
 void SourceSurfaceAlignedRawData::RegisterMemoryReporter() {
-  RegisterStrongMemoryReporter(
-      MakeAndAddRef<SourceSurfaceAlignedRawDataReporter>());
+  RegisterStrongMemoryReporter(new SourceSurfaceAlignedRawDataReporter);
 }
 
 void SourceSurfaceRawData::InitWrappingData(
@@ -75,11 +76,9 @@ bool SourceSurfaceAlignedRawData::Init(const IntSize& aSize,
                                        uint8_t aClearValue, int32_t aStride) {
   mFormat = aFormat;
   mStride = aStride ? aStride
-                    : GetAlignedStride<16>(aSize.width, BytesPerPixel(aFormat))
-                          .valueOr(0);
+                    : GetAlignedStride<16>(aSize.width, BytesPerPixel(aFormat));
 
-  size_t bufLen =
-      mStride ? BufferSizeFromStrideAndHeight(mStride, aSize.height) : 0;
+  size_t bufLen = BufferSizeFromStrideAndHeight(mStride, aSize.height);
   if (bufLen > 0) {
     bool zeroMem = aClearMem && !aClearValue;
     static_assert(sizeof(decltype(mArray[0])) == 1,

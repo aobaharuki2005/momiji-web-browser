@@ -13,7 +13,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <optional>
 #include <vector>
 
 #include "api/rtp_packet_infos.h"
@@ -28,7 +27,7 @@
 namespace webrtc {
 namespace test {
 
-std::optional<Timestamp> FakeEncodedFrame::ReceivedTimestamp() const {
+int64_t FakeEncodedFrame::ReceivedTime() const {
   return received_time_;
 }
 
@@ -36,7 +35,7 @@ int64_t FakeEncodedFrame::RenderTime() const {
   return _renderTimeMs;
 }
 
-void FakeEncodedFrame::SetReceivedTime(Timestamp received_time) {
+void FakeEncodedFrame::SetReceivedTime(int64_t received_time) {
   received_time_ = received_time;
 }
 
@@ -99,8 +98,8 @@ std::unique_ptr<FakeEncodedFrame> FakeFrameBuilder::Build() {
     frame->SetId(*frame_id_);
   if (playout_delay_)
     frame->SetPlayoutDelay(*playout_delay_);
-  frame->set_frame_type(references_.empty() ? VideoFrameType::kVideoFrameKey
-                                            : VideoFrameType::kVideoFrameDelta);
+  frame->SetFrameType(references_.empty() ? VideoFrameType::kVideoFrameKey
+                                          : VideoFrameType::kVideoFrameDelta);
   for (int64_t ref : references_) {
     frame->references[frame->num_references] = ref;
     frame->num_references++;
@@ -108,7 +107,7 @@ std::unique_ptr<FakeEncodedFrame> FakeFrameBuilder::Build() {
   if (spatial_layer_)
     frame->SetSpatialIndex(spatial_layer_);
   if (received_time_)
-    frame->SetReceivedTime(*received_time_);
+    frame->SetReceivedTime(received_time_->ms());
   if (payload_type_)
     frame->SetPayloadType(*payload_type_);
   if (ntp_time_)

@@ -28,11 +28,9 @@ add_task(async function () {
 
     let node = library.ContentTree.view.view.nodeForTreeIndex(i);
     is(node.bookmarkGuid, bm.guid, "Found the expected bookmark");
-    // Ensure the tree is focused so the "select" event triggers updateDetailsPane.
-    library.ContentTree.view.focus();
     // Select the bookmark.
     library.ContentTree.view.selectNode(node);
-    await synthesizeClickOnSelectedTreeCell(library.ContentTree.view);
+    synthesizeClickOnSelectedTreeCell(library.ContentTree.view);
 
     is(
       library.document.getElementById("editBMPanel_keywordField").value,

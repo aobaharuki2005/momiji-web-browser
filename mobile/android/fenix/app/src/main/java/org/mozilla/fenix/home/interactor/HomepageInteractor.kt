@@ -15,12 +15,11 @@ import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
 import org.mozilla.fenix.home.sessioncontrol.MessageCardInteractor
 import org.mozilla.fenix.home.sessioncontrol.SetupChecklistInteractor
 import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
-import org.mozilla.fenix.home.sessioncontrol.TrackingProtectionInteractor
 import org.mozilla.fenix.home.sessioncontrol.WallpaperInteractor
-import org.mozilla.fenix.home.sports.SportsInteractor
 import org.mozilla.fenix.home.termsofuse.PrivacyNoticeBannerInteractor
 import org.mozilla.fenix.home.toolbar.ToolbarInteractor
 import org.mozilla.fenix.home.topsites.interactor.TopSiteInteractor
+import org.mozilla.fenix.search.toolbar.SearchSelectorInteractor
 
 /**
  * Homepage interactor for interactions with the homepage UI.
@@ -39,7 +38,6 @@ interface HomepageInteractor :
     RecentVisitsInteractor,
     PocketStoriesInteractor,
     PrivateBrowsingInteractor,
+    SearchSelectorInteractor,
     WallpaperInteractor,
-    SetupChecklistInteractor,
-    TrackingProtectionInteractor,
-    SportsInteractor
+    SetupChecklistInteractor

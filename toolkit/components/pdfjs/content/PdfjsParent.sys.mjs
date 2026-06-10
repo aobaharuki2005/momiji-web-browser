@@ -22,10 +22,10 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   createEngine: "chrome://global/content/ml/EngineProcess.sys.mjs",
+  EngineProcess: "chrome://global/content/ml/EngineProcess.sys.mjs",
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
-  MLUninstallService: "chrome://global/content/ml/Utils.sys.mjs",
+  ModelHub: "chrome://global/content/ml/ModelHub.sys.mjs",
   MultiProgressAggregator: "chrome://global/content/ml/Utils.sys.mjs",
-  PdfJsGuessAltTextFeature: "resource://pdf.js/PdfJsAIFeature.sys.mjs",
   Progress: "chrome://global/content/ml/Utils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -34,11 +34,20 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 const IMAGE_TO_TEXT_TASK = "moz-image-to-text";
+const ML_ENGINE_ID = "pdfjs";
 const ML_ENGINE_MAX_TIMEOUT = 60000;
 const PDFJS_DB_NAME = "pdfjs";
 const PDFJS_DB_VERSION = 1;
 const PDFJS_STORE_NAME = "signatures";
 const PDFJS_SIGNATURE_STORAGE_CHANGED_TOPIC = "pdfjs:storedSignaturesChanged";
+
+var Svc = {};
+XPCOMUtils.defineLazyServiceGetter(
+  Svc,
+  "mime",
+  "@mozilla.org/mime;1",
+  Ci.nsIMIMEService
+);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -79,14 +88,7 @@ export class PdfjsParent extends JSWindowActorParent {
     this._findFailedString = null;
     this._lastNotFoundStringLength = 0;
 
-    if (
-      !Services.prefs.prefHasUserValue("pdfjs.enableAltText") &&
-      !Services.locale.appLocaleAsBCP47.startsWith("en") &&
-      Services.prefs.getBoolPref("pdfjs.enableAltText", true)
-    ) {
-      Services.prefs.setBoolPref("pdfjs.enableAltText", false);
-    }
-
+    this.#checkPreferences();
     this._updatedPreference();
   }
 
@@ -260,6 +262,22 @@ export class PdfjsParent extends JSWindowActorParent {
       return false;
     } finally {
       await db?.close();
+    }
+  }
+
+  #checkPreferences() {
+    if (Services.prefs.getBoolPref("pdfjs.enableAltTextForEnglish", true)) {
+      return;
+    }
+    Services.prefs.setBoolPref("pdfjs.enableAltTextForEnglish", true);
+    if (Services.locale.appLocaleAsBCP47.substring(0, 2) !== "en") {
+      return;
+    }
+    if (!Services.prefs.prefHasUserValue("browser.ml.enable")) {
+      Services.prefs.setBoolPref("browser.ml.enable", true);
+    }
+    if (!Services.prefs.prefHasUserValue("pdfjs.enableAltText")) {
+      Services.prefs.setBoolPref("pdfjs.enableAltText", true);
     }
   }
 
@@ -488,10 +506,16 @@ export class PdfjsParent extends JSWindowActorParent {
       return null;
     }
     try {
-      await lazy.MLUninstallService.uninstall({
-        engineIds: [lazy.PdfJsGuessAltTextFeature.engineId],
-        // Used only for attribution/telemetry; the specific value is not significant.
-        actor: "pdfjs",
+      // TODO: Temporary workaround to delete the model from the cache.
+      //       See bug 1908941.
+      await lazy.EngineProcess.destroyMLEngine();
+
+      // Deleting all models linked to IMAGE_TO_TEXT_TASK is safe because this is a
+      // Mozilla specific task name.
+      const hub = new lazy.ModelHub();
+      await hub.deleteModels({
+        taskName: service,
+        deletedBy: "pdfjs",
       });
     } catch (e) {
       console.error("Failed to delete AI model", e);
@@ -503,12 +527,7 @@ export class PdfjsParent extends JSWindowActorParent {
   async #createAIEngine(taskName, aggregator) {
     try {
       return await lazy.createEngine(
-        {
-          engineId: lazy.PdfJsGuessAltTextFeature.engineId,
-          featureId: lazy.PdfJsGuessAltTextFeature.id,
-          taskName,
-          backend: "onnx-native",
-        },
+        { engineId: ML_ENGINE_ID, taskName, backend: "onnx-native" },
         aggregator?.aggregateCallback.bind(aggregator) || null
       );
     } catch (e) {
@@ -519,7 +538,7 @@ export class PdfjsParent extends JSWindowActorParent {
 
   _saveURL(aMsg) {
     const { blobUrl, originalUrl, filename } = aMsg.data;
-    this.browser.documentGlobal.saveURL(
+    this.browser.ownerGlobal.saveURL(
       blobUrl /* aURL */,
       originalUrl /* aOriginalURL */,
       filename /* aFileName */,

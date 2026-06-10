@@ -3,6 +3,7 @@
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
 use core::borrow::Borrow;
+use core::iter::FromIterator;
 use litemap::LiteMap;
 
 use super::Key;
@@ -31,12 +32,7 @@ use super::Value;
 /// assert_eq!(&fields.to_string(), "h0-hybrid");
 /// ```
 #[derive(Clone, PartialEq, Eq, Debug, Default, Hash, PartialOrd, Ord)]
-pub struct Fields(Inner);
-
-#[cfg(feature = "alloc")]
-type Inner = LiteMap<Key, Value>;
-#[cfg(not(feature = "alloc"))]
-type Inner = LiteMap<Key, Value, &'static [(Key, Value)]>;
+pub struct Fields(LiteMap<Key, Value>);
 
 impl Fields {
     /// Returns a new empty list of key-value pairs. Same as [`default()`](Default::default()), but is `const`.
@@ -141,8 +137,6 @@ impl Fields {
 
     /// Sets the specified keyword, returning the old value if it already existed.
     ///
-    /// ✨ *Enabled with the `alloc` Cargo feature.*
-    ///
     /// # Examples
     ///
     /// ```
@@ -160,14 +154,11 @@ impl Fields {
     /// assert_eq!(old_value, Some(casefold));
     /// assert_eq!(loc, "en-t-hi-d0-lower".parse().unwrap());
     /// ```
-    #[cfg(feature = "alloc")]
     pub fn set(&mut self, key: Key, value: Value) -> Option<Value> {
         self.0.insert(key, value)
     }
 
     /// Retains a subset of fields as specified by the predicate function.
-    ///
-    /// ✨ *Enabled with the `alloc` Cargo feature.*
     ///
     /// # Examples
     ///
@@ -189,7 +180,6 @@ impl Fields {
     ///     .retain_by_key(|&k| k == key!("d0"));
     /// assert_eq!(loc, Locale::UNKNOWN);
     /// ```
-    #[cfg(feature = "alloc")]
     pub fn retain_by_key<F>(&mut self, mut predicate: F)
     where
         F: FnMut(&Key) -> bool,
@@ -215,17 +205,13 @@ impl Fields {
     }
 }
 
-/// ✨ *Enabled with the `alloc` Cargo feature.*
-#[cfg(feature = "alloc")]
 impl From<LiteMap<Key, Value>> for Fields {
     fn from(map: LiteMap<Key, Value>) -> Self {
         Self(map)
     }
 }
 
-/// ✨ *Enabled with the `alloc` Cargo feature.*
-#[cfg(feature = "alloc")]
-impl core::iter::FromIterator<(Key, Value)> for Fields {
+impl FromIterator<(Key, Value)> for Fields {
     fn from_iter<I: IntoIterator<Item = (Key, Value)>>(iter: I) -> Self {
         LiteMap::from_iter(iter).into()
     }

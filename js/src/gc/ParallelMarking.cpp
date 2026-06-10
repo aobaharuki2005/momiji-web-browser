@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -80,7 +82,7 @@ bool ParallelMarker::mark(const SliceBudget& sliceBudget) {
     // TODO: When tuning for more than two markers we may need to adopt a more
     // sophisticated approach.
     if (!marker->hasEntriesForCurrentColor() && gc->marker().canDonateWork()) {
-      GCMarker::moveSomeWork(marker, &gc->marker(), false);
+      GCMarker::moveWork(marker, &gc->marker(), false);
     }
   }
 
@@ -355,7 +357,7 @@ void ParallelMarker::donateWorkFrom(GCMarker* src) {
 
   // Move some work from this thread's mark stack to the waiting task.
   MOZ_ASSERT(!waitingTask->hasWork());
-  size_t wordsMoved = GCMarker::moveSomeWork(waitingTask->marker, src, true);
+  size_t wordsMoved = GCMarker::moveWork(waitingTask->marker, src, true);
 
   gc->stats().count(gcstats::COUNT_PARALLEL_MARK_INTERRUPTIONS);
 

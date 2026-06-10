@@ -85,9 +85,8 @@ RUN_ON_PROJECT_ALIASES = {
     "trunk-only": lambda params: params["project"] in TRUNK_PROJECTS,
     "autoland": lambda params: params["project"] in ("autoland", "toolchains"),
     "autoland-only": lambda params: params["project"] == "autoland",
-    "mozilla-central": lambda params: (
-        params["project"] in ("mozilla-central", "toolchains")
-    ),
+    "mozilla-central": lambda params: params["project"]
+    in ("mozilla-central", "toolchains"),
     "mozilla-central-only": lambda params: params["project"] == "mozilla-central",
 }
 
@@ -102,6 +101,7 @@ _COPYABLE_ATTRIBUTES = (
     "mar-channel-id",
     "maven_packages",
     "nightly",
+    "required_signoffs",
     "shippable",
     "shipping_phase",
     "shipping_product",
@@ -160,8 +160,6 @@ def release_level(params):
 
     :return str: One of "production" or "staging".
     """
-    if params["level"] != "3":
-        return "staging"
     if branches := PROJECT_RELEASE_BRANCHES.get(params.get("project")):
         if branches is True:
             return "production"

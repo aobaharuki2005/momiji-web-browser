@@ -8,16 +8,12 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   NavigationManager: "chrome://remote/content/shared/NavigationManager.sys.mjs",
-  registerWebDriverWorkerListenerActor:
-    "chrome://remote/content/shared/js-process-actors/WebDriverWorkerListenerActor.sys.mjs",
   RootTransport:
     "chrome://remote/content/shared/messagehandler/transports/RootTransport.sys.mjs",
   SessionData:
     "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
   SessionDataMethod:
     "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
-  unregisterWebDriverWorkerListenerActor:
-    "chrome://remote/content/shared/js-process-actors/WebDriverWorkerListenerActor.sys.mjs",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
 });
@@ -73,10 +69,6 @@ export class RootMessageHandler extends MessageHandler {
     this.#navigationManager = new lazy.NavigationManager();
     this.#navigationManager.startMonitoring();
 
-    // Register js process actors to monitor worker creation and destruction in
-    // all processes.
-    lazy.registerWebDriverWorkerListenerActor();
-
     // Map with inner window ids as keys, and sets of realm ids, associated with
     // this window as values.
     this.#realms = new Map();
@@ -103,8 +95,6 @@ export class RootMessageHandler extends MessageHandler {
     this.#sessionData.destroy();
     this.#navigationManager.destroy();
 
-    lazy.unregisterWebDriverWorkerListenerActor();
-
     Services.obs.removeObserver(this, "window-global-destroyed");
     this.#realms = null;
 
@@ -124,7 +114,7 @@ export class RootMessageHandler extends MessageHandler {
     return this.updateSessionData([sessionData]);
   }
 
-  emitEvent(name, eventPayload, relatedContexts) {
+  emitEvent(name, eventPayload, contextInfo) {
     // Intercept realm created and destroyed events to update internal map.
     if (name === "realm-created") {
       this.#onRealmCreated(eventPayload);
@@ -137,7 +127,7 @@ export class RootMessageHandler extends MessageHandler {
       );
     }
 
-    super.emitEvent(name, eventPayload, relatedContexts);
+    super.emitEvent(name, eventPayload, contextInfo);
   }
 
   /**
@@ -224,11 +214,11 @@ export class RootMessageHandler extends MessageHandler {
     }
 
     realms.forEach(realm => {
-      realms.delete(realm.realm);
+      this.#realms.get(innerWindowId).delete(realm);
 
       this.emitEvent("realm-destroyed", {
         context,
-        realm: realm.realm,
+        realm,
       });
     });
 
@@ -242,8 +232,6 @@ export class RootMessageHandler extends MessageHandler {
       this.#realms.set(innerWindowId, new Set());
     }
 
-    this.#realms
-      .get(innerWindowId)
-      .add({ realm: realmInfo.realm, sandbox: realmInfo.sandbox });
+    this.#realms.get(innerWindowId).add(realmInfo.realm);
   };
 }

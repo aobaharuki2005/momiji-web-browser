@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -334,8 +336,10 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(FloatRegionProperty, nsMargin)
 LogicalRect nsFloatManager::GetRegionFor(WritingMode aWM, nsIFrame* aFloat,
                                          const nsSize& aContainerSize) {
   LogicalRect region = aFloat->GetLogicalRect(aWM, aContainerSize);
-  if (nsMargin* storedRegion = aFloat->GetProperty(FloatRegionProperty())) {
-    region.Inflate(aWM, LogicalMargin(aWM, *storedRegion));
+  void* storedRegion = aFloat->GetProperty(FloatRegionProperty());
+  if (storedRegion) {
+    nsMargin margin = *static_cast<nsMargin*>(storedRegion);
+    region.Inflate(aWM, LogicalMargin(aWM, margin));
   }
   return region;
 }
@@ -348,8 +352,11 @@ void nsFloatManager::StoreRegionFor(WritingMode aWM, nsIFrame* aFloat,
   if (region.IsEqualEdges(rect)) {
     aFloat->RemoveProperty(FloatRegionProperty());
   } else {
-    nsMargin* storedMargin =
-        aFloat->GetOrCreateDeletableProperty(FloatRegionProperty());
+    nsMargin* storedMargin = aFloat->GetProperty(FloatRegionProperty());
+    if (!storedMargin) {
+      storedMargin = new nsMargin();
+      aFloat->SetProperty(FloatRegionProperty(), storedMargin);
+    }
     *storedMargin = region - rect;
   }
 }

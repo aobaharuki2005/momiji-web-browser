@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -228,7 +230,7 @@ void WebSocketEventService::WebSocketCreated(uint32_t aWebSocketSerialID,
     return;
   }
 
-  RefPtr runnable = MakeRefPtr<WebSocketCreatedRunnable>(
+  RefPtr<WebSocketCreatedRunnable> runnable = new WebSocketCreatedRunnable(
       aWebSocketSerialID, aInnerWindowID, aURI, aProtocols);
   DebugOnly<nsresult> rv = aTarget
                                ? aTarget->Dispatch(runnable, NS_DISPATCH_NORMAL)
@@ -248,7 +250,7 @@ void WebSocketEventService::WebSocketOpened(uint32_t aWebSocketSerialID,
     return;
   }
 
-  RefPtr runnable = MakeRefPtr<WebSocketOpenedRunnable>(
+  RefPtr<WebSocketOpenedRunnable> runnable = new WebSocketOpenedRunnable(
       aWebSocketSerialID, aInnerWindowID, aEffectiveURI, aProtocols,
       aExtensions, aHttpChannelId);
   DebugOnly<nsresult> rv = aTarget
@@ -265,8 +267,9 @@ void WebSocketEventService::WebSocketMessageAvailable(
     return;
   }
 
-  RefPtr runnable = MakeRefPtr<WebSocketMessageAvailableRunnable>(
-      aWebSocketSerialID, aInnerWindowID, aData, aMessageType);
+  RefPtr<WebSocketMessageAvailableRunnable> runnable =
+      new WebSocketMessageAvailableRunnable(aWebSocketSerialID, aInnerWindowID,
+                                            aData, aMessageType);
   DebugOnly<nsresult> rv = aTarget
                                ? aTarget->Dispatch(runnable, NS_DISPATCH_NORMAL)
                                : NS_DispatchToMainThread(runnable);
@@ -283,7 +286,7 @@ void WebSocketEventService::WebSocketClosed(uint32_t aWebSocketSerialID,
     return;
   }
 
-  RefPtr runnable = MakeRefPtr<WebSocketClosedRunnable>(
+  RefPtr<WebSocketClosedRunnable> runnable = new WebSocketClosedRunnable(
       aWebSocketSerialID, aInnerWindowID, aWasClean, aCode, aReason);
   DebugOnly<nsresult> rv = aTarget
                                ? aTarget->Dispatch(runnable, NS_DISPATCH_NORMAL)
@@ -302,9 +305,9 @@ void WebSocketEventService::FrameReceived(
     return;
   }
 
-  RefPtr runnable =
-      MakeRefPtr<WebSocketFrameRunnable>(aWebSocketSerialID, aInnerWindowID,
-                                         frame.forget(), false /* frameSent */);
+  RefPtr<WebSocketFrameRunnable> runnable =
+      new WebSocketFrameRunnable(aWebSocketSerialID, aInnerWindowID,
+                                 frame.forget(), false /* frameSent */);
   DebugOnly<nsresult> rv = aTarget
                                ? aTarget->Dispatch(runnable, NS_DISPATCH_NORMAL)
                                : NS_DispatchToMainThread(runnable);
@@ -323,7 +326,7 @@ void WebSocketEventService::FrameSent(uint32_t aWebSocketSerialID,
     return;
   }
 
-  RefPtr runnable = MakeRefPtr<WebSocketFrameRunnable>(
+  RefPtr<WebSocketFrameRunnable> runnable = new WebSocketFrameRunnable(
       aWebSocketSerialID, aInnerWindowID, frame.forget(), true /* frameSent */);
 
   DebugOnly<nsresult> rv = aTarget

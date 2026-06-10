@@ -4,7 +4,7 @@
  *
  *   Routines to parse and access the 'GPOS' table for simple kerning (body).
  *
- * Copyright (C) 2025-2026 by
+ * Copyright (C) 2025 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -55,7 +55,7 @@
     FT_Byte*  p = table;
     FT_Byte*  limit;
 
-    FT_UInt  next_id = 0;
+    FT_Long  last_id = -1;
 
 
     if ( table_limit < p + 4 )
@@ -79,9 +79,9 @@
         FT_UInt  id = FT_NEXT_USHORT( p );
 
 
-        if ( next_id > id )
+        if ( last_id >= id )
           return FALSE;
-        next_id = id + 1;
+        last_id = id;
       }
     }
     else if ( format == 2 )
@@ -103,9 +103,9 @@
         if ( startGlyphID > endGlyphID )
           return FALSE;
 
-        if ( next_id > startGlyphID )
+        if ( last_id >= startGlyphID )
           return FALSE;
-        next_id = endGlyphID + 1;
+        last_id = endGlyphID;
 
         /* XXX: Is this modulo 65536 arithmetic? */
         if ( startCoverageIndex + endGlyphID - startGlyphID >=
@@ -164,7 +164,7 @@
     else if ( format == 2 )
     {
       FT_UInt  classRangeCount;
-      FT_UInt  next_id = 0;
+      FT_Long  last_id = -1;
 
 
       if ( table_limit < p + 2 )
@@ -185,9 +185,9 @@
         if ( startGlyphID > endGlyphID )
           return FALSE;
 
-        if ( next_id > startGlyphID )
+        if ( last_id >= startGlyphID )
           return FALSE;
-        next_id = endGlyphID + 1;
+        last_id = endGlyphID;
 
         if ( class_value > max_class_value )
           max_class_value = class_value;
@@ -291,7 +291,7 @@
     FT_Byte*  p = table;
     FT_Byte*  limit;
 
-    FT_UInt  next_id = 0;
+    FT_Long  last_id = -1;
 
 
     if ( table_limit < p + 2 )
@@ -311,10 +311,10 @@
       FT_UInt  id = FT_NEXT_USHORT( p );
 
 
-      if ( next_id > id )
+      if ( last_id >= id )
         return FALSE;
 
-      next_id = id + 1;
+      last_id = id;
 
       p += 2; /* Skip `valueRecord1`. */
     }
@@ -408,8 +408,6 @@
       FT_UInt   class1Count;
       FT_UInt   class2Count;
 
-      FT_UInt  max_size;
-
 
       /* The number of coverage indices is not relevant here. */
       if ( !tt_face_validate_coverage( coverage, table_limit, FT_UINT_MAX ) )
@@ -434,11 +432,7 @@
 
       /* For our purposes, the first value record only contains */
       /* X advances while the second one is empty.              */
-      max_size = class1Count * class2Count;
-      if ( max_size > FT_UINT_MAX / 2 )
-        return FALSE;
-
-      limit = p + max_size * 2;
+      limit = p + class1Count * class2Count * 2;
       if ( table_limit < limit )
         return FALSE;
 
@@ -449,9 +443,8 @@
   }
 
 
-  /* The return value is the number of fitting subtables.  It is negative */
-  /* if there is a validation error.                                      */
-  static FT_Int
+  /* The return value is the number of fitting subtables. */
+  static FT_UInt
   tt_face_validate_lookup_table( FT_Byte*  table,
                                  FT_Byte*  table_limit )
   {
@@ -466,7 +459,7 @@
 
 
     if ( table_limit < p + 6 )
-      return -1;
+      return 0;
 
     lookupType = FT_NEXT_USHORT( p );
 
@@ -475,7 +468,7 @@
     subtableCount = FT_NEXT_USHORT( p );
     limit         = p + subtableCount * 2;
     if ( table_limit < limit )
-      return -1;
+      return 0;
 
     while ( p < limit )
     {
@@ -492,15 +485,15 @@
 
 
         if ( table_limit < q + 8 )
-          return -1;
+          return 0;
 
         if ( FT_NEXT_USHORT( q ) != 1 ) /* format */
-          return -1;
+          return 0;
 
         if ( real_lookupType == 0 )
           real_lookupType = FT_NEXT_USHORT( q );
         else if ( real_lookupType != FT_NEXT_USHORT( q ) )
-          return -1;
+          return 0;
 
         subtable += FT_PEEK_ULONG( q );
       }
@@ -509,7 +502,7 @@
 
       /* Ensure the first eight bytes of the subtable formats. */
       if ( table_limit < subtable + 8 )
-        return -1;
+        return 0;
 
       format = FT_PEEK_USHORT( subtable );
 
@@ -520,20 +513,20 @@
           if ( !tt_face_validate_pair_pos1( subtable,
                                             table_limit,
                                             &is_fitting ) )
-            return -1;
+            return 0;
         }
         else if ( format == 2 )
         {
           if ( !tt_face_validate_pair_pos2( subtable,
                                             table_limit,
                                             &is_fitting ) )
-            return -1;
+            return 0;
         }
         else
-          return -1;
+          return 0;
       }
       else
-        return -1;
+        return 0;
 
       if ( is_fitting )
         num_fitting_subtables++;
@@ -664,7 +657,6 @@
     for ( i = 0; i < lookupCount; i++ )
     {
       FT_UInt  lookupOffset;
-      FT_Int   fits;
 
 
       if ( !use_lookup_table[i] )
@@ -672,12 +664,10 @@
 
       lookupOffset = FT_PEEK_USHORT( p + i * 2 );
 
-      fits = tt_face_validate_lookup_table( lookup_list + lookupOffset,
-                                            gpos_limit );
-      if ( fits < 0 )
-        goto Fail;
+      num_fitting_subtables +=
+        tt_face_validate_lookup_table( lookup_list + lookupOffset,
+                                       gpos_limit );
 
-      num_fitting_subtables += (FT_UInt)fits;
     }
 
     /* Loop again over all lookup tables and */
@@ -719,7 +709,7 @@
     return error;
 
   Fail:
-    FT_FRAME_RELEASE( gpos );
+    FT_FREE( gpos );
     FT_FREE( gpos_lookups_kerning );
     FT_FREE( use_lookup_table );
 
@@ -823,7 +813,7 @@
 
       /* XXX: Is this modulo 65536 arithmetic? */
       if ( startGlyphID              <= glyph_index &&
-           startGlyphID + glyphCount > glyph_index  )
+           startGlyphID + glyphCount >= glyph_index )
         return FT_PEEK_USHORT( p + ( glyph_index - startGlyphID ) * 2 );
     }
     else
@@ -890,7 +880,7 @@
 
 
       if ( second_glyph > mid_index )
-        min = mid + 1;
+        min = max + 1;
       else if ( second_glyph < mid_index )
         max = mid;
       else

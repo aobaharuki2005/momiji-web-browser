@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // Unicode BCP 47 locale identifiers don't support irregular legacy tags.
 var irregularLegacy = [
     "en-gb-oed",

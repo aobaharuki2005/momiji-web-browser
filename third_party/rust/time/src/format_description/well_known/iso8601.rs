@@ -2,7 +2,7 @@
 
 mod adt_hack;
 
-use core::num::NonZero;
+use core::num::NonZeroU8;
 
 #[doc(hidden, no_inline)]
 pub use self::adt_hack::DoNotRelyOnWhatThisIs;
@@ -32,7 +32,6 @@ pub use self::adt_hack::EncodedConfig;
 pub struct Iso8601<const CONFIG: EncodedConfig = { Config::DEFAULT.encode() }>;
 
 impl<const CONFIG: EncodedConfig> core::fmt::Debug for Iso8601<CONFIG> {
-    #[inline]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Iso8601")
             .field("config", &Config::decode(CONFIG))
@@ -126,20 +125,20 @@ pub enum TimePrecision {
     /// Format the hour only. Minutes, seconds, and nanoseconds will be represented with the
     /// specified number of decimal digits, if any.
     Hour {
-        #[expect(missing_docs)]
-        decimal_digits: Option<NonZero<u8>>,
+        #[allow(missing_docs)]
+        decimal_digits: Option<NonZeroU8>,
     },
     /// Format the hour and minute. Seconds and nanoseconds will be represented with the specified
     /// number of decimal digits, if any.
     Minute {
-        #[expect(missing_docs)]
-        decimal_digits: Option<NonZero<u8>>,
+        #[allow(missing_docs)]
+        decimal_digits: Option<NonZeroU8>,
     },
     /// Format the hour, minute, and second. Nanoseconds will be represented with the specified
     /// number of decimal digits, if any.
     Second {
-        #[expect(missing_docs)]
-        decimal_digits: Option<NonZero<u8>>,
+        #[allow(missing_docs)]
+        decimal_digits: Option<NonZeroU8>,
     },
 }
 
@@ -155,7 +154,7 @@ pub enum OffsetPrecision {
 /// Configuration for [`Iso8601`].
 // This is only used as a const generic, so there's no need to have a number of implementations on
 // it.
-#[expect(missing_copy_implementations, reason = "forwards compatibility")]
+#[allow(missing_copy_implementations)]
 #[doc(alias = "EncodedConfig")] // People will likely search for `EncodedConfig`, so show them this.
 #[derive(Debug)]
 pub struct Config {
@@ -193,7 +192,7 @@ impl Config {
         year_is_six_digits: false,
         date_kind: DateKind::Calendar,
         time_precision: TimePrecision::Second {
-            decimal_digits: NonZero::new(9),
+            decimal_digits: NonZeroU8::new(9),
         },
         offset_precision: OffsetPrecision::Minute,
     };
@@ -212,7 +211,6 @@ impl Config {
     };
 
     /// Set whether the format the date, time, and/or UTC offset.
-    #[inline]
     pub const fn set_formatted_components(self, formatted_components: FormattedComponents) -> Self {
         Self {
             formatted_components,
@@ -221,7 +219,6 @@ impl Config {
     }
 
     /// Set whether the format contains separators (such as `-` or `:`).
-    #[inline]
     pub const fn set_use_separators(self, use_separators: bool) -> Self {
         Self {
             use_separators,
@@ -230,7 +227,6 @@ impl Config {
     }
 
     /// Set whether the year is six digits.
-    #[inline]
     pub const fn set_year_is_six_digits(self, year_is_six_digits: bool) -> Self {
         Self {
             year_is_six_digits,
@@ -239,13 +235,11 @@ impl Config {
     }
 
     /// Set the format used for the date.
-    #[inline]
     pub const fn set_date_kind(self, date_kind: DateKind) -> Self {
         Self { date_kind, ..self }
     }
 
     /// Set the precision and number of decimal digits present for the time.
-    #[inline]
     pub const fn set_time_precision(self, time_precision: TimePrecision) -> Self {
         Self {
             time_precision,
@@ -254,7 +248,6 @@ impl Config {
     }
 
     /// Set the precision for the UTC offset.
-    #[inline]
     pub const fn set_offset_precision(self, offset_precision: OffsetPrecision) -> Self {
         Self {
             offset_precision,

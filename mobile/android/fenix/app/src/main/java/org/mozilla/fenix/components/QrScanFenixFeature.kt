@@ -16,9 +16,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
@@ -52,7 +50,6 @@ class QrScanFenixFeature(
     private val context: Context,
     private val appStore: AppStore,
     private val qrScanActivityLauncher: ActivityResultLauncher<Intent>,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
 ) : LifecycleAwareFeature, PermissionsFeature {
 
@@ -69,7 +66,7 @@ class QrScanFenixFeature(
     }
 
     private fun observeQrScanRequests() {
-        scope = appStore.flowScoped(dispatcher = mainDispatcher) { flow ->
+        scope = appStore.flowScoped { flow ->
             flow.map { state -> state.qrScannerState }
                 .distinctUntilChangedBy { it.isRequesting }
                 .collect { qrScannerState ->

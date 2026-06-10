@@ -24,7 +24,6 @@ from mozharness.mozilla.testing.codecoverage import (
 from mozharness.mozilla.testing.errors import HarnessErrorList, LogcatErrorList
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.mozilla.testing.unittest import TestSummaryOutputParserHelper
-from mozharness.mozilla.testing.video_test_recorder import VideoTestRecorder
 
 
 class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageMixin):
@@ -390,6 +389,9 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
         else:
             cmd.append(manifest)
 
+        try_options, try_tests = self.try_args("marionette")
+        cmd.extend(self.query_tests_args(try_tests, str_format_values=config_fmt_args))
+
         env = {}
         if self.query_minidump_stackwalk():
             env["MINIDUMP_STACKWALK"] = self.minidump_stackwalk_path
@@ -429,16 +431,9 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
             error_list=BaseErrorList + HarnessErrorList,
             strict=False,
         )
-
-        with VideoTestRecorder(self.test_suite, self):
-            return_code = self.run_command(
-                cmd,
-                cwd=cwd,
-                output_timeout=1000,
-                output_parser=marionette_parser,
-                env=env,
-            )
-
+        return_code = self.run_command(
+            cmd, cwd=cwd, output_timeout=1000, output_parser=marionette_parser, env=env
+        )
         level = INFO
         tbpl_status, log_level, summary = marionette_parser.evaluate_parser(
             return_code=return_code

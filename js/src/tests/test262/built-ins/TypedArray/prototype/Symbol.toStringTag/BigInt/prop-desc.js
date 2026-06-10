@@ -13,7 +13,7 @@ info: |
 
   This property has the attributes { [[Enumerable]]: false, [[Configurable]]:
   true }.
-includes: [propertyHelper.js, testTypedArray.js]
+includes: [propertyHelper.js, testBigIntTypedArray.js]
 features: [BigInt, Symbol.toStringTag]
 ---*/
 

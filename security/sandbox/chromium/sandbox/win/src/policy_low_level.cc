@@ -89,8 +89,6 @@ bool LowLevelPolicy::Done() {
       return false;
     }
     policy_store_->entry[static_cast<size_t>(service)] = current_buffer;
-    // Account for the opcode_count in PolicyBuffer.
-    avail_size -= sizeof PolicyBuffer::opcode_count;
 
     RuleList::iterator rules_it = (*it).second.begin();
     RuleList::iterator rules_it_end = (*it).second.end();
@@ -105,14 +103,12 @@ bool LowLevelPolicy::Done() {
       if (avail_size < opcodes_size) {
         return false;
       }
-      avail_size -= opcodes_size;
-      size_t data_size = avail_size;
+      size_t data_size = avail_size - opcodes_size;
       PolicyOpcode* opcodes_start = &current_buffer->opcodes[svc_opcode_count];
       if (!rule->RebindCopy(opcodes_start, opcodes_size, buffer_end,
                             &data_size)) {
         return false;
       }
-      DCHECK(avail_size >= data_size);
       size_t used = avail_size - data_size;
       buffer_end -= used;
       avail_size -= used;
@@ -120,14 +116,9 @@ bool LowLevelPolicy::Done() {
     }
 
     current_buffer->opcode_count = svc_opcode_count;
-    size_t opcode_bytes_used = sizeof PolicyBuffer::opcode_count +
-                               (svc_opcode_count * sizeof(PolicyOpcode));
-    size_t policy_buffer_count =
-        (opcode_bytes_used + sizeof(PolicyBuffer) - 1) / sizeof(PolicyBuffer);
-    size_t byte_padding =
-        (policy_buffer_count * sizeof(PolicyBuffer)) - opcode_bytes_used;
-    avail_size -= byte_padding;
-    current_buffer += policy_buffer_count;
+    size_t policy_buffers_occupied =
+        (svc_opcode_count * sizeof(PolicyOpcode)) / sizeof(current_buffer[0]);
+    current_buffer = &current_buffer[policy_buffers_occupied + 1];
   }
 
   return true;

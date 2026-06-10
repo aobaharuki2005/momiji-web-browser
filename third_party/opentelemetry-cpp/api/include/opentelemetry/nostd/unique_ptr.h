@@ -56,17 +56,14 @@ public:
 
   unique_ptr(unique_ptr &&other) noexcept : ptr_{other.release()} {}
 
-  unique_ptr(const unique_ptr &)            = delete;
-  unique_ptr &operator=(const unique_ptr &) = delete;
-
   template <class U,
             typename std::enable_if<std::is_convertible<U *, pointer>::value>::type * = nullptr>
-  unique_ptr(unique_ptr<U> &&other) noexcept : ptr_{std::move(other).release()}
+  unique_ptr(unique_ptr<U> &&other) noexcept : ptr_{other.release()}
   {}
 
   template <class U,
             typename std::enable_if<std::is_convertible<U *, pointer>::value>::type * = nullptr>
-  unique_ptr(std::unique_ptr<U> &&other) noexcept : ptr_{std::move(other).release()}
+  unique_ptr(std::unique_ptr<U> &&other) noexcept : ptr_{other.release()}
   {}
 
   ~unique_ptr() { reset(); }
@@ -87,7 +84,7 @@ public:
             typename std::enable_if<std::is_convertible<U *, pointer>::value>::type * = nullptr>
   unique_ptr &operator=(unique_ptr<U> &&other) noexcept
   {
-    reset(std::move(other).release());
+    reset(other.release());
     return *this;
   }
 
@@ -95,7 +92,7 @@ public:
             typename std::enable_if<std::is_convertible<U *, pointer>::value>::type * = nullptr>
   unique_ptr &operator=(std::unique_ptr<U> &&other) noexcept
   {
-    reset(std::move(other).release());
+    reset(other.release());
     return *this;
   }
 

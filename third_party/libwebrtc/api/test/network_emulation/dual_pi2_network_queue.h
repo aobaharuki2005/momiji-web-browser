@@ -14,6 +14,7 @@
 #include <memory>
 #include <optional>
 #include <queue>
+#include <random>
 #include <vector>
 
 #include "api/sequence_checker.h"
@@ -23,7 +24,6 @@
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
-#include "rtc_base/random.h"
 
 namespace webrtc {
 
@@ -89,8 +89,18 @@ class DualPi2NetworkQueue : public NetworkQueue {
   }
 
  private:
-  void UpdateBaseMarkingProbability(Timestamp time_now, TimeDelta sojourn_time);
+  void UpdateBaseMarkingProbability(Timestamp time_now);
   bool ShouldTakeAction(double marking_probability);
+  TimeDelta l4s_queue_delay(Timestamp time_now) const {
+    return l4s_queue_.empty() ? TimeDelta::Zero()
+                              : time_now - l4s_queue_.front().send_time();
+  }
+
+  TimeDelta classic_queue_delay(Timestamp time_now) const {
+    return classic_queue_.empty()
+               ? TimeDelta::Zero()
+               : time_now - classic_queue_.front().send_time();
+  }
 
   SequenceChecker sequence_checker_;
 
@@ -100,7 +110,8 @@ class DualPi2NetworkQueue : public NetworkQueue {
   std::queue<PacketInFlightInfo> l4s_queue_;
   std::queue<PacketInFlightInfo> classic_queue_;
 
-  Random random_;
+  std::mt19937 random_;
+  std::uniform_real_distribution<double> distribution_;
 
   std::optional<size_t> max_packet_capacity_;
   DataSize total_queued_size_;

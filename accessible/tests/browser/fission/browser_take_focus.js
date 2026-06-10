@@ -74,30 +74,12 @@ addAccessibleTask(
 
 function focusURLBar() {
   info("Focusing the URL bar");
-  // XXX: See bug 2016839
   const focused = waitForEvent(
     EVENT_FOCUS,
-    event => event.accessible.role == ROLE_EDITCOMBOBOX
+    event => event.accessible.role == ROLE_ENTRY
   );
   gURLBar.focus();
   return focused;
-}
-
-// Retry takeFocus if the expected focus event doesn't arrive in time.
-// This handles intermittent races when moving focus between chrome UI
-// and remote content.
-async function takeFocusWithRetry(acc, retries = 5, timeoutMs = 3000) {
-  for (let i = 0; i < retries; i++) {
-    const focused = waitForEvent(EVENT_FOCUS, acc);
-    acc.takeFocus();
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    const timeout = new Promise(r => setTimeout(() => r("timeout"), timeoutMs));
-    if ((await Promise.race([focused, timeout])) !== "timeout") {
-      return;
-    }
-    info(`takeFocus attempt ${i + 1} timed out, retrying...`);
-  }
-  ok(false, "Failed to receive focus event after multiple retries");
 }
 
 /**
@@ -111,21 +93,29 @@ addAccessibleTask(
   async function testFocusContentWhileUiFocused(browser, docAcc) {
     await focusURLBar();
     info("Focusing docAcc");
-    await takeFocusWithRetry(docAcc);
+    let focused = waitForEvent(EVENT_FOCUS, docAcc);
+    docAcc.takeFocus();
+    await focused;
 
     await focusURLBar();
     info("Focusing outerButton");
     const outerButton = findAccessibleChildByID(docAcc, "outerButton");
-    await takeFocusWithRetry(outerButton);
+    focused = waitForEvent(EVENT_FOCUS, outerButton);
+    outerButton.takeFocus();
+    await focused;
 
     await focusURLBar();
     info("Focusing innerButton");
-    const innerButton = findAccessibleChildByID(docAcc, "innerButton");
-    await takeFocusWithRetry(innerButton);
+    const innerButton = findAccessibleChildByID(docAcc, "outerButton");
+    focused = waitForEvent(EVENT_FOCUS, innerButton);
+    innerButton.takeFocus();
+    await focused;
 
     await focusURLBar();
     info("Focusing outerButton");
-    await takeFocusWithRetry(outerButton);
+    focused = waitForEvent(EVENT_FOCUS, outerButton);
+    outerButton.takeFocus();
+    await focused;
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );

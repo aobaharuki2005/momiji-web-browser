@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 // This test is based on browser_ext_popup_select.js.
@@ -16,14 +18,6 @@ const iframeSrc = encodeURIComponent(`
   <option>Baz</option>
   </select>
 </html>`);
-
-add_setup(async () => {
-  if (AppConstants.platform == "macosx") {
-    await SpecialPowers.pushPrefEnv({
-      set: [["widget.macos.allow-native-select", false]],
-    });
-  }
-});
 
 add_task(async function testPopupSelectPopup() {
   let extension = ExtensionTestUtils.loadExtension({

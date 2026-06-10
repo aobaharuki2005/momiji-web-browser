@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef IPC_GLUE_GECKOCHILDPROCESSHOST_H_
-#define IPC_GLUE_GECKOCHILDPROCESSHOST_H_
+#ifndef __IPC_GLUE_GECKOCHILDPROCESSHOST_H__
+#define __IPC_GLUE_GECKOCHILDPROCESSHOST_H__
 
 #include "base/file_path.h"
 #include "base/process_util.h"
@@ -17,7 +19,6 @@
 #include "mozilla/ipc/NodeChannel.h"
 #include "mozilla/ipc/LaunchError.h"
 #include "mozilla/ipc/ScopedPort.h"
-#include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
@@ -42,6 +43,10 @@
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
+#endif
+
+#if defined(MOZ_SANDBOX)
+#  include "mozilla/ipc/UtilityProcessSandboxing.h"
 #endif
 
 #if (defined(XP_WIN) && defined(_ARM64_)) || \
@@ -208,7 +213,7 @@ class GeckoChildProcessHost : public SupportsWeakPtr,
   GeckoProcessType mProcessType;
   GeckoChildID mChildID;
   bool mIsFileContent;
-  mutable Monitor mMonitor;
+  Monitor mMonitor;
   FilePath mProcessPath;
 #ifdef ALLOW_GECKO_CHILD_PROCESS_ARCH
   // Used on platforms where we may launch a child process with a different
@@ -255,12 +260,9 @@ class GeckoChildProcessHost : public SupportsWeakPtr,
 #  endif
 #endif  // XP_WIN
 
-  // Only set by UtilityProcessHost. The sandbox policy associated with
-  // mUtilitySandbox will only be honored under MOZ_SANDBOX. However, on macOS,
-  // we will choose the proper firefox binary to run independently of
-  // MOZ_SANDBOX. This ensures that the utility process always runs with the
-  // expected set of entitlements.
-  SandboxingKind mUtilitySandbox;
+#if defined(MOZ_SANDBOX)
+  SandboxingKind mSandbox;
+#endif
 
   mozilla::RWLock mHandleLock;
   ProcessHandle mChildProcessHandle MOZ_GUARDED_BY(mHandleLock);
@@ -296,8 +298,6 @@ class GeckoChildProcessHost : public SupportsWeakPtr,
   virtual bool AppendMacSandboxParams(StringVector& aArgs);
 #endif
 
-  virtual void OnProcessLaunchError(const LaunchError aError);
-
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GeckoChildProcessHost);
 
@@ -320,4 +320,4 @@ nsCOMPtr<nsISerialEventTarget> GetIPCLauncher();
 } /* namespace ipc */
 } /* namespace mozilla */
 
-#endif /* IPC_GLUE_GECKOCHILDPROCESSHOST_H_ */
+#endif /* __IPC_GLUE_GECKOCHILDPROCESSHOST_H__ */

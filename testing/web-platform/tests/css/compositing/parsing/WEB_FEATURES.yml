@@ -5,6 +5,3 @@ features:
 - name: isolation
   files:
   - isolation-*
-- name: mix-blend-mode
-  files:
-  - mix-blend-mode-*

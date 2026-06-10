@@ -349,7 +349,7 @@ void nsHtml5Tokenizer::addAttributeWithoutValue() {
 
 void nsHtml5Tokenizer::addAttributeWithValue() {
   if (attributeName) {
-    nsHtml5String val = strBufToAttributeValueString();
+    nsHtml5String val = strBufToString();
     if (mViewSource) {
       mViewSource->MaybeLinkifyAttributeValue(attributeName, val);
     }

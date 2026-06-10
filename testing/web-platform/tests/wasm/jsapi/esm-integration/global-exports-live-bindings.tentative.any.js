@@ -1,4 +1,4 @@
-// META: global=window,dedicatedworker,jsshell
+// META: global=window,dedicatedworker,jsshell,shadowrealm
 
 promise_test(async () => {
   const wasmExports = await import("./resources/globals.wasm");

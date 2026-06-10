@@ -3,26 +3,25 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 //! This file lists all arc FFI types and defines corresponding addref and release functions. This
-//! list loosely corresponds to ServoLockedArcTypeList.inc file in Gecko.
+//! list loosely corresponds to ServoLockedArcTypeList.h file in Gecko.
 
 #![allow(non_snake_case, missing_docs)]
 
+use crate::gecko::url::CssUrlData;
 use crate::media_queries::MediaList;
 use crate::properties::animated_properties::AnimationValue;
 use crate::properties::{ComputedValues, PropertyDeclarationBlock};
 use crate::shared_lock::Locked;
 use crate::stylesheets::keyframes_rule::Keyframe;
 use crate::stylesheets::{
-    AppearanceBaseRule, ContainerRule, CssRules, CustomMediaRule, DocumentRule,
-    FontFeatureValuesRule, FontPaletteValuesRule, LayerBlockRule, LayerStatementRule, MarginRule,
-    MediaRule, NamespaceRule, PropertyRule, ScopeRule, StartingStyleRule, StylesheetContents,
-    SupportsRule, ViewTransitionRule,
+    ContainerRule, CssRules, CustomMediaRule, DocumentRule, FontFeatureValuesRule,
+    FontPaletteValuesRule, LayerBlockRule, LayerStatementRule, MarginRule, MediaRule,
+    NamespaceRule, PropertyRule, ScopeRule, StartingStyleRule, StylesheetContents, SupportsRule,
 };
 pub use crate::stylesheets::{
     LockedCounterStyleRule, LockedFontFaceRule, LockedImportRule, LockedKeyframesRule,
     LockedNestedDeclarationsRule, LockedPageRule, LockedPositionTryRule, LockedStyleRule,
 };
-use crate::url::gecko::CssUrlData;
 use servo_arc::Arc;
 
 macro_rules! impl_simple_arc_ffi {
@@ -184,11 +183,6 @@ impl_simple_arc_ffi!(
     Servo_StartingStyleRule_AddRef,
     Servo_StartingStyleRule_Release
 );
-impl_simple_arc_ffi!(
-    AppearanceBaseRule,
-    Servo_AppearanceBaseRule_AddRef,
-    Servo_AppearanceBaseRule_Release
-);
 
 impl_simple_arc_ffi!(
     LockedPositionTryRule,
@@ -199,9 +193,4 @@ impl_simple_arc_ffi!(
     LockedNestedDeclarationsRule,
     Servo_NestedDeclarationsRule_AddRef,
     Servo_NestedDeclarationsRule_Release
-);
-impl_simple_arc_ffi!(
-    ViewTransitionRule,
-    Servo_ViewTransitionRule_AddRef,
-    Servo_ViewTransitionRule_Release
 );

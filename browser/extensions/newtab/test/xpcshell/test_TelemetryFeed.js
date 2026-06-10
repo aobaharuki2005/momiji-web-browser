@@ -18,7 +18,6 @@ ChromeUtils.defineESModuleGetters(this, {
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs",
   NewTabContentPing: "resource://newtab/lib/NewTabContentPing.sys.mjs",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
   TelemetryFeed: "resource://newtab/lib/TelemetryFeed.sys.mjs",
@@ -36,8 +35,6 @@ const PREF_REDACT_NEWTAB_PING_ENABLED =
   "browser.newtabpage.activity-stream.telemetry.privatePing.redactNewtabPing.enabled";
 const PREF_EVENT_TELEMETRY =
   "browser.newtabpage.activity-stream.telemetry.ut.events";
-const PREF_IS_MERINO_FEED_EXPERIMENT =
-  "browser.newtabpage.activity-stream.discoverystream.merino-feed-experiment";
 
 let BasePingSchemaPromise;
 let SessionPingSchemaPromise;
@@ -1588,6 +1585,87 @@ add_task(
 );
 
 add_task(
+  async function test_handleDiscoveryStreamImpressionStats_instrument_pocket_impressions() {
+    info(
+      "TelemetryFeed.handleDiscoveryStreamImpressionStats should throw " +
+        "for a missing session"
+    );
+
+    let sandbox = sinon.createSandbox();
+    let instance = new TelemetryFeed();
+    Services.fog.testResetFOG();
+
+    const SESSION_ID = "1337cafe";
+    const POS_1 = 1;
+    const POS_2 = 4;
+    const SHIM = "Y29uc2lkZXIgeW91ciBjdXJpb3NpdHkgcmV3YXJkZWQ=";
+    const FETCH_TIMESTAMP = new Date("March 22, 2024 10:15:20");
+    const NEWTAB_CREATION_TIMESTAMP = new Date("March 23, 2024 11:10:30");
+    sandbox.stub(instance.sessions, "get").returns({ session_id: SESSION_ID });
+
+    let pingSubmitted = new Promise(resolve => {
+      GleanPings.spoc.testBeforeNextSubmit(reason => {
+        Assert.equal(reason, "impression");
+        let pocketImpressions = Glean.pocket.impression.testGetValue();
+        Assert.equal(pocketImpressions.length, 2);
+        Assert.deepEqual(pocketImpressions[0].extra, {
+          newtab_visit_id: SESSION_ID,
+          is_sponsored: String(false),
+          position: String(POS_1),
+          recommendation_id: "decaf-c0ff33",
+          content_redacted: String(true),
+        });
+        Assert.deepEqual(pocketImpressions[1].extra, {
+          newtab_visit_id: SESSION_ID,
+          is_sponsored: String(true),
+          position: String(POS_2),
+          tile_id: String(2),
+          content_redacted: String(true),
+        });
+        Assert.equal(Glean.pocket.shim.testGetValue(), SHIM);
+        Assert.deepEqual(
+          Glean.pocket.fetchTimestamp.testGetValue(),
+          FETCH_TIMESTAMP
+        );
+        Assert.deepEqual(
+          Glean.pocket.newtabCreationTimestamp.testGetValue(),
+          NEWTAB_CREATION_TIMESTAMP
+        );
+
+        resolve();
+      });
+    });
+
+    instance.handleDiscoveryStreamImpressionStats("_", {
+      source: "foo",
+      tiles: [
+        {
+          id: 1,
+          pos: POS_1,
+          type: "organic",
+          recommendation_id: "decaf-c0ff33",
+        },
+        {
+          id: 2,
+          pos: POS_2,
+          type: "spoc",
+          recommendation_id: undefined,
+          shim: SHIM,
+          fetchTimestamp: FETCH_TIMESTAMP.valueOf(),
+        },
+      ],
+      window_inner_width: 1000,
+      window_inner_height: 900,
+      firstVisibleTimestamp: NEWTAB_CREATION_TIMESTAMP.valueOf(),
+    });
+
+    await pingSubmitted;
+
+    sandbox.restore();
+  }
+);
+
+add_task(
   async function test_handleTopSitesSponsoredImpressionStats_add_keyed_scalar() {
     info(
       "TelemetryFeed.handleTopSitesSponsoredImpressionStats should add to " +
@@ -2147,6 +2225,11 @@ add_task(
       tile_id: String(314623757745896),
     });
 
+    Assert.ok(
+      !Glean.pocket.shim.testGetValue(),
+      "Pocket shim was not recorded"
+    );
+
     sandbox.restore();
     Services.prefs.clearUserPref(PREF_PRIVATE_PING_ENABLED);
     Services.prefs.clearUserPref(PREF_REDACT_NEWTAB_PING_ENABLED);
@@ -2210,6 +2293,11 @@ add_task(
         })
       ),
       "NewTabContentPing passed the expected arguments."
+    );
+
+    Assert.ok(
+      !Glean.pocket.shim.testGetValue(),
+      "Pocket shim was not recorded"
     );
 
     sandbox.restore();
@@ -2276,6 +2364,11 @@ add_task(
       "NewTabContentPing passed the expected arguments."
     );
 
+    Assert.ok(
+      !Glean.pocket.shim.testGetValue(),
+      "Pocket shim was not recorded"
+    );
+
     sandbox.restore();
     Services.prefs.clearUserPref(PREF_PRIVATE_PING_ENABLED);
     Services.prefs.clearUserPref(PREF_REDACT_NEWTAB_PING_ENABLED);
@@ -2294,6 +2387,8 @@ add_task(
     Services.fog.testResetFOG();
     const ACTION_POSITION = 42;
     const SHIM = "Y29uc2lkZXIgeW91ciBjdXJpb3NpdHkgcmV3YXJkZWQ=";
+    const FETCH_TIMESTAMP = new Date("March 22, 2024 10:15:20");
+    const NEWTAB_CREATION_TIMESTAMP = new Date("March 23, 2024 11:10:30");
     let action = actionCreators.DiscoveryStreamUserEvent({
       event: "CLICK",
       action_position: ACTION_POSITION,
@@ -2302,11 +2397,28 @@ add_task(
         recommendation_id: undefined,
         tile_id: 448685088,
         shim: SHIM,
+        fetchTimestamp: FETCH_TIMESTAMP.valueOf(),
+        firstVisibleTimestamp: NEWTAB_CREATION_TIMESTAMP.valueOf(),
       },
     });
 
     const SESSION_ID = "decafc0ffee";
     sandbox.stub(instance.sessions, "get").returns({ session_id: SESSION_ID });
+
+    let pingSubmitted = new Promise(resolve => {
+      GleanPings.spoc.testBeforeNextSubmit(reason => {
+        Assert.equal(reason, "click");
+        Assert.deepEqual(
+          Glean.pocket.fetchTimestamp.testGetValue(),
+          FETCH_TIMESTAMP
+        );
+        Assert.deepEqual(
+          Glean.pocket.newtabCreationTimestamp.testGetValue(),
+          NEWTAB_CREATION_TIMESTAMP
+        );
+        resolve();
+      });
+    });
 
     instance.handleDiscoveryStreamUserEvent(action);
 
@@ -2319,6 +2431,8 @@ add_task(
       tile_id: String(448685088),
       content_redacted: String(true),
     });
+
+    await pingSubmitted;
 
     sandbox.restore();
   }
@@ -2625,629 +2739,5 @@ add_task(async function test_handleSpocPlaceholderDuration_ignores_undefined() {
     recordedDuration,
     null,
     "Metric should not be recorded for undefined duration"
-  );
-});
-/**
- * Helper to create a mock store with trainhopConfig
- */
-function createMockStore(
-  trainhopConfig = {},
-  civState = { initialized: false }
-) {
-  return {
-    getState: () => ({
-      Prefs: {
-        values: {
-          trainhopConfig,
-        },
-      },
-      InferredPersonalization: civState,
-    }),
-  };
-}
-
-add_task(async function test_initializePrivacySession_defaults_to_private() {
-  info(
-    "initializeGleanSession should default to PrivateGleanSession " +
-      "when privatePingEnabled is false"
-  );
-
-  Services.prefs.setBoolPref(PREF_PRIVATE_PING_ENABLED, false);
-
-  let instance = new TelemetryFeed();
-  instance.store = createMockStore({
-    Prefs: {
-      values: {
-        trainhopConfig: { newtabPrivatePing: { clickOnly: true } },
-      },
-    },
-  });
-
-  instance.initializeGleanSession();
-
-  Assert.equal(
-    instance.gleanSessionType,
-    "private",
-    "Should be PrivateGleanSession when privatePingEnabled is false"
-  );
-
-  Services.prefs.clearUserPref(PREF_PRIVATE_PING_ENABLED);
-});
-
-add_task(
-  async function test_initializePrivacySession_defaults_to_private_no_clickOnly() {
-    info(
-      "initializeGleanSession should default to PrivateGleanSession " +
-        "when clickOnly is false"
-    );
-
-    Services.prefs.setBoolPref(PREF_PRIVATE_PING_ENABLED, true);
-
-    let instance = new TelemetryFeed();
-    instance.store = createMockStore({
-      Prefs: {
-        values: {
-          trainhopConfig: { newtabPrivatePing: { clickOnly: false } },
-        },
-      },
-    });
-
-    instance.initializeGleanSession();
-
-    Assert.equal(
-      instance.gleanSessionType,
-      "private",
-      "Should be PrivateGleanSession when clickOnly is false"
-    );
-
-    Services.prefs.clearUserPref(PREF_PRIVATE_PING_ENABLED);
-  }
-);
-
-add_task(
-  async function test_initializePrivacySession_defaults_to_private_sov_enabled() {
-    info(
-      "initializeGleanSession should default to PrivateGleanSession when SOV is enabled"
-    );
-
-    Services.prefs.setBoolPref(PREF_PRIVATE_PING_ENABLED, true);
-
-    let instance = new TelemetryFeed();
-    instance.store = {
-      getState: () => ({
-        Prefs: {
-          values: {
-            trainhopConfig: {
-              sov: { enabled: true },
-              newtabPrivatePing: { clickOnly: true },
-            },
-          },
-        },
-      }),
-    };
-
-    instance.initializeGleanSession();
-
-    Assert.equal(
-      instance.gleanSessionType,
-      "private",
-      "Should be PrivateGleanSession when SOV is enabled"
-    );
-
-    Services.prefs.clearUserPref(PREF_PRIVATE_PING_ENABLED);
-  }
-);
-
-add_task(async function test_hasRecordedClicksInCIV_with_click_count() {
-  info("hasRecordedClicksInCIV should return true when click count > 0");
-
-  let instance = new TelemetryFeed();
-  instance.store = createMockStore(
-    {},
-    {
-      initialized: true,
-      inferredInterests: { clicks: 5 },
-    }
-  );
-
-  Assert.equal(
-    instance.hasRecordedClicksInCIV(),
-    true,
-    "Should return true when clicks > 0"
-  );
-});
-
-add_task(async function test_recordOrQueueEvent_queues_in_normal_session() {
-  info("recordOrQueueEvent should queue events in NormalContentSession mode");
-
-  let sandbox = sinon.createSandbox();
-  let instance = new TelemetryFeed();
-  instance.gleanSessionType = "normal";
-  Services.prefs.setBoolPref(PREF_PRIVATE_PING_ENABLED, true);
-
-  let callbackCalled = false;
-  let callback = () => {
-    callbackCalled = true;
-  };
-
-  let recordEventStub = sandbox.stub(instance.newtabContentPing, "recordEvent");
-
-  instance.recordOrQueueEvent("testEvent", { test: "data" }, callback);
-
-  Assert.ok(
-    !recordEventStub.called,
-    "newtabContentPing.recordEvent should NOT be called"
-  );
-  Assert.ok(!callbackCalled, "callback should NOT be called");
-
-  Services.prefs.clearUserPref(PREF_PRIVATE_PING_ENABLED);
-  sandbox.restore();
-});
-
-add_task(async function test_recordOrQueueEvent_immediate_in_private_session() {
-  info(
-    "recordOrQueueEvent should send events immediately in PrivateContentSession mode"
-  );
-
-  let sandbox = sinon.createSandbox();
-  let instance = new TelemetryFeed();
-  instance.gleanSessionType = "private";
-  Services.prefs.setBoolPref(PREF_PRIVATE_PING_ENABLED, true);
-
-  let callbackCalled = false;
-  let callback = () => {
-    callbackCalled = true;
-  };
-
-  let recordEventStub = sandbox.stub(instance.newtabContentPing, "recordEvent");
-
-  const eventData = { test: "data" };
-  instance.recordOrQueueEvent("testEvent", eventData, callback);
-
-  Assert.ok(callbackCalled, "callback should be called immediately");
-  Assert.ok(
-    recordEventStub.calledOnce,
-    "newtabContentPing.recordEvent should be called once"
-  );
-  Assert.ok(
-    recordEventStub.calledWith("testEvent", eventData),
-    "recordEvent should be called with correct arguments"
-  );
-
-  Services.prefs.clearUserPref(PREF_PRIVATE_PING_ENABLED);
-  sandbox.restore();
-});
-
-add_task(
-  async function test_recordOrQueueEvent_no_private_ping_when_disabled() {
-    info(
-      "recordOrQueueEvent should not send to newtab-content ping when privatePingEnabled is false"
-    );
-
-    let sandbox = sinon.createSandbox();
-    let instance = new TelemetryFeed();
-    instance.gleanSessionType = "private";
-    Services.prefs.setBoolPref(PREF_PRIVATE_PING_ENABLED, false);
-
-    let callbackCalled = false;
-    let callback = () => {
-      callbackCalled = true;
-    };
-
-    let recordEventStub = sandbox.stub(
-      instance.newtabContentPing,
-      "recordEvent"
-    );
-
-    instance.recordOrQueueEvent("testEvent", { test: "data" }, callback);
-
-    Assert.ok(callbackCalled, "callback should still be called");
-    Assert.ok(
-      !recordEventStub.called,
-      "newtabContentPing.recordEvent should NOT be called when pref is false"
-    );
-
-    Services.prefs.clearUserPref(PREF_PRIVATE_PING_ENABLED);
-    sandbox.restore();
-  }
-);
-
-add_task(
-  async function test_handleTopSitesSponsoredImpressionStats_frecency_boosted_queued() {
-    info(
-      "Frecency-boosted topsite events should be queued, not sent immediately"
-    );
-
-    let sandbox = sinon.createSandbox();
-    let instance = new TelemetryFeed();
-    Services.fog.testResetFOG();
-    Services.prefs.setBoolPref(PREF_PRIVATE_PING_ENABLED, true);
-
-    instance.gleanSessionType = "normal";
-    instance.store = createMockStore({
-      sov: { enabled: true },
-      newtabPrivatePing: { clickOnly: true },
-    });
-
-    sandbox.stub(instance.sessions, "get").returns({ session_id: FAKE_UUID });
-
-    let recordEventStub = sandbox.stub(
-      instance.newtabContentPing,
-      "recordEvent"
-    );
-
-    // Send an impression (should be queued)
-    let impressionData = {
-      type: "impression",
-      tile_id: 42,
-      source: "newtab",
-      position: 1,
-      advertiser: "test advertiser",
-      visible_topsites: 8,
-      frecency_boosted: true,
-    };
-    await instance.handleTopSitesSponsoredImpressionStats({
-      data: impressionData,
-    });
-
-    Assert.equal(
-      recordEventStub.callCount,
-      0,
-      "Impression should be queued, not sent to newtab-content"
-    );
-
-    // Send a click (should also be queued, not trigger transition)
-    let clickData = {
-      type: "click",
-      tile_id: 42,
-      source: "newtab",
-      position: 1,
-      advertiser: "test advertiser",
-      visible_topsites: 8,
-      frecency_boosted: true,
-    };
-    await instance.handleTopSitesSponsoredImpressionStats({ data: clickData });
-
-    Assert.equal(
-      instance.gleanSessionType,
-      "normal",
-      "Topsite clicks should NOT transition to private session"
-    );
-    Assert.equal(
-      recordEventStub.callCount,
-      0,
-      "Click should also be queued, not sent immediately"
-    );
-
-    // Manually transition and verify events are flushed
-    instance.transitionToPrivateSession();
-
-    Assert.equal(
-      recordEventStub.callCount,
-      2,
-      "Both impression and click should be sent after transition"
-    );
-
-    Services.prefs.clearUserPref(PREF_PRIVATE_PING_ENABLED);
-    sandbox.restore();
-  }
-);
-
-add_task(
-  async function test_handleTopSitesSponsoredImpressionStats_non_frecency_boosted_content_ping() {
-    info(
-      "Non-frecency-boosted sponsored topsites in SOV mode should go to newtab-content ping"
-    );
-
-    let sandbox = sinon.createSandbox();
-    let instance = new TelemetryFeed();
-    Services.fog.testResetFOG();
-    Services.prefs.setBoolPref(PREF_PRIVATE_PING_ENABLED, true);
-
-    instance.gleanSessionType = "private";
-    instance.store = createMockStore({
-      sov: { enabled: true },
-      newtabPrivatePing: { clickOnly: true },
-    });
-
-    const SESSION_ID = "decafc0ffee";
-    sandbox.stub(instance.sessions, "get").returns({ session_id: SESSION_ID });
-
-    let recordEventStub = sandbox.stub(
-      instance.newtabContentPing,
-      "recordEvent"
-    );
-
-    let impressionData = {
-      type: "impression",
-      tile_id: 42,
-      source: "newtab",
-      position: 1,
-      advertiser: "test advertiser",
-      visible_topsites: 8,
-      frecency_boosted: false,
-    };
-    await instance.handleTopSitesSponsoredImpressionStats({
-      data: impressionData,
-    });
-
-    Assert.equal(
-      recordEventStub.callCount,
-      1,
-      "Non-frecency-boosted impression should go to newtab-content ping in private session"
-    );
-
-    Services.prefs.clearUserPref(PREF_PRIVATE_PING_ENABLED);
-    sandbox.restore();
-  }
-);
-
-add_task(
-  async function test_configureContentPing_includes_experiment_when_merino_feed_experiment() {
-    info(
-      "configureContentPing should include experiment name and branch " +
-        "when merino-feed-experiment pref is truthy"
-    );
-
-    let sandbox = sinon.createSandbox();
-    let instance = new TelemetryFeed();
-    instance.store = {
-      getState: () => ({
-        Prefs: { values: { trainhopConfig: {} } },
-        DiscoveryStream: { sectionPersonalization: {} },
-        InferredPersonalization: { initialized: false },
-      }),
-    };
-
-    Services.prefs.setBoolPref(PREF_IS_MERINO_FEED_EXPERIMENT, true);
-
-    sandbox
-      .stub(NimbusFeatures.pocketNewtab, "getEnrollmentMetadata")
-      .returns({ slug: "test-experiment", branch: "treatment" });
-    let scheduleStub = sandbox.stub(
-      instance.newtabContentPing,
-      "scheduleSubmission"
-    );
-    sandbox.stub(instance.newtabContentPing, "setMaxEventsPerDay");
-    sandbox.stub(instance.newtabContentPing, "setMaxClickEventsPerDay");
-    sandbox.stub(instance.newtabContentPing, "setMaxClickEventsPerWeek");
-
-    await instance.configureContentPing();
-
-    Assert.ok(scheduleStub.calledOnce, "scheduleSubmission called once");
-    let [metrics] = scheduleStub.firstCall.args;
-    Assert.equal(
-      metrics.experimentName,
-      "test-experiment",
-      "experimentName should be the Nimbus slug"
-    );
-    Assert.equal(
-      metrics.experimentBranch,
-      "treatment",
-      "experimentBranch should be the Nimbus branch"
-    );
-
-    Services.prefs.clearUserPref(PREF_IS_MERINO_FEED_EXPERIMENT);
-    sandbox.restore();
-  }
-);
-
-add_task(
-  async function test_configureContentPing_omits_experiment_when_not_merino_feed_experiment() {
-    info(
-      "configureContentPing should not include experiment name and branch " +
-        "when merino-feed-experiment pref is falsy"
-    );
-
-    let sandbox = sinon.createSandbox();
-    let instance = new TelemetryFeed();
-    instance.store = {
-      getState: () => ({
-        Prefs: { values: { trainhopConfig: {} } },
-        DiscoveryStream: { sectionPersonalization: {} },
-        InferredPersonalization: { initialized: false },
-      }),
-    };
-
-    Services.prefs.setBoolPref(PREF_IS_MERINO_FEED_EXPERIMENT, false);
-
-    sandbox
-      .stub(NimbusFeatures.pocketNewtab, "getEnrollmentMetadata")
-      .returns({ slug: "test-experiment", branch: "treatment" });
-    let scheduleStub = sandbox.stub(
-      instance.newtabContentPing,
-      "scheduleSubmission"
-    );
-    sandbox.stub(instance.newtabContentPing, "setMaxEventsPerDay");
-    sandbox.stub(instance.newtabContentPing, "setMaxClickEventsPerDay");
-    sandbox.stub(instance.newtabContentPing, "setMaxClickEventsPerWeek");
-
-    await instance.configureContentPing();
-
-    Assert.ok(scheduleStub.calledOnce, "scheduleSubmission called once");
-    let [metrics] = scheduleStub.firstCall.args;
-    Assert.equal(
-      metrics.experimentName,
-      "",
-      "experimentName should not be the Nimbus slug when pref is falsy"
-    );
-    Assert.equal(
-      metrics.experimentBranch,
-      "",
-      "experimentBranch should not be the Nimbus branch when pref is falsy"
-    );
-
-    Services.prefs.clearUserPref(PREF_IS_MERINO_FEED_EXPERIMENT);
-    sandbox.restore();
-  }
-);
-
-add_task(
-  async function test_configureContentPing_empty_experiment_when_merino_but_no_metadata() {
-    info(
-      "configureContentPing should set empty experiment name and branch " +
-        "when merino-feed-experiment is truthy but no enrollment metadata"
-    );
-
-    let sandbox = sinon.createSandbox();
-    let instance = new TelemetryFeed();
-    instance.store = {
-      getState: () => ({
-        Prefs: { values: { trainhopConfig: {} } },
-        DiscoveryStream: { sectionPersonalization: {} },
-        InferredPersonalization: { initialized: false },
-      }),
-    };
-
-    Services.prefs.setBoolPref(PREF_IS_MERINO_FEED_EXPERIMENT, true);
-
-    sandbox
-      .stub(NimbusFeatures.pocketNewtab, "getEnrollmentMetadata")
-      .returns(null);
-    let scheduleStub = sandbox.stub(
-      instance.newtabContentPing,
-      "scheduleSubmission"
-    );
-    sandbox.stub(instance.newtabContentPing, "setMaxEventsPerDay");
-    sandbox.stub(instance.newtabContentPing, "setMaxClickEventsPerDay");
-    sandbox.stub(instance.newtabContentPing, "setMaxClickEventsPerWeek");
-
-    await instance.configureContentPing();
-
-    Assert.ok(scheduleStub.calledOnce, "scheduleSubmission called once");
-    let [metrics] = scheduleStub.firstCall.args;
-    Assert.equal(
-      metrics.experimentName,
-      "",
-      "experimentName should be empty when no enrollment metadata"
-    );
-    Assert.equal(
-      metrics.experimentBranch,
-      "",
-      "experimentBranch should be empty when no enrollment metadata"
-    );
-
-    Services.prefs.clearUserPref(PREF_IS_MERINO_FEED_EXPERIMENT);
-    sandbox.restore();
-  }
-);
-
-add_task(async function test_recordEnabledWidgets_partial() {
-  info(
-    "recordEnabledWidgets should set widgetsEnabledList with only enabled widget names"
-  );
-  Services.fog.testResetFOG();
-
-  let instance = new TelemetryFeed();
-  instance.store = {
-    getState: () => ({
-      Prefs: {
-        values: {
-          "widgets.enabled": true,
-          "widgets.lists.enabled": true,
-          "widgets.system.lists.enabled": true,
-          "widgets.focusTimer.enabled": false,
-          "widgets.system.focusTimer.enabled": true,
-          "widgets.weather.enabled": true,
-          "widgets.system.weather.enabled": true,
-          "widgets.sportsWidget.enabled": false,
-          "widgets.system.sportsWidget.enabled": true,
-        },
-      },
-    }),
-  };
-
-  instance.recordEnabledWidgets();
-
-  Assert.deepEqual(
-    Glean.newtab.widgetsEnabledList.testGetValue(),
-    ["lists", "weather"],
-    "widgetsEnabledList should contain only enabled widget names"
-  );
-});
-
-add_task(async function test_recordEnabledWidgets_trainhop() {
-  info(
-    "recordEnabledWidgets should count a widget enabled via trainhopConfig when the system pref is off"
-  );
-  Services.fog.testResetFOG();
-
-  let instance = new TelemetryFeed();
-  instance.store = {
-    getState: () => ({
-      Prefs: {
-        values: {
-          "widgets.enabled": true,
-          "widgets.lists.enabled": true,
-          "widgets.system.lists.enabled": false,
-          trainhopConfig: { widgets: { listsEnabled: true } },
-        },
-      },
-    }),
-  };
-
-  instance.recordEnabledWidgets();
-
-  Assert.deepEqual(
-    Glean.newtab.widgetsEnabledList.testGetValue(),
-    ["lists"],
-    "widgetsEnabledList should include widgets gated on by trainhopConfig"
-  );
-});
-
-add_task(async function test_recordEnabledWidgets_container_disabled() {
-  info(
-    "recordEnabledWidgets should return an empty list when the widgets container is off"
-  );
-  Services.fog.testResetFOG();
-
-  let instance = new TelemetryFeed();
-  instance.store = {
-    getState: () => ({
-      Prefs: {
-        values: {
-          "widgets.enabled": false,
-          "widgets.lists.enabled": true,
-          "widgets.system.lists.enabled": true,
-        },
-      },
-    }),
-  };
-
-  instance.recordEnabledWidgets();
-
-  Assert.deepEqual(
-    Glean.newtab.widgetsEnabledList.testGetValue(),
-    [],
-    "widgetsEnabledList should be empty when widgets.enabled is false"
-  );
-});
-
-add_task(async function test_recordEnabledWidgets_none_enabled() {
-  info(
-    "recordEnabledWidgets should set an empty list when no widgets are enabled"
-  );
-  Services.fog.testResetFOG();
-
-  let instance = new TelemetryFeed();
-  instance.store = {
-    getState: () => ({
-      Prefs: {
-        values: {
-          "widgets.lists.enabled": false,
-          "widgets.focusTimer.enabled": false,
-          "widgets.weather.enabled": false,
-          "widgets.sportsWidget.enabled": false,
-        },
-      },
-    }),
-  };
-
-  instance.recordEnabledWidgets();
-
-  Assert.deepEqual(
-    Glean.newtab.widgetsEnabledList.testGetValue(),
-    [],
-    "widgetsEnabledList should be empty when no widgets are enabled"
   );
 });

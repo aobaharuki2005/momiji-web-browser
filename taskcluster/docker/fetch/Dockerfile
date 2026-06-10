@@ -28,7 +28,10 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
 
 # %include taskcluster/scripts/run-task
 COPY topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task-hg
+# %include third_party/python/taskcluster_taskgraph/taskgraph/run-task/run-task
+COPY topsrcdir/third_party/python/taskcluster_taskgraph/taskgraph/run-task/run-task /builds/worker/bin/run-task-git
 
-# %include-run-task
+# %include third_party/python/taskcluster_taskgraph/taskgraph/run-task/fetch-content
+ADD topsrcdir/third_party/python/taskcluster_taskgraph/taskgraph/run-task/fetch-content /builds/worker/bin/fetch-content
 
 RUN pip3 install redo==2.0.4 --break-system-packages

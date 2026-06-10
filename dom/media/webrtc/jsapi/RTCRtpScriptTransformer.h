@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -8,7 +10,6 @@
 #include <memory>
 
 #include "js/RootingAPI.h"
-#include "jsapi/RTCStatsReport.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/ReadableStream.h"
@@ -188,7 +189,6 @@ class RTCRtpScriptTransformer final : public nsISupports,
   // ask the FrameTransformerProxy again, and just bulk resolve/reject.
   GenerateKeyFramePromises mGenerateKeyFramePromises;
   Maybe<bool> mVideo;
-  Maybe<RTCStatsTimestampMaker> mTimestampMaker;
   RefPtr<StrongWorkerRef> mWorkerRef;
 };
 

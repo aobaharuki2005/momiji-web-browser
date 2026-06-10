@@ -13,11 +13,7 @@
 #include <libproc.h>
 
 #include <algorithm>
-#include <cstdint>
-#include <cstring>
 #include <functional>
-#include <iterator>
-#include <memory>
 #include <string>
 
 #include "absl/strings/match.h"

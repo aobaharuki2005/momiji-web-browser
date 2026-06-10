@@ -39,7 +39,7 @@ newtab-search-box-input =
     .placeholder = Szukej w internecie
     .aria-label = Szukej w internecie
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = Przidej wyszukowarka
 newtab-topsites-add-shortcut-header = Nowy skrōt
@@ -233,22 +233,9 @@ newtab-error-fallback-refresh-link = Ôdświyż strōna, coby sprōbować jeszcz
 
 newtab-custom-shortcuts-title = Skrōty
 newtab-custom-shortcuts-subtitle = Spamiyntane i nawiydzane strōny
-#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Skrōty
     .description = Spamiyntane i nawiydzane strōny
-newtab-custom-shortcuts-nova =
-    .label = Skrōty
-# Variables
-#   $num (number) - Number of rows to display
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
-newtab-custom-row-selector2 =
-    .label =
-        { $num ->
-            [one] { $num } raja
-            [few] { $num } raje
-           *[many] { $num } raji
-        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =

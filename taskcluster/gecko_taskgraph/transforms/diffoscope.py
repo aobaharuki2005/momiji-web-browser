@@ -6,56 +6,55 @@ This transform construct tasks to perform diffs between builds, as
 defined in kind.yml
 """
 
-from typing import Optional, Union
-
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import Schema
 from taskgraph.util.taskcluster import get_artifact_path
+from voluptuous import Any, Optional, Required
 
-from gecko_taskgraph.transforms.task import TaskDescriptionSchema
+from gecko_taskgraph.transforms.task import task_description_schema
 
+index_or_string = Any(
+    str,
+    {Required("index-search"): str},
+)
 
-class IndexSearchSchema(Schema):
-    index_search: str
-
-
-class DiffDescriptionSchema(Schema, kw_only=True):
+diff_description_schema = Schema({
     # Name of the diff task.
-    name: str
+    Required("name"): str,
     # Treeherder tier.
-    tier: int
+    Required("tier"): int,
     # Treeherder symbol.
-    symbol: str
+    Required("symbol"): str,
     # relative path (from config.path) to the file the task was defined in.
-    task_from: Optional[str] = None
+    Optional("task-from"): str,
     # Original and new builds to compare.
-    original: Union[str, IndexSearchSchema]
-    new: Union[str, IndexSearchSchema]
+    Required("original"): index_or_string,
+    Required("new"): index_or_string,
     # Arguments to pass to diffoscope, used for task-defaults in
     # taskcluster/kinds/diffoscope/kind.yml
-    args: Optional[str] = None
+    Optional("args"): str,
     # Extra arguments to pass to diffoscope, that can be set per job.
-    extra_args: Optional[str] = None
+    Optional("extra-args"): str,
     # Fail the task when differences are detected.
-    fail_on_diff: Optional[bool] = None
+    Optional("fail-on-diff"): bool,
     # What artifact to check the differences of. Defaults to target.tar.xz
     # for Linux, target.dmg for Mac, target.zip for Windows, target.apk for
     # Android.
-    artifact: Optional[str] = None
+    Optional("artifact"): str,
     # Whether to unpack first. Diffoscope can normally work without unpacking,
     # but when one needs to --exclude some contents, that doesn't work out well
     # if said content is packed (e.g. in omni.ja).
-    unpack: Optional[bool] = None
+    Optional("unpack"): bool,
     # Commands to run before performing the diff.
-    pre_diff_commands: Optional[list[str]] = None
+    Optional("pre-diff-commands"): [str],
     # Only run the task on a set of projects/branches.
-    run_on_projects: TaskDescriptionSchema.__annotations__["run_on_projects"] = None
-    run_on_repo_type: TaskDescriptionSchema.__annotations__["run_on_repo_type"] = None
-    optimization: TaskDescriptionSchema.__annotations__["optimization"] = None
-
+    Optional("run-on-projects"): task_description_schema["run-on-projects"],
+    Optional("run-on-repo-type"): task_description_schema["run-on-repo-type"],
+    Optional("optimization"): task_description_schema["optimization"],
+})
 
 transforms = TransformSequence()
-transforms.add_validate(DiffDescriptionSchema)
+transforms.add_validate(diff_description_schema)
 
 
 @transforms.add

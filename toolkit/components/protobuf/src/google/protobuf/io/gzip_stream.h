@@ -1,9 +1,32 @@
 // Protocol Buffers - Google's data interchange format
 // Copyright 2008 Google Inc.  All rights reserved.
+// https://developers.google.com/protocol-buffers/
 //
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file or at
-// https://developers.google.com/open-source/licenses/bsd
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Author: brianolson@google.com (Brian Olson)
 //
@@ -20,23 +43,22 @@
 #ifndef GOOGLE_PROTOBUF_IO_GZIP_STREAM_H__
 #define GOOGLE_PROTOBUF_IO_GZIP_STREAM_H__
 
-#include "google/protobuf/io/zero_copy_stream.h"
-#include "google/protobuf/port.h"
+
+#include <google/protobuf/stubs/common.h>
+#include <google/protobuf/io/zero_copy_stream.h>
+#include <google/protobuf/port.h>
+#include "zlib.h"
 
 // Must be included last.
-#include "google/protobuf/port_def.inc"
+#include <google/protobuf/port_def.inc>
 
 namespace google {
 namespace protobuf {
-namespace internal {
-struct StreamContext;
-}  // namespace internal
-
 namespace io {
 
 // A ZeroCopyInputStream that reads compressed data through zlib
-class PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED PROTOBUF_EXPORT
-    GzipInputStream final : public ZeroCopyInputStream {
+class PROTOBUF_EXPORT GzipInputStream PROTOBUF_FUTURE_FINAL
+    : public ZeroCopyInputStream {
  public:
   // Format key for constructor
   enum Format {
@@ -53,29 +75,24 @@ class PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED PROTOBUF_EXPORT
   // buffer_size and format may be -1 for default of 64kB and GZIP format
   explicit GzipInputStream(ZeroCopyInputStream* sub_stream,
                            Format format = AUTO, int buffer_size = -1);
-  GzipInputStream(const GzipInputStream&) = delete;
-  GzipInputStream& operator=(const GzipInputStream&) = delete;
-  ~GzipInputStream() override;
+  virtual ~GzipInputStream();
 
   // Return last error message or NULL if no error.
-  PROTOBUF_FUTURE_ADD_EARLY_NODISCARD const char* ZlibErrorMessage() const;
-  PROTOBUF_FUTURE_ADD_EARLY_NODISCARD inline int ZlibErrorCode() const {
-    return zerror_;
-  }
+  inline const char* ZlibErrorMessage() const { return zcontext_.msg; }
+  inline int ZlibErrorCode() const { return zerror_; }
 
   // implements ZeroCopyInputStream ----------------------------------
-  PROTOBUF_FUTURE_ADD_EARLY_NODISCARD bool Next(const void** data,
-                                                int* size) override;
+  bool Next(const void** data, int* size) override;
   void BackUp(int count) override;
-  PROTOBUF_FUTURE_ADD_EARLY_NODISCARD bool Skip(int count) override;
-  PROTOBUF_FUTURE_ADD_EARLY_NODISCARD int64_t ByteCount() const override;
+  bool Skip(int count) override;
+  int64_t ByteCount() const override;
 
  private:
   Format format_;
 
   ZeroCopyInputStream* sub_stream_;
 
-  internal::StreamContext* zcontext_;
+  z_stream zcontext_;
   int zerror_;
 
   void* output_buffer_;
@@ -85,10 +102,12 @@ class PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED PROTOBUF_EXPORT
 
   int Inflate(int flush);
   void DoNextOutput(const void** data, int* size);
+
+  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(GzipInputStream);
 };
 
-class PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED PROTOBUF_EXPORT
-    GzipOutputStream final : public ZeroCopyOutputStream {
+class PROTOBUF_EXPORT GzipOutputStream PROTOBUF_FUTURE_FINAL
+    : public ZeroCopyOutputStream {
  public:
   // Format key for constructor
   enum Format {
@@ -123,16 +142,12 @@ class PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED PROTOBUF_EXPORT
 
   // Create a GzipOutputStream with the given options.
   GzipOutputStream(ZeroCopyOutputStream* sub_stream, const Options& options);
-  GzipOutputStream(const GzipOutputStream&) = delete;
-  GzipOutputStream& operator=(const GzipOutputStream&) = delete;
 
-  ~GzipOutputStream() override;
+  virtual ~GzipOutputStream();
 
   // Return last error message or NULL if no error.
-  PROTOBUF_FUTURE_ADD_EARLY_NODISCARD const char* ZlibErrorMessage() const;
-  PROTOBUF_FUTURE_ADD_EARLY_NODISCARD inline int ZlibErrorCode() const {
-    return zerror_;
-  }
+  inline const char* ZlibErrorMessage() const { return zcontext_.msg; }
+  inline int ZlibErrorCode() const { return zerror_; }
 
   // Flushes data written so far to zipped data in the underlying stream.
   // It is the caller's responsibility to flush the underlying stream if
@@ -146,19 +161,18 @@ class PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED PROTOBUF_EXPORT
   // In the case of a Z_FULL_FLUSH or Z_SYNC_FLUSH, make sure that avail_out
   // is greater than six to avoid repeated flush markers due to
   // avail_out == 0 on return.
-  PROTOBUF_FUTURE_ADD_EARLY_NODISCARD bool Flush();
+  bool Flush();
 
   // Writes out all data and closes the gzip stream.
   // It is the caller's responsibility to close the underlying stream if
   // necessary.
   // Returns true if no error.
-  PROTOBUF_FUTURE_ADD_EARLY_NODISCARD bool Close();
+  bool Close();
 
   // implements ZeroCopyOutputStream ---------------------------------
-  PROTOBUF_FUTURE_ADD_EARLY_NODISCARD bool Next(void** data,
-                                                int* size) override;
+  bool Next(void** data, int* size) override;
   void BackUp(int count) override;
-  PROTOBUF_FUTURE_ADD_EARLY_NODISCARD int64_t ByteCount() const override;
+  int64_t ByteCount() const override;
 
  private:
   ZeroCopyOutputStream* sub_stream_;
@@ -166,7 +180,7 @@ class PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED PROTOBUF_EXPORT
   void* sub_data_;
   int sub_data_size_;
 
-  internal::StreamContext* zcontext_;
+  z_stream zcontext_;
   int zerror_;
   void* input_buffer_;
   size_t input_buffer_length_;
@@ -178,12 +192,14 @@ class PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED PROTOBUF_EXPORT
   // Takes zlib flush mode.
   // Returns zlib error code.
   int Deflate(int flush);
+
+  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(GzipOutputStream);
 };
 
 }  // namespace io
 }  // namespace protobuf
 }  // namespace google
 
-#include "google/protobuf/port_undef.inc"
+#include <google/protobuf/port_undef.inc>
 
 #endif  // GOOGLE_PROTOBUF_IO_GZIP_STREAM_H__

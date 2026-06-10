@@ -2,7 +2,6 @@
   "name": "@puppeteer/ng-schematics",
   "version": "0.7.0",
   "description": "Puppeteer Angular schematics",
-  "type": "module",
   "scripts": {
     "build": "wireit",
     "clean": "../../tools/clean.mjs",
@@ -57,8 +56,8 @@
     "@angular-devkit/schematics": "18.1.4"
   },
   "devDependencies": {
-    "@angular/cli": "^21.0.5",
-    "@schematics/angular": "21.0.4"
+    "@schematics/angular": "19.2.13",
+    "@angular/cli": "19.2.13"
   },
   "files": [
     "lib",

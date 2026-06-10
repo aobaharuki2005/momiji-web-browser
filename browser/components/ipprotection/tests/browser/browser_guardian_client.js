@@ -5,8 +5,9 @@
 "use strict";
 
 const { GuardianClient } = ChromeUtils.importESModule(
-  "moz-src:///toolkit/components/ipprotection/fxa/GuardianClient.sys.mjs"
+  "moz-src:///browser/components/ipprotection/GuardianClient.sys.mjs"
 );
+
 function makeGuardianServer(
   arg = {
     enroll: (_request, _response) => {},
@@ -21,6 +22,12 @@ function makeGuardianServer(
   server.start(-1);
   return server;
 }
+
+const testGuardianConfig = server => ({
+  withToken: async cb => cb("test-token"),
+  guardianEndpoint: `http://localhost:${server.identity.primaryPort}`,
+  fxaOrigin: `http://localhost:${server.identity.primaryPort}`,
+});
 
 const testcases = [
   {
@@ -59,6 +66,7 @@ testcases
       requestLongerTimeout(2); // Increase timeout for this test case
       info(`Running test case: ${name}`);
 
+      // Create a Guardian server with custom enroll handler that redirects to our test URL
       const server = makeGuardianServer({
         enroll: (request, response) => {
           info(`Handling enroll request, redirecting to ${responseURL}`);
@@ -87,19 +95,14 @@ testcases
         },
       });
 
-      const serverOrigin = `http://localhost:${server.identity.primaryPort}`;
-      await SpecialPowers.pushPrefEnv({
-        set: [
-          ["browser.ipProtection.guardian.endpoint", serverOrigin],
-          ["identity.fxaccounts.remote.root", serverOrigin],
-        ],
-      });
-
-      const client = new GuardianClient();
+      // Create a client with our test server
+      const client = new GuardianClient(testGuardianConfig(server));
 
       try {
-        const result = await client.enrollWithFxa(experimentType);
+        // Call the actual enroll method - no mocking!
+        const result = await client.enroll(experimentType);
 
+        // Check the results
         Assert.equal(
           result.ok,
           expects.ok,
@@ -120,7 +123,6 @@ testcases
           );
         }
       } finally {
-        await SpecialPowers.popPrefEnv();
         server.stop();
       }
     };

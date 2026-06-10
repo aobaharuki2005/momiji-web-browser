@@ -52,7 +52,7 @@ function getLoadedPaymentResponse(iframe, url) {
   });
 }
 
-function methodNotFullyActive(button, methodName, ...args) {
+function methodNotFullyActive(button, method, ...args) {
   const text = button.textContent.trim();
   promise_test(async t => {
     const iframe = document.createElement("iframe");
@@ -74,9 +74,9 @@ function methodNotFullyActive(button, methodName, ...args) {
     const promise = response[methodName](...args);
     await promise_rejects_dom(
       t,
-      "InvalidStateError",
+      "AbortError",
       promise,
-      "Inactive document, so must throw InvalidStateError"
+      "Inactive document, so must throw AbortError"
     );
     // We are done, so clean up.
     iframe.remove();
@@ -111,7 +111,7 @@ function methodBecomesNotFullyActive(button, methodName, ...args) {
       t,
       "AbortError",
       promise,
-      "Document became inactive, so must throw AbortError"
+      "Inactive document, so must throw AbortError"
     );
     // We are done, so clean up.
     iframe.remove();

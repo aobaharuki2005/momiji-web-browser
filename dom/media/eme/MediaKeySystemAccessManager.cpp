@@ -486,6 +486,7 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
       keySystem = NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName);
     }
 #endif
+    auto& diagnostics = aRequest->mDiagnostics;
     if (AwaitInstall(std::move(aRequest))) {
       // Notify chrome that we're going to wait for the CDM to download/update.
       EME_LOG("Await %s for installation",
@@ -496,6 +497,8 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
       // this request.
       EME_LOG("Failed to await %s for installation",
               NS_ConvertUTF16toUTF8(keySystem).get());
+      diagnostics.StoreMediaKeySystemAccess(mWindow->GetExtantDoc(), keySystem,
+                                            false, __func__);
     }
     return;
   }
@@ -582,8 +585,6 @@ bool MediaKeySystemAccessManager::AwaitInstall(
     NS_WARNING("Failed to add pref observer");
     aRequest->RejectPromiseWithNotSupportedError(nsLiteralCString(
         "Failed trying to setup CDM update: failed adding observers"));
-    aRequest->mDiagnostics.StoreMediaKeySystemAccess(
-        mWindow->GetExtantDoc(), aRequest->mKeySystem, false, __func__);
     return false;
   }
 
@@ -594,15 +595,13 @@ bool MediaKeySystemAccessManager::AwaitInstall(
     NS_WARNING("Failed to create timer to await CDM install.");
     aRequest->RejectPromiseWithNotSupportedError(nsLiteralCString(
         "Failed trying to setup CDM update: failed timer creation"));
-    aRequest->mDiagnostics.StoreMediaKeySystemAccess(
-        mWindow->GetExtantDoc(), aRequest->mKeySystem, false, __func__);
     return false;
   }
 
   MOZ_DIAGNOSTIC_ASSERT(
       aRequest->mTimer == nullptr,
       "Timer should not already be set on a request we're about to await");
-  aRequest->mTimer = std::move(timer);
+  aRequest->mTimer = timer;
 
   mPendingInstallRequests.AppendElement(std::move(aRequest));
   return true;

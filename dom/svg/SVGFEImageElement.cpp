@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,7 +17,6 @@
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/gfx/2D.h"
 #include "nsContentUtils.h"
-#include "nsIURIWithSizeOf.h"
 #include "nsLayoutUtils.h"
 #include "nsNetUtil.h"
 
@@ -246,9 +247,12 @@ FilterPrimitiveDescription SVGFEImageElement::GetPrimitiveDescription(
   RefPtr<SourceSurface> image;
   nsIntSize nativeSize;
   if (imageContainer) {
-    CSSIntSize size = NaturalSize(DoDensityCorrection::No);
-    nativeSize.width = size.width;
-    nativeSize.height = size.height;
+    if (NS_FAILED(imageContainer->GetWidth(&nativeSize.width))) {
+      nativeSize.width = kFallbackIntrinsicWidthInPixels;
+    }
+    if (NS_FAILED(imageContainer->GetHeight(&nativeSize.height))) {
+      nativeSize.height = kFallbackIntrinsicHeightInPixels;
+    }
     uint32_t flags =
         imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY;
     image = imageContainer->GetFrameAtSize(nativeSize,
@@ -432,10 +436,9 @@ void SVGFEImageElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
   // It is okay to include the size of mSrcURI here even though it might have
   // strong references from elsewhere because the URI was created for this
   // object, in nsImageLoadingContent::StringToURI(). Only objects that created
-  // their own URI will call nsIURIWithSizeOf::SizeOfIncludingThis().
+  // their own URI will call nsIURI::SizeOfIncludingThis().
   if (mSrcURI) {
-    *aNodeSize += SizeOfIncludingThisIfURIWithSizeOf(
-        mSrcURI, aSizes.mState.mMallocSizeOf);
+    *aNodeSize += mSrcURI->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
 }
 

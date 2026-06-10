@@ -3,7 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::logging;
-use http::Method;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
+use hyper::Method;
+use serde::de::{self, Deserialize, Deserializer};
 use serde_json::Value;
 use webdriver::command::{WebDriverCommand, WebDriverExtensionCommand};
 use webdriver::error::WebDriverResult;
@@ -102,13 +105,10 @@ impl WebDriverExtensionCommand for GeckoExtensionCommand {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AddonBase64 {
-    pub addon: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(deserialize_with = "deserialize_base64")]
+    pub addon: Vec<u8>,
     pub temporary: Option<bool>,
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        rename = "allowPrivateBrowsing"
-    )]
+    #[serde(rename = "allowPrivateBrowsing")]
     pub allow_private_browsing: Option<bool>,
 }
 
@@ -116,12 +116,8 @@ pub struct AddonBase64 {
 #[serde(deny_unknown_fields)]
 pub struct AddonPath {
     pub path: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub temporary: Option<bool>,
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        rename = "allowPrivateBrowsing"
-    )]
+    #[serde(rename = "allowPrivateBrowsing")]
     pub allow_private_browsing: Option<bool>,
 }
 
@@ -130,6 +126,18 @@ pub struct AddonPath {
 pub enum AddonInstallParameters {
     AddonBase64(AddonBase64),
     AddonPath(AddonPath),
+}
+
+fn deserialize_base64<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let encoded_str = String::deserialize(deserializer)?;
+    let decoded_str = BASE64_STANDARD
+        .decode(encoded_str)
+        .map_err(de::Error::custom)?;
+
+    Ok(decoded_str.clone())
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -232,7 +240,7 @@ mod tests {
 
         if let AddonInstallParameters::AddonBase64(data) = data {
             assert_eq!(data.temporary, Some(true));
-            assert_eq!(data.addon, "aGVsbG8=");
+            assert_eq!(String::from_utf8(data.addon).unwrap(), "hello");
         }
     }
 
@@ -243,7 +251,7 @@ mod tests {
 
         if let AddonInstallParameters::AddonBase64(data) = data {
             assert_eq!(data.allow_private_browsing, Some(true));
-            assert_eq!(data.addon, "aGVsbG8=");
+            assert_eq!(String::from_utf8(data.addon).unwrap(), "hello");
         }
     }
 
@@ -254,7 +262,7 @@ mod tests {
 
         if let AddonInstallParameters::AddonBase64(data) = data {
             assert_eq!(data.temporary, None);
-            assert_eq!(data.addon, "aGVsbG8=");
+            assert_eq!(String::from_utf8(data.addon).unwrap(), "hello");
         }
     }
 

@@ -16,7 +16,7 @@ class nsZipDataStream final : public nsIStreamListener {
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  nsZipDataStream() = default;
+  nsZipDataStream() {}
 
   nsresult Init(nsZipWriter* aWriter, nsIOutputStream* aStream,
                 nsZipHeader* aHeader, int32_t aCompression);
@@ -24,7 +24,7 @@ class nsZipDataStream final : public nsIStreamListener {
   nsresult ReadStream(nsIInputStream* aStream);
 
  private:
-  ~nsZipDataStream() = default;
+  ~nsZipDataStream() {}
 
   nsCOMPtr<nsIStreamListener> mOutput;
   nsCOMPtr<nsIOutputStream> mStream;

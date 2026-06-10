@@ -188,10 +188,8 @@ bool ClearKeyUtils::DecryptCbcs(const vector<uint8_t>& aKey,
 /* static */
 bool ClearKeyUtils::DecryptAES(const vector<uint8_t>& aKey,
                                vector<uint8_t>& aData, vector<uint8_t>& aIV) {
-  if (aKey.size() != CENC_KEY_LEN || aIV.size() != CENC_KEY_LEN) {
-    CK_LOGE("Key and IV size should be 16!");
-    return false;
-  }
+  assert(aIV.size() == CENC_KEY_LEN);
+  assert(aKey.size() == CENC_KEY_LEN);
 
   PK11SlotInfo* slot = PK11_GetInternalKeySlot();
   if (!slot) {
@@ -499,7 +497,7 @@ static bool ParseKeys(ParserContext& aCtx, vector<KeyIdPair>& aOutKeys) {
     }
 
     assert(!key.mKey.empty() && !key.mKeyId.empty());
-    aOutKeys.push_back(std::move(key));
+    aOutKeys.push_back(key);
 
     uint8_t sym = PeekSymbol(aCtx);
     if (!sym || sym == ']') {
@@ -569,7 +567,7 @@ static bool ParseKeyIds(ParserContext& aCtx, vector<KeyId>& aOutKeyIds) {
       return false;
     }
     if (!keyId.empty() && keyId.size() <= kMaxKeyIdsLength) {
-      aOutKeyIds.push_back(std::move(keyId));
+      aOutKeyIds.push_back(keyId);
     }
 
     uint8_t sym = PeekSymbol(aCtx);

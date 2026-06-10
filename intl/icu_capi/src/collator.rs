@@ -6,6 +6,7 @@ use icu_collator::options::{CollatorOptions, ResolvedCollatorOptions};
 
 #[diplomat::bridge]
 #[diplomat::abi_rename = "icu4x_{0}_mv1"]
+#[diplomat::attr(auto, namespace = "icu4x")]
 pub mod ffi {
     use alloc::boxed::Box;
 
@@ -48,7 +49,6 @@ pub mod ffi {
     #[diplomat::rust_link(icu::collator::options::Strength, Enum)]
     #[derive(Eq, PartialEq, Debug, PartialOrd, Ord)]
     #[diplomat::enum_convert(icu_collator::options::Strength, needs_wildcard)]
-    #[non_exhaustive]
     pub enum CollatorStrength {
         Primary = 0,
         Secondary = 1,
@@ -60,7 +60,6 @@ pub mod ffi {
     #[diplomat::rust_link(icu::collator::options::AlternateHandling, Enum)]
     #[derive(Eq, PartialEq, Debug, PartialOrd, Ord)]
     #[diplomat::enum_convert(icu_collator::options::AlternateHandling, needs_wildcard)]
-    #[non_exhaustive]
     pub enum CollatorAlternateHandling {
         NonIgnorable = 0,
         Shifted = 1,
@@ -68,7 +67,6 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::collator::preferences::CollationCaseFirst, Enum)]
     #[derive(Eq, PartialEq, Debug, PartialOrd, Ord)]
-    #[non_exhaustive]
     pub enum CollatorCaseFirst {
         Off = 0,
         Lower = 1,
@@ -78,7 +76,6 @@ pub mod ffi {
     #[diplomat::rust_link(icu::collator::options::MaxVariable, Enum)]
     #[derive(Eq, PartialEq, Debug, PartialOrd, Ord)]
     #[diplomat::enum_convert(icu_collator::options::MaxVariable, needs_wildcard)]
-    #[non_exhaustive]
     pub enum CollatorMaxVariable {
         Space = 0,
         Punctuation = 1,
@@ -89,7 +86,6 @@ pub mod ffi {
     #[diplomat::rust_link(icu::collator::options::CaseLevel, Enum)]
     #[derive(Eq, PartialEq, Debug, PartialOrd, Ord)]
     #[diplomat::enum_convert(icu_collator::options::CaseLevel, needs_wildcard)]
-    #[non_exhaustive]
     pub enum CollatorCaseLevel {
         Off = 0,
         On = 1,
@@ -97,7 +93,6 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::collator::preferences::CollationNumericOrdering, Enum)]
     #[derive(Eq, PartialEq, Debug, PartialOrd, Ord)]
-    #[non_exhaustive]
     pub enum CollatorNumericOrdering {
         Off = 0,
         On = 1,
@@ -109,7 +104,7 @@ pub mod ffi {
         #[diplomat::rust_link(icu::collator::CollatorBorrowed::try_new, FnInStruct, hidden)]
         #[diplomat::rust_link(icu::collator::CollatorPreferences, Struct, hidden)]
         #[diplomat::rust_link(icu::collator::CollatorPreferences::extend, FnInStruct, hidden)]
-        #[diplomat::attr(supports = fallible_constructors, constructor)]
+        #[diplomat::attr(all(supports = fallible_constructors, supports = named_constructors), named_constructor = "with_provider")]
         #[diplomat::attr(supports = non_exhaustive_structs, rename = "create")]
         #[cfg(feature = "compiled_data")]
         pub fn create_v1(
@@ -126,7 +121,7 @@ pub mod ffi {
         #[diplomat::rust_link(icu::collator::Collator::try_new, FnInStruct)]
         #[diplomat::rust_link(icu::collator::CollatorBorrowed::try_new, FnInStruct, hidden)]
         #[diplomat::rust_link(icu::collator::CollatorPreferences, Struct, hidden)]
-        #[diplomat::attr(all(supports = fallible_constructors, supports = named_constructors), named_constructor = "with_provider")]
+        #[diplomat::attr(supports = fallible_constructors, constructor)]
         #[diplomat::attr(supports = non_exhaustive_structs, rename = "create_with_provider")]
         #[cfg(feature = "buffer_provider")]
         pub fn create_v1_with_provider(

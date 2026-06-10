@@ -232,7 +232,7 @@ To recap:
 * you can use it however you want or process it further as you need
 
 Tests are denoted by sections in an ``*.toml`` file (see
-:searchfox:`testing/mozbase/manifestparser/tests/manifest.toml`
+https://searchfox.org/mozilla-central/source/testing/mozbase/manifestparser/tests/manifest.toml
 ).
 
 Additional manifest files may be included with an `[include:]` directive:
@@ -267,7 +267,7 @@ from TestManifest if more harness-specific customization is desired at
 the manifest level.
 
 See the source code at
-:searchfox:`testing/mozbase/manifestparser`
+https://searchfox.org/mozilla-central/source/testing/mozbase/manifestparser
 .
 
 Filtering Manifests

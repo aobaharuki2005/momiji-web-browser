@@ -14,7 +14,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <optional>
 #include <vector>
 
 #include "absl/strings/string_view.h"
@@ -42,8 +41,7 @@ struct LoggedRtpPacket {
       : timestamp(timestamp),
         header(header),
         header_length(header_length),
-        total_length(total_length),
-        rtx_original_sequence_number(std::nullopt) {}
+        total_length(total_length) {}
 
   int64_t log_time_us() const { return timestamp.us(); }
   int64_t log_time_ms() const { return timestamp.ms(); }
@@ -56,9 +54,6 @@ struct LoggedRtpPacket {
   std::vector<uint8_t> dependency_descriptor_wire_format;
   size_t header_length;
   size_t total_length;
-  // RTX OSN, only set for RTX packets.
-  // https://datatracker.ietf.org/doc/html/rfc4588#section-4
-  std::optional<uint16_t> rtx_original_sequence_number;
 };
 
 struct LoggedRtpPacketIncoming {

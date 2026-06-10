@@ -1,4 +1,4 @@
-function runWebLocksBfcacheTest(params, description) {
+export function runWebLocksBfcacheTest(params, description) {
   runBfcacheTest(
     {
       scripts: ["/web-locks/resources/helpers.js"],

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_CERTTREE_H_
-#define NS_CERTTREE_H_
+#ifndef _NS_CERTTREE_H_
+#define _NS_CERTTREE_H_
 
 #include "nsCOMPtr.h"
 #include "nsICertTree.h"
@@ -33,12 +33,19 @@
 
 typedef struct treeArrayElStr treeArrayEl;
 
-struct CompareCacheEntry {
+struct CompareCacheHashEntry {
   enum { max_criterions = 3 };
-  CompareCacheEntry();
+  CompareCacheHashEntry();
 
+  void* key;  // no ownership
   bool mCritInit[max_criterions];
   nsString mCrit[max_criterions];
+};
+
+struct CompareCacheHashEntryPtr : PLDHashEntryHdr {
+  CompareCacheHashEntryPtr();
+  ~CompareCacheHashEntryPtr();
+  CompareCacheHashEntry* entry;
 };
 
 class nsCertTreeDispInfo : public nsICertTreeItem {
@@ -54,7 +61,7 @@ class nsCertTreeDispInfo : public nsICertTreeItem {
   nsCOMPtr<nsIX509Cert> mCert;
 };
 
-class nsCertTree final : public nsICertTree {
+class nsCertTree : public nsICertTree {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICERTTREE
@@ -72,35 +79,29 @@ class nsCertTree final : public nsICertTree {
     sort_None
   };
 
- private:
-  ~nsCertTree();
+ protected:
+  virtual ~nsCertTree();
 
   void ClearCompareHash();
-  void RemoveCacheEntry(nsIX509Cert* key);
+  void RemoveCacheEntry(void* key);
 
-  using CompareCache =
-      nsTHashMap<nsIX509Cert*, std::unique_ptr<CompareCacheEntry>>;
+  typedef int (*nsCertCompareFunc)(void*, nsIX509Cert* a, nsIX509Cert* b);
 
-  using nsCertCompareFunc = int (*)(CompareCache*, nsIX509Cert* a,
-                                    nsIX509Cert* b);
-
-  static CompareCacheEntry* getCacheEntry(CompareCache* cache,
-                                          nsIX509Cert* aCert);
-  static void CmpInitCriterion(nsIX509Cert* cert, CompareCacheEntry* entry,
+  static CompareCacheHashEntry* getCacheEntry(void* cache, void* aCert);
+  static void CmpInitCriterion(nsIX509Cert* cert, CompareCacheHashEntry* entry,
                                sortCriterion crit, int32_t level);
-  static int32_t CmpByCrit(nsIX509Cert* a, CompareCacheEntry* ace,
-                           nsIX509Cert* b, CompareCacheEntry* bce,
+  static int32_t CmpByCrit(nsIX509Cert* a, CompareCacheHashEntry* ace,
+                           nsIX509Cert* b, CompareCacheHashEntry* bce,
                            sortCriterion crit, int32_t level);
-  static int32_t CmpBy(CompareCache* cache, nsIX509Cert* a, nsIX509Cert* b,
+  static int32_t CmpBy(void* cache, nsIX509Cert* a, nsIX509Cert* b,
                        sortCriterion c0, sortCriterion c1, sortCriterion c2);
-  static int32_t CmpCACert(CompareCache* cache, nsIX509Cert* a, nsIX509Cert* b);
-  static int32_t CmpUserCert(CompareCache* cache, nsIX509Cert* a,
-                             nsIX509Cert* b);
-  static int32_t CmpEmailCert(CompareCache* cache, nsIX509Cert* a,
-                              nsIX509Cert* b);
+  static int32_t CmpCACert(void* cache, nsIX509Cert* a, nsIX509Cert* b);
+  static int32_t CmpUserCert(void* cache, nsIX509Cert* a, nsIX509Cert* b);
+  static int32_t CmpEmailCert(void* cache, nsIX509Cert* a, nsIX509Cert* b);
   nsCertCompareFunc GetCompareFuncFromCertType(uint32_t aType);
   int32_t CountOrganizations();
 
+ private:
   static const uint32_t kInitialCacheLength = 64;
 
   nsTArray<RefPtr<nsCertTreeDispInfo>> mDispInfo;
@@ -109,7 +110,7 @@ class nsCertTree final : public nsICertTree {
   treeArrayEl* mTreeArray;
   int32_t mNumOrgs;
   int32_t mNumRows;
-  CompareCache mCompareCache;
+  PLDHashTable mCompareCache;
 
   treeArrayEl* GetThreadDescAtIndex(int32_t _index);
   already_AddRefed<nsIX509Cert> GetCertAtIndex(
@@ -121,9 +122,9 @@ class nsCertTree final : public nsICertTree {
 
   nsresult GetCertsByTypeFromCertList(
       const nsTArray<RefPtr<nsIX509Cert>>& aCertList, uint32_t aWantedType,
-      nsCertCompareFunc aCertCmpFn, CompareCache* aCertCmpFnArg);
+      nsCertCompareFunc aCertCmpFn, void* aCertCmpFnArg);
 
   nsCOMPtr<nsIMutableArray> mCellText;
 };
 
-#endif /* NS_CERTTREE_H_ */
+#endif /* _NS_CERTTREE_H_ */

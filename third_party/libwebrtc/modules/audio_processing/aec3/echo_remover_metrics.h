@@ -56,6 +56,8 @@ class EchoRemoverMetrics {
   bool metrics_reported_ = false;
 };
 
+namespace aec3 {
+
 // Updates a banded metric of type DbMetric with the values in the supplied
 // array.
 void UpdateDbMetric(const std::array<float, kFftLengthBy2Plus1>& value,
@@ -68,6 +70,8 @@ int TransformDbMetricForReporting(bool negate,
                                   float offset,
                                   float scaling,
                                   float value);
+
+}  // namespace aec3
 
 }  // namespace webrtc
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -134,8 +135,8 @@ void LoadImage(const char* aData, imgIContainer** aImage) {
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                      nsContentPolicyType::TYPE_IMAGE);
 
-  auto listener = MakeRefPtr<ImageLoadListener>();
-  auto tracker = MakeRefPtr<ProgressTracker>();
+  RefPtr<ImageLoadListener> listener = new ImageLoadListener();
+  RefPtr<ProgressTracker> tracker = new ProgressTracker();
   tracker->AddObserver(listener);
   RefPtr<Image> image = ImageFactory::CreateImage(
       channel, tracker, nsCString(IMAGE_SVG_XML), uri, false, 0);

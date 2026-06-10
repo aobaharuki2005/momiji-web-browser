@@ -1,4 +1,5 @@
-/* Any copyright is dedicated to the Public Domain.
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
+ * Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 package org.mozilla.geckoview.test
@@ -16,7 +17,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.gecko.EventDispatcher
-import org.mozilla.geckoview.AIFeaturesController.RuntimeAIFeatures
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.TranslationsController
@@ -35,7 +35,6 @@ import org.mozilla.geckoview.TranslationsController.SessionTranslation.Translati
 import org.mozilla.geckoview.TranslationsController.SessionTranslation.TranslationState
 import org.mozilla.geckoview.TranslationsController.TranslationsException
 import org.mozilla.geckoview.TranslationsController.TranslationsException.ERROR_COULD_NOT_TRANSLATE
-import org.mozilla.geckoview.TranslationsController.TranslationsException.ERROR_ENGINE_DEACTIVATED
 import org.mozilla.geckoview.TranslationsController.TranslationsException.ERROR_MODEL_COULD_NOT_DELETE
 import org.mozilla.geckoview.TranslationsController.TranslationsException.ERROR_MODEL_COULD_NOT_DOWNLOAD
 import org.mozilla.geckoview.TranslationsController.TranslationsException.ERROR_MODEL_DOWNLOAD_REQUIRED
@@ -129,7 +128,7 @@ class TranslationsTest : BaseSessionTest() {
     fun onTranslationStateChangeDelegateTest() {
         if (sessionRule.env.isAutomation) {
             sessionRule.delegateDuringNextWait(object : Delegate {
-                @AssertCalled(count = 2)
+                @AssertCalled(count = 1)
                 override fun onTranslationStateChange(
                     session: GeckoSession,
                     translationState: TranslationState?,
@@ -139,7 +138,7 @@ class TranslationsTest : BaseSessionTest() {
         } else {
             // For use when running from Android Studio
             sessionRule.delegateDuringNextWait(object : Delegate {
-                @AssertCalled(count = 3)
+                @AssertCalled(count = 2)
                 override fun onTranslationStateChange(
                     session: GeckoSession,
                     translationState: TranslationState?,
@@ -293,32 +292,26 @@ class TranslationsTest : BaseSessionTest() {
     fun translateTest() {
         var delegateCalled = 0
         sessionRule.delegateUntilTestEnd(object : Delegate {
-            @AssertCalled(count = 4)
+            @AssertCalled(count = 3)
             override fun onTranslationStateChange(
                 session: GeckoSession,
                 translationState: TranslationState?,
             ) {
                 delegateCalled++
-                // Actor created
+                // Before page load
                 if (delegateCalled == 1) {
                     assertTrue(
                         "Translations correctly does not have a requested pair.",
                         translationState?.requestedTranslationPair == null,
                     )
                 }
-
                 // Page load
                 if (delegateCalled == 2) {
-                    // Nothing to check here.
-                }
-
-                // Detection complete
-                if (delegateCalled == 3) {
                     assertTrue("Translations correctly has detected a page language. ", translationState?.detectedLanguages?.docLangTag == "es")
                 }
 
                 // Translate
-                if (delegateCalled == 4) {
+                if (delegateCalled == 3) {
                     assertTrue("Translations correctly has set a translation pair from language. ", translationState?.requestedTranslationPair?.fromLanguage == "es")
                     assertTrue("Translations correctly has set a translation pair to language. ", translationState?.requestedTranslationPair?.toLanguage == "en")
                 }
@@ -718,9 +711,17 @@ class TranslationsTest : BaseSessionTest() {
                 .operation(DELETE)
                 .operationLevel(ALL)
                 .build()
-            // Deleting from an empty database is a no-op.
-            sessionRule.waitForResult(RuntimeTranslation.manageLanguageModel(allDeleteAttempt))
-            assertTrue("Delete from empty database succeeds gracefully.", true)
+            try {
+                sessionRule.waitForResult(RuntimeTranslation.manageLanguageModel(allDeleteAttempt))
+                fail("Should not complete deletes in automation.")
+            } catch (e: RuntimeException) {
+                // Wait call causes a runtime exception too.
+                val te = e.cause as TranslationsException
+                assertTrue(
+                    "Correctly could not delete on automated test harness.",
+                    te.code == ERROR_MODEL_COULD_NOT_DELETE,
+                )
+            }
 
             val malformedRequest = ModelManagementOptions.Builder()
                 .operation("not-a-function")
@@ -844,71 +845,6 @@ class TranslationsTest : BaseSessionTest() {
         )
         mainSession.triggerLanguageStateChange(translated)
         sessionRule.waitForResult(handled)
-    }
-
-    @Test
-    fun testEngineDeactivatedError() {
-        sessionRule.waitForResult(RuntimeAIFeatures.setFeatureEnablement("translations", false))
-        mainSession.loadTestPath(TRANSLATIONS_ES)
-        mainSession.waitForPageStop()
-
-        try {
-            sessionRule.waitForResult(
-                sessionRule.session.sessionTranslation!!.translate("es", "en", null),
-            )
-            fail("translate should not complete when the engine is deactivated.")
-        } catch (e: RuntimeException) {
-            // Wait call causes a runtime exception too.
-            val te = e.cause as TranslationsException
-            assertTrue(
-                "Correctly could not translate when the engine is deactivated.",
-                te.code == ERROR_ENGINE_DEACTIVATED,
-            )
-        }
-
-        try {
-            sessionRule.waitForResult(
-                sessionRule.session.sessionTranslation!!.restoreOriginalPage(),
-            )
-            fail("restoreOriginalPage should not complete when the engine is deactivated.")
-        } catch (e: RuntimeException) {
-            // Wait call causes a runtime exception too.
-            val te = e.cause as TranslationsException
-            assertTrue(
-                "Correctly could not restore the page when the engine is deactivated.",
-                te.code == ERROR_ENGINE_DEACTIVATED,
-            )
-        }
-
-        try {
-            sessionRule.waitForResult(
-                sessionRule.session.sessionTranslation!!.neverTranslateSiteSetting,
-            )
-            fail("neverTranslateSiteSetting should not complete when the engine is deactivated.")
-        } catch (e: RuntimeException) {
-            // Wait call causes a runtime exception too.
-            val te = e.cause as TranslationsException
-            assertTrue(
-                "Correctly could not get never translate site setting when the engine is deactivated.",
-                te.code == ERROR_ENGINE_DEACTIVATED,
-            )
-        }
-
-        try {
-            sessionRule.waitForResult(
-                sessionRule.session.sessionTranslation!!.setNeverTranslateSiteSetting(true),
-            )
-            fail("setNeverTranslateSiteSetting should not complete when the engine is deactivated.")
-        } catch (e: RuntimeException) {
-            // Wait call causes a runtime exception too.
-            val te = e.cause as TranslationsException
-            assertTrue(
-                "Correctly could not set never translate site setting when the engine is deactivated.",
-                te.code == ERROR_ENGINE_DEACTIVATED,
-            )
-        }
-
-        sessionRule.waitForResult(RuntimeAIFeatures.setFeatureEnablement("translations", true))
     }
 
     @Test

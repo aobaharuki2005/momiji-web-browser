@@ -11,7 +11,6 @@
 #include <array>
 #include <cstdlib>
 #include <memory>
-#include <span>
 #include <vector>
 
 #include "common_audio/resampler/push_sinc_resampler.h"
@@ -75,9 +74,9 @@ TEST_P(RnnVadProbabilityParametrization, RnnVadProbabilityWithinTolerance) {
   const int num_frames = samples_reader->size() / kFrameSize10ms48kHz;
 
   // Init buffers.
-  std::array<float, kFrameSize10ms48kHz> samples_48k = {};
-  std::array<float, kFrameSize10ms24kHz> samples_24k = {};
-  std::array<float, kFeatureVectorSize> feature_vector = {};
+  std::vector<float> samples_48k(kFrameSize10ms48kHz);
+  std::vector<float> samples_24k(kFrameSize10ms24kHz);
+  std::vector<float> feature_vector(kFeatureVectorSize);
   std::vector<float> computed_vad_prob(num_frames);
   std::vector<float> expected_vad_prob(num_frames);
 
@@ -91,9 +90,10 @@ TEST_P(RnnVadProbabilityParametrization, RnnVadProbabilityWithinTolerance) {
     decimator.Resample(samples_48k.data(), samples_48k.size(),
                        samples_24k.data(), samples_24k.size());
     bool is_silence = features_extractor.CheckSilenceComputeFeatures(
-        samples_24k, feature_vector);
-    computed_vad_prob[i] =
-        rnn_vad.ComputeVadProbability(feature_vector, is_silence);
+        {samples_24k.data(), kFrameSize10ms24kHz},
+        {feature_vector.data(), kFeatureVectorSize});
+    computed_vad_prob[i] = rnn_vad.ComputeVadProbability(
+        {feature_vector.data(), kFeatureVectorSize}, is_silence);
     EXPECT_NEAR(computed_vad_prob[i], expected_vad_prob[i], 1e-3f);
     cumulative_error += std::abs(computed_vad_prob[i] - expected_vad_prob[i]);
   }
@@ -141,9 +141,8 @@ TEST_P(RnnVadProbabilityParametrization, DISABLED_RnnVadPerformance) {
     perf_timer.StartTimer();
     for (int i = 0; i < num_frames; ++i) {
       bool is_silence = features_extractor.CheckSilenceComputeFeatures(
-          std::span<const float, kFrameSize10ms24kHz>(
-              &prefetched_decimated_samples[i * kFrameSize10ms24kHz],
-              kFrameSize10ms24kHz),
+          {&prefetched_decimated_samples[i * kFrameSize10ms24kHz],
+           kFrameSize10ms24kHz},
           feature_vector);
       rnn_vad.ComputeVadProbability(feature_vector, is_silence);
     }

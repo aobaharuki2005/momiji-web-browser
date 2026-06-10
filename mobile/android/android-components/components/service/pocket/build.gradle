@@ -4,16 +4,19 @@
 
 buildscript {
     repositories {
-        gradle.configureMavenRepositories(delegate)
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url = repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
     }
 
     dependencies {
         classpath libs.kotlin.serialization
     }
-}
-
-plugins {
-    alias(libs.plugins.dependency.analysis)
 }
 
 apply plugin: 'com.android.library'
@@ -63,7 +66,6 @@ dependencies {
     testImplementation libs.androidx.test.junit
     testImplementation libs.androidx.work.testing
     testImplementation libs.kotlin.reflect
-    testImplementation libs.kotlin.test
     testImplementation libs.kotlinx.coroutines.test
     testImplementation libs.robolectric
 
@@ -74,8 +76,6 @@ dependencies {
     androidTestImplementation libs.androidx.test.core
     androidTestImplementation libs.androidx.test.rules
     androidTestImplementation libs.androidx.test.runner
-
-    androidTestRuntimeOnly libs.okhttp
 }
 
 apply from: '../../../common-config.gradle'

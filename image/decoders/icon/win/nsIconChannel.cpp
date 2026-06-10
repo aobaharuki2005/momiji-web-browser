@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -476,7 +477,7 @@ static nsresult GetIconHandleFromURLBlocking(nsIMozIconURI* aUrl,
 }
 
 static RefPtr<HIconPromise> GetIconHandleFromURLAsync(nsIMozIconURI* aUrl) {
-  auto promise = MakeRefPtr<HIconPromise::Private>(__func__);
+  RefPtr<HIconPromise::Private> promise = new HIconPromise::Private(__func__);
 
   nsAutoCString stockIcon;
   aUrl->GetStockIcon(stockIcon);
@@ -521,7 +522,8 @@ static RefPtr<HIconPromise> GetIconHandleFromURLAsync(nsIMozIconURI* aUrl) {
 
 static RefPtr<nsIconChannel::ByteBufPromise> GetIconBufferFromURLAsync(
     nsIMozIconURI* aUrl) {
-  auto promise = MakeRefPtr<nsIconChannel::ByteBufPromise::Private>(__func__);
+  RefPtr<nsIconChannel::ByteBufPromise::Private> promise =
+      new nsIconChannel::ByteBufPromise::Private(__func__);
 
   GetIconHandleFromURLAsync(aUrl)->Then(
       GetCurrentSerialEventTarget(), __func__,
@@ -959,16 +961,16 @@ nsIconChannel::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
 
 // nsIRequestObserver methods
 NS_IMETHODIMP nsIconChannel::OnStartRequest(nsIRequest* aRequest) {
-  if (nsCOMPtr<nsIStreamListener> listener = mListener) {
-    return listener->OnStartRequest(this);
+  if (mListener) {
+    return mListener->OnStartRequest(this);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
-  if (nsCOMPtr<nsIStreamListener> listener = mListener) {
-    listener->OnStopRequest(this, aStatus);
+  if (mListener) {
+    mListener->OnStopRequest(this, aStatus);
     mListener = nullptr;
   }
 
@@ -987,8 +989,8 @@ nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
 NS_IMETHODIMP
 nsIconChannel::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
                                uint64_t aOffset, uint32_t aCount) {
-  if (nsCOMPtr<nsIStreamListener> listener = mListener) {
-    return listener->OnDataAvailable(this, aStream, aOffset, aCount);
+  if (mListener) {
+    return mListener->OnDataAvailable(this, aStream, aOffset, aCount);
   }
   return NS_OK;
 }

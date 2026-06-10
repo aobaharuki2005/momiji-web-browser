@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -38,8 +40,7 @@ XULButtonElement::XULButtonElement(
     : nsXULElement(std::move(aNodeInfo)),
       mIsAlwaysMenu(IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menulist,
                                        nsGkAtoms::menuitem)),
-      mCheckable(IsAnyOfXULElements(nsGkAtoms::menuitem,
-                                    nsGkAtoms::richlistitem, nsGkAtoms::radio,
+      mCheckable(IsAnyOfXULElements(nsGkAtoms::menuitem, nsGkAtoms::radio,
                                     nsGkAtoms::checkbox)) {}
 
 XULButtonElement::~XULButtonElement() {
@@ -75,7 +76,7 @@ void XULButtonElement::PopupClosed(bool aDeselectMenu) {
     return;
   }
   nsContentUtils::AddScriptRunner(
-      MakeAndAddRef<nsUnsetAttrRunnable>(this, nsGkAtoms::open));
+      new nsUnsetAttrRunnable(this, nsGkAtoms::open));
 
   if (aDeselectMenu) {
     if (RefPtr<XULMenuParentElement> parent = GetMenuParent()) {
@@ -553,8 +554,7 @@ nsresult XULButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       if (!keyEvent) {
         break;
       }
-      if (keyEvent->ShouldWorkAsSpaceKey() && aVisitor.mPresContext &&
-          !IsDisabled()) {
+      if (keyEvent->ShouldWorkAsSpaceKey() && aVisitor.mPresContext) {
         EventStateManager* esm = aVisitor.mPresContext->EventStateManager();
         // :hover:active state
         esm->SetContentState(this, ElementState::HOVER);
@@ -564,13 +564,13 @@ nsresult XULButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       break;
     }
 
+// On mac, Return fires the default button, not the focused one.
+#ifndef XP_MACOSX
     case eKeyPress: {
       WidgetKeyboardEvent* keyEvent = event->AsKeyboardEvent();
       if (!keyEvent) {
         break;
       }
-// On mac, Return fires the default button, not the focused one.
-#ifndef XP_MACOSX
       if (NS_VK_RETURN == keyEvent->mKeyCode) {
         if (RefPtr<nsIDOMXULButtonElement> button = AsXULButton()) {
           if (OnPointerClicked(*keyEvent)) {
@@ -578,13 +578,9 @@ nsresult XULButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           }
         }
       }
-#endif
-      if (keyEvent->ShouldWorkAsSpaceKey() && mIsHandlingKeyEvent) {
-        // Prevent scrolling.
-        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-      }
       break;
     }
+#endif
 
     case eKeyUp: {
       WidgetKeyboardEvent* keyEvent = event->AsKeyboardEvent();
@@ -593,7 +589,9 @@ nsresult XULButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       }
       if (keyEvent->ShouldWorkAsSpaceKey()) {
         mIsHandlingKeyEvent = false;
-        if (State().HasAllStates(ElementState::ACTIVE | ElementState::HOVER) &&
+        ElementState buttonState = State();
+        if (buttonState.HasAllStates(ElementState::ACTIVE |
+                                     ElementState::HOVER) &&
             aVisitor.mPresContext) {
           // return to normal state
           EventStateManager* esm = aVisitor.mPresContext->EventStateManager();
@@ -625,8 +623,9 @@ nsresult XULButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 }
 
 void XULButtonElement::Blurred() {
+  ElementState buttonState = State();
   if (mIsHandlingKeyEvent &&
-      State().HasAllStates(ElementState::ACTIVE | ElementState::HOVER)) {
+      buttonState.HasAllStates(ElementState::ACTIVE | ElementState::HOVER)) {
     // Return to normal state
     if (nsPresContext* pc = OwnerDoc()->GetPresContext()) {
       EventStateManager* esm = pc->EventStateManager();
@@ -641,11 +640,6 @@ bool XULButtonElement::OnPointerClicked(WidgetGUIEvent& aEvent) {
   // Don't execute if we're disabled.
   if (IsDisabled() || !IsInComposedDoc()) {
     return false;
-  }
-
-  if (NodeInfo()->Equals(nsGkAtoms::checkbox)) {
-    // Toggle `checked` now so that command handling sees the right state.
-    SetBoolAttr(nsGkAtoms::checked, !GetBoolAttr(nsGkAtoms::checked));
   }
 
   // Have the content handle the event, propagating it according to normal DOM
@@ -717,24 +711,6 @@ void XULButtonElement::UncheckRadioSiblings() {
   }
 }
 
-nsAtom* XULButtonElement::GetCheckedStateAttribute() const {
-  // <menuitem> uses checked for type=radio / type=checkbox, and selected for
-  // <menulist>.
-  //
-  // <richlistitem> uses checked, and <radio> uses selected. Note that
-  // <richlistitem> uses selected with a different meaning as well (for the
-  // currently selected / focused item), so this code needs to deal with that.
-  MOZ_ASSERT(mCheckable);
-  if (auto menuType = GetMenuType()) {
-    return *menuType == MenuType::Normal ? nsGkAtoms::selected
-                                         : nsGkAtoms::checked;
-  }
-  if (NodeInfo()->Equals(nsGkAtoms::radio)) {
-    return nsGkAtoms::selected;
-  }
-  return nsGkAtoms::checked;
-}
-
 void XULButtonElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                     const nsAttrValue* aValue,
                                     const nsAttrValue* aOldValue,
@@ -745,14 +721,15 @@ void XULButtonElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   if (aNamespaceID != kNameSpaceID_None) {
     return;
   }
-  if (mCheckable) {
-    if (aName == GetCheckedStateAttribute()) {
-      SetStates(ElementState::CHECKED, !!aValue, aNotify);
-    }
-    if (IsAlwaysMenu() && aName == nsGkAtoms::type) {
-      SetStates(ElementState::CHECKED, GetBoolAttr(GetCheckedStateAttribute()),
-                aNotify);
-    }
+  if (mCheckable &&
+      (aName == nsGkAtoms::checked || aName == nsGkAtoms::selected)) {
+    // <menuitem> uses checked for type=radio / type=checkbox and selected for
+    // menulists. <radio> uses selected, but <checkbox> uses checked. We just
+    // make both work for simplicity (also matches historical behavior).
+    const bool checked =
+        aValue || GetBoolAttr(aName == nsGkAtoms::checked ? nsGkAtoms::selected
+                                                          : nsGkAtoms::checked);
+    SetStates(ElementState::CHECKED, checked, aNotify);
   }
   if (aName == nsGkAtoms::disabled) {
     SetStates(ElementState::DISABLED, !!aValue, aNotify);

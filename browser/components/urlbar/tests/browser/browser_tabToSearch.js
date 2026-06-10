@@ -26,7 +26,6 @@ add_setup(async function () {
       // that specifically address onboarding.
       ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
       ["browser.urlbar.scotchBonnet.enableOverride", false],
-      ["browser.urlbar.autoFill.adaptiveHistory.enabled", false],
     ],
   });
 
@@ -36,10 +35,7 @@ add_setup(async function () {
   });
 
   for (let i = 0; i < 3; i++) {
-    await PlacesTestUtils.addVisits({
-      url: `https://${TEST_ENGINE_DOMAIN}/`,
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    });
+    await PlacesTestUtils.addVisits([`https://${TEST_ENGINE_DOMAIN}/`]);
   }
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   registerCleanupFunction(async () => {
@@ -83,8 +79,9 @@ add_task(async function basic() {
   );
   let [actionTabToSearch] = await document.l10n.formatValues([
     {
-      id: SearchService.getEngineByName(tabToSearchDetails.searchParams.engine)
-        .isGeneralPurposeEngine
+      id: Services.search.getEngineByName(
+        tabToSearchDetails.searchParams.engine
+      ).isGeneralPurposeEngine
         ? "urlbar-result-action-tabtosearch-web"
         : "urlbar-result-action-tabtosearch-other-engine",
       args: { engine: tabToSearchDetails.searchParams.engine },
@@ -273,7 +270,7 @@ add_task(async function tab_key_race() {
      * A no-op test provider.
      * We use this to wait for the query to start, because otherwise TAB will
      * move to the next widget since the panel is closed and there's no running
-     * query. This means waiting for the ProvidersManager to at least
+     * query. This means waiting for the UrlbarProvidersManager to at least
      * evaluate the isActive status of providers.
      * In the future we should try to reduce this latency, to defer user events
      * even more efficiently.
@@ -300,10 +297,9 @@ add_task(async function tab_key_race() {
       }
     }
     let provider = new ListeningTestProvider();
-    let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-    providersManager.registerProvider(provider);
+    UrlbarProvidersManager.registerProvider(provider);
     registerCleanupFunction(async function () {
-      providersManager.unregisterProvider(provider);
+      UrlbarProvidersManager.unregisterProvider(provider);
     });
   });
   gURLBar.focus();
@@ -384,7 +380,7 @@ add_task(async function onboard() {
         },
       },
       {
-        id: SearchService.getEngineByName(
+        id: Services.search.getEngineByName(
           onboardingElement.result.payload.engine
         ).isGeneralPurposeEngine
           ? "urlbar-result-action-tabtosearch-web"

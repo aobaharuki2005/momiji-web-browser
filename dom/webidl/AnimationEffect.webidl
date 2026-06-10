@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -25,35 +26,31 @@ enum PlaybackDirection {
 };
 
 dictionary EffectTiming {
-  // TODO: delay and endDelay should no longer have default values:
-  // https://drafts.csswg.org/web-animations-2/#the-effecttiming-dictionaries
-  double                                                  delay = 0.0;
-  double                                                  endDelay = 0.0;
-  FillMode                                                fill = "auto";
-  double                                                  iterationStart = 0.0;
-  unrestricted double                                     iterations = 1.0;
-  (unrestricted double or CSSNumericValue or DOMString)   duration = "auto";
-  PlaybackDirection                                       direction = "normal";
-  UTF8String                                              easing = "linear";
+  double                              delay = 0.0;
+  double                              endDelay = 0.0;
+  FillMode                            fill = "auto";
+  double                              iterationStart = 0.0;
+  unrestricted double                 iterations = 1.0;
+  (unrestricted double or DOMString)  duration = "auto";
+  PlaybackDirection                   direction = "normal";
+  UTF8String                          easing = "linear";
 };
 
 dictionary OptionalEffectTiming {
-  double                                                  delay;
-  double                                                  endDelay;
-  FillMode                                                fill;
-  double                                                  iterationStart;
-  unrestricted double                                     iterations;
-  // CSSNumericValue isn't currently in the spec, but that's probably a bug:
-  // https://github.com/w3c/csswg-drafts/issues/13990
-  (unrestricted double or CSSNumericValue or DOMString)   duration;
-  PlaybackDirection                                       direction;
-  UTF8String                                              easing;
+  double                              delay;
+  double                              endDelay;
+  FillMode                            fill;
+  double                              iterationStart;
+  unrestricted double                 iterations;
+  (unrestricted double or DOMString)  duration;
+  PlaybackDirection                   direction;
+  UTF8String                          easing;
 };
 
 dictionary ComputedEffectTiming : EffectTiming {
-  CSSNumberish          endTime;
-  CSSNumberish          activeDuration;
-  CSSNumberish?         localTime;
+  unrestricted double   endTime = 0.0;
+  unrestricted double   activeDuration = 0.0;
+  double?               localTime = null;
   double?               progress = null;
   unrestricted double?  currentIteration = null;
 };

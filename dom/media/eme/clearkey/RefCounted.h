@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef RefCount_h_
-#define RefCount_h_
+#ifndef __RefCount_h__
+#define __RefCount_h__
 
 #include <assert.h>
 #include <stdint.h>
@@ -82,4 +82,4 @@ class RefPtr {
   T* mPtr = nullptr;
 };
 
-#endif  // RefCount_h_
+#endif  // __RefCount_h__

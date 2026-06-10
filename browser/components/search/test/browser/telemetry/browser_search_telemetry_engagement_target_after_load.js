@@ -69,6 +69,18 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
+// The impression and ad impression doesn't change across tests.
+const IMPRESSION = {
+  provider: "example",
+  tagged: "true",
+  partner_code: "ff",
+  source: "unknown",
+  is_shopping_page: "false",
+  is_private: "false",
+  shopping_tab_displayed: "false",
+  is_signed_in: "false",
+};
+
 const AD_IMPRESSIONS = [
   {
     component: SearchSERPTelemetryUtils.COMPONENTS.AD_SITELINK,
@@ -107,6 +119,7 @@ add_task(async function test_click_ad_created_after_page_load() {
   info("Assert the page has had its components categorized.");
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       adImpressions: AD_IMPRESSIONS,
     },
   ]);
@@ -130,6 +143,7 @@ add_task(async function test_click_ad_created_after_page_load() {
 
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
@@ -152,6 +166,7 @@ add_task(async function test_click_non_ad_created_after_page_load() {
   info("Assert the page has had its components categorized.");
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       adImpressions: AD_IMPRESSIONS,
     },
   ]);
@@ -175,6 +190,7 @@ add_task(async function test_click_non_ad_created_after_page_load() {
 
   assertSERPTelemetry([
     {
+      impression: IMPRESSION,
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,

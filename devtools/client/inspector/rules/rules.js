@@ -11,7 +11,6 @@ const {
 } = require("resource://devtools/shared/constants.js");
 const {
   PSEUDO_CLASSES,
-  ELEMENT_SPECIFIC_PSEUDO_CLASSES,
 } = require("resource://devtools/shared/css/constants.js");
 const OutputParser = require("resource://devtools/client/shared/output-parser.js");
 const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
@@ -21,6 +20,7 @@ const RegisteredPropertyEditor = require("resource://devtools/client/inspector/r
 const TooltipsOverlay = require("resource://devtools/client/inspector/shared/tooltips-overlay.js");
 const {
   createChild,
+  promiseWarn,
 } = require("resource://devtools/client/inspector/shared/utils.js");
 const { debounce } = require("resource://devtools/shared/debounce.js");
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
@@ -80,7 +80,6 @@ const PREF_DEFAULT_COLOR_UNIT = "devtools.defaultColorUnit";
 const PREF_DRAGGABLE = "devtools.inspector.draggable_properties";
 const PREF_INPLACE_EDITOR_FOCUS_NEXT_ON_ENTER =
   "devtools.inspector.rule-view.focusNextOnEnter";
-const PREF_CSS_EXPLAINERS = "devtools.inspector.css-explainers";
 const FILTER_CHANGED_TIMEOUT = 150;
 // Removes the flash-out class from an element after 1 second (100ms in tests so they
 // don't take too long to run).
@@ -93,10 +92,7 @@ const FILTER_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*;?$/;
 const FILTER_STRICT_RE = /\s*`(.*?)`\s*$/;
 
 const RULE_VIEW_HEADER_CLASSNAME = "ruleview-header";
-
-// List of all container IDs, order by typical order of display
 const PSEUDO_ELEMENTS_CONTAINER_ID = "pseudo-elements-container";
-const ELEMENT_CONTAINER_ID = "element-container";
 const REGISTERED_PROPERTIES_CONTAINER_ID = "registered-properties-container";
 const POSITION_TRY_CONTAINER_ID = "position-try-container";
 
@@ -164,40 +160,41 @@ class CssRuleView extends EventEmitter {
     // Allow tests to override debouncing behavior, as this can cause intermittents.
     this.debounce = debounce;
 
-    // Used by TextPropertyEditor
-    this.outputParser = new OutputParser(document, this.cssProperties);
+    // Variable used to stop the propagation of mouse events to children
+    // when we are updating a value by dragging the mouse and we then release it
+    this.childHasDragged = false;
+
+    this._outputParser = new OutputParser(document, this.cssProperties);
+    this._abortController = new this.styleWindow.AbortController();
 
     this.addNewRule = this.addNewRule.bind(this);
+    this._onContextMenu = this._onContextMenu.bind(this);
+    this._onCopy = this._onCopy.bind(this);
+    this._onFilterStyles = this._onFilterStyles.bind(this);
+    this._onClearSearch = this._onClearSearch.bind(this);
+    this._onTogglePseudoClassPanel = this._onTogglePseudoClassPanel.bind(this);
+    this._onTogglePseudoClass = this._onTogglePseudoClass.bind(this);
+    this._onToggleClassPanel = this._onToggleClassPanel.bind(this);
+    this._onToggleLightColorSchemeSimulation =
+      this._onToggleLightColorSchemeSimulation.bind(this);
+    this._onToggleDarkColorSchemeSimulation =
+      this._onToggleDarkColorSchemeSimulation.bind(this);
+    this._onTogglePrintSimulation = this._onTogglePrintSimulation.bind(this);
+    this.highlightProperty = this.highlightProperty.bind(this);
     this.refreshPanel = this.refreshPanel.bind(this);
-
-    this.#abortController = new this.styleWindow.AbortController();
-    const { signal } = this.#abortController;
-    const baseEventConfig = { signal };
 
     const doc = this.styleDocument;
     // Delegate bulk handling of events happening within the DOM tree of the Rules view
     // to this.handleEvent(). Listening on the capture phase of the event bubbling to be
     // able to stop event propagation on a case-by-case basis and prevent event target
     // ancestor nodes from handling them.
-    this.styleDocument.addEventListener("click", this, {
-      capture: true,
-      signal,
-    });
+    this.styleDocument.addEventListener("click", this, { capture: true });
     this.element = doc.getElementById("ruleview-container-focusable");
     this.addRuleButton = doc.getElementById("ruleview-add-rule-button");
     this.searchField = doc.getElementById("ruleview-searchbox");
     this.searchClearButton = doc.getElementById("ruleview-searchinput-clear");
     this.pseudoClassPanel = doc.getElementById("pseudo-class-panel");
     this.pseudoClassToggle = doc.getElementById("pseudo-class-panel-toggle");
-    this.pseudoClassesStandardPanel = doc.getElementById(
-      "pseudo-classes-standard"
-    );
-    this.pseudoClassesElementSpecificPanel = doc.getElementById(
-      "pseudo-classes-element-specific"
-    );
-    this.pseudoClassesElementSpecificHeading = doc.getElementById(
-      "pseudo-classes-element-specific-heading"
-    );
     this.classPanel = doc.getElementById("ruleview-class-panel");
     this.classToggle = doc.getElementById("class-panel-toggle");
     this.colorSchemeLightSimulationButton = doc.getElementById(
@@ -208,7 +205,7 @@ class CssRuleView extends EventEmitter {
     );
     this.printSimulationButton = doc.getElementById("print-simulation-toggle");
 
-    this.#initSimulationFeatures();
+    this._initSimulationFeatures();
 
     this.searchClearButton.hidden = true;
 
@@ -226,49 +223,25 @@ class CssRuleView extends EventEmitter {
     );
 
     this.shortcuts = new KeyShortcuts({ window: this.styleWindow });
-    this.shortcuts.on("Escape", event => this.#onShortcut("Escape", event));
-    this.shortcuts.on("Return", event => this.#onShortcut("Return", event));
-    this.shortcuts.on("Space", event => this.#onShortcut("Space", event));
+    this._onShortcut = this._onShortcut.bind(this);
+    this.shortcuts.on("Escape", event => this._onShortcut("Escape", event));
+    this.shortcuts.on("Return", event => this._onShortcut("Return", event));
+    this.shortcuts.on("Space", event => this._onShortcut("Space", event));
     this.shortcuts.on("CmdOrCtrl+F", event =>
-      this.#onShortcut("CmdOrCtrl+F", event)
+      this._onShortcut("CmdOrCtrl+F", event)
     );
-    this.element.addEventListener("copy", this.#onCopy, baseEventConfig);
-    this.element.addEventListener(
-      "contextmenu",
-      this.#onContextMenu,
-      baseEventConfig
-    );
-    this.addRuleButton.addEventListener(
-      "click",
-      this.addNewRule,
-      baseEventConfig
-    );
-    this.searchField.addEventListener(
-      "input",
-      this.#onFilterStyles,
-      baseEventConfig
-    );
-    this.searchClearButton.addEventListener(
-      "click",
-      this.#onClearSearch,
-      baseEventConfig
-    );
+    this.element.addEventListener("copy", this._onCopy);
+    this.element.addEventListener("contextmenu", this._onContextMenu);
+    this.addRuleButton.addEventListener("click", this.addNewRule);
+    this.searchField.addEventListener("input", this._onFilterStyles);
+    this.searchClearButton.addEventListener("click", this._onClearSearch);
     this.pseudoClassToggle.addEventListener(
       "click",
-      this.#onTogglePseudoClassPanel,
-      baseEventConfig
+      this._onTogglePseudoClassPanel
     );
-    this.classToggle.addEventListener(
-      "click",
-      this.#onToggleClassPanel,
-      baseEventConfig
-    );
+    this.classToggle.addEventListener("click", this._onToggleClassPanel);
     // The "change" event bubbles up from checkbox inputs nested within the panel container.
-    this.pseudoClassPanel.addEventListener(
-      "change",
-      this.#onTogglePseudoClass,
-      baseEventConfig
-    );
+    this.pseudoClassPanel.addEventListener("change", this._onTogglePseudoClass);
 
     if (flags.testing) {
       // In tests, we start listening immediately to avoid having to simulate a mousemove.
@@ -279,153 +252,99 @@ class CssRuleView extends EventEmitter {
         () => {
           this.highlighters.addToView(this);
         },
-        { once: true, signal }
+        { once: true }
       );
     }
 
-    this.#prefObserver = new PrefObserver("devtools.");
-    this.#prefObserver.on(PREF_UA_STYLES, this.#handleUAStylePrefChange);
-    this.#prefObserver.on(
-      PREF_DEFAULT_COLOR_UNIT,
-      this.#handleDefaultColorUnitPrefChange
-    );
-    this.#prefObserver.on(PREF_DRAGGABLE, this.#handleDraggablePrefChange);
-    // Initialize value of this.draggablePropertiesEnabled
-    this.#handleDraggablePrefChange();
+    this._handlePrefChange = this._handlePrefChange.bind(this);
+    this._handleUAStylePrefChange = this._handleUAStylePrefChange.bind(this);
+    this._handleDefaultColorUnitPrefChange =
+      this._handleDefaultColorUnitPrefChange.bind(this);
+    this._handleDraggablePrefChange =
+      this._handleDraggablePrefChange.bind(this);
+    this._handleInplaceEditorFocusNextOnEnterPrefChange =
+      this._handleInplaceEditorFocusNextOnEnterPrefChange.bind(this);
 
-    this.#prefObserver.on(
+    this._prefObserver = new PrefObserver("devtools.");
+    this._prefObserver.on(PREF_UA_STYLES, this._handleUAStylePrefChange);
+    this._prefObserver.on(
+      PREF_DEFAULT_COLOR_UNIT,
+      this._handleDefaultColorUnitPrefChange
+    );
+    this._prefObserver.on(PREF_DRAGGABLE, this._handleDraggablePrefChange);
+    // Initialize value of this.draggablePropertiesEnabled
+    this._handleDraggablePrefChange();
+
+    this._prefObserver.on(
       PREF_INPLACE_EDITOR_FOCUS_NEXT_ON_ENTER,
-      this.#handleInplaceEditorFocusNextOnEnterPrefChange
+      this._handleInplaceEditorFocusNextOnEnterPrefChange
     );
     // Initialize value of this.inplaceEditorFocusNextOnEnter
-    this.#handleInplaceEditorFocusNextOnEnterPrefChange();
+    this._handleInplaceEditorFocusNextOnEnterPrefChange();
 
-    // Used from tests
-    this.pseudoClassCheckboxes = this.#createCheckboxes(
-      PSEUDO_CLASSES,
-      this.pseudoClassesStandardPanel
-    );
-    this.elementSpecificPseudoClassCheckboxes = this.#createCheckboxes(
-      Object.keys(ELEMENT_SPECIFIC_PSEUDO_CLASSES),
-      this.pseudoClassesElementSpecificPanel
-    );
-    this.#showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
-    this.cssExplainersEnabled = Services.prefs.getBoolPref(
-      PREF_CSS_EXPLAINERS,
-      false
-    );
+    this.pseudoClassCheckboxes = this._createPseudoClassCheckboxes();
+    this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
 
     // Add the tooltips and highlighters to the view
     this.tooltips = new TooltipsOverlay(this);
 
-    // Used from RuleViewTool class
     this.cssRegisteredPropertiesByTarget = new Map();
-
-    this.#elementsWithPendingClicks = new this.styleWindow.WeakSet();
+    this._elementsWithPendingClicks = new this.styleWindow.WeakSet();
   }
 
-  #abortController;
-
-  #prefObserver;
-  #elementsWithPendingClicks;
-  #showUserAgentStyles;
-  #focusNextUserAddedRule;
-
-  // References to all active rule containers DOM Elements.
-  // Containers can be: "pseudo element", "inherited by", "keyframes",...
-  // Map(String => Object { header: DOM Element, container: DOM Element} )
-  // Map(Container ID => Header and container DOM Elements)
-  #containers = new Map();
-
-  // Variable used to stop the propagation of mouse events to children
-  // when we are updating a value by dragging the mouse and we then release it
-  #childHasDragged = false;
-
   // The element that we're inspecting.
-  // (Used from RuleViewTool class)
-  selectedNodeFront = null;
+  _viewedElement = null;
 
   // Used for cancelling timeouts in the style filter.
-  #filterChangedTimeout = null;
+  _filterChangedTimeout = null;
 
-  // Empty, unconnected element of the same type as this selected node,
-  // used to figure out how shorthand properties will be parsed.
-  #dummyElement = null;
-
-  #popup;
+  // Empty, unconnected element of the same type as this node, used
+  // to figure out how shorthand properties will be parsed.
+  _dummyElement = null;
 
   get popup() {
-    if (!this.#popup) {
+    if (!this._popup) {
       // The popup will be attached to the toolbox document.
-      this.#popup = new AutocompletePopup(this.inspector.toolbox.doc, {
+      this._popup = new AutocompletePopup(this.inspector.toolbox.doc, {
         autoSelect: true,
       });
     }
 
-    return this.#popup;
+    return this._popup;
   }
 
-  #classListPreviewer;
   get classListPreviewer() {
-    if (!this.#classListPreviewer) {
-      this.#classListPreviewer = new ClassListPreviewer(
+    if (!this._classListPreviewer) {
+      this._classListPreviewer = new ClassListPreviewer(
         this.inspector,
         this.classPanel
       );
     }
 
-    return this.#classListPreviewer;
+    return this._classListPreviewer;
   }
 
-  #contextMenu;
   get contextMenu() {
-    if (!this.#contextMenu) {
-      this.#contextMenu = new StyleInspectorMenu(this, { isRuleView: true });
+    if (!this._contextMenu) {
+      this._contextMenu = new StyleInspectorMenu(this, { isRuleView: true });
     }
 
-    return this.#contextMenu;
+    return this._contextMenu;
   }
 
-  // Get the dummy element.
+  // Get the dummy elemenet.
   get dummyElement() {
-    return this.#dummyElement;
-  }
-
-  #refreshDummyElement() {
-    // Only update the dummy element if the selected element's tag is different.
-    if (
-      !this.selectedNodeFront ||
-      this.#dummyElement?.tagName === this.selectedNodeFront.tagName
-    ) {
-      return;
-    }
-
-    // To figure out how shorthand properties are interpreted by the
-    // engine, we will set properties on a dummy element and observe
-    // how their .style attribute reflects them as computed values.
-    try {
-      // ::before and ::after do not have a namespaceURI
-      const namespaceURI =
-        this.selectedNodeFront.namespaceURI ||
-        this.styleDocument.documentElement.namespaceURI;
-      this.#dummyElement = this.styleDocument.createElementNS(
-        namespaceURI,
-        this.selectedNodeFront.tagName
-      );
-    } catch (e) {
-      console.error("Error while creating dummy element", e);
-    }
+    return this._dummyElement;
   }
 
   // Get the highlighters overlay from the Inspector.
-  #highlighters;
   get highlighters() {
-    if (!this.#highlighters) {
+    if (!this._highlighters) {
       // highlighters is a lazy getter in the inspector.
-      this.#highlighters = this.inspector.highlighters;
+      this._highlighters = this.inspector.highlighters;
     }
 
-    return this.#highlighters;
+    return this._highlighters;
   }
 
   // Get the filter search value.
@@ -434,7 +353,7 @@ class CssRuleView extends EventEmitter {
   }
 
   get rules() {
-    return this.elementStyle ? this.elementStyle.rules : [];
+    return this._elementStyle ? this._elementStyle.rules : [];
   }
 
   get currentTarget() {
@@ -520,8 +439,8 @@ class CssRuleView extends EventEmitter {
    * @param {MouseEvent|UIEvent} event
    */
   handleEvent(event) {
-    if (this.#childHasDragged) {
-      this.#childHasDragged = false;
+    if (this.childHasDragged) {
+      this.childHasDragged = false;
       event.stopPropagation();
       return;
     }
@@ -552,7 +471,7 @@ class CssRuleView extends EventEmitter {
       // dataset.computedSelector will be initially empty for inline styles (inherited or not)
       // Rules associated with a regular selector should have this data-attribute
       // set in devtools/client/inspector/rules/views/rule-editor.js
-      const rule = getRuleFromNode(target, this.elementStyle);
+      const rule = getRuleFromNode(target, this._elementStyle);
       if (selector === "") {
         try {
           if (rule.inherited) {
@@ -600,7 +519,7 @@ class CssRuleView extends EventEmitter {
 
     const valueSpan = target.closest(".ruleview-propertyvalue");
     if (valueSpan) {
-      if (this.#elementsWithPendingClicks.has(valueSpan)) {
+      if (this._elementsWithPendingClicks.has(valueSpan)) {
         // When we start handling a drag in the TextPropertyEditor valueSpan,
         // we make the valueSpan capture the pointer. Then, `click` event target is always
         // the valueSpan with the latest spec of Pointer Events.
@@ -701,29 +620,24 @@ class CssRuleView extends EventEmitter {
   /**
    * Enables the print and color scheme simulation only for local and remote tab debugging.
    */
-  async #initSimulationFeatures() {
+  async _initSimulationFeatures() {
     if (!this.inspector.commands.descriptorFront.isTabDescriptor) {
       return;
     }
     this.colorSchemeLightSimulationButton.removeAttribute("hidden");
     this.colorSchemeDarkSimulationButton.removeAttribute("hidden");
     this.printSimulationButton.removeAttribute("hidden");
-    const { signal } = this.#abortController;
-    const baseEventConfig = { signal };
     this.printSimulationButton.addEventListener(
       "click",
-      this.#onTogglePrintSimulation,
-      baseEventConfig
+      this._onTogglePrintSimulation
     );
     this.colorSchemeLightSimulationButton.addEventListener(
       "click",
-      this.#onToggleLightColorSchemeSimulation,
-      baseEventConfig
+      this._onToggleLightColorSchemeSimulation
     );
     this.colorSchemeDarkSimulationButton.addEventListener(
       "click",
-      this.#onToggleDarkColorSchemeSimulation,
-      baseEventConfig
+      this._onToggleDarkColorSchemeSimulation
     );
     const { rfpCSSColorScheme } = this.inspector.walker;
     if (rfpCSSColorScheme) {
@@ -746,7 +660,7 @@ class CssRuleView extends EventEmitter {
    * Otherwise, returns null if the node isn't anything we care about.
    */
   getNodeInfo(node) {
-    return getNodeInfo(node, this.elementStyle);
+    return getNodeInfo(node, this._elementStyle);
   }
 
   /**
@@ -767,7 +681,7 @@ class CssRuleView extends EventEmitter {
   async getNodeCompatibilityInfo(node) {
     const compatibilityInfo = await getNodeCompatibilityInfo(
       node,
-      this.elementStyle
+      this._elementStyle
     );
 
     return compatibilityInfo;
@@ -776,11 +690,12 @@ class CssRuleView extends EventEmitter {
   /**
    * Context menu handler.
    */
-  #onContextMenu = event => {
-    const inInput = event.composedTarget.matches(
-      "input:is([type=text], [type=search], :not([type])), textarea"
-    );
-    if (inInput) {
+  _onContextMenu(event) {
+    if (
+      event.originalTarget.closest("input[type=text]") ||
+      event.originalTarget.closest("input:not([type])") ||
+      event.originalTarget.closest("textarea")
+    ) {
       return;
     }
 
@@ -788,7 +703,7 @@ class CssRuleView extends EventEmitter {
     event.preventDefault();
 
     this.contextMenu.show(event);
-  };
+  }
 
   /**
    * Callback for copy event. Copy the selected text.
@@ -796,13 +711,13 @@ class CssRuleView extends EventEmitter {
    * @param {Event} event
    *        copy event object.
    */
-  #onCopy = event => {
+  _onCopy(event) {
     if (event) {
       this.copySelection(event.target);
       event.preventDefault();
       event.stopPropagation();
     }
-  };
+  }
 
   /**
    * Copy the current selection. The current target is necessary
@@ -844,14 +759,15 @@ class CssRuleView extends EventEmitter {
    * Add a new rule to the current element.
    */
   addNewRule() {
-    // Clear the search input so the new rule is visible
-    this.#onClearSearch({ focusSearchField: false });
+    const elementStyle = this._elementStyle;
+    const element = elementStyle.element;
+    const pseudoClasses = element.pseudoClassLocks;
 
-    this.#focusNextUserAddedRule = true;
-    this.pageStyle.addNewRule(
-      this.selectedNodeFront,
-      this.selectedNodeFront.pseudoClassLocks
-    );
+    // Clear the search input so the new rule is visible
+    this._onClearSearch();
+
+    this._focusNextUserAddedRule = true;
+    this.pageStyle.addNewRule(element, pseudoClasses);
   }
 
   /**
@@ -861,7 +777,14 @@ class CssRuleView extends EventEmitter {
    * @returns {boolean}
    */
   canAddNewRuleForSelectedNode() {
-    return this.selectedNodeFront && this.inspector.selection.isElementNode();
+    return this._viewedElement && this.inspector.selection.isElementNode();
+  }
+
+  /**
+   * Disables add rule button when needed
+   */
+  refreshAddRuleButtonState() {
+    this.addRuleButton.disabled = !this.canAddNewRuleForSelectedNode();
   }
 
   /**
@@ -875,16 +798,16 @@ class CssRuleView extends EventEmitter {
     );
   }
 
-  #handleUAStylePrefChange = () => {
-    this.#showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
-    this.#handlePrefChange(PREF_UA_STYLES);
-  };
+  _handleUAStylePrefChange() {
+    this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
+    this._handlePrefChange(PREF_UA_STYLES);
+  }
 
-  #handleDefaultColorUnitPrefChange = () => {
-    this.#handlePrefChange(PREF_DEFAULT_COLOR_UNIT);
-  };
+  _handleDefaultColorUnitPrefChange() {
+    this._handlePrefChange(PREF_DEFAULT_COLOR_UNIT);
+  }
 
-  #handleDraggablePrefChange = () => {
+  _handleDraggablePrefChange() {
     this.draggablePropertiesEnabled = Services.prefs.getBoolPref(
       PREF_DRAGGABLE,
       false
@@ -893,25 +816,25 @@ class CssRuleView extends EventEmitter {
     // update their draggable behavior. Preferences observer are costly, so
     // we are forwarding the preference update via the EventEmitter.
     this.emit("draggable-preference-updated");
-  };
+  }
 
-  #handleInplaceEditorFocusNextOnEnterPrefChange = () => {
+  _handleInplaceEditorFocusNextOnEnterPrefChange() {
     this.inplaceEditorFocusNextOnEnter = Services.prefs.getBoolPref(
       PREF_INPLACE_EDITOR_FOCUS_NEXT_ON_ENTER,
       false
     );
-    this.#handlePrefChange(PREF_INPLACE_EDITOR_FOCUS_NEXT_ON_ENTER);
-  };
+    this._handlePrefChange(PREF_INPLACE_EDITOR_FOCUS_NEXT_ON_ENTER);
+  }
 
-  #handlePrefChange(pref) {
+  _handlePrefChange(pref) {
     // Reselect the currently selected element
     const refreshOnPrefs = [
       PREF_UA_STYLES,
       PREF_DEFAULT_COLOR_UNIT,
       PREF_INPLACE_EDITOR_FOCUS_NEXT_ON_ENTER,
     ];
-    if (this.selectedNodeFront && refreshOnPrefs.includes(pref)) {
-      this.selectElement(this.selectedNodeFront, true);
+    if (this._viewedElement && refreshOnPrefs.includes(pref)) {
+      this.selectElement(this._viewedElement, true);
     }
   }
 
@@ -920,26 +843,21 @@ class CssRuleView extends EventEmitter {
    *
    * @param {string} value
    *        The search value.
-   * @param {object} options
-   * @param {boolean} options.focusSearchField
-   *        Whether or not to focus the search input. Defaults to true.
    */
-  setFilterStyles(value = "", { focusSearchField = true } = {}) {
+  setFilterStyles(value = "") {
     this.searchField.value = value;
-    if (focusSearchField) {
-      this.searchField.focus();
-    }
-    this.#onFilterStyles();
+    this.searchField.focus();
+    this._onFilterStyles();
   }
 
   /**
    * Called when the user enters a search term in the filter style search box.
-   * The actual filtering (done in #doFilterStyles) will be throttled if the search input
+   * The actual filtering (done in _doFilterStyles) will be throttled if the search input
    * isn't empty, but will happen immediately when the search gets cleared.
    */
-  #onFilterStyles = () => {
-    if (this.#filterChangedTimeout) {
-      clearTimeout(this.#filterChangedTimeout);
+  _onFilterStyles() {
+    if (this._filterChangedTimeout) {
+      clearTimeout(this._filterChangedTimeout);
     }
 
     const isSearchEmpty = this.searchValue.length === 0;
@@ -948,21 +866,21 @@ class CssRuleView extends EventEmitter {
     // If the search is cleared update the UI directly so calls to this function (or any
     // callsite of it) can assume the UI is up to date directly after the call.
     if (isSearchEmpty) {
-      this.#doFilterStyles();
+      this._doFilterStyles();
     } else {
-      this.#filterChangedTimeout = setTimeout(
-        () => this.#doFilterStyles(),
+      this._filterChangedTimeout = setTimeout(
+        () => this._doFilterStyles(),
         FILTER_CHANGED_TIMEOUT
       );
     }
-  };
+  }
 
   /**
    * Actually update search data and update the UI to reflect the current search.
    *
    * @fires ruleview-filtered
    */
-  #doFilterStyles() {
+  _doFilterStyles() {
     this.searchData = {
       searchPropertyMatch: FILTER_PROP_RE.exec(this.searchValue),
       searchPropertyName: this.searchValue,
@@ -1000,7 +918,7 @@ class CssRuleView extends EventEmitter {
 
       // Strict search for stylesheets will match the property line regex.
       // Extract the search value within the backquotes to be used
-      // in the strict search for stylesheets in #highlightStyleSheet.
+      // in the strict search for stylesheets in _highlightStyleSheet.
       if (FILTER_STRICT_RE.test(this.searchValue)) {
         this.searchData.strictSearchValue = FILTER_STRICT_RE.exec(
           this.searchValue
@@ -1018,63 +936,76 @@ class CssRuleView extends EventEmitter {
       this.searchData.strictSearchValue = searchValue;
     }
 
-    this.#clearHighlight(this.element);
-    this.#clearRules();
-    this.#createEditors();
+    this._clearHighlight(this.element);
+    this._clearRules();
+    this._createEditors();
 
     this.inspector.emit("ruleview-filtered");
+
+    this._filterChangeTimeout = null;
   }
 
   /**
    * Called when the user clicks on the clear button in the filter style search
    * box. Returns true if the search box is cleared and false otherwise.
-   *
-   * @param {object} options
-   *        Options that will be passed to `setFilterStyles`
    */
-  #onClearSearch = options => {
+  _onClearSearch() {
     if (this.searchField.value) {
-      this.setFilterStyles("", options);
+      this.setFilterStyles("");
       return true;
     }
 
     return false;
-  };
+  }
 
   destroy() {
     this.isDestroyed = true;
+    this.clear();
 
-    this.selectedNodeFront = null;
+    this._dummyElement = null;
+    // off handlers must have the same reference as their on handlers
+    this._prefObserver.off(PREF_UA_STYLES, this._handleUAStylePrefChange);
+    this._prefObserver.off(
+      PREF_DEFAULT_COLOR_UNIT,
+      this._handleDefaultColorUnitPrefChange
+    );
+    this._prefObserver.off(PREF_DRAGGABLE, this._handleDraggablePrefChange);
+    this._prefObserver.off(
+      PREF_INPLACE_EDITOR_FOCUS_NEXT_ON_ENTER,
+      this._handleInplaceEditorFocusNextOnEnterPrefChange
+    );
+    this._prefObserver.destroy();
 
-    if (this.elementStyle) {
-      this.elementStyle.destroy();
-      this.elementStyle = null;
+    this._outputParser = null;
+
+    if (this._classListPreviewer) {
+      this._classListPreviewer.destroy();
+      this._classListPreviewer = null;
     }
 
-    if (this.pageStyle) {
-      this.pageStyle.off("stylesheet-updated", this.refreshPanel);
-      this.pageStyle = null;
+    if (this._contextMenu) {
+      this._contextMenu.destroy();
+      this._contextMenu = null;
     }
 
-    this.#dummyElement = null;
-    this.#prefObserver.destroy();
-
-    this.outputParser = null;
-
-    if (this.#classListPreviewer) {
-      this.#classListPreviewer.destroy();
-      this.#classListPreviewer = null;
+    if (this._highlighters) {
+      this._highlighters.removeFromView(this);
+      this._highlighters = null;
     }
 
-    if (this.#contextMenu) {
-      this.#contextMenu.destroy();
-      this.#contextMenu = null;
-    }
-
-    if (this.#highlighters) {
-      this.#highlighters.removeFromView(this);
-      this.#highlighters = null;
-    }
+    // Clean-up for simulations.
+    this.colorSchemeLightSimulationButton.removeEventListener(
+      "click",
+      this._onToggleLightColorSchemeSimulation
+    );
+    this.colorSchemeDarkSimulationButton.removeEventListener(
+      "click",
+      this._onToggleDarkColorSchemeSimulation
+    );
+    this.printSimulationButton.removeEventListener(
+      "click",
+      this._onTogglePrintSimulation
+    );
 
     this.colorSchemeLightSimulationButton = null;
     this.colorSchemeDarkSimulationButton = null;
@@ -1082,12 +1013,25 @@ class CssRuleView extends EventEmitter {
 
     this.tooltips.destroy();
 
-    this.#abortController.abort();
-    this.#abortController = null;
-    this.#containers.clear();
-
+    // Remove bound listeners
+    this._abortController.abort();
+    this._abortController = null;
     this.shortcuts.destroy();
-
+    this.styleDocument.removeEventListener("click", this, { capture: true });
+    this.element.removeEventListener("copy", this._onCopy);
+    this.element.removeEventListener("contextmenu", this._onContextMenu);
+    this.addRuleButton.removeEventListener("click", this.addNewRule);
+    this.searchField.removeEventListener("input", this._onFilterStyles);
+    this.searchClearButton.removeEventListener("click", this._onClearSearch);
+    this.pseudoClassPanel.removeEventListener(
+      "change",
+      this._onTogglePseudoClass
+    );
+    this.pseudoClassToggle.removeEventListener(
+      "click",
+      this._onTogglePseudoClassPanel
+    );
+    this.classToggle.removeEventListener("click", this._onToggleClassPanel);
     this.inspector.highlighters.off(
       "highlighter-shown",
       this.onHighlighterShown
@@ -1102,10 +1046,6 @@ class CssRuleView extends EventEmitter {
     this.pseudoClassPanel = null;
     this.pseudoClassToggle = null;
     this.pseudoClassCheckboxes = null;
-    this.pseudoClassesStandardPanel = null;
-    this.pseudoClassesElementSpecificPanel = null;
-    this.pseudoClassesElementSpecificHeading = null;
-    this.elementSpecificPseudoClassCheckboxes = null;
     this.classPanel = null;
     this.classToggle = null;
 
@@ -1117,9 +1057,13 @@ class CssRuleView extends EventEmitter {
       this.element.remove();
     }
 
-    if (this.#popup) {
-      this.#popup.destroy();
-      this.#popup = null;
+    if (this._elementStyle) {
+      this._elementStyle.destroy();
+    }
+
+    if (this._popup) {
+      this._popup.destroy();
+      this._popup = null;
     }
   }
 
@@ -1128,44 +1072,15 @@ class CssRuleView extends EventEmitter {
    * visually clearing the view after a few milliseconds to avoid confusion
    * about which element's styles the rule view shows.
    */
-  #startSelectingElement() {
+  _startSelectingElement() {
     this.element.classList.add("non-interactive");
   }
 
   /**
    * Mark the view as no longer selecting an element, re-enabling interaction.
    */
-  #stopSelectingElement() {
+  _stopSelectingElement() {
     this.element.classList.remove("non-interactive");
-  }
-
-  /**
-   * Disables add rule button when needed
-   */
-  #refreshAddRuleButtonState() {
-    this.addRuleButton.disabled = !this.canAddNewRuleForSelectedNode();
-  }
-
-  /**
-   * Update pageStyle reference and listen for stylesheet updates.
-   */
-  #refreshPageStyle() {
-    const newPageStyle = this.selectedNodeFront?.inspectorFront.pageStyle;
-    if (this.pageStyle == newPageStyle) {
-      return;
-    }
-    // If we were already selecting an element from a different process,
-    // we should unregister the PageStyle Actor event listener
-    if (this.pageStyle) {
-      this.pageStyle.off("stylesheet-updated", this.refreshPanel);
-      this.pageStyle = null;
-    }
-    // If we are selecting a new element, we should also start listening
-    // for event from its process and its related Page Style Actor.
-    if (newPageStyle) {
-      this.pageStyle = newPageStyle;
-      this.pageStyle.on("stylesheet-updated", this.refreshPanel);
-    }
   }
 
   /**
@@ -1173,352 +1088,290 @@ class CssRuleView extends EventEmitter {
    *
    * @param {NodeActor} element
    *        The node whose style rules we'll inspect.
-   * @param {boolean} forceRefresh
+   * @param {boolean} allowRefresh
    *        Update the view even if the element is the same as last time.
    */
-  async selectElement(element, forceRefresh = false) {
-    const sameElementSelected = this.selectedNodeFront === element;
-    if (sameElementSelected && !forceRefresh) {
-      return;
+  selectElement(element, allowRefresh = false) {
+    const refresh = this._viewedElement === element;
+    if (refresh && !allowRefresh) {
+      return Promise.resolve(undefined);
     }
 
-    // 1/3 All cleanups that do not depend on former/new selected element
-    if (this.#popup && this.#popup.isOpen) {
-      this.#popup.hidePopup();
+    if (this._popup && this.popup.isOpen) {
+      this.popup.hidePopup();
     }
 
-    // 2/3 Important step: actually switch to a new or empty element
-    this.selectedNodeFront = element;
+    this.clear(false);
+    this._viewedElement = element;
 
-    // 3/3 Now update based on the newly selected element
+    this.clearPseudoClassPanel();
+    this.refreshAddRuleButtonState();
 
-    // Wipe the whole rule view content when deselecting or selecting another element
-    // as there is little chance we would display the same rules. It is faster
-    // to render everything from scratch than trying to do incremental updates.
-    if (!sameElementSelected) {
-      this.#clearRules();
-    }
-
-    this.#refreshEmptyNotice();
-    this.#refreshAddRuleButtonState();
-    this.#refreshDummyElement();
-    this.#refreshPageStyle();
-    this.#refreshPseudoClassPanel();
-
-    if (!element) {
-      this.#stopSelectingElement();
-
-      // Destroy the ElementStyle *after* having cleared the rule view
-      // (earlier call to `#clearRules`), as it may destroy each DOM element
-      // for each rule individually and cause unecessary reflows
-      if (this.elementStyle) {
-        this.elementStyle.destroy();
-        this.elementStyle = null;
+    if (!this._viewedElement) {
+      this._stopSelectingElement();
+      this._clearRules();
+      this._showEmpty();
+      this.refreshPseudoClassPanel();
+      if (this.pageStyle) {
+        this.pageStyle.off("stylesheet-updated", this.refreshPanel);
+        this.pageStyle = null;
       }
-      return;
+      return Promise.resolve(undefined);
     }
 
-    const isProfilerActive = Services.profiler.IsActive();
+    const isProfilerActive = Services.profiler?.IsActive();
     const startTime = isProfilerActive ? ChromeUtils.now() : null;
-    const done = this.inspector.updating("rule-view");
+
+    this.pageStyle = element.inspectorFront.pageStyle;
+    this.pageStyle.on("stylesheet-updated", this.refreshPanel);
+
+    // To figure out how shorthand properties are interpreted by the
+    // engine, we will set properties on a dummy element and observe
+    // how their .style attribute reflects them as computed values.
+    const dummyElementPromise = Promise.resolve(this.styleDocument)
+      .then(document => {
+        // ::before and ::after do not have a namespaceURI
+        const namespaceURI =
+          this.element.namespaceURI || document.documentElement.namespaceURI;
+        this._dummyElement = document.createElementNS(
+          namespaceURI,
+          this.element.tagName
+        );
+      })
+      .catch(promiseWarn);
 
     const elementStyle = new ElementStyle(
       element,
       this,
       this.store,
       this.pageStyle,
-      this.#showUserAgentStyles
+      this.showUserAgentStyles
     );
-    let previousElementStyle = this.elementStyle;
-    this.elementStyle = elementStyle;
+    this._elementStyle = elementStyle;
 
-    this.#startSelectingElement();
+    this._startSelectingElement();
 
-    try {
-      // Bug 2016127: This is historical, but unfortunately breaks some tests if removed
-      await Promise.resolve(null);
-
-      await this.#populate();
-      if (this.elementStyle !== elementStyle) {
-        done();
-        return;
-      }
-      this.elementStyle.onChanged = () => {
-        this.#onElementStyleChanged();
-      };
-      // Cleanup the previous ElementStyle model only after the refresh
-      // as it will destroy each rule individually and may cause uncessary reflows
-      // if entire containers are removed.
-      if (previousElementStyle) {
-        previousElementStyle.destroy();
-        previousElementStyle = null;
-
-        // We need to update containers as some may now be empty
-        this.#updateContainers();
-      }
-      this.#stopSelectingElement();
-      if (isProfilerActive && this.elementStyle.rules) {
-        let declarations = 0;
-        for (const rule of this.elementStyle.rules) {
-          declarations += rule.textProps.length;
+    return dummyElementPromise
+      .then(() => {
+        if (this._elementStyle === elementStyle) {
+          return this._populate();
         }
-        ChromeUtils.addProfilerMarker(
-          "DevTools:CssRuleView.selectElement",
-          startTime,
-          `${declarations} CSS declarations in ${this.elementStyle.rules.length} rules`
-        );
-      }
-    } catch (e) {
-      if (this.elementStyle === elementStyle) {
-        this.#stopSelectingElement();
-        this.#clearRules();
-      }
-      console.error("Error while updating the rule view", e);
-    }
-    done();
+        return undefined;
+      })
+      .then(() => {
+        if (this._elementStyle === elementStyle) {
+          if (!refresh) {
+            this.element.scrollTop = 0;
+          }
+          this._stopSelectingElement();
+          this._elementStyle.onChanged = () => {
+            this._changed();
+          };
+        }
+        if (isProfilerActive && this._elementStyle.rules) {
+          let declarations = 0;
+          for (const rule of this._elementStyle.rules) {
+            declarations += rule.textProps.length;
+          }
+          ChromeUtils.addProfilerMarker(
+            "DevTools:CssRuleView.selectElement",
+            startTime,
+            `${declarations} CSS declarations in ${this._elementStyle.rules.length} rules`
+          );
+        }
+      })
+      .catch(e => {
+        if (this._elementStyle === elementStyle) {
+          this._stopSelectingElement();
+          this._clearRules();
+        }
+        console.error(e);
+      });
   }
 
   /**
    * Update the rules for the currently highlighted element.
    */
-  async refreshPanel() {
+  refreshPanel() {
     // Ignore refreshes when the panel is hidden, or during editing or when no element is selected.
-    if (!this.isPanelVisible() || this.isEditing || !this.elementStyle) {
-      return;
+    if (!this.isPanelVisible() || this.isEditing || !this._elementStyle) {
+      return Promise.resolve(undefined);
     }
 
     // Repopulate the element style once the current modifications are done.
     const promises = [];
-    for (const rule of this.elementStyle.rules) {
-      if (rule.applyingModifications) {
-        promises.push(rule.applyingModifications);
+    for (const rule of this._elementStyle.rules) {
+      if (rule._applyingModifications) {
+        promises.push(rule._applyingModifications);
       }
     }
 
-    await Promise.all(promises);
-    await this.#populate();
+    return Promise.all(promises).then(() => {
+      return this._populate();
+    });
   }
 
   /**
-   * For each pseudo-class item, create a checkbox input element for toggling a
-   * pseudo-class on the selected element and append it to passed container.
-   *
-   * @param {Array} items
-   *        An array of pseudo-class items to create checkboxes for.
-   * @param {HTMLElement} container
-   *        The container element to which the checkboxes will be appended.
-   *
-   * @returns {Array<HTMLInputElement>} An array with the checkbox input elements for pseudo-classes.
+   * Clear the pseudo class options panel by removing the checked and disabled
+   * attributes for each checkbox.
    */
-  #createCheckboxes(items, container) {
+  clearPseudoClassPanel() {
+    this.pseudoClassCheckboxes.forEach(checkbox => {
+      checkbox.checked = false;
+      checkbox.disabled = false;
+    });
+  }
+
+  /**
+   * For each item in PSEUDO_CLASSES, create a checkbox input element for toggling a
+   * pseudo-class on the selected element and append it to the pseudo-class panel.
+   *
+   * Returns an array with the checkbox input elements for pseudo-classes.
+   *
+   * @return {Array}
+   */
+  _createPseudoClassCheckboxes() {
     const doc = this.styleDocument;
     const fragment = doc.createDocumentFragment();
-    const checkboxes = [];
-    for (const item of items) {
+
+    for (const pseudo of PSEUDO_CLASSES) {
       const label = doc.createElement("label");
       const checkbox = doc.createElement("input");
+      checkbox.setAttribute("tabindex", "-1");
       checkbox.setAttribute("type", "checkbox");
-      checkbox.setAttribute("value", item);
+      checkbox.setAttribute("value", pseudo);
 
-      label.append(checkbox, item);
+      label.append(checkbox, pseudo);
       fragment.append(label);
-      checkboxes.push(checkbox);
     }
 
-    container.append(fragment);
-    return checkboxes;
-  }
-
-  /**
-   * Get the element-specific pseudo-classes that apply to the currently selected element.
-   *
-   * @returns {Array} Array of pseudo-classes that apply to the current element
-   */
-  #getApplicableElementSpecificPseudoClasses() {
-    if (!this.selectedNodeFront) {
-      return [];
-    }
-
-    const tagName = this.selectedNodeFront.tagName?.toLowerCase();
-    const applicablePseudoClasses = [];
-
-    for (const [pseudo, elementTypes] of Object.entries(
-      ELEMENT_SPECIFIC_PSEUDO_CLASSES
-    )) {
-      if (elementTypes.has(tagName)) {
-        applicablePseudoClasses.push(pseudo);
-      }
-    }
-
-    return applicablePseudoClasses;
+    this.pseudoClassPanel.append(fragment);
+    return Array.from(
+      this.pseudoClassPanel.querySelectorAll("input[type=checkbox]")
+    );
   }
 
   /**
    * Update the pseudo class options for the currently highlighted element.
    */
-  #refreshPseudoClassPanel() {
+  refreshPseudoClassPanel() {
     if (
-      !this.selectedNodeFront ||
+      !this._elementStyle ||
       !this.inspector.canTogglePseudoClassForSelectedNode()
     ) {
-      for (const checkbox of [
-        ...this.pseudoClassCheckboxes,
-        ...this.elementSpecificPseudoClassCheckboxes,
-      ]) {
+      this.pseudoClassCheckboxes.forEach(checkbox => {
         checkbox.disabled = true;
-      }
-      this.#updateElementSpecificPseudoClassPanel();
+      });
       return;
     }
 
-    const pseudoClassLocks = this.selectedNodeFront.pseudoClassLocks;
-    for (const checkbox of this.pseudoClassCheckboxes) {
+    const pseudoClassLocks = this._elementStyle.element.pseudoClassLocks;
+    this.pseudoClassCheckboxes.forEach(checkbox => {
       checkbox.disabled = false;
       checkbox.checked = pseudoClassLocks.includes(checkbox.value);
-    }
+    });
+  }
 
-    const applicablePseudoClasses =
-      this.#getApplicableElementSpecificPseudoClasses();
-    for (const checkbox of this.elementSpecificPseudoClassCheckboxes) {
-      const isApplicable = applicablePseudoClasses.includes(checkbox.value);
-      checkbox.disabled = !isApplicable;
-      if (isApplicable) {
-        checkbox.checked = pseudoClassLocks.includes(checkbox.value);
-      }
-    }
+  _populate() {
+    const elementStyle = this._elementStyle;
+    return this._elementStyle
+      .populate()
+      .then(() => {
+        if (this._elementStyle !== elementStyle || this.isDestroyed) {
+          return null;
+        }
 
-    this.#updateElementSpecificPseudoClassPanel();
+        this._clearRules();
+        const onEditorsReady = this._createEditors();
+        this.refreshPseudoClassPanel();
+
+        // Notify anyone that cares that we refreshed.
+        return onEditorsReady.then(() => {
+          this.emit("ruleview-refreshed");
+        }, console.error);
+      })
+      .catch(promiseWarn);
   }
 
   /**
-   * Update the visibility of the element-specific pseudo-class panel.
-   * Show the panel if there are applicable pseudo-classes, otherwise hide it.
+   * Show the user that the rule view has no node selected.
    */
-  #updateElementSpecificPseudoClassPanel() {
-    const applicablePseudoClasses =
-      this.#getApplicableElementSpecificPseudoClasses();
-    const hasApplicablePseudoClasses = !!applicablePseudoClasses.length;
-
-    this.pseudoClassesElementSpecificHeading.hidden =
-      !hasApplicablePseudoClasses;
-  }
-
-  async #populate() {
-    try {
-      const elementStyle = this.elementStyle;
-
-      await this.elementStyle.populate();
-
-      if (this.elementStyle !== elementStyle || this.isDestroyed) {
-        return;
-      }
-
-      await this.#createEditors();
-
-      // Notify anyone that cares that we refreshed.
-      this.inspector.emit("rule-view-refreshed");
-    } catch (e) {
-      console.error("Exception while populating the rule view", e);
-      throw e;
+  _showEmpty() {
+    if (this.styleDocument.getElementById("ruleview-no-results")) {
+      return;
     }
-  }
 
-  /**
-   * Show or hide the empty notice depending on selected node.
-   */
-  #refreshEmptyNotice() {
-    const emptyNotice = this.styleDocument.getElementById(
-      "ruleview-no-results"
-    );
-    if (this.selectedNodeFront && emptyNotice) {
-      emptyNotice.remove();
-    } else if (!this.selectedNodeFront && !emptyNotice) {
-      createChild(this.element, "div", {
-        id: "ruleview-no-results",
-        class: "devtools-sidepanel-no-result",
-        textContent: l10n("rule.empty"),
-      });
-    }
+    createChild(this.element, "div", {
+      id: "ruleview-no-results",
+      class: "devtools-sidepanel-no-result",
+      textContent: l10n("rule.empty"),
+    });
   }
 
   /**
    * Clear the rules.
    */
-  #clearRules() {
-    this.#containers.clear();
+  _clearRules() {
     this.element.innerHTML = "";
+  }
+
+  /**
+   * Clear the rule view.
+   */
+  clear(clearDom = true) {
+    if (clearDom) {
+      this._clearRules();
+    }
+    this._viewedElement = null;
+
+    if (this._elementStyle) {
+      this._elementStyle.destroy();
+      this._elementStyle = null;
+    }
+
+    if (this.pageStyle) {
+      this.pageStyle.off("stylesheet-updated", this.refreshPanel);
+      this.pageStyle = null;
+    }
   }
 
   /**
    * Called when the user has made changes to the ElementStyle.
    * Emits an event that clients can listen to.
    */
-  #onElementStyleChanged() {
+  _changed() {
     this.emit("ruleview-changed");
   }
 
   /**
    * Text for header that shows above rules for this element
    */
-  #selectedElementLabel;
   get selectedElementLabel() {
-    if (this.#selectedElementLabel) {
-      return this.#selectedElementLabel;
+    if (this._selectedElementLabel) {
+      return this._selectedElementLabel;
     }
-    this.#selectedElementLabel = l10n("rule.selectedElement");
-    return this.#selectedElementLabel;
+    this._selectedElementLabel = l10n("rule.selectedElement");
+    return this._selectedElementLabel;
   }
 
   /**
    * Text for header that shows above rules for pseudo elements
    */
-  #pseudoElementLabel;
   get pseudoElementLabel() {
-    if (this.#pseudoElementLabel) {
-      return this.#pseudoElementLabel;
+    if (this._pseudoElementLabel) {
+      return this._pseudoElementLabel;
     }
-    this.#pseudoElementLabel = l10n("rule.pseudoElement");
-    return this.#pseudoElementLabel;
+    this._pseudoElementLabel = l10n("rule.pseudoElement");
+    return this._pseudoElementLabel;
   }
 
-  #showPseudoElements;
   get showPseudoElements() {
-    if (this.#showPseudoElements === undefined) {
-      this.#showPseudoElements = Services.prefs.getBoolPref(
+    if (this._showPseudoElements === undefined) {
+      this._showPseudoElements = Services.prefs.getBoolPref(
         "devtools.inspector.show_pseudo_elements"
       );
     }
-    return this.#showPseudoElements;
-  }
-
-  /**
-   * Creates a simple, non-expandable container in the rule view
-   *
-   * @param  {string} label
-   *         The label for the container header
-   * @param  {string} containerId
-   *         The id that will be set on the container
-   * @return {Object{ header:DOMElement, container: DOMElement }}
-   *         Object containing both the container element and its related header.
-   */
-  createSimpleContainer(label, containerId) {
-    const header = this.styleDocument.createElementNS(HTML_NS, "div");
-    header.className = RULE_VIEW_HEADER_CLASSNAME;
-    header.setAttribute("role", "heading");
-    // Element container is only shown when pseudo element container exists
-    // which can only be computed later after having processed all rules.
-    if (containerId == ELEMENT_CONTAINER_ID) {
-      header.hidden = true;
-    }
-    header.append(label);
-
-    const container = this.styleDocument.createElementNS(HTML_NS, "div");
-    container.classList.add("ruleview-container");
-    container.id = containerId;
-
-    this.#containers.set(containerId, { header, container });
-
-    return { header, container };
+    return this._showPseudoElements;
   }
 
   /**
@@ -1528,18 +1381,17 @@ class CssRuleView extends EventEmitter {
    *         The label for the container header
    * @param  {string} containerId
    *         The id that will be set on the container
-   * @return {Object{ header:DOMElement, container: DOMElement }}
-   *         Object containing both the container element and its related header.
+   * @param  {boolean} isPseudo
+   *         Whether or not the container will hold pseudo element rules
+   * @return {DOMNode} The container element
    */
-  createExpandableContainer(label, containerId) {
+  createExpandableContainer(label, containerId, isPseudo = false) {
     const header = this.styleDocument.createElementNS(HTML_NS, "div");
     header.classList.add(
       RULE_VIEW_HEADER_CLASSNAME,
       "ruleview-expandable-header"
     );
     header.setAttribute("role", "heading");
-    header.setAttribute("aria-level", "3");
-    header.hidden = false;
 
     const toggleButton = this.styleDocument.createElementNS(HTML_NS, "button");
     toggleButton.setAttribute(
@@ -1552,41 +1404,35 @@ class CssRuleView extends EventEmitter {
     const twisty = this.styleDocument.createElementNS(HTML_NS, "span");
     twisty.className = "ruleview-expander theme-twisty";
 
-    toggleButton.append(twisty, label);
+    toggleButton.append(twisty, this.styleDocument.createTextNode(label));
     header.append(toggleButton);
 
     const container = this.styleDocument.createElementNS(HTML_NS, "div");
     container.id = containerId;
-    container.classList.add(
-      "ruleview-container",
-      "ruleview-expandable-container"
-    );
+    container.classList.add("ruleview-expandable-container");
     container.hidden = false;
 
-    this.#containers.set(containerId, { header, container });
+    this.element.append(header, container);
 
-    const isPseudo = containerId == PSEUDO_ELEMENTS_CONTAINER_ID;
-    const { signal } = this.#abortController;
-    toggleButton.addEventListener(
-      "click",
-      this.#toggleContainerVisibility.bind(
-        this,
-        containerId,
+    toggleButton.addEventListener("click", () => {
+      this._toggleContainerVisibility(
+        toggleButton,
+        container,
         isPseudo,
         !this.showPseudoElements
-      ),
-      { signal }
-    );
+      );
+    });
 
     if (isPseudo) {
-      this.#toggleContainerVisibility(
-        containerId,
+      this._toggleContainerVisibility(
+        toggleButton,
+        container,
         isPseudo,
         this.showPseudoElements
       );
     }
 
-    return { header, container };
+    return container;
   }
 
   /**
@@ -1594,23 +1440,13 @@ class CssRuleView extends EventEmitter {
    *
    * @returns {Element}
    */
-  getOrCreateRegisteredPropertiesExpandableContainer() {
-    const existingEntry = this.#containers.get(
-      REGISTERED_PROPERTIES_CONTAINER_ID
-    );
-    if (existingEntry) {
-      return existingEntry.container;
-    }
-    const { header, container } = this.createExpandableContainer(
+  createRegisteredPropertiesExpandableContainer() {
+    const el = this.createExpandableContainer(
       "@property",
       REGISTERED_PROPERTIES_CONTAINER_ID
     );
-    this.#containers.set(REGISTERED_PROPERTIES_CONTAINER_ID, {
-      header,
-      container,
-    });
-    this.element.append(header, container);
-    return container;
+    el.classList.add("registered-properties");
+    return el;
   }
 
   /**
@@ -1628,20 +1464,20 @@ class CssRuleView extends EventEmitter {
   /**
    * Toggle the visibility of an expandable container
    *
-   * @param  {string}  containerId
-   *         Container ID.
+   * @param  {DOMNode}  twisty
+   *         Clickable toggle DOM Node
+   * @param  {DOMNode}  container
+   *         Expandable container DOM Node
    * @param  {boolean}  isPseudo
    *         Whether or not the container will hold pseudo element rules
    * @param  {boolean}  showPseudo
    *         Whether or not pseudo element rules should be displayed
    */
-  #toggleContainerVisibility(containerId, isPseudo, showPseudo) {
-    const { header, container } = this.#containers.get(containerId);
-    const toggleButton = header.querySelector("button");
+  _toggleContainerVisibility(toggleButton, container, isPseudo, showPseudo) {
     let isOpen = toggleButton.getAttribute("aria-expanded") === "true";
 
     if (isPseudo) {
-      this.#showPseudoElements = !!showPseudo;
+      this._showPseudoElements = !!showPseudo;
 
       Services.prefs.setBoolPref(
         "devtools.inspector.show_pseudo_elements",
@@ -1658,27 +1494,44 @@ class CssRuleView extends EventEmitter {
   }
 
   /**
-   * Creates editor UI for each of the rules in elementStyle.
+   * Creates editor UI for each of the rules in _elementStyle.
    */
-  #createEditors() {
+  // eslint-disable-next-line complexity
+  _createEditors() {
     // Run through the current list of rules, attaching
     // their editors in order.  Create editors if needed.
+    let lastInherited = null;
+    let lastinheritedSectionLabel = "";
+    let seenNormalElement = false;
     let seenSearchTerm = false;
+    const containers = new Map();
 
-    if (!this.elementStyle.rules) {
+    if (!this._elementStyle.rules) {
       return Promise.resolve();
     }
 
-    // Transient list of containers added to the DOM
-    // while processing this method.
-    const currentContainers = [];
-
     const editorReadyPromises = [];
-    const lastElementPerContainer = new Map();
-    for (const rule of this.elementStyle.rules) {
-      // Initialize rule editor if this is a new rule
+    for (const rule of this._elementStyle.rules) {
+      if (rule.domRule.system) {
+        continue;
+      }
+
+      // Initialize rule editor
       if (!rule.editor) {
-        editorReadyPromises.push(this.#createEditorForRule(rule));
+        const ruleActorID = rule.domRule.actorID;
+        rule.editor = new RuleEditor(this, rule, {
+          elementsWithPendingClicks: this._elementsWithPendingClicks,
+          onShowUnusedCustomCssProperties: () => {
+            this.store.expandedUnusedCustomCssPropertiesRuleActorIds.add(
+              ruleActorID
+            );
+          },
+          shouldHideUnusedCustomCssProperties:
+            !this.store.expandedUnusedCustomCssPropertiesRuleActorIds.has(
+              ruleActorID
+            ),
+        });
+        editorReadyPromises.push(rule.editor.once("source-link-updated"));
       }
 
       // Filter the rules and highlight any matches if there is a search input
@@ -1690,39 +1543,124 @@ class CssRuleView extends EventEmitter {
         }
       }
 
-      const container = this.#getContainerForRule(rule, currentContainers);
+      const isNonInheritedPseudo = !!rule.pseudoElement && !rule.inherited;
 
-      // Ensure adding the rule editor at the right location
-      const lastElement = lastElementPerContainer.get(container);
-      // Also avoid any DOM mutation if the rule already exists and wasn't moved
+      // Only print header for this element if there are pseudo elements
       if (
-        lastElement &&
-        lastElement.nextElementSibling != rule.editor.element
+        containers.has(PSEUDO_ELEMENTS_CONTAINER_ID) &&
+        !seenNormalElement &&
+        !rule.pseudoElement
       ) {
-        lastElement.insertAdjacentElement("afterend", rule.editor.element);
-      } else if (
-        !lastElement &&
-        container.firstElementChild != rule.editor.element
-      ) {
-        container.insertAdjacentElement("afterbegin", rule.editor.element);
+        seenNormalElement = true;
+        const div = this.styleDocument.createElementNS(HTML_NS, "div");
+        div.className = RULE_VIEW_HEADER_CLASSNAME;
+        div.setAttribute("role", "heading");
+        div.textContent = this.selectedElementLabel;
+        this.element.appendChild(div);
       }
-      lastElementPerContainer.set(container, rule.editor.element);
-    }
 
-    this.#createRegisteredPropertyEditors();
+      const { inherited, inheritedSectionLabel } = rule;
+      // We need to check both `inherited` (a NodeFront) and `inheritedSectionLabel` (string),
+      // as element-backed pseudo element rules (e.g. `::details-content`) can have the same
+      // `inherited` property as a regular rule (e.g. on `<details>`), but the element is
+      // to be considered as a child of the binding element.
+      // e.g. we want to have
+      // This element
+      // Inherited by details::details-content
+      // Inherited by details
+      if (
+        inherited &&
+        (inherited !== lastInherited ||
+          inheritedSectionLabel !== lastinheritedSectionLabel)
+      ) {
+        const div = this.styleDocument.createElementNS(HTML_NS, "div");
+        div.classList.add(RULE_VIEW_HEADER_CLASSNAME);
+        div.setAttribute("role", "heading");
+        div.setAttribute("aria-level", "3");
+        div.textContent = rule.inheritedSectionLabel;
+        lastInherited = inherited;
+        lastinheritedSectionLabel = inheritedSectionLabel;
+        this.element.appendChild(div);
+      }
 
-    this.#updateContainers();
+      const keyframes = rule.keyframes;
 
-    // Automatically select the selector input when we are adding a user-added rule.
-    // (Focus after having updated all the rules to prevent the focus from being
-    // lost because of possible following DOM updates)
-    if (this.#focusNextUserAddedRule) {
-      const rule = this.elementStyle.rules.find(r => r.domRule.userAdded);
-      if (rule) {
+      let containerKey = null;
+
+      // Don't display inherited pseudo element rules (e.g. ::details-content) inside
+      // the pseudo element container
+      if (isNonInheritedPseudo) {
+        containerKey = PSEUDO_ELEMENTS_CONTAINER_ID;
+        if (!containers.has(containerKey)) {
+          containers.set(
+            containerKey,
+            this.createExpandableContainer(
+              this.pseudoElementLabel,
+              containerKey,
+              true
+            )
+          );
+        }
+      } else if (keyframes) {
+        containerKey = keyframes;
+        if (!containers.has(containerKey)) {
+          containers.set(
+            containerKey,
+            this.createExpandableContainer(
+              rule.keyframesName,
+              `keyframes-container-${keyframes.name}`
+            )
+          );
+        }
+      } else if (rule.domRule.className === "CSSPositionTryRule") {
+        containerKey = POSITION_TRY_CONTAINER_ID;
+        if (!containers.has(containerKey)) {
+          containers.set(
+            containerKey,
+            this.createExpandableContainer(
+              `@position-try`,
+              `position-try-container`
+            )
+          );
+        }
+      }
+
+      rule.editor.element.setAttribute("role", "article");
+      const container = containers.get(containerKey);
+      if (container) {
+        container.appendChild(rule.editor.element);
+      } else {
+        this.element.appendChild(rule.editor.element);
+      }
+
+      // Automatically select the selector input when we are adding a user-added rule
+      if (this._focusNextUserAddedRule && rule.domRule.userAdded) {
+        this._focusNextUserAddedRule = null;
         rule.editor.selectorText.click();
         this.emitForTests("new-rule-added", rule);
       }
-      this.#focusNextUserAddedRule = null;
+    }
+
+    const targetRegisteredProperties =
+      this.getRegisteredPropertiesForSelectedNodeTarget();
+    if (targetRegisteredProperties?.size) {
+      const registeredPropertiesContainer =
+        this.createRegisteredPropertiesExpandableContainer();
+
+      // Sort properties by their name, as we want to display them in alphabetical order
+      const propertyDefinitions = Array.from(
+        targetRegisteredProperties.values()
+      ).sort((a, b) => (a.name < b.name ? -1 : 1));
+      for (const propertyDefinition of propertyDefinitions) {
+        const registeredPropertyEditor = new RegisteredPropertyEditor(
+          this,
+          propertyDefinition
+        );
+
+        registeredPropertiesContainer.appendChild(
+          registeredPropertyEditor.element
+        );
+      }
     }
 
     const searchBox = this.searchField.parentNode;
@@ -1735,175 +1673,6 @@ class CssRuleView extends EventEmitter {
   }
 
   /**
-   * Instantiate a new RuleEditor for a given rule
-   * currently applying to the selected element.
-   *
-   * @param  {Rule} rule
-   */
-  #createEditorForRule(rule) {
-    const ruleActorID = rule.domRule.actorID;
-    rule.editor = new RuleEditor(this, rule, {
-      elementsWithPendingClicks: this.#elementsWithPendingClicks,
-      onShowUnusedCustomCssProperties: () => {
-        this.store.expandedUnusedCustomCssPropertiesRuleActorIds.add(
-          ruleActorID
-        );
-      },
-      shouldHideUnusedCustomCssProperties:
-        !this.store.expandedUnusedCustomCssPropertiesRuleActorIds.has(
-          ruleActorID
-        ),
-    });
-
-    return rule.editor.once("source-link-updated");
-  }
-
-  /**
-   * Create or get existing container for a given rule.
-   *
-   * @param {Rule} rule
-   * @param {Array<DOMElement>} currentContainers
-   */
-  #getContainerForRule(rule, currentContainers) {
-    let id,
-      label,
-      expandable = false;
-
-    // Don't display inherited pseudo element rules (e.g. ::details-content) inside
-    // the pseudo element container
-    const isNonInheritedPseudo = !!rule.pseudoElement && !rule.inherited;
-    const keyframes = rule.keyframes;
-
-    if (isNonInheritedPseudo) {
-      id = PSEUDO_ELEMENTS_CONTAINER_ID;
-      label = this.pseudoElementLabel;
-      expandable = true;
-    } else if (keyframes) {
-      // See bug 1042036 and Bug 1894873 we are showing all keyframes with the same name.
-      // We may use ${keyframes.name}, but all rule's content would be merged
-      // into a unique rule/container.
-      // (only use part of the actorID to have a valid DOM id)
-      id = `keyframes-container-${rule.keyframes.actorID.match(/\w+$/)[0]}`;
-      label = rule.keyframesName;
-      expandable = true;
-    } else if (rule.domRule.className === "CSSPositionTryRule") {
-      id = POSITION_TRY_CONTAINER_ID;
-      label = "@position-try";
-      expandable = true;
-    } else if (rule.inherited) {
-      // We need to check both `inherited` (a NodeFront) and `pseudoElement` (string),
-      // as element-backed pseudo element rules (e.g. `::details-content`) can have the same
-      // `inherited` property as a regular rule (e.g. on `<details>`), but the element is
-      // to be considered as a child of the binding element.
-      //
-      // e.g. we want to have:
-      //   This element
-      //   Inherited by details::details-content
-      //   Inherited by details
-      id = `inherited-${rule.inherited.actorID}-${rule.pseudoElement}`;
-      label = rule.inheritedSectionLabel;
-    } else {
-      id = ELEMENT_CONTAINER_ID;
-      label = this.selectedElementLabel;
-    }
-
-    let entry = this.#containers.get(id);
-    // Create the DOM for the container if it doesn't exist yet
-    if (!entry) {
-      if (expandable) {
-        entry = this.createExpandableContainer(label, id);
-      } else {
-        entry = this.createSimpleContainer(label, id);
-      }
-    }
-
-    const { header, container } = entry;
-
-    // Ensure displaying the containers in the new order processed in #createEditors.
-    if (!currentContainers.includes(container)) {
-      const lastContainer = currentContainers.at(-1);
-      // Pseudo element rules are sorted **after** element matching rules and inherited rules
-      // in ElementStyle.rules, but we want the container to always be shown at the top.
-      //
-      // Also avoid any DOM mutation if the rule already exists and wasn't moved
-      if (id == PSEUDO_ELEMENTS_CONTAINER_ID || !lastContainer) {
-        if (this.element.firstElementChild != header) {
-          this.element.insertAdjacentElement("afterbegin", header);
-          header.insertAdjacentElement("afterend", container);
-        }
-      } else if (lastContainer.nextElementSibling != header) {
-        lastContainer.insertAdjacentElement("afterend", header);
-        header.insertAdjacentElement("afterend", container);
-      }
-      currentContainers.push(container);
-    }
-
-    return container;
-  }
-
-  /**
-   * Whenever we may add or remove rules in the list,
-   * we have to eventually update containers by removing the empty ones
-   * and update the visibility of "Element" header.
-   */
-  #updateContainers() {
-    // Clear containers which no longer contain any rule
-    for (const [
-      containerId,
-      { header, container },
-    ] of this.#containers.entries()) {
-      if (!container.children.length) {
-        header.remove();
-        container.remove();
-        this.#containers.delete(containerId);
-      }
-    }
-
-    // Only print header for "This element" if there are pseudo elements displayed before
-    const elementEntry = this.#containers.get(ELEMENT_CONTAINER_ID);
-    if (elementEntry) {
-      const hasPseudoElementRules = this.#containers.has(
-        PSEUDO_ELEMENTS_CONTAINER_ID
-      );
-      // Show the header element, which is before the container element
-      elementEntry.header.hidden = !hasPseudoElementRules;
-    }
-  }
-
-  #createRegisteredPropertyEditors() {
-    const targetRegisteredProperties =
-      this.getRegisteredPropertiesForSelectedNodeTarget();
-    if (!targetRegisteredProperties?.size) {
-      // Wipe the list, but only if the properties container was populated
-      const entry = this.#containers.get(REGISTERED_PROPERTIES_CONTAINER_ID);
-      if (entry) {
-        entry.container.replaceChildren();
-      }
-      return;
-    }
-
-    const registeredPropertiesContainer =
-      this.getOrCreateRegisteredPropertiesExpandableContainer();
-    // Always wipe and rebuild the list of properties from scratch
-    registeredPropertiesContainer.replaceChildren();
-
-    // Sort properties by their name, as we want to display them in alphabetical order
-    const propertyDefinitions = Array.from(
-      targetRegisteredProperties.values()
-    ).sort((a, b) => (a.name < b.name ? -1 : 1));
-    for (const propertyDefinition of propertyDefinitions) {
-      const registeredPropertyEditor = new RegisteredPropertyEditor(
-        this,
-        propertyDefinition
-      );
-
-      registeredPropertiesContainer.appendChild(
-        registeredPropertyEditor.element
-      );
-    }
-  }
-
-  /**
    * Highlight rules that matches the filter search value and returns a
    * boolean indicating whether or not rules were highlighted.
    *
@@ -1913,9 +1682,9 @@ class CssRuleView extends EventEmitter {
    * @return {boolean} true if the rule was highlighted, false otherwise.
    */
   highlightRule(rule) {
-    const isRuleSelectorHighlighted = this.#highlightRuleSelector(rule);
-    const isStyleSheetHighlighted = this.#highlightStyleSheet(rule);
-    const isAncestorRulesHighlighted = this.#highlightAncestorRules(rule);
+    const isRuleSelectorHighlighted = this._highlightRuleSelector(rule);
+    const isStyleSheetHighlighted = this._highlightStyleSheet(rule);
+    const isAncestorRulesHighlighted = this._highlightAncestorRules(rule);
     let isHighlighted =
       isRuleSelectorHighlighted ||
       isStyleSheetHighlighted ||
@@ -1923,7 +1692,7 @@ class CssRuleView extends EventEmitter {
 
     // Highlight search matches in the rule properties
     for (const textProp of rule.textProps) {
-      if (!textProp.invisible && this.#highlightProperty(textProp)) {
+      if (!textProp.invisible && this._highlightProperty(textProp)) {
         isHighlighted = true;
       }
     }
@@ -1940,7 +1709,7 @@ class CssRuleView extends EventEmitter {
    * @return {boolean} true if the rule selector was highlighted,
    *         false otherwise.
    */
-  #highlightRuleSelector(rule) {
+  _highlightRuleSelector(rule) {
     let isSelectorHighlighted = false;
 
     let selectorNodes = [...rule.editor.selectorText.childNodes];
@@ -1976,7 +1745,7 @@ class CssRuleView extends EventEmitter {
    *
    * @return {boolean} true if the element was highlighted, false otherwise.
    */
-  #highlightAncestorRules(rule) {
+  _highlightAncestorRules(rule) {
     const element = rule.editor.ancestorDataEl;
     if (!element) {
       return false;
@@ -2009,7 +1778,7 @@ class CssRuleView extends EventEmitter {
    * @return {boolean} true if the stylesheet source was highlighted, false
    *         otherwise.
    */
-  #highlightStyleSheet(rule) {
+  _highlightStyleSheet(rule) {
     const styleSheetSource = rule.title.toLowerCase();
     const isStyleSheetHighlighted = this.searchData.strictSearchValue
       ? styleSheetSource === this.searchData.strictSearchValue
@@ -2032,9 +1801,9 @@ class CssRuleView extends EventEmitter {
    * @returns {boolean} true if the property or computed property was
    *         highlighted, false otherwise.
    */
-  #highlightProperty(textProperty) {
-    const isPropertyHighlighted = this.#highlightRuleProperty(textProperty);
-    const isComputedHighlighted = this.#highlightComputedProperty(textProperty);
+  _highlightProperty(textProperty) {
+    const isPropertyHighlighted = this._highlightRuleProperty(textProperty);
+    const isComputedHighlighted = this._highlightComputedProperty(textProperty);
 
     // Expand the computed list if a computed property is highlighted and the
     // property rule is not highlighted
@@ -2056,14 +1825,14 @@ class CssRuleView extends EventEmitter {
    * @param  {TextPropertyEditor} editor
    *         The rule property TextPropertyEditor object.
    */
-  updatePropertyHighlight(editor) {
+  _updatePropertyHighlight(editor) {
     if (!this.searchValue || !this.searchData) {
       return;
     }
 
-    this.#clearHighlight(editor.element);
+    this._clearHighlight(editor.element);
 
-    if (this.#highlightProperty(editor.prop)) {
+    if (this._highlightProperty(editor.prop)) {
       this.searchField.classList.remove("devtools-style-searchbox-no-match");
     }
   }
@@ -2078,7 +1847,7 @@ class CssRuleView extends EventEmitter {
    * @returns {boolean} true if the rule property was highlighted,
    *         false otherwise.
    */
-  #highlightRuleProperty(textProperty) {
+  _highlightRuleProperty(textProperty) {
     const propertyName = textProperty.name.toLowerCase();
     // Get the actual property value displayed in the rule view if we have an editor for
     // it (that might not be the case for unused CSS custom properties).
@@ -2086,7 +1855,7 @@ class CssRuleView extends EventEmitter {
       ? textProperty.editor.valueSpan.textContent.toLowerCase()
       : textProperty.value.toLowerCase();
 
-    return this.#highlightMatches({
+    return this._highlightMatches({
       element: textProperty.editor?.container,
       propertyName,
       propertyValue,
@@ -2104,7 +1873,7 @@ class CssRuleView extends EventEmitter {
    * @returns {boolean} true if the computed property was highlighted, false
    *         otherwise.
    */
-  #highlightComputedProperty(textProperty) {
+  _highlightComputedProperty(textProperty) {
     if (!textProperty.editor) {
       return false;
     }
@@ -2119,7 +1888,7 @@ class CssRuleView extends EventEmitter {
         const computedName = computed.name.toLowerCase();
         const computedValue = computed.parsedValue.toLowerCase();
 
-        isComputedHighlighted = this.#highlightMatches({
+        isComputedHighlighted = this._highlightMatches({
           element: computed.element,
           propertyName: computedName,
           propertyValue: computedValue,
@@ -2151,7 +1920,7 @@ class CssRuleView extends EventEmitter {
    * @return {boolean} true if the given search terms match the property, false
    *         otherwise.
    */
-  #highlightMatches({ element, propertyName, propertyValue, textProperty }) {
+  _highlightMatches({ element, propertyName, propertyValue, textProperty }) {
     const {
       searchPropertyName,
       searchPropertyValue,
@@ -2216,7 +1985,7 @@ class CssRuleView extends EventEmitter {
    * Clear all search filter highlights in the panel, and close the computed
    * list if toggled opened
    */
-  #clearHighlight(element) {
+  _clearHighlight(element) {
     for (const el of element.querySelectorAll(".ruleview-highlight")) {
       el.classList.remove("ruleview-highlight");
     }
@@ -2232,25 +2001,29 @@ class CssRuleView extends EventEmitter {
    * Called when the pseudo class panel button is clicked and toggles
    * the display of the pseudo class panel.
    */
-  #onTogglePseudoClassPanel = () => {
+  _onTogglePseudoClassPanel() {
     if (this.pseudoClassPanel.hidden) {
       this.showPseudoClassPanel();
     } else {
       this.hidePseudoClassPanel();
     }
-  };
+  }
 
   showPseudoClassPanel() {
     this.hideClassPanel();
 
     this.pseudoClassToggle.setAttribute("aria-pressed", "true");
-    this.pseudoClassPanel.inert = false;
+    this.pseudoClassCheckboxes.forEach(checkbox => {
+      checkbox.setAttribute("tabindex", "0");
+    });
     this.pseudoClassPanel.hidden = false;
   }
 
   hidePseudoClassPanel() {
     this.pseudoClassToggle.setAttribute("aria-pressed", "false");
-    this.pseudoClassPanel.inert = true;
+    this.pseudoClassCheckboxes.forEach(checkbox => {
+      checkbox.setAttribute("tabindex", "-1");
+    });
     this.pseudoClassPanel.hidden = true;
   }
 
@@ -2258,22 +2031,22 @@ class CssRuleView extends EventEmitter {
    * Called when a pseudo class checkbox is clicked and toggles
    * the pseudo class for the current selected element.
    */
-  #onTogglePseudoClass = event => {
+  _onTogglePseudoClass(event) {
     const target = event.target;
     this.inspector.togglePseudoClass(target.value);
-  };
+  }
 
   /**
    * Called when the class panel button is clicked and toggles the display of the class
    * panel.
    */
-  #onToggleClassPanel = () => {
+  _onToggleClassPanel() {
     if (this.classPanel.hidden) {
       this.showClassPanel();
     } else {
       this.hideClassPanel();
     }
-  };
+  }
 
   showClassPanel() {
     this.hidePseudoClassPanel();
@@ -2292,7 +2065,7 @@ class CssRuleView extends EventEmitter {
   /**
    * Handle the keypress event in the rule view.
    */
-  #onShortcut(name, event) {
+  _onShortcut(name, event) {
     if (!event.target.closest("#sidebar-panel-ruleview")) {
       return;
     }
@@ -2308,7 +2081,7 @@ class CssRuleView extends EventEmitter {
     } else if (
       name === "Escape" &&
       event.target === this.searchField &&
-      this.#onClearSearch()
+      this._onClearSearch()
     ) {
       // Handle the search box's keypress event. If the escape key is pressed,
       // clear the search box field.
@@ -2317,7 +2090,7 @@ class CssRuleView extends EventEmitter {
     }
   }
 
-  #onToggleLightColorSchemeSimulation = async () => {
+  async _onToggleLightColorSchemeSimulation() {
     const shouldSimulateLightScheme =
       this.colorSchemeLightSimulationButton.getAttribute("aria-pressed") !==
       "true";
@@ -2336,9 +2109,9 @@ class CssRuleView extends EventEmitter {
     );
     // Refresh the current element's rules in the panel.
     this.refreshPanel();
-  };
+  }
 
-  #onToggleDarkColorSchemeSimulation = async () => {
+  async _onToggleDarkColorSchemeSimulation() {
     const shouldSimulateDarkScheme =
       this.colorSchemeDarkSimulationButton.getAttribute("aria-pressed") !==
       "true";
@@ -2357,9 +2130,9 @@ class CssRuleView extends EventEmitter {
     );
     // Refresh the current element's rules in the panel.
     this.refreshPanel();
-  };
+  }
 
-  #onTogglePrintSimulation = async () => {
+  async _onTogglePrintSimulation() {
     const enabled =
       this.printSimulationButton.getAttribute("aria-pressed") !== "true";
     this.printSimulationButton.setAttribute("aria-pressed", enabled);
@@ -2370,7 +2143,7 @@ class CssRuleView extends EventEmitter {
     );
     // Refresh the current element's rules in the panel.
     this.refreshPanel();
-  };
+  }
 
   /**
    * Temporarily flash the given element.
@@ -2379,26 +2152,25 @@ class CssRuleView extends EventEmitter {
    *         The element.
    * @returns {Promise} Promise that resolves after the element was flashed-out
    */
-  #flashMutationCallback;
-  #flashElement(element) {
+  _flashElement(element) {
     flashElementOn(element, {
       backgroundClass: "theme-bg-contrast",
     });
 
-    if (this.#flashMutationCallback) {
-      this.#flashMutationCallback();
+    if (this._flashMutationCallback) {
+      this._flashMutationCallback();
     }
 
     return new Promise(resolve => {
-      this.#flashMutationCallback = () => {
+      this._flashMutationCallback = () => {
         flashElementOff(element, {
           backgroundClass: "theme-bg-contrast",
         });
-        this.#flashMutationCallback = null;
+        this._flashMutationCallback = null;
         resolve();
       };
 
-      setTimeout(this.#flashMutationCallback, PROPERTY_FLASHING_DURATION);
+      setTimeout(this._flashMutationCallback, PROPERTY_FLASHING_DURATION);
     });
   }
 
@@ -2412,9 +2184,9 @@ class CssRuleView extends EventEmitter {
    *         Optional. The declaration to scroll to.
    * @param  {string} scrollBehavior
    *         Optional. The transition animation when scrolling. If prefers-reduced-motion
-   *         system pref is set, then the scroll behavior will be overridden to "instant".
+   *         system pref is set, then the scroll behavior will be overridden to "auto".
    */
-  #scrollToElement(rule, declaration, scrollBehavior = "smooth") {
+  _scrollToElement(rule, declaration, scrollBehavior = "smooth") {
     let elementToScrollTo = rule;
 
     if (declaration) {
@@ -2429,22 +2201,24 @@ class CssRuleView extends EventEmitter {
     }
 
     // Ensure that smooth scrolling is disabled when the user prefers reduced motion.
-    const win = elementToScrollTo.documentGlobal;
+    const win = elementToScrollTo.ownerGlobal;
     const reducedMotion = win.matchMedia("(prefers-reduced-motion)").matches;
-    scrollBehavior = reducedMotion ? "instant" : scrollBehavior;
-    elementToScrollTo.scrollIntoView({
-      behavior: scrollBehavior,
-    });
+    scrollBehavior = reducedMotion ? "auto" : scrollBehavior;
+
+    elementToScrollTo.scrollIntoView({ behavior: scrollBehavior });
   }
 
   /**
-   * Returns whether or not the rule is in the view
-   *
-   * @param  {StyleRuleFront} ruleFront
-   * @returns {boolean}
+   * Toggles the visibility of the pseudo element rule's container.
    */
-  hasRule(ruleFront) {
-    return this.rules.some(r => r.domRule === ruleFront);
+  _togglePseudoElementRuleContainer() {
+    const container = this.styleDocument.getElementById(
+      PSEUDO_ELEMENTS_CONTAINER_ID
+    );
+    const toggle = this.styleDocument.querySelector(
+      `[aria-controls="${PSEUDO_ELEMENTS_CONTAINER_ID}"]`
+    );
+    this._toggleContainerVisibility(toggle, container, true, true);
   }
 
   /**
@@ -2454,253 +2228,151 @@ class CssRuleView extends EventEmitter {
    * @param  {string} name
    *         The property name to scroll to and highlight.
    * @param  {object} options
-   * @param  {StyleRuleFront|undefined} options.ruleFront
-   *         An optional StyleRuleFront. When this is set, we will only look for the property
-   *         in this exact rule.
    * @param  {Function|undefined} options.ruleValidator
    *         An optional function that can be used to filter out rules we shouldn't look
    *         into to find the property name. The function is called with a Rule object,
    *         and the rule will be skipped if the function returns a falsy value.
-   * @param  {true|undefined} options.focusValue
-   *         An optional boolean that indicate that the declaration value should be focused.
-   *         If false (the default value), the declaration name will be focused.
-   * @returns {boolean} true if the TextProperty name is found, and false otherwise.
+   * @return {boolean} true if the TextProperty name is found, and false otherwise.
    */
-  highlightProperty = async (
-    name,
-    { ruleValidator, ruleFront, focusValue = false } = {}
-  ) => {
+  highlightProperty(name, { ruleValidator } = {}) {
     // First, let's clear any search we might have, as the property could be hidden
-    this.#onClearSearch({ focusSearchField: false });
+    this._onClearSearch();
 
-    if (ruleFront) {
-      const rule = this.rules.find(r => r.domRule === ruleFront);
-      if (!rule) {
-        console.error("Unable to find a rule for actor", ruleFront);
-        return false;
-      }
-
-      const highlighted = await this.#maybeHighlightPropertyInRule({
-        name,
-        rule,
-        ruleValidator,
-        // If ruleFront is passed, we might need to highlight a declaration that is actually
-        // overridden  (e.g. when calling this from a  "matched selector" item in the
-        // computed panel).
-        matchOverridden: true,
-        focusValue,
-      });
-      if (!highlighted) {
-        console.error("Unable to highlight rule", name, rule);
-        return false;
-      }
-
-      return true;
-    }
-
+    let scrollBehavior = "auto";
+    const hasRuleValidator = typeof ruleValidator === "function";
     for (const rule of this.rules) {
-      if (
-        await this.#maybeHighlightPropertyInRule({
-          name,
-          rule,
-          ruleValidator,
-          focusValue,
-        })
-      ) {
-        return true;
+      if (hasRuleValidator && !ruleValidator(rule)) {
+        continue;
+      }
+      for (const textProp of rule.textProps) {
+        if (textProp.overridden || textProp.invisible || !textProp.enabled) {
+          continue;
+        }
+
+        // First, search for a matching authored property.
+        if (textProp.name === name) {
+          // If using 2-Pane mode, then switch to the Rules tab first.
+          if (!this.inspector.isThreePaneModeEnabled) {
+            this.inspector.sidebar.select("ruleview");
+          }
+
+          // If the property is being applied by a pseudo element rule, expand the pseudo
+          // element list container.
+          if (rule.pseudoElement.length && !this.showPseudoElements) {
+            // Set the scroll behavior to "auto" to avoid timing issues between toggling
+            // the pseudo element container and scrolling smoothly to the rule.
+            scrollBehavior = "auto";
+            this._togglePseudoElementRuleContainer();
+          }
+
+          // If we're jumping to an unused CSS variable, it might not be visible, so show
+          // it here.
+          if (!textProp.editor && textProp.isUnusedVariable) {
+            textProp.rule.editor.showUnusedCssVariable(textProp);
+          }
+
+          this._highlightElementInRule(
+            rule,
+            textProp.editor.element,
+            scrollBehavior
+          );
+          return true;
+        }
+
+        // If there is no matching property, then look in computed properties.
+        for (const computed of textProp.computed) {
+          if (computed.overridden) {
+            continue;
+          }
+
+          if (computed.name === name) {
+            if (!this.inspector.isThreePaneModeEnabled) {
+              this.inspector.sidebar.select("ruleview");
+            }
+
+            if (
+              textProp.rule.pseudoElement.length &&
+              !this.showPseudoElements
+            ) {
+              scrollBehavior = "auto";
+              this._togglePseudoElementRuleContainer();
+            }
+
+            // Expand the computed list.
+            textProp.editor.expandForFilter();
+
+            this._highlightElementInRule(
+              rule,
+              computed.element,
+              scrollBehavior
+            );
+
+            return true;
+          }
+        }
       }
     }
     // If the property is a CSS variable and we didn't find its declaration, it might
     // be a registered property
-    if (this.#maybeHighlightCssRegisteredProperty(name)) {
+    if (this._maybeHighlightCssRegisteredProperty(name)) {
       return true;
     }
 
     return false;
-  };
-
-  /**
-   * Finds the specified TextProperty name in a specific rule. If found, scroll to it and
-   * flash/focus the TextProperty.
-   *
-   * @param  {object} options
-   * @param  {string} options.name
-   *         The property name to scroll to and highlight.
-   * @param  {Rule} options.rule
-   *         The rule to find the property into
-   * @param  {Function|undefined} options.ruleValidator
-   *         An optional function that can be used to filter out rules we shouldn't look
-   *         into to find the property name. The function is called with a Rule object,
-   *         and the rule will be skipped if the function returns a falsy value.
-   * @param  {boolean|undefined} options.matchOverridden
-   *         If true, the declaration will be considered even if it is overridden.
-   * @param {string} options.scrollBehavior
-   *        An optional string that will be used as `scrollIntoView` `behavior` option.
-   *        Note that this will be overridden to "instant" if the user prefers reduced motion.
-   * @param  {true|undefined} options.focusValue
-   *         An optional boolean that indicate that the declaration value should be focused.
-   *         If false (the default value), the declaration name will be focused.
-   * @returns {boolean} true if the TextProperty name is found, and false otherwise.
-   */
-  async #maybeHighlightPropertyInRule({
-    name,
-    rule,
-    ruleValidator,
-    matchOverridden = false,
-    focusValue = false,
-  }) {
-    const hasRuleValidator = typeof ruleValidator === "function";
-    if (hasRuleValidator && !ruleValidator(rule)) {
-      return false;
-    }
-
-    let matchingTextPropComputed;
-    // hasHigherPriorityThanEarlierProp (that we use in the loop), is expecting
-    // the props to be iterated through in reverse.
-    const textProps = rule.textProps.toReversed();
-    for (const textProp of textProps) {
-      for (const computed of textProp.computed) {
-        if (
-          computed.name === name &&
-          !textProp.invisible &&
-          textProp.enabled &&
-          (!computed.overridden || matchOverridden) &&
-          (!matchingTextPropComputed ||
-            this.elementStyle.hasHigherPriorityThanEarlierProp(
-              computed,
-              matchingTextPropComputed
-            ))
-        ) {
-          matchingTextPropComputed = computed;
-        }
-      }
-    }
-
-    if (!matchingTextPropComputed) {
-      return false;
-    }
-
-    await this.#selectRuleViewIfNeeded();
-
-    let scrollBehavior;
-
-    // If the property is being applied by a pseudo element rule, expand the pseudo
-    // element list container.
-    if (rule.pseudoElement.length && !this.showPseudoElements) {
-      // Set the scroll behavior to "instant" to avoid timing issues between toggling
-      // the pseudo element container and scrolling smoothly to the rule.
-      scrollBehavior = "instant";
-      this.#toggleContainerVisibility(PSEUDO_ELEMENTS_CONTAINER_ID, true, true);
-    }
-
-    const textProp = matchingTextPropComputed.textProp;
-
-    // If we're jumping to an unused CSS variable, it might not be visible, so show
-    // it here.
-    if (!textProp.editor && textProp.isUnusedVariable) {
-      textProp.rule.editor.showUnusedCssVariable(textProp);
-    }
-
-    // If the textProp is a shorthand, we need to expand the computed list so we can
-    // highlight the proper element.
-    const isTextPropAShorthand =
-      textProp.name !== matchingTextPropComputed.name;
-    if (isTextPropAShorthand) {
-      textProp.editor.expandForFilter();
-    }
-
-    this.#highlightElementInRule({
-      rule,
-      elementToHighlight: isTextPropAShorthand
-        ? // if the prop is a shorthand, we hand to highlight the exact longhand property
-          matchingTextPropComputed.element
-        : textProp.editor.element,
-      elementToFocus: focusValue
-        ? textProp.editor.valueSpan
-        : textProp.editor.nameSpan,
-      scrollBehavior,
-    });
-    return true;
   }
 
   /**
    * If the passed name matches a registered CSS property highlight it
    *
    * @param {string} name - The name of the registered property to highlight
-   * @param {string} scrollBehavior - An optional string that will be used as
-   *        `scrollIntoView` `behavior` option.
-   *        Note that this will be overridden to "instant" if the user prefers reduced motion.
+   * @param {string} scrollBehavior
    * @returns {boolean} Returns true if `name` matched a registered property
    */
-  #maybeHighlightCssRegisteredProperty(name, scrollBehavior) {
+  _maybeHighlightCssRegisteredProperty(name, scrollBehavior) {
     if (!name.startsWith("--")) {
       return false;
     }
 
     // Get a potential @property section
-    const entry = this.#containers.get(REGISTERED_PROPERTIES_CONTAINER_ID);
-    if (!entry) {
+    const propertyContainer = this.styleDocument.getElementById(
+      REGISTERED_PROPERTIES_CONTAINER_ID
+    );
+    if (!propertyContainer) {
       return false;
     }
-    const { header, container } = entry;
 
-    const propertyEl = container.querySelector(`[data-name="${name}"]`);
+    const propertyEl = propertyContainer.querySelector(`[data-name="${name}"]`);
     if (!propertyEl) {
       return false;
     }
 
-    const toggleButton = header.querySelector("button");
-    if (toggleButton.ariaExpanded === "false") {
-      this.#toggleContainerVisibility(REGISTERED_PROPERTIES_CONTAINER_ID);
+    const toggle = this.styleDocument.querySelector(
+      `[aria-controls="${REGISTERED_PROPERTIES_CONTAINER_ID}"]`
+    );
+    if (toggle.ariaExpanded === "false") {
+      this._toggleContainerVisibility(toggle, propertyContainer);
     }
 
-    this.#highlightElementInRule({
-      elementToHighlight: propertyEl,
-      scrollBehavior,
-    });
+    this._highlightElementInRule(null, propertyEl, scrollBehavior);
     return true;
   }
 
   /**
    * Highlight a given element in a rule editor
    *
-   * @param {object} options
-   * @param {Rule} options.rule
-   *        The rule the element to highlight is in.
-   * @param {Element} options.elementToHighlight
-   *        The element to highlight.
-   * @param {Element} options.elementToFocus
-   *        An optional element to focus.
-   * @param {string} options.scrollBehavior
-   *        An optional string that will be used as `scrollIntoView` `behavior` option.
-   *        Note that this will be overridden to "instant" if the user prefers reduced motion.
+   * @param {Rule} rule
+   * @param {Element} element
+   * @param {string} scrollBehavior
    */
-  async #highlightElementInRule({
-    rule,
-    elementToHighlight,
-    elementToFocus,
-    scrollBehavior,
-  }) {
+  _highlightElementInRule(rule, element, scrollBehavior) {
     if (rule) {
-      this.#scrollToElement(
-        rule.editor.selectorText,
-        elementToHighlight,
-        scrollBehavior
-      );
+      this._scrollToElement(rule.editor.selectorText, element, scrollBehavior);
     } else {
-      this.#scrollToElement(elementToHighlight, null, scrollBehavior);
+      this._scrollToElement(element, null, scrollBehavior);
     }
-
-    if (elementToFocus) {
-      elementToFocus.focus({
-        focusVisible: true,
-        // Don't scroll when focusing, this is taken care of by the call to #scrollToElement
-        preventScroll: true,
-      });
-    }
-
-    await this.#flashElement(elementToHighlight);
-    this.emitForTests("element-highlighted", elementToHighlight);
+    this._flashElement(element).then(() =>
+      this.emitForTests("element-highlighted", element)
+    );
   }
 
   /**
@@ -2713,23 +2385,6 @@ class CssRuleView extends EventEmitter {
     return this.cssRegisteredPropertiesByTarget.get(
       this.inspector.selection.nodeFront.targetFront
     );
-  }
-
-  async #selectRuleViewIfNeeded() {
-    // If three-pane mode is enable, or if the rule view is already the currently selected
-    // tab, there's no need to do anything.
-    if (
-      this.inspector.isThreePaneModeEnabled ||
-      this.inspector.sidebar.getCurrentTabID() === "ruleview"
-    ) {
-      return;
-    }
-
-    // Otherwise, we need to select the ruleview from the sidebar. This will update the
-    // panel, so we need to wait for it be populatedr
-    const onRefreshed = this.inspector.once("rule-view-refreshed");
-    await this.inspector.sidebar.select("ruleview");
-    await onRefreshed;
   }
 }
 
@@ -2745,11 +2400,13 @@ class RuleViewTool {
     this.onPanelSelected = this.onPanelSelected.bind(this);
     this.onDetachedFront = this.onDetachedFront.bind(this);
     this.onSelected = this.onSelected.bind(this);
+    this.onViewRefreshed = this.onViewRefreshed.bind(this);
 
     this.#abortController = new window.AbortController();
     const { signal } = this.#abortController;
     const baseEventConfig = { signal };
 
+    this.view.on("ruleview-refreshed", this.onViewRefreshed, baseEventConfig);
     this.inspector.selection.on(
       "detached-front",
       this.onDetachedFront,
@@ -2836,34 +2493,36 @@ class RuleViewTool {
     this.onSelected(false);
   }
 
-  async onSelected(selectElement = true) {
+  onSelected(selectElement = true) {
     // Ignore the event if the view has been destroyed, or if it's inactive.
     // But only if the current selection isn't null. If it's been set to null,
     // let the update go through as this is needed to empty the view on
     // navigation.
     if (!this.view) {
-      return;
+      return null;
     }
 
     const isInactive =
       !this.isPanelVisible() && this.inspector.selection.nodeFront;
     if (isInactive) {
-      return;
+      return null;
     }
 
     if (
       !this.inspector.selection.isConnected() ||
       !this.inspector.selection.isElementNode()
     ) {
-      this.view.selectElement(null);
-      return;
+      return this.view.selectElement(null);
     }
 
     if (!selectElement) {
-      return;
+      return null;
     }
 
-    await this.view.selectElement(this.inspector.selection.nodeFront);
+    const done = this.inspector.updating("rule-view");
+    return this.view
+      .selectElement(this.inspector.selection.nodeFront)
+      .then(done, done);
   }
 
   refresh() {
@@ -2930,8 +2589,15 @@ class RuleViewTool {
 
     if (addedRegisteredProperties.length) {
       // Retrieve @property container
-      const registeredPropertiesContainer =
-        this.view.getOrCreateRegisteredPropertiesExpandableContainer();
+      let registeredPropertiesContainer =
+        this.view.styleDocument.getElementById(
+          REGISTERED_PROPERTIES_CONTAINER_ID
+        );
+      // create it if it didn't exist before
+      if (!registeredPropertiesContainer) {
+        registeredPropertiesContainer =
+          this.view.createRegisteredPropertiesExpandableContainer();
+      }
 
       // Then add all new registered properties
       const names = new Set();
@@ -2958,7 +2624,7 @@ class RuleViewTool {
       }
 
       // Finally, update textProps that might rely on those new properties
-      this.#updateElementStyleRegisteredProperties(names);
+      this._updateElementStyleRegisteredProperties(names);
     }
 
     if (hasNewStylesheet) {
@@ -3011,7 +2677,7 @@ class RuleViewTool {
         names.add(resource.name);
       }
       // Finally, update textProps that might rely on those new properties
-      this.#updateElementStyleRegisteredProperties(names);
+      this._updateElementStyleRegisteredProperties(names);
     }
   };
 
@@ -3055,7 +2721,7 @@ class RuleViewTool {
         this.view.getRegisteredPropertyElement(name)?.remove();
       }
       // Finally, update textProps that were relying on those removed properties
-      this.#updateElementStyleRegisteredProperties(destroyedPropertiesNames);
+      this._updateElementStyleRegisteredProperties(destroyedPropertiesNames);
     }
   };
 
@@ -3065,11 +2731,11 @@ class RuleViewTool {
    *
    * @param {Set<string>} registeredPropertyNames
    */
-  #updateElementStyleRegisteredProperties(registeredPropertyNames) {
-    if (!this.view.elementStyle) {
+  _updateElementStyleRegisteredProperties(registeredPropertyNames) {
+    if (!this.view._elementStyle) {
       return;
     }
-    this.view.elementStyle.onRegisteredPropertiesChange(
+    this.view._elementStyle.onRegisteredPropertiesChange(
       registeredPropertyNames
     );
   }
@@ -3081,11 +2747,15 @@ class RuleViewTool {
   }
 
   onPanelSelected() {
-    if (this.inspector.selection.nodeFront === this.view.selectedNodeFront) {
+    if (this.inspector.selection.nodeFront === this.view._viewedElement) {
       this.refresh();
     } else {
       this.onSelected();
     }
+  }
+
+  onViewRefreshed() {
+    this.inspector.emit("rule-view-refreshed");
   }
 
   destroy() {

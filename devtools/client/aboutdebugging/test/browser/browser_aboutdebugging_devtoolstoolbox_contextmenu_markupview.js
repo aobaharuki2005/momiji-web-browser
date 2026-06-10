@@ -33,7 +33,7 @@ add_task(async function () {
   EventUtils.synthesizeMouseAtCenter(
     markupDocument.body,
     { type: "contextmenu" },
-    markupDocument.documentGlobal
+    markupDocument.ownerGlobal
   );
 
   info("Check whether proper context menu of markup view will be shown");

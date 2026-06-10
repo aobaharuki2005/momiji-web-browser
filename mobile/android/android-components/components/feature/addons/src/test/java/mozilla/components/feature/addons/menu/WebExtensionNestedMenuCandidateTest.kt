@@ -24,7 +24,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.assertIs
 
 @RunWith(AndroidJUnit4::class)
 class WebExtensionNestedMenuCandidateTest {
@@ -73,7 +72,7 @@ class WebExtensionNestedMenuCandidateTest {
         val ext1 = candidate.subMenuItems!![2] as TextMenuCandidate
         assertTrue(ext1.containerStyle.isEnabled)
         assertEquals("browser title", ext1.text)
-        assertIs<AsyncDrawableMenuIcon>(ext1.start)
+        assertTrue(ext1.start is AsyncDrawableMenuIcon)
         assertEquals(
             "browserBadge",
             (ext1.end as TextMenuIcon).text,
@@ -82,7 +81,7 @@ class WebExtensionNestedMenuCandidateTest {
         val ext2 = candidate.subMenuItems!![3] as TextMenuCandidate
         assertTrue(ext2.containerStyle.isEnabled)
         assertEquals("page title", ext2.text)
-        assertIs<AsyncDrawableMenuIcon>(ext2.start)
+        assertTrue(ext2.start is AsyncDrawableMenuIcon)
         assertEquals(
             "pageBadge",
             (ext2.end as TextMenuIcon).text,

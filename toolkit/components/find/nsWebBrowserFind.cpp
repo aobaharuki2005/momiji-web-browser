@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,7 +20,7 @@
 #include "nsISelectionController.h"
 #include "nsIFrame.h"
 #include "nsReadableUtils.h"
-#include "nsIContentInlines.h"
+#include "nsIContent.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsFind.h"
@@ -320,7 +322,7 @@ already_AddRefed<Selection> nsWebBrowserFind::UpdateSelection(
   // since the match could be an anonymous textnode inside a
   // <textarea> or text <input>, we need to get the outer frame
   nsIFrame* tcFrame = nullptr;
-  for (; content; content = content->GetFlattenedTreeParent()) {
+  for (; content; content = content->GetParent()) {
     if (!content->IsInNativeAnonymousSubtree()) {
       nsIFrame* f = content->GetPrimaryFrame();
       if (!f) {
@@ -638,7 +640,7 @@ nsresult nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow,
               if (scrollSelection) {
                 scrollSelection->ScrollIntoView(
                     nsISelectionController::SELECTION_WHOLE_SELECTION,
-                    AxisScrollParams(WhereToScroll::Center), AxisScrollParams(),
+                    ScrollAxis(WhereToScroll::Center), ScrollAxis(),
                     ScrollFlags::None, SelectionScrollMode::SyncFlush);
               }
             }));
@@ -661,38 +663,35 @@ nsresult nsWebBrowserFind::OnEndSearchFrame(nsPIDOMWindowOuter* aWindow) {
 }
 
 already_AddRefed<Selection> nsWebBrowserFind::GetFrameSelection(
-    nsPIDOMWindowOuter* aWindow) const {
-  MOZ_ASSERT(aWindow);
-
-  Document* const doc = aWindow->GetDoc();
-  if (MOZ_UNLIKELY(!doc)) {
+    nsPIDOMWindowOuter* aWindow) {
+  RefPtr<Document> doc = aWindow->GetDoc();
+  if (!doc) {
     return nullptr;
   }
 
-  PresShell* const presShell = doc->GetPresShell();
-  if (MOZ_UNLIKELY(!presShell)) {
+  PresShell* presShell = doc->GetPresShell();
+  if (!presShell) {
     return nullptr;
   }
+
+  // text input controls have their independent selection controllers that we
+  // must use when they have focus.
 
   nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-  if (const nsCOMPtr<nsIContent> focusedContent =
-          nsFocusManager::GetFocusedDescendant(
-              aWindow, nsFocusManager::eOnlyCurrentWindow,
-              getter_AddRefs(focusedWindow))) {
-    nsIFrame* const focusedFrame = focusedContent->GetPrimaryFrame();
-    if (focusedFrame && focusedFrame->PresShell() == presShell) {
-      // While a text control has focus, we should use it instead of the
-      // selection for the document.  nsIFrame::GetSelectionController()
-      // returns the independent selection controller if and only if it's a
-      // TextControlFrame.
-      if (nsISelectionController* const selCon =
-              focusedFrame->GetSelectionController()) {
-        Selection* const sel =
-            selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
-        if (sel && sel->RangeCount() > 0) {
-          return do_AddRef(sel);
-        }
-      }
+  nsCOMPtr<nsIContent> focusedContent = nsFocusManager::GetFocusedDescendant(
+      aWindow, nsFocusManager::eOnlyCurrentWindow,
+      getter_AddRefs(focusedWindow));
+
+  nsIFrame* const frame =
+      focusedContent ? focusedContent->GetPrimaryFrame() : nullptr;
+
+  nsCOMPtr<nsISelectionController> selCon;
+  if (frame) {
+    nsISelectionController* const selCon = frame->GetSelectionController();
+    Selection* const sel =
+        selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
+    if (sel && sel->RangeCount() > 0) {
+      return do_AddRef(sel);
     }
   }
 

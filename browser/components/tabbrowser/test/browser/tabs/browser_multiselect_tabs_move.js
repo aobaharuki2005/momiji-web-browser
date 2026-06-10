@@ -227,16 +227,3 @@ add_task(async function testMoveStartEnabledWithCollapsedGroupAtEnd() {
 
   BrowserTestUtils.removeTab(tab2);
 });
-
-add_task(async function testMoveTabOptionsDisabledFromOnlyTab() {
-  let tab = gBrowser.selectedTab;
-  let menuItemMoveTabOptions = document.getElementById(
-    "context_moveTabOptions"
-  );
-  updateTabContextMenu(tab);
-  is(
-    menuItemMoveTabOptions.disabled,
-    true,
-    "Move Tab Options Submenu is disabled"
-  );
-});

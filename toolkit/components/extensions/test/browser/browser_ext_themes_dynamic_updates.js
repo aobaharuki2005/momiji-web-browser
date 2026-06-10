@@ -19,26 +19,12 @@ function hexToRGB(hex) {
   );
 }
 
-function imageDataFromDataURI(dataURIString) {
-  return Uint8Array.from(
-    atob(dataURIString.replace("data:image/png;base64,", "")),
-    byte => byte.charCodeAt(0)
-  ).buffer;
-}
-
-function validateTheme(
-  backgroundImage,
-  accentColor,
-  textColor,
-  isLWT,
-  hasVerticalAlign = false
-) {
+function validateTheme(backgroundImage, accentColor, textColor, isLWT) {
   let docEl = window.document.documentElement;
   let rootCS = window.getComputedStyle(docEl);
 
   let toolbox = document.querySelector("#navigator-toolbox");
   let toolboxCS = window.getComputedStyle(toolbox);
-  let bodyCS = window.getComputedStyle(window.document.body);
 
   if (isLWT) {
     Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
@@ -54,20 +40,8 @@ function validateTheme(
   if (textColor.startsWith("#")) {
     textColor = hexToRGB(textColor);
   }
-
-  Assert.equal(
-    hasVerticalAlign,
-    docEl.hasAttribute("lwtheme-image-y-align"),
-    "root element should have attribute lwtheme-image-y-align when custom vertical alignment is expected"
-  );
   Assert.ok(
-    // The background image is expected to be set on the body element
-    // unless the background image needed to a custom vertical alignment,
-    // in which case the background image is expected to be set on the
-    // #navigator-toolbox element. See Bug 1952602.
-    hasVerticalAlign
-      ? toolboxCS.backgroundImage.includes(backgroundImage)
-      : bodyCS.backgroundImage.includes(backgroundImage),
+    toolboxCS.backgroundImage.includes(backgroundImage),
     "Expected correct background image"
   );
   Assert.equal(
@@ -85,8 +59,8 @@ add_task(async function test_dynamic_theme_updates() {
       permissions: ["theme"],
     },
     files: {
-      "image1.png": imageDataFromDataURI(BACKGROUND_1),
-      "image2.png": imageDataFromDataURI(BACKGROUND_2),
+      "image1.png": BACKGROUND_1,
+      "image2.png": BACKGROUND_2,
     },
     background() {
       browser.test.onMessage.addListener((msg, details) => {
@@ -109,13 +83,9 @@ add_task(async function test_dynamic_theme_updates() {
   );
   await extension.startup();
 
-  // Check with customized background vertical alignment
   extension.sendMessage("update-theme", {
     images: {
-      additional_backgrounds: ["image1.png"],
-    },
-    properties: {
-      additional_backgrounds_alignment: ["right center"],
+      theme_frame: "image1.png",
     },
     colors: {
       frame: ACCENT_COLOR_1,
@@ -125,9 +95,10 @@ add_task(async function test_dynamic_theme_updates() {
 
   await extension.awaitMessage("theme-updated");
 
-  validateTheme("image1.png", ACCENT_COLOR_1, TEXT_COLOR_1, true, true);
+  validateTheme("image1.png", ACCENT_COLOR_1, TEXT_COLOR_1, true);
 
-  // Check without customized background vertical alignment.
+  // Check with the LWT aliases (to update on Firefox 69, because the
+  // LWT aliases are going to be removed).
   extension.sendMessage("update-theme", {
     images: {
       theme_frame: "image2.png",

@@ -8,7 +8,7 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "devtools/client/shared/vendor/react-redux";
 
 import SourceIcon from "../shared/SourceIcon";
-import DebuggerImage from "devtools/client/shared/components/DebuggerImage";
+import DebuggerImage from "../shared/DebuggerImage";
 
 import {
   getHideIgnoredSources,
@@ -107,7 +107,6 @@ class SourceTreeItemContents extends Component {
     if (item.type == "source") {
       const { source, sourceActor } = item;
       return React.createElement(SourceIcon, {
-        className: this.props.isSourceOverridden ? " has-network-override" : "",
         location: createLocation({
           source,
           sourceActor,
@@ -118,7 +117,10 @@ class SourceTreeItemContents extends Component {
           if (icon === "extension") {
             return sourceTypes[source.displayURL.fileExtension] || "javascript";
           }
-          return icon;
+          return (
+            icon +
+            (this.props.isSourceOverridden ? " has-network-override" : "")
+          );
         },
       });
     }

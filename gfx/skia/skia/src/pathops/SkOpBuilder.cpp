@@ -28,18 +28,15 @@
 #include <cstdint>
 
 static bool one_contour(const SkPath& path) {
-    const auto raw = SkPathPriv::Raw(path, SkResolveConvexity::kNo);
-    if (!raw) {
-        return false;
-    }
-
-    const auto verbs = raw->verbs();
-    for (size_t i = 1; i < verbs.size(); ++i) {
-        if (verbs[i] == SkPathVerb::kMove) {
+    SkSTArenaAlloc<256> allocator;
+    int verbCount = path.countVerbs();
+    uint8_t* verbs = (uint8_t*) allocator.makeArrayDefault<uint8_t>(verbCount);
+    (void) path.getVerbs({verbs, verbCount});
+    for (int index = 1; index < verbCount; ++index) {
+        if (verbs[index] == SkPath::kMove_Verb) {
             return false;
         }
     }
-
     return true;
 }
 
@@ -189,7 +186,7 @@ std::optional<SkPath> SkOpBuilder::resolve() {
         reset();
         return result;
     }
-    SkPathBuilder sum;
+    SkPath sum;
     for (int index = 0; index < count; ++index) {
         auto result = Simplify(fPathRefs[index]);
         if (!result.has_value()) {
@@ -207,5 +204,5 @@ std::optional<SkPath> SkOpBuilder::resolve() {
     }
     reset();
 
-    return Simplify(sum.detach());
+    return Simplify(sum);
 }

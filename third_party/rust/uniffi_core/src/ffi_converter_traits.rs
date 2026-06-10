@@ -306,7 +306,10 @@ pub unsafe trait LowerReturn<UT>: Sized {
     ///   `Err(RustCallError::Error(buf))`. This results in better exception throws on the foreign
     ///   side.
     fn handle_failed_lift(error: LiftArgsError) -> Result<Self::ReturnType, RustCallError> {
-        Err(error.to_internal_error())
+        let LiftArgsError { arg_name, error } = error;
+        Err(RustCallError::InternalError(format!(
+            "Failed to convert arg '{arg_name}': {error}"
+        )))
     }
 }
 
@@ -647,14 +650,15 @@ macro_rules! derive_ffi_traits {
 
 unsafe impl<T: Send + Sync, UT> HandleAlloc<UT> for T {
     fn new_handle(value: Arc<Self>) -> Handle {
-        Handle::from_arc(value)
+        Handle::from_pointer(Arc::into_raw(value))
     }
 
     unsafe fn clone_handle(handle: Handle) -> Handle {
-        handle.clone_arc_handle::<T>()
+        Arc::increment_strong_count(handle.as_pointer::<T>());
+        handle
     }
 
     unsafe fn consume_handle(handle: Handle) -> Arc<Self> {
-        handle.into_arc()
+        Arc::from_raw(handle.as_pointer())
     }
 }

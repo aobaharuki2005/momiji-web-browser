@@ -23,15 +23,14 @@ Could not find codespell!
 """.strip()
 
 
+results = []
+
 CODESPELL_FORMAT_REGEX = re.compile(r"(.*):(.*): (.*) ==> (.*)$")
 
 
 class CodespellProcess(LintProcess):
-    def __init__(self, config, cmd, results, fix=False):
-        super().__init__(config, cmd)
-        self.results = results
-        self.fix = fix
-        self.fixed = 0
+    fixed = 0
+    _fix = None
 
     def process_line(self, line):
         try:
@@ -42,8 +41,8 @@ class CodespellProcess(LintProcess):
                 print(f"Unable to match regex against output: {line}")
             return
 
-        if self.fix:
-            self.fixed += 1
+        if CodespellProcess._fix:
+            CodespellProcess.fixed += 1
 
         # Ignore false positive like aParent (which would be fixed to apparent)
         # See https://github.com/lucasdemarchi/codespell/issues/314
@@ -56,17 +55,16 @@ class CodespellProcess(LintProcess):
             "level": "error",
             "lineno": line,
         }
-        self.results.append(result.from_config(self.config, **res))
+        results.append(result.from_config(self.config, **res))
 
 
-def run_process(config, cmd, results, fix=False):
-    proc = CodespellProcess(config, cmd, results, fix)
+def run_process(config, cmd):
+    proc = CodespellProcess(config, cmd)
     proc.run()
     try:
         proc.wait()
     except KeyboardInterrupt:
         proc.kill()
-    return proc
 
 
 def get_codespell_binary():
@@ -125,20 +123,22 @@ def lint(paths, config, fix=None, **lintargs):
     log.debug("Command: {}".format(" ".join(cmd_args)))
     log.debug(f"Version: {get_codespell_version(binary)}")
 
-    results = []
-    fixed = 0
+    if fix:
+        CodespellProcess._fix = True
 
     base_command = cmd_args + paths
-    proc = run_process(config, base_command, results, fix=bool(fix))
+    run_process(config, base_command)
 
     if fix:
-        fixed = proc.fixed
-        results.clear()
+        global results
+        results = []
         cmd_args.append("--write-changes")
         log.debug("Command: {}".format(" ".join(cmd_args)))
         log.debug(f"Version: {get_codespell_version(binary)}")
         base_command = cmd_args + paths
-        proc = run_process(config, base_command, results, fix=True)
-        fixed += proc.fixed - len(results)
+        run_process(config, base_command)
+        CodespellProcess.fixed = CodespellProcess.fixed - len(results)
+    else:
+        CodespellProcess.fixed = 0
 
-    return {"results": results, "fixed": fixed}
+    return {"results": results, "fixed": CodespellProcess.fixed}

@@ -1,3 +1,4 @@
+//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // Originally based on Chrome sources:
 // Copyright (c) 2010 The Chromium Authors. All rights reserved.
 //

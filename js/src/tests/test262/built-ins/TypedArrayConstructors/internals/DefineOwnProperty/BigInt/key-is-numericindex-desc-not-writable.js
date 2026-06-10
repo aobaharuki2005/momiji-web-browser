@@ -14,12 +14,12 @@ info: |
       x. If Desc has a [[Writable]] field and if Desc.[[Writable]] is false,
       return false.
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Reflect, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg(2));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA(2);
 
   assert.sameValue(
     Reflect.defineProperty(sample, "0", {
@@ -32,6 +32,6 @@ testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
     "defineProperty's result"
   );
   assert.sameValue(sample[0], 0n, "side effect check");
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

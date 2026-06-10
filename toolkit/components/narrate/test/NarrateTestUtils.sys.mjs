@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { ContentTaskUtils } from "resource://testing-common/ContentTaskUtils.sys.mjs";
+import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 export var NarrateTestUtils = {
@@ -19,7 +20,7 @@ export var NarrateTestUtils = {
   FORWARD: ".narrate-skip-next",
 
   isVisible(element) {
-    let win = element.documentGlobal;
+    let win = element.ownerGlobal;
     let style = win.getComputedStyle(element);
     if (style.display == "none") {
       return false;
@@ -112,6 +113,17 @@ export var NarrateTestUtils = {
   waitForNarrateToggle(window) {
     let toggle = window.document.querySelector(this.TOGGLE);
     return ContentTaskUtils.waitForCondition(() => !toggle.hidden, "");
+  },
+
+  waitForPrefChange(pref) {
+    return new Promise(resolve => {
+      function observeChange() {
+        Services.prefs.removeObserver(pref, observeChange);
+        resolve(Preferences.get(pref));
+      }
+
+      Services.prefs.addObserver(pref, observeChange);
+    });
   },
 
   sendBoundaryEvent(window, name, charIndex, charLength) {

@@ -1,3 +1,5 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -11,7 +13,6 @@ UNIFIED_SOURCES += [
     "TestCapsule.cpp",
     "TestCommon.cpp",
     "TestCookie.cpp",
-    "TestDNS.cpp",
     "TestDNSPacket.cpp",
     "TestEtcHostsParsing.cpp",
     "TestHeaders.cpp",
@@ -29,14 +30,12 @@ UNIFIED_SOURCES += [
     "TestLocalNetworkAccess.cpp",
     "TestMIMEInputStream.cpp",
     "TestMozURL.cpp",
-    "TestNoVarySearchUtils.cpp",
     "TestPACMan.cpp",
     "TestParseHeaders.cpp",
     "TestPollableEvent.cpp",
     "TestProtocolProxyService.cpp",
     "TestReadStreamToString.cpp",
     "TestServerTimingHeader.cpp",
-    "TestSFV.cpp",
     "TestSocketTransportService.cpp",
     "TestSSLTokensCache.cpp",
     "TestStandardURL.cpp",
@@ -44,7 +43,7 @@ UNIFIED_SOURCES += [
     "TestUDPSocket.cpp",
     "TestURIMutator.cpp",
     "TestUriTemplate.cpp",
-    "TestUrlPatternGlue.cpp",
+    "TestURLPatternGlue.cpp",
     "TestUseAsDictionary.cpp",
     "TestWebTransportFlowControl.cpp",
 ]
@@ -69,7 +68,6 @@ USE_LIBS += [
 
 LOCAL_INCLUDES += [
     "/netwerk/base",
-    "/netwerk/base/http-sfv",
     "/netwerk/cache2",
     "/netwerk/cookie",
     "/netwerk/dns",

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,18 +36,16 @@ void WSScanResult::AssertIfInvalidData(const WSRunScanner& aScanner) const {
              mReason == WSType::CollapsibleWhiteSpaces ||
              mReason == WSType::BRElement ||
              mReason == WSType::PreformattedLineBreak ||
-             mReason == WSType::EmptyInlineContainerElement ||
              mReason == WSType::SpecialContent ||
              mReason == WSType::CurrentBlockBoundary ||
              mReason == WSType::OtherBlockBoundary ||
              mReason == WSType::InlineEditingHostBoundary);
   MOZ_ASSERT_IF(mReason == WSType::UnexpectedError, !mContent);
   MOZ_ASSERT_IF(mReason != WSType::UnexpectedError, mContent);
-  MOZ_ASSERT_IF(
-      mReason == WSType::InUncomposedDoc,
-      aScanner.ScanOptions().contains(WSRunScanner::Option::OnlyEditableNodes));
   MOZ_ASSERT_IF(mReason == WSType::InUncomposedDoc,
                 !mContent->IsInComposedDoc());
+  MOZ_ASSERT_IF(mContent && !mContent->IsInComposedDoc(),
+                mReason == WSType::InUncomposedDoc);
   MOZ_ASSERT_IF(mReason == WSType::NonCollapsibleCharacters ||
                     mReason == WSType::CollapsibleWhiteSpaces ||
                     mReason == WSType::PreformattedLineBreak,
@@ -73,34 +72,15 @@ void WSScanResult::AssertIfInvalidData(const WSRunScanner& aScanner) const {
                 mContent->IsHTMLElement(nsGkAtoms::br));
   MOZ_ASSERT_IF(mReason == WSType::PreformattedLineBreak,
                 EditorUtils::IsNewLinePreformatted(*mContent));
-  auto MaybeNonVoidEmptyInlineContainerElement = [&]() {
-    return HTMLEditUtils::IsInlineContent(
-               *mContent,
-               aScanner.ReferredHTMLDefaultStyle()
-                   ? BlockInlineCheck::UseHTMLDefaultStyle
-                   : BlockInlineCheck::UseComputedDisplayOutsideStyle) &&
-           HTMLEditUtils::IsContainerNode(*mContent) &&
-           !HTMLEditUtils::IsReplacedElement(*mContent->AsElement());
-  };
-  MOZ_ASSERT_IF(mReason == WSType::EmptyInlineContainerElement,
-                !mContent->GetShadowRootForSelection());
-  MOZ_ASSERT_IF(mReason == WSType::EmptyInlineContainerElement,
-                MaybeNonVoidEmptyInlineContainerElement());
   MOZ_ASSERT_IF(
       mReason == WSType::SpecialContent,
-      (mContent->IsComment() || mContent->IsProcessingInstruction()) ||
-          (mContent->IsText() && !mContent->IsEditable()) ||
-          mContent->GetShadowRootForSelection() ||
-          (mContent->IsElement() && !mContent->IsHTMLElement(nsGkAtoms::br) &&
+      (mContent->IsText() && !mContent->IsEditable()) ||
+          (!mContent->IsHTMLElement(nsGkAtoms::br) &&
            !HTMLEditUtils::IsBlockElement(
                *mContent,
                aScanner.ReferredHTMLDefaultStyle()
                    ? BlockInlineCheck::UseHTMLDefaultStyle
-                   : BlockInlineCheck::UseComputedDisplayOutsideStyle) &&
-           !(mContent->IsEditable() &&
-             MaybeNonVoidEmptyInlineContainerElement())));
-  MOZ_ASSERT_IF(mReason == WSType::OtherBlockBoundary,
-                !mContent->GetShadowRootForSelection());
+                   : BlockInlineCheck::UseComputedDisplayOutsideStyle)));
   MOZ_ASSERT_IF(
       mReason == WSType::OtherBlockBoundary,
       HTMLEditUtils::IsBlockElement(
@@ -173,9 +153,7 @@ template <typename PT, typename CT>
 WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSet());
-  const bool onlyEditableNodes =
-      ScanOptions().contains(Option::OnlyEditableNodes);
-  MOZ_ASSERT_IF(onlyEditableNodes, aPoint.IsInComposedDoc());
+  MOZ_ASSERT(aPoint.IsInComposedDoc());
 
   if (MOZ_UNLIKELY(!aPoint.IsSet())) {
     return WSScanResult::Error();
@@ -185,7 +163,7 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
   // For example, only some descendants in an editing host is temporarily
   // removed from the tree, they are not editable unless nested contenteditable
   // attribute is set to "true".
-  if (onlyEditableNodes && !aPoint.IsInComposedDoc()) [[unlikely]] {
+  if (MOZ_UNLIKELY(!aPoint.IsInComposedDoc())) {
     return WSScanResult(*this, WSScanResult::ScanDirection::Backward,
                         *aPoint.template ContainerAs<nsIContent>(),
                         WSType::InUncomposedDoc);
@@ -204,7 +182,8 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
     // If the visible things are not editable, we shouldn't scan "editable"
     // things now.  Whether keep scanning editable things or not should be
     // considered by the caller.
-    if (onlyEditableNodes && aPoint.GetChild() &&
+    if (ScanOptions().contains(Option::OnlyEditableNodes) &&
+        aPoint.GetChild() &&
         !HTMLEditUtils::IsSimplyEditableNode((*aPoint.GetChild()))) {
       return WSScanResult(*this, WSScanResult::ScanDirection::Backward,
                           *aPoint.GetChild(), WSType::SpecialContent);
@@ -271,9 +250,7 @@ template <typename PT, typename CT>
 WSScanResult WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSet());
-  const bool onlyEditableNodes =
-      ScanOptions().contains(Option::OnlyEditableNodes);
-  MOZ_ASSERT_IF(onlyEditableNodes, aPoint.IsInComposedDoc());
+  MOZ_ASSERT(aPoint.IsInComposedDoc());
 
   if (MOZ_UNLIKELY(!aPoint.IsSet())) {
     return WSScanResult::Error();
@@ -283,7 +260,7 @@ WSScanResult WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
   // For example, only some descendants in an editing host is temporarily
   // removed from the tree, they are not editable unless nested contenteditable
   // attribute is set to "true".
-  if (onlyEditableNodes && !aPoint.IsInComposedDoc()) [[unlikely]] {
+  if (MOZ_UNLIKELY(!aPoint.IsInComposedDoc())) {
     return WSScanResult(*this, WSScanResult::ScanDirection::Forward,
                         *aPoint.template ContainerAs<nsIContent>(),
                         WSType::InUncomposedDoc);
@@ -302,7 +279,8 @@ WSScanResult WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
     // If the visible things are not editable, we shouldn't scan "editable"
     // things now.  Whether keep scanning editable things or not should be
     // considered by the caller.
-    if (onlyEditableNodes && aPoint.GetChild() &&
+    if (ScanOptions().contains(Option::OnlyEditableNodes) &&
+        aPoint.GetChild() &&
         !HTMLEditUtils::IsSimplyEditableNode(*aPoint.GetChild())) {
       return WSScanResult(*this, WSScanResult::ScanDirection::Forward,
                           *aPoint.GetChild(), WSType::SpecialContent);
@@ -872,8 +850,7 @@ EditorDOMRange WSRunScanner::GetRangeForDeletingBlockElementBoundaries(
   if (NS_WARN_IF(!textFragmentDataAtEndOfLeftBlockElement.IsInitialized())) {
     return EditorDOMRange();  // TODO: Make here return error with Err.
   }
-  if (textFragmentDataAtEndOfLeftBlockElement
-          .StartsFromBRElementFollowedByBlockBoundary()) {
+  if (textFragmentDataAtEndOfLeftBlockElement.StartsFromInvisibleBRElement()) {
     // If the left block element ends with an invisible `<br>` element,
     // it'll be deleted (and it means there is no invisible trailing
     // white-spaces).  Therefore, the range should start from the invisible
@@ -1050,10 +1027,9 @@ WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
     if (NS_WARN_IF(!textFragmentDataAtStart.IsInitialized())) {
       return Err(NS_ERROR_FAILURE);
     }
-    if (textFragmentDataAtStart.EndsByBRElementNotFollowedByBlockBoundary()) {
+    if (textFragmentDataAtStart.EndsByVisibleBRElement()) {
       startContent = textFragmentDataAtStart.EndReasonBRElementPtr();
     } else if (textFragmentDataAtStart.EndsBySpecialContent() ||
-               textFragmentDataAtStart.EndsByEmptyInlineContainerElement() ||
                (textFragmentDataAtStart.EndsByOtherBlockElement() &&
                 !HTMLEditUtils::IsContainerNode(
                     *textFragmentDataAtStart
@@ -1073,10 +1049,9 @@ WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
     if (NS_WARN_IF(!textFragmentDataAtEnd.IsInitialized())) {
       return Err(NS_ERROR_FAILURE);
     }
-    if (textFragmentDataAtEnd.StartsFromBRElementNotFollowedByBlockBoundary()) {
+    if (textFragmentDataAtEnd.StartsFromVisibleBRElement()) {
       endContent = textFragmentDataAtEnd.StartReasonBRElementPtr();
     } else if (textFragmentDataAtEnd.StartsFromSpecialContent() ||
-               textFragmentDataAtEnd.EndsByEmptyInlineContainerElement() ||
                (textFragmentDataAtEnd.StartsFromOtherBlockElement() &&
                 !HTMLEditUtils::IsContainerNode(
                     *textFragmentDataAtEnd
@@ -1090,9 +1065,13 @@ WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
   }
 
   nsresult rv = aRange.SetStartAndEnd(
-      startContent ? RangeBoundary::FromChild(*startContent)
+      startContent ? RangeBoundary(
+                         startContent->GetParentNode(),
+                         startContent->GetPreviousSibling())  // at startContent
                    : aRange.StartRef(),
-      endContent ? RangeBoundary::After(*endContent) : aRange.EndRef());
+      endContent ? RangeBoundary(endContent->GetParentNode(),
+                                 endContent)  // after endContent
+                 : aRange.EndRef());
   if (NS_FAILED(rv)) {
     NS_WARNING("nsRange::SetStartAndEnd() failed");
     return Err(rv);

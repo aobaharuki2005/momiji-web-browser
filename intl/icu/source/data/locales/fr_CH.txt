@@ -9,7 +9,6 @@ fr_CH{
             }
             symbols{
                 currencyDecimal{"."}
-                group{"'"}
             }
         }
     }

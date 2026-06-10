@@ -259,9 +259,7 @@ impl AsFd for UnixSocket {
 
 impl FromRawFd for UnixSocket {
     unsafe fn from_raw_fd(fd: RawFd) -> UnixSocket {
-        // Safety: exactly the same safety requirements as the
-        // `FromRawFd::from_raw_fd` trait method.
-        let inner = unsafe { socket2::Socket::from_raw_fd(fd) };
+        let inner = socket2::Socket::from_raw_fd(fd);
         UnixSocket { inner }
     }
 }

@@ -80,7 +80,6 @@ namespace mozilla::gtest {
 #  define EXPECT_DEBUG_DEATH_WRAP(a, b)
 #endif
 
-void EnableCrashReporter();
 void DisableCrashReporter();
 
 /**

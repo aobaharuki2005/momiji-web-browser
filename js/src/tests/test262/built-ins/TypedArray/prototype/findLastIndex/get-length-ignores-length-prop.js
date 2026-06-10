@@ -20,14 +20,14 @@ Object.defineProperty(TypedArray.prototype, "length", {
   }
 });
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   Object.defineProperty(TA.prototype, "length", {
     get: function() {
       throw new Test262Error();
     }
   });
 
-  var sample = new TA(makeCtorArg([42]));
+  var sample = new TA([42]);
 
   Object.defineProperty(sample, "length", {
     get: function() {
@@ -40,6 +40,6 @@ testWithTypedArrayConstructors(function(TA, makeCtorArg) {
     sample.findLastIndex(function() { return true; }),
     0
   );
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

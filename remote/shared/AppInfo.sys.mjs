@@ -52,12 +52,6 @@ ChromeUtils.defineLazyGetter(AppInfo, "isWindows", () => {
   return Services.appinfo.OS === "WINNT";
 });
 
-// Display
-
-ChromeUtils.defineLazyGetter(AppInfo, "isHeadless", () => {
-  return Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless;
-});
-
 // Application type
 
 ChromeUtils.defineLazyGetter(AppInfo, "isFirefox", () => {

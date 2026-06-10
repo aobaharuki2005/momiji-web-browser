@@ -1,3 +1,6 @@
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,29 +8,20 @@
 #include <xf86drm.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-#include <gbm.h>
-#include <mutex>
 
 #include "DMABufDevice.h"
 #include "DMABufFormats.h"
-#include "WidgetUtilsGtk.h"
 #ifdef MOZ_WAYLAND
 #  include "nsWaylandDisplay.h"
+#  include "WidgetUtilsGtk.h"
 #  include "mozilla/widget/mozwayland.h"
 #  include "mozilla/widget/linux-dmabuf-unstable-v1-client-protocol.h"
 #endif
+#include <gbm.h>
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/gfx/Logging.h"  // for gfxCriticalNote
 
-// drm_fourcc.h defines DRM_FORMAT_MOD_INVALID without a guard; undef the
-// fallback from DMABufFormats.h first so the unified build doesn't see a
-// redefinition (same pattern as DMABufSurface.cpp).
-#ifdef DRM_FORMAT_MOD_INVALID
-#  undef DRM_FORMAT_MOD_INVALID
-#endif
-#include <libdrm/drm_fourcc.h>
-#include "GLContextEGL.h"
+#include "mozilla/gfx/Logging.h"  // for gfxCriticalNote
 
 using namespace mozilla::gfx;
 
@@ -36,38 +30,10 @@ using namespace mozilla::gfx;
     __gbm_fourcc_code('P', '0', '1', '0') /* 2x2 subsampled Cr:Cb plane */
 #endif
 
-namespace mozilla::widget {
+// TODO: Provide fallback formats if beedback is not received yet
+// Get from display?
 
-static void AppendDmaBufModifiersFromEGL(uint32_t aDrmFourcc,
-                                         nsTArray<uint64_t>& aOut) {
-  if (!aOut.IsEmpty()) {
-    return;
-  }
-  nsCString failureId;
-  const auto egl = gl::DefaultEglDisplay(&failureId);
-  if (!egl ||
-      !egl->IsExtensionSupported(
-          mozilla::gl::EGLExtension::EXT_image_dma_buf_import_modifiers)) {
-    return;
-  }
-  EGLint numMods = 0;
-  if (!egl->mLib->fQueryDmaBufModifiersEXT(egl->mDisplay,
-                                           static_cast<EGLint>(aDrmFourcc), 0,
-                                           nullptr, nullptr, &numMods) ||
-      numMods <= 0) {
-    return;
-  }
-  nsTArray<uint64_t> mods;
-  mods.SetLength(numMods);
-  EGLint n = numMods;
-  if (!egl->mLib->fQueryDmaBufModifiersEXT(egl->mDisplay,
-                                           static_cast<EGLint>(aDrmFourcc), n,
-                                           mods.Elements(), nullptr, &n) ||
-      n <= 0) {
-    return;
-  }
-  aOut.AppendElements(mods.Elements(), n);
-}
+namespace mozilla::widget {
 
 // Table of all supported DRM formats, every format is stored as
 // FOURCC format + modifier pair and
@@ -81,8 +47,8 @@ class DMABufFormatTable final {
   void Set(int32_t aFd, uint32_t aSize) {
     MOZ_DIAGNOSTIC_ASSERT(!mData && !mSize);
     mSize = aSize;
-    mData = (DRMFormatTableEntry*)mmap(nullptr, aSize, PROT_READ, MAP_PRIVATE,
-                                       aFd, 0);
+    mData =
+        (DRMFormatTableEntry*)mmap(NULL, aSize, PROT_READ, MAP_PRIVATE, aFd, 0);
     close(aFd);
   }
 
@@ -259,7 +225,7 @@ static void dmabuf_feedback_tranche_formats(
     formatTable = dmabuf->GetDMABufFeedback()
                       ? dmabuf->GetDMABufFeedback()->FormatTable()
                       : nullptr;
-    if (!formatTable || !formatTable->IsSet()) {
+    if (!formatTable->IsSet()) {
       gfxCriticalNote << "Missing DMABuf format table!";
       return;
     }
@@ -381,33 +347,30 @@ DRMFormat* DMABufFormats::GetFormat(uint32_t aFormat,
   return mDMABufFeedback->GetFormat(aFormat, aRequestScanoutFormat);
 }
 
-void DMABufFormats::EnsureBasicFormat(uint32_t aDrmFourcc) {
-  MOZ_DIAGNOSTIC_ASSERT(mDMABufFeedback);
-  if (!GetFormat(aDrmFourcc)) {
-    LOGDMABUF(("DMABufFormats::EnsureBasicFormat(): %x is missing, adding.",
-               aDrmFourcc));
-    mDMABufFeedback->PendingTranche()->AddFormat(aDrmFourcc,
-                                                 DRM_FORMAT_MOD_INVALID);
-  }
-}
-
 void DMABufFormats::EnsureBasicFormats() {
   MOZ_DIAGNOSTIC_ASSERT(!mPendingDMABufFeedback,
                         "Can't add extra formats during init!");
   if (!mDMABufFeedback) {
     mDMABufFeedback = MakeUnique<DMABufFeedback>();
   }
-
-  EnsureBasicFormat(GBM_FORMAT_XRGB8888);
-  EnsureBasicFormat(GBM_FORMAT_ARGB8888);
-  EnsureBasicFormat(GBM_FORMAT_P010);
-  EnsureBasicFormat(GBM_FORMAT_NV12);
-  EnsureBasicFormat(GBM_FORMAT_YUV420);
-
+  if (!GetFormat(GBM_FORMAT_XRGB8888)) {
+    LOGDMABUF(
+        ("DMABufFormats::EnsureBasicFormats(): GBM_FORMAT_XRGB8888 is missing, "
+         "adding."));
+    mDMABufFeedback->PendingTranche()->AddFormat(GBM_FORMAT_XRGB8888,
+                                                 DRM_FORMAT_MOD_INVALID);
+  }
+  if (!GetFormat(GBM_FORMAT_ARGB8888)) {
+    LOGDMABUF(
+        ("DMABufFormats::EnsureBasicFormats(): GBM_FORMAT_ARGB8888 is missing, "
+         "adding."));
+    mDMABufFeedback->PendingTranche()->AddFormat(GBM_FORMAT_ARGB8888,
+                                                 DRM_FORMAT_MOD_INVALID);
+  }
   mDMABufFeedback->PendingTrancheDone();
 }
 
-DMABufFormats::DMABufFormats() = default;
+DMABufFormats::DMABufFormats() {}
 
 DMABufFormats::~DMABufFormats() {
 #ifdef MOZ_WAYLAND
@@ -423,42 +386,12 @@ RefPtr<DMABufFormats> CreateDMABufFeedbackFormats(
   if (!WaylandDisplayGet()->HasDMABufFeedback()) {
     return nullptr;
   }
-  auto formats = MakeRefPtr<DMABufFormats>();
+  RefPtr<DMABufFormats> formats = new DMABufFormats();
   formats->InitFeedback(WaylandDisplayGet()->GetDmabuf(), aFormatRefreshCB,
                         aSurface);
   return formats.forget();
 }
 #endif
-
-bool GlobalDMABufFormats::ConfigureFormat(RefPtr<DMABufFormats> aFormats,
-                                          RefPtr<DRMFormat>& aTargetFormat,
-                                          uint32_t aDrmFourcc) {
-  DRMFormat* format = aFormats->GetFormat(aDrmFourcc);
-  if (!format) {
-    LOGDMABUF(
-        ("GlobalDMABufFormats::ConfigureFormat(): missing %x fourcc format.",
-         aDrmFourcc));
-    return false;
-  }
-  nsTArray<uint64_t> mods;
-  if (!format->UseModifiers()) {
-    AppendDmaBufModifiersFromEGL(aDrmFourcc, mods);
-    LOGDMABUF(
-        ("GlobalDMABufFormats::ConfigureFormat(): Adding %x fourcc format EGL "
-         "modifiers num [%d].",
-         aDrmFourcc, (int)mods.Length()));
-  }
-  if (mods.IsEmpty()) {
-    mods.Assign(*format->GetModifiers());
-    LOGDMABUF(
-        ("GlobalDMABufFormats::ConfigureFormat(): Adding %x fourcc format "
-         "dmabuf "
-         "modifiers num [%d].",
-         aDrmFourcc, (int)mods.Length()));
-  }
-  aTargetFormat = new DRMFormat(aDrmFourcc, mods);
-  return true;
-}
 
 void GlobalDMABufFormats::SetModifiersToGfxVars() {
   RefPtr<DMABufFormats> formats;
@@ -472,25 +405,33 @@ void GlobalDMABufFormats::SetModifiersToGfxVars() {
   }
   formats->EnsureBasicFormats();
 
-  if (!ConfigureFormat(formats, mFormatRGBX, GBM_FORMAT_XRGB8888)) {
-    MOZ_DIAGNOSTIC_CRASH("Missing GBM_FORMAT_XRGB8888 dmabuf format!");
-  }
-  gfxVars::SetDMABufModifiersXRGB(*mFormatRGBX->GetModifiers());
+  DRMFormat* format = formats->GetFormat(GBM_FORMAT_XRGB8888);
+  MOZ_DIAGNOSTIC_ASSERT(format, "Missing GBM_FORMAT_XRGB8888 dmabuf format!");
+  mFormatRGBX = new DRMFormat(*format);
+  gfxVars::SetDMABufModifiersXRGB(*format->GetModifiers());
 
-  if (!ConfigureFormat(formats, mFormatRGBA, GBM_FORMAT_ARGB8888)) {
-    MOZ_DIAGNOSTIC_CRASH("Missing GBM_FORMAT_ARGB8888 dmabuf format!");
-  }
-  gfxVars::SetDMABufModifiersARGB(*mFormatRGBA->GetModifiers());
+  format = formats->GetFormat(GBM_FORMAT_ARGB8888);
+  MOZ_DIAGNOSTIC_ASSERT(format, "Missing GBM_FORMAT_ARGB8888 dmabuf format!");
+  mFormatRGBA = new DRMFormat(*format);
+  gfxVars::SetDMABufModifiersARGB(*format->GetModifiers());
 
-  if (ConfigureFormat(formats, mFormatP010, GBM_FORMAT_P010)) {
-    gfxVars::SetDMABufModifiersP010(*mFormatP010->GetModifiers());
+  format = formats->GetFormat(GBM_FORMAT_P010);
+  if (format) {
+    LOGDMABUF(("GBM_FORMAT_P010 is directly composited"));
+    mFormatP010 = new DRMFormat(*format);
+    gfxVars::SetDMABufModifiersP010(*format->GetModifiers());
   }
-
-  if (ConfigureFormat(formats, mFormatNV12, GBM_FORMAT_NV12)) {
-    gfxVars::SetDMABufModifiersNV12(*mFormatNV12->GetModifiers());
+  format = formats->GetFormat(GBM_FORMAT_NV12);
+  if (format) {
+    LOGDMABUF(("GBM_FORMAT_NV12 is directly composited"));
+    mFormatNV12 = new DRMFormat(*format);
+    gfxVars::SetDMABufModifiersNV12(*format->GetModifiers());
   }
-
-  ConfigureFormat(formats, mFormatYUV420, GBM_FORMAT_YUV420);
+  format = formats->GetFormat(GBM_FORMAT_YUV420);
+  if (format) {
+    LOGDMABUF(("GBM_FORMAT_YUV420 is directly composited"));
+    mFormatYUV420 = new DRMFormat(*format);
+  }
 }
 
 void GlobalDMABufFormats::GetModifiersFromGfxVars() {

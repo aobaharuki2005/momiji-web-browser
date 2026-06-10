@@ -34,7 +34,7 @@ add_task(async function test_open_all_in_tabs_from_library() {
     placesContext,
     "popupshown"
   );
-  await synthesizeClickOnSelectedTreeCell(gLibrary.ContentTree.view, {
+  synthesizeClickOnSelectedTreeCell(gLibrary.ContentTree.view, {
     button: 2,
     type: "contextmenu",
   });

@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Stopwatch_h_
-#define Stopwatch_h_
+#ifndef Stopwatch_h__
+#define Stopwatch_h__
 
 #include "mozilla/dom/UserInteractionBinding.h"
 
@@ -35,4 +36,4 @@ class UserInteractionStopwatch {
 }  // namespace telemetry
 }  // namespace mozilla
 
-#endif  // Stopwatch_h_
+#endif  // Stopwatch_h__

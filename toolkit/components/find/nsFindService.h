@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,9 +8,6 @@
  * last used Find settings
  *
  */
-
-#ifndef TOOLKIT_COMPONENTS_FIND_NSFINDSERVICE_H_
-#define TOOLKIT_COMPONENTS_FIND_NSFINDSERVICE_H_
 
 #include "nsString.h"
 
@@ -38,7 +36,5 @@ class nsFindService : public nsIFindService {
   bool mWrapFind;
   bool mEntireWord;
   bool mMatchCase;
-  bool mMatchDiacritics = false;
+  bool mMatchDiacritics;
 };
-
-#endif  // TOOLKIT_COMPONENTS_FIND_NSFINDSERVICE_H_

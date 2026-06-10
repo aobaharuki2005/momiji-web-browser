@@ -17,9 +17,6 @@ use utf8_iter::Utf8CharIndices;
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 pub struct SentenceBreakOptions<'a> {
     /// Content locale for sentence segmenter.
-    ///
-    /// If you know the language of the text being segmented, provide it here in order to produce
-    /// higher quality breakpoints.
     pub content_locale: Option<&'a LanguageIdentifier>,
     /// Options independent of the locale
     pub invariant_options: SentenceBreakInvariantOptions,
@@ -55,46 +52,33 @@ derive_usize_iterator_with_type!(SentenceBreakIterator, 'data);
 /// Most segmentation methods live on [`SentenceSegmenterBorrowed`], which can be obtained via
 /// [`SentenceSegmenter::new()`] or [`SentenceSegmenter::as_borrowed()`].
 ///
-/// # Content Locale
-///
-/// You can optionally provide a _content locale_ to the [`SentenceSegmenter`] constructor. If you
-/// have information on the language of the text being segmented, providing this hint can
-/// produce higher-quality results.
-///
-/// If you have a content locale, use [`SentenceBreakOptions`] and a constructor begining with `new`.
-/// If you do not have a content locale use [`SentenceBreakInvariantOptions`] and a constructor
-/// beginning with `try_new`.
-///
 /// # Examples
 ///
 /// Segment a string:
 ///
 /// ```rust
-/// use icu::segmenter::SentenceSegmenter;
-///
-/// let segmenter = SentenceSegmenter::new(Default::default());
+/// use icu::segmenter::{
+///     options::SentenceBreakInvariantOptions, SentenceSegmenter,
+/// };
+/// let segmenter =
+///     SentenceSegmenter::new(SentenceBreakInvariantOptions::default());
 ///
 /// let breakpoints: Vec<usize> =
 ///     segmenter.segment_str("Hello World").collect();
 /// assert_eq!(&breakpoints, &[0, 11]);
 /// ```
 ///
-/// Segment a Latin1 byte string with a content locale:
+/// Segment a Latin1 byte string:
 ///
 /// ```rust
-/// use icu::locale::langid;
-/// use icu::segmenter::options::SentenceBreakOptions;
-/// use icu::segmenter::SentenceSegmenter;
+/// use icu::segmenter::{
+///     options::SentenceBreakInvariantOptions, SentenceSegmenter,
+/// };
+/// let segmenter =
+///     SentenceSegmenter::new(SentenceBreakInvariantOptions::default());
 ///
-/// let mut options = SentenceBreakOptions::default();
-/// let langid = &langid!("en");
-/// options.content_locale = Some(langid);
-/// let segmenter = SentenceSegmenter::try_new(options).unwrap();
-///
-/// let breakpoints: Vec<usize> = segmenter
-///     .as_borrowed()
-///     .segment_latin1(b"Hello World")
-///     .collect();
+/// let breakpoints: Vec<usize> =
+///     segmenter.segment_latin1(b"Hello World").collect();
 /// assert_eq!(&breakpoints, &[0, 11]);
 /// ```
 ///
@@ -139,7 +123,7 @@ impl SentenceSegmenter {
     ///
     /// [📚 Help choosing a constructor](icu_provider::constructors)
     #[cfg(feature = "compiled_data")]
-    #[expect(clippy::new_ret_no_self)]
+    #[allow(clippy::new_ret_no_self)]
     pub const fn new(
         _options: SentenceBreakInvariantOptions,
     ) -> SentenceSegmenterBorrowed<'static> {

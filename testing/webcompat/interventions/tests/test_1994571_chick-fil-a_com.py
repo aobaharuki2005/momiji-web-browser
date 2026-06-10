@@ -1,7 +1,7 @@
 import pytest
 
 URL = "https://www.chick-fil-a.com/careers"
-ICONS_CSS = "svg.svg-icon.medal"
+ICONS_CSS = ".wp-pattern-multi-column-icon-content figure>img"
 
 
 async def are_icons_stretched(client):

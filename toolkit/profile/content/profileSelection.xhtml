@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
 <!--
 
  This Source Code Form is subject to the terms of the Mozilla Public
@@ -18,10 +19,6 @@
   prefwidth="min-width"
   style="min-width: 30em"
 >
-#ifdef XP_MACOSX
-#include ../../content/editMenubar.inc.xhtml
-#endif
-
   <dialog
     id="profileWindow"
     buttons="accept,cancel"
@@ -40,14 +37,9 @@
         rel="localization"
         href="toolkit/global/profileSelection.ftl"
       />
-      <html:link rel="localization" href="toolkit/global/textActions.ftl" />
     </linkset>
 
     <script src="chrome://global/content/customElements.js" />
-#ifdef XP_MACOSX
-    <script src="chrome://global/content/globalOverlay.js" />
-    <script src="chrome://global/content/editMenuOverlay.js" />
-#endif
 
     <stringbundle
       id="bundle_profileManager"

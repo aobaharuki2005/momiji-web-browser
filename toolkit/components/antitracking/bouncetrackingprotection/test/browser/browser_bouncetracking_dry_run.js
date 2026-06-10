@@ -80,6 +80,7 @@ async function runPurgeTest(expectPurge) {
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["privacy.bounceTrackingProtection.requireStatefulBounces", true],
       ["privacy.bounceTrackingProtection.bounceTrackingGracePeriodSec", 0],
       // Required to use SiteDataTestUtils localStorage helpers.
       ["dom.storage.client_validation", false],

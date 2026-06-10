@@ -4,9 +4,7 @@
 
 package org.mozilla.fenix.home.mars
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import androidx.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Request.Method
@@ -19,11 +17,9 @@ import java.io.IOException
  * The use cases performs a request for the provided click or impression callback URL.
  *
  * @param client [Client] used for making HTTP API calls.
- * @param ioDispatcher [CoroutineDispatcher] used for the IO operations.
  */
 class MARSUseCases(
     private val client: Client,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val logger = Logger("MarsCallbackUseCases")
 
@@ -34,7 +30,8 @@ class MARSUseCases(
      * @param url The click or impression URL to request.
      * @return Whether the response is successful or not.
      */
-    suspend fun recordInteraction(url: String): Boolean = withContext(ioDispatcher) {
+    @WorkerThread
+    fun recordInteraction(url: String): Boolean {
         val request = Request(
             url = url,
             method = Method.GET,
@@ -49,6 +46,6 @@ class MARSUseCases(
         }
 
         response?.close()
-        response?.isSuccess ?: false
+        return response?.isSuccess ?: false
     }
 }

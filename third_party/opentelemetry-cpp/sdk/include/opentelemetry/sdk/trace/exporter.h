@@ -25,12 +25,6 @@ class OPENTELEMETRY_EXPORT SpanExporter
 {
 public:
   SpanExporter();
-
-  SpanExporter(const SpanExporter &)            = delete;
-  SpanExporter(SpanExporter &&)                 = delete;
-  SpanExporter &operator=(const SpanExporter &) = delete;
-  SpanExporter &operator=(SpanExporter &&)      = delete;
-
   virtual ~SpanExporter();
 
   /**

@@ -30,10 +30,6 @@ internal sealed class LoginsListSortMenuAction : LoginsAction {
 internal data class SearchLogins(val searchText: String, val loginItems: List<LoginItem>) :
     LoginsAction
 
-internal data object ImportPasswordsOverflowMenuClicked : LoginsAction
-internal data object ImportPasswordsOverflowMenuDismissed : LoginsAction
-internal data object ImportFileClicked : LoginsAction
-
 internal data object LearnMoreAboutSync : LoginsAction
 
 internal data class LoginClicked(val item: LoginItem) : LoginsAction
@@ -71,5 +67,4 @@ internal sealed class DetailLoginAction : LoginsAction {
     data class GoToSiteClicked(val url: String) : DetailLoginAction()
     data class CopyUsernameClicked(val username: String) : DetailLoginAction()
     data class CopyPasswordClicked(val password: String) : DetailLoginAction()
-    data class PasswordVisibilityChanged(val isPasswordVisible: Boolean) : DetailLoginAction()
 }

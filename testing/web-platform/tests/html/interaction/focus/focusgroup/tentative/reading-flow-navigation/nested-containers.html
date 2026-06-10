@@ -8,7 +8,6 @@
 <script src="/resources/testdriver.js"></script>
 <script src="/resources/testdriver-vendor.js"></script>
 <script src="/resources/testdriver-actions.js"></script>
-<script src="/shadow-dom/focus-navigation/resources/focus-utils.js"></script>
 <script src="../resources/focusgroup-utils.js"></script>
 
 <style>
@@ -45,9 +44,14 @@
   promise_test(async t => {
     // DOM order: item1, item2, item3, item4
     // Visual order: item3, item2, item4, item1
-    const elementsInVisualOrder = [item3, item2, item4, item1];
+    const elementsInVisualOrder = [
+      document.getElementById("item3"),
+      document.getElementById("item2"),
+      document.getElementById("item4"),
+      document.getElementById("item1")
+    ];
 
-    await assert_directional_navigation_bidirectional(elementsInVisualOrder);
+    await assert_focus_navigation_bidirectional(elementsInVisualOrder);
   }, "Focusgroup navigation with nested reading flow containers should follow the visual order.");
 
 </script>

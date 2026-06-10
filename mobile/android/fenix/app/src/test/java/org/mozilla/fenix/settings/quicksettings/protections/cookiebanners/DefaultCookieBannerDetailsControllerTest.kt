@@ -9,19 +9,19 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import io.mockk.MockKAnnotations
+import io.mockk.Runs
 import io.mockk.coEvery
-import io.mockk.coJustRun
 import io.mockk.coVerifyOrder
 import io.mockk.every
-import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.impl.annotations.MockK
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createCustomTab
@@ -34,7 +34,10 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
@@ -49,23 +52,22 @@ import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
 import org.mozilla.fenix.trackingprotection.ProtectionsAction
 import org.mozilla.fenix.trackingprotection.ProtectionsStore
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 internal class DefaultCookieBannerDetailsControllerTest {
 
     private lateinit var context: Context
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var navController: NavController
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var fragment: Fragment
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var sitePermissions: SitePermissions
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var cookieBannersStorage: CookieBannersStorage
 
     private lateinit var controller: DefaultCookieBannerDetailsController
@@ -74,21 +76,23 @@ internal class DefaultCookieBannerDetailsControllerTest {
 
     private lateinit var browserStore: BrowserStore
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var protectionsStore: ProtectionsStore
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var reload: SessionUseCases.ReloadUrlUseCase
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var engine: Engine
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var publicSuffixList: PublicSuffixList
 
-    private val testDispatcher = StandardTestDispatcher()
-    private val testScope = TestScope(testDispatcher)
     private var gravity = 54
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
 
     @get:Rule
     val gleanRule = FenixGleanTestRule(testContext)
@@ -104,7 +108,7 @@ internal class DefaultCookieBannerDetailsControllerTest {
             DefaultCookieBannerDetailsController(
                 fragment = fragment,
                 context = context,
-                scope = testScope,
+                ioScope = scope,
                 cookieBannersStorage = cookieBannersStorage,
                 navController = { navController },
                 sitePermissions = sitePermissions,
@@ -116,7 +120,6 @@ internal class DefaultCookieBannerDetailsControllerTest {
                 engine = engine,
                 publicSuffixList = publicSuffixList,
                 reload = reload,
-                ioDispatcher = testDispatcher,
             ),
         )
 
@@ -132,22 +135,24 @@ internal class DefaultCookieBannerDetailsControllerTest {
         }.answers { onComplete.captured.invoke(true) }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class) // advanceUntilIdle
     @Test
-    fun `WHEN handleBackPressed is called THEN should call popBackStack and navigate`() = runTest(testDispatcher) {
+    fun `WHEN handleBackPressed is called THEN should call popBackStack and navigate`() = runTestOnMain {
         every { context.settings().shouldUseCookieBannerPrivateMode } returns false
         every { context.components.publicSuffixList } returns publicSuffixList
 
         controller.handleBackPressed()
 
-        testDispatcher.scheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
         verify { navController.popBackStack() }
         verify { navController.navigate(any<NavDirections>()) }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class) // advanceUntilIdle
     @Test
     fun `GIVEN cookie banner is enabled WHEN handleTogglePressed THEN remove from the storage, send telemetry and reload the tab`() =
-        runTest(testDispatcher) {
+        runTestOnMain {
             val cookieBannerUIMode = CookieBannerUIMode.ENABLE
 
             assertNull(CookieBanners.exceptionRemoved.testGetValue())
@@ -155,7 +160,7 @@ internal class DefaultCookieBannerDetailsControllerTest {
 
             controller.handleTogglePressed(true)
 
-            testScheduler.advanceUntilIdle()
+            advanceUntilIdle()
 
             coVerifyOrder {
                 cookieBannersStorage.removeException(
@@ -173,18 +178,19 @@ internal class DefaultCookieBannerDetailsControllerTest {
             assertNotNull(CookieBanners.exceptionRemoved.testGetValue())
         }
 
+    @OptIn(ExperimentalCoroutinesApi::class) // advanceUntilIdle
     @Test
     fun `GIVEN cookie banner is disabled WHEN handleTogglePressed THEN remove from the storage, send telemetry and reload the tab`() =
-        runTest(testDispatcher) {
+        runTestOnMain {
             val cookieBannerUIMode = CookieBannerUIMode.DISABLE
 
             assertNull(CookieBanners.exceptionRemoved.testGetValue())
             every { protectionsStore.dispatch(any()) } returns mockk()
-            coJustRun { controller.clearSiteData(any()) }
+            coEvery { controller.clearSiteData(any()) } just Runs
 
             controller.handleTogglePressed(false)
 
-            testScheduler.advanceUntilIdle()
+            advanceUntilIdle()
 
             coVerifyOrder {
                 controller.clearSiteData(tab)
@@ -205,7 +211,7 @@ internal class DefaultCookieBannerDetailsControllerTest {
 
     @Test
     fun `WHEN clearSiteData THEN delegate the call to the engine`() =
-        runTest(testDispatcher) {
+        runTestOnMain {
             coEvery { publicSuffixList.getPublicSuffixPlusOne(any()) } returns CompletableDeferred("mozilla.org")
 
             controller.clearSiteData(tab)
@@ -221,9 +227,10 @@ internal class DefaultCookieBannerDetailsControllerTest {
             }
         }
 
+    @OptIn(ExperimentalCoroutinesApi::class) // advanceUntilIdle
     @Test
     fun `GIVEN cookie banner mode is site not supported WHEN handleRequestSiteSupportPressed THEN request report site domain`() =
-        runTest(testDispatcher) {
+        runTestOnMain {
             val store = BrowserStore(
                 BrowserState(
                     customTabs = listOf(
@@ -243,12 +250,10 @@ internal class DefaultCookieBannerDetailsControllerTest {
                 assertEquals("mozilla.org", CookieBanners.reportSiteDomain.testGetValue())
             }
             controller.handleRequestSiteSupportPressed()
-            testScheduler.advanceUntilIdle()
-
             job.join()
 
             assertNotNull(CookieBanners.reportDomainSiteButton.testGetValue())
-            testScheduler.advanceUntilIdle()
+            advanceUntilIdle()
             coVerifyOrder {
                 protectionsStore.dispatch(
                     ProtectionsAction.RequestReportSiteDomain(

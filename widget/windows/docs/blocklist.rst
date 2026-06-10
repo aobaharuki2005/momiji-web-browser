@@ -73,7 +73,7 @@ How to request to block a DLL
 -----------------------------
 
 Our codebase has the file named
-:searchfox:`WindowsDllBlocklistDefs.in <toolkit/xre/dllservices/mozglue/WindowsDllBlocklistDefs.in>` from which our build process generates DLL blocklists as C++ header files and compiles them. To block a new DLL, you create a patch to update WindowsDllBlocklistDefs.in and land it on our codebase, following our standard development process. Moreover, you need to fill out a form specific to the DLL blockling request so that reviewers can review the impact and risk as well as the patch itself.
+`WindowsDllBlocklistDefs.in <https://searchfox.org/mozilla-central/source/toolkit/xre/dllservices/mozglue/WindowsDllBlocklistDefs.in>`_ from which our build process generates DLL blocklists as C++ header files and compiles them. To block a new DLL, you create a patch to update WindowsDllBlocklistDefs.in and land it on our codebase, following our standard development process. Moreover, you need to fill out a form specific to the DLL blockling request so that reviewers can review the impact and risk as well as the patch itself.
 
 Here are the steps:
 
@@ -274,7 +274,8 @@ initialized very early during browser startup. If the :ref:`launcher process
   - This is so (ideally) no DLLs can be injected before the blocklist is set up.
 
 If the launcher process is not available, a different blocklist is used, defined
-in :searchfox:`mozglue/WindowsDllBlocklist.cpp <toolkit/xre/dllservices/mozglue/WindowsDllBlocklist.cpp>`.
+in `mozglue/WindowsDllBlocklist.cpp
+<https://searchfox.org/mozilla-central/source/toolkit/xre/dllservices/mozglue/WindowsDllBlocklist.cpp>`_.
 This code does not currently support the dynamic blocklist. This is intended to
 only be used in testing and other non-deployed scenarios, so this shouldn't be
 a problem for users.
@@ -293,7 +294,8 @@ app data directory, specifically
 
 ``<Roaming AppData directory>\Mozilla\Firefox\blocklist-<install hash>``
 
-Note that the install hash here is what is returned by :searchfox:`GetInstallHash() <toolkit/mozapps/update/common/commonupdatedir.cpp#404>`,
+Note that the install hash here is what is returned by `GetInstallHash()
+<https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/common/commonupdatedir.cpp#404>`_,
 and is suitable for uniquely identifying the particular Firefox installation
 that is running.
 
@@ -301,7 +303,8 @@ On first launch, this location will be written to the registry, and can be
 overriden by setting that key to a different file location. The registry key is
 ``HKEY_CURRENT_USER\Software\Mozilla\Firefox\Launcher``, and the name is the
 full path to firefox.exe with "\|Blocklist" appended. This code is in
-:searchfox:`LauncherRegistryInfo <toolkit/xre/LauncherRegistryInfo.cpp>`.
+`LauncherRegistryInfo
+<https://searchfox.org/mozilla-central/source/toolkit/xre/LauncherRegistryInfo.cpp>`_.
 
 Adding to and removing from the dynamic blocklist
 -------------------------------------------------

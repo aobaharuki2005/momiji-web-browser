@@ -1,16 +1,12 @@
 <!doctype html>
 <meta charset=utf-8>
-<meta name="variant" content="?interop-2026">
-<meta name="variant" content="?rest">
 <meta name="timeout" content="long">
 <title>RTCRtpTransceiver</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="RTCPeerConnection-helper.js"></script>
 <script>
-'use strict';
-const rest = !new URLSearchParams(location.search).has("interop-2026");
-const interop2026 = !new URLSearchParams(location.search).has("rest");
+  'use strict';
 
   const checkThrows = async (func, exceptionName, description) => {
     try {
@@ -2121,8 +2117,7 @@ const interop2026 = !new URLSearchParams(location.search).has("rest");
       });
   };
 
-if (rest) {
-[
+const tests = [
   checkAddTransceiverNoTrack,
   checkAddTransceiverWithTrack,
   checkAddTransceiverWithAddTrack,
@@ -2133,6 +2128,7 @@ if (rest) {
   checkNoMidOffer,
   checkNoMidAnswer,
   checkSetDirection,
+  checkCurrentDirection,
   checkSendrecvWithNoSendTrack,
   checkSendrecvWithTracklessStream,
   checkAddTransceiverNoTrackDoesntPair,
@@ -2144,28 +2140,21 @@ if (rest) {
   checkRemoveAndReadd,
   checkAddTrackExistingTransceiverThenRemove,
   checkRemoveTrackNegotiation,
+  checkStop,
+  checkStopAfterCreateOffer,
+  checkStopAfterSetLocalOffer,
+  checkStopAfterSetRemoteOffer,
+  checkStopAfterCreateAnswer,
+  checkStopAfterSetLocalAnswer,
   checkStopAfterClose,
+  checkLocalRollback,
   checkRollbackAndSetRemoteOfferWithDifferentType,
+  checkRemoteRollback,
+  checkMsectionReuse,
   checkStopAfterCreateOfferWithReusedMsection,
   checkAddIceCandidateToStoppedTransceiver,
   checkBundleTagRejected
 ].forEach(test => promise_test(test, test.name));
-}
-
-if (interop2026) {
-[
-  checkCurrentDirection,
-  checkLocalRollback,
-  checkMsectionReuse,
-  checkRemoteRollback,
-  checkStop,
-  checkStopAfterCreateAnswer,
-  checkStopAfterCreateOffer,
-  checkStopAfterSetLocalAnswer,
-  checkStopAfterSetLocalOffer,
-  checkStopAfterSetRemoteOffer,
-].forEach(test => promise_test(test, test.name));
-}
 
 ['audio', 'video'].forEach(kind => {
   const waitUntilTrackEventWithTimeout = (obj, name, t, timeout = 1000/*ms*/) => {
@@ -2175,7 +2164,6 @@ if (interop2026) {
     });
   }
 
-if (rest) {
   promise_test(async t => {
     const pc1 = new RTCPeerConnection();
     const pc2 = new RTCPeerConnection();
@@ -2190,9 +2178,7 @@ if (rest) {
     await pc2.setRemoteDescription(offer);
     assert_true(pc2.getReceivers()[0].track.muted, `track is muted after SRD`);
   }, `track with ${kind} is muted after SRD`);
-}
-// audio is part of interop2026, video is not
-if ((kind == 'audio')? interop2026 : rest) {
+
   promise_test(async t => {
     const pc1 = new RTCPeerConnection();
     const pc2 = new RTCPeerConnection();
@@ -2217,8 +2203,7 @@ if ((kind == 'audio')? interop2026 : rest) {
     await waitUntilTrackEventWithTimeout(pc2.getReceivers()[0].track, 'unmute', t);
     assert_false(pc2.getReceivers()[0].track.muted, `track is unmuted`);
   }, `track with ${kind} gets unmuted when packets flow.`);
-}
-if (rest) {
+
   promise_test(async t => {
     const pc1 = new RTCPeerConnection();
     const pc2 = new RTCPeerConnection();
@@ -2283,10 +2268,7 @@ if (rest) {
     await waitUntilTrackEventWithTimeout(pc2.getReceivers()[0].track, 'unmute', t);
     assert_false(pc2.getReceivers()[0].track.muted, `track is unmuted`);
   }, `track with ${kind} gets unmuted when setting the transceiver direction to 'sendrecv' after 'inactive'`);
-}
 
-// audio is part of interop2026, video is not
-if ((kind == 'audio')? interop2026 : rest) {
   promise_test(async t => {
     const pc1 = new RTCPeerConnection();
     const pc2 = new RTCPeerConnection();
@@ -2322,7 +2304,6 @@ if ((kind == 'audio')? interop2026 : rest) {
     await waitUntilTrackEventWithTimeout(pc2.getReceivers()[0].track, 'unmute', t);
     assert_true(pc2.getReceivers()[0].track.muted, `track remains muted`);
   }, `track with ${kind} stays muted when setting the transceiver direction to 'sendrecv' after 'inactive' but no packets flow`);
-}
 });
 
 </script>

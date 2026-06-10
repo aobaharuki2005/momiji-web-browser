@@ -40,7 +40,7 @@ httpServer.registerPathHandler("/test.js", function (request, response) {
 const TEST_URI = `http://localhost:${httpServer.identity.primaryPort}/`;
 
 const { MockFilePicker } = SpecialPowers;
-MockFilePicker.init();
+MockFilePicker.init(window.browsingContext);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
 var FileUtils = ChromeUtils.importESModule(

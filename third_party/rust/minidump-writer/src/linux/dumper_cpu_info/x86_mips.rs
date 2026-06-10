@@ -1,6 +1,5 @@
 use {
-    super::CpuInfoError,
-    crate::minidump_format::*,
+    crate::{errors::CpuInfoError, minidump_format::*},
     failspot::failspot,
     std::{
         io::{BufRead, BufReader},
@@ -112,7 +111,7 @@ pub fn write_cpu_information(sys_info: &mut MDRawSystemInfo) -> Result<()> {
     {
         sys_info.processor_level = cpu_info_table[3].value as u16;
         sys_info.processor_revision =
-            ((cpu_info_table[1].value << 8) | cpu_info_table[2].value) as u16;
+            (cpu_info_table[1].value << 8 | cpu_info_table[2].value) as u16;
     }
     if !vendor_id.is_empty() {
         let vendor_id = vendor_id.as_bytes();

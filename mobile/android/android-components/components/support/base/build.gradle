@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-plugins {
-    alias(libs.plugins.dependency.analysis)
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -20,9 +16,7 @@ android {
 
         buildConfigField("String", "LIBRARY_VERSION", "\"" + config.componentsVersion + "\"")
         buildConfigField("String", "APPLICATION_SERVICES_VERSION", "\"" + appServicesVersion + "\"")
-        // This uses the version catalog entry, which could differ from the version
-        // Gradle actually resolves if a range or `+` were used in the catalog.
-        buildConfigField("String", "GLEAN_SDK_VERSION", "\"" + libs.versions.glean.get() + "\"")
+        buildConfigField("String", "GLEAN_SDK_VERSION", "\"" + project.ext.gleanVersion + "\"")
         if (gradle.mozconfig.substs.MOZ_INCLUDE_SOURCE_INFO) {
             buildConfigField("String", "VCS_HASH", "\"" + gradle.mozconfig.source_repo.MOZ_SOURCE_STAMP + "\"")
         } else {
@@ -64,7 +58,6 @@ dependencies {
 
     testImplementation libs.androidx.test.core
     testImplementation libs.androidx.test.junit
-    testImplementation libs.kotlin.test
     testImplementation libs.kotlinx.coroutines.test
     testImplementation libs.robolectric
 }
@@ -112,11 +105,11 @@ tasks.register("generateComponentEnum") {
 }
 
 afterEvaluate {
-    tasks.matching {
-        (it.name.startsWith("compile") && it.name.endsWith("Kotlin")) ||
-        it.name.startsWith("explodeCodeSource") ||
-        it.name in ["sourceReleaseJar", "sourcesJar"]
-    }.configureEach {
+    tasks.matching { it.name.startsWith("compile") && it.name.endsWith("Kotlin") }.configureEach {
+        dependsOn("generateComponentEnum")
+    }
+
+    tasks.matching { it.name == "sourceReleaseJar" || it.name == "sourcesJar" }.configureEach {
         dependsOn("generateComponentEnum")
     }
 }

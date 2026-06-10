@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include <mferror.h>
+#include <Mferror.h>
 
 #include "WMFClearKeyCDMAccess.h"
 #include "WMFClearKeyUtils.h"

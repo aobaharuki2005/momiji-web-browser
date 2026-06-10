@@ -4,15 +4,15 @@
 <link rel="help" href="https://github.com/WICG/PEPC/blob/main/explainer.md#locking-the-pepc-style">
 <body>
   <div>
-    The usermedia element should not create any pseudo elements.
+    The permission element should not create any pseudo elements.
   </div>
 
   <style>
-    usermedia::before, usermedia::after { content: "FAIL"; }
+    permission::before, permission::after { content: "FAIL"; }
   </style>
 
   <p>You should not see the word FAIL below.</p>
 
-  <usermedia type="camera"></usermedia>
+  <permission type="camera"></permission>
 </body>
 </html>

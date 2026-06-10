@@ -17,8 +17,6 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "api/scoped_refptr.h"
-#include "modules/portal/portal_guard.h"
 #include "modules/portal/portal_request_response.h"
 #include "rtc_base/system/rtc_export.h"
 
@@ -62,28 +60,20 @@ RequestResponse RequestResponseFromPortalResponse(uint32_t portal_response);
 RTC_EXPORT std::string PrepareSignalHandle(absl::string_view token,
                                            GDBusConnection* connection);
 
-// Unsubscribes a signal subscription and zeros its ID.
-// Returns true if the subscription was active, false if the ID was already 0.
-RTC_EXPORT bool UnsubscribeSignalHandler(GDBusConnection* connection,
-                                         guint& signal_id);
-
 // Sets up the callback to execute when a response signal is received for the
-// given object. Adds a ref to the guard for the signal subscription.
+// given object.
 RTC_EXPORT uint32_t
 SetupRequestResponseSignal(absl::string_view object_path,
                            const GDBusSignalCallback callback,
-                           scoped_refptr<PortalGuard> guard,
+                           gpointer user_data,
                            GDBusConnection* connection);
 
-// Requests a D-Bus proxy. Adds a ref to the guard for the async callback.
 RTC_EXPORT void RequestSessionProxy(
     absl::string_view interface_name,
     const ProxyRequestCallback proxy_request_callback,
     GCancellable* cancellable,
-    scoped_refptr<PortalGuard> guard);
+    gpointer user_data);
 
-// Sets up signal subscription and async call for session creation.
-// Adds refs to the guard for both.
 RTC_EXPORT void SetupSessionRequestHandlers(
     absl::string_view portal_prefix,
     const SessionRequestCallback session_request_callback,
@@ -93,10 +83,8 @@ RTC_EXPORT void SetupSessionRequestHandlers(
     GCancellable* cancellable,
     std::string& portal_handle,
     guint& session_request_signal_id,
-    scoped_refptr<PortalGuard> guard);
+    gpointer user_data);
 
-// Starts a portal session. Adds refs to the guard for both signal
-// subscription and async call.
 RTC_EXPORT void StartSessionRequest(
     absl::string_view prefix,
     absl::string_view session_handle,
@@ -107,7 +95,7 @@ RTC_EXPORT void StartSessionRequest(
     GCancellable* cancellable,
     guint& start_request_signal_id,
     std::string& start_handle,
-    scoped_refptr<PortalGuard> guard);
+    gpointer user_data);
 
 // Tears down the portal session and cleans up related objects.
 RTC_EXPORT void TearDownSession(absl::string_view session_handle,

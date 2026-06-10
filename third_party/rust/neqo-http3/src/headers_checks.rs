@@ -4,8 +4,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use enumset::{EnumSet, EnumSetType, enum_set};
-use neqo_common::{Header, header::HeadersExt as _};
+use enumset::{enum_set, EnumSet, EnumSetType};
+use neqo_common::{header::HeadersExt as _, Header};
 
 use crate::{Error, MessageType, Res};
 
@@ -199,13 +199,11 @@ mod tests {
     #[test]
     fn connect_with_missing_header() {
         for field in &[":scheme", ":path", ":authority"] {
-            assert!(
-                headers_valid(
-                    &create_connect_headers_without_field(field),
-                    MessageType::Request
-                )
-                .is_err()
-            );
+            assert!(headers_valid(
+                &create_connect_headers_without_field(field),
+                MessageType::Request
+            )
+            .is_err());
         }
     }
 
@@ -223,18 +221,16 @@ mod tests {
 
     #[test]
     fn invalid_webtransport_connect_with_status() {
-        assert!(
-            headers_valid(
-                [
-                    create_connect_headers(),
-                    vec![Header::new(":status", "200")]
-                ]
-                .concat()
-                .as_slice(),
-                MessageType::Request
-            )
-            .is_err()
-        );
+        assert!(headers_valid(
+            [
+                create_connect_headers(),
+                vec![Header::new(":status", "200")]
+            ]
+            .concat()
+            .as_slice(),
+            MessageType::Request
+        )
+        .is_err());
     }
 
     #[test]

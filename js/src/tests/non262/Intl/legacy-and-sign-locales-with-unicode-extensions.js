@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 const languageTags = {
   // Case 1: legacy, regular tags.
   "art-lojban": "jbo",

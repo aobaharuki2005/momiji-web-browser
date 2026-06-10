@@ -51,9 +51,7 @@ Configuration macro:
 #include <pthread.h>
 
 /*---------------------------- macros ----------------------------*/
-#ifndef __once_flag_defined
 #define ONCE_FLAG_INIT PTHREAD_ONCE_INIT
-#endif
 #ifdef INIT_ONCE_STATIC_INIT
 #define TSS_DTOR_ITERATIONS PTHREAD_DESTRUCTOR_ITERATIONS
 #else
@@ -68,9 +66,7 @@ typedef pthread_cond_t  cnd_t;
 typedef pthread_t       thrd_t;
 typedef pthread_key_t   tss_t;
 typedef pthread_mutex_t mtx_t;
-#ifndef __once_flag_defined
 typedef pthread_once_t  once_flag;
-#endif
 
 
 /*
@@ -94,13 +90,11 @@ impl_thrd_routine(void *p)
 
 /*--------------- 7.25.2 Initialization functions ---------------*/
 // 7.25.2.1
-#ifndef __once_flag_defined
 static inline void
 call_once(once_flag *flag, void (*func)(void))
 {
     pthread_once(flag, func);
 }
-#endif
 
 
 /*------------- 7.25.3 Condition variable functions -------------*/

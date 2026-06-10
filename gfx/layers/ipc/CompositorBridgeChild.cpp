@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -71,7 +73,6 @@ CompositorBridgeChild::CompositorBridgeChild(CompositorManagerChild* aManager)
       mIdNamespace(0),
       mResourceId(0),
       mCanSend(false),
-      mWindowOverlayChanged(false),
       mActorDestroyed(false),
       mPaused(false),
       mForceSyncFlushRendering(false),
@@ -224,26 +225,17 @@ void CompositorBridgeChild::InitForContent(uint32_t aNamespace) {
 }
 
 void CompositorBridgeChild::InitForWidget(uint64_t aProcessToken,
+                                          WebRenderLayerManager* aLayerManager,
                                           uint32_t aNamespace) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aProcessToken);
+  MOZ_ASSERT(aLayerManager);
   MOZ_ASSERT(aNamespace);
 
   mCanSend = true;
   mProcessToken = aProcessToken;
+  mLayerManager = aLayerManager;
   mIdNamespace = aNamespace;
-}
-
-RefPtr<WebRenderLayerManager> CompositorBridgeChild::CreateLayerManager(
-    nsIWidget* aWidget, wr::PipelineId aPipelineId, nsCString& aError) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Must only be called for widget CompositorBridgeChild");
-  MOZ_ASSERT(!mLayerManager, "Must only be called once");
-
-  mLayerManager =
-      WebRenderLayerManager::Create(aWidget, this, aPipelineId, aError);
-  return mLayerManager;
 }
 
 /*static*/
@@ -394,6 +386,17 @@ bool CompositorBridgeChild::SendStopFrameTimeRecording(
                                                             intervals);
 }
 
+PTextureChild* CompositorBridgeChild::AllocPTextureChild(
+    const SurfaceDescriptor&, ReadLockDescriptor&, const LayersBackend&,
+    const TextureFlags&, const LayersId&, const uint64_t& aSerial,
+    const wr::MaybeExternalImageId& aExternalImageId) {
+  return TextureClient::CreateIPDLActor();
+}
+
+bool CompositorBridgeChild::DeallocPTextureChild(PTextureChild* actor) {
+  return TextureClient::DestroyIPDLActor(actor);
+}
+
 mozilla::ipc::IPCResult CompositorBridgeChild::RecvParentAsyncMessages(
     nsTArray<AsyncParentMessageData>&& aMessages) {
   for (AsyncParentMessageArray::index_type i = 0; i < aMessages.Length(); ++i) {
@@ -500,18 +503,18 @@ CompositorBridgeChild::GetTileLockAllocator() {
   return mSectionAllocator;
 }
 
-already_AddRefed<PTextureChild> CompositorBridgeChild::CreateTexture(
+PTextureChild* CompositorBridgeChild::CreateTexture(
     const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
     LayersBackend aLayersBackend, TextureFlags aFlags,
     const dom::ContentParentId& aContentId, uint64_t aSerial,
     wr::MaybeExternalImageId& aExternalImageId) {
-  RefPtr actor = TextureClient::CreateIPDLActor();
-  if (!SendPTextureConstructor(actor, aSharedData, std::move(aReadLock),
-                               aLayersBackend, aFlags, aSerial,
-                               aExternalImageId)) {
-    return nullptr;
-  }
-  return actor.forget();
+  PTextureChild* textureChild =
+      AllocPTextureChild(aSharedData, aReadLock, aLayersBackend, aFlags,
+                         LayersId{0} /* FIXME */, aSerial, aExternalImageId);
+
+  return SendPTextureConstructor(
+      textureChild, aSharedData, std::move(aReadLock), aLayersBackend, aFlags,
+      LayersId{0} /* FIXME? */, aSerial, aExternalImageId);
 }
 
 already_AddRefed<CanvasChild> CompositorBridgeChild::GetCanvasChild() {
@@ -524,7 +527,6 @@ already_AddRefed<CanvasChild> CompositorBridgeChild::GetCanvasChild() {
 
 void CompositorBridgeChild::EndCanvasTransaction() {
   if (auto* cm = gfx::CanvasManagerChild::Get()) {
-    mWindowOverlayChanged = false;
     cm->EndCanvasTransaction();
   }
 }
@@ -552,19 +554,48 @@ bool CompositorBridgeChild::DeallocShmem(ipc::Shmem& aShmem) {
   return PCompositorBridgeChild::DeallocShmem(aShmem);
 }
 
-already_AddRefed<PAPZCTreeManagerChild>
-CompositorBridgeChild::AllocPAPZCTreeManagerChild(const LayersId& aLayersId) {
-  return MakeAndAddRef<APZCTreeManagerChild>();
+PAPZCTreeManagerChild* CompositorBridgeChild::AllocPAPZCTreeManagerChild(
+    const LayersId& aLayersId) {
+  APZCTreeManagerChild* child = new APZCTreeManagerChild();
+  child->AddIPDLReference();
+
+  return child;
 }
 
-already_AddRefed<PAPZChild> CompositorBridgeChild::AllocPAPZChild(
-    const LayersId& aLayersId) {
+PAPZChild* CompositorBridgeChild::AllocPAPZChild(const LayersId& aLayersId) {
   // We send the constructor manually.
   MOZ_CRASH("Should not be called");
   return nullptr;
 }
 
+bool CompositorBridgeChild::DeallocPAPZChild(PAPZChild* aActor) {
+  delete aActor;
+  return true;
+}
+
+bool CompositorBridgeChild::DeallocPAPZCTreeManagerChild(
+    PAPZCTreeManagerChild* aActor) {
+  APZCTreeManagerChild* child = static_cast<APZCTreeManagerChild*>(aActor);
+  child->ReleaseIPDLReference();
+  return true;
+}
+
 // -
+
+PWebRenderBridgeChild* CompositorBridgeChild::AllocPWebRenderBridgeChild(
+    const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize&,
+    const WindowKind&) {
+  WebRenderBridgeChild* child = new WebRenderBridgeChild(aPipelineId);
+  child->AddIPDLReference();
+  return child;
+}
+
+bool CompositorBridgeChild::DeallocPWebRenderBridgeChild(
+    PWebRenderBridgeChild* aActor) {
+  WebRenderBridgeChild* child = static_cast<WebRenderBridgeChild*>(aActor);
+  child->ReleaseIPDLReference();
+  return true;
+}
 
 uint64_t CompositorBridgeChild::GetNextResourceId() {
   ++mResourceId;

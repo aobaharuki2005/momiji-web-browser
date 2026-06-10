@@ -6,7 +6,6 @@ skip-if = [
 ]
 support-files = ["head.js"]
 prefs = [
-  "accessibility.ariaNotify.enabled=true",
   # Enabling the a11y service from XPCOM doesn't seem to be enough to get ATK
   # working correctly. Force enable it before the test starts.
   "accessibility.force_disabled=-1",
@@ -20,10 +19,11 @@ prefs = [
 
 ["browser_groupPosition.js"]
 
-["browser_notification.js"]
-
 ["browser_prune_children.js"]
 
 ["browser_role.js"]
+skip-if = [
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt", # Bug 1984205
+]
 
 ["browser_table.js"]

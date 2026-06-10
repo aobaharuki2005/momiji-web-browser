@@ -76,17 +76,7 @@ public:
     }
 
 private:
-    // Fast path for pointer arithmetic. Assumes 'n' has already been bounds-checked.
-    size_t bytes(int n) const { return SkToSizeT(n) * SkToSizeT(fSizeOfT); }
-
-    // Safe path for memory allocations; protects against 32-bit overflow.
-    size_t safe_bytes(int n) const {
-        size_t size = SkToSizeT(n);
-        size_t sizeOfT = SkToSizeT(fSizeOfT);
-        SkASSERT_RELEASE(size <= SIZE_MAX / sizeOfT);
-        return size * sizeOfT;
-    }
-
+    size_t bytes(int n) const { return SkToSizeT(n * fSizeOfT); }
     void* address(int n) { return fStorage + this->bytes(n); }
 
     // Adds delta to fSize. Crash if outside [0, INT_MAX]
@@ -186,10 +176,10 @@ public:
         fStorage.clear();
     }
 
-    // Sets the number of elements in the array.
-    // If the array does not have space for count elements, it will increase
-    // the storage allocated to some amount greater than that required.
-    // It will never shrink the storage.
+     // Sets the number of elements in the array.
+     // If the array does not have space for count elements, it will increase
+     // the storage allocated to some amount greater than that required.
+     // It will never shrink the storage.
     void resize(int count) {
         fStorage.resize(count);
     }

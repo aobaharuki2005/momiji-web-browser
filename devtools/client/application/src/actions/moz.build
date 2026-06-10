@@ -6,7 +6,6 @@ DevToolsModules(
     "index.js",
     "manifest.js",
     "page.js",
-    "session-history.js",
     "ui.js",
     "workers.js",
 )

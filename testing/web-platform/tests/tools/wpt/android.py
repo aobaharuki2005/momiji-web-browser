@@ -207,11 +207,7 @@ def get_emulator(paths, device_serial=None):
     if android_device is None:
         do_delayed_imports(paths)
 
-    substs = {
-        "top_srcdir": wpt_root,
-        "TARGET_CPU": platform.uname().machine,
-        "HOST_CPU_ARCH": platform.uname().machine
-    }
+    substs = {"top_srcdir": wpt_root, "TARGET_CPU": "x86"}
     emulator = android_device.AndroidEmulator(substs=substs,
                                               device_serial=device_serial,
                                               verbose=True)
@@ -256,8 +252,8 @@ def install(logger, dest=None, reinstall=False, prompt=True):
 
         if new_install:
             packages = ["platform-tools",
-                        "build-tools;37.0.0",
-                        "platforms;android-37.0",
+                        "build-tools;36.1.0",
+                        "platforms;android-36.1",
                         "emulator"]
 
             install_android_packages(logger, paths, packages, prompt=prompt)

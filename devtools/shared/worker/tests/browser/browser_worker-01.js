@@ -3,11 +3,15 @@
 
 "use strict";
 
-const { DevToolsWorker } = ChromeUtils.importESModule(
+const { DevToolsWorker, workerify } = ChromeUtils.importESModule(
   "resource://devtools/shared/worker/worker.sys.mjs"
 );
 
 const BUFFER_SIZE = 8;
+
+registerCleanupFunction(function () {
+  Services.prefs.clearUserPref("security.allow_parent_unrestricted_js_loads");
+});
 
 add_task(async function () {
   // Test both CJS and JSM versions
@@ -17,9 +21,38 @@ add_task(async function () {
 });
 
 async function testWorker() {
-  const worker = new DevToolsWorker(
-    getRootDirectory(gTestPath) + "file_worker-01-worker.worker.js"
+  // Needed for blob:null
+  Services.prefs.setBoolPref(
+    "security.allow_parent_unrestricted_js_loads",
+    true
   );
+
+  const blob = new Blob(
+    [
+      `
+importScripts("resource://gre/modules/workers/require.js");
+const { createTask } = require("resource://devtools/shared/worker/helper.js");
+
+createTask(self, "groupByField", function({
+  items,
+  groupField
+}) {
+  const groups = {};
+  for (const item of items) {
+    if (!groups[item[groupField]]) {
+      groups[item[groupField]] = [];
+    }
+    groups[item[groupField]].push(item);
+  }
+  return { groups };
+});
+    `,
+    ],
+    { type: "application/javascript" }
+  );
+
+  const WORKER_URL = URL.createObjectURL(blob);
+  const worker = new DevToolsWorker(WORKER_URL);
 
   const results = await worker.performTask("groupByField", {
     items: [
@@ -36,14 +69,21 @@ async function testWorker() {
     `worker should have returned the expected result`
   );
 
+  URL.revokeObjectURL(WORKER_URL);
+
+  const fn = workerify(x => x * x);
+  is(await fn(5), 25, `workerify works`);
+  fn.destroy();
+
   worker.destroy();
 }
 
 async function testTransfer() {
-  const worker = new DevToolsWorker(
-    getRootDirectory(gTestPath) + "file_worker-01-transfer.worker.js"
+  Services.prefs.setBoolPref(
+    "security.allow_parent_unrestricted_js_loads",
+    true
   );
-
+  const workerFn = workerify(({ buf }) => buf.byteLength);
   const buf = new ArrayBuffer(BUFFER_SIZE);
 
   is(
@@ -52,19 +92,11 @@ async function testTransfer() {
     "Size of the buffer before transfer is correct."
   );
 
-  is(
-    await worker.performTask("transfer", { buf }),
-    8,
-    "Sent array buffer to worker"
-  );
+  is(await workerFn({ buf }), 8, "Sent array buffer to worker");
   is(buf.byteLength, 8, "Array buffer was copied, not transferred.");
 
-  is(
-    await worker.performTask("transfer", { buf }, [buf]),
-    8,
-    "Sent array buffer to worker"
-  );
+  is(await workerFn({ buf }, [buf]), 8, "Sent array buffer to worker");
   is(buf.byteLength, 0, "Array buffer was transferred, not copied.");
 
-  worker.destroy();
+  workerFn.destroy();
 }

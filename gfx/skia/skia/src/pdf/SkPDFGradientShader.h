@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google LLC
+ * Copyright 2017 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -52,7 +52,7 @@ inline bool operator==(const SkShaderBase::GradientInfo& u, const SkShaderBase::
         && u.fRadius[0]     == v.fRadius[0]
         && u.fRadius[1]     == v.fRadius[1]
         && u.fTileMode      == v.fTileMode
-        && u.fPremulInterp  == v.fPremulInterp
+        && u.fGradientFlags == v.fGradientFlags
         && SkPackedArrayEqual(u.fColors, v.fColors, u.fColorCount)
         && SkPackedArrayEqual(u.fColorOffsets, v.fColorOffsets, u.fColorCount);
 }

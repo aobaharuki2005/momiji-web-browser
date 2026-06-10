@@ -142,7 +142,7 @@ const clickOnDetailCloseButton = function (panel) {
   const bounds = buttonEl.getBoundingClientRect();
   const x = bounds.width / 2;
   const y = bounds.height / 2;
-  EventUtils.synthesizeMouse(buttonEl, x, y, {}, buttonEl.documentGlobal);
+  EventUtils.synthesizeMouse(buttonEl, x, y, {}, buttonEl.ownerGlobal);
 };
 
 /**
@@ -158,7 +158,7 @@ const clickOnPauseResumeButton = function (animationInspector, panel) {
   const bounds = buttonEl.getBoundingClientRect();
   const x = bounds.width / 2;
   const y = bounds.height / 2;
-  EventUtils.synthesizeMouse(buttonEl, x, y, {}, buttonEl.documentGlobal);
+  EventUtils.synthesizeMouse(buttonEl, x, y, {}, buttonEl.ownerGlobal);
 };
 
 /**
@@ -174,7 +174,7 @@ const clickOnRewindButton = function (animationInspector, panel) {
   const bounds = buttonEl.getBoundingClientRect();
   const x = bounds.width / 2;
   const y = bounds.height / 2;
-  EventUtils.synthesizeMouse(buttonEl, x, y, {}, buttonEl.documentGlobal);
+  EventUtils.synthesizeMouse(buttonEl, x, y, {}, buttonEl.ownerGlobal);
 };
 
 /**
@@ -203,7 +203,7 @@ const clickOnCurrentTimeScrubberController = function (
     mousedonwX,
     0,
     {},
-    controllerEl.documentGlobal
+    controllerEl.ownerGlobal
   );
 };
 
@@ -229,14 +229,14 @@ const clickOnInspectIcon = async function (animationInspector, panel, index) {
 };
 
 /**
- * Change playback rate multiplier selector value to given rate.
+ * Change playback rate selector to select given rate.
  *
  * @param {AnimationInspector} animationInspector
  * @param {DOMElement} panel
  *        #animation-container element.
  * @param {number} rate
  */
-const changePlaybackRateMultiplierSelector = async function (
+const changePlaybackRateSelector = async function (
   animationInspector,
   panel,
   rate
@@ -256,14 +256,10 @@ const changePlaybackRateMultiplierSelector = async function (
 
   selectEl.focus();
 
-  const win = selectEl.documentGlobal;
+  const win = selectEl.ownerGlobal;
   while (selectEl.selectedIndex != optionIndex) {
-    const onUpdated = animationInspector.once(
-      "playbackrate-multiplier-updated"
-    );
     const key = selectEl.selectedIndex > optionIndex ? "LEFT" : "RIGHT";
     EventUtils.sendKey(key, win);
-    await onUpdated;
   }
 };
 
@@ -288,7 +284,7 @@ const clickOnSummaryGraph = function (
   EventUtils.synthesizeMouseAtCenter(
     summaryGraphEl,
     {},
-    summaryGraphEl.documentGlobal
+    summaryGraphEl.ownerGlobal
   );
   // Restore the scrubber style.
   scrubberEl.style.pointerEvents = "unset";
@@ -315,7 +311,7 @@ const clickOnTargetNode = async function (animationInspector, panel, index) {
   const onHighlight = waitForHighlighterTypeShown(
     inspector.highlighters.TYPES.BOXMODEL
   );
-  EventUtils.synthesizeMouseAtCenter(targetEl, {}, targetEl.documentGlobal);
+  EventUtils.synthesizeMouseAtCenter(targetEl, {}, targetEl.ownerGlobal);
   await onHighlight;
 };
 
@@ -350,7 +346,7 @@ const clickOnTargetNodeByTargetText = async function (
   const onHighlight = waitForHighlighterTypeShown(
     inspector.highlighters.TYPES.BOXMODEL
   );
-  EventUtils.synthesizeMouseAtCenter(targetEl, {}, targetEl.documentGlobal);
+  EventUtils.synthesizeMouseAtCenter(targetEl, {}, targetEl.ownerGlobal);
   await onHighlight;
 };
 
@@ -377,7 +373,7 @@ const dragOnCurrentTimeScrubber = async function (
     0,
     mouseYPixel,
     { type: "mousedown" },
-    controllerEl.documentGlobal
+    controllerEl.ownerGlobal
   );
   await waitUntilAnimationsPlayState(animationInspector, "paused");
 
@@ -388,7 +384,7 @@ const dragOnCurrentTimeScrubber = async function (
     mouseMovePixel,
     mouseYPixel,
     { type: "mousemove" },
-    controllerEl.documentGlobal
+    controllerEl.ownerGlobal
   );
   await waitUntil(() => animation.state.currentTime !== currentTime);
 
@@ -398,7 +394,7 @@ const dragOnCurrentTimeScrubber = async function (
     mouseMovePixel,
     mouseYPixel,
     { type: "mouseup" },
-    controllerEl.documentGlobal
+    controllerEl.ownerGlobal
   );
   await waitUntil(() => animation.state.currentTime !== currentTime);
 };
@@ -434,7 +430,7 @@ const dragOnCurrentTimeScrubberController = async function (
     mousedonwX,
     0,
     { type: "mousedown" },
-    controllerEl.documentGlobal
+    controllerEl.ownerGlobal
   );
   await waitUntilAnimationsPlayState(animationInspector, "paused");
 
@@ -445,7 +441,7 @@ const dragOnCurrentTimeScrubberController = async function (
     mousemoveX,
     0,
     { type: "mousemove" },
-    controllerEl.documentGlobal
+    controllerEl.ownerGlobal
   );
   await waitUntil(() => animation.state.currentTime !== currentTime);
 
@@ -455,7 +451,7 @@ const dragOnCurrentTimeScrubberController = async function (
     mousemoveX,
     0,
     { type: "mouseup" },
-    controllerEl.documentGlobal
+    controllerEl.ownerGlobal
   );
   await waitUntil(() => animation.state.currentTime !== currentTime);
 };
@@ -496,13 +492,7 @@ const mouseOverOnTargetNode = function (animationInspector, panel, index) {
   info(`Mouse over on a target node in animation target component[${index}]`);
   const el = panel.querySelectorAll(".animation-target .objectBox")[index];
   el.scrollIntoView(false);
-  EventUtils.synthesizeMouse(
-    el,
-    10,
-    5,
-    { type: "mouseover" },
-    el.documentGlobal
-  );
+  EventUtils.synthesizeMouse(el, 10, 5, { type: "mouseover" }, el.ownerGlobal);
 };
 
 /**
@@ -518,13 +508,7 @@ const mouseOutOnTargetNode = function (animationInspector, panel, index) {
   info(`Mouse out on a target node in animation target component[${index}]`);
   const el = panel.querySelectorAll(".animation-target .objectBox")[index];
   el.scrollIntoView(false);
-  EventUtils.synthesizeMouse(
-    el,
-    -1,
-    -1,
-    { type: "mouseout" },
-    el.documentGlobal
-  );
+  EventUtils.synthesizeMouse(el, -1, -1, { type: "mouseout" }, el.ownerGlobal);
 };
 
 /**
@@ -535,7 +519,7 @@ const mouseOutOnTargetNode = function (animationInspector, panel, index) {
 const selectAnimationInspector = async function (inspector) {
   await inspector.toolbox.selectTool("inspector");
   const onDispatched = waitForDispatch(inspector.store, "UPDATE_ANIMATIONS");
-  await inspector.sidebar.select("animationinspector");
+  inspector.sidebar.select("animationinspector");
   await onDispatched;
 };
 
@@ -547,7 +531,7 @@ const selectAnimationInspector = async function (inspector) {
  */
 const sendSpaceKeyEvent = function (animationInspector, element) {
   element.focus();
-  EventUtils.sendKey("SPACE", element.documentGlobal);
+  EventUtils.sendKey("SPACE", element.ownerGlobal);
 };
 
 /**
@@ -1070,8 +1054,8 @@ async function testKeyframesGraphComputedValuePath(testData) {
 /**
  * Check the adjusted current time and created time from specified two animations.
  *
- * @param {AnimationFront.state} animation1
- * @param {AnimationFront.state} animation2
+ * @param {AnimationPlayerFront.state} animation1
+ * @param {AnimationPlayerFront.state} animation2
  */
 function checkAdjustingTheTime(animation1, animation2) {
   const adjustedCurrentTimeDiff =

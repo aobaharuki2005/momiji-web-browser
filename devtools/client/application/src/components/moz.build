@@ -6,7 +6,6 @@ DIRS += [
     "routing",
     "manifest",
     "service-workers",
-    "session-history",
     "ui",
 ]
 

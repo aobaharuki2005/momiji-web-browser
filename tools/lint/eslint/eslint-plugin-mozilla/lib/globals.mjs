@@ -15,10 +15,6 @@ import helpers from "./helpers.mjs";
 import * as htmlparser from "htmlparser2";
 import testharnessEnvironment from "./environments/testharness.mjs";
 
-function getFileMtime(filePath) {
-  return fs.statSync(filePath).mtimeMs;
-}
-
 const callExpressionDefinitions = [
   /^loader\.lazyGetter\((?:globalThis|this), "(\w+)"/,
   /^loader\.lazyServiceGetter\((?:globalThis|this), "(\w+)"/,
@@ -231,7 +227,7 @@ let fileImportGraph = new GraphMap();
  * A map of file paths mapped to the globals found in those files. These exclude
  * globals imported via import-globals-from.
  *
- * @type {Map<string, { globals: GlobalsList, mtime: number }>}
+ * @type {Map<string, GlobalsList>}
  */
 let fileGlobalsMap = new Map();
 
@@ -572,14 +568,9 @@ let globalUtils = {
     // Now look for the globals in all of the files imported by this one.
     for (let file of fileImportGraph.getSubGraph(filePath).values()) {
       if (fileGlobalsMap.has(file)) {
-        let entry = fileGlobalsMap.get(file);
-        if (entry.mtime == getFileMtime(file)) {
-          globals = [...globals, ...entry.globals];
-          continue;
-        }
-        fileGlobalsMap.delete(file);
+        globals = [...globals, ...fileGlobalsMap.get(file)];
+        continue;
       }
-      let mtime = getFileMtime(file);
       let content = fs.readFileSync(file, "utf8");
 
       // Parse the content into an AST
@@ -606,9 +597,9 @@ let globalUtils = {
           globalsInFile.push(...newGlobals);
         }
       });
-      fileGlobalsMap.set(file, { globals: globalsInFile, mtime });
+      fileGlobalsMap.set(file, globalsInFile);
 
-      globals = [...globals, ...globalsInFile];
+      globals = [...globals, ...fileGlobalsMap.get(file)];
     }
 
     return globals;
@@ -757,11 +748,10 @@ let globalUtils = {
   },
 
   /**
-   * Used for tests to clear the import graph and globals map in-between tests.
+   * Used for tests to clear the import graph in-between tests.
    */
   clearFileImportGraph() {
     fileImportGraph.clear();
-    fileGlobalsMap.clear();
   },
 };
 

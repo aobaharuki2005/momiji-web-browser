@@ -1,5 +1,4 @@
 use crate::backend::c;
-use crate::ffi;
 use bitflags::bitflags;
 
 #[cfg(linux_kernel)]
@@ -9,7 +8,7 @@ bitflags! {
     /// [`mount`]: crate::mount::mount
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct MountFlags: ffi::c_ulong {
+    pub struct MountFlags: c::c_ulong {
         /// `MS_BIND`
         const BIND = c::MS_BIND;
 
@@ -56,10 +55,6 @@ bitflags! {
         /// `MS_SYNCHRONOUS`
         const SYNCHRONOUS = c::MS_SYNCHRONOUS;
 
-        /// `MS_NOSYMFOLLOW`
-        #[cfg(linux_raw_dep)]
-        const NOSYMFOLLOW = c::MS_NOSYMFOLLOW;
-
         /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
@@ -87,6 +82,7 @@ bitflags! {
     }
 }
 
+#[cfg(feature = "mount")]
 #[cfg(linux_kernel)]
 bitflags! {
     /// `FSOPEN_*` constants for use with [`fsopen`].
@@ -94,7 +90,7 @@ bitflags! {
     /// [`fsopen`]: crate::mount::fsopen
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct FsOpenFlags: ffi::c_uint {
+    pub struct FsOpenFlags: c::c_uint {
         /// `FSOPEN_CLOEXEC`
         const FSOPEN_CLOEXEC = 0x0000_0001;
 
@@ -103,6 +99,7 @@ bitflags! {
     }
 }
 
+#[cfg(feature = "mount")]
 #[cfg(linux_kernel)]
 bitflags! {
     /// `FSMOUNT_*` constants for use with [`fsmount`].
@@ -110,7 +107,7 @@ bitflags! {
     /// [`fsmount`]: crate::mount::fsmount
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct FsMountFlags: ffi::c_uint {
+    pub struct FsMountFlags: c::c_uint {
         /// `FSMOUNT_CLOEXEC`
         const FSMOUNT_CLOEXEC = 0x0000_0001;
 
@@ -120,6 +117,7 @@ bitflags! {
 }
 
 /// `FSCONFIG_*` constants for use with the `fsconfig` syscall.
+#[cfg(feature = "mount")]
 #[cfg(linux_kernel)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u32)]
@@ -147,11 +145,9 @@ pub(crate) enum FsConfigCmd {
 
     /// `FSCONFIG_CMD_RECONFIGURE`
     Reconfigure = 7,
-
-    /// `FSCONFIG_CMD_CREATE_EXCL` (since Linux 6.6)
-    CreateExclusive = 8,
 }
 
+#[cfg(feature = "mount")]
 #[cfg(linux_kernel)]
 bitflags! {
     /// `MOUNT_ATTR_*` constants for use with [`fsmount`].
@@ -159,7 +155,7 @@ bitflags! {
     /// [`fsmount`]: crate::mount::fsmount
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct MountAttrFlags: ffi::c_uint {
+    pub struct MountAttrFlags: c::c_uint {
         /// `MOUNT_ATTR_RDONLY`
         const MOUNT_ATTR_RDONLY = 0x0000_0001;
 
@@ -201,6 +197,7 @@ bitflags! {
     }
 }
 
+#[cfg(feature = "mount")]
 #[cfg(linux_kernel)]
 bitflags! {
     /// `MOVE_MOUNT_*` constants for use with [`move_mount`].
@@ -208,7 +205,7 @@ bitflags! {
     /// [`move_mount`]: crate::mount::move_mount
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct MoveMountFlags: ffi::c_uint {
+    pub struct MoveMountFlags: c::c_uint {
         /// `MOVE_MOUNT_F_EMPTY_PATH`
         const MOVE_MOUNT_F_SYMLINKS = 0x0000_0001;
 
@@ -241,6 +238,7 @@ bitflags! {
     }
 }
 
+#[cfg(feature = "mount")]
 #[cfg(linux_kernel)]
 bitflags! {
     /// `OPENTREE_*` constants for use with [`open_tree`].
@@ -248,7 +246,7 @@ bitflags! {
     /// [`open_tree`]: crate::mount::open_tree
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct OpenTreeFlags: ffi::c_uint {
+    pub struct OpenTreeFlags: c::c_uint {
         /// `OPENTREE_CLONE`
         const OPEN_TREE_CLONE = 1;
 
@@ -272,6 +270,7 @@ bitflags! {
     }
 }
 
+#[cfg(feature = "mount")]
 #[cfg(linux_kernel)]
 bitflags! {
     /// `FSPICK_*` constants for use with [`fspick`].
@@ -279,7 +278,7 @@ bitflags! {
     /// [`fspick`]: crate::mount::fspick
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct FsPickFlags: ffi::c_uint {
+    pub struct FsPickFlags: c::c_uint {
         /// `FSPICK_CLOEXEC`
         const FSPICK_CLOEXEC = 0x0000_0001;
 
@@ -304,23 +303,15 @@ bitflags! {
     /// [`mount_change`]: crate::mount::mount_change
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-    pub struct MountPropagationFlags: ffi::c_ulong {
+    pub struct MountPropagationFlags: c::c_ulong {
         /// `MS_SILENT`
         const SILENT = c::MS_SILENT;
         /// `MS_SHARED`
         const SHARED = c::MS_SHARED;
         /// `MS_PRIVATE`
         const PRIVATE = c::MS_PRIVATE;
-        /// Mark a mount as a downstream of its current peer group.
-        ///
-        /// Mount and unmount events propagate from the upstream peer group
-        /// into the downstream.
-        ///
-        /// In Linux documentation, this flag is named `MS_SLAVE`, and the
-        /// concepts of “upstream” and “downstream” are called
-        /// “master” and “slave”.
-        #[doc(alias = "SLAVE")]
-        const DOWNSTREAM = c::MS_SLAVE;
+        /// `MS_SLAVE`
+        const SLAVE = c::MS_SLAVE;
         /// `MS_UNBINDABLE`
         const UNBINDABLE = c::MS_UNBINDABLE;
         /// `MS_REC`

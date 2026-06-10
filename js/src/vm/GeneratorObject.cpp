@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -8,7 +10,6 @@
 #ifdef DEBUG
 #  include "js/friend/DumpFunctions.h"  // js::DumpObject, js::DumpValue
 #endif
-#include "js/friend/UsageStatistics.h"  // JSUseCounter
 #include "js/PropertySpec.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
@@ -26,15 +27,10 @@ AbstractGeneratorObject* AbstractGeneratorObject::create(
     JSContext* cx, HandleFunction callee, HandleScript script,
     HandleObject environmentChain, Handle<ArgumentsObject*> argsObject) {
   Rooted<AbstractGeneratorObject*> genObj(cx);
-  // TODO(Bug 2039389): Remove generator use counters
   if (!callee->isAsync()) {
     genObj = GeneratorObject::create(cx, callee);
-    cx->runtime()->setUseCounter(cx->global(),
-                                 JSUseCounter::GENERATOR_FUNCTION_CREATED);
   } else if (callee->isGenerator()) {
     genObj = AsyncGeneratorObject::create(cx, callee);
-    cx->runtime()->setUseCounter(
-        cx->global(), JSUseCounter::ASYNC_GENERATOR_FUNCTION_CREATED);
   } else {
     genObj = AsyncFunctionGeneratorObject::create(cx, callee);
   }
@@ -314,13 +310,11 @@ GeneratorObject* GeneratorObject::create(JSContext* cx, HandleFunction fun) {
 
   // FIXME: This would be faster if we could avoid doing a lookup to get
   // the prototype for the instance.  Bug 906600.
-  RootedTuple<Value, JSObject*> roots(cx);
-  RootedField<Value, 0> pval(roots);
+  RootedValue pval(cx);
   if (!GetProperty(cx, fun, fun, cx->names().prototype, &pval)) {
     return nullptr;
   }
-  RootedField<JSObject*, 1> proto(roots,
-                                  pval.isObject() ? &pval.toObject() : nullptr);
+  RootedObject proto(cx, pval.isObject() ? &pval.toObject() : nullptr);
   if (!proto) {
     proto = GlobalObject::getOrCreateGeneratorObjectPrototype(cx, cx->global());
     if (!proto) {
@@ -337,7 +331,16 @@ const JSClass GeneratorObject::class_ = {
 };
 
 const JSClassOps GeneratorObject::classOps_ = {
-    .trace = CallTraceMethod<AbstractGeneratorObject>,
+    nullptr,                                   // addProperty
+    nullptr,                                   // delProperty
+    nullptr,                                   // enumerate
+    nullptr,                                   // newEnumerate
+    nullptr,                                   // resolve
+    nullptr,                                   // mayResolve
+    nullptr,                                   // finalize
+    nullptr,                                   // call
+    nullptr,                                   // construct
+    CallTraceMethod<AbstractGeneratorObject>,  // trace
 };
 
 static const JSFunctionSpec generator_methods[] = {

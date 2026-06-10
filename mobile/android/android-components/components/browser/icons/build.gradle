@@ -2,10 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import static org.mozilla.conventions.BuildConfigKt.updateExtensionVersion
-
 plugins {
-    alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
@@ -28,12 +25,7 @@ android {
 }
 
 tasks.register("updateBuiltInExtensionVersion", Copy) { task ->
-    updateExtensionVersion(task, 'src/main/assets/extensions/browser-icons', rootProject.ext.config.componentsVersion)
-}
-
-// Make sure DAGP asset-source exploding happens after ExtensionVersion tasks
-tasks.matching { it.name.startsWith("explodeAssetSource") }.configureEach { t ->
-    t.dependsOn(tasks.named("updateBuiltInExtensionVersion"))
+    updateExtensionVersion(task, 'src/main/assets/extensions/browser-icons')
 }
 
 dependencies {
@@ -43,9 +35,7 @@ dependencies {
     implementation project(':components:concept-base')
     implementation project(':components:concept-engine')
     implementation project(':components:concept-fetch')
-    implementation project(':components:service-merino-manifest')
     implementation project(':components:support-ktx')
-    implementation project(':components:support-utils')
 
     implementation libs.androidsvg
     implementation libs.androidx.annotation
@@ -54,6 +44,7 @@ dependencies {
     implementation libs.androidx.compose.ui
     implementation libs.androidx.core.ktx
     implementation libs.androidx.palette
+    implementation libs.disklrucache
     implementation libs.kotlinx.coroutines
 
     testImplementation project(':components:lib-fetch-httpurlconnection')
@@ -63,17 +54,13 @@ dependencies {
     testImplementation libs.androidx.test.core
     testImplementation libs.androidx.test.junit
     testImplementation libs.kotlin.reflect
-    testImplementation libs.kotlin.test
     testImplementation libs.kotlinx.coroutines.test
     testImplementation libs.mockwebserver
-    testImplementation libs.okhttp
-    testImplementation libs.okio
     testImplementation libs.robolectric
 
     androidTestImplementation libs.androidx.test.core
     androidTestImplementation libs.androidx.test.rules
     androidTestImplementation libs.androidx.test.runner
-    androidTestImplementation libs.kotlin.test
     androidTestImplementation libs.kotlinx.coroutines.test
 }
 

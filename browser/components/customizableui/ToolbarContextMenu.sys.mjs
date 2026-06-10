@@ -44,7 +44,7 @@ export var ToolbarContextMenu = {
    *   The toolbar-context-menu element for a window.
    */
   updateDownloadsAutoHide(popup) {
-    let { document, DownloadsButton } = popup.documentGlobal;
+    let { document, DownloadsButton } = popup.ownerGlobal;
     let checkbox = document.getElementById(
       "toolbar-context-autohide-downloads-button"
     );
@@ -85,7 +85,7 @@ export var ToolbarContextMenu = {
    *   The toolbar-context-menu element for a window.
    */
   updateDownloadsAlwaysOpenPanel(popup) {
-    let { document } = popup.documentGlobal;
+    let { document } = popup.ownerGlobal;
     let separator = document.getElementById(
       "toolbarDownloadsAnchorMenuSeparator"
     );
@@ -129,7 +129,7 @@ export var ToolbarContextMenu = {
   // eslint-disable-next-line complexity
   onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     var popup = aEvent.target;
-    let window = popup.documentGlobal;
+    let window = popup.ownerGlobal;
     let {
       document,
       BookmarkingUI,
@@ -342,7 +342,7 @@ export var ToolbarContextMenu = {
       let closedCount = lazy.SessionStore.getLastClosedTabCount(window);
       document
         .getElementById("History:UndoCloseTab")
-        .toggleAttribute("disabled", closedCount == 0);
+        .setAttribute("disabled", closedCount == 0);
       document.l10n.setArgs(
         document.getElementById("toolbar-context-undoCloseTab"),
         { tabCount: closedCount }
@@ -352,14 +352,21 @@ export var ToolbarContextMenu = {
 
     let movable =
       toolbarItem?.id && lazy.CustomizableUI.isWidgetRemovable(toolbarItem);
-    moveToPanel.toggleAttribute(
-      "disabled",
-      !movable || lazy.CustomizableUI.isSpecialWidget(toolbarItem.id)
-    );
-    removeFromToolbar.toggleAttribute(
-      "disabled",
-      !movable || shouldHideCustomizationItems
-    );
+    if (movable) {
+      if (lazy.CustomizableUI.isSpecialWidget(toolbarItem.id)) {
+        moveToPanel.setAttribute("disabled", true);
+      } else {
+        moveToPanel.removeAttribute("disabled");
+      }
+      if (shouldHideCustomizationItems) {
+        removeFromToolbar.setAttribute("disabled", true);
+      } else {
+        removeFromToolbar.removeAttribute("disabled");
+      }
+    } else {
+      removeFromToolbar.setAttribute("disabled", true);
+      moveToPanel.setAttribute("disabled", true);
+    }
   },
 
   /**
@@ -375,7 +382,7 @@ export var ToolbarContextMenu = {
   _getUnwrappedTriggerNode(popup) {
     // Toolbar buttons are wrapped in customize mode. Unwrap if necessary.
     let { triggerNode } = popup;
-    let { gCustomizeMode } = popup.documentGlobal;
+    let { gCustomizeMode } = popup.ownerGlobal;
     if (triggerNode && gCustomizeMode.isWrappedToolbarItem(triggerNode)) {
       return triggerNode.firstElementChild;
     }
@@ -424,7 +431,7 @@ export var ToolbarContextMenu = {
     const isExtsButton = popup.triggerNode?.id === "unified-extensions-button";
     const isCustomizingExtsButton =
       popup.triggerNode?.id === "wrapper-unified-extensions-button";
-    const { gUnifiedExtensions } = popup.documentGlobal;
+    const { gUnifiedExtensions } = popup.ownerGlobal;
 
     const checkbox = popup.querySelector(
       "#toolbar-context-always-show-extensions-button"
@@ -528,7 +535,7 @@ export var ToolbarContextMenu = {
    *   Resolves when the extension has been removed.
    */
   async removeExtensionForContextAction(popup) {
-    let { BrowserAddonUI } = popup.documentGlobal;
+    let { BrowserAddonUI } = popup.ownerGlobal;
 
     let id = this._getExtensionId(popup);
     await BrowserAddonUI.removeAddon(id, "browserAction");
@@ -545,7 +552,7 @@ export var ToolbarContextMenu = {
    *   Resolves when the extension has been removed.
    */
   async reportExtensionForContextAction(popup, reportEntryPoint) {
-    let { BrowserAddonUI } = popup.documentGlobal;
+    let { BrowserAddonUI } = popup.ownerGlobal;
     let id = this._getExtensionId(popup);
     await BrowserAddonUI.reportAddon(id, reportEntryPoint);
   },
@@ -560,7 +567,7 @@ export var ToolbarContextMenu = {
    *   opened.
    */
   async openAboutAddonsForContextAction(popup) {
-    let { BrowserAddonUI } = popup.documentGlobal;
+    let { BrowserAddonUI } = popup.ownerGlobal;
     let id = this._getExtensionId(popup);
     await BrowserAddonUI.manageAddon(id, "browserAction");
   },
@@ -609,8 +616,8 @@ export var ToolbarContextMenu = {
     );
 
     if (
-      removeFromToolbar?.hasAttribute("disabled") &&
-      moveToPanel.hasAttribute("disabled")
+      removeFromToolbar?.getAttribute("disabled") &&
+      moveToPanel.getAttribute("disabled")
     ) {
       removeFromToolbar.hidden = true;
       moveToPanel.hidden = true;

@@ -4,7 +4,7 @@
 
 /*---
 esid: sec-temporal.zoneddatetime.from
-description: Invalid ISO string as calendar should throw RangeError
+description: Various invalid ISO string values for calendar in a property bag
 features: [Temporal]
 ---*/
 
@@ -12,12 +12,10 @@ const timeZone = "UTC";
 
 const invalidStrings = [
   ["", "empty string"],
-  ["1997-12-04[u-ca=notacal]", "Unknown calendar"],
-  ["notacal", "Unknown calendar"],
 ];
 
-for (const [cal, description] of invalidStrings) {
-  const arg = { year: 1976, monthCode: "M11", day: 18, calendar: cal };
+for (const [calendar, description] of invalidStrings) {
+  const arg = { year: 1970, monthCode: "M01", day: 1, timeZone, calendar };
   assert.throws(
     RangeError,
     () => Temporal.ZonedDateTime.from(arg),

@@ -46,7 +46,7 @@ where
     ///         id: de.as_borrowed(),
     ///         ..Default::default()
     ///     });
-    /// assert!(response.is_ok());
+    /// assert!(matches!(response, Ok(_)));
     ///
     /// // English requests should fail:
     /// let en = DataIdentifierCow::from_locale(langid!("en-US").into());
@@ -60,10 +60,13 @@ where
     ///         id: en.as_borrowed(),
     ///         ..Default::default()
     ///     });
-    /// assert_eq!(
-    ///     response.unwrap_err().kind,
-    ///     DataErrorKind::IdentifierNotFound,
-    /// );
+    /// assert!(matches!(
+    ///     response,
+    ///     Err(DataError {
+    ///         kind: DataErrorKind::IdentifierNotFound,
+    ///         ..
+    ///     })
+    /// ));
     ///
     /// // English should not appear in the iterator result:
     /// let available_ids = provider
@@ -74,7 +77,7 @@ where
     /// assert!(!available_ids
     ///     .contains(&DataIdentifierCow::from_locale(langid!("en").into())));
     /// ```
-    #[expect(clippy::type_complexity)]
+    #[allow(clippy::type_complexity)]
     pub fn with_filter<'a>(
         self,
         predicate: impl Fn(DataIdentifierBorrowed) -> bool + Sync + 'a,

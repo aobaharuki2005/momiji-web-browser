@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -610,167 +611,69 @@ class TSFTextStore final : public TSFTextStoreBase,
   // DOM composition events.  However, we cannot dispatch while the document is
   // locked because it can cause modifying the locked document.  So, the pending
   // actions should be performed when document lock is unlocked.
-  class PendingActions {
-   public:
-    using size_type = nsTArray<PendingAction>::size_type;
-    PendingActions() {
-      // We hope that 5 or more actions don't occur at once.
-      mPendingActions.SetCapacity(5);
-    }
+  nsTArray<PendingAction> mPendingActions;
 
-    [[nodiscard]] bool IsLocked() const { return mLocked; }
-
-    bool Clear() {
-      if (mLocked && !mPendingActions.IsEmpty()) [[unlikely]] {
-        return false;
+  PendingAction* LastOrNewPendingCompositionUpdate() {
+    if (!mPendingActions.IsEmpty()) {
+      PendingAction& lastAction = mPendingActions.LastElement();
+      if (lastAction.mType == PendingAction::Type::CompositionUpdate) {
+        return &lastAction;
       }
-      mPendingActions.Clear();
-      return true;
     }
-    [[nodiscard]] bool IsEmpty() const { return mPendingActions.IsEmpty(); }
-    [[nodiscard]] size_type Length() const { return mPendingActions.Length(); }
-    [[nodiscard]] PendingAction& operator[](size_t aIndex) {
-      return mPendingActions[aIndex];
-    }
-    [[nodiscard]] PendingAction* CreateNewAction() {
-      // It's okay to append new action during a lock since it's safe to refer
-      // extant pending actions.
-      return mPendingActions.AppendElement();
-    }
-    [[nodiscard]] PendingAction* CreateNewActions(size_t aNumOfNewActions) {
-      return mPendingActions.AppendElements(aNumOfNewActions);
-    }
-    PendingAction* AppendNewAction(PendingAction&& aNewAction) {
-      // It's okay to append new action during a lock since it's safe to refer
-      // extant pending actions.
-      return mPendingActions.AppendElement(std::move(aNewAction));
-    }
-    [[nodiscard]] PendingAction& LastAction() {
-      return mPendingActions.LastElement();
-    }
-    [[nodiscard]] bool RemoveLastAction() {
-      if (mLocked) [[unlikely]] {
-        return false;
-      }
-      mPendingActions.RemoveLastElement();
-      return true;
-    }
-    [[nodiscard]] bool RemoveActionsFrom(size_type aIndex) {
-      if (mLocked) [[unlikely]] {
-        return false;
-      }
-      mPendingActions.RemoveLastElements(mPendingActions.Length() - aIndex);
-      return true;
-    }
+    PendingAction* newAction = mPendingActions.AppendElement();
+    newAction->mType = PendingAction::Type::CompositionUpdate;
+    newAction->mRanges = new TextRangeArray();
+    newAction->mIncomplete = true;
+    return newAction;
+  }
 
-    PendingAction* LastOrNewPendingCompositionUpdate() {
-      if (!mPendingActions.IsEmpty()) {
-        PendingAction& lastAction = mPendingActions.LastElement();
-        if (lastAction.mType == PendingAction::Type::CompositionUpdate) {
-          return &lastAction;
-        }
-      }
-      PendingAction* newAction = mPendingActions.AppendElement();
-      newAction->mType = PendingAction::Type::CompositionUpdate;
-      newAction->mRanges = new TextRangeArray();
-      newAction->mIncomplete = true;
-      return newAction;
+  /**
+   * IsLastPendingActionCompositionEndAt() checks whether the previous pending
+   * action is committing composition whose range starts from aStart and its
+   * length is aLength.  In other words, this checks whether new composition
+   * which will replace same range as previous pending commit can be merged
+   * with the previous composition.
+   *
+   * @param aStart              The inserted offset you expected.
+   * @param aLength             The inserted text length you expected.
+   * @return                    true if the last pending action is
+   *                            eCompositionEnd and it inserted the text
+   *                            between aStart and aStart + aLength.
+   */
+  bool IsLastPendingActionCompositionEndAt(LONG aStart, LONG aLength) const {
+    if (mPendingActions.IsEmpty()) {
+      return false;
     }
+    const PendingAction& pendingLastAction = mPendingActions.LastElement();
+    return pendingLastAction.mType == PendingAction::Type::CompositionEnd &&
+           pendingLastAction.mSelectionStart == aStart &&
+           pendingLastAction.mData.Length() == static_cast<ULONG>(aLength);
+  }
 
-    /**
-     * IsLastPendingActionCompositionEndAt() checks whether the previous pending
-     * action is committing composition whose range starts from aStart and its
-     * length is aLength.  In other words, this checks whether new composition
-     * which will replace same range as previous pending commit can be merged
-     * with the previous composition.
-     *
-     * @param aStart              The inserted offset you expected.
-     * @param aLength             The inserted text length you expected.
-     * @return                    true if the last pending action is
-     *                            eCompositionEnd and it inserted the text
-     *                            between aStart and aStart + aLength.
-     */
-    bool IsLastPendingActionCompositionEndAt(LONG aStart, LONG aLength) const {
-      if (mPendingActions.IsEmpty()) {
-        return false;
-      }
-      const PendingAction& pendingLastAction = mPendingActions.LastElement();
-      return pendingLastAction.mType == PendingAction::Type::CompositionEnd &&
-             pendingLastAction.mSelectionStart == aStart &&
-             pendingLastAction.mData.Length() == static_cast<ULONG>(aLength);
+  bool IsPendingCompositionUpdateIncomplete() const {
+    if (mPendingActions.IsEmpty()) {
+      return false;
     }
-
-    bool IsPendingCompositionUpdateIncomplete() const {
-      if (mPendingActions.IsEmpty()) {
-        return false;
-      }
-      const PendingAction& lastAction = mPendingActions.LastElement();
-      return lastAction.mType == PendingAction::Type::CompositionUpdate &&
-             lastAction.mIncomplete;
-    }
-
-    [[nodiscard]] bool RemoveLastCompositionUpdateActions() {
-      while (!mPendingActions.IsEmpty()) {
-        const PendingAction& lastAction = mPendingActions.LastElement();
-        if (lastAction.mType != PendingAction::Type::CompositionUpdate) {
-          break;
-        }
-        if (mLocked) [[unlikely]] {
-          return false;
-        }
-        mPendingActions.RemoveLastElement();
-      }
-      return true;
-    }
-
-    /**
-     * Lock the PendingActions to avoid to remove extant pending actions.
-     */
-    class MOZ_STACK_CLASS AutoLockPendingActions {
-     public:
-      explicit AutoLockPendingActions(PendingActions& aPendingActions)
-          : mPendingActions(aPendingActions),
-            mDoLockAndUnlock(!aPendingActions.mLocked) {
-        if (mDoLockAndUnlock) {
-          mPendingActions.Lock();
-        }
-      }
-      ~AutoLockPendingActions() {
-        if (mDoLockAndUnlock) {
-          mPendingActions.Unlock();
-        }
-      }
-
-     private:
-      PendingActions& mPendingActions;
-      const bool mDoLockAndUnlock;
-    };
-
-    using iterator = nsTArray<PendingAction>::iterator;
-    [[nodiscard]] iterator begin() { return mPendingActions.begin(); }
-    [[nodiscard]] iterator end() { return mPendingActions.end(); }
-
-   private:
-    void Lock() {
-      MOZ_ASSERT(!mLocked);
-      mLocked = true;
-    }
-    void Unlock() {
-      MOZ_ASSERT(mLocked);
-      mLocked = false;
-    }
-
-    nsTArray<PendingAction> mPendingActions;
-    bool mLocked = false;
-  } mPendingActions;
-
-  using AutoLockPendingActions = PendingActions::AutoLockPendingActions;
+    const PendingAction& lastAction = mPendingActions.LastElement();
+    return lastAction.mType == PendingAction::Type::CompositionUpdate &&
+           lastAction.mIncomplete;
+  }
 
   void CompleteLastActionIfStillIncomplete() {
-    if (!mPendingActions.IsPendingCompositionUpdateIncomplete()) {
+    if (!IsPendingCompositionUpdateIncomplete()) {
       return;
     }
     RecordCompositionUpdateAction();
+  }
+
+  void RemoveLastCompositionUpdateActions() {
+    while (!mPendingActions.IsEmpty()) {
+      const PendingAction& lastAction = mPendingActions.LastElement();
+      if (lastAction.mType != PendingAction::Type::CompositionUpdate) {
+        break;
+      }
+      mPendingActions.RemoveLastElement();
+    }
   }
 
   // When On*Composition() is called without document lock, we need to flush
@@ -804,9 +707,6 @@ class TSFTextStore final : public TSFTextStoreBase,
    public:
     Content(TSFTextStore& aTSFTextStore, const nsAString& aText)
         : mText(aText),
-          // If mText is not modified, mTextInContent should just refer the same
-          // buffer. So, this shouldn't cause duplicating the data.
-          mTextInContent(mText),
           mLastComposition(aTSFTextStore.mComposition),
           mComposition(aTSFTextStore.mComposition),
           mSelection(aTSFTextStore.mSelectionForTSF) {}
@@ -818,8 +718,9 @@ class TSFTextStore final : public TSFTextStoreBase,
     // process.
     void OnCompositionEventsHandled() { mLastComposition = mComposition; }
 
-    nsDependentSubstring GetSelectedText() const;
-    nsDependentSubstring GetSubstring(uint32_t aStart, uint32_t aLength) const;
+    const nsDependentSubstring GetSelectedText() const;
+    const nsDependentSubstring GetSubstring(uint32_t aStart,
+                                            uint32_t aLength) const;
     void ReplaceSelectedTextWith(const nsAString& aString);
     void ReplaceTextWith(LONG aStart, LONG aLength,
                          const nsAString& aReplaceString);
@@ -845,7 +746,6 @@ class TSFTextStore final : public TSFTextStoreBase,
     void EndComposition(const PendingAction& aCompEnd);
 
     const nsString& TextRef() const { return mText; }
-    const nsString& TextInContentRef() const { return mTextInContent; }
     const Maybe<OffsetAndData<LONG>>& LastComposition() const {
       return mLastComposition;
     }
@@ -886,8 +786,6 @@ class TSFTextStore final : public TSFTextStoreBase,
 
    private:
     nsString mText;
-    // The text which is in the focused editor or ContentCache.
-    const nsString mTextInContent;
 
     // mLastComposition may store the composition string and its start offset
     // when the document is locked. This is necessary to compute

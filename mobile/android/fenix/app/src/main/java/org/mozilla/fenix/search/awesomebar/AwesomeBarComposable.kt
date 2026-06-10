@@ -44,10 +44,7 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.metrics.MetricsUtils
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.home.toolbar.edgeToEdgeClipboardBarBackground
 import org.mozilla.fenix.search.BrowserStoreToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.BrowserToolbarToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.FenixSearchMiddleware
@@ -74,7 +71,6 @@ private const val MATERIAL_DESIGN_SCRIM = "#52000000"
  * @param tabId [String] Id of the current tab for which a new search was started.
  * @param showScrimWhenNoSuggestions Whether to show a scrim when no suggestions are available.
  * @param searchAccessPoint Where search was started from.
- * @param isEdgeToEdgeBackgroundEnabled Whether the Edge2Edge background is enabled.
  */
 @Suppress("LongParameterList")
 class AwesomeBarComposable(
@@ -89,7 +85,6 @@ class AwesomeBarComposable(
     private val tabId: String? = null,
     private val showScrimWhenNoSuggestions: Boolean = false,
     private val searchAccessPoint: MetricsUtils.Source = MetricsUtils.Source.NONE,
-    private val isEdgeToEdgeBackgroundEnabled: Boolean = false,
 ) {
     private val searchStore by initializeSearchStore()
 
@@ -101,11 +96,6 @@ class AwesomeBarComposable(
     @Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")
     @Composable
     fun SearchSuggestions() {
-        val deleteHistoryDelegate = remember(activity.getRootView(), searchStore) {
-            activity.getRootView()?.let {
-                DeleteHistoryEntryDelegate(it, it.context.components, searchStore)
-            }
-        }
         val isSearchActive = appStore.observeAsComposableState { it.searchState.isSearchActive }.value
         val state = searchStore.observeAsComposableState { it }.value
         val orientation by remember(state.searchSuggestionsOrientedAtBottom) {
@@ -120,14 +110,15 @@ class AwesomeBarComposable(
             state.showClipboardSuggestions,
             state.query,
             state.clipboardHasUrl,
+            state.showSearchShortcuts,
         ) {
             derivedStateOf {
                 state.showClipboardSuggestions &&
                         state.query.isEmpty() &&
-                        state.clipboardHasUrl
+                        state.clipboardHasUrl &&
+                        !state.showSearchShortcuts
             }
         }
-        val clipboardBarBackground = edgeToEdgeClipboardBarBackground(isEdgeToEdgeBackgroundEnabled)
         val view = LocalView.current
         val focusManager = LocalFocusManager.current
         val keyboardController = LocalSoftwareKeyboardController.current
@@ -147,11 +138,10 @@ class AwesomeBarComposable(
 
             ClipboardSuggestionBar(
                 shouldUseBottomToolbar = components.settings.shouldUseBottomToolbar,
-                backgroundColor = clipboardBarBackground,
                 onClick = {
                     url?.let {
                         toolbarStore.dispatch(
-                            SearchQueryUpdated(query = BrowserToolbarQuery(url), isQueryPrefilled = true),
+                            SearchQueryUpdated(query = BrowserToolbarQuery(url), isQueryPrefilled = false),
                         )
                     }
                 },
@@ -206,16 +196,12 @@ class AwesomeBarComposable(
                     AwesomeBar(
                         text = state.query,
                         providers = state.searchSuggestionsProviders,
-                        hiddenSuggestions = state.hiddenSuggestions,
                         orientation = orientation,
                         onSuggestionClicked = { suggestion ->
                             searchStore.dispatch(SuggestionClicked(suggestion))
                         },
                         onAutoComplete = { suggestion ->
                             searchStore.dispatch(SuggestionSelected(suggestion))
-                        },
-                        onRemoveClicked = { suggestion ->
-                            deleteHistoryDelegate?.handleDeletingHistoryEntry(suggestion)
                         },
                         onVisibilityStateUpdated = {
                             browserStore.dispatch(AwesomeBarAction.VisibilityStateUpdated(it))
@@ -247,11 +233,10 @@ class AwesomeBarComposable(
 
             ClipboardSuggestionBar(
                 shouldUseBottomToolbar = components.settings.shouldUseBottomToolbar,
-                backgroundColor = clipboardBarBackground,
                 onClick = {
                     url?.let {
                         toolbarStore.dispatch(
-                            SearchQueryUpdated(query = BrowserToolbarQuery(url), isQueryPrefilled = true),
+                            SearchQueryUpdated(query = BrowserToolbarQuery(url), isQueryPrefilled = false),
                         )
                     }
                 },
@@ -282,7 +267,6 @@ class AwesomeBarComposable(
                 BrowserStoreToFenixSearchMapperMiddleware(
                     browserStore = browserStore,
                     scope = lifecycleScope,
-                    appStore = components.appStore,
                 ),
                 FenixSearchMiddleware(
                     fragment = fragment,

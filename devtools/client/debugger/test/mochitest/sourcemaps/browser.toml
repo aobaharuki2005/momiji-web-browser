@@ -9,6 +9,7 @@ support-files = [
   "!/devtools/client/inspector/test/head.js",
   "!/devtools/client/inspector/test/shared-head.js",
   "!/devtools/client/shared/test/shared-head.js",
+  "!/devtools/client/shared/test/telemetry-test-helpers.js",
   "!/devtools/client/shared/test/highlighter-test-actor.js",
   "!/devtools/client/webconsole/test/browser/shared-head.js",
 ]
@@ -26,8 +27,8 @@ skip-if = [
 ]
 
 ["browser_dbg-sourcemapped-stepping.js"]
-skip-if = [
-  "true", # original stepping is currently disabled
+run-if = [
+  "false", # original stepping is currently disabled
 ]
 
 ["browser_dbg-sourcemapped-toggle.js"]

@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,6 +21,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
 
+private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(28.dp)
+
 /**
  * A menu group container.
  *
@@ -29,7 +32,7 @@ import mozilla.components.ui.icons.R as iconsR
 internal fun MenuGroup(content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
-            .clip(shape = MaterialTheme.shapes.extraLarge),
+            .clip(shape = ROUNDED_CORNER_SHAPE),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         content()

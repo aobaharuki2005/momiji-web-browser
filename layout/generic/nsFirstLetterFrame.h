@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsFirstLetterFrame_h_
-#define nsFirstLetterFrame_h_
+#ifndef nsFirstLetterFrame_h__
+#define nsFirstLetterFrame_h__
 
 /* rendering object for CSS :first-letter pseudo-element */
 
@@ -98,4 +100,4 @@ class nsFloatingFirstLetterFrame : public nsFirstLetterFrame {
       : nsFirstLetterFrame(aStyle, aPresContext, kClassID) {}
 };
 
-#endif /* nsFirstLetterFrame_h_ */
+#endif /* nsFirstLetterFrame_h__ */

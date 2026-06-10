@@ -11,9 +11,11 @@ import android.os.Bundle
 import androidx.annotation.VisibleForTesting
 import androidx.browser.customtabs.CustomTabsService
 import androidx.browser.customtabs.CustomTabsSessionToken
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.customtabs.feature.OriginVerifierFeature
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
@@ -34,7 +36,7 @@ private const val MAX_SPECULATIVE_URLS = 50
  */
 abstract class AbstractCustomTabsService : CustomTabsService() {
     private val logger = Logger("CustomTabsService")
-    open val scope = MainScope()
+    private val scope = MainScope()
 
     abstract val engine: Engine
     abstract val customTabsServiceStore: CustomTabsServiceStore
@@ -57,8 +59,10 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
 
     override fun warmup(flags: Long): Boolean {
         // We need to run this on the main thread since that's where GeckoRuntime expects to get initialized (if needed)
-        scope.launch { engine.warmUp() }
-        return true
+        return runBlocking(Main) {
+            engine.warmUp()
+            true
+        }
     }
 
     override fun requestPostMessageChannel(sessionToken: CustomTabsSessionToken, postMessageOrigin: Uri): Boolean {
@@ -115,7 +119,7 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
         val verifier = verifier
         val state = customTabsServiceStore.state.tabs[sessionToken]
         return if (verifier != null && state != null) {
-            scope.launch {
+            scope.launch(Main) {
                 val result = verifier.verify(state, sessionToken, relation, origin)
                 sessionToken.callback?.onRelationshipValidationResult(relation, origin, result, extras)
             }

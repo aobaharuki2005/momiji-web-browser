@@ -14,7 +14,7 @@ fn uniset_bench(c: &mut Criterion) {
         CodePointInversionList::try_from_u32_inversion_list_slice(&worst_ex).unwrap();
 
     c.bench_function("uniset/overview", |b| {
-        #[expect(clippy::suspicious_map)]
+        #[allow(clippy::suspicious_map)]
         b.iter(|| {
             best_sample
                 .iter_chars()

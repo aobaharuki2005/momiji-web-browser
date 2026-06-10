@@ -5,9 +5,7 @@
 package org.mozilla.focus.session
 
 import android.content.Context
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -28,14 +26,12 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  * @param context The application context.
  * @param browserStore The [BrowserStore] used to observe the number of private tabs.
  * @param crashReporter The [CrashReporting] instance for error reporting.
- * @param mainDispatcher The [CoroutineDispatcher] to be used for observing the store.
  * @param permissionRequestHandler A lambda function to handle permission requests for the notification service.
  */
 class PrivateNotificationFeature(
     context: Context,
     private val browserStore: BrowserStore,
     private val crashReporter: CrashReporting,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
     private val permissionRequestHandler: (() -> Unit),
 ) : LifecycleAwareFeature {
 
@@ -43,7 +39,7 @@ class PrivateNotificationFeature(
     private var scope: CoroutineScope? = null
 
     override fun start() {
-        scope = browserStore.flowScoped(dispatcher = mainDispatcher) { flow ->
+        scope = browserStore.flowScoped { flow ->
             flow.map { state -> state.privateTabs.isNotEmpty() }
                 .distinctUntilChanged()
                 .collect { hasPrivateTabs ->

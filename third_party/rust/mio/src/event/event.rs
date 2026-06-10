@@ -216,7 +216,7 @@ impl fmt::Debug for Event {
         if alternate {
             struct EventDetails<'a>(&'a sys::Event);
 
-            impl fmt::Debug for EventDetails<'_> {
+            impl<'a> fmt::Debug for EventDetails<'a> {
                 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                     sys::event::debug_details(f, self.0)
                 }

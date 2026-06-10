@@ -15,7 +15,7 @@ const ruleTester = new RuleTester();
 // ------------------------------------------------------------------------------
 
 function callError() {
-  return [{ messageId: "noCompareBoolean" }];
+  return [{ messageId: "noCompareBoolean", type: "BinaryExpression" }];
 }
 
 ruleTester.run("no-compare-against-boolean-literals", rule, {

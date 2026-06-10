@@ -7,19 +7,20 @@ package mozilla.components.tooling.fetch.tests
 import android.annotation.SuppressLint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import mockwebserver3.MockResponse
-import mockwebserver3.MockWebServer
-import mockwebserver3.SocketEffect
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
 import okhttp3.Headers
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.SocketPolicy
 import okio.Buffer
 import okio.GzipSink
 import okio.buffer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -29,7 +30,6 @@ import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import kotlin.test.assertNotNull
 
 /**
  * Generic test cases for concept-fetch implementations.
@@ -50,7 +50,8 @@ abstract class FetchTestCases {
 
     @Test
     open fun get200WithStringBody() = withServerResponding(
-        MockResponse(body = "Hello World"),
+        MockResponse()
+            .setBody("Hello World"),
     ) { client ->
         val response = client.fetch(Request(rootUrl()))
 
@@ -61,7 +62,9 @@ abstract class FetchTestCases {
     @Test
     open fun get404WithBody() {
         withServerResponding(
-            MockResponse(code = 404, body = "Error"),
+            MockResponse()
+                .setResponseCode(404)
+                .setBody("Error"),
         ) { client ->
             val response = client.fetch(Request(rootUrl()))
 
@@ -143,17 +146,16 @@ abstract class FetchTestCases {
             val request = takeRequest()
 
             assertEquals("POST", request.method)
-            assertEquals("Hello World", request.body!!.utf8())
+            assertEquals("Hello World", request.body.readUtf8())
         }
     }
 
     @Test
     open fun get200WithGzippedBody() {
         withServerResponding(
-            MockResponse.Builder()
-                .body(gzip("This is compressed"))
-                .addHeader("Content-Encoding: gzip")
-                .build(),
+            MockResponse()
+                .setBody(gzip("This is compressed"))
+                .addHeader("Content-Encoding: gzip"),
         ) { client ->
             val response = client.fetch(Request(rootUrl()))
             assertEquals(200, response.status)
@@ -165,8 +167,9 @@ abstract class FetchTestCases {
     @Test
     open fun get302FollowRedirects() {
         withServerResponding(
-            MockResponse.Builder().code(302).addHeader("Location", "/x").build(),
-            MockResponse(body = "Hello World!"),
+            MockResponse().setResponseCode(302)
+                .addHeader("Location", "/x"),
+            MockResponse().setBody("Hello World!"),
         ) { client ->
             val response = client.fetch(
                 Request(
@@ -183,8 +186,9 @@ abstract class FetchTestCases {
     @Test
     open fun get302FollowRedirectsDisabled() {
         withServerResponding(
-            MockResponse.Builder().code(302).addHeader("Location", "/x").build(),
-            MockResponse(body = "Hello World!"),
+            MockResponse().setResponseCode(302)
+                .addHeader("Location", "/x"),
+            MockResponse().setBody("Hello World!"),
         ) { client ->
             val response = client.fetch(
                 Request(
@@ -201,7 +205,9 @@ abstract class FetchTestCases {
     @Test
     open fun get200WithReadTimeout() {
         withServerResponding(
-            MockResponse.Builder().body("Yep!").onResponseStart(SocketEffect.Stall).build(),
+            MockResponse()
+                .setBody("Yep!")
+                .setSocketPolicy(SocketPolicy.NO_RESPONSE),
         ) { client ->
             try {
                 val response = client.fetch(
@@ -226,7 +232,10 @@ abstract class FetchTestCases {
         file.writer().use { it.write("I am an image file!") }
 
         withServerResponding(
-            MockResponse.Builder().code(201).addHeader("Location", "/your-image.png").body("Thank you!").build(),
+            MockResponse()
+                .setResponseCode(201)
+                .setHeader("Location", "/your-image.png")
+                .setBody("Thank you!"),
         ) { client ->
             val response = client.fetch(
                 Request(
@@ -256,20 +265,19 @@ abstract class FetchTestCases {
 
             assertEquals("PUT", request.method)
 
-            assertEquals("image/png", request.headers["Content-Type"])
+            assertEquals("image/png", request.getHeader("Content-Type"))
 
-            assertEquals("I am an image file!", request.body!!.utf8())
+            assertEquals("I am an image file!", request.body.readUtf8())
         }
     }
 
     @Test
     open fun get200WithDuplicatedCacheControlResponseHeaders() {
         withServerResponding(
-            MockResponse.Builder()
+            MockResponse()
                 .addHeader("Cache-Control", "no-cache")
                 .addHeader("Cache-Control", "no-store")
-                .body("I am the content")
-                .build(),
+                .setBody("I am the content"),
         ) { client ->
             val response = client.fetch(Request(rootUrl()))
 
@@ -367,7 +375,7 @@ abstract class FetchTestCases {
 
     @Test
     open fun get200WithCookiePolicy() = withServerResponding(
-        MockResponse.Builder().addHeader("Set-Cookie", "name=value").build(),
+        MockResponse().addHeader("Set-Cookie", "name=value"),
         MockResponse(),
         MockResponse(),
     ) { client ->
@@ -375,7 +383,7 @@ abstract class FetchTestCases {
         val responseWithCookies = client.fetch(Request(rootUrl())).also { it.close() }
         assertEquals(200, responseWithCookies.status)
         assertEquals("name=value", responseWithCookies.headers["Set-Cookie"])
-        assertNull(takeRequest().headers["Cookie"])
+        assertNull(takeRequest().getHeader("Cookie"))
 
         // Send additional request, using CookiePolicy.INCLUDE, which should
         // include the cookie set by the previous response.
@@ -384,7 +392,7 @@ abstract class FetchTestCases {
         ).also { it.close() }
 
         assertEquals(200, response1.status)
-        assertEquals("name=value", takeRequest().headers["Cookie"])
+        assertEquals("name=value", takeRequest().getHeader("Cookie"))
 
         // Send additional request, using CookiePolicy.OMIT, which should
         // NOT include the cookie.
@@ -393,19 +401,17 @@ abstract class FetchTestCases {
         ).also { it.close() }
 
         assertEquals(200, response2.status)
-        assertNull(takeRequest().headers["Cookie"])
+        assertNull(takeRequest().getHeader("Cookie"))
     }
 
     @Test
     open fun get200WithContentTypeCharset() = withServerResponding(
-        MockResponse.Builder()
+        MockResponse()
             .addHeader("Content-Type", "text/html; charset=ISO-8859-1")
-            .body(Buffer().writeString("ÄäÖöÜü", Charsets.ISO_8859_1))
-            .build(),
-        MockResponse.Builder()
+            .setBody(Buffer().writeString("ÄäÖöÜü", Charsets.ISO_8859_1)),
+        MockResponse()
             .addHeader("Content-Type", "text/html; charset=invalid")
-            .body("Hello World")
-            .build(),
+            .setBody("Hello World"),
     ) { client ->
 
         val response = client.fetch(Request(rootUrl()))
@@ -421,8 +427,10 @@ abstract class FetchTestCases {
 
     @Test
     open fun get200WithCacheControl() = withServerResponding(
-        MockResponse.Builder().addHeader("Cache-Control", "max-age=600").body("Cache this!").build(),
-        MockResponse(body = "Could've cached this!"),
+        MockResponse()
+            .addHeader("Cache-Control", "max-age=600")
+            .setBody("Cache this!"),
+        MockResponse().setBody("Could've cached this!"),
     ) { client ->
 
         val responseWithCacheControl = client.fetch(Request(rootUrl()))
@@ -504,7 +512,7 @@ abstract class FetchTestCases {
             }
         } finally {
             try {
-                server.close()
+                server.shutdown()
             } catch (e: IOException) {
                 // Ignore exception
             }

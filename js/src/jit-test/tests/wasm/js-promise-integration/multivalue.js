@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmJSPromiseIntegrationEnabled()
-
 // Test passing of multi-value results.
 
 var suspending_fib2 = new WebAssembly.Suspending(

@@ -1,10 +1,11 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WebBrowserPersistSerializeParent_h_
-#define WebBrowserPersistSerializeParent_h_
+#ifndef WebBrowserPersistSerializeParent_h__
+#define WebBrowserPersistSerializeParent_h__
 
 #include "mozilla/PWebBrowserPersistSerializeParent.h"
 #include "nsCOMPtr.h"
@@ -40,4 +41,4 @@ class WebBrowserPersistSerializeParent
 
 }  // namespace mozilla
 
-#endif  // WebBrowserPersistSerializeParent_h_
+#endif  // WebBrowserPersistSerializeParent_h__

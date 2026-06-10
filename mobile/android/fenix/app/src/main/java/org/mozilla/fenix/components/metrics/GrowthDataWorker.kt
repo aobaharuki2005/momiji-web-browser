@@ -5,10 +5,10 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context
-import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
+import androidx.work.Worker
 import androidx.work.WorkerParameters
 import mozilla.components.support.utils.ext.packageManagerCompatHelper
 import org.mozilla.fenix.ext.metrics
@@ -21,9 +21,9 @@ import java.util.concurrent.TimeUnit
 class GrowthDataWorker(
     context: Context,
     workerParameters: WorkerParameters,
-) : CoroutineWorker(context, workerParameters) {
+) : Worker(context, workerParameters) {
 
-    override suspend fun doWork(): Result {
+    override fun doWork(): Result {
         val settings = applicationContext.settings()
 
         if (!System.currentTimeMillis().isAfterFirstWeekFromInstall(applicationContext) ||
@@ -32,7 +32,7 @@ class GrowthDataWorker(
             return Result.success()
         }
 
-        applicationContext.metrics.track(Event.GrowthData.ConversionEvent7(fromSearch = false))
+        applicationContext.metrics.track(Event.GrowthData.UserActivated(fromSearch = false))
 
         return Result.success()
     }

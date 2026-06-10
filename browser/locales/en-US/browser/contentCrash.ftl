@@ -20,10 +20,10 @@ crashed-subframe-submit =
 
 # Variables:
 #   $reportCount (Number): the number of pending crash reports
-pending-crash-reports-message-new =
+pending-crash-reports-message =
     { $reportCount ->
-        [one] You have a recent unsent crash report
-       *[other] You have { $reportCount } recent unsent crash reports
+        [one] You have an unsent crash report
+       *[other] You have { $reportCount } unsent crash reports
     }
 
 pending-crash-reports-view-all =

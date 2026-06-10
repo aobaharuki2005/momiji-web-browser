@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,7 +21,7 @@ nsresult AnimationPerformanceWarning::ToLocalizedStringWithIntParams(
   }
 
   return nsContentUtils::FormatLocalizedString(
-      PropertiesFile::LAYOUT_PROPERTIES, aKey, strings, aLocalizedString);
+      nsContentUtils::eLAYOUT_PROPERTIES, aKey, strings, aLocalizedString);
 }
 
 bool AnimationPerformanceWarning::ToLocalizedString(
@@ -66,7 +68,7 @@ bool AnimationPerformanceWarning::ToLocalizedString(
   }
 
   nsresult rv = nsContentUtils::GetLocalizedString(
-      PropertiesFile::LAYOUT_PROPERTIES, key, aLocalizedString);
+      nsContentUtils::eLAYOUT_PROPERTIES, key, aLocalizedString);
   return NS_SUCCEEDED(rv);
 }
 

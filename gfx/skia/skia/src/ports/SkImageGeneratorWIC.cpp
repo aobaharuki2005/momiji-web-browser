@@ -31,14 +31,10 @@ public:
      * Takes ownership of the imagingFactory
      * Takes ownership of the imageSource
      */
-    ImageGeneratorWIC(const SkImageInfo& info,
-                      IWICImagingFactory* imagingFactory,
-                      IWICBitmapSource* imageSource,
-                      sk_sp<const SkData>,
-                      SkEncodedOrigin);
-
+    ImageGeneratorWIC(const SkImageInfo& info, IWICImagingFactory* imagingFactory,
+            IWICBitmapSource* imageSource, sk_sp<SkData>, SkEncodedOrigin);
 protected:
-    sk_sp<const SkData> onRefEncodedData() override;
+    sk_sp<SkData> onRefEncodedData() override;
 
     bool onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes, const Options&)
     override;
@@ -46,15 +42,14 @@ protected:
 private:
     SkTScopedComPtr<IWICImagingFactory> fImagingFactory;
     SkTScopedComPtr<IWICBitmapSource>   fImageSource;
-    sk_sp<const SkData>                 fData;
+    sk_sp<SkData>                       fData;
     SkEncodedOrigin                     fOrigin;
 
     using INHERITED = SkImageGenerator;
 };
 }  // namespace
 
-std::unique_ptr<SkImageGenerator> SkImageGeneratorWIC::MakeFromEncodedWIC(
-        sk_sp<const SkData> data) {
+std::unique_ptr<SkImageGenerator> SkImageGeneratorWIC::MakeFromEncodedWIC(sk_sp<SkData> data) {
     // Create Windows Imaging Component ImagingFactory.
     SkTScopedComPtr<IWICImagingFactory> imagingFactory;
     HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
@@ -186,17 +181,17 @@ std::unique_ptr<SkImageGenerator> SkImageGeneratorWIC::MakeFromEncodedWIC(
 }
 
 ImageGeneratorWIC::ImageGeneratorWIC(const SkImageInfo& info,
-                                     IWICImagingFactory* imagingFactory,
-                                     IWICBitmapSource* imageSource,
-                                     sk_sp<const SkData> data,
-                                     SkEncodedOrigin origin)
-        : INHERITED(info)
-        , fImagingFactory(imagingFactory)
-        , fImageSource(imageSource)
-        , fData(std::move(data))
-        , fOrigin(origin) {}
+        IWICImagingFactory* imagingFactory, IWICBitmapSource* imageSource, sk_sp<SkData> data, SkEncodedOrigin origin)
+    : INHERITED(info)
+    , fImagingFactory(imagingFactory)
+    , fImageSource(imageSource)
+    , fData(std::move(data))
+    , fOrigin(origin)
+{}
 
-sk_sp<const SkData> ImageGeneratorWIC::onRefEncodedData() { return fData; }
+sk_sp<SkData> ImageGeneratorWIC::onRefEncodedData() {
+    return fData;
+}
 
 bool ImageGeneratorWIC::onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
         const Options&) {

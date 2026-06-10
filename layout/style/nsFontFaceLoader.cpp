@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -347,9 +349,6 @@ void nsFontFaceLoader::Cancel() {
   if (doc) {
     doc->UnblockOnload(false);
   }
-  // Remove ourselves from the set that registered us, so it never holds a
-  // dangling raw pointer to us after we're freed.
-  mFontFaceSet->RemoveLoader(this);
   mFontFaceSet = nullptr;
   if (mLoadTimer) {
     mLoadTimer->Cancel();

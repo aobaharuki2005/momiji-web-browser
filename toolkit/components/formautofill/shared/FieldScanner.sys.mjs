@@ -101,7 +101,6 @@ export class FieldDetail {
       fathomConfidence = null,
       isVisible = true,
       isLookup = false,
-      mlData = null,
     } = {}
   ) {
     const fieldDetail = new FieldDetail(element);
@@ -138,15 +137,13 @@ export class FieldDetail {
       fieldDetail.reason = "regex-heuristic";
     }
 
-    fieldDetail.mlData = mlData;
-
     try {
       fieldDetail.browsingContextId =
         element.localName == "iframe"
           ? element.browsingContext.id
-          : BrowsingContext.getFromWindow(element.documentGlobal).id;
+          : BrowsingContext.getFromWindow(element.ownerGlobal).id;
     } catch {
-      /* unit test doesn't have documentGlobal */
+      /* unit test doesn't have ownerGlobal */
     }
 
     fieldDetail.isVisible = isVisible;

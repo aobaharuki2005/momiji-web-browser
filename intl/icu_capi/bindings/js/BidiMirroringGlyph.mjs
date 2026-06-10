@@ -4,10 +4,11 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
- * See the [Rust documentation for `BidiMirroringGlyph`](https://docs.rs/icu/2.1.1/icu/properties/props/struct.BidiMirroringGlyph.html) for more information.
+ * See the [Rust documentation for `BidiMirroringGlyph`](https://docs.rs/icu/latest/icu/properties/props/struct.BidiMirroringGlyph.html) for more information.
  */
+
+
 export class BidiMirroringGlyph {
     #mirroringGlyph;
     get mirroringGlyph() {
@@ -30,7 +31,9 @@ export class BidiMirroringGlyph {
     set pairedBracketType(value){
         this.#pairedBracketType = value;
     }
-    /** @internal */
+    /** Create `BidiMirroringGlyph` from an object that contains all of `BidiMirroringGlyph`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
     static fromFields(structObj) {
         return new BidiMirroringGlyph(structObj);
     }
@@ -67,13 +70,7 @@ export class BidiMirroringGlyph {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 16, 4);
-
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-
-        functionCleanupArena.alloc(buffer);
-
-        return buffer.ptr;
+        return [...diplomatRuntime.optionToArgsForCalling(this.#mirroringGlyph, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint32Array)]), this.#mirrored, /* [3 x i8] padding */ 0, 0, 0 /* end padding */, this.#pairedBracketType.ffiValue]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -121,7 +118,7 @@ export class BidiMirroringGlyph {
 
 
     /**
-     * See the [Rust documentation for `for_char`](https://docs.rs/icu/2.1.1/icu/properties/props/trait.EnumeratedProperty.html#tymethod.for_char) for more information.
+     * See the [Rust documentation for `for_char`](https://docs.rs/icu/latest/icu/properties/props/trait.EnumeratedProperty.html#tymethod.for_char) for more information.
      */
     static forChar(ch) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 16, 4, false);

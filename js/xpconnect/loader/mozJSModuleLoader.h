@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -97,32 +99,19 @@ class mozJSModuleLoader final {
   static bool IsDevToolsLoaderGlobal(nsIGlobalObject* aGlobal);
 
   // Public methods for use from SyncModuleLoader.
-  static nsresult LoadSingleModule(
+  static nsresult LoadSingleModuleScript(
       mozilla::loader::SyncModuleLoader* aModuleLoader, JSContext* aCx,
       JS::loader::ModuleLoadRequest* aRequest,
-      JS::MutableHandle<JSObject*> aModuleOut);
+      JS::MutableHandleScript aScriptOut);
 
  private:
   static nsresult ReadScriptOnMainThread(JSContext* aCx,
                                          const nsCString& aLocation,
                                          nsCString& aData);
-  static nsresult LoadSingleModuleOnWorker(
+  static nsresult LoadSingleModuleScriptOnWorker(
       mozilla::loader::SyncModuleLoader* aModuleLoader, JSContext* aCx,
       JS::loader::ModuleLoadRequest* aRequest,
-      JS::MutableHandle<JSObject*> aModuleOut);
-
-  static nsresult CompileJsonModuleFromSource(
-      JSContext* aCx, const nsACString& aSource, const nsACString& aLocation,
-      JS::MutableHandle<JSObject*> aModuleOut);
-
-  static nsresult CompileCssModuleFromSource(
-      JSContext* aCx, mozilla::loader::SyncModuleLoader* aModuleLoader,
-      const nsACString& aSource, nsIURI* aBaseURI,
-      JS::MutableHandle<JSObject*> aModuleOut);
-
-  static nsresult CreateTextModuleFromSource(
-      JSContext* aCx, const nsACString& aSource, const nsACString& aLocation,
-      JS::MutableHandle<JSObject*> aModuleOut);
+      JS::MutableHandleScript aScriptOut);
 
  public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
@@ -159,8 +148,10 @@ class mozJSModuleLoader final {
   // compiling it from source.
   static nsresult GetScriptForLocation(JSContext* aCx, ModuleLoaderInfo& aInfo,
                                        nsIFile* aModuleFile, bool aUseMemMap,
-                                       JS::MutableHandle<JSObject*> aModuleOut,
+                                       JS::MutableHandleScript aScriptOut,
                                        char** aLocationOut = nullptr);
+
+  static JSScript* InstantiateStencil(JSContext* aCx, JS::Stencil* aStencil);
 
   class ModuleEntry {
    public:

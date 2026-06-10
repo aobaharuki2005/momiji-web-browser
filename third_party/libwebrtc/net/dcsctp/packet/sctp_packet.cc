@@ -12,10 +12,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <span>
 #include <utility>
 #include <vector>
 
+#include "api/array_view.h"
 #include "net/dcsctp/common/internal_types.h"
 #include "net/dcsctp/common/math.h"
 #include "net/dcsctp/packet/bounded_byte_reader.h"
@@ -105,8 +105,9 @@ std::vector<uint8_t> SctpPacket::Builder::Build(bool write_checksum) {
   return out;
 }
 
-std::optional<SctpPacket> SctpPacket::Parse(std::span<const uint8_t> data,
-                                            const DcSctpOptions& options) {
+std::optional<SctpPacket> SctpPacket::Parse(
+    webrtc::ArrayView<const uint8_t> data,
+    const DcSctpOptions& options) {
   if (data.size() < kHeaderSize + kChunkTlvHeaderSize ||
       data.size() > kMaxUdpPacketSize) {
     RTC_DLOG(LS_WARNING) << "Invalid packet size";
@@ -161,8 +162,8 @@ std::optional<SctpPacket> SctpPacket::Parse(std::span<const uint8_t> data,
 
   std::vector<ChunkDescriptor> descriptors;
   descriptors.reserve(kExpectedDescriptorCount);
-  std::span<const uint8_t> descriptor_data =
-      std::span<const uint8_t>(data_copy).subspan(kHeaderSize);
+  webrtc::ArrayView<const uint8_t> descriptor_data =
+      webrtc::ArrayView<const uint8_t>(data_copy).subview(kHeaderSize);
   while (!descriptor_data.empty()) {
     if (descriptor_data.size() < kChunkTlvHeaderSize) {
       RTC_DLOG(LS_WARNING) << "Too small chunk";
@@ -182,8 +183,8 @@ std::optional<SctpPacket> SctpPacket::Parse(std::span<const uint8_t> data,
       return std::nullopt;
     }
     descriptors.emplace_back(type, flags,
-                             descriptor_data.subspan(0, padded_length));
-    descriptor_data = descriptor_data.subspan(padded_length);
+                             descriptor_data.subview(0, padded_length));
+    descriptor_data = descriptor_data.subview(padded_length);
   }
 
   // Note that iterators (and pointer) are guaranteed to be stable when moving a

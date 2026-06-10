@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=4 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,9 +13,9 @@
 #include "gfxGlyphExtents.h"
 #include "gfxHarfBuzzShaper.h"
 #include "gfxPlatformFontList.h"
+#include "gfxScriptItemizer.h"
 #include "gfxUserFontSet.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"  // for gfxCriticalError
 #include "mozilla/gfx/PathHelpers.h"
@@ -162,6 +164,8 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters* aParams,
       mUserData(aParams->mUserData),
       mFontGroup(aFontGroup),
       mFlags2(aFlags2),
+      mReleasedFontGroup(false),
+      mReleasedFontGroupSkippedDrawing(false),
       mShapingState(eShapingState_Normal) {
   NS_ASSERTION(mAppUnitsPerDevUnit > 0, "Invalid app unit scale");
   NS_ADDREF(mFontGroup);
@@ -197,13 +201,37 @@ gfxTextRun::~gfxTextRun() {
   mFlags2 = ~nsTextFrameUtils::Flags();
 #endif
 
+  // The cached ellipsis textrun (if any) in a fontgroup will have already
+  // been told to release its reference to the group, so we mustn't do that
+  // again here.
+  if (!mReleasedFontGroup) {
 #ifndef RELEASE_OR_BETA
-  gfxTextPerfMetrics* tp = mFontGroup->GetTextPerfMetrics();
-  if (tp) {
-    tp->current.textrunDestr++;
-  }
+    gfxTextPerfMetrics* tp = mFontGroup->GetTextPerfMetrics();
+    if (tp) {
+      tp->current.textrunDestr++;
+    }
 #endif
+    NS_RELEASE(mFontGroup);
+  }
+}
+
+void gfxTextRun::ReleaseFontGroup() {
+  NS_ASSERTION(!mReleasedFontGroup, "doubly released!");
+
+  // After dropping our reference to the font group, we'll no longer be able
+  // to get up-to-date results for ShouldSkipDrawing().  Store the current
+  // value in mReleasedFontGroupSkippedDrawing.
+  //
+  // (It doesn't actually matter that we can't get up-to-date results for
+  // ShouldSkipDrawing(), since the only text runs that we call
+  // ReleaseFontGroup() for are ellipsis text runs, and we ask the font
+  // group for a new ellipsis text run each time we want to draw one,
+  // and ensure that the cached one is cleared in ClearCachedData() when
+  // font loading status changes.)
+  mReleasedFontGroupSkippedDrawing = mFontGroup->ShouldSkipDrawing();
+
   NS_RELEASE(mFontGroup);
+  mReleasedFontGroup = true;
 }
 
 bool gfxTextRun::SetPotentialLineBreaks(Range aRange,
@@ -550,7 +578,9 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   NS_ASSERTION(aParams.drawMode == DrawMode::GLYPH_PATH || !aParams.callbacks,
                "callback must not be specified unless using GLYPH_PATH");
 
-  bool skipDrawing = !mDontSkipDrawing && mFontGroup->ShouldSkipDrawing();
+  bool skipDrawing =
+      !mDontSkipDrawing && (mFontGroup ? mFontGroup->ShouldSkipDrawing()
+                                       : mReleasedFontGroupSkippedDrawing);
   auto* textDrawer = aParams.context->GetTextDrawer();
   if (aParams.drawMode & DrawMode::GLYPH_FILL) {
     DeviceColor currentColor;
@@ -1222,7 +1252,7 @@ gfxFloat gfxTextRun::GetAdvanceWidth(
   return result + GetAdvanceForGlyphs(ligatureRange);
 }
 
-gfxFloat gfxTextRun::GetMinAdvanceWidth(Range aRange) const {
+gfxFloat gfxTextRun::GetMinAdvanceWidth(Range aRange) {
   MOZ_ASSERT(aRange.end <= GetLength(), "Substring out of range");
 
   Range ligatureRange = aRange;
@@ -1539,7 +1569,7 @@ void gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
   gfxFontShaper::RoundingFlags roundingFlags =
       aFont->GetRoundOffsetsToPixels(aDrawTarget);
   aFont->ProcessSingleSpaceShapedWord(
-      vertical, mAppUnitsPerDevUnit, flags, roundingFlags,
+      aDrawTarget, vertical, mAppUnitsPerDevUnit, flags, roundingFlags,
       [&](gfxShapedWord* aShapedWord) {
         const GlyphRun* prevRun = TrailingGlyphRun();
         bool isCJK = prevRun && prevRun->mFont == aFont &&
@@ -1848,12 +1878,6 @@ gfxFontGroup::~gfxFontGroup() {
 }
 
 static StyleGenericFontFamily GetDefaultGeneric(nsAtom* aLanguage) {
-  // If we're running on a worker thread, always return sans-serif as default
-  // (matching the canvas2d default font), rather than potentially accessing
-  // prefs.
-  if (dom::GetCurrentThreadWorkerPrivate()) {
-    return StyleGenericFontFamily::SansSerif;
-  }
   return StaticPresData::Get()
       ->GetFontPrefsForLang(aLanguage)
       ->GetDefaultGeneric();
@@ -1871,7 +1895,7 @@ class DeferredClearResolvedFonts final : public nsIRunnable {
       : mFontList(std::move(aFontList)) {}
 
  protected:
-  virtual ~DeferredClearResolvedFonts() = default;
+  virtual ~DeferredClearResolvedFonts() {}
 
   NS_IMETHOD Run(void) override {
     mFontList.Clear();
@@ -2013,8 +2037,17 @@ void gfxFontGroup::AddFamilyToFontList(gfxFontFamily* aFamily,
 void gfxFontGroup::AddFamilyToFontList(fontlist::Family* aFamily,
                                        StyleGenericFontFamily aGeneric) {
   gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
-  if (!aFamily->IsInitialized() && !pfl->InitializeFamily(aFamily)) {
-    return;
+  if (!aFamily->IsInitialized()) {
+    if (ServoStyleSet* set = gfxFontUtils::CurrentServoStyleSet()) {
+      // If we need to initialize a Family record, but we're on a style
+      // worker thread, we have to defer it.
+      set->AppendTask(PostTraversalTask::InitializeFamily(aFamily));
+      set->AppendTask(PostTraversalTask::FontInfoUpdate(set));
+      return;
+    }
+    if (!pfl->InitializeFamily(aFamily)) {
+      return;
+    }
   }
   AutoTArray<fontlist::Face*, 4> faceList;
   aFamily->FindAllFacesForStyle(pfl->SharedFontList(), mStyle, faceList);
@@ -2337,6 +2370,27 @@ already_AddRefed<gfxFont> gfxFontGroup::GetFirstMathFont() {
   return nullptr;
 }
 
+bool gfxFontGroup::IsInvalidChar(uint8_t ch) {
+  return ((ch & 0x7f) < 0x20 || ch == 0x7f);
+}
+
+bool gfxFontGroup::IsInvalidChar(char16_t ch) {
+  // All printable 7-bit ASCII values are OK
+  if (ch >= ' ' && ch < 0x7f) {
+    return false;
+  }
+  // No point in sending non-printing control chars through font shaping
+  if (ch <= 0x9f) {
+    return true;
+  }
+  // Word-separating format/bidi control characters are not shaped as part
+  // of words.
+  return (((ch & 0xFF00) == 0x2000 /* Unicode control character */ &&
+           (ch == 0x200B /*ZWSP*/ || ch == 0x2028 /*LSEP*/ ||
+            ch == 0x2029 /*PSEP*/ || ch == 0x2060 /*WJ*/)) ||
+          ch == 0xfeff /*ZWNBSP*/ || IsBidiControl(ch));
+}
+
 already_AddRefed<gfxTextRun> gfxFontGroup::MakeEmptyTextRun(
     const Parameters* aParams, gfx::ShapedTextFlags aFlags,
     nsTextFrameUtils::Flags aFlags2) {
@@ -2465,7 +2519,7 @@ already_AddRefed<gfxTextRun> gfxFontGroup::MakeTextRun(
     return MakeSpaceTextRun(aParams, aFlags, aFlags2);
   }
 
-  if constexpr (sizeof(T) == sizeof(uint8_t)) {
+  if (sizeof(T) == 1) {
     aFlags |= ShapedTextFlags::TEXT_IS_8BIT;
   }
 
@@ -2498,12 +2552,6 @@ template already_AddRefed<gfxTextRun> gfxFontGroup::MakeTextRun(
     const char16_t* aString, uint32_t aLength, const Parameters* aParams,
     gfx::ShapedTextFlags aFlags, nsTextFrameUtils::Flags aFlags2,
     gfxMissingFontRecorder* aMFR);
-
-// ComputeRanges instantiation (used by
-// gfxPlatformFontList::ListFontsUsedForString).
-template void gfxFontGroup::ComputeRanges(nsTArray<TextRange>&, const char16_t*,
-                                          uint32_t, Script,
-                                          gfx::ShapedTextFlags);
 
 // Helper to get a hashtable that maps tags to Script codes, created on first
 // use.
@@ -2604,48 +2652,15 @@ static Script ResolveScriptForLang(const nsAtom* aLanguage, Script aDefault) {
   return script;
 }
 
-void gfxFontGroup::InitTextRunLog(LogModule* aLog, const uint8_t* aString,
-                                  const char16_t* aTextPtr,
-                                  const gfxScriptItemizer::Run& aRun) {
-  nsAutoCString lang;
-  mLanguage->ToUTF8String(lang);
-  nsAutoCString styleString;
-  mStyle.style.ToString(styleString);
-  auto defaultGeneric = GetDefaultGeneric(mLanguage);
-  MOZ_LOG(
-      aLog, LogLevel::Warning,
-      ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
-       "len %d weight: %g stretch: %g%% style: %s size: %6.2f "
-       "%d-byte TEXTRUN [%s] ENDTEXTRUN\n",
-       (mStyle.systemFont ? "textrunui" : "textrun"),
-       FamilyListToString(mFamilyList).get(),
-       (defaultGeneric == StyleGenericFontFamily::Serif
-            ? "serif"
-            : (defaultGeneric == StyleGenericFontFamily::SansSerif
-                   ? "sans-serif"
-                   : "none")),
-       lang.get(), static_cast<int>(aRun.mScript), aRun.mLength,
-       mStyle.weight.ToFloat(), mStyle.stretch.ToFloat(), styleString.get(),
-       mStyle.size, aString ? 1 : 2,
-       aTextPtr
-           ? NS_ConvertUTF16toUTF8(aTextPtr + aRun.mOffset, aRun.mLength).get()
-           : nsPromiseFlatCString(
-                 nsDependentCSubstring(
-                     reinterpret_cast<const char*>(aString) + aRun.mOffset,
-                     aRun.mLength))
-                 .get()));
-}
-
 template <typename T>
 void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
                                const T* aString, uint32_t aLength,
                                gfxMissingFontRecorder* aMFR) {
-  MOZ_DIAGNOSTIC_ASSERT(aLength > 0,
-                        "don't call InitTextRun for a zero-length run");
+  NS_ASSERTION(aLength > 0, "don't call InitTextRun for a zero-length run");
 
   // we need to do numeral processing even on 8-bit text,
   // in case we're converting Western to Hindi/Arabic digits
-  const uint32_t numOption = gfxPlatform::GetPlatform()->GetBidiNumeralOption();
+  uint32_t numOption = gfxPlatform::GetPlatform()->GetBidiNumeralOption();
   UniquePtr<char16_t[]> transformedString;
   if (numOption != IBMBIDI_NUMERAL_NOMINAL) {
     // scan the string for numerals that may need to be transformed;
@@ -2678,104 +2693,80 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
   LogModule* log = mStyle.systemFont ? gfxPlatform::GetLog(eGfxLog_textrunui)
                                      : gfxPlatform::GetLog(eGfxLog_textrun);
 
-  // If we have 16-bit text, either as the input string or a transformedString,
-  // set textPtr to point to it. If textPtr is null, we're using the original
-  // aString and it is 8-bit text.
-  const char16_t* const textPtr =
-      transformedString ? transformedString.get()
-      : sizeof(T) == sizeof(char16_t)
-          ? reinterpret_cast<const char16_t*>(aString)
-          : nullptr;
-
-  // Split into script runs so that script can potentially influence
-  // the font matching process below.
-
-  // Fast path for all-ASCII/Latin-extended text: try to skip ScriptItemizer
-  // entirely. Note that even if this is the 8-bit version of InitTextRun,
-  // it's possible that numeral transformation may have generated non-Latin
-  // codepoints and so we have a 16-bit string to consider.
-  bool allCommonOrLatin = true;
-  if (textPtr) {
-    for (uint32_t j = 0; j < aLength && allCommonOrLatin; j++) {
-      allCommonOrLatin = textPtr[j] < gfxScriptItemizer::kFirstNonCommonOrLatin;
-    }
-  }
-
-  Script script = Script::INVALID;
-  if (allCommonOrLatin) {
-    bool hasLetter = false;
-    if (!textPtr) {
-      for (uint32_t j = 0; !hasLetter && j < aLength; j++) {
-        const uint8_t c = aString[j] & ~0x20;
-        hasLetter = (c - 'A' <= 'Z' - 'A');
-      }
-    } else {
-      for (uint32_t j = 0; !hasLetter && j < aLength; j++) {
-        const char16_t c = textPtr[j];
-        hasLetter = gfxScriptItemizer::FastGetScriptCode(c) == Script::LATIN;
-      }
-    }
-    script = hasLetter ? Script::LATIN
-                       : ResolveScriptForLang(mLanguage, Script::COMMON);
-  }
-
-  // Either we have a valid textPtr, or we must have resolved script by now.
-  MOZ_DIAGNOSTIC_ASSERT(textPtr || script != Script::INVALID);
-
   // variant fallback handling may end up passing through this twice
   bool redo;
   do {
     redo = false;
 
-    // If we resolved script already (for simple Latin-only runs), we don't
-    // need to use gfxScriptItemizer here.
-    if (script != Script::INVALID) {
-      if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
-        gfxScriptItemizer::Run run{0, aLength, script};
-        InitTextRunLog(log,
-                       sizeof(T) == sizeof(uint8_t)
-                           ? reinterpret_cast<const uint8_t*>(aString)
-                           : nullptr,
-                       textPtr, run);
-      }
-      if (textPtr) {
-        InitScriptRun(aDrawTarget, aTextRun, textPtr, 0, aLength, script, aMFR);
-      } else {
-        InitScriptRun(aDrawTarget, aTextRun, aString, 0, aLength, script, aMFR);
-      }
+    // split into script runs so that script can potentially influence
+    // the font matching process below
+    gfxScriptItemizer scriptRuns;
+    const char16_t* textPtr = nullptr;
+
+    if (sizeof(T) == sizeof(uint8_t) && !transformedString) {
+      scriptRuns.SetText(aString, aLength);
     } else {
-      gfxScriptItemizer scriptRuns(textPtr, aLength);
-      MOZ_DIAGNOSTIC_ASSERT(!scriptRuns.Done(), "scriptRuns cannot be empty");
+      if (transformedString) {
+        textPtr = transformedString.get();
+      } else {
+        // typecast to avoid compilation error for the 8-bit version,
+        // even though this is dead code in that case
+        textPtr = reinterpret_cast<const char16_t*>(aString);
+      }
 
-      do {
-        gfxScriptItemizer::Run run = scriptRuns.Next();
-        if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
-          InitTextRunLog(log,
-                         sizeof(T) == sizeof(uint8_t)
-                             ? reinterpret_cast<const uint8_t*>(aString)
-                             : nullptr,
-                         textPtr, run);
-        }
+      scriptRuns.SetText(textPtr, aLength);
+    }
 
-        // If COMMON or INHERITED was not resolved, try to use the language
-        // code to guess a likely script.
-        if (run.mScript <= Script::INHERITED) {
-          // This assumes Script codes begin with COMMON and INHERITED,
-          // preceding codes for any "real" scripts.
-          MOZ_ASSERT(
-              run.mScript == Script::COMMON || run.mScript == Script::INHERITED,
-              "unexpected Script code!");
-          run.mScript = ResolveScriptForLang(mLanguage, run.mScript);
-        }
+    while (gfxScriptItemizer::Run run = scriptRuns.Next()) {
+      if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
+        nsAutoCString lang;
+        mLanguage->ToUTF8String(lang);
+        nsAutoCString styleString;
+        mStyle.style.ToString(styleString);
+        auto defaultLanguageGeneric = GetDefaultGeneric(mLanguage);
+        MOZ_LOG(
+            log, LogLevel::Warning,
+            ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
+             "len %d weight: %g stretch: %g%% style: %s size: %6.2f "
+             "%zu-byte TEXTRUN [%s] ENDTEXTRUN\n",
+             (mStyle.systemFont ? "textrunui" : "textrun"),
+             FamilyListToString(mFamilyList).get(),
+             (defaultLanguageGeneric == StyleGenericFontFamily::Serif
+                  ? "serif"
+                  : (defaultLanguageGeneric == StyleGenericFontFamily::SansSerif
+                         ? "sans-serif"
+                         : "none")),
+             lang.get(), static_cast<int>(run.mScript), run.mLength,
+             mStyle.weight.ToFloat(), mStyle.stretch.ToFloat(),
+             styleString.get(), mStyle.size, sizeof(T),
+             textPtr
+                 ? NS_ConvertUTF16toUTF8(textPtr + run.mOffset, run.mLength)
+                       .get()
+                 : nsPromiseFlatCString(
+                       nsDependentCSubstring(
+                           reinterpret_cast<const char*>(aString) + run.mOffset,
+                           run.mLength))
+                       .get()));
+      }
 
-        if (textPtr) {
-          InitScriptRun(aDrawTarget, aTextRun, textPtr + run.mOffset,
-                        run.mOffset, run.mLength, run.mScript, aMFR);
-        } else {
-          InitScriptRun(aDrawTarget, aTextRun, aString + run.mOffset,
-                        run.mOffset, run.mLength, run.mScript, aMFR);
-        }
-      } while (!scriptRuns.Done());
+      // If COMMON or INHERITED was not resolved, try to use the language code
+      // to guess a likely script.
+      if (run.mScript <= Script::INHERITED) {
+        // This assumes Script codes begin with COMMON and INHERITED, preceding
+        // codes for any "real" scripts.
+        MOZ_ASSERT(
+            run.mScript == Script::COMMON || run.mScript == Script::INHERITED,
+            "unexpected Script code!");
+        run.mScript = ResolveScriptForLang(mLanguage, run.mScript);
+      }
+
+      if (textPtr) {
+        InitScriptRun(aDrawTarget, aTextRun, textPtr + run.mOffset, run.mOffset,
+                      run.mLength, run.mScript, aMFR);
+      } else {
+        InitScriptRun(aDrawTarget, aTextRun, aString + run.mOffset, run.mOffset,
+                      run.mLength, run.mScript, aMFR);
+      }
     }
 
     // if shaping was aborted due to lack of feature support, clear out
@@ -2788,9 +2779,7 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
 
   } while (redo);
 
-  // Guard against text that starts with a combining mark (which cannot occur
-  // in 8-bit text, even after numeral processing).
-  if (sizeof(T) == sizeof(char16_t)) {
+  if (sizeof(T) == sizeof(char16_t) && aLength > 0) {
     gfxTextRun::CompressedGlyph* glyph = aTextRun->GetCharacterGlyphs();
     if (!glyph->IsSimpleGlyph()) {
       glyph->SetClusterStart(true);
@@ -2812,7 +2801,7 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
 static inline bool IsPUA(uint32_t aUSV) {
   // We could look up the General Category of the codepoint here,
   // but it's simpler to check PUA codepoint ranges.
-  return (aUSV - 0xE000 <= 0xF8FF - 0xE000) || (aUSV >= 0xF0000);
+  return (aUSV >= 0xE000 && aUSV <= 0xF8FF) || (aUSV >= 0xF0000);
 }
 
 template <typename T>
@@ -3030,11 +3019,18 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
   }
 }
 
-already_AddRefed<gfxTextRun> gfxFontGroup::MakeEllipsisTextRun(
+gfxTextRun* gfxFontGroup::GetEllipsisTextRun(
     int32_t aAppUnitsPerDevPixel, gfx::ShapedTextFlags aFlags,
-    DrawTarget* aRefDrawTarget) {
+    LazyReferenceDrawTargetGetter& aRefDrawTargetGetter) {
   MOZ_ASSERT(!(aFlags & ~ShapedTextFlags::TEXT_ORIENT_MASK),
              "flags here should only be used to specify orientation");
+  if (mCachedEllipsisTextRun &&
+      (mCachedEllipsisTextRun->GetFlags() &
+       ShapedTextFlags::TEXT_ORIENT_MASK) == aFlags &&
+      mCachedEllipsisTextRun->GetAppUnitsPerDevUnit() == aAppUnitsPerDevPixel) {
+    return mCachedEllipsisTextRun.get();
+  }
+
   // Use a Unicode ellipsis if the font supports it,
   // otherwise use three ASCII periods as fallback.
   RefPtr<gfxFont> firstFont = GetFirstValidFont();
@@ -3044,10 +3040,19 @@ already_AddRefed<gfxTextRun> gfxFontGroup::MakeEllipsisTextRun(
           : nsDependentString(kASCIIPeriodsChar,
                               std::size(kASCIIPeriodsChar) - 1);
 
-  Parameters params = {aRefDrawTarget, nullptr, nullptr,
-                       nullptr,        0,       aAppUnitsPerDevPixel};
-  return MakeTextRun(ellipsis.BeginReading(), ellipsis.Length(), &params,
-                     aFlags, nsTextFrameUtils::Flags(), nullptr);
+  RefPtr<DrawTarget> refDT = aRefDrawTargetGetter.GetRefDrawTarget();
+  Parameters params = {refDT,   nullptr, nullptr,
+                       nullptr, 0,       aAppUnitsPerDevPixel};
+  mCachedEllipsisTextRun =
+      MakeTextRun(ellipsis.BeginReading(), ellipsis.Length(), &params, aFlags,
+                  nsTextFrameUtils::Flags(), nullptr);
+  if (!mCachedEllipsisTextRun) {
+    return nullptr;
+  }
+  // don't let the presence of a cached ellipsis textrun prolong the
+  // fontgroup's life
+  mCachedEllipsisTextRun->ReleaseFontGroup();
+  return mCachedEllipsisTextRun.get();
 }
 
 already_AddRefed<gfxFont> gfxFontGroup::FindFallbackFaceForChar(
@@ -3556,10 +3561,8 @@ template <typename T>
 void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
                                  uint32_t aLength, Script aRunScript,
                                  gfx::ShapedTextFlags aOrientation) {
-  MOZ_ASSERT(aRanges.IsEmpty(), "aRanges must be initially empty");
-  MOZ_ASSERT(aLength > 0, "don't call ComputeRanges for zero-length text");
-
-  const uint32_t maxIndex = aLength - 1;  // max valid index into aString
+  NS_ASSERTION(aRanges.Length() == 0, "aRanges must be initially empty");
+  NS_ASSERTION(aLength > 0, "don't call ComputeRanges for zero-length text");
 
   uint32_t prevCh = 0;
   uint32_t nextCh = aString[0];
@@ -3568,6 +3571,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
       nextCh = SURROGATE_TO_UCS4(nextCh, aString[1]);
     }
   }
+  int32_t lastRangeIndex = -1;
 
   // initialize prevFont to the group's primary font, so that this will be
   // used for string-initial control chars, etc rather than risk hitting font
@@ -3575,20 +3579,11 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
   StyleGenericFontFamily generic = StyleGenericFontFamily::None;
   RefPtr<gfxFont> prevFont = GetFirstValidFont(' ', &generic);
 
-  // The absolute first font in the list (which might not be the "first valid
-  // font" if it doesn't support <space>!) is the one we will consider for
-  // fast-path handling.
-  RefPtr<gfxFont> firstFont = GetFontAt(0);
-
   // if we use the initial value of prevFont, we treat this as a match from
   // the font group; fixes bug 978313
   FontMatchType matchType = {FontMatchType::Kind::kFontGroup, generic};
-  TextRange* currRange = nullptr;
 
   for (uint32_t i = 0; i < aLength; i++) {
-    // At the start of this loop, /i/ points to the beginning of a character,
-    // which might be a surrogate pair in the 16-bit case.
-
     const uint32_t origI = i;  // save off in case we increase for surrogate
 
     // set up current ch
@@ -3596,16 +3591,15 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
 
     // Get next char (if any) so that FindFontForChar can look ahead
     // for a possible variation selector.
+
     if constexpr (sizeof(T) == sizeof(char16_t)) {
       // In 16-bit case only, check for surrogate pairs.
       if (ch > 0xffffu) {
-        i++;  // increment /i/ to point to the trailing (low) surrogate of the
-              // current character.
+        i++;
       }
-      // Get the next character, if any, decoding any surrogate pair.
-      if (i < maxIndex) {
+      if (i < aLength - 1) {
         nextCh = aString[i + 1];
-        if (i + 2 <= maxIndex && NS_IS_SURROGATE_PAIR(nextCh, aString[i + 2])) {
+        if (i + 2 < aLength && NS_IS_SURROGATE_PAIR(nextCh, aString[i + 2])) {
           nextCh = SURROGATE_TO_UCS4(nextCh, aString[i + 2]);
         }
       } else {
@@ -3613,7 +3607,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
       }
     } else {
       // 8-bit case is trivial.
-      nextCh = i < maxIndex ? aString[i + 1] : 0;
+      nextCh = i < aLength - 1 ? aString[i + 1] : 0;
     }
 
     RefPtr<gfxFont> font;
@@ -3632,7 +3626,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
             // that would affect it.
             (sizeof(T) == sizeof(uint8_t) &&
              (mFontVariantEmoji == StyleFontVariantEmoji::Normal ||
-              GetEmojiPresentation(uint8_t(ch)) == TextOnly)) ||
+              GetEmojiPresentation(ch) == TextOnly)) ||
             // For 16-bit text, we need to consider cluster extenders etc.
             (sizeof(T) == sizeof(char16_t) &&
              (!IsClusterExtender(ch) && ch != NARROW_NO_BREAK_SPACE &&
@@ -3660,108 +3654,6 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
       }
     }
 #endif
-
-    // Fast path for a run of non-join-control, non-variation-selector chars
-    // that are all supported by the first font.
-    // On entry here, /i/ indicates the trailing code unit of the current char.
-    if (font && font == firstFont && font->HasCharacter(ch) &&
-        mFontVariantEmoji == StyleFontVariantEmoji::Normal &&
-        (sizeof(T) == sizeof(uint8_t) || !(gfxFontUtils::IsJoinControl(ch) ||
-                                           gfxFontUtils::IsVarSelector(ch))) &&
-        GetEmojiPresentation(ch) == TextOnly &&
-        aOrientation != ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED) {
-      uint32_t safeI = i;
-      while (i < maxIndex) {
-        // Look at the next character in the text.
-        uint32_t c = aString[i + 1];
-        uint32_t charLen = 1;
-        if constexpr (sizeof(T) == sizeof(char16_t)) {
-          // Decode surrogate pair.
-          if (i + 2 <= maxIndex && NS_IS_SURROGATE_PAIR(c, aString[i + 2])) {
-            c = SURROGATE_TO_UCS4(c, aString[i + 2]);
-            charLen = 2;
-          }
-          // If we've found a join control or variation selector, back up to
-          // the last known /safeI/ position, because the previous character
-          // needs to use the full FindFontForChar process.
-          if (gfxFontUtils::IsJoinControl(c) ||
-              gfxFontUtils::IsVarSelector(c)) {
-            i = safeI;
-            break;
-          }
-        }
-        // Bail out if the first font doesn't support this codepoint...
-        if (!font->HasCharacter(c)) {
-          break;
-        }
-        // ...or if it might need to consider emoji presentation controls.
-        if constexpr (sizeof(T) == sizeof(char16_t)) {
-          if (GetEmojiPresentation(c) != TextOnly) {
-            break;
-          }
-          // We might still need to reject this character (if followed by VS
-          // or join-control), but it is safe to include everything up to here.
-          safeI = i;
-          i += charLen;
-        } else {
-          // Only the `emoji` value of StyleFontVariantEmoji could affect font
-          // selection for 8-bit text.
-          if (mFontVariantEmoji == StyleFontVariantEmoji::Emoji &&
-              GetEmojiPresentation(uint8_t(c)) != TextOnly) {
-            break;
-          }
-          i++;
-        }
-      }
-
-      // Record that all chars from /origI/ to /i/ (inclusive) use /font/.
-      if (!currRange) {
-        // first char ==> make a new range
-        currRange = aRanges.AppendElement(
-            TextRange(origI, i + 1, font, matchType, aOrientation));
-        prevFont = std::move(font);
-      } else {
-        // If font has changed, make a new range. (Orientation cannot have
-        // changed, since we don't apply the fast-path to VERTICAL_MIXED,
-        // so no need to check for cluster-extender characters.)
-        if (currRange->font != font) {
-          // Close out the previous range and start a new one.
-          currRange->end = origI;
-          currRange = aRanges.AppendElement(
-              TextRange(origI, i + 1, font, matchType, aOrientation));
-          prevFont = std::move(font);
-        } else {
-          currRange->matchType |= matchType;
-        }
-      }
-
-      if (i > origI) {
-        // Update prevCh and nextCh for the end of the fast-path run.
-        prevCh = aString[i];
-        if constexpr (sizeof(T) == sizeof(char16_t)) {
-          if (i > 0 && NS_IS_SURROGATE_PAIR(aString[i - 1], prevCh)) {
-            prevCh = SURROGATE_TO_UCS4(aString[i - 1], prevCh);
-          }
-          if (i < maxIndex) {
-            nextCh = aString[i + 1];
-            if (i + 2 <= maxIndex &&
-                NS_IS_SURROGATE_PAIR(nextCh, aString[i + 2])) {
-              nextCh = SURROGATE_TO_UCS4(nextCh, aString[i + 2]);
-            }
-          } else {
-            nextCh = 0;
-          }
-        } else {
-          nextCh = i < maxIndex ? aString[i + 1] : 0;
-        }
-      } else {
-        // We didn't find a run, just a single character.
-        prevCh = ch;
-      }
-
-      // Return to the beginning of the main loop.
-      continue;
-    }
 
     prevCh = ch;
 
@@ -3806,20 +3698,21 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
       }
     }
 
-    if (!currRange) {
+    if (lastRangeIndex == -1) {
       // first char ==> make a new range
-      currRange = aRanges.AppendElement(
-          TextRange(origI, i + 1, font, matchType, orient));
+      aRanges.AppendElement(TextRange(0, 1, font, matchType, orient));
+      lastRangeIndex++;
       prevFont = std::move(font);
     } else {
       // if font or orientation has changed, make a new range...
       // unless ch is a variation selector (bug 1248248)
-      if (currRange->font != font ||
-          (currRange->orientation != orient && !IsClusterExtender(ch))) {
+      TextRange& prevRange = aRanges[lastRangeIndex];
+      if (prevRange.font != font ||
+          (prevRange.orientation != orient && !IsClusterExtender(ch))) {
         // close out the previous range
-        currRange->end = origI;
-        currRange = aRanges.AppendElement(
-            TextRange(origI, i + 1, font, matchType, orient));
+        prevRange.end = origI;
+        aRanges.AppendElement(TextRange(origI, i + 1, font, matchType, orient));
+        lastRangeIndex++;
 
         // update prevFont for the next match, *unless* we switched
         // fonts on a ZWJ, in which case propagating the changed font
@@ -3828,13 +3721,12 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
           prevFont = std::move(font);
         }
       } else {
-        currRange->matchType |= matchType;
+        prevRange.matchType |= matchType;
       }
     }
   }
 
-  MOZ_ASSERT(currRange, "no range created?");
-  currRange->end = aLength;
+  aRanges[lastRangeIndex].end = aLength;
 
 #ifndef RELEASE_OR_BETA
   LogModule* log = mStyle.systemFont ? gfxPlatform::GetLog(eGfxLog_textrunui)
@@ -4101,7 +3993,7 @@ class DeferredNotifyMissingFonts final : public nsIRunnable {
       : mScriptList(std::move(aScriptList)) {}
 
  protected:
-  virtual ~DeferredNotifyMissingFonts() = default;
+  virtual ~DeferredNotifyMissingFonts() {}
 
   NS_IMETHOD Run(void) override {
     nsCOMPtr<nsIObserverService> service = GetObserverService();

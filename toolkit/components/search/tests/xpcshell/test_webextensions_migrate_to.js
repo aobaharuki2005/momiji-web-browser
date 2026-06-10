@@ -16,13 +16,13 @@ add_setup(async function () {
 
   await promiseSaveSettingsData(data);
 
-  await SearchService.init();
+  await Services.search.init();
 
   // We need the extension installed for this test, but we do not want to
   // trigger the functions that happen on installation, so stub that out.
   // The manifest already has details of this engine.
-  let oldFunc = SearchService.addEngineFromExtension;
-  SearchService.addEngineFromExtension = () => {};
+  let oldFunc = Services.search.wrappedJSObject.addEnginesFromExtension;
+  Services.search.wrappedJSObject.addEnginesFromExtension = () => {};
 
   // Add the add-on so add-on manager has a valid item.
   await SearchTestUtils.installSearchExtension({
@@ -31,32 +31,35 @@ add_setup(async function () {
     search_url: "https://example.com/",
   });
 
-  SearchService.addEngineFromExtension = oldFunc;
+  Services.search.wrappedJSObject.addEnginesFromExtension = oldFunc;
 });
 
 add_task(async function test_migrateLegacyEngineDifferentName() {
-  await SearchService.init();
+  await Services.search.init();
 
-  let engine = SearchService.getEngineByName("simple");
+  let engine = Services.search.getEngineByName("simple");
   Assert.ok(engine, "Should have the legacy add-on engine.");
 
   // Set this engine as default, the new engine should become the default
   // after migration.
-  await SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
-  engine = SearchService.getEngineByName("simple search");
+  engine = Services.search.getEngineByName("simple search");
   Assert.ok(engine, "Should have the WebExtension engine.");
 
-  await SearchService.runBackgroundChecks();
+  await Services.search.runBackgroundChecks();
 
-  engine = SearchService.getEngineByName("simple");
+  engine = Services.search.getEngineByName("simple");
   Assert.ok(!engine, "Should have removed the legacy add-on engine");
 
-  engine = SearchService.getEngineByName("simple search");
+  engine = Services.search.getEngineByName("simple search");
   Assert.ok(engine, "Should have kept the WebExtension engine.");
 
   Assert.equal(
-    (await SearchService.getDefault()).name,
+    (await Services.search.getDefault()).name,
     engine.name,
     "Should have switched to the WebExtension engine as default."
   );

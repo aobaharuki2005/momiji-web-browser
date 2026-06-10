@@ -295,5 +295,4 @@ else
     echo "Building NSS requires an installation of ninja: https://ninja-build.org/" 1>&2
     exit 3
 fi
-
 run_scanbuild "$ninja" -C "$target_dir" "${ninja_params[@]}"

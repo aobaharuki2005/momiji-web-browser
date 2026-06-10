@@ -208,13 +208,7 @@ class BrowserRobot {
                 if (i == RETRY_COUNT) {
                     throw e
                 } else {
-                    // Video failed to start - refresh the page and try again
-                    browserScreen {
-                    }.openMainMenu {
-                    }.clickReloadButton {
-                        progressBar.waitUntilGone(waitingTime)
-                        clickPlayButton()
-                    }
+                    clickPlayButton()
                 }
             }
         }
@@ -273,7 +267,7 @@ class BrowserRobot {
 
     fun clickLinkMatchingText(expectedText: String) = clickPageObject(webPageItemContainingText(expectedText))
 
-    fun verifyOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean) = assertOpenLinksInAppsPrompt(openLinksInAppsEnabled)
+    fun verifyOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean, link: String) = assertOpenLinksInAppsPrompt(openLinksInAppsEnabled, link)
 
     fun clickOpenLinksInAppsCancelButton() {
         for (i in 1..RETRY_COUNT) {
@@ -590,10 +584,11 @@ inline fun runWithIdleRes(ir: IdlingResource?, pendingCheck: () -> Unit) {
     }
 }
 
-private fun assertOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean) {
+private fun assertOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean, link: String) {
     if (openLinksInAppsEnabled) {
         mDevice.findObject(UiSelector().resourceId("$packageName:id/parentPanel")).waitForExists(waitingTime)
         assertTrue(openLinksInAppsMessage.waitForExists(waitingTimeShort))
+        assertTrue(openLinksInAppsLink(link).exists())
         assertTrue(openLinksInAppsCancelButton.waitForExists(waitingTimeShort))
         assertTrue(openLinksInAppsOpenButton.waitForExists(waitingTimeShort))
     } else {
@@ -604,6 +599,8 @@ private fun assertOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean) {
         )
     }
 }
+
+private fun openLinksInAppsLink(link: String) = mDevice.findObject(UiSelector().textContains(link))
 
 private val browserURLbar = mDevice.findObject(
     UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view"),

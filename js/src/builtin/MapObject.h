@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -173,8 +175,7 @@ class MapObject : public OrderedHashMapObject {
   // it, or nullptr.
   static MapObject* sweepAfterMinorGC(JS::GCContext* gcx, MapObject* mapobj);
 
-  size_t sizeOfBufferData();
-  size_t sizeOfMallocData(mozilla::MallocSizeOf mallocSizeOf);
+  size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf);
 
   [[nodiscard]] static bool get(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool set(JSContext* cx, unsigned argc, Value* vp);
@@ -304,8 +305,7 @@ class SetObject : public OrderedHashSetObject {
   // it, or nullptr.
   static SetObject* sweepAfterMinorGC(JS::GCContext* gcx, SetObject* setobj);
 
-  size_t sizeOfBufferData();
-  size_t sizeOfMallocData(mozilla::MallocSizeOf mallocSizeOf);
+  size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf);
 
  private:
   static const ClassSpec classSpec_;

@@ -49,12 +49,6 @@
                                     COVER_START_OFFSET + TRIGGER_END_PX,
                                     scroller);
       const ANIMATION_DURATION_MS = 1;
-
-      const enter = () => {
-        return runAndWaitForFrameUpdate(() => {
-          rangeBoundaries.enterTriggerRange();
-        })
-      }
       const view_timeline = new ViewTimeline({ subject: subject });
       function setupAnimation() {
         const animation = new Animation(
@@ -69,12 +63,12 @@
         return animation;
       }
       function setupAnimationTrigger(use_default_trigger=false) {
-        const trigger = use_default_trigger ? new TimelineTrigger([{}])
-            : new TimelineTrigger([{
+        const trigger = use_default_trigger ? new TimelineTrigger()
+            : new TimelineTrigger({
               timeline: view_timeline,
-              activationRangeStart: `${TRIGGER_START_PX}px`,
-              activationRangeEnd: `${TRIGGER_END_PX}px`
-            }]);
+              rangeStart: `${TRIGGER_START_PX}px`,
+              rangeEnd: `${TRIGGER_END_PX}px`
+            });
         return trigger;
       }
 
@@ -118,7 +112,7 @@
         assert_times_equal(animation.currentTime, 0, "currentTime is 0");
 
         // Entering the trigger range should play the animation.
-        await enter();
+        rangeBoundaries.enterTriggerRange();
         await animation.finished;
 
         assert_equals(animation.playState, "finished",
@@ -127,7 +121,7 @@
           "currentTime is 0");
         assert_array_equals(trigger.getAnimations(), [animation],
           "trigger has animation attached");
-      }, "Animation attached to untripped trigger is paused initially.");
+      }, "Animation attached to untripped trigger is paused at the beginning.");
 
       promise_test(async (test) => {
         await waitForScrollReset(test, scroller);

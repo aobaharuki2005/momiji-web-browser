@@ -17,35 +17,37 @@
 
   <script type="application/javascript">
 
-    function objAttrChangedMatcher(aID, aAttr) {
-      return e => {
-        if (!(e instanceof nsIAccessibleObjectAttributeChangedEvent)) {
-          return false;
-        }
-        return (
-          e.accessible == getAccessible(aID) &&
-          e.QueryInterface(nsIAccessibleObjectAttributeChangedEvent)
-            .changedAttribute == aAttr
-        );
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+    function updateAttribute(aID, aAttr, aValue) {
+      this.node = getNode(aID);
+      this.accessible = getAccessible(this.node);
+
+      this.eventSeq = [
+        new objAttrChangedChecker(aID, aAttr),
+      ];
+
+      this.invoke = function updateAttribute_invoke() {
+        this.node.setAttribute(aAttr, aValue);
+      };
+
+      this.getID = function updateAttribute_getID() {
+        return aAttr + " for " + aID + " " + aValue;
       };
     }
-    async function doTests() {
-      let p = waitForEvent(
-        EVENT_OBJECT_ATTRIBUTE_CHANGED,
-        objAttrChangedMatcher("sortable", "aria-sort")
-      );
-      getNode("sortable").setAttribute("aria-sort", "ascending");
-      await p;
+
+    // gA11yEventDumpToConsole = true;
+    function doTests() {
+      gQueue = new eventQueue();
+
+      gQueue.push(new updateAttribute("sortable", "aria-sort", "ascending"));
 
       // For experimental ARIA extensions
-      p = waitForEvent(
-        EVENT_OBJECT_ATTRIBUTE_CHANGED,
-        objAttrChangedMatcher("custom", "aria-blah")
-      );
-      getNode("custom").setAttribute("aria-blah", "true");
-      await p;
+      gQueue.push(new updateAttribute("custom", "aria-blah", "true"));
 
-      SimpleTest.finish();
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

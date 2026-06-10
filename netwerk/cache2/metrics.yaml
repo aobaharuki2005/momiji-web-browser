@@ -11,6 +11,23 @@ $tags:
   - 'Core :: Networking: Cache'
 
 network:
+  disk_cache_shutdown_v2:
+    type: timing_distribution
+    description: >
+      Total Time spent (ms) during disk cache shutdown [cache2]
+
+      This metric was generated to correspond to the Legacy Telemetry
+      exponential histogram NETWORK_DISK_CACHE_SHUTDOWN_V2.
+    time_unit: millisecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
+    notification_emails:
+      - necko@mozilla.com
+    expires: never
+    telemetry_mirror: NETWORK_DISK_CACHE_SHUTDOWN_V2
+
   disk_cache2_shutdown_clear_private:
     type: timing_distribution
     description: >
@@ -22,12 +39,12 @@ network:
     time_unit: millisecond
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037081
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
     notification_emails:
       - necko@mozilla.com
     expires: never
+    telemetry_mirror: NETWORK_DISK_CACHE2_SHUTDOWN_CLEAR_PRIVATE
 
   cache_v2_output_stream_status:
     type: custom_distribution
@@ -44,12 +61,12 @@ network:
     histogram_type: linear
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037081
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
     notification_emails:
       - necko@mozilla.com
     expires: never
+    telemetry_mirror: NETWORK_CACHE_V2_OUTPUT_STREAM_STATUS
 
   cache_v2_input_stream_status:
     type: custom_distribution
@@ -66,30 +83,33 @@ network:
     histogram_type: linear
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037081
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
     notification_emails:
       - necko@mozilla.com
     expires: never
+    telemetry_mirror: NETWORK_CACHE_V2_INPUT_STREAM_STATUS
 
   cache_size:
     type: labeled_memory_distribution
     description: >
       Cache size in megabytes keyed by cache capacity calculation type. Numbers
       are sampled periodically, every time 2GB of data is written to the cache.
+
+      This metric was generated to correspond to the Legacy Telemetry linear
+      histogram NETWORK_CACHE_SIZE.
     memory_unit: megabyte
     labels:
       - SMARTSIZE
       - USERDEFINEDSIZE
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1548472
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037081
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1548472
     notification_emails:
       - necko@mozilla.com
     expires: never
+    telemetry_mirror: NETWORK_CACHE_SIZE
 
   cache_entry_count:
     type: labeled_custom_distribution
@@ -97,6 +117,9 @@ network:
       Number of entries in the cache keyed by cache capacity calculation type.
       Numbers are sampled periodically, every time 2GB of data is written to the
       cache.
+
+      This metric was generated to correspond to the Legacy Telemetry
+      exponential histogram NETWORK_CACHE_ENTRY_COUNT.
     range_min: 1
     range_max: 100000
     bucket_count: 100
@@ -107,12 +130,12 @@ network:
       - USERDEFINEDSIZE
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1548472
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037081
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1548472
     notification_emails:
       - necko@mozilla.com
     expires: never
+    telemetry_mirror: NETWORK_CACHE_ENTRY_COUNT
 
   cache_size_share:
     type: labeled_custom_distribution
@@ -136,12 +159,12 @@ network:
       - WASM
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1548472
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037081
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1548472
     notification_emails:
       - necko@mozilla.com
     expires: never
+    telemetry_mirror: NETWORK_CACHE_SIZE_SHARE
 
   cache_entry_count_share:
     type: labeled_custom_distribution
@@ -165,12 +188,12 @@ network:
       - WASM
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1548472
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037081
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1548472
     notification_emails:
       - necko@mozilla.com
     expires: never
+    telemetry_mirror: NETWORK_CACHE_ENTRY_COUNT_SHARE
 
   http_cache_entry_reload_time:
     type: timing_distribution
@@ -182,12 +205,12 @@ network:
     time_unit: millisecond
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037081
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
     notification_emails:
       - necko@mozilla.com
     expires: never
+    telemetry_mirror: HTTP_CACHE_ENTRY_RELOAD_TIME
 
   http_cache_entry_alive_time:
     type: timing_distribution
@@ -199,12 +222,12 @@ network:
     time_unit: millisecond
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037081
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
     notification_emails:
       - necko@mozilla.com
     expires: never
+    telemetry_mirror: HTTP_CACHE_ENTRY_ALIVE_TIME
 
   http_cache_entry_reuse_count:
     type: custom_distribution
@@ -219,9 +242,9 @@ network:
     histogram_type: linear
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037081
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1935420
     notification_emails:
       - necko@mozilla.com
     expires: never
+    telemetry_mirror: HTTP_CACHE_ENTRY_REUSE_COUNT

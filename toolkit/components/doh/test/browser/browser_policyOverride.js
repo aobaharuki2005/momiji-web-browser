@@ -26,37 +26,41 @@ add_task(async function testPolicyOverride() {
     "Policy engine is active."
   );
 
-  Services.prefs.setBoolPref(prefs.ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
   await waitForStateTelemetry(["shutdown", "policyDisabled"]);
-  ok(
-    !Services.prefs.prefHasUserValue(prefs.BREADCRUMB_PREF),
+  is(
+    Preferences.get(prefs.BREADCRUMB_PREF),
+    undefined,
     "Breadcrumb not saved."
   );
-  ok(
-    !Services.prefs.prefHasUserValue(prefs.TRR_SELECT_URI_PREF),
+  is(
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
+    undefined,
     "TRR selection not performed."
   );
   is(
-    Services.prefs.getBoolPref(prefs.SKIP_HEURISTICS_PREF),
+    Preferences.get(prefs.SKIP_HEURISTICS_PREF),
     true,
     "Pref set to suppress CFR."
   );
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(undefined);
-  await ensureNoHeuristicsTelemetry();
+  ensureNoHeuristicsTelemetry();
 
-  await assertGleanValues([
+  checkScalars(
     [
-      Glean.networking.dohHeuristicsResult,
-      Heuristics.Telemetry.enterprisePresent,
-    ],
-    ...allHeuristicsFalseExpectations(),
-  ]);
+      [
+        "networking.doh_heuristics_result",
+        { value: Heuristics.Telemetry.enterprisePresent },
+      ],
+      // All of the heuristics must be false.
+    ].concat(falseExpectations([]))
+  );
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(undefined);
-  await ensureNoHeuristicsTelemetry();
+  ensureNoHeuristicsTelemetry();
 
   // Clean up.
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({

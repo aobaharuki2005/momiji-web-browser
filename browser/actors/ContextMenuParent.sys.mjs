@@ -1,3 +1,4 @@
+/* vim: set ts=2 sw=2 sts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,15 +31,15 @@ export class ContextMenuParent extends JSWindowActorParent {
       return;
     }
 
-    let win = browser.documentGlobal;
+    let win = browser.ownerGlobal;
     // It's possible that the <xul:browser> associated with this
     // ContextMenu message doesn't belong to a window that actually
     // loads nsContextMenu.js. In that case, try to find the chromeEventHandler,
     // since that'll likely be the "top" <xul:browser>, and then use its window's
     // nsContextMenu instance instead.
     if (!win.nsContextMenu) {
-      let topBrowser = browser.documentGlobal.docShell.chromeEventHandler;
-      win = topBrowser.documentGlobal;
+      let topBrowser = browser.ownerGlobal.docShell.chromeEventHandler;
+      win = topBrowser.ownerGlobal;
     }
 
     message.data.context.showRelay &&= lazy.FirefoxRelay.isEnabled;
@@ -101,7 +102,7 @@ export class ContextMenuParent extends JSWindowActorParent {
   mediaCommand(targetIdentifier, command, data) {
     let windowGlobal = this.manager.browsingContext.currentWindowGlobal;
     let browser = windowGlobal.rootFrameLoader.ownerElement;
-    let win = browser.documentGlobal;
+    let win = browser.ownerGlobal;
     let windowUtils = win.windowUtils;
     this.sendAsyncMessage("ContextMenu:MediaCommand", {
       targetIdentifier,
@@ -113,12 +114,6 @@ export class ContextMenuParent extends JSWindowActorParent {
 
   canvasToBlobURL(targetIdentifier) {
     return this.sendQuery("ContextMenu:Canvas:ToBlobURL", { targetIdentifier });
-  }
-
-  copyCanvasImage(targetIdentifier) {
-    return this.sendQuery("ContextMenu:Canvas:CopyImage", {
-      targetIdentifier,
-    });
   }
 
   saveVideoFrameAsImage(targetIdentifier) {

@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_serviceworkerparent_h_
-#define mozilla_dom_serviceworkerparent_h_
+#ifndef mozilla_dom_serviceworkerparent_h__
+#define mozilla_dom_serviceworkerparent_h__
 
 #include "mozilla/dom/PServiceWorkerParent.h"
 
@@ -24,7 +26,8 @@ class ServiceWorkerParent final : public PServiceWorkerParent {
   mozilla::ipc::IPCResult RecvTeardown() override;
 
   mozilla::ipc::IPCResult RecvPostMessage(
-      StructuredCloneData* aData, const PostMessageSource& aSource) override;
+      const ClonedOrErrorMessageData& aClonedData,
+      const PostMessageSource& aSource) override;
 
  public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerParent, override);
@@ -38,4 +41,4 @@ class ServiceWorkerParent final : public PServiceWorkerParent {
 
 }  // namespace mozilla::dom
 
-#endif  // mozilla_dom_serviceworkerparent_h_
+#endif  // mozilla_dom_serviceworkerparent_h__

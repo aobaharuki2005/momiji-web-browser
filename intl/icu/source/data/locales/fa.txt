@@ -340,7 +340,7 @@ fa{
                 HHmmZ{"HH:mm (Z)"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
-                Hv{"H (v)"}
+                Hv{"سHH v"}
                 MEd{"E M/d"}
                 MMMEd{"E d LLL"}
                 MMMMEd{"E d LLLL"}
@@ -568,7 +568,7 @@ fa{
                 Hms{"H:mm:ss"}
                 Hmsv{"H:mm:ss v"}
                 Hmv{"H:mm v"}
-                Hv{"H (v)"}
+                Hv{"سHH v"}
                 MEd{"E M/d"}
                 MMMEd{"E d LLL"}
                 MMMMEd{"E d LLLL"}

@@ -218,11 +218,6 @@ pub trait Flags: Sized + 'static {
         iter::IterNames::new(self)
     }
 
-    /// Yield a set of all named flags defined by [`Self::FLAGS`].
-    fn iter_defined_names() -> iter::IterDefinedNames<Self> {
-        iter::IterDefinedNames::new()
-    }
-
     /// Whether all bits in this flags value are unset.
     fn is_empty(&self) -> bool {
         self.bits() == Self::Bits::EMPTY

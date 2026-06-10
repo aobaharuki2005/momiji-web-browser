@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,16 +7,17 @@
 #include "MediaFormatReader.h"
 
 #include <algorithm>
+#include <queue>
 
-#include "AOMDecoder.h"
 #include "AllocationPolicy.h"
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "MP4Decoder.h"
 #include "MediaData.h"
 #include "MediaDataDecoderProxy.h"
-#include "MediaGleanMetrics.h"
 #include "MediaInfo.h"
 #include "PDMFactory.h"
-#include "PDMFactorySupport.h"
 #include "PerformanceRecorder.h"
 #include "VPXDecoder.h"
 #include "VideoFrameContainer.h"
@@ -1214,7 +1217,10 @@ void MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult) {
 
   UniquePtr<MetadataTags> tags(MakeUnique<MetadataTags>());
 
-  const bool checkSupport = !IsWaitingOnCDMResource();
+  RefPtr<PDMFactory> platform;
+  if (!IsWaitingOnCDMResource()) {
+    platform = new PDMFactory();
+  }
 
   // To decode, we need valid video and a place to put it.
   bool videoActive = !!mDemuxer->GetNumberTracks(TrackInfo::kVideoTrack) &&
@@ -1233,8 +1239,8 @@ void MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult) {
     UniquePtr<TrackInfo> videoInfo = mVideo.mTrackDemuxer->GetInfo();
     videoActive = videoInfo && videoInfo->IsValid();
     if (videoActive) {
-      if (checkSupport &&
-          PDMFactorySupport::IsTypeSupported(videoInfo->mMimeType).isEmpty()) {
+      if (platform &&
+          platform->SupportsMimeType(videoInfo->mMimeType).isEmpty()) {
         // We have no decoder for this track. Error.
         LOG("No supported decoder for video track (%s)",
             videoInfo->mMimeType.get());
@@ -1272,10 +1278,9 @@ void MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult) {
 
     UniquePtr<TrackInfo> audioInfo = mAudio.mTrackDemuxer->GetInfo();
     // We actively ignore audio tracks that we know we can't play.
-    audioActive =
-        audioInfo && audioInfo->IsValid() &&
-        (!checkSupport ||
-         !PDMFactorySupport::IsTypeSupported(audioInfo->mMimeType).isEmpty());
+    audioActive = audioInfo && audioInfo->IsValid() &&
+                  (!platform ||
+                   !platform->SupportsMimeType(audioInfo->mMimeType).isEmpty());
 
     if (audioActive) {
       mInfo.mAudio = *audioInfo->GetAsAudioInfo();
@@ -2073,9 +2078,12 @@ void MediaFormatReader::DecoderData::StartRecordDecodingPerf(
       flag |= MediaInfoFlag::VIDEO_VP9;
     } else if (MP4Decoder::IsHEVC(mimeType)) {
       flag |= MediaInfoFlag::VIDEO_HEVC;
-    } else if (AOMDecoder::IsAV1(mimeType)) {
+    }
+#ifdef MOZ_AV1
+    else if (AOMDecoder::IsAV1(mimeType)) {
       flag |= MediaInfoFlag::VIDEO_AV1;
     }
+#endif
   }
   mDecodePerfRecorder->Start(aSample->mTime.ToMicroseconds(),
                              MediaStage::RequestDecode, height, flag);
@@ -2101,7 +2109,7 @@ void MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
 
   decoder.StartRecordDecodingPerf(aTrack, aSample);
   if (aSample->mCrypto.IsEncrypted() &&
-      (mMediaEngineId || (mCDMProxy && !!mCDMProxy->AsRemoteCDMProxy()))) {
+      (mMediaEngineId || (mCDMProxy && !!mCDMProxy->AsRemoteCDMChild()))) {
     aSample->mShouldCopyCryptoToRemoteRawData = true;
   }
   decoder.mDecoder->Decode(aSample)
@@ -2461,24 +2469,16 @@ void MediaFormatReader::Update(TrackType aTrack) {
     } else if (decoder.HasFatalError()) {
       nsCString mimeType = decoder.GetCurrentInfo()->mMimeType;
       if (!mimeType.IsEmpty()) {
-        const nsCString& errorName = decoder.mError->ErrorName();
-        if (!IsNotRealDecodeError(errorName)) {
-          nsCString errorLabel = ErrorNameToLabel(errorName);
-          if (mCDMProxy) {
-            glean::media_playback::encrypted_decode_error
-                .Get(MimeTypeToEncryptedLabel(mimeType),
-                     KeySystemToLabel(mCDMProxy->KeySystem()))
-                .Add();
-          } else if (decoder.mIsHardwareAccelerated) {
-            glean::media_playback::unencrypted_hw_decode_error
-                .Get(MimeTypeToUnencryptedLabel(mimeType), errorLabel)
-                .Add();
-          } else {
-            glean::media_playback::unencrypted_sw_decode_error
-                .Get(MimeTypeToUnencryptedLabel(mimeType), errorLabel)
-                .Add();
-          }
+        glean::media_playback::DecodeErrorExtra extraData;
+        extraData.mimeType = Some(mimeType);
+        extraData.errorName = Some(decoder.mError->ErrorName());
+        if (mCDMProxy) {
+          extraData.keySystem =
+              Some(NS_ConvertUTF16toUTF8(mCDMProxy->KeySystem()));
         }
+        extraData.decoderName = Some(decoder.mDescription);
+        extraData.isHardwareAccelerated = Some(decoder.mIsHardwareAccelerated);
+        glean::media_playback::decode_error.Record(Some(extraData));
       }
       LOG("Rejecting %s promise for %s : DECODE_ERROR", TrackTypeToStr(aTrack),
           mimeType.get());
@@ -3103,7 +3103,7 @@ void MediaFormatReader::OnSeekFailed(TrackType aTrack,
       } else {
         mFallbackSeekTime.reset();
       }
-      mPendingSeekTime = std::move(nextSeekTime);
+      mPendingSeekTime = nextSeekTime;
       DoAudioSeek();
       return;
     }

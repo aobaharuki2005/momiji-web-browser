@@ -11,7 +11,7 @@ namespace trace
 
 OPENTELEMETRY_EXPORT TracerConfig TracerConfig::Disabled()
 {
-  static const auto kDisabledConfig = TracerConfig(false);
+  static const auto kDisabledConfig = TracerConfig(true);
   return kDisabledConfig;
 }
 
@@ -28,12 +28,12 @@ OPENTELEMETRY_EXPORT TracerConfig TracerConfig::Default()
 
 OPENTELEMETRY_EXPORT bool TracerConfig::IsEnabled() const noexcept
 {
-  return enabled_;
+  return !disabled_;
 }
 
 OPENTELEMETRY_EXPORT bool TracerConfig::operator==(const TracerConfig &other) const noexcept
 {
-  return enabled_ == other.enabled_;
+  return disabled_ == other.disabled_;
 }
 
 }  // namespace trace

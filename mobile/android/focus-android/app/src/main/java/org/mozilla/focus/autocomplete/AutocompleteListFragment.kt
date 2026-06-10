@@ -18,10 +18,15 @@ import android.widget.TextView
 import androidx.annotation.LayoutRes
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
@@ -56,7 +61,9 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment() {
                 val from = viewHolder.bindingAdapterPosition
                 val to = target.bindingAdapterPosition
 
-                (recyclerView.adapter as DomainListAdapter).move(requireContext(), from, to)
+                viewLifecycleOwner.lifecycleScope.launch {
+                    (recyclerView.adapter as DomainListAdapter).move(requireContext(), from, to)
+                }
 
                 return true
             }
@@ -137,8 +144,10 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment() {
 
         showToolbar(getString(R.string.preference_autocomplete_subitem_manage_sites))
 
-        (binding.domainList.adapter as DomainListAdapter).refresh(requireActivity()) {
-            activity?.invalidateOptionsMenu()
+        viewLifecycleOwner.lifecycleScope.launch {
+            (binding.domainList.adapter as DomainListAdapter).refresh(requireActivity()) {
+                activity?.invalidateOptionsMenu()
+            }
         }
     }
 
@@ -184,11 +193,15 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment() {
         private val domains: MutableList<String> = mutableListOf()
         private val selectedDomains: MutableList<String> = mutableListOf()
 
-        internal fun refresh(
+        internal suspend fun refresh(
             context: Context,
+            ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
             body: (() -> Unit)? = null,
         ) {
-            val updatedDomains = CustomDomains.load(context)
+            val updatedDomains =
+                withContext(ioDispatcher) {
+                    CustomDomains.load(context)
+                }
 
             domains.clear()
             domains.addAll(updatedDomains)
@@ -240,16 +253,19 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment() {
 
         internal fun selection(): List<String> = selectedDomains
 
-        internal fun move(
+        internal suspend fun move(
             context: Context,
             from: Int,
             to: Int,
+            ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
         ) {
             Collections.swap(domains, from, to)
             notifyItemMoved(from, to)
 
-            CustomDomains.save(context, domains)
-            Autocomplete.listOrderChanged.add()
+            withContext(ioDispatcher) {
+                CustomDomains.save(context, domains)
+                Autocomplete.listOrderChanged.add()
+            }
         }
     }
 

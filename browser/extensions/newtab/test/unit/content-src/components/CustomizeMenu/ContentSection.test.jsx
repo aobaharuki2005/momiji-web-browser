@@ -13,7 +13,6 @@ const DEFAULT_PROPS = {
   mayHaveTimerWidget: false,
   mayHaveListsWidget: false,
   wallpapersEnabled: false,
-  wallpapersUserEnabled: false,
   activeWallpaper: null,
   exitEventFired: false,
   enabledSections: {
@@ -58,7 +57,7 @@ describe("ContentSection", () => {
     assert.ok(wrapper.exists());
   });
 
-  it("should look for a data-event-source attribute and dispatch an event for INPUT", () => {
+  it("should look for a data-eventSource attribute and dispatch an event for INPUT", () => {
     wrapper.instance().onPreferenceSelect({
       target: {
         nodeName: "INPUT",
@@ -78,30 +77,18 @@ describe("ContentSection", () => {
     assert.calledWith(DEFAULT_PROPS.setPref, "foo", true);
   });
 
-  it("should call setPref with parsed integer value for MOZ-SELECT", () => {
-    wrapper.instance().onPreferenceSelect({
-      target: {
-        nodeName: "MOZ-SELECT",
-        value: "3",
-        dataset: { preference: "topSitesRows" },
-      },
-    });
-
-    assert.calledWith(DEFAULT_PROPS.setPref, "topSitesRows", 3);
-  });
-
-  it("should have data-event-source attributes on relevant pref changing inputs", () => {
+  it("should have data-eventSource attributes on relevant pref changing inputs", () => {
     wrapper = mount(<ContentSection {...DEFAULT_PROPS} />);
     assert.equal(
-      wrapper.find("#weather-toggle").prop("data-event-source"),
+      wrapper.find("#weather-toggle").prop("data-eventSource"),
       "WEATHER"
     );
     assert.equal(
-      wrapper.find("#shortcuts-toggle").prop("data-event-source"),
+      wrapper.find("#shortcuts-toggle").prop("data-eventSource"),
       "TOP_SITES"
     );
     assert.equal(
-      wrapper.find("#pocket-toggle").prop("data-event-source"),
+      wrapper.find("#pocket-toggle").prop("data-eventSource"),
       "TOP_STORIES"
     );
   });
@@ -230,336 +217,5 @@ describe("ContentSection", () => {
       ),
     });
     assert.isFalse(wrapper.find("#timer-widget-section").exists());
-  });
-
-  it("should dispatch WIDGETS_ENABLED with widget_size=large when widgetsMayBeMaximized is false", () => {
-    const dispatch = sinon.spy();
-    wrapper = mount(
-      <ContentSection
-        {...DEFAULT_PROPS}
-        dispatch={dispatch}
-        enabledWidgets={{
-          listsEnabled: false,
-          timerEnabled: false,
-          widgetsMaximized: false,
-          widgetsMayBeMaximized: false,
-        }}
-      />
-    );
-
-    wrapper.instance().onPreferenceSelect({
-      target: {
-        nodeName: "INPUT",
-        checked: true,
-        dataset: {
-          preference: "widgets.lists.enabled",
-          eventSource: "WIDGET_LISTS",
-        },
-      },
-    });
-
-    const widgetsEnabledCall = dispatch
-      .getCalls()
-      .find(call => call.args[0].type === "WIDGETS_ENABLED");
-    assert.ok(widgetsEnabledCall, "Expected WIDGETS_ENABLED to be dispatched");
-    assert.equal(
-      widgetsEnabledCall.args[0].data.widget_size,
-      "large",
-      "widget_size should be large when widgets.system.maximized is false"
-    );
-  });
-
-  it("should dispatch WIDGETS_ENABLED with widget_size=small for Weather widget", () => {
-    const dispatch = sinon.spy();
-    wrapper = mount(
-      <ContentSection
-        {...DEFAULT_PROPS}
-        dispatch={dispatch}
-        enabledWidgets={{
-          widgetsMaximized: false,
-          widgetsMayBeMaximized: false,
-        }}
-      />
-    );
-
-    wrapper.instance().onPreferenceSelect({
-      target: {
-        nodeName: "INPUT",
-        checked: true,
-        dataset: {
-          preference: "showWeather",
-          eventSource: "WEATHER",
-        },
-      },
-    });
-
-    const widgetsEnabledCall = dispatch
-      .getCalls()
-      .find(call => call.args[0].type === "WIDGETS_ENABLED");
-    assert.ok(widgetsEnabledCall, "Expected WIDGETS_ENABLED to be dispatched");
-    assert.equal(
-      widgetsEnabledCall.args[0].data.widget_name,
-      "weather",
-      "widget_name should be weather"
-    );
-    assert.equal(
-      widgetsEnabledCall.args[0].data.widget_size,
-      "small",
-      "widget_size should be small for Weather widget"
-    );
-  });
-
-  describe("SectionsMgmtPanel", () => {
-    const STATE_WITH_SECTIONS = {
-      ...INITIAL_STATE,
-      DiscoveryStream: {
-        ...INITIAL_STATE.DiscoveryStream,
-        layout: [
-          {
-            components: [
-              {
-                type: "CardGrid",
-                feed: {
-                  url: "https://example.com/feed",
-                },
-              },
-            ],
-          },
-        ],
-        feeds: {
-          data: {
-            "https://example.com/feed": {
-              data: {
-                sections: [
-                  {
-                    sectionKey: "technology",
-                    title: "Technology",
-                    receivedRank: 0,
-                  },
-                ],
-              },
-            },
-          },
-        },
-        sectionPersonalization: {},
-      },
-    };
-
-    it("should not render SectionsMgmtPanel when mayHaveTopicSections is false", () => {
-      wrapper = mount(
-        <WrapWithProvider state={STATE_WITH_SECTIONS}>
-          <ContentSection
-            {...DEFAULT_PROPS}
-            mayHaveTopicSections={false}
-            enabledSections={{
-              ...DEFAULT_PROPS.enabledSections,
-              pocketEnabled: true,
-            }}
-          />
-        </WrapWithProvider>
-      );
-      assert.isFalse(wrapper.find("SectionsMgmtPanel").exists());
-    });
-
-    it("should render SectionsMgmtPanel when mayHaveTopicSections is true", () => {
-      wrapper = mount(
-        <WrapWithProvider state={STATE_WITH_SECTIONS}>
-          <ContentSection
-            {...DEFAULT_PROPS}
-            mayHaveTopicSections={true}
-            enabledSections={{
-              ...DEFAULT_PROPS.enabledSections,
-              pocketEnabled: true,
-            }}
-          />
-        </WrapWithProvider>
-      );
-      assert.isTrue(wrapper.find("SectionsMgmtPanel").exists());
-    });
-
-    it("should render SectionsMgmtPanel only when pocket is enabled and mayHaveTopicSections is true", () => {
-      wrapper = mount(
-        <WrapWithProvider state={STATE_WITH_SECTIONS}>
-          <ContentSection
-            {...DEFAULT_PROPS}
-            mayHaveTopicSections={true}
-            enabledSections={{
-              ...DEFAULT_PROPS.enabledSections,
-              pocketEnabled: false,
-            }}
-          />
-        </WrapWithProvider>
-      );
-      assert.isTrue(wrapper.find("SectionsMgmtPanel").exists());
-    });
-  });
-
-  // @nova-cleanup(remove-conditional): Remove novaEnabled condition from wallpapers section
-  describe("wallpapers section (novaEnabled)", () => {
-    // WallpaperCategories reads newtabWallpapers.wallpaper from the store;
-    // provide it so the component doesn't crash on .includes()
-    const WALLPAPER_STATE = {
-      ...INITIAL_STATE,
-      Prefs: {
-        ...INITIAL_STATE.Prefs,
-        values: {
-          ...INITIAL_STATE.Prefs.values,
-          "newtabWallpapers.wallpaper": "",
-        },
-      },
-    };
-
-    const NOVA_PROPS = {
-      novaEnabled: true,
-      wallpapersEnabled: true,
-      toggleWidgetsManagementPanel: sinon.stub(),
-      showWidgetsManagementPanel: false,
-      onSubpanelToggle: sinon.stub(),
-    };
-
-    it("renders the wallpaper toggle", () => {
-      wrapper = mount(
-        <WrapWithProvider state={WALLPAPER_STATE}>
-          <ContentSection
-            {...DEFAULT_PROPS}
-            {...NOVA_PROPS}
-            wallpapersUserEnabled={false}
-          />
-        </WrapWithProvider>
-      );
-      assert.isTrue(wrapper.find("#wallpapers-toggle").exists());
-    });
-
-    it("shows WallpaperCategories regardless of toggle state", () => {
-      wrapper = mount(
-        <WrapWithProvider state={WALLPAPER_STATE}>
-          <ContentSection
-            {...DEFAULT_PROPS}
-            {...NOVA_PROPS}
-            wallpapersUserEnabled={false}
-          />
-        </WrapWithProvider>
-      );
-      assert.isTrue(wrapper.find(".category-list").exists());
-    });
-
-    it("sets newtabWallpapers.user.enabled to false when the wallpaper toggle is turned off", () => {
-      wrapper = mount(
-        <WrapWithProvider state={WALLPAPER_STATE}>
-          <ContentSection
-            {...DEFAULT_PROPS}
-            {...NOVA_PROPS}
-            wallpapersUserEnabled={true}
-          />
-        </WrapWithProvider>
-      );
-      wrapper
-        .find(ContentSection)
-        .instance()
-        .onPreferenceSelect({
-          target: {
-            nodeName: "MOZ-TOGGLE",
-            pressed: false,
-            dataset: {
-              preference: "newtabWallpapers.user.enabled",
-              eventSource: "WALLPAPERS",
-            },
-          },
-        });
-      assert.calledWith(
-        DEFAULT_PROPS.setPref,
-        "newtabWallpapers.user.enabled",
-        false
-      );
-    });
-
-    it("sets newtabWallpapers.user.enabled to true when the wallpaper toggle is turned on", () => {
-      wrapper = mount(
-        <WrapWithProvider state={WALLPAPER_STATE}>
-          <ContentSection
-            {...DEFAULT_PROPS}
-            {...NOVA_PROPS}
-            wallpapersUserEnabled={false}
-          />
-        </WrapWithProvider>
-      );
-      wrapper
-        .find(ContentSection)
-        .instance()
-        .onPreferenceSelect({
-          target: {
-            nodeName: "MOZ-TOGGLE",
-            pressed: true,
-            dataset: {
-              preference: "newtabWallpapers.user.enabled",
-              eventSource: "WALLPAPERS",
-            },
-          },
-        });
-      assert.calledWith(
-        DEFAULT_PROPS.setPref,
-        "newtabWallpapers.user.enabled",
-        true
-      );
-    });
-
-    // @nova-cleanup(remove-conditional): Remove the `.widgets-section` assertion once the novaEnabled condition is removed
-    it("renders WidgetsManagementPanel instead of .widgets-section when novaEnabled and mayHaveWidgets are true", () => {
-      wrapper = mount(
-        <WrapWithProvider state={WALLPAPER_STATE}>
-          <ContentSection
-            {...DEFAULT_PROPS}
-            {...NOVA_PROPS}
-            mayHaveWidgets={true}
-          />
-        </WrapWithProvider>
-      );
-      assert.isTrue(wrapper.find("WidgetsManagementPanel").exists());
-      assert.isFalse(wrapper.find(".widgets-section").exists());
-    });
-
-    describe("widgets system toggle", () => {
-      it("renders the widgets system toggle in ContentSection", () => {
-        wrapper = mount(
-          <WrapWithProvider state={WALLPAPER_STATE}>
-            <ContentSection
-              {...DEFAULT_PROPS}
-              {...NOVA_PROPS}
-              mayHaveWidgets={true}
-              widgetsEnabled={false}
-            />
-          </WrapWithProvider>
-        );
-        assert.isTrue(wrapper.find("#widgets-system-toggle").exists());
-      });
-
-      it("sets widgets-system-toggle pressed when widgetsEnabled is true", () => {
-        wrapper = mount(
-          <WrapWithProvider state={WALLPAPER_STATE}>
-            <ContentSection
-              {...DEFAULT_PROPS}
-              {...NOVA_PROPS}
-              mayHaveWidgets={true}
-              widgetsEnabled={true}
-            />
-          </WrapWithProvider>
-        );
-        assert.isTrue(wrapper.find("#widgets-system-toggle").prop("pressed"));
-      });
-
-      it("sets widgets-system-toggle unpressed when widgetsEnabled is false", () => {
-        wrapper = mount(
-          <WrapWithProvider state={WALLPAPER_STATE}>
-            <ContentSection
-              {...DEFAULT_PROPS}
-              {...NOVA_PROPS}
-              mayHaveWidgets={true}
-              widgetsEnabled={false}
-            />
-          </WrapWithProvider>
-        );
-        assert.isNotOk(wrapper.find("#widgets-system-toggle").prop("pressed"));
-      });
-    });
   });
 });

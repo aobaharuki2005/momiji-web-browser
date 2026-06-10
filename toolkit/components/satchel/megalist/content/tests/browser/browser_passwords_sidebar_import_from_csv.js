@@ -52,7 +52,7 @@ const clickImportFromCsv = async (
   linesInFile,
   isFromMenuDropdown = true
 ) => {
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
   MockFilePicker.returnValue = MockFilePicker.returnOK;
   const csvFile = await LoginTestUtils.file.setupCsvFileWithLines(linesInFile);
   if (isFromMenuDropdown) {

@@ -5,15 +5,13 @@
 package mozilla.components.feature.session
 
 import android.view.View
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createCustomTab
@@ -24,23 +22,28 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.test.any
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 class SessionFeatureTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
 
     @Test
-    fun `start renders selected session`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
+    fun `start renders selected session`() {
+        val store = prepareStore()
 
         val actualView: View = mock()
         val view: EngineView = mock()
@@ -49,18 +52,17 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession))
 
-        val feature = SessionFeature(store, mock(), mock(), view, mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(view).render(engineSession)
     }
 
     @Test
-    fun `start renders fixed session`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
+    fun `start renders fixed session`() {
+        val store = prepareStore()
 
         val actualView: View = mock()
         val view: EngineView = mock()
@@ -69,18 +71,17 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("C", engineSession))
 
-        val feature = SessionFeature(store, mock(), mock(), view, tabId = "C", mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view, tabId = "C")
         verify(view, never()).render(any())
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(view).render(engineSession)
     }
 
     @Test
-    fun `start renders custom tab session`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
+    fun `start renders custom tab session`() {
+        val store = prepareStore()
 
         val actualView: View = mock()
         val view: EngineView = mock()
@@ -89,17 +90,16 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("D", engineSession))
 
-        val feature = SessionFeature(store, mock(), mock(), view, tabId = "D", mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view, tabId = "D")
         verify(view, never()).render(any())
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(view).render(engineSession)
     }
 
     @Test
-    fun `renders selected tab after changes`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
+    fun `renders selected tab after changes`() {
+        val store = prepareStore()
 
         val actualView: View = mock()
         val view: EngineView = mock()
@@ -109,44 +109,34 @@ class SessionFeatureTest {
         val engineSessionB: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("A", engineSessionA))
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSessionB))
-        testDispatcher.scheduler.advanceUntilIdle()
 
-        val feature = SessionFeature(store, mock(), mock(), view, mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
         verify(view).render(engineSessionB)
 
         store.dispatch(TabListAction.SelectTabAction("A"))
-        testDispatcher.scheduler.advanceUntilIdle()
-
         verify(view).render(engineSessionA)
     }
 
     @Test
-    fun `creates engine session if needed`() = runTest(testDispatcher) {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-
-        val store = prepareStore(captureActionsMiddleware, this)
+    fun `creates engine session if needed`() {
+        val store = spy(prepareStore())
         val actualView: View = mock()
         val view: EngineView = mock()
         doReturn(actualView).`when`(view).asView()
 
-        val feature = SessionFeature(store, mock(), mock(), view, mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        captureActionsMiddleware.assertFirstAction(EngineAction.CreateEngineSessionAction::class) { action ->
-            assertEquals("B", action.tabId)
-        }
+        verify(store).dispatch(EngineAction.CreateEngineSessionAction("B"))
     }
 
     @Test
-    fun `does not render new selected session after stop`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
+    fun `does not render new selected session after stop`() {
+        val store = prepareStore()
 
         val actualView: View = mock()
         val view: EngineView = mock()
@@ -157,11 +147,10 @@ class SessionFeatureTest {
         store.dispatch(EngineAction.LinkEngineSessionAction("A", engineSessionA))
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSessionB))
 
-        val feature = SessionFeature(store, mock(), mock(), view, mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
         verify(view).render(engineSessionB)
 
         feature.stop()
@@ -171,8 +160,8 @@ class SessionFeatureTest {
     }
 
     @Test
-    fun `releases when last selected session gets removed`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
+    fun `releases when last selected session gets removed`() {
+        val store = prepareStore()
 
         val actualView: View = mock()
         val view: EngineView = mock()
@@ -180,23 +169,20 @@ class SessionFeatureTest {
 
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession))
-        val feature = SessionFeature(store, mock(), mock(), view, mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view)
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(view).render(engineSession)
         verify(view, never()).release()
 
         store.dispatch(TabListAction.RemoveAllTabsAction())
-        testDispatcher.scheduler.advanceUntilIdle()
-
         verify(view).release()
     }
 
     @Test
-    fun `release stops observing and releases session from view`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
+    fun `release stops observing and releases session from view`() {
+        val store = prepareStore()
         val actualView: View = mock()
 
         val view: EngineView = mock()
@@ -205,11 +191,10 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession))
 
-        val feature = SessionFeature(store, mock(), mock(), view, mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(view).render(engineSession)
 
@@ -222,8 +207,8 @@ class SessionFeatureTest {
     }
 
     @Test
-    fun `releases when custom tab gets removed`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
+    fun `releases when custom tab gets removed`() {
+        val store = prepareStore()
 
         val actualView: View = mock()
         val view: EngineView = mock()
@@ -232,28 +217,25 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("D", engineSession))
 
-        val feature = SessionFeature(store, mock(), mock(), view, tabId = "D", mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view, tabId = "D")
         verify(view, never()).render(any())
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(view).render(engineSession)
         verify(view, never()).release()
 
         store.dispatch(CustomTabListAction.RemoveCustomTabAction("D"))
-        testDispatcher.scheduler.advanceUntilIdle()
-
         verify(view).release()
     }
 
     @Test
-    fun `onBackPressed clears selection if it exists`() = runTest(testDispatcher) {
+    fun `onBackPressed clears selection if it exists`() {
         run {
             val view: EngineView = mock()
             doReturn(false).`when`(view).canClearSelection()
 
-            val feature = SessionFeature(BrowserStore(), mock(), mock(), view, mainDispatcher = testDispatcher)
+            val feature = SessionFeature(BrowserStore(), mock(), mock(), view)
             assertFalse(feature.onBackPressed())
 
             verify(view, never()).clearSelection()
@@ -263,7 +245,7 @@ class SessionFeatureTest {
             val view: EngineView = mock()
             doReturn(true).`when`(view).canClearSelection()
 
-            val feature = SessionFeature(BrowserStore(), mock(), mock(), view, mainDispatcher = testDispatcher)
+            val feature = SessionFeature(BrowserStore(), mock(), mock(), view)
             assertTrue(feature.onBackPressed())
 
             verify(view).clearSelection()
@@ -271,7 +253,7 @@ class SessionFeatureTest {
     }
 
     @Test
-    fun `onBackPressed() invokes GoBackUseCase if back navigation is possible`() = runTest(testDispatcher) {
+    fun `onBackPressed() invokes GoBackUseCase if back navigation is possible`() {
         run {
             val store = BrowserStore(
                 BrowserState(
@@ -282,7 +264,7 @@ class SessionFeatureTest {
 
             val useCase: SessionUseCases.GoBackUseCase = mock()
 
-            val feature = SessionFeature(store, useCase, mock(), mock(), mainDispatcher = testDispatcher)
+            val feature = SessionFeature(store, useCase, mock(), mock())
 
             assertFalse(feature.onBackPressed())
             verify(useCase, never()).invoke("A")
@@ -305,7 +287,7 @@ class SessionFeatureTest {
 
             val useCase: SessionUseCases.GoBackUseCase = mock()
 
-            val feature = SessionFeature(store, useCase, mock(), mock(), mainDispatcher = testDispatcher)
+            val feature = SessionFeature(store, useCase, mock(), mock())
 
             assertTrue(feature.onBackPressed())
             verify(useCase).invoke("A")
@@ -313,7 +295,7 @@ class SessionFeatureTest {
     }
 
     @Test
-    fun `onForwardPressed() invokes GoForwardUseCase if forward navigation is possible`() = runTest(testDispatcher) {
+    fun `onForwardPressed() invokes GoForwardUseCase if forward navigation is possible`() {
         run {
             val store = BrowserStore(
                 BrowserState(
@@ -324,7 +306,7 @@ class SessionFeatureTest {
 
             val forwardUseCase: SessionUseCases.GoForwardUseCase = mock()
 
-            val feature = SessionFeature(store, mock(), forwardUseCase, mock(), mainDispatcher = testDispatcher)
+            val feature = SessionFeature(store, mock(), forwardUseCase, mock())
 
             assertFalse(feature.onForwardPressed())
             verify(forwardUseCase, never()).invoke("A")
@@ -347,7 +329,7 @@ class SessionFeatureTest {
 
             val forwardUseCase: SessionUseCases.GoForwardUseCase = mock()
 
-            val feature = SessionFeature(store, mock(), forwardUseCase, mock(), mainDispatcher = testDispatcher)
+            val feature = SessionFeature(store, mock(), forwardUseCase, mock())
 
             assertTrue(feature.onForwardPressed())
             verify(forwardUseCase).invoke("A")
@@ -355,8 +337,8 @@ class SessionFeatureTest {
     }
 
     @Test
-    fun `stop releases engine view`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
+    fun `stop releases engine view`() {
+        val store = prepareStore()
 
         val actualView: View = mock()
         val view: EngineView = mock()
@@ -365,10 +347,9 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("D", engineSession))
 
-        val feature = SessionFeature(store, mock(), mock(), view, tabId = "D", mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view, tabId = "D")
         verify(view, never()).render(any())
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(view).render(engineSession)
 
@@ -377,9 +358,9 @@ class SessionFeatureTest {
     }
 
     @Test
-    fun `presenter observes crash state and does not create new engine session immediately`() = runTest(testDispatcher) {
+    fun `presenter observes crash state and does not create new engine session immediately`() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = prepareStore(middleware, this)
+        val store = prepareStore(middleware)
 
         val actualView: View = mock()
         val view: EngineView = mock()
@@ -387,23 +368,19 @@ class SessionFeatureTest {
 
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("A", engineSession))
-        testDispatcher.scheduler.advanceUntilIdle()
 
-        val feature = SessionFeature(store, mock(), mock(), view, tabId = "A", mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view, tabId = "A")
         verify(view, never()).render(any())
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         store.dispatch(CrashAction.SessionCrashedAction("A"))
-        testDispatcher.scheduler.advanceUntilIdle()
-
         verify(view, atLeastOnce()).release()
         middleware.assertNotDispatched(EngineAction.CreateEngineSessionAction::class)
     }
 
     @Test
-    fun `last access is updated when session is rendered`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
+    fun `last access is updated when session is rendered`() {
+        val store = prepareStore()
 
         val actualView: View = mock()
         val view: EngineView = mock()
@@ -412,96 +389,18 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession))
 
-        val feature = SessionFeature(store, mock(), mock(), view, mainDispatcher = testDispatcher)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         assertEquals(0L, store.state.findTab("B")?.lastAccess)
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         assertNotEquals(0L, store.state.findTab("B")?.lastAccess)
         verify(view).render(engineSession)
     }
 
-    @Test
-    fun `lastVisibleAt is stamped when stop is called`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
-
-        val actualView: View = mock()
-        val view: EngineView = mock()
-        doReturn(actualView).`when`(view).asView()
-
-        val engineSession: EngineSession = mock()
-        store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession))
-
-        val feature = SessionFeature(store, mock(), mock(), view, mainDispatcher = testDispatcher)
-        feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        assertEquals(0L, store.state.findTab("B")?.lastVisibleAt)
-
-        feature.stop()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        assertNotEquals(0L, store.state.findTab("B")?.lastVisibleAt)
-    }
-
-    @Test
-    fun `lastVisibleAt is stamped on the outgoing tab when switching tabs`() = runTest(testDispatcher) {
-        val store = prepareStore(scope = this)
-
-        val actualView: View = mock()
-        val view: EngineView = mock()
-        doReturn(actualView).`when`(view).asView()
-
-        val engineSessionA: EngineSession = mock()
-        val engineSessionB: EngineSession = mock()
-        store.dispatch(EngineAction.LinkEngineSessionAction("A", engineSessionA))
-        store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSessionB))
-
-        val feature = SessionFeature(store, mock(), mock(), view, mainDispatcher = testDispatcher)
-        feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        assertEquals(0L, store.state.findTab("B")?.lastVisibleAt)
-
-        store.dispatch(TabListAction.SelectTabAction("A"))
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        assertNotEquals(0L, store.state.findTab("B")?.lastVisibleAt)
-        assertEquals(0L, store.state.findTab("A")?.lastVisibleAt)
-    }
-
-    @Test
-    fun `lastVisibleAt is stamped when last tab is removed`() = runTest(testDispatcher) {
-        val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = prepareStore(captureActionsMiddleware, this)
-
-        val actualView: View = mock()
-        val view: EngineView = mock()
-        doReturn(actualView).`when`(view).asView()
-
-        val engineSession: EngineSession = mock()
-        store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession))
-
-        val feature = SessionFeature(store, mock(), mock(), view, mainDispatcher = testDispatcher)
-        feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        store.dispatch(TabListAction.RemoveAllTabsAction())
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        captureActionsMiddleware.assertFirstAction(
-            mozilla.components.browser.state.action.LastAccessAction.UpdateLastVisibleAtAction::class,
-        ) { action ->
-            assertEquals("B", action.tabId)
-            assertNotEquals(0L, action.lastVisibleAt)
-        }
-    }
-
     private fun prepareStore(
         middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>? = null,
-        scope: CoroutineScope,
     ): BrowserStore = BrowserStore(
         BrowserState(
             tabs = listOf(
@@ -514,6 +413,9 @@ class SessionFeatureTest {
             ),
             selectedTabId = "B",
         ),
-        middleware = (if (middleware != null) listOf(middleware) else emptyList()),
+        middleware = (if (middleware != null) listOf(middleware) else emptyList()) + EngineMiddleware.create(
+            engine = mock(),
+            scope = scope,
+        ),
     )
 }

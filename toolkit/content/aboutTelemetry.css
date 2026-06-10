@@ -47,7 +47,7 @@ body {
   display: flex;
   flex-direction: column;
   font-size: 17px;
-  font-weight: var(--font-weight-heading);
+  font-weight: var(--heading-font-weight);
   pointer-events: none;
   padding: 12px 8px;
 }
@@ -184,7 +184,7 @@ section:not(.active) {
 }
 
 #ping-picker {
-  min-width: var(--size-layout-medium);
+  min-width: 300px;
   position: fixed;
   z-index: 2;
   top: 32px;

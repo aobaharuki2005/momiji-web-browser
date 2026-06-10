@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 const {
   DayPeriod, Hour, Minute, Second, FractionalSecond, Literal
 } = DateTimeFormatParts

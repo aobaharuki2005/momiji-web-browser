@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -23,7 +25,6 @@
 #  include <unistd.h>
 #else
 #  include <dirent.h>
-#  include <signal.h>
 #  include <sys/types.h>
 #  include <sys/wait.h>
 #  include <unistd.h>
@@ -48,7 +49,6 @@
 #include "util/StringBuilder.h"
 #include "util/Text.h"
 #include "util/WindowsWrapper.h"
-#include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
 #include "vm/TypedArrayObject.h"
 
@@ -331,8 +331,20 @@ JSObject* FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr) {
   }
 
   js::TypedArrayObject& ta = obj->as<js::TypedArrayObject>();
-  MOZ_RELEASE_ASSERT(!ta.isSharedMemory(),
-                     "JS_NewUint8Array returns non-shared typed array");
+  if (ta.isSharedMemory()) {
+    // Must opt in to use shared memory.  For now, don't.
+    //
+    // (It is incorrect to read into the buffer without
+    // synchronization since that can create a race.  A
+    // lock here won't fix it - both sides must
+    // participate.  So what one must do is to create a
+    // temporary buffer, read into that, and use a
+    // race-safe primitive to copy memory into the
+    // buffer.)
+    JS_ReportErrorUTF8(cx, "can't read %s: shared memory buffer",
+                       pathname.get());
+    return nullptr;
+  }
 
   char* buf = static_cast<char*>(ta.dataPointerUnshared());
   if (!ReadFile(cx, pathname.get(), file, buf, len)) {
@@ -340,45 +352,6 @@ JSObject* FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr) {
   }
 
   return obj;
-}
-
-JSObject* FileAsImmutableTypedArray(JSContext* cx,
-                                    JS::HandleString pathnameStr) {
-  UniqueChars pathname = JS_EncodeStringToUTF8(cx, pathnameStr);
-  if (!pathname) {
-    return nullptr;
-  }
-
-  FILE* file = OpenFile(cx, pathname.get(), "rb");
-  if (!file) {
-    return nullptr;
-  }
-  AutoCloseFile autoClose(file);
-
-  size_t len;
-  if (!FileSize(cx, pathname.get(), file, &len)) {
-    return nullptr;
-  }
-
-  if (len > ArrayBufferObject::ByteLengthLimit) {
-    JS_ReportErrorUTF8(cx, "file %s is too large for an ArrayBuffer",
-                       pathname.get());
-    return nullptr;
-  }
-
-  JS::Rooted<ImmutableArrayBufferObject*> obj(
-      cx, ImmutableArrayBufferObject::createZeroed(cx, len));
-  if (!obj) {
-    return nullptr;
-  }
-  MOZ_RELEASE_ASSERT(obj->byteLength() == len);
-
-  auto* buf = reinterpret_cast<char*>(obj->dataPointer());
-  if (!ReadFile(cx, pathname.get(), file, buf, len)) {
-    return nullptr;
-  }
-
-  return JS_NewUint8ArrayWithBuffer(cx, obj, 0, len);
 }
 
 /**
@@ -603,13 +576,7 @@ static bool osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc,
   if (obj->isSharedMemory()) {
     // Must opt in to use shared memory.  For now, don't.
     //
-    // (It is incorrect to read into the buffer without
-    // synchronization since that can create a race.  A
-    // lock here won't fix it - both sides must
-    // participate.  So what one must do is to create a
-    // temporary buffer, read into that, and use a
-    // race-safe primitive to copy memory into the
-    // buffer.)
+    // See further comments in FileAsTypedArray, above.
     JS_ReportErrorUTF8(cx, "can't write %s: shared memory buffer",
                        filename.get());
     return false;
@@ -702,7 +669,16 @@ class FileObject : public NativeObject {
 };
 
 static const JSClassOps FileObjectClassOps = {
-    .finalize = FileObject::finalize,
+    nullptr,               // addProperty
+    nullptr,               // delProperty
+    nullptr,               // enumerate
+    nullptr,               // newEnumerate
+    nullptr,               // resolve
+    nullptr,               // mayResolve
+    FileObject::finalize,  // finalize
+    nullptr,               // call
+    nullptr,               // construct
+    nullptr,               // trace
 };
 
 const JSClass FileObject::class_ = {
@@ -1336,8 +1312,3 @@ bool DefineOS(JSContext* cx, HandleObject global, bool fuzzingSafe,
 
 }  // namespace shell
 }  // namespace js
-
-#ifdef XP_WIN
-#  undef PATH_MAX
-#  undef getcwd
-#endif

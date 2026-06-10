@@ -30,7 +30,6 @@
 #include "mozilla/Casting.h"
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/ICUError.h"
-#include "mozilla/intl/Locale.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/Span.h"
@@ -254,7 +253,7 @@ class TimeZone final {
    * region.
    */
   static Result<SpanEnumeration<char>, ICUError> GetAvailableTimeZones(
-      const RegionSubtag& aRegion);
+      const char* aRegion);
 
   /**
    * Return an enumeration over all available time zones.

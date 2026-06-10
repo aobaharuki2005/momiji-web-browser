@@ -62,8 +62,6 @@ skip-if = [
 
 ["test_getAll.js"]
 
-["test_getAllRecords.js"]
-
 ["test_globalObjects_other.js"]
 skip-if = [
   "os == 'android'", # bug 1079278
@@ -100,12 +98,14 @@ skip-if = [
 
 ["test_invalid_version.js"]
 
-["test_key_conversion_abort.js"]
-
 ["test_key_requirements.js"]
 
 ["test_keys.js"]
 requesttimeoutfactor = 2  # Slow on Linux TSan
+
+["test_locale_aware_index_getAll.js"]
+
+["test_locale_aware_index_getAllObjects.js"]
 
 ["test_multientry.js"]
 
@@ -148,7 +148,7 @@ skip-if = [
 
 ["test_put_get_values_autoIncrement.js"]
 skip-if = [
-  "os == 'win' && debug && verify",
+  "verify && debug && os == 'win'",
 ]
 
 ["test_readonly_transactions.js"]

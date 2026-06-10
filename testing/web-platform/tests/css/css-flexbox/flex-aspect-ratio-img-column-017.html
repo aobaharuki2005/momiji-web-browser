@@ -11,7 +11,6 @@
 
 <div id=log></div>
 
-<body onload="checkLayout('img')">
 <pre>
 Specified size suggestion = 200px
 Content size suggestion = 150px [1]
@@ -29,3 +28,7 @@ Pass condition: there is a 150x150 green square.
 <div style="display: flex; flex-direction: column; height: 0px; width: 150px;">
   <img src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" />' style="height: 200px; background: green;" data-expected-height=150>
 </div>
+
+<script>
+checkLayout('img');
+</script>

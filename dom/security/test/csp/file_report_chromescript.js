@@ -1,3 +1,5 @@
+/* eslint-env mozilla/chrome-script */
+
 const { NetUtil } = ChromeUtils.importESModule(
   "resource://gre/modules/NetUtil.sys.mjs"
 );

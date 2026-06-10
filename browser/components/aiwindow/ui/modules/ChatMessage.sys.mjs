@@ -3,47 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-const TOKEN_LABELS = {
-  EXISTING_MEMORY: "existing_memory",
-  SEARCH: "search",
-  FOLLOWUP: "followup",
-  KIT: "kit",
-};
-
-// Deterministic fallback normalization for follow-up suggestions. Token/tag
-// extraction can leave whitespace artifacts ("sentence ."), and the model
-// sometimes emits a trailing period or other terminal punctuation that we
-// don't want to render in the suggestion chips.
-function normalizeFollowUp(value) {
-  if (!value) {
-    return "";
-  }
-  return value
-    .replace(/[.!?…]+\s*$/u, "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .replace(/ ([.,!?…;:])/g, "$1");
-}
-
-/**
- * @import { ContextWebsite } from "chrome://browser/content/urlbar/SmartbarInput.mjs"
- */
-
-/**
- * The text content for a conversation.
- *
- * @typedef {object} TextContent
- * @property {"text"} type - The type discriminator.
- * @property {string} body - The body of the content.
- * @property {Array<ContextWebsite>} [contextMentions] - The mentioned websites.
- * @property {string} [contextPageUrl] - The URL of the context.
- */
-
-/**
- * @typedef {object} FunctionContent
- * @property {"function"} type - The type discriminator
- * @property {{tool_calls: Array<any>}} body - The body of the content.
- */
+import { makeGuid } from "./ChatUtils.sys.mjs";
 
 /**
  * A message in a conversation.
@@ -59,25 +19,14 @@ export class ChatMessage {
   modelId;
   params;
   usage;
-
-  /**
-   * The message content object.
-   *
-   * @type {TextContent | FunctionContent}
-   */
   content;
   convId;
   pageUrl;
   turnIndex;
-  memoriesEnabled;
-  memoriesFlagSource;
-  memoriesApplied;
+  insightsEnabled;
+  insightsFlagSource;
+  insightsApplied;
   webSearchQueries;
-  followUpSuggestions; // transient value
-  pageHistoryDeleted;
-  tokens;
-  toolUIData;
-  kit;
 
   /**
    * @param {object} param
@@ -86,9 +35,9 @@ export class ChatMessage {
    * @param {object} param.content - The message content object
    * @param {number} param.turnIndex - The message turn, different than ordinal,
    * prompt/reply for example would be one turn
-   * @param {URL} [param.pageUrl = null] - A URL object defining which page
+   * @param {string} [param.pageUrl = null] - A URL object defining which page
    * the user was on when submitting a message if role == user
-   * @param {string} [param.id = crypto.randomUUID()] - The row.message_id of the
+   * @param {string} [param.id = makeGuid()] - The row.message_id of the
    * message in the database
    * @param {number} [param.createdDate = Date.now()] - The date the message was
    * sent/stored in the database
@@ -97,18 +46,16 @@ export class ChatMessage {
    * null if its the first message of the converation
    * @param {string} [param.convId = null] - The id of the conversation the
    * message belongs to
-   * @param {?boolean} param.memoriesEnabled - Whether memories were enabled
+   * @param {?boolean} param.insightsEnabled - Whether insights were enabled
    * when the message was submitted if role == assistant
-   * @param {MemoriesFlagSource} param.memoriesFlagSource - How the
-   * memoriesEnabled flag was determined if role == assistant, one of
-   * MEMORIES_FLAG_SOURCE.GLOBAL, MEMORIES_FLAG_SOURCE.CONVERSATION,
-   * MEMORIES_FLAG_SOURCE.MESSAGE_ONCE
-   * @param {?Array<string>} param.memoriesApplied - List of strings of memories
-   * that were applied to a response if memoriesEnabled == true
+   * @param {InsightsFlagSource} param.insightsFlagSource - How the
+   * insightsEnabled flag was determined if role == assistant, one of
+   * INSIGHTS_FLAG_SOURCE.GLOBAL, INSIGHTS_FLAG_SOURCE.CONVERSATION,
+   * INSIGHTS_FLAG_SOURCE.MESSAGE_ONCE
+   * @param {?Array<string>} param.insightsApplied - List of strings of insights
+   * that were applied to a response if insightsEnabled == true
    * @param {?Array<string>} param.webSearchQueries - List of strings of web
    * search queries that were applied to a response if role == assistant
-   * @param {?Array<string>} param.followUpSuggestions - List of strings of follow up
-   * questions that were generated from a response if role == assistant
    * @param {object} [param.params = null] - Model params used if role == assistant|tool
    * @param {object} [param.usage = null] - Token usage data for the current
    * response if role == assistant
@@ -124,9 +71,6 @@ export class ChatMessage {
    * message is originally generated. If a message is edited/regenerated, the
    * edited message turns to false and the newly edited/regenerated message is
    * the only message of the revision branch set to true.
-   * @param {?boolean} param.pageHistoryDeleted - Whether pageUrl was removed due
-   * to a history removal action like Forget This Site or Delete Page
-   * @param {?object} param.toolUIData - Tool UI data to render with this message
    */
   constructor({
     ordinal,
@@ -134,22 +78,19 @@ export class ChatMessage {
     content,
     turnIndex,
     pageUrl = null,
-    id = crypto.randomUUID(),
+    id = makeGuid(),
     createdDate = Date.now(),
     parentMessageId = null,
     convId = null,
-    memoriesEnabled = null,
-    memoriesFlagSource = null,
-    memoriesApplied = [],
-    webSearchQueries = [],
-    followUpSuggestions = [],
+    insightsEnabled = null,
+    insightsFlagSource = null,
+    insightsApplied = null,
+    webSearchQueries = null,
     params = null,
     usage = null,
     modelId = null,
     revisionRootMessageId = id,
     isActiveBranch = true,
-    pageHistoryDeleted = false,
-    toolUIData = null,
   }) {
     this.id = id;
     this.createdDate = createdDate;
@@ -163,57 +104,12 @@ export class ChatMessage {
     this.usage = usage;
     this.content = content;
     this.convId = convId;
-    this.pageUrl = pageUrl;
+    this.pageUrl = pageUrl ? new URL(pageUrl) : null;
     this.turnIndex = turnIndex;
-    this.memoriesEnabled = memoriesEnabled;
-    this.memoriesFlagSource = memoriesFlagSource;
-    this.memoriesApplied = memoriesApplied;
+    this.insightsEnabled = insightsEnabled;
+    this.insightsFlagSource = insightsFlagSource;
+    this.insightsApplied = insightsApplied;
     this.webSearchQueries = webSearchQueries;
-    this.followUpSuggestions = followUpSuggestions;
-    this.pageHistoryDeleted = pageHistoryDeleted;
-    this.toolUIData = toolUIData;
-    this.tokens = {
-      search: [],
-      existing_memory: [],
-      followup: [],
-    };
-  }
-
-  /**
-   * Processes tokens from the AI response stream and updates the message.
-   * Adds all tokens to their respective arrays in the tokens object and
-   * builds the memoriesApplied array for existing_memory tokens.
-   *
-   * @param {Array<{key: string, value: string}>} tokens - Array of parsed tokens from the stream
-   */
-  addTokens(tokens) {
-    tokens.forEach(({ key, value }) => {
-      let storedValue = value;
-      if (key == TOKEN_LABELS.FOLLOWUP) {
-        storedValue = normalizeFollowUp(value);
-        if (!storedValue) {
-          return;
-        }
-      }
-
-      if (Array.isArray(this.tokens[key])) {
-        this.tokens[key].push(storedValue);
-      }
-
-      switch (key) {
-        case TOKEN_LABELS.EXISTING_MEMORY:
-          (this._pendingMemoryIds ??= []).push(value);
-          break;
-        case TOKEN_LABELS.SEARCH:
-          this.webSearchQueries.push(value);
-          break;
-        case TOKEN_LABELS.FOLLOWUP:
-          this.followUpSuggestions.push(storedValue);
-          break;
-        case TOKEN_LABELS.KIT:
-          this.kit = value;
-      }
-    });
   }
 }
 
@@ -222,9 +118,9 @@ export class ChatMessage {
  * role of assistant
  */
 export class AssistantRoleOpts {
-  memoriesEnabled;
-  memoriesFlagSource;
-  memoriesApplied;
+  insightsEnabled;
+  insightsFlagSource;
+  insightsApplied;
   webSearchQueries;
   params;
   usage;
@@ -234,32 +130,24 @@ export class AssistantRoleOpts {
    * @param {string} [modelId=null]
    * @param {object} [params=null] - The model params used
    * @param {object} [usage=null] - Token usage data for the current response
-   * @param {boolean} [memoriesEnabled=false] - Whether memories were enabled
-   * when the message was submitted
-   * @param {MemoriesFlagSource} [memoriesFlagSource=null] - How the memoriesEnabled
-   * flag was determined
-   * @param {?Array<string>} [memoriesApplied=[]] - List of strings of memories
-   * that were applied to a response
-   * @param {?Array<string>} [webSearchQueries=[]] - List of strings of web search
-   * queries that were applied to a response
-   * @param {?Array<string>} [followUpSuggestions=[]] - List of strings of follow up
-   * questions that were generated from a response
+   * @param {boolean} [insightsEnabled=false] - Whether insights were enabled when the message was submitted
+   * @param {import("moz-src:///browser/components/aiwindow/ui/modules/ChatStorage.sys.mjs").InsightsFlagSource} [insightsFlagSource=null] - How the insightsEnabled flag was determined
+   * @param {?Array<string>} [insightsApplied=[]] - List of strings of insights that were applied to a response
+   * @param {?Array<string>} [webSearchQueries=[]] - List of strings of web search queries that were applied to a response
    */
   constructor(
     modelId = null,
     params = null,
     usage = null,
-    memoriesEnabled = false,
-    memoriesFlagSource = null,
-    memoriesApplied = [],
-    webSearchQueries = [],
-    followUpSuggestions = []
+    insightsEnabled = false,
+    insightsFlagSource = null,
+    insightsApplied = [],
+    webSearchQueries = []
   ) {
-    this.memoriesEnabled = memoriesEnabled;
-    this.memoriesFlagSource = memoriesFlagSource;
-    this.memoriesApplied = memoriesApplied;
+    this.insightsEnabled = insightsEnabled;
+    this.insightsFlagSource = insightsFlagSource;
+    this.insightsApplied = insightsApplied;
     this.webSearchQueries = webSearchQueries;
-    this.followUpSuggestions = followUpSuggestions;
     this.params = params;
     this.usage = usage;
     this.modelId = modelId;
@@ -287,25 +175,14 @@ export class ToolRoleOpts {
  */
 export class UserRoleOpts {
   revisionRootMessageId;
-  memoriesEnabled;
-  memoriesFlagSource;
-  contextMentions;
 
   /**
-   * @param {string|object} [opts]
+   * @param {string} [revisionRootMessageId=undefined]
    */
-  constructor({
-    revisionRootMessageId = null,
-    memoriesEnabled = null,
-    memoriesFlagSource = null,
-    contextMentions = null,
-  } = {}) {
+  constructor(revisionRootMessageId) {
     if (revisionRootMessageId) {
       this.revisionRootMessageId = revisionRootMessageId;
     }
-    this.memoriesEnabled = memoriesEnabled;
-    this.memoriesFlagSource = memoriesFlagSource;
-    this.contextMentions = contextMentions;
   }
 }
 

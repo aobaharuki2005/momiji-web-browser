@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,12 +13,10 @@
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryService.h"
-#include "nsIDUtils.h"
 #include "nsIFileStreams.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/GeckoArgs.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
@@ -96,6 +96,7 @@
 
 #  if defined(MOZ_OXIDIZED_BREAKPAD)
 #    include "mozilla/toolkit/crashreporter/rust_minidump_writer_linux_ffi_generated.h"
+#    include <mutex>
 #    include <sys/auxv.h>
 #  endif  // defined(MOZ_OXIDIZED_BREAKPAD)
 
@@ -214,7 +215,7 @@ static const XP_CHAR dumpFileExtension[] = XP_TEXT(".dmp");
 
 static const XP_CHAR extraFileExtension[] = XP_TEXT(".extra");
 static const XP_CHAR memoryReportExtension[] = XP_TEXT(".memory.json.gz");
-constinit static std::optional<xpstring> defaultMemoryReportPath;
+MOZ_RUNINIT static std::optional<xpstring> defaultMemoryReportPath = {};
 
 static const char kCrashMainID[] = "crash.main.3\n";
 
@@ -225,13 +226,13 @@ static google_breakpad::ExceptionHandler* gExceptionHandler = nullptr;
 static mozilla::Atomic<bool> gEncounteredChildException(false);
 constinit static nsCString gServerURL;
 
-static MOZ_GLIBCXX_CONSTINIT xpstring pendingDirectory;
-static MOZ_GLIBCXX_CONSTINIT xpstring crashReporterPath;
-static MOZ_GLIBCXX_CONSTINIT xpstring crashHelperPath;
-static MOZ_GLIBCXX_CONSTINIT xpstring memoryReportPath;
+MOZ_RUNINIT static xpstring pendingDirectory;
+MOZ_RUNINIT static xpstring crashReporterPath;
+MOZ_RUNINIT static xpstring crashHelperPath;
+MOZ_RUNINIT static xpstring memoryReportPath;
 
 // Where crash events should go.
-static MOZ_GLIBCXX_CONSTINIT xpstring eventsDirectory;
+MOZ_RUNINIT static xpstring eventsDirectory;
 
 // If this is false, we don't launch the crash reporter
 static bool doReport = true;
@@ -276,7 +277,7 @@ static bool sIncludeContextHeap = false;
 static std::terminate_handler oldTerminateHandler = nullptr;
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
-MOZ_GLIBCXX_CONSTINIT static nsCString childCrashNotifyPipe;
+MOZ_RUNINIT static nsCString childCrashNotifyPipe;
 
 #elif defined(XP_LINUX)
 static int clientSocketFd = -1;
@@ -286,6 +287,8 @@ static int serverSocketFd = -1;
 static int crashHelperClientFd = -1;
 #  endif
 #endif
+
+static void OOPInit();
 
 void RecordMainThreadId() {
   gMainThreadId =
@@ -368,16 +371,21 @@ static void SetJitExceptionHandler() {
 #  endif
 #endif  // defined(XP_WIN)
 
+MOZ_RUNINIT static struct ReservedResources {
 #if defined(XP_WIN) && !defined(HAVE_64BIT_BUILD)
-constinit static struct ReservedResources {
   // This should be bigger than xul.dll plus a bit of extra space for
   // MinidumpWriteDump allocations.
   static const SIZE_T kReserveSize = 0x5000000;  // 80 MB
   void* mVirtualMemory;
-
-  constexpr ReservedResources() : mVirtualMemory(nullptr) {}
-} gReservedResources;
 #endif
+
+  ReservedResources()
+#if defined(XP_WIN) && !defined(HAVE_64BIT_BUILD)
+      : mVirtualMemory(nullptr)
+#endif
+  {
+  }
+} gReservedResources;
 
 static void ReserveResources() {
 #if defined(XP_WIN) && !defined(HAVE_64BIT_BUILD)
@@ -569,10 +577,11 @@ class PlatformWriter {
 
   FileHandle FileDesc() { return mFD; }
 
+ private:
   PlatformWriter(const PlatformWriter&) = delete;
+
   const PlatformWriter& operator=(const PlatformWriter&) = delete;
 
- private:
   void WriteChar(char aChar) {
     if (mPos == kBufferSize) {
       Flush();
@@ -1371,12 +1380,6 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
 
   WriteSynthesizedAnnotations(writer);
   writer.Write(Annotation::CrashTime, uint64_t(crashTime));
-  // Add a unique identifier for this crash event.
-  {
-    NSID_TrimBracketsASCII uuidString(nsID::GenerateUUID());
-    writer.Write(Annotation::CrashEventID, uuidString.Data(),
-                 uuidString.Length());
-  }
 
   if (inactiveStateStart) {
     writer.Write(Annotation::LastInteractionDuration,
@@ -1673,10 +1676,6 @@ static size_t BuildTempPath(CharT (&aBuf)[N]) {
 
 template <typename PathStringT>
 static bool BuildTempPath(PathStringT& aResult) {
-  if (!aResult.IsEmpty()) {
-    return true;
-  }
-
   aResult.SetLength(XP_PATH_MAX);
   size_t actualLen = BuildTempPath(aResult.BeginWriting(), XP_PATH_MAX);
   if (!actualLen) {
@@ -1928,8 +1927,16 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+  // Locate the crash helper executable
+  PathString crashHelperPath_temp;
+  rv = LocateExecutable(aXREDirectory, CRASH_HELPER_FILENAME,
+                        crashHelperPath_temp);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   crashReporterPath = crashReporterPath_temp.get();
+  crashHelperPath = crashHelperPath_temp.get();
 #else
   // On Android, we launch a service defined via MOZ_ANDROID_CRASH_HANDLER
   const char* androidCrashHandler = PR_GetEnv("MOZ_ANDROID_CRASH_HANDLER");
@@ -1938,6 +1945,10 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   } else {
     NS_WARNING("No Android crash handler set");
   }
+
+  const char* crashHelperPathEnv = PR_GetEnv("MOZ_ANDROID_PACKAGE_NAME");
+  MOZ_ASSERT(crashHelperPathEnv, "The application package name is required");
+  crashHelperPath = crashHelperPathEnv;
 #endif  // !defined(MOZ_WIDGET_ANDROID)
 
   // get temp path to use for minidump path
@@ -2049,6 +2060,8 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
 
   oldTerminateHandler = std::set_terminate(&TerminateHandler);
 
+  OOPInit();
+
   return NS_OK;
 }
 
@@ -2080,19 +2093,19 @@ nsresult SetMinidumpPath(const nsAString& aPath) {
 
   // Set the path for the in-process exception handler
 #ifdef XP_WIN
-  gExceptionHandler->set_dump_path(std::wstring(path.getW()));
+  gExceptionHandler->set_dump_path(std::wstring(path.get()));
 #elif defined(XP_LINUX)
-  gExceptionHandler->set_minidump_descriptor(MinidumpDescriptor(path.get()));
+  gExceptionHandler->set_minidump_descriptor(
+      MinidumpDescriptor(path.BeginReading()));
 #else
-  gExceptionHandler->set_dump_path(path.get());
+  gExceptionHandler->set_dump_path(path.BeginReading());
 #endif
 
   // Set the path used by the crash helper for out-of-process crash generation
   StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
-    set_crash_report_path(
-        gCrashHelperClient,
-        mozilla::BitwiseCast<const BreakpadChar*>(path.get()));
+    set_crash_report_path(gCrashHelperClient,
+                          (const BreakpadChar*)path.BeginReading());
   }
 
   return NS_OK;
@@ -2169,6 +2182,15 @@ static nsresult GetOrInit(nsIFile* aDir, const nsACString& filename,
   return rv;
 }
 
+// Init the "install time" data.  We're taking an easy way out here
+// and just setting this to "the time when this version was first run".
+static nsresult InitInstallTime(nsACString& aInstallTime) {
+  time_t t = time(nullptr);
+  aInstallTime = nsPrintfCString("%" PRIu64, static_cast<uint64_t>(t));
+
+  return NS_OK;
+}
+
 // Ensure a directory exists and create it if missing.
 static nsresult EnsureDirectoryExists(nsIFile* dir) {
   nsresult rv = dir->Create(nsIFile::DIRECTORY_TYPE, 0700);
@@ -2220,7 +2242,8 @@ static nsresult SetupCrashReporterDirectory(nsIFile* aAppDataDirectory,
 // time since last crash, which must be calculated at
 // crash time.
 // If any piece of data doesn't exist, initialize it first.
-nsresult SetupExtraData(nsIFile* aAppDataDirectory, nsIFile* aXreDirectory) {
+nsresult SetupExtraData(nsIFile* aAppDataDirectory,
+                        const nsACString& aBuildID) {
   nsCOMPtr<nsIFile> dataDirectory;
   nsresult rv =
       SetupCrashReporterDirectory(aAppDataDirectory, "Crash Reports",
@@ -2238,17 +2261,10 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory, nsIFile* aXreDirectory) {
     return rv;
   }
 
-  nsAutoString xreDirPath;
-#if defined(MOZ_WIDGET_ANDROID)
-  aXreDirectory->GetPath(xreDirPath);
-#endif  // defined(MOZ_WIDGET_ANDROID)
-
-  uint64_t install_time = get_install_time(
-      xreDirPath.IsEmpty()
-          ? nullptr
-          : mozilla::BitwiseCast<const BreakpadChar*>(xreDirPath.get()));
-  if (install_time != 0) {
-    RecordAnnotationU64(Annotation::InstallTime, install_time);
+  nsAutoCString data;
+  if (NS_SUCCEEDED(GetOrInit(dataDirectory, "InstallTime"_ns + aBuildID, data,
+                             InitInstallTime))) {
+    RecordAnnotationNSCString(Annotation::InstallTime, data);
   }
 
   // this is a little different, since we can't init it with anything,
@@ -2256,10 +2272,8 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory, nsIFile* aXreDirectory) {
   // crash report with the stored value, since we really want
   // (now - LastCrash), so we just get a value if it exists,
   // and store it in a time_t value.
-  nsAutoCString last_crash_time;
-  if (NS_SUCCEEDED(
-          GetOrInit(dataDirectory, "LastCrash"_ns, last_crash_time, nullptr))) {
-    lastCrashTime = (time_t)atol(last_crash_time.get());
+  if (NS_SUCCEEDED(GetOrInit(dataDirectory, "LastCrash"_ns, data, nullptr))) {
+    lastCrashTime = (time_t)atol(data.get());
   }
 
   // not really the best place to init this, but I have the path I need here
@@ -2286,6 +2300,8 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory, nsIFile* aXreDirectory) {
   return NS_OK;
 }
 
+static void OOPDeinit();
+
 nsresult UnsetExceptionHandler() {
   if (isSafeToDump) {
     MutexAutoLock lock(*dumpSafetyLock);
@@ -2306,10 +2322,17 @@ nsresult UnsetExceptionHandler() {
 
   gExceptionHandler = nullptr;
 
+  OOPDeinit();
+
   delete dumpSafetyLock;
   dumpSafetyLock = nullptr;
 
   std::set_terminate(oldTerminateHandler);
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
+  if (gCrashHelperClient) {
+    crash_helper_shutdown(gCrashHelperClient);
+    gCrashHelperClient = nullptr;
+  }
 
   return NS_OK;
 }
@@ -2526,14 +2549,13 @@ static void AddCommonAnnotations(AnnotationTable& aAnnotations) {
   const time_t crashTime = time(nullptr);
   nsAutoCString crashTimeStr;
   crashTimeStr.AppendInt(static_cast<uint64_t>(crashTime));
-  aAnnotations[Annotation::CrashTime] = std::move(crashTimeStr);
+  aAnnotations[Annotation::CrashTime] = crashTimeStr;
 
   if (inactiveStateStart) {
     nsAutoCString inactiveDuration;
     inactiveDuration.AppendInt(
         static_cast<uint64_t>(crashTime - inactiveStateStart));
-    aAnnotations[Annotation::LastInteractionDuration] =
-        std::move(inactiveDuration);
+    aAnnotations[Annotation::LastInteractionDuration] = inactiveDuration;
   }
 
   // ToSeconds preserves the full precision of the TimeDuration. It is assumed
@@ -2542,7 +2564,7 @@ static void AddCommonAnnotations(AnnotationTable& aAnnotations) {
       (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation()).ToSeconds();
   nsAutoCString uptimeStr;
   uptimeStr.AppendFloat(uptimeTS);
-  aAnnotations[Annotation::UptimeTS] = std::move(uptimeStr);
+  aAnnotations[Annotation::UptimeTS] = uptimeStr;
 }
 
 nsresult SetGarbageCollecting(bool collecting) {
@@ -3191,7 +3213,7 @@ static void AddSharedAnnotations(AnnotationTable& aAnnotations) {
 
       if (!value.IsEmpty() && aAnnotations[key].IsEmpty() &&
           ShouldIncludeAnnotation(key, value.get())) {
-        aAnnotations[key] = std::move(value);
+        aAnnotations[key] = value;
       }
     }
   }
@@ -3236,29 +3258,8 @@ static bool MoveToPending(nsIFile* dumpFile, nsIFile* extraFile,
   return true;
 }
 
-nsresult OOPInit(nsIFile* aXREDirectory) {
+static void OOPInit() {
   CrashHelperClient* crashHelperClient;
-
-  PathString tempPath;
-  if (!BuildTempPath(tempPath)) {
-    return NS_ERROR_FAILURE;
-  }
-
-#if !defined(MOZ_WIDGET_ANDROID)
-  // Locate the crash helper executable
-  PathString crashHelperPath_temp;
-  nsresult rv = LocateExecutable(aXREDirectory, CRASH_HELPER_FILENAME,
-                                 crashHelperPath_temp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  crashHelperPath = crashHelperPath_temp.get();
-#else
-  const char* crashHelperPathEnv = PR_GetEnv("MOZ_ANDROID_PACKAGE_NAME");
-  MOZ_ASSERT(crashHelperPathEnv, "The application package name is required");
-  crashHelperPath = crashHelperPathEnv;
-#endif  // !defined(MOZ_WIDGET_ANDROID)
 
 #if defined(XP_WIN)
   childCrashNotifyPipe = nsCString("\\\\.\\pipe\\gecko-crash-server-pipe.");
@@ -3269,9 +3270,12 @@ nsresult OOPInit(nsIFile* aXREDirectory) {
   // the appropriate type of minidump in the crash helper.
   crashHelperClient = crash_helper_launch(
       (const BreakpadChar*)crashHelperPath.c_str(),
-      (const BreakpadChar*)NS_ConvertUTF8toUTF16(childCrashNotifyPipe).getW(),
-      mozilla::BitwiseCast<const BreakpadChar*>(tempPath.get()));
+      (const BreakpadChar*)NS_ConvertUTF8toUTF16(childCrashNotifyPipe)
+          .BeginReading(),
+      (const BreakpadChar*)gExceptionHandler->dump_path().c_str());
 #elif defined(XP_LINUX)
+  const std::string dumpPath =
+      gExceptionHandler->minidump_descriptor().directory();
 #  if !defined(MOZ_WIDGET_ANDROID)
   if (!CrashGenerationServer::CreateReportChannel(&serverSocketFd,
                                                   &clientSocketFd)) {
@@ -3279,14 +3283,11 @@ nsresult OOPInit(nsIFile* aXREDirectory) {
   }
 
   crashHelperClient = crash_helper_launch(crashHelperPath.c_str(),
-                                          serverSocketFd, tempPath.get());
+                                          serverSocketFd, dumpPath.c_str());
   close(serverSocketFd);
 #  else
   crashHelperClient = crash_helper_connect(crashHelperClientFd);
-
-  if (crashHelperClient) {
-    set_crash_report_path(crashHelperClient, tempPath.get());
-  }
+  set_crash_report_path(crashHelperClient, dumpPath.c_str());
 #  endif  // !defined(MOZ_WIDGET_ANDROID)
 #elif defined(XP_MACOSX)
   childCrashNotifyPipe = nsCString("gecko-crash-server-pipe.");
@@ -3294,27 +3295,17 @@ nsresult OOPInit(nsIFile* aXREDirectory) {
 
   crashHelperClient = crash_helper_launch(
       crashHelperPath.c_str(), (BreakpadRawData)childCrashNotifyPipe.get(),
-      tempPath.get());
+      gExceptionHandler->dump_path().c_str());
 #endif
-  if (!crashHelperClient) {
-    return NS_ERROR_FAILURE;
-  }
 
   StaticMutexAutoLock lock(gCrashHelperClientMutex);
   gCrashHelperClient = crashHelperClient;
-  return NS_OK;
 }
 
-void OOPDeinit() {
+static void OOPDeinit() {
 #if defined(XP_WIN) || defined(XP_MACOSX)
   childCrashNotifyPipe = ""_ns;
 #endif  // defined(XP_WIN) || defined(XP_MACOSX)
-
-  StaticMutexAutoLock lock(gCrashHelperClientMutex);
-  if (gCrashHelperClient) {
-    crash_helper_shutdown(gCrashHelperClient);
-    gCrashHelperClient = nullptr;
-  }
 }
 
 // Parent-side API for children
@@ -3325,13 +3316,11 @@ void SetCrashHelperPipes(FileHandle breakpadFd, FileHandle crashHelperFd) {
 }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_IOS)
-using CrashPipeType = const char*;
-#else
-using CrashPipeType = mozilla::UniqueFileHandle;
-#endif
+CrashPipeType GetChildNotificationPipe() {
+  if (!GetEnabled()) {
+    return nullptr;
+  }
 
-static CrashPipeType GetChildNotificationPipe() {
 #if defined(XP_WIN) || defined(XP_MACOSX)
   return childCrashNotifyPipe.get();
 #elif defined(XP_LINUX)
@@ -3339,108 +3328,21 @@ static CrashPipeType GetChildNotificationPipe() {
 #endif
 }
 
-bool RegisterChildIPCChannel(mozilla::geckoargs::ChildProcessArgs& aArgs,
-                             GeckoChildID aID) {
+UniqueFileHandle RegisterChildIPCChannel() {
   StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
-    auto childNotificationPipe = CrashReporter::GetChildNotificationPipe();
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_IOS)
-    geckoargs::sCrashReporter.Put(childNotificationPipe, aArgs);
-#else
-    if (!childNotificationPipe) {
-      NS_WARNING("Could not create the child crash notification pipe");
-      return false;
-    }
-    geckoargs::sCrashReporter.Put(std::move(childNotificationPipe), aArgs);
-#endif  // defined(XP_MACOSX) || defined(XP_IOS) || defined(XP_WIN)
-
-    RawIPCConnector connector = {};
-    if (!register_child_ipc_channel(gCrashHelperClient, aID, &connector)) {
-      return false;
-    }
-
-    geckoargs::sCrashHelperPid.Put(crash_helper_pid(gCrashHelperClient), aArgs);
-
-#if defined(XP_DARWIN)
-    UniqueMachSendRight send_right{connector.send};
-    UniqueMachReceiveRight recv_right{connector.recv};
-
-    if (!send_right || !recv_right) {
-      return false;
-    }
-
-    geckoargs::sCrashHelperSend.Put(std::move(send_right), aArgs);
-    geckoargs::sCrashHelperRecv.Put(std::move(recv_right), aArgs);
-#else
-#  if defined(XP_WIN)
-    UniqueFileHandle endpoint{connector.handle};
-#  else
-    UniqueFileHandle endpoint{connector.socket};
-#  endif  // defined(XP_WIN)
-
-    if (!endpoint) {
-      return false;
-    }
-
-    geckoargs::sCrashHelper.Put(std::move(endpoint), aArgs);
-#endif
-    return true;
+    RawAncillaryData ipc_endpoint =
+        register_child_ipc_channel(gCrashHelperClient);
+    return UniqueFileHandle{ipc_endpoint};
   }
 
-  return false;
+  return UniqueFileHandle();
 }
 
-#if defined(XP_WIN)
-bool ChildProcessProxyRendezvous(GeckoChildID aID, DWORD aPid, HANDLE aHandle) {
-  StaticMutexAutoLock lock(gCrashHelperClientMutex);
-  if (gCrashHelperClient) {
-    return child_process_proxy_rendezvous(gCrashHelperClient, aID, aPid,
-                                          aHandle);
-  }
-
-  return false;
-}
-#endif  // defined(XP_WIN)
-
-bool SetRemoteExceptionHandler(int& aArgc, char** aArgv) {
+bool SetRemoteExceptionHandler(CrashPipeType aCrashPipe,
+                               UniqueFileHandle aCrashHelperPipe) {
   MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
-  auto crash_pipe = geckoargs::sCrashReporter.Get(aArgc, aArgv);
-
-  if (crash_pipe.isNothing()) {
-    return false;
-  }
-
-#if defined(XP_DARWIN)
-  auto send_right = geckoargs::sCrashHelperSend.Get(aArgc, aArgv);
-  auto recv_right = geckoargs::sCrashHelperRecv.Get(aArgc, aArgv);
-
-  if (send_right.isNothing() || recv_right.isNothing()) {
-    return false;
-  }
-
-  RawIPCConnector raw_connector = {
-      .send = send_right->release(),
-      .recv = recv_right->release(),
-  };
-#else
-  auto endpoint = geckoargs::sCrashHelper.Get(aArgc, aArgv);
-
-  if (endpoint.isNothing()) {
-    return false;
-  }
-
-#  if defined(XP_WIN)
-  RawIPCConnector raw_connector = {.handle = endpoint->release()};
-#  else
-  RawIPCConnector raw_connector = {.socket = endpoint->release()};
-#  endif  // defined(XP_WIN)
-#endif    // defined(XP_DARWIN)
-
-  auto pid_arg = geckoargs::sCrashHelperPid.Get(aArgc, aArgv);
-  Pid pid = static_cast<Pid>(pid_arg.valueOr(0));
-
-  crash_helper_rendezvous(raw_connector, GetGeckoChildID(),
-                          pid_arg.isSome() ? &pid : nullptr);
+  crash_helper_rendezvous(aCrashHelperPipe.release());
   RegisterRuntimeExceptionModule();
   InitializeAppNotes();
   RegisterAnnotations();
@@ -3461,7 +3363,7 @@ bool SetRemoteExceptionHandler(int& aArgc, char** aArgv) {
       nullptr,  // no callback
       nullptr,  // no callback context
       google_breakpad::ExceptionHandler::HANDLER_ALL, GetMinidumpType(),
-      (const wchar_t*)NS_ConvertUTF8toUTF16(*crash_pipe).get(),
+      (const wchar_t*)NS_ConvertUTF8toUTF16(aCrashPipe).BeginReading(),
       nullptr  // no custom info
   );
   gExceptionHandler->set_handle_debug_exceptions(true);
@@ -3478,29 +3380,25 @@ bool SetRemoteExceptionHandler(int& aArgc, char** aArgv) {
                                             nullptr,  // no callback
                                             nullptr,  // no callback context
                                             true,     // install signal handlers
-                                            crash_pipe->release());
+                                            aCrashPipe.release());
 #elif defined(XP_MACOSX)
   gExceptionHandler =
       new google_breakpad::ExceptionHandler("", ChildFilter,
                                             nullptr,  // no callback
                                             nullptr,  // no callback context
                                             true,     // install signal handlers
-                                            *crash_pipe);
+                                            aCrashPipe);
 #endif
 
   RecordMainThreadId();
 
   oldTerminateHandler = std::set_terminate(&TerminateHandler);
 
-  // If we didn't fail earlier because of a missing IPC channel then all of the
-  // above should have succeeded.
-  MOZ_ASSERT(gExceptionHandler->IsOutOfProcess(),
-             "Should have been able to set remote exception handler");
-
+  // we either do remote or nothing, no fallback to regular crash reporting
   return gExceptionHandler->IsOutOfProcess();
-}  // namespace CrashReporter
+}
 
-bool TakeMinidumpForChild(GeckoChildID aChildId, nsIFile** dump,
+bool TakeMinidumpForChild(ProcessId childPid, nsIFile** dump,
                           AnnotationTable& aAnnotations) {
   if (!GetEnabled()) {
     return false;
@@ -3511,7 +3409,7 @@ bool TakeMinidumpForChild(GeckoChildID aChildId, nsIFile** dump,
   {
     StaticMutexAutoLock lock(gCrashHelperClientMutex);
     if (gCrashHelperClient) {
-      crash_report = transfer_crash_report(gCrashHelperClient, aChildId);
+      crash_report = transfer_crash_report(gCrashHelperClient, childPid);
     }
   }
 
@@ -3552,18 +3450,18 @@ bool TakeMinidumpForChild(GeckoChildID aChildId, nsIFile** dump,
   AddSharedAnnotations(aAnnotations);
 
   if (error.Length() > 0) {
-    aAnnotations[Annotation::DumperError] = std::move(error);
+    aAnnotations[Annotation::DumperError] = error;
   }
 
   return true;
 }
 
-bool FinalizeOrphanedMinidump(GeckoChildID aChildId, GeckoProcessType aType,
+bool FinalizeOrphanedMinidump(ProcessId aChildPid, GeckoProcessType aType,
                               nsString* aDumpId) {
   AnnotationTable annotations;
   nsCOMPtr<nsIFile> minidump;
 
-  if (!TakeMinidumpForChild(aChildId, getter_AddRefs(minidump), annotations)) {
+  if (!TakeMinidumpForChild(aChildPid, getter_AddRefs(minidump), annotations)) {
     return false;
   }
 
@@ -3791,18 +3689,18 @@ void GetCurrentProcessAuxvInfo(DirectAuxvDumpInfo* aAuxvInfo) {
   aAuxvInfo->entry_address = getauxval(AT_ENTRY);
 }
 
-void RegisterChildAuxvInfo(GeckoChildID aChildId,
+void RegisterChildAuxvInfo(pid_t aChildPid,
                            const DirectAuxvDumpInfo& aAuxvInfo) {
   StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
-    register_child_auxv_info(gCrashHelperClient, aChildId, &aAuxvInfo);
+    register_child_auxv_info(gCrashHelperClient, aChildPid, &aAuxvInfo);
   }
 }
 
-void UnregisterChildAuxvInfo(GeckoChildID aChildId) {
+void UnregisterChildAuxvInfo(pid_t aChildPid) {
   StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
-    unregister_child_auxv_info(gCrashHelperClient, aChildId);
+    unregister_child_auxv_info(gCrashHelperClient, aChildPid);
   }
 }
 

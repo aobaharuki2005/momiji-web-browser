@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -201,16 +203,14 @@ void ImageTrackList::SetSelectedIndex(int32_t aIndex, bool aSelected) {
   }
 
   // 10. Run the Reset ImageDecoder algorithm on [[ImageDecoder]].
-  RefPtr<ImageDecoder> decoder = mDecoder;
-  decoder->ResetWithoutRef(
-      MediaResult(NS_ERROR_DOM_ABORT_ERR, "Reset decoder (select index)"_ns));
+  mDecoder->Reset();
 
   // 11. Queue a control message to [[ImageDecoder]]'s control message queue to
   //     update the internal selected track index with selectedIndex.
-  decoder->QueueSelectTrackMessage(mSelectedIndex);
+  mDecoder->QueueSelectTrackMessage(mSelectedIndex);
 
   // 12. Process the control message queue belonging to [[ImageDecoder]].
-  decoder->ProcessControlMessageQueue();
+  mDecoder->ProcessControlMessageQueue();
 }
 
 }  // namespace mozilla::dom

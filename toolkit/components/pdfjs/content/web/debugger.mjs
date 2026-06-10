@@ -333,10 +333,11 @@ class Stepper {
     });
 
     showBoxesCheckbox.addEventListener("change", () => {
-      this.pageContainer.classList.toggle(
-        "showDebugBoxes",
-        showBoxesCheckbox.checked
-      );
+      if (showBoxesCheckbox.checked) {
+        this.pageContainer.classList.add("showDebugBoxes");
+      } else {
+        this.pageContainer.classList.remove("showDebugBoxes");
+      }
     });
   }
 
@@ -659,10 +660,6 @@ class Stepper {
     this.goTo(idx);
   }
 
-  shouldSkip(idx) {
-    return false;
-  }
-
   goTo(idx) {
     const allRows = this.panel.getElementsByClassName("line");
     for (const row of allRows) {
@@ -676,10 +673,18 @@ class Stepper {
   }
 }
 
-const Stats = (function () {
+const Stats = (function Stats() {
   let stats = [];
   function clear(node) {
     node.textContent = ""; // Remove any `node` contents from the DOM.
+  }
+  function getStatIndex(pageNumber) {
+    for (const [i, stat] of stats.entries()) {
+      if (stat.pageNumber === pageNumber) {
+        return i;
+      }
+    }
+    return false;
   }
   return {
     // Properties/functions needed by PDFBug.
@@ -695,8 +700,8 @@ const Stats = (function () {
       if (!stat) {
         return;
       }
-      const statsIndex = stats.findIndex(s => s.pageNumber === pageNumber);
-      if (statsIndex !== -1) {
+      const statsIndex = getStatIndex(pageNumber);
+      if (statsIndex !== false) {
         stats[statsIndex].div.remove();
         stats.splice(statsIndex, 1);
       }

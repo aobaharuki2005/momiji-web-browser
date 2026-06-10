@@ -7,10 +7,6 @@
 
 "use strict";
 
-const { AppProvidedConfigEngine } = ChromeUtils.importESModule(
-  "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs"
-);
-
 ChromeUtils.defineESModuleGetters(this, {
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
 });
@@ -44,31 +40,44 @@ const CONFIG = [
 
 add_setup(async function () {
   SearchTestUtils.setRemoteSettingsConfig(CONFIG);
-  await SearchService.init();
+  await Services.search.init();
 
   info("Install a non-app provided engine.");
   await SearchTestUtils.installSearchExtension({
     name: "Test",
   });
 
-  let engines = await SearchService.getEngines();
+  let engines = await Services.search.getEngines();
   for (let engine of engines) {
-    if (engine instanceof AppProvidedConfigEngine) {
+    if (engine.isAppProvided) {
       engine.clearUsage();
     }
   }
 });
 
-add_task(async function test_app_provided_engine_record_usage() {
-  let mochiEngine = SearchService.getEngineByName("Mochi Search");
-  let exampleEngine = SearchService.getEngineByName("Example");
+function getAndUnwrapEngine(engineName) {
+  let engine = Services.search.getEngineByName(engineName);
+  // Methods we need to access aren't exposed in the IDL so we need to access
+  // the unwrapped implementation.
+  let unwrapped = engine.wrappedJSObject;
+  if (!unwrapped) {
+    throw new Error("Should have an unwrapped Javascript object.");
+  }
+  return unwrapped;
+}
 
-  Assert.ok(
-    mochiEngine instanceof AppProvidedConfigEngine,
+add_task(async function test_app_provided_engine_record_usage() {
+  let mochiEngine = getAndUnwrapEngine("Mochi Search");
+  let exampleEngine = getAndUnwrapEngine("Example");
+
+  Assert.equal(
+    mochiEngine.isAppProvided,
+    true,
     "Mochi Search should be app-provided."
   );
-  Assert.ok(
-    exampleEngine instanceof AppProvidedConfigEngine,
+  Assert.equal(
+    exampleEngine.isAppProvided,
+    true,
     "Example should be app-provided."
   );
 
@@ -110,10 +119,11 @@ add_task(async function test_app_provided_engine_record_usage() {
 });
 
 add_task(async function test_non_app_provided_engine_record_usage() {
-  let testEngine = SearchService.getEngineByName("Test");
+  let testEngine = getAndUnwrapEngine("Test");
 
-  Assert.ok(
-    !(testEngine instanceof AppProvidedConfigEngine),
+  Assert.equal(
+    testEngine.isAppProvided,
+    false,
     "Test search engine should not be app-provided."
   );
 
@@ -137,8 +147,8 @@ add_task(async function test_non_app_provided_engine_record_usage() {
 });
 
 add_task(async function test_clearUsage() {
-  let mochiEngine = SearchService.getEngineByName("Mochi Search");
-  let exampleEngine = SearchService.getEngineByName("Example");
+  let mochiEngine = getAndUnwrapEngine("Mochi Search");
+  let exampleEngine = getAndUnwrapEngine("Example");
 
   mochiEngine.markAsUsed();
   exampleEngine.markAsUsed();
@@ -175,7 +185,7 @@ add_task(async function test_clearUsage() {
 });
 
 add_task(async function test_clearUsage_unused_engine() {
-  let exampleEngine = SearchService.getEngineByName("Example");
+  let exampleEngine = getAndUnwrapEngine("Example");
 
   exampleEngine.clearUsage();
 

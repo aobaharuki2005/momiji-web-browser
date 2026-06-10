@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -567,12 +569,14 @@ void MacroAssemblerX86::boxNonDouble(Register type, Register src,
   breakpoint();
   {
     bind(&isNullOrUndefined);
-    asMasm().branchTest32(Assembler::Zero, src, src, &ok);
+    cmp32(src, src);
+    j(Assembler::Zero, &ok);
     breakpoint();
   }
   {
     bind(&isBoolean);
-    asMasm().branch32(Assembler::BelowOrEqual, src, Imm32(1), &ok);
+    cmp32(src, Imm32(1));
+    j(Assembler::BelowOrEqual, &ok);
     breakpoint();
   }
   bind(&ok);
@@ -726,7 +730,7 @@ void MacroAssemblerX86::handleFailureWithHandlerTail(
 
   // Found a wasm catch handler, restore state and jump to it.
   bind(&wasmCatch);
-  wasm::GenerateJumpToCatchHandler(asMasm(), esp, eax, ebx, ecx);
+  wasm::GenerateJumpToCatchHandler(asMasm(), esp, eax, ebx);
 }
 
 void MacroAssemblerX86::profilerEnterFrame(Register framePtr,
@@ -1989,24 +1993,20 @@ void MacroAssembler::patchNearAddressMove(CodeLocationLabel loc,
 void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
                                        Register64 boundsCheckLimit,
                                        Label* label) {
-  MOZ_ASSERT(cond == Assembler::AboveOrEqual || cond == Assembler::Below);
-  Label rejoin;
-  Label* failLabel = cond == Assembler::AboveOrEqual ? label : &rejoin;
+  Label ifFalse;
   cmp32(index.high, Imm32(0));
-  j(Assembler::NonZero, failLabel);
+  j(Assembler::NonZero, &ifFalse);
   wasmBoundsCheck32(cond, index.low, boundsCheckLimit.low, label);
-  bind(&rejoin);
+  bind(&ifFalse);
 }
 
 void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
                                        Address boundsCheckLimit, Label* label) {
-  MOZ_ASSERT(cond == Assembler::AboveOrEqual || cond == Assembler::Below);
-  Label rejoin;
-  Label* failLabel = cond == Assembler::AboveOrEqual ? label : &rejoin;
+  Label ifFalse;
   cmp32(index.high, Imm32(0));
-  j(Assembler::NonZero, failLabel);
+  j(Assembler::NonZero, &ifFalse);
   wasmBoundsCheck32(cond, index.low, boundsCheckLimit, label);
-  bind(&rejoin);
+  bind(&ifFalse);
 }
 
 void MacroAssembler::wasmMarkCallAsSlow() {

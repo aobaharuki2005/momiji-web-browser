@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -17,22 +19,30 @@ SMILInstanceTime::SMILInstanceTime(const SMILTimeValue& aTime,
                                    SMILInstanceTimeSource aSource,
                                    SMILTimeValueSpec* aCreator,
                                    SMILInterval* aBaseInterval)
-    : mCreator(aCreator), mTime(aTime) {
+    : mTime(aTime),
+      mFlags(0),
+      mVisited(false),
+      mFixedEndpointRefCnt(0),
+      mSerial(0),
+      mCreator(aCreator),
+      mBaseInterval(nullptr)  // This will get set to aBaseInterval in a call to
+                              // SetBaseInterval() at end of constructor
+{
   switch (aSource) {
-    case SMILInstanceTimeSource::None:
+    case SOURCE_NONE:
       // No special flags
       break;
 
-    case SMILInstanceTimeSource::DOM:
-      mFlags = Flags(Flag::Dynamic, Flag::FromDOM);
+    case SOURCE_DOM:
+      mFlags = kDynamic | kFromDOM;
       break;
 
-    case SMILInstanceTimeSource::Syncbase:
-      mFlags = Flag::MayUpdate;
+    case SOURCE_SYNCBASE:
+      mFlags = kMayUpdate;
       break;
 
-    case SMILInstanceTimeSource::Event:
-      mFlags = Flag::Dynamic;
+    case SOURCE_EVENT:
+      mFlags = kDynamic;
       break;
   }
 
@@ -91,7 +101,7 @@ void SMILInstanceTime::HandleDeletedInterval() {
   MOZ_ASSERT(mCreator, "Base interval is set but creator is not");
 
   mBaseInterval = nullptr;
-  mFlags -= Flag::MayUpdate;  // Can't update without a base interval
+  mFlags &= ~kMayUpdate;  // Can't update without a base interval
 
   RefPtr<SMILInstanceTime> deathGrip(this);
   mCreator->HandleDeletedInstanceTime(*this);
@@ -104,30 +114,30 @@ void SMILInstanceTime::HandleFilteredInterval() {
              "time");
 
   mBaseInterval = nullptr;
-  mFlags -= Flag::MayUpdate;  // Can't update without a base interval
+  mFlags &= ~kMayUpdate;  // Can't update without a base interval
   mCreator = nullptr;
 }
 
 bool SMILInstanceTime::ShouldPreserve() const {
-  return mFixedEndpointRefCnt > 0 || mFlags.contains(Flag::WasDynamicEndpoint);
+  return mFixedEndpointRefCnt > 0 || (mFlags & kWasDynamicEndpoint);
 }
 
 void SMILInstanceTime::UnmarkShouldPreserve() {
-  mFlags -= Flag::WasDynamicEndpoint;
+  mFlags &= ~kWasDynamicEndpoint;
 }
 
 void SMILInstanceTime::AddRefFixedEndpoint() {
   MOZ_ASSERT(mFixedEndpointRefCnt < UINT16_MAX,
              "Fixed endpoint reference count upper limit reached");
   ++mFixedEndpointRefCnt;
-  mFlags -= Flag::MayUpdate;  // Once fixed, always fixed
+  mFlags &= ~kMayUpdate;  // Once fixed, always fixed
 }
 
 void SMILInstanceTime::ReleaseFixedEndpoint() {
   MOZ_ASSERT(mFixedEndpointRefCnt > 0, "Duplicate release");
   --mFixedEndpointRefCnt;
   if (mFixedEndpointRefCnt == 0 && IsDynamic()) {
-    mFlags += Flag::WasDynamicEndpoint;
+    mFlags |= kWasDynamicEndpoint;
   }
 }
 

@@ -25,9 +25,9 @@ var keys = [
   "0.0000001"
 ];
 
-testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithTypedArrayConstructors(function(TA) {
   keys.forEach(function(key) {
-    var sample = new TA(makeCtorArg(1));
+    var sample = new TA(1);
 
     assert.sameValue(
       Reflect.has(sample, key), false,
@@ -50,6 +50,6 @@ testWithTypedArrayConstructors(function(TA, makeCtorArg) {
       "returns true with own key [" + key + "]"
     );
   });
-}, null, ["passthrough"]);
+});
 
 reportCompare(0, 0);

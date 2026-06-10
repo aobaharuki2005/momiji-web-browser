@@ -176,11 +176,6 @@ status::Code MappedPatch::ApplyUnsafe(const uint8_t* aCheckedOldImage,
     return result;
   }
 
-  if (!mappedNew.Flush()) {
-    LOG(ERROR) << "Error flushing changes to disk: " << mappedNew.error();
-    return status::kStatusFileWriteError;
-  }
-
   return status::kStatusSuccess;
   END_TRY_EXCEPT()
 }

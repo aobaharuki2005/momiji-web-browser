@@ -1,9 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef DOM_SMIL_SMILREPEATCOUNT_H_
 #define DOM_SMIL_SMILREPEATCOUNT_H_
+
+#include <math.h>
 
 #include "nsDebug.h"
 
@@ -22,8 +26,10 @@ namespace mozilla {
 //
 class SMILRepeatCount {
  public:
-  SMILRepeatCount() = default;
-  explicit SMILRepeatCount(double aCount) { SetCount(aCount); }
+  SMILRepeatCount() : mCount(kNotSet) {}
+  explicit SMILRepeatCount(double aCount) : mCount(kNotSet) {
+    SetCount(aCount);
+  }
 
   operator double() const {
     MOZ_ASSERT(IsDefinite(),
@@ -46,10 +52,10 @@ class SMILRepeatCount {
   void Unset() { mCount = kNotSet; }
 
  private:
-  static constexpr double kNotSet = -1.0;
-  static constexpr double kIndefinite = -2.0;
+  static const double kNotSet;
+  static const double kIndefinite;
 
-  double mCount = kNotSet;
+  double mCount;
 };
 
 }  // namespace mozilla

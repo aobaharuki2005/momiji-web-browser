@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,7 +10,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -55,11 +56,6 @@ TCPSocketParentBase::~TCPSocketParentBase() = default;
 
 void TCPSocketParentBase::ReleaseIPDLReference() {
   MOZ_ASSERT(mIPCOpen);
-  NS_ASSERTION(mIPCOpen,
-               "ReleaseIPDLReference called without matching AddIPDLReference");
-  if (!mIPCOpen) {
-    return;
-  }
   mIPCOpen = false;
   this->Release();
 }
@@ -82,9 +78,6 @@ NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketParent::Release(void) {
 mozilla::ipc::IPCResult TCPSocketParent::RecvOpen(
     const nsString& aHost, const uint16_t& aPort, const bool& aUseSSL,
     const bool& aUseArrayBuffers) {
-  if (!StaticPrefs::dom_tcpsocket_in_child_enabled()) {
-    return IPC_FAIL(this, "tcp socket not enabled");
-  }
   mSocket = new TCPSocket(nullptr, aHost, aPort, aUseSSL, aUseArrayBuffers);
   mSocket->SetSocketBridgeParent(this);
   NS_ENSURE_SUCCESS(mSocket->Init(nullptr), IPC_OK());

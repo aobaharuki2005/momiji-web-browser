@@ -1,19 +1,11 @@
 features:
-- name: gradients
-  files:
-  - gradient-position-*
-- name: gradient-interpolation
-  files:
-  - gradient-interpolation-*
 - name: image-orientation
   files:
   - image-orientation-*
-- name: image-rendering
+- name: gradient-interpolation
   files:
-  - image-rendering-*
-- name: object-fit
+  - "gradient-interpolation-*"
+- name: smooth
   files:
-  - object-fit-*
-- name: object-position
-  files:
-  - object-position-*
+  - image-rendering-computed.html
+  - image-rendering-valid.html

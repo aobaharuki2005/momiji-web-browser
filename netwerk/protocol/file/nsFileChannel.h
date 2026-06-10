@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsFileChannel_h_
-#define nsFileChannel_h_
+#ifndef nsFileChannel_h__
+#define nsFileChannel_h__
 
 #include "nsBaseChannel.h"
 #include "nsIChildChannel.h"
@@ -65,4 +67,4 @@ class nsFileChannel : public nsBaseChannel,
   nsCOMPtr<nsIURI> mFileURI;
 };
 
-#endif  // !nsFileChannel_h_
+#endif  // !nsFileChannel_h__

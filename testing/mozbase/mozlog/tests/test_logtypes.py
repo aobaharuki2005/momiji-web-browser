@@ -4,8 +4,8 @@
 
 import unittest
 
-from mozlog.logtypes import Any, Dict, Int, List, Tuple, Unicode
-from mozlog.logtypes import TestList as TypeTestList
+import mozunit
+from mozlog.logtypes import Any, Dict, Int, List, TestList, Tuple, Unicode
 
 
 class TestContainerTypes(unittest.TestCase):
@@ -89,7 +89,7 @@ class TestContainerTypes(unittest.TestCase):
 
 class TestDataTypes(unittest.TestCase):
     def test_test_list(self):
-        t = TypeTestList("name")
+        t = TestList("name")
         with self.assertRaises(ValueError):
             t("foo")
 
@@ -103,6 +103,4 @@ class TestDataTypes(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import mozunit
-
     mozunit.main()

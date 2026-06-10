@@ -248,7 +248,7 @@ async function testPolicy({
     addEventListener(
       "DOMWindowCreated",
       event => {
-        let win = event.target.documentGlobal;
+        let win = event.target.ownerGlobal;
         function getCsp() {
           let { cspJSON } = win.document;
           return win.wrappedJSObject.JSON.parse(cspJSON);

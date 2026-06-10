@@ -1,8 +1,12 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaTimer.h"
+
+#include <math.h>
 
 #include "mozilla/AwakeTimeStamp.h"
 #include "mozilla/DebugOnly.h"
@@ -23,7 +27,8 @@ MediaTimer<T>::MediaTimer(bool aFuzzy)
 
   // Use the SharedThreadPool to create an nsIThreadPool with a maximum of one
   // thread, which is equivalent to an nsIThread for our purposes.
-  RefPtr<SharedThreadPool> threadPool(SharedThreadPool::Get("MediaTimer", 1));
+  RefPtr<SharedThreadPool> threadPool(
+      SharedThreadPool::Get("MediaTimer"_ns, 1));
   mThread = threadPool.get();
   mTimer = NS_NewTimer(mThread);
 }

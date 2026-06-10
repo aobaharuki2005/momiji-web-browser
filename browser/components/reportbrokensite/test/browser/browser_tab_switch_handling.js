@@ -12,66 +12,70 @@ add_common_setup();
 add_task(async function testResetsProperlyOnTabSwitch() {
   ensureReportBrokenSitePreffedOn();
 
-  await withNewTab("about:blank", async (_, badTab) => {
-    await withNewTab(REPORTABLE_PAGE_URL, async (__, goodTab1) => {
-      await withNewTab(REPORTABLE_PAGE_URL2, async () => {
-        const appMenu = AppMenu();
-        const protPanel = ProtectionsPanel();
+  const badTab = await openTab("about:blank");
+  const goodTab1 = await openTab(REPORTABLE_PAGE_URL);
+  const goodTab2 = await openTab(REPORTABLE_PAGE_URL2);
 
-        let rbs = await appMenu.openReportBrokenSite();
-        rbs.isProperlyReset();
-        rbs.close();
+  const appMenu = AppMenu();
+  const protPanel = ProtectionsPanel();
 
-        gBrowser.selectedTab = goodTab1;
+  let rbs = await appMenu.openReportBrokenSite();
+  rbs.isMainViewResetToCurrentTab();
+  rbs.close();
 
-        rbs = await protPanel.openReportBrokenSite();
-        rbs.isProperlyReset();
-        rbs.close();
+  gBrowser.selectedTab = goodTab1;
 
-        gBrowser.selectedTab = badTab;
-        await appMenu.open();
-        appMenu.isReportBrokenSiteDisabled();
-        await appMenu.close();
+  rbs = await protPanel.openReportBrokenSite();
+  rbs.isMainViewResetToCurrentTab();
+  rbs.close();
 
-        gBrowser.selectedTab = goodTab1;
-        rbs = await protPanel.openReportBrokenSite();
-        rbs.isProperlyReset();
-        rbs.close();
-      });
-    });
-  });
+  gBrowser.selectedTab = badTab;
+  await appMenu.open();
+  appMenu.isReportBrokenSiteDisabled();
+  await appMenu.close();
+
+  gBrowser.selectedTab = goodTab1;
+  rbs = await protPanel.openReportBrokenSite();
+  rbs.isMainViewResetToCurrentTab();
+  rbs.close();
+
+  closeTab(badTab);
+  closeTab(goodTab1);
+  closeTab(goodTab2);
 });
 
 add_task(async function testResetsProperlyOnWindowSwitch() {
   ensureReportBrokenSitePreffedOn();
 
-  await withNewTab(REPORTABLE_PAGE_URL, async (win1, tab1) => {
-    await withNewTab(
-      { url: REPORTABLE_PAGE_URL2, window: null },
-      async (win2, tab2) => {
-        const appMenu1 = AppMenu(win1);
-        const appMenu2 = ProtectionsPanel(win2);
+  const tab1 = await openTab(REPORTABLE_PAGE_URL);
 
-        let rbs2 = await appMenu2.openReportBrokenSite();
-        rbs2.isProperlyReset();
-        rbs2.close();
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
+  const tab2 = await openTab(REPORTABLE_PAGE_URL2, win2);
 
-        // flip back to tab1's window and ensure its URL pops up instead of tab2's URL
-        await switchToWindow(win1);
-        isSelectedTab(win1, tab1); // sanity check
+  const appMenu1 = AppMenu();
+  const appMenu2 = ProtectionsPanel(win2);
 
-        let rbs1 = await appMenu1.openReportBrokenSite();
-        rbs1.isProperlyReset();
-        rbs1.close();
+  let rbs2 = await appMenu2.openReportBrokenSite();
+  rbs2.isMainViewResetToCurrentTab();
+  rbs2.close();
 
-        // likewise flip back to tab2's window and ensure its URL pops up instead of tab1's URL
-        await switchToWindow(win2);
-        isSelectedTab(win2, tab2); // sanity check
+  // flip back to tab1's window and ensure its URL pops up instead of tab2's URL
+  await switchToWindow(window);
+  isSelectedTab(window, tab1); // sanity check
 
-        rbs2 = await appMenu2.openReportBrokenSite();
-        rbs2.isProperlyReset();
-        rbs2.close();
-      }
-    );
-  });
+  let rbs1 = await appMenu1.openReportBrokenSite();
+  rbs1.isMainViewResetToCurrentTab();
+  rbs1.close();
+
+  // likewise flip back to tab2's window and ensure its URL pops up instead of tab1's URL
+  await switchToWindow(win2);
+  isSelectedTab(win2, tab2); // sanity check
+
+  rbs2 = await appMenu2.openReportBrokenSite();
+  rbs2.isMainViewResetToCurrentTab();
+  rbs2.close();
+
+  closeTab(tab1);
+  closeTab(tab2);
+  await BrowserTestUtils.closeWindow(win2);
 });

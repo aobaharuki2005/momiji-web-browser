@@ -19,7 +19,6 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
-import kotlin.test.assertIs
 
 class UtilsKtTest {
     @Test
@@ -68,7 +67,7 @@ class UtilsKtTest {
                 { "fail" },
                 { error ->
                     assertEquals("oops", error.message)
-                    assertIs<FxaNetworkException>(error)
+                    assertTrue(error is FxaNetworkException)
                     "pass!"
                 },
             ),
@@ -107,7 +106,7 @@ class UtilsKtTest {
                 { "fail" },
                 { error ->
                     assertEquals("dunno", error.message)
-                    assertIs<FxaUnspecifiedException>(error)
+                    assertTrue(error is FxaUnspecifiedException)
                     "pass!"
                 },
             ),
@@ -148,6 +147,7 @@ class UtilsKtTest {
 
         assertTrue(
             handleFxaExceptions(mock(), "test op") {
+                Unit
             },
         )
 

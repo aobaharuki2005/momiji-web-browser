@@ -4,7 +4,7 @@
  *
  *   FreeType PFR bitmap loader (body).
  *
- * Copyright (C) 2002-2026 by
+ * Copyright (C) 2002-2025 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -785,15 +785,20 @@
           goto Exit1;
 
         /* Allocate and read bitmap data */
-        error = ft_glyphslot_alloc_bitmap( &glyph->root );
-        if ( !error )
-          error = pfr_load_bitmap_bits(
+        {
+          FT_ULong  len = (FT_ULong)glyph->root.bitmap.pitch * ysize;
+
+
+          error = ft_glyphslot_alloc_bitmap( &glyph->root, len );
+          if ( !error )
+            error = pfr_load_bitmap_bits(
                       p,
                       stream->limit,
                       format,
                       FT_BOOL( face->header.color_flags &
                                PFR_FLAG_INVERT_BITMAP   ),
                       &glyph->root.bitmap );
+        }
       }
 
     Exit1:

@@ -8,9 +8,11 @@ use {
     minidump_writer::{
         app_memory::AppMemory,
         crash_context::CrashContext,
+        errors::*,
         maps_reader::{MappingEntry, MappingInfo, SystemMappingInfo},
-        minidump_writer::{errors::WriterError, MinidumpWriter, MinidumpWriterConfig},
+        minidump_writer::MinidumpWriter,
         module_reader::{BuildId, ReadFromModule},
+        ptrace_dumper::PtraceDumper,
         Pid,
     },
     nix::{errno::Errno, sys::signal::Signal},
@@ -33,8 +35,8 @@ enum Context {
 }
 
 impl Context {
-    pub fn minidump_writer(&self, pid: Pid) -> MinidumpWriterConfig {
-        let mut mw = MinidumpWriterConfig::new(pid, pid);
+    pub fn minidump_writer(&self, pid: Pid) -> MinidumpWriter {
+        let mut mw = MinidumpWriter::new(pid, pid);
         #[cfg(not(target_arch = "mips"))]
         if self == &Context::With {
             let crash_context = get_crash_context(pid);
@@ -107,8 +109,8 @@ contextual_test! {
             .tempfile()
             .unwrap();
 
-        let tmp = context.minidump_writer(pid);
-        let in_memory_buffer = tmp.write(&mut tmpfile).expect("Could not write minidump");
+        let mut tmp = context.minidump_writer(pid);
+        let in_memory_buffer = tmp.dump(&mut tmpfile).expect("Could not write minidump");
         child.kill().expect("Failed to kill process");
 
         // Reap child
@@ -177,9 +179,8 @@ contextual_test! {
 
         let mut tmp = context.minidump_writer(pid);
 
-        tmp.set_user_mapping_list(vec![entry]);
-        tmp
-            .write(&mut tmpfile)
+        tmp.set_user_mapping_list(vec![entry])
+            .dump(&mut tmpfile)
             .expect("Could not write minidump");
 
         child.kill().expect("Failed to kill process");
@@ -266,9 +267,8 @@ contextual_test! {
 
         let mut tmp = context.minidump_writer(pid);
 
-        tmp.set_app_memory(vec![app_memory]);
-        tmp
-            .write(&mut tmpfile)
+        tmp.set_app_memory(vec![app_memory])
+            .dump(&mut tmpfile)
             .expect("Could not write minidump");
 
         child.kill().expect("Failed to kill process");
@@ -302,9 +302,7 @@ contextual_test! {
 contextual_test! {
     fn skip_if_requested(context: Context) {
         let expected_errors = vec![
-            json!({
-                "InitErrors": ["PrincipalMappingNotReferenced"]
-            }),
+            json!("PrincipalMappingNotReferenced"),
         ];
 
         let num_of_threads = 1;
@@ -327,11 +325,10 @@ contextual_test! {
         {
             pr_mapping_addr = 0x010203040;
         };
-        tmp
-            .skip_stacks_if_mapping_unreferenced()
-            .set_principal_mapping_address(pr_mapping_addr);
         let res = tmp
-            .write(&mut tmpfile);
+            .skip_stacks_if_mapping_unreferenced()
+            .set_principal_mapping_address(pr_mapping_addr)
+            .dump(&mut tmpfile);
         child.kill().expect("Failed to kill process");
 
         // Reap child
@@ -364,9 +361,8 @@ contextual_test! {
             .unwrap();
 
         let mut tmp = context.minidump_writer(pid);
-        tmp.sanitize_stack();
-        tmp
-            .write(&mut tmpfile)
+        tmp.sanitize_stack()
+            .dump(&mut tmpfile)
             .expect("Faild to dump minidump");
         child.kill().expect("Failed to kill process");
 
@@ -435,10 +431,9 @@ contextual_test! {
         };
 
         let mut tmp = context.minidump_writer(pid);
-        tmp.set_app_memory(vec![app_memory]);
 
         // This should fail, because during the dump an error is detected (try_from fails)
-        match tmp.write(&mut tmpfile) {
+        match tmp.set_app_memory(vec![app_memory]).dump(&mut tmpfile) {
             Err(WriterError::SectionAppMemoryError(_)) => (),
             _ => panic!("Wrong kind of error returned"),
         }
@@ -472,8 +467,8 @@ contextual_test! {
             .tempfile()
             .unwrap();
 
-        let tmp = context.minidump_writer(pid);
-        let _ = tmp.write(&mut tmpfile).expect("Could not write minidump");
+        let mut tmp = context.minidump_writer(pid);
+        let _ = tmp.dump(&mut tmpfile).expect("Could not write minidump");
         child.kill().expect("Failed to kill process");
 
         // Reap child
@@ -500,7 +495,7 @@ contextual_test! {
         let mut expected = HashSet::new();
         expected.insert("test".to_string());
         for id in 1..num_of_threads {
-            expected.insert(format!("thread_{id}"));
+            expected.insert(format!("thread_{}", id));
         }
         assert_eq!(expected, names);
     }
@@ -517,8 +512,8 @@ contextual_test! {
             .tempfile()
             .unwrap();
 
-        let tmp = context.minidump_writer(pid);
-        let _ = tmp.write(&mut tmpfile).expect("Could not write minidump");
+        let mut tmp = context.minidump_writer(pid);
+        let _ = tmp.dump(&mut tmpfile).expect("Could not write minidump");
         child.kill().expect("Failed to kill process");
 
         // Reap child
@@ -572,8 +567,8 @@ fn minidump_size_limit() {
             .tempfile()
             .unwrap();
 
-        MinidumpWriterConfig::new(pid, pid)
-            .write(&mut tmpfile)
+        MinidumpWriter::new(pid, pid)
+            .dump(&mut tmpfile)
             .expect("Could not write minidump");
 
         let meta = std::fs::metadata(tmpfile.path()).expect("Couldn't get metadata for tempfile");
@@ -604,9 +599,10 @@ fn minidump_size_limit() {
             .tempfile()
             .unwrap();
 
-        let mut tmp = MinidumpWriterConfig::new(pid, pid);
-        tmp.set_minidump_size_limit(minidump_size_limit);
-        tmp.write(&mut tmpfile).expect("Could not write minidump");
+        MinidumpWriter::new(pid, pid)
+            .set_minidump_size_limit(minidump_size_limit)
+            .dump(&mut tmpfile)
+            .expect("Could not write minidump");
 
         let meta = std::fs::metadata(tmpfile.path()).expect("Couldn't get metadata for tempfile");
 
@@ -650,9 +646,10 @@ fn minidump_size_limit() {
             .tempfile()
             .unwrap();
 
-        let mut tmp = MinidumpWriterConfig::new(pid, pid);
-        tmp.set_minidump_size_limit(minidump_size_limit);
-        tmp.write(&mut tmpfile).expect("Could not write minidump");
+        MinidumpWriter::new(pid, pid)
+            .set_minidump_size_limit(minidump_size_limit)
+            .dump(&mut tmpfile)
+            .expect("Could not write minidump");
 
         let meta = std::fs::metadata(tmpfile.path()).expect("Couldn't get metadata for tempfile");
         assert!(meta.len() > 0);
@@ -736,8 +733,8 @@ fn with_deleted_binary() {
         .tempfile()
         .unwrap();
 
-    MinidumpWriterConfig::new(pid, pid)
-        .write(&mut tmpfile)
+    MinidumpWriter::new(pid, pid)
+        .dump(&mut tmpfile)
         .expect("Could not write minidump");
 
     child.kill().expect("Failed to kill process");
@@ -797,8 +794,8 @@ fn memory_info_list_stream() {
         .unwrap();
 
     // Write a minidump
-    MinidumpWriterConfig::new(pid, pid)
-        .write(&mut tmpfile)
+    MinidumpWriter::new(pid, pid)
+        .dump(&mut tmpfile)
         .expect("cound not write minidump");
     child.kill().expect("Failed to kill process");
     child.wait().expect("Failed to wait on killed process");

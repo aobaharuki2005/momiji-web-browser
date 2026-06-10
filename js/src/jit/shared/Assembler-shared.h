@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -10,7 +12,6 @@
 #endif
 #include "mozilla/DebugOnly.h"
 
-#include <bit>
 #include <limits.h>
 #include <utility>  // std::pair
 
@@ -19,7 +20,6 @@
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitCode.h"
 #include "jit/JitContext.h"
-#include "jit/JitSpewer.h"
 #include "jit/Label.h"
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
@@ -255,7 +255,7 @@ class ImmGCPtr {
   explicit ImmGCPtr(const JSOffThreadAtom* atom) : ImmGCPtr(atom->raw()) {}
 
  private:
-  ImmGCPtr() : value(nullptr) {}
+  ImmGCPtr() : value(0) {}
 };
 
 // Pointer to trampoline code. Trampoline code is kept alive until the runtime
@@ -568,7 +568,7 @@ class MemoryAccessDesc {
         widenOp_(wasm::SimdOp::Limit),
         loadOp_(Plain),
         hugeMemory_(hugeMemory) {
-    MOZ_ASSERT(std::has_single_bit(align));
+    MOZ_ASSERT(mozilla::IsPowerOfTwo(align));
   }
 
   uint32_t memoryIndex() const {
@@ -712,12 +712,6 @@ class AssemblerShared {
   void append(wasm::Trap trap, wasm::TrapMachineInsn insn, uint32_t pcOffset,
               const wasm::TrapSiteDesc& desc) {
     enoughMemory_ &= trapSites_.append(trap, insn, pcOffset, desc);
-#ifdef JS_JITSPEW
-    if (JitSpewEnabled(JitSpew_Codegen)) {
-      JitSpew(jit::JitSpew_Codegen, "%06x  # <-- @ w::TrapSiteDesc, kind = %s",
-              pcOffset, NameOfTrap(trap));
-    }
-#endif
   }
   void append(const wasm::MemoryAccessDesc& access, wasm::TrapMachineInsn insn,
               FaultingCodeOffset pcOffset) {
@@ -786,7 +780,7 @@ class MOZ_RAII AutoCreatedBy {
   inline AutoCreatedBy(AssemblerShared& ash, const char* who) {}
   // A user-defined constructor is necessary to stop some compilers from
   // complaining about unused variables.
-  inline ~AutoCreatedBy() = default;
+  inline ~AutoCreatedBy() {}
 };
 #endif
 

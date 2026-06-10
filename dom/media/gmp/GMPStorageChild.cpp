@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -33,117 +34,57 @@ GMPRecordImpl::GMPRecordImpl(GMPStorageChild* aOwner, const nsCString& aName,
                              GMPRecordClient* aClient)
     : mName(aName), mClient(aClient), mOwner(aOwner) {}
 
-RefPtr<GMPStorageChild> GMPRecordImpl::GetOwner() {
-  RecursiveMutexAutoLock lock(mMutex);
-  return RefPtr{mOwner};
-}
-
-GMPErr GMPRecordImpl::Open() {
-  // The IPDL actor might be destroyed on another thread, releasing the owner,
-  // so take a strong reference to ensure it stays alive long enough.
-  if (auto owner = GetOwner()) {
-    return owner->Open(this);
-  }
-  return GMPClosedErr;
-}
+GMPErr GMPRecordImpl::Open() { return mOwner->Open(this); }
 
 void GMPRecordImpl::OpenComplete(GMPErr aStatus) {
-  // While we know mClient is not yet destroyed if the pointer is still valid
-  // while holding the lock, be careful to note that it may be destroyed by the
-  // plugin after the callback returns.
-  RecursiveMutexAutoLock lock(mMutex);
-  if (mClient) {
-    mClient->OpenComplete(aStatus);
-  }
+  mClient->OpenComplete(aStatus);
 }
 
-GMPErr GMPRecordImpl::Read() {
-  // The IPDL actor might be destroyed on another thread, releasing the owner,
-  // so take a strong reference to ensure it stays alive long enough.
-  if (auto owner = GetOwner()) {
-    return owner->Read(this);
-  }
-  return GMPClosedErr;
-}
+GMPErr GMPRecordImpl::Read() { return mOwner->Read(this); }
 
 void GMPRecordImpl::ReadComplete(GMPErr aStatus, const uint8_t* aBytes,
                                  uint32_t aLength) {
-  // While we know mClient is not yet destroyed if the pointer is still valid
-  // while holding the lock, be careful to note that it may be destroyed by the
-  // plugin after the callback returns.
-  RecursiveMutexAutoLock lock(mMutex);
-  if (mClient) {
-    mClient->ReadComplete(aStatus, aBytes, aLength);
-  }
+  mClient->ReadComplete(aStatus, aBytes, aLength);
 }
 
 GMPErr GMPRecordImpl::Write(const uint8_t* aData, uint32_t aDataSize) {
-  // The IPDL actor might be destroyed on another thread, releasing the owner,
-  // so take a strong reference to ensure it stays alive long enough.
-  if (auto owner = GetOwner()) {
-    return owner->Write(this, aData, aDataSize);
-  }
-  return GMPClosedErr;
+  return mOwner->Write(this, aData, aDataSize);
 }
 
 void GMPRecordImpl::WriteComplete(GMPErr aStatus) {
-  // While we know mClient is not yet destroyed if the pointer is still valid
-  // while holding the lock, be careful to note that it may be destroyed by the
-  // plugin after the callback returns.
-  RecursiveMutexAutoLock lock(mMutex);
-  if (mClient) {
-    mClient->WriteComplete(aStatus);
-  }
+  mClient->WriteComplete(aStatus);
 }
 
 GMPErr GMPRecordImpl::Close() {
   RefPtr<GMPRecordImpl> kungfuDeathGrip(this);
   // Delete our self reference.
   Release();
-
-  // We need to only clear mClient within the lock to avoid destroying it while
-  // a callback is in progress. Since we have no control over the plugins on
-  // when they choose to call Close, we must support this being re-entrant (e.g.
-  // call Close from the OpenComplete, ReadComplete or WriteComplete callbacks).
-  RefPtr<GMPStorageChild> owner;
-  {
-    RecursiveMutexAutoLock lock(mMutex);
-    owner = RefPtr{mOwner};
-    mClient = nullptr;
-  }
-
-  if (owner) {
-    owner->Close(this->Name());
-  }
+  mOwner->Close(this->Name());
   return GMPNoErr;
 }
 
-void GMPRecordImpl::DestroyOwner() {
-  RecursiveMutexAutoLock lock(mMutex);
-  mOwner = nullptr;
-}
-
-GMPStorageChild::GMPStorageChild(GMPChild* aPlugin) : mPlugin(aPlugin) {
+GMPStorageChild::GMPStorageChild(GMPChild* aPlugin)
+    : mMonitor("GMPStorageChild"), mPlugin(aPlugin), mShutdown(false) {
   MOZ_ASSERT(ON_GMP_THREAD());
 }
 
 GMPErr GMPStorageChild::CreateRecord(const nsCString& aRecordName,
                                      GMPRecord** aOutRecord,
                                      GMPRecordClient* aClient) {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
 
-  if (NS_WARN_IF(mShutdown)) {
+  if (mShutdown) {
+    NS_WARNING("GMPStorage used after it's been shutdown!");
     return GMPClosedErr;
   }
 
-  MOZ_ASSERT(!aRecordName.IsEmpty());
-  MOZ_ASSERT(aOutRecord);
+  MOZ_ASSERT(aRecordName.Length() && aOutRecord);
 
   if (HasRecord(aRecordName)) {
     return GMPRecordInUse;
   }
 
-  auto record = MakeRefPtr<GMPRecordImpl>(this, aRecordName, aClient);
+  RefPtr<GMPRecordImpl> record(new GMPRecordImpl(this, aRecordName, aClient));
   mRecords.InsertOrUpdate(aRecordName, RefPtr{record});  // Addrefs
 
   // The GMPRecord holds a self reference until the GMP calls Close() on
@@ -155,24 +96,23 @@ GMPErr GMPStorageChild::CreateRecord(const nsCString& aRecordName,
 }
 
 bool GMPStorageChild::HasRecord(const nsCString& aRecordName) {
+  mMonitor.AssertCurrentThreadOwns();
   return mRecords.Contains(aRecordName);
 }
 
 already_AddRefed<GMPRecordImpl> GMPStorageChild::GetRecord(
     const nsCString& aRecordName) {
-  MutexAutoLock lock(mMutex);
-  if (NS_WARN_IF(mShutdown)) {
-    return nullptr;
-  }
+  MonitorAutoLock lock(mMonitor);
   RefPtr<GMPRecordImpl> record;
   mRecords.Get(aRecordName, getter_AddRefs(record));
   return record.forget();
 }
 
 GMPErr GMPStorageChild::Open(GMPRecordImpl* aRecord) {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
 
-  if (NS_WARN_IF(mShutdown)) {
+  if (mShutdown) {
+    NS_WARNING("GMPStorage used after it's been shutdown!");
     return GMPClosedErr;
   }
 
@@ -187,9 +127,10 @@ GMPErr GMPStorageChild::Open(GMPRecordImpl* aRecord) {
 }
 
 GMPErr GMPStorageChild::Read(GMPRecordImpl* aRecord) {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
 
-  if (NS_WARN_IF(mShutdown)) {
+  if (mShutdown) {
+    NS_WARNING("GMPStorage used after it's been shutdown!");
     return GMPClosedErr;
   }
 
@@ -209,9 +150,10 @@ GMPErr GMPStorageChild::Write(GMPRecordImpl* aRecord, const uint8_t* aData,
     return GMPQuotaExceededErr;
   }
 
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
 
-  if (NS_WARN_IF(mShutdown)) {
+  if (mShutdown) {
+    NS_WARNING("GMPStorage used after it's been shutdown!");
     return GMPClosedErr;
   }
 
@@ -226,12 +168,14 @@ GMPErr GMPStorageChild::Write(GMPRecordImpl* aRecord, const uint8_t* aData,
 }
 
 GMPErr GMPStorageChild::Close(const nsCString& aRecordName) {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
 
-  if (!mRecords.Remove(aRecordName)) {
+  if (!HasRecord(aRecordName)) {
     // Already closed.
     return GMPClosedErr;
   }
+
+  mRecords.Remove(aRecordName);
 
   if (!mShutdown) {
     CALL_ON_GMP_THREAD(SendClose, aRecordName);
@@ -242,26 +186,46 @@ GMPErr GMPStorageChild::Close(const nsCString& aRecordName) {
 
 mozilla::ipc::IPCResult GMPStorageChild::RecvOpenComplete(
     const nsCString& aRecordName, const GMPErr& aStatus) {
-  if (RefPtr<GMPRecordImpl> record = GetRecord(aRecordName)) {
-    record->OpenComplete(aStatus);
+  // We don't need a lock to read |mShutdown| since it is only changed in
+  // the GMP thread.
+  if (mShutdown) {
+    return IPC_OK();
   }
+  RefPtr<GMPRecordImpl> record = GetRecord(aRecordName);
+  if (!record) {
+    // Not fatal.
+    return IPC_OK();
+  }
+  record->OpenComplete(aStatus);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult GMPStorageChild::RecvReadComplete(
     const nsCString& aRecordName, const GMPErr& aStatus,
     nsTArray<uint8_t>&& aBytes) {
-  if (RefPtr<GMPRecordImpl> record = GetRecord(aRecordName)) {
-    record->ReadComplete(aStatus, aBytes.Elements(), aBytes.Length());
+  if (mShutdown) {
+    return IPC_OK();
   }
+  RefPtr<GMPRecordImpl> record = GetRecord(aRecordName);
+  if (!record) {
+    // Not fatal.
+    return IPC_OK();
+  }
+  record->ReadComplete(aStatus, aBytes.Elements(), aBytes.Length());
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult GMPStorageChild::RecvWriteComplete(
     const nsCString& aRecordName, const GMPErr& aStatus) {
-  if (RefPtr<GMPRecordImpl> record = GetRecord(aRecordName)) {
-    record->WriteComplete(aStatus);
+  if (mShutdown) {
+    return IPC_OK();
   }
+  RefPtr<GMPRecordImpl> record = GetRecord(aRecordName);
+  if (!record) {
+    // Not fatal.
+    return IPC_OK();
+  }
+  record->WriteComplete(aStatus);
   return IPC_OK();
 }
 
@@ -269,24 +233,9 @@ mozilla::ipc::IPCResult GMPStorageChild::RecvShutdown() {
   // Block any new storage requests, and thus any messages back to the
   // parent. We don't delete any objects here, as that may invalidate
   // GMPRecord pointers held by the GMP.
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
   mShutdown = true;
   return IPC_OK();
-}
-
-void GMPStorageChild::ActorDestroy(ActorDestroyReason aWhy) {
-  nsRefPtrHashtable<nsCStringHashKey, GMPRecordImpl> records;
-  {
-    MutexAutoLock lock(mMutex);
-    mShutdown = true;
-    records = std::move(mRecords);
-  }
-
-  // We know that any other thread that may be using the owner has a strong
-  // reference to it, so it is safe to clear our own reference here.
-  for (auto& record : records) {
-    record.GetData()->DestroyOwner();
-  }
 }
 
 }  // namespace mozilla::gmp

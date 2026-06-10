@@ -1,7 +1,7 @@
 // Async return type handlers
 
 internal const val UNIFFI_RUST_FUTURE_POLL_READY = 0.toByte()
-internal const val UNIFFI_RUST_FUTURE_POLL_WAKE = 1.toByte()
+internal const val UNIFFI_RUST_FUTURE_POLL_MAYBE_READY = 1.toByte()
 
 internal val uniffiContinuationHandleMap = UniffiHandleMap<CancellableContinuation<Byte>>()
 
@@ -44,25 +44,16 @@ internal inline fun<T> uniffiTraitInterfaceCallAsync(
     crossinline makeCall: suspend () -> T,
     crossinline handleSuccess: (T) -> Unit,
     crossinline handleError: (UniffiRustCallStatus.ByValue) -> Unit,
-    uniffiOutDroppedCallback: UniffiForeignFutureDroppedCallbackStruct,
-) {
+): UniffiForeignFuture {
     // Using `GlobalScope` is labeled as a "delicate API" and generally discouraged in Kotlin programs, since it breaks structured concurrency.
     // However, our parent task is a Rust future, so we're going to need to break structure concurrency in any case.
     //
     // Uniffi does its best to support structured concurrency across the FFI.
-    // If the Rust future is dropped, `uniffiForeignFutureDroppedCallbackImpl` is called, which will cancel the Kotlin coroutine if it's still running.
+    // If the Rust future is dropped, `uniffiForeignFutureFreeImpl` is called, which will cancel the Kotlin coroutine if it's still running.
     @OptIn(DelicateCoroutinesApi::class)
-    val job = GlobalScope.launch coroutineBlock@ {
-        // Note: it's important we call either `handleSuccess` or `handleError` exactly once.  Each
-        // call consumes an Arc reference, which means there should be no possibility of a double
-        // call.  The following code is structured so that will will never call both `handleSuccess`
-        // and `handleError`, even in the face of weird exceptions.
-        //
-        // In extreme circumstances we may not call either, for example if we fail to make the JNA
-        // call to `handleSuccess`.  This means we will leak the Arc reference, which is better than
-        // double-freeing it.
-        val callResult = try {
-            makeCall()
+    val job = GlobalScope.launch {
+        try {
+            handleSuccess(makeCall())
         } catch(e: kotlin.Exception) {
             handleError(
                 UniffiRustCallStatus.create(
@@ -70,12 +61,10 @@ internal inline fun<T> uniffiTraitInterfaceCallAsync(
                     {{ Type::String.borrow()|lower_fn }}(e.toString()),
                 )
             )
-            return@coroutineBlock
         }
-        handleSuccess(callResult)
     }
     val handle = uniffiForeignFutureHandleMap.insert(job)
-    uniffiOutDroppedCallback.uniffiSetValue(UniffiForeignFutureDroppedCallbackStruct(handle, uniffiForeignFutureDroppedCallbackImpl))
+    return UniffiForeignFuture(handle, uniffiForeignFutureFreeImpl)
 }
 
 internal inline fun<T, reified E: Throwable> uniffiTraitInterfaceCallAsyncWithError(
@@ -83,15 +72,12 @@ internal inline fun<T, reified E: Throwable> uniffiTraitInterfaceCallAsyncWithEr
     crossinline handleSuccess: (T) -> Unit,
     crossinline handleError: (UniffiRustCallStatus.ByValue) -> Unit,
     crossinline lowerError: (E) -> RustBuffer.ByValue,
-    uniffiOutDroppedCallback: UniffiForeignFutureDroppedCallbackStruct,
-) {
+): UniffiForeignFuture {
     // See uniffiTraitInterfaceCallAsync for details on `DelicateCoroutinesApi`
     @OptIn(DelicateCoroutinesApi::class)
-    val job = GlobalScope.launch coroutineBlock@ {
-        // See the note in uniffiTraitInterfaceCallAsync for details on `handleSuccess` and
-        // `handleError`.
-        val callResult = try {
-            makeCall()
+    val job = GlobalScope.launch {
+        try {
+            handleSuccess(makeCall())
         } catch(e: kotlin.Exception) {
             if (e is E) {
                 handleError(
@@ -108,17 +94,15 @@ internal inline fun<T, reified E: Throwable> uniffiTraitInterfaceCallAsyncWithEr
                     )
                 )
             }
-            return@coroutineBlock
         }
-        handleSuccess(callResult)
     }
     val handle = uniffiForeignFutureHandleMap.insert(job)
-    uniffiOutDroppedCallback.uniffiSetValue(UniffiForeignFutureDroppedCallbackStruct(handle, uniffiForeignFutureDroppedCallbackImpl))
+    return UniffiForeignFuture(handle, uniffiForeignFutureFreeImpl)
 }
 
 internal val uniffiForeignFutureHandleMap = UniffiHandleMap<Job>()
 
-internal object uniffiForeignFutureDroppedCallbackImpl: UniffiForeignFutureDroppedCallback {
+internal object uniffiForeignFutureFreeImpl: UniffiForeignFutureFree {
     override fun callback(handle: Long) {
         val job = uniffiForeignFutureHandleMap.remove(handle)
         if (!job.isCompleted) {

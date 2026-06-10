@@ -6,29 +6,19 @@
 // This file may not be copied, modified, or distributed except according to
 // those terms.
 
-// See comment in `include.rs` for why we disable the prelude.
-#![no_implicit_prelude]
-#![allow(warnings)]
+use zerocopy::{AsBytes, FromBytes, FromZeroes, KnownLayout, Unaligned};
 
-include!("include.rs");
+// These derives do not result in E0446 as of Rust 1.59.0, because of
+// https://github.com/rust-lang/rust/pull/90586.
+//
+// This change eliminates one of the major downsides of emitting `where`
+// bounds for field types (i.e., the emission of E0446 for private field
+// types).
 
-// FIXME(#847): Make this test succeed on earlier Rust versions.
-#[::rustversion::stable(1.59)]
-mod test {
-    use super::*;
+#[derive(KnownLayout, AsBytes, FromZeroes, FromBytes, Unaligned)]
+#[repr(C)]
+pub struct Public(Private);
 
-    // These derives do not result in E0446 as of Rust 1.59.0, because of
-    // https://github.com/rust-lang/rust/pull/90586.
-    //
-    // This change eliminates one of the major downsides of emitting `where`
-    // bounds for field types (i.e., the emission of E0446 for private field
-    // types).
-
-    #[derive(imp::KnownLayout, imp::IntoBytes, imp::FromZeros, imp::FromBytes, imp::Unaligned)]
-    #[repr(C)]
-    pub struct Public(Private);
-
-    #[derive(imp::KnownLayout, imp::IntoBytes, imp::FromZeros, imp::FromBytes, imp::Unaligned)]
-    #[repr(C)]
-    struct Private(());
-}
+#[derive(KnownLayout, AsBytes, FromZeroes, FromBytes, Unaligned)]
+#[repr(C)]
+struct Private(());

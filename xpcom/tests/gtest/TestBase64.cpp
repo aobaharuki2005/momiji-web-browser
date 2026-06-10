@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -183,7 +184,7 @@ bool FakeInputStream::NextTest() {
 }
 
 void FakeInputStream::CheckTest(nsACString& aResult) {
-  ASSERT_STREQ(PromiseFlatCString(aResult).get(), mTest->mResult);
+  ASSERT_STREQ(aResult.BeginReading(), mTest->mResult);
 }
 
 void FakeInputStream::CheckTest(nsAString& aResult) {
@@ -198,7 +199,7 @@ TEST(Base64, StreamEncoder)
       do_CreateInstance("@mozilla.org/scriptablebase64encoder;1");
   ASSERT_TRUE(encoder);
 
-  RefPtr stream = mozilla::MakeRefPtr<FakeInputStream>();
+  RefPtr<FakeInputStream> stream = new FakeInputStream();
   do {
     nsString wideString;
     nsCString string;

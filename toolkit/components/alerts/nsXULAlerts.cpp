@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode:nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -158,8 +159,8 @@ nsresult nsXULAlerts::ShowAlertImpl(nsIAlertNotification* aAlert,
   rv = aAlert->GetName(name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<imgIContainer> image;
-  rv = aAlert->GetImage(getter_AddRefs(image));
+  nsAutoString imageUrl;
+  rv = aAlert->GetImageURL(imageUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString title;
@@ -194,11 +195,16 @@ nsresult nsXULAlerts::ShowAlertImpl(nsIAlertNotification* aAlert,
 
   nsCOMPtr<nsIMutableArray> argsArray = nsArray::Create();
 
-  rv = argsArray->AppendElement(image);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // create scriptable versions of our strings that we can store in our
   // nsIMutableArray....
+  nsCOMPtr<nsISupportsString> scriptableImageUrl(
+      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  NS_ENSURE_TRUE(scriptableImageUrl, NS_ERROR_FAILURE);
+
+  scriptableImageUrl->SetData(imageUrl);
+  rv = argsArray->AppendElement(scriptableImageUrl);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsISupportsString> scriptableAlertTitle(
       do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableAlertTitle, NS_ERROR_FAILURE);
@@ -367,10 +373,5 @@ NS_IMETHODIMP nsXULAlerts::PbmTeardown() {
   // Usually XUL alerts close after a few seconds without being listed anywhere,
   // but those with requireInteraction: true would still need an explicit
   // closure.
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsXULAlerts::IsFullscreen(bool* aRetVal) {
-  *aRetVal = false;
   return NS_ERROR_NOT_IMPLEMENTED;
 }

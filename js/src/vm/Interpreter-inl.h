@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -9,17 +11,17 @@
 
 #include "mozilla/CheckedArithmetic.h"
 
-#include "builtin/Math.h"
-#include "builtin/Number.h"
+#include "jslibmath.h"
+#include "jsmath.h"
+#include "jsnum.h"
+
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "util/PortableMath.h"
 #include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"  // JSDVG_SEARCH_STACK
 #include "vm/JSAtomUtils.h"   // AtomizeString
 #include "vm/Realm.h"
 #include "vm/StaticStrings.h"
 #include "vm/ThrowMsgKind.h"
-#include "vm/Watchtower.h"
 
 #include "vm/GlobalObject-inl.h"
 #include "vm/JSAtomUtils-inl.h"  // PrimitiveValueToId, TypeName
@@ -254,25 +256,14 @@ inline void InitGlobalLexicalOperation(
                 lexicalEnv == &cx->global()->lexicalEnvironment());
   MOZ_ASSERT(JSOp(*pc) == JSOp::InitGLexical);
 
-  PropertyName* name = script->getName(pc);
-  mozilla::Maybe<PropertyInfo> prop = lexicalEnv->lookup(cx, name);
+  mozilla::Maybe<PropertyInfo> prop =
+      lexicalEnv->lookup(cx, script->getName(pc));
   MOZ_ASSERT(prop.isSome());
+  MOZ_ASSERT(IsUninitializedLexical(lexicalEnv->getSlot(prop->slot())));
 
-  // We usually don't have to call Watchtower::watchPropertyValueChange because
-  // this is an initialization instead of a mutation, and we don't optimize
-  // loads of uninitialized lexicals in the JIT.
-  //
-  // The Debugger API allows initializing lexical bindings using
-  // forceLexicalInitializationByName before we get here, so we use a slow path
-  // if that feature has been used.
-  if (MOZ_UNLIKELY(cx->hasDebuggerForcedLexicalInit)) {
-    if (!IsUninitializedLexical(lexicalEnv->getSlot(prop->slot()))) {
-      Watchtower::watchPropertyValueChange<AllowGC::NoGC>(
-          cx, lexicalEnv, NameToId(name), value, *prop);
-    }
-  } else {
-    MOZ_ASSERT(IsUninitializedLexical(lexicalEnv->getSlot(prop->slot())));
-  }
+  // Note: we don't have to call Watchtower::watchPropertyValueChange because
+  // this is an initialization instead of a mutation. We don't optimize loads of
+  // uninitialized lexicals in the JIT.
   lexicalEnv->setSlot(prop->slot(), value);
 }
 

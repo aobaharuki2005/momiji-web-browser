@@ -12,24 +12,23 @@ import mozpack.path as mozpath
 
 from mozbuild.util import hash_file
 
-# Regular expression to strip ANSI escape sequences from a string. This is
-# needed to properly analyze compiler output, which may be colorized.
-RE_STRIP_COLORS = re.compile(r"\x1b\[[\d;]*[mK]")
+# Regular expression to strip ANSI color sequences from a string. This is
+# needed to properly analyze Clang compiler output, which may be colorized.
+# It assumes ANSI escape sequences.
+RE_STRIP_COLORS = re.compile(r"\x1b\[[\d;]+m")
 
 # This captures Clang diagnostics with the standard formatting.
-# The file pattern handles Windows paths with drive letters (e.g.: D:/path/file.cpp)
 RE_CLANG_WARNING_AND_ERROR = re.compile(
     r"""
-    (?P<file>(?:[A-Za-z]:)?[^:]+)
+    (?P<file>[^:]+)
     :
     (?P<line>\d+)
     :
     (?P<column>\d+)
     :
-    \s(?:fatal\s+)?(?P<type>warning|error):\s
-    (?P<message>.+?)
-    (?:\[(?P<flag>[^\]]+)\])?
-    $
+    \s(?P<type>warning|error):\s
+    (?P<message>.+)
+    \[(?P<flag>[^\]]+)
     """,
     re.X,
 )
@@ -39,10 +38,9 @@ RE_CLANG_CL_WARNING_AND_ERROR = re.compile(
     r"""
     (?P<file>.*)
     \((?P<line>\d+),(?P<column>\d+)\)
-    \s?:\s+(?:fatal\s+)?(?P<type>warning|error):\s
-    (?P<message>.+?)
-    (?:\[(?P<flag>[^\]]+)\])?
-    $
+    \s?:\s+(?P<type>warning|error):\s
+    (?P<message>.*)
+    \[(?P<flag>[^\]]+)
     """,
     re.X,
 )

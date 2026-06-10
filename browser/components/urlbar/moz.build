@@ -17,13 +17,13 @@ MOZ_SRC_FILES += [
     "MerinoClient.sys.mjs",
     "QuickActionsLoaderDefault.sys.mjs",
     "QuickSuggest.sys.mjs",
-    "SmartbarMentionsPanelSearch.sys.mjs",
+    "SearchModeSwitcher.sys.mjs",
     "UrlbarController.sys.mjs",
+    "UrlbarEventBufferer.sys.mjs",
     "UrlbarMuxerStandard.sys.mjs",
     "UrlbarPrefs.sys.mjs",
     "UrlbarProviderAboutPages.sys.mjs",
     "UrlbarProviderActionsSearchMode.sys.mjs",
-    "UrlbarProviderAiChat.sys.mjs",
     "UrlbarProviderAliasEngines.sys.mjs",
     "UrlbarProviderAutofill.sys.mjs",
     "UrlbarProviderBookmarkKeywords.sys.mjs",
@@ -52,12 +52,14 @@ MOZ_SRC_FILES += [
     "UrlbarProviderTokenAliasEngines.sys.mjs",
     "UrlbarProviderTopSites.sys.mjs",
     "UrlbarProviderUnitConversion.sys.mjs",
+    "UrlbarResult.sys.mjs",
     "UrlbarSearchOneOffs.sys.mjs",
     "UrlbarSearchTermsPersistence.sys.mjs",
     "UrlbarSearchUtils.sys.mjs",
     "UrlbarTokenizer.sys.mjs",
     "UrlbarUtils.sys.mjs",
     "UrlbarValueFormatter.sys.mjs",
+    "UrlbarView.sys.mjs",
 ]
 
 MOZ_SRC_FILES += [
@@ -91,21 +93,13 @@ TESTING_JS_MODULES += [
     "tests/UrlbarTestUtils.sys.mjs",
 ]
 BROWSER_CHROME_MANIFESTS += [
-    "tests/browser-autofill/browser.toml",
-    "tests/browser-engagementTelemetry/browser.toml",
-    "tests/browser-quickactions/browser.toml",
-    "tests/browser-searchMode/browser.toml",
-    "tests/browser-switchTab/browser.toml",
-    "tests/browser-telemetry/browser.toml",
     "tests/browser-tips/browser.toml",
     "tests/browser-tips/suppress-tips/browser.toml",
     "tests/browser-updateResults/browser.toml",
-    "tests/browser-UrlbarInput/browser.toml",
-    "tests/browser-UrlbarView/browser.toml",
     "tests/browser/browser.toml",
-    "tests/browser/browserDisableAPZ.toml",
     "tests/browser/browserSidebarRevamp.toml",
     "tests/browser/searchbar/browser.toml",
+    "tests/engagementTelemetry/browser/browser.toml",
     "tests/quicksuggest/browser/browser.toml",
 ]
 XPCSHELL_TESTS_MANIFESTS += [

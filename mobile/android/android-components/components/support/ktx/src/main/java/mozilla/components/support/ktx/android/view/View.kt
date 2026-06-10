@@ -4,22 +4,17 @@
 
 package mozilla.components.support.ktx.android.view
 
-import android.app.Activity
-import android.content.ContextWrapper
 import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.view.Window
+import android.view.inputmethod.InputMethodManager
 import androidx.annotation.MainThread
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import kotlinx.coroutines.CoroutineDispatcher
+import androidx.core.content.getSystemService
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.util.dpToPx
@@ -39,22 +34,20 @@ val View.isLTR: Boolean
 
 /**
  * Tries to focus this view and show the soft input window for it.
+ *
+ *  @param flags Provides additional operating flags to be used with InputMethodManager.showSoftInput().
+ *  Currently may be 0, SHOW_IMPLICIT or SHOW_FORCED.
  */
-fun View.showKeyboard() {
-    ShowKeyboard(this).post()
+fun View.showKeyboard(flags: Int = InputMethodManager.SHOW_IMPLICIT) {
+    ShowKeyboard(this, flags).post()
 }
 
 /**
  * Hides the soft input window.
- *
- * Note: this is a no-op when the view is not hosted in an Activity (e.g. a view attached to an
- * application-context window such as a PopupWindow), since no Activity Window is reachable from
- * which to obtain an InsetsController.
  */
 fun View.hideKeyboard() {
-    findWindow()?.let { window ->
-        WindowCompat.getInsetsController(window, this).hide(WindowInsetsCompat.Type.ime())
-    }
+    val imm = context.getSystemService<InputMethodManager>()
+    imm?.hideSoftInputFromWindow(windowToken, 0)
 }
 
 /**
@@ -90,15 +83,14 @@ fun View.setPadding(padding: Padding) {
  * Creates a [CoroutineScope] that is active as long as this [View] is attached. Once this [View]
  * gets detached this [CoroutineScope] gets cancelled automatically.
  *
- * @param mainDispatcher The [CoroutineDispatcher] to be used for the scope. Defaults to [Dispatchers.Main].
- * By default, coroutines dispatched on the created [CoroutineScope] run on the main dispatcher.
+ * By default coroutines dispatched on the created [CoroutineScope] run on the main dispatcher.
  *
  * Note: This scope gets only cancelled if the [View] gets detached. In cases where the [View] never
  * gets attached this may create a scope that never gets cancelled!
  */
 @MainThread
-fun View.toScope(mainDispatcher: CoroutineDispatcher = Dispatchers.Main): CoroutineScope {
-    val scope = CoroutineScope(SupervisorJob() + mainDispatcher)
+fun View.toScope(): CoroutineScope {
+    val scope = MainScope()
 
     addOnAttachStateChangeListener(
         object : View.OnAttachStateChangeListener {
@@ -143,16 +135,10 @@ inline fun View.onNextGlobalLayout(crossinline callback: () -> Unit) {
     viewTreeObserver.addOnGlobalLayoutListener(listener)
 }
 
-private fun View.findWindow(): Window? {
-    var ctx = context
-    while (ctx is ContextWrapper) {
-        if (ctx is Activity) return ctx.window
-        ctx = ctx.baseContext
-    }
-    return null
-}
-
-private class ShowKeyboard(view: View) : Runnable {
+private class ShowKeyboard(
+    view: View,
+    private val flags: Int = InputMethodManager.SHOW_IMPLICIT,
+) : Runnable {
     private val weakReference: WeakReference<View> = WeakReference(view)
     private val handler: Handler = Handler(Looper.getMainLooper())
     private var tries: Int = TRIES
@@ -170,14 +156,18 @@ private class ShowKeyboard(view: View) : Runnable {
                 return
             }
 
-            val window = view.findWindow()
-            if (window == null) {
-                // View is not yet attached to a window.
-                post()
-                return
-            }
+            view.context?.getSystemService<InputMethodManager>()?.let { imm ->
+                if (!imm.isActive(view)) {
+                    // This view is not the currently active view for the input method yet.
+                    post()
+                    return
+                }
 
-            WindowCompat.getInsetsController(window, view).show(WindowInsetsCompat.Type.ime())
+                if (!imm.showSoftInput(view, flags)) {
+                    // Showing they keyboard failed. Try again later.
+                    post()
+                }
+            }
         }
     }
 

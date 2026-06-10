@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -22,11 +24,10 @@ ManagedPostRefreshObserver::~ManagedPostRefreshObserver() = default;
 
 void ManagedPostRefreshObserver::Cancel() {
   // Caller holds a strong reference, so no need to reference stuff from here.
-  auto action = std::move(mAction);
-  mAction = nullptr;
-  if (action) {
-    action(true);
+  if (mAction) {
+    mAction(true);
   }
+  mAction = nullptr;
   mPresContext = nullptr;
 }
 
@@ -37,8 +38,8 @@ void ManagedPostRefreshObserver::DidRefresh() {
 
   RefPtr<ManagedPostRefreshObserver> thisObject = this;
   auto action = std::move(mAction);
-  mAction = nullptr;
   Unregister unregister = action(false);
+
   if (unregister == Unregister::Yes) {
     if (RefPtr<nsPresContext> pc = std::move(mPresContext)) {
       // We have to null-check mPresContext here because in theory, mAction

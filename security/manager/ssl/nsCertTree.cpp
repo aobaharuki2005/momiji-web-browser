@@ -44,12 +44,42 @@ struct treeArrayElStr {
   int32_t numChildren; /* number of chidren (certs) for thread */
 };
 
-CompareCacheEntry::CompareCacheEntry() : mCritInit() {
+CompareCacheHashEntryPtr::CompareCacheHashEntryPtr() {
+  entry = new CompareCacheHashEntry;
+}
+
+CompareCacheHashEntryPtr::~CompareCacheHashEntryPtr() { delete entry; }
+
+CompareCacheHashEntry::CompareCacheHashEntry() : key(nullptr), mCritInit() {
   for (int i = 0; i < max_criterions; ++i) {
     mCritInit[i] = false;
     mCrit[i].SetIsVoid(true);
   }
 }
+
+static bool CompareCacheMatchEntry(const PLDHashEntryHdr* hdr,
+                                   const void* key) {
+  const CompareCacheHashEntryPtr* entryPtr =
+      static_cast<const CompareCacheHashEntryPtr*>(hdr);
+  return entryPtr->entry->key == key;
+}
+
+static void CompareCacheInitEntry(PLDHashEntryHdr* hdr, const void* key) {
+  new (hdr) CompareCacheHashEntryPtr();
+  CompareCacheHashEntryPtr* entryPtr =
+      static_cast<CompareCacheHashEntryPtr*>(hdr);
+  entryPtr->entry->key = (void*)key;
+}
+
+static void CompareCacheClearEntry(PLDHashTable* table, PLDHashEntryHdr* hdr) {
+  CompareCacheHashEntryPtr* entryPtr =
+      static_cast<CompareCacheHashEntryPtr*>(hdr);
+  entryPtr->~CompareCacheHashEntryPtr();
+}
+
+static const PLDHashTableOps gMapOps = {
+    PLDHashTable::HashVoidPtrKeyStub, CompareCacheMatchEntry,
+    PLDHashTable::MoveEntryStub, CompareCacheClearEntry, CompareCacheInitEntry};
 
 NS_IMPL_ISUPPORTS(nsCertTreeDispInfo, nsICertTreeItem)
 
@@ -69,27 +99,27 @@ nsCertTree::nsCertTree()
     : mTreeArray(nullptr),
       mNumOrgs(0),
       mNumRows(0),
-      mCompareCache(kInitialCacheLength) {
+      mCompareCache(&gMapOps, sizeof(CompareCacheHashEntryPtr),
+                    kInitialCacheLength) {
   mCellText = nullptr;
 }
 
-void nsCertTree::ClearCompareHash() { mCompareCache.Clear(); }
+void nsCertTree::ClearCompareHash() {
+  mCompareCache.ClearAndPrepareForLength(kInitialCacheLength);
+}
 
 nsCertTree::~nsCertTree() { delete[] mTreeArray; }
 
 void nsCertTree::FreeCertArray() { mDispInfo.Clear(); }
 
-CompareCacheEntry* nsCertTree::getCacheEntry(CompareCache* aCache,
-                                             nsIX509Cert* aCert) {
-  return aCache
-      ->LookupOrInsertWith(aCert,
-                           [] { return std::make_unique<CompareCacheEntry>(); })
-      .get();
+CompareCacheHashEntry* nsCertTree::getCacheEntry(void* cache, void* aCert) {
+  PLDHashTable& aCompareCache = *static_cast<PLDHashTable*>(cache);
+  auto entryPtr = static_cast<CompareCacheHashEntryPtr*>(
+      aCompareCache.Add(aCert, fallible));
+  return entryPtr ? entryPtr->entry : nullptr;
 }
 
-void nsCertTree::RemoveCacheEntry(nsIX509Cert* key) {
-  mCompareCache.Remove(key);
-}
+void nsCertTree::RemoveCacheEntry(void* key) { mCompareCache.Remove(key); }
 
 // CountOrganizations
 //
@@ -190,7 +220,7 @@ nsCertTree::nsCertCompareFunc nsCertTree::GetCompareFuncFromCertType(
 
 nsresult nsCertTree::GetCertsByTypeFromCertList(
     const nsTArray<RefPtr<nsIX509Cert>>& aCertList, uint32_t aWantedType,
-    nsCertCompareFunc aCertCmpFn, CompareCache* aCertCmpFnArg) {
+    nsCertCompareFunc aCertCmpFn, void* aCertCmpFnArg) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("GetCertsByTypeFromCertList"));
 
   nsTHashtable<nsCStringHashKey> allHostPortOverrideKeys;
@@ -682,7 +712,8 @@ NS_IMETHODIMP nsCertTree::IsSorted(bool* _retval) {
 
 #define RETURN_NOTHING
 
-void nsCertTree::CmpInitCriterion(nsIX509Cert* cert, CompareCacheEntry* entry,
+void nsCertTree::CmpInitCriterion(nsIX509Cert* cert,
+                                  CompareCacheHashEntry* entry,
                                   sortCriterion crit, int32_t level) {
   NS_ENSURE_TRUE(cert && entry, RETURN_NOTHING);
 
@@ -732,8 +763,8 @@ void nsCertTree::CmpInitCriterion(nsIX509Cert* cert, CompareCacheEntry* entry,
   }
 }
 
-int32_t nsCertTree::CmpByCrit(nsIX509Cert* a, CompareCacheEntry* ace,
-                              nsIX509Cert* b, CompareCacheEntry* bce,
+int32_t nsCertTree::CmpByCrit(nsIX509Cert* a, CompareCacheHashEntry* ace,
+                              nsIX509Cert* b, CompareCacheHashEntry* bce,
                               sortCriterion crit, int32_t level) {
   NS_ENSURE_TRUE(a && ace && b && bce, 0);
 
@@ -759,7 +790,7 @@ int32_t nsCertTree::CmpByCrit(nsIX509Cert* a, CompareCacheEntry* ace,
   return result;
 }
 
-int32_t nsCertTree::CmpBy(CompareCache* cache, nsIX509Cert* a, nsIX509Cert* b,
+int32_t nsCertTree::CmpBy(void* cache, nsIX509Cert* a, nsIX509Cert* b,
                           sortCriterion c0, sortCriterion c1,
                           sortCriterion c2) {
   // This will be called when comparing items for display sorting.
@@ -777,8 +808,8 @@ int32_t nsCertTree::CmpBy(CompareCache* cache, nsIX509Cert* a, nsIX509Cert* b,
 
   NS_ENSURE_TRUE(cache && a && b, 0);
 
-  CompareCacheEntry* ace = getCacheEntry(cache, a);
-  CompareCacheEntry* bce = getCacheEntry(cache, b);
+  CompareCacheHashEntry* ace = getCacheEntry(cache, a);
+  CompareCacheHashEntry* bce = getCacheEntry(cache, b);
 
   int32_t cmp;
   cmp = CmpByCrit(a, ace, b, bce, c0, 0);
@@ -796,21 +827,18 @@ int32_t nsCertTree::CmpBy(CompareCache* cache, nsIX509Cert* a, nsIX509Cert* b,
   return cmp;
 }
 
-int32_t nsCertTree::CmpCACert(CompareCache* cache, nsIX509Cert* a,
-                              nsIX509Cert* b) {
+int32_t nsCertTree::CmpCACert(void* cache, nsIX509Cert* a, nsIX509Cert* b) {
   // XXX we assume issuer org is always criterion 1
   return CmpBy(cache, a, b, sort_IssuerOrg, sort_Org, sort_Token);
 }
 
-int32_t nsCertTree::CmpUserCert(CompareCache* cache, nsIX509Cert* a,
-                                nsIX509Cert* b) {
+int32_t nsCertTree::CmpUserCert(void* cache, nsIX509Cert* a, nsIX509Cert* b) {
   // XXX we assume issuer org is always criterion 1
   return CmpBy(cache, a, b, sort_IssuerOrg, sort_Token,
                sort_IssuedDateDescending);
 }
 
-int32_t nsCertTree::CmpEmailCert(CompareCache* cache, nsIX509Cert* a,
-                                 nsIX509Cert* b) {
+int32_t nsCertTree::CmpEmailCert(void* cache, nsIX509Cert* a, nsIX509Cert* b) {
   // XXX we assume issuer org is always criterion 1
   return CmpBy(cache, a, b, sort_IssuerOrg, sort_Email, sort_CommonName);
 }

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -64,10 +65,7 @@ static NSPasteboard* GetPasteboard(
     case nsIClipboard::kGlobalClipboard:
       return [NSPasteboard generalPasteboard];
     case nsIClipboard::kFindClipboard:
-      if (@available(macOS 10.13, *)) {
-          return [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
-      }
-      return [NSPasteboard pasteboardWithName:NSFindPboard];
+      return [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
     default:
       return nil;
   }
@@ -160,7 +158,7 @@ nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
                              stringFromPboardType:kPasteboardConcealedType]]) {
         // It's fine to set the data to null for this field - this field is an
         // addition to a value's other type and works like a flag.
-        [cocoaPasteboard setData:nullptr forType:currentKey];
+        [cocoaPasteboard setData:NULL forType:currentKey];
       } else {
         [cocoaPasteboard setData:currentValue forType:currentKey];
       }
@@ -174,8 +172,7 @@ nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
 
 mozilla::Result<nsCOMPtr<nsISupports>, nsresult>
 nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
-                                   NSPasteboard* aPasteboard,
-                                   uint64_t aThreshold) {
+                                   NSPasteboard* aPasteboard) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSString* pboardType = nil;
@@ -183,11 +180,6 @@ nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
     NSString* pString = [aPasteboard stringForType:pboardType];
     if (!pString) {
       return nsCOMPtr<nsISupports>{};
-    }
-
-    if (aThreshold && aFlavor.EqualsLiteral(kTextMime) &&
-        [pString length] * 2 > aThreshold) {
-      return mozilla::Err(NS_ERROR_CLIPBOARD_TOO_BIG);
     }
 
     NSData* stringData;
@@ -200,7 +192,6 @@ nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
       stringData = [pString dataUsingEncoding:NSUnicodeStringEncoding
                          allowLossyConversion:YES];
     }
-
     unsigned int dataLength = [stringData length];
     void* clipboardDataPtr = malloc(dataLength);
     if (!clipboardDataPtr) {
@@ -215,15 +206,12 @@ nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
                                                        &signedDataLength);
     dataLength = signedDataLength;
 
-    // skip BOM (Byte Order Mark to distinguish little or big endian), but
-    // not for RTF since that is ASCII encoded
+    // skip BOM (Byte Order Mark to distinguish little or big endian)
     char16_t* clipboardDataPtrNoBOM = (char16_t*)clipboardDataPtr;
-    if (!isRTF && (dataLength > 2)) {
-      if ((clipboardDataPtrNoBOM[0] == 0xFEFF) ||
-          (clipboardDataPtrNoBOM[0] == 0xFFFE)) {
-        dataLength -= sizeof(char16_t);
-        clipboardDataPtrNoBOM += 1;
-      }
+    if ((dataLength > 2) && ((clipboardDataPtrNoBOM[0] == 0xFEFF) ||
+                             (clipboardDataPtrNoBOM[0] == 0xFFFE))) {
+      dataLength -= sizeof(char16_t);
+      clipboardDataPtrNoBOM += 1;
     }
 
     nsCOMPtr<nsISupports> genericDataWrapper;
@@ -249,30 +237,6 @@ nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
 
     return nsCOMPtr<nsISupports>(
         nsCocoaUtils::GetDataFromPasteboardItem(aFlavor, item));
-  }
-
-  if (aFlavor.EqualsLiteral(kURLDataMime)) {
-    NSString* publicUrl = [UTIHelper stringFromPboardType:kPublicUrlPboardType];
-    NSString* pString = [aPasteboard stringForType:publicUrl];
-    if (!pString) {
-      return nsCOMPtr<nsISupports>{};
-    }
-
-    NSData* stringData = [pString dataUsingEncoding:NSUnicodeStringEncoding
-                               allowLossyConversion:YES];
-    unsigned int dataLength = [stringData length];
-    void* clipboardDataPtr = malloc(dataLength);
-    if (!clipboardDataPtr) {
-      return mozilla::Err(NS_ERROR_OUT_OF_MEMORY);
-    }
-    [stringData getBytes:clipboardDataPtr length:dataLength];
-
-    nsCOMPtr<nsISupports> genericDataWrapper;
-    nsPrimitiveHelpers::CreatePrimitiveForData(
-        aFlavor, clipboardDataPtr, dataLength,
-        getter_AddRefs(genericDataWrapper));
-    free(clipboardDataPtr);
-    return std::move(genericDataWrapper);
   }
 
   if (aFlavor.EqualsLiteral(kCustomTypesMime)) {
@@ -317,9 +281,9 @@ nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
                                      stringFromPboardType:(NSString*)
                                                               kUTTypeFileURL],
                                  [UTIHelper
-                                     stringFromPboardType:NSPasteboardTypePNG],
-                                 [UTIHelper
                                      stringFromPboardType:NSPasteboardTypeTIFF],
+                                 [UTIHelper
+                                     stringFromPboardType:NSPasteboardTypePNG],
                                  nil]];
     if (!type) {
       return nsCOMPtr<nsISupports>{};
@@ -332,7 +296,7 @@ nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
     }
 
     // Figure out what type we're converting to
-    CFStringRef outputType = nullptr;
+    CFStringRef outputType = NULL;
     if (aFlavor.EqualsLiteral(kJPEGImageMime) ||
         aFlavor.EqualsLiteral(kJPGImageMime)) {
       outputType = CFSTR("public.jpeg");
@@ -344,18 +308,6 @@ nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
       return nsCOMPtr<nsISupports>{};
     }
 
-    // If the pasteboard data is already in the requested format, return it
-    // directly to avoid an ImageIO round-trip that applies color management
-    // and shifts pixel values (bug 1396587).
-    if ([type isEqualToString:(__bridge NSString*)outputType]) {
-      nsCOMPtr<nsIInputStream> byteStream;
-      NS_NewByteInputStream(getter_AddRefs(byteStream),
-                            mozilla::Span((const char*)[pasteboardData bytes],
-                                          [pasteboardData length]),
-                            NS_ASSIGNMENT_COPY);
-      return nsCOMPtr<nsISupports>(std::move(byteStream));
-    }
-
     // Use ImageIO to interpret the data on the clipboard and transcode.
     // Note that ImageIO, like all CF APIs, allows NULLs to propagate freely
     // and safely in most cases (like ObjC). A notable exception is CFRelease.
@@ -364,9 +316,7 @@ nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
                                      kCGImageSourceShouldAllowFloat, type,
                                      kCGImageSourceTypeIdentifierHint, nil];
     CGImageSourceRef source = nullptr;
-    if ([type isEqualToString:[UTIHelper
-                                  stringFromPboardType:(NSString*)
-                                                           kUTTypeFileURL]]) {
+    if (type == [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL]) {
       NSString* urlStr = [aPasteboard stringForType:type];
       NSURL* url = [NSURL URLWithString:urlStr];
       source =
@@ -376,31 +326,10 @@ nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
                                            (CFDictionaryRef)options);
     }
 
-    if (!source) {
-      return nsCOMPtr<nsISupports>{};
-    }
-
     NSMutableData* encodedData = [NSMutableData data];
     CGImageDestinationRef dest = CGImageDestinationCreateWithData(
-        (CFMutableDataRef)encodedData, outputType, 1, nullptr);
-    if (!dest) {
-      CFRelease(source);
-      return nsCOMPtr<nsISupports>{};
-    }
-    CGImageRef cgImage = CGImageSourceCreateImageAtIndex(source, 0, nullptr);
-    if (!cgImage) {
-      CFRelease(dest);
-      CFRelease(source);
-      return nsCOMPtr<nsISupports>{};
-    }
-    CGColorSpaceRef srgb = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
-    CGImageRef srgbImage = CGImageCreateCopyWithColorSpace(cgImage, srgb);
-    CGImageDestinationAddImage(dest, srgbImage ? srgbImage : cgImage, nullptr);
-    CGColorSpaceRelease(srgb);
-    if (srgbImage) {
-      CGImageRelease(srgbImage);
-    }
-    CGImageRelease(cgImage);
+        (CFMutableDataRef)encodedData, outputType, 1, NULL);
+    CGImageDestinationAddImageFromSource(dest, source, 0, NULL);
 
     nsCOMPtr<nsIInputStream> byteStream;
     if (CGImageDestinationFinalize(dest)) {
@@ -428,8 +357,7 @@ nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
 
 mozilla::Result<nsCOMPtr<nsISupports>, nsresult>
 nsClipboard::GetNativeClipboardData(const nsACString& aFlavor,
-                                    ClipboardType aWhichClipboard,
-                                    uint64_t aThreshold) {
+                                    ClipboardType aWhichClipboard) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_DIAGNOSTIC_ASSERT(
@@ -456,7 +384,7 @@ nsClipboard::GetNativeClipboardData(const nsACString& aFlavor,
     return mozilla::Err(NS_ERROR_FAILURE);
   }
 
-  return GetDataFromPasteboard(aFlavor, cocoaPasteboard, aThreshold);
+  return GetDataFromPasteboard(aFlavor, cocoaPasteboard);
 
   NS_OBJC_END_TRY_BLOCK_RETURN(mozilla::Err(NS_ERROR_FAILURE));
 }
@@ -505,7 +433,7 @@ nsClipboard::HasNativeClipboardDataMatchingFlavors(
   if (MOZ_CLIPBOARD_LOG_ENABLED()) {
     NSArray* types = [cocoaPasteboard types];
     uint32_t count = [types count];
-    MOZ_CLIPBOARD_LOG("    Pasteboard types (nums %u)\n", count);
+    MOZ_CLIPBOARD_LOG("    Pasteboard types (nums %d)\n", count);
     for (uint32_t i = 0; i < count; i++) {
       NSPasteboardType type = [types objectAtIndex:i];
       if (!type) {
@@ -567,14 +495,6 @@ nsClipboard::HasNativeClipboardDataMatchingFlavors(
           }
         }
       }
-    } else if (mimeType.EqualsLiteral(kURLDataMime)) {
-      NSString* availableType = [cocoaPasteboard availableTypeFromArray:@[
-        [UTIHelper stringFromPboardType:kPublicUrlPboardType]
-      ]];
-      if (availableType) {
-        MOZ_CLIPBOARD_LOG("    has %s\n", mimeType.get());
-        return true;
-      }
     }
   }
 
@@ -629,7 +549,7 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(
   for (uint32_t i = 0; i < flavors.Length(); i++) {
     nsCString& flavorStr = flavors[i];
 
-    MOZ_CLIPBOARD_LOG("writing out clipboard data of type %s (%u)\n",
+    MOZ_CLIPBOARD_LOG("writing out clipboard data of type %s (%d)\n",
                       flavorStr.get(), i);
 
     NSString* pboardType = nil;
@@ -713,7 +633,7 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(
       if (!surface) {
         continue;
       }
-      CGImageRef imageRef = nullptr;
+      CGImageRef imageRef = NULL;
       rv = nsCocoaUtils::CreateCGImageFromSurface(surface, &imageRef);
       if (NS_FAILED(rv) || !imageRef) {
         continue;
@@ -723,11 +643,11 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(
       CFMutableDataRef tiffData = CFDataCreateMutable(kCFAllocatorDefault, 0);
       CFMutableDataRef pngData = CFDataCreateMutable(kCFAllocatorDefault, 0);
       CGImageDestinationRef destRefTIFF = CGImageDestinationCreateWithData(
-          tiffData, CFSTR("public.tiff"), 1, nullptr);
+          tiffData, CFSTR("public.tiff"), 1, NULL);
       CGImageDestinationRef destRefPNG = CGImageDestinationCreateWithData(
-          pngData, CFSTR("public.png"), 1, nullptr);
-      CGImageDestinationAddImage(destRefTIFF, imageRef, nullptr);
-      CGImageDestinationAddImage(destRefPNG, imageRef, nullptr);
+          pngData, CFSTR("public.png"), 1, NULL);
+      CGImageDestinationAddImage(destRefTIFF, imageRef, NULL);
+      CGImageDestinationAddImage(destRefPNG, imageRef, NULL);
       const bool successfullyConvertedTIFF =
           CGImageDestinationFinalize(destRefTIFF);
       const bool successfullyConvertedPNG =
@@ -810,13 +730,7 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(
       nsCOMPtr<nsISupports> genericURL;
       rv = aTransferable->GetTransferData(flavorStr.get(),
                                           getter_AddRefs(genericURL));
-      if (NS_FAILED(rv)) {
-        continue;
-      }
       nsCOMPtr<nsISupportsString> urlObject(do_QueryInterface(genericURL));
-      if (!urlObject) {
-        continue;
-      }
 
       nsAutoString url;
       urlObject->GetData(url);
@@ -884,9 +798,6 @@ bool nsClipboard::IsStringType(const nsACString& aMIMEType,
     return true;
   } else if (aMIMEType.EqualsLiteral(kHTMLMime)) {
     *aPboardType = [UTIHelper stringFromPboardType:NSPasteboardTypeHTML];
-    return true;
-  } else if (aMIMEType.EqualsLiteral(kURLDataMime)) {
-    *aPboardType = [UTIHelper stringFromPboardType:kPublicUrlPboardType];
     return true;
   } else {
     return false;

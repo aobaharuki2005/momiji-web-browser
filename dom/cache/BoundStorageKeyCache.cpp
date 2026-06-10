@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -137,8 +139,9 @@ auto BoundStorageKeyCache::Add(JSContext* aContext,
     return nullptr;
   }
 
-  SafeRefPtr<InternalRequest> ireq = request->GetInternalRequest();
-  if (NS_WARN_IF(!IsValidPutRequestURL(ireq->GetURLWithoutFragment(), aRv))) {
+  nsAutoCString url;
+  request->GetUrl(url);
+  if (NS_WARN_IF(!IsValidPutRequestURL(url, aRv))) {
     return nullptr;
   }
 
@@ -172,7 +175,8 @@ auto BoundStorageKeyCache::AddAll(
         return nullptr;
       }
     } else {
-      requestOrString.SetAsUTF8String() = aRequestList[i].GetAsUTF8String();
+      requestOrString.SetAsUTF8String().ShareOrDependUpon(
+          aRequestList[i].GetAsUTF8String());
     }
 
     RootedDictionary<RequestInit> requestInit(aContext);
@@ -182,8 +186,9 @@ auto BoundStorageKeyCache::AddAll(
       return nullptr;
     }
 
-    SafeRefPtr<InternalRequest> ireq = request->GetInternalRequest();
-    if (NS_WARN_IF(!IsValidPutRequestURL(ireq->GetURLWithoutFragment(), aRv))) {
+    nsAutoCString url;
+    request->GetUrl(url);
+    if (NS_WARN_IF(!IsValidPutRequestURL(url, aRv))) {
       return nullptr;
     }
 

@@ -41,6 +41,7 @@ class DefaultTopSitesStorageTest {
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
             defaultTopSites = defaultTopSites,
+            coroutineContext = coroutineContext,
         )
         testScheduler.advanceUntilIdle()
 
@@ -52,9 +53,12 @@ class DefaultTopSitesStorageTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         defaultTopSitesStorage.addTopSite("Mozilla", "https://mozilla.com", isDefault = false)
+        testScheduler.advanceUntilIdle()
 
         verify(pinnedSitesStorage).addPinnedSite(
             "Mozilla",
@@ -68,6 +72,8 @@ class DefaultTopSitesStorageTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
         val topSites = listOf(
             Pair("Mozilla", "https://mozilla.com"),
@@ -76,6 +82,7 @@ class DefaultTopSitesStorageTest {
         val isDefault = false
 
         defaultTopSitesStorage.addTopSites(topSites = topSites, isDefault = isDefault)
+        testScheduler.advanceUntilIdle()
 
         verify(pinnedSitesStorage).addAllPinnedSites(topSites = topSites, isDefault = isDefault)
     }
@@ -85,6 +92,8 @@ class DefaultTopSitesStorageTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         val frecentSite = TopSite.Frecent(
@@ -95,6 +104,7 @@ class DefaultTopSitesStorageTest {
         )
 
         defaultTopSitesStorage.removeTopSite(frecentSite)
+        testScheduler.advanceUntilIdle()
 
         verify(historyStorage).deleteVisitsFor(frecentSite.url)
 
@@ -106,6 +116,7 @@ class DefaultTopSitesStorageTest {
         )
 
         defaultTopSitesStorage.removeTopSite(pinnedSite)
+        testScheduler.advanceUntilIdle()
 
         verify(pinnedSitesStorage).removePinnedSite(pinnedSite)
         verify(historyStorage).deleteVisitsFor(pinnedSite.url)
@@ -118,6 +129,7 @@ class DefaultTopSitesStorageTest {
         )
 
         defaultTopSitesStorage.removeTopSite(defaultSite)
+        testScheduler.advanceUntilIdle()
 
         verify(pinnedSitesStorage).removePinnedSite(defaultSite)
         verify(historyStorage).deleteVisitsFor(defaultSite.url)
@@ -128,6 +140,8 @@ class DefaultTopSitesStorageTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         val defaultSite = TopSite.Default(
@@ -138,6 +152,7 @@ class DefaultTopSitesStorageTest {
         )
 
         defaultTopSitesStorage.updateTopSite(defaultSite, "Mozilla Firefox", "https://mozilla.com")
+        testScheduler.advanceUntilIdle()
 
         verify(pinnedSitesStorage).updatePinnedSite(defaultSite, "Mozilla Firefox", "https://mozilla.com")
 
@@ -149,6 +164,7 @@ class DefaultTopSitesStorageTest {
         )
 
         defaultTopSitesStorage.updateTopSite(pinnedSite, "Wiki", "https://en.wikipedia.org/wiki/Wiki")
+        testScheduler.advanceUntilIdle()
 
         verify(pinnedSitesStorage).updatePinnedSite(pinnedSite, "Wiki", "https://en.wikipedia.org/wiki/Wiki")
 
@@ -160,6 +176,7 @@ class DefaultTopSitesStorageTest {
         )
 
         defaultTopSitesStorage.updateTopSite(frecentSite, "Moz", "")
+        testScheduler.advanceUntilIdle()
 
         verify(pinnedSitesStorage, never()).updatePinnedSite(frecentSite, "Moz", "")
     }
@@ -169,6 +186,8 @@ class DefaultTopSitesStorageTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         val defaultSite = TopSite.Default(
@@ -224,6 +243,8 @@ class DefaultTopSitesStorageTest {
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
             topSitesProvider = topSitesProvider,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         val defaultSite = TopSite.Default(
@@ -343,6 +364,8 @@ class DefaultTopSitesStorageTest {
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
             topSitesProvider = topSitesProvider,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         val defaultSite = TopSite.Default(
@@ -483,6 +506,8 @@ class DefaultTopSitesStorageTest {
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
             topSitesProvider = topSitesProvider,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         val defaultSite = TopSite.Default(
@@ -622,6 +647,8 @@ class DefaultTopSitesStorageTest {
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
             topSitesProvider = topSitesProvider,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         val defaultSite = TopSite.Default(
@@ -737,6 +764,8 @@ class DefaultTopSitesStorageTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         val defaultSite = TopSite.Default(
@@ -864,6 +893,8 @@ class DefaultTopSitesStorageTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         val defaultSiteFirefox = TopSite.Default(
@@ -933,6 +964,7 @@ class DefaultTopSitesStorageTest {
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
             topSitesProvider = topSitesProvider,
+            coroutineContext = coroutineContext,
         )
 
         val filteredUrl = "https://test.com"
@@ -1020,6 +1052,8 @@ class DefaultTopSitesStorageTest {
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
             topSitesProvider = topSitesProvider,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         val defaultSiteFirefox = TopSite.Default(
@@ -1105,6 +1139,7 @@ class DefaultTopSitesStorageTest {
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
             topSitesProvider = topSitesProvider,
+            coroutineContext = coroutineContext,
         )
 
         val filterMethod: ((TopSite) -> Boolean) = { topSite ->
@@ -1203,6 +1238,8 @@ class DefaultTopSitesStorageTest {
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
             topSitesProvider = topSitesProvider,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
         )
 
         val defaultSiteFirefox = TopSite.Default(

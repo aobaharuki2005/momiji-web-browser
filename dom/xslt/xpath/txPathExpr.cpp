@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -146,10 +147,10 @@ nsresult PathExpr::evalDescendants(Expr* aStep, const txXPathNode& aNode,
   resNodes->addAndTransfer(newSet);
 
   bool filterWS;
-  rv = aContext->isStripSpaceAllowed(eContext.getContextNode(), filterWS);
+  rv = aContext->isStripSpaceAllowed(aNode, filterWS);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  txXPathTreeWalker walker(eContext.getContextNode());
+  txXPathTreeWalker walker(aNode);
   if (!walker.moveToFirstChild()) {
     return NS_OK;
   }

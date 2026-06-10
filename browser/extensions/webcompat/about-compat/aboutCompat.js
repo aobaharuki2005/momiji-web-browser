@@ -45,6 +45,11 @@ const DOMContentLoadedPromise = new Promise(resolve => {
   );
 });
 
+const ua = navigator.userAgent;
+if (ua.includes("Tablet") || ua.includes("Mobile")) {
+  document.documentElement.classList.add("mobile");
+}
+
 Promise.all([
   browser.runtime.sendMessage("getAllInterventions"),
   DOMContentLoadedPromise,
@@ -91,64 +96,24 @@ async function onMessageFromAddon(msg) {
   await DOMContentLoadedPromise;
 
   if ("interventionsChanged" in msg) {
-    const section = document.querySelector("#interventions");
-
-    // if we toggled the global pref, we need to redraw the whole section.
-    if (
-      msg.interventionsChanged === false ||
-      section.querySelector("[data-l10n-id=text-disabled-in-about-config]")
-    ) {
-      redrawSection(
-        $("#interventions"),
-        msg.interventionsChanged,
-        alsoShowHidden
-      );
-    } else {
-      // redraw just the interventions which changed.
-      for (const config of msg.interventionsChanged) {
-        if (config.hidden && !alsoShowHidden) {
-          continue;
-        }
-
-        const { domain } = config;
-        const newArticle = createArticle(config);
-
-        const oldArticle = document.querySelector(`[data-id="${config.id}"]`);
-        const oldDomain = oldArticle?.querySelector("span").innerText;
-        if (domain == oldDomain) {
-          oldArticle.parentNode.replaceChild(newArticle, oldArticle);
-          continue;
-        }
-
-        oldArticle?.remove();
-        let whereToInsert = section.firstElementChild;
-        while (
-          whereToInsert &&
-          (whereToInsert.nodeName != "ARTICLE" ||
-            whereToInsert.querySelector("span").innerText < domain)
-        ) {
-          whereToInsert = whereToInsert.nextElementSibling;
-        }
-        section.insertBefore(newArticle, whereToInsert);
-      }
-    }
+    redrawTable($("#interventions"), msg.interventionsChanged, alsoShowHidden);
   }
 
   if ("shimsChanged" in msg) {
-    updateShimSections(msg.shimsChanged, alsoShowHidden);
+    updateShimTables(msg.shimsChanged, alsoShowHidden);
   }
 
-  if ("toggling" in msg) {
-    // Disable the button while an intervention is being enabled/disabled.
-    // The markup of the section-row will be updated appropriately when a
-    // subsequent interventionsChanged message arrives.
-    const id = msg.toggling;
-    const button = $(`[data-id="${id}"] button`);
-    if (!button) {
-      return;
-    }
-    button.disabled = true;
+  const id = msg.toggling || msg.toggled;
+  const button = $(`[data-id="${id}"] button`);
+  if (!button) {
+    return;
   }
+  const active = msg.active;
+  document.l10n.setAttributes(
+    button,
+    active ? "label-disable" : "label-enable"
+  );
+  button.disabled = !!msg.toggling;
 }
 
 function redraw() {
@@ -157,52 +122,53 @@ function redraw() {
   }
   const { interventions, shims } = availablePatches;
   const alsoShowHidden = location.hash === "#all";
-  redrawSection($("#interventions"), interventions, alsoShowHidden);
-  updateShimSections(shims, alsoShowHidden);
+  redrawTable($("#interventions"), interventions, alsoShowHidden);
+  updateShimTables(shims, alsoShowHidden);
 }
 
-function clearSectionAndAddMessage(section, msgId) {
-  section.querySelectorAll("article").forEach(article => {
-    article.remove();
+function clearTableAndAddMessage(table, msgId) {
+  table.querySelectorAll("tr").forEach(tr => {
+    tr.remove();
   });
 
-  const article = document.createElement("article");
-  article.className = "message";
-  article.id = msgId;
+  const tr = document.createElement("tr");
+  tr.className = "message";
+  tr.id = msgId;
 
-  const span = document.createElement("span");
-  document.l10n.setAttributes(span, msgId);
-  article.appendChild(span);
+  const td = document.createElement("td");
+  td.setAttribute("colspan", "3");
+  document.l10n.setAttributes(td, msgId);
+  tr.appendChild(td);
 
-  section.appendChild(article);
+  table.appendChild(tr);
 }
 
-function hideMessagesOnSection(section) {
-  section.querySelectorAll("article.message").forEach(article => {
-    article.remove();
+function hideMessagesOnTable(table) {
+  table.querySelectorAll("tr.message").forEach(tr => {
+    tr.remove();
   });
 }
 
-function updateShimSections(shimsChanged, alsoShowHidden) {
-  const sections = document.querySelectorAll("section.shims");
-  if (!sections.length) {
+function updateShimTables(shimsChanged, alsoShowHidden) {
+  const tables = document.querySelectorAll("table.shims");
+  if (!tables.length) {
     return;
   }
 
   for (const { bug, disabledReason, hidden, id, name, type } of shimsChanged) {
     // if any shim is disabled by global pref, all of them are. just show the
-    // "disabled in about:config" message on each shim section in that case.
+    // "disabled in about:config" message on each shim table in that case.
     if (disabledReason === "globalPref") {
-      for (const section of sections) {
-        clearSectionAndAddMessage(section, "text-disabled-in-about-config");
+      for (const table of tables) {
+        clearTableAndAddMessage(table, "text-disabled-in-about-config");
       }
       return;
     }
 
-    // otherwise, find which section the shim belongs in. if there is none,
+    // otherwise, find which table the shim belongs in. if there is none,
     // ignore the shim (we're not showing it on the UI for whatever reason).
-    const section = document.querySelector(`section.shims#${type}`);
-    if (!section) {
+    const table = document.querySelector(`table.shims#${type}`);
+    if (!table) {
       continue;
     }
 
@@ -221,73 +187,74 @@ function updateShimSections(shimsChanged, alsoShowHidden) {
       continue;
     }
 
-    // create an updated section-row for the shim
-    const article = document.createElement("article");
-    article.setAttribute("data-id", id);
+    // create an updated table-row for the shim
+    const tr = document.createElement("tr");
+    tr.setAttribute("data-id", id);
 
-    let span = document.createElement("span");
-    span.innerText = name;
-    article.appendChild(span);
+    let td = document.createElement("td");
+    td.innerText = name;
+    tr.appendChild(td);
 
-    span = document.createElement("span");
+    td = document.createElement("td");
     const a = document.createElement("a");
     a.href = `https://bugzilla.mozilla.org/show_bug.cgi?id=${bug}`;
     document.l10n.setAttributes(a, "label-more-information", { bug });
     a.target = "_blank";
-    span.appendChild(a);
-    article.appendChild(span);
+    td.appendChild(a);
+    tr.appendChild(td);
 
-    span = document.createElement("span");
-    article.appendChild(span);
+    td = document.createElement("td");
+    tr.appendChild(td);
     const button = document.createElement("button");
     document.l10n.setAttributes(
       button,
       disabledReason ? "label-enable" : "label-disable"
     );
-    span.appendChild(button);
+    td.appendChild(button);
 
-    // is it already in the section?
-    const row = section.querySelector(`article[data-id="${id}"]`);
+    // is it already in the table?
+    const row = table.querySelector(`tr[data-id="${id}"]`);
     if (row) {
-      row.replaceWith(article);
+      row.replaceWith(tr);
     } else {
-      section.appendChild(article);
+      table.appendChild(tr);
     }
   }
 
-  for (const section of sections) {
-    if (!section.querySelector("article:not(.message)")) {
+  for (const table of tables) {
+    if (!table.querySelector("tr:not(.message)")) {
       // no shims? then add a message that none are available for this platform/config
-      clearSectionAndAddMessage(section, `text-no-${section.id}`);
+      clearTableAndAddMessage(table, `text-no-${table.id}`);
     } else {
       // otherwise hide any such message, since we have shims on the list
-      hideMessagesOnSection(section);
+      hideMessagesOnTable(table);
     }
   }
 }
 
-function redrawSection(section, data, alsoShowHidden) {
+function redrawTable(table, data, alsoShowHidden) {
   const df = document.createDocumentFragment();
-  section.querySelectorAll("article").forEach(article => {
-    article.remove();
+  table.querySelectorAll("tr").forEach(tr => {
+    tr.remove();
   });
 
   let noEntriesMessage;
   if (data === false) {
     noEntriesMessage = "text-disabled-in-about-config";
   } else if (data.length === 0) {
-    noEntriesMessage = `text-no-${section.id}`;
+    noEntriesMessage = `text-no-${table.id}`;
   }
 
   if (noEntriesMessage) {
-    const article = document.createElement("article");
-    df.appendChild(article);
+    const tr = document.createElement("tr");
+    df.appendChild(tr);
 
-    const span = document.createElement("span");
-    document.l10n.setAttributes(span, noEntriesMessage);
-    article.appendChild(span);
+    const td = document.createElement("td");
+    td.setAttribute("colspan", "3");
+    document.l10n.setAttributes(td, noEntriesMessage);
+    tr.appendChild(td);
 
-    section.appendChild(df);
+    table.appendChild(df);
     return;
   }
 
@@ -295,38 +262,34 @@ function redrawSection(section, data, alsoShowHidden) {
     if (row.hidden && !alsoShowHidden) {
       continue;
     }
-    df.appendChild(createArticle(row));
+
+    const tr = document.createElement("tr");
+    tr.setAttribute("data-id", row.id);
+    df.appendChild(tr);
+
+    let td = document.createElement("td");
+    td.innerText = row.domain;
+    tr.appendChild(td);
+
+    td = document.createElement("td");
+    const a = document.createElement("a");
+    const bug = row.bug;
+    a.href = `https://bugzilla.mozilla.org/show_bug.cgi?id=${bug}`;
+    document.l10n.setAttributes(a, "label-more-information", { bug });
+    a.target = "_blank";
+    td.appendChild(a);
+    tr.appendChild(td);
+
+    td = document.createElement("td");
+    tr.appendChild(td);
+    const button = document.createElement("button");
+    document.l10n.setAttributes(
+      button,
+      row.active ? "label-disable" : "label-enable"
+    );
+    td.appendChild(button);
   }
-  section.appendChild(df);
-}
-
-function createArticle(row) {
-  const article = document.createElement("article");
-  article.setAttribute("data-id", row.id);
-
-  let span = document.createElement("span");
-  span.innerText = row.domain;
-  article.appendChild(span);
-
-  span = document.createElement("span");
-  const a = document.createElement("a");
-  const bug = row.bug;
-  a.href = `https://bugzilla.mozilla.org/show_bug.cgi?id=${bug}`;
-  document.l10n.setAttributes(a, "label-more-information", { bug });
-  a.target = "_blank";
-  span.appendChild(a);
-  article.appendChild(span);
-
-  span = document.createElement("span");
-  article.appendChild(span);
-  const button = document.createElement("button");
-  document.l10n.setAttributes(
-    button,
-    row.active ? "label-disable" : "label-enable"
-  );
-  span.appendChild(button);
-
-  return article;
+  table.appendChild(df);
 }
 
 window.onhashchange = redraw;

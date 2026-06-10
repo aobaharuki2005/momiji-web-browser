@@ -3,7 +3,7 @@
  * Copyright 2024 Google Inc.
  * SPDX-License-Identifier: Apache-2.0
  */
-import path from 'node:path';
+import path from 'path';
 
 import {getBabelOutputPlugin} from '@rollup/plugin-babel';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
@@ -25,9 +25,6 @@ export default {
       return false;
     }
     if (id.includes('node_modules')) {
-      return true;
-    }
-    if (id.includes('@puppeteer/browsers')) {
       return true;
     }
     if (id.startsWith(path.join(cwd, `lib`, `esm`, `puppeteer`, `bidi`))) {

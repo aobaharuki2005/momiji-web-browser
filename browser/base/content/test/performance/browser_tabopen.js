@@ -32,7 +32,6 @@ add_task(async function () {
 
   await ensureNoPreloadedBrowser();
   await disableFxaBadge();
-  await ensureSearchIconVisible();
 
   // The test starts on about:blank and opens an about:blank
   // tab which triggers opening the toolbar since

@@ -5,6 +5,7 @@
 sidebar-panel-header {
   padding-inline: var(--space-large);
 
+  /* stylelint-disable-next-line media-query-no-invalid */
   @media not -moz-pref("sidebar.revamp") {
     display: none;
   }

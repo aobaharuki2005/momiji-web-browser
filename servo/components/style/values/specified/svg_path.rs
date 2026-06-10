@@ -11,7 +11,7 @@ use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::basic_shape::GenericShapeCommand;
 use crate::values::generics::basic_shape::{
     ArcRadii, ArcSize, ArcSweep, AxisEndPoint, AxisPosition, CommandEndPoint, ControlPoint,
-    ControlReference, CoordinatePair, RelativeControlPoint,
+    ControlReference, CoordinatePair, RelativeControlPoint, ShapePosition,
 };
 use crate::values::generics::position::GenericPosition;
 use crate::values::CSSFloat;
@@ -189,16 +189,13 @@ impl ComputeSquaredDistance for SVGPathData {
     }
 }
 
-/// A position type for SVG path coordinates (just a pair of floats).
-pub type SVGPathPosition = GenericPosition<CSSFloat, CSSFloat>;
-
 /// The SVG path command.
 /// The fields of these commands are self-explanatory, so we skip the documents.
 /// Note: the index of the control points, e.g. control1, control2, are mapping to the control
 /// points of the Bézier curve in the spec.
 ///
 /// https://www.w3.org/TR/SVG11/paths.html#PathData
-pub type PathCommand = GenericShapeCommand<CSSFloat, SVGPathPosition, CSSFloat>;
+pub type PathCommand = GenericShapeCommand<CSSFloat, ShapePosition<CSSFloat>, CSSFloat>;
 
 /// For internal SVGPath normalization.
 #[allow(missing_docs)]
@@ -547,7 +544,7 @@ impl ops::Div<CSSFloat> for CoordPair {
     }
 }
 
-impl CommandEndPoint<SVGPathPosition, CSSFloat> {
+impl CommandEndPoint<ShapePosition<CSSFloat>, CSSFloat> {
     /// Converts <command-end-point> into absolutely positioned type.
     pub fn to_abs(self, state_pos: CoordPair) -> Self {
         // Consume self value.
@@ -577,12 +574,12 @@ impl AxisEndPoint<CSSFloat> {
     }
 }
 
-impl ControlPoint<SVGPathPosition, CSSFloat> {
+impl ControlPoint<ShapePosition<CSSFloat>, CSSFloat> {
     /// Converts <control-point> into absolutely positioned control point type.
     pub fn to_abs(
         self,
         state_pos: CoordPair,
-        end_point: CommandEndPoint<SVGPathPosition, CSSFloat>,
+        end_point: CommandEndPoint<ShapePosition<CSSFloat>, CSSFloat>,
     ) -> Self {
         // Consume self value.
         match self {
@@ -611,9 +608,9 @@ impl ControlPoint<SVGPathPosition, CSSFloat> {
     }
 }
 
-impl From<CommandEndPoint<SVGPathPosition, CSSFloat>> for CoordPair {
+impl From<CommandEndPoint<ShapePosition<CSSFloat>, CSSFloat>> for CoordPair {
     #[inline]
-    fn from(p: CommandEndPoint<SVGPathPosition, CSSFloat>) -> Self {
+    fn from(p: CommandEndPoint<ShapePosition<CSSFloat>, CSSFloat>) -> Self {
         match p {
             CommandEndPoint::ToPosition(pos) => CoordPair {
                 x: pos.horizontal,
@@ -624,9 +621,9 @@ impl From<CommandEndPoint<SVGPathPosition, CSSFloat>> for CoordPair {
     }
 }
 
-impl From<ControlPoint<SVGPathPosition, CSSFloat>> for CoordPair {
+impl From<ControlPoint<ShapePosition<CSSFloat>, CSSFloat>> for CoordPair {
     #[inline]
-    fn from(point: ControlPoint<SVGPathPosition, CSSFloat>) -> Self {
+    fn from(point: ControlPoint<ShapePosition<CSSFloat>, CSSFloat>) -> Self {
         match point {
             ControlPoint::Absolute(pos) => CoordPair {
                 x: pos.horizontal,
@@ -642,14 +639,14 @@ impl From<ControlPoint<SVGPathPosition, CSSFloat>> for CoordPair {
     }
 }
 
-impl From<CoordPair> for CommandEndPoint<SVGPathPosition, CSSFloat> {
+impl From<CoordPair> for CommandEndPoint<ShapePosition<CSSFloat>, CSSFloat> {
     #[inline]
     fn from(coord: CoordPair) -> Self {
         CommandEndPoint::ByCoordinate(coord)
     }
 }
 
-impl From<CoordPair> for SVGPathPosition {
+impl From<CoordPair> for ShapePosition<CSSFloat> {
     #[inline]
     fn from(coord: CoordPair) -> Self {
         GenericPosition {
@@ -672,7 +669,7 @@ impl From<AxisEndPoint<CSSFloat>> for CSSFloat {
     }
 }
 
-impl ToCss for SVGPathPosition {
+impl ToCss for ShapePosition<CSSFloat> {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
     where
         W: Write,
@@ -943,7 +940,7 @@ fn parse_coord(iter: &mut Peekable<Cloned<slice::Iter<u8>>>) -> Result<CoordPair
 /// Parse a pair of numbers that describes the absolutely positioned end point.
 fn parse_command_end_abs(
     iter: &mut Peekable<Cloned<slice::Iter<u8>>>,
-) -> Result<CommandEndPoint<SVGPathPosition, CSSFloat>, ()> {
+) -> Result<CommandEndPoint<ShapePosition<CSSFloat>, CSSFloat>, ()> {
     let coord = parse_coord(iter)?;
     Ok(CommandEndPoint::ToPosition(coord.into()))
 }
@@ -951,7 +948,7 @@ fn parse_command_end_abs(
 /// Parse a pair of numbers that describes the relatively positioned end point.
 fn parse_command_end_rel(
     iter: &mut Peekable<Cloned<slice::Iter<u8>>>,
-) -> Result<CommandEndPoint<SVGPathPosition, CSSFloat>, ()> {
+) -> Result<CommandEndPoint<ShapePosition<CSSFloat>, CSSFloat>, ()> {
     let coord = parse_coord(iter)?;
     Ok(CommandEndPoint::ByCoordinate(coord))
 }
@@ -959,7 +956,7 @@ fn parse_command_end_rel(
 /// Parse a pair of values that describe the absolutely positioned curve control point.
 fn parse_control_point_abs(
     iter: &mut Peekable<Cloned<slice::Iter<u8>>>,
-) -> Result<ControlPoint<SVGPathPosition, CSSFloat>, ()> {
+) -> Result<ControlPoint<ShapePosition<CSSFloat>, CSSFloat>, ()> {
     let coord = parse_coord(iter)?;
     Ok(ControlPoint::Relative(RelativeControlPoint {
         coord,
@@ -970,7 +967,7 @@ fn parse_control_point_abs(
 /// Parse a pair of values that describe the relatively positioned curve control point.
 fn parse_control_point_rel(
     iter: &mut Peekable<Cloned<slice::Iter<u8>>>,
-) -> Result<ControlPoint<SVGPathPosition, CSSFloat>, ()> {
+) -> Result<ControlPoint<ShapePosition<CSSFloat>, CSSFloat>, ()> {
     let coord = parse_coord(iter)?;
     Ok(ControlPoint::Relative(RelativeControlPoint {
         coord,

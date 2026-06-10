@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
@@ -18,7 +19,6 @@ import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.settings.creditcards.controller.CreditCardsManagementController
 import org.mozilla.fenix.settings.creditcards.interactor.DefaultCreditCardsManagementInteractor
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class DefaultCreditCardsManagementInteractorTest {

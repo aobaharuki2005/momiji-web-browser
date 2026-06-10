@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <algorithm>
 #include <cassert>
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
 
@@ -19,15 +17,8 @@
 
 static SECItem* nicknameCollision(SECItem* oldNick, PRBool* cancel,
                                   void* wincx) {
-  static unsigned int counter = 0;
-
-  // Always return a unique nickname.
-  unsigned int len =
-      (counter == 0) ? 2 : (2 + (unsigned int)(log10(counter) + 1e-9));
-  SECItem* item = SECITEM_AllocItem(nullptr, nullptr, len);
-  snprintf((char*)item->data, item->len, "%d", counter++);
-
-  return item;
+  *cancel = true;
+  return nullptr;
 }
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
@@ -42,9 +33,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
       SEC_PKCS12DecoderStart(&pwItem, slot.get(), nullptr, nullptr, nullptr,
                              nullptr, nullptr, nullptr));
   assert(dcx);
-
-  SEC_PKCS12DecoderSetMaxElementLen(dcx.get(),
-                                    std::max(1024 * 1024, (int)size));  // 1 MB
 
   SECStatus rv = SEC_PKCS12DecoderUpdate(dcx.get(), (unsigned char*)data, size);
   if (rv != SECSuccess) {

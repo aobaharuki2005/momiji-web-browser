@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,154 +11,193 @@
 #include <cstdint>
 #include <iosfwd>
 
-#include "mozilla/CSSEnabledState.h"
-#include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/TypedEnumBits.h"
-
-class nsStaticAtom;
+#include "PLDHashTable.h"
+#include "mozilla/RefPtr.h"
+#include "nsAtom.h"
 
 namespace mozilla {
 namespace dom {
 class Element;
 }  // namespace dom
 
-enum class PseudoStyleTypeFlags : uint16_t {
-  NONE = 0,
-  ENABLED_IN_UA = 1 << 0,
-  ENABLED_IN_CHROME = 1 << 1,
-  ENABLED_BY_PREF = 1 << 2,
-  IS_PSEUDO_ELEMENT = 1 << 3,
-  IS_CSS2 = 1 << 4,
-  IS_EAGER = 1 << 5,
-  IS_JS_CREATED_NAC = 1 << 6,
-  IS_FLEX_OR_GRID_ITEM = 1 << 7,
-  IS_ELEMENT_BACKED = 1 << 8,
-  IS_TREE_ABIDING = 1 << 9,
-  SUPPORTS_USER_ACTION_STATE = 1 << 10,
-  IS_INHERITING_ANON_BOX = 1 << 11,
-  IS_NON_INHERITING_ANON_BOX = 1 << 12,
-  IS_ANON_BOX = IS_INHERITING_ANON_BOX | IS_NON_INHERITING_ANON_BOX,
-  IS_WRAPPER_ANON_BOX = 1 << 13,
-  PARSES_AS_ELEMENT_BACKED = 1 << 14,
-};
-
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PseudoStyleTypeFlags)
-
 // The kind of pseudo-style that we have. This can be:
 //
-//  * CSS pseudo-elements (see PseudoStyleType.h).
+//  * CSS pseudo-elements (see nsCSSPseudoElements.h).
 //  * Anonymous boxes (see nsCSSAnonBoxes.h).
 //  * XUL tree pseudo-element stuff.
 //
 // This roughly corresponds to the `PseudoElement` enum in Rust code.
 enum class PseudoStyleType : uint8_t {
 // If CSS pseudo-elements stop being first here, change GetPseudoType.
-#define CSS_PSEUDO_STYLE_TYPE(_name, _flags) _name,
-#include "mozilla/PseudoStyleTypeList.h"
-#undef CSS_PSEUDO_STYLE_TYPE
-  NotPseudo,
-  MAX,
-};
+#define CSS_PSEUDO_ELEMENT(_name, _value, _flags) _name,
+#include "nsCSSPseudoElementList.h"
+#undef CSS_PSEUDO_ELEMENT
+  CSSPseudoElementsEnd,
+  AnonBoxesStart = CSSPseudoElementsEnd,
+  InheritingAnonBoxesStart = CSSPseudoElementsEnd,
 
-enum NonInheritingAnonBox : uint8_t {
-#define CSS_NON_INHERITING_ANON_BOX(_name, _flags) _name,
-#include "mozilla/PseudoStyleTypeList.h"
+  // Dummy variant so the next variant also has the same discriminant as
+  // AnonBoxesStart.
+  __reset_1 = AnonBoxesStart - 1,
+
+#define CSS_ANON_BOX(_name, _str) _name,
+#define CSS_NON_INHERITING_ANON_BOX(_name, _str)
+#define CSS_WRAPPER_ANON_BOX(_name, _str)
+#include "nsCSSAnonBoxList.h"
+#undef CSS_ANON_BOX
+#undef CSS_WRAPPER_ANON_BOX
 #undef CSS_NON_INHERITING_ANON_BOX
-  _Count,
+
+  // Wrapper anon boxes are inheriting anon boxes.
+  WrapperAnonBoxesStart,
+
+  // Dummy variant so the next variant also has the same discriminant as
+  // WrapperAnonBoxesStart.
+  __reset_2 = WrapperAnonBoxesStart - 1,
+
+#define CSS_ANON_BOX(_name, _str)
+#define CSS_NON_INHERITING_ANON_BOX(_name, _str)
+#define CSS_WRAPPER_ANON_BOX(_name, _str) _name,
+#include "nsCSSAnonBoxList.h"
+#undef CSS_ANON_BOX
+#undef CSS_WRAPPER_ANON_BOX
+#undef CSS_NON_INHERITING_ANON_BOX
+
+  WrapperAnonBoxesEnd,
+  InheritingAnonBoxesEnd = WrapperAnonBoxesEnd,
+  NonInheritingAnonBoxesStart = WrapperAnonBoxesEnd,
+
+  __reset_3 = NonInheritingAnonBoxesStart - 1,
+
+#define CSS_ANON_BOX(_name, _str)
+#define CSS_NON_INHERITING_ANON_BOX(_name, _str) _name,
+#include "nsCSSAnonBoxList.h"
+#undef CSS_ANON_BOX
+#undef CSS_NON_INHERITING_ANON_BOX
+
+  NonInheritingAnonBoxesEnd,
+  AnonBoxesEnd = NonInheritingAnonBoxesEnd,
+
+  XULTree = AnonBoxesEnd,
+  NotPseudo,
+  MAX
 };
 
 std::ostream& operator<<(std::ostream&, PseudoStyleType);
 
 class PseudoStyle final {
-  static const PseudoStyleTypeFlags kFlags[size_t(PseudoStyleType::MAX)];
-  static const nsStaticAtom* kAtoms[size_t(PseudoStyleType::MAX)];
-
  public:
-  static constexpr size_t kEagerPseudoCount = 4;
   using Type = PseudoStyleType;
 
-  static PseudoStyleTypeFlags GetFlags(Type aType) {
-    MOZ_ASSERT(aType < Type::MAX);
-    return kFlags[size_t(aType)];
-  }
-
-  static const nsStaticAtom* GetAtom(Type aType) {
-    MOZ_ASSERT(aType < Type::MAX);
-    MOZ_ASSERT(aType != Type::NotPseudo);
-    return kAtoms[size_t(aType)];
-  }
-
-  static bool HasAnyFlag(Type aType, PseudoStyleTypeFlags aFlags) {
-    return bool(GetFlags(aType) & aFlags);
-  }
+  // This must match EAGER_PSEUDO_COUNT in Rust code.
+  static const size_t kEagerPseudoCount = 4;
 
   static bool IsPseudoElement(Type aType) {
-    return HasAnyFlag(aType, PseudoStyleTypeFlags::IS_PSEUDO_ELEMENT);
+    return aType < Type::CSSPseudoElementsEnd;
   }
 
   static bool IsAnonBox(Type aType) {
-    return HasAnyFlag(aType, PseudoStyleTypeFlags::IS_ANON_BOX);
-  }
-
-  static bool IsNonElement(PseudoStyleType aPseudo) {
-    return aPseudo == PseudoStyleType::MozText ||
-           aPseudo == PseudoStyleType::MozOofPlaceholder ||
-           aPseudo == PseudoStyleType::MozFirstLetterContinuation;
+    return aType >= Type::AnonBoxesStart && aType < Type::AnonBoxesEnd;
   }
 
   static bool IsInheritingAnonBox(Type aType) {
-    return HasAnyFlag(aType, PseudoStyleTypeFlags::IS_INHERITING_ANON_BOX);
+    return aType >= Type::InheritingAnonBoxesStart &&
+           aType < Type::InheritingAnonBoxesEnd;
   }
 
   static bool IsNonInheritingAnonBox(Type aType) {
-    return HasAnyFlag(aType, PseudoStyleTypeFlags::IS_NON_INHERITING_ANON_BOX);
+    return aType >= Type::NonInheritingAnonBoxesStart &&
+           aType < Type::NonInheritingAnonBoxesEnd;
   }
 
   static bool IsWrapperAnonBox(Type aType) {
-    return HasAnyFlag(aType, PseudoStyleTypeFlags::IS_WRAPPER_ANON_BOX);
-  }
-
-  static bool IsElementBackedPseudo(Type aType) {
-    return HasAnyFlag(aType, PseudoStyleTypeFlags::IS_ELEMENT_BACKED);
+    return aType >= Type::WrapperAnonBoxesStart &&
+           aType < Type::WrapperAnonBoxesEnd;
   }
 
   static bool IsNamedViewTransitionPseudoElement(Type aType) {
-    return aType == Type::ViewTransitionGroup ||
-           aType == Type::ViewTransitionImagePair ||
-           aType == Type::ViewTransitionOld || aType == Type::ViewTransitionNew;
+    return aType == Type::viewTransitionGroup ||
+           aType == Type::viewTransitionImagePair ||
+           aType == Type::viewTransitionOld || aType == Type::viewTransitionNew;
   }
 
   static bool IsViewTransitionPseudoElement(Type aType) {
-    return aType == Type::ViewTransition ||
+    return aType == Type::viewTransition ||
            IsNamedViewTransitionPseudoElement(aType);
   }
 
-  static bool IsEagerlyCascadedInServo(const Type aType) {
-    return HasAnyFlag(aType, PseudoStyleTypeFlags::IS_EAGER);
+  static bool IsElementBackedPseudo(Type aType) {
+    return aType == Type::detailsContent ||
+           IsNamedViewTransitionPseudoElement(aType);
+  }
+};
+
+/*
+ * The pseudo style request is used to get the pseudo style of an element. This
+ * include a pseudo style type and an identifier which is used for functional
+ * pseudo style.
+ */
+struct PseudoStyleRequest {
+  PseudoStyleRequest() = default;
+  PseudoStyleRequest(PseudoStyleRequest&&) = default;
+  PseudoStyleRequest(const PseudoStyleRequest&) = default;
+  PseudoStyleRequest& operator=(PseudoStyleRequest&&) = default;
+  PseudoStyleRequest& operator=(const PseudoStyleRequest&) = default;
+
+  explicit PseudoStyleRequest(PseudoStyleType aType) : mType(aType) {}
+  PseudoStyleRequest(PseudoStyleType aType, nsAtom* aIdentifier)
+      : mType(aType), mIdentifier(aIdentifier) {}
+
+  bool operator==(const PseudoStyleRequest&) const = default;
+
+  bool IsNotPseudo() const { return mType == PseudoStyleType::NotPseudo; }
+  bool IsPseudoElementOrNotPseudo() const {
+    return IsNotPseudo() || PseudoStyle::IsPseudoElement(mType);
+  }
+  bool IsViewTransition() const {
+    return PseudoStyle::IsViewTransitionPseudoElement(mType);
   }
 
-  // Get the NonInheriting type for a given pseudo tag. The pseudo tag must test
-  // true for IsNonInheritingAnonBox.
-  static NonInheritingAnonBox NonInheritingTypeForPseudoType(
-      PseudoStyleType aType) {
-    MOZ_ASSERT(IsNonInheritingAnonBox(aType));
-    static_assert(sizeof(PseudoStyleType) == sizeof(uint8_t));
-    // We rely on non-inheriting anon boxes going first.
-    return NonInheritingAnonBox(static_cast<uint8_t>(aType));
+  static PseudoStyleRequest NotPseudo() { return PseudoStyleRequest(); }
+  static PseudoStyleRequest Before() {
+    return PseudoStyleRequest(PseudoStyleType::before);
+  }
+  static PseudoStyleRequest After() {
+    return PseudoStyleRequest(PseudoStyleType::after);
+  }
+  static PseudoStyleRequest Marker() {
+    return PseudoStyleRequest(PseudoStyleType::marker);
+  }
+  static PseudoStyleRequest Backdrop() {
+    return PseudoStyleRequest(PseudoStyleType::backdrop);
   }
 
-  static bool SupportsUserActionState(const Type aType) {
-    return HasAnyFlag(aType, PseudoStyleTypeFlags::SUPPORTS_USER_ACTION_STATE);
-  }
+  PseudoStyleType mType = PseudoStyleType::NotPseudo;
+  RefPtr<nsAtom> mIdentifier;
+};
 
-  static bool IsJSCreatedNAC(Type aType) {
-    return HasAnyFlag(aType, PseudoStyleTypeFlags::IS_JS_CREATED_NAC);
-  }
+class PseudoStyleRequestHashKey : public PLDHashEntryHdr {
+ public:
+  using KeyType = PseudoStyleRequest;
+  using KeyTypePointer = const PseudoStyleRequest*;
 
-  static bool PseudoElementIsFlexOrGridItem(const Type aType) {
-    return HasAnyFlag(aType, PseudoStyleTypeFlags::IS_FLEX_OR_GRID_ITEM);
+  explicit PseudoStyleRequestHashKey(KeyTypePointer aKey) : mRequest(*aKey) {}
+  PseudoStyleRequestHashKey(PseudoStyleRequestHashKey&& aOther) = default;
+  ~PseudoStyleRequestHashKey() = default;
+
+  KeyType GetKey() const { return mRequest; }
+  bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mRequest; }
+
+  static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
+    return mozilla::HashGeneric(
+        static_cast<uint8_t>(aKey->mType),
+        aKey->mIdentifier ? aKey->mIdentifier->hash() : 0);
   }
+  enum { ALLOW_MEMMOVE = true };
+
+ private:
+  PseudoStyleRequest mRequest;
 };
 
 }  // namespace mozilla

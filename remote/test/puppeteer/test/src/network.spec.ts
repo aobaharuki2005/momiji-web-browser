@@ -109,61 +109,6 @@ describe('network', function () {
         expect(userAgent).toContain('Firefox');
       }
     });
-
-    // In CDP cookie header is only when the request actually
-    // hits the network, verify that we populate the correctly
-    describe('cookie header', () => {
-      it('should show Cookie header', async () => {
-        const {page, server} = await getTestState();
-        await page.goto(server.EMPTY_PAGE);
-        await page.evaluate(() => {
-          document.cookie = 'username=John Doe';
-        });
-        const response = (await page.goto(server.PREFIX + '/title.html'))!;
-
-        const cookie = response.request().headers()['cookie'];
-
-        expect(cookie).toContain('username=John Doe');
-      });
-
-      it('should show Cookie header for redirect', async () => {
-        const {page, server} = await getTestState();
-        await page.goto(server.EMPTY_PAGE);
-        server.setRedirect('/foo.html', '/title.html');
-        await page.evaluate(() => {
-          document.cookie = 'username=John Doe';
-        });
-        const response = (await page.goto(server.PREFIX + '/foo.html'))!;
-
-        const cookie1 = response.request().redirectChain()[0]!.headers()[
-          'cookie'
-        ];
-        expect(cookie1).toContain('username=John Doe');
-
-        const cookie2 = response.request().headers()['cookie'];
-        expect(cookie2).toContain('username=John Doe');
-      });
-
-      it('should show Cookie header for fetch request', async () => {
-        const {page, server} = await getTestState();
-        await page.goto(server.EMPTY_PAGE);
-        await page.evaluate(() => {
-          document.cookie = 'username=John Doe';
-        });
-
-        const [response] = await Promise.all([
-          waitEvent<HTTPResponse>(page, 'response', req => {
-            return !isFavicon(req);
-          }),
-          page.evaluate(async () => {
-            await fetch('/title.html');
-          }),
-        ]);
-
-        const cookie = response.request().headers()['cookie'];
-        expect(cookie).toContain('username=John Doe');
-      });
-    });
   });
 
   describe('Response.headers', function () {
@@ -296,7 +241,7 @@ describe('network', function () {
     });
   });
 
-  describe('Request.fetchPostData', function () {
+  describe('Request.postData', function () {
     it('should work', async () => {
       const {page, server} = await getTestState();
 
@@ -318,17 +263,14 @@ describe('network', function () {
       ]);
 
       expect(request).toBeTruthy();
-      expect(request.hasPostData()).toBeTruthy();
-      expect(await request.fetchPostData()).toBe('{"foo":"bar"}');
+      expect(request.postData()).toBe('{"foo":"bar"}');
     });
 
     it('should be |undefined| when there is no post data', async () => {
       const {page, server} = await getTestState();
 
       const response = (await page.goto(server.EMPTY_PAGE))!;
-      expect(response.request().hasPostData()).toBeFalsy();
-
-      expect(await response.request().fetchPostData()).toBe(undefined);
+      expect(response.request().postData()).toBe(undefined);
     });
 
     it('should work with blobs', async () => {
@@ -354,6 +296,7 @@ describe('network', function () {
       ]);
 
       expect(request).toBeTruthy();
+      expect(request.postData()).toBe(undefined);
       expect(request.hasPostData()).toBe(true);
       expect(await request.fetchPostData()).toBe('{"foo":"bar"}');
     });
@@ -457,7 +400,7 @@ describe('network', function () {
 
       const response = (await page.goto(server.PREFIX + '/pptr.png'))!;
       const imageBuffer = fs.readFileSync(
-        path.join(import.meta.dirname, '../assets', 'pptr.png'),
+        path.join(__dirname, '../assets', 'pptr.png'),
       );
       const responseBuffer = await response.buffer();
 
@@ -469,7 +412,7 @@ describe('network', function () {
       server.enableGzip('/pptr.png');
       const response = (await page.goto(server.PREFIX + '/pptr.png'))!;
       const imageBuffer = fs.readFileSync(
-        path.join(import.meta.dirname, '../assets', 'pptr.png'),
+        path.join(__dirname, '../assets', 'pptr.png'),
       );
       const responseBuffer = await response.buffer();
       expect(Buffer.from(responseBuffer).equals(imageBuffer)).toBe(true);
@@ -506,8 +449,8 @@ describe('network', function () {
       }, url);
 
       const response = await responsePromise;
-      await expect(response.buffer()).rejects.toThrow(
-        'Could not load response body for this request. This might happen if the request is a preflight request.',
+      await expect(response.buffer()).rejects.toThrowError(
+        'Could not load body for this request. This might happen if the request is a preflight request.',
       );
     });
   });
@@ -792,21 +735,6 @@ describe('network', function () {
   describe('Page.authenticate', function () {
     it('should work', async () => {
       const {page, server} = await getTestState();
-      server.setAuth('/empty.html', 'user', 'pass');
-      await page.authenticate({
-        username: 'user',
-        password: 'pass',
-      });
-      const response = (await page.goto(server.EMPTY_PAGE))!;
-      expect(response.status()).toBe(200);
-    });
-
-    it('should work with interception', async () => {
-      const {page, server} = await getTestState();
-      await page.setRequestInterception(true);
-      page.on('request', async req => {
-        await req.continue();
-      });
       server.setAuth('/empty.html', 'user', 'pass');
       await page.authenticate({
         username: 'user',

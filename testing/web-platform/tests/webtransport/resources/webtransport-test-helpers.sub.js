@@ -1,9 +1,16 @@
+// The file including this must also include /common/get-host-info.sub.js to
+// pick up the necessary constants.
+
+const HOST = get_host_info().ORIGINAL_HOST;
+const PORT = '{{ports[webtransport-h3][0]}}';
+const BASE = `https://${HOST}:${PORT}`;
+
 // Wait for the given number of milliseconds (ms).
 function wait(ms) { return new Promise(res => step_timeout(res, ms)); }
 
 // Create URL for WebTransport session.
 function webtransport_url(handler) {
-  return `https://{{host}}:{{ports[webtransport-h3][0]}}/webtransport/handlers/${handler}`;
+  return `${BASE}/webtransport/handlers/${handler}`;
 }
 
 // Converts WebTransport stream error code to HTTP/3 error code.
@@ -63,13 +70,13 @@ function check_and_remove_standard_headers(headers) {
   delete headers[':scheme'];
   assert_equals(headers[':method'], 'CONNECT');
   delete headers[':method'];
-  assert_equals(headers[':authority'], '{{host}}:{{ports[webtransport-h3][0]}}');
+  assert_equals(headers[':authority'], `${HOST}:${PORT}`);
   delete headers[':authority'];
   assert_equals(headers[':path'], '/webtransport/handlers/echo-request-headers.py');
   delete headers[':path'];
   assert_equals(headers[':protocol'], 'webtransport');
   delete headers[':protocol'];
-  assert_equals(headers['origin'], 'https://{{location[host]}}');
+  assert_equals(headers['origin'], `${get_host_info().ORIGIN}`);
   delete headers['origin'];
 }
 

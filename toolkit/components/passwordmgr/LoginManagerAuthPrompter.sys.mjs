@@ -175,7 +175,7 @@ LoginManagerAuthPromptFactory.prototype = {
   async _waitForLoginsUI(prompt) {
     await this._uiBusyPromise;
 
-    const { displayHost, realm } = PromptUtils.getAuthTarget(
+    let [origin, httpRealm] = prompt.prompter._getAuthTarget(
       prompt.channel,
       prompt.authInfo
     );
@@ -185,17 +185,14 @@ LoginManagerAuthPromptFactory.prototype = {
       return;
     }
 
-    let hasLogins =
-      (await Services.logins.countLoginsAsync(displayHost, null, realm)) > 0;
+    let hasLogins = Services.logins.countLogins(origin, null, httpRealm) > 0;
     if (
       !hasLogins &&
       lazy.LoginHelper.schemeUpgrades &&
-      displayHost.startsWith("https://")
+      origin.startsWith("https://")
     ) {
-      let httpDisplayHost = displayHost.replace(/^https:\/\//, "http://");
-      hasLogins =
-        (await Services.logins.countLoginsAsync(httpDisplayHost, null, realm)) >
-        0;
+      let httpOrigin = origin.replace(/^https:\/\//, "http://");
+      hasLogins = Services.logins.countLogins(httpOrigin, null, httpRealm) > 0;
     }
     // We don't depend on saved logins.
     if (!hasLogins) {
@@ -495,7 +492,7 @@ LoginManagerAuthPrompter.prototype = {
       await this._updateLogin(selectedLogin, newLogin);
     } else {
       this.log("Login unchanged, no further action needed.");
-      await Services.logins.recordPasswordUseAsync(
+      Services.logins.recordPasswordUse(
         selectedLogin,
         this._inPrivateBrowsing,
         "PromptLogin",
@@ -641,7 +638,6 @@ LoginManagerAuthPrompter.prototype = {
     var canAutologin = false;
     var foundLogins;
     let autofilled = false;
-    let origin, httpRealm;
 
     try {
       // If the user submits a login but it fails, we need to remove the
@@ -649,10 +645,7 @@ LoginManagerAuthPrompter.prototype = {
       // be prompted for authentication again, which brings us here.
       this._factory._dismissPendingSavePrompt(this._browser);
 
-      ({ displayHost: origin, realm: httpRealm } = PromptUtils.getAuthTarget(
-        aChannel,
-        aAuthInfo
-      ));
+      var [origin, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
 
       // Looks for existing logins to prefill the prompt with.
       foundLogins = await Services.logins.searchLoginsAsync({
@@ -791,7 +784,7 @@ LoginManagerAuthPrompter.prototype = {
         this._factory._setPendingSavePrompt(promptBrowser, savePrompt);
       } else {
         this.log("Login unchanged, no further action needed.");
-        await Services.logins.recordPasswordUseAsync(
+        Services.logins.recordPasswordUse(
           selectedLogin,
           this._inPrivateBrowsing,
           "AuthLogin",
@@ -838,8 +831,7 @@ LoginManagerAuthPrompter.prototype = {
 
       cancelable = this._newAsyncPromptConsumer(aCallback, aContext);
 
-      const { displayHost: origin, realm: httpRealm } =
-        PromptUtils.getAuthTarget(aChannel, aAuthInfo);
+      let [origin, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
 
       let hashKey = aLevel + "|" + origin + "|" + httpRealm;
       let pendingPrompt = this._factory.getPendingPrompt(
@@ -919,7 +911,7 @@ LoginManagerAuthPrompter.prototype = {
     propBag.setProperty("timePasswordChanged", now);
     propBag.setProperty("timeLastUsed", now);
     propBag.setProperty("timesUsedIncrement", 1);
-    // Note that we don't call `recordPasswordUseAsync` so we won't potentially record
+    // Note that we don't call `recordPasswordUse` so we won't potentially record
     // both a use and a save/update. See bug 1640096.
     await Services.logins.modifyLoginAsync(login, propBag);
   },
@@ -933,7 +925,7 @@ LoginManagerAuthPrompter.prototype = {
       return null;
     }
 
-    let chromeWin = browser.documentGlobal;
+    let chromeWin = browser.ownerGlobal;
     if (!chromeWin) {
       return null;
     }
@@ -1026,6 +1018,57 @@ LoginManagerAuthPrompter.prototype = {
     }
 
     return displayHost;
+  },
+
+  /**
+   * Returns the origin and realm for which authentication is being
+   * requested, in the format expected to be used with nsILoginInfo.
+   */
+  _getAuthTarget(aChannel, aAuthInfo) {
+    var origin, realm;
+
+    // If our proxy is demanding authentication, don't use the
+    // channel's actual destination.
+    if (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) {
+      this.log("getAuthTarget is for proxy auth.");
+      if (!(aChannel instanceof Ci.nsIProxiedChannel)) {
+        throw new Error("proxy auth needs nsIProxiedChannel");
+      }
+
+      var info = aChannel.proxyInfo;
+      if (!info) {
+        throw new Error("proxy auth needs nsIProxyInfo");
+      }
+
+      // Proxies don't have a scheme, but we'll use "moz-proxy://"
+      // so that it's more obvious what the login is for.
+      var idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
+        Ci.nsIIDNService
+      );
+      origin =
+        "moz-proxy://" +
+        idnService.convertUTF8toACE(info.host) +
+        ":" +
+        info.port;
+      realm = aAuthInfo.realm;
+      if (!realm) {
+        realm = origin;
+      }
+
+      return [origin, realm];
+    }
+
+    origin = this._getFormattedOrigin(aChannel.URI);
+
+    // If a HTTP WWW-Authenticate header specified a realm, that value
+    // will be available here. If it wasn't set or wasn't HTTP, we'll use
+    // the formatted origin instead.
+    realm = aAuthInfo.realm;
+    if (!realm) {
+      realm = origin;
+    }
+
+    return [origin, realm];
   },
 
   /**

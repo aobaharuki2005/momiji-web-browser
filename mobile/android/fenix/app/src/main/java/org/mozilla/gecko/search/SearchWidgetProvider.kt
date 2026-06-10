@@ -27,7 +27,6 @@ import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
 import org.mozilla.fenix.iconpicker.DefaultPackageManagerWrapper
 import org.mozilla.fenix.utils.IntentUtils
-import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.widget.VoiceSearchActivity
 import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 
@@ -38,17 +37,16 @@ class SearchWidgetProvider : AppWidgetProvider() {
     // The existing name replicates the name and package we used in Fennec.
 
     override fun onEnabled(context: Context) {
-        recordWidgetIsInstalled(context.settings())
+        context.settings().setSearchWidgetInstalled(true)
+        Metrics.searchWidgetInstalled.set(true)
     }
 
     override fun onDisabled(context: Context) {
-        context.settings().searchWidgetInstalled = false
+        context.settings().setSearchWidgetInstalled(false)
         Metrics.searchWidgetInstalled.set(false)
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        recordWidgetIsInstalled(context.settings())
-
         val textSearchIntent = createTextSearchIntent(context)
         val voiceSearchIntent = createVoiceSearchIntent(context)
 
@@ -83,13 +81,6 @@ class SearchWidgetProvider : AppWidgetProvider() {
 
         val views = createRemoteViews(context, layout, textSearchIntent, voiceSearchIntent, text)
         appWidgetManager.updateAppWidget(appWidgetId, views)
-    }
-
-    private fun recordWidgetIsInstalled(settings: Settings) {
-        if (!settings.searchWidgetInstalled) {
-            settings.searchWidgetInstalled = true
-            Metrics.searchWidgetInstalled.set(true)
-        }
     }
 
     /**

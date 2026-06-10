@@ -6,8 +6,6 @@ package mozilla.components.lib.crash.service
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.io.Resources.getResource
-import mockwebserver3.MockResponse
-import mockwebserver3.MockWebServer
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
@@ -16,6 +14,8 @@ import mozilla.components.support.ktx.kotlin.toDate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.robolectric.testContext
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -124,7 +124,8 @@ class MozillaSocorroServiceTest {
 
         try {
             mockWebServer.enqueue(
-                MockResponse(code = 200, body = "CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -145,12 +146,11 @@ class MozillaSocorroServiceTest {
                 processType = "main",
                 breadcrumbs = arrayListOf(Breadcrumb(message = "Hello World", date = "2018-06-12T19:30+00:00".toDate("yyyy-MM-dd'T'HH:mmXXX"))),
                 remoteType = null,
-                uuid = "f6aa9fc0-75f5-4677-b90d-7b481909365a",
             )
             service.report(crash)
 
             val fileInputStream =
-                ByteArrayInputStream(mockWebServer.takeRequest().body!!.toByteArray())
+                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
             val inputStream = GZIPInputStream(fileInputStream)
             val reader = InputStreamReader(inputStream)
             val bufferedReader = BufferedReader(reader)
@@ -162,7 +162,6 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=ReleaseChannel\r\n\r\nN/A"))
             assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
             assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
-            assert(request.contains("name=CrashEventID\r\n\r\nf6aa9fc0-75f5-4677-b90d-7b481909365a"))
             assert(request.contains("name=CrashType\r\n\r\n$FATAL_NATIVE_CRASH_TYPE"))
             assert(request.contains("name=CrashTime\r\n\r\n123"))
             assert(request.contains("name=useragent_locale\r\n\r\nen-US"))
@@ -171,7 +170,7 @@ class MozillaSocorroServiceTest {
             verify(service).report(crash)
             verify(service).sendReport(crash, null, "dump.path", "extras.path", true, true)
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 
@@ -181,7 +180,8 @@ class MozillaSocorroServiceTest {
 
         try {
             mockWebServer.enqueue(
-                MockResponse(code = 200, body = "CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -212,7 +212,7 @@ class MozillaSocorroServiceTest {
             verify(service, times(0)).readExtrasFromFile(any())
             verify(formDataWriter, times(0)).sendFile(any(), any())
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 
@@ -222,7 +222,8 @@ class MozillaSocorroServiceTest {
 
         try {
             mockWebServer.enqueue(
-                MockResponse(code = 200, body = "CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -253,7 +254,7 @@ class MozillaSocorroServiceTest {
             verify(service, times(0)).readExtrasFromFile(any())
             verify(formDataWriter, times(0)).sendFile(any(), any())
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 
@@ -263,7 +264,8 @@ class MozillaSocorroServiceTest {
 
         try {
             mockWebServer.enqueue(
-                MockResponse(code = 200, body = "CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -294,7 +296,7 @@ class MozillaSocorroServiceTest {
             verify(service).readExtrasFromFile(any())
             verify(formDataWriter).sendFile(any(), any())
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 
@@ -306,7 +308,8 @@ class MozillaSocorroServiceTest {
 
         try {
             mockWebServer.enqueue(
-                MockResponse(code = 200, body = "CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -346,7 +349,7 @@ class MozillaSocorroServiceTest {
             assertEquals("test/minidumps/3fa772dc-dc89-c08d-c03e-7f441c50821e-browser.dmp", files.get(1).path)
             assertEquals("test/minidumps/3fa772dc-dc89-c08d-c03e-7f441c50821e-content.dmp", files.get(2).path)
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 
@@ -356,7 +359,8 @@ class MozillaSocorroServiceTest {
 
         try {
             mockWebServer.enqueue(
-                MockResponse(code = 200, body = "CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -388,7 +392,7 @@ class MozillaSocorroServiceTest {
             service.report(crash)
 
             val fileInputStream =
-                ByteArrayInputStream(mockWebServer.takeRequest().body!!.toByteArray())
+                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
             val inputStream = GZIPInputStream(fileInputStream)
             val reader = InputStreamReader(inputStream)
             val bufferedReader = BufferedReader(reader)
@@ -412,7 +416,7 @@ class MozillaSocorroServiceTest {
             verify(service).report(crash)
             verify(service).sendReport(crash, null, "dump.path", "extras.path", true, true)
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 
@@ -422,7 +426,8 @@ class MozillaSocorroServiceTest {
 
         try {
             mockWebServer.enqueue(
-                MockResponse(code = 200, body = "CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -449,7 +454,7 @@ class MozillaSocorroServiceTest {
             service.report(crash)
 
             val fileInputStream =
-                ByteArrayInputStream(mockWebServer.takeRequest().body!!.toByteArray())
+                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
             val inputStream = GZIPInputStream(fileInputStream)
             val reader = InputStreamReader(inputStream)
             val bufferedReader = BufferedReader(reader)
@@ -468,7 +473,7 @@ class MozillaSocorroServiceTest {
             verify(service).report(crash)
             verify(service).sendReport(crash, null, "dump.path", "extras.path", true, false)
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 
@@ -478,7 +483,8 @@ class MozillaSocorroServiceTest {
 
         try {
             mockWebServer.enqueue(
-                MockResponse(code = 200, body = "CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -493,11 +499,11 @@ class MozillaSocorroServiceTest {
                 ),
             )
 
-            val crash = Crash.UncaughtExceptionCrash(123456, RuntimeException("Test"), arrayListOf(), uuid = "13b041a0-3958-4d11-b3b6-194c973d8d58")
+            val crash = Crash.UncaughtExceptionCrash(123456, RuntimeException("Test"), arrayListOf())
             service.report(crash)
 
             val fileInputStream =
-                ByteArrayInputStream(mockWebServer.takeRequest().body!!.toByteArray())
+                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
             val inputStream = GZIPInputStream(fileInputStream)
             val reader = InputStreamReader(inputStream)
             val bufferedReader = BufferedReader(reader)
@@ -511,7 +517,6 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=ReleaseChannel\r\n\r\nnightly"))
             assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
             assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
-            assert(request.contains("name=CrashEventID\r\n\r\n13b041a0-3958-4d11-b3b6-194c973d8d58"))
             assert(request.contains("name=CrashType\r\n\r\n$UNCAUGHT_EXCEPTION_TYPE"))
             assert(request.contains("name=CrashTime\r\n\r\n123"))
             assert(request.contains("name=useragent_locale\r\n\r\nen-US"))
@@ -519,7 +524,7 @@ class MozillaSocorroServiceTest {
             verify(service).report(crash)
             verify(service).sendReport(crash, crash.throwable, null, null, false, true)
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 
@@ -529,7 +534,8 @@ class MozillaSocorroServiceTest {
 
         try {
             mockWebServer.enqueue(
-                MockResponse(code = 200, body = "CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -544,11 +550,11 @@ class MozillaSocorroServiceTest {
             val crash = Crash.UncaughtExceptionCrash(123, RuntimeException("Test"), arrayListOf())
             service.report(crash)
 
-            mockWebServer.close()
+            mockWebServer.shutdown()
             verify(service).report(crash)
             verify(service).sendReport(crash, crash.throwable, null, null, false, true)
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 
@@ -557,7 +563,7 @@ class MozillaSocorroServiceTest {
         val mockWebServer = MockWebServer()
 
         try {
-            mockWebServer.enqueue(MockResponse(code = 404, body = "error"))
+            mockWebServer.enqueue(MockResponse().setResponseCode(404).setBody("error"))
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
             val service = spy(
@@ -578,12 +584,12 @@ class MozillaSocorroServiceTest {
                 remoteType = null,
             )
             service.report(crash)
-            mockWebServer.close()
+            mockWebServer.shutdown()
 
             verify(service).report(crash)
             verify(service).sendReport(crash, null, crash.minidumpPath, crash.extrasPath, true, false)
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 
@@ -714,7 +720,8 @@ class MozillaSocorroServiceTest {
 
         try {
             mockWebServer.enqueue(
-                MockResponse(code = 200, body = "CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
 
@@ -745,7 +752,7 @@ class MozillaSocorroServiceTest {
 
             assertEquals("bp-924121d3-4de3-4b32-ab12-026fc0190928", id)
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 
@@ -755,7 +762,8 @@ class MozillaSocorroServiceTest {
 
         try {
             mockWebServer.enqueue(
-                MockResponse(code = 200, body = "CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"),
             )
             mockWebServer.start()
             val serverUrl = mockWebServer.url("/")
@@ -789,7 +797,7 @@ class MozillaSocorroServiceTest {
             service.report(crash)
 
             val fileInputStream =
-                ByteArrayInputStream(mockWebServer.takeRequest().body!!.toByteArray())
+                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
             val inputStream = GZIPInputStream(fileInputStream)
             val reader = InputStreamReader(inputStream)
             val bufferedReader = BufferedReader(reader)
@@ -813,7 +821,7 @@ class MozillaSocorroServiceTest {
             verify(service).report(crash)
             verify(service).sendReport(crash, null, "dump.path", "extras.path", true, true)
         } finally {
-            mockWebServer.close()
+            mockWebServer.shutdown()
         }
     }
 }

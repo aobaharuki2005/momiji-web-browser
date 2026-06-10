@@ -18,7 +18,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import mozilla.components.feature.prompts.R
-import mozilla.components.feature.prompts.ext.Truncation
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 private const val KEY_USERNAME_EDIT_TEXT = "KEY_USERNAME_EDIT_TEXT"
@@ -56,7 +55,7 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = MaterialAlertDialogBuilder(requireContext())
             .setupTitle()
-            .setMessage(truncateMessage(message))
+            .setMessage(message)
             .setCancelable(true)
             .setNegativeButton(R.string.mozac_feature_prompts_cancel) { _, _ ->
                 feature?.onCancel(sessionId, promptRequestUID)
@@ -65,17 +64,6 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
                 onPositiveClickAction()
             }
         return addLayout(builder).create().withCenterAlignedButtons()
-    }
-
-    /**
-     * Truncates the message to prevent ANR during text measurement.
-     */
-    private fun truncateMessage(text: String): String {
-        return if (text.length > Truncation.MAX_MESSAGE_LENGTH) {
-            text.substring(0, Truncation.MAX_MESSAGE_LENGTH) + "…"
-        } else {
-            text
-        }
     }
 
     override fun onCancel(dialog: DialogInterface) {

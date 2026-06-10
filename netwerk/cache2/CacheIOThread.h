@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef CacheIOThread_h_
-#define CacheIOThread_h_
+#ifndef CacheIOThread__h__
+#define CacheIOThread__h__
 
 #include "nsIThreadInternal.h"
 #include "nsISupportsImpl.h"

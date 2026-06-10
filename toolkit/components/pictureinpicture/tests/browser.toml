@@ -43,7 +43,6 @@ prefs = [
   "media.videocontrols.picture-in-picture.video-toggle.position=\"right\"",
   "media.videocontrols.picture-in-picture.video-toggle.testing=true",
   "media.videocontrols.picture-in-picture.urlbar-button.enabled=true",
-  "media.videocontrols.picture-in-picture.auto-close.enabled=true",
 ]
 
 ["browser_aaa_run_first_firstTimePiPToggleEvents.js"]
@@ -61,8 +60,6 @@ prefs = [
 ["browser_changePiPSrcInFullscreen.js"]
 
 ["browser_closePipPause.js"]
-
-["browser_closePip_emptySrc.js"]
 
 ["browser_closePip_pageNavigationChanges.js"]
 
@@ -154,8 +151,6 @@ support-files = ["test-page-with-nan-video-duration.html"]
 
 ["browser_privateWindow.js"]
 
-["browser_reconnectPiPAfterVideoReparented.js"]
-
 ["browser_removeVideoElement.js"]
 
 ["browser_resizeVideo.js"]
@@ -191,7 +186,6 @@ skip-if = [
 ["browser_text_tracks_webvtt_3.js"]
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && ccov",
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && ccov",
 ]
 
 ["browser_thirdPartyIframe.js"]
@@ -246,7 +240,6 @@ skip-if = [
 ["browser_urlbar_toggle.js"]
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && debug && msix && verify-standalone", # Bug 1833445
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && debug && msix && verify-standalone", # Bug 1833445
 ]
 
 ["browser_videoEmptied.js"]

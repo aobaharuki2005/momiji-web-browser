@@ -123,7 +123,7 @@ add_task(async function test_open_bookmark_folder_from_sidebar() {
       );
     }
 
-    await synthesizeClickOnSelectedTreeCell(tree, { button: 1 });
+    synthesizeClickOnSelectedTreeCell(tree, { button: 1 });
 
     let tabs = await Promise.all(loadedPromises);
 

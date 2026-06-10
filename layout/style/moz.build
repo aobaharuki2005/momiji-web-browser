@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -48,14 +50,19 @@ XPIDL_MODULE = "layout_style"
 
 EXPORTS += [
     "!NonCustomCSSPropertyId.h",
-    "!PseudoStyleTypeList.h",
     "AnimationCommon.h",
     "CounterStyleManager.h",
     "nsAnimationManager.h",
     "nsChangeHint.h",
     "nsComputedDOMStyle.h",
+    "nsCSSAnonBoxes.h",
+    "nsCSSAnonBoxList.h",
+    "nsCSSCounterDescList.h",
+    "nsCSSFontDescList.h",
     "nsCSSPropertyIDSet.h",
     "nsCSSProps.h",
+    "nsCSSPseudoElementList.h",
+    "nsCSSPseudoElements.h",
     "nsCSSValue.h",
     "nsDOMCSSAttrDeclaration.h",
     "nsDOMCSSDeclaration.h",
@@ -75,13 +82,12 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    "!PseudoStyleTypeList.h",
     "!ServoCSSPropList.h",
     "AnimatedPropertyIDSet.h",
     "AnimationCollection.h",
     "AttributeStyles.h",
     "BindgenUniquePtr.h",
-    "BuiltInStyleSheetList.inc",
+    "BuiltInStyleSheetList.h",
     "BuiltInStyleSheets.h",
     "CachedInheritingStyles.h",
     "ComputedStyle.h",
@@ -102,19 +108,18 @@ EXPORTS.mozilla += [
     "PostTraversalTask.h",
     "PreferenceSheet.h",
     "PreloadedStyleSheet.h",
-    "PseudoStyleRequest.h",
     "PseudoStyleType.h",
     "RestyleManager.h",
     "RustCell.h",
     "ServoBindings.h",
     "ServoBindingTypes.h",
-    "ServoBoxedTypeList.inc",
+    "ServoBoxedTypeList.h",
     "ServoComputedData.h",
     "ServoCSSParser.h",
     "ServoCSSRuleList.h",
     "ServoElementSnapshot.h",
     "ServoElementSnapshotTable.h",
-    "ServoLockedArcTypeList.inc",
+    "ServoLockedArcTypeList.h",
     "ServoStyleConstsForwards.h",
     "ServoStyleConstsInlines.h",
     "ServoStyleSet.h",
@@ -137,7 +142,6 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     "CSS.h",
-    "CSSAppearanceBaseRule.h",
     "CSSContainerRule.h",
     "CSSCounterStyleRule.h",
     "CSSCustomMediaRule.h",
@@ -163,7 +167,6 @@ EXPORTS.mozilla.dom += [
     "CSSStyleRule.h",
     "CSSSupportsRule.h",
     "CSSValue.h",
-    "CSSViewTransitionRule.h",
     "FontFace.h",
     "FontFaceImpl.h",
     "FontFaceSet.h",
@@ -196,7 +199,6 @@ UNIFIED_SOURCES += [
     "ComputedStyle.cpp",
     "CounterStyleManager.cpp",
     "CSS.cpp",
-    "CSSAppearanceBaseRule.cpp",
     "CSSContainerRule.cpp",
     "CSSCounterStyleRule.cpp",
     "CSSCustomMediaRule.cpp",
@@ -221,7 +223,6 @@ UNIFIED_SOURCES += [
     "CSSStartingStyleRule.cpp",
     "CSSStyleRule.cpp",
     "CSSSupportsRule.cpp",
-    "CSSViewTransitionRule.cpp",
     "DeclarationBlock.cpp",
     "DocumentStyleRootIterator.cpp",
     "ErrorReporter.cpp",
@@ -246,7 +247,9 @@ UNIFIED_SOURCES += [
     "MediaQueryList.cpp",
     "nsAnimationManager.cpp",
     "nsComputedDOMStyle.cpp",
+    "nsCSSAnonBoxes.cpp",
     "nsCSSProps.cpp",
+    "nsCSSPseudoElements.cpp",
     "nsCSSValue.cpp",
     "nsDOMCSSAttrDeclaration.cpp",
     "nsDOMCSSDeclaration.cpp",
@@ -319,21 +322,24 @@ CONTENT_ACCESSIBLE_FILES += [
     "TopLevelVideoDocument.css",
 ]
 
+
 GeneratedFile(
     "NonCustomCSSPropertyId.h",
-    script="GenerateCSSProperties.py",
-    entry_point="gen_non_custom_css_property_id",
-    inputs=["NonCustomCSSPropertyId.h.in"],
+    script="GenerateCSSPropertyID.py",
+    entry_point="generate",
+    inputs=["NonCustomCSSPropertyId.h.in", "!ServoCSSPropList.py"],
 )
 GeneratedFile(
     "ServoCSSPropList.h",
-    script="GenerateCSSProperties.py",
-    entry_point="gen_css_prop_list_header",
+    script="GenerateServoCSSPropList.py",
+    entry_point="generate_header",
+    inputs=["!ServoCSSPropList.py"],
 )
 GeneratedFile(
-    "PseudoStyleTypeList.h",
-    script="GeneratePseudoStyleTypeList.py",
-    entry_point="generate",
+    "ServoCSSPropList.py",
+    script="GenerateServoCSSPropList.py",
+    entry_point="generate_data",
+    inputs=["ServoCSSPropList.mako.py"],
 )
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
@@ -345,26 +351,29 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
 
     GeneratedFile(
         "CompositorAnimatableProperties.h",
-        script="GenerateCSSProperties.py",
-        entry_point="gen_compositor_animatable_properties",
+        script="GenerateCompositorAnimatableProperties.py",
+        entry_point="generate",
+        inputs=["!ServoCSSPropList.py"],
     )
     GeneratedFile(
         "CountedUnknownProperties.h",
-        script="GenerateCSSProperties.py",
-        entry_point="gen_counted_unknown_properties",
+        script="GenerateCountedUnknownProperties.py",
+        entry_point="generate",
         inputs=[
             "/servo/components/style/properties/counted_unknown_properties.py",
         ],
     )
     GeneratedFile(
         "nsComputedDOMStyleGenerated.inc",
-        script="GenerateCSSProperties.py",
-        entry_point="gen_computed_style",
+        script="GenerateComputedDOMStyleGenerated.py",
+        entry_point="generate",
+        inputs=["!ServoCSSPropList.py"],
     )
     GeneratedFile(
         "nsCSSPropsGenerated.inc",
-        script="GenerateCSSProperties.py",
-        entry_point="gen_ns_css_props",
+        script="GenerateCSSPropsGenerated.py",
+        entry_point="generate",
+        inputs=["!ServoCSSPropList.py"],
     )
     CbindgenHeader(
         "ServoStyleConsts.h",

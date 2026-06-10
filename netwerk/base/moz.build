@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -133,7 +135,6 @@ EXPORTS += [
     "nsBaseParentChannel.h",
     "nsFileStreams.h",
     "nsInputStreamPump.h",
-    "nsIURIWithSizeOf.h",
     "nsMIMEInputStream.h",
     "nsNetUtil.h",
     "nsReadLine.h",
@@ -166,7 +167,6 @@ EXPORTS.mozilla.net += [
     "InterceptionInfo.h",
     "IPv4Parser.h",
     "NetworkConnectivityService.h",
-    "NoVarySearchUtils.h",
     "PrivateBrowsingChannel.h",
     "ProtocolHandlerInfo.h",
     "RedirectChannelRegistrar.h",
@@ -194,7 +194,6 @@ UNIFIED_SOURCES += [
     "MockNetworkLayerController.cpp",
     "NetworkConnectivityService.cpp",
     "NetworkDataCountLayer.cpp",
-    "NoVarySearchUtils.cpp",
     "nsAsyncRedirectVerifyHelper.cpp",
     "nsAsyncStreamCopier.cpp",
     "nsAuthInformationHolder.cpp",
@@ -297,7 +296,6 @@ DIRS += [
     "rust-helper",
     "http-sfv",
     "idna_glue",
-    "ssl_tokens_cache",
     "uritemplate_glue",
     "urlpattern_glue",
 ]

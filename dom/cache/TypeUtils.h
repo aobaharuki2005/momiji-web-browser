@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,7 +16,6 @@
 class nsIGlobalObject;
 class nsIAsyncInputStream;
 class nsIInputStream;
-class nsIURI;
 
 namespace mozilla {
 
@@ -120,8 +121,23 @@ class TypeUtils {
       const nsTArray<HeadersEntry>& aHeadersEntryList,
       HeadersGuardEnum aGuard = HeadersGuardEnum::None);
 
-  // Check if aUrl's scheme is valid for storing in the cache.
-  static bool URLHasValidScheme(nsIURI* aUrl);
+  // Utility method for parsing a URL and doing associated operations.  A mix
+  // of things are done in this one method to avoid duplicated parsing:
+  //
+  //  1) The aUrl argument is modified to strip the fragment
+  //  2) If aSchemaValidOut is set, then a boolean value is set indicating
+  //     if the aUrl's scheme is valid or not for storing in the cache.
+  //  3) If aUrlWithoutQueryOut is set, then a url string is provided without
+  //     the search section.
+  //  4) If aUrlQueryOut is set then its populated with the search section
+  //     of the URL.  Note, this parameter must be set if aUrlWithoutQueryOut
+  //     is set.  They must either both be nullptr or set to valid string
+  //     pointers.
+  //
+  // Any errors are thrown on ErrorResult.
+  static void ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
+                         nsACString* aUrlWithoutQueryOut,
+                         nsACString* aUrlQueryOut, ErrorResult& aRv);
 
  private:
   void CheckAndSetBodyUsed(JSContext* aCx, Request& aRequest,

@@ -88,19 +88,19 @@ Examples of correct token usage for this rule:
 .. code-block:: css
 
   .heading-medium {
-    font-size: var(--font-size-heading-medium);
+    font-size: var(--heading-font-size-medium);
   }
 
 .. code-block:: css
 
   .heading-large {
-    font-size: var(--font-size-heading-large);
+    font-size: var(--heading-font-size-large);
   }
 
 .. code-block:: css
 
   .heading-xlarge {
-    font-size: var(--font-size-heading-xlarge);
+    font-size: var(--heading-font-size-xlarge);
   }
 
 .. code-block:: css

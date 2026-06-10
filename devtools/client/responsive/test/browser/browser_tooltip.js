@@ -50,14 +50,14 @@ addRDMTask(TEST_URL, async ({ ui }) => {
         }
       );
       while (!mouseMoveFired) {
-        EventUtils.synthesizeMouse(
+        await EventUtils.synthesizeMouse(
           target,
           -2,
           -2,
           { type: "mousemove" },
           content
         );
-        EventUtils.synthesizeMouse(
+        await EventUtils.synthesizeMouse(
           target,
           -1,
           -1,
@@ -83,21 +83,21 @@ addRDMTask(TEST_URL, async ({ ui }) => {
     target.addEventListener("mouseout", eventLogger);
     content.document.addEventListener("mousemove", eventLogger);
     // Then, move cursor over the target.
-    EventUtils.synthesizeMouse(
+    await EventUtils.synthesizeMouse(
       target,
       1,
       1,
       { type: "mousemove", isSynthesized: false },
       content
     );
-    EventUtils.synthesizeMouse(
+    await EventUtils.synthesizeMouse(
       target,
       2,
       1,
       { type: "mousemove", isSynthesized: false },
       content
     );
-    EventUtils.synthesizeMouse(
+    await EventUtils.synthesizeMouse(
       target,
       3,
       1,
@@ -117,7 +117,7 @@ addRDMTask(TEST_URL, async ({ ui }) => {
   await spawnViewportTask(ui, {}, async () => {
     info("Cleaning up the tooltip with moving the cursor");
     const target = content.document.querySelector("h1");
-    EventUtils.synthesizeMouse(
+    await EventUtils.synthesizeMouse(
       target,
       -1,
       -1,

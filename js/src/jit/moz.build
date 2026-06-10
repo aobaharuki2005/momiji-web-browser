@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -27,7 +29,6 @@ UNIFIED_SOURCES += [
     "BaselineJIT.cpp",
     "BitSet.cpp",
     "BranchHinting.cpp",
-    "BranchPruning.cpp",
     "BytecodeAnalysis.cpp",
     "CacheIR.cpp",
     "CacheIRAOT.cpp",
@@ -43,7 +44,6 @@ UNIFIED_SOURCES += [
     "ExecutableAllocator.cpp",
     "FlushICache.cpp",
     "FoldLinearArithConstants.cpp",
-    "FoldTests.cpp",
     "GraphSpewer.cpp",
     "InlinableNatives.cpp",
     "InstructionReordering.cpp",
@@ -98,7 +98,6 @@ UNIFIED_SOURCES += [
     "Trampoline.cpp",
     "TrampolineNatives.cpp",
     "TrialInlining.cpp",
-    "TypeAnalysis.cpp",
     "TypePolicy.cpp",
     "UnrollLoops.cpp",
     "ValueNumbering.cpp",
@@ -109,7 +108,6 @@ UNIFIED_SOURCES += [
     "WarpOracle.cpp",
     "WarpSnapshot.cpp",
     "WasmBCE.cpp",
-    "WasmRefTypeAnalysis.cpp",
     "XrayJitInfo.cpp",
 ]
 
@@ -233,11 +231,11 @@ elif CONFIG["JS_CODEGEN_RISCV64"]:
         "riscv64/Architecture-riscv64.cpp",
         "riscv64/Assembler-riscv64.cpp",
         "riscv64/AssemblerMatInt.cpp",
-        "riscv64/base/base-assembler-riscv.cc",
-        "riscv64/base/base-riscv-i.cc",
-        "riscv64/base/Instruction.cpp",
         "riscv64/CodeGenerator-riscv64.cpp",
+        "riscv64/constant/Base-constant-riscv.cpp",
         "riscv64/disasm/Disasm-riscv64.cpp",
+        "riscv64/extension/base-assembler-riscv.cc",
+        "riscv64/extension/base-riscv-i.cc",
         "riscv64/extension/extension-riscv-a.cc",
         "riscv64/extension/extension-riscv-b.cc",
         "riscv64/extension/extension-riscv-c.cc",

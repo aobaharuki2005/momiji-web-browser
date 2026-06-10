@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Google LLC
+ * Copyright 2018 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -49,8 +49,6 @@ struct SkColorSpaceXformSteps {
 
     void apply(float rgba[4]) const;
     void apply(SkRasterPipeline*) const;
-
-    explicit operator bool() const { return fFlags.mask() != 0; }
 
     Flags fFlags;
 

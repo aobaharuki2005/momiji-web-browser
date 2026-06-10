@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ClearKeyCencParser_h_
-#define ClearKeyCencParser_h_
+#ifndef __ClearKeyCencParser_h__
+#define __ClearKeyCencParser_h__
 
 #include <stdint.h>
 #include <vector>

@@ -3,8 +3,9 @@ use http::{Method, Request};
 use tokio::net::TcpStream;
 use tokio_rustls::TlsConnector;
 
-use tokio_rustls::rustls::{pki_types::ServerName, RootCertStore};
+use tokio_rustls::rustls::{OwnedTrustAnchor, RootCertStore, ServerName};
 
+use std::convert::TryFrom;
 use std::error::Error;
 use std::net::ToSocketAddrs;
 
@@ -15,8 +16,17 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     let _ = env_logger::try_init();
 
     let tls_client_config = std::sync::Arc::new({
-        let root_store = RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+        let mut root_store = RootCertStore::empty();
+        root_store.add_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
+            OwnedTrustAnchor::from_subject_spki_name_constraints(
+                ta.subject,
+                ta.spki,
+                ta.name_constraints,
+            )
+        }));
+
         let mut c = tokio_rustls::rustls::ClientConfig::builder()
+            .with_safe_defaults()
             .with_root_certificates(root_store)
             .with_no_client_auth();
         c.alpn_protocols.push(ALPN_H2.as_bytes().to_owned());

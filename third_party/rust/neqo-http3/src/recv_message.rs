@@ -13,18 +13,17 @@ use std::{
     time::Instant,
 };
 
-use neqo_common::{Header, header::HeadersExt as _, qdebug, qinfo, qtrace};
+use neqo_common::{header::HeadersExt as _, qdebug, qinfo, qtrace, Header};
 use neqo_qpack as qpack;
 use neqo_transport::{Connection, StreamId};
 
 use crate::{
-    CloseType, Error, Http3StreamInfo, Http3StreamType, HttpRecvStream, HttpRecvStreamEvents,
-    MessageType, Priority, PushId, ReceiveOutput, RecvStream, Res, Stream,
-    frames::{FrameReader, HFrame, StreamReaderConnectionWrapper, hframe::HFrameType},
+    frames::{hframe::HFrameType, FrameReader, HFrame, StreamReaderConnectionWrapper},
     headers_checks::{headers_valid, is_interim},
     priority::PriorityHandler,
     push_controller::PushController,
-    qlog,
+    qlog, CloseType, Error, Http3StreamInfo, Http3StreamType, HttpRecvStream, HttpRecvStreamEvents,
+    MessageType, Priority, PushId, ReceiveOutput, RecvStream, Res, Stream,
 };
 
 pub struct RecvMessageInfo {
@@ -122,35 +121,30 @@ impl RecvMessage {
 
     fn handle_headers_frame(&mut self, header_block: Vec<u8>, fin: bool) -> Res<()> {
         match self.state {
-            RecvMessageState::WaitingForResponseHeaders { .. } => {
+            RecvMessageState::WaitingForResponseHeaders {..} => {
                 if header_block.is_empty() {
                     return Err(Error::HttpGeneralProtocolStream);
                 }
-                self.state = RecvMessageState::DecodingHeaders { header_block, fin };
-            }
-            RecvMessageState::WaitingForData { .. } => {
+                    self.state = RecvMessageState::DecodingHeaders { header_block, fin };
+             }
+            RecvMessageState::WaitingForData { ..} => {
                 // TODO implement trailers, for now just ignore them.
-                self.state = RecvMessageState::WaitingForFinAfterTrailers {
-                    frame_reader: FrameReader::new(),
-                };
+                self.state = RecvMessageState::WaitingForFinAfterTrailers{frame_reader: FrameReader::new()};
             }
-            RecvMessageState::WaitingForFinAfterTrailers { .. } => {
+            RecvMessageState::WaitingForFinAfterTrailers {..} => {
                 return Err(Error::HttpFrameUnexpected);
             }
-            _ => unreachable!(
-                "This functions is only called in WaitingForResponseHeaders | WaitingForData | WaitingForFinAfterTrailers state"
-            ),
-        }
+            _ => unreachable!("This functions is only called in WaitingForResponseHeaders | WaitingForData | WaitingForFinAfterTrailers state")
+         }
         Ok(())
     }
 
     fn handle_data_frame(&mut self, len: u64, fin: bool) -> Res<()> {
         match self.state {
-            RecvMessageState::WaitingForResponseHeaders { .. }
-            | RecvMessageState::WaitingForFinAfterTrailers { .. } => {
+            RecvMessageState::WaitingForResponseHeaders {..} | RecvMessageState::WaitingForFinAfterTrailers {..} => {
                 return Err(Error::HttpFrameUnexpected);
             }
-            RecvMessageState::WaitingForData { .. } => {
+            RecvMessageState::WaitingForData {..} => {
                 if len > 0 {
                     if fin {
                         return Err(Error::HttpFrame);
@@ -160,9 +154,7 @@ impl RecvMessage {
                     };
                 }
             }
-            _ => unreachable!(
-                "This functions is only called in WaitingForResponseHeaders | WaitingForData | WaitingForFinAfterTrailers state"
-            ),
+            _ => unreachable!("This functions is only called in WaitingForResponseHeaders | WaitingForData | WaitingForFinAfterTrailers state")
         }
         Ok(())
     }
@@ -291,8 +283,7 @@ impl RecvMessage {
                         (None, false) => break Ok(()),
                         (Some(frame), fin) => {
                             qdebug!(
-                                "[{self}] A new frame has been received: {frame:?}; state={:?} fin={fin}",
-                                self.state,
+                                "[{self}] A new frame has been received: {frame:?}; state={:?} fin={fin}", self.state,
                             );
                             match frame {
                                 HFrame::Headers { header_block } => {

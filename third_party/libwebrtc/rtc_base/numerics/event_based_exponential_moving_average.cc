@@ -17,8 +17,6 @@
 
 #include "rtc_base/checks.h"
 
-namespace webrtc {
-
 namespace {
 
 // For a normal distributed value, the 95% double sided confidence interval is
@@ -26,6 +24,8 @@ namespace {
 constexpr double ninetyfive_percent_confidence = 1.96;
 
 }  // namespace
+
+namespace webrtc {
 
 // `half_time` specifies how much weight will be given to old samples,
 // a sample gets exponentially less weight so that it's 50%

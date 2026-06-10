@@ -46,7 +46,7 @@ export var UnitTestObjs = {
  * # Return:
  * - A score ranges in [0, 1].
  * @param {InterestVector} interestVector
- * @param {Array.<Interest[keyof Interest]>} contentCategories
+ * @param {Array.<Interest>} contentCategories
  * @returns {number}
  */
 export function score(
@@ -56,7 +56,7 @@ export function score(
 FfiConverterTypeInterestVector.checkType(interestVector);
 FfiConverterSequenceTypeInterest.checkType(contentCategories);
 const result = UniFFIScaffolding.callSync(
-    64, // uniffi_relevancy_fn_func_score
+    52, // uniffi_relevancy_fn_func_score
     FfiConverterTypeInterestVector.lower(interestVector),
     FfiConverterSequenceTypeInterest.lower(contentCategories),
 )
@@ -142,27 +142,27 @@ export class BanditData {
             throw e;
         }
         /**
-         * @type {string}
+         * bandit
          */
         this.bandit = bandit;
         /**
-         * @type {string}
+         * arm
          */
         this.arm = arm;
         /**
-         * @type {number}
+         * impressions
          */
         this.impressions = impressions;
         /**
-         * @type {number}
+         * clicks
          */
         this.clicks = clicks;
         /**
-         * @type {number}
+         * alpha
          */
         this.alpha = alpha;
         /**
-         * @type {number}
+         * beta
          */
         this.beta = beta;
     }
@@ -321,7 +321,6 @@ export class InterestMetrics {
          * the user's top interest is copied, but all other interests are set to zero.  This measures
          * the highest possible similarity with consumers that used interest vectors with a single
          * interest set.
-         * @type {number}
          */
         this.topSingleInterestSimilarity = topSingleInterestSimilarity;
         /**
@@ -329,12 +328,10 @@ export class InterestMetrics {
          * similarity with consumers that used interest vectors with a two interests (note: this means
          * they would need to choose the user's top two interests and have the exact same proportion
          * between them as the user).
-         * @type {number}
          */
         this.top2interestSimilarity = top2interestSimilarity;
         /**
          * The same as before, but the top 3 interests are copied.
-         * @type {number}
          */
         this.top3interestSimilarity = top3interestSimilarity;
     }
@@ -605,79 +602,79 @@ export class InterestVector {
             throw e;
         }
         /**
-         * @type {number}
+         * inconclusive
          */
         this.inconclusive = inconclusive;
         /**
-         * @type {number}
+         * animals
          */
         this.animals = animals;
         /**
-         * @type {number}
+         * arts
          */
         this.arts = arts;
         /**
-         * @type {number}
+         * autos
          */
         this.autos = autos;
         /**
-         * @type {number}
+         * business
          */
         this.business = business;
         /**
-         * @type {number}
+         * career
          */
         this.career = career;
         /**
-         * @type {number}
+         * education
          */
         this.education = education;
         /**
-         * @type {number}
+         * fashion
          */
         this.fashion = fashion;
         /**
-         * @type {number}
+         * finance
          */
         this.finance = finance;
         /**
-         * @type {number}
+         * food
          */
         this.food = food;
         /**
-         * @type {number}
+         * government
          */
         this.government = government;
         /**
-         * @type {number}
+         * hobbies
          */
         this.hobbies = hobbies;
         /**
-         * @type {number}
+         * home
          */
         this.home = home;
         /**
-         * @type {number}
+         * news
          */
         this.news = news;
         /**
-         * @type {number}
+         * realEstate
          */
         this.realEstate = realEstate;
         /**
-         * @type {number}
+         * society
          */
         this.society = society;
         /**
-         * @type {number}
+         * sports
          */
         this.sports = sports;
         /**
-         * @type {number}
+         * tech
          */
         this.tech = tech;
         /**
-         * @type {number}
+         * travel
          */
         this.travel = travel;
     }
@@ -943,7 +940,7 @@ export class FfiConverterTypeInterestVector extends FfiConverterArrayBuffer {
  * interests.  `Inconclusive` is used for domains in the user's top sites that we can't classify
  * because there's no corresponding entry in the interest database.
  */
-export const Interest = Object.freeze({
+export const Interest = {
     /**
      * INCONCLUSIVE
      */
@@ -1020,7 +1017,8 @@ export const Interest = Object.freeze({
      * TRAVEL
      */
     TRAVEL: 19,
-});
+};
+Object.freeze(Interest);
 
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeInterest extends FfiConverterArrayBuffer {
@@ -1416,7 +1414,7 @@ export class RelevancyStore extends RelevancyStoreInterface {
         FfiConverterString.checkType(dbPath);
         FfiConverterTypeRemoteSettingsService.checkType(remoteSettings);
         const result = UniFFIScaffolding.callSync(
-            65, // uniffi_relevancy_fn_constructor_relevancystore_new
+            53, // uniffi_relevancy_fn_constructor_relevancystore_new
             FfiConverterString.lower(dbPath),
             FfiConverterTypeRemoteSettingsService.lower(remoteSettings),
         )
@@ -1444,7 +1442,7 @@ export class RelevancyStore extends RelevancyStoreInterface {
         FfiConverterString.checkType(bandit);
         FfiConverterSequenceString.checkType(arms);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            66, // uniffi_relevancy_fn_method_relevancystore_bandit_init
+            54, // uniffi_relevancy_fn_method_relevancystore_bandit_init
             FfiConverterTypeRelevancyStore.lowerReceiver(this),
             FfiConverterString.lower(bandit),
             FfiConverterSequenceString.lower(arms),
@@ -1475,7 +1473,7 @@ export class RelevancyStore extends RelevancyStoreInterface {
         FfiConverterString.checkType(bandit);
         FfiConverterSequenceString.checkType(arms);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            67, // uniffi_relevancy_fn_method_relevancystore_bandit_select
+            55, // uniffi_relevancy_fn_method_relevancystore_bandit_select
             FfiConverterTypeRelevancyStore.lowerReceiver(this),
             FfiConverterString.lower(bandit),
             FfiConverterSequenceString.lower(arms),
@@ -1508,7 +1506,7 @@ export class RelevancyStore extends RelevancyStoreInterface {
         FfiConverterString.checkType(arm);
         FfiConverterBoolean.checkType(selected);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            68, // uniffi_relevancy_fn_method_relevancystore_bandit_update
+            56, // uniffi_relevancy_fn_method_relevancystore_bandit_update
             FfiConverterTypeRelevancyStore.lowerReceiver(this),
             FfiConverterString.lower(bandit),
             FfiConverterString.lower(arm),
@@ -1529,7 +1527,7 @@ export class RelevancyStore extends RelevancyStoreInterface {
     close() {
        
         const result = UniFFIScaffolding.callSync(
-            69, // uniffi_relevancy_fn_method_relevancystore_close
+            57, // uniffi_relevancy_fn_method_relevancystore_close
             FfiConverterTypeRelevancyStore.lowerReceiver(this),
         )
         return handleRustResult(
@@ -1545,7 +1543,7 @@ export class RelevancyStore extends RelevancyStoreInterface {
     async ensureInterestDataPopulated() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            70, // uniffi_relevancy_fn_method_relevancystore_ensure_interest_data_populated
+            58, // uniffi_relevancy_fn_method_relevancystore_ensure_interest_data_populated
             FfiConverterTypeRelevancyStore.lowerReceiver(this),
         )
         return handleRustResult(
@@ -1568,7 +1566,7 @@ export class RelevancyStore extends RelevancyStoreInterface {
         FfiConverterString.checkType(bandit);
         FfiConverterString.checkType(arm);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            71, // uniffi_relevancy_fn_method_relevancystore_get_bandit_data
+            59, // uniffi_relevancy_fn_method_relevancystore_get_bandit_data
             FfiConverterTypeRelevancyStore.lowerReceiver(this),
             FfiConverterString.lower(bandit),
             FfiConverterString.lower(arm),
@@ -1600,7 +1598,7 @@ export class RelevancyStore extends RelevancyStoreInterface {
        
         FfiConverterSequenceString.checkType(topUrlsByFrecency);
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            72, // uniffi_relevancy_fn_method_relevancystore_ingest
+            60, // uniffi_relevancy_fn_method_relevancystore_ingest
             FfiConverterTypeRelevancyStore.lowerReceiver(this),
             FfiConverterSequenceString.lower(topUrlsByFrecency),
         )
@@ -1617,7 +1615,7 @@ export class RelevancyStore extends RelevancyStoreInterface {
     interrupt() {
        
         const result = UniFFIScaffolding.callSync(
-            73, // uniffi_relevancy_fn_method_relevancystore_interrupt
+            61, // uniffi_relevancy_fn_method_relevancystore_interrupt
             FfiConverterTypeRelevancyStore.lowerReceiver(this),
         )
         return handleRustResult(
@@ -1637,7 +1635,7 @@ export class RelevancyStore extends RelevancyStoreInterface {
     async userInterestVector() {
        
         const result = await UniFFIScaffolding.callAsyncWrapper(
-            74, // uniffi_relevancy_fn_method_relevancystore_user_interest_vector
+            62, // uniffi_relevancy_fn_method_relevancystore_user_interest_vector
             FfiConverterTypeRelevancyStore.lowerReceiver(this),
         )
         return handleRustResult(
@@ -1671,11 +1669,11 @@ export class FfiConverterTypeRelevancyStore extends FfiConverter {
     }
 
     static read(dataStream) {
-        return this.lift(dataStream.readPointer(11));
+        return this.lift(dataStream.readPointer(10));
     }
 
     static write(dataStream, value) {
-        dataStream.writePointer(11, this.lower(value));
+        dataStream.writePointer(10, this.lower(value));
     }
 
     static computeSize(value) {

@@ -182,7 +182,7 @@ function prepareMockFilePicker(pathOrFile) {
 
   // Mock the file picker to select a test addon
   const MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
   MockFilePicker.setFiles([file]);
 }
 /* exported prepareMockFilePicker */

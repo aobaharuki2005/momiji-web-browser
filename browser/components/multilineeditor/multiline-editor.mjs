@@ -2,75 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { css, html } from "chrome://global/content/vendor/lit.all.mjs";
+import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import {
   Decoration,
   DecorationSet,
   EditorState,
   EditorView,
-  MarkdownParser,
-  MarkdownSerializer,
   Plugin as PmPlugin,
-  Schema,
   TextSelection,
   baseKeymap,
   basicSchema,
-  defaultMarkdownParser,
-  defaultMarkdownSerializer,
   history as historyPlugin,
   keymap,
   redo as historyRedo,
   undo as historyUndo,
 } from "chrome://browser/content/multilineeditor/prosemirror.bundle.mjs";
-
-function generatePlaceholderKeyframeStyles(placeholderCount) {
-  const segmentDuration = 100 / placeholderCount;
-  const transitionDuration = segmentDuration * 0.2;
-  const exitStart = Math.round(segmentDuration - transitionDuration);
-  const exitEnd = Math.round(segmentDuration);
-  const enterStart = Math.round(100 - transitionDuration);
-
-  return css`
-    @keyframes multiline-editor-placeholder-animation {
-      0% {
-        opacity: 1;
-        transform: translateY(0);
-        visibility: visible;
-      }
-      ${exitStart}% {
-        opacity: 1;
-        transform: translateY(0);
-        visibility: visible;
-      }
-      ${exitEnd}% {
-        opacity: 0;
-        transform: translateY(-100%);
-        visibility: hidden;
-      }
-      ${enterStart}% {
-        opacity: 0;
-        transform: translateY(100%);
-        visibility: hidden;
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-        visibility: visible;
-      }
-    }
-  `;
-}
-
-/**
- * @typedef {object} MultilineEditorPlugin
- * @property {object} [schemaExtension] - Schema extensions
- * @property {object} [schemaExtension.nodes] - Node specs
- * @property {object} [schemaExtension.marks] - Mark specs
- * @property {function(MultilineEditor): PmPlugin} [createPlugin] - Create plugin
- * @property {object} [parseMarkdown] - Markdown token specs
- * @property {object} [toMarkdown] - Markdown serializer functions
- */
 
 /**
  * @class MultilineEditor
@@ -78,7 +25,6 @@ function generatePlaceholderKeyframeStyles(placeholderCount) {
  * A ProseMirror-based multiline editor.
  *
  * @property {string} placeholder - Placeholder text for the editor.
- * @property {Array<MultilineEditorPlugin>} plugins - Editor plugins.
  * @property {boolean} readOnly - Whether the editor is read-only.
  */
 export class MultilineEditor extends MozLitElement {
@@ -89,73 +35,22 @@ export class MultilineEditor extends MozLitElement {
 
   static properties = {
     placeholder: { type: String, reflect: true, fluent: true },
-    placeholderHints: { type: Array, attribute: false },
     readOnly: { type: Boolean, reflect: true, attribute: "readonly" },
-    plugins: { type: Array, attribute: false },
-    maxLength: { type: Number, attribute: "maxlength" },
-    // ARIA combobox state forwarded from the host to the inner contenteditable.
-    // reflect:false so the host attribute stays the source of truth.
-    ariaControls: { type: String, attribute: "aria-controls", reflect: false },
-    ariaAutoComplete: {
-      type: String,
-      attribute: "aria-autocomplete",
-      reflect: false,
-    },
-    ariaExpanded: { type: String, attribute: "aria-expanded", reflect: false },
-    ariaActiveDescendant: {
-      type: String,
-      attribute: "aria-activedescendant",
-      reflect: false,
-    },
-    ariaHasPopup: { type: String, attribute: "aria-haspopup", reflect: false },
-    showPlaceholderAnimation: {
-      type: Boolean,
-      reflect: true,
-      attribute: "show-placeholder-animation",
-    },
   };
 
-  static schema = new Schema({
-    nodes: {
-      doc: basicSchema.spec.nodes.get("doc"),
-      paragraph: basicSchema.spec.nodes.get("paragraph"),
-      text: basicSchema.spec.nodes.get("text"),
-    },
-  });
+  static schema = basicSchema;
 
-  /**
-   * ARIA state forwarded from the host's reactive Lit properties to the inner
-   * contenteditable. Each entry pairs the property name (used in `updated()`
-   * change detection) with the attribute name applied to the inner element.
-   */
-  static FORWARDED_ARIA = [
-    { prop: "ariaControls", attr: "aria-controls" },
-    { prop: "ariaAutoComplete", attr: "aria-autocomplete" },
-    { prop: "ariaExpanded", attr: "aria-expanded" },
-    { prop: "ariaActiveDescendant", attr: "aria-activedescendant" },
-    { prop: "ariaHasPopup", attr: "aria-haspopup" },
-  ];
-
-  #instanceId = crypto.randomUUID();
-  #placeholderVersion = 0;
-  #placeholderKeyframeStyles = null;
   #pendingValue = "";
   #placeholderPlugin;
   #plugins;
   #suppressInputEvent = false;
   #view;
-  #markdownSerializer;
-  #innerRole = null;
 
   constructor() {
     super();
 
     this.placeholder = "";
-    this.placeholderHints = [];
-    this.plugins = [];
     this.readOnly = false;
-    this.maxLength = 0;
-    this.showPlaceholderAnimation = false;
     this.#placeholderPlugin = this.#createPlaceholderPlugin();
     const plugins = [
       historyPlugin(),
@@ -179,15 +74,6 @@ export class MultilineEditor extends MozLitElement {
   }
 
   /**
-   * The ProseMirror view instance.
-   *
-   * @type {EditorView}
-   */
-  get view() {
-    return this.#view;
-  }
-
-  /**
    * Whether the editor is composing.
    *
    * @type {boolean}
@@ -204,9 +90,6 @@ export class MultilineEditor extends MozLitElement {
   get value() {
     if (!this.#view) {
       return this.#pendingValue;
-    }
-    if (this.#markdownSerializer) {
-      return this.#markdownSerializer.serialize(this.#view.state.doc);
     }
     return this.#view.state.doc.textBetween(
       0,
@@ -232,7 +115,13 @@ export class MultilineEditor extends MozLitElement {
     }
 
     const state = this.#view.state;
-    const doc = this.#textToDoc(val, state.schema);
+    const schema = state.schema;
+    const lines = val.split("\n");
+    const paragraphs = lines.map(line => {
+      const content = line ? [schema.text(line)] : [];
+      return schema.node("paragraph", null, content);
+    });
+    const doc = schema.node("doc", null, paragraphs);
 
     const tr = state.tr.replaceWith(0, state.doc.content.size, doc.content);
     tr.setMeta("addToHistory", false);
@@ -252,47 +141,6 @@ export class MultilineEditor extends MozLitElement {
     } finally {
       this.#suppressInputEvent = false;
     }
-  }
-
-  /**
-   * The plain-text content of the editor with atom nodes (e.g. mentions)
-   * contributing zero characters. Useful for persisting input alongside a
-   * structured list of inline atoms.
-   *
-   * @type {string}
-   */
-  get plainText() {
-    if (!this.#view) {
-      return this.#pendingValue;
-    }
-    return this.#view.state.doc.textBetween(
-      0,
-      this.#view.state.doc.content.size,
-      "\n",
-      ""
-    );
-  }
-
-  /**
-   * Convert a ProseMirror document position to a text-character offset that
-   * matches `plainText`.
-   *
-   * @param {number} pos
-   * @returns {number}
-   */
-  posToTextOffset(pos) {
-    return this.#textOffsetFromPos(pos, this.#view?.state.doc, "\n", "");
-  }
-
-  /**
-   * Convert a text-character offset (matching `plainText`) to a ProseMirror
-   * document position.
-   *
-   * @param {number} offset
-   * @returns {number}
-   */
-  textOffsetToPos(offset) {
-    return this.#posFromTextOffset(offset);
   }
 
   /**
@@ -387,7 +235,6 @@ export class MultilineEditor extends MozLitElement {
    */
   select() {
     this.setSelectionRange(0, this.value.length);
-    this.focus();
   }
 
   /**
@@ -403,14 +250,6 @@ export class MultilineEditor extends MozLitElement {
    */
   connectedCallback() {
     super.connectedCallback();
-    // Capture a consumer-supplied role for the inner contenteditable before
-    // hiding this host element from the accessibility tree. With
-    // delegatesFocus, screen readers focus the inner contenteditable, so its
-    // role and ARIA state are what get announced.
-    const hostRole = this.getAttribute("role");
-    if (hostRole && hostRole !== "presentation") {
-      this.#innerRole = hostRole;
-    }
     this.setAttribute("role", "presentation");
   }
 
@@ -418,7 +257,6 @@ export class MultilineEditor extends MozLitElement {
    * Called when the element is removed from the DOM.
    */
   disconnectedCallback() {
-    this.#cancelPlaceholderAnimations();
     this.#destroyView();
     this.#pendingValue = "";
     super.disconnectedCallback();
@@ -428,7 +266,6 @@ export class MultilineEditor extends MozLitElement {
    * Called after the element’s DOM has been rendered for the first time.
    */
   firstUpdated() {
-    this.#updatePlaceholderKeyframeStyles();
     this.#createView();
   }
 
@@ -438,109 +275,9 @@ export class MultilineEditor extends MozLitElement {
    * @param {Map} changedProps
    */
   updated(changedProps) {
-    if (
-      changedProps.has("placeholder") ||
-      changedProps.has("placeholderHints") ||
-      changedProps.has("plugins") ||
-      changedProps.has("readOnly") ||
-      MultilineEditor.FORWARDED_ARIA.some(({ prop }) => changedProps.has(prop))
-    ) {
+    if (changedProps.has("placeholder") || changedProps.has("readOnly")) {
       this.#refreshView();
     }
-    if (changedProps.has("showPlaceholderAnimation")) {
-      // Restart or cancel placeholder animation.
-      if (this.showPlaceholderAnimation) {
-        this.#resetPlaceholderAnimation();
-      } else {
-        this.#cancelPlaceholderAnimations();
-      }
-    }
-  }
-
-  #buildSchema() {
-    const nodes = {};
-    const marks = {};
-
-    for (const plugin of this.plugins) {
-      Object.assign(nodes, plugin.schemaExtension?.nodes ?? {});
-      Object.assign(marks, plugin.schemaExtension?.marks ?? {});
-    }
-
-    if (Object.keys(nodes).length === 0 && Object.keys(marks).length === 0) {
-      return MultilineEditor.schema;
-    }
-
-    const baseSchemaSpec = MultilineEditor.schema.spec;
-    return new Schema({
-      nodes: baseSchemaSpec.nodes.append(nodes),
-      marks: baseSchemaSpec.marks.append(marks),
-    });
-  }
-
-  #createMarkdownClipboardPlugin(schema) {
-    const parsers = {};
-    const serializers = {};
-
-    for (const plugin of this.plugins) {
-      Object.assign(parsers, plugin.parseMarkdown ?? {});
-      Object.assign(serializers, plugin.toMarkdown ?? {});
-    }
-
-    if (
-      Object.keys(parsers).length === 0 &&
-      Object.keys(serializers).length === 0
-    ) {
-      return null;
-    }
-
-    // Filter parser tokens that reference nodes or marks not in the schema.
-    const filterParserTokens = tokens => {
-      const filtered = {};
-      for (const [key, spec] of Object.entries(tokens)) {
-        if (
-          Object.values(spec).every(
-            val =>
-              typeof val !== "string" || schema.nodes[val] || schema.marks[val]
-          )
-        ) {
-          filtered[key] = spec;
-        }
-      }
-      return filtered;
-    };
-
-    const filterBySchema = (items, schemaItems) => {
-      const filtered = {};
-      for (const [key, value] of Object.entries(items)) {
-        if (schemaItems[key]) {
-          filtered[key] = value;
-        }
-      }
-      return filtered;
-    };
-
-    const parser = new MarkdownParser(schema, defaultMarkdownParser.tokenizer, {
-      ...filterParserTokens(defaultMarkdownParser.tokens),
-      ...parsers,
-    });
-    const serializer = new MarkdownSerializer(
-      {
-        ...defaultMarkdownSerializer.nodes,
-        ...filterBySchema(serializers, schema.nodes),
-      },
-      {
-        ...defaultMarkdownSerializer.marks,
-        ...filterBySchema(serializers, schema.marks),
-      }
-    );
-    this.#markdownSerializer = serializer;
-
-    return new PmPlugin({
-      props: {
-        clipboardTextParser: text => parser.parse(text)?.content,
-        clipboardTextSerializer: slice => serializer.serialize(slice.content),
-      },
-    });
   }
 
   #createView() {
@@ -549,19 +286,9 @@ export class MultilineEditor extends MozLitElement {
       return;
     }
 
-    const schema = this.#buildSchema();
-    const markdownPlugin = this.#createMarkdownClipboardPlugin(schema);
-    const customPlugins = this.plugins
-      .map(plugin => plugin.createPlugin?.(this))
-      .filter(Boolean);
-
     const state = EditorState.create({
-      schema,
-      plugins: [
-        ...this.#plugins,
-        ...(markdownPlugin ? [markdownPlugin] : []),
-        ...customPlugins,
-      ],
+      schema: MultilineEditor.schema,
+      plugins: this.#plugins,
     });
 
     this.#view = new EditorView(mount, {
@@ -569,10 +296,6 @@ export class MultilineEditor extends MozLitElement {
       attributes: this.#viewAttributes(),
       editable: () => !this.readOnly,
       dispatchTransaction: this.#dispatchTransaction,
-      nodeViews: Object.assign(
-        {},
-        ...this.plugins.map(plugin => plugin.nodeViews).filter(Boolean)
-      ),
     });
 
     if (this.#pendingValue) {
@@ -589,23 +312,6 @@ export class MultilineEditor extends MozLitElement {
   #dispatchTransaction = tr => {
     if (!this.#view) {
       return;
-    }
-
-    if (
-      tr.docChanged &&
-      this.maxLength > 0 &&
-      tr.doc.content.size > this.maxLength
-    ) {
-      const newText = tr.doc.textBetween(0, tr.doc.content.size, "\n", "\n");
-      const truncated = newText.slice(0, this.maxLength);
-
-      /* tr.doc.content.size includes ProseMirror structural tokens, so check actual text length here */
-      if (newText.length > this.maxLength && truncated !== this.value) {
-        const doc = this.#textToDoc(truncated, this.#view.state.schema);
-        tr = this.#view.state.tr
-          .replaceWith(0, this.#view.state.doc.content.size, doc.content)
-          .scrollIntoView();
-      }
     }
 
     const prevText = this.value;
@@ -668,36 +374,6 @@ export class MultilineEditor extends MozLitElement {
     return true;
   }
 
-  #createPlaceholderHints() {
-    const placeholderCount = this.placeholderHints.length + 1;
-
-    const hints = document.createElement("ul");
-    hints.id = `placeholder-hints-${this.#instanceId}-${this.#placeholderVersion}`;
-    hints.className = "placeholder-hints";
-    hints.setAttribute("role", "presentation");
-    hints.style.setProperty(
-      "--multiline-editor-placeholder-count",
-      placeholderCount
-    );
-
-    const placeholder = document.createElement("li");
-    placeholder.textContent = this.placeholder;
-    placeholder.style.setProperty("--multiline-editor-placeholder-index", 0);
-    hints.appendChild(placeholder);
-
-    for (const [index, hint] of this.placeholderHints.entries()) {
-      const hintItem = document.createElement("li");
-      hintItem.textContent = hint;
-      hintItem.style.setProperty(
-        "--multiline-editor-placeholder-index",
-        index + 1
-      );
-      hints.appendChild(hintItem);
-    }
-
-    return hints;
-  }
-
   /**
    * Creates a plugin that shows a placeholder when the editor is empty.
    *
@@ -710,22 +386,9 @@ export class MultilineEditor extends MozLitElement {
           if (
             doc.childCount !== 1 ||
             !doc.firstChild.isTextblock ||
-            doc.firstChild.content.size !== 0
+            doc.firstChild.content.size !== 0 ||
+            !this.placeholder
           ) {
-            return null;
-          }
-
-          if (this.placeholderHints.length) {
-            return DecorationSet.create(doc, [
-              Decoration.widget(1, () => this.#createPlaceholderHints(), {
-                key: `placeholder-hints-${this.#instanceId}-${this.#placeholderVersion}`,
-                side: -1,
-                ignoreSelection: true,
-              }),
-            ]);
-          }
-
-          if (!this.placeholder) {
             return null;
           }
 
@@ -796,8 +459,6 @@ export class MultilineEditor extends MozLitElement {
       return;
     }
 
-    this.#placeholderVersion++;
-    this.#updatePlaceholderKeyframeStyles();
     this.#view.setProps({
       attributes: this.#viewAttributes(),
       editable: () => !this.readOnly,
@@ -805,75 +466,11 @@ export class MultilineEditor extends MozLitElement {
     this.#view.dispatch(this.#view.state.tr);
   }
 
-  /**
-   * Resets placeholder animations to their starting position.
-   *
-   * When the placeholder animation is re-enabled the cached placeholder
-   * elements retain animation state and must be reset.
-   */
-  #resetPlaceholderAnimation() {
-    const animations = this.#getPlaceholderAnimations();
-    // The `ready` promise rejects with an AbortError if the animation is
-    // cancelled before it becomes ready.
-    Promise.all(animations.map(animation => animation.ready))
-      .then(() => {
-        for (const animation of animations) {
-          animation.currentTime = 0;
-        }
-      })
-      .catch(() => {});
-  }
-
-  #cancelPlaceholderAnimations() {
-    const animations = this.#getPlaceholderAnimations();
-    for (const animation of animations) {
-      animation.cancel();
-    }
-  }
-
-  #getPlaceholderAnimations() {
-    const placeholderHints =
-      this.renderRoot.querySelector(".placeholder-hints");
-    if (!placeholderHints) {
-      return [];
-    }
-    return [...placeholderHints.querySelectorAll("li")].flatMap(
-      placeholderHint => placeholderHint.getAnimations()
-    );
-  }
-
-  #updatePlaceholderKeyframeStyles() {
-    if (!this.placeholderHints.length) {
-      return;
-    }
-    if (!this.#placeholderKeyframeStyles) {
-      this.#placeholderKeyframeStyles = new CSSStyleSheet();
-      this.renderRoot.adoptedStyleSheets.push(this.#placeholderKeyframeStyles);
-    }
-    const keyframeStyles = generatePlaceholderKeyframeStyles(
-      this.placeholderHints.length + 1
-    );
-    this.#placeholderKeyframeStyles.replaceSync(keyframeStyles.cssText);
-  }
-
-  #textToDoc(text, schema) {
-    const paragraphs = text.split("\n").map(line => {
-      const content = line ? [schema.text(line)] : [];
-      return schema.node("paragraph", null, content);
-    });
-    return schema.node("doc", null, paragraphs);
-  }
-
-  #textOffsetFromPos(
-    pos,
-    doc = this.#view?.state.doc,
-    blockSeparator = "\n",
-    leafText = "\n"
-  ) {
+  #textOffsetFromPos(pos, doc = this.#view?.state.doc) {
     if (!doc) {
       return 0;
     }
-    return doc.textBetween(0, pos, blockSeparator, leafText).length;
+    return doc.textBetween(0, pos, "\n", "\n").length;
   }
 
   #posFromTextOffset(offset, doc = this.#view?.state.doc) {
@@ -930,32 +527,12 @@ export class MultilineEditor extends MozLitElement {
   }
 
   #viewAttributes() {
-    const attrs = {
+    return {
       "aria-label": this.placeholder,
+      "aria-multiline": "true",
       "aria-readonly": this.readOnly ? "true" : "false",
+      role: "textbox",
     };
-
-    if (this.#innerRole) {
-      // Combobox is a single-line widget per ARIA; omit aria-multiline so the
-      // role's semantics aren't muddled.
-      attrs.role = this.#innerRole;
-    } else {
-      attrs.role = "textbox";
-      attrs["aria-multiline"] = "true";
-    }
-
-    for (const { prop, attr } of MultilineEditor.FORWARDED_ARIA) {
-      const value = this[prop];
-      if (value != null) {
-        attrs[attr] = value;
-      }
-    }
-
-    if (this.placeholderHints.length) {
-      attrs["aria-describedby"] =
-        `placeholder-hints-${this.#instanceId}-${this.#placeholderVersion}`;
-    }
-    return attrs;
   }
 
   render() {

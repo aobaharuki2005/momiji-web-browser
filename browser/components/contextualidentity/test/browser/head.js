@@ -5,7 +5,7 @@ async function openTabMenuFor(tab) {
   EventUtils.synthesizeMouseAtCenter(
     tab,
     { type: "contextmenu" },
-    tab.documentGlobal
+    tab.ownerGlobal
   );
   await tabMenuShown;
 
@@ -60,7 +60,7 @@ async function openTabInUserContext(uri, userContextId) {
   let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
 
   gBrowser.selectedTab = tab;
-  tab.documentGlobal.focus();
+  tab.ownerGlobal.focus();
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);

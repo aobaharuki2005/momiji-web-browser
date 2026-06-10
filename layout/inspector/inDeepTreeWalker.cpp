@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -303,7 +305,7 @@ inDeepTreeWalker::NextNode(nsINode** _retval) {
   nsINode* origCurrentNode = mCurrentNode;
 #endif
   uint32_t lastChildCallsToMake = 0;
-  while (true) {
+  while (1) {
     NextSibling(_retval);
 
     if (*_retval) {

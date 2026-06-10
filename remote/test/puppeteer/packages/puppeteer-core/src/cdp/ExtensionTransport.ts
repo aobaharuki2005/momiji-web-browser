@@ -68,10 +68,7 @@ export class ExtensionTransport implements ConnectionTransport {
   };
 
   #dispatchResponse(message: object): void {
-    // Dispatch in a new task like other transports.
-    setTimeout(() => {
-      this.onmessage?.(JSON.stringify(message));
-    }, 0);
+    this.onmessage?.(JSON.stringify(message));
   }
 
   send(message: string): void {
@@ -128,7 +125,6 @@ export class ExtensionTransport implements ConnectionTransport {
         if (parsed.sessionId === 'tabTargetSessionId') {
           this.#dispatchResponse({
             method: 'Target.attachedToTarget',
-            sessionId: 'tabTargetSessionId',
             params: {
               targetInfo: pageTargetInfo,
               sessionId: 'pageTargetSessionId',

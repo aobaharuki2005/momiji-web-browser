@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -137,9 +139,12 @@ enum class LinkStatus : uint8_t {
   // A live link is connected to the other side of this actor.
   Connected,
 
-  // The link has begun being destroyed. Messages may no longer be sent or
-  // received. The ActorDestroy method is queued to be called, but has not been
-  // invoked yet, as managed actors still need to be destroyed first.
+  // The link has begun being destroyed. Messages may no longer be sent. The
+  // ActorDestroy method is queued to be called, but has not been invoked yet,
+  // as managed actors still need to be destroyed first.
+  //
+  // NOTE: While no new IPC can be received at this point, `CanRecv` will still
+  // be true until `LinkStatus::Destroyed`.
   Doomed,
 
   // The actor has been destroyed, and ActorDestroy has been called, however an
@@ -216,6 +221,13 @@ class IProtocol : public HasResultCodes {
   Side GetSide() const { return mSide; }
   bool CanSend() const { return mLinkStatus == LinkStatus::Connected; }
 
+  // Returns `true` for an active actor until the actor's `ActorDestroy` method
+  // has been called.
+  bool CanRecv() const {
+    return mLinkStatus == LinkStatus::Connected ||
+           mLinkStatus == LinkStatus::Doomed;
+  }
+
   // Deallocate a managee given its type.
   virtual void DeallocManagee(ProtocolId, IProtocol*) = 0;
 
@@ -262,10 +274,6 @@ class IProtocol : public HasResultCodes {
   // Internal method called when the actor becomes connected.
   already_AddRefed<ActorLifecycleProxy> ActorConnected();
 
-  // Internal method called to indicate an actor will become disconnected.
-  // Implicitly called by ActorDisconnected.
-  void DoomSubtree();
-
   // Internal method called when actor becomes disconnected.
   void ActorDisconnected(ActorDestroyReason aWhy);
 
@@ -306,6 +314,8 @@ class IProtocol : public HasResultCodes {
 #else
   void WarnMessageDiscarded(IPC::Message*) {}
 #endif
+
+  void DoomSubtree();
 
   // Internal function returning an arbitrary directly managed actor. Used to
   // identify managed actors to destroy when tearing down an actor tree.
@@ -428,14 +438,7 @@ class IToplevelProtocol : public IRefCountedProtocol {
 
  public:
   // Shadows the method on IProtocol, which will forward to the top.
-  IProtocol* Lookup(ActorId aId);
-
-  // Ensures aId is from the remote side's range, and reserves a slot in
-  // mActorMap for a future call to SetManagerAndRegister.
-  [[nodiscard]] bool TryReserve(ActorId aId);
-
-  // Abandon a reservation if SetManagerAndRegister will never be called.
-  void ClearReservation(ActorId aId);
+  IProtocol* Lookup(Shmem::id_t aId);
 
   Shmem CreateSharedMemory(size_t aSize, bool aUnsafe);
   Shmem::Segment* LookupSharedMemory(Shmem::id_t aId);
@@ -660,9 +663,6 @@ void AnnotateSystemError();
 // references!
 class ActorLifecycleProxy {
  public:
-  ActorLifecycleProxy(const ActorLifecycleProxy&) = delete;
-  ActorLifecycleProxy& operator=(const ActorLifecycleProxy&) = delete;
-
   NS_INLINE_DECL_REFCOUNTING_ONEVENTTARGET(ActorLifecycleProxy)
 
   IProtocol* Get() { return mActor; }
@@ -674,6 +674,9 @@ class ActorLifecycleProxy {
 
   explicit ActorLifecycleProxy(IProtocol* aActor);
   ~ActorLifecycleProxy();
+
+  ActorLifecycleProxy(const ActorLifecycleProxy&) = delete;
+  ActorLifecycleProxy& operator=(const ActorLifecycleProxy&) = delete;
 
   IProtocol* MOZ_NON_OWNING_REF mActor;
 

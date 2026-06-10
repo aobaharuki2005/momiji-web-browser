@@ -1,10 +1,14 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MatroskaDemuxer.h"
 
-#include "AOMDecoder.h"
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "H264.h"
 #include "H265.h"
 #include "VPXDecoder.h"
@@ -138,8 +142,9 @@ nsresult MatroskaDemuxer::SetCodecPrivateToVideoExtraData(nestegg* aContext,
   return NS_OK;
 }
 
-nsresult MatroskaDemuxer::SetContainerAudioCodecInfo(
-    nestegg* aContext, const nestegg_audio_params& aParams) {
+nsresult MatroskaDemuxer::SetAudioCodecInfo(
+    nestegg* aContext, int aTrackId, const nestegg_audio_params& aParams) {
+  mAudioCodec = nestegg_track_codec_id(aContext, aTrackId);
   ReportCodecUsage(mAudioCodec);
 
   static const uint64_t NSECS_PER_USEC = 1000;
@@ -172,12 +177,60 @@ nsresult MatroskaDemuxer::SetContainerAudioCodecInfo(
       MKV_DEBUG("AAC stream in MKV container, media frames: %" PRIu64
                 ", delay frames : %" PRIu32,
                 frameCount, aacCodecSpecificData.mEncoderDelayFrames);
+
+      // Get the codec specific data from the codec private.
+      nsTArray<const unsigned char*> headers;
+      nsTArray<size_t> headerLens;
+      nsresult rv =
+          GetCodecPrivateData(aContext, aTrackId, &headers, &headerLens);
+      if (NS_FAILED(rv)) {
+        MKV_DEBUG("GetCodecPrivateData error for AAC");
+        return rv;
+      }
+      aacCodecSpecificData.mDecoderConfigDescriptorBinaryBlob->AppendElements(
+          headers[0], headerLens[0]);
       mInfo.mAudio.mCodecSpecificConfig =
           AudioCodecSpecificVariant{std::move(aacCodecSpecificData)};
       break;
     }
+    case NESTEGG_CODEC_VORBIS: {
+      mInfo.mAudio.mCodecSpecificConfig =
+          AudioCodecSpecificVariant{VorbisCodecSpecificData{}};
+      mInfo.mAudio.mMimeType = "audio/vorbis";
+      AutoTArray<const unsigned char*, 4> headers;
+      AutoTArray<size_t, 4> headerLens;
+      nsresult rv =
+          GetCodecPrivateData(aContext, aTrackId, &headers, &headerLens);
+      if (NS_FAILED(rv)) {
+        MKV_DEBUG("GetCodecPrivateData error for vorbis");
+        return rv;
+      }
+      // Vorbis has 3 headers, convert to Xiph extradata format to send them to
+      // the demuxer.
+      RefPtr<MediaByteBuffer> audioCodecSpecificBlob =
+          GetAudioCodecSpecificBlob(mInfo.mAudio.mCodecSpecificConfig);
+      if (!XiphHeadersToExtradata(audioCodecSpecificBlob, headers,
+                                  headerLens)) {
+        MKV_DEBUG("Couldn't parse Xiph headers");
+        return NS_ERROR_FAILURE;
+      }
+      break;
+    }
+    case NESTEGG_CODEC_OPUS: {
+      uint64_t codecDelayUs = aParams.codec_delay / NSECS_PER_USEC;
+      mInfo.mAudio.mMimeType = "audio/opus";
+      OpusCodecSpecificData opusCodecSpecificData;
+      opusCodecSpecificData.mContainerCodecDelayFrames =
+          AssertedCast<int64_t>(USECS_PER_S * codecDelayUs / 48000);
+      MKV_DEBUG("Preroll for Opus: %" PRIu64 " frames",
+                opusCodecSpecificData.mContainerCodecDelayFrames);
+      mInfo.mAudio.mCodecSpecificConfig =
+          AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
+      break;
+    }
     default:
-      return WebMDemuxer::SetContainerAudioCodecInfo(aContext, aParams);
+      NS_WARNING("Unknown Matroska audio codec");
+      return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
@@ -199,8 +252,10 @@ bool MatroskaDemuxer::CheckKeyFrameByExamineByteStream(
       return VPXDecoder::IsKeyframe(*aSample, VPXDecoder::Codec::VP8);
     case NESTEGG_CODEC_VP9:
       return VPXDecoder::IsKeyframe(*aSample, VPXDecoder::Codec::VP9);
+#ifdef MOZ_AV1
     case NESTEGG_CODEC_AV1:
       return AOMDecoder::IsKeyframe(*aSample);
+#endif
     default:
       MOZ_ASSERT_UNREACHABLE(
           "Cannot detect keyframes in unknown Matroska video codec");

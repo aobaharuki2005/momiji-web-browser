@@ -1,10 +1,11 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsIRollupListener_h_
-#define _nsIRollupListener_h_
+#ifndef __nsIRollupListener_h__
+#define __nsIRollupListener_h__
 
 #include "nsTArray.h"
 #include "nsPoint.h"
@@ -74,4 +75,4 @@ class nsIRollupListener {
   virtual bool RollupNativeMenu() { return false; }
 };
 
-#endif /* _nsIRollupListener_h_ */
+#endif /* __nsIRollupListener_h__ */

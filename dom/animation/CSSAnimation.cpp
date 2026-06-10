@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,17 +27,13 @@ void CSSAnimation::SetEffect(AnimationEffect* aEffect) {
   AddOverriddenProperties(CSSAnimationProperties::Effect);
 }
 
-void CSSAnimation::SetStartTime(const Nullable<CSSNumberish>& aStartTime,
-                                ErrorResult& aRv) {
+void CSSAnimation::SetStartTimeAsDouble(const Nullable<double>& aStartTime) {
   // Note that we always compare with the paused state since for the purposes
   // of determining if play control is being overridden or not, we want to
   // treat the finished state as running.
   bool wasPaused = PlayState() == AnimationPlayState::Paused;
 
-  Animation::SetStartTime(aStartTime, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
+  Animation::SetStartTimeAsDouble(aStartTime);
 
   bool isPaused = PlayState() == AnimationPlayState::Paused;
 
@@ -50,8 +48,8 @@ mozilla::dom::Promise* CSSAnimation::GetReady(ErrorResult& aRv) {
 }
 
 void CSSAnimation::Reverse(ErrorResult& aRv) {
-  // As with CSSAnimation::SetStartTime, we're really only interested in the
-  // paused state.
+  // As with CSSAnimation::SetStartTimeAsDouble, we're really only interested in
+  // the paused state.
   bool wasPaused = PlayState() == AnimationPlayState::Paused;
 
   Animation::Reverse(aRv);

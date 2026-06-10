@@ -74,7 +74,15 @@ struct MOZ_TRIVIAL_CTOR_DTOR OkConstExprConstructorInMember {
   OkConstExprConstructor m;
 };
 
-struct MOZ_TRIVIAL_CTOR_DTOR OkExplicitlyInitializedMember {
+#if __cplusplus >= 202002L
+struct
+#else
+// XXX: This error is unfortunate, but is unlikely to come up in real code.
+// In this situation, it should be possible to define a constexpr constructor
+// which explicitly initializes the members.
+struct // expected-error {{class 'BadUnfortunateError' must have trivial constructors and destructors}}
+#endif
+MOZ_TRIVIAL_CTOR_DTOR BadUnfortunateError {
   OkConstExprConstructor m;
   void *n;
 };

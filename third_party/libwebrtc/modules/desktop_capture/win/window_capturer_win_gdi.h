@@ -20,13 +20,12 @@
 #include "modules/desktop_capture/desktop_geometry.h"
 #include "modules/desktop_capture/win/window_capture_utils.h"
 #include "modules/desktop_capture/window_finder_win.h"
-#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
 class WindowCapturerWinGdi : public DesktopCapturer {
  public:
-  explicit WindowCapturerWinGdi(const DesktopCaptureOptions& options);
+  explicit WindowCapturerWinGdi(bool enumerate_current_process_windows);
 
   // Disallow copy and assign
   WindowCapturerWinGdi(const WindowCapturerWinGdi&) = delete;
@@ -54,7 +53,6 @@ class WindowCapturerWinGdi : public DesktopCapturer {
   CaptureResults CaptureFrame(bool capture_owned_windows);
 
   Callback* callback_ = nullptr;
-  DesktopCaptureOptions options_;
 
   // HWND and HDC for the currently selected window or nullptr if window is not
   // selected.
@@ -63,6 +61,8 @@ class WindowCapturerWinGdi : public DesktopCapturer {
   DesktopSize previous_size_;
 
   WindowCaptureHelperWin window_capture_helper_;
+
+  bool enumerate_current_process_windows_;
 
   // This map is used to avoid flickering for the case when SelectWindow() calls
   // are interleaved with Capture() calls.

@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nswindowsshellservice_h_
-#define nswindowsshellservice_h_
+#ifndef nswindowsshellservice_h____
+#define nswindowsshellservice_h____
 
 #include "nscore.h"
 #include "nsString.h"
@@ -27,6 +28,7 @@ class nsWindowsShellService : public nsToolkitShellService,
 
  protected:
   nsresult LaunchControlPanelDefaultsSelectionUI();
+  nsresult LaunchModernSettingsDialogDefaultApps();
 };
 
-#endif  // nswindowsshellservice_h_
+#endif  // nswindowsshellservice_h____

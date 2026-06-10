@@ -1229,7 +1229,6 @@ static celt_glog dynalloc_analysis(const celt_glog *bandLogE, const celt_glog *b
             follower[i] = follower[i] +  GCONST(1.f/64.f)*analysis->leak_boost[i];
       }
 #endif
-      if (effectiveBytes>320) follower[0] += MIN32(GCONST(1.5f), GCONST(1e-3f)*(effectiveBytes-320));
       for (i=start;i<end;i++)
       {
          int width;
@@ -1371,7 +1370,7 @@ static opus_val16 tone_detect(const celt_sig *in, int CC, int N, opus_val32 *ton
    ALLOC(x, N, opus_val16);
    /* Shift by SIG_SHIFT+2 (+3 for stereo) to account for HF gain of the preemphasis filter. */
    if (CC==2) {
-      for (i=0;i<N;i++) x[i] = PSHR32(ADD32(SHR32(in[i], 1), SHR32(in[i+N], 1)), SIG_SHIFT+2);
+      for (i=0;i<N;i++) x[i] = PSHR32(ADD32(in[i], in[i+N]), SIG_SHIFT+3);
    } else {
       for (i=0;i<N;i++) x[i] = PSHR32(in[i], SIG_SHIFT+2);
    }
@@ -1967,8 +1966,8 @@ int celt_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_res * pcm, in
 
    ALLOC(in, CC*(N+overlap), celt_sig);
 
-   sample_max=MAX32(st->overlap_max, celt_maxabs_res(pcm, CC*(N-overlap)/st->upsample));
-   st->overlap_max=celt_maxabs_res(pcm+CC*(N-overlap)/st->upsample, CC*overlap/st->upsample);
+   sample_max=MAX32(st->overlap_max, celt_maxabs_res(pcm, C*(N-overlap)/st->upsample));
+   st->overlap_max=celt_maxabs_res(pcm+C*(N-overlap)/st->upsample, C*overlap/st->upsample);
    sample_max=MAX32(sample_max, st->overlap_max);
 #ifdef FIXED_POINT
    silence = (sample_max==0);
@@ -2555,6 +2554,7 @@ int celt_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_res * pcm, in
          }
          scale = PSHR32(toneishness,14);
          scale = Q15ONE - MULT16_16_Q15(scale, scale);
+         qext_bytes += MULT16_32_Q15(scale, (nbCompressedBytes-(target/(8<<BITRES))) - qext_bytes);
          qext_bytes = IMAX(nbCompressedBytes-1275, IMAX(21, qext_bytes));
       }
       padding_len_bytes = (qext_bytes+253)/254;

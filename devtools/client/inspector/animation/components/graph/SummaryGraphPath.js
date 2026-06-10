@@ -208,16 +208,16 @@ class SummaryGraphPath extends Component {
       return dom.svg();
     }
 
-    const { playbackRate, playBackRateMultiplier } = animation.state;
+    const { playbackRate } = animation.state;
     const { createdTime } = animation.state.absoluteValues;
-    const multiplier = Math.abs(playbackRate) * playBackRateMultiplier;
+    const absPlaybackRate = Math.abs(playbackRate);
 
     // Absorb the playbackRate in viewBox of SVG and offset of child path elements
     // in order to each graph path components can draw without considering to the
     // playbackRate.
-    const offset = createdTime * multiplier;
-    const startTime = timeScale.minStartTime * multiplier;
-    const totalDuration = timeScale.getDuration() * multiplier;
+    const offset = createdTime * absPlaybackRate;
+    const startTime = timeScale.minStartTime * absPlaybackRate;
+    const totalDuration = timeScale.getDuration() * absPlaybackRate;
     const opacity = Math.max(
       1 / keyframesList.length,
       MIN_KEYFRAMES_EASING_OPACITY

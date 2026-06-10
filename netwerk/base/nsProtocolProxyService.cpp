@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=4 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1584,7 +1586,7 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
     nsCOMPtr<nsISystemProxySettings> sp2 =
         do_GetService(NS_SYSTEMPROXYSETTINGS_CONTRACTID);
     if (sp2 != mSystemProxySettings) {
-      mSystemProxySettings = std::move(sp2);
+      mSystemProxySettings = sp2;
       ResetPACThread();
     }
   }
@@ -2106,9 +2108,6 @@ nsresult nsProtocolProxyService::NewProxyInfo_Internal(
   proxyInfo->mPassword = aPassword;
   proxyInfo->mFlags = aFlags;
   proxyInfo->mResolveFlags = aResolveFlags;
-  if (aFlags & nsIProxyInfo::ALWAYS_TUNNEL_VIA_PROXY) {
-    proxyInfo->mResolveFlags |= nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL;
-  }
   proxyInfo->mTimeout =
       aFailoverTimeout == UINT32_MAX ? mFailedProxyTimeout : aFailoverTimeout;
   proxyInfo->mProxyAuthorizationHeader = aProxyAuthorizationHeader;
@@ -2164,24 +2163,15 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
     return NS_OK;
   }
 
+  bool mainThreadOnly;
+  if (mSystemProxySettings && mProxyConfig == PROXYCONFIG_SYSTEM &&
+      NS_SUCCEEDED(mSystemProxySettings->GetMainThreadOnly(&mainThreadOnly)) &&
+      !mainThreadOnly) {
+    *usePACThread = true;
+    return NS_OK;
+  }
+
   if (mSystemProxySettings && mProxyConfig == PROXYCONFIG_SYSTEM) {
-    bool mainThreadOnly = false;
-    if (NS_SUCCEEDED(
-            mSystemProxySettings->GetMainThreadOnly(&mainThreadOnly)) &&
-        !mainThreadOnly) {
-      *usePACThread = true;
-      return NS_OK;
-    }
-
-    if (StaticPrefs::network_proxy_fast_path_system_direct()) {
-      bool systemDirect = false;
-      if (NS_SUCCEEDED(
-              mSystemProxySettings->GetSystemProxyDirect(&systemDirect)) &&
-          systemDirect) {
-        return NS_OK;
-      }
-    }
-
     // If the system proxy setting implementation is not threadsafe (e.g
     // linux gconf), we'll do it inline here. Such implementations promise
     // not to block
@@ -2523,30 +2513,6 @@ nsProtocolProxyService::NotifyProxyConfigChangedInternal() {
     callback->OnProxyConfigChanged();
   }
   return NS_OK;
-}
-
-bool nsProtocolProxyService::IsEffectivelyDirect() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!StaticPrefs::network_proxy_fast_path_system_direct()) {
-    return false;
-  }
-
-  if (!mFilters.IsEmpty()) {
-    return false;
-  }
-
-  if (mProxyConfig == PROXYCONFIG_DIRECT) {
-    return true;
-  }
-
-  if (mProxyConfig == PROXYCONFIG_SYSTEM && mSystemProxySettings) {
-    bool systemDirect = false;
-    mSystemProxySettings->GetSystemProxyDirect(&systemDirect);
-    return systemDirect;
-  }
-
-  return false;
 }
 
 }  // namespace net

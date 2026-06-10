@@ -14,6 +14,13 @@
       },
     },
   },
+  'arm64': {
+    'swarming': {
+      'dimensions': {
+        'cpu': 'arm64'
+      }
+    }
+  },
   'cores-12': {
     'swarming': {
       'dimensions': {
@@ -37,6 +44,24 @@
       '--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json',
       '--test-arg=--undefok=test_launcher_summary_output'
     ],
+  },
+  'ios-device-18': {
+    'swarming': {
+      'dimensions': {
+        'os': 'iOS-18',
+        'pool': 'chrome.tests',
+      }
+    }
+  },
+  'ios-device-perf': {
+    'swarming': {
+      'idempotent': False,
+      'dimensions': {
+        'os': 'iOS-17.6.1',
+        'pool': 'WebRTC',
+        #'device_status': 'available'
+      },
+    },
   },
   'ios_runtime_cache_17_5': {
     'swarming': {
@@ -97,6 +122,13 @@
       'dimensions': {
         'cpu': 'x86-64',
         'os': 'Mac-15'
+      }
+    }
+  },
+  'mac11': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Mac-11'
       }
     }
   },
@@ -185,6 +217,12 @@
   'shards-8': {
     'swarming': {
       'shards': 8,
+    },
+  },
+  'timeout-2h': {
+    'swarming': {
+      'hard_timeout': 7200,
+      'io_timeout': 7200,
     },
   },
   'timeout-3h': {

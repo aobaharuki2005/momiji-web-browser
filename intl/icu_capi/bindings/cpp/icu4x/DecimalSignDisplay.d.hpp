@@ -1,5 +1,5 @@
-#ifndef ICU4X_DecimalSignDisplay_D_HPP
-#define ICU4X_DecimalSignDisplay_D_HPP
+#ifndef icu4x_DecimalSignDisplay_D_HPP
+#define icu4x_DecimalSignDisplay_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -9,7 +9,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 
 namespace icu4x {
@@ -30,31 +30,30 @@ namespace icu4x {
 /**
  * ECMA-402 compatible sign display preference.
  *
- * See the [Rust documentation for `SignDisplay`](https://docs.rs/fixed_decimal/0.7.0/fixed_decimal/enum.SignDisplay.html) for more information.
+ * See the [Rust documentation for `SignDisplay`](https://docs.rs/fixed_decimal/latest/fixed_decimal/enum.SignDisplay.html) for more information.
  */
 class DecimalSignDisplay {
 public:
-    enum Value {
-        Auto = 0,
-        Never = 1,
-        Always = 2,
-        ExceptZero = 3,
-        Negative = 4,
-    };
+  enum Value {
+    Auto = 0,
+    Never = 1,
+    Always = 2,
+    ExceptZero = 3,
+    Negative = 4,
+  };
 
-    DecimalSignDisplay(): value(Value::Auto) {}
+  DecimalSignDisplay() = default;
+  // Implicit conversions between enum and ::Value
+  constexpr DecimalSignDisplay(Value v) : value(v) {}
+  constexpr operator Value() const { return value; }
+  // Prevent usage as boolean value
+  explicit operator bool() const = delete;
 
-    // Implicit conversions between enum and ::Value
-    constexpr DecimalSignDisplay(Value v) : value(v) {}
-    constexpr operator Value() const { return value; }
-    // Prevent usage as boolean value
-    explicit operator bool() const = delete;
-
-    inline icu4x::capi::DecimalSignDisplay AsFFI() const;
-    inline static icu4x::DecimalSignDisplay FromFFI(icu4x::capi::DecimalSignDisplay c_enum);
+  inline icu4x::capi::DecimalSignDisplay AsFFI() const;
+  inline static icu4x::DecimalSignDisplay FromFFI(icu4x::capi::DecimalSignDisplay c_enum);
 private:
     Value value;
 };
 
 } // namespace
-#endif // ICU4X_DecimalSignDisplay_D_HPP
+#endif // icu4x_DecimalSignDisplay_D_HPP

@@ -3,6 +3,7 @@
 Mozilla-JSS JCA Provider notes
 ==============================
 
+.. _the_mozilla-jss_jca_provider:
 
 `The Mozilla-JSS JCA Provider <#the_mozilla-jss_jca_provider>`__
 ----------------------------------------------------------------
@@ -36,6 +37,7 @@ Mozilla-JSS JCA Provider notes
    -  `What's Not
       Supported <https://www.mozilla.org/projects/security/pki/jss/provider_notes.html#not-supported>`__
 
+.. _signed_jar_file:
 
 `Signed JAR file <#signed_jar_file>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,6 +63,7 @@ Mozilla-JSS JCA Provider notes
       Extension <http://java.sun.com/javase/6/docs/technotes/guides/security/crypto/HowToImplAProvider.html#Step61>`__.
       Then you can sign your own JSS JAR file.
 
+.. _installing_the_provider:
 
 `Installing the Provider <#installing_the_provider>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -75,6 +78,7 @@ Mozilla-JSS JCA Provider notes
    object, set its ``installJSSProvider`` field to ``false``, and pass the ``InitializationValues``
    object to ``CryptoManager.initialize()``.
 
+.. _specifying_the_cryptotoken:
 
 `Specifying the CryptoToken <#specifying_the_cryptotoken>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,6 +131,7 @@ Mozilla-JSS JCA Provider notes
       dsaKpg.initialize(1024);
       KeyPair dsaPair = dsaKpg.generateKeyPair();
 
+.. _supported_classes:
 
 `Supported Classes <#supported_classes>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -154,8 +159,10 @@ Mozilla-JSS JCA Provider notes
 .. container::
 
    .. rubric:: Supported Algorithms
+      :name: supported_algorithms
 
    .. rubric:: Notes
+      :name: notes
 
    -  AES
    -  DES
@@ -211,8 +218,10 @@ Mozilla-JSS JCA Provider notes
 .. container::
 
    .. rubric:: Supported Algorithms
+      :name: supported_algorithms_2
 
    .. rubric:: Notes
+      :name: notes_2
 
    -  DSA
    -  RSA
@@ -249,8 +258,10 @@ Mozilla-JSS JCA Provider notes
 .. container::
 
    .. rubric:: Supported Algorithms
+      :name: supported_algorithms_3
 
    .. rubric:: Notes
+      :name: notes_3
 
    -  AES
    -  DES
@@ -266,8 +277,10 @@ Mozilla-JSS JCA Provider notes
 .. container::
 
    .. rubric:: Supported Algorithms
+      :name: supported_algorithms_4
 
    .. rubric:: Notes
+      :name: notes_4
 
    -  DSA
    -  RSA
@@ -281,8 +294,10 @@ Mozilla-JSS JCA Provider notes
 .. container::
 
    .. rubric:: Supported Algorithms
+      :name: supported_algorithms_5
 
    .. rubric:: Notes
+      :name: notes_5
 
    -  HmacSHA1 (*Hmac-SHA1*)
 
@@ -296,6 +311,7 @@ Mozilla-JSS JCA Provider notes
 .. container::
 
    .. rubric:: Supported Algorithms
+      :name: supported_algorithms_6
 
    -  MD5
    -  MD2
@@ -307,6 +323,7 @@ Mozilla-JSS JCA Provider notes
 .. container::
 
    .. rubric:: Notes
+      :name: notes_6
 
    -  ``getModulus()`` is not supported because NSS does not support extracting data from private
       keys.
@@ -319,8 +336,10 @@ Mozilla-JSS JCA Provider notes
 .. container::
 
    .. rubric:: Supported Algorithms
+      :name: supported_algorithms_7
 
    .. rubric:: Notes
+      :name: notes_7
 
    -  AES
    -  DES
@@ -387,8 +406,10 @@ Mozilla-JSS JCA Provider notes
 .. container::
 
    .. rubric:: Supported Algorithms
+      :name: supported_algorithms_8
 
    .. rubric:: Notes
+      :name: notes_8
 
    -  AES
    -  DES
@@ -407,8 +428,10 @@ Mozilla-JSS JCA Provider notes
 .. container::
 
    .. rubric:: Supported Algorithms
+      :name: supported_algorithms_9
 
    .. rubric:: Notes
+      :name: notes_9
 
    -  pkcs11prng
 
@@ -420,8 +443,10 @@ Mozilla-JSS JCA Provider notes
 .. container::
 
    .. rubric:: Supported Algorithms
+      :name: supported_algorithms_10
 
    .. rubric:: Notes
+      :name: notes_10
 
    -  SHA1withDSA (*DSA, DSS, SHA/DSA, SHA-1/DSA, SHA1/DSA, DSAWithSHA1, SHAwithDSA*)
    -  SHA-1/RSA (*SHA1/RSA, SHA1withRSA*)
@@ -431,6 +456,7 @@ Mozilla-JSS JCA Provider notes
    -  The SecureRandom argument passed to ``initSign()`` and ``initVerify()`` is ignored, because
       NSS does not support specifying an external source of randomness.
 
+.. _what's_not_supported:
 
 `What's Not Supported <#what's_not_supported>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

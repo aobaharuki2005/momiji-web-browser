@@ -34,6 +34,7 @@ NSS 3.24 release notes
    NSS 3.24 includes two NSS softoken updates, a new function to configure SSL/TLS server sockets,
    and two functions to improve the use of temporary arenas.
 
+.. _new_functionality:
 
 `New functionality <#new_functionality>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,6 +85,7 @@ NSS 3.24 release notes
    This section lists and briefly describes the new functions, types, and macros in NSS 3.24.
 
    .. rubric:: New functions
+      :name: new_functions
 
    -  *In ssl.h*
 
@@ -98,6 +100,7 @@ NSS 3.24 release notes
          PORTCheapArenaPool.)
 
    .. rubric:: New types
+      :name: new_types
 
    -  *In sslt.h*
 
@@ -112,6 +115,7 @@ NSS 3.24 release notes
          allocations.
 
    .. rubric:: New macros
+      :name: new_macros
 
    -  *In pkcs11t.h*
 

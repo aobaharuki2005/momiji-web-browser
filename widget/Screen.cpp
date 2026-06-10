@@ -1,3 +1,5 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 2; -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -29,7 +31,7 @@ Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
                uint32_t aRefreshRate, DesktopToLayoutDeviceScale aContentsScale,
                CSSToLayoutDeviceScale aDefaultCssScale, float aDPI,
                IsPseudoDisplay aIsPseudoDisplay, IsHDR aIsHDR,
-               IsHDR aIsVideoHDR, hal::ScreenOrientation aOrientation,
+               hal::ScreenOrientation aOrientation,
                OrientationAngle aOrientationAngle)
     : mRect(aRect),
       mAvailRect(aAvailRect),
@@ -44,8 +46,7 @@ Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
       mScreenOrientation(EffectiveOrientation(aOrientation, aRect)),
       mOrientationAngle(aOrientationAngle),
       mIsPseudoDisplay(aIsPseudoDisplay == IsPseudoDisplay::Yes),
-      mIsHDR(aIsHDR == IsHDR::Yes),
-      mIsVideoHDR(aIsVideoHDR == IsHDR::Yes) {}
+      mIsHDR(aIsHDR == IsHDR::Yes) {}
 
 Screen::Screen(const dom::ScreenDetails& aScreen)
     : mRect(aScreen.rect()),
@@ -61,8 +62,7 @@ Screen::Screen(const dom::ScreenDetails& aScreen)
       mScreenOrientation(aScreen.orientation()),
       mOrientationAngle(aScreen.orientationAngle()),
       mIsPseudoDisplay(aScreen.isPseudoDisplay()),
-      mIsHDR(aScreen.isHDR()),
-      mIsVideoHDR(aScreen.isVideoHDR()) {}
+      mIsHDR(aScreen.isHDR()) {}
 
 Screen::Screen(const Screen& aOther)
     : mRect(aOther.mRect),
@@ -78,15 +78,13 @@ Screen::Screen(const Screen& aOther)
       mScreenOrientation(aOther.mScreenOrientation),
       mOrientationAngle(aOther.mOrientationAngle),
       mIsPseudoDisplay(aOther.mIsPseudoDisplay),
-      mIsHDR(aOther.mIsHDR),
-      mIsVideoHDR(aOther.mIsVideoHDR) {}
+      mIsHDR(aOther.mIsHDR) {}
 
 dom::ScreenDetails Screen::ToScreenDetails() const {
-  return dom::ScreenDetails(mRect, mRectDisplayPix, mAvailRect,
-                            mAvailRectDisplayPix, mPixelDepth, mColorDepth,
-                            mRefreshRate, mContentsScale, mDefaultCssScale,
-                            mDPI, mScreenOrientation, mOrientationAngle,
-                            mIsPseudoDisplay, mIsHDR, mIsVideoHDR);
+  return dom::ScreenDetails(
+      mRect, mRectDisplayPix, mAvailRect, mAvailRectDisplayPix, mPixelDepth,
+      mColorDepth, mRefreshRate, mContentsScale, mDefaultCssScale, mDPI,
+      mScreenOrientation, mOrientationAngle, mIsPseudoDisplay, mIsHDR);
 }
 
 NS_IMETHODIMP

@@ -8,11 +8,12 @@ import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.service.nimbus.messaging.Message
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageClicked
@@ -35,17 +36,16 @@ class MicrosurveyMessageControllerTest {
     @get:Rule
     val gleanTestRule = FenixGleanTestRule(testContext)
 
+    private val homeActivity: HomeActivity = mockk(relaxed = true)
     private val message: Message = mockk(relaxed = true)
     private lateinit var microsurveyMessageController: MicrosurveyMessageController
     private val appStore: AppStore = mockk(relaxed = true)
-    private val openUrlInBrowserCalls = mutableListOf<String>()
-    private val openUrlInBrowser: (String) -> Unit = { openUrlInBrowserCalls.add(it) }
 
     @Before
     fun setup() {
         microsurveyMessageController = MicrosurveyMessageController(
             appStore = appStore,
-            openUrlInBrowser = openUrlInBrowser,
+            homeActivity = homeActivity,
         )
     }
 
@@ -66,8 +66,13 @@ class MicrosurveyMessageControllerTest {
     fun `GIVEN has utmContent WHEN calling onPrivacyPolicyLinkClicked THEN open the privacy URL appended with the utmContent in a new tab`() {
         microsurveyMessageController.onPrivacyPolicyLinkClicked(message.id, "homepage")
 
-        verify { appStore.dispatch(OnPrivacyNoticeTapped(message.id)) }
-        assertEquals(listOf("$PRIVACY_POLICY_URL&utm_content=homepage"), openUrlInBrowserCalls)
+        verify {
+            homeActivity.openToBrowserAndLoad(
+                searchTermOrURL = "$PRIVACY_POLICY_URL&utm_content=homepage",
+                newTab = true,
+                from = BrowserDirection.FromGlobal,
+            )
+        }
     }
 
     @Test
@@ -75,7 +80,13 @@ class MicrosurveyMessageControllerTest {
         microsurveyMessageController.onPrivacyPolicyLinkClicked(message.id)
 
         verify { appStore.dispatch(OnPrivacyNoticeTapped(message.id)) }
-        assertEquals(listOf(PRIVACY_POLICY_URL), openUrlInBrowserCalls)
+        verify {
+            homeActivity.openToBrowserAndLoad(
+                searchTermOrURL = PRIVACY_POLICY_URL,
+                newTab = true,
+                from = BrowserDirection.FromGlobal,
+            )
+        }
     }
 
     @Test

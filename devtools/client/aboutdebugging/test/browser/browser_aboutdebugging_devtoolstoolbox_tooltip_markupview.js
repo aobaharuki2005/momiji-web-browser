@@ -54,7 +54,7 @@ add_task(async function () {
   info(
     "Check tooltip visibility after clicking on an element in the root document"
   );
-  const rootDocument = devtoolsWindow.windowRoot.window.document;
+  const rootDocument = devtoolsWindow.windowRoot.ownerGlobal.document;
   await checkTooltipVisibility(
     inspector,
     eventBadge,
@@ -86,7 +86,7 @@ async function checkTooltipVisibility(
     1,
     1,
     {},
-    elementForHiding.documentGlobal
+    elementForHiding.ownerGlobal
   );
   await tooltip.once("hidden");
   is(

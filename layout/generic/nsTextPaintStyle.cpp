@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/RelativeLuminanceUtils.h"
-#include "mozilla/dom/Document.h"
 #include "nsCSSColorUtils.h"
 #include "nsCSSRendering.h"
 #include "nsFrameSelection.h"
@@ -214,68 +215,42 @@ void nsTextPaintStyle::GetHighlightColors(nscolor* aForeColor,
   *aBackColor = NS_TRANSPARENT;
 }
 
-bool nsTextPaintStyle::TargetTextUseLightScheme() {
-  if (mTargetTextUseLightScheme.isSome()) {
-    return *mTargetTextUseLightScheme;
-  }
-  InitCommonColors();
-  const auto darkSchemeBackground =
-      LookAndFeel::Color(LookAndFeel::ColorID::TargetTextBackground,
-                         ColorScheme::Dark, LookAndFeel::UseStandins::No);
-  const auto lightSchemeBackground =
-      LookAndFeel::Color(LookAndFeel::ColorID::TargetTextBackground,
-                         ColorScheme::Light, LookAndFeel::UseStandins::No);
-  mTargetTextUseLightScheme =
-      Some(RelativeLuminanceUtils::ContrastRatio(lightSchemeBackground,
-                                                 mFrameBackgroundColor) >
-           RelativeLuminanceUtils::ContrastRatio(darkSchemeBackground,
-                                                 mFrameBackgroundColor));
-  return *mTargetTextUseLightScheme;
-}
-
-bool nsTextPaintStyle::GetTargetTextColor(nscolor* aForeColor) {
+void nsTextPaintStyle::GetTargetTextColors(nscolor* aForeColor,
+                                           nscolor* aBackColor) {
   NS_ASSERTION(aForeColor, "aForeColor is null");
+  NS_ASSERTION(aBackColor, "aBackColor is null");
+  InitCommonColors();
   InitTargetTextPseudoStyle();
-  if (mTargetTextPseudoStyle &&
-      (mTargetTextPseudoStyle->HasAuthorSpecifiedTextColor() ||
-       mTargetTextPseudoStyle->HasAuthorSpecifiedBorderOrBackground())) {
+
+  if (mTargetTextPseudoStyle) {
     *aForeColor = mTargetTextPseudoStyle->GetVisitedDependentColor(
         &nsStyleText::mWebkitTextFillColor);
-    return mTargetTextPseudoStyle->HasAuthorSpecifiedTextColor();
-  }
-  *aForeColor = LookAndFeel::Color(
-      LookAndFeel::ColorID::TargetTextForeground,
-      TargetTextUseLightScheme() ? ColorScheme::Light : ColorScheme::Dark,
-      LookAndFeel::UseStandins::No);
-  return false;
-}
-
-bool nsTextPaintStyle::GetTargetTextBackgroundColor(nscolor* aBackColor) {
-  NS_ASSERTION(aBackColor, "aBackColor is null");
-  InitTargetTextPseudoStyle();
-  if (mTargetTextPseudoStyle &&
-      (mTargetTextPseudoStyle->HasAuthorSpecifiedTextColor() ||
-       mTargetTextPseudoStyle->HasAuthorSpecifiedBorderOrBackground())) {
     *aBackColor = mTargetTextPseudoStyle->GetVisitedDependentColor(
         &nsStyleBackground::mBackgroundColor);
-    return NS_GET_A(*aBackColor) != 0;
+    return;
   }
-  *aBackColor = LookAndFeel::Color(
+
+  const auto darkSchemeBackground = LookAndFeel::Color(
       LookAndFeel::ColorID::TargetTextBackground,
-      TargetTextUseLightScheme() ? ColorScheme::Light : ColorScheme::Dark,
-      LookAndFeel::UseStandins::No);
-  return NS_GET_A(*aBackColor) != 0;
-}
+      LookAndFeel::ColorScheme::Dark, LookAndFeel::UseStandins::No);
+  const auto lightSchemeBackground = LookAndFeel::Color(
+      LookAndFeel::ColorID::TargetTextBackground,
+      LookAndFeel::ColorScheme::Light, LookAndFeel::UseStandins::No);
+  const auto lightSchemeForeground = LookAndFeel::Color(
+      LookAndFeel::ColorID::TargetTextForeground,
+      LookAndFeel::ColorScheme::Light, LookAndFeel::UseStandins::No);
+  const auto darkSchemeForeground = LookAndFeel::Color(
+      LookAndFeel::ColorID::TargetTextForeground,
+      LookAndFeel::ColorScheme::Dark, LookAndFeel::UseStandins::No);
+  const float ratioLightScheme = RelativeLuminanceUtils::ContrastRatio(
+      lightSchemeBackground, mFrameBackgroundColor);
+  const float ratioDarkScheme = RelativeLuminanceUtils::ContrastRatio(
+      darkSchemeBackground, mFrameBackgroundColor);
 
-mozilla::Span<const StyleSimpleShadow> nsTextPaintStyle::GetTargetTextShadow() {
-  InitTargetTextPseudoStyle();
-
-  if (mTargetTextPseudoStyle &&
-      mTargetTextPseudoStyle->HasAuthorSpecifiedTextShadow()) {
-    return mTargetTextPseudoStyle->StyleText()->mTextShadow.AsSpan();
-  }
-
-  return {};
+  *aBackColor = ratioLightScheme > ratioDarkScheme ? lightSchemeBackground
+                                                   : darkSchemeBackground;
+  *aForeColor = ratioLightScheme > ratioDarkScheme ? lightSchemeForeground
+                                                   : darkSchemeForeground;
 }
 
 bool nsTextPaintStyle::GetCustomHighlightTextColor(nsAtom* aHighlightName,
@@ -295,7 +270,8 @@ bool nsTextPaintStyle::GetCustomHighlightTextColor(nsAtom* aHighlightName,
     return false;
   }
 
-  *aForeColor = highlightStyle->GetVisitedDependentColor(&nsStyleText::mColor);
+  *aForeColor = highlightStyle->GetVisitedDependentColor(
+      &nsStyleText::mWebkitTextFillColor);
 
   return highlightStyle->HasAuthorSpecifiedTextColor();
 }
@@ -321,20 +297,6 @@ bool nsTextPaintStyle::GetCustomHighlightBackgroundColor(nsAtom* aHighlightName,
   return NS_GET_A(*aBackColor) != 0;
 }
 
-mozilla::Span<const StyleSimpleShadow>
-nsTextPaintStyle::GetCustomHighlightTextShadow(nsAtom* aHighlightName) {
-  RefPtr<ComputedStyle> highlightStyle =
-      mCustomHighlightPseudoStyles.LookupOrInsertWith(
-          aHighlightName, [this, &aHighlightName] {
-            return mFrame->ComputeHighlightSelectionStyle(aHighlightName);
-          });
-  if (!highlightStyle || !highlightStyle->HasAuthorSpecifiedTextShadow()) {
-    return {};
-  }
-
-  return highlightStyle->StyleText()->mTextShadow.AsSpan();
-}
-
 RefPtr<ComputedStyle> nsTextPaintStyle::GetComputedStyleForSelectionPseudo(
     SelectionType aSelectionType, nsAtom* aHighlightName) {
   switch (aSelectionType) {
@@ -351,6 +313,7 @@ RefPtr<ComputedStyle> nsTextPaintStyle::GetComputedStyleForSelectionPseudo(
           });
     }
     default:
+      MOZ_ASSERT_UNREACHABLE("Wrong selection type");
       return nullptr;
   }
 }
@@ -459,28 +422,12 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
   // Use ::selection pseudo class if applicable.
   if (RefPtr<ComputedStyle> style =
           mFrame->ComputeSelectionStyle(selectionStatus)) {
+    mSelectionBGColor =
+        style->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
+    mSelectionTextColor =
+        style->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
     mSelectionPseudoStyle = std::move(style);
-
-    // Currently, there are separate code paths that determine whether to use
-    // native selection colors or author-specified ones, depending on whether
-    // this is web content or chrome content. See bug 2029839.
-    if (!mFrame->PresContext()->Document()->ChromeRulesEnabled()) {
-      mSelectionBGColor = mSelectionPseudoStyle->GetVisitedDependentColor(
-          &nsStyleBackground::mBackgroundColor);
-      mSelectionTextColor =
-          mSelectionPseudoStyle->GetVisitedDependentColor(&nsStyleText::mColor);
-      return true;
-    }
-
-    if (nscolor bgColor = mSelectionPseudoStyle->GetVisitedDependentColor(
-            &nsStyleBackground::mBackgroundColor);
-        mSelectionPseudoStyle->HasAuthorSpecifiedTextColor() ||
-        NS_GET_A(bgColor) > 0) {
-      mSelectionBGColor = bgColor;
-      mSelectionTextColor =
-          mSelectionPseudoStyle->GetVisitedDependentColor(&nsStyleText::mColor);
-      return true;
-    }
+    return true;
   }
 
   mSelectionTextColor =
@@ -646,17 +593,18 @@ bool nsTextPaintStyle::GetSelectionUnderline(nsIFrame* aFrame,
          size > 0.0f;
 }
 
-mozilla::Span<const StyleSimpleShadow> nsTextPaintStyle::GetSelectionShadow() {
+bool nsTextPaintStyle::GetSelectionShadow(
+    Span<const StyleSimpleShadow>* aShadows) {
   if (!InitSelectionColorsAndShadow()) {
-    return {};
+    return false;
   }
 
-  if (mSelectionPseudoStyle &&
-      mSelectionPseudoStyle->HasAuthorSpecifiedTextShadow()) {
-    return mSelectionPseudoStyle->StyleText()->mTextShadow.AsSpan();
+  if (mSelectionPseudoStyle) {
+    *aShadows = mSelectionPseudoStyle->StyleText()->mTextShadow.AsSpan();
+    return true;
   }
 
-  return {};
+  return false;
 }
 
 inline nscolor Get40PercentColor(nscolor aForeColor, nscolor aBackColor) {

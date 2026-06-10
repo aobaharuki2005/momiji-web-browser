@@ -122,7 +122,7 @@ fn((t) => {
   vtu.doCreateRenderPipelineTest(
     t,
     isAsync,
-    isTextureFormatColorRenderable(t.device.features, format),
+    isTextureFormatColorRenderable(t.device, format),
     descriptor
   );
 });
@@ -194,7 +194,7 @@ fn((t) => {
     })
   });
   const shouldError =
-  !isTextureFormatColorRenderable(t.device.features, format) ||
+  !isTextureFormatColorRenderable(t.device, format) ||
   getColorRenderByteCost(format) * attachmentCount >
   t.device.limits.maxColorAttachmentBytesPerSample;
 
@@ -272,7 +272,7 @@ fn((t) => {
 
   });
 
-  const supportsBlend = isTextureFormatBlendable(t.device.features, format);
+  const supportsBlend = isTextureFormatBlendable(t.device, format);
   vtu.doCreateRenderPipelineTest(t, isAsync, !hasBlend || supportsBlend, descriptor);
 });
 

@@ -63,8 +63,10 @@ add_task(
         selectSpanishSentence: false,
         openAtEnglishHyperlink: true,
         expectMenuItemVisible: true,
+        expectedTargetLanguage: "en",
       },
-      "The translate-selection context menu item should use the generic label when the link text is already in the preferred language"
+      "The translate-selection context menu item should be localized to translate the link text" +
+        "to the target language."
     );
 
     await cleanup();

@@ -18,17 +18,23 @@ function task(contentConsts) {
     Assert.ok(false, "Received a " + evt.type + " event on content");
   }
 
-  let gDoc = content.document;
-  let ceh = content.docShell.chromeEventHandler;
-  // This event is chrome-only so this listener on gDoc never fires,
-  // but kept for parity with the original test's intent.
-  gDoc.addEventListener("DOMInputPasswordAdded", unexpectedContentEvent);
-  content.setTimeout(test_inputAddOutsideForm, 0);
+  var gDoc = null;
+
+  addEventListener("load", tabLoad, true);
+
+  function tabLoad() {
+    removeEventListener("load", tabLoad, true);
+    gDoc = content.document;
+    // These events shouldn't escape to content.
+    gDoc.addEventListener("DOMInputPasswordAdded", unexpectedContentEvent);
+    gDoc.defaultView.setTimeout(test_inputAddOutsideForm, 0);
+  }
 
   function test_inputAddOutsideForm() {
-    ceh.addEventListener(
+    addEventListener(
       "DOMInputPasswordAdded",
-      test_inputAddOutsideFormHandler
+      test_inputAddOutsideFormHandler,
+      false
     );
     let input = gDoc.createElementNS(contentConsts.HTML_NS, "input");
     input.setAttribute("type", "password");
@@ -39,30 +45,34 @@ function task(contentConsts) {
   }
 
   function test_inputAddOutsideFormHandler(evt) {
-    ceh.removeEventListener(evt.type, test_inputAddOutsideFormHandler);
+    removeEventListener(evt.type, test_inputAddOutsideFormHandler, false);
     Assert.equal(
       evt.target.id,
       contentConsts.BODY_INPUT_ID,
       evt.type +
         " event targets correct input element (added password element outside form)"
     );
-    content.setTimeout(test_inputChangesType, 0);
+    gDoc.defaultView.setTimeout(test_inputChangesType, 0);
   }
 
   function test_inputChangesType() {
-    ceh.addEventListener("DOMInputPasswordAdded", test_inputChangesTypeHandler);
+    addEventListener(
+      "DOMInputPasswordAdded",
+      test_inputChangesTypeHandler,
+      false
+    );
     let input = gDoc.getElementById(contentConsts.CHANGE_INPUT_ID);
     input.setAttribute("type", "password");
   }
 
   function test_inputChangesTypeHandler(evt) {
-    ceh.removeEventListener(evt.type, test_inputChangesTypeHandler);
+    removeEventListener(evt.type, test_inputChangesTypeHandler, false);
     Assert.equal(
       evt.target.id,
       contentConsts.CHANGE_INPUT_ID,
       evt.type + " event targets correct input element (changed type)"
     );
-    content.setTimeout(completeTest, 0);
+    gDoc.defaultView.setTimeout(completeTest, 0);
   }
 
   function completeTest() {
@@ -76,6 +86,7 @@ function task(contentConsts) {
 
 add_task(async function () {
   let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
+  let promise = ContentTask.spawn(tab.linkedBrowser, consts, task);
   BrowserTestUtils.startLoadingURIString(
     tab.linkedBrowser,
     `data:text/html;charset=utf-8,
@@ -85,7 +96,6 @@ add_task(async function () {
       </html>
     `
   );
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [consts], task);
+  await promise;
   gBrowser.removeCurrentTab();
 });

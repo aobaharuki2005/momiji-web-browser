@@ -8,8 +8,7 @@ const { sinon } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
-  ScreenshotsUtils:
-    "moz-src:///browser/components/screenshots/ScreenshotsUtils.sys.mjs",
+  ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
 });
 
 const COMPONENT_PREF = "screenshots.browser.component.enabled";

@@ -419,9 +419,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
         cmd += ["--no-install-fonts"]
 
-        if test_types:
-            cmd.append("--test-type")
-            cmd.extend(test_types)
+        for test_type in test_types:
+            cmd.append("--test-type=%s" % test_type)
 
         if c["extra_prefs"]:
             cmd.extend([f"--setpref={p}" for p in c["extra_prefs"]])
@@ -511,9 +510,25 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                 )
             cmd.append("--webdriver-binary=%s" % geckodriver_path)
             cmd.append("--webdriver-arg=-vv")  # enable trace logs
-            cmd.append("--log-raw-unexpectedonly")
 
-        cmd.extend(self.query_options(options, str_format_values=str_format_values))
+        test_type_suite = {
+            "testharness": "web-platform-tests",
+            "crashtest": "web-platform-tests-crashtest",
+            "print-reftest": "web-platform-tests-print-reftest",
+            "reftest": "web-platform-tests-reftest",
+            "wdspec": "web-platform-tests-wdspec",
+        }
+        for test_type in test_types:
+            try_options, try_tests = self.try_args(test_type_suite[test_type])
+
+            cmd.extend(
+                self.query_options(
+                    options, try_options, str_format_values=str_format_values
+                )
+            )
+            cmd.extend(
+                self.query_tests_args(try_tests, str_format_values=str_format_values)
+            )
 
         for url_prefix in c["include"]:
             cmd.append(f"--include={url_prefix}")

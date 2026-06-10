@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,8 +20,7 @@
 #include "nsRefreshDriver.h"
 #include "nsThreadUtils.h"
 
-static mozilla::LazyLogModule gRenderingFingerprinterDetection(
-    "FingerprinterDetection");
+static mozilla::LazyLogModule gFingerprinterDetection("FingerprinterDetection");
 
 nsICanvasRenderingContextInternal::nsICanvasRenderingContextInternal() =
     default;
@@ -62,20 +62,20 @@ class RecordCanvasUsageRunnable final
     mozilla::AssertIsOnMainThread();
     RefPtr<mozilla::dom::Document> doc;
     if (!mWorkerRef) {
-      MOZ_LOG(gRenderingFingerprinterDetection, mozilla::LogLevel::Error,
+      MOZ_LOG(gFingerprinterDetection, mozilla::LogLevel::Error,
               ("RecordCanvasUsageRunnable::MainThreadRun - null mWorkerRef"));
       return false;
     }
     auto* priv = mWorkerRef->Private();
     if (!priv) {
       MOZ_LOG(
-          gRenderingFingerprinterDetection, mozilla::LogLevel::Error,
+          gFingerprinterDetection, mozilla::LogLevel::Error,
           ("RecordCanvasUsageRunnable::MainThreadRun - null worker private"));
       return false;
     }
     doc = priv->GetDocument();
     if (!doc) {
-      MOZ_LOG(gRenderingFingerprinterDetection, mozilla::LogLevel::Error,
+      MOZ_LOG(gFingerprinterDetection, mozilla::LogLevel::Error,
               ("RecordCanvasUsageRunnable::MainThreadRun - null document"));
       return false;
     }
@@ -101,7 +101,7 @@ void nsICanvasRenderingContextInternal::RecordCanvasUsage(
     auto usage =
         mozilla::CanvasUsage::CreateUsage(true, contextType, aAPI, size, this);
     if (NS_IsMainThread()) {
-      nsIGlobalObject* global = mOffscreenCanvas->GetRelevantGlobal();
+      nsIGlobalObject* global = mOffscreenCanvas->GetOwnerGlobal();
       if (global) {
         if (nsPIDOMWindowInner* inner = global->GetAsInnerWindow()) {
           if (mozilla::dom::Document* doc = inner->GetExtantDoc()) {
@@ -120,7 +120,7 @@ void nsICanvasRenderingContextInternal::RecordCanvasUsage(
                            rv);
         if (rv.Failed()) {
           rv.SuppressException();
-          MOZ_LOG(gRenderingFingerprinterDetection, mozilla::LogLevel::Error,
+          MOZ_LOG(gFingerprinterDetection, mozilla::LogLevel::Error,
                   ("RecordCanvasUsageRunnable dispatch failed"));
         }
       }
@@ -151,7 +151,7 @@ nsICookieJarSettings* nsICanvasRenderingContextInternal::GetCookieJarSettings()
   // and return the cookieJarSettings for the window's document, if available.
   if (mOffscreenCanvas) {
     nsCOMPtr<nsPIDOMWindowInner> win =
-        do_QueryInterface(mOffscreenCanvas->GetRelevantGlobal());
+        do_QueryInterface(mOffscreenCanvas->GetOwnerGlobal());
 
     if (win) {
       return win->GetExtantDoc()->CookieJarSettings();

@@ -1,3 +1,4 @@
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -264,29 +265,31 @@ function test_enforce_test_mode() {
 }
 
 function check_pinning_telemetry() {
-  let prod_histogram = Glean.certPinning.results.testGetValue();
-  console.log(prod_histogram);
-  let test_histogram = Glean.certPinning.testResults.testGetValue();
-  console.log(test_histogram);
+  let prod_histogram = Services.telemetry
+    .getHistogramById("CERT_PINNING_RESULTS")
+    .snapshot();
+  let test_histogram = Services.telemetry
+    .getHistogramById("CERT_PINNING_TEST_RESULTS")
+    .snapshot();
   // Because all of our test domains are pinned to user-specified trust
   // anchors, effectively only strict mode and enforce test-mode get evaluated
   equal(
-    prod_histogram.false,
+    prod_histogram.values[0],
     4,
     "Actual and expected prod (non-Mozilla) failure count should match"
   );
   equal(
-    prod_histogram.true,
+    prod_histogram.values[1],
     6,
     "Actual and expected prod (non-Mozilla) success count should match"
   );
   equal(
-    test_histogram.false,
+    test_histogram.values[0],
     2,
     "Actual and expected test (non-Mozilla) failure count should match"
   );
   equal(
-    test_histogram.true || 0,
+    test_histogram.values[1] || 0,
     0,
     "Actual and expected test (non-Mozilla) success count should match"
   );
@@ -295,9 +298,6 @@ function check_pinning_telemetry() {
 }
 
 function run_test() {
-  Services.fog.initializeFOG();
-  Services.fog.testResetFOG();
-
   // Ensure that static pinning works when HPKP is disabled.
   Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", false);
 

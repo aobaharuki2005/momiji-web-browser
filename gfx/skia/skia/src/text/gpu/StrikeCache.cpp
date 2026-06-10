@@ -16,6 +16,7 @@
 #include "src/core/SkStrikeSpec.h"
 #include "src/core/SkTraceEvent.h"
 #include "src/text/StrikeForGPU.h"
+#include "src/text/gpu/Glyph.h"
 
 #include <algorithm>
 #include <optional>
@@ -25,19 +26,53 @@ class SkStrike;
 
 namespace sktext::gpu {
 
-void TextStrikeBase::addMemoryUsed(size_t bytes) {
-    fMemoryUsed += bytes;
-    if (!fRemoved) {
-        fStrikeCache->fTotalMemoryUsed += bytes;
-    }
-}
-
 StrikeCache::~StrikeCache() {
     this->freeAll();
 }
 
 void StrikeCache::freeAll() {
     this->internalPurge(fTotalMemoryUsed);
+}
+
+sk_sp<TextStrike> StrikeCache::findOrCreateStrike(const SkStrikeSpec& strikeSpec) {
+    if (sk_sp<TextStrike>* cached = fCache.find(strikeSpec.descriptor())) {
+        return *cached;
+    }
+    sk_sp<TextStrike> strike = this->generateStrike(strikeSpec);
+    this->internalPurge();
+
+    return strike;
+}
+
+sk_sp<TextStrike> StrikeCache::internalFindStrikeOrNull(const SkDescriptor& desc) {
+    // Check head because it is likely the strike we are looking for.
+    if (fHead != nullptr && fHead->getDescriptor() == desc) { return sk_ref_sp(fHead); }
+
+    // Do the heavy search looking for the strike.
+    sk_sp<TextStrike>* strikeHandle = fCache.find(desc);
+    if (strikeHandle == nullptr) { return nullptr; }
+    TextStrike* strikePtr = strikeHandle->get();
+    SkASSERT(strikePtr != nullptr);
+    if (fHead != strikePtr) {
+        // Make most recently used
+        strikePtr->fPrev->fNext = strikePtr->fNext;
+        if (strikePtr->fNext != nullptr) {
+            strikePtr->fNext->fPrev = strikePtr->fPrev;
+        } else {
+            fTail = strikePtr->fPrev;
+        }
+        fHead->fPrev = strikePtr;
+        strikePtr->fNext = fHead;
+        strikePtr->fPrev = nullptr;
+        fHead = strikePtr;
+    }
+    return sk_ref_sp(strikePtr);
+}
+
+sk_sp<TextStrike> StrikeCache::generateStrike(const SkStrikeSpec& strikeSpec) {
+    sk_sp<TextStrike> strike = sk_make_sp<TextStrike>(this, strikeSpec);
+    this->internalAttachToHead(strike);
+    return strike;
 }
 
 size_t StrikeCache::internalPurge(size_t minBytesNeeded) {
@@ -71,9 +106,9 @@ size_t StrikeCache::internalPurge(size_t minBytesNeeded) {
 
     // Start at the tail and proceed backwards deleting; the list is in LRU
     // order, with unimportant entries at the tail.
-    TextStrikeBase* strike = fTail;
+    TextStrike* strike = fTail;
     while (strike != nullptr && (bytesFreed < bytesNeeded || countFreed < countNeeded)) {
-        TextStrikeBase* prev = strike->fPrev;
+        TextStrike* prev = strike->fPrev;
 
         bytesFreed += strike->fMemoryUsed;
         countFreed += 1;
@@ -94,9 +129,9 @@ size_t StrikeCache::internalPurge(size_t minBytesNeeded) {
     return bytesFreed;
 }
 
-void StrikeCache::internalAttachToHead(sk_sp<TextStrikeBase> strike) {
+void StrikeCache::internalAttachToHead(sk_sp<TextStrike> strike) {
     SkASSERT(fCache.find(strike->getDescriptor()) == nullptr);
-    TextStrikeBase* strikePtr = strike.get();
+    TextStrike* strikePtr = strike.get();
     fCache.set(std::move(strike));
     SkASSERT(nullptr == strikePtr->fPrev && nullptr == strikePtr->fNext);
 
@@ -115,7 +150,7 @@ void StrikeCache::internalAttachToHead(sk_sp<TextStrikeBase> strike) {
     fHead = strikePtr; // Transfer ownership of strike to the cache list.
 }
 
-void StrikeCache::internalRemoveStrike(TextStrikeBase* strike) {
+void StrikeCache::internalRemoveStrike(TextStrike* strike) {
     SkASSERT(fCacheCount > 0);
     fCacheCount -= 1;
     fTotalMemoryUsed -= strike->fMemoryUsed;
@@ -141,7 +176,7 @@ void StrikeCache::validate() const {
     size_t computedBytes = 0;
     int computedCount = 0;
 
-    const TextStrikeBase* strike = fHead;
+    const TextStrike* strike = fHead;
     while (strike != nullptr) {
         computedBytes += strike->fMemoryUsed;
         computedCount += 1;
@@ -160,12 +195,37 @@ void StrikeCache::validate() const {
 #endif
 }
 
-const SkDescriptor& StrikeCache::HashTraits::GetKey(const sk_sp<TextStrikeBase>& strike) {
+const SkDescriptor& StrikeCache::HashTraits::GetKey(const sk_sp<TextStrike>& strike) {
     return strike->fStrikeSpec.descriptor();
 }
 
 uint32_t StrikeCache::HashTraits::Hash(const SkDescriptor& descriptor) {
     return descriptor.getChecksum();
+}
+
+TextStrike::TextStrike(StrikeCache* strikeCache, const SkStrikeSpec& strikeSpec)
+        : fStrikeCache(strikeCache)
+        , fStrikeSpec{strikeSpec} {}
+
+Glyph* TextStrike::getGlyph(SkPackedGlyphID packedGlyphID) {
+    Glyph* glyph = fCache.findOrNull(packedGlyphID);
+    if (glyph == nullptr) {
+        glyph = fAlloc.make<Glyph>(packedGlyphID);
+        fCache.set(glyph);
+        fMemoryUsed += sizeof(Glyph);
+        if (!fRemoved) {
+            fStrikeCache->fTotalMemoryUsed += sizeof(Glyph);
+        }
+    }
+    return glyph;
+}
+
+const SkPackedGlyphID& TextStrike::HashTraits::GetKey(const Glyph* glyph) {
+    return glyph->fPackedID;
+}
+
+uint32_t TextStrike::HashTraits::Hash(SkPackedGlyphID key) {
+    return key.hash();
 }
 
 }  // namespace sktext::gpu

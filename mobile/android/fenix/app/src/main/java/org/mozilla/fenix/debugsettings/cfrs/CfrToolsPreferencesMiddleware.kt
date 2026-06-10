@@ -40,6 +40,14 @@ class CfrToolsPreferencesMiddleware(
                 }
                 cfrPreferencesRepository.init()
             }
+            is CfrToolsAction.HomepageSearchBarShownToggled -> {
+                cfrPreferencesRepository.updateCfrPreference(
+                    CfrPreferencesRepository.CfrPreferenceUpdate(
+                        preferenceType = CfrPreferencesRepository.CfrPreference.HomepageSearchBar,
+                        value = store.state.homepageSearchBarShown,
+                    ),
+                )
+            }
             is CfrToolsAction.TabAutoCloseBannerShownToggled -> {
                 cfrPreferencesRepository.updateCfrPreference(
                     CfrPreferencesRepository.CfrPreferenceUpdate(
@@ -80,6 +88,8 @@ class CfrToolsPreferencesMiddleware(
         cfrPreferenceUpdate: CfrPreferencesRepository.CfrPreferenceUpdate,
     ): CfrToolsAction {
         return when (cfrPreferenceUpdate.preferenceType) {
+            CfrPreferencesRepository.CfrPreference.HomepageSearchBar ->
+                CfrToolsAction.HomepageSearchbarCfrLoaded(newValue = !cfrPreferenceUpdate.value)
             CfrPreferencesRepository.CfrPreference.TabAutoCloseBanner ->
                 CfrToolsAction.TabAutoCloseBannerCfrLoaded(newValue = !cfrPreferenceUpdate.value)
             CfrPreferencesRepository.CfrPreference.InactiveTabs ->

@@ -1,3 +1,5 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -36,7 +38,7 @@ export const ResetPBMPanel = {
     // Populate _widgetConfig during init to defer (lazy) CustomizableUI import.
     this._widgetConfig ??= {
       id: "reset-pbm-toolbar-button",
-      l10nId: "reset-pbm-toolbar-button2",
+      l10nId: "reset-pbm-toolbar-button",
       type: "view",
       viewId: "reset-pbm-panel",
       defaultArea: lazy.CustomizableUI.AREA_NAVBAR,
@@ -62,7 +64,7 @@ export const ResetPBMPanel = {
    */
   async onViewShowing(event) {
     let panelview = event.target;
-    let triggeringWindow = panelview.documentGlobal;
+    let triggeringWindow = panelview.ownerGlobal;
 
     // We may skip the confirmation panel if disabled via pref.
     if (!this._shouldConfirmClear) {
@@ -135,7 +137,7 @@ export const ResetPBMPanel = {
     if (!this._enabled) {
       throw new Error("Not initialized.");
     }
-    let triggeringWindow = button.documentGlobal;
+    let triggeringWindow = button.ownerGlobal;
 
     // Write the checkbox state to pref. Only do this when the user
     // confirms.
@@ -220,17 +222,11 @@ export const ResetPBMPanel = {
     lazy.SessionStore.purgeDataForPrivateWindow(triggeringWindow);
 
     // 4. Clear private browsing data.
-    //    Wait for async cleanup to complete before showing confirmation.
-    await new Promise(resolve => {
-      Services.clearData.clearPrivateBrowsingData({
-        onDataDeleted(aFailedFlags) {
-          if (aFailedFlags) {
-            console.error("PBM cleanup failed with flags:", aFailedFlags);
-          }
-          resolve();
-        },
-      });
-    });
+    //    TODO: this doesn't wait for data to be cleared. This is probably
+    //    fine since PBM data is stored in memory and can be cleared quick
+    //    enough. The mechanism is brittle though, some callers still
+    //    perform clearing async. Bug 1846494 will address this.
+    Services.obs.notifyObservers(null, "last-pb-context-exited");
 
     // Once clearing is complete show a toast message.
 

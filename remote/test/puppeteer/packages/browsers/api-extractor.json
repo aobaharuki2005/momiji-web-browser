@@ -18,7 +18,7 @@
   "messages": {
     "compilerMessageReporting": {
       "default": {
-        "logLevel": "error"
+        "logLevel": "warning"
       }
     },
 
@@ -27,13 +27,13 @@
         "logLevel": "none"
       },
       "default": {
-        "logLevel": "error"
+        "logLevel": "warning"
       }
     },
 
     "tsdocMessageReporting": {
       "default": {
-        "logLevel": "error"
+        "logLevel": "warning"
       }
     }
   }

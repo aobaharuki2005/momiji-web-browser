@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -147,8 +149,7 @@ void CrossShadowBoundaryRange::ContentWillBeRemoved(nsIContent* aChild,
   MOZ_ASSERT(startContainer && endContainer);
 
   if (startContainer == aChild || endContainer == aChild) {
-    mOwner->ResetCrossShadowBoundaryRange(
-        ResetCommonAncestorIfInAnySelection::Yes);
+    mOwner->ResetCrossShadowBoundaryRange();
     return;
   }
 
@@ -156,23 +157,20 @@ void CrossShadowBoundaryRange::ContentWillBeRemoved(nsIContent* aChild,
   // anonymous contents created by the frame of aChild, and they are
   // unbounded from the document now.
   if (!startContainer->IsInComposedDoc() || !endContainer->IsInComposedDoc()) {
-    mOwner->ResetCrossShadowBoundaryRange(
-        ResetCommonAncestorIfInAnySelection::Yes);
+    mOwner->ResetCrossShadowBoundaryRange();
     return;
   }
 
   if (const auto* shadowRoot = aChild->GetShadowRoot()) {
     if (startContainer == shadowRoot || endContainer == shadowRoot) {
-      mOwner->ResetCrossShadowBoundaryRange(
-          ResetCommonAncestorIfInAnySelection::Yes);
+      mOwner->ResetCrossShadowBoundaryRange();
       return;
     }
   }
 
   if (startContainer->IsShadowIncludingInclusiveDescendantOf(aChild) ||
       endContainer->IsShadowIncludingInclusiveDescendantOf(aChild)) {
-    mOwner->ResetCrossShadowBoundaryRange(
-        ResetCommonAncestorIfInAnySelection::Yes);
+    mOwner->ResetCrossShadowBoundaryRange();
     return;
   }
 
@@ -186,10 +184,11 @@ void CrossShadowBoundaryRange::ContentWillBeRemoved(nsIContent* aChild,
       // We're only interested if our boundary reference was removed, otherwise
       // we can just invalidate the offset.
       if (aChild == aBoundary.Ref()) {
-        return Some(RawRangeBoundary::FromChild(*aChild, TreeKind::Flat));
+        return Some<RawRangeBoundary>(
+            {container, aChild->GetPreviousSibling(), TreeKind::Flat});
       }
       RawRangeBoundary newBoundary(TreeKind::Flat);
-      newBoundary.CopyFrom(aBoundary, RangeBoundarySetBy::Ref);
+      newBoundary.CopyFrom(aBoundary, RangeBoundaryIsMutationObserved::Yes);
       newBoundary.InvalidateOffset();
       return Some(newBoundary);
     }
@@ -208,27 +207,22 @@ void CrossShadowBoundaryRange::ContentWillBeRemoved(nsIContent* aChild,
   }
 }
 
+// For now CrossShadowBoundaryRange::CharacterDataChanged is only meant
+// to handle the character removal initiated by nsRange::CutContents.
 void CrossShadowBoundaryRange::CharacterDataChanged(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
-  // DOM mutation for cross-shadow-boundary selections is not specified.
-  // (https://github.com/w3c/selection-api/issues/168)
-  //
-  // When aInfo.mDetails is present, it means the character data was changed
-  // due to splitText() or normalize(). Only reset the cross-shadow-boundary
-  // range if the split/normalize affects the start or end container.
+  // When aInfo.mDetails is present, it means the character data was
+  // changed due to splitText() or normalize(), which shouldn't be the
+  // case for nsRange::CutContents, so we return early.
   if (aInfo.mDetails) {
-    if (aContent == mStart.GetContainer() || aContent == mEnd.GetContainer()) {
-      mOwner->ResetCrossShadowBoundaryRange(
-          ResetCommonAncestorIfInAnySelection::Yes);
-    }
     return;
   }
   MOZ_ASSERT(aContent);
   MOZ_ASSERT(mIsPositioned);
 
   auto MaybeCreateNewBoundary =
-      [aContent, &aInfo](const RangeBoundary& aBoundary,
-                         RangeBoundaryFor aFor) -> Maybe<RawRangeBoundary> {
+      [aContent,
+       &aInfo](const RangeBoundary& aBoundary) -> Maybe<RawRangeBoundary> {
     // If the changed node contains our start boundary and the change starts
     // before the boundary we'll need to adjust the offset.
     if (aContent == aBoundary.GetContainer() &&
@@ -242,17 +236,14 @@ void CrossShadowBoundaryRange::CharacterDataChanged(
       RawRangeBoundary newStart =
           nsRange::ComputeNewBoundaryWhenBoundaryInsideChangedText(
               aInfo, aBoundary.AsRaw());
-      return Some(newStart.AsRangeBoundaryInFlatTree(aFor));
+      return Some(newStart.AsRangeBoundaryInFlatTree());
     }
     return Nothing();
   };
 
-  const bool collapsed = mStart == mEnd;
   const Maybe<RawRangeBoundary> newStartBoundary =
-      MaybeCreateNewBoundary(mStart, collapsed ? RangeBoundaryFor::Collapsed
-                                               : RangeBoundaryFor::Start);
-  const Maybe<RawRangeBoundary> newEndBoundary = MaybeCreateNewBoundary(
-      mEnd, collapsed ? RangeBoundaryFor::Collapsed : RangeBoundaryFor::End);
+      MaybeCreateNewBoundary(mStart);
+  const Maybe<RawRangeBoundary> newEndBoundary = MaybeCreateNewBoundary(mEnd);
 
   if (newStartBoundary || newEndBoundary) {
     DoSetRange(newStartBoundary ? newStartBoundary.ref() : mStart.AsRaw(),
@@ -267,7 +258,6 @@ void CrossShadowBoundaryRange::ParentChainChanged(nsIContent* aContent) {
   MOZ_DIAGNOSTIC_ASSERT(mCommonAncestor == aContent,
                         "Wrong ParentChainChanged notification");
   MOZ_DIAGNOSTIC_ASSERT(mOwner);
-  mOwner->ResetCrossShadowBoundaryRange(
-      ResetCommonAncestorIfInAnySelection::Yes);
+  mOwner->ResetCrossShadowBoundaryRange();
 }
 }  // namespace mozilla::dom

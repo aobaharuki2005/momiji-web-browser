@@ -8,11 +8,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
-import androidx.fragment.compose.content
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.navArgs
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
@@ -21,35 +19,34 @@ import org.mozilla.fenix.theme.FirefoxTheme
 /**
  * Lets the user toggle telemetry on/off.
  */
-class DataChoicesFragment : Fragment(), SystemInsetsPaddedFragment {
-    private val args by navArgs<DataChoicesFragmentArgs>()
+class DataChoicesFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        val context = requireContext()
-        return content {
-            FirefoxTheme {
-                val store =
-                    DataChoicesStore(
-                        initialState = DataChoicesState(itemToScrollTo = args.preferenceToScrollTo),
-                        middleware = listOf(
-                            DataChoicesMiddleware(
-                                settings = context.settings(),
-                                learnMoreClicked = ::learnMoreClicked,
-                                nimbusSdk = context.components.nimbus.sdk,
-                                engine = context.components.core.engine,
-                                metrics = context.components.analytics.metrics,
-                                crashReporter = context.components.analytics.crashReporter,
-                                navController = view?.findNavController(),
+        return ComposeView(requireContext()).apply {
+            setContent {
+                FirefoxTheme {
+                    val store =
+                        DataChoicesStore(
+                            initialState = DataChoicesState(),
+                            middleware = listOf(
+                                DataChoicesMiddleware(
+                                    settings = context.settings(),
+                                    learnMoreClicked = ::learnMoreClicked,
+                                    nimbusSdk = context.components.nimbus.sdk,
+                                    engine = context.components.core.engine,
+                                    metrics = context.components.analytics.metrics,
+                                    navController = view?.findNavController(),
+                                ),
                             ),
-                        ),
-                    )
-                store.dispatch(ViewCreated)
+                        )
+                    store.dispatch(ViewCreated)
 
-                DataChoicesScreen(store = store)
+                    DataChoicesScreen(store = store)
+                }
             }
         }
     }

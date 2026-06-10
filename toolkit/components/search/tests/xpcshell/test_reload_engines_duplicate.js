@@ -34,11 +34,11 @@ add_setup(async () => {
   Region._setHomeRegion("US", false);
 
   SearchTestUtils.setRemoteSettingsConfig(CONFIG);
-  await SearchService.init();
+  await Services.search.init();
 });
 
 add_task(async function test_reload_engines_with_duplicate() {
-  let engines = await SearchService.getEngines();
+  let engines = await Services.search.getEngines();
 
   Assert.deepEqual(
     engines.map(e => e.id),
@@ -59,19 +59,16 @@ add_task(async function test_reload_engines_with_duplicate() {
 
   let engineId = engine.id;
 
-  const reloadObserved =
-    SearchTestUtils.promiseSearchNotification("engines-reloaded");
+  Region._setHomeRegion("FR", false);
 
-  Region._setHomeRegion("FR");
-
-  await reloadObserved;
+  await Services.search.wrappedJSObject._maybeReloadEngines();
 
   Assert.ok(
-    !(await SearchService.getEngineById(engineId)),
+    !(await Services.search.getEngineById(engineId)),
     "Should not have added the duplicate engine"
   );
 
-  engines = await SearchService.getEngines();
+  engines = await Services.search.getEngines();
 
   Assert.deepEqual(
     engines.map(e => e.id),
@@ -79,7 +76,7 @@ add_task(async function test_reload_engines_with_duplicate() {
     "Should have the expected default engines"
   );
 
-  let enginePref = await SearchService.getEngineByName("Not In FR");
+  let enginePref = await Services.search.getEngineByName("Not In FR");
 
   Assert.equal(
     enginePref.alias,

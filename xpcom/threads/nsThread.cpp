@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,11 +37,8 @@
 #include "mozilla/StaticLocalPtr.h"
 #include "mozilla/StaticPrefs_threads.h"
 #include "mozilla/TaskController.h"
-#include "nsExceptionHandler.h"
-#include "nsFmtString.h"
 #include "nsXPCOMPrivate.h"
 #include "mozilla/ChaosMode.h"
-#include "prerror.h"
 #include "mozilla/glean/XpcomMetrics.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/DocGroup.h"
@@ -333,7 +332,7 @@ void nsThread::ThreadFunc(void* aArg) {
   SetupCurrentThreadForChaosMode();
 
   if (!initData->name.IsEmpty()) {
-    NS_SetCurrentThreadName(initData->name.get());
+    NS_SetCurrentThreadName(initData->name.BeginReading());
   }
 
   self->InitCommon();
@@ -356,7 +355,7 @@ void nsThread::ThreadFunc(void* aArg) {
   // which profiler_register_thread() requires. See bug 1347007.
   const bool registerWithProfiler = !initData->name.IsEmpty();
   if (registerWithProfiler) {
-    PROFILER_REGISTER_THREAD(initData->name.get());
+    PROFILER_REGISTER_THREAD(initData->name.BeginReading());
   }
 
   {
@@ -623,15 +622,6 @@ nsresult nsThread::Init(const nsACString& aName) {
     if (!(thread = PR_CreateThread(PR_USER_THREAD, ThreadFunc, initData.get(),
                                    PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
                                    PR_JOINABLE_THREAD, mStackSize))) {
-      // Until bug 2017883 is fixed, these values may not be useful on
-      // Windows as NSPR does not propagate the OS error from thread
-      // creation.
-      PRErrorCode prError = PR_GetError();
-      PRInt32 osError = PR_GetOSError();
-      CrashReporter::RecordAnnotationNSCString(
-          CrashReporter::Annotation::ThreadLastCreateError,
-          nsFmtCString("{}: prError={:#x} osError={:#x}", aName, prError,
-                       osError));
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -727,11 +717,6 @@ nsThread::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
   NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_IMPLEMENTED);
 
   return mEventTarget->UnregisterShutdownTask(aTask);
-}
-
-nsIEventTarget::FeatureFlags nsThread::GetFeatures() {
-  return (mIsMainThread ? SUPPORTS_PRIORITIZATION : SUPPORTS_BASE) |
-         (SUPPORTS_SHUTDOWN_TASKS | SUPPORTS_SHUTDOWN_TASK_DISPATCH);
 }
 
 NS_IMETHODIMP
@@ -849,8 +834,8 @@ nsThread::BeginShutdown(nsIThreadShutdown** aShutdown) {
 
   // Set mShutdownContext and wake up the thread in case it is waiting for
   // events to process.
-  RefPtr<nsIRunnable> event = MakeRefPtr<nsThreadShutdownEvent>(
-      WrapNotNull(this), WrapNotNull(context));
+  RefPtr<nsIRunnable> event =
+      new nsThreadShutdownEvent(WrapNotNull(this), WrapNotNull(context));
   if (!mEvents->PutEvent(event, EventQueuePriority::Normal)) {
     // We do not expect this to happen. Let's collect some diagnostics.
     nsAutoCString threadName;
@@ -982,17 +967,15 @@ NS_IMETHODIMP nsThread::SetThreadQoS(nsIThread::QoSPriority aPriority) {
   // Only arm64 macs may possess heterogeneous cores. On these, we can tell
   // a thread to set its own QoS status. On intel macs things should behave
   // normally, and the OS will ignore the QoS state of the thread.
-  if(__builtin_available(macOS 10.10, *)) {
-     if (aPriority == nsIThread::QOS_PRIORITY_LOW) {
-       pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
-     } else if (NS_IsMainThread()) {
-       // MacOS documentation specifies that a main thread should be initialized at
-       // the USER_INTERACTIVE priority, so when we restore thread priorities the
-       // main thread should be setting itself to this.
-       pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
-     } else {
-       pthread_set_qos_class_self_np(QOS_CLASS_DEFAULT, 0);
-     }
+  if (aPriority == nsIThread::QOS_PRIORITY_LOW) {
+    pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
+  } else if (NS_IsMainThread()) {
+    // MacOS documentation specifies that a main thread should be initialized at
+    // the USER_INTERACTIVE priority, so when we restore thread priorities the
+    // main thread should be setting itself to this.
+    pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
+  } else {
+    pthread_set_qos_class_self_np(QOS_CLASS_DEFAULT, 0);
   }
 #endif
   // Do nothing if an OS-specific implementation is unavailable.
@@ -1540,7 +1523,8 @@ void PerformanceCounterState::MaybeReportAccumulatedTime(const nsCString& aName,
         static MarkerSchema MarkerTypeDisplay() {
           using MS = MarkerSchema;
           MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-          schema.AddKeyLabelFormat("category", "Type", MS::Format::String);
+          schema.AddKeyLabelFormat("category", "Type", MS::Format::String,
+                                   MS::PayloadFlags::Searchable);
           return schema;
         }
       };

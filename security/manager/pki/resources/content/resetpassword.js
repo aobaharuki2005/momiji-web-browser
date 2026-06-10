@@ -6,14 +6,15 @@
 
 document.addEventListener("dialogaccept", resetPassword);
 
-async function resetPassword() {
-  var token = Cc["@mozilla.org/security/internalkeytoken;1"].createInstance(
-    Ci.nsIPKCS11Token
+function resetPassword() {
+  var pk11db = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
+    Ci.nsIPK11TokenDB
   );
+  var token = pk11db.getInternalKeyToken();
   token.reset();
 
   try {
-    await Services.logins.removeAllUserFacingLoginsAsync();
+    Services.logins.removeAllUserFacingLogins();
   } catch (e) {}
 
   let l10n = new Localization(["security/pippki/pippki.ftl"], true);

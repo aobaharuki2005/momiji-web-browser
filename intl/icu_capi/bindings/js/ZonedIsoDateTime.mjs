@@ -10,12 +10,13 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
  * An ICU4X ZonedDateTime object capable of containing a ISO-8601 date, time, and zone.
  *
- * See the [Rust documentation for `ZonedDateTime`](https://docs.rs/icu/2.1.1/icu/time/struct.ZonedDateTime.html) for more information.
+ * See the [Rust documentation for `ZonedDateTime`](https://docs.rs/icu/latest/icu/time/struct.ZonedDateTime.html) for more information.
  */
+
+
 export class ZonedIsoDateTime {
     #date;
     get date() {
@@ -64,13 +65,7 @@ export class ZonedIsoDateTime {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 12, 4);
-
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-
-        functionCleanupArena.alloc(buffer);
-
-        return buffer.ptr;
+        return [this.#date.ffiValue, this.#time.ffiValue, this.#zone.ffiValue]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -118,54 +113,23 @@ export class ZonedIsoDateTime {
 
 
     /**
-     * Creates a new {@link ZonedIsoDateTime} from an IXDTF string.
+     * Creates a new [`ZonedIsoDateTime`] from an IXDTF string.
      *
-     * See the [Rust documentation for `try_strict_from_str`](https://docs.rs/icu/2.1.1/icu/time/struct.ZonedDateTime.html#method.try_strict_from_str) for more information.
-     */
-    static strictFromString(v, ianaParser) {
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, v)));
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 13, 4, true);
-
-
-        const result = wasm.icu4x_ZonedIsoDateTime_strict_from_string_mv1(diplomatReceive.buffer, vSlice.ptr, ianaParser.ffiValue);
-
-        try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new Rfc9557ParseError(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
-                throw new globalThis.Error('Rfc9557ParseError.' + cause.value, { cause });
-            }
-            return ZonedIsoDateTime._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
-        }
-
-        finally {
-            functionCleanupArena.free();
-
-            diplomatReceive.free();
-        }
-    }
-
-    /**
-     * Creates a new {@link ZonedIsoDateTime} from an IXDTF string.
-     *
-     * See the [Rust documentation for `try_full_from_str`](https://docs.rs/icu/2.1.1/icu/time/struct.ZonedDateTime.html#method.try_full_from_str) for more information.
-     *
-     * @deprecated use strict_from_string
+     * See the [Rust documentation for `try_full_from_str`](https://docs.rs/icu/latest/icu/time/struct.ZonedDateTime.html#method.try_full_from_str) for more information.
      */
     static fullFromString(v, ianaParser, offsetCalculator) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, v)));
+        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 13, 4, true);
 
 
-        const result = wasm.icu4x_ZonedIsoDateTime_full_from_string_mv1(diplomatReceive.buffer, vSlice.ptr, ianaParser.ffiValue, offsetCalculator.ffiValue);
+        const result = wasm.icu4x_ZonedIsoDateTime_full_from_string_mv1(diplomatReceive.buffer, ...vSlice.splat(), ianaParser.ffiValue, offsetCalculator.ffiValue);
 
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = new Rfc9557ParseError(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
-                throw new globalThis.Error('Rfc9557ParseError.' + cause.value, { cause });
+                throw new globalThis.Error('Rfc9557ParseError: ' + cause.value, { cause });
             }
             return ZonedIsoDateTime._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
@@ -178,11 +142,11 @@ export class ZonedIsoDateTime {
     }
 
     /**
-     * Creates a new {@link ZonedIsoDateTime} from milliseconds since epoch (timestamp) and a UTC offset.
+     * Creates a new [`ZonedIsoDateTime`] from milliseconds since epoch (timestamp) and a UTC offset.
      *
-     * Note: {@link ZonedIsoDateTime}s created with this constructor can only be formatted using localized offset zone styles.
+     * Note: [`ZonedIsoDateTime`]s created with this constructor can only be formatted using localized offset zone styles.
      *
-     * See the [Rust documentation for `from_epoch_milliseconds_and_utc_offset`](https://docs.rs/icu/2.1.1/icu/time/struct.ZonedDateTime.html#method.from_epoch_milliseconds_and_utc_offset) for more information.
+     * See the [Rust documentation for `from_epoch_milliseconds_and_utc_offset`](https://docs.rs/icu/latest/icu/time/struct.ZonedDateTime.html#method.from_epoch_milliseconds_and_utc_offset) for more information.
      */
     static fromEpochMillisecondsAndUtcOffset(epochMilliseconds, utcOffset) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 12, 4, false);

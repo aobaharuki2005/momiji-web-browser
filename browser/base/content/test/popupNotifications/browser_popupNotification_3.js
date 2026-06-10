@@ -292,7 +292,6 @@ var tests = [
 
       fgNotification.remove();
       gBrowser.removeTab(bgTab);
-      anchor.remove();
       goNext();
     },
   },

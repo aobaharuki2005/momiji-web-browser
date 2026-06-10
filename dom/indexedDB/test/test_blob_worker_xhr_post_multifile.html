@@ -69,6 +69,7 @@
     is(blob.type, BLOB_TYPE, "Correct type");
 
     function workerScript() {
+      /* eslint-env worker */
       onmessage = function(event) {
         var blob = event.data;
         var compositeBlob = new Blob(["preceding string. ", blob],

@@ -19,8 +19,8 @@
 #include <cstdio>
 #include <memory>
 #include <optional>
-#include <span>
 
+#include "api/array_view.h"
 #include "api/audio/audio_processing.h"
 #include "api/environment/environment.h"
 #include "api/field_trials_view.h"
@@ -200,7 +200,7 @@ void MonoAgc::Initialize() {
   is_first_frame_ = true;
 }
 
-void MonoAgc::Process(std::span<const int16_t> audio,
+void MonoAgc::Process(ArrayView<const int16_t> audio,
                       std::optional<int> rms_error_override) {
   new_compression_to_set_ = std::nullopt;
 
@@ -519,6 +519,7 @@ AgcManagerDirect::~AgcManagerDirect() {}
 
 void AgcManagerDirect::Initialize() {
   RTC_DLOG(LS_INFO) << "AgcManagerDirect::Initialize";
+  data_dumper_->InitiateNewSetOfRecordings();
   for (size_t ch = 0; ch < channel_agcs_.size(); ++ch) {
     channel_agcs_[ch]->Initialize();
   }
@@ -669,7 +670,7 @@ void AgcManagerDirect::Process(const AudioBuffer& audio_buffer,
   }
 }
 
-std::optional<int> AgcManagerDirect::GetDigitalCompressionGain() {
+std::optional<int> AgcManagerDirect::GetDigitalComressionGain() {
   return new_compressions_to_set_[channel_controlling_gain_];
 }
 

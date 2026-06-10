@@ -1,77 +1,44 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gc/WeakMap-inl.h"
 
+#include <string.h>
+
 #include "gc/PublicIterators.h"
 #include "vm/JSObject.h"
 
-#include "gc/AtomMarking-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/StoreBuffer-inl.h"
 
 using namespace js;
 using namespace js::gc;
 
-void js::gc::MarkSymbolForWeakMapReadBarrier(JS::Zone* zone, JS::Symbol* sym) {
-  MOZ_ASSERT(zone && !zone->isAtomsZone());
-  zone->runtimeFromMainThread()->gc.atomMarking.inlinedMarkAtom(zone, sym);
-}
-
 WeakMapBase::WeakMapBase(JSObject* memOf, Zone* zone)
     : memberOf(memOf), zone_(zone) {
   MOZ_ASSERT_IF(memberOf, memberOf->compartment()->zone() == zone);
-  MOZ_ASSERT(!isMarked());
-
-  if (zone->isGCMarking()) {
-    setMapColor(CellColor::Black);
-  }
-
-  SlimLinkedList<WeakMapBase>* list;
-  if (isSystem()) {
-    list = &zone->gcSystemWeakMaps();
-  } else if (isMarked()) {
-    list = &zone->gcMarkedUserWeakMaps();
-  } else {
-    list = &zone->gcUserWeakMaps();
-  }
-
-#ifdef JS_GC_CONCURRENT_MARKING
-  // Lock if background thread is marking concurrently.
-  mozilla::Maybe<AutoLockGC> lock;
-  if (!isSystem() && zone->needsMarkingBarrier(Zone::Concurrent)) {
-    lock.emplace(zone->runtimeFromMainThread());
-  }
-#endif
-
-  list->pushFront(this);
+  MOZ_ASSERT(!IsMarked(mapColor()));
 }
 
 void WeakMapBase::unmarkZone(JS::Zone* zone) {
   zone->gcEphemeronEdges().clearAndCompact();
-  ForAllWeakMapsInZone(
-      zone, [](WeakMapBase* map) { map->setMapColor(CellColor::White); });
-  zone->gcUserWeakMaps().append(std::move(zone->gcMarkedUserWeakMaps()));
-  MOZ_ASSERT(zone->gcMarkedUserWeakMaps().isEmpty());
+  for (WeakMapBase* m : zone->gcWeakMapList()) {
+    m->setMapColor(CellColor::White);
+  }
 }
-
-#ifdef DEBUG
-void WeakMapBase::checkZoneUnmarked(JS::Zone* zone) {
-  MOZ_ASSERT(zone->gcEphemeronEdges().empty());
-  MOZ_ASSERT(zone->gcMarkedUserWeakMaps().isEmpty());
-  ForAllWeakMapsInZone(zone, [](WeakMapBase* map) {
-    MOZ_ASSERT(map->mapColor() == CellColor::White);
-  });
-}
-#endif
 
 void Zone::traceWeakMaps(JSTracer* trc) {
   MOZ_ASSERT(trc->weakMapAction() != JS::WeakMapTraceAction::Skip);
-  ForAllWeakMapsInZone(this, [trc](WeakMapBase* map) { map->trace(trc); });
+  for (WeakMapBase* m : gcWeakMapList()) {
+    m->trace(trc);
+    TraceNullableEdge(trc, &m->memberOf, "memberOf");
+  }
 }
 
-mozilla::Maybe<CellColor> WeakMapBase::markMap(MarkColor markColor) {
+bool WeakMapBase::markMap(MarkColor markColor) {
   // We may be marking in parallel here so use a compare exchange loop to handle
   // concurrent updates to the map color.
   //
@@ -87,11 +54,11 @@ mozilla::Maybe<CellColor> WeakMapBase::markMap(MarkColor markColor) {
     uint32_t currentColor = mapColor_;
 
     if (currentColor >= targetColor) {
-      return mozilla::Nothing();
+      return false;
     }
 
     if (mapColor_.compareExchange(currentColor, targetColor)) {
-      return mozilla::Some(CellColor(currentColor));
+      return true;
     }
   }
 }
@@ -145,11 +112,11 @@ bool WeakMapBase::checkMarkingForZone(JS::Zone* zone) {
   MOZ_ASSERT(zone->isGCMarking());
 
   bool ok = true;
-  ForAllWeakMapsInZone(zone, [&ok](WeakMapBase* map) {
-    if (map->isMarked() && !map->checkMarking()) {
+  for (WeakMapBase* m : zone->gcWeakMapList()) {
+    if (IsMarked(m->mapColor()) && !m->checkMarking()) {
       ok = false;
     }
-  });
+  }
 
   return ok;
 }
@@ -158,168 +125,81 @@ bool WeakMapBase::checkMarkingForZone(JS::Zone* zone) {
 #ifdef JSGC_HASH_TABLE_CHECKS
 /* static */
 void WeakMapBase::checkWeakMapsAfterMovingGC(JS::Zone* zone) {
-  ForAllWeakMapsInZone(zone,
-                       [](WeakMapBase* map) { map->checkAfterMovingGC(); });
+  for (WeakMapBase* map : zone->gcWeakMapList()) {
+    map->checkAfterMovingGC();
+  }
 }
 #endif
 
 bool WeakMapBase::markZoneIteratively(JS::Zone* zone, GCMarker* marker) {
-  MOZ_ASSERT(zone->isGCMarking());
-
   bool markedAny = false;
-  ForAllWeakMapsInZone(zone, [&](WeakMapBase* map) {
-    if (map->isMarked() && map->markEntries(marker)) {
+  for (WeakMapBase* m : zone->gcWeakMapList()) {
+    if (IsMarked(m->mapColor()) && m->markEntries(marker)) {
       markedAny = true;
     }
-  });
+  }
   return markedAny;
 }
 
 bool WeakMapBase::findSweepGroupEdgesForZone(JS::Zone* atomsZone,
                                              JS::Zone* mapZone) {
-#ifdef DEBUG
-  ForAllWeakMapsInZone(mapZone,
-                       [](WeakMapBase* map) { map->checkCachedFlags(); });
-#endif
-
-  // Because this might involve iterating over all weakmap edges in the zone we
-  // cache some information on the zone to allow us to avoid it if possible.
-  //
-  //  - mapZone->gcWeakMapsMayHaveSymbolKeys() is set if any weakmap may have
-  //    symbol keys
-  //
-  //  - mapZone->gcUserWeakMapsMayHaveKeyDelegates() is set if any user weakmap
-  //    may have key delegates
-  //
-  //  It's assumed that system weakmaps may have key delegates so these are
-  //  always scanned. There are a limited number of these.
-
-  if (mapZone->gcWeakMapsMayHaveSymbolKeys()) {
-    MOZ_ASSERT(JS::Prefs::experimental_symbols_as_weakmap_keys());
-    if (atomsZone->isGCMarking()) {
-      if (!atomsZone->addSweepGroupEdgeTo(mapZone)) {
-        return false;
-      }
-    }
-  }
-
-  for (WeakMapBase* map : mapZone->gcSystemWeakMaps()) {
-    if (!map->findSweepGroupEdges(atomsZone)) {
+  for (WeakMapBase* m : mapZone->gcWeakMapList()) {
+    if (!m->findSweepGroupEdges(atomsZone)) {
       return false;
     }
   }
-
-  if (mapZone->gcUserWeakMapsMayHaveKeyDelegates()) {
-    for (WeakMapBase* map : mapZone->gcMarkedUserWeakMaps()) {
-      if (!map->findSweepGroupEdges(atomsZone)) {
-        return false;
-      }
-    }
-    for (WeakMapBase* map : mapZone->gcUserWeakMaps()) {
-      if (!map->findSweepGroupEdges(atomsZone)) {
-        return false;
-      }
-    }
-  }
-
   return true;
 }
 
 void Zone::sweepWeakMaps(JSTracer* trc) {
-  MOZ_ASSERT(isGCSweeping());
-
-  // These flags will be recalculated during sweeping.
-  clearGCCachedWeakMapKeyData();
-
-  // Sweep all system weakmaps.
-  WeakMapBase* weakmap = gcSystemWeakMaps().getFirst();
-  while (weakmap) {
-    WeakMapBase* next = weakmap->getNext();
-    if (weakmap->isMarked()) {
-      // Sweep live map to remove dead entries.
-      weakmap->traceWeakEdgesDuringSweeping(trc);
-      // Unmark swept weak map.
-      weakmap->setMapColor(CellColor::White);
+  for (WeakMapBase* m = gcWeakMapList().getFirst(); m;) {
+    WeakMapBase* next = m->getNext();
+    if (IsMarked(m->mapColor())) {
+      m->traceWeakEdges(trc);
     } else {
-      // Clean up system weak maps now. This may remove store buffer entries.
-      // TODO: Is this still necessary? There should be no nursery entries.
-      AutoLockSweepingLock lock(trc->runtime());
-      weakmap->clearAndCompact();
-      gcSystemWeakMaps().remove(weakmap);
+      m->clearAndCompact();
+      m->removeFrom(gcWeakMapList());
     }
-    weakmap = next;
+    m = next;
   }
 
-  // Sweep marked user weakmaps.
-  for (WeakMapBase* weakmap : gcMarkedUserWeakMaps()) {
-    MOZ_ASSERT(weakmap->isMarked());
-    MOZ_ASSERT(weakmap->memberOf->isMarkedAny());
-    // Sweep live map to remove dead entries.
-    weakmap->traceWeakEdgesDuringSweeping(trc);
-    // Unmark swept weak map.
-    weakmap->setMapColor(CellColor::White);
-  }
-
-  // Remove all dead user weakmaps without iterating the list. The data will be
-  // cleaned up when their owning objects are finalized. This assumes user
-  // weakmaps are allocated using the buffer allocator which will recover the
-  // memory without explicit free.
 #ifdef DEBUG
-  for (WeakMapBase* weakmap : gcUserWeakMaps()) {
-    MOZ_ASSERT(!weakmap->isMarked());
-    MOZ_ASSERT(!weakmap->memberOf->isMarkedAny());
+  for (WeakMapBase* m : gcWeakMapList()) {
+    MOZ_ASSERT(m->isInList() && IsMarked(m->mapColor()));
   }
 #endif
-  new (&gcUserWeakMaps()) SlimLinkedList<WeakMapBase>();
-  gcUserWeakMaps() = std::move(gcMarkedUserWeakMaps());
-
-  WeakMapBase::checkZoneUnmarked(this);
 }
 
 void WeakMapBase::traceAllMappings(WeakMapTracer* tracer) {
   JSRuntime* rt = tracer->runtime;
   for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-    ForAllWeakMapsInZone(zone, [tracer](WeakMapBase* map) {
+    for (WeakMapBase* m : zone->gcWeakMapList()) {
       // The WeakMapTracer callback is not allowed to GC.
       JS::AutoSuppressGCAnalysis nogc;
-      map->traceMappings(tracer);
-    });
+      m->traceMappings(tracer);
+    }
   }
 }
-
-#if defined(JS_GC_ZEAL)
 
 bool WeakMapBase::saveZoneMarkedWeakMaps(JS::Zone* zone,
                                          WeakMapColors& markedWeakMaps) {
-  bool ok = true;
-  ForAllWeakMapsInZone(zone, [&](WeakMapBase* map) {
-    if (!markedWeakMaps.put(map, map->mapColor())) {
-      ok = false;
+  for (WeakMapBase* m : zone->gcWeakMapList()) {
+    if (IsMarked(m->mapColor()) && !markedWeakMaps.put(m, m->mapColor())) {
+      return false;
     }
-  });
-  return ok;
+  }
+  return true;
 }
 
 void WeakMapBase::restoreMarkedWeakMaps(WeakMapColors& markedWeakMaps) {
-  for (auto iter = markedWeakMaps.iter(); !iter.done(); iter.next()) {
-    WeakMapBase* map = iter.get().key();
-    MOZ_ASSERT(!map->isMarked());
-
-    Zone* zone = map->zone();
-    MOZ_ASSERT(zone->isGCMarking());
-
-    CellColor color = iter.get().value();
-    if (IsMarked(color)) {
-      map->setMapColor(color);
-      if (!map->isSystem()) {
-        zone->gcUserWeakMaps().remove(map);
-        zone->gcMarkedUserWeakMaps().pushFront(map);
-      }
-    }
+  for (WeakMapColors::Range r = markedWeakMaps.all(); !r.empty();
+       r.popFront()) {
+    WeakMapBase* map = r.front().key();
+    MOZ_ASSERT(map->zone()->isGCMarking());
+    MOZ_ASSERT(!IsMarked(map->mapColor()));
+    map->setMapColor(r.front().value());
   }
 }
-
-#endif  // JS_GC_ZEAL
 
 void WeakMapBase::setHasNurseryEntries() {
   MOZ_ASSERT(!hasNurseryEntries);
@@ -333,3 +213,7 @@ void WeakMapBase::setHasNurseryEntries() {
 
   hasNurseryEntries = true;
 }
+
+namespace js {
+template class WeakMap<JSObject*, JSObject*, ZoneAllocPolicy>;
+}  // namespace js

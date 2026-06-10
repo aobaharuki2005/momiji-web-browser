@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -237,6 +239,8 @@ class StructuredSpewer {
 //  correct number of destructors fire.
 class MOZ_RAII AutoStructuredSpewer {
   mozilla::Maybe<JSONPrinter*> printer_;
+  AutoStructuredSpewer(const AutoStructuredSpewer&) = delete;
+  void operator=(AutoStructuredSpewer&) = delete;
 
  public:
   explicit AutoStructuredSpewer(JSContext* cx, SpewChannel channel,
@@ -247,9 +251,6 @@ class MOZ_RAII AutoStructuredSpewer {
       printer_.ref()->endObject();
     }
   }
-
-  AutoStructuredSpewer(const AutoStructuredSpewer&) = delete;
-  void operator=(AutoStructuredSpewer&) = delete;
 
   explicit operator bool() const { return printer_.isSome(); }
 
@@ -272,14 +273,14 @@ class MOZ_RAII AutoSpewChannel {
   JSContext* cx_;
   bool wasChannelAutoSet = false;
 
+  AutoSpewChannel(const AutoSpewChannel&) = delete;
+  void operator=(AutoSpewChannel&) = delete;
+
  public:
   explicit AutoSpewChannel(JSContext* cx, SpewChannel channel,
                            JSScript* script);
 
   ~AutoSpewChannel();
-
-  AutoSpewChannel(const AutoSpewChannel&) = delete;
-  void operator=(AutoSpewChannel&) = delete;
 };
 
 }  // namespace js

@@ -10,10 +10,12 @@
 #ifndef NET_DCSCTP_PACKET_CHUNK_CHUNK_H_
 #define NET_DCSCTP_PACKET_CHUNK_CHUNK_H_
 
+
 #include <cstdint>
-#include <span>
 #include <string>
 #include <vector>
+
+#include "api/array_view.h"
 
 namespace dcsctp {
 
@@ -38,7 +40,7 @@ class Chunk {
 
 // Introspects the chunk in `data` and returns a human readable textual
 // representation of it, to be used in debugging.
-std::string DebugConvertChunkToString(std::span<const uint8_t> data);
+std::string DebugConvertChunkToString(webrtc::ArrayView<const uint8_t> data);
 
 struct ChunkConfig {
   static constexpr int kTypeSizeInBytes = 1;

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -55,12 +56,11 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
                            bool aAllowPersistentState,
                            nsIEventTarget* aMainThread);
 
-  void CreateSession(uint32_t aCreateSessionToken,
-                     cdm::SessionType aSessionType,
-                     cdm::InitDataType aInitDataType, uint32_t aPromiseId,
+  void CreateSession(uint32_t aCreateSessionToken, uint32_t aSessionType,
+                     uint32_t aInitDataType, uint32_t aPromiseId,
                      const nsTArray<uint8_t>& aInitData);
 
-  void LoadSession(uint32_t aPromiseId, cdm::SessionType aSessionType,
+  void LoadSession(uint32_t aPromiseId, uint32_t aSessionType,
                    nsString aSessionId);
 
   void SetServerCertificate(uint32_t aPromiseId,
@@ -106,19 +106,19 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   ~ChromiumCDMParent() = default;
 
   ipc::IPCResult Recv__delete__() override;
-  ipc::IPCResult RecvOnResolvePromiseWithKeyStatus(
-      const uint32_t& aPromiseId, const cdm::KeyStatus& aKeyStatus);
+  ipc::IPCResult RecvOnResolvePromiseWithKeyStatus(const uint32_t& aPromiseId,
+                                                   const uint32_t& aKeyStatus);
   ipc::IPCResult RecvOnResolveNewSessionPromise(const uint32_t& aPromiseId,
                                                 const nsCString& aSessionId);
   ipc::IPCResult RecvResolveLoadSessionPromise(const uint32_t& aPromiseId,
                                                const bool& aSuccessful);
   ipc::IPCResult RecvOnResolvePromise(const uint32_t& aPromiseId);
   ipc::IPCResult RecvOnRejectPromise(const uint32_t& aPromiseId,
-                                     const cdm::Exception& aError,
+                                     const uint32_t& aError,
                                      const uint32_t& aSystemCode,
                                      const nsCString& aErrorMessage);
   ipc::IPCResult RecvOnSessionMessage(const nsCString& aSessionId,
-                                      const cdm::MessageType& aMessageType,
+                                      const uint32_t& aMessageType,
                                       nsTArray<uint8_t>&& aMessage);
   ipc::IPCResult RecvOnSessionKeysChange(
       const nsCString& aSessionId, nsTArray<CDMKeyInformation>&& aKeysInfo);
@@ -127,19 +127,18 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   ipc::IPCResult RecvOnSessionClosed(const nsCString& aSessionId);
   ipc::IPCResult RecvOnQueryOutputProtectionStatus();
   ipc::IPCResult RecvDecryptedShmem(const uint32_t& aId,
-                                    const cdm::Status& aStatus,
+                                    const uint32_t& aStatus,
                                     ipc::Shmem&& aData);
-  ipc::IPCResult RecvDecryptedData(const uint32_t& aId,
-                                   const cdm::Status& aStatus,
+  ipc::IPCResult RecvDecryptedData(const uint32_t& aId, const uint32_t& aStatus,
                                    nsTArray<uint8_t>&& aData);
   ipc::IPCResult RecvDecryptFailed(const uint32_t& aId,
-                                   const cdm::Status& aStatus);
-  ipc::IPCResult RecvOnDecoderInitDone(const cdm::Status& aStatus);
+                                   const uint32_t& aStatus);
+  ipc::IPCResult RecvOnDecoderInitDone(const uint32_t& aStatus);
   ipc::IPCResult RecvDecodedShmem(const CDMVideoFrame& aFrame,
                                   ipc::Shmem&& aShmem);
   ipc::IPCResult RecvDecodedData(const CDMVideoFrame& aFrame,
                                  nsTArray<uint8_t>&& aData);
-  ipc::IPCResult RecvDecodeFailed(const cdm::Status& aStatus);
+  ipc::IPCResult RecvDecodeFailed(const uint32_t& aStatus);
   ipc::IPCResult RecvShutdown();
   ipc::IPCResult RecvResetVideoDecoderComplete();
   ipc::IPCResult RecvDrainComplete();

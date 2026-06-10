@@ -4,14 +4,12 @@
 
 //! https://html.spec.whatwg.org/multipage/#source-size-list
 
-use crate::device::Device;
-use crate::dom::AttributeTracker;
+use crate::media_queries::Device;
 use crate::parser::{Parse, ParserContext};
 use crate::queries::{FeatureType, QueryCondition};
 use crate::stylesheets::CustomMediaEvaluator;
 use crate::values::computed::{self, ToComputedValue};
-use crate::values::specified::length::LengthUnit;
-use crate::values::specified::{Length, NoCalcLength};
+use crate::values::specified::{Length, NoCalcLength, ViewportPercentageLength};
 use app_units::Au;
 use cssparser::{Delimiter, Parser, Token};
 use selectors::context::QuirksMode;
@@ -61,11 +59,7 @@ impl SourceSizeList {
             let matching_source_size = self.source_sizes.iter().find(|source_size| {
                 source_size
                     .condition
-                    .matches(
-                        context,
-                        &mut CustomMediaEvaluator::none(),
-                        &mut AttributeTracker::new_dummy(),
-                    )
+                    .matches(context, &mut CustomMediaEvaluator::none())
                     .to_bool(/* unknown = */ false)
             });
 
@@ -73,8 +67,10 @@ impl SourceSizeList {
                 Some(source_size) => source_size.value.to_computed_value(context),
                 None => match self.value {
                     Some(ref v) => v.to_computed_value(context),
-                    None => Length::new(NoCalcLength::new(LengthUnit::Vw, 100.))
-                        .to_computed_value(context),
+                    None => Length::NoCalc(NoCalcLength::ViewportPercentage(
+                        ViewportPercentageLength::Vw(100.),
+                    ))
+                    .to_computed_value(context),
                 },
             }
         })

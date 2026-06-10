@@ -46,8 +46,8 @@ class nsHtml5AtomTable {
    * Empties the table.
    */
   void Clear() {
-    for (auto& mRecentlyUsedParserAtom : mRecentlyUsedParserAtoms) {
-      mRecentlyUsedParserAtom = nullptr;
+    for (uint32_t i = 0; i < RECENTLY_USED_PARSER_ATOMS_SIZE; ++i) {
+      mRecentlyUsedParserAtoms[i] = nullptr;
     }
   }
 

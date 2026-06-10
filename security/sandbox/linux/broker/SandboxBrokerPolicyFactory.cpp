@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -353,9 +355,12 @@ static void AddX11Dependencies(SandboxBroker::Policy* policy) {
   policy->AddPath(SandboxBroker::MAY_CONNECT, bumblebeeSocket);
 
 #if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
-  // Allow local X11 connections, if:
+  // Allow local X11 connections, for several purposes:
   //
-  // * Primus or VirtualGL is used, to contact the secondary X server
+  // * for content processes to use WebGL when the browser is in headless
+  //   mode, by opening the X display if/when needed
+  //
+  // * if Primus or VirtualGL is used, to contact the secondary X server
   static const bool kIsX11 =
       !mozilla::widget::GdkIsWaylandDisplay() && PR_GetEnv("DISPLAY");
   if (kIsX11) {
@@ -741,7 +746,16 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
         nsAutoCString tmpPath;
         rv = workDir->GetNativePath(tmpPath);
         if (NS_SUCCEEDED(rv)) {
-          policy->AddFutureDir(rdonly, tmpPath.get());
+          bool exists;
+          rv = workDir->Exists(&exists);
+          if (NS_SUCCEEDED(rv)) {
+            if (!exists) {
+              policy->AddPrefix(rdonly, tmpPath.get());
+              policy->AddPath(rdonly, tmpPath.get());
+            } else {
+              policy->AddTree(rdonly, tmpPath.get());
+            }
+          }
         }
       }
     }
@@ -772,7 +786,7 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
     // Bug 1321134: DConf's single bit of shared memory
     // The leaf filename is "user" by default, but is configurable.
     nsPrintfCString shmPath("%s/dconf/", userDir);
-    policy->AddFutureDir(rdwrcr, shmPath.get());
+    policy->AddPrefix(rdwrcr, shmPath.get());
     policy->AddAncestors(shmPath.get());
     if (allowPulse) {
       // PulseAudio, if it can't get server info from X11, will break
@@ -828,7 +842,6 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
   // No read blocking at level 2 and below.
   // file:// processes also get global read permissions
   if (level <= 2 || aFileProcess) {
-    policy->RemoveAllDenyRules();
     policy->AddTree(rdonly, "/");
     // Any other read-only rules will be removed as redundant by
     // Policy::FixRecursivePermissions, so there's no need to

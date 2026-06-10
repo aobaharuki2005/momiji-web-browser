@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1639,7 +1641,7 @@ void TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult) {
 
     {
       MutexAutoLock mut(mMutex);
-      mInfo = std::move(info);
+      mInfo = info;
     }
   }
   // We now have a valid init data ; we can store it for later use.
@@ -2080,33 +2082,14 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     TimeUnit timestampOffset =
         mSourceBufferAttributes->GetTimestampOffset().ToBase(sample->mTime);
 
-    TimeUnit intervalStart;
-    TimeUnit intervalEnd;
-    TimeUnit decodeTimestamp;
-
-    if (mSourceBufferAttributes->mGenerateTimestamps) {
-      intervalStart = timestampOffset;
-      intervalEnd = timestampOffset + sampleDuration;
-      decodeTimestamp = timestampOffset;
-    } else {
-      intervalStart = timestampOffset + sampleTime;
-      intervalEnd = timestampOffset + sampleTime + sampleDuration;
-      decodeTimestamp = timestampOffset + sampleTimecode;
-    }
-
-    if (!intervalStart.IsValid() || !intervalEnd.IsValid() ||
-        !decodeTimestamp.IsValid()) {
-      SAMPLE_DEBUG(
-          "Skipping sample with invalid timestamp after applying offset "
-          "(intervalStart valid: %s, intervalEnd valid: %s, decodeTimestamp "
-          "valid: %s)",
-          intervalStart.IsValid() ? "yes" : "no",
-          intervalEnd.IsValid() ? "yes" : "no",
-          decodeTimestamp.IsValid() ? "yes" : "no");
-      continue;
-    }
-
-    TimeInterval sampleInterval(intervalStart, intervalEnd);
+    TimeInterval sampleInterval =
+        mSourceBufferAttributes->mGenerateTimestamps
+            ? TimeInterval(timestampOffset, timestampOffset + sampleDuration)
+            : TimeInterval(timestampOffset + sampleTime,
+                           timestampOffset + sampleTime + sampleDuration);
+    TimeUnit decodeTimestamp = mSourceBufferAttributes->mGenerateTimestamps
+                                   ? timestampOffset
+                                   : timestampOffset + sampleTimecode;
 
     SAMPLE_DEBUG(
         "Processing %s frame [%" PRId64 "%s,%" PRId64 "%s] (adjusted:[%" PRId64

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Google LLC
+ * Copyright 2024 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -29,9 +29,6 @@
 
 #include <unicode/uchar.h>
 #include <unicode/ustring.h>
-
-#include <algorithm>
-#include <cmath>
 
 #if defined(SK_BUILD_FOR_ANDROID)
 #include <android/api-level.h>
@@ -101,11 +98,11 @@ static constexpr SkFourByteTag italTag = SkSetFourByteTag('i','t','a','l');
 
 static bool coordinateLess(const Coordinate& a, const Coordinate& b) {
     return a.axis != b.axis ? a.axis < b.axis : a.value < b.value;
-}
+};
 
 static bool coordinateEqual(const Coordinate& a, const Coordinate& b) {
     return a.axis == b.axis && a.value == b.value;
-}
+};
 
 static SkSpan<Coordinate> Get(const SkTypeface& typeface, Storage& storage) {
     if (storage.size() < Storage::kCount) {
@@ -954,15 +951,12 @@ struct NameToFamily {
 };
 
 class SkFontMgr_AndroidNDK : public SkFontMgr {
-    void addSystemTypeface(sk_sp<SkTypeface_AndroidNDK> typeface, const SkString& name,
-                           bool isFallback) {
+    void addSystemTypeface(sk_sp<SkTypeface_AndroidNDK> typeface, const SkString& name) {
         NameToFamily* nameToFamily = nullptr;
         SkString normalizedName(fICU.casefold({name.data(), name.size()}));
-        size_t index = 0;
         for (NameToFamily& current : fNameToFamilyMap) {
             if (current.normalizedName == normalizedName) {
                 nameToFamily = &current;
-                index = &current - fNameToFamilyMap.data();
                 break;
             }
         }
@@ -970,16 +964,10 @@ class SkFontMgr_AndroidNDK : public SkFontMgr {
             sk_sp<SkFontStyleSet_AndroidNDK> newSet(new SkFontStyleSet_AndroidNDK(fCache));
             nameToFamily = &fNameToFamilyMap.emplace_back(
                 NameToFamily{name, normalizedName, newSet.get()});
-            index = fFallbackStyleSets.size();
-            fFallbackStyleSets.push_back(nullptr);
             fStyleSets.push_back(std::move(newSet));
         }
         if constexpr (kSkFontMgrVerbose) { SkDebugf("SKIA: Adding member to %s\n", name.c_str()); }
-        if (isFallback) {
-            if constexpr (kSkFontMgrVerbose) { SkDebugf("SKIA: Adding it to fallback\n"); }
-            fFallbackStyleSets[index] = nameToFamily->styleSet;
-        }
-        nameToFamily->styleSet->fStyles.push_back(std::move(typeface));
+        nameToFamily->styleSet->fStyles.push_back(typeface);
     }
 
 public:
@@ -1009,63 +997,16 @@ public:
 
             SkString name;
             typeface->getFamilyName(&name);
-            this->addSystemTypeface(typeface, name, true);
+            this->addSystemTypeface(typeface, name);
 
             // A font may have many localized family names.
             sk_sp<SkTypeface::LocalizedStrings> names(typeface->createFamilyNameIterator());
             SkTypeface::LocalizedString localeName;
             while (names->next(&localeName)) {
                 if (localeName.fString != name) {
-                    this->addSystemTypeface(typeface, localeName.fString, false);
+                    this->addSystemTypeface(typeface, localeName.fString);
                 }
             }
-        }
-
-        // xmlFamilies may have an entry with "sans-serif" but there may be no matches (even for
-        // just file name, like on Xiaomi HyperOS devices). In such cases assume Roboto (if it
-        // exists) should be used for "sans-serif" and aliases.
-        [&]() {
-            if (this->onMatchAFamily("sans-serif")) {
-                return;
-            }
-            if constexpr (kSkFontMgrVerbose) { SkDebugf("SKIA: Found no sans-serif matches\n"); }
-
-            auto&& matchXmlFamily = [&xmlFamilies](std::string_view familyName) -> FontFamily* {
-                for (const std::unique_ptr<FontFamily>& xmlFamily : xmlFamilies) {
-                    for (auto&& xmlName : xmlFamily->fNames) {
-                        if (xmlName.equals(familyName.data(), familyName.size())) {
-                            return &*xmlFamily;
-                        }
-                    }
-                }
-                return nullptr;
-            };
-            FontFamily* xmlSansSerif = matchXmlFamily("sans-serif");
-            if (!xmlSansSerif) {
-                return;
-            }
-            if constexpr (kSkFontMgrVerbose) { SkDebugf("SKIA: Found xml sans-serif\n"); }
-
-            sk_sp<SkFontStyleSet_AndroidNDK> roboto = this->onMatchAFamily("Roboto");
-            if (!roboto) {
-                return;
-            }
-            if constexpr (kSkFontMgrVerbose) { SkDebugf("SKIA: Found Roboto\n"); }
-
-            for (auto&& xmlName : xmlSansSerif->fNames) {
-                if constexpr (kSkFontMgrVerbose) { SkDebugf("SKIA: Alias %s\n", xmlName.c_str()); }
-                SkString normalizedName(fICU.casefold({xmlName.data(), xmlName.size()}));
-                fNameToFamilyMap.emplace_back(NameToFamily{xmlName, normalizedName, roboto.get()});
-            }
-        }();
-
-        // fFallbackStyleSets was populated by addSystemTypeface, remove all nullptr but keep order.
-        SkFontStyleSet_AndroidNDK** newEnd =
-                std::remove(fFallbackStyleSets.begin(), fFallbackStyleSets.end(), nullptr);
-        fFallbackStyleSets.resize_back(newEnd - fFallbackStyleSets.data());
-        if constexpr (kSkFontMgrVerbose) {
-            SkDebugf("SKIA: Fallback list size %d out of %d\n",
-                     fFallbackStyleSets.size(), fNameToFamilyMap.size());
         }
 
         if (fStyleSets.empty()) {
@@ -1382,12 +1323,10 @@ protected:
         if constexpr (kSkFontMgrVerbose) {
             SkString foundName;
             face->getFamilyName(&foundName);
-            using SkUnicharUnsigned = std::make_unsigned_t<decltype(character)>;
-            SkDebugf("SKIA: Found U%c%" PRIx32 " in \"%s\" lang \"%s\" "
+            SkDebugf("SKIA: Found U+%" PRIx32 " in \"%s\" lang \"%s\" "
                      "script \"%s\" region \"%s\" scope %s step %zu.\n",
-                     "+-"[character < 0], static_cast<SkUnicharUnsigned>(std::abs(character)),
-                     foundName.c_str(), langTag.getLanguage().c_str(), langTag.getScript().c_str(),
-                     langTag.getRegion().c_str(), scope, *step);
+                     character, foundName.c_str(), langTag.getLanguage().c_str(),
+                     langTag.getScript().c_str(), langTag.getRegion().c_str(), scope, *step);
 
         }
         return true;
@@ -1406,8 +1345,8 @@ protected:
         }
 
         // Look through the styles that match in each family.
-        for (SkFontStyleSet_AndroidNDK* styleSet : fFallbackStyleSets) {
-            sk_sp<SkTypeface_AndroidNDK> face(styleSet->matchAStyle(style));
+        for (const NameToFamily& nameToFamily : fNameToFamilyMap) {
+            sk_sp<SkTypeface_AndroidNDK> face(nameToFamily.styleSet->matchAStyle(style));
             if (has_locale_and_character(face.get(), langTag, character, "style", &step)) {
                 return adjustForStyle(std::move(face), style, *fCache);
             }
@@ -1425,8 +1364,8 @@ protected:
         // While Android internally depends on all fonts in a family having the same characters
         // mapped, this cannot be relied upon when guessing at the families by name.
 
-        for (SkFontStyleSet_AndroidNDK* styleSet : fFallbackStyleSets) {
-            for (const sk_sp<SkTypeface_AndroidNDK>& face : styleSet->fStyles) {
+        for (const NameToFamily& nameToFamily : fNameToFamilyMap) {
+            for (const sk_sp<SkTypeface_AndroidNDK>& face : nameToFamily.styleSet->fStyles) {
                 if (has_locale_and_character(face.get(), langTag, character, "anything", &step)) {
                     return adjustForStyle(sk_sp(face), style, *fCache);
                 }
@@ -1478,9 +1417,7 @@ protected:
         }
 
         if constexpr (kSkFontMgrVerbose) {
-            using SkUnicharUnsigned = std::make_unsigned_t<decltype(character)>;
-            SkDebugf("SKIA: No font had U%c%" PRIx32 "\n",
-                     "+-"[character < 0], static_cast<SkUnicharUnsigned>(std::abs(character)));
+            SkDebugf("SKIA: No font had U+%" PRIx32 "\n", character);
         }
         return nullptr;
     }
@@ -1526,9 +1463,8 @@ private:
     AndroidIcuAPI fICU;
     std::unique_ptr<SkFontScanner> fScanner;
 
-    TArray<sk_sp<SkFontStyleSet_AndroidNDK>> fStyleSets;
-    TArray<SkFontStyleSet_AndroidNDK*> fFallbackStyleSets;
     TArray<NameToFamily> fNameToFamilyMap;
+    TArray<sk_sp<SkFontStyleSet_AndroidNDK>> fStyleSets;
     sk_sp<SkFontStyleSet> fDefaultStyleSet;
 
     sk_sp<TypefaceCache> fCache;

@@ -16,9 +16,8 @@
 #include <memory>
 #include <optional>
 
-#include "absl/functional/any_invocable.h"
-#include "api/test/network_emulation/leaky_bucket_network_queue.h"
 #include "api/test/network_emulation/network_queue.h"
+#include "api/test/network_emulation/leaky_bucket_network_queue.h"
 #include "api/test/simulated_network.h"
 #include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
@@ -52,22 +51,14 @@ class CcFeedbackGenerator {
   // Processes the simulation until the next feedback message is received.
   // The function will send packets at the given send rate until the next
   // feedback message is generated.
-  TransportPacketsFeedback ProcessUntilNextFeedback(DataRate send_rate,
-                                                    SimulatedClock& clock) {
-    return ProcessUntilNextFeedback(send_rate, clock, nullptr);
-  }
-
   TransportPacketsFeedback ProcessUntilNextFeedback(
-      DataRate send_rate,
-      SimulatedClock& clock,
-      absl::AnyInvocable<void(const SentPacket&)> sent_packet_cb,
+      DataRate send_rate, SimulatedClock& clock,
       TimeDelta max_time = TimeDelta::Seconds(1));
 
   static int CountCeMarks(const TransportPacketsFeedback& feedback);
 
  private:
-  std::optional<SentPacket> MaybeSendPackets(Timestamp time,
-                                             DataRate send_rate);
+  void MaybeSendPackets(Timestamp time, DataRate send_rate);
   void ProcessNetwork(Timestamp time);
   std::optional<TransportPacketsFeedback> MaybeSendFeedback(Timestamp time);
 
@@ -85,6 +76,8 @@ class CcFeedbackGenerator {
   std::deque<PacketDeliveryInfo> packets_received_;
 
   Timestamp last_feedback_time_ = Timestamp::MinusInfinity();
+
+  TimeDelta smoothed_rtt_ = TimeDelta::PlusInfinity();
 
   Timestamp last_send_budget_update = Timestamp::MinusInfinity();
   DataSize send_budget_;

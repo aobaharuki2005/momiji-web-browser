@@ -7,9 +7,6 @@
 :root {
   --in-content-container-min-width: 13em;
   --in-content-container-max-width: 52em;
-  --info-pages-body-space-padding: var(--dimension-40) var(--dimension-48);
-  --info-pages-list-space-column-gap: var(--dimension-80);
-  --info-pages-title-space-image-offset: calc(2.5 * var(--space-xxlarge));
 }
 
 /* Body and container */
@@ -18,7 +15,7 @@ body {
   flex-direction: column;
   box-sizing: border-box;
   min-height: 100vh;
-  padding: var(--info-pages-body-space-padding);
+  padding: 40px 48px;
   align-items: center;
   justify-content: center;
 }
@@ -39,8 +36,8 @@ body.wide-container {
   background-size: 1.6em;
   /* Ensure sufficient space for the background image: */
   min-height: 1.6em;
-  margin-inline-start: calc(-1 * var(--info-pages-title-space-image-offset));
-  padding-inline-start: var(--info-pages-title-space-image-offset);
+  margin-inline-start: -2.3em;
+  padding-inline-start: 2.3em;
   font-size: var(--font-size-xxxlarge);
   -moz-context-properties: fill;
   fill: currentColor;
@@ -53,14 +50,14 @@ body.wide-container {
 
 .title-text {
   font-size: var(--font-size-xxxlarge);
-  padding-bottom: var(--space-medium);
+  padding-bottom: 0.4em;
 }
 
 @media (max-width: 970px) {
   .title {
     padding-inline-start: 0;
     margin-inline-start: 0;
-    padding-top: var(--info-pages-title-space-image-offset);
+    padding-top: 2.3em;
   }
 
   .title-text {
@@ -69,19 +66,19 @@ body.wide-container {
 }
 
 .page-subtitle {
-  margin-bottom: var(--space-xxlarge);
+  margin-bottom: 2em;
 }
 
 ul,
 ol {
-  margin: var(--space-large) 0;
+  margin: 1em 0;
   padding: 0;
-  margin-inline-start: var(--space-xxlarge);
+  margin-inline-start: 2em;
 }
 
 ul > li,
 ol > li {
-  margin-bottom: var(--space-small);
+  margin-bottom: 0.5em;
 }
 
 ul {
@@ -94,7 +91,7 @@ dt {
 
 ul.columns {
   column-count: 2;
-  column-gap: var(--info-pages-list-space-column-gap);
+  column-gap: 5em;
 }
 
 @media (max-width: 35em) {
@@ -105,11 +102,11 @@ ul.columns {
 
 /* Buttons */
 .button-container {
-  margin-top: var(--space-large);
+  margin-top: 1.2em;
 }
 
 button {
-  padding: 0 var(--space-xlarge);
+  padding: 0 1.5em;
 }
 
 .button-container > button:first-child {
@@ -129,24 +126,24 @@ tree {
 /* Tables */
 
 table {
-  background-color: var(--table-background-color);
+  background-color: var(--in-content-table-background);
   color: var(--text-color);
   font: message-box;
   text-align: start;
   width: 100%;
-  border: 1px solid var(--table-border-color);
+  border: 1px solid var(--in-content-table-border-color);
   border-radius: var(--border-radius-small);
   border-spacing: 0;
   overflow: hidden;
 }
 
 table button {
-  padding-inline: var(--space-xsmall);
+  padding-inline: 3px;
 }
 
 th,
 td {
-  padding: var(--space-xsmall);
+  padding: 4px;
   text-align: match-parent;
 }
 
@@ -155,9 +152,9 @@ thead th {
 }
 
 th {
-  background-color: var(--table-header-background-color);
-  color: var(--table-header-text-color);
-  border: 1px solid var(--table-border-color);
+  background-color: var(--in-content-table-header-background);
+  color: var(--in-content-table-header-color);
+  border: 1px solid var(--in-content-table-border-color);
 }
 
 th.column {
@@ -166,22 +163,22 @@ th.column {
 }
 
 td {
-  border: 1px solid var(--table-border-color);
+  border: 1px solid var(--border-color);
   unicode-bidi: plaintext; /* Make sure file paths will be LTR */
 }
 
 .action-box {
-  background-color: var(--table-background-color);
-  border: 1px solid var(--table-border-color);
+  background-color: var(--in-content-table-background);
+  border: 1px solid var(--border-color);
   border-radius: var(--border-radius-small);
-  padding: var(--space-large);
+  padding: 16px;
   flex: 1 1 25%;
 }
 
 .header-flex {
   display: flex;
-  gap: var(--space-xlarge);
-  margin-bottom: var(--space-large);
+  gap: 1.5rem;
+  margin-bottom: 1rem;
   flex-wrap: wrap;
 }
 

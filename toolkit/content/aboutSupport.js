@@ -43,10 +43,7 @@ window.addEventListener("load", function onload() {
     populateActionBox();
     setupEventListeners();
 
-    if (
-      AppConstants.MOZ_UPDATER &&
-      Services.sysinfo.getProperty("isPackagedApp")
-    ) {
+    if (Services.sysinfo.getProperty("isPackagedApp")) {
       $("update-dir-row").hidden = true;
       $("update-history-row").hidden = true;
     }
@@ -393,11 +390,10 @@ var snapshotFormatters = {
     $.append(
       $("environment-variables-tbody"),
       Object.entries(data).map(([name, value]) => {
-        return $.new(
-          "tr",
-          [$.new("td", name, "pref-name"), $.new("td", value, "pref-value")],
-          soundsLikeDir(name) ? "no-copy" : undefined
-        );
+        return $.new("tr", [
+          $.new("td", name, "pref-name"),
+          $.new("td", value, "pref-value"),
+        ]);
       })
     );
   },
@@ -1464,10 +1460,9 @@ var snapshotFormatters = {
     $("a11y-activated").textContent = data.isActive;
     $("a11y-force-disabled").textContent = data.forceDisabled || 0;
 
-    const instantiator = data.instantiator;
-    if (instantiator) {
-      $("a11y-instantiator").hidden = false;
-      $("a11y-instantiator").querySelector("td").textContent = instantiator;
+    let a11yInstantiator = $("a11y-instantiator");
+    if (a11yInstantiator) {
+      a11yInstantiator.textContent = data.instantiator;
     }
   },
 
@@ -1751,42 +1746,12 @@ function sortedArrayFromObject(obj) {
   return tuples;
 }
 
-/**
- * @param {string} key
- * @returns {boolean}
- */
-function soundsLikeDir(key) {
-  const dirSuffixes = ["directory", "path", "dir"];
-  return dirSuffixes.some(suffix => key.toLowerCase().endsWith(suffix));
-}
-
-/**
- * Recursively replaces values with keys that
- * sound like paths by "<non-empty string>".
- *
- * @param {object} object
- */
-function sanitizeSnapshot(object) {
-  for (let [key, val] of Object.entries(object)) {
-    if (!val) {
-      // Don't recurse into null and leave empty strings empty.
-      continue;
-    }
-    if (typeof val == "object") {
-      sanitizeSnapshot(val);
-    } else if (typeof val == "string" && soundsLikeDir(key)) {
-      object[key] = "<non-empty string>";
-    }
-  }
-}
-
 function copyRawDataToClipboard(button) {
   if (button) {
     button.disabled = true;
   }
   Troubleshoot.snapshot().then(
     async snapshot => {
-      sanitizeSnapshot(snapshot);
       if (button) {
         button.disabled = false;
       }
@@ -2115,7 +2080,7 @@ function setupEventListeners() {
         Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL +
         Services.prompt.BUTTON_POS_0_DEFAULT;
       const result = Services.prompt.confirmEx(
-        window.docShell.chromeEventHandler.documentGlobal,
+        window.docShell.chromeEventHandler.ownerGlobal,
         promptTitle,
         promptBody,
         buttonFlags,
@@ -2143,7 +2108,7 @@ function setupEventListeners() {
           .hasMoreElements()
       ) {
         Services.obs.notifyObservers(
-          window.docShell.chromeEventHandler.documentGlobal,
+          window.docShell.chromeEventHandler.ownerGlobal,
           "restart-in-safe-mode"
         );
       } else {

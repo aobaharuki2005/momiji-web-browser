@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -82,12 +84,6 @@ class LogModule {
    * Profiler markers that are recorded for for each log entry.
    */
   static void SetCaptureStacks(bool aCaptureStacks);
-
-  /**
-   * @return If we should log JS Stacks when logging js console messages.
-   * (may be extended outside of just the js console)
-   */
-  static bool GetLogJSStacks();
 
   /**
    * Indicates whether or not the given log level is enabled.
@@ -276,13 +272,13 @@ void log_print(const LogModule* aModule, LogLevel aLevel, TimeStamp* aStart,
                                    MOZ_LOG_EXPAND_ARGS _args);     \
       }                                                            \
     } while (0)
-#  define MOZ_LOG_FMT(_module, _level, _fmt, ...)                     \
-    do {                                                              \
-      const ::mozilla::LogModule* moz_real_module = _module;          \
-      if (MOZ_LOG_TEST(moz_real_module, _level)) {                    \
-        mozilla::detail::log_print_fmt(moz_real_module, _level, _fmt, \
-                                       ##__VA_ARGS__);                \
-      }                                                               \
+#  define MOZ_LOG_FMT(_module, _level, _fmt, ...)                        \
+    do {                                                                 \
+      const ::mozilla::LogModule* moz_real_module = _module;             \
+      if (MOZ_LOG_TEST(moz_real_module, _level)) {                       \
+        mozilla::detail::log_print_fmt(moz_real_module, _level,          \
+                                       FMT_STRING(_fmt), ##__VA_ARGS__); \
+      }                                                                  \
     } while (0)
 #else
 #  define MOZ_LOG(_module, _level, _args)                      \
@@ -299,11 +295,12 @@ void log_print(const LogModule* aModule, LogLevel aLevel, TimeStamp* aStart,
                                    MOZ_LOG_EXPAND_ARGS _args); \
       }                                                        \
     } while (0)
-#  define MOZ_LOG_FMT(_module, _level, _fmt, ...)                             \
-    do {                                                                      \
-      if (MOZ_LOG_TEST(_module, _level)) {                                    \
-        mozilla::detail::log_print_fmt(_module, _level, _fmt, ##__VA_ARGS__); \
-      }                                                                       \
+#  define MOZ_LOG_FMT(_module, _level, _fmt, ...)                         \
+    do {                                                                  \
+      if (MOZ_LOG_TEST(_module, _level)) {                                \
+        mozilla::detail::log_print_fmt(_module, _level, FMT_STRING(_fmt), \
+                                       ##__VA_ARGS__);                    \
+      }                                                                   \
     } while (0)
 #endif
 

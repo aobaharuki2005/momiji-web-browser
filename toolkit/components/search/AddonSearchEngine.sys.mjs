@@ -10,7 +10,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = XPCOMUtils.declareLazy({
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
   logConsole: () =>
     console.createInstance({
@@ -24,6 +23,12 @@ const lazy = XPCOMUtils.declareLazy({
  */
 export class AddonSearchEngine extends SearchEngine {
   /**
+   * @type {string}
+   * The extension ID if added by an extension.
+   */
+  _extensionID;
+
+  /**
    * Creates a AddonSearchEngine.
    *
    * @param {object} options
@@ -36,19 +41,14 @@ export class AddonSearchEngine extends SearchEngine {
   constructor({ details, json } = {}) {
     let extensionId =
       details?.extensionID ?? json.extensionID ?? json._extensionID;
-    // Historically, configuration based engines used to be backed by add-ons
-    // and they would sometimes have a specific locale enforced. For cases where
-    // it wasn't enforced, the locale was recorded as ``default``. We hard-code
-    // that here, as we have kept the same identifier format. We could potentially
-    // add a migration step in future and drop the ``default``.
-    let id = extensionId + "default";
+    let id = extensionId + lazy.SearchUtils.DEFAULT_TAG;
 
     super({
       loadPath: "[addon]" + extensionId,
       id,
     });
 
-    this.#extensionID = extensionId;
+    this._extensionID = extensionId;
 
     if (json) {
       this._initWithJSON(json);
@@ -57,7 +57,7 @@ export class AddonSearchEngine extends SearchEngine {
 
   _initWithJSON(json) {
     super._initWithJSON(json);
-    this.#extensionID = json.extensionID || json._extensionID || null;
+    this._extensionID = json.extensionID || json._extensionID || null;
   }
 
   /**
@@ -93,7 +93,7 @@ export class AddonSearchEngine extends SearchEngine {
 
     let originalName = this.name;
     let name = manifest.chrome_settings_overrides.search_provider.name.trim();
-    if (originalName != name && lazy.SearchService.getEngineByName(name)) {
+    if (originalName != name && Services.search.getEngineByName(name)) {
       throw new Error("Can't upgrade to the same name as an existing engine");
     }
 
@@ -108,15 +108,8 @@ export class AddonSearchEngine extends SearchEngine {
    */
   toJSON() {
     let json = super.toJSON();
-    json._extensionID = this.#extensionID;
+    json._extensionID = this._extensionID;
     return json;
-  }
-
-  /**
-   * The extension ID that this search engine is associated with.
-   */
-  get extensionID() {
-    return this.#extensionID;
   }
 
   /**
@@ -124,49 +117,49 @@ export class AddonSearchEngine extends SearchEngine {
    * manager has, and reports the results to telemetry.
    */
   async checkAndReportIfSettingsValid() {
-    let addon = await lazy.AddonManager.getAddonByID(this.#extensionID);
+    let addon = await lazy.AddonManager.getAddonByID(this._extensionID);
 
     if (!addon) {
       lazy.logConsole.debug(
-        `Add-on ${this.#extensionID} for search engine ${this.name} is not installed!`
+        `Add-on ${this._extensionID} for search engine ${this.name} is not installed!`
       );
-      Glean.browserSearchinit.engineInvalidWebextension[this.#extensionID].set(
+      Glean.browserSearchinit.engineInvalidWebextension[this._extensionID].set(
         1
       );
     } else if (!addon.isActive) {
       lazy.logConsole.debug(
-        `Add-on ${this.#extensionID} for search engine ${this.name} is not active!`
+        `Add-on ${this._extensionID} for search engine ${this.name} is not active!`
       );
-      Glean.browserSearchinit.engineInvalidWebextension[this.#extensionID].set(
+      Glean.browserSearchinit.engineInvalidWebextension[this._extensionID].set(
         2
       );
     } else {
       let policy = await AddonSearchEngine.getWebExtensionPolicy(
-        this.#extensionID
+        this._extensionID
       );
       let providerSettings =
         policy.extension.manifest?.chrome_settings_overrides?.search_provider;
 
       if (!providerSettings) {
         lazy.logConsole.debug(
-          `Add-on ${this.#extensionID} for search engine ${this.name} no longer has an engine defined`
+          `Add-on ${this._extensionID} for search engine ${this.name} no longer has an engine defined`
         );
         Glean.browserSearchinit.engineInvalidWebextension[
-          this.#extensionID
+          this._extensionID
         ].set(4);
       } else if (this.name != providerSettings.name) {
         lazy.logConsole.debug(
-          `Add-on ${this.#extensionID} for search engine ${this.name} has a different name!`
+          `Add-on ${this._extensionID} for search engine ${this.name} has a different name!`
         );
         Glean.browserSearchinit.engineInvalidWebextension[
-          this.#extensionID
+          this._extensionID
         ].set(5);
       } else if (!this.checkSearchUrlMatchesManifest(providerSettings)) {
         lazy.logConsole.debug(
-          `Add-on ${this.#extensionID} for search engine ${this.name} has out-of-date manifest!`
+          `Add-on ${this._extensionID} for search engine ${this.name} has out-of-date manifest!`
         );
         Glean.browserSearchinit.engineInvalidWebextension[
-          this.#extensionID
+          this._extensionID
         ].set(6);
       }
     }
@@ -240,13 +233,14 @@ export class AddonSearchEngine extends SearchEngine {
     // If we haven't been passed an extension object, then go and find it.
     if (!extension) {
       extension = (
-        await AddonSearchEngine.getWebExtensionPolicy(this.#extensionID)
+        await AddonSearchEngine.getWebExtensionPolicy(this._extensionID)
       ).extension;
     }
 
     let manifest = extension.manifest;
 
-    // We have to simulate the add-on manager code for loading the correct locale.
+    // For user installed add-ons, we have to simulate the add-on manager
+    // code for loading the correct locale.
     // We do this, as in the case of a live language switch, the add-on manager
     // may not have yet reloaded the extension, and there's no way for us to
     // listen for that reload to complete.
@@ -274,17 +268,14 @@ export class AddonSearchEngine extends SearchEngine {
   static async getWebExtensionPolicy(id) {
     let policy = WebExtensionPolicy.getByID(id);
     if (!policy) {
-      throw new Error("Could not find add-on information");
+      let idPrefix = id.split("@")[0];
+      let path = `resource://search-extensions/${idPrefix}/`;
+      await lazy.AddonManager.installBuiltinAddon(path);
+      policy = WebExtensionPolicy.getByID(id);
     }
     // On startup the extension may have not finished parsing the
     // manifest, wait for that here.
     await policy.readyPromise;
     return policy;
   }
-
-  /**
-   * @type {string}
-   *   The extension ID that this search engine is associated with.
-   */
-  #extensionID;
 }

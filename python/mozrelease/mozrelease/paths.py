@@ -50,7 +50,7 @@ def getReleaseInstallerPath(
     version,
     platform,
     locale="en-US",
-    last_linux_bz2_version="134.99.0",
+    last_linux_bz2_version=None,
 ):
     if productName not in ("fennec",):
         if platform.startswith("linux"):
@@ -64,12 +64,13 @@ def getReleaseInstallerPath(
                 for p in [
                     platform,
                     locale,
-                    f"{productName}-{version}.tar.{compression}",
+                    "%s-%s.tar.%s" % (productName, version, compression),
                 ]
             ])
         elif "mac" in platform:
             return "/".join([
-                p.strip("/") for p in [platform, locale, f"{brandName} {version}.dmg"]
+                p.strip("/")
+                for p in [platform, locale, "%s %s.dmg" % (brandName, version)]
             ])
         elif platform.startswith("win"):
             return "/".join([
@@ -77,13 +78,13 @@ def getReleaseInstallerPath(
                 for p in [
                     platform,
                     locale,
-                    f"{brandName} Setup {version}.exe",
+                    "%s Setup %s.exe" % (brandName, version),
                 ]
             ])
         else:
-            raise ValueError("Unsupported platform")
+            raise "Unsupported platform"
     elif platform.startswith("android"):
-        filename = f"{productName}-{version}.{locale}.android-arm.apk"
+        filename = "%s-%s.%s.android-arm.apk" % (productName, version, locale)
         return "/".join([p.strip("/") for p in [platform, locale, filename]])
     else:
-        raise ValueError("Unsupported platform")
+        raise "Unsupported platform"

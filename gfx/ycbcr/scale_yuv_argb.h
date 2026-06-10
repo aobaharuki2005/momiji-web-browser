@@ -8,26 +8,32 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef GFX_YCBCR_SCALE_YUV_ARGB_H_
-#define GFX_YCBCR_SCALE_YUV_ARGB_H_
+#ifndef INCLUDE_LIBYUV_SCALE_YUV_ARGB_H_  // NOLINT
+#define INCLUDE_LIBYUV_SCALE_YUV_ARGB_H_
 
 #include "libyuv/basic_types.h"
 #include "libyuv/scale.h"  // For FilterMode
 
-#include "mozilla/gfx/Types.h"  // For YUVColorSpace
+#include "mozilla/gfx/Types.h" // For YUVColorSpace
 
-namespace mozilla::gfx {
+#ifdef __cplusplus
+namespace libyuv {
+extern "C" {
+#endif
 
 int YUVToARGBScale(const uint8_t* src_y, int src_stride_y,
                    const uint8_t* src_u, int src_stride_u,
                    const uint8_t* src_v, int src_stride_v,
                    uint32_t src_fourcc,
-                   YUVColorSpace yuv_color_space,
+                   mozilla::gfx::YUVColorSpace yuv_color_space,
                    int src_width, int src_height,
                    uint8_t* dst_argb, int dst_stride_argb,
                    int dst_width, int dst_height,
-                   libyuv::FilterMode filtering);
+                   enum FilterMode filtering);
 
-}  // namespace mozilla::gfx
+#ifdef __cplusplus
+}  // extern "C"
+}  // namespace libyuv
+#endif
 
-#endif  // GFX_YCBCR_SCALE_YUV_ARGB_H_
+#endif  // INCLUDE_LIBYUV_SCALE_YUV_ARGB_H_  NOLINT

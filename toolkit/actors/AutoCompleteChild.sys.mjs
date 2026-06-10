@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -104,16 +105,13 @@ export class AutoCompleteChild extends JSWindowActorChild {
     }
 
     let rect = lazy.LayoutUtils.getElementBoundingScreenRect(element);
-    let window = element.documentGlobal;
+    let window = element.ownerGlobal;
     let dir = window.getComputedStyle(element).direction;
     let results = this.getResultsFromController(input);
     let formOrigin = lazy.LoginHelper.getLoginOrigin(
       element.ownerDocument.documentURI
     );
     let inputElementIdentifier = lazy.ContentDOMReference.get(element);
-    // If the input element isn't focused, we select the first item by default
-    // for accessibility reason.
-    let selectedIndex = Services.focus.focusedElement == element ? -1 : 0;
 
     this.sendAsyncMessage("AutoComplete:MaybeOpenPopup", {
       results,
@@ -121,7 +119,6 @@ export class AutoCompleteChild extends JSWindowActorChild {
       dir,
       inputElementIdentifier,
       formOrigin,
-      selectedIndex,
     });
 
     this._input = input;
@@ -192,7 +189,7 @@ export class AutoCompleteChild extends JSWindowActorChild {
 
     if (input.hasBeenTypePassword) {
       providers.add(
-        input.documentGlobal.windowGlobalChild.getActor("LoginManager")
+        input.ownerGlobal.windowGlobalChild.getActor("LoginManager")
       );
     } else {
       // The current design is that FormHistory doesn't call `markAsAutoCompletable`
@@ -201,7 +198,7 @@ export class AutoCompleteChild extends JSWindowActorChild {
       // Because of the design, we need to ask FormHistory whether to search for autocomplete entries
       // for every startSearch call
       providers.add(
-        input.documentGlobal.windowGlobalChild.getActor("FormHistory")
+        input.ownerGlobal.windowGlobalChild.getActor("FormHistory")
       );
     }
     return providers;

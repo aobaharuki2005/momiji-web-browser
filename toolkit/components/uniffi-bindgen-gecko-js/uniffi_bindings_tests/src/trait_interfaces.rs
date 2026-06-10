@@ -63,16 +63,6 @@ fn create_test_trait_interface(value: u32) -> Arc<dyn TestTraitInterface> {
     })
 }
 
-#[uniffi::export]
-pub fn roundtrip_test_trait_interface(int: Arc<dyn TestTraitInterface>) -> Arc<dyn TestTraitInterface> {
-    int
-}
-
-#[uniffi::export]
-pub fn roundtrip_test_trait_interface_list(int_list: Vec<Arc<dyn TestTraitInterface>>) -> Vec<Arc<dyn TestTraitInterface>> {
-    int_list
-}
-
 struct TestTraitInterfaceImpl {
     value: AtomicU32,
 }
@@ -128,16 +118,6 @@ fn create_async_test_trait_interface(value: u32) -> Arc<dyn AsyncTestTraitInterf
 }
 
 #[uniffi::export]
-fn roundtrip_async_test_trait_interface(int: Arc<dyn AsyncTestTraitInterface>) -> Arc<dyn AsyncTestTraitInterface> {
-    int
-}
-
-#[uniffi::export]
-fn roundtrip_async_test_trait_interface_list(int_list: Vec<Arc<dyn AsyncTestTraitInterface>>) -> Vec<Arc<dyn AsyncTestTraitInterface>> {
-    int_list
-}
-
-#[uniffi::export]
 async fn invoke_async_test_trait_interface_noop(int: Arc<dyn AsyncTestTraitInterface>) {
     int.noop().await
 }
@@ -152,6 +132,7 @@ async fn invoke_async_test_trait_interface_set_value(
     int: Arc<dyn AsyncTestTraitInterface>,
     value: u32,
 ) {
+    println!("**** invoke_async_test_trait_interface_set_value {value}");
     int.set_value(value).await
 }
 

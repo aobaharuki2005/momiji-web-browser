@@ -23,6 +23,12 @@
 
 namespace webrtc {
 
+std::optional<Timestamp> EncodedFrame::ReceivedTimestamp() const {
+  return ReceivedTime() >= 0
+             ? std::make_optional(Timestamp::Millis(ReceivedTime()))
+             : std::nullopt;
+}
+
 std::optional<Timestamp> EncodedFrame::RenderTimestamp() const {
   return RenderTimeMs() >= 0
              ? std::make_optional(Timestamp::Millis(RenderTimeMs()))

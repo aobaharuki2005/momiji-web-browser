@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,12 +7,10 @@
 #ifndef DOM_SVG_SVGANIMATEDCLASS_H_
 #define DOM_SVG_SVGANIMATEDCLASS_H_
 
-#include <memory>
-
 #include "mozilla/SMILAttr.h"
 #include "mozilla/SVGAnimatedClassOrString.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsString.h"
 
 namespace mozilla {
 
@@ -25,7 +25,7 @@ class SVGAnimatedClass final : public SVGAnimatedClassOrString {
  public:
   using SVGElement = dom::SVGElement;
 
-  void Init() { mAnimVal = VoidString(); }
+  void Init() { mAnimVal = nullptr; }
 
   void SetBaseValue(const nsAString& aValue, SVGElement* aSVGElement,
                     bool aDoSetAttr) override;
@@ -35,12 +35,12 @@ class SVGAnimatedClass final : public SVGAnimatedClassOrString {
   void SetAnimValue(const nsAString& aValue, SVGElement* aSVGElement);
   void GetAnimValue(nsAString& aResult,
                     const SVGElement* aSVGElement) const override;
-  bool IsAnimated() const { return !mAnimVal.IsVoid(); }
+  bool IsAnimated() const { return !!mAnimVal; }
 
-  std::unique_ptr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
-  nsString mAnimVal = VoidString();
+  UniquePtr<nsString> mAnimVal;
 
  public:
   struct SMILString : public SMILAttr {

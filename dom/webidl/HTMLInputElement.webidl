@@ -1,10 +1,11 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://html.spec.whatwg.org/multipage/input.html#the-input-element
- * https://html.spec.whatwg.org/multipage/obsolete.html#other-elements%2C-attributes-and-apis
+ * http://www.whatwg.org/specs/web-apps/current-work/#the-input-element
+ * http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
  * https://wicg.github.io/entries-api/#idl-index
  *
  * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
@@ -27,8 +28,6 @@ interface HTMLInputElement : HTMLElement {
 
   [CEReactions, Pure, SetterThrows]
            attribute DOMString accept;
-  [CEReactions, Pure, SetterThrows, Pref="dom.forms.alpha.enabled"]
-           attribute boolean alpha;
   [CEReactions, Pure, SetterThrows]
            attribute DOMString alt;
   [CEReactions, Pure, SetterThrows]
@@ -39,14 +38,11 @@ interface HTMLInputElement : HTMLElement {
            attribute boolean defaultChecked;
   [Pure]
            attribute boolean checked;
-  [CEReactions, Pure, SetterThrows, Pref="dom.forms.colorspace.enabled"]
-           attribute DOMString colorSpace;
   [CEReactions, Pure, SetterThrows]
            attribute DOMString dirName;
   [CEReactions, Pure, SetterThrows]
            attribute boolean disabled;
-  [BinaryName=formForBindings]
-  readonly attribute Element? form;
+  readonly attribute HTMLFormElement? form;
   [Pure]
            attribute FileList? files;
   [CEReactions, Pure, SetterThrows]
@@ -59,12 +55,12 @@ interface HTMLInputElement : HTMLElement {
            attribute boolean formNoValidate;
   [CEReactions, Pure, SetterThrows]
            attribute DOMString formTarget;
-  [CEReactions, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute unsigned long height;
   [Pure]
            attribute boolean indeterminate;
-  [Pure, BinaryName=listForBindings]
-  readonly attribute Element? list;
+  [Pure]
+  readonly attribute HTMLDataListElement? list;
   [CEReactions, Pure, SetterThrows]
            attribute DOMString max;
   [CEReactions, Pure, SetterThrows]
@@ -119,7 +115,6 @@ interface HTMLInputElement : HTMLElement {
   boolean reportValidity();
   undefined setCustomValidity(DOMString error);
 
-  [BinaryName=labelsForBindings]
   readonly attribute NodeList? labels;
 
   undefined select();
@@ -215,7 +210,7 @@ interface mixin MozEditableElement {
   // Returns an nsIEditor instance which is associated with the element.
   // If the element can be associated with an editor but not yet created,
   // this creates new one automatically.
-  [ChromeOnly, BinaryName="editorForBindings"]
+  [Pure, ChromeOnly, BinaryName="editorForBindings"]
   readonly attribute nsIEditor? editor;
 
   // Returns true if an nsIEditor instance has already been associated with
@@ -303,8 +298,8 @@ dictionary InputPickerColor {
   required float component2;
   required float component3;
 
-  required unrestricted float alpha;
-  // bug 2009748
+  // bug 1919718
+  // required float alpha;
   // required InputColorSpace colorSpace;
 };
 

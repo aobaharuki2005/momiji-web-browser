@@ -8,7 +8,7 @@
  * did not declare a canonical URL.
  *
  * @param {Document} document
- * @returns {Omit<CanonicalURLSourceResults, "pushstate">}
+ * @returns {CanonicalURLSourceResults}
  */
 export function findCandidates(document) {
   return {
@@ -41,12 +41,8 @@ export function pickCanonicalUrl(sources) {
  * @param {Document} document
  * @returns {string|null}
  */
-export function getLinkRelCanonical(document) {
-  const url = document
-    .querySelector('link[rel="canonical"]')
-    ?.getAttribute("href");
-
-  return parseUrl(url, document);
+function getLinkRelCanonical(document) {
+  return document.querySelector('link[rel="canonical"]')?.getAttribute("href");
 }
 
 /**
@@ -55,12 +51,10 @@ export function getLinkRelCanonical(document) {
  * @param {Document} document
  * @returns {string|null}
  */
-export function getOpenGraphUrl(document) {
-  const url = document
+function getOpenGraphUrl(document) {
+  return document
     .querySelector('meta[property="og:url"]')
     ?.getAttribute("content");
-
-  return parseUrl(url, document);
 }
 
 /**
@@ -72,7 +66,7 @@ export function getOpenGraphUrl(document) {
  * @param {Document} document
  * @returns {string|null}
  */
-export function getJSONLDUrl(document) {
+function getJSONLDUrl(document) {
   const firstMatch = Array.from(
     document.querySelectorAll('script[type="application/ld+json"]')
   )
@@ -83,44 +77,19 @@ export function getJSONLDUrl(document) {
         return null;
       }
     })
-    .find(obj => obj && typeof obj.url === "string");
-  const url = firstMatch?.url;
-
-  return parseUrl(url, document);
+    .find(obj => obj && obj.url && typeof obj.url === "string");
+  return firstMatch?.url;
 }
 
 /**
  * @param {Document} document
  * @returns {string|null}
  */
-export function getFallbackCanonicalUrl(document) {
-  return cleanNoncanonicalUrl(document.documentURI);
-}
-
-/**
- * @param {string} url
- * @returns {string|null}
- */
-export function cleanNoncanonicalUrl(url) {
-  const parsed = URL.parse(url);
-  if (parsed) {
-    return [parsed.origin, parsed.pathname, parsed.search].join("");
+function getFallbackCanonicalUrl(document) {
+  const fallbackUrl = URL.parse(document.documentURI);
+  if (fallbackUrl) {
+    fallbackUrl.hash = "";
+    return fallbackUrl.toString();
   }
   return null;
-}
-
-/**
- * @param {string} urlString
- * @param {Document} document
- * @returns {string|null}
- */
-export function parseUrl(urlString, document) {
-  // Return null if the urlString is null or undefined. All other falsy values
-  // (e.g. the empty string) pass through, since these could have been
-  // explicitly set (see bug2009459).
-  if (urlString == null) {
-    return null;
-  }
-
-  return URL.parse(urlString, document.documentURI)?.toString() || null;
 }

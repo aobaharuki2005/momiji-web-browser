@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +7,6 @@
 #ifndef mozilla_dom_VideoFrame_h
 #define mozilla_dom_VideoFrame_h
 
-#include "MediaResult.h"
 #include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Span.h"
@@ -220,7 +221,7 @@ class VideoFrame final : public nsISupports,
     uint32_t SampleBytes(const Plane& aPlane) const;
     gfx::IntSize SampleSize(const Plane& aPlane) const;
     bool IsValidSize(const gfx::IntSize& aSize) const;
-    Result<size_t, MediaResult> ByteCount(const gfx::IntSize& aSize) const;
+    size_t ByteCount(const gfx::IntSize& aSize) const;
 
    private:
     bool IsYUV() const;

@@ -45,7 +45,7 @@ add_setup(async () => {
 });
 
 add_task(async function test_update_individual_static_rules() {
-  Services.fog.testResetFOG();
+  resetTelemetryData();
 
   const ruleset1 = [
     getDNRRule({
@@ -266,11 +266,9 @@ add_task(async function test_update_individual_static_rules() {
 
   info("Test disabled rules has been restored from the stored data");
   await assertDNRGetEnabledRulesets(extension, ["ruleset1", "ruleset2"]);
-  await assertDNRGetDisabledRuleIds(
-    extension,
-    { rulesetId: "ruleset1" },
-    [666]
-  );
+  await assertDNRGetDisabledRuleIds(extension, { rulesetId: "ruleset1" }, [
+    666,
+  ]);
   await assertDNRGetDisabledRuleIds(extension, { rulesetId: "ruleset2" }, [
     ruleset2[0].id,
     999,
@@ -404,22 +402,18 @@ add_task(
       disableRuleIds: [1],
     });
     await extension.awaitMessage("updateStaticRules:done");
-    await assertDNRGetDisabledRuleIds(
-      extension,
-      { rulesetId: "ruleset1" },
-      [1]
-    );
+    await assertDNRGetDisabledRuleIds(extension, { rulesetId: "ruleset1" }, [
+      1,
+    ]);
 
     extension.sendMessage("updateStaticRules", {
       rulesetId: "ruleset2",
       disableRuleIds: [2],
     });
     await extension.awaitMessage("updateStaticRules:done");
-    await assertDNRGetDisabledRuleIds(
-      extension,
-      { rulesetId: "ruleset2" },
-      [2]
-    );
+    await assertDNRGetDisabledRuleIds(extension, { rulesetId: "ruleset2" }, [
+      2,
+    ]);
 
     // Verify limit applied on both enabled and disabled rules.
     const rejectedWithErrorMessage =
@@ -446,16 +440,12 @@ add_task(
     );
 
     // Expect the disabled rules to stay unchanged.
-    await assertDNRGetDisabledRuleIds(
-      extension,
-      { rulesetId: "ruleset1" },
-      [1]
-    );
-    await assertDNRGetDisabledRuleIds(
-      extension,
-      { rulesetId: "ruleset2" },
-      [2]
-    );
+    await assertDNRGetDisabledRuleIds(extension, { rulesetId: "ruleset1" }, [
+      1,
+    ]);
+    await assertDNRGetDisabledRuleIds(extension, { rulesetId: "ruleset2" }, [
+      2,
+    ]);
 
     info(
       "Verify custom limit enforced when loading the DNR store data again (startup cache)"
@@ -498,11 +488,9 @@ add_task(
     await assertDNRGetDisabledRuleIds(extension, { rulesetId: "ruleset1" }, []);
 
     // Expect ruleset2 disabled rules to have not been emptied.
-    await assertDNRGetDisabledRuleIds(
-      extension,
-      { rulesetId: "ruleset2" },
-      [2]
-    );
+    await assertDNRGetDisabledRuleIds(extension, { rulesetId: "ruleset2" }, [
+      2,
+    ]);
 
     // Try again after dropping the startup cache file (to make sure the limit
     // is enforced also when the data is loaded from the JSON file).
@@ -534,11 +522,9 @@ add_task(
       { rulesetId: "ruleset2" },
       [2, 3, 4, 5]
     );
-    await assertDNRGetDisabledRuleIds(
-      extension,
-      { rulesetId: "ruleset1" },
-      [3]
-    );
+    await assertDNRGetDisabledRuleIds(extension, { rulesetId: "ruleset1" }, [
+      3,
+    ]);
 
     // Make sure the DNR data is stored on disk.
     dnrStore = ExtensionDNRStore._getStoreForTesting();
@@ -569,11 +555,9 @@ add_task(
     await assertDNRGetDisabledRuleIds(extension, { rulesetId: "ruleset2" }, []);
 
     // Expect ruleset1 disabled rules to have not been emptied.
-    await assertDNRGetDisabledRuleIds(
-      extension,
-      { rulesetId: "ruleset1" },
-      [3]
-    );
+    await assertDNRGetDisabledRuleIds(extension, { rulesetId: "ruleset1" }, [
+      3,
+    ]);
 
     await extension.unload();
   }

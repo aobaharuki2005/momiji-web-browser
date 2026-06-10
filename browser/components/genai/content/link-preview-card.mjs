@@ -14,7 +14,6 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
-  FaviconUtils: "moz-src:///toolkit/modules/FaviconUtils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(
@@ -82,7 +81,7 @@ class LinkPreviewCard extends MozLitElement {
    * @param {MouseEvent} _event - The click event from the settings button.
    */
   handleSettingsClick(_event) {
-    const win = this.documentGlobal;
+    const win = this.ownerGlobal;
     win.openPreferences("general-link-preview");
     this.dispatchEvent(
       new CustomEvent("LinkPreviewCard:dismiss", {
@@ -107,7 +106,7 @@ class LinkPreviewCard extends MozLitElement {
     const anchor = event.target.closest("a");
     const url = anchor.href;
 
-    const win = this.documentGlobal;
+    const win = this.ownerGlobal;
     const params = {
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
         {}
@@ -475,14 +474,6 @@ class LinkPreviewCard extends MozLitElement {
 
     const { title, description, imageUrl } = this.pageData.meta;
 
-    const inDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    const colorScheme = inDarkMode ? "dark" : "light";
-    const ogImageUrl = lazy.FaviconUtils.getMozRemoteImageURL(imageUrl, {
-      colorScheme,
-    });
-
     const readingTimeMinsFast = articleData.readingTimeMinsFast || "";
     const readingTimeMinsSlow = articleData.readingTimeMinsSlow || "";
     const readingTimeMinsFastStr =
@@ -526,7 +517,7 @@ class LinkPreviewCard extends MozLitElement {
       <div class="og-card">
         <div class="og-card-content">
           ${imageUrl.startsWith("https://")
-            ? html` <img class="og-card-img" src=${ogImageUrl} alt=${title} /> `
+            ? html` <img class="og-card-img" src=${imageUrl} alt=${title} /> `
             : ""}
           ${siteName
             ? html`

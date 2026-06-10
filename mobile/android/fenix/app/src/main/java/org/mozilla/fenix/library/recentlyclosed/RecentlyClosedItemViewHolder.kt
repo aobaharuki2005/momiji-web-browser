@@ -13,7 +13,6 @@ import org.mozilla.fenix.databinding.HistoryListItemBinding
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.selection.SelectionHolder
-import mozilla.components.ui.icons.R as iconsR
 
 class RecentlyClosedItemViewHolder(
     view: View,
@@ -27,7 +26,7 @@ class RecentlyClosedItemViewHolder(
 
     init {
         binding.historyLayout.overflowView.apply {
-            setImageResource(iconsR.drawable.mozac_ic_cross_24)
+            setImageResource(R.drawable.ic_close)
             contentDescription = view.context.getString(R.string.history_delete_item)
             setOnClickListener {
                 val item = item ?: return@setOnClickListener

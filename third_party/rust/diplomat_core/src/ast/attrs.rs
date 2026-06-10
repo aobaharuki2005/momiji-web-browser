@@ -6,7 +6,7 @@ use std::borrow::Cow;
 use std::convert::Infallible;
 use std::str::FromStr;
 use syn::parse::{Error as ParseError, Parse, ParseStream};
-use syn::{Attribute, Expr, Ident, Lit, LitStr, Meta, MetaList, MetaNameValue, Token};
+use syn::{Attribute, Expr, Ident, Lit, LitStr, Meta, MetaList, Token};
 
 /// The list of attributes on a type. All attributes except `attrs` (HIR attrs) are
 /// potentially read by the diplomat macro and the AST backends, anything that is not should
@@ -30,10 +30,6 @@ pub struct Attrs {
     /// The regular #[cfg()] attributes. Inherited, though the inheritance onto methods is the
     /// only relevant one here.
     pub cfg: Vec<Attribute>,
-
-    /// The #[deprecated(note = 'foo')] attribute.
-    pub deprecated: Option<String>,
-
     /// HIR backend attributes.
     ///
     /// Inherited, but only during lowering. See [`crate::hir::Attrs`] for details on which HIR attributes are inherited.
@@ -62,7 +58,6 @@ impl Attrs {
             Attr::DiplomatBackend(attr) => self.attrs.push(attr),
             Attr::CRename(rename) => self.abi_rename.extend(&rename),
             Attr::DemoBackend(attr) => self.demo_attrs.push(attr),
-            Attr::Deprecated(msg) => self.deprecated = Some(msg),
         }
     }
 
@@ -89,8 +84,6 @@ impl Attrs {
         let abi_rename = self.abi_rename.attrs_for_inheritance(context, true);
         Self {
             cfg: self.cfg.clone(),
-
-            deprecated: None,
 
             attrs,
             abi_rename,
@@ -121,7 +114,6 @@ enum Attr {
     DiplomatBackend(DiplomatBackendAttr),
     CRename(RenameAttr),
     DemoBackend(DemoBackendAttr),
-    Deprecated(String),
     // More goes here
 }
 
@@ -130,7 +122,6 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
     let crename_attr: syn::Path = syn::parse_str("diplomat::abi_rename").unwrap();
     let demo_path: syn::Path = syn::parse_str("diplomat::demo").unwrap();
-    let deprecated: syn::Path = syn::parse_str("deprecated").unwrap();
     attrs.iter().filter_map(move |a| {
         if a.path() == &cfg_path {
             Some(Attr::Cfg(a.clone()))
@@ -146,23 +137,6 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
                 a.parse_args()
                     .expect("Failed to parse malformed diplomat::demo"),
             ))
-        } else if a.path() == &deprecated {
-            if let Some(Meta::NameValue(MetaNameValue {
-                value:
-                    syn::Expr::Lit(syn::ExprLit {
-                        lit: Lit::Str(s), ..
-                    }),
-                ..
-            })) = a
-                .meta
-                .require_list()
-                .ok()
-                .and_then(|m| syn::parse2::<Meta>(m.tokens.clone()).ok())
-            {
-                Some(Attr::Deprecated(s.value()))
-            } else {
-                Some(Attr::Deprecated("deprecated".into()))
-            }
         } else {
             None
         }

@@ -9,8 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -20,7 +21,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,10 +32,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.compose.base.Dropdown
 import mozilla.components.compose.base.annotation.FlexibleWindowPreview
+import mozilla.components.compose.base.button.DestructiveButton
 import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.button.OutlinedButton
 import mozilla.components.compose.base.menu.MenuItem
@@ -44,18 +44,21 @@ import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.concept.engine.autofill.AddressStructure
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.UpdatableAddressFields
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.address.store.AddressState
 import org.mozilla.fenix.settings.address.store.AddressStore
 import org.mozilla.fenix.settings.address.store.AddressStructureState
 import org.mozilla.fenix.settings.address.store.CancelTapped
+import org.mozilla.fenix.settings.address.store.DeleteTapped
 import org.mozilla.fenix.settings.address.store.FormChange
 import org.mozilla.fenix.settings.address.store.SaveTapped
 import org.mozilla.fenix.settings.address.store.ViewAppeared
+import org.mozilla.fenix.settings.address.store.isEditing
 import org.mozilla.fenix.settings.address.utils.generateAddress
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.compose.base.text.Text as DropdownText
 
 /**
@@ -70,9 +73,7 @@ fun EditAddressScreen(store: AddressStore) {
             EditAddressTopBar(store)
         },
     ) { paddingValues ->
-        val structureState by remember {
-            store.stateFlow.map { it.structureState }
-        }.collectAsState(initial = store.state.structureState)
+        val structureState by store.observeAsState(store.state.structureState) { it.structureState }
         var hasRequestedFocus by remember { mutableStateOf(false) }
         val focusRequester = remember { FocusRequester() }
 
@@ -93,14 +94,13 @@ fun EditAddressScreen(store: AddressStore) {
             verticalArrangement = Arrangement.spacedBy(10.dp),
             state = rememberLazyListState(),
             modifier = Modifier
-                .padding(top = paddingValues.calculateTopPadding())
+                .padding(paddingValues)
                 .consumeWindowInsets(paddingValues)
                 .padding(
                     horizontal = FirefoxTheme.layout.space.static200,
                     vertical = FirefoxTheme.layout.space.static100,
                 )
-                .windowInsetsPadding(WindowInsets.ime)
-                .testTag(EditAddressTestTag.FORM),
+                .windowInsetsPadding(WindowInsets.ime.exclude(WindowInsets.navigationBars)),
         ) {
             val firstTextField = structureState.structure.fields.firstOrNull {
                 it is AddressStructure.Field.TextField
@@ -139,8 +139,9 @@ private fun TextField(
     field: AddressStructure.Field.TextField,
     modifier: Modifier = Modifier,
 ) {
-    val value by remember { store.stateFlow.map { it.address.valueForID(field.id) } }
-        .collectAsState(initial = store.state.address.valueForID(field.id))
+    val value by store.observeAsState(store.state.address.valueForID(field.id)) {
+        it.address.valueForID(field.id)
+    }
 
     TextField(
         value = value,
@@ -157,8 +158,9 @@ private fun SelectField(
     store: AddressStore,
     field: AddressStructure.Field.SelectField,
 ) {
-    val value by remember { store.stateFlow.map { it.address.valueForID(field.id) } }
-        .collectAsState(store.state.address.valueForID(field.id))
+    val value by store.observeAsState(store.state.address.valueForID(field.id)) {
+        it.address.valueForID(field.id)
+    }
 
     val items = field.options.map {
         MenuItem.CheckableItem(
@@ -180,10 +182,18 @@ private fun SelectField(
 
 @Composable
 private fun FormButtons(store: AddressStore) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
-    ) {
+    Row {
+        if (store.state.isEditing) {
+            DestructiveButton(
+                text = stringResource(R.string.addressess_delete_address_button),
+                modifier = Modifier.testTag(EditAddressTestTag.DELETE_BUTTON),
+            ) {
+                store.dispatch(DeleteTapped)
+            }
+        }
+
+        Spacer(Modifier.weight(1f))
+
         OutlinedButton(
             text = stringResource(R.string.addresses_cancel_button),
             modifier = Modifier.testTag(EditAddressTestTag.CANCEL_BUTTON),
@@ -312,7 +322,7 @@ private fun createStore(
 @FlexibleWindowPreview
 @Composable
 private fun AddAddressPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     val store = createStore()
 
@@ -324,7 +334,7 @@ private fun AddAddressPreview(
 @FlexibleWindowPreview
 @Composable
 private fun EditAddressPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     val store = createStore(
         address = generateAddress(),

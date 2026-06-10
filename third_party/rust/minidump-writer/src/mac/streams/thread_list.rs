@@ -1,4 +1,5 @@
-use {super::*, crate::minidump_cpu::RawContextCPU};
+use super::*;
+use crate::minidump_cpu::RawContextCPU;
 
 impl MinidumpWriter {
     /// Writes the [`MDStreamType::ThreadListStream`] which is an array of

@@ -242,7 +242,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
     const shouldError =
-      !isTextureFormatColorRenderable(t.device.features, format) ||
+      !isTextureFormatColorRenderable(t.device, format) ||
       computeBytesPerSampleFromFormats(range(attachmentCount, () => format)) >
         t.device.limits.maxColorAttachmentBytesPerSample;
 
@@ -741,7 +741,7 @@ g.test('color_attachments,loadOp_storeOp')
     t.skipIfTextureFormatNotSupported(format);
     t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
 
-    // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
     if (transientTexture) {
       t.skipIfTransientAttachmentNotSupported();
     }
@@ -1129,7 +1129,7 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
 
     t.skipIfTextureFormatNotSupported(format);
 
-    // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
     if (transientTexture) {
       t.skipIfTransientAttachmentNotSupported();
     }
@@ -1252,7 +1252,7 @@ g.test('resolveTarget,format_supports_resolve')
     const colorAttachment = t.getColorAttachment(multisampledColorTexture);
     colorAttachment.resolveTarget = resolveTarget.createView();
 
-    t.tryRenderPass(isTextureFormatResolvable(t.device.features, format), {
+    t.tryRenderPass(isTextureFormatResolvable(t.device, format), {
       colorAttachments: [colorAttachment],
     });
   });

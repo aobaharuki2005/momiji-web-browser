@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Copyright 1993 by OpenVision Technologies, Inc.
  *

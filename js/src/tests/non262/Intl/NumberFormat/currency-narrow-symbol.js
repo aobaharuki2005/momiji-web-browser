@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 const {
     Integer, Decimal, Fraction, Currency, Literal,
 } = NumberFormatParts;

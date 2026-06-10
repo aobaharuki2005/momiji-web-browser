@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,8 +18,6 @@ class nsWindowSizes;
 
 namespace mozilla {
 
-enum class PseudoStyleType : uint8_t;
-
 struct ServoWritingMode {
   uint8_t mBits;
 };
@@ -25,10 +25,6 @@ struct ServoWritingMode {
 struct ServoComputedCustomProperties {
   uintptr_t mInherited;
   uintptr_t mNonInherited;
-};
-
-struct ServoUsedAttributes {
-  uintptr_t mUsedAttributes;
 };
 
 struct ServoRuleNode {
@@ -80,7 +76,6 @@ class ServoComputedData {
 
  private:
   mozilla::ServoComputedCustomProperties custom_properties;
-  mozilla::ServoUsedAttributes attribute_references;
   /// The rule node representing the ordered list of rules matched for this
   /// node.  Can be None for default values and text nodes.  This is
   /// essentially an optimization to avoid referencing the root rule node.
@@ -91,8 +86,6 @@ class ServoComputedData {
   const mozilla::ComputedStyle* visited_style;
   /// The computed writing-mode of the element.
   mozilla::ServoWritingMode writing_mode;
-  /// The pseudo type of this style.
-  mozilla::PseudoStyleType pseudo_type;
   /// The effective zoom (as in, the CSS zoom property) of this style.
   ///
   /// zoom is a non-inherited property, yet changes to it propagate through in

@@ -105,12 +105,7 @@ async function openPopupAndAssertUrlForPreset({ window, preset, expectedUrl }) {
       const presetsInPopup = document.getElementById(
         "PanelUI-profiler-presets"
       );
-      const popupPromise = BrowserTestUtils.waitForEvent(
-        presetsInPopup.menupopup,
-        "popupshown"
-      );
       presetsInPopup.menupopup.openPopup();
-      await popupPromise;
       presetsInPopup.menupopup.activateItem(
         await getElementByLabel(presetsInPopup, preset)
       );

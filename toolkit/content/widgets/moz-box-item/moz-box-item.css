@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:host([layout$="-icon"]) {
+:host([layout="large-icon"]) {
+  --box-icon-size: var(--icon-size-xlarge);
+
   .text-content.has-icon.has-description {
     grid-template-areas:
       "icon label"
@@ -10,36 +12,24 @@
   }
 }
 
-:host([static]) {
-  /* Indent static items the width of the handle button + gap */
-  padding-inline-start: calc(var(--button-size-icon) + var(--space-small));
-}
+.text-content.has-support-page {
+  display: flex;
 
-:host(:focus-visible) {
-  outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-inset);
-}
+  &.has-description {
+    flex-wrap: wrap;
+  }
 
-.text-content {
   .label-wrapper {
-    grid-area: label;
+    width: 100%;
+    display: flex;
+    gap: var(--space-small);
+    align-items: center;
+
+    .support-page {
+      margin-inline-start: var(--space-xsmall);
+    }
   }
 
-  .description-wrapper {
-    grid-area: description;
-  }
-
-  &.has-support-page .label,
-  &.has-support-page .description {
-    margin-inline-end: var(--space-xsmall);
-  }
-
-  &:not(.has-description) .description-wrapper,
-  &:not(.has-support-page) slot[name="support-link"] {
-    display: none;
-  }
-
-  .label,
   .description,
   .support-page {
     display: inline;
@@ -51,7 +41,7 @@
 }
 
 .box-container {
-  padding: var(--box-padding, var(--space-large));
+  padding: var(--box-padding);
   font-size: inherit;
   text-align: start;
 }
@@ -69,8 +59,6 @@ slot[name="actions-start"] {
 }
 
 .handle {
-  --box-item-handle-icon-color: var(--text-color);
-
   width: var(--button-size-icon);
   height: var(--button-size-icon);
   cursor: grab;
@@ -79,14 +67,7 @@ slot[name="actions-start"] {
   background-repeat: no-repeat;
   border-radius: var(--button-border-radius);
   -moz-context-properties: fill;
-  /** Override the text color set by description-deemphasized for the handle.
-      This cannot be disabled, hence the color should remain the default. */
-  fill: var(--box-item-handle-icon-color);
-  flex-shrink: 0;
-}
-
-.actions {
-  word-wrap: normal;
+  fill: currentColor;
 }
 
 .actions:has(> slot:not(:has-slotted)) {

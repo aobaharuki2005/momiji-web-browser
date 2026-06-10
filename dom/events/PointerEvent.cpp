@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -28,16 +30,10 @@ PointerEvent::PointerEvent(EventTarget* aOwner, nsPresContext* aPresContext,
   WidgetMouseEvent* mouseEvent = mEvent->AsMouseEvent();
   if (aEvent) {
     mEventIsInternal = false;
-    if (aEvent->mTilt) {
-      mTiltX.emplace(aEvent->mTilt->mX);
-      mTiltY.emplace(aEvent->mTilt->mY);
-    }
-    // If mAltitudeAngle and mAzimuthAngle are Nothing(), they should be
-    // computed by mTiltX and mTiltY when they are requested by JS.
-    if (aEvent->mAngle) {
-      mAltitudeAngle.emplace(aEvent->mAngle->mAltitude);
-      mAzimuthAngle.emplace(aEvent->mAngle->mAzimuth);
-    }
+    mTiltX.emplace(aEvent->tiltX);
+    mTiltY.emplace(aEvent->tiltY);
+    // mAltitudeAngle and mAzimuthAngle should be computed when they are
+    // requested by JS.
   } else {
     mEventIsInternal = true;
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
@@ -332,33 +328,25 @@ float PointerEvent::TangentialPressure(CallerType aCallerType) const {
 
 int32_t PointerEvent::TiltX(CallerType aCallerType) {
   if (ShouldResistFingerprinting(aCallerType)) {
-    return WidgetPointerHelper::GetDefaultTiltX();
+    return 0;
   }
   if (mTiltX.isSome()) {
     return *mTiltX;
   }
-  if (mAltitudeAngle.isSome() && mAzimuthAngle.isSome()) {
-    mTiltX.emplace(
-        WidgetPointerHelper::ComputeTiltX(*mAltitudeAngle, *mAzimuthAngle));
-    return *mTiltX;
-  }
-  mTiltX.emplace(WidgetPointerHelper::GetDefaultTiltX());
+  mTiltX.emplace(
+      WidgetPointerHelper::ComputeTiltX(*mAltitudeAngle, *mAzimuthAngle));
   return *mTiltX;
 }
 
 int32_t PointerEvent::TiltY(CallerType aCallerType) {
   if (ShouldResistFingerprinting(aCallerType)) {
-    return WidgetPointerHelper::GetDefaultTiltY();
+    return 0;
   }
   if (mTiltY.isSome()) {
     return *mTiltY;
   }
-  if (mAltitudeAngle.isSome() && mAzimuthAngle.isSome()) {
-    mTiltY.emplace(
-        WidgetPointerHelper::ComputeTiltY(*mAltitudeAngle, *mAzimuthAngle));
-    return *mTiltY;
-  }
-  mTiltY.emplace(WidgetPointerHelper::GetDefaultTiltY());
+  mTiltY.emplace(
+      WidgetPointerHelper::ComputeTiltY(*mAltitudeAngle, *mAzimuthAngle));
   return *mTiltY;
 }
 
@@ -375,12 +363,8 @@ double PointerEvent::AltitudeAngle(CallerType aCallerType) {
   if (mAltitudeAngle.isSome()) {
     return *mAltitudeAngle;
   }
-  if (mTiltX.isSome() && mTiltY.isSome()) {
-    mAltitudeAngle.emplace(
-        WidgetPointerHelper::ComputeAltitudeAngle(*mTiltX, *mTiltY));
-    return *mAltitudeAngle;
-  }
-  mAltitudeAngle.emplace(WidgetPointerHelper::GetDefaultAltitudeAngle());
+  mAltitudeAngle.emplace(
+      WidgetPointerHelper::ComputeAltitudeAngle(*mTiltX, *mTiltY));
   return *mAltitudeAngle;
 }
 
@@ -391,12 +375,8 @@ double PointerEvent::AzimuthAngle(CallerType aCallerType) {
   if (mAzimuthAngle.isSome()) {
     return *mAzimuthAngle;
   }
-  if (mTiltX.isSome() && mTiltY.isSome()) {
-    mAzimuthAngle.emplace(
-        WidgetPointerHelper::ComputeAzimuthAngle(*mTiltX, *mTiltY));
-    return *mAzimuthAngle;
-  }
-  mAzimuthAngle.emplace(WidgetPointerHelper::GetDefaultAzimuthAngle());
+  mAzimuthAngle.emplace(
+      WidgetPointerHelper::ComputeAzimuthAngle(*mTiltX, *mTiltY));
   return *mAzimuthAngle;
 }
 
@@ -431,6 +411,12 @@ int32_t PointerEvent::PersistentDeviceId(CallerType aCallerType) {
   return mPersistentDeviceId.value();
 }
 
+bool PointerEvent::EnableGetCoalescedEvents(JSContext* aCx, JSObject* aGlobal) {
+  return !StaticPrefs::
+             dom_w3c_pointer_events_getcoalescedevents_only_in_securecontext() ||
+         nsContentUtils::IsSecureContextOrWebExtension(aCx, aGlobal);
+}
+
 void PointerEvent::GetCoalescedEvents(
     nsTArray<RefPtr<PointerEvent>>& aPointerEvents) {
   WidgetPointerEvent* widgetEvent = mEvent->AsPointerEvent();
@@ -439,7 +425,7 @@ void PointerEvent::GetCoalescedEvents(
   if (mCoalescedEvents.IsEmpty() && widgetEvent &&
       widgetEvent->mCoalescedWidgetEvents &&
       !widgetEvent->mCoalescedWidgetEvents->mEvents.IsEmpty()) {
-    nsCOMPtr<EventTarget> owner = do_QueryInterface(mGlobal);
+    nsCOMPtr<EventTarget> owner = do_QueryInterface(mOwner);
     for (WidgetPointerEvent& event :
          widgetEvent->mCoalescedWidgetEvents->mEvents) {
       RefPtr<PointerEvent> domEvent =

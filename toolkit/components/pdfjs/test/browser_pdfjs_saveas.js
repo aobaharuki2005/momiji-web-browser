@@ -37,7 +37,7 @@ function createPromiseForTransferComplete(expectedFileName, destFile) {
 let tempDir = createTemporarySaveDirectory();
 
 add_setup(async function () {
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
   mockTransferRegisterer.register();
   registerCleanupFunction(function () {
     mockTransferRegisterer.unregister();

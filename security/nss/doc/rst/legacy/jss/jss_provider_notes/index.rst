@@ -9,6 +9,7 @@ JSS Provider Notes
 
       This page has been moved to http://www.dogtagpki.org/wiki/JSS_Provider.
 
+.. _the_mozilla-jss_jca_provider:
 
 `The Mozilla-JSS JCA Provider <#the_mozilla-jss_jca_provider>`__
 ----------------------------------------------------------------
@@ -36,6 +37,9 @@ JSS Provider Notes
    -  `Supported Classes <#supported-classes>`__
    -  `What's Not Supported <#not-supported>`__
 
+   --------------
+
+.. _signed_jar_file:
 
 `Signed JAR file <#signed_jar_file>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,6 +65,7 @@ JSS Provider Notes
          Extension <http://java.sun.com/javase/6/docs/technotes/guides/security/crypto/HowToImplAProvider.html#Step61>`__.
          Then you can sign your own JSS JAR file.
 
+.. _installing_the_provider:
 
 `Installing the Provider <#installing_the_provider>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -75,6 +80,7 @@ JSS Provider Notes
       its ``installJSSProvider`` field to ``false``, and pass the ``InitializationValues`` object to
       ``CryptoManager.initialize()``.
 
+.. _specifying_the_cryptotoken:
 
 `Specifying the CryptoToken <#specifying_the_cryptotoken>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -128,6 +134,7 @@ JSS Provider Notes
          dsaKpg.initialize(1024);
          KeyPair dsaPair = dsaKpg.generateKeyPair();
 
+.. _supported_classes:
 
 `Supported Classes <#supported_classes>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -163,6 +170,7 @@ JSS Provider Notes
    -  `Signature <#signature>`__
 
       .. rubric:: What's Not Supported
+         :name: What's_Not_Supported
 
       -  The following classes don't work very well:
 
@@ -176,8 +184,10 @@ JSS Provider Notes
    :name: Cipher_2
 
 .. rubric:: Supported Algorithms
+   :name: supported_algorithms
 
 .. rubric:: Notes
+   :name: notes
 
 -
 
@@ -232,8 +242,10 @@ JSS Provider Notes
    :name: KeyFactory_2
 
 .. rubric:: Supported Algorithms
+   :name: supported_algorithms_2
 
 .. rubric:: Notes
+   :name: notes_2
 
 -
 
@@ -272,8 +284,10 @@ JSS Provider Notes
    :name: KeyGenerator_2
 
 .. rubric:: Supported Algorithms
+   :name: supported_algorithms_3
 
 .. rubric:: Notes
+   :name: notes_3
 
 -
 
@@ -290,8 +304,10 @@ JSS Provider Notes
    :name: KeyPairGenerator_2
 
 .. rubric:: Supported Algorithms
+   :name: supported_algorithms_4
 
 .. rubric:: Notes
+   :name: notes_4
 
 -
 
@@ -305,8 +321,10 @@ JSS Provider Notes
    :name: Mac_2
 
 .. rubric:: Supported Algorithms
+   :name: supported_algorithms_5
 
 .. rubric:: Notes
+   :name: notes_5
 
 -
 
@@ -320,6 +338,7 @@ JSS Provider Notes
    :name: MessageDigest_2
 
 .. rubric:: Supported Algorithms
+   :name: supported_algorithms_6
 
 -
 
@@ -331,6 +350,7 @@ JSS Provider Notes
    :name: RSAPrivateKey_2
 
 .. rubric:: Notes
+   :name: notes_6
 
 -
 
@@ -343,8 +363,10 @@ JSS Provider Notes
    :name: SecretKeyFactory_2
 
 .. rubric:: Supported Algorithms
+   :name: supported_algorithms_7
 
 .. rubric:: Notes
+   :name: notes_7
 
 -
 
@@ -414,8 +436,10 @@ JSS Provider Notes
    :name: SecretKey_2
 
 .. rubric:: Supported Algorithms
+   :name: supported_algorithms_8
 
 .. rubric:: Notes
+   :name: notes_8
 
 -
 
@@ -434,8 +458,10 @@ JSS Provider Notes
    :name: SecureRandom_2
 
 .. rubric:: Supported Algorithms
+   :name: supported_algorithms_9
 
 .. rubric:: Notes
+   :name: notes_9
 
 -
 
@@ -447,8 +473,10 @@ JSS Provider Notes
    :name: Signature_2
 
 .. rubric:: Supported Algorithms
+   :name: supported_algorithms_10
 
 .. rubric:: Notes
+   :name: notes_10
 
 -
 

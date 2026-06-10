@@ -95,7 +95,10 @@ rtc_library("metrics_accumulator") {
 rtc_library("metrics_exporter") {
   visibility = [ "*" ]
   sources = [ "metrics_exporter.h" ]
-  deps = [ ":metric" ]
+  deps = [
+    ":metric",
+    "../..:array_view",
+  ]
 }
 
 if (!build_with_chromium) {
@@ -111,6 +114,7 @@ if (!build_with_chromium) {
     deps = [
       ":metric",
       ":metrics_exporter",
+      "../..:array_view",
       "../../../rtc_base:stringutils",
       "../../../test:test_flags",
       "//third_party/abseil-cpp/absl/flags:flag",
@@ -129,6 +133,7 @@ rtc_library("chrome_perf_dashboard_metrics_exporter") {
   deps = [
     ":metric",
     ":metrics_exporter",
+    "../..:array_view",
     "../../../test:fileutils",
     "../../../test:perf_test",
     "//third_party/abseil-cpp/absl/memory",
@@ -155,6 +160,7 @@ rtc_library("metrics_set_proto_file_exporter") {
   deps = [
     ":metric",
     ":metrics_exporter",
+    "../..:array_view",
     "../../../rtc_base:logging",
     "../../../test:fileutils",
     "//third_party/abseil-cpp/absl/strings:string_view",
@@ -175,6 +181,7 @@ rtc_library("print_result_proxy_metrics_exporter") {
   deps = [
     ":metric",
     ":metrics_exporter",
+    "../..:array_view",
     "../../../test:perf_test",
     "../../numerics",
   ]
@@ -190,6 +197,7 @@ rtc_library("global_metrics_logger_and_exporter") {
     ":metric",
     ":metrics_exporter",
     ":metrics_logger",
+    "../../../rtc_base:checks",
     "../../../system_wrappers",
   ]
 }
@@ -251,6 +259,7 @@ if (rtc_include_tests) {
       ":metric",
       ":metrics_exporter",
       ":metrics_logger",
+      "../..:array_view",
       "../../../system_wrappers",
       "../../../test:test_support",
     ]

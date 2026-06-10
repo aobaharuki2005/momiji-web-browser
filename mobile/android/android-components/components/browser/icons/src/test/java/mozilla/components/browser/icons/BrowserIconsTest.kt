@@ -10,12 +10,8 @@ import android.os.Looper.getMainLooper
 import android.widget.ImageView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import mockwebserver3.MockResponse
-import mockwebserver3.MockWebServer
 import mozilla.components.browser.icons.generator.IconGenerator
 import mozilla.components.browser.icons.loader.MemoryInfoProvider
 import mozilla.components.concept.engine.manifest.Size
@@ -25,10 +21,13 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import okio.buffer
 import okio.source
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
@@ -41,13 +40,10 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.robolectric.Shadows.shadowOf
 import java.io.OutputStream
-import kotlin.coroutines.ContinuationInterceptor
-import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class BrowserIconsTest {
     private val defaultAvailMem: Long = 100000
-    private val testDispatcher = StandardTestDispatcher()
 
     class FakeMemoryInfoProvider(private val availMem: Long) : MemoryInfoProvider {
         override fun getAvailMem(): Long = availMem
@@ -73,7 +69,6 @@ class BrowserIconsTest {
             httpClient = mock(),
             generator = generator,
             memoryInfoProvider = FakeMemoryInfoProvider(defaultAvailMem),
-            mainDispatcher = testDispatcher,
         )
             .loadIcon(request)
 
@@ -87,7 +82,9 @@ class BrowserIconsTest {
         val server = MockWebServer()
 
         server.enqueue(
-            MockResponse.Builder().body(javaClass.getResourceAsStream("/png/mozac.png")!!.source().buffer().buffer).build(),
+            MockResponse().setBody(
+                javaClass.getResourceAsStream("/png/mozac.png")!!.source().buffer().buffer,
+            ),
         )
 
         server.start()
@@ -127,9 +124,9 @@ class BrowserIconsTest {
             assertNotNull(icon.bitmap)
 
             val serverRequest = server.takeRequest()
-            assertEquals("/icon128.png", serverRequest.target)
+            assertEquals("/icon128.png", serverRequest.requestUrl?.encodedPath)
         } finally {
-            server.close()
+            server.shutdown()
         }
     }
 
@@ -138,7 +135,9 @@ class BrowserIconsTest {
         val server = MockWebServer()
 
         server.enqueue(
-            MockResponse.Builder().body(javaClass.getResourceAsStream("/png/mozac.png")!!.source().buffer().buffer).build(),
+            MockResponse().setBody(
+                javaClass.getResourceAsStream("/png/mozac.png")!!.source().buffer().buffer,
+            ),
         )
 
         server.start()
@@ -148,7 +147,6 @@ class BrowserIconsTest {
                 context = testContext,
                 httpClient = HttpURLConnectionClient(),
                 memoryInfoProvider = FakeMemoryInfoProvider(defaultAvailMem),
-                mainDispatcher = coroutineContext[ContinuationInterceptor] as CoroutineDispatcher,
             )
 
             val request = IconRequest(
@@ -162,7 +160,6 @@ class BrowserIconsTest {
             )
 
             val icon = icons.loadIcon(request).await()
-            testScheduler.advanceUntilIdle()
 
             assertEquals(Icon.Source.DOWNLOAD, icon.source)
             assertNotNull(icon.bitmap)
@@ -170,14 +167,13 @@ class BrowserIconsTest {
             val secondIcon = icons.loadIcon(
                 IconRequest("https://www.mozilla.org"), // Without resources!
             ).await()
-            testScheduler.advanceUntilIdle()
 
             assertEquals(Icon.Source.MEMORY, secondIcon.source)
             assertNotNull(secondIcon.bitmap)
 
             assertSame(icon.bitmap, secondIcon.bitmap)
         } finally {
-            server.close()
+            server.shutdown()
         }
     }
 
@@ -186,7 +182,9 @@ class BrowserIconsTest {
         val server = MockWebServer()
 
         server.enqueue(
-            MockResponse.Builder().body(javaClass.getResourceAsStream("/png/mozac.png")!!.source().buffer().buffer).build(),
+            MockResponse().setBody(
+                javaClass.getResourceAsStream("/png/mozac.png")!!.source().buffer().buffer,
+            ),
         )
 
         server.start()
@@ -196,7 +194,6 @@ class BrowserIconsTest {
                 context = testContext,
                 httpClient = HttpURLConnectionClient(),
                 memoryInfoProvider = FakeMemoryInfoProvider(defaultAvailMem),
-                mainDispatcher = coroutineContext[ContinuationInterceptor] as CoroutineDispatcher,
             )
 
             val request = IconRequest(
@@ -210,7 +207,6 @@ class BrowserIconsTest {
             )
 
             val icon = icons.loadIcon(request).await()
-            testScheduler.advanceUntilIdle()
 
             assertEquals(Icon.Source.DOWNLOAD, icon.source)
             assertNotNull(icon.bitmap)
@@ -220,12 +216,11 @@ class BrowserIconsTest {
             val secondIcon = icons.loadIcon(
                 IconRequest("https://www.mozilla.org"), // Without resources!
             ).await()
-            testScheduler.advanceUntilIdle()
 
             assertEquals(Icon.Source.DISK, secondIcon.source)
             assertNotNull(secondIcon.bitmap)
         } finally {
-            server.close()
+            server.shutdown()
         }
     }
 

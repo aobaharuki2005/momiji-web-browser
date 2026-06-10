@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef FFmpegVideoFramePool_h_
-#define FFmpegVideoFramePool_h_
+#ifndef __FFmpegVideoFramePool_h__
+#define __FFmpegVideoFramePool_h__
 
 #include "FFmpegLibWrapper.h"
 #include "FFmpegLibs.h"
@@ -82,9 +84,6 @@ class VideoFrameSurface<LIBAV_VER> {
   void SetWPChromaLocation(uint32_t aWPChromaLocation) {
     mSurface->GetAsDMABufSurfaceYUV()->SetWPChromaLocation(aWPChromaLocation);
   }
-  void SetVulkanCopySlotIndex(int32_t aSlotIndex) {
-    mVulkanCopySlotIndex = aSlotIndex;
-  }
 
   RefPtr<DMABufSurfaceYUV> GetDMABufSurface() {
     return mSurface->GetAsDMABufSurfaceYUV();
@@ -124,7 +123,6 @@ class VideoFrameSurface<LIBAV_VER> {
   AVBufferRef* mHWAVBuffer;
   VASurfaceID mFFMPEGSurfaceID;
   bool mHoldByFFmpeg;
-  int32_t mVulkanCopySlotIndex = -1;
 };
 
 // VideoFramePool class is thread-safe.
@@ -147,7 +145,6 @@ class VideoFramePool<LIBAV_VER> {
 
   void ReleaseUnusedVAAPIFrames();
   void FlushFFmpegFrames();
-  bool IsVulkanFrameSlotInUseByRenderer(int32_t aSlotIndex);
 
  private:
   RefPtr<VideoFrameSurface<LIBAV_VER>> GetTargetVideoFrameSurfaceLocked(
@@ -176,4 +173,4 @@ class VideoFramePool<LIBAV_VER> {
 
 }  // namespace mozilla
 
-#endif  // FFmpegVideoFramePool_h_
+#endif  // __FFmpegVideoFramePool_h__

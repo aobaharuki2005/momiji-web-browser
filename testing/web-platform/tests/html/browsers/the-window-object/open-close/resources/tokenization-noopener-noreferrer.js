@@ -142,7 +142,6 @@ function booleanTests(feature) {
       `${featureSplitBegin}\n${featureSplitEnd}`,
       `${featureSplitBegin},${featureSplitEnd}`,
       `\0${feature}`,
-      `\u000B${feature}`,
       `${feature}\u0000=yes`,
       `foo=\u000C${feature}`
     ].forEach(variant => {

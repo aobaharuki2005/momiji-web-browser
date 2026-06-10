@@ -5,8 +5,8 @@
 
 const ICON_DATAURL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
-const TEST_URI = Services.io.newURI("http://mozilla.org/");
-const ICON_URI = Services.io.newURI("http://mozilla.org/favicon.ico");
+const TEST_URI = NetUtil.newURI("http://mozilla.org/");
+const ICON_URI = NetUtil.newURI("http://mozilla.org/favicon.ico");
 
 const { XPCShellContentUtils } = ChromeUtils.importESModule(
   "resource://testing-common/XPCShellContentUtils.sys.mjs"
@@ -61,7 +61,7 @@ function fetchIconForSpec(spec) {
   return new Promise((resolve, reject) => {
     NetUtil.asyncFetch(
       {
-        uri: Services.io.newURI(spec),
+        uri: NetUtil.newURI(spec),
         loadUsingSystemPrincipal: true,
         contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
       },
@@ -137,7 +137,7 @@ add_task(async function subpage_url_fallback() {
 });
 
 add_task(async function svg_icon() {
-  let faviconURI = Services.io.newURI("http://places.test/favicon.svg");
+  let faviconURI = NetUtil.newURI("http://places.test/favicon.svg");
   await PlacesTestUtils.setFaviconForPage(
     TEST_URI,
     faviconURI,
@@ -177,13 +177,13 @@ add_task(async function test_icon_telemetry() {
   } of TELEMETRY_TEST_DATA) {
     Services.fog.testResetFOG();
 
-    let telemetryTestURI = Services.io.newURI(page);
+    let telemetryTestURI = NetUtil.newURI(page);
 
     await PlacesTestUtils.addVisits(telemetryTestURI);
 
     await PlacesTestUtils.setFaviconForPage(
       telemetryTestURI,
-      Services.io.newURI("http://example.com/favicon.png"),
+      NetUtil.newURI("http://example.com/favicon.png"),
       ICON_DATAURL // The icon has a size of 1x1.
     );
 
@@ -302,12 +302,12 @@ add_task(async function test_icon_telemetry_new_stream() {
   } of TELEMETRY_TEST_DATA) {
     Services.fog.testResetFOG();
 
-    const URI = Services.io.newURI(page);
+    const URI = NetUtil.newURI(page);
 
     await PlacesTestUtils.addVisits(URI);
     await PlacesTestUtils.setFaviconForPage(
       URI,
-      Services.io.newURI("http://example.com/favicon/ico"),
+      NetUtil.newURI("http://example.com/favicon/ico"),
       ICON_DATAURL
     );
 
@@ -394,13 +394,13 @@ add_task(async function test_icon_with_port() {
     ICON_DATAURL_PAGE_WITHOUT_PORT
   );
 
-  const TEST_URI_WITH_PORT = Services.io.newURI("http://example.com:5000/");
-  const FAVICON_URI_WITH_PORT = Services.io.newURI(
+  const TEST_URI_WITH_PORT = NetUtil.newURI("http://example.com:5000/");
+  const FAVICON_URI_WITH_PORT = NetUtil.newURI(
     "http://example.com:5000/favicon.ico"
   );
 
-  const TEST_URI_WITHOUT_PORT = Services.io.newURI("http://example.com/");
-  const FAVICON_URI_WITHOUT_PORT = Services.io.newURI(
+  const TEST_URI_WITHOUT_PORT = NetUtil.newURI("http://example.com/");
+  const FAVICON_URI_WITHOUT_PORT = NetUtil.newURI(
     "http://example.com/favicon.ico"
   );
 

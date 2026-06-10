@@ -1,11 +1,11 @@
 use std::iter::Peekable;
 
-use proc_macro::{TokenStream, token_stream};
+use proc_macro::{token_stream, TokenTree};
 
 use crate::date::Date;
 use crate::error::Error;
 use crate::time::Time;
-use crate::to_tokens::ToTokenStream;
+use crate::to_tokens::ToTokenTree;
 use crate::{date, time};
 
 pub(crate) struct UtcDateTime {
@@ -26,13 +26,14 @@ pub(crate) fn parse(chars: &mut Peekable<token_stream::IntoIter>) -> Result<UtcD
     Ok(UtcDateTime { date, time })
 }
 
-impl ToTokenStream for UtcDateTime {
-    fn append_to(self, ts: &mut TokenStream) {
-        quote_append! { ts
-            ::time::UtcDateTime::new(
-                #S(self.date),
-                #S(self.time),
-            )
-        }
+impl ToTokenTree for UtcDateTime {
+    fn into_token_tree(self) -> TokenTree {
+        quote_group! {{
+            const DATE_TIME: ::time::UtcDateTime = ::time::UtcDateTime::new(
+                #(self.date),
+                #(self.time),
+            );
+            DATE_TIME
+        }}
     }
 }

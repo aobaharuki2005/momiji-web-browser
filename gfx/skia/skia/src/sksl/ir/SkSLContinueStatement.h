@@ -20,7 +20,8 @@ class ContinueStatement final : public Statement {
 public:
     inline static constexpr Kind kIRNodeKind = Kind::kContinue;
 
-    explicit ContinueStatement(Position pos) : INHERITED(pos, kIRNodeKind) {}
+    ContinueStatement(Position pos)
+    : INHERITED(pos, kIRNodeKind) {}
 
     static std::unique_ptr<Statement> Make(Position pos) {
         return std::make_unique<ContinueStatement>(pos);

@@ -26,35 +26,25 @@ add_task(async function () {
 
   info("Change the playback rate to x10 after selecting '.div2'");
   await selectNode(".div2", inspector);
-  await waitFor(() => panel.querySelectorAll(".animation-item").length === 1);
-  await changePlaybackRateMultiplierSelector(animationInspector, panel, 10);
+  await waitUntil(() => panel.querySelectorAll(".animation-item").length === 1);
+  await changePlaybackRateSelector(animationInspector, panel, 10);
 
   info("Check each adjusted result of animations after selecting 'body' again");
   await selectNode("body", inspector);
-  await waitFor(() => panel.querySelectorAll(".animation-item").length === 2);
+  await waitUntil(() => panel.querySelectorAll(".animation-item").length === 2);
 
   checkAdjustingTheTime(
     animationInspector.state.animations[0].state,
     animationInspector.state.animations[1].state
   );
 
-  await waitFor(
-    () => animationInspector.state.animations[0].state.currentTime === 50000,
-    {
-      toString() {
-        return `1st animation currentTime: ${animationInspector.state.animations[0].state.currentTime}`;
-      },
-    }
+  await waitUntil(
+    () => animationInspector.state.animations[0].state.currentTime === 50000
   );
   ok(true, "The current time of '.div1' animation is 50%");
 
-  await waitFor(
-    () => animationInspector.state.animations[1].state.currentTime === 50000,
-    {
-      toString() {
-        return `2nd animation currentTime: ${animationInspector.state.animations[1].state.currentTime}`;
-      },
-    }
+  await waitUntil(
+    () => animationInspector.state.animations[1].state.currentTime === 50000
   );
   ok(true, "The current time of '.div2' animation is 50%");
 });

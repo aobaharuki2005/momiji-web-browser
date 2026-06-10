@@ -15,27 +15,17 @@ add_task(async function testHeuristicsThrottling() {
   let throttleDoneTopic = "doh:heuristics-throttle-done";
   let throttleExtendTopic = "doh:heuristics-throttle-extend";
 
-  Services.prefs.setIntPref(
-    prefs.HEURISTICS_THROTTLE_TIMEOUT_PREF,
-    throttleTimeout
-  );
-  Services.prefs.setIntPref(
-    prefs.HEURISTICS_THROTTLE_RATE_LIMIT_PREF,
-    rateLimit
-  );
+  Preferences.set(prefs.HEURISTICS_THROTTLE_TIMEOUT_PREF, throttleTimeout);
+  Preferences.set(prefs.HEURISTICS_THROTTLE_RATE_LIMIT_PREF, rateLimit);
 
   // Set up a passing environment and enable DoH.
   let throttledPromise = TestUtils.topicObserved(throttleDoneTopic);
   setPassingHeuristics();
   let prefPromise = TestUtils.waitForPrefChange(prefs.BREADCRUMB_PREF);
-  Services.prefs.setBoolPref(prefs.ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
 
   await prefPromise;
-  is(
-    Services.prefs.getBoolPref(prefs.BREADCRUMB_PREF),
-    true,
-    "Breadcrumb saved."
-  );
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb saved.");
   await ensureTRRMode(2);
   info("waiting for throttle done");
   await throttledPromise;

@@ -13,7 +13,7 @@ from urllib.parse import quote
 
 import pytest
 import webdriver
-from PIL import Image, ImageChops
+from PIL import Image
 from webdriver.bidi.error import InvalidArgumentException, NoSuchFrameException
 from webdriver.bidi.modules.script import ContextTarget
 
@@ -40,7 +40,7 @@ class Client:
             self.execute_script(
                 r"""
                     const [ level ] = arguments;
-                    const win = browser.documentGlobal;
+                    const win = browser.ownerGlobal;
                     win.ZoomManager.setZoomForBrowser(win.gBrowser.selectedTab.linkedBrowser, level);
                     """,
                 level,
@@ -528,7 +528,7 @@ class Client:
             wait="interactive",
         )
         await self.session.bidi_session.script.evaluate(
-            expression=f"window.browser.extension.getBackgroundPage().{waitFor}.allSettled()",
+            expression=f"window.browser.extension.getBackgroundPage().{waitFor}.ready()",
             target=ContextTarget(context["context"]),
             await_promise=True,
         )
@@ -1034,41 +1034,33 @@ class Client:
                     return found
                 await asyncio.sleep(polling_interval)
 
-    async def await_popup(self, url=None, timeout=15):
+    async def await_popup(self, url=None):
         if not hasattr(self, "popup_preload_script"):
             self.popup_preload_script = await self.make_preload_script(
                 """
-                    const win = window.wrappedJSObject;
-                    win.__popups = new win.Array();
-                    win.open = function(url) {
-                        win.__popups.push(url);
+                    window.__popups = [];
+                    window.wrappedJSObject.open = function(url) {
+                        window.__popups.push(url);
                     }
                 """,
                 "popup_detector",
             )
         return self.popup_preload_script.run(
-            """(url, timeout) => new Promise(done => {
-                    let attempts = timeout;
+            """(url) => new Promise(done => {
                     const to = setInterval(() => {
-                        const { __popups } = window.wrappedJSObject;
-                        if (url === undefined && __popups.length) {
+                        if (url === undefined && window.__popups.length) {
                             clearInterval(to);
-                            return done(true);
+                            return done(window.__popups[0]);
                         }
-                        const found = __popups.find(u => u.includes(url));
+                        const found = window.__popups.find(u => u.includes(url));
                         if (found !== undefined) {
                             clearInterval(to);
-                            done(true);
-                        }
-                        if (!--attempts) {
-                            clearInterval(to);
-                            done(false);
+                            done(found);
                         }
                     }, 1000);
                })
             """,
             url,
-            timeout,
             await_promise=True,
         )
 
@@ -1436,44 +1428,18 @@ class Client:
             element,
         )
 
-    async def does_fastclick_activate(self, url, wait="load"):
-        async with self.monitor_for_fastclick_attachment():
-            await self.navigate(url, wait=wait)
-            return await self.was_fastclick_attached()
-
     @contextlib.asynccontextmanager
-    async def monitor_for_fastclick_attachment(self):
+    async def ensure_fastclick_activates(self):
         fastclick_preload_script = await self.make_preload_script(
             """
-                // FastClick can check for document.documentElement.scrollWidth <= window.outerWidth
-                // in notNeeded, so let's force it to enable (as there may be devices where it's false).
-                window.wrappedJSObject.outerWidth--;
-
-                window.detected = false;
-
-                const { prototype } = window.wrappedJSObject.EventTarget;
-                const { addEventListener } = prototype;
-                prototype.addEventListener = function (type, fn, c, d) {
-                  if (type == "touchstart" && new Error().stack?.includes("attach@")) {
-                    window.detected = true;
-                  }
-                  try {
-                    return addEventListener.call(this, type, fn, c, d);
-                  } catch(_) { // throws if attaching to window, since it's a sandbox, not EventTarget
-                    return addEventListener.call(window, type, fn, c, d);
-                  }
-                };
+                var _ = document.createElement("webcompat_test");
+                _.style = "position:absolute;right:-1px;width:1px;height:1px";
+                document.documentElement.appendChild(_);
             """,
-            "fastclick_detector",
+            "fastclick_forcer",
         )
         yield
         fastclick_preload_script.stop()
-
-    async def was_fastclick_attached(self):
-        result = await self.run_script_in_context(
-            "window.detected", sandbox="fastclick_detector"
-        )
-        return result["value"]
 
     async def ensure_InstallTrigger_defined(self):
         return await self.make_preload_script("window.InstallTrigger = function() {}")
@@ -1561,6 +1527,36 @@ class Client:
                 "scrollbar does not cover any text"
             )
 
+    def test_for_fastclick(self, element):
+        # FastClick cancels touchend, breaking default actions on Fenix.
+        # It instead fires a mousedown or click, which we can detect.
+        self.execute_script(
+            """
+                const sel = arguments[0];
+                window.fastclicked = false;
+                const evt = sel.nodeName === "SELECT" ? "mousedown" : "click";
+                document.addEventListener(evt, e => {
+                    if (e.target === sel && !e.isTrusted) {
+                        window.fastclicked = true;
+                    }
+                }, true);
+                sel.style.position = "absolute";
+                sel.style.zIndex = 2147483647;
+            """,
+            element,
+        )
+        self.scroll_into_view(element)
+        self.clear_covering_elements(element)
+        # tap a few times in case the site's other code interferes, but
+        # FastClick can move the element out of bounds, so take care.
+        try:
+            self.touch.click(element=element).perform()
+            self.touch.click(element=element).perform()
+            self.touch.click(element=element).perform()
+        except webdriver.error.MoveTargetOutOfBoundsException:
+            pass
+        return self.execute_script("return window.fastclicked")
+
     async def test_aceomni_pan_and_zoom_works(self, url):
         await self.navigate(url, wait="none")
         img = self.await_css("#imageZoom", is_displayed=True)
@@ -1579,12 +1575,8 @@ class Client:
         coords = self.get_element_screen_position(img)
         coords = [coords[0] + 50, coords[1] + 100]
         await self.apz_move(coords=coords)
-        for _ in range(5):
-            try:
-                old_x = float(get_zoom_x())
-                break
-            except TypeError:
-                await self.stall(0.5)
+        await self.stall(0.5)
+        old_x = float(get_zoom_x())
 
         for i in range(20):
             coords = [coords[0] + 10, coords[1]]
@@ -1616,17 +1608,11 @@ class Client:
         except webdriver.error.StaleElementReferenceException:
             return False
 
-    def diff_images(self, img1b64, img2b64):
-        img1 = Image.open(BytesIO(b64decode(img1b64))).convert("RGB")
-        img2 = Image.open(BytesIO(b64decode(img2b64))).convert("RGB")
-        return ImageChops.difference(img1, img2)
-
-    def is_one_solid_color(self, image, max_fuzz=8):
+    def is_one_solid_color(self, element, max_fuzz=8):
         # max_fuzz is needed as screenshots can have slight color bleeding/fringing
-        if isinstance(image, webdriver.client.WebElement):
-            shotb64 = image.screenshot()
-            image = Image.open(BytesIO(b64decode(shotb64))).convert("RGB")
-        for min, max in image.getextrema():
+        shotb64 = element.screenshot()
+        shot = Image.open(BytesIO(b64decode(shotb64))).convert("RGB")
+        for min, max in shot.getextrema():
             if max - min > max_fuzz:
                 return False
         return True
@@ -1679,7 +1665,7 @@ class Client:
                     );
                     return eventUtilsObject;
                 }
-                const win = browser.documentGlobal;
+                const win = browser.ownerGlobal;
                 if (!win.EventUtils) {
                     win.EventUtils = _getEventUtils(win);
                 }

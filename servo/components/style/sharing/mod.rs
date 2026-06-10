@@ -67,9 +67,10 @@
 use crate::applicable_declarations::ApplicableDeclarationBlock;
 use crate::bloom::StyleBloom;
 use crate::computed_value_flags::ComputedValueFlags;
-use crate::context::{CascadeInputs, SharedStyleContext, StyleContext};
-use crate::dom::{SendElement, TElement};
+use crate::context::{SharedStyleContext, StyleContext};
+use crate::dom::{SendElement, TElement, TShadowRoot};
 use crate::properties::ComputedValues;
+use crate::rule_tree::StrongRuleNode;
 use crate::selector_map::RelevantAttributes;
 use crate::style_resolver::{PrimaryStyle, ResolvedElementStyles};
 use crate::stylist::Stylist;
@@ -781,23 +782,10 @@ impl<E: TElement> StyleSharingCache<E> {
             return None;
         }
 
-        // If two elements belong to different shadow trees, different rules may apply to them, from
-        // the respective trees, so check their cascade data pointers.
-        if !checks::shadow_root_style_data_equals(
-            target.element.containing_shadow(),
-            candidate.element.containing_shadow(),
-        ) {
-            trace!("Miss: Different containing shadow root style data");
-            return None;
-        }
-
-        // Shadow hosts can share style when they have matching CascadeData pointers, which ensures
-        // they match the same :host rules.
-        if !checks::shadow_root_style_data_equals(
-            target.element.shadow_root(),
-            candidate.element.shadow_root(),
-        ) {
-            trace!("Miss: Different shadow root style data");
+        // If two elements belong to different shadow trees, different rules may
+        // apply to them, from the respective trees.
+        if target.element.containing_shadow() != candidate.element.containing_shadow() {
+            trace!("Miss: Different containing shadow roots");
             return None;
         }
 
@@ -817,6 +805,20 @@ impl<E: TElement> StyleSharingCache<E> {
         if target.implemented_pseudo_element() != candidate.implemented_pseudo_element() {
             trace!("Miss: Element backed pseudo-element");
             return None;
+        }
+
+        // Shadow hosts can share style when they have matching CascadeData pointers, which
+        // ensures they match the same :host rules.
+        match (
+            target.element.shadow_root().and_then(|s| s.style_data()),
+            candidate.element.shadow_root().and_then(|s| s.style_data()),
+        ) {
+            (Some(td), Some(cd)) if std::ptr::eq(td, cd) => {},
+            (None, None) => {},
+            _ => {
+                trace!("Miss: Different shadow root style data");
+                return None;
+            },
         }
 
         if target.element.has_animations(shared_context)
@@ -864,11 +866,6 @@ impl<E: TElement> StyleSharingCache<E> {
             return None;
         }
 
-        if !checks::have_same_referenced_attrs(target, candidate) {
-            trace!("Miss: Attr references");
-            return None;
-        }
-
         if !checks::revalidate(target, candidate, shared, bloom, selector_caches) {
             trace!("Miss: Revalidation");
             return None;
@@ -899,7 +896,8 @@ impl<E: TElement> StyleSharingCache<E> {
         &mut self,
         shared_context: &SharedStyleContext,
         inherited: &ComputedValues,
-        inputs: &CascadeInputs,
+        rules: &StrongRuleNode,
+        visited_rules: Option<&StrongRuleNode>,
         target: E,
     ) -> Option<PrimaryStyle> {
         if shared_context.options.disable_style_sharing_cache {
@@ -911,15 +909,12 @@ impl<E: TElement> StyleSharingCache<E> {
             if !candidate.parent_style_identity().eq(inherited) {
                 return None;
             }
-            if !checks::have_same_referenced_attrs(&StyleSharingTarget::new(target), candidate) {
-                return None;
-            }
             let data = candidate.element.borrow_data().unwrap();
             let style = data.styles.primary();
-            if style.rules.as_ref() != Some(&inputs.rules.as_ref().unwrap()) {
+            if style.rules.as_ref() != Some(&rules) {
                 return None;
             }
-            if style.visited_rules() != inputs.visited_rules.as_ref() {
+            if style.visited_rules() != visited_rules {
                 return None;
             }
             // NOTE(emilio): We only need to check name / namespace because we
@@ -949,35 +944,6 @@ impl<E: TElement> StyleSharingCache<E> {
             // entirely, so that visitedness doesn't affect timing.
             if target.is_link() || candidate.element.is_link() {
                 return None;
-            }
-
-            let target_depends_on_style_queries = inputs
-                .flags
-                .contains(ComputedValueFlags::DEPENDS_ON_CONTAINER_STYLE_QUERY);
-            let candidate_depends_on_style_queries = style
-                .flags
-                .contains(ComputedValueFlags::DEPENDS_ON_CONTAINER_STYLE_QUERY);
-
-            if target_depends_on_style_queries != candidate_depends_on_style_queries {
-                // If we're considering sharing across two elements, target
-                // depends on style queries and candidate doesn't, right
-                // now we can share it, but by cloning the candidate style
-                // if we adjust the flags.
-                // If we're considering sharing across two elements, target
-                // does not depend on style queries and candidate does, we
-                // can share them with the same flags, but that would
-                // overinvalidate if we already know we don't need to keep
-                // `DEPENDS_ON_CONTAINER_STYLE_QUERY`.
-                let mut new_flags = inputs.flags | style.flags;
-                new_flags.set(
-                    ComputedValueFlags::DEPENDS_ON_CONTAINER_STYLE_QUERY,
-                    target_depends_on_style_queries,
-                );
-
-                return Some(PrimaryStyle {
-                    style: data.clone_style_with_flags(new_flags),
-                    reused_via_rule_node: true,
-                });
             }
 
             Some(data.share_primary_style())

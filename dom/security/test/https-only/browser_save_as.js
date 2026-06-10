@@ -14,7 +14,7 @@ const TEST_PATH =
   "http://example.com/browser/dom/security/test/https-only/file_save_as.html";
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init();
+MockFilePicker.init(window.browsingContext);
 const tempDir = createTemporarySaveDirectory();
 MockFilePicker.displayDirectory = tempDir;
 

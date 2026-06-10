@@ -342,7 +342,7 @@ export class ExtensionControlledPopup {
     }
     popupnotification.show();
     if (anchor?.id == "unified-extensions-button") {
-      const { gUnifiedExtensions } = anchor.documentGlobal;
+      const { gUnifiedExtensions } = anchor.ownerGlobal;
       gUnifiedExtensions.recordButtonTelemetry("extension_controlled_setting");
       gUnifiedExtensions.ensureButtonShownBeforeAttachingPanel(panel);
     }

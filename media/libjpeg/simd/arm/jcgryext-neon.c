@@ -1,5 +1,5 @@
 /*
- * Grayscale colorspace conversion (Arm Neon)
+ * jcgryext-neon.c - grayscale colorspace conversion (Arm Neon)
  *
  * Copyright (C) 2020, Arm Limited.  All Rights Reserved.
  *

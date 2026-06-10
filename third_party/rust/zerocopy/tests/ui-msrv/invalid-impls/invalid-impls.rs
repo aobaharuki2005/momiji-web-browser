@@ -12,21 +12,18 @@
 extern crate zerocopy;
 extern crate zerocopy_derive;
 
-include!("../../../src/util/macros.rs");
+include!("../../../src/macros.rs");
 
 use zerocopy::*;
 use zerocopy_derive::*;
 
 fn main() {}
 
-#[derive(FromBytes, IntoBytes, Unaligned)]
+#[derive(FromZeroes, FromBytes, AsBytes, Unaligned)]
 #[repr(transparent)]
 struct Foo<T>(T);
 
-const _: () = unsafe {
-    impl_or_verify!(T => TryFromBytes for Foo<T>);
-    impl_or_verify!(T => FromZeros for Foo<T>);
-    impl_or_verify!(T => FromBytes for Foo<T>);
-    impl_or_verify!(T => IntoBytes for Foo<T>);
-    impl_or_verify!(T => Unaligned for Foo<T>);
-};
+impl_or_verify!(T => FromZeroes for Foo<T>);
+impl_or_verify!(T => FromBytes for Foo<T>);
+impl_or_verify!(T => AsBytes for Foo<T>);
+impl_or_verify!(T => Unaligned for Foo<T>);

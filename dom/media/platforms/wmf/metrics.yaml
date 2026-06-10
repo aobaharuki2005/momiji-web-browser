@@ -21,7 +21,6 @@ mfcdm:
         - 'Core :: Audio/Video: Playback'
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1873394
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2026435
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1873394#c7
     data_sensitivity:
@@ -47,7 +46,7 @@ mfcdm:
       dropped_frames:
         description: The amount of video frames don't get rendered but dropped
         type: quantity
-    expires: 158
+    expires: 152
     telemetry_mirror: Mfcdm_EmePlayback_Gecko
   error:
     type: event
@@ -60,7 +59,6 @@ mfcdm:
         - 'Core :: Audio/Video: Playback'
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1873394
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=2026435
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1873394#c7
     data_sensitivity:
@@ -89,30 +87,10 @@ mfcdm:
       platform_error:
         description: The platform specific error code, eg. HResult on Windows
         type: quantity
-    expires: 158
+    expires: 152
     telemetry_mirror: Mfcdm_Error_Gecko
 
 media:
-  wmf_codec_no_extension:
-    type: labeled_boolean
-    description: >
-      Set to true for a given codec when its required Windows Store extension
-      is not installed (WINCODEC_ERR_COMPONENTNOTFOUND during WMF decoder
-      initialization). Recorded once per session. Not recorded when the codec
-      is disabled by pref or DXVA is unavailable.
-    labels:
-      - av1
-      - hevc
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1990057
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1990057
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - media-alerts@mozilla.com
-    expires: never
-
   decoder_backend_used:
     type: custom_distribution
     description: >

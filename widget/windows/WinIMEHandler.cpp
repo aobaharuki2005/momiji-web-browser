@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -359,7 +360,7 @@ IMENotificationRequests IMEHandler::GetIMENotificationRequests() {
     // an editor has focus isn't supported by IMEContentObserver nor
     // ContentCacheInParent.  Therefore, we need to request whole notifications
     // which are necessary either IMMHandler or TSFTextStore.
-    return IMMHandler::GetIMENotificationRequests() +
+    return IMMHandler::GetIMENotificationRequests() |
            TSFUtils::GetIMENotificationRequests();
   }
 
@@ -396,18 +397,12 @@ void IMEHandler::OnDestroyWindow(nsWindow* aWindow) {
     NotifyIME(aWindow, IMENotification(NOTIFY_IME_OF_BLUR));
   }
 
-  // We may fail to cancel the ongoing composition with the above blur
-  // notification. Then, IMMHandler should forget the current window for the
-  // further processing.
-  IMMHandler::OnDestroyWindow(aWindow);
-
   // We need to do nothing here for TSF. Just restore the default context
   // if it's been disassociated.
   if (!TSFUtils::IsAvailable()) {
     // MSDN says we need to set IS_DEFAULT to avoid memory leak when we use
     // SetInputScopes API. Use an empty string to do this.
-    SetInputScopeForIMM32(aWindow, u""_ns, u""_ns, InPrivateBrowsing::No,
-                          ForCleanUp::Yes);
+    SetInputScopeForIMM32(aWindow, u""_ns, u""_ns, false);
   }
   AssociateIMEContext(aWindow, true);
 }
@@ -449,11 +444,9 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
     }
   } else {
     // Set at least InputScope even when TextStore is not available.
-    SetInputScopeForIMM32(
-        aWindow, aInputContext.mHTMLInputType, aInputContext.mHTMLInputMode,
-        aInputContext.mInPrivateBrowsing ? InPrivateBrowsing::Yes
-                                         : InPrivateBrowsing::No,
-        ForCleanUp::No);
+    SetInputScopeForIMM32(aWindow, aInputContext.mHTMLInputType,
+                          aInputContext.mHTMLInputMode,
+                          aInputContext.mInPrivateBrowsing);
   }
 
   AssociateIMEContext(aWindow, enable);
@@ -546,11 +539,8 @@ void IMEHandler::OnKeyboardLayoutChanged() {
 void IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
                                        const nsAString& aHTMLInputType,
                                        const nsAString& aHTMLInputMode,
-                                       InPrivateBrowsing aInPrivateBrowsing,
-                                       ForCleanUp aForCleanUp) {
-  if (TSFUtils::IsAvailable() || !sSetInputScopes ||
-      !aWindow->GetWindowHandle() ||
-      (aForCleanUp == ForCleanUp::No && aWindow->Destroyed())) {
+                                       bool aInPrivateBrowsing) {
+  if (TSFUtils::IsAvailable() || !sSetInputScopes || aWindow->Destroyed()) {
     return;
   }
   AutoTArray<InputScope, 3> scopes;
@@ -560,7 +550,7 @@ void IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
   AppendInputScopeFromType(aHTMLInputType, scopes);
   AppendInputScopeFromInputMode(aHTMLInputMode, scopes);
 
-  if (aInPrivateBrowsing == InPrivateBrowsing::Yes) {
+  if (aInPrivateBrowsing) {
     scopes.AppendElement(IS_PRIVATE);
   }
 

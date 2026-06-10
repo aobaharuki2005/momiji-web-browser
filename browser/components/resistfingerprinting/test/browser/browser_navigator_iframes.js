@@ -134,13 +134,7 @@ const SPOOFED_UA_GECKO_TRAIL = {
   other: LEGACY_UA_GECKO_TRAIL,
 };
 
-const SPOOFED_MAX_TOUCH_POINTS = {
-  linux: 5,
-  win: 10,
-  macosx: 0,
-  android: 5,
-  other: 5,
-};
+const DEFAULT_HARDWARE_CONCURRENCY = navigator.hardwareConcurrency;
 
 // =============================================================================================
 // =============================================================================================
@@ -301,7 +295,6 @@ add_setup(async () => {
     userAgent: defaultUserAgent,
     framer_crossOrigin_userAgentHTTPHeader: defaultUserAgent,
     framee_crossOrigin_userAgentHTTPHeader: defaultUserAgent,
-    maxTouchPoints: navigator.maxTouchPoints,
   };
   allSpoofed = {
     appVersion: SPOOFED_APPVERSION[AppConstants.platform],
@@ -313,7 +306,6 @@ add_setup(async () => {
     userAgent: spoofedUserAgent,
     framer_crossOrigin_userAgentHTTPHeader: spoofedUserAgent,
     framee_crossOrigin_userAgentHTTPHeader: spoofedUserAgent,
-    maxTouchPoints: SPOOFED_MAX_TOUCH_POINTS[AppConstants.platform],
   };
 
   registerCleanupFunction(async function () {

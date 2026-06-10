@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -7,22 +9,39 @@
 #include "WebrtcGlobal.h"
 #include "libwebrtcglue/SystemTime.h"
 #include "mozilla/dom/Performance.h"
-#include "mozilla/dom/PerformanceService.h"
-#include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/WorkerScope.h"
 #include "nsRFPService.h"
 
 namespace mozilla::dom {
 
-RTCStatsTimestampState::RTCStatsTimestampState(
-    uint64_t aRandomTimelineSeed, const TimeStamp& aStartDomRealtime,
-    webrtc::Timestamp aStartRealtime, RTPCallerType aRTPCallerType,
-    DOMHighResTimeStamp aStartWallClockRaw)
-    : mRandomTimelineSeed(aRandomTimelineSeed),
+RTCStatsTimestampState::RTCStatsTimestampState(TimeStamp aStartDomRealtime,
+                                               webrtc::Timestamp aStartRealtime)
+    : mRandomTimelineSeed(0),
       mStartDomRealtime(aStartDomRealtime),
-      mStartRealtime(aStartRealtime),
-      mRTPCallerType(aRTPCallerType),
-      mStartWallClockRaw(aStartWallClockRaw) {}
+      mStartRealtime(webrtc::Timestamp::Micros(0)),
+      mRTPCallerType(RTPCallerType::Normal),
+      mStartWallClockRaw(0) {}
+
+RTCStatsTimestampState::RTCStatsTimestampState()
+    : mRandomTimelineSeed(0),
+      mStartDomRealtime(WebrtcSystemTimeBase()),
+      mStartRealtime(
+          WebrtcSystemTime() -
+          webrtc::TimeDelta::Micros(
+              (TimeStamp::Now() - mStartDomRealtime).ToMicroseconds())),
+      mRTPCallerType(RTPCallerType::Normal),
+      mStartWallClockRaw(
+          PerformanceService::GetOrCreate()->TimeOrigin(mStartDomRealtime)) {}
+
+RTCStatsTimestampState::RTCStatsTimestampState(Performance& aPerformance)
+    : mRandomTimelineSeed(aPerformance.GetRandomTimelineSeed()),
+      mStartDomRealtime(aPerformance.CreationTimeStamp()),
+      mStartRealtime(
+          WebrtcSystemTime() -
+          webrtc::TimeDelta::Micros(
+              (TimeStamp::Now() - mStartDomRealtime).ToMicroseconds())),
+      mRTPCallerType(aPerformance.GetRTPCallerType()),
+      mStartWallClockRaw(
+          PerformanceService::GetOrCreate()->TimeOrigin(mStartDomRealtime)) {}
 
 TimeStamp RTCStatsTimestamp::ToMozTime() const { return mMozTime; }
 
@@ -44,16 +63,6 @@ webrtc::Timestamp RTCStatsTimestamp::ToDomRealtime() const {
       (mMozTime - mState.mStartDomRealtime).ToMicroseconds());
 }
 
-DOMHighResTimeStamp RTCStatsTimestamp::ToDomNoTimeOrigin() const {
-  double realtime = ToDomRealtime().ms<double>();
-  // mRandomTimelineSeed is not set in the unit-tests.
-  if (mState.mRandomTimelineSeed) {
-    return nsRFPService::ReduceTimePrecisionAsMSecs(
-        realtime, mState.mRandomTimelineSeed, mState.mRTPCallerType);
-  }
-  return realtime;
-}
-
 DOMHighResTimeStamp RTCStatsTimestamp::ToDom() const {
   // webrtc-pc says to use performance.timeOrigin + performance.now(), but
   // keeping a Performance object around is difficult because it is
@@ -63,6 +72,13 @@ DOMHighResTimeStamp RTCStatsTimestamp::ToDom() const {
   // We are very careful to do exactly what Performance does, to avoid timestamp
   // discrepancies.
 
+  DOMHighResTimeStamp realtime = ToDomRealtime().ms<double>();
+  // mRandomTimelineSeed is not set in the unit-tests.
+  if (mState.mRandomTimelineSeed) {
+    realtime = nsRFPService::ReduceTimePrecisionAsMSecs(
+        realtime, mState.mRandomTimelineSeed, mState.mRTPCallerType);
+  }
+
   // Ugh. Performance::TimeOrigin is not constant, which means we need to
   // emulate this weird behavior so our time stamps are consistent with JS
   // timeOrigin. This is based on the code here:
@@ -71,7 +87,7 @@ DOMHighResTimeStamp RTCStatsTimestamp::ToDom() const {
   DOMHighResTimeStamp start = nsRFPService::ReduceTimePrecisionAsMSecs(
       mState.mStartWallClockRaw, 0, mState.mRTPCallerType);
 
-  return start + ToDomNoTimeOrigin();
+  return start + realtime;
 }
 
 /* static */ RTCStatsTimestamp RTCStatsTimestamp::FromMozTime(
@@ -120,46 +136,15 @@ RTCStatsTimestampMaker::RTCStatsTimestampMaker(RTCStatsTimestampState aState)
     : mState(aState) {}
 
 /* static */
-RTCStatsTimestampMaker RTCStatsTimestampMaker::Create() {
-  return RTCStatsTimestampMaker(RTCStatsTimestampState(
-      0, WebrtcSystemTimeBase(),
-      WebrtcSystemTime() -
-          webrtc::TimeDelta::Micros(
-              (TimeStamp::Now() - WebrtcSystemTimeBase()).ToMicroseconds()),
-      RTPCallerType::Normal,
-      PerformanceService::GetOrCreate()->TimeOrigin(WebrtcSystemTimeBase())));
-}
-
-/* static */
 RTCStatsTimestampMaker RTCStatsTimestampMaker::Create(
-    Performance* aPerformance) {
-  if (!aPerformance) {
-    return RTCStatsTimestampMaker::Create();
-  }
-  TimeStamp startDomRealtime = aPerformance->CreationTimeStamp();
-  return RTCStatsTimestampMaker(RTCStatsTimestampState(
-      aPerformance->GetRandomTimelineSeed(), startDomRealtime,
-      WebrtcSystemTime() -
-          webrtc::TimeDelta::Micros(
-              (TimeStamp::Now() - startDomRealtime).ToMicroseconds()),
-      aPerformance->GetRTPCallerType(),
-      PerformanceService::GetOrCreate()->TimeOrigin(startDomRealtime)));
-}
-
-/* static */
-RTCStatsTimestampMaker RTCStatsTimestampMaker::Create(
-    nsPIDOMWindowInner* aWindow) {
+    nsPIDOMWindowInner* aWindow /* = nullptr */) {
   if (!aWindow) {
-    return RTCStatsTimestampMaker::Create();
+    return RTCStatsTimestampMaker(RTCStatsTimestampState());
   }
-  return RTCStatsTimestampMaker::Create(aWindow->GetPerformance());
-}
-
-/* static */
-RTCStatsTimestampMaker RTCStatsTimestampMaker::Create(
-    const WorkerPrivate& aWorkerPrivate) {
-  return RTCStatsTimestampMaker::Create(
-      aWorkerPrivate.GlobalScope()->GetPerformance());
+  if (Performance* p = aWindow->GetPerformance()) {
+    return RTCStatsTimestampMaker(RTCStatsTimestampState(*p));
+  }
+  return RTCStatsTimestampMaker(RTCStatsTimestampState());
 }
 
 RTCStatsTimestamp RTCStatsTimestampMaker::GetNow() const {

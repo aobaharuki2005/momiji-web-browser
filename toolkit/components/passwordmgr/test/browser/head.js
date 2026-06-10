@@ -188,11 +188,13 @@ async function getFormSubmitResponseResult(
   { username = "#user", password = "#pass" } = {}
 ) {
   // default selectors are for the response page produced by formsubmit.sjs
-  // TODO: Switch to SpecialPowers.spawn
-  // eslint-disable-next-line mozilla/reject-contenttask-spawn
   let fieldValues = await ContentTask.spawn(
     browser,
-    { resultURL, usernameSelector: username, passwordSelector: password },
+    {
+      resultURL,
+      usernameSelector: username,
+      passwordSelector: password,
+    },
     async function ({ resultURL, usernameSelector, passwordSelector }) {
       await ContentTaskUtils.waitForCondition(() => {
         return (
@@ -425,7 +427,7 @@ function getDoorhangerButton(aPopup, aButtonIndex) {
  * @param {number} aButtonIndex Number indicating which button to click.
  *                              See the constants in this file.
  */
-async function clickDoorhangerButton(aPopup, aButtonIndex) {
+function clickDoorhangerButton(aPopup, aButtonIndex) {
   Assert.ok(true, "Looking for action at index " + aButtonIndex);
 
   let button = getDoorhangerButton(aPopup, aButtonIndex);
@@ -436,13 +438,7 @@ async function clickDoorhangerButton(aPopup, aButtonIndex) {
   } else {
     Assert.ok(true, "Triggering menuitem # " + aButtonIndex);
   }
-  let panel = aPopup.owner?.panel;
-  let promiseHidden =
-    panel && aPopup.owner.isPanelOpen
-      ? BrowserTestUtils.waitForEvent(panel, "popuphidden")
-      : Promise.resolve();
-  button.click();
-  await promiseHidden;
+  button.doCommand();
 }
 
 async function cleanupDoorhanger(notif) {
@@ -712,11 +708,9 @@ async function fillGeneratedPasswordFromOpenACPopup(
     return item && !EventUtils.isHidden(item);
   }, "Waiting for item to become visible");
 
-  // TODO: Switch to SpecialPowers.spawn
-  // eslint-disable-next-line mozilla/reject-contenttask-spawn
   let inputEventPromise = ContentTask.spawn(
     browser,
-    passwordInputSelector,
+    [passwordInputSelector],
     async function waitForInput(inputSelector) {
       let passwordInput = content.document.querySelector(inputSelector);
       await ContentTaskUtils.waitForEvent(
@@ -902,10 +896,8 @@ async function changeContentInputValue(
   str,
   shouldBlur = true
 ) {
-  await SimpleTest.promiseFocus(browser.documentGlobal);
-  // TODO: Switch to SpecialPowers.spawn
-  // eslint-disable-next-line mozilla/reject-contenttask-spawn
-  let oldValue = await ContentTask.spawn(browser, selector, function (sel) {
+  await SimpleTest.promiseFocus(browser.ownerGlobal);
+  let oldValue = await ContentTask.spawn(browser, [selector], function (sel) {
     return content.document.querySelector(sel).value;
   });
 
@@ -914,8 +906,6 @@ async function changeContentInputValue(
     return;
   }
   info(`changeContentInputValue: from "${oldValue}" to "${str}"`);
-  // TODO: Switch to SpecialPowers.spawn
-  // eslint-disable-next-line mozilla/reject-contenttask-spawn
   await ContentTask.spawn(
     browser,
     { selector, str, shouldBlur },
@@ -965,7 +955,7 @@ async function verifyConfirmationHint(
   anchorID = "password-notification-icon",
   expectedL10nMessageId = null
 ) {
-  let hintElem = browser.documentGlobal.ConfirmationHint._panel;
+  let hintElem = browser.ownerGlobal.ConfirmationHint._panel;
   await BrowserTestUtils.waitForPopupEvent(hintElem, "shown");
   try {
     Assert.equal(hintElem.state, "open", "hint popup is open");
@@ -973,11 +963,9 @@ async function verifyConfirmationHint(
       BrowserTestUtils.isVisible(hintElem.anchorNode),
       "hint anchorNode is visible"
     );
-    let matchedAnchor = Array.isArray(anchorID)
-      ? anchorID.includes(hintElem.anchorNode.id)
-      : hintElem.anchorNode.id == anchorID;
-    Assert.ok(
-      matchedAnchor,
+    Assert.equal(
+      hintElem.anchorNode.id,
+      anchorID,
       "Hint should be anchored on the expected notification icon"
     );
     info("verifyConfirmationHint, hint is shown and has its anchorNode");

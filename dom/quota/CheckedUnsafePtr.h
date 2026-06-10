@@ -14,7 +14,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DataMutex.h"
-#include "mozilla/SourcePathLiteral.h"
 #include "mozilla/StackWalk.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsContentUtils.h"
@@ -56,15 +55,15 @@ namespace detail {
 
 static constexpr auto kSourceFileRelativePathMap =
     std::array<std::pair<nsLiteralCString, nsLiteralCString>, 1>{
-        {{"mozilla/dom/CheckedUnsafePtr.h"_sp,
-          "dom/quota/CheckedUnsafePtr.h"_sp}}};
+        {{"mozilla/dom/CheckedUnsafePtr.h"_ns,
+          "dom/quota/CheckedUnsafePtr.h"_ns}}};
 
 static inline nsDependentCSubstring GetSourceFileRelativePath(
     const nsACString& aSourceFilePath) {
   static constexpr auto error = "ERROR"_ns;
-  static constexpr auto mozillaRelativeBase = "mozilla/"_sp;
+  static constexpr auto mozillaRelativeBase = "mozilla/"_ns;
   static constexpr auto thisSourceFileRelativePath =
-      "/dom/quota/CheckedUnsafePtr.h"_sp;
+      "/dom/quota/CheckedUnsafePtr.h"_ns;
   static constexpr auto filePath = nsLiteralCString(__FILE__);
 
   MOZ_ASSERT(StringEndsWith(filePath, thisSourceFileRelativePath));
@@ -78,7 +77,7 @@ static inline nsDependentCSubstring GetSourceFileRelativePath(
   // The source file could have been exported to the OBJDIR/dist/include
   // directory, so we need to check that case as well.
   static constexpr auto commonHSourceFileRelativePath =
-      "/mozilla/dom/quota/CheckedUnsafePtr.h"_sp;
+      "/mozilla/dom/quota/CheckedUnsafePtr.h"_ns;
   MOZ_ASSERT(StringEndsWith(filePath, commonHSourceFileRelativePath));
   static const auto objdirDistIncludeTreeBase = Substring(
       filePath, 0, filePath.Length() - commonHSourceFileRelativePath.Length());
@@ -117,7 +116,7 @@ static inline nsDependentCSubstring GetSourceFileRelativePath(
   }
 
   nsCString::const_iterator begin, end;
-  if (RFindInReadable("/"_sp, aSourceFilePath.BeginReading(begin),
+  if (RFindInReadable("/"_ns, aSourceFilePath.BeginReading(begin),
                       aSourceFilePath.EndReading(end))) {
     // Use the basename as a fallback, to avoid exposing any user parts of the
     // path.
@@ -192,8 +191,7 @@ class CheckedUnsafePtrBaseCheckingEnabled {
   void DumpDebugMsg() {
     fprintf(stderr, "CheckedUnsafePtr [%p]\n", this);
     fprintf(stderr, "Location of creation: %s, %s:%d\n", mFunctionName.get(),
-            PromiseFlatCString(GetSourceFileRelativePath(mSourceFile)).get(),
-            mLineNo);
+            GetSourceFileRelativePath(mSourceFile).BeginReading(), mLineNo);
     fprintf(stderr, "Stack of creation:\n%s\n", mCreationStack.get());
     fprintf(stderr, "Stack of last assignment\n%s\n\n",
             mLastAssignmentStack.get());
@@ -397,9 +395,8 @@ class CheckingPolicyAccess {
 };
 
 template <typename Derived>
-class MOZ_EMPTY_BASES CheckCheckedUnsafePtrs
-    : private CheckingPolicyAccess,
-      private detail::CheckedUnsafePtrBaseAccess {
+class CheckCheckedUnsafePtrs : private CheckingPolicyAccess,
+                               private detail::CheckedUnsafePtrBaseAccess {
  public:
   using SupportsChecking =
       std::integral_constant<CheckingSupport, CheckingSupport::Enabled>;
@@ -506,7 +503,7 @@ using ReleaseAssertEnabled = std::true_type;
 // while release builds forgo all checks. (Release builds incur no size or
 // runtime penalties compared to bare pointers.)
 template <typename CheckingPolicy>
-class MOZ_EMPTY_BASES SupportsCheckedUnsafePtr
+class SupportsCheckedUnsafePtr
     : public detail::SupportCheckedUnsafePtrImpl<CheckingPolicy>,
       public detail::SupportsCheckedUnsafePtrTag {
  public:

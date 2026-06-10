@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -85,9 +87,7 @@ struct ChannelMarker {
     using MS = MarkerSchema;
     MS schema(MS::Location::MarkerChart, MS::Location::MarkerTable);
     schema.SetTableLabel("{marker.data.url}");
-    schema.AddKeyFormat("url", MS::Format::Url);
-    // Bug 1618687 - Use channelId to segment "Waiting for Socket Thread".
-    schema.AddKeyFormat("channelId", MS::Format::Integer);
+    schema.AddKeyFormat("url", MS::Format::Url, MS::PayloadFlags::Searchable);
     schema.AddStaticLabelValue(
         "Description",
         "Timestamp capturing various phases of a network channel's lifespan.");
@@ -271,15 +271,12 @@ void HttpChannelParent::CleanupBackgroundChannel() {
     }
 
     // This HttpChannelParent might still have a reference from
-    // BackgroundChannelRegistrar. Only remove our own entry; another
-    // HttpChannelParent may have been registered under the same channel Id
-    // (e.g. after a redirect), and we must not remove that entry.
-    RefPtr<BackgroundChannelRegistrar> registrar =
+    // BackgroundChannelRegistrar.
+    nsCOMPtr<nsIBackgroundChannelRegistrar> registrar =
         BackgroundChannelRegistrar::GetOrCreate();
     MOZ_ASSERT(registrar);
-    if (registrar) {
-      registrar->DeleteChannelIfMatches(mChannel->ChannelId(), this);
-    }
+
+    registrar->DeleteChannel(mChannel->ChannelId());
 
     // If mAsyncOpenBarrier is greater than zero, it means AsyncOpen procedure
     // is still on going. we need to abort AsyncOpen with failure to destroy
@@ -941,11 +938,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
   // Wait for background channel ready on target channel
   nsCOMPtr<nsIRedirectChannelRegistrar> redirectReg =
       RedirectChannelRegistrar::GetOrCreate();
-  if (!redirectReg) {
-    // Shutdown is in progress.
-    ContinueRedirect2Verify(NS_ERROR_ABORT);
-    return IPC_OK();
-  }
+  MOZ_ASSERT(redirectReg);
 
   nsCOMPtr<nsIParentChannel> redirectParentChannel;
   rv = redirectReg->GetParentChannel(mRedirectChannelId,
@@ -979,11 +972,6 @@ HttpChannelParent::ContinueVerification(
 
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCallback);
-
-  if (mIPCClosed) {
-    aCallback->ReadyToVerify(NS_ERROR_FAILURE);
-    return NS_OK;
-  }
 
   // Continue the verification procedure if background channel is ready.
   if (mBgParent) {
@@ -1064,6 +1052,25 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult HttpChannelParent::RecvSetCookies(
+    const nsACString& aBaseDomain, const OriginAttributes& aOriginAttributes,
+    nsIURI* aHost, const bool& aFromHttp, const bool& aIsThirdParty,
+    nsTArray<CookieStruct>&& aCookies) {
+  net::PCookieServiceParent* csParent =
+      LoneManagedOrNullAsserts(Manager()->ManagedPCookieServiceParent());
+  NS_ENSURE_TRUE(csParent, IPC_OK());
+
+  auto* cs = static_cast<net::CookieServiceParent*>(csParent);
+
+  BrowsingContext* browsingContext = nullptr;
+  if (mBrowserParent) {
+    browsingContext = mBrowserParent->GetBrowsingContext();
+  }
+
+  return cs->SetCookies(nsCString(aBaseDomain), aOriginAttributes, aHost,
+                        aFromHttp, aIsThirdParty, aCookies, browsingContext);
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsIRequestObserver
 //-----------------------------------------------------------------------------
@@ -1087,10 +1094,6 @@ static ResourceTimingStructArgs GetTimingAttributes(HttpBaseChannel* aChannel) {
   args.requestStart() = timeStamp;
   aChannel->GetResponseStart(&timeStamp);
   args.responseStart() = timeStamp;
-  aChannel->GetFirstInterimResponseStart(&timeStamp);
-  args.firstInterimResponseStart() = timeStamp;
-  aChannel->GetFinalResponseHeadersStart(&timeStamp);
-  args.finalResponseHeadersStart() = timeStamp;
   aChannel->GetResponseEnd(&timeStamp);
   args.responseEnd() = timeStamp;
   aChannel->GetAsyncOpen(&timeStamp);
@@ -1127,7 +1130,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
 
   LOG(("HttpChannelParent::OnStartRequest [this=%p, aRequest=%p]\n", this,
        aRequest));
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread());
 
   Maybe<uint32_t> multiPartID;
   bool isFirstPartOfMultiPart = false;
@@ -1172,28 +1175,15 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
 
   HttpChannelOnStartRequestArgs args;
 
-  // Send down any cookies which are relevant to this URL if we are performing a
-  // cookie-requesting document load. We can't do that if mIPCClosed is set.
-  //
-  // NOTE: Transferring cookies in this way happens here, rather than in
-  // `AboutToLoadDocumentForChild`, as we need the PCookieService actor to be
-  // initialized before we can transmit cookies.
-  if (!mIPCClosed && chan->IsNavigation()) {
-    // FIXME: We should consider skipping sending cookies if the response isn't
-    // going to result in the document being rendered (e.g. if we're going to
-    // display a load error)
-    nsLoadFlags loadFlags;
-    MOZ_ALWAYS_SUCCEEDS(chan->GetLoadFlags(&loadFlags));
-    if (loadFlags & nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE) {
-      PNeckoParent* neckoParent = Manager();
-      MOZ_ASSERT(neckoParent,
-                 "We should have a manager if our IPC isn't closed");
-      if (PCookieServiceParent* csParent = LoneManagedOrNullAsserts(
-              neckoParent->ManagedPCookieServiceParent())) {
-        static_cast<CookieServiceParent*>(csParent)->TrackCookieLoad(chan);
-        args.shouldWaitForOnStartRequestSent() = true;
-      }
-    }
+  // Send down any permissions/cookies which are relevant to this URL if we are
+  // performing a document load. We can't do that if mIPCClosed is set.
+  if (!mIPCClosed) {
+    PContentParent* pcp = Manager()->Manager();
+    MOZ_ASSERT(pcp, "We should have a manager if our IPC isn't closed");
+    DebugOnly<nsresult> rv =
+        static_cast<ContentParent*>(pcp)->AboutToLoadHttpDocumentForChild(
+            chan, &args.shouldWaitForOnStartRequestSent());
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   args.multiPartID() = multiPartID;
@@ -1207,12 +1197,20 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   if (httpChannelImpl) {
     httpChannelImpl->IsFromCache(&args.isFromCache());
     httpChannelImpl->GetCacheDisposition(&args.cacheDisposition());
+    httpChannelImpl->IsRacing(&args.isRacing());
     httpChannelImpl->GetCacheEntryId(&args.cacheEntryId());
     httpChannelImpl->GetCacheTokenFetchCount(&args.cacheFetchCount());
     httpChannelImpl->GetCacheTokenExpirationTime(&args.cacheExpirationTime());
     httpChannelImpl->GetProtocolVersion(args.protocolVersion());
 
     mDataSentToChildProcess = httpChannelImpl->DataSentToChildProcess();
+
+    // If RCWN is enabled and cache wins, we can't use the ODA from socket
+    // process.
+    if (args.isRacing()) {
+      mDataSentToChildProcess =
+          httpChannelImpl->DataSentToChildProcess() && !args.isFromCache();
+    }
     args.dataFromSocketProcess() = mDataSentToChildProcess;
   }
 
@@ -1338,10 +1336,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   if (mIPCClosed) {
     rv = NS_ERROR_UNEXPECTED;
   } else {
-    MOZ_DIAGNOSTIC_ASSERT(
-        responseHead == &cleanedUpResponseHead ||
-            responseHead == chan->GetResponseHead(),
-        "mResponseHead changed between GetResponseHead and copy");
     nsHttpResponseHead newResponseHead = *responseHead;
     if (!mBgParent->OnStartRequest(
             std::move(newResponseHead), useResponseHead,
@@ -1353,9 +1347,9 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
 
   requestHead->Exit();
 
-  // Need to wait for the cookies to be sent to the content process, which is
-  // sent via PContent in ContentParent::UpdateCookieStatus. For multipart
-  // channel, send only one time since the cookies/permissions are the same.
+  // Need to wait for the cookies/permissions to content process, which is sent
+  // via PContent in AboutToLoadHttpFtpDocumentForChild. For multipart channel,
+  // send only one time since the cookies/permissions are the same.
   if (NS_SUCCEEDED(rv) && args.shouldWaitForOnStartRequestSent() &&
       multiPartID.valueOr(0) == 0) {
     LOG(("HttpChannelParent::SendOnStartRequestSent\n"));
@@ -1724,7 +1718,8 @@ HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                             const nsACString& aProvider,
                                             const nsACString& aFullHash) {
   LOG(("HttpChannelParent::SetClassifierMatchedInfo [this=%p]\n", this));
-  if (!mIPCClosed && mBgParent) {
+  if (!mIPCClosed) {
+    MOZ_ASSERT(mBgParent);
     (void)mBgParent->OnSetClassifierMatchedInfo(aList, aProvider, aFullHash);
   }
   return NS_OK;
@@ -1735,7 +1730,8 @@ HttpChannelParent::SetClassifierMatchedTrackingInfo(
     const nsACString& aLists, const nsACString& aFullHashes) {
   LOG(("HttpChannelParent::SetClassifierMatchedTrackingInfo [this=%p]\n",
        this));
-  if (!mIPCClosed && mBgParent) {
+  if (!mIPCClosed) {
+    MOZ_ASSERT(mBgParent);
     (void)mBgParent->OnSetClassifierMatchedTrackingInfo(aLists, aFullHashes);
   }
   return NS_OK;
@@ -1748,7 +1744,8 @@ HttpChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
       ("HttpChannelParent::NotifyClassificationFlags "
        "classificationFlags=%" PRIu32 ", thirdparty=%d [this=%p]\n",
        aClassificationFlags, static_cast<int>(aIsThirdParty), this));
-  if (!mIPCClosed && mBgParent) {
+  if (!mIPCClosed) {
+    MOZ_ASSERT(mBgParent);
     (void)mBgParent->OnNotifyClassificationFlags(aClassificationFlags,
                                                  aIsThirdParty);
   }
@@ -1792,10 +1789,7 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   // Register the new channel and obtain id for it
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
       RedirectChannelRegistrar::GetOrCreate();
-  if (!registrar) {
-    // Shutdown is in progress.
-    return NS_ERROR_ABORT;
-  }
+  MOZ_ASSERT(registrar);
 
   mRedirectChannelId = nsContentUtils::GenerateLoadIdentifier();
   rv = registrar->RegisterChannel(newChannel, mRedirectChannelId);
@@ -1903,7 +1897,6 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   mozilla::ipc::LoadInfoToParentLoadInfoForwarder(loadInfo,
                                                   &loadInfoForwarderArg);
 
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   nsHttpResponseHead* responseHead = mChannel->GetResponseHead();
 
   nsHttpResponseHead cleanedUpResponseHead;
@@ -2133,12 +2126,7 @@ HttpChannelParent::OnRedirectResult(nsresult status) {
   if (mRedirectChannelId) {
     nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
         RedirectChannelRegistrar::GetOrCreate();
-    if (!registrar) {
-      // Shutdown is in progress.
-      mRedirectChannelId = 0;
-      CompleteRedirect(NS_ERROR_ABORT);
-      return NS_OK;
-    }
+    MOZ_ASSERT(registrar);
 
     rv = registrar->GetParentChannel(mRedirectChannelId,
                                      getter_AddRefs(redirectChannel));

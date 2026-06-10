@@ -31,6 +31,7 @@ NSS Sample Code Sample1
      to extablish a shared key pair.
    | We will add message protection (encryption and MACing) examples to this program in the future.
 
+.. _sample_code:
 
 `Sample Code <#sample_code>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

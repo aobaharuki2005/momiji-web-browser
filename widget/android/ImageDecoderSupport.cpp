@@ -149,7 +149,8 @@ NS_IMPL_ISUPPORTS(ImageCallbackHelper, imgIContainerCallback,
                                               int32_t aDesiredLength,
                                               jni::Object::Param aResult) {
   auto result = java::GeckoResult::LocalRef(aResult);
-  auto helper = MakeRefPtr<ImageCallbackHelper>(result, aDesiredLength);
+  RefPtr<ImageCallbackHelper> helper =
+      new ImageCallbackHelper(result, aDesiredLength);
 
   nsresult rv = DecodeInternal(aUri->ToString(), helper, helper);
   if (NS_FAILED(rv)) {

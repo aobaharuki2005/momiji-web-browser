@@ -1,12 +1,10 @@
 use std::time::SystemTime;
 
-use http::HeaderValue;
-
 use super::{ETag, LastModified};
-use crate::util::{EntityTag, HttpDate, TryFromValues};
-use crate::Error;
+use util::{EntityTag, HttpDate};
+use HeaderValue;
 
-/// `If-Range` header, defined in [RFC7233](https://datatracker.ietf.org/doc/html/rfc7233#section-3.2)
+/// `If-Range` header, defined in [RFC7233](http://tools.ietf.org/html/rfc7233#section-3.2)
 ///
 /// If a client has a partial copy of a representation and wishes to have
 /// an up-to-date copy of the entire representation, it could use the
@@ -35,6 +33,7 @@ use crate::Error;
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::IfRange;
 /// use std::time::{SystemTime, Duration};
 ///
@@ -80,8 +79,8 @@ enum IfRange_ {
     Date(HttpDate),
 }
 
-impl TryFromValues for IfRange_ {
-    fn try_from_values<'i, I>(values: &mut I) -> Result<Self, Error>
+impl ::util::TryFromValues for IfRange_ {
+    fn try_from_values<'i, I>(values: &mut I) -> Result<Self, ::Error>
     where
         I: Iterator<Item = &'i HeaderValue>,
     {
@@ -95,7 +94,7 @@ impl TryFromValues for IfRange_ {
                 let date = HttpDate::from_val(val)?;
                 Some(IfRange_::Date(date))
             })
-            .ok_or_else(Error::invalid)
+            .ok_or_else(::Error::invalid)
     }
 }
 

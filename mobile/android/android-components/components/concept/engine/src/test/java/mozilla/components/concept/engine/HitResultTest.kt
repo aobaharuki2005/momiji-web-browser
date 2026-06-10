@@ -5,14 +5,14 @@
 package mozilla.components.concept.engine
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.test.assertIs
 
 class HitResultTest {
     @Test
     fun constructor() {
         var result: HitResult = HitResult.UNKNOWN("file://foobar")
-        assertIs<HitResult.UNKNOWN>(result)
+        assertTrue(result is HitResult.UNKNOWN)
         assertEquals(result.src, "file://foobar")
 
         result = HitResult.IMAGE("https://mozilla.org/i.png")

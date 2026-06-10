@@ -1,14 +1,18 @@
+
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ProfileBuffer.h"
+#ifdef MOZ_GECKO_PROFILER
 
-#include "mozilla/PowerOfTwo.h"
-#include "mozilla/ProfileBufferChunkManagerWithLocalLimit.h"
-#include "mozilla/ProfileChunkedBuffer.h"
+#  include "ProfileBuffer.h"
 
-#include "gtest/gtest.h"
+#  include "mozilla/PowerOfTwo.h"
+#  include "mozilla/ProfileBufferChunkManagerWithLocalLimit.h"
+#  include "mozilla/ProfileChunkedBuffer.h"
+
+#  include "gtest/gtest.h"
 
 // Make sure we can record one entry and read it
 TEST(ThreadProfile, InsertOneEntry)
@@ -52,3 +56,5 @@ TEST(ThreadProfile, InsertEntriesNoWrap)
   }
   ASSERT_EQ(test_size, times);
 }
+
+#endif  // MOZ_GECKO_PROFILER

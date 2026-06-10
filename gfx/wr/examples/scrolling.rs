@@ -39,6 +39,7 @@ impl Example for App {
     ) {
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
         builder.push_simple_stacking_context(
+            LayoutPoint::zero(),
             root_space_and_clip.spatial_id,
             PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );
@@ -48,6 +49,7 @@ impl Example for App {
             // let's make a scrollbox
             let scrollbox = (0, 0).to(300, 400);
             builder.push_simple_stacking_context(
+                LayoutPoint::new(10., 10.),
                 root_space_and_clip.spatial_id,
                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
             );
@@ -60,6 +62,7 @@ impl Example for App {
                 LayoutVector2D::zero(),
                 APZScrollGeneration::default(),
                 HasScrollLinkedEffect::No,
+                SpatialTreeItemKey::new(0, 0),
             );
             let space_and_clip1 = SpaceAndClipInfo {
                 spatial_id: space1,
@@ -115,6 +118,7 @@ impl Example for App {
                 LayoutVector2D::zero(),
                 APZScrollGeneration::default(),
                 HasScrollLinkedEffect::No,
+                SpatialTreeItemKey::new(0, 1),
             );
             let space_and_clip2 = SpaceAndClipInfo {
                 spatial_id: space2,
@@ -159,6 +163,7 @@ impl Example for App {
                 StickyOffsetBounds::new(-40.0, 60.0),
                 StickyOffsetBounds::new(0.0, 0.0),
                 LayoutVector2D::new(0.0, 0.0),
+                SpatialTreeItemKey::new(0, 2),
                 None,
             );
 
@@ -213,19 +218,18 @@ impl Example for App {
         let mut txn = Transaction::new();
         match event {
             winit::event::WindowEvent::KeyboardInput {
-                event: winit::event::KeyEvent {
+                input: winit::event::KeyboardInput {
                     state: winit::event::ElementState::Pressed,
-                    ref logical_key,
+                    virtual_keycode: Some(key),
                     ..
                 },
                 ..
             } => {
-                use winit::keyboard::{Key, NamedKey};
-                let offset = match logical_key.as_ref() {
-                    Key::Named(NamedKey::ArrowDown) => Some(LayoutVector2D::new(0.0, -10.0)),
-                    Key::Named(NamedKey::ArrowUp) => Some(LayoutVector2D::new(0.0, 10.0)),
-                    Key::Named(NamedKey::ArrowRight) => Some(LayoutVector2D::new(-10.0, 0.0)),
-                    Key::Named(NamedKey::ArrowLeft) => Some(LayoutVector2D::new(10.0, 0.0)),
+                let offset = match key {
+                    winit::event::VirtualKeyCode::Down => Some(LayoutVector2D::new(0.0, -10.0)),
+                    winit::event::VirtualKeyCode::Up => Some(LayoutVector2D::new(0.0, 10.0)),
+                    winit::event::VirtualKeyCode::Right => Some(LayoutVector2D::new(-10.0, 0.0)),
+                    winit::event::VirtualKeyCode::Left => Some(LayoutVector2D::new(10.0, 0.0)),
                     _ => None,
                 };
 

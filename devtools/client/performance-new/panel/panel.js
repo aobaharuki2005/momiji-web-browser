@@ -11,8 +11,6 @@
  * with wiring this panel into the rest of DevTools and fetching the Actor's fronts.
  */
 
-const EventEmitter = require("resource://devtools/shared/event-emitter.js");
-
 /**
  * @typedef {import("../@types/perf").PanelWindow} PanelWindow
  * @typedef {import("../@types/perf").Toolbox} Toolbox
@@ -20,17 +18,19 @@ const EventEmitter = require("resource://devtools/shared/event-emitter.js");
  * @typedef {import("../@types/perf").Commands} Commands
  */
 
-class PerformancePanel extends EventEmitter {
+class PerformancePanel {
   /**
    * @param {PanelWindow} iframeWindow
    * @param {Toolbox} toolbox
    * @param {Commands} commands
    */
   constructor(iframeWindow, toolbox, commands) {
-    super();
     this.panelWin = iframeWindow;
     this.toolbox = toolbox;
     this.commands = commands;
+
+    const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+    EventEmitter.decorate(this);
   }
 
   /**

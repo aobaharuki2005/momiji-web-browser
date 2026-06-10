@@ -20,7 +20,7 @@ Add the license plugin directly to your **project's** `build.gradle` classpath:
 // root build.gradle
 buildscript {
     dependencies {
-        classpath "com.google.android.gms:oss-licenses-plugin:<version>"
+        classpath "com.google.android.gms:oss-licenses-plugin:0.10.4"
     }
 }
 ```
@@ -37,9 +37,9 @@ Extend the abstract `LibrariesListFragment` and provide the resource location to
 
 ```kotlin
 class MyLicense : LibrariesListFragment() {
-    override val licenseData = LicenseData(
+    override val resources = LicenseResources(
         licenses = R.raw.third_party_licenses,
-        metadata = R.raw.third_party_license_metadata,
+        licenseMetadata = R.raw.third_party_license_metadata,
     )
 }
 ```

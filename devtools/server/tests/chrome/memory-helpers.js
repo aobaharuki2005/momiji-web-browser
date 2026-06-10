@@ -10,13 +10,13 @@ const {
 } = require("resource://devtools/shared/commands/commands-factory.js");
 
 // Always log packets when running tests.
-Services.prefs.setIntPref("logging.devtools_rdp", 5);
+Services.prefs.setBoolPref("devtools.debugger.log", true);
 var gReduceTimePrecision = Services.prefs.getBoolPref(
   "privacy.reduceTimerPrecision"
 );
 Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
 SimpleTest.registerCleanupFunction(function () {
-  Services.prefs.clearUserPref("logging.devtools_rdp");
+  Services.prefs.clearUserPref("devtools.debugger.log");
   Services.prefs.setBoolPref(
     "privacy.reduceTimerPrecision",
     gReduceTimePrecision

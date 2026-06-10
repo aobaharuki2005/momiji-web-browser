@@ -3,10 +3,11 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
- * Additional information: [1](https://docs.rs/icu_provider/2.1.1/icu_provider/struct.DataError.html), [2](https://docs.rs/icu_provider/2.1.1/icu_provider/enum.DataErrorKind.html)
+ * Additional information: [1](https://docs.rs/icu_provider/latest/icu_provider/struct.DataError.html), [2](https://docs.rs/icu_provider/latest/icu_provider/enum.DataErrorKind.html)
  */
+
+
 export class DataError {
     #value = undefined;
 
@@ -51,7 +52,6 @@ export class DataError {
         throw TypeError(value + " is not a DataError and does not correspond to any of its enumerator values.");
     }
 
-    /** @internal */
     static fromValue(value) {
         return new DataError(value);
     }
@@ -60,7 +60,6 @@ export class DataError {
         return [...DataError.#values.keys()][this.#value];
     }
 
-    /** @internal */
     get ffiValue(){
         return this.#value;
     }

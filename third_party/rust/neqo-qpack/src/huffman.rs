@@ -5,9 +5,9 @@
 // except according to those terms.
 
 use crate::{
-    Error, Res,
-    huffman_decode_helper::{HuffmanDecoderNode, huffman_decoder_root},
+    huffman_decode_helper::{huffman_decoder_root, HuffmanDecoderNode},
     huffman_table::HUFFMAN_TABLE,
+    Error, Res,
 };
 
 struct BitReader<'a> {
@@ -163,7 +163,7 @@ pub fn encode(input: &[u8]) -> Vec<u8> {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use super::{Error, decode, encode};
+    use super::{decode, encode, Error};
 
     struct TestElement {
         pub val: &'static [u8],

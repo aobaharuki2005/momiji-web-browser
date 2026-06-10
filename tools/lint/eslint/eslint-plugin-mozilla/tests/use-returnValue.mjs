@@ -23,6 +23,7 @@ function invalidCode(code, methodName) {
         data: {
           property: methodName,
         },
+        type: "ExpressionStatement",
       },
     ],
   };

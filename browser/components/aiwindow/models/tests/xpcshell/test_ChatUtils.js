@@ -13,15 +13,8 @@ const {
   constructRelevantMemoriesContextMessage,
   parseContentWithTokens,
   detectTokens,
-  sanitizeUntrustedContent,
-  expandUrlTokens,
-  replaceUrlsWithTokens,
 } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs"
-);
-
-const { ChatConversation } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/ui/modules/ChatConversation.sys.mjs"
 );
 const { MemoriesManager } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs"
@@ -67,9 +60,9 @@ async function clearAndAddMemories() {
 /**
  * Constants for preference keys and test values
  */
-const PREF_API_KEY = "browser.smartwindow.apiKey";
-const PREF_ENDPOINT = "browser.smartwindow.endpoint";
-const PREF_MODEL = "browser.smartwindow.model";
+const PREF_API_KEY = "browser.aiwindow.apiKey";
+const PREF_ENDPOINT = "browser.aiwindow.endpoint";
+const PREF_MODEL = "browser.aiwindow.model";
 
 const API_KEY = "fake-key";
 const ENDPOINT = "https://api.fake-endpoint.com/v1";
@@ -110,105 +103,155 @@ add_task(function test_getLocalIsoTime_returns_offset_timestamp() {
   }
 });
 
-add_task(async function test_getCurrentTabMetadata_returns_browser_info() {
-  const contextMentions = [
-    {
-      type: "currentTab",
-      url: "https://example.com/article",
-      label: "Example Article",
+add_task(async function test_getCurrentTabMetadata_fetch_fallback() {
+  const sb = sinon.createSandbox();
+  const tracker = { getTopWindow: sb.stub() };
+  const pageData = {
+    getCached: sb.stub(),
+  };
+  const fakeActor = {
+    collectPageData: sb.stub().resolves({
+      description: "Collected description",
+    }),
+  };
+  const fakeBrowser = {
+    currentURI: { spec: "https://example.com/article" },
+    contentTitle: "",
+    documentTitle: "Example Article",
+    browsingContext: {
+      currentWindowGlobal: {
+        getActor: sb.stub().returns(fakeActor),
+      },
     },
-  ];
+  };
 
-  const result = await getCurrentTabMetadata(contextMentions);
+  tracker.getTopWindow.returns({
+    gBrowser: { selectedBrowser: fakeBrowser },
+  });
+  pageData.getCached.returns(null);
 
-  Assert.equal(result.url, "https://example.com/article", "Should return URL");
-  Assert.equal(
-    result.title,
-    sanitizeUntrustedContent("Example Article"),
-    "Should return title from contextMentions label"
-  );
-  Assert.equal(
-    result.description,
-    "",
-    "Description should be empty (not yet implemented)"
-  );
+  try {
+    const result = await getCurrentTabMetadata({
+      BrowserWindowTracker: tracker,
+      PageDataService: pageData,
+    });
+    Assert.deepEqual(result, {
+      url: "https://example.com/article",
+      title: "Example Article",
+      description: "Collected description",
+    });
+    Assert.ok(
+      fakeActor.collectPageData.calledOnce,
+      "Should collect page data from actor when not cached"
+    );
+    Assert.ok(
+      fakeBrowser.browsingContext.currentWindowGlobal.getActor.calledWith(
+        "PageData"
+      ),
+      "Should get PageData actor"
+    );
+  } finally {
+    sb.restore();
+  }
 });
 
 add_task(
-  async function test_getCurrentTabMetadata_returns_empty_when_no_currentTab() {
-    const contextMentions = [
-      { type: "tab", url: "https://other.com", label: "Other" },
-    ];
-
-    const result = await getCurrentTabMetadata(contextMentions);
-
-    Assert.equal(result.url, "", "Should return empty URL");
-    Assert.equal(result.title, "", "Should return empty title");
-    Assert.equal(result.description, "", "Should return empty description");
-  }
-);
-
-add_task(
-  async function test_getCurrentTabMetadata_constructRealTimeInfoInjectionMessage() {
-    const contextMentions = [
-      {
-        type: "currentTab",
-        url: "https://example.com/page",
-        label: "Example Page",
-      },
-    ];
+  async function test_constructRealTimeInfoInjectionMessage_with_tab_info() {
+    const sb = sinon.createSandbox();
+    const tracker = { getTopWindow: sb.stub() };
+    const pageData = {
+      getCached: sb.stub(),
+    };
     const locale = Services.locale.appLocaleAsBCP47;
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const fakeActor = {
+      collectPageData: sb.stub(),
+    };
+    const fakeBrowser = {
+      currentURI: { spec: "https://mozilla.org" },
+      contentTitle: "Mozilla",
+      documentTitle: "Mozilla",
+      browsingContext: {
+        currentWindowGlobal: {
+          getActor: sb.stub().returns(fakeActor),
+        },
+      },
+    };
 
-    const mapping =
-      await constructRealTimeInfoInjectionMessage(contextMentions);
+    tracker.getTopWindow.returns({
+      gBrowser: { selectedBrowser: fakeBrowser },
+    });
+    pageData.getCached.returns({
+      description: "Internet for people",
+    });
+    const clock = sb.useFakeTimers({ now: Date.UTC(2025, 11, 27, 14, 0, 0) });
 
-    Assert.equal(mapping.url, "https://example.com/page", "Should include URL");
-    Assert.equal(
-      mapping.title,
-      sanitizeUntrustedContent("Example Page"),
-      "Should include title"
-    );
-    Assert.equal(mapping.description, "", "Should include description");
-
-    Assert.equal(mapping.locale, locale, "Should include locale");
-    Assert.equal(mapping.timezone, timezone, "Should include timezone");
-    Assert.ok(
-      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(mapping.isoTimestamp),
-      `Should have valid ISO timestamp format (YYYY-MM-DDTHH:MM:SS), got: ${mapping.isoTimestamp}`
-    );
-    Assert.ok(
-      /^\d{4}-\d{2}-\d{2}$/.test(mapping.todayDate),
-      `Should have valid date format (YYYY-MM-DD), got: ${mapping.todayDate}`
-    );
-    Assert.equal(
-      mapping.hasTabInfo,
-      true,
-      "Should indicate tab info is present"
-    );
+    try {
+      const message = await constructRealTimeInfoInjectionMessage({
+        BrowserWindowTracker: tracker,
+        PageDataService: pageData,
+      });
+      Assert.equal(message.role, "system", "Should return system role");
+      Assert.ok(
+        message.content.includes(`Locale: ${locale}`),
+        "Should include locale"
+      );
+      Assert.ok(
+        message.content.includes("Current active browser tab details:"),
+        "Should include tab details heading"
+      );
+      Assert.ok(
+        message.content.includes("- URL: https://mozilla.org"),
+        "Should include tab URL"
+      );
+      Assert.ok(
+        message.content.includes("- Title: Mozilla"),
+        "Should include tab title"
+      );
+      Assert.ok(
+        message.content.includes("- Description: Internet for people"),
+        "Should include tab description"
+      );
+      Assert.ok(
+        fakeActor.collectPageData.notCalled,
+        "Should not collect page data when cached data exists"
+      );
+    } finally {
+      clock.restore();
+      sb.restore();
+    }
   }
 );
 
 add_task(
   async function test_constructRealTimeInfoInjectionMessage_without_tab_info() {
     const sb = sinon.createSandbox();
+    const tracker = { getTopWindow: sb.stub() };
+    const pageData = {
+      getCached: sb.stub(),
+      fetchPageData: sb.stub(),
+    };
+    const locale = Services.locale.appLocaleAsBCP47;
+
+    tracker.getTopWindow.returns(null);
     const clock = sb.useFakeTimers({ now: Date.UTC(2025, 11, 27, 14, 0, 0) });
 
     try {
-      const mapping = await constructRealTimeInfoInjectionMessage([]);
-
-      Assert.equal(mapping.url, "", "Should not have URL");
-      Assert.equal(mapping.title, "", "Should not have title");
-      Assert.equal(mapping.description, "", "Should not have description");
-      Assert.equal(
-        mapping.hasTabInfo,
-        false,
-        "Should indicate no tab info present"
+      const message = await constructRealTimeInfoInjectionMessage({
+        BrowserWindowTracker: tracker,
+        PageDataService: pageData,
+      });
+      Assert.ok(
+        message.content.includes("No active browser tab."),
+        "Should mention missing tab info"
       );
-      Assert.ok(mapping.locale, "Should still include locale");
-      Assert.ok(mapping.timezone, "Should still include timezone");
-      Assert.ok(mapping.isoTimestamp, "Should still include timestamp");
-      Assert.ok(mapping.todayDate, "Should still include date");
+      Assert.ok(
+        !message.content.includes("- URL:"),
+        "Should not include empty tab fields"
+      );
+      Assert.ok(
+        message.content.includes(`Locale: ${locale}`),
+        "Should include system locale"
+      );
     } finally {
       clock.restore();
       sb.restore();
@@ -218,28 +261,28 @@ add_task(
 
 add_task(async function test_constructRelevantMemoriesContextMessage() {
   await clearAndAddMemories();
-  MemoriesManager._clearEmbeddingsCache();
 
   const sb = sinon.createSandbox();
   try {
-    // Mock getRelevantMemories to return coffee memory
-    const stub = sb.stub(MemoriesManager, "getRelevantMemories").resolves([
-      {
-        id: "food_drink.16ec1838",
-        memory_summary: "Loves drinking coffee",
-        category: "Food & Drink",
-        intent: "Plan / Organize",
-        score: 3,
-        similarity: 0.95,
+    const fakeEngine = {
+      run() {
+        return {
+          finalOutput: `{
+            "categories": ["Food & Drink"],
+            "intents": ["Plan / Organize"]
+          }`,
+        };
       },
-    ]);
+    };
+
+    // Stub the `ensureOpenAIEngine` method in MemoriesManager
+    const stub = sb
+      .stub(MemoriesManager, "ensureOpenAIEngine")
+      .returns(fakeEngine);
 
     const relevantMemoriesContextMessage =
-      await constructRelevantMemoriesContextMessage(
-        "I love drinking coffee",
-        {}
-      );
-    Assert.ok(stub.calledOnce, "getRelevantMemories should be called once");
+      await constructRelevantMemoriesContextMessage("I love drinking coffee");
+    Assert.ok(stub.calledOnce, "ensureOpenAIEngine should be called once");
 
     // Check relevantMemoriesContextMessage's top level structure
     Assert.strictEqual(
@@ -260,12 +303,25 @@ add_task(async function test_constructRelevantMemoriesContextMessage() {
       "Should have role 'system'"
     );
     Assert.ok(
-      relevantMemoriesContextMessage.content.includes("# Existing Memories"),
-      "Should include prompt template text"
+      typeof relevantMemoriesContextMessage.content === "string" &&
+        relevantMemoriesContextMessage.content.length,
+      "Content should be a non-empty string"
+    );
+
+    const content = relevantMemoriesContextMessage.content;
+    Assert.ok(
+      content.includes(
+        "Use them to personalized your response using the following guidelines:"
+      ),
+      "Relevant memories context prompt should pull from the correct base"
     );
     Assert.ok(
-      relevantMemoriesContextMessage.content.includes("Loves drinking coffee"),
-      "Should include memory content about coffee"
+      content.includes("- Loves drinking coffee"),
+      "Content should include relevant memory"
+    );
+    Assert.ok(
+      !content.includes("- Buys dog food online"),
+      "Content should not include non-relevant memory"
     );
   } finally {
     sb.restore();
@@ -275,19 +331,28 @@ add_task(async function test_constructRelevantMemoriesContextMessage() {
 add_task(
   async function test_constructRelevantMemoriesContextMessage_no_relevant_memories() {
     await clearAndAddMemories();
-    MemoriesManager._clearEmbeddingsCache();
 
     const sb = sinon.createSandbox();
     try {
-      // Mock getRelevantMemories to return empty array (no matches)
-      const stub = sb.stub(MemoriesManager, "getRelevantMemories").resolves([]);
+      const fakeEngine = {
+        run() {
+          return {
+            finalOutput: `{
+            "categories": ["Health & Fitness"],
+            "intents": ["Plan / Organize"]
+          }`,
+          };
+        },
+      };
+
+      // Stub the `ensureOpenAIEngine` method in MemoriesManager
+      const stub = sb
+        .stub(MemoriesManager, "ensureOpenAIEngine")
+        .returns(fakeEngine);
 
       const relevantMemoriesContextMessage =
-        await constructRelevantMemoriesContextMessage(
-          "I love drinking coffee",
-          {}
-        );
-      Assert.ok(stub.calledOnce, "getRelevantMemories should be called once");
+        await constructRelevantMemoriesContextMessage("I love drinking coffee");
+      Assert.ok(stub.calledOnce, "ensureOpenAIEngine should be called once");
 
       // No relevant memories, so returned value should be null
       Assert.equal(
@@ -335,7 +400,7 @@ add_task(async function test_parseContentWithTokens_single_search_token() {
 
 add_task(async function test_parseContentWithTokens_single_memory_token() {
   const content =
-    "I recommend trying herbal tea blends.§existing_memory: food_drink.e45w65§";
+    "I recommend trying herbal tea blends.§existing_memory: likes tea§";
   const result = await parseContentWithTokens(content);
 
   Assert.equal(
@@ -347,14 +412,14 @@ add_task(async function test_parseContentWithTokens_single_memory_token() {
   Assert.equal(result.usedMemories.length, 1, "Should have one used memory");
   Assert.equal(
     result.usedMemories[0],
-    "food_drink.e45w65",
+    "likes tea",
     "Should extract correct memory"
   );
 });
 
 add_task(async function test_parseContentWithTokens_multiple_mixed_tokens() {
   const content =
-    "I recommend checking out organic coffee options.§existing_memory: food_drink.e45w65§ They have great flavor profiles.§search: organic coffee beans reviews§§search: best organic cafes nearby§";
+    "I recommend checking out organic coffee options.§existing_memory: prefers organic§ They have great flavor profiles.§search: organic coffee beans reviews§§search: best organic cafes nearby§";
   const result = await parseContentWithTokens(content);
 
   Assert.equal(
@@ -375,7 +440,7 @@ add_task(async function test_parseContentWithTokens_multiple_mixed_tokens() {
   Assert.equal(result.usedMemories.length, 1, "Should have one used memory");
   Assert.equal(
     result.usedMemories[0],
-    "food_drink.e45w65",
+    "prefers organic",
     "Should extract correct memory"
   );
 });
@@ -400,7 +465,7 @@ add_task(async function test_parseContentWithTokens_tokens_with_whitespace() {
 
 add_task(async function test_parseContentWithTokens_adjacent_tokens() {
   const content =
-    "Here are some great Italian dining options.§existing_memory: food_drink.e45w65§§search: local italian restaurants§";
+    "Here are some great Italian dining options.§existing_memory: prefers italian food§§search: local italian restaurants§";
   const result = await parseContentWithTokens(content);
 
   Assert.equal(
@@ -417,7 +482,7 @@ add_task(async function test_parseContentWithTokens_adjacent_tokens() {
   Assert.equal(result.usedMemories.length, 1, "Should have one memory");
   Assert.equal(
     result.usedMemories[0],
-    "food_drink.e45w65",
+    "prefers italian food",
     "Should extract memory"
   );
 });
@@ -470,181 +535,5 @@ add_task(function test_detectTokens_custom_key() {
   Assert.ok(
     !result[0].hasOwnProperty("query"),
     "Result should not have default 'query' property"
-  );
-});
-
-// expandUrlTokens tests
-
-add_task(function test_expandUrlTokens_bare_token() {
-  const mapping = new Map([["GITHUB_COM_1", "https://github.com/foo"]]);
-  const result = expandUrlTokens(
-    "Check out §url_token: GITHUB_COM_1§ for details.",
-    mapping
-  );
-  Assert.equal(
-    result,
-    "Check out https://github.com/foo for details.",
-    "Bare token should be replaced with full URL"
-  );
-});
-
-add_task(function test_expandUrlTokens_bracketed_id_in_href_resolved() {
-  const mapping = new Map([["GITHUB_COM_1", "https://github.com/foo"]]);
-  const result = expandUrlTokens(
-    "[Click here](§url_token: GITHUB_COM_1§)",
-    mapping
-  );
-  Assert.equal(
-    result,
-    "[Click here](https://github.com/foo)",
-    "Bracketed ID in href should be expanded to full URL"
-  );
-});
-
-add_task(function test_expandUrlTokens_same_domain() {
-  const mapping = new Map([
-    ["GITHUB_COM_1", "https://github.com/foo"],
-    ["GITHUB_COM_2", "https://github.com/foo/bar"],
-  ]);
-  const result = expandUrlTokens(
-    "[Click here](§url_token: GITHUB_COM_2§)",
-    mapping
-  );
-  Assert.equal(
-    result,
-    "[Click here](https://github.com/foo/bar)",
-    "Bracketed ID in href should be expanded to longer URL"
-  );
-});
-
-add_task(function test_expandUrlTokens_no_space() {
-  const mapping = new Map([["GITHUB_COM_1", "https://github.com/foo"]]);
-  const result = expandUrlTokens(
-    "[Click here](§url_token:GITHUB_COM_1§)",
-    mapping
-  );
-  Assert.equal(
-    result,
-    "[Click here](https://github.com/foo)",
-    "Should handle missing space after token type and still expand to correct URL"
-  );
-});
-
-add_task(function test_expandUrlTokens_no_mapping() {
-  const mapping = new Map();
-  const result = expandUrlTokens(
-    "[Click here](§url_token: GITHUB_COM_2§)",
-    mapping
-  );
-  Assert.equal(
-    result,
-    "[Click here](§url_token: GITHUB_COM_2§)",
-    "ID should remain unchanged if not in mapping"
-  );
-});
-
-add_task(function test_expandUrlTokens_lowercase() {
-  const mapping = new Map([["github_com_1", "https://github.com/foo"]]);
-  const result = expandUrlTokens(
-    "[Click here](§url_token: github_com_1§)",
-    mapping
-  );
-  Assert.equal(
-    result,
-    "[Click here](§url_token: github_com_1§)",
-    "Shouldn't match lowercase ID"
-  );
-});
-
-add_task(function test_expandUrlTokens_no_digits() {
-  const mapping = new Map([["GITHUB_COM", "https://github.com/foo"]]);
-  const result = expandUrlTokens(
-    "[Click here](§url_token: GITHUB_COM§)",
-    mapping
-  );
-  Assert.equal(
-    result,
-    "[Click here](§url_token: GITHUB_COM§)",
-    "Shouldn't match tags missing digits"
-  );
-});
-
-add_task(function test_expandUrlTokens_special_characters() {
-  const mapping = new Map([["GITHUB_COM$_1", "https://github.com/foo"]]);
-  const result = expandUrlTokens(
-    "[Click here](§url_token: GITHUB_COM$_1§)",
-    mapping
-  );
-  Assert.equal(
-    result,
-    "[Click here](§url_token: GITHUB_COM$_1§)",
-    "Shouldn't match tags with special characters"
-  );
-});
-
-add_task(function test_expandUrlTokens_missing_separator() {
-  const mapping = new Map([["GITHUB_COM_1", "https://github.com/foo"]]);
-  const result = expandUrlTokens(
-    "[Click here](url_token: GITHUB_COM_1)",
-    mapping
-  );
-  Assert.equal(
-    result,
-    "[Click here](url_token: GITHUB_COM_1)",
-    "Shouldn't match missing § separators"
-  );
-});
-
-add_task(function test_expandUrlTokens_wrong_tag_name() {
-  const mapping = new Map([["GITHUB_COM_1", "https://github.com/foo"]]);
-  const result = expandUrlTokens("[Click here](§url: GITHUB_COM_1§)", mapping);
-  Assert.equal(
-    result,
-    "[Click here](§url: GITHUB_COM_1§)",
-    "Shouldn't match wrong tag name"
-  );
-});
-
-add_task(function test_replaceUrlsWithTokens_serp_content_format() {
-  const conversation = new ChatConversation({});
-
-  const serpUrl = "https://www.google.com/search?q=example";
-  const inlineUrl = "https://github.com/mozilla/gecko-dev";
-  replaceUrlsWithTokens(conversation, [
-    {
-      role: "tool",
-      content: `Search results from <${serpUrl}>:\n\nSee ${inlineUrl} for the source.`,
-    },
-  ]);
-
-  Assert.ok(
-    conversation.urlToToken.has(serpUrl),
-    "URL in angle-bracket header from #extractSerpContent should be extracted without trailing >"
-  );
-  Assert.ok(
-    conversation.urlToToken.has(inlineUrl),
-    "URL in SERP content body should also be extracted"
-  );
-});
-
-add_task(function test_replaceUrlsWithTokens_runExtraction_content_format() {
-  const conversation = new ChatConversation({});
-
-  const pageUrl = "http://example.com/some/page";
-  const inlineUrl = "https://mozilla.org/en-US/firefox";
-  replaceUrlsWithTokens(conversation, [
-    {
-      role: "tool",
-      content: `Content from <${pageUrl}>:\n\nVisit ${inlineUrl} for more info.`,
-    },
-  ]);
-
-  Assert.ok(
-    conversation.urlToToken.has(pageUrl),
-    "URL in angle-bracket header from #runExtraction should be extracted without trailing >"
-  );
-  Assert.ok(
-    conversation.urlToToken.has(inlineUrl),
-    "URL in extracted page content body should also be extracted"
   );
 });

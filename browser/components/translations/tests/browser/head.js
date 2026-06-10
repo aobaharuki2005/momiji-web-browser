@@ -49,8 +49,6 @@ function median(numbers) {
  * Opens a new tab in the foreground.
  *
  * @param {string} url
- * @param {string} message
- * @param {Window} [win=window]
  */
 async function addTab(url, message, win = window) {
   logAction(url);
@@ -74,8 +72,6 @@ async function addTab(url, message, win = window) {
      * @returns {Promise<void>}
      */
     runInPage(callback, data = {}) {
-      // TODO: Switch to SpecialPowers.spawn
-      // eslint-disable-next-line mozilla/reject-contenttask-spawn
       return ContentTask.spawn(
         tab.linkedBrowser,
         { contentData: data, callbackSource: callback.toString() }, // Data to inject.
@@ -136,25 +132,9 @@ function focusElementAndSynthesizeKey(element, key) {
  * @param {Window} win
  */
 async function focusWindow(win) {
-  await SimpleTest.promiseFocus(win);
-}
-
-/**
- * Opens a new browser window and returns it as the currently focused window.
- *
- * @returns {Promise<Window>}
- */
-async function openNewFocusedBrowserWindow() {
-  // Avoid BrowserTestUtils.openNewBrowserWindow() here because it has been flaky
-  // and has caused timeouts in multi-window translations tests in CI, particularly
-  // when address sanitizer (asan) is enabled.
-  const win = OpenBrowserWindow();
-
-  await win.delayedStartupPromise;
-  await BrowserTestUtils.firstBrowserLoaded(win);
-  await SimpleTest.promiseFocus(win);
-
-  return win;
+  const windowFocusPromise = BrowserTestUtils.waitForEvent(win, "focus");
+  win.focus();
+  await windowFocusPromise;
 }
 
 /**
@@ -1522,12 +1502,8 @@ class FullPageTranslationsTestUtils {
    */
   static async waitForAllPendingTranslationsToComplete(runInPage) {
     await runInPage(async ({ waitForCondition }) => {
-      let translationsChild;
-      try {
-        translationsChild = content.windowGlobalChild.getActor("Translations");
-      } catch {
-        return;
-      }
+      const translationsChild =
+        content.windowGlobalChild.getActor("Translations");
 
       while (
         translationsChild.translatedDoc?.hasPendingTranslationRequests() ||
@@ -1557,12 +1533,8 @@ class FullPageTranslationsTestUtils {
    */
   static async assertNoElementsAreObservedForContentIntersection(runInPage) {
     await runInPage(async ({ waitForCondition }) => {
-      let translationsChild;
-      try {
-        translationsChild = content.windowGlobalChild.getActor("Translations");
-      } catch {
-        return;
-      }
+      const translationsChild =
+        content.windowGlobalChild.getActor("Translations");
 
       await waitForCondition(
         () =>
@@ -1581,12 +1553,8 @@ class FullPageTranslationsTestUtils {
    */
   static async assertNoElementsAreObservedForAttributeIntersection(runInPage) {
     await runInPage(async ({ waitForCondition }) => {
-      let translationsChild;
-      try {
-        translationsChild = content.windowGlobalChild.getActor("Translations");
-      } catch {
-        return;
-      }
+      const translationsChild =
+        content.windowGlobalChild.getActor("Translations");
 
       await waitForCondition(
         () =>
@@ -2700,108 +2668,6 @@ class FullPageTranslationsTestUtils {
   }
 
   /**
-   * Opens the app menu and asserts the translate button visibility.
-   *
-   * @param {object} options
-   * @param {boolean} options.visible
-   * @param {string} message
-   */
-  static async assertAppMenuTranslateItemVisibility({ visible }, message) {
-    if (message) {
-      info(message);
-    }
-
-    if (window.PanelUI.panel.state !== "closed") {
-      const panelHidden = BrowserTestUtils.waitForEvent(
-        window.PanelUI.panel,
-        "popuphidden"
-      );
-      window.PanelUI.hide();
-      await panelHidden;
-    }
-
-    const panelShown = BrowserTestUtils.waitForEvent(
-      window.PanelUI.panel,
-      "popupshown"
-    );
-    window.PanelUI.show();
-    await panelShown;
-
-    const translateSiteButton = maybeGetById("appMenu-translate-button", false);
-    ok(
-      visible
-        ? BrowserTestUtils.isVisible(translateSiteButton)
-        : BrowserTestUtils.isHidden(translateSiteButton),
-      `The app-menu translate button should be ${
-        visible ? "visible" : "hidden"
-      }.`
-    );
-
-    const panelHidden = BrowserTestUtils.waitForEvent(
-      window.PanelUI.panel,
-      "popuphidden"
-    );
-    window.PanelUI.hide();
-    await panelHidden;
-  }
-
-  /**
-   * Opens the More Tools menu and asserts the translate menu item visibility.
-   *
-   * @param {object} options
-   * @param {boolean} options.visible
-   * @param {string} message
-   */
-  static async assertMoreToolsTranslateItemVisibility({ visible }, message) {
-    if (message) {
-      info(message);
-    }
-
-    if (window.PanelUI.panel.state !== "closed") {
-      const panelHidden = BrowserTestUtils.waitForEvent(
-        window.PanelUI.panel,
-        "popuphidden"
-      );
-      window.PanelUI.hide();
-      await panelHidden;
-    }
-
-    const panelShown = BrowserTestUtils.waitForEvent(
-      window.PanelUI.panel,
-      "popupshown"
-    );
-    window.PanelUI.show();
-    await panelShown;
-
-    const moreToolsShown = BrowserTestUtils.waitForEvent(
-      window.PanelMultiView.getViewNode(document, "appmenu-moreTools"),
-      "ViewShown"
-    );
-    getById("appMenu-more-button2").click();
-    await moreToolsShown;
-
-    const aboutTranslationsButton = window.PanelMultiView.getViewNode(
-      document,
-      "appmenu-abouttranslations-button"
-    );
-    ok(
-      visible
-        ? BrowserTestUtils.isVisible(aboutTranslationsButton)
-        : BrowserTestUtils.isHidden(aboutTranslationsButton),
-      `The more-tools translate menu item should be ${
-        visible ? "visible" : "hidden"
-      }.`
-    );
-
-    const panelHidden = BrowserTestUtils.waitForEvent(
-      window.PanelUI.panel,
-      "popuphidden"
-    );
-    window.PanelUI.hide();
-    await panelHidden;
-  }
-
-  /**
    * Opens the translations panel via the translations button.
    *
    * @param {object} config
@@ -2887,10 +2753,6 @@ class FullPageTranslationsTestUtils {
     await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       () => {
-        if (menuPopup.isNativeMenu) {
-          menuPopup.activateItem(menuItem);
-          return;
-        }
         click(menuItem);
         // Synthesizing a click on the menuitem isn't closing the popup
         // as a click normally would, so this tab keypress is added to
@@ -3467,7 +3329,7 @@ class SelectTranslationsTestUtils {
     );
     SharedTranslationsTestUtils._assertL10nId(
       unsupportedLanguageMessageBar,
-      "select-translations-panel-unsupported-language-message-known-2"
+      "select-translations-panel-unsupported-language-message-known"
     );
     SharedTranslationsTestUtils._assertHasFocus(tryAnotherSourceMenuList);
     SharedTranslationsTestUtils._assertTabIndexOrder([
@@ -4211,10 +4073,6 @@ class SelectTranslationsTestUtils {
       await SelectTranslationsTestUtils.waitForPanelPopupEvent(
         "popuphidden",
         () => {
-          if (menuPopup.isNativeMenu) {
-            menuPopup.activateItem(menuItem);
-            return;
-          }
           click(menuItem);
           // Synthesizing a click on the menuitem isn't closing the popup
           // as a click normally would, so this tab keypress is added to

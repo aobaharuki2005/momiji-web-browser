@@ -169,6 +169,12 @@ class BaseBootstrapper:
         to the user, if necessary.
         """
 
+    def suggest_install_pip3(self):
+        """Called if pip3 can't be found."""
+        print(
+            "Try installing pip3 with your system's package manager.", file=sys.stderr
+        )
+
     def install_system_packages(self):
         """
         Install packages shared by all applications. These are usually
@@ -679,43 +685,3 @@ class BaseBootstrapper:
             except OSError as e:
                 if e.errno != errno.ENOENT:
                     raise
-
-    CARGO_TOOLS = (
-        "searchfox-cli",
-        "socorro-cli",
-        "stmo-cli",
-        "treeherder-cli",
-        "webspec-index",
-    )
-
-    def cargo_tools_installed(self):
-        """Return True if all cargo developer tools are already installed."""
-        _, cargo_bin = self.cargo_home()
-        extra = [str(cargo_bin)]
-        return all(which(tool, extra_search_dirs=extra) for tool in self.CARGO_TOOLS)
-
-    def ensure_cargo_tools(self):
-        """Install cargo-binstall and required developer tools."""
-        cargo_home, cargo_bin = self.cargo_home()
-        extra = [str(cargo_bin)]
-
-        cargo = to_optional_path(which("cargo", extra_search_dirs=extra))
-        if not cargo:
-            print(
-                "cargo is required to install agentic coding tools but was not found. "
-                "Please install Rust from https://rustup.rs/ and re-run bootstrap."
-            )
-            return
-
-        binstall = cargo_bin / ("cargo-binstall" + rust.exe_suffix())
-        if not binstall.exists():
-            print("Installing cargo-binstall...")
-            subprocess.check_call([str(cargo), "install", "cargo-binstall"])
-
-        print("Installing cargo tools: {}...".format(", ".join(self.CARGO_TOOLS)))
-        subprocess.check_call([
-            str(cargo),
-            "binstall",
-            "--no-confirm",
-            *self.CARGO_TOOLS,
-        ])

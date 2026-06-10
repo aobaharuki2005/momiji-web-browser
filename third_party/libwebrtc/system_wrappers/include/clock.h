@@ -14,7 +14,6 @@
 #include <atomic>
 #include <cstdint>
 
-#include "absl/base/nullability.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "rtc_base/numerics/divide_round.h"
@@ -67,10 +66,7 @@ class RTC_EXPORT Clock {
   }
 
   // Returns an instance of the real-time system clock implementation.
-  // (MOZ): We have renamed this from GetRealTimeClock in order to detect new
-  // uses of this API within libwebrtc, so we can determine whether we
-  // can/should inject our own clock.
-  static Clock* absl_nonnull GetRealTimeClockOnlyUseForRelativeTime();
+  static Clock* GetRealTimeClockRaw();
 };
 
 class SimulatedClock : public Clock {

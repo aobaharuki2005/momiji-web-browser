@@ -73,31 +73,6 @@ const std::vector<uint8_t> kInvalidLengthKey = {
     0x00  // OCTET STRING(len=0)
 };
 
-// Ed25519 PKCS#8 PrivateKeyInfo with non-empty algorithm parameters.
-// RFC 8410 section 3 says parameters MUST be absent for Ed25519, so NSS rejects
-// this at the parameters-length check in PK11_ImportPrivateKeyInfoAndReturnKey.
-//
-//   SEQUENCE {
-//     INTEGER 0
-//     SEQUENCE {
-//       OBJECT IDENTIFIER 1.3.101.112 (Ed25519)
-//       NULL                            <-- params.len != 0, triggers rejection
-//     }
-//     OCTET STRING { OCTET STRING { 32 zero bytes } }
-//   }
-const std::vector<uint8_t> kEd25519WithNonEmptyAlgorithmParams = {
-    0x30, 0x30,                    // SEQUENCE(48)
-    0x02, 0x01, 0x00,              // INTEGER(0) -- version
-    0x30, 0x07,                    // SEQUENCE(7) -- AlgorithmIdentifier
-    0x06, 0x03, 0x2b, 0x65, 0x70,  // OID 1.3.101.112 (Ed25519)
-    0x05, 0x00,  // NULL -- parameters must be absent per RFC 8410
-    0x04, 0x22,  // OCTET STRING(34) -- privateKey
-    0x04, 0x20,  // OCTET STRING(32) -- CurvePrivateKey
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-
 const std::vector<uint8_t> kInvalidZeroLengthKey = {
     0x30, 0x1a,        // SEQUENCE(len=26)
     0x02, 0x01, 0x00,  // INT(len=1) = 0
@@ -163,59 +138,6 @@ class DERPrivateKeyImportTest : public ::testing::Test {
 
     return rv == SECSuccess;
   }
-
-  SECStatus BuildPrivateKeyInfoAndImportIt(SECOidTag algTag) {
-    ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
-    EXPECT_TRUE(slot);
-    if (!slot) {
-      return SECFailure;
-    }
-
-    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
-    EXPECT_TRUE(arena);
-    if (!arena) {
-      return SECFailure;
-    }
-
-    SECKEYPrivateKeyInfo* pki = (SECKEYPrivateKeyInfo*)PORT_ArenaZAlloc(
-        arena.get(), sizeof(SECKEYPrivateKeyInfo));
-    EXPECT_TRUE(pki);
-    if (!pki) {
-      return SECFailure;
-    }
-
-    pki->version.data = (unsigned char*)PORT_ArenaAlloc(arena.get(), 1);
-    EXPECT_TRUE(pki->version.data);
-    if (!pki->version.data) {
-      return SECFailure;
-    }
-
-    pki->version.data[0] = 0x00;
-    pki->version.len = 1;
-
-    EXPECT_EQ(
-        SECOID_SetAlgorithmID(arena.get(), &pki->algorithm, algTag, nullptr),
-        SECSuccess);
-
-    // Empty private key
-    pki->privateKey.data = (unsigned char*)PORT_ArenaAlloc(arena.get(), 1);
-    EXPECT_TRUE(pki->privateKey.data);
-    if (!pki->privateKey.data) {
-      return SECFailure;
-    }
-    pki->privateKey.len = 0;
-
-    SECKEYPrivateKey* privk = nullptr;
-    PORT_SetError(0);
-    SECStatus rv = PK11_ImportPrivateKeyInfoAndReturnKey(
-        slot.get(), pki, nullptr, nullptr, PR_FALSE, PR_FALSE, KU_ALL, &privk,
-        nullptr);
-
-    if (privk) {
-      SECKEY_DestroyPrivateKey(privk);
-    }
-    return rv;
-  }
 };
 
 TEST_F(DERPrivateKeyImportTest, ImportPrivateRSAKey) {
@@ -236,16 +158,6 @@ TEST_F(DERPrivateKeyImportTest, ImportInvalidPrivateKey) {
 TEST_F(DERPrivateKeyImportTest, ImportZeroLengthPrivateKey) {
   EXPECT_FALSE(ParsePrivateKey(kInvalidZeroLengthKey, false));
   EXPECT_EQ(PORT_GetError(), SEC_ERROR_BAD_KEY) << PORT_GetError();
-}
-
-TEST_F(DERPrivateKeyImportTest, ImportZeroLengthMLDSAPrivateKey) {
-  EXPECT_EQ(BuildPrivateKeyInfoAndImportIt(SEC_OID_ML_DSA_44), SECFailure);
-  EXPECT_EQ(PORT_GetError(), SEC_ERROR_BAD_KEY);
-}
-
-TEST_F(DERPrivateKeyImportTest, ImportEd25519WithNonEmptyAlgorithmParams) {
-  EXPECT_FALSE(ParsePrivateKey(kEd25519WithNonEmptyAlgorithmParams, false));
-  EXPECT_EQ(PORT_GetError(), SEC_ERROR_UNSUPPORTED_KEYALG);
 }
 
 }  // namespace nss_test

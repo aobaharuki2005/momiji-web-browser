@@ -40,7 +40,7 @@ add_task(async function test_open_sidebar_and_customize() {
         () => tree.view.result.root.containerOpen,
         "View root node should be reopened"
       );
-      await toggleFolder(tree, gInsertedBookmarks[1].guid);
+      toggleFolder(tree, gInsertedBookmarks[1].guid);
     }
 
     await checkTreeIsFunctional();
@@ -80,19 +80,19 @@ function promiseCustomizeEnd(win = window) {
   });
 }
 
-async function toggleFolder(tree, guid) {
+function toggleFolder(tree, guid) {
   tree.selectItems([guid]);
   Assert.equal(tree.selectedNode.title, "folder");
   Assert.ok(
     !PlacesUtils.asContainer(tree.selectedNode).containerOpen,
     "Folder is closed"
   );
-  await synthesizeClickOnSelectedTreeCell(tree);
+  synthesizeClickOnSelectedTreeCell(tree);
   Assert.ok(
     PlacesUtils.asContainer(tree.selectedNode).containerOpen,
     "Folder is open"
   );
-  await synthesizeClickOnSelectedTreeCell(tree);
+  synthesizeClickOnSelectedTreeCell(tree);
   Assert.ok(
     !PlacesUtils.asContainer(tree.selectedNode).containerOpen,
     "Folder is closed"

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -206,12 +207,11 @@ bool CookieStorage::FindCookie(const nsACString& aBaseDomain,
   }
 
   const CookieEntry::ArrayType& cookies = entry->GetCookies();
-  uint32_t targetHash = Cookie::ComputeKeyHash(aName, aHost, aPath);
   for (CookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
     Cookie* cookie = cookies[i];
 
-    if (cookie->KeyHash() == targetHash && aHost.Equals(cookie->Host()) &&
-        aPath.Equals(cookie->Path()) && aName.Equals(cookie->Name())) {
+    if (aHost.Equals(cookie->Host()) && aPath.Equals(cookie->Path()) &&
+        aName.Equals(cookie->Name())) {
       aIter = CookieListIter(entry, i);
       return true;
     }
@@ -262,27 +262,6 @@ uint32_t CookieStorage::CountCookiesFromHost(const nsACString& aBaseDomain,
   // Return a count of all cookies, including expired.
   CookieEntry* entry = mHostTable.GetEntry(CookieKey(aBaseDomain, attrs));
   return entry ? entry->GetCookies().Length() : 0;
-}
-
-bool CookieStorage::HasCookiesForSite(const nsACString& aBaseDomain,
-                                      const OriginAttributesPattern& aPattern) {
-  for (auto iter = mHostTable.Iter(); !iter.Done(); iter.Next()) {
-    CookieEntry* entry = iter.Get();
-
-    if (!aBaseDomain.Equals(entry->mBaseDomain)) {
-      continue;
-    }
-
-    if (!aPattern.Matches(entry->mOriginAttributes)) {
-      continue;
-    }
-
-    if (!entry->GetCookies().IsEmpty()) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 uint32_t CookieStorage::CountCookieBytesNotMatchingCookie(
@@ -631,7 +610,6 @@ void CookieStorage::RemoveOlderCookiesByBytes(CookieEntry* aEntry,
                                               uint32_t removeBytes,
                                               nsCOMPtr<nsIArray>& aPurgedList) {
   MOZ_ASSERT(aEntry);
-  CookieKey key(aEntry->mBaseDomain, aEntry->mOriginAttributes);
 
   // remove insecure older cookies until we are within the byte limit
   // (CHIPS cookies will not be detected here since they must be secure)
@@ -640,16 +618,11 @@ void CookieStorage::RemoveOlderCookiesByBytes(CookieEntry* aEntry,
 
   // remove secure cookies if we still have cookies to remove
   if (bytesRemoved <= removeBytes) {
-    // Re-lookup: aEntry may have been freed if pass 1 emptied it.
-    CookieEntry* entry = mHostTable.GetEntry(key);
-    if (!entry) {
-      return;
-    }
     // remove secure older cookies until we are within the byte limit
     MOZ_LOG(gCookieLog, LogLevel::Debug,
             ("Still too many cookies for partition, purging secure\n"));
     uint32_t bytesStillToRemove = removeBytes - bytesRemoved;
-    RemoveOldestCookies(entry, true, bytesStillToRemove, aPurgedList);
+    RemoveOldestCookies(aEntry, true, bytesStillToRemove, aPurgedList);
   }
 }
 
@@ -921,9 +894,7 @@ void CookieStorage::AddCookie(CookieParser* aCookieParser,
         purgedList = PurgeCookies(aCurrentTimeInUsec, mMaxNumberOfCookies,
                                   mCookiePurgeAge);
         uint32_t purgedLength = 0;
-        if (purgedList) {
-          purgedList->GetLength(&purgedLength);
-        }
+        purgedList->GetLength(&purgedLength);
         mozilla::glean::networking::cookie_purge_max.AccumulateSingleSample(
             purgedLength);
       }

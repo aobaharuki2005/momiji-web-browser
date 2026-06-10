@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -78,7 +80,7 @@ already_AddRefed<dom::SVGPathSegment> SVGPathData::GetPathSegmentAtLength(
   for (const auto& cmd : aPath) {
     SVGPathSegUtils::TraversePathSegment(cmd, state);
     if (state.length >= aDistance) {
-      return MakeAndAddRef<dom::SVGPathSegment>(aPathElement, cmd);
+      return do_AddRef(new dom::SVGPathSegment(aPathElement, cmd));
     }
   }
   return nullptr;
@@ -426,11 +428,11 @@ ComputeSegAnglesAndCorrectRadii(const Point& aSegStart, const Point& aSegEnd,
                                 const float aAngle, const bool aLargeArcFlag,
                                 const bool aSweepFlag, const float aRx,
                                 const float aRy) {
-  float rx = std::abs(aRx);  // F.6.6.1
-  float ry = std::abs(aRy);
+  float rx = fabs(aRx);  // F.6.6.1
+  float ry = fabs(aRy);
 
   // F.6.5.1:
-  const float angle = static_cast<float>(aAngle * kRadPerDegree);
+  const float angle = static_cast<float>(aAngle * M_PI / 180.0);
   double x1p = cos(angle) * (aSegStart.x - aSegEnd.x) / 2.0 +
                sin(angle) * (aSegStart.y - aSegEnd.y) / 2.0;
   double y1p = -sin(angle) * (aSegStart.x - aSegEnd.x) / 2.0 +
@@ -696,7 +698,7 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
     // pretended earlier.
     aMarks->AppendElement(SVGMark(static_cast<float>(segEnd.x),
                                   static_cast<float>(segEnd.y), 0.0f,
-                                  SVGMark::Type::Mid));
+                                  SVGMark::eMid));
 
     if (cmd.IsClose() && !(prevSeg && prevSeg->IsClose())) {
       aMarks->LastElement().angle = aMarks->ElementAt(pathStartIndex).angle =
@@ -712,8 +714,8 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
     if (!(prevSeg && prevSeg->IsClose())) {
       aMarks->LastElement().angle = prevSegEndAngle;
     }
-    aMarks->LastElement().type = SVGMark::Type::End;
-    aMarks->ElementAt(0).type = SVGMark::Type::Start;
+    aMarks->LastElement().type = SVGMark::eEnd;
+    aMarks->ElementAt(0).type = SVGMark::eStart;
   }
 }
 

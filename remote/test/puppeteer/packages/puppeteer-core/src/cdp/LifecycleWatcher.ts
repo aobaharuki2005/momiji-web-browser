@@ -77,7 +77,6 @@ export class LifecycleWatcher {
   #sameDocumentNavigationDeferred = Deferred.create<undefined>();
   #lifecycleDeferred = Deferred.create<void>();
   #newDocumentNavigationDeferred = Deferred.create<undefined>();
-  #error = new Error('LifecycleWatcher terminated');
 
   #hasSameDocumentNavigation?: boolean;
   #swapped?: boolean;
@@ -100,13 +99,10 @@ export class LifecycleWatcher {
     this.#expectedLifecycle = waitUntil.map(value => {
       const protocolEvent = puppeteerToProtocolLifecycle.get(value);
       assert(protocolEvent, 'Unknown value for options.waitUntil: ' + value);
-      return protocolEvent;
+      return protocolEvent as ProtocolLifeCycleEvent;
     });
 
     signal?.addEventListener('abort', () => {
-      if (signal.reason instanceof Error) {
-        signal.reason.cause = this.#error;
-      }
       this.#terminationDeferred.reject(signal.reason);
     });
 
@@ -188,8 +184,9 @@ export class LifecycleWatcher {
 
   #onFrameDetached(frame: Frame): void {
     if (this.#frame === frame) {
-      this.#error.message = 'Navigating frame was detached';
-      this.#terminationDeferred.resolve(this.#error);
+      this.#terminationDeferred.resolve(
+        new Error('Navigating frame was detached'),
+      );
       return;
     }
     this.#checkLifecycleComplete();
@@ -270,7 +267,6 @@ export class LifecycleWatcher {
 
   dispose(): void {
     this.#subscriptions.dispose();
-    this.#error.cause = new Error('LifecycleWatcher disposed');
-    this.#terminationDeferred.resolve(this.#error);
+    this.#terminationDeferred.resolve(new Error('LifecycleWatcher disposed'));
   }
 }

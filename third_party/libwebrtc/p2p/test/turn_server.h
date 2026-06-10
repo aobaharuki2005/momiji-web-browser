@@ -16,17 +16,16 @@
 #include <list>
 #include <map>
 #include <memory>
-#include <span>
 #include <string>
 #include <utility>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/environment/environment.h"
 #include "api/packet_socket_factory.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
-#include "api/transport/ecn_marking.h"
 #include "api/transport/stun.h"
 #include "api/units/time_delta.h"
 #include "p2p/base/port_interface.h"
@@ -34,11 +33,11 @@
 #include "rtc_base/byte_buffer.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/memory/less_unique_ptr.h"
-#include "rtc_base/net_helper.h"
 #include "rtc_base/network/received_packet.h"
 #include "rtc_base/socket.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_adapter.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
@@ -96,8 +95,8 @@ class TurnServerAllocation final {
 
   std::string ToString() const;
 
-  void HandleTurnMessage(const TurnMessage* msg, EcnMarking ecn);
-  void HandleChannelData(std::span<const uint8_t> payload, EcnMarking ecn);
+  void HandleTurnMessage(const TurnMessage* msg);
+  void HandleChannelData(ArrayView<const uint8_t> payload);
 
  private:
   struct Channel {
@@ -116,7 +115,7 @@ class TurnServerAllocation final {
 
   void HandleAllocateRequest(const TurnMessage* msg);
   void HandleRefreshRequest(const TurnMessage* msg);
-  void HandleSendIndication(const TurnMessage* msg, EcnMarking ecn);
+  void HandleSendIndication(const TurnMessage* msg);
   void HandleCreatePermissionRequest(const TurnMessage* msg);
   void HandleChannelBindRequest(const TurnMessage* msg);
 
@@ -135,10 +134,7 @@ class TurnServerAllocation final {
   void SendErrorResponse(const TurnMessage* req,
                          int code,
                          absl::string_view reason);
-  void SendExternal(const void* data,
-                    size_t size,
-                    const SocketAddress& peer,
-                    EcnMarking ecn);
+  void SendExternal(const void* data, size_t size, const SocketAddress& peer);
 
   TurnServer* const server_;
   TaskQueueBase* const thread_;
@@ -176,7 +172,7 @@ class TurnRedirectInterface {
 class StunMessageObserver {
  public:
   virtual void ReceivedMessage(const TurnMessage* msg) = 0;
-  virtual void ReceivedChannelData(std::span<const uint8_t> payload) = 0;
+  virtual void ReceivedChannelData(ArrayView<const uint8_t> payload) = 0;
   virtual ~StunMessageObserver() {}
 };
 
@@ -184,13 +180,13 @@ class StunMessageObserver {
 // AddInternalServerSocket, and a factory to create external sockets via
 // SetExternalSocketFactory, and it's ready to go.
 // Not yet wired up: TCP support.
-class TurnServer {
+class TurnServer : public sigslot::has_slots<> {
  public:
   typedef std::map<TurnServerConnection, std::unique_ptr<TurnServerAllocation>>
       AllocationMap;
 
   TurnServer(const Environment& env, TaskQueueBase* thread);
-  virtual ~TurnServer();
+  ~TurnServer() override;
 
   // Gets/sets the realm value to use for the server.
   const std::string& realm() const {
@@ -290,14 +286,12 @@ class TurnServer {
   void OnInternalSocketClose(AsyncPacketSocket* socket, int err);
 
   void HandleStunMessage(TurnServerConnection* conn,
-                         std::span<const uint8_t> payload,
-                         EcnMarking ecn) RTC_RUN_ON(thread_);
+                         ArrayView<const uint8_t> payload) RTC_RUN_ON(thread_);
   void HandleBindingRequest(TurnServerConnection* conn, const StunMessage* msg)
       RTC_RUN_ON(thread_);
   void HandleAllocateRequest(TurnServerConnection* conn,
                              const TurnMessage* msg,
-                             absl::string_view key,
-                             EcnMarking ecn) RTC_RUN_ON(thread_);
+                             absl::string_view key) RTC_RUN_ON(thread_);
 
   bool GetKey(const StunMessage* msg, std::string* key) RTC_RUN_ON(thread_);
   bool CheckAuthorization(TurnServerConnection* conn,
@@ -328,10 +322,8 @@ class TurnServer {
                                             const SocketAddress& addr)
       RTC_RUN_ON(thread_);
 
-  void SendStun(TurnServerConnection* conn, StunMessage* msg, EcnMarking ecn);
-  void Send(TurnServerConnection* conn,
-            const ByteBufferWriter& buf,
-            EcnMarking ecn);
+  void SendStun(TurnServerConnection* conn, StunMessage* msg);
+  void Send(TurnServerConnection* conn, const ByteBufferWriter& buf);
 
   void DestroyAllocation(TurnServerAllocation* allocation) RTC_RUN_ON(thread_);
   void DestroyInternalSocket(ServerSocketMap::iterator iter)

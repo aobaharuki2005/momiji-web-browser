@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -25,8 +26,8 @@ interface HTMLTextAreaElement : HTMLElement {
            attribute DOMString dirName;
   [CEReactions, SetterThrows, Pure]
            attribute boolean disabled;
-  [Pure, BinaryName=formForBindings]
-  readonly attribute Element? form;
+  [Pure]
+  readonly attribute HTMLFormElement? form;
            // attribute DOMString inputMode;
   [CEReactions, SetterThrows, Pure]
            attribute long maxLength;
@@ -61,7 +62,6 @@ interface HTMLTextAreaElement : HTMLElement {
   boolean reportValidity();
   undefined setCustomValidity(DOMString error);
 
-  [BinaryName=labelsForBindings]
   readonly attribute NodeList labels;
 
   undefined select();

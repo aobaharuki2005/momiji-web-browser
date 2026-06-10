@@ -14,7 +14,7 @@ from .base import get_free_port
 from .base import get_timeout_multiplier   # noqa: F401
 from .base import cmd_arg
 from ..executors import executor_kwargs as base_executor_kwargs
-from ..executors.base import PytestExecutor  # noqa: F401
+from ..executors.base import WdspecExecutor  # noqa: F401
 from ..executors.executorchrome import (  # noqa: F401
     ChromeDriverPrintRefTestExecutor,
     ChromeDriverRefTestExecutor,
@@ -32,10 +32,8 @@ __wptrunner__ = {"product": "chrome",
                  "executor": {"testharness": "ChromeDriverTestharnessExecutor",
                               "reftest": "ChromeDriverRefTestExecutor",
                               "print-reftest": "ChromeDriverPrintRefTestExecutor",
-                              "wdspec": "PytestExecutor",
-                              "aamtest": "PytestExecutor",
-                              "crashtest": "ChromeDriverCrashTestExecutor",
-                              "test262": "ChromeDriverTestharnessExecutor"},
+                              "wdspec": "WdspecExecutor",
+                              "crashtest": "ChromeDriverCrashTestExecutor"},
                  "browser_kwargs": "browser_kwargs",
                  "executor_kwargs": "executor_kwargs",
                  "env_extras": "env_extras",
@@ -51,18 +49,10 @@ def check_args(**kwargs):
 
 
 def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
-    browser_kwargs = {
-        "binary": kwargs["binary"],
-        "webdriver_binary": kwargs["webdriver_binary"],
-        "webdriver_args": kwargs.get("webdriver_args"),
-        "leak_check": kwargs.get("leak_check", False),
-    }
-
-    if test_type == "aamtest":
-        # Necessary to force chrome to register in AT-SPI2.
-        browser_kwargs["env"] = {"ACCESSIBILITY_ENABLED": "1"}
-    return browser_kwargs
-
+    return {"binary": kwargs["binary"],
+            "webdriver_binary": kwargs["webdriver_binary"],
+            "webdriver_args": kwargs.get("webdriver_args"),
+            "leak_check": kwargs.get("leak_check", False)}
 
 
 def executor_kwargs(logger, test_type, test_environment, run_info_data, subsuite,
@@ -158,14 +148,6 @@ def executor_kwargs(logger, test_type, test_environment, run_info_data, subsuite
     # This is needed to test extensions, PWA, compilation caches that
     # require local CDP access.
     chrome_options["args"].append("--remote-debugging-pipe")
-    # For Device Bound Session Credentials tests, which are only eligible on
-    # Windows, Mac, and Linux.
-    if run_info_data.get("os") in ["win", "mac", "linux"]:
-        chrome_options["args"].append("--enable-features=" + ",".join([
-            "EnableBoundSessionCredentialsSoftwareKeysForManualTesting",
-            "DeviceBoundSessions:RefreshQuota/false/RequireOriginTrialTokens/false",
-            "DeviceBoundSessionsFederatedRegistration",
-        ]))
 
     # Classify `http-local`, `http-public` and https variants in the
     # appropriate IP address spaces.
@@ -234,11 +216,6 @@ def executor_kwargs(logger, test_type, test_environment, run_info_data, subsuite
     if test_type == "wdspec":
         executor_kwargs["binary_args"] = chrome_options["args"]
 
-    if test_type == "aamtest":
-        if "--force-renderer-accessibility" not in chrome_options["args"]:
-            chrome_options["args"].append("--force-renderer-accessibility")
-            executor_kwargs["binary_args"] = chrome_options["args"]
-
     executor_kwargs["capabilities"] = capabilities
 
     return executor_kwargs
@@ -273,10 +250,11 @@ class ChromeBrowser(WebDriverBrowser):
         self._require_webdriver_bidi: Optional[bool] = None
 
     def restart_on_test_type_change(self, new_test_type: str, old_test_type: str) -> bool:
-        # Restart the test runner when switch from/to wdspec or aamtest tests.
-        # These tests use a different protocol class so a restart is always needed.
-        wdspec_types = {"wdspec", "aamtest"}
-        return old_test_type in wdspec_types or new_test_type in wdspec_types
+        # Restart the test runner when switch from/to wdspec tests. Wdspec test
+        # is using a different protocol class so a restart is always needed.
+        if "wdspec" in [old_test_type, new_test_type]:
+            return True
+        return False
 
     def create_output_handler(self, cmd: List[str]) -> OutputHandler:
         return ChromeDriverOutputHandler(

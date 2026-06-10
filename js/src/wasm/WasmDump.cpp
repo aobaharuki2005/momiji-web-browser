@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -461,14 +463,6 @@ void wasm::DumpRefType(RefType type, GenericPrinter& out,
       case RefType::Exn:
         literal = "exnref";
         break;
-#ifdef ENABLE_WASM_JSPI
-      case RefType::Cont:
-        literal = "contref";
-        break;
-      case RefType::NoCont:
-        literal = "nullcontref";
-        break;
-#endif  // ENABLE_WASM_JSPI
       case RefType::TypeRef: {
         MOZ_CRASH("type ref should not be possible here");
       }
@@ -528,14 +522,6 @@ void wasm::DumpHeapType(RefType type, GenericPrinter& out,
     case RefType::Exn:
       out.put("exn");
       return;
-#ifdef ENABLE_WASM_JSPI
-    case RefType::Cont:
-      out.put("cont");
-      return;
-    case RefType::NoCont:
-      out.put("nocont");
-      return;
-#endif
     case RefType::TypeRef: {
       DumpTypeDefIndex(type.typeDef(), out, types);
       return;
@@ -620,20 +606,6 @@ void wasm::DumpArrayType(const ArrayType& arrayType, StructuredPrinter& out,
   out.printf(")");
 }
 
-#ifdef ENABLE_WASM_JSPI
-void wasm::DumpContType(const ContType& contType, const TypeContext* types) {
-  Fprinter fileOut(stdout);
-  StructuredPrinter out(fileOut);
-  wasm::DumpContType(contType, out, types);
-  out.printf("\n");
-}
-
-void wasm::DumpContType(const ContType& contType, StructuredPrinter& out,
-                        const TypeContext* types) {
-  out.printf("(cont %u)", types->indexOf(contType.funcTypeDef()));
-}
-#endif  // ENABLE_WASM_JSPI
-
 void wasm::DumpTypeDef(const TypeDef& typeDef, int32_t index,
                        const TypeContext* types) {
   Fprinter fileOut(stdout);
@@ -681,11 +653,6 @@ void wasm::DumpTypeDef(const TypeDef& typeDef, StructuredPrinter& out,
     case TypeDefKind::Array:
       DumpArrayType(typeDef.arrayType(), out, types);
       break;
-#ifdef ENABLE_WASM_JSPI
-    case TypeDefKind::Cont:
-      DumpContType(typeDef.contType(), out, types);
-      break;
-#endif
     case TypeDefKind::None:
       out.printf("(; TypeDefKind::None ;)\n");
       break;
@@ -752,7 +719,7 @@ void wasm::DumpTableDesc(const TableDesc& tableDesc,
   if (tableDesc.maximumLength().isSome()) {
     out.printf("%" PRIu64 " ", tableDesc.maximumLength().value());
   }
-  DumpRefType(tableDesc.elemType(), out, codeMeta.types);
+  DumpRefType(tableDesc.elemType, out, codeMeta.types);
   if (includeInitExpr && tableDesc.initExpr) {
     StructuredPrinter::Scope _(out);
     DumpInitExpr(tableDesc.initExpr.ref(), codeMeta, out);

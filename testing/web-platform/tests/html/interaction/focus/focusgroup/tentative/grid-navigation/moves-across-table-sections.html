@@ -2,13 +2,12 @@
 <meta charset="utf-8">
 <title>HTML Test: focusgroup - Table with one or less row per section (head, 2 bodies and foot).</title>
 <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
-<link rel="help" href="https://open-ui.org/components/scoped-focusgroup.explainer/">
+<link rel="help" href="https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/main/Focusgroup/explainer.md">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/resources/testdriver.js"></script>
 <script src="/resources/testdriver-vendor.js"></script>
 <script src="/resources/testdriver-actions.js"></script>
-<script src="/shadow-dom/focus-navigation/resources/focus-utils.js"></script>
 <script src="../resources/focusgroup-utils.js"></script>
 
 <table focusgroup="grid wrap">
@@ -42,43 +41,57 @@
 <script>
 
   promise_test(async t => {
-    await focusAndSendDirectionalInput(r1c1, kDown);
+    var r1c1 = document.getElementById("r1c1");
+    var r1c2 = document.getElementById("r2c1");
+    var r3c2 = document.getElementById("r3c1");
+    var r4c2 = document.getElementById("r4c1");
+    var r5c2 = document.getElementById("r5c1");
+    var r6c2 = document.getElementById("r6c1");
+
+    await focusAndKeyPress(r1c1, kArrowDown);
     assert_equals(document.activeElement, r2c1);
 
-    await focusAndSendDirectionalInput(r2c1, kDown);
+    await focusAndKeyPress(r2c1, kArrowDown);
     assert_equals(document.activeElement, r3c1);
 
-    await focusAndSendDirectionalInput(r3c1, kDown);
+    await focusAndKeyPress(r3c1, kArrowDown);
     assert_equals(document.activeElement, r4c1);
 
-    await focusAndSendDirectionalInput(r4c1, kDown);
+    await focusAndKeyPress(r4c1, kArrowDown);
     assert_equals(document.activeElement, r5c1);
 
-    await focusAndSendDirectionalInput(r5c1, kDown);
+    await focusAndKeyPress(r5c1, kArrowDown);
     assert_equals(document.activeElement, r6c1);
 
-    await focusAndSendDirectionalInput(r6c1, kDown);
+    await focusAndKeyPress(r6c1, kArrowDown);
     assert_equals(document.activeElement, r1c1);
-  }, "Navigating down should move the focus to the next row even when that row is in another section.");
+  }, "A down arrow press should move the focus to the next row even when that row is in another section.");
 
   promise_test(async t => {
-    await focusAndSendDirectionalInput(r6c1, kUp);
+    var r1c1 = document.getElementById("r1c1");
+    var r1c2 = document.getElementById("r2c1");
+    var r3c2 = document.getElementById("r3c1");
+    var r4c2 = document.getElementById("r4c1");
+    var r5c2 = document.getElementById("r5c1");
+    var r6c2 = document.getElementById("r6c1");
+
+    await focusAndKeyPress(r6c1, kArrowUp);
     assert_equals(document.activeElement, r5c1);
 
-    await focusAndSendDirectionalInput(r5c1, kUp);
+    await focusAndKeyPress(r5c1, kArrowUp);
     assert_equals(document.activeElement, r4c1);
 
-    await focusAndSendDirectionalInput(r4c1, kUp);
+    await focusAndKeyPress(r4c1, kArrowUp);
     assert_equals(document.activeElement, r3c1);
 
-    await focusAndSendDirectionalInput(r3c1, kUp);
+    await focusAndKeyPress(r3c1, kArrowUp);
     assert_equals(document.activeElement, r2c1);
 
-    await focusAndSendDirectionalInput(r2c1, kUp);
+    await focusAndKeyPress(r2c1, kArrowUp);
     assert_equals(document.activeElement, r1c1);
 
-    await focusAndSendDirectionalInput(r1c1, kUp);
+    await focusAndKeyPress(r1c1, kArrowUp);
     assert_equals(document.activeElement, r6c1);
-  }, "Navigating up should move the focus to the previous row even when that row is in another section.");
+  }, "An up arrow press should move the focus to the previous row even when that row is in another section.");
 
 </script>

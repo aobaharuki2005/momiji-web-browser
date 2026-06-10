@@ -8,9 +8,7 @@
 use alloc::{boxed::Box, vec};
 use core::ops;
 
-use super::{
-    ExpressionError, FunctionError, ImmediateSlots, ModuleInfo, ShaderStages, ValidationFlags,
-};
+use super::{ExpressionError, FunctionError, ModuleInfo, ShaderStages, ValidationFlags};
 use crate::diagnostic_filter::{DiagnosticFilterNode, StandardFilterableTriggeringRule};
 use crate::span::{AddSpan as _, WithSpan};
 use crate::{
@@ -241,6 +239,7 @@ struct Sampling {
 #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub struct FunctionInfo {
     /// Validation flags.
+    #[allow(dead_code)]
     flags: ValidationFlags,
     /// Set of shader stages where calling this function is valid.
     pub available_stages: ShaderStages,
@@ -271,7 +270,7 @@ pub struct FunctionInfo {
     /// `FunctionInfo` implements `core::ops::Index<Handle<GlobalVariable>>`,
     /// so you can simply index this struct with a global handle to retrieve
     /// its usage information.
-    pub global_uses: Box<[GlobalUse]>,
+    global_uses: Box<[GlobalUse]>,
 
     /// Information about each expression in this function's body.
     ///
@@ -304,10 +303,6 @@ pub struct FunctionInfo {
     /// See [`DiagnosticFilterNode`] for details on how the tree is represented and used in
     /// validation.
     diagnostic_filter_leaf: Option<Handle<DiagnosticFilterNode>>,
-
-    /// A bitmask, tracking which 4-byte slots this function (possibly transitively) reads.
-    /// Used to determine the minimum set of slots that must be written via `set_immediates`.
-    pub immediate_slots_used: ImmediateSlots,
 }
 
 impl FunctionInfo {
@@ -499,11 +494,10 @@ impl FunctionInfo {
             }
         }
 
-        // Inherit global use and immediate slot tracking from our callees.
+        // Inherit global use from our callees.
         for (mine, other) in self.global_uses.iter_mut().zip(callee.global_uses.iter()) {
             *mine |= *other;
         }
-        self.immediate_slots_used |= callee.immediate_slots_used;
 
         Ok(FunctionUniformity {
             result: callee.uniformity.clone(),
@@ -660,7 +654,7 @@ impl FunctionInfo {
                 let var = &resolve_context.global_vars[gh];
                 let uniform = match var.space {
                     // local data is non-uniform
-                    As::Function | As::Private | As::RayPayload | As::IncomingRayPayload => false,
+                    As::Function | As::Private => false,
                     // workgroup memory is exclusively accessed by the group
                     // task payload memory is very similar to workgroup memory
                     As::WorkGroup | As::TaskPayload => true,
@@ -679,25 +673,10 @@ impl FunctionInfo {
                 non_uniform_result: Some(handle),
                 requirements: UniformityRequirements::empty(),
             },
-            E::Load { pointer } => {
-                let non_uniform_result = self.add_ref(pointer);
-                // Track which immediate slots this load touches.
-                if let Some(global) = self.expressions[pointer.index()].assignable_global {
-                    if resolve_context.global_vars[global].space == crate::AddressSpace::Immediate {
-                        self.immediate_slots_used |= ImmediateSlots::for_pointer(
-                            pointer,
-                            global,
-                            expression_arena,
-                            resolve_context.global_vars,
-                            resolve_context.types,
-                        );
-                    }
-                }
-                Uniformity {
-                    non_uniform_result,
-                    requirements: UniformityRequirements::empty(),
-                }
-            }
+            E::Load { pointer } => Uniformity {
+                non_uniform_result: self.add_ref(pointer),
+                requirements: UniformityRequirements::empty(),
+            },
             E::ImageSample {
                 image,
                 sampler,
@@ -1212,20 +1191,6 @@ impl FunctionInfo {
                     },
                     exit: ExitFlags::empty(),
                 },
-                S::RayPipelineFunction(ref fun) => {
-                    match *fun {
-                        crate::RayPipelineFunction::TraceRay {
-                            acceleration_structure,
-                            descriptor,
-                            payload,
-                        } => {
-                            let _ = self.add_ref(acceleration_structure);
-                            let _ = self.add_ref(descriptor);
-                            let _ = self.add_ref(payload);
-                        }
-                    }
-                    FunctionUniformity::new()
-                }
             };
 
             disruptor = disruptor.or(uniformity.exit_disruptor());
@@ -1268,7 +1233,6 @@ impl ModuleInfo {
             sampling: crate::FastHashSet::default(),
             dual_source_blending: false,
             diagnostic_filter_leaf: fun.diagnostic_filter_leaf,
-            immediate_slots_used: ImmediateSlots::default(),
         };
         let resolve_context =
             ResolveContext::with_locals(module, &fun.local_variables, &fun.arguments);
@@ -1346,7 +1310,6 @@ fn uniform_control_flow() {
             ty,
             space: crate::AddressSpace::Handle,
             binding: None,
-            memory_decorations: crate::MemoryDecorations::empty(),
         },
         Default::default(),
     );
@@ -1357,7 +1320,6 @@ fn uniform_control_flow() {
             ty,
             binding: None,
             space: crate::AddressSpace::Uniform,
-            memory_decorations: crate::MemoryDecorations::empty(),
         },
         Default::default(),
     );
@@ -1404,7 +1366,6 @@ fn uniform_control_flow() {
         sampling: crate::FastHashSet::default(),
         dual_source_blending: false,
         diagnostic_filter_leaf: None,
-        immediate_slots_used: ImmediateSlots::default(),
     };
     let resolve_context = ResolveContext {
         constants: &Arena::new(),

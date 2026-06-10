@@ -1,3 +1,5 @@
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -55,28 +57,18 @@ var ZoomManager = {
     }
   },
 
-  enlargeForBrowser: function ZoomManager_enlargeForBrowser(aBrowser) {
-    var i =
-      this.zoomValues.indexOf(this.snap(this.getZoomForBrowser(aBrowser))) + 1;
-    if (i < this.zoomValues.length) {
-      this.setZoomForBrowser(aBrowser, this.zoomValues[i]);
-    }
-  },
-
-  reduceForBrowser: function ZoomManager_reduceForBrowser(aBrowser) {
-    var i =
-      this.zoomValues.indexOf(this.snap(this.getZoomForBrowser(aBrowser))) - 1;
-    if (i >= 0) {
-      this.setZoomForBrowser(aBrowser, this.zoomValues[i]);
-    }
-  },
-
   enlarge: function ZoomManager_enlarge() {
-    this.enlargeForBrowser(gBrowser);
+    var i = this.zoomValues.indexOf(this.snap(this.zoom)) + 1;
+    if (i < this.zoomValues.length) {
+      this.zoom = this.zoomValues[i];
+    }
   },
 
   reduce: function ZoomManager_reduce() {
-    this.reduceForBrowser(gBrowser);
+    var i = this.zoomValues.indexOf(this.snap(this.zoom)) - 1;
+    if (i >= 0) {
+      this.zoom = this.zoomValues[i];
+    }
   },
 
   reset: function ZoomManager_reset() {

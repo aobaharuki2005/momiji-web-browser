@@ -57,13 +57,6 @@ interface TermsOfUsePromptRepository {
      * Increments the number of times the Terms of Use prompt has been displayed by 1.
      */
     fun incrementTermsOfUsePromptDisplayedCount()
-
-    /**
-     * A boolean to track if we are currently showing the terms of use bottom sheet prompt.
-     * This is used when determining if we can show the prompt. We don't want to recreate
-     * it if it is already showing.
-     */
-    var isShowingPrompt: Boolean
 }
 
 /**
@@ -74,14 +67,8 @@ interface TermsOfUsePromptRepository {
 class DefaultTermsOfUsePromptRepository(
     private val settings: Settings,
 ) : TermsOfUsePromptRepository {
-
-    override var isShowingPrompt = false
-
     override fun canShowTermsOfUsePrompt(): Boolean =
-        !settings.hasAcceptedTermsOfService &&
-                settings.isTermsOfUsePromptEnabled &&
-                !hasExceededMaxDisplayCount() &&
-                !isShowingPrompt
+        !settings.hasAcceptedTermsOfService && settings.isTermsOfUsePromptEnabled && !hasExceededMaxDisplayCount()
 
     override fun userPostponedAndWithinCooldownPeriod(currentTimeMillis: Long): Boolean {
         val durationSinceLastPrompt = currentTimeMillis - settings.lastTermsOfUsePromptTimeInMillis
@@ -94,8 +81,8 @@ class DefaultTermsOfUsePromptRepository(
         return settings.hasPostponedAcceptingTermsOfUse && (durationSinceLastPrompt < durationBetweenPrompts)
     }
 
-    private fun hasExceededMaxDisplayCount(): Boolean =
-        settings.termsOfUsePromptDisplayedCount >= settings.getTermsOfUseMaxDisplayCount()
+    private fun hasExceededMaxDisplayCount() =
+        settings.termsOfUsePromptDisplayedCount > settings.getTermsOfUseMaxDisplayCount()
 
     override fun updateHasAcceptedTermsOfUsePreference(nowMillis: Long) {
         settings.hasAcceptedTermsOfService = true

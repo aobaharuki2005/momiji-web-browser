@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,18 +42,6 @@ already_AddRefed<NavigationHistoryEntry> NavigationActivation::GetFrom() const {
 // https://html.spec.whatwg.org/#dom-navigationactivation-entry
 already_AddRefed<NavigationHistoryEntry> NavigationActivation::Entry() const {
   return do_AddRef(mNewEntry);
-}
-
-void NavigationActivation::SetNewEntry(NavigationHistoryEntry* aEntry) {
-  mNewEntry = aEntry;
-}
-
-void NavigationActivation::SetOldEntry(NavigationHistoryEntry* aEntry) {
-  mOldEntry = aEntry;
-}
-
-void NavigationActivation::SetNavigationType(enum NavigationType aType) {
-  mType = aType;
 }
 
 }  // namespace mozilla::dom

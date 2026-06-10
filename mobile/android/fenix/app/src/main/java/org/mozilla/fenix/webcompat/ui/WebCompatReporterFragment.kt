@@ -19,7 +19,6 @@ import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.helpers.StoreProvider.Companion.storeProvider
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.openToBrowser
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -33,7 +32,7 @@ import org.mozilla.fenix.webcompat.store.WebCompatReporterStore
 /**
  * [Fragment] for displaying the WebCompat Reporter.
  */
-class WebCompatReporterFragment : Fragment(), SystemInsetsPaddedFragment {
+class WebCompatReporterFragment : Fragment() {
 
     private val args by navArgs<WebCompatReporterFragmentArgs>()
 

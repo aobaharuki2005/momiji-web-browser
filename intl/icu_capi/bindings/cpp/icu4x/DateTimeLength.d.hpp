@@ -1,5 +1,5 @@
-#ifndef ICU4X_DateTimeLength_D_HPP
-#define ICU4X_DateTimeLength_D_HPP
+#ifndef icu4x_DateTimeLength_D_HPP
+#define icu4x_DateTimeLength_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -9,7 +9,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 
 namespace icu4x {
@@ -26,29 +26,28 @@ namespace capi {
 
 namespace icu4x {
 /**
- * See the [Rust documentation for `Length`](https://docs.rs/icu/2.1.1/icu/datetime/options/enum.Length.html) for more information.
+ * See the [Rust documentation for `Length`](https://docs.rs/icu/latest/icu/datetime/options/enum.Length.html) for more information.
  */
 class DateTimeLength {
 public:
-    enum Value {
-        Long = 0,
-        Medium = 1,
-        Short = 2,
-    };
+  enum Value {
+    Long = 0,
+    Medium = 1,
+    Short = 2,
+  };
 
-    DateTimeLength(): value(Value::Medium) {}
+  DateTimeLength() = default;
+  // Implicit conversions between enum and ::Value
+  constexpr DateTimeLength(Value v) : value(v) {}
+  constexpr operator Value() const { return value; }
+  // Prevent usage as boolean value
+  explicit operator bool() const = delete;
 
-    // Implicit conversions between enum and ::Value
-    constexpr DateTimeLength(Value v) : value(v) {}
-    constexpr operator Value() const { return value; }
-    // Prevent usage as boolean value
-    explicit operator bool() const = delete;
-
-    inline icu4x::capi::DateTimeLength AsFFI() const;
-    inline static icu4x::DateTimeLength FromFFI(icu4x::capi::DateTimeLength c_enum);
+  inline icu4x::capi::DateTimeLength AsFFI() const;
+  inline static icu4x::DateTimeLength FromFFI(icu4x::capi::DateTimeLength c_enum);
 private:
     Value value;
 };
 
 } // namespace
-#endif // ICU4X_DateTimeLength_D_HPP
+#endif // icu4x_DateTimeLength_D_HPP

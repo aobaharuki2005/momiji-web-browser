@@ -9,7 +9,10 @@ const {
   gDevTools,
 } = require("resource://devtools/client/framework/devtools.js");
 
-const l10n = new Localization(["devtools/client/toolbox-options.ftl"], true);
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/toolbox.properties"
+);
 
 loader.lazyRequireGetter(
   this,
@@ -259,9 +262,9 @@ class OptionsPanel extends EventEmitter {
         checkboxSpanLabel.textContent = tool.label;
       } else {
         atleastOneToolNotSupported = true;
-        checkboxSpanLabel.textContent = l10n.formatValueSync(
-          "options-tool-not-supported-marker",
-          { toolLabel: tool.label }
+        checkboxSpanLabel.textContent = L10N.getFormatStr(
+          "options.toolNotSupportedMarker",
+          tool.label
         );
         checkboxInput.setAttribute("data-unsupported", "true");
         checkboxInput.setAttribute("disabled", "true");
@@ -286,9 +289,7 @@ class OptionsPanel extends EventEmitter {
       if (tool.deprecated) {
         const deprecationURL = this.panelDoc.createElement("a");
         deprecationURL.title = deprecationURL.href = tool.deprecationURL;
-        deprecationURL.textContent = l10n.formatValueSync(
-          "options-deprecation-notice"
-        );
+        deprecationURL.textContent = L10N.getStr("options.deprecationNotice");
         // Cannot use a real link when we are in the Browser Toolbox.
         deprecationURL.addEventListener("click", e => {
           e.preventDefault();
@@ -407,7 +408,7 @@ class OptionsPanel extends EventEmitter {
     themeBox.appendChild(
       createThemeOption({
         id: "auto",
-        label: l10n.formatValueSync("options-auto-theme-label"),
+        label: L10N.getStr("options.autoTheme.label"),
       })
     );
 
@@ -553,23 +554,6 @@ class OptionsPanel extends EventEmitter {
     } else {
       // Hide the checkbox and label
       this.disableJSNode.parentNode.style.display = "none";
-    }
-
-    // @backward-compat { version 152 } Once 152 hits release, we can remove this boolean
-    // and always consider it true (i.e. remove everything related to the "show comments" option in the toolbox).
-    const showCommentsOption = this.panelDoc.querySelector(
-      'label:has(> [data-pref="devtools.markup.showComments"])'
-    );
-    try {
-      if (
-        !this.commands.targetCommand.rootFront.traits
-          .supportsCommentNodesDisplayControl
-      ) {
-        showCommentsOption.style.display = "none";
-      }
-    } catch (e) {
-      // If inspector is not available, hide the option
-      showCommentsOption.style.display = "none";
     }
   }
 

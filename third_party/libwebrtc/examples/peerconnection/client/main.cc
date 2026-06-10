@@ -84,9 +84,7 @@ int PASCAL wWinMain(HINSTANCE instance,
                     int cmd_show) {
   webrtc::WinsockInitializer winsock_init;
   webrtc::PhysicalSocketServer ss;
-  std::unique_ptr<webrtc::Thread> main_thread =
-      std::make_unique<webrtc::Thread>(&ss);
-  webrtc::ThreadManager::Instance()->SetCurrentThread(main_thread.get());
+  webrtc::AutoSocketServerThread main_thread(&ss);
 
   WindowsCommandLineArguments win_args;
   int argc = win_args.argc();
@@ -124,8 +122,6 @@ int PASCAL wWinMain(HINSTANCE instance,
     if (!wnd.PreTranslateMessage(&msg)) {
       ::TranslateMessage(&msg);
       ::DispatchMessage(&msg);
-      // Also make sure that TaskQueue/Thread messages are processed.
-      webrtc::Thread::Current()->ProcessMessages(0);
     }
   }
 
@@ -135,13 +131,10 @@ int PASCAL wWinMain(HINSTANCE instance,
       if (!wnd.PreTranslateMessage(&msg)) {
         ::TranslateMessage(&msg);
         ::DispatchMessage(&msg);
-        // Also make sure that TaskQueue/Thread messages are processed.
-        webrtc::Thread::Current()->ProcessMessages(0);
       }
     }
   }
 
   webrtc::CleanupSSL();
-  webrtc::ThreadManager::Instance()->SetCurrentThread(nullptr);
   return 0;
 }

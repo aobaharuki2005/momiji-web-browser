@@ -6,7 +6,6 @@ package org.mozilla.fenix.ext
 
 import android.app.Activity
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.view.Menu
 import android.view.MenuInflater
@@ -37,9 +36,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarContainerView
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.navigation.DefaultNavControllerProvider
 import org.mozilla.fenix.navigation.NavControllerProvider
-import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.isLargeScreenSize
-import com.google.android.material.R as materialR
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -111,8 +108,6 @@ fun Fragment.showToolbarWithIconButton(
 
             val item = menu.add(Menu.NONE, Menu.NONE, Menu.NONE, "")
             item.setIcon(iconResId)
-            val colorResId = ThemeManager.resolveAttribute(materialR.attr.colorOnSurface, activity)
-            item.iconTintList = ColorStateList.valueOf(activity.getColor(colorResId))
             item.contentDescription = contentDescription
             item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
             item.setOnMenuItemClickListener {
@@ -290,7 +285,7 @@ fun Fragment.getBottomToolbarHeight(includeNavBarIfEnabled: Boolean = true): Int
     val navBarHeight =
         if (includeNavBarIfEnabled && isNavBarEnabled) {
         pixelSizeFor(
-            if (isToolbarAtBottom) {
+            if (settings.shouldUseComposableToolbar && isToolbarAtBottom) {
                 R.dimen.browser_navbar_height_small
             } else {
                 R.dimen.browser_navbar_height
@@ -358,15 +353,6 @@ fun Fragment.updateMicrosurveyPromptForConfigurationChange(
  * @param resId Resource ID of the dimension.
  * @return The pixel size corresponding to the given dimension resource.
  */
-@Suppress("Resources.GetDimensionPixelSizeInsteadOfPixelSizeFor")
 fun Fragment.pixelSizeFor(
     @DimenRes resId: Int,
 ) = resources.getDimensionPixelSize(resId)
-
-/**
- * Opens a [url] in a new tab and navigates to the browser fragment.
- */
-fun Fragment.openInNewTab(url: String) {
-    requireComponents.useCases.tabsUseCases.addTab(url)
-    findNavController().navigate(R.id.browserFragment)
-}

@@ -46,7 +46,7 @@ add_task(async function mixed_content_block_for_target_top_test() {
   await insecureLoadPromise;
 
   // The link click should not invoke the Mixed Content Blocker.
-  let { gIdentityHandler } = testBrowser.documentGlobal;
+  let { gIdentityHandler } = testBrowser.ownerGlobal;
   ok(
     !gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
     "Mixed Content Doorhanger did not appear when trying to navigate top"

@@ -4,9 +4,14 @@
 
 // We use importESModule here instead of static import so that the Karma test
 // environment won't choke on these module. This is because the Karma test
-// environment already stubs out XPCOMUtils and AppConstants,
+// environment already stubs out XPCOMUtils, AppConstants and RemoteSettings,
 // and overrides importESModule to be a no-op (which can't be done for a static
 // import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 // eslint-disable-next-line mozilla/use-static-import
 const { MESSAGE_TYPE_HASH: msg } = ChromeUtils.importESModule(
@@ -42,6 +47,12 @@ export const PREF_IMPRESSION_ID =
 export class ASRouterTelemetry {
   constructor() {
     this._impressionId = this.getOrCreateImpressionId();
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "telemetryEnabled",
+      "browser.newtabpage.activity-stream.telemetry",
+      false
+    );
   }
 
   get telemetryClientId() {
@@ -72,8 +83,8 @@ export class ASRouterTelemetry {
   }
 
   /**
-   * Create a ping for an ASRouter event and apply the appropriate policy based
-   * on the messaging surface.
+   * Create a ping for AS router event. The client_id is set to "n/a" by default,
+   * different component can override this by its own telemetry collection policy.
    */
   async createASRouterEvent(action) {
     let event = {
@@ -82,6 +93,9 @@ export class ASRouterTelemetry {
       locale: Services.locale.appLocaleAsBCP47,
     };
 
+    if (event.event_context && typeof event.event_context === "object") {
+      event.event_context = JSON.stringify(event.event_context);
+    }
     switch (event.action) {
       case "cfr_user_event":
         event = await this.applyCFRPolicy(event);
@@ -103,9 +117,6 @@ export class ASRouterTelemetry {
         break;
       case "menu_message_user_event":
         event = await this.applyMenuMessagePolicy(event);
-        break;
-      case "smart_window_promo_user_event":
-        event = await this.applySmartWindowPromoPolicy(event);
         break;
       case "asrouter_undesired_event":
         event = this.applyUndesiredEventPolicy(event);
@@ -183,16 +194,22 @@ export class ASRouterTelemetry {
     return { ping, pingType: "menu" };
   }
 
-  async applySmartWindowPromoPolicy(ping) {
-    ping.client_id = await this.telemetryClientId;
-    ping.browser_session_id = lazy.browserSessionId;
-    delete ping.action;
-    return { ping, pingType: "smart_window_promo" };
-  }
-
+  /**
+   * Per Bug 1484035, Moments metrics comply with following policies:
+   * 1). In release, it collects impression_id, and treats bucket_id as message_id
+   * 2). In prerelease, it collects client_id and message_id
+   * 3). In shield experiments conducted in release, it collects client_id and message_id
+   */
   async applyMomentsPolicy(ping) {
-    ping.client_id = await this.telemetryClientId;
-    ping.browser_session_id = lazy.browserSessionId;
+    if (
+      lazy.UpdateUtils.getUpdateChannel(true) === "release" &&
+      !this.isInCFRCohort
+    ) {
+      ping.message_id = "n/a";
+      ping.impression_id = this._impressionId;
+    } else {
+      ping.client_id = await this.telemetryClientId;
+    }
     delete ping.action;
     return { ping, pingType: "moments" };
   }
@@ -200,6 +217,8 @@ export class ASRouterTelemetry {
   async applyNewtabMessagePolicy(ping) {
     ping.client_id = await this.telemetryClientId;
     ping.browser_session_id = lazy.browserSessionId;
+    ping.addon_version = Services.appinfo.appBuildID;
+    ping.locale = Services.locale.appLocaleAsBCP47;
     delete ping.action;
     return { ping, pingType: "newtab_message" };
   }
@@ -217,7 +236,10 @@ export class ASRouterTelemetry {
       return;
     }
 
-    lazy.Telemetry.parseAndSubmitPing({ ...ping, pingType });
+    // Now that the action has become a ping, we can echo it to Glean.
+    if (this.telemetryEnabled) {
+      lazy.Telemetry.submitGleanPingForPing({ ...ping, pingType });
+    }
   }
 
   /**
@@ -251,8 +273,6 @@ export class ASRouterTelemetry {
       case msg.MENU_MESSAGE_TELEMETRY:
       // Intentional fall-through
       case msg.NEWTAB_MESSAGE_TELEMETRY:
-      // Intentional fall-through
-      case msg.SMART_WINDOW_PROMO_TELEMETRY:
       // Intentional fall-through
       case msg.AS_ROUTER_TELEMETRY_USER_EVENT:
         this.handleASRouterUserEvent(action);

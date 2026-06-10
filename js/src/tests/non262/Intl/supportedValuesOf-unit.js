@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 const units = Intl.supportedValuesOf("unit");
 
 assertEq(new Set(units).size, units.length, "No duplicates are present");

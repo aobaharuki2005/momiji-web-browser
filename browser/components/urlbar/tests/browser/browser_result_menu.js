@@ -1,16 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_setup(async function init() {
-  registerCleanupFunction(async function () {
-    await PlacesUtils.history.clear();
-    await UrlbarTestUtils.formHistory.clear();
-  });
-});
-
 add_task(async function test_history() {
   const TEST_URL = "https://remove.me/from_urlbar/";
   await PlacesTestUtils.addVisits(TEST_URL);
+  registerCleanupFunction(async function () {
+    await PlacesUtils.history.clear();
+  });
 
   const resultIndex = 1;
   let result;
@@ -98,19 +94,12 @@ add_task(async function test_history() {
   }
 
   await UrlbarTestUtils.promisePopupClose(window);
-  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_remove_search_history() {
-  let extension = await SearchTestUtils.installSearchExtension(
-    {},
-    {
-      setAsDefault: true,
-      skipUnload: true,
-    }
-  );
-  let engine = SearchService.getEngineByName("Example");
-  await SearchService.moveEngine(engine, 0);
+  await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
+  let engine = Services.search.getEngineByName("Example");
+  await Services.search.moveEngine(engine, 0);
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.suggest.searches", true],
@@ -188,7 +177,6 @@ add_task(async function test_remove_search_history() {
   );
 
   await SpecialPowers.popPrefEnv();
-  await extension.unload();
 });
 
 add_task(async function firefoxSuggest() {
@@ -205,7 +193,7 @@ add_task(async function firefoxSuggest() {
           isBlockable: true,
           helpUrl,
           helpL10n: {
-            id: "urlbar-result-menu-learn-more",
+            id: "urlbar-result-menu-learn-more-about-firefox-suggest",
           },
         },
       }),
@@ -219,8 +207,7 @@ add_task(async function firefoxSuggest() {
     controller.removeResult(details.result);
   };
 
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(provider);
+  UrlbarProvidersManager.registerProvider(provider);
 
   async function openResults() {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -268,5 +255,5 @@ add_task(async function firefoxSuggest() {
   );
 
   await UrlbarTestUtils.promisePopupClose(window);
-  providersManager.unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 });

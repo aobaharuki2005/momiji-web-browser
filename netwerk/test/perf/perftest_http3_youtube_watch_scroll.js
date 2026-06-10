@@ -1,6 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* eslint-env node */
 
 /*
 Ensure the `--firefox.preference=network.http.http3.enable:true` is
@@ -8,24 +9,18 @@ set for this test.
 */
 
 async function test(context, commands) {
-  let rootUrl = "https://www.youtube.com/watch?v=YE7VzlLtp-4";
+  let rootUrl = "https://www.youtube.com/watch?v=COU5T-Wafa4";
   let waitTime = 20000;
 
   if (
-    typeof context.options.browsertime !== "undefined" &&
-    typeof context.options.browsertime.waitTime !== "undefined"
+    (typeof context.options.browsertime !== "undefined") &
+    (typeof context.options.browsertime.waitTime !== "undefined")
   ) {
     waitTime = context.options.browsertime.waitTime;
   }
 
   // Make firefox learn of HTTP/3 server
   await commands.navigate(rootUrl);
-
-  // Set a cookie to prevent the cookie banner from appearing on refresh.
-  await commands.js.runAndWait(`
-    document.cookie =
-      'SOCS=CAESEwgDEgk4NTQ5OTI2NTgaAmVuIAEaBgiAlpbLBg; path=/; domain=.youtube.com; Secure; SameSite=None';
-  `);
 
   let cycles = 1;
   for (let cycle = 0; cycle < cycles; cycle++) {
@@ -41,8 +36,7 @@ async function test(context, commands) {
     }
 
     // Disable youtube autoplay
-    // Note: the button is no longer called `toggleButton`
-    // await commands.click.byIdAndWait("toggleButton");
+    await commands.click.byIdAndWait("toggleButton");
 
     // Start playback quality measurements
     const start = await commands.js.run(`return performance.now();`);
@@ -51,11 +45,11 @@ async function test(context, commands) {
     while (
       !(await commands.js.run(`
           return document.querySelector("video").ended;
-      `)) &&
+      `)) &
       !(await commands.js.run(`
           return document.querySelector("video").paused;
-      `)) &&
-      (await commands.js.run(`return performance.now();`)) - start < waitTime
+      `)) &
+      ((await commands.js.run(`return performance.now();`)) - start < waitTime)
     ) {
       // Reset the scroll after going down 10 times
       direction = counter * 1000;

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,12 +17,10 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PostRestyleMode.h"
-#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/TimeStamp.h"             // for TimeStamp, TimeDuration
 #include "mozilla/dom/AnimationBinding.h"  // for AnimationPlayState
 #include "mozilla/dom/AnimationTimeline.h"
-#include "mozilla/dom/CSSNumericValueBindingFwd.h"
 #include "nsCycleCollectionParticipant.h"
 
 struct JSContext;
@@ -43,19 +43,6 @@ class CSSTransition;
 class Document;
 class Promise;
 
-// The helper struct to hold the animation-range values.
-struct AnimationRange {
-  StyleAnimationRangeStart mStart = StyleAnimationRangeStart::DefaultStart();
-  StyleAnimationRangeEnd mEnd = StyleAnimationRangeEnd::DefaultEnd();
-  bool operator==(const AnimationRange& aOther) const {
-    return mStart == aOther.mStart && mEnd == aOther.mEnd;
-  }
-  bool IsNormal() const {
-    return mStart.name == StyleTimelineRangeName::Normal &&
-           mEnd.name == StyleTimelineRangeName::Normal;
-  }
-};
-
 class Animation : public DOMEventTargetHelper,
                   public LinkedListElement<Animation> {
  protected:
@@ -75,7 +62,7 @@ class Animation : public DOMEventTargetHelper,
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Animation, DOMEventTargetHelper)
 
-  nsIGlobalObject* GetParentObject() const { return GetRelevantGlobal(); }
+  nsIGlobalObject* GetParentObject() const { return GetOwnerGlobal(); }
 
   /**
    * Utility function to get the target (pseudo-)element associated with an
@@ -111,68 +98,45 @@ class Animation : public DOMEventTargetHelper,
   virtual void SetEffect(AnimationEffect* aEffect);
   void SetEffectNoUpdate(AnimationEffect* aEffect);
 
-  void SetTimeline(AnimationTimeline* aTimeline) {
-    // Can't refer to timeline by name from JS side.
-    const auto prevTimelineName = GetTimelineName();
-    SetTimeline(aTimeline, nullptr);
-    if (prevTimelineName) {
-      RemovedNamedTimelineReferenceFromJS(prevTimelineName);
-    }
-  }
-
-  void RemovedNamedTimelineReferenceFromJS(const nsAtom* aName);
-
-  AnimationTimeline* GetTimelineFromJS() const {
-    auto* timeline = GetTimeline();
-    if (timeline && timeline->IsInactiveTimeline()) {
-      // See:
-      // https://github.com/w3c/csswg-drafts/issues/13807#issuecomment-4390005560
-      return nullptr;
-    }
-    return timeline;
+  // FIXME: Bug 1676794. This is a tentative solution before we implement
+  // ScrollTimeline interface. If the timeline is scroll/view timeline, we
+  // return null. Once we implement ScrollTimeline interface, we can drop this.
+  already_AddRefed<AnimationTimeline> GetTimelineFromJS() const {
+    return mTimeline && mTimeline->IsScrollTimeline() ? nullptr
+                                                      : do_AddRef(mTimeline);
   }
   void SetTimelineFromJS(AnimationTimeline* aTimeline) {
-    return SetTimeline(aTimeline);
+    SetTimeline(aTimeline);
   }
-  AnimationTimeline* GetTimeline() const { return mTimeline; }
-  void SetTimeline(AnimationTimeline* aTimeline, const nsAtom* aTimelineName);
-  void SetTimelineNoUpdate(AnimationTimeline* aTimeline,
-                           const nsAtom* aTimelineName);
 
-  const AnimationRange& GetTimelineRange() const { return mTimelineRange; }
-  void SetTimelineRange(AnimationRange&& aRange);
-  void SetTimelineRangeNoUpdate(AnimationRange&& aRange);
+  AnimationTimeline* GetTimeline() const { return mTimeline; }
+  void SetTimeline(AnimationTimeline* aTimeline);
+  void SetTimelineNoUpdate(AnimationTimeline* aTimeline);
 
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
+  Nullable<double> GetStartTimeAsDouble() const;
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
   const TimeStamp& GetPendingReadyTime() const { return mPendingReadyTime; }
   void SetPendingReadyTime(const TimeStamp& aReadyTime) {
     mPendingReadyTime = aReadyTime;
   }
+  virtual void SetStartTimeAsDouble(const Nullable<double>& aStartTime);
 
-  // Web IDL binding for `attribute CSSNumberish? startTime`.
-  void GetStartTime(Nullable<OwningCSSNumberish>& aRetVal) const;
-  virtual void SetStartTime(const Nullable<CSSNumberish>& aStartTime,
-                            ErrorResult& aRv);
-
-  // Web IDL binding for `attribute CSSNumberish? currentTime`.
-  void GetCurrentTime(Nullable<OwningCSSNumberish>& aRetVal) const;
-  void SetCurrentTime(const Nullable<CSSNumberish>& aCurrentTime,
-                      ErrorResult& aRv);
-
+  // This is deliberately _not_ called GetCurrentTime since that would clash
+  // with a macro defined in winbase.h
   Nullable<TimeDuration> GetCurrentTimeAsDuration() const {
     return GetCurrentTimeForHoldTime(mHoldTime);
   }
+  Nullable<double> GetCurrentTimeAsDouble() const;
   void SetCurrentTime(const TimeDuration& aSeekTime);
   void SetCurrentTimeNoUpdate(const TimeDuration& aSeekTime);
+  void SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
+                              ErrorResult& aRv);
 
   Nullable<double> GetOverallProgress() const;
 
   double PlaybackRate() const { return mPlaybackRate; }
   void SetPlaybackRate(double aPlaybackRate);
-  // Returns the playback rate multiplied by
-  // BrowsingContext::AnimationsPlayBackRateMultiplier.
-  double PlaybackRateInternal() const;
 
   AnimationPlayState PlayState() const;
   virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
@@ -221,7 +185,7 @@ class Animation : public DOMEventTargetHelper,
             // won't be relevant and hence won't be returned by GetAnimations().
             // We don't want its timeline to keep it alive (which would happen
             // if we return true) since otherwise it will effectively be leaked.
-            PlaybackRateInternal() != 0.0) ||
+            PlaybackRate() != 0.0) ||
            // Always return true for not idle animations attached to not
            // monotonically increasing timelines even if the animation is
            // finished. This is required to accommodate cases where timeline
@@ -241,7 +205,9 @@ class Animation : public DOMEventTargetHelper,
    * As with the start time, we should use the pending playback rate when
    * producing layer animations.
    */
-  double CurrentOrPendingPlaybackRate() const;
+  double CurrentOrPendingPlaybackRate() const {
+    return mPendingPlaybackRate.valueOr(mPlaybackRate);
+  }
   bool HasPendingPlaybackRate() const { return mPendingPlaybackRate.isSome(); }
 
   /**
@@ -255,7 +221,7 @@ class Animation : public DOMEventTargetHelper,
    */
   static TimeDuration CurrentTimeFromTimelineTime(
       const TimeDuration& aTimelineTime, const TimeDuration& aStartTime,
-      double aPlaybackRate) {
+      float aPlaybackRate) {
     return (aTimelineTime - aStartTime).MultDouble(aPlaybackRate);
   }
 
@@ -270,7 +236,7 @@ class Animation : public DOMEventTargetHelper,
    */
   static TimeDuration StartTimeFromTimelineTime(
       const TimeDuration& aTimelineTime, const TimeDuration& aCurrentTime,
-      double aPlaybackRate) {
+      float aPlaybackRate) {
     TimeDuration result = aTimelineTime;
     if (aPlaybackRate == 0) {
       return result;
@@ -302,7 +268,7 @@ class Animation : public DOMEventTargetHelper,
   bool IsInEffect() const;
 
   bool IsPlaying() const {
-    return PlaybackRateInternal() != 0.0 && mTimeline &&
+    return mPlaybackRate != 0.0 && mTimeline &&
            !mTimeline->GetCurrentTimeAsDuration().IsNull() &&
            PlayState() == AnimationPlayState::Running;
   }
@@ -438,7 +404,7 @@ class Animation : public DOMEventTargetHelper,
   ProgressTimelinePosition AtProgressTimelineBoundary() const {
     Nullable<TimeDuration> currentTime = GetUnconstrainedCurrentTime();
     return AtProgressTimelineBoundary(
-        mTimeline ? mTimeline->TimelineDuration(mTimelineRange) : nullptr,
+        mTimeline ? mTimeline->TimelineDuration() : nullptr,
         // Set unlimited current time based on the first matching condition:
         // 1. start time is resolved:
         //    (timeline time - start time) × playback rate
@@ -446,11 +412,8 @@ class Animation : public DOMEventTargetHelper,
         //    animation’s current time
         !currentTime.IsNull() ? currentTime : GetCurrentTimeAsDuration(),
         mStartTime.IsNull() ? TimeDuration() : mStartTime.Value(),
-        PlaybackRateInternal());
+        mPlaybackRate);
   }
-
-  void UpdateNormalizedTimingForTimelineDataChange();
-  void MaybeUpdateKeyframeComputedOffsets();
 
   void SetHiddenByContentVisibility(bool hidden);
   bool IsHiddenByContentVisibility() const {
@@ -459,21 +422,6 @@ class Animation : public DOMEventTargetHelper,
   void UpdateHiddenByContentVisibility();
 
   DocGroup* GetDocGroup();
-
-  void PostUpdate();
-
-  void AutoAlignStartTime();
-
-  const nsAtom* GetTimelineName() const { return mTimelineName; }
-
-  bool HasFiniteTimeline() const {
-    return mTimeline && !mTimeline->IsMonotonicallyIncreasing();
-  }
-
-  // True when CSSNumberish times for this animation are expressed as
-  // percentages, i.e. typed-OM is enabled and the animation is associated with
-  // a progress-based timeline.
-  bool AcceptsPercentageBasedTime() const;
 
  protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
@@ -513,13 +461,13 @@ class Animation : public DOMEventTargetHelper,
    * animations running on the compositor).
    */
   void FlushUnanimatedStyle() const;
+  void PostUpdate();
   void ResetFinishedPromise();
   void MaybeResolveFinishedPromise();
   void DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag);
   friend class AsyncFinishNotification;
   void DoFinishNotificationImmediately(MicroTaskRunnable* aAsync = nullptr);
   void QueuePlaybackEvent(nsAtom* aOnEvent, TimeStamp&& aScheduledEventTime);
-  void MaybeResolvePromiseWithThis(Promise*);
 
   /**
    * Remove this animation from the pending animation tracker and reset
@@ -567,10 +515,12 @@ class Animation : public DOMEventTargetHelper,
   Document* GetRenderedDocument() const;
   Document* GetTimelineDocument() const;
 
-  bool HasFiniteActiveTimeline() const {
-    return mTimeline && !mTimeline->IsMonotonicallyIncreasing() &&
-           !mTimeline->IsInactiveTimeline();
+  bool HasFiniteTimeline() const {
+    return mTimeline && !mTimeline->IsMonotonicallyIncreasing();
   }
+
+  void UpdateScrollTimelineAnimationTracker(AnimationTimeline* aOldTimeline,
+                                            AnimationTimeline* aNewTimeline);
 
   RefPtr<AnimationTimeline> mTimeline;
   RefPtr<AnimationEffect> mEffect;
@@ -580,8 +530,6 @@ class Animation : public DOMEventTargetHelper,
   Nullable<TimeDuration> mPreviousCurrentTime;  // Animation timescale
   double mPlaybackRate = 1.0;
   Maybe<double> mPendingPlaybackRate;
-
-  AnimationRange mTimelineRange;
 
   // A Promise that is replaced on each call to Play()
   // and fulfilled when Play() is successfully completed.
@@ -632,35 +580,18 @@ class Animation : public DOMEventTargetHelper,
 
   nsString mId;
 
+  bool mResetCurrentTimeOnResume = false;
+
   // Whether the Animation is System, ResistFingerprinting, or neither
   RTPCallerType mRTPCallerType;
 
   // The time at which our animation should be ready.
-  // FIXME: Bug 2017448. We have to make sure what type or value is suitable for
-  // pending ready time when using finite timelines because they don't use time
-  // values. Perhaps we need to define or use a new type (e.g. CSSNumberish).
-  // For now, we skip this for finite timelines and use the current time of
-  // the timeline in TryTriggerNow().
   TimeStamp mPendingReadyTime;
 
  private:
-  // Returns BrowsingContext.animationsPlayBackRateMultiplier for this
-  // animation.
-  double AnimationsPlayBackRateMultiplier() const;
-
   // The id for this animation on the compositor.
   uint64_t mIdOnCompositor = 0;
   bool mIsPartialPrerendered = false;
-
-  // The flag to indicate that the animation’s start time cannot be reliably
-  // calculated until post layout since the start time is to align with the
-  // start or end of the animation range.
-  bool mAutoAlignStartTime = false;
-
-  // The name of the timeline this animation is referring to, if one exists.
-  // Note that animations can have a null timeline but have this set, if it
-  // refers to a timeline that does not exist by name.
-  RefPtr<const nsAtom> mTimelineName;
 };
 
 }  // namespace dom

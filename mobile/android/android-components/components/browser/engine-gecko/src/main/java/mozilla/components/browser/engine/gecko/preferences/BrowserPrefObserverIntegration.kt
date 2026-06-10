@@ -43,28 +43,10 @@ class BrowserPrefObserverIntegration(
     ) {
         engine.registerPrefForObservation(
             pref,
-            onSuccess = onSuccess,
-            onError = onError,
-        )
-    }
-
-    /**
-     * Will register a list of browser preferences for observation. Will receive reports on changes via
-     * [onPreferenceChange].
-     *
-     * @param prefs The list of browser preferences to observe.
-     * @param onSuccess What to do in the event of a successful registration.
-     * @param onError What to do in the event of a unsuccessful registration.
-     */
-    fun registerPrefsForObservation(
-        prefs: List<String>,
-        onSuccess: () -> Unit,
-        onError: (Throwable) -> Unit,
-    ) {
-        engine.registerPrefsForObservation(
-            prefs,
-            onSuccess = onSuccess,
-            onError = onError,
+            onSuccess = {
+                onSuccess
+            },
+            onError = { onError },
         )
     }
 
@@ -83,29 +65,10 @@ class BrowserPrefObserverIntegration(
     ) {
         engine.unregisterPrefForObservation(
             pref,
-            onSuccess = onSuccess,
-            onError = onError,
-        )
-    }
-
-    /**
-     * Will unregister a list of browser preferences for
-     * observation that was registered via [registerPrefForObservation].
-     *
-     * @param prefs The list of browser preferences to stop observing.
-     * @param onSuccess What to do in the event of a successful deregistration.
-     * @param onError What to do in the event of a unsuccessful deregistration.
-     *
-     */
-    fun unregisterPrefsForObservation(
-        prefs: List<String>,
-        onSuccess: () -> Unit,
-        onError: (Throwable) -> Unit,
-    ) {
-        engine.unregisterPrefsForObservation(
-            prefs,
-            onSuccess = onSuccess,
-            onError = onError,
+            onSuccess = {
+                onSuccess
+            },
+            onError = { onError },
         )
     }
 

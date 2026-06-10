@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -169,7 +171,7 @@ void HTMLTrackElement::CreateTextTrack() {
   if (!parentObject) {
     nsContentUtils::ReportToConsole(
         nsIScriptError::errorFlag, "Media"_ns, OwnerDoc(),
-        PropertiesFile::DOM_PROPERTIES,
+        nsContentUtils::eDOM_PROPERTIES,
         "Using track element in non-window context");
     return;
   }
@@ -347,9 +349,9 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
   // 9. End the synchronous section, continuing the remaining steps in parallel.
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
       "dom::HTMLTrackElement::LoadResource",
-      [self = RefPtr{this}, this, listener = mListener, uri, secFlags]() {
-        if (mListener != listener) {
-          // Shutdown got called or load got canceled, abort.
+      [self = RefPtr<HTMLTrackElement>(this), this, uri, secFlags]() {
+        if (!mListener) {
+          // Shutdown got called, abort.
           return;
         }
         nsCOMPtr<nsIChannel> channel;
@@ -375,7 +377,7 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
           SetReadyState(TextTrackReadyState::FailedToLoad);
           return;
         }
-        mChannel = std::move(channel);
+        mChannel = channel;
       });
   doc->Dispatch(runnable.forget());
 }

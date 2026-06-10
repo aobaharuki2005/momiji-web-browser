@@ -184,7 +184,8 @@ mozilla::ipc::IPCResult FetchChild::RecvOnFlushConsoleReport(
     // extract doc object to flush the console report
     for (const auto& report : aReports) {
       mReporter->AddConsoleReport(
-          report.errorFlags(), report.category(), report.propertiesFile(),
+          report.errorFlags(), report.category(),
+          static_cast<nsContentUtils::PropertiesFile>(report.propertiesFile()),
           report.sourceFileURI(), report.lineNumber(), report.columnNumber(),
           report.messageName(), report.stringParams());
     }
@@ -215,7 +216,9 @@ mozilla::ipc::IPCResult FetchChild::RecvOnFlushConsoleReport(
                  workerRef = std::move(workerRef)]() mutable {
         for (const auto& report : reports) {
           reporter->AddConsoleReport(
-              report.errorFlags(), report.category(), report.propertiesFile(),
+              report.errorFlags(), report.category(),
+              static_cast<nsContentUtils::PropertiesFile>(
+                  report.propertiesFile()),
               report.sourceFileURI(), report.lineNumber(),
               report.columnNumber(), report.messageName(),
               report.stringParams());
@@ -276,9 +279,9 @@ RefPtr<FetchChild> FetchChild::CreateForMainThread(
 }
 
 mozilla::ipc::IPCResult FetchChild::RecvOnCSPViolationEvent(
-    const nsAString& aJSON, const nsAString& aReportGroupName) {
+    const nsAString& aJSON) {
   FETCH_LOG(("FetchChild::RecvOnCSPViolationEvent [%p] aJSON: %s\n", this,
-             NS_ConvertUTF16toUTF8(aJSON).get()));
+             NS_ConvertUTF16toUTF8(aJSON).BeginReading()));
 
   nsString JSON(aJSON);
 
@@ -310,8 +313,7 @@ mozilla::ipc::IPCResult FetchChild::RecvOnCSPViolationEvent(
   MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 
   if (mCSPEventListener) {
-    (void)NS_WARN_IF(NS_FAILED(
-        mCSPEventListener->OnCSPViolationEvent(aJSON, aReportGroupName)));
+    (void)NS_WARN_IF(NS_FAILED(mCSPEventListener->OnCSPViolationEvent(aJSON)));
   }
   return IPC_OK();
 }

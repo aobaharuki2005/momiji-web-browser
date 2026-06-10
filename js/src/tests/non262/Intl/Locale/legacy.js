@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty('Intl'))
+
 var testData = [
     {
         tag: "cel-gaulish",

@@ -149,7 +149,6 @@ PK11_IsUserCert(PK11SlotInfo *slot, CERTCertificate *cert,
     if (theClass == CKO_PUBLIC_KEY) {
         SECKEYPublicKey *pubKey = CERT_ExtractPublicKey(cert);
         CK_ATTRIBUTE theTemplate;
-        PRBool needUnsignedAdjust = PR_FALSE;
 
         if (pubKey == NULL) {
             return PR_FALSE;
@@ -162,17 +161,14 @@ PK11_IsUserCert(PK11SlotInfo *slot, CERTCertificate *cert,
             case rsaOaepKey:
                 PK11_SETATTRS(&theTemplate, CKA_MODULUS, pubKey->u.rsa.modulus.data,
                               pubKey->u.rsa.modulus.len);
-                needUnsignedAdjust = PR_TRUE;
                 break;
             case dsaKey:
                 PK11_SETATTRS(&theTemplate, CKA_VALUE, pubKey->u.dsa.publicValue.data,
                               pubKey->u.dsa.publicValue.len);
-                needUnsignedAdjust = PR_TRUE;
                 break;
             case dhKey:
                 PK11_SETATTRS(&theTemplate, CKA_VALUE, pubKey->u.dh.publicValue.data,
                               pubKey->u.dh.publicValue.len);
-                needUnsignedAdjust = PR_TRUE;
                 break;
             case ecKey:
             case edKey:
@@ -186,13 +182,9 @@ PK11_IsUserCert(PK11SlotInfo *slot, CERTCertificate *cert,
                               pubKey->u.mldsa.publicValue.data,
                               pubKey->u.mldsa.publicValue.len);
                 break;
-            case kyberKey:
-                PK11_SETATTRS(&theTemplate, CKA_VALUE,
-                              pubKey->u.kyber.publicValue.data,
-                              pubKey->u.kyber.publicValue.len);
-                break;
             case keaKey:
             case fortezzaKey:
+            case kyberKey:
             case nullKey:
                 /* fall through and return false */
                 break;
@@ -202,7 +194,8 @@ PK11_IsUserCert(PK11SlotInfo *slot, CERTCertificate *cert,
             SECKEY_DestroyPublicKey(pubKey);
             return PR_FALSE;
         }
-        if (needUnsignedAdjust) {
+        if (pubKey->keyType != ecKey && pubKey->keyType != edKey &&
+            pubKey->keyType != ecMontKey && pubKey->keyType != mldsaKey) {
             pk11_SignedToUnsigned(&theTemplate);
         }
         if (pk11_FindObjectByTemplate(slot, &theTemplate, 1) != CK_INVALID_HANDLE) {
@@ -650,7 +643,7 @@ transfer_uri_certs_to_collection(nssList *certList, PK11URI *uri,
          * CKA_ID from the URI
          */
         if (id && (id->len != certs[i]->id.size ||
-                   memcmp(id->data, certs[i]->id.data, certs[i]->id.size)))
+                   memcmp(id, certs[i]->id.data, certs[i]->id.size)))
             continue;
         tokens = nssPKIObject_GetTokens(&certs[i]->object, NULL);
         if (tokens) {
@@ -1326,8 +1319,7 @@ PK11_FindPrivateKeyFromCert(PK11SlotInfo *slot, CERTCertificate *cert,
     if (keyh == CK_INVALID_HANDLE) {
         return NULL;
     }
-
-    return pk11_MakePrivKey(slot, nullKey, PR_FALSE, keyh, wincx);
+    return PK11_MakePrivKey(slot, nullKey, PR_TRUE, keyh, wincx);
 }
 
 /*
@@ -2099,7 +2091,7 @@ PK11_FindKeyByAnyCert(CERTCertificate *cert, void *wincx)
         }
     }
     if (keyHandle != CK_INVALID_HANDLE) {
-        privKey = pk11_MakePrivKey(slot, nullKey, PR_FALSE, keyHandle, wincx);
+        privKey = PK11_MakePrivKey(slot, nullKey, PR_TRUE, keyHandle, wincx);
     }
     if (slot) {
         PK11_FreeSlot(slot);
@@ -2274,10 +2266,6 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
     NSSCertificate **certs;
     nssList *nameList = NULL;
     nssTokenSearchType tokenOnly = nssTokenSearchType_TokenOnly;
-    if (!nickname || !nickname->data || nickname->len == 0) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
     token = PK11Slot_GetNSSToken(slot);
     if (!token || !nssToken_IsPresent(token)) {
         (void)nssToken_Destroy(token);
@@ -2510,7 +2498,7 @@ PK11_FindKeyByDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
         return NULL;
     }
 
-    return pk11_MakePrivKey(slot, nullKey, PR_FALSE, keyHandle, wincx);
+    return PK11_MakePrivKey(slot, nullKey, PR_TRUE, keyHandle, wincx);
 }
 
 SECStatus

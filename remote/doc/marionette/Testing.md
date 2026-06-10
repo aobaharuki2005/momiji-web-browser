@@ -36,7 +36,7 @@ chatty, it can sometimes be useful to run the tests sequentially:
 
 These unit tests run as part of the `X` jobs on Treeherder.
 
-[xpcshell]: /testing/xpcshell/index.rst
+[xpcshell]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Writing_xpcshell-based_unit_tests
 
 ## Marionette functional tests
 

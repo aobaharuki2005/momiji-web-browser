@@ -34,8 +34,6 @@ urlbar-web-notification-anchor =
     .tooltiptext = Change whether you can receive notifications from the site
 urlbar-midi-notification-anchor =
     .tooltiptext = Open MIDI panel
-urlbar-serial-notification-anchor =
-    .tooltiptext = Open Serial panel
 urlbar-eme-notification-anchor =
     .tooltiptext = Manage use of DRM software
 urlbar-web-authn-anchor =
@@ -93,6 +91,9 @@ urlbar-result-menu-tip-get-help =
 urlbar-result-menu-dismiss-suggestion =
     .label = Dismiss this suggestion
     .accesskey = D
+urlbar-result-menu-learn-more-about-firefox-suggest =
+    .label = Learn more about { -firefox-suggest-brand-name }
+    .accesskey = L
 urlbar-result-menu-manage-firefox-suggest =
     .label = Manage { -firefox-suggest-brand-name }
     .accesskey = M
@@ -167,8 +168,6 @@ urlbar-canvas-blocked =
     .tooltiptext = You have blocked canvas data extraction for this website.
 urlbar-midi-blocked =
     .tooltiptext = You have blocked MIDI access for this website.
-urlbar-serial-blocked =
-    .tooltiptext = You have blocked serial port access for this website.
 urlbar-install-blocked =
     .tooltiptext = You have blocked add-on installation for this website.
 
@@ -185,12 +184,6 @@ urlbar-star-add-bookmark =
 urlbar-split-view-button =
     .tooltiptext = Split view
     .aria-label = Split view
-
-## Searchbar context menu
-
-clear-search-history =
-    .label = Clear Search History
-    .accesskey = H
 
 ## Page Action Context Menu
 
@@ -267,7 +260,7 @@ search-one-offs-actions =
 
 ## QuickActions are shown in the urlbar as the user types a matching string
 ## The -cmd- strings are comma separated list of keywords that will match
-## the action. English commas should be used, i.e. ,
+## the action.
 
 # Opens the about:addons page in the home / recommendations section
 quickactions-addons = View add-ons
@@ -282,7 +275,7 @@ quickactions-cmd-bookmarks = bookmarks
 
 # Opens a SUMO article explaining how to clear history
 quickactions-clearrecenthistory = Clear recent history
-quickactions-cmd-clearrecenthistory2 = cookies, clear cookies, cache, clear cache, browsing data, clear browsing data, history, clear recent history
+quickactions-cmd-clearrecenthistory = clear recent history, history
 
 # Opens about:downloads page
 quickactions-downloads2 = View downloads
@@ -307,24 +300,9 @@ quickactions-cmd-help = help, support
 quickactions-inspector2 = Open Developer Tools
 quickactions-cmd-inspector2 = inspector, devtools, dev tools
 
-# Opens the devtools eyedropper to pick a color from the page
-quickactions-colorpicker = Pick a color
-quickactions-cmd-colorpicker = color picker, eyedropper, pick color
-
-# Opens Firefox Library
-quickactions-cmd-library = library
-quickactions-library = Open Library
-
 # Opens about:logins
 quickactions-logins2 = Manage passwords
 quickactions-cmd-logins = logins, passwords
-
-# Mutes all tabs playing audio
-quickactions-mute = Mute tabs playing audio
-# List of words that would trigger the "mute tabs" action from the address bar.
-# Replace with idiomatic expressions in your language to silence something or
-# someone.
-quickactions-cmd-mute = mute, shush, sssssh
 
 # Opens the print dialog
 quickactions-print2 = Print page
@@ -373,10 +351,6 @@ quickactions-cmd-update = update
 # Opens the view-source UI with current pages source
 quickactions-viewsource2 = View page source
 quickactions-cmd-viewsource2 = view source, source, page source
-
-# Opens about:preferences:experimental (Firefox Labs)
-quickactions-labs = Open { -firefoxlabs-brand-name }
-quickactions-cmd-labs = labs, experiment
 
 # Tooltip text for the help button shown in the result.
 quickactions-learn-more =
@@ -459,11 +433,9 @@ identity-clear-site-data =
 identity-connection-not-secure-security-view = You are not securely connected to this site.
 identity-connection-verified = You are securely connected to this site.
 identity-ev-owner-label = Certificate issued to:
-identity-verifier-label = Verified by:
 # "qualified" here refers to the qualified website authentication certificate presented by the site.
 identity-etsi = Qualified as specified in Regulation (EU) 2024/1183.
 identity-description-custom-root2 = Mozilla does not recognize this certificate issuer. It may have been added from your operating system or by an administrator.
-identity-cert-exception-overridden = You have added a security exception for this site.
 identity-remove-cert-exception =
     .label = Remove Exception
     .accesskey = R
@@ -489,9 +461,11 @@ browser-window-restore-down-button =
     .tooltiptext = Restore Down
 browser-window-close-button =
     .tooltiptext = Close
-# Clicking this button closes the window and returns to the tab where it was opened from
-browser-window-return-to-opener =
-    .tooltiptext = Return
+
+## Tab actions
+
+# This label should be written in all capital letters if your locale supports them.
+browser-tab-audio-pip = PICTURE-IN-PICTURE
 
 ## Bookmarks toolbar items
 
@@ -528,11 +502,6 @@ sharing-warning-proceed-to-tab =
   .label = Proceed to Tab
 sharing-warning-disable-for-session =
   .label = Disable sharing protection for this session
-
-## WebSerial "select a port" popup
-
-webserial-select-port-label = Select a serial port:
-webserial-no-ports-available = No serial ports available
 
 ## URL Bar
 
@@ -607,8 +576,8 @@ urlbar-switch-to-tab =
 urlbar-extension =
   .value = Extension:
 
-urlbar-go-button2 =
-  .title = Go to the address in the Location Bar
+urlbar-go-button =
+  .tooltiptext = Go to the address in the Location Bar
 urlbar-page-action-button =
   .tooltiptext = Page actions
 urlbar-revert-button =
@@ -617,8 +586,6 @@ urlbar-revert-button =
 ## Action text shown in urlbar results, usually appended after the search
 ## string or the url, like "result value - action text".
 
-# Used for asking AI assistant chat.
-urlbar-result-action-ai-chat = Ask
 # Used when the private browsing engine differs from the default engine.
 # The "with" format was chosen because the search engine name can end with
 # "Search", and we would like to avoid strings like "Search MSN Search".
@@ -634,7 +601,6 @@ urlbar-result-action-search-in-private = Search in a Private Window
 urlbar-result-action-search-w-engine = Search with { $engine }
 urlbar-result-action-sponsored = Sponsored
 urlbar-result-action-switch-tab = Switch to Tab
-urlbar-result-action-move-tab-to-split-view = Move Tab to Split View
 urlbar-result-action-visit = Visit
 # "Switch to tab with container" is used when the target tab is located in a
 # different container.
@@ -669,18 +635,6 @@ urlbar-result-action-tabtosearch-other-engine = Search { $engine } directly from
 urlbar-result-action-copy-to-clipboard = Copy
 # The string returned for an undefined calculator result such as when dividing by 0
 urlbar-result-action-undefined-calculator-result = undefined
-
-# The sub title of an add-on suggestion in the urlbar.
-urlbar-result-addons-subtitle = { -brand-product-name } extension
-
-# The sub title of a mdn suggestion in the urlbar.
-urlbar-result-mdn-subtitle = { -mdn-brand-name }
-
-# The sub title of a Yelp suggestion in the urlbar.
-urlbar-result-yelp-subtitle = { -yelp-brand-name }
-
-# This string explaining that the suggestion is a recommendation.
-urlbar-result-suggestion-recommended = Recommended
 
 # The title of a weather suggestion in the urlbar. The temperature and unit
 # substring should be inside a <strong> tag. If the temperature and unit are not
@@ -811,40 +765,44 @@ urlbar-result-dates-ends-today = { $name } · Ends today
 # Searchmode Switcher button
 # Variables:
 #   $engine (String): the current default search engine.
-urlbar-searchmode-button3 =
-    .title = { $engine }, pick a search engine
-urlbar-searchmode-button-no-engine2 =
-    .title = No shortcut selected, pick a shortcut
+urlbar-searchmode-button2 =
+    .label = { $engine }, pick a search engine
+    .tooltiptext = { $engine }, pick a search engine
+urlbar-searchmode-button-no-engine =
+    .label = No shortcut selected, pick a shortcut
+    .tooltiptext = No shortcut selected, pick a shortcut
 
 # Refers to the ability to search using keywords in the address bar
-urlbar-searchmode-no-keyword2 =
-    .title = Keyword search is disabled
+urlbar-searchmode-no-keyword =
+    .label = Keyword search is disabled
+    .tooltiptext = Keyword search is disabled
 
-urlbar-searchmode-dropmarker2 =
-    .title = Pick a Search Engine
-urlbar-searchmode-bookmarks2 = Bookmarks
-urlbar-searchmode-tabs2 = Tabs
-urlbar-searchmode-history2 = History
-urlbar-searchmode-actions2 = Actions
-urlbar-searchmode-exit-button2 =
-    .title = Close
-urlbar-searchmode-default2 =
-    .title = Default search engine
-
-# Shown when adding new search engines from the search mode switcher.
-# Variables:
-#  $engineName (String): The name of the search engine.
-urlbar-searchmode-popup-add-engine = Add “{ $engineName }”
-    .title = Add search engine “{ $engineName }”
+urlbar-searchmode-dropmarker =
+    .tooltiptext = Pick a Search Engine
+urlbar-searchmode-bookmarks =
+    .label = Bookmarks
+urlbar-searchmode-tabs =
+    .label = Tabs
+urlbar-searchmode-history =
+    .label = History
+urlbar-searchmode-actions =
+    .label = Actions
+urlbar-searchmode-exit-button =
+    .tooltiptext = Close
+urlbar-searchmode-default =
+    .tooltiptext = Default search engine
 
 # Label shown on the top of Searchmode Switcher popup. After this label, the
 # available search engines will be listed.
-urlbar-searchmode-popup-one-off-header = This time search with:
+urlbar-searchmode-popup-description = This time search with:
 # Label shown on the top of Searchmode Switcher popup when the search engine won't automatically
 # reset after submitting.
-urlbar-searchmode-popup-header = Search with:
-urlbar-searchmode-popup-search-settings-panelitem = Search Settings
-urlbar-searchmode-popup-settings-panelitem = Settings
+urlbar-searchmode-popup-sticky-description = Search with:
+urlbar-searchmode-popup-search-settings-menuitem =
+    .label = Search Settings
+
+# Label shown next to a new search engine in the Searchmode Switcher popup to promote it.
+urlbar-searchmode-new = New
 
 # Label prompting user to search with a particular search engine.
 #  $engine (String): the name of a search engine that searches a specific site
@@ -877,21 +835,6 @@ urlbar-result-action-switch-to-tabgroup = Switch to { $group }
 #  $group (String): the name of the tab group to re-open
 urlbar-result-action-open-saved-tabgroup = Open { $group }
 
-## Used in the context menu in urlbar view.
-
-urlbar-view-context-menu-open-in-tab =
-  .label = Open in New Tab
-  .accesskey = w
-urlbar-view-context-menu-open-in-container-tab =
-  .label = Open in New Container Tab
-  .accesskey = i
-urlbar-view-context-menu-open-in-window =
-  .label = Open in New Window
-  .accesskey = N
-urlbar-view-context-menu-open-in-private-window =
-  .label = Open in New Private Window
-  .accesskey = P
-
 ## Labels shown above groups of urlbar results
 
 # A label shown above the "Firefox Suggest" (bookmarks/history) group in the
@@ -922,10 +865,17 @@ urlbar-group-recent-searches =
 urlbar-group-trending =
   .label = Trending on { $engine }
 
+# Label shown above sponsored suggestions in the urlbar results.
+urlbar-group-sponsored =
+  .label = Sponsored
+
 # The result menu labels shown next to trending results.
 urlbar-result-menu-trending-dont-show =
     .label = Don’t show trending searches
     .accesskey = D
+urlbar-result-menu-trending-why =
+    .label = Why am I seeing this?
+    .accesskey = W
 
 # A message that replaces a result when the user dismisses all suggestions of a
 # particular type.
@@ -968,10 +918,6 @@ fullscreen-warning-no-domain = This document is now full screen
 fullscreen-exit-button = Exit Full Screen (Esc)
 # "esc" is lowercase on mac keyboards, but uppercase elsewhere.
 fullscreen-exit-mac-button = Exit Full Screen (esc)
-
-fullscreen-keyboardlock-exit-button = Exit Full Screen (Press and hold Esc)
-# "esc" is lowercase on mac keyboards, but uppercase elsewhere.
-fullscreen-keyboardlock-exit-mac-button = Exit Full Screen (Press and hold esc)
 
 # Please ensure that the domain stays in the `<span data-l10n-name="domain">` markup.
 # Variables
@@ -1076,42 +1022,6 @@ toolbar-button-logins =
   .label = Passwords
   .tooltiptext = View and manage your saved passwords
 
-qrcode-panel-error =
-    .message = Failed to generate QR code. Please try again.
-
-qrcode-copy-button =
-    .label = Copy
-qrcode-copy-success =
-    .message = QR code copied to clipboard.
-qrcode-copy-error =
-    .message = Failed to copy QR code.
-
-qrcode-save-button =
-    .label = Save
-qrcode-save-success =
-    .message = QR code saved.
-qrcode-save-error =
-    .message = Failed to save QR code.
-qrcode-save-title = Save QR Code
-qrcode-save-filter-png = PNG Image
-
-## Default filenames used when saving a QR code. The file extension (.png)
-## is added automatically.
-
-qrcode-save-filename-base = qrcode
-# Variables:
-#  $domain (String): The current page's domain used in the suggested filename.
-qrcode-save-filename-with-domain-base = qrcode-{ $domain }
-
-##
-
-qrcode-window-title = QR Code
-qrcode-dialog-title = QR Code
-qrcode-image =
-    .aria-label = QR code
-qrcode-close-button =
-    .aria-label = Close
-
 # Variables:
 #  $shortcut (String): keyboard shortcut to save a copy of the page
 toolbar-button-save-page =
@@ -1128,23 +1038,11 @@ toolbar-button-synced-tabs =
   .label = Synced tabs
   .tooltiptext = Show tabs from other devices
 
-toolbar-button-send-tab =
-  .label = Send tab
-  .tooltiptext = Send current tab to another device
-
 # Variables
 # $shortcut (string) - Keyboard shortcut to open a new private browsing window
 toolbar-button-new-private-window =
   .label = New private window
   .tooltiptext = Open a new private browsing window ({ $shortcut })
-
-toolbar-button-share-tab =
-  .label = Share
-  .tooltiptext = Share this page
-
-toolbar-button-tab-groups =
-  .label = Tab groups
-  .tooltiptext = Show your tab groups
 
 ## EME notification panel
 
@@ -1164,16 +1062,8 @@ panel-save-update-password = Password
 # "More" item in macOS share menu
 menu-share-more =
     .label = More…
-menu-share-windows =
-    .label = More Options
-# Variables:
-#   $count (Number) - The number of links that will be copied.
-menu-share-copy-links =
-    .label =
-        { $count ->
-            [one] Copy Link
-           *[other] Copy { $count } Links
-        }
+menu-share-copy-link =
+    .label = Copy Link
     .accesskey = L
 ui-tour-info-panel-close =
     .tooltiptext = Close
@@ -1329,20 +1219,20 @@ unified-extensions-button-blocklisted =
 
 ## Private browsing reset button
 
-reset-pbm-toolbar-button2 =
-    .label = Clear Private Session
-    .tooltiptext = Clear Private Session
-reset-pbm-panel-heading2 = Clear data and start a fresh private session?
-reset-pbm-panel-description2 = This deletes history, cookies, and all other site data without closing your Private Window.
+reset-pbm-toolbar-button =
+    .label = End Private Session
+    .tooltiptext = End Private Session
+reset-pbm-panel-heading = End your private session?
+reset-pbm-panel-description = Close all private tabs and delete history, cookies, and all other site data.
 reset-pbm-panel-always-ask-checkbox =
      .label = Always ask me
      .accesskey = A
 reset-pbm-panel-cancel-button =
     .label = Cancel
     .accesskey = C
-reset-pbm-panel-confirm-button2 =
-    .label = Clear private session
-    .accesskey = l
+reset-pbm-panel-confirm-button =
+    .label = Delete session data
+    .accesskey = D
 reset-pbm-panel-complete = Private session data deleted
 
 ## Autorefresh blocker
@@ -1608,17 +1498,3 @@ trustpanel-cryptominer-not-blocking-tab-header = { $count ->
   *[other] { -brand-product-name } allowed { $count } cryptominers
 }
 trustpanel-cryptominer-tab-list-header = These sites are trying to cryptomine:
-# "account on this site" refers to the (breached) site the user is currently visiting, not a Mozilla Monitor account.
-trustpanel-breachalerts-anonymous-breached-header = Have an account on this site?
-trustpanel-breachalerts-anonymous-breached-description = { -brand-product-name } found that this site had a data breach in the last 12 months. Find out if you were affected.
-trustpanel-breachalerts-anonymous-breached-button-dismiss = Dismiss
-trustpanel-breachalerts-anonymous-breached-button-check-monitor = Start free scan
-
-## Reduced Protection Infobar ("ReducedProtectionNotification.sys.mjs")
-
-# "temporarily lower your tracking protection" refers to temporarily decreasing the amount of tracking protection.
-reduced-protection-infobar-message = <strong>Site looks broken?</strong> Reload the page to temporarily lower your tracking protection.
-reduced-protection-infobar-reload-button = Reload
-  .accesskey = R
-reduced-protection-infobar-never-show-button = Don’t show again
-  .accesskey = D

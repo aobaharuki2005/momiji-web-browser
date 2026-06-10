@@ -3,7 +3,6 @@
 [include]
 # List of dependencies for the command
 path:python/sites/docs.txt
-path:taskcluster/requirements.txt
 
 # Code for generating docs.
 glob:docs/**
@@ -17,6 +16,7 @@ glob:**/*.rst
 glob:**/*.md
 glob:**/*.mjs
 glob:**/*.js
+glob:**/*.jsm
 glob:**/*.json
 
 # Potential included images. We don't glob all paths in order to avoid importing
@@ -54,6 +54,3 @@ path:config/milestone.txt
 
 # mots configuration
 path:mots.yaml
-
-# ETP matrix generation needs pref definitions
-path:modules/libpref/init/StaticPrefList.yaml

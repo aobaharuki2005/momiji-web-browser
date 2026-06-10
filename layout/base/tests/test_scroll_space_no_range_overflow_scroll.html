@@ -29,11 +29,6 @@ let selectionController =
 
 function doPageDown(targetExpectedToScroll) {
   let promise = waitForScrollEvent(targetExpectedToScroll);
-  let selectionNode = targetExpectedToScroll;
-  if (selectionNode instanceof Window) {
-    selectionNode = selectionNode.document.body;
-  }
-  getSelection().collapse(selectionNode);
   selectionController.pageMove(true, false);
   return promise;
 }

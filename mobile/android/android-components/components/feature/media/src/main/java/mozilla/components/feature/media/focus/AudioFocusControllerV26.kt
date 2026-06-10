@@ -22,7 +22,6 @@ internal class AudioFocusControllerV26(
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build(),
         )
-        .setAcceptsDelayedFocusGain(true)
         .setWillPauseWhenDucked(false)
         .setOnAudioFocusChangeListener(listener)
         .build()

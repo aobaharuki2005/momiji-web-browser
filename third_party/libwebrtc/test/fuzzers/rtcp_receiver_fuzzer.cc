@@ -10,9 +10,9 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <span>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/environment/environment_factory.h"
 #include "api/field_trials.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
@@ -20,7 +20,6 @@
 #include "modules/rtp_rtcp/source/rtcp_receiver.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
 #include "system_wrappers/include/clock.h"
-#include "test/fuzzers/fuzz_data_helper.h"
 
 namespace webrtc {
 namespace {
@@ -37,13 +36,13 @@ class NullModuleRtpRtcp : public RTCPReceiver::ModuleRtpRtcp {
   void OnRequestSendReport() override {}
   void OnReceivedNack(const std::vector<uint16_t>&) override {}
   void OnReceivedRtcpReportBlocks(
-      std::span<const ReportBlockData> report_blocks) override {}
+      webrtc::ArrayView<const ReportBlockData> report_blocks) override {}
 };
 
 }  // namespace
 
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
-  if (fuzz_data.size() > kMaxInputLenBytes) {
+void FuzzOneInput(const uint8_t* data, size_t size) {
+  if (size > kMaxInputLenBytes) {
     return;
   }
   FieldTrials field_trials("WebRTC-RFC8888CongestionControlFeedback/Enabled/");
@@ -57,6 +56,6 @@ void FuzzOneInput(FuzzDataHelper fuzz_data) {
   RTCPReceiver receiver(CreateEnvironment(&clock, &field_trials), config,
                         &rtp_rtcp_module);
 
-  receiver.IncomingPacket(fuzz_data.ReadRemaining());
+  receiver.IncomingPacket(webrtc::MakeArrayView(data, size));
 }
 }  // namespace webrtc

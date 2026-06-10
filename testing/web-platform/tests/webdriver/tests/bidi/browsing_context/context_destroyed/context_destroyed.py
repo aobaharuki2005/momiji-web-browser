@@ -2,6 +2,7 @@ import pytest
 from webdriver.bidi.modules.script import ContextTarget
 from webdriver.error import TimeoutException
 
+from tests.bidi import wait_for_bidi_events
 from .. import assert_browsing_context
 
 pytestmark = pytest.mark.asyncio
@@ -9,7 +10,7 @@ pytestmark = pytest.mark.asyncio
 CONTEXT_DESTROYED_EVENT = "browsingContext.contextDestroyed"
 
 
-async def test_unsubscribe(bidi_session, new_tab, wait_for_bidi_events):
+async def test_unsubscribe(bidi_session, new_tab):
     await bidi_session.session.subscribe(events=[CONTEXT_DESTROYED_EVENT])
     await bidi_session.session.unsubscribe(events=[CONTEXT_DESTROYED_EVENT])
 
@@ -24,7 +25,7 @@ async def test_unsubscribe(bidi_session, new_tab, wait_for_bidi_events):
     await bidi_session.browsing_context.close(context=new_tab["context"])
 
     with pytest.raises(TimeoutException):
-        await wait_for_bidi_events(events, 1, timeout=0.5)
+        await wait_for_bidi_events(bidi_session, events, 1, timeout=0.5)
 
     remove_listener()
 
@@ -53,7 +54,7 @@ async def test_new_context(bidi_session, wait_for_event, wait_for_future_safe, s
 
 
 @pytest.mark.parametrize("domain", ["", "alt"], ids=["same_origin", "cross_origin"])
-async def test_navigate(bidi_session, subscribe_events, wait_for_bidi_events, new_tab, inline, domain):
+async def test_navigate(bidi_session, subscribe_events, new_tab, inline, domain):
     await subscribe_events([CONTEXT_DESTROYED_EVENT])
 
     # Track all received browsingContext.contextDestroyed events in the events array
@@ -71,7 +72,7 @@ async def test_navigate(bidi_session, subscribe_events, wait_for_bidi_events, ne
 
     # Make sure navigation doesn't cause the context to be destroyed
     with pytest.raises(TimeoutException):
-        await wait_for_bidi_events(events, 1, timeout=0.5)
+        await wait_for_bidi_events(bidi_session, events, 1, timeout=0.5)
 
     remove_listener()
 
@@ -265,7 +266,7 @@ async def test_iframe_destroy_parent(
     remove_listener()
 
 
-async def test_subscribe_to_one_context(bidi_session, subscribe_events, wait_for_bidi_events, new_tab):
+async def test_subscribe_to_one_context(bidi_session, subscribe_events, new_tab):
     # Subscribe to a specific context
     await subscribe_events(
         events=[CONTEXT_DESTROYED_EVENT], contexts=[new_tab["context"]]
@@ -284,12 +285,12 @@ async def test_subscribe_to_one_context(bidi_session, subscribe_events, wait_for
 
     # Make sure we didn't receive the event for the new tab
     with pytest.raises(TimeoutException):
-        await wait_for_bidi_events(events, 1, timeout=0.5)
+        await wait_for_bidi_events(bidi_session, events, 1, timeout=0.5)
 
     await bidi_session.browsing_context.close(context=new_tab["context"])
 
     # Make sure we received the event
-    await wait_for_bidi_events(events, 1)
+    await wait_for_bidi_events(bidi_session, events, 1)
 
     remove_listener()
 

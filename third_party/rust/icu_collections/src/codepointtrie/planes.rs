@@ -172,9 +172,9 @@ pub fn get_planes_trie() -> CodePointTrie<'static, u8> {
         0xe, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf,
         0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0x10, 0x10, 0x10, 0,
     ];
-    #[expect(clippy::unwrap_used)] // valid bytes
+    #[allow(clippy::unwrap_used)] // valid bytes
     let index: ZeroVec<u16> = ZeroVec::parse_bytes(index_array_as_bytes).unwrap();
-    #[expect(clippy::unwrap_used)] // valid bytes
+    #[allow(clippy::unwrap_used)] // valid bytes
     let data: ZeroVec<u8> = ZeroVec::parse_bytes(data_8_array).unwrap();
     let high_start = 0x100000;
     let shifted12_high_start = 0x100;
@@ -192,7 +192,7 @@ pub fn get_planes_trie() -> CodePointTrie<'static, u8> {
         trie_type,
     };
 
-    #[expect(clippy::unwrap_used)] // valid data
+    #[allow(clippy::unwrap_used)] // valid data
     CodePointTrie::try_new(trie_header, index, data).unwrap()
 }
 

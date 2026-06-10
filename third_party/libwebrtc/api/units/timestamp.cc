@@ -12,11 +12,13 @@
 
 #include <string>
 
+#include "api/array_view.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 std::string ToString(Timestamp value) {
-  StringBuilder sb;
+  char buf[64];
+  SimpleStringBuilder sb(buf);
   if (value.IsPlusInfinity()) {
     sb << "+inf ms";
   } else if (value.IsMinusInfinity()) {
@@ -29,6 +31,6 @@ std::string ToString(Timestamp value) {
     else
       sb << value.seconds() << " s";
   }
-  return sb.Release();
+  return sb.str();
 }
 }  // namespace webrtc

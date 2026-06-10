@@ -1,3 +1,4 @@
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -399,7 +400,7 @@ nsresult RequestWorkerRunnable::DeserializeArgs(
     IgnoredErrorResult rv;
 
     JS::Rooted<JS::Value> jsvalue(aCx);
-    mArgsHolder->get()->Read(aCx, &jsvalue, rv);
+    mArgsHolder->get()->Read(xpc::CurrentNativeGlobal(aCx), aCx, &jsvalue, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -608,12 +609,13 @@ void RequestWorkerRunnable::ReadResult(JSContext* aCx,
 
   switch (*mResultType) {
     case mozIExtensionAPIRequestResult::ResultType::RETURN_VALUE:
-      mResultHolder->get()->Read(aCx, aResult, aRv);
+      mResultHolder->get()->Read(xpc::CurrentNativeGlobal(aCx), aCx, aResult,
+                                 aRv);
       return;
     case mozIExtensionAPIRequestResult::ResultType::EXTENSION_ERROR:
       JS::Rooted<JS::Value> exn(aCx);
       IgnoredErrorResult rv;
-      mResultHolder->get()->Read(aCx, &exn, rv);
+      mResultHolder->get()->Read(xpc::CurrentNativeGlobal(aCx), aCx, &exn, rv);
       if (rv.Failed()) {
         NS_WARNING("Failed to deserialize extension error");
         ExtensionAPIBase::ThrowUnexpectedError(aCx, aRv);

@@ -40,7 +40,7 @@
   }
 }
 
-.datetime-picker-button {
+.datetime-calendar-button {
   -moz-context-properties: fill;
   color: color-mix(in srgb, currentColor 65%, transparent);
   font-size: inherit;
@@ -67,7 +67,7 @@
     background-color: ButtonFace;
     color: ButtonText;
 
-    > svg {
+    > .datetime-calendar-button-svg {
       background-color: ButtonFace;
       -moz-context-properties: fill;
       fill: ButtonText;
@@ -77,7 +77,7 @@
     &:hover {
       background-color: SelectedItem;
 
-      > svg {
+      > .datetime-calendar-button-svg {
         background-color: SelectedItem;
         -moz-context-properties: fill;
         fill: SelectedItemText;
@@ -86,8 +86,7 @@
   }
 }
 
-.datetime-calendar-button-svg,
-.datetime-time-button-svg {
+.datetime-calendar-button-svg {
   pointer-events: none;
   /* When using a very small font-size, we don't want the button to take extra
    * space (which will affect the baseline of the form control) */
@@ -95,11 +94,7 @@
   max-height: 1em;
 }
 
-.datetime-time-button-svg {
-  display: none;
-}
-
-:host(:is(:disabled, :read-only, [type="time"])) .datetime-picker-button {
+:host(:is(:disabled, :read-only, [type="time"])) .datetime-calendar-button {
   display: none;
 }
 
@@ -107,16 +102,4 @@
   user-select: none;
   pointer-events: none;
   -moz-user-focus: none;
-}
-
-@media -moz-pref("dom.forms.datetime.timepicker") {
-  :host([type="time"]) {
-    .datetime-calendar-button-svg {
-      display: none;
-    }
-    .datetime-picker-button,
-    .datetime-time-button-svg {
-      display: initial;
-    }
-  }
 }

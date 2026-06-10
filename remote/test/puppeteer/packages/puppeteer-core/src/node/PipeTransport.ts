@@ -17,7 +17,7 @@ export class PipeTransport implements ConnectionTransport {
   #subscriptions = new DisposableStack();
 
   #isClosed = false;
-  #pendingMessage: Buffer[] = [];
+  #pendingMessage = '';
 
   onclose?: () => void;
   onmessage?: (value: string) => void;
@@ -34,7 +34,7 @@ export class PipeTransport implements ConnectionTransport {
         pipeRead as unknown as EventEmitter<Record<string, any>>,
       ),
     );
-    pipeReadEmitter.on('data', buffer => {
+    pipeReadEmitter.on('data', (buffer: Buffer) => {
       return this.#dispatch(buffer);
     });
     pipeReadEmitter.on('close', () => {
@@ -60,32 +60,29 @@ export class PipeTransport implements ConnectionTransport {
     this.#pipeWrite.write('\0');
   }
 
-  #dispatch(buffer: Buffer<ArrayBuffer>): void {
+  #dispatch(buffer: Buffer): void {
     assert(!this.#isClosed, '`PipeTransport` is closed.');
 
-    this.#pendingMessage.push(buffer);
-    if (buffer.indexOf('\0') === -1) {
+    let end = buffer.indexOf('\0');
+    if (end === -1) {
+      this.#pendingMessage += buffer.toString();
       return;
     }
-    const concatBuffer = Buffer.concat(this.#pendingMessage);
+    const message = this.#pendingMessage + buffer.toString(undefined, 0, end);
+    if (this.onmessage) {
+      this.onmessage.call(null, message);
+    }
 
-    let start = 0;
-    let end = concatBuffer.indexOf('\0');
+    let start = end + 1;
+    end = buffer.indexOf('\0', start);
     while (end !== -1) {
-      const message = concatBuffer.toString(undefined, start, end);
-      setImmediate(() => {
-        if (this.onmessage) {
-          this.onmessage.call(null, message);
-        }
-      });
+      if (this.onmessage) {
+        this.onmessage.call(null, buffer.toString(undefined, start, end));
+      }
       start = end + 1;
-      end = concatBuffer.indexOf('\0', start);
+      end = buffer.indexOf('\0', start);
     }
-    if (start >= concatBuffer.length) {
-      this.#pendingMessage = [];
-    } else {
-      this.#pendingMessage = [concatBuffer.subarray(start)];
-    }
+    this.#pendingMessage = buffer.toString(undefined, start);
   }
 
   close(): void {

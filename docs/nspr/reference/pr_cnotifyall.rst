@@ -28,9 +28,9 @@ The function has the following parameter:
 Returns
 ~~~~~~~
 
- - ``PR_SUCCESS`` indicates that the referenced monitor was located and
+ - :ref:`PR_SUCCESS` indicates that the referenced monitor was located and
    the calling thread was in the monitor.
- - ``PR_FAILURE`` indicates that the referenced monitor could not be
+ - :ref:`PR_FAILURE` indicates that the referenced monitor could not be
    located or that the calling thread was not in the monitor
 
 

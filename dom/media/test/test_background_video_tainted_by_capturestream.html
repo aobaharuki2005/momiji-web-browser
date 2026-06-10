@@ -11,7 +11,7 @@
 var manager = new MediaTestManager;
 
 function captureVideoAsStream(v) {
-  v.captureStream?.() || v.mozCaptureStream();
+  v.mozCaptureStream();
 }
 
 startTest({

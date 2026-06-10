@@ -194,7 +194,7 @@ add_task(async function test() {
 
   // Move the original window to the foreground to pass the tests
   gBrowser.selectedTab = tab0;
-  tab0.documentGlobal.focus();
+  tab0.ownerGlobal.focus();
 
   // Pretend we've visited the tabs
   await BrowserTestUtils.switchTab(windowPriv.gBrowser, tabPriv1);
@@ -278,7 +278,9 @@ add_task(async function test() {
   TabUnloader.unloadTabAsync(null);
   ok(tabPriv1.linkedPanel, "a tab in a private window is never unloaded");
 
-  Services.fog.testResetFOG();
+  const histogram = TelemetryTestUtils.getAndClearHistogram(
+    "TAB_UNLOAD_TO_RELOAD"
+  );
 
   // It's possible that we're already in the memory-pressure state
   // and we may receive the "ongoing" message.
@@ -295,13 +297,11 @@ add_task(async function test() {
   await BrowserTestUtils.switchTab(gBrowser, tab1);
   await BrowserTestUtils.switchTab(gBrowser, pinnedTab);
 
-  Assert.equal(
-    Glean.browserEngagement.tabUnloadToReload.testGetValue().count,
-    2,
-    "two tabs have been reloaded."
-  );
+  const hist = histogram.snapshot();
+  const numEvents = Object.values(hist.values).reduce((a, b) => a + b);
+  Assert.equal(numEvents, 2, "two tabs have been reloaded.");
 
-  // tab0 has never been unloaded.  No data is recorded.
+  // tab0 has never been unloaded.  No data is added to the histogram.
   await BrowserTestUtils.switchTab(gBrowser, tab0);
 
   await compareTabOrder([

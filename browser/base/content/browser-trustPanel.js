@@ -5,26 +5,15 @@
 /* import-globals-from browser-siteProtections.js */
 
 ChromeUtils.defineESModuleGetters(this, {
-  BreachAlertStorage: "resource://gre/modules/BreachAlertStore.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   ContentBlockingAllowList:
     "resource://gre/modules/ContentBlockingAllowList.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
-  FX_MONITOR_OAUTH_CLIENT_ID: "resource://gre/modules/FxAccountsCommon.sys.mjs",
   PanelMultiView:
     "moz-src:///browser/components/customizableui/PanelMultiView.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  QWACs: "resource://gre/modules/psm/QWACs.sys.mjs",
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SiteDataManager: "resource:///modules/SiteDataManager.sys.mjs",
-  UIState: "resource://services-sync/UIState.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-});
-
-ChromeUtils.defineLazyGetter(this, "fxAccounts", () => {
-  return ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
-  ).getFxAccountsSingleton();
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -105,8 +94,8 @@ const SMARTBLOCK_EMBED_INFO = [
   },
   {
     matchPatterns: ["https://www.tiktok.com/*"],
-    shimId: "TikTokEmbed",
-    displayName: "TikTok",
+    shimId: "TiktokEmbed",
+    displayName: "Tiktok",
   },
   {
     matchPatterns: ["https://platform.twitter.com/*"],
@@ -123,31 +112,12 @@ const SMARTBLOCK_EMBED_INFO = [
 class TrustPanel {
   #state = null;
   #secInfo = null;
-  /**
-   * We read the OAuth clients attached to the user's FxA account to know if
-   * they're a Mozilla Monitor user, and cache those in memory. When the user
-   * logs out, we flip this boolean to indicate that list needs refreshing.
-   */
-  #clearFxaOauthClientCache = false;
-  #breachAlertStoragePromise = null;
-
-  /**
-   * If the document is using a qualified website authentication certificate
-   * (QWAC), this may eventually be an nsIX509Cert corresponding to it.
-   */
-  #qwac = null;
-
-  #breachedStatus = null;
-
-  /**
-   * Promise that will resolve when determining if the document is using a QWAC
-   * has resolved.
-   */
-  #qwacStatusPromise = null;
-
+  #host = null;
   #uri = null;
   #uriHasHost = null;
   #pageExtensionPolicy = null;
+  #isSecureContext = null;
+  #isSecureInternalUI = null;
 
   #lastEvent = null;
 
@@ -171,21 +141,6 @@ class TrustPanel {
 
     // Add an observer to listen to requests to open the protections panel
     Services.obs.addObserver(this, "smartblock:open-protections-panel");
-
-    // Add an observer to listen for FxAccounts logout to clear OAuth cache
-    Services.obs.addObserver(this, "fxaccounts:onlogout");
-
-    customElements.whenDefined("breach-alert-panel").then(() => {
-      const breachAlertElement = document.getElementById(
-        "trustpanel-breach-alert-section"
-      );
-      if (breachAlertElement) {
-        breachAlertElement.addEventListener(
-          "dismissBreachAlert",
-          this.dismissBreachAlert.bind(this)
-        );
-      }
-    });
   }
 
   uninit() {
@@ -196,7 +151,6 @@ class TrustPanel {
     }
 
     Services.obs.removeObserver(this, "smartblock:open-protections-panel");
-    Services.obs.removeObserver(this, "fxaccounts:onlogout");
   }
 
   get #popup() {
@@ -227,15 +181,13 @@ class TrustPanel {
     _isSimulated,
     _previousState
   ) {
-    // Only accept contentblocking events for uris that we initialised `updateIdentity`
-    // with, this can go wrong if trustpanel is enabled mid page load.
-    if (!this.#enabled || !this.#uri) {
+    if (!this.#enabled) {
       return;
     }
-
     // First update all our internal state based on the allowlist and the
     // different blockers:
     this.anyDetected = false;
+    this.anyBlocking = false;
     this.#lastEvent = event;
 
     // Check whether the user has added an exception for this site.
@@ -252,6 +204,7 @@ class TrustPanel {
       // the data with the document directly.
       blocker.activated = blocker.isBlocking(event);
       this.anyDetected = this.anyDetected || blocker.isDetected(event);
+      this.anyBlocking = this.anyBlocking || blocker.activated;
     }
 
     if (this.#popup) {
@@ -274,13 +227,12 @@ class TrustPanel {
         .addEventListener("click", event => this.#openBlockerSubview(event));
       document
         .getElementById("trustpanel-privacy-link")
-        .addEventListener("click", () => {
-          this.#hidePopup();
-          window.openTrustedLinkIn("about:preferences#privacy", "tab");
-        });
+        .addEventListener("click", () =>
+          window.openTrustedLinkIn("about:preferences#privacy", "tab")
+        );
       document
         .getElementById("trustpanel-clear-cookies-button")
-        .addEventListener("command", event =>
+        .addEventListener("click", event =>
           this.#showClearCookiesSubview(event)
         );
       document
@@ -308,40 +260,13 @@ class TrustPanel {
 
   async showPopup(opts = {}) {
     this.#initializePopup();
-
-    // Kick off background determination of QWAC status.
-    if (this.#isSecureContext && !this.#qwacStatusPromise) {
-      let qwacStatusPromise = QWACs.determineQWACStatus(
-        this.#secInfo,
-        this.#uri,
-        gBrowser.selectedBrowser.browsingContext
-      ).then(result => {
-        // Check that when this promise resolves, we're still on the same
-        // document as when it was created.
-        if (qwacStatusPromise == this.#qwacStatusPromise && result) {
-          this.#qwac = result;
-          this.#updateSecurityInformationSubview();
-        }
-      });
-      this.#qwacStatusPromise = qwacStatusPromise;
-    }
-
     await this.#updatePopup();
 
     this.#openingReason = opts.reason;
 
-    PanelMultiView.openPopup(this.#popup, this.#anchor(), {
+    let anchor = document.getElementById("trust-icon-container");
+    PanelMultiView.openPopup(this.#popup, anchor, {
       position: "bottomleft topleft",
-    });
-
-    const applicableBreaches = await this.#getApplicableBreaches(this.#host);
-    const hasMonitorAccountOrStoredPasswords =
-      await this.#hasMonitorAccountOrStoredPasswords();
-    Glean.trustpanel.opened.record({
-      breach_status: getBreachedStatus({
-        breaches: applicableBreaches,
-        hasMonitorAccountOrStoredPasswords,
-      }),
     });
   }
 
@@ -367,98 +292,48 @@ class TrustPanel {
     this.#uri = uri;
 
     this.#secInfo = gBrowser.securityUI.secInfo;
-    // Clear any previously-determined QWAC information.
-    this.#qwac = null;
-    this.#qwacStatusPromise = null;
     this.#pageExtensionPolicy = WebExtensionPolicy.getByURI(uri);
-    this.#breachedStatus = null;
-    // The breached status is checked asynchronously below:
+    this.#isSecureContext = this.#getIsSecureContext();
+
+    this.#isSecureInternalUI = false;
+    if (this.#uri.schemeIs("about")) {
+      let module = E10SUtils.getAboutModule(this.#uri);
+      if (module) {
+        let flags = module.getURIFlags(this.#uri);
+        this.#isSecureInternalUI = !!(
+          flags & Ci.nsIAboutModule.IS_SECURE_CHROME_UI
+        );
+      }
+    }
+
     this.#updateUrlbarIcon();
-
-    // We want to make sure the URL bar icon updates immediately to a neutral state
-    // after navigation, which is why `this.#updateUrlbarIcon` is synchronous.
-    // However, to determine whether we need to show an animation to highlight a breach alert,
-    // we need to make a couple of async calls. Thus, we accept that we might be showing the
-    // "wrong" icon initially, and then redraw the icon again when the async calls complete
-    // and we need to display the breach animation.
-    // (This function will update the icon by itself when it resolves, so we don't have to await it here.)
-    void this.#checkForBreaches(uri);
-  }
-
-  /** Asynchronous check for the current page's breached status, updating the address bar icon if the page was breached */
-  async #checkForBreaches(uri) {
-    const capturedUri = uri;
-    const [applicableBreaches, hasMonitorAccountOrStoredPasswords] =
-      await Promise.all([
-        this.#getApplicableBreaches(this.#host),
-        this.#hasMonitorAccountOrStoredPasswords(),
-      ]);
-
-    // Ensure we're still looking at the page we checked the breach status for:
-    if (this.#uri !== capturedUri) {
-      return;
-    }
-    const breachedStatus = getBreachedStatus({
-      breaches: applicableBreaches,
-      hasMonitorAccountOrStoredPasswords,
-    });
-    this.#breachedStatus = breachedStatus;
-    if (breachedStatus !== "disabled" && breachedStatus !== "not-breached") {
-      this.#updateUrlbarIcon();
-    }
-  }
-
-  /**
-   * The trust icon may be hidden, in that case the identity box
-   * should be shown so use that as anchor.
-   *
-   * @returns {DOMElement}
-   */
-  #anchor() {
-    let anchors = [
-      document.getElementById("trust-icon-container"),
-      document.getElementById("identity-icon-box"),
-    ];
-    return anchors.find(element => element.checkVisibility());
   }
 
   #updateUrlbarIcon() {
     let icon = document.getElementById("trust-icon-container");
-    let targetClasses = new Set();
-    targetClasses.add(this.#isSecurePage() ? "secure" : "insecure");
+    icon.className = this.#isSecurePage() ? "secure" : "insecure";
 
-    if (this.#isSecurePage() && this.#breachedStatus === "breached") {
-      targetClasses.add("breached");
+    if (this.#isURILoadedFromFile) {
+      icon.classList.add("file");
     }
+
     if (!this.#trackingProtectionEnabled) {
-      targetClasses.add("inactive");
-    }
-    if (this.#isAboutNetErrorPage || this.#isCertUserOverridden) {
-      targetClasses.add("warning");
+      icon.classList.add("inactive");
     }
 
-    icon.className = "";
-
-    // Handle the breach animation guard (restart only on fresh URI).
-    if (targetClasses.has("breached")) {
-      let browser = gBrowser.selectedBrowser;
-      if (browser.lastAnimatedBreachURI !== this.#uri?.spec) {
-        // This is a fresh visit: trigger the animation.
-        targetClasses.add("breach-animating");
-        browser.lastAnimatedBreachURI = this.#uri?.spec;
-        // Logic will re-add breached, and since it's the first time for
-        // breach-animating, the CSS animation will play.
-      }
-    }
-
-    icon.classList.add(...targetClasses);
     icon.setAttribute("tooltiptext", this.#tooltipText());
-    icon.classList.toggle("chickletShown", this.#isInternalSecurePage);
+    icon.classList.toggle("chickletShown", this.#isSecureInternalUI);
   }
 
   async #updatePopup() {
+    if (this.#uri) {
+      this.#host = BrowserUtils.formatURIForDisplay(this.#uri, {
+        onlyBaseDomain: true,
+      });
+    } else {
+      this.#host = "";
+    }
     this.#popup.setAttribute("connection", this.#connectionState());
-    this.#popup.toggleAttribute("customroot", this.#hasCustomRoot());
     this.#popup.setAttribute(
       "tracking-protection",
       this.#trackingProtectionStatus()
@@ -468,35 +343,10 @@ class TrustPanel {
   }
 
   async #updateMainView() {
+    let secureConnection = this.#isSecurePage();
     let assets = this.#trackingProtectionEnabled
       ? ETP_ENABLED_ASSETS
       : ETP_DISABLED_ASSETS;
-
-    const graphicSection = document.getElementById(
-      "trustpanel-graphic-section"
-    );
-    const breachAlertGraphicSection = document.getElementById(
-      "trustpanel-breach-alert-section"
-    );
-
-    const applicableBreaches = await this.#getApplicableBreaches(this.#host);
-    const hasMonitorAccountOrStoredPasswords =
-      await this.#hasMonitorAccountOrStoredPasswords();
-    const breachedStatus = getBreachedStatus({
-      breaches: applicableBreaches,
-      hasMonitorAccountOrStoredPasswords,
-    });
-    if (breachedStatus !== "disabled" && breachedStatus !== "not-breached") {
-      graphicSection.hidden = true;
-      breachAlertGraphicSection.hidden = false;
-      breachAlertGraphicSection.breachStatus = breachedStatus;
-      breachAlertGraphicSection.breachNames = applicableBreaches.map(
-        breach => breach.Name
-      );
-    } else {
-      graphicSection.hidden = false;
-      breachAlertGraphicSection.hidden = true;
-    }
 
     if (this.#uri) {
       let favicon = await PlacesUtils.favicons.getFaviconForPage(this.#uri);
@@ -536,7 +386,9 @@ class TrustPanel {
     );
     document.l10n.setAttributes(
       document.getElementById("trustpanel-connection-label"),
-      this.#connectionLabel()
+      secureConnection
+        ? "trustpanel-connection-label-secure"
+        : "trustpanel-connection-label-insecure"
     );
 
     this.#updateAttribute(
@@ -544,30 +396,6 @@ class TrustPanel {
       "hidden",
       !this.anyDetected
     );
-
-    this.#updateAttribute(
-      document.getElementById("trustpanel-toggle-section"),
-      "disabled",
-      !ContentBlockingAllowList.canHandle(window.gBrowser.selectedBrowser)
-    );
-
-    try {
-      let baseDomain = SiteDataManager.getBaseDomainFromHost(this.#uri.host);
-      SiteDataManager.hasSiteData(baseDomain).then(hasSiteData => {
-        this.#updateAttribute(
-          document.getElementById("trustpanel-clear-cookies-button"),
-          "disabled",
-          !hasSiteData
-        );
-      });
-    } catch (e) {}
-
-    this.#updateAttribute(
-      document.getElementById("trustpanel-toggle"),
-      "disabled",
-      !ContentBlockingAllowList.canHandle(window.gBrowser.selectedBrowser)
-    );
-
     await this.#updateBlockerView();
   }
 
@@ -625,13 +453,14 @@ class TrustPanel {
     return this.#trackingProtectionEnabled ? "enabled" : "disabled";
   }
 
-  #updateSecurityInformationSubview() {
+  #openSecurityInformationSubview(event) {
     document.l10n.setAttributes(
       document.getElementById("trustpanel-securityInformationView"),
       "trustpanel-site-information-header",
       { host: this.#host }
     );
 
+    let customRoot = this.#isSecureConnection ? this.#hasCustomRoot() : false;
     let connection = this.#connectionState();
     let mixedcontent = this.#mixedContentState();
     let ciphers = this.#ciphersState();
@@ -649,7 +478,7 @@ class TrustPanel {
       this.#updateAttribute(element, "ciphers", ciphers);
       this.#updateAttribute(element, "mixedcontent", mixedcontent);
       this.#updateAttribute(element, "isbroken", this.#isBrokenConnection);
-      element.toggleAttribute("customroot", this.#hasCustomRoot());
+      this.#updateAttribute(element, "customroot", customRoot);
       this.#updateAttribute(element, "httpsonlystatus", httpsOnlyStatus);
     }
 
@@ -659,10 +488,7 @@ class TrustPanel {
     document.getElementById("identity-popup-content-verifier").textContent =
       verifier;
     document.getElementById("identity-popup-content-owner").textContent = owner;
-  }
 
-  #openSecurityInformationSubview(event) {
-    this.#updateSecurityInformationSubview();
     document
       .getElementById("trustpanel-popup-multiView")
       .showSubView("trustpanel-securityInformationView", event.target);
@@ -722,7 +548,7 @@ class TrustPanel {
     document.l10n.setAttributes(
       document.getElementById("trustpanel-clearcookiesView"),
       "trustpanel-clear-cookies-header",
-      { host: this.#host }
+      { host: window.gIdentityHandler.getHostForDisplay() }
     );
     document
       .getElementById("trustpanel-popup-multiView")
@@ -766,69 +592,19 @@ class TrustPanel {
     );
   }
 
-  async #hasMonitorAccount() {
-    const state = UIState.get();
-    if (state.status !== UIState.STATUS_SIGNED_IN) {
-      return false;
-    }
-    try {
-      const attachedClients =
-        (await fxAccounts.listAttachedOAuthClients(
-          this.#clearFxaOauthClientCache
-        )) ?? [];
-      this.#clearFxaOauthClientCache = false;
-
-      const hasMonitorClient = attachedClients.some(
-        client => client.id === FX_MONITOR_OAUTH_CLIENT_ID
-      );
-
-      return hasMonitorClient;
-    } catch (error) {
-      console.warn("Failed to fetch attached OAuth clients:", error);
-      return false;
-    }
-  }
-
-  async #hasStoredPasswords() {
-    try {
-      const count = await Services.logins.countLoginsAsync("", "", "");
-      return count > 0;
-    } catch (error) {
-      console.warn("Failed to check stored passwords:", error);
-      return false;
-    }
-  }
-
-  async #hasMonitorAccountOrStoredPasswords() {
+  #isSecurePage() {
     return (
-      (await this.#hasMonitorAccount()) || (await this.#hasStoredPasswords())
+      this.#state & Ci.nsIWebProgressListener.STATE_IS_SECURE ||
+      this.#isInternalSecurePage(this.#uri) ||
+      this.#isPotentiallyTrustworthy
     );
   }
 
-  #isSecurePage() {
-    if (this.#isInternalSecurePage) {
-      return true;
-    }
-    if (this.#isCertErrorPage || this.#isCertUserOverridden) {
-      return false;
-    }
-    if (this.#isSecureConnection) {
-      return true;
-    }
-    if (this.#isBrokenConnection) {
-      return false;
-    }
-    if (this.#isPotentiallyTrustworthy) {
-      return true;
-    }
-    return false;
-  }
-
-  get #isInternalSecurePage() {
-    if (this.#uri?.schemeIs("about")) {
-      let module = E10SUtils.getAboutModule(this.#uri);
+  #isInternalSecurePage(uri) {
+    if (uri && uri.schemeIs("about")) {
+      let module = E10SUtils.getAboutModule(uri);
       if (module) {
-        let flags = module.getURIFlags(this.#uri);
+        let flags = module.getURIFlags(uri);
         if (flags & Ci.nsIAboutModule.IS_SECURE_CHROME_UI) {
           return true;
         }
@@ -875,8 +651,9 @@ class TrustPanel {
    * Helper to parse out the important parts of _secInfo (of the SSL cert in
    * particular) for use in constructing identity UI strings
    */
-  #getIdentityData(cert = this.#secInfo.serverCert) {
+  #getIdentityData() {
     var result = {};
+    var cert = this.#secInfo.serverCert;
 
     // Human readable name of Subject
     result.subjectOrg = cert.organization;
@@ -902,7 +679,7 @@ class TrustPanel {
     return result;
   }
 
-  get #isSecureContext() {
+  #getIsSecureContext() {
     if (gBrowser.contentPrincipal?.originNoSuffix != "resource://pdf.js") {
       return gBrowser.securityUI.isSecureContext;
     }
@@ -931,16 +708,9 @@ class TrustPanel {
   /**
    * Returns whether the issuer of the current certificate chain is
    * built-in (returns false) or imported (returns true).
-   * Can only be true for secure connections and where there isn't a
-   * user-added error override.
    */
   #hasCustomRoot() {
-    return (
-      this.#isSecureConnection &&
-      !this.#isCertUserOverridden &&
-      this.#secInfo &&
-      !this.#secInfo.isBuiltCertChainRootBuiltInRoot
-    );
+    return !this.#secInfo.isBuiltCertChainRootBuiltInRoot;
   }
 
   /**
@@ -968,18 +738,6 @@ class TrustPanel {
       !this.#isURILoadedFromFile &&
       this.#state & Ci.nsIWebProgressListener.STATE_IS_SECURE
     );
-  }
-
-  // Using a getter rather than a method reduces call-site noise (this.#host vs
-  // this.#host()) and avoids churn when the implementation changes. Semantically,
-  // this behaves like a property derived from #uri, so a getter is the right fit.
-  get #host() {
-    if (!this.#uri) {
-      return null;
-    }
-    return BrowserUtils.formatURIForDisplay(this.#uri, {
-      onlyBaseDomain: true,
-    });
   }
 
   get #isEV() {
@@ -1093,48 +851,37 @@ class TrustPanel {
     return this.#uri.schemeIs("file");
   }
 
-  /**
-   * Returns a promise that will resolve when determining QWAC status has
-   * finished. Primarily intended for tests.
-   */
-  get qwacStatusPromise() {
-    return this.#qwacStatusPromise;
-  }
-
   #supplementalText() {
     let supplemental = "";
     let verifier = "";
     let owner = "";
 
     // Fill in the CA name if we have a valid TLS certificate.
-    if (this.#isSecureConnection) {
-      verifier = this.#getIdentityData().caOrg;
+    if (this.#isSecureConnection || this.#isCertUserOverridden) {
+      verifier = this.#tooltipText();
     }
 
-    // Fill in organization information if we have a valid EV certificate or
-    // QWAC.
-    if (this.#isEV || this.#qwac) {
-      let identityData = this.#getIdentityData(
-        this.#qwac || this.#secInfo.serverCert
-      );
-      owner = identityData.subjectOrg;
-      verifier = identityData.caOrg;
+    // Fill in organization information if we have a valid EV certificate.
+    if (this.#isEV) {
+      let iData = this.#getIdentityData();
+      owner = iData.subjectOrg;
+      verifier = this.#tooltipText();
 
       // Build an appropriate supplemental block out of whatever location data we have
-      if (identityData.city) {
-        supplemental += identityData.city + "\n";
+      if (iData.city) {
+        supplemental += iData.city + "\n";
       }
-      if (identityData.state && identityData.country) {
+      if (iData.state && iData.country) {
         supplemental += gNavigatorBundle.getFormattedString(
           "identity.identified.state_and_country",
-          [identityData.state, identityData.country]
+          [iData.state, iData.country]
         );
-      } else if (identityData.state) {
+      } else if (iData.state) {
         // State only
-        supplemental += identityData.state;
-      } else if (identityData.country) {
+        supplemental += iData.state;
+      } else if (iData.country) {
         // Country only
-        supplemental += identityData.country;
+        supplemental += iData.country;
       }
     }
     return { supplemental, verifier, owner };
@@ -1149,7 +896,7 @@ class TrustPanel {
 
     if (this.#uriHasHost && this.#isSecureConnection) {
       // This is a secure connection.
-      if (!this.#isCertUserOverridden) {
+      if (!this._isCertUserOverridden) {
         // It's a normal cert, verifier is the CA Org.
         tooltip = gNavigatorBundle.getFormattedString(
           "identity.identified.verifier",
@@ -1158,6 +905,7 @@ class TrustPanel {
       }
     } else if (this.#isBrokenConnection) {
       if (this.#isMixedActiveContentLoaded) {
+        this._identityBox.classList.add("mixedActiveContent");
         if (
           UrlbarPrefs.getScotchBonnetPref("trimHttps") &&
           warnTextOnInsecure
@@ -1169,7 +917,7 @@ class TrustPanel {
       tooltip = gNavigatorBundle.getString("identity.notSecure.tooltip");
     }
 
-    if (this.#isCertUserOverridden) {
+    if (this._isCertUserOverridden) {
       // Cert is trusted because of a security exception, verifier is a special string.
       tooltip = gNavigatorBundle.getString(
         "identity.identified.verified_by_you"
@@ -1181,14 +929,12 @@ class TrustPanel {
   #connectionState() {
     // Determine connection security information.
     let connection = "not-secure";
-    if (this.#isInternalSecurePage) {
+    if (this.#isSecureInternalUI) {
       connection = "chrome";
     } else if (this.#pageExtensionPolicy) {
       connection = "extension";
     } else if (this.#isURILoadedFromFile) {
       connection = "file";
-    } else if (this.#qwac) {
-      connection = "secure-etsi";
     } else if (this.#isEV) {
       connection = "secure-ev";
     } else if (this.#isCertUserOverridden) {
@@ -1211,16 +957,6 @@ class TrustPanel {
       connection = "file";
     }
     return connection;
-  }
-
-  #connectionLabel() {
-    if (this.#isAboutNetErrorPage) {
-      return "identity-connection-failure";
-    }
-    if (this.#isSecurePage()) {
-      return "trustpanel-connection-label-secure";
-    }
-    return "trustpanel-connection-label-insecure";
   }
 
   #mixedContentState() {
@@ -1548,15 +1284,7 @@ class TrustPanel {
   }
 
   async observe(subject, topic) {
-    if (!this.#enabled) {
-      return;
-    }
     switch (topic) {
-      case "fxaccounts:onlogout": {
-        // Clear OAuth clients cache when user signs out
-        this.#clearFxaOauthClientCache = true;
-        break;
-      }
       case "smartblock:open-protections-panel": {
         if (gBrowser.selectedBrowser.browserId !== subject.browserId) {
           break;
@@ -1592,7 +1320,6 @@ class TrustPanel {
   }
 
   onPopupShown() {
-    PopupNotifications.suppressWhileOpen(this.#popup);
     // Disable the toggles for a short time after opening via SmartBlock placeholder button
     // to prevent clickjacking.
     if (this.#openingReason == "embedPlaceholderButton") {
@@ -1648,12 +1375,7 @@ class TrustPanel {
   #enablePopupToggles() {
     // Enables all toggles in the protections panel
     this.#popup.querySelectorAll("moz-toggle").forEach(toggle => {
-      if (
-        toggle.id != "trustpanel-toggle" ||
-        ContentBlockingAllowList.canHandle(window.gBrowser.selectedBrowser)
-      ) {
-        toggle.removeAttribute("disabled");
-      }
+      toggle.removeAttribute("disabled");
       toggle.removeEventListener("pointerdown", this.#resetToggleReference);
     });
   }
@@ -1665,121 +1387,6 @@ class TrustPanel {
       elem.removeAttribute(attr);
     }
   }
-
-  async #getBreachAlertStorage() {
-    if (this.#breachAlertStoragePromise === null) {
-      const initializeStorage = async () => {
-        const storage = new BreachAlertStorage();
-        await storage.initialize();
-        return storage;
-      };
-      this.#breachAlertStoragePromise = initializeStorage();
-    }
-    return this.#breachAlertStoragePromise;
-  }
-
-  async #getBreachedWebsites() {
-    const REMOTE_SETTINGS_COLLECTION = "fxmonitor-breaches";
-
-    try {
-      const breaches = await RemoteSettings(REMOTE_SETTINGS_COLLECTION).get();
-      return breaches;
-    } catch (ex) {
-      console.error("Could not get breach data from Remote Settings:", ex);
-      return [];
-    }
-  }
-
-  async #getApplicableBreaches(site) {
-    const breaches = await this.#getBreachedWebsites();
-
-    if (!site || !breaches.length) {
-      return [];
-    }
-
-    // Get breaches applying to the current domain...
-    const breachesForSite = breaches.filter(breach => {
-      return breach.Domain && Services.eTLD.hasRootDomain(site, breach.Domain);
-    });
-
-    // ...filter them down to those that occurred in the last year...
-    const recentBreaches = breachesForSite.filter(isRecentBreach);
-
-    // ...and then load dismissals for those breaches,
-    // and filter out those that the user has dismissed:
-    const breachAlertStorage = await this.#getBreachAlertStorage();
-    const dismissedBreachNames = (
-      await breachAlertStorage.getBreachAlertDismissals(
-        recentBreaches.map(breach => breach.Name)
-      )
-    ).map(breachDismissal => breachDismissal.breachName);
-    const undismissedBreaches = recentBreaches.filter(
-      recentBreach => !dismissedBreachNames.includes(recentBreach.Name)
-    );
-
-    return undismissedBreaches;
-  }
-
-  async dismissBreachAlert(event) {
-    const breachNames = event.detail.breachNames;
-    if (!breachNames) {
-      return;
-    }
-
-    try {
-      const timeDismissed = Date.now();
-      const dismissals = breachNames.map(breachName => ({
-        breachName,
-        timeDismissed,
-      }));
-      const breachAlertStorage = await this.#getBreachAlertStorage();
-      await breachAlertStorage.setBreachAlertDismissals(dismissals);
-      this.#breachedStatus = "disabled";
-    } catch (ex) {
-      console.error("Failed to store breach dismissal:", ex);
-    }
-    this.#updateMainView();
-    this.#updateUrlbarIcon();
-  }
-}
-
-/**
- * @param {{ Name: string, Domain: string, BreachDate: string, AddedDate: string }} breach
- * @returns boolean
- */
-function isRecentBreach(breach) {
-  const currentDate = Temporal.Now.plainDateISO();
-  // Although `breach.AddedDate` is an ISO8601 string,
-  // `breach.BreachDate` is just `YYYY-MM-DD`:
-  const breachedDate = Temporal.PlainDate.from(breach.BreachDate);
-
-  const oneYearAgo = currentDate.subtract({ years: 1 });
-  // Return `true` if the breach happened at most a year ago
-  return Temporal.PlainDate.compare(breachedDate, oneYearAgo) !== -1;
-}
-
-function getBreachedStatus(inputData) {
-  const { breaches, hasMonitorAccountOrStoredPasswords } = inputData;
-  if (!UrlbarPrefs.get("trustPanel.breachAlerts")) {
-    return "disabled";
-  }
-
-  if (hasMonitorAccountOrStoredPasswords) {
-    // Currently, we only show a Call To Action to get a Monitor account,
-    // which is not very useful to users who already have one.
-    // Later, we'll provide functionality for Monitor users too.
-    return "disabled";
-  }
-
-  // The plan is to eventually add other conditions in which to show the
-  // breach alert with different content. Currently, we just show an alert
-  // when the site is breached, but we could e.g. add a more pressing warning
-  // if we know the user's credentials specifically have been included.
-  if (breaches.length) {
-    return "breached";
-  }
-
-  return "not-breached";
 }
 
 var gTrustPanelHandler = new TrustPanel();

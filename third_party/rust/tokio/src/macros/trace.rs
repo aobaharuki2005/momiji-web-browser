@@ -12,13 +12,13 @@ cfg_trace! {
     macro_rules! trace_poll_op {
         ($name:expr, $poll:expr $(,)*) => {
             match $poll {
-                $crate::macros::support::Poll::Ready(t) => {
+                std::task::Poll::Ready(t) => {
                     trace_op!($name, true);
-                    $crate::macros::support::Poll::Ready(t)
+                    std::task::Poll::Ready(t)
                 }
-                $crate::macros::support::Poll::Pending => {
+                std::task::Poll::Pending => {
                     trace_op!($name, false);
-                    return $crate::macros::support::Poll::Pending;
+                    return std::task::Poll::Pending;
                 }
             }
         };

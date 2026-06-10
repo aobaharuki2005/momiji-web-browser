@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -68,10 +70,16 @@ class PostMessageEvent final : public Runnable {
     mHolder.ref<StructuredCloneHolder>().Write(aCx, aMessage, aTransfer,
                                                aClonePolicy, aError);
   }
-  void SetMessageData(ipc::StructuredCloneData* aMessageData) {
-    if (aMessageData) {
-      mHolder.construct<RefPtr<ipc::StructuredCloneData>>(aMessageData);
+  void UnpackFrom(const ClonedOrErrorMessageData& aMessageData) {
+    if (aMessageData.type() != ClonedOrErrorMessageData::TClonedMessageData) {
+      return;
     }
+
+    mHolder.construct<ipc::StructuredCloneData>();
+    // FIXME Want to steal!
+    //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1516349.
+    mHolder.ref<ipc::StructuredCloneData>().CopyFromClonedMessageData(
+        aMessageData);
   }
 
   void DispatchToTargetThread(ErrorResult& aError);
@@ -100,7 +108,7 @@ class PostMessageEvent final : public Runnable {
   // If the postMessage call was made on a WindowProxy whose Window lives in a
   // separate process then mHolder will contain a StructuredCloneData, else
   // it'll contain a StructuredCloneHolder.
-  MaybeOneOf<StructuredCloneHolder, RefPtr<ipc::StructuredCloneData>> mHolder;
+  MaybeOneOf<StructuredCloneHolder, ipc::StructuredCloneData> mHolder;
   uint64_t mCallerWindowID;
   const Maybe<nsID> mCallerAgentClusterId;
   nsCOMPtr<nsIURI> mCallerURI;

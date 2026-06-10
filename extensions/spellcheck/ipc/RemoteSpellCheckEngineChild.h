@@ -17,10 +17,7 @@ class RemoteSpellcheckEngineChild
     : public mozilla::PRemoteSpellcheckEngineChild {
  public:
   explicit RemoteSpellcheckEngineChild(mozSpellChecker* aOwner);
-  RemoteSpellcheckEngineChild() = delete;
   virtual ~RemoteSpellcheckEngineChild();
-
-  void Destroy();
 
   RefPtr<GenericPromise> SetCurrentDictionaries(
       const nsTArray<nsCString>& aDictionaries);

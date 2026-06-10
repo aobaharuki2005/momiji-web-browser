@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "minidump-common"
-version = "0.26.1"
+version = "0.24.0"
 authors = ["Ted Mielczarek <ted@mielczarek.org>"]
 build = false
 autolib = false
@@ -26,9 +26,6 @@ readme = "README.md"
 license = "MIT"
 repository = "https://github.com/rust-minidump/rust-minidump"
 resolver = "2"
-
-[badges.travis-ci]
-repository = "rust-minidump/rust-minidump"
 
 [lib]
 name = "minidump_common"
@@ -60,3 +57,6 @@ features = ["derive"]
 
 [dependencies.smart-default]
 version = "0.7.0"
+
+[badges.travis-ci]
+repository = "rust-minidump/rust-minidump"

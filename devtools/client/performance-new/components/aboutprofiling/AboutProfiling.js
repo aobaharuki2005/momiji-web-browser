@@ -86,8 +86,6 @@ class MoreActionsButtonImpl extends PureComponent {
     ),
   };
 
-  _menuRef = createRef();
-
   componentDidMount() {
     Services.prefs.addObserver(
       ABOUTPROFILING_HAS_DEVELOPER_OPTIONS_PREF,
@@ -101,6 +99,7 @@ class MoreActionsButtonImpl extends PureComponent {
       this.onHasDeveloperOptionsPrefChanges
     );
   }
+  _menuRef = createRef();
 
   onHasDeveloperOptionsPrefChanges = () => {
     this.setState({

@@ -41,6 +41,7 @@
 html,
 body,
 #mount,
+.launchpad-root,
 .network-monitor,
 .monitor-panel {
   flex: initial;

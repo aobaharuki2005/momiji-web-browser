@@ -19,13 +19,13 @@ async function changeMargin(helper, scroll, value) {
 
   marginSelect.value = value;
   marginSelect.dispatchEvent(
-    new marginSelect.documentGlobal.Event("input", {
+    new marginSelect.ownerGlobal.Event("input", {
       bubbles: true,
       composed: true,
     })
   );
   marginSelect.dispatchEvent(
-    new marginSelect.documentGlobal.Event("change", {
+    new marginSelect.ownerGlobal.Event("change", {
       bubbles: true,
     })
   );

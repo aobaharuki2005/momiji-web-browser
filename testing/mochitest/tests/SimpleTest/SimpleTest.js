@@ -1,3 +1,6 @@
+/* -*- js-indent-level: 2; tab-width: 2; indent-tabs-mode: nil -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
+
 // Generally gTestPath should be set by the harness.
 /* global gTestPath */
 
@@ -621,12 +624,7 @@ SimpleTest._logResult = function (test, passInfo, failInfo, stack) {
   var result = test.result ? passInfo : failInfo;
   var diagnostic = test.diag || null;
   // BUGFIX : coercing test.name to a string, because some a11y tests pass an xpconnect object
-  var message = test.name ? String(test.name) : null;
-  // Combine assertion name with diagnostic info if present
-  if (diagnostic) {
-    message = message ? message + " - " + diagnostic : diagnostic;
-  }
-
+  var subtest = test.name ? String(test.name) : null;
   var isError = !test.result == !test.todo;
 
   if (parentRunner) {
@@ -643,10 +641,10 @@ SimpleTest._logResult = function (test, passInfo, failInfo, stack) {
 
     parentRunner.structuredLogger.testStatus(
       url,
-      null, // mochitest-plain doesn't have subtests
+      subtest,
       result.status,
       result.expected,
-      message,
+      diagnostic,
       stack
     );
   } else if (typeof dump === "function") {
@@ -1015,7 +1013,7 @@ SimpleTest.promiseFocus = async function (
 
     browser =
       browsingContext == aObject ? aObject.top.embedderElement : aObject;
-    windowToFocus = browser.documentGlobal;
+    windowToFocus = browser.ownerGlobal;
   }
 
   if (!windowToFocus.document.hasFocus()) {
@@ -2055,21 +2053,21 @@ window.onerror = function simpletestOnerror(
   // a test failure.  See bug 652494.
   var isExpected = !!SimpleTest._expectingUncaughtException;
   var message = (isExpected ? "expected " : "") + "uncaught exception";
-  var stack;
+  var error = errorMsg + " at ";
   try {
-    stack = originalException.stack;
+    error += originalException.stack;
   } catch (e) {
     // At least use the url+line+column we were given
-    stack = url + ":" + lineNumber + ":" + columnNumber;
+    error += url + ":" + lineNumber + ":" + columnNumber;
   }
   if (!SimpleTest._ignoringAllUncaughtExceptions) {
     // Don't log if SimpleTest.finish() is already called, it would cause failures
     if (!SimpleTest._alreadyFinished) {
-      SimpleTest.record(isExpected, message, errorMsg, stack);
+      SimpleTest.record(isExpected, message, error);
     }
     SimpleTest._expectingUncaughtException = false;
   } else {
-    SimpleTest.todo(false, message + ": " + errorMsg + " at " + stack);
+    SimpleTest.todo(false, message + ": " + error);
   }
   // There is no Components.stack.caller to log. (See bug 511888.)
 

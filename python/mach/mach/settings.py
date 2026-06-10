@@ -2,21 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from textwrap import dedent
-
 from mach.decorators import SettingsProvider
-
-
-def _get_log_formatters():
-    from mozlog.commandline import log_formatters
-
-    return list(log_formatters)
-
-
-def _get_log_levels():
-    from mozlog.structuredlog import log_levels
-
-    return [level.lower() for level in log_levels]
 
 
 @SettingsProvider
@@ -71,11 +57,11 @@ class MachSettings:
                 (
                     "runprefs.*",
                     "string",
-                    dedent("""
+                    """
         Pass a pref into Firefox when using `mach run`, of the form `foo.bar=value`.
         Prefs will automatically be cast into the appropriate type. Integers can be
         single quoted to force them to be strings.
-        """),
+        """.strip(),
                 ),
             ]
 
@@ -109,18 +95,6 @@ class MachSettings:
                     "Do not automatically open a browser during authentication.",
                     False,
                 ),
-                (
-                    "try.noartifact",
-                    "boolean",
-                    "Do not autodetect artifact mode base on mozconfig. The '--artifact' flag must be used explicitly if artifact try pushes are desired.",
-                    False,
-                ),
-                (
-                    "try.pushremote",
-                    "string",
-                    "Remote name or url to push to.",
-                    "ssh://hg.mozilla.org/try",
-                ),
             ]
 
         def taskgraph_config_settings():
@@ -136,26 +110,31 @@ class MachSettings:
             ]
 
         def test_config_settings():
+            from mozlog.commandline import log_formatters
+            from mozlog.structuredlog import log_levels
+
             format_desc = (
                 "The default format to use when running tests with `mach test`."
             )
+            format_choices = list(log_formatters)
             level_desc = (
                 "The default log level to use when running tests with `mach test`."
             )
+            level_choices = [l.lower() for l in log_levels]
             return [
                 (
                     "test.format",
                     "string",
                     format_desc,
                     "mach",
-                    {"choices": _get_log_formatters},
+                    {"choices": format_choices},
                 ),
                 (
                     "test.level",
                     "string",
                     level_desc,
                     "info",
-                    {"choices": _get_log_levels},
+                    {"choices": level_choices},
                 ),
             ]
 

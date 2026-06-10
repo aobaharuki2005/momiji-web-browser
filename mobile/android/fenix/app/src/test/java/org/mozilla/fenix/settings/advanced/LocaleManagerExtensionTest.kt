@@ -64,17 +64,23 @@ class LocaleManagerExtensionTest {
 
     @Test
     @Config(qualifiers = "en-rUS")
-    fun `match current stored locale string with a supported Locale`() {
-        val selectedLocale = Locale.forLanguageTag("fr")
+    fun `match current stored locale string with a Locale from our list`() {
+        val otherLocale = Locale.forLanguageTag("fr")
+        val selectedLocale = Locale.Builder().setLanguage("en").setRegion("UK").build()
+        val localeList = listOf(otherLocale, selectedLocale)
 
         LocaleManager.setNewLocale(context, locale = selectedLocale)
 
-        assertEquals(selectedLocale, LocaleManager.getSelectedLocale(context))
+        assertEquals(selectedLocale, LocaleManager.getSelectedLocale(context, localeList))
     }
 
     @Test
     @Config(qualifiers = "en-rUS")
-    fun `match null stored locale with the system default Locale`() {
-        assertEquals("en-US", LocaleManager.getSelectedLocale(context).toLanguageTag())
+    fun `match null stored locale with the default Locale from our list`() {
+        val firstLocale = Locale.forLanguageTag("fr")
+        val secondLocale = Locale.Builder().setLanguage("en").setRegion("UK").build()
+        val localeList = listOf(firstLocale, secondLocale)
+
+        assertEquals("en-US", LocaleManager.getSelectedLocale(context, localeList).toLanguageTag())
     }
 }

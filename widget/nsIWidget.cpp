@@ -1,3 +1,6 @@
+
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,6 +16,7 @@
 #include "TouchEvents.h"
 #include "X11UndefineNone.h"
 #include "base/thread.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/GlobalKeyListener.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/Logging.h"
@@ -107,7 +111,7 @@ namespace mozilla::widget {
 
 // Helper class used in shutting down gfx related code.
 class WidgetShutdownObserver final : public nsIObserver {
-  ~WidgetShutdownObserver() = default;
+  ~WidgetShutdownObserver();
 
  public:
   explicit WidgetShutdownObserver(nsIWidget* aWidget);
@@ -129,9 +133,11 @@ WidgetShutdownObserver::WidgetShutdownObserver(nsIWidget* aWidget)
   Register();
 }
 
-// No need to call Unregister(), we can't be destroyed until nsIWidget
-// gets torn down. The observer service and nsIWidget.have a ref on us
-// so nsIWidget.has to call Unregister and then clear its ref.
+WidgetShutdownObserver::~WidgetShutdownObserver() {
+  // No need to call Unregister(), we can't be destroyed until nsIWidget
+  // gets torn down. The observer service and nsIWidget.have a ref on us
+  // so nsIWidget.has to call Unregister and then clear its ref.
+}
 
 NS_IMETHODIMP
 WidgetShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
@@ -191,10 +197,7 @@ void WidgetShutdownObserver::Unregister() {
 
 // Helper class used for observing locales change.
 class LocalesChangedObserver final : public nsIObserver {
-  // No need to call Unregister(), we can't be destroyed until nsIWidget
-  // gets torn down. The observer service and nsIWidget.have a ref on us
-  // so nsIWidget.has to call Unregister and then clear its ref.
-  ~LocalesChangedObserver() = default;
+  ~LocalesChangedObserver();
 
  public:
   explicit LocalesChangedObserver(nsIWidget* aWidget);
@@ -214,6 +217,12 @@ NS_IMPL_ISUPPORTS(LocalesChangedObserver, nsIObserver)
 LocalesChangedObserver::LocalesChangedObserver(nsIWidget* aWidget)
     : mWidget(aWidget), mRegistered(false) {
   Register();
+}
+
+LocalesChangedObserver::~LocalesChangedObserver() {
+  // No need to call Unregister(), we can't be destroyed until nsIWidget
+  // gets torn down. The observer service and nsIWidget.have a ref on us
+  // so nsIWidget.has to call Unregister and then clear its ref.
 }
 
 NS_IMETHODIMP
@@ -270,7 +279,7 @@ int32_t nsIWidget::sPointerIdCounter = 0;
 // Some statics from nsIWidget.h
 /*static*/
 uint64_t AutoSynthesizedEventCallbackNotifier::sCallbackId = 0;
-constinit nsTHashMap<uint64_t, nsCOMPtr<nsISynthesizedEventCallback>>
+MOZ_RUNINIT nsTHashMap<uint64_t, nsCOMPtr<nsISynthesizedEventCallback>>
     AutoSynthesizedEventCallbackNotifier::sSavedCallbacks;
 
 // The maximum amount of time to let the EnableDragDrop runnable wait in the
@@ -1023,8 +1032,8 @@ void nsIWidget::PauseOrResumeCompositor(bool aPause) {
 
 already_AddRefed<GeckoContentController>
 nsIWidget::CreateRootContentController() {
-  auto controller =
-      MakeRefPtr<ChromeProcessController>(this, mAPZEventState, mAPZC);
+  RefPtr<GeckoContentController> controller =
+      new ChromeProcessController(this, mAPZEventState, mAPZC);
   return controller.forget();
 }
 
@@ -1176,10 +1185,6 @@ class DispatchEventOnMainThread : public Runnable {
   NS_IMETHOD Run() override {
     EventType event = mInput.ToWidgetEvent(mWidget);
     mWidget->ProcessUntransformedAPZEvent(&event, mAPZResult);
-    if (event.mCallbackId.isSome()) {
-      mozilla::widget::AutoSynthesizedEventCallbackNotifier::
-          NotifySavedCallback(event.mCallbackId.ref());
-    }
     return NS_OK;
   }
 
@@ -1196,10 +1201,6 @@ NS_IMETHODIMP DispatchEventOnMainThread<MouseInput, WidgetMouseEvent>::Run() {
       "Please use DispatchEventOnMainThread<MouseInput, WidgetPointerEvent>");
   WidgetMouseEvent event = mInput.ToWidgetEvent<WidgetMouseEvent>(mWidget);
   mWidget->ProcessUntransformedAPZEvent(&event, mAPZResult);
-  if (event.mCallbackId.isSome()) {
-    mozilla::widget::AutoSynthesizedEventCallbackNotifier::NotifySavedCallback(
-        event.mCallbackId.ref());
-  }
   return NS_OK;
 }
 
@@ -1210,10 +1211,6 @@ NS_IMETHODIMP DispatchEventOnMainThread<MouseInput, WidgetPointerEvent>::Run() {
       "Please use DispatchEventOnMainThread<MouseInput, WidgetMouseEvent>");
   WidgetPointerEvent event = mInput.ToWidgetEvent<WidgetPointerEvent>(mWidget);
   mWidget->ProcessUntransformedAPZEvent(&event, mAPZResult);
-  if (event.mCallbackId.isSome()) {
-    mozilla::widget::AutoSynthesizedEventCallbackNotifier::NotifySavedCallback(
-        event.mCallbackId.ref());
-  }
   return NS_OK;
 }
 
@@ -1235,10 +1232,6 @@ class DispatchInputOnControllerThread : public Runnable {
     APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(mInput);
     if (mAPZOnly == APZOnly::Yes ||
         result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
-      if (mInput.mCallbackId.isSome()) {
-        mozilla::widget::AutoSynthesizedEventCallbackNotifier::
-            NotifySavedCallback(mInput.mCallbackId.ref());
-      }
       return NS_OK;
     }
     RefPtr<Runnable> r = new DispatchEventOnMainThread<InputType, EventType>(
@@ -1338,7 +1331,6 @@ nsIWidget::ContentAndAPZEventStatus nsIWidget::DispatchInputEvent(
             new DispatchInputOnControllerThread<ScrollWheelInput,
                                                 WidgetWheelEvent>(*wheelEvent,
                                                                   mAPZC, this);
-        wheelEvent->mCallbackId.reset();
         APZThreadUtils::RunOnControllerThread(std::move(r));
         status.mContentStatus = nsEventStatus_eConsumeDoDefault;
         return status;
@@ -1348,7 +1340,6 @@ nsIWidget::ContentAndAPZEventStatus nsIWidget::DispatchInputEvent(
         RefPtr<Runnable> r =
             new DispatchInputOnControllerThread<MouseInput, WidgetPointerEvent>(
                 *pointerEvent, mAPZC, this);
-        pointerEvent->mCallbackId.reset();
         APZThreadUtils::RunOnControllerThread(std::move(r));
         status.mContentStatus = nsEventStatus_eConsumeDoDefault;
         return status;
@@ -1357,7 +1348,6 @@ nsIWidget::ContentAndAPZEventStatus nsIWidget::DispatchInputEvent(
         RefPtr<Runnable> r =
             new DispatchInputOnControllerThread<MouseInput, WidgetMouseEvent>(
                 *mouseEvent, mAPZC, this);
-        mouseEvent->mCallbackId.reset();
         APZThreadUtils::RunOnControllerThread(std::move(r));
         status.mContentStatus = nsEventStatus_eConsumeDoDefault;
         return status;
@@ -1367,7 +1357,6 @@ nsIWidget::ContentAndAPZEventStatus nsIWidget::DispatchInputEvent(
             new DispatchInputOnControllerThread<MultiTouchInput,
                                                 WidgetTouchEvent>(*touchEvent,
                                                                   mAPZC, this);
-        touchEvent->mCallbackId.reset();
         APZThreadUtils::RunOnControllerThread(std::move(r));
         status.mContentStatus = nsEventStatus_eConsumeDoDefault;
         return status;
@@ -1504,6 +1493,8 @@ already_AddRefed<WebRenderLayerManager> nsIWidget::CreateCompositorSession(
     options.SetInitiallyPaused(CompositorInitiallyPaused());
 #endif
 
+    RefPtr<WebRenderLayerManager> lm = new WebRenderLayerManager(this);
+
     uint64_t innerWindowId = 0;
     if (Document* doc = GetDocument()) {
       innerWindowId = doc->InnerWindowID();
@@ -1511,18 +1502,15 @@ already_AddRefed<WebRenderLayerManager> nsIWidget::CreateCompositorSession(
 
     bool retry = false;
     mCompositorSession = gpm->CreateTopLevelCompositor(
-        this, GetDefaultScale(), options, UseExternalCompositingSurface(),
+        this, lm, GetDefaultScale(), options, UseExternalCompositingSurface(),
         gfx::IntSize(aWidth, aHeight), innerWindowId, &retry);
 
-    RefPtr<WebRenderLayerManager> lm;
     if (mCompositorSession) {
-      nsCString error;
       TextureFactoryIdentifier textureFactoryIdentifier;
-      lm = mCompositorSession->GetCompositorBridgeChild()->CreateLayerManager(
-          this, wr::AsPipelineId(mCompositorSession->RootLayerTreeId()), error);
-      if (lm) {
-        lm->Initialize(&textureFactoryIdentifier, error);
-      }
+      nsCString error;
+      lm->Initialize(mCompositorSession->GetCompositorBridgeChild(),
+                     wr::AsPipelineId(mCompositorSession->RootLayerTreeId()),
+                     &textureFactoryIdentifier, error);
       if (textureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_WR) {
         retry = true;
         DestroyCompositor();
@@ -1647,17 +1635,16 @@ WindowRenderer* nsIWidget::GetWindowRenderer() {
   return mWindowRenderer;
 }
 
-already_AddRefed<WindowRenderer> nsIWidget::CreateFallbackRenderer() {
+WindowRenderer* nsIWidget::CreateFallbackRenderer() {
   // We don't provide a reference to ourself because we want to stay with the
   // fallback renderer regardless of changes in compositing.
-  return MakeAndAddRef<DefaultFallbackRenderer>();
+  return new DefaultFallbackRenderer();
 }
 
-already_AddRefed<WindowRenderer>
-nsIWidget::CreateBackgroundedFallbackRenderer() {
+WindowRenderer* nsIWidget::CreateBackgroundedFallbackRenderer() {
   // Provide a reference back to ourself so that when the GPU process and
   // hardware compositing is once again available, we can return to it.
-  return MakeAndAddRef<BackgroundedFallbackRenderer>(this);
+  return new BackgroundedFallbackRenderer(this);
 }
 
 CompositorBridgeChild* nsIWidget::GetRemoteRenderer() {
@@ -1880,12 +1867,12 @@ void nsIWidget::SetSizeConstraints(const SizeConstraints& aConstraints) {
   // the new constraints don't affect the current size, because Resize
   // implementation on some platforms may touch other geometry even if
   // the size don't need to change.
-  DesktopIntSize curSize =
-      DesktopIntSize::Round(GetBounds().Size() / GetDesktopToDeviceScale());
-  DesktopIntSize clampedSize =
+  LayoutDeviceIntSize curSize = GetBounds().Size();
+  LayoutDeviceIntSize clampedSize =
       Max(aConstraints.mMinSize, Min(aConstraints.mMaxSize, curSize));
   if (clampedSize != curSize) {
-    Resize(DesktopSize(clampedSize), true);
+    DesktopSize desktopSize = clampedSize / GetDesktopToDeviceScale();
+    Resize(desktopSize, true);
   }
 }
 
@@ -1915,8 +1902,7 @@ void nsIWidget::NotifyWindowMoved(const LayoutDeviceIntPoint& aPoint,
     mWidgetListener->WindowMoved(this, aPoint, aByMoveToRect);
   }
 
-  if (mIMEHasFocus && IMENotificationRequestsRef().contains(
-                          IMENotificationRequest::PositionChange)) {
+  if (mIMEHasFocus && IMENotificationRequestsRef().WantPositionChanged()) {
     NotifyIME(IMENotification(IMEMessage::NOTIFY_IME_OF_POSITION_CHANGE));
   }
 }
@@ -2289,7 +2275,6 @@ void nsIWidget::TrackScrollEventAsSwipe(
 
   mSwipeTracker =
       new SwipeTracker(*this, aSwipeStartEvent, aAllowedDirections, direction);
-  mSwipeTracker->StartTracking(aSwipeStartEvent);
 
   if (!mAPZC) {
     mCurrentPanGestureBelongsToSwipe = true;
@@ -2336,8 +2321,7 @@ WidgetWheelEvent nsIWidget::MayStartSwipeForAPZ(
     return event;
   }
 
-  if (aPanInput.mHandledByAPZ && aPanInput.AllowsSwipe() &&
-      !aApzResult.mTargetCanScrollHorizontally) {
+  if (aPanInput.mHandledByAPZ && aPanInput.AllowsSwipe()) {
     SwipeInfo swipeInfo = SendMayStartSwipe(aPanInput);
     event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
     if (swipeInfo.wantsSwipe) {
@@ -3337,9 +3321,9 @@ static PrefPair debug_PrefValues[] = {
 bool nsIWidget::debug_GetCachedBoolPref(const char* aPrefName) {
   NS_ASSERTION(nullptr != aPrefName, "cmon, pref name is null.");
 
-  for (const auto& debug_PrefValue : debug_PrefValues) {
-    if (strcmp(debug_PrefValue.name, aPrefName) == 0) {
-      return debug_PrefValue.value;
+  for (uint32_t i = 0; i < std::size(debug_PrefValues); i++) {
+    if (strcmp(debug_PrefValues[i].name, aPrefName) == 0) {
+      return debug_PrefValues[i].value;
     }
   }
 
@@ -3349,9 +3333,10 @@ bool nsIWidget::debug_GetCachedBoolPref(const char* aPrefName) {
 static void debug_SetCachedBoolPref(const char* aPrefName, bool aValue) {
   NS_ASSERTION(nullptr != aPrefName, "cmon, pref name is null.");
 
-  for (auto& debug_PrefValue : debug_PrefValues) {
-    if (strcmp(debug_PrefValue.name, aPrefName) == 0) {
-      debug_PrefValue.value = aValue;
+  for (uint32_t i = 0; i < std::size(debug_PrefValues); i++) {
+    if (strcmp(debug_PrefValues[i].name, aPrefName) == 0) {
+      debug_PrefValues[i].value = aValue;
+
       return;
     }
   }
@@ -3391,14 +3376,16 @@ Debug_PrefObserver::Observe(nsISupports* subject, const char* topic,
   once = false;
 
   nsCOMPtr<nsIObserver> obs(new Debug_PrefObserver());
-  for (auto& debug_PrefValue : debug_PrefValues) {
+  for (uint32_t i = 0; i < std::size(debug_PrefValues); i++) {
     // Initialize the pref values
-    debug_PrefValue.value = Preferences::GetBool(debug_PrefValue.name, false);
+    debug_PrefValues[i].value =
+        Preferences::GetBool(debug_PrefValues[i].name, false);
 
     if (obs) {
       // Register callbacks for when these change
       nsCString name;
-      name.AssignLiteral(debug_PrefValue.name, strlen(debug_PrefValue.name));
+      name.AssignLiteral(debug_PrefValues[i].name,
+                         strlen(debug_PrefValues[i].name));
       Preferences::AddStrongObserver(obs, name);
     }
   }

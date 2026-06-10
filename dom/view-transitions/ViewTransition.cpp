@@ -4,7 +4,6 @@
 
 #include "ViewTransition.h"
 
-#include "AnchorPositioningUtils.h"
 #include "Units.h"
 #include "WindowRenderer.h"
 #include "mozilla/AnimationEventDispatcher.h"
@@ -107,14 +106,7 @@ static inline nsRect CapturedRect(const nsIFrame* aFrame,
 
 static StyleViewTransitionClass DocumentScopedClassListFor(
     const nsIFrame* aFrame) {
-  const auto& classInfo = aFrame->StyleUIReset()->mViewTransitionClass;
-  nsIContent* content = aFrame->GetContent();
-  if (!content || AnchorPositioningUtils::GetShadowRootForTreeScope(
-                      *content->AsElement(), classInfo.scope)) {
-    return StyleViewTransitionClass();
-  }
-
-  return classInfo;
+  return aFrame->StyleUIReset()->mViewTransitionClass;
 }
 
 static constexpr wr::ImageKey kNoKey{{0}, 0};
@@ -194,7 +186,7 @@ struct CapturedElementOldState {
 };
 
 // https://drafts.csswg.org/css-view-transitions/#captured-element
-struct ViewTransitionCapturedElement {
+struct ViewTransition::CapturedElement {
   CapturedElementOldState mOldState;
   RefPtr<Element> mNewElement;
   wr::SnapshotImageKey mNewSnapshotKey{kNoKey};
@@ -203,11 +195,10 @@ struct ViewTransitionCapturedElement {
   nsRect mNewSnapshotRect;
   nsSize mNewBorderBoxSize;
 
-  ViewTransitionCapturedElement() = default;
+  CapturedElement() = default;
 
-  ViewTransitionCapturedElement(nsIFrame* aFrame,
-                                const nsSize& aSnapshotContainingBlockSize,
-                                StyleViewTransitionClass&& aClassList)
+  CapturedElement(nsIFrame* aFrame, const nsSize& aSnapshotContainingBlockSize,
+                  StyleViewTransitionClass&& aClassList)
       : mOldState(aFrame, aSnapshotContainingBlockSize),
         mClassList(std::move(aClassList)) {}
 
@@ -235,7 +226,7 @@ struct ViewTransitionCapturedElement {
     mClassList = std::move(aClassList);
   }
 
-  ~ViewTransitionCapturedElement() {
+  ~CapturedElement() {
     if (wr::AsImageKey(mNewSnapshotKey) != kNoKey) {
       MOZ_ASSERT(mOldState.mSnapshot.mManager);
       mOldState.mSnapshot.mManager->AddSnapshotImageKeyForDiscard(
@@ -244,13 +235,9 @@ struct ViewTransitionCapturedElement {
   }
 };
 
-// This definition should not be in the header as ViewTransitionCapturedElement
-// would be incomplete with non-trivial destructor.
-ViewTransitionParams::~ViewTransitionParams() = default;
-
 static inline void ImplCycleCollectionTraverse(
     nsCycleCollectionTraversalCallback& aCb,
-    const ViewTransitionCapturedElement& aField, const char* aName,
+    const ViewTransition::CapturedElement& aField, const char* aName,
     uint32_t aFlags = 0) {
   ImplCycleCollectionTraverse(aCb, aField.mNewElement, aName, aFlags);
 }
@@ -275,32 +262,6 @@ ViewTransition::ViewTransition(Document& aDoc,
     : mDocument(&aDoc), mUpdateCallback(aCb), mTypeList(std::move(aTypeList)) {}
 
 ViewTransition::~ViewTransition() { ClearTimeoutTimer(); }
-
-/* static */
-already_AddRefed<ViewTransition> ViewTransition::CreateCrossDocument(
-    Document& aDocument, UniquePtr<ViewTransitionParams> aInboundParams,
-    TypeList&& aResolvedRule) {
-  // https://drafts.csswg.org/css-view-transitions-2/#resolve-inbound-cross-document-view-transition
-
-  // Step 10. Create a new ViewTransition whose named elements and
-  // initial snapshot containing block size are initialized from inbound params.
-  // Step 14. Set active types to resolvedRule.
-  MOZ_ASSERT(aInboundParams);
-  RefPtr<ViewTransition> vt =
-      new ViewTransition(aDocument, nullptr, std::move(aResolvedRule));
-  vt->mNamedElements = std::move(aInboundParams->namedElements);
-  vt->mNames = std::move(aInboundParams->names);
-  vt->mInitialSnapshotContainingBlockSize =
-      aInboundParams->initialSnapshotContainingBlockSize;
-
-  // Step 12. Resolve updateCallbackDone with undefined.
-  vt->mUpdateCallbackDonePromise->MaybeResolveWithUndefined();
-
-  // Step 13. Set phase to update-callback-called.
-  vt->mPhase = Phase::UpdateCallbackCalled;
-
-  return vt.forget();
-}
 
 Element* ViewTransition::GetViewTransitionTreeRoot() const {
   return mSnapshotContainingBlock
@@ -612,7 +573,7 @@ static already_AddRefed<Element> MakePseudo(Document& aDoc,
                                             PseudoStyleType aType,
                                             nsAtom* aName) {
   RefPtr<Element> el = aDoc.CreateHTMLElement(nsGkAtoms::div);
-  if (aType == PseudoStyleType::MozSnapshotContainingBlock) {
+  if (aType == PseudoStyleType::mozSnapshotContainingBlock) {
     el->SetIsNativeAnonymousRoot();
   }
   el->SetPseudoElementType(aType);
@@ -621,7 +582,7 @@ static already_AddRefed<Element> MakePseudo(Document& aDoc,
   }
   // This is not needed, but useful for debugging.
   el->SetAttr(nsGkAtoms::type,
-              nsDependentAtomString(PseudoStyle::GetAtom(aType)),
+              nsDependentAtomString(nsCSSPseudoElements::GetPseudoAtom(aType)),
               IgnoreErrors());
   return el.forget();
 }
@@ -704,7 +665,7 @@ static nsTArray<Keyframe> BuildGroupKeyframes(
     Document* aDoc, const CSSToCSSMatrix4x4Flagged& aTransform,
     const nsSize& aSize, const StyleOwnedSlice<StyleFilter>& aBackdropFilters) {
   Keyframe firstKeyframe;
-  firstKeyframe.mOffset = Some(Keyframe::OffsetType::PercentageOffset(0.0));
+  firstKeyframe.mOffset = Some(0.0);
   PropertyValuePair transform{
       CSSPropertyId(eCSSProperty_transform),
       Servo_DeclarationBlock_CreateEmpty().Consume(),
@@ -736,7 +697,7 @@ static nsTArray<Keyframe> BuildGroupKeyframes(
   firstKeyframe.mPropertyValues.AppendElement(std::move(backdropFilters));
 
   Keyframe lastKeyframe;
-  lastKeyframe.mOffset = Some(Keyframe::OffsetType::PercentageOffset(1.0));
+  lastKeyframe.mOffset = Some(1.0);
   lastKeyframe.mPropertyValues.AppendElement(
       PropertyValuePair{CSSPropertyId(eCSSProperty_transform)});
   lastKeyframe.mPropertyValues.AppendElement(
@@ -777,25 +738,13 @@ bool ViewTransition::GetGroupKeyframes(
 bool ViewTransition::MatchClassList(
     nsAtom* aTransitionName,
     const nsTArray<StyleAtom>& aPtNameAndClassSelector) const {
-  MOZ_ASSERT(aPtNameAndClassSelector.Length() > 1,
-             "Should have a vt-class selector");
-  MOZ_ASSERT(aTransitionName, "No transition name?");
+  MOZ_ASSERT(aPtNameAndClassSelector.Length() > 1);
 
   const auto* el = mNamedElements.Get(aTransitionName);
-  MOZ_ASSERT(el,
-             "Our caller should have the view transition pseudo handy, how do "
-             "we have no capture?");
-  if (MOZ_UNLIKELY(!el)) {
-    // FIXME: We see some instances of this on the wild (bug 2010608), but have
-    // no repro for it. For now not matching is pretty safe...
-    return false;
-  }
-  const auto& classList = el->mClassList.value._0.AsSpan();
-  if (classList.IsEmpty()) {
-    return false;
-  }
+  MOZ_ASSERT(el);
+  const auto& classList = el->mClassList._0.AsSpan();
   auto hasClass = [&classList](nsAtom* aClass) {
-    // Linear search. The css class list shouldn't be very large in most cases.
+    // LInear search. The css class list shouldn't be very large in most cases.
     for (const auto& ident : classList) {
       if (ident.AsAtom() == aClass) {
         return true;
@@ -850,9 +799,9 @@ void ViewTransition::SetupTransitionPseudoElements() {
   // least).
   // Note: Use mSnapshotContainingBlock to wrap the pseudo-element tree.
   mSnapshotContainingBlock = MakePseudo(
-      *mDocument, PseudoStyleType::MozSnapshotContainingBlock, nullptr);
+      *mDocument, PseudoStyleType::mozSnapshotContainingBlock, nullptr);
   RefPtr<Element> root =
-      MakePseudo(*mDocument, PseudoStyleType::ViewTransition, nullptr);
+      MakePseudo(*mDocument, PseudoStyleType::viewTransition, nullptr);
   mSnapshotContainingBlock->AppendChildTo(root, kNotify, IgnoreErrors());
 #ifdef DEBUG
   // View transition pseudos don't care about frame tree ordering, so can be
@@ -869,13 +818,13 @@ void ViewTransition::SetupTransitionPseudoElements() {
     // Let group be a new ::view-transition-group(), with its view transition
     // name set to transitionName.
     RefPtr<Element> group = MakePseudo(
-        *mDocument, PseudoStyleType::ViewTransitionGroup, transitionName);
+        *mDocument, PseudoStyleType::viewTransitionGroup, transitionName);
     // Append group to transition’s transition root pseudo-element.
     root->AppendChildTo(group, kNotify, IgnoreErrors());
     // Let imagePair be a new ::view-transition-image-pair(), with its view
     // transition name set to transitionName.
     RefPtr<Element> imagePair = MakePseudo(
-        *mDocument, PseudoStyleType::ViewTransitionImagePair, transitionName);
+        *mDocument, PseudoStyleType::viewTransitionImagePair, transitionName);
     // Append imagePair to group.
     group->AppendChildTo(imagePair, kNotify, IgnoreErrors());
     // If capturedElement's old image is not null, then:
@@ -884,7 +833,7 @@ void ViewTransition::SetupTransitionPseudoElements() {
       // name set to transitionName, displaying capturedElement's old image as
       // its replaced content.
       RefPtr<Element> old = MakePseudo(
-          *mDocument, PseudoStyleType::ViewTransitionOld, transitionName);
+          *mDocument, PseudoStyleType::viewTransitionOld, transitionName);
       // Append old to imagePair.
       imagePair->AppendChildTo(old, kNotify, IgnoreErrors());
     } else {
@@ -901,7 +850,7 @@ void ViewTransition::SetupTransitionPseudoElements() {
       // Let new be a new ::view-transition-new(), with its view transition
       // name set to transitionName.
       RefPtr<Element> new_ = MakePseudo(
-          *mDocument, PseudoStyleType::ViewTransitionNew, transitionName);
+          *mDocument, PseudoStyleType::viewTransitionNew, transitionName);
       // Append new to imagePair.
       imagePair->AppendChildTo(new_, kNotify, IgnoreErrors());
     } else {
@@ -1039,7 +988,7 @@ bool ViewTransition::UpdatePseudoElementStyles(bool aNeedsInvalidation) {
                 frame->StyleUI()->mColorScheme);
     if (groupStyleChanged && aNeedsInvalidation) {
       auto* pseudo = FindPseudo(PseudoStyleRequest(
-          PseudoStyleType::ViewTransitionGroup, transitionName));
+          PseudoStyleType::viewTransitionGroup, transitionName));
       MOZ_ASSERT(pseudo);
       // TODO(emilio): Maybe we need something more than recascade? But I don't
       // see how off-hand.
@@ -1173,9 +1122,9 @@ Element* ViewTransition::FindPseudo(const PseudoStyleRequest& aRequest) const {
   if (!root) {
     return nullptr;
   }
-  MOZ_ASSERT(root->GetPseudoElementType() == PseudoStyleType::ViewTransition);
+  MOZ_ASSERT(root->GetPseudoElementType() == PseudoStyleType::viewTransition);
 
-  if (aRequest.mType == PseudoStyleType::ViewTransition) {
+  if (aRequest.mType == PseudoStyleType::viewTransition) {
     return root;
   }
 
@@ -1197,13 +1146,13 @@ Element* ViewTransition::FindPseudo(const PseudoStyleRequest& aRequest) const {
     return nullptr;
   }
 
-  if (aRequest.mType == PseudoStyleType::ViewTransitionGroup) {
+  if (aRequest.mType == PseudoStyleType::viewTransitionGroup) {
     return group;
   }
 
   Element* imagePair = group->GetFirstElementChild();
   MOZ_ASSERT(imagePair, "::view-transition-image-pair() should exist always");
-  if (aRequest.mType == PseudoStyleType::ViewTransitionImagePair) {
+  if (aRequest.mType == PseudoStyleType::viewTransitionImagePair) {
     return imagePair;
   }
 
@@ -1221,12 +1170,12 @@ Element* ViewTransition::FindPseudo(const PseudoStyleRequest& aRequest) const {
 
   // Since the second child is either ::view-transition-new() or nullptr, so we
   // can reject viewTransitionOld request here.
-  if (aRequest.mType == PseudoStyleType::ViewTransitionOld) {
+  if (aRequest.mType == PseudoStyleType::viewTransitionOld) {
     return nullptr;
   }
 
   child = child->GetNextElementSibling();
-  MOZ_ASSERT(aRequest.mType == PseudoStyleType::ViewTransitionNew);
+  MOZ_ASSERT(aRequest.mType == PseudoStyleType::viewTransitionNew);
   MOZ_ASSERT(!child || !child->GetNextElementSibling(),
              "No more psuedo elements in this subtree");
   return child;
@@ -1244,13 +1193,13 @@ const StyleLockedDeclarationBlock* ViewTransition::GetDynamicRuleFor(
   }
 
   switch (aElement.GetPseudoElementType()) {
-    case PseudoStyleType::ViewTransitionNew:
+    case PseudoStyleType::viewTransitionNew:
       return capture->mNewRule.get();
-    case PseudoStyleType::ViewTransitionOld:
+    case PseudoStyleType::viewTransitionOld:
       return capture->mOldRule.get();
-    case PseudoStyleType::ViewTransitionImagePair:
+    case PseudoStyleType::viewTransitionImagePair:
       return capture->mImagePairRule.get();
-    case PseudoStyleType::ViewTransitionGroup:
+    case PseudoStyleType::viewTransitionGroup:
       return capture->mGroupRule.get();
     default:
       return nullptr;
@@ -1305,7 +1254,7 @@ template <typename Callback>
 static bool ForEachDescendantWithViewTransitionNameInPaintOrder(
     nsIFrame* aFrame, const Callback& aCb) {
   // Call the callback if it specifies view-transition-name.
-  if (aFrame->StyleUIReset()->HasViewTransitionName() && !aCb(aFrame)) {
+  if (!aFrame->StyleUIReset()->mViewTransitionName.IsNone() && !aCb(aFrame)) {
     return false;
   }
 
@@ -1364,10 +1313,6 @@ Maybe<SkipTransitionReason> ViewTransition::CaptureOldState() {
       // If transitionName is none, or element is not rendered, then continue.
       return true;
     }
-    if (aFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
-      // See https://github.com/w3c/csswg-drafts/issues/13831
-      return true;
-    }
     if (aFrame->GetPrevContinuation() || aFrame->GetNextContinuation()) {
       // If element has more than one box fragment, then continue.
       return true;
@@ -1375,8 +1320,7 @@ Maybe<SkipTransitionReason> ViewTransition::CaptureOldState() {
     if (!usedTransitionNames.EnsureInserted(name)) {
       // We don't expect to see a duplicate transition name when using
       // match-element.
-      MOZ_ASSERT(aFrame->StyleUIReset()->mViewTransitionName.value.AsAtom() !=
-                 nsGkAtoms::match_element);
+      MOZ_ASSERT(!aFrame->StyleUIReset()->mViewTransitionName.IsMatchElement());
 
       // If usedTransitionNames contains transitionName, then return failure.
       result.emplace(
@@ -1444,10 +1388,6 @@ Maybe<SkipTransitionReason> ViewTransition::CaptureNewState() {
     if (!name) {
       return true;
     }
-    if (aFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
-      // See https://github.com/w3c/csswg-drafts/issues/13831
-      return true;
-    }
     if (aFrame->GetPrevContinuation() || aFrame->GetNextContinuation()) {
       // If element has more than one box fragment, then continue.
       return true;
@@ -1455,8 +1395,7 @@ Maybe<SkipTransitionReason> ViewTransition::CaptureNewState() {
     if (!usedTransitionNames.EnsureInserted(name)) {
       // We don't expect to see a duplicate transition name when using
       // match-element.
-      MOZ_ASSERT(aFrame->StyleUIReset()->mViewTransitionName.value.AsAtom() !=
-                 nsGkAtoms::match_element);
+      MOZ_ASSERT(!aFrame->StyleUIReset()->mViewTransitionName.IsMatchElement());
       result.emplace(
           SkipTransitionReason::DuplicateTransitionNameCapturingNewState);
       return false;
@@ -1517,19 +1456,6 @@ void ViewTransition::Setup() {
                         &ViewTransition::MaybeScheduleUpdateCallback));
 }
 
-void ViewTransition::FinishDone() {
-  if (mPhase != Phase::PendingDone) {
-    return;
-  }
-  // https://drafts.csswg.org/css-view-transitions-1/#handle-transition-frame
-  // step 4.2: Clear view transition transition.
-  ClearActiveTransition(false);
-  // 4.3: Resolve transition's finished promise.
-  if (Promise* finished = GetFinished(IgnoreErrors())) {
-    finished->MaybeResolveWithUndefined();
-  }
-}
-
 // https://drafts.csswg.org/css-view-transitions-1/#handle-transition-frame
 void ViewTransition::HandleFrame() {
   // Steps 1-3: Steps 1-3: Compute active animations.
@@ -1540,11 +1466,13 @@ void ViewTransition::HandleFrame() {
     AUTO_PROFILER_TERMINATING_FLOW_MARKER("ViewTransition::HandleFrameFinish",
                                           LAYOUT, Flow::FromPointer(this));
     // 4.1: Set transition's phase to "done".
-    // NOTE: pending-done + async task per
-    // https://github.com/w3c/csswg-drafts/issues/12442
-    mPhase = Phase::PendingDone;
-    mDocument->Dispatch(NewRunnableMethod("ViewTransition::FinishDone", this,
-                                          &ViewTransition::FinishDone));
+    mPhase = Phase::Done;
+    // 4.2: Clear view transition transition.
+    ClearActiveTransition(false);
+    // 4.3: Resolve transition's finished promise.
+    if (Promise* finished = GetFinished(IgnoreErrors())) {
+      finished->MaybeResolveWithUndefined();
+    }
     return;
   }
 
@@ -1659,17 +1587,17 @@ bool ViewTransition::CheckForActiveAnimations() const {
   };
 
   bool hasActiveAnimations =
-      checkForEachPseudo(PseudoStyleRequest(PseudoStyleType::ViewTransition));
+      checkForEachPseudo(PseudoStyleRequest(PseudoStyleType::viewTransition));
   for (nsAtom* name : mNamedElements.Keys()) {
     if (hasActiveAnimations) {
       break;
     }
 
     hasActiveAnimations =
-        checkForEachPseudo({PseudoStyleType::ViewTransitionGroup, name}) ||
-        checkForEachPseudo({PseudoStyleType::ViewTransitionImagePair, name}) ||
-        checkForEachPseudo({PseudoStyleType::ViewTransitionOld, name}) ||
-        checkForEachPseudo({PseudoStyleType::ViewTransitionNew, name});
+        checkForEachPseudo({PseudoStyleType::viewTransitionGroup, name}) ||
+        checkForEachPseudo({PseudoStyleType::viewTransitionImagePair, name}) ||
+        checkForEachPseudo({PseudoStyleType::viewTransitionOld, name}) ||
+        checkForEachPseudo({PseudoStyleType::viewTransitionNew, name});
   }
   return hasActiveAnimations;
 }
@@ -1890,10 +1818,9 @@ already_AddRefed<nsAtom> ViewTransition::DocumentScopedTransitionNameFor(
   // https://drafts.csswg.org/css-view-transitions-2/#additions-to-vt-name
   // 1. Let computed be the computed value of view-transition-name.
   const auto& computed = aFrame->StyleUIReset()->mViewTransitionName;
-  nsAtom* ident = computed.value.AsAtom();
 
   // 2. If computed is none, return null.
-  if (ident == nsGkAtoms::none) {
+  if (computed.IsNone()) {
     return nullptr;
   }
 
@@ -1903,23 +1830,16 @@ already_AddRefed<nsAtom> ViewTransition::DocumentScopedTransitionNameFor(
     return nullptr;
   }
 
-  // If the name is not associated with the document, return null.
-  // https://drafts.csswg.org/css-view-transitions-1/#document-scoped-view-transition-name
-  nsIContent* content = aFrame->GetContent();
-  if (MOZ_UNLIKELY(!content) ||
-      AnchorPositioningUtils::GetShadowRootForTreeScope(*content->AsElement(),
-                                                        computed.scope)) {
-    return nullptr;
-  }
-
   // 3. If computed is a <custom-ident>, return computed.
-  if (ident != nsGkAtoms::match_element) {
-    return do_AddRef(ident);
+  if (computed.IsIdent()) {
+    return RefPtr<nsAtom>{computed.AsIdent().AsAtom()}.forget();
   }
 
   // 4. Assert: computed is auto or match-element.
   // TODO: Bug 1918218. Implement auto or others, depending on the spec issue.
   // https://github.com/w3c/csswg-drafts/issues/12091
+  MOZ_ASSERT(computed.IsMatchElement());
+
   // 5. If computed is auto, element has an associated id, and computed is
   // associated with the same root as element’s root, then return a unique
   // string starting with "-ua-". Two elements with the same id must return the
@@ -1930,7 +1850,8 @@ already_AddRefed<nsAtom> ViewTransition::DocumentScopedTransitionNameFor(
   // 6. Return a unique string starting with "-ua-". The string should remain
   // consistent and unique for this element and Document, at least for the
   // lifetime of element’s node document’s active view transition.
-  if (MOZ_UNLIKELY(!content->IsElement())) {
+  nsIContent* content = aFrame->GetContent();
+  if (MOZ_UNLIKELY(!content || !content->IsElement())) {
     return nullptr;
   }
 

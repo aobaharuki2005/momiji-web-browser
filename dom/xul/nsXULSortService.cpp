@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,9 +10,18 @@
 #include "nsXULSortService.h"
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/intl/AppCollator.h"
+#include "mozilla/intl/Collator.h"
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsGkAtoms.h"
+#include "nsIContent.h"
+#include "nsNameSpaceManager.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nsUnicharUtils.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsXULContentUtils.h"
+#include "nsXULElement.h"
 
 using mozilla::dom::Element;
 const unsigned long SORT_COMPARECASE = 0x0001;
@@ -161,11 +171,16 @@ static int32_t CompareValues(const nsAString& aLeft, const nsAString& aRight,
   }
 
   if (aSortHints & SORT_COMPARECASE) {
-    // XXX why does this not use a real collator?
     return ::Compare(aLeft, aRight);
   }
 
-  return mozilla::intl::AppCollator::CompareBase(aLeft, aRight);
+  using mozilla::intl::Collator;
+  const Collator* collator = nsXULContentUtils::GetCollator();
+  if (collator) {
+    return collator->CompareStrings(aLeft, aRight);
+  }
+
+  return ::Compare(aLeft, aRight, nsCaseInsensitiveStringComparator);
 }
 
 static int testSortCallback(const contentSortInfo& left,

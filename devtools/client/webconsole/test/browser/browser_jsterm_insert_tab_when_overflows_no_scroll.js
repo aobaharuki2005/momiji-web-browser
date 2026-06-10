@@ -11,9 +11,7 @@ const TEST_URI = "data:text/html,<!DOCTYPE html><meta charset=utf8>";
 
 add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const cmScroller = hud.ui.outputNode.querySelector(
-    codemirrorSelectors.cmScroller
-  );
+  const cmScroller = hud.ui.outputNode.querySelector(".CodeMirror-scroll");
 
   info("Fill in the input with a hundred lines to make it overflow");
   await setInputValue(hud, "x;\n".repeat(100));

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -288,8 +289,8 @@ class nsAccUtils {
                           nsAString& aResult);
   static const nsAttrValue* GetARIAAttr(dom::Element* aElement,
                                         const nsAtom* aName);
-  static Maybe<nsTArray<RefPtr<dom::Element>>> GetARIAElementsAttr(
-      dom::Element* aElement, nsAtom* aName);
+  static bool GetARIAElementsAttr(dom::Element* aElement, nsAtom* aName,
+                                  nsTArray<dom::Element*>& aElements);
   static bool ARIAAttrValueIs(dom::Element* aElement, const nsAtom* aName,
                               const nsAString& aValue,
                               nsCaseTreatment aCaseSensitive);

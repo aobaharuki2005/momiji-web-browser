@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,9 +8,10 @@
 
 #include "nsGenericHTMLElement.h"
 
+class nsContentList;
+
 namespace mozilla::dom {
 
-class ContentList;
 class HTMLTableSectionElement;
 
 class HTMLTableRowElement final : public nsGenericHTMLElement {
@@ -26,7 +29,7 @@ class HTMLTableRowElement final : public nsGenericHTMLElement {
 
   int32_t RowIndex() const;
   int32_t SectionRowIndex() const;
-  HTMLCollection* Cells();
+  nsIHTMLCollection* Cells();
   already_AddRefed<nsGenericHTMLElement> InsertCell(int32_t aIndex,
                                                     ErrorResult& aError);
   void DeleteCell(int32_t aValue, ErrorResult& aError);
@@ -56,14 +59,15 @@ class HTMLTableRowElement final : public nsGenericHTMLElement {
     SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor, aError);
   }
 
-  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                      const nsAString& aValue,
-                      nsIPrincipal* aMaybeScriptedPrincipal,
-                      nsAttrValue& aResult) override;
-  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
+                              nsAttrValue& aResult) override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
+      const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTableRowElement,
                                            nsGenericHTMLElement)
@@ -71,12 +75,12 @@ class HTMLTableRowElement final : public nsGenericHTMLElement {
  protected:
   virtual ~HTMLTableRowElement();
 
-  JSObject* WrapNode(JSContext* aCx,
-                     JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
   HTMLTableSectionElement* GetSection() const;
   HTMLTableElement* GetTable() const;
-  RefPtr<ContentList> mCells;
+  RefPtr<nsContentList> mCells;
 
  private:
   static void MapAttributesIntoRule(MappedDeclarationsBuilder&);

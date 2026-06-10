@@ -27,18 +27,18 @@ add_task(async function test_main() {
       await content.window.wrappedJSObject.doZoomIn();
     };
 
-    let resolution = await SpecialPowers.spawn(browser, [], getResolution);
+    let resolution = await ContentTask.spawn(browser, null, getResolution);
     is(resolution, 1.0, "Initial page resolution should be 1.0");
 
-    await SpecialPowers.spawn(browser, [], doZoomIn);
-    resolution = await SpecialPowers.spawn(browser, [], getResolution);
+    await ContentTask.spawn(browser, null, doZoomIn);
+    resolution = await ContentTask.spawn(browser, null, getResolution);
     isnot(resolution, 1.0, "Expected resolution to be bigger than 1.0");
 
     document.getElementById("cmd_fullZoomReset").doCommand();
     // Spin the event loop once just to make sure the message gets through
     await new Promise(resolve => setTimeout(resolve, 0));
 
-    resolution = await SpecialPowers.spawn(browser, [], getResolution);
+    resolution = await ContentTask.spawn(browser, null, getResolution);
     is(resolution, 1.0, "Expected resolution to be reset to 1.0");
   });
 });

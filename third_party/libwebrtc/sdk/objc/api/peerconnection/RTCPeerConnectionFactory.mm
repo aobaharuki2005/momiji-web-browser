@@ -9,7 +9,6 @@
  */
 
 #include <memory>
-#include <optional>
 
 #import "RTCPeerConnectionFactory+Native.h"
 #import "RTCPeerConnectionFactory+Private.h"
@@ -38,11 +37,9 @@
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "api/create_modular_peer_connection_factory.h"
 #include "api/enable_media.h"
-#include "api/environment/environment.h"
 #include "api/environment/environment_factory.h"
-#include "api/media_stream_interface.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"
-#include "api/scoped_refptr.h"
+#include "api/task_queue/default_task_queue_factory.h"
 #import "components/video_codec/RTCVideoDecoderFactoryH264.h"
 #import "components/video_codec/RTCVideoEncoderFactoryH264.h"
 #include "media/base/media_constants.h"
@@ -52,14 +49,12 @@
 #include "sdk/objc/native/api/video_encoder_factory.h"
 #include "sdk/objc/native/src/objc_video_decoder_factory.h"
 #include "sdk/objc/native/src/objc_video_encoder_factory.h"
-#include "sdk/objc/native/src/objc_video_track_source.h"
 
 #if defined(WEBRTC_IOS)
 #import "sdk/objc/native/api/audio_device_module.h"
 #endif
 
 @implementation RTC_OBJC_TYPE (RTCPeerConnectionFactory) {
-  std::optional<webrtc::Environment> _env;
   std::unique_ptr<webrtc::Thread> _networkThread;
   std::unique_ptr<webrtc::Thread> _workerThread;
   std::unique_ptr<webrtc::Thread> _signalingThread;
@@ -158,9 +153,9 @@
     if (!dependencies.env.has_value()) {
       dependencies.env = webrtc::CreateEnvironment();
     }
-    _env = dependencies.env;
     if (dependencies.network_monitor_factory == nullptr &&
-        _env->field_trials().IsEnabled("WebRTC-Network-UseNWPathMonitor")) {
+        dependencies.env->field_trials().IsEnabled(
+            "WebRTC-Network-UseNWPathMonitor")) {
       dependencies.network_monitor_factory =
           webrtc::CreateNetworkMonitorFactory();
     }
@@ -307,17 +302,19 @@
 }
 
 - (RTC_OBJC_TYPE(RTCVideoSource) *)videoSource {
-  return [self videoSourceForScreenCast:NO];
+  return [[RTC_OBJC_TYPE(RTCVideoSource) alloc]
+      initWithFactory:self
+      signalingThread:_signalingThread.get()
+         workerThread:_workerThread.get()];
 }
 
 - (RTC_OBJC_TYPE(RTCVideoSource) *)videoSourceForScreenCast:
     (BOOL)forScreenCast {
   return [[RTC_OBJC_TYPE(RTCVideoSource) alloc]
-        initWithFactory:self
-        signalingThread:_signalingThread.get()
-           workerThread:_workerThread.get()
-      nativeVideoSource:webrtc::make_ref_counted<webrtc::ObjCVideoTrackSource>(
-                            *_env, forScreenCast)];
+      initWithFactory:self
+      signalingThread:_signalingThread.get()
+         workerThread:_workerThread.get()
+         isScreenCast:forScreenCast];
 }
 
 - (RTC_OBJC_TYPE(RTCVideoTrack) *)videoTrackWithSource:

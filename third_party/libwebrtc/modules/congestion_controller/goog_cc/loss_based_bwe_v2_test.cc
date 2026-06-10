@@ -36,7 +36,8 @@ constexpr int kPacketSize = 15'000;
 class LossBasedBweV2Test : public ::testing::TestWithParam<bool> {
  protected:
   FieldTrials Config(bool enabled, bool valid) {
-    StringBuilder config_string;
+    char buffer[1024];
+    SimpleStringBuilder config_string(buffer);
 
     config_string << "WebRTC-Bwe-LossBasedBweV2/";
 
@@ -76,7 +77,8 @@ class LossBasedBweV2Test : public ::testing::TestWithParam<bool> {
   }
 
   FieldTrials ShortObservationConfig(std::string custom_config) {
-    StringBuilder config_string;
+    char buffer[1024];
+    SimpleStringBuilder config_string(buffer);
 
     config_string << "WebRTC-Bwe-LossBasedBweV2/"
                      "MinNumObservations:1,ObservationWindowSize:2,";

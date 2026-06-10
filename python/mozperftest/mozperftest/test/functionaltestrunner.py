@@ -10,10 +10,7 @@ from mozperftest.utils import load_class_from_path
 
 
 class FunctionalTestProcessor(mozlog.handlers.StreamHandler):
-    """
-    Used for capturing the perfMetrics and evalDataPayload output from a `mach test`
-    log output.
-    """
+    """Used for capturing the perfMetrics output from a `mach test` run."""
 
     def __init__(self, *args, **kwargs):
         self._match = []
@@ -21,9 +18,7 @@ class FunctionalTestProcessor(mozlog.handlers.StreamHandler):
 
     def __call__(self, data):
         formatted = self.formatter(data)
-        if formatted is not None and (
-            "perfMetrics" in formatted or "evalDataPayload" in formatted
-        ):
+        if formatted is not None and "perfMetrics" in formatted:
             self.match.append(formatted)
 
     @property

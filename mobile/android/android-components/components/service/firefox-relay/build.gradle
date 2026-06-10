@@ -4,7 +4,14 @@
 
 buildscript {
     repositories {
-        gradle.configureMavenRepositories(delegate)
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url = repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
     }
 
     dependencies {
@@ -13,7 +20,6 @@ buildscript {
 }
 
 plugins {
-    alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
@@ -35,15 +41,12 @@ dependencies {
     implementation project(':components:compose-base')
     implementation project(":components:ui-icons")
     implementation project(':components:support-ktx')
-    implementation project(':components:support-utils')
     implementation project(":components:lib-state")
     implementation project(':components:service-firefox-accounts')
 
     implementation libs.androidx.compose.material3
     implementation libs.androidx.compose.ui
     implementation libs.androidx.compose.ui.tooling.preview
-
-    testImplementation project(':components:support-test')
 
     testImplementation libs.androidx.test.core
     testImplementation libs.androidx.test.junit

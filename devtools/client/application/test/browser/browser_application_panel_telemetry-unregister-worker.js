@@ -12,9 +12,9 @@ add_task(async function () {
   const { panel, tab, commands } = await openNewTabAndApplicationPanel(TAB_URL);
   const doc = panel.panelWin.document;
 
-  await selectPage(panel, "service-workers");
+  selectPage(panel, "service-workers");
 
-  Services.fog.testResetFOG();
+  setupTelemetryTest();
 
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
@@ -27,10 +27,7 @@ add_task(async function () {
   const button = workerContainer.querySelector(".js-unregister-button");
   button.click();
 
-  Assert.equal(
-    1,
-    Glean.devtoolsMain.unregisterWorkerApplication.testGetValue().length
-  );
+  checkTelemetryEvent({ method: "unregister_worker" });
 
   // clean up and close the tab
   await unregisterAllWorkers(commands.client, doc);

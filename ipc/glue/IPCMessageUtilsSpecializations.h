@@ -1,14 +1,19 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef IPC_GLUE_IPCMESSAGEUTILSSPECIALIZATIONS_H_
-#define IPC_GLUE_IPCMESSAGEUTILSSPECIALIZATIONS_H_
+#ifndef __IPC_GLUE_IPCMESSAGEUTILSSPECIALIZATIONS_H__
+#define __IPC_GLUE_IPCMESSAGEUTILSSPECIALIZATIONS_H__
 
 #include <cstdint>
 #include <limits>
+#include <set>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 #include "chrome/common/ipc_message.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "ipc/EnumSerializer.h"
@@ -17,15 +22,16 @@
 #include "mozilla/BitSet.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EnumTypeTraits.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/UserActivation.h"
 #include "gfxPlatform.h"
 #include "NonCustomCSSPropertyId.h"
-#include "nsContentPolicyType.h"
 #include "nsContentPermissionHelper.h"
 #include "nsDebug.h"
 #include "nsIContentPolicy.h"
@@ -269,6 +275,89 @@ struct ParamTraits<mozilla::Vector<E, N, AP>> {
   }
 };
 
+template <typename E>
+struct ParamTraits<std::vector<E>> {
+  typedef std::vector<E> paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteSequenceParam<const E&>(aWriter, aParam.data(), aParam.size());
+  }
+  static void Write(MessageWriter* aWriter, paramType&& aParam) {
+    WriteSequenceParam<E&&>(aWriter, aParam.data(), aParam.size());
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadSequenceParam<E>(aReader, [&](uint32_t aLength) {
+      if constexpr (std::is_trivially_default_constructible_v<E>) {
+        aResult->resize(aLength);
+        return aResult->data();
+      } else {
+        aResult->reserve(aLength);
+        return mozilla::Some(std::back_inserter(*aResult));
+      }
+    });
+  }
+};
+
+template <typename V, typename Compare, typename Allocator>
+struct ParamTraits<std::set<V, Compare, Allocator>> final {
+  using T = std::set<V, Compare, Allocator>;
+
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.size());
+    for (const auto& value : in) {
+      WriteParam(writer, value);
+    }
+  }
+
+  static bool Read(MessageReader* const reader, T* const out) {
+    size_t size = 0;
+    if (!ReadParam(reader, &size)) return false;
+    T set;
+    for (const auto i : mozilla::IntegerRange(size)) {
+      V value;
+      (void)i;
+      if (!ReadParam(reader, &(value))) {
+        return false;
+      }
+      set.insert(std::move(value));
+    }
+    *out = std::move(set);
+    return true;
+  }
+};
+
+template <typename K, typename V>
+struct ParamTraits<std::unordered_map<K, V>> final {
+  using T = std::unordered_map<K, V>;
+
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.size());
+    for (const auto& pair : in) {
+      WriteParam(writer, pair.first);
+      WriteParam(writer, pair.second);
+    }
+  }
+
+  static bool Read(MessageReader* const reader, T* const out) {
+    size_t size = 0;
+    if (!ReadParam(reader, &size)) return false;
+    T map;
+    map.reserve(size);
+    for (const auto i : mozilla::IntegerRange(size)) {
+      std::pair<K, V> pair;
+      (void)i;
+      if (!ReadParam(reader, &(pair.first)) ||
+          !ReadParam(reader, &(pair.second))) {
+        return false;
+      }
+      map.insert(std::move(pair));
+    }
+    *out = std::move(map);
+    return true;
+  }
+};
+
 template <>
 struct ParamTraits<float> {
   typedef float paramType;
@@ -313,28 +402,11 @@ struct ParamTraits<nsID> {
   }
 };
 
-struct nsContentPolicyTypeValidator {
-  using IntegralType = std::underlying_type_t<nsContentPolicyType>;
-
-  static bool IsLegalValue(const IntegralType e) {
-    switch (e) {
-#define CONTENT_POLICY_TYPE(name) case nsContentPolicyType::name:
-      FOR_EACH_CONTENT_POLICY_TYPE(CONTENT_POLICY_TYPE)
-#undef CONTENT_POLICY_TYPE
-      return true;
-
-      case nsContentPolicyType::TYPE_INVALID:
-        // NOTE: It is intentionally valid to send TYPE_INVALID over IPC.
-        return true;
-    }
-
-    return false;
-  }
-};
-
 template <>
 struct ParamTraits<nsContentPolicyType>
-    : EnumSerializer<nsContentPolicyType, nsContentPolicyTypeValidator> {};
+    : public ContiguousEnumSerializer<nsContentPolicyType,
+                                      nsIContentPolicy::TYPE_INVALID,
+                                      nsIContentPolicy::TYPE_END> {};
 
 template <>
 struct ParamTraits<mozilla::TimeDuration> {
@@ -356,6 +428,19 @@ struct ParamTraits<mozilla::TimeStamp> {
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mValue);
   };
+};
+
+template <>
+struct ParamTraits<mozilla::dom::ipc::StructuredCloneData> {
+  typedef mozilla::dom::ipc::StructuredCloneData paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aParam.WriteIPCParams(aWriter);
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return aResult->ReadIPCParams(aReader);
+  }
 };
 
 template <class T>
@@ -622,6 +707,74 @@ struct ParamTraits<mozilla::BitSet<N, Word>> {
   }
 };
 
+template <typename T>
+struct ParamTraits<mozilla::UniquePtr<T>> {
+  typedef mozilla::UniquePtr<T> paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    bool isNull = aParam == nullptr;
+    WriteParam(aWriter, isNull);
+
+    if (!isNull) {
+      WriteParam(aWriter, *aParam.get());
+    }
+  }
+
+  static bool Read(IPC::MessageReader* aReader, paramType* aResult) {
+    bool isNull = true;
+    if (!ReadParam(aReader, &isNull)) {
+      return false;
+    }
+
+    if (isNull) {
+      aResult->reset();
+    } else {
+      *aResult = mozilla::MakeUnique<T>();
+      if (!ReadParam(aReader, aResult->get())) {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
+template <typename... Ts>
+struct ParamTraits<std::tuple<Ts...>> {
+  typedef std::tuple<Ts...> paramType;
+
+  template <typename U>
+  static void Write(IPC::MessageWriter* aWriter, U&& aParam) {
+    WriteInternal(aWriter, std::forward<U>(aParam),
+                  std::index_sequence_for<Ts...>{});
+  }
+
+  static bool Read(IPC::MessageReader* aReader, std::tuple<Ts...>* aResult) {
+    return ReadInternal(aReader, *aResult, std::index_sequence_for<Ts...>{});
+  }
+
+ private:
+  template <size_t... Is>
+  static void WriteInternal(IPC::MessageWriter* aWriter,
+                            const std::tuple<Ts...>& aParam,
+                            std::index_sequence<Is...>) {
+    WriteParams(aWriter, std::get<Is>(aParam)...);
+  }
+
+  template <size_t... Is>
+  static void WriteInternal(IPC::MessageWriter* aWriter,
+                            std::tuple<Ts...>&& aParam,
+                            std::index_sequence<Is...>) {
+    WriteParams(aWriter, std::move(std::get<Is>(aParam))...);
+  }
+
+  template <size_t... Is>
+  static bool ReadInternal(IPC::MessageReader* aReader,
+                           std::tuple<Ts...>& aResult,
+                           std::index_sequence<Is...>) {
+    return ReadParams(aReader, std::get<Is>(aResult)...);
+  }
+};
+
 template <>
 struct ParamTraits<mozilla::net::LinkHeader> {
   typedef mozilla::net::LinkHeader paramType;
@@ -633,6 +786,8 @@ struct ParamTraits<mozilla::net::LinkHeader> {
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     static_assert(sizeof(paramType) == kExpectedSizeOfParamType,
                   "All members of should be written below.");
+    // Bug 1860565: `aParam.mAnchor` is not written.
+
     WriteParam(aWriter, aParam.mHref);
     WriteParam(aWriter, aParam.mRel);
     WriteParam(aWriter, aParam.mTitle);
@@ -651,6 +806,8 @@ struct ParamTraits<mozilla::net::LinkHeader> {
   static bool Read(MessageReader* aReader, paramType* aResult) {
     static_assert(sizeof(paramType) == kExpectedSizeOfParamType,
                   "All members of should be handled below.");
+    // Bug 1860565: `aParam.mAnchor` is not handled.
+
     if (!ReadParam(aReader, &aResult->mHref)) {
       return false;
     }
@@ -711,6 +868,29 @@ struct ParamTraits<gfxPlatform::GlobalReflowFlags>
                                     gfxPlatform::GlobalReflowFlags::ALL_BITS> {
 };
 
+template <size_t N>
+struct ParamTraits<std::bitset<N>> {
+  typedef std::bitset<N> paramType;
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    paramType mask(UINT64_MAX);
+    for (size_t i = 0; i < N; i += 64) {
+      uint64_t value = ((aParam >> i) & mask).to_ullong();
+      WriteParam(aWriter, value);
+    }
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    for (size_t i = 0; i < N; i += 64) {
+      uint64_t value = 0;
+      if (!ReadParam(aReader, &value)) {
+        return false;
+      }
+      *aResult |= std::bitset<N>(value) << i;
+    }
+    return true;
+  }
+};
+
 template <>
 struct ParamTraits<nsILoadInfo::IPAddressSpace>
     : public ContiguousEnumSerializer<nsILoadInfo::IPAddressSpace,
@@ -725,4 +905,4 @@ struct ParamTraits<PromptResult>
 
 } /* namespace IPC */
 
-#endif /* IPC_GLUE_IPCMESSAGEUTILSSPECIALIZATIONS_H_ */
+#endif /* __IPC_GLUE_IPCMESSAGEUTILSSPECIALIZATIONS_H__ */

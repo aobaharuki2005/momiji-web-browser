@@ -8,13 +8,9 @@
 newtab-page-title = Novi tab
 newtab-settings-button =
     .title = Prilagodite svoju početnu stranicu novog taba
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Prilagodi ovu stranicu
-#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Prilagodi
-newtab-customize-panel-label =
-    .label = Prilagodi
 newtab-personalize-settings-icon-label =
     .title = Personalizujte novi tab
     .aria-label = Postavke
@@ -53,7 +49,7 @@ newtab-search-box-input =
     .placeholder = Pretraži web
     .aria-label = Pretraži web
 
-## Clear text button for the URL and image URL input fields in the Top Sites form.
+## Top Sites - General form dialog.
 
 newtab-topsites-add-search-engine-header = Dodaj pretraživač
 newtab-topsites-add-shortcut-header = Nova prečica
@@ -299,22 +295,9 @@ newtab-error-fallback-refresh-link = Osvježite stranicu da biste pokušali pono
 
 newtab-custom-shortcuts-title = Prečice
 newtab-custom-shortcuts-subtitle = Web stranice koje sačuvate ili posjetite
-#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Prečice
     .description = Stranice koje ste sačuvali ili posjetili
-newtab-custom-shortcuts-nova =
-    .label = Prečice
-# Variables
-#   $num (number) - Number of rows to display
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
-newtab-custom-row-selector2 =
-    .label =
-        { $num ->
-            [one] { $num } red
-            [few] { $num } reda
-           *[other] { $num } redova
-        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -326,12 +309,9 @@ newtab-custom-row-selector =
 newtab-custom-sponsored-sites = Sponzorisane prečice
 newtab-custom-pocket-title = Preporučuje { -pocket-brand-name }
 newtab-custom-pocket-subtitle = Izuzetan sadržaj koji je kurirao { -pocket-brand-name }, dio porodice { -brand-product-name }
-#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be having a description under "Recommended stories" anymore
 newtab-custom-stories-toggle =
     .label = Preporučene priče
     .description = Izuzetan sadržaj koji je kurirala porodica { -brand-product-name }
-newtab-recommended-stories-toggle =
-    .label = Preporučene priče
 newtab-custom-pocket-sponsored = Sponzorisane priče
 newtab-custom-pocket-show-recent-saves = Prikaži nedavno sačuvane
 newtab-custom-recent-title = Nedavne aktivnosti
@@ -339,6 +319,9 @@ newtab-custom-recent-subtitle = Izbor najnovijih stranica i sadržaja
 newtab-custom-weather-toggle =
     .label = Vrijeme
     .description = Ukratko o današnjoj prognozi
+newtab-custom-trending-search-toggle =
+    .label = Popularne pretrage
+    .description = Popularne i često tražene teme
 newtab-custom-close-button = Zatvori
 newtab-custom-settings = Upravljajte više postavki
 
@@ -346,11 +329,8 @@ newtab-custom-settings = Upravljajte više postavki
 
 newtab-wallpaper-title = Pozadine
 newtab-wallpaper-reset = Vrati na izvorno
-#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Učitaj sliku
 newtab-wallpaper-custom-color = Izaberite boju
-newtab-wallpaper-toggle-title =
-    .label = Pozadine
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Slika je premašila ograničenje veličine datoteke od { $file_size }MB. Molimo pokušajte s učitavanjem manje datoteke.
@@ -372,7 +352,6 @@ newtab-wallpaper-light-fox-anniversary = Lisica u travnatom polju sa maglovitim 
 
 ## Solid Colors
 
-#  (developer note): @nova-cleanup(remove-string): Remove old "Solid colors" string once Nova lands. The simplified "Colors" string will take over
 newtab-wallpaper-category-title-colors = Čvrste boje
 newtab-wallpaper-blue = Plava
 newtab-wallpaper-light-blue = Svijetlo plava
@@ -477,11 +456,6 @@ newtab-weather-menu-hide-weather = Sakrij vrijeme na novom tabu
 newtab-weather-menu-learn-more = Saznajte više
 # This message is shown if user is working offline
 newtab-weather-error-not-available = Vremenski podaci trenutno nisu dostupni.
-# Variables:
-#   $provider (string) - Service provider for weather data
-newtab-weather-see-forecast-description =
-    .title = Pogledajte prognozu na { $provider }
-    .aria-description = { $provider } ∙ Sponzorisano
 
 ## Topic Labels
 
@@ -580,7 +554,7 @@ newtab-download-mobile-highlight-image =
 newtab-shortcuts-highlight-title = Vaši favoriti na dohvat ruke
 newtab-shortcuts-highlight-subtitle = Dodajte prečicu da biste svoje omiljene stranice imali pri ruci na jedan klik.
 
-## Strings for reporting issues with ads and content
+## Strings for reporting ads and content
 
 newtab-report-content-why-reporting-this =
     .label = Zašto ovo prijavljujete?
@@ -602,3 +576,14 @@ newtab-report-cancel = Otkaži
 newtab-report-submit = Pošalji
 newtab-toast-thanks-for-reporting =
     .message = Hvala vam što ste ovo prijavili.
+
+## Strings for trending searches
+
+newtab-trending-searches-show-trending =
+    .title = Prikaži popularne pretrage
+newtab-trending-searches-hide-trending =
+    .title = Sakrij popularne pretrage
+newtab-trending-searches-learn-more = Saznajte više
+newtab-trending-searches-dismiss = Sakrij popularne pretrage
+# "Trending searches refers to popular searches from search engines
+newtab-trending-searches-title = Popularne pretrage

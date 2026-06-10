@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -672,8 +674,7 @@ bool WarpBuilder::buildBody() {
       return false;
     }
 #endif
-    bool wantPreciseLineNumbers =
-        js::jit::PerfEnabled() || mirGen().isProfilerInstrumentationEnabled();
+    bool wantPreciseLineNumbers = js::jit::PerfEnabled();
     if (wantPreciseLineNumbers && !hasTerminatedBlock()) {
       current->updateTrackedSite(newBytecodeSite(loc));
     }
@@ -1194,6 +1195,17 @@ bool WarpBuilder::build_TakeDisposeCapability(BytecodeLocation loc) {
   current->push(ins);
   return resumeAfter(ins, loc);
 }
+
+bool WarpBuilder::build_CreateSuppressedError(BytecodeLocation loc) {
+  MDefinition* suppressed = current->pop();
+  MDefinition* error = current->pop();
+
+  MCreateSuppressedError* ins =
+      MCreateSuppressedError::New(alloc(), error, suppressed);
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
 #endif
 
 // Returns true iff the MTest added for |op| has a true-target corresponding
@@ -1562,10 +1574,9 @@ bool WarpBuilder::build_DebugCheckSelfHosted(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_DynamicImport(BytecodeLocation loc) {
-  auto phase = ImportPhase(GET_UINT8(loc.toRawBytecode()));
   MDefinition* options = current->pop();
   MDefinition* specifier = current->pop();
-  MDynamicImport* ins = MDynamicImport::New(alloc(), specifier, options, phase);
+  MDynamicImport* ins = MDynamicImport::New(alloc(), specifier, options);
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins, loc);
@@ -1621,6 +1632,16 @@ bool WarpBuilder::build_GlobalOrEvalDeclInstantiation(BytecodeLocation loc) {
   auto* redeclCheck = MGlobalDeclInstantiation::New(alloc());
   current->add(redeclCheck);
   return resumeAfter(redeclCheck, loc);
+}
+
+bool WarpBuilder::build_BindVar(BytecodeLocation) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
+  MDefinition* env = current->environmentChain();
+  MCallBindVar* ins = MCallBindVar::New(alloc(), env);
+  current->add(ins);
+  current->push(ins);
+  return true;
 }
 
 bool WarpBuilder::build_MutateProto(BytecodeLocation loc) {
@@ -2449,6 +2470,17 @@ bool WarpBuilder::build_AsyncResolve(BytecodeLocation loc) {
   current->add(resolve);
   current->push(resolve);
   return resumeAfter(resolve, loc);
+}
+
+bool WarpBuilder::build_AsyncReject(BytecodeLocation loc) {
+  MDefinition* generator = current->pop();
+  MDefinition* stack = current->pop();
+  MDefinition* reason = current->pop();
+
+  auto* reject = MAsyncReject::New(alloc(), generator, reason, stack);
+  current->add(reject);
+  current->push(reject);
+  return resumeAfter(reject, loc);
 }
 
 bool WarpBuilder::build_ResumeKind(BytecodeLocation loc) {
@@ -3281,16 +3313,6 @@ bool WarpBuilder::build_Exception(BytecodeLocation) {
 }
 
 bool WarpBuilder::build_ExceptionAndStack(BytecodeLocation) {
-  MOZ_CRASH("Unreachable because we skip catch-blocks");
-}
-
-#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
-bool WarpBuilder::build_CreateSuppressedError(BytecodeLocation) {
-  MOZ_CRASH("Unreachable because we skip catch-blocks");
-}
-#endif
-
-bool WarpBuilder::build_AsyncReject(BytecodeLocation) {
   MOZ_CRASH("Unreachable because we skip catch-blocks");
 }
 

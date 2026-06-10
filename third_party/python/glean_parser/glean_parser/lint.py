@@ -35,7 +35,7 @@ NitGenerator = Generator["GlinterNit", None, None]
 
 
 def noop(*args):
-    """A noop `LintGenerator`. Never yields a GlinterNit."""
+    """ A noop `LintGenerator`. Never yields a GlinterNit."""
     return
     yield
 
@@ -300,25 +300,6 @@ def check_metric_on_events_lifetime(
         )
 
 
-def check_event_on_non_events_ping(
-    metric: metrics.Metric, parser_config: Dict[str, Any]
-) -> LintGenerator:
-    """
-    An event metric should usually go on the `events` ping or a custom ping,
-    not on a builtin ping.
-    """
-    disallowed_pings = set(pings.RESERVED_PING_NAMES) - {"default", "events"} | {
-        "health"
-    }
-    if metric.type == "event" and any(
-        [ping in disallowed_pings for ping in metric.send_in_pings]
-    ):
-        yield (
-            "An event metric should usually go on the `events` ping or a custom ping, "
-            + "not on a builtin ping."
-        )
-
-
 def check_unexpected_unit(
     metric: metrics.Metric, parser_config: Dict[str, Any]
 ) -> LintGenerator:
@@ -485,7 +466,6 @@ METRIC_CHECKS: Dict[
     "EXPIRED": (check_expired_metric, CheckType.warning),
     "OLD_EVENT_API": (check_old_event_api, CheckType.warning),
     "METRIC_ON_EVENTS_LIFETIME": (check_metric_on_events_lifetime, CheckType.error),
-    "EVENT_ON_NON_EVENTS_PING": (check_event_on_non_events_ping, CheckType.warning),
     "UNEXPECTED_UNIT": (check_unexpected_unit, CheckType.warning),
     "EMPTY_DATAREVIEW": (check_empty_datareview, CheckType.warning),
     "HIGHER_DATA_SENSITIVITY_REQUIRED": (
@@ -713,11 +693,7 @@ def lint_metrics(
 
             for check_name, (check_func, check_type) in METRIC_CHECKS.items():
                 new_nits = list(check_func(metric, parser_config))
-                if (
-                    check_unused_lints
-                    and check_name in metric.no_lint
-                    and not len(new_nits)
-                ):
+                if check_unused_lints and check_name in metric.no_lint and not len(new_nits):
                     nits.append(
                         GlinterNit(
                             "UNUSED_NO_LINT",

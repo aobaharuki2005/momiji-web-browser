@@ -5,23 +5,19 @@
 #ifndef V8_REGEXP_REGEXP_DOTPRINTER_H_
 #define V8_REGEXP_REGEXP_DOTPRINTER_H_
 
-#ifdef V8_ENABLE_REGEXP_DIAGNOSTICS
 #include "irregexp/RegExpShim.h"
 
 namespace v8 {
 namespace internal {
-namespace regexp {
 
-class Node;
+class RegExpNode;
 
 class DotPrinter final : public AllStatic {
  public:
-  static void DotPrint(const char* label, Node* node);
+  static void DotPrint(const char* label, RegExpNode* node);
 };
 
-}  // namespace regexp
 }  // namespace internal
 }  // namespace v8
-#endif  // V8_ENABLE_REGEXP_DIAGNOSTICS
 
 #endif  // V8_REGEXP_REGEXP_DOTPRINTER_H_

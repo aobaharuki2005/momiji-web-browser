@@ -9,6 +9,26 @@ const { DevToolsWorker } = ChromeUtils.importESModule(
   "resource://devtools/shared/worker/worker.sys.mjs"
 );
 
+const blob = new Blob(
+  [
+    `
+importScripts("resource://gre/modules/workers/require.js");
+const { createTask } = require("resource://devtools/shared/worker/helper.js");
+
+createTask(self, "myTask", function({
+  shouldThrow,
+} = {}) {
+  if (shouldThrow) {
+    throw new Error("err");
+  }
+
+  return "OK";
+});
+    `,
+  ],
+  { type: "application/javascript" }
+);
+
 add_task(async function () {
   try {
     new DevToolsWorker("resource://i/dont/exist.js");
@@ -17,9 +37,8 @@ add_task(async function () {
     ok(true, "Creating a DevToolsWorker with an invalid URL throws");
   }
 
-  const worker = new DevToolsWorker(
-    getRootDirectory(gTestPath) + "file_worker-02.worker.js"
-  );
+  const WORKER_URL = URL.createObjectURL(blob);
+  const worker = new DevToolsWorker(WORKER_URL);
   try {
     await worker.performTask("myTask", { shouldThrow: true });
     ok(
@@ -59,4 +78,6 @@ add_task(async function () {
       "DevToolsWorker rejects when performing a task on a destroyed worker"
     );
   }
+
+  URL.revokeObjectURL(WORKER_URL);
 });

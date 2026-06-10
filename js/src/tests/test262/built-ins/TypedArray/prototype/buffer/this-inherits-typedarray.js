@@ -22,8 +22,8 @@ var getter = Object.getOwnPropertyDescriptor(
   TypedArrayPrototype, "buffer"
 ).get;
 
-testWithTypedArrayConstructors((TA, makeCtorArg) => {
-  var typedArray = new TA(makeCtorArg(5));
+testWithTypedArrayConstructors(TA => {
+  var typedArray = new TA(5);
   var o = {};
   Object.setPrototypeOf(o, typedArray);
   assert.throws(TypeError, function() {

@@ -2,17 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, ColorU, GradientStop};
+use api::{ColorF, ColorU, ExtendMode, GradientStop, PremultipliedColorF};
 use api::units::{LayoutRect, LayoutSize, LayoutVector2D};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferWriterF};
 use std::hash;
 
 mod linear;
 mod radial;
 mod conic;
 
+pub use linear::MAX_CACHED_SIZE as LINEAR_MAX_CACHED_SIZE;
+
 pub use linear::*;
 pub use radial::*;
 pub use conic::*;
+
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+pub enum GradientKind {
+    Linear = 0,
+    Radial = 1,
+    Conic = 2,
+}
 
 /// A hashable gradient stop that can be used in primitive keys.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -59,12 +70,419 @@ fn stops_and_min_alpha(stop_keys: &[GradientStopKey]) -> (Vec<GradientStop>, f32
     (stops, min_alpha)
 }
 
+fn write_gpu_gradient_stops_header_and_colors(
+    stops: &[GradientStop],
+    kind: GradientKind,
+    extend_mode: ExtendMode,
+    writer: &mut GpuBufferWriterF,
+) -> bool {
+    // Write the header.
+    writer.push_one([
+        (kind as u8) as f32,
+        stops.len() as f32,
+        if extend_mode == ExtendMode::Repeat { 1.0 } else { 0.0 },
+        0.0
+    ]);
+
+    // Write the stop colors.
+    let mut is_opaque = true;
+    for stop in stops {
+        writer.push_one(stop.color.premultiplied());
+        is_opaque &= stop.color.a == 1.0;
+    }
+
+    is_opaque
+}
+
+// Push stop offsets in rearranged order so that the search can be carried
+// out as an implicit tree traversal.
+//
+// The structure of the tree is:
+//  - Each level is plit into 5 partitions.
+//  - The root level has one node (4 offsets -> 5 partitions).
+//  - Each level has 5 more nodes than the previous one.
+//  - Levels are pushed one by one starting from the root
+//
+// ```ascii
+// level : indices
+// ------:---------
+//   0   :                                                               24     ...
+//   1   :          4         9            14             19             |      ...
+//   2   :  0,1,2,3,|,5,6,7,8,|10,11,12,13,| ,15,16,17,18,| ,20,21,22,23,| ,25, ...
+// ```
+//
+// In the example above:
+// - The first (root) contains a single block containing the stop offsets from
+//   indices [24, 49, 74, 99].
+// - The second level contains blocks of offsets from indices [4, 9, 14, 19],
+//   [29, 34, 39, 44], etc.
+// - The third (leaf) level contains blocks from indices [0,1,2,3], [5,6,7,8],
+//   [15, 16, 17, 18], etc.
+//
+// Placeholder offsets (1.0) are used when a level has more capacity than the
+// input number of stops.
+//
+// Conceptually, blocks [0,1,2,3] and [5,6,7,8] are the first two children of
+// the node [4,9,14,19], separated by the offset from index 4.
+// Links are not explicitly represented via pointers or indices. Instead the
+// position in the buffer is sufficient to represent the level and index of the
+// stop (at the expense of having to store extra padding to round up each tree
+// level to its power-of-5-aligned size).
+//
+// This scheme is meant to make the traversal efficient loading offsets in
+// blocks of 4. The shader can converge to the leaf in very few loads.
+fn write_gpu_gradient_stops_tree(
+    stops: &[GradientStop],
+    kind: GradientKind,
+    extend_mode: ExtendMode,
+    writer: &mut GpuBufferWriterF,
+) -> bool {
+    let is_opaque = write_gpu_gradient_stops_header_and_colors(
+        stops,
+        kind,
+        extend_mode,
+        writer
+    );
+
+    let num_stops = stops.len();
+    let mut num_levels = 1;
+    let mut index_stride = 5;
+    let mut next_index_stride = 1;
+    // Number of 4-offsets blocks for the current level.
+    // The root has 1, then each level has 5 more than the previous one.
+    let mut num_blocks_for_level = 1;
+    let mut offset_blocks = 1;
+    while offset_blocks * 4 < num_stops {
+        num_blocks_for_level *= 5;
+        offset_blocks += num_blocks_for_level;
+
+        num_levels += 1;
+        index_stride *= 5;
+        next_index_stride *= 5;
+    }
+
+    // Fix offset_blocks up to account for the fact that we don't
+    // store the entirety of the last level;
+    let num_blocks_for_last_level = num_blocks_for_level.min(num_stops / 5 + 1);
+
+    // Reset num_blocks_for_level for the traversal.
+    num_blocks_for_level = 1;
+
+    // Go over each level, starting from the root.
+    for level in 0..num_levels {
+        // This scheme rounds up the number of offsets to store for each
+        // level to the next power of 5, which can represent a lot of wasted
+        // space, especially for the last levels. We need each level to start
+        // at a specific power-of-5-aligned offset so we can't get around the
+        // wasted space for all levels except the last one (which has the most
+        // waste).
+        let is_last_level = level == num_levels - 1;
+        let num_blocks = if is_last_level {
+            num_blocks_for_last_level
+        } else {
+            num_blocks_for_level
+        };
+
+        for block_idx in 0..num_blocks {
+            let mut block = [1.0; 4];
+            for i in 0..4 {
+                let linear_idx = block_idx * index_stride
+                    + i * next_index_stride
+                    + next_index_stride - 1;
+
+                if linear_idx < num_stops {
+                    block[i] = stops[linear_idx].offset;
+                }
+            }
+            writer.push_one(block);
+        }
+
+        index_stride = next_index_stride;
+        next_index_stride /= 5;
+        num_blocks_for_level *= 5;
+    }
+
+    return is_opaque;
+}
+
+fn gpu_gradient_stops_blocks(num_stops: usize) -> usize {
+    let header_blocks = 1;
+    let color_blocks = num_stops;
+
+    // If this is changed, matching changes should be made to the
+    // equivalent code in write_gpu_gradient_stops_tree.
+    let mut num_blocks_for_level = 1;
+    let mut offset_blocks = 1;
+    while offset_blocks * 4 < num_stops {
+        num_blocks_for_level *= 5;
+        offset_blocks += num_blocks_for_level;
+    }
+
+    // Fix the capacity up to account for the fact that we don't
+    // store the entirety of the last level;
+    let num_blocks_for_last_level = num_blocks_for_level.min(num_stops / 5 + 1);
+    offset_blocks -= num_blocks_for_level;
+    offset_blocks += num_blocks_for_last_level;
+
+    header_blocks + color_blocks + offset_blocks
+}
+
 impl Eq for GradientStopKey {}
 
 impl hash::Hash for GradientStopKey {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.offset.to_bits().hash(state);
         self.color.hash(state);
+    }
+}
+
+// The gradient entry index for the first color stop
+pub const GRADIENT_DATA_FIRST_STOP: usize = 0;
+// The gradient entry index for the last color stop
+pub const GRADIENT_DATA_LAST_STOP: usize = GRADIENT_DATA_SIZE - 1;
+
+// The start of the gradient data table
+pub const GRADIENT_DATA_TABLE_BEGIN: usize = GRADIENT_DATA_FIRST_STOP + 1;
+// The exclusive bound of the gradient data table
+pub const GRADIENT_DATA_TABLE_END: usize = GRADIENT_DATA_LAST_STOP;
+// The number of entries in the gradient data table.
+pub const GRADIENT_DATA_TABLE_SIZE: usize = 128;
+
+// The number of entries in a gradient data: GRADIENT_DATA_TABLE_SIZE + first stop entry + last stop entry
+pub const GRADIENT_DATA_SIZE: usize = GRADIENT_DATA_TABLE_SIZE + 2;
+
+/// An entry in a gradient data table representing a segment of the gradient
+/// color space.
+#[derive(Debug, Copy, Clone)]
+#[repr(C)]
+struct GradientDataEntry {
+    start_color: PremultipliedColorF,
+    end_step: PremultipliedColorF,
+}
+
+impl GradientDataEntry {
+    fn white() -> Self {
+        Self {
+            start_color: PremultipliedColorF::WHITE,
+            end_step: PremultipliedColorF::TRANSPARENT,
+        }
+    }
+}
+
+// TODO(gw): Tidy this up to be a free function / module?
+pub struct GradientGpuBlockBuilder {}
+
+impl GradientGpuBlockBuilder {
+    /// Generate a color ramp filling the indices in [start_idx, end_idx) and interpolating
+    /// from start_color to end_color.
+    fn fill_colors(
+        start_idx: usize,
+        end_idx: usize,
+        start_color: &PremultipliedColorF,
+        end_color: &PremultipliedColorF,
+        entries: &mut [GradientDataEntry; GRADIENT_DATA_SIZE],
+        prev_step: &PremultipliedColorF,
+    ) -> PremultipliedColorF {
+        // Calculate the color difference for individual steps in the ramp.
+        let inv_steps = 1.0 / (end_idx - start_idx) as f32;
+        let mut step = PremultipliedColorF {
+            r: (end_color.r - start_color.r) * inv_steps,
+            g: (end_color.g - start_color.g) * inv_steps,
+            b: (end_color.b - start_color.b) * inv_steps,
+            a: (end_color.a - start_color.a) * inv_steps,
+        };
+        // As a subtle form of compression, we ensure that the step values for
+        // each stop range are the same if and only if they belong to the same
+        // stop range. However, if two different stop ranges have the same step,
+        // we need to modify the steps so they compare unequally between ranges.
+        // This allows to quickly compare if two adjacent stops belong to the
+        // same range by comparing their steps.
+        if step == *prev_step {
+            // Modify the step alpha value as if by nextafter(). The difference
+            // here should be so small as to be unnoticeable, but yet allow it
+            // to compare differently.
+            step.a = f32::from_bits(if step.a == 0.0 { 1 } else { step.a.to_bits() + 1 });
+        }
+
+        let mut cur_color = *start_color;
+
+        // Walk the ramp writing start and end colors for each entry.
+        for index in start_idx .. end_idx {
+            let entry = &mut entries[index];
+            entry.start_color = cur_color;
+            cur_color.r += step.r;
+            cur_color.g += step.g;
+            cur_color.b += step.b;
+            cur_color.a += step.a;
+            entry.end_step = step;
+        }
+
+        step
+    }
+
+    /// Compute an index into the gradient entry table based on a gradient stop offset. This
+    /// function maps offsets from [0, 1] to indices in [GRADIENT_DATA_TABLE_BEGIN, GRADIENT_DATA_TABLE_END].
+    #[inline]
+    fn get_index(offset: f32) -> usize {
+        (offset.max(0.0).min(1.0) * GRADIENT_DATA_TABLE_SIZE as f32 +
+            GRADIENT_DATA_TABLE_BEGIN as f32)
+            .round() as usize
+    }
+
+    // Build the gradient data from the supplied stops, reversing them if necessary.
+    pub fn build(
+        reverse_stops: bool,
+        gpu_buffer_builder: &mut GpuBufferBuilderF,
+        src_stops: &[GradientStop],
+    ) -> GpuBufferAddress {
+        // Preconditions (should be ensured by DisplayListBuilder):
+        // * we have at least two stops
+        // * first stop has offset 0.0
+        // * last stop has offset 1.0
+        let mut src_stops = src_stops.into_iter();
+        let mut cur_color = match src_stops.next() {
+            Some(stop) => {
+                debug_assert_eq!(stop.offset, 0.0);
+                stop.color.premultiplied()
+            }
+            None => {
+                error!("Zero gradient stops found!");
+                PremultipliedColorF::BLACK
+            }
+        };
+
+        // A table of gradient entries, with two colors per entry, that specify the start and end color
+        // within the segment of the gradient space represented by that entry. To lookup a gradient result,
+        // first the entry index is calculated to determine which two colors to interpolate between, then
+        // the offset within that entry bucket is used to interpolate between the two colors in that entry.
+        // This layout is motivated by the fact that if one naively tries to store a single color per entry
+        // and interpolate directly between entries, then hard stops will become softened because the end
+        // color of an entry actually differs from the start color of the next entry, even though they fall
+        // at the same edge offset in the gradient space. Instead, the two-color-per-entry layout preserves
+        // hard stops, as the end color for a given entry can differ from the start color for the following
+        // entry.
+        // Colors are stored in RGBA32F format (in the GPU cache). This table requires the gradient color
+        // stops to be normalized to the range [0, 1]. The first and last entries hold the first and last
+        // color stop colors respectively, while the entries in between hold the interpolated color stop
+        // values for the range [0, 1].
+        // As a further optimization, rather than directly storing the end color, the difference of the end
+        // color from the start color is stored instead, so that an entry can be evaluated more cheaply
+        // with start+diff*offset instead of mix(start,end,offset). Further, the color difference in two
+        // adjacent entries will always be the same if they were generated from the same set of stops/run.
+        // To allow fast searching of the table, if two adjacent entries generated from different sets of
+        // stops (a boundary) have the same difference, the floating-point bits of the stop will be nudged
+        // so that they compare differently without perceptibly altering the interpolation result. This way,
+        // one can quickly scan the table and recover runs just by comparing the color differences of the
+        // current and next entry.
+        // For example, a table with 2 inside entries (startR,startG,startB):(diffR,diffG,diffB) might look
+        // like so:
+        //     first           | 0.0              | 0.5              | last
+        //     (0,0,0):(0,0,0) | (1,0,0):(-1,1,0) | (0,0,1):(0,1,-1) | (1,1,1):(0,0,0)
+        //     ^ solid black     ^ red to green     ^ blue to green    ^ solid white
+        let mut entries = [GradientDataEntry::white(); GRADIENT_DATA_SIZE];
+        let mut prev_step = cur_color;
+        if reverse_stops {
+            // Fill in the first entry (for reversed stops) with the first color stop
+            prev_step = GradientGpuBlockBuilder::fill_colors(
+                GRADIENT_DATA_LAST_STOP,
+                GRADIENT_DATA_LAST_STOP + 1,
+                &cur_color,
+                &cur_color,
+                &mut entries,
+                &prev_step,
+            );
+
+            // Fill in the center of the gradient table, generating a color ramp between each consecutive pair
+            // of gradient stops. Each iteration of a loop will fill the indices in [next_idx, cur_idx). The
+            // loop will then fill indices in [GRADIENT_DATA_TABLE_BEGIN, GRADIENT_DATA_TABLE_END).
+            let mut cur_idx = GRADIENT_DATA_TABLE_END;
+            for next in src_stops {
+                let next_color = next.color.premultiplied();
+                let next_idx = Self::get_index(1.0 - next.offset);
+
+                if next_idx < cur_idx {
+                    prev_step = GradientGpuBlockBuilder::fill_colors(
+                        next_idx,
+                        cur_idx,
+                        &next_color,
+                        &cur_color,
+                        &mut entries,
+                        &prev_step,
+                    );
+                    cur_idx = next_idx;
+                }
+
+                cur_color = next_color;
+            }
+            if cur_idx != GRADIENT_DATA_TABLE_BEGIN {
+                error!("Gradient stops abruptly at {}, auto-completing to white", cur_idx);
+            }
+
+            // Fill in the last entry (for reversed stops) with the last color stop
+            GradientGpuBlockBuilder::fill_colors(
+                GRADIENT_DATA_FIRST_STOP,
+                GRADIENT_DATA_FIRST_STOP + 1,
+                &cur_color,
+                &cur_color,
+                &mut entries,
+                &prev_step,
+            );
+        } else {
+            // Fill in the first entry with the first color stop
+            prev_step = GradientGpuBlockBuilder::fill_colors(
+                GRADIENT_DATA_FIRST_STOP,
+                GRADIENT_DATA_FIRST_STOP + 1,
+                &cur_color,
+                &cur_color,
+                &mut entries,
+                &prev_step,
+            );
+
+            // Fill in the center of the gradient table, generating a color ramp between each consecutive pair
+            // of gradient stops. Each iteration of a loop will fill the indices in [cur_idx, next_idx). The
+            // loop will then fill indices in [GRADIENT_DATA_TABLE_BEGIN, GRADIENT_DATA_TABLE_END).
+            let mut cur_idx = GRADIENT_DATA_TABLE_BEGIN;
+            for next in src_stops {
+                let next_color = next.color.premultiplied();
+                let next_idx = Self::get_index(next.offset);
+
+                if next_idx > cur_idx {
+                    prev_step = GradientGpuBlockBuilder::fill_colors(
+                        cur_idx,
+                        next_idx,
+                        &cur_color,
+                        &next_color,
+                        &mut entries,
+                        &prev_step,
+                    );
+                    cur_idx = next_idx;
+                }
+
+                cur_color = next_color;
+            }
+            if cur_idx != GRADIENT_DATA_TABLE_END {
+                error!("Gradient stops abruptly at {}, auto-completing to white", cur_idx);
+            }
+
+            // Fill in the last entry with the last color stop
+            GradientGpuBlockBuilder::fill_colors(
+                GRADIENT_DATA_LAST_STOP,
+                GRADIENT_DATA_LAST_STOP + 1,
+                &cur_color,
+                &cur_color,
+                &mut entries,
+                &prev_step,
+            );
+        }
+
+        let mut writer = gpu_buffer_builder.write_blocks(2 * entries.len());
+
+        for entry in entries {
+            writer.push_one(entry.start_color);
+            writer.push_one(entry.end_step);
+        }
+
+        writer.finish()
     }
 }
 
@@ -126,14 +544,14 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<LinearGradient>(), 72, "LinearGradient size changed");
-    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 80, "LinearGradientTemplate size changed");
-    assert_eq!(mem::size_of::<LinearGradientKey>(), 72, "LinearGradientKey size changed");
+    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 136, "LinearGradientTemplate size changed");
+    assert_eq!(mem::size_of::<LinearGradientKey>(), 96, "LinearGradientKey size changed");
 
     assert_eq!(mem::size_of::<RadialGradient>(), 72, "RadialGradient size changed");
-    assert_eq!(mem::size_of::<RadialGradientTemplate>(), 80, "RadialGradientTemplate size changed");
-    assert_eq!(mem::size_of::<RadialGradientKey>(), 72, "RadialGradientKey size changed");
+    assert_eq!(mem::size_of::<RadialGradientTemplate>(), 136, "RadialGradientTemplate size changed");
+    assert_eq!(mem::size_of::<RadialGradientKey>(), 96, "RadialGradientKey size changed");
 
     assert_eq!(mem::size_of::<ConicGradient>(), 72, "ConicGradient size changed");
-    assert_eq!(mem::size_of::<ConicGradientTemplate>(), 80, "ConicGradientTemplate size changed");
-    assert_eq!(mem::size_of::<ConicGradientKey>(), 72, "ConicGradientKey size changed");
+    assert_eq!(mem::size_of::<ConicGradientTemplate>(), 136, "ConicGradientTemplate size changed");
+    assert_eq!(mem::size_of::<ConicGradientKey>(), 96, "ConicGradientKey size changed");
 }

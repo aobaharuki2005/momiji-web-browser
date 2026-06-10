@@ -27,13 +27,13 @@ add_task(async function () {
   await setSearchFilter(view, SEARCH);
 
   info("Start entering a new property in the rule");
-  const ruleEditor = getRuleViewRuleEditorAt(view, 1);
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
   const rule = ruleEditor.rule;
   const prop = getTextProperty(view, 1, { width: "100%" });
   let editor = await focusNewRuleViewProperty(ruleEditor);
 
   info("Check that the correct rules are visible");
-  assertDisplayedRulesCount(view, 2);
+  is(view.element.children.length, 2, "Should have 2 rules.");
   is(rule.selectorText, "#testid", "Second rule is #testid.");
   ok(
     prop.editor.container.classList.contains("ruleview-highlight"),
@@ -48,10 +48,10 @@ add_task(async function () {
 
   info("Test creating a new property");
 
-  info("Entering padding-left in the property name editor");
+  info("Entering margin-left in the property name editor");
   // Changing the value doesn't cause a rule-view refresh, no need to wait for
   // ruleview-changed here.
-  editor.input.value = "padding-left";
+  editor.input.value = "margin-left";
 
   info("Pressing return to commit and focus the new value field");
   let onRuleViewChanged = view.once("ruleview-changed");
@@ -74,6 +74,6 @@ add_task(async function () {
 
   ok(
     propEditor.container.classList.contains("ruleview-highlight"),
-    "padding-left text property is correctly highlighted."
+    "margin-left text property is correctly highlighted."
   );
 });

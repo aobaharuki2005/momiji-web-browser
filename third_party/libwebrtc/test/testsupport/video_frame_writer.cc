@@ -11,11 +11,9 @@
 #include "test/testsupport/video_frame_writer.h"
 
 #include <cmath>
-#include <cstdint>
 #include <cstdlib>
 #include <limits>
 #include <memory>
-#include <span>
 #include <string>
 #include <utility>
 
@@ -44,22 +42,16 @@ Buffer ExtractI420BufferWithSize(const VideoFrame& frame,
 
     size_t length =
         CalcBufferSize(VideoType::kI420, scaled->width(), scaled->height());
-    Buffer buffer = Buffer::CreateWithCapacity(length);
-    buffer.AppendData(length, [&](std::span<uint8_t> buffer) {
-      RTC_CHECK_NE(ExtractBuffer(scaled, length, buffer.data()), -1);
-      return length;
-    });
+    Buffer buffer(length);
+    RTC_CHECK_NE(ExtractBuffer(scaled, length, buffer.data()), -1);
     return buffer;
   }
 
   // No resize.
   size_t length =
       CalcBufferSize(VideoType::kI420, frame.width(), frame.height());
-  Buffer buffer = Buffer::CreateWithCapacity(length);
-  buffer.AppendData(length, [&](std::span<uint8_t> buffer) {
-    RTC_CHECK_NE(ExtractBuffer(frame, length, buffer.data()), -1);
-    return length;
-  });
+  Buffer buffer(length);
+  RTC_CHECK_NE(ExtractBuffer(frame, length, buffer.data()), -1);
   return buffer;
 }
 

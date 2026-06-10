@@ -9,6 +9,7 @@
 #define _BLAPII_H_
 
 #include "blapit.h"
+#include "mpi.h"
 #include "hasht.h"
 
 /* max block size of supported block ciphers */
@@ -80,13 +81,13 @@ SEC_END_PROTOS
 #undef HAVE_NO_SANITIZE_ATTR
 
 SECStatus RSA_Init();
+SECStatus generate_prime(mp_int *prime, int primeLen);
 
 SECStatus
 RSA_EMSAEncodePSS(unsigned char *em,
                   unsigned int emLen,
                   unsigned int emBits,
                   const unsigned char *mHash,
-                  unsigned int mHashLen,
                   HASH_HashType hashAlg,
                   HASH_HashType maskHashAlg,
                   const unsigned char *salt,

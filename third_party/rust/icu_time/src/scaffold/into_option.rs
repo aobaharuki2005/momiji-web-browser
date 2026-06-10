@@ -63,13 +63,6 @@ impl IntoOption<DayOfYear> for DayOfYear {
     }
 }
 
-impl IntoOption<RataDie> for RataDie {
-    #[inline]
-    fn into_option(self) -> Option<Self> {
-        Some(self)
-    }
-}
-
 impl IntoOption<AnyCalendarKind> for AnyCalendarKind {
     #[inline]
     fn into_option(self) -> Option<Self> {

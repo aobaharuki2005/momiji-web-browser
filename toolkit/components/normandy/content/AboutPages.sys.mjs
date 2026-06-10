@@ -102,15 +102,11 @@ ChromeUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
     },
 
     getMessagingSystemList() {
-      const debugEnabled = Services.prefs.getBoolPref("nimbus.debug");
-
       // Do not include Firefox Labs. Those are shown on
       // about:preferences#experimental.
-      //
-      // Only show Rollouts if nimbus.debug is enabled.
       return lazy.ExperimentAPI.manager.store
         .getAll()
-        .filter(e => !e.isFirefoxLabsOptIn && (debugEnabled || !e.isRollout));
+        .filter(e => !e.isFirefoxLabsOptIn);
     },
 
     async optInToExperiment(data) {

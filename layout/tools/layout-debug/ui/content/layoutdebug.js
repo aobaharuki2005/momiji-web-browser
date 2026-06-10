@@ -125,7 +125,7 @@ class Debugger {
   }
 
   sendDumpContent() {
-    return this._sendMessage("dumpContent", this.anonymousSubtreeDumping);
+    this._sendMessage("dumpContent", this.anonymousSubtreeDumping);
   }
 
   sendDumpFrames(css_pixels) {
@@ -136,7 +136,7 @@ class Debugger {
     if (this.deterministicFrameDumping) {
       flags |= Ci.nsILayoutDebuggingTools.DUMP_FRAME_FLAGS_DETERMINISTIC;
     }
-    return this._sendMessage("dumpFrames", flags);
+    this._sendMessage("dumpFrames", flags);
   }
 
   async _sendMessage(name, arg) {
@@ -177,36 +177,21 @@ for (let [name, pref] of Object.entries(FEATURES)) {
 
 for (let name of SIMPLE_COMMANDS) {
   Debugger.prototype[name] = function () {
-    return this._sendMessage(name);
+    this._sendMessage(name);
   };
 }
 
 Debugger.prototype.dumpContent = function () {
-  return this.sendDumpContent();
+  this.sendDumpContent();
 };
 
 Debugger.prototype.dumpFrames = function () {
-  return this.sendDumpFrames(false);
+  this.sendDumpFrames(false);
 };
 
 Debugger.prototype.dumpFramesInCSSPixels = function () {
-  return this.sendDumpFrames(true);
+  this.sendDumpFrames(true);
 };
-
-async function dumpRequestedInfo() {
-  if (gArgs.dumpContent) {
-    await gDebugger.dumpContent();
-  }
-  if (gArgs.dumpFrames) {
-    await gDebugger.dumpFrames();
-  }
-  if (gArgs.dumpFramesCSSPixels) {
-    await gDebugger.dumpFramesInCSSPixels();
-  }
-  if (gArgs.dumpRetainedDisplayList) {
-    await gDebugger.dumpRetainedDisplayList();
-  }
-}
 
 function autoCloseIfNeeded(aCrash) {
   if (!gArgs.autoclose) {
@@ -278,9 +263,7 @@ nsLDBBrowserContentListener.prototype = {
         // This does mean that --autoclose doesn't work when the URL on
         // the command line is about:blank (or not specified), but that's
         // not a big deal.
-        //
-        // Waiting for any dump output completes before closing layout debugger.
-        dumpRequestedInfo().finally(() => autoCloseIfNeeded(false));
+        autoCloseIfNeeded(false);
       }
     }
   },
@@ -310,7 +293,11 @@ nsLDBBrowserContentListener.prototype = {
 
   // non-interface methods
   setButtonEnabled: function (aButtonElement, aEnabled) {
-    aButtonElement.toggleAttribute("disabled", !aEnabled);
+    if (aEnabled) {
+      aButtonElement.removeAttribute("disabled");
+    } else {
+      aButtonElement.setAttribute("disabled", "true");
+    }
   },
 
   mStatusText: null,
@@ -329,10 +316,6 @@ function parseArguments() {
     paged: false,
     anonymousSubtreeDumping: false,
     deterministicFrameDumping: false,
-    dumpContent: false,
-    dumpFrames: false,
-    dumpFramesCSSPixels: false,
-    dumpRetainedDisplayList: false,
   };
   if (window.arguments) {
     args.url = window.arguments[0];
@@ -350,14 +333,6 @@ function parseArguments() {
         args.anonymousSubtreeDumping = true;
       } else if (/^deterministic-frame-dumping$/.test(arg)) {
         args.deterministicFrameDumping = true;
-      } else if (arg === "dump-content") {
-        args.dumpContent = true;
-      } else if (arg === "dump-frames") {
-        args.dumpFrames = true;
-      } else if (arg === "dump-frames-css-pixels") {
-        args.dumpFramesCSSPixels = true;
-      } else if (arg === "dump-retained-display-list") {
-        args.dumpRetainedDisplayList = true;
       } else {
         throw `Unknown option ${arg}`;
       }
@@ -566,7 +541,7 @@ function OnLDBLoad() {
 
 function checkPersistentMenu(item) {
   var menuitem = document.getElementById("menu_" + item);
-  menuitem.toggleAttribute("checked", gDebugger[item]);
+  menuitem.setAttribute("checked", gDebugger[item]);
 }
 
 function checkPersistentMenus() {
@@ -648,10 +623,13 @@ function openFile() {
 
 // A simplified version of the function with the same name in tabbrowser.js.
 function updateBrowserRemotenessByURL(aURL) {
-  let remoteType = ChromeUtils.predictRemoteTypeForURI(aURL, {
-    window,
-    // NOTE: userContextId is always 0
+  let oa = E10SUtils.predictOriginAttributes({ browser: gBrowser });
+  let remoteType = E10SUtils.getRemoteTypeForURIObject(aURL, {
+    multiProcess: gMultiProcessBrowser,
+    remoteSubFrames: gFissionBrowser,
     preferredRemoteType: gBrowser.remoteType,
+    currentURI: gBrowser.currentURI,
+    originAttributes: oa,
   });
   if (gBrowser.remoteType != remoteType) {
     gDebugger.detachBrowser();

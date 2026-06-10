@@ -45,7 +45,7 @@ registerCleanupFunction(function () {
 });
 
 function notFound(id) {
-  let doc = tabbrowser.documentGlobal.document;
+  let doc = tabbrowser.ownerGlobal.document;
   return doc.getElementById(id).classList.contains("notFound");
 }
 
@@ -74,7 +74,7 @@ async function testBenignPage() {
     "icon box is visible"
   );
 
-  let win = tabbrowser.documentGlobal;
+  let win = tabbrowser.ownerGlobal;
   await openProtectionsPanel(false, win);
   ok(
     notFound("protections-popup-category-cookies"),
@@ -113,7 +113,7 @@ async function testBenignPageWithException() {
     "icon box is not hidden"
   );
 
-  let win = tabbrowser.documentGlobal;
+  let win = tabbrowser.ownerGlobal;
   await openProtectionsPanel(false, win);
   ok(
     notFound("protections-popup-category-cookies"),
@@ -132,7 +132,7 @@ function areTrackersBlocked(isPrivateBrowsing) {
   );
   let blockedByTPC = [
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
-    Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN,
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
   ].includes(Services.prefs.getIntPref(TPC_PREF));
   return blockedByTP || blockedByTPC;
 }
@@ -267,7 +267,7 @@ async function testContentBlocking(tab) {
     browser: tab.linkedBrowser,
     uriString: gTrackingPageURL,
   });
-  await testTrackingPage(tab.documentGlobal);
+  await testTrackingPage(tab.ownerGlobal);
 
   info("Disable CB for the page (which reloads the page)");
   let reloadURI = tab.linkedBrowser.currentURI.spec;
@@ -275,13 +275,11 @@ async function testContentBlocking(tab) {
     browser: tab.linkedBrowser,
     uriString: reloadURI,
   });
-  tab.documentGlobal.gProtectionsHandler.disableForCurrentPage();
+  tab.ownerGlobal.gProtectionsHandler.disableForCurrentPage();
   await tabReloadPromise;
-  let isPrivateBrowsing = PrivateBrowsingUtils.isWindowPrivate(
-    tab.documentGlobal
-  );
+  let isPrivateBrowsing = PrivateBrowsingUtils.isWindowPrivate(tab.ownerGlobal);
   let blockedByTP = areTrackersBlocked(isPrivateBrowsing);
-  await testTrackingPageUnblocked(blockedByTP, tab.documentGlobal);
+  await testTrackingPageUnblocked(blockedByTP, tab.ownerGlobal);
 
   info("Re-enable TP for the page (which reloads the page)");
   reloadURI = tab.linkedBrowser.currentURI.spec;
@@ -289,9 +287,9 @@ async function testContentBlocking(tab) {
     browser: tab.linkedBrowser,
     uriString: reloadURI,
   });
-  tab.documentGlobal.gProtectionsHandler.enableForCurrentPage();
+  tab.ownerGlobal.gProtectionsHandler.enableForCurrentPage();
   await tabReloadPromise;
-  await testTrackingPage(tab.documentGlobal);
+  await testTrackingPage(tab.ownerGlobal);
 }
 
 add_task(async function testNormalBrowsing() {
@@ -300,14 +298,14 @@ add_task(async function testNormalBrowsing() {
   tabbrowser = gBrowser;
   let tab = (tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser));
 
-  gProtectionsHandler = gBrowser.documentGlobal.gProtectionsHandler;
+  gProtectionsHandler = gBrowser.ownerGlobal.gProtectionsHandler;
   ok(
     gProtectionsHandler,
     "gProtectionsHandler is attached to the browser window"
   );
 
   TrackingProtection =
-    gBrowser.documentGlobal.gProtectionsHandler.blockers.TrackingProtection;
+    gBrowser.ownerGlobal.gProtectionsHandler.blockers.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
   is(
     TrackingProtection.enabled,
@@ -344,14 +342,14 @@ add_task(async function testPrivateBrowsing() {
 
   Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
 
-  gProtectionsHandler = tabbrowser.documentGlobal.gProtectionsHandler;
+  gProtectionsHandler = tabbrowser.ownerGlobal.gProtectionsHandler;
   ok(
     gProtectionsHandler,
     "gProtectionsHandler is attached to the private window"
   );
 
   TrackingProtection =
-    tabbrowser.documentGlobal.gProtectionsHandler.blockers.TrackingProtection;
+    tabbrowser.ownerGlobal.gProtectionsHandler.blockers.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the private window");
   is(
     TrackingProtection.enabled,
@@ -380,19 +378,19 @@ add_task(async function testThirdPartyCookies() {
   tabbrowser = gBrowser;
   let tab = (tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser));
 
-  gProtectionsHandler = gBrowser.documentGlobal.gProtectionsHandler;
+  gProtectionsHandler = gBrowser.ownerGlobal.gProtectionsHandler;
   ok(
     gProtectionsHandler,
     "gProtectionsHandler is attached to the browser window"
   );
   ThirdPartyCookies =
-    gBrowser.documentGlobal.gProtectionsHandler.blockers.ThirdPartyCookies;
+    gBrowser.ownerGlobal.gProtectionsHandler.blockers.ThirdPartyCookies;
   ok(ThirdPartyCookies, "TP is attached to the browser window");
   is(
     ThirdPartyCookies.enabled,
     [
       Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
-      Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN,
+      Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
     ].includes(Services.prefs.getIntPref(TPC_PREF)),
     "TPC.enabled is based on the original pref value"
   );

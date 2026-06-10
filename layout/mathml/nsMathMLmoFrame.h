@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsMathMLmoFrame_h_
-#define nsMathMLmoFrame_h_
+#ifndef nsMathMLmoFrame_h___
+#define nsMathMLmoFrame_h___
 
 #include "nsMathMLChar.h"
 #include "nsMathMLTokenFrame.h"
@@ -57,7 +59,7 @@ class nsMathMLmoFrame final : public nsMathMLTokenFrame {
   // This method is called by the parent frame to ask <mo>
   // to stretch itself.
   NS_IMETHOD
-  Stretch(DrawTarget* aDrawTarget, StretchDirection aStretchDirection,
+  Stretch(DrawTarget* aDrawTarget, nsStretchDirection aStretchDirection,
           nsBoundingMetrics& aContainerSize,
           ReflowOutput& aDesiredStretchSize) override;
 
@@ -66,11 +68,10 @@ class nsMathMLmoFrame final : public nsMathMLTokenFrame {
     return nsMathMLContainerFrame::ChildListChanged();
   }
 
-  nscoord ItalicCorrection() final;
-
  protected:
   explicit nsMathMLmoFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsMathMLTokenFrame(aStyle, aPresContext, kClassID),
+        mFlags(0),
         mMinSize(0),
         mMaxSize(0) {}
   virtual ~nsMathMLmoFrame();
@@ -93,8 +94,6 @@ class nsMathMLmoFrame final : public nsMathMLTokenFrame {
 
   // helper to double check thar our char should be rendered as a selected char
   bool IsFrameInSelection(nsIFrame* aFrame);
-
-  nscoord FixInterFrameSpacing(ReflowOutput& aDesiredSize) final;
 };
 
-#endif /* nsMathMLmoFrame_h_ */
+#endif /* nsMathMLmoFrame_h___ */

@@ -8,7 +8,6 @@ use rand::{Rng, SeedableRng};
 
 use std::collections::HashMap;
 
-#[cfg(not(miri))]
 #[test]
 fn header_map_fuzz() {
     fn prop(fuzz: Fuzz) -> TestResult {
@@ -76,12 +75,12 @@ impl Fuzz {
 
         let mut steps = vec![];
         let mut expect = AltMap::default();
-        let num = rng.gen_range(5..500);
+        let num = rng.gen_range(5, 500);
 
         let weight = Weight {
-            insert: rng.gen_range(1..10),
-            remove: rng.gen_range(1..10),
-            append: rng.gen_range(1..10),
+            insert: rng.gen_range(1, 10),
+            remove: rng.gen_range(1, 10),
+            append: rng.gen_range(1, 10),
         };
 
         while steps.len() < num {
@@ -89,8 +88,8 @@ impl Fuzz {
         }
 
         Fuzz {
-            seed,
-            steps,
+            seed: seed,
+            steps: steps,
             reduce: 0,
         }
     }
@@ -111,8 +110,8 @@ impl Fuzz {
 }
 
 impl Arbitrary for Fuzz {
-    fn arbitrary(_: &mut Gen) -> Self {
-        Self::new(rand::thread_rng().gen())
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        Fuzz::new(Rng::gen(g))
     }
 }
 
@@ -121,7 +120,7 @@ impl AltMap {
         let action = self.gen_action(weight, rng);
 
         Step {
-            action,
+            action: action,
             expect: self.clone(),
         }
     }
@@ -130,7 +129,7 @@ impl AltMap {
     fn gen_action(&mut self, weight: &Weight, rng: &mut StdRng) -> Action {
         let sum = weight.insert + weight.remove + weight.append;
 
-        let mut num = rng.gen_range(0..sum);
+        let mut num = rng.gen_range(0, sum);
 
         if num < weight.insert {
             return self.gen_insert(rng);
@@ -156,14 +155,21 @@ impl AltMap {
         let val = gen_header_value(rng);
         let old = self.insert(name.clone(), val.clone());
 
-        Action::Insert { name, val, old }
+        Action::Insert {
+            name: name,
+            val: val,
+            old: old,
+        }
     }
 
     fn gen_remove(&mut self, rng: &mut StdRng) -> Action {
         let name = self.gen_name(-4, rng);
         let val = self.remove(&name);
 
-        Action::Remove { name, val }
+        Action::Remove {
+            name: name,
+            val: val,
+        }
     }
 
     fn gen_append(&mut self, rng: &mut StdRng) -> Action {
@@ -175,7 +181,11 @@ impl AltMap {
         let ret = !vals.is_empty();
         vals.push(val.clone());
 
-        Action::Append { name, val, ret }
+        Action::Append {
+            name: name,
+            val: val,
+            ret: ret,
+        }
     }
 
     /// Negative numbers weigh finding an existing header higher
@@ -202,7 +212,7 @@ impl AltMap {
         if self.map.is_empty() {
             None
         } else {
-            let n = rng.gen_range(0..self.map.len());
+            let n = rng.gen_range(0, self.map.len());
             self.map.keys().nth(n).map(Clone::clone)
         }
     }

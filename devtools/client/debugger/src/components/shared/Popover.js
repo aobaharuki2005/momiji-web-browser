@@ -47,8 +47,6 @@ class Popover extends Component {
 
     this.firstRender = false;
     this.startTimer();
-
-    window.addEventListener("keyup", this.onKeyup);
   }
 
   componentDidUpdate(prevProps) {
@@ -69,7 +67,6 @@ class Popover extends Component {
   }
 
   componentWillUnmount() {
-    window.removeEventListener("keyup", this.onKeyup);
     if (this.timerId) {
       clearTimeout(this.timerId);
     }
@@ -101,12 +98,6 @@ class Popover extends Component {
     }
 
     this.props.mouseout();
-  };
-
-  onKeyup = event => {
-    if (event.key === "Escape") {
-      this.props.mouseout();
-    }
   };
 
   calculateLeft(target, editor, popover, orientation) {

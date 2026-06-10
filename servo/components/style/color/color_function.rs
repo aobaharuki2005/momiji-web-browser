@@ -14,7 +14,7 @@ use super::{
 };
 use crate::derives::*;
 use crate::values::{
-    computed, computed::color::Color as ComputedColor, generics::Optional, normalize,
+    computed::color::Color as ComputedColor, generics::Optional, normalize,
     specified::color::Color as SpecifiedColor,
 };
 use cssparser::color::{clamp_floor_256_f32, OPAQUE};
@@ -92,14 +92,11 @@ pub enum ColorFunction<OriginColor> {
 
 impl ColorFunction<AbsoluteColor> {
     /// Try to resolve into a valid absolute color.
-    pub fn resolve_to_absolute(
-        &self,
-        context: Option<&computed::Context>,
-    ) -> Result<AbsoluteColor, ()> {
+    pub fn resolve_to_absolute(&self) -> Result<AbsoluteColor, ()> {
         macro_rules! alpha {
             ($alpha:expr, $origin_color:expr) => {{
                 $alpha
-                    .resolve($origin_color, context)?
+                    .resolve($origin_color)?
                     .map(|value| normalize(value.to_number(1.0)).clamp(0.0, OPAQUE))
             }};
         }
@@ -130,11 +127,11 @@ impl ColorFunction<AbsoluteColor> {
                     // calculations.
                     AbsoluteColor::new(
                         ColorSpace::Srgb,
-                        r.resolve(origin_color.as_ref(), context)?
+                        r.resolve(origin_color.as_ref())?
                             .map(|c| c.to_number(255.0) / 255.0),
-                        g.resolve(origin_color.as_ref(), context)?
+                        g.resolve(origin_color.as_ref())?
                             .map(|c| c.to_number(255.0) / 255.0),
-                        b.resolve(origin_color.as_ref(), context)?
+                        b.resolve(origin_color.as_ref())?
                             .map(|c| c.to_number(255.0) / 255.0),
                         alpha!(alpha, origin_color.as_ref()),
                     )
@@ -143,11 +140,10 @@ impl ColorFunction<AbsoluteColor> {
                     fn resolve(
                         component: &ColorComponent<NumberOrPercentageComponent>,
                         origin_color: Option<&AbsoluteColor>,
-                        context: Option<&computed::Context>,
                     ) -> Result<u8, ()> {
                         Ok(clamp_floor_256_f32(
                             component
-                                .resolve(origin_color, context)?
+                                .resolve(origin_color)?
                                 .map_or(0.0, |value| value.to_number(u8::MAX as f32)),
                         ))
                     }
@@ -155,9 +151,9 @@ impl ColorFunction<AbsoluteColor> {
                     let origin_color = origin_color.as_ref().map(|o| o.into_srgb_legacy());
 
                     AbsoluteColor::srgb_legacy(
-                        resolve(r, origin_color.as_ref(), context)?,
-                        resolve(g, origin_color.as_ref(), context)?,
-                        resolve(b, origin_color.as_ref(), context)?,
+                        resolve(r, origin_color.as_ref())?,
+                        resolve(g, origin_color.as_ref())?,
+                        resolve(b, origin_color.as_ref())?,
                         alpha!(alpha, origin_color.as_ref()).unwrap_or(0.0),
                     )
                 }
@@ -180,16 +176,16 @@ impl ColorFunction<AbsoluteColor> {
 
                 let mut result = AbsoluteColor::new(
                     ColorSpace::Hsl,
-                    h.resolve(origin_color.as_ref(), context)?
+                    h.resolve(origin_color.as_ref())?
                         .map(|angle| normalize_hue(angle.degrees())),
-                    s.resolve(origin_color.as_ref(), context)?.map(|s| {
+                    s.resolve(origin_color.as_ref())?.map(|s| {
                         if use_rgb_sytax {
                             s.to_number(SATURATION_RANGE).clamp(0.0, SATURATION_RANGE)
                         } else {
                             s.to_number(SATURATION_RANGE)
                         }
                     }),
-                    l.resolve(origin_color.as_ref(), context)?.map(|l| {
+                    l.resolve(origin_color.as_ref())?.map(|l| {
                         if use_rgb_sytax {
                             l.to_number(LIGHTNESS_RANGE).clamp(0.0, LIGHTNESS_RANGE)
                         } else {
@@ -223,16 +219,16 @@ impl ColorFunction<AbsoluteColor> {
 
                 let mut result = AbsoluteColor::new(
                     ColorSpace::Hwb,
-                    h.resolve(origin_color.as_ref(), context)?
+                    h.resolve(origin_color.as_ref())?
                         .map(|angle| normalize_hue(angle.degrees())),
-                    w.resolve(origin_color.as_ref(), context)?.map(|w| {
+                    w.resolve(origin_color.as_ref())?.map(|w| {
                         if use_rgb_sytax {
                             w.to_number(WHITENESS_RANGE).clamp(0.0, WHITENESS_RANGE)
                         } else {
                             w.to_number(WHITENESS_RANGE)
                         }
                     }),
-                    b.resolve(origin_color.as_ref(), context)?.map(|b| {
+                    b.resolve(origin_color.as_ref())?.map(|b| {
                         if use_rgb_sytax {
                             b.to_number(BLACKNESS_RANGE).clamp(0.0, BLACKNESS_RANGE)
                         } else {
@@ -260,11 +256,11 @@ impl ColorFunction<AbsoluteColor> {
 
                 AbsoluteColor::new(
                     ColorSpace::Lab,
-                    l.resolve(origin_color.as_ref(), context)?
+                    l.resolve(origin_color.as_ref())?
                         .map(|l| l.to_number(LIGHTNESS_RANGE)),
-                    a.resolve(origin_color.as_ref(), context)?
+                    a.resolve(origin_color.as_ref())?
                         .map(|a| a.to_number(A_B_RANGE)),
-                    b.resolve(origin_color.as_ref(), context)?
+                    b.resolve(origin_color.as_ref())?
                         .map(|b| b.to_number(A_B_RANGE)),
                     alpha!(alpha, origin_color.as_ref()),
                 )
@@ -281,11 +277,11 @@ impl ColorFunction<AbsoluteColor> {
 
                 AbsoluteColor::new(
                     ColorSpace::Lch,
-                    l.resolve(origin_color.as_ref(), context)?
+                    l.resolve(origin_color.as_ref())?
                         .map(|l| l.to_number(LIGHTNESS_RANGE)),
-                    c.resolve(origin_color.as_ref(), context)?
+                    c.resolve(origin_color.as_ref())?
                         .map(|c| c.to_number(CHROMA_RANGE)),
-                    h.resolve(origin_color.as_ref(), context)?
+                    h.resolve(origin_color.as_ref())?
                         .map(|angle| normalize_hue(angle.degrees())),
                     alpha!(alpha, origin_color.as_ref()),
                 )
@@ -302,11 +298,11 @@ impl ColorFunction<AbsoluteColor> {
 
                 AbsoluteColor::new(
                     ColorSpace::Oklab,
-                    l.resolve(origin_color.as_ref(), context)?
+                    l.resolve(origin_color.as_ref())?
                         .map(|l| l.to_number(LIGHTNESS_RANGE)),
-                    a.resolve(origin_color.as_ref(), context)?
+                    a.resolve(origin_color.as_ref())?
                         .map(|a| a.to_number(A_B_RANGE)),
-                    b.resolve(origin_color.as_ref(), context)?
+                    b.resolve(origin_color.as_ref())?
                         .map(|b| b.to_number(A_B_RANGE)),
                     alpha!(alpha, origin_color.as_ref()),
                 )
@@ -323,11 +319,11 @@ impl ColorFunction<AbsoluteColor> {
 
                 AbsoluteColor::new(
                     ColorSpace::Oklch,
-                    l.resolve(origin_color.as_ref(), context)?
+                    l.resolve(origin_color.as_ref())?
                         .map(|l| l.to_number(LIGHTNESS_RANGE)),
-                    c.resolve(origin_color.as_ref(), context)?
+                    c.resolve(origin_color.as_ref())?
                         .map(|c| c.to_number(CHROMA_RANGE)),
-                    h.resolve(origin_color.as_ref(), context)?
+                    h.resolve(origin_color.as_ref())?
                         .map(|angle| normalize_hue(angle.degrees())),
                     alpha!(alpha, origin_color.as_ref()),
                 )
@@ -346,12 +342,9 @@ impl ColorFunction<AbsoluteColor> {
 
                 AbsoluteColor::new(
                     *color_space,
-                    r.resolve(origin_color.as_ref(), context)?
-                        .map(|c| c.to_number(1.0)),
-                    g.resolve(origin_color.as_ref(), context)?
-                        .map(|c| c.to_number(1.0)),
-                    b.resolve(origin_color.as_ref(), context)?
-                        .map(|c| c.to_number(1.0)),
+                    r.resolve(origin_color.as_ref())?.map(|c| c.to_number(1.0)),
+                    g.resolve(origin_color.as_ref())?.map(|c| c.to_number(1.0)),
+                    b.resolve(origin_color.as_ref())?.map(|c| c.to_number(1.0)),
                     alpha!(alpha, origin_color.as_ref()),
                 )
             },
@@ -376,30 +369,20 @@ impl ColorFunction<SpecifiedColor> {
 
     /// Try to resolve the color function to an [`AbsoluteColor`] that does not
     /// contain any variables (currentcolor, color components, etc.).
-    pub fn resolve_to_absolute(
-        &self,
-        context: Option<&computed::Context>,
-    ) -> Result<AbsoluteColor, ()> {
+    pub fn resolve_to_absolute(&self) -> Result<AbsoluteColor, ()> {
         // Map the color function to one with an absolute origin color.
-        self.map_origin_color(|o| o.resolve_to_absolute(context))?
-            .resolve_to_absolute(context)
+        let resolvable = self.map_origin_color(|o| o.resolve_to_absolute());
+        resolvable.resolve_to_absolute()
     }
 }
 
 impl<Color> ColorFunction<Color> {
-    /// Map the origin color to another type.
-    pub fn map_origin_color<U>(
-        &self,
-        f: impl FnOnce(&Color) -> Result<U, ()>,
-    ) -> Result<ColorFunction<U>, ()> {
+    /// Map the origin color to another type.  Return None from `f` if the conversion fails.
+    pub fn map_origin_color<U>(&self, f: impl FnOnce(&Color) -> Option<U>) -> ColorFunction<U> {
         macro_rules! map {
             ($f:ident, $o:expr, $c0:expr, $c1:expr, $c2:expr, $alpha:expr) => {{
                 ColorFunction::$f(
-                    match $o.as_ref() {
-                        Some(c) => Some(f(c)?),
-                        None => None,
-                    }
-                    .into(),
+                    $o.as_ref().and_then(f).into(),
                     $c0.clone(),
                     $c1.clone(),
                     $c2.clone(),
@@ -407,7 +390,7 @@ impl<Color> ColorFunction<Color> {
                 )
             }};
         }
-        Ok(match self {
+        match self {
             ColorFunction::Rgb(o, c0, c1, c2, alpha) => map!(Rgb, o, c0, c1, c2, alpha),
             ColorFunction::Hsl(o, c0, c1, c2, alpha) => map!(Hsl, o, c0, c1, c2, alpha),
             ColorFunction::Hwb(o, c0, c1, c2, alpha) => map!(Hwb, o, c0, c1, c2, alpha),
@@ -416,18 +399,14 @@ impl<Color> ColorFunction<Color> {
             ColorFunction::Oklab(o, c0, c1, c2, alpha) => map!(Oklab, o, c0, c1, c2, alpha),
             ColorFunction::Oklch(o, c0, c1, c2, alpha) => map!(Oklch, o, c0, c1, c2, alpha),
             ColorFunction::Color(o, c0, c1, c2, alpha, color_space) => ColorFunction::Color(
-                match o.as_ref() {
-                    Some(c) => Some(f(c)?),
-                    None => None,
-                }
-                .into(),
+                o.as_ref().and_then(f).into(),
                 c0.clone(),
                 c1.clone(),
                 c2.clone(),
                 alpha.clone(),
                 color_space.clone(),
             ),
-        })
+        }
     }
 }
 
@@ -435,11 +414,8 @@ impl ColorFunction<ComputedColor> {
     /// Resolve a computed color function to an absolute computed color.
     pub fn resolve_to_absolute(&self, current_color: &AbsoluteColor) -> AbsoluteColor {
         // Map the color function to one with an absolute origin color.
-        let resolvable = self
-            .map_origin_color(|o| Ok(o.resolve_to_absolute(current_color)))
-            .unwrap();
-        // Computed value context is not required as it was already applied to this color.
-        match resolvable.resolve_to_absolute(None) {
+        let resolvable = self.map_origin_color(|o| Some(o.resolve_to_absolute(current_color)));
+        match resolvable.resolve_to_absolute() {
             Ok(color) => color,
             Err(..) => {
                 debug_assert!(

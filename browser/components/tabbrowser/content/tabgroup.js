@@ -51,8 +51,6 @@
     /** @type {boolean} */
     #wasCreatedByAdoption = false;
 
-    #observerRemoved = false;
-
     constructor() {
       super();
 
@@ -80,8 +78,7 @@
 
       // Similar to above, always set up TabSelect listener, as this gets
       // removed in disconnectedCallback
-      this.documentGlobal.addEventListener("TabSelect", this);
-      this.addEventListener("SplitViewTabChange", this);
+      this.ownerGlobal.addEventListener("TabSelect", this);
 
       if (this._initialized) {
         return;
@@ -98,7 +95,12 @@
         this.resetDefaultGroupName,
         "intl:app-locales-changed"
       );
-      this.documentGlobal.addEventListener("unload", this.#removeObserver);
+      window.addEventListener("unload", () => {
+        Services.obs.removeObserver(
+          this.resetDefaultGroupName,
+          "intl:app-locales-changed"
+        );
+      });
 
       this.addEventListener("click", this);
 
@@ -148,23 +150,9 @@
       this.#updateTooltip();
     };
 
-    #removeObserver = () => {
-      if (this.#observerRemoved) {
-        return;
-      }
-      this.#observerRemoved = true;
-      Services.obs.removeObserver(
-        this.resetDefaultGroupName,
-        "intl:app-locales-changed"
-      );
-    };
-
     disconnectedCallback() {
-      this.documentGlobal.removeEventListener("TabSelect", this);
-      this.documentGlobal.removeEventListener("unload", this.#removeObserver);
-      this.removeEventListener("SplitViewTabChange", this);
+      this.ownerGlobal.removeEventListener("TabSelect", this);
       this.#tabChangeObserver?.disconnect();
-      this.#removeObserver();
     }
 
     appendChild(node) {
@@ -239,29 +227,11 @@
       );
       this.style.setProperty(
         "--tab-group-color-invert",
-        Services.prefs.getBoolPref("browser.nova.enabled")
-          ? `var(--tab-group-${code}-invert)`
-          : `var(--tab-group-color-${code}-invert)`
+        `var(--tab-group-color-${code}-invert)`
       );
       this.style.setProperty(
         "--tab-group-color-pale",
         `var(--tab-group-color-${code}-pale)`
-      );
-      this.style.setProperty(
-        "--tab-group-background-color",
-        `var(--tab-group-${code})`
-      );
-      this.style.setProperty(
-        "--tab-group-text-color",
-        `var(--tab-group-${code}-text)`
-      );
-      this.style.setProperty(
-        "--tab-group-text-color-invert",
-        `var(--tab-group-${code}-text-invert)`
-      );
-      this.style.setProperty(
-        "--tab-group-background-color-hover",
-        `var(--tab-group-${code}-hover)`
       );
       if (diff) {
         this.dispatchEvent(
@@ -487,8 +457,8 @@
         `[${LAST_ITEM_ATTRIBUTE}]`
       );
       if (prevLastTabOrSplitView !== currentLastTabOrSplitView) {
-        prevLastTabOrSplitView?.removeAttribute(LAST_ITEM_ATTRIBUTE);
-        currentLastTabOrSplitView.setAttribute(LAST_ITEM_ATTRIBUTE, true);
+        prevLastTabOrSplitView?.toggleAttribute(LAST_ITEM_ATTRIBUTE);
+        currentLastTabOrSplitView.toggleAttribute(LAST_ITEM_ATTRIBUTE);
       }
     }
 
@@ -522,12 +492,7 @@
       if (this.isBeingDragged) {
         return false;
       }
-      if (
-        this.collapsed &&
-        !tab.selected &&
-        !tab.multiselected &&
-        !tab.splitview?.hasActiveTab
-      ) {
+      if (this.collapsed && !tab.selected && !tab.multiselected) {
         return false;
       }
       return true;
@@ -597,23 +562,17 @@
     addTabs(tabsOrSplitViews, metricsContext = null) {
       for (let tabOrSplitView of tabsOrSplitViews) {
         if (gBrowser.isSplitViewWrapper(tabOrSplitView)) {
-          let splitViewToMove =
-            this.documentGlobal === tabOrSplitView.documentGlobal
-              ? tabOrSplitView
-              : gBrowser.adoptSplitView(tabOrSplitView, {
-                  tabIndex: gBrowser.tabs.at(-1)._tPos + 1,
-                });
           gBrowser.moveSplitViewToExistingGroup(
-            splitViewToMove,
+            tabOrSplitView,
             this,
             metricsContext
           );
         } else {
           if (tabOrSplitView.pinned) {
-            tabOrSplitView.documentGlobal.gBrowser.unpinTab(tabOrSplitView);
+            tabOrSplitView.ownerGlobal.gBrowser.unpinTab(tabOrSplitView);
           }
           let tabToMove =
-            this.documentGlobal === tabOrSplitView.documentGlobal
+            this.ownerGlobal === tabOrSplitView.ownerGlobal
               ? tabOrSplitView
               : gBrowser.adoptTab(tabOrSplitView, {
                   tabIndex: gBrowser.tabs.at(-1)._tPos + 1,
@@ -642,12 +601,8 @@
           detail: metricsContext,
         })
       );
-      for (let i = this.tabsAndSplitViews.length - 1; i >= 0; i--) {
-        if (gBrowser.isSplitViewWrapper(this.tabsAndSplitViews[i])) {
-          gBrowser.ungroupSplitView(this.tabsAndSplitViews[i]);
-        } else if (gBrowser.isTab(this.tabsAndSplitViews[i])) {
-          gBrowser.ungroupTab(this.tabsAndSplitViews[i]);
-        }
+      for (let i = this.tabs.length - 1; i >= 0; i--) {
+        gBrowser.ungroupTab(this.tabs[i]);
       }
     }
 
@@ -731,14 +686,6 @@
       }
       if (previousTab.group === this) {
         this.#updateTabAriaHidden(previousTab);
-      }
-
-      this.#updateOverflowLabel();
-    }
-
-    on_SplitViewTabChange(event) {
-      for (const splitViewTab of event.target.tabs) {
-        this.#updateTabAriaHidden(splitViewTab);
       }
 
       this.#updateOverflowLabel();

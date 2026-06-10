@@ -13,48 +13,32 @@ end of the VS buffer table.
 
 !*/
 
-#[allow(
-    deprecated,
-    reason = "MTLFeatureSet` is superseded by `MTLGpuFamily`.
-        However, `MTLGpuFamily` is only supported starting MacOS 10.15, whereas our minimum target is MacOS 10.13,
-        See https://github.com/gpuweb/gpuweb/issues/1069 for minimum spec.
-        TODO: Eventually all deprecated features should be abstracted and use new api when available."
-)]
+// `MTLFeatureSet` is superseded by `MTLGpuFamily`.
+// However, `MTLGpuFamily` is only supported starting MacOS 10.15, whereas our minimum target is MacOS 10.13,
+// See https://github.com/gpuweb/gpuweb/issues/1069 for minimum spec.
+// TODO: Eventually all deprecated features should be abstracted and use new api when available.
+#[allow(deprecated)]
 mod adapter;
 mod command;
 mod conv;
 mod device;
-mod library_from_metallib;
+mod layer_observer;
 mod surface;
 mod time;
 
-use alloc::{
-    string::{String, ToString as _},
-    sync::Arc,
-    vec::Vec,
-};
+use alloc::{borrow::ToOwned as _, string::String, sync::Arc, vec::Vec};
 use core::{fmt, iter, ops, ptr::NonNull, sync::atomic};
 
+use arrayvec::ArrayVec;
 use bitflags::bitflags;
 use hashbrown::HashMap;
+use metal::{
+    foreign_types::ForeignTypeRef as _, MTLArgumentBuffersTier, MTLBuffer, MTLCommandBufferStatus,
+    MTLCullMode, MTLDepthClipMode, MTLIndexType, MTLLanguageVersion, MTLPrimitiveType,
+    MTLReadWriteTextureTier, MTLRenderStages, MTLResource, MTLResourceUsage, MTLSamplerState,
+    MTLSize, MTLTexture, MTLTextureType, MTLTriangleFillMode, MTLWinding,
+};
 use naga::FastHashMap;
-use objc2::{
-    available,
-    rc::{autoreleasepool, Retained},
-    runtime::ProtocolObject,
-};
-use objc2_foundation::ns_string;
-use objc2_metal::{
-    MTLAccelerationStructure, MTLAccelerationStructureCommandEncoder, MTLArgumentBuffersTier,
-    MTLBlitCommandEncoder, MTLBuffer, MTLCommandBuffer, MTLCommandBufferStatus, MTLCommandQueue,
-    MTLComputeCommandEncoder, MTLComputePipelineState, MTLCounterSampleBuffer, MTLCullMode,
-    MTLDepthClipMode, MTLDepthStencilState, MTLDevice, MTLDrawable, MTLIndexType,
-    MTLLanguageVersion, MTLLibrary, MTLPrimitiveType, MTLReadWriteTextureTier,
-    MTLRenderCommandEncoder, MTLRenderPipelineState, MTLRenderStages, MTLResource,
-    MTLResourceUsage, MTLSamplerState, MTLSharedEvent, MTLSize, MTLTexture, MTLTextureType,
-    MTLTriangleFillMode, MTLWinding,
-};
-use objc2_quartz_core::CAMetalLayer;
 use parking_lot::{Mutex, RwLock};
 
 #[derive(Clone, Debug)]
@@ -118,26 +102,11 @@ crate::impl_dyn_resource!(
     TextureView
 );
 
-/// Provides availability information about Mac APIs.
-///
-/// This may include Metal features that depend only on software support.
-/// Features with varying hardware support are in [`CapabilitiesQuery`]
-///
-/// When feature detection is only needed once, it may also be done inline.
-struct OsFeatures;
-
-impl OsFeatures {
-    fn display_sync() -> bool {
-        // https://developer.apple.com/documentation/quartzcore/cametallayer/displaysyncenabled
-        available!(macos = 10.13) || cfg!(target_abi = "macabi")
-    }
-}
-
 pub struct Instance {}
 
 impl Instance {
-    pub fn create_surface_from_layer(&self, layer: &CAMetalLayer) -> Surface {
-        Surface::from_layer(layer)
+    pub fn create_surface_from_layer(&self, layer: &metal::MetalLayerRef) -> Surface {
+        unsafe { Surface::from_layer(layer) }
     }
 }
 
@@ -153,41 +122,58 @@ impl crate::Instance for Instance {
 
     unsafe fn create_surface(
         &self,
-        display_handle: raw_window_handle::RawDisplayHandle,
+        _display_handle: raw_window_handle::RawDisplayHandle,
         window_handle: raw_window_handle::RawWindowHandle,
     ) -> Result<Surface, crate::InstanceError> {
-        let layer = match (display_handle, window_handle) {
-            (
-                raw_window_handle::RawDisplayHandle::AppKit(_),
-                raw_window_handle::RawWindowHandle::AppKit(handle),
-            ) => unsafe { raw_window_metal::Layer::from_ns_view(handle.ns_view) },
-            (
-                raw_window_handle::RawDisplayHandle::UiKit(_),
-                raw_window_handle::RawWindowHandle::UiKit(handle),
-            ) => unsafe { raw_window_metal::Layer::from_ui_view(handle.ui_view) },
-            _ => {
-                return Err(crate::InstanceError::new(format!(
-                    "window handle {window_handle:?} is not a Metal-compatible handle"
-                )))
+        match window_handle {
+            #[cfg(any(target_os = "ios", target_os = "visionos"))]
+            raw_window_handle::RawWindowHandle::UiKit(handle) => {
+                Ok(unsafe { Surface::from_view(handle.ui_view.cast()) })
             }
-        };
-
-        // SAFETY: The layer is an initialized instance of `CAMetalLayer`, and
-        // we transfer the retain count to `Retained` using `into_raw`.
-        let layer = unsafe {
-            Retained::from_raw(layer.into_raw().cast::<CAMetalLayer>().as_ptr()).unwrap()
-        };
-
-        Ok(Surface::new(layer))
+            #[cfg(target_os = "macos")]
+            raw_window_handle::RawWindowHandle::AppKit(handle) => {
+                Ok(unsafe { Surface::from_view(handle.ns_view.cast()) })
+            }
+            _ => Err(crate::InstanceError::new(format!(
+                "window handle {window_handle:?} is not a Metal-compatible handle"
+            ))),
+        }
     }
 
     unsafe fn enumerate_adapters(
         &self,
         _surface_hint: Option<&Surface>,
     ) -> Vec<crate::ExposedAdapter<Api>> {
-        let devices = objc2_metal::MTLCopyAllDevices();
-        let mut adapters: Vec<crate::ExposedAdapter<Api>> =
-            devices.into_iter().map(AdapterShared::expose).collect();
+        let devices = metal::Device::all();
+        let mut adapters: Vec<crate::ExposedAdapter<Api>> = devices
+            .into_iter()
+            .map(|dev| {
+                let name = dev.name().into();
+                let shared = AdapterShared::new(dev);
+                crate::ExposedAdapter {
+                    info: wgt::AdapterInfo {
+                        name,
+                        vendor: 0,
+                        device: 0,
+                        device_type: shared.private_caps.device_type(),
+                        device_pci_bus_id: String::new(),
+                        driver: String::new(),
+                        driver_info: String::new(),
+                        backend: wgt::Backend::Metal,
+                        // These are hardcoded based on typical values for Metal devices
+                        //
+                        // See <https://github.com/gpuweb/gpuweb/blob/main/proposals/subgroups.md#adapter-info>
+                        // for more information.
+                        subgroup_min_size: 4,
+                        subgroup_max_size: 64,
+                        transient_saves_memory: shared.private_caps.supports_memoryless_storage,
+                    },
+                    features: shared.private_caps.features(),
+                    capabilities: shared.private_caps.capabilities(),
+                    adapter: Adapter::new(Arc::new(shared)),
+                }
+            })
+            .collect();
         adapters.sort_by_key(|ad| {
             (
                 ad.adapter.shared.private_caps.low_power,
@@ -216,8 +202,11 @@ bitflags!(
     }
 );
 
+// TODO(https://github.com/gfx-rs/wgpu/issues/8715): Eliminate duplication with
+// `wgt::Limits`. Keeping multiple sets of limits creates a risk of confusion.
 #[allow(dead_code)]
-struct CapabilitiesQuery {
+#[derive(Clone, Debug)]
+struct PrivateCapabilities {
     msl_version: MTLLanguageVersion,
     fragment_rw_storage: bool,
     read_write_texture_tier: MTLReadWriteTextureTier,
@@ -283,11 +272,18 @@ struct CapabilitiesQuery {
     format_depth32float_none: bool,
     format_bgr10a2_all: bool,
     format_bgr10a2_no_write: bool,
-    max_textures_per_stage: (ResourceIndex, ResourceIndex),
+    max_buffers_per_stage: ResourceIndex,
+    max_vertex_buffers: ResourceIndex,
+    max_textures_per_stage: ResourceIndex,
+    max_samplers_per_stage: ResourceIndex,
     max_binding_array_elements: ResourceIndex,
     max_sampler_binding_array_elements: ResourceIndex,
     buffer_alignment: u64,
-    constant_buffer_offset_alignment: u32,
+
+    /// Platform-reported maximum buffer size
+    ///
+    /// This value is clamped to `u32::MAX` for `wgt::Limits`, so you probably
+    /// shouldn't be looking at this copy.
     max_buffer_size: u64,
     max_texture_size: u64,
     max_texture_3d_size: u64,
@@ -295,15 +291,21 @@ struct CapabilitiesQuery {
     max_fragment_input_components: u64,
     max_color_render_targets: u8,
     max_color_attachment_bytes_per_sample: u8,
-    max_inter_stage_shader_variables: u32,
+    max_varying_components: u32,
     max_threads_per_group: u32,
     max_total_threadgroup_memory: u32,
     sample_count_mask: crate::TextureFormatCapabilities,
     supports_debug_markers: bool,
     supports_binary_archives: bool,
+    supports_capture_manager: bool,
+    can_set_maximum_drawables_count: bool,
+    can_set_display_sync: bool,
+    can_set_next_drawable_timeout: bool,
     supports_arrays_of_textures: bool,
     supports_arrays_of_textures_write: bool,
+    supports_mutability: bool,
     supports_depth_clip_control: bool,
+    supports_preserve_invariance: bool,
     supports_shader_primitive_index: bool,
     has_unified_memory: Option<bool>,
     timestamp_query_support: TimestampQuerySupport,
@@ -313,52 +315,13 @@ struct CapabilitiesQuery {
     int64_atomics_min_max: bool,
     int64_atomics: bool,
     float_atomics: bool,
+    supports_shared_event: bool,
     mesh_shaders: bool,
-    max_task_workgroup_count: u32,
-    max_mesh_workgroup_count: u32,
+    max_mesh_task_workgroup_count: u32,
     max_task_payload_size: u32,
     supported_vertex_amplification_factor: u32,
     shader_barycentrics: bool,
     supports_memoryless_storage: bool,
-    supports_raytracing: bool,
-    shader_per_vertex: bool,
-    supports_multisample_array: bool,
-}
-
-#[derive(Debug)]
-struct PrivateCapabilities {
-    msl_version: MTLLanguageVersion,
-    low_power: bool,
-    headless: bool,
-    has_unified_memory: Option<bool>,
-    timestamp_query_support: TimestampQuerySupport,
-    supports_memoryless_storage: bool,
-    mesh_shaders: bool,
-}
-
-#[derive(Debug)]
-struct PrivateTextureFormatCapabilities {
-    read_write_texture_tier: MTLReadWriteTextureTier,
-    sample_count_mask: crate::TextureFormatCapabilities,
-    int64_atomics: bool,
-    msaa_desktop: bool,
-    msaa_apple3: bool,
-    msaa_apple7: bool,
-    format_r32float_all: bool,
-    format_rgba8_srgb_all: bool,
-    format_rgb10a2_uint_write: bool,
-    format_rgb10a2_unorm_all: bool,
-    format_rg11b10_all: bool,
-    format_rg32float_all: bool,
-    format_rgba32float_all: bool,
-    format_depth16unorm: bool,
-    format_depth16unorm_filter: bool,
-    format_depth32float_filter: bool,
-    format_depth24_stencil8: bool,
-    format_bc: bool,
-    format_eac_etc: bool,
-    format_astc: bool,
-    format_astc_hdr: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -384,61 +347,28 @@ impl Default for Settings {
 }
 
 struct AdapterShared {
-    device: Retained<ProtocolObject<dyn MTLDevice>>,
+    device: metal::Device,
     disabilities: PrivateDisabilities,
     private_caps: PrivateCapabilities,
-    private_texture_format_caps: PrivateTextureFormatCapabilities,
     settings: Settings,
     presentation_timer: time::PresentationTimer,
 }
 
-#[cfg(send_sync)]
-static_assertions::assert_impl_all!(AdapterShared: Send, Sync);
+unsafe impl Send for AdapterShared {}
+unsafe impl Sync for AdapterShared {}
 
 impl AdapterShared {
-    fn new(
-        device: Retained<ProtocolObject<dyn MTLDevice>>,
-        capabilities_query: &CapabilitiesQuery,
-    ) -> Self {
-        let private_caps = capabilities_query.private_capabilities();
-        let private_texture_format_caps = capabilities_query.private_texture_format_capabilities();
+    fn new(device: metal::Device) -> Self {
+        let private_caps = PrivateCapabilities::new(&device);
         log::debug!("{private_caps:#?}");
-        log::debug!("{private_texture_format_caps:#?}");
 
         Self {
             disabilities: PrivateDisabilities::new(&device),
             private_caps,
-            private_texture_format_caps,
             device,
             settings: Settings::default(),
             presentation_timer: time::PresentationTimer::new(),
         }
-    }
-
-    fn expose(device: Retained<ProtocolObject<dyn MTLDevice>>) -> crate::ExposedAdapter<Api> {
-        autoreleasepool(|_| {
-            let name = device.name().to_string();
-            let capabilities_query = CapabilitiesQuery::new(&device);
-            let shared = AdapterShared::new(device, &capabilities_query);
-            let features = capabilities_query.features();
-            let capabilities = capabilities_query.capabilities();
-            crate::ExposedAdapter {
-                info: wgt::AdapterInfo {
-                    name,
-                    // These are hardcoded based on typical values for Metal devices
-                    //
-                    // See <https://github.com/gpuweb/gpuweb/blob/main/proposals/subgroups.md#adapter-info>
-                    // for more information.
-                    subgroup_min_size: 4,
-                    subgroup_max_size: 64,
-                    transient_saves_memory: shared.private_caps.supports_memoryless_storage,
-                    ..wgt::AdapterInfo::new(shared.private_caps.device_type(), wgt::Backend::Metal)
-                },
-                features,
-                capabilities,
-                adapter: Adapter::new(Arc::new(shared)),
-            }
-        })
     }
 }
 
@@ -446,58 +376,35 @@ pub struct Adapter {
     shared: Arc<AdapterShared>,
 }
 
-#[cfg(send_sync)]
-static_assertions::assert_impl_all!(Adapter: Send, Sync);
-
 pub struct Queue {
-    shared: Arc<QueueShared>,
+    raw: Arc<Mutex<metal::CommandQueue>>,
     timestamp_period: f32,
 }
 
-#[cfg(send_sync)]
-static_assertions::assert_impl_all!(Queue: Send, Sync);
+unsafe impl Send for Queue {}
+unsafe impl Sync for Queue {}
 
 impl Queue {
-    pub unsafe fn queue_from_raw(
-        raw: Retained<ProtocolObject<dyn MTLCommandQueue>>,
-        timestamp_period: f32,
-    ) -> Self {
+    pub unsafe fn queue_from_raw(raw: metal::CommandQueue, timestamp_period: f32) -> Self {
         Self {
-            shared: Arc::new(QueueShared {
-                raw,
-                command_buffer_created_not_submitted: atomic::AtomicUsize::new(0),
-            }),
+            raw: Arc::new(Mutex::new(raw)),
             timestamp_period,
         }
     }
 
-    pub fn as_raw(&self) -> &ProtocolObject<dyn MTLCommandQueue> {
-        &self.shared.raw
+    pub fn as_raw(&self) -> &Arc<Mutex<metal::CommandQueue>> {
+        &self.raw
     }
-}
-
-#[derive(Debug)]
-pub struct QueueShared {
-    raw: Retained<ProtocolObject<dyn MTLCommandQueue>>,
-    // Tracks command buffers created via `CommandEncoder::begin_encoding` that
-    // have not yet been submitted or discarded. Used to proactively fail
-    // before hitting Metal's `maxCommandBufferCount`.
-    //
-    // (In a few places we call `.commandBuffer{,WithUnretainedReferences}` directly
-    // to create command buffers for internal purposes. In those cases we always
-    // commit the buffer immediately, so we don't adjust the counter for them.)
-    command_buffer_created_not_submitted: atomic::AtomicUsize,
 }
 
 pub struct Device {
     shared: Arc<AdapterShared>,
     features: wgt::Features,
     counters: Arc<wgt::HalCounters>,
-    limits: wgt::Limits,
 }
 
 pub struct Surface {
-    render_layer: Mutex<Retained<CAMetalLayer>>,
+    render_layer: Mutex<metal::MetalLayer>,
     swapchain_format: RwLock<Option<wgt::TextureFormat>>,
     extent: RwLock<wgt::Extent3d>,
 }
@@ -508,9 +415,9 @@ unsafe impl Sync for Surface {}
 #[derive(Debug)]
 pub struct SurfaceTexture {
     texture: Texture,
+    drawable: metal::MetalDrawable,
     // Useful for UI-intensive applications that are sensitive to
     // window resizing.
-    drawable: Retained<ProtocolObject<dyn MTLDrawable>>,
     present_with_transaction: bool,
 }
 
@@ -538,37 +445,35 @@ impl crate::Queue for Queue {
         &self,
         command_buffers: &[&CommandBuffer],
         _surface_textures: &[&SurfaceTexture],
-        (signal_fence, signal_value): (&Fence, crate::FenceValue),
+        (signal_fence, signal_value): (&mut Fence, crate::FenceValue),
     ) -> Result<(), crate::DeviceError> {
-        autoreleasepool(|_| {
+        objc::rc::autoreleasepool(|| {
             let extra_command_buffer = {
                 let completed_value = Arc::clone(&signal_fence.completed_value);
-                let block = block2::RcBlock::new(move |_cmd_buf| {
+                let block = block::ConcreteBlock::new(move |_cmd_buf| {
                     completed_value.store(signal_value, atomic::Ordering::Release);
-                });
+                })
+                .copy();
 
                 let raw = match command_buffers.last() {
-                    Some(&cmd_buf) => cmd_buf.raw.clone(),
+                    Some(&cmd_buf) => cmd_buf.raw.to_owned(),
                     None => {
-                        // We do not bother adjusting `command_buffer_created_not_submitted`
-                        // because we immediately commit this buffer.
-                        self.shared
-                            .raw
-                            .commandBufferWithUnretainedReferences()
-                            .unwrap()
+                        let queue = self.raw.lock();
+                        queue
+                            .new_command_buffer_with_unretained_references()
+                            .to_owned()
                     }
                 };
-                raw.setLabel(Some(ns_string!("(wgpu internal) Signal")));
-                unsafe { raw.addCompletedHandler(block2::RcBlock::as_ptr(&block)) };
+                raw.set_label("(wgpu internal) Signal");
+                raw.add_completed_handler(&block);
 
                 signal_fence.maintain();
                 signal_fence
                     .pending_command_buffers
-                    .write()
-                    .push((signal_value, raw.clone()));
+                    .push((signal_value, raw.to_owned()));
 
-                if let Some(shared_event) = &signal_fence.shared_event {
-                    raw.encodeSignalEvent_value(shared_event.as_ref(), signal_value);
+                if let Some(shared_event) = signal_fence.shared_event.as_ref() {
+                    raw.encode_signal_event(shared_event, signal_value);
                 }
                 // only return an extra one if it's extra
                 match command_buffers.last() {
@@ -579,14 +484,6 @@ impl crate::Queue for Queue {
 
             for cmd_buffer in command_buffers {
                 cmd_buffer.raw.commit();
-                // One command buffer per `end_encoding` call moves from the
-                // "created but not yet submitted" bucket into the submitted
-                // set, so update the counter.
-                let previous = self
-                    .shared
-                    .command_buffer_created_not_submitted
-                    .fetch_sub(1, atomic::Ordering::AcqRel);
-                debug_assert!(previous > 0);
             }
 
             if let Some(raw) = extra_command_buffer {
@@ -600,21 +497,20 @@ impl crate::Queue for Queue {
         _surface: &Surface,
         texture: SurfaceTexture,
     ) -> Result<(), crate::SurfaceError> {
-        autoreleasepool(|_| {
-            // We do not bother adjusting `command_buffer_created_not_submitted`
-            // because we immediately commit this buffer.
-            let command_buffer = self.shared.raw.commandBuffer().unwrap();
-            command_buffer.setLabel(Some(ns_string!("(wgpu internal) Present")));
+        let queue = &self.raw.lock();
+        objc::rc::autoreleasepool(|| {
+            let command_buffer = queue.new_command_buffer();
+            command_buffer.set_label("(wgpu internal) Present");
 
             // https://developer.apple.com/documentation/quartzcore/cametallayer/1478157-presentswithtransaction?language=objc
             if !texture.present_with_transaction {
-                command_buffer.presentDrawable(&texture.drawable);
+                command_buffer.present_drawable(&texture.drawable);
             }
 
             command_buffer.commit();
 
             if texture.present_with_transaction {
-                command_buffer.waitUntilScheduled();
+                command_buffer.wait_until_scheduled();
                 texture.drawable.present();
             }
         });
@@ -624,21 +520,11 @@ impl crate::Queue for Queue {
     unsafe fn get_timestamp_period(&self) -> f32 {
         self.timestamp_period
     }
-
-    unsafe fn wait_for_idle(&self) -> Result<(), crate::DeviceError> {
-        autoreleasepool(|_| {
-            let command_buffer = self.shared.raw.commandBuffer().unwrap();
-            command_buffer.setLabel(Some(ns_string!("(wgpu internal) wait_for_idle")));
-            command_buffer.commit();
-            command_buffer.waitUntilCompleted();
-        });
-        Ok(())
-    }
 }
 
 #[derive(Debug)]
 pub struct Buffer {
-    raw: Retained<ProtocolObject<dyn MTLBuffer>>,
+    raw: metal::Buffer,
     size: wgt::BufferAddress,
 }
 
@@ -648,8 +534,8 @@ unsafe impl Sync for Buffer {}
 impl crate::DynBuffer for Buffer {}
 
 impl Buffer {
-    fn as_raw(&self) -> NonNull<ProtocolObject<dyn MTLBuffer>> {
-        unsafe { NonNull::new_unchecked(Retained::as_ptr(&self.raw) as *mut _) }
+    fn as_raw(&self) -> BufferPtr {
+        unsafe { NonNull::new_unchecked(self.raw.as_ptr()) }
     }
 }
 
@@ -664,7 +550,7 @@ impl crate::BufferBinding<'_, Buffer> {
 
 #[derive(Debug)]
 pub struct Texture {
-    raw: Retained<ProtocolObject<dyn MTLTexture>>,
+    raw: metal::Texture,
     format: wgt::TextureFormat,
     raw_type: MTLTextureType,
     array_layers: u32,
@@ -673,7 +559,10 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn raw_handle(&self) -> &ProtocolObject<dyn MTLTexture> {
+    /// # Safety
+    ///
+    /// - The texture handle must not be manually destroyed
+    pub unsafe fn raw_handle(&self) -> &metal::Texture {
         &self.raw
     }
 }
@@ -685,7 +574,7 @@ unsafe impl Sync for Texture {}
 
 #[derive(Debug)]
 pub struct TextureView {
-    raw: Retained<ProtocolObject<dyn MTLTexture>>,
+    raw: metal::Texture,
     aspects: crate::FormatAspects,
 }
 
@@ -695,24 +584,24 @@ unsafe impl Send for TextureView {}
 unsafe impl Sync for TextureView {}
 
 impl TextureView {
-    fn as_raw(&self) -> NonNull<ProtocolObject<dyn MTLTexture>> {
-        unsafe { NonNull::new_unchecked(Retained::as_ptr(&self.raw) as *mut _) }
+    fn as_raw(&self) -> TexturePtr {
+        unsafe { NonNull::new_unchecked(self.raw.as_ptr()) }
     }
 }
 
 #[derive(Debug)]
 pub struct Sampler {
-    raw: Retained<ProtocolObject<dyn MTLSamplerState>>,
+    raw: metal::SamplerState,
 }
 
 impl crate::DynSampler for Sampler {}
 
-#[cfg(send_sync)]
-static_assertions::assert_impl_all!(Sampler: Send, Sync);
+unsafe impl Send for Sampler {}
+unsafe impl Sync for Sampler {}
 
 impl Sampler {
-    fn as_raw(&self) -> NonNull<ProtocolObject<dyn MTLSamplerState>> {
-        unsafe { NonNull::new_unchecked(Retained::as_ptr(&self.raw) as *mut _) }
+    fn as_raw(&self) -> SamplerPtr {
+        unsafe { NonNull::new_unchecked(self.raw.as_ptr()) }
     }
 }
 
@@ -757,10 +646,6 @@ impl<T> ops::Index<naga::ShaderStage> for MultiStageData<T> {
             naga::ShaderStage::Compute => &self.cs,
             naga::ShaderStage::Task => &self.ts,
             naga::ShaderStage::Mesh => &self.ms,
-            naga::ShaderStage::RayGeneration
-            | naga::ShaderStage::AnyHit
-            | naga::ShaderStage::ClosestHit
-            | naga::ShaderStage::Miss => unimplemented!(),
         }
     }
 }
@@ -816,34 +701,91 @@ struct ImmediateDataInfo {
 
 #[derive(Debug)]
 pub struct PipelineLayout {
-    bind_group_infos: [Option<BindGroupLayoutInfo>; crate::MAX_BIND_GROUPS],
+    bind_group_infos: ArrayVec<BindGroupLayoutInfo, { crate::MAX_BIND_GROUPS }>,
     immediates_infos: MultiStageData<Option<ImmediateDataInfo>>,
+    total_counters: MultiStageResourceCounters,
     total_immediates: u32,
     per_stage_map: MultiStageResources,
 }
 
 impl crate::DynPipelineLayout for PipelineLayout {}
 
+trait AsNative {
+    type Native;
+    fn from(native: &Self::Native) -> Self;
+    fn as_native(&self) -> &Self::Native;
+}
+
+type ResourcePtr = NonNull<MTLResource>;
+type BufferPtr = NonNull<MTLBuffer>;
+type TexturePtr = NonNull<MTLTexture>;
+type SamplerPtr = NonNull<MTLSamplerState>;
+
+impl AsNative for ResourcePtr {
+    type Native = metal::ResourceRef;
+    #[inline]
+    fn from(native: &Self::Native) -> Self {
+        unsafe { NonNull::new_unchecked(native.as_ptr()) }
+    }
+    #[inline]
+    fn as_native(&self) -> &Self::Native {
+        unsafe { Self::Native::from_ptr(self.as_ptr()) }
+    }
+}
+
+impl AsNative for BufferPtr {
+    type Native = metal::BufferRef;
+    #[inline]
+    fn from(native: &Self::Native) -> Self {
+        unsafe { NonNull::new_unchecked(native.as_ptr()) }
+    }
+    #[inline]
+    fn as_native(&self) -> &Self::Native {
+        unsafe { Self::Native::from_ptr(self.as_ptr()) }
+    }
+}
+
+impl AsNative for TexturePtr {
+    type Native = metal::TextureRef;
+    #[inline]
+    fn from(native: &Self::Native) -> Self {
+        unsafe { NonNull::new_unchecked(native.as_ptr()) }
+    }
+    #[inline]
+    fn as_native(&self) -> &Self::Native {
+        unsafe { Self::Native::from_ptr(self.as_ptr()) }
+    }
+}
+
+impl AsNative for SamplerPtr {
+    type Native = metal::SamplerStateRef;
+    #[inline]
+    fn from(native: &Self::Native) -> Self {
+        unsafe { NonNull::new_unchecked(native.as_ptr()) }
+    }
+    #[inline]
+    fn as_native(&self) -> &Self::Native {
+        unsafe { Self::Native::from_ptr(self.as_ptr()) }
+    }
+}
+
 #[derive(Debug)]
-enum BufferLikeResource {
-    Buffer {
-        ptr: NonNull<ProtocolObject<dyn MTLBuffer>>,
-        offset: wgt::BufferAddress,
-        dynamic_index: Option<u32>,
+struct BufferResource {
+    ptr: BufferPtr,
+    offset: wgt::BufferAddress,
+    dynamic_index: Option<u32>,
 
-        /// The buffer's size, if it is a [`Storage`] binding. Otherwise `None`.
-        ///
-        /// Buffers with the [`wgt::BufferBindingType::Storage`] binding type can
-        /// hold WGSL runtime-sized arrays. When one does, we must pass its size to
-        /// shader entry points to implement bounds checks and WGSL's `arrayLength`
-        /// function. See `device::CompiledShader::sized_bindings` for details.
-        ///
-        /// [`Storage`]: wgt::BufferBindingType::Storage
-        binding_size: Option<wgt::BufferSize>,
+    /// The buffer's size, if it is a [`Storage`] binding. Otherwise `None`.
+    ///
+    /// Buffers with the [`wgt::BufferBindingType::Storage`] binding type can
+    /// hold WGSL runtime-sized arrays. When one does, we must pass its size to
+    /// shader entry points to implement bounds checks and WGSL's `arrayLength`
+    /// function. See `device::CompiledShader::sized_bindings` for details.
+    ///
+    /// [`Storage`]: wgt::BufferBindingType::Storage
+    binding_size: Option<wgt::BufferSize>,
 
-        binding_location: u32,
-    },
-    AccelerationStructure(NonNull<ProtocolObject<dyn MTLAccelerationStructure>>),
+    binding_location: u32,
 }
 
 #[derive(Debug)]
@@ -866,12 +808,12 @@ impl Default for UseResourceInfo {
 #[derive(Debug, Default)]
 pub struct BindGroup {
     counters: MultiStageResourceCounters,
-    buffers: Vec<BufferLikeResource>,
-    samplers: Vec<NonNull<ProtocolObject<dyn MTLSamplerState>>>,
-    textures: Vec<NonNull<ProtocolObject<dyn MTLTexture>>>,
+    buffers: Vec<BufferResource>,
+    samplers: Vec<SamplerPtr>,
+    textures: Vec<TexturePtr>,
 
-    argument_buffers: Vec<Retained<ProtocolObject<dyn MTLBuffer>>>,
-    resources_to_use: HashMap<NonNull<ProtocolObject<dyn MTLResource>>, UseResourceInfo>,
+    argument_buffers: Vec<metal::Buffer>,
+    resources_to_use: HashMap<ResourcePtr, UseResourceInfo>,
 }
 
 impl crate::DynBindGroup for BindGroup {}
@@ -887,25 +829,24 @@ pub enum ShaderModuleSource {
 
 #[derive(Debug)]
 pub struct PassthroughShader {
-    pub library: Retained<ProtocolObject<dyn MTLLibrary>>,
-    pub num_workgroups: HashMap<String, (u32, u32, u32)>,
+    pub library: metal::Library,
+    pub function: metal::Function,
+    pub entry_point: String,
+    pub num_workgroups: (u32, u32, u32),
 }
-
-#[cfg(send_sync)]
-static_assertions::assert_impl_all!(PassthroughShader: Send, Sync);
 
 #[derive(Debug)]
 pub struct ShaderModule {
     source: ShaderModuleSource,
-    runtime_checks: wgt::ShaderRuntimeChecks,
+    bounds_checks: wgt::ShaderRuntimeChecks,
 }
 
 impl crate::DynShaderModule for ShaderModule {}
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct PipelineStageInfo {
     #[allow(dead_code)]
-    library: Option<Retained<ProtocolObject<dyn MTLLibrary>>>,
+    library: Option<metal::Library>,
     immediates: Option<ImmediateDataInfo>,
 
     /// The buffer argument table index at which we pass runtime-sized arrays' buffer sizes.
@@ -928,26 +869,6 @@ struct PipelineStageInfo {
     work_group_memory_sizes: Vec<u32>,
 }
 
-// TODO(madsmtm): Derive this when a release with
-// https://github.com/madsmtm/objc2/issues/804 is available (likely 0.4).
-impl Default for PipelineStageInfo {
-    fn default() -> Self {
-        Self {
-            library: Default::default(),
-            immediates: Default::default(),
-            sizes_slot: Default::default(),
-            sized_bindings: Default::default(),
-            vertex_buffer_mappings: Default::default(),
-            raw_wg_size: MTLSize {
-                width: 0,
-                height: 0,
-                depth: 0,
-            },
-            work_group_memory_sizes: Default::default(),
-        }
-    }
-}
-
 impl PipelineStageInfo {
     fn clear(&mut self) {
         self.immediates = None;
@@ -956,11 +877,7 @@ impl PipelineStageInfo {
         self.vertex_buffer_mappings.clear();
         self.library = None;
         self.work_group_memory_sizes.clear();
-        self.raw_wg_size = MTLSize {
-            width: 0,
-            height: 0,
-            depth: 0,
-        };
+        self.raw_wg_size = Default::default();
     }
 
     fn assign_from(&mut self, other: &Self) {
@@ -981,7 +898,7 @@ impl PipelineStageInfo {
 
 #[derive(Debug)]
 pub struct RenderPipeline {
-    raw: Retained<ProtocolObject<dyn MTLRenderPipelineState>>,
+    raw: metal::RenderPipelineState,
     vs_info: Option<PipelineStageInfo>,
     fs_info: Option<PipelineStageInfo>,
     ts_info: Option<PipelineStageInfo>,
@@ -991,33 +908,30 @@ pub struct RenderPipeline {
     raw_front_winding: MTLWinding,
     raw_cull_mode: MTLCullMode,
     raw_depth_clip_mode: Option<MTLDepthClipMode>,
-    depth_stencil: Option<(
-        Retained<ProtocolObject<dyn MTLDepthStencilState>>,
-        wgt::DepthBiasState,
-    )>,
+    depth_stencil: Option<(metal::DepthStencilState, wgt::DepthBiasState)>,
 }
 
-#[cfg(send_sync)]
-static_assertions::assert_impl_all!(RenderPipeline: Send, Sync);
+unsafe impl Send for RenderPipeline {}
+unsafe impl Sync for RenderPipeline {}
 
 impl crate::DynRenderPipeline for RenderPipeline {}
 
 #[derive(Debug)]
 pub struct ComputePipeline {
-    raw: Retained<ProtocolObject<dyn MTLComputePipelineState>>,
+    raw: metal::ComputePipelineState,
     cs_info: PipelineStageInfo,
 }
 
-#[cfg(send_sync)]
-static_assertions::assert_impl_all!(ComputePipeline: Send, Sync);
+unsafe impl Send for ComputePipeline {}
+unsafe impl Sync for ComputePipeline {}
 
 impl crate::DynComputePipeline for ComputePipeline {}
 
 #[derive(Debug, Clone)]
 pub struct QuerySet {
-    raw_buffer: Retained<ProtocolObject<dyn MTLBuffer>>,
+    raw_buffer: metal::Buffer,
     //Metal has a custom buffer for counters.
-    counter_sample_buffer: Option<Retained<ProtocolObject<dyn MTLCounterSampleBuffer>>>,
+    counter_sample_buffer: Option<metal::CounterSampleBuffer>,
     ty: wgt::QueryType,
 }
 
@@ -1030,14 +944,9 @@ unsafe impl Sync for QuerySet {}
 pub struct Fence {
     completed_value: Arc<atomic::AtomicU64>,
     /// The pending fence values have to be ascending.
-    pending_command_buffers: RwLock<Vec<PendingCommandBuffer>>,
-    shared_event: Option<Retained<ProtocolObject<dyn MTLSharedEvent>>>,
+    pending_command_buffers: Vec<(crate::FenceValue, metal::CommandBuffer)>,
+    shared_event: Option<metal::SharedEvent>,
 }
-
-type PendingCommandBuffer = (
-    crate::FenceValue,
-    Retained<ProtocolObject<dyn MTLCommandBuffer>>,
-);
 
 impl crate::DynFence for Fence {}
 
@@ -1047,8 +956,7 @@ unsafe impl Sync for Fence {}
 impl Fence {
     fn get_latest(&self) -> crate::FenceValue {
         let mut max_value = self.completed_value.load(atomic::Ordering::Acquire);
-        let pending_command_buffers = self.pending_command_buffers.read();
-        for &(value, ref cmd_buf) in pending_command_buffers.iter() {
+        for &(value, ref cmd_buf) in self.pending_command_buffers.iter() {
             if cmd_buf.status() == MTLCommandBufferStatus::Completed {
                 max_value = value;
             }
@@ -1056,20 +964,19 @@ impl Fence {
         max_value
     }
 
-    fn maintain(&self) {
+    fn maintain(&mut self) {
         let latest = self.get_latest();
         self.pending_command_buffers
-            .write()
             .retain(|&(value, _)| value > latest);
     }
 
-    pub fn raw_shared_event(&self) -> Option<&ProtocolObject<dyn MTLSharedEvent>> {
-        self.shared_event.as_deref()
+    pub fn raw_shared_event(&self) -> Option<&metal::SharedEvent> {
+        self.shared_event.as_ref()
     }
 }
 
 struct IndexState {
-    buffer_ptr: NonNull<ProtocolObject<dyn MTLBuffer>>,
+    buffer_ptr: BufferPtr,
     offset: wgt::BufferAddress,
     stride: wgt::BufferAddress,
     raw_type: MTLIndexType,
@@ -1081,11 +988,9 @@ struct Temp {
 }
 
 struct CommandState {
-    blit: Option<Retained<ProtocolObject<dyn MTLBlitCommandEncoder>>>,
-    acceleration_structure_builder:
-        Option<Retained<ProtocolObject<dyn MTLAccelerationStructureCommandEncoder>>>,
-    render: Option<Retained<ProtocolObject<dyn MTLRenderCommandEncoder>>>,
-    compute: Option<Retained<ProtocolObject<dyn MTLComputeCommandEncoder>>>,
+    blit: Option<metal::BlitCommandEncoder>,
+    render: Option<metal::RenderCommandEncoder>,
+    compute: Option<metal::ComputeCommandEncoder>,
     raw_primitive_type: MTLPrimitiveType,
     index: Option<IndexState>,
     stage_infos: MultiStageData<PipelineStageInfo>,
@@ -1111,7 +1016,7 @@ struct CommandState {
     /// [`ResourceBinding`]: naga::ResourceBinding
     storage_buffer_length_map: FastHashMap<naga::ResourceBinding, wgt::BufferSize>,
 
-    vertex_buffer_size_map: FastHashMap<u32, wgt::BufferSize>,
+    vertex_buffer_size_map: FastHashMap<u64, wgt::BufferSize>,
 
     immediates: Vec<u32>,
 
@@ -1121,8 +1026,8 @@ struct CommandState {
 
 pub struct CommandEncoder {
     shared: Arc<AdapterShared>,
-    queue_shared: Arc<QueueShared>,
-    raw_cmd_buf: Option<Retained<ProtocolObject<dyn MTLCommandBuffer>>>,
+    raw_queue: Arc<Mutex<metal::CommandQueue>>,
+    raw_cmd_buf: Option<metal::CommandBuffer>,
     state: CommandState,
     temp: Temp,
     counters: Arc<wgt::HalCounters>,
@@ -1131,6 +1036,7 @@ pub struct CommandEncoder {
 impl fmt::Debug for CommandEncoder {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("CommandEncoder")
+            .field("raw_queue", &self.raw_queue)
             .field("raw_cmd_buf", &self.raw_cmd_buf)
             .finish()
     }
@@ -1141,8 +1047,7 @@ unsafe impl Sync for CommandEncoder {}
 
 #[derive(Debug)]
 pub struct CommandBuffer {
-    raw: Retained<ProtocolObject<dyn MTLCommandBuffer>>,
-    queue_shared: Arc<QueueShared>,
+    raw: metal::CommandBuffer,
 }
 
 impl crate::DynCommandBuffer for CommandBuffer {}
@@ -1156,19 +1061,9 @@ pub struct PipelineCache;
 impl crate::DynPipelineCache for PipelineCache {}
 
 #[derive(Debug)]
-pub struct AccelerationStructure {
-    raw: Retained<ProtocolObject<dyn MTLAccelerationStructure>>,
-}
-
-impl AccelerationStructure {
-    fn as_raw(&self) -> NonNull<ProtocolObject<dyn MTLAccelerationStructure>> {
-        unsafe { NonNull::new_unchecked(Retained::as_ptr(&self.raw) as *mut _) }
-    }
-}
+pub struct AccelerationStructure;
 
 impl crate::DynAccelerationStructure for AccelerationStructure {}
-unsafe impl Send for AccelerationStructure {}
-unsafe impl Sync for AccelerationStructure {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OsType {

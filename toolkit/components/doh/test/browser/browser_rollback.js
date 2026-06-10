@@ -13,16 +13,12 @@ add_task(async function testRollback() {
   setPassingHeuristics();
   let promise = waitForDoorhanger();
   let prefPromise = TestUtils.waitForPrefChange(prefs.BREADCRUMB_PREF);
-  Services.prefs.setBoolPref(prefs.ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
 
   await prefPromise;
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb saved.");
   is(
-    Services.prefs.getBoolPref(prefs.BREADCRUMB_PREF),
-    true,
-    "Breadcrumb saved."
-  );
-  is(
-    Services.prefs.getStringPref(prefs.TRR_SELECT_URI_PREF),
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
     "https://example.com/dns-query",
     "TRR selection complete."
   );
@@ -46,15 +42,11 @@ add_task(async function testRollback() {
 
   await prefPromise;
   is(
-    Services.prefs.getStringPref(prefs.DOORHANGER_USER_DECISION_PREF),
+    Preferences.get(prefs.DOORHANGER_USER_DECISION_PREF),
     "UIOk",
     "Doorhanger decision saved."
   );
-  is(
-    Services.prefs.getBoolPref(prefs.BREADCRUMB_PREF),
-    true,
-    "Breadcrumb not cleared."
-  );
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb not cleared.");
 
   BrowserTestUtils.removeTab(tab);
 
@@ -71,20 +63,20 @@ add_task(async function testRollback() {
 
   // Rollback!
   setPassingHeuristics();
-  Services.prefs.clearUserPref(prefs.ENABLED_PREF);
+  Preferences.reset(prefs.ENABLED_PREF);
   await waitForStateTelemetry(["shutdown", "rollback"]);
   await ensureTRRMode(undefined);
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
   simulateNetworkChange();
   await ensureNoTRRModeChange(undefined);
   await ensureNoHeuristicsTelemetry();
 
   // Re-enable.
-  Services.prefs.setBoolPref(prefs.ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
 
   await ensureTRRMode(2);
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
   // Change the environment to failing and simulate a network change.
@@ -94,20 +86,20 @@ add_task(async function testRollback() {
   await checkHeuristicsTelemetry("disable_doh", "netchange");
 
   // Rollback again for good measure! This time with failing heuristics.
-  Services.prefs.clearUserPref(prefs.ENABLED_PREF);
+  Preferences.reset(prefs.ENABLED_PREF);
   await waitForStateTelemetry(["shutdown", "rollback"]);
   await ensureTRRMode(undefined);
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
   simulateNetworkChange();
   await ensureNoTRRModeChange(undefined);
   await ensureNoHeuristicsTelemetry();
 
   // Re-enable.
-  Services.prefs.setBoolPref(prefs.ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
 
   await ensureTRRMode(0);
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
   await checkHeuristicsTelemetry("disable_doh", "startup");
 
   // Change the environment to passing and simulate a network change.
@@ -117,20 +109,20 @@ add_task(async function testRollback() {
   await checkHeuristicsTelemetry("enable_doh", "netchange");
 
   // Rollback again, this time with TRR mode set to 2 prior to doing so.
-  Services.prefs.clearUserPref(prefs.ENABLED_PREF);
+  Preferences.reset(prefs.ENABLED_PREF);
   await waitForStateTelemetry(["shutdown", "rollback"]);
   await ensureTRRMode(undefined);
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
   simulateNetworkChange();
   await ensureNoTRRModeChange(undefined);
   await ensureNoHeuristicsTelemetry();
 
   // Re-enable.
-  Services.prefs.setBoolPref(prefs.ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
 
   await ensureTRRMode(2);
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
   await checkHeuristicsTelemetry("enable_doh", "startup");
   simulateNetworkChange();
   await ensureNoTRRModeChange(2);
@@ -140,10 +132,10 @@ add_task(async function testRollback() {
   // correctly at startup.
   await DoHController._uninit();
   await waitForStateTelemetry(["shutdown"]);
-  Services.prefs.clearUserPref(prefs.ENABLED_PREF);
+  Preferences.reset(prefs.ENABLED_PREF);
   await DoHController.init();
   await ensureTRRMode(undefined);
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
   await waitForStateTelemetry(["rollback"]);
   simulateNetworkChange();

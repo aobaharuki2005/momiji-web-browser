@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=4 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,7 +11,7 @@
 #include "mozilla/StaticPrefs_network.h"
 
 #include <dns_sd.h>
-#include <poll.h>
+#include <unistd.h>
 #include <arpa/inet.h>
 
 namespace mozilla::net {
@@ -46,19 +48,13 @@ void QueryCallback(DNSServiceRef aSDRef, DNSServiceFlags aFlags,
     return;
   }
 
-  // Skip intermediate records (e.g. CNAMEs) returned when
-  // kDNSServiceFlagsReturnIntermediates is set.
-  if (aRRType != TRRTYPE_HTTPSSVC) {
-    return;
-  }
-
   // Process the rdata for HTTPS records (type 65)
-  if (aRDLen == 0) {
+  if (aRRType != TRRTYPE_HTTPSSVC || aRDLen == 0) {
     context->mRv = NS_ERROR_UNKNOWN_HOST;
     return;
   }
 
-  auto fullname = Substring(nsDependentCString(aFullname), 0, -1);
+  nsDependentCString fullname(aFullname);
   if (fullname.Length() && fullname.Last() == '.') {
     // The fullname argument is always FQDN
     fullname.Rebind(aFullname, fullname.Length() - 1);
@@ -123,7 +119,8 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost,
   DNSServiceRef sdRef;
   DNSServiceErrorType err;
 
-  err = DNSServiceQueryRecord(&sdRef, kDNSServiceFlagsReturnIntermediates,
+  err = DNSServiceQueryRecord(&sdRef,
+                              0,  // No flags
                               0,  // All interfaces
                               host.get(), TRRTYPE_HTTPSSVC, kDNSServiceClass_IN,
                               QueryCallback, &context);
@@ -133,23 +130,28 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost,
     return NS_ERROR_UNKNOWN_HOST;
   }
 
-  struct pollfd pfd = {
-      .fd = DNSServiceRefSockFD(sdRef),
-      .events = POLLIN,
-  };
+  int fd = DNSServiceRefSockFD(sdRef);
+  fd_set readfds;
+  FD_ZERO(&readfds);
+  FD_SET(fd, &readfds);
 
   // If the domain queried results in NXDOMAIN, then QueryCallback will
-  // never get called, and poll will hang forever. We need to use a
-  // timeout so that poll() eventually returns.
-  int result =
-      poll(&pfd, 1, StaticPrefs::network_dns_native_https_timeout_mac_msec());
-  if (result > 0 && (pfd.revents & POLLIN)) {
+  // never get called, and select will hang forever. We need to use a
+  // timeout so that select() eventually returns.
+  struct timeval timeout;
+  timeout.tv_sec =
+      StaticPrefs::network_dns_native_https_timeout_mac_msec() / 1000;
+  timeout.tv_usec =
+      (StaticPrefs::network_dns_native_https_timeout_mac_msec() % 1000) * 1000;
+
+  int result = select(fd + 1, &readfds, NULL, NULL, &timeout);
+  if (result > 0 && FD_ISSET(fd, &readfds)) {
     // Process the result
     DNSServiceProcessResult(sdRef);
   } else if (result < 0) {
-    LOG("poll() failed");
+    LOG("select() failed");
   } else if (result == 0) {
-    LOG("poll timed out");
+    LOG("select timed out");
   }
 
   // Cleanup

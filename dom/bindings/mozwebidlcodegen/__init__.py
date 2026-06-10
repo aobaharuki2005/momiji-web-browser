@@ -7,10 +7,11 @@
 
 import errno
 import hashlib
+import json
 import logging
 import os
 import sys
-from concurrent import futures
+from multiprocessing import Pool
 
 import mozpack.path as mozpath
 from Codegen import CGThing
@@ -18,21 +19,19 @@ from mach.mixin.logging import LoggingMixin
 from mozbuild.makeutil import Makefile
 from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite, cpu_count
-from mozfile import json
 
 # There are various imports in this file in functions to avoid adding
 # dependencies to config.status. See bug 949875.
 
 # Limit the count on Windows, because of bug 1889842 and also the
 # inefficiency of fork on Windows.
-USE_THREADS = hasattr(sys, "_is_gil_enabled") and not sys._is_gil_enabled()
 DEFAULT_PROCESS_COUNT = 4 if sys.platform == "win32" else cpu_count()
 
 
 class WebIDLPool:
     """
-    Distribute generation load across several threads or processes, avoiding
-    redundant state copies.
+    Distribute generation load across several processes, avoiding redundant state
+    copies.
     """
 
     GeneratorState = None
@@ -45,37 +44,20 @@ class WebIDLPool:
         if processes == 1:
             WebIDLPool._init(GeneratorState)
 
-            class SeqExecutor:
+            class SeqPool:
                 def map(self, *args):
-                    return map(*args)
+                    return list(map(*args))
 
-            self.executor = SeqExecutor()
-        elif USE_THREADS:
-            self.executor = futures.ThreadPoolExecutor(
-                max_workers=processes,
-                initializer=WebIDLPool._init,
-                initargs=(GeneratorState,),
-            )
+            self.pool = SeqPool()
         else:
-            self.executor = futures.ProcessPoolExecutor(
-                max_workers=processes,
+            self.pool = Pool(
                 initializer=WebIDLPool._init,
                 initargs=(GeneratorState,),
+                processes=processes,
             )
 
     def run(self, filenames):
-        return list(self.executor.map(WebIDLPool._run, filenames))
-
-    def close(self):
-        shutdown = getattr(self.executor, "shutdown", None)
-        if shutdown is not None:
-            shutdown(wait=True)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.close()
+        return self.pool.map(WebIDLPool._run, filenames)
 
     @staticmethod
     def _init(GeneratorState):
@@ -218,6 +200,7 @@ class WebIDLCodegenManager(LoggingMixin):
         "GeneratedEventList.h",
         "PrototypeList.h",
         "RegisterBindings.h",
+        "RegisterShadowRealmBindings.h",
         "RegisterWorkerBindings.h",
         "RegisterWorkerDebuggerBindings.h",
         "RegisterWorkletBindings.h",
@@ -230,6 +213,7 @@ class WebIDLCodegenManager(LoggingMixin):
     GLOBAL_DEFINE_FILES = {
         "BindingNames.cpp",
         "RegisterBindings.cpp",
+        "RegisterShadowRealmBindings.cpp",
         "RegisterWorkerBindings.cpp",
         "RegisterWorkerDebuggerBindings.cpp",
         "RegisterWorkletBindings.cpp",
@@ -255,8 +239,7 @@ class WebIDLCodegenManager(LoggingMixin):
 
         config_path refers to a WebIDL config file (e.g. Bindings.conf).
         inputs is a 4-tuple describing the input .webidl files and how to
-        process them. Members are::
-
+        process them. Members are:
             (set(.webidl files), set(basenames of exported files),
                 set(basenames of generated events files),
                 set(example interface names))
@@ -386,8 +369,8 @@ class WebIDLCodegenManager(LoggingMixin):
         # a) that `self' is serializable and b) that `self' is unchanged by
         # _generate_build_files_for_webidl(...)
         ordered_changed_inputs = sorted(changed_inputs)
-        with WebIDLPool(self, processes=processes) as pool:
-            generation_results = pool.run(ordered_changed_inputs)
+        pool = WebIDLPool(self, processes=processes)
+        generation_results = pool.run(ordered_changed_inputs)
 
         # Generate bindings from .webidl files.
         for filename, generation_result in zip(

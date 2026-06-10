@@ -144,11 +144,17 @@ class TextPropertyEditor {
    * Boolean indicating if the name or value is being currently edited.
    */
   get editing() {
-    return !!(this.nameSpan.inplaceEditor || this.valueSpan.inplaceEditor);
+    return (
+      !!(
+        this.nameSpan.inplaceEditor ||
+        this.valueSpan.inplaceEditor ||
+        this.ruleView.tooltips.isEditing
+      ) || this.popup.isOpen
+    );
   }
 
   /**
-   * Get the Rule model to the current text property
+   * Get the rule to the current text property
    */
   get rule() {
     return this.prop.rule;
@@ -176,7 +182,8 @@ class TextPropertyEditor {
       class: "ruleview-propertycontainer",
     });
 
-    const indent = ((this.rule.domRule.ancestorData.length || 0) + 1) * 2;
+    const indent =
+      ((this.ruleEditor.rule.domRule.ancestorData.length || 0) + 1) * 2;
     createChild(this.container, "span", {
       class: "ruleview-rule-indent clipboard-only",
       textContent: " ".repeat(indent),
@@ -305,7 +312,7 @@ class TextPropertyEditor {
 
       this.valueContainer.addEventListener(
         "click",
-        async event => {
+        event => {
           // Clicks within the value shouldn't propagate any further.
           event.stopPropagation();
 
@@ -315,31 +322,29 @@ class TextPropertyEditor {
           }
 
           if (event.target.classList.contains("ruleview-variable-link")) {
-            const isRuleInStartingStyle = this.rule.isInStartingStyle();
-            const rulePseudoElement = this.rule.pseudoElement;
-            await this.ruleView.highlightProperty(
-              event.target.dataset.variableName,
-              {
-                ruleValidator: rule => {
-                  // If the associated rule is not in starting style, the variable
-                  // definition can't be in a starting style rule.
-                  // Note that if the rule is in starting style, then the variable
-                  // definition might be in a starting style rule, or in a regular one.
-                  if (!isRuleInStartingStyle && rule.isInStartingStyle()) {
-                    return false;
-                  }
+            const isRuleInStartingStyle =
+              this.ruleEditor.rule.isInStartingStyle();
+            const rulePseudoElement = this.ruleEditor.rule.pseudoElement;
+            this.ruleView.highlightProperty(event.target.dataset.variableName, {
+              ruleValidator: rule => {
+                // If the associated rule is not in starting style, the variable
+                // definition can't be in a starting style rule.
+                // Note that if the rule is in starting style, then the variable
+                // definition might be in a starting style rule, or in a regular one.
+                if (!isRuleInStartingStyle && rule.isInStartingStyle()) {
+                  return false;
+                }
 
-                  if (
-                    rule.pseudoElement &&
-                    rulePseudoElement !== rule.pseudoElement
-                  ) {
-                    return false;
-                  }
+                if (
+                  rule.pseudoElement &&
+                  rulePseudoElement !== rule.pseudoElement
+                ) {
+                  return false;
+                }
 
-                  return true;
-                },
-              }
-            );
+                return true;
+              },
+            });
           }
         },
         { signal: this.abortController.signal }
@@ -406,16 +411,16 @@ class TextPropertyEditor {
         start: this.#onStartEditing,
         element: this.valueSpan,
         done: this.#onValueDone,
-        destroy: async onValueDonePromise => {
+        destroy: onValueDonePromise => {
           const cb = this.update;
           // The `done` callback is called before this `destroy` callback is.
           // In #onValueDone, we might preview/set the property and we want to wait for
           // that to be resolved before updating the view so all data are up to date (see Bug 1325145).
-          //
-          // Note that it is important to only await if a promise is passed,
-          // otherwise browser_rules_grid-template-areas.js starts failing because of a race condition.
-          if (typeof onValueDonePromise?.then == "function") {
-            await onValueDonePromise;
+          if (
+            onValueDonePromise &&
+            typeof onValueDonePromise.then === "function"
+          ) {
+            return onValueDonePromise.then(cb);
           }
           return cb();
         },
@@ -428,7 +433,6 @@ class TextPropertyEditor {
         multiline: true,
         maxWidth: () => this.container.getBoundingClientRect().width,
         cssProperties: this.cssProperties,
-        getCssAnchors: this.#getAnchorNames,
         getCssVariables,
         getGridLineNames: this.#getGridlineNames,
         showSuggestCompletionOnEmpty: true,
@@ -447,21 +451,6 @@ class TextPropertyEditor {
       });
     }
   }
-
-  /**
-   * Get the names of the anchors the currently selected element can be anchored to
-   *
-   * @return {Array<string>}
-   */
-  #getAnchorNames = async () => {
-    const names = await this.ruleView.pageStyle.getAnchorNames(
-      this.ruleView.inspector.selection.nodeFront
-    );
-
-    // Emit message for test files
-    this.ruleView.inspector.emitForTests("anchor-names-updated");
-    return names;
-  };
 
   /**
    * Get the grid line names of the grid that the currently selected element is
@@ -589,7 +578,7 @@ class TextPropertyEditor {
       this.element.removeAttribute("dirty");
     }
 
-    const { outputParser } = this.ruleView;
+    const outputParser = this.ruleView._outputParser;
     this.outputParserOptions = {
       angleClass: "ruleview-angle",
       angleSwatchClass: SHARED_SWATCH_CLASS + " " + ANGLE_SWATCH_CLASS,
@@ -620,24 +609,8 @@ class TextPropertyEditor {
           varName,
           this.rule.pseudoElement
         ),
-      getAttributeValue: attrName => {
-        const nodeFront = this.rule.elementStyle.element.isPseudoElement
-          ? // get the closest non pseudo element
-            this.rule.elementStyle.element.getUltimateOriginatingElement()
-          : this.rule.elementStyle.element;
-
-        const attribute = nodeFront.attributes.find(
-          attr => attr.name === attrName
-        );
-        if (!attribute) {
-          return null;
-        }
-
-        return attribute.value;
-      },
       inStartingStyleRule: this.rule.isInStartingStyle(),
       isValid: this.isValid(),
-      cssExplainersEnabled: this.ruleView.cssExplainersEnabled,
     };
 
     if (this.rule.darkColorScheme !== undefined) {
@@ -676,7 +649,7 @@ class TextPropertyEditor {
     }
 
     this.ruleView.emit("property-value-updated", {
-      rule: this.rule,
+      rule: this.prop.rule,
       property: name,
       value: val,
     });
@@ -687,11 +660,9 @@ class TextPropertyEditor {
       "." + FONT_FAMILY_CLASS
     );
     if (fontFamilySpans.length && this.prop.enabled && !this.prop.overridden) {
-      // This code branch was historically spawn in a distinct async task
-      // but it may not be strictly required.
-      (async () => {
-        try {
-          const families = await this.rule.elementStyle.getUsedFontFamilies();
+      this.rule.elementStyle
+        .getUsedFontFamilies()
+        .then(families => {
           for (const span of fontFamilySpans) {
             const authoredFont = span.textContent.toLowerCase();
             if (families.has(authoredFont)) {
@@ -703,10 +674,10 @@ class TextPropertyEditor {
           }
 
           this.ruleView.emit("font-highlighted", this.valueSpan);
-        } catch (e) {
-          console.error("Could not get the list of font families", e);
-        }
-      })();
+        })
+        .catch(e =>
+          console.error("Could not get the list of font families", e)
+        );
     }
 
     // Attach the color picker tooltip to the color swatches
@@ -869,7 +840,7 @@ class TextPropertyEditor {
     this.#updateShorthandOverridden();
 
     // Update the rule property highlight.
-    this.ruleView.updatePropertyHighlight(this);
+    this.ruleView._updatePropertyHighlight(this);
 
     // Restore focus back to the element whose markup was recreated above, if
     // the focus is still in the current document (avoid stealing the focus, see
@@ -932,7 +903,7 @@ class TextPropertyEditor {
       !this.editing &&
       this.isValid() &&
       this.prop.overridden &&
-      !this.rule.isUnmatched
+      !this.ruleEditor.rule.isUnmatched
     );
   }
 
@@ -1037,7 +1008,7 @@ class TextPropertyEditor {
     this.filterProperty.addEventListener(
       "click",
       event => {
-        this.ruleView.setFilterStyles("`" + this.prop.name + "`");
+        this.ruleEditor.ruleView.setFilterStyles("`" + this.prop.name + "`");
         event.stopPropagation();
       },
       { signal: this.abortController.signal }
@@ -1285,7 +1256,7 @@ class TextPropertyEditor {
     });
     appendText(nameContainer, ": ");
 
-    const { outputParser } = this.ruleView;
+    const outputParser = this.ruleView._outputParser;
     const frag = outputParser.parseCssProperty(computed.name, computed.value, {
       colorSwatchClass: "inspector-swatch inspector-colorswatch",
       urlClass: "theme-link",
@@ -1474,7 +1445,7 @@ class TextPropertyEditor {
    *        The move focus direction number.
    */
   remove(direction) {
-    this.rule.editClosestTextProperty(this.prop, direction);
+    this.ruleEditor.rule.editClosestTextProperty(this.prop, direction);
 
     this.prop.remove();
     this.nameSpan.textProperty = null;
@@ -1512,7 +1483,7 @@ class TextPropertyEditor {
     // If the value is not empty (or is an empty variable) and unchanged,
     // revert the property back to its original value and enabled or disabled state
     if ((value.trim() || isVariable) && isValueUnchanged) {
-      const onPropertySet = this.rule.previewPropertyValue(
+      const onPropertySet = this.ruleEditor.rule.previewPropertyValue(
         this.prop,
         val.value,
         val.priority
@@ -1636,14 +1607,6 @@ class TextPropertyEditor {
   }
 
   /**
-   * Boolean indicating if the user is potentially previewing another value
-   * in a swatch tooltip, or in the inplace value editor
-   */
-  get isPreviewing() {
-    return this.ruleView.tooltips.isEditing || this.valueSpan.inplaceEditor;
-  }
-
-  /**
    * Live preview this property, without committing changes.
    *
    * @param {string} value
@@ -1654,12 +1617,16 @@ class TextPropertyEditor {
   #previewValue = (value, reverting = false) => {
     // Since function call is debounced, we need to make sure we are still
     // editing, and any selector modifications have been completed
-    if (!reverting && (!this.isPreviewing || this.ruleEditor.isEditing)) {
+    if (!reverting && (!this.editing || this.ruleEditor.isEditing)) {
       return;
     }
 
     const val = parseSingleValue(this.cssProperties.isKnown, value);
-    this.rule.previewPropertyValue(this.prop, val.value, val.priority);
+    this.ruleEditor.rule.previewPropertyValue(
+      this.prop,
+      val.value,
+      val.priority
+    );
   };
 
   /**
@@ -1763,7 +1730,7 @@ class TextPropertyEditor {
     });
   };
 
-  #draggingOnMouseMove = throttle(async event => {
+  #draggingOnMouseMove = throttle(event => {
     if (!this.#isDragging) {
       return;
     }
@@ -1805,13 +1772,10 @@ class TextPropertyEditor {
     const { value, unit } = this.#draggingValueCache;
     // We use toFixed to avoid the case where value is too long, 9.00001px for example
     const roundedValue = Number.isInteger(value) ? value : value.toFixed(1);
-    const onValueSet = this.prop.setValue(
-      roundedValue + unit,
-      this.prop.priority
-    );
+    this.prop
+      .setValue(roundedValue + unit, this.prop.priority)
+      .then(() => this.ruleView.emitForTests("property-updated-by-dragging"));
     this.#hasDragged = true;
-    await onValueSet;
-    this.ruleView.emitForTests("property-updated-by-dragging");
   }, 30);
 
   #draggingOnPointerUp = () => {

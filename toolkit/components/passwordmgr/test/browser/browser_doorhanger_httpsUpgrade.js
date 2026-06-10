@@ -74,7 +74,7 @@ add_task(async function test_httpsUpgradeCaptureFields_noChange() {
   Assert.equal(login.password, "notifyp1", "Check the password is unchanged");
   Assert.equal(login.timesUsed, 2, "Check times used increased");
 
-  await Services.logins.removeLoginAsync(login1);
+  Services.logins.removeLogin(login1);
 });
 
 add_task(async function test_httpsUpgradeCaptureFields_changePW() {
@@ -131,7 +131,7 @@ add_task(async function test_httpsUpgradeCaptureFields_changePW() {
   Assert.equal(login.password, "pass2", "Check the password changed");
   Assert.equal(login.timesUsed, 2, "Check times used increased");
 
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
 });
 
 add_task(
@@ -215,7 +215,7 @@ add_task(
       "timeLastUsed == timePasswordChanged"
     );
 
-    await Services.logins.removeAllUserFacingLoginsAsync();
+    Services.logins.removeAllUserFacingLogins();
   }
 );
 
@@ -314,6 +314,6 @@ add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
   Assert.ok(httpLogin.equals(login1), "Check HTTP login is as expected");
   Assert.equal(httpLogin.timesUsed, 2, "Check times used increased");
 
-  await Services.logins.removeLoginAsync(login1);
-  await Services.logins.removeLoginAsync(login1HTTPS);
+  Services.logins.removeLogin(login1);
+  Services.logins.removeLogin(login1HTTPS);
 });

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,10 +7,8 @@
 #ifndef SubstitutingJARURI_h
 #define SubstitutingJARURI_h
 
-#include "nsIIPCSerializableURI.h"
 #include "nsIStandardURL.h"
 #include "nsIURL.h"
-#include "nsIURIWithSizeOf.h"
 #include "nsJARURI.h"
 #include "nsISerializable.h"
 
@@ -26,9 +26,7 @@ namespace net {
 // allows consumers to access the underlying jar resource.
 class SubstitutingJARURI : public nsIJARURI,
                            public nsIStandardURL,
-                           public nsISerializable,
-                           public nsIIPCSerializableURI,
-                           public nsIURIWithSizeOf {
+                           public nsISerializable {
  protected:
   // Contains the resource://-like URI to be mapped. nsIURI and nsIURL will
   // forward to this.
@@ -45,8 +43,6 @@ class SubstitutingJARURI : public nsIJARURI,
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISERIALIZABLE
-  NS_DECL_NSIIPCSERIALIZABLEURI
-  NS_DECL_NSIURIWITHSIZEOF
 
   NS_INLINE_DECL_STATIC_IID(NS_SUBSTITUTINGJARURI_IMPL_CID)
 
@@ -156,6 +152,8 @@ class SubstitutingJARURI : public nsIJARURI,
                     : mSource->GetDisplayPrePath(aDisplayPrePath);
   }
   NS_IMETHOD Mutate(nsIURIMutator** _retval) override;
+  NS_IMETHOD_(void) Serialize(mozilla::ipc::URIParams& aParams) override;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) override;
 
  private:
   nsresult Clone(nsIURI** aURI);

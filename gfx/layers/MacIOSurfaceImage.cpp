@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,10 +14,6 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "YCbCrUtils.h"
 
-#ifdef XP_MACOSX
-#  include "nsCocoaFeatures.h"
-#endif
-
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 
@@ -27,7 +25,7 @@ TextureClient* MacIOSurfaceImage::GetTextureClient(
         IsDRM() ? TextureFlags::DRM_SOURCE : TextureFlags::DEFAULT;
     mTextureClient = TextureClient::CreateWithData(
         MacIOSurfaceTextureData::Create(mSurface, backend), flags,
-        aKnowsCompositor->GetTextureForwarder().get());
+        aKnowsCompositor->GetTextureForwarder());
   }
   return mTextureClient;
 }
@@ -308,8 +306,7 @@ already_AddRefed<MacIOSurface> MacIOSurfaceRecycleAllocator::Allocate(
     }
 #endif
 
-    return MakeAndAddRef<MacIOSurface>(surf, aYUVColorSpace, aTransferFunction,
-                                       MacIOSurface::AllowAlpha::No);
+    return MakeAndAddRef<MacIOSurface>(surf, false, aYUVColorSpace);
   }
 
   // Time to decide if we are creating a single planar or bi-planar surface.
@@ -321,20 +318,15 @@ already_AddRefed<MacIOSurface> MacIOSurfaceRecycleAllocator::Allocate(
   // planar format.
   // 4:2:2 formats with 8 bit color are single planar, otherwise bi-planar.
 
-  //Lion doesn't do 10-bit colour, so we have to always create a single planar
-  //surface for 10.7 and lower lol.
   RefPtr<MacIOSurface> result;
-  if ((aChromaSubsampling == gfx::ChromaSubsampling::HALF_WIDTH &&
-      aColorDepth == gfx::ColorDepth::COLOR_8) || 
-      !nsCocoaFeatures::OnMountainLionOrLater()) {
+  if (aChromaSubsampling == gfx::ChromaSubsampling::HALF_WIDTH &&
+      aColorDepth == gfx::ColorDepth::COLOR_8) {
     result = MacIOSurface::CreateSinglePlanarSurface(
-        aYSize, aYUVColorSpace, aTransferFunction, aColorRange,
-        MacIOSurface::AllowAlpha::Yes);
+        aYSize, aYUVColorSpace, aTransferFunction, aColorRange);
   } else {
     result = MacIOSurface::CreateBiPlanarSurface(
         aYSize, aCbCrSize, aChromaSubsampling, aYUVColorSpace,
-        aTransferFunction, aColorRange, aColorDepth,
-        MacIOSurface::AllowAlpha::Yes);
+        aTransferFunction, aColorRange, aColorDepth);
   }
 
   if (result &&

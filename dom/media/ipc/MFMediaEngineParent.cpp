@@ -5,14 +5,12 @@
 #include "MFMediaEngineParent.h"
 
 #include <audiosessiontypes.h>
-#include <dxgi.h>
 #include <intsafe.h>
 #include <mfapi.h>
 
 #ifdef MOZ_WMF_CDM
 #  include "MFCDMParent.h"
 #  include "MFContentProtectionManager.h"
-#  include "mozilla/EMEUtils.h"
 #endif
 
 #include "MFMediaEngineExtension.h"
@@ -38,21 +36,6 @@ namespace mozilla {
   MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug,                                \
           ("MFMediaEngineParent=%p, Id=%" PRId64 ", " msg, this, this->Id(), \
            ##__VA_ARGS__))
-
-// Helper for IPC handler methods that set up the CDM: log the failure,
-// notify the content process with a fatal error, and return IPC_OK() so
-// the IPC channel stays alive.
-#define CDM_SETUP_IPC_RETURN_IF_FAILED(rv, description)             \
-  do {                                                              \
-    if (MOZ_UNLIKELY(FAILED(rv))) {                                 \
-      LOG(description " failed, hr=%lx", rv);                       \
-      (void)SendNotifyError(                                        \
-          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,                 \
-                      nsPrintfCString(description " (hr=%lx)", rv), \
-                      Some(static_cast<int32_t>(rv))));             \
-      return IPC_OK();                                              \
-    }                                                               \
-  } while (false)
 
 using MediaEngineMap = nsTHashMap<nsUint64HashKey, MFMediaEngineParent*>;
 static StaticAutoPtr<MediaEngineMap> sMediaEngines;
@@ -97,6 +80,7 @@ MFMediaEngineParent::MFMediaEngineParent(RemoteMediaManagerParent* aManager,
              ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM);
   LOG("Created MFMediaEngineParent");
   RegisterMediaEngine(this);
+  mIPDLSelfRef = this;
   CreateMediaEngine();
 }
 
@@ -121,8 +105,6 @@ void MFMediaEngineParent::DestroyEngineIfExists(
     mContentProtectionManager->Shutdown();
     mContentProtectionManager = nullptr;
   }
-  mProxyId.reset();
-  mHDCPRequestHolder.DisconnectIfExists();
 #endif
   if (mMediaEngine) {
     LOG_IF_FAILED(mMediaEngine->Shutdown());
@@ -132,7 +114,6 @@ void MFMediaEngineParent::DestroyEngineIfExists(
   mRequestSampleListener.DisconnectIfExists();
   if (mDXGIDeviceManager) {
     mDXGIDeviceManager = nullptr;
-    wmf::MFUnlockDXGIDeviceManager();
   }
   if (aError) {
     (void)SendNotifyError(*aError);
@@ -229,16 +210,6 @@ void MFMediaEngineParent::InitializeDXGIDeviceManager() {
     } while (false)
 #endif
 
-static MF_MEDIA_ENGINE_ERR ToError(DWORD aError) {
-  MOZ_ASSERT(aError == MF_MEDIA_ENGINE_ERR_NOERROR ||
-             aError == MF_MEDIA_ENGINE_ERR_ABORTED ||
-             aError == MF_MEDIA_ENGINE_ERR_NETWORK ||
-             aError == MF_MEDIA_ENGINE_ERR_DECODE ||
-             aError == MF_MEDIA_ENGINE_ERR_SRC_NOT_SUPPORTED ||
-             aError == MF_MEDIA_ENGINE_ERR_ENCRYPTED);
-  return static_cast<MF_MEDIA_ENGINE_ERR>(aError);
-}
-
 void MFMediaEngineParent::HandleMediaEngineEvent(
     MFMediaEngineEventWrapper aEvent) {
   AssertOnManagerThread();
@@ -249,7 +220,7 @@ void MFMediaEngineParent::HandleMediaEngineEvent(
   switch (aEvent.mEvent) {
     case MF_MEDIA_ENGINE_EVENT_ERROR: {
       MOZ_ASSERT(aEvent.mParam1 && aEvent.mParam2);
-      auto error = ToError(*aEvent.mParam1);
+      auto error = static_cast<MF_MEDIA_ENGINE_ERR>(*aEvent.mParam1);
       auto result = static_cast<HRESULT>(*aEvent.mParam2);
       NotifyError(error, result);
       break;
@@ -261,7 +232,7 @@ void MFMediaEngineParent::HandleMediaEngineEvent(
       break;
     }
     case MF_MEDIA_ENGINE_EVENT_FIRSTFRAMEREADY: {
-      if (mMediaEngine->HasVideo() && !mIsFrameServerMode) {
+      if (mMediaEngine->HasVideo()) {
         EnsureDcompSurfaceHandle();
       }
       [[fallthrough]];
@@ -289,12 +260,6 @@ void MFMediaEngineParent::HandleMediaEngineEvent(
       auto currentTimeInSeconds = mMediaEngine->GetCurrentTime();
       (void)SendUpdateCurrentTime(currentTimeInSeconds);
       UpdateStatisticsData();
-      if (mIsFrameServerMode && mMediaEngine->HasVideo()) {
-        LONGLONG pts = 0;
-        HRESULT hr = mMediaEngine->OnVideoStreamTick(&pts);
-        LOG("FrameServer pump: OnVideoStreamTick hr=%lx pts=%" PRId64, (long)hr,
-            (int64_t)pts);
-      }
       break;
     }
     default:
@@ -305,23 +270,21 @@ void MFMediaEngineParent::HandleMediaEngineEvent(
 
 void MFMediaEngineParent::NotifyError(MF_MEDIA_ENGINE_ERR aError,
                                       HRESULT aResult) {
-  AssertOnManagerThread();
   if (aError == MF_MEDIA_ENGINE_ERR_NOERROR) {
     return;
   }
 #ifdef MOZ_WMF_CDM
-  // Hardware context reset errors require engine recovery, not a real error.
-  if (IsHardwareResetHRESULT(aResult)) {
-    LOG("Notifying hardware reset error, hr=%lx", aResult);
-    ENGINE_MARKER("MFMediaEngineParent,HardwareContextReset");
-    sPendingHDCPCheck = nullptr;
-    mHardwareResetInProgress = true;
-    if (MFCDMParent* cdmParent =
-            mProxyId ? MFCDMParent::GetCDMById(*mProxyId) : nullptr) {
-      cdmParent->OnHardwareContextReset();
-      sPendingHDCPCheck = cdmParent->WaitForHDCPSettleAfterReset();
+  // A special error requires to reset the hareware context, not a real error.
+  if (aResult == DRM_E_TEE_INVALID_HWDRM_STATE) {
+    LOG("Notify error 'DRM_E_TEE_INVALID_HWDRM_STATE', hr=%lx", aResult);
+    ENGINE_MARKER(
+        "MFMediaEngineParent,Received 'DRM_E_TEE_INVALID_HWDRM_STATE'");
+    auto* proxy = mContentProtectionManager
+                      ? mContentProtectionManager->GetCDMProxy()
+                      : nullptr;
+    if (proxy) {
+      proxy->OnHardwareContextReset();
     }
-    (void)SendNotifyHardwareReset();
     return;
   }
 #endif
@@ -332,15 +295,14 @@ void MFMediaEngineParent::NotifyError(MF_MEDIA_ENGINE_ERR aError,
   switch (aError) {
     case MF_MEDIA_ENGINE_ERR_ABORTED:
     case MF_MEDIA_ENGINE_ERR_NETWORK:
-      // We ignore these because we fetch data by ourselves.
+      // We ignore these two because we fetch data by ourselves.
       return;
     case MF_MEDIA_ENGINE_ERR_DECODE: {
       MediaResult error(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                         nsPrintfCString("Decoder error (hr=%lx)", aResult),
                         Some(static_cast<int32_t>(aResult)));
 #ifdef MOZ_WMF_CDM
-      if (aResult == MSPR_E_NO_DECRYPTOR_AVAILABLE ||
-          aResult == MF_E_HARDWARE_DRM_UNSUPPORTED) {
+      if (aResult == MSPR_E_NO_DECRYPTOR_AVAILABLE) {
         NotifyDisableHWDRM();
       }
 #endif
@@ -348,30 +310,6 @@ void MFMediaEngineParent::NotifyError(MF_MEDIA_ENGINE_ERR aError,
       return;
     }
     case MF_MEDIA_ENGINE_ERR_SRC_NOT_SUPPORTED: {
-#ifdef MOZ_WMF_CDM
-      if (mProxyId) {
-        // When a CDM is active the media format was validated before the CDM
-        // was initialised, so a genuine codec/container issue is unlikely.
-        // Most errors tunnelled through SRC_NOT_SUPPORTED in this context are
-        // CDM pipeline or content-protection failures. Use an allowlist of the
-        // few HRESULTs that genuinely mean unsupported format; classify
-        // everything else as a decode error so it surfaces correctly.
-        bool isSrcError =
-            (aResult == S_OK || aResult == MF_E_INVALIDMEDIATYPE ||
-             aResult == MF_E_UNSUPPORTED_BYTESTREAM_TYPE ||
-             aResult == MF_E_UNSUPPORTED_FORMAT ||
-             aResult == MF_E_TOPO_CODEC_NOT_FOUND);
-        MediaResult error(
-            isSrcError ? NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR
-                       : NS_ERROR_DOM_MEDIA_DECODE_ERR,
-            nsPrintfCString(
-                "%s (hr=%lx)",
-                isSrcError ? "Source not supported" : "Decode error", aResult),
-            Some(static_cast<int32_t>(aResult)));
-        (void)SendNotifyError(error);
-        return;
-      }
-#endif
       MediaResult error(
           NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
           nsPrintfCString("Source not supported (hr=%lx)", aResult),
@@ -390,20 +328,6 @@ void MFMediaEngineParent::NotifyError(MF_MEDIA_ENGINE_ERR aError,
       MOZ_ASSERT_UNREACHABLE("Unsupported error");
       return;
   }
-}
-
-/* static */
-bool MFMediaEngineParent::IsHardwareResetHRESULT(HRESULT aResult) {
-#ifdef MOZ_WMF_CDM
-  if (aResult == DRM_E_TEE_INVALID_HWDRM_STATE ||      // TEE state invalid
-      aResult == DRM_OEM_E_ASD_ACTIVE_DISPLAY_FAIL) {  // display link failure
-    return true;
-  }
-#endif
-  // https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/dxgi-error
-  return aResult == DXGI_ERROR_DEVICE_REMOVED ||  // GPU removed / driver crash
-         aResult == DXGI_ERROR_DEVICE_HUNG ||     // GPU hung (TDR timeout)
-         aResult == DXGI_ERROR_DEVICE_RESET;      // GPU reset by OS
 }
 
 MFMediaEngineStreamWrapper* MFMediaEngineParent::GetMediaEngineStream(
@@ -469,8 +393,8 @@ HRESULT MFMediaEngineParent::SetMediaInfo(const MediaInfoIPDL& aInfo,
   nsPrintfCString message(
       "Created the media source, audio=%s, video=%s, encrypted-audio=%s, "
       "encrypted-video=%s, aIsEncryptedCustomInit=%d, isEncrypted=%d",
-      aInfo.audioInfo() ? aInfo.audioInfo()->mMimeType.get() : "none",
-      aInfo.videoInfo() ? aInfo.videoInfo()->mMimeType.get() : "none",
+      aInfo.audioInfo() ? aInfo.audioInfo()->mMimeType.BeginReading() : "none",
+      aInfo.videoInfo() ? aInfo.videoInfo()->mMimeType.BeginReading() : "none",
       aInfo.audioInfo() && aInfo.audioInfo()->mCrypto.IsEncrypted() ? "yes"
                                                                     : "no",
       aInfo.videoInfo() && aInfo.videoInfo()->mCrypto.IsEncrypted() ? "yes"
@@ -481,6 +405,9 @@ HRESULT MFMediaEngineParent::SetMediaInfo(const MediaInfoIPDL& aInfo,
   if (aInfo.videoInfo()) {
     ComPtr<IMFMediaEngineEx> mediaEngineEx;
     RETURN_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
+    RETURN_IF_FAILED(mediaEngineEx->EnableWindowlessSwapchainMode(true));
+    LOG("Enabled dcomp swap chain mode");
+    ENGINE_MARKER("MFMediaEngineParent,EnabledSwapChain");
     if (isEncrypted) {
       // Microsoft recommends to disable low latency with DRM.
       RETURN_IF_FAILED(mediaEngineEx->SetRealTimeMode(false));
@@ -518,39 +445,6 @@ void MFMediaEngineParent::SetMediaSourceOnEngine() {
                       "Failed to set media source");
     DestroyEngineIfExists(Some(error));
   });
-
-  // Enable windowless swapchain mode before setting the source. For encrypted
-  // content, this must be called after SetContentProtectionManager (which
-  // resets the swapchain mode), and before SetSource.
-  if (mMediaSource->GetVideoStream()) {
-    if (mIsFrameServerMode) {
-      LOG("Frame server mode: skipping DComp");
-      ENGINE_MARKER("MFMediaEngineParent,FrameServerMode");
-      mMediaSource->GetVideoStream()->AsVideoStream()->SetFrameServerMode();
-      (void)SendNotifyFrameServerMode();
-    } else {
-      ComPtr<IMFMediaEngineEx> mediaEngineEx;
-      RETURN_VOID_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
-      HRESULT swapChainHr = mediaEngineEx->EnableWindowlessSwapchainMode(true);
-      if (SUCCEEDED(swapChainHr)) {
-        mDCompModeEnabled = true;
-        LOG("Enabled dcomp swap chain mode");
-        ENGINE_MARKER("MFMediaEngineParent,EnabledSwapChain");
-      } else {
-        LOG("EnableWindowlessSwapchainMode failed: hr=%lx", (long)swapChainHr);
-        // This branch is reached in non-WMFClearKey playback (e.g. unencrypted
-        // or Widevine/PlayReady EME) when the underlying graphics driver does
-        // not support windowless swap chains (e.g. running in a remote desktop
-        // or software-rendering environment). mDCompModeEnabled stays false, so
-        // EnsureDcompSurfaceHandle() will early-return on FIRSTFRAMEREADY, and
-        // the engine falls back to its own internal rendering while still
-        // firing LOADEDDATA/ENDED/etc. normally. Do NOT enter frame-server mode
-        // here: that path is only for WMFClearKey, which is handled by the
-        // mIsFrameServerMode fast path above (set in RecvSetCDMProxyId before
-        // SetMediaSourceOnEngine runs).
-      }
-    }
-  }
 
   mMediaEngineExtension->SetMediaSource(mMediaSource.Get());
 
@@ -622,68 +516,31 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvSetCDMProxyId(
   }
 #ifdef MOZ_WMF_CDM
   LOG("SetCDMProxy, Id=%" PRIu64, aProxyId);
-  mProxyId = Some(aProxyId);
   MFCDMParent* cdmParent = MFCDMParent::GetCDMById(aProxyId);
   MOZ_DIAGNOSTIC_ASSERT(cdmParent);
-  if (IsWMFClearKeySystemAndSupported(cdmParent->GetKeySystem())) {
-    LOG("WMFClearKey CDM detected, enabling frame server mode");
-    mIsFrameServerMode = true;
-  }
-  HRESULT rv =
-      MakeAndInitialize<MFContentProtectionManager>(&mContentProtectionManager);
-  CDM_SETUP_IPC_RETURN_IF_FAILED(rv,
-                                 "Failed to create content protection manager");
+  RETURN_PARAM_IF_FAILED(
+      MakeAndInitialize<MFContentProtectionManager>(&mContentProtectionManager),
+      IPC_OK());
 
   ComPtr<IMFMediaEngineProtectedContent> protectedMediaEngine;
-  rv = mMediaEngine.As(&protectedMediaEngine);
-  CDM_SETUP_IPC_RETURN_IF_FAILED(rv, "Failed to get protected media engine");
-
-  rv = protectedMediaEngine->SetContentProtectionManager(
-      mContentProtectionManager.Get());
-  CDM_SETUP_IPC_RETURN_IF_FAILED(rv,
-                                 "Failed to set content protection manager");
+  RETURN_PARAM_IF_FAILED(mMediaEngine.As(&protectedMediaEngine), IPC_OK());
+  RETURN_PARAM_IF_FAILED(protectedMediaEngine->SetContentProtectionManager(
+                             mContentProtectionManager.Get()),
+                         IPC_OK());
 
   RefPtr<MFCDMProxy> proxy = cdmParent->GetMFCDMProxy();
   if (!proxy) {
     LOG("Failed to get MFCDMProxy!");
-    (void)SendNotifyError(
-        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, "Failed to get CDM proxy"));
     return IPC_OK();
   }
 
-  rv = mContentProtectionManager->SetCDMProxy(proxy);
-  CDM_SETUP_IPC_RETURN_IF_FAILED(rv, "Failed to set CDM proxy");
-
-  mContentProtectionManager->SetNotifyWaitingForKeyCallback(
-      [self = RefPtr{this}]() {
-        if (self->CanSend() && self->mMediaEngine) {
-          (void)self->SendNotifyWaitingForKey();
-        }
-      },
-      mManagerThread);
-
+  RETURN_PARAM_IF_FAILED(mContentProtectionManager->SetCDMProxy(proxy),
+                         IPC_OK());
   // TODO : is it possible to set CDM proxy before creating media source? If so,
   // handle that as well.
   if (mMediaSource) {
     mMediaSource->SetCDMProxy(proxy);
-    if (sPendingHDCPCheck) {
-      LOG("Deferring SetMediaSourceOnEngine until HDCP settle check completes");
-      RefPtr<GenericPromise> hdcpCheck = std::move(sPendingHDCPCheck);
-      hdcpCheck
-          ->Then(mManagerThread, __func__,
-                 [self = RefPtr{this}](GenericPromise::ResolveOrRejectValue&&) {
-                   self->mHDCPRequestHolder.Complete();
-                   // Proceed regardless of whether the HDCP check resolved or
-                   // rejected: the check is a timing signal, not a hard gate.
-                   // The engine will enforce any HDCP policy on its own.
-                   if (self->mMediaEngine) {
-                     self->SetMediaSourceOnEngine();
-                   }
-                 })
-          ->Track(mHDCPRequestHolder);
-    } else {
-      SetMediaSourceOnEngine();
-    }
+    SetMediaSourceOnEngine();
   }
   LOG("Set CDM Proxy successfully on the media engine!");
 #endif
@@ -747,6 +604,11 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvShutdown() {
   return IPC_OK();
 }
 
+void MFMediaEngineParent::Destroy() {
+  AssertOnManagerThread();
+  mIPDLSelfRef = nullptr;
+}
+
 void MFMediaEngineParent::HandleRequestSample(const SampleRequest& aRequest) {
   AssertOnManagerThread();
   MOZ_ASSERT(aRequest.mType == TrackInfo::TrackType::kAudioTrack ||
@@ -783,10 +645,6 @@ void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
   MOZ_ASSERT(mMediaEngine);
   MOZ_ASSERT(mMediaEngine->HasVideo());
 
-  if (!mDCompModeEnabled) {
-    LOG("Skip EnsureDcompSurfaceHandle: DComp mode not enabled");
-    return;
-  }
   ComPtr<IMFMediaEngineEx> mediaEngineEx;
   RETURN_VOID_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
 
@@ -796,52 +654,20 @@ void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
     size = *newSize;
   }
 
-  // A zero-rect poisons EnableWindowlessSwapchainMode, causing all subsequent
-  // GetVideoSwapchainHandle calls to return S_FALSE. Wait for a real size.
-  // See https://issues.chromium.org/issues/40218622#comment5
-  if (size.IsEmpty()) {
-    LOG("EnsureDcompSurfaceHandle: size is empty, deferring");
-    return;
-  }
-
   // Update stream size before asking for a handle. If we don't update the
   // size, media engine will create the dcomp surface in a wrong size.
   RECT rect = {0, 0, (LONG)size.width, (LONG)size.height};
-  HRESULT rv = mediaEngineEx->UpdateVideoStream(nullptr /* pSrc */, &rect,
-                                                nullptr /* pBorderClr */);
-  if (MOZ_UNLIKELY(FAILED(rv))) {
-    LOG("UpdateVideoStream failed, hr=%lx", rv);
-    (void)SendNotifyError(
-        MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                    nsPrintfCString("UpdateVideoStream (hr=%lx)", rv),
-                    Some(static_cast<int32_t>(rv))));
-    return;
-  }
+  RETURN_VOID_IF_FAILED(mediaEngineEx->UpdateVideoStream(
+      nullptr /* pSrc */, &rect, nullptr /* pBorderClr */));
 
   HANDLE surfaceHandle = INVALID_HANDLE_VALUE;
-  rv = mediaEngineEx->GetVideoSwapchainHandle(&surfaceHandle);
-  if (FAILED(rv)) {
-    if (IsHardwareResetHRESULT(rv)) {
-      LOG("GetVideoSwapchainHandle failed with hardware reset hr=%lx", rv);
-      (void)SendNotifyHardwareReset();
-    } else {
-      LOG("GetVideoSwapchainHandle failed, hr=%lx", rv);
-      MediaResult error(
-          NS_ERROR_DOM_MEDIA_DECODE_ERR,
-          nsPrintfCString("GetVideoSwapchainHandle failed (hr=%lx)", rv),
-          Some(static_cast<int32_t>(rv)));
-      (void)SendNotifyError(error);
-    }
-    return;
-  }
+  RETURN_VOID_IF_FAILED(mediaEngineEx->GetVideoSwapchainHandle(&surfaceHandle));
   if (surfaceHandle && surfaceHandle != INVALID_HANDLE_VALUE) {
     LOG("EnsureDcompSurfaceHandle, handle=%p, size=[%dx%d]", surfaceHandle,
         size.width, size.height);
     mMediaSource->SetDCompSurfaceHandle(surfaceHandle, size);
   } else {
-    // The surface isn't ready yet (e.g. the first frame hasn't been decoded).
-    // EnsureDcompSurfaceHandle will be called again on the next engine event.
-    LOG("SurfaceHandle not ready yet, will retry later");
+    NS_WARNING("SurfaceHandle is not ready yet");
   }
 }
 

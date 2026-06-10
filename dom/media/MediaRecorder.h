@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -54,9 +56,6 @@ class MediaRecorder final : public DOMEventTargetHelper,
   class Session;
 
   explicit MediaRecorder(nsPIDOMWindowInner* aOwnerWindow);
-
-  MediaRecorder& operator=(const MediaRecorder& x) = delete;
-  MediaRecorder(const MediaRecorder& x) = delete;  // prevent bad usage
 
   static nsTArray<RefPtr<Session>> GetSessions();
 
@@ -122,6 +121,7 @@ class MediaRecorder final : public DOMEventTargetHelper,
  protected:
   virtual ~MediaRecorder();
 
+  MediaRecorder& operator=(const MediaRecorder& x) = delete;
   // Create dataavailable event with Blob data and it runs in main thread
   nsresult CreateAndDispatchBlobEvent(BlobImpl* aBlobImpl);
   // Creating a simple event to notify UA simple event.
@@ -129,6 +129,7 @@ class MediaRecorder final : public DOMEventTargetHelper,
   // Creating a error event with message.
   void NotifyError(nsresult aRv);
 
+  MediaRecorder(const MediaRecorder& x) = delete;  // prevent bad usage
   // Remove session pointer.
   void RemoveSession(Session* aSession);
   // Create DOMExceptions capturing the JS stack for async errors. These are

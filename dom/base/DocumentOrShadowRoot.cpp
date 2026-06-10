@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,8 +12,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/dom/AnimatableBinding.h"
-#include "mozilla/dom/ContentList.h"
-#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -62,7 +62,9 @@ void DocumentOrShadowRoot::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
 }
 
 DocumentOrShadowRoot::~DocumentOrShadowRoot() {
-  MOZ_ASSERT(mStyleSheets.IsEmpty());
+  for (StyleSheet* sheet : mStyleSheets) {
+    sheet->ClearAssociatedDocumentOrShadowRoot();
+  }
 }
 
 StyleSheetList* DocumentOrShadowRoot::StyleSheets() {
@@ -111,10 +113,6 @@ void DocumentOrShadowRoot::RemoveSheetFromStylesIfApplicable(
 void DocumentOrShadowRoot::OnSetAdoptedStyleSheets(StyleSheet& aSheet,
                                                    uint32_t aIndex,
                                                    ErrorResult& aRv) {
-  if (aIndex > mAdoptedStyleSheets.Length()) [[unlikely]] {
-    MOZ_ASSERT_UNREACHABLE("Out of sync proxy");
-    return;
-  }
   Document& doc = *AsNode().OwnerDoc();
   // 1. If value’s constructed flag is not set, or its constructor document is
   // not equal to this DocumentOrShadowRoot's node document, throw a
@@ -167,10 +165,7 @@ void DocumentOrShadowRoot::OnSetAdoptedStyleSheets(StyleSheet& aSheet,
 void DocumentOrShadowRoot::OnDeleteAdoptedStyleSheets(StyleSheet& aSheet,
                                                       uint32_t aIndex,
                                                       ErrorResult&) {
-  if (mAdoptedStyleSheets.ElementAt(aIndex) != &aSheet) [[unlikely]] {
-    MOZ_ASSERT_UNREACHABLE("Out of sync proxy");
-    return;
-  }
+  MOZ_ASSERT(mAdoptedStyleSheets.ElementAt(aIndex) == &aSheet);
   mAdoptedStyleSheets.RemoveElementAt(aIndex);
   auto existingIndex = mAdoptedStyleSheets.LastIndexOf(&aSheet);
   if (existingIndex != mAdoptedStyleSheets.NoIndex && existingIndex >= aIndex) {
@@ -263,10 +258,10 @@ Element* DocumentOrShadowRoot::GetElementById(nsAtom* aElementId) const {
   return nullptr;
 }
 
-already_AddRefed<ContentList> DocumentOrShadowRoot::GetElementsByTagNameNS(
+already_AddRefed<nsContentList> DocumentOrShadowRoot::GetElementsByTagNameNS(
     const nsAString& aNamespaceURI, const nsAString& aLocalName) {
   ErrorResult rv;
-  RefPtr<ContentList> list =
+  RefPtr<nsContentList> list =
       GetElementsByTagNameNS(aNamespaceURI, aLocalName, rv);
   if (rv.Failed()) {
     return nullptr;
@@ -274,7 +269,7 @@ already_AddRefed<ContentList> DocumentOrShadowRoot::GetElementsByTagNameNS(
   return list.forget();
 }
 
-already_AddRefed<ContentList> DocumentOrShadowRoot::GetElementsByTagNameNS(
+already_AddRefed<nsContentList> DocumentOrShadowRoot::GetElementsByTagNameNS(
     const nsAString& aNamespaceURI, const nsAString& aLocalName,
     ErrorResult& aResult) {
   int32_t nameSpaceId = kNameSpaceID_Wildcard;
@@ -291,7 +286,7 @@ already_AddRefed<ContentList> DocumentOrShadowRoot::GetElementsByTagNameNS(
   return NS_GetContentList(&AsNode(), nameSpaceId, aLocalName);
 }
 
-already_AddRefed<ContentList> DocumentOrShadowRoot::GetElementsByClassName(
+already_AddRefed<nsContentList> DocumentOrShadowRoot::GetElementsByClassName(
     const nsAString& aClasses) {
   return nsContentUtils::GetElementsByClassName(&AsNode(), aClasses);
 }
@@ -331,42 +326,6 @@ Element* DocumentOrShadowRoot::GetFullscreenElement() const {
   NS_ASSERTION(!element || element->State().HasState(ElementState::FULLSCREEN),
                "Fullscreen element should have fullscreen styles applied");
   return Element::FromNodeOrNull(Retarget(element));
-}
-
-// https://w3c.github.io/picture-in-picture/#dom-documentorshadowroot-pictureinpictureelement
-// See: https://github.com/w3c/picture-in-picture/issues/248
-Element* DocumentOrShadowRoot::GetPictureInPictureElement() const {
-  // 1. If this is a shadow root and its host is not connected, return null.
-  if (const auto* shadow = ShadowRoot::FromNode(AsNode())) {
-    const Element* host = shadow->GetHost();
-    if (!host || !host->IsInComposedDoc()) {
-      return nullptr;
-    }
-  }
-
-  // 2. Let candidate be the result of retargeting Picture-in-Picture element
-  //    against this.
-  Element* candidate = Element::FromNodeOrNull(nsContentUtils::Retarget(
-      AsNode().OwnerDoc()->GetPictureInPictureElementInternal(), mAsNode));
-
-  // 3. If candidate is null, return null.
-  if (!candidate) {
-    return nullptr;
-  }
-
-  // 4. If candidate and this are in the same tree, return candidate.
-  if (candidate->SubtreeRoot() == &AsNode()) {
-    return candidate;
-  }
-
-  // 5. If this is a Document and candidate's node document is this, return
-  //    candidate.
-  if (AsNode().IsDocument() && candidate->OwnerDoc() == AsNode().AsDocument()) {
-    return candidate;
-  }
-
-  // 6. Return null.
-  return nullptr;
 }
 
 namespace {
@@ -658,11 +617,7 @@ void DocumentOrShadowRoot::GetAnimations(
        child = child->GetNextSibling()) {
     if (RefPtr<Element> element = Element::FromNode(child)) {
       nsTArray<RefPtr<Animation>> result;
-      IgnoredErrorResult error;
-      element->GetAnimationsWithoutFlush(options, result, error);
-      MOZ_ASSERT(
-          !error.Failed(),
-          "We only expect exceptions with invalid pseudoElement arguments");
+      element->GetAnimationsWithoutFlush(options, result);
       aAnimations.AppendElements(std::move(result));
     }
   }
@@ -792,48 +747,6 @@ void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
   });
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAdoptedStyleSheets);
   tmp->mIdentifierMap.Clear();
-}
-
-void DocumentOrShadowRoot::SetCustomElementRegistry(
-    CustomElementRegistry& aRegistry) {
-  MOZ_ASSERT(StaticPrefs::dom_scoped_custom_element_registries_enabled());
-  MOZ_ASSERT(mKind == Kind::ShadowRoot,
-             "SetCustomElementRegistry should only be called on ShadowRoots");
-  ShadowRoot& root = static_cast<ShadowRoot&>(AsNode());
-  root.SetCustomElementRegistry(&aRegistry);
-}
-
-/* https://dom.spec.whatwg.org/#dom-documentorshadowroot-customelementregistry
- */
-CustomElementRegistry* DocumentOrShadowRoot::GetCustomElementRegistry() {
-  // Step 1. If this is a document, then return this's custom element registry.
-  // TODO(2021247): Per document registries
-  if (mKind == Kind::Document) {
-    Document* doc = AsNode().AsDocument();
-    nsPIDOMWindowInner* window = doc->GetInnerWindow();
-    if (!window) {
-      return nullptr;
-    }
-    return window->CustomElements();
-  }
-
-  // Step 2. Assert: this is a ShadowRoot node.
-  MOZ_ASSERT(AsNode().IsShadowRoot());
-
-  // Step 3. Return this's custom element registry.
-  ShadowRoot* root = ShadowRoot::FromNode(AsNode());
-  MOZ_ASSERT(root);
-  if (StaticPrefs::dom_scoped_custom_element_registries_enabled()) {
-    return root->GetCustomElementRegistry();
-  }
-
-  // XXX Fallback when scoped registries are disabled: return the window's
-  // global registry.
-  nsPIDOMWindowInner* window = root->OwnerDoc()->GetInnerWindow();
-  if (!window) {
-    return nullptr;
-  }
-  return window->CustomElements();
 }
 
 }  // namespace mozilla::dom

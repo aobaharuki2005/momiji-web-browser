@@ -1,16 +1,20 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MP4Decoder.h"
 
-#include "AOMDecoder.h"
 #include "H264.h"
+#include "VPXDecoder.h"
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "MP4Demuxer.h"
 #include "MediaContainerType.h"
-#include "PDMFactorySupport.h"
+#include "PDMFactory.h"
 #include "PlatformDecoderModule.h"
-#include "VPXDecoder.h"
 #include "VideoUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/Tools.h"
@@ -85,6 +89,7 @@ nsTArray<UniquePtr<TrackInfo>> MP4Decoder::GetTracksInfo(
       tracks.AppendElement(std::move(trackInfo));
       continue;
     }
+#ifdef MOZ_AV1
     if (StaticPrefs::media_av1_enabled() && IsAV1CodecString(codec)) {
       auto trackInfo =
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
@@ -93,6 +98,7 @@ nsTArray<UniquePtr<TrackInfo>> MP4Decoder::GetTracksInfo(
       tracks.AppendElement(std::move(trackInfo));
       continue;
     }
+#endif
     if (StaticPrefs::media_hevc_enabled() && IsH265CodecString(codec)) {
       auto trackInfo =
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
@@ -139,10 +145,11 @@ bool MP4Decoder::IsSupportedType(const MediaContainerType& aType,
 
   if (!tracks.IsEmpty()) {
     // Look for exact match as we know used codecs.
+    RefPtr<PDMFactory> platform = new PDMFactory();
     for (const auto& track : tracks) {
-      if (!track || PDMFactorySupport::IsSupported(SupportDecoderParams(*track),
-                                                   aDiagnostics)
-                        .isEmpty()) {
+      if (!track ||
+          platform->Supports(SupportDecoderParams(*track), aDiagnostics)
+              .isEmpty()) {
         return false;
       }
     }
@@ -173,9 +180,9 @@ bool MP4Decoder::IsSupportedType(const MediaContainerType& aType,
   }
 
   // Check that something is supported at least.
+  RefPtr<PDMFactory> platform = new PDMFactory();
   for (const auto& track : tracks) {
-    if (track && !PDMFactorySupport::IsSupported(SupportDecoderParams(*track),
-                                                 aDiagnostics)
+    if (track && !platform->Supports(SupportDecoderParams(*track), aDiagnostics)
                       .isEmpty()) {
       return true;
     }

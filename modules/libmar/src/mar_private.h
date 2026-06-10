@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MAR_PRIVATE_H_
-#define MAR_PRIVATE_H_
+#ifndef MAR_PRIVATE_H__
+#define MAR_PRIVATE_H__
 
 #include <assert.h>  // for C11 static_assert
 #include "limits.h"
@@ -74,4 +76,4 @@ static_assert(sizeof(BLOCKSIZE) < (SIGNATURE_BLOCK_OFFSET + sizeof(uint32_t)),
       (((((uint64_t)x) >> 48) & 0xFF) << 8) | (((uint64_t)x) >> 56)
 #define NETWORK_TO_HOST64 HOST_TO_NETWORK64
 
-#endif /* MAR_PRIVATE_H_ */
+#endif /* MAR_PRIVATE_H__ */

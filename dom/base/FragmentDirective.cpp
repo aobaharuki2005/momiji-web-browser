@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -152,11 +154,6 @@ nsTArray<RefPtr<nsRange>> FragmentDirective::FindTextFragmentsInDocument() {
                    : nsCString();
     TEXT_FRAGMENT_LOG("No uninvoked text directives in document '{}'. Exiting.",
                       uri);
-    return {};
-  }
-  RefPtr doc = mDocument;
-  doc->FlushPendingNotifications(FlushType::Layout);
-  if (!mFinder) {
     return {};
   }
   auto textDirectives = mFinder->FindTextDirectivesInDocument();
@@ -391,18 +388,6 @@ void FragmentDirective::HighlightTextDirectives(
     targetTextSelection->AddRangeAndSelectFramesAndNotifyListeners(
         MOZ_KnownLive(*range), IgnoreErrors());
   }
-  // AddRangeAndSelectFramesAndNotifyListeners sets the selection's anchor to
-  // each newly added range, so after the loop the anchor points to the last
-  // range. The selection stores ranges in document order, which may differ
-  // from directive (URL) order. Find the first directive's range and set the
-  // anchor to it so that ScrollSelectionIntoView scrolls to the correct one.
-  const nsRange* firstDirectiveRange = aTextDirectiveRanges[0];
-  for (uint32_t rangeIndex : IntegerRange(targetTextSelection->RangeCount())) {
-    if (targetTextSelection->GetRangeAt(rangeIndex) == firstDirectiveRange) {
-      targetTextSelection->SetAnchorFocusRange(rangeIndex);
-      break;
-    }
-  }
 }
 
 void FragmentDirective::GetTextDirectiveRanges(
@@ -447,7 +432,7 @@ void FragmentDirective::RemoveAllTextDirectives(ErrorResult& aRv) {
 already_AddRefed<Promise> FragmentDirective::CreateTextDirectiveForRanges(
     const Sequence<OwningNonNull<nsRange>>& aRanges) {
   RefPtr<Promise> resultPromise =
-      Promise::Create(mDocument->GetRelevantGlobal(), IgnoreErrors());
+      Promise::Create(mDocument->GetOwnerGlobal(), IgnoreErrors());
   if (!resultPromise) {
     return nullptr;
   }

@@ -115,12 +115,6 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
     // MIPS.
     static vector<string> MIPS();
 
-    // LoongArch.
-    static vector<string> LOONGARCH();
-
-    // RISC-V.
-    static vector<string> RISCV();
-
    private:
     // Given STRINGS, an array of C strings with SIZE elements, return an
     // equivalent vector<string>.

@@ -527,8 +527,7 @@ add_task(async function test() {
     );
     let provider = registerBasicTestProvider(results);
     let context = createContext(undefined, { providers: [provider.name] });
-    let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-    await providersManager.startQuery(context, controller);
+    await UrlbarProvidersManager.startQuery(context, controller);
 
     // Make the list of expected results.
     let expectedResults = [];
@@ -556,7 +555,7 @@ add_task(async function test() {
 
     Assert.deepEqual(context.results, expectedResults);
 
-    providersManager.unregisterProvider(provider);
+    UrlbarProvidersManager.unregisterProvider(provider);
   }
 });
 

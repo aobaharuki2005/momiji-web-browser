@@ -42,7 +42,7 @@ add_task(async function testOfflineSupportPage() {
         expectedURL + "time-errors",
         "Correct support page URL has been set"
       );
-      EventUtils.synthesizeMouseAtCenter(learnMoreLink, {}, content);
+      await EventUtils.synthesizeMouseAtCenter(learnMoreLink, {}, content);
     }
   );
   let offlineSupportTab = await offlineSupportPromise;

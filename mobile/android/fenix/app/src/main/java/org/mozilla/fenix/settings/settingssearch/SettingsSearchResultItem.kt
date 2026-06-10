@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -41,51 +40,29 @@ fun SettingsSearchResultItem(
     query: String,
     onClick: () -> Unit,
 ) {
-    val backgroundColor = MaterialTheme.colorScheme.secondaryContainer
-    val defaultSpanStyle = remember(backgroundColor) {
-        SpanStyle(
-            fontWeight = FontWeight.Bold,
-            background = backgroundColor,
-        )
-    }
+    val defaultSpanStyle = SpanStyle(
+        fontWeight = FontWeight.Bold,
+        background = FirefoxTheme.colors.layer3,
+    )
 
-    val displayTitle = remember(item.title, query, defaultSpanStyle) {
+    val displayTitle = remember(item.title, query) {
         highlightQueryMatchingText(
             text = item.title,
             query = query,
             highlight = defaultSpanStyle,
         )
     }
-    val topBreadcrumb = if (item.preferenceFileInformation.topBreadcrumbResourceId != 0) {
-        stringResource(item.preferenceFileInformation.topBreadcrumbResourceId)
+    val displaySubtitle = if (shouldShowSummary(item)) {
+        AnnotatedString(item.summary)
     } else {
-        ""
-    }
-
-    val secondaryBreadcrumb = if (item.preferenceFileInformation.secondaryBreadcrumbResourceId != 0) {
-        stringResource(item.preferenceFileInformation.secondaryBreadcrumbResourceId)
-    } else {
-        ""
-    }
-
-    val displaySubtitle = remember(
-        item.summary,
-        item.preferenceFileInformation,
-        topBreadcrumb,
-        secondaryBreadcrumb,
-    ) {
-        val text = if (shouldShowSummary(item)) {
-            item.summary
-        } else {
-            buildString {
-                append(topBreadcrumb)
-                if (secondaryBreadcrumb.isNotBlank()) {
-                    append(" > ")
-                    append(secondaryBreadcrumb)
-                }
+        val breadcrumbString = buildString {
+            append(stringResource(item.preferenceFileInformation.topBreadcrumbResourceId))
+            if (item.preferenceFileInformation.secondaryBreadcrumbResourceId != 0) {
+                append(" > ")
+                append(stringResource(item.preferenceFileInformation.secondaryBreadcrumbResourceId))
             }
         }
-        AnnotatedString(text)
+        AnnotatedString(breadcrumbString)
     }
 
     Column(
@@ -193,12 +170,10 @@ private fun SettingsSearchResultItemFullPreview(
     @PreviewParameter(SettingsSearchResultItemParameterProvider::class) item: SettingsSearchItem,
 ) {
     FirefoxTheme {
-        Surface {
-            SettingsSearchResultItem(
-                item = item,
-                "a",
-                onClick = {},
-            )
-        }
+        SettingsSearchResultItem(
+            item = item,
+            "a",
+            onClick = {},
+        )
     }
 }

@@ -5,7 +5,6 @@
 package mozilla.components.compose.browser.toolbar.store
 
 import androidx.annotation.StringRes
-import mozilla.components.compose.browser.toolbar.BrowserToolbarCFR
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
 import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
 import mozilla.components.concept.toolbar.AutocompleteResult
@@ -116,16 +115,6 @@ sealed class BrowserDisplayToolbarAction : BrowserToolbarAction {
      * @property actions The new list of [ToolbarAction]s.
      */
     data class NavigationActionsUpdated(val actions: List<ToolbarAction>) : BrowserDisplayToolbarAction()
-
-    /**
-     * Action called when a toolbar CFR [cfr] is shown
-     */
-    data class ToolbarCFRShown(val cfr: BrowserToolbarCFR) : BrowserDisplayToolbarAction()
-
-    /**
-     * Action called when a toolbar CFR specified by [tag] is dismissed
-     */
-    data class ToolbarCFRDismissed(val tag: String) : BrowserDisplayToolbarAction()
 }
 
 /**

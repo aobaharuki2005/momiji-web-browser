@@ -16,7 +16,8 @@ class ReaderViewPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestR
 
     init {
         NavigationRegistry.register(
-            from = "BrowserPage",
+            // Will need the BrowserPage
+            from = "Browser",
             to = pageName,
             steps = listOf(),
         )

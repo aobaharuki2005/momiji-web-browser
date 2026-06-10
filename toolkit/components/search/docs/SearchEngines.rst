@@ -16,7 +16,8 @@ search providers. The types of search engines are:
 - Enterprise Policy Engine
 
 These are all implemented by `similarly named classes`_ which inherit from
-the ``SearchEngine`` class.
+the ``SearchEngine`` class and implement the :searchfox:`nsISearchEngine.idl <toolkit/components/search/nsISearchService.idl>`
+interface.
 
 Config Search Engines
 =====================

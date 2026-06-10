@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -57,7 +58,7 @@ static bool ValidateNoSamplingFeedback(const WebGLTexture& tex,
     const auto& srcBase = tex.Es3_level_base();
     const auto srcLast = srcBase + sampledLevels - 1;
     const auto& dstLevel = attach->MipLevel();
-    if (srcBase <= dstLevel && dstLevel <= srcLast) [[unlikely]] {
+    if (MOZ_UNLIKELY(srcBase <= dstLevel && dstLevel <= srcLast)) {
       const auto& webgl = tex.mContext;
       const auto& texTargetStr = EnumString(tex.Target().get());
       const auto& attachStr = EnumString(attach->mAttachmentPoint);
@@ -106,8 +107,8 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
               SamplerByTexUnit{texUnit, prevSamplerForTexUnit}));
         }
 
-        if (&uniform.texListForType != &prevSamplerForTexUnit->texListForType)
-            [[unlikely]] {
+        if (MOZ_UNLIKELY(&uniform.texListForType !=
+                         &prevSamplerForTexUnit->texListForType)) {
           // Pointing to different tex lists means different types!
           const auto linkInfo = mWebGL->mActiveProgramLinkInfo;
           const auto LocInfoBySampler = [&](const webgl::SamplerUniformInfo* p)
@@ -139,11 +140,11 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
 
       const auto& sampler = mWebGL->mBoundSamplers[texUnit];
       const auto& samplingInfo = tex->GetSampleableInfo(sampler.get());
-      if (!samplingInfo) [[unlikely]] {  // There was an error.
+      if (MOZ_UNLIKELY(!samplingInfo)) {  // There was an error.
         *out_error = true;
         return;
       }
-      if (!samplingInfo->IsComplete()) [[unlikely]] {
+      if (MOZ_UNLIKELY(!samplingInfo->IsComplete())) {
         if (samplingInfo->incompleteReason) {
           const auto& targetName = GetEnumName(tex->Target().get());
           mWebGL->GenerateWarning("%s at unit %u is incomplete: %s", targetName,
@@ -155,7 +156,7 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
 
       // We have more validation to do if we're otherwise complete:
       const auto& texBaseType = samplingInfo->usage->format->baseType;
-      if (texBaseType != uniformBaseType) [[unlikely]] {
+      if (MOZ_UNLIKELY(texBaseType != uniformBaseType)) {
         const auto& targetName = GetEnumName(tex->Target().get());
         const auto& srcType = ToString(texBaseType);
         const auto& dstType = ToString(uniformBaseType);
@@ -167,8 +168,8 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
         return;
       }
 
-      if (uniform.isShadowSampler != samplingInfo->isDepthTexCompare)
-          [[unlikely]] {
+      if (MOZ_UNLIKELY(uniform.isShadowSampler !=
+                       samplingInfo->isDepthTexCompare)) {
         const auto& targetName = GetEnumName(tex->Target().get());
         mWebGL->ErrorInvalidOperation(
             "%s at unit %u is%s a depth texture"
@@ -181,8 +182,8 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
         return;
       }
 
-      if (!ValidateNoSamplingFeedback(*tex, samplingInfo->levels, fb.get(),
-                                      texUnit)) [[unlikely]] {
+      if (MOZ_UNLIKELY(!ValidateNoSamplingFeedback(*tex, samplingInfo->levels,
+                                                   fb.get(), texUnit))) {
         *out_error = true;
         return;
       }
@@ -273,7 +274,7 @@ void WebGLContext::GenErrorIllegalUse(const GLenum useTarget,
   GenerateError(LOCAL_GL_INVALID_OPERATION,
                 "Illegal use of buffer at %s"
                 " while also bound to %s.",
-                useName.get(), boundName.get());
+                useName.BeginReading(), boundName.BeginReading());
 }
 
 bool WebGLContext::ValidateBufferForNonTf(const WebGLBuffer& nonTfBuffer,
@@ -284,9 +285,7 @@ bool WebGLContext::ValidateBufferForNonTf(const WebGLBuffer& nonTfBuffer,
   for (const auto& cur : tfAttribs) {
     dupe |= (&nonTfBuffer == cur.mBufferBinding.get());
   }
-  if (!dupe) [[likely]] {
-    return true;
-  }
+  if (MOZ_LIKELY(!dupe)) return true;
 
   dupe = false;
   for (const auto tfId : IntegerRange(tfAttribs.size())) {
@@ -337,9 +336,7 @@ bool WebGLContext::ValidateBuffersForTf(
       dupe |= (nonTf && tf.buffer == nonTf);
     }
 
-    if (!dupe) [[likely]] {
-      return false;
-    }
+    if (MOZ_LIKELY(!dupe)) return false;
 
     for (const auto& tf : tfBuffers) {
       if (nonTf && tf.buffer == nonTf) {
@@ -490,7 +487,7 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
 
         const auto& info = itr->second;
         const auto& srcBaseType = info.baseType;
-        if (dstBaseType != srcBaseType) [[unlikely]] {
+        if (MOZ_UNLIKELY(dstBaseType != srcBaseType)) {
           const auto& srcStr = ToString(srcBaseType);
           const auto& dstStr = ToString(dstBaseType);
           webgl->ErrorInvalidOperation(
@@ -1056,9 +1053,9 @@ void WebGLContext::DrawElementsInstanced(const GLenum mode,
     ScopedDrawCallWrapper wrapper(*this);
     {
       std::unique_ptr<gl::GLContext::LocalErrorScope> errorScope;
-      if (gl->IsANGLE() &&
-          (gl->mDebugFlags & gl::GLContext::DebugFlagAbortOnError))
-          [[unlikely]] {
+      if (MOZ_UNLIKELY(gl->IsANGLE() &&
+                       gl->mDebugFlags &
+                           gl::GLContext::DebugFlagAbortOnError)) {
         // ANGLE does range validation even when it doesn't need to.
         // With MOZ_GL_ABORT_ON_ERROR, we need to catch it or hit assertions.
         errorScope.reset(new gl::GLContext::LocalErrorScope(*gl));

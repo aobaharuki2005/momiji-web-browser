@@ -284,7 +284,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         if self.device.workarounds.contains(
             super::Workarounds::FORCE_FILL_BUFFER_WITH_SIZE_GREATER_4096_ALIGNED_OFFSET_16,
         ) && range_size >= 4096
-            && !range.start.is_multiple_of(16)
+            && range.start % 16 != 0
         {
             let rounded_start = wgt::math::align_to(range.start, 16);
             let prefix_size = rounded_start - range.start;
@@ -609,8 +609,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
                                 // index buffer we need to have IndexType::NONE_KHR as our index type.
                                 .index_type(vk::IndexType::NONE_KHR)
                                 .vertex_data(vk::DeviceOrHostAddressConstKHR {
-                                    device_address: get_device_address(triangles.vertex_buffer)
-                                        + (triangles.first_vertex as u64 * triangles.vertex_stride),
+                                    device_address: get_device_address(triangles.vertex_buffer),
                                 })
                                 .vertex_format(conv::map_vertex_format(triangles.vertex_format))
                                 .max_vertex(triangles.vertex_count)
@@ -627,9 +626,12 @@ impl crate::CommandEncoder for super::CommandEncoder {
 
                             range = range
                                 .primitive_count(indices.count / 3)
-                                .primitive_offset(indices.offset);
+                                .primitive_offset(indices.offset)
+                                .first_vertex(triangles.first_vertex);
                         } else {
-                            range = range.primitive_count(triangles.vertex_count / 3);
+                            range = range
+                                .primitive_count(triangles.vertex_count / 3)
+                                .first_vertex(triangles.first_vertex);
                         }
 
                         if let Some(ref transform) = triangles.transform {
@@ -769,12 +771,6 @@ impl crate::CommandEncoder for super::CommandEncoder {
                 &[],
             )
         };
-    }
-
-    unsafe fn set_acceleration_structure_dependencies(
-        _command_buffers: &[&super::CommandBuffer],
-        _dependencies: &[&super::AccelerationStructure],
-    ) {
     }
     // render
 
@@ -932,7 +928,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         group: &super::BindGroup,
         dynamic_offsets: &[wgt::DynamicOffset],
     ) {
-        let sets = [group.set.raw()];
+        let sets = [*group.set.raw()];
         unsafe {
             self.device.raw.cmd_bind_descriptor_sets(
                 self.active,
@@ -1340,18 +1336,14 @@ impl crate::CommandEncoder for super::CommandEncoder {
         };
     }
 
-    unsafe fn dispatch_workgroups(&mut self, count: [u32; 3]) {
+    unsafe fn dispatch(&mut self, count: [u32; 3]) {
         unsafe {
             self.device
                 .raw
                 .cmd_dispatch(self.active, count[0], count[1], count[2])
         };
     }
-    unsafe fn dispatch_workgroups_indirect(
-        &mut self,
-        buffer: &super::Buffer,
-        offset: wgt::BufferAddress,
-    ) {
+    unsafe fn dispatch_indirect(&mut self, buffer: &super::Buffer, offset: wgt::BufferAddress) {
         unsafe {
             self.device
                 .raw

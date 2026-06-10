@@ -8,7 +8,6 @@ const lazy = XPCOMUtils.declareLazy({
   DEFAULT_FORM_HISTORY_PARAM:
     "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs",
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SearchSuggestionController:
     "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs",
 });
@@ -348,7 +347,7 @@ class SuggestAutoComplete {
 
     // Start search immediately if possible, otherwise once the search
     // service is initialized
-    if (lazy.SearchService.isInitialized) {
+    if (Services.search.isInitialized) {
       this.#triggerSearch(
         searchString,
         formHistorySearchParam,
@@ -358,7 +357,8 @@ class SuggestAutoComplete {
       return;
     }
 
-    lazy.SearchService.init()
+    Services.search
+      .init()
       .then(() => {
         this.#triggerSearch(
           searchString,
@@ -423,7 +423,7 @@ class SuggestAutoComplete {
     let results = await this.#suggestionController.fetch({
       searchString,
       inPrivateBrowsing,
-      engine: lazy.SearchService.defaultEngine,
+      engine: Services.search.defaultEngine,
       maxLocalResults: this.#historyLimit,
     });
 

@@ -19,6 +19,7 @@ import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.FxAEntryPoint
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StatePersistenceCallback
+import mozilla.components.concept.sync.UserData
 import mozilla.components.support.base.log.logger.Logger
 
 typealias PersistCallback = mozilla.appservices.fxaclient.FxaClient.PersistCallback
@@ -136,9 +137,9 @@ class FirefoxAccount internal constructor(
         }
     }
 
-    override suspend fun handleWebChannelLogin(jsonPayload: String) {
-        handleFxaExceptions(logger, "handleWebChannelLogin", { null }) {
-            inner.handleWebChannelLogin(jsonPayload)
+    override suspend fun setUserData(userData: UserData) {
+        handleFxaExceptions(logger, "setUserData", { null }) {
+            inner.setUserData(userData.into())
         }
     }
 
@@ -154,8 +155,16 @@ class FirefoxAccount internal constructor(
         }
     }
 
-    override fun getSignedInUserForWebChannel(): String? {
-        return inner.getSignedInUserForWebChannel()
+    override fun getSessionToken(): String? {
+        return try {
+            // This is awkward, yes. Underlying method simply reads some data from in-memory state, and yet it throws
+            // in case that data isn't there. See https://github.com/mozilla/application-services/issues/2202.
+            inner.getSessionToken()
+        } catch (e: FxaPanicException) {
+            throw e
+        } catch (e: FxaException) {
+            null
+        }
     }
 
     override suspend fun getTokenServerEndpointURL() = withContext(scope.coroutineContext) {
@@ -181,10 +190,7 @@ class FirefoxAccount internal constructor(
         return inner.getConnectionSuccessURL()
     }
 
-    override suspend fun completeOAuthFlow(
-        code: String,
-        state: String,
-    ) = withContext(scope.coroutineContext) {
+    override suspend fun completeOAuthFlow(code: String, state: String) = withContext(scope.coroutineContext) {
         handleFxaExceptions(logger, "complete oauth flow") {
             inner.completeOAuthFlow(code, state)
         }
@@ -193,15 +199,6 @@ class FirefoxAccount internal constructor(
     override suspend fun getAccessToken(singleScope: String) = withContext(scope.coroutineContext) {
         handleFxaExceptions(logger, "get access token", { null }) {
             inner.getAccessToken(singleScope).into()
-        }
-    }
-
-    /**
-     * See [OAuthAccount.getAttachedClient].
-     */
-    override suspend fun getAttachedClient() = withContext(scope.coroutineContext) {
-        handleFxaExceptions(logger, "get attached client", { emptyList() }) {
-            inner.getAttachedClients().map { it.into() }
         }
     }
 

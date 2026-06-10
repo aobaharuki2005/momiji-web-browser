@@ -361,13 +361,6 @@ add_task(
           null,
           "context-viewsource",
           true,
-          "---",
-          null,
-          "context-sendpagetodevice",
-          true,
-          // This entry will be blank because the submenu is dynamically generated.
-          [],
-          null,
         ],
         {
           skipFocusChange: true,

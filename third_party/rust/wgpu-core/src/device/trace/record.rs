@@ -1,5 +1,10 @@
-use alloc::{borrow::Cow, string::ToString, sync::Arc, vec::Vec};
-use core::{any::Any, convert::Infallible};
+use alloc::{
+    borrow::Cow,
+    string::{String, ToString},
+    sync::Arc,
+    vec::Vec,
+};
+use core::convert::Infallible;
 use std::io::Write as _;
 
 use crate::{
@@ -8,7 +13,6 @@ use crate::{
         BasePass, ColorAttachments, Command, ComputeCommand, PointerReferences, RenderCommand,
         RenderPassColorAttachment, ResolvedRenderPassDepthStencilAttachment,
     },
-    device::trace::{Data, DataKind},
     id::{markers, PointerId},
     storage::StorageItem,
 };
@@ -39,25 +43,15 @@ pub(crate) fn new_render_bundle_encoder_descriptor(
     }
 }
 
-pub trait Trace: Any + Send + Sync {
-    fn make_binary(&mut self, kind: DataKind, data: &[u8]) -> Data;
-
-    fn make_string(&mut self, kind: DataKind, data: &str) -> Data;
-
-    fn add(&mut self, action: Action<'_, PointerReferences>)
-    where
-        for<'a> Action<'a, PointerReferences>: serde::Serialize;
-}
-
 #[derive(Debug)]
-pub struct DiskTrace {
+pub struct Trace {
     path: std::path::PathBuf,
     file: std::fs::File,
     config: ron::ser::PrettyConfig,
-    data_id: usize,
+    binary_id: usize,
 }
 
-impl DiskTrace {
+impl Trace {
     pub fn new(path: std::path::PathBuf) -> Result<Self, std::io::Error> {
         log::debug!("Tracing into '{path:?}'");
         let mut file = std::fs::File::create(path.join(FILE_NAME))?;
@@ -66,32 +60,18 @@ impl DiskTrace {
             path,
             file,
             config: ron::ser::PrettyConfig::default(),
-            data_id: 0,
+            binary_id: 0,
         })
     }
-}
 
-impl Trace for DiskTrace {
-    /// Store `[u8]` data in the trace.
-    ///
-    /// Using a string `kind` is probably a bug, but should work as long as the
-    /// data is UTF-8.
-    fn make_binary(&mut self, kind: DataKind, data: &[u8]) -> Data {
-        self.data_id += 1;
-        let name = std::format!("data{}.{}", self.data_id, kind);
+    pub fn make_binary(&mut self, kind: &str, data: &[u8]) -> String {
+        self.binary_id += 1;
+        let name = std::format!("data{}.{}", self.binary_id, kind);
         let _ = std::fs::write(self.path.join(&name), data);
-        Data::File(name)
+        name
     }
 
-    /// Store `str` data in the trace.
-    ///
-    /// Using a binary `kind` is fine, but it's not clear why not use
-    /// `make_binary` instead.
-    fn make_string(&mut self, kind: DataKind, data: &str) -> Data {
-        self.make_binary(kind, data.as_bytes())
-    }
-
-    fn add(&mut self, action: Action<'_, PointerReferences>)
+    pub(crate) fn add(&mut self, action: Action<'_, PointerReferences>)
     where
         for<'a> Action<'a, PointerReferences>: serde::Serialize,
     {
@@ -106,49 +86,9 @@ impl Trace for DiskTrace {
     }
 }
 
-impl Drop for DiskTrace {
+impl Drop for Trace {
     fn drop(&mut self) {
         let _ = self.file.write_all(b"]");
-    }
-}
-
-#[derive(Default)]
-pub struct MemoryTrace {
-    actions: Vec<Action<'static, PointerReferences>>,
-}
-
-impl MemoryTrace {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn actions(&self) -> &[Action<'static, PointerReferences>] {
-        &self.actions
-    }
-}
-
-impl Trace for MemoryTrace {
-    /// Store `[u8]` data in the trace.
-    ///
-    /// Using a string `kind` is probably a bug, but should work as long as the
-    /// data is UTF-8.
-    fn make_binary(&mut self, kind: DataKind, data: &[u8]) -> Data {
-        Data::Binary(kind, data.to_vec())
-    }
-
-    /// Store `str` data in the trace.
-    ///
-    /// Using a binary `kind` is fine, but it's not clear why not use
-    /// `make_binary` instead.
-    fn make_string(&mut self, kind: DataKind, data: &str) -> Data {
-        Data::String(kind, data.to_string())
-    }
-
-    fn add(&mut self, action: Action<'_, PointerReferences>)
-    where
-        for<'a> Action<'a, PointerReferences>: serde::Serialize,
-    {
-        self.actions.push(action_to_owned(action))
     }
 }
 
@@ -362,11 +302,6 @@ impl IntoTrace for crate::ray_tracing::OwnedBlasGeometries<ArcReferences> {
                     geos.into_iter().map(|g| g.into_trace()).collect(),
                 )
             }
-            crate::ray_tracing::OwnedBlasGeometries::AabbGeometries(geos) => {
-                crate::ray_tracing::OwnedBlasGeometries::AabbGeometries(
-                    geos.into_iter().map(|g| g.into_trace()).collect(),
-                )
-            }
         }
     }
 }
@@ -383,18 +318,6 @@ impl IntoTrace for crate::ray_tracing::OwnedBlasTriangleGeometry<ArcReferences> 
             vertex_stride: self.vertex_stride,
             first_index: self.first_index,
             transform_buffer_offset: self.transform_buffer_offset,
-        }
-    }
-}
-
-impl IntoTrace for crate::ray_tracing::OwnedBlasAabbGeometry<ArcReferences> {
-    type Output = crate::ray_tracing::OwnedBlasAabbGeometry<PointerReferences>;
-    fn into_trace(self) -> Self::Output {
-        crate::ray_tracing::OwnedBlasAabbGeometry {
-            size: self.size,
-            stride: self.stride,
-            aabb_buffer: self.aabb_buffer.into_trace(),
-            primitive_offset: self.primitive_offset,
         }
     }
 }
@@ -469,8 +392,8 @@ impl IntoTrace for ArcComputeCommand {
                 size_bytes,
                 values_offset,
             },
-            C::DispatchWorkgroups(groups) => C::DispatchWorkgroups(groups),
-            C::DispatchWorkgroupsIndirect { buffer, offset } => C::DispatchWorkgroupsIndirect {
+            C::Dispatch(groups) => C::Dispatch(groups),
+            C::DispatchIndirect { buffer, offset } => C::DispatchIndirect {
                 buffer: buffer.into_trace(),
                 offset,
             },
@@ -492,26 +415,6 @@ impl IntoTrace for ArcComputeCommand {
                 query_index,
             },
             C::EndPipelineStatisticsQuery => C::EndPipelineStatisticsQuery,
-            C::TransitionResources {
-                buffer_transitions,
-                texture_transitions,
-            } => C::TransitionResources {
-                buffer_transitions: buffer_transitions
-                    .into_iter()
-                    .map(|buffer_transition| wgt::BufferTransition {
-                        buffer: buffer_transition.buffer.into_trace(),
-                        state: buffer_transition.state,
-                    })
-                    .collect(),
-                texture_transitions: texture_transitions
-                    .into_iter()
-                    .map(|texture_transition| wgt::TextureTransition {
-                        texture: texture_transition.texture.into_trace(),
-                        selector: texture_transition.selector,
-                        state: texture_transition.state,
-                    })
-                    .collect(),
-            },
         }
     }
 }
@@ -662,11 +565,9 @@ impl IntoTrace for ArcRenderCommand {
     }
 }
 
-impl IntoTrace for crate::binding_model::ResolvedPipelineLayoutDescriptor<'_> {
-    type Output = crate::binding_model::PipelineLayoutDescriptor<
-        'static,
-        PointerId<markers::BindGroupLayout>,
-    >;
+impl<'a> IntoTrace for crate::binding_model::ResolvedPipelineLayoutDescriptor<'a> {
+    type Output =
+        crate::binding_model::PipelineLayoutDescriptor<'a, PointerId<markers::BindGroupLayout>>;
     fn into_trace(self) -> Self::Output {
         crate::binding_model::PipelineLayoutDescriptor {
             label: self.label.map(|l| Cow::Owned(l.into_owned())),
@@ -731,11 +632,6 @@ impl<'a> IntoTrace for &'_ crate::binding_model::ResolvedBindGroupDescriptor<'a>
                             }
                             ResolvedBindingResource::AccelerationStructure(tlas_id) => {
                                 BindingResource::AccelerationStructure(tlas_id.to_trace())
-                            }
-                            ResolvedBindingResource::AccelerationStructureArray(tlas_ids) => {
-                                let resolved: Vec<_> =
-                                    tlas_ids.iter().map(|id| id.to_trace()).collect();
-                                BindingResource::AccelerationStructureArray(Cow::Owned(resolved))
                             }
                             ResolvedBindingResource::ExternalTexture(external_texture_id) => {
                                 BindingResource::ExternalTexture(external_texture_id.to_trace())
@@ -858,132 +754,5 @@ impl<T: IntoTrace> IntoTrace for Option<T> {
     type Output = Option<T::Output>;
     fn into_trace(self) -> Self::Output {
         self.map(|v| v.into_trace())
-    }
-}
-
-/// For selected `Action`s (mostly actions containing only owned data), return a
-/// copy with `'static` lifetime.
-///
-/// This is used for in-memory tracing.
-///
-/// # Panics
-///
-/// If `action` is not supported for in-memory tracing (likely because it
-/// contains borrowed data).
-fn action_to_owned(action: Action<'_, PointerReferences>) -> Action<'static, PointerReferences> {
-    use Action as A;
-    match action {
-        A::Init { desc, backend } => A::Init {
-            desc: wgt::DeviceDescriptor {
-                label: desc.label.map(|l| Cow::Owned(l.into_owned())),
-                required_features: desc.required_features,
-                required_limits: desc.required_limits,
-                experimental_features: desc.experimental_features,
-                memory_hints: desc.memory_hints,
-                trace: desc.trace,
-            },
-            backend,
-        },
-        A::ConfigureSurface(surface, config) => A::ConfigureSurface(surface, config),
-        A::CreateBuffer(buffer, desc) => A::CreateBuffer(
-            buffer,
-            wgt::BufferDescriptor {
-                label: desc.label.map(|l| Cow::Owned(l.into_owned())),
-                size: desc.size,
-                usage: desc.usage,
-                mapped_at_creation: desc.mapped_at_creation,
-            },
-        ),
-        A::FreeBuffer(buffer) => A::FreeBuffer(buffer),
-        A::DestroyBuffer(buffer) => A::DestroyBuffer(buffer),
-        A::FreeTexture(texture) => A::FreeTexture(texture),
-        A::DestroyTexture(texture) => A::DestroyTexture(texture),
-        A::DestroyTextureView(texture_view) => A::DestroyTextureView(texture_view),
-        A::FreeExternalTexture(external_texture) => A::FreeExternalTexture(external_texture),
-        A::DestroyExternalTexture(external_texture) => A::DestroyExternalTexture(external_texture),
-        A::DestroySampler(sampler) => A::DestroySampler(sampler),
-        A::GetSurfaceTexture { id, parent } => A::GetSurfaceTexture { id, parent },
-        A::Present(surface) => A::Present(surface),
-        A::DiscardSurfaceTexture(surface) => A::DiscardSurfaceTexture(surface),
-        A::DestroyBindGroupLayout(layout) => A::DestroyBindGroupLayout(layout),
-        A::GetRenderPipelineBindGroupLayout {
-            id,
-            pipeline,
-            index,
-        } => A::GetRenderPipelineBindGroupLayout {
-            id,
-            pipeline,
-            index,
-        },
-        A::GetComputePipelineBindGroupLayout {
-            id,
-            pipeline,
-            index,
-        } => A::GetComputePipelineBindGroupLayout {
-            id,
-            pipeline,
-            index,
-        },
-        A::DestroyPipelineLayout(layout) => A::DestroyPipelineLayout(layout),
-        A::DestroyBindGroup(bind_group) => A::DestroyBindGroup(bind_group),
-        A::DestroyShaderModule(shader_module) => A::DestroyShaderModule(shader_module),
-        A::DestroyComputePipeline(pipeline) => A::DestroyComputePipeline(pipeline),
-        A::DestroyRenderPipeline(pipeline) => A::DestroyRenderPipeline(pipeline),
-        A::DestroyPipelineCache(cache) => A::DestroyPipelineCache(cache),
-        A::DestroyRenderBundle(render_bundle) => A::DestroyRenderBundle(render_bundle),
-        A::DestroyQuerySet(query_set) => A::DestroyQuerySet(query_set),
-        A::WriteBuffer {
-            id,
-            data,
-            offset,
-            size,
-            queued,
-        } => A::WriteBuffer {
-            id,
-            data,
-            offset,
-            size,
-            queued,
-        },
-        A::WriteTexture {
-            to,
-            data,
-            layout,
-            size,
-        } => A::WriteTexture {
-            to,
-            data,
-            layout,
-            size,
-        },
-        A::Submit(index, commands) => A::Submit(index, commands),
-        A::FailedCommands {
-            commands,
-            failed_at_submit,
-            error,
-        } => A::FailedCommands {
-            commands,
-            failed_at_submit,
-            error,
-        },
-        A::DestroyBlas(blas) => A::DestroyBlas(blas),
-        A::DestroyTlas(tlas) => A::DestroyTlas(tlas),
-
-        A::CreateTexture(..)
-        | A::CreateTextureView { .. }
-        | A::CreateExternalTexture { .. }
-        | A::CreateSampler(..)
-        | A::CreateBindGroupLayout(..)
-        | A::CreatePipelineLayout(..)
-        | A::CreateBindGroup(..)
-        | A::CreateShaderModule { .. }
-        | A::CreateShaderModulePassthrough { .. }
-        | A::CreateComputePipeline { .. }
-        | A::CreateGeneralRenderPipeline { .. }
-        | A::CreatePipelineCache { .. }
-        | A::CreateRenderBundle { .. }
-        | A::CreateQuerySet { .. }
-        | A::CreateBlas { .. }
-        | A::CreateTlas { .. } => panic!("Unsupported action for tracing: {action:?}"),
     }
 }

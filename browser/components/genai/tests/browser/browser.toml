@@ -1,5 +1,4 @@
 [DEFAULT]
-support-files = ["head.js"]
 prefs = [
   "browser.ml.chat.enabled=true",
   "browser.ml.chat.openSidebarOnProviderChange=false",
@@ -13,9 +12,7 @@ prefs = [
 ["browser_chat_contextmenu.js"]
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86' && debug", # Bug 1904431
-  "os == 'win' && os_version == '11.26200' && arch == 'x86' && debug", # Bug 1904431
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64'", # Bug 1904431
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64'", # Bug 1904431
 ]
 
 ["browser_chat_nimbus.js"]
@@ -23,11 +20,8 @@ skip-if = [
 ["browser_chat_page.js"]
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86' && debug", # Bug 1975092
-  "os == 'win' && os_version == '11.26200' && arch == 'x86' && debug", # Bug 1975092
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && asan", # Bug 1975092
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && asan", # Bug 1975092
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && debug", # Bug 1975092
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && debug", # Bug 1975092
   "verify-standalone",
 ]
 
@@ -45,20 +39,10 @@ skip-if = [
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1992633
 ]
 
-["browser_chat_sidebar_permissions.js"]
-skip-if = [
-  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 2023967
-  "os == 'win' && os_version == '11.26200' && asan", # Bug 2019745
-]
-support-files = [
-  "file_chat-webrtc.html",
-]
-
 ["browser_chat_telemetry.js"]
 skip-if = [
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1992527
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && opt && verify-standalone",
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && opt && verify-standalone",
 ]
 
 ["browser_genai_actors.js"]
@@ -81,8 +65,6 @@ skip-if = [
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1996489
 ]
 
-["browser_link_preview_aifeature_lifecycle.js"]
-
 ["browser_link_preview_nimbus.js"]
 
 ["browser_link_preview_optin.js"]
@@ -103,3 +85,5 @@ support-files = [
 ]
 
 ["browser_page_assist_sidebar.js"]
+
+["browser_smart_assist_sidebar.js"]

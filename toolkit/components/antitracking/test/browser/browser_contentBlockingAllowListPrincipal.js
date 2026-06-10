@@ -181,7 +181,7 @@ add_task(async () => {
     checkAllowListPrincipal(browser, "content");
 
     let promiseTabOpened = BrowserTestUtils.waitForNewTab(
-      browser.documentGlobal.gBrowser,
+      browser.ownerGlobal.gBrowser,
       "https://example.org/",
       true
     );
@@ -220,7 +220,7 @@ add_task(async () => {
       let [frameBrowsingContext] = browser.browsingContext.children;
 
       let promiseTabOpened = BrowserTestUtils.waitForNewTab(
-        browser.documentGlobal.gBrowser,
+        browser.ownerGlobal.gBrowser,
         "https://example.org/",
         true
       );

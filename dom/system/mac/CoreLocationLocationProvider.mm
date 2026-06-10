@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 #include "GeolocationPosition.h"
 #include "MLSFallback.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/Logging.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/GeolocationPositionErrorBinding.h"
 #include "mozilla/glean/DomGeolocationMetrics.h"
@@ -29,36 +30,6 @@ using namespace mozilla;
 
 #define kDefaultAccuracy kCLLocationAccuracyNearestTenMeters
 
-static LazyLogModule gCoreLocationProviderLog("CoreLocation");
-#define LOGD(...) \
-  MOZ_LOG(gCoreLocationProviderLog, LogLevel::Debug, (__VA_ARGS__))
-#define LOGI(...) \
-  MOZ_LOG(gCoreLocationProviderLog, LogLevel::Info, (__VA_ARGS__))
-
-static void LogLocationPermissionState() {
-  CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
-  const char* authStatusStr = "Unknown";
-  switch (authStatus) {
-    case kCLAuthorizationStatusNotDetermined:
-      authStatusStr = "NotDetermined";
-      break;
-    case kCLAuthorizationStatusRestricted:
-      authStatusStr = "Restricted";
-      break;
-    case kCLAuthorizationStatusDenied:
-      authStatusStr = "Denied";
-      break;
-    case kCLAuthorizationStatusAuthorizedAlways:
-      authStatusStr = "AuthorizedAlways";
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown CLAuthorizationStatus");
-      break;
-  }
-
-  LOGD("Authorization status: %s (code: %d)", authStatusStr, (int)authStatus);
-}
-
 @interface LocationDelegate : NSObject <CLLocationManagerDelegate> {
   CoreLocationLocationProvider* mProvider;
 }
@@ -68,9 +39,6 @@ static void LogLocationPermissionState() {
        didFailWithError:(NSError*)aError;
 - (void)locationManager:(CLLocationManager*)aManager
      didUpdateLocations:(NSArray*)locations;
-- (void)locationManagerDidChangeAuthorization:(CLLocationManager*)aManager;
-- (void)locationManagerDidPauseLocationUpdates:(CLLocationManager*)aManager;
-- (void)locationManagerDidResumeLocationUpdates:(CLLocationManager*)aManager;
 
 @end
 
@@ -90,33 +58,15 @@ static void LogLocationPermissionState() {
 
   NS_ENSURE_TRUE_VOID(console);
 
-  LogLocationPermissionState();
-
   NSString* message = [@"Failed to acquire position: "
       stringByAppendingString:[aError localizedDescription]];
 
   console->LogStringMessage(NS_ConvertUTF8toUTF16([message UTF8String]).get());
-  LOGD("%s", [message UTF8String]);
 
-  // Telemetry will store up to 16 different error codes.
-  nsAutoCString errorCodeStr;
-  errorCodeStr.AppendInt(static_cast<int32_t>([aError code]));
-  glean::geolocation::macos_error_code.Get(errorCodeStr).Add();
-
-  if ([aError code] == kCLErrorLocationUnknown) {
-    // LocationUnknown is returned in situations where MacOS can't get location
-    // for some reason.  It means that MacOS will try again later, but, in
-    // practice, we see this error when wifi-scanning isn't available (maybe
-    // there is no wifi device).  We temporarily switch to
-    // NetworkGeolocationProvider, which will then report back a location or
-    // error.
-    mProvider->CreateMLSFallbackProvider();
-  }
-
-  // We leave the CoreLocation provider running.  If it receives a location
-  // result later, say, because a wifi device was added or the user enables
-  // MacOS location permissions, then the CoreLocation results will resume
-  // and the fallback provider, if running, will be stopped.
+  // The CL provider does not fallback to GeoIP, so use
+  // NetworkGeolocationProvider for this. The concept here is: on error, hand
+  // off geolocation to MLS, which will then report back a location or error.
+  mProvider->CreateMLSFallbackProvider();
 }
 
 - (void)locationManager:(CLLocationManager*)aManager
@@ -161,21 +111,7 @@ static void LogLocationPermissionState() {
         .Add();
   }
 
-  LOGD("Location updated.");
   mProvider->Update(geoPosition);
-}
-
-- (void)locationManagerDidChangeAuthorization:(CLLocationManager*)aManager {
-  LOGD("Authorization changed");
-  LogLocationPermissionState();
-}
-
-- (void)locationManagerDidPauseLocationUpdates:(CLLocationManager*)aManager {
-  LOGD("Paused location updates");
-}
-
-- (void)locationManagerDidResumeLocationUpdates:(CLLocationManager*)aManager {
-  LOGD("Resumed location updates");
 }
 @end
 
@@ -252,10 +188,6 @@ CoreLocationLocationProvider::Startup() {
   // guaranteed
   [mCLObjects->mLocationManager stopUpdatingLocation];
   [mCLObjects->mLocationManager startUpdatingLocation];
-  glean::geolocation::geolocation_service
-      .EnumGet(glean::geolocation::GeolocationServiceLabel::eSystem)
-      .Add();
-  LOGI("CoreLocationLocationProvider requested location updates.");
   return NS_OK;
 }
 
@@ -284,7 +216,6 @@ CoreLocationLocationProvider::Shutdown() {
     mMLSFallbackProvider = nullptr;
   }
 
-  LOGI("CoreLocationLocationProvider stopped location updates.");
   return NS_OK;
 }
 

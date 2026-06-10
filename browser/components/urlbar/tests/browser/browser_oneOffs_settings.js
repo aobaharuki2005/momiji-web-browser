@@ -58,7 +58,7 @@ async function selectSettings(win, activateFn) {
       });
 
       Assert.equal(
-        win.gBrowser.contentWindow.gLastCategory?.category,
+        win.gBrowser.contentWindow.history.state,
         "paneSearch",
         "Should have opened the search preferences pane"
       );

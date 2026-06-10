@@ -24,7 +24,6 @@
 #include "api/candidate.h"
 #include "api/crypto/crypto_options.h"
 #include "api/data_channel_interface.h"
-#include "api/environment/environment.h"
 #include "api/field_trials_view.h"
 #include "api/jsep.h"
 #include "api/media_stream_interface.h"
@@ -46,7 +45,6 @@
 #include "pc/session_description.h"
 #include "pc/transport_stats.h"
 #include "pc/usage_pattern.h"
-#include "rtc_base/containers/flat_map.h"
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_stream_adapter.h"
@@ -101,6 +99,7 @@ class PeerConnectionSdpMethods {
   // observer is removed.
   virtual void RunWithObserver(
       absl::AnyInvocable<void(webrtc::PeerConnectionObserver*) &&>) = 0;
+  virtual std::optional<SSLRole> GetSctpSslRole_n() = 0;
   virtual PeerConnectionInterface::IceConnectionState
   ice_connection_state_internal() = 0;
   virtual void SetIceConnectionState(
@@ -116,7 +115,7 @@ class PeerConnectionSdpMethods {
   virtual bool IsUnifiedPlan() const = 0;
   virtual bool ValidateBundleSettings(
       const SessionDescription* desc,
-      const flat_map<std::string, const ContentGroup*>&
+      const std::map<std::string, const ContentGroup*>&
           bundle_groups_by_mid) = 0;
 
   // Internal implementation for AddTransceiver family of methods. If
@@ -126,10 +125,17 @@ class PeerConnectionSdpMethods {
       scoped_refptr<MediaStreamTrackInterface> track,
       const RtpTransceiverInit& init,
       bool fire_callback = true) = 0;
-  // Synchronously calls SctpTransport::Start() on the network thread for
-  // `sctp_mid()` if set. Called as part of pushing down the media descriptions
-  // after a complete offer/answer.
+  // Asynchronously calls SctpTransport::Start() on the network thread for
+  // `sctp_mid()` if set. Called as part of setting the local description.
   virtual RTCError StartSctpTransport(const SctpOptions& options) = 0;
+  [[deprecated("Call with SctpOptions")]]
+  virtual void StartSctpTransport(int local_port,
+                                  int remote_port,
+                                  int max_message_size) {
+    StartSctpTransport({.local_port = local_port,
+                        .remote_port = remote_port,
+                        .max_message_size = max_message_size});
+  }
 
   // Asynchronously adds a remote candidate on the network thread.
   virtual void AddRemoteCandidate(absl::string_view mid,
@@ -147,7 +153,6 @@ class PeerConnectionSdpMethods {
   // Tears down the data channel transport state and clears the `sctp_mid()` and
   // `sctp_transport_name()` properties.
   virtual void DestroyDataChannelTransport(RTCError error) = 0;
-  virtual const Environment& env() const = 0;
   virtual const FieldTrialsView& trials() const = 0;
 
   virtual void ClearStatsCache() = 0;

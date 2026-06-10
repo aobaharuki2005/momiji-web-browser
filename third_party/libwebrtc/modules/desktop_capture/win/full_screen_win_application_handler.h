@@ -15,7 +15,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <optional>
 #include <string>
 
 #include "modules/desktop_capture/desktop_capturer.h"
@@ -29,14 +28,6 @@ enum class FullScreenDetectorResult {
   kFailureDueToSameTitleWindows = 2,
   kFailureDueToSlideShowWasNotChosen = 3,
   kMaxValue = kFailureDueToSlideShowWasNotChosen
-};
-
-// Used for metrics; Entries should not be renumbered and numeric values should
-// never be reused.
-enum class FullScreenFindEditorResult {
-  kSuccess = 0,
-  kFailureDueToSameTitleWindows = 1,
-  kMaxValue = kFailureDueToSameTitleWindows
 };
 
 namespace webrtc {
@@ -53,13 +44,8 @@ class FullScreenPowerPointHandler : public FullScreenApplicationHandler {
       const DesktopCapturer::SourceList& window_list,
       int64_t timestamp) const override;
 
-  DesktopCapturer::SourceId FindEditorWindow(
-      const DesktopCapturer::SourceList& window_list) const override;
-
   void SetSlideShowCreationStateForTest(
       bool fullscreen_slide_show_started_after_capture_start) override;
-
-  void SetEditorWasFound() override;
 
  private:
   WindowType GetWindowType(HWND window) const;
@@ -83,9 +69,6 @@ class FullScreenPowerPointHandler : public FullScreenApplicationHandler {
   mutable bool was_slide_show_created_after_capture_started_;
 
   mutable FullScreenDetectorResult full_screen_detector_result_;
-
-  mutable std::optional<FullScreenFindEditorResult>
-      previous_find_editor_result_;
 };
 
 std::unique_ptr<FullScreenApplicationHandler>

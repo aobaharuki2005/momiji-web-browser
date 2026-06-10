@@ -20,7 +20,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestLongerTimeout(2);
 
 function runTests() {
   var formFillController =
@@ -32,6 +31,7 @@ function runTests() {
 
   // Register a word to the form history.
   let chromeScript = SpecialPowers.loadChromeScript(function addEntry() {
+    /* eslint-env mozilla/chrome-script */
     let {FormHistory} = ChromeUtils.importESModule(
       "resource://gre/modules/FormHistory.sys.mjs"
     );

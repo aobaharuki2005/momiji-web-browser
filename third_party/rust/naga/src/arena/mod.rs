@@ -78,17 +78,18 @@ impl<T> Arena<T> {
     }
 
     /// Extracts the inner vector.
+    #[allow(clippy::missing_const_for_fn)] // ignore due to requirement of #![feature(const_precise_live_drops)]
     pub fn into_inner(self) -> Vec<T> {
         self.data
     }
 
     /// Returns the current number of items stored in this arena.
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.data.len()
     }
 
     /// Returns `true` if the arena contains no elements.
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
 
@@ -98,7 +99,7 @@ impl<T> Arena<T> {
         self.data
             .iter()
             .enumerate()
-            .map(|(i, v)| (Handle::from_usize(i), v))
+            .map(|(i, v)| unsafe { (Handle::from_usize_unchecked(i), v) })
     }
 
     /// Returns an iterator over the items stored in this arena, returning both
@@ -110,7 +111,7 @@ impl<T> Arena<T> {
             .iter_mut()
             .zip(self.span_info.iter())
             .enumerate()
-            .map(|(i, (v, span))| (Handle::from_usize(i), v, span))
+            .map(|(i, (v, span))| unsafe { (Handle::from_usize_unchecked(i), v, span) })
     }
 
     /// Drains the arena, returning an iterator over the items stored.
@@ -121,7 +122,7 @@ impl<T> Arena<T> {
             .into_iter()
             .zip(arena.span_info)
             .enumerate()
-            .map(|(i, (v, span))| (Handle::from_usize(i), v, span))
+            .map(|(i, (v, span))| unsafe { (Handle::from_usize_unchecked(i), v, span) })
     }
 
     /// Returns a iterator over the items stored in this arena,
@@ -130,7 +131,7 @@ impl<T> Arena<T> {
         self.data
             .iter_mut()
             .enumerate()
-            .map(|(i, v)| (Handle::from_usize(i), v))
+            .map(|(i, v)| unsafe { (Handle::from_usize_unchecked(i), v) })
     }
 
     /// Adds a new value to the arena, returning a typed handle.
@@ -146,7 +147,7 @@ impl<T> Arena<T> {
         self.data
             .iter()
             .position(fun)
-            .map(|index| Handle::from_usize(index))
+            .map(|index| unsafe { Handle::from_usize_unchecked(index) })
     }
 
     /// Adds a value with a custom check for uniqueness:
@@ -160,7 +161,7 @@ impl<T> Arena<T> {
         fun: F,
     ) -> Handle<T> {
         if let Some(index) = self.data.iter().position(|d| fun(d, &value)) {
-            Handle::from_usize(index)
+            unsafe { Handle::from_usize_unchecked(index) }
         } else {
             self.append(value, span)
         }

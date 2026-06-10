@@ -6,11 +6,7 @@
 #include "CustomMatchers.h"
 
 void MustOverrideChecker::registerMatchers(MatchFinder *AstMatcher) {
-  AstMatcher->addMatcher(
-      cxxRecordDecl(isDefinition(), hasAnyBase(hasType(cxxRecordDecl(
-                                        hasMethod(isMarkedMustOverride())))))
-          .bind("class"),
-      this);
+  AstMatcher->addMatcher(cxxRecordDecl(isDefinition()).bind("class"), this);
 }
 
 void MustOverrideChecker::registerPPCallbacks(CompilerInstance &CI) {

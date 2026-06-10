@@ -110,7 +110,7 @@ function openPopup(document) {
   // will make CustomizableUI show the view.
   const cmdEvent = document.createEvent("xulcommandevent");
   // @ts-ignore - Bug 1674368
-  cmdEvent.initCommandEvent("command", true, true, button.documentGlobal);
+  cmdEvent.initCommandEvent("command", true, true, button.ownerGlobal);
   button.dispatchEvent(cmdEvent);
 }
 

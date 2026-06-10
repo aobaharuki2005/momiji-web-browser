@@ -147,7 +147,7 @@ add_task(async () => {
   const onNewTargetProcessed = commands.targetCommand.once(
     "processed-available-target"
   );
-  await reloadSelectedTab({ waitForLoad: false });
+  await reloadBrowser({ waitForLoad: false });
   await onNewTargetProcessed;
   nodeFront = await commands.inspectorCommand.findNodeFrontFromSelectors(
     ["#iframe-org", "#in-iframe"],

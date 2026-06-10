@@ -1,3 +1,5 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1745,9 +1747,8 @@ var DownloadsBlockedSubview = {
       download.error?.reputationCheckVerdict === "Malware";
 
     e.unblockButton.hidden =
-      (download.error?.becauseBlockedByContentAnalysis &&
-        download.error?.reputationCheckVerdict === "Malware") ||
-      !Services.prefs.getBoolPref("browser.safebrowsing.allowOverride", true);
+      download.error?.becauseBlockedByContentAnalysis &&
+      download.error?.reputationCheckVerdict === "Malware";
 
     title.l10n
       ? document.l10n.setAttributes(e.title, title.l10n.id, title.l10n.args)

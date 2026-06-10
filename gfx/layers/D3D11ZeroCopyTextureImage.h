@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,18 +32,10 @@ class ZeroCopyUsageInfo final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ZeroCopyUsageInfo)
 
-  enum class DisableReason : uint8_t {
-    Default,
-    UsingTooManyFrames,
-  };
-
   ZeroCopyUsageInfo() = default;
 
   bool SupportsZeroCopyNV12Texture() { return mSupportsZeroCopyNV12Texture; }
-  void DisableZeroCopyNV12Texture(
-      DisableReason aReason = DisableReason::Default);
-
-  int GetRefCount() { return mRefCnt; }
+  void DisableZeroCopyNV12Texture() { mSupportsZeroCopyNV12Texture = false; }
 
  protected:
   ~ZeroCopyUsageInfo() = default;
@@ -53,20 +47,15 @@ class ZeroCopyUsageInfo final {
 // Expected to be used in GPU process.
 class D3D11ZeroCopyTextureImage : public Image {
  public:
-  D3D11ZeroCopyTextureImage(ID3D11Texture2D* aTexture,
-                            const uint32_t aArrayIndex,
-                            const gfx::IntSize& aSize,
-                            const gfx::IntRect& aRect,
-                            const gfx::SurfaceFormat aFormat,
-                            const gfx::ColorSpace2 aColorSpace,
-                            const gfx::ColorRange aColorRange,
-                            const gfx::TransferFunction aTransferFunction,
-                            const Maybe<gfx::HDRMetadata>& aHDRMetadata,
-                            const gfx::ColorDepth aColorDepth);
+  D3D11ZeroCopyTextureImage(
+      ID3D11Texture2D* aTexture, const uint32_t aArrayIndex,
+      const gfx::IntSize& aSize, const gfx::IntRect& aRect,
+      const gfx::SurfaceFormat aFormat, const gfx::ColorSpace2 aColorSpace,
+      const gfx::ColorRange aColorRange, const gfx::ColorDepth aColorDepth);
   virtual ~D3D11ZeroCopyTextureImage();
 
   void AllocateTextureClient(KnowsCompositor* aKnowsCompositor,
-                             ZeroCopyUsageInfo* aUsageInfo,
+                             RefPtr<ZeroCopyUsageInfo> aUsageInfo,
                              const RefPtr<FenceD3D11> aWriteFence);
 
   gfx::IntSize GetSize() const override;
@@ -102,8 +91,6 @@ class D3D11ZeroCopyTextureImage : public Image {
   const gfx::SurfaceFormat mFormat;
   const gfx::ColorSpace2 mColorSpace;
   const gfx::ColorRange mColorRange;
-  const gfx::TransferFunction mTransferFunction;
-  const Maybe<gfx::HDRMetadata> mHDRMetadata;
   const gfx::ColorDepth mColorDepth;
 };
 
@@ -132,8 +119,6 @@ class D3D11TextureIMFSampleImage final : public D3D11ZeroCopyTextureImage {
                              const gfx::SurfaceFormat aFormat,
                              const gfx::ColorSpace2 aColorSpace,
                              const gfx::ColorRange aColorRange,
-                             const gfx::TransferFunction aTransferFunction,
-                             const Maybe<gfx::HDRMetadata>& aHDRMetadata,
                              const gfx::ColorDepth aColorDepth);
   virtual ~D3D11TextureIMFSampleImage() = default;
 
@@ -151,8 +136,6 @@ class D3D11TextureAVFrameImage final : public D3D11ZeroCopyTextureImage {
                            const gfx::IntSize& aSize, const gfx::IntRect& aRect,
                            const gfx::ColorSpace2 aColorSpace,
                            const gfx::ColorRange aColorRange,
-                           const gfx::TransferFunction aTransferFunction,
-                           const Maybe<gfx::HDRMetadata>& aHDRMetadata,
                            const gfx::ColorDepth aColorDepth);
   virtual ~D3D11TextureAVFrameImage() = default;
 

@@ -12,14 +12,14 @@ class _UniffiRustBuffer(ctypes.Structure):
 
     @staticmethod
     def alloc(size):
-        return _uniffi_rust_call(_UniffiLib.{{ ffi_rustbuffer_alloc.0 }}, size)
+        return _uniffi_rust_call(_UniffiLib.{{ ci.ffi_rustbuffer_alloc().name() }}, size)
 
     @staticmethod
     def reserve(rbuf, additional):
-        return _uniffi_rust_call(_UniffiLib.{{ ffi_rustbuffer_reserve.0 }}, rbuf, additional)
+        return _uniffi_rust_call(_UniffiLib.{{ ci.ffi_rustbuffer_reserve().name() }}, rbuf, additional)
 
     def free(self):
-        return _uniffi_rust_call(_UniffiLib.{{ ffi_rustbuffer_free.0 }}, self)
+        return _uniffi_rust_call(_UniffiLib.{{ ci.ffi_rustbuffer_free().name() }}, self)
 
     def __str__(self):
         return "_UniffiRustBuffer(capacity={}, len={}, data={})".format(
@@ -53,7 +53,7 @@ class _UniffiRustBuffer(ctypes.Structure):
             s = _UniffiRustBufferStream.from_rust_buffer(self)
             yield s
             if s.remaining() != 0:
-                raise RuntimeError(f"junk data left in buffer at end of consume_with_stream {s.remaining()}")
+                raise RuntimeError("junk data left in buffer at end of consume_with_stream")
         finally:
             self.free()
 
@@ -67,7 +67,7 @@ class _UniffiRustBuffer(ctypes.Structure):
         s = _UniffiRustBufferStream.from_rust_buffer(self)
         yield s
         if s.remaining() != 0:
-            raise RuntimeError(f"junk data left in buffer at end of read_with_stream {s.remaining()}")
+            raise RuntimeError("junk data left in buffer at end of read_with_stream")
 
 class _UniffiForeignBytes(ctypes.Structure):
     _fields_ = [

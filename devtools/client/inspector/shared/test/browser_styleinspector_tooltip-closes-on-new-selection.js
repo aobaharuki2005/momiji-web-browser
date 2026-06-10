@@ -17,7 +17,7 @@ add_task(async function () {
   await testRuleView(view, inspector);
 
   info("Testing computed view tooltip closes on new selection");
-  view = await selectComputedView(inspector);
+  view = selectComputedView(inspector);
   await testComputedView(view, inspector);
 });
 

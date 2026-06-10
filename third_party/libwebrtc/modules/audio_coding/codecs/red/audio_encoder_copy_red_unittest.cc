@@ -15,11 +15,11 @@
 #include <cstring>
 #include <memory>
 #include <optional>
-#include <span>
 #include <utility>
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/field_trials.h"
 #include "api/units/time_delta.h"
@@ -34,9 +34,12 @@
 using ::testing::_;
 using ::testing::Eq;
 using ::testing::InSequence;
+using ::testing::Invoke;
 using ::testing::MockFunction;
+using ::testing::Not;
 using ::testing::Optional;
 using ::testing::Return;
+using ::testing::SetArgPointee;
 
 namespace webrtc {
 
@@ -71,7 +74,7 @@ class AudioEncoderCopyRedTest : public ::testing::Test {
     ASSERT_TRUE(red_.get() != nullptr);
     encoded_.Clear();
     encoded_info_ = red_->Encode(
-        timestamp_, std::span<const int16_t>(audio_, num_audio_samples_10ms),
+        timestamp_, ArrayView<const int16_t>(audio_, num_audio_samples_10ms),
         &encoded_);
     timestamp_ += checked_cast<uint32_t>(num_audio_samples_10ms);
   }
@@ -169,9 +172,9 @@ TEST_F(AudioEncoderCopyRedTest, CheckNoOutput) {
   {
     InSequence s;
     EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-        .WillOnce(MockAudioEncoder::FakeEncoding(kEncodedSize))
-        .WillOnce(MockAudioEncoder::FakeEncoding(0))
-        .WillOnce(MockAudioEncoder::FakeEncoding(kEncodedSize));
+        .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(kEncodedSize)))
+        .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(0)))
+        .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(kEncodedSize)));
   }
 
   // Start with one Encode() call that will produce output.
@@ -200,7 +203,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckPayloadSizes1) {
   InSequence s;
   for (int encode_size = 1; encode_size <= kNumPackets; ++encode_size) {
     EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-        .WillOnce(MockAudioEncoder::FakeEncoding(encode_size));
+        .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(encode_size)));
   }
 
   // First call is a special case, since it does not include a secondary
@@ -229,7 +232,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckPayloadSizes0) {
   InSequence s;
   for (int encode_size = 1; encode_size <= kNumPackets; ++encode_size) {
     EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-        .WillOnce(MockAudioEncoder::FakeEncoding(encode_size));
+        .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(encode_size)));
   }
 
   for (size_t i = 1; i <= kNumPackets; ++i) {
@@ -249,7 +252,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckPayloadSizes2) {
   InSequence s;
   for (int encode_size = 1; encode_size <= kNumPackets; ++encode_size) {
     EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-        .WillOnce(MockAudioEncoder::FakeEncoding(encode_size));
+        .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(encode_size)));
   }
 
   // First call is a special case, since it does not include a secondary
@@ -285,7 +288,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckPayloadSizes3) {
   InSequence s;
   for (int encode_size = 1; encode_size <= kNumPackets; ++encode_size) {
     EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-        .WillOnce(MockAudioEncoder::FakeEncoding(encode_size));
+        .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(encode_size)));
   }
 
   // First call is a special case, since it does not include a secondary
@@ -327,7 +330,7 @@ TEST_F(AudioEncoderCopyRedTest, VeryLargePacket) {
   info.encoded_timestamp = timestamp_;
 
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
 
   Encode();
   ASSERT_EQ(0u, encoded_info_.redundant.size());
@@ -343,7 +346,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckTimestamps) {
   info.encoded_timestamp = timestamp_;
 
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
 
   // First call is a special case, since it does not include a secondary
   // payload.
@@ -354,7 +357,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckTimestamps) {
   primary_timestamp = timestamp_;
   info.encoded_timestamp = timestamp_;
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
 
   Encode();
   ASSERT_EQ(2u, encoded_info_.redundant.size());
@@ -374,7 +377,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckPayloads) {
     payload[i] = i;
   }
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillRepeatedly(MockAudioEncoder::CopyEncoding(payload));
+      .WillRepeatedly(Invoke(MockAudioEncoder::CopyEncoding(payload)));
 
   // First call is a special case, since it does not include a secondary
   // payload.
@@ -412,7 +415,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckPayloadType) {
   info.encoded_bytes = 17;
   info.payload_type = primary_payload_type;
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
 
   // First call is a special case, since it does not include a secondary
   // payload.
@@ -422,7 +425,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckPayloadType) {
   const int secondary_payload_type = red_payload_type_ + 2;
   info.payload_type = secondary_payload_type;
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
 
   Encode();
   ASSERT_EQ(2u, encoded_info_.redundant.size());
@@ -439,11 +442,11 @@ TEST_F(AudioEncoderCopyRedTest, CheckRFC2198Header) {
   info.payload_type = primary_payload_type;
 
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();
   info.encoded_timestamp = timestamp_;  // update timestamp.
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();  // Second call will produce a redundant encoding.
 
   EXPECT_EQ(encoded_.size(),
@@ -461,7 +464,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckRFC2198Header) {
   EXPECT_EQ(encoded_[4], primary_payload_type);
 
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();  // Third call will produce a redundant encoding with double
              // redundancy.
 
@@ -494,11 +497,11 @@ TEST_F(AudioEncoderCopyRedTest, CheckRFC2198Header0) {
   info.payload_type = primary_payload_type;
 
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();
   info.encoded_timestamp = timestamp_;  // update timestamp.
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();  // Second call will not produce a redundant encoding.
 
   EXPECT_EQ(encoded_.size(),
@@ -516,11 +519,11 @@ TEST_F(AudioEncoderCopyRedTest, CheckRFC2198Header2) {
   info.payload_type = primary_payload_type;
 
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();
   info.encoded_timestamp = timestamp_;  // update timestamp.
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();  // Second call will produce a redundant encoding.
 
   EXPECT_EQ(encoded_.size(),
@@ -538,7 +541,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckRFC2198Header2) {
   EXPECT_EQ(encoded_[4], primary_payload_type);
 
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();  // Third call will produce a redundant encoding with double
              // redundancy.
 
@@ -575,12 +578,12 @@ TEST_F(AudioEncoderCopyRedTest, RespectsPayloadMTU) {
   info.payload_type = primary_payload_type;
 
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();
   info.encoded_timestamp = timestamp_;  // update timestamp.
   info.encoded_bytes = 500;
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();  // Second call will produce a redundant encoding.
 
   EXPECT_EQ(encoded_.size(), 5u + 600u + 500u);
@@ -588,7 +591,7 @@ TEST_F(AudioEncoderCopyRedTest, RespectsPayloadMTU) {
   info.encoded_timestamp = timestamp_;  // update timestamp.
   info.encoded_bytes = 400;
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();  // Third call will drop the oldest packet.
   EXPECT_EQ(encoded_.size(), 5u + 500u + 400u);
 }
@@ -601,7 +604,7 @@ TEST_F(AudioEncoderCopyRedTest, LargeTimestampGap) {
   info.payload_type = primary_payload_type;
 
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();
   // Update timestamp to simulate a 400ms gap like the one
   // opus DTX causes.
@@ -609,76 +612,11 @@ TEST_F(AudioEncoderCopyRedTest, LargeTimestampGap) {
   info.encoded_timestamp = timestamp_;  // update timestamp.
   info.encoded_bytes = 200;
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
   Encode();
 
   // The old packet will be dropped.
   EXPECT_EQ(encoded_.size(), 1u + 200u);
-}
-
-TEST_F(AudioEncoderCopyRedTest, AvoidRedundantNonSpeechEncoding) {
-  const int primary_payload_type = red_payload_type_ + 1;
-
-  AudioEncoder::EncodedInfo info;
-  info.encoded_bytes = 1;
-  info.encoded_timestamp = timestamp_;
-  info.payload_type = primary_payload_type;
-  info.speech = false;
-  EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
-  Encode();
-
-  // Previous packet was non-speech and should not be used as redundant
-  // encoding.
-  timestamp_ += 960;
-  info.encoded_timestamp = timestamp_;
-  info.encoded_bytes = 100;
-  info.speech = true;
-  EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
-  Encode();
-  EXPECT_EQ(encoded_.size(), 1u + 100u);
-  EXPECT_TRUE(encoded_info_.redundant.empty());
-
-  // Non-speech packet can still have redundant encoding.
-  timestamp_ += 960;
-  info.encoded_timestamp = timestamp_;
-  info.encoded_bytes = 200;
-  info.speech = false;
-  EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
-  Encode();
-  EXPECT_EQ(encoded_.size(), 5u + 100u + 200u);
-}
-
-TEST_F(AudioEncoderCopyRedTest, SingleRedundantPathNoIteratorUnderflow) {
-  const int primary_payload_type = red_payload_type_ + 1;
-  AudioEncoder::EncodedInfo info;
-  info.payload_type = primary_payload_type;
-  info.encoded_bytes = 10;
-  info.encoded_timestamp = timestamp_;
-
-  // First encode seeds the redundancy list so the next encode has exactly one
-  // older payload to include as redundancy.
-  EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
-  Encode();
-
-  // Second encode yields a primary payload plus that single redundant payload.
-  // Running this path makes sure we handle the iterator safely in stricter
-  // STL builds.
-  timestamp_ += 960;
-  info.encoded_timestamp = timestamp_;
-  EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(MockAudioEncoder::FakeEncoding(info));
-  Encode();
-
-  EXPECT_FALSE(encoded_.empty());
-  EXPECT_EQ(encoded_.size(), encoded_info_.encoded_bytes);
-  ASSERT_EQ(encoded_info_.redundant.size(), 2u);
-  EXPECT_EQ(encoded_info_.payload_type, red_payload_type_);
-  EXPECT_EQ(encoded_info_.redundant[0].payload_type, primary_payload_type);
-  EXPECT_EQ(encoded_info_.redundant[1].payload_type, primary_payload_type);
 }
 
 #if GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)

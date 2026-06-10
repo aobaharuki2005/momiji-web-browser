@@ -63,17 +63,12 @@ public:
     bool precompile(sk_sp<SkData> serializedPipelineKey);
 
     /**
-     * Get a human-readable version of a serialized pipeline key and, optionally, the unique
-     * hash of the Pipeline.
+     * Get a human-readable version of a serialized pipeline key.
      *
      * @param serializedPipelineKey   serialized Pipeline key.
-     * @param uniqueHash              If non-null, this will be filled in with the unique hash.
-     *                                Note that the uniqueHash is only valid for the lifetime
-     *                                of the Context used to create this PrecompileContext.
      * @return                        A human-readable version of the provided key; "" on failure.
      */
-    std::string getPipelineLabel(sk_sp<SkData> serializedPipelineKey,
-                                 uint32_t* uniqueHash = nullptr);
+    std::string getPipelineLabel(sk_sp<SkData> serializedPipelineKey);
 
     // Provides access to functions that aren't part of the public API.
     PrecompileContextPriv priv();
@@ -83,7 +78,7 @@ private:
     friend class PrecompileContextPriv;
     friend class Context; // for ctor
 
-    explicit PrecompileContext(sk_sp<SharedContext>);
+    PrecompileContext(sk_sp<SharedContext>);
 
     mutable SingleOwner fSingleOwner;
     sk_sp<SharedContext> fSharedContext;

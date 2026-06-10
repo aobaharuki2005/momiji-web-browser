@@ -157,12 +157,16 @@ class VisitObserver {
  * @param {string} aTitle
  *   The expected title in the database.
  */
-async function do_check_title_for_uri(aURI, aTitle) {
-  const title = await PlacesTestUtils.getDatabaseValue("moz_places", "title", {
-    url: aURI.spec,
-  });
-  Assert.notStrictEqual(title, undefined, "Should have a result for URI");
-  Assert.equal(title, aTitle);
+function do_check_title_for_uri(aURI, aTitle) {
+  let stmt = DBConn().createStatement(
+    `SELECT title
+     FROM moz_places
+     WHERE url_hash = hash(:url) AND url = :url`
+  );
+  stmt.params.url = aURI.spec;
+  Assert.ok(stmt.executeStep());
+  Assert.equal(stmt.row.title, aTitle);
+  stmt.finalize();
 }
 
 // Test Functions
@@ -229,7 +233,7 @@ add_task(async function test_invalid_guid_throws() {
   // First check invalid length guid.
   let place = {
     guid: "BAD_GUID",
-    uri: Services.io.newURI(TEST_DOMAIN + "test_invalid_guid_throws"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_invalid_guid_throws"),
     visits: [new VisitInfo()],
   };
   try {
@@ -251,7 +255,7 @@ add_task(async function test_invalid_guid_throws() {
 });
 
 add_task(async function test_no_visits_throws() {
-  const TEST_URI = Services.io.newURI(
+  const TEST_URI = NetUtil.newURI(
     TEST_DOMAIN + "test_no_id_or_guid_no_visits_throws"
   );
   const TEST_GUID = "_RANDOMGUID_";
@@ -294,7 +298,7 @@ add_task(async function test_no_visits_throws() {
 
 add_task(async function test_add_visit_no_date_throws() {
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_add_visit_no_date_throws"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_add_visit_no_date_throws"),
     visits: [new VisitInfo()],
   };
   delete place.visits[0].visitDate;
@@ -308,7 +312,7 @@ add_task(async function test_add_visit_no_date_throws() {
 
 add_task(async function test_add_visit_no_transitionType_throws() {
   let place = {
-    uri: Services.io.newURI(
+    uri: NetUtil.newURI(
       TEST_DOMAIN + "test_add_visit_no_transitionType_throws"
     ),
     visits: [new VisitInfo()],
@@ -325,7 +329,7 @@ add_task(async function test_add_visit_no_transitionType_throws() {
 add_task(async function test_add_visit_invalid_transitionType_throws() {
   // First, test something that has a transition type lower than the first one.
   let place = {
-    uri: Services.io.newURI(
+    uri: NetUtil.newURI(
       TEST_DOMAIN + "test_add_visit_invalid_transitionType_throws"
     ),
     visits: [new VisitInfo(TRANSITION_LINK - 1)],
@@ -367,7 +371,7 @@ add_task(async function test_non_addable_uri_errors() {
   URLS.forEach(function (url) {
     try {
       let place = {
-        uri: Services.io.newURI(url),
+        uri: NetUtil.newURI(url),
         title: "test for " + url,
         visits: [new VisitInfo()],
       };
@@ -376,7 +380,7 @@ add_task(async function test_non_addable_uri_errors() {
       if (e.result != Cr.NS_ERROR_FAILURE) {
         throw e;
       }
-      // Services.io.newURI() can throw if e.g. our app knows about imap://
+      // NetUtil.newURI() can throw if e.g. our app knows about imap://
       // but the account is not set up and so the URL is invalid for us.
       // Note this in the log but ignore as it's not the subject of this test.
       info("Could not construct URI for '" + url + "'; ignoring");
@@ -399,7 +403,7 @@ add_task(async function test_duplicate_guid_errors() {
   // This test ensures that trying to add a visit, with a guid already found in
   // another visit, fails.
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_first"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_first"),
     visits: [new VisitInfo()],
   };
 
@@ -412,7 +416,7 @@ add_task(async function test_duplicate_guid_errors() {
   Assert.ok(await PlacesUtils.history.hasVisits(placeInfo.uri));
 
   let badPlace = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
     visits: [new VisitInfo()],
     guid: placeInfo.guid,
   };
@@ -434,10 +438,10 @@ add_task(async function test_duplicate_guid_errors() {
 
 add_task(async function test_invalid_referrerURI_ignored() {
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_invalid_referrerURI_ignored"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_invalid_referrerURI_ignored"),
     visits: [new VisitInfo()],
   };
-  place.visits[0].referrerURI = Services.io.newURI(
+  place.visits[0].referrerURI = NetUtil.newURI(
     place.uri.spec + "_unvisistedURI"
   );
   Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
@@ -460,20 +464,22 @@ add_task(async function test_invalid_referrerURI_ignored() {
   );
 
   // Check to make sure from_visit is zero in database.
-  const fromVisit = await PlacesTestUtils.getDatabaseValue(
-    "moz_historyvisits",
-    "from_visit",
-    { id: placeInfo.visits[0].visitId }
+  let stmt = DBConn().createStatement(
+    `SELECT from_visit
+     FROM moz_historyvisits
+     WHERE id = :visit_id`
   );
-  Assert.notEqual(fromVisit, undefined, "Should have a result");
-  Assert.equal(fromVisit, 0);
+  stmt.params.visit_id = placeInfo.visits[0].visitId;
+  Assert.ok(stmt.executeStep());
+  Assert.equal(stmt.row.from_visit, 0);
+  stmt.finalize();
 
   await PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(async function test_nonnsIURI_referrerURI_ignored() {
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_nonnsIURI_referrerURI_ignored"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_nonnsIURI_referrerURI_ignored"),
     visits: [new VisitInfo()],
   };
   place.visits[0].referrerURI = place.uri.spec + "_nonnsIURI";
@@ -487,15 +493,15 @@ add_task(async function test_nonnsIURI_referrerURI_ignored() {
   Assert.ok(await PlacesUtils.history.hasVisits(placeInfo.uri));
 
   // Check to make sure from_visit is zero in database.
-  {
-    const fromVisit = await PlacesTestUtils.getDatabaseValue(
-      "moz_historyvisits",
-      "from_visit",
-      { id: placeInfo.visits[0].visitId }
-    );
-    Assert.notEqual(fromVisit, undefined, "Should have a result");
-    Assert.equal(fromVisit, 0);
-  }
+  let stmt = DBConn().createStatement(
+    `SELECT from_visit
+     FROM moz_historyvisits
+     WHERE id = :visit_id`
+  );
+  stmt.params.visit_id = placeInfo.visits[0].visitId;
+  Assert.ok(stmt.executeStep());
+  Assert.equal(stmt.row.from_visit, 0);
+  stmt.finalize();
 
   await PlacesTestUtils.promiseAsyncUpdates();
 });
@@ -506,7 +512,7 @@ add_task(async function test_old_referrer_ignored() {
   // updatePlaces.
   let oldTime = Date.now() * 1000 - (RECENT_EVENT_THRESHOLD + 1);
   let referrerPlace = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_old_referrer_ignored_referrer"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_old_referrer_ignored_referrer"),
     visits: [new VisitInfo(TRANSITION_LINK, oldTime)],
   };
 
@@ -526,7 +532,7 @@ add_task(async function test_old_referrer_ignored() {
   let visitInfo = new VisitInfo();
   visitInfo.referrerURI = referrerPlace.uri;
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_old_referrer_ignored_page"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_old_referrer_ignored_page"),
     visits: [visitInfo],
   };
 
@@ -541,25 +547,24 @@ add_task(async function test_old_referrer_ignored() {
   // Though the visit will not contain the referrer, we must examine the
   // database to be sure.
   Assert.equal(placeInfo.visits[0].referrerURI, null);
-  {
-    let db = await PlacesUtils.promiseDBConnection();
-    let rows = await db.execute(
-      `SELECT COUNT(1) AS count
-       FROM moz_historyvisits
-       JOIN moz_places h ON h.id = place_id
-       WHERE url_hash = hash(:page_url) AND url = :page_url
-       AND from_visit = 0`,
-      { page_url: place.uri.spec }
-    );
-    Assert.equal(rows[0].getResultByName("count"), 1);
-  }
+  let stmt = DBConn().createStatement(
+    `SELECT COUNT(1) AS count
+     FROM moz_historyvisits
+     JOIN moz_places h ON h.id = place_id
+     WHERE url_hash = hash(:page_url) AND url = :page_url
+     AND from_visit = 0`
+  );
+  stmt.params.page_url = place.uri.spec;
+  Assert.ok(stmt.executeStep());
+  Assert.equal(stmt.row.count, 1);
+  stmt.finalize();
 
   await PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(async function test_place_id_ignored() {
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_place_id_ignored_first"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_place_id_ignored_first"),
     visits: [new VisitInfo()],
   };
 
@@ -575,7 +580,7 @@ add_task(async function test_place_id_ignored() {
   Assert.notEqual(placeId, 0);
 
   let badPlace = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_place_id_ignored_second"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_place_id_ignored_second"),
     visits: [new VisitInfo()],
     placeId,
   };
@@ -599,13 +604,13 @@ add_task(async function test_handleCompletion_called_when_complete() {
   // of them have had a callback.
   let places = [
     {
-      uri: Services.io.newURI(
+      uri: NetUtil.newURI(
         TEST_DOMAIN + "test_handleCompletion_called_when_complete"
       ),
       visits: [new VisitInfo(), new VisitInfo(TRANSITION_EMBED)],
     },
     {
-      uri: Services.io.newURI("data:,Hello%2C%20World!"),
+      uri: NetUtil.newURI("data:,Hello%2C%20World!"),
       visits: [new VisitInfo()],
     },
   ];
@@ -626,7 +631,7 @@ add_task(async function test_handleCompletion_called_when_complete() {
 add_task(async function test_add_visit() {
   const VISIT_TIME = Date.now() * 1000;
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_add_visit"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_add_visit"),
     title: "test_add_visit title",
     visits: [],
   };
@@ -699,7 +704,7 @@ add_task(async function test_properties_saved() {
     }
     let transitionType = PlacesUtils.history.TRANSITIONS[t];
     let place = {
-      uri: Services.io.newURI(
+      uri: NetUtil.newURI(
         TEST_DOMAIN + "test_properties_saved/" + transitionType
       ),
       title: "test_properties_saved test",
@@ -728,37 +733,47 @@ add_task(async function test_properties_saved() {
     const EXPECTED_COUNT = visit.transitionType == TRANSITION_EMBED ? 0 : 1;
 
     // mozIVisitInfo::date
-    let db = await PlacesUtils.promiseDBConnection();
-    let dateRows = await db.execute(
+    let stmt = DBConn().createStatement(
       `SELECT COUNT(1) AS count
        FROM moz_places h
-       JOIN moz_historyvisits v ON h.id = v.place_id
+       JOIN moz_historyvisits v
+       ON h.id = v.place_id
        WHERE h.url_hash = hash(:page_url) AND h.url = :page_url
-       AND v.visit_date = :visit_date`,
-      { page_url: uri.spec, visit_date: visit.visitDate }
+       AND v.visit_date = :visit_date`
     );
-    Assert.equal(dateRows[0].getResultByName("count"), EXPECTED_COUNT);
+    stmt.params.page_url = uri.spec;
+    stmt.params.visit_date = visit.visitDate;
+    Assert.ok(stmt.executeStep());
+    Assert.equal(stmt.row.count, EXPECTED_COUNT);
+    stmt.finalize();
 
     // mozIVisitInfo::transitionType
-    let transRows = await db.execute(
+    stmt = DBConn().createStatement(
       `SELECT COUNT(1) AS count
        FROM moz_places h
-       JOIN moz_historyvisits v ON h.id = v.place_id
+       JOIN moz_historyvisits v
+       ON h.id = v.place_id
        WHERE h.url_hash = hash(:page_url) AND h.url = :page_url
-       AND v.visit_type = :transition_type`,
-      { page_url: uri.spec, transition_type: visit.transitionType }
+       AND v.visit_type = :transition_type`
     );
-    Assert.equal(transRows[0].getResultByName("count"), EXPECTED_COUNT);
+    stmt.params.page_url = uri.spec;
+    stmt.params.transition_type = visit.transitionType;
+    Assert.ok(stmt.executeStep());
+    Assert.equal(stmt.row.count, EXPECTED_COUNT);
+    stmt.finalize();
 
     // mozIPlaceInfo::title
-    let titleRows = await db.execute(
+    stmt = DBConn().createStatement(
       `SELECT COUNT(1) AS count
        FROM moz_places h
        WHERE h.url_hash = hash(:page_url) AND h.url = :page_url
-       AND h.title = :title`,
-      { page_url: uri.spec, title: placeInfo.title }
+       AND h.title = :title`
     );
-    Assert.equal(titleRows[0].getResultByName("count"), EXPECTED_COUNT);
+    stmt.params.page_url = uri.spec;
+    stmt.params.title = placeInfo.title;
+    Assert.ok(stmt.executeStep());
+    Assert.equal(stmt.row.count, EXPECTED_COUNT);
+    stmt.finalize();
 
     // If we have had all of our callbacks, continue running tests.
     if (++callbackCount == places.length) {
@@ -769,7 +784,7 @@ add_task(async function test_properties_saved() {
 
 add_task(async function test_guid_saved() {
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_guid_saved"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_guid_saved"),
     guid: "__TESTGUID__",
     visits: [new VisitInfo()],
   };
@@ -791,11 +806,11 @@ add_task(async function test_guid_saved() {
 add_task(async function test_referrer_saved() {
   let places = [
     {
-      uri: Services.io.newURI(TEST_DOMAIN + "test_referrer_saved/referrer"),
+      uri: NetUtil.newURI(TEST_DOMAIN + "test_referrer_saved/referrer"),
       visits: [new VisitInfo()],
     },
     {
-      uri: Services.io.newURI(TEST_DOMAIN + "test_referrer_saved/test"),
+      uri: NetUtil.newURI(TEST_DOMAIN + "test_referrer_saved/test"),
       visits: [new VisitInfo()],
     },
   ];
@@ -817,8 +832,7 @@ add_task(async function test_referrer_saved() {
     if (++resultCount == places.length) {
       Assert.ok(places[0].uri.equals(visit.referrerURI));
 
-      let db = await PlacesUtils.promiseDBConnection();
-      let rows = await db.execute(
+      let stmt = DBConn().createStatement(
         `SELECT COUNT(1) AS count
          FROM moz_historyvisits
          JOIN moz_places h ON h.id = place_id
@@ -828,10 +842,13 @@ add_task(async function test_referrer_saved() {
            FROM moz_historyvisits v
            JOIN moz_places h ON h.id = place_id
            WHERE url_hash = hash(:referrer) AND url = :referrer
-         )`,
-        { page_url: uri.spec, referrer: visit.referrerURI.spec }
+         )`
       );
-      Assert.equal(rows[0].getResultByName("count"), 1);
+      stmt.params.page_url = uri.spec;
+      stmt.params.referrer = visit.referrerURI.spec;
+      Assert.ok(stmt.executeStep());
+      Assert.equal(stmt.row.count, 1);
+      stmt.finalize();
 
       await PlacesTestUtils.promiseAsyncUpdates();
     }
@@ -841,7 +858,7 @@ add_task(async function test_referrer_saved() {
 add_task(async function test_guid_change_saved() {
   // First, add a visit for it.
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_guid_change_saved"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_guid_change_saved"),
     visits: [new VisitInfo()],
   };
   Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
@@ -865,7 +882,7 @@ add_task(async function test_guid_change_saved() {
 add_task(async function test_title_change_saved() {
   // First, add a visit for it.
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_title_change_saved"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_title_change_saved"),
     title: "original title",
     visits: [new VisitInfo()],
   };
@@ -883,7 +900,7 @@ add_task(async function test_title_change_saved() {
   if (placesResult.errors.length) {
     do_throw("Unexpected error.");
   }
-  await do_check_title_for_uri(place.uri, null);
+  do_check_title_for_uri(place.uri, null);
 
   // Then, change the title with visits.
   place.title = "title change";
@@ -892,7 +909,7 @@ add_task(async function test_title_change_saved() {
   if (placesResult.errors.length) {
     do_throw("Unexpected error.");
   }
-  await do_check_title_for_uri(place.uri, place.title);
+  do_check_title_for_uri(place.uri, place.title);
 
   // Lastly, check that the title is cleared if we set it to null.
   place.title = null;
@@ -901,7 +918,7 @@ add_task(async function test_title_change_saved() {
   if (placesResult.errors.length) {
     do_throw("Unexpected error.");
   }
-  await do_check_title_for_uri(place.uri, place.title);
+  do_check_title_for_uri(place.uri, place.title);
 
   await PlacesTestUtils.promiseAsyncUpdates();
 });
@@ -910,7 +927,7 @@ add_task(async function test_no_title_does_not_clear_title() {
   const TITLE = "test title";
   // First, add a visit for it.
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_no_title_does_not_clear_title"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_no_title_does_not_clear_title"),
     title: TITLE,
     visits: [new VisitInfo()],
   };
@@ -927,7 +944,7 @@ add_task(async function test_no_title_does_not_clear_title() {
   if (placesResult.errors.length) {
     do_throw("Unexpected error.");
   }
-  await do_check_title_for_uri(place.uri, TITLE);
+  do_check_title_for_uri(place.uri, TITLE);
 
   await PlacesTestUtils.promiseAsyncUpdates();
 });
@@ -936,7 +953,7 @@ add_task(async function test_title_change_notifies() {
   // There are three cases to test.  The first case is to make sure we do not
   // get notified if we do not specify a title.
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_title_change_notifies"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_title_change_notifies"),
     visits: [new VisitInfo()],
   };
   Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
@@ -953,7 +970,7 @@ add_task(async function test_title_change_notifies() {
   // The second case to test is that we don't get the notification when we add
   // it for the first time.  The first case will fail before our callback if it
   // is busted, so we can do this now.
-  place.uri = Services.io.newURI(place.uri.spec + "/new-visit-with-title");
+  place.uri = NetUtil.newURI(place.uri.spec + "/new-visit-with-title");
   place.title = "title 1";
   let expectedNotification = false;
   let titleChangeObserver;
@@ -1010,7 +1027,7 @@ add_task(async function test_visit_notifies() {
   // PlacesObservers and the other is the uri-visit-saved observer topic.
   let place = {
     guid: "abcdefghijkl",
-    uri: Services.io.newURI(TEST_DOMAIN + "test_visit_notifies"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_visit_notifies"),
     visits: [new VisitInfo()],
   };
   Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
@@ -1060,7 +1077,7 @@ add_task(async function test_callbacks_not_supplied() {
   URLS.forEach(function (url) {
     try {
       let place = {
-        uri: Services.io.newURI(url),
+        uri: NetUtil.newURI(url),
         title: "test for " + url,
         visits: [new VisitInfo()],
       };
@@ -1069,7 +1086,7 @@ add_task(async function test_callbacks_not_supplied() {
       if (e.result != Cr.NS_ERROR_FAILURE) {
         throw e;
       }
-      // Services.io.newURI() can throw if e.g. our app knows about imap://
+      // NetUtil.newURI() can throw if e.g. our app knows about imap://
       // but the account is not set up and so the URL is invalid for us.
       // Note this in the log but ignore as it's not the subject of this test.
       info("Could not construct URI for '" + url + "'; ignoring");
@@ -1085,29 +1102,30 @@ add_task(async function test_typed_hidden_not_overwritten() {
   await PlacesUtils.history.clear();
   let places = [
     {
-      uri: Services.io.newURI("http://mozilla.org/"),
+      uri: NetUtil.newURI("http://mozilla.org/"),
       title: "test",
       visits: [new VisitInfo(TRANSITION_TYPED), new VisitInfo(TRANSITION_LINK)],
     },
     {
-      uri: Services.io.newURI("http://mozilla.org/"),
+      uri: NetUtil.newURI("http://mozilla.org/"),
       title: "test",
       visits: [new VisitInfo(TRANSITION_FRAMED_LINK)],
     },
   ];
   await promiseUpdatePlaces(places);
 
+  let db = await PlacesUtils.promiseDBConnection();
+  let rows = await db.execute(
+    "SELECT hidden, typed FROM moz_places WHERE url_hash = hash(:url) AND url = :url",
+    { url: "http://mozilla.org/" }
+  );
   Assert.equal(
-    await PlacesTestUtils.getDatabaseValue("moz_places", "typed", {
-      url: "http://mozilla.org/",
-    }),
+    rows[0].getResultByName("typed"),
     1,
     "The page should be marked as typed"
   );
   Assert.equal(
-    await PlacesTestUtils.getDatabaseValue("moz_places", "hidden", {
-      url: "http://mozilla.org/",
-    }),
+    rows[0].getResultByName("hidden"),
     0,
     "The page should be marked as not hidden"
   );
@@ -1126,12 +1144,12 @@ add_task(async function test_omit_frecency_notifications() {
   PlacesUtils.observers.addListener(["pages-rank-changed"], listener);
   let places = [
     {
-      uri: Services.io.newURI("http://mozilla.org/"),
+      uri: NetUtil.newURI("http://mozilla.org/"),
       title: "test",
       visits: [new VisitInfo(TRANSITION_TYPED)],
     },
     {
-      uri: Services.io.newURI("http://example.org/"),
+      uri: NetUtil.newURI("http://example.org/"),
       title: "test",
       visits: [new VisitInfo(TRANSITION_TYPED)],
     },
@@ -1147,7 +1165,7 @@ add_task(async function test_ignore_errors() {
   // This test ensures that trying to add a visit, with a guid already found in
   // another visit, fails - but doesn't report if we told it not to.
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_first"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_first"),
     visits: [new VisitInfo()],
   };
 
@@ -1160,7 +1178,7 @@ add_task(async function test_ignore_errors() {
   Assert.ok(await PlacesUtils.history.hasVisits(placeInfo.uri));
 
   let badPlace = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
     visits: [new VisitInfo()],
     guid: placeInfo.guid,
   };
@@ -1191,7 +1209,7 @@ add_task(async function test_ignore_errors() {
 add_task(async function test_ignore_results() {
   await PlacesUtils.history.clear();
   let place = {
-    uri: Services.io.newURI("http://mozilla.org/"),
+    uri: NetUtil.newURI("http://mozilla.org/"),
     title: "test",
     visits: [new VisitInfo()],
   };
@@ -1219,7 +1237,7 @@ add_task(async function test_ignore_results_and_errors() {
   // This test ensures that trying to add a visit, with a guid already found in
   // another visit, fails - but doesn't report if we told it not to.
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_first"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_first"),
     visits: [new VisitInfo()],
   };
 
@@ -1232,13 +1250,13 @@ add_task(async function test_ignore_results_and_errors() {
   Assert.ok(await PlacesUtils.history.hasVisits(placeInfo.uri));
 
   let badPlace = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
     visits: [new VisitInfo()],
     guid: placeInfo.guid,
   };
   let allPlaces = [
     {
-      uri: Services.io.newURI(TEST_DOMAIN + "test_other_successful_item"),
+      uri: NetUtil.newURI(TEST_DOMAIN + "test_other_successful_item"),
       visits: [new VisitInfo()],
     },
     badPlace,
@@ -1269,7 +1287,7 @@ add_task(async function test_ignore_results_and_errors() {
 
 add_task(async function test_title_on_initial_visit() {
   let place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_visit_title"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_visit_title"),
     title: "My title",
     visits: [new VisitInfo()],
     guid: "mnopqrstuvwx",
@@ -1290,7 +1308,7 @@ add_task(async function test_title_on_initial_visit() {
 
   // Now check an empty title doesn't get reported as null
   place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_visit_title"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_visit_title"),
     title: "",
     visits: [new VisitInfo()],
     guid: "fghijklmnopq",
@@ -1311,7 +1329,7 @@ add_task(async function test_title_on_initial_visit() {
 
   // and that a missing title correctly gets reported as null.
   place = {
-    uri: Services.io.newURI(TEST_DOMAIN + "test_visit_title"),
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_visit_title"),
     visits: [new VisitInfo()],
     guid: "fghijklmnopq",
   };

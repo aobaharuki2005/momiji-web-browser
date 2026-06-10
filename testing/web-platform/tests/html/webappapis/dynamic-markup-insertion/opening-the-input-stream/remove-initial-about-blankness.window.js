@@ -49,8 +49,9 @@ async_test(t => {
 
   iframe.contentWindow.persistedString = "Hello world!";
 
-  // NO document.open() call or restarted navigation, since the ongoing
-  // navigation isn't cancelled by the document.open().
+  // NO document.open() call.
+
+  iframe.src = "/common/blank.html";
 
   iframe.addEventListener("load", t.step_func_done(() => {
     assert_equals(

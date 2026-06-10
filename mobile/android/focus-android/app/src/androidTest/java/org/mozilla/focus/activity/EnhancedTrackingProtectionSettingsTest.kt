@@ -5,6 +5,7 @@ package org.mozilla.focus.activity
 
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -14,35 +15,43 @@ import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
-import org.mozilla.focus.helpers.FocusTestRule
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.TestAssetHelper.genericAsset
 import org.mozilla.focus.helpers.TestAssetHelper.getEnhancedTrackingProtectionAsset
 import org.mozilla.focus.helpers.TestHelper.exitToBrowser
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.helpers.TestSetup
 import org.mozilla.focus.testAnnotations.SmokeTest
+import java.io.IOException
 
 @RunWith(AndroidJUnit4ClassRunner::class)
-class EnhancedTrackingProtectionSettingsTest {
+class EnhancedTrackingProtectionSettingsTest : TestSetup() {
+    private lateinit var webServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
-
-    @get:Rule(order = 0)
-    val focusTestRule: FocusTestRule = FocusTestRule()
-
-    private val webServerRule get() = focusTestRule.mockWebServerRule
 
     @get:Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
         featureSettingsHelper.setSearchWidgetDialogEnabled(false)
     }
 
     @After
     fun tearDown() {
+        try {
+            webServer.shutdown()
+        } catch (e: IOException) {
+            throw AssertionError("Could not stop web server", e)
+        }
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
@@ -67,8 +76,8 @@ class EnhancedTrackingProtectionSettingsTest {
     @SmokeTest
     @Test
     fun blockAdTrackersTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val trackingPage = webServerRule.server.getEnhancedTrackingProtectionAsset("adsTrackers")
+        val genericPage = webServer.genericAsset
+        val trackingPage = webServer.getEnhancedTrackingProtectionAsset("adsTrackers")
 
         searchScreen {
         }.loadPage(genericPage.url) {
@@ -88,8 +97,8 @@ class EnhancedTrackingProtectionSettingsTest {
     @SmokeTest
     @Test
     fun allowAdTrackersTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val trackingPage = webServerRule.server.getEnhancedTrackingProtectionAsset("adsTrackers")
+        val genericPage = webServer.genericAsset
+        val trackingPage = webServer.getEnhancedTrackingProtectionAsset("adsTrackers")
 
         homeScreen {
         }.openMainMenu {
@@ -118,8 +127,8 @@ class EnhancedTrackingProtectionSettingsTest {
     @SmokeTest
     @Test
     fun blockAnalyticsTrackersTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val trackingPage = webServerRule.server.getEnhancedTrackingProtectionAsset("analyticsTrackers")
+        val genericPage = webServer.genericAsset
+        val trackingPage = webServer.getEnhancedTrackingProtectionAsset("analyticsTrackers")
 
         searchScreen {
         }.loadPage(genericPage.url) {
@@ -139,8 +148,8 @@ class EnhancedTrackingProtectionSettingsTest {
     @SmokeTest
     @Test
     fun allowAnalyticsTrackersTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val trackingPage = webServerRule.server.getEnhancedTrackingProtectionAsset("analyticsTrackers")
+        val genericPage = webServer.genericAsset
+        val trackingPage = webServer.getEnhancedTrackingProtectionAsset("analyticsTrackers")
 
         homeScreen {
         }.openMainMenu {
@@ -169,8 +178,8 @@ class EnhancedTrackingProtectionSettingsTest {
     @SmokeTest
     @Test
     fun blockSocialTrackersTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val trackingPage = webServerRule.server.getEnhancedTrackingProtectionAsset("socialTrackers")
+        val genericPage = webServer.genericAsset
+        val trackingPage = webServer.getEnhancedTrackingProtectionAsset("socialTrackers")
 
         searchScreen {
         }.loadPage(genericPage.url) {
@@ -190,8 +199,8 @@ class EnhancedTrackingProtectionSettingsTest {
     @SmokeTest
     @Test
     fun allowSocialTrackersTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val trackingPage = webServerRule.server.getEnhancedTrackingProtectionAsset("socialTrackers")
+        val genericPage = webServer.genericAsset
+        val trackingPage = webServer.getEnhancedTrackingProtectionAsset("socialTrackers")
 
         homeScreen {
         }.openMainMenu {
@@ -216,8 +225,8 @@ class EnhancedTrackingProtectionSettingsTest {
     @SmokeTest
     @Test
     fun allowOtherContentTrackersTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val trackingPage = webServerRule.server.getEnhancedTrackingProtectionAsset("otherTrackers")
+        val genericPage = webServer.genericAsset
+        val trackingPage = webServer.getEnhancedTrackingProtectionAsset("otherTrackers")
 
         searchScreen {
         }.loadPage(genericPage.url) {
@@ -238,8 +247,8 @@ class EnhancedTrackingProtectionSettingsTest {
     @SmokeTest
     @Test
     fun blockOtherContentTrackersTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val trackingPage = webServerRule.server.getEnhancedTrackingProtectionAsset("otherTrackers")
+        val genericPage = webServer.genericAsset
+        val trackingPage = webServer.getEnhancedTrackingProtectionAsset("otherTrackers")
 
         searchScreen {
         }.loadPage(genericPage.url) {
@@ -264,8 +273,8 @@ class EnhancedTrackingProtectionSettingsTest {
     @SmokeTest
     @Test
     fun addURLToTPExceptionsListTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val trackingPage = webServerRule.server.getEnhancedTrackingProtectionAsset("otherTrackers")
+        val genericPage = webServer.genericAsset
+        val trackingPage = webServer.getEnhancedTrackingProtectionAsset("otherTrackers")
 
         searchScreen {
         }.loadPage(genericPage.url) {
@@ -280,15 +289,15 @@ class EnhancedTrackingProtectionSettingsTest {
         }.openSettings {
         }.openPrivacySettingsMenu {
             openExceptionsList()
-            verifyExceptionURL(webServerRule.server.hostName)
+            verifyExceptionURL(webServer.hostName)
         }
     }
 
     @SmokeTest
     @Test
     fun removeOneExceptionURLTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val trackingPage = webServerRule.server.getEnhancedTrackingProtectionAsset("otherTrackers")
+        val genericPage = webServer.genericAsset
+        val trackingPage = webServer.getEnhancedTrackingProtectionAsset("otherTrackers")
 
         searchScreen {
         }.loadPage(genericPage.url) {
@@ -316,8 +325,8 @@ class EnhancedTrackingProtectionSettingsTest {
     @SmokeTest
     @Test
     fun removeAllExceptionURLTest() {
-        val genericPage = webServerRule.server.genericAsset
-        val trackingPage = webServerRule.server.getEnhancedTrackingProtectionAsset("otherTrackers")
+        val genericPage = webServer.genericAsset
+        val trackingPage = webServer.getEnhancedTrackingProtectionAsset("otherTrackers")
 
         searchScreen {
         }.loadPage(genericPage.url) {

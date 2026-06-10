@@ -32,9 +32,9 @@ let gTopEdge = 0;
 async function testVideo(browser, videoID, pipWin, { pinX, pinY } = {}) {
   async function switchVideoSource(src) {
     let videoResized = BrowserTestUtils.waitForEvent(pipWin, "resize");
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       browser,
-      [{ src, videoID }],
+      { src, videoID },
       async ({ src, videoID }) => {
         let doc = content.document;
         let video = doc.getElementById(videoID);

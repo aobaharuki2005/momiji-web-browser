@@ -17,19 +17,16 @@
 #include <vector>
 
 #include "api/environment/environment.h"
-#include "api/ref_counted_base.h"
 #include "api/units/data_rate.h"
 #include "api/video/render_resolution.h"
-#include "api/video/resolution.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
-#include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
 
 // A factory that creates VideoEncoders.
 // NOTE: This class is still under development and may change without notice.
-class RTC_EXPORT VideoEncoderFactory {
+class VideoEncoderFactory {
  public:
   struct CodecSupport {
     bool is_supported = false;
@@ -41,13 +38,9 @@ class RTC_EXPORT VideoEncoderFactory {
   // typically stateful to avoid toggling between different encoders, which is
   // costly due to recreation of objects, a new codec will always start with a
   // key-frame.
-  // A note about threading: This interface is used on a dedicated encoder
-  // queue. But creation and deletion may happen on another thread.
-  class EncoderSelectorInterface : public RefCountedBase {
+  class EncoderSelectorInterface {
    public:
-    // TODO: bugs.webrtc.org/42224373 - make destructor protected once all
-    // implementations use reference counting.
-    virtual ~EncoderSelectorInterface() = default;
+    virtual ~EncoderSelectorInterface() {}
 
     // Informs the encoder selector about which encoder that is currently being
     // used.
@@ -82,28 +75,25 @@ class RTC_EXPORT VideoEncoderFactory {
     return GetSupportedFormats();
   }
 
-  // TODO(crbug.com/505034803): Deprecate once all clients are switched.
-  // [[deprecated("Use the 3-parameter version instead")]]
-  virtual CodecSupport QueryCodecSupport(
-      const SdpVideoFormat& format,
-      std::optional<std::string> scalability_mode) const {
-    return QueryCodecSupport(format, scalability_mode, std::nullopt);
-  }
-
   // Query whether the specifed format is supported or not and if it will be
   // power efficient, which is currently interpreted as if there is support for
   // hardware acceleration.
   // See https://w3c.github.io/webrtc-svc/#scalabilitymodes* for a specification
   // of valid values for `scalability_mode`.
-  // The parameter `resolution` may optionally be provided to require the format
-  // has encoding support up to the provided resolution to mark it as supported.
-  //
   // NOTE: QueryCodecSupport is currently an experimental feature that is
   // subject to change without notice.
   virtual CodecSupport QueryCodecSupport(
       const SdpVideoFormat& format,
-      std::optional<std::string> scalability_mode,
-      std::optional<Resolution> resolution) const;
+      std::optional<std::string> scalability_mode) const {
+    // Default implementation, query for supported formats and check if the
+    // specified format is supported. Returns false if scalability_mode is
+    // specified.
+    CodecSupport codec_support;
+    if (!scalability_mode) {
+      codec_support.is_supported = format.IsCodecInList(GetSupportedFormats());
+    }
+    return codec_support;
+  }
 
   // Creates a VideoEncoder for the specified format.
   virtual std::unique_ptr<VideoEncoder> Create(
@@ -125,7 +115,7 @@ class RTC_EXPORT VideoEncoderFactory {
   // recommended.
   //
   // TODO(bugs.webrtc.org:14122): Deprecate and remove in favor of
-  // `RtpSenderInterface::SetEncoderSelector` using ref count.
+  // `RtpSenderInterface::SetEncoderSelector`.
   virtual std::unique_ptr<EncoderSelectorInterface> GetEncoderSelector() const {
     return nullptr;
   }

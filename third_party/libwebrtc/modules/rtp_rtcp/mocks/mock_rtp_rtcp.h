@@ -15,10 +15,10 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <span>
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/rtp_headers.h"
 #include "api/transport/network_types.h"
 #include "api/units/time_delta.h"
@@ -38,7 +38,7 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
  public:
   MOCK_METHOD(void,
               IncomingRtcpPacket,
-              (std::span<const uint8_t> packet),
+              (ArrayView<const uint8_t> packet),
               (override));
   MOCK_METHOD(void, SetRemoteSSRC, (uint32_t ssrc), (override));
   MOCK_METHOD(void, SetLocalSsrc, (uint32_t ssrc), (override));
@@ -120,11 +120,11 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               (override));
   MOCK_METHOD(void,
               OnAbortedRetransmissions,
-              (std::span<const uint16_t>),
+              (ArrayView<const uint16_t>),
               (override));
   MOCK_METHOD(void,
               OnPacketsAcknowledged,
-              (std::span<const uint16_t>),
+              (ArrayView<const uint16_t>),
               (override));
   MOCK_METHOD(std::vector<std::unique_ptr<RtpPacketToSend>>,
               GeneratePadding,
@@ -132,7 +132,7 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               (override));
   MOCK_METHOD(std::vector<RtpSequenceNumberMap::Info>,
               GetSentRtpPacketInfos,
-              (std::span<const uint16_t> sequence_numbers),
+              (ArrayView<const uint16_t> sequence_numbers),
               (const, override));
   MOCK_METHOD(size_t, ExpectedPerPacketOverhead, (), (const, override));
   MOCK_METHOD(void, OnPacketSendingThreadSwitched, (), (override));

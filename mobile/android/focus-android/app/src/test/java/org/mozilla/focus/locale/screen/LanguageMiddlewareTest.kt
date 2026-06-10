@@ -26,7 +26,6 @@ import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations.openMocks
 import org.mozilla.focus.settings.InstalledSearchEnginesSettingsFragment
 import java.util.Locale
-import kotlin.test.assertIs
 
 class LanguageMiddlewareTest {
 
@@ -117,7 +116,8 @@ class LanguageMiddlewareTest {
         val dispatchedActionCaptor = argumentCaptor<LanguageScreenAction>()
         verify(mockStore).dispatch(dispatchedActionCaptor.capture())
         val dispatchedAction = dispatchedActionCaptor.value
-        assertIs<LanguageScreenAction.UpdateLanguages>(dispatchedAction)
+        assertTrue(dispatchedAction is LanguageScreenAction.UpdateLanguages)
+        dispatchedAction as LanguageScreenAction.UpdateLanguages
         assertEquals(languages, dispatchedAction.languageList)
         assertEquals(selectedLanguage, dispatchedAction.selectedLanguage)
     }

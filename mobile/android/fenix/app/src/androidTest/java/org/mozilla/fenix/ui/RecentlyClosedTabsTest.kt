@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import org.junit.Ignore
 import org.junit.Rule
@@ -12,35 +13,29 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SkipLeaks
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
-import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
 /**
  *  Tests for verifying basic functionality of recently closed tabs history
  *
  */
-class RecentlyClosedTabsTest {
-    @get:Rule(order = 0)
-    val fenixTestRule: FenixTestRule = FenixTestRule()
-
-    private val mockWebServer get() = fenixTestRule.mockWebServer
-
-    @get:Rule(order = 1)
-    val composeTestRule = AndroidComposeTestRuleV2(
+class RecentlyClosedTabsTest : TestSetup() {
+    @get:Rule
+    val composeTestRule = AndroidComposeTestRule(
         HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
     ) { it.activity }
 
-    @get:Rule(order = 2)
-    val memoryLeaksRule = DetectMemoryLeaksRule(composeTestRule = { composeTestRule })
+    @get:Rule
+    val memoryLeaksRule = DetectMemoryLeaksRule()
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1065414
     // Verifies that a recently closed item is properly opened
@@ -103,6 +98,7 @@ class RecentlyClosedTabsTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1605515
+    @Ignore("disabled - https://bugzilla.mozilla.org/show_bug.cgi?id=1989405")
     @Test
     fun openMultipleRecentlyClosedTabsTest() {
         val firstPage = mockWebServer.getGenericAsset(1)
@@ -138,7 +134,6 @@ class RecentlyClosedTabsTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2198690
-    // Couldn't enable it due to the bug I've discovered: https://bugzilla.mozilla.org/show_bug.cgi?id=2015388
     @Ignore("disabled - https://bugzilla.mozilla.org/show_bug.cgi?id=1989405")
     @Test
     fun openRecentlyClosedTabsInPrivateBrowsingTest() {
@@ -175,6 +170,7 @@ class RecentlyClosedTabsTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1605514
+    @Ignore("disabled - https://bugzilla.mozilla.org/show_bug.cgi?id=1989405")
     @Test
     @SkipLeaks(reasons = ["https://bugzilla.mozilla.org/show_bug.cgi?id=1956220"])
     fun shareMultipleRecentlyClosedTabsTest() {
@@ -206,6 +202,7 @@ class RecentlyClosedTabsTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1065438
+    @Ignore("disabled - https://bugzilla.mozilla.org/show_bug.cgi?id=1989405")
     @Test
     @SkipLeaks(reasons = ["https://bugzilla.mozilla.org/show_bug.cgi?id=1956220"])
     fun closedPrivateTabsAreNotSavedInRecentlyClosedTabsTest() {
@@ -233,6 +230,7 @@ class RecentlyClosedTabsTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1065439
+    @Ignore("disabled - https://bugzilla.mozilla.org/show_bug.cgi?id=1989405")
     @Test
     @SkipLeaks(reasons = ["https://bugzilla.mozilla.org/show_bug.cgi?id=1956220"])
     fun deletingBrowserHistoryClearsRecentlyClosedTabsListTest() {

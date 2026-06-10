@@ -333,7 +333,7 @@ add_task(async function test_onPasswordEditedOrGenerated_generatedPassword() {
   LoginManagerParent._browsingContextGlobal.get.restore();
   restorePrompter();
   LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().clear();
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
   Services.telemetry.clearEvents();
 });
 
@@ -421,7 +421,7 @@ add_task(
     LoginManagerParent._browsingContextGlobal.get.restore();
     restorePrompter();
     LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().clear();
-    await Services.logins.removeAllUserFacingLoginsAsync();
+    Services.logins.removeAllUserFacingLogins();
     Services.telemetry.clearEvents();
   }
 );
@@ -430,19 +430,15 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
   await startTestConditions(99);
   let { generatedPassword } =
     await stubGeneratedPasswordForBrowsingContextId(99);
-  let {
-    fakePromptToSavePassword,
-    fakePromptToChangePassword,
-    restorePrompter,
-    resetPrompterHistory,
-  } = stubPrompter();
+  let { fakePromptToChangePassword, restorePrompter, resetPrompterHistory } =
+    stubPrompter();
   let rootBrowser = LMP.getRootBrowser();
   let fakePopupNotifications = {
     getNotification: sinon.stub().returns({ dismissed: true }),
   };
   sinon.stub(LoginHelper, "getBrowserForPrompt").callsFake(() => {
     return {
-      documentGlobal: {
+      ownerGlobal: {
         PopupNotifications: fakePopupNotifications,
       },
     };
@@ -505,12 +501,15 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
   info("Add a username to the auto-saved login in storage");
   let loginWithUsername = login.clone();
   loginWithUsername.username = "added_username";
-  await LoginManagerPrompter._updateLogin(login, loginWithUsername);
+  LoginManagerPrompter._updateLogin(login, loginWithUsername);
 
   info("Edit the password");
   const newPassword = generatedPassword + "🔥";
-  // After the username was added, the generated password cache was cleared,
-  // so the cache entry should not auto-save.
+  storageChangedPromised = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "modifyLogin"
+  );
+  // will update the doorhanger with changed password
   await LMP._onPasswordEditedOrGenerated(
     rootBrowser,
     "https://www.example.com",
@@ -522,39 +521,53 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
       triggeredByFillingGenerated: true,
     }
   );
+  let generatedPW =
+    LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
+      "https://www.example.com^userContextId=6"
+    );
+  Assert.ok(generatedPW.edited, "Cached edited boolean should be true");
+  equal(generatedPW.value, newPassword, "Cached password should be updated");
+  let [dataArray] = await storageChangedPromised;
+  login = dataArray.queryElementAt(1, Ci.nsILoginInfo);
+  loginWithUsername.password = newPassword;
+  // the password should be updated in storage, but not the username (until the user confirms the doorhanger)
+  assertLoginProperties(login, loginWithUsername);
+  Assert.ok(login.matches(loginWithUsername, false), "Check updated login");
+  equal(
+    (await Services.logins.getAllLogins()).length,
+    1,
+    "Should have 1 saved login still"
+  );
 
   Assert.ok(
-    !LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
-      "https://www.example.com^userContextId=6"
-    ),
-    "Generated password cache should remain cleared"
+    fakePopupNotifications.getNotification.calledOnce,
+    "getNotification was called"
   );
-
-  let storedLogins = await Services.logins.getAllLogins();
-  equal(storedLogins.length, 1, "Should have 1 saved login still");
-  equal(
-    storedLogins[0].password,
-    generatedPassword,
-    "Login password should be unchanged (no auto-save without cache)"
-  );
-
-  // Since no existing login matched the new username, promptToSavePassword
-  // is shown (not promptToChangePassword).
   Assert.ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
   Assert.ok(
-    fakePromptToSavePassword.calledOnce,
-    "promptToSavePassword should be called"
+    fakePromptToChangePassword.calledOnce,
+    "Checking promptToChangePassword was called"
   );
   Assert.ok(
-    !fakePromptToChangePassword.called,
-    "promptToChangePassword should not be called"
+    fakePromptToChangePassword.getCall(0).args[3],
+    "promptToChangePassword had a truthy 'dismissed' argument"
+  );
+  // The generated password changed, so we expect notifySaved to be true
+  Assert.ok(
+    fakePromptToChangePassword.getCall(0).args[4],
+    "promptToChangePassword should have a falsey 'notifySaved' argument"
   );
   resetPrompterHistory();
 
   info(
-    "Simulate a second edit — cache is still cleared, promptToSavePassword is called again"
+    "Simulate a second edit to check that the telemetry event for the first edit is not recorded twice"
   );
   const newerPassword = newPassword + "🦊";
+  storageChangedPromised = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "modifyLogin"
+  );
+  info("Calling _onPasswordEditedOrGenerated again");
   await LMP._onPasswordEditedOrGenerated(
     rootBrowser,
     "https://www.example.com",
@@ -566,34 +579,43 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
       triggeredByFillingGenerated: true,
     }
   );
-
-  // Cache is still cleared — no auto-save, no storage update.
-  Assert.ok(
-    !LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
-      "https://www.example.com^userContextId=6"
-    ),
-    "Generated password cache should still be cleared"
+  generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
+    "https://www.example.com^userContextId=6"
   );
+  Assert.ok(generatedPW.edited, "Cached edited state should remain true");
+  equal(generatedPW.value, newerPassword, "Cached password should be updated");
+  [dataArray] = await storageChangedPromised;
+  login = dataArray.queryElementAt(1, Ci.nsILoginInfo);
+  loginWithUsername.password = newerPassword;
+  assertLoginProperties(login, loginWithUsername);
+  Assert.ok(login.matches(loginWithUsername, false), "Check updated login");
   equal(
     (await Services.logins.getAllLogins()).length,
     1,
     "Should have 1 saved login still"
   );
-  Assert.ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
+
+  checkEditTelemetryRecorded(1, "with auto-save");
+
   Assert.ok(
-    fakePromptToSavePassword.calledOnce,
-    "promptToSavePassword should be called again"
+    fakePromptToChangePassword.calledOnce,
+    "Checking promptToChangePassword was called"
+  );
+  equal(
+    fakePromptToChangePassword.getCall(0).args[2].password,
+    newerPassword,
+    "promptToChangePassword had the updated password"
   );
   Assert.ok(
-    !fakePromptToChangePassword.called,
-    "promptToChangePassword should not be called"
+    fakePromptToChangePassword.getCall(0).args[3],
+    "promptToChangePassword had a truthy 'dismissed' argument"
   );
 
   LoginManagerParent._browsingContextGlobal.get.restore();
   LoginHelper.getBrowserForPrompt.restore();
   restorePrompter();
   LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().clear();
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
   Services.telemetry.clearEvents();
 });
 
@@ -612,7 +634,7 @@ add_task(async function test_editUsernameOfFilledSavedLogin() {
   };
   sinon.stub(LoginHelper, "getBrowserForPrompt").callsFake(() => {
     return {
-      documentGlobal: {
+      ownerGlobal: {
         PopupNotifications: fakePopupNotifications,
       },
     };
@@ -725,7 +747,7 @@ add_task(async function test_editUsernameOfFilledSavedLogin() {
   LoginHelper.getBrowserForPrompt.restore();
   restorePrompter();
   LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().clear();
-  await Services.logins.removeAllUserFacingLoginsAsync();
+  Services.logins.removeAllUserFacingLogins();
   Services.telemetry.clearEvents();
 });
 
@@ -764,7 +786,7 @@ add_task(
     restorePrompter();
     LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().clear();
     Services.logins.setLoginSavingEnabled("https://www.example.com", true);
-    await Services.logins.removeAllUserFacingLoginsAsync();
+    Services.logins.removeAllUserFacingLogins();
   }
 );
 
@@ -850,7 +872,7 @@ add_task(
     LoginManagerParent._browsingContextGlobal.get.restore();
     restorePrompter();
     LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().clear();
-    await Services.logins.removeAllUserFacingLoginsAsync();
+    Services.logins.removeAllUserFacingLogins();
     Services.telemetry.clearEvents();
   }
 );
@@ -967,7 +989,7 @@ add_task(
     LoginManagerParent._browsingContextGlobal.get.restore();
     restorePrompter();
     LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().clear();
-    await Services.logins.removeAllUserFacingLoginsAsync();
+    Services.logins.removeAllUserFacingLogins();
     Services.telemetry.clearEvents();
   }
 );
@@ -1031,7 +1053,7 @@ add_task(
     LoginManagerParent._browsingContextGlobal.get.restore();
     restorePrompter();
     LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().clear();
-    await Services.logins.removeAllUserFacingLoginsAsync();
+    Services.logins.removeAllUserFacingLogins();
   }
 );
 
@@ -1092,6 +1114,6 @@ add_task(
     LoginManagerParent._browsingContextGlobal.get.restore();
     restorePrompter();
     LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().clear();
-    await Services.logins.removeAllUserFacingLoginsAsync();
+    Services.logins.removeAllUserFacingLogins();
   }
 );

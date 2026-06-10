@@ -32,7 +32,7 @@ add_setup(async function () {
     return !events || !events.length;
   }, "Waiting for content telemetry events to get cleared");
 
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
   MockFilePicker.useAnyFile();
   MockFilePicker.returnValue = MockFilePicker.returnOK;
 

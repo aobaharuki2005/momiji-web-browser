@@ -6,34 +6,19 @@
   --ai-window-sidebar-width-default: 412px;
 }
 
-/* Hide AI window sidebar on about:newtab, about:home, firstrun, and AI Window URL */
-:root[hide-ai-sidebar] {
-  #ai-window-box,
-  #ai-window-splitter {
-    display: none;
-  }
-}
-
 .ai-window-right-sidebar {
   width: var(--ai-window-sidebar-width-default);
 }
 
 /* Splitter styling to match the left sidebar */
 #ai-window-splitter {
-  background-clip: padding-box;
+  width: var(--splitter-width);
+  border: 0;
   background-color: transparent;
-  border-inline: calc((var(--space-medium) - var(--splitter-width)) / 2) solid transparent;
-  margin-inline: 0 calc(-1 * var(--space-medium));
-  /* Matching sidebar "revamp" splitter width */
-  width: var(--space-medium);
+  position: relative;
   z-index: var(--browser-area-z-index-sidebar-splitter);
 }
 
 #ai-window-splitter:hover {
-  background-color: var(--focus-outline-color);
-}
-
-/* adjust splitter negative margin when the smartwindow sidebar is on the left */
-#sidebar-main[sidebar-positionend] ~ #ai-window-splitter {
-  margin-inline: calc(-1 * var(--space-medium)) 0;
+  background-color: var(--toolbarbutton-hover-background);
 }

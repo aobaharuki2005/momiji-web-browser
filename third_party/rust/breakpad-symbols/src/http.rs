@@ -147,9 +147,12 @@ fn create_cache_file(tmp_path: &Path, final_path: &Path) -> io::Result<NamedTemp
     // crash.
 
     // First ensure that the target directory in the cache exists
-    let base = final_path
-        .parent()
-        .ok_or_else(|| io::Error::other(format!("Bad cache path: {final_path:?}")))?;
+    let base = final_path.parent().ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::Other,
+            format!("Bad cache path: {final_path:?}"),
+        )
+    })?;
     fs::create_dir_all(base)?;
 
     NamedTempFile::new_in(tmp_path)
@@ -354,13 +357,17 @@ async fn fetch_lookup(
     let mut temp = create_cache_file(tmp, &final_cache_path)?;
 
     // Now stream the contents to our file
-    while let Some(chunk) = res.chunk().await.map_err(std::io::Error::other)? {
+    while let Some(chunk) = res
+        .chunk()
+        .await
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
+    {
         temp.write_all(&chunk[..])?;
     }
 
     // And swap it into the cache
     temp.persist_noclobber(&final_cache_path)
-        .map_err(std::io::Error::other)?;
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
 
     trace!("symbols: fetched native binary: {}", lookup.cache_rel);
 
@@ -447,7 +454,7 @@ pub fn unpack_cabinet_file(
 
     // And swap it into the cache
     temp.persist_noclobber(&final_cache_path)
-        .map_err(std::io::Error::other)?;
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
 
     Ok(final_cache_path)
 }

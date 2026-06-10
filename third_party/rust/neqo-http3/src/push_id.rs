@@ -9,7 +9,7 @@ use std::{
     ops::{Add, Sub},
 };
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Default)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd)]
 pub struct PushId(u64);
 
 impl PushId {
@@ -18,7 +18,7 @@ impl PushId {
         Self(id)
     }
 
-    pub const fn next(&mut self) {
+    pub fn next(&mut self) {
         self.0 += 1;
     }
 }
@@ -55,9 +55,4 @@ impl Add<u64> for PushId {
     fn add(self, rhs: u64) -> Self {
         Self(self.0 + rhs)
     }
-}
-
-#[test]
-fn push_id_display() {
-    assert_eq!(PushId::new(42).to_string(), "42");
 }

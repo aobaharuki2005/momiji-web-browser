@@ -1,4 +1,5 @@
 // META: global=window,worker
+// META: script=/common/get-host-info.sub.js
 // META: script=resources/webtransport-test-helpers.sub.js
 
 function set_csp(destination) {
@@ -9,10 +10,9 @@ function set_csp(destination) {
 }
 
 promise_test(async t => {
- const handler_url = webtransport_url('custom-response.py?:status=200');
- let meta = set_csp(new URL(handler_url).origin);
+ let meta = set_csp(`${BASE}`);
  document.head.appendChild(meta);
 
-  let wt = new WebTransport(handler_url);
+  let wt = new WebTransport(webtransport_url('custom-response.py?:status=200'));
   await wt.ready;
 }, 'WebTransport connection should succeed when CSP connect-src destination is set to the page');

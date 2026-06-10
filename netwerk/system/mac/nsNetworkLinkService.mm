@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -160,14 +161,7 @@ void nsNetworkLinkService::GetDnsSuffixListInternal() {
       LOG(("DNS search domain from [%s]\n", res.dnsrch[i]));
       result.AppendElement(nsCString(res.dnsrch[i]));
     }
-    // Calls to res_ninit() should be matched with calls to res_ndestroy()
-    // when available, as it is on macOS. This resolves bug 2039387. On
-    // macOS 26.5 (and up?) a call to res_ninit() always triggers a call to
-    // notify_register_check(). But only res_ndestroy() triggers a
-    // corresponding call to notify_cancel(). res_nclose() doesn't. So
-    // calling only res_nclose() here leaks resources on macOS 26.5. And it
-    // eventually crashes our app when a "registration limit" is exceeded.
-    res_ndestroy(&res);
+    res_nclose(&res);
   }
 
   MutexAutoLock lock(mMutex);
@@ -539,7 +533,7 @@ bool nsNetworkLinkService::IPv6NetworkId(SHA1Sum* sha1) {
     bool hasNonLocalIPv6 = false;
     struct ifaddrs* ifa;
     for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-      if (ifa->ifa_addr == nullptr) {
+      if (ifa->ifa_addr == NULL) {
         continue;
       }
       if ((AF_INET6 == ifa->ifa_addr->sa_family) &&
@@ -716,26 +710,9 @@ void nsNetworkLinkService::NetworkConfigChanged(SCDynamicStoreRef aStoreREf,
 
   bool ipConfigChanged = false;
   bool dnsConfigChanged = false;
-  bool skipOnIPConfigChanged = false;
   for (CFIndex i = 0; i < CFArrayGetCount(aChangedKeys); ++i) {
     CFStringRef key =
         static_cast<CFStringRef>(CFArrayGetValueAtIndex(aChangedKeys, i));
-    // Don't call OnIPConfigChanged() if aChangedKeys contains any EAPOL
-    // notifications. This works around a crash bug deep in macOS system
-    // code. Our observers should still get reachability notifications, so
-    // this shouldn't interfere with network functionality.
-    if (CFStringHasSuffix(key, CFSTR("EAPOL"))) {
-      CFIndex keyMaxLength =
-          CFStringGetMaximumSizeForEncoding(CFStringGetLength(key),
-                                            kCFStringEncodingUTF8) +
-          1;
-      char* keyBuffer = static_cast<char*>(moz_xmalloc(keyMaxLength));
-      keyBuffer[0] = 0;
-      CFStringGetCString(key, keyBuffer, keyMaxLength, kCFStringEncodingUTF8);
-      LOG(("Skipping OnIPConfigChanged() on changed key %s", keyBuffer));
-      free(keyBuffer);
-      skipOnIPConfigChanged = true;
-    }
     if (CFStringHasSuffix(key, kSCEntNetIPv4) ||
         CFStringHasSuffix(key, kSCEntNetIPv6)) {
       ipConfigChanged = true;
@@ -746,7 +723,7 @@ void nsNetworkLinkService::NetworkConfigChanged(SCDynamicStoreRef aStoreREf,
   }
 
   nsNetworkLinkService* service = static_cast<nsNetworkLinkService*>(aInfo);
-  if (ipConfigChanged && !skipOnIPConfigChanged) {
+  if (ipConfigChanged) {
     service->OnIPConfigChanged();
   }
 
@@ -825,8 +802,7 @@ nsresult nsNetworkLinkService::Init(void) {
       ::SCDynamicStoreCreate(nullptr, CFSTR("IPAndDNSChangeCallbackSCF"),
                              NetworkConfigChanged, &storeContext);
 
-  CFStringRef patterns[6] = {nullptr, nullptr, nullptr,
-                             nullptr, nullptr, nullptr};
+  CFStringRef patterns[4] = {nullptr, nullptr, nullptr, nullptr};
   OSStatus err = getErrorCodePtr(mStoreRef);
   if (err == noErr) {
     // This pattern is "State:/Network/Service/[^/]+/IPv4".
@@ -841,16 +817,7 @@ nsresult nsNetworkLinkService::Init(void) {
     // This pattern is "Setup:/Network/Service/[^/]+/DNS".
     patterns[3] = ::SCDynamicStoreKeyCreateNetworkServiceEntity(
         nullptr, kSCDynamicStoreDomainSetup, kSCCompAnyRegex, kSCEntNetDNS);
-    // We want to be able to ignore some groups of notifications that contain
-    // "EAPOL" keys. This works around a crash bug deep in macOS system code.
-    // This pattern is "State:/Network/Service/[^/]+/EAPOL".
-    patterns[4] = ::SCDynamicStoreKeyCreateNetworkServiceEntity(
-        nullptr, kSCDynamicStoreDomainState, kSCCompAnyRegex, CFSTR("EAPOL"));
-    // This pattern is "State:/Network/Interface/[^/]+/EAPOL".
-    patterns[5] = ::SCDynamicStoreKeyCreateNetworkInterfaceEntity(
-        nullptr, kSCDynamicStoreDomainState, kSCCompAnyRegex, CFSTR("EAPOL"));
-    if (!patterns[0] || !patterns[1] || !patterns[2] || !patterns[3] ||
-        !patterns[4] || !patterns[5]) {
+    if (!patterns[0] || !patterns[1] || !patterns[2] || !patterns[3]) {
       err = -1;
     }
   }
@@ -861,7 +828,7 @@ nsresult nsNetworkLinkService::Init(void) {
   // that match that pattern list, then create our run loop
   // source.
   if (err == noErr) {
-    patternList = ::CFArrayCreate(nullptr, (const void**)patterns, 6,
+    patternList = ::CFArrayCreate(nullptr, (const void**)patterns, 4,
                                   &kCFTypeArrayCallBacks);
     if (!patternList) {
       err = -1;
@@ -881,8 +848,6 @@ nsresult nsNetworkLinkService::Init(void) {
   CFReleaseSafe(patterns[1]);
   CFReleaseSafe(patterns[2]);
   CFReleaseSafe(patterns[3]);
-  CFReleaseSafe(patterns[4]);
-  CFReleaseSafe(patterns[5]);
   CFReleaseSafe(patternList);
 
   if (err != noErr) {

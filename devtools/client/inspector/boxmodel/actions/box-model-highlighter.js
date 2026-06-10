@@ -28,7 +28,7 @@ module.exports = {
   highlightSelectedNode(options = {}) {
     return async thunkOptions => {
       const { inspector } = thunkOptions;
-      if (!inspector || inspector.isDestroyed()) {
+      if (!inspector || inspector._destroyed) {
         return;
       }
 
@@ -56,7 +56,7 @@ module.exports = {
   highlightNode(nodeFront, options = {}) {
     return async thunkOptions => {
       const { inspector } = thunkOptions;
-      if (!inspector || inspector.isDestroyed()) {
+      if (!inspector || inspector._destroyed) {
         return;
       }
 
@@ -74,7 +74,7 @@ module.exports = {
   unhighlightNode() {
     return async thunkOptions => {
       const { inspector } = thunkOptions;
-      if (!inspector || inspector.isDestroyed()) {
+      if (!inspector || inspector._destroyed) {
         return;
       }
 

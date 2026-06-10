@@ -19,7 +19,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
-  ChangePasswordURLs: "resource:///modules/ChangePasswordURLs.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -87,9 +86,12 @@ export class AboutLoginsParent extends JSWindowActorParent {
     // Only respond to messages sent from a privlegedabout process. Ideally
     // we would also check the contentPrincipal.originNoSuffix but this
     // check has been removed due to bug 1576722.
-    if (this.manager.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE) {
+    if (
+      this.browsingContext.embedderElement.remoteType !=
+      EXPECTED_ABOUTLOGINS_REMOTE_TYPE
+    ) {
       throw new Error(
-        `AboutLoginsParent: Received ${message.name} message the remote type didn't match expectations: ${this.manager.remoteType} == ${EXPECTED_ABOUTLOGINS_REMOTE_TYPE}`
+        `AboutLoginsParent: Received ${message.name} message the remote type didn't match expectations: ${this.browsingContext.embedderElement.remoteType} == ${EXPECTED_ABOUTLOGINS_REMOTE_TYPE}`
       );
     }
 
@@ -101,7 +103,7 @@ export class AboutLoginsParent extends JSWindowActorParent {
         break;
       }
       case "AboutLogins:DeleteLogin": {
-        await this.#deleteLogin(message.data.login);
+        this.#deleteLogin(message.data.login);
         break;
       }
       case "AboutLogins:SortChanged": {
@@ -152,20 +154,20 @@ export class AboutLoginsParent extends JSWindowActorParent {
         break;
       }
       case "AboutLogins:RemoveAllLogins": {
-        await this.#removeAllLogins();
+        this.#removeAllLogins();
         break;
       }
     }
   }
 
-  get #documentGlobal() {
-    return this.browsingContext.embedderElement?.documentGlobal;
+  get #ownerGlobal() {
+    return this.browsingContext.embedderElement?.ownerGlobal;
   }
 
   async #createLogin(newLogin) {
     if (!Services.policies.isAllowed("removeMasterPassword")) {
       if (!lazy.LoginHelper.isPrimaryPasswordSet()) {
-        this.#documentGlobal.openDialog(
+        this.#ownerGlobal.openDialog(
           "chrome://mozapps/content/preferences/changemp.xhtml",
           "",
           "centerscreen,chrome,modal,titlebar"
@@ -199,18 +201,15 @@ export class AboutLoginsParent extends JSWindowActorParent {
 
   get preselectedLogin() {
     const preselectedLogin =
-      this.#documentGlobal?.gBrowser.selectedTab.getAttribute(
-        "preselect-login"
-      ) || this.browsingContext.currentURI?.ref;
-    this.#documentGlobal?.gBrowser.selectedTab.removeAttribute(
-      "preselect-login"
-    );
+      this.#ownerGlobal?.gBrowser.selectedTab.getAttribute("preselect-login") ||
+      this.browsingContext.currentURI?.ref;
+    this.#ownerGlobal?.gBrowser.selectedTab.removeAttribute("preselect-login");
     return preselectedLogin || null;
   }
 
-  async #deleteLogin(loginObject) {
+  #deleteLogin(loginObject) {
     let login = lazy.LoginHelper.vanillaObjectToLogin(loginObject);
-    await Services.logins.removeLoginAsync(login);
+    Services.logins.removeLogin(login);
   }
 
   #sortChanged(sort) {
@@ -218,12 +217,12 @@ export class AboutLoginsParent extends JSWindowActorParent {
   }
 
   #syncEnable() {
-    this.#documentGlobal.gSync.openFxAEmailFirstPage("password-manager");
+    this.#ownerGlobal.gSync.openFxAEmailFirstPage("password-manager");
   }
 
   #importFromBrowser() {
     try {
-      lazy.MigrationUtils.showMigrationWizard(this.#documentGlobal, {
+      lazy.MigrationUtils.showMigrationWizard(this.#ownerGlobal, {
         entrypoint: lazy.MigrationUtils.MIGRATION_ENTRYPOINTS.PASSWORDS,
       });
     } catch (ex) {
@@ -240,13 +239,13 @@ export class AboutLoginsParent extends JSWindowActorParent {
     const SUPPORT_URL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
       "password-manager-remember-delete-edit-logins";
-    this.#documentGlobal.openWebLinkIn(SUPPORT_URL, "tab", {
+    this.#ownerGlobal.openWebLinkIn(SUPPORT_URL, "tab", {
       relatedToCurrent: true,
     });
   }
 
   #openPreferences() {
-    this.#documentGlobal.openPreferences("privacy-logins");
+    this.#ownerGlobal.openPreferences("privacy-logins");
   }
 
   async #primaryPasswordRequest(messageId, reason) {
@@ -276,6 +275,7 @@ export class AboutLoginsParent extends JSWindowActorParent {
 
     let { isAuthorized, telemetryEvent } = await lazy.LoginHelper.requestReauth(
       this.browsingContext.embedderElement,
+      isOSAuthEnabled,
       AboutLogins._authExpirationTime,
       messageText.value,
       captionText.value,
@@ -397,6 +397,7 @@ export class AboutLoginsParent extends JSWindowActorParent {
     let reason = "export_logins";
     let { isAuthorized, telemetryEvent } = await lazy.LoginHelper.requestReauth(
       this.browsingContext.embedderElement,
+      true,
       null, // Prompt regardless of a recent prompt
       messageText.value,
       captionText.value,
@@ -501,8 +502,8 @@ export class AboutLoginsParent extends JSWindowActorParent {
     }
   }
 
-  async #removeAllLogins() {
-    await Services.logins.removeAllUserFacingLoginsAsync();
+  #removeAllLogins() {
+    Services.logins.removeAllUserFacingLogins();
   }
 
   #handleLoginStorageErrors(login, error) {
@@ -542,7 +543,6 @@ class AboutLoginsInternal {
   subscribers = new WeakSet();
   #observersAdded = false;
   authExpirationTime = Number.NEGATIVE_INFINITY;
-  changePasswordURLsByLoginGUID = new Map();
 
   async observe(subject, topic, type) {
     if (!ChromeUtils.nondeterministicGetWeakSetKeys(this.subscribers).length) {
@@ -578,7 +578,7 @@ class AboutLoginsInternal {
             break;
           }
           case "modifyLogin": {
-            await this.#modifyLogin(subject);
+            this.#modifyLogin(subject);
             break;
           }
           case "removeLogin": {
@@ -586,7 +586,7 @@ class AboutLoginsInternal {
             break;
           }
           case "removeAllLogins": {
-            await this.#removeAllLogins();
+            this.#removeAllLogins();
             break;
           }
         }
@@ -614,10 +614,7 @@ class AboutLoginsInternal {
         );
       }
     }
-    this.#messageSubscribers(
-      "AboutLogins:UpdateChangePasswordURLs",
-      await lazy.ChangePasswordURLs.getChangePasswordURLsByLoginGUID([login])
-    );
+
     this.#messageSubscribers("AboutLogins:LoginAdded", login);
   }
 
@@ -650,10 +647,7 @@ class AboutLoginsInternal {
         );
       }
     }
-    this.#messageSubscribers(
-      "AboutLogins:UpdateChangePasswordURLs",
-      await lazy.ChangePasswordURLs.getChangePasswordURLsByLoginGUID([login])
-    );
+
     this.#messageSubscribers("AboutLogins:LoginModified", login);
   }
 
@@ -665,7 +659,7 @@ class AboutLoginsInternal {
     this.#messageSubscribers("AboutLogins:LoginRemoved", login);
   }
 
-  async #removeAllLogins() {
+  #removeAllLogins() {
     this.#messageSubscribers("AboutLogins:RemoveAllLogins", []);
   }
 
@@ -702,14 +696,14 @@ class AboutLoginsInternal {
   } = {}) {
     for (let subscriber of this.#subscriberIterator()) {
       let browser = subscriber.embedderElement;
-      let MozXULElement = browser.documentGlobal.MozXULElement;
+      let MozXULElement = browser.ownerGlobal.MozXULElement;
       MozXULElement.insertFTLIfNeeded("browser/aboutLogins.ftl");
       for (let ftl of extraFtl) {
         MozXULElement.insertFTLIfNeeded(ftl);
       }
 
       // If there's already an existing notification bar, don't do anything.
-      let { gBrowser } = browser.documentGlobal;
+      let { gBrowser } = browser.ownerGlobal;
       let notificationBox = gBrowser.getNotificationBox(browser);
       let notification = notificationBox.getNotificationWithValue(id);
       if (notification) {
@@ -742,7 +736,7 @@ class AboutLoginsInternal {
   #removeNotifications(notificationId) {
     for (let subscriber of this.#subscriberIterator()) {
       let browser = subscriber.embedderElement;
-      let { gBrowser } = browser.documentGlobal;
+      let { gBrowser } = browser.ownerGlobal;
       let notificationBox = gBrowser.getNotificationBox(browser);
       let notification =
         notificationBox.getNotificationWithValue(notificationId);
@@ -830,11 +824,6 @@ class AboutLoginsInternal {
         );
       }
     }
-
-    sendMessageFn(
-      "AboutLogins:SetChangePasswordURLs",
-      await lazy.ChangePasswordURLs.getChangePasswordURLsByLoginGUID(logins)
-    );
   }
 
   async getSyncState() {

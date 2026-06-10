@@ -10,13 +10,12 @@
 
 #include "pc/dtls_srtp_transport.h"
 
-#include <cstddef>
 #include <cstdint>
-#include <memory>
+#include <functional>
+#include <string>
 #include <utility>
 #include <vector>
 
-#include "absl/functional/any_invocable.h"
 #include "api/dtls_transport_interface.h"
 #include "api/field_trials_view.h"
 #include "p2p/base/packet_transport_internal.h"
@@ -28,80 +27,54 @@
 #include "rtc_base/ssl_stream_adapter.h"
 
 namespace webrtc {
-namespace {
-void ValidateAndLogTransport(DtlsTransportInternal* rtp_dtls_transport,
-                             DtlsTransportInternal* old_rtcp_dtls_transport,
-                             DtlsTransportInternal* rtcp_dtls_transport,
-                             bool is_srtp_active) {
-  if (rtcp_dtls_transport && rtcp_dtls_transport != old_rtcp_dtls_transport) {
-    // This would only be possible if using BUNDLE but not rtcp-mux, which isn't
-    // allowed according to the BUNDLE spec.
-    RTC_CHECK(!is_srtp_active)
-        << "Setting RTCP for DTLS/SRTP after the DTLS is active "
-           "should never happen.";
-  }
-  if (rtcp_dtls_transport && rtp_dtls_transport) {
-    RTC_DCHECK_EQ(rtcp_dtls_transport->transport_name(),
-                  rtp_dtls_transport->transport_name());
-  }
-  if (rtcp_dtls_transport) {
-    RTC_LOG(LS_INFO) << "Setting RTCP Transport on "
-                     << rtcp_dtls_transport->transport_name() << " transport "
-                     << rtcp_dtls_transport;
-  }
-  if (rtp_dtls_transport) {
-    RTC_LOG(LS_INFO) << "Setting RTP Transport on "
-                     << rtp_dtls_transport->transport_name() << " transport "
-                     << rtp_dtls_transport;
-  }
-}
-}  // namespace
 
 DtlsSrtpTransport::DtlsSrtpTransport(bool rtcp_mux_enabled,
                                      const FieldTrialsView& field_trials)
     : SrtpTransport(rtcp_mux_enabled, field_trials) {}
 
-void DtlsSrtpTransport::SetDtlsTransports(DtlsTransportInternal* rtp_dtls,
-                                          DtlsTransportInternal* rtcp_dtls) {
-  ValidateAndLogTransport(rtp_dtls, rtcp_dtls_transport(), rtcp_dtls,
-                          IsSrtpActive());
-
-  bool rtp_changed = MaybeUnsubscribe(rtp_dtls_transport(), rtp_dtls);
-  bool rtcp_changed = MaybeUnsubscribe(rtcp_dtls_transport(), rtcp_dtls);
-
-  // Now pass the RTP transport to RtpTransport.
-  SetRtpPacketTransport(rtp_dtls);
-  SetRtcpPacketTransport(rtcp_dtls);
-
-  if (rtp_changed) {
-    SetupDtlsTransport(rtp_dtls, /*is_rtcp=*/false);
-  }
-  if (rtcp_changed) {
-    SetupDtlsTransport(rtcp_dtls, /*is_rtcp=*/true);
-  }
-}
-
-void DtlsSrtpTransport::SetDtlsTransportsOwned(
-    std::unique_ptr<DtlsTransportInternal> rtp_dtls,
-    std::unique_ptr<DtlsTransportInternal> rtcp_dtls) {
-  ValidateAndLogTransport(rtp_dtls.get(), rtcp_dtls_transport(),
-                          rtcp_dtls.get(), IsSrtpActive());
-
-  bool rtp_changed = MaybeUnsubscribe(rtp_dtls_transport(), rtp_dtls.get());
-  bool rtcp_changed = MaybeUnsubscribe(rtcp_dtls_transport(), rtcp_dtls.get());
-
-  // Pass the RTP transport to RtpTransport and ownership of
-  // rtcp_dtls_transport.
-  SetRtpPacketTransportOwned(std::move(rtp_dtls));
-  SetRtcpPacketTransportOwned(std::move(rtcp_dtls));
-
-  if (rtp_changed) {
-    SetupDtlsTransport(rtp_dtls_transport(), /*is_rtcp=*/false);
+void DtlsSrtpTransport::SetDtlsTransports(
+    DtlsTransportInternal* rtp_dtls_transport,
+    DtlsTransportInternal* rtcp_dtls_transport) {
+  // Transport names should be the same.
+  if (rtp_dtls_transport && rtcp_dtls_transport) {
+    RTC_DCHECK(rtp_dtls_transport->transport_name() ==
+               rtcp_dtls_transport->transport_name());
   }
 
-  if (rtcp_changed) {
-    SetupDtlsTransport(rtcp_dtls_transport(), /*is_rtcp=*/true);
+  // When using DTLS-SRTP, we must reset the SrtpTransport every time the
+  // DtlsTransport changes and wait until the DTLS handshake is complete to set
+  // the newly negotiated parameters.
+  // If `active_reset_srtp_params_` is true, intentionally reset the SRTP
+  // parameter even though the DtlsTransport may not change.
+  if (IsSrtpActive() && (rtp_dtls_transport != rtp_dtls_transport_ ||
+                         active_reset_srtp_params_)) {
+    ResetParams();
   }
+
+  const std::string transport_name =
+      rtp_dtls_transport ? rtp_dtls_transport->transport_name() : "null";
+
+  if (rtcp_dtls_transport && rtcp_dtls_transport != rtcp_dtls_transport_) {
+    // This would only be possible if using BUNDLE but not rtcp-mux, which isn't
+    // allowed according to the BUNDLE spec.
+    RTC_CHECK(!(IsSrtpActive()))
+        << "Setting RTCP for DTLS/SRTP after the DTLS is active "
+           "should never happen.";
+  }
+
+  if (rtcp_dtls_transport) {
+    RTC_LOG(LS_INFO) << "Setting RTCP Transport on " << transport_name
+                     << " transport " << rtcp_dtls_transport;
+  }
+  SetRtcpDtlsTransport(rtcp_dtls_transport);
+  SetRtcpPacketTransport(rtcp_dtls_transport);
+
+  RTC_LOG(LS_INFO) << "Setting RTP Transport on " << transport_name
+                   << " transport " << rtp_dtls_transport;
+  SetRtpDtlsTransport(rtp_dtls_transport);
+  SetRtpPacketTransport(rtp_dtls_transport);
+
+  MaybeSetupDtlsSrtp();
 }
 
 void DtlsSrtpTransport::SetRtcpMuxEnabled(bool enable) {
@@ -136,25 +109,25 @@ void DtlsSrtpTransport::UpdateRecvEncryptedHeaderExtensionIds(
 }
 
 bool DtlsSrtpTransport::IsDtlsActive() {
-  auto rtcp_dtls_transport_ptr =
-      rtcp_mux_enabled() ? nullptr : rtcp_dtls_transport();
-  return rtp_dtls_transport() && rtp_dtls_transport()->IsDtlsActive() &&
-         (!rtcp_dtls_transport_ptr || rtcp_dtls_transport_ptr->IsDtlsActive());
+  auto rtcp_dtls_transport =
+      rtcp_mux_enabled() ? nullptr : rtcp_dtls_transport_;
+  return (rtp_dtls_transport_ && rtp_dtls_transport_->IsDtlsActive() &&
+          (!rtcp_dtls_transport || rtcp_dtls_transport->IsDtlsActive()));
 }
 
 bool DtlsSrtpTransport::IsDtlsConnected() {
-  auto rtcp_dtls_transport_ptr =
-      rtcp_mux_enabled() ? nullptr : rtcp_dtls_transport();
-  return rtp_dtls_transport() &&
-         rtp_dtls_transport()->dtls_state() == DtlsTransportState::kConnected &&
-         (!rtcp_dtls_transport_ptr || rtcp_dtls_transport_ptr->dtls_state() ==
-                                          DtlsTransportState::kConnected);
+  auto rtcp_dtls_transport =
+      rtcp_mux_enabled() ? nullptr : rtcp_dtls_transport_;
+  return (rtp_dtls_transport_ &&
+          rtp_dtls_transport_->dtls_state() == DtlsTransportState::kConnected &&
+          (!rtcp_dtls_transport || rtcp_dtls_transport->dtls_state() ==
+                                       DtlsTransportState::kConnected));
 }
 
 bool DtlsSrtpTransport::IsDtlsWritable() {
   auto rtcp_packet_transport =
-      rtcp_mux_enabled() ? nullptr : rtcp_dtls_transport();
-  return rtp_dtls_transport() && rtp_dtls_transport()->writable() &&
+      rtcp_mux_enabled() ? nullptr : rtcp_dtls_transport_;
+  return rtp_dtls_transport_ && rtp_dtls_transport_->writable() &&
          (!rtcp_packet_transport || rtcp_packet_transport->writable());
 }
 
@@ -169,7 +142,7 @@ void DtlsSrtpTransport::MaybeSetupDtlsSrtp() {
 
   SetupRtpDtlsSrtp();
 
-  if (!rtcp_mux_enabled() && rtcp_dtls_transport()) {
+  if (!rtcp_mux_enabled() && rtcp_dtls_transport_) {
     SetupRtcpDtlsSrtp();
   }
 }
@@ -191,7 +164,7 @@ void DtlsSrtpTransport::SetupRtpDtlsSrtp() {
   ZeroOnFreeBuffer<uint8_t> send_key;
   ZeroOnFreeBuffer<uint8_t> recv_key;
 
-  if (!ExtractParams(rtp_dtls_transport(), &selected_crypto_suite, &send_key,
+  if (!ExtractParams(rtp_dtls_transport_, &selected_crypto_suite, &send_key,
                      &recv_key) ||
       !SetRtpParams(selected_crypto_suite, send_key, send_extension_ids,
                     selected_crypto_suite, recv_key, recv_extension_ids)) {
@@ -219,7 +192,7 @@ void DtlsSrtpTransport::SetupRtcpDtlsSrtp() {
   int selected_crypto_suite;
   ZeroOnFreeBuffer<uint8_t> rtcp_send_key;
   ZeroOnFreeBuffer<uint8_t> rtcp_recv_key;
-  if (!ExtractParams(rtcp_dtls_transport(), &selected_crypto_suite,
+  if (!ExtractParams(rtcp_dtls_transport_, &selected_crypto_suite,
                      &rtcp_send_key, &rtcp_recv_key) ||
       !SetRtcpParams(selected_crypto_suite, rtcp_send_key, send_extension_ids,
                      selected_crypto_suite, rtcp_recv_key,
@@ -241,6 +214,9 @@ bool DtlsSrtpTransport::ExtractParams(DtlsTransportInternal* dtls_transport,
     return false;
   }
 
+  RTC_LOG(LS_INFO) << "Extracting keys from transport: "
+                   << dtls_transport->transport_name();
+
   int key_len;
   int salt_len;
   if (!GetSrtpKeyAndSaltLengths((*selected_crypto_suite), &key_len,
@@ -250,19 +226,15 @@ bool DtlsSrtpTransport::ExtractParams(DtlsTransportInternal* dtls_transport,
     return false;
   }
 
-  RTC_LOG(LS_INFO) << "Extracting keys from transport: "
-                   << dtls_transport->transport_name();
+  // OK, we're now doing DTLS (RFC 5764)
+  ZeroOnFreeBuffer<uint8_t> dtls_buffer(key_len * 2 + salt_len * 2);
 
   // RFC 5705 exporter using the RFC 5764 parameters
-  ZeroOnFreeBuffer<uint8_t> dtls_buffer;
-  if (!dtls_transport->AppendSrtpKeyingMaterial(dtls_buffer)) {
+  if (!dtls_transport->ExportSrtpKeyingMaterial(dtls_buffer)) {
     RTC_LOG(LS_ERROR) << "DTLS-SRTP key export failed";
     RTC_DCHECK_NOTREACHED();  // This should never happen
     return false;
   }
-  // Verify that key material size is as expected.
-  RTC_DCHECK_EQ(dtls_buffer.size(),
-                static_cast<size_t>(2 * key_len + 2 * salt_len));
 
   // Sync up the keys with the DTLS-SRTP interface
   // https://datatracker.ietf.org/doc/html/rfc5764#section-4.2
@@ -292,41 +264,42 @@ bool DtlsSrtpTransport::ExtractParams(DtlsTransportInternal* dtls_transport,
   return true;
 }
 
-void DtlsSrtpTransport::SetupDtlsTransport(
-    DtlsTransportInternal* dtls_transport,
-    bool is_rtcp) {
-  if (dtls_transport) {
-    dtls_transport->SubscribeDtlsTransportState(
+void DtlsSrtpTransport::SetDtlsTransport(
+    DtlsTransportInternal* new_dtls_transport,
+    DtlsTransportInternal** old_dtls_transport) {
+  if (*old_dtls_transport == new_dtls_transport) {
+    return;
+  }
+
+  if (*old_dtls_transport) {
+    (*old_dtls_transport)->UnsubscribeDtlsTransportState(this);
+  }
+
+  *old_dtls_transport = new_dtls_transport;
+
+  if (new_dtls_transport) {
+    new_dtls_transport->SubscribeDtlsTransportState(
         this,
         [this](DtlsTransportInternal* transport, DtlsTransportState state) {
           OnDtlsState(transport, state);
         });
-    // Set the initial state.
-    OnDtlsState(dtls_transport, dtls_transport->dtls_state());
-  } else {
-    // When the transport is removed, we usually reset the SRTP parameters.
-    // However, if the RTCP transport is removed because we are enabling RTCP
-    // muxing, we should not reset the parameters because the SRTP session
-    // will be maintained by the RTP transport.
-    if (is_rtcp && rtcp_mux_enabled()) {
-      return;
-    }
-    OnDtlsState(nullptr, DtlsTransportState::kNew);
   }
 }
 
-bool DtlsSrtpTransport::MaybeUnsubscribe(DtlsTransportInternal* old_transport,
-                                         DtlsTransportInternal* new_transport) {
-  if (old_transport && old_transport != new_transport) {
-    old_transport->UnsubscribeDtlsTransportState(this);
-  }
-  return old_transport != new_transport;
+void DtlsSrtpTransport::SetRtpDtlsTransport(
+    DtlsTransportInternal* rtp_dtls_transport) {
+  SetDtlsTransport(rtp_dtls_transport, &rtp_dtls_transport_);
+}
+
+void DtlsSrtpTransport::SetRtcpDtlsTransport(
+    DtlsTransportInternal* rtcp_dtls_transport) {
+  SetDtlsTransport(rtcp_dtls_transport, &rtcp_dtls_transport_);
 }
 
 void DtlsSrtpTransport::OnDtlsState(DtlsTransportInternal* transport,
                                     DtlsTransportState state) {
-  RTC_DCHECK(transport == rtp_dtls_transport() ||
-             transport == rtcp_dtls_transport());
+  RTC_DCHECK(transport == rtp_dtls_transport_ ||
+             transport == rtcp_dtls_transport_);
 
   if (on_dtls_state_change_) {
     on_dtls_state_change_();
@@ -334,6 +307,7 @@ void DtlsSrtpTransport::OnDtlsState(DtlsTransportInternal* transport,
 
   if (state != DtlsTransportState::kConnected) {
     ResetParams();
+    return;
   }
 
   MaybeSetupDtlsSrtp();
@@ -345,7 +319,7 @@ void DtlsSrtpTransport::OnWritableState(
 }
 
 void DtlsSrtpTransport::SetOnDtlsStateChange(
-    absl::AnyInvocable<void()> callback) {
+    std::function<void(void)> callback) {
   on_dtls_state_change_ = std::move(callback);
 }
 }  // namespace webrtc

@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -6,8 +8,8 @@
 #define jit_SparseBitSet_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/MathAlgorithms.h"
 
-#include <bit>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -48,9 +50,10 @@ class SparseBitSet {
   static constexpr size_t NumEntries = 8;
   using Map = InlineMap<uint32_t, WordType, NumEntries, DefaultHasher<uint32_t>,
                         AllocPolicy>;
+  using Range = typename Map::Range;
   Map map_;
 
-  static_assert(std::has_single_bit(BitsPerWord),
+  static_assert(mozilla::IsPowerOfTwo(BitsPerWord),
                 "Must be power-of-two for fast division/modulo");
   static_assert((sizeof(uint32_t) + sizeof(WordType)) * NumEntries ==
                     Map::SizeOfInlineEntries,
@@ -97,9 +100,9 @@ class SparseBitSet {
   bool empty() const { return map_.empty(); }
 
   [[nodiscard]] bool insertAll(const SparseBitSet& other) {
-    for (auto iter = other.map_.iter(); !iter.done(); iter.next()) {
-      auto index = iter.get().key();
-      WordType bits = iter.get().value();
+    for (Range r(other.map_.all()); !r.empty(); r.popFront()) {
+      auto index = r.front().key();
+      WordType bits = r.front().value();
       MOZ_ASSERT(bits);
       auto p = map_.lookupForAdd(index);
       if (p) {
@@ -127,18 +130,18 @@ class SparseBitSet<AllocPolicy, Owner>::Iterator {
 #ifdef DEBUG
   SparseBitSet& bitSet_;
 #endif
-  typename SparseBitSet::Map::Iterator iter_;
+  SparseBitSet::Range range_;
   WordType currentWord_ = 0;
   // Index of a 1-bit in the SparseBitSet. This is the value returned by
   // |*iter|.
   size_t index_ = 0;
 
-  bool done() const { return iter_.done(); }
+  bool done() const { return range_.empty(); }
 
   void skipZeroBits() {
     MOZ_ASSERT(!done());
     MOZ_ASSERT(currentWord_ != 0);
-    auto numZeroes = std::countr_zero(currentWord_);
+    auto numZeroes = mozilla::CountTrailingZeroes32(currentWord_);
     index_ += numZeroes;
     currentWord_ >>= numZeroes;
   }
@@ -149,10 +152,10 @@ class SparseBitSet<AllocPolicy, Owner>::Iterator {
 #ifdef DEBUG
         bitSet_(bitSet),
 #endif
-        iter_(bitSet.map_.iter()) {
-    if (!iter_.done()) {
-      index_ = iter_.get().key() * BitsPerWord;
-      currentWord_ = iter_.get().value();
+        range_(bitSet.map_.all()) {
+    if (!range_.empty()) {
+      index_ = range_.front().key() * BitsPerWord;
+      currentWord_ = range_.front().value();
       skipZeroBits();
     }
   }
@@ -169,13 +172,13 @@ class SparseBitSet<AllocPolicy, Owner>::Iterator {
     MOZ_ASSERT(!done());
     currentWord_ >>= 1;
     if (currentWord_ == 0) {
-      iter_.next();
-      if (iter_.done()) {
+      range_.popFront();
+      if (range_.empty()) {
         // Done iterating.
         return;
       }
-      index_ = iter_.get().key() * BitsPerWord;
-      currentWord_ = iter_.get().value();
+      index_ = range_.front().key() * BitsPerWord;
+      currentWord_ = range_.front().value();
     } else {
       index_++;
     }

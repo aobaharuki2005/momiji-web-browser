@@ -14,8 +14,8 @@ class A extends Base {
   }
 }
 
-function transplantTest(global) {
-  var {object, transplant} = transplantableObject();
+function transplantTest(transplantOptions, global) {
+  var {object, transplant} = transplantableObject(transplantOptions);
 
   new A(object);
   assertEq(A.gx(object), 10);
@@ -29,6 +29,7 @@ function transplantTest(global) {
   assertEq(A.gx(object), 29);
 }
 
+// Structure helpfully provided by bug1403679.js
 const thisGlobal = this;
 const otherGlobalSameCompartment = newGlobal({sameCompartmentAs: thisGlobal});
 const otherGlobalNewCompartment = newGlobal({newCompartment: true});
@@ -36,6 +37,12 @@ const otherGlobalNewCompartment = newGlobal({newCompartment: true});
 const globals =
     [thisGlobal, otherGlobalSameCompartment, otherGlobalNewCompartment];
 
-for (let global of globals) {
-  transplantTest(global);
+function testWithOptions(fn) {
+  for (let global of globals) {
+    for (let options of [{}, {proxy: true}, {object: new FakeDOMObject()}, ]) {
+      fn(options, global);
+    }
+  }
 }
+
+testWithOptions(transplantTest)

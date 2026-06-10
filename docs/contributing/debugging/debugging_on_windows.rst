@@ -274,7 +274,7 @@ Debugging JavaScript
 ~~~~~~~~~~~~~~~~~~~~
 
 You can use helper functions from
-:searchfox:`nsXPConnect.cpp <js/xpconnect/src/nsXPConnect.cpp>`
+`nsXPConnect.cpp <https://searchfox.org/mozilla-central/source/js/xpconnect/src/nsXPConnect.cpp>`__
 to inspect and modify the state of JavaScript code from the MSVS
 debugger.
 

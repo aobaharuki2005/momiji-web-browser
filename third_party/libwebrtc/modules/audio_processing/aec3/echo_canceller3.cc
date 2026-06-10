@@ -14,15 +14,14 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/audio/echo_canceller3_config.h"
 #include "api/audio/echo_control.h"
-#include "api/audio/neural_residual_echo_estimator.h"
 #include "api/environment/environment.h"
 #include "api/field_trials_view.h"
 #include "modules/audio_processing/aec3/aec3_common.h"
@@ -45,7 +44,7 @@ namespace {
 
 enum class EchoCanceller3ApiCall { kCapture, kRender };
 
-bool DetectSaturation(std::span<const float> y) {
+bool DetectSaturation(ArrayView<const float> y) {
   for (size_t k = 0; k < y.size(); ++k) {
     if (y[k] >= 32700.0f || y[k] <= -32700.0f) {
       return true;
@@ -102,14 +101,14 @@ void RetrieveFieldTrialValue(const FieldTrialsView& field_trials,
 void FillSubFrameView(
     AudioBuffer* frame,
     size_t sub_frame_index,
-    std::vector<std::vector<std::span<float>>>* sub_frame_view) {
+    std::vector<std::vector<ArrayView<float>>>* sub_frame_view) {
   RTC_DCHECK_GE(1, sub_frame_index);
   RTC_DCHECK_LE(0, sub_frame_index);
   RTC_DCHECK_EQ(frame->num_bands(), sub_frame_view->size());
   RTC_DCHECK_EQ(frame->num_channels(), (*sub_frame_view)[0].size());
   for (size_t band = 0; band < sub_frame_view->size(); ++band) {
     for (size_t channel = 0; channel < (*sub_frame_view)[0].size(); ++channel) {
-      (*sub_frame_view)[band][channel] = std::span<float>(
+      (*sub_frame_view)[band][channel] = ArrayView<float>(
           &frame->split_bands(channel)[band][sub_frame_index * kSubFrameLength],
           kSubFrameLength);
     }
@@ -120,7 +119,7 @@ void FillSubFrameView(
     bool proper_downmix_needed,
     std::vector<std::vector<std::vector<float>>>* frame,
     size_t sub_frame_index,
-    std::vector<std::vector<std::span<float>>>* sub_frame_view) {
+    std::vector<std::vector<ArrayView<float>>>* sub_frame_view) {
   RTC_DCHECK_GE(1, sub_frame_index);
   RTC_DCHECK_EQ(frame->size(), sub_frame_view->size());
   const size_t frame_num_channels = (*frame)[0].size();
@@ -148,7 +147,7 @@ void FillSubFrameView(
       }
     }
     for (size_t band = 0; band < frame->size(); ++band) {
-      (*sub_frame_view)[band][/*channel=*/0] = std::span<float>(
+      (*sub_frame_view)[band][/*channel=*/0] = ArrayView<float>(
           &(*frame)[band][/*channel=*/0][sub_frame_index * kSubFrameLength],
           kSubFrameLength);
     }
@@ -156,7 +155,7 @@ void FillSubFrameView(
     RTC_DCHECK_EQ(frame_num_channels, sub_frame_num_channels);
     for (size_t band = 0; band < frame->size(); ++band) {
       for (size_t channel = 0; channel < (*frame)[band].size(); ++channel) {
-        (*sub_frame_view)[band][channel] = std::span<float>(
+        (*sub_frame_view)[band][channel] = ArrayView<float>(
             &(*frame)[band][channel][sub_frame_index * kSubFrameLength],
             kSubFrameLength);
       }
@@ -176,9 +175,9 @@ void ProcessCaptureFrameContent(
     BlockFramer* output_framer,
     BlockProcessor* block_processor,
     Block* linear_output_block,
-    std::vector<std::vector<std::span<float>>>* linear_output_sub_frame_view,
+    std::vector<std::vector<ArrayView<float>>>* linear_output_sub_frame_view,
     Block* capture_block,
-    std::vector<std::vector<std::span<float>>>* capture_sub_frame_view) {
+    std::vector<std::vector<ArrayView<float>>>* capture_sub_frame_view) {
   FillSubFrameView(capture, sub_frame_index, capture_sub_frame_view);
 
   if (linear_output) {
@@ -238,7 +237,7 @@ void BufferRenderFrameContent(
     FrameBlocker* render_blocker,
     BlockProcessor* block_processor,
     Block* block,
-    std::vector<std::vector<std::span<float>>>* sub_frame_view) {
+    std::vector<std::vector<ArrayView<float>>>* sub_frame_view) {
   FillSubFrameView(proper_downmix_needed, render_frame, sub_frame_index,
                    sub_frame_view);
   render_blocker->InsertSubFrameAndExtractBlock(*sub_frame_view, block);
@@ -264,7 +263,7 @@ void CopyBufferIntoFrame(const AudioBuffer& buffer,
   RTC_DCHECK_EQ(AudioBuffer::kSplitBandSize, (*frame)[0][0].size());
   for (size_t band = 0; band < num_bands; ++band) {
     for (size_t channel = 0; channel < num_channels; ++channel) {
-      std::span<const float> buffer_view(
+      ArrayView<const float> buffer_view(
           &buffer.split_bands_const(channel)[band][0],
           AudioBuffer::kSplitBandSize);
       std::copy(buffer_view.begin(), buffer_view.end(),
@@ -727,6 +726,10 @@ void EchoCanceller3::RenderWriter::Insert(const AudioBuffer& input) {
   RTC_DCHECK_EQ(num_bands_, input.num_bands());
   RTC_DCHECK_EQ(num_channels_, input.num_channels());
 
+  // TODO(bugs.webrtc.org/8759) Temporary work-around.
+  if (num_bands_ != input.num_bands())
+    return;
+
   data_dumper_->DumpWav("aec3_render_input", AudioBuffer::kSplitBandSize,
                         &input.split_bands_const(0)[0][0], 16000, 1);
 
@@ -790,7 +793,7 @@ EchoCanceller3::EchoCanceller3(
       capture_block_(num_bands_, num_capture_channels_),
       capture_sub_frame_view_(
           num_bands_,
-          std::vector<std::span<float>>(num_capture_channels_)) {
+          std::vector<ArrayView<float>>(num_capture_channels_)) {
   RTC_DCHECK(ValidFullBandRate(sample_rate_hz_));
 
   if (config_selector_.active_config().delay.fixed_capture_delay_samples > 0) {
@@ -811,8 +814,8 @@ EchoCanceller3::EchoCanceller3(
         new BlockFramer(/*num_bands=*/1, num_capture_channels_));
     linear_output_block_ =
         std::make_unique<Block>(/*num_bands=*/1, num_capture_channels_);
-    linear_output_sub_frame_view_ = std::vector<std::vector<std::span<float>>>(
-        1, std::vector<std::span<float>>(num_capture_channels_));
+    linear_output_sub_frame_view_ = std::vector<std::vector<ArrayView<float>>>(
+        1, std::vector<ArrayView<float>>(num_capture_channels_));
   }
 
   Initialize();
@@ -845,8 +848,8 @@ void EchoCanceller3::Initialize() {
       num_render_channels_to_aec_, num_capture_channels_,
       neural_residual_echo_estimator_);
 
-  render_sub_frame_view_ = std::vector<std::vector<std::span<float>>>(
-      num_bands_, std::vector<std::span<float>>(num_render_channels_to_aec_));
+  render_sub_frame_view_ = std::vector<std::vector<ArrayView<float>>>(
+      num_bands_, std::vector<ArrayView<float>>(num_render_channels_to_aec_));
 }
 
 void EchoCanceller3::AnalyzeRender(const AudioBuffer& render) {
@@ -865,7 +868,7 @@ void EchoCanceller3::AnalyzeCapture(const AudioBuffer& capture) {
                         capture.channels_const()[0], sample_rate_hz_, 1);
   saturated_microphone_signal_ = false;
   for (size_t channel = 0; channel < capture.num_channels(); ++channel) {
-    saturated_microphone_signal_ |= DetectSaturation(std::span<const float>(
+    saturated_microphone_signal_ |= DetectSaturation(ArrayView<const float>(
         capture.channels_const()[channel], capture.num_frames()));
     if (saturated_microphone_signal_) {
       break;
@@ -904,7 +907,7 @@ void EchoCanceller3::ProcessCapture(AudioBuffer* capture,
     block_delay_buffer_->DelaySignal(capture);
   }
 
-  std::span<float> capture_lower_band = std::span<float>(
+  ArrayView<float> capture_lower_band = ArrayView<float>(
       &capture->split_bands(0)[0][0], AudioBuffer::kSplitBandSize);
 
   data_dumper_->DumpWav("aec3_capture_input", capture_lower_band, 16000, 1);

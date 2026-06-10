@@ -15,13 +15,13 @@ const NEW_REPORT_ENDPOINT_PREF =
 this.tabExtras = class extends ExtensionAPI {
   getAPI(context) {
     const { tabManager } = context.extension;
-    const getReportBrokenSiteActor = tabId => {
+    const queryReportBrokenSiteActor = (tabId, name, params) => {
       const { browser } = tabManager.get(tabId);
       const windowGlobal = browser.browsingContext.currentWindowGlobal;
       if (!windowGlobal) {
         return null;
       }
-      return windowGlobal.getActor("ReportBrokenSite");
+      return windowGlobal.getActor("ReportBrokenSite").sendQuery(name, params);
     };
     return {
       tabExtras: {
@@ -30,8 +30,10 @@ this.tabExtras = class extends ExtensionAPI {
             NEW_REPORT_ENDPOINT_PREF,
             DEFAULT_NEW_REPORT_ENDPOINT
           );
-          const webcompatInfo =
-            await getReportBrokenSiteActor(tabId).getWebCompatInfo();
+          const webcompatInfo = await queryReportBrokenSiteActor(
+            tabId,
+            "GetWebCompatInfo"
+          );
           return {
             webcompatInfo,
             endpointUrl,
@@ -39,7 +41,8 @@ this.tabExtras = class extends ExtensionAPI {
         },
         async sendWebcompatInfo(tabId, info) {
           console.error(info);
-          return getReportBrokenSiteActor(tabId).sendQuery(
+          return queryReportBrokenSiteActor(
+            tabId,
             "SendDataToWebcompatCom",
             info
           );

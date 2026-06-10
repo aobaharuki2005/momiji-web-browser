@@ -15,7 +15,4 @@ private const val MIN_NUMBER_OF_APP_LAUNCHES = 3
  * way that the other conditions are not met.
  */
 internal fun Settings.showWallpaperOnboardingDialog() =
-    numberOfAppLaunches >= MIN_NUMBER_OF_APP_LAUNCHES &&
-        showWallpaperOnboarding &&
-        inAppMessagesEnabled &&
-        !continuousOnboardingFeatureEnabled
+    numberOfAppLaunches >= MIN_NUMBER_OF_APP_LAUNCHES && showWallpaperOnboarding

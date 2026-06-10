@@ -6,36 +6,43 @@ package mozilla.components.feature.privatemode.feature
 
 import android.view.Window
 import android.view.WindowManager.LayoutParams.FLAG_SECURE
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 class SecureWindowFeatureTest {
 
-    private val window: Window = mock()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
+    private lateinit var window: Window
     private val tabId = "test-tab"
-    private val testDispatcher = StandardTestDispatcher()
+
+    @Before
+    fun setup() {
+        window = mock()
+    }
 
     @Test
-    fun `no-op if no sessions`() = runTest {
+    fun `no-op if no sessions`() {
         val store = BrowserStore(BrowserState(tabs = emptyList()))
-        val feature = SecureWindowFeature(window, store, mainDispatcher = testDispatcher)
+        val feature = SecureWindowFeature(window, store)
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(window, never()).addFlags(FLAG_SECURE)
         verify(window, never()).clearFlags(FLAG_SECURE)
     }
 
     @Test
-    fun `add flags to private session`() = runTest {
+    fun `add flags to private session`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -44,16 +51,15 @@ class SecureWindowFeatureTest {
                 selectedTabId = tabId,
             ),
         )
-        val feature = SecureWindowFeature(window, store, mainDispatcher = testDispatcher)
+        val feature = SecureWindowFeature(window, store)
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(window).addFlags(FLAG_SECURE)
     }
 
     @Test
-    fun `remove flags from normal session`() = runTest {
+    fun `remove flags from normal session`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -62,22 +68,19 @@ class SecureWindowFeatureTest {
                 selectedTabId = tabId,
             ),
         )
-        val feature = SecureWindowFeature(window, store, mainDispatcher = testDispatcher)
+        val feature = SecureWindowFeature(window, store)
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(window).clearFlags(FLAG_SECURE)
     }
 
     @Test
-    fun `remove flags on stop`() = runTest {
+    fun `remove flags on stop`() {
         val store = BrowserStore()
-        val feature = SecureWindowFeature(window, store, clearFlagOnStop = true, mainDispatcher = testDispatcher)
+        val feature = SecureWindowFeature(window, store, clearFlagOnStop = true)
 
         feature.start()
-        testDispatcher.scheduler.advanceUntilIdle()
-
         feature.stop()
 
         verify(window).clearFlags(FLAG_SECURE)

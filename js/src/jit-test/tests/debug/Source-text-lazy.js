@@ -18,7 +18,7 @@ function test(source) {
 
   withSourceHook(function (url) {
     log += 's';
-    assertEq(url, "BanalBivalve.sys.mjs");
+    assertEq(url, "BanalBivalve.jsm");
     return frobbed;
   }, () => {
     dbg.onDebuggerStatement = function (frame) {
@@ -26,7 +26,7 @@ function test(source) {
       assertEq(frame.script.source.text, frobbed);
     }
 
-    g.evaluate(source, { fileName: "BanalBivalve.sys.mjs",
+    g.evaluate(source, { fileName: "BanalBivalve.jsm",
                          sourceIsLazy: true });
   });
 

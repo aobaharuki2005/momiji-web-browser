@@ -8,14 +8,7 @@
  */
 
 const EXPECTED_REQUEST_HEADER_COUNT = 13;
-// We always get the following 5 headers:
-//   "Host", "User-agent", "Accept", "Accept-Language", "Accept-Encoding"
-// while "Connection" is sometimes set or not set,
-// but are missing the three last headers:
-// "Upgrade-Insecure-Requests", "Pragma", "Cache-Control"
-const EXPECTED_PARTIAL_REQUEST_HEADER_COUNT = [5, 6];
-// We may or may not receive "Connection: keep-alive" header
-const EXPECTED_RESPONSE_HEADER_COUNT = [5, 6];
+const EXPECTED_RESPONSE_HEADER_COUNT = 6;
 
 add_task(async function () {
   // Disable tcp fast open, because it is setting a response header indicator
@@ -73,9 +66,9 @@ async function testResponseBodyLimits() {
 
     const har = await reloadAndCopyAllAsHar({ tab, monitor, toolbox });
     const entry = har.log.entries[0];
-    ok(
-      entry.response.content.text.length >= 0 &&
-        entry.response.content.text.length <= 10,
+    is(
+      entry.response.content.text.length,
+      10,
       "Response body must be truncated"
     );
     await teardown(monitor);
@@ -126,12 +119,11 @@ async function testManyReloads() {
     ok(entry, "Found the cancelled request");
     is(entry.request.method, "GET", "Method is set");
     is(entry.request.url, HTTPS_SIMPLE_URL, "URL is set");
-    ok(
-      EXPECTED_PARTIAL_REQUEST_HEADER_COUNT.includes(
-        entry.request.headers.length
-      ),
-      "But headers are partialy populated"
-    );
+    // We always get the following headers:
+    // "Host", "User-agent", "Accept", "Accept-Language", "Accept-Encoding", "Connection"
+    // but are missing the three last headers:
+    // "Upgrade-Insecure-Requests", "Pragma", "Cache-Control"
+    is(entry.request.headers.length, 6, "But headers are partialy populated");
     is(entry.response.status, 0, "And status is set to 0");
   }
 
@@ -218,11 +210,11 @@ function assertNavigationRequestEntry(entry) {
   );
   is(entry.response.status, 200, "Check response status");
   is(entry.response.statusText, "OK", "Check response status text");
-  ok(
-    EXPECTED_RESPONSE_HEADER_COUNT.includes(entry.response.headers.length),
+  is(
+    entry.response.headers.length,
+    EXPECTED_RESPONSE_HEADER_COUNT,
     "Check number of response headers"
   );
-
   is(
     entry.response.content.mimeType,
     "text/html",
@@ -242,14 +234,14 @@ async function reloadAndCopyAllAsHar({
 
   store.dispatch(Actions.batchEnable(false));
 
-  const onNetworkEvent = waitForNetworkEvents(monitor, reloadTwice ? 2 : 1);
+  const onNetworkEvent = waitForNetworkEvents(monitor, 1);
   const { onDomCompleteResource } =
     await waitForNextTopLevelDomCompleteResource(toolbox.commands);
 
   if (reloadTwice) {
-    reloadSelectedTab();
+    reloadBrowser();
   }
-  await reloadSelectedTab();
+  await reloadBrowser();
 
   info("Waiting for network events");
   await onNetworkEvent;

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -226,16 +227,9 @@ static std::optional<std::string> ChooseDeviceReplacement(
 
   // -
 
-  static const std::regex kAdreno("Adreno.*?([A-Z]?[0-9]-?[0-9]+)");
+  static const std::regex kAdreno("Adreno.*?([0-9][0-9][0-9]+)");
   if (std::regex_search(str, m, kAdreno)) {
-    const std::string& modelName = m[1];
-    if (modelName[0] == 'A') {
-      return "Adreno (TM) A11";
-    }
-    if (modelName[0] == 'X') {
-      return "Adreno (TM) X1-45";
-    }
-    const auto modelNum = stoul(modelName);
+    const auto modelNum = stoul(m.str(1));
     if (modelNum >= 600) {
       return "Adreno (TM) 650";
     }

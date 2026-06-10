@@ -93,7 +93,7 @@ We have two automated tests running on
   - `cd libc-test && cargo test`
   - Use the `skip_*()` functions in `build.rs` if you really need a workaround.
 2. Style checker
-  - [`./ci/style.py`](https://github.com/rust-lang/libc/blob/main/ci/style.py)
+  - [`./ci/style.sh`](https://github.com/rust-lang/libc/blob/main/ci/style.sh)
 
 ## Breaking change policy
 

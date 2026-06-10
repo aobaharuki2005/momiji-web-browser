@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <cstdint>
 #include <sstream>  // IWYU pragma: keep
 #include <string>
 
@@ -29,7 +28,7 @@ namespace common
 namespace internal_log
 {
 
-enum class LogLevel : std::uint8_t
+enum class LogLevel
 {
   None    = OTEL_INTERNAL_LOG_LEVEL_NONE,
   Error   = OTEL_INTERNAL_LOG_LEVEL_ERROR,
@@ -143,7 +142,7 @@ OPENTELEMETRY_END_NAMESPACE
   {                                                                                               \
     using opentelemetry::sdk::common::internal_log::GlobalLogHandler;                             \
     using opentelemetry::sdk::common::internal_log::LogHandler;                                   \
-    if ((level) > GlobalLogHandler::GetLogLevel())                                                \
+    if (level > GlobalLogHandler::GetLogLevel())                                                  \
     {                                                                                             \
       break;                                                                                      \
     }                                                                                             \
@@ -153,9 +152,8 @@ OPENTELEMETRY_END_NAMESPACE
       break;                                                                                      \
     }                                                                                             \
     std::stringstream tmp_stream;                                                                 \
-    /* NOLINTNEXTLINE(bugprone-macro-parentheses) */                                              \
     tmp_stream << message;                                                                        \
-    log_handler->Handle((level), __FILE__, __LINE__, tmp_stream.str().c_str(), attributes);       \
+    log_handler->Handle(level, __FILE__, __LINE__, tmp_stream.str().c_str(), attributes);         \
   } while (false);
 
 #define OTEL_INTERNAL_LOG_GET_3RD_ARG(arg1, arg2, arg3, ...) arg3

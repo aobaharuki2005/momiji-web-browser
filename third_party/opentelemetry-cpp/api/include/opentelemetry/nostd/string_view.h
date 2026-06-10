@@ -124,7 +124,7 @@ public:
       auto found = Traits::find(data() + pos, length() - pos, ch);
       if (found)
       {
-        res = static_cast<size_type>(found - data());
+        res = found - data();
       }
     }
     return res;

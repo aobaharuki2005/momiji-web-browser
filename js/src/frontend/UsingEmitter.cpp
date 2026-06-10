@@ -1043,27 +1043,46 @@ bool ForOfDisposalEmitter::prepareForForOfLoopIteration() {
   return true;
 }
 
-bool ForOfDisposalEmitter::prepareForForOfIteratorClose() {
+bool ForOfDisposalEmitter::emitEnd() {
   MOZ_ASSERT(state_ == State::Iteration);
   EmitterScope* es = bce_->innermostEmitterScopeNoCheck();
   MOZ_ASSERT(es->hasDisposables());
 
-  // [stack] EXC THROWING
+  // [stack] EXC STACK
 
   if (!bce_->emit1(JSOp::Swap)) {
-    // [stack] THROWING EXC
+    // [stack] STACK EXC
+    return false;
+  }
+
+  if (!bce_->emit1(JSOp::True)) {
+    // [stack] STACK EXC THROWING
+    return false;
+  }
+
+  if (!bce_->emit1(JSOp::Swap)) {
+    // [stack] STACK THROWING EXC
     return false;
   }
 
   if (!emitDisposeResourcesForEnvironment(*es)) {
-    // [stack] EXC THROWING
+    // [stack] STACK EXC THROWING
     return false;
   }
 
-  // The ForOfIteratorClose logic can be emitted multiple times (due different
-  // configurations of for-of loops like yields inside a for-of loop for
-  // example), and thus prepareForForOfIteratorClose stays in the Iteration
-  // state.
+  if (!bce_->emit1(JSOp::Pop)) {
+    // [stack] STACK EXC
+    return false;
+  }
+
+  if (!bce_->emit1(JSOp::Swap)) {
+    // [stack] EXC STACK
+    return false;
+  }
+
+#ifdef DEBUG
+  state_ = State::End;
+#endif
   return true;
 }
 
@@ -1192,18 +1211,6 @@ bool NonLocalIteratorCloseUsingEmitter::prepareForIteratorClose(
 
   // [stack] ITER
 
-  if (hasAwaitUsing()) {
-    // Since in case of for-of loop the disposals are wrapped in a try-catch,
-    // and await-using would suspend the frame causing the rval to be lost,
-    // we need to preserve the rval and restore it after the disposal.
-    if (!bce_->emit1(JSOp::GetRval)) {
-      // [stack] ITER RVAL
-      return false;
-    }
-  }
-
-  // [stack] ITER RVAL?
-
   if (!bce_->emit1(JSOp::False)) {
     // [stack] THROWING
     return false;
@@ -1215,25 +1222,13 @@ bool NonLocalIteratorCloseUsingEmitter::prepareForIteratorClose(
   }
 
   if (!emitDisposeResourcesForEnvironment(es)) {
-    // [stack] ITER RVAL? EXC-DISPOSE DISPOSE-THROWING
+    // [stack] ITER EXC-DISPOSE DISPOSE-THROWING
     return false;
   }
 
-  if (!bce_->emitPickN(hasAwaitUsing() ? 3 : 2)) {
-    // [stack] RVAL? EXC-DISPOSE DISPOSE-THROWING ITER
+  if (!bce_->emitPickN(2)) {
+    // [stack] EXC-DISPOSE DISPOSE-THROWING ITER
     return false;
-  }
-
-  if (hasAwaitUsing()) {
-    if (!bce_->emitPickN(3)) {
-      // [stack] EXC-DISPOSE DISPOSE-THROWING ITER RVAL
-      return false;
-    }
-
-    if (!bce_->emit1(JSOp::SetRval)) {
-      // [stack] EXC-DISPOSE DISPOSE-THROWING ITER
-      return false;
-    }
   }
 
   tryClosingIterator_ = bce_->fc->getAllocator()->make_unique<TryEmitter>(

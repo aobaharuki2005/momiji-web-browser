@@ -13,13 +13,12 @@
 
 #include <memory>
 #include <optional>
-#include <span>
 #include <string>
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "api/array_view.h"
 #include "api/environment/environment.h"
-#include "api/video/resolution.h"
 #include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
@@ -51,7 +50,6 @@ namespace webrtc {
 template <typename... Ts>
 class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
  public:
-  using VideoEncoderFactory::QueryCodecSupport;
   std::vector<SdpVideoFormat> GetSupportedFormats() const override {
     return GetSupportedFormatsInternal<Ts...>();
   }
@@ -72,15 +70,13 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
 
   CodecSupport QueryCodecSupport(
       const SdpVideoFormat& format,
-      std::optional<std::string> scalability_mode,
-      std::optional<Resolution> resolution) const override {
-    return QueryCodecSupportInternal<Ts...>(format, scalability_mode,
-                                            resolution);
+      std::optional<std::string> scalability_mode) const override {
+    return QueryCodecSupportInternal<Ts...>(format, scalability_mode);
   }
 
  private:
   bool IsFormatInList(const SdpVideoFormat& format,
-                      std::span<const SdpVideoFormat> supported_formats) const {
+                      ArrayView<const SdpVideoFormat> supported_formats) const {
     return absl::c_any_of(
         supported_formats, [&](const SdpVideoFormat& supported_format) {
           return supported_format.name == format.name &&
@@ -134,15 +130,13 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
   template <typename V, typename... Vs>
   CodecSupport QueryCodecSupportInternal(
       const SdpVideoFormat& format,
-      const std::optional<std::string>& scalability_mode,
-      const std::optional<Resolution>& resolution) const {
+      const std::optional<std::string>& scalability_mode) const {
     if (IsFormatInList(format, V::SupportedFormats())) {
       return {.is_supported = IsScalabilityModeSupported<V>(scalability_mode)};
     }
 
     if constexpr (sizeof...(Vs) > 0) {
-      return QueryCodecSupportInternal<Vs...>(format, scalability_mode,
-                                              resolution);
+      return QueryCodecSupportInternal<Vs...>(format, scalability_mode);
     }
 
     return {.is_supported = false};

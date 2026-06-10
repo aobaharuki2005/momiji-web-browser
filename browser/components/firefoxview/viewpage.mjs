@@ -91,10 +91,10 @@ export class ViewPageContent extends MozLitElement {
     this.recordContextMenuTelemetry("open-in-private-window", e);
   }
 
-  recordContextMenuTelemetry(menuAction, event, tabType) {
+  recordContextMenuTelemetry(menuAction, event) {
     Glean.firefoxviewNext.contextMenuTabs.record({
       menu_action: menuAction,
-      data_type: tabType ?? event.target.panel.dataset.tabType,
+      data_type: event.target.panel.dataset.tabType,
     });
   }
 
@@ -140,7 +140,7 @@ export class ViewPage extends ViewPageContent {
   }
 
   onTabSelect({ target }) {
-    const win = target.documentGlobal;
+    const win = target.ownerGlobal;
 
     let selfBrowser = window.docShell?.chromeEventHandler;
     const { gBrowser } = this.getWindow();

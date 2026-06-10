@@ -40,6 +40,7 @@ NSS 3.57 release notes
 
    -  NSPR dependency updated to 4.29.
 
+.. _certificate_authority_changes:
 
 `Certificate Authority Changes <#certificate_authority_changes>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

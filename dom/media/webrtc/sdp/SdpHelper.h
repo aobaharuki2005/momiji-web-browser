@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_MEDIA_WEBRTC_SDP_SDPHELPER_H_
-#define DOM_MEDIA_WEBRTC_SDP_SDPHELPER_H_
+#ifndef _SDPHELPER_H_
+#define _SDPHELPER_H_
 
 #include <map>
 #include <string>
@@ -23,15 +25,15 @@ class SdpHelper {
   // Takes a std::string* into which error strings will be written for the
   // lifetime of the SdpHelper.
   explicit SdpHelper(std::string* errorDest) : mLastError(*errorDest) {}
-  ~SdpHelper() = default;
+  ~SdpHelper() {}
 
   nsresult GetComponent(const std::string& candidate, size_t* component);
-  nsresult CopyTransportParams(const size_t numComponents,
+  nsresult CopyTransportParams(size_t numComponents,
                                const SdpMediaSection& source,
                                SdpMediaSection* dest);
   bool AreOldTransportParamsValid(const Sdp& oldAnswer,
                                   const Sdp& offerersPreviousSdp,
-                                  const Sdp& newOffer, const size_t level);
+                                  const Sdp& newOffer, size_t level);
   bool IceCredentialsDiffer(const SdpMediaSection& msection1,
                             const SdpMediaSection& msection2);
 
@@ -44,15 +46,13 @@ class SdpHelper {
 
   nsresult GetBundledMids(const Sdp& sdp, BundledMids* bundledMids);
 
-  bool OwnsTransport(const Sdp& localSdp, const uint16_t level,
-                     const sdp::SdpType type);
+  bool OwnsTransport(const Sdp& localSdp, uint16_t level, sdp::SdpType type);
   bool OwnsTransport(const SdpMediaSection& msection,
-                     const BundledMids& bundledMids, const sdp::SdpType type);
+                     const BundledMids& bundledMids, sdp::SdpType type);
   void GetBundleGroups(const Sdp& sdp,
                        std::vector<SdpGroupAttributeList::Group>* groups) const;
 
-  nsresult GetMidFromLevel(const Sdp& sdp, const uint16_t level,
-                           std::string* mid);
+  nsresult GetMidFromLevel(const Sdp& sdp, uint16_t level, std::string* mid);
   nsresult GetIdsFromMsid(const Sdp& sdp, const SdpMediaSection& msection,
                           std::vector<std::string>* streamId);
   nsresult GetMsids(const SdpMediaSection& msection,
@@ -60,14 +60,14 @@ class SdpHelper {
   nsresult ParseMsid(const std::string& msidAttribute, std::string* streamId,
                      std::string* trackId);
   nsresult AddCandidateToSdp(Sdp* sdp, const std::string& candidate,
-                             const uint16_t level, const std::string& ufrag);
+                             uint16_t level, const std::string& ufrag);
   nsresult SetIceGatheringComplete(Sdp* sdp, const std::string& ufrag);
-  nsresult SetIceGatheringComplete(Sdp* sdp, const uint16_t level,
+  nsresult SetIceGatheringComplete(Sdp* sdp, uint16_t level,
                                    const std::string& ufrag);
   void SetDefaultAddresses(const std::string& defaultCandidateAddr,
-                           const uint16_t defaultCandidatePort,
+                           uint16_t defaultCandidatePort,
                            const std::string& defaultRtcpCandidateAddr,
-                           const uint16_t defaultRtcpCandidatePort,
+                           uint16_t defaultRtcpCandidatePort,
                            SdpMediaSection* msection);
   void SetupMsidSemantic(const std::vector<std::string>& msids, Sdp* sdp) const;
 
@@ -80,9 +80,9 @@ class SdpHelper {
 
   nsresult CopyStickyParams(const SdpMediaSection& source,
                             SdpMediaSection* dest);
-  bool HasRtcp(const SdpMediaSection::Protocol proto) const;
+  bool HasRtcp(SdpMediaSection::Protocol proto) const;
   static SdpMediaSection::Protocol GetProtocolForMediaType(
-      const SdpMediaSection::MediaType type);
+      SdpMediaSection::MediaType type);
   void AppendSdpParseErrors(
       const std::vector<std::pair<size_t, std::string> >& aErrors,
       std::string* aErrorString);
@@ -95,8 +95,7 @@ class SdpHelper {
       SdpMediaSection* localMsection);
 
   bool SdpMatch(const Sdp& sdp1, const Sdp& sdp2);
-  nsresult ValidateTransportAttributes(const Sdp& aSdp,
-                                       const sdp::SdpType aType);
+  nsresult ValidateTransportAttributes(const Sdp& aSdp, sdp::SdpType aType);
 
  private:
   std::string& mLastError;
@@ -105,4 +104,4 @@ class SdpHelper {
 };
 }  // namespace mozilla
 
-#endif  // DOM_MEDIA_WEBRTC_SDP_SDPHELPER_H_
+#endif  // _SDPHELPER_H_

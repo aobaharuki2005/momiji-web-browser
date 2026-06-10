@@ -5,18 +5,20 @@
 package org.mozilla.fenix.onboarding.store
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.mockk.mockk
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.MockitoAnnotations
 import org.mozilla.fenix.GleanMetrics.Onboarding
-import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class PrivacyPreferencesTelemetryMiddlewareTest {
@@ -28,7 +30,8 @@ class PrivacyPreferencesTelemetryMiddlewareTest {
 
     @Before
     fun setup() {
-        middleware = PrivacyPreferencesTelemetryMiddleware(installSource = "installPackage")
+        MockitoAnnotations.openMocks(this)
+        middleware = PrivacyPreferencesTelemetryMiddleware()
     }
 
     @Test
@@ -36,12 +39,12 @@ class PrivacyPreferencesTelemetryMiddlewareTest {
         assertNull(Onboarding.privacyPreferencesModalCrashReportingEnabled.testGetValue())
 
         middleware.invoke(
-            store = mockk(),
+            store = mock(),
             {},
             PrivacyPreferencesAction.CrashReportingPreferenceUpdatedTo(true),
         )
 
-        val event = Onboarding.privacyPreferencesModalCrashReportingEnabled.testGetValue()
+        val event = Onboarding.privacyPreferencesModalCrashReportingEnabled.testGetValue()!!
         assertNotNull(event)
         assertEquals(1, event.size)
         val result = event.single().extra?.getValue("value").toBoolean()
@@ -53,12 +56,12 @@ class PrivacyPreferencesTelemetryMiddlewareTest {
         assertNull(Onboarding.privacyPreferencesModalUsageDataEnabled.testGetValue())
 
         middleware.invoke(
-            store = mockk(),
+            store = mock(),
             {},
             PrivacyPreferencesAction.UsageDataPreferenceUpdatedTo(true),
         )
 
-        val event = Onboarding.privacyPreferencesModalUsageDataEnabled.testGetValue()
+        val event = Onboarding.privacyPreferencesModalUsageDataEnabled.testGetValue()!!
         assertNotNull(event)
         assertEquals(1, event.size)
         val result = event.single().extra?.getValue("value").toBoolean()
@@ -70,12 +73,12 @@ class PrivacyPreferencesTelemetryMiddlewareTest {
         assertNull(Onboarding.privacyPreferencesModalCrashReportingLearnMore.testGetValue())
 
         middleware.invoke(
-            store = mockk(),
+            store = mock(),
             {},
             PrivacyPreferencesAction.CrashReportingLearnMore,
         )
 
-        val event = Onboarding.privacyPreferencesModalCrashReportingLearnMore.testGetValue()
+        val event = Onboarding.privacyPreferencesModalCrashReportingLearnMore.testGetValue()!!
         assertNotNull(event)
         assertEquals(1, event.size)
     }
@@ -85,12 +88,12 @@ class PrivacyPreferencesTelemetryMiddlewareTest {
         assertNull(Onboarding.privacyPreferencesModalUsageDataLearnMore.testGetValue())
 
         middleware.invoke(
-            store = mockk(),
+            store = mock(),
             {},
             PrivacyPreferencesAction.UsageDataUserLearnMore,
         )
 
-        val event = Onboarding.privacyPreferencesModalUsageDataLearnMore.testGetValue()
+        val event = Onboarding.privacyPreferencesModalUsageDataLearnMore.testGetValue()!!
         assertNotNull(event)
         assertEquals(1, event.size)
     }

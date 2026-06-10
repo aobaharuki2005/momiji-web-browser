@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +7,6 @@
 #ifndef MediaElementAudioSourceNode_h_
 #define MediaElementAudioSourceNode_h_
 
-#include "MediaEventSource.h"
 #include "MediaStreamAudioSourceNode.h"
 
 namespace mozilla::dom {
@@ -56,17 +57,9 @@ class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode {
   // source starts.
   void ListenForAllowedToPlay(const MediaElementAudioSourceOptions& aOptions);
 
-  // Listen for media element's effective volume change so that we can update
-  // the volume on track properly.
-  void ListenForEffectiveVolumeChange();
-
-  void UpdateVolume(float aVolume);
-
   MozPromiseRequestHolder<GenericNonExclusivePromise> mAllowedToPlayRequest;
 
   RefPtr<HTMLMediaElement> mElement;
-
-  MediaEventListener mEffectiveVolumeChangeListener;
 };
 
 }  // namespace mozilla::dom

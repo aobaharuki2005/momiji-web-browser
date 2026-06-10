@@ -13,21 +13,15 @@ def test_content_process(configuration, geckodriver):
         # The crash is delayed and happens after this command finished.
         driver.session.url = "about:crashcontent"
 
-        # A content crash will cause the application to shutdown. But because
-        # it doesn't happen immediately try to reduce the race condition by
-        # waiting a little bit so we can be sure no command can be send anymore.
+        # Bug 1943038: geckodriver fails to detect minidump files for content
+        # crashes when the next command is sent immediately.
         time.sleep(1)
 
         # Send another command that should fail
         with pytest.raises(error.UnknownErrorException):
             driver.session.url
 
-    run_crash_test(
-        configuration,
-        geckodriver,
-        crash_callback=trigger_crash,
-        reason="MOZ_CRASH(Crash via about:crashcontent)",
-    )
+    run_crash_test(configuration, geckodriver, crash_callback=trigger_crash)
 
 
 def test_parent_process(configuration, geckodriver):
@@ -35,15 +29,10 @@ def test_parent_process(configuration, geckodriver):
         with pytest.raises(error.UnknownErrorException):
             driver.session.url = "about:crashparent"
 
-    run_crash_test(
-        configuration,
-        geckodriver,
-        crash_callback=trigger_crash,
-        reason="MOZ_CRASH(Crash via about:crashparent)",
-    )
+    run_crash_test(configuration, geckodriver, crash_callback=trigger_crash)
 
 
-def run_crash_test(configuration, geckodriver, crash_callback, reason=None):
+def run_crash_test(configuration, geckodriver, crash_callback):
     config = deepcopy(configuration)
     config["capabilities"]["webSocketUrl"] = True
 
@@ -72,11 +61,6 @@ def run_crash_test(configuration, geckodriver, crash_callback, reason=None):
         assert extra_data.get("RemoteAgent") == "1", (
             "RemoteAgent entry is missing or invalid"
         )
-        if reason is not None:
-            crash_reason = extra_data.get("MozCrashReason")
-            assert crash_reason == reason, (
-                f"Expected crash reason {reason} found {crash_reason}"
-            )
 
         # Remove original minidump files from the profile directory
         remove_files(profile_minidump_path, file_map.values())

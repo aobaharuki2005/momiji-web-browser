@@ -4,14 +4,15 @@
 
 package org.mozilla.fenix.components
 
-import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.test.mock
 import org.junit.Test
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 
 class LogMiddlewareTest {
 
@@ -20,7 +21,7 @@ class LogMiddlewareTest {
 
     @Test
     fun `WHEN including detailed data THEN middleware logs actions and their properties that are dispatched to store`() = runTest {
-        val logger = mockk<Logger>(relaxed = true)
+        val logger = mock<Logger>()
         val store = Store<SState, AAction>(
             initialState = SState,
             reducer = { state, _ -> state },
@@ -31,13 +32,13 @@ class LogMiddlewareTest {
         actionMessages.forEach { message ->
             val action = AAction(message)
             store.dispatch(action)
-            verify { logger.info(action.toString()) }
+            verify(logger).info(action.toString())
         }
     }
 
     @Test
     fun `WHEN excluding detailed data THEN middleware only logs actions that are dispatched to store`() = runTest {
-        val logger = mockk<Logger>(relaxed = true)
+        val logger = mock<Logger>()
         val store = Store<SState, AAction>(
             initialState = SState,
             reducer = { state, _ -> state },
@@ -49,6 +50,6 @@ class LogMiddlewareTest {
             store.dispatch(AAction(message))
         }
 
-        verify(exactly = 3) { logger.info(AAction::class.java.name) }
+        verify(logger, times(3)).info(AAction::class.java.name)
     }
 }

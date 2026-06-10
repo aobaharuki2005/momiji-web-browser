@@ -411,7 +411,7 @@ add_task(
         ],
       },
       async () => {
-        await aboutTranslationsTestUtils.invokeSwapLanguagesButton();
+        await aboutTranslationsTestUtils.clickSwapLanguagesButton();
       }
     );
 
@@ -468,10 +468,6 @@ add_task(
       {
         expected: [
           [
-            AboutTranslationsTestUtils.Events.SourceTextInputDebounced,
-            { sourceText: "Hello world" },
-          ],
-          [
             AboutTranslationsTestUtils.Events.TranslationRequested,
             { translationId: 1 },
           ],
@@ -511,12 +507,9 @@ add_task(
           ],
           [AboutTranslationsTestUtils.Events.SwapLanguagesButtonEnabled],
         ],
-        unexpected: [
-          AboutTranslationsTestUtils.Events.SourceTextInputDebounced,
-        ],
       },
       async () => {
-        await aboutTranslationsTestUtils.invokeSwapLanguagesButton();
+        await aboutTranslationsTestUtils.clickSwapLanguagesButton();
       }
     );
 

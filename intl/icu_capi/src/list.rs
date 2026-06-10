@@ -4,6 +4,7 @@
 
 #[diplomat::bridge]
 #[diplomat::abi_rename = "icu4x_{0}_mv1"]
+#[diplomat::attr(auto, namespace = "icu4x")]
 pub mod ffi {
     use alloc::boxed::Box;
     use diplomat_runtime::{DiplomatStr16Slice, DiplomatStrSlice};
@@ -19,9 +20,7 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::list::options::ListLength, Enum)]
     #[diplomat::enum_convert(icu_list::options::ListLength, needs_wildcard)]
-    #[non_exhaustive]
     pub enum ListLength {
-        #[diplomat::attr(auto, default)]
         Wide,
         Short,
         Narrow,

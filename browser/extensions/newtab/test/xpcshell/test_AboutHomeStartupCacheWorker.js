@@ -18,9 +18,6 @@ const { TestUtils } = ChromeUtils.importESModule(
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
-const { NimbusTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/NimbusTestUtils.sys.mjs"
-);
 
 SearchTestUtils.init(this);
 
@@ -36,8 +33,6 @@ ChromeUtils.defineESModuleGetters(this, {
 
 const CACHE_WORKER_URL = "resource://newtab/lib/cache.worker.js";
 const NEWTAB_RENDER_URL = "resource://newtab/data/content/newtab-render.js";
-
-NimbusTestUtils.init(this);
 
 /**
  * In order to make this test less brittle, much of Activity Stream is
@@ -116,12 +111,9 @@ add_setup(async function () {
     { setAsDefault: true }
   );
 
-  const { cleanup: nimbusTestCleanup } = await NimbusTestUtils.setupTest();
-  registerCleanupFunction(nimbusTestCleanup);
-
   // Pretend that a new window has been loaded to kick off initializing all of
   // the feeds.
-  await AboutNewTab.onBrowserReady();
+  AboutNewTab.onBrowserReady();
 
   // Much of Activity Stream initializes asynchronously. This is the easiest way
   // I could find to ensure that enough of the feeds had initialized to produce

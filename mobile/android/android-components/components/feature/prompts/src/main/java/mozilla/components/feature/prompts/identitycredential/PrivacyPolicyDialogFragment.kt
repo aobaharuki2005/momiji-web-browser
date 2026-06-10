@@ -24,7 +24,6 @@ import mozilla.components.feature.prompts.dialog.KEY_PROMPT_UID
 import mozilla.components.feature.prompts.dialog.KEY_SESSION_ID
 import mozilla.components.feature.prompts.dialog.KEY_SHOULD_DISMISS_ON_LOAD
 import mozilla.components.feature.prompts.dialog.KEY_TITLE
-import mozilla.components.feature.prompts.ext.Truncation
 
 internal const val KEY_ICON = "KEY_ICON"
 
@@ -52,12 +51,7 @@ internal class PrivacyPolicyDialogFragment : AbstractPromptTextDialogFragment() 
         val inflater = LayoutInflater.from(requireContext())
         val view = inflater.inflate(R.layout.mozac_feature_prompt_simple_text, null)
         val textView = view.findViewById<TextView>(R.id.labelView)
-        val truncatedMessage = if (message.length > Truncation.MAX_MESSAGE_LENGTH) {
-            message.substring(0, Truncation.MAX_MESSAGE_LENGTH) + "…"
-        } else {
-            message
-        }
-        val text = HtmlCompat.fromHtml(truncatedMessage, HtmlCompat.FROM_HTML_MODE_COMPACT)
+        val text = HtmlCompat.fromHtml(message, HtmlCompat.FROM_HTML_MODE_COMPACT)
 
         val spannableStringBuilder = SpannableStringBuilder(text)
         spannableStringBuilder.getSpans<URLSpan>().forEach { link ->

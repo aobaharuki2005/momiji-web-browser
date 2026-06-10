@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -105,7 +107,7 @@ nsresult SVGAnimatedTransformList::SetAnimValue(const SVGTransformList& aValue,
     domWrapper->InternalAnimValListWillChangeLengthTo(aValue.Length());
   }
   if (!mAnimVal) {
-    mAnimVal = std::make_unique<SVGTransformList>();
+    mAnimVal = MakeUnique<SVGTransformList>();
   }
   nsresult rv = mAnimVal->CopyFrom(aValue);
   if (NS_FAILED(rv)) {
@@ -151,9 +153,9 @@ bool SVGAnimatedTransformList::IsExplicitlySet() const {
   return mIsBaseSet || !mBaseVal.IsEmpty() || mAnimVal;
 }
 
-std::unique_ptr<SMILAttr> SVGAnimatedTransformList::ToSMILAttr(
+UniquePtr<SMILAttr> SVGAnimatedTransformList::ToSMILAttr(
     SVGElement* aSVGElement) {
-  return std::make_unique<SMILAnimatedTransformList>(this, aSVGElement);
+  return MakeUnique<SMILAnimatedTransformList>(this, aSVGElement);
 }
 
 nsresult SVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(

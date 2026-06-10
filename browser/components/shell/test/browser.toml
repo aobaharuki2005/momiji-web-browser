@@ -1,10 +1,7 @@
 [DEFAULT]
 
 ["browser_1119088.js"]
-support-files = [
-  "large.png",
-  "mac_desktop_image.py"
-]
+support-files = ["mac_desktop_image.py"]
 run-if = [
   "os == 'mac'",
 ]
@@ -14,7 +11,6 @@ skip-if = [
 ]
 
 ["browser_420786.js"]
-support-files = ["large.png"]
 run-if = [
   "os == 'linux' && os_version == '22.04' && arch == 'x86_64' && display == 'wayland'",
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11'",
@@ -118,5 +114,4 @@ run-if = [
 tags = "os_integration"
 
 ["browser_setDesktopBackgroundPreview.js"]
-support-files = ["large.png", "canvas.html"]
 tags = "os_integration"

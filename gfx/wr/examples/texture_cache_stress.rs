@@ -101,6 +101,7 @@ impl Example for App {
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         builder.push_simple_stacking_context(
+            bounds.min,
             space_and_clip.spatial_id,
             PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );
@@ -198,18 +199,17 @@ impl Example for App {
     ) -> bool {
         match event {
             winit::event::WindowEvent::KeyboardInput {
-                event: winit::event::KeyEvent {
+                input: winit::event::KeyboardInput {
                     state: winit::event::ElementState::Pressed,
-                    ref logical_key,
+                    virtual_keycode: Some(key),
                     ..
                 },
                 ..
             } => {
-                use winit::keyboard::Key;
                 let mut txn = Transaction::new();
 
-                match logical_key.as_ref() {
-                    Key::Character("s") | Key::Character("S") => {
+                match key {
+                    winit::event::VirtualKeyCode::S => {
                         self.stress_keys.clear();
 
                         for _ in 0 .. 16 {
@@ -236,10 +236,10 @@ impl Example for App {
                             }
                         }
                     }
-                    Key::Character("d") | Key::Character("D") => if let Some(image_key) = self.image_key.take() {
+                    winit::event::VirtualKeyCode::D => if let Some(image_key) = self.image_key.take() {
                         txn.delete_image(image_key);
                     },
-                    Key::Character("u") | Key::Character("U") => if let Some(image_key) = self.image_key {
+                    winit::event::VirtualKeyCode::U => if let Some(image_key) = self.image_key {
                         let size = 128;
                         self.image_generator.generate_image(size);
 
@@ -250,7 +250,7 @@ impl Example for App {
                             &DirtyRect::All,
                         );
                     },
-                    Key::Character("e") | Key::Character("E") => {
+                    winit::event::VirtualKeyCode::E => {
                         if let Some(image_key) = self.image_key.take() {
                             txn.delete_image(image_key);
                         }
@@ -274,7 +274,7 @@ impl Example for App {
 
                         self.image_key = Some(image_key);
                     }
-                    Key::Character("r") | Key::Character("R") => {
+                    winit::event::VirtualKeyCode::R => {
                         if let Some(image_key) = self.image_key.take() {
                             txn.delete_image(image_key);
                         }

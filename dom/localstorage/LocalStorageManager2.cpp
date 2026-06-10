@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -202,7 +204,7 @@ LocalStorageManager2::PrecacheStorage(nsIPrincipal* aPrincipal,
   // implementation to perform a preload in the content/current process.  That's
   // not how things work in LSNG.  Instead everything happens in the parent
   // process, triggered by the official preloading spot,
-  // ContentParent::AboutToLoadDocumentForChild.
+  // ContentParent::AboutToLoadHttpDocumentForChild.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -307,8 +309,8 @@ LocalStorageManager2::Preload(nsIPrincipal* aPrincipal, JSContext* aContext,
 
   LSRequestCommonParams commonParams;
   commonParams.principalInfo() = principalInfo;
-  commonParams.storagePrincipalInfo() = std::move(principalInfo);
-  commonParams.originKey() = std::move(originKey);
+  commonParams.storagePrincipalInfo() = principalInfo;
+  commonParams.originKey() = originKey;
 
   LSRequestPreloadDatastoreParams params(commonParams);
 

@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 async function testReturnStatus(expectedStatus) {
@@ -28,7 +30,7 @@ async function testReturnStatus(expectedStatus) {
   }
 
   let MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
 
   if (expectedStatus == "replaced" || expectedStatus == "not_replaced") {
     MockFilePicker.returnValue = MockFilePicker.returnReplace;
@@ -124,7 +126,7 @@ async function testFileName(expectedFileName) {
   }
 
   let MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
 
   MockFilePicker.returnValue = MockFilePicker.returnOK;
 

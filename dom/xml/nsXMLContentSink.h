@@ -1,12 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsXMLContentSink_h_
-#define nsXMLContentSink_h_
+#ifndef nsXMLContentSink_h__
+#define nsXMLContentSink_h__
 
 #include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
-#include "mozilla/Span.h"
 #include "mozilla/dom/FromParser.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -104,7 +105,7 @@ class nsXMLContentSink : public nsContentSink,
 
   virtual nsresult AddAttributes(const char16_t** aNode,
                                  mozilla::dom::Element* aElement);
-  nsresult AddText(mozilla::Span<const char16_t> aText);
+  nsresult AddText(const char16_t* aString, int32_t aLength);
 
   virtual bool OnOpenContainer(const char16_t** aAtts, uint32_t aAttsCount,
                                int32_t aNameSpaceID, nsAtom* aTagName,
@@ -184,19 +185,21 @@ class nsXMLContentSink : public nsContentSink,
   nsCOMPtr<nsIContent> mDocElement;
   nsCOMPtr<nsIContent> mCurrentHead;  // When set, we're in an XHTML <haed>
 
-  XMLContentSinkState mState = eXMLContentSinkState_InProlog;
+  XMLContentSinkState mState;
 
-  int32_t mNotifyLevel = 0;
+  // The length of the valid data in mText.
+  int32_t mTextLength;
+
+  int32_t mNotifyLevel;
   RefPtr<nsTextNode> mLastTextNode;
 
-  bool mPrettyPrintXML : 1 = true;
-  bool mPrettyPrintHasSpecialRoot : 1 = false;
-  bool mPrettyPrintHasFactoredElements : 1 = false;
-  // True if we called PrettyPrint() and it
-  // decided we should in fact prettyprint.
-  bool mPrettyPrinting : 1 = false;
+  uint8_t mPrettyPrintXML : 1;
+  uint8_t mPrettyPrintHasSpecialRoot : 1;
+  uint8_t mPrettyPrintHasFactoredElements : 1;
+  uint8_t mPrettyPrinting : 1;  // True if we called PrettyPrint() and it
+                                // decided we should in fact prettyprint.
   // True to call prevent script execution in the fragment mode.
-  bool mPreventScriptExecution : 1 = false;
+  uint8_t mPreventScriptExecution : 1;
 
   nsTArray<StackNode> mContentStack;
 
@@ -209,8 +212,9 @@ class nsXMLContentSink : public nsContentSink,
   // discard the children.
   nsTArray<nsCOMPtr<nsIContent>> mDocumentChildren;
 
+  static const int NS_ACCUMULATION_BUFFER_SIZE = 4096;
   // Our currently accumulated text that we have not flushed to a textnode yet.
-  AutoTArray<char16_t, 4096> mText;
+  char16_t mText[NS_ACCUMULATION_BUFFER_SIZE];
 };
 
-#endif  // nsXMLContentSink_h_
+#endif  // nsXMLContentSink_h__

@@ -15,7 +15,6 @@
 #include <functional>
 #include <memory>
 #include <optional>
-#include <span>
 #include <utility>
 #include <vector>
 
@@ -185,8 +184,8 @@ UDPPort::UDPPort(const PortParametersRef& args,
     : Port(args, type),
       request_manager_(
           args.network_thread,
-          [this](std::span<const uint8_t> data, StunRequest* request) {
-            SendStunRequest(data, request);
+          [this](const void* data, size_t size, StunRequest* request) {
+            OnSendPacket(data, size, request);
           }),
       socket_(socket),
       error_(0),
@@ -203,8 +202,8 @@ UDPPort::UDPPort(const PortParametersRef& args,
     : Port(args, type, min_port, max_port),
       request_manager_(
           args.network_thread,
-          [this](std::span<const uint8_t> data, StunRequest* request) {
-            SendStunRequest(data, request);
+          [this](const void* data, size_t size, StunRequest* request) {
+            OnSendPacket(data, size, request);
           }),
       socket_(nullptr),
       error_(0),
@@ -230,27 +229,13 @@ bool UDPPort::Init() {
           OnReadPacket(socket, packet);
         });
   }
-  socket_->SubscribeSentPacket(
-      this, [this](AsyncPacketSocket* socket, const SentPacketInfo& info) {
-        OnSentPacket(socket, info);
-      });
-  socket_->SubscribeReadyToSend(
-      this, [this](AsyncPacketSocket* socket) { OnReadyToSend(socket); });
-  socket_->SubscribeAddressReady(
-      this, [this](AsyncPacketSocket* socket, const SocketAddress& address) {
-        OnLocalAddressReady(socket, address);
-      });
+  socket_->SignalSentPacket.connect(this, &UDPPort::OnSentPacket);
+  socket_->SignalReadyToSend.connect(this, &UDPPort::OnReadyToSend);
+  socket_->SignalAddressReady.connect(this, &UDPPort::OnLocalAddressReady);
   return true;
 }
 
-UDPPort::~UDPPort() {
-  if (!socket_) {
-    return;
-  }
-  socket_->UnsubscribeSentPacket(this);
-  socket_->UnsubscribeReadyToSend(this);
-  socket_->UnsubscribeAddressReady(this);
-}
+UDPPort::~UDPPort() = default;
 
 void UDPPort::PrepareAddress() {
   RTC_DCHECK(request_manager_.empty());
@@ -308,20 +293,21 @@ Connection* UDPPort::CreateConnection(const Candidate& address,
   return conn;
 }
 
-int UDPPort::SendTo(std::span<const uint8_t> data,
+int UDPPort::SendTo(const void* data,
+                    size_t size,
                     const SocketAddress& addr,
                     const AsyncSocketPacketOptions& options,
                     bool /* payload */) {
   AsyncSocketPacketOptions modified_options(options);
   CopyPortInformationToPacketInfo(&modified_options.info_signaled_after_sent);
-  int sent = socket_->SendTo(data.data(), data.size(), addr, modified_options);
+  int sent = socket_->SendTo(data, size, addr, modified_options);
   if (sent < 0) {
     error_ = socket_->GetError();
     // Rate limiting added for crbug.com/856088.
     // TODO(webrtc:9622): Use general rate limiting mechanism once it exists.
     if (send_error_count_ < kSendErrorLogLimit) {
       ++send_error_count_;
-      RTC_LOG(LS_ERROR) << ToString() << ": UDP send of " << data.size()
+      RTC_LOG(LS_ERROR) << ToString() << ": UDP send of " << size
                         << " bytes to host "
                         << addr.ToSensitiveNameAndAddressString()
                         << " failed with error " << error_;
@@ -412,7 +398,9 @@ void UDPPort::OnReadPacket(AsyncPacketSocket* socket,
   // we already cleared the request when we got the first response.
   if (server_addresses_.find(packet.source_address()) !=
       server_addresses_.end()) {
-    request_manager_.CheckResponse(packet.payload());
+    request_manager_.CheckResponse(
+        reinterpret_cast<const char*>(packet.payload().data()),
+        packet.payload().size());
     return;
   }
 
@@ -625,18 +613,24 @@ void UDPPort::MaybeSetPortCompleteOrError() {
   // request succeeded for any stun server, or the socket is shared.
   if (server_addresses_.empty() || !bind_request_succeeded_servers_.empty() ||
       SharedSocket()) {
-    NotifyPortComplete(this);
+    SignalPortComplete(this);
   } else {
-    NotifyPortError(this);
+    SignalPortError(this);
   }
 }
 
-void UDPPort::SendStunRequest(std::span<const uint8_t> data, StunRequest* req) {
+// TODO(?): merge this with SendTo above.
+void UDPPort::OnSendPacket(const void* data, size_t size, StunRequest* req) {
   StunBindingRequest* sreq = static_cast<StunBindingRequest*>(req);
   AsyncSocketPacketOptions options(StunDscpValue());
   options.info_signaled_after_sent.packet_type = PacketType::kStunMessage;
-  SendTo(data, sreq->server_addr(), options, /*payload=*/true);
-
+  CopyPortInformationToPacketInfo(&options.info_signaled_after_sent);
+  if (socket_->SendTo(data, size, sreq->server_addr(), options) < 0) {
+    RTC_LOG_ERR_EX(LS_ERROR, socket_->GetError())
+        << "UDP send of " << size << " bytes to host "
+        << sreq->server_addr().ToSensitiveNameAndAddressString()
+        << " failed with error " << error_;
+  }
   stats_.stun_binding_requests_sent++;
 }
 

@@ -26,16 +26,12 @@
  * See https://bugzilla.mozilla.org/show_bug.cgi?id=1799980 for details.
  */
 
-if (!window.ajaxRequestProcessing) {
-  console.info(
-    "window.ajaxRequetProcessing has been modified for compatibility reasons. See https://bugzilla.mozilla.org/show_bug.cgi?id=1799980 for details."
-  );
+/* globals exportFunction */
 
-  Object.defineProperty(window, "ajaxRequestProcessing", {
-    get() {
-      return false;
-    },
+Object.defineProperty(window.wrappedJSObject, "ajaxRequestProcessing", {
+  get: exportFunction(function () {
+    return false;
+  }, window),
 
-    set() {},
-  });
-}
+  set: exportFunction(function () {}, window),
+});

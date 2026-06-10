@@ -410,7 +410,7 @@ class SkPictureBackedGlyphDrawable final : public SkDrawable {
 public:
     static sk_sp<SkPictureBackedGlyphDrawable>MakeFromBuffer(SkReadBuffer& buffer);
     static void FlattenDrawable(SkWriteBuffer& buffer, SkDrawable* drawable);
-    explicit SkPictureBackedGlyphDrawable(sk_sp<SkPicture> self);
+    SkPictureBackedGlyphDrawable(sk_sp<SkPicture> self);
 
 private:
     sk_sp<SkPicture> fPicture;

@@ -21,12 +21,7 @@ class Tracer;
 class OPENTELEMETRY_EXPORT TracerProvider
 {
 public:
-  TracerProvider()                                  = default;
-  virtual ~TracerProvider()                         = default;
-  TracerProvider(const TracerProvider &)            = default;
-  TracerProvider &operator=(const TracerProvider &) = default;
-  TracerProvider(TracerProvider &&)                 = default;
-  TracerProvider &operator=(TracerProvider &&)      = default;
+  virtual ~TracerProvider() = default;
 
 #if OPENTELEMETRY_ABI_VERSION_NO >= 2
 

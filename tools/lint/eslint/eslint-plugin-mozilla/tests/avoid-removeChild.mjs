@@ -15,7 +15,7 @@ const ruleTester = new RuleTester();
 // ------------------------------------------------------------------------------
 
 function invalidCode(code, messageId = "useRemove") {
-  return { code, errors: [{ messageId }] };
+  return { code, errors: [{ messageId, type: "CallExpression" }] };
 }
 
 ruleTester.run("avoid-removeChild", rule, {

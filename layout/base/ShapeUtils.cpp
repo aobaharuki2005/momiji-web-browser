@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,16 +18,15 @@
 
 namespace mozilla {
 
-nscoord ShapeUtils::ComputeOrthogonalDistanceTo(const StyleShapeRadius& aType,
-                                                const nscoord aCenter,
-                                                const nscoord aPosMin,
-                                                const nscoord aPosMax) {
-  MOZ_ASSERT(aType.IsFarthestSide() || aType.IsClosestSide() ||
-             aType.IsFarthestCorner() || aType.IsClosestCorner());
+nscoord ShapeUtils::ComputeShapeRadius(const StyleShapeRadius& aType,
+                                       const nscoord aCenter,
+                                       const nscoord aPosMin,
+                                       const nscoord aPosMax) {
+  MOZ_ASSERT(aType.IsFarthestSide() || aType.IsClosestSide());
   nscoord dist1 = std::abs(aPosMin - aCenter);
   nscoord dist2 = std::abs(aPosMax - aCenter);
   nscoord length = 0;
-  if (aType.IsFarthestSide() || aType.IsFarthestCorner()) {
+  if (aType.IsFarthestSide()) {
     length = dist1 > dist2 ? dist1 : dist2;
   } else {
     length = dist1 > dist2 ? dist2 : dist1;
@@ -74,14 +75,10 @@ nscoord ShapeUtils::ComputeCircleRadius(const StyleBasicShape& aBasicShape,
     });
   }
 
-  nscoord horizontal = ComputeOrthogonalDistanceTo(radius, aCenter.x, aRefBox.x,
-                                                   aRefBox.XMost());
-  nscoord vertical = ComputeOrthogonalDistanceTo(radius, aCenter.y, aRefBox.y,
-                                                 aRefBox.YMost());
-
-  if (radius.IsFarthestCorner() || radius.IsClosestCorner()) {
-    return nscoord(NS_hypot(horizontal, vertical));
-  }
+  nscoord horizontal =
+      ComputeShapeRadius(radius, aCenter.x, aRefBox.x, aRefBox.XMost());
+  nscoord vertical =
+      ComputeShapeRadius(radius, aCenter.y, aRefBox.y, aRefBox.YMost());
   return radius.IsFarthestSide() ? std::max(horizontal, vertical)
                                  : std::min(horizontal, vertical);
 }
@@ -95,27 +92,15 @@ nsSize ShapeUtils::ComputeEllipseRadii(const StyleBasicShape& aBasicShape,
   if (ellipse.semiaxis_x.IsLength()) {
     radii.width = ellipse.semiaxis_x.AsLength().Resolve(aRefBox.width);
   } else {
-    const auto& radius_type = ellipse.semiaxis_x;
-    radii.width = ComputeOrthogonalDistanceTo(radius_type, aCenter.x, aRefBox.x,
-                                              aRefBox.XMost());
-    if (radius_type.IsFarthestCorner() || radius_type.IsClosestCorner()) {
-      nscoord vertical = ComputeOrthogonalDistanceTo(
-          radius_type, aCenter.y, aRefBox.y, aRefBox.YMost());
-      radii.width = nscoord(NS_hypot(radii.width, vertical));
-    }
+    radii.width = ComputeShapeRadius(ellipse.semiaxis_x, aCenter.x, aRefBox.x,
+                                     aRefBox.XMost());
   }
 
   if (ellipse.semiaxis_y.IsLength()) {
     radii.height = ellipse.semiaxis_y.AsLength().Resolve(aRefBox.height);
   } else {
-    auto radius_type = ellipse.semiaxis_y;
-    radii.height = ComputeOrthogonalDistanceTo(radius_type, aCenter.y,
-                                               aRefBox.y, aRefBox.YMost());
-    if (radius_type.IsFarthestCorner() || radius_type.IsClosestCorner()) {
-      nscoord horizontal = ComputeOrthogonalDistanceTo(
-          radius_type, aCenter.x, aRefBox.x, aRefBox.XMost());
-      radii.height = nscoord(NS_hypot(horizontal, radii.height));
-    }
+    radii.height = ComputeShapeRadius(ellipse.semiaxis_y, aCenter.y, aRefBox.y,
+                                      aRefBox.YMost());
   }
 
   return radii;

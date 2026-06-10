@@ -32,7 +32,7 @@ async function assertIconMatches(actualIconData, expectedIcon) {
 
 async function assertEngineIcon(engineId, expectedIcon, size = 0) {
   // Default value for size is 0 to mimic XPCOM optional parameters.
-  let engine = SearchService.getEngineById(engineId);
+  let engine = Services.search.getEngineById(engineId);
   let engineIconURL = await engine.getIconURL(size);
 
   if (expectedIcon) {
@@ -125,7 +125,7 @@ add_setup(async function setup() {
   await client.db.importChanges({}, record.lastModified);
 
   SearchTestUtils.setRemoteSettingsConfig(CONFIG);
-  await SearchService.init();
+  await Services.search.init();
 
   // Testing that an icon is not local generates a `Could not find {id}...`
   // message.

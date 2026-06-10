@@ -37,9 +37,9 @@ const GOOGLE_DOMAINS = [
   "www.google.com.au",
   "www.google.co.nz",
 ];
-let tipsProviderInstance = ProvidersManager.getInstanceForSap(
-  "urlbar"
-).getProvider("UrlbarProviderSearchTips");
+let tipsProviderInstance = UrlbarProvidersManager.getProvider(
+  "UrlbarProviderSearchTips"
+);
 
 add_setup(async function () {
   await PlacesUtils.history.clear();
@@ -74,7 +74,7 @@ add_setup(async function () {
     activeUpdateFile.remove(false);
   } catch (e) {}
 
-  let defaultEngine = await SearchService.getDefault();
+  let defaultEngine = await Services.search.getDefault();
   let defaultEngineName = defaultEngine.name;
   Assert.equal(defaultEngineName, "Google", "Default engine should be Google.");
 
@@ -369,7 +369,7 @@ add_task(async function ignoreEndsEngagement() {
         // technology and keyboard by pressing `Esc` key, this rule check shall
         // be ignored by a11y_checks suite.
         AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
-        EventUtils.synthesizeMouseAtCenter(spring, {});
+        await EventUtils.synthesizeMouseAtCenter(spring, {});
         AccessibilityUtils.resetEnv();
       });
       Assert.equal(

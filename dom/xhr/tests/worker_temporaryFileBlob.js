@@ -1,3 +1,5 @@
+/* eslint-env worker */
+
 /* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
 
 importScripts("common_temporaryFileBlob.js");

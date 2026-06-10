@@ -1,4 +1,5 @@
-/* Any copyright is dedicated to the Public Domain.
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
+ * Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 package org.mozilla.geckoview.test
@@ -64,7 +65,7 @@ class ContentDelegateMultipleSessionsTest : BaseSessionTest() {
     // to sessions and content processes:
     // * mainSession is the only session, it is open, and its content process is the only
     //   content process (but note that the content process assigned to mainSession is
-    //   *not* guaranteed to be ":tab_disable_art_image_0").
+    //   *not* guaranteed to be ":tab0").
     // * With multi-e10s configured to run N content processes, we create and open
     //   an additional N content processes. With the default e10s process allocation
     //   scheme, this means that the first N-1 new sessions we create each get their

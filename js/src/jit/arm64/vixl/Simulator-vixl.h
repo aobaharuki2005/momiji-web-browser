@@ -27,13 +27,12 @@
 #ifndef VIXL_A64_SIMULATOR_A64_H_
 #define VIXL_A64_SIMULATOR_A64_H_
 
-#ifndef JS_SIMULATOR_ARM64
-#  error "simulator disabled"
-#endif
+#include "jstypes.h"
+
+#ifdef JS_SIMULATOR_ARM64
 
 #include "mozilla/Vector.h"
 
-#include "jstypes.h"
 #include "jit/arm64/vixl/Assembler-vixl.h"
 #include "jit/arm64/vixl/Disasm-vixl.h"
 #include "jit/arm64/vixl/Globals-vixl.h"
@@ -2612,4 +2611,5 @@ class AutoLockSimulatorCache : public js::LockGuard<js::Mutex>
 } // namespace jit
 } // namespace js
 
+#endif  // JS_SIMULATOR_ARM64
 #endif  // VIXL_A64_SIMULATOR_A64_H_

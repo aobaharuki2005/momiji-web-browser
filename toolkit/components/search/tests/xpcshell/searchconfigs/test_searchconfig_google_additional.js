@@ -9,7 +9,6 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
 });
 
 const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
@@ -122,7 +121,7 @@ async function assertEnterpriseParameter(useEmptyPolicy) {
     },
   ];
 
-  SearchService.reset();
+  Services.search.wrappedJSObject.reset();
   await EnterprisePolicyTesting.setupPolicyEngineWithJson(
     useEmptyPolicy
       ? {}
@@ -132,7 +131,7 @@ async function assertEnterpriseParameter(useEmptyPolicy) {
           },
         }
   );
-  await SearchService.init();
+  await Services.search.init();
 
   for (const testData of TEST_DATA) {
     info(`Checking region ${testData.region}, locale ${testData.locale}`);

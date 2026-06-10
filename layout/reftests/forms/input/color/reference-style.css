@@ -7,8 +7,7 @@ div.input-color-swatch {
   box-sizing: border-box;
   border: 1px solid grey;
   display: block;
-  background-image: linear-gradient(currentColor), repeating-conic-gradient(#ccc 0 25%, white 0 50%);
-  background-size: 12px 12px;
+  background-color: #000000; /* default color for input type color */
 }
 
 button.input-color {

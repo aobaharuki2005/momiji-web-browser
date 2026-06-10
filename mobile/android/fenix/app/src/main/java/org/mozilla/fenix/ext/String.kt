@@ -7,7 +7,6 @@ package org.mozilla.fenix.ext
 import android.text.Editable
 import androidx.compose.runtime.Composable
 import mozilla.components.compose.base.utils.inComposePreview
-import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.base.utils.MAX_URI_LENGTH
 import mozilla.components.support.ktx.kotlin.toShortUrl
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
@@ -67,18 +66,25 @@ fun String?.replaceConsecutiveZeros(): String? =
  * This function handles both regular URLs and blob URLs. For regular URLs, it extracts the base domain.
  * For blob URLs, it extracts the base domain from the URL embedded within the blob URL.
  *
- * @param publicSuffixList The [PublicSuffixList] used to resolve the registrable domain.
- * @return The registrable domain (e.g., "mozilla.org") or the host if a registrable
- * domain cannot be determined.
+ * @receiver The URL string to extract the shortened URL from.
+ * @return The shortened URL (typically the base domain).
  */
-internal suspend fun String.getBaseDomainUrl(publicSuffixList: PublicSuffixList): String {
-    val host = when {
-        this.startsWith("blob:") -> this.substringAfter("blob:").tryGetHostFromUrl()
-        else -> this.tryGetHostFromUrl()
-    }
-    val registrableDomain = publicSuffixList
-        .getPublicSuffixPlusOne(host)
-        .await()
+fun String.getBaseDomainUrl(): String {
+    return when {
+        this.startsWith("blob:") -> {
+            val blobUrl = this.substringAfter("blob:")
+            blobUrl.tryGetHostFromUrl().getBaseDomainFromHost()
+        }
 
-    return registrableDomain ?: host
+        else -> this.tryGetHostFromUrl().getBaseDomainFromHost()
+    }
+}
+
+private fun String.getBaseDomainFromHost(): String {
+    val parts = this.split(".")
+    return if (parts.size >= 2) {
+        parts.takeLast(2).joinToString(".")
+    } else {
+        this
+    }
 }

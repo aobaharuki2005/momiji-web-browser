@@ -2,6 +2,3 @@ features:
 - name: object-view-box
   files:
   - object-view-box-*
-- name: object-position
-  files:
-  - object-position-*

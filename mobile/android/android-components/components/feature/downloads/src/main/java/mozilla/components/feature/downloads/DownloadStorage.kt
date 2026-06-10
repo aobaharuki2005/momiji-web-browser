@@ -91,7 +91,7 @@ class DownloadStorage(context: Context) {
                 first.contentType == second.contentType &&
                 first.contentLength == second.contentLength &&
                 first.status == second.status &&
-                first.directoryPath == second.directoryPath &&
+                first.destinationDirectory == second.destinationDirectory &&
                 first.createdTime == second.createdTime
         }
     }

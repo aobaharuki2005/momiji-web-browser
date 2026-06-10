@@ -660,7 +660,7 @@ class MOZ_GSL_POINTER Span {
   constexpr Span<element_type, Count> Subspan() const {
     const size_t len = size();
     MOZ_RELEASE_ASSERT(Offset <= len &&
-                       (Count == dynamic_extent || (Count <= len - Offset)));
+                       (Count == dynamic_extent || (Offset + Count <= len)));
     return {data() + Offset, Count == dynamic_extent ? len - Offset : Count};
   }
 
@@ -688,7 +688,7 @@ class MOZ_GSL_POINTER Span {
       index_type aStart, index_type aLength = dynamic_extent) const {
     const size_t len = size();
     MOZ_RELEASE_ASSERT(aStart <= len && (aLength == dynamic_extent ||
-                                         (aLength <= len - aStart)));
+                                         (aStart + aLength <= len)));
     return {data() + aStart,
             aLength == dynamic_extent ? len - aStart : aLength};
   }
@@ -791,27 +791,25 @@ class MOZ_GSL_POINTER Span {
   constexpr pointer data() const { return storage_.data(); }
 
   // [Span.iter], Span iterator support
-  constexpr iterator begin() const {
-    return {this, 0, span_details::SpanKnownBounds{}};
-  }
-  constexpr iterator end() const {
+  iterator begin() const { return {this, 0, span_details::SpanKnownBounds{}}; }
+  iterator end() const {
     return {this, Length(), span_details::SpanKnownBounds{}};
   }
 
-  constexpr const_iterator cbegin() const {
+  const_iterator cbegin() const {
     return {this, 0, span_details::SpanKnownBounds{}};
   }
-  constexpr const_iterator cend() const {
+  const_iterator cend() const {
     return {this, Length(), span_details::SpanKnownBounds{}};
   }
 
-  constexpr reverse_iterator rbegin() const { return reverse_iterator{end()}; }
-  constexpr reverse_iterator rend() const { return reverse_iterator{begin()}; }
+  reverse_iterator rbegin() const { return reverse_iterator{end()}; }
+  reverse_iterator rend() const { return reverse_iterator{begin()}; }
 
-  constexpr const_reverse_iterator crbegin() const {
+  const_reverse_iterator crbegin() const {
     return const_reverse_iterator{cend()};
   }
-  constexpr const_reverse_iterator crend() const {
+  const_reverse_iterator crend() const {
     return const_reverse_iterator{cbegin()};
   }
 
@@ -837,7 +835,7 @@ class MOZ_GSL_POINTER Span {
 
   // Returns the index of the given element in the span, or `npos` otherwise.
   template <typename Item>
-  constexpr index_type IndexOf(const Item& aItem) const {
+  index_type IndexOf(const Item& aItem) const {
     auto begin = this->begin();
     auto end = this->end();
     auto it = std::find(begin, end, aItem);
@@ -845,12 +843,6 @@ class MOZ_GSL_POINTER Span {
       return npos;
     }
     return index_type(it - begin);
-  }
-
-  // Returns whether the element is somewhere in the span.
-  template <typename Item>
-  constexpr bool Contains(const Item& aItem) const {
-    return IndexOf(aItem) != npos;
   }
 
  private:

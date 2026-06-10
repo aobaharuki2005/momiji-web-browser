@@ -14,12 +14,13 @@
   <div id="target"></div>
   </div>
   <script>
-    const properties = ["column-rule-visibility-items", "row-rule-visibility-items", "rule-visibility-items"];
+    // TODO(samomekarajr): Add tests for shorthand 'rule-visibility-items' once implemented.
+    const properties = ["column-rule-visibility-items", "row-rule-visibility-items"];
     for (const property of properties) {
       test_computed_value(property, "all");
+      test_computed_value(property, "none");
       test_computed_value(property, "around");
       test_computed_value(property, "between");
-      test_computed_value(property, "normal");
     }
   </script>
 </body>

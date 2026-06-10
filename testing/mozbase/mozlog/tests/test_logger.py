@@ -11,6 +11,7 @@ import unittest
 
 import mozfile
 import mozlog.unstructured as mozlog
+import mozunit
 
 
 class ListHandler(mozlog.Handler):
@@ -35,13 +36,13 @@ class TestLogging(unittest.TestCase):
         self.assertEqual(len(default_logger.handlers), 1)
         self.assertTrue(isinstance(default_logger.handlers[0], mozlog.StreamHandler))
 
-        with mozfile.NamedTemporaryFile() as f:
-            list_logger = mozlog.getLogger(
-                "file.logger", handler=mozlog.FileHandler(f.name)
-            )
-            self.assertEqual(len(list_logger.handlers), 1)
-            self.assertTrue(isinstance(list_logger.handlers[0], mozlog.FileHandler))
-            list_logger.handlers[0].close()
+        f = mozfile.NamedTemporaryFile()
+        list_logger = mozlog.getLogger(
+            "file.logger", handler=mozlog.FileHandler(f.name)
+        )
+        self.assertEqual(len(list_logger.handlers), 1)
+        self.assertTrue(isinstance(list_logger.handlers[0], mozlog.FileHandler))
+        f.close()
 
         self.assertRaises(
             ValueError, mozlog.getLogger, "file.logger", handler=ListHandler()
@@ -229,22 +230,22 @@ class TestStructuredLogging(unittest.TestCase):
 
         host, port = self.log_server.server_address
 
-        with socket.socket() as sock:
-            sock.connect((host, port))
+        sock = socket.socket()
+        sock.connect((host, port))
 
-            # Sleeps prevent listener from receiving entire message in a single call
-            # to recv in order to test reconstruction of partial messages.
-            sock.sendall(message_string[:8].encode())
-            time.sleep(0.01)
-            sock.sendall(message_string[8:32].encode())
-            time.sleep(0.01)
-            sock.sendall(message_string[32:64].encode())
-            time.sleep(0.01)
-            sock.sendall(message_string[64:128].encode())
-            time.sleep(0.01)
-            sock.sendall(message_string[128:].encode())
+        # Sleeps prevent listener from receiving entire message in a single call
+        # to recv in order to test reconstruction of partial messages.
+        sock.sendall(message_string[:8].encode())
+        time.sleep(0.01)
+        sock.sendall(message_string[8:32].encode())
+        time.sleep(0.01)
+        sock.sendall(message_string[32:64].encode())
+        time.sleep(0.01)
+        sock.sendall(message_string[64:128].encode())
+        time.sleep(0.01)
+        sock.sendall(message_string[128:].encode())
 
-            server_thread.join()
+        server_thread.join()
 
 
 class Loggable(mozlog.LoggingMixin):
@@ -292,6 +293,4 @@ class TestLoggingMixin(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import mozunit
-
     mozunit.main()

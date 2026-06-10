@@ -1,5 +1,7 @@
 use core::time::Duration as StdDuration;
 
+use num_conv::prelude::*;
+
 use crate::convert::*;
 
 /// Sealed trait to prevent downstream implementations.
@@ -46,8 +48,6 @@ mod sealed {
 /// When called on floating point values, any remainder of the floating point value will be
 /// truncated. Keep in mind that floating point numbers are inherently imprecise and have
 /// limited capacity.
-#[diagnostic::on_unimplemented(note = "this extension trait is intended to be used with numeric \
-                                       literals, such as `5.std_seconds()`")]
 pub trait NumericalStdDuration: sealed::Sealed {
     /// Create a [`std::time::Duration`] from the number of nanoseconds.
     fn std_nanoseconds(self) -> StdDuration;
@@ -68,22 +68,18 @@ pub trait NumericalStdDuration: sealed::Sealed {
 }
 
 impl NumericalStdDuration for u64 {
-    #[inline]
     fn std_nanoseconds(self) -> StdDuration {
         StdDuration::from_nanos(self)
     }
 
-    #[inline]
     fn std_microseconds(self) -> StdDuration {
         StdDuration::from_micros(self)
     }
 
-    #[inline]
     fn std_milliseconds(self) -> StdDuration {
         StdDuration::from_millis(self)
     }
 
-    #[inline]
     fn std_seconds(self) -> StdDuration {
         StdDuration::from_secs(self)
     }
@@ -91,11 +87,9 @@ impl NumericalStdDuration for u64 {
     /// # Panics
     ///
     /// This may panic if an overflow occurs.
-    #[inline]
-    #[track_caller]
     fn std_minutes(self) -> StdDuration {
         StdDuration::from_secs(
-            self.checked_mul(Second::per_t(Minute))
+            self.checked_mul(Second::per(Minute).extend())
                 .expect("overflow constructing `time::Duration`"),
         )
     }
@@ -103,11 +97,9 @@ impl NumericalStdDuration for u64 {
     /// # Panics
     ///
     /// This may panic if an overflow occurs.
-    #[inline]
-    #[track_caller]
     fn std_hours(self) -> StdDuration {
         StdDuration::from_secs(
-            self.checked_mul(Second::per_t(Hour))
+            self.checked_mul(Second::per(Hour).extend())
                 .expect("overflow constructing `time::Duration`"),
         )
     }
@@ -115,11 +107,9 @@ impl NumericalStdDuration for u64 {
     /// # Panics
     ///
     /// This may panic if an overflow occurs.
-    #[inline]
-    #[track_caller]
     fn std_days(self) -> StdDuration {
         StdDuration::from_secs(
-            self.checked_mul(Second::per_t(Day))
+            self.checked_mul(Second::per(Day).extend())
                 .expect("overflow constructing `time::Duration`"),
         )
     }
@@ -127,11 +117,9 @@ impl NumericalStdDuration for u64 {
     /// # Panics
     ///
     /// This may panic if an overflow occurs.
-    #[inline]
-    #[track_caller]
     fn std_weeks(self) -> StdDuration {
         StdDuration::from_secs(
-            self.checked_mul(Second::per_t(Week))
+            self.checked_mul(Second::per(Week).extend())
                 .expect("overflow constructing `time::Duration`"),
         )
     }
@@ -141,8 +129,6 @@ impl NumericalStdDuration for f64 {
     /// # Panics
     ///
     /// This will panic if self is negative.
-    #[inline]
-    #[track_caller]
     fn std_nanoseconds(self) -> StdDuration {
         assert!(self >= 0.);
         StdDuration::from_nanos(self as u64)
@@ -151,70 +137,56 @@ impl NumericalStdDuration for f64 {
     /// # Panics
     ///
     /// This will panic if self is negative.
-    #[inline]
-    #[track_caller]
     fn std_microseconds(self) -> StdDuration {
         assert!(self >= 0.);
-        StdDuration::from_nanos((self * Nanosecond::per_t::<Self>(Microsecond)) as u64)
+        StdDuration::from_nanos((self * Nanosecond::per(Microsecond) as Self) as u64)
     }
 
     /// # Panics
     ///
     /// This will panic if self is negative.
-    #[inline]
-    #[track_caller]
     fn std_milliseconds(self) -> StdDuration {
         assert!(self >= 0.);
-        StdDuration::from_nanos((self * Nanosecond::per_t::<Self>(Millisecond)) as u64)
+        StdDuration::from_nanos((self * Nanosecond::per(Millisecond) as Self) as u64)
     }
 
     /// # Panics
     ///
     /// This will panic if self is negative.
-    #[inline]
-    #[track_caller]
     fn std_seconds(self) -> StdDuration {
         assert!(self >= 0.);
-        StdDuration::from_nanos((self * Nanosecond::per_t::<Self>(Second)) as u64)
+        StdDuration::from_nanos((self * Nanosecond::per(Second) as Self) as u64)
     }
 
     /// # Panics
     ///
     /// This will panic if self is negative.
-    #[inline]
-    #[track_caller]
     fn std_minutes(self) -> StdDuration {
         assert!(self >= 0.);
-        StdDuration::from_nanos((self * Nanosecond::per_t::<Self>(Minute)) as u64)
+        StdDuration::from_nanos((self * Nanosecond::per(Minute) as Self) as u64)
     }
 
     /// # Panics
     ///
     /// This will panic if self is negative.
-    #[inline]
-    #[track_caller]
     fn std_hours(self) -> StdDuration {
         assert!(self >= 0.);
-        StdDuration::from_nanos((self * Nanosecond::per_t::<Self>(Hour)) as u64)
+        StdDuration::from_nanos((self * Nanosecond::per(Hour) as Self) as u64)
     }
 
     /// # Panics
     ///
     /// This will panic if self is negative.
-    #[inline]
-    #[track_caller]
     fn std_days(self) -> StdDuration {
         assert!(self >= 0.);
-        StdDuration::from_nanos((self * Nanosecond::per_t::<Self>(Day)) as u64)
+        StdDuration::from_nanos((self * Nanosecond::per(Day) as Self) as u64)
     }
 
     /// # Panics
     ///
     /// This will panic if self is negative.
-    #[inline]
-    #[track_caller]
     fn std_weeks(self) -> StdDuration {
         assert!(self >= 0.);
-        StdDuration::from_nanos((self * Nanosecond::per_t::<Self>(Week)) as u64)
+        StdDuration::from_nanos((self * Nanosecond::per(Week) as Self) as u64)
     }
 }

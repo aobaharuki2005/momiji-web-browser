@@ -172,8 +172,8 @@ var gProfiles = {
     });
   },
 
-  createNewProfile(source) {
-    SelectableProfileService.createNewProfile(true, null, source);
+  createNewProfile() {
+    SelectableProfileService.createNewProfile();
   },
 
   updateView(target) {
@@ -240,13 +240,13 @@ var gProfiles = {
         break;
       }
       case "profiles-create-profile-button": {
-        this.createNewProfile("profiles-panel");
+        this.createNewProfile();
         break;
       }
 
       /* Menubar events */
       case "Profiles:CreateProfile": {
-        this.createNewProfile("main-menu");
+        this.createNewProfile();
         break;
       }
       case "Profiles:ManageProfiles": {

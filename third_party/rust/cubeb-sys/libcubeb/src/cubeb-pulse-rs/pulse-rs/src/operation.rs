@@ -3,6 +3,8 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
 
+use ffi;
+
 #[derive(Debug)]
 pub struct Operation(*mut ffi::pa_operation);
 

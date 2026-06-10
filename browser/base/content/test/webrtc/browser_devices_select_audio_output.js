@@ -70,9 +70,7 @@ async function simulateAudioOutputRequest(options) {
 
 async function allowPrompt() {
   const observerPromise = expectObserverCalled("getUserMedia:response:allow");
-  const notification = PopupNotifications.panel.firstElementChild;
-  await notification.button.updateComplete;
-  notification.button.click();
+  PopupNotifications.panel.firstElementChild.button.click();
   await observerPromise;
 }
 
@@ -175,7 +173,7 @@ var gTests = [
       ]);
       is(
         document.activeElement.className,
-        "popup-notification-primary-button",
+        "popup-notification-primary-button primary footer-button",
         "popup button focus"
       );
       checkDeviceSelectors(["speaker"]);

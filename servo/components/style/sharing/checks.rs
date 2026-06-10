@@ -8,8 +8,7 @@
 
 use crate::bloom::StyleBloom;
 use crate::context::SharedStyleContext;
-use crate::dom::{TElement, TShadowRoot};
-use crate::properties::ComputedValues;
+use crate::dom::TElement;
 use crate::sharing::{StyleSharingCandidate, StyleSharingTarget};
 use selectors::matching::SelectorCaches;
 
@@ -141,46 +140,6 @@ where
     for_element == for_candidate
 }
 
-/// Whether the given element and a candidate have the same values for the the
-/// attributes used in an `attr()` function.
-#[inline]
-pub fn have_same_referenced_attrs<E>(
-    target: &StyleSharingTarget<E>,
-    candidate: &StyleSharingCandidate<E>,
-) -> bool
-where
-    E: TElement,
-{
-    // The candidate must be styled in order to be in the cache.
-    let borrowed_data = candidate.element.borrow_data().unwrap();
-    let styles = &borrowed_data.styles;
-
-    let check_style = |style: &ComputedValues| {
-        let Some(ref attrs) = style.attribute_references else {
-            return true;
-        };
-        attrs.iter().all(|(name, namespaces)| {
-            namespaces.iter().all(|namespace| {
-                target.get_attr(name, namespace) == candidate.get_attr(name, namespace)
-            })
-        })
-    };
-
-    if !check_style(styles.primary()) {
-        return false;
-    }
-
-    for pseudo_styles in styles.pseudos.as_array() {
-        let Some(ref styles) = pseudo_styles else {
-            continue;
-        };
-        if !check_style(styles) {
-            return false;
-        }
-    }
-    true
-}
-
 /// Whether a given element and a candidate share a set of scope activations
 /// for revalidation.
 #[inline]
@@ -231,24 +190,5 @@ where
     match candidate_id {
         Some(id) => stylist.may_have_rules_for_id(id, candidate),
         None => false,
-    }
-}
-
-/// Returns whether the cascade data of the given shadow roots is the same.
-#[inline]
-pub fn shadow_root_style_data_equals<S>(l: Option<S>, r: Option<S>) -> bool
-where
-    S: TShadowRoot,
-{
-    if l == r {
-        return true;
-    }
-    match (
-        l.and_then(|s| s.style_data()),
-        r.and_then(|s| s.style_data()),
-    ) {
-        (Some(l), Some(r)) => std::ptr::eq(l, r),
-        (None, None) => true,
-        _ => false,
     }
 }

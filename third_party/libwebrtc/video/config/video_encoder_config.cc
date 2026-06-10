@@ -36,7 +36,8 @@ VideoStream::VideoStream(const VideoStream& other) = default;
 VideoStream::~VideoStream() = default;
 
 std::string VideoStream::ToString() const {
-  StringBuilder ss;
+  char buf[1024];
+  SimpleStringBuilder ss(buf);
   ss << "{width: " << width;
   ss << ", height: " << height;
   ss << ", max_framerate: " << max_framerate;
@@ -48,12 +49,8 @@ std::string VideoStream::ToString() const {
   ss << ", bitrate_priority: " << bitrate_priority.value_or(0);
   ss << ", active: " << active;
   ss << ", scale_down_by: " << scale_resolution_down_by;
-  if (scale_resolution_down_to.has_value()) {
-    ss << ", scale_down_to: " << scale_resolution_down_to->width << "x"
-       << scale_resolution_down_to->height;
-  }
   ss << '}';
-  return ss.Release();
+  return ss.str();
 }
 
 VideoEncoderConfig::VideoEncoderConfig()
@@ -75,7 +72,8 @@ VideoEncoderConfig::VideoEncoderConfig(VideoEncoderConfig&&) = default;
 VideoEncoderConfig::~VideoEncoderConfig() = default;
 
 std::string VideoEncoderConfig::ToString() const {
-  StringBuilder ss;
+  char buf[1024];
+  SimpleStringBuilder ss(buf);
   ss << "{codec_type: " << CodecTypeToPayloadString(codec_type);
   ss << ", content_type: ";
   switch (content_type) {
@@ -98,21 +96,12 @@ std::string VideoEncoderConfig::ToString() const {
     ss << ", simulcast_layers[" << n << "]: " << simulcast_layers[n].ToString();
   }
   ss << '}';
-  return ss.Release();
+  return ss.str();
 }
 
 bool VideoEncoderConfig::HasScaleResolutionDownTo() const {
   for (const VideoStream& simulcast_layer : simulcast_layers) {
     if (simulcast_layer.scale_resolution_down_to.has_value()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool VideoEncoderConfig::HasScaleResolutionDownBy() const {
-  for (const VideoStream& simulcast_layer : simulcast_layers) {
-    if (simulcast_layer.scale_resolution_down_by >= 1.0) {
       return true;
     }
   }

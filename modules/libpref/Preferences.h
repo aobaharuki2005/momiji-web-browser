@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,6 +26,8 @@
 #include "nsTArray.h"
 #include "nsWeakReference.h"
 #include "nsXULAppAPI.h"
+#include <atomic>
+#include <functional>
 
 class nsIFile;
 class nsIPrefOverrideMap;
@@ -133,7 +137,7 @@ class Preferences final : public nsIPrefService,
   }
 
   // Gets the type of the pref.
-  static nsIPrefBranch::PreferenceType GetType(const char* aPrefName);
+  static int32_t GetType(const char* aPrefName);
 
   // Fallible value getters. When `aKind` is `User` they will get the user
   // value if possible, and fall back to the default value otherwise.
@@ -424,8 +428,6 @@ class Preferences final : public nsIPrefService,
   static void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                      PrefsSizes& aSizes);
 
-  static uint32_t GetCallbackCount();
-
   static void HandleDirty();
 
   // Explicitly choosing synchronous or asynchronous (if allowed) preferences
@@ -498,8 +500,6 @@ class Preferences final : public nsIPrefService,
                                       const char* const* aPrefs, void* aClosure,
                                       MatchKind aMatchKind);
 
-  static uint32_t UnregisterCallbacksForBranch(nsPrefBranch* aBranch);
-
   template <typename T>
   static nsresult RegisterCallbackImpl(PrefChangedFunc aCallback, T& aPref,
                                        void* aClosure, MatchKind aMatchKind,
@@ -529,7 +529,6 @@ class Preferences final : public nsIPrefService,
 
  private:
   nsCOMPtr<nsIFile> mCurrentFile;
-  nsCOMPtr<nsISerialEventTarget> mAsyncTarget;
   // Time since unix epoch in ms (JS Date compatible)
   PRTime mUserPrefsFileLastModifiedAtStartup = 0;
   bool mDirty = false;

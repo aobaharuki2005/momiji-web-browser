@@ -28,6 +28,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
      * These will be restored when the tests end.
      */
     private val initialFeatureFlags = FeatureFlags(
+        isHomepageHeaderEnabled = settings.showHomepageHeader,
         isPocketEnabled = settings.showPocketRecommendationsFeature,
         isRecentTabsFeatureEnabled = settings.showRecentTabsFeature,
         isRecentlyVisitedFeatureEnabled = settings.historyMetadataUIFeature,
@@ -38,21 +39,18 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         isUnifiedTrustPanelEnabled = settings.enableUnifiedTrustPanel,
         etpPolicy = getETPPolicy(settings),
         isLocationPermissionEnabled = getFeaturePermission(PhoneFeature.LOCATION, settings),
+        isComposableToolbarEnabled = settings.shouldUseComposableToolbar,
+        isMenuRedesignEnabled = settings.enableMenuRedesign,
         isMenuRedesignCFREnabled = settings.shouldShowMenuCFR,
         isMicrosurveyEnabled = settings.microsurveyFeatureEnabled,
         shouldUseBottomToolbar = settings.shouldUseBottomToolbar,
         onboardingFeatureEnabled = settings.onboardingFeatureEnabled,
-        isUseNewCrashReporterFlow = settings.useNewCrashReporterFlow,
+        isUseNewCrashReporterDialog = settings.useNewCrashReporterDialog,
         isTabSwipeCFREnabled = settings.hasShownTabSwipeCFR,
         isTermsOfServiceAccepted = settings.hasAcceptedTermsOfService,
         openLinksInApp = getOpenLinksInApp(settings),
         tabManagerOpeningAnimationEnabled = settings.tabManagerOpeningAnimationEnabled,
-        hasSeenShakeToSummarizeToolbarCfr = settings.shakeToSummarizeToolbarCfrShown,
-        shakeToSummarizeFeatureFlagEnabled = settings.shakeToSummarizeFeatureFlagEnabled,
-        isPrivateModeAndStoriesEntryPointEnabled = settings.privateModeAndStoriesEntryPointEnabled,
-        shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar,
-        nativeShareSheetEnabled = settings.nativeShareSheetEnabled,
-        showVoiceSearchInDisplayToolbar = settings.showVoiceSearchInDisplayToolbar,
+        hasSeenBrowserToolbarCFR = settings.hasSeenBrowserToolbarCFR,
     )
 
     /**
@@ -60,6 +58,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
      */
     private var updatedFeatureFlags = initialFeatureFlags.copy()
 
+    override var isHomepageHeaderEnabled: Boolean by updatedFeatureFlags::isHomepageHeaderEnabled
     override var isPocketEnabled: Boolean by updatedFeatureFlags::isPocketEnabled
     override var isWallpaperOnboardingEnabled: Boolean by updatedFeatureFlags::isWallpaperOnboardingEnabled
     override var isRecentTabsFeatureEnabled: Boolean by updatedFeatureFlags::isRecentTabsFeatureEnabled
@@ -69,21 +68,18 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override var isUnifiedTrustPanelEnabled: Boolean by updatedFeatureFlags::isUnifiedTrustPanelEnabled
     override var etpPolicy: ETPPolicy by updatedFeatureFlags::etpPolicy
     override var isLocationPermissionEnabled: SitePermissionsRules.Action by updatedFeatureFlags::isLocationPermissionEnabled
+    override var isComposableToolbarEnabled: Boolean by updatedFeatureFlags::isComposableToolbarEnabled
+    override var isMenuRedesignEnabled: Boolean by updatedFeatureFlags::isMenuRedesignEnabled
     override var isMenuRedesignCFREnabled: Boolean by updatedFeatureFlags::isMenuRedesignCFREnabled
     override var isMicrosurveyEnabled: Boolean by updatedFeatureFlags::isMicrosurveyEnabled
     override var shouldUseBottomToolbar: Boolean by updatedFeatureFlags::shouldUseBottomToolbar
     override var onboardingFeatureEnabled: Boolean by updatedFeatureFlags::onboardingFeatureEnabled
-    override var isUseNewCrashReporterFlow: Boolean by updatedFeatureFlags::isUseNewCrashReporterFlow
+    override var isUseNewCrashReporterDialog: Boolean by updatedFeatureFlags::isUseNewCrashReporterDialog
     override var isTabSwipeCFREnabled: Boolean by updatedFeatureFlags::isTabSwipeCFREnabled
     override var isTermsOfServiceAccepted: Boolean by updatedFeatureFlags::isTermsOfServiceAccepted
     override var openLinksInExternalApp: OpenLinksInApp by updatedFeatureFlags::openLinksInApp
     override var tabManagerOpeningAnimationEnabled: Boolean by updatedFeatureFlags::tabManagerOpeningAnimationEnabled
-    override var hasSeenShakeToSummarizeToolbarCfr: Boolean by updatedFeatureFlags::hasSeenShakeToSummarizeToolbarCfr
-    override var shakeToSummarizeFeatureFlagEnabled: Boolean by updatedFeatureFlags::shakeToSummarizeFeatureFlagEnabled
-    override var isPrivateModeAndStoriesEntryPointEnabled: Boolean by updatedFeatureFlags::isPrivateModeAndStoriesEntryPointEnabled
-    override var shouldUseExpandedToolbar: Boolean by updatedFeatureFlags::shouldUseExpandedToolbar
-    override var nativeShareSheetEnabled: Boolean by updatedFeatureFlags::nativeShareSheetEnabled
-    override var showVoiceSearchInDisplayToolbar: Boolean by updatedFeatureFlags::showVoiceSearchInDisplayToolbar
+    override var hasSeenBrowserToolbarCFR: Boolean by updatedFeatureFlags::hasSeenBrowserToolbarCFR
 
     override fun applyFlagUpdates() {
         Log.i(TAG, "applyFlagUpdates: Trying to apply the updated feature flags: $updatedFeatureFlags")
@@ -100,6 +96,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override var isDeleteSitePermissionsEnabled: Boolean by updatedFeatureFlags::isDeleteSitePermissionsEnabled
 
     private fun applyFeatureFlags(featureFlags: FeatureFlags) {
+        settings.showHomepageHeader = featureFlags.isHomepageHeaderEnabled
         settings.showPocketRecommendationsFeature = featureFlags.isPocketEnabled
         settings.showRecentTabsFeature = featureFlags.isRecentTabsFeatureEnabled
         settings.historyMetadataUIFeature = featureFlags.isRecentlyVisitedFeatureEnabled
@@ -107,6 +104,8 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         settings.showWallpaperOnboarding = featureFlags.isWallpaperOnboardingEnabled
         settings.deleteSitePermissions = featureFlags.isDeleteSitePermissionsEnabled
         settings.shouldShowOpenInAppBanner = featureFlags.isOpenInAppBannerEnabled
+        settings.shouldUseComposableToolbar = featureFlags.isComposableToolbarEnabled
+        settings.enableMenuRedesign = featureFlags.isMenuRedesignEnabled
         settings.shouldShowMenuCFR = featureFlags.isMenuRedesignCFREnabled
         settings.microsurveyFeatureEnabled = featureFlags.isMicrosurveyEnabled
         settings.shouldUseBottomToolbar = featureFlags.shouldUseBottomToolbar
@@ -114,21 +113,17 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         setETPPolicy(featureFlags.etpPolicy)
         setPermissions(PhoneFeature.LOCATION, featureFlags.isLocationPermissionEnabled)
         settings.onboardingFeatureEnabled = featureFlags.onboardingFeatureEnabled
-        settings.useNewCrashReporterFlow = featureFlags.isUseNewCrashReporterFlow
+        settings.useNewCrashReporterDialog = featureFlags.isUseNewCrashReporterDialog
         settings.hasShownTabSwipeCFR = !featureFlags.isTabSwipeCFREnabled
         settings.hasAcceptedTermsOfService = featureFlags.isTermsOfServiceAccepted
         setOpenLinksInApp(featureFlags.openLinksInApp)
         settings.tabManagerOpeningAnimationEnabled = featureFlags.tabManagerOpeningAnimationEnabled
-        settings.shakeToSummarizeToolbarCfrShown = featureFlags.hasSeenShakeToSummarizeToolbarCfr
-        settings.shakeToSummarizeFeatureFlagEnabled = featureFlags.shakeToSummarizeFeatureFlagEnabled
-        settings.privateModeAndStoriesEntryPointEnabled = featureFlags.isPrivateModeAndStoriesEntryPointEnabled
-        settings.shouldUseExpandedToolbar = featureFlags.shouldUseExpandedToolbar
-        settings.nativeShareSheetEnabled = featureFlags.nativeShareSheetEnabled
-        settings.showVoiceSearchInDisplayToolbar = featureFlags.showVoiceSearchInDisplayToolbar
+        settings.hasSeenBrowserToolbarCFR = featureFlags.hasSeenBrowserToolbarCFR
     }
 }
 
 private data class FeatureFlags(
+    var isHomepageHeaderEnabled: Boolean,
     var isPocketEnabled: Boolean,
     var isRecentTabsFeatureEnabled: Boolean,
     var isRecentlyVisitedFeatureEnabled: Boolean,
@@ -139,21 +134,18 @@ private data class FeatureFlags(
     var isUnifiedTrustPanelEnabled: Boolean,
     var etpPolicy: ETPPolicy,
     var isLocationPermissionEnabled: SitePermissionsRules.Action,
+    var isComposableToolbarEnabled: Boolean,
+    var isMenuRedesignEnabled: Boolean,
     var isMenuRedesignCFREnabled: Boolean,
     var isMicrosurveyEnabled: Boolean,
     var shouldUseBottomToolbar: Boolean,
     var onboardingFeatureEnabled: Boolean,
-    var isUseNewCrashReporterFlow: Boolean,
+    var isUseNewCrashReporterDialog: Boolean,
     var isTabSwipeCFREnabled: Boolean,
     var isTermsOfServiceAccepted: Boolean,
     var openLinksInApp: OpenLinksInApp,
     var tabManagerOpeningAnimationEnabled: Boolean,
-    var hasSeenShakeToSummarizeToolbarCfr: Boolean,
-    var shakeToSummarizeFeatureFlagEnabled: Boolean,
-    var isPrivateModeAndStoriesEntryPointEnabled: Boolean,
-    var shouldUseExpandedToolbar: Boolean,
-    var nativeShareSheetEnabled: Boolean,
-    var showVoiceSearchInDisplayToolbar: Boolean,
+    var hasSeenBrowserToolbarCFR: Boolean,
 )
 
 internal fun getETPPolicy(settings: Settings): ETPPolicy {

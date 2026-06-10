@@ -50,8 +50,7 @@ add_task(async function ui() {
     results: [result],
     priority: 1,
   });
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(provider);
+  UrlbarProvidersManager.registerProvider(provider);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
@@ -119,7 +118,7 @@ add_task(async function ui() {
   Assert.ok(BrowserTestUtils.isHidden(action));
 
   await UrlbarTestUtils.promisePopupClose(window);
-  providersManager.unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 });
 
 add_task(async function learn_more() {
@@ -143,8 +142,7 @@ add_task(async function learn_more() {
       ],
       priority: 1,
     });
-    let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-    providersManager.registerProvider(provider);
+    UrlbarProvidersManager.registerProvider(provider);
 
     info("Open urlbar view and find learn more link from 1st row");
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -188,6 +186,6 @@ add_task(async function learn_more() {
     }
 
     await UrlbarTestUtils.promisePopupClose(window);
-    providersManager.unregisterProvider(provider);
+    UrlbarProvidersManager.unregisterProvider(provider);
   }
 });

@@ -100,7 +100,7 @@ add_task(async function test_special_searches() {
   // Test restricting searches.
 
   info("History restrict");
-  let context = createContext(UrlbarShared.RESTRICT_TOKENS.HISTORY, {
+  let context = createContext(UrlbarTokenizer.RESTRICT.HISTORY, {
     isPrivate: false,
   });
   await check_results({
@@ -120,7 +120,7 @@ add_task(async function test_special_searches() {
   });
 
   info("Star restrict");
-  context = createContext(UrlbarShared.RESTRICT_TOKENS.BOOKMARK, {
+  context = createContext(UrlbarTokenizer.RESTRICT.BOOKMARK, {
     isPrivate: false,
   });
   await check_results({
@@ -154,9 +154,7 @@ add_task(async function test_special_searches() {
   });
 
   info("Tag restrict");
-  context = createContext(UrlbarShared.RESTRICT_TOKENS.TAG, {
-    isPrivate: false,
-  });
+  context = createContext(UrlbarTokenizer.RESTRICT.TAG, { isPrivate: false });
   await check_results({
     context,
     matches: [
@@ -184,7 +182,7 @@ add_task(async function test_special_searches() {
   });
 
   info("Special as first word");
-  context = createContext(`${UrlbarShared.RESTRICT_TOKENS.HISTORY} foo bar`, {
+  context = createContext(`${UrlbarTokenizer.RESTRICT.HISTORY} foo bar`, {
     isPrivate: false,
   });
   await check_results({
@@ -192,7 +190,7 @@ add_task(async function test_special_searches() {
     matches: [
       makeSearchResult(context, {
         query: "foo bar",
-        alias: UrlbarShared.RESTRICT_TOKENS.HISTORY,
+        alias: UrlbarTokenizer.RESTRICT.HISTORY,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
@@ -205,7 +203,7 @@ add_task(async function test_special_searches() {
   });
 
   info("Special as last word");
-  context = createContext(`foo bar ${UrlbarShared.RESTRICT_TOKENS.HISTORY}`, {
+  context = createContext(`foo bar ${UrlbarTokenizer.RESTRICT.HISTORY}`, {
     isPrivate: false,
   });
   await check_results({
@@ -225,8 +223,8 @@ add_task(async function test_special_searches() {
 
   // Test restricting and matching searches with a term.
 
-  info(`foo ${UrlbarShared.RESTRICT_TOKENS.HISTORY} -> history`);
-  context = createContext(`foo ${UrlbarShared.RESTRICT_TOKENS.HISTORY}`, {
+  info(`foo ${UrlbarTokenizer.RESTRICT.HISTORY} -> history`);
+  context = createContext(`foo ${UrlbarTokenizer.RESTRICT.HISTORY}`, {
     isPrivate: false,
   });
   await check_results({
@@ -244,8 +242,8 @@ add_task(async function test_special_searches() {
     ],
   });
 
-  info(`foo ${UrlbarShared.RESTRICT_TOKENS.BOOKMARK} -> is star`);
-  context = createContext(`foo ${UrlbarShared.RESTRICT_TOKENS.BOOKMARK}`, {
+  info(`foo ${UrlbarTokenizer.RESTRICT.BOOKMARK} -> is star`);
+  context = createContext(`foo ${UrlbarTokenizer.RESTRICT.BOOKMARK}`, {
     isPrivate: false,
   });
   await check_results({
@@ -281,8 +279,8 @@ add_task(async function test_special_searches() {
     ],
   });
 
-  info(`foo ${UrlbarShared.RESTRICT_TOKENS.TITLE} -> in title`);
-  context = createContext(`foo ${UrlbarShared.RESTRICT_TOKENS.TITLE}`, {
+  info(`foo ${UrlbarTokenizer.RESTRICT.TITLE} -> in title`);
+  context = createContext(`foo ${UrlbarTokenizer.RESTRICT.TITLE}`, {
     isPrivate: false,
   });
   await check_results({
@@ -303,8 +301,8 @@ add_task(async function test_special_searches() {
     ],
   });
 
-  info(`foo ${UrlbarShared.RESTRICT_TOKENS.URL} -> in url`);
-  context = createContext(`foo ${UrlbarShared.RESTRICT_TOKENS.URL}`, {
+  info(`foo ${UrlbarTokenizer.RESTRICT.URL} -> in url`);
+  context = createContext(`foo ${UrlbarTokenizer.RESTRICT.URL}`, {
     isPrivate: false,
   });
   await check_results({
@@ -323,8 +321,8 @@ add_task(async function test_special_searches() {
     ],
   });
 
-  info(`foo ${UrlbarShared.RESTRICT_TOKENS.TAG} -> is tag`);
-  context = createContext(`foo ${UrlbarShared.RESTRICT_TOKENS.TAG}`, {
+  info(`foo ${UrlbarTokenizer.RESTRICT.TAG} -> is tag`);
+  context = createContext(`foo ${UrlbarTokenizer.RESTRICT.TAG}`, {
     isPrivate: false,
   });
   await check_results({
@@ -360,20 +358,20 @@ add_task(async function test_special_searches() {
   // Test conflicting restrictions.
 
   info(
-    `conflict ${UrlbarShared.RESTRICT_TOKENS.TITLE} ${UrlbarShared.RESTRICT_TOKENS.URL} -> url wins`
+    `conflict ${UrlbarTokenizer.RESTRICT.TITLE} ${UrlbarTokenizer.RESTRICT.URL} -> url wins`
   );
   await PlacesTestUtils.addVisits([
     {
-      uri: `http://conflict.com/${UrlbarShared.RESTRICT_TOKENS.TITLE}`,
+      uri: `http://conflict.com/${UrlbarTokenizer.RESTRICT.TITLE}`,
       title: "test",
     },
     {
       uri: "http://conflict.com/",
-      title: `test${UrlbarShared.RESTRICT_TOKENS.TITLE}`,
+      title: `test${UrlbarTokenizer.RESTRICT.TITLE}`,
     },
   ]);
   context = createContext(
-    `conflict ${UrlbarShared.RESTRICT_TOKENS.TITLE} ${UrlbarShared.RESTRICT_TOKENS.URL}`,
+    `conflict ${UrlbarTokenizer.RESTRICT.TITLE} ${UrlbarTokenizer.RESTRICT.URL}`,
     { isPrivate: false }
   );
   await check_results({
@@ -384,22 +382,22 @@ add_task(async function test_special_searches() {
         heuristic: true,
       }),
       makeVisitResult(context, {
-        uri: `http://conflict.com/${UrlbarShared.RESTRICT_TOKENS.TITLE}`,
+        uri: `http://conflict.com/${UrlbarTokenizer.RESTRICT.TITLE}`,
         title: "test",
       }),
     ],
   });
 
   info(
-    `conflict ${UrlbarShared.RESTRICT_TOKENS.HISTORY} ${UrlbarShared.RESTRICT_TOKENS.BOOKMARK} -> bookmark wins`
+    `conflict ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.BOOKMARK} -> bookmark wins`
   );
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://bookmark.conflict.com/",
-    title: `conflict ${UrlbarShared.RESTRICT_TOKENS.HISTORY}`,
+    title: `conflict ${UrlbarTokenizer.RESTRICT.HISTORY}`,
   });
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   context = createContext(
-    `conflict ${UrlbarShared.RESTRICT_TOKENS.HISTORY} ${UrlbarShared.RESTRICT_TOKENS.BOOKMARK}`,
+    `conflict ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
     { isPrivate: false }
   );
   await check_results({
@@ -411,26 +409,26 @@ add_task(async function test_special_searches() {
       }),
       makeBookmarkResult(context, {
         uri: "http://bookmark.conflict.com/",
-        title: `conflict ${UrlbarShared.RESTRICT_TOKENS.HISTORY}`,
+        title: `conflict ${UrlbarTokenizer.RESTRICT.HISTORY}`,
       }),
     ],
   });
 
   info(
-    `conflict ${UrlbarShared.RESTRICT_TOKENS.BOOKMARK} ${UrlbarShared.RESTRICT_TOKENS.TAG} -> tag wins`
+    `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK} ${UrlbarTokenizer.RESTRICT.TAG} -> tag wins`
   );
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://tag.conflict.com/",
-    title: `conflict ${UrlbarShared.RESTRICT_TOKENS.BOOKMARK}`,
+    title: `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
     tags: ["one"],
   });
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://nontag.conflict.com/",
-    title: `conflict ${UrlbarShared.RESTRICT_TOKENS.BOOKMARK}`,
+    title: `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
   });
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   context = createContext(
-    `conflict ${UrlbarShared.RESTRICT_TOKENS.BOOKMARK} ${UrlbarShared.RESTRICT_TOKENS.TAG}`,
+    `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK} ${UrlbarTokenizer.RESTRICT.TAG}`,
     { isPrivate: false }
   );
   await check_results({
@@ -442,7 +440,7 @@ add_task(async function test_special_searches() {
       }),
       makeBookmarkResult(context, {
         uri: "http://tag.conflict.com/",
-        title: `conflict ${UrlbarShared.RESTRICT_TOKENS.BOOKMARK}`,
+        title: `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
       }),
     ],
   });

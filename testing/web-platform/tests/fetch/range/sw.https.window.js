@@ -92,6 +92,8 @@ promise_test(async t => {
   const loadScriptPromise = loadScript('?action=use-stored-ranged-response', { doc: w.document });
   await promise_rejects_js(t, Error, loadScriptPromise);
 
+  await loadScriptPromise.catch(() => {});
+
   assert_false(!!w.scriptExecuted, `Partial response shouldn't be executed`);
 }, `Ranged response not allowed following no-cors ranged request`);
 

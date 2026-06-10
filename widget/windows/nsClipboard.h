@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsClipboard_h_
-#define nsClipboard_h_
+#ifndef nsClipboard_h__
+#define nsClipboard_h__
 
 #include "nsBaseClipboard.h"
 #include "nsIObserver.h"
@@ -42,20 +43,17 @@ class nsClipboard final : public nsBaseClipboard, public nsIObserver {
                                         MightNeedToFlush* = nullptr);
   static mozilla::Result<nsCOMPtr<nsISupports>, nsresult> GetDataFromDataObject(
       IDataObject* aDataObject, UINT anIndex, nsIWidget* aWindow,
-      const nsCString& aFlavor, uint64_t aThreshold = 0);
+      const nsCString& aFlavor);
   static nsresult GetDataFromDataObject(IDataObject* aDataObject, UINT anIndex,
                                         nsIWidget* aWindow,
-                                        nsITransferable* aTransferable,
-                                        uint64_t aThreshold = 0);
+                                        nsITransferable* aTransferable);
   static nsresult GetNativeDataOffClipboard(nsIWidget* aWindow, UINT aIndex,
                                             UINT aFormat, void** aData,
-                                            uint32_t* aLen,
-                                            uint64_t aThreshold = 0);
+                                            uint32_t* aLen);
   static nsresult GetNativeDataOffClipboard(IDataObject* aDataObject,
                                             UINT aIndex, UINT aFormat,
                                             const char* aMIMEImageFormat,
-                                            void** aData, uint32_t* aLen,
-                                            uint64_t aThreshold = 0);
+                                            void** aData, uint32_t* aLen);
   static nsresult GetGlobalData(HGLOBAL aHGBL, void** aData, uint32_t* aLen);
 
   // This function returns the internal Windows clipboard format identifier
@@ -84,8 +82,7 @@ class nsClipboard final : public nsBaseClipboard, public nsIObserver {
   NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable,
                                     ClipboardType aWhichClipboard) override;
   mozilla::Result<nsCOMPtr<nsISupports>, nsresult> GetNativeClipboardData(
-      const nsACString& aFlavor, ClipboardType aWhichClipboard,
-      uint64_t aThreshold = 0) override;
+      const nsACString& aFlavor, ClipboardType aWhichClipboard) override;
   nsresult EmptyNativeClipboardData(ClipboardType aWhichClipboard) override;
   mozilla::Result<bool, nsresult> HasNativeClipboardDataMatchingFlavors(
       const nsTArray<nsCString>& aFlavorList,
@@ -120,4 +117,4 @@ class nsClipboard final : public nsBaseClipboard, public nsIObserver {
     (fe).tymed = med;                           \
   }
 
-#endif  // nsClipboard_h_
+#endif  // nsClipboard_h__

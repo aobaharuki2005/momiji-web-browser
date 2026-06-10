@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DetailedPromise_h_
-#define DetailedPromise_h_
+#ifndef __DetailedPromise_h__
+#define __DetailedPromise_h__
 
 #include "EMEUtils.h"
 #include "mozilla/dom/Promise.h"
@@ -40,11 +42,11 @@ class DetailedPromise : public Promise {
     Promise::MaybeRejectWith##name(aMessage);                     \
   }                                                               \
   template <int N>                                                \
-  void MaybeRejectWith##name(const char (&aMessage)[N]) {         \
+  void MaybeRejectWith##name(const char(&aMessage)[N]) {          \
     MaybeRejectWith##name(nsLiteralCString(aMessage));            \
   }
 
-#include "mozilla/dom/DOMExceptionNames.inc"
+#include "mozilla/dom/DOMExceptionNames.h"
 
 #undef DOMEXCEPTION
 
@@ -90,4 +92,4 @@ class DetailedPromise : public Promise {
 
 }  // namespace mozilla::dom
 
-#endif  // DetailedPromise_h_
+#endif  // __DetailedPromise_h__

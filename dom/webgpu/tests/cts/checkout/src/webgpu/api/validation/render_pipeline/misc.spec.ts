@@ -119,10 +119,8 @@ g.test('pipeline_layout,device_mismatch')
   });
 
 g.test('external_texture')
-  .desc('Tests createRenderPipeline(Async) with an external_texture')
-  .params(u => u.combine('isAsync', [false, true]))
+  .desc('Tests createRenderPipeline() with an external_texture')
   .fn(t => {
-    const { isAsync } = t.params;
     const shader = t.device.createShaderModule({
       code: `
         @vertex
@@ -151,7 +149,7 @@ g.test('external_texture')
       },
     };
 
-    vtu.doCreateRenderPipelineTest(t, isAsync, true, descriptor);
+    vtu.doCreateRenderPipelineTest(t, false, true, descriptor);
   });
 
 g.test('storage_texture,format')
@@ -186,7 +184,7 @@ generates a validation error at createComputePipeline(Async)
     `;
     const module = t.device.createShaderModule({ code });
 
-    const success = isTextureFormatUsableWithStorageAccessMode(t.device.features, format, access);
+    const success = isTextureFormatUsableWithStorageAccessMode(t.device, format, access);
     const descriptor: GPURenderPipelineDescriptor = {
       layout: 'auto',
       vertex: { module },

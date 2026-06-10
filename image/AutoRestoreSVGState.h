@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,8 +40,6 @@ class MOZ_STACK_CLASS AutoRestoreSVGState final {
     MOZ_ASSERT(aSVGDocumentWrapper->GetDocument());
 
     if (auto* pc = aSVGDocumentWrapper->GetDocument()->GetPresContext()) {
-      pc->SetLinkParametersOverride(aSVGContext.GetLinkParameters());
-
       pc->SetColorSchemeOverride([&] {
         if (auto scheme = aSVGContext.GetColorScheme()) {
           return *scheme == ColorScheme::Light

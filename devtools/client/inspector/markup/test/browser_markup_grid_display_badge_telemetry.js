@@ -17,8 +17,7 @@ const TEST_URI = `
 
 add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  Services.fog.testResetFOG();
-
+  startTelemetry();
   const { inspector } = await openLayoutView();
   const { highlighters, store } = inspector;
 
@@ -42,5 +41,5 @@ add_task(async function () {
 });
 
 function checkResults() {
-  is(1, Glean.devtoolsMarkupGridinspector.opened.testGetValue());
+  checkTelemetry("devtools.markup.gridinspector.opened", "", 1, "scalar");
 }

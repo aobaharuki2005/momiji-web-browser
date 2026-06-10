@@ -10,11 +10,10 @@
 #ifndef API_TEST_TIME_CONTROLLER_H_
 #define API_TEST_TIME_CONTROLLER_H_
 
+#include <functional>
 #include <memory>
 #include <string>
 
-#include "absl/strings/string_view.h"
-#include "api/function_view.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/socket_server.h"
@@ -47,12 +46,6 @@ class TimeController {
       const std::string& name,
       std::unique_ptr<SocketServer> socket_server = nullptr) = 0;
 
-  // Creates a Thread instance that uses the provided `socket_server`.
-  // The `socket_server` must outlive the returned thread.
-  virtual std::unique_ptr<Thread> CreateThreadWithSocketServer(
-      absl::string_view name,
-      SocketServer* socket_server) = 0;
-
   // Creates an Thread instance that ensure that it's set as the current
   // thread.
   virtual Thread* GetMainThread() = 0;
@@ -64,7 +57,7 @@ class TimeController {
   // intervals.
   // Returns true if condition() was evaluated to true before `max_duration`
   // elapsed and false otherwise.
-  bool Wait(FunctionView<bool()> condition,
+  bool Wait(const std::function<bool()>& condition,
             TimeDelta max_duration = TimeDelta::Seconds(5));
 };
 

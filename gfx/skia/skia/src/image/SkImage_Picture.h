@@ -34,7 +34,7 @@ public:
                                SkImages::BitDepth bitDepth, sk_sp<SkColorSpace> colorSpace,
                                SkSurfaceProps props);
 
-    explicit SkImage_Picture(Validator* validator) : SkImage_Lazy(validator) {}
+    SkImage_Picture(Validator* validator) : SkImage_Lazy(validator) {}
 
     SkImage_Base::Type type() const override { return SkImage_Base::Type::kLazyPicture; }
 

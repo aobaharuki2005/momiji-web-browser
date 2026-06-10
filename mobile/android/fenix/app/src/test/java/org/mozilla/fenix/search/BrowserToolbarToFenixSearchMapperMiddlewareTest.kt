@@ -8,9 +8,6 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -20,9 +17,11 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
 import mozilla.components.lib.state.Middleware
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
+import mozilla.components.support.test.rule.MainLooperTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -33,22 +32,22 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserToolbarToFenixSearchMapperMiddlewareTest {
+    @get:Rule
+    val mainLooperRule = MainLooperTestRule()
 
-    private val testDispatcher = StandardTestDispatcher()
-    private val testScope = TestScope(testDispatcher)
     val toolbarStore = BrowserToolbarStore()
     private val browsingModeManager: BrowsingModeManager = mockk {
         every { mode } returns BrowsingMode.Private
     }
 
     @Test
-    fun `WHEN entering in edit mode THEN consider it as search being started`() = runTest(testDispatcher) {
+    fun `WHEN entering in edit mode THEN consider it as search being started`() {
         val searchStatusMapperMiddleware = buildMiddleware()
         val captorMiddleware = CaptureActionsMiddleware<SearchFragmentState, SearchFragmentAction>()
         val searchStore = buildSearchStore(listOf(searchStatusMapperMiddleware, captorMiddleware))
 
         toolbarStore.dispatch(EnterEditMode(false))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         captorMiddleware.assertLastAction(SearchStarted::class) {
             assertNull(it.selectedSearchEngine)
@@ -57,32 +56,32 @@ class BrowserToolbarToFenixSearchMapperMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN search was started WHEN there's a new query in the toolbar THEN update the search state`() = runTest(testDispatcher) {
+    fun `GIVEN search was started WHEN there's a new query in the toolbar THEN update the search state`() {
         val searchStore = buildSearchStore(listOf(buildMiddleware()))
         toolbarStore.dispatch(EnterEditMode(false))
 
         searchStore.dispatch(SearchStarted(mockk(), false, false, searchStartedForCurrentUrl = false))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
 
         toolbarStore.dispatch(SearchQueryUpdated(BrowserToolbarQuery("t")))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         assertEquals("t", searchStore.state.query)
 
         toolbarStore.dispatch(SearchQueryUpdated(BrowserToolbarQuery("te")))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         assertEquals("te", searchStore.state.query)
 
         toolbarStore.dispatch(SearchQueryUpdated(BrowserToolbarQuery("tes")))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         assertEquals("tes", searchStore.state.query)
 
         toolbarStore.dispatch(SearchQueryUpdated(BrowserToolbarQuery("test")))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         assertEquals("test", searchStore.state.query)
     }
 
     @Test
-    fun `GIVEN search was started for the current URL WHEN there's a new query in the toolbar THEN don't update the search state`() = runTest(testDispatcher) {
+    fun `GIVEN search was started for the current URL WHEN there's a new query in the toolbar THEN don't update the search state`() {
         val currentTab = createTab("https://mozilla.org")
         val browserStore = BrowserStore(
             BrowserState(
@@ -97,15 +96,15 @@ class BrowserToolbarToFenixSearchMapperMiddlewareTest {
             SearchQueryUpdated(BrowserToolbarQuery("https://mozilla.org"), isQueryPrefilled = true),
         )
         searchStore.dispatch(SearchStarted(mockk(), false, false, searchStartedForCurrentUrl = true))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         assertEquals("", searchStore.state.query)
 
         toolbarStore.dispatch(SearchQueryUpdated(BrowserToolbarQuery("t")))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         assertEquals("t", searchStore.state.query)
 
         toolbarStore.dispatch(SearchQueryUpdated(BrowserToolbarQuery("https://mozilla.org")))
-        testDispatcher.scheduler.advanceUntilIdle()
+        mainLooperRule.idle()
         assertEquals("https://mozilla.org", searchStore.state.query)
     }
 
@@ -119,7 +118,7 @@ class BrowserToolbarToFenixSearchMapperMiddlewareTest {
     private fun buildMiddleware(
         toolbarStore: BrowserToolbarStore = this.toolbarStore,
         browsingModeManager: BrowsingModeManager = this.browsingModeManager,
-        scope: CoroutineScope = testScope,
+        scope: CoroutineScope = MainScope(),
         browserStore: BrowserStore? = null,
     ) = BrowserToolbarToFenixSearchMapperMiddleware(toolbarStore, browsingModeManager, scope, browserStore)
 

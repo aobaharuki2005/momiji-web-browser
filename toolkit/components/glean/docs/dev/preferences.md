@@ -4,14 +4,11 @@
 
 `datareporting.healthreport.uploadEnabled`
 
-This determines whether the Glean SDK has `collection_enabled` set.
+This determines whether the Glean SDK is enabled.
 It can be controlled by users via `about:preferences#privacy`.
 If this is set to false from true, we send a
-["deletion-request" ping](https://mozilla.github.io/glean/book/user/pings/deletion_request.html),
-and the only data collection that can happen are for
-[pings that set `follows_collection_enabled: false`](https://searchfox.org/firefox-main/search?q=follows_collection_enabled%3A%20false&path=).
-More information can be found in
-[this support article](https://support.mozilla.org/kb/technical-and-interaction-data).
+["deletion-request" ping](https://mozilla.github.io/glean/book/user/pings/deletion_request.html)
+and no data collections will be persisted or reported from that point.
 
 ## Test-only Preferences
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,10 +6,6 @@
 include "GMPMessageUtils.h";
 
 using cdm::EncryptionScheme from "GMPSanitizedExports.h";
-using cdm::KeyStatus from "GMPSanitizedExports.h";
-using cdm::VideoCodec from "GMPSanitizedExports.h";
-using cdm::VideoCodecProfile from "GMPSanitizedExports.h";
-using cdm::VideoFormat from "GMPSanitizedExports.h";
 using GMPBufferType from "gmp-video-codec.h";
 
 namespace mozilla {
@@ -84,9 +81,9 @@ struct CDMInputBuffer {
 };
 
 struct CDMVideoDecoderConfig {
-  VideoCodec mCodec;
-  VideoCodecProfile mProfile;
-  VideoFormat mFormat;
+  uint32_t mCodec;
+  uint32_t mProfile;
+  uint32_t mFormat;
   int32_t mImageWidth;
   int32_t mImageHeight;
   uint8_t[] mExtraData;
@@ -95,7 +92,7 @@ struct CDMVideoDecoderConfig {
 
 struct CDMKeyInformation {
   uint8_t[] mKeyId;
-  KeyStatus mStatus;
+  uint32_t mStatus;
   uint32_t mSystemCode;
 };
 

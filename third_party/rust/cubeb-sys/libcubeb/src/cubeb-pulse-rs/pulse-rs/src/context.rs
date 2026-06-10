@@ -3,12 +3,13 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
 
-use crate::util::UnwrapCStr;
-use crate::*;
+use ffi;
 use std::ffi::CStr;
 use std::mem::{forget, MaybeUninit};
 use std::os::raw::{c_int, c_void};
 use std::ptr;
+use util::UnwrapCStr;
+use *;
 
 // A note about `wrapped` functions
 //

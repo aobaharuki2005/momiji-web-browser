@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef SystemGlobal_h_
-#define SystemGlobal_h_
+#ifndef SystemGlobal_h__
+#define SystemGlobal_h__
 
 #include "js/loader/ModuleLoaderBase.h"
 #include "mozilla/BasePrincipal.h"
@@ -105,4 +107,4 @@ class SystemGlobal final : public nsIGlobalObject,
   RefPtr<JS::loader::ModuleLoaderBase> mModuleLoader;
 };
 
-#endif  // SystemGlobal_h_
+#endif  // SystemGlobal_h__

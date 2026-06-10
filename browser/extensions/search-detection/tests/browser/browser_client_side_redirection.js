@@ -6,9 +6,6 @@
 const { AddonTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/AddonTestUtils.sys.mjs"
 );
-const { SearchService } = ChromeUtils.importESModule(
-  "moz-src:///toolkit/components/search/SearchService.sys.mjs"
-);
 const { SearchTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SearchTestUtils.sys.mjs"
 );
@@ -142,7 +139,7 @@ add_setup(async function () {
   });
 
   Assert.ok(
-    !!SearchService.getEngineByName(searchEngineName),
+    !!Services.search.getEngineByName(searchEngineName),
     "test search engine registered"
   );
 });

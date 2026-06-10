@@ -145,16 +145,11 @@ impl PulseContext {
                 }
             }
 
-            // Fire-and-forget: detach to release our ref without canceling.
-            // PulseAudio holds its own ref while the operation is in flight;
-            // context_destroy's drain ensures it completes before teardown.
-            if let Ok(o) = context.get_sink_info_by_name(
+            let _ = context.get_sink_info_by_name(
                 try_cstr_from(info.default_sink_name),
                 sink_info_cb,
                 u,
-            ) {
-                o.detach();
-            }
+            );
         } else {
             // If info is None, then an error occured.
             let ctx = unsafe { &mut *(u as *mut PulseContext) };
@@ -265,13 +260,9 @@ impl PulseContext {
                 cubeb_log!("Server changed {}", index as i32);
                 let user_data: *mut c_void = ctx as *mut _ as *mut _;
                 if let Some(ref context) = ctx.context {
-                    // Fire-and-forget: detach to release our ref without canceling.
-                    // context_destroy's drain ensures it completes before teardown.
-                    match context.get_server_info(PulseContext::server_info_cb, user_data) {
-                        Ok(o) => o.detach(),
-                        Err(e) => {
-                            cubeb_log!("Error: get_server_info ignored failure: {}", e);
-                        }
+                    if let Err(e) = context.get_server_info(PulseContext::server_info_cb, user_data)
+                    {
+                        cubeb_log!("Error: get_server_info ignored failure: {}", e);
                     }
                 }
             }
@@ -578,11 +569,6 @@ impl ContextOps for PulseContext {
         cb: ffi::cubeb_device_collection_changed_callback,
         user_ptr: *mut c_void,
     ) -> Result<()> {
-        let old_input_cb = self.input_collection_changed_callback;
-        let old_input_ptr = self.input_collection_changed_user_ptr;
-        let old_output_cb = self.output_collection_changed_callback;
-        let old_output_ptr = self.output_collection_changed_user_ptr;
-
         if devtype.contains(DeviceType::INPUT) {
             self.input_collection_changed_callback = cb;
             self.input_collection_changed_user_ptr = user_ptr;
@@ -603,19 +589,7 @@ impl ContextOps for PulseContext {
          * `default_sink_info` when the default device changes. */
         mask |= pulse::SubscriptionMask::SERVER;
 
-        if let Err(e) = self.subscribe_notifications(mask) {
-            if devtype.contains(DeviceType::INPUT) {
-                self.input_collection_changed_callback = old_input_cb;
-                self.input_collection_changed_user_ptr = old_input_ptr;
-            }
-            if devtype.contains(DeviceType::OUTPUT) {
-                self.output_collection_changed_callback = old_output_cb;
-                self.output_collection_changed_user_ptr = old_output_ptr;
-            }
-            return Err(e);
-        }
-
-        Ok(())
+        self.subscribe_notifications(mask)
     }
 }
 
@@ -691,18 +665,16 @@ impl PulseContext {
         }
 
         let context_ptr: *mut c_void = self as *mut _ as *mut _;
-        self.mainloop.lock();
-        if let Some(ref context) = self.context {
-            if let Ok(o) = context.drain(drain_complete, context_ptr) {
+        if let Some(ctx) = self.context.take() {
+            self.mainloop.lock();
+            if let Ok(o) = ctx.drain(drain_complete, context_ptr) {
                 self.operation_wait(None, &o);
             }
-        }
-        if let Some(ctx) = self.context.take() {
             ctx.clear_state_callback();
             ctx.disconnect();
             ctx.unref();
+            self.mainloop.unlock();
         }
-        self.mainloop.unlock();
     }
 
     pub fn operation_wait<'a, S>(&self, s: S, o: &pulse::Operation) -> bool
@@ -711,6 +683,7 @@ impl PulseContext {
     {
         let stream = s.into();
         while o.get_state() == PA_OPERATION_RUNNING {
+            self.mainloop.wait();
             if let Some(ref context) = self.context {
                 if !context.get_state().is_good() {
                     return false;
@@ -722,7 +695,6 @@ impl PulseContext {
                     return false;
                 }
             }
-            self.mainloop.wait();
         }
 
         true

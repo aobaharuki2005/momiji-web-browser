@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,9 +18,7 @@ class nsINIParserImpl final : public nsIINIParser, public nsIINIParserWriter {
   NS_DECL_NSIINIPARSER
   NS_DECL_NSIINIPARSERWRITER
 
-  nsresult Init(nsIFile* aINIFile, bool* aContainedErrors) {
-    return mParser.Init(aINIFile, aContainedErrors);
-  }
+  nsresult Init(nsIFile* aINIFile) { return mParser.Init(aINIFile); }
 
  private:
   nsINIParser mParser;
@@ -28,14 +28,13 @@ class nsINIParserImpl final : public nsIINIParser, public nsIINIParserWriter {
 NS_IMPL_ISUPPORTS(nsINIParserFactory, nsIINIParserFactory)
 
 NS_IMETHODIMP
-nsINIParserFactory::CreateINIParser(nsIFile* aINIFile, bool* aContainedErrors,
-                                    nsIINIParser** aResult) {
+nsINIParserFactory::CreateINIParser(nsIFile* aINIFile, nsIINIParser** aResult) {
   *aResult = nullptr;
 
   RefPtr<nsINIParserImpl> p(new nsINIParserImpl());
 
   if (aINIFile) {
-    nsresult rv = p->Init(aINIFile, aContainedErrors);
+    nsresult rv = p->Init(aINIFile);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -110,9 +109,8 @@ nsINIParserImpl::GetString(const nsACString& aSection, const nsACString& aKey,
 }
 
 NS_IMETHODIMP
-nsINIParserImpl::InitFromString(const nsACString& aData,
-                                bool* aContainedErrors) {
-  return mParser.InitFromString(nsCString(aData), aContainedErrors);
+nsINIParserImpl::InitFromString(const nsACString& aData) {
+  return mParser.InitFromString(nsCString(aData));
 }
 
 NS_IMETHODIMP

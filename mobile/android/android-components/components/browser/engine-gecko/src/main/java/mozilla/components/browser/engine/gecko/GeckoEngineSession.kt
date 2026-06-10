@@ -6,26 +6,23 @@ package mozilla.components.browser.engine.gecko
 
 import android.os.Build
 import android.view.WindowManager
-import androidx.annotation.OptIn
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.engine.gecko.ext.isExcludedForTrackingProtection
 import mozilla.components.browser.engine.gecko.fetch.toResponse
 import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
 import mozilla.components.browser.engine.gecko.mediasession.GeckoMediaSessionDelegate
-import mozilla.components.browser.engine.gecko.pageextraction.intoPageExtractionError
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
 import mozilla.components.browser.engine.gecko.translate.GeckoTranslateSessionDelegate
 import mozilla.components.browser.engine.gecko.translate.GeckoTranslationUtils.intoTranslationError
 import mozilla.components.browser.engine.gecko.window.GeckoWindowRequest
 import mozilla.components.browser.errorpages.ErrorType
-import mozilla.components.concept.engine.DownloadDelegate
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_ADDITIONAL_HEADERS
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
@@ -37,9 +34,6 @@ import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
-import mozilla.components.concept.engine.pageextraction.ContentParams
-import mozilla.components.concept.engine.pageextraction.PageExtractionError
-import mozilla.components.concept.engine.pageextraction.PageMetadata
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.engine.translate.TranslationError
@@ -65,14 +59,12 @@ import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.ktx.kotlin.sanitizeFileName
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
-import mozilla.components.support.utils.CertificateUtils
 import mozilla.components.support.utils.DownloadUtils
 import mozilla.components.support.utils.DownloadUtils.RESPONSE_CODE_SUCCESS
 import mozilla.components.support.utils.DownloadUtils.makePdfContentDisposition
 import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
-import org.mozilla.geckoview.ExperimentalGeckoViewApi
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
@@ -83,10 +75,8 @@ import org.mozilla.geckoview.GeckoSession.APP_LINK_LAUNCH_TYPE_WARM
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission
 import org.mozilla.geckoview.GeckoSessionSettings
-import org.mozilla.geckoview.PageExtractionController
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
-import java.security.cert.X509Certificate
 import java.util.Locale
 import kotlin.coroutines.CoroutineContext
 import org.mozilla.geckoview.TranslationsController.SessionTranslation as GeckoViewTranslateSession
@@ -107,9 +97,9 @@ class GeckoEngineSession(
             .build()
         GeckoSession(settings)
     },
-    context: CoroutineContext = Dispatchers.IO,
+    private val context: CoroutineContext = Dispatchers.IO,
     openGeckoSession: Boolean = true,
-) : EngineSession() {
+) : CoroutineScope, EngineSession() {
 
     // This logger is temporary and parsed by FNPRMS for performance measurements. It can be
     // removed once FNPRMS is replaced: https://github.com/mozilla-mobile/android-components/issues/8662
@@ -129,8 +119,7 @@ class GeckoEngineSession(
     // The Gecko site permissions for the loaded site.
     internal var geckoPermissions: List<ContentPermission> = emptyList()
 
-    internal val job: Job = SupervisorJob()
-    private val scope = CoroutineScope(context + job)
+    internal var job: Job = Job()
     private var canGoBack: Boolean = false
     private var canGoForward: Boolean = false
 
@@ -140,8 +129,6 @@ class GeckoEngineSession(
     override val settings: Settings = object : Settings() {
         override var requestInterceptor: RequestInterceptor? = null
         override var historyTrackingDelegate: HistoryTrackingDelegate? = null
-        override var downloadDelegate: DownloadDelegate? = null
-
         override var userAgentString: String?
             get() = geckoSession.settings.userAgentOverride
             set(value) {
@@ -155,6 +142,9 @@ class GeckoEngineSession(
     }
 
     internal var initialLoad = true
+
+    override val coroutineContext: CoroutineContext
+        get() = context + job
 
     init {
         createGeckoSession(shouldOpen = openGeckoSession)
@@ -267,8 +257,8 @@ class GeckoEngineSession(
                 val contentLength = 0L
                 // NB: If the title is an empty string, there is a chance the PDF will not have a name.
                 // See https://github.com/mozilla-mobile/android-components/issues/12276
-                val fileName = settings.downloadDelegate?.guessFileName(
-                    contentDisposition = disposition,
+                val fileName = DownloadUtils.guessFileName(
+                    disposition,
                     url = url,
                     mimeType = contentType,
                 )
@@ -452,7 +442,7 @@ class GeckoEngineSession(
         // store thread. Since this notification can be delayed until an observer
         // is registered we switch to the main scope to make sure we're not notifying
         // on the store thread.
-        scope.launch(Dispatchers.Main) {
+        MainScope().launch {
             observer.onTrackerBlockingEnabledChange(enabled)
         }
     }
@@ -858,67 +848,6 @@ class GeckoEngineSession(
     }
 
     /**
-     * See [EngineSession.getPageContent]
-     */
-    @OptIn(ExperimentalGeckoViewApi::class)
-    override fun getPageContent(
-        options: ContentParams,
-        onResult: (String) -> Unit,
-        onException: (Throwable) -> Unit,
-    ) {
-        val geckoViewOptions = PageExtractionController.ContentParams(
-            options.removeBoilerplate,
-        )
-        geckoSession.sessionPageExtractor.getPageContent(geckoViewOptions)
-            .then(
-                { content ->
-                    if (content == null) {
-                        onException(PageExtractionError.UnexpectedNull())
-                        return@then GeckoResult()
-                    }
-                    onResult(content)
-                    GeckoResult<Unit>()
-                },
-                { error ->
-                    onException(error.intoPageExtractionError())
-                    GeckoResult()
-                },
-            )
-    }
-
-    /**
-     * See [EngineSession.getPageMetadata]
-     */
-    @OptIn(ExperimentalGeckoViewApi::class)
-    override fun getPageMetadata(
-        onResult: (PageMetadata) -> Unit,
-        onException: (Throwable) -> Unit,
-    ) {
-        geckoSession.sessionPageExtractor.pageMetadata
-            .then(
-                { metadata ->
-                    if (metadata == null) {
-                        onException(PageExtractionError.UnexpectedNull())
-                        return@then GeckoResult()
-                    }
-                    onResult(
-                        PageMetadata(
-                            structuredDataTypes = metadata.structuredDataTypes.toList(),
-                            wordCount = metadata.wordCount,
-                            language = metadata.language,
-                            isReaderable = metadata.isReaderable,
-                        ),
-                    )
-                    GeckoResult<Unit>()
-                },
-                { error ->
-                    onException(error.intoPageExtractionError())
-                    GeckoResult()
-                },
-            )
-    }
-
-    /**
      * Purges the history for the session (back and forward history).
      */
     override fun purgeHistory() {
@@ -936,29 +865,6 @@ class GeckoEngineSession(
 
     override fun getBlockedSchemes(): List<String> {
         return BLOCKED_SCHEMES
-    }
-
-    /**
-     * See [EngineSession.processBackPressed].
-     */
-    override fun processBackPressed(
-          onResult: (Boolean) -> Unit,
-    ) {
-        geckoSession.processBackPressed().then(
-            { response ->
-                if (response == null) {
-                    logger.error("Did not receive a back key pressed.")
-                    onResult(false)
-                    return@then GeckoResult<Void>()
-                }
-                onResult(response)
-                GeckoResult()
-            },
-            { throwable ->
-                onResult(false)
-                GeckoResult()
-            },
-        )
     }
 
     /**
@@ -994,9 +900,6 @@ class GeckoEngineSession(
                 }
             }
 
-            if (hasUserGesture) {
-                pageLoadingUrl = url
-            }
             currentUrl = url
             initialLoad = false
             initialLoadRequest = null
@@ -1077,12 +980,7 @@ class GeckoEngineSession(
             uri: String,
         ): GeckoResult<GeckoSession> {
             val newEngineSession =
-                GeckoEngineSession(
-                    runtime = runtime,
-                    privateMode = privateMode,
-                    defaultSettings = defaultSettings,
-                    openGeckoSession = false,
-                )
+                GeckoEngineSession(runtime, privateMode, defaultSettings, openGeckoSession = false)
             notifyObservers {
                 onWindowRequest(GeckoWindowRequest(uri, newEngineSession))
             }
@@ -1185,7 +1083,7 @@ class GeckoEngineSession(
                 onSecurityChange(
                     securityInfo.isSecure,
                     securityInfo.host,
-                    CertificateUtils.issuerOrganization(securityInfo.certificate),
+                    securityInfo.getIssuerName(),
                     securityInfo.certificate,
                 )
             }
@@ -1298,7 +1196,7 @@ class GeckoEngineSession(
                 else -> null
             }
 
-            return scope.launchGeckoResult {
+            return launchGeckoResult {
                 delegate.onVisited(url, PageVisit(visitType, redirectSource))
                 true
             }
@@ -1314,7 +1212,7 @@ class GeckoEngineSession(
 
             val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(null)
 
-            return scope.launchGeckoResult {
+            return launchGeckoResult {
                 val visits = delegate.getVisited(urls.toList())
                 visits.toBooleanArray()
             }
@@ -1395,9 +1293,8 @@ class GeckoEngineSession(
                 val contentLength = headers[CONTENT_LENGTH]?.trim()?.toLongOrNull()
                 val contentDisposition = headers[CONTENT_DISPOSITION]?.trim()
                 val url = uri
-
-                val fileName = settings.downloadDelegate?.guessFileName(
-                    contentDisposition = contentDisposition,
+                val fileName = DownloadUtils.guessFileName(
+                    contentDisposition,
                     url = url,
                     mimeType = contentType,
                 )
@@ -1407,7 +1304,7 @@ class GeckoEngineSession(
                         url = url,
                         contentLength = contentLength,
                         contentType = DownloadUtils.sanitizeMimeType(contentType),
-                        fileName = fileName?.sanitizeFileName(),
+                        fileName = fileName.sanitizeFileName(),
                         response = response,
                         isPrivate = privateMode,
                         openInApp = webResponse.requestExternalApp,
@@ -1438,7 +1335,7 @@ class GeckoEngineSession(
                                 // delegate before the session is closed (and the corresponding coroutine
                                 // job is cancelled). Observers will always be notified of the title
                                 // change though.
-                                scope.launch {
+                                launch(coroutineContext) {
                                     delegate.onTitleChanged(url, title ?: "")
                                 }
                             }
@@ -1455,7 +1352,7 @@ class GeckoEngineSession(
                 currentUrl?.let { url ->
                     settings.historyTrackingDelegate?.let { delegate ->
                         if (delegate.shouldStoreUri(url)) {
-                            scope.launch {
+                            launch(coroutineContext) {
                                 delegate.onPreviewImageChange(url, previewImageUrl)
                             }
                         }
@@ -1569,6 +1466,10 @@ class GeckoEngineSession(
         return cookiesPolicies
     }
 
+    internal fun GeckoSession.ProgressDelegate.SecurityInformation.getIssuerName(): String? {
+        return certificate?.issuerDN?.name?.substringAfterLast("O=")?.substringBeforeLast(",C=")
+    }
+
     private operator fun Int.contains(mask: Int): Boolean {
         return (this and mask) != 0
     }
@@ -1672,20 +1573,12 @@ class GeckoEngineSession(
         }
     }
 
-    override fun qwacStatus(onResult: (X509Certificate?) -> Unit) {
-      geckoSession.qwacStatus().then({ qwac ->
-        onResult(qwac)
-        GeckoResult<Void>()
-      })
-    }
-
     private fun createGeckoSession(shouldOpen: Boolean = true) {
         this.geckoSession = geckoSessionProvider()
 
         defaultSettings?.trackingProtectionPolicy?.let { updateTrackingProtection(it) }
         defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
         defaultSettings?.historyTrackingDelegate?.let { settings.historyTrackingDelegate = it }
-        defaultSettings?.downloadDelegate?.let { settings.downloadDelegate = it }
         defaultSettings?.testingModeEnabled?.let {
             geckoSession.settings.fullAccessibilityTree = it
         }
@@ -1696,7 +1589,6 @@ class GeckoEngineSession(
         defaultSettings?.clearColor?.let { geckoSession.compositorController.clearColor = it }
 
         if (shouldOpen) {
-            runtime.warmUp()
             geckoSession.open(runtime)
         }
 

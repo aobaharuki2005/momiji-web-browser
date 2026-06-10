@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -335,7 +337,6 @@ class PrevWordBreakClassWalker {
       if (!PrevChar()) {
         return Nothing();
       }
-      MOZ_ASSERT(mOffset >= 0);
       WordBreakClass curClass = GetWordBreakClass(mText.CharAt(mOffset));
       if (curClass != mClass) {
         mClass = curClass;
@@ -351,7 +352,6 @@ class PrevWordBreakClassWalker {
       // There are no characters before us.
       return true;
     }
-    MOZ_ASSERT(mOffset >= 0);
     WordBreakClass curClass = GetWordBreakClass(mText.CharAt(mOffset));
     // We wanted to peek at the previous character, not really move to it.
     ++mOffset;
@@ -368,19 +368,14 @@ class PrevWordBreakClassWalker {
       // PrevChar was called already and failed.
       return false;
     }
-    // Walk backward through leaves, skipping any that are empty.
-    for (;;) {
-      mAcc = PrevLeaf(mAcc);
-      if (!mAcc) {
-        return false;
-      }
-      mText.Truncate();
-      mAcc->AppendTextTo(mText);
-      if (!mText.IsEmpty()) {
-        mOffset = static_cast<int32_t>(mText.Length()) - 1;
-        return true;
-      }
+    mAcc = PrevLeaf(mAcc);
+    if (!mAcc) {
+      return false;
     }
+    mText.Truncate();
+    mAcc->AppendTextTo(mText);
+    mOffset = static_cast<int32_t>(mText.Length()) - 1;
+    return true;
   }
 
   Accessible* mAcc;
@@ -542,7 +537,7 @@ static dom::Selection* GetDOMSelection(const nsIContent* aStartContent,
   return startFrameSel ? &startFrameSel->NormalSelection() : nullptr;
 }
 
-std::pair<RefPtr<nsIContent>, uint32_t> TextLeafPoint::ToDOMPoint(
+std::pair<nsIContent*, uint32_t> TextLeafPoint::ToDOMPoint(
     bool aIncludeGenerated) const {
   if (!(*this) || !mAcc->IsLocal()) {
     MOZ_ASSERT_UNREACHABLE("Invalid point");
@@ -664,18 +659,6 @@ static bool IsCaretValid(TextLeafPoint aPoint) {
   // isn't focused. Instead, we pretend there is no caret. See bug 1950748 for
   // more details.
   return focus->State() & states::EDITABLE;
-}
-
-static bool IsStartOfFocusedEditor(TextLeafPoint& aPoint) {
-  if (aPoint.mOffset != 0) {
-    return false;
-  }
-  Accessible* focus = FocusMgr() ? FocusMgr()->FocusedAccessible() : nullptr;
-  if (!focus || !(focus->State() & states::EDITABLE)) {
-    // There isn't a focused editor.
-    return false;
-  }
-  return aPoint == TextLeafPoint(focus, 0);
 }
 
 /*** TextLeafPoint ***/
@@ -1105,10 +1088,9 @@ TextLeafPoint TextLeafPoint::GetCaret(Accessible* aAcc) {
     // that code into TextLeafPoint, but existing code depends on it being based
     // on HyperTextAccessible (including caret events).
     int32_t htOffset = -1;
-    // Try the cached caret. It is only useful here if it belongs to the same
-    // document.
+    // Try the cached caret.
     HyperTextAccessible* ht = SelectionMgr()->AccessibleWithCaret(&htOffset);
-    if (ht && ht->Document() == localAcc->Document()) {
+    if (ht) {
       MOZ_ASSERT(htOffset != -1);
     } else {
       // There is no cached caret, but there might still be a caret; see bug
@@ -1167,19 +1149,17 @@ TextLeafPoint TextLeafPoint::GetCaret(Accessible* aAcc) {
       // node.
       // 3. The caret is somewhere other than the start of a line and the user
       // presses down or up arrow to move by line.
-      // 4. The user focuses a contentEditable and the caret is positioned on
-      // the first character.
       if (point.mOffset <
           static_cast<int32_t>(nsAccUtils::TextLength(point.mAcc))) {
         // The caret is at the end of a line if the point is at the start of a
-        // line but not the start of a focused editor.
+        // line but not at the start of a paragraph.
         point.mIsEndOfLineInsertionPoint =
             point.FindPrevLineStartSameLocalAcc(/* aIncludeOrigin */ true) ==
                 point &&
-            !IsStartOfFocusedEditor(point);
+            !point.IsParagraphStart();
       } else {
-        // CaretAssociationHint::Before is only used at the end of a node if the
-        // caret is both at the end of a node and at the end of a line.
+        // This is the end of a node. CaretAssociationHint::Before is only used
+        // at the end of a node if the caret is at the end of a line.
         point.mIsEndOfLineInsertionPoint = true;
       }
     }
@@ -1633,8 +1613,7 @@ void TextLeafPoint::AddTextOffsetAttributes(AccAttributes* aAttrs) const {
 
   RemoteAccessible* acc = mAcc->AsRemote();
   MOZ_ASSERT(acc);
-  if (acc->Document()->RequestDomainsIfInactive(
-          CacheDomain::TextOffsetAttributes)) {
+  if (RequestDomainsIfInactive(CacheDomain::TextOffsetAttributes)) {
     return;
   }
   if (!acc->mCachedFields) {
@@ -1750,8 +1729,7 @@ TextLeafPoint TextLeafPoint::FindTextOffsetAttributeSameAcc(
 
   RemoteAccessible* acc = mAcc->AsRemote();
   MOZ_ASSERT(acc);
-  if (acc->Document()->RequestDomainsIfInactive(
-          CacheDomain::TextOffsetAttributes)) {
+  if (RequestDomainsIfInactive(CacheDomain::TextOffsetAttributes)) {
     return TextLeafPoint();
   }
   if (!acc->mCachedFields) {
@@ -2050,7 +2028,7 @@ already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributesLocalAcc(
   }
   HyperTextAccessible* hyperAcc = parent->AsHyperText();
   MOZ_ASSERT(hyperAcc);
-  auto attributes = MakeRefPtr<AccAttributes>();
+  RefPtr<AccAttributes> attributes = new AccAttributes();
   if (hyperAcc) {
     TextAttrsMgr mgr(hyperAcc, aIncludeDefaults, acc);
     mgr.GetAttributes(attributes);
@@ -2270,10 +2248,10 @@ LayoutDeviceIntRect TextLeafPoint::CharBounds() const {
     return bounds;
   }
 
-  RemoteAccessible* remote = mAcc->AsRemote();
-  if (remote->Document()->RequestDomainsIfInactive(CacheDomain::TextBounds)) {
+  if (RequestDomainsIfInactive(CacheDomain::TextBounds)) {
     return LayoutDeviceIntRect();
   }
+  RemoteAccessible* remote = mAcc->AsRemote();
   if (!remote->mCachedFields) {
     return LayoutDeviceIntRect();
   }
@@ -2499,7 +2477,7 @@ bool TextLeafRange::SetSelection(int32_t aSelectionNum, bool aSetFocus) const {
 
   // Make sure the selection is visible. See bug 1170242.
   domSel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                         AxisScrollParams(), AxisScrollParams(),
+                         ScrollAxis(), ScrollAxis(),
                          ScrollFlags::ScrollOverflowHidden);
 
   if (aSetFocus && mStart == mEnd && !isFocusable) {
@@ -2646,16 +2624,6 @@ bool TextLeafRange::WalkLineRects(LineRectCallback aCallback) const {
     currPoint = nextLineStartPoint;
   }
   return true;
-}
-
-void TextLeafRange::GetFlattenedText(nsAString& aText) const {
-  for (TextLeafRange segment : *this) {
-    if (segment.mStart.mAcc->IsText()) {
-      segment.mStart.mAcc->AppendTextTo(
-          aText, segment.mStart.mOffset,
-          segment.mEnd.mOffset - segment.mStart.mOffset);
-    }
-  }
 }
 
 TextLeafRange::Iterator TextLeafRange::Iterator::BeginIterator(

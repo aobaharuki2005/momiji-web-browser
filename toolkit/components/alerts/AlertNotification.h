@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_AlertNotification_h_
-#define mozilla_AlertNotification_h_
+#ifndef mozilla_AlertNotification_h__
+#define mozilla_AlertNotification_h__
 
 #include "imgINotificationObserver.h"
 #include "nsIAlertsService.h"
@@ -16,6 +16,42 @@
 #include "nsITimer.h"
 
 namespace mozilla {
+
+class AlertImageRequest final : public imgINotificationObserver,
+                                public nsICancelable,
+                                public nsITimerCallback,
+                                public nsINamed {
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(AlertImageRequest,
+                                           imgINotificationObserver)
+  NS_DECL_IMGINOTIFICATIONOBSERVER
+  NS_DECL_NSICANCELABLE
+  NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
+
+  AlertImageRequest(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                    bool aInPrivateBrowsing, uint32_t aTimeout,
+                    nsIAlertNotificationImageListener* aListener,
+                    nsISupports* aUserData);
+
+  nsresult Start();
+
+ private:
+  virtual ~AlertImageRequest();
+
+  nsresult NotifyMissing();
+  void NotifyComplete();
+
+  nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  bool mInPrivateBrowsing;
+  uint32_t mTimeout;
+  nsCOMPtr<nsIAlertNotificationImageListener> mListener;
+  nsCOMPtr<nsISupports> mUserData;
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<imgIRequest> mRequest;
+};
 
 class AlertNotification : public nsIAlertNotification {
  public:
@@ -31,7 +67,6 @@ class AlertNotification : public nsIAlertNotification {
   nsString mId;
   nsString mName;
   nsString mImageURL;
-  nsCOMPtr<imgIContainer> mImage;
   nsString mTitle;
   nsString mText;
   bool mTextClickable = false;
@@ -65,4 +100,4 @@ class AlertAction : public nsIAlertAction {
 
 }  // namespace mozilla
 
-#endif /* mozilla_AlertNotification_h_ */
+#endif /* mozilla_AlertNotification_h__ */

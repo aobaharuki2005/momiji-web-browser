@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_TextEvents_h_
-#define mozilla_TextEvents_h_
+#ifndef mozilla_TextEvents_h__
+#define mozilla_TextEvents_h__
 
 #include <stdint.h>
 
@@ -39,7 +40,7 @@ class nsStringHashKey;
 
 enum {
 #define NS_DEFINE_VK(aDOMKeyName, aDOMKeyCode) NS_##aDOMKeyName = aDOMKeyCode,
-#include "mozilla/VirtualKeyCodeList.inc"
+#include "mozilla/VirtualKeyCodeList.h"
 #undef NS_DEFINE_VK
   NS_VK_UNKNOWN = 0xFF
 };
@@ -190,7 +191,7 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
         mEditCommandsForRichTextEditorInitialized(false) {}
 
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Widget, KeyboardEvent);
+  WidgetKeyboardEvent* AsKeyboardEvent() override { return this; }
 
   WidgetKeyboardEvent(bool aIsTrusted, EventMessage aMessage,
                       nsIWidget* aWidget,
@@ -213,10 +214,6 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
         mEditCommandsForSingleLineEditorInitialized(false),
         mEditCommandsForMultiLineEditorInitialized(false),
         mEditCommandsForRichTextEditorInitialized(false) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(WidgetKeyboardEvent,
-                                                    eKeyboardEventClass,
-                                                    eInputEventClass)
 
   // IsInputtingText() and IsInputtingLineBreak() are used to check if
   // it should cause eKeyPress events even on web content.
@@ -325,12 +322,9 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
              // XXXedgar, we probably could improve this by referring to
              // EditCommandsConstRef() if we're sure the event target on Linux
              // and macOS is active with any edit commands.
-             // ctrl+f5 is used by web apps e.g. Google Slides as a
-             // presentation/fullscreen shortcut. See bug 2001938
              ((mKeyCode == dom::KeyboardEvent_Binding::DOM_VK_C ||
                mKeyCode == dom::KeyboardEvent_Binding::DOM_VK_V ||
-               mKeyCode == dom::KeyboardEvent_Binding::DOM_VK_X ||
-               mKeyCode == dom::KeyboardEvent_Binding::DOM_VK_F5) &&
+               mKeyCode == dom::KeyboardEvent_Binding::DOM_VK_X) &&
               IsAccel());
     }
 
@@ -593,23 +587,10 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
   }
 
   /**
-   * Return true if this stores one or more edit commands for at least one
-   * editor type. This does not initialize them when they have not been
-   * initialized yet. Therefore, this returns just current status.
-   */
-  [[nodiscard]] bool HasEditCommands() const {
-    return !mEditCommandsForSingleLineEditor.IsEmpty() ||
-           !mEditCommandsForMultiLineEditor.IsEmpty() ||
-           !mEditCommandsForRichTextEditor.IsEmpty();
-  }
-
-  /**
    * EditCommandsConstRef() returns reference to edit commands for aType.
    */
   const nsTArray<CommandInt>& EditCommandsConstRef(
       NativeKeyBindingsType aType) const {
-    MOZ_ASSERT(!IsHandledInRemoteProcess(),
-               "Editor commands is not available on reply event");
     return const_cast<WidgetKeyboardEvent*>(this)->EditCommandsRef(aType);
   }
 
@@ -917,7 +898,7 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
  * mozilla::WidgetCompositionEvent
  ******************************************************************************/
 
-class WidgetCompositionEvent final : public WidgetGUIEvent {
+class WidgetCompositionEvent : public WidgetGUIEvent {
  private:
   friend class mozilla::dom::PBrowserParent;
   friend class mozilla::dom::PBrowserChild;
@@ -926,7 +907,7 @@ class WidgetCompositionEvent final : public WidgetGUIEvent {
   WidgetCompositionEvent() : mOriginalMessage(eVoidEvent) {}
 
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Widget, CompositionEvent);
+  virtual WidgetCompositionEvent* AsCompositionEvent() override { return this; }
 
   WidgetCompositionEvent(bool aIsTrusted, EventMessage aMessage,
                          nsIWidget* aWidget,
@@ -935,10 +916,6 @@ class WidgetCompositionEvent final : public WidgetGUIEvent {
                        aTime),
         mNativeIMEContext(aWidget),
         mOriginalMessage(eVoidEvent) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(WidgetCompositionEvent,
-                                                    eCompositionEventClass,
-                                                    eGUIEventClass)
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eCompositionEventClass,
@@ -1023,35 +1000,39 @@ class WidgetCompositionEvent final : public WidgetGUIEvent {
  * mozilla::WidgetQueryContentEvent
  ******************************************************************************/
 
-class WidgetQueryContentEvent final : public WidgetGUIEvent {
+class WidgetQueryContentEvent : public WidgetGUIEvent {
  private:
   friend class dom::PBrowserParent;
   friend class dom::PBrowserChild;
   ALLOW_DEPRECATED_READPARAM
 
   WidgetQueryContentEvent()
-      : mWithFontRanges(false), mNeedsToFlushLayout(true) {
+      : mUseNativeLineBreak(true),
+        mWithFontRanges(false),
+        mNeedsToFlushLayout(true) {
     MOZ_CRASH("WidgetQueryContentEvent is created without proper arguments");
   }
 
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Widget, QueryContentEvent);
+  virtual WidgetQueryContentEvent* AsQueryContentEvent() override {
+    return this;
+  }
 
   WidgetQueryContentEvent(bool aIsTrusted, EventMessage aMessage,
                           nsIWidget* aWidget)
-      : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eQueryContentEventClass) {
-  }
+      : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eQueryContentEventClass),
+        mUseNativeLineBreak(true),
+        mWithFontRanges(false),
+        mNeedsToFlushLayout(true) {}
 
   WidgetQueryContentEvent(EventMessage aMessage,
                           const WidgetQueryContentEvent& aOtherEvent)
       : WidgetGUIEvent(aOtherEvent.IsTrusted(), aMessage,
                        const_cast<nsIWidget*>(aOtherEvent.mWidget.get()),
                        eQueryContentEventClass),
+        mUseNativeLineBreak(aOtherEvent.mUseNativeLineBreak),
+        mWithFontRanges(false),
         mNeedsToFlushLayout(aOtherEvent.mNeedsToFlushLayout) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(WidgetQueryContentEvent,
-                                                    eQueryContentEventClass,
-                                                    eGUIEventClass)
 
   WidgetEvent* Duplicate() const override {
     // This event isn't an internal event of any DOM event.
@@ -1061,14 +1042,19 @@ class WidgetQueryContentEvent final : public WidgetGUIEvent {
   }
 
   struct Options final {
-    explicit Options() {}  // XXX Cannot use `= default` here
-    explicit Options(const WidgetQueryContentEvent& aEvent)
-        : mRelativeToInsertionPoint(aEvent.mInput.mRelativeToInsertionPoint) {}
+    bool mUseNativeLineBreak;
+    bool mRelativeToInsertionPoint;
 
-    bool mRelativeToInsertionPoint = false;
+    explicit Options()
+        : mUseNativeLineBreak(true), mRelativeToInsertionPoint(false) {}
+
+    explicit Options(const WidgetQueryContentEvent& aEvent)
+        : mUseNativeLineBreak(aEvent.mUseNativeLineBreak),
+          mRelativeToInsertionPoint(aEvent.mInput.mRelativeToInsertionPoint) {}
   };
 
   void Init(const Options& aOptions) {
+    mUseNativeLineBreak = aOptions.mUseNativeLineBreak;
     mInput.mRelativeToInsertionPoint = aOptions.mRelativeToInsertionPoint;
     MOZ_ASSERT(mInput.IsValidEventMessage(mMessage));
   }
@@ -1174,24 +1160,28 @@ class WidgetQueryContentEvent final : public WidgetGUIEvent {
     return Failed() || mReply->mTentativeCaretOffset.isNothing();
   }
 
-  bool mWithFontRanges = false;
-  bool mNeedsToFlushLayout = true;
-
+  bool mUseNativeLineBreak;
+  bool mWithFontRanges;
+  bool mNeedsToFlushLayout;
   struct Input final {
     uint32_t EndOffset() const {
       CheckedInt<uint32_t> endOffset = CheckedInt<uint32_t>(mOffset) + mLength;
       return NS_WARN_IF(!endOffset.isValid()) ? UINT32_MAX : endOffset.value();
     }
 
-    int64_t mOffset = 0;
-    uint32_t mLength = 0;
-    SelectionType mSelectionType = SelectionType::eNormal;
+    int64_t mOffset;
+    uint32_t mLength;
+    SelectionType mSelectionType;
     // If mOffset is true, mOffset is relative to the start offset of
     // composition if there is, otherwise, the start of the first selection
     // range.
-    bool mRelativeToInsertionPoint = false;
+    bool mRelativeToInsertionPoint;
 
-    Input() = default;
+    Input()
+        : mOffset(0),
+          mLength(0),
+          mSelectionType(SelectionType::eNormal),
+          mRelativeToInsertionPoint(false) {}
 
     bool IsValidOffset() const {
       return mRelativeToInsertionPoint || mOffset >= 0;
@@ -1399,24 +1389,34 @@ class WidgetQueryContentEvent final : public WidgetGUIEvent {
  * mozilla::WidgetSelectionEvent
  ******************************************************************************/
 
-class WidgetSelectionEvent final : public WidgetGUIEvent {
+class WidgetSelectionEvent : public WidgetGUIEvent {
  private:
   friend class mozilla::dom::PBrowserParent;
   friend class mozilla::dom::PBrowserChild;
   ALLOW_DEPRECATED_READPARAM
 
-  WidgetSelectionEvent() = default;
+  WidgetSelectionEvent()
+      : mOffset(0),
+        mLength(0),
+        mReversed(false),
+        mExpandToClusterBoundary(true),
+        mSucceeded(false),
+        mUseNativeLineBreak(true),
+        mReason(nsISelectionListener::NO_REASON) {}
 
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Widget, SelectionEvent);
+  virtual WidgetSelectionEvent* AsSelectionEvent() override { return this; }
 
   WidgetSelectionEvent(bool aIsTrusted, EventMessage aMessage,
                        nsIWidget* aWidget)
-      : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eSelectionEventClass) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(WidgetSelectionEvent,
-                                                    eSelectionEventClass,
-                                                    eGUIEventClass)
+      : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eSelectionEventClass),
+        mOffset(0),
+        mLength(0),
+        mReversed(false),
+        mExpandToClusterBoundary(true),
+        mSucceeded(false),
+        mUseNativeLineBreak(true),
+        mReason(nsISelectionListener::NO_REASON) {}
 
   virtual WidgetEvent* Duplicate() const override {
     // This event isn't an internal event of any DOM event.
@@ -1427,38 +1427,38 @@ class WidgetSelectionEvent final : public WidgetGUIEvent {
   }
 
   // Start offset of selection
-  uint32_t mOffset = 0;
+  uint32_t mOffset;
   // Length of selection
-  uint32_t mLength = 0;
+  uint32_t mLength;
   // Selection "anchor" should be in front
-  bool mReversed = false;
+  bool mReversed;
   // Cluster-based or character-based
-  bool mExpandToClusterBoundary = true;
+  bool mExpandToClusterBoundary;
   // true if setting selection succeeded.
-  bool mSucceeded = false;
+  bool mSucceeded;
+  // true if native line breaks are used for mOffset and mLength
+  bool mUseNativeLineBreak;
   // Fennec provides eSetSelection reason codes for downstream
   // use in AccessibleCaret visibility logic.
-  int16_t mReason = nsISelectionListener::NO_REASON;
+  int16_t mReason;
 };
 
 /******************************************************************************
  * mozilla::InternalEditorInputEvent
  ******************************************************************************/
 
-class InternalEditorInputEvent final : public InternalUIEvent {
+class InternalEditorInputEvent : public InternalUIEvent {
  public:
   InternalEditorInputEvent() = delete;
-  NS_DEFINE_AS_EVENT_OVERRIDE(Internal, EditorInputEvent);
+  virtual InternalEditorInputEvent* AsEditorInputEvent() override {
+    return this;
+  }
 
   InternalEditorInputEvent(bool aIsTrusted, EventMessage aMessage,
                            nsIWidget* aWidget = nullptr,
                            const WidgetEventTime* aTime = nullptr)
       : InternalUIEvent(aIsTrusted, aMessage, aWidget, eEditorInputEventClass,
                         aTime) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(InternalEditorInputEvent,
-                                                    eEditorInputEventClass,
-                                                    eUIEventClass)
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eEditorInputEventClass,
@@ -1509,21 +1509,17 @@ class InternalEditorInputEvent final : public InternalUIEvent {
  * mozilla::InternalLegacyTextEvent
  ******************************************************************************/
 
-class InternalLegacyTextEvent final : public InternalUIEvent {
+class InternalLegacyTextEvent : public InternalUIEvent {
  public:
   InternalLegacyTextEvent() = delete;
 
-  NS_DEFINE_AS_EVENT_OVERRIDE(Internal, LegacyTextEvent);
+  virtual InternalLegacyTextEvent* AsLegacyTextEvent() override { return this; }
 
   InternalLegacyTextEvent(bool aIsTrusted, EventMessage aMessage,
                           nsIWidget* aWidget = nullptr,
                           const WidgetEventTime* aTime = nullptr)
       : InternalUIEvent(aIsTrusted, aMessage, aWidget, eLegacyTextEventClass,
                         aTime) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(InternalLegacyTextEvent,
-                                                    eLegacyTextEventClass,
-                                                    eUIEventClass)
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eLegacyTextEventClass,
@@ -1552,4 +1548,4 @@ class InternalLegacyTextEvent final : public InternalUIEvent {
 
 }  // namespace mozilla
 
-#endif  // mozilla_TextEvents_h_
+#endif  // mozilla_TextEvents_h__

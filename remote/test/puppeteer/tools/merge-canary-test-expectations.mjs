@@ -6,7 +6,7 @@
 
 // Modifies test/TestExpectations.json in place.
 
-import fs from 'node:fs';
+import fs from 'fs';
 
 const source = 'test/TestExpectations.json';
 const testExpectations = JSON.parse(fs.readFileSync(source, 'utf-8'));

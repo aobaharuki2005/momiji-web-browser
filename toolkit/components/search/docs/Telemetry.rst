@@ -1,7 +1,5 @@
-.. _toolkit-search-telemetry:
-
-Search Service Telemetry
-========================
+Telemetry
+=========
 
 This document describes search telemetry recorded by Toolkit such as search
 service telemetry and telemetry related to fetching search suggestions.

@@ -10,9 +10,10 @@
 
 #include "api/video/corruption_detection/frame_instrumentation_data.h"
 
-#include <span>
 #include <utility>
 #include <vector>
+
+#include "api/array_view.h"
 
 namespace webrtc {
 
@@ -60,7 +61,7 @@ bool FrameInstrumentationData::SetChromaErrorThreshold(int threshold) {
 }
 
 bool FrameInstrumentationData::SetSampleValues(
-    std::span<const double> samples) {
+    webrtc::ArrayView<const double> samples) {
   for (double sample_value : samples) {
     if (sample_value < 0.0 || sample_value > 255.0) {
       return false;

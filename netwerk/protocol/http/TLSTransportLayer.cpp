@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=4 sw=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,6 +7,7 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "Http2StreamTunnel.h"
 #include "TLSTransportLayer.h"
 #include "nsISocketProvider.h"
 #include "nsITLSSocketControl.h"
@@ -448,6 +451,11 @@ TLSTransportLayer::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   nsresult rv = NS_OK;
   if (callback) {
     rv = callback->OnOutputStreamReady(&mSocketOutWrapper);
+
+    RefPtr<OutputStreamTunnel> tunnel = do_QueryObject(out);
+    if (tunnel) {
+      tunnel->MaybeSetRequestDone(callback);
+    }
   }
   return rv;
 }
@@ -505,16 +513,8 @@ TLSTransportLayer::OpenOutputStream(uint32_t aFlags, uint32_t aSegmentSize,
 
 NS_IMETHODIMP
 TLSTransportLayer::Close(nsresult aReason) {
-  bool onSocketThread = OnSocketThread();
-  LOG(("TLSTransportLayer::Close [this=%p reason=%" PRIx32 "] sts=%d", this,
-       static_cast<uint32_t>(aReason), onSocketThread));
-
-  if (!onSocketThread) {
-    gSocketTransportService->Dispatch(NS_NewRunnableFunction(
-        "TLSTransportLayer::Close",
-        [self = RefPtr{this}, aReason] { self->Close(aReason); }));
-    return NS_OK;
-  }
+  LOG(("TLSTransportLayer::Close [this=%p reason=%" PRIx32 "]\n", this,
+       static_cast<uint32_t>(aReason)));
 
   mInputCallback = nullptr;
   mOutputCallback = nullptr;
@@ -635,8 +635,7 @@ FWD_TS_ADDREF(GetScriptableSelfAddr, nsINetAddr);
 FWD_TS_PTR(IsAlive, bool);
 FWD_TS_PTR(GetConnectionFlags, uint32_t);
 FWD_TS(SetConnectionFlags, uint32_t);
-FWD_TS(SetIsTRRConnection, bool);
-FWD_TS_PTR(GetIsTRRConnection, bool);
+FWD_TS(SetIsPrivate, bool);
 FWD_TS_PTR(GetTlsFlags, uint32_t);
 FWD_TS(SetTlsFlags, uint32_t);
 FWD_TS_PTR(GetRecvBufferSize, uint32_t);

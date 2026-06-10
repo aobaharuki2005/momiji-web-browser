@@ -1,7 +1,5 @@
-.. _browser-search-preferences:
-
-Search UI Preferences
-=====================
+Preferences
+===========
 
 This document describes preferences affecting Firefox's Search UI code. For information
 on the toolkit search service, see the :doc:`/toolkit/search/Preferences` document.

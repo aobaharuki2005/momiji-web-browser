@@ -27,7 +27,7 @@
 //!
 //! ## Examples
 //!
-//! Examples can be found in the `examples` directory of the source code, or [on
+//! Examples can found in the `examples` directory of the source code, or [on
 //! GitHub].
 //!
 //! [on GitHub]: https://github.com/tokio-rs/mio/tree/master/examples
@@ -39,9 +39,6 @@
 //! ## Available features
 //!
 //! The available features are described in the [`features`] module.
-
-#[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
-compile_error!("This wasm target is unsupported by mio. If using Tokio, disable the net feature.");
 
 // macros used internally
 #[macro_use]
@@ -92,14 +89,6 @@ pub mod unix {
 #[cfg_attr(docsrs, doc(cfg(all(target_os = "hermit", feature = "os-ext"))))]
 pub mod hermit {
     //! Hermit only extensions.
-
-    pub use crate::sys::SourceFd;
-}
-
-#[cfg(all(target_os = "wasi", not(target_env = "p1"), feature = "os-ext"))]
-#[cfg_attr(docsrs, doc(cfg(all(target_os = "wasi", feature = "os-ext"))))]
-pub mod wasi {
-    //! WASI-only extensions.
 
     pub use crate::sys::SourceFd;
 }

@@ -20,19 +20,53 @@
           src="../actions.js"></script>
 
   <script type="application/javascript">
-    /* global testAction */
-    async function doTest() {
+    function doTest() {
+      var actionsArray = [
+        {
+          ID: "button",
+          actionName: "press",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "input_button",
+          actionName: "press",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "checkbox_unchecked",
+          actionName: "check",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "checkbox_checked",
+          actionName: "uncheck",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "checkbox_mixed",
+          actionName: "cycle",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "radio",
+          actionName: "select",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "textarea",
+          actionName: "activate",
+          events: FOCUS_EVENT,
+        },
+        {
+          ID: "textinput",
+          actionName: "activate",
+          events: FOCUS_EVENT,
+        },
+
+      ];
       document.getElementById("checkbox_mixed").indeterminate = true;
 
-      await testAction({ id: "button", actionName: "press", events: CLICK_EVENTS });
-      await testAction({ id: "input_button", actionName: "press", events: CLICK_EVENTS });
-      await testAction({ id: "checkbox_unchecked", actionName: "check", events: CLICK_EVENTS });
-      await testAction({ id: "checkbox_checked", actionName: "uncheck", events: CLICK_EVENTS });
-      await testAction({ id: "checkbox_mixed", actionName: "cycle", events: CLICK_EVENTS });
-      await testAction({ id: "radio", actionName: "select", events: CLICK_EVENTS });
-      await testAction({ id: "textarea", actionName: "activate", events: FOCUS_EVENT });
-      await testAction({ id: "textinput", actionName: "activate", events: FOCUS_EVENT });
-      SimpleTest.finish();
+      testActions(actionsArray);
     }
 
     SimpleTest.waitForExplicitFinish();

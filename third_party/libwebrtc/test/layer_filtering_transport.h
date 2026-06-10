@@ -13,10 +13,9 @@
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <span>
 
+#include "api/array_view.h"
 #include "api/call/transport.h"
-#include "api/environment/environment.h"
 #include "api/media_types.h"
 #include "api/rtp_parameters.h"
 #include "api/task_queue/task_queue_base.h"
@@ -32,7 +31,6 @@ namespace test {
 class LayerFilteringTransport : public test::DirectTransport {
  public:
   LayerFilteringTransport(
-      const Environment& env,
       TaskQueueBase* task_queue,
       std::unique_ptr<SimulatedPacketReceiverInterface> pipe,
       Call* send_call,
@@ -43,10 +41,9 @@ class LayerFilteringTransport : public test::DirectTransport {
       const std::map<uint8_t, MediaType>& payload_type_map,
       uint32_t ssrc_to_filter_min,
       uint32_t ssrc_to_filter_max,
-      std::span<const RtpExtension> audio_extensions,
-      std::span<const RtpExtension> video_extensions);
+      ArrayView<const RtpExtension> audio_extensions,
+      ArrayView<const RtpExtension> video_extensions);
   LayerFilteringTransport(
-      const Environment& env,
       TaskQueueBase* task_queue,
       std::unique_ptr<SimulatedPacketReceiverInterface> pipe,
       Call* send_call,
@@ -55,10 +52,10 @@ class LayerFilteringTransport : public test::DirectTransport {
       int selected_tl,
       int selected_sl,
       const std::map<uint8_t, MediaType>& payload_type_map,
-      std::span<const RtpExtension> audio_extensions,
-      std::span<const RtpExtension> video_extensions);
+      ArrayView<const RtpExtension> audio_extensions,
+      ArrayView<const RtpExtension> video_extensions);
   bool DiscardedLastPacket() const;
-  bool SendRtp(std::span<const uint8_t> data,
+  bool SendRtp(ArrayView<const uint8_t> data,
                const PacketOptions& options) override;
 
  private:

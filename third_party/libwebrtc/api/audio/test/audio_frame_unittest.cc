@@ -66,7 +66,7 @@ TEST(AudioFrameTest, FrameStartsZeroedAndMuted) {
   EXPECT_TRUE(AllSamplesAre(0, frame));
 }
 
-// TODO: b/335805780 - Delete test when `mutable_data()` returns std::span.
+// TODO: b/335805780 - Delete test when `mutable_data()` returns ArrayView.
 TEST(AudioFrameTest, UnmutedFrameIsInitiallyZeroedLegacy) {
   AudioFrame frame(kSampleRateHz, kNumChannelsMono, CHANNEL_LAYOUT_NONE);
   frame.mutable_data();
@@ -88,7 +88,7 @@ TEST(AudioFrameTest, UnmutedFrameIsInitiallyZeroed) {
 TEST(AudioFrameTest, MutedFrameBufferIsZeroed) {
   AudioFrame frame;
   int16_t* frame_data =
-      frame.mutable_data(kSamplesPerChannel, kNumChannelsMono).data().data();
+      frame.mutable_data(kSamplesPerChannel, kNumChannelsMono).begin();
   EXPECT_FALSE(frame.muted());
   // Fill the reserved buffer with non-zero data.
   for (size_t i = 0; i < frame.max_16bit_samples(); i++) {

@@ -20,16 +20,14 @@ add_task(async function () {
   const { view } = await openRuleView();
 
   info("Testing that the colors in gradient properties are parsed correctly");
-  await testColorParsing(view);
+  testColorParsing(view);
 
   info("Testing that changing one of the colors of a gradient property works");
   await testPickingNewColor(view);
 });
 
-async function testColorParsing(view) {
-  const ruleEl = await getRuleViewProperty(view, "body", "background-image", {
-    wait: true,
-  });
+function testColorParsing(view) {
+  const ruleEl = getRuleViewProperty(view, "body", "background-image");
   ok(ruleEl, "The background-image gradient declaration was found");
 
   const swatchEls = ruleEl.valueSpan.querySelectorAll(".inspector-colorswatch");
@@ -48,9 +46,7 @@ async function testColorParsing(view) {
 
 async function testPickingNewColor(view) {
   // Grab the first color swatch and color in the gradient
-  const ruleEl = await getRuleViewProperty(view, "body", "background-image", {
-    wait: true,
-  });
+  const ruleEl = getRuleViewProperty(view, "body", "background-image");
   const swatchEl = ruleEl.valueSpan.querySelector(".inspector-colorswatch");
   const colorEl = ruleEl.valueSpan.querySelector(".ruleview-color");
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-*/
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -185,7 +186,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
     nsAutoCString name;
     GetErrorName(rv, name);
     LOG("Mic source %p Reconfigure() failed unexpectedly. rv=%s", this,
-        name.get());
+        name.Data());
     Stop();
     return NS_ERROR_UNEXPECTED;
   }
@@ -205,6 +206,7 @@ AudioProcessing::Config AudioInputProcessing::ConfigForPrefs(
   config.pipeline.multi_channel_capture = true;
 
   config.echo_canceller.enabled = aPrefs.mAecOn;
+  config.echo_canceller.mobile_mode = aPrefs.mUseAecMobile;
 
   if ((config.gain_controller1.enabled =
            aPrefs.mAgcOn && !aPrefs.mAgc2Forced)) {
@@ -823,7 +825,7 @@ void AudioInputProcessing::ProcessOutputData(AudioProcessingTrack* aTrack,
       std::min<uint32_t>(aChunk.ChannelCount(), MAX_CHANNELS);
   if (channelCount != mOutputBufferChannelCount ||
       channelCount * framesPerPacket != mOutputBuffer.Length()) {
-    MOZ_RELEASE_ASSERT(mOutputBuffer.SetLength(channelCount * framesPerPacket));
+    mOutputBuffer.SetLength(channelCount * framesPerPacket);
     mOutputBufferChannelCount = channelCount;
     // It's ok to drop the audio still in the packetizer here: if this changes,
     // we changed devices or something.
@@ -929,13 +931,16 @@ void AudioInputProcessing::PacketizeAndProcess(AudioProcessingTrack* aTrack,
 
   while (mPacketizerInput->PacketsAvailable()) {
     mPacketCount++;
-    MOZ_ASSERT(mInputBuffer.Length() ==
-               mPacketizerInput->mPacketSize * mPacketizerInput->mChannels);
-    MOZ_ASSERT(mDeinterleavedBuffer.Length() ==
-               mPacketizerInput->mPacketSize * mPacketizerInput->mChannels);
+    uint32_t samplesPerPacket =
+        mPacketizerInput->mPacketSize * mPacketizerInput->mChannels;
+    if (mInputBuffer.Length() < samplesPerPacket) {
+      mInputBuffer.SetLength(samplesPerPacket);
+    }
+    if (mDeinterleavedBuffer.Length() < samplesPerPacket) {
+      mDeinterleavedBuffer.SetLength(samplesPerPacket);
+    }
     float* packet = mInputBuffer.Data();
     mPacketizerInput->Output(packet);
-    mInputDump->Write(packet, mInputBuffer.Length());
 
     // Downmix from mPacketizerInput->mChannels to mono if needed. We always
     // have floats here, the packetizer performed the conversion.
@@ -1009,20 +1014,6 @@ void AudioInputProcessing::PacketizeAndProcess(AudioProcessingTrack* aTrack,
     mAudioProcessing->ProcessStream(
         deinterleavedPacketizedInputDataChannelPointers.Elements(), inputConfig,
         outputConfig, processedOutputChannelPointers.Elements());
-
-    if (mOutputDump.isNothing()) {
-      mOutputDump.emplace();
-      mOutputDump->Open("AudioProcessingOutput", channelCountInput,
-                        aTrack->mSampleRate);
-    }
-    for (uint32_t f = 0; f < mPacketizerInput->mPacketSize; ++f) {
-      for (uint32_t c = 0; c < channelCountInput; ++c) {
-        packet[f * channelCountInput + c] =
-            processedOutputChannelPointers[c][f];
-      }
-    }
-    mOutputDump->Write(packet,
-                       mPacketizerInput->mPacketSize * channelCountInput);
 
     // If logging is enabled, dump the audio processing stats twice a second
     if (MOZ_LOG_TEST(gMediaManagerLog, LogLevel::Debug) &&
@@ -1242,15 +1233,7 @@ void AudioInputProcessing::EnsurePacketizer(AudioProcessingTrack* aTrack) {
     mChunksInPacketizer.clear();
   }
 
-  mInputDump.reset();
-  mOutputDump.reset();
   mPacketizerInput.emplace(GetPacketSize(aTrack->mSampleRate), channelCount);
-  MOZ_RELEASE_ASSERT(
-      mInputBuffer.SetLength(mPacketizerInput->mPacketSize * channelCount));
-  MOZ_RELEASE_ASSERT(mDeinterleavedBuffer.SetLength(
-      mPacketizerInput->mPacketSize * channelCount));
-  mInputDump.emplace();
-  mInputDump->Open("AudioProcessingInput", channelCount, aTrack->mSampleRate);
 
   if (needPreBuffering) {
     LOG_FRAME(

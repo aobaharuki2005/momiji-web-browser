@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -188,7 +190,7 @@ void HTMLScriptElement::GetInnerText(
   if (aError.Failed()) {
     return;
   }
-  aValue.SetAsNullIsEmptyString() = std::move(innerText);
+  aValue.SetAsNullIsEmptyString() = innerText.AsAString();
 }
 
 void HTMLScriptElement::SetInnerText(
@@ -290,18 +292,18 @@ void HTMLScriptElement::FreezeExecutionAttrs(const Document* aOwnerDoc) {
                                                 OwnerDoc(), GetBaseURI());
 
       if (!mUri) {
-        AutoTArray<nsString, 2> params = {u"src"_ns, std::move(src)};
+        AutoTArray<nsString, 2> params = {u"src"_ns, src};
 
         nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "HTML"_ns,
                                         OwnerDoc(),
-                                        PropertiesFile::DOM_PROPERTIES,
+                                        nsContentUtils::eDOM_PROPERTIES,
                                         "ScriptSourceInvalidUri", params, loc);
       }
     } else {
       AutoTArray<nsString, 1> params = {u"src"_ns};
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, "HTML"_ns, OwnerDoc(),
-          PropertiesFile::DOM_PROPERTIES, "ScriptSourceEmpty", params, loc);
+          nsContentUtils::eDOM_PROPERTIES, "ScriptSourceEmpty", params, loc);
     }
 
     // At this point mUri will be null for invalid URLs.

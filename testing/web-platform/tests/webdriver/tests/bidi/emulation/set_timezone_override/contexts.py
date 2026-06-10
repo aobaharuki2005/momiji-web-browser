@@ -59,8 +59,7 @@ async def test_iframe(
     inline,
     get_current_timezone,
     some_timezone,
-    another_timezone,
-    iframe
+    another_timezone
 ):
     # Set timezone override.
     await bidi_session.emulation.set_timezone_override(
@@ -71,7 +70,8 @@ async def test_iframe(
     # Assert timezone emulated in the required context.
     assert await get_current_timezone(new_tab) == some_timezone
 
-    page_url = inline(iframe("<div id='in-iframe'>foo</div>", domain=domain))
+    iframe_url = inline("<div id='in-iframe'>foo</div>", domain=domain)
+    page_url = inline(f"<iframe src='{iframe_url}'></iframe>")
 
     # Load the page with iframes.
     await bidi_session.browsing_context.navigate(

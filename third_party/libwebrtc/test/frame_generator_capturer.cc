@@ -52,7 +52,7 @@ FrameGeneratorCapturer::FrameGeneratorCapturer(
       allow_zero_hertz_(allow_zero_hertz),
       task_queue_(task_queue_factory.CreateTaskQueue(
           "FrameGenCapQ",
-          TaskQueueFactory::Priority::kHigh)) {
+          TaskQueueFactory::Priority::HIGH)) {
   RTC_DCHECK(frame_generator_);
   RTC_DCHECK_GT(target_fps, 0);
 }

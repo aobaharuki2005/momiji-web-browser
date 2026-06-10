@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -163,49 +164,6 @@ void nsFontMetrics::Destroy() { mPresContext = nullptr; }
 // XXXTODO get rid of this macro
 #define ROUND_TO_TWIPS(x) (nscoord) floor(((x) * mP2A) + 0.5)
 #define CEIL_TO_TWIPS(x) (nscoord) ceil((x) * mP2A)
-
-static gfxFloat GetBaseline(const nsFontMetrics* aFontMetrics,
-                            gfxFont::Baseline aBaseline) {
-  RefPtr<gfxFont> font =
-      aFontMetrics->GetThebesFontGroup()->GetFirstValidFont();
-  return font->GetBaseline(aBaseline, aFontMetrics->Orientation());
-}
-
-nscoord nsFontMetrics::AlphabeticBaseline() const {
-  return ROUND_TO_TWIPS(GetBaseline(this, gfxFont::kAlphabetic));
-}
-
-nscoord nsFontMetrics::CentralBaseline() const {
-  return ROUND_TO_TWIPS(GetBaseline(this, gfxFont::kCentral));
-}
-
-nscoord nsFontMetrics::XMiddleBaseline() const {
-  return (AlphabeticBaseline() + XHeight()) / 2;
-}
-
-nscoord nsFontMetrics::IdeographicUnderBaseline() const {
-  return ROUND_TO_TWIPS(GetBaseline(this, gfxFont::kIdeographicUnder));
-}
-
-nscoord nsFontMetrics::IdeographicOverBaseline() const {
-  return ROUND_TO_TWIPS(GetBaseline(this, gfxFont::kIdeographicOver));
-}
-
-nscoord nsFontMetrics::IdeographicInkUnderBaseline() const {
-  return ROUND_TO_TWIPS(GetBaseline(this, gfxFont::kIdeographicInkUnder));
-}
-
-nscoord nsFontMetrics::IdeographicInkOverBaseline() const {
-  return ROUND_TO_TWIPS(GetBaseline(this, gfxFont::kIdeographicInkOver));
-}
-
-nscoord nsFontMetrics::HangingBaseline() const {
-  return ROUND_TO_TWIPS(GetBaseline(this, gfxFont::kHanging));
-}
-
-nscoord nsFontMetrics::MathBaseline() const {
-  return ROUND_TO_TWIPS(GetBaseline(this, gfxFont::kMath));
-}
 
 static const gfxFont::Metrics& GetMetrics(
     const nsFontMetrics* aFontMetrics,

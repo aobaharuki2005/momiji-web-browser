@@ -267,7 +267,6 @@ LoginManager.prototype = {
 
   /**
    * Remove the specified login from the stored logins.
-   * Deprecated: use removeLoginAsync instead
    */
   removeLogin(login) {
     lazy.log.debug(
@@ -275,17 +274,6 @@ LoginManager.prototype = {
       login.QueryInterface(Ci.nsILoginMetaInfo).guid
     );
     return this._storage.removeLogin(login);
-  },
-
-  /**
-   * Remove the specified login from the stored logins.
-   */
-  async removeLoginAsync(login) {
-    lazy.log.debug(
-      "Removing login",
-      login.QueryInterface(Ci.nsILoginMetaInfo).guid
-    );
-    return this._storage.removeLoginAsync(login);
   },
 
   /**
@@ -333,25 +321,6 @@ LoginManager.prototype = {
     Glean.pwmgr["savedLoginUsed" + loginType].record({ filled });
   },
 
-  async recordPasswordUseAsync(
-    login,
-    privateContextWithoutExplicitConsent,
-    loginType,
-    filled
-  ) {
-    lazy.log.debug(
-      "Recording password use",
-      loginType,
-      login.QueryInterface(Ci.nsILoginMetaInfo).guid
-    );
-    if (!privateContextWithoutExplicitConsent) {
-      // don't record non-interactive use in private browsing
-      await this._storage.recordPasswordUseAsync(login);
-    }
-
-    Glean.pwmgr["savedLoginUsed" + loginType].record({ filled });
-  },
-
   /**
    * Get a dump of all stored logins asynchronously. Used by the login manager UI.
    *
@@ -374,7 +343,7 @@ LoginManager.prototype = {
 
   /**
    * Remove all user facing stored logins.
-   * Deprecated: Use removeAllUserFacingLoginsAsync() instead.
+   *
    * This will not remove the FxA Sync key, which is stored with the rest of a user's logins.
    */
   removeAllUserFacingLogins() {
@@ -383,18 +352,7 @@ LoginManager.prototype = {
   },
 
   /**
-   * Remove all user facing stored logins.
-   *
-   * This will not remove the FxA Sync key, which is stored with the rest of a user's logins.
-   */
-  async removeAllUserFacingLoginsAsync() {
-    lazy.log.debug("Removing all user facing logins.");
-    await this._storage.removeAllUserFacingLoginsAsync();
-  },
-
-  /**
    * Remove all logins from data store, including the FxA Sync key.
-   * Deprecated: Use removeAllLoginsAsync() instead.
    *
    * NOTE: You probably want `removeAllUserFacingLogins()` instead of this function.
    * This function will remove the FxA Sync key, which will break syncing of saved user data
@@ -403,18 +361,6 @@ LoginManager.prototype = {
   removeAllLogins() {
     lazy.log.debug("Removing all logins from local store, including FxA key.");
     this._storage.removeAllLogins();
-  },
-
-  /**
-   * Remove all logins from data store, including the FxA Sync key.
-   *
-   * NOTE: You probably want `removeAllUserFacingLogins()` instead of this function.
-   * This function will remove the FxA Sync key, which will break syncing of saved user data
-   * e.g. bookmarks, history, open tabs, logins and passwords, add-ons, and options
-   */
-  async removeAllLoginsAsync() {
-    lazy.log.debug("Removing all logins from local store, including FxA key.");
-    await this._storage.removeAllLoginsAsync();
   },
 
   /**
@@ -509,20 +455,6 @@ LoginManager.prototype = {
     return loginsCount;
   },
 
-  async countLoginsAsync(origin, formActionOrigin, httpRealm) {
-    const loginsCount = await this._storage.countLoginsAsync(
-      origin,
-      formActionOrigin,
-      httpRealm
-    );
-
-    lazy.log.debug(
-      `Found ${loginsCount} matching origin: ${origin}, formActionOrigin: ${formActionOrigin} and realm: ${httpRealm}`
-    );
-
-    return loginsCount;
-  },
-
   /* Sync metadata functions */
   async getSyncID() {
     return this._storage.getSyncID();
@@ -552,30 +484,6 @@ LoginManager.prototype = {
     await this.setSyncID(newSyncID);
     await this.setLastSync(0);
     return newSyncID;
-  },
-
-  async addPotentiallyVulnerablePassword(login) {
-    return this._storage.addPotentiallyVulnerablePassword(login);
-  },
-
-  async isPotentiallyVulnerablePassword(login) {
-    return this._storage.isPotentiallyVulnerablePassword(login);
-  },
-
-  async recordBreachAlertDismissal(loginGUID) {
-    return this._storage.recordBreachAlertDismissal(loginGUID);
-  },
-
-  async getBreachAlertDismissalsByLoginGUID() {
-    return this._storage.getBreachAlertDismissalsByLoginGUID();
-  },
-
-  async arePotentiallyVulnerablePasswords(logins) {
-    return this._storage.arePotentiallyVulnerablePasswords(logins);
-  },
-
-  async clearAllPotentiallyVulnerablePasswords() {
-    return this._storage.clearAllPotentiallyVulnerablePasswords();
   },
 
   get uiBusy() {
@@ -652,29 +560,5 @@ LoginManager.prototype = {
    */
   reencryptAllLogins() {
     return this._storage.reencryptAllLogins();
-  },
-
-  /**
-   * Debug helper to identify logins with invalid origin/formActionOrigin URLs.
-   * Used to diagnose login storage incompatibilities with the Application Services
-   * Rust component, which has stricter URL validation requirements.
-   *
-   * @return {Promise<Array<object>>} Array of objects containing origin,
-   * timeCreated, and timeLastUsed for logins that failed URL validation.
-   */
-  async listInvalidOrigins() {
-    const logins = await this.getAllLogins();
-    const invalidOrigins = [];
-    for (const login of logins) {
-      const origin = login.origin || login.formActionOrigin;
-      if (!URL.canParse(origin)) {
-        invalidOrigins.push({
-          origin,
-          timeCreated: new Date(login.timeCreated),
-          timeLastUsed: new Date(login.timeLastUsed),
-        });
-      }
-    }
-    return invalidOrigins;
   },
 }; // end of LoginManager implementation

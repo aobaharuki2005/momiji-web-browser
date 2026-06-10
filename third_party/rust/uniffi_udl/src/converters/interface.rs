@@ -48,7 +48,6 @@ impl APIConverter<ObjectMetadata> for weedle::InterfaceDefinition<'_> {
                     if !member_names.insert(method.name.clone()) {
                         bail!("Duplicate interface member name: \"{}\"", method.name)
                     }
-                    // a little smelly that we need to fixup `self_name` here, but it is what it is...
                     method.self_name = object_name.to_string();
                     ci.items.insert(method.into());
                 }
@@ -62,8 +61,9 @@ impl APIConverter<ObjectMetadata> for weedle::InterfaceDefinition<'_> {
          -> Result<MethodMetadata> {
             Ok(MethodMetadata {
                 module_path: ci.module_path(),
-                self_name: object_name.to_string(),
+                // The name is used to create the ffi function for the method.
                 name: name.to_string(),
+                self_name: object_name.to_string(),
                 is_async: false,
                 inputs,
                 return_type,
@@ -120,23 +120,6 @@ impl APIConverter<ObjectMetadata> for weedle::InterfaceDefinition<'_> {
                     "Hash" => UniffiTraitMetadata::Hash {
                         hash: make_trait_method("uniffi_trait_hash", vec![], Some(Type::UInt64))?,
                     },
-                    "Ord" => UniffiTraitMetadata::Ord {
-                        cmp: make_trait_method(
-                            "uniffi_trait_ord_cmp",
-                            vec![FnParamMetadata {
-                                name: "other".to_string(),
-                                ty: Type::Object {
-                                    module_path: ci.module_path(),
-                                    name: object_name.to_string(),
-                                    imp: object_impl,
-                                },
-                                by_ref: true,
-                                default: None,
-                                optional: false,
-                            }],
-                            Some(Type::Int8),
-                        )?,
-                    },
                     _ => bail!("Invalid trait name: {}", trait_name),
                 })
             })
@@ -144,7 +127,6 @@ impl APIConverter<ObjectMetadata> for weedle::InterfaceDefinition<'_> {
         for ut in uniffi_traits {
             ci.items.insert(ut.into());
         }
-
         Ok(ObjectMetadata {
             module_path: ci.module_path(),
             name: object_name.to_string(),

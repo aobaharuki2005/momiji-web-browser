@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +9,6 @@
 
 #include "FileSystemParentTypes.h"
 #include "ResultConnection.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/ThreadBound.h"
@@ -183,7 +184,7 @@ class FileSystemDataManager
   MozPromiseHolder<BoolPromise> mOpenPromiseHolder;
   MozPromiseHolder<BoolPromise> mClosePromiseHolder;
   int64_t mDirectoryLockId;
-  Atomic<uint32_t, Relaxed> mRegCount;
+  uint32_t mRegCount;
   DatabaseVersion mVersion;
   State mState;
 };

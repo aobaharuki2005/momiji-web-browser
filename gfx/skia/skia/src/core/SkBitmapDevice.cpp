@@ -31,13 +31,12 @@
 #include "include/private/base/SkTo.h"
 #include "src/core/SkCPURecorderImpl.h"
 #include "src/core/SkDraw.h"
+#include "src/core/SkImagePriv.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkMatrixPriv.h"
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkSpecialImage.h"
 #include "src/image/SkImage_Base.h"
-#include "src/image/SkImage_Raster.h"
-#include "src/shaders/SkImageShader.h"
 #include "src/text/GlyphRun.h"
 
 #include <utility>
@@ -377,23 +376,25 @@ void SkBitmapDevice::drawRRect(const SkRRect& rrect, const SkPaint& paint) {
     LOOP_TILER( drawRRect(rrect, paint), Bounder(rrect.getBounds(), paint))
 }
 
-void SkBitmapDevice::drawPath(const SkPath& path, const SkPaint& paint) {
+void SkBitmapDevice::drawPath(const SkPath& path,
+                              const SkPaint& paint,
+                              bool pathIsMutable) {
     const SkRect* bounds = nullptr;
     if (SkDrawTiler::NeedsTiling(this) && !path.isInverseFillType()) {
         bounds = &path.getBounds();
     }
     SkDrawTiler tiler(this, bounds ? Bounder(*bounds, paint).bounds() : nullptr);
+    if (tiler.needsTiling()) {
+        pathIsMutable = false;
+    }
     while (const skcpu::Draw* draw = tiler.next()) {
-        draw->drawPath(path, paint, nullptr);
+        draw->drawPath(path, paint, nullptr, pathIsMutable);
     }
 }
 
-void SkBitmapDevice::drawBitmap(const SkBitmap& bitmap,
-                                const SkMatrix& matrix,
-                                const SkRect* dstOrNull,
-                                const SkSamplingOptions& sampling,
-                                const SkPaint& paint,
-                                sk_sp<SkMipmap> mips) {
+void SkBitmapDevice::drawBitmap(const SkBitmap& bitmap, const SkMatrix& matrix,
+                                const SkRect* dstOrNull, const SkSamplingOptions& sampling,
+                                const SkPaint& paint) {
     const SkRect* bounds = dstOrNull;
     SkRect storage;
     if (!bounds && SkDrawTiler::NeedsTiling(this)) {
@@ -404,7 +405,7 @@ void SkBitmapDevice::drawBitmap(const SkBitmap& bitmap,
             bounds = &storage;
         }
     }
-    LOOP_TILER(drawBitmap(bitmap, matrix, dstOrNull, sampling, paint, mips), bounds)
+    LOOP_TILER(drawBitmap(bitmap, matrix, dstOrNull, sampling, paint), bounds)
 }
 
 static inline bool CanApplyDstMatrixAsCTM(const SkMatrix& m, const SkPaint& paint) {
@@ -419,18 +420,15 @@ static inline bool CanApplyDstMatrixAsCTM(const SkMatrix& m, const SkPaint& pain
 void SkBitmapDevice::drawImageRect(const SkImage* image, const SkRect* src, const SkRect& dst,
                                    const SkSamplingOptions& sampling, const SkPaint& paint,
                                    SkCanvas::SrcRectConstraint constraint) {
-    SkASSERT(image);
     SkASSERT(dst.isFinite());
     SkASSERT(dst.isSorted());
 
     SkBitmap bitmap;
     // TODO: Elevate direct context requirement to public API and remove cheat.
-    auto imageBase = as_IB(image);
-    auto dContext = imageBase->directContext();
-    if (!imageBase->getROPixels(dContext, &bitmap)) {
+    auto dContext = as_IB(image)->directContext();
+    if (!as_IB(image)->getROPixels(dContext, &bitmap)) {
         return;
     }
-    sk_sp<SkMipmap> mips = imageBase->refMips();
 
     SkRect      bitmapBounds, tmpSrc, tmpDst;
     SkBitmap    tmpBitmap;
@@ -483,7 +481,6 @@ void SkBitmapDevice::drawImageRect(const SkImage* image, const SkRect* src, cons
             return;
         }
         bitmapPtr = &tmpBitmap;
-        mips = nullptr;
 
         // Since we did an extract, we need to adjust the matrix accordingly
         SkScalar dx = 0, dy = 0;
@@ -515,7 +512,7 @@ void SkBitmapDevice::drawImageRect(const SkImage* image, const SkRect* src, cons
         // matrix with the CTM, and try to call drawSprite if it can. If not,
         // it will make a shader and call drawRect, as we do below.
         if (CanApplyDstMatrixAsCTM(matrix, paint)) {
-            this->drawBitmap(*bitmapPtr, matrix, dstPtr, sampling, paint, mips);
+            this->drawBitmap(*bitmapPtr, matrix, dstPtr, sampling, paint);
             return;
         }
     }
@@ -523,16 +520,15 @@ void SkBitmapDevice::drawImageRect(const SkImage* image, const SkRect* src, cons
     USE_SHADER:
 
     // construct a shader, so we can call drawRect with the dst
-    auto img = SkImage_Raster::MakeFromBitmap(*bitmapPtr, SkCopyPixelsMode::kNever, mips);
-    auto shader = img->makeShaderForPaint(
-            paint, SkTileMode::kClamp, SkTileMode::kClamp, sampling, &matrix);
-    if (!shader) {
+    auto s = SkMakeBitmapShaderForPaint(paint, *bitmapPtr, SkTileMode::kClamp, SkTileMode::kClamp,
+                                        sampling, &matrix, kNever_SkCopyPixelsMode);
+    if (!s) {
         return;
     }
 
     SkPaint paintWithShader(paint);
     paintWithShader.setStyle(SkPaint::kFill_Style);
-    paintWithShader.setShader(std::move(shader));
+    paintWithShader.setShader(std::move(s));
 
     // Call ourself, in case the subclass wanted to share this setup code
     // but handle the drawRect code themselves.
@@ -590,7 +586,7 @@ void SkBitmapDevice::drawSpecial(SkSpecialImage* src,
         }
         draw.fCTM = &localToDevice;
         draw.fRC = &fRCStack.rc();
-        draw.drawBitmap(resultBM, SkMatrix::I(), nullptr, sampling, paint, nullptr);
+        draw.drawBitmap(resultBM, SkMatrix::I(), nullptr, sampling, paint);
     }
 }
 

@@ -51,5 +51,3 @@ support-files = [
   "empty.html",
   "image_yellow.png",
 ]
-
-["browser_validationmessage_spoof_english.js"]

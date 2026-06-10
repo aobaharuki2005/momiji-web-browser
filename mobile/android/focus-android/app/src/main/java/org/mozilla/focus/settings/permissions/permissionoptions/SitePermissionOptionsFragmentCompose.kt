@@ -48,7 +48,6 @@ import org.mozilla.focus.settings.permissions.AutoplayOption
 import org.mozilla.focus.settings.permissions.SitePermissionOption
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.ui.theme.focusColors
-import org.mozilla.focus.ui.theme.focusDimensions
 
 private fun getPermissionOptionsList(): List<SitePermissionOptionListItem> {
     return mutableListOf<SitePermissionOptionListItem>().apply {
@@ -104,7 +103,7 @@ fun OptionsPermissionList(
                 ),
         ) {
             LazyColumn(
-                contentPadding = PaddingValues(horizontal = focusDimensions.paddingListHorizontal),
+                contentPadding = PaddingValues(horizontal = 12.dp),
             ) {
                 items(optionsListItems) { item ->
                     OptionPermission(
@@ -156,7 +155,7 @@ private fun OptionPermission(
 
 @Composable
 private fun OptionPermissionDisplayName(sitePermissionOption: SitePermissionOption) {
-    Column(modifier = Modifier.padding(focusDimensions.paddingText)) {
+    Column(modifier = Modifier.padding(10.dp)) {
         Text(
             textAlign = TextAlign.Start,
             color = focusColors.settingsTextColor,
@@ -164,19 +163,19 @@ private fun OptionPermissionDisplayName(sitePermissionOption: SitePermissionOpti
             style = TextStyle(
                 fontSize = 16.sp,
             ),
+            modifier = Modifier
+                .padding(start = 8.dp, end = 8.dp),
+        )
+        sitePermissionOption.summaryId?.let {
+            Text(
+                textAlign = TextAlign.Start,
+                text = AnnotatedString(stringResource(id = it)),
+                color = focusColors.settingsTextSummaryColor,
+                style = TextStyle(
+                    fontSize = 14.sp,
+                ),
                 modifier = Modifier
-                    .padding(start = focusDimensions.paddingSmall, end = focusDimensions.paddingSmall),
-            )
-            sitePermissionOption.summaryId?.let {
-                Text(
-                    textAlign = TextAlign.Start,
-                    text = AnnotatedString(stringResource(id = it)),
-                    color = focusColors.settingsTextSummaryColor,
-                    style = TextStyle(
-                        fontSize = 14.sp,
-                    ),
-                    modifier = Modifier
-                        .padding(start = focusDimensions.paddingSmall, end = focusDimensions.paddingSmall),
+                    .padding(start = 8.dp, end = 8.dp),
             )
         }
     }
@@ -196,7 +195,7 @@ private fun ComponentPermissionBlockedByAndroid(goToPhoneSettings: () -> Unit, p
         modifier = Modifier
             .background(colorResource(R.color.settings_background), shape = RectangleShape)
             .fillMaxWidth()
-            .padding(top = focusDimensions.paddingDefault)
+            .padding(top = 16.dp)
             .wrapContentHeight(),
     ) {
         ComponentPermissionBlockedByAndroidText(
@@ -237,7 +236,7 @@ private fun ComponentPermissionBlockedByAndroidButton(goToPhoneSettings: () -> U
             containerColor = PhotonColors.LightGrey50,
         ),
         modifier = Modifier
-            .padding(focusDimensions.paddingDefault)
+            .padding(16.dp)
             .fillMaxWidth(),
     ) {
         Text(
@@ -258,11 +257,7 @@ private fun ComponentPermissionBlockedByAndroidText(
         color = focusColors.settingsTextColor,
         text = stringResource(id = stringRes, permissionLabel ?: "").parseBold(),
         style = TextStyle(fontSize = 16.sp),
-        modifier = Modifier.padding(
-            start = focusDimensions.paddingPermissionStart,
-            end = focusDimensions.paddingDefault,
-            bottom = bottomPadding,
-        ),
+        modifier = Modifier.padding(start = 55.dp, end = 16.dp, bottom = bottomPadding),
     )
 }
 

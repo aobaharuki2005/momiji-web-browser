@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,10 +16,10 @@ already_AddRefed<PathBuilder> PathBuilderSkia::Create(FillRule aFillRule) {
   return MakeAndAddRef<PathBuilderSkia>(aFillRule);
 }
 
-PathBuilderSkia::PathBuilderSkia(SkPathBuilder&& aPathBuilder,
-                                 FillRule aFillRule, const Point& aCurrentPoint,
+PathBuilderSkia::PathBuilderSkia(SkPath&& aPath, FillRule aFillRule,
+                                 const Point& aCurrentPoint,
                                  const Point& aBeginPoint)
-    : mPathBuilder(aPathBuilder) {
+    : mPath(aPath) {
   SetFillRule(aFillRule);
   SetCurrentPoint(aCurrentPoint);
   SetBeginPoint(aBeginPoint);
@@ -28,49 +30,49 @@ PathBuilderSkia::PathBuilderSkia(FillRule aFillRule) { SetFillRule(aFillRule); }
 void PathBuilderSkia::SetFillRule(FillRule aFillRule) {
   mFillRule = aFillRule;
   if (mFillRule == FillRule::FILL_WINDING) {
-    mPathBuilder.setFillType(SkPathFillType::kWinding);
+    mPath.setFillType(SkPathFillType::kWinding);
   } else {
-    mPathBuilder.setFillType(SkPathFillType::kEvenOdd);
+    mPath.setFillType(SkPathFillType::kEvenOdd);
   }
 }
 
 void PathBuilderSkia::MoveTo(const Point& aPoint) {
-  mPathBuilder.moveTo(SkFloatToScalar(aPoint.x), SkFloatToScalar(aPoint.y));
+  mPath.moveTo(SkFloatToScalar(aPoint.x), SkFloatToScalar(aPoint.y));
   mCurrentPoint = aPoint;
   mBeginPoint = aPoint;
 }
 
 void PathBuilderSkia::LineTo(const Point& aPoint) {
-  if (!mPathBuilder.countPoints()) {
+  if (!mPath.countPoints()) {
     MoveTo(aPoint);
   } else {
-    mPathBuilder.lineTo(SkFloatToScalar(aPoint.x), SkFloatToScalar(aPoint.y));
+    mPath.lineTo(SkFloatToScalar(aPoint.x), SkFloatToScalar(aPoint.y));
   }
   mCurrentPoint = aPoint;
 }
 
 void PathBuilderSkia::BezierTo(const Point& aCP1, const Point& aCP2,
                                const Point& aCP3) {
-  if (!mPathBuilder.countPoints()) {
+  if (!mPath.countPoints()) {
     MoveTo(aCP1);
   }
-  mPathBuilder.cubicTo(SkFloatToScalar(aCP1.x), SkFloatToScalar(aCP1.y),
-                       SkFloatToScalar(aCP2.x), SkFloatToScalar(aCP2.y),
-                       SkFloatToScalar(aCP3.x), SkFloatToScalar(aCP3.y));
+  mPath.cubicTo(SkFloatToScalar(aCP1.x), SkFloatToScalar(aCP1.y),
+                SkFloatToScalar(aCP2.x), SkFloatToScalar(aCP2.y),
+                SkFloatToScalar(aCP3.x), SkFloatToScalar(aCP3.y));
   mCurrentPoint = aCP3;
 }
 
 void PathBuilderSkia::QuadraticBezierTo(const Point& aCP1, const Point& aCP2) {
-  if (!mPathBuilder.countPoints()) {
+  if (!mPath.countPoints()) {
     MoveTo(aCP1);
   }
-  mPathBuilder.quadTo(SkFloatToScalar(aCP1.x), SkFloatToScalar(aCP1.y),
-                      SkFloatToScalar(aCP2.x), SkFloatToScalar(aCP2.y));
+  mPath.quadTo(SkFloatToScalar(aCP1.x), SkFloatToScalar(aCP1.y),
+               SkFloatToScalar(aCP2.x), SkFloatToScalar(aCP2.y));
   mCurrentPoint = aCP2;
 }
 
 void PathBuilderSkia::Close() {
-  mPathBuilder.close();
+  mPath.close();
   mCurrentPoint = mBeginPoint;
 }
 
@@ -82,32 +84,44 @@ void PathBuilderSkia::Arc(const Point& aOrigin, float aRadius,
 }
 
 already_AddRefed<Path> PathBuilderSkia::Finish() {
-  RefPtr<Path> path = MakeAndAddRef<PathSkia>(mPathBuilder.detach(), mFillRule,
-                                              mCurrentPoint, mBeginPoint);
+  RefPtr<Path> path =
+      MakeAndAddRef<PathSkia>(mPath, mFillRule, mCurrentPoint, mBeginPoint);
   mCurrentPoint = Point(0.0, 0.0);
   mBeginPoint = Point(0.0, 0.0);
   return path.forget();
 }
 
-void PathBuilderSkia::AppendPath(const SkPath& aPath) {
-  mPathBuilder.addPath(aPath);
-}
+void PathBuilderSkia::AppendPath(const SkPath& aPath) { mPath.addPath(aPath); }
 
 already_AddRefed<PathBuilder> PathSkia::CopyToBuilder(
     FillRule aFillRule) const {
-  return MakeAndAddRef<PathBuilderSkia>(SkPathBuilder(mPath), aFillRule,
-                                        mCurrentPoint, mBeginPoint);
+  return MakeAndAddRef<PathBuilderSkia>(SkPath(mPath), aFillRule, mCurrentPoint,
+                                        mBeginPoint);
 }
 
 already_AddRefed<PathBuilder> PathSkia::TransformedCopyToBuilder(
     const Matrix& aTransform, FillRule aFillRule) const {
   SkMatrix matrix;
   GfxMatrixToSkiaMatrix(aTransform, matrix);
-  SkPathBuilder pathBuilder(mPath);
-  pathBuilder.transform(matrix);
+  SkPath path(mPath);
+  path.transform(matrix);
   return MakeAndAddRef<PathBuilderSkia>(
-      std::move(pathBuilder), aFillRule,
-      aTransform.TransformPoint(mCurrentPoint),
+      std::move(path), aFillRule, aTransform.TransformPoint(mCurrentPoint),
+      aTransform.TransformPoint(mBeginPoint));
+}
+
+already_AddRefed<PathBuilder> PathSkia::MoveToBuilder(FillRule aFillRule) {
+  return MakeAndAddRef<PathBuilderSkia>(std::move(mPath), aFillRule,
+                                        mCurrentPoint, mBeginPoint);
+}
+
+already_AddRefed<PathBuilder> PathSkia::TransformedMoveToBuilder(
+    const Matrix& aTransform, FillRule aFillRule) {
+  SkMatrix matrix;
+  GfxMatrixToSkiaMatrix(aTransform, matrix);
+  mPath.transform(matrix);
+  return MakeAndAddRef<PathBuilderSkia>(
+      std::move(mPath), aFillRule, aTransform.TransformPoint(mCurrentPoint),
       aTransform.TransformPoint(mBeginPoint));
 }
 
@@ -147,14 +161,8 @@ bool PathSkia::GetFillPath(const StrokeOptions& aStrokeOptions,
     cullRect = Some(RectToSkRect(aClipRect.ref()));
   }
 
-  SkPathBuilder builder;
-  if (!skpathutils::FillPathWithPaint(mPath, paint, &builder,
-                                      cullRect.ptrOr(nullptr), skiaMatrix)) {
-    return false;
-  }
-
-  aFillPath = builder.detach();
-  return true;
+  return skpathutils::FillPathWithPaint(mPath, paint, &aFillPath,
+                                        cullRect.ptrOr(nullptr), skiaMatrix);
 }
 
 bool PathSkia::StrokeContainsPoint(const StrokeOptions& aStrokeOptions,

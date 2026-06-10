@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -331,11 +332,8 @@ nsUnknownDecoder::GetMIMETypeFromContent(nsIRequest* aRequest,
   DetermineContentType(aRequest);
   mBuffer = nullptr;
   mBufferLen = 0;
-  {
-    MutexAutoLock lock(mMutex);
-    type.Assign(mContentType);
-    mContentType.Truncate();
-  }
+  type.Assign(mContentType);
+  mContentType.Truncate();
   return type.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
 }
 
@@ -554,12 +552,6 @@ bool nsUnknownDecoder::SniffForHTML(nsIRequest* aRequest) {
       MATCHES_TAG("table") || MATCHES_TAG("a") || MATCHES_TAG("style") ||
       MATCHES_TAG("title") || MATCHES_TAG("b") || MATCHES_TAG("body") ||
       MATCHES_TAG("br") || MATCHES_TAG("p") || MATCHES_TAG("!--")) {
-    mContentType = TEXT_HTML;
-    return true;
-  }
-
-  if (StaticPrefs::network_mimesniff_non_standard_html_comment() &&
-      StringBeginsWith(substr, "!--"_ns)) {
     mContentType = TEXT_HTML;
     return true;
   }
@@ -815,7 +807,18 @@ nsresult nsUnknownDecoder::ConvertEncodedData(nsIRequest* request,
 // nsIThreadRetargetableStreamListener methods
 //
 NS_IMETHODIMP
-nsUnknownDecoder::CheckListenerChain() { return NS_ERROR_NO_INTERFACE; }
+nsUnknownDecoder::CheckListenerChain() {
+  nsCOMPtr<nsIThreadRetargetableStreamListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    listener = do_QueryInterface(mNextListener);
+  }
+  if (!listener) {
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  return listener->CheckListenerChain();
+}
 
 NS_IMETHODIMP
 nsUnknownDecoder::OnDataFinished(nsresult aStatus) {

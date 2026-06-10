@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,13 +7,10 @@
 // components. The appropriate headers for those types cannot be included in
 // the generated static component code directly.
 
-#ifndef WIDGET_COCOA_NSWIDGETFACTORY_H_
-#define WIDGET_COCOA_NSWIDGETFACTORY_H_
-
 #include "nsID.h"
 
 namespace mozilla {
-class MacOSNotificationCenter;
+class OSXNotificationCenter;
 }  // namespace mozilla
 
 namespace mozilla::widget {
@@ -44,5 +42,3 @@ nsresult nsAppShellConstructor(const nsIID&, void**);
 
 void nsWidgetCocoaModuleCtor();
 void nsWidgetCocoaModuleDtor();
-
-#endif  // WIDGET_COCOA_NSWIDGETFACTORY_H_

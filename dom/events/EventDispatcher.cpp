@@ -1,10 +1,10 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EventDispatcher.h"
-
-#include <fmt/format.h>
 
 #include <new>
 
@@ -115,7 +115,7 @@ static bool IsEventTargetChrome(EventTarget* aEventTarget,
       retVal.swap(*aDocument);
     }
   } else if (nsCOMPtr<nsIScriptObjectPrincipal> sop =
-                 do_QueryInterface(aEventTarget->GetRelevantGlobal())) {
+                 do_QueryInterface(aEventTarget->GetOwnerGlobal())) {
     isChrome = sop->GetPrincipal()->IsSystemPrincipal();
   }
   return isChrome;
@@ -330,7 +330,7 @@ class EventTargetChainItem {
    * Copies mItemFlags and mItemData to aVisitor.
    * Calls PreHandleEvent for those items which called SetWantsPreHandleEvent.
    */
-  MOZ_CAN_RUN_SCRIPT void PreHandleEvent(EventChainVisitor& aVisitor);
+  void PreHandleEvent(EventChainVisitor& aVisitor);
 
   /**
    * If the current item in the event target chain has an event listener
@@ -776,8 +776,7 @@ static void DescribeEventTargetForProfilerMarker(const EventTarget* aTarget,
   if (node) {
     if (node->IsElement()) {
       nsAutoString nodeDescription;
-      node->AsElement()->Describe(nodeDescription,
-                                  Element::DescriptionKind::IdAndClass);
+      node->AsElement()->Describe(nodeDescription, true);
       aDescription = NS_ConvertUTF16toUTF8(nodeDescription);
     } else if (node->IsDocument()) {
       aDescription.AssignLiteral("document");
@@ -828,20 +827,12 @@ struct DOMEventMarker : public BaseMarkerType<DOMEventMarker> {
 
   using MS = MarkerSchema;
   static constexpr MS::PayloadField PayloadFields[] = {
-      {
-          "target",
-          MS::InputType::CString,
-          "Event Target",
-          MS::Format::String,
-      },
+      {"target", MS::InputType::CString, "Event Target", MS::Format::String,
+       MS::PayloadFlags::Searchable},
       {"latency", MS::InputType::TimeDuration, "Latency", MS::Format::Duration,
        MS::PayloadFlags::None},
-      {
-          "eventType",
-          MS::InputType::String,
-          "Event Type",
-          MS::Format::String,
-      }};
+      {"eventType", MS::InputType::String, "Event Type", MS::Format::String,
+       MS::PayloadFlags::Searchable}};
 
   static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
                                                MS::Location::MarkerTable,
@@ -875,15 +866,7 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
                                    nsTArray<EventTarget*>* aTargets) {
   AUTO_PROFILER_LABEL_HOT("EventDispatcher::Dispatch", OTHER);
 
-  MOZ_ASSERT(aEvent, "Trying to dispatch without WidgetEvent!");
-  NS_WARNING_ASSERTION(
-      !aEvent->IsTrusted() || aEvent->IsAllowedToDispatchDOMEvent(),
-      fmt::format("aEvent={{ IsTrusted()={}, mMessage={}, mClass={} }}",
-                  TrueOrFalse(aEvent->IsTrusted()), ToChar(aEvent->mMessage),
-                  ToChar(aEvent->mClass))
-          .c_str());
-  MOZ_ASSERT_IF(aEvent->IsTrusted(), aEvent->IsAllowedToDispatchDOMEvent());
-
+  NS_ASSERTION(aEvent, "Trying to dispatch without WidgetEvent!");
   NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
                  NS_ERROR_DOM_INVALID_STATE_ERR);
   NS_ASSERTION(!aTargets || !aEvent->mMessage, "Wrong parameters!");
@@ -917,25 +900,6 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
       }
     }
   }
-
-  // Track the current event timing entry so that modal dialog code can call
-  // RecordModalFallbackTime() to stamp the fallback time on the right entry.
-  // The previous entry is saved and restored via ScopeExit to handle nested
-  // event dispatch and early returns.
-  RefPtr<PerformanceMainThread> perfMainThread;
-  RefPtr<PerformanceEventTiming> prevEventTimingEntry;
-  if (eventTimingEntry) {
-    perfMainThread = aPresContext->GetPerformanceMainThread();
-    if (perfMainThread) {
-      prevEventTimingEntry = perfMainThread->GetCurrentEventTimingEntry();
-      perfMainThread->SetCurrentEventTimingEntry(eventTimingEntry);
-    }
-  }
-  auto restoreEventTimingEntry = MakeScopeExit([&]() {
-    if (perfMainThread) {
-      perfMainThread->SetCurrentEventTimingEntry(prevEventTimingEntry);
-    }
-  });
 
   bool retargeted = false;
 
@@ -996,7 +960,7 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
       if (global || hasHadScriptHandlingObject) {
         warn(nsContentUtils::IsChromeDoc(doc));
       }
-    } else if (nsCOMPtr<nsIGlobalObject> global = target->GetRelevantGlobal()) {
+    } else if (nsCOMPtr<nsIGlobalObject> global = target->GetOwnerGlobal()) {
       warn(global->PrincipalOrNull()->IsSystemPrincipal());
     }
   }
@@ -1070,7 +1034,7 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
 
   bool clearTargets = false;
 
-  nsIContent* content =
+  nsCOMPtr<nsIContent> content =
       nsIContent::FromEventTargetOrNull(aEvent->mOriginalTarget);
 
   const bool isInAnon = content && content->ChromeOnlyAccessForEvents();
@@ -1099,10 +1063,6 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
     targetEtci = MayRetargetToChromeIfCanNotHandleEvent(
         chain, preVisitor, targetEtci, nullptr, content);
   }
-
-  // Ensure no one will use the pointer after this point.
-  content = nullptr;
-
   if (!preVisitor.mCanHandle) {
     // The original target and chrome target (mAutomaticChromeDispatch=true)
     // can not handle the event but we still have to call their PreHandleEvent.
@@ -1273,7 +1233,7 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
               "EventDispatcher::Dispatch", OTHER, typeStr);
 
           MarkerInnerWindowId innerWindowId;
-          if (nsIGlobalObject* global = aEvent->mTarget->GetRelevantGlobal()) {
+          if (nsIGlobalObject* global = aEvent->mTarget->GetOwnerGlobal()) {
             if (nsPIDOMWindowInner* inner = global->GetAsInnerWindow()) {
               innerWindowId = MarkerInnerWindowId{inner->WindowID()};
             }

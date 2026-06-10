@@ -17,6 +17,7 @@
 
 #include "absl/base/nullability.h"
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/audio/audio_processing.h"
 #include "api/audio/builtin_audio_processing_builder.h"
 #include "api/audio/echo_canceller3_factory.h"
@@ -46,9 +47,9 @@ const Environment& GetEnvironment() {
   return *env;
 }
 
-webrtc::scoped_refptr<AudioProcessing> CreateApm(FuzzDataHelper* fuzz_data,
-                                                 TaskQueueBase* absl_nonnull
-                                                     worker_queue) {
+webrtc::scoped_refptr<AudioProcessing> CreateApm(
+    test::FuzzDataHelper* fuzz_data,
+    TaskQueueBase* absl_nonnull worker_queue) {
   // Parse boolean values for optionally enabling different
   // configurable public components of APM.
   bool use_ts = fuzz_data->ReadOrDefaultValue(true);
@@ -108,6 +109,7 @@ webrtc::scoped_refptr<AudioProcessing> CreateApm(FuzzDataHelper* fuzz_data,
   apm_config.pipeline.multi_channel_render = true;
   apm_config.pipeline.multi_channel_capture = true;
   apm_config.echo_canceller.enabled = use_aec || use_aecm;
+  apm_config.echo_canceller.mobile_mode = use_aecm;
   apm_config.high_pass_filter.enabled = use_hpf;
   apm_config.gain_controller1.enabled = use_agc;
   apm_config.gain_controller1.enable_limiter = use_agc_limiter;
@@ -134,14 +136,15 @@ webrtc::scoped_refptr<AudioProcessing> CreateApm(FuzzDataHelper* fuzz_data,
 
 }  // namespace
 
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
-  if (fuzz_data.size() > 400'000) {
+void FuzzOneInput(const uint8_t* data, size_t size) {
+  if (size > 400000) {
     return;
   }
+  test::FuzzDataHelper fuzz_data(webrtc::ArrayView<const uint8_t>(data, size));
 
   std::unique_ptr<TaskQueueBase, TaskQueueDeleter> worker_queue =
       GetEnvironment().task_queue_factory().CreateTaskQueue(
-          "rtc-low-prio", TaskQueueFactory::Priority::kLow);
+          "rtc-low-prio", TaskQueueFactory::Priority::LOW);
   auto apm = CreateApm(&fuzz_data, worker_queue.get());
 
   if (apm) {

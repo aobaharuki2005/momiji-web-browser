@@ -27,9 +27,7 @@ add_task(async function () {
   });
 
   info("Performing the service worker request");
-  await performRequests(monitor, tab, 4);
-
-  await waitForDOM(document, ".request-list-item", 4);
+  await performRequests(monitor, tab, 1);
 
   info("Open the request blocking panel and block service-workers request");
   store.dispatch(Actions.toggleRequestBlockingPanel());
@@ -40,10 +38,10 @@ add_task(async function () {
   await clearNetworkEvents(monitor);
 
   info("Performing the service worker request again");
-  await performRequests(monitor, tab, 4);
+  await performRequests(monitor, tab, 1);
 
   // Wait till there are four resources rendered in the results
-  await waitForDOM(document, ".request-list-item", 4);
+  await waitForDOMIfNeeded(document, ".request-list-item", 4);
 
   const requestItems = document.querySelectorAll(".request-list-item");
   ok(

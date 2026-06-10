@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This code is made available to you under your choice of the following sets
  * of licensing terms:
  */
@@ -25,6 +27,7 @@
 #include "NSSCertDBTrustDomain.h"
 #include "pk11pub.h"
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozpkix/pkixnss.h"
 #include "ScopedNSSTypes.h"
 #include "secerr.h"
@@ -132,9 +135,15 @@ static SECStatus CertIDHash(SHA384Buffer& buf, const CertID& certID,
     return rv;
   }
 
-  rv = populateOriginAttributesKey(originAttributes.mPartitionKey);
-  if (rv != SECSuccess) {
-    return rv;
+  bool isolateByPartitionKey =
+      originAttributes.IsPrivateBrowsing()
+          ? StaticPrefs::privacy_partition_network_state_ocsp_cache_pbmode()
+          : StaticPrefs::privacy_partition_network_state_ocsp_cache();
+  if (isolateByPartitionKey) {
+    rv = populateOriginAttributesKey(originAttributes.mPartitionKey);
+    if (rv != SECSuccess) {
+      return rv;
+    }
   }
   uint32_t outLen = 0;
   rv = PK11_DigestFinal(context.get(), buf, &outLen, SHA384_LENGTH);

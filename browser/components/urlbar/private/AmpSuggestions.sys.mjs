@@ -17,7 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/components/generated/RustSuggest.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
+  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
 });
 
@@ -29,11 +29,6 @@ const TIMESTAMP_REGEXP = /^\d{10}$/;
  * A feature that manages AMP suggestions.
  */
 export class AmpSuggestions extends SuggestProvider {
-  // Serializes `quick-suggest` ping submissions so that pings are submitted in
-  // the order they were initiated, despite the async ContextId.request() call
-  // inside each submission.
-  #lastPingSubmission = Promise.resolve();
-
   get enablingPreferences() {
     return [
       "ampFeatureGate",
@@ -96,14 +91,7 @@ export class AmpSuggestions extends SuggestProvider {
     }
   }
 
-  makeResult(queryContext, suggestion, searchString) {
-    if (
-      this.showLessFrequentlyCount &&
-      searchString.length < this.#minKeywordLength
-    ) {
-      return null;
-    }
-
+  makeResult(queryContext, suggestion) {
     let normalized = Object.assign({}, suggestion);
     if (suggestion.source == "merino") {
       // Normalize the Merino suggestion so it has the same properties as Rust
@@ -123,82 +111,61 @@ export class AmpSuggestions extends SuggestProvider {
     }
 
     let isTopPick =
-      (lazy.UrlbarPrefs.get("quickSuggestAmpTopPickCharThreshold") &&
-        lazy.UrlbarPrefs.get("quickSuggestAmpTopPickCharThreshold") <=
-          queryContext.trimmedLowerCaseSearchString.length) ||
-      lazy.UrlbarPrefs.get("quickSuggestSponsoredPriority");
+      lazy.UrlbarPrefs.get("quickSuggestAmpTopPickCharThreshold") &&
+      lazy.UrlbarPrefs.get("quickSuggestAmpTopPickCharThreshold") <=
+        queryContext.trimmedLowerCaseSearchString.length;
 
-    let richSuggestionIconSize;
-    if (!isTopPick) {
-      richSuggestionIconSize = 16;
-    } else if (!lazy.UrlbarPrefs.get("quickSuggestAmpTopPickUseNovaIconSize")) {
-      // Use the standard rich-suggestion size.
-      richSuggestionIconSize = 28;
+    let { value: title, highlights: titleHighlights } =
+      lazy.QuickSuggest.getFullKeywordTitleAndHighlights({
+        tokens: queryContext.tokens,
+        highlightType: isTopPick
+          ? lazy.UrlbarUtils.HIGHLIGHT.TYPED
+          : lazy.UrlbarUtils.HIGHLIGHT.SUGGESTED,
+        fullKeyword: normalized.fullKeyword,
+        title: normalized.title,
+      });
+
+    let payload = {
+      url: normalized.url,
+      originalUrl: normalized.rawUrl,
+      title,
+      requestId: normalized.requestId,
+      urlTimestampIndex: normalized.urlTimestampIndex,
+      sponsoredImpressionUrl: normalized.impressionUrl,
+      sponsoredClickUrl: normalized.clickUrl,
+      sponsoredBlockId: normalized.blockId,
+      sponsoredAdvertiser: normalized.advertiser,
+      sponsoredIabCategory: normalized.iabCategory,
+      isBlockable: true,
+      isManageable: true,
+    };
+
+    let resultParams = {};
+    if (isTopPick) {
+      resultParams.isBestMatch = true;
+      resultParams.suggestedIndex = 1;
+    } else {
+      if (lazy.UrlbarPrefs.get("quickSuggestSponsoredPriority")) {
+        resultParams.isBestMatch = true;
+        resultParams.suggestedIndex = 1;
+      } else {
+        resultParams.richSuggestionIconSize = 16;
+      }
+      payload.descriptionL10n = {
+        id: "urlbar-result-action-sponsored",
+      };
     }
-    // Else, leave `richSuggestionIconSize` undefined so
-    // `UrlbarProviderQuickSuggest` uses the standard Nova size.
 
     return new lazy.UrlbarResult({
       type: lazy.UrlbarUtils.RESULT_TYPE.URL,
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-      isBottomUrlSuggestion: true,
-      isBestMatch: isTopPick,
-      richSuggestionIconSize,
-      payload: {
-        url: normalized.url,
-        originalUrl: normalized.rawUrl,
-        title: normalized.fullKeyword,
-        subtitle: normalized.title,
-        bottomTextL10n: {
-          id: "urlbar-result-action-sponsored",
-        },
-        requestId: normalized.requestId,
-        urlTimestampIndex: normalized.urlTimestampIndex,
-        sponsoredImpressionUrl: normalized.impressionUrl,
-        sponsoredClickUrl: normalized.clickUrl,
-        sponsoredBlockId: normalized.blockId,
-        sponsoredAdvertiser: normalized.advertiser,
-        sponsoredIabCategory: normalized.iabCategory,
+      isRichSuggestion: true,
+      ...resultParams,
+      payload,
+      highlights: {
+        title: titleHighlights,
       },
     });
-  }
-
-  getResultCommands() {
-    /** @type {UrlbarResultCommand[]} */
-    const commands = [];
-
-    if (this.canShowLessFrequently) {
-      commands.push({
-        name: "show_less_frequently",
-        l10n: {
-          id: "urlbar-result-menu-show-less-frequently",
-        },
-      });
-    }
-
-    commands.push(
-      {
-        name: "dismiss",
-        l10n: {
-          id: "urlbar-result-menu-dismiss-suggestion",
-        },
-      },
-      { name: "separator" },
-      {
-        name: "manage",
-        l10n: {
-          id: "urlbar-result-menu-manage-firefox-suggest",
-        },
-      },
-      {
-        name: "help",
-        l10n: {
-          id: "urlbar-result-menu-learn-more",
-        },
-      }
-    );
-
-    return commands;
   }
 
   onImpression(state, queryContext, controller, featureResults, details) {
@@ -217,30 +184,15 @@ export class AmpSuggestions extends SuggestProvider {
     }
   }
 
-  onEngagement(queryContext, controller, details, searchString) {
+  onEngagement(queryContext, controller, details, _searchString) {
     let { result } = details;
 
-    switch (details.selType) {
-      case "help":
-      case "manage": {
-        // "manage" and "help" are handled by UrlbarInput, no need to do
-        // anything here.
-        return;
-      }
-      case "dismiss": {
-        lazy.QuickSuggest.dismissResult(result);
-        controller.removeResult(result);
-        break;
-      }
-      case "show_less_frequently": {
-        controller.view.acknowledgeFeedback(result);
-        this.incrementShowLessFrequentlyCount();
-        if (!this.canShowLessFrequently) {
-          controller.view.invalidateResultMenuCommands();
-        }
-        lazy.UrlbarPrefs.set("amp.minKeywordLength", searchString.length + 1);
-        break;
-      }
+    // Handle commands. These suggestions support the Dismissal and Manage
+    // commands. Dismissal is the only one we need to handle here. `UrlbarInput`
+    // handles Manage.
+    if (details.selType == "dismiss") {
+      lazy.QuickSuggest.dismissResult(result);
+      controller.removeResult(result);
     }
 
     // A `quick-suggest` impression ping must always be submitted on engagement
@@ -270,30 +222,6 @@ export class AmpSuggestions extends SuggestProvider {
     if (pingData) {
       this.#submitQuickSuggestPing({ queryContext, result, ...pingData });
     }
-  }
-
-  incrementShowLessFrequentlyCount() {
-    if (this.canShowLessFrequently) {
-      lazy.UrlbarPrefs.set(
-        "amp.showLessFrequentlyCount",
-        this.showLessFrequentlyCount + 1
-      );
-    }
-  }
-
-  get showLessFrequentlyCount() {
-    const count = lazy.UrlbarPrefs.get("amp.showLessFrequentlyCount") || 0;
-    return Math.max(count, 0);
-  }
-
-  get canShowLessFrequently() {
-    const cap = lazy.QuickSuggest.config.showLessFrequentlyCap || 0;
-    return !cap || this.showLessFrequentlyCount < cap;
-  }
-
-  get #minKeywordLength() {
-    let minLength = lazy.UrlbarPrefs.get("amp.minKeywordLength");
-    return Math.max(minLength, 0);
   }
 
   isUrlEquivalentToResultUrl(url, result) {
@@ -337,54 +265,49 @@ export class AmpSuggestions extends SuggestProvider {
     return TIMESTAMP_REGEXP.test(maybeTimestamp);
   }
 
-  #submitQuickSuggestPing({ queryContext, result, pingType, ...pingData }) {
+  async #submitQuickSuggestPing({
+    queryContext,
+    result,
+    pingType,
+    ...pingData
+  }) {
     if (queryContext.isPrivate) {
-      return Promise.resolve();
+      return;
     }
 
-    // Chain this submission to the previous one so that pings are always
-    // submitted in the order they were initiated. Without this, multiple
-    // concurrent calls can race at the async ContextId.request() and submit
-    // their pings out of order.
-    let submission = this.#lastPingSubmission.then(async () => {
-      let allPingData = {
-        pingType,
-        // Suggest initialization awaits `Region.init()`, so safe to assume
-        // it's already been initialized here.
-        country: lazy.Region.home,
-        ...pingData,
-        matchType: result.isBestMatch ? "best-match" : "firefox-suggest",
-        // Always use lowercase to make the reporting consistent.
-        advertiser: result.payload.sponsoredAdvertiser.toLocaleLowerCase(),
-        blockId: result.payload.sponsoredBlockId,
-        improveSuggestExperience:
-          lazy.UrlbarPrefs.get("quickSuggestOnlineAvailable") &&
-          lazy.UrlbarPrefs.get("quicksuggest.online.enabled"),
-        // `position` is 1-based, unlike `rowIndex`, which is zero-based.
-        position: result.rowIndex + 1,
-        suggestedIndex: result.suggestedIndex.toString(),
-        suggestedIndexRelativeToGroup: !!result.isSuggestedIndexRelativeToGroup,
-        requestId: result.payload.requestId,
-        source: result.payload.source,
-        contextId: await lazy.ContextId.request(),
-      };
+    let allPingData = {
+      pingType,
+      // Suggest initialization awaits `Region.init()`, so safe to assume it's
+      // already been initialized here.
+      country: lazy.Region.home,
+      ...pingData,
+      matchType: result.isBestMatch ? "best-match" : "firefox-suggest",
+      // Always use lowercase to make the reporting consistent.
+      advertiser: result.payload.sponsoredAdvertiser.toLocaleLowerCase(),
+      blockId: result.payload.sponsoredBlockId,
+      improveSuggestExperience:
+        lazy.UrlbarPrefs.get("quickSuggestOnlineAvailable") &&
+        lazy.UrlbarPrefs.get("quicksuggest.online.enabled"),
+      // `position` is 1-based, unlike `rowIndex`, which is zero-based.
+      position: result.rowIndex + 1,
+      suggestedIndex: result.suggestedIndex.toString(),
+      suggestedIndexRelativeToGroup: !!result.isSuggestedIndexRelativeToGroup,
+      requestId: result.payload.requestId,
+      source: result.payload.source,
+      contextId: await lazy.ContextId.request(),
+    };
 
-      for (let [gleanKey, value] of Object.entries(allPingData)) {
-        let glean = Glean.quickSuggest[gleanKey];
-        if (value !== undefined && value !== "") {
-          glean.set(value);
-        }
+    for (let [gleanKey, value] of Object.entries(allPingData)) {
+      let glean = Glean.quickSuggest[gleanKey];
+      if (value !== undefined && value !== "") {
+        glean.set(value);
       }
-      GleanPings.quickSuggest.submit();
-    });
-
-    // Ensure the queue keeps working even if this submission fails.
-    this.#lastPingSubmission = submission.catch(console.error);
-    return submission;
+    }
+    GleanPings.quickSuggest.submit();
   }
 
   #submitQuickSuggestImpressionPing({ queryContext, result, details }) {
-    return this.#submitQuickSuggestPing({
+    this.#submitQuickSuggestPing({
       result,
       queryContext,
       pingType: lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,

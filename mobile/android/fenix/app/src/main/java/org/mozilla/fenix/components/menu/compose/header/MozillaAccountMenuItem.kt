@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -38,21 +39,22 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.theme.surfaceDimVariant
 import mozilla.components.service.fxa.manager.AccountState
 import mozilla.components.service.fxa.manager.AccountState.Authenticated
 import mozilla.components.service.fxa.manager.AccountState.Authenticating
 import mozilla.components.service.fxa.manager.AccountState.AuthenticationProblem
 import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
-import mozilla.components.service.fxa.manager.AccountState.Unknown
 import mozilla.components.service.fxa.store.Account
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 private val BUTTON_HEIGHT = 56.dp
+private val BUTTON_SHAPE = RoundedCornerShape(size = 4.dp)
 private val AVATAR_SIZE = 24.dp
 
 @SuppressWarnings("LongMethod")
@@ -69,7 +71,7 @@ internal fun MozillaAccountMenuItem(
     val contentDescription: String
 
     when (accountState) {
-        NotAuthenticated, Unknown -> {
+        NotAuthenticated -> {
             label = stringResource(id = R.string.browser_menu_sign_in)
             description = stringResource(id = R.string.browser_menu_sign_in_caption_3)
         }
@@ -101,8 +103,8 @@ internal fun MozillaAccountMenuItem(
                 this.contentDescription = contentDescription
             }
             .wrapContentSize()
-            .clip(MaterialTheme.shapes.extraSmall)
-            .background(color = MaterialTheme.colorScheme.surfaceBright)
+            .clip(shape = BUTTON_SHAPE)
+            .background(color = MaterialTheme.colorScheme.surfaceDimVariant)
             .height(IntrinsicSize.Min)
             .defaultMinSize(minHeight = BUTTON_HEIGHT)
             .clickable { onClick() }
@@ -229,9 +231,11 @@ private fun MozillaAccountMenuItemPreviewContent() {
         MozillaAccountMenuItem(
             account = Account(
                 uid = "testUID",
-                email = "test@example.com",
                 avatar = null,
+                email = "test@example.com",
                 displayName = "test profile",
+                currentDeviceId = null,
+                sessionToken = null,
             ),
             accountState = Authenticated,
             isPrivate = false,
@@ -241,9 +245,11 @@ private fun MozillaAccountMenuItemPreviewContent() {
         MozillaAccountMenuItem(
             account = Account(
                 uid = "testUID",
+                avatar = null,
                 email = "test@example.com",
-                avatar = null,
                 displayName = null,
+                currentDeviceId = null,
+                sessionToken = null,
             ),
             accountState = Authenticated,
             isPrivate = false,
@@ -253,9 +259,11 @@ private fun MozillaAccountMenuItemPreviewContent() {
         MozillaAccountMenuItem(
             account = Account(
                 uid = "testUID",
-                email = null,
                 avatar = null,
+                email = null,
                 displayName = null,
+                currentDeviceId = null,
+                sessionToken = null,
             ),
             accountState = Authenticated,
             isPrivate = false,
@@ -267,7 +275,7 @@ private fun MozillaAccountMenuItemPreviewContent() {
 @Preview
 @Composable
 private fun MozillaAccountMenuItemPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         MozillaAccountMenuItemPreviewContent()

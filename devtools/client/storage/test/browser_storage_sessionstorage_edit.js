@@ -8,10 +8,10 @@
 
 add_task(async function () {
   await openTabAndSetupStorage(
-    MAIN_URL_SECURED + "storage-sessionstorage.html"
+    MAIN_DOMAIN_SECURED + "storage-sessionstorage.html"
   );
 
-  await selectTreeItem(["sessionStorage", MAIN_ORIGIN_SECURED]);
+  await selectTreeItem(["sessionStorage", "https://test1.example.org"]);
 
   await editCell("TestSS1", "name", "newTestSS1");
   await editCell("newTestSS1", "value", "newValueSS1");

@@ -151,8 +151,7 @@ bool CertHasPolicyFrom(Input cert, const nsTArray<Input>& policies) {
   // certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
   // PolicyInformation ::= SEQUENCE {
   //   policyIdentifier   CertPolicyId,
-  //   policyQualifiers   SEQUENCE SIZE (1..MAX) OF
-  //                           PolicyQualifierInfo OPTIONAL }
+  //   ...
   // }
   // CertPolicyId ::= OBJECT IDENTIFIER
   bool foundPolicy = false;
@@ -170,17 +169,6 @@ bool CertHasPolicyFrom(Input cert, const nsTArray<Input>& policies) {
                      foundPolicy = true;
                    }
                  }
-
-                 // The policy may have policyQualifiers. For unrelated
-                 // policies, it doesn't make sense to validate the qualifiers.
-                 // For related policies, the relevant specifications don't
-                 // mention qualifiers one way or another. For maximum
-                 // compatibility, we don't validate qualifiers if present. As
-                 // a consequence, `policyInformationContents` must be skipped
-                 // to the end to consume its input (so `NestedOf` won't return
-                 // an error in such cases).
-                 policyInformationContents.SkipToEnd();
-
                  return Success;
                });
   if (rv != Success) {

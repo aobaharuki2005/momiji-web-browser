@@ -10,13 +10,12 @@ import androidx.navigation.fragment.navArgs
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreferenceCompat
+import androidx.preference.SwitchPreference
 import com.google.android.material.color.MaterialColors
 import mozilla.components.browser.state.action.DefaultDesktopModeAction
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.R
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.navigateWithBreadcrumb
@@ -25,14 +24,13 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.requirePreference
-import org.mozilla.fenix.settings.scrollToPreferenceWithHighlight
 import com.google.android.material.R as materialR
 
 /**
  * Screen for managing settings related to site permissions and content defaults.
  */
 @SuppressWarnings("TooManyFunctions")
-class SiteSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragment {
+class SiteSettingsFragment : PreferenceFragmentCompat() {
 
     val args by navArgs<SiteSettingsFragmentArgs>()
 
@@ -48,7 +46,7 @@ class SiteSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragm
         showToolbar(getString(R.string.preferences_site_settings))
         setupPreferences()
         args.preferenceToScrollTo?.let {
-            scrollToPreferenceWithHighlight(it)
+            scrollToPreference(it)
         }
     }
 
@@ -58,7 +56,7 @@ class SiteSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragm
     }
 
     private fun bindDesktopMode() {
-        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_desktop_browsing).apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_desktop_browsing).apply {
             icon?.setTint(
                 MaterialColors.getColor(
                     requireContext(),

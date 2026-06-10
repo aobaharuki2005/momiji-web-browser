@@ -52,7 +52,6 @@ pub enum NumberOrAuto<N> {
     ToTyped,
 )]
 #[repr(C)]
-#[typed(todo_derive_fields)]
 pub struct GenericHyphenateLimitChars<Integer> {
     /// Required minimum number of characters in a hyphenated word.
     pub total_word_length: NumberOrAuto<Integer>,

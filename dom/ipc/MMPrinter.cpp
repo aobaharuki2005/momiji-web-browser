@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -54,29 +56,21 @@ Maybe<uint64_t> MMPrinter::PrintHeader(char const* aLocation,
 }
 
 /* static */
-void MMPrinter::PrintData(uint64_t aMsgId, ipc::StructuredCloneData* aData) {
+void MMPrinter::PrintNoData(uint64_t aMsgId) {
+  if (!MOZ_LOG_TEST(sMMLog, LogLevel::Verbose)) {
+    return;
+  }
+  MOZ_LOG(MMPrinter::sMMLog, LogLevel::Verbose,
+          ("%" PRIu64 " (No Data)", aMsgId));
+}
+
+/* static */
+void MMPrinter::PrintData(uint64_t aMsgId, ClonedMessageData const& aData) {
   if (!MOZ_LOG_TEST(sMMLog, LogLevel::Verbose)) {
     return;
   }
 
-  if (!aData) {
-    MOZ_LOG(MMPrinter::sMMLog, LogLevel::Verbose,
-            ("%" PRIu64 " (No Data)", aMsgId));
-    return;
-  }
-
-  // If aData->SupportsTransferring(), we cannot call Read() more than once.
-  //
-  // NOTE(Jan 2026): This is true for almost every StructuredCloneData passed in
-  // here, which greatly limits PrintData's usability. It _may_ be possible to
-  // dynamically clear the SupportsTransferring flag for instances which did not
-  // use any transferables when constructed, but that would require changes to
-  // StructuredCloneHolder's internals.
-  if (aData->SupportsTransferring()) {
-    MOZ_LOG(MMPrinter::sMMLog, LogLevel::Verbose,
-            ("%" PRIu64 " (Supports Transferring)", aMsgId));
-    return;
-  }
+  ErrorResult rv;
 
   AutoJSAPI jsapi;
   // We're using this context to deserialize, stringify, and print a message
@@ -86,15 +80,17 @@ void MMPrinter::PrintData(uint64_t aMsgId, ipc::StructuredCloneData* aData) {
   MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
   JSContext* cx = jsapi.cx();
 
+  ipc::StructuredCloneData data;
+  ipc::UnpackClonedMessageData(aData, data);
+
   /* Read original StructuredCloneData. */
-  IgnoredErrorResult rv;
   JS::Rooted<JS::Value> scdContent(cx);
-  aData->Read(cx, &scdContent, rv);
+  data.Read(cx, &scdContent, rv);
   if (rv.Failed()) {
     // In testing, the only reason this would fail was if there was no data in
     // the message; so it seems like this is safe-ish.
-    MOZ_LOG(MMPrinter::sMMLog, LogLevel::Verbose,
-            ("%" PRIu64 " (Read Failed)", aMsgId));
+    MMPrinter::PrintNoData(aMsgId);
+    rv.SuppressException();
     return;
   }
 

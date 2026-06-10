@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -73,13 +75,11 @@ void PopoverData::DestroyCloseWatcher() {
 
 PopoverToggleEventTask::PopoverToggleEventTask(nsWeakPtr aElement,
                                                nsWeakPtr aSource,
-                                               PopoverVisibilityState aOldState,
-                                               PopoverVisibilityState aNewState)
+                                               PopoverVisibilityState aOldState)
     : Runnable("PopoverToggleEventTask"),
       mElement(std::move(aElement)),
       mSource(std::move(aSource)),
-      mOldState(aOldState),
-      mNewState(aNewState) {}
+      mOldState(aOldState) {}
 
 NS_IMETHODIMP
 PopoverToggleEventTask::Run() {
@@ -89,7 +89,8 @@ PopoverToggleEventTask::Run() {
     return NS_OK;
   }
   if (auto* htmlElement = nsGenericHTMLElement::FromNode(element)) {
-    MOZ_KnownLive(htmlElement)->RunPopoverToggleEventTask(this, source);
+    MOZ_KnownLive(htmlElement)
+        ->RunPopoverToggleEventTask(this, mOldState, source);
   }
   return NS_OK;
 };

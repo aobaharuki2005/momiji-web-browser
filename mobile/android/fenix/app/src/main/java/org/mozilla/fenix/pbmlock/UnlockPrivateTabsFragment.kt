@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.pbmlock
 
-import android.app.KeyguardManager
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,7 +12,6 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withResumed
@@ -28,18 +26,18 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.registerForActivityResult
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.settings.biometric.DefaultBiometricUtils
-import org.mozilla.fenix.tabstray.redux.state.Page
+import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Fragment used to display biometric authentication when the app is locked.
  */
-class UnlockPrivateTabsFragment : Fragment(), UserInteractionHandler, SystemInsetsPaddedFragment {
+class UnlockPrivateTabsFragment : Fragment(), UserInteractionHandler {
     private lateinit var startForResult: ActivityResultLauncher<Intent>
     private val args: UnlockPrivateTabsFragmentArgs by navArgs()
     private val navigationOrigin by lazy { args.navigationOrigin }
@@ -80,30 +78,19 @@ class UnlockPrivateTabsFragment : Fragment(), UserInteractionHandler, SystemInse
                 )
             }
         }
-        maybeRequestPrompt()
+
+        // Delay the prompt until this fragment is resumed to ensure that `BiometricPromptFeature`
+        // is wiring up the system `BiometricPrompt` to the right (currently active) fragment.
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.withResumed {
+                requestPrompt()
+            }
+        }
     }
 
     override fun onBackPressed(): Boolean {
         closeFragment()
         return true
-    }
-
-    private fun maybeRequestPrompt() {
-        // Delay the prompt until this fragment is resumed to ensure that `BiometricPromptFeature`
-        // is wiring up the system `BiometricPrompt` to the right (currently active) fragment.
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.withResumed {
-                // This check handles an edge case related to the screen saver.
-                // When a screen saver is used in combination with a screen lock, cancelling a screen saver
-                // (in some cases) resumes the app briefly, although the screen lock is active. Which, in
-                // this case, allows the app to trigger system windows above the screen lock.
-                val manager = requireContext().getSystemService<KeyguardManager>()
-                val screenLocked = manager?.isDeviceLocked ?: false
-                if (!screenLocked) {
-                    requestPrompt()
-                }
-            }
-        }
     }
 
     private fun requestPrompt() {
@@ -131,11 +118,19 @@ class UnlockPrivateTabsFragment : Fragment(), UserInteractionHandler, SystemInse
 
                 val hasNormalTabs = requireComponents.core.store.state.normalTabs.isNotEmpty()
                 if (hasNormalTabs) {
-                    findNavController().navigate(
-                        HomeFragmentDirections.actionGlobalTabManagementFragment(
-                            page = Page.NormalTabs,
-                        ),
-                    )
+                    if (requireContext().settings().tabManagerEnhancementsEnabled) {
+                        findNavController().navigate(
+                            HomeFragmentDirections.actionGlobalTabManagementFragment(
+                                page = Page.NormalTabs,
+                            ),
+                        )
+                    } else {
+                        findNavController().navigate(
+                            HomeFragmentDirections.actionGlobalTabsTrayFragment(
+                                page = Page.NormalTabs,
+                            ),
+                        )
+                    }
                 }
             }
             // If we locked private mode while the user had the tabs tray private page opened, then
@@ -144,11 +139,19 @@ class UnlockPrivateTabsFragment : Fragment(), UserInteractionHandler, SystemInse
             NavigationOrigin.TABS_TRAY -> {
                 findNavController().popBackStack()
 
-                findNavController().navigate(
-                    HomeFragmentDirections.actionGlobalTabManagementFragment(
-                        page = Page.NormalTabs,
-                    ),
-                )
+                if (requireContext().settings().tabManagerEnhancementsEnabled) {
+                    findNavController().navigate(
+                        HomeFragmentDirections.actionGlobalTabManagementFragment(
+                            page = Page.NormalTabs,
+                        ),
+                    )
+                } else {
+                    findNavController().navigate(
+                        HomeFragmentDirections.actionGlobalTabsTrayFragment(
+                            page = Page.NormalTabs,
+                        ),
+                    )
+                }
             }
             // If private mode is locked and the user opens a private custom tab,
             // close the activity when they leave without authenticating to return to the host app.
@@ -164,11 +167,19 @@ class UnlockPrivateTabsFragment : Fragment(), UserInteractionHandler, SystemInse
         findNavController().popBackStack()
 
         if (navigationOrigin == NavigationOrigin.TABS_TRAY) {
-            findNavController().navigate(
-                HomeFragmentDirections.actionGlobalTabManagementFragment(
-                    page = Page.PrivateTabs,
-                ),
-            )
+            if (requireContext().settings().tabManagerEnhancementsEnabled) {
+                findNavController().navigate(
+                    HomeFragmentDirections.actionGlobalTabManagementFragment(
+                        page = Page.PrivateTabs,
+                    ),
+                )
+            } else {
+                findNavController().navigate(
+                    HomeFragmentDirections.actionGlobalTabsTrayFragment(
+                        page = Page.PrivateTabs,
+                    ),
+                )
+            }
         }
     }
 

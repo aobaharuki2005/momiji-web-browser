@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCSSVisitedDependentPropList_h_
-#define nsCSSVisitedDependentPropList_h_
+#ifndef nsCSSVisitedDependentPropList_h__
+#define nsCSSVisitedDependentPropList_h__
 
 /* a list of style struct's member variables which can be visited-dependent */
 
@@ -38,4 +40,4 @@
   MACRO(SVG, (mFill, mStroke)) \
   MACRO(UI, (mCaretColor))
 
-#endif // nsCSSVisitedDependentPropList_h_
+#endif // nsCSSVisitedDependentPropList_h__

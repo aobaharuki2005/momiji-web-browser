@@ -33,9 +33,7 @@ add_task(async function engagement() {
         selType: "history",
         provider: "",
         searchSource: "urlbar",
-        windowMode: "classic",
         isSessionOngoing: false,
-        pickedActionKey: null,
       },
     });
   });
@@ -75,9 +73,7 @@ add_task(async function privateWindow_engagement() {
       selType: "history",
       provider: "",
       searchSource: "urlbar",
-      windowMode: "private",
       isSessionOngoing: false,
-      pickedActionKey: null,
     },
   });
   await BrowserTestUtils.closeWindow(win);
@@ -112,8 +108,7 @@ async function doTest({
   expectedEndDetails = {},
 }) {
   let provider = new TestProvider();
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(provider);
+  UrlbarProvidersManager.registerProvider(provider);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window: win,
@@ -162,8 +157,6 @@ async function doTest({
     expectedEndDetails.result = result;
     expectedEndDetails.element = element;
 
-    // The event object that is passed to providers varies between calls.
-    delete details.event;
     Assert.deepEqual(
       details,
       Object.assign(detailsDefaults, expectedEndDetails),
@@ -171,7 +164,7 @@ async function doTest({
     );
   }
 
-  providersManager.unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 }
 
 /**

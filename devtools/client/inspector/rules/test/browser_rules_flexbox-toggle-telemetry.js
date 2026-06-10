@@ -17,8 +17,7 @@ const TEST_URI = `
 
 add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  Services.fog.testResetFOG();
-
+  startTelemetry();
   const { inspector, view } = await openRuleView();
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
   const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
@@ -44,9 +43,11 @@ add_task(async function () {
 });
 
 function checkResults() {
-  is(1, Glean.devtoolsRulesFlexboxhighlighter.opened.testGetValue());
-  Assert.greater(
-    Glean.devtools.flexboxHighlighterTimeActive.testGetValue().sum,
-    0
+  checkTelemetry("devtools.rules.flexboxhighlighter.opened", "", 1, "scalar");
+  checkTelemetry(
+    "DEVTOOLS_FLEXBOX_HIGHLIGHTER_TIME_ACTIVE_SECONDS",
+    "",
+    null,
+    "hasentries"
   );
 }

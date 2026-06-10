@@ -30,8 +30,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
-namespace webrtc {
-
 namespace {
 
 // WindowCapturer returns window IDs of X11 windows with WM_STATE attribute.
@@ -66,6 +64,8 @@ Window GetTopLevelWindow(Display* display, Window window) {
 }
 
 }  // namespace
+
+namespace webrtc {
 
 MouseCursorMonitorX11::MouseCursorMonitorX11(
     const DesktopCaptureOptions& options,

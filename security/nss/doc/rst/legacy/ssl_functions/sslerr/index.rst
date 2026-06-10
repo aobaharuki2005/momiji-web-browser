@@ -17,9 +17,12 @@ sslerr
    .. rubric:: NSS and SSL Error Codes
       :name: NSS_and_SSL_Error_Codes
 
+   --------------
 
-`Chapter 8 <#chapter_8_nss_and_ssl_error_codes>`__\ NSS and SSL Error Codes
+.. _chapter_8_nss_and_ssl_error_codes:
 
+`Chapter 8
+ <#chapter_8_nss_and_ssl_error_codes>`__\ NSS and SSL Error Codes
 -----------------------------------------------------------------
 
 .. container::
@@ -433,7 +436,7 @@ sslerr
    | _ERROR_HANDSHAKE_NOT_COMPLETED |                                | handshake until current        |
    |                                |                                | handshake is complete."        |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL\_                          | -12201                         | "Received incorrect handshakes |
+   | SSL_                           | -12201                         | "Received incorrect handshakes |
    | ERROR_BAD_HANDSHAKE_HASH_VALUE |                                | hash values from peer."        |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ERROR_CERT_KEA_MISMATCH    | -12200                         | "The certificate provided      |
@@ -441,7 +444,7 @@ sslerr
    |                                |                                | selected key exchange          |
    |                                |                                | algorithm."                    |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL\_                          | -12199                         | "No certificate authority is   |
+   | SSL_                           | -12199                         | "No certificate authority is   |
    | ERROR_NO_TRUSTED_SSL_CLIENT_CA |                                | trusted for SSL client         |
    |                                |                                | authentication."               |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -458,7 +461,7 @@ sslerr
    +--------------------------------+--------------------------------+--------------------------------+
    | **Received a malformed (too    |                                |                                |
    | long or short or invalid       |                                |                                |
-   | content) SSL handshake:**      |                                |                                |
+   | content) SSL handshake: **     |                                |                                |
    |                                |                                |                                |
    | All the error codes in the     |                                |                                |
    | following block indicate that  |                                |                                |
@@ -481,7 +484,7 @@ sslerr
    | RROR_RX_MALFORMED_SERVER_HELLO |                                | Server Hello handshake         |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL\_                          | -12258                         | "SSL received a malformed      |
+   | SSL_                           | -12258                         | "SSL received a malformed      |
    | ERROR_RX_MALFORMED_CERTIFICATE |                                | Certificate handshake          |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -497,7 +500,7 @@ sslerr
    | _ERROR_RX_MALFORMED_HELLO_DONE |                                | Server Hello Done handshake    |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL\_                          | -12254                         | "SSL received a malformed      |
+   | SSL_                           | -12254                         | "SSL received a malformed      |
    | ERROR_RX_MALFORMED_CERT_VERIFY |                                | Certificate Verify handshake   |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -533,7 +536,7 @@ sslerr
    | SS                             | -12249                         | "SSL received a malformed      |
    | L_ERROR_RX_MALFORMED_HANDSHAKE |                                | Handshake record."             |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL_ERROR\_                    | -12248                         | "SSL received a malformed      |
+   | SSL_ERROR_                     | -12248                         | "SSL received a malformed      |
    | RX_MALFORMED_APPLICATION_DATA  |                                | Application Data record."      |
    +--------------------------------+--------------------------------+--------------------------------+
    | **Received an SSL handshake    |                                |                                |
@@ -569,7 +572,7 @@ sslerr
    | RROR_RX_UNEXPECTED_CERTIFICATE |                                | Certificate handshake          |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL_ERROR\_                    | -12243                         | "SSL received an unexpected    |
+   | SSL_ERROR_                     | -12243                         | "SSL received an unexpected    |
    | RX_UNEXPECTED_SERVER_KEY_EXCH  |                                | Server Key Exchange handshake  |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -577,7 +580,7 @@ sslerr
    | ROR_RX_UNEXPECTED_CERT_REQUEST |                                | Certificate Request handshake  |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL\_                          | -12241                         | "SSL received an unexpected    |
+   | SSL_                           | -12241                         | "SSL received an unexpected    |
    | ERROR_RX_UNEXPECTED_HELLO_DONE |                                | Server Hello Done handshake    |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -585,7 +588,7 @@ sslerr
    | RROR_RX_UNEXPECTED_CERT_VERIFY |                                | Certificate Verify handshake   |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL_ERROR\_                    | -12239                         | "SSL received an unexpected    |
+   | SSL_ERROR_                     | -12239                         | "SSL received an unexpected    |
    | RX_UNEXPECTED_CLIENT_KEY_EXCH  |                                | Client Key Exchange handshake  |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -620,7 +623,7 @@ sslerr
    | SSL                            | -12235                         | "SSL received an unexpected    |
    | _ERROR_RX_UNEXPECTED_HANDSHAKE |                                | Handshake record."             |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL_ERROR\_                    | -12234                         | "SSL received an unexpected    |
+   | SSL_ERROR_                     | -12234                         | "SSL received an unexpected    |
    | RX_UNEXPECTED_APPLICATION_DATA |                                | Application Data record."      |
    +--------------------------------+--------------------------------+--------------------------------+
    | **Received record/message with |                                |                                |
@@ -712,7 +715,7 @@ sslerr
    |                                |                                | signature verification or key  |
    |                                |                                | exchange."                     |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL\_                          | -12191                         | "Peer reports negotiation not  |
+   | SSL_                           | -12191                         | "Peer reports negotiation not  |
    | ERROR_EXPORT_RESTRICTION_ALERT |                                | in compliance with export      |
    |                                |                                | regulations."                  |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -737,14 +740,14 @@ sslerr
    | OR_UNSUPPORTED_EXTENSION_ALERT |                                | requested TLS hello            |
    |                                |                                | extension."                    |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL_ERROR\_                    | -12183                         | "SSL peer could not obtain     |
+   | SSL_ERROR_                     | -12183                         | "SSL peer could not obtain     |
    | CERTIFICATE_UNOBTAINABLE_ALERT |                                | your certificate from the      |
    |                                |                                | supplied URL."                 |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL                            | -12182                         | "SSL peer has no certificate   |
    | _ERROR_UNRECOGNIZED_NAME_ALERT |                                | for the requested DNS name."   |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SSL_ERROR\_                    | -12181                         | "SSL peer was unable to get an |
+   | SSL_ERROR_                     | -12181                         | "SSL peer was unable to get an |
    | BAD_CERT_STATUS_RESPONSE_ALERT |                                | OCSP response for its          |
    |                                |                                | certificate."                  |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -1001,7 +1004,7 @@ sslerr
    |                                |                                | do not yet have an email       |
    |                                |                                | certificate.                   |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SEC\_                          | -8148                          | Not encrypted: you do not have |
+   | SEC_                           | -8148                          | Not encrypted: you do not have |
    | ERROR_NO_RECIPIENT_CERTS_QUERY |                                | certificates for each of the   |
    |                                |                                | recipients.                    |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -1231,7 +1234,7 @@ sslerr
    | SEC_ERROR_UNKNOWN_SIGNER       | -8076                          | "The signer's certificate      |
    |                                |                                | could not be found."           |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SEC\_                          | -8075                          | "The location for the          |
+   | SEC_                           | -8075                          | "The location for the          |
    | ERROR_CERT_BAD_ACCESS_LOCATION |                                | certificate status server has  |
    |                                |                                | invalid format."               |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -1290,7 +1293,7 @@ sslerr
    | SEC_ERROR_DIGEST_NOT_FOUND     | -8059                          | "The CMS or PKCS #7 Digest was |
    |                                |                                | not found in signed message."  |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SEC\_                          | -8058                          | "The CMS or PKCS #7 Message    |
+   | SEC_                           | -8058                          | "The CMS or PKCS #7 Message    |
    | ERROR_UNSUPPORTED_MESSAGE_TYPE |                                | type is unsupported."          |
    +--------------------------------+--------------------------------+--------------------------------+
    | SEC_ERROR_MODULE_STUCK         | -8057                          | "PKCS #11 module could not be  |
@@ -1303,7 +1306,7 @@ sslerr
    +--------------------------------+--------------------------------+--------------------------------+
    | SEC_ERROR_CRL_NOT_FOUND        | -8055                          | "No matching CRL was found."   |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SEC\_                          | -8054                          | "You are attempting to import  |
+   | SEC_                           | -8054                          | "You are attempting to import  |
    | ERROR_REUSED_ISSUER_AND_SERIAL |                                | a cert with the same           |
    |                                |                                | issuer/serial as an existing   |
    |                                |                                | cert, but that is not the same |
@@ -1331,7 +1334,7 @@ sslerr
    | _ERROR_REVOKED_CERTIFICATE_CRL |                                | issuer's certificate           |
    |                                |                                | revocation list."              |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SEC\_                          | -8046                          | "Issuer's OCSP responder       |
+   | SEC_                           | -8046                          | "Issuer's OCSP responder       |
    | ERROR_REVOKED_CERTIFICATE_OCSP |                                | reports certificate is         |
    |                                |                                | revoked."                      |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -1343,7 +1346,7 @@ sslerr
    | RROR_CRL_V1_CRITICAL_EXTENSION |                                | Revocation List has a critical |
    |                                |                                | extension."                    |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SEC_ERROR\_                    | -8043                          | "Issuer's V2 Certificate       |
+   | SEC_ERROR_                     | -8043                          | "Issuer's V2 Certificate       |
    | CRL_UNKNOWN_CRITICAL_EXTENSION |                                | Revocation List has an unknown |
    |                                |                                | critical extension."           |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -1378,7 +1381,7 @@ sslerr
    | SE                             | -8033                          | "Policy mapping contains       |
    | C_ERROR_INVALID_POLICY_MAPPING |                                | any-policy."                   |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SEC\_                          | -8032                          | "Certificate chain fails       |
+   | SEC_                           | -8032                          | "Certificate chain fails       |
    | ERROR_POLICY_VALIDATION_FAILED |                                | policy validation."            |
    +--------------------------------+--------------------------------+--------------------------------+
    | SEC_E                          | -8031                          | "Unknown location type in      |
@@ -1393,7 +1396,7 @@ sslerr
    | S                              | -8028                          | "Failed to encode data with    |
    | EC_ERROR_FAILED_TO_ENCODE_DATA |                                | ASN.1 encoder."                |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SEC\_                          | -8027                          | "Bad information access        |
+   | SEC_                           | -8027                          | "Bad information access        |
    | ERROR_BAD_INFO_ACCESS_LOCATION |                                | location in certificate        |
    |                                |                                | extension."                    |
    +--------------------------------+--------------------------------+--------------------------------+

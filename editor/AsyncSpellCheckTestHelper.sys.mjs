@@ -29,7 +29,7 @@ const CP = Cc["@mozilla.org/content-pref/service;1"].getService(
 export function maybeOnSpellCheck(editableElement, callback) {
   let editor = editableElement.editor;
   if (!editor) {
-    let win = editableElement.documentGlobal;
+    let win = editableElement.ownerGlobal;
     editor = win.docShell.editingSession.getEditorForWindow(win);
   }
   if (!editor) {

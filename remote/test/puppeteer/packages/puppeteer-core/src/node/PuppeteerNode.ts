@@ -44,11 +44,13 @@ import type {ChromeReleaseChannel, LaunchOptions} from './LaunchOptions.js';
  * ```ts
  * import puppeteer from 'puppeteer';
  *
- * const browser = await puppeteer.launch();
- * const page = await browser.newPage();
- * await page.goto('https://www.google.com');
- * // other actions...
- * await browser.close();
+ * (async () => {
+ *   const browser = await puppeteer.launch();
+ *   const page = await browser.newPage();
+ *   await page.goto('https://www.google.com');
+ *   // other actions...
+ *   await browser.close();
+ * })();
  * ```
  *
  * Once you have created a `page` you have access to a large API to interact

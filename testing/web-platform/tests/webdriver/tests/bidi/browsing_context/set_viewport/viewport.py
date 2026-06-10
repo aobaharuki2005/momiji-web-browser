@@ -3,9 +3,8 @@ from webdriver.bidi.undefined import UNDEFINED
 
 from ... import get_viewport_dimensions
 
-pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.asyncio
 async def test_set_viewport(bidi_session, new_tab):
     test_viewport = {"width": 250, "height": 300}
 
@@ -18,6 +17,7 @@ async def test_set_viewport(bidi_session, new_tab):
     assert await get_viewport_dimensions(bidi_session, new_tab) == test_viewport
 
 
+@pytest.mark.asyncio
 async def test_undefined_viewport(bidi_session, inline, new_tab):
     test_viewport = {"width": 499, "height": 599}
 
@@ -42,6 +42,7 @@ async def test_undefined_viewport(bidi_session, inline, new_tab):
     assert await get_viewport_dimensions(bidi_session, new_tab) == test_viewport
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("width, height", [
     (250, 300),
     (500, 300),
@@ -73,6 +74,7 @@ async def test_modified_dimensions(bidi_session, inline, new_tab, width, height)
     assert await get_viewport_dimensions(bidi_session, new_tab) == modified_viewport
 
 
+@pytest.mark.asyncio
 async def test_reset_to_default(bidi_session, inline, new_tab):
     original_viewport = await get_viewport_dimensions(bidi_session, new_tab)
 
@@ -100,6 +102,7 @@ async def test_reset_to_default(bidi_session, inline, new_tab):
     assert await get_viewport_dimensions(bidi_session, new_tab) == original_viewport
 
 
+@pytest.mark.asyncio
 async def test_specific_context(bidi_session, inline, new_tab, top_context):
     original_viewport = await get_viewport_dimensions(bidi_session, top_context)
 
@@ -131,6 +134,7 @@ async def test_specific_context(bidi_session, inline, new_tab, top_context):
     "https",
     "https coop"
 ])
+@pytest.mark.asyncio
 async def test_persists_on_navigation(bidi_session, new_tab, inline, protocol, parameters):
     test_viewport = {"width": 499, "height": 599}
 
@@ -157,6 +161,7 @@ async def test_persists_on_navigation(bidi_session, new_tab, inline, protocol, p
     assert await get_viewport_dimensions(bidi_session, new_tab) == test_viewport
 
 
+@pytest.mark.asyncio
 async def test_persists_on_reload(bidi_session, inline, new_tab):
     test_viewport = {"width": 499, "height": 599}
 
@@ -181,6 +186,7 @@ async def test_persists_on_reload(bidi_session, inline, new_tab):
     assert await get_viewport_dimensions(bidi_session, new_tab) == test_viewport
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "use_horizontal_scrollbar, use_vertical_scrollbar",
     [

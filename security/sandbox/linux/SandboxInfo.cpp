@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -99,8 +101,8 @@ static bool HasUserNamespaceSupport() {
       "/proc/self/ns/net",
       "/proc/self/ns/ipc",
   };
-  for (auto path : paths) {
-    if (access(path, F_OK) == -1) {
+  for (size_t i = 0; i < std::size(paths); ++i) {
+    if (access(paths[i], F_OK) == -1) {
       MOZ_ASSERT(errno == ENOENT);
       return false;
     }

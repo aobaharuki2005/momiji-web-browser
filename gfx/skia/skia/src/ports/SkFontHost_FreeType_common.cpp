@@ -17,7 +17,7 @@
 #include "include/core/SkOpenTypeSVGDecoder.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkPathBuilder.h"
-#include "include/effects/SkGradient.h"
+#include "include/effects/SkGradientShader.h"
 #include "include/private/base/SkTo.h"
 #include "src/core/SkColorData.h"
 #include "src/core/SkFDot6.h"
@@ -768,14 +768,16 @@ bool colrv1_configure_skpaint(FT_Face face,
                 }
             }
 
-            sk_sp<SkShader> shader(SkShaders::LinearGradient(
+            sk_sp<SkShader> shader(SkGradientShader::MakeLinear(
                 linePositions,
-                {{colors, stops, tileMode, SkColorSpace::MakeSRGB()},
-                SkGradient::Interpolation{
-                    SkGradient::Interpolation::InPremul::kNo,
-                    SkGradient::Interpolation::ColorSpace::kSRGB,
-                    SkGradient::Interpolation::HueMethod::kShorter
-                }}));
+                colors.data(), SkColorSpace::MakeSRGB(), stops.data(), stops.size(),
+                tileMode,
+                SkGradientShader::Interpolation{
+                    SkGradientShader::Interpolation::InPremul::kNo,
+                    SkGradientShader::Interpolation::ColorSpace::kSRGB,
+                    SkGradientShader::Interpolation::HueMethod::kShorter
+                },
+                nullptr));
 
             SkASSERT(shader);
             // An opaque color is needed to ensure the gradient is not modulated by alpha.
@@ -950,14 +952,15 @@ bool colrv1_configure_skpaint(FT_Face face,
             // An opaque color is needed to ensure the gradient is not modulated by alpha.
             paint->setColor(SK_ColorBLACK);
 
-            paint->setShader(SkShaders::TwoPointConicalGradient(
+            paint->setShader(SkGradientShader::MakeTwoPointConical(
                 start, startRadius, end, endRadius,
-                {{colors, stops, tileMode, SkColorSpace::MakeSRGB()},
-                SkGradient::Interpolation{
-                    SkGradient::Interpolation::InPremul::kNo,
-                    SkGradient::Interpolation::ColorSpace::kSRGB,
-                    SkGradient::Interpolation::HueMethod::kShorter
-                }},
+                colors.data(), SkColorSpace::MakeSRGB(), stops.data(), stops.size(),
+                tileMode,
+                SkGradientShader::Interpolation{
+                    SkGradientShader::Interpolation::InPremul::kNo,
+                    SkGradientShader::Interpolation::ColorSpace::kSRGB,
+                    SkGradientShader::Interpolation::HueMethod::kShorter
+                },
                 nullptr));
 
             return true;
@@ -1058,14 +1061,16 @@ bool colrv1_configure_skpaint(FT_Face face,
                 }
             }
 
-            paint->setShader(SkShaders::SweepGradient(
-                center, startAngleScaled, endAngleScaled,
-                {{colors, stops, tileMode, SkColorSpace::MakeSRGB()},
-                {
-                    SkGradient::Interpolation::InPremul::kNo,
-                    SkGradient::Interpolation::ColorSpace::kSRGB,
-                    SkGradient::Interpolation::HueMethod::kShorter
-                }},
+            paint->setShader(SkGradientShader::MakeSweep(
+                center.x(), center.y(),
+                colors.data(), SkColorSpace::MakeSRGB(), stops.data(), stops.size(),
+                tileMode,
+                startAngleScaled, endAngleScaled,
+                SkGradientShader::Interpolation{
+                    SkGradientShader::Interpolation::InPremul::kNo,
+                    SkGradientShader::Interpolation::ColorSpace::kSRGB,
+                    SkGradientShader::Interpolation::HueMethod::kShorter
+                },
                 nullptr));
 
             return true;
@@ -1375,14 +1380,14 @@ SkPath GetClipBoxPath(FT_Face face, SkGlyphID glyphId, bool untransformed) {
 
     FT_ClipBox colrGlyphClipBox;
     if (FT_Get_Color_Glyph_ClipBox(face, glyphId, &colrGlyphClipBox)) {
-        resultPath = SkPath::Polygon({{{ SkFDot6ToScalar(colrGlyphClipBox.bottom_left.x),
+        resultPath = SkPath::Polygon({{ SkFDot6ToScalar(colrGlyphClipBox.bottom_left.x),
                                        -SkFDot6ToScalar(colrGlyphClipBox.bottom_left.y)},
                                       { SkFDot6ToScalar(colrGlyphClipBox.top_left.x),
                                        -SkFDot6ToScalar(colrGlyphClipBox.top_left.y)},
                                       { SkFDot6ToScalar(colrGlyphClipBox.top_right.x),
                                        -SkFDot6ToScalar(colrGlyphClipBox.top_right.y)},
                                       { SkFDot6ToScalar(colrGlyphClipBox.bottom_right.x),
-                                       -SkFDot6ToScalar(colrGlyphClipBox.bottom_right.y)}}},
+                                       -SkFDot6ToScalar(colrGlyphClipBox.bottom_right.y)}},
                                      true);
     }
 

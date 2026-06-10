@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,10 +8,7 @@
 #define LAYOUT_STYLE_TYPEDOM_CSSIMAGEVALUE_H_
 
 #include "js/TypeDecls.h"
-#include "mozilla/NotNull.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/CSSStyleValue.h"
-#include "nsStringFwd.h"
 
 template <class T>
 class nsCOMPtr;
@@ -17,18 +16,11 @@ class nsISupports;
 
 namespace mozilla {
 
-struct CSSPropertyId;
-struct StyleImageValue;
-
 namespace dom {
 
 class CSSImageValue final : public CSSStyleValue {
  public:
-  explicit CSSImageValue(nsCOMPtr<nsISupports> aParent,
-                         const StyleImageValue& aImageValue);
-
-  static RefPtr<CSSImageValue> Create(nsCOMPtr<nsISupports> aParent,
-                                      const StyleImageValue& aImageValue);
+  explicit CSSImageValue(nsCOMPtr<nsISupports> aParent);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -37,13 +29,8 @@ class CSSImageValue final : public CSSStyleValue {
 
   // end of CSSImageValue Web IDL declarations
 
-  void ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
-                             nsACString& aDest) const;
-
  private:
   virtual ~CSSImageValue() = default;
-
-  const NotNull<UniquePtr<StyleImageValue>> mImageValue;
 };
 
 }  // namespace dom

@@ -46,9 +46,6 @@ const PREF_WEBAPI_TESTING = "extensions.webapi.testing";
 const PREF_EM_POSTDOWNLOAD_THIRD_PARTY =
   "extensions.postDownloadThirdPartyPrompt";
 
-const PREF_ALLOW_EXECUTESCRIPT_IN_MOZEXTENSION =
-  "extensions.webextensions.allow_executeScript_in_moz_extension";
-
 const UPDATE_REQUEST_VERSION = 2;
 
 const BRANCH_REGEXP = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
@@ -92,6 +89,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Extension: "resource://gre/modules/Extension.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  TelemetryTimestamps: "resource://gre/modules/TelemetryTimestamps.sys.mjs",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
   isGatedPermissionType:
     "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
@@ -138,17 +136,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "GLEAN_PING_ADDONS_UPDATED_TESTING",
   PREF_GLEAN_PING_ADDONS_UPDATED_TESTING,
   false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "ALLOW_EXECUTESCRIPT_IN_MOZEXTENSION",
-  PREF_ALLOW_EXECUTESCRIPT_IN_MOZEXTENSION,
-  false,
-  // onUpdate callback.
-  (_pref, _oldValue, newValue) => {
-    Glean.extensions.allowExecuteScriptInMozExtension.set(newValue);
-  }
 );
 
 // Initialize the WebExtension process script service as early as possible,
@@ -567,6 +554,10 @@ var AddonManagerInternal = {
   upgradeListeners: new Map(),
   externalExtensionLoaders: new Map(),
 
+  recordTimestamp(name, value) {
+    lazy.TelemetryTimestamps.add(name, value);
+  },
+
   /**
    * Start up a provider, and register its shutdown hook if it has one
    *
@@ -647,6 +638,7 @@ var AddonManagerInternal = {
         return;
       }
 
+      this.recordTimestamp("AMI_startup_begin");
       Glean.addonsManager.startupTimeline.AMI_startup_begin.set(
         Services.telemetry.msSinceProcessStart()
       );
@@ -818,6 +810,7 @@ var AddonManagerInternal = {
 
       gStartupComplete = true;
       gStartedPromise.resolve();
+      this.recordTimestamp("AMI_startup_end");
       Glean.addonsManager.startupTimeline.AMI_startup_end.set(
         Services.telemetry.msSinceProcessStart()
       );
@@ -851,10 +844,6 @@ var AddonManagerInternal = {
       Services.prefs.getBoolPref(PREF_USE_REMOTE)
     );
     Services.prefs.addObserver(PREF_USE_REMOTE, this);
-
-    Glean.extensions.allowExecuteScriptInMozExtension.set(
-      lazy.ALLOW_EXECUTESCRIPT_IN_MOZEXTENSION
-    );
 
     logger.debug("Completed startup sequence");
     this.callManagerListeners("onStartup");
@@ -1304,7 +1293,7 @@ var AddonManagerInternal = {
       return Promise.resolve();
     }
 
-    if (Services.policies?.isAddonRequiredByPolicy(info.existingAddon.id)) {
+    if (info.existingAddon.isInstalledByEnterprisePolicy) {
       return Promise.resolve();
     }
 
@@ -3928,6 +3917,10 @@ export var AddonManagerPrivate = {
     gXPIProvider.unregisterDictionaries(aDicts);
   },
 
+  recordTimestamp(name, value) {
+    AddonManagerInternal.recordTimestamp(name, value);
+  },
+
   _simpleMeasures: {},
   recordSimpleMeasure(name, value) {
     this._simpleMeasures[name] = value;
@@ -5976,15 +5969,11 @@ AMTelemetry = {
   /**
    * @param {object} opts
    * @param {nsIURI} opts.displayURI
-   * @param {string} permissionType The requested permission
    */
-  recordSuspiciousSiteEvent({ displayURI, permissionType }) {
+  recordSuspiciousSiteEvent({ displayURI }) {
     let site = displayURI?.displayHost ?? "(unknown)";
     Glean.addonsManager.reportSuspiciousSite.record(
-      this.formatExtraVars({
-        suspicious_site: site,
-        permission_type: permissionType,
-      })
+      this.formatExtraVars({ suspicious_site: site })
     );
   },
 

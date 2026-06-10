@@ -366,9 +366,9 @@ async function blackBox(sourceActor, shouldBlackBox, ranges) {
     const blackboxingFront =
       await commands.targetCommand.watcherFront.getBlackboxingActor();
     if (shouldBlackBox) {
-      await blackboxingFront.blackbox(sourceActor.sourceObject.url, ranges);
+      await blackboxingFront.blackbox(sourceActor.url, ranges);
     } else {
-      await blackboxingFront.unblackbox(sourceActor.sourceObject.url, ranges);
+      await blackboxingFront.unblackbox(sourceActor.url, ranges);
     }
   } else {
     const sourceFront = currentThreadFront().source({

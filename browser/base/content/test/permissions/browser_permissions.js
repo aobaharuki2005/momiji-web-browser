@@ -449,7 +449,7 @@ add_task(async function testHiddenAfterRefresh() {
       false,
       PERMISSIONS_PAGE
     );
-    EventUtils.synthesizeKey("VK_F5", {}, browser.documentGlobal);
+    EventUtils.synthesizeKey("VK_F5", {}, browser.ownerGlobal);
     await reloaded;
 
     ok(

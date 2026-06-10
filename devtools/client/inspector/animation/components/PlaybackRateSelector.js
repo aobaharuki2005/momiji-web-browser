@@ -9,48 +9,100 @@ const {
 } = require("resource://devtools/client/shared/vendor/react.mjs");
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.mjs");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const {
   getFormatStr,
 } = require("resource://devtools/client/inspector/animation/utils/l10n.js");
 
-const OPTIONS = [0.01, 0.1, 0.25, 0.5, 1, 2, 5, 10];
+const PLAYBACK_RATES = [0.01, 0.1, 0.25, 0.5, 1, 2, 5, 10];
 
 class PlaybackRateSelector extends PureComponent {
   static get propTypes() {
     return {
-      playBackRateMultiplier: PropTypes.number.isRequired,
-      setAnimationsPlaybackRateMultiplier: PropTypes.func.isRequired,
+      animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      playbackRates: PropTypes.arrayOf(PropTypes.number).isRequired,
+      setAnimationsPlaybackRate: PropTypes.func.isRequired,
+    };
+  }
+
+  static getDerivedStateFromProps(props) {
+    const { animations, playbackRates } = props;
+
+    const currentPlaybackRates = sortAndUnique(
+      animations.map(a => a.state.playbackRate)
+    );
+    const options = sortAndUnique([
+      ...PLAYBACK_RATES,
+      ...playbackRates,
+      ...currentPlaybackRates,
+    ]);
+
+    if (currentPlaybackRates.length === 1) {
+      return {
+        options,
+        selected: currentPlaybackRates[0],
+      };
+    }
+
+    // When the animations displayed have mixed playback rates, we can't
+    // select any of the predefined ones.
+    return {
+      options: ["", ...options],
+      selected: "",
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      options: [],
+      selected: 1,
     };
   }
 
   onChange(e) {
-    const { setAnimationsPlaybackRateMultiplier } = this.props;
+    const { setAnimationsPlaybackRate } = this.props;
 
     if (!e.target.value) {
       return;
     }
 
-    setAnimationsPlaybackRateMultiplier(Number(e.target.value));
+    setAnimationsPlaybackRate(e.target.value);
   }
 
   render() {
+    const { options, selected } = this.state;
+
     return dom.select(
       {
         className: "playback-rate-selector devtools-button",
         onChange: this.onChange.bind(this),
       },
-      OPTIONS.map(option => {
+      options.map(rate => {
         return dom.option(
           {
-            value: option,
-            selected: option === this.props.playBackRateMultiplier,
+            selected: rate === selected ? "true" : null,
+            value: rate,
           },
-          getFormatStr("player.playbackRateLabel", option)
+          rate ? getFormatStr("player.playbackRateLabel", rate) : "-"
         );
       })
     );
   }
 }
 
-module.exports = PlaybackRateSelector;
+function sortAndUnique(array) {
+  return [...new Set(array)].sort((a, b) => a > b);
+}
+
+const mapStateToProps = state => {
+  return {
+    playbackRates: state.animations.playbackRates,
+  };
+};
+
+module.exports = connect(mapStateToProps)(PlaybackRateSelector);

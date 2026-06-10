@@ -115,7 +115,7 @@ async function doHelpTest({
   );
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  ProvidersManager.getInstanceForSap("urlbar").unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 }
 
 // (SHIFT+)TABs through a result with a menu button. The result is the second
@@ -165,7 +165,7 @@ add_task(async function keyboardSelection_secondResult() {
   assertOtherResultSelected(0, "previous result");
 
   await UrlbarTestUtils.promisePopupClose(window);
-  ProvidersManager.getInstanceForSap("urlbar").unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 });
 
 // (SHIFT+)TABs through a result with a help button.  The result is the
@@ -236,7 +236,7 @@ add_task(async function keyboardSelection_lastResult() {
   assertOtherResultSelected(numSelectable - 3, "previous result");
 
   await UrlbarTestUtils.promisePopupClose(window);
-  ProvidersManager.getInstanceForSap("urlbar").unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 });
 
 // Picks the main part of the test result with the keyboard.
@@ -314,7 +314,7 @@ async function doPickTest({ pickHelp, useKeyboard }) {
     if (pickHelp) {
       BrowserTestUtils.removeTab(gBrowser.selectedTab);
     }
-    ProvidersManager.getInstanceForSap("urlbar").unregisterProvider(provider);
+    UrlbarProvidersManager.unregisterProvider(provider);
 
     // Avoid showing adaptive history autofill.
     await PlacesTestUtils.clearInputHistory();
@@ -358,7 +358,7 @@ function registerTestProvider({
       }),
     ],
   });
-  ProvidersManager.getInstanceForSap("urlbar").registerProvider(provider);
+  UrlbarProvidersManager.registerProvider(provider);
   return provider;
 }
 

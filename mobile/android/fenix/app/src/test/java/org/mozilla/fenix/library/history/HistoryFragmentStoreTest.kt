@@ -10,7 +10,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.test.assertIs
 
 class HistoryFragmentStoreTest {
     private val historyItem = History.Regular(0, "title", "url", 0.toLong(), HistoryItemTimeGroup.timeGroupForTimestamp(0))
@@ -133,7 +132,7 @@ class HistoryFragmentStoreTest {
         store.dispatch(HistoryFragmentAction.HistoryItemClicked(historyItem))
 
         assertEquals(0, store.state.mode.selectedItems.size)
-        assertIs<HistoryFragmentState.Mode.Normal>(store.state.mode)
+        assertTrue(store.state.mode is HistoryFragmentState.Mode.Normal)
     }
 
     @Test
@@ -143,7 +142,7 @@ class HistoryFragmentStoreTest {
         store.dispatch(HistoryFragmentAction.HistoryItemClicked(historyItem))
 
         assertEquals(0, store.state.mode.selectedItems.size)
-        assertIs<HistoryFragmentState.Mode.Normal>(store.state.mode)
+        assertTrue(store.state.mode is HistoryFragmentState.Mode.Normal)
     }
 
     @Test
@@ -153,7 +152,7 @@ class HistoryFragmentStoreTest {
         store.dispatch(HistoryFragmentAction.HistoryItemClicked(historyItem))
 
         assertEquals(0, store.state.mode.selectedItems.size)
-        assertIs<HistoryFragmentState.Mode.Syncing>(store.state.mode)
+        assertTrue(store.state.mode is HistoryFragmentState.Mode.Syncing)
     }
 
     @Test
@@ -163,7 +162,7 @@ class HistoryFragmentStoreTest {
         store.dispatch(HistoryFragmentAction.HistoryItemLongClicked(historyItem))
 
         assertEquals(0, store.state.mode.selectedItems.size)
-        assertIs<HistoryFragmentState.Mode.Syncing>(store.state.mode)
+        assertTrue(store.state.mode is HistoryFragmentState.Mode.Syncing)
     }
 
     @Test

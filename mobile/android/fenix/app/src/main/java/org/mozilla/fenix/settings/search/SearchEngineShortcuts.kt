@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,7 +37,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
-import mozilla.components.browser.state.search.DefaultSearchEngineProvider
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SearchState
@@ -50,10 +50,9 @@ import mozilla.components.compose.base.menu.MenuItem.FixedItem.Level
 import mozilla.components.compose.base.text.Text
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.settings.SettingsSectionHeader
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -76,10 +75,8 @@ fun SearchEngineShortcuts(
     onAddEngineClicked: () -> Unit,
 ) {
     val searchState = store.observeAsComposableState { it.search }.value
-    val defaultSearchEngineId = DefaultSearchEngineProvider(store).getDefaultSearchEngine()?.id
     val searchEngines = with(searchState) {
-        (regionSearchEngines + additionalSearchEngines + availableSearchEngines + customSearchEngines)
-            .filter { it.id != defaultSearchEngineId }
+        regionSearchEngines + additionalSearchEngines + availableSearchEngines + customSearchEngines
     }
     val disabledShortcutsIds = searchState.disabledSearchEngineIds
 
@@ -118,9 +115,11 @@ fun SearchEngineShortcuts(
 
 @Composable
 private fun Title(title: String) {
-    SettingsSectionHeader(
+    Text(
         text = title,
         modifier = Modifier.padding(horizontal = 16.dp),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = FirefoxTheme.typography.headline8,
     )
 }
 
@@ -283,7 +282,7 @@ private fun generateFakeEngines(
 @FlexibleWindowPreview
 @Composable
 private fun SearchEngineShortcutsPreview(
-    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         SearchEngineShortcuts(
@@ -293,7 +292,6 @@ private fun SearchEngineShortcutsPreview(
                     search = SearchState(
                         regionSearchEngines = generateFakeEnginesList(),
                         disabledSearchEngineIds = listOf("7", "8"),
-                        regionDefaultSearchEngineId = "1",
                     ),
                 ),
             ),

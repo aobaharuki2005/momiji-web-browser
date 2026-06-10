@@ -16,8 +16,6 @@
 #include <optional>
 #include <string>
 
-#include "api/task_queue/pending_task_safety_flag.h"
-#include "api/task_queue/task_queue_base.h"
 #include "api/transport/ecn_marking.h"
 #include "api/units/timestamp.h"
 #include "p2p/base/packet_transport_internal.h"
@@ -80,11 +78,7 @@ class FakePacketTransport : public PacketTransportInternal {
     SendPacketInternal(packet, options);
 
     SentPacketInfo sent_packet(options.packet_id, TimeMillis());
-    // Because handlers of NotifySentPacket may be sending packets,
-    // dispatch this call to a new task.
-    TaskQueueBase::Current()->PostTask(
-        SafeTask(safety_.flag(),
-                 [this, sent_packet] { NotifySentPacket(this, sent_packet); }));
+    SignalSentPacket(this, sent_packet);
     return static_cast<int>(len);
   }
 
@@ -106,9 +100,6 @@ class FakePacketTransport : public PacketTransportInternal {
   void SetError(int error) { error_ = error; }
 
   const CopyOnWriteBuffer* last_sent_packet() { return &last_sent_packet_; }
-  const AsyncSocketPacketOptions& last_sent_packet_options() const {
-    return last_sent_packet_options_;
-  }
 
   std::optional<NetworkRoute> network_route() const override {
     return network_route_;
@@ -144,7 +135,6 @@ class FakePacketTransport : public PacketTransportInternal {
   void SendPacketInternal(const CopyOnWriteBuffer& packet,
                           const AsyncSocketPacketOptions& options) {
     last_sent_packet_ = packet;
-    last_sent_packet_options_ = options;
     if (dest_) {
       dest_->NotifyPacketReceived(ReceivedIpPacket(
           packet, SocketAddress(), Timestamp::Micros(TimeMicros()),
@@ -153,7 +143,6 @@ class FakePacketTransport : public PacketTransportInternal {
   }
 
   CopyOnWriteBuffer last_sent_packet_;
-  AsyncSocketPacketOptions last_sent_packet_options_;
   std::string transport_name_;
   FakePacketTransport* dest_ = nullptr;
   bool writable_ = false;
@@ -163,7 +152,6 @@ class FakePacketTransport : public PacketTransportInternal {
   int error_ = 0;
 
   std::optional<NetworkRoute> network_route_;
-  ScopedTaskSafety safety_;
 };
 
 }  //  namespace webrtc

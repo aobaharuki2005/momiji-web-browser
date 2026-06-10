@@ -210,8 +210,8 @@ std::unique_ptr<TabCaptureInfo> CreateTabCaptureInfo() {
 template <typename Source>
 class DesktopCaptureDeviceInfo final : public VideoCaptureModule::DeviceInfo {
  public:
-  explicit DesktopCaptureDeviceInfo(
-      std::unique_ptr<CaptureInfo<Source>>&& aSourceInfo);
+  DesktopCaptureDeviceInfo(int32_t aId,
+                           std::unique_ptr<CaptureInfo<Source>>&& aSourceInfo);
 
   int32_t Refresh() override;
 
@@ -240,6 +240,7 @@ class DesktopCaptureDeviceInfo final : public VideoCaptureModule::DeviceInfo {
                          VideoRotation& aOrientation) override;
 
  protected:
+  int32_t mId;
   std::unique_ptr<CaptureInfo<Source>> mDeviceInfo;
 };
 
@@ -248,8 +249,8 @@ using TabDeviceInfo = DesktopCaptureDeviceInfo<TabSource>;
 
 template <typename Source>
 DesktopCaptureDeviceInfo<Source>::DesktopCaptureDeviceInfo(
-    std::unique_ptr<CaptureInfo<Source>>&& aSourceInfo)
-    : mDeviceInfo(std::move(aSourceInfo)) {}
+    int32_t aId, std::unique_ptr<CaptureInfo<Source>>&& aSourceInfo)
+    : mId(aId), mDeviceInfo(std::move(aSourceInfo)) {}
 
 template <typename Source>
 int32_t DesktopCaptureDeviceInfo<Source>::Refresh() {
@@ -375,12 +376,12 @@ int32_t DesktopCaptureDeviceInfo<Source>::GetOrientation(
 }
 
 std::shared_ptr<VideoCaptureModule::DeviceInfo> CreateDesktopDeviceInfo(
-    std::unique_ptr<DesktopCaptureInfo>&& aInfo) {
-  return std::make_shared<DesktopDeviceInfo>(std::move(aInfo));
+    int32_t aId, std::unique_ptr<DesktopCaptureInfo>&& aInfo) {
+  return std::make_shared<DesktopDeviceInfo>(aId, std::move(aInfo));
 }
 
 std::shared_ptr<VideoCaptureModule::DeviceInfo> CreateTabDeviceInfo(
-    std::unique_ptr<TabCaptureInfo>&& aInfo) {
-  return std::make_shared<TabDeviceInfo>(std::move(aInfo));
+    int32_t aId, std::unique_ptr<TabCaptureInfo>&& aInfo) {
+  return std::make_shared<TabDeviceInfo>(aId, std::move(aInfo));
 }
 }  // namespace webrtc

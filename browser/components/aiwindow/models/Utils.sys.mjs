@@ -11,27 +11,31 @@
  */
 
 import { createEngine } from "chrome://global/content/ml/EngineProcess.sys.mjs";
+import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
 import {
   OAUTH_CLIENT_ID,
-  SCOPE_PROFILE_UID,
-  SCOPE_SMART_WINDOW,
+  SCOPE_PROFILE,
 } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = XPCOMUtils.declareLazy({
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  getFxAccountsSingleton: "resource://gre/modules/FxAccounts.sys.mjs",
 });
 
-const APIKEY_PREF = "browser.smartwindow.apiKey";
-export const MODEL_PREF = "browser.smartwindow.model";
-const ENDPOINT_PREF = "browser.smartwindow.endpoint";
-const GENERIC_MODEL_NAME = "generic";
+const MODEL_PREF = "browser.aiwindow.model";
 
 /**
  * Default engine ID used for all AI Window features
  */
 export const DEFAULT_ENGINE_ID = "smart-openai";
+
+/**
+ * Service types for different AI Window features
+ */
+export const SERVICE_TYPES = Object.freeze({
+  AI: "ai",
+  MEMORIES: "memories",
+});
 
 /**
  * Observer for model preference changes.
@@ -57,53 +61,34 @@ Services.prefs.addObserver(MODEL_PREF, modelPrefObserver);
 export const MODEL_FEATURES = Object.freeze({
   CHAT: "chat",
   TITLE_GENERATION: "title-generation",
-  CONVERSATION_STARTERS_SIDEBAR_SYSTEM: "conversation-starters-sidebar-system",
   CONVERSATION_SUGGESTIONS_SIDEBAR_STARTER:
     "conversation-suggestions-sidebar-starter",
   CONVERSATION_SUGGESTIONS_FOLLOWUP: "conversation-suggestions-followup",
   CONVERSATION_SUGGESTIONS_ASSISTANT_LIMITATIONS:
     "conversation-suggestions-assistant-limitations",
   CONVERSATION_SUGGESTIONS_MEMORIES: "conversation-suggestions-memories",
-  // memories generation features
-  MEMORIES_INITIAL_GENERATION_SYSTEM: "memories-initial-generation-system",
-  MEMORIES_INITIAL_GENERATION_USER: "memories-initial-generation-user",
-  MEMORIES_QUALITY_AND_SENSITIVITY_FILTER_SYSTEM:
-    "memories-quality-and-sensitivity-filter-system",
-  MEMORIES_QUALITY_AND_SENSITIVITY_FILTER_USER:
-    "memories-quality-and-sensitivity-filter-user",
-  MEMORIES_DEDUPLICATION_SYSTEM: "memories-deduplication-system",
-  MEMORIES_DEDUPLICATION_USER: "memories-deduplication-user",
-  // memories usage features
-  MEMORIES_MESSAGE_CLASSIFICATION_SYSTEM:
-    "memories-message-classification-system",
-  MEMORIES_MESSAGE_CLASSIFICATION_USER: "memories-message-classification-user",
-  // real time context
-  REAL_TIME_CONTEXT_DATE: "real-time-context-date",
-  REAL_TIME_CONTEXT_TAB: "real-time-context-tab",
-  REAL_TIME_CONTEXT_MENTIONS: "real-time-context-mentions",
-  MEMORIES_RELEVANT_CONTEXT: "memories-relevant-context",
-  DISABLE_TABLE_INSTRUCTIONS: "disable-table-instructions",
-  ENABLE_TABLE_INSTRUCTIONS: "enable-table-instructions",
-});
-
-/** @typedef {(typeof MODEL_FEATURES)[keyof typeof MODEL_FEATURES]} ModelFeature */
-
-/**
- * Service types for different AI Window features
- */
-export const SERVICE_TYPES = Object.freeze({
-  AI: "ai",
+  // TODO: update with actual memories prompts identifiers
   MEMORIES: "memories",
 });
 
 /**
- * Purposes for different AI Window features, used to track usage and performance in telemetry
+ * Default model IDs for each feature.
+ * These are Mozilla's recommended models, used when user hasn't configured
+ * custom settings or when remote setting retrieval fails.
  */
-export const PURPOSES = Object.freeze({
-  CHAT: "chat",
-  TITLE_GENERATION: "title-generation",
-  CONVERSATION_STARTERS_SIDEBAR: "convo-starters-sidebar",
-  MEMORY_GENERATION: "memory-generation",
+export const DEFAULT_MODEL = Object.freeze({
+  [MODEL_FEATURES.CHAT]: "qwen3-235b-a22b-instruct-2507-maas",
+  [MODEL_FEATURES.TITLE_GENERATION]: "qwen3-235b-a22b-instruct-2507-maas",
+  [MODEL_FEATURES.CONVERSATION_SUGGESTIONS_SIDEBAR_STARTER]:
+    "qwen3-235b-a22b-instruct-2507-maas",
+  [MODEL_FEATURES.CONVERSATION_SUGGESTIONS_FOLLOWUP]:
+    "qwen3-235b-a22b-instruct-2507-maas",
+  [MODEL_FEATURES.CONVERSATION_SUGGESTIONS_ASSISTANT_LIMITATIONS]:
+    "qwen3-235b-a22b-instruct-2507-maas",
+  [MODEL_FEATURES.CONVERSATION_SUGGESTIONS_INSIGHTS]:
+    "qwen3-235b-a22b-instruct-2507-maas",
+  // TODO: update with actual memories default model
+  [MODEL_FEATURES.MEMORIES]: "qwen3-235b-a22b-instruct-2507-maas",
 });
 
 /**
@@ -112,34 +97,15 @@ export const PURPOSES = Object.freeze({
  * - Update this constant
  * - Ensure Remote Settings has configs for the new major version
  * - Old clients will continue using old major version
- *
- * Keep ui/test/browser/head.js MOCK_RS_RECORDS aligned with this table.
  */
 export const FEATURE_MAJOR_VERSIONS = Object.freeze({
-  [MODEL_FEATURES.CHAT]: 5,
+  [MODEL_FEATURES.CHAT]: 1,
   [MODEL_FEATURES.TITLE_GENERATION]: 1,
-  [MODEL_FEATURES.CONVERSATION_STARTERS_SIDEBAR_SYSTEM]: 1,
-  [MODEL_FEATURES.CONVERSATION_SUGGESTIONS_SIDEBAR_STARTER]: 2,
+  [MODEL_FEATURES.CONVERSATION_SUGGESTIONS_SIDEBAR_STARTER]: 1,
   [MODEL_FEATURES.CONVERSATION_SUGGESTIONS_FOLLOWUP]: 1,
   [MODEL_FEATURES.CONVERSATION_SUGGESTIONS_ASSISTANT_LIMITATIONS]: 1,
-  [MODEL_FEATURES.CONVERSATION_SUGGESTIONS_MEMORIES]: 1,
-  // memories generation feature versions
-  [MODEL_FEATURES.MEMORIES_INITIAL_GENERATION_SYSTEM]: 3,
-  [MODEL_FEATURES.MEMORIES_INITIAL_GENERATION_USER]: 3,
-  [MODEL_FEATURES.MEMORIES_DEDUPLICATION_SYSTEM]: 1,
-  [MODEL_FEATURES.MEMORIES_DEDUPLICATION_USER]: 1,
-  [MODEL_FEATURES.MEMORIES_QUALITY_AND_SENSITIVITY_FILTER_SYSTEM]: 1,
-  [MODEL_FEATURES.MEMORIES_QUALITY_AND_SENSITIVITY_FILTER_USER]: 1,
-  // memories usage feature versions
-  [MODEL_FEATURES.MEMORIES_MESSAGE_CLASSIFICATION_SYSTEM]: 1,
-  [MODEL_FEATURES.MEMORIES_MESSAGE_CLASSIFICATION_USER]: 1,
-  [MODEL_FEATURES.MEMORIES_RELEVANT_CONTEXT]: 2,
-  // real-time-context fragments and table-instructions fragments
-  [MODEL_FEATURES.REAL_TIME_CONTEXT_DATE]: 1,
-  [MODEL_FEATURES.REAL_TIME_CONTEXT_TAB]: 1,
-  [MODEL_FEATURES.REAL_TIME_CONTEXT_MENTIONS]: 1,
-  [MODEL_FEATURES.ENABLE_TABLE_INSTRUCTIONS]: 1,
-  [MODEL_FEATURES.DISABLE_TABLE_INSTRUCTIONS]: 1,
+  [MODEL_FEATURES.CONVERSATION_SUGGESTIONS_INSIGHTS]: 1,
+  // TODO: add major version for memories prompts
 });
 
 /**
@@ -156,18 +122,13 @@ export const FEATURE_MAJOR_VERSIONS = Object.freeze({
  */
 
 /**
- * @typedef {object} RemoteSettingsClient
- * @property {() => Promise<object[]>} get - Function to get records from remote settings
- */
-
-/**
- * Parses a version string in the format "{major}.{minor}".
+ * Parses a version string in the format "v{major}.{minor}".
  *
- * @param {string} versionString - Version string to parse (e.g., "1.2")
+ * @param {string} versionString - Version string to parse (e.g., "v1.2")
  * @returns {object|null} Parsed version with major and minor numbers, or null if invalid
  */
-export function parseVersion(versionString) {
-  const match = /^v?(\d+)\.(\d+)$/.exec(versionString || "");
+function parseVersion(versionString) {
+  const match = /^v(\d+)\.(\d+)$/.exec(versionString || "");
   if (!match) {
     return null;
   }
@@ -176,18 +137,6 @@ export function parseVersion(versionString) {
     minor: Number(match[2]),
     original: versionString,
   };
-}
-
-/**
- * Verifies that the RS record matches the current Fx build
- *
- * @param {string} recordVersion {majorVersion}.{minorVersion}
- * @param {string} comparisonVersion major version supported by this build
- * @returns {boolean} whether or not major version in recordVersion matches comparisonVersion
- */
-export function checkMajorVersion(recordVersion, comparisonVersion) {
-  const parsed = parseVersion(recordVersion);
-  return parsed && parsed.major == comparisonVersion;
 }
 
 /**
@@ -204,75 +153,34 @@ export function checkMajorVersion(recordVersion, comparisonVersion) {
  * @param {object} options - Selection options
  * @param {number} options.majorVersion - Required major version for the feature
  * @param {string} options.userModel - User's preferred model (empty string if none)
- * @param {string} options.modelChoiceId
- * @param {string} options.feature
  * @returns {object|null} Selected config or null if no match
  */
-export function selectMainConfig(
-  featureConfigs,
-  { majorVersion, userModel, modelChoiceId, feature }
-) {
+function selectMainConfig(featureConfigs, { majorVersion, userModel }) {
   // Filter to configs matching the required major version
-  const sameMajor = featureConfigs.filter(config =>
-    checkMajorVersion(config.version, majorVersion)
-  );
+  const sameMajor = featureConfigs.filter(config => {
+    const parsed = parseVersion(config.version);
+    return parsed && parsed.major === majorVersion;
+  });
 
   if (sameMajor.length === 0) {
-    console.warn(`Missing featureConfigs for major version ${majorVersion}`);
     return null;
   }
 
-  // We only allow customization of main assistant model ("chat" feature)
-  // We figure out which model the user wants and load prompts for that model
-  // If we can't find a config for the user selection, we load the generic one
-  if (feature === MODEL_FEATURES.CHAT) {
-    if (modelChoiceId !== "0") {
-      // First check the choice ID. If it's not 0, use the model associated with that ID
-
-      // Look for config based on model choice ID
-      const userModelConfig = sameMajor.find(
-        config => config.model_choice_id == modelChoiceId
-      );
-      // Return if we found it
-      if (userModelConfig) {
-        return userModelConfig;
-      }
-      // Config for user's model choice ID not found in this major version - fall through to generic
-      console.warn(
-        `User model choice "${modelChoiceId}" not found for major version ${majorVersion} for feature '${feature}', using generic`
-      );
-    } else {
-      // If the choice ID is 0 or null, check the provided model name
-
-      // Look for config based on the user-provided model name
-      // This is the case where the user provides a model name for which we have a fine-tuned prompt
-      const userModelConfig = sameMajor.find(
-        config => config.model === userModel
-      );
-      // Return if we found it
-      if (userModelConfig) {
-        return userModelConfig;
-      }
-      // Config for user-provided model name not found in this major version - fall through to generic
-      console.warn(
-        `User model "${userModel}" not found for major version ${majorVersion} for feature '${feature}', using generic`
-      );
-    }
-
-    // If both cases above failed, load the generic config
-    const genericConfig = sameMajor.find(
-      config => config.model === GENERIC_MODEL_NAME
+  // If user specified a model preference, find that model's config
+  if (userModel) {
+    const userModelConfig = sameMajor.find(
+      config => config.model === userModel
     );
-    // Inject the user model if one was provided
-    // If one wasn't, we return the generic config plain, which will intentionally break inference
-    if (userModel) {
-      genericConfig.model = userModel;
+    if (userModelConfig) {
+      return userModelConfig;
     }
-    return genericConfig;
+    // User's model not found in this major version - fall through to defaults
+    console.warn(
+      `User model "${userModel}" not found for major version ${majorVersion}, using default`
+    );
   }
 
-  // **For all features other than "chat"**
-  // If no user model pref OR user's model not found: use default
+  // No user model pref OR user's model not found: use default
   const defaultConfig = sameMajor.find(config => config.is_default === true);
   if (defaultConfig) {
     return defaultConfig;
@@ -308,48 +216,25 @@ export class openAIEngine {
   static _remoteClient = null;
 
   /**
-   * Main feature name. Retained on the instance so _recreateEngine() can
-   * rebuild after 401 retry without the caller re-supplying it.
+   * Configuration map: { featureName: configObject }
+   *
+   * @type {object | null}
+   */
+  #configs = null;
+
+  /**
+   * Main feature name
    *
    * @type {string | null}
    */
   feature = null;
 
   /**
-   * Resolved model name for LLM inference. Retained on the instance for
-   * _recreateEngine() (same reason as `feature`).
+   * Resolved model name for LLM inference
    *
    * @type {string | null}
    */
   model = null;
-
-  /**
-   * Engine ID used for creating the engine instance
-   *
-   * @type {string | null}
-   */
-  #engineId = null;
-
-  /**
-   * Service type used for creating the engine instance
-   *
-   * @type {string | null}
-   */
-  #serviceType = null;
-
-  /**
-   * Purpose used for creating the engine instance
-   *
-   * @type {string | null}
-   */
-  #purpose = null;
-
-  /**
-   * Flow ID for correlating frontend and backend telemetry.
-   *
-   * @type {string | null}
-   */
-  #flowId = null;
 
   /**
    * Gets the Remote Settings client for AI window configurations.
@@ -370,42 +255,211 @@ export class openAIEngine {
   }
 
   /**
-   * Checks whether a custom endpoint is configured via pref.
+   * Applies default configuration fallback when Remote Settings selection fails
    *
-   * @returns {boolean} True if the endpoint pref has a user-set value.
+   * @param {string} feature - The feature identifier
+   * @private
    */
-  static hasCustomEndpoint() {
-    return Services.prefs.prefHasUserValue(ENDPOINT_PREF);
+  _applyDefaultConfig(feature) {
+    this.feature = feature;
+    this.model = DEFAULT_MODEL[feature];
+    this.#configs = {};
   }
 
   /**
-   * Builds an openAIEngine instance.
+   * Loads configuration from Remote Settings with version-aware selection.
    *
-   * @param {object} options
-   * @param {string} options.model
-   * @param {string} options.serviceType
-   * @param {string} options.purpose
-   * @param {string|null} [options.flowId]
-   * @param {string} options.feature
-   * @returns {Promise<openAIEngine>}
+   * Selection logic:
+   * 1. Filters configs by feature and major version compatibility
+   * 2. If user has model preference, finds latest minor for that model
+   * 3. Otherwise, finds latest minor among default configs
+   * 4. Falls back to latest minor overall if no defaults
+   * 5. Falls back to local defaults if no matching major version
+   *
+   * @param {string} feature - The feature identifier from MODEL_FEATURES
+   * @returns {Promise<void>}
+   *   Sets this.feature to the feature name
+   *   Sets this.model to the selected model ID
+   *   Sets this.#configs to contain feature's and additional_components' configs
    */
-  static async build({ model, serviceType, purpose, flowId, feature }) {
+  async loadConfig(feature) {
+    const client = openAIEngine.getRemoteClient();
+    const allRecords = await client.get();
+
+    // Filter to configs for this feature
+    const featureConfigs = allRecords.filter(
+      record => record.feature === feature
+    );
+
+    // Fallback to default if no remote settings records for given feature
+    if (!featureConfigs.length) {
+      console.warn(
+        `No Remote Settings records found for feature: ${feature}, using default`
+      );
+      this._applyDefaultConfig(feature);
+      return;
+    }
+
+    const majorVersion = FEATURE_MAJOR_VERSIONS[feature];
+    const userModel = Services.prefs.getStringPref(MODEL_PREF, "");
+
+    // Find matching config with version and provided userModel pref
+    const mainConfig = selectMainConfig(featureConfigs, {
+      majorVersion,
+      userModel,
+    });
+
+    if (!mainConfig) {
+      console.warn(
+        `No matching model config found for feature: ${feature} with major version ${majorVersion}, using default`
+      );
+      this._applyDefaultConfig(feature);
+      return;
+    }
+
+    // Store the selected configuration
+    this.feature = feature;
+    this.model = mainConfig.model;
+
+    // Build configsMap for looking up additional_components
+    const configsMap = new Map(allRecords.map(r => [r.feature, r]));
+
+    // Build configs map: { featureName: configObject }
+    this.#configs = {};
+    this.#configs[feature] = mainConfig;
+
+    // Add additional_components if exists
+    // This field lists what other remote settings configs are needed
+    // as dependency to the current feature.
+    if (mainConfig.additional_components) {
+      for (const componentFeature of mainConfig.additional_components) {
+        const componentConfig = configsMap.get(componentFeature);
+        if (componentConfig) {
+          this.#configs[componentFeature] = componentConfig;
+        } else {
+          console.warn(
+            `Additional component "${componentFeature}" not found in Remote Settings`
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Gets the configuration for a specific feature.
+   *
+   * @param {string} [feature] - The feature identifier. Defaults to the main feature.
+   * @returns {object|null} The feature's configuration object
+   */
+  getConfig(feature) {
+    const targetFeature = feature || this.feature;
+    return this.#configs?.[targetFeature] || null;
+  }
+
+  /**
+   * Loads a prompt for the specified feature.
+   * Tries Remote Settings first, then falls back to local prompts.
+   *
+   * @param {string} feature - The feature identifier
+   * @returns {Promise<string>} The prompt content
+   */
+  async loadPrompt(feature) {
+    // Try loading from Remote Settings first
+    const config = this.getConfig(feature);
+    if (config?.prompts) {
+      return config.prompts;
+    }
+
+    console.warn(
+      `No Remote Settings prompt for ${feature}, falling back to local`
+    );
+
+    // Fall back to local prompts
+    try {
+      return await this.#loadLocalPrompt(feature);
+    } catch (error) {
+      throw new Error(`Failed to load prompt for ${feature}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Loads a prompt from local prompt files.
+   *
+   * @param {string} feature - The feature identifier
+   * @returns {Promise<string>} The prompt content from local files
+   */
+  async #loadLocalPrompt(feature) {
+    switch (feature) {
+      case MODEL_FEATURES.CHAT: {
+        const { assistantPrompt } = await import(
+          "moz-src:///browser/components/aiwindow/models/prompts/AssistantPrompts.sys.mjs"
+        );
+        return assistantPrompt;
+      }
+      case MODEL_FEATURES.TITLE_GENERATION: {
+        const { titleGenerationPrompt } = await import(
+          "moz-src:///browser/components/aiwindow/models/prompts/TitleGenerationPrompts.sys.mjs"
+        );
+        return titleGenerationPrompt;
+      }
+      case MODEL_FEATURES.CONVERSATION_SUGGESTIONS_SIDEBAR_STARTER: {
+        const { conversationStarterPrompt } = await import(
+          "moz-src:///browser/components/aiwindow/models/prompts/ConversationSuggestionsPrompts.sys.mjs"
+        );
+        return conversationStarterPrompt;
+      }
+      case MODEL_FEATURES.CONVERSATION_SUGGESTIONS_FOLLOWUP: {
+        const { conversationFollowupPrompt } = await import(
+          "moz-src:///browser/components/aiwindow/models/prompts/ConversationSuggestionsPrompts.sys.mjs"
+        );
+        return conversationFollowupPrompt;
+      }
+      case MODEL_FEATURES.CONVERSATION_SUGGESTIONS_ASSISTANT_LIMITATIONS: {
+        const { assistantLimitations } = await import(
+          "moz-src:///browser/components/aiwindow/models/prompts/ConversationSuggestionsPrompts.sys.mjs"
+        );
+        return assistantLimitations;
+      }
+      case MODEL_FEATURES.CONVERSATION_SUGGESTIONS_MEMORIES: {
+        const { conversationMemoriesPrompt } = await import(
+          "moz-src:///browser/components/aiwindow/models/prompts/ConversationSuggestionsPrompts.sys.mjs"
+        );
+        return conversationMemoriesPrompt;
+      }
+      // TODO: add local memories prompts imports for each feature
+      default:
+        throw new Error(`No local prompt found for feature: ${feature}`);
+    }
+  }
+
+  /**
+   * Builds an openAIEngine instance with configuration loaded from Remote Settings.
+   *
+   * @param {string} feature
+   *   The feature name to use to retrieve remote settings for prompts.
+   * @param {string} engineId
+   *   The engine ID for MLEngine creation. Defaults to DEFAULT_ENGINE_ID.
+   * @param {string} serviceType
+   *   The type of message to be sent ("ai", "memories", "s2s").
+   *   Defaults to SERVICE_TYPES.AI.
+   * @returns {Promise<object>}
+   *   Promise that will resolve to the configured engine instance.
+   */
+  static async build(
+    feature,
+    engineId = DEFAULT_ENGINE_ID,
+    serviceType = SERVICE_TYPES.AI
+  ) {
     const engine = new openAIEngine();
-    const engineId = `${DEFAULT_ENGINE_ID}-${feature}-${model}`;
-    engine.#engineId = engineId;
-    engine.feature = feature;
-    engine.model = model;
-    engine.#serviceType = serviceType;
-    engine.#purpose = purpose;
-    engine.#flowId = flowId;
+
+    await engine.loadConfig(feature);
+
     engine.engineInstance = await openAIEngine.#createOpenAIEngine(
       engineId,
       serviceType,
-      purpose,
-      model,
-      flowId,
-      feature
+      engine.model
     );
+
     return engine;
   }
 
@@ -416,9 +470,10 @@ export class openAIEngine {
    */
   static async getFxAccountToken() {
     try {
-      const fxAccounts = lazy.getFxAccountsSingleton();
+      const fxAccounts = getFxAccountsSingleton();
       return await fxAccounts.getOAuthToken({
-        scope: [SCOPE_SMART_WINDOW, SCOPE_PROFILE_UID],
+        // Scope needs to be updated in accordance with https://bugzilla.mozilla.org/show_bug.cgi?id=2005290
+        scope: SCOPE_PROFILE,
         client_id: OAUTH_CLIENT_ID,
       });
     } catch (error) {
@@ -428,41 +483,16 @@ export class openAIEngine {
   }
 
   /**
-   * Checks if an error is an HTTP 429 from MLPA. MLPA returns 429 for several
-   * sub-conditions (budget overage, QPS rate limit, upstream limit, etc.)
-   * callers should back off the same way regardless of the sub-code.
-   *
-   * @param {Error} error  The error to check
-   * @returns {boolean}    True if the error is a 429
-   */
-  static is429Error(error) {
-    if (!error) {
-      return false;
-    }
-    return error.status === 429 || !!error.message?.includes("429 status code");
-  }
-
-  /**
    * Creates an OpenAI engine instance
    *
    * @param {string} engineId     The identifier for the engine instance
    * @param {string} serviceType  The type of message to be sent ("ai", "memories", "s2s")
-   * @param {string} purpose      The purpose of the request, used for telemetry tracking
    * @param {string | null} modelId  The resolved model ID (already contains fallback logic)
-   * @param {string | null} flowId   Flow ID for correlating frontend and backend telemetry
-   * @param {string | null} featureId  Feature name passed to PipelineOptions
    * @returns {Promise<object>}   The configured engine instance
    */
-  static async #createOpenAIEngine(
-    engineId,
-    serviceType,
-    purpose,
-    modelId = null,
-    flowId = null,
-    featureId = null
-  ) {
+  static async #createOpenAIEngine(engineId, serviceType, modelId = null) {
     const extraHeadersPref = Services.prefs.getStringPref(
-      "browser.smartwindow.extraHeaders",
+      "browser.aiwindow.extraHeaders",
       "{}"
     );
     let extraHeaders = {};
@@ -470,22 +500,19 @@ export class openAIEngine {
       extraHeaders = JSON.parse(extraHeadersPref);
     } catch (e) {
       console.error("Failed to parse extra headers from prefs:", e);
-      Services.prefs.clearUserPref("browser.smartwindow.extraHeaders");
+      Services.prefs.clearUserPref("browser.aiwindow.extraHeaders");
     }
 
     try {
       const engineInstance = await openAIEngine._createEngine({
-        apiKey: this.hasCustomEndpoint() ? this.apiKey : "",
+        apiKey: Services.prefs.getStringPref("browser.aiwindow.apiKey", ""),
         backend: "openai",
-        baseURL: this.endpoint,
+        baseURL: Services.prefs.getStringPref("browser.aiwindow.endpoint", ""),
         engineId,
-        featureId,
-        flowId,
         modelId,
         modelRevision: "main",
         taskName: "text-generation",
         serviceType,
-        purpose,
         extraHeaders,
       });
       return engineInstance;
@@ -503,161 +530,7 @@ export class openAIEngine {
    * @returns {object}                  LLM response
    */
   async run(content) {
-    return await this._runWithAuth(content);
-  }
-
-  /**
-   * Helper method to handle 401 authentication errors and retry with new token.
-   *
-   * @param {Map<string, any>} content  OpenAI formatted messages to be sent to the LLM
-   * @returns {object}                  LLM response
-   */
-  async _runWithAuth(content) {
-    try {
-      return await this.engineInstance.run(content);
-    } catch (ex) {
-      // Skip the token retry flow when using a custom endpoint,
-      // as the retry logic only applies to FxAccounts tokens.
-      if (!this._is401Error(ex) || openAIEngine.hasCustomEndpoint()) {
-        throw ex;
-      }
-
-      console.warn(
-        "LLM request returned a 401 - revoking our token and retrying"
-      );
-
-      const fxAccounts = lazy.getFxAccountsSingleton();
-      const oldToken = content.fxAccountToken;
-      if (oldToken) {
-        await fxAccounts.removeCachedOAuthToken({ token: oldToken });
-      }
-
-      await this._recreateEngine();
-
-      const newToken = await openAIEngine.getFxAccountToken();
-      const updatedContent = { ...content, fxAccountToken: newToken };
-
-      try {
-        return await this.engineInstance.run(updatedContent);
-      } catch (retryEx) {
-        if (!this._is401Error(retryEx)) {
-          throw retryEx;
-        }
-
-        console.warn(
-          "Retry LLM request still returned a 401 - revoking our token and failing"
-        );
-
-        if (newToken) {
-          await fxAccounts.removeCachedOAuthToken({ token: newToken });
-        }
-
-        throw retryEx;
-      }
-    }
-  }
-
-  /**
-   * Recreates the engine instance with current configuration.
-   *
-   * @returns {Promise<void>}
-   * @private
-   */
-  async _recreateEngine() {
-    if (!this.#engineId || !this.#serviceType) {
-      console.warn("Cannot recreate engine: missing engineId or serviceType");
-      return;
-    }
-
-    this.engineInstance = await openAIEngine.#createOpenAIEngine(
-      this.#engineId,
-      this.#serviceType,
-      this.#purpose,
-      this.model,
-      this.#flowId,
-      this.feature
-    );
-  }
-
-  /**
-   * Checks if an error is a 401 authentication error.
-   *
-   * @param {Error} error  The error to check
-   * @returns {boolean}    True if the error is a 401 error
-   * @private
-   */
-  _is401Error(error) {
-    if (!error) {
-      return false;
-    }
-
-    return error.status === 401 || error.message?.includes("401 status code");
-  }
-
-  /**
-   * Helper async generator to handle 401 authentication errors and retry with new token for streaming requests.
-   *
-   * @param {Map<string, any>} options  OpenAI formatted messages with streaming and tooling options to be sent to the LLM
-   * @yields {object}                   LLM streaming response chunks
-   */
-  async *_runWithGeneratorAuth(options) {
-    // Extract signal before passing options to engineInstance — AbortSignal
-    // cannot be cloned via postMessage (structured clone algorithm).
-    const { signal, ...engineOptions } = options;
-    try {
-      const generator = this.engineInstance.runWithGenerator(engineOptions);
-      for await (const chunk of generator) {
-        if (signal?.aborted) {
-          return;
-        }
-        yield chunk;
-      }
-    } catch (ex) {
-      // Skip the token retry flow when using a custom endpoint,
-      // as the retry logic only applies to FxAccounts tokens.
-      if (!this._is401Error(ex) || openAIEngine.hasCustomEndpoint()) {
-        throw ex;
-      }
-
-      console.warn(
-        "LLM streaming request returned a 401 - revoking our token and retrying"
-      );
-
-      const fxAccounts = lazy.getFxAccountsSingleton();
-      const oldToken = options.fxAccountToken;
-      if (oldToken) {
-        await fxAccounts.removeCachedOAuthToken({ token: oldToken });
-      }
-
-      await this._recreateEngine();
-
-      const newToken = await openAIEngine.getFxAccountToken();
-      const updatedOptions = { ...engineOptions, fxAccountToken: newToken };
-
-      try {
-        const generator = this.engineInstance.runWithGenerator(updatedOptions);
-        for await (const chunk of generator) {
-          if (signal?.aborted) {
-            return;
-          }
-          yield chunk;
-        }
-      } catch (retryEx) {
-        if (!this._is401Error(retryEx)) {
-          throw retryEx;
-        }
-
-        console.warn(
-          "Retry LLM streaming request still returned a 401 - revoking our token and failing"
-        );
-
-        if (newToken) {
-          await fxAccounts.removeCachedOAuthToken({ token: newToken });
-        }
-
-        throw retryEx;
-      }
-    }
+    return await this.engineInstance.run(content);
   }
 
   /**
@@ -665,68 +538,10 @@ export class openAIEngine {
    * Will eventually use `usage` from the LiteLLM API response for token telemetry
    *
    * @param {Map<string, any>} options  OpenAI formatted messages with streaming and tooling options to be sent to the LLM
-   * @returns {AsyncGenerator}          LLM streaming response
+   * @returns {object}                  LLM response
    */
   runWithGenerator(options) {
-    return this._runWithGeneratorAuth(options);
-  }
-}
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  openAIEngine,
-  "endpoint",
-  ENDPOINT_PREF,
-  "https://mlpa-prod-prod-mozilla.global.ssl.fastly.net/v1"
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(openAIEngine, "apiKey", APIKEY_PREF, "");
-
-/**
- * Resolves chat model metadata for a given choice ID from Remote Settings.
- *
- * @param {string} choiceId - Model choice ID (e.g., "1", "2", "3")
- * @param {number} [maxMajorVersion] - Maximum major version to include
- * @returns {Promise<{model: string, ownerName: string}|null>}
- *   Returns null if choice ID not found in Remote Settings
- */
-export async function resolveChatModelChoice(
-  choiceId,
-  maxMajorVersion = FEATURE_MAJOR_VERSIONS[MODEL_FEATURES.CHAT]
-) {
-  if (choiceId === "0") {
-    // Custom model - no RS lookup needed
-    return {
-      model: "custom-model",
-      ownerName: "",
-    };
-  }
-
-  try {
-    const client = openAIEngine.getRemoteClient();
-    const allRecords = await client.get();
-
-    const record = selectMainConfig(
-      allRecords.filter(r => r.feature === MODEL_FEATURES.CHAT),
-      {
-        majorVersion: maxMajorVersion,
-        feature: MODEL_FEATURES.CHAT,
-        modelChoiceId: choiceId,
-      }
-    );
-    if (!record) {
-      return null;
-    }
-
-    return {
-      model: record.model,
-      ownerName: record.owner_name ?? "",
-    };
-  } catch (error) {
-    console.warn(
-      "Failed to resolve chat model choice from Remote Settings:",
-      error
-    );
-    return null;
+    return this.engineInstance.runWithGenerator(options);
   }
 }
 
@@ -737,12 +552,12 @@ export async function resolveChatModelChoice(
  * @param {Map<string, string>} stringsToReplace  A map of placeholder strings to their replacements
  * @returns {Promise<string>}                     The rendered prompt
  */
-export function renderPrompt(rawPromptContent, stringsToReplace = {}) {
+export async function renderPrompt(rawPromptContent, stringsToReplace = {}) {
   let finalPromptContent = rawPromptContent;
 
   for (const [orig, repl] of Object.entries(stringsToReplace)) {
     const regex = new RegExp(`{${orig}}`, "g");
-    finalPromptContent = finalPromptContent.replace(regex, () => repl);
+    finalPromptContent = finalPromptContent.replace(regex, repl);
   }
 
   return finalPromptContent;

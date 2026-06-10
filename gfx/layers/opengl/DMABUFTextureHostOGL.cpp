@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -49,13 +51,6 @@ gfx::ColorRange DMABUFTextureHostOGL::GetColorRange() const {
                                  : gfx::ColorRange::LIMITED;
 }
 
-gfx::TransferFunction DMABUFTextureHostOGL::GetTransferFunction() const {
-  if (!mSurface) {
-    return gfx::TransferFunction::BT709;
-  }
-  return mSurface->GetTransferFunction();
-}
-
 uint32_t DMABUFTextureHostOGL::NumSubTextures() {
   return mSurface ? mSurface->GetTextureCount() : 0;
 }
@@ -76,7 +71,8 @@ void DMABUFTextureHostOGL::CreateRenderTexture(
   if (!mSurface) {
     return;
   }
-  RefPtr texture = MakeRefPtr<wr::RenderDMABUFTextureHost>(mSurface);
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderDMABUFTextureHost(mSurface);
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
@@ -99,10 +95,7 @@ void DMABUFTextureHostOGL::PushResourceUpdates(
     case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8X8:
     case gfx::SurfaceFormat::B8G8R8A8: {
-      if (aImageKeys.length() != 1) {
-        MOZ_ASSERT_UNREACHABLE("unexpected key length");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 1);
       // XXX Add RGBA handling. Temporary hack to avoid crash
       // With BGRA format setting, rendering works without problem.
       wr::ImageDescriptor descriptor(GetSize(), mSurface->GetFormat());
@@ -111,10 +104,8 @@ void DMABUFTextureHostOGL::PushResourceUpdates(
       break;
     }
     case gfx::SurfaceFormat::NV12: {
-      if (aImageKeys.length() != 2 || mSurface->GetTextureCount() != 2) {
-        MOZ_ASSERT_UNREACHABLE("unexpected key length or plane count");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 2);
+      MOZ_ASSERT(mSurface->GetTextureCount() == 2);
       wr::ImageDescriptor descriptor0(
           gfx::IntSize(mSurface->GetWidth(0), mSurface->GetHeight(0)),
           gfx::SurfaceFormat::A8);
@@ -128,10 +119,8 @@ void DMABUFTextureHostOGL::PushResourceUpdates(
       break;
     }
     case gfx::SurfaceFormat::YUV420: {
-      if (aImageKeys.length() != 3 || mSurface->GetTextureCount() != 3) {
-        MOZ_ASSERT_UNREACHABLE("unexpected key length or plane count");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 3);
+      MOZ_ASSERT(mSurface->GetTextureCount() == 3);
       wr::ImageDescriptor descriptor0(
           gfx::IntSize(mSurface->GetWidth(0), mSurface->GetHeight(0)),
           gfx::SurfaceFormat::A8);
@@ -148,10 +137,8 @@ void DMABUFTextureHostOGL::PushResourceUpdates(
     }
     case gfx::SurfaceFormat::P010:
     case gfx::SurfaceFormat::P016: {
-      if (aImageKeys.length() != 2 || mSurface->GetTextureCount() != 2) {
-        MOZ_ASSERT_UNREACHABLE("unexpected key length or plane count");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 2);
+      MOZ_ASSERT(mSurface->GetTextureCount() == 2);
       wr::ImageDescriptor descriptor0(
           gfx::IntSize(mSurface->GetWidth(0), mSurface->GetHeight(0)),
           gfx::SurfaceFormat::A16);
@@ -188,10 +175,7 @@ void DMABUFTextureHostOGL::PushDisplayItems(
     case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8A8:
     case gfx::SurfaceFormat::B8G8R8X8: {
-      if (aImageKeys.length() != 1) {
-        MOZ_ASSERT_UNREACHABLE("unexpected key length");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 1);
       aBuilder.PushImage(aBounds, aClip, true, false, aFilter, aImageKeys[0],
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                          wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
@@ -199,10 +183,8 @@ void DMABUFTextureHostOGL::PushDisplayItems(
       break;
     }
     case gfx::SurfaceFormat::NV12: {
-      if (aImageKeys.length() != 2 || mSurface->GetTextureCount() != 2) {
-        MOZ_ASSERT_UNREACHABLE("unexpected key length or plane count");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 2);
+      MOZ_ASSERT(mSurface->GetTextureCount() == 2);
       // Those images can only be generated at present by the VAAPI H264 decoder
       // which only supports 8 bits color depth.
       aBuilder.PushNV12Image(
@@ -213,10 +195,8 @@ void DMABUFTextureHostOGL::PushDisplayItems(
       break;
     }
     case gfx::SurfaceFormat::YUV420: {
-      if (aImageKeys.length() != 3 || mSurface->GetTextureCount() != 3) {
-        MOZ_ASSERT_UNREACHABLE("unexpected key length or plane count");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 3);
+      MOZ_ASSERT(mSurface->GetTextureCount() == 3);
       // Those images can only be generated at present by the VAAPI vp8 decoder
       // which only supports 8 bits color depth.
       aBuilder.PushYCbCrPlanarImage(
@@ -228,10 +208,8 @@ void DMABUFTextureHostOGL::PushDisplayItems(
     }
     case gfx::SurfaceFormat::P010:
     case gfx::SurfaceFormat::P016: {
-      if (aImageKeys.length() != 2 || mSurface->GetTextureCount() != 2) {
-        MOZ_ASSERT_UNREACHABLE("unexpected key length or plane count");
-        return;
-      }
+      MOZ_ASSERT(aImageKeys.length() == 2);
+      MOZ_ASSERT(mSurface->GetTextureCount() == 2);
       aBuilder.PushP010Image(
           aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
           wr::ColorDepth::Color10, wr::ToWrYuvColorSpace(GetYUVColorSpace()),

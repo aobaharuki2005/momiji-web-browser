@@ -15,11 +15,11 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
-  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
+  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
-  UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
+  UrlbarTokenizer:
+    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
 });
 
 /**
@@ -63,7 +63,7 @@ export class UrlbarProviderPrivateSearch extends UrlbarProvider {
     let searchString = queryContext.trimmedSearchString;
     if (
       queryContext.tokens.some(
-        t => t.type == lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_SEARCH
+        t => t.type == lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH
       )
     ) {
       if (queryContext.tokens.length == 1) {
@@ -72,7 +72,7 @@ export class UrlbarProviderPrivateSearch extends UrlbarProvider {
       }
       // Remove the restriction char from the search string.
       searchString = queryContext.tokens
-        .filter(t => t.type != lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_SEARCH)
+        .filter(t => t.type != lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH)
         .map(t => t.value)
         .join(" ");
     }
@@ -80,11 +80,11 @@ export class UrlbarProviderPrivateSearch extends UrlbarProvider {
     let instance = this.queryInstance;
 
     let engine = queryContext.searchMode?.engineName
-      ? lazy.SearchService.getEngineByName(queryContext.searchMode.engineName)
-      : await lazy.SearchService.getDefaultPrivate();
+      ? Services.search.getEngineByName(queryContext.searchMode.engineName)
+      : await Services.search.getDefaultPrivate();
     let isPrivateEngine =
       lazy.UrlbarSearchUtils.separatePrivateDefault &&
-      engine != (await lazy.SearchService.getDefault());
+      engine != (await Services.search.getDefault());
     this.logger.info(`isPrivateEngine: ${isPrivateEngine}`);
 
     // This is a delay added before returning results, to avoid flicker.

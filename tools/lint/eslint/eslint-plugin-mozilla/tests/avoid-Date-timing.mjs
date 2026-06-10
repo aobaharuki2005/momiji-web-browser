@@ -14,8 +14,8 @@ const ruleTester = new RuleTester();
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidCode(code) {
-  return { code, errors: [{ messageId: "usePerfNow" }] };
+function invalidCode(code, type) {
+  return { code, errors: [{ messageId: "usePerfNow", type }] };
 }
 
 ruleTester.run("avoid-Date-timing", rule, {
@@ -25,5 +25,8 @@ ruleTester.run("avoid-Date-timing", rule, {
     "new Date(2017, 7, 11);",
     "Date.UTC(2017, 7);",
   ],
-  invalid: [invalidCode("Date.now();"), invalidCode("new Date();")],
+  invalid: [
+    invalidCode("Date.now();", "CallExpression"),
+    invalidCode("new Date();", "NewExpression"),
+  ],
 });

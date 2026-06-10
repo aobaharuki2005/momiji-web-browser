@@ -19,7 +19,7 @@ public:
      *  If 'fc' is nullptr, each method call will use the current config.
      *  Takes ownership of 'fc' and will call FcConfigDestroy on it.
      */
-    explicit SkFontConfigInterfaceDirect(FcConfig* fc);
+    SkFontConfigInterfaceDirect(FcConfig* fc);
     ~SkFontConfigInterfaceDirect() override;
 
     bool matchFamilyName(const char familyName[],

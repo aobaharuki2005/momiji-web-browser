@@ -51,10 +51,10 @@ def test_get_commit_patches(repo):
 
     # Create some commits and note the SHAs.
     repo.execute_next_step()
-    nodes.append(vcs.head_rev)
+    nodes.append(vcs.head_ref)
 
     repo.execute_next_step()
-    nodes.append(vcs.head_rev)
+    nodes.append(vcs.head_ref)
 
     patches = vcs.get_commit_patches(nodes)
 

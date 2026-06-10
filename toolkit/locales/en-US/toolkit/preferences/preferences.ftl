@@ -2,9 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-set-password-not-set =
-    .label = Current password:
-    .placeholder = (not set)
+password-not-set =
+    .value = (not set)
 
 failed-pp-change = Unable to change Primary Password.
 incorrect-pp = You did not enter the correct current Primary Password. Please try again.
@@ -21,12 +20,9 @@ pw-remove-button =
 
 primary-password-dialog =
     .title = Primary Password
-set-password-old =
-    .label = Current password:
-set-password-new =
-    .label = Enter new password:
-set-password-reenter =
-    .label = Re-enter password:
+set-password-old-password = Current password:
+set-password-new-password = Enter new password:
+set-password-reenter-password = Re-enter password:
 set-password-meter = Password quality meter
 set-password-meter-loading = Loading
 primary-password-required-by-policy = Your organization requires that you have a Primary Password set in order to save logins and passwords.
@@ -35,9 +31,9 @@ primary-password-warning = Please make sure you remember the Primary Password yo
 
 remove-primary-password =
     .title = Remove Primary Password
-remove-primary-password-info =
-    .value = You must enter your current password to proceed.
+remove-info =
+    .value = You must enter your current password to proceed:
 remove-primary-password-warning1 = Your Primary Password is used to protect sensitive information like logins and passwords.
 remove-primary-password-warning2 = If you remove your Primary Password your information will not be protected if your computer is compromised.
-remove-password-old =
-    .label = Current password:
+remove-password-old-password =
+    .value = Current password:

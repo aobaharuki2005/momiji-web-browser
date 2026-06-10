@@ -17,10 +17,10 @@ const { getLoadedProperties } = require("resource://devtools/client/shared/compo
  * This action is responsible for expanding a given node, which also means that
  * it will call the action responsible to fetch properties.
  */
-function nodeExpand(node, actor, options) {
+function nodeExpand(node, actor) {
   return async ({ dispatch }) => {
     dispatch({ type: "NODE_EXPAND", data: { node } });
-    dispatch(nodeLoadProperties(node, actor, options));
+    dispatch(nodeLoadProperties(node, actor));
   };
 }
 
@@ -36,7 +36,7 @@ function nodeCollapse(node) {
  * symbols for a given node. If we do, it will call the appropriate ObjectFront
  * functions.
  */
-function nodeLoadProperties(node, actor, options) {
+function nodeLoadProperties(node, actor) {
   return async ({ dispatch, client, getState }) => {
     const state = getState();
     const loadedProperties = getLoadedProperties(state);
@@ -48,9 +48,7 @@ function nodeLoadProperties(node, actor, options) {
       const properties = await loadItemProperties(
         node,
         client,
-        loadedProperties,
-        null,
-        options,
+        loadedProperties
       );
 
       // If the client does not have a releaseActor function, it means the actors are

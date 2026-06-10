@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,8 +9,8 @@
 #include "WorkerRef.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
-#include "mozilla/dom/ReportingUtils.h"
 #include "mozilla/dom/SecurityPolicyViolationEvent.h"
+#include "mozilla/dom/SecurityPolicyViolationEventBinding.h"
 #include "mozilla/dom/WorkerRunnable.h"
 
 using namespace mozilla::dom;
@@ -17,22 +19,27 @@ namespace {
 
 class WorkerCSPEventRunnable final : public MainThreadWorkerRunnable {
  public:
-  WorkerCSPEventRunnable(WorkerPrivate* aWorkerPrivate, const nsAString& aJSON,
-                         const nsAString& aReportGroupName)
-      : MainThreadWorkerRunnable("WorkerCSPEventRunnable"),
-        mJSON(aJSON),
-        mReportGroupName(aReportGroupName) {}
+  WorkerCSPEventRunnable(WorkerPrivate* aWorkerPrivate, const nsAString& aJSON)
+      : MainThreadWorkerRunnable("WorkerCSPEventRunnable"), mJSON(aJSON) {}
 
  private:
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
-    ReportingUtils::DeserializeSecurityViolationEventAndReport(
-        aWorkerPrivate->GlobalScope(), aWorkerPrivate->GlobalScope(), mJSON,
-        mReportGroupName);
+    SecurityPolicyViolationEventInit violationEventInit;
+    if (NS_WARN_IF(!violationEventInit.Init(mJSON))) {
+      return true;
+    }
+
+    RefPtr<mozilla::dom::Event> event =
+        mozilla::dom::SecurityPolicyViolationEvent::Constructor(
+            aWorkerPrivate->GlobalScope(), u"securitypolicyviolation"_ns,
+            violationEventInit);
+    event->SetTrusted(true);
+
+    aWorkerPrivate->GlobalScope()->DispatchEvent(*event);
     return true;
   }
 
   const nsString mJSON;
-  const nsString mReportGroupName;
 };
 
 }  // namespace
@@ -64,8 +71,7 @@ WorkerCSPEventListener::WorkerCSPEventListener()
     : mMutex("WorkerCSPEventListener::mMutex") {}
 
 NS_IMETHODIMP
-WorkerCSPEventListener::OnCSPViolationEvent(const nsAString& aJSON,
-                                            const nsAString& aReportGroupName) {
+WorkerCSPEventListener::OnCSPViolationEvent(const nsAString& aJSON) {
   MutexAutoLock lock(mMutex);
   if (!mWorkerRef) {
     return NS_OK;
@@ -76,13 +82,24 @@ WorkerCSPEventListener::OnCSPViolationEvent(const nsAString& aJSON,
 
   if (NS_IsMainThread()) {
     RefPtr<WorkerCSPEventRunnable> runnable =
-        new WorkerCSPEventRunnable(workerPrivate, aJSON, aReportGroupName);
+        new WorkerCSPEventRunnable(workerPrivate, aJSON);
     runnable->Dispatch(workerPrivate);
-  } else {
-    ReportingUtils::DeserializeSecurityViolationEventAndReport(
-        workerPrivate->GlobalScope(), workerPrivate->GlobalScope(), aJSON,
-        aReportGroupName);
+
+    return NS_OK;
   }
+
+  SecurityPolicyViolationEventInit violationEventInit;
+  if (NS_WARN_IF(!violationEventInit.Init(aJSON))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  RefPtr<mozilla::dom::Event> event =
+      mozilla::dom::SecurityPolicyViolationEvent::Constructor(
+          workerPrivate->GlobalScope(), u"securitypolicyviolation"_ns,
+          violationEventInit);
+  event->SetTrusted(true);
+
+  workerPrivate->GlobalScope()->DispatchEvent(*event);
 
   return NS_OK;
 }

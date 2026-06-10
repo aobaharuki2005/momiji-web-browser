@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,8 +9,8 @@
  * style change
  */
 
-#ifndef nsStyleChangeList_h_
-#define nsStyleChangeList_h_
+#ifndef nsStyleChangeList_h___
+#define nsStyleChangeList_h___
 
 #include "nsCOMPtr.h"
 #include "nsChangeHint.h"
@@ -25,6 +27,7 @@ struct nsStyleChangeData {
 
 class nsStyleChangeList : private AutoTArray<nsStyleChangeData, 10> {
   typedef AutoTArray<nsStyleChangeData, 10> base_type;
+  nsStyleChangeList(const nsStyleChangeList&) = delete;
 
  public:
   using base_type::begin;
@@ -33,8 +36,6 @@ class nsStyleChangeList : private AutoTArray<nsStyleChangeData, 10> {
   using base_type::IsEmpty;
   using base_type::Length;
   using base_type::operator[];
-
-  nsStyleChangeList(const nsStyleChangeList&) = delete;
 
   MOZ_COUNTED_DEFAULT_CTOR(nsStyleChangeList)
   MOZ_COUNTED_DTOR(nsStyleChangeList)
@@ -49,4 +50,4 @@ class nsStyleChangeList : private AutoTArray<nsStyleChangeData, 10> {
   }
 };
 
-#endif /* nsStyleChangeList_h_ */
+#endif /* nsStyleChangeList_h___ */

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=4 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -36,7 +38,7 @@ using namespace mozilla;
 
 // We protect only the initialization with the mutex, such that we cannot
 // annotate the following static variables.
-static StaticMutex gInitLock MOZ_ANNOTATED;
+static StaticMutex gInitLock MOZ_UNANNOTATED;
 // The relaxed memory ordering is fine here as we write this only when holding
 // gInitLock and only ever set it true once during EnsureGlobalsAreInited.
 static Atomic<bool, MemoryOrdering::Relaxed> gInitialized(false);

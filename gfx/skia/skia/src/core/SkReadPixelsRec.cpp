@@ -7,19 +7,12 @@
 #include "src/core/SkReadPixelsRec.h"
 
 #include "include/core/SkRect.h"
-#include "src/base/SkSafeMath.h"
 
 bool SkReadPixelsRec::trim(int srcWidth, int srcHeight) {
-    // fInfo.minRowBytes() returns 0 if the size doesn't fit in `size_t`.
-    const size_t minRowBytes = fInfo.minRowBytes();
-    if (nullptr == fPixels || fRowBytes < minRowBytes || minRowBytes == 0) {
+    if (nullptr == fPixels || fRowBytes < fInfo.minRowBytes()) {
         return false;
     }
     if (0 >= fInfo.width() || 0 >= fInfo.height()) {
-        return false;
-    }
-    // negating the largest negative integer (below) is UB
-    if (fX == INT_MIN || fY == INT_MIN) {
         return false;
     }
 
@@ -37,17 +30,9 @@ bool SkReadPixelsRec::trim(int srcWidth, int srcHeight) {
     if (y > 0) {
         y = 0;
     }
-    // here x,y are either 0 or negative (safe to cast to size_t)
+    // here x,y are either 0 or negative
     // we negate and add them so UBSAN (pointer-overflow) doesn't get confused.
-    SkSafeMath safeMath;
-    const size_t y_offset = safeMath.mul(-y, fRowBytes);
-    const size_t x_offset = safeMath.mul(-x, fInfo.bytesPerPixel());
-    const size_t total = safeMath.add(y_offset, x_offset);
-    if (!safeMath.ok()) {
-        return false;
-    }
-
-    fPixels = ((char*)fPixels + total);
+    fPixels = ((char*)fPixels + -y*fRowBytes + -x*fInfo.bytesPerPixel());
     // the intersect may have shrunk info's logical size
     fInfo = fInfo.makeDimensions(srcR.size());
     fX = srcR.x();

@@ -11,7 +11,7 @@
 <body>
 <input type="text" id = "prerenderTextField">
 <script>
-setup(() => assertSpeculationRulesIsSupported('prerender'));
+setup(() => assertSpeculationRulesIsSupported());
 
 promise_test(async t => {
   document.getElementById('prerenderTextField').focus();

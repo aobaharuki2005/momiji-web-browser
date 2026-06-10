@@ -20,7 +20,7 @@ pub(super) fn string_to_words(input: &str) -> Vec<Word> {
 
 pub(super) fn str_bytes_to_words(bytes: &[u8]) -> Vec<Word> {
     let mut words = bytes_to_words(bytes);
-    if bytes.len().is_multiple_of(4) {
+    if bytes.len() % 4 == 0 {
         // nul-termination
         words.push(0x0u32);
     }
@@ -56,12 +56,6 @@ pub(super) const fn map_storage_class(space: crate::AddressSpace) -> spirv::Stor
         crate::AddressSpace::WorkGroup => spirv::StorageClass::Workgroup,
         crate::AddressSpace::Immediate => spirv::StorageClass::PushConstant,
         crate::AddressSpace::TaskPayload => spirv::StorageClass::TaskPayloadWorkgroupEXT,
-        // We can't require capabilities here but we request capabilities on the ray pipeline stages
-        // and when writing global variables - global variables because we may be writing an
-        // uncompacted module and pipeline stages for all other cases because these can only be
-        //accessed in a ray tracing pipeline stage.
-        crate::AddressSpace::RayPayload => spirv::StorageClass::RayPayloadKHR,
-        crate::AddressSpace::IncomingRayPayload => spirv::StorageClass::IncomingRayPayloadKHR,
     }
 }
 
@@ -129,44 +123,6 @@ pub fn global_needs_wrapper(ir_module: &crate::Module, var: &crate::GlobalVariab
     }
 }
 
-/// Returns true if `pointer` refers to two-row matrix which is a member of a
-/// struct in the [`crate::AddressSpace::Uniform`] address space.
-pub fn is_uniform_matcx2_struct_member_access(
-    ir_function: &crate::Function,
-    fun_info: &crate::valid::FunctionInfo,
-    ir_module: &crate::Module,
-    pointer: Handle<crate::Expression>,
-) -> bool {
-    if let crate::TypeInner::Pointer {
-        base: pointer_base_type,
-        space: crate::AddressSpace::Uniform,
-    } = *fun_info[pointer].ty.inner_with(&ir_module.types)
-    {
-        if let crate::TypeInner::Matrix {
-            rows: crate::VectorSize::Bi,
-            ..
-        } = ir_module.types[pointer_base_type].inner
-        {
-            if let crate::Expression::AccessIndex {
-                base: parent_pointer,
-                ..
-            } = ir_function.expressions[pointer]
-            {
-                if let crate::TypeInner::Pointer {
-                    base: parent_type, ..
-                } = *fun_info[parent_pointer].ty.inner_with(&ir_module.types)
-                {
-                    if let crate::TypeInner::Struct { .. } = ir_module.types[parent_type].inner {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-
-    false
-}
-
 ///HACK: this is taken from std unstable, remove it when std's floor_char_boundary is stable
 /// and available in our msrv.
 trait U8Internal {
@@ -194,8 +150,8 @@ impl StrUnstable for str {
                 .iter()
                 .rposition(|b| b.is_utf8_char_boundary_polyfill());
 
-            // We know that the character boundary will be within four bytes.
-            lower_bound + new_index.unwrap()
+            // SAFETY: we know that the character boundary will be within four bytes
+            unsafe { lower_bound + new_index.unwrap_unchecked() }
         }
     }
 }

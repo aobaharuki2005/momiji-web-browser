@@ -2,14 +2,13 @@
 
 use alloc::boxed::Box;
 use alloc::string::String;
-use core::num::NonZero;
+use core::num::NonZeroU16;
 use core::str::{self, FromStr};
 
-use super::{Error, Span, Spanned, ast, unused};
+use super::{ast, unused, Error, Span, Spanned};
 use crate::internal_macros::bug;
 
 /// Parse an AST iterator into a sequence of format items.
-#[inline]
 pub(super) fn parse<'a>(
     ast_items: impl Iterator<Item = Result<ast::Item<'a>, Error>>,
 ) -> impl Iterator<Item = Result<Item<'a>, Error>> {
@@ -106,7 +105,6 @@ impl Item<'_> {
 impl<'a> TryFrom<Item<'a>> for crate::format_description::BorrowedFormatItem<'a> {
     type Error = Error;
 
-    #[inline]
     fn try_from(item: Item<'a>) -> Result<Self, Self::Error> {
         match item {
             Item::Literal(literal) => Ok(Self::Literal(literal)),
@@ -136,7 +134,6 @@ impl<'a> TryFrom<Item<'a>> for crate::format_description::BorrowedFormatItem<'a>
 }
 
 impl From<Item<'_>> for crate::format_description::OwnedFormatItem {
-    #[inline]
     fn from(item: Item<'_>) -> Self {
         match item {
             Item::Literal(literal) => Self::Literal(literal.to_vec().into_boxed_slice()),
@@ -150,7 +147,6 @@ impl From<Item<'_>> for crate::format_description::OwnedFormatItem {
 }
 
 impl<'a> From<Box<[Item<'a>]>> for crate::format_description::OwnedFormatItem {
-    #[inline]
     fn from(items: Box<[Item<'a>]>) -> Self {
         let items = items.into_vec();
         match <[_; 1]>::try_from(items) {
@@ -185,7 +181,6 @@ macro_rules! component_definition {
 
         $(impl $variant {
             /// Parse the component from the AST, given its modifiers.
-            #[inline]
             fn with_modifiers(
                 modifiers: &[ast::Modifier<'_>],
                 _component_span: Span,
@@ -198,7 +193,7 @@ macro_rules! component_definition {
                 };
 
                 for modifier in modifiers {
-                    $(#[expect(clippy::string_lit_as_bytes)]
+                    $(#[allow(clippy::string_lit_as_bytes)]
                     if modifier.key.eq_ignore_ascii_case($parse_field.as_bytes()) {
                         this.$field = component_definition!(@if_from_str $($from_str)?
                             then {
@@ -235,7 +230,6 @@ macro_rules! component_definition {
         })*
 
         impl From<$name> for crate::format_description::Component {
-            #[inline]
             fn from(component: $name) -> Self {
                 match component {$(
                     $name::$variant($variant { $($field),* }) => {
@@ -259,12 +253,11 @@ macro_rules! component_definition {
         }
 
         /// Parse a component from the AST, given its name and modifiers.
-        #[inline]
         fn component_from_ast(
             name: &Spanned<&[u8]>,
             modifiers: &[ast::Modifier<'_>],
         ) -> Result<Component, Error> {
-            $(#[expect(clippy::string_lit_as_bytes)]
+            $(#[allow(clippy::string_lit_as_bytes)]
             if name.eq_ignore_ascii_case($parse_variant.as_bytes()) {
                 return Ok(Component::$variant($variant::with_modifiers(&modifiers, name.span)?));
             })*
@@ -285,16 +278,14 @@ component_definition! {
         Day = "day" {
             padding = "padding": Option<Padding> => padding,
         },
-        End = "end" {
-            trailing_input = "trailing_input": Option<TrailingInput> => trailing_input,
-        },
+        End = "end" {},
         Hour = "hour" {
             padding = "padding": Option<Padding> => padding,
             base = "repr": Option<HourBase> => is_12_hour_clock,
         },
         Ignore = "ignore" {
             #[required]
-            count = "count": Option<#[from_str] NonZero<u16>> => count,
+            count = "count": Option<#[from_str] NonZeroU16> => count,
         },
         Minute = "minute" {
             padding = "padding": Option<Padding> => padding,
@@ -403,7 +394,6 @@ macro_rules! modifier {
 
         impl $name {
             /// Parse the modifier from its string representation.
-            #[inline]
             fn from_modifier_value(value: &Spanned<&[u8]>) -> Result<Option<Self>, Error> {
                 $(if value.eq_ignore_ascii_case($parse_variant) {
                     return Ok(Some(Self::$variant));
@@ -419,7 +409,6 @@ macro_rules! modifier {
         }
 
         impl From<$name> for target_ty!($name $($target_ty)?) {
-            #[inline]
             fn from(modifier: $name) -> Self {
                 match modifier {
                     $($name::$variant => target_value!($name $variant $($target_value)?)),*
@@ -489,12 +478,6 @@ modifier! {
         OneOrMore = b"1+",
     }
 
-    enum TrailingInput {
-        #[default]
-        Prohibit = b"prohibit",
-        Discard = b"discard",
-    }
-
     enum UnixTimestampPrecision {
         #[default]
         Second = b"second",
@@ -551,11 +534,7 @@ modifier! {
 }
 
 /// Parse a modifier value using `FromStr`. Requires the modifier value to be valid UTF-8.
-#[inline]
-fn parse_from_modifier_value<T>(value: &Spanned<&[u8]>) -> Result<Option<T>, Error>
-where
-    T: FromStr,
-{
+fn parse_from_modifier_value<T: FromStr>(value: &Spanned<&[u8]>) -> Result<Option<T>, Error> {
     str::from_utf8(value)
         .ok()
         .and_then(|val| val.parse::<T>().ok())

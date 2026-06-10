@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 const REFERENCE_DATE = Date.now();
@@ -31,7 +33,7 @@ async function addLogin(host, timestamp) {
 async function setupPasswords() {
   // Remove all logins if any (included FxAccounts one in case one got captured in
   // a conditioned profile, see Bug 1853617).
-  await Services.logins.removeAllLoginsAsync();
+  Services.logins.removeAllLogins();
   await addLogin(FXA_HOST, REFERENCE_DATE);
   await addLogin(NEW_HOST, REFERENCE_DATE);
   await addLogin(OLD_HOST, REFERENCE_DATE - 10000);

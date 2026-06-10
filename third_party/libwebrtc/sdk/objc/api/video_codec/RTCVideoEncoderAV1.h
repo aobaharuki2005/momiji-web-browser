@@ -10,11 +10,8 @@
 
 #import <Foundation/Foundation.h>
 
-#import "RTCVideoCodecInfo.h"
 #import "RTCVideoEncoder.h"
 #import "sdk/objc/base/RTCMacros.h"
-
-NS_ASSUME_NONNULL_BEGIN
 
 RTC_OBJC_EXPORT
 @interface RTC_OBJC_TYPE (RTCVideoEncoderAV1) : NSObject
@@ -23,19 +20,13 @@ RTC_OBJC_EXPORT
  * RTCPeerConnectionFactory. Even though it implements the RTCVideoEncoder protocol, it can not be
  * used independently from the RTCPeerConnectionFactory.
  */
-+ (id<RTC_OBJC_TYPE(RTCVideoEncoder)>)av1Encoder;
++ (nonnull id<RTC_OBJC_TYPE(RTCVideoEncoder)>)av1Encoder;
 
 /* Returns list of scalability modes supported by the encoder that can be
  * created with `av1Encoder` method above.
  */
-+ (NSArray<NSString *> *)supportedScalabilityModes;
-
-/** Returns the list of supported codec formats (profiles) for the AV1 encoder.
- */
-+ (NSArray<RTC_OBJC_TYPE(RTCVideoCodecInfo) *> *)supportedCodecs;
++ (nonnull NSArray<NSString*>*)supportedScalabilityModes;
 
 + (bool)isSupported;
 
 @end
-
-NS_ASSUME_NONNULL_END

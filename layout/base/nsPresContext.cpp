@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -52,7 +54,6 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
-#include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/HTMLBodyElement.h"
@@ -176,7 +177,7 @@ void nsPresContext::ForceReflowForFontInfoUpdateFromStyle() {
   }
 
   mPendingFontInfoUpdateReflowFromStyle = true;
-  nsCOMPtr<nsIRunnable> ev = MakeAndAddRef<WeakRunnableMethod>(
+  nsCOMPtr<nsIRunnable> ev = new WeakRunnableMethod(
       "nsPresContext::DoForceReflowForFontInfoUpdateFromStyle", this,
       &nsPresContext::DoForceReflowForFontInfoUpdateFromStyle);
   RefreshDriver()->AddEarlyRunner(ev);
@@ -433,6 +434,8 @@ void nsPresContext::GetUserPreferences() {
     return;
   }
 
+  Document()->SetMayNeedFontPrefsUpdate();
+
   // * image animation
   nsAutoCString animatePref;
   Preferences::GetCString("image.animation_mode", animatePref);
@@ -604,6 +607,7 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
 
   // Same, this just frees a bunch of memory.
   StaticPresData::Get()->InvalidateFontPrefs();
+  Document()->SetMayNeedFontPrefsUpdate();
 
   // Initialize our state from the user preferences.
   GetUserPreferences();
@@ -639,9 +643,9 @@ bool nsPresContext::NormalizeRubyMetrics() {
   return mRubyPositioningFactor > 0.0f;
 }
 
-void nsPresContext::Init(nsDeviceContext* aDeviceContext) {
-  MOZ_ASSERT(!mInitialized, "attempt to reinit pres context");
-  MOZ_ASSERT(aDeviceContext);
+nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
+  NS_ASSERTION(!mInitialized, "attempt to reinit pres context");
+  NS_ENSURE_ARG(aDeviceContext);
 
   mDeviceContext = aDeviceContext;
 
@@ -663,11 +667,10 @@ void nsPresContext::Init(nsDeviceContext* aDeviceContext) {
   }
   mCurAppUnitsPerDevPixel = mDeviceContext->AppUnitsPerDevPixel();
 
-  mEventManager = MakeRefPtr<mozilla::EventStateManager>();
+  mEventManager = new mozilla::EventStateManager();
 
-  mAnimationEventDispatcher =
-      MakeRefPtr<mozilla::AnimationEventDispatcher>(this);
-  mEffectCompositor = MakeRefPtr<mozilla::EffectCompositor>(this);
+  mAnimationEventDispatcher = new mozilla::AnimationEventDispatcher(this);
+  mEffectCompositor = new mozilla::EffectCompositor(this);
   mTransitionManager = MakeUnique<nsTransitionManager>(this);
   mAnimationManager = MakeUnique<nsAnimationManager>(this);
   mTimelineManager = MakeUnique<mozilla::TimelineManager>(this);
@@ -700,9 +703,12 @@ void nsPresContext::Init(nsDeviceContext* aDeviceContext) {
     }
 
     if (!mRefreshDriver) {
-      mRefreshDriver = MakeRefPtr<nsRefreshDriver>(this);
+      mRefreshDriver = new nsRefreshDriver(this);
     }
   }
+
+  mFragmentainerAwarePositioningEnabled =
+      StaticPrefs::layout_abspos_fragmentainer_aware_positioning_enabled();
 
   // Register callbacks so we're notified when the preferences change
   Preferences::RegisterPrefixCallbacks(nsPresContext::PreferenceChanged,
@@ -710,7 +716,8 @@ void nsPresContext::Init(nsDeviceContext* aDeviceContext) {
   Preferences::RegisterCallbacks(nsPresContext::PreferenceChanged,
                                  gExactCallbackPrefs, this);
 
-  mEventManager->Init();
+  nsresult rv = mEventManager->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mEventManager->SetPresContext(this);
 
@@ -729,6 +736,8 @@ void nsPresContext::Init(nsDeviceContext* aDeviceContext) {
 #ifdef DEBUG
   mInitialized = true;
 #endif
+
+  return NS_OK;
 }
 
 void nsPresContext::UpdateForcedColors(bool aNotify) {
@@ -784,7 +793,7 @@ bool nsPresContext::UpdateFontVisibility() {
 
 void nsPresContext::InitFontCache() {
   if (!mFontCache) {
-    mFontCache = MakeRefPtr<nsFontCache>();
+    mFontCache = new nsFontCache();
     mFontCache->Init(this);
   }
 }
@@ -826,7 +835,7 @@ void nsPresContext::AttachPresShell(mozilla::PresShell* aPresShell) {
   // Since CounterStyleManager is also the name of a method of
   // nsPresContext, it is necessary to prefix the class with the mozilla
   // namespace here.
-  mCounterStyleManager = MakeRefPtr<mozilla::CounterStyleManager>(this);
+  mCounterStyleManager = new mozilla::CounterStyleManager(this);
 
   dom::Document* doc = mPresShell->GetDocument();
   MOZ_ASSERT(doc);
@@ -884,26 +893,6 @@ void nsPresContext::SetColorSchemeOverride(
   }
 }
 
-void nsPresContext::SetLinkParametersOverride(
-    const StyleLinkParameters& aLinkParameters) {
-  if (mLinkParameters == aLinkParameters) {
-    return;
-  }
-  mLinkParameters = aLinkParameters;
-
-  // Link params affect env() functions, so we need to re-cascade but there's no
-  // need to re-selector-match.
-  RebuildAllStyleData(nsChangeHint(0), RestyleHint::RecascadeSubtree());
-}
-
-void nsPresContext::UpdateAnimationsPlayBackRateMultiplier(double aMultiplier) {
-  if (mAnimationsPlayBackRateMultiplier == aMultiplier) {
-    return;
-  }
-  mAnimationsPlayBackRateMultiplier = aMultiplier;
-  mDocument->Timeline()->PostUpdateForAllAnimations();
-}
-
 void nsPresContext::RecomputeBrowsingContextDependentData() {
   MOZ_ASSERT(mDocument);
   dom::Document* doc = mDocument;
@@ -949,9 +938,6 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
     }
     EmulateMedium(mediumToEmulate);
   }
-
-  UpdateAnimationsPlayBackRateMultiplier(
-      top->AnimationsPlayBackRateMultiplier());
 
   mDocument->EnumerateExternalResources([](dom::Document& aSubResource) {
     if (nsPresContext* subResourcePc = aSubResource.GetPresContext()) {
@@ -1305,13 +1291,13 @@ void nsPresContext::SetSMILAnimations(dom::Document* aDoc, uint16_t aNewMode,
       case imgIContainer::kNormalAnimMode:
       case imgIContainer::kLoopOnceAnimMode:
         if (aOldMode == imgIContainer::kDontAnimMode) {
-          controller->Resume(SMILTimeContainer::PauseType::UserPref);
+          controller->Resume(SMILTimeContainer::PAUSE_USERPREF);
         }
         break;
 
       case imgIContainer::kDontAnimMode:
         if (aOldMode != imgIContainer::kDontAnimMode) {
-          controller->Pause(SMILTimeContainer::PauseType::UserPref);
+          controller->Pause(SMILTimeContainer::PAUSE_USERPREF);
         }
         break;
     }
@@ -1437,7 +1423,7 @@ void nsPresContext::SetOverrideDPPX(float aDPPX) {
                             MediaFeatureChangePropagation::JustThisDocument);
 }
 
-void nsPresContext::UpdateInnerSizeSpoofedForRFP() {
+void nsPresContext::UpdateTopInnerSizeForRFP() {
   if (!mDocument->ShouldResistFingerprinting(RFPTarget::WindowOuterSize) ||
       !mDocument->GetBrowsingContext() ||
       !mDocument->GetBrowsingContext()->IsTop()) {
@@ -1459,7 +1445,7 @@ void nsPresContext::UpdateInnerSizeSpoofedForRFP() {
       break;
   }
 
-  (void)mDocument->GetBrowsingContext()->SetInnerSizeSpoofedForRFP(
+  (void)mDocument->GetBrowsingContext()->SetTopInnerSizeForRFP(
       CSSIntSize{(int)size.width, (int)size.height});
 }
 
@@ -1798,9 +1784,9 @@ void nsPresContext::ThemeChanged(widget::ThemeChangeKind aKind) {
   mPendingThemeChangeKind |= unsigned(aKind);
 
   if (!mPendingThemeChanged) {
-    nsCOMPtr<nsIRunnable> ev = MakeAndAddRef<WeakRunnableMethod>(
-        "nsPresContext::ThemeChangedInternal", this,
-        &nsPresContext::ThemeChangedInternal);
+    nsCOMPtr<nsIRunnable> ev =
+        new WeakRunnableMethod("nsPresContext::ThemeChangedInternal", this,
+                               &nsPresContext::ThemeChangedInternal);
     RefreshDriver()->AddEarlyRunner(ev);
     mPendingThemeChanged = true;
   }
@@ -2379,7 +2365,7 @@ void nsPresContext::NotifyRevokingDidPaint(TransactionId aTransactionId) {
   // the others are completed.
   // If this is the only transaction, then we can send it immediately.
   if (mTransactions.Length() == 1) {
-    nsCOMPtr<nsIRunnable> ev = MakeAndAddRef<DelayedFireDOMPaintEvent>(
+    nsCOMPtr<nsIRunnable> ev = new DelayedFireDOMPaintEvent(
         this, std::move(transaction->mInvalidations),
         transaction->mTransactionId, mozilla::TimeStamp());
     nsContentUtils::AddScriptRunner(ev);
@@ -2427,7 +2413,7 @@ void nsPresContext::NotifyDidPaintForSubtree(
   while (i < mTransactions.Length()) {
     if (mTransactions[i].mTransactionId <= aTransactionId) {
       if (!mTransactions[i].mInvalidations.IsEmpty()) {
-        nsCOMPtr<nsIRunnable> ev = MakeAndAddRef<DelayedFireDOMPaintEvent>(
+        nsCOMPtr<nsIRunnable> ev = new DelayedFireDOMPaintEvent(
             this, std::move(mTransactions[i].mInvalidations),
             mTransactions[i].mTransactionId, aTimeStamp);
         NS_DispatchToCurrentThreadQueue(ev.forget(),
@@ -2439,7 +2425,7 @@ void nsPresContext::NotifyDidPaintForSubtree(
       // If there are transaction which is waiting for this transaction,
       // we should fire a MozAfterPaint immediately.
       if (sent && mTransactions[i].mIsWaitingForPreviousTransaction) {
-        nsCOMPtr<nsIRunnable> ev = MakeAndAddRef<DelayedFireDOMPaintEvent>(
+        nsCOMPtr<nsIRunnable> ev = new DelayedFireDOMPaintEvent(
             this, std::move(mTransactions[i].mInvalidations),
             mTransactions[i].mTransactionId, aTimeStamp);
         NS_DispatchToCurrentThreadQueue(ev.forget(),
@@ -2454,7 +2440,7 @@ void nsPresContext::NotifyDidPaintForSubtree(
 
   if (!sent) {
     nsTArray<nsRect> dummy;
-    nsCOMPtr<nsIRunnable> ev = MakeAndAddRef<DelayedFireDOMPaintEvent>(
+    nsCOMPtr<nsIRunnable> ev = new DelayedFireDOMPaintEvent(
         this, std::move(dummy), aTransactionId, aTimeStamp);
     NS_DispatchToCurrentThreadQueue(ev.forget(),
                                     EventQueuePriority::MediumHigh);
@@ -2869,7 +2855,7 @@ void nsPresContext::SetVisibleArea(const nsRect& aRect) {
           MediaFeatureChangePropagation::JustThisDocument);
     }
 
-    UpdateInnerSizeSpoofedForRFP();
+    UpdateTopInnerSizeForRFP();
   }
 }
 
@@ -3046,22 +3032,6 @@ nscoord nsPresContext::GetBimodalDynamicToolbarHeightInAppUnits() const {
              : 0;
 }
 
-nscoord nsPresContext::GetBimodalDynamicToolbarHeightForFixedPosInAppUnits()
-    const {
-  if (GetDynamicToolbarState() != DynamicToolbarState::Collapsed) {
-    return 0;
-  }
-  if (mDynamicToolbarMaxHeight == 0) {
-    return 0;
-  }
-  RefPtr<MobileViewportManager> mvm = mPresShell->GetMobileViewportManager();
-  if (!mvm) {
-    return 0;
-  }
-  return CSSPixel::ToAppUnits(ScreenCoord(GetDynamicToolbarMaxHeight()) /
-                              mvm->GetIntrinsicScaleForFixedViewport());
-}
-
 void nsPresContext::SetSafeAreaInsets(
     const LayoutDeviceIntMargin& aSafeAreaInsets) {
   if (mSafeAreaInsets == aSafeAreaInsets) {
@@ -3133,7 +3103,7 @@ nsRootPresContext::nsRootPresContext(dom::Document* aDocument,
 
 void nsRootPresContext::AddWillPaintObserver(nsIRunnable* aRunnable) {
   if (!mWillPaintFallbackEvent.IsPending()) {
-    mWillPaintFallbackEvent = MakeRefPtr<RunWillPaintObservers>(this);
+    mWillPaintFallbackEvent = new RunWillPaintObservers(this);
     Document()->Dispatch(do_AddRef(mWillPaintFallbackEvent));
   }
   mWillPaintObservers.AppendElement(aRunnable);

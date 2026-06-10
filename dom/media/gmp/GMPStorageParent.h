@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,11 +13,11 @@ namespace mozilla::gmp {
 
 class GMPParent;
 
-class GMPStorageParent final : public PGMPStorageParent {
+class GMPStorageParent : public PGMPStorageParent {
   friend class PGMPStorageParent;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(GMPStorageParent, final)
+  NS_INLINE_DECL_REFCOUNTING(GMPStorageParent)
   GMPStorageParent(const nsACString& aNodeId, GMPParent* aPlugin);
 
   nsresult Init();

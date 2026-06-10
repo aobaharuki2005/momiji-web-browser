@@ -9,6 +9,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -35,9 +36,11 @@ import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainLooperTestRule
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -75,14 +78,15 @@ import org.mozilla.fenix.telemetry.ACTION_SEARCH_ENGINE_SELECTED
 import org.mozilla.fenix.telemetry.SOURCE_ADDRESS_BAR
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 import org.mozilla.fenix.components.appstate.search.SearchState as AppSearchState
 
 @RunWith(RobolectricTestRunner::class)
 class FenixSearchMiddlewareTest {
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
+
+    @get:Rule
+    val mainLooperRule = MainLooperTestRule()
 
     private val engine: Engine = mockk {
         every { speculativeCreateSession(any(), any()) } just Runs
@@ -111,7 +115,9 @@ class FenixSearchMiddlewareTest {
 
         assertNotNull(store.state.defaultEngine)
         assertEquals("Engine B", store.state.defaultEngine!!.name)
-        assertIs<SearchEngineSource.Default>(store.state.searchEngineSource)
+        assertTrue(store.state.areShortcutsAvailable)
+        assertFalse(store.state.showSearchShortcuts)
+        assertTrue(store.state.searchEngineSource is SearchEngineSource.Default)
         assertNotNull(store.state.searchEngineSource.searchEngine)
         assertEquals("Engine B", store.state.searchEngineSource.searchEngine!!.name)
     }
@@ -181,14 +187,7 @@ class FenixSearchMiddlewareTest {
         val (middleware, store) = buildMiddlewareAndAddToSearchStore()
         every { middleware.buildSearchSuggestionsProvider(any()) } returns mockk(relaxed = true)
 
-        store.dispatch(
-            SearchStarted(
-                null,
-                isUserSelected = false,
-                inPrivateMode = false,
-                searchStartedForCurrentUrl = false,
-            ),
-        )
+        store.dispatch(SearchStarted(null, false, false, false))
 
         assertNull(Toolbar.buttonTapped.testGetValue())
     }
@@ -255,14 +254,8 @@ class FenixSearchMiddlewareTest {
         every { settings.shouldShowSearchSuggestions } returns true
         val defaultSearchEngine = fakeSearchEnginesState().selectedOrDefaultSearchEngine
 
-        store.dispatch(
-            SearchStarted(
-                defaultSearchEngine,
-                isUserSelected = false,
-                inPrivateMode = false,
-                searchStartedForCurrentUrl = true,
-            ),
-        )
+        store.dispatch(SearchStarted(defaultSearchEngine, false, false, true))
+        mainLooperRule.idle()
 
         searchActionsCaptor.assertLastAction(SearchSuggestionsVisibilityUpdated::class) {
             assertTrue(it.visible)
@@ -276,57 +269,11 @@ class FenixSearchMiddlewareTest {
         every { settings.shouldShowSearchSuggestions } returns true
         val defaultSearchEngine = fakeSearchEnginesState().selectedOrDefaultSearchEngine
 
-        store.dispatch(
-            SearchStarted(
-                defaultSearchEngine,
-                isUserSelected = false,
-                inPrivateMode = false,
-                searchStartedForCurrentUrl = true,
-            ),
-        )
+        store.dispatch(SearchStarted(defaultSearchEngine, false, false, true))
 
         searchActionsCaptor.assertLastAction(SearchSuggestionsVisibilityUpdated::class) {
             assertTrue(it.visible)
         }
-    }
-
-    @Test
-    fun `GIVEN browsing mode is private and suggestions in private mode not allowed WHEN the query is empty THEN don't show the private suggestions banner`() {
-        val (_, store) = buildMiddlewareAndAddToSearchStore()
-        every { settings.showSearchSuggestionsInPrivateOnboardingFinished } returns false
-        every { settings.shouldShowSearchSuggestions } returns true
-        every { settings.shouldShowSearchSuggestionsInPrivate } returns false
-        every { browsingModeManager.mode } returns BrowsingMode.Private
-
-        store.dispatch(SearchFragmentAction.UpdateQuery(""))
-
-        assertFalse(store.state.showSearchSuggestionsHint)
-    }
-
-    @Test
-    fun `GIVEN browsing mode is private and search suggestions not allowed WHEN the query is not empty THEN don't show the private suggestions banner`() {
-        val privateAppStore = AppStore(AppState(mode = BrowsingMode.Private))
-        val (_, store) = buildMiddlewareAndAddToSearchStore(appStore = privateAppStore)
-        every { settings.showSearchSuggestionsInPrivateOnboardingFinished } returns false
-        every { settings.shouldShowSearchSuggestions } returns false
-        every { settings.shouldShowSearchSuggestionsInPrivate } returns false
-
-        store.dispatch(SearchFragmentAction.UpdateQuery("test"))
-
-        assertFalse(store.state.showSearchSuggestionsHint)
-    }
-
-    @Test
-    fun `GIVEN browsing mode is private and suggestions in private mode not allowed WHEN the query is not empty THEN show the private suggestions banner`() {
-        val (_, store) = buildMiddlewareAndAddToSearchStore()
-        every { settings.showSearchSuggestionsInPrivateOnboardingFinished } returns false
-        every { settings.shouldShowSearchSuggestions } returns true
-        every { settings.shouldShowSearchSuggestionsInPrivate } returns false
-        every { browsingModeManager.mode } returns BrowsingMode.Private
-
-        store.dispatch(SearchFragmentAction.UpdateQuery("test"))
-
-        assertTrue(store.state.showSearchSuggestionsHint)
     }
 
     @Test
@@ -365,15 +312,8 @@ class FenixSearchMiddlewareTest {
         }
         every { middleware.buildSearchSuggestionsProvider(any()) } returns expectedSearchSuggestionsProvider
 
-        // this triggers observing the search engine updates
-        store.dispatch(
-            SearchStarted(
-                null,
-                isUserSelected = false,
-                inPrivateMode = false,
-                searchStartedForCurrentUrl = false,
-            ),
-        )
+        store.dispatch(SearchStarted(null, false, false, false)) // this triggers observing the search engine updates
+        mainLooperRule.idle()
 
         searchActionsCaptor.assertLastAction(SearchShortcutEngineSelected::class) {
             assertEquals(newSearchEngineSelection, it.engine)
@@ -472,21 +412,31 @@ class FenixSearchMiddlewareTest {
         val (_, store) = buildMiddlewareAndAddToSearchStore(appStore = appStore)
 
         appStore.dispatch(AppAction.SearchAction.SearchStarted())
-        store.dispatch(
-            SearchStarted(
-                defaultSearchEngine,
-                isUserSelected = false,
-                inPrivateMode = false,
-                searchStartedForCurrentUrl = false,
-            ),
-        )
+        store.dispatch(SearchStarted(defaultSearchEngine, false, false, false))
         appStore.dispatch(SearchEngineSelected(searchEngineClicked, true))
+        mainLooperRule.idle()
 
         assertEquals(Bookmarks(searchEngineClicked), store.state.searchEngineSource)
         assertNotNull(store.state.defaultEngine)
         assertEquals(defaultSearchEngine?.id, store.state.defaultEngine?.id)
         browserActionsCaptor.assertNotDispatched(EngagementFinished::class)
         assertSearchEngineSelectedTelemetryRecorded("bookmarks")
+    }
+
+    @Test
+    fun `GIVEN search settings are clicked WHEN handling this THEN open the settings screen and record search ended`() {
+        every { navController.navigate(any<NavDirections>()) } just Runs
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.searchDialogFragment
+        }
+        val (middleware, _) = buildMiddlewareAndAddToSearchStore()
+
+        middleware.handleClickSearchEngineSettings()
+
+        verify { navController.navigate(SearchDialogFragmentDirections.actionGlobalSearchEngineFragment()) }
+        browserActionsCaptor.assertLastAction(EngagementFinished::class) {
+            assertEquals(true, it.abandoned)
+        }
     }
 
     @Test
@@ -536,14 +486,7 @@ class FenixSearchMiddlewareTest {
 
         store.dispatch(SuggestionSelected(selectedSuggestion))
 
-        verify {
-            toolbarStore.dispatch(
-                BrowserEditToolbarAction.SearchQueryUpdated(
-                    query = BrowserToolbarQuery("test"),
-                    isQueryPrefilled = true,
-                ),
-            )
-        }
+        verify { toolbarStore.dispatch(BrowserEditToolbarAction.SearchQueryUpdated(BrowserToolbarQuery("test"))) }
     }
 
     private fun buildMiddlewareAndAddToSearchStore(
@@ -612,12 +555,16 @@ class FenixSearchMiddlewareTest {
     private fun buildEmptySearchState(
         searchEngineSource: SearchEngineSource = SearchEngineSource.Default(searchEngine = mockk()),
         defaultEngine: SearchEngine? = mockk(),
+        areShortcutsAvailable: Boolean = true,
+        showSearchShortcutsSetting: Boolean = false,
         showHistorySuggestionsForCurrentEngine: Boolean = true,
         showSponsoredSuggestions: Boolean = true,
         showNonSponsoredSuggestions: Boolean = true,
     ): SearchFragmentState = EMPTY_SEARCH_FRAGMENT_STATE.copy(
         searchEngineSource = searchEngineSource,
         defaultEngine = defaultEngine,
+        showSearchShortcutsSetting = showSearchShortcutsSetting,
+        areShortcutsAvailable = areShortcutsAvailable,
         showSearchTermHistory = true,
         showHistorySuggestionsForCurrentEngine = showHistorySuggestionsForCurrentEngine,
         showSponsoredSuggestions = showSponsoredSuggestions,
@@ -656,7 +603,7 @@ class FenixSearchMiddlewareTest {
     ) {
         val values = Toolbar.buttonTapped.testGetValue()
         assertNotNull(values)
-        val last = values.last()
+        val last = values!!.last()
         assertEquals(ACTION_SEARCH_ENGINE_SELECTED, last.extra?.get("item"))
         assertEquals(SOURCE_ADDRESS_BAR, last.extra?.get("source"))
         assertEquals(extra, last.extra?.get("extra"))

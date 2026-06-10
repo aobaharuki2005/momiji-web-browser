@@ -67,10 +67,10 @@ class AccessibilityActor extends Actor {
    * @param  {string} topic
    *         Name of the a11y service event: "a11y-init-or-shutdown".
    * @param  {string} data
-   *         "0" means shutdown. Anything else means init.
+   *         "0" corresponds to shutdown and "1" to init.
    */
   observe(subject, topic, data) {
-    const enabled = data !== "0";
+    const enabled = data === "1";
     if (enabled && this.enabled) {
       this.emit("init");
     } else if (!enabled && !this.enabled) {

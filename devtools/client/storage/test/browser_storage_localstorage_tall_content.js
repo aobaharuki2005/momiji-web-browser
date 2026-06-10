@@ -6,42 +6,38 @@ const ROW_IDS = ["emoji", "tall", "long"];
 add_task(async function test_storage_layout_tall_content() {
   // Load the HTML page that pre-fills localStorage
   await openTabAndSetupStorage(
-    MAIN_URL_SECURED + "storage-localstorage-tall-content.html"
+    MAIN_DOMAIN_SECURED + "storage-localstorage-tall-content.html"
   );
 
   // Ensure all columns are visible before testing layout
   showAllColumns(true);
 
   // Focus on the relevant storage tree item
-  await selectTreeItem(["localStorage", MAIN_ORIGIN_SECURED]);
+  await selectTreeItem(["localStorage", "https://test1.example.org"]);
 
   // Check row heights before any actions
-  await testRowHeights(ROW_IDS, "initial layout");
+  testRowHeights(ROW_IDS, "initial layout");
 
   // Click to sort and check again
   clickColumnHeader("value");
-  await testRowHeights(ROW_IDS, "after sorting by value");
+  testRowHeights(ROW_IDS, "after sorting by value");
 
   // Add a new tall value and test layout
   await updateLocalStorageItem("newTall", "add", "🧵".repeat(300));
-  await testRowHeights(["newTall"], "after adding new tall value");
+  testRowHeights(["newTall"], "after adding new tall value");
 
   // Edit an existing row to be taller
   await updateLocalStorageItem("emoji", "edit", "🧵".repeat(400));
-  await testRowHeights(["emoji"], "after editing 'emoji' to be taller");
+  testRowHeights(["emoji"], "after editing 'emoji' to be taller");
 
   // Remove the tall one and test remaining layout
   await updateLocalStorageItem("newTall", "remove");
-  await testRowHeights(ROW_IDS, "after removing 'newTall'");
+  testRowHeights(ROW_IDS, "after removing 'newTall'");
 });
 
-async function testRowHeights(rowIds, description) {
+function testRowHeights(rowIds, description) {
   info(`Checking row heights: ${description}`);
   for (const rowId of rowIds) {
-    await waitFor(
-      () => getRowItem(rowId),
-      `Wait for row ${rowId} to be available`
-    );
     checkRowHeights(rowId);
   }
 }

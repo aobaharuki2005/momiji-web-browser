@@ -33,9 +33,6 @@ skip-if = [
 ["test_crash_backgroundtask_moz_crash.js"]
 
 ["test_crash_exc_guard.js"]
-skip-if = [
-  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 2023967
-]
 run-if = [
   "os == 'mac'",
 ]
@@ -69,12 +66,6 @@ run-if = [
 ]
 reason = "Test covering Linux-specific PSI (Pressure Stall Information) annotation"
 
-["test_crash_signal_origin_linux.js"]
-run-if = [
-  "os == 'linux'",
-]
-reason = "Test covering Linux-specific SignalOrigin annotation"
-
 ["test_crash_purevirtual.js"]
 
 ["test_crash_rust_panic.js"]
@@ -88,12 +79,12 @@ run-if = [
 reason = "Still broken on macOS and not yet supported on Windows"
 
 ["test_crash_stl.js"]
-run-if = [
-  "debug && !ccov",
-  "os == 'win' && !ccov",
-  "os == 'mac' && !ccov",
+skip-if = [
+  "ccov",
+  "os != 'mac' && opt",
+  "os == 'win'",
 ]
-reason = "STL hardening is enabled on desktop debug, Windows opt, and MacOS opt builds"
+reason = "STL hardening is only enabled on non-Windows debug builds and MacOS"
 
 ["test_crash_terminator.js"]
 
@@ -171,8 +162,6 @@ skip-if = [
 ["test_crashreporter_crash.js"]
 
 ["test_crashreporter_omnijar_loading.js"]
-
-["test_crashreports.js"]
 
 ["test_event_files.js"]
 

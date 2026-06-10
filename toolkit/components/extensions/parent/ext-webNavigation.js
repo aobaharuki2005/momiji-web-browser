@@ -144,7 +144,7 @@ this.webNavigation = class extends ExtensionAPIPersistent {
 
         // Do not send a webNavigation event when the data.browser is related to a tab from a
         // new window opened to adopt an existent tab (See Bug 1443221 for a rationale).
-        const chromeWin = data.browser.documentGlobal;
+        const chromeWin = data.browser.ownerGlobal;
 
         if (
           chromeWin &&
@@ -167,10 +167,9 @@ this.webNavigation = class extends ExtensionAPIPersistent {
         }
 
         if (data.sourceTabBrowser) {
-          const sourceTab = tabTracker.getTabForBrowser(data.sourceTabBrowser);
-          if (sourceTab) {
-            data2.sourceTabId = tabTracker.getId(sourceTab);
-          }
+          data2.sourceTabId = tabTracker.getBrowserData(
+            data.sourceTabBrowser
+          ).tabId;
         }
 
         fillTransitionProperties(event, data, data2);

@@ -5,7 +5,7 @@
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
 /**
- * @typedef {import("./OpenSearchParser.sys.mjs").OpenSearchProperties} OpenSearchProperties
+ * @typedef {import("./OpenSearchLoader.sys.mjs").OpenSearchProperties} OpenSearchProperties
  */
 
 import {
@@ -207,9 +207,9 @@ export class OpenSearchEngine extends SearchEngine {
         });
         this._urls.push(searchFormUrl);
       } catch (ex) {
-        throw new Error(
+        throw Components.Exception(
           `Failed to add ${data.searchForm} as a searchForm URL`,
-          { cause: ex }
+          Cr.NS_ERROR_FAILURE
         );
       }
     }
@@ -225,9 +225,10 @@ export class OpenSearchEngine extends SearchEngine {
             template: url.template,
           });
         } catch (ex) {
-          throw new Error(`Failed to add ${url.template} as an Engine URL`, {
-            cause: ex,
-          });
+          throw Components.Exception(
+            `Failed to add ${url.template} as an Engine URL`,
+            Cr.NS_ERROR_FAILURE
+          );
         }
         this.#addParamsToUrl(searchFormURL, url.params);
         this._urls.push(searchFormURL);
@@ -237,9 +238,10 @@ export class OpenSearchEngine extends SearchEngine {
       try {
         engineURL = new EngineURL(url);
       } catch (ex) {
-        throw new Error(`Failed to add ${url.template} as an Engine URL`, {
-          cause: ex,
-        });
+        throw Components.Exception(
+          `Failed to add ${url.template} as an Engine URL`,
+          Cr.NS_ERROR_FAILURE
+        );
       }
 
       let nonSearchformRels = url.rels.filter(rel => rel != "searchform");

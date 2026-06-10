@@ -15,12 +15,13 @@ doh:
     type: event
     description: >
       Results of DoH heuristics at startup and after network changes.
+      This event was generated to correspond to the Legacy Telemetry event
+      doh.evaluate_v2#heuristics.
     bugs:
       - https://bugzil.la/1573840
       - https://bugzil.la/1631609
       - https://bugzil.la/1603779
       - https://bugzil.la/1654714
-      - https://bugzil.la/2037081
     data_reviews:
       - https://bugzil.la/1573840
       - https://bugzil.la/1631609
@@ -70,6 +71,7 @@ doh:
         description: >
           Comma-separated list of platform attributes that would cause split-horizon issues (vpn, proxy, nrpt)
         type: string
+    telemetry_mirror: Doh_EvaluateV2_Heuristics
 
   state_enabled:
     type: event
@@ -81,7 +83,6 @@ doh:
       - https://bugzil.la/1573840
       - https://bugzil.la/1631609
       - https://bugzil.la/1603779
-      - https://bugzil.la/2037081
     data_reviews: &doh_state_data_reviews
       - https://bugzil.la/1573840
       - https://bugzil.la/1631609
@@ -98,6 +99,7 @@ doh:
           The `value` of the event. Mirrors to the Legacy Telemetry
           event's `value` parameter.
         type: string
+    telemetry_mirror: Doh_State_Enabled
 
   state_disabled:
     type: event
@@ -110,6 +112,7 @@ doh:
     notification_emails: *doh_state_emails
     expires: never
     extra_keys: *doh_state_extra
+    telemetry_mirror: Doh_State_Disabled
 
   state_manually_disabled:
     type: event
@@ -122,6 +125,7 @@ doh:
     notification_emails: *doh_state_emails
     expires: never
     extra_keys: *doh_state_extra
+    telemetry_mirror: Doh_State_Manuallydisabled
 
   state_policy_disabled:
     type: event
@@ -134,6 +138,7 @@ doh:
     notification_emails: *doh_state_emails
     expires: never
     extra_keys: *doh_state_extra
+    telemetry_mirror: Doh_State_Policydisabled
 
   state_uninstalled:
     type: event
@@ -146,6 +151,7 @@ doh:
     notification_emails: *doh_state_emails
     expires: never
     extra_keys: *doh_state_extra
+    telemetry_mirror: Doh_State_Uninstalled
 
   state_uiok:
     type: event
@@ -158,6 +164,7 @@ doh:
     notification_emails: *doh_state_emails
     expires: never
     extra_keys: *doh_state_extra
+    telemetry_mirror: Doh_State_Uiok
 
   state_uidisabled:
     type: event
@@ -170,6 +177,7 @@ doh:
     notification_emails: *doh_state_emails
     expires: never
     extra_keys: *doh_state_extra
+    telemetry_mirror: Doh_State_Uidisabled
 
   state_rollback:
     type: event
@@ -182,6 +190,7 @@ doh:
     notification_emails: *doh_state_emails
     expires: never
     extra_keys: *doh_state_extra
+    telemetry_mirror: Doh_State_Rollback
 
   state_shutdown:
     type: event
@@ -194,33 +203,7 @@ doh:
     notification_emails: *doh_state_emails
     expires: never
     extra_keys: *doh_state_extra
-
-  region_changed:
-    type: event
-    description: >
-      Recorded when the DoH region changes. This helps us understand
-      how often users roam between regions.
-    bugs:
-      - https://bugzil.la/1886225
-    data_reviews:
-      - https://bugzil.la/1886225
-    notification_emails:
-      - necko@mozilla.com
-      - vgosu@mozilla.com
-    expires: never
-    extra_keys:
-      old_region:
-        description: >
-          The previous DoH region.
-        type: string
-      new_region:
-        description: >
-          The new DoH region.
-        type: string
-      trigger:
-        description: >
-          What triggered the region change (idle-daily, timezone-changed).
-        type: string
+    telemetry_mirror: Doh_State_Shutdown
 
 security.doh.trr_performance:
   resolved_record:
@@ -306,13 +289,13 @@ networking:
       scalar networking.doh_heuristics_attempts.
     bugs:
       - https://bugzil.la/1784258
-      - https://bugzil.la/2037081
     data_reviews:
       - https://bugzil.la/1784258
     notification_emails:
       - necko@mozilla.com
       - vgosu@mozilla.com
     expires: never
+    telemetry_mirror: NETWORKING_DOH_HEURISTICS_ATTEMPTS
 
   doh_heuristics_pass_count:
     type: counter
@@ -322,13 +305,13 @@ networking:
       scalar networking.doh_heuristics_pass_count.
     bugs:
       - https://bugzil.la/1784258
-      - https://bugzil.la/2037081
     data_reviews:
       - https://bugzil.la/1784258
     notification_emails:
       - necko@mozilla.com
       - vgosu@mozilla.com
     expires: never
+    telemetry_mirror: NETWORKING_DOH_HEURISTICS_PASS_COUNT
 
   doh_heuristics_result:
     type: quantity
@@ -343,7 +326,6 @@ networking:
       scalar networking.doh_heuristics_result.
     bugs:
       - https://bugzil.la/1784258
-      - https://bugzil.la/2037081
     data_reviews:
       - https://bugzil.la/1784258
     notification_emails:
@@ -351,6 +333,7 @@ networking:
       - vgosu@mozilla.com
     expires: never
     unit: doh heuristic result
+    telemetry_mirror: NETWORKING_DOH_HEURISTICS_RESULT
 
   doh_heuristic_ever_tripped:
     type: labeled_boolean
@@ -360,10 +343,10 @@ networking:
       scalar networking.doh_heuristic_ever_tripped.
     bugs:
       - https://bugzil.la/1784258
-      - https://bugzil.la/2037081
     data_reviews:
       - https://bugzil.la/1784258
     notification_emails:
       - necko@mozilla.com
       - vgosu@mozilla.com
     expires: never
+    telemetry_mirror: NETWORKING_DOH_HEURISTIC_EVER_TRIPPED

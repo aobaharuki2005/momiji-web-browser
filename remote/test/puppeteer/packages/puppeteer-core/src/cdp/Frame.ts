@@ -7,7 +7,6 @@
 import type {Protocol} from 'devtools-protocol';
 
 import type {CDPSession} from '../api/CDPSession.js';
-import type {DeviceRequestPrompt} from '../api/DeviceRequestPrompt.js';
 import type {ElementHandle} from '../api/ElementHandle.js';
 import type {WaitForOptions} from '../api/Frame.js';
 import {Frame, FrameEvent, throwIfDetached} from '../api/Frame.js';
@@ -22,7 +21,10 @@ import {isErrorLike} from '../util/ErrorLike.js';
 import {Accessibility} from './Accessibility.js';
 import type {Binding} from './Binding.js';
 import type {CdpPreloadScript} from './CdpPreloadScript.js';
-import type {CdpDeviceRequestPromptManager} from './DeviceRequestPrompt.js';
+import type {
+  DeviceRequestPrompt,
+  DeviceRequestPromptManager,
+} from './DeviceRequestPrompt.js';
 import type {FrameManager} from './FrameManager.js';
 import {FrameManagerEvent} from './FrameManagerEvents.js';
 import type {IsolatedWorldChart} from './IsolatedWorld.js';
@@ -166,7 +168,7 @@ export class CdpFrame extends Frame {
         this.#client,
         url,
         referer,
-        referrerPolicy ? referrerPolicyToProtocol(referrerPolicy) : undefined,
+        referrerPolicy as Protocol.Page.ReferrerPolicy,
         this._id,
       ),
       watcher.terminationPromise(),
@@ -315,7 +317,7 @@ export class CdpFrame extends Frame {
     return this._frameManager._frameTree.childFrames(this._id);
   }
 
-  #deviceRequestPromptManager(): CdpDeviceRequestPromptManager {
+  #deviceRequestPromptManager(): DeviceRequestPromptManager {
     return this._frameManager._deviceRequestPromptManager(this.#client);
   }
 
@@ -435,18 +437,4 @@ export class CdpFrame extends Frame {
       .mainRealm()
       .adoptBackendNode(backendNodeId)) as ElementHandle<HTMLIFrameElement>;
   }
-}
-
-/**
- * @internal
- */
-export function referrerPolicyToProtocol(
-  referrerPolicy: string,
-): Protocol.Page.ReferrerPolicy {
-  // See
-  // https://chromedevtools.github.io/devtools-protocol/tot/Page/#type-ReferrerPolicy
-  // We need to conver from Web-facing phase to CDP's camelCase.
-  return referrerPolicy.replaceAll(/-./g, match => {
-    return match[1]!.toUpperCase();
-  }) as Protocol.Page.ReferrerPolicy;
 }

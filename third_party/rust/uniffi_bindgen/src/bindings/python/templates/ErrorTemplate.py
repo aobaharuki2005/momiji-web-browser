@@ -1,4 +1,3 @@
-{%- let type_name = e.self_type.type_name %}
 # {{ type_name }}
 # We want to define each variant as a nested class that's also a subclass,
 # which is tricky in Python.  To accomplish this we're going to create each
@@ -6,32 +5,32 @@
 # __dict__.  All of this happens in dummy class to avoid polluting the module
 # namespace.
 class {{ type_name }}(Exception):
-    {{ e.docstring|docstring(4) -}}
+    {%- call py::docstring(e, 4) %}
     pass
 
 _UniffiTemp{{ type_name }} = {{ type_name }}
 
 class {{ type_name }}:  # type: ignore
-    {{ e.docstring|docstring(4) -}}
-    {%- for variant in e.variants -%}
-    {%- let variant_type_name = variant.name -%}
-    {%- if e.is_flat %}
+    {%- call py::docstring(e, 4) %}
+    {%- for variant in e.variants() -%}
+    {%- let variant_type_name = variant.name() -%}
+    {%- if e.is_flat() %}
     class {{ variant_type_name }}(_UniffiTemp{{ type_name }}):
-        {{ variant.docstring|docstring(8) -}}
+        {%- call py::docstring(variant, 8) %}
 
         def __repr__(self):
             return "{{ type_name }}.{{ variant_type_name }}({})".format(repr(str(self)))
     {%- else %}
     class {{ variant_type_name }}(_UniffiTemp{{ type_name }}):
-        {{ variant.docstring|docstring(8) -}}
+        {%- call py::docstring(variant, 8) %}
 
-    {%-     if variant.has_unnamed_fields() %}
+    {%-     if variant.has_nameless_fields() %}
         def __init__(self, *values):
-            if len(values) != {{ variant.fields.len() }}:
-                raise TypeError(f"Expected {{ variant.fields.len() }} arguments, found {len(values)}")
-        {%- for field in variant.fields %}
-            if not isinstance(values[{{ loop.index0 }}], {{ field.ty.type_name }}):
-                raise TypeError(f"unexpected type for tuple element {{ loop.index0 }} - expected '{{ field.ty.type_name }}', got '{type(values[{{ loop.index0 }}])}'")
+            if len(values) != {{ variant.fields().len() }}:
+                raise TypeError(f"Expected {{ variant.fields().len() }} arguments, found {len(values)}")
+        {%- for field in variant.fields() %}
+            if not isinstance(values[{{ loop.index0 }}], {{ field|type_name }}):
+                raise TypeError(f"unexpected type for tuple element {{ loop.index0 }} - expected '{{ field|type_name }}', got '{type(values[{{ loop.index0 }}])}'")
         {%- endfor %}
             super().__init__(", ".join(map(repr, values)))
             self._values = values
@@ -40,15 +39,15 @@ class {{ type_name }}:  # type: ignore
             return self._values[index]
 
     {%-     else %}
-        def __init__(self{% for field in variant.fields %}, {{ field.name }}{% endfor %}):
-            {%- if !variant.fields.is_empty() %}
+        def __init__(self{% for field in variant.fields() %}, {{ field.name() }}{% endfor %}):
+            {%- if variant.has_fields() %}
             super().__init__(", ".join([
-                {%- for field in variant.fields %}
-                "{{ field.name }}={!r}".format({{ field.name }}),
+                {%- for field in variant.fields() %}
+                "{{ field.name() }}={!r}".format({{ field.name() }}),
                 {%- endfor %}
             ]))
-            {%- for field in variant.fields %}
-            self.{{ field.name }} = {{ field.name }}
+            {%- for field in variant.fields() %}
+            self.{{ field.name() }} = {{ field.name() }}
             {%- endfor %}
             {%- else %}
             pass
@@ -57,16 +56,6 @@ class {{ type_name }}:  # type: ignore
 
         def __repr__(self):
             return "{{ type_name }}.{{ variant_type_name }}({})".format(str(self))
-
-    {%-     for meth in e.methods -%}
-    {%-     let callable = meth.callable %}
-        {% if callable.is_async %}async {% endif %}def {{ callable.name }}(self, {% include "CallableArgs.py" %}) -> {{ callable.return_type.type_name }}:
-            {{ meth.docstring|docstring(12) -}}
-    {%-         filter indent(12) %}
-    {%-         include "CallableBody.py" %}
-    {%-         endfilter %}
-    {%-     endfor %}
-
     {%- endif %}
     _UniffiTemp{{ type_name }}.{{ variant_type_name }} = {{ variant_type_name }} # type: ignore
     {%- endfor %}
@@ -75,18 +64,18 @@ class {{ type_name }}:  # type: ignore
 del _UniffiTemp{{ type_name }}
 
 
-class {{ e.self_type.ffi_converter_name }}(_UniffiConverterRustBuffer):
+class {{ ffi_converter_name }}(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
         variant = buf.read_i32()
-        {%- for variant in e.variants %}
+        {%- for variant in e.variants() %}
         if variant == {{ loop.index }}:
-            return {{ type_name }}.{{ variant.name }}(
-                {%- if e.is_flat %}
-                {{ string_type_node.ffi_converter_name }}.read(buf),
+            return {{ type_name }}.{{ variant.name() }}(
+                {%- if e.is_flat() %}
+                {{ Type::String.borrow()|read_fn }}(buf),
                 {%- else %}
-                {%- for field in variant.fields %}
-                {{ field.ty.ffi_converter_name }}.read(buf),
+                {%- for field in variant.fields() %}
+                {{ field|read_fn }}(buf),
                 {%- endfor %}
                 {%- endif %}
             )
@@ -95,16 +84,16 @@ class {{ e.self_type.ffi_converter_name }}(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
-        {%- if e.variants.is_empty() %}
+        {%- if e.variants().is_empty() %}
         pass
         {%- else %}
-        {%- for variant in e.variants %}
-        if isinstance(value, {{ type_name }}.{{ variant.name }}):
-            {%- for field in variant.fields %}
-            {%-     if variant.has_unnamed_fields() %}
-            {{ field.ty.ffi_converter_name }}.check_lower(value._values[{{ loop.index0 }}])
+        {%- for variant in e.variants() %}
+        if isinstance(value, {{ type_name }}.{{ variant.name() }}):
+            {%- for field in variant.fields() %}
+            {%-     if variant.has_nameless_fields() %}
+            {{ field|check_lower_fn }}(value._values[{{ loop.index0 }}])
             {%-     else %}
-            {{ field.ty.ffi_converter_name }}.check_lower(value.{{ field.name }})
+            {{ field|check_lower_fn }}(value.{{ field.name() }})
             {%-     endif %}
             {%- endfor %}
             return
@@ -113,14 +102,14 @@ class {{ e.self_type.ffi_converter_name }}(_UniffiConverterRustBuffer):
 
     @staticmethod
     def write(value, buf):
-        {%- for variant in e.variants %}
-        if isinstance(value, {{ type_name }}.{{ variant.name }}):
+        {%- for variant in e.variants() %}
+        if isinstance(value, {{ type_name }}.{{ variant.name() }}):
             buf.write_i32({{ loop.index }})
-            {%- for field in variant.fields %}
-            {%-     if variant.has_unnamed_fields() %}
-            {{ field.ty.ffi_converter_name }}.write(value._values[{{ loop.index0 }}], buf)
+            {%- for field in variant.fields() %}
+            {%-     if variant.has_nameless_fields() %}
+            {{ field|write_fn }}(value._values[{{ loop.index0 }}], buf)
             {%-     else %}
-            {{ field.ty.ffi_converter_name }}.write(value.{{ field.name }}, buf)
+            {{ field|write_fn }}(value.{{ field.name() }}, buf)
             {%-     endif %}
             {%- endfor %}
         {%- endfor %}

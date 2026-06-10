@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||!Intl.hasOwnProperty("DurationFormat"))
+
 const {
   Integer, Group, Decimal, Fraction, Literal, Unit
 } = NumberFormatParts;

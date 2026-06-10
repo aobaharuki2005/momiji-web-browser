@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsRedirectHistoryEntry_h_
-#define nsRedirectHistoryEntry_h_
+#ifndef nsRedirectHistoryEntry_h__
+#define nsRedirectHistoryEntry_h__
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -34,4 +34,4 @@ class nsRedirectHistoryEntry final : public nsIRedirectHistoryEntry {
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // nsRedirectHistoryEntry_h_
+#endif  // nsRedirectHistoryEntry_h__

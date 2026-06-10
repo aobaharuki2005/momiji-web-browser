@@ -10,7 +10,6 @@ import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
@@ -23,7 +22,7 @@ import org.junit.Test
 
 class TabHistoryViewHolderTest {
 
-    @RelaxedMockK
+    @MockK(relaxed = true)
     private lateinit var view: WidgetSiteItemView
 
     @MockK private lateinit var interactor: TabHistoryViewInteractor

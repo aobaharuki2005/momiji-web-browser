@@ -7,7 +7,7 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 import { connect } from "devtools/client/shared/vendor/react-redux";
 
-import DebuggerImage from "devtools/client/shared/components/DebuggerImage";
+import DebuggerImage from "./DebuggerImage";
 
 import { getSourceClassnames } from "../../utils/source";
 import { isSourceBlackBoxed } from "../../selectors/index";
@@ -15,7 +15,6 @@ import { isSourceBlackBoxed } from "../../selectors/index";
 class SourceIcon extends PureComponent {
   static get propTypes() {
     return {
-      className: PropTypes.string,
       modifier: PropTypes.func,
       location: PropTypes.object.isRequired,
       iconName: PropTypes.string,
@@ -23,7 +22,7 @@ class SourceIcon extends PureComponent {
   }
 
   render() {
-    const { className, modifier } = this.props;
+    const { modifier } = this.props;
     let { iconName } = this.props;
 
     if (modifier) {
@@ -33,11 +32,9 @@ class SourceIcon extends PureComponent {
       }
       iconName = modified;
     }
-
     return React.createElement(DebuggerImage, {
       name: iconName,
-      // Append the optional className to the default "source-icon" class.
-      className: `source-icon${className ? ` ${className}` : ""}`,
+      className: "source-icon",
     });
   }
 }

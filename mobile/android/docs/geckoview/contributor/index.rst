@@ -1,3 +1,5 @@
+.. -*- Mode: rst; fill-column: 80; -*-
+
 =========================
 Contributing to GeckoView
 =========================

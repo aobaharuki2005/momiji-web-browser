@@ -61,6 +61,8 @@ class ConstellationObserverTest {
         verifyNoMoreInteractions(push)
         // We should have told the constellation of the new subscription.
         verify(constellation).setDevicePushSubscription(any())
+
+        Unit
     }
 
     @Test
@@ -79,6 +81,7 @@ class ConstellationObserverTest {
         // We should not have told the constellation of the subscription as it matches
         verify(constellation).state()
         verifyNoMoreInteractions(constellation)
+        Unit
     }
 
     @Test
@@ -98,6 +101,7 @@ class ConstellationObserverTest {
         // We should have told the constellation of the same end-point subscription to clear the
         // expired flag on the server.
         verify(constellation).setDevicePushSubscription(any())
+        Unit
     }
 
     @Test

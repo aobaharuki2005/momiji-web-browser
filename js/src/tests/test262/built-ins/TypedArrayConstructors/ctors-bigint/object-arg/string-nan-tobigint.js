@@ -57,14 +57,14 @@ info: |
       2. If n is NaN, throw a SyntaxError exception.
       3. Return n.
 
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(TA) {
 
   assert.throws(SyntaxError, function() {
-    new TA(makeCtorArg(["definately not a number"]));
+    new TA(["definately not a number"]);
   }, "StringToBigInt(prim) == NaN");
 
 });

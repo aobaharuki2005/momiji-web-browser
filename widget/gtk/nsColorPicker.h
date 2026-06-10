@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsColorPicker_h_
-#define nsColorPicker_h_
+#ifndef nsColorPicker_h__
+#define nsColorPicker_h__
 
 #include <gtk/gtk.h>
 
@@ -67,4 +68,4 @@ class nsColorPicker final : public nsBaseColorPicker {
   nsTArray<nsString> mDefaultColors;
 };
 
-#endif  // nsColorPicker_h_
+#endif  // nsColorPicker_h__

@@ -75,7 +75,7 @@ class RTPBuffer : public RTPStream {
  public:
   RTPBuffer() = default;
 
-  ~RTPBuffer() override = default;
+  ~RTPBuffer() = default;
 
   void Write(uint8_t payloadType,
              uint32_t timeStamp,
@@ -98,7 +98,7 @@ class RTPBuffer : public RTPStream {
 
 class RTPFile : public RTPStream {
  public:
-  ~RTPFile() override {}
+  ~RTPFile() {}
 
   RTPFile() : _rtpFile(NULL), _rtpEOF(false) {}
 

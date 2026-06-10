@@ -132,12 +132,10 @@ where
 ///
 /// The provider is not allowed to return `Ok` for requests that were not returned by `iter_ids`,
 /// and must not fail with a [`DataErrorKind::IdentifierNotFound`] for requests that were returned.
-///
-/// ✨ *Enabled with the `alloc` Cargo feature.*
 #[cfg(feature = "alloc")]
 pub trait IterableDataProvider<M: DataMarker>: DataProvider<M> {
     /// Returns a set of [`DataIdentifierCow`].
-    fn iter_ids(&self) -> Result<alloc::collections::BTreeSet<DataIdentifierCow<'_>>, DataError>;
+    fn iter_ids(&self) -> Result<alloc::collections::BTreeSet<DataIdentifierCow>, DataError>;
 }
 
 /// A data provider that loads data for a specific data type.
@@ -307,15 +305,13 @@ where
 ///
 /// The provider is not allowed to return `Ok` for requests that were not returned by `iter_ids`,
 /// and must not fail with a [`DataErrorKind::IdentifierNotFound`] for requests that were returned.
-///
-/// ✨ *Enabled with the `alloc` Cargo feature.*
 #[cfg(feature = "alloc")]
 pub trait IterableDynamicDataProvider<M: DynamicDataMarker>: DynamicDataProvider<M> {
     /// Given a [`DataMarkerInfo`], returns a set of [`DataIdentifierCow`].
     fn iter_ids_for_marker(
         &self,
         marker: DataMarkerInfo,
-    ) -> Result<alloc::collections::BTreeSet<DataIdentifierCow<'_>>, DataError>;
+    ) -> Result<alloc::collections::BTreeSet<DataIdentifierCow>, DataError>;
 }
 
 #[cfg(feature = "alloc")]
@@ -327,7 +323,7 @@ where
     fn iter_ids_for_marker(
         &self,
         marker: DataMarkerInfo,
-    ) -> Result<alloc::collections::BTreeSet<DataIdentifierCow<'_>>, DataError> {
+    ) -> Result<alloc::collections::BTreeSet<DataIdentifierCow>, DataError> {
         (**self).iter_ids_for_marker(marker)
     }
 }

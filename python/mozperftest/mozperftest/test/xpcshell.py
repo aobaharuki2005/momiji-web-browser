@@ -14,9 +14,8 @@ from mozperftest.utils import NoPerfMetricsError, temp_dir
 def copy_tree_update(src_path, dst_path):
     for src_file in src_path.rglob("*"):
         dst_file = dst_path / src_file.relative_to(src_path)
-        if src_file.is_dir():
-            if not dst_file.exists():
-                dst_file.mkdir(parents=True)
+        if src_file.is_dir() and not dst_file.exists():
+            dst_file.mkdir(parents=True)
         elif not dst_file.exists() or not filecmp.cmp(
             src_file, dst_file, shallow=False
         ):
@@ -103,11 +102,11 @@ class XPCShell(Layer):
 
         import runxpcshelltests
 
+        verbose = self.get_arg("verbose")
         xpcshell = runxpcshelltests.XPCShellTests(log=self)
         kwargs = {}
         kwargs["testPaths"] = test.name
-        # Enable verbose mode to capture structured log output (required for perfMetrics)
-        kwargs["verbose"] = True
+        kwargs["verbose"] = verbose
         binary = self.get_arg("xpcshell_binary")
         if binary is None:
             binary = self.mach_cmd.get_binary_path("xpcshell")
@@ -148,10 +147,10 @@ class XPCShell(Layer):
             kwargs["http3server"] = str(http3server)
 
         cycles = self.get_arg("cycles", 1)
-        self.info(f"Running {cycles} cycles")
+        self.info("Running %d cycles" % cycles)
 
         for cycle in range(cycles):
-            self.info(f"Cycle {cycle + 1}")
+            self.info("Cycle %d" % (cycle + 1))
             with temp_dir() as tmp:
                 kwargs["tempDir"] = tmp
                 if not xpcshell.runTests(kwargs):
@@ -187,7 +186,7 @@ class XPCShell(Layer):
             return
         self.metrics.append(data["extra"])
 
-    def process_output(self, procid, line, command, **kwargs):
+    def process_output(self, procid, line, command):
         self.info(line)
 
     def dummy(self, *args, **kw):

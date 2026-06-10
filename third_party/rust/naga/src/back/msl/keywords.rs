@@ -343,8 +343,6 @@ const RESERVED: &[&str] = &[
     "M_SQRT1_2",
     // Naga utilities
     "DefaultConstructible",
-    // Naga builtin names
-    "__local_invocation_index",
     super::writer::FREXP_FUNCTION,
     super::writer::MODF_FUNCTION,
     super::writer::ABS_FUNCTION,

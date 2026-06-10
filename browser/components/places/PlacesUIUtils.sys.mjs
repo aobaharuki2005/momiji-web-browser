@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,8 +13,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CLIENT_NOT_CONFIGURED: "resource://services-sync/constants.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
-  ContentSharingUtils:
-    "resource:///modules/contentsharing/ContentSharingUtils.sys.mjs",
   CustomizableUI:
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
@@ -23,8 +22,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
-  WebNavigationManager: "resource://gre/modules/WebNavigation.sys.mjs",
 });
+
 const ITEM_CHANGED_BATCH_NOTIFICATION_THRESHOLD = 10;
 
 // copied from utilityOverlay.js
@@ -810,21 +809,11 @@ export var PlacesUIUtils = {
     // For consistency, we want all the bookmarks to open in new tabs, instead
     // of having one of them replace the currently focused tab.  Hence we call
     // loadTabs with aReplace set to false.
-    let tabs = browserWindow.gBrowser.loadTabs(urls, {
+    browserWindow.gBrowser.loadTabs(urls, {
       inBackground: loadInBackground,
       replace: false,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
-
-    for (const [i, tab] of tabs.entries()) {
-      let item = aItemsToOpen[i];
-      if (item.isBookmark && !item.uri.startsWith("javascript:")) {
-        lazy.WebNavigationManager.setRecentTabTransitionData(
-          { auto_bookmark: true },
-          tab.linkedBrowser
-        );
-      }
-    }
   },
 
   /**
@@ -859,7 +848,7 @@ export var PlacesUIUtils = {
     }
     if (lazy.OpenInTabsUtils.confirmOpenInTabs(urlsToOpen.length, window)) {
       if (window.updateTelemetry) {
-        window.updateTelemetry(urlsToOpen, true);
+        window.updateTelemetry(urlsToOpen);
       }
       this.openTabset(urlsToOpen, event, window);
     }
@@ -877,7 +866,7 @@ export var PlacesUIUtils = {
    *          user's preferred destination window or tab.
    */
   openNodeWithEvent: function PUIU_openNodeWithEvent(aNode, aEvent) {
-    let window = aEvent.target.documentGlobal;
+    let window = aEvent.target.ownerGlobal;
 
     let where = lazy.BrowserUtils.whereToOpenLink(aEvent, false, true);
     if (this.loadBookmarksInTabs && lazy.PlacesUtils.nodeIsBookmark(aNode)) {
@@ -939,22 +928,12 @@ export var PlacesUIUtils = {
       }
 
       const isJavaScriptURL = aNode.uri.startsWith("javascript:");
-      let resolveOnContentBrowserCreated;
-      if (isBookmark && !isJavaScriptURL) {
-        resolveOnContentBrowserCreated = browser => {
-          lazy.WebNavigationManager.setRecentTabTransitionData(
-            { auto_bookmark: true },
-            browser
-          );
-        };
-      }
       aWindow.openTrustedLinkIn(aNode.uri, aWhere, {
         allowPopups: isJavaScriptURL,
         inBackground: this.loadBookmarksInBackground,
         allowInheritPrincipal: isJavaScriptURL,
         private: aPrivate,
         userContextId,
-        resolveOnContentBrowserCreated,
       });
       if (aWindow.updateTelemetry) {
         aWindow.updateTelemetry([aNode]);
@@ -1040,7 +1019,7 @@ export var PlacesUIUtils = {
    * @throws if aFetchInfo is representing a separator.
    */
   async promiseNodeLikeFromFetchInfo(aFetchInfo) {
-    if (aFetchInfo.type == lazy.PlacesUtils.bookmarks.TYPE_SEPARATOR) {
+    if (aFetchInfo.itemType == lazy.PlacesUtils.bookmarks.TYPE_SEPARATOR) {
       throw new Error("promiseNodeLike doesn't support separators");
     }
 
@@ -1055,7 +1034,7 @@ export var PlacesUIUtils = {
       uri: aFetchInfo.url !== undefined ? aFetchInfo.url.href : "",
 
       get type() {
-        if (aFetchInfo.type == lazy.PlacesUtils.bookmarks.TYPE_FOLDER) {
+        if (aFetchInfo.itemType == lazy.PlacesUtils.bookmarks.TYPE_FOLDER) {
           return Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER;
         }
 
@@ -1178,7 +1157,7 @@ export var PlacesUIUtils = {
     // respectively.)  Therefore, we make sure to exclude the blank area
     // before the tree item icon (that is, to the left or right of it in
     // LTR and RTL modes, respectively) from the click target area.
-    let win = tree.documentGlobal;
+    let win = tree.ownerGlobal;
     let rect = tree.getCoordsForCellItem(cell.row, cell.col, "image");
     let isRTL = win.getComputedStyle(tree).direction == "rtl";
     let mouseInGutter = isRTL ? event.clientX > rect.x : event.clientX < rect.x;
@@ -1245,11 +1224,11 @@ export var PlacesUIUtils = {
     if (cell.row != -1) {
       let node = tree.view.nodeForTreeIndex(cell.row);
       if (lazy.PlacesUtils.nodeIsURI(node)) {
-        this.setMouseoverURL(node.uri, tree.documentGlobal);
+        this.setMouseoverURL(node.uri, tree.ownerGlobal);
         return;
       }
     }
-    this.setMouseoverURL("", tree.documentGlobal);
+    this.setMouseoverURL("", tree.ownerGlobal);
   },
 
   setMouseoverURL(url, win) {
@@ -1330,7 +1309,7 @@ export var PlacesUIUtils = {
 
     if (
       item.hasAttribute("hide-if-private-browsing") &&
-      lazy.PrivateBrowsingUtils.isWindowPrivate(item.documentGlobal)
+      lazy.PrivateBrowsingUtils.isWindowPrivate(item.ownerGlobal)
     ) {
       return true;
     }
@@ -1342,20 +1321,13 @@ export var PlacesUIUtils = {
       return true;
     }
 
-    if (
-      item.hasAttribute("hide-if-content-sharing-disabled") &&
-      !lazy.ContentSharingUtils.isEnabled
-    ) {
-      return true;
-    }
-
     return false;
   },
 
   async managedPlacesContextShowing(event) {
     let menupopup = event.target;
     let document = menupopup.ownerDocument;
-    let window = menupopup.documentGlobal;
+    let window = menupopup.ownerGlobal;
     // We need to populate the submenus in order to have information
     // to show the context menu.
     if (
@@ -1401,28 +1373,22 @@ export var PlacesUIUtils = {
       }
     }
 
-    event.target.documentGlobal.updateCommands("places");
+    event.target.ownerGlobal.updateCommands("places");
   },
 
   placesContextShowing(event) {
     let menupopup = /** @type {XULPopupElement} */ (event.target);
     if (
-      ![
-        "placesContext",
-        "sidebar-history-context-menu",
-        "sidebar-synced-tabs-context-menu",
-      ].includes(menupopup.id)
+      !["placesContext", "sidebar-history-context-menu"].includes(menupopup.id)
     ) {
       // Ignore any popupshowing events from submenus
       return;
     }
 
-    switch (menupopup.id) {
-      case "sidebar-history-context-menu":
-      case "sidebar-synced-tabs-context-menu":
-        PlacesUIUtils.lastContextMenuTriggerNode =
-          menupopup.triggerNode.triggerNode;
-        return;
+    if (menupopup.id == "sidebar-history-context-menu") {
+      PlacesUIUtils.lastContextMenuTriggerNode =
+        menupopup.triggerNode.triggerNode;
+      return;
     }
 
     PlacesUIUtils.lastContextMenuTriggerNode = menupopup.triggerNode;
@@ -1477,7 +1443,6 @@ export var PlacesUIUtils = {
         "sidebar-history-context-menu",
         "placesContext",
         "sidebar-synced-tabs-context-menu",
-        "sidebar-bookmarks-context-menu",
       ].includes(menupopup.id)
     ) {
       PlacesUIUtils.lastContextMenuTriggerNode = null;
@@ -1486,7 +1451,7 @@ export var PlacesUIUtils = {
   },
 
   createContainerTabMenu(event) {
-    let window = event.target.documentGlobal;
+    let window = event.target.ownerGlobal;
     return window.createUserContextMenu(event, { isContextMenu: true });
   },
 
@@ -1498,7 +1463,7 @@ export var PlacesUIUtils = {
     let triggerNode = this.lastContextMenuTriggerNode;
     let isManaged = !!triggerNode?.closest("#managed-bookmarks");
     if (isManaged) {
-      let window = triggerNode.documentGlobal;
+      let window = triggerNode.ownerGlobal;
       window.openTrustedLinkIn(triggerNode.link, "tab", { userContextId });
       return;
     }
@@ -1506,7 +1471,7 @@ export var PlacesUIUtils = {
     this._openNodeIn(
       view?.selectedNode || triggerNode,
       "tab",
-      view?.ownerWindow || triggerNode.documentGlobal.top,
+      view?.ownerWindow || triggerNode.ownerGlobal.top,
       {
         userContextId,
       }
@@ -1531,7 +1496,7 @@ export var PlacesUIUtils = {
     triggerNode: null,
 
     openSelectionInTabs(event) {
-      let window = event.target.documentGlobal;
+      let window = event.target.ownerGlobal;
       let menuitems = event.target.parentNode.triggerNode.menupopup.children;
       let items = [];
       for (let i = 0; i < menuitems.length; i++) {
@@ -1558,7 +1523,7 @@ export var PlacesUIUtils = {
     },
 
     doCommand(command) {
-      let window = this.triggerNode.documentGlobal;
+      let window = this.triggerNode.ownerGlobal;
       switch (command) {
         case "placesCmd_copy": {
           lazy.BrowserUtils.copyLink(
@@ -1617,11 +1582,6 @@ export var PlacesUIUtils = {
     }
   },
 
-  removeImportButton() {
-    lazy.CustomizableUI.removeWidgetFromArea("import-button");
-    Services.prefs.clearUserPref("browser.bookmarks.addedImportButton");
-  },
-
   removeImportButtonWhenImportSucceeds() {
     // If the user (re)moved the button, clear the pref and stop worrying about
     // moving the item.
@@ -1636,7 +1596,8 @@ export var PlacesUIUtils = {
         data == lazy.MigrationUtils.resourceTypes.BOOKMARKS &&
         lazy.MigrationUtils.getImportedCount("bookmarks") > 0
       ) {
-        this.removeImportButton();
+        lazy.CustomizableUI.removeWidgetFromArea("import-button");
+        Services.prefs.clearUserPref("browser.bookmarks.addedImportButton");
         Services.obs.removeObserver(obs, "Migration:ItemAfterMigrate");
         Services.obs.removeObserver(obs, "Migration:ItemError");
       }
@@ -1693,7 +1654,7 @@ export var PlacesUIUtils = {
     ) {
       PlacesUIUtils.setupSpeculativeConnection(
         event.target._placesNode.uri,
-        event.target.documentGlobal
+        event.target.ownerGlobal
       );
     }
   },
@@ -1784,24 +1745,6 @@ export var PlacesUIUtils = {
       } else {
         longTitles.set(titleBeginning, [candidate]);
       }
-    }
-  },
-
-  /**
-   * Event handler for experimental link sharing context menu item.
-   */
-  shareBookmarkFolder() {
-    let view = PlacesUIUtils.getViewForNode(
-      PlacesUIUtils.lastContextMenuTriggerNode
-    );
-    try {
-      lazy.ContentSharingUtils.createShareableLinkFromBookmarkFolders(
-        view.selectedNodes
-          .filter(n => lazy.PlacesUtils.nodeIsFolderOrShortcut(n))
-          .map(n => lazy.PlacesUtils.getConcreteItemGuid(n))
-      );
-    } catch (ex) {
-      console.error("Failed to create shareable link: ", ex);
     }
   },
 };

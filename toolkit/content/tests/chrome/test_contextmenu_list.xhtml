@@ -6,8 +6,8 @@
         onload="setTimeout(startTest, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
 
 <spacer style="height: 5px"/>
 
@@ -83,14 +83,9 @@ var gContextMenuFired = false;
 async function startTest()
 {
   // These tests check behavior of non-native menus, and use anchored and non-anchored popups
-  // somewhat interchangeably. So disable native menus for this test.
+  // somewhat interchangeably. So disable native context menus for this test.
   // We will have separate tests for native context menu behavior, see bug 1700727.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["widget.macos.native-anchored-menus", false],
-      ["widget.macos.native-context-menus", false]
-    ]
-  });
+  await SpecialPowers.pushPrefEnv({ set: [["widget.macos.native-context-menus", false]] });
 
   // first, check if the richlistbox selection changes on a contextmenu mouse event
   var element = $("list");
@@ -171,11 +166,14 @@ function nextTest()
 // with a clientY of round(111 - 100.4) == round(10.6) == 11. This is not
 // equal to round(10.3) as you might expect.
 
-function isRounded(a, b, msg) {
-  const diff = Math.abs(b - a);
-  const withinOnePx = diff <= 1;
+function isRoundedX(a, b, msg)
+{
+  is(Math.round(a + window.mozInnerScreenX), Math.round(b + window.mozInnerScreenX), msg);
+}
 
-  is(withinOnePx, true, msg);
+function isRoundedY(a, b, msg)
+{
+  is(Math.round(a + window.mozInnerScreenY), Math.round(b + window.mozInnerScreenY), msg);
 }
 
 function checkContextMenu(event)
@@ -188,8 +186,8 @@ function checkContextMenu(event)
   var left = frombase ? rect.left + 7 : rect.left;
   var top = frombase ? rect.top + 4 : rect.bottom;
 
-  isRounded(event.clientX, left, gTestElement + " clientX " + gSelectionStep + " " + gTestId + "," + frombase);
-  isRounded(event.clientY, top, gTestElement + " clientY " + gSelectionStep + " " + gTestId);
+  isRoundedX(event.clientX, left, gTestElement + " clientX " + gSelectionStep + " " + gTestId + "," + frombase);
+  isRoundedY(event.clientY, top, gTestElement + " clientY " + gSelectionStep + " " + gTestId);
   ok(event.screenX > left, gTestElement + " screenX " + gSelectionStep + " " + gTestId);
   ok(event.screenY > top, gTestElement + " screenY " + gSelectionStep + " " + gTestId);
 
@@ -244,17 +242,17 @@ function checkPopup()
   if (gTestId == 0) {
     if (gTestElement == "list") {
       var itemrect = $("item3").getBoundingClientRect();
-      isRounded(menurect.left, itemrect.left + contextMenuOffsetX,
+      isRoundedX(menurect.left, itemrect.left + contextMenuOffsetX,
          "list selection keyboard left");
-      isRounded(menurect.top, itemrect.bottom + contextMenuOffsetY,
+      isRoundedY(menurect.top, itemrect.bottom + contextMenuOffsetY,
          "list selection keyboard top");
     }
     else {
       var tree = $("tree");
       var bodyrect = $("treechildren").getBoundingClientRect();
-      isRounded(menurect.left, bodyrect.left + contextMenuOffsetX,
+      isRoundedX(menurect.left, bodyrect.left + contextMenuOffsetX,
          "tree selection keyboard left");
-      isRounded(menurect.top, bodyrect.top +
+      isRoundedY(menurect.top, bodyrect.top +
          tree.rowHeight * 3 + contextMenuOffsetY,
          "tree selection keyboard top");
     }
@@ -262,16 +260,16 @@ function checkPopup()
   else if (gTestId == 1) {
     // activating a context menu with the mouse from position (7, 4).
     let elementrect = $(gTestElement).getBoundingClientRect();
-    isRounded(menurect.left, elementrect.left + 7 + contextMenuOffsetX,
+    isRoundedX(menurect.left, elementrect.left + 7 + contextMenuOffsetX,
        gTestElement + " mouse left");
-    isRounded(menurect.top, elementrect.top + 4 + contextMenuOffsetY,
+    isRoundedY(menurect.top, elementrect.top + 4 + contextMenuOffsetY,
        gTestElement + " mouse top");
   }
   else {
     let elementrect = $(gTestElement).getBoundingClientRect();
-    isRounded(menurect.left, elementrect.left + contextMenuOffsetX,
+    isRoundedX(menurect.left, elementrect.left + contextMenuOffsetX,
        gTestElement + " no selection keyboard left");
-    isRounded(menurect.top, elementrect.bottom + contextMenuOffsetY,
+    isRoundedY(menurect.top, elementrect.bottom + contextMenuOffsetY,
        gTestElement + " no selection keyboard top");
   }
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
   "mainEntryPointFilePath": "<projectFolder>/lib/esm/puppeteer/puppeteer.d.ts",
-  "bundledPackages": [],
+  "bundledPackages": ["puppeteer-core"],
 
   "apiReport": {
     "enabled": false
@@ -24,7 +24,7 @@
   "messages": {
     "compilerMessageReporting": {
       "default": {
-        "logLevel": "error"
+        "logLevel": "warning"
       }
     },
 
@@ -36,13 +36,13 @@
         "logLevel": "none"
       },
       "default": {
-        "logLevel": "error"
+        "logLevel": "warning"
       }
     },
 
     "tsdocMessageReporting": {
       "default": {
-        "logLevel": "error"
+        "logLevel": "warning"
       }
     }
   }

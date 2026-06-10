@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as codemirror from "codemirror";
-import * as codemirrorAutocomplete from "@codemirror/autocomplete";
 import * as codemirrorView from "@codemirror/view";
 import * as codemirrorState from "@codemirror/state";
 import * as codemirrorSearch from "@codemirror/search";
@@ -20,7 +19,6 @@ import * as lezerHighlight from "@lezer/highlight";
 
 export {
   codemirror,
-  codemirrorAutocomplete,
   codemirrorView,
   codemirrorState,
   codemirrorSearch,

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -104,6 +106,12 @@ struct TraceTimestampTraits<mozilla::TimeStamp> {
 PERFETTO_DEFINE_CATEGORIES(perfetto::Category("task"),
                            perfetto::Category("usertiming"));
 
+template <typename T, typename = void>
+struct MarkerHasPayloadFields : std::false_type {};
+template <typename T>
+struct MarkerHasPayloadFields<T, std::void_t<decltype(T::PayloadFields)>>
+    : std::true_type {};
+
 using MS = mozilla::MarkerSchema;
 
 // Primary template.  Assert if a payload type has not been specialized so we
@@ -199,18 +207,8 @@ struct AddDebugAnnotationImpl<Flow> {
 #  define ADD_DEBUG_STRING_ANNOTATION(type, getter) \
     ADD_DEBUG_STRING_ANNOTATION_IMPL(, type, type&, getter)
 
-// ProfilerString8View may not be null-terminated, use the length-specified
-// overload.
-template <>
-struct AddDebugAnnotationImpl<mozilla::ProfilerString8View> {
-  static void call(perfetto::EventContext& ctx, const char* const aKey,
-                   const mozilla::ProfilerString8View& aValue) {
-    auto* arg = ctx.event()->add_debug_annotations();
-    arg->set_name(aKey);
-    auto sv = aValue.StringView();
-    arg->set_string_value(sv.data(), sv.length());
-  }
-};
+ADD_DEBUG_STRING_ANNOTATION(mozilla::ProfilerString8View,
+                            aValue.StringView().data())
 ADD_DEBUG_STRING_ANNOTATION_IMPL(size_t N, nsAutoCStringN<N>,
                                  nsAutoCStringN<N>&, aValue.get())
 ADD_DEBUG_STRING_ANNOTATION(nsCString, aValue.get())
@@ -260,8 +258,7 @@ void EmitPerfettoTrackEvent(const mozilla::ProfilerString8View& aName,
     phase = aOptions.Timing().MarkerPhase();
   }
 
-  auto nameSv = aName.StringView();
-  const char* nameStr = nameSv.data();
+  const char* nameStr = aName.StringView().data();
   if (!nameStr) {
     return;
   }
@@ -270,23 +267,14 @@ void EmitPerfettoTrackEvent(const mozilla::ProfilerString8View& aName,
   const char* categoryName =
       ProfilerCategoryNames[static_cast<uint32_t>(aCategory.GetCategory())];
   perfetto::DynamicCategory category{categoryName};
-  perfetto::DynamicString name{nameStr, nameSv.length()};
+  perfetto::DynamicString name{nameStr};
 
   // If the Marker has payload fields, we can annotate them in the perfetto
   // track event. Otherwise, we define an empty lambda which does nothing.
   std::function<void(perfetto::EventContext)> annotateTrackEvent =
       [&](perfetto::EventContext ctx) {};
-  if constexpr (mozilla::MarkerHasTranslator<MarkerType>::value) {
-    // NOP
-    // TODO - Bug 2037782
-  } else if constexpr (mozilla::MarkerHasPayloadFields<MarkerType>::value) {
+  if constexpr (MarkerHasPayloadFields<MarkerType>::value) {
     annotateTrackEvent = [&](perfetto::EventContext ctx) {
-      static_assert(
-          sizeof...(PayloadArguments) ==
-              std::extent_v<decltype(MarkerType::PayloadFields)>,
-          "Number and type of fields must be equal to number and type of "
-          "payload arguments. If this is not the case a "
-          "TranslateMarkerInputToSchema function must be defined.");
       size_t i = 0;
       auto processArgument = [&](const auto& payloadArg) {
         AddDebugAnnotation(ctx, MarkerType::PayloadFields[i++].Key, payloadArg);
@@ -297,7 +285,7 @@ void EmitPerfettoTrackEvent(const mozilla::ProfilerString8View& aName,
 
   // Create a unique id for each marker so it has it's own track.
   mozilla::HashNumber hash =
-      mozilla::HashStringKnownLength(nameStr, nameSv.length());
+      mozilla::HashStringKnownLength(nameStr, aName.StringView().length());
 
   switch (phase) {
     case mozilla::MarkerTiming::Phase::Interval: {

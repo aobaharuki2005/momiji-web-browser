@@ -565,10 +565,7 @@ async function doSuggestedIndexTest({
 
   // Finally, search and check the results.
   let expectedResults = expected.map(i => results[i]);
-  await ProvidersManager.getInstanceForSap("urlbar").startQuery(
-    context,
-    controller
-  );
+  await UrlbarProvidersManager.startQuery(context, controller);
   Assert.deepEqual(context.results, expectedResults);
 }
 

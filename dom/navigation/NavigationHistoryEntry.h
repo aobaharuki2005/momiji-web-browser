@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_NavigationHistoryEntry_h_
-#define mozilla_dom_NavigationHistoryEntry_h_
+#ifndef mozilla_dom_NavigationHistoryEntry_h___
+#define mozilla_dom_NavigationHistoryEntry_h___
 
 #include "mozilla/DOMEventTargetHelper.h"
 
@@ -28,7 +30,6 @@ class NavigationHistoryEntry final : public DOMEventTargetHelper {
   void GetKey(nsAString& aResult) const;
   void GetId(nsAString& aResult) const;
   int64_t Index() const;
-  void SetIndex(int64_t aIndex) { mIndex = aIndex; }
   bool SameDocument() const;
 
   void GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
@@ -52,9 +53,6 @@ class NavigationHistoryEntry final : public DOMEventTargetHelper {
 
   void ResetIndexForDisposal();
 
-  MOZ_CAN_RUN_SCRIPT
-  void FireDisposeEvent();
-
  private:
   ~NavigationHistoryEntry();
 
@@ -69,4 +67,4 @@ class NavigationHistoryEntry final : public DOMEventTargetHelper {
 
 }  // namespace mozilla::dom
 
-#endif  // mozilla_dom_NavigationHistoryEntry_h_
+#endif  // mozilla_dom_NavigationHistoryEntry_h___

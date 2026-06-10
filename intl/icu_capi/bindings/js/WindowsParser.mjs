@@ -5,9 +5,6 @@ import { TimeZone } from "./TimeZone.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-const WindowsParser_box_destroy_registry = new FinalizationRegistry((ptr) => {
-    wasm.icu4x_WindowsParser_destroy_mv1(ptr);
-});
 
 /**
  * A mapper between Windows time zone identifiers and BCP-47 time zone identifiers.
@@ -15,8 +12,12 @@ const WindowsParser_box_destroy_registry = new FinalizationRegistry((ptr) => {
  * This mapper supports two-way mapping, but it is optimized for the case of Windows to BCP-47.
  * It also supports normalizing and canonicalizing the Windows strings.
  *
- * See the [Rust documentation for `WindowsParser`](https://docs.rs/icu/2.1.1/icu/time/zone/windows/struct.WindowsParser.html) for more information.
+ * See the [Rust documentation for `WindowsParser`](https://docs.rs/icu/latest/icu/time/zone/windows/struct.WindowsParser.html) for more information.
  */
+const WindowsParser_box_destroy_registry = new FinalizationRegistry((ptr) => {
+    wasm.icu4x_WindowsParser_destroy_mv1(ptr);
+});
+
 export class WindowsParser {
     // Internal ptr reference:
     #ptr = null;
@@ -40,16 +41,15 @@ export class WindowsParser {
 
         return this;
     }
-    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }
 
 
     /**
-     * Create a new {@link WindowsParser} using compiled data
+     * Create a new [`WindowsParser`] using compiled data
      *
-     * See the [Rust documentation for `new`](https://docs.rs/icu/2.1.1/icu/time/zone/windows/struct.WindowsParser.html#method.new) for more information.
+     * See the [Rust documentation for `new`](https://docs.rs/icu/latest/icu/time/zone/windows/struct.WindowsParser.html#method.new) for more information.
      */
     #defaultConstructor() {
 
@@ -64,9 +64,9 @@ export class WindowsParser {
     }
 
     /**
-     * Create a new {@link WindowsParser} using a particular data source
+     * Create a new [`WindowsParser`] using a particular data source
      *
-     * See the [Rust documentation for `new`](https://docs.rs/icu/2.1.1/icu/time/zone/windows/struct.WindowsParser.html#method.new) for more information.
+     * See the [Rust documentation for `new`](https://docs.rs/icu/latest/icu/time/zone/windows/struct.WindowsParser.html#method.new) for more information.
      */
     static createWithProvider(provider) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
@@ -77,7 +77,7 @@ export class WindowsParser {
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = new DataError(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
-                throw new globalThis.Error('DataError.' + cause.value, { cause });
+                throw new globalThis.Error('DataError: ' + cause.value, { cause });
             }
             return new WindowsParser(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
@@ -88,15 +88,15 @@ export class WindowsParser {
     }
 
     /**
-     * See the [Rust documentation for `parse`](https://docs.rs/icu/2.1.1/icu/time/zone/windows/struct.WindowsParserBorrowed.html#method.parse) for more information.
+     * See the [Rust documentation for `parse`](https://docs.rs/icu/latest/icu/time/zone/windows/struct.WindowsParserBorrowed.html#method.parse) for more information.
      */
     parse(value, region) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-        const valueSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, value)));
-        const regionSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, region)));
+        const valueSlice = diplomatRuntime.DiplomatBuf.str8(wasm, value);
+        const regionSlice = diplomatRuntime.DiplomatBuf.str8(wasm, region);
 
-        const result = wasm.icu4x_WindowsParser_parse_mv1(this.ffiValue, valueSlice.ptr, regionSlice.ptr);
+        const result = wasm.icu4x_WindowsParser_parse_mv1(this.ffiValue, ...valueSlice.splat(), ...regionSlice.splat());
 
         try {
             return result === 0 ? null : new TimeZone(diplomatRuntime.internalConstructor, result, []);
@@ -108,11 +108,6 @@ export class WindowsParser {
         }
     }
 
-    /**
-     * Create a new {@link WindowsParser} using compiled data
-     *
-     * See the [Rust documentation for `new`](https://docs.rs/icu/2.1.1/icu/time/zone/windows/struct.WindowsParser.html#method.new) for more information.
-     */
     constructor() {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {
             return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));

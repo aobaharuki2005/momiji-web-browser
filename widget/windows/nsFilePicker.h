@@ -1,10 +1,11 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsFilePicker_h_
-#define nsFilePicker_h_
+#ifndef nsFilePicker_h__
+#define nsFilePicker_h__
 
 #include <windows.h>
 
@@ -70,8 +71,7 @@ class nsFilePicker final : public nsBaseWinFilePicker {
   nsFilePicker();
 
   NS_IMETHOD Init(mozilla::dom::BrowsingContext* aBrowsingContext,
-                  const nsAString& aTitle, nsIFilePicker::Mode aMode,
-                  nsISupports* aGlobal) override;
+                  const nsAString& aTitle, nsIFilePicker::Mode aMode) override;
 
   NS_DECL_ISUPPORTS
 
@@ -133,4 +133,4 @@ class nsFilePicker final : public nsBaseWinFilePicker {
   AutoTArray<Filter, 1> mFilterList;
 };
 
-#endif  // nsFilePicker_h_
+#endif  // nsFilePicker_h__

@@ -27,7 +27,7 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
  */
 export class QRCodeWorker extends BasePromiseWorker {
   constructor() {
-    super("chrome://browser/content/qrcode/QRCodeWorker.worker.mjs", {
+    super("moz-src:///browser/components/qrcode/QRCodeWorker.worker.mjs", {
       type: "module",
     });
 
@@ -36,32 +36,32 @@ export class QRCodeWorker extends BasePromiseWorker {
   }
 
   /**
-   * Generate a complete QR code PNG with the Firefox logo composited off the
-   * main thread.
+   * Simple ping test for worker communication
+   *
+   * @returns {Promise<string>} Returns "pong"
+   */
+  async ping() {
+    return this.post("ping", []);
+  }
+
+  /**
+   * Check if the QRCode library is available in the worker
+   *
+   * @returns {Promise<boolean>} True if library is available
+   */
+  async hasQRCodeLibrary() {
+    return this.post("hasQRCodeLibrary", []);
+  }
+
+  /**
+   * Generate a QR code for the given URL
    *
    * @param {string} url - The URL to encode in the QR code
-   * @param {boolean} [showLogo=true] - Whether to overlay the Firefox logo
-   * @returns {Promise<string>} data:image/png;base64,... URI
+   * @param {string} errorCorrectionLevel - Error correction level (L, M, Q, H)
+   * @returns {Promise<object>} Object with width, height, and src data URI
    */
-  async generateFullQRCode(url, showLogo = true) {
-    return this.post("generateFullQRCode", [url, showLogo]);
-  }
-
-  /**
-   * @param {string} url
-   * @returns {Promise<{matrix: boolean[][], dotCount: number}>}
-   */
-  async generateQRMatrix(url) {
-    return this.post("generateQRMatrix", [url]);
-  }
-
-  /**
-   * @param {number} dotCount - Number of QR modules per side
-   * @param {number} margin - Canvas margin in pixels
-   * @returns {Promise<object>} Logo placement data
-   */
-  async getLogoPlacement(dotCount, margin) {
-    return this.post("getLogoPlacement", [dotCount, margin]);
+  async generateQRCode(url, errorCorrectionLevel = "H") {
+    return this.post("generateQRCode", [url, errorCorrectionLevel]);
   }
 
   /**

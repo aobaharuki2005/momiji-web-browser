@@ -88,4 +88,3 @@ tasks:
     android-support-ktx: {}
     android-feature-downloads: {}
     android-feature-recentlyclosed: {}
-    android-lib-crash: {}

@@ -57,10 +57,9 @@ add_task(async function test_create_folder() {
   Assert.equal(path, DESTINATION_PATH, "Got back the expected folder path.");
   Assert.ok(await IOUtils.exists(path), "The destination folder was created.");
   Assert.equal(
-    (await IOUtils.getChildren(path)).filter(p => !p.endsWith("desktop.ini"))
-      .length,
+    (await IOUtils.getChildren(path)).length,
     0,
-    "Destination folder should be empty, ignore desktop.ini."
+    "Destination folder should be empty."
   );
   await IOUtils.remove(PARENT_FOLDER, { recursive: true });
 });
@@ -111,10 +110,9 @@ add_task(async function test_find_folder() {
   Assert.equal(path, DESTINATION_PATH, "Got back the expected folder path.");
   Assert.ok(await IOUtils.exists(path), "The destination folder exists.");
   Assert.equal(
-    (await IOUtils.getChildren(path)).filter(p => !p.endsWith("desktop.ini"))
-      .length,
+    (await IOUtils.getChildren(path)).length,
     0,
-    "Destination folder should be empty, ignore desktop.ini."
+    "Destination folder should be empty."
   );
   await IOUtils.remove(PARENT_FOLDER, { recursive: true });
 });

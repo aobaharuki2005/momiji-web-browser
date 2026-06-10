@@ -39,7 +39,6 @@ let JSPROCESSACTORS = {
         "moz-src:///browser/components/mozcachedohttp/actors/MozCachedOHTTPParent.sys.mjs",
     },
     includeParent: true,
-    remoteTypes: ["parent", "privilegedabout"],
   },
 
   RefreshBlockerObserver: {
@@ -136,9 +135,6 @@ let JSWINDOWACTORS = {
       },
     },
     matches: ["about:messagepreview", "about:messagepreview?*"],
-    remoteTypes: ["privilegedabout"],
-    enablePreference:
-      "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled",
   },
 
   AboutPrivateBrowsing: {
@@ -154,7 +150,6 @@ let JSWINDOWACTORS = {
     },
 
     matches: ["about:privatebrowsing*"],
-    remoteTypes: ["privilegedabout"],
   },
 
   AboutProtections: {
@@ -170,7 +165,6 @@ let JSWINDOWACTORS = {
     },
 
     matches: ["about:protections", "about:protections?*"],
-    remoteTypes: ["privilegedabout"],
   },
 
   AboutReader: {
@@ -233,34 +227,12 @@ let JSWINDOWACTORS = {
       esModuleURI:
         "moz-src:///browser/components/aiwindow/ui/actors/AIChatContentChild.sys.mjs",
       events: {
-        "AIChatContent:DispatchFollowUp": { wantUntrusted: true },
-        "AIChatContent:Ready": { wantUntrusted: true },
-        "AIChatContent:DispatchAction": { wantUntrusted: true },
-        "AIChatContent:OpenLink": { wantUntrusted: true },
-        "AIChatContent:DispatchNewChat": { wantUntrusted: true },
-        "AIChatContent:AccountSignIn": { wantUntrusted: true },
-        "AIChatContent:ToolUIUpdate": { wantUntrusted: true },
+        "AIChatContent:DispatchSearch": { wantUntrusted: true },
       },
     },
     allFrames: true,
     matches: ["about:aichatcontent"],
-    remoteTypes: ["privilegedabout"],
-    enablePreference: "browser.smartwindow.enabled",
-  },
-
-  AISmartBar: {
-    parent: {
-      esModuleURI:
-        "moz-src:///browser/components/aiwindow/ui/actors/AISmartBarParent.sys.mjs",
-    },
-    child: {
-      esModuleURI:
-        "moz-src:///browser/components/aiwindow/ui/actors/AISmartBarChild.sys.mjs",
-    },
-    matches: ["chrome://browser/content/aiwindow/aiWindow.html"],
-    includeChrome: true,
-    allFrames: true,
-    enablePreference: "browser.smartwindow.enabled",
+    enablePreference: "browser.aiwindow.enabled",
   },
 
   BackupUI: {
@@ -287,7 +259,6 @@ let JSWINDOWACTORS = {
           wantUntrusted: true,
         },
         "BackupUI:ErrorBarDismissed": { wantUntrusted: true },
-        "BackupUI:FindBackupsInWellKnownLocations": { wantUntrusted: true },
       },
     },
     includeChrome: true,
@@ -297,10 +268,7 @@ let JSWINDOWACTORS = {
       "about:settings*",
       "about:welcome*",
       "chrome://browser/content/spotlight.html",
-      "about:newtab*",
-      "about:home*",
     ],
-    remoteTypes: ["parent", "privilegedabout"],
   },
 
   BlockedSite: {
@@ -335,23 +303,11 @@ let JSWINDOWACTORS = {
       events: {
         DOMContentLoaded: {},
         pageshow: {},
-        // `popstate` does not bubble, so it needs to be captured.
-        popstate: { capture: true },
       },
     },
+    enablePreference: "browser.tabs.notes.enabled",
     matches: ["http://*/*", "https://*/*"],
     messageManagerGroups: ["browsers"],
-    enablePreference: "browser.tabs.notes.enabled",
-    onPreferenceChanged: isEnabled => {
-      if (isEnabled) {
-        Services.obs.notifyObservers(undefined, "CanonicalURL:ActorRegistered");
-      } else {
-        Services.obs.notifyObservers(
-          undefined,
-          "CanonicalURL:ActorUnregistered"
-        );
-      }
-    },
   },
 
   ClickHandler: {
@@ -465,8 +421,6 @@ let JSWINDOWACTORS = {
         "MozDOMFullscreen:NewOrigin": {},
         "MozDOMFullscreen:Exit": {},
         "MozDOMFullscreen:Exited": {},
-        "MozDOMFullscreen:WarnAboutKeyboardLock": {},
-        "MozDOMFullscreen:UpdateKeyboardLock": {},
       },
     },
 
@@ -561,18 +515,15 @@ let JSWINDOWACTORS = {
       "chrome://browser/content/syncedtabs/sidebar.xhtml",
       "chrome://browser/content/places/historySidebar.xhtml",
       "chrome://browser/content/places/bookmarksSidebar.xhtml",
-      "chrome://browser/content/sidebar/sidebar-bookmarks.html",
       "chrome://browser/content/sidebar/sidebar-history.html",
       "chrome://browser/content/sidebar/sidebar-customize.html",
       "chrome://browser/content/sidebar/sidebar-syncedtabs.html",
-      "chrome://browser/content/sidebar/sidebar-opentabs.html",
       "chrome://browser/content/genai/chat.html",
       "about:firefoxview",
       "about:editprofile",
       "about:deleteprofile",
       "about:newprofile",
       "about:opentabs",
-      "about:aichatcontent",
     ],
   },
 
@@ -724,8 +675,7 @@ let JSWINDOWACTORS = {
 
   ScreenshotsComponent: {
     parent: {
-      esModuleURI:
-        "moz-src:///browser/components/screenshots/ScreenshotsUtils.sys.mjs",
+      esModuleURI: "resource:///modules/ScreenshotsUtils.sys.mjs",
     },
     child: {
       esModuleURI: "resource:///actors/ScreenshotsComponentChild.sys.mjs",
@@ -745,12 +695,10 @@ let JSWINDOWACTORS = {
 
   ScreenshotsHelper: {
     parent: {
-      esModuleURI:
-        "moz-src:///browser/components/screenshots/ScreenshotsUtils.sys.mjs",
+      esModuleURI: "resource:///modules/ScreenshotsUtils.sys.mjs",
     },
     child: {
-      esModuleURI:
-        "moz-src:///browser/components/screenshots/ScreenshotsHelperChild.sys.mjs",
+      esModuleURI: "resource:///modules/ScreenshotsHelperChild.sys.mjs",
     },
     allFrames: true,
     enablePreference: "screenshots.browser.component.enabled",
@@ -815,13 +763,7 @@ let JSWINDOWACTORS = {
         DOMDocElementInserted: {},
       },
     },
-    matches: [
-      "about:asrouter*",
-      "about:welcome*",
-      "about:privatebrowsing*",
-      "about:newtab*",
-      "about:home*",
-    ],
+    matches: ["about:asrouter*", "about:welcome*", "about:privatebrowsing*"],
     remoteTypes: ["privilegedabout"],
   },
 
@@ -831,6 +773,14 @@ let JSWINDOWACTORS = {
     },
 
     allFrames: true,
+  },
+
+  TLSCertificateBinding: {
+    child: {
+      esModuleURI: "resource:///actors/TLSCertificateBindingChild.sys.mjs",
+    },
+
+    messageManagerGroups: ["browsers"],
   },
 
   UITour: {

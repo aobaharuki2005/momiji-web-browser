@@ -15,7 +15,9 @@ const ruleTester = new RuleTester();
 // ------------------------------------------------------------------------------
 
 function requirePathError(path) {
-  return [{ messageId: "rejectRequire", data: { path } }];
+  return [
+    { messageId: "rejectRequire", data: { path }, type: "CallExpression" },
+  ];
 }
 
 const DEVTOOLS_FORBIDDEN_PATH = "^(resource://)?devtools/forbidden";

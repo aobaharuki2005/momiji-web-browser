@@ -11,9 +11,8 @@ from tests.support.screenshot import (
 
 from . import get_physical_viewport_dimensions
 
-pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.asyncio
 async def test_iframe(bidi_session, top_context, inline, iframe):
     viewport_size = await get_physical_viewport_dimensions(bidi_session, top_context)
 
@@ -35,6 +34,7 @@ async def test_iframe(bidi_session, top_context, inline, iframe):
 
 
 @pytest.mark.parametrize("domain", ["", "alt"], ids=["same_origin", "cross_origin"])
+@pytest.mark.asyncio
 async def test_context_origin(bidi_session, top_context, inline, iframe, compare_png_bidi, domain):
     expected_size = await get_physical_viewport_dimensions(bidi_session, top_context)
 

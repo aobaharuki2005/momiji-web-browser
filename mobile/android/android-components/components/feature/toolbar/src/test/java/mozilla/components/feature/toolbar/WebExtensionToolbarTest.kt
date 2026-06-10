@@ -15,31 +15,35 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import kotlin.coroutines.ContinuationInterceptor
-import kotlin.test.assertNotNull
 import mozilla.components.ui.icons.R as iconsR
 
 @RunWith(AndroidJUnit4::class)
 class WebExtensionToolbarTest {
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
+
     @Test
-    fun bind() = runTest {
+    fun bind() {
         val icon: Bitmap = mock()
         val imageView: ImageView = mock()
         val textView: TextView = mock()
@@ -63,26 +67,23 @@ class WebExtensionToolbarTest {
             badgeBackgroundColor = Color.BLUE,
         ) {}
 
-        val action = WebExtensionToolbarAction(
-            browserAction,
-            mainDispatcher = coroutineContext[ContinuationInterceptor] as CoroutineDispatcher,
-            iconJobDispatcher = coroutineContext[ContinuationInterceptor] as CoroutineDispatcher,
-        ) {}
+        val action = WebExtensionToolbarAction(browserAction, iconJobDispatcher = testDispatcher) {}
         action.bind(view)
-        testScheduler.advanceUntilIdle()
+        action.iconJob?.joinBlocking()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         val iconCaptor = argumentCaptor<BitmapDrawable>()
         verify(imageView).setImageDrawable(iconCaptor.capture())
         assertEquals(icon, iconCaptor.value.bitmap)
 
         verify(imageView).contentDescription = "title"
-        verify(textView).text = "badgeText"
+        verify(textView).setText("badgeText")
         verify(textView).setTextColor(Color.WHITE)
         verify(textView).setBackgroundColor(Color.BLUE)
     }
 
     @Test
-    fun fallbackToDefaultIcon() = runTest {
+    fun fallbackToDefaultIcon() {
         val imageView: ImageView = mock()
         val textView: TextView = mock()
         val view: View = mock()
@@ -100,22 +101,18 @@ class WebExtensionToolbarTest {
             badgeBackgroundColor = Color.BLUE,
         ) {}
 
-        val action = WebExtensionToolbarAction(
-            browserAction,
-            mainDispatcher = coroutineContext[ContinuationInterceptor] as CoroutineDispatcher,
-            iconJobDispatcher = coroutineContext[ContinuationInterceptor] as CoroutineDispatcher,
-        ) {}
-
+        val action = WebExtensionToolbarAction(browserAction, iconJobDispatcher = testDispatcher) {}
         action.bind(view)
-        testScheduler.advanceUntilIdle()
+        action.iconJob?.joinBlocking()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(imageView).setImageResource(
-            iconsR.drawable.mozac_ic_extension_fill_24,
+            iconsR.drawable.mozac_ic_web_extension_default_icon,
         )
     }
 
     @Test
-    fun createView() = runTest {
+    fun createView() {
         var listenerWasClicked = false
 
         val browserAction = Action(
@@ -130,8 +127,7 @@ class WebExtensionToolbarTest {
         val action = WebExtensionToolbarAction(
             browserAction,
             padding = Padding(1, 2, 3, 4),
-            mainDispatcher = coroutineContext[ContinuationInterceptor] as CoroutineDispatcher,
-            iconJobDispatcher = coroutineContext[ContinuationInterceptor] as CoroutineDispatcher,
+            iconJobDispatcher = testDispatcher,
         ) {
             listenerWasClicked = true
         }
@@ -148,7 +144,7 @@ class WebExtensionToolbarTest {
     }
 
     @Test
-    fun cancelLoadIconWhenViewIsDetached() = runTest {
+    fun cancelLoadIconWhenViewIsDetached() {
         val view: View = mock()
         val imageView: ImageView = mock()
         val textView: TextView = mock()
@@ -172,8 +168,7 @@ class WebExtensionToolbarTest {
         val action = WebExtensionToolbarAction(
             browserAction,
             padding = Padding(1, 2, 3, 4),
-            mainDispatcher = coroutineContext[ContinuationInterceptor] as CoroutineDispatcher,
-            iconJobDispatcher = coroutineContext[ContinuationInterceptor] as CoroutineDispatcher,
+            iconJobDispatcher = testDispatcher,
         ) {}
 
         val attachListenerCaptor = argumentCaptor<View.OnAttachStateChangeListener>()
@@ -186,7 +181,7 @@ class WebExtensionToolbarTest {
         assertFalse(action.iconJob?.isCancelled!!)
 
         attachListenerCaptor.value.onViewDetachedFromWindow(parent)
-        testScheduler.advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
         assertTrue(action.iconJob?.isCancelled!!)
     }
 }

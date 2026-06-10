@@ -80,12 +80,7 @@ object LocaleManager {
         return ConfigurationCompat.getLocales(config).get(0) ?: Locale.getDefault()
     }
 
-    /**
-     * Updates localization resources to use the current locale.
-     *
-     * @return A context that is locale aware.
-     */
-     fun updateResources(baseContext: Context): Context {
+    internal fun updateResources(baseContext: Context): Context {
         val locale = getCurrentLocale(baseContext) ?: getSystemDefault()
 
         updateSystemLocale(locale)

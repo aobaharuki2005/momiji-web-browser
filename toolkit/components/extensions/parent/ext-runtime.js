@@ -110,9 +110,7 @@ this.runtime = class extends ExtensionAPIPersistent {
 
         let scriptBrowser = report.scriptBrowser;
         let nativeTab =
-          scriptBrowser?.documentGlobal.gBrowser?.getTabForBrowser(
-            scriptBrowser
-          );
+          scriptBrowser?.ownerGlobal.gBrowser?.getTabForBrowser(scriptBrowser);
         if (nativeTab) {
           performanceWarningEventDetails.tabId = tabTracker.getId(nativeTab);
         }

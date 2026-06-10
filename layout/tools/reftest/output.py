@@ -81,7 +81,18 @@ class ReftestFormatter(TbplFormatter):
         return output_text + "\n"
 
     def test_end(self, data):
-        return "TEST-END | %s\n" % data["test"]
+        status = data["status"]
+        test = data["test"]
+
+        output_text = ""
+        if status != "OK":
+            status_msg = self._format_status(data)
+            output_text = "%s | %s | %s" % (status_msg, test, data.get("message", ""))
+
+        if output_text:
+            output_text += "\nREFTEST "
+        output_text += "TEST-END | %s" % test
+        return "%s\n" % output_text
 
     def process_output(self, data):
         return "%s\n" % data["data"]

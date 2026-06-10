@@ -29,6 +29,10 @@ FTP_PLATFORMS_PER_BOUNCER_PLATFORM = {
 }
 
 # :lang is interpolated by bouncer at runtime
+CANDIDATES_PATH_TEMPLATE = (
+    "/{ftp_product}/candidates/{version}-candidates/build{build_number}/\
+{update_folder}{ftp_platform}/:lang/{file}"
+)
 RELEASES_PATH_TEMPLATE = "/{ftp_product}/releases/{version}/\
 {update_folder}{ftp_platform}/:lang/{file}"
 
@@ -37,6 +41,13 @@ CONFIG_PER_BOUNCER_PRODUCT = {
     "complete-mar": {
         "name_postfix": "-Complete",
         "path_template": RELEASES_PATH_TEMPLATE,
+        "file_names": {
+            "default": "{product}-{version}.complete.mar",
+        },
+    },
+    "complete-mar-candidates": {
+        "name_postfix": "build{build_number}-Complete",
+        "path_template": CANDIDATES_PATH_TEMPLATE,
         "file_names": {
             "default": "{product}-{version}.complete.mar",
         },
@@ -55,6 +66,13 @@ CONFIG_PER_BOUNCER_PRODUCT = {
     "partial-mar": {
         "name_postfix": "-Partial-{previous_version}",
         "path_template": RELEASES_PATH_TEMPLATE,
+        "file_names": {
+            "default": "{product}-{previous_version}-{version}.partial.mar",
+        },
+    },
+    "partial-mar-candidates": {
+        "name_postfix": "build{build_number}-Partial-{previous_version}build{previous_build}",
+        "path_template": CANDIDATES_PATH_TEMPLATE,
         "file_names": {
             "default": "{product}-{previous_version}-{version}.partial.mar",
         },
@@ -300,8 +318,10 @@ def craft_ssl_only(bouncer_product, project):
 
     return bouncer_product not in (
         "complete-mar",
+        "complete-mar-candidates",
         "installer",
         "partial-mar",
+        "partial-mar-candidates",
     )
 
 

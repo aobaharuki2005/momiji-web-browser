@@ -4,6 +4,7 @@
 
 "use strict";
 
+const flags = require("resource://devtools/shared/flags.js");
 const { ELLIPSIS } = require("resource://devtools/shared/l10n.js");
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
@@ -27,16 +28,16 @@ const SHADOW_ROOT_TAGNAME = "#shadow-root";
  * Component to replicate functionality of XUL arrowscrollbox
  * for breadcrumbs
  */
-class ArrowScrollBox extends EventEmitter {
+class ArrowScrollBox {
   /**
    * @param {Window} win The window containing the breadcrumbs
    * @param {Element} container The element in which to put the scroll box
    */
   constructor(win, container) {
-    super();
     this.win = win;
     this.doc = win.document;
     this.container = container;
+    EventEmitter.decorate(this);
     this.init();
   }
   // Scroll behavior, exposed for testing
@@ -390,13 +391,18 @@ class HTMLBreadcrumbs {
 
     this.handleShortcut = this.handleShortcut.bind(this);
 
-    this.outer.addEventListener(
-      "focus",
-      () => {
-        this.initKeyShortcuts();
-      },
-      { once: true }
-    );
+    if (flags.testing) {
+      // In tests, we start listening immediately to avoid having to simulate a focus.
+      this.initKeyShortcuts();
+    } else {
+      this.outer.addEventListener(
+        "focus",
+        () => {
+          this.initKeyShortcuts();
+        },
+        { once: true }
+      );
+    }
 
     // We will save a list of already displayed nodes in this array.
     this.nodeHierarchy = [];
@@ -540,8 +546,12 @@ class HTMLBreadcrumbs {
    * Focus event handler. When breadcrumbs container gets focus,
    * aria-activedescendant needs to be updated to currently selected
    * breadcrumb. Ensures that the focus stays on the container at all times.
+   *
+   * @param {DOMEvent} event.
    */
   handleFocus(event) {
+    event.stopPropagation();
+
     const node = this.nodeHierarchy[this.currentIndex];
     if (node) {
       this.outer.setAttribute("aria-activedescendant", node.button.id);
@@ -549,10 +559,7 @@ class HTMLBreadcrumbs {
       this.outer.removeAttribute("aria-activedescendant");
     }
 
-    // The focus should always be set on the outer element
-    if (event.target !== this.outer) {
-      this.outer.focus();
-    }
+    this.outer.focus();
   }
 
   /**

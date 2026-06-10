@@ -22,9 +22,8 @@ pytestmark = pytest.mark.asyncio
 async def test_webextension_popup_context(
     bidi_session,
     current_session,
-    install_webextension,
-    subscribe_events,
     top_context,
+    subscribe_events,
     event_name,
 ):
     # Install a webextension with a toolbar button showing a popup.
@@ -36,7 +35,9 @@ async def test_webextension_popup_context(
     )
     extension_data = {"type": "path", "path": path}
 
-    await install_webextension(extension_data=extension_data)
+    web_extension = await bidi_session.web_extension.install(
+        extension_data=extension_data
+    )
 
     # Subscribe to events and collect them all in an array.
     await subscribe_events(events=[event_name])
@@ -67,4 +68,6 @@ async def test_webextension_popup_context(
     with pytest.raises(TimeoutException):
         await wait.until(lambda _: len(events) > 0)
 
+    # Clean up the extension.
+    await bidi_session.web_extension.uninstall(extension=web_extension)
     remove_listener()

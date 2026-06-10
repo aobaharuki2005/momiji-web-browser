@@ -45,10 +45,9 @@ def add_command(config, tasks):
             )
             if not chunked["worker"].get("env"):
                 chunked["worker"]["env"] = {}
-            chunked["worker"]["env"]["WORKSPACE_DIR"] = "/builds/worker/workspace"
 
             command = [
-                "/builds/worker/tools/scripts/chunked-verify.sh",
+                "tools/update-verify/scripts/chunked-verify.sh",
                 f"--total-chunks={total_chunks} --this-chunk={this_chunk}",
             ]
 
@@ -59,8 +58,9 @@ def add_command(config, tasks):
 
             chunked["run"] = {
                 "using": "run-task",
-                "checkout": False,
+                "cwd": "{checkout}",
                 "command": " ".join(command),
+                "sparse-profile": "update-verify",
             }
 
             yield chunked

@@ -21,7 +21,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   NimbusEnrollments: "resource://nimbus/lib/Enrollments.sys.mjs",
   NimbusMigrations: "resource://nimbus/lib/Migrations.sys.mjs",
-  NimbusTelemetry: "resource://nimbus/lib/Telemetry.sys.mjs",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   ProfilesDatastoreService:
@@ -171,12 +170,15 @@ const NimbusLogging = {
   },
 };
 
+let _testSuite = null;
+
 export const NimbusTestUtils = {
   init(testCase) {
-    const assert = testCase.Assert;
+    _testSuite = testCase;
+
     Object.defineProperty(NimbusTestUtils, "Assert", {
       configurable: true,
-      get: () => assert,
+      get: () => _testSuite.Assert,
     });
   },
 
@@ -393,7 +395,7 @@ export const NimbusTestUtils = {
           ],
           firefoxLabsTitle: null,
         },
-        source: lazy.NimbusTelemetry.EnrollmentSource.RS_LOADER,
+        source: "NimbusTestUtils",
         userFacingName,
         userFacingDescription,
         lastSeen: new Date().toJSON(),
@@ -437,14 +439,7 @@ export const NimbusTestUtils = {
      * @param {object?} props
      *        Additional properties to splat into to the
      */
-    recipe(
-      slug,
-      { isFirefoxLabsOptIn = false, isRollout = false, ...props } = {}
-    ) {
-      if (isFirefoxLabsOptIn && !isRollout) {
-        throw new Error("isFirefoxLabsOptIn requires isRollout");
-      }
-
+    recipe(slug, props = {}) {
       return {
         id: slug,
         schemaVersion: "1.7.0",
@@ -459,7 +454,7 @@ export const NimbusTestUtils = {
         proposedEnrollment: 7,
         referenceBranch: "control",
         application: "firefox-desktop",
-        branches: isRollout
+        branches: props?.isRollout
           ? [NimbusTestUtils.factories.recipe.branches[0]]
           : NimbusTestUtils.factories.recipe.branches,
         bucketConfig: NimbusTestUtils.factories.recipe.bucketConfig,
@@ -469,14 +464,12 @@ export const NimbusTestUtils = {
           "testFeature",
         ],
         targeting: "true",
-        isRollout,
-        isFirefoxLabsOptIn,
-        firefoxLabsTitle: isFirefoxLabsOptIn ? "placeholder-title" : null,
-        firefoxLabsDescription: isFirefoxLabsOptIn
-          ? "placeholder-description"
-          : null,
+        isRollout: false,
+        isFirefoxLabsOptIn: false,
+        firefoxLabsTitle: null,
+        firefoxLabsDescription: null,
         firefoxLabsDescriptionLinks: null,
-        firefoxLabsGroup: isFirefoxLabsOptIn ? "placeholder-group" : null,
+        firefoxLabsGroup: null,
         requiresRestart: false,
         localizations: null,
         ...props,
@@ -570,33 +563,13 @@ export const NimbusTestUtils = {
       });
     },
 
-    get SEPARATE_ROLLOUT_OPT_OUT() {
-      const { Phase } = lazy.NimbusMigrations;
-
-      return NimbusTestUtils.makeMigrationState({
-        [Phase.INIT_STARTED]: "separate-rollout-opt-out",
-        [Phase.AFTER_STORE_INITIALIZED]: "graduate-firefox-labs-auto-pip",
-        [Phase.AFTER_REMOTE_SETTINGS_UPDATE]: "firefox-labs-enrollments",
-      });
-    },
-
-    get GRADUATED_FIREFOX_LABS_JPEG_XL() {
-      const { Phase } = lazy.NimbusMigrations;
-
-      return NimbusTestUtils.makeMigrationState({
-        [Phase.INIT_STARTED]: "separate-rollout-opt-out",
-        [Phase.AFTER_STORE_INITIALIZED]: "graduate-firefox-labs-jpeg-xl",
-        [Phase.AFTER_REMOTE_SETTINGS_UPDATE]: "firefox-labs-enrollments",
-      });
-    },
-
     /**
      * A migration state that represents all migrations applied.
      *
      * @type {Record<Phase, number>}
      */
     get LATEST() {
-      return NimbusTestUtils.migrationState.GRADUATED_FIREFOX_LABS_JPEG_XL;
+      return NimbusTestUtils.migrationState.GRADUATED_FIREFOX_LABS_AUTO_PIP;
     },
   },
 
@@ -660,7 +633,7 @@ export const NimbusTestUtils = {
       slug: recipe.slug,
       branch,
       active: true,
-      source: lazy.NimbusTelemetry.EnrollmentSource.RS_LOADER,
+      source: "NimbusTestUtils",
       userFacingName: recipe.userFacingName,
       userFacingDescription: recipe.userFacingDescription,
       lastSeen: new Date().toJSON(),
@@ -926,7 +899,7 @@ export const NimbusTestUtils = {
    * @throws {Error} If the recipe references a feature that does not exist or
    *                 if the recipe fails to enroll.
    */
-  async enroll(recipe, { manager, source } = {}) {
+  async enroll(recipe, { manager, source = "nimbus-test-utils" } = {}) {
     if (!recipe?.slug) {
       throw new Error("Experiment with slug is required");
     }
@@ -944,10 +917,7 @@ export const NimbusTestUtils = {
     const experimentManager = manager ?? ExperimentAPI.manager;
     await experimentManager.store.ready();
 
-    const enrollment = await experimentManager.enroll(
-      recipe,
-      source ?? lazy.NimbusTelemetry.EnrollmentSource.RS_LOADER
-    );
+    const enrollment = await experimentManager.enroll(recipe, source);
 
     if (!enrollment) {
       throw new Error(`Failed to enroll in ${recipe}`);
@@ -1087,7 +1057,7 @@ export const NimbusTestUtils = {
         lastSeen,
         setPrefs: setPrefs ? JSON.stringify(setPrefs) : null,
         prefFlips: prefFlips ? JSON.stringify(prefFlips) : null,
-        source: extra.source ?? lazy.NimbusTelemetry.EnrollmentSource.RS_LOADER,
+        source: extra.source ?? "NimbusTestUtils",
       }
     );
   },
@@ -1223,6 +1193,9 @@ export const NimbusTestUtils = {
    *           An ExperimentManager instance that will validate all enrollments
    *           added to its store.
    *
+   * @property {(function(): void)?} initExperimentAPI
+   *           A function that will complete ExperimentAPI initialization.
+   *
    * @property {function(): Promise<void>} cleanup
    *           A cleanup function that should be called at the end of the test.
    */
@@ -1232,8 +1205,8 @@ export const NimbusTestUtils = {
    * @param {boolean?} options.init
    *        Initialize the Experiment API.
    *
-   *        If false, the caller must call {@link ExperimentAPI.init} to
-   *        complete initialization.
+   *        If false, the returned context will return an `initExperimentAPI` member that
+   *        will complete the initialization.
    *
    * @param {string?} options.storePath
    *        An optional path to an existing ExperimentStore to use for the
@@ -1258,14 +1231,14 @@ export const NimbusTestUtils = {
    *
    * @param {Record<Phase, number>?} options.migrationState
    *        The value that should be set for the Nimbus migration prefs. If
-   *        not provided, {@link NimbusTestUtils.migrationState.LATEST} will be used.
+   *        not provided, the pref will be unset.
    *
    *        Required if {@link options.storePath} is also provided.
    *
    *        Most tests will want to use either
-   *        {@link NimbusTestUtils.migrationState.UNMIGRATED} or
-   *        {@link NimbusTestUtils.migrationState.LATEST}, depending on whether
-   *        or not they are writing to the `NimbusEnrollments` database table.
+   *        `NimbusTestUtils.migrationState.UNMIGRATED` or
+   *        `NimbusTestUtils.migrationState.LATEST`, depending on whether or not
+   *        they are writing to the `NimbusEnrollments` database table.
    *
    * @throws {Error} If the the arguments to this function are not consistent.
    *
@@ -1279,7 +1252,7 @@ export const NimbusTestUtils = {
     secureExperiments,
     clearTelemetry = false,
     features,
-    migrationState = undefined,
+    migrationState,
   } = {}) {
     if (storePath && typeof migrationState === "undefined") {
       throw new Error("setupTest: storePath requires migrationState");
@@ -1316,15 +1289,13 @@ export const NimbusTestUtils = {
       )
       .resolves(0);
 
-    if (typeof migrationState === "undefined") {
-      migrationState = NimbusTestUtils.migrationState.LATEST;
-    }
-
-    for (const [phase, value] of Object.entries(migrationState)) {
-      Services.prefs.setIntPref(
-        lazy.NimbusMigrations.NIMBUS_MIGRATION_PREFS[phase],
-        value
-      );
+    if (migrationState) {
+      for (const [phase, value] of Object.entries(migrationState)) {
+        Services.prefs.setIntPref(
+          lazy.NimbusMigrations.NIMBUS_MIGRATION_PREFS[phase],
+          value
+        );
+      }
     }
 
     const ctx = {
@@ -1352,14 +1323,16 @@ export const NimbusTestUtils = {
         // Remove all migration state.
         Services.prefs.deleteBranch("nimbus.migrations.");
 
-        Services.prefs.clearUserPref("nimbus.firstUpdateComplete");
-
         NimbusLogging.maybeResetLogLevel();
       },
     };
 
+    const initExperimentAPI = () => ExperimentAPI.init();
+
     if (init) {
-      await ExperimentAPI.init();
+      await initExperimentAPI();
+    } else {
+      ctx.initExperimentAPI = initExperimentAPI;
     }
 
     return ctx;

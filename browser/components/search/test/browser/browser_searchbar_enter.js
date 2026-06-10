@@ -204,7 +204,7 @@ add_task(async function openSettingsWithEnter() {
   await promise;
 
   Assert.equal(
-    win.gBrowser.contentWindow.gLastCategory?.category,
+    win.gBrowser.contentWindow.history.state,
     "paneSearch",
     "Should have opened the search preferences pane"
   );

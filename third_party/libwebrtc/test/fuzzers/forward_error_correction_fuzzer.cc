@@ -12,14 +12,13 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
-#include <span>
 
+#include "api/array_view.h"
 #include "api/scoped_refptr.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
 #include "modules/rtp_rtcp/source/forward_error_correction.h"
 #include "rtc_base/byte_buffer.h"
-#include "test/fuzzers/fuzz_data_helper.h"
 
 namespace webrtc {
 
@@ -31,8 +30,8 @@ constexpr size_t kPacketSize = 50;
 constexpr size_t kMaxPacketsInBuffer = 48;
 }  // namespace
 
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
-  if (fuzz_data.size() > 5'000) {
+void FuzzOneInput(const uint8_t* data, size_t size) {
+  if (size > 5000) {
     return;
   }
   // Object under test.
@@ -40,7 +39,7 @@ void FuzzOneInput(FuzzDataHelper fuzz_data) {
       ForwardErrorCorrection::CreateFlexfec(kFecSsrc, kMediaSsrc);
 
   // Entropy from fuzzer.
-  webrtc::ByteBufferReader fuzz_buffer(fuzz_data.ReadRemaining());
+  webrtc::ByteBufferReader fuzz_buffer(webrtc::MakeArrayView(data, size));
 
   // Initial stream state.
   uint16_t media_seqnum;
@@ -83,7 +82,7 @@ void FuzzOneInput(FuzzDataHelper fuzz_data) {
   uint8_t packet_loss;
   while (true) {
     if (!fuzz_buffer.ReadBytes(
-            std::span<uint8_t>(packet_buffer, kPacketSize))) {
+            webrtc::ArrayView<uint8_t>(packet_buffer, kPacketSize))) {
       return;
     }
     if (!fuzz_buffer.ReadUInt8(&reordering))

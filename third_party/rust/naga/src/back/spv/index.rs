@@ -368,7 +368,7 @@ impl BlockContext<'_> {
         let restricted_index_id = self.gen_id();
         block.body.push(Instruction::ext_inst_gl_op(
             self.writer.gl450_ext_inst_id,
-            spirv::GlslStd450Op::UMin,
+            spirv::GLOp::UMin,
             self.writer.get_u32_type_id(),
             restricted_index_id,
             &[index_id, max_index_id],
@@ -536,18 +536,17 @@ impl BlockContext<'_> {
     /// Emit code to subscript a vector by value with a computed index.
     ///
     /// Return the id of the element value.
-    ///
-    /// If `base_id_override` is provided, it is used as the vector expression
-    /// to be subscripted into, rather than the cached value of `base`.
     pub(super) fn write_vector_access(
         &mut self,
-        result_type_id: Word,
+        expr_handle: Handle<crate::Expression>,
         base: Handle<crate::Expression>,
-        base_id_override: Option<Word>,
-        index: GuardedIndex,
+        index: Handle<crate::Expression>,
         block: &mut Block,
     ) -> Result<Word, Error> {
-        let base_id = base_id_override.unwrap_or_else(|| self.cached[base]);
+        let result_type_id = self.get_expression_type_id(&self.fun_info[expr_handle].ty);
+
+        let base_id = self.cached[base];
+        let index = GuardedIndex::Expression(index);
 
         let result_id = match self.write_bounds_check(base, index, block)? {
             BoundsCheckResult::KnownInBounds(known_index) => {

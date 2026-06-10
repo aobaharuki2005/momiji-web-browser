@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -32,13 +34,14 @@ class CompositorManagerChild : public PCompositorManagerChild {
   static bool CreateContentCompositorBridge(uint32_t aNamespace);
 
   static already_AddRefed<CompositorBridgeChild> CreateWidgetCompositorBridge(
-      uint64_t aProcessToken, uint32_t aNamespace,
-      CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
-      bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
-      uint64_t aInnerWindowId);
+      uint64_t aProcessToken, WebRenderLayerManager* aLayerManager,
+      uint32_t aNamespace, CSSToLayoutDeviceScale aScale,
+      const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
+      const gfx::IntSize& aSurfaceSize, uint64_t aInnerWindowId);
 
   static already_AddRefed<CompositorBridgeChild>
-  CreateSameProcessWidgetCompositorBridge(uint32_t aNamespace);
+  CreateSameProcessWidgetCompositorBridge(WebRenderLayerManager* aLayerManager,
+                                          uint32_t aNamespace);
 
   static CompositorManagerChild* GetInstance() {
     MOZ_ASSERT(NS_IsMainThread());

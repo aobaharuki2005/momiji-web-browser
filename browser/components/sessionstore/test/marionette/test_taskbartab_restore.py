@@ -75,15 +75,13 @@ class TestManualRestoreWithTaskbarTabs(SessionStoreTestCase):
         # meaning the window we opened should have
         # two tabs again.
         Wait(self.marionette).until(
-            lambda mn: (
-                mn.execute_script(
-                    """
+            lambda mn: mn.execute_script(
+                """
                 let newWindow = BrowserWindowTracker.getTopWindow({ allowTaskbarTabs: false });
                 return newWindow.gBrowser.tabs.length;
                 """
-                )
-                == 2
             )
+            == 2
         )
 
 
@@ -120,13 +118,11 @@ class TestAutoRestoreWithTaskbarTabs(SessionStoreTestCase):
         # meaning the window we opened should have
         # the original two tabs plus the home page tab.
         Wait(self.marionette).until(
-            lambda mn: (
-                mn.execute_script(
-                    """
+            lambda mn: mn.execute_script(
+                """
                 let newWindow = BrowserWindowTracker.getTopWindow({ allowTaskbarTabs: false });
                 return newWindow.gBrowser.tabs.length;
                 """
-                )
-                == 3
             )
+            == 3
         )

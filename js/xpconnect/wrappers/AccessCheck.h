@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef AccessCheck_h_
-#define AccessCheck_h_
+#ifndef __AccessCheck_h__
+#define __AccessCheck_h__
 
 #include "js/Id.h"
 #include "js/Wrapper.h"
@@ -110,4 +112,4 @@ struct OpaqueWithSilentFailing : public Policy {
 
 }  // namespace xpc
 
-#endif /* AccessCheck_h_ */
+#endif /* __AccessCheck_h__ */

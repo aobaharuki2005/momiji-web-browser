@@ -13,5 +13,5 @@
 #import "RTCMTLRenderer.h"
 
 NS_AVAILABLE(10_11, 9_0)
-@interface RTC_OBJC_TYPE (RTCMTLI420Renderer) : RTC_OBJC_TYPE (RTCMTLRenderer)
+@interface RTCMTLI420Renderer : RTCMTLRenderer
 @end

@@ -6,7 +6,6 @@ add_heuristic_tests(
   [
     {
       fixturePath: "Checkout_Payment.html",
-      useTestYear: 2024,
       expectedResult: [
         {
           default: {

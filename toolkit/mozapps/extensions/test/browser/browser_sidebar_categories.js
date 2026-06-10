@@ -15,16 +15,13 @@ function assertListView(win, type) {
 add_task(async function testClickingSidebarEntriesChangesView() {
   let win = await loadInitialView("extension");
   let doc = win.document;
-  let themeCategory = AboutAddonsTestUtils.getCategoryButton(win, "theme");
-  let extensionCategory = AboutAddonsTestUtils.getCategoryButton(
-    win,
-    "extension"
-  );
+  let themeCategory = doc.querySelector("#categories > [name=theme]");
+  let extensionCategory = doc.querySelector("#categories > [name=extension]");
 
   assertListView(win, "extension");
 
   let loaded = waitForViewLoad(win);
-  EventUtils.synthesizeMouseAtCenter(themeCategory, {}, win);
+  themeCategory.click();
   await loaded;
 
   assertListView(win, "theme");
@@ -57,7 +54,8 @@ add_task(async function testClickingSidebarEntriesChangesView() {
 
 add_task(async function testClickingSidebarPaddingNoChange() {
   let win = await loadInitialView("theme");
-  let themeCategory = AboutAddonsTestUtils.getCategoryButton(win, "theme");
+  let categoryUtils = new CategoryUtilities(win);
+  let themeCategory = categoryUtils.get("theme");
 
   let loadDetailView = async () => {
     let loaded = waitForViewLoad(win);
@@ -98,13 +96,10 @@ add_task(async function testClickingSidebarPaddingNoChange() {
 
 add_task(async function testKeyboardUsage() {
   let win = await loadInitialView("extension");
-  let categoriesButtons = AboutAddonsTestUtils.getAllCategoryButtons(win);
-  let extensionCategory = AboutAddonsTestUtils.getCategoryButton(
-    win,
-    "extension"
-  );
-  let themeCategory = AboutAddonsTestUtils.getCategoryButton(win, "theme");
-  let pluginCategory = AboutAddonsTestUtils.getCategoryButton(win, "plugin");
+  let categories = win.document.getElementById("categories");
+  let extensionCategory = categories.getButtonByName("extension");
+  let themeCategory = categories.getButtonByName("theme");
+  let pluginCategory = categories.getButtonByName("plugin");
 
   let waitForAnimationFrame = () =>
     new Promise(resolve => win.requestAnimationFrame(resolve));
@@ -114,7 +109,7 @@ add_task(async function testKeyboardUsage() {
   };
   let sendTabKey = e => sendKey("VK_TAB", e);
   let isFocusInCategories = () =>
-    categoriesButtons.includes(win.document.activeElement);
+    categories.contains(win.document.activeElement);
 
   ok(!isFocusInCategories(), "Focus is not in the category list");
 

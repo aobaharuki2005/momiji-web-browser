@@ -18,9 +18,6 @@ enum MediaControlKey {
   "skipad",
   "seekto",
   "stop",
-  "mute",
-  "unmute",
-  "setvolume",
 };
 
 /**
@@ -34,14 +31,7 @@ interface MediaController : EventTarget {
   readonly attribute boolean isActive;
   readonly attribute boolean isAudible;
   readonly attribute boolean isPlaying;
-  readonly attribute boolean isAnyMediaBeingControlled;
   readonly attribute MediaSessionPlaybackState playbackState;
-
-  // The effective audio-session type the tab is currently claiming. Chrome
-  // consumers can use this to apply tab/application level audio-focus
-  // management strategies based on the kind of audio the tab is playing.
-  [BinaryName="GetEffectiveAudioSessionType"]
-  readonly attribute AudioSessionType effectiveAudioSessionType;
 
   [Throws]
   MediaMetadataInit getMetadata();
@@ -51,8 +41,6 @@ interface MediaController : EventTarget {
 
   attribute EventHandler onactivated;
   attribute EventHandler ondeactivated;
-  attribute EventHandler onaudiblechange;
-  attribute EventHandler oneffectiveaudiosessiontypechange;
 
   // Following events would only be dispatched after controller is active.
   attribute EventHandler onmetadatachange;

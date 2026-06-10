@@ -1,6 +1,4 @@
-// |jit-test| skip-if: !wasmJSPromiseIntegrationEnabled()
-
-// Test if we can handle WebAssembly.Exception on cont stack,
+// Test if we can handle WebAssembly.Exception on suspendable stack,
 // and in suspending function.
 
 function wasmException(i) {
@@ -72,7 +70,7 @@ async function testWasmException() {
 // run test asynchronously
 var p = testWasmException();
 
-// Test if we can handle JS exception/rejection on cont stack,
+// Test if we can handle JS exception/rejection on suspendable stack,
 // and in suspending function.
 
 function jsException(i) {

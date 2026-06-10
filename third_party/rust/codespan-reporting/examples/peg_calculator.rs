@@ -9,11 +9,12 @@
 
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFile;
-use codespan_reporting::term::{self, Config};
-
+use codespan_reporting::term;
+use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
+#[allow(clippy::redundant_closure_call)]
 peg::parser! {
     grammar arithmetic() for str {
         rule number() -> i64
@@ -36,17 +37,9 @@ peg::parser! {
     }
 }
 
-#[cfg(not(feature = "termcolor"))]
-fn main() {
-    panic!("this example requires termcolor feature");
-}
-
-#[cfg(feature = "termcolor")]
 fn main() -> anyhow::Result<()> {
-    use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
-
     let writer = StandardStream::stderr(ColorChoice::Always);
-    let config = Config::default();
+    let config = codespan_reporting::term::Config::default();
     let mut editor = Editor::<()>::new();
 
     loop {
@@ -64,10 +57,12 @@ fn main() -> anyhow::Result<()> {
                 let start = error.location.offset;
                 let diagnostic = Diagnostic::error()
                     .with_message("parse error")
-                    .with_label(Label::primary((), start..start).with_message("parse error"))
+                    .with_labels(vec![
+                        Label::primary((), start..start).with_message("parse error")
+                    ])
                     .with_notes(vec![format!("expected: {}", error.expected)]);
 
-                term::emit_to_write_style(&mut writer.lock(), &config, &file, &diagnostic)?;
+                term::emit(&mut writer.lock(), &config, &file, &diagnostic)?;
             }
         }
     }

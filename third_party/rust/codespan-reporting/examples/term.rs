@@ -7,31 +7,24 @@
 
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFiles;
-use codespan_reporting::term::{self, Config};
+use codespan_reporting::term;
+use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 
-#[cfg(not(feature = "termcolor"))]
-fn main() {
-    panic!("this example requires termcolor feature");
+#[derive(Debug)]
+pub struct Opts {
+    /// Configure coloring of output
+    pub color: ColorChoice,
 }
 
-#[cfg(feature = "termcolor")]
+fn parse_args() -> Result<Opts, pico_args::Error> {
+    let mut pargs = pico_args::Arguments::from_env();
+    let color = pargs
+        .opt_value_from_str("--color")?
+        .unwrap_or(ColorChoice::Auto);
+    Ok(Opts { color })
+}
+
 fn main() -> anyhow::Result<()> {
-    use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
-
-    #[derive(Debug)]
-    pub struct Opts {
-        /// Configure coloring of output
-        pub color: ColorChoice,
-    }
-
-    fn parse_args() -> Result<Opts, pico_args::Error> {
-        let mut pargs = pico_args::Arguments::from_env();
-        let color = pargs
-            .opt_value_from_str("--color")?
-            .unwrap_or(ColorChoice::Auto);
-        Ok(Opts { color })
-    }
-
     let Opts { color } = parse_args()?;
 
     let mut files = SimpleFiles::new();
@@ -102,14 +95,18 @@ fn main() -> anyhow::Result<()> {
         // Unknown builtin error
         Diagnostic::error()
             .with_message("unknown builtin: `NATRAL`")
-            .with_label(Label::primary(file_id1, 96..102).with_message("unknown builtin"))
+            .with_labels(vec![
+                Label::primary(file_id1, 96..102).with_message("unknown builtin")
+            ])
             .with_notes(vec![
                 "there is a builtin with a similar name: `NATURAL`".to_owned()
             ]),
         // Unused parameter warning
         Diagnostic::warning()
             .with_message("unused parameter pattern: `n₂`")
-            .with_label(Label::primary(file_id1, 285..289).with_message("unused parameter"))
+            .with_labels(vec![
+                Label::primary(file_id1, 285..289).with_message("unused parameter")
+            ])
             .with_notes(vec!["consider using a wildcard pattern: `_`".to_owned()]),
         // Unexpected type error
         Diagnostic::error()
@@ -169,9 +166,9 @@ fn main() -> anyhow::Result<()> {
     ];
 
     let writer = StandardStream::stderr(color);
-    let config = Config::default();
+    let config = codespan_reporting::term::Config::default();
     for diagnostic in &diagnostics {
-        term::emit_to_write_style(&mut writer.lock(), &config, &files, diagnostic)?;
+        term::emit(&mut writer.lock(), &config, &files, diagnostic)?;
     }
 
     Ok(())

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -147,6 +149,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessagePort,
   if (tmp->mPostMessageRunnable) {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mPostMessageRunnable->mPort);
   }
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessagesForTheOtherPort);
 
   tmp->CloseForced();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -311,12 +315,12 @@ void MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   }
 
   Maybe<nsID> agentClusterId;
-  nsCOMPtr<nsIGlobalObject> global = GetRelevantGlobal();
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   if (global) {
     agentClusterId = global->GetAgentClusterId();
   }
 
-  auto data = MakeNotNull<RefPtr<SharedMessageBody>>(
+  RefPtr<SharedMessageBody> data = new SharedMessageBody(
       StructuredCloneHolder::TransferringSupported, agentClusterId);
 
   data->Write(aCx, aMessage, transferable, mIdentifier->uuid(),
@@ -353,22 +357,24 @@ void MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   RemoveDocFromBFCache();
 
-  // Not entangled yet, but we can send immediately via the actor. IPDL
-  // ordering guarantees the parent has processed our PMessagePortConstructor
-  // (and thus RequestEntangling) before this PostMessages arrives.
+  // Not entangled yet.
   if (mState == eStateEntangling) {
-    MOZ_ASSERT(mActor);
-    AutoTArray<NotNull<RefPtr<SharedMessageBody>>, 1> messages;
-    messages.AppendElement(data);
-    mActor->SendPostMessages(messages);
+    mMessagesForTheOtherPort.AppendElement(data);
     return;
   }
 
   MOZ_ASSERT(mActor);
+  MOZ_ASSERT(mMessagesForTheOtherPort.IsEmpty());
 
-  AutoTArray<NotNull<RefPtr<SharedMessageBody>>, 1> messages;
-  messages.AppendElement(data);
+  AutoTArray<RefPtr<SharedMessageBody>, 1> array;
+  array.AppendElement(data);
 
+  AutoTArray<MessageData, 1> messages;
+  // note: `messages` will borrow the underlying buffer, but this is okay
+  // because reverse destruction order means `messages` will be destroyed prior
+  // to `array`/`data`.
+  SharedMessageBody::FromSharedToMessagesChild(mActor->Manager(), array,
+                                               messages);
   mActor->SendPostMessages(messages);
 }
 
@@ -542,14 +548,34 @@ void MessagePort::SetOnmessage(EventHandlerNonNull* aCallback) {
 // another actor. It receives a list of messages to be dispatch. It can be that
 // we were waiting for this entangling step in order to disentangle the port or
 // to close it.
-void MessagePort::Entangled(
-    nsTArray<NotNull<RefPtr<SharedMessageBody>>>& aMessages) {
+void MessagePort::Entangled(nsTArray<MessageData>& aMessages) {
   MOZ_ASSERT(mState == eStateEntangling ||
              mState == eStateEntanglingForDisentangle ||
              mState == eStateEntanglingForClose);
 
   State oldState = mState;
   mState = eStateEntangled;
+
+  // If we have pending messages, these have to be sent.
+  if (!mMessagesForTheOtherPort.IsEmpty()) {
+    {
+      nsTArray<MessageData> messages;
+      SharedMessageBody::FromSharedToMessagesChild(
+          mActor->Manager(), mMessagesForTheOtherPort, messages);
+      mActor->SendPostMessages(messages);
+    }
+    // Because `messages` borrow the underlying JSStructuredCloneData buffers,
+    // only clear after `messages` have gone out of scope.
+    mMessagesForTheOtherPort.Clear();
+  }
+
+  // We must convert the messages into SharedMessageBodys to avoid leaks.
+  FallibleTArray<RefPtr<SharedMessageBody>> data;
+  if (NS_WARN_IF(
+          !SharedMessageBody::FromMessagesToSharedChild(aMessages, data))) {
+    DispatchError();
+    return;
+  }
 
   // If the next step is to close the port, we do it ignoring the received
   // messages.
@@ -558,7 +584,7 @@ void MessagePort::Entangled(
     return;
   }
 
-  mMessages.AppendElements(aMessages);
+  mMessages.AppendElements(data);
 
   // We were waiting for the entangling callback in order to disentangle this
   // port immediately after.
@@ -583,17 +609,24 @@ void MessagePort::StartDisentangling() {
   mActor->SendStopSendingData();
 }
 
-void MessagePort::MessagesReceived(
-    nsTArray<NotNull<RefPtr<SharedMessageBody>>>& aMessages) {
+void MessagePort::MessagesReceived(nsTArray<MessageData>& aMessages) {
   MOZ_ASSERT(mState == eStateEntangled || mState == eStateDisentangling ||
              // This last step can happen only if Close() has been called
              // manually. At this point SendClose() is sent but we can still
              // receive something until the Closing request is processed.
              mState == eStateDisentangledForClose);
+  MOZ_ASSERT(mMessagesForTheOtherPort.IsEmpty());
 
   RemoveDocFromBFCache();
 
-  mMessages.AppendElements(aMessages);
+  FallibleTArray<RefPtr<SharedMessageBody>> data;
+  if (NS_WARN_IF(
+          !SharedMessageBody::FromMessagesToSharedChild(aMessages, data))) {
+    DispatchError();
+    return;
+  }
+
+  mMessages.AppendElements(data);
 
   if (mState == eStateEntangled) {
     Dispatch();
@@ -613,12 +646,19 @@ void MessagePort::Disentangle() {
 
   mState = eStateDisentangled;
 
-  mActor->SendDisentangle(mMessages);
+  {
+    nsTArray<MessageData> messages;
+    SharedMessageBody::FromSharedToMessagesChild(mActor->Manager(), mMessages,
+                                                 messages);
+    mActor->SendDisentangle(messages);
+  }
 
   // Let's inform the RefMessageBodyService that any our shared messages are
   // now invalid.
   mRefMessageBodyService->ForgetPort(mIdentifier->uuid());
 
+  // Only clear mMessages after the MessageData instances have gone out of scope
+  // because they borrow mMessages' underlying JSStructuredCloneDatas.
   mMessages.Clear();
 
   mActor->SetPort(nullptr);
@@ -657,6 +697,7 @@ void MessagePort::CloneAndDisentangle(UniqueMessagePortId& aIdentifier) {
   // We have to entangle first.
   if (mState == eStateUnshippedEntangled) {
     MOZ_ASSERT(mUnshippedEntangledPort);
+    MOZ_ASSERT(mMessagesForTheOtherPort.IsEmpty());
 
     RefPtr<MessagePort> port = std::move(mUnshippedEntangledPort);
 

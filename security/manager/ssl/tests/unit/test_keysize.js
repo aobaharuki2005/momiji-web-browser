@@ -1,3 +1,4 @@
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -24,20 +25,17 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
  * @param {string} eeKeyType
  * @param {number} eeKeySize
  * @param {PRErrorCode} eeExpectedError
- * @param {bool} makeRootBuiltIn
-          Whether or not to make the root a built-in. Defaults to false.
  * @returns {Promise} a promise that will resolve when the verification has
  *                   completed
  */
-async function checkChain(
+function checkChain(
   rootKeyType,
   rootKeySize,
   intKeyType,
   intKeySize,
   eeKeyType,
   eeKeySize,
-  eeExpectedError,
-  makeRootBuiltIn = false
+  eeExpectedError
 ) {
   let rootName = "root_" + rootKeyType + "_" + rootKeySize;
   let intName = "int_" + intKeyType + "_" + intKeySize;
@@ -50,28 +48,14 @@ async function checkChain(
   addCertFromFile(certdb, `test_keysize/${intFullName}.pem`, ",,");
   let eeCert = constructCertFromFile(`test_keysize/${eeFullName}.pem`);
 
-  if (makeRootBuiltIn) {
-    let root = constructCertFromFile(`test_keysize/${rootName}.pem`);
-    Services.prefs.setCharPref(
-      "security.test.built_in_root_hash",
-      root.sha256Fingerprint
-    );
-  }
-
-  info("end-entity: " + eeCert.commonName);
-  info("issuer: " + eeCert.issuerCommonName);
-  let result = await checkCertErrorGeneric(
+  info("cert o=" + eeCert.organization);
+  info("cert issuer o=" + eeCert.issuerOrganization);
+  return checkCertErrorGeneric(
     certdb,
     eeCert,
     eeExpectedError,
     Ci.nsIX509CertDB.verifyUsageTLSServer
   );
-
-  if (makeRootBuiltIn) {
-    Services.prefs.clearUserPref("security.test.built_in_root_hash");
-  }
-
-  return result;
 }
 
 /**
@@ -79,13 +63,8 @@ async function checkChain(
  *
  * @param {number} inadequateKeySize
  * @param {number} adequateKeySize
- * @param {bool} makeRootBuiltIn
  */
-async function checkRSAChains(
-  inadequateKeySize,
-  adequateKeySize,
-  makeRootBuiltIn
-) {
+async function checkRSAChains(inadequateKeySize, adequateKeySize) {
   // Chain with certs that have adequate sizes for DV
   await checkChain(
     "rsa",
@@ -94,8 +73,7 @@ async function checkRSAChains(
     adequateKeySize,
     "rsa",
     adequateKeySize,
-    PRErrorCodeSuccess,
-    makeRootBuiltIn
+    PRErrorCodeSuccess
   );
 
   // Chain with a root cert that has an inadequate size for DV
@@ -106,8 +84,7 @@ async function checkRSAChains(
     adequateKeySize,
     "rsa",
     adequateKeySize,
-    MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE,
-    makeRootBuiltIn
+    MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE
   );
 
   // Chain with an intermediate cert that has an inadequate size for DV
@@ -118,8 +95,7 @@ async function checkRSAChains(
     inadequateKeySize,
     "rsa",
     adequateKeySize,
-    MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE,
-    makeRootBuiltIn
+    MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE
   );
 
   // Chain with an end entity cert that has an inadequate size for DV
@@ -130,8 +106,7 @@ async function checkRSAChains(
     adequateKeySize,
     "rsa",
     inadequateKeySize,
-    MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE,
-    makeRootBuiltIn
+    MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE
   );
 }
 
@@ -223,13 +198,7 @@ async function checkCombinationChains() {
 }
 
 add_task(async function () {
-  // When the root is not a built-in, 1024 bits is accepted.
-  await checkRSAChains(1016, 1024, false);
-  // When the root is a built-in, 2048 bits is the minimum.
-  // Unfortunately, this can currently only be tested in debug builds.
-  if (gIsDebugBuild) {
-    await checkRSAChains(1024, 2048, true);
-  }
+  await checkRSAChains(1016, 1024);
   await checkECCChains();
   await checkCombinationChains();
 });

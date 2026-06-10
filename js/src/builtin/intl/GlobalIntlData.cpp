@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -25,7 +27,6 @@
 #include "vm/JSObject-inl.h"
 
 using namespace js;
-using namespace js::intl;
 
 void js::intl::GlobalIntlData::resetCollator() {
   collatorLocale_ = nullptr;
@@ -45,12 +46,20 @@ void js::intl::GlobalIntlData::resetDateTimeFormat() {
 }
 
 bool js::intl::GlobalIntlData::ensureRealmLocale(JSContext* cx) {
-  auto locale = cx->realm()->getLocale();
-  if (realmLocale_ != locale) {
-    realmLocale_ = locale;
+  const char* locale = cx->realm()->getLocale();
+  if (!locale) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  if (!realmLocale_ || !StringEqualsAscii(realmLocale_, locale)) {
+    realmLocale_ = NewStringCopyZ<CanGC>(cx, locale);
+    if (!realmLocale_) {
+      return false;
+    }
 
     // Clear the cached default locale.
-    defaultLocale_ = LanguageId::und();
+    defaultLocale_ = nullptr;
 
     // Clear all cached instances when the realm locale has changed.
     resetCollator();
@@ -87,26 +96,18 @@ bool js::intl::GlobalIntlData::ensureRealmTimeZone(JSContext* cx) {
   return true;
 }
 
-bool js::intl::GlobalIntlData::defaultLocale(JSContext* cx,
-                                             LanguageId* result) {
+JSLinearString* js::intl::GlobalIntlData::defaultLocale(JSContext* cx) {
   // Ensure the realm locale didn't change.
   if (!ensureRealmLocale(cx)) {
-    return false;
+    return nullptr;
   }
 
   // If we didn't have a cache hit, compute the candidate default locale.
-  if (defaultLocale_ == LanguageId::und()) {
+  if (!defaultLocale_) {
     // Cache the computed locale until the realm locale changes.
-    auto locale = LanguageId::und();
-    if (!ComputeDefaultLocale(cx, &locale)) {
-      return false;
-    }
-    MOZ_ASSERT(locale != LanguageId::und(), "default locale is not 'und'");
-
-    defaultLocale_ = locale;
+    defaultLocale_ = ComputeDefaultLocale(cx);
   }
-  *result = defaultLocale_;
-  return true;
+  return defaultLocale_;
 }
 
 JSLinearString* js::intl::GlobalIntlData::defaultTimeZone(JSContext* cx) {
@@ -296,36 +297,29 @@ temporal::TimeZoneObject* js::intl::GlobalIntlData::getOrCreateTimeZone(
   return &timeZone->as<temporal::TimeZoneObject>();
 }
 
-JS::Symbol* js::intl::GlobalIntlData::fallbackSymbol(JSContext* cx) {
-  if (!fallbackSymbol_) {
-    Handle<PropertyName*> description = cx->names().IntlLegacyConstructedSymbol;
-    fallbackSymbol_ =
-        JS::Symbol::new_(cx, JS::SymbolCode::UniqueSymbol, description);
-  }
-  return fallbackSymbol_;
-}
-
 void js::intl::GlobalIntlData::trace(JSTracer* trc) {
-  TraceEdge(trc, &realmTimeZone_, "GlobalIntlData::realmTimeZone_");
-  TraceEdge(trc, &defaultTimeZone_, "GlobalIntlData::defaultTimeZone_");
-  TraceEdge(trc, &defaultTimeZoneObject_,
-            "GlobalIntlData::defaultTimeZoneObject_");
-  TraceEdge(trc, &timeZoneObject_, "GlobalIntlData::timeZoneObject_");
+  TraceNullableEdge(trc, &realmLocale_, "GlobalIntlData::realmLocale_");
+  TraceNullableEdge(trc, &defaultLocale_, "GlobalIntlData::defaultLocale_");
 
-  TraceEdge(trc, &collatorLocale_, "GlobalIntlData::collatorLocale_");
-  TraceEdge(trc, &collator_, "GlobalIntlData::collator_");
+  TraceNullableEdge(trc, &realmTimeZone_, "GlobalIntlData::realmTimeZone_");
+  TraceNullableEdge(trc, &defaultTimeZone_, "GlobalIntlData::defaultTimeZone_");
+  TraceNullableEdge(trc, &defaultTimeZoneObject_,
+                    "GlobalIntlData::defaultTimeZoneObject_");
+  TraceNullableEdge(trc, &timeZoneObject_, "GlobalIntlData::timeZoneObject_");
 
-  TraceEdge(trc, &numberFormatLocale_, "GlobalIntlData::numberFormatLocale_");
-  TraceEdge(trc, &numberFormat_, "GlobalIntlData::numberFormat_");
+  TraceNullableEdge(trc, &collatorLocale_, "GlobalIntlData::collatorLocale_");
+  TraceNullableEdge(trc, &collator_, "GlobalIntlData::collator_");
 
-  TraceEdge(trc, &dateTimeFormatLocale_,
-            "GlobalIntlData::dateTimeFormatLocale_");
-  TraceEdge(trc, &dateTimeFormatToLocaleAll_,
-            "GlobalIntlData::dateTimeFormatToLocaleAll_");
-  TraceEdge(trc, &dateTimeFormatToLocaleDate_,
-            "GlobalIntlData::dateTimeFormatToLocaleDate_");
-  TraceEdge(trc, &dateTimeFormatToLocaleTime_,
-            "GlobalIntlData::dateTimeFormatToLocaleTime_");
+  TraceNullableEdge(trc, &numberFormatLocale_,
+                    "GlobalIntlData::numberFormatLocale_");
+  TraceNullableEdge(trc, &numberFormat_, "GlobalIntlData::numberFormat_");
 
-  TraceEdge(trc, &fallbackSymbol_, "GlobalIntlData::fallbackSymbol_");
+  TraceNullableEdge(trc, &dateTimeFormatLocale_,
+                    "GlobalIntlData::dateTimeFormatLocale_");
+  TraceNullableEdge(trc, &dateTimeFormatToLocaleAll_,
+                    "GlobalIntlData::dateTimeFormatToLocaleAll_");
+  TraceNullableEdge(trc, &dateTimeFormatToLocaleDate_,
+                    "GlobalIntlData::dateTimeFormatToLocaleDate_");
+  TraceNullableEdge(trc, &dateTimeFormatToLocaleTime_,
+                    "GlobalIntlData::dateTimeFormatToLocaleTime_");
 }

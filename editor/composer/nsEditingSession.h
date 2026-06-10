@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsEditingSession_h_
-#define nsEditingSession_h_
+#ifndef nsEditingSession_h__
+#define nsEditingSession_h__
 
 #include "nsCOMPtr.h"               // for nsCOMPtr
 #include "nsISupportsImpl.h"        // for NS_DECL_ISUPPORTS
@@ -165,4 +166,4 @@ class nsEditingSession final : public nsIEditingSession,
   nsWeakPtr mExistingEditor;
 };
 
-#endif  // nsEditingSession_h_
+#endif  // nsEditingSession_h__

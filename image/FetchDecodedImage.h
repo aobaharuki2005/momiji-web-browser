@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -20,7 +21,7 @@ using FetchDecodedImagePromise =
     mozilla::MozPromise<already_AddRefed<imgIContainer>, nsresult, true>;
 
 /*
- * This method fetches an image URI and starts decoding the image soon as
+ * This method fetches and image URI and starts decoding the image soon as
  * possible. Either resolves the promise with the decoded imgIContainer or
  * rejects with an nsresult, for e.g. network failures or decoding errors.
  *

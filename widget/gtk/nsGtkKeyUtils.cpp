@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -720,7 +723,7 @@ void KeymapWrapper::HandleKeymap(uint32_t format, int fd, uint32_t size) {
     return;
   }
 
-  char* mapString = (char*)mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
+  char* mapString = (char*)mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (mapString == MAP_FAILED) {
     MOZ_LOG(gKeyLog, LogLevel::Info,
             ("KeymapWrapper::HandleKeymap(): failed to allocate shm!"));
@@ -1108,34 +1111,33 @@ uint32_t KeymapWrapper::ComputeKeyModifiers(guint aGdkModifierState) {
 
 /* static */
 guint KeymapWrapper::ConvertWidgetModifierToGdkState(
-    nsIWidget::NativeModifiers aNativeModifiers) {
-  if (aNativeModifiers == nsIWidget::NativeModifiers::NO_MODIFIERS) {
+    nsIWidget::Modifiers aNativeModifiers) {
+  if (!aNativeModifiers) {
     return 0;
   }
   struct ModifierMapEntry {
-    nsIWidget::NativeModifiers mWidgetModifier;
+    nsIWidget::Modifiers mWidgetModifier;
     MappedModifier mModifier;
   };
   // TODO: Currently, we don't treat L/R of each modifier on Linux.
   // TODO: No proper native modifier for Level5.
   static constexpr ModifierMapEntry sModifierMap[] = {
-      {nsIWidget::NativeModifiers::CAPS_LOCK, MappedModifier::CAPS_LOCK},
-      {nsIWidget::NativeModifiers::NUM_LOCK, MappedModifier::NUM_LOCK},
-      {nsIWidget::NativeModifiers::SHIFT_L, MappedModifier::SHIFT},
-      {nsIWidget::NativeModifiers::SHIFT_R, MappedModifier::SHIFT},
-      {nsIWidget::NativeModifiers::CTRL_L, MappedModifier::CTRL},
-      {nsIWidget::NativeModifiers::CTRL_R, MappedModifier::CTRL},
-      {nsIWidget::NativeModifiers::ALT_L, MappedModifier::ALT},
-      {nsIWidget::NativeModifiers::ALT_R, MappedModifier::ALT},
-      {nsIWidget::NativeModifiers::ALTGRAPH, MappedModifier::LEVEL3},
-      {nsIWidget::NativeModifiers::COMMAND_L, MappedModifier::SUPER},
-      {nsIWidget::NativeModifiers::COMMAND_R, MappedModifier::SUPER}};
+      {nsIWidget::CAPS_LOCK, MappedModifier::CAPS_LOCK},
+      {nsIWidget::NUM_LOCK, MappedModifier::NUM_LOCK},
+      {nsIWidget::SHIFT_L, MappedModifier::SHIFT},
+      {nsIWidget::SHIFT_R, MappedModifier::SHIFT},
+      {nsIWidget::CTRL_L, MappedModifier::CTRL},
+      {nsIWidget::CTRL_R, MappedModifier::CTRL},
+      {nsIWidget::ALT_L, MappedModifier::ALT},
+      {nsIWidget::ALT_R, MappedModifier::ALT},
+      {nsIWidget::ALTGRAPH, MappedModifier::LEVEL3},
+      {nsIWidget::COMMAND_L, MappedModifier::SUPER},
+      {nsIWidget::COMMAND_R, MappedModifier::SUPER}};
 
   guint state = 0;
   KeymapWrapper* instance = GetInstance();
   for (const ModifierMapEntry& entry : sModifierMap) {
-    if ((aNativeModifiers & entry.mWidgetModifier) !=
-        nsIWidget::NativeModifiers::NO_MODIFIERS) {
+    if (aNativeModifiers & entry.mWidgetModifier) {
       state |= instance->GetGdkModifierMask(entry.mModifier);
     }
   }
@@ -1268,16 +1270,7 @@ uint32_t KeymapWrapper::ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent) {
     // refer keyCode value without modifiers because web apps should be
     // able to identify the key as far as possible.
     guint keyvalWithoutModifier = GetGDKKeyvalWithoutModifier(aGdkKeyEvent);
-    if (auto keyCode = GetDOMKeyCodeFromKeyPairs(keyvalWithoutModifier)) {
-      return keyCode;
-    }
-    // If the unmodified keyval is a basic Latin letter or numeral (e.g., '6'
-    // for a dead key produced by Shift+6), compute the keyCode from it.
-    // This matches Chromium's behavior for dead keys. (Bug 2004800)
-    if (IsBasicLatinLetterOrNumeral(keyvalWithoutModifier)) {
-      return WidgetUtils::ComputeKeyCodeFromChar(keyvalWithoutModifier);
-    }
-    return 0;
+    return GetDOMKeyCodeFromKeyPairs(keyvalWithoutModifier);
   }
 
   // printable numpad keys should be resolved here.
@@ -1433,7 +1426,7 @@ KeyNameIndex KeymapWrapper::ComputeDOMKeyNameIndex(
   case aNativeKey:                                                     \
     return aKeyNameIndex;
 
-#include "NativeKeyToDOMKeyName.inc"
+#include "NativeKeyToDOMKeyName.h"
 
 #undef NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
 
@@ -1452,7 +1445,7 @@ CodeNameIndex KeymapWrapper::ComputeDOMCodeNameIndex(
   case aNativeKey:                                                       \
     return aCodeNameIndex;
 
-#include "NativeKeyToDOMCodeName.inc"
+#include "NativeKeyToDOMCodeName.h"
 
 #undef NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX
 
@@ -2018,30 +2011,6 @@ void KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
 }
 
 /* static */
-void KeymapWrapper::InitKeyEventFromCommitString(
-    WidgetKeyboardEvent& aKeyEvent, const nsAString& aCommitString) {
-  MOZ_ASSERT(aCommitString.Length() == 1,
-             "InitKeyEventFromCommitString expects single character");
-
-  char16_t commitChar = aCommitString.CharAt(0);
-  aKeyEvent.mKeyCode = WidgetUtils::ComputeKeyCodeFromChar(commitChar);
-  aKeyEvent.mCharCode = commitChar;
-  aKeyEvent.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
-  aKeyEvent.mKeyValue = aCommitString;
-  aKeyEvent.mCodeNameIndex = CODE_NAME_INDEX_UNKNOWN;
-  aKeyEvent.mLocation = eKeyLocationStandard;
-
-  guint modifierState = GetCurrentModifierState();
-  InitInputEvent(aKeyEvent, modifierState);
-
-  MOZ_LOG(gKeyLog, LogLevel::Info,
-          ("InitKeyEventFromCommitString, char='%c' (0x%04X), "
-           "mKeyCode=0x%02X, mModifiers=0x%08X",
-           static_cast<char>(commitChar), commitChar, aKeyEvent.mKeyCode,
-           aKeyEvent.mModifiers));
-}
-
-/* static */
 uint32_t KeymapWrapper::GetCharCodeFor(const GdkEventKey* aGdkKeyEvent) {
   // Anything above 0xf000 is considered a non-printable
   // Exception: directly encoded UCS characters
@@ -2252,7 +2221,7 @@ struct KeyCodeData {
 static struct KeyCodeData gKeyCodes[] = {
 #define NS_DEFINE_VK(aDOMKeyName, aDOMKeyCode) \
   {#aDOMKeyName, sizeof(#aDOMKeyName) - 1, aDOMKeyCode},
-#include "mozilla/VirtualKeyCodeList.inc"
+#include "mozilla/VirtualKeyCodeList.h"
 #undef NS_DEFINE_VK
     {nullptr, 0, 0}};
 

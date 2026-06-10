@@ -10,4 +10,3 @@ export * from './Mutex.js';
 export * from './ErrorLike.js';
 export * from './AsyncIterableUtil.js';
 export * from './disposable.js';
-export * from './incremental-id-generator.js';

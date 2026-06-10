@@ -5,19 +5,21 @@ mod level;
 pub(crate) use self::level::Expiration;
 use self::level::Level;
 
-use std::ptr::NonNull;
+use std::{array, ptr::NonNull};
 
-use super::entry::STATE_DEREGISTERED;
 use super::EntryList;
 
 /// Timing wheel implementation.
 ///
-/// This type provides the hashed timing wheel implementation that backs
-/// [`Driver`].
+/// This type provides the hashed timing wheel implementation that backs `Timer`
+/// and `DelayQueue`.
 ///
-/// See [`Driver`] documentation for some implementation notes.
+/// The structure is generic over `T: Stack`. This allows handling timeout data
+/// being stored on the heap or in a slab. In order to support the latter case,
+/// the slab must be passed into each function allowing the implementation to
+/// lookup timer entries.
 ///
-/// [`Driver`]: crate::runtime::time::Driver
+/// See `Timer` documentation for some implementation notes.
 #[derive(Debug)]
 pub(crate) struct Wheel {
     /// The number of milliseconds elapsed since the wheel started.
@@ -50,13 +52,9 @@ pub(super) const MAX_DURATION: u64 = (1 << (6 * NUM_LEVELS)) - 1;
 impl Wheel {
     /// Creates a new timing wheel.
     pub(crate) fn new() -> Wheel {
-        let mut levels = Vec::with_capacity(NUM_LEVELS);
-        for i in 0..NUM_LEVELS {
-            levels.push(Level::new(i));
-        }
         Wheel {
             elapsed: 0,
-            levels: levels.into_boxed_slice().try_into().unwrap(),
+            levels: Box::new(array::from_fn(Level::new)),
             pending: EntryList::new(),
         }
     }
@@ -92,7 +90,7 @@ impl Wheel {
         &mut self,
         item: TimerHandle,
     ) -> Result<u64, (TimerHandle, InsertError)> {
-        let when = unsafe { item.sync_when() };
+        let when = item.sync_when();
 
         if when <= self.elapsed {
             return Err((item, InsertError::Elapsed));
@@ -118,8 +116,8 @@ impl Wheel {
     /// Removes `item` from the timing wheel.
     pub(crate) unsafe fn remove(&mut self, item: NonNull<TimerShared>) {
         unsafe {
-            let when = item.as_ref().registered_when();
-            if when == STATE_DEREGISTERED {
+            let when = item.as_ref().cached_when();
+            if when == u64::MAX {
                 self.pending.remove(item);
             } else {
                 debug_assert!(
@@ -232,11 +230,11 @@ impl Wheel {
 
         while let Some(item) = entries.pop_back() {
             if expiration.level == 0 {
-                debug_assert_eq!(unsafe { item.registered_when() }, expiration.deadline);
+                debug_assert_eq!(unsafe { item.cached_when() }, expiration.deadline);
             }
 
             // Try to expire the entry; this is cheap (doesn't synchronize) if
-            // the timer is not expired, and updates registered_when.
+            // the timer is not expired, and updates cached_when.
             match unsafe { item.mark_pending(expiration.deadline) } {
                 Ok(()) => {
                     // Item was expired

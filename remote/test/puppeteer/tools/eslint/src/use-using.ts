@@ -84,4 +84,4 @@ const useUsingRule = createRule<[], 'useUsing' | 'useUsingFix'>({
   },
 });
 
-export default useUsingRule;
+export = useUsingRule;

@@ -1,5 +1,5 @@
 use crate::buf::{IntoIter, UninitSlice};
-use crate::{Buf, BufMut};
+use crate::{Buf, BufMut, Bytes};
 
 #[cfg(feature = "std")]
 use std::io::IoSlice;
@@ -25,7 +25,9 @@ use std::io::IoSlice;
 /// assert_eq!(full[..], b"hello world"[..]);
 /// ```
 ///
-/// [`Buf::chain`]: Buf::chain
+/// [`Buf::chain`]: trait.Buf.html#method.chain
+/// [`Buf`]: trait.Buf.html
+/// [`BufMut`]: trait.BufMut.html
 #[derive(Debug)]
 pub struct Chain<T, U> {
     a: T,
@@ -133,7 +135,7 @@ where
     U: Buf,
 {
     fn remaining(&self) -> usize {
-        self.a.remaining().saturating_add(self.b.remaining())
+        self.a.remaining().checked_add(self.b.remaining()).unwrap()
     }
 
     fn chunk(&self) -> &[u8] {
@@ -169,7 +171,7 @@ where
         n
     }
 
-    fn copy_to_bytes(&mut self, len: usize) -> crate::Bytes {
+    fn copy_to_bytes(&mut self, len: usize) -> Bytes {
         let a_rem = self.a.remaining();
         if a_rem >= len {
             self.a.copy_to_bytes(len)

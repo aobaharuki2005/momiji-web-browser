@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Google LLC
+ * Copyright 2018 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -184,7 +184,7 @@ private:
  */
 class SK_SPI SkTextBlobRunIterator {
 public:
-    explicit SkTextBlobRunIterator(const SkTextBlob* blob);
+    SkTextBlobRunIterator(const SkTextBlob* blob);
 
     enum GlyphPositioning : uint8_t {
         kDefault_Positioning      = 0, // Default glyph advances -- zero scalars per glyph.

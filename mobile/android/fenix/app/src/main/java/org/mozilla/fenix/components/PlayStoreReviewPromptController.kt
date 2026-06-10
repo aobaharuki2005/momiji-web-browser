@@ -9,6 +9,8 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
+import androidx.fragment.app.FragmentActivity
+import androidx.navigation.fragment.NavHostFragment
 import com.google.android.play.core.review.ReviewException
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
@@ -20,6 +22,8 @@ import org.mozilla.fenix.components.ReviewPromptAttemptResult.Displayed
 import org.mozilla.fenix.components.ReviewPromptAttemptResult.Error
 import org.mozilla.fenix.components.ReviewPromptAttemptResult.NotDisplayed
 import org.mozilla.fenix.components.ReviewPromptAttemptResult.Unknown
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.openToBrowser
 import org.mozilla.fenix.settings.SupportUtils
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -88,10 +92,7 @@ class PlayStoreReviewPromptController(
     /**
      * Try to launch the play store review flow.
      */
-    fun tryLaunchPlayStoreReview(
-        activity: Activity,
-        openInNewTab: (url: String) -> Unit,
-    ) {
+    fun tryLaunchPlayStoreReview(activity: Activity) {
         logger.info("tryLaunchPlayStoreReview in progress...")
 
         try {
@@ -102,7 +103,19 @@ class PlayStoreReviewPromptController(
         } catch (e: ActivityNotFoundException) {
             // Device without the play store installed.
             // Opening the play store website.
-            openInNewTab(SupportUtils.FENIX_PLAY_STORE_URL)
+
+            activity.applicationContext.components.useCases.fenixBrowserUseCases.loadUrlOrSearch(
+                searchTermOrURL = SupportUtils.FENIX_PLAY_STORE_URL,
+                newTab = true,
+            )
+
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1997148
+            (activity as? FragmentActivity)
+                ?.supportFragmentManager
+                ?.fragments
+                ?.firstOrNull { it is NavHostFragment }
+                ?.let { (it as NavHostFragment).navController }
+                ?.openToBrowser()
 
             logger.warn("Failed to launch play store review flow due to: $e.")
         }

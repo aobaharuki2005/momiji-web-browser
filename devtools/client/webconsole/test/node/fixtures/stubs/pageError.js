@@ -57,7 +57,7 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 115 > eval",
+        "filename": "resource://testing-common/content-task.js line 117 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -66,14 +66,14 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 116,
+        "lineNumber": 118,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 66,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -143,7 +143,7 @@ rawPackets.set(`TypeError longString message`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 115 > eval",
+        "filename": "resource://testing-common/content-task.js line 117 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -152,14 +152,14 @@ rawPackets.set(`TypeError longString message`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 116,
+        "lineNumber": 118,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 66,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"

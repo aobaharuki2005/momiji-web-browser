@@ -1,11 +1,13 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Original author: ekr@rtfm.com
 
-#ifndef transportlayerdtls_h_
-#define transportlayerdtls_h_
+#ifndef transportlayerdtls_h__
+#define transportlayerdtls_h__
 
 #include <queue>
 #include <set>
@@ -88,12 +90,10 @@ class TransportLayerDtls final : public TransportLayer {
   nsresult SetVerificationDigest(const DtlsDigest& digest);
 
   nsresult GetCipherSuite(uint16_t* cipherSuite) const;
-  nsresult GetChannelInfo(SSLChannelInfo* info) const;
 
   nsresult SetSrtpCiphers(const std::vector<uint16_t>& ciphers);
   nsresult GetSrtpCipher(uint16_t* cipher) const;
   static std::vector<uint16_t> GetDefaultSrtpCiphers();
-  static const char* GetSrtpCipherName(uint16_t cipher);
 
   nsresult ExportKeyingMaterial(const std::string& label, bool use_context,
                                 const std::string& context, unsigned char* out,

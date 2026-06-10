@@ -1,16 +1,12 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 document.addEventListener(
   "MozBeforeInitialXULLayout",
   () => {
-    const lazy = {};
-    ChromeUtils.defineESModuleGetters(lazy, {
-      TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
-    });
-
-    // <commandset id="mainCommandSet"> defined in browser-sets.inc.xhtml
+    // <commandset id="mainCommandSet"> defined in browser-sets.inc
     document
       .getElementById("mainCommandSet")
       // eslint-disable-next-line complexity
@@ -69,9 +65,6 @@ document.addEventListener(
           case "cmd_closeWindow":
             BrowserCommands.tryToCloseWindow(event);
             break;
-          case "cmd_returnToOpener":
-            BrowserCommands.returnToOpenerFromPiP(event);
-            break;
           case "cmd_minimizeWindow":
             window.minimize();
             break;
@@ -126,12 +119,6 @@ document.addEventListener(
           case "cmd_translate":
             FullPageTranslationsPanel.open(event);
             break;
-          case "cmd_openAboutTranslations":
-            lazy.TranslationsParent.openAboutTranslationsPage({
-              browserWindow: window,
-              targetLanguage: "derive",
-            }).catch(console.error);
-            break;
           case "Browser:AddBookmarkAs":
             PlacesCommandHook.bookmarkPage();
             break;
@@ -168,9 +155,6 @@ document.addEventListener(
             break;
           case "Browser:ReloadSkipCache":
             BrowserCommands.reloadSkipCache();
-            break;
-          case "Browser:DuplicateTab":
-            BrowserCommands.duplicateTab();
             break;
           case "Browser:NextTab":
             gBrowser.tabContainer.advanceSelectedTab(1, true);
@@ -244,10 +228,11 @@ document.addEventListener(
             OpenBrowserWindow({ aiWindow: false });
             break;
           case "Tools:AIWindow":
-            AIWindow.launchWindow(gBrowser?.selectedBrowser, true, "menu");
+            OpenBrowserWindow({ aiWindow: true });
             break;
           case "Tools:ChatsHistory":
-            FirefoxViewHandler.openTab("chats");
+            // @todo Bug 2006543
+            // Implement opening the chat history view
             break;
           case "Tools:Sanitize":
             Sanitizer.showUI(window);

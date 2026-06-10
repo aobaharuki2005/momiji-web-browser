@@ -13,6 +13,12 @@ async def are_product_images_visible(client):
 
 
 @pytest.mark.asyncio
-@pytest.mark.without_interventions
-async def test_regression(client):
+@pytest.mark.with_interventions
+async def test_enabled(client):
     assert await are_product_images_visible(client)
+
+
+@pytest.mark.asyncio
+@pytest.mark.without_interventions
+async def test_disabled(client):
+    assert not await are_product_images_visible(client)

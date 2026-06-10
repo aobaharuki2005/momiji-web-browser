@@ -13,8 +13,9 @@
 
 #include <stddef.h>
 
-#include <span>
 #include <type_traits>
+
+#include "api/array_view.h"
 
 namespace webrtc {
 
@@ -25,7 +26,7 @@ void ExplicitZeroMemory(void* ptr, size_t len);
 template <typename T,
           typename std::enable_if<!std::is_const<T>::value &&
                                   std::is_trivial<T>::value>::type* = nullptr>
-void ExplicitZeroMemory(std::span<T> a) {
+void ExplicitZeroMemory(ArrayView<T> a) {
   ExplicitZeroMemory(a.data(), a.size());
 }
 

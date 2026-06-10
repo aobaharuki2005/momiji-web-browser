@@ -31,7 +31,6 @@
 
 class SkColorInfo;
 class SkSurface;
-class SkCapture;
 enum SkYUVColorSpace : int;
 class SkColorSpace;
 class SkTraceMemoryDump;
@@ -55,13 +54,11 @@ class Buffer;
 class ClientMappedBufferManager;
 class ContextPriv;
 struct ContextOptions;
-class PersistentPipelineStorage;
 class PrecompileContext;
 class QueueManager;
 class ResourceProvider;
 class SharedContext;
 class TextureProxy;
-class TextureProxyView;
 
 class SK_API Context final {
 public:
@@ -87,9 +84,6 @@ public:
 
     /** Returns true if there is work that was submitted to the GPU that has not finished. */
     bool hasUnfinishedGpuWork() const;
-
-    /** Returns true if there is pending GPU work that needs to be submitted. */
-    bool hasPendingGPUWork() const;
 
     /** Makes image pixel data available to caller, possibly asynchronously. It can also rescale
         the image pixels.
@@ -230,12 +224,9 @@ public:
     /**
      * Purge GPU resources on the Context that haven't been used in the past 'msNotUsed'
      * milliseconds or are otherwise marked for deletion, regardless of whether the context is under
-     * budget. Optionally provide a `microsMaxPurgingDur` after which Skia should stop purging
-     * resources.
+     * budget.
      */
-    void performDeferredCleanup(
-            std::chrono::milliseconds msNotUsed,
-            std::optional<std::chrono::microseconds> microsMaxPurgingDur = std::nullopt);
+    void performDeferredCleanup(std::chrono::milliseconds msNotUsed);
 
     /**
      * Returns the number of bytes of the Context's gpu memory cache budget that are currently in
@@ -286,16 +277,6 @@ public:
      */
     GpuStatsFlags supportedGpuStats() const;
 
-    /**
-     * If supported by the backend, stores the current pipeline cache data into the
-     * PersistentPipelineStorage-derived object passed into Graphite via
-     * ContextOptions::fPersistentPipelineStorage. The amount stored is limited to 'maxSize'.
-     *
-     * Skia attempts to only call store() on the PersistentPipelineStorage object when the data
-     * is likely to be different from what was last sync'ed.
-     */
-    void syncPipelineData(size_t maxSize = SIZE_MAX);
-
     /*
      * TODO (b/412351769): Do not use startCapture() or endCapture() as the feature is still under
      * development.
@@ -307,7 +288,7 @@ public:
     /*
      * Ends the SkCapture and returns the collected draws and surface creation.
      */
-    sk_sp<SkCapture> endCapture();
+    void endCapture();
 
     // Provides access to functions that aren't part of the public API.
     ContextPriv priv();
@@ -389,14 +370,14 @@ private:
     // Like asyncReadPixels() except it performs no fallbacks, and requires that the texture be
     // readable. However, the texture does not need to be sampleable.
     void asyncReadTexture(std::unique_ptr<Recorder>,
-                          const AsyncParams<TextureProxyView>&,
+                          const AsyncParams<TextureProxy>&,
                           const SkColorInfo& srcColorInfo);
 
     // Inserts a texture to buffer transfer task, used by asyncReadPixels methods. If the
     // Recorder is non-null, tasks will be added to the Recorder's list; otherwise the transfer
     // tasks will be added to the queue manager directly.
     PixelTransferResult transferPixels(Recorder*,
-                                       const TextureProxyView& srcView,
+                                       const TextureProxy* srcProxy,
                                        const SkColorInfo& srcColorInfo,
                                        const SkColorInfo& dstColorInfo,
                                        const SkIRect& srcRect);
@@ -410,11 +391,9 @@ private:
 
     sk_sp<SharedContext> fSharedContext;
     std::unique_ptr<ResourceProvider> fResourceProvider;
-    std::unique_ptr<ClientMappedBufferManager> fMappedBufferManager;
     std::unique_ptr<QueueManager> fQueueManager;
+    std::unique_ptr<ClientMappedBufferManager> fMappedBufferManager;
     std::unique_ptr<const skcpu::ContextImpl> fCPUContext;
-
-    PersistentPipelineStorage* fPersistentPipelineStorage;
 
     // In debug builds we guard against improper thread handling. This guard is passed to the
     // ResourceCache for the Context.

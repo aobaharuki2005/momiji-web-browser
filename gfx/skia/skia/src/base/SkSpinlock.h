@@ -48,9 +48,7 @@ private:
 
 class SK_SCOPED_CAPABILITY SkAutoSpinlock {
 public:
-    explicit SkAutoSpinlock(SkSpinlock& mutex) SK_ACQUIRE(mutex) : fSpinlock(mutex) {
-        fSpinlock.acquire();
-    }
+    SkAutoSpinlock(SkSpinlock& mutex) SK_ACQUIRE(mutex) : fSpinlock(mutex) { fSpinlock.acquire(); }
     ~SkAutoSpinlock() SK_RELEASE_CAPABILITY() { fSpinlock.release(); }
 
 private:

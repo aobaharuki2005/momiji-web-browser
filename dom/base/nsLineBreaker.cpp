@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -48,12 +50,22 @@ static constexpr uint8_t kNonBreakableASCII[] = {
 };
 
 template <typename T>
-static constexpr bool IsNonBreakableChar(T aChar) {
+static constexpr bool IsNonBreakableChar(T aChar, bool aLegacyBehavior) {
+  if (aLegacyBehavior) {
+    // If not using ICU4X, line break rules aren't compatible with UAX#14. Use
+    // old way.
+    return (0x0030 <= aChar && aChar <= 0x0039) ||
+           (0x0041 <= aChar && aChar <= 0x005A) ||
+           (0x0061 <= aChar && aChar <= 0x007A) || (0x000a == aChar);
+  }
   if (aChar < 0x20 || aChar > 0x7f) {
     return false;
   }
   return !!kNonBreakableASCII[aChar - 0x20];
 }
+
+nsLineBreaker::nsLineBreaker()
+    : mLegacyBehavior(!mozilla::StaticPrefs::intl_icu4x_segmenter_enabled()) {}
 
 nsLineBreaker::~nsLineBreaker() {
   NS_ASSERTION(mCurrentWord.Length() == 0,
@@ -248,7 +260,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     while (offset < aLength && !IsSegmentSpace(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
       if (!mCurrentWordMightBeBreakable &&
-          !IsNonBreakableChar<char16_t>(aText[offset])) {
+          !IsNonBreakableChar<char16_t>(aText[offset], mLegacyBehavior)) {
         mCurrentWordMightBeBreakable = true;
       }
       UpdateCurrentWordLanguage(aHyphenationLanguage);
@@ -365,7 +377,8 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       continue;
     }
 
-    if (!wordMightBeBreakable && !IsNonBreakableChar<char16_t>(ch)) {
+    if (!wordMightBeBreakable &&
+        !IsNonBreakableChar<char16_t>(ch, mLegacyBehavior)) {
       wordMightBeBreakable = true;
     }
     ++offset;
@@ -524,7 +537,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     while (offset < aLength && !IsSegmentSpace(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
       if (!mCurrentWordMightBeBreakable &&
-          !IsNonBreakableChar<uint8_t>(aText[offset])) {
+          !IsNonBreakableChar<uint8_t>(aText[offset], mLegacyBehavior)) {
         mCurrentWordMightBeBreakable = true;
       }
       ++offset;
@@ -617,7 +630,8 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       continue;
     }
 
-    if (!wordMightBeBreakable && !IsNonBreakableChar<uint8_t>(ch)) {
+    if (!wordMightBeBreakable &&
+        !IsNonBreakableChar<uint8_t>(ch, mLegacyBehavior)) {
       wordMightBeBreakable = true;
     }
     ++offset;

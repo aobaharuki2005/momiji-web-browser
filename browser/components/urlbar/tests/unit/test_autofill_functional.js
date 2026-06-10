@@ -17,14 +17,8 @@ add_setup(async function () {
 add_task(async function test_urls_order() {
   info("Add urls, check for correct order");
   let places = [
-    {
-      uri: Services.io.newURI("http://visit1.mozilla.org"),
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
-    {
-      uri: Services.io.newURI("http://visit2.mozilla.org"),
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
+    { uri: Services.io.newURI("http://visit1.mozilla.org") },
+    { uri: Services.io.newURI("http://visit2.mozilla.org") },
   ];
   await PlacesTestUtils.addVisits(places);
   let context = createContext("vis", { isPrivate: false });
@@ -48,12 +42,6 @@ add_task(async function test_urls_order() {
 });
 
 add_task(async function test_bookmark_first() {
-  // Bookmark-driven autofill is disabled when adaptive autofill is on.
-  Services.prefs.setBoolPref(
-    "browser.urlbar.autoFill.adaptiveHistory.enabled",
-    false
-  );
-
   info("With a bookmark and history, the query result should be the bookmark");
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: Services.io.newURI("http://bookmark1.mozilla.org/"),
@@ -78,9 +66,6 @@ add_task(async function test_bookmark_first() {
       }),
     ],
   });
-  Services.prefs.clearUserPref(
-    "browser.urlbar.autoFill.adaptiveHistory.enabled"
-  );
   await cleanupPlaces();
 });
 
@@ -132,11 +117,9 @@ add_task(async function test_complete_fragment() {
 add_task(async function test_prefix_autofill() {
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
-    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://moz.org/test/"),
-    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
 
   info("Should still autofill after a search is cancelled immediately");

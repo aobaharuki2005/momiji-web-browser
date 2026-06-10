@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -138,11 +140,11 @@ void SVGScriptElement::FreezeExecutionAttrs(const Document* aOwnerDoc) {
 
       if (!mUri) {
         AutoTArray<nsString, 2> params = {
-            isHref ? u"href"_ns : u"xlink:href"_ns, std::move(src)};
+            isHref ? u"href"_ns : u"xlink:href"_ns, src};
 
         nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "SVG"_ns,
                                         OwnerDoc(),
-                                        PropertiesFile::DOM_PROPERTIES,
+                                        nsContentUtils::eDOM_PROPERTIES,
                                         "ScriptSourceInvalidUri", params, loc);
       }
     } else {
@@ -150,7 +152,7 @@ void SVGScriptElement::FreezeExecutionAttrs(const Document* aOwnerDoc) {
 
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, "SVG"_ns, OwnerDoc(),
-          PropertiesFile::DOM_PROPERTIES, "ScriptSourceEmpty", params, loc);
+          nsContentUtils::eDOM_PROPERTIES, "ScriptSourceEmpty", params, loc);
     }
 
     // At this point mUri will be null for invalid URLs.

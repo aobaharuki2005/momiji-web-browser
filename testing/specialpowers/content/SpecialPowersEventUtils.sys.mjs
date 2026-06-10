@@ -20,12 +20,12 @@ EventUtils.synthesizeClick = element =>
     EventUtils.synthesizeMouseAtCenter(
       element,
       { type: "mousedown", isSynthesized: false },
-      element.documentGlobal
+      element.ownerGlobal
     );
     EventUtils.synthesizeMouseAtCenter(
       element,
       { type: "mouseup", isSynthesized: false },
-      element.documentGlobal
+      element.ownerGlobal
     );
   });
 

@@ -14,8 +14,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <span>
-
+#include "api/array_view.h"
 #include "api/function_view.h"
 #include "rtc_base/buffer.h"
 
@@ -55,7 +54,7 @@ class RtcpPacket {
   // max_length bytes, it will be fragmented and multiple calls to this
   // callback will be made.
   using PacketReadyCallback =
-      FunctionView<void(std::span<const uint8_t> packet)>;
+      FunctionView<void(ArrayView<const uint8_t> packet)>;
 
   virtual ~RtcpPacket() = default;
 

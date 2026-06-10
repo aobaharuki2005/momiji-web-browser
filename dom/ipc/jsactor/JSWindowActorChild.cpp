@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,10 +41,9 @@ void JSWindowActorChild::Init(const nsACString& aName,
   JSActor::Init(aName, sendTyped);
 }
 
-void JSWindowActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
-                                        JSIPCValue&& aData,
-                                        ipc::StructuredCloneData* aStack,
-                                        ErrorResult& aRv) {
+void JSWindowActorChild::SendRawMessage(
+    const JSActorMessageMeta& aMeta, JSIPCValue&& aData,
+    UniquePtr<ipc::StructuredCloneData> aStack, ErrorResult& aRv) {
   if (!CanSend() || !mManager || !mManager->CanSend()) {
     aRv.ThrowInvalidStateError("JSWindowActorChild cannot send at the moment");
     return;
@@ -55,7 +56,25 @@ void JSWindowActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
     return;
   }
 
-  if (!mManager->SendRawMessage(aMeta, aData, aStack)) {
+  // Cross-process case - send data over WindowGlobalChild to other side.
+  JSIPCValueUtils::SCDHolder holder;
+  if (!JSIPCValueUtils::PrepareForSending(holder, aData)) {
+    aRv.ThrowDataCloneError(
+        nsPrintfCString("JSWindowActorChild serialization error: cannot "
+                        "clone, in actor '%s'",
+                        PromiseFlatCString(aMeta.actorName()).get()));
+    return;
+  }
+
+  UniquePtr<ClonedMessageData> stackData;
+  if (aStack) {
+    stackData = MakeUnique<ClonedMessageData>();
+    if (!aStack->BuildClonedMessageData(*stackData)) {
+      stackData.reset();
+    }
+  }
+
+  if (!mManager->SendRawMessage(aMeta, aData, stackData)) {
     aRv.ThrowOperationError(
         nsPrintfCString("JSWindowActorChild send error in actor '%s'",
                         PromiseFlatCString(aMeta.actorName()).get()));

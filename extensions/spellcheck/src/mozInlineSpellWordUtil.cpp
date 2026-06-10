@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,8 +12,6 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/Logging.h"
-#include "mozilla/RangeBoundary.h"
-#include "mozilla/ToString.h"
 #include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/Element.h"
 
@@ -140,7 +139,7 @@ Maybe<mozInlineSpellWordUtil> mozInlineSpellWordUtil::Create(
   return Some(std::move(util));
 }
 
-static inline bool IsSpellCheckingTextNode(const nsINode* aNode) {
+static inline bool IsSpellCheckingTextNode(nsINode* aNode) {
   nsIContent* parent = aNode->GetParent();
   if (parent &&
       parent->IsAnyOfHTMLElements(nsGkAtoms::script, nsGkAtoms::style))
@@ -183,22 +182,23 @@ static nsINode* FindNextNode(nsINode* aNode, const nsINode* aRoot,
 
 // aNode is not a text node. Find the first text node starting at aNode/aOffset
 // in a preorder DOM traversal.
-template <typename PT, typename RT>
-static nsINode* FindNextTextNode(const RangeBoundaryBase<PT, RT>& aBoundary,
+static nsINode* FindNextTextNode(nsINode* aNode, int32_t aOffset,
                                  const nsINode* aRoot) {
-  MOZ_ASSERT(aBoundary.IsSetAndInComposedDoc());
-  MOZ_ASSERT(!IsSpellCheckingTextNode(aBoundary.GetContainer()),
+  MOZ_ASSERT(aNode, "Null starting node?");
+  MOZ_ASSERT(!IsSpellCheckingTextNode(aNode),
              "FindNextTextNode should start with a non-text node");
 
   nsINode* checkNode;
   // Need to start at the aOffset'th child
-  if (nsIContent* child = aBoundary.GetChildAtOffset()) {
+  nsIContent* child = aNode->GetChildAt_Deprecated(aOffset);
+
+  if (child) {
     checkNode = child;
   } else {
     // aOffset was beyond the end of the child list.
     // goto next node after the last descendant of aNode in
     // a preorder DOM traversal.
-    checkNode = aBoundary.GetContainer()->GetNextNonChildNode(aRoot);
+    checkNode = aNode->GetNextNonChildNode(aRoot);
   }
 
   while (checkNode && !IsSpellCheckingTextNode(checkNode)) {
@@ -224,30 +224,24 @@ static nsINode* FindNextTextNode(const RangeBoundaryBase<PT, RT>& aBoundary,
 //    SetPosition(). You might think of the soft boundary as being this initial
 //    position.
 
-template nsresult mozInlineSpellWordUtil::SetPositionAndEnd(
-    const RangeBoundary&, const RangeBoundary&);
-template nsresult mozInlineSpellWordUtil::SetPositionAndEnd(
-    const RawRangeBoundary&, const RawRangeBoundary&);
-
-template <typename PT, typename RT>
-nsresult mozInlineSpellWordUtil::SetPositionAndEnd(
-    const RangeBoundaryBase<PT, RT>& aCurrentPosition,
-    const RangeBoundaryBase<PT, RT>& aEndBoundary) {
+nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
+                                                   int32_t aPositionOffset,
+                                                   nsINode* aEndNode,
+                                                   int32_t aEndOffset) {
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
-          ("%s: aCurrentPosition=(%s), aEndBoundary=(%s)", __FUNCTION__,
-           mozilla::ToString(aCurrentPosition).c_str(),
-           mozilla::ToString(aEndBoundary).c_str()));
+          ("%s: pos=(%p, %i), end=(%p, %i)", __FUNCTION__, aPositionNode,
+           aPositionOffset, aEndNode, aEndOffset));
 
-  MOZ_ASSERT(aCurrentPosition.IsSetAndInComposedDoc());
-  MOZ_ASSERT(aEndBoundary.IsSetAndInComposedDoc());
+  MOZ_ASSERT(aPositionNode, "Null begin node?");
+  MOZ_ASSERT(aEndNode, "Null end node?");
 
   MOZ_ASSERT(mRootNode, "Not initialized");
 
   // Find a appropriate root if we are dealing with contenteditable nodes which
   // are in the shadow DOM.
   if (mIsContentEditableOrDesignMode) {
-    nsINode* rootNode = aCurrentPosition.GetContainer()->SubtreeRoot();
-    if (rootNode != aEndBoundary.GetContainer()->SubtreeRoot()) {
+    nsINode* rootNode = aPositionNode->SubtreeRoot();
+    if (rootNode != aEndNode->SubtreeRoot()) {
       return NS_ERROR_FAILURE;
     }
 
@@ -258,27 +252,19 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(
 
   mSoftText.Invalidate();
 
-  RawRangeBoundary currentPosition = aCurrentPosition.AsRaw();
-  if (!IsSpellCheckingTextNode(currentPosition.GetContainer())) {
+  if (!IsSpellCheckingTextNode(aPositionNode)) {
     // Start at the start of the first text node after aNode/aOffset.
-    if (nsINode* nextTextNode = FindNextTextNode(currentPosition, mRootNode)) {
-      currentPosition = RawRangeBoundary::StartOfParent(*nextTextNode);
-    } else {
-      currentPosition = RawRangeBoundary();
-    }
+    aPositionNode = FindNextTextNode(aPositionNode, aPositionOffset, mRootNode);
+    aPositionOffset = 0;
   }
-  NodeOffset softBegin = NodeOffset(currentPosition);
+  NodeOffset softBegin = NodeOffset(aPositionNode, aPositionOffset);
 
-  RawRangeBoundary endBoundary = aEndBoundary.AsRaw();
-  if (!IsSpellCheckingTextNode(endBoundary.GetContainer())) {
+  if (!IsSpellCheckingTextNode(aEndNode)) {
     // End at the start of the first text node after aEndNode/aEndOffset.
-    if (nsINode* nextTextNode = FindNextTextNode(endBoundary, mRootNode)) {
-      endBoundary = RawRangeBoundary::StartOfParent(*nextTextNode);
-    } else {
-      endBoundary = RawRangeBoundary();
-    }
+    aEndNode = FindNextTextNode(aEndNode, aEndOffset, mRootNode);
+    aEndOffset = 0;
   }
-  NodeOffset softEnd = NodeOffset(endBoundary);
+  NodeOffset softEnd = NodeOffset(aEndNode, aEndOffset);
 
   nsresult rv = EnsureWords(std::move(softBegin), std::move(softEnd));
   if (NS_FAILED(rv)) {
@@ -799,7 +785,7 @@ static void CheckLeavingBreakElement(nsINode* aNode, void* aClosure) {
 void mozInlineSpellWordUtil::NormalizeWord(nsAString& aWord) {
   nsAutoString result;
   ::NormalizeWord(aWord, 0, aWord.Length(), result);
-  aWord = std::move(result);
+  aWord = result;
 }
 
 void mozInlineSpellWordUtil::SoftText::AdjustBeginAndBuildText(

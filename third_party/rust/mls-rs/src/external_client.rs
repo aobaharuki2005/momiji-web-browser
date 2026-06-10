@@ -4,11 +4,7 @@
 
 use crate::{
     client::MlsError,
-    group::{
-        cipher_suite_provider, framing::MlsMessage, message_processor::validate_key_package,
-        ExportedTree,
-    },
-    time::MlsTime,
+    group::{framing::MlsMessage, message_processor::validate_key_package, ExportedTree},
     KeyPackage,
 };
 
@@ -80,14 +76,12 @@ where
         &self,
         group_info: MlsMessage,
         tree_data: Option<ExportedTree<'_>>,
-        maybe_time: Option<MlsTime>,
     ) -> Result<ExternalGroup<C>, MlsError> {
         ExternalGroup::join(
             self.config.clone(),
             self.signing_data.clone(),
             group_info,
             tree_data,
-            maybe_time,
         )
         .await
     }
@@ -100,26 +94,7 @@ where
         &self,
         snapshot: ExternalSnapshot,
     ) -> Result<ExternalGroup<C>, MlsError> {
-        #[cfg(feature = "tree_index")]
-        let identity_provider = self.config.identity_provider();
-
-        let cipher_suite_provider = cipher_suite_provider(
-            self.config.crypto_provider(),
-            snapshot.state.context.cipher_suite,
-        )?;
-
-        Ok(ExternalGroup {
-            config: self.config.clone(),
-            signing_data: self.signing_data.clone(),
-            state: snapshot
-                .state
-                .import(
-                    #[cfg(feature = "tree_index")]
-                    &identity_provider,
-                )
-                .await?,
-            cipher_suite_provider,
-        })
+        ExternalGroup::from_snapshot(self.config.clone(), snapshot).await
     }
 
     /// Load an existing observed group by loading a snapshot that was
@@ -134,14 +109,13 @@ where
     ) -> Result<ExternalGroup<C>, MlsError> {
         snapshot.state.public_tree.nodes = tree_data.0.into_owned();
 
-        self.load_group(snapshot).await
+        ExternalGroup::from_snapshot(self.config.clone(), snapshot).await
     }
 
     #[cfg_attr(not(mls_build_async), maybe_async::must_be_sync)]
     pub async fn validate_key_package(
         &self,
         key_package: MlsMessage,
-        timestamp: Option<MlsTime>,
     ) -> Result<KeyPackage, MlsError> {
         let version = key_package.version;
 
@@ -157,7 +131,7 @@ where
 
         let id = self.config.identity_provider();
 
-        validate_key_package(&key_package, version, &cs, &id, timestamp).await?;
+        validate_key_package(&key_package, version, &cs, &id).await?;
 
         Ok(key_package)
     }
@@ -181,7 +155,7 @@ pub(crate) mod tests_utils {
     async fn external_client_can_validate_key_package() {
         let kp = test_key_package_message(TEST_PROTOCOL_VERSION, TEST_CIPHER_SUITE, "john").await;
         let server = TestExternalClientBuilder::new_for_test().build();
-        let validated_kp = server.validate_key_package(kp.clone(), None).await.unwrap();
+        let validated_kp = server.validate_key_package(kp.clone()).await.unwrap();
 
         assert_eq!(kp.into_key_package().unwrap(), validated_kp);
     }

@@ -9,24 +9,45 @@ const gExpectedHistory = {
 };
 
 async function get_remote_history(browser) {
-  let sessionHistory = browser.browsingContext?.sessionHistory;
-  if (!sessionHistory) {
-    return null;
+  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+    let sessionHistory = browser.browsingContext?.sessionHistory;
+    if (!sessionHistory) {
+      return null;
+    }
+
+    let result = {
+      index: sessionHistory.index,
+      entries: [],
+    };
+
+    for (let i = 0; i < sessionHistory.count; i++) {
+      let entry = sessionHistory.getEntryAtIndex(i);
+      result.entries.push({
+        uri: entry.URI.spec,
+        title: entry.title,
+      });
+    }
+    return result;
   }
 
-  let result = {
-    index: sessionHistory.index,
-    entries: [],
-  };
+  return SpecialPowers.spawn(browser, [], () => {
+    let webNav = content.docShell.QueryInterface(Ci.nsIWebNavigation);
+    let sessionHistory = webNav.sessionHistory;
+    let result = {
+      index: sessionHistory.index,
+      entries: [],
+    };
 
-  for (let i = 0; i < sessionHistory.count; i++) {
-    let entry = sessionHistory.getEntryAtIndex(i);
-    result.entries.push({
-      uri: entry.URI.spec,
-      title: entry.title,
-    });
-  }
-  return result;
+    for (let i = 0; i < sessionHistory.count; i++) {
+      let entry = sessionHistory.legacySHistory.getEntryAtIndex(i);
+      result.entries.push({
+        uri: entry.URI.spec,
+        title: entry.title,
+      });
+    }
+
+    return result;
+  });
 }
 
 var check_history = async function () {

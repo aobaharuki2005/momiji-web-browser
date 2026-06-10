@@ -19,7 +19,7 @@ const MAX_SUGGESTIONS = 15;
  * - search-cleared: when the search box is emptied
  * - search-result: when a search is made and a result is selected
  */
-class InspectorSearch extends EventEmitter {
+class InspectorSearch {
   /**
    * @param {InspectorPanel} inspector
    *        The InspectorPanel to access the inspector commands for
@@ -37,7 +37,6 @@ class InspectorSearch extends EventEmitter {
    *        selection to next match.
    */
   constructor(inspector, input, clearBtn, prevBtn, nextBtn) {
-    super();
     this.inspector = inspector;
     this.searchBox = input;
     this.searchClearButton = clearBtn;
@@ -58,6 +57,7 @@ class InspectorSearch extends EventEmitter {
     this.searchClearButton.addEventListener("click", this._onClearSearch);
 
     this.autocompleter = new SelectorAutocompleter(inspector, input);
+    EventEmitter.decorate(this);
   }
   destroy() {
     this.searchBox.removeEventListener("keydown", this._onKeyDown, true);

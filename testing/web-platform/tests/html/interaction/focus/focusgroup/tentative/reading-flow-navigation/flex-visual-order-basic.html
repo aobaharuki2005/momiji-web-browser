@@ -8,7 +8,6 @@
 <script src="/resources/testdriver.js"></script>
 <script src="/resources/testdriver-vendor.js"></script>
 <script src="/resources/testdriver-actions.js"></script>
-<script src="/shadow-dom/focus-navigation/resources/focus-utils.js"></script>
 <script src="../resources/focusgroup-utils.js"></script>
 
 <style>
@@ -30,9 +29,13 @@
   promise_test(async t => {
     // Expected visual order due to flex-direction: row-reverse and reading-flow: flex-visual
     // Visual order: item3, item2, item1
-    const elementsInVisualOrder = [item3, item2, item1];
+    const elementsInVisualOrder = [
+      document.getElementById("item3"),
+      document.getElementById("item2"),
+      document.getElementById("item1")
+    ];
 
-    await assert_directional_navigation_bidirectional(elementsInVisualOrder);
+    await assert_focus_navigation_bidirectional(elementsInVisualOrder);
   }, "Focusgroup navigation should respect reading-flow: flex-visual order instead of DOM order.");
 
 </script>

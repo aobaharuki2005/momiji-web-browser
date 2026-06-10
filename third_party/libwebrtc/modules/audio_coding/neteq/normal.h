@@ -17,6 +17,7 @@
 #include "api/neteq/neteq.h"
 #include "modules/audio_coding/neteq/statistics_calculator.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/numerics/safe_conversions.h"
 
 namespace webrtc {
 
@@ -41,6 +42,8 @@ class Normal {
         background_noise_(background_noise),
         expand_(expand),
         samples_per_ms_(CheckedDivExact(fs_hz_, 1000)),
+        default_win_slope_Q14_(
+            dchecked_cast<uint16_t>((1 << 14) / samples_per_ms_)),
         statistics_(statistics) {}
 
   virtual ~Normal() {}
@@ -65,6 +68,7 @@ class Normal {
   const BackgroundNoise& background_noise_;
   Expand* expand_;
   const size_t samples_per_ms_;
+  const int16_t default_win_slope_Q14_;
   StatisticsCalculator* const statistics_;
 };
 

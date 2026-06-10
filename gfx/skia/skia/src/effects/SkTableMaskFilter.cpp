@@ -78,22 +78,14 @@ bool SkTableMaskFilterImpl::filterMask(SkMaskBuilder* dst, const SkMask& src,
     if (src.fFormat != SkMask::kA8_Format) {
         return false;
     }
-    // SkAlign4 overflows when too close to INT32_MAX, so reject when too big.
-    constexpr int32_t kMaxWidth = 1 << 30;
-    if (src.fBounds.width() > kMaxWidth) {
-        return false;
-    }
+
     dst->bounds() = src.fBounds;
     dst->rowBytes() = SkAlign4(dst->fBounds.width());
     dst->format() = SkMask::kA8_Format;
     dst->image() = nullptr;
 
     if (src.fImage) {
-        auto imgSize = dst->computeImageSize();
-        if (imgSize == 0) {
-            return false;
-        }
-        dst->image() = SkMaskBuilder::AllocImage(imgSize);
+        dst->image() = SkMaskBuilder::AllocImage(dst->computeImageSize());
 
         const uint8_t* srcP = src.fImage;
         uint8_t* dstP = dst->image();

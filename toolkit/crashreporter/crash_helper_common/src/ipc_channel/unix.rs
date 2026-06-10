@@ -6,6 +6,8 @@ use std::process;
 
 #[cfg(any(target_os = "android", target_os = "linux"))]
 use crate::platform::linux::unix_socketpair;
+#[cfg(target_os = "macos")]
+use crate::platform::macos::unix_socketpair;
 use crate::{ipc_channel::IPCChannelError, IPCConnector, IPCListener, Pid};
 
 pub struct IPCChannel {
@@ -15,15 +17,15 @@ pub struct IPCChannel {
 }
 
 impl IPCChannel {
-    /// Create a new IPC channel for use between the browser main process and
-    /// the crash helper. This includes a dummy listener and two connected
-    /// endpoints. The the server-side endpoint can be inherited by a child
-    /// process, the client-side endpoint cannot.
+    /// Create a new IPCChannel, this includes a listening endpoint that
+    /// will use the current process PID as part of its address and two
+    /// connected endpoints. The listener and the server-side endpoint can be
+    /// inherited by a child process, the client-side endpoint cannot.
     pub fn new() -> Result<IPCChannel, IPCChannelError> {
         let listener = IPCListener::new(process::id() as Pid)?;
 
         // Only the server-side socket will be left open after an exec().
-        let pair = unix_socketpair()?;
+        let pair = unix_socketpair().map_err(IPCChannelError::SocketPair)?;
         let client_endpoint = IPCConnector::from_fd(pair.0)?;
         let server_endpoint = IPCConnector::from_fd_inheritable(pair.1)?;
 
@@ -34,8 +36,9 @@ impl IPCChannel {
         })
     }
 
-    /// Deconstruct the IPC channel, returning the listener, the connected
-    /// server-side endpoint and the connected client-side endpoint.
+    /// Deconstruct the IPC channel, returning the listening endpoint,
+    /// the connected server-side endpoint and the connected client-side
+    /// endpoint.
     pub fn deconstruct(self) -> (IPCListener, IPCConnector, IPCConnector) {
         (self.listener, self.server_endpoint, self.client_endpoint)
     }
@@ -50,7 +53,7 @@ impl IPCClientChannel {
     /// Create a new IPC channel for use between one of the browser's child
     /// processes and the crash helper.
     pub fn new() -> Result<IPCClientChannel, IPCChannelError> {
-        let pair = unix_socketpair()?;
+        let pair = unix_socketpair().map_err(IPCChannelError::SocketPair)?;
         let client_endpoint = IPCConnector::from_fd(pair.0)?;
         let server_endpoint = IPCConnector::from_fd(pair.1)?;
 
@@ -60,8 +63,9 @@ impl IPCClientChannel {
         })
     }
 
-    /// Deconstruct the IPC channel, returning the connected server-side
-    /// endpoint and the connected client-side endpoint.
+    /// Deconstruct the IPC channel, returning the listening endpoint,
+    /// the connected server-side endpoint and the connected client-side
+    /// endpoint.
     pub fn deconstruct(self) -> (IPCConnector, IPCConnector) {
         (self.server_endpoint, self.client_endpoint)
     }

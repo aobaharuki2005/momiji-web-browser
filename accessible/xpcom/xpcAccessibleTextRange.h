@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,8 +27,6 @@ class xpcAccessibleTextRange final : public nsIAccessibleTextRange {
  public:
   explicit xpcAccessibleTextRange(TextRange& aRange) { SetRange(aRange); }
 
-  xpcAccessibleTextRange& operator=(const xpcAccessibleTextRange&) = delete;
-
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetStartContainer(nsIAccessibleText** aAnchor) final;
@@ -44,10 +44,13 @@ class xpcAccessibleTextRange final : public nsIAccessibleTextRange {
   NS_INLINE_DECL_STATIC_IID(NS_ACCESSIBLETEXTRANGE_IMPL_IID)
 
  private:
-  xpcAccessibleTextRange() = default;
-  ~xpcAccessibleTextRange() = default;
+  xpcAccessibleTextRange() {}
+
+  ~xpcAccessibleTextRange() {}
 
   friend class xpcAccessibleHyperText;
+
+  xpcAccessibleTextRange& operator=(const xpcAccessibleTextRange&) = delete;
 
   void SetRange(TextRange& aRange);
 

@@ -5,8 +5,6 @@
 
   </script>
   <style>
-    @custom-media --visible (min-width: 1px);
-
     div {
       width: 1000px;
       height: 100px;
@@ -23,12 +21,6 @@
     @media (prefers-color-scheme: dark) {
       div {
         background-color: darkblue;
-      }
-    }
-
-    @media (--visible) {
-      div {
-        border: 5px solid hotpink;
       }
     }
   </style>

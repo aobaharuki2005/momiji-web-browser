@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "mls-rs-provider-sqlite"
-version = "0.22.0"
+version = "0.15.0"
 build = false
 autolib = false
 autobins = false
@@ -50,18 +50,20 @@ name = "mls_rs_provider_sqlite"
 path = "src/lib.rs"
 
 [dependencies]
-async-trait = "0.1.74"
+async-trait = "^0.1"
 maybe-async = "0.2.10"
-thiserror = "2"
+rand = "0.8"
+thiserror = "1.0.40"
 
 [dependencies.hex]
 version = "0.4"
 
 [dependencies.mls-rs-core]
-version = "0.26"
+version = "0.21.0"
+path = "../mls-rs-core"
 
 [dependencies.rusqlite]
-version = "0.37"
+version = "^0.31"
 default-features = false
 
 [dependencies.wasm-bindgen]
@@ -75,7 +77,6 @@ features = ["zeroize_derive"]
 [dev-dependencies]
 anyhow = "1"
 assert_matches = "1"
-rand = "0.9"
 tempfile = "3"
 
 [lints.rust.unexpected_cfgs]

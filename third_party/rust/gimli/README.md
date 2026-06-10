@@ -26,9 +26,11 @@
 
 ## Install
 
-To add a `gimli` dependency to your `Cargo.toml`, run:
-```console
-$ cargo add gimli
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+gimli = "0.31.0"
 ```
 
 The minimum supported Rust version is:
@@ -45,11 +47,6 @@ The minimum supported Rust version is:
   * [A simple `.debug_info` parser](./crates/examples/src/bin/simple.rs)
 
   * [A simple `.debug_line` parser](./crates/examples/src/bin/simple_line.rs)
-
-  * [A simple DWARF writer](./crates/examples/src/bin/simple_write.rs)
-
-  * [A simple DWARF converter](./crates/examples/src/bin/simple_convert.rs)
-    to read DWARF sections then write them back out again.
 
   * [A `dwarfdump` clone](./crates/examples/src/bin/dwarfdump.rs)
 

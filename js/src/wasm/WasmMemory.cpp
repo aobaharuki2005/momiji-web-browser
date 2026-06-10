@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ *
  * Copyright 2021 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,11 +18,15 @@
 
 #include "wasm/WasmMemory.h"
 
+#include "mozilla/MathAlgorithms.h"
+
 #include "js/Conversions.h"
 #include "js/ErrorReport.h"
 #include "vm/ArrayBufferObject.h"
 #include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmProcess.h"
+
+using mozilla::IsPowerOfTwo;
 
 using namespace js;
 using namespace js::wasm;
@@ -60,25 +66,6 @@ bool wasm::ToAddressType(JSContext* cx, HandleValue value,
   return true;
 }
 
-bool wasm::ToPageSize(JSContext* cx, HandleValue value, PageSize* pageSize) {
-  if (!value.isInt32()) {
-    JS_ReportErrorASCII(cx, "page size must be an integer");
-    return false;
-  }
-  uint32_t pageSizeBytes = uint32_t(value.toInt32());
-  if (pageSizeBytes == PageSizeInBytes(PageSize::Standard)) {
-    *pageSize = PageSize::Standard;
-#ifdef ENABLE_WASM_CUSTOM_PAGE_SIZES
-  } else if (pageSizeBytes == PageSizeInBytes(PageSize::Tiny)) {
-    *pageSize = PageSize::Tiny;
-#endif
-  } else {
-    JS_ReportErrorASCII(cx, "bad page size");
-    return false;
-  }
-  return true;
-}
-
 /*
  * [SMDOC] Linear memory addresses and bounds checking
  *
@@ -100,8 +87,8 @@ bool wasm::ToPageSize(JSContext* cx, HandleValue value, PageSize* pageSize) {
  *   f32.load offset=8
  *
  * The address is 128; the offset is 8. The memory base is not observable to
- * wasm. Note that the address comes from the wasm value stack, but the offset
- * is an immediate.
+ * wasm. Note that the address comes from wasm value stack, but the offset is an
+ * immediate.
  *
  * The "effective address" (EA) is the non-overflowed sum of the address and the
  * offset. (If the sum overflows, the program traps.) For the above, the

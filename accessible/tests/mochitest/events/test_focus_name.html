@@ -15,9 +15,22 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    const gFocusHandler = {
-      handleEvent(aEvent) {
-        const elm = aEvent.target;
+    /**
+     * Checker for invokers.
+     */
+    function actionChecker(aID, aDescription) {
+      this.__proto__ = new invokerChecker(EVENT_FOCUS, aID);
+
+      this.check = function actionChecker_check(aEvent) {
+        var target = aEvent.accessible;
+        is(target.description, aDescription,
+           "Wrong description for " + prettyName(target));
+      };
+    }
+
+    var gFocusHandler = {
+      handleEvent: function gFocusHandler_handleEvent(aEvent) {
+        var elm = aEvent.target;
         if (elm.nodeType != Node.ELEMENT_NODE)
           return;
 
@@ -27,11 +40,11 @@
       },
     };
 
-    const gBlurHandler = {
-      handleEvent(aEvent) {
+    var gBlurHandler = {
+      handleEvent: function gBlurHandler_handleEvent(aEvent) {
         gTooltipElm.style.display = "none";
 
-        const elm = aEvent.target;
+        var elm = aEvent.target;
         if (elm.nodeType == Node.ELEMENT_NODE)
           elm.removeAttribute("aria-describedby");
       },
@@ -41,11 +54,16 @@
      * Do tests.
      */
 
-    let gButtonElm = null;
-    let gTextboxElm = null;
-    let gTooltipElm = null;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
 
-    async function doTests() {
+    var gQueue = null;
+
+    var gButtonElm = null;
+    var gTextboxElm = null;
+    var gTooltipElm = null;
+
+    function doTests() {
       gButtonElm = getNode("button");
       gTextboxElm = getNode("textbox");
       gTooltipElm = getNode("tooltip");
@@ -57,32 +75,19 @@
 
       // The aria-describedby is changed on DOM focus. Accessible description
       // should be updated when a11y focus is fired.
-      const descr = "It's a tooltip";
+      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_FOCUS);
+      gQueue.onFinish = function() {
+        gButtonElm.removeEventListener("focus", gFocusHandler);
+        gButtonElm.removeEventListener("blur", gBlurHandler);
+        gTextboxElm.removeEventListener("focus", gFocusHandler);
+        gTextboxElm.removeEventListener("blur", gBlurHandler);
+      };
 
-      let focused = waitForEvent(EVENT_FOCUS, "button");
-      selectAllTextAndFocus("button");
-      let evt = await focused;
-      is(
-        evt.accessible.description,
-        descr,
-        "Wrong description for " + prettyName(evt.accessible)
-      );
+      var descr = "It's a tooltip";
+      gQueue.push(new synthFocus("button", new actionChecker("button", descr)));
+      gQueue.push(new synthTab("textbox", new actionChecker("textbox", descr)));
 
-      focused = waitForEvent(EVENT_FOCUS, "textbox");
-      synthesizeKey("KEY_Tab", { shiftKey: false });
-      evt = await focused;
-      is(
-        evt.accessible.description,
-        descr,
-        "Wrong description for " + prettyName(evt.accessible)
-      );
-
-      gButtonElm.removeEventListener("focus", gFocusHandler);
-      gButtonElm.removeEventListener("blur", gBlurHandler);
-      gTextboxElm.removeEventListener("focus", gFocusHandler);
-      gTextboxElm.removeEventListener("blur", gBlurHandler);
-
-      SimpleTest.finish();
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

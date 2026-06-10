@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,7 +12,6 @@
 #include "MultipartBlobImpl.h"
 #include "StreamBlobImpl.h"
 #include "StringBlobImpl.h"
-#include "js/Object.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/ReadableStream.h"
@@ -71,7 +72,7 @@ void Blob::MakeValidBlobType(nsAString& aType) {
 }
 
 /* static */
-already_AddRefed<Blob> Blob::Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl) {
+Blob* Blob::Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl) {
   MOZ_ASSERT(aImpl);
 
   MOZ_ASSERT(aGlobal);
@@ -79,9 +80,7 @@ already_AddRefed<Blob> Blob::Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl) {
     return nullptr;
   }
 
-  RefPtr<Blob> blob =
-      aImpl->IsFile() ? new File(aGlobal, aImpl) : new Blob(aGlobal, aImpl);
-  return blob.forget();
+  return aImpl->IsFile() ? new File(aGlobal, aImpl) : new Blob(aGlobal, aImpl);
 }
 
 /* static */
@@ -122,16 +121,6 @@ Blob::Blob(nsIGlobalObject* aGlobal, BlobImpl* aImpl)
 }
 
 Blob::~Blob() = default;
-
-already_AddRefed<Blob> Blob::Clone() const {
-  RefPtr<Blob> clone = Create(GetParentObject(), Impl());
-  return clone.forget();
-}
-
-bool Blob::HasExpandos() const {
-  const JSObject* wrapper = GetWrapperPreserveColor();
-  return wrapper && JS::NativeObjectHasOwnProperties(wrapper);
-}
 
 bool Blob::IsFile() const { return mImpl->IsFile(); }
 
@@ -305,8 +294,8 @@ already_AddRefed<Promise> Blob::ConsumeBody(
   }
 
   return BodyConsumer::Create(mGlobal, mainThreadEventTarget, inputStream,
-                              nullptr, aConsumeType, mImpl, VoidString(),
-                              VoidCString(), VoidCString(),
+                              nullptr, aConsumeType, VoidCString(),
+                              VoidString(), VoidCString(), VoidCString(),
                               MutableBlobStorage::eOnlyInMemory, aRv);
 }
 

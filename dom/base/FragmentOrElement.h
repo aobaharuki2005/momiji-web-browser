@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,8 +10,8 @@
  * utility methods for subclasses, and so forth.
  */
 
-#ifndef FragmentOrElement_h_
-#define FragmentOrElement_h_
+#ifndef FragmentOrElement_h___
+#define FragmentOrElement_h___
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumSet.h"
@@ -19,10 +21,12 @@
 #include "nsAtomHashKeys.h"
 #include "nsCycleCollectionParticipant.h"  // NS_DECL_CYCLE_*
 #include "nsIContent.h"                    // base class
+#include "nsIHTMLCollection.h"
 #include "nsIWeakReferenceUtils.h"
-#include "nsTHashSet.h"
 
 class ContentUnbinder;
+class nsContentList;
+class nsLabelsNodeList;
 class nsDOMAttributeMap;
 class nsDOMTokenList;
 class nsIControllers;
@@ -32,19 +36,16 @@ class nsDOMStringMap;
 class nsIURI;
 
 namespace mozilla {
-struct StyleLockedDeclarationBlock;
+class DeclarationBlock;
 enum class ContentRelevancyReason;
 using ContentRelevancy = EnumSet<ContentRelevancyReason, uint8_t>;
 class ElementAnimationData;
 namespace dom {
-class ContentList;
+struct CustomElementData;
 class Element;
-class HTMLCollection;
-class LabelsNodeList;
 class PopoverData;
 class StylePropertyMap;
 class StylePropertyMapReadOnly;
-struct CustomElementData;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -110,8 +111,13 @@ class FragmentOrElement : public nsIContent {
   void DestroyContent() override;
   void SaveSubtreeState() override;
 
-  HTMLCollection* Children();
-  uint32_t ChildElementCount();
+  nsIHTMLCollection* Children();
+  uint32_t ChildElementCount() {
+    if (!HasChildren()) {
+      return 0;
+    }
+    return Children()->Length();
+  }
 
   RadioGroupContainer& OwnedRadioGroupContainer() {
     auto* slots = ExtendedDOMSlots();
@@ -176,7 +182,7 @@ class FragmentOrElement : public nsIContent {
     /**
      * Holds any SMIL override style declaration for this element.
      */
-    RefPtr<mozilla::StyleLockedDeclarationBlock> mSMILOverrideStyleDeclaration;
+    RefPtr<DeclarationBlock> mSMILOverrideStyleDeclaration;
 
     /**
      * The controllers of the XUL Element.
@@ -186,7 +192,7 @@ class FragmentOrElement : public nsIContent {
     /**
      * An object implementing the .labels property for this element.
      */
-    RefPtr<mozilla::dom::LabelsNodeList> mLabelsList;
+    RefPtr<nsLabelsNodeList> mLabelsList;
 
     /**
      * ShadowRoot bound to the element.
@@ -279,69 +285,6 @@ class FragmentOrElement : public nsIContent {
     nsTHashMap<RefPtr<nsAtom>, std::pair<Maybe<nsTArray<nsWeakPtr>>,
                                          Maybe<nsTArray<RefPtr<Element>>>>>
         mAttrElementsMap;
-
-    typedef bool (*AttrTargetObserver)(Element* aOldElement,
-                                       Element* aNewelement,
-                                       Element* aThisElement);
-    struct AttrElementObserverCallbackData {
-      nsWeakPtr mElement;
-      RefPtr<nsAtom> mAttr;
-    };
-    struct AttrElementObserverData {
-      // Used as the value for |aOldElement| when calling an AttrTargetObserver
-      // callback.
-      nsWeakPtr mLastKnownAttrElement;  // TODO: should be an array
-
-      // Used to add/remove ID target observers when the attribute value changes
-      // or the attribute host is added to or removed from a document or shadow
-      // root.
-      RefPtr<nsAtom> mLastKnownAttrValue;  // TODO: should be a ParsedAttr
-      nsTHashSet<AttrTargetObserver> mObservers;
-
-      // Used for removing the IDTargetObserver(s)
-      UniquePtr<AttrElementObserverCallbackData> mCallbackData;
-    };
-    nsTHashMap<RefPtr<nsAtom>, AttrElementObserverData> mAttrElementObserverMap;
-
-    /**
-     * Callback called when an element's resolved reference target changes.
-     * @param aData The callback data which was stored using
-     * AddReferenceTargetChangeObserver.
-     * @return true to keep the callback in the callback set, false to remove
-     * it.
-     */
-    typedef bool (*ReferenceTargetChangeObserver)(void* aData);
-
-    struct ReferenceTargetChangeCallback {
-      ReferenceTargetChangeObserver mObserver;
-      void* mData;
-    };
-
-    struct ReferenceTargetChangeCallbackEntry : public PLDHashEntryHdr {
-      typedef const ReferenceTargetChangeCallback KeyType;
-      typedef const ReferenceTargetChangeCallback* KeyTypePointer;
-
-      explicit ReferenceTargetChangeCallbackEntry(
-          const ReferenceTargetChangeCallback* aKey)
-          : mKey(*aKey) {}
-      ReferenceTargetChangeCallbackEntry(
-          ReferenceTargetChangeCallbackEntry&& aOther)
-          : PLDHashEntryHdr(std::move(aOther)), mKey(std::move(aOther.mKey)) {}
-
-      KeyType GetKey() const { return mKey; }
-      bool KeyEquals(KeyTypePointer aKey) const {
-        return aKey->mObserver == mKey.mObserver && aKey->mData == mKey.mData;
-      }
-
-      static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
-      static PLDHashNumber HashKey(KeyTypePointer aKey) {
-        return HashGeneric(aKey->mObserver, aKey->mData);
-      }
-      enum { ALLOW_MEMMOVE = true };
-
-      ReferenceTargetChangeCallback mKey;
-    };
-    nsTHashSet<ReferenceTargetChangeCallbackEntry> mReferenceTargetObservers;
   };
 
   class nsDOMSlots : public nsIContent::nsContentSlots {
@@ -369,7 +312,7 @@ class FragmentOrElement : public nsIContent {
     /**
      * An object implementing the .children property for this element.
      */
-    RefPtr<ContentList> mChildrenList;
+    RefPtr<nsContentList> mChildrenList;
 
     /**
      * An object implementing the .classList property for this element.
@@ -408,9 +351,13 @@ class FragmentOrElement : public nsIContent {
   void SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult& aError);
 
   // Override from nsINode
-  nsIContent::nsContentSlots* CreateSlots() override;
+  nsIContent::nsContentSlots* CreateSlots() override {
+    return new nsDOMSlots();
+  }
 
-  nsIContent::nsExtendedContentSlots* CreateExtendedSlots() final;
+  nsIContent::nsExtendedContentSlots* CreateExtendedSlots() final {
+    return new nsExtendedDOMSlots();
+  }
 
   nsDOMSlots* DOMSlots() { return static_cast<nsDOMSlots*>(Slots()); }
 
@@ -418,7 +365,20 @@ class FragmentOrElement : public nsIContent {
     return static_cast<nsDOMSlots*>(GetExistingSlots());
   }
 
-  nsExtendedDOMSlots* ExtendedDOMSlots();
+  nsExtendedDOMSlots* ExtendedDOMSlots() {
+    nsContentSlots* slots = GetExistingContentSlots();
+    if (!slots) {
+      FatSlots* fatSlots = new FatSlots();
+      mSlots = fatSlots;
+      return fatSlots;
+    }
+
+    if (!slots->GetExtendedContentSlots()) {
+      slots->SetExtendedContentSlots(CreateExtendedSlots(), true);
+    }
+
+    return static_cast<nsExtendedDOMSlots*>(slots->GetExtendedContentSlots());
+  }
 
   const nsExtendedDOMSlots* GetExistingExtendedDOMSlots() const {
     return static_cast<const nsExtendedDOMSlots*>(
@@ -440,4 +400,4 @@ class FragmentOrElement : public nsIContent {
   rv = FragmentOrElement::QueryInterface(aIID, aInstancePtr); \
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
 
-#endif /* FragmentOrElement_h_ */
+#endif /* FragmentOrElement_h___ */

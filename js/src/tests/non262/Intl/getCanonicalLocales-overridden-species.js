@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // Tests the getCanonicalLocales function for overriden Array[Symbol.species].
 
 Object.defineProperty(Array, Symbol.species, {

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,6 +14,7 @@ struct StackFrame {
   uint16_t mModIndex;  // The index of module that has this program counter.
 };
 
+#ifdef MOZ_GECKO_PROFILER
 static bool CompareByPC(const StackFrame& a, const StackFrame& b) {
   return a.mPC < b.mPC;
 }
@@ -19,6 +22,7 @@ static bool CompareByPC(const StackFrame& a, const StackFrame& b) {
 static bool CompareByIndex(const StackFrame& a, const StackFrame& b) {
   return a.mIndex < b.mIndex;
 }
+#endif
 
 }  // namespace
 
@@ -62,10 +66,19 @@ ProcessedStack GetStackAndModules(const std::vector<uintptr_t>& aPCs) {
 }
 
 BatchProcessedStackGenerator::BatchProcessedStackGenerator()
-    : mSortedRawModules(SharedLibraryInfo::GetInfoForSelf()) {
+#ifdef MOZ_GECKO_PROFILER
+    : mSortedRawModules(SharedLibraryInfo::GetInfoForSelf())
+#endif
+{
+#ifdef MOZ_GECKO_PROFILER
   mSortedRawModules.SortByAddress();
+#endif
 }
 
+#ifndef MOZ_GECKO_PROFILER
+static ProcessedStack GetStackAndModulesInternal(
+    std::vector<StackFrame>& aRawStack) {
+#else
 static ProcessedStack GetStackAndModulesInternal(
     std::vector<StackFrame>& aRawStack, SharedLibraryInfo& aSortedRawModules) {
   SharedLibraryInfo rawModules(aSortedRawModules);
@@ -115,6 +128,7 @@ static ProcessedStack GetStackAndModulesInternal(
   }
 
   std::sort(aRawStack.begin(), aRawStack.end(), CompareByIndex);
+#endif
 
   // Copy the information to the return value.
   ProcessedStack Ret;
@@ -124,6 +138,7 @@ static ProcessedStack GetStackAndModulesInternal(
     Ret.AddFrame(frame);
   }
 
+#ifdef MOZ_GECKO_PROFILER
   for (unsigned i = 0, n = rawModules.GetSize(); i != n; ++i) {
     const SharedLibrary& info = rawModules.GetEntry(i);
     mozilla::Telemetry::ProcessedStack::Module module = {
@@ -131,6 +146,7 @@ static ProcessedStack GetStackAndModulesInternal(
         nsCString(info.GetBreakpadId().c_str())};
     Ret.AddModule(module);
   }
+#endif
 
   return Ret;
 }
@@ -146,7 +162,11 @@ ProcessedStack BatchProcessedStackGenerator::GetStackAndModules(
     rawStack.push_back(Frame);
   }
 
+#if defined(MOZ_GECKO_PROFILER)
   return GetStackAndModulesInternal(rawStack, mSortedRawModules);
+#else
+  return GetStackAndModulesInternal(rawStack);
+#endif
 }
 
 ProcessedStack BatchProcessedStackGenerator::GetStackAndModules(
@@ -159,7 +179,11 @@ ProcessedStack BatchProcessedStackGenerator::GetStackAndModules(
     rawStack.push_back(Frame);
   }
 
+#if defined(MOZ_GECKO_PROFILER)
   return GetStackAndModulesInternal(rawStack, mSortedRawModules);
+#else
+  return GetStackAndModulesInternal(rawStack);
+#endif
 }
 
 }  // namespace mozilla::Telemetry

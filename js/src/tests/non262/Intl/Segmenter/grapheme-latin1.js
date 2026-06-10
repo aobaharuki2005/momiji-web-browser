@@ -1,3 +1,5 @@
+// |reftest| slow skip-if(!this.hasOwnProperty('Intl')||!this.Intl.Segmenter)
+
 // CRLF should be the only compound grapheme for Latin-1 strings.
 
 let segmenter = new Intl.Segmenter("en", {granularity: "grapheme"});

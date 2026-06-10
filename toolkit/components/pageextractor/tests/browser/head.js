@@ -4,10 +4,100 @@
 const BLANK_PAGE =
   "data:text/html;charset=utf-8,<!DOCTYPE html><title>Blank</title>Blank page";
 
-/** @type {import("../../../ml/tests/MLTestUtils.sys.mjs")} */
-const { MLTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/MLTestUtils.sys.mjs"
+/** @type {import("../../../../../netwerk/test/httpserver/httpd.sys.mjs")} */
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
 );
+
+/**
+ * Use a tagged template literal to create a page extraction actor test. This spins
+ * up an http server that serves the markup in a new tab. The page extractor can then
+ * be used on the page.
+ *
+ * @param {TemplateStringsArray} strings - The literal string parts.
+ * @param {...any} values - The interpolated expressions.
+ */
+async function html(strings, ...values) {
+  // Convert the arguments into markup.
+  let markup = "";
+  for (let i = 0; i < strings.length; i++) {
+    markup += strings[i];
+    if (i < values.length) {
+      markup += values[i];
+    }
+  }
+
+  markup = `<!DOCTYPE html><body>${markup}</body>`;
+
+  const { url, serverClosed } = serveOnce(markup);
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    url,
+    true // waitForLoad
+  );
+
+  const actor =
+    tab.linkedBrowser.browsingContext.currentWindowGlobal.getActor(
+      "PageExtractor"
+    );
+
+  return {
+    /**
+     * @type {PageExtractorParent}
+     */
+    actor,
+
+    tab,
+
+    /**
+     * Get a new page extractor, which can change when navigating pages.
+     *
+     * @returns {PageExtractorParent}
+     */
+    getPageExtractor() {
+      return tab.linkedBrowser.browsingContext.currentWindowGlobal.getActor(
+        "PageExtractor"
+      );
+    },
+
+    async cleanup() {
+      info("Cleaning up");
+      await serverClosed;
+      BrowserTestUtils.removeTab(tab);
+    },
+  };
+}
+
+/**
+ * Start an HTTP server that serves page.html with the provided HTML.
+ *
+ * @param {string} html
+ * @param {number} statusCode
+ */
+function serveOnce(html, statusCode = 200) {
+  info("Create server");
+  const server = new HttpServer();
+
+  const { promise, resolve } = Promise.withResolvers();
+
+  server.registerPathHandler("/page.html", (request, response) => {
+    info("Request received for: " + url);
+    response.setHeader("Content-Type", "text/html");
+    response.setStatusLine(request.httpVersion, statusCode);
+    response.write(html);
+    resolve(server.stop());
+  });
+
+  server.start(-1);
+
+  let { primaryHost, primaryPort } = server.identity;
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+  const url = `http://${primaryHost}:${primaryPort}/page.html`;
+  info("Server listening for: " + url);
+
+  return { url, serverClosed: promise };
+}
 
 /**
  * Click the reader-mode button if the reader-mode button is available.

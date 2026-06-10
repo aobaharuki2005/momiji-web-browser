@@ -1,11 +1,14 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "base/waitable_event.h"
 
-#include "mozilla/Mutex.h"
-#include "mozilla/CondVar.h"
+#include "base/condition_variable.h"
+#include "base/lock.h"
+#include "base/message_loop.h"
 
 // -----------------------------------------------------------------------------
 // A WaitableEvent on POSIX is implemented as a wait-list. Currently we don't
@@ -36,15 +39,15 @@ namespace base {
 WaitableEvent::WaitableEvent(bool manual_reset, bool initially_signaled)
     : kernel_(new WaitableEventKernel(manual_reset, initially_signaled)) {}
 
-WaitableEvent::~WaitableEvent() = default;
+WaitableEvent::~WaitableEvent() {}
 
 void WaitableEvent::Reset() {
-  mozilla::MutexAutoLock locked(kernel_->lock_);
+  AutoLock locked(kernel_->lock_);
   kernel_->signaled_ = false;
 }
 
 void WaitableEvent::Signal() {
-  mozilla::MutexAutoLock locked(kernel_->lock_);
+  AutoLock locked(kernel_->lock_);
 
   if (kernel_->signaled_) return;
 
@@ -59,7 +62,7 @@ void WaitableEvent::Signal() {
 }
 
 bool WaitableEvent::IsSignaled() {
-  mozilla::MutexAutoLock locked(kernel_->lock_);
+  AutoLock locked(kernel_->lock_);
 
   const bool result = kernel_->signaled_;
   if (result && !kernel_->manual_reset_) kernel_->signaled_ = false;
@@ -75,11 +78,11 @@ bool WaitableEvent::IsSignaled() {
 // -----------------------------------------------------------------------------
 class SyncWaiter : public WaitableEvent::Waiter {
  public:
-  SyncWaiter(mozilla::CondVar* cv, mozilla::Mutex* lock)
-      : fired_(false), cv_(cv), lock_(lock), signaling_event_(nullptr) {}
+  SyncWaiter(ConditionVariable* cv, Lock* lock)
+      : fired_(false), cv_(cv), lock_(lock), signaling_event_(NULL) {}
 
   bool Fire(WaitableEvent* signaling_event) override {
-    mozilla::MutexAutoLock locked(*lock_);
+    AutoLock locked(*lock_);
 
     if (fired_) {
       return false;
@@ -88,7 +91,7 @@ class SyncWaiter : public WaitableEvent::Waiter {
     fired_ = true;
     signaling_event_ = signaling_event;
 
-    cv_->NotifyAll();
+    cv_->Broadcast();
 
     // SyncWaiters are stack allocated on the stack of the blocking thread.
     return true;
@@ -116,20 +119,16 @@ class SyncWaiter : public WaitableEvent::Waiter {
 
  private:
   bool fired_;
-  mozilla::CondVar* const cv_;
-  mozilla::Mutex* const lock_;
+  ConditionVariable* const cv_;
+  Lock* const lock_;
   WaitableEvent* signaling_event_;  // The WaitableEvent which woke us
 };
 
 bool WaitableEvent::TimedWait(const TimeDelta& max_time) {
-  mozilla::Maybe<mozilla::TimeStamp> end_time;
-  if (max_time.ToInternalValue() >= 0) {
-    end_time.emplace(
-        mozilla::TimeStamp::Now() +
-        mozilla::TimeDuration::FromMilliseconds(max_time.InMillisecondsF()));
-  }
+  const TimeTicks end_time(TimeTicks::Now() + max_time);
+  const bool finite_time = max_time.ToInternalValue() >= 0;
 
-  kernel_->lock_.Lock();
+  kernel_->lock_.Acquire();
   if (kernel_->signaled_) {
     if (!kernel_->manual_reset_) {
       // In this case we were signaled when we had no waiters. Now that
@@ -137,25 +136,25 @@ bool WaitableEvent::TimedWait(const TimeDelta& max_time) {
       kernel_->signaled_ = false;
     }
 
-    kernel_->lock_.Unlock();
+    kernel_->lock_.Release();
     return true;
   }
 
-  mozilla::Mutex lock("TimedWait");
-  lock.Lock();
-  mozilla::CondVar cv(lock, "TimedWait");
+  Lock lock;
+  lock.Acquire();
+  ConditionVariable cv(&lock);
   SyncWaiter sw(&cv, &lock);
 
   Enqueue(&sw);
-  kernel_->lock_.Unlock();
+  kernel_->lock_.Release();
   // We are violating locking order here by holding the SyncWaiter lock but not
   // the WaitableEvent lock. However, this is safe because we don't lock @lock_
   // again before unlocking it.
 
   for (;;) {
-    const mozilla::TimeStamp current_time(mozilla::TimeStamp::Now());
+    const TimeTicks current_time(TimeTicks::Now());
 
-    if (sw.fired() || (end_time && current_time >= *end_time)) {
+    if (sw.fired() || (finite_time && current_time >= end_time)) {
       const bool return_value = sw.fired();
 
       // We can't acquire @lock_ before releasing @lock (because of locking
@@ -164,18 +163,18 @@ bool WaitableEvent::TimedWait(const TimeDelta& max_time) {
       // would be lost on an auto-reset WaitableEvent. Thus we call Disable
       // which makes sw::Fire return false.
       sw.Disable();
-      lock.Unlock();
+      lock.Release();
 
-      kernel_->lock_.Lock();
+      kernel_->lock_.Acquire();
       kernel_->Dequeue(&sw, &sw);
-      kernel_->lock_.Unlock();
+      kernel_->lock_.Release();
 
       return return_value;
     }
 
-    if (end_time) {
-      const mozilla::TimeDuration max_wait(*end_time - current_time);
-      cv.Wait(max_wait);
+    if (finite_time) {
+      const TimeDelta max_wait(end_time - current_time);
+      cv.TimedWait(max_wait);
     } else {
       cv.Wait();
     }
@@ -196,9 +195,7 @@ cmp_fst_addr(const std::pair<WaitableEvent*, unsigned>& a,
 }
 
 // static
-// MOZ_NO_THREAD_SAFETY_ANALYSIS: Complex control flow.
-size_t WaitableEvent::WaitMany(WaitableEvent** raw_waitables,
-                               size_t count) MOZ_NO_THREAD_SAFETY_ANALYSIS {
+size_t WaitableEvent::WaitMany(WaitableEvent** raw_waitables, size_t count) {
   DCHECK(count) << "Cannot wait on no events";
 
   // We need to acquire the locks in a globally consistent order. Thus we sort
@@ -220,8 +217,8 @@ size_t WaitableEvent::WaitMany(WaitableEvent** raw_waitables,
     DCHECK(waitables[i].first != waitables[i + 1].first);
   }
 
-  mozilla::Mutex lock("WaitMany");
-  mozilla::CondVar cv(lock, "WaitMany");
+  Lock lock;
+  ConditionVariable cv(&lock);
   SyncWaiter sw(&cv, &lock);
 
   const size_t r = EnqueueMany(&waitables[0], count, &sw);
@@ -235,10 +232,10 @@ size_t WaitableEvent::WaitMany(WaitableEvent** raw_waitables,
 
   // At this point, we hold the locks on all the WaitableEvents and we have
   // enqueued our waiter in them all.
-  lock.Lock();
+  lock.Acquire();
   // Release the WaitableEvent locks in the reverse order
   for (size_t i = 0; i < count; ++i) {
-    waitables[count - (1 + i)].first->kernel_->lock_.Unlock();
+    waitables[count - (1 + i)].first->kernel_->lock_.Release();
   }
 
   for (;;) {
@@ -246,7 +243,7 @@ size_t WaitableEvent::WaitMany(WaitableEvent** raw_waitables,
 
     cv.Wait();
   }
-  lock.Unlock();
+  lock.Release();
 
   // The address of the WaitableEvent which fired is stored in the SyncWaiter.
   WaitableEvent* const signaled_event = sw.signaled_event();
@@ -257,18 +254,13 @@ size_t WaitableEvent::WaitMany(WaitableEvent** raw_waitables,
   // remove our SyncWaiter from the wait-list
   for (size_t i = 0; i < count; ++i) {
     if (raw_waitables[i] != signaled_event) {
-      raw_waitables[i]->kernel_->lock_.Lock();
+      raw_waitables[i]->kernel_->lock_.Acquire();
       // There's no possible ABA issue with the address of the SyncWaiter here
       // because it lives on the stack. Thus the tag value is just the pointer
       // value again.
       raw_waitables[i]->kernel_->Dequeue(&sw, &sw);
-      raw_waitables[i]->kernel_->lock_.Unlock();
+      raw_waitables[i]->kernel_->lock_.Release();
     } else {
-      // By taking this lock here we ensure that |Signal| has completed by the
-      // time we return, because |Signal| holds this lock. This matches the
-      // behaviour of |Wait| and |TimedWait|.
-      raw_waitables[i]->kernel_->lock_.Lock();
-      raw_waitables[i]->kernel_->lock_.Unlock();
       signaled_index = i;
     }
   }
@@ -287,23 +279,21 @@ size_t WaitableEvent::WaitMany(WaitableEvent** raw_waitables,
 //   which was signaled, from the end of the array.
 // -----------------------------------------------------------------------------
 // static
-// MOZ_NO_THREAD_SAFETY_ANALYSIS: Complex control flow.
 size_t WaitableEvent::EnqueueMany(std::pair<WaitableEvent*, size_t>* waitables,
-                                  size_t count, Waiter* waiter)
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+                                  size_t count, Waiter* waiter) {
   if (!count) return 0;
 
-  waitables[0].first->kernel_->lock_.Lock();
+  waitables[0].first->kernel_->lock_.Acquire();
   if (waitables[0].first->kernel_->signaled_) {
     if (!waitables[0].first->kernel_->manual_reset_)
       waitables[0].first->kernel_->signaled_ = false;
-    waitables[0].first->kernel_->lock_.Unlock();
+    waitables[0].first->kernel_->lock_.Release();
     return count;
   }
 
   const size_t r = EnqueueMany(waitables + 1, count - 1, waiter);
   if (r) {
-    waitables[0].first->kernel_->lock_.Unlock();
+    waitables[0].first->kernel_->lock_.Release();
   } else {
     waitables[0].first->Enqueue(waiter);
   }

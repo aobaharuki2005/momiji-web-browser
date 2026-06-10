@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 
 #include <stdint.h>
 
-#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -38,9 +39,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/UnderlyingSinkCallbackHelpers.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
-#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WritableStream.h"
 #include "mozilla/dom/WritableStreamDefaultController.h"
 #include "nsCOMPtr.h"
@@ -301,9 +300,6 @@ void RTCRtpScriptTransformer::TransformFrame(
     // First frame. mProxy will know whether it's video or not by now.
     mVideo = mProxy->IsVideo();
     MOZ_ASSERT(mVideo.isSome());
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
-    mTimestampMaker.emplace(RTCStatsTimestampMaker::Create(*workerPrivate));
   }
 
   RefPtr<RTCEncodedFrameBase> domFrame;
@@ -326,12 +322,10 @@ void RTCRtpScriptTransformer::TransformFrame(
       }
     }
     domFrame = new RTCEncodedVideoFrame(mGlobal, std::move(aFrame),
-                                        ++mLastEnqueuedFrameCounter, this,
-                                        mTimestampMaker);
+                                        ++mLastEnqueuedFrameCounter, this);
   } else {
     domFrame = new RTCEncodedAudioFrame(mGlobal, std::move(aFrame),
-                                        ++mLastEnqueuedFrameCounter, this,
-                                        mTimestampMaker);
+                                        ++mLastEnqueuedFrameCounter, this);
   }
   mReadableSource->Enqueue(domFrame);
 }
@@ -432,10 +426,8 @@ JSObject* RTCRtpScriptTransformer::WrapObject(
 already_AddRefed<Promise> RTCRtpScriptTransformer::OnTransformedFrame(
     RTCEncodedFrameBase* aFrame, ErrorResult& aError) {
   // Spec says to skip frames that are out of order or have wrong owner
-  // We also skip frames that are unreasonably large
   if (aFrame->GetCounter() > mLastReceivedFrameCounter &&
-      aFrame->CheckOwner(this) && mProxy &&
-      aFrame->Size() <= std::numeric_limits<int>::max() / 4) {
+      aFrame->CheckOwner(this) && mProxy) {
     mLastReceivedFrameCounter = aFrame->GetCounter();
     // also skip if frame has been detached (transferred away)
     if (auto frame = aFrame->TakeFrame()) {

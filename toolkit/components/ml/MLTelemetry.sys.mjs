@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// @ts-nocheck - TODO - Remove this to type check this file.
-
 const lazy = {};
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
@@ -11,10 +9,6 @@ ChromeUtils.defineLazyGetter(lazy, "console", () => {
     maxLogLevelPref: "browser.ml.logLevel",
     prefix: "MLTelemetry",
   });
-});
-
-ChromeUtils.defineLazyGetter(lazy, "mlUtils", () => {
-  return Cc["@mozilla.org/ml-utils;1"].getService(Ci.nsIMLUtils);
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -36,10 +30,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * new MLTelemetry({ featureId: "ml-suggest-intent", flowId: "1234-5678" }).sessionStart({ interaction: "keyboard_shortcut"});
  */
 export class MLTelemetry {
-  static #systemMemoryMB = Math.round(
-    Services.sysinfo.getProperty("memsize") / 1024 / 1024
-  );
-
   /** @type {string} */
   #flowId;
   /** @type {string|undefined} */
@@ -51,8 +41,8 @@ export class MLTelemetry {
    * Creates a new MLTelemetry instance.
    *
    * @param {object} [options] - Configuration options.
-   * @param {string | null} [options.featureId] - The identifier for the ML feature.
-   * @param {string | null} [options.flowId] - An optional unique identifier for
+   * @param {string} [options.featureId] - The identifier for the ML feature.
+   * @param {string} [options.flowId] - An optional unique identifier for
    * this flow. If not provided, a new UUID will be generated.
    */
   constructor(options = {}) {
@@ -208,11 +198,11 @@ export class MLTelemetry {
    *
    * @param {object} options - Engine creation failure options.
    * @param {string} [options.flowId] - The flow ID. Uses instance flowId if not provided.
-   * @param {string | null} options.modelId - The model identifier.
-   * @param {string | null} options.featureId - The feature identifier.
-   * @param {string | null} options.taskName - The task name.
-   * @param {string | null} options.engineId - The engine identifier.
-   * @param {unknown} options.error - The error class/message or object.
+   * @param {string} options.modelId - The model identifier.
+   * @param {string} options.featureId - The feature identifier.
+   * @param {string} options.taskName - The task name.
+   * @param {string} options.engineId - The engine identifier.
+   * @param {string|object} options.error - The error class/message or object.
    */
   recordEngineCreationFailure({
     flowId,
@@ -356,72 +346,41 @@ export class MLTelemetry {
   /**
    * Records an engine run event.
    *
-   * See firefox.ai.runtime.engine_run in toolkit/components/ml/metrics.yaml for
-   * documentation on each of the parameters here.
-   *
    * @param {object} options - Engine run options.
-   * @param {string} options.engineId
-   * @param {string | null} options.modelId
-   * @param {string | null} options.backend
-   * @param {number} options.beforeRun
-   * @param {{cpuTime: number | null, memory: number | null}} [options.resourcesBefore]
-   * @param {{cpuTime: number | null, memory: number | null}} [options.resourcesAfter]
-   * @param {number | null} [options.tokenCount]
-   * @param {number | null} [options.characterCount]
-   * @param {string} [options.flow_id]
-   * @param {string} [options.feature_id]
+   * @param {string} [options.flow_id] - The flow ID. Uses instance flowId if not provided.
+   * @param {number} options.cpuMilliseconds - The combined milliseconds of every cpu core that was running.
+   * @param {number} options.wallMilliseconds - The amount of wall time the run request took.
+   * @param {number} options.cores - The number of cores on the machine.
+   * @param {number} options.cpuUtilization - The percentage of the user's CPU used (0-100).
+   * @param {number} options.memoryBytes - The number of RSS bytes for the inference process.
+   * @param {string} [options.feature_id] - The feature identifier. Uses instance featureId if not provided.
+   * @param {string} options.engineId - The engine identifier.
+   * @param {string} options.modelId - The model identifier.
+   * @param {string} options.backend - The backend that is being used.
    */
   recordEngineRun({
+    cpuMilliseconds,
+    wallMilliseconds,
+    cores,
+    cpuUtilization,
+    memoryBytes,
     engineId,
     modelId,
     backend,
-    beforeRun,
-    resourcesBefore,
-    resourcesAfter,
-    tokenCount,
-    characterCount,
     flow_id = this.#flowId,
     feature_id = this.#featureId,
   }) {
-    let cpuMilliseconds = null;
-    let cpuUtilization = null;
-    const wallMilliseconds = ChromeUtils.now() - beforeRun;
-    const cores = lazy.mlUtils.getOptimalCPUConcurrency();
-    const memoryBytes = resourcesAfter?.memory ?? null;
-    if (resourcesAfter?.cpuTime != null && resourcesBefore?.cpuTime != null) {
-      cpuMilliseconds = resourcesAfter.cpuTime - resourcesBefore.cpuTime;
-      cpuUtilization = (cpuMilliseconds / wallMilliseconds / cores) * 100;
-    }
-
-    /**
-     * Round a potentially null number, preserving null for telemetry results.
-     *
-     * @param {number | null} number
-     */
-    function round(number) {
-      if (number == null) {
-        return null;
-      }
-      return Math.round(number);
-    }
-
     const payload = {
       flow_id,
-      cpu_milliseconds: round(cpuMilliseconds),
-      wall_milliseconds: round(wallMilliseconds),
-      cores: round(cores),
-      cpu_utilization: round(cpuUtilization),
-      memory_bytes: round(memoryBytes),
+      cpu_milliseconds: Math.round(cpuMilliseconds),
+      wall_milliseconds: Math.round(wallMilliseconds),
+      cores: Math.round(cores),
+      cpu_utilization: Math.round(cpuUtilization),
+      memory_bytes: Math.round(memoryBytes),
       feature_id,
       engine_id: engineId,
       model_id: modelId,
       backend,
-      // Specifically use the "||" operator since Glean expects "null" rather than
-      // "undefined". When the counts are 0, this can mean nothing was generated for
-      // the counts. We should count these as null.
-      token_count: tokenCount || null,
-      character_count: characterCount || null,
-      system_memory_mb: MLTelemetry.#systemMemoryMB,
     };
 
     Glean.firefoxAiRuntime.engineRun.record(payload);

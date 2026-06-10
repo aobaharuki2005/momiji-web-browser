@@ -136,8 +136,6 @@ function setMocksInGlobal() {
       return { resolve, reject, promise };
     };
   }
-
-  global.console.createInstance = () => console;
 }
 
 module.exports = {

@@ -1,6 +1,5 @@
 {
   "global": {
-    "isGlobal": true,
     "queryParams": [
       "at_campaign",
       "at_send_date",
@@ -19,11 +18,12 @@
       "utm_email_id",
       "utm_campaign_id",
       "utm_newsletter_id"
-    ]
+    ],
+    "topLevelSites": ["*"]
   },
   "twitter": {
     "queryParams": ["refsrc", "cxt", "s"],
-    "origins": ["www.twitter.com", "twitter.com", "x.com"]
+    "topLevelSites": ["www.twitter.com", "twitter.com", "x.com"]
   },
   "amazon": {
     "queryParams": [
@@ -63,7 +63,7 @@
       "_encoding",
       "qualifier"
     ],
-    "origins": [
+    "topLevelSites": [
       "www.amazon.com",
       "www.amazon.de",
       "www.amazon.nl",
@@ -94,8 +94,13 @@
     ]
   },
   "youtube": {
-    "queryParams": ["si", "is", "feature", "kw", "pp"],
-    "origins": ["www.youtube.com", "youtube.com", "m.youtube.com", "youtu.be"]
+    "queryParams": ["si", "feature", "kw", "pp"],
+    "topLevelSites": [
+      "www.youtube.com",
+      "youtube.com",
+      "m.youtube.com",
+      "youtu.be"
+    ]
   },
   "carousell": {
     "queryParams": [
@@ -111,7 +116,7 @@
       "t-referrer_browse_type",
       "t-id"
     ],
-    "origins": [
+    "topLevelSites": [
       "ca.carousell.com",
       "www.carousell.sg",
       "www.carousell.com.hk",
@@ -121,23 +126,23 @@
   },
   "etsy": {
     "queryParams": ["click_sum", "ref", "click_key", "organic_search_click"],
-    "origins": ["www.etsy.com"]
+    "topLevelSites": ["www.etsy.com"]
   },
   "wallstreetjournal": {
     "queryParams": ["reflink"],
-    "origins": ["www.wsj.com"]
+    "topLevelSites": ["www.wsj.com"]
   },
   "theathletic": {
     "queryParams": ["source"],
-    "origins": ["theathletic.com"]
+    "topLevelSites": ["theathletic.com"]
   },
   "forbes": {
     "queryParams": ["sh"],
-    "origins": ["www.forbes.com"]
+    "topLevelSites": ["www.forbes.com"]
   },
   "bloomberg": {
     "queryParams": ["leadSource", "sref", "srnd"],
-    "origins": ["www.bloomberg.com"]
+    "topLevelSites": ["www.bloomberg.com"]
   },
   "tiktok": {
     "queryParams": [
@@ -155,7 +160,7 @@
       "t",
       "q"
     ],
-    "origins": ["www.tiktok.com"]
+    "topLevelSites": ["www.tiktok.com"]
   },
   "bbc": {
     "queryParams": [
@@ -169,11 +174,11 @@
       "ns_fee",
       "xtor"
     ],
-    "origins": ["www.bbc.com"]
+    "topLevelSites": ["www.bbc.com"]
   },
   "cnn": {
     "queryParams": ["ref"],
-    "origins": ["www.cnn.co.jp", "www.cnn.com", "edition.cnn.com"]
+    "topLevelSites": ["www.cnn.co.jp", "www.cnn.com", "edition.cnn.com"]
   },
   "imdb": {
     "queryParams": [
@@ -185,19 +190,19 @@
       "pf_rd_r",
       "ref_"
     ],
-    "origins": ["www.imdb.com", "m.imdb.com"]
+    "topLevelSites": ["www.imdb.com", "m.imdb.com"]
   },
   "mirror": {
     "queryParams": ["int_source"],
-    "origins": ["www.mirror.co.uk"]
+    "topLevelSites": ["www.mirror.co.uk"]
   },
   "wise": {
     "queryParams": ["partnerizecampaignID", "clickref", "adref", "partnerID"],
-    "origins": ["wise.com"]
+    "topLevelSites": ["wise.com"]
   },
   "facebook": {
     "queryParams": ["tracking", "extid", "mibextid"],
-    "origins": ["www.facebook.com"]
+    "topLevelSites": ["www.facebook.com"]
   },
   "lazada": {
     "queryParams": [
@@ -214,7 +219,7 @@
       "cid",
       "pos"
     ],
-    "origins": [
+    "topLevelSites": [
       "www.lazada.com.ph",
       "www.lazada.vn",
       "www.lazada.sg",
@@ -225,7 +230,7 @@
   },
   "msn": {
     "queryParams": ["cvid", "pc", "ei"],
-    "origins": ["www.msn.com"]
+    "topLevelSites": ["www.msn.com"]
   },
   "aliexpress": {
     "queryParams": [
@@ -250,7 +255,7 @@
       "algo_expid",
       "gps-id"
     ],
-    "origins": [
+    "topLevelSites": [
       "www.aliexpress.com",
       "robotime.aliexpress.com",
       "ar.aliexpress.com"
@@ -264,11 +269,11 @@
       "correlation_id",
       "share_id"
     ],
-    "origins": ["www.reddit.com"]
+    "topLevelSites": ["www.reddit.com"]
   },
   "wired": {
     "queryParams": ["mbid"],
-    "origins": ["www.wired.co.uk", "www.wired.com"]
+    "topLevelSites": ["www.wired.co.uk", "www.wired.com"]
   },
   "yandex": {
     "queryParams": [
@@ -283,7 +288,7 @@
       "suggest_reqid",
       "clid"
     ],
-    "origins": ["yandex.com"]
+    "topLevelSites": ["yandex.com"]
   },
   "ebay": {
     "queryParams": [
@@ -300,7 +305,7 @@
       "_from",
       "hash"
     ],
-    "origins": ["www.ebay.com", "www.ebay.co.uk"]
+    "topLevelSites": ["www.ebay.com", "www.ebay.co.uk"]
   },
   "flipkart": {
     "queryParams": [
@@ -314,7 +319,7 @@
       "pageUID",
       "lid"
     ],
-    "origins": ["www.flipkart.com"]
+    "topLevelSites": ["www.flipkart.com"]
   },
   "google": {
     "queryParams": [
@@ -345,7 +350,7 @@
       "gs_lcp",
       "gs_lcrp"
     ],
-    "origins": [
+    "topLevelSites": [
       "www.google.com",
       "www.google.ad",
       "www.google.ae",
@@ -539,34 +544,34 @@
   },
   "bing": {
     "queryParams": ["qp", "cvid", "qs", "form", "sk", "sc", "sp"],
-    "origins": ["www.bing.com"]
+    "topLevelSites": ["www.bing.com"]
   },
   "twitch": {
     "queryParams": ["tt_content", "tt_medium"],
-    "origins": ["www.twitch.tv", "dev.twitch.tv"]
+    "topLevelSites": ["www.twitch.tv", "dev.twitch.tv"]
   },
   "cnet": {
     "queryParams": ["ftag"],
-    "origins": ["www.cnet.com"]
+    "topLevelSites": ["www.cnet.com"]
   },
   "nytimes": {
     "queryParams": ["smid"],
-    "origins": ["www.nytimes.com"]
+    "topLevelSites": ["www.nytimes.com"]
   },
   "github": {
     "queryParams": ["email_token", "email_source"],
-    "origins": ["github.com"]
+    "topLevelSites": ["github.com"]
   },
   "linkedin": {
     "queryParams": ["refId", "trk", "trackingId"],
-    "origins": ["ca.linkedin.com", "ro.linkedin.com"]
+    "topLevelSites": ["ca.linkedin.com", "ro.linkedin.com"]
   },
   "newyorker": {
     "queryParams": ["esrc", "bxid", "cndid", "source", "mbid"],
-    "origins": ["www.newyorker.com"]
+    "topLevelSites": ["www.newyorker.com"]
   },
   "bestbuy": {
     "queryParams": ["acampID", "irclickid", "irgwc", "loc", "mpid", "intl"],
-    "origins": ["www.bestbuy.com"]
+    "topLevelSites": ["www.bestbuy.com"]
   }
 }

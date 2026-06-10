@@ -14,7 +14,6 @@
 # dictionary will be in hunspell-en_US-mozilla.zip.
 
 set -e
-set -o pipefail
 
 export LANG=C
 export LC_ALL=C
@@ -24,18 +23,10 @@ export LC_COLLATE=C
 WKDIR="`pwd`"
 ORIG="$WKDIR/orig"
 SUPPORT_DIR="$WKDIR/support_files"
-SCOWL_DIR="$WKDIR/scowl"
-SPELLER="$SCOWL_DIR/speller"
+SPELLER="$WKDIR/scowl/speller"
 
-# Required by SCOWL scripts.
-export SCOWL="$SCOWL_DIR"
-export SCOWL_DB="$SCOWL_DIR/scowl.db"
-
-# If the SCOWL clone is at a tagged release, surface that tag in the
-# generated README via SCOWL_VERSION (read by SCOWL's HEADER.sh). Falls
-# back to a short commit hash for non-tagged checkouts.
-SCOWL_VERSION=`git -C "$SCOWL_DIR" describe --tags --always 2>/dev/null || true`
-export SCOWL_VERSION
+# This is required by scowl scripts
+export SCOWL="$WKDIR/scowl/"
 
 expand() {
   grep -v '^[0-9]\+$' | $SPELLER/munch-list expand $1 | sort -u
@@ -47,14 +38,6 @@ if [ ! -d "$SPELLER" ]; then
   exit 1
 fi
 
-# SCOWLv2 stores its source data in a SQLite database that must be built
-# before mk-list can run. Build it the first time, or whenever the user
-# removed scowl.db to force a rebuild after refreshing the SCOWL checkout.
-if [ ! -f "$SCOWL_DB" ]; then
-  echo "Building $SCOWL_DB ..."
-  (cd "$SCOWL_DIR" && make scowl.db)
-fi
-
 mkdir -p $SUPPORT_DIR
 cd $SPELLER
 MK_LIST="../mk-list -v1 --accents=both en_US 60"
@@ -63,12 +46,6 @@ With Input Command: $MK_LIST
 EOF
 # Note: the output of make-hunspell-dict is UTF-8
 $MK_LIST | ./make-hunspell-dict -one en_US-custom params.txt > ./make-hunspell-dict.log
-
-if [ ! -s "$SPELLER/en_US-custom.dic" ]; then
-  echo "ERROR: $SPELLER/en_US-custom.dic was not generated or is empty."
-  echo "Inspect $SPELLER/make-hunspell-dict.log for upstream errors."
-  exit 1
-fi
 cd $WKDIR
 
 # Note: Input and output of "expand" is always ISO-8859-1.
@@ -109,8 +86,13 @@ comm -23 $SUPPORT_DIR/3-upstream.txt $SUPPORT_DIR/2-mozilla-removed.txt | cat - 
 # Note: the output of make-hunspell-dict is UTF-8
 cat $SUPPORT_DIR/4-patched.txt | comm -23 - $SUPPORT_DIR/0-special.txt | $SPELLER/make-hunspell-dict -one en_US-mozilla /dev/null
 
-# Add back Mozilla suggestion exclusions and rewrite the count line.
-python3 "$WKDIR/assemble-dic.py" en_US-mozilla.dic "$SUPPORT_DIR/2-mozilla-nosug-munched.txt"
+# Add back Mozilla suggestion exclusions. Need to convert the file from
+# ISO-8859-1 to UTF-8 first, then add back the line count and reorder.
+tail -n +2 en_US-mozilla.dic > en_US-mozilla-complete.dic
+iconv -f iso-8859-1 -t utf-8 $SUPPORT_DIR/2-mozilla-nosug-munched.txt >> en_US-mozilla-complete.dic
+wc -l < en_US-mozilla-complete.dic | tr -d '[:blank:]' > en_US-mozilla.dic
+LC_ALL=C sort en_US-mozilla-complete.dic >> en_US-mozilla.dic
+rm -f en_US-mozilla-complete.dic
 
 # Sanity check should yield identical results
 #comm -23 $SUPPORT_DIR/1-base.txt $SUPPORT_DIR/3-upstream.txt > $SUPPORT_DIR/3-upstream-remover.txt
@@ -132,10 +114,9 @@ comm -23 $SUPPORT_DIR/5-mozilla-added-tmp.txt $SUPPORT_DIR/2-mozilla-nosug.txt >
 rm $SUPPORT_DIR/5-mozilla-added-tmp.txt
 iconv -f iso-8859-1 -t utf-8 $SUPPORT_DIR/5-mozilla-added.txt > 5-mozilla-added.txt
 
-# Clean up some files. With SCOWL_VERSION set, make-hunspell-dict suffixes
-# the zip name with the version (e.g. hunspell-en_US-mozilla-rel-2026.02.25.zip).
-rm -f hunspell-en_US-mozilla*.zip
-rm -f nosug
+# Clean up some files
+rm hunspell-en_US-mozilla.zip
+rm nosug
 
 # Remove backup folders in preparation for the install-new-dict script
 FOLDERS=( "orig-bk" "mozilla-bk")

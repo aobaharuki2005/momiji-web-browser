@@ -10,6 +10,7 @@
 #include "include/core/SkRefCnt.h"
 #include "include/private/base/SkAssert.h"
 #include "include/private/base/SkMalloc.h"
+#include "include/private/base/SkOnce.h"
 
 #include <cstring>
 
@@ -82,7 +83,9 @@ const void* SkDataTable::at(int index, size_t* size) const {
 ///////////////////////////////////////////////////////////////////////////////
 
 sk_sp<SkDataTable> SkDataTable::MakeEmpty() {
-    static SkDataTable* singleton = new SkDataTable();
+    static SkDataTable* singleton;
+    static SkOnce once;
+    once([]{ singleton = new SkDataTable(); });
     return sk_ref_sp(singleton);
 }
 

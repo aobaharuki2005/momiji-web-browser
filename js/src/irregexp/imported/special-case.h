@@ -14,7 +14,6 @@
 
 namespace v8 {
 namespace internal {
-namespace regexp {
 
 // Sets of Unicode characters that need special handling under "i" mode
 
@@ -72,7 +71,7 @@ namespace regexp {
 // their equivalence class are added to IgnoreSet. Characters that
 // match at least one other character are added to SpecialAddSet.
 
-class CaseFolding final : public AllStatic {
+class RegExpCaseFolding final : public AllStatic {
  public:
   static const icu::UnicodeSet& IgnoreSet();
   static const icu::UnicodeSet& SpecialAddSet();
@@ -110,7 +109,6 @@ class CaseFolding final : public AllStatic {
   }
 };
 
-}  // namespace regexp
 }  // namespace internal
 }  // namespace v8
 

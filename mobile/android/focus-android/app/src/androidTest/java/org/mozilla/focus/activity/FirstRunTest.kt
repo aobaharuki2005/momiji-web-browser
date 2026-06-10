@@ -4,6 +4,7 @@
 package org.mozilla.focus.activity
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -11,29 +12,34 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
-import org.mozilla.focus.helpers.FocusTestRule
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.TestHelper.restartApp
+import org.mozilla.focus.helpers.TestSetup
 import org.mozilla.focus.testAnnotations.SmokeTest
 
 // Tests the First run onboarding screens
 @RunWith(AndroidJUnit4ClassRunner::class)
-class FirstRunTest {
+class FirstRunTest : TestSetup() {
+    private lateinit var webServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
-
-    @get:Rule(order = 0)
-    val focusTestRule: FocusTestRule = FocusTestRule()
 
     @get:Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = true)
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
     }
 
     @After
     fun stopWebServer() {
+        webServer.shutdown()
         featureSettingsHelper.resetAllFeatureFlags()
     }
 

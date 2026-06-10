@@ -49,13 +49,10 @@ tasks:
         treeherder:
             symbol: Rpk-flatpak
         flatpak:
-            name:
-                by-release-type:
-                    nightly: org.mozilla.firefox_nightly
-                    default: org.mozilla.firefox
+            name: org.mozilla.firefox
             branch:
                 by-release-type:
-                    release: stable
+                    release.*: stable
                     beta: beta
                     nightly: nightly
                     default: default

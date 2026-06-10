@@ -1,3 +1,4 @@
+/* vim: set ts=4 sts=4 sw=4 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -147,7 +148,7 @@ export class FormHistoryAutoCompleteResult {
     if (this.#isFormHistoryEntry(index)) {
       const [removedEntry] = this.entries.splice(index, 1);
       const actor =
-        this.input.documentGlobal.windowGlobalChild.getActor("FormHistory");
+        this.input.ownerGlobal.windowGlobalChild.getActor("FormHistory");
       actor.sendAsyncMessage("FormHistory:RemoveEntry", {
         inputName: this.inputName,
         value: removedEntry.text,

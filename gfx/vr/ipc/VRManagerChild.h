@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -68,19 +70,16 @@ class VRManagerChild : public PVRManagerChild {
   void AddPromise(const uint32_t& aID, dom::Promise* aPromise);
   gfx::VRAPIMode GetVRAPIMode(uint32_t aDisplayID) const;
 
-  static void InitSameProcess(uint32_t aNamespace);
-  static void InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint,
-                                 uint32_t aNamespace);
-  static bool InitForContent(Endpoint<PVRManagerChild>&& aEndpoint,
-                             uint32_t aNamespace);
+  static void InitSameProcess();
+  static void InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint);
+  static bool InitForContent(Endpoint<PVRManagerChild>&& aEndpoint);
   static void ShutDown();
 
   static bool IsCreated();
   static bool IsPresenting();
   static TimeStamp GetIdleDeadlineHint(TimeStamp aDefault);
 
-  already_AddRefed<VRLayerChild> CreateVRLayer(uint32_t aDisplayID,
-                                               uint32_t aGroup);
+  PVRLayerChild* CreateVRLayer(uint32_t aDisplayID, uint32_t aGroup);
 
   static void IdentifyTextureHost(
       const layers::TextureFactoryIdentifier& aIdentifier);
@@ -110,8 +109,12 @@ class VRManagerChild : public PVRManagerChild {
   void ResetPuppet(dom::Promise* aPromise, ErrorResult& aRv);
 
  protected:
-  explicit VRManagerChild(uint32_t aNamespace);
+  explicit VRManagerChild();
   ~VRManagerChild();
+
+  PVRLayerChild* AllocPVRLayerChild(const uint32_t& aDisplayID,
+                                    const uint32_t& aGroup);
+  bool DeallocPVRLayerChild(PVRLayerChild* actor);
 
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY until we can mark ipdl-generated things as
   // MOZ_CAN_RUN_SCRIPT.
@@ -142,11 +145,9 @@ class VRManagerChild : public PVRManagerChild {
   void NotifyEnumerationCompletedInternal();
   void NotifyRuntimeCapabilitiesUpdatedInternal();
 
-  uint32_t mNamespace;
-
   nsTArray<RefPtr<VRDisplayClient>> mDisplays;
   VRDisplayCapabilityFlags mRuntimeCapabilities;
-  bool mDisplaysInitialized = false;
+  bool mDisplaysInitialized;
   nsTArray<uint64_t> mNavigatorCallbacks;
 
   struct XRFrameRequest {

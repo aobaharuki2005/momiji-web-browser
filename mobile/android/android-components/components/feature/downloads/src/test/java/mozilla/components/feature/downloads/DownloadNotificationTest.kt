@@ -13,10 +13,9 @@ import androidx.core.content.ContextCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobState
+import mozilla.components.feature.downloads.fake.FakeDateTimeProvider
 import mozilla.components.feature.downloads.fake.FakeFileSizeFormatter
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.utils.FakeDateTimeProvider
-import mozilla.components.support.utils.FakeDownloadFileUtils
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -396,7 +395,6 @@ class DownloadNotificationTest {
             downloadState = download.state,
             createdTime = download.createdTime,
             notificationAccentColor = style.notificationAccentColor,
-            downloadFileUtils = FakeDownloadFileUtils(),
             contentIntent = mock(PendingIntent::class.java),
         )
 

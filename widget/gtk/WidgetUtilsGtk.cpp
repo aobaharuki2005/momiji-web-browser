@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,7 +27,6 @@
 #include <gtk/gtk.h>
 #include <dlfcn.h>
 #include <glib.h>
-#include <inttypes.h>
 
 #ifdef MOZ_ENABLE_DBUS
 #  include "mozilla/ClearOnShutdown.h"
@@ -142,23 +142,6 @@ GdkDevice* GdkGetPointer() {
   return gdk_device_manager_get_client_pointer(deviceManager);
 }
 
-GdkSeat* GdkDeviceGetSeat(GdkDevice* device) {
-  static auto sGdkDeviceGetSeat =
-      (GdkSeat * (*)(GdkDevice*)) dlsym(RTLD_DEFAULT, "gdk_device_get_seat");
-  if (!sGdkDeviceGetSeat) {
-    return nullptr;
-  }
-  return sGdkDeviceGetSeat(device);
-}
-
-void GdkSeatUngrab(GdkSeat* seat) {
-  static auto sGdkSeatUngrab =
-      (void (*)(GdkSeat*))dlsym(RTLD_DEFAULT, "gdk_seat_ungrab");
-  if (sGdkSeatUngrab) {
-    sGdkSeatUngrab(seat);
-  }
-}
-
 static GdkEvent* sLastPointerDownEvent = nullptr;
 GdkEvent* GetLastPointerDownEvent() { return sLastPointerDownEvent; }
 
@@ -215,7 +198,9 @@ static void DoRegisterHostApp() {
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [](const DBusCallPromise::ResolveOrRejectValue& aValue) {
                if (aValue.IsReject()) {
-                 NS_WARNING("Failed to register host application for portals");
+                 NS_WARNING(
+                     "Failed to register host application for "
+                     "portals\n");
                }
              });
 }
@@ -311,7 +296,9 @@ bool ShouldUsePortal(PortalKind aPortalKind) {
   const int32_t pref = [&] {
     switch (aPortalKind) {
       case PortalKind::FilePicker:
+#ifdef EARLY_BETA_OR_EARLIER
         autoBehavior = true;
+#endif
         return StaticPrefs::widget_use_xdg_desktop_portal_file_picker();
       case PortalKind::MimeHandler:
         // Mime portal breaks default browser handling, see bug 1516290.
@@ -415,42 +402,36 @@ RefPtr<FocusRequestPromise> RequestWaylandFocusPromise() {
     return nullptr;
   }
 
+  RefPtr<nsWindow> sourceWindow = nsWindow::GetFocusedWindow();
+  if (!sourceWindow || sourceWindow->IsDestroyed()) {
+    LOGW("RequestWaylandFocusPromise() missing source window");
+    return nullptr;
+  }
+
   xdg_activation_v1* xdg_activation = WaylandDisplayGet()->GetXdgActivation();
   if (!xdg_activation) {
     LOGW("RequestWaylandFocusPromise() missing xdg_activation");
     return nullptr;
   }
 
-  auto transferPromise = MakeRefPtr<FocusRequestPromise::Private>(__func__);
+  GdkWindow* gdkWindow = sourceWindow->GetToplevelGdkWindow();
+  if (!gdkWindow) {
+    return nullptr;
+  }
+  wl_surface* surface = gdk_wayland_window_get_wl_surface(gdkWindow);
+
+  RefPtr<FocusRequestPromise::Private> transferPromise =
+      new FocusRequestPromise::Private(__func__);
 
   xdg_activation_token_v1* aXdgToken =
       xdg_activation_v1_get_activation_token(xdg_activation);
   xdg_activation_token_v1_add_listener(
       aXdgToken, &token_listener,
       new XDGTokenRequest(aXdgToken, transferPromise));
-
-  // If a Firefox window already has focus use it as the activation source so
-  // the token carries full focus-transfer rights.  On first launch there is
-  // no focused source window; we still commit a bare token (no serial/surface)
-  // so Mutter places the new window on the current workspace rather than a
-  // stale or phantom output.
-  RefPtr<nsWindow> sourceWindow = nsWindow::GetFocusedWindow();
-  if (sourceWindow && !sourceWindow->IsDestroyed()) {
-    GdkWindow* gdkWindow = sourceWindow->GetToplevelGdkWindow();
-    wl_surface* surface =
-        gdkWindow ? gdk_wayland_window_get_wl_surface(gdkWindow) : nullptr;
-    if (surface) {
-      xdg_activation_token_v1_set_serial(aXdgToken,
-                                         nsWaylandDisplay::GetLastEventSerial(),
-                                         WaylandDisplayGet()->GetSeat());
-      xdg_activation_token_v1_set_surface(aXdgToken, surface);
-    }
-  } else {
-    LOGW(
-        "RequestWaylandFocusPromise() no source window, "
-        "requesting bare token for workspace placement");
-  }
-
+  xdg_activation_token_v1_set_serial(aXdgToken,
+                                     nsWaylandDisplay::GetLastEventSerial(),
+                                     WaylandDisplayGet()->GetSeat());
+  xdg_activation_token_v1_set_surface(aXdgToken, surface);
   xdg_activation_token_v1_commit(aXdgToken);
 
   LOGW("RequestWaylandFocusPromise() XDG Token sent");
@@ -603,13 +584,14 @@ bool IsCancelledGError(GError* aGError) {
 }
 
 #if defined(MOZ_X11)
-static uint32_t GetWindowUserTime(GdkDisplay* aDisplay, uintptr_t aWindow) {
+static unsigned long GetWindowUserTime(GdkDisplay* aDisplay,
+                                       uintptr_t aWindow) {
   Atom actualType;
   int actualFormat;
   unsigned long numberOfItems;
   unsigned long bytesAfter;
   unsigned char* property = nullptr;
-  uint32_t userTime = 0;
+  unsigned long userTime = 0;
 
   Display* xDisplay = GDK_DISPLAY_XDISPLAY(aDisplay);
   Atom atom =
@@ -620,7 +602,7 @@ static uint32_t GetWindowUserTime(GdkDisplay* aDisplay, uintptr_t aWindow) {
                          &bytesAfter, &property) == Success &&
       property) {
     if (numberOfItems == 1) {
-      userTime = *((uint32_t*)property);
+      userTime = *((unsigned long*)property);
     }
     XFree(property);
   }
@@ -629,12 +611,12 @@ static uint32_t GetWindowUserTime(GdkDisplay* aDisplay, uintptr_t aWindow) {
 }
 
 void FindLatestUserTime(GdkDisplay* aDisplay, uintptr_t aWindow,
-                        uint32_t* aLatestTime) {
+                        unsigned long* aLatestTime) {
   Window rootReturn;
   Window parentReturn;
   Window* children;
   unsigned int numberOfChildren;
-  uint32_t userTime;
+  unsigned long userTime;
 
   Display* xDisplay = GDK_DISPLAY_XDISPLAY(aDisplay);
 
@@ -654,7 +636,7 @@ void FindLatestUserTime(GdkDisplay* aDisplay, uintptr_t aWindow,
 
 // Assume we're started from user interaction and infer user time if its missing
 nsCString SynthesizeStartupToken() {
-  uint32_t latestUserTime = 0;
+  unsigned long latestUserTime = 0;
   FindLatestUserTime(gdk_display_get_default(),
                      GDK_WINDOW_XID(gdk_get_default_root_window()),
                      &latestUserTime);
@@ -663,7 +645,7 @@ nsCString SynthesizeStartupToken() {
     return nsCString();
   }
 
-  return nsPrintfCString("%s_TIME%" PRIu32, g_get_host_name(), latestUserTime);
+  return nsPrintfCString("%s_TIME%lu", g_get_host_name(), latestUserTime);
 }
 #endif
 

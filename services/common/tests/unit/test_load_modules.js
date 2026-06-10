@@ -28,16 +28,12 @@ function expectImportsToSucceed(mm, base = MODULE_BASE) {
   }
 }
 
-async function expectImportsToFail(mm, base = MODULE_BASE) {
+function expectImportsToFail(mm, base = MODULE_BASE) {
   for (let m of mm) {
     let resource = base + m;
     let succeeded = false;
     try {
-      // ChromeUtils.importESModule(resource); cannot be called because it
-      // triggers a crash in CheckForBrokenChromeURL (in automation only) with:
-      // "Missing chrome or resource URLs: resource://services-common/tokenserverclient.sys.mjs"
-      // Instead, we verify that the file does really not exist.
-      await fetch(resource);
+      ChromeUtils.importESModule(resource);
       succeeded = true;
     } catch (e) {}
 
@@ -47,7 +43,7 @@ async function expectImportsToFail(mm, base = MODULE_BASE) {
   }
 }
 
-add_task(async function test_imports() {
+function run_test() {
   expectImportsToSucceed(shared_modules);
   expectImportsToSucceed(shared_test_modules, TEST_BASE);
   expectImportsToSucceed(["LogManager.sys.mjs"], "resource://gre/modules/");
@@ -55,9 +51,6 @@ add_task(async function test_imports() {
   if (AppConstants.platform != "android") {
     expectImportsToSucceed(non_android_modules);
   } else {
-    await expectImportsToFail(non_android_modules);
-
-    // Sanity check: fetch does not throw for modules that exist.
-    await fetch(MODULE_BASE + shared_modules[0]);
+    expectImportsToFail(non_android_modules);
   }
-});
+}

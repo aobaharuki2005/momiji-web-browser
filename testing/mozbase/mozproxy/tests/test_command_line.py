@@ -198,9 +198,7 @@ def test_run_record():
         assert p.wait(10) == 0
         assert output_handler.port is not None
     finally:
-        record_file = os.path.join(here, "files", "record.zip")
-        if os.path.exists(record_file):
-            os.remove(record_file)
+        os.remove(os.path.join(here, "files", "record.zip"))
 
 
 def test_run_playback():

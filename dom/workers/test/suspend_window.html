@@ -16,7 +16,7 @@
 
   var worker;
   var finish = false;
-  var bc = SpecialPowers.wrap(BroadcastChannel).unpartitionedTestingChannel("suspendWindow");
+  var bc = new BroadcastChannel("suspendWindow");
   bc.onmessage = (msgEvent) => {
     var msg = msgEvent.data;
     var command = msg.command;

@@ -1,5 +1,9 @@
 "use strict";
 
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
+);
+
 const server = createHttpServer();
 server.registerDirectory("/data/", do_get_file("data"));
 
@@ -161,7 +165,7 @@ async function test_i18n_css(options = {}) {
     // RTL directionality.
     const origReqLocales = Services.locale.requestedLocales;
     Services.locale.requestedLocales = ["he"];
-    Services.prefs.setStringPref(DIR, "bidi");
+    Preferences.set(DIR, "bidi");
 
     css = await fetch(baseURL + "locale.css");
     equal(
@@ -171,7 +175,7 @@ async function test_i18n_css(options = {}) {
     );
 
     Services.locale.requestedLocales = origReqLocales;
-    Services.prefs.clearUserPref(DIR);
+    Preferences.reset(DIR);
   }
 
   await extension.awaitFinish("i18n-css");

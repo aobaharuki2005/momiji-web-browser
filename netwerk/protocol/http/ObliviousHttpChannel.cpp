@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -525,9 +528,6 @@ NS_IMETHODIMP
 ObliviousHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   LOG(("ObliviousHttpChannel::AsyncOpen [this=%p, listener=%p]", this,
        aListener));
-  if (mStreamListener) {
-    return NS_ERROR_ALREADY_OPENED;
-  }
   mStreamListener = aListener;
   nsresult rv = mInnerChannel->SetRequestMethod("POST"_ns);
   if (NS_FAILED(rv)) {
@@ -731,8 +731,7 @@ nsresult ObliviousHttpChannel::ProcessOnStopRequest() {
                                getter_AddRefs(mBinaryHttpResponse));
 }
 
-void ObliviousHttpChannel::EmitOnDataAvailable(
-    nsIStreamListener* aStreamListener) {
+void ObliviousHttpChannel::EmitOnDataAvailable() {
   if (!mBinaryHttpResponse) {
     return;
   }
@@ -753,7 +752,7 @@ void ObliviousHttpChannel::EmitOnDataAvailable(
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = aStreamListener->OnDataAvailable(this, contentStream, 0, contentLength);
+  rv = mStreamListener->OnDataAvailable(this, contentStream, 0, contentLength);
   (void)rv;
 }
 
@@ -763,7 +762,8 @@ ObliviousHttpChannel::OnStopRequest(nsIRequest* aRequest,
   LOG(("ObliviousHttpChannel::OnStopRequest [this=%p, request=%p, status=%u]",
        this, aRequest, (uint32_t)aStatusCode));
 
-  nsCOMPtr<nsIStreamListener> listener = std::move(mStreamListener);
+  auto releaseStreamListener = MakeScopeExit(
+      [self = RefPtr{this}]() mutable { self->mStreamListener = nullptr; });
 
   if (NS_SUCCEEDED(aStatusCode)) {
     bool requestSucceeded;
@@ -772,11 +772,11 @@ ObliviousHttpChannel::OnStopRequest(nsIRequest* aRequest,
       aStatusCode = ProcessOnStopRequest();
     }
   }
-  (void)listener->OnStartRequest(this);
+  (void)mStreamListener->OnStartRequest(this);
   if (NS_SUCCEEDED(aStatusCode)) {
-    EmitOnDataAvailable(listener);
+    EmitOnDataAvailable();
   }
-  (void)listener->OnStopRequest(this, aStatusCode);
+  (void)mStreamListener->OnStopRequest(this, aStatusCode);
 
   return NS_OK;
 }

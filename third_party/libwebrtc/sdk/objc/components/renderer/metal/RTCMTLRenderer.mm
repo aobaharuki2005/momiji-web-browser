@@ -136,7 +136,7 @@ static inline void getCubeVertexData(int cropX,
 // In future we might use triple buffering method if it improves performance.
 static const NSInteger kMaxInflightBuffers = 1;
 
-@implementation RTC_OBJC_TYPE (RTCMTLRenderer) {
+@implementation RTCMTLRenderer {
   __kindof MTKView *_view;
 
   // Controller.

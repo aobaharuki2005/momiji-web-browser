@@ -347,7 +347,7 @@ std::unique_ptr<StunByteStringAttribute> StunDictionaryWriter::CreateDelta() {
     }
   }
   return std::make_unique<StunByteStringAttribute>(STUN_ATTR_GOOG_DELTA,
-                                                   buf.DataView());
+                                                   buf.Data(), buf.Length());
 }
 
 // Apply a delta ack, i.e prune list of pending changes.

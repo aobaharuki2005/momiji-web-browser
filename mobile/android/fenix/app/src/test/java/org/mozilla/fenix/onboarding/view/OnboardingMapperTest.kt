@@ -7,7 +7,6 @@ package org.mozilla.fenix.onboarding.view
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mozilla.fenix.R
-import org.mozilla.fenix.nimbus.MarketingCardVariant
 
 class OnboardingMapperTest {
 
@@ -19,7 +18,6 @@ class OnboardingMapperTest {
             description = "default browser body with link text",
             primaryButton = Action("default browser primary button text", unitLambda),
             secondaryButton = Action("default browser secondary button text", unitLambda),
-            shouldShowElevation = true,
         )
 
         val onboardingPageUiData = OnboardingPageUiData(
@@ -44,7 +42,6 @@ class OnboardingMapperTest {
             onCustomizeToolbarButtonClick = {},
             onCustomizeThemeClick = {},
             onTermsOfServiceButtonClick = {},
-            shouldShowElevation = true,
         )
 
         assertEquals(expected, actual)
@@ -58,7 +55,6 @@ class OnboardingMapperTest {
             description = "sync body",
             primaryButton = Action("sync primary button text", unitLambda),
             secondaryButton = Action("sync secondary button text", unitLambda),
-            shouldShowElevation = true,
         )
 
         val onboardingPageUiData = OnboardingPageUiData(
@@ -83,7 +79,6 @@ class OnboardingMapperTest {
             onCustomizeToolbarButtonClick = {},
             onCustomizeThemeClick = {},
             onTermsOfServiceButtonClick = {},
-            shouldShowElevation = true,
         )
 
         assertEquals(expected, actual)
@@ -97,7 +92,6 @@ class OnboardingMapperTest {
             description = "notification body",
             primaryButton = Action("notification primary button text", unitLambda),
             secondaryButton = Action("notification secondary button text", unitLambda),
-            shouldShowElevation = true,
         )
 
         val onboardingPageUiData = OnboardingPageUiData(
@@ -122,7 +116,6 @@ class OnboardingMapperTest {
             onCustomizeToolbarButtonClick = {},
             onCustomizeThemeClick = {},
             onTermsOfServiceButtonClick = {},
-            shouldShowElevation = true,
         )
 
         assertEquals(expected, actual)
@@ -136,7 +129,6 @@ class OnboardingMapperTest {
             description = "add search widget body with link text",
             primaryButton = Action("add search widget primary button text", unitLambda),
             secondaryButton = Action("add search widget secondary button text", unitLambda),
-            shouldShowElevation = true,
         )
 
         val onboardingPageUiData = OnboardingPageUiData(
@@ -161,7 +153,6 @@ class OnboardingMapperTest {
             onCustomizeToolbarButtonClick = {},
             onCustomizeThemeClick = {},
             onTermsOfServiceButtonClick = {},
-            shouldShowElevation = true,
         )
 
         assertEquals(expected, actual)
@@ -188,7 +179,6 @@ class OnboardingMapperTest {
             description = "Keep searches within reach",
             primaryButton = Action("Save and continue", unitLambda),
             toolbarOptions = toolbarOptions,
-            shouldShowElevation = true,
         )
 
         val onboardingPageUiData = OnboardingPageUiData(
@@ -214,7 +204,6 @@ class OnboardingMapperTest {
             onCustomizeThemeClick = {},
             onTermsOfServiceButtonClick = {},
             onMarketingDataContinueClick = {},
-            shouldShowElevation = true,
         )
 
         assertEquals(expected, actual)
@@ -223,7 +212,6 @@ class OnboardingMapperTest {
     @Test
     fun `GIVEN a marketing data collection opt out page WHEN mapToOnboardingPageState is called THEN creates the expected OnboardingPageState`() {
         val marketingData = OnboardingMarketingData(
-            marketingCardVariant = MarketingCardVariant.DEFAULT,
             bodyOneText = "marketing data body one",
             bodyOneLinkText = "marketing data body one link",
             bodyTwoText = "marketing data body two",
@@ -235,7 +223,6 @@ class OnboardingMapperTest {
             description = "marketing data body",
             primaryButton = Action("marketing data button text", unitLambda),
             marketingData = marketingData,
-            shouldShowElevation = true,
         )
 
         val onboardingPageUiData = OnboardingPageUiData(
@@ -261,7 +248,6 @@ class OnboardingMapperTest {
             onCustomizeThemeClick = {},
             onTermsOfServiceButtonClick = {},
             onMarketingDataContinueClick = unitLambda,
-            shouldShowElevation = true,
         )
 
         assertEquals(expected, actual)
@@ -308,7 +294,6 @@ class OnboardingMapperTest {
             description = description,
             primaryButton = Action(primaryButtonLabel, unitLambda),
             themeOptions = themeOptions,
-            shouldShowElevation = true,
         )
 
         val actualPageState = mapToOnboardingPageState(
@@ -324,7 +309,6 @@ class OnboardingMapperTest {
             onCustomizeToolbarButtonClick = {},
             onCustomizeThemeClick = unitLambda,
             onTermsOfServiceButtonClick = {},
-            shouldShowElevation = true,
         )
 
         assertEquals(expectedPageState, actualPageState)

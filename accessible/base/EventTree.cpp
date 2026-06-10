@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,11 +27,6 @@ TreeMutation::TreeMutation(LocalAccessible* aParent, bool aNoEvents)
 #endif
 
   mParent->mStateFlags |= LocalAccessible::eKidsMutating;
-  if (mQueueEvents &&
-      !mParent->Document()->HasLoadState(DocAccessible::eTreeConstructed)) {
-    // Don't queue events while we're still building the initial tree.
-    mQueueEvents = false;
-  }
 }
 
 TreeMutation::~TreeMutation() {
@@ -48,7 +44,7 @@ void TreeMutation::AfterInsertion(LocalAccessible* aChild) {
     return;
   }
 
-  auto ev = MakeRefPtr<AccShowEvent>(aChild);
+  RefPtr<AccShowEvent> ev = new AccShowEvent(aChild);
   DebugOnly<bool> added = Controller()->QueueMutationEvent(ev);
   MOZ_ASSERT(added);
   aChild->SetShowEventTarget(true);
@@ -65,7 +61,7 @@ void TreeMutation::BeforeRemoval(LocalAccessible* aChild, bool aNoShutdown) {
     return;
   }
 
-  auto ev = MakeRefPtr<AccHideEvent>(aChild, !aNoShutdown);
+  RefPtr<AccHideEvent> ev = new AccHideEvent(aChild, !aNoShutdown);
   if (Controller()->QueueMutationEvent(ev)) {
     aChild->SetHideEventTarget(true);
   }

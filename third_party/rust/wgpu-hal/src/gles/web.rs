@@ -107,7 +107,9 @@ impl Instance {
 }
 
 #[cfg(send_sync)]
-static_assertions::assert_impl_all!(Instance: Send, Sync);
+unsafe impl Sync for Instance {}
+#[cfg(send_sync)]
+unsafe impl Send for Instance {}
 
 impl crate::Instance for Instance {
     type A = super::Api;
@@ -174,44 +176,6 @@ impl crate::Instance for Instance {
         };
 
         self.create_surface_from_canvas(canvas)
-    }
-}
-
-impl super::Adapter {
-    /// Creates a new external adapter from an existing WebGL2 rendering context.
-    ///
-    /// # Safety
-    ///
-    /// - The underlying WebGL2 context must be valid (not lost).
-    /// - The underlying WebGL2 context must be valid when interfacing with any objects returned by
-    ///   wgpu-hal from this adapter.
-    /// - The underlying WebGL2 context must be valid when dropping this adapter and when
-    ///   dropping any objects returned from this adapter.
-    pub unsafe fn new_external(
-        webgl2_context: web_sys::WebGl2RenderingContext,
-        options: wgt::GlBackendOptions,
-    ) -> Option<crate::ExposedAdapter<super::Api>> {
-        let glow_context = glow::Context::from_webgl2_context(webgl2_context.clone());
-        unsafe {
-            Self::expose(
-                AdapterContext {
-                    glow_context,
-                    webgl2_context,
-                },
-                options,
-            )
-        }
-    }
-
-    pub fn adapter_context(&self) -> &AdapterContext {
-        &self.shared.context
-    }
-}
-
-impl super::Device {
-    /// Returns the underlying WebGL2 `AdapterContext`.
-    pub fn context(&self) -> &AdapterContext {
-        &self.shared.context
     }
 }
 
@@ -460,7 +424,7 @@ impl crate::Surface for Surface {
         &self,
         _timeout_ms: Option<core::time::Duration>, //TODO
         _fence: &super::Fence,
-    ) -> Result<crate::AcquiredSurfaceTexture<super::Api>, crate::SurfaceError> {
+    ) -> Result<Option<crate::AcquiredSurfaceTexture<super::Api>>, crate::SurfaceError> {
         let swapchain = self.swapchain.read();
         let sc = swapchain.as_ref().unwrap();
         let texture = super::Texture {
@@ -479,10 +443,10 @@ impl crate::Surface for Surface {
                 depth: 1,
             },
         };
-        Ok(crate::AcquiredSurfaceTexture {
+        Ok(Some(crate::AcquiredSurfaceTexture {
             texture,
             suboptimal: false,
-        })
+        }))
     }
 
     unsafe fn discard_texture(&self, _texture: super::Texture) {}

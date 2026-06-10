@@ -26,15 +26,6 @@ const {
  * http://www.softwareishard.com/blog/har-12-spec/
  */
 class HarBuilder {
-  #connector;
-  #id;
-  #includeResponseBodies;
-  #items;
-  #pageId;
-  #pageMap;
-  #supportsMultiplePages;
-  #url;
-
   /**
    * @param {object} options
    *        configuration object
@@ -52,15 +43,15 @@ class HarBuilder {
    *        Set to true to create distinct page entries for each navigation.
    */
   constructor(options) {
-    this.#connector = options.connector;
-    this.#id = options.id;
-    this.#includeResponseBodies = options.includeResponseBodies;
-    this.#items = options.items;
+    this._connector = options.connector;
+    this._id = options.id;
+    this._includeResponseBodies = options.includeResponseBodies;
+    this._items = options.items;
     // Page id counter, only used when options.supportsMultiplePages is true.
-    this.#pageId = options.supportsMultiplePages ? 0 : options.id;
-    this.#pageMap = [];
-    this.#supportsMultiplePages = options.supportsMultiplePages;
-    this.#url = this.#connector.currentTarget.url;
+    this._pageId = options.supportsMultiplePages ? 0 : options.id;
+    this._pageMap = [];
+    this._supportsMultiplePages = options.supportsMultiplePages;
+    this._url = this._connector.currentTarget.url;
   }
 
   // Public API
@@ -82,11 +73,9 @@ class HarBuilder {
     // Build pages.
     this.buildPages(harLog.log);
 
-    // Build entries in parallel.
-    const entries = await Promise.all(
-      this.#items.map(request => this.buildEntry(harLog.log, request))
-    );
-    for (const entry of entries) {
+    // Build entries.
+    for (const request of this._items) {
+      const entry = await this.buildEntry(harLog.log, request);
       if (entry) {
         harLog.log.entries.push(entry);
       }
@@ -101,21 +90,21 @@ class HarBuilder {
 
   // Helpers
   buildPages(log) {
-    if (this.#supportsMultiplePages) {
+    if (this._supportsMultiplePages) {
       this.buildPagesFromTargetTitles(log);
-    } else if (this.#items.length) {
-      const firstRequest = this.#items[0];
-      const page = this.buildPage(this.#url, firstRequest);
+    } else if (this._items.length) {
+      const firstRequest = this._items[0];
+      const page = this.buildPage(this._url, firstRequest);
       log.pages.push(page);
-      this.#pageMap[this.#id] = page;
+      this._pageMap[this._id] = page;
     }
   }
 
   buildPagesFromTargetTitles(log) {
     // Retrieve the additional HAR data collected by the connector.
-    const { initialURL, navigationRequests } = this.#connector.getHarData();
+    const { initialURL, navigationRequests } = this._connector.getHarData();
     const firstNavigationRequest = navigationRequests[0];
-    const firstRequest = this.#items[0];
+    const firstRequest = this._items[0];
 
     if (
       !firstNavigationRequest ||
@@ -136,7 +125,7 @@ class HarBuilder {
   buildPage(url, networkEvent) {
     const page = {};
 
-    page.id = "page_" + this.#pageId;
+    page.id = "page_" + this._pageId;
     page.pageTimings = this.buildPageTimings(page, networkEvent);
     page.startedDateTime = dateToHarString(new Date(networkEvent.startedMs));
 
@@ -146,7 +135,7 @@ class HarBuilder {
 
     // Increase the pageId, for upcoming calls to buildPage.
     // If supportsMultiplePages is disabled this method is only called once.
-    this.#pageId++;
+    this._pageId++;
 
     return page;
   }
@@ -171,8 +160,8 @@ class HarBuilder {
 
     let { eventTimings, id } = networkEvent;
     try {
-      if (!eventTimings && this.#connector.requestData) {
-        eventTimings = await this.#connector.requestData(id, "eventTimings");
+      if (!eventTimings && this._connector.requestData) {
+        eventTimings = await this._connector.requestData(id, "eventTimings");
       }
 
       entry.request = await this.buildRequest(networkEvent);
@@ -228,11 +217,11 @@ class HarBuilder {
 
     // TODO: This method currently ignores the networkEvent and always retrieves
     // the same timing markers for all pages. Seee Bug 1833806.
-    if (this.#connector.getTimingMarker) {
-      timings.onContentLoad = this.#connector.getTimingMarker(
+    if (this._connector.getTimingMarker) {
+      timings.onContentLoad = this._connector.getTimingMarker(
         "firstDocumentDOMContentLoadedTimestamp"
       );
-      timings.onLoad = this.#connector.getTimingMarker(
+      timings.onLoad = this._connector.getTimingMarker(
         "firstDocumentLoadTimestamp"
       );
     }
@@ -245,13 +234,13 @@ class HarBuilder {
     // and requestCookies, but when we use it from netmonitor, FirefoxDataProvider
     // should fetch it itself lazily, via requestData.
     let { id, requestHeaders } = networkEvent;
-    if (!requestHeaders && this.#connector.requestData) {
-      requestHeaders = await this.#connector.requestData(id, "requestHeaders");
+    if (!requestHeaders && this._connector.requestData) {
+      requestHeaders = await this._connector.requestData(id, "requestHeaders");
     }
 
     let { requestCookies } = networkEvent;
-    if (!requestCookies && this.#connector.requestData) {
-      requestCookies = await this.#connector.requestData(id, "requestCookies");
+    if (!requestCookies && this._connector.requestData) {
+      requestCookies = await this._connector.requestData(id, "requestCookies");
     }
 
     const request = {
@@ -340,8 +329,8 @@ class HarBuilder {
     let { id, requestHeaders, requestPostData } = networkEvent;
     let requestHeadersFromUploadStream;
 
-    if (!requestPostData && this.#connector.requestData) {
-      requestPostData = await this.#connector.requestData(
+    if (!requestPostData && this._connector.requestData) {
+      requestPostData = await this._connector.requestData(
         id,
         "requestPostData"
       );
@@ -352,8 +341,8 @@ class HarBuilder {
       return undefined;
     }
 
-    if (!requestHeaders && this.#connector.requestData) {
-      requestHeaders = await this.#connector.requestData(id, "requestHeaders");
+    if (!requestHeaders && this._connector.requestData) {
+      requestHeaders = await this._connector.requestData(id, "requestHeaders");
     }
 
     const postData = {
@@ -380,7 +369,7 @@ class HarBuilder {
         requestHeaders,
         requestHeadersFromUploadStream,
         requestPostData,
-        this.#connector.getLongString
+        this._connector.getLongString
       );
 
       formDataSections.forEach(section => {
@@ -400,15 +389,15 @@ class HarBuilder {
     // should fetch it itself lazily, via requestData.
 
     let { id, responseCookies, responseHeaders } = networkEvent;
-    if (!responseHeaders && this.#connector.requestData) {
-      responseHeaders = await this.#connector.requestData(
+    if (!responseHeaders && this._connector.requestData) {
+      responseHeaders = await this._connector.requestData(
         id,
         "responseHeaders"
       );
     }
 
-    if (!responseCookies && this.#connector.requestData) {
-      responseCookies = await this.#connector.requestData(
+    if (!responseCookies && this._connector.requestData) {
+      responseCookies = await this._connector.requestData(
         id,
         "responseCookies"
       );
@@ -457,8 +446,8 @@ class HarBuilder {
     // but when we use it from netmonitor, FirefoxDataProvider should fetch it itself
     // lazily, via requestData.
     let { responseContent } = networkEvent;
-    if (!responseContent && this.#connector.requestData) {
-      responseContent = await this.#connector.requestData(
+    if (!responseContent && this._connector.requestData) {
+      responseContent = await this._connector.requestData(
         networkEvent.id,
         "responseContent"
       );
@@ -468,7 +457,7 @@ class HarBuilder {
       content.encoding = responseContent.content.encoding;
     }
 
-    const includeBodies = this.#includeResponseBodies;
+    const includeBodies = this._includeResponseBodies;
     const contentDiscarded = responseContent
       ? responseContent.contentDiscarded
       : false;
@@ -498,8 +487,8 @@ class HarBuilder {
       return cache;
     }
 
-    if (networkEvent.responseCacheAvailable && this.#connector.requestData) {
-      const responseCache = await this.#connector.requestData(
+    if (networkEvent.responseCacheAvailable && this._connector.requestData) {
+      const responseCache = await this._connector.requestData(
         networkEvent.id,
         "responseCache"
       );
@@ -546,7 +535,7 @@ class HarBuilder {
 
   // RDP Helpers
   fetchData(string) {
-    const promise = this.#connector.getLongString(string).then(value => {
+    const promise = this._connector.getLongString(string).then(value => {
       return value;
     });
 

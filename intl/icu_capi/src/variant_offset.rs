@@ -4,6 +4,7 @@
 
 #[diplomat::bridge]
 #[diplomat::abi_rename = "icu4x_{0}_mv1"]
+#[diplomat::attr(auto, namespace = "icu4x")]
 pub mod ffi {
     use alloc::boxed::Box;
 
@@ -19,8 +20,6 @@ pub mod ffi {
     #[diplomat::rust_link(icu::time::zone::VariantOffsetsCalculator, Struct)]
     #[diplomat::rust_link(icu::time::zone::VariantOffsetsCalculatorBorrowed, Struct, hidden)]
     #[diplomat::opaque]
-    #[deprecated(note = "this API is a bad approximation of a time zone database")]
-    #[allow(deprecated)]
     pub struct VariantOffsetsCalculator(pub icu_time::zone::VariantOffsetsCalculator);
 
     #[diplomat::opaque]
@@ -116,7 +115,6 @@ pub mod ffi {
         }
     }
 
-    #[allow(deprecated)]
     impl VariantOffsetsCalculator {
         /// Construct a new [`VariantOffsetsCalculator`] instance using compiled data.
         #[diplomat::rust_link(icu::time::zone::VariantOffsetsCalculator::new, FnInStruct)]
@@ -150,12 +148,11 @@ pub mod ffi {
             icu::time::zone::VariantOffsetsCalculatorBorrowed::compute_offsets_from_time_zone_and_name_timestamp,
             FnInStruct
         )]
-        #[allow(deprecated)] // clean up in 3.0
         pub fn compute_offsets_from_time_zone_and_date_time(
             &self,
             time_zone: &TimeZone,
-            utc_date: &IsoDate,
-            utc_time: &Time,
+            local_date: &IsoDate,
+            local_time: &Time,
         ) -> Option<VariantOffsets> {
             let icu_time::zone::VariantOffsets {
                 standard, daylight, ..
@@ -165,49 +162,9 @@ pub mod ffi {
                 .compute_offsets_from_time_zone_and_name_timestamp(
                     time_zone.0,
                     icu_time::zone::ZoneNameTimestamp::from_date_time_iso(icu_time::DateTime {
-                        date: utc_date.0,
-                        time: utc_time.0,
+                        date: local_date.0,
+                        time: local_time.0,
                     }),
-                )?;
-
-            Some(VariantOffsets {
-                standard: Box::new(UtcOffset(standard)),
-                daylight: daylight.map(UtcOffset).map(Box::new),
-            })
-        }
-
-        #[diplomat::rust_link(
-            icu::time::zone::VariantOffsetsCalculatorBorrowed::compute_offsets_from_time_zone_and_name_timestamp,
-            FnInStruct
-        )]
-        #[diplomat::rust_link(
-            icu::time::zone::ZoneNameTimestamp::from_zoned_date_time_iso,
-            FnInStruct,
-            hidden
-        )]
-        #[diplomat::rust_link(
-            icu::time::ZonedDateTime::from_epoch_milliseconds_and_utc_offset,
-            FnInStruct,
-            hidden
-        )]
-        pub fn compute_offsets_from_time_zone_and_timestamp(
-            &self,
-            time_zone: &TimeZone,
-            timestamp: i64,
-        ) -> Option<VariantOffsets> {
-            let icu_time::zone::VariantOffsets {
-                standard, daylight, ..
-            } = self
-                .0
-                .as_borrowed()
-                .compute_offsets_from_time_zone_and_name_timestamp(
-                    time_zone.0,
-                    icu_time::zone::ZoneNameTimestamp::from_zoned_date_time_iso(
-                        icu_time::ZonedDateTime::from_epoch_milliseconds_and_utc_offset(
-                            timestamp,
-                            icu_time::zone::UtcOffset::zero(),
-                        ),
-                    ),
                 )?;
 
             Some(VariantOffsets {

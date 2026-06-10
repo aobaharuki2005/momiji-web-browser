@@ -144,11 +144,6 @@ static int equation_system_solve(aom_equation_system_t *eqns) {
   if (ret == 0) {
     return 0;
   }
-  for (int i = 0; i < n; ++i) {
-    if (isnan((float)eqns->x[i])) {
-      return 0;
-    }
-  }
   return 1;
 }
 
@@ -487,8 +482,7 @@ int aom_flat_block_finder_init(aom_flat_block_finder_t *block_finder,
   for (i = 0; i < kLowPolyNumParams; ++i) {
     memset(eqns.b, 0, sizeof(*eqns.b) * kLowPolyNumParams);
     eqns.b[i] = 1;
-    const int ret = equation_system_solve(&eqns);
-    if (!ret) return ret;
+    equation_system_solve(&eqns);
 
     for (j = 0; j < kLowPolyNumParams; ++j) {
       AtA_inv[j * kLowPolyNumParams + i] = eqns.x[j];
@@ -1265,10 +1259,7 @@ int aom_noise_model_get_grain_parameters(aom_noise_model_t *const noise_model,
     if (c == 0) {
       avg_luma_strength = average_strength;
     } else {
-      y_corr[c - 1] =
-          average_strength > 1e-6
-              ? avg_luma_strength * eqns->x[n_coeff] / average_strength
-              : 0;
+      y_corr[c - 1] = avg_luma_strength * eqns->x[n_coeff] / average_strength;
       max_coeff = AOMMAX(max_coeff, y_corr[c - 1]);
       min_coeff = AOMMIN(min_coeff, y_corr[c - 1]);
     }
@@ -1345,11 +1336,8 @@ static float *get_half_cos_window(int block_size) {
         INT_TYPE new_val = (INT_TYPE)AOMMIN(                                \
             AOMMAX(result[result_idx] * block_normalization + 0.5f, 0),     \
             block_normalization);                                           \
-        float err =                                                         \
+        const float err =                                                   \
             -(((float)new_val) / block_normalization - result[result_idx]); \
-        if (fabsf(err) < 1e-6f) {                                           \
-          err = 0.0f;                                                       \
-        }                                                                   \
         denoised[y * stride + x] = new_val;                                 \
         if (x + 1 < (w >> chroma_sub_w)) {                                  \
           result[result_idx + 1] += err * 7.0f / 16.0f;                     \

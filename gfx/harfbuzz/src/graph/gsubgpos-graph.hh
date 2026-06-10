@@ -52,7 +52,7 @@ struct ExtensionFormat1 : public OT::ExtensionFormat1<T>
 
   bool sanitize (graph_t::vertex_t& vertex) const
   {
-    size_t vertex_len = vertex.obj.tail - vertex.obj.head;
+    int64_t vertex_len = vertex.obj.tail - vertex.obj.head;
     return vertex_len >= OT::ExtensionFormat1<T>::static_size;
   }
 
@@ -76,7 +76,7 @@ struct Lookup : public OT::Lookup
 
   bool sanitize (graph_t::vertex_t& vertex) const
   {
-    size_t vertex_len = vertex.obj.tail - vertex.obj.head;
+    int64_t vertex_len = vertex.obj.tail - vertex.obj.head;
     if (vertex_len < OT::Lookup::min_size) return false;
     hb_barrier ();
     return vertex_len >= this->get_size ();
@@ -282,12 +282,14 @@ struct Lookup : public OT::Lookup
                                     const hb_vector_t<hb_pair_t<unsigned, hb_vector_t<unsigned>>>& subtable_ids)
   {
     auto& v = c.graph.vertices_[this_index];
+    Lookup* lookup = (Lookup*) v.obj.head;
+
     unsigned shift = 0;
     for (const auto& p : subtable_ids)
     {
       unsigned insert_index = p.first + shift;
       unsigned pos_offset = p.second.length * OT::Offset16::static_size;
-      unsigned insert_offset = Lookup::min_size + insert_index * OT::Offset16::static_size;
+      unsigned insert_offset = (char*) &lookup->subTable[insert_index] - (char*) lookup;
       shift += p.second.length;
 
       for (auto& l : v.obj.all_links_writer ())
@@ -390,7 +392,7 @@ struct LookupList : public OT::LookupList<T>
 {
   bool sanitize (const graph_t::vertex_t& vertex) const
   {
-    size_t vertex_len = vertex.obj.tail - vertex.obj.head;
+    int64_t vertex_len = vertex.obj.tail - vertex.obj.head;
     if (vertex_len < OT::LookupList<T>::min_size) return false;
     hb_barrier ();
     return vertex_len >= OT::LookupList<T>::item_size * this->len;
@@ -424,7 +426,7 @@ struct GSTAR : public OT::GSUBGPOS
 
   bool sanitize (const graph_t::vertex_t& vertex)
   {
-    size_t len = vertex.obj.tail - vertex.obj.head;
+    int64_t len = vertex.obj.tail - vertex.obj.head;
     if (len < OT::GSUBGPOS::min_size) return false;
     hb_barrier ();
     return len >= get_size ();

@@ -5,18 +5,16 @@
  */
 
 import childProcess from 'node:child_process';
-import {EventEmitter} from 'node:events';
 import {accessSync} from 'node:fs';
 import os from 'node:os';
 import readline from 'node:readline';
-import type Stream from 'node:stream';
 
 import {
   type Browser,
   type BrowserPlatform,
+  resolveSystemExecutablePath,
   type ChromeReleaseChannel,
   executablePathByBrowser,
-  resolveSystemExecutablePaths,
 } from './browser-data/browser-data.js';
 import {Cache} from './Cache.js';
 import {debug} from './debug.js';
@@ -97,8 +95,8 @@ export interface SystemOptions {
 /**
  * Returns a path to a system-wide Chrome installation given a release channel
  * name by checking known installation locations (using
- * {@link https://pptr.dev/browsers-api/browsers.computesystemexecutablepath}).
- * If Chrome instance is not found at the expected path, an error is thrown.
+ * https://pptr.dev/browsers-api/browsers.computesystemexecutablepath/). If
+ * Chrome instance is not found at the expected path, an error is thrown.
  *
  * @public
  */
@@ -109,24 +107,19 @@ export function computeSystemExecutablePath(options: SystemOptions): string {
       `Cannot download a binary for the provided platform: ${os.platform()} (${os.arch()})`,
     );
   }
-  const paths = resolveSystemExecutablePaths(
+  const path = resolveSystemExecutablePath(
     options.browser,
     options.platform,
     options.channel,
   );
-  for (const path of paths) {
-    try {
-      accessSync(path);
-      return path;
-    } catch {}
+  try {
+    accessSync(path);
+  } catch {
+    throw new Error(
+      `Could not find Google Chrome executable for channel '${options.channel}' at '${path}'.`,
+    );
   }
-  throw new Error(
-    `Could not find Google Chrome executable for channel '${options.channel}' at:${paths.map(
-      path => {
-        return `\n - ${path}`;
-      },
-    )}.`,
-  );
+  return path;
 }
 
 /**
@@ -281,9 +274,6 @@ export class Process {
   #hooksRan = false;
   #onExitHook = async () => {};
   #browserProcessExiting: Promise<void>;
-  #logs: string[] = [];
-  #maxLogLinesSize = 1000;
-  #lineEmitter = new EventEmitter();
 
   constructor(opts: LaunchOptions) {
     this.#executablePath = opts.executablePath;
@@ -299,8 +289,10 @@ export class Process {
     // process tree with `.kill(-pid)` command. @see
     // https://nodejs.org/api/child_process.html#child_process_options_detached
     opts.detached ??= process.platform !== 'win32';
+
     const stdio = this.#configureStdio({
       pipe: opts.pipe,
+      dumpio: opts.dumpio,
     });
 
     const env = opts.env || {};
@@ -328,8 +320,6 @@ export class Process {
         stdio,
       },
     );
-    this.#recordStream(this.#browserProcess.stderr!);
-    this.#recordStream(this.#browserProcess.stdout!);
 
     debugLaunch(`Launched ${this.#browserProcess.pid}`);
     if (opts.dumpio) {
@@ -377,11 +367,22 @@ export class Process {
     return this.#browserProcess;
   }
 
-  #configureStdio(opts: {pipe: boolean}): Array<'ignore' | 'pipe'> {
+  #configureStdio(opts: {
+    pipe: boolean;
+    dumpio: boolean;
+  }): Array<'ignore' | 'pipe'> {
     if (opts.pipe) {
-      return ['pipe', 'pipe', 'pipe', 'pipe', 'pipe'];
+      if (opts.dumpio) {
+        return ['ignore', 'pipe', 'pipe', 'pipe', 'pipe'];
+      } else {
+        return ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'];
+      }
     } else {
-      return ['pipe', 'pipe', 'pipe'];
+      if (opts.dumpio) {
+        return ['pipe', 'pipe', 'pipe'];
+      } else {
+        return ['pipe', 'ignore', 'pipe'];
+      }
     }
   }
 
@@ -476,77 +477,46 @@ export class Process {
     this.#clearListeners();
   }
 
-  #recordStream(stream: Stream.Readable): void {
-    const rl = readline.createInterface(stream);
-    const cleanup = (): void => {
-      rl.off('line', onLine);
-      rl.off('close', onClose);
-      try {
-        rl.close();
-      } catch {}
-    };
-    const onLine = (line: string) => {
-      if (line.trim() === '') {
-        return;
-      }
-      this.#logs.push(line);
-      const delta = this.#logs.length - this.#maxLogLinesSize;
-      if (delta) {
-        this.#logs.splice(0, delta);
-      }
-      this.#lineEmitter.emit('line', line);
-    };
-    const onClose = (): void => {
-      cleanup();
-    };
-    rl.on('line', onLine);
-    rl.on('close', onClose);
-  }
-
-  /**
-   * Get recent logs (stderr + stdout) emitted by the browser.
-   *
-   * @public
-   */
-  getRecentLogs(): string[] {
-    return [...this.#logs];
-  }
-
   waitForLineOutput(regex: RegExp, timeout = 0): Promise<string> {
+    if (!this.#browserProcess.stderr) {
+      throw new Error('`browserProcess` does not have stderr.');
+    }
+    const rl = readline.createInterface(this.#browserProcess.stderr);
+    let stderr = '';
+
     return new Promise((resolve, reject) => {
-      const onClose = (errorOrCode?: Error | number): void => {
+      rl.on('line', onLine);
+      rl.on('close', onClose);
+      this.#browserProcess.on('exit', onClose);
+      this.#browserProcess.on('error', onClose);
+      const timeoutId =
+        timeout > 0 ? setTimeout(onTimeout, timeout) : undefined;
+
+      const cleanup = (): void => {
+        clearTimeout(timeoutId);
+        rl.off('line', onLine);
+        rl.off('close', onClose);
+        rl.close();
+        this.#browserProcess.off('exit', onClose);
+        this.#browserProcess.off('error', onClose);
+      };
+
+      function onClose(error?: Error): void {
         cleanup();
         reject(
           new Error(
             [
-              `Failed to launch the browser process: ${
-                errorOrCode instanceof Error
-                  ? ` ${errorOrCode.message}`
-                  : ` Code: ${errorOrCode}`
+              `Failed to launch the browser process!${
+                error ? ' ' + error.message : ''
               }`,
-              '',
-              `stderr:`,
-              this.getRecentLogs().join('\n'),
+              stderr,
               '',
               'TROUBLESHOOTING: https://pptr.dev/troubleshooting',
               '',
             ].join('\n'),
           ),
         );
-      };
-
-      this.#browserProcess.on('exit', onClose);
-      this.#browserProcess.on('error', onClose);
-      const timeoutId =
-        timeout > 0 ? setTimeout(onTimeout, timeout) : undefined;
-
-      this.#lineEmitter.on('line', onLine);
-      const cleanup = (): void => {
-        clearTimeout(timeoutId);
-        this.#lineEmitter.off('line', onLine);
-        this.#browserProcess.off('exit', onClose);
-        this.#browserProcess.off('error', onClose);
-      };
+      }
 
       function onTimeout(): void {
         cleanup();
@@ -557,11 +527,8 @@ export class Process {
         );
       }
 
-      for (const line of this.#logs) {
-        onLine(line);
-      }
-
       function onLine(line: string): void {
+        stderr += line + '\n';
         const match = line.match(regex);
         if (!match) {
           return;

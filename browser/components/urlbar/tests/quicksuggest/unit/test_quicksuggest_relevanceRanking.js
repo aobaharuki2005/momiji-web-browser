@@ -376,8 +376,7 @@ async function doOfflineTest({ mode, expectedResultArgs }) {
 }
 
 async function applyRanking(suggestions) {
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  let quickSuggestProviderInstance = providersManager.getProvider(
+  let quickSuggestProviderInstance = UrlbarProvidersManager.getProvider(
     UrlbarProviderQuickSuggest.name
   );
   for (let s of suggestions) {

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,11 +16,12 @@ DetailedPromise::DetailedPromise(nsIGlobalObject* aGlobal,
                                  const nsACString& aName)
     : Promise(aGlobal), mName(aName), mStartTime(TimeStamp::Now()) {}
 
-// It would be nice to assert that mResponded is identical to
-// GetPromiseState() == PromiseState::Rejected.  But by now we've been
-// unlinked, so don't have a reference to our actual JS Promise object
-// anymore.
-DetailedPromise::~DetailedPromise() = default;
+DetailedPromise::~DetailedPromise() {
+  // It would be nice to assert that mResponded is identical to
+  // GetPromiseState() == PromiseState::Rejected.  But by now we've been
+  // unlinked, so don't have a reference to our actual JS Promise object
+  // anymore.
+}
 
 void DetailedPromise::LogRejectionReason(uint32_t aErrorCode,
                                          const nsACString& aReason) {

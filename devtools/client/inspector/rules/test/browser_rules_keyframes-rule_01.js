@@ -26,8 +26,10 @@ async function testPacman(inspector, view) {
     keyframeRules: ["100%", "100%"],
   });
 
-  // See bug 1042036 and Bug 1894873 we are showing all keyframes with the same name.
-  assertRuleViewHeaders(view, ["Keyframes pacman", "Keyframes pacman"]);
+  assertGutters(view, {
+    guttersNbs: 2,
+    gutterHeading: ["Keyframes pacman", "Keyframes pacman"],
+  });
 }
 
 async function testBoxy(inspector, view) {
@@ -40,7 +42,10 @@ async function testBoxy(inspector, view) {
     keyframeRules: ["10%", "20%", "100%"],
   });
 
-  assertRuleViewHeaders(view, ["Keyframes boxy"]);
+  assertGutters(view, {
+    guttersNbs: 1,
+    gutterHeading: ["Keyframes boxy"],
+  });
 }
 
 async function testMoxy(inspector, view) {
@@ -53,12 +58,15 @@ async function testMoxy(inspector, view) {
     keyframeRules: ["10%", "20%", "100%", "100%"],
   });
 
-  assertRuleViewHeaders(view, ["Keyframes boxy", "Keyframes moxy"]);
+  assertGutters(view, {
+    guttersNbs: 2,
+    gutterHeading: ["Keyframes boxy", "Keyframes moxy"],
+  });
 }
 
 async function assertKeyframeRules(selector, inspector, view, expected) {
   await selectNode(selector, inspector);
-  const elementStyle = view.elementStyle;
+  const elementStyle = view._elementStyle;
 
   const rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.keyframes),
@@ -90,4 +98,26 @@ async function assertKeyframeRules(selector, inspector, view, expected) {
     );
     i++;
   }
+}
+
+function assertGutters(view, expected) {
+  const gutters = view.element.querySelectorAll(".ruleview-header");
+
+  is(
+    gutters.length,
+    expected.guttersNbs,
+    "There are " + gutters.length + " gutter headings"
+  );
+
+  let i = 0;
+  for (const gutter of gutters) {
+    is(
+      gutter.textContent,
+      expected.gutterHeading[i],
+      "Correct " + gutter.textContent + " gutter headings"
+    );
+    i++;
+  }
+
+  return gutters;
 }

@@ -102,11 +102,11 @@ public:
     }
 
     SkSpan<std::unique_ptr<Expression>> argumentSpan() final {
-        return {&fArguments.front(), (size_t)fArguments.size()};
+        return {&fArguments.front(), fArguments.size()};
     }
 
     SkSpan<const std::unique_ptr<Expression>> argumentSpan() const final {
-        return {&fArguments.front(), (size_t)fArguments.size()};
+        return {&fArguments.front(), fArguments.size()};
     }
 
 private:

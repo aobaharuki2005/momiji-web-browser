@@ -117,15 +117,9 @@ struct hb_bit_set_t
 
   void clear ()
   {
-    /* Early-out on already-empty.  Protects the Null singleton
-     * (which is zero-initialized) from any writes.  Any non-empty
-     * instance is a real heap object with writable storage, so
-     * clearing through the vector's always-safe clear() is fine
-     * even if we entered error state. */
-    if (!pages.length && !population) return;
-    pages.clear ();
-    page_map.clear ();
-    population = 0;
+    resize (0);
+    if (likely (successful))
+      population = 0;
   }
   bool is_empty () const
   {
@@ -444,31 +438,23 @@ struct hb_bit_set_t
       return false;
 
     uint32_t spi = 0;
-    uint32_t lpi = 0;
-    while (spi < page_map.length && lpi < larger_set.page_map.length)
+    for (uint32_t lpi = 0; spi < page_map.length && lpi < larger_set.page_map.length; lpi++)
     {
       uint32_t spm = page_map.arrayZ[spi].major;
       uint32_t lpm = larger_set.page_map.arrayZ[lpi].major;
       auto sp = page_at (spi);
 
-      if (spm < lpm) {
-        if (!sp.is_empty ())
-          return false;
-        spi++;
-        continue;
-      }
+      if (spm < lpm && !sp.is_empty ())
+        return false;
 
-      if (lpm < spm) {
-        lpi++;
+      if (lpm < spm)
         continue;
-      }
 
       auto lp = larger_set.page_at (lpi);
       if (!sp.is_subset (lp))
         return false;
 
       spi++;
-      lpi++;
     }
 
     while (spi < page_map.length)

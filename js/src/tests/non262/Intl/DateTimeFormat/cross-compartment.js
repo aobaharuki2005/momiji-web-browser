@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 var otherGlobal = newGlobal();
 
 var dateTimeFormat = new Intl.DateTimeFormat();

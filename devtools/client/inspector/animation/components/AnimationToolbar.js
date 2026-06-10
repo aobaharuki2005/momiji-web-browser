@@ -5,9 +5,7 @@
 "use strict";
 
 const {
-  createElement,
   createFactory,
-  Fragment,
   PureComponent,
 } = require("resource://devtools/client/shared/vendor/react.mjs");
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
@@ -31,10 +29,9 @@ class AnimationToolbar extends PureComponent {
     return {
       addAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
-      playBackRateMultiplier: PropTypes.number.isRequired,
       removeAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       rewindAnimationsCurrentTime: PropTypes.func.isRequired,
-      setAnimationsPlaybackRateMultiplier: PropTypes.func.isRequired,
+      setAnimationsPlaybackRate: PropTypes.func.isRequired,
       setAnimationsPlayState: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
     };
@@ -44,10 +41,9 @@ class AnimationToolbar extends PureComponent {
     const {
       addAnimationsCurrentTimeListener,
       animations,
-      playBackRateMultiplier,
       removeAnimationsCurrentTimeListener,
       rewindAnimationsCurrentTime,
-      setAnimationsPlaybackRateMultiplier,
+      setAnimationsPlaybackRate,
       setAnimationsPlayState,
       timeScale,
     } = this.props;
@@ -56,28 +52,22 @@ class AnimationToolbar extends PureComponent {
       {
         className: "animation-toolbar devtools-toolbar",
       },
-      PlaybackRateSelector({
-        playBackRateMultiplier,
-        setAnimationsPlaybackRateMultiplier,
+      RewindButton({
+        rewindAnimationsCurrentTime,
       }),
-      animations.length
-        ? createElement(
-            Fragment,
-            null,
-            RewindButton({
-              rewindAnimationsCurrentTime,
-            }),
-            PauseResumeButton({
-              animations,
-              setAnimationsPlayState,
-            }),
-            CurrentTimeLabel({
-              addAnimationsCurrentTimeListener,
-              removeAnimationsCurrentTimeListener,
-              timeScale,
-            })
-          )
-        : null
+      PauseResumeButton({
+        animations,
+        setAnimationsPlayState,
+      }),
+      PlaybackRateSelector({
+        animations,
+        setAnimationsPlaybackRate,
+      }),
+      CurrentTimeLabel({
+        addAnimationsCurrentTimeListener,
+        removeAnimationsCurrentTimeListener,
+        timeScale,
+      })
     );
   }
 }

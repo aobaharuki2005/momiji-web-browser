@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,8 +10,10 @@
 
 using namespace cdm;
 
-ClearKeyCDM::ClearKeyCDM(Host_11* aHost)
-    : mSessionManager(new ClearKeySessionManager(aHost)), mHost(aHost) {}
+ClearKeyCDM::ClearKeyCDM(Host_11* aHost) {
+  mHost = aHost;
+  mSessionManager = new ClearKeySessionManager(mHost);
+}
 
 void ClearKeyCDM::Initialize(bool aAllowDistinctiveIdentifier,
                              bool aAllowPersistentState,
@@ -96,17 +100,16 @@ Status ClearKeyCDM::InitializeAudioDecoder(
 Status ClearKeyCDM::InitializeVideoDecoder(
     const VideoDecoderConfig_2& aVideoDecoderConfig) {
 #ifdef ENABLE_WMF
-  mVideoDecoder = VideoDecoder::Create(mHost, aVideoDecoderConfig);
-  if (mVideoDecoder) {
-    return Status::kSuccess;
-  }
-#endif
+  mVideoDecoder = new VideoDecoder(mHost);
+  return mVideoDecoder->InitDecode(aVideoDecoderConfig);
+#else
   return Status::kDecodeError;
+#endif
 }
 
 void ClearKeyCDM::DeinitializeDecoder(StreamType aDecoderType) {
 #ifdef ENABLE_WMF
-  if (mVideoDecoder && aDecoderType == StreamType::kStreamTypeVideo) {
+  if (aDecoderType == StreamType::kStreamTypeVideo) {
     mVideoDecoder->DecodingComplete();
     mVideoDecoder = nullptr;
   }
@@ -115,7 +118,7 @@ void ClearKeyCDM::DeinitializeDecoder(StreamType aDecoderType) {
 
 void ClearKeyCDM::ResetDecoder(StreamType aDecoderType) {
 #ifdef ENABLE_WMF
-  if (mVideoDecoder && aDecoderType == StreamType::kStreamTypeVideo) {
+  if (aDecoderType == StreamType::kStreamTypeVideo) {
     mVideoDecoder->Reset();
   }
 #endif
@@ -130,11 +133,10 @@ Status ClearKeyCDM::DecryptAndDecodeFrame(const InputBuffer_2& aEncryptedBuffer,
     // check using that mechanism.
     mSessionManager->QueryOutputProtectionStatusIfNeeded();
   }
-  if (mVideoDecoder) {
-    return mVideoDecoder->Decode(aEncryptedBuffer, aVideoFrame);
-  }
-#endif
+  return mVideoDecoder->Decode(aEncryptedBuffer, aVideoFrame);
+#else
   return Status::kDecodeError;
+#endif
 }
 
 Status ClearKeyCDM::DecryptAndDecodeSamples(

@@ -68,11 +68,11 @@ class PictureInPictureFeature(
 
     /**
      * Should be called when the system informs you of changes to and from picture-in-picture mode.
-     * @param isInPipMode True if the activity is in picture-in-picture mode.
+     * @param enabled True if the activity is in picture-in-picture mode.
      */
-    fun onPictureInPictureModeChanged(isInPipMode: Boolean) {
+    fun onPictureInPictureModeChanged(enabled: Boolean) {
         val sessionId = tabId ?: store.state.selectedTabId ?: return
-        store.state.selectedTab?.engineState?.engineSession?.onPipModeChanged(isInPipMode)
-        store.dispatch(ContentAction.PictureInPictureChangedAction(sessionId, isInPipMode))
+        store.state.selectedTab?.engineState?.engineSession?.onPipModeChanged(enabled)
+        store.dispatch(ContentAction.PictureInPictureChangedAction(sessionId, enabled))
     }
 }

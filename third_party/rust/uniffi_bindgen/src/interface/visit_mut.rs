@@ -1,10 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-use crate::interface::FfiDefinition;
+use crate::interface::{Enum, FfiDefinition, Record};
 use crate::{ComponentInterface, VisitMut};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use uniffi_meta::Type;
 
 impl ComponentInterface {
@@ -30,8 +26,10 @@ impl ComponentInterface {
 
         self.types.all_known_types = all_known_types_altered;
 
+        let mut updated_enums: BTreeMap<String, Enum> = BTreeMap::new();
         let errors_clone = self.errors.clone();
-        for enum_item in self.enums.iter_mut() {
+        for (enum_name, enum_item) in self.enums.iter_mut() {
+            let updated_key = visitor.visit_enum_key(&mut enum_name.clone());
             let is_error = errors_clone.contains(enum_item.name());
 
             visitor.visit_enum(is_error, enum_item);
@@ -44,9 +42,11 @@ impl ComponentInterface {
                     visitor.visit_type(&mut field.type_);
                 }
             }
+            updated_enums.insert(updated_key, enum_item.clone());
         }
+        self.enums = updated_enums;
 
-        for record_item in self.records.iter_mut() {
+        for record_item in self.records.values_mut() {
             visitor.visit_record(record_item);
 
             for field in &mut record_item.fields {
@@ -54,6 +54,7 @@ impl ComponentInterface {
                 visitor.visit_type(&mut field.type_);
             }
         }
+        self.fix_record_keys_after_rename();
 
         for function in self.functions.iter_mut() {
             visitor.visit_function(function);
@@ -64,12 +65,6 @@ impl ComponentInterface {
                 function.return_type = Some(return_type);
             }
 
-            if let Some(error_type) = function.throws_type() {
-                let mut error_type = error_type.clone();
-                visitor.visit_type(&mut error_type);
-                function.throws = Some(error_type);
-            }
-
             for argument in function.arguments.iter_mut() {
                 visitor.visit_argument(argument);
                 visitor.visit_type(&mut argument.type_);
@@ -77,13 +72,10 @@ impl ComponentInterface {
         }
 
         for object in self.objects.iter_mut() {
-            // Capture original object name before any renaming
-            let object_name = object.name().to_string();
-
             visitor.visit_object(object);
 
             for method in object.methods.iter_mut() {
-                visitor.visit_method(&object_name, method);
+                visitor.visit_method(method);
 
                 for argument in method.arguments.iter_mut() {
                     visitor.visit_argument(argument);
@@ -95,16 +87,10 @@ impl ComponentInterface {
                     visitor.visit_type(&mut return_type);
                     method.return_type = Some(return_type);
                 }
-
-                if let Some(error_type) = method.throws_type() {
-                    let mut error_type = error_type.clone();
-                    visitor.visit_type(&mut error_type);
-                    method.throws = Some(error_type);
-                }
             }
 
             for constructor in object.constructors.iter_mut() {
-                visitor.visit_constructor(&object_name, constructor);
+                visitor.visit_constructor(constructor);
 
                 for argument in constructor.arguments.iter_mut() {
                     visitor.visit_argument(argument);
@@ -114,9 +100,8 @@ impl ComponentInterface {
         }
 
         for callback_interface in self.callback_interfaces.iter_mut() {
-            visitor.visit_callback_interface(callback_interface);
             for method in callback_interface.methods.iter_mut() {
-                visitor.visit_method(&callback_interface.name, method);
+                visitor.visit_method(method);
 
                 for argument in method.arguments.iter_mut() {
                     visitor.visit_argument(argument);
@@ -155,5 +140,15 @@ impl ComponentInterface {
                 name
             })
             .collect()
+    }
+
+    fn fix_record_keys_after_rename(&mut self) {
+        let mut new_records: BTreeMap<String, Record> = BTreeMap::new();
+
+        for record in self.records.values() {
+            new_records.insert(record.name().to_string(), record.clone());
+        }
+
+        self.records = new_records;
     }
 }

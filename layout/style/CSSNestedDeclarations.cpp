@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,10 +12,14 @@
 namespace mozilla::dom {
 
 CSSNestedDeclarationsDeclaration::CSSNestedDeclarationsDeclaration(
-    already_AddRefed<Block> aDecls)
-    : mDecls(aDecls) {}
+    already_AddRefed<StyleLockedDeclarationBlock> aDecls)
+    : mDecls(new DeclarationBlock(std::move(aDecls))) {
+  mDecls->SetOwningRule(Rule());
+}
 
-CSSNestedDeclarationsDeclaration::~CSSNestedDeclarationsDeclaration() = default;
+CSSNestedDeclarationsDeclaration::~CSSNestedDeclarationsDeclaration() {
+  mDecls->SetOwningRule(nullptr);
+}
 
 // QueryInterface implementation for CSSNestedDeclarationsDeclaration
 NS_INTERFACE_MAP_BEGIN(CSSNestedDeclarationsDeclaration)
@@ -36,9 +42,8 @@ nsINode* CSSNestedDeclarationsDeclaration::GetAssociatedNode() const {
 nsISupports* CSSNestedDeclarationsDeclaration::GetParentObject() const {
   return Rule()->GetParentObject();
 }
-StyleLockedDeclarationBlock*
-CSSNestedDeclarationsDeclaration::GetOrCreateCSSDeclaration(
-    Operation aOperation, Block** aCreated) {
+DeclarationBlock* CSSNestedDeclarationsDeclaration::GetOrCreateCSSDeclaration(
+    Operation aOperation, DeclarationBlock** aCreated) {
   if (aOperation != Operation::Read) {
     if (StyleSheet* sheet = Rule()->GetStyleSheet()) {
       sheet->WillDirty();
@@ -49,17 +54,22 @@ CSSNestedDeclarationsDeclaration::GetOrCreateCSSDeclaration(
 
 void CSSNestedDeclarationsDeclaration::SetRawAfterClone(
     RefPtr<StyleLockedDeclarationBlock> aRaw) {
-  mDecls = std::move(aRaw);
+  auto block = MakeRefPtr<DeclarationBlock>(aRaw.forget());
+  mDecls->SetOwningRule(nullptr);
+  mDecls = std::move(block);
+  mDecls->SetOwningRule(Rule());
 }
 
 nsresult CSSNestedDeclarationsDeclaration::SetCSSDeclaration(
-    Block* aDecl, MutationClosureData* aClosureData) {
+    DeclarationBlock* aDecl, MutationClosureData* aClosureData) {
   CSSNestedDeclarations* rule = Rule();
-  RefPtr<Block> oldDecls;
+  RefPtr<DeclarationBlock> oldDecls;
   if (aDecl != mDecls) {
     oldDecls = std::move(mDecls);
-    Servo_NestedDeclarationsRule_SetStyle(rule->Raw(), aDecl);
+    oldDecls->SetOwningRule(nullptr);
+    Servo_NestedDeclarationsRule_SetStyle(rule->Raw(), aDecl->Raw());
     mDecls = aDecl;
+    mDecls->SetOwningRule(rule);
   }
   if (StyleSheet* sheet = rule->GetStyleSheet()) {
     sheet->RuleChanged(rule, {StyleRuleChangeKind::StyleRuleDeclarations,
@@ -70,10 +80,8 @@ nsresult CSSNestedDeclarationsDeclaration::SetCSSDeclaration(
 
 nsDOMCSSDeclaration::ParsingEnvironment
 CSSNestedDeclarationsDeclaration::GetParsingEnvironment(nsIPrincipal*) const {
-  if (auto* parent = Rule()->GetParentRule()) {
-    return GetParsingEnvironmentForRule(parent, parent->Type());
-  }
-  return {};
+  return GetParsingEnvironmentForRule(Rule(),
+                                      StyleCssRuleType::NestedDeclarations);
 }
 
 CSSNestedDeclarations::CSSNestedDeclarations(
@@ -111,7 +119,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSNestedDeclarations,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 const StyleLockedDeclarationBlock* CSSNestedDeclarations::RawStyle() const {
-  return mDecls.mDecls.get();
+  return mDecls.mDecls->Raw();
 }
 
 bool CSSNestedDeclarations::IsCCLeaf() const {

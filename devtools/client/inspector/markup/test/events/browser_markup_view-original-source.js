@@ -31,13 +31,7 @@ add_task(async function () {
   const debuggerIcon = tooltip.panel.querySelector(
     ".event-tooltip-debugger-icon"
   );
-  EventUtils.synthesizeMouse(
-    debuggerIcon,
-    2,
-    2,
-    {},
-    debuggerIcon.documentGlobal
-  );
+  EventUtils.synthesizeMouse(debuggerIcon, 2, 2, {}, debuggerIcon.ownerGlobal);
 
   await gDevTools.showToolboxForTab(tab, { toolId: "jsdebugger" });
   const dbg = toolbox.getPanel("jsdebugger");

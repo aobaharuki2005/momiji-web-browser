@@ -12,8 +12,6 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.browser.state.state.TabGroup
-import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.state.recover.TabState
@@ -82,7 +80,6 @@ private fun JsonReader.browsingSession(
 
     var version = 1 // Initially we didn't save a version. If there's none then we assume it is version 1.
     var tabs: List<RecoverableTab>? = null
-    var tabPartitions: Map<String, TabPartition> = emptyMap()
     var selectedIndex: Int? = null
     var selectedTabId: String? = null
 
@@ -92,7 +89,6 @@ private fun JsonReader.browsingSession(
             Keys.SELECTED_SESSION_INDEX_KEY -> selectedIndex = nextInt()
             Keys.SELECTED_TAB_ID_KEY -> selectedTabId = nextStringOrNull()
             Keys.SESSION_STATE_TUPLES_KEY -> tabs = tabs(engine, restoreSessionId, restoreParentId, predicate)
-            Keys.TAB_PARTITIONS_KEY -> tabPartitions = tabPartitions()
         }
     }
 
@@ -105,14 +101,14 @@ private fun JsonReader.browsingSession(
         selectedTabId = tabs?.getOrNull(selectedIndex)?.state?.id
     }
 
-    return if (!tabs.isNullOrEmpty()) {
+    return if (tabs != null && tabs.isNotEmpty()) {
         // Check if selected tab still exists after restoring/filtering and
         // use most recently accessed tab otherwise.
         if (tabs.find { it.state.id == selectedTabId } == null) {
             selectedTabId = tabs.sortedByDescending { it.state.lastAccess }.first().state.id
         }
 
-        RecoverableBrowserState(tabs, selectedTabId, tabPartitions)
+        RecoverableBrowserState(tabs, selectedTabId)
     } else {
         null
     }
@@ -177,7 +173,6 @@ private fun JsonReader.tabSession(): RecoverableTab {
     var contextId: String? = null
     var lastAccess: Long? = null
     var createdAt: Long? = null
-    var lastVisibleAt: Long? = null
     var lastMediaUrl: String? = null
     var lastMediaAccess: Long? = null
     var mediaSessionActive: Boolean? = null
@@ -214,7 +209,6 @@ private fun JsonReader.tabSession(): RecoverableTab {
             Keys.SESSION_HISTORY_METADATA_REFERRER_URL -> historyMetadataReferrerUrl = nextStringOrNull()
             Keys.SESSION_LAST_ACCESS -> lastAccess = nextLong()
             Keys.SESSION_CREATED_AT -> createdAt = nextLong()
-            Keys.SESSION_LAST_VISIBLE_AT -> lastVisibleAt = nextLong()
             Keys.SESSION_LAST_MEDIA_URL -> lastMediaUrl = nextString()
             Keys.SESSION_LAST_MEDIA_SESSION_ACTIVE -> mediaSessionActive = nextBoolean()
             Keys.SESSION_LAST_MEDIA_ACCESS -> lastMediaAccess = nextLong()
@@ -255,7 +249,6 @@ private fun JsonReader.tabSession(): RecoverableTab {
             private = false, // We never serialize private sessions
             lastAccess = lastAccess ?: 0,
             createdAt = createdAt ?: 0,
-            lastVisibleAt = lastVisibleAt ?: 0,
             lastMediaAccessState = LastMediaAccessState(
                 lastMediaUrl ?: "",
                 lastMediaAccess = lastMediaAccess ?: 0,
@@ -264,80 +257,5 @@ private fun JsonReader.tabSession(): RecoverableTab {
             source = SessionState.Source.restore(sourceId, externalSourcePackageId, externalSourceCategory),
             desktopMode = desktopMode ?: false,
         ),
-    )
-}
-
-private fun JsonReader.tabPartitions(): Map<String, TabPartition> {
-    beginArray()
-
-    val tabPartitions = mutableMapOf<String, TabPartition>()
-    while (peek() != JsonToken.END_ARRAY) {
-        val tabPartition = tabPartition()
-        tabPartitions[tabPartition.id] = tabPartition
-    }
-
-    endArray()
-
-    return tabPartitions
-}
-
-private fun JsonReader.tabPartition(): TabPartition {
-    beginObject()
-
-    var id: String? = null
-    var tabGroups: List<TabGroup> = emptyList()
-
-    while (hasNext()) {
-        when (nextName()) {
-            Keys.TAB_PARTITION_ID_KEY -> id = nextString()
-            Keys.TAB_PARTITION_GROUPS_KEY -> {
-                val groups = mutableListOf<TabGroup>()
-                beginArray()
-                while (peek() != JsonToken.END_ARRAY) {
-                    groups.add(group())
-                }
-                endArray()
-                tabGroups = groups
-            }
-        }
-    }
-
-    endObject()
-
-    return TabPartition(
-        id = requireNotNull(id),
-        tabGroups = tabGroups,
-    )
-}
-
-private fun JsonReader.group(): TabGroup {
-    beginObject()
-
-    var id: String? = null
-    var name: String? = null
-    val tabIds = mutableSetOf<String>()
-
-    while (hasNext()) {
-        when (nextName()) {
-            Keys.TAB_GROUP_ID_KEY -> id = nextString()
-            Keys.TAB_GROUP_NAME_KEY -> name = nextString()
-            Keys.TAB_GROUP_TAB_IDS_KEY -> {
-                beginArray()
-
-                while (peek() != JsonToken.END_ARRAY) {
-                    tabIds.add(nextString())
-                }
-
-                endArray()
-            }
-        }
-    }
-
-    endObject()
-
-    return TabGroup(
-        id = requireNotNull(id),
-        name = requireNotNull(name),
-        tabIds = tabIds,
     )
 }

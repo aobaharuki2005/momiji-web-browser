@@ -19,5 +19,12 @@ add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   await selectNode("a", inspector);
-  assertRuleViewHeaders(view, ["Inherited from div", "Inherited from div"]);
+  await elementStyleInherit(inspector, view);
 });
+
+function elementStyleInherit(inspector, view) {
+  const gutters = view.element.querySelectorAll(".ruleview-header");
+  is(gutters.length, 2, "Gutters should contains 2 sections");
+  ok(gutters[0].textContent, "Inherited from div");
+  ok(gutters[1].textContent, "Inherited from div");
+}

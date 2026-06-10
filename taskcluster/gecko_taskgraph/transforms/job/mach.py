@@ -5,30 +5,29 @@
 Support for running mach tasks (via run-task)
 """
 
-from typing import Literal, Optional, Union
-
-from taskgraph.util.schema import Schema, taskref_or_string_msgspec
+from taskgraph.util.schema import Schema, taskref_or_string
+from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
 
-
-class MachSchema(Schema, kw_only=True):
-    using: Literal["mach"]
+mach_schema = Schema({
+    Required("using"): "mach",
     # The mach command (omitting `./mach`) to run
-    mach: taskref_or_string_msgspec
+    Required("mach"): taskref_or_string,
     # The sparse checkout profile to use. Value is the filename relative to the
     # directory where sparse profiles are defined (build/sparse-profiles/).
-    sparse_profile: Optional[str] = None
+    Optional("sparse-profile"): Any(str, None),
     # if true, perform a checkout of a comm-central based branch inside the
     # gecko checkout
-    comm_checkout: bool
+    Required("comm-checkout"): bool,
     # Prepend the specified ENV variables to the command. This can be useful
     # if the value of the ENV needs to be interpolated with another ENV.
-    prepend_env: Optional[dict[str, str]] = None
+    Optional("prepend-env"): {str: str},
     # Base work directory used to set up the task.
-    workdir: Optional[str] = None
+    Optional("workdir"): str,
     # Use the specified caches.
-    use_caches: Optional[Union[bool, list[str]]] = None
+    Optional("use-caches"): Any(bool, [str]),
+})
 
 
 defaults = {
@@ -36,8 +35,8 @@ defaults = {
 }
 
 
-@run_job_using("docker-worker", "mach", schema=MachSchema, defaults=defaults)
-@run_job_using("generic-worker", "mach", schema=MachSchema, defaults=defaults)
+@run_job_using("docker-worker", "mach", schema=mach_schema, defaults=defaults)
+@run_job_using("generic-worker", "mach", schema=mach_schema, defaults=defaults)
 def configure_mach(config, job, taskdesc):
     run = job["run"]
     worker = job["worker"]

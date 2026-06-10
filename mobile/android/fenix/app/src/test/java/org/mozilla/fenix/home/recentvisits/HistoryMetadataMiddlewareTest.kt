@@ -765,8 +765,6 @@ class HistoryMetadataMiddlewareTest {
                 ),
                 userSelectedSearchEngineId = null,
                 userSelectedSearchEngineName = null,
-                userSelectedPrivateSearchEngineId = null,
-                userSelectedPrivateSearchEngineName = null,
                 regionDefaultSearchEngineId = "google",
                 customSearchEngines = emptyList(),
                 hiddenSearchEngines = emptyList(),
@@ -774,7 +772,6 @@ class HistoryMetadataMiddlewareTest {
                 additionalAvailableSearchEngines = emptyList(),
                 additionalSearchEngines = emptyList(),
                 regionSearchEnginesOrder = listOf("google"),
-                searchEnginesConfigurationId = 11,
             ),
         )
     }

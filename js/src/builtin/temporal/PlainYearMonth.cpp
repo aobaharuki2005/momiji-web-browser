@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -481,34 +483,6 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
   return true;
 }
 
-const char* NonZeroDurationPartAfterMonths(const Duration& duration) {
-  if (duration.weeks != 0) {
-    return "weeks";
-  }
-  if (duration.days != 0) {
-    return "days";
-  }
-  if (duration.hours != 0) {
-    return "hours";
-  }
-  if (duration.minutes != 0) {
-    return "minutes";
-  }
-  if (duration.seconds != 0) {
-    return "seconds";
-  }
-  if (duration.milliseconds != 0) {
-    return "milliseconds";
-  }
-  if (duration.microseconds != 0) {
-    return "microseconds";
-  }
-  if (duration.nanoseconds != 0) {
-    return "nanoseconds";
-  }
-  return nullptr;
-}
-
 /**
  * AddDurationToYearMonth ( operation, yearMonth, temporalDurationLike, options
  * )
@@ -529,58 +503,86 @@ static bool AddDurationToYearMonth(JSContext* cx, TemporalAddDuration operation,
     duration = duration.negate();
   }
 
-  // Step 3.
-  auto internalDuration = ToInternalDurationRecord(duration);
-
-  // Steps 4-5.
+  // Steps 3-4.
   auto overflow = TemporalOverflow::Constrain;
   if (args.hasDefined(1)) {
-    // Step 4.
+    // Step 3.
     Rooted<JSObject*> options(
         cx, RequireObjectArg(cx, "options", ToName(operation), args[1]));
     if (!options) {
       return false;
     }
 
-    // Step 5.
+    // Step 4.
     if (!GetTemporalOverflowOption(cx, options, &overflow)) {
       return false;
     }
   }
 
+  // Step 5.
+  int32_t sign = DurationSign(duration);
+
   // Step 6.
-  const auto& durationToAdd = internalDuration.date;
-
-  // Step 7.
-  if (durationToAdd.weeks != 0 || durationToAdd.days != 0 ||
-      internalDuration.time != TimeDuration{}) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TEMPORAL_PLAIN_YEAR_MONTH_BAD_DURATION,
-                              NonZeroDurationPartAfterMonths(duration));
-    return false;
-  }
-
-  // Step 8.
   auto calendar = yearMonth.calendar();
 
-  // Step 9.
+  // Step 7.
   Rooted<CalendarFields> fields(cx);
   if (!ISODateToFields(cx, yearMonth, &fields)) {
     return false;
   }
 
-  // Step 10.
+  // Step 8.
   MOZ_ASSERT(!fields.has(CalendarField::Day));
   fields.setDay(1);
 
-  // Step 11.
-  Rooted<PlainDate> date(cx);
+  // Step 9.
+  Rooted<PlainDate> intermediateDate(cx);
   if (!CalendarDateFromFields(cx, calendar, fields, TemporalOverflow::Constrain,
-                              &date)) {
+                              &intermediateDate)) {
     return false;
   }
 
-  // Step 12.
+  // Steps 10-11.
+  ISODate date;
+  if (sign < 0) {
+    // |intermediateDate| is initialized to the first day of |yearMonth|'s
+    // month. Compute the last day of |yearMonth|'s month by first adding one
+    // month and then subtracting one day.
+    //
+    // This is roughly equivalent to these calls:
+    //
+    // js> var ym = new Temporal.PlainYearMonth(2023, 1);
+    // js> ym.toPlainDate({day: 1}).add({months: 1}).subtract({days: 1}).day
+    // 31
+    //
+    // For many calendars this is equivalent to `ym.daysInMonth`, except when
+    // some days are skipped, for example consider the Julian-to-Gregorian
+    // calendar transition.
+
+    // Step 10.a.
+    auto oneMonthDuration = DateDuration{0, 1};
+
+    // Step 10.b.
+    ISODate nextMonth;
+    if (!CalendarDateAdd(cx, calendar, intermediateDate, oneMonthDuration,
+                         TemporalOverflow::Constrain, &nextMonth)) {
+      return false;
+    }
+
+    // Step 10.c.
+    date = BalanceISODate(nextMonth, -1);
+
+    // Step 10.d.
+    MOZ_ASSERT(ISODateWithinLimits(date));
+  } else {
+    // Step 11.a.
+    date = intermediateDate;
+  }
+
+  // Steps 12.
+  auto durationToAdd = ToDateDurationRecordWithoutTime(duration);
+
+  // Step 13.
   ISODate addedDate;
   if (!CalendarDateAdd(cx, calendar, date, durationToAdd, overflow,
                        &addedDate)) {
@@ -591,21 +593,21 @@ static bool AddDurationToYearMonth(JSContext* cx, TemporalAddDuration operation,
   Rooted<PlainYearMonth> addedYearMonth(cx,
                                         PlainYearMonth{addedDate, calendar});
 
-  // Step 13.
+  // Step 14.
   Rooted<CalendarFields> addedDateFields(cx);
   if (!ISODateToFields(cx, addedYearMonth, &addedDateFields)) {
     return false;
   }
 
-  // Step 14.
-  Rooted<PlainYearMonth> isoDate(cx);
+  // Step 15.
+  Rooted<PlainYearMonth> result(cx);
   if (!CalendarYearMonthFromFields(cx, calendar, addedDateFields, overflow,
-                                   &isoDate)) {
+                                   &result)) {
     return false;
   }
 
-  // Step 15.
-  auto* obj = CreateTemporalYearMonth(cx, isoDate);
+  // Step 16.
+  auto* obj = CreateTemporalYearMonth(cx, result);
   if (!obj) {
     return false;
   }

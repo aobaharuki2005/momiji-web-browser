@@ -1,8 +1,12 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RemotePrintJobParent.h"
+
+#include <fstream>
 
 #include "PrintTranslator.h"
 #include "gfxContext.h"
@@ -17,58 +21,27 @@
 #include "nsIWebProgressListener.h"
 #include "private/pprio.h"
 
-#if defined(ACCESSIBILITY) && defined(MOZ_ENABLE_SKIA_PDF)
-#  include "mozilla/a11y/PdfStructTreeBuilder.h"
-#endif
-
 namespace mozilla::layout {
 
 RemotePrintJobParent::RemotePrintJobParent(nsIPrintSettings* aPrintSettings)
-    : mPrintSettings(aPrintSettings), mStatus(NS_ERROR_UNEXPECTED) {
+    : mPrintSettings(aPrintSettings),
+      mIsDoingPrinting(false),
+      mStatus(NS_ERROR_UNEXPECTED) {
   MOZ_COUNT_CTOR(RemotePrintJobParent);
 }
 
 mozilla::ipc::IPCResult RemotePrintJobParent::RecvInitializePrint(
-    const nsAString& aDocumentTitle, const uint64_t& aBrowsingContextId,
-    const int32_t& aStartPage, const int32_t& aEndPage) {
-  if (mInitializeReceived) {
-    MOZ_ASSERT_UNREACHABLE("Unexpected redundant call to RecvInitializePrint");
-    return IPC_FAIL(this, "Unexpected redundant call to RecvInitializePrint");
-  }
-  mInitializeReceived = true;
-
-#if defined(ACCESSIBILITY) && defined(MOZ_ENABLE_SKIA_PDF)
-  if (auto* builder =
-          mozilla::a11y::PdfStructTreeBuilder::Get(aBrowsingContextId)) {
-    nsString title;
-    title.Assign(aDocumentTitle);
-    RefPtr{builder->GetReadyPromise()}->Then(
-        GetMainThreadSerialEventTarget(), __func__,
-        [self = RefPtr{this}, title, aBrowsingContextId, aStartPage, aEndPage] {
-          self->InitializePrint(title, aBrowsingContextId, aStartPage,
-                                aEndPage);
-        });
-    return IPC_OK();
-  }
-#endif
-  InitializePrint(aDocumentTitle, aBrowsingContextId, aStartPage, aEndPage);
-  return IPC_OK();
-}
-
-void RemotePrintJobParent::InitializePrint(const nsAString& aDocumentTitle,
-                                           const uint64_t& aBrowsingContextId,
-                                           const int32_t& aStartPage,
-                                           const int32_t& aEndPage) {
+    const nsAString& aDocumentTitle, const int32_t& aStartPage,
+    const int32_t& aEndPage) {
   PROFILER_MARKER_TEXT("RemotePrintJobParent", LAYOUT_Printing, {},
-                       "RemotePrintJobParent::InitializePrint"_ns);
+                       "RemotePrintJobParent::RecvInitializePrint"_ns);
 
-  nsresult rv = InitializePrintDevice(aDocumentTitle, aBrowsingContextId,
-                                      aStartPage, aEndPage);
+  nsresult rv = InitializePrintDevice(aDocumentTitle, aStartPage, aEndPage);
   if (NS_FAILED(rv)) {
     (void)SendPrintInitializationResult(rv, FileDescriptor());
     mStatus = rv;
     (void)Send__delete__(this);
-    return;
+    return IPC_OK();
   }
 
   mPrintTranslator = MakeUnique<PrintTranslator>(mPrintDeviceContext);
@@ -78,15 +51,16 @@ void RemotePrintJobParent::InitializePrint(const nsAString& aDocumentTitle,
     (void)SendPrintInitializationResult(rv, FileDescriptor());
     mStatus = rv;
     (void)Send__delete__(this);
-    return;
+    return IPC_OK();
   }
 
   (void)SendPrintInitializationResult(NS_OK, fd);
+  return IPC_OK();
 }
 
 nsresult RemotePrintJobParent::InitializePrintDevice(
-    const nsAString& aDocumentTitle, const uint64_t& aBrowsingContextId,
-    const int32_t& aStartPage, const int32_t& aEndPage) {
+    const nsAString& aDocumentTitle, const int32_t& aStartPage,
+    const int32_t& aEndPage) {
   AUTO_PROFILER_MARKER_TEXT("RemotePrintJobParent", LAYOUT_Printing, {},
                             "RemotePrintJobParent::InitializePrintDevice"_ns);
 
@@ -111,8 +85,8 @@ nsresult RemotePrintJobParent::InitializePrintDevice(
   nsAutoString fileName;
   mPrintSettings->GetToFileName(fileName);
 
-  rv = mPrintDeviceContext->BeginDocument(
-      aDocumentTitle, fileName, aBrowsingContextId, aStartPage, aEndPage);
+  rv = mPrintDeviceContext->BeginDocument(aDocumentTitle, fileName, aStartPage,
+                                          aEndPage);
   if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_ABORT,
                          "Failed to initialize print device");
@@ -162,8 +136,7 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvProcessPage(
     deps.Insert(i);
   }
 
-  gfx::CrossProcessPaint::Start(std::move(deps),
-                                gfx::CrossProcessPaintFlags::ForPrinting)
+  gfx::CrossProcessPaint::Start(std::move(deps))
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr{this}, pageSizeInPoints](
@@ -180,9 +153,6 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvProcessPage(
 void RemotePrintJobParent::FinishProcessingPage(
     const gfx::IntSize& aSizeInPoints,
     gfx::CrossProcessPaint::ResolvedFragmentMap* aFragments) {
-  if (NS_WARN_IF(!mIsDoingPrinting)) {
-    return;
-  }
   nsresult rv = PrintPage(aSizeInPoints, mCurrentPageStream, aFragments);
 
   mCurrentPageStream.Close();

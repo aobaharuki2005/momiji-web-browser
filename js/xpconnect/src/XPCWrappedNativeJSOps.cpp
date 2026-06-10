@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -647,12 +649,16 @@ static bool XPC_WN_NoHelper_Resolve(JSContext* cx, HandleObject obj,
 }
 
 static const JSClassOps XPC_WN_NoHelper_JSClassOps = {
-    .addProperty = XPC_WN_OnlyIWrite_AddPropertyStub,
-    .delProperty = XPC_WN_CannotDeletePropertyStub,
-    .enumerate = XPC_WN_Shared_Enumerate,
-    .resolve = XPC_WN_NoHelper_Resolve,
-    .finalize = XPC_WN_NoHelper_Finalize,
-    .trace = XPCWrappedNative::Trace,
+    XPC_WN_OnlyIWrite_AddPropertyStub,  // addProperty
+    XPC_WN_CannotDeletePropertyStub,    // delProperty
+    XPC_WN_Shared_Enumerate,            // enumerate
+    nullptr,                            // newEnumerate
+    XPC_WN_NoHelper_Resolve,            // resolve
+    nullptr,                            // mayResolve
+    XPC_WN_NoHelper_Finalize,           // finalize
+    nullptr,                            // call
+    nullptr,                            // construct
+    XPCWrappedNative::Trace,            // trace
 };
 
 const js::ClassExtension XPC_WN_JSClassExtension = {
@@ -1118,11 +1124,16 @@ static bool XPC_WN_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id,
 }
 
 static const JSClassOps XPC_WN_Proto_JSClassOps = {
-    .addProperty = XPC_WN_OnlyIWrite_Proto_AddPropertyStub,
-    .delProperty = XPC_WN_CannotDeletePropertyStub,
-    .enumerate = XPC_WN_Proto_Enumerate,
-    .resolve = XPC_WN_Proto_Resolve,
-    .finalize = XPC_WN_Proto_Finalize,
+    XPC_WN_OnlyIWrite_Proto_AddPropertyStub,  // addProperty
+    XPC_WN_CannotDeletePropertyStub,          // delProperty
+    XPC_WN_Proto_Enumerate,                   // enumerate
+    nullptr,                                  // newEnumerate
+    XPC_WN_Proto_Resolve,                     // resolve
+    nullptr,                                  // mayResolve
+    XPC_WN_Proto_Finalize,                    // finalize
+    nullptr,                                  // call
+    nullptr,                                  // construct
+    nullptr,                                  // trace
 };
 
 static const js::ClassExtension XPC_WN_Proto_ClassExtension = {
@@ -1201,11 +1212,16 @@ static size_t XPC_WN_TearOff_ObjectMoved(JSObject* obj, JSObject* old) {
 }
 
 static const JSClassOps XPC_WN_Tearoff_JSClassOps = {
-    .addProperty = XPC_WN_OnlyIWrite_AddPropertyStub,
-    .delProperty = XPC_WN_CannotDeletePropertyStub,
-    .enumerate = XPC_WN_TearOff_Enumerate,
-    .resolve = XPC_WN_TearOff_Resolve,
-    .finalize = XPC_WN_TearOff_Finalize,
+    XPC_WN_OnlyIWrite_AddPropertyStub,  // addProperty
+    XPC_WN_CannotDeletePropertyStub,    // delProperty
+    XPC_WN_TearOff_Enumerate,           // enumerate
+    nullptr,                            // newEnumerate
+    XPC_WN_TearOff_Resolve,             // resolve
+    nullptr,                            // mayResolve
+    XPC_WN_TearOff_Finalize,            // finalize
+    nullptr,                            // call
+    nullptr,                            // construct
+    nullptr,                            // trace
 };
 
 static const js::ClassExtension XPC_WN_Tearoff_JSClassExtension = {

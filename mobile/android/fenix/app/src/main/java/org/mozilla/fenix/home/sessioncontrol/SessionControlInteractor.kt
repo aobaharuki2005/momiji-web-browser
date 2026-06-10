@@ -15,8 +15,6 @@ import org.mozilla.fenix.components.appstate.setup.checklist.ChecklistItem
 import org.mozilla.fenix.home.bookmarks.Bookmark
 import org.mozilla.fenix.home.bookmarks.controller.BookmarksController
 import org.mozilla.fenix.home.interactor.HomepageInteractor
-import org.mozilla.fenix.home.logo.LogoController
-import org.mozilla.fenix.home.logo.TrackingProtectionController
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.controller.PocketStoriesController
 import org.mozilla.fenix.home.privatebrowsing.controller.PrivateBrowsingController
@@ -28,14 +26,11 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGrou
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.search.HomeSearchController
-import org.mozilla.fenix.home.sports.CountrySelectorSource
-import org.mozilla.fenix.home.sports.LiveMatchRefreshSource
-import org.mozilla.fenix.home.sports.SportsCardImpressionSource
-import org.mozilla.fenix.home.sports.SportsCardType
-import org.mozilla.fenix.home.sports.SportsController
 import org.mozilla.fenix.home.termsofuse.PrivacyNoticeBannerController
 import org.mozilla.fenix.home.toolbar.ToolbarController
 import org.mozilla.fenix.home.topsites.controller.TopSiteController
+import org.mozilla.fenix.search.toolbar.SearchSelectorController
+import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
@@ -124,6 +119,11 @@ interface CollectionInteractor {
      * Opens the collection creator
      */
     fun onAddTabsToCollectionTapped()
+
+    /**
+     * User has removed the collections placeholder from home.
+     */
+    fun onRemoveCollectionsPlaceholder()
 }
 
 interface MessageCardInteractor {
@@ -168,21 +168,6 @@ interface SetupChecklistInteractor {
 }
 
 /**
- * Interface for tracking protection related actions on the homepage.
- */
-interface TrackingProtectionInteractor {
-    /**
-     * Invoked when the privacy report card is tapped.
-     */
-    fun onPrivacyReportTapped()
-
-    /**
-     * Invoked when the longfox entry point text is clicked.
-     */
-    fun onLongfoxEntryPointClicked()
-}
-
-/**
  * Interactor for the Home screen. Provides implementations for the CollectionInteractor,
  * OnboardingInteractor, TopSiteInteractor, TabSessionInteractor, ToolbarInteractor,
  * ExperimentCardInteractor, RecentTabInteractor, RecentBookmarksInteractor
@@ -197,13 +182,11 @@ class SessionControlInteractor(
     private val recentVisitsController: RecentVisitsController,
     private val pocketStoriesController: PocketStoriesController,
     private val privateBrowsingController: PrivateBrowsingController,
+    private val searchSelectorController: SearchSelectorController,
     private val toolbarController: ToolbarController,
     private val homeSearchController: HomeSearchController,
     private val topSiteController: TopSiteController,
     private val privacyNoticeBannerController: PrivacyNoticeBannerController,
-    private val trackingProtectionController: TrackingProtectionController,
-    private val logoController: LogoController,
-    private val sportsController: SportsController,
 ) : HomepageInteractor {
 
     override fun onCollectionAddTabTapped(collection: TabCollection) {
@@ -302,12 +285,24 @@ class SessionControlInteractor(
         privateBrowsingController.handlePrivateModeButtonClicked(newMode)
     }
 
+    override fun onPasteAndGo(clipboardText: String) {
+        toolbarController.handlePasteAndGo(clipboardText)
+    }
+
+    override fun onPaste(clipboardText: String) {
+        toolbarController.handlePaste(clipboardText)
+    }
+
     override fun onNavigateSearch() {
         toolbarController.handleNavigateSearch()
     }
 
     override fun onHomeContentFocusedWhileSearchIsActive() {
         homeSearchController.handleHomeContentFocusedWhileSearchIsActive()
+    }
+
+    override fun onRemoveCollectionsPlaceholder() {
+        controller.handleRemoveCollectionsPlaceholder()
     }
 
     override fun onRecentTabClicked(tabId: String) {
@@ -404,6 +399,10 @@ class SessionControlInteractor(
         controller.handleMessageClosed(message)
     }
 
+    override fun onMenuItemTapped(item: SearchSelectorMenu.Item) {
+        searchSelectorController.handleMenuItemTapped(item)
+    }
+
     override fun onPrivacyNoticeBannerCloseClicked() {
         privacyNoticeBannerController.onBannerCloseClicked()
     }
@@ -418,53 +417,5 @@ class SessionControlInteractor(
 
     override fun onPrivacyNoticeBannerDisplayed() {
         privacyNoticeBannerController.onBannerDisplayed()
-    }
-
-    override fun onCountriesSelected(countryCodes: Set<String>) {
-        sportsController.handleCountriesSelected(countryCodes = countryCodes)
-    }
-
-    override fun onSkippedFollowTeam() {
-        sportsController.handleSkippedFollowTeam()
-    }
-
-    override fun onSportsWidgetDismissed() {
-        sportsController.handleSportsWidgetDismissed()
-    }
-
-    override fun onViewScheduleClicked() {
-        sportsController.handleViewScheduleClicked()
-    }
-
-    override fun onRefreshClicked(source: LiveMatchRefreshSource) {
-        sportsController.handleRefreshClicked(source)
-    }
-
-    override fun onCountdownWidgetDismissed() {
-        sportsController.handleCountdownWidgetDismissed()
-    }
-
-    override fun onPrivacyReportTapped() {
-        trackingProtectionController.handleProtectionStatusPillClicked()
-    }
-
-    override fun onLongfoxEntryPointClicked() {
-        logoController.handleLongfoxEntryPointClicked()
-    }
-
-    override fun onGetCustomWallpaperClicked() {
-        sportsController.handleOnGetCustomWallpaperClicked()
-    }
-
-    override fun onMatchClicked(homeTeam: String?, awayTeam: String?, date: String?) {
-        sportsController.handleMatchClicked(homeTeam = homeTeam, awayTeam = awayTeam, date = date)
-    }
-
-    override fun onSportsWidgetCardShown(cardType: SportsCardType, source: SportsCardImpressionSource) {
-        sportsController.handleSportsWidgetCardShown(cardType = cardType, source = source)
-    }
-
-    override fun onCountrySelectorShown(source: CountrySelectorSource) {
-        sportsController.handleCountrySelectorShown(source)
     }
 }

@@ -750,8 +750,7 @@ async function promiseFormsProcessed(expectedCount = 1) {
 
 async function loadFormIntoWindow(origin, html, win, expectedCount = 1, task) {
   const token = `channel${Math.random().toString().slice(2)}`;
-  const bc =
-    SpecialPowers.wrap(BroadcastChannel).unpartitionedTestingChannel(token);
+  const bc = new BroadcastChannel(token);
   const loadedPromise = new Promise(resolve => (bc.onmessage = resolve));
 
   let processedPromise = promiseFormsProcessed(expectedCount);
@@ -840,10 +839,11 @@ function runInParent(aFunctionOrURL) {
 function manageLoginsInParent() {
   return runInParent(function addLoginsInParentInner() {
     /* eslint-env mozilla/chrome-script */
-    addMessageListener("removeAllUserFacingLogins", async () => {
-      await Services.logins.removeAllUserFacingLoginsAsync();
+    addMessageListener("removeAllUserFacingLogins", () => {
+      Services.logins.removeAllUserFacingLogins();
     });
 
+    /* eslint-env mozilla/chrome-script */
     addMessageListener("getLogins", async () => {
       const logins = await Services.logins.getAllLogins();
       return logins.map(
@@ -867,6 +867,7 @@ function manageLoginsInParent() {
       );
     });
 
+    /* eslint-env mozilla/chrome-script */
     addMessageListener("addLogins", async logins => {
       let nsLoginInfo = Components.Constructor(
         "@mozilla.org/login-manager/loginInfo;1",
@@ -1012,14 +1013,15 @@ SimpleTest.registerCleanupFunction(() => {
 
   PWMGR_COMMON_PARENT.sendAsyncMessage("cleanup");
 
-  runInParent(async function cleanupParent() {
+  runInParent(function cleanupParent() {
+    /* eslint-env mozilla/chrome-script */
     // eslint-disable-next-line no-shadow
     const { LoginManagerParent } = ChromeUtils.importESModule(
       "resource://gre/modules/LoginManagerParent.sys.mjs"
     );
 
     // Remove all logins and disabled hosts
-    await Services.logins.removeAllUserFacingLoginsAsync();
+    Services.logins.removeAllUserFacingLogins();
 
     let disabledHosts = Services.logins.getAllDisabledHosts();
     disabledHosts.forEach(host =>

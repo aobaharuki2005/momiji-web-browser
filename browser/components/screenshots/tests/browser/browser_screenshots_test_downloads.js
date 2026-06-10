@@ -29,7 +29,7 @@ add_setup(async function () {
     ],
   });
 
-  MockFilePicker.init();
+  MockFilePicker.init(window.browsingContext);
   MockFilePicker.useAnyFile();
   MockFilePicker.returnValue = MockFilePicker.returnOK;
 
@@ -57,8 +57,8 @@ function waitForFilePickerCancel() {
     MockFilePicker.showCallback = () => {
       MockFilePicker.showCallback = null;
       ok(true, "Saw the file picker");
+      MockFilePicker.returnValue = MockFilePicker.returnCancel;
       resolve();
-      return MockFilePicker.returnCancel;
     };
   });
 }
@@ -115,7 +115,7 @@ add_task(async function test_download_without_filepicker() {
       );
 
       let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
-        helper.selector.panel
+        "#screenshotsPagePanel"
       );
 
       // click the visible page button in panel

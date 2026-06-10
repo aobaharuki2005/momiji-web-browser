@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WindowDefs_h_
-#define WindowDefs_h_
+#ifndef WindowDefs_h__
+#define WindowDefs_h__
 
 /*
  * nsWindowDefs - nsWindow related definitions, consts, and macros.
@@ -111,4 +112,4 @@ struct MSGResult {
   NS_ASSERTION(((s) & (WS_CHILD | WS_POPUP)) != (WS_CHILD | WS_POPUP), \
                "WS_POPUP and WS_CHILD are mutually exclusive")
 
-#endif /* WindowDefs_h_ */
+#endif /* WindowDefs_h__ */

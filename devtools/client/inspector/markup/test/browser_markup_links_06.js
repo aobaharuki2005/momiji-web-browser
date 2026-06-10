@@ -21,14 +21,13 @@ add_task(async function () {
 
   info("Set the popupNode to the node that contains the uri");
   let { editor } = await getContainerForSelector("link", inspector);
-  let contextMenuItem = openContextMenuAndGetLinkFollowItem(
-    inspector,
-    editor.attrElements.get("href").querySelector(".link")
-  );
+  openContextMenuAndGetAllItems(inspector, {
+    target: editor.attrElements.get("href").querySelector(".link"),
+  });
 
   info("Follow the link and wait for the style-editor to open");
   const onStyleEditorReady = toolbox.once("styleeditor-ready");
-  contextMenuItem.click();
+  inspector.markup.contextMenu._onFollowLink();
   await onStyleEditorReady;
 
   // No real need to test that the editor opened on the right file here as this
@@ -43,13 +42,12 @@ add_task(async function () {
 
   info("Set the popupNode to the node that contains the uri");
   ({ editor } = await getContainerForSelector("script", inspector));
-  contextMenuItem = openContextMenuAndGetLinkFollowItem(
-    inspector,
-    editor.attrElements.get("src").querySelector(".link")
-  );
+  openContextMenuAndGetAllItems(inspector, {
+    target: editor.attrElements.get("src").querySelector(".link"),
+  });
 
   info("Follow the link and wait for the debugger to open");
-  contextMenuItem.click();
+  inspector.markup.contextMenu._onFollowLink();
 
   // Wait for the debugger to have fully processed the opened source
   await toolbox.getPanelWhenReady("jsdebugger");
@@ -60,10 +58,3 @@ add_task(async function () {
   // this is already tested in /framework/test/browser_toolbox_view_source_*
   ok(true, "The debugger was open");
 });
-
-function openContextMenuAndGetLinkFollowItem(inspector, target) {
-  const items = openContextMenuAndGetAllItems(inspector, {
-    target,
-  });
-  return items.find(({ id }) => id == "node-menu-link-follow");
-}

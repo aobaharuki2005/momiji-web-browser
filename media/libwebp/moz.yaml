@@ -11,10 +11,9 @@ origin:
   url: "https://chromium.googlesource.com/webm/libwebp"
   license: BSD-3-Clause
 
-  # Tip of the 1.6 branch.
-  release: 991170bbab3e6afc74666d124f3f1dc7be942cd0 (2025-08-07T21:01:35Z).
+  release: v1.6.0 (2025-07-07T17:20:00-07:00).
 
-  revision: 991170bbab3e6afc74666d124f3f1dc7be942cd0
+  revision: "v1.3.0"
 
   license-file: COPYING
 
@@ -24,12 +23,6 @@ updatebot:
   tasks:
     - type: vendoring
       enabled: True
-      frequency: release
-    # Update this branch name when vendoring a new release.
-    - type: commit-alert
-      enabled: true
-      frequency: every
-      branch: 1.6.0
 
 vendoring:
   url: https://github.com/webmproject/libwebp

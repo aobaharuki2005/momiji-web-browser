@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -27,7 +29,10 @@ struct AtomHasher {
   static inline HashNumber hash(const Lookup& l);
   static MOZ_ALWAYS_INLINE bool match(const WeakHeapPtr<JSAtom*>& entry,
                                       const Lookup& lookup);
-  static void rekey(WeakHeapPtr<JSAtom*>& k, JSAtom* newKey) { k = newKey; }
+  static void rekey(WeakHeapPtr<JSAtom*>& k,
+                    const WeakHeapPtr<JSAtom*>& newKey) {
+    k = newKey;
+  }
 };
 
 struct js::AtomHasher::Lookup {
@@ -37,12 +42,12 @@ struct js::AtomHasher::Lookup {
     const char* utf8Bytes;
   };
   enum { TwoByteChar, Latin1, UTF8 } type;
-  size_t length = 0;
-  size_t byteLength = 0;
-  const JSAtom* atom = nullptr; /* Optional. */
+  size_t length;
+  size_t byteLength;
+  const JSAtom* atom; /* Optional. */
   JS::AutoCheckCannotGC nogc;
 
-  HashNumber hash = 0;
+  HashNumber hash;
 
   MOZ_ALWAYS_INLINE Lookup(const char* utf8Bytes, size_t byteLen, size_t length,
                            HashNumber hash)
@@ -136,9 +141,9 @@ class FrozenAtomSet {
     return mSet->shallowSizeOfIncludingThis(mallocSizeOf);
   }
 
-  using Iterator = AtomSet::Iterator;
+  using Range = AtomSet::Range;
 
-  AtomSet::Iterator iter() const { return mSet->iter(); }
+  AtomSet::Range all() const { return mSet->all(); }
 };
 
 class AtomsTable {
@@ -157,7 +162,7 @@ class AtomsTable {
 
  public:
   // An iterator used for sweeping atoms incrementally.
-  using SweepIterator = AtomSet::ModIterator;
+  using SweepIterator = AtomSet::Enum;
 
   AtomsTable();
   ~AtomsTable();

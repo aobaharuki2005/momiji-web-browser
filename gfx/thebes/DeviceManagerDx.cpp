@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -29,11 +30,6 @@
 #include <dcomp.h>
 #include <ddraw.h>
 #include <dxgi.h>
-
-// Magic constants to convert to fixed point.
-// https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_5/ns-dxgi1_5-dxgi_hdr_metadata_hdr10
-static constexpr int kPrimariesFixedPoint = 50000;
-static constexpr int kMinLuminanceFixedPoint = 10000;
 
 namespace mozilla {
 namespace gfx {
@@ -148,71 +144,61 @@ void DeviceManagerDx::ReleaseD3D11() {
 }
 
 nsTArray<DXGI_OUTPUT_DESC1> DeviceManagerDx::EnumerateOutputs() {
-  MutexAutoLock lock(mDeviceLock);
-  nsTArray<DXGI_OUTPUT_DESC1> outputs;
-  if (!EnsureFactoryLocked()) {
-    return outputs;
+  RefPtr<IDXGIAdapter> adapter = GetDXGIAdapter();
+
+  if (!adapter) {
+    NS_WARNING("Failed to acquire a DXGI adapter for enumerating outputs.");
+    return nsTArray<DXGI_OUTPUT_DESC1>();
   }
 
-  RefPtr<IDXGIAdapter1> adapter;
-  for (UINT adapterIndex = 0;; adapterIndex++) {
-    if (FAILED(
-            mFactory->EnumAdapters1(adapterIndex, getter_AddRefs(adapter)))) {
+  nsTArray<DXGI_OUTPUT_DESC1> outputs;
+  for (UINT i = 0;; ++i) {
+    RefPtr<IDXGIOutput> output = nullptr;
+    if (FAILED(adapter->EnumOutputs(i, getter_AddRefs(output)))) {
       break;
     }
 
-    for (UINT outputIndex = 0;; outputIndex++) {
-      RefPtr<IDXGIOutput> output;
-      if (FAILED(adapter->EnumOutputs(outputIndex, getter_AddRefs(output)))) {
-        break;
-      }
-      RefPtr<IDXGIOutput6> output6 = nullptr;
-      if (FAILED(output->QueryInterface(__uuidof(IDXGIOutput6),
-                                        getter_AddRefs(output6)))) {
-        break;
-      }
-      DXGI_OUTPUT_DESC1 desc;
-      if (FAILED(output6->GetDesc1(&desc))) {
-        break;
-      }
-      outputs.AppendElement(desc);
+    RefPtr<IDXGIOutput6> output6 = nullptr;
+    if (FAILED(output->QueryInterface(__uuidof(IDXGIOutput6),
+                                      getter_AddRefs(output6)))) {
+      break;
     }
+
+    DXGI_OUTPUT_DESC1 desc;
+    if (FAILED(output6->GetDesc1(&desc))) {
+      break;
+    }
+
+    outputs.AppendElement(desc);
   }
   return outputs;
 }
 
-bool DeviceManagerDx::GetOutputFromMonitor(HMONITOR aMonitor,
+bool DeviceManagerDx::GetOutputFromMonitor(HMONITOR monitor,
                                            RefPtr<IDXGIOutput>* aOutOutput) {
-  MutexAutoLock lock(mDeviceLock);
-  if (!EnsureFactoryLocked()) {
+  RefPtr<IDXGIAdapter> adapter = GetDXGIAdapter();
+
+  if (!adapter) {
+    NS_WARNING("Failed to acquire a DXGI adapter for GetOutputFromMonitor.");
     return false;
   }
 
-  RefPtr<IDXGIAdapter1> adapter;
-  for (UINT adapterIndex = 0;; adapterIndex++) {
-    if (FAILED(
-            mFactory->EnumAdapters1(adapterIndex, getter_AddRefs(adapter)))) {
+  for (UINT i = 0;; ++i) {
+    RefPtr<IDXGIOutput> output = nullptr;
+    if (FAILED(adapter->EnumOutputs(i, getter_AddRefs(output)))) {
       break;
     }
 
-    for (UINT outputIndex = 0;; outputIndex++) {
-      RefPtr<IDXGIOutput> output;
-      if (FAILED(adapter->EnumOutputs(outputIndex, getter_AddRefs(output)))) {
-        break;
-      }
+    DXGI_OUTPUT_DESC desc;
+    if (FAILED(output->GetDesc(&desc))) {
+      continue;
+    }
 
-      DXGI_OUTPUT_DESC desc;
-      if (FAILED(output->GetDesc(&desc))) {
-        continue;
-      }
-
-      if (desc.Monitor == aMonitor) {
-        *aOutOutput = output;
-        return true;
-      }
+    if (desc.Monitor == monitor) {
+      *aOutOutput = output;
+      return true;
     }
   }
-
   return false;
 }
 
@@ -270,102 +256,21 @@ static bool ColorSpaceIsHDR(const DXGI_OUTPUT_DESC1& aDesc) {
   return isHDR;
 }
 
-/* static */
-DXGI_HDR_METADATA_HDR10 DeviceManagerDx::OutputDESC1ToDXGI(
-    const DXGI_OUTPUT_DESC1& aDesc) {
-  DXGI_HDR_METADATA_HDR10 metadata{};
-
-  auto& primaryR = aDesc.RedPrimary;
-  metadata.RedPrimary[0] = primaryR[0] * kPrimariesFixedPoint;
-  metadata.RedPrimary[1] = primaryR[1] * kPrimariesFixedPoint;
-  auto& primaryG = aDesc.GreenPrimary;
-  metadata.GreenPrimary[0] = primaryG[0] * kPrimariesFixedPoint;
-  metadata.GreenPrimary[1] = primaryG[1] * kPrimariesFixedPoint;
-  auto& primaryB = aDesc.BluePrimary;
-  metadata.BluePrimary[0] = primaryB[0] * kPrimariesFixedPoint;
-  metadata.BluePrimary[1] = primaryB[1] * kPrimariesFixedPoint;
-  auto& whitePoint = aDesc.WhitePoint;
-  metadata.WhitePoint[0] = whitePoint[0] * kPrimariesFixedPoint;
-  metadata.WhitePoint[1] = whitePoint[1] * kPrimariesFixedPoint;
-  metadata.MaxMasteringLuminance = aDesc.MaxLuminance;
-  metadata.MinMasteringLuminance = aDesc.MinLuminance * kMinLuminanceFixedPoint;
-  // It's unclear how to set these properly, so this is a guess.
-  // Also note that these are not fixed-point.
-  metadata.MaxContentLightLevel = aDesc.MaxFullFrameLuminance;
-  metadata.MaxFrameAverageLightLevel = aDesc.MaxFullFrameLuminance;
-
-  return metadata;
-}
-
-bool DeviceManagerDx::VideoProcessorHDREnabled() {
-  MutexAutoLock lock(mDeviceLock);
-  D3D11Checks::VideoProcessorOptionSet options;
-  if (mDeviceStatus) {
-    options = mDeviceStatus->processorOptions();
-  } else {
-    // We can't call LoadD3D11 if it is disabled because it will just hit an
-    // assert immediately.
-    FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
-    if (!d3d11.IsEnabled()) {
-      return false;
-    }
-
-    UINT flags =
-        D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_VIDEO_SUPPORT;
-    HRESULT hr;
-    if (!LoadD3D11()) {
-      gfxCriticalNoteOnce
-          << "DeviceManagerDx::VideoProcessorHDREnabled: Failed to load D3D11 "
-             "library for checking video processor HDR support";
-      return false;
-    }
-    RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapterLocked();
-    if (!adapter) {
-      gfxCriticalNoteOnce
-          << "DeviceManagerDx::VideoProcessorHDREnabled: Failed to get DXGI "
-             "adapter for checking video processor HDR support";
-      return false;
-    }
-    RefPtr<ID3D11Device> device;
-    if (!CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, flags, hr, device) ||
-        !device) {
-      gfxCriticalNoteOnce
-          << "DeviceManagerDx::VideoProcessorHDREnabled: Failed to create "
-             "D3D11 device for checking video processor HDR support: "
-          << gfx::hexa(hr);
-      return false;
-    }
-    options = D3D11Checks::ProcessorOptions(device);
-  }
-  return options.contains(
-             D3D11Checks::VideoProcessorOption::P010_STUDIO_2100_PQ) &&
-         options.contains(
-             D3D11Checks::VideoProcessorOption::P010_STUDIO_2100_HLG) &&
-         options.contains(
-             D3D11Checks::VideoProcessorOption::P010_FULL_2100_HLG);
-}
-
 void DeviceManagerDx::UpdateMonitorInfo() {
   bool systemHdrEnabled = false;
-  bool videoHdrEnabled;
   std::set<HMONITOR> hdrMonitors;
-  std::unordered_map<HMONITOR, DXGI_HDR_METADATA_HDR10> hdrMetadatas;
 
   for (const auto desc : EnumerateOutputs()) {
     if (ColorSpaceIsHDR(desc)) {
       systemHdrEnabled = true;
       hdrMonitors.emplace(desc.Monitor);
-      hdrMetadatas[desc.Monitor] = OutputDESC1ToDXGI(desc);
     }
   }
 
-  videoHdrEnabled = VideoProcessorHDREnabled();
   {
     MutexAutoLock lock(mDeviceLock);
     mSystemHdrEnabled = Some(systemHdrEnabled);
-    mVideoHdrEnabled = Some(videoHdrEnabled);
     mHdrMonitors.swap(hdrMonitors);
-    mHdrMetadatas.swap(hdrMetadatas);
     mUpdateMonitorInfoRunnable = nullptr;
   }
 }
@@ -391,7 +296,11 @@ bool DeviceManagerDx::WindowHDREnabled(HWND aWindow) {
   return MonitorHDREnabled(monitor);
 }
 
-void DeviceManagerDx::EnsureMonitorInfo() {
+bool DeviceManagerDx::MonitorHDREnabled(HMONITOR aMonitor) {
+  if (!aMonitor) {
+    return false;
+  }
+
   bool needInit = false;
 
   {
@@ -404,14 +313,6 @@ void DeviceManagerDx::EnsureMonitorInfo() {
   if (needInit) {
     UpdateMonitorInfo();
   }
-}
-
-bool DeviceManagerDx::MonitorHDREnabled(HMONITOR aMonitor) {
-  if (!aMonitor) {
-    return false;
-  }
-
-  EnsureMonitorInfo();
 
   MutexAutoLock lock(mDeviceLock);
   MOZ_ASSERT(mSystemHdrEnabled.isSome());
@@ -422,31 +323,6 @@ bool DeviceManagerDx::MonitorHDREnabled(HMONITOR aMonitor) {
   }
 
   return true;
-}
-
-Maybe<DXGI_HDR_METADATA_HDR10> DeviceManagerDx::WindowHDRMetadata(
-    HWND aWindow) {
-  MOZ_ASSERT(aWindow);
-
-  HMONITOR monitor = ::MonitorFromWindow(aWindow, MONITOR_DEFAULTTONEAREST);
-  return MonitorHDRMetadata(monitor);
-}
-
-Maybe<DXGI_HDR_METADATA_HDR10> DeviceManagerDx::MonitorHDRMetadata(
-    HMONITOR aMonitor) {
-  if (!aMonitor) {
-    return Nothing();
-  }
-
-  EnsureMonitorInfo();
-
-  MutexAutoLock lock(mDeviceLock);
-
-  auto it = mHdrMetadatas.find(aMonitor);
-  if (it == mHdrMetadatas.end()) {
-    return Nothing();
-  }
-  return Some(it->second);
 }
 
 void DeviceManagerDx::CheckHardwareStretchingSupport(HwStretchingSupport& aRv) {
@@ -728,14 +604,14 @@ void DeviceManagerDx::CreateDirectCompositionDeviceLocked() {
 /* static */
 HANDLE DeviceManagerDx::CreateDCompSurfaceHandle() {
   if (!sDcompCreateSurfaceHandleFn) {
-    return nullptr;
+    return 0;
   }
 
-  HANDLE handle = nullptr;
+  HANDLE handle = 0;
   HRESULT hr = sDcompCreateSurfaceHandleFn(COMPOSITIONOBJECT_ALL_ACCESS,
                                            nullptr, &handle);
   if (FAILED(hr)) {
-    return nullptr;
+    return 0;
   }
 
   return handle;
@@ -779,23 +655,24 @@ void DeviceManagerDx::CreateContentDevicesLocked() {
   }
 }
 
-bool DeviceManagerDx::EnsureFactoryLocked() {
-  if (mFactory && mFactory->IsCurrent()) {
-    return true;
+already_AddRefed<IDXGIAdapter1> DeviceManagerDx::GetDXGIAdapter() {
+  MutexAutoLock lock(mDeviceLock);
+  return do_AddRef(GetDXGIAdapterLocked());
+}
+
+IDXGIAdapter1* DeviceManagerDx::GetDXGIAdapterLocked() {
+  if (mAdapter && mFactory && mFactory->IsCurrent()) {
+    return mAdapter;
   }
+  mAdapter = nullptr;
   mFactory = nullptr;
 
   nsModuleHandle dxgiModule(LoadLibrarySystem32(L"dxgi.dll"));
-  auto scopeExit = MakeScopeExit([&] {
-    // We leak this module everywhere, we might as well do so here as well.
-    dxgiModule.disown();
-  });
-
   decltype(CreateDXGIFactory1)* createDXGIFactory1 =
       (decltype(CreateDXGIFactory1)*)GetProcAddress(dxgiModule,
                                                     "CreateDXGIFactory1");
   if (!createDXGIFactory1) {
-    return false;
+    return nullptr;
   }
   static const auto fCreateDXGIFactory2 =
       (decltype(CreateDXGIFactory2)*)GetProcAddress(dxgiModule,
@@ -820,28 +697,8 @@ bool DeviceManagerDx::EnsureFactoryLocked() {
     if (FAILED(hr) || !mFactory) {
       // This seems to happen with some people running the iZ3D driver.
       // They won't get acceleration.
-      return false;
+      return nullptr;
     }
-  }
-
-  MOZ_ASSERT(mFactory && mFactory->IsCurrent());
-  return true;
-}
-
-already_AddRefed<IDXGIAdapter1> DeviceManagerDx::GetDXGIAdapter() {
-  MutexAutoLock lock(mDeviceLock);
-  return do_AddRef(GetDXGIAdapterLocked());
-}
-
-IDXGIAdapter1* DeviceManagerDx::GetDXGIAdapterLocked() {
-  if (mAdapter && mFactory && mFactory->IsCurrent()) {
-    return mAdapter;
-  }
-
-  mAdapter = nullptr;
-  if (!EnsureFactoryLocked()) {
-    // No factory? Can't proceed.
-    return nullptr;
   }
 
   if (mDeviceStatus) {
@@ -872,6 +729,8 @@ IDXGIAdapter1* DeviceManagerDx::GetDXGIAdapterLocked() {
     mFactory->EnumAdapters1(0, getter_AddRefs(mAdapter));
   }
 
+  // We leak this module everywhere, we might as well do so here as well.
+  dxgiModule.disown();
   return mAdapter;
 }
 
@@ -1011,12 +870,10 @@ void DeviceManagerDx::CreateCompositorDevice(FeatureState& d3d11) {
   auto formatOptions = D3D11Checks::FormatOptions(device);
   mCompositorDevice = device;
 
-  auto videoProcessorOptions = D3D11Checks::ProcessorOptions(device);
-
   int32_t sequenceNumber = GetNextDeviceCounter();
   mDeviceStatus = Some(D3D11DeviceStatus(
       false, textureSharingWorks, featureLevel, DxgiAdapterDesc::From(desc),
-      sequenceNumber, formatOptions, videoProcessorOptions));
+      sequenceNumber, formatOptions));
   mCompositorDevice->SetExceptionMode(0);
 }
 
@@ -1116,12 +973,10 @@ void DeviceManagerDx::CreateWARPCompositorDevice() {
   auto formatOptions = D3D11Checks::FormatOptions(device);
   mCompositorDevice = device;
 
-  auto videoProcessorOptions = D3D11Checks::ProcessorOptions(device);
-
   int32_t sequenceNumber = GetNextDeviceCounter();
   mDeviceStatus = Some(D3D11DeviceStatus(
       true, textureSharingWorks, featureLevel, DxgiAdapterDesc::From(desc),
-      sequenceNumber, formatOptions, videoProcessorOptions));
+      sequenceNumber, formatOptions));
   mCompositorDevice->SetExceptionMode(0);
 
   reporterWARP.SetSuccessful();
@@ -1266,49 +1121,22 @@ static HRESULT SetDebugName(T* d3d11Object, const char* debugString) {
 
 RefPtr<ID3D11Device> DeviceManagerDx::CreateMediaEngineDevice() {
   MutexAutoLock lock(mDeviceLock);
-  // LoadD3D11() asserts D3D11_COMPOSITING is enabled, which may not hold in
-  // the utility process (headless mode). Load the DLL directly if needed.
-  if (!sD3D11CreateDeviceFn) {
-    nsModuleHandle module(LoadLibrarySystem32(L"d3d11.dll"));
-    if (!module) {
-      return nullptr;
-    }
-    sD3D11CreateDeviceFn = (decltype(D3D11CreateDevice)*)GetProcAddress(
-        module, "D3D11CreateDevice");
-    if (!sD3D11CreateDeviceFn) {
-      return nullptr;
-    }
-    mD3D11Module.steal(module);
+  if (!LoadD3D11()) {
+    return nullptr;
   }
 
   HRESULT hr;
   RefPtr<ID3D11Device> device;
-  UINT baseFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT |
-                   D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS;
-  UINT flags = D3D11_CREATE_DEVICE_VIDEO_SUPPORT | baseFlags;
-  // When hardware video decoding is unavailable, DXGI swap chains used by
-  // the MF Media Engine may fail. Fall back to WARP so the engine can
-  // create its swap chain with a software adapter.
-  bool useWarp = !gfxVars::CanUseHardwareVideoDecoding();
-  if (!useWarp) {
-    if (!CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, flags, hr, device) ||
-        FAILED(hr) || !device || !D3D11Checks::DoesDeviceWork()) {
-      useWarp = true;
-    }
+  UINT flags = D3D11_CREATE_DEVICE_VIDEO_SUPPORT |
+               D3D11_CREATE_DEVICE_BGRA_SUPPORT |
+               D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS;
+  if (!CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, flags, hr, device)) {
+    return nullptr;
   }
-  if (useWarp) {
-    gfxWarning()
-        << "MFMediaEngine: hardware D3D11 device unavailable, using WARP";
-    device = nullptr;
-    // WARP does not support D3D11_CREATE_DEVICE_VIDEO_SUPPORT; use baseFlags
-    // only.
-    if (!CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, baseFlags, hr, device) ||
-        FAILED(hr) || !device) {
-      return nullptr;
-    }
+  if (FAILED(hr) || !device || !D3D11Checks::DoesDeviceWork()) {
+    return nullptr;
   }
-  (void)SetDebugName(device.get(), useWarp ? "MFMediaEngineDevice(WARP)"
-                                           : "MFMediaEngineDevice");
+  (void)SetDebugName(device.get(), "MFMediaEngineDevice");
 
   RefPtr<ID3D10Multithread> multi;
   device->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));

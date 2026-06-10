@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,7 +28,7 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
                                                         FetchBody<Request>)
 
  public:
-  Request(nsIGlobalObject* aGlobal, SafeRefPtr<InternalRequest> aRequest,
+  Request(nsIGlobalObject* aOwner, SafeRefPtr<InternalRequest> aRequest,
           AbortSignal* aSignal);
 
   JSObject* WrapObject(JSContext* aCx,
@@ -34,10 +36,7 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
     return Request_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  void GetUrl(nsACString& aUrl) const {
-    nsCOMPtr<nsIURI> uri = mRequest->GetURL();
-    MOZ_ALWAYS_SUCCEEDS(uri->GetSpec(aUrl));
-  }
+  void GetUrl(nsACString& aUrl) const { mRequest->GetURL(aUrl); }
   void GetMethod(nsCString& aMethod) const { aMethod = mRequest->mMethod; }
 
   RequestMode Mode() const { return mRequest->mMode; }
@@ -89,9 +88,11 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
     mRequest->SetBody(aStream, aBodyLength);
   }
 
-  using FetchBody::BodyBlobImpl;
+  using FetchBody::BodyBlobURISpec;
 
-  BlobImpl* BodyBlobImpl() const { return mRequest->BodyBlobImpl(); }
+  const nsACString& BodyBlobURISpec() const {
+    return mRequest->BodyBlobURISpec();
+  }
 
   using FetchBody::BodyLocalPath;
 
@@ -109,7 +110,7 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
                                          const CallerType aCallerType,
                                          ErrorResult& rv);
 
-  nsIGlobalObject* GetParentObject() const { return mGlobal; }
+  nsIGlobalObject* GetParentObject() const { return mOwner; }
 
   SafeRefPtr<Request> Clone(ErrorResult& aRv);
 

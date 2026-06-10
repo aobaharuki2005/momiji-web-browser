@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,45 +19,11 @@ extern mozilla::LazyLogModule gDcompSurface;
 
 namespace mozilla::layers {
 
-static constexpr int32_t kMaxDcompSurfaceDimension = 16384;
-
-static bool IsValidDcompSurfaceDescriptor(
-    const SurfaceDescriptorDcompSurface& aDescriptor) {
-  if (!aDescriptor.handle().IsValid()) {
-    gfxCriticalNote << "DcompSurfaceHandleHost: invalid FileDescriptor";
-    return false;
-  }
-
-  const gfx::SurfaceFormat fmt = aDescriptor.format();
-  if (fmt != gfx::SurfaceFormat::B8G8R8A8 &&
-      fmt != gfx::SurfaceFormat::R8G8B8A8 &&
-      fmt != gfx::SurfaceFormat::R16G16B16A16F) {
-    gfxCriticalNote << "DcompSurfaceHandleHost: unsupported format "
-                    << static_cast<int>(fmt);
-    return false;
-  }
-
-  const gfx::IntSize size = aDescriptor.size();
-  if (size.width <= 0 || size.height <= 0 ||
-      size.width > kMaxDcompSurfaceDimension ||
-      size.height > kMaxDcompSurfaceDimension) {
-    gfxCriticalNote << "DcompSurfaceHandleHost: bad size " << size.width << "x"
-                    << size.height;
-    return false;
-  }
-
-  return true;
-}
-
 already_AddRefed<TextureHost> CreateTextureHostDcompSurface(
     const SurfaceDescriptor& aDesc, ISurfaceAllocator* aDeallocator,
     LayersBackend aBackend, TextureFlags aFlags) {
   MOZ_ASSERT(aDesc.type() == SurfaceDescriptor::TSurfaceDescriptorDcompSurface);
-  if (!IsValidDcompSurfaceDescriptor(
-          aDesc.get_SurfaceDescriptorDcompSurface())) {
-    return nullptr;
-  }
-  RefPtr result = MakeRefPtr<DcompSurfaceHandleHost>(
+  RefPtr<TextureHost> result = new DcompSurfaceHandleHost(
       aFlags, aDesc.get_SurfaceDescriptorDcompSurface());
   return result.forget();
 }
@@ -67,7 +34,7 @@ already_AddRefed<TextureClient> DcompSurfaceTexture::CreateTextureClient(
     KnowsCompositor* aKnowsCompositor) {
   RefPtr<TextureClient> textureClient = MakeAndAddRef<TextureClient>(
       new DcompSurfaceTexture(aHandle, aSize, aFormat), TextureFlags::NO_FLAGS,
-      aKnowsCompositor->GetTextureForwarder().get());
+      aKnowsCompositor->GetTextureForwarder());
   return textureClient.forget();
 }
 
@@ -125,8 +92,8 @@ void DcompSurfaceHandleHost::CreateRenderTexture(
   MOZ_ASSERT(mExternalImageId.isSome());
   LOG("DcompSurfaceHandleHost %p CreateRenderTexture, ext-id=%" PRIu64, this,
       wr::AsUint64(aExternalImageId));
-  RefPtr texture = MakeRefPtr<wr::RenderDcompSurfaceTextureHost>(
-      mHandle.get(), mSize, mFormat);
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderDcompSurfaceTextureHost(mHandle.get(), mSize, mFormat);
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
@@ -140,12 +107,7 @@ void DcompSurfaceHandleHost::PushResourceUpdates(
     return;
   }
   MOZ_ASSERT(mHandle);
-
-  if (aImageKeys.length() != 1) {
-    MOZ_ASSERT_UNREACHABLE("unexpected key length");
-    return;
-  }
-
+  MOZ_ASSERT(aImageKeys.length() == 1);
   auto method = aOp == TextureHost::ADD_IMAGE
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
@@ -176,10 +138,7 @@ void DcompSurfaceHandleHost::PushDisplayItems(
     return;
   }
   LOG("DcompSurfaceHandleHost %p PushDisplayItems", this);
-  if (aImageKeys.length() != 1) {
-    MOZ_ASSERT_UNREACHABLE("unexpected key length");
-    return;
-  }
+  MOZ_ASSERT(aImageKeys.length() == 1);
   aBuilder.PushImage(
       aBounds, aClip, true, false, aFilter, aImageKeys[0],
       !(mFlags & TextureFlags::NON_PREMULTIPLIED),

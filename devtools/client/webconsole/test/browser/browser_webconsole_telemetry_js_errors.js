@@ -9,6 +9,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8><script>docum
 
 add_task(async function () {
   Services.fog.testResetFOG();
+  startTelemetry();
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
@@ -18,7 +19,7 @@ add_task(async function () {
   await waitFor(() => findErrorMessage(hud, "is not a function"));
   checkErrorDisplayedTelemetry("JSMSG_NOT_FUNCTION", 1);
 
-  await reloadSelectedTab();
+  await reloadBrowser();
 
   info("Reloading the page (and having the same error) increments the sum");
   await waitFor(() => findErrorMessage(hud, "is not a function"));

@@ -27,7 +27,7 @@ namespace nostd
 class bad_variant_access : public std::exception
 {
 public:
-  const char *what() const noexcept override { return "bad_variant_access"; }
+  virtual const char *what() const noexcept override { return "bad_variant_access"; }
 };
 
 [[noreturn]] inline void throw_bad_variant_access()
@@ -51,8 +51,6 @@ OPENTELEMETRY_END_NAMESPACE
 
 #  include "opentelemetry/nostd/internal/absl/base/options.h"
 
-// Forward declarations needed by the local Abseil snapshot bridge.
-// NOLINTBEGIN(abseil-no-namespace)
 namespace absl
 {
 namespace OTABSL_OPTION_NAMESPACE_NAME
@@ -63,7 +61,6 @@ template <typename... Ts>
 class variant;
 }  // namespace OTABSL_OPTION_NAMESPACE_NAME
 }  // namespace absl
-// NOLINTEND(abseil-no-namespace)
 
 #  include "opentelemetry/nostd/internal/absl/types/variant.h"
 

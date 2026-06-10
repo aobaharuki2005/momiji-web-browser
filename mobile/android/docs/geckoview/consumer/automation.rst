@@ -1,3 +1,5 @@
+.. -*- Mode: rst; fill-column: 80; -*-
+
 Configuring GeckoView for Automation
 ####################################
 How to set environment variables, Gecko arguments, and Gecko preferences for automation and debugging.

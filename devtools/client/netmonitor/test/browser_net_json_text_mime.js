@@ -32,7 +32,7 @@ add_task(async function () {
   const requestsListStatus = requestItem.querySelector(".status-code");
   EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
   await waitUntil(() => requestsListStatus.title);
-  await waitForDOM(requestItem, ".requests-list-timings-total");
+  await waitForDOMIfNeeded(requestItem, ".requests-list-timings-total");
 
   await verifyRequestItemTarget(
     document,
@@ -76,7 +76,7 @@ add_task(async function () {
   ok(rawResponseToggle.checked, "Raw toggle is checked");
   wait = waitForDOM(document, "#response-panel .data-header");
   rawResponseToggle.focus();
-  EventUtils.synthesizeKey("VK_SPACE", {}, rawResponseToggle.documentGlobal);
+  EventUtils.synthesizeKey("VK_SPACE", {}, rawResponseToggle.ownerGlobal);
   await wait;
   ok(!rawResponseToggle.checked, "Raw toggle is unchecked");
 

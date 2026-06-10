@@ -12,6 +12,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import mozilla.components.service.pocket.spocs.db.SpocEntity
 import mozilla.components.service.pocket.spocs.db.SpocImpressionEntity
+import mozilla.components.service.pocket.spocs.db.SpocsDao
 
 /**
  * Internal database for storing Pocket items.
@@ -26,6 +27,7 @@ import mozilla.components.service.pocket.spocs.db.SpocImpressionEntity
 )
 internal abstract class PocketRecommendationsDatabase : RoomDatabase() {
     abstract fun pocketRecommendationsDao(): PocketRecommendationsDao
+    abstract fun spocsDao(): SpocsDao
 
     companion object {
         private const val DATABASE_NAME = "pocket_recommendations"

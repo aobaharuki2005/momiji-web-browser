@@ -15,18 +15,18 @@ info: |
       other does not, throw a TypeError exception.
   ...
 
-includes: [testTypedArray.js, testTypedArray.js]
+includes: [testBigIntTypedArray.js, testTypedArray.js]
 features: [BigInt, TypedArray]
 ---*/
 
 var bigTypedArray;
 var littleTypedArray;
 
-testWithBigIntTypedArrayConstructors(function(BTA, makeCtorArg) {
+testWithBigIntTypedArrayConstructors(function(BTA) {
 
-  bigTypedArray = new BTA(makeCtorArg([1n]));
+  bigTypedArray = new BTA([1n]);
 
-  testWithTypedArrayConstructors(function(TA, makeCtorArg) {
+  testWithTypedArrayConstructors(function(TA) {
 
     littleTypedArray = new TA(1);
     assert.throws(TypeError, function() {

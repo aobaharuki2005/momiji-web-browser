@@ -1,4 +1,4 @@
-// META: global=window,dedicatedworker
+// META: global=window,dedicatedworker,shadowrealm
 "use strict";
 // https://console.spec.whatwg.org/
 

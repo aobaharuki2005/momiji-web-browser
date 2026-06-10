@@ -8,7 +8,9 @@ import android.content.Intent
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -18,8 +20,8 @@ import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.notificationTray
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
-import org.mozilla.focus.helpers.FocusTestRule
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.RetryTestRule
 import org.mozilla.focus.helpers.TestAssetHelper.getGenericTabAsset
 import org.mozilla.focus.helpers.TestHelper.getStringResource
@@ -27,18 +29,14 @@ import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.pressHomeKey
 import org.mozilla.focus.helpers.TestHelper.restartApp
 import org.mozilla.focus.helpers.TestHelper.verifySnackBarText
+import org.mozilla.focus.helpers.TestSetup
 import org.mozilla.focus.testAnnotations.SmokeTest
-import kotlin.test.assertNotNull
 
 // These tests verify interaction with the browsing notification and erasing browsing data
 @RunWith(AndroidJUnit4ClassRunner::class)
-class EraseBrowsingDataTest {
+class EraseBrowsingDataTest : TestSetup() {
+    private lateinit var webServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
-
-    @get:Rule(order = 0)
-    val focusTestRule: FocusTestRule = FocusTestRule()
-
-    private val webServerRule get() = focusTestRule.mockWebServerRule
 
     @get:Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
@@ -48,20 +46,26 @@ class EraseBrowsingDataTest {
     val retryTestRule = RetryTestRule(3)
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setSearchWidgetDialogEnabled(false)
     }
 
     @After
     fun tearDown() {
+        webServer.shutdown()
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SmokeTest
     @Test
     fun trashButtonTest() {
-        val testPage = webServerRule.server.getGenericTabAsset(1)
+        val testPage = webServer.getGenericTabAsset(1)
 
         searchScreen {
         }.loadPage(testPage.url) {
@@ -76,7 +80,7 @@ class EraseBrowsingDataTest {
     @SmokeTest
     @Test
     fun notificationEraseAndOpenButtonTest() {
-        val testPage = webServerRule.server.getGenericTabAsset(1)
+        val testPage = webServer.getGenericTabAsset(1)
 
         notificationTray {
             mDevice.openNotification()
@@ -102,7 +106,7 @@ class EraseBrowsingDataTest {
     @SmokeTest
     @Test
     fun deleteHistoryOnRestartTest() {
-        val testPage = webServerRule.server.getGenericTabAsset(1)
+        val testPage = webServer.getGenericTabAsset(1)
 
         searchScreen {
         }.loadPage(testPage.url) {}
@@ -115,7 +119,7 @@ class EraseBrowsingDataTest {
     @SmokeTest
     @Test
     fun systemBarHomeViewTest() {
-        val testPage = webServerRule.server.getGenericTabAsset(1)
+        val testPage = webServer.getGenericTabAsset(1)
         val launcherLoadTimeoutMillis = 5000
         val launcherPackage = mDevice.launcherPackageName
 
@@ -145,7 +149,7 @@ class EraseBrowsingDataTest {
             expandEraseBrowsingNotification()
         }.clickNotificationMessage {
             // Wait for launcher
-            assertNotNull(launcherPackage)
+            Assert.assertNotNull(launcherPackage)
             mDevice.wait(
                 Until.hasObject(By.pkg(launcherPackage).depth(0)),
                 launcherLoadTimeoutMillis.toLong(),

@@ -3,12 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 task-defaults:
-    worker-type:
-        by-test-platform:
-            windows11-64-24h2-asan/.*: win11-64-25h2-large
-            windows11-(32|64)-24h2(-ccov|-devedition|-mingwclang|-shippable)?/.*: win11-64-25h2
-            windows11-aarch64-24h2(-devedition|-shippable)?/.*: win11-a64-25h2
-            default: default
     mozharness:
         script: marionette.py
         config:
@@ -18,10 +12,6 @@ task-defaults:
                     - marionette/mac_taskcluster_config.py
                 windows.*:
                     - marionette/windows_taskcluster_config.py
-                linux.*:
-                    - marionette/prod_config.py
-                    - unittests/linux_dbus-python.py
-                    - remove_executables.py
                 default:
                     - marionette/prod_config.py
                     - remove_executables.py
@@ -42,17 +32,11 @@ marionette-unittest:
             webrender-sw:
                 by-test-platform:
                     .*-wayland.*: []
-                    # Compositor shutdown assertion in DisconnectApzcTreeManager
-                    # on headless macOS aarch64 VM workers (Bug 2039987 family).
-                    macosx1500-aarch64-vms/debug: []
                     .*/debug: built-projects
                     default: []
             default:
                 by-test-platform:
                     .*-wayland.*: []
-                    # Compositor shutdown assertion in DisconnectApzcTreeManager
-                    # on headless macOS aarch64 VM workers (Bug 2039987 family).
-                    macosx1500-aarch64-vms/debug: []
                     default: built-projects
     tier:
         by-variant:
@@ -62,7 +46,6 @@ marionette-unittest:
         by-test-platform:
             .*-asan.*: 3600
             .*-tsan.*: 4500
-            .*/debug: 3600
             default: 1800
     instance-size: default
     chunks: 1
@@ -70,7 +53,7 @@ marionette-unittest:
     test-manifest-loader: null  # don't load in taskgraph
     mozharness:
         extra-options:
-            - --subsuite=marionette-unittest
+            - --subsuite=unittest
             - --test-manifest=unit/unit-tests.toml
 
 marionette-integration:
@@ -90,18 +73,12 @@ marionette-integration:
             webrender-sw:
                 by-test-platform:
                     .*-wayland.*: []
-                    # Compositor shutdown assertion in DisconnectApzcTreeManager
-                    # on headless macOS aarch64 VM workers (Bug 2039987 family).
-                    macosx1500-aarch64-vms/debug: []
                     .*/debug: built-projects
                     default: []
             inc-origin-init: []
             default:
                 by-test-platform:
                     .*-wayland.*: []
-                    # Compositor shutdown assertion in DisconnectApzcTreeManager
-                    # on headless macOS aarch64 VM workers (Bug 2039987 family).
-                    macosx1500-aarch64-vms/debug: []
                     default: built-projects
     tier:
         by-variant:
@@ -112,16 +89,14 @@ marionette-integration:
             .*-asan.*: 3600
             .*-tsan.*: 3600
             .*-ccov.*: 3600
-            .*/debug: 3600
+            .*-debug.*: 3600
             default: 2700
     instance-size: default
-    chunks: dynamic
-    default-chunks:
-        by-test-platform:
-            .*-asan.*: 2
-            .*-tsan.*: 2
-            default: 1
-    mozharness:
-        extra-options:
-            - --subsuite=marionette-integration
-            - --test-manifest=integration-tests.toml
+    chunks:
+        by-variant:
+            inc-origin-init: dynamic
+            default:
+                by-test-platform:
+                    .*-asan.*: 2
+                    .*-tsan.*: 2
+                    default: 1

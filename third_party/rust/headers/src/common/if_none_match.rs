@@ -1,7 +1,6 @@
-use http::HeaderValue;
-
 use super::ETag;
-use crate::util::EntityTagRange;
+use util::EntityTagRange;
+use HeaderValue;
 
 /// `If-None-Match` header, defined in
 /// [RFC7232](https://tools.ietf.org/html/rfc7232#section-3.2)
@@ -34,6 +33,7 @@ use crate::util::EntityTagRange;
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::IfNoneMatch;
 ///
 /// let if_none_match = IfNoneMatch::any();

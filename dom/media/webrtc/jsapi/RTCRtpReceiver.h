@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef RTCRtpReceiver_h_
-#define RTCRtpReceiver_h_
+#ifndef _RTCRtpReceiver_h_
+#define _RTCRtpReceiver_h_
 
 #include <vector>
 
@@ -224,4 +224,4 @@ class RTCRtpReceiver : public nsISupports,
 
 }  // namespace dom
 }  // namespace mozilla
-#endif  // RTCRtpReceiver_h_
+#endif  // _RTCRtpReceiver_h_

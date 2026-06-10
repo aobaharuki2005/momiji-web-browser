@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -94,15 +96,14 @@ class PRFileDescStream final : public mozilla::gfx::EventStream {
     }
   }
 
-  [[nodiscard]] bool read(char* aOut, size_t aSize) override {
+  void read(char* aOut, size_t aSize) override {
     if (!good()) {
-      return false;
+      return;
     }
 
     Flush();
     PRInt32 res = PR_Read(mFd, static_cast<void*>(aOut), aSize);
     mGood = res >= 0 && (static_cast<size_t>(res) == aSize);
-    return true;
   }
 
   bool good() final { return mGood; }

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef RELRHACK_H_
-#define RELRHACK_H_
+#ifndef __RELRHACK_H__
+#define __RELRHACK_H__
 
 #include <elf.h>
 
@@ -22,4 +22,4 @@
 #  define SHT_RELR 19
 #endif
 
-#endif /* RELRHACK_H_ */
+#endif /* __RELRHACK_H__ */

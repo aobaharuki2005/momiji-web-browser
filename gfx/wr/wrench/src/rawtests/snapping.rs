@@ -511,6 +511,7 @@ fn dl_scrolling1(
         LayoutVector2D::zero(),
         APZScrollGeneration::default(),
         HasScrollLinkedEffect::No,
+        SpatialTreeItemKey::new(0, 0),
     );
 
     let prim_size = DeviceIntSize::new(
@@ -575,6 +576,7 @@ fn dl_scrolling_ext1(
         LayoutVector2D::new(0.0, variant.external_offset),
         APZScrollGeneration::default(),
         HasScrollLinkedEffect::No,
+        SpatialTreeItemKey::new(0, 0),
     );
 
     let prim_size = DeviceIntSize::new(

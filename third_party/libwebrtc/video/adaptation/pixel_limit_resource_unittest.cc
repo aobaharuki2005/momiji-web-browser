@@ -22,7 +22,6 @@
 #include "api/task_queue/task_queue_factory.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
-#include "api/video/video_adaptation_reason.h"
 #include "call/adaptation/test/fake_video_stream_input_state_provider.h"
 #include "call/adaptation/test/mock_resource_listener.h"
 #include "call/adaptation/video_stream_adapter.h"
@@ -47,7 +46,7 @@ class PixelLimitResourceTest : public ::testing::Test {
       : time_controller_(Timestamp::Micros(1234)),
         task_queue_(time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
             "TestQueue",
-            TaskQueueFactory::Priority::kNormal)),
+            TaskQueueFactory::Priority::NORMAL)),
         input_state_provider_() {}
 
   void SetCurrentPixels(int current_pixels) {
@@ -203,34 +202,6 @@ TEST_F(PixelLimitResourceTest, PeriodicallyAdaptsUpWhenToggling) {
 
     pixel_limit_resource->SetResourceListener(nullptr);
   });
-}
-
-TEST_F(PixelLimitResourceTest, AdaptationReasonIsCpuByDefault) {
-  FieldTrials field_trials =
-      CreateTestFieldTrials("WebRTC-PixelLimitResource/target_pixels:123/");
-  auto pixel_limit_resource = PixelLimitResource::CreateIfFieldTrialEnabled(
-      field_trials, task_queue_.get(), &input_state_provider_);
-  EXPECT_EQ(pixel_limit_resource->adaptation_reason(),
-            VideoAdaptationReason::kCpu);
-}
-
-TEST_F(PixelLimitResourceTest, CanSpecifyAdaptationReason) {
-  {
-    FieldTrials field_trials =
-        CreateTestFieldTrials("WebRTC-PixelLimitResource/reason:quality/");
-    auto pixel_limit_resource = PixelLimitResource::CreateIfFieldTrialEnabled(
-        field_trials, task_queue_.get(), &input_state_provider_);
-    EXPECT_EQ(pixel_limit_resource->adaptation_reason(),
-              VideoAdaptationReason::kQuality);
-  }
-  {
-    FieldTrials field_trials =
-        CreateTestFieldTrials("WebRTC-PixelLimitResource/reason:cpu/");
-    auto pixel_limit_resource = PixelLimitResource::CreateIfFieldTrialEnabled(
-        field_trials, task_queue_.get(), &input_state_provider_);
-    EXPECT_EQ(pixel_limit_resource->adaptation_reason(),
-              VideoAdaptationReason::kCpu);
-  }
 }
 
 }  // namespace webrtc

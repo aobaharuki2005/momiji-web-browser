@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -63,16 +65,14 @@ class MOZ_CAPABILITY("monitor") Monitor {
  * The monitor must be unlocked when instances of this class are
  * created.
  */
-template <class MonitorType>
-class MOZ_SCOPED_CAPABILITY MOZ_STACK_CLASS MonitorAutoLockBase {
+class MOZ_SCOPED_CAPABILITY MOZ_STACK_CLASS MonitorAutoLock {
  public:
-  explicit MonitorAutoLockBase(MonitorType& aMonitor)
-      MOZ_CAPABILITY_ACQUIRE(aMonitor)
+  explicit MonitorAutoLock(Monitor& aMonitor) MOZ_CAPABILITY_ACQUIRE(aMonitor)
       : mMonitor(&aMonitor) {
     mMonitor->Lock();
   }
 
-  ~MonitorAutoLockBase() MOZ_CAPABILITY_RELEASE() { mMonitor->Unlock(); }
+  ~MonitorAutoLock() MOZ_CAPABILITY_RELEASE() { mMonitor->Unlock(); }
   // It's very hard to mess up MonitorAutoLock lock(mMonitor); ... lock.Wait().
   // The only way you can fail to hold the lock when you call lock.Wait() is to
   // use MonitorAutoUnlock.   For now we'll ignore that case.
@@ -113,23 +113,23 @@ class MOZ_SCOPED_CAPABILITY MOZ_STACK_CLASS MonitorAutoLockBase {
   // should use this method in preference to using AssertCurrentThreadOwns on
   // the mutex you expected to be held, since this method provides stronger
   // guarantees.
-  void AssertOwns(const MonitorType& aMonitor) const
+  void AssertOwns(const Monitor& aMonitor) const
       MOZ_ASSERT_CAPABILITY(aMonitor) {
     MOZ_ASSERT(&aMonitor == mMonitor);
     mMonitor->AssertCurrentThreadOwns();
   }
 
  private:
-  MonitorAutoLockBase() = delete;
-  MonitorAutoLockBase(const MonitorAutoLockBase&) = delete;
-  MonitorAutoLockBase& operator=(const MonitorAutoLockBase&) = delete;
+  MonitorAutoLock() = delete;
+  MonitorAutoLock(const MonitorAutoLock&) = delete;
+  MonitorAutoLock& operator=(const MonitorAutoLock&) = delete;
   static void* operator new(size_t) noexcept(true);
 
- protected:
-  MonitorType* mMonitor;
-};
+  friend class MonitorAutoUnlock;
 
-using MonitorAutoLock = MonitorAutoLockBase<Monitor>;
+ protected:
+  Monitor* mMonitor;
+};
 
 /**
  * Unlock the monitor for the lexical scope instances of this class
@@ -138,27 +138,24 @@ using MonitorAutoLock = MonitorAutoLockBase<Monitor>;
  * The monitor must be locked by the current thread when instances of
  * this class are created.
  */
-template <class MonitorType>
-class MOZ_STACK_CLASS MOZ_SCOPED_CAPABILITY MonitorAutoUnlockBase {
+class MOZ_STACK_CLASS MOZ_SCOPED_CAPABILITY MonitorAutoUnlock {
  public:
-  explicit MonitorAutoUnlockBase(MonitorType& aMonitor)
+  explicit MonitorAutoUnlock(Monitor& aMonitor)
       MOZ_SCOPED_UNLOCK_RELEASE(aMonitor)
       : mMonitor(&aMonitor) {
     mMonitor->Unlock();
   }
 
-  ~MonitorAutoUnlockBase() MOZ_SCOPED_UNLOCK_REACQUIRE() { mMonitor->Lock(); }
+  ~MonitorAutoUnlock() MOZ_SCOPED_UNLOCK_REACQUIRE() { mMonitor->Lock(); }
 
  private:
-  MonitorAutoUnlockBase() = delete;
-  MonitorAutoUnlockBase(const MonitorAutoUnlockBase&) = delete;
-  MonitorAutoUnlockBase& operator=(const MonitorAutoUnlockBase&) = delete;
+  MonitorAutoUnlock() = delete;
+  MonitorAutoUnlock(const MonitorAutoUnlock&) = delete;
+  MonitorAutoUnlock& operator=(const MonitorAutoUnlock&) = delete;
   static void* operator new(size_t) noexcept(true);
 
-  MonitorType* mMonitor;
+  Monitor* mMonitor;
 };
-
-using MonitorAutoUnlock = MonitorAutoUnlockBase<Monitor>;
 
 /**
  * Lock the monitor for the lexical scope instances of this class are
@@ -167,17 +164,16 @@ using MonitorAutoUnlock = MonitorAutoUnlockBase<Monitor>;
  * The monitor must be unlocked when instances of this class are
  * created.
  */
-template <class MonitorType>
-class MOZ_SCOPED_CAPABILITY MOZ_STACK_CLASS ReleasableMonitorAutoLockBase {
+class MOZ_SCOPED_CAPABILITY MOZ_STACK_CLASS ReleasableMonitorAutoLock {
  public:
-  explicit ReleasableMonitorAutoLockBase(MonitorType& aMonitor)
+  explicit ReleasableMonitorAutoLock(Monitor& aMonitor)
       MOZ_CAPABILITY_ACQUIRE(aMonitor)
       : mMonitor(&aMonitor) {
     mMonitor->Lock();
     mLocked = true;
   }
 
-  ~ReleasableMonitorAutoLockBase() MOZ_CAPABILITY_RELEASE() {
+  ~ReleasableMonitorAutoLock() MOZ_CAPABILITY_RELEASE() {
     if (mLocked) {
       mMonitor->Unlock();
     }
@@ -228,16 +224,14 @@ class MOZ_SCOPED_CAPABILITY MOZ_STACK_CLASS ReleasableMonitorAutoLockBase {
 
  private:
   bool mLocked;
-  MonitorType* mMonitor;
+  Monitor* mMonitor;
 
-  ReleasableMonitorAutoLockBase() = delete;
-  ReleasableMonitorAutoLockBase(const ReleasableMonitorAutoLockBase&) = delete;
-  ReleasableMonitorAutoLockBase& operator=(
-      const ReleasableMonitorAutoLockBase&) = delete;
+  ReleasableMonitorAutoLock() = delete;
+  ReleasableMonitorAutoLock(const ReleasableMonitorAutoLock&) = delete;
+  ReleasableMonitorAutoLock& operator=(const ReleasableMonitorAutoLock&) =
+      delete;
   static void* operator new(size_t) noexcept(true);
 };
-
-using ReleasableMonitorAutoLock = ReleasableMonitorAutoLockBase<Monitor>;
 
 }  // namespace mozilla
 

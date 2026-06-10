@@ -13,6 +13,8 @@ let gHits = 0;
 add_task(async function () {
   do_get_profile();
 
+  info("Disable rcwn and accept all");
+  Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
 
   const server = CookieXPCShellUtils.createServer({
@@ -39,18 +41,8 @@ add_task(async function () {
         }
         body { font-family: foo }
       </style>
-      <iframe src="http://example.org/font-iframe"></iframe>
-      <script>
-        window._allFontsReady = Promise.all([
-          document.fonts.ready,
-          new Promise(resolve => window.addEventListener("message", function handler(e) {
-            if (e.data === "iframe-fonts-ready") {
-              window.removeEventListener("message", handler);
-              resolve();
-            }
-          }))
-        ]);
-      </script>`;
+      <iframe src="http://example.org/font-iframe">
+      </iframe>`;
     response.bodyOutputStream.write(body, body.length);
   });
 
@@ -64,10 +56,7 @@ add_task(async function () {
           src: url("http://example.org/font.woff") format('woff');
         }
         body { font-family: foo }
-      </style>
-      <script>
-        document.fonts.ready.then(() => window.parent.postMessage("iframe-fonts-ready", "*"));
-      </script>`;
+      </style>`;
     response.bodyOutputStream.write(body, body.length);
   });
 
@@ -79,29 +68,23 @@ add_task(async function () {
   info("Reset the hits count");
   gHits = 0;
 
-  info("Let's load pages with origins A, B, and C");
-  const [pageA, pageB, pageC] = await Promise.all([
-    CookieXPCShellUtils.loadContentPage("http://example.org/font"),
-    CookieXPCShellUtils.loadContentPage("http://foo.com/font"),
-    CookieXPCShellUtils.loadContentPage("http://bar.com/font"),
-  ]);
-  const allFontsReady = await Promise.all([
-    pageA.spawn([], function () {
-      return this.content.wrappedJSObject._allFontsReady.then(() => true);
-    }),
-    pageB.spawn([], function () {
-      return this.content.wrappedJSObject._allFontsReady.then(() => true);
-    }),
-    pageC.spawn([], function () {
-      return this.content.wrappedJSObject._allFontsReady.then(() => true);
-    }),
-  ]);
-  Assert.deepEqual(
-    allFontsReady,
-    [true, true, true],
-    "_allFontsReady should be defined in all pages"
+  info("Let's load a page with origin A");
+  let contentPage = await CookieXPCShellUtils.loadContentPage(
+    "http://example.org/font"
   );
-  await Promise.all([pageA.close(), pageB.close(), pageC.close()]);
+  await contentPage.close();
+
+  info("Let's load a page with origin B");
+  contentPage = await CookieXPCShellUtils.loadContentPage(
+    "http://foo.com/font"
+  );
+  await contentPage.close();
+
+  info("Let's load a page with origin C");
+  contentPage = await CookieXPCShellUtils.loadContentPage(
+    "http://bar.com/font"
+  );
+  await contentPage.close();
 
   Assert.equal(gHits, hitsCount, "The number of hits match");
 });

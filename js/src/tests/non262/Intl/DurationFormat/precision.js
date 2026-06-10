@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||!Intl.hasOwnProperty("DurationFormat"))
+
 var df = new Intl.DurationFormat("en", {
   seconds: "numeric",
   fractionalDigits: 9,

@@ -1,3 +1,4 @@
+/* -*- mode: js; indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -270,7 +271,7 @@ export var ProcessHangMonitor = {
     let maybeStopHang = report => {
       let hungBrowserWindow = null;
       try {
-        hungBrowserWindow = report.scriptBrowser.documentGlobal;
+        hungBrowserWindow = report.scriptBrowser.ownerGlobal;
       } catch (e) {
         // Ignore failures to get the script browser - we'll be
         // conservative, and assume that if we cannot access the
@@ -509,9 +510,7 @@ export var ProcessHangMonitor = {
         ]);
       } else {
         let tab =
-          scriptBrowser?.documentGlobal.gBrowser?.getTabForBrowser(
-            scriptBrowser
-          );
+          scriptBrowser?.ownerGlobal.gBrowser?.getTabForBrowser(scriptBrowser);
         if (!tab) {
           notificationTag = "nonspecific_tab";
           message = bundle.getFormattedString(
@@ -615,7 +614,7 @@ export var ProcessHangMonitor = {
   },
 
   handleEvent(event) {
-    let win = event.target.documentGlobal;
+    let win = event.target.ownerGlobal;
 
     // If a new tab is selected or if a tab changes remoteness, then
     // we may need to show or hide a hang notification.

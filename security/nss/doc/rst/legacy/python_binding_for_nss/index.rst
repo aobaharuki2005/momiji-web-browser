@@ -235,6 +235,8 @@ Python binding for NSS
 `Release Information <#release_information>`__
 ----------------------------------------------
 
+.. container::
+
 .. _release_1.0.1:
 
 `Release 1.0.1 <#release_1.0.1>`__
@@ -296,25 +298,15 @@ Python binding for NSS
    |                                                 | -  The following constants were added:          |
    |                                                 |                                                 |
    |                                                 |    -                                            |
-   |                                                 |                                                 |
    |                                                 | ssl.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 |
-   |                                                 |                                                 |
    |                                                 |    -  ss                                        |
-   |                                                 |                                                 |
    |                                                 | l.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 |
-   |                                                 |                                                 |
    |                                                 |    -                                            |
-   |                                                 |                                                 |
    |                                                 |   ssl.TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256 |
-   |                                                 |                                                 |
    |                                                 |    -                                            |
-   |                                                 |                                                 |
    |                                                 | ssl.TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256 |
-   |                                                 |                                                 |
    |                                                 |    -                                            |
-   |                                                 |                                                 |
    |                                                 |   ssl.TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256 |
-   |                                                 |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
 
 .. _release_1.0.0beta1:
@@ -535,7 +527,6 @@ Python binding for NSS
    |                                                 |    -  ssl.SSL_CK_RC4_128_WITH_MD5               |
    |                                                 |                                                 |
    |                                                 |   -  ssl.SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA |
-   |                                                 |                                                 |
    |                                                 |    -  ssl.SSL_FORTEZZA_DMS_WITH_NULL_SHA        |
    |                                                 |    -  ssl.SSL_FORTEZZA_DMS_WITH_RC4_128_SHA     |
    |                                                 |    -  ssl.SSL_RSA_OLDFIPS_WITH_3DES_EDE_CBC_SHA |
@@ -579,12 +570,10 @@ Python binding for NSS
    |                                                 |  -  ssl.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256 |
    |                                                 |                                                 |
    |                                                 |  -  ssl.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 |
-   |                                                 |                                                 |
    |                                                 |    -  ssl.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 |
    |                                                 |    -  ssl.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 |
    |                                                 |                                                 |
    |                                                 |   -  ssl.TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256 |
-   |                                                 |                                                 |
    |                                                 |    -  ssl.TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256  |
    |                                                 |    -  ssl.TLS_EMPTY_RENEGOTIATION_INFO_SCSV     |
    |                                                 |    -  ssl.TLS_FALLBACK_SCSV                     |
@@ -995,7 +984,8 @@ Internal Changes
    |                                                 |                                                 |
    |                                                 | .. rubric:: The following class methods were    |
    |                                                 |    added                                        |
-   |                                                 |    :name: the_following_class_methods_were_added|
+   |                                                 |                                                 |
+   |                                                 |   :name: the_following_class_methods_were_added |
    |                                                 |                                                 |
    |                                                 | -  nss.nss.Certificate.get_extension            |
    |                                                 | -  nss.nss.PK11Slot.generate_key_pair           |
@@ -1004,13 +994,15 @@ Internal Changes
    |                                                 |                                                 |
    |                                                 | .. rubric:: The following module functions were |
    |                                                 |    added                                        |
-   |                                                 |    :name: the_following_module_functions_added  |
+   |                                                 |    :                                            |
+   |                                                 | name: the_following_module_functions_were_added |
    |                                                 |                                                 |
    |                                                 | -  nss.nss.pub_wrap_sym_key                     |
    |                                                 |                                                 |
    |                                                 | .. rubric:: The following internal utilities    |
    |                                                 |    were added                                   |
-   |                                                 |    :name: the_following_internal_utilities_added|
+   |                                                 |    :na                                          |
+   |                                                 | me: the_following_internal_utilities_were_added |
    |                                                 |                                                 |
    |                                                 | -  PyString_UTF8                                |
    |                                                 | -  SecItem_new_alloc()                          |
@@ -1018,6 +1010,8 @@ Internal Changes
    |                                                 | .. rubric:: The following class constructors    |
    |                                                 |    were modified to accept intialization        |
    |                                                 |    parameters                                   |
+   |                                                 |    :name: the_following_class_constructors_w    |
+   |                                                 | ere_modified_to_accept_intialization_parameters |
    |                                                 |                                                 |
    |                                                 | -  KEYPQGParams (DSA generation parameters)     |
    |                                                 |                                                 |
@@ -1128,6 +1122,8 @@ Internal Changes
    |                                                 |                                                 |
    |                                                 | .. rubric:: The following class properties were |
    |                                                 |    added                                        |
+   |                                                 |    :                                            |
+   |                                                 | name: the_following_class_properties_were_added |
    |                                                 |                                                 |
    |                                                 | -  AlgorithmID.id_oid                           |
    |                                                 | -  AlgorithmID.id_str                           |
@@ -1144,6 +1140,8 @@ Internal Changes
    |                                                 |                                                 |
    |                                                 | .. rubric:: The following module functions were |
    |                                                 |    added                                        |
+   |                                                 |    :na                                          |
+   |                                                 | me: the_following_module_functions_were_added_2 |
    |                                                 |                                                 |
    |                                                 | -  nss.nss.dump_certificate_cache_info()        |
    |                                                 | -  nss.nss.find_slot_by_name()                  |
@@ -1162,14 +1160,11 @@ Internal Changes
    |                                                 | -  nss.nss.pkcs12_export()                      |
    |                                                 | -  nss.nss.pkcs12_map_cipher()                  |
    |                                                 | -  n                                            |
-   |                                                 |                                                 |
    |                                                 | ss.nss.pkcs12_set_nickname_collision_callback() |
-   |                                                 |                                                 |
    |                                                 | -  nss.nss.pkcs12_set_preferred_cipher()        |
    |                                                 | -  nss.nss.token_exists()                       |
    |                                                 | -  nss.ssl.config_mp_server_sid_cache()         |
    |                                                 | -  ns                                           |
-   |                                                 |                                                 |
    |                                                 | s.ssl.config_server_session_id_cache_with_opt() |
    |                                                 | -  nss.ssl.get_max_server_cache_locks()         |
    |                                                 | -  nss.ssl.set_max_server_cache_locks()         |
@@ -1229,7 +1224,7 @@ Internal Changes
    |                                                 |    resolution. Supports iteration over it's set |
    |                                                 |    of NetworkAddress objects and provides       |
    |                                                 |    hostname, canonical_name object properties.  |
-   |                                                 | -  Add PR\_AI\_\* constants.                    |
+   |                                                 | -  Add PR_AI_\* constants.                      |
    |                                                 | -  NetworkAddress constructor and               |
    |                                                 |    NetworkAddress.set_from_string() added       |
    |                                                 |    optional family parameter. This is necessary |
@@ -1254,7 +1249,7 @@ Internal Changes
    |                                                 | -  HostEntry objects now support iteration and  |
    |                                                 |    indexing of their NetworkAddress members.    |
    |                                                 | -  Add io.addr_family_name() function to return |
-   |                                                 |    string representation of PR\_AF_\* constants.|
+   |                                                 |    string representation of PR_AF_\* constants. |
    |                                                 | -  Modify example and test code to utilize      |
    |                                                 |    AddrInfo instead of deprecated               |
    |                                                 |    NetworkAddress functionality. Add address    |
@@ -1351,6 +1346,8 @@ Internal Changes
    |                                                 |                                                 |
    |                                                 | .. rubric:: The following module functions were |
    |                                                 |    added:                                       |
+   |                                                 |    :na                                          |
+   |                                                 | me: the_following_module_functions_were_added_3 |
    |                                                 |                                                 |
    |                                                 | -  nss.nss.nss_initialize()                     |
    |                                                 | -  nss.nss.nss_init_context()                   |
@@ -1457,6 +1454,8 @@ Internal Changes
    |                                                 |                                                 |
    |                                                 | .. rubric:: The following module functions were |
    |                                                 |    added:                                       |
+   |                                                 |    :na                                          |
+   |                                                 | me: the_following_module_functions_were_added_4 |
    |                                                 |                                                 |
    |                                                 | -  nss.nss.nss_is_initialized()                 |
    |                                                 | -  nss.nss.cert_crl_reason_from_name()          |
@@ -1479,6 +1478,8 @@ Internal Changes
    |                                                 |                                                 |
    |                                                 | .. rubric:: The following class methods and     |
    |                                                 |    properties were added:                       |
+   |                                                 |    :name: the_fo                                |
+   |                                                 | llowing_class_methods_and_properties_were_added |
    |                                                 |                                                 |
    |                                                 | Note: it's a method if the name is suffixed     |
    |                                                 | with (), a propety otherwise                    |
@@ -1529,6 +1530,8 @@ Internal Changes
    |                                                 |                                                 |
    |                                                 | .. rubric:: The following module functions were |
    |                                                 |    removed:                                     |
+   |                                                 |    :na                                          |
+   |                                                 | me: the_following_module_functions_were_removed |
    |                                                 |                                                 |
    |                                                 | Note: use nss.nss.oid_tag() instead             |
    |                                                 |                                                 |
@@ -1610,6 +1613,8 @@ Internal Changes
    |                                                 |                                                 |
    |                                                 | .. rubric:: The following methods and functions |
    |                                                 |    added:                                       |
+   |                                                 |    :                                            |
+   |                                                 | name: the_following_methods_and_functions_added |
    |                                                 |                                                 |
    |                                                 | -  get_best_wrap_mechanism                      |
    |                                                 | -  get_best_key_length                          |

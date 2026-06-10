@@ -51,6 +51,7 @@ support-files = [
   "!/devtools/client/inspector/test/head.js",
   "!/devtools/client/inspector/test/shared-head.js",
   "!/devtools/client/shared/test/shared-head.js",
+  "!/devtools/client/shared/test/telemetry-test-helpers.js",
   "!/devtools/client/shared/test/highlighter-test-actor.js",
   "!/devtools/client/webconsole/test/browser/shared-head.js",
 ]
@@ -69,8 +70,6 @@ tags = "devtools-compat-data"
 
 ["browser_rules_css-compatibility-tooltip-telemetry.js"]
 tags = "devtools-compat-data"
-
-["browser_rules_element_specific_pseudo_classes.js"]
 
 ["browser_rules_filtereditor-appears-on-swatch-click.js"]
 fail-if = [
@@ -139,6 +138,8 @@ fail-if = [
 
 ["browser_rules_imported_stylesheet_edit.js"]
 
+["browser_rules_inactive_css_display-justify.js"]
+
 ["browser_rules_inactive_css_flexbox.js"]
 
 ["browser_rules_inactive_css_grid.js"]
@@ -146,8 +147,6 @@ fail-if = [
 ["browser_rules_inactive_css_inline.js"]
 
 ["browser_rules_inactive_css_split-condition.js"]
-
-["browser_rules_inactive_css_update.js"]
 
 ["browser_rules_inactive_css_visited.js"]
 
@@ -218,8 +217,6 @@ fail-if = [
 
 ["browser_rules_mark_overridden_layers.js"]
 
-["browser_rules_mark_overridden_refresh.js"]
-
 ["browser_rules_mathml-element.js"]
 
 ["browser_rules_media-queries.js"]
@@ -253,8 +250,6 @@ fail-if = [
 fail-if = [
   "a11y_checks", # Bug 1849028 clicked element may not be focusable and/or labeled
 ]
-
-["browser_rules_popup_override.js"]
 
 ["browser_rules_position-try.js"]
 
@@ -350,7 +345,6 @@ fail-if = [
 ["browser_rules_selector_warnings.js"]
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64'", # Bug 1945519, perma failing on windows.
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64'", # Bug 1945519, perma failing on windows.
 ]
 
 ["browser_rules_shadowdom_slot_rules.js"]

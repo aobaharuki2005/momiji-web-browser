@@ -31,6 +31,7 @@ NSS 3.29.1 release notes
 `New in NSS 3.29.1 <#new_in_nss_3.29.1>`__
 ------------------------------------------
 
+.. _new_functionality:
 
 `New Functionality <#new_functionality>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

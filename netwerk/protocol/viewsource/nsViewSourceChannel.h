@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsViewSourceChannel_h_
-#define nsViewSourceChannel_h_
+#ifndef nsViewSourceChannel_h___
+#define nsViewSourceChannel_h___
 
 #include "mozilla/net/NeckoChannelParams.h"
 #include "nsCOMPtr.h"
@@ -93,4 +94,4 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   bool mIsSrcdocChannel{false};
 };
 
-#endif /* nsViewSourceChannel_h_ */
+#endif /* nsViewSourceChannel_h___ */

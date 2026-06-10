@@ -11,17 +11,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <span>
-
 #include "media/base/turn_utils.h"
-#include "test/fuzzers/fuzz_data_helper.h"
 
 namespace webrtc {
-void FuzzOneInput(FuzzDataHelper fuzz_data) {
+void FuzzOneInput(const uint8_t* data, size_t size) {
   size_t content_position;
   size_t content_size;
-  std::span<const uint8_t> raw = fuzz_data.ReadRemaining();
-  webrtc::UnwrapTurnPacket(raw.data(), raw.size(), &content_position,
-                           &content_size);
+  webrtc::UnwrapTurnPacket(data, size, &content_position, &content_size);
 }
 }  // namespace webrtc

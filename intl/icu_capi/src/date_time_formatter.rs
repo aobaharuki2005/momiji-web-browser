@@ -7,6 +7,7 @@
 #[rustfmt::skip]
 #[diplomat::bridge]
 #[diplomat::abi_rename = "icu4x_{0}_mv1"]
+#[diplomat::attr(auto, namespace = "icu4x")]
 pub mod ffi {
     use alloc::boxed::Box;
     use icu_calendar::Gregorian;
@@ -532,11 +533,11 @@ pub mod ffi {
         #[diplomat::rust_link(icu::datetime::FormattedDateTime::to_string, FnInStruct, hidden)]
         pub fn format_iso(
             &self,
-            iso_date: &IsoDate,
+            date: &IsoDate,
             time: &Time,
             write: &mut diplomat_runtime::DiplomatWrite,
         ) {
-            let date = iso_date.0;
+            let date = date.0;
             let value = icu_time::DateTime {
                 date,
                 time: time.0,
@@ -547,7 +548,6 @@ pub mod ffi {
         #[diplomat::rust_link(icu::datetime::DateTimeFormatter::format_same_calendar, FnInStruct)]
         #[diplomat::rust_link(icu::datetime::FormattedDateTime, Struct, hidden)]
         #[diplomat::rust_link(icu::datetime::FormattedDateTime::to_string, FnInStruct, hidden)]
-        #[diplomat::attr(demo_gen, disable)] // confusing, as Date is constructed from ISO
         pub fn format_same_calendar(
             &self,
             date: &Date,
@@ -1069,11 +1069,11 @@ pub mod ffi {
         #[diplomat::rust_link(icu::datetime::FormattedDateTime::to_string, FnInStruct, hidden)]
         pub fn format_iso(
             &self,
-            iso_date: &IsoDate,
+            date: &IsoDate,
             time: &Time,
             write: &mut diplomat_runtime::DiplomatWrite,
         ) {
-            let date = iso_date.0.to_calendar(Gregorian);
+            let date = date.0.to_calendar(Gregorian);
             let value = icu_time::DateTime {
                 date,
                 time: time.0,

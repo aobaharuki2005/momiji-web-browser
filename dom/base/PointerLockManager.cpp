@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -17,12 +19,9 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/PointerEventHandler.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowContext.h"
 #include "nsCOMPtr.h"
-#include "nsIWidget.h"
 #include "nsMenuPopupFrame.h"
 #include "nsSandboxFlags.h"
 
@@ -40,8 +39,6 @@ using mozilla::dom::CallerType;
 using mozilla::dom::CanonicalBrowsingContext;
 using mozilla::dom::Document;
 using mozilla::dom::Element;
-using mozilla::dom::PointerLockOptions;
-using mozilla::dom::Promise;
 using mozilla::dom::WindowContext;
 
 // Reference to the pointer locked element.
@@ -55,66 +52,6 @@ static BrowserParent* sLockedRemoteTarget = nullptr;
 
 /* static */
 bool PointerLockManager::sIsLocked = false;
-
-/* static */
-bool PointerLockManager::sIsLockUnadjustedMovement = false;
-
-// Map a Gecko-internal pointer-lock error string to the DOMException defined in
-// the spec, https://w3c.github.io/pointerlock/#dom-element-requestpointerlock.
-static void RejectPromiseForError(Promise* aPromise, const char* aError) {
-  MOZ_ASSERT(aPromise);
-  MOZ_ASSERT(aError);
-
-  if (!strcmp(aError, "PointerLockDeniedDisabled")) {
-    aPromise->MaybeRejectWithNotSupportedError("Pointer Lock API is disabled.");
-    return;
-  }
-  if (!strcmp(aError, "PointerLockDeniedNotInDocument")) {
-    aPromise->MaybeRejectWithInvalidStateError(
-        "The requesting element is not in a document.");
-    return;
-  }
-  if (!strcmp(aError, "PointerLockDeniedSandboxed")) {
-    aPromise->MaybeRejectWithSecurityError(
-        "Pointer Lock API is restricted via sandbox.");
-    return;
-  }
-  // Other browsers allow the hidden document to lock the pointer, but there is
-  // a spec issue for that, https://github.com/w3c/pointerlock/issues/93.
-  if (!strcmp(aError, "PointerLockDeniedHidden")) {
-    aPromise->MaybeRejectWithWrongDocumentError("The document is not visible.");
-    return;
-  }
-  if (!strcmp(aError, "PointerLockDeniedNotFocused")) {
-    aPromise->MaybeRejectWithWrongDocumentError("The document is not focused.");
-    return;
-  }
-  if (!strcmp(aError, "PointerLockDeniedFailedToLock")) {
-    aPromise->MaybeRejectWithNotSupportedError(
-        "The browser failed to lock the pointer.");
-    return;
-  }
-  if (!strcmp(aError, "PointerLockDeniedInUse")) {
-    aPromise->MaybeRejectWithInvalidStateError(
-        "The pointer is currently locked by a different document.");
-    return;
-  }
-  if (!strcmp(aError, "PointerLockDeniedNotInputDriven")) {
-    aPromise->MaybeRejectWithNotAllowedError(
-        "Element.requestPointerLock() was not called from inside a short "
-        "running user-generated event handler, and the document is not in full "
-        "screen.");
-    return;
-  }
-  if (!strcmp(aError, "PointerLockDeniedMovedDocument")) {
-    aPromise->MaybeRejectWithInvalidStateError(
-        "The requesting element has moved to a different document");
-    return;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Unknown pointer lock error");
-  aPromise->MaybeRejectWithInvalidStateError("Unknown error.");
-}
 
 /* static */
 already_AddRefed<dom::Element> PointerLockManager::GetLockedElement() {
@@ -148,7 +85,6 @@ static void DispatchPointerLockChange(Document* aTarget) {
 }
 
 static void DispatchPointerLockError(Document* aTarget, const char* aMessage) {
-  MOZ_ASSERT(aMessage);
   if (!aTarget) {
     return;
   }
@@ -161,15 +97,8 @@ static void DispatchPointerLockError(Document* aTarget, const char* aMessage) {
                                ChromeOnlyDispatch::eNo);
   asyncDispatcher->PostDOMEvent();
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
-                                  aTarget, PropertiesFile::DOM_PROPERTIES,
+                                  aTarget, nsContentUtils::eDOM_PROPERTIES,
                                   aMessage);
-}
-
-// Combined error path: fires pointerlockerror for backwards compatibility AND
-// rejects the spec-mandated Promise with the appropriate DOMException.
-static void FailWith(Document* aTarget, Promise* aPromise, const char* aError) {
-  DispatchPointerLockError(aTarget, aError);
-  RejectPromiseForError(aPromise, aError);
 }
 
 static bool IsPopupOpened() {
@@ -250,32 +179,22 @@ static const char* GetPointerLockError(Element* aElement, Element* aCurrentLock,
 
 /* static */
 void PointerLockManager::RequestLock(Element* aElement,
-                                     const PointerLockOptions& aOptions,
-                                     CallerType aCallerType,
-                                     Promise* aPromise) {
-  MOZ_ASSERT(aPromise);
+                                     CallerType aCallerType) {
   NS_ASSERTION(aElement,
                "Must pass non-null element to PointerLockManager::RequestLock");
 
   RefPtr<Document> doc = aElement->OwnerDoc();
   nsCOMPtr<Element> pointerLockedElement = GetLockedElement();
-  MOZ_POINTERLOCK_LOG(
-      "Request lock on element 0x%p [document=0x%p, "
-      "unadjustedMovement=%s]",
-      aElement, doc.get(), aOptions.mUnadjustedMovement ? "true" : "false");
+  MOZ_POINTERLOCK_LOG("Request lock on element 0x%p [document=0x%p]", aElement,
+                      doc.get());
 
-  // XXX: https://bugzilla.mozilla.org/show_bug.cgi?id=2037874.
-  // Spec does this check in queued task instead, see step 6-2 of
-  // https://w3c.github.io/pointerlock/#dom-element-requestpointerlock.
-  if (aElement == pointerLockedElement &&
-      sIsLockUnadjustedMovement == aOptions.mUnadjustedMovement) {
+  if (aElement == pointerLockedElement) {
     DispatchPointerLockChange(doc);
-    aPromise->MaybeResolveWithUndefined();
     return;
   }
 
   if (const char* msg = GetPointerLockError(aElement, pointerLockedElement)) {
-    FailWith(doc, aPromise, msg);
+    DispatchPointerLockError(doc, msg);
     return;
   }
 
@@ -283,8 +202,7 @@ void PointerLockManager::RequestLock(Element* aElement,
       doc->HasValidTransientUserGestureActivation() ||
       aCallerType == CallerType::System;
   nsCOMPtr<nsIRunnable> request =
-      new PointerLockRequest(aElement, userInputOrSystemCaller,
-                             aOptions.mUnadjustedMovement, aPromise);
+      new PointerLockRequest(aElement, userInputOrSystemCaller);
   doc->Dispatch(request.forget());
 }
 
@@ -322,8 +240,7 @@ void PointerLockManager::Unlock(const char* aReason, Document* aDoc) {
   if (!pointerLockedDoc || (aDoc && aDoc != pointerLockedDoc)) {
     return;
   }
-  if (!SetPointerLock(nullptr, pointerLockedDoc, StyleCursorKind::Auto,
-                      /* aUnadjustedMovement */ false)) {
+  if (!SetPointerLock(nullptr, pointerLockedDoc, StyleCursorKind::Auto)) {
     return;
   }
 
@@ -375,10 +292,8 @@ void PointerLockManager::ChangePointerLockedElement(
 
 /* static */
 bool PointerLockManager::StartSetPointerLock(Element* aElement,
-                                             Document* aDocument,
-                                             bool aUnadjustedMovement) {
-  if (!SetPointerLock(aElement, aDocument, StyleCursorKind::None,
-                      aUnadjustedMovement)) {
+                                             Document* aDocument) {
+  if (!SetPointerLock(aElement, aDocument, StyleCursorKind::None)) {
     DispatchPointerLockError(aDocument, "PointerLockDeniedFailedToLock");
     return false;
   }
@@ -393,8 +308,7 @@ bool PointerLockManager::StartSetPointerLock(Element* aElement,
 
 /* static */
 bool PointerLockManager::SetPointerLock(Element* aElement, Document* aDocument,
-                                        StyleCursorKind aCursorStyle,
-                                        bool aUnadjustedMovement) {
+                                        StyleCursorKind aCursorStyle) {
   MOZ_ASSERT(!aElement || aElement->OwnerDoc() == aDocument,
              "We should be either unlocking pointer (aElement is nullptr), "
              "or locking pointer to an element in this document");
@@ -410,12 +324,10 @@ bool PointerLockManager::SetPointerLock(Element* aElement, Document* aDocument,
     NS_WARNING("SetPointerLock(): No PresShell");
     if (!aElement) {
       sIsLocked = false;
-      sIsLockUnadjustedMovement = false;
       // If we are unlocking pointer lock, but for some reason the doc
       // has already detached from the presshell, just ask the event
       // state manager to release the pointer.
-      EventStateManager::SetPointerLock(nullptr, nullptr,
-                                        /* aUnadjustedMovement */ false);
+      EventStateManager::SetPointerLock(nullptr, nullptr);
       return true;
     }
     return false;
@@ -441,13 +353,11 @@ bool PointerLockManager::SetPointerLock(Element* aElement, Document* aDocument,
   }
 
   sIsLocked = !!aElement;
-  sIsLockUnadjustedMovement = !!aElement && aUnadjustedMovement;
 
   // Hide the cursor and set pointer lock for future mouse events
   RefPtr<EventStateManager> esm = presContext->EventStateManager();
   esm->SetCursor(aCursorStyle, nullptr, {}, Nothing(), widget, true);
-  EventStateManager::SetPointerLock(widget, presContext,
-                                    sIsLockUnadjustedMovement);
+  EventStateManager::SetPointerLock(widget, presContext);
 
   return true;
 }
@@ -502,55 +412,28 @@ void PointerLockManager::ReleaseLockedRemoteTarget(
   }
 }
 
-static nsIWidget* GetWidgetForDocument(Document* aDocument) {
-  if (!aDocument) {
-    return nullptr;
-  }
-  PresShell* presShell = aDocument->GetPresShell();
-  if (!presShell) {
-    return nullptr;
-  }
-  return presShell->GetRootWidget();
-}
-
 PointerLockManager::PointerLockRequest::PointerLockRequest(
-    Element* aElement, bool aUserInputOrChromeCaller, bool aUnadjustedMovement,
-    Promise* aPromise)
+    Element* aElement, bool aUserInputOrChromeCaller)
     : mozilla::Runnable("PointerLockRequest"),
       mElement(do_GetWeakReference(aElement)),
       mDocument(do_GetWeakReference(aElement->OwnerDoc())),
-      mUserInputOrChromeCaller(aUserInputOrChromeCaller),
-      mUnadjustedMovement(aUnadjustedMovement),
-      mPromise(aPromise) {}
+      mUserInputOrChromeCaller(aUserInputOrChromeCaller) {}
 
 NS_IMETHODIMP
 PointerLockManager::PointerLockRequest::Run() {
   nsCOMPtr<Element> element = do_QueryReferent(mElement);
   nsCOMPtr<Document> document = do_QueryReferent(mDocument);
-  RefPtr<Promise> promise = std::move(mPromise);
 
   const char* error = nullptr;
   if (!element || !document || !element->GetComposedDoc()) {
     error = "PointerLockDeniedNotInDocument";
   } else if (element->GetComposedDoc() != document) {
     error = "PointerLockDeniedMovedDocument";
-  } else if (mUnadjustedMovement) {
-    nsCOMPtr<nsIWidget> widget = GetWidgetForDocument(document);
-    if (!widget || !widget->SupportsUnadjustedMovement()) {
-      // XXX Reuse the existing error code for now, we should have a more
-      // specific error code for this case.
-      error = "PointerLockDeniedFailedToLock";
-    }
   }
-
   if (!error) {
     nsCOMPtr<Element> pointerLockedElement = do_QueryReferent(sLockedElement);
-    // XXX The steps are not exactly the same as in the spec, but they should
-    // result in the same behavior.
-    if (element == pointerLockedElement &&
-        sIsLockUnadjustedMovement == mUnadjustedMovement) {
+    if (element == pointerLockedElement) {
       DispatchPointerLockChange(document);
-      promise->MaybeResolveWithUndefined();
       return NS_OK;
     }
     // Note, we must bypass focus change, so pass true as the last parameter!
@@ -558,25 +441,7 @@ PointerLockManager::PointerLockRequest::Run() {
     // Another element in the same document is requesting pointer lock,
     // just grant it without user input check.
     if (!error && pointerLockedElement) {
-      // Apply new options on the existing lock.
-      if (sIsLockUnadjustedMovement != mUnadjustedMovement) {
-        nsCOMPtr<nsIWidget> widget = GetWidgetForDocument(document);
-        if (NS_WARN_IF(!widget)) {
-          FailWith(document, promise, "PointerLockDeniedFailedToLock");
-          return NS_OK;
-        }
-        MOZ_ASSERT(widget->SupportsUnadjustedMovement());
-        widget->SetNativePointerLockMode(
-            mUnadjustedMovement ? nsIWidget::NativePointerLockMode::Unadjusted
-                                : nsIWidget::NativePointerLockMode::Regular);
-        sIsLockUnadjustedMovement = mUnadjustedMovement;
-      }
-      if (element != pointerLockedElement) {
-        ChangePointerLockedElement(element, document, pointerLockedElement);
-      } else {
-        DispatchPointerLockChange(document);
-      }
-      promise->MaybeResolveWithUndefined();
+      ChangePointerLockedElement(element, document, pointerLockedElement);
       return NS_OK;
     }
   }
@@ -587,7 +452,7 @@ PointerLockManager::PointerLockRequest::Run() {
   }
 
   if (error) {
-    FailWith(document, promise, error);
+    DispatchPointerLockError(document, error);
     return NS_OK;
   }
 
@@ -597,18 +462,17 @@ PointerLockManager::PointerLockRequest::Run() {
     nsWeakPtr doc = do_GetWeakReference(element->OwnerDoc());
     nsWeakPtr bc = do_GetWeakReference(browserChild);
     browserChild->SendRequestPointerLock(
-        [e, doc, bc, promise,
-         unadjustedMovement = mUnadjustedMovement](const nsCString& aError) {
+        [e, doc, bc](const nsCString& aError) {
           nsCOMPtr<Document> document = do_QueryReferent(doc);
           if (!aError.IsEmpty()) {
-            FailWith(document, promise, aError.get());
+            DispatchPointerLockError(document, aError.get());
             return;
           }
 
           const char* error = nullptr;
           auto autoCleanup = MakeScopeExit([&] {
             if (error) {
-              FailWith(document, promise, error);
+              DispatchPointerLockError(document, error);
               // If we are failed to set pointer lock, notify parent to stop
               // redirect mouse event to this process.
               if (nsCOMPtr<nsIBrowserChild> browserChild =
@@ -636,24 +500,22 @@ PointerLockManager::PointerLockRequest::Run() {
             return;
           }
 
-          if (!StartSetPointerLock(element, document, unadjustedMovement)) {
+          if (!StartSetPointerLock(element, document)) {
             error = "PointerLockDeniedFailedToLock";
             return;
           }
-
-          promise->MaybeResolveWithUndefined();
         },
-        [doc, promise](mozilla::ipc::ResponseRejectReason) {
+        [doc](mozilla::ipc::ResponseRejectReason) {
           // IPC layer error
           nsCOMPtr<Document> document = do_QueryReferent(doc);
-          FailWith(document, promise, "PointerLockDeniedFailedToLock");
+          if (!document) {
+            return;
+          }
+
+          DispatchPointerLockError(document, "PointerLockDeniedFailedToLock");
         });
   } else {
-    if (StartSetPointerLock(element, document, mUnadjustedMovement)) {
-      promise->MaybeResolveWithUndefined();
-    } else {
-      FailWith(document, promise, "PointerLockDeniedFailedToLock");
-    }
+    StartSetPointerLock(element, document);
   }
 
   return NS_OK;

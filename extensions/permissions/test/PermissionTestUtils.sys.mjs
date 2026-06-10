@@ -117,8 +117,7 @@ export let PermissionTestUtils = {
    * @see nsIPermissionManager for documentation
    *
    * @param {Ci.nsIPrincipal|Ci.nsIURI|string} subject
-   * @param {string} type
-   * @param {boolean} [exactHost]
+   * @param {*} args
    */
   getPermissionObject(subject, type, exactHost = false) {
     return pm.getPermissionObject(convertToPrincipal(subject), type, exactHost);

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -38,48 +39,6 @@ using PipelinePromise = MozPromise<RawId, ipc::ResponseRejectReason, true>;
 using DevicePromise = MozPromise<bool, ipc::ResponseRejectReason, true>;
 
 ffi::WGPUByteBuf* ToFFI(ipc::ByteBuf* x);
-
-struct PendingRequestAdapterPromise {
-  RefPtr<dom::Promise> promise;
-  RefPtr<Instance> instance;
-  RawId adapter_id;
-};
-
-struct PendingRequestDevicePromise {
-  RefPtr<dom::Promise> promise;
-  RawId device_id;
-  RawId queue_id;
-  nsString label;
-  RefPtr<Adapter> adapter;
-  RefPtr<SupportedFeatures> features;
-  RefPtr<SupportedLimits> limits;
-  RefPtr<AdapterInfo> adapter_info;
-  RefPtr<dom::Promise> lost_promise;
-};
-
-struct PendingPopErrorScopePromise {
-  RefPtr<dom::Promise> promise;
-  RefPtr<Device> device;
-};
-
-struct PendingCreatePipelinePromise {
-  RefPtr<dom::Promise> promise;
-  RefPtr<Device> device;
-  bool is_render_pipeline;
-  RawId pipeline_id;
-  nsString label;
-};
-
-struct PendingCreateShaderModulePromise {
-  RefPtr<dom::Promise> promise;
-  RefPtr<Device> device;
-  RefPtr<ShaderModule> shader_module;
-};
-
-struct PendingBufferMapPromise {
-  RefPtr<dom::Promise> promise;
-  RefPtr<Buffer> buffer;
-};
 
 /// The child actor is held alive by all WebGPU DOM wrapper objects since it
 /// provides access to the rust Client; even if it can't send any more
@@ -147,32 +106,13 @@ class WebGPUChild final : public PWebGPUChild {
   void ScheduledFlushQueuedMessages();
   nsTArray<ipc::ByteBuf> mQueuedDataBuffers;
   nsTArray<ipc::MutableSharedMemoryHandle> mQueuedHandles;
-
-  std::deque<PendingRequestAdapterPromise> mPendingRequestAdapterPromises;
-  std::deque<PendingRequestDevicePromise> mPendingRequestDevicePromises;
-  std::unordered_map<RawId, RefPtr<dom::Promise>> mPendingDeviceLostPromises;
-  std::deque<PendingPopErrorScopePromise> mPendingPopErrorScopePromises;
-  std::deque<PendingCreatePipelinePromise> mPendingCreatePipelinePromises;
-  std::deque<PendingCreateShaderModulePromise>
-      mPendingCreateShaderModulePromises;
-  std::unordered_map<RawId, std::deque<PendingBufferMapPromise>>
-      mPendingBufferMapPromises;
-  // Pending submitted work done promises for each queue. We must track these
-  // separately for each queue because there are guarantees about the order
-  // different queues will complete their work in. For each queue individually
-  // we know these will be resolved FIFO.
-  std::unordered_map<ffi::WGPUQueueId, std::deque<RefPtr<dom::Promise>>>
-      mPendingOnSubmittedWorkDonePromises;
-
   void ClearActorState();
 
  public:
   ipc::IPCResult RecvServerMessage(const ipc::ByteBuf& aByteBuf);
   ipc::IPCResult RecvUncapturedError(RawId aDeviceId,
-                                     const dom::GPUErrorFilter aType,
                                      const nsACString& aMessage);
-  ipc::IPCResult RecvDeviceLost(RawId aDeviceId,
-                                const dom::GPUDeviceLostReason aReason,
+  ipc::IPCResult RecvDeviceLost(RawId aDeviceId, uint8_t aReason,
                                 const nsACString& aMessage);
 
   size_t QueueDataBuffer(ipc::ByteBuf&& bb);
@@ -182,24 +122,70 @@ class WebGPUChild final : public PWebGPUChild {
 
   void ActorDestroy(ActorDestroyReason) override;
 
-  void EnqueueRequestAdapterPromise(PendingRequestAdapterPromise&& promise);
-  void EnqueueRequestDevicePromise(PendingRequestDevicePromise&& promise);
-  void RegisterDeviceLostPromise(RawId id, RefPtr<dom::Promise>& promise);
-  void EnqueuePopErrorScopePromise(PendingPopErrorScopePromise&& promise);
-  void EnqueueCreatePipelinePromise(PendingCreatePipelinePromise&& promise);
-  void EnqueueCreateShaderModulePromise(
-      PendingCreateShaderModulePromise&& promise);
-  void EnqueueBufferMapPromise(RawId id, PendingBufferMapPromise&& promise);
-  void EnqueueOnSubmittedWorkDonePromise(RawId id,
-                                         RefPtr<dom::Promise>& promise);
+  struct PendingRequestAdapterPromise {
+    RefPtr<dom::Promise> promise;
+    RefPtr<Instance> instance;
+    RawId adapter_id;
+  };
 
-  PendingRequestAdapterPromise DequeueRequestAdapterPromise();
-  PendingRequestDevicePromise DequeueRequestDevicePromise();
-  PendingPopErrorScopePromise DequeuePopErrorScopePromise();
-  PendingCreatePipelinePromise DequeueCreatePipelinePromise();
-  PendingCreateShaderModulePromise DequeueCreateShaderModulePromise();
-  PendingBufferMapPromise DequeueBufferMapPromise(RawId id);
-  RefPtr<dom::Promise> DequeueOnSubmittedWorkDonePromise(RawId id);
+  std::deque<PendingRequestAdapterPromise> mPendingRequestAdapterPromises;
+
+  struct PendingRequestDevicePromise {
+    RefPtr<dom::Promise> promise;
+    RawId device_id;
+    RawId queue_id;
+    nsString label;
+    RefPtr<Adapter> adapter;
+    RefPtr<SupportedFeatures> features;
+    RefPtr<SupportedLimits> limits;
+    RefPtr<AdapterInfo> adapter_info;
+    RefPtr<dom::Promise> lost_promise;
+  };
+
+  std::deque<PendingRequestDevicePromise> mPendingRequestDevicePromises;
+
+  std::unordered_map<RawId, RefPtr<dom::Promise>> mPendingDeviceLostPromises;
+
+  struct PendingPopErrorScopePromise {
+    RefPtr<dom::Promise> promise;
+    RefPtr<Device> device;
+  };
+
+  std::deque<PendingPopErrorScopePromise> mPendingPopErrorScopePromises;
+
+  struct PendingCreatePipelinePromise {
+    RefPtr<dom::Promise> promise;
+    RefPtr<Device> device;
+    bool is_render_pipeline;
+    RawId pipeline_id;
+    nsString label;
+  };
+
+  std::deque<PendingCreatePipelinePromise> mPendingCreatePipelinePromises;
+
+  struct PendingCreateShaderModulePromise {
+    RefPtr<dom::Promise> promise;
+    RefPtr<Device> device;
+    RefPtr<ShaderModule> shader_module;
+  };
+
+  std::deque<PendingCreateShaderModulePromise>
+      mPendingCreateShaderModulePromises;
+
+  struct PendingBufferMapPromise {
+    RefPtr<dom::Promise> promise;
+    RefPtr<Buffer> buffer;
+  };
+
+  std::unordered_map<RawId, std::deque<PendingBufferMapPromise>>
+      mPendingBufferMapPromises;
+
+  // Pending submitted work done promises for each queue. We must track these
+  // separately for each queue because there are guarantees about the order
+  // different queues will complete their work in. For each queue individually
+  // we know these will be resolved FIFO.
+  std::unordered_map<ffi::WGPUQueueId, std::deque<RefPtr<dom::Promise>>>
+      mPendingOnSubmittedWorkDonePromises;
 };
 
 }  // namespace webgpu

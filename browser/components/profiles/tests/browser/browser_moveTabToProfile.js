@@ -118,11 +118,7 @@ add_task(async function test_moveSelectedTab() {
   const allProfiles = await SelectableProfileService.getAllProfiles();
   let otherProfile;
   if (allProfiles.length < 2) {
-    otherProfile = await SelectableProfileService.createNewProfile(
-      false,
-      null,
-      "tests"
-    );
+    otherProfile = await SelectableProfileService.createNewProfile(false);
   } else {
     otherProfile = allProfiles.find(
       p => p.id !== SelectableProfileService.currentProfile.id
@@ -151,11 +147,7 @@ add_task(async function test_moveNonSelectedTab() {
   const allProfiles = await SelectableProfileService.getAllProfiles();
   let otherProfile;
   if (allProfiles.length < 2) {
-    otherProfile = await SelectableProfileService.createNewProfile(
-      false,
-      null,
-      "tests"
-    );
+    otherProfile = await SelectableProfileService.createNewProfile(false);
   } else {
     otherProfile = allProfiles.find(
       p => p.id !== SelectableProfileService.currentProfile.id
@@ -186,11 +178,7 @@ add_task(async function test_moveMultipleSelectedTabs() {
   const allProfiles = await SelectableProfileService.getAllProfiles();
   let otherProfile;
   if (allProfiles.length < 2) {
-    otherProfile = await SelectableProfileService.createNewProfile(
-      false,
-      null,
-      "tests"
-    );
+    otherProfile = await SelectableProfileService.createNewProfile(false);
   } else {
     otherProfile = allProfiles.find(
       p => p.id !== SelectableProfileService.currentProfile.id

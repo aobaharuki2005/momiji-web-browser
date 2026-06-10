@@ -18,7 +18,7 @@ add_setup(async function () {
     true
   );
 
-  appDefaultEngine = await SearchService.getDefault();
+  appDefaultEngine = await Services.search.getDefault();
 });
 
 add_task(async function test_addingEngine_opensearch() {
@@ -37,7 +37,7 @@ add_task(async function test_addingEngine_opensearch() {
 
   engine = await addEngineObserver.promise;
 
-  engine = SearchService.getEngineByName("Test search engine");
+  engine = Services.search.getEngineByName("Test search engine");
   Assert.ok(engine, "Should have added the engine");
 });
 
@@ -57,7 +57,7 @@ add_task(async function test_addingEngine_webExtension() {
 
   await addEngineObserver.promise;
 
-  let webExtensionEngine = SearchService.getEngineByName("Example Engine");
+  let webExtensionEngine = Services.search.getEngineByName("Example Engine");
   Assert.ok(webExtensionEngine, "Should have added the web extension engine");
 });
 
@@ -69,9 +69,9 @@ async function defaultNotificationTest(
     ? [[SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE, engine.name]]
     : [[SearchUtils.MODIFIED_TYPE.DEFAULT, engine.name]];
   const defaultObserver = new SearchObserver(expected);
-  await SearchService[setPrivateDefault ? "setDefaultPrivate" : "setDefault"](
+  await Services.search[setPrivateDefault ? "setDefaultPrivate" : "setDefault"](
     engine,
-    SearchService.CHANGE_REASON.UNKNOWN
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   await defaultObserver.promise;
 }
@@ -86,9 +86,9 @@ add_task(async function test_defaultPrivateEngine_notifications() {
 
 add_task(
   async function test_defaultPrivateEngine_notifications_when_not_enabled() {
-    await SearchService.setDefault(
+    await Services.search.setDefault(
       appDefaultEngine,
-      SearchService.CHANGE_REASON.UNKNOWN
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
 
     Services.prefs.setBoolPref(
@@ -101,10 +101,13 @@ add_task(
 );
 
 add_task(async function test_removeEngine() {
-  await SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
-  await SearchService.setDefaultPrivate(
+  await Services.search.setDefault(
     engine,
-    SearchService.CHANGE_REASON.UNKNOWN
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+  await Services.search.setDefaultPrivate(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
   const removedObserver = new SearchObserver([
@@ -113,7 +116,7 @@ add_task(async function test_removeEngine() {
     [SearchUtils.MODIFIED_TYPE.REMOVED, engine.name],
   ]);
 
-  await SearchService.removeEngine(engine);
+  await Services.search.removeEngine(engine);
 
   await removedObserver.promise;
 });

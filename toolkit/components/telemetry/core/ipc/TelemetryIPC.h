@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TelemetryIPC_h_
-#define TelemetryIPC_h_
+#ifndef TelemetryIPC_h__
+#define TelemetryIPC_h__
 
 #include "mozilla/TelemetryProcessEnums.h"
 #include "nsTArray.h"
@@ -110,4 +111,4 @@ void AddDynamicScalarDefinitions(
 }  // namespace TelemetryIPC
 }  // namespace mozilla
 
-#endif  // TelemetryIPC_h_
+#endif  // TelemetryIPC_h__

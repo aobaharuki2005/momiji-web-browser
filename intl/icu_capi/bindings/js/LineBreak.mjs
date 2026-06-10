@@ -3,10 +3,11 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 /**
- * See the [Rust documentation for `LineBreak`](https://docs.rs/icu/2.1.1/icu/properties/props/struct.LineBreak.html) for more information.
+ * See the [Rust documentation for `LineBreak`](https://docs.rs/icu/latest/icu/properties/props/struct.LineBreak.html) for more information.
  */
+
+
 export class LineBreak {
     #value = undefined;
 
@@ -58,8 +59,7 @@ export class LineBreak {
         ["AksaraPrebase", 44],
         ["AksaraStart", 45],
         ["ViramaFinal", 46],
-        ["Virama", 47],
-        ["UnambiguousHyphen", 48]
+        ["Virama", 47]
     ]);
 
     static getAllEntries() {
@@ -91,7 +91,6 @@ export class LineBreak {
         throw TypeError(value + " is not a LineBreak and does not correspond to any of its enumerator values.");
     }
 
-    /** @internal */
     static fromValue(value) {
         return new LineBreak(value);
     }
@@ -100,7 +99,6 @@ export class LineBreak {
         return [...LineBreak.#values.keys()][this.#value];
     }
 
-    /** @internal */
     get ffiValue(){
         return this.#value;
     }
@@ -153,7 +151,6 @@ export class LineBreak {
         new LineBreak(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 45),
         new LineBreak(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 46),
         new LineBreak(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 47),
-        new LineBreak(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 48),
     ];
 
     static Unknown = LineBreak.#objectValues[0];
@@ -204,11 +201,10 @@ export class LineBreak {
     static AksaraStart = LineBreak.#objectValues[45];
     static ViramaFinal = LineBreak.#objectValues[46];
     static Virama = LineBreak.#objectValues[47];
-    static UnambiguousHyphen = LineBreak.#objectValues[48];
 
 
     /**
-     * See the [Rust documentation for `for_char`](https://docs.rs/icu/2.1.1/icu/properties/props/trait.EnumeratedProperty.html#tymethod.for_char) for more information.
+     * See the [Rust documentation for `for_char`](https://docs.rs/icu/latest/icu/properties/props/trait.EnumeratedProperty.html#tymethod.for_char) for more information.
      */
     static forChar(ch) {
 
@@ -225,7 +221,7 @@ export class LineBreak {
     /**
      * Get the "long" name of this property value (returns empty if property value is unknown)
      *
-     * See the [Rust documentation for `get`](https://docs.rs/icu/2.1.1/icu/properties/struct.PropertyNamesLongBorrowed.html#method.get) for more information.
+     * See the [Rust documentation for `get`](https://docs.rs/icu/latest/icu/properties/struct.PropertyNamesLongBorrowed.html#method.get) for more information.
      */
     longName() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
@@ -248,7 +244,7 @@ export class LineBreak {
     /**
      * Get the "short" name of this property value (returns empty if property value is unknown)
      *
-     * See the [Rust documentation for `get`](https://docs.rs/icu/2.1.1/icu/properties/struct.PropertyNamesShortBorrowed.html#method.get) for more information.
+     * See the [Rust documentation for `get`](https://docs.rs/icu/latest/icu/properties/struct.PropertyNamesShortBorrowed.html#method.get) for more information.
      */
     shortName() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
@@ -271,7 +267,7 @@ export class LineBreak {
     /**
      * Convert to an integer value usable with ICU4C and CodePointMapData
      *
-     * See the [Rust documentation for `to_icu4c_value`](https://docs.rs/icu/2.1.1/icu/properties/props/struct.LineBreak.html#method.to_icu4c_value) for more information.
+     * See the [Rust documentation for `to_icu4c_value`](https://docs.rs/icu/latest/icu/properties/props/struct.LineBreak.html#method.to_icu4c_value) for more information.
      */
     toIntegerValue() {
 
@@ -288,7 +284,7 @@ export class LineBreak {
     /**
      * Convert from an integer value from ICU4C or CodePointMapData
      *
-     * See the [Rust documentation for `from_icu4c_value`](https://docs.rs/icu/2.1.1/icu/properties/props/struct.LineBreak.html#method.from_icu4c_value) for more information.
+     * See the [Rust documentation for `from_icu4c_value`](https://docs.rs/icu/latest/icu/properties/props/struct.LineBreak.html#method.from_icu4c_value) for more information.
      */
     static fromIntegerValue(other) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);

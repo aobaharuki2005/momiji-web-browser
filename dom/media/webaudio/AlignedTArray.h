@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef AlignedTArray_h_
-#define AlignedTArray_h_
+#ifndef AlignedTArray_h__
+#define AlignedTArray_h__
 
 #include "nsTArray.h"
 
@@ -107,4 +109,4 @@ class AlignedTArray : private nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   }
 };
 
-#endif  // AlignedTArray_h_
+#endif  // AlignedTArray_h__

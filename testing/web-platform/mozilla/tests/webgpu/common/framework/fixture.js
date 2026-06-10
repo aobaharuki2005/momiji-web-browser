@@ -367,12 +367,10 @@ export class Fixture {
       cond = cond();
     }
     if (cond) {
-      if (this.rec.debugging) {
-        const m = msg ? ': ' + (typeof msg === 'function' ? msg() : msg) : '';
-        this.rec.debug(new Error('expect OK' + m));
-      }
+      const m = msg ? ': ' + msg : '';
+      this.rec.debug(new Error('expect OK' + m));
     } else {
-      this.rec.expectationFailed(new Error(typeof msg === 'function' ? msg() : msg));
+      this.rec.expectationFailed(new Error(msg));
     }
     return cond;
   }

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -47,10 +49,9 @@ class WorkletModuleLoader : public JS::loader::ModuleLoaderBase {
   void RemoveRequest(nsIURI* aURI);
   JS::loader::ModuleLoadRequest* GetRequest(nsIURI* aURI) const;
 
-  bool HasSetLocalizedStrings() const { return !mLocalizedStrs.IsEmpty(); }
-  void SetLocalizedStrings(nsTArray<nsString>&& aStrings) {
-    MOZ_ASSERT(!aStrings.IsEmpty());
-    mLocalizedStrs = std::move(aStrings);
+  bool HasSetLocalizedStrings() const { return (bool)mLocalizedStrs; }
+  void SetLocalizedStrings(const nsTArray<nsString>* aStrings) {
+    mLocalizedStrs = aStrings;
   }
 
  private:
@@ -83,10 +84,6 @@ class WorkletModuleLoader : public JS::loader::ModuleLoaderBase {
                              ModuleLoadRequest* aRequest,
                              JS::MutableHandle<JSObject*> aModuleScript);
 
-  nsresult CreateTextModule(JSContext* aCx, JS::CompileOptions& aOptions,
-                            ModuleLoadRequest* aRequest,
-                            JS::MutableHandle<JSObject*> aModuleScript);
-
   void OnModuleLoadComplete(JS::loader::ModuleLoadRequest* aRequest) override;
 
   nsresult GetResolveFailureMessage(JS::loader::ResolveError aError,
@@ -98,8 +95,7 @@ class WorkletModuleLoader : public JS::loader::ModuleLoaderBase {
     // If moduleType is "css" and the CSSStyleSheet interface is not exposed in
     // settings's realm, then return false.
     return aModuleType == JS::ModuleType::JavaScript ||
-           aModuleType == JS::ModuleType::JSON ||
-           aModuleType == JS::ModuleType::Text;
+           aModuleType == JS::ModuleType::JSON;
   }
 
   // A hashtable to map a nsIURI(from main thread) to a ModuleLoadRequest(in
@@ -109,7 +105,7 @@ class WorkletModuleLoader : public JS::loader::ModuleLoaderBase {
 
   // We get the localized strings on the main thread, and pass it to
   // WorkletModuleLoader.
-  nsTArray<nsString> mLocalizedStrs;
+  const nsTArray<nsString>* mLocalizedStrs = nullptr;
 };
 }  // namespace loader
 

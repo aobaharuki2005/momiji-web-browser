@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,14 +7,12 @@
 #include "base/task.h"
 #include "GeckoProfiler.h"
 #include "gfxPlatform.h"
-#include "GfxInfoBase.h"
 #include "GLContext.h"
 #include "RenderThread.h"
 #include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "transport/runnable_utils.h"
 #include "mozilla/BackgroundHangMonitor.h"
-#include "mozilla/Components.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
@@ -938,11 +938,9 @@ bool RenderThread::Resume(wr::WindowId aWindowId) {
 
 void RenderThread::NotifyIdle() {
   if (!IsInRenderThread()) {
-    PostRunnable(NS_NewRunnableFunction("RenderThread::NotifyIdle", []() {
-      if (auto* rt = RenderThread::Get()) {
-        rt->NotifyIdle();
-      }
-    }));
+    PostRunnable(NewRunnableMethod("RenderThread::NotifyIdle", this,
+                                   &RenderThread::NotifyIdle));
+
     return;
   }
 
@@ -1039,8 +1037,7 @@ void RenderThread::RegisterExternalImage(
   if (texture->SyncObjectNeeded()) {
     mSyncObjectNeededRenderTextures.emplace(aExternalImageId, texture);
   }
-  auto [it, inserted] = mRenderTextures.emplace(aExternalImageId, texture);
-  MOZ_RELEASE_ASSERT(inserted, "ExternalImageId collision");
+  mRenderTextures.emplace(aExternalImageId, texture);
 
 #ifdef DEBUG
   int32_t maxAllowedIncrease =
@@ -1281,23 +1278,6 @@ void RenderThread::InitDeviceTask() {
   // Query the shared GL context to force the
   // lazy initialization to happen now.
   SingletonGL();
-
-#ifdef MOZ_WIDGET_ANDROID
-  // On Android we must report the GL context's strings to gfxInfo. This allows
-  // gfxInfo to avoid creating a GL context during startup.
-  if (mSingletonGL) {
-    gfx::GfxInfoGLStrings strings(mSingletonGL->VendorString(),
-                                  mSingletonGL->RendererString(),
-                                  mSingletonGL->VersionString(),
-                                  mSingletonGL->ExtensionStrings().Clone());
-    if (XRE_IsGPUProcess()) {
-      gfx::GPUParent::GetSingleton()->ReportGLStrings(std::move(strings));
-    } else if (nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service()) {
-      static_cast<widget::GfxInfoBase*>(gfxInfo.get())
-          ->ReportGLStrings(std::move(strings));
-    }
-  }
-#endif
 
   const auto maxDurationMs = 3 * 1000;
   const auto end = TimeStamp::Now();

@@ -6,9 +6,7 @@ package org.mozilla.focus.browser.integration
 
 import android.content.Context
 import androidx.appcompat.content.res.AppCompatResources
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
@@ -24,16 +22,12 @@ import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.theme.resolveAttribute
 import mozilla.components.ui.icons.R as iconsR
 
-/**
- * Integration for browser navigation buttons (back, forward, reload/stop).
- */
 class NavigationButtonsIntegration(
     val context: Context,
     val store: BrowserStore,
     val toolbar: BrowserToolbar,
     private val sessionUseCases: SessionUseCases,
     private val customTabId: String?,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
 
@@ -83,7 +77,7 @@ class NavigationButtonsIntegration(
         toolbar.addNavigationAction(forwardButton)
 
         val reloadOrStopButton = BrowserToolbar.TwoStateButton(
-            primaryImage = AppCompatResources.getDrawable(context, iconsR.drawable.mozac_ic_cross_24)!!,
+            primaryImage = AppCompatResources.getDrawable(context, iconsR.drawable.mozac_ic_stop)!!,
             secondaryImage = AppCompatResources.getDrawable(context, iconsR.drawable.mozac_ic_arrow_clockwise_24)!!,
             primaryContentDescription = context.getString(R.string.content_description_stop),
             secondaryContentDescription = context.getString(R.string.content_description_reload),
@@ -108,7 +102,7 @@ class NavigationButtonsIntegration(
     }
 
     override fun start() {
-        scope = store.flowScoped(dispatcher = mainDispatcher) { flow ->
+        scope = store.flowScoped { flow ->
             flow.map { state -> state.findCustomTabOrSelectedTab(customTabId) }
                 .ifAnyChanged { tab ->
                     arrayOf(

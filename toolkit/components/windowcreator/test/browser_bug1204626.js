@@ -1,5 +1,5 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
-"use strict";
+"use strict"; // -*- js-indent-level: 2; indent-tabs-mode: nil -*-
 const contentBase =
   "https://example.com/browser/toolkit/components/windowcreator/test/";
 const chromeBase =

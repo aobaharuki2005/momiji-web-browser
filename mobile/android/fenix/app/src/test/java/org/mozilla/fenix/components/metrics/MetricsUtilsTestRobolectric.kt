@@ -11,6 +11,7 @@ import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
@@ -20,7 +21,6 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.components.metrics.MetricsUtilsTest.Companion.ENGINE_SOURCE_IDENTIFIER
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertNotNull
 
 /**
  * Just the Robolectric tests for MetricsUtil. Splitting these files out means our other tests will run more quickly.

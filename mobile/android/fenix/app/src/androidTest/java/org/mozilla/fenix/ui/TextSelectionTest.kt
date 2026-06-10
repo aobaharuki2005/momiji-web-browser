@@ -4,22 +4,22 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RetryTestRule
-import org.mozilla.fenix.helpers.RetryableComposeTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.browserScreen
-import org.mozilla.fenix.ui.robots.clearTextFieldItem
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -28,20 +28,11 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.openEditURLView
 import org.mozilla.fenix.ui.robots.searchScreen
 import org.mozilla.fenix.ui.robots.shareOverlay
-import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
-class TextSelectionTest {
+class TextSelectionTest : TestSetup() {
     @get:Rule(order = 0)
-    val fenixTestRule: FenixTestRule = FenixTestRule()
-
-    private val mockWebServer get() = fenixTestRule.mockWebServer
-
-    @get:Rule(order = 1)
-    val retryTestRule = RetryTestRule(3)
-
-    @get:Rule(order = 2)
-    val retryableComposeTestRule = RetryableComposeTestRule {
-        AndroidComposeTestRuleV2(
+    val composeTestRule =
+        AndroidComposeTestRule(
             HomeActivityTestRule(
                 isLocationPermissionEnabled = SitePermissionsRules.Action.BLOCKED,
                 isPageLoadTranslationsPromptEnabled = false,
@@ -50,12 +41,13 @@ class TextSelectionTest {
                 shouldUseBottomToolbar = true,
             ),
         ) { it.activity }
-    }
 
-    private val composeTestRule get() = retryableComposeTestRule.current
+    @get:Rule(order = 1)
+    val memoryLeaksRule = DetectMemoryLeaksRule()
 
-    @get:Rule(order = 3)
-    val memoryLeaksRule = DetectMemoryLeaksRule(composeTestRule = { composeTestRule })
+    @Rule(order = 2)
+    @JvmField
+    val retryTestRule = RetryTestRule(3)
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326832
     @Ignore("Disabled after enabling the composable toolbar and main menu: https://bugzilla.mozilla.org/show_bug.cgi?id=2006295")
@@ -132,6 +124,7 @@ class TextSelectionTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326831
+    @Ignore("Disabled after enabling the composable toolbar and main menu: https://bugzilla.mozilla.org/show_bug.cgi?id=2006295")
     @SmokeTest
     @Test
     fun verifyPrivateSearchTextTest() {
@@ -145,7 +138,8 @@ class TextSelectionTest {
             verifyPageContent(genericURL.content)
             longClickPageObject(composeTestRule, itemContainingText("content"))
             clickContextMenuItem("Private Search")
-            verifyTabCounter("2", isPrivateBrowsingEnabled = true)
+            mDevice.waitForIdle()
+            verifyTabCounter("2")
             verifyUrl("content")
         }
     }
@@ -160,7 +154,7 @@ class TextSelectionTest {
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(composeTestRule, itemWithText("PDF form file"))
-            clickPageObject(composeTestRule, itemContainingText("Stay in"))
+            clickPageObject(composeTestRule, itemWithResIdAndText("android:id/button2", "Cancel"))
             waitForPageToLoad()
             longClickPageObject(composeTestRule, itemContainingText("Crossing"))
             clickContextMenuItem("Select all")
@@ -190,7 +184,7 @@ class TextSelectionTest {
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(composeTestRule, itemWithText("PDF form file"))
-            clickPageObject(composeTestRule, itemContainingText("Stay in"))
+            clickPageObject(composeTestRule, itemWithResIdAndText("android:id/button2", "Cancel"))
             longClickPageObject(composeTestRule, itemContainingText("Crossing"))
             clickContextMenuItem("Copy")
         }.openNavigationToolbar {
@@ -213,7 +207,7 @@ class TextSelectionTest {
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(composeTestRule, itemWithText("PDF form file"))
-            clickPageObject(composeTestRule, itemContainingText("Stay in"))
+            clickPageObject(composeTestRule, itemWithResIdAndText("android:id/button2", "Cancel"))
             longClickPageObject(composeTestRule, itemContainingText("Crossing"))
         }.clickShareSelectedText {
             verifyAndroidShareLayout()
@@ -230,7 +224,7 @@ class TextSelectionTest {
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(composeTestRule, itemWithText("PDF form file"))
-            clickPageObject(composeTestRule, itemContainingText("Stay in"))
+            clickPageObject(composeTestRule, itemWithResIdAndText("android:id/button2", "Cancel"))
             longClickPageObject(composeTestRule, itemContainingText("Crossing"))
             clickContextMenuItem("Search")
             verifyUrl("Crossing")
@@ -239,6 +233,7 @@ class TextSelectionTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326837
+    @Ignore("Disabled after enabling the composable toolbar and main menu: https://bugzilla.mozilla.org/show_bug.cgi?id=2006295")
     @Test
     fun verifyPrivateSearchPDFTextOptionTest() {
         val genericURL =
@@ -250,11 +245,11 @@ class TextSelectionTest {
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(composeTestRule, itemWithText("PDF form file"))
-            clickPageObject(composeTestRule, itemContainingText("Stay in"))
+            clickPageObject(composeTestRule, itemWithResIdAndText("android:id/button2", "Cancel"))
             longClickPageObject(composeTestRule, itemContainingText("Crossing"))
             clickContextMenuItem("Private Search")
             verifyUrl("Crossing")
-            verifyTabCounter("2", isPrivateBrowsingEnabled = true)
+            verifyTabCounter("2")
         }
     }
 
@@ -273,6 +268,7 @@ class TextSelectionTest {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326814
+    @Ignore("Disabled after enabling the composable toolbar and main menu: https://bugzilla.mozilla.org/show_bug.cgi?id=2006295")
     @Test
     fun verifyCopyUrlBarTextSelectionOptionTest() {
         val genericURL = mockWebServer.getGenericAsset(1)
@@ -280,15 +276,13 @@ class TextSelectionTest {
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(genericURL.url) {
         }.openNavigationToolbar {
-        }
-        searchScreen(retryableComposeTestRule.current) {
-            longClickToolbar()
+            longClickEditModeToolbar()
             clickContextMenuItem("Copy")
-            clickClearButton()
-            verifySearchBarPlaceholder("Search or enter address")
-            longClickToolbar()
+            clickClearToolbarButton()
+            verifyToolbarIsEmpty()
+            longClickEditModeToolbar()
             clickContextMenuItem("Paste")
-            verifyTypedToolbarText(genericURL.url.toString(), exists = true)
+            verifyUrl(genericURL.url.toString())
         }
     }
 
@@ -307,6 +301,24 @@ class TextSelectionTest {
             longClickEditModeToolbar()
             clickContextMenuItem("Paste")
             verifyUrl(genericURL.url.toString())
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/243845
+    @Ignore("Disabled after enabling the composable toolbar and main menu: https://bugzilla.mozilla.org/show_bug.cgi?id=2006295")
+    @SmokeTest
+    @Test
+    fun verifyShareUrlBarTextSelectionOptionTest() {
+        val genericURL = mockWebServer.getGenericAsset(1)
+
+        navigationToolbar(composeTestRule) {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.openNavigationToolbar {
+            longClickEditModeToolbar()
+            clickContextMenuItem("Share")
+        }
+        shareOverlay {
+            verifyAndroidShareLayout()
         }
     }
 

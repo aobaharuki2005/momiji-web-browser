@@ -21,8 +21,7 @@ function TestCase(scenarios, sanityChecker) {
 
     const urls = getRequestURLs(scenario.subresource,
                                 scenario.origin,
-                                scenario.redirection,
-                                true);
+                                scenario.redirection);
     const checkResult = _ => {
       // Send request to check if the key has been torn down.
       return xhrRequest(urls.assertUrl)

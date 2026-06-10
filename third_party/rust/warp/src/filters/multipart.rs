@@ -12,11 +12,10 @@ use std::{fmt, io};
 use bytes::{Buf, Bytes};
 use futures_util::{future, Stream};
 use headers::ContentType;
-use http_body_util::BodyDataStream;
+use hyper::Body;
 use mime::Mime;
 use multer::{Field as PartInner, Multipart as FormDataInner};
 
-use crate::bodyt::Body;
 use crate::filter::{Filter, FilterBase, Internal};
 use crate::reject::{self, Rejection};
 
@@ -88,7 +87,7 @@ impl FilterBase for FormOptions {
         let filt = boundary
             .and(super::body::body())
             .map(|boundary: String, body| {
-                let body = BodyIoError(BodyDataStream::new(body));
+                let body = BodyIoError(body);
                 FormData {
                     inner: FormDataInner::new(body, &boundary),
                 }
@@ -201,7 +200,7 @@ impl Stream for PartStream {
     }
 }
 
-struct BodyIoError(BodyDataStream<Body>);
+struct BodyIoError(Body);
 
 impl Stream for BodyIoError {
     type Item = io::Result<Bytes>;

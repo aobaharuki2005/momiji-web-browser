@@ -4,7 +4,7 @@
  *
  *   The FreeType glyph rasterizer (body).
  *
- * Copyright (C) 1996-2026 by
+ * Copyright (C) 1996-2025 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -546,7 +546,7 @@
      *
      */
 
-    if ( High && ras.bTop + ras.bRight < 256 )
+    if ( High )
     {
       ras.precision_bits   = 12;
       ras.precision_step   = 256;
@@ -1351,9 +1351,17 @@
         /* this arc has no given direction, split it! */
         Split_Conic( arc );
         arc += 2;
-        continue;
       }
-      else if ( y1 != y3 )
+      else if ( y1 == y3 )
+      {
+        /* this arc is flat, advance position */
+        /* and pop it from the Bezier stack   */
+        arc -= 2;
+
+        ras.lastX = x3;
+        ras.lastY = y3;
+      }
+      else
       {
         /* the arc is y-monotonous, either ascending or descending */
         /* detect a change of direction                            */
@@ -1381,16 +1389,13 @@
           if ( Bezier_Down( RAS_VARS 2, arc, Split_Conic,
                                      ras.minY, ras.maxY ) )
             goto Fail;
+        arc -= 2;
+
+        ras.lastX = x3;
+        ras.lastY = y3;
       }
 
-      ras.lastX = x3;
-      ras.lastY = y3;
-
-      if ( arc == arcs )
-        break;
-      arc -= 2;
-
-    } while ( 1 );
+    } while ( arc >= arcs );
 
     return SUCCESS;
 
@@ -1493,9 +1498,17 @@
         /* this arc has no given direction, split it! */
         Split_Cubic( arc );
         arc += 3;
-        continue;
       }
-      else if ( y1 != y4 )
+      else if ( y1 == y4 )
+      {
+        /* this arc is flat, advance position */
+        /* and pop it from the Bezier stack   */
+        arc -= 3;
+
+        ras.lastX = x4;
+        ras.lastY = y4;
+      }
+      else
       {
         state_bez = y1 < y4 ? Ascending_State : Descending_State;
 
@@ -1522,16 +1535,13 @@
           if ( Bezier_Down( RAS_VARS 3, arc, Split_Cubic,
                                      ras.minY, ras.maxY ) )
             goto Fail;
+        arc -= 3;
+
+        ras.lastX = x4;
+        ras.lastY = y4;
       }
 
-      ras.lastX = x4;
-      ras.lastY = y4;
-
-      if ( arc == arcs )
-        break;
-      arc -= 3;
-
-    } while ( 1 );
+    } while ( arc >= arcs );
 
     return SUCCESS;
 

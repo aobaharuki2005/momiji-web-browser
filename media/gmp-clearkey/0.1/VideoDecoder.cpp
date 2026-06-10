@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <thread>
 
 #include "BigEndian.h"
 #include "ClearKeyUtils.h"
@@ -27,36 +26,35 @@
 
 using namespace wmf;
 
-VideoDecoder::VideoDecoder(cdm::Host_11* aHost, wmf::WMFH264Decoder* aDecoder)
-    : mHost(aHost), mDecoder(aDecoder) {
+VideoDecoder::VideoDecoder(cdm::Host_11* aHost)
+    : mHost(aHost), mHasShutdown(false) {
   CK_LOGD("VideoDecoder created");
 
   // We drop the ref in DecodingComplete().
   AddRef();
+
+  mDecoder = new WMFH264Decoder();
+
+  uint32_t cores = std::max(1u, std::thread::hardware_concurrency());
+
+  HRESULT hr = mDecoder->Init(cores);
+  if (FAILED(hr)) {
+    CK_LOGE("Failed to initialize mDecoder!");
+  }
 }
 
 VideoDecoder::~VideoDecoder() { CK_LOGD("VideoDecoder destroyed"); }
 
-/* static */ VideoDecoder* VideoDecoder::Create(
-    cdm::Host_11* aHost, const cdm::VideoDecoderConfig_2& aConfig) {
-  CK_LOGD("VideoDecoder::Create");
+cdm::Status VideoDecoder::InitDecode(const cdm::VideoDecoderConfig_2& aConfig) {
+  CK_LOGD("VideoDecoder::InitDecode");
 
-  if (aConfig.codec != cdm::VideoCodec::kCodecH264) {
-    CK_LOGE("Unsupported codec type!");
-    return nullptr;
+  if (!mDecoder) {
+    CK_LOGD("VideoDecoder::InitDecode failed to init WMFH264Decoder");
+
+    return cdm::Status::kDecodeError;
   }
 
-  uint32_t cores = std::max(1u, std::thread::hardware_concurrency());
-
-  auto* decoder = new WMFH264Decoder();
-  HRESULT hr = decoder->Init(cores);
-  if (FAILED(hr)) {
-    CK_LOGE("Failed to initialize mDecoder!");
-    delete decoder;
-    return nullptr;
-  }
-
-  return new VideoDecoder(aHost, decoder);
+  return cdm::Status::kSuccess;
 }
 
 cdm::Status VideoDecoder::Decode(const cdm::InputBuffer_2& aInputBuffer,
@@ -132,8 +130,7 @@ cdm::Status VideoDecoder::OutputFrame(cdm::VideoFrame* aVideoFrame) {
 
     CK_LOGD("VideoDecoder::OutputFrame Decoder output ret=0x%x", hr);
 
-    mOutputQueue.push({output, mDecoder->GetPictureRegion(),
-                       mDecoder->GetStride(), mDecoder->GetFrameHeight()});
+    mOutputQueue.push(output);
     CK_LOGD("VideoDecoder::OutputFrame: Queue size: %u", mOutputQueue.size());
   }
 
@@ -150,19 +147,20 @@ cdm::Status VideoDecoder::OutputFrame(cdm::VideoFrame* aVideoFrame) {
     return cdm::Status::kDecodeError;
   }
 
-  OutputData result = std::move(mOutputQueue.front());
+  CComPtr<IMFSample> result = mOutputQueue.front();
   mOutputQueue.pop();
 
   // The Chromium CDM API doesn't have support for negative strides, though
   // they are theoretically possible in real world data.
-  if (result.mStride <= 0) {
+  if (mDecoder->GetStride() <= 0) {
     CK_LOGD("VideoDecoder::OutputFrame Failed! (negative stride)");
     return cdm::Status::kDecodeError;
   }
 
-  const IntRect& picture = result.mPictureRegion;
-  hr = SampleToVideoFrame(result.mSample, picture.width, picture.height,
-                          result.mStride, result.mFrameHeight, aVideoFrame);
+  const IntRect& picture = mDecoder->GetPictureRegion();
+  hr = SampleToVideoFrame(result, picture.width, picture.height,
+                          mDecoder->GetStride(), mDecoder->GetFrameHeight(),
+                          aVideoFrame);
   if (FAILED(hr)) {
     CK_LOGD("VideoDecoder::OutputFrame Failed!");
     return cdm::Status::kDecodeError;

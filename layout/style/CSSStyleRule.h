@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,7 +11,11 @@
 #include "mozilla/css/GroupRule.h"
 #include "nsDOMCSSDeclaration.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+
+class DeclarationBlock;
+
+namespace dom {
 class DocGroup;
 class CSSStyleRule;
 struct SelectorWarning;
@@ -24,9 +30,9 @@ class CSSStyleRuleDeclaration final : public nsDOMCSSDeclaration {
   nsISupports* GetParentObject() const final;
 
  protected:
-  Block* GetOrCreateCSSDeclaration(Operation aOperation,
-                                   Block** aCreated) final;
-  nsresult SetCSSDeclaration(Block* aDecl,
+  DeclarationBlock* GetOrCreateCSSDeclaration(
+      Operation aOperation, DeclarationBlock** aCreated) final;
+  nsresult SetCSSDeclaration(DeclarationBlock* aDecl,
                              MutationClosureData* aClosureData) final;
   ParsingEnvironment GetParsingEnvironment(
       nsIPrincipal* aSubjectPrincipal) const final;
@@ -35,15 +41,16 @@ class CSSStyleRuleDeclaration final : public nsDOMCSSDeclaration {
   // For accessing the constructor.
   friend class CSSStyleRule;
 
-  explicit CSSStyleRuleDeclaration(already_AddRefed<Block> aDecls);
+  explicit CSSStyleRuleDeclaration(
+      already_AddRefed<StyleLockedDeclarationBlock> aDecls);
   ~CSSStyleRuleDeclaration();
 
   inline CSSStyleRule* Rule();
   inline const CSSStyleRule* Rule() const;
 
-  void SetRawAfterClone(RefPtr<Block>);
+  void SetRawAfterClone(RefPtr<StyleLockedDeclarationBlock>);
 
-  RefPtr<Block> mDecls;
+  RefPtr<DeclarationBlock> mDecls;
 };
 
 class CSSStyleRule final : public css::GroupRule {
@@ -66,9 +73,9 @@ class CSSStyleRule final : public css::GroupRule {
                               bool aRelevantLinkVisited);
   Element* GetScopeRootFor(uint32_t aSelectorIndex, dom::Element&,
                            const nsAString& aPseudo, bool aRelevantLinkVisited);
-  StyleLockedDeclarationBlock& GetDeclarationBlock() const;
+  DeclarationBlock& GetDeclarationBlock() const;
   void GetSelectorWarnings(nsTArray<SelectorWarning>& aResult) const;
-  already_AddRefed<NodeList> QuerySelectorAll(nsINode& aRoot);
+  already_AddRefed<nsINodeList> QuerySelectorAll(nsINode& aRoot);
 
   // WebIDL interface
   StyleCssRuleType Type() const final;
@@ -120,6 +127,7 @@ const CSSStyleRule* CSSStyleRuleDeclaration::Rule() const {
       reinterpret_cast<const uint8_t*>(this) - offsetof(CSSStyleRule, mDecls));
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // mozilla_CSSStyleRule_h

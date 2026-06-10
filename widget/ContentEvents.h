@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ContentEvents_h_
-#define mozilla_ContentEvents_h_
+#ifndef mozilla_ContentEvents_h__
+#define mozilla_ContentEvents_h__
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -16,18 +17,13 @@ class nsIContent;
 
 namespace mozilla {
 
-namespace dom {
-class CSSAnimation;
-class CSSTransition;
-}  // namespace dom
-
 /******************************************************************************
  * mozilla::InternalScrollPortEvent
  ******************************************************************************/
 
-class InternalScrollPortEvent final : public WidgetGUIEvent {
+class InternalScrollPortEvent : public WidgetGUIEvent {
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Internal, ScrollPortEvent);
+  virtual InternalScrollPortEvent* AsScrollPortEvent() override { return this; }
 
   enum OrientType { eVertical, eHorizontal, eBoth };
 
@@ -37,10 +33,6 @@ class InternalScrollPortEvent final : public WidgetGUIEvent {
       : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eScrollPortEventClass,
                        aTime),
         mOrient(eVertical) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(InternalScrollPortEvent,
-                                                    eScrollPortEventClass,
-                                                    eGUIEventClass)
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eScrollPortEventClass,
@@ -67,19 +59,15 @@ class InternalScrollPortEvent final : public WidgetGUIEvent {
  * mozilla::InternalScrollPortEvent
  ******************************************************************************/
 
-class InternalScrollAreaEvent final : public WidgetGUIEvent {
+class InternalScrollAreaEvent : public WidgetGUIEvent {
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Internal, ScrollAreaEvent);
+  virtual InternalScrollAreaEvent* AsScrollAreaEvent() override { return this; }
 
   InternalScrollAreaEvent(bool aIsTrusted, EventMessage aMessage,
                           nsIWidget* aWidget,
                           const WidgetEventTime* aTime = nullptr)
       : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eScrollAreaEventClass,
                        aTime) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(InternalScrollAreaEvent,
-                                                    eScrollAreaEventClass,
-                                                    eGUIEventClass)
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eScrollAreaEventClass,
@@ -109,18 +97,14 @@ class InternalScrollAreaEvent final : public WidgetGUIEvent {
  * mOriginator is a weak pointer (does not hold a strong reference).
  ******************************************************************************/
 
-class InternalFormEvent final : public WidgetEvent {
+class InternalFormEvent : public WidgetEvent {
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Internal, FormEvent);
+  virtual InternalFormEvent* AsFormEvent() override { return this; }
 
   InternalFormEvent(bool aIsTrusted, EventMessage aMessage,
                     const WidgetEventTime* aTime = nullptr)
       : WidgetEvent(aIsTrusted, aMessage, eFormEventClass, aTime),
         mOriginator(nullptr) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(InternalFormEvent,
-                                                    eFormEventClass,
-                                                    eBasicEventClass)
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eFormEventClass,
@@ -144,17 +128,13 @@ class InternalFormEvent final : public WidgetEvent {
  * mozilla::InternalClipboardEvent
  ******************************************************************************/
 
-class InternalClipboardEvent final : public WidgetEvent {
+class InternalClipboardEvent : public WidgetEvent {
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Internal, ClipboardEvent);
+  virtual InternalClipboardEvent* AsClipboardEvent() override { return this; }
 
   InternalClipboardEvent(bool aIsTrusted, EventMessage aMessage,
                          const WidgetEventTime* aTime = nullptr)
       : WidgetEvent(aIsTrusted, aMessage, eClipboardEventClass, aTime) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(InternalClipboardEvent,
-                                                    eClipboardEventClass,
-                                                    eBasicEventClass)
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eClipboardEventClass,
@@ -180,19 +160,15 @@ class InternalClipboardEvent final : public WidgetEvent {
  * mozilla::InternalFocusEvent
  ******************************************************************************/
 
-class InternalFocusEvent final : public InternalUIEvent {
+class InternalFocusEvent : public InternalUIEvent {
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Internal, FocusEvent);
+  virtual InternalFocusEvent* AsFocusEvent() override { return this; }
 
   InternalFocusEvent(bool aIsTrusted, EventMessage aMessage,
                      const WidgetEventTime* aTime = nullptr)
       : InternalUIEvent(aIsTrusted, aMessage, eFocusEventClass, aTime),
         mFromRaise(false),
         mIsRefocus(false) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(InternalFocusEvent,
-                                                    eFocusEventClass,
-                                                    eUIEventClass)
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eFocusEventClass,
@@ -219,75 +195,100 @@ class InternalFocusEvent final : public InternalUIEvent {
  * mozilla::InternalTransitionEvent
  ******************************************************************************/
 
-class InternalTransitionEvent final : public WidgetEvent {
+class InternalTransitionEvent : public WidgetEvent {
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Internal, TransitionEvent);
+  virtual InternalTransitionEvent* AsTransitionEvent() override { return this; }
 
   InternalTransitionEvent(bool aIsTrusted, EventMessage aMessage,
-                          const WidgetEventTime* aTime = nullptr);
+                          const WidgetEventTime* aTime = nullptr)
+      : WidgetEvent(aIsTrusted, aMessage, eTransitionEventClass, aTime),
+        mElapsedTime(0.0) {}
 
-  InternalTransitionEvent(const InternalTransitionEvent&) = delete;
-  InternalTransitionEvent& operator=(const InternalTransitionEvent&) = delete;
-  InternalTransitionEvent(InternalTransitionEvent&&);
-  InternalTransitionEvent& operator=(InternalTransitionEvent&&);
+  InternalTransitionEvent(const InternalTransitionEvent& aOther) = delete;
+  InternalTransitionEvent& operator=(const InternalTransitionEvent& aOther) =
+      delete;
+  InternalTransitionEvent(InternalTransitionEvent&& aOther) = default;
+  InternalTransitionEvent& operator=(InternalTransitionEvent&& aOther) =
+      default;
 
-  ~InternalTransitionEvent();
-
-  WidgetEvent* Duplicate() const override;
+  virtual WidgetEvent* Duplicate() const override {
+    MOZ_ASSERT(mClass == eTransitionEventClass,
+               "Duplicate() must be overridden by sub class");
+    InternalTransitionEvent* result =
+        new InternalTransitionEvent(false, mMessage, this);
+    result->AssignTransitionEventData(*this, true);
+    result->mFlags = mFlags;
+    return result;
+  }
 
   nsString mPropertyName;
   nsString mPseudoElement;
   float mElapsedTime;
-  RefPtr<dom::CSSTransition> mAnimation;
 
   void AssignTransitionEventData(const InternalTransitionEvent& aEvent,
-                                 bool aCopyTargets);
+                                 bool aCopyTargets) {
+    AssignEventData(aEvent, aCopyTargets);
+
+    mPropertyName = aEvent.mPropertyName;
+    mElapsedTime = aEvent.mElapsedTime;
+    mPseudoElement = aEvent.mPseudoElement;
+  }
 };
 
 /******************************************************************************
  * mozilla::InternalAnimationEvent
  ******************************************************************************/
 
-class InternalAnimationEvent final : public WidgetEvent {
+class InternalAnimationEvent : public WidgetEvent {
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Internal, AnimationEvent);
+  virtual InternalAnimationEvent* AsAnimationEvent() override { return this; }
 
   InternalAnimationEvent(bool aIsTrusted, EventMessage aMessage,
-                         const WidgetEventTime* aTime = nullptr);
+                         const WidgetEventTime* aTime = nullptr)
+      : WidgetEvent(aIsTrusted, aMessage, eAnimationEventClass, aTime),
+        mElapsedTime(0.0) {}
 
-  InternalAnimationEvent(const InternalAnimationEvent&) = delete;
-  InternalAnimationEvent& operator=(const InternalAnimationEvent&) = delete;
-  InternalAnimationEvent(InternalAnimationEvent&&);
-  InternalAnimationEvent& operator=(InternalAnimationEvent&&);
+  InternalAnimationEvent(const InternalAnimationEvent& aOther) = delete;
+  InternalAnimationEvent& operator=(const InternalAnimationEvent& aOther) =
+      delete;
+  InternalAnimationEvent(InternalAnimationEvent&& aOther) = default;
+  InternalAnimationEvent& operator=(InternalAnimationEvent&& aOther) = default;
 
-  virtual ~InternalAnimationEvent();
-
-  WidgetEvent* Duplicate() const override;
+  virtual WidgetEvent* Duplicate() const override {
+    MOZ_ASSERT(mClass == eAnimationEventClass,
+               "Duplicate() must be overridden by sub class");
+    InternalAnimationEvent* result =
+        new InternalAnimationEvent(false, mMessage, this);
+    result->AssignAnimationEventData(*this, true);
+    result->mFlags = mFlags;
+    return result;
+  }
 
   nsString mAnimationName;
   nsString mPseudoElement;
   float mElapsedTime;
-  RefPtr<dom::CSSAnimation> mAnimation;
 
   void AssignAnimationEventData(const InternalAnimationEvent& aEvent,
-                                bool aCopyTargets);
+                                bool aCopyTargets) {
+    AssignEventData(aEvent, aCopyTargets);
+
+    mAnimationName = aEvent.mAnimationName;
+    mElapsedTime = aEvent.mElapsedTime;
+    mPseudoElement = aEvent.mPseudoElement;
+  }
 };
 
 /******************************************************************************
  * mozilla::InternalSMILTimeEvent
  ******************************************************************************/
 
-class InternalSMILTimeEvent final : public InternalUIEvent {
+class InternalSMILTimeEvent : public InternalUIEvent {
  public:
-  NS_DEFINE_AS_EVENT_OVERRIDE(Internal, SMILTimeEvent);
+  virtual InternalSMILTimeEvent* AsSMILTimeEvent() override { return this; }
 
   InternalSMILTimeEvent(bool aIsTrusted, EventMessage aMessage,
                         const WidgetEventTime* aTime = nullptr)
       : InternalUIEvent(aIsTrusted, aMessage, eSMILTimeEventClass, aTime) {}
-
-  NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(InternalSMILTimeEvent,
-                                                    eSMILTimeEventClass,
-                                                    eUIEventClass)
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eSMILTimeEventClass,
@@ -307,4 +308,4 @@ class InternalSMILTimeEvent final : public InternalUIEvent {
 
 }  // namespace mozilla
 
-#endif  // mozilla_ContentEvents_h_
+#endif  // mozilla_ContentEvents_h__

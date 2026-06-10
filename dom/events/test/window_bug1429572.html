@@ -17,6 +17,7 @@
       var host2;
       var shadowRoot;
       var shadowRoot2;
+      var winUtils;
 
       var touchCounter = 0;
       function createTouchArray(targetList) {
@@ -58,30 +59,10 @@
           tiltYs.push(0);
           twists.push(0);
         }
-        synthesizeTouchAtPoint(xs, ys, {
-          type: "touchstart",
-          id: touches,
-          rx: rxs,
-          ry: rys,
-          angle: angles,
-          force: forces,
-          tiltX: tiltXs,
-          tiltY: tiltYs,
-          twist: twists,
-          modifiers: 0,
-        });
-        synthesizeTouchAtPoint(xs, ys, {
-          type: "touchend",
-          id: touches,
-          rx: rxs,
-          ry: rys,
-          angle: angles,
-          force: forces,
-          tiltX: tiltXs,
-          tiltY: tiltYs,
-          twist: twists,
-          modifiers: 0,
-        });
+        winUtils.sendTouchEvent("touchstart",
+          touches, xs, ys, rxs, rys, angles, forces, tiltXs, tiltYs, twists, 0);
+        winUtils.sendTouchEvent("touchend",
+          touches, xs, ys, rxs, rys, angles, forces, tiltXs, tiltYs, twists, 0);
       }
 
       function next() {
@@ -343,6 +324,7 @@
       }
 
       function start() {
+        winUtils = _getDOMWindowUtils(this);
         host = document.getElementById("host");
         shadowRoot = host.attachShadow({ mode: "open" });
         shadowRoot.innerHTML =

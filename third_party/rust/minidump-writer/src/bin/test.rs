@@ -10,8 +10,8 @@ mod linux {
         super::*,
         error_graph::ErrorList,
         minidump_writer::{
-            minidump_writer::{MinidumpWriter, MinidumpWriterConfig},
-            module_reader, LINUX_GATE_LIBRARY_NAME,
+            minidump_writer::STOP_TIMEOUT, module_reader, ptrace_dumper::PtraceDumper,
+            LINUX_GATE_LIBRARY_NAME,
         },
         nix::{
             sys::mman::{mmap_anonymous, MapFlags, ProtFlags},
@@ -40,8 +40,12 @@ mod linux {
         let ppid = getppid();
         fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(ppid.as_raw(), ppid.as_raw())
-                .build_for_testing(&mut soft_errors)?
+            PtraceDumper::new_report_soft_errors(
+                ppid.as_raw(),
+                STOP_TIMEOUT,
+                Default::default(),
+                &mut soft_errors,
+            )?
         );
         Ok(())
     }
@@ -50,8 +54,12 @@ mod linux {
         let ppid = getppid();
         let dumper = fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(ppid.as_raw(), ppid.as_raw())
-                .build_for_testing(&mut soft_errors)?
+            PtraceDumper::new_report_soft_errors(
+                ppid.as_raw(),
+                STOP_TIMEOUT,
+                Default::default(),
+                &mut soft_errors,
+            )?
         );
         test!(!dumper.threads.is_empty(), "No threads");
         test!(
@@ -79,10 +87,17 @@ mod linux {
         use minidump_writer::mem_reader::MemReader;
 
         let ppid = getppid().as_raw();
-        let dumper = fail_on_soft_error!(
+        let mut dumper = fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(ppid, ppid).build_for_testing(&mut soft_errors)?
+            PtraceDumper::new_report_soft_errors(
+                ppid,
+                STOP_TIMEOUT,
+                Default::default(),
+                &mut soft_errors
+            )?
         );
+
+        fail_on_soft_error!(soft_errors, dumper.suspend_threads(&mut soft_errors));
 
         // We support 3 different methods of reading memory from another
         // process, ensure they all function and give the same results
@@ -126,27 +141,30 @@ mod linux {
         }
 
         let stack_res =
-            MinidumpWriter::copy_from_process(ppid, stack_var, std::mem::size_of::<usize>())?;
+            PtraceDumper::copy_from_process(ppid, stack_var, std::mem::size_of::<usize>())?;
 
         test!(stack_res == expected_stack, "stack var not correct");
 
         let heap_res =
-            MinidumpWriter::copy_from_process(ppid, heap_var, std::mem::size_of::<usize>())?;
+            PtraceDumper::copy_from_process(ppid, heap_var, std::mem::size_of::<usize>())?;
 
         test!(heap_res == expected_heap, "heap var not correct");
 
-        drop(dumper);
+        fail_on_soft_error!(soft_errors, dumper.resume_threads(&mut soft_errors));
 
         Ok(())
     }
 
     fn test_find_mappings(addr1: usize, addr2: usize) -> Result<()> {
         let ppid = getppid();
-
         let dumper = fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(ppid.as_raw(), ppid.as_raw())
-                .build_for_testing(&mut soft_errors)?
+            PtraceDumper::new_report_soft_errors(
+                ppid.as_raw(),
+                STOP_TIMEOUT,
+                Default::default(),
+                &mut soft_errors,
+            )?
         );
         dumper
             .find_mapping(addr1)
@@ -167,8 +185,15 @@ mod linux {
 
         let mut dumper = fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(ppid, ppid).build_for_testing(&mut soft_errors)?
+            PtraceDumper::new_report_soft_errors(
+                ppid,
+                STOP_TIMEOUT,
+                Default::default(),
+                &mut soft_errors
+            )?
         );
+
+        fail_on_soft_error!(soft_errors, dumper.suspend_threads(&mut soft_errors));
 
         let mut found_exe = None;
         for (idx, mapping) in dumper.mappings.iter().enumerate() {
@@ -180,7 +205,7 @@ mod linux {
         let idx = found_exe.unwrap();
         let module_reader::BuildId(id) = dumper.from_process_memory_for_index(idx)?;
 
-        drop(dumper);
+        fail_on_soft_error!(soft_errors, dumper.resume_threads(&mut soft_errors));
 
         assert!(!id.is_empty());
         assert!(id.iter().any(|&x| x > 0));
@@ -191,8 +216,12 @@ mod linux {
         // Now check that PtraceDumper interpreted the mappings properly.
         let dumper = fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(getppid().as_raw(), getppid().as_raw())
-                .build_for_testing(&mut soft_errors)?
+            PtraceDumper::new_report_soft_errors(
+                getppid().as_raw(),
+                STOP_TIMEOUT,
+                Default::default(),
+                &mut soft_errors,
+            )?
         );
         let mut mapping_count = 0;
         for map in &dumper.mappings {
@@ -215,20 +244,29 @@ mod linux {
 
     fn test_linux_gate_mapping_id() -> Result<()> {
         let ppid = getppid().as_raw();
-        let dumper = fail_on_soft_error!(
+        let mut dumper = fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(ppid, ppid).build_for_testing(&mut soft_errors)?
+            PtraceDumper::new_report_soft_errors(
+                ppid,
+                STOP_TIMEOUT,
+                Default::default(),
+                &mut soft_errors
+            )?
         );
         let mut found_linux_gate = false;
         for mapping in dumper.mappings.clone() {
             if mapping.name == Some(LINUX_GATE_LIBRARY_NAME.into()) {
                 found_linux_gate = true;
 
+                fail_on_soft_error!(soft_errors, dumper.suspend_threads(&mut soft_errors));
+
                 let module_reader::BuildId(id) =
-                    MinidumpWriter::from_process_memory_for_mapping(&mapping, ppid)?;
+                    PtraceDumper::from_process_memory_for_mapping(&mapping, ppid)?;
                 test!(!id.is_empty(), "id-vec is empty");
                 test!(id.iter().any(|&x| x > 0), "all id elements are 0");
-                drop(dumper);
+
+                fail_on_soft_error!(soft_errors, dumper.resume_threads(&mut soft_errors));
+
                 break;
             }
         }
@@ -240,7 +278,12 @@ mod linux {
         let ppid = getppid().as_raw();
         let dumper = fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(ppid, ppid).build_for_testing(&mut soft_errors)?
+            PtraceDumper::new_report_soft_errors(
+                ppid,
+                STOP_TIMEOUT,
+                Default::default(),
+                &mut soft_errors
+            )?
         );
         let linux_gate_loc = dumper.auxv.get_linux_gate_address().unwrap();
         test!(linux_gate_loc != 0, "linux_gate_loc == 0");
@@ -289,7 +332,7 @@ mod linux {
         // One less than the requested amount, as the main thread counts as well
         for id in 1..num {
             std::thread::Builder::new()
-                .name(format!("thread_{id}"))
+                .name(format!("thread_{}", id))
                 .spawn(|| {
                     println!("1");
                     loop {

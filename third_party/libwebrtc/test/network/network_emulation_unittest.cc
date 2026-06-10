@@ -42,6 +42,7 @@
 #include "rtc_base/socket_address.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue_for_test.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "test/gmock.h"
@@ -61,12 +62,11 @@ constexpr TimeDelta kNetworkPacketWaitTimeout = TimeDelta::Millis(100);
 constexpr TimeDelta kStatsWaitTimeout = TimeDelta::Seconds(1);
 constexpr int kOverheadIpv4Udp = 20 + 8;
 
-class SocketReader {
+class SocketReader : public sigslot::has_slots<> {
  public:
   explicit SocketReader(Socket* socket, Thread* network_thread)
       : socket_(socket), network_thread_(network_thread) {
-    socket_->SubscribeReadEvent(
-        this, [this](Socket* socket) { OnReadEvent(socket); });
+    socket_->SignalReadEvent.connect(this, &SocketReader::OnReadEvent);
   }
 
   void OnReadEvent(Socket* socket) {

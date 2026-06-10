@@ -9,31 +9,28 @@ add_task(setup);
 add_task(async function testTrrSelectionDisable() {
   // Turn off TRR Selection.
   let configFlushed = DoHTestUtils.waitForConfigFlush();
-  Services.prefs.setBoolPref(prefs.TRR_SELECT_ENABLED_PREF, false);
+  Preferences.set(prefs.TRR_SELECT_ENABLED_PREF, false);
   await configFlushed;
 
   // Set up a passing environment and enable DoH.
   setPassingHeuristics();
   let promise = waitForDoorhanger();
-  Services.prefs.setBoolPref(prefs.ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
   await BrowserTestUtils.waitForCondition(() => {
-    return Services.prefs.getBoolPref(prefs.BREADCRUMB_PREF, false);
+    return Preferences.get(prefs.BREADCRUMB_PREF);
   });
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb saved.");
   is(
-    Services.prefs.getBoolPref(prefs.BREADCRUMB_PREF),
-    true,
-    "Breadcrumb saved."
-  );
-  ok(
-    !Services.prefs.prefHasUserValue(prefs.TRR_SELECT_DRY_RUN_RESULT_PREF),
+    Preferences.get(prefs.TRR_SELECT_DRY_RUN_RESULT_PREF),
+    undefined,
     "TRR selection dry run not performed."
   );
   is(
-    Services.prefs.getStringPref(prefs.TRR_SELECT_URI_PREF),
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
     "https://example.com/1",
     "doh-rollout.uri set to first provider in the list."
   );
-  await ensureNoTRRSelectionTelemetry();
+  ensureNoTRRSelectionTelemetry();
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXAMPLE_URL);
   let panel = await promise;
@@ -48,30 +45,27 @@ add_task(async function testTrrSelectionDisable() {
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
   await BrowserTestUtils.waitForCondition(() => {
-    return Services.prefs.getStringPref(prefs.DOORHANGER_USER_DECISION_PREF);
+    return Preferences.get(prefs.DOORHANGER_USER_DECISION_PREF);
   });
   is(
-    Services.prefs.getStringPref(prefs.DOORHANGER_USER_DECISION_PREF),
+    Preferences.get(prefs.DOORHANGER_USER_DECISION_PREF),
     "UIOk",
     "Doorhanger decision saved."
   );
-  is(
-    Services.prefs.getBoolPref(prefs.BREADCRUMB_PREF),
-    true,
-    "Breadcrumb not cleared."
-  );
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb not cleared.");
 
   BrowserTestUtils.removeTab(tab);
 
   // Restart the controller for good measure.
   await restartDoHController();
-  await ensureNoTRRSelectionTelemetry();
-  ok(
-    !Services.prefs.prefHasUserValue(prefs.TRR_SELECT_DRY_RUN_RESULT_PREF),
+  ensureNoTRRSelectionTelemetry();
+  is(
+    Preferences.get(prefs.TRR_SELECT_DRY_RUN_RESULT_PREF),
+    undefined,
     "TRR selection dry run not performed."
   );
   is(
-    Services.prefs.getStringPref(prefs.TRR_SELECT_URI_PREF),
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
     "https://example.com/1",
     "doh-rollout.uri set to first provider in the list."
   );

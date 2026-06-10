@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -29,8 +30,6 @@ class Document;
 }
 }  // namespace mozilla
 
-// FIXME: NodeOffset is lossy copy of RangeBoundaryBase. We should make all of
-// this users use RangeBoundaryBase.
 struct NodeOffset {
   nsCOMPtr<nsINode> mNode;
   int32_t mOffset;
@@ -38,12 +37,6 @@ struct NodeOffset {
   NodeOffset() : mOffset(0) {}
   NodeOffset(nsINode* aNode, int32_t aOffset)
       : mNode(aNode), mOffset(aOffset) {}
-  template <typename PT, typename RT>
-  explicit NodeOffset(const mozilla::RangeBoundaryBase<PT, RT>& aBoundary)
-      : mNode(aBoundary.GetContainer()),
-        mOffset(
-            *aBoundary.Offset(mozilla::RangeBoundaryBase<
-                              PT, RT>::OffsetFilter::kValidOrInvalidOffsets)) {}
 
   bool operator==(const NodeOffset& aOther) const {
     return mNode == aOther.mNode && mOffset == aOther.mOffset;
@@ -63,7 +56,7 @@ class NodeOffsetRange {
   NodeOffset mEnd;
 
  public:
-  NodeOffsetRange() = default;
+  NodeOffsetRange() {}
   NodeOffsetRange(NodeOffset b, NodeOffset e)
       : mBegin(std::move(b)), mEnd(std::move(e)) {}
 
@@ -100,10 +93,8 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
 
   // sets the current position, this should be inside the range. If we are in
   // the middle of a word, we'll move to its start.
-  template <typename PT, typename RT>
-  nsresult SetPositionAndEnd(
-      const mozilla::RangeBoundaryBase<PT, RT>& aCurrentPosition,
-      const mozilla::RangeBoundaryBase<PT, RT>& aEndBoundary);
+  nsresult SetPositionAndEnd(nsINode* aPositionNode, int32_t aPositionOffset,
+                             nsINode* aEndNode, int32_t aEndOffset);
 
   // Given a point inside or immediately following a word, this returns the
   // DOM range that exactly encloses that word's characters. The current

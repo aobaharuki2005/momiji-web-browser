@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,8 +7,8 @@
  * This is the popup listener implementation for popup menus and context menus.
  */
 
-#ifndef nsXULPopupListener_h_
-#define nsXULPopupListener_h_
+#ifndef nsXULPopupListener_h___
+#define nsXULPopupListener_h___
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -54,4 +55,4 @@ class nsXULPopupListener : public nsIDOMEventListener {
   bool mIsContext;
 };
 
-#endif  // nsXULPopupListener_h_
+#endif  // nsXULPopupListener_h___

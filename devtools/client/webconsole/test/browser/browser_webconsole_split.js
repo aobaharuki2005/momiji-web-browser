@@ -89,10 +89,10 @@ add_task(async function () {
     const openedConsolePanel = toolbox.currentToolId === "webconsole";
     const menuLabel = await getMenuLabel(toolbox);
     const isConsoleVisible =
-      webconsolePanel.documentGlobal.getComputedStyle(webconsolePanel)
+      webconsolePanel.ownerGlobal.getComputedStyle(webconsolePanel)
         .visibility == "visible";
     const isDeckVisible =
-      deck.documentGlobal.getComputedStyle(deck).visibility == "visible";
+      deck.ownerGlobal.getComputedStyle(deck).visibility == "visible";
 
     return {
       deckHeight,

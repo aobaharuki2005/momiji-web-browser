@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -61,17 +63,21 @@ namespace {
 // https://fetch.spec.whatwg.org/#concept-http-network-fetch
 // If stream is readable, then error stream with ...
 void AbortStream(JSContext* aCx, ReadableStream* aReadableStream,
-                 AbortSignalImpl* aSignal, ErrorResult& aRv) {
-  MOZ_ASSERT(aSignal->Aborted());
-
+                 ErrorResult& aRv, JS::Handle<JS::Value> aReasonDetails) {
   if (aReadableStream->State() != ReadableStream::ReaderState::Readable) {
     return;
   }
 
-  JS::Rooted<JS::Value> reason(aCx);
-  aSignal->GetReason(aCx, &reason);
+  JS::Rooted<JS::Value> value(aCx, aReasonDetails);
 
-  aReadableStream->ErrorNative(aCx, reason, aRv);
+  if (aReasonDetails.isUndefined()) {
+    RefPtr<DOMException> e = DOMException::Create(NS_ERROR_DOM_ABORT_ERR);
+    if (!GetOrCreateDOMReflector(aCx, e, &value)) {
+      return;
+    }
+  }
+
+  aReadableStream->ErrorNative(aCx, value, aRv);
 }
 
 }  // namespace
@@ -438,15 +444,9 @@ class MainThreadFetchRunnable : public Runnable {
       MOZ_ASSERT(loadGroup);
       // We don't track if a worker is spawned from a tracking script for now,
       // so pass false as the last argument to FetchDriver().
-      nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-      if (mRequest->GetCookieJarSettings()) {
-        cookieJarSettings = mRequest->GetCookieJarSettings();
-      } else {
-        cookieJarSettings = workerPrivate->CookieJarSettings();
-      }
       fetch = new FetchDriver(mRequest.clonePtr(), principal, loadGroup,
                               workerPrivate->MainThreadEventTarget(),
-                              cookieJarSettings,
+                              workerPrivate->CookieJarSettings(),
                               workerPrivate->GetPerformanceStorage(),
                               net::ClassificationFlags({0, 0}));
       nsAutoCString spec;
@@ -531,8 +531,12 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
 
   if (signalImpl && signalImpl->Aborted()) {
     // Already aborted signal rejects immediately.
-    JS::Rooted<JS::Value> reason(cx);
-    signalImpl->GetReason(cx, &reason);
+    JS::Rooted<JS::Value> reason(cx, signalImpl->RawReason());
+    if (reason.get().isUndefined()) {
+      aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+      return nullptr;
+    }
+
     p->MaybeReject(reason);
     return p.forget();
   }
@@ -548,15 +552,11 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
     aInit.mObserve.Value().HandleEvent(*observer);
   }
 
-  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  if (internalRequest->GetCookieJarSettings()) {
-    cookieJarSettings = internalRequest->GetCookieJarSettings();
-  }
-
   if (NS_IsMainThread() && !internalRequest->GetKeepalive()) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
     nsCOMPtr<Document> doc;
     nsCOMPtr<nsILoadGroup> loadGroup;
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
     nsIPrincipal* principal;
     net::ClassificationFlags trackingFlags = {0, 0};
     if (window) {
@@ -577,9 +577,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
         return nullptr;
       }
 
-      if (!cookieJarSettings) {
-        cookieJarSettings = mozilla::net::CookieJarSettings::Create(principal);
-      }
+      cookieJarSettings = mozilla::net::CookieJarSettings::Create(principal);
     }
 
     if (!loadGroup) {
@@ -592,18 +590,11 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
 
     RefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(
         p, observer, signalImpl, request->MozErrors());
-    uint64_t associatedBc = 0;
-    if (internalRequest) {
-      associatedBc = internalRequest->AssociatedBrowsingContextID();
-    }
     RefPtr<FetchDriver> fetch =
         new FetchDriver(std::move(internalRequest), principal, loadGroup,
                         aGlobal->SerialEventTarget(), cookieJarSettings,
                         nullptr,  // PerformanceStorage
                         trackingFlags);
-    if (associatedBc > 0) {
-      fetch->SetAssociatedBrowsingContextID(associatedBc);
-    }
     fetch->SetDocument(doc);
     resolver->SetLoadGroup(loadGroup);
     aRv = fetch->Fetch(signalImpl, resolver);
@@ -663,6 +654,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
     ipcArgs.clientInfo() = clientInfo.ref().ToIPC();
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
     nsCOMPtr<Document> doc;
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
     nsIPrincipal* principal;
     // we don't check if we this request is invoked from a tracking script
     // we might add this capability in future.
@@ -693,10 +685,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
         aRv.Throw(NS_ERROR_FAILURE);
         return nullptr;
       }
-
-      if (!cookieJarSettings) {
-        cookieJarSettings = mozilla::net::CookieJarSettings::Create(principal);
-      }
+      cookieJarSettings = mozilla::net::CookieJarSettings::Create(principal);
     }
 
     if (cookieJarSettings) {
@@ -1343,9 +1332,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FetchBodyBase)
 NS_INTERFACE_MAP_END
 
 template <class Derived>
-FetchBody<Derived>::FetchBody(nsIGlobalObject* aGlobal)
-    : mGlobal(aGlobal), mBodyUsed(false) {
-  MOZ_ASSERT(aGlobal);
+FetchBody<Derived>::FetchBody(nsIGlobalObject* aOwner)
+    : mOwner(aOwner), mBodyUsed(false) {
+  MOZ_ASSERT(aOwner);
 
   if (!NS_IsMainThread()) {
     WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
@@ -1358,9 +1347,9 @@ FetchBody<Derived>::FetchBody(nsIGlobalObject* aGlobal)
   MOZ_ASSERT(mMainThreadEventTarget);
 }
 
-template FetchBody<Request>::FetchBody(nsIGlobalObject* aGlobal);
+template FetchBody<Request>::FetchBody(nsIGlobalObject* aOwner);
 
-template FetchBody<Response>::FetchBody(nsIGlobalObject* aGlobal);
+template FetchBody<Response>::FetchBody(nsIGlobalObject* aOwner);
 
 template <class Derived>
 FetchBody<Derived>::~FetchBody() {
@@ -1392,7 +1381,7 @@ template bool FetchBody<Response>::BodyUsed() const;
 template <class Derived>
 void FetchBody<Derived>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv) {
   MOZ_ASSERT(aCx);
-  MOZ_ASSERT(mGlobal->SerialEventTarget()->IsOnCurrentThread());
+  MOZ_ASSERT(mOwner->SerialEventTarget()->IsOnCurrentThread());
 
   MOZ_DIAGNOSTIC_ASSERT(!BodyUsed(), "Consuming already used body?");
   if (BodyUsed()) {
@@ -1433,15 +1422,16 @@ already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
       DerivedClass()->GetSignalImplToConsumeBody();
 
   if (signalImpl && signalImpl->Aborted()) {
-    JS::Rooted<JS::Value> abortReason(aCx);
-    signalImpl->GetReason(aCx, &abortReason);
+    JS::Rooted<JS::Value> abortReason(aCx, signalImpl->RawReason());
 
-    nsCOMPtr<nsIGlobalObject> global = DerivedClass()->GetParentObject();
-    RefPtr<Promise> promise = Promise::Create(global, aRv);
-    if (aRv.Failed()) {
+    if (abortReason.get().isUndefined()) {
+      aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
       return nullptr;
     }
 
+    nsCOMPtr<nsIGlobalObject> go = DerivedClass()->GetParentObject();
+
+    RefPtr<Promise> promise = Promise::Create(go, aRv);
     promise->MaybeReject(abortReason);
     return promise.forget();
   }
@@ -1502,10 +1492,10 @@ already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
     blobStorageType = MutableBlobStorage::eCouldBeInTemporaryFile;
   }
 
-  RefPtr<Promise> promise =
-      BodyConsumer::Create(global, mMainThreadEventTarget, bodyStream,
-                           signalImpl, aType, BodyBlobImpl(), BodyLocalPath(),
-                           mimeType, mixedCaseMimeType, blobStorageType, aRv);
+  RefPtr<Promise> promise = BodyConsumer::Create(
+      global, mMainThreadEventTarget, bodyStream, signalImpl, aType,
+      BodyBlobURISpec(), BodyLocalPath(), mimeType, mixedCaseMimeType,
+      blobStorageType, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -1592,15 +1582,15 @@ template void FetchBody<Response>::GetMimeType(nsACString& aMimeType,
                                                nsACString& aMixedCaseMimeType);
 
 template <class Derived>
-BlobImpl* FetchBody<Derived>::BodyBlobImpl() const {
-  return DerivedClass()->BodyBlobImpl();
+const nsACString& FetchBody<Derived>::BodyBlobURISpec() const {
+  return DerivedClass()->BodyBlobURISpec();
 }
 
-template BlobImpl* FetchBody<Request>::BodyBlobImpl() const;
+template const nsACString& FetchBody<Request>::BodyBlobURISpec() const;
 
-template BlobImpl* FetchBody<Response>::BodyBlobImpl() const;
+template const nsACString& FetchBody<Response>::BodyBlobURISpec() const;
 
-template BlobImpl* FetchBody<EmptyBody>::BodyBlobImpl() const;
+template const nsACString& FetchBody<EmptyBody>::BodyBlobURISpec() const;
 
 template <class Derived>
 const nsAString& FetchBody<Derived>::BodyLocalPath() const {
@@ -1625,9 +1615,11 @@ void FetchBody<Derived>::SetReadableStreamBody(JSContext* aCx,
     return;
   }
 
-  if (signalImpl->Aborted()) {
+  bool aborted = signalImpl->Aborted();
+  if (aborted) {
     IgnoredErrorResult result;
-    AbortStream(aCx, mReadableStreamBody, signalImpl, result);
+    JS::Rooted<JS::Value> abortReason(aCx, signalImpl->RawReason());
+    AbortStream(aCx, mReadableStreamBody, result, abortReason);
     if (NS_WARN_IF(result.Failed())) {
       return;
     }
@@ -1683,7 +1675,8 @@ already_AddRefed<ReadableStream> FetchBody<Derived>::GetBody(JSContext* aCx,
   RefPtr<AbortSignalImpl> signalImpl = DerivedClass()->GetSignalImpl();
   if (signalImpl) {
     if (signalImpl->Aborted()) {
-      AbortStream(aCx, body, signalImpl, aRv);
+      JS::Rooted<JS::Value> abortReason(aCx, signalImpl->RawReason());
+      AbortStream(aCx, body, aRv, abortReason);
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;
       }
@@ -1753,7 +1746,7 @@ void FetchBody<Derived>::MaybeTeeReadableStreamBody(
   mReadableStreamBody = branches[0];
   branches[1].forget(aBodyOut);
 
-  aRv = FetchStreamReader::Create(aCx, mGlobal, aStreamReader, aInputStream);
+  aRv = FetchStreamReader::Create(aCx, mOwner, aStreamReader, aInputStream);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -1776,14 +1769,23 @@ void FetchBody<Derived>::RunAbortAlgorithm() {
   }
 
   AutoJSAPI jsapi;
-  if (!jsapi.Init(mGlobal)) {
+  if (!jsapi.Init(mOwner)) {
     return;
   }
 
   JSContext* cx = jsapi.cx();
 
   RefPtr<ReadableStream> body(mReadableStreamBody);
-  AbortStream(cx, body, Signal(), IgnoredErrorResult());
+  IgnoredErrorResult result;
+
+  JS::Rooted<JS::Value> abortReason(cx);
+
+  AbortSignalImpl* signalImpl = Signal();
+  if (signalImpl) {
+    abortReason.set(signalImpl->RawReason());
+  }
+
+  AbortStream(cx, body, result, abortReason);
 }
 
 template void FetchBody<Request>::RunAbortAlgorithm();
@@ -1796,14 +1798,14 @@ NS_IMPL_RELEASE_INHERITED(EmptyBody, FetchBody<EmptyBody>)
 NS_IMPL_CYCLE_COLLECTION_CLASS(EmptyBody)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(EmptyBody, FetchBody<EmptyBody>)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAbortSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchStreamReader)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EmptyBody,
                                                   FetchBody<EmptyBody>)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAbortSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchStreamReader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

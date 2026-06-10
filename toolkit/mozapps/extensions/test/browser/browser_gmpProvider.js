@@ -52,7 +52,7 @@ function openDetailsView(win, id) {
   EventUtils.synthesizeMouseAtCenter(
     item.querySelector(".addon-name-link"),
     {},
-    item.documentGlobal
+    item.ownerGlobal
   );
   return loaded;
 }
@@ -97,10 +97,7 @@ add_task(async function initializeState() {
 add_task(async function testNotInstalledDisabled() {
   let win = await loadInitialView("extension");
 
-  Assert.ok(
-    AboutAddonsTestUtils.isCategoryVisible(win, "plugin"),
-    "Plugin tab visible."
-  );
+  Assert.ok(isCategoryVisible(win, "plugin"), "Plugin tab visible.");
   await switchView(win, "plugin");
 
   for (let addon of gMockAddons) {

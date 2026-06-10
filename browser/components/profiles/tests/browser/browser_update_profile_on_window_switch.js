@@ -7,46 +7,10 @@ const { SelectableProfile } = ChromeUtils.importESModule(
   "resource:///modules/profiles/SelectableProfile.sys.mjs"
 );
 
-const { sinon } = ChromeUtils.importESModule(
-  "resource://testing-common/Sinon.sys.mjs"
-);
-
-// Waits for the stub to be called and then resolves with the result of the
-// provided behaviour or the original method if no behaviour is provided.
-function waitForCall(stub, behaviour = stub.wrappedMethod) {
-  let { promise, resolve } = Promise.withResolvers();
-
-  stub.callsFake(function (...args) {
-    let result = behaviour.apply(this, args);
-    resolve(result);
-
-    return result;
-  });
-
-  return promise;
-}
-
-function rejects(promise) {
-  return promise.then(
-    () => Promise.reject(),
-    () => Promise.resolve()
-  );
-}
-
 add_task(async function test_updateDefaultProfileOnWindowSwitch() {
   await initGroupDatabase();
   let currentProfile = SelectableProfileService.currentProfile;
   let profileRootDir = await currentProfile.rootDir;
-
-  let asyncFlushCurrentProfile = sinon.stub(
-    gProfileService,
-    "asyncFlushCurrentProfile"
-  );
-  let asyncFlush = sinon.stub(gProfileService, "asyncFlush");
-  let setDefaultProfileForGroup = sinon.stub(
-    SelectableProfileService,
-    "setDefaultProfileForGroup"
-  );
 
   ok(
     SelectableProfileService.currentProfile instanceof SelectableProfile,
@@ -66,61 +30,33 @@ add_task(async function test_updateDefaultProfileOnWindowSwitch() {
     "We have not recorded any Glean data yet"
   );
 
-  let window2 = await BrowserTestUtils.openNewBrowserWindow();
-  await SimpleTest.promiseFocus(window2);
-
-  let currentWindow = window2;
-  async function switchWindow() {
-    let newWindow = currentWindow === window2 ? window : window2;
-    await SimpleTest.promiseFocus(newWindow);
-    currentWindow = newWindow;
-  }
-
-  info("Switching windows when the profile hasn't changed doesn't flush");
-
-  let setDefaultCalled = waitForCall(setDefaultProfileForGroup);
-  // Focus the original window so we get an "activate" event and consider updating the toolkitProfile rootDir
-  await switchWindow();
-  await setDefaultCalled;
-
-  // Because the rootDir was unchanged we shouldn't have performed any flushing.
-  Assert.equal(
-    asyncFlushCurrentProfile.callCount,
-    0,
-    "Should not have flushed the current profile"
-  );
-  Assert.equal(asyncFlush.callCount, 0, "Should not have flushed");
-
-  info(
-    "Switching windows when the profile has changed flushes the current profile"
-  );
-
   // Override
-  let badRoot = uAppData.clone();
-  badRoot.append("bad");
-  gProfileService.currentProfile.rootDir = badRoot;
+  gProfileService.currentProfile.rootDir = "bad";
 
-  let flushedCurrentProfile = waitForCall(asyncFlushCurrentProfile, () =>
-    Promise.resolve()
-  );
-  await switchWindow();
-  await flushedCurrentProfile;
+  let w = await BrowserTestUtils.openNewBrowserWindow();
+  await SimpleTest.promiseFocus(w);
 
-  info(
-    "Switching windows when the profile has changed and flushing the current fails does a full flush"
-  );
+  // Focus the original window so we get an "activate" event and update the toolkitProfile rootDir
+  let asyncFlushResolver = Promise.withResolvers();
+  gProfileService.asyncFlush = () => asyncFlushResolver.resolve();
+  await SimpleTest.promiseFocus(window);
+  await asyncFlushResolver.promise;
 
-  gProfileService.currentProfile.rootDir = badRoot;
+  asyncFlushResolver = Promise.withResolvers();
+  await SimpleTest.promiseFocus(w);
+  await asyncFlushResolver.promise;
 
-  flushedCurrentProfile = waitForCall(asyncFlushCurrentProfile, () =>
-    Promise.reject()
-  );
-  let flushed = waitForCall(asyncFlush, () => Promise.resolve());
+  gProfileService.asyncFlush = () => {
+    throw new Error("Failed");
+  };
 
-  await switchWindow();
+  let asyncFlushCurrentProfileResolver = Promise.withResolvers();
+  gProfileService.asyncFlushCurrentProfile = () =>
+    asyncFlushCurrentProfileResolver.resolve();
 
-  await rejects(flushedCurrentProfile);
-  await flushed;
+  await SimpleTest.promiseFocus(window);
+
+  await asyncFlushCurrentProfileResolver.promise;
 
   is(
     gProfileService.currentProfile.rootDir.path,
@@ -130,12 +66,13 @@ add_task(async function test_updateDefaultProfileOnWindowSwitch() {
 
   let testEvents = Glean.profilesDefault.updated.testGetValue();
   Assert.equal(
-    2,
+    3,
     testEvents.length,
-    "Should have recorded the default profile updated event exactly two times"
+    "Should have recorded the default profile updated event exactly three times"
   );
   TelemetryTestUtils.assertEvents(
     [
+      ["profiles", "default", "updated"],
       ["profiles", "default", "updated"],
       ["profiles", "default", "updated"],
     ],
@@ -145,8 +82,6 @@ add_task(async function test_updateDefaultProfileOnWindowSwitch() {
     }
   );
 
-  await BrowserTestUtils.closeWindow(window2);
+  await BrowserTestUtils.closeWindow(w);
   await SelectableProfileService.uninit();
-  asyncFlushCurrentProfile.restore();
-  asyncFlush.restore();
 });

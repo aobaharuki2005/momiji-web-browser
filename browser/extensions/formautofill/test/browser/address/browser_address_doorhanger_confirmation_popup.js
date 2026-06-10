@@ -6,6 +6,7 @@
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["browser.urlbar.trustPanel.featureGate", false],
       ["test.wait300msAfterTabSwitch", true],
       ["extensions.formautofill.addresses.capture.enabled", true],
       ["extensions.formautofill.addresses.supported", "on"],
@@ -34,11 +35,7 @@ add_task(async function test_save_doorhanger_show_confirmation() {
       await onSavePopupShown;
 
       // click the main button and expect seeing the confirmation
-      const hintShownAndVerified = verifyConfirmationHint(
-        browser,
-        false,
-        "trust-icon-container"
-      );
+      const hintShownAndVerified = verifyConfirmationHint(browser, false);
       await clickDoorhangerButton(MAIN_BUTTON, 0);
 
       info("waiting for verifyConfirmationHint");
@@ -71,11 +68,7 @@ add_task(async function test_update_doorhanger_show_confirmation() {
       await onUpdatePopupShown;
 
       // click the main button and expect seeing the confirmation
-      const hintShownAndVerified = verifyConfirmationHint(
-        browser,
-        false,
-        "trust-icon-container"
-      );
+      const hintShownAndVerified = verifyConfirmationHint(browser, false);
       await clickDoorhangerButton(MAIN_BUTTON, 0);
 
       info("waiting for verifyConfirmationHint");
@@ -112,11 +105,7 @@ add_task(async function test_edit_doorhanger_show_confirmation() {
       await onEditPopupShown;
 
       // click the main button and expect seeing the confirmation
-      const hintShownAndVerified = verifyConfirmationHint(
-        browser,
-        false,
-        "trust-icon-container"
-      );
+      const hintShownAndVerified = verifyConfirmationHint(browser, false);
       await clickDoorhangerButton(MAIN_BUTTON, 0);
 
       info("waiting for verifyConfirmationHint");

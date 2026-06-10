@@ -93,6 +93,7 @@ object DebugControls {
                 Thread.sleep(flags.pauseSeconds * 1000)
             } catch (_: InterruptedException) {
                 // Ignored; used only for debug inspection
+                null
             }
         }
     }

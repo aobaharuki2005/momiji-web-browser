@@ -19,32 +19,13 @@ add_task(async function test_copy_button_copies_text_and_resets() {
   await aboutTranslationsTestUtils.setSourceLanguageSelectorValue("en");
   await aboutTranslationsTestUtils.setTargetLanguageSelectorValue("fr");
 
-  await aboutTranslationsTestUtils.assertEvents(
-    {
-      expected: [
-        [
-          AboutTranslationsTestUtils.Events.SourceTextInputDebounced,
-          { sourceText: "Hello clipboard" },
-        ],
-        [
-          AboutTranslationsTestUtils.Events.TranslationRequested,
-          { translationId: 1 },
-        ],
-      ],
-      unexpected: [AboutTranslationsTestUtils.Events.TranslationComplete],
-    },
-    async () => {
-      await aboutTranslationsTestUtils.setSourceTextAreaValue(
-        "Hello clipboard"
-      );
-    }
-  );
+  await aboutTranslationsTestUtils.setSourceTextAreaValue("Hello clipboard");
   await aboutTranslationsTestUtils.assertEvents(
     {
       expected: [
         [
           AboutTranslationsTestUtils.Events.TranslationComplete,
-          { translationId: 1 },
+          AboutTranslationsTestUtils.AnyEventDetail,
         ],
         [AboutTranslationsTestUtils.Events.CopyButtonEnabled],
       ],
@@ -74,7 +55,7 @@ add_task(async function test_copy_button_copies_text_and_resets() {
       expected: [[AboutTranslationsTestUtils.Events.CopyButtonShowCopied]],
     },
     async () => {
-      await aboutTranslationsTestUtils.invokeCopyButton();
+      await aboutTranslationsTestUtils.clickCopyButton();
     }
   );
   await aboutTranslationsTestUtils.assertCopyButton({
@@ -116,30 +97,13 @@ add_task(async function test_copy_button_reset_clears_copied_state() {
   await aboutTranslationsTestUtils.setTargetLanguageSelectorValue("fr");
 
   const sourceText = "Hello clipboard";
-  await aboutTranslationsTestUtils.assertEvents(
-    {
-      expected: [
-        [
-          AboutTranslationsTestUtils.Events.SourceTextInputDebounced,
-          { sourceText },
-        ],
-        [
-          AboutTranslationsTestUtils.Events.TranslationRequested,
-          { translationId: 1 },
-        ],
-      ],
-      unexpected: [AboutTranslationsTestUtils.Events.TranslationComplete],
-    },
-    async () => {
-      await aboutTranslationsTestUtils.setSourceTextAreaValue(sourceText);
-    }
-  );
+  await aboutTranslationsTestUtils.setSourceTextAreaValue(sourceText);
   await aboutTranslationsTestUtils.assertEvents(
     {
       expected: [
         [
           AboutTranslationsTestUtils.Events.TranslationComplete,
-          { translationId: 1 },
+          AboutTranslationsTestUtils.AnyEventDetail,
         ],
         [AboutTranslationsTestUtils.Events.CopyButtonEnabled],
       ],
@@ -160,7 +124,7 @@ add_task(async function test_copy_button_reset_clears_copied_state() {
       expected: [[AboutTranslationsTestUtils.Events.CopyButtonShowCopied]],
     },
     async () => {
-      await aboutTranslationsTestUtils.invokeCopyButton();
+      await aboutTranslationsTestUtils.clickCopyButton();
     }
   );
   await aboutTranslationsTestUtils.assertCopyButton({
@@ -173,7 +137,7 @@ add_task(async function test_copy_button_reset_clears_copied_state() {
       expected: [[AboutTranslationsTestUtils.Events.CopyButtonShowCopied]],
     },
     async () => {
-      await aboutTranslationsTestUtils.invokeCopyButton();
+      await aboutTranslationsTestUtils.clickCopyButton();
     }
   );
   await aboutTranslationsTestUtils.assertCopyButton({
@@ -199,7 +163,7 @@ add_task(async function test_copy_button_reset_clears_copied_state() {
       expected: [[AboutTranslationsTestUtils.Events.CopyButtonShowCopied]],
     },
     async () => {
-      await aboutTranslationsTestUtils.invokeCopyButton();
+      await aboutTranslationsTestUtils.clickCopyButton();
     }
   );
   await aboutTranslationsTestUtils.assertCopyButton({
@@ -220,30 +184,13 @@ add_task(async function test_copy_button_reset_when_target_language_changes() {
   await aboutTranslationsTestUtils.setTargetLanguageSelectorValue("fr");
 
   const sourceText = "Hello clipboard";
-  await aboutTranslationsTestUtils.assertEvents(
-    {
-      expected: [
-        [
-          AboutTranslationsTestUtils.Events.SourceTextInputDebounced,
-          { sourceText },
-        ],
-        [
-          AboutTranslationsTestUtils.Events.TranslationRequested,
-          { translationId: 1 },
-        ],
-      ],
-      unexpected: [AboutTranslationsTestUtils.Events.TranslationComplete],
-    },
-    async () => {
-      await aboutTranslationsTestUtils.setSourceTextAreaValue(sourceText);
-    }
-  );
+  await aboutTranslationsTestUtils.setSourceTextAreaValue(sourceText);
   await aboutTranslationsTestUtils.assertEvents(
     {
       expected: [
         [
           AboutTranslationsTestUtils.Events.TranslationComplete,
-          { translationId: 1 },
+          AboutTranslationsTestUtils.AnyEventDetail,
         ],
         [AboutTranslationsTestUtils.Events.CopyButtonEnabled],
       ],
@@ -264,7 +211,7 @@ add_task(async function test_copy_button_reset_when_target_language_changes() {
       expected: [[AboutTranslationsTestUtils.Events.CopyButtonShowCopied]],
     },
     async () => {
-      await aboutTranslationsTestUtils.invokeCopyButton();
+      await aboutTranslationsTestUtils.clickCopyButton();
     }
   );
   await aboutTranslationsTestUtils.assertCopyButton({
@@ -294,7 +241,7 @@ add_task(async function test_copy_button_reset_when_target_language_changes() {
       expected: [
         [
           AboutTranslationsTestUtils.Events.TranslationComplete,
-          { translationId: 2 },
+          AboutTranslationsTestUtils.AnyEventDetail,
         ],
         [AboutTranslationsTestUtils.Events.CopyButtonEnabled],
       ],
@@ -326,30 +273,13 @@ add_task(async function test_copy_button_reset_timeout_fires_event() {
   await aboutTranslationsTestUtils.setSourceLanguageSelectorValue("en");
   await aboutTranslationsTestUtils.setTargetLanguageSelectorValue("fr");
 
-  await aboutTranslationsTestUtils.assertEvents(
-    {
-      expected: [
-        [
-          AboutTranslationsTestUtils.Events.SourceTextInputDebounced,
-          { sourceText: "Timeout reset" },
-        ],
-        [
-          AboutTranslationsTestUtils.Events.TranslationRequested,
-          { translationId: 1 },
-        ],
-      ],
-      unexpected: [AboutTranslationsTestUtils.Events.TranslationComplete],
-    },
-    async () => {
-      await aboutTranslationsTestUtils.setSourceTextAreaValue("Timeout reset");
-    }
-  );
+  await aboutTranslationsTestUtils.setSourceTextAreaValue("Timeout reset");
   await aboutTranslationsTestUtils.assertEvents(
     {
       expected: [
         [
           AboutTranslationsTestUtils.Events.TranslationComplete,
-          { translationId: 1 },
+          AboutTranslationsTestUtils.AnyEventDetail,
         ],
         [AboutTranslationsTestUtils.Events.CopyButtonEnabled],
       ],
@@ -375,7 +305,7 @@ add_task(async function test_copy_button_reset_timeout_fires_event() {
       expected: [[AboutTranslationsTestUtils.Events.CopyButtonShowCopied]],
     },
     async () => {
-      await aboutTranslationsTestUtils.invokeCopyButton();
+      await aboutTranslationsTestUtils.clickCopyButton();
     }
   );
 

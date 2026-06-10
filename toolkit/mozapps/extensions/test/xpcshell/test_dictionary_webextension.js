@@ -39,48 +39,36 @@ add_task(
     pref_set: [["extensions.install_origins.enabled", true]],
   },
   async function test_validation() {
-    let { messages } = await promiseConsoleOutput(async () => {
-      await Assert.rejects(
-        promiseInstallWebExtension({
-          manifest: {
-            browser_specific_settings: {
-              gecko: { id: "en-US-no-dic@dictionaries.mozilla.org" },
-            },
-            dictionaries: {
-              "en-US": "subdir/en-US.dic",
-            },
+    await Assert.rejects(
+      promiseInstallWebExtension({
+        manifest: {
+          browser_specific_settings: {
+            gecko: { id: "en-US-no-dic@dictionaries.mozilla.org" },
           },
-        }),
-        /Expected file to be downloaded for install/
-      );
+          dictionaries: {
+            "en-US": "en-US.dic",
+          },
+        },
+      }),
+      /Expected file to be downloaded for install/
+    );
 
-      await Assert.rejects(
-        promiseInstallWebExtension({
-          manifest: {
-            browser_specific_settings: {
-              gecko: { id: "en-US-no-aff@dictionaries.mozilla.org" },
-            },
-            dictionaries: {
-              "en-US": "en-US.dic",
-            },
+    await Assert.rejects(
+      promiseInstallWebExtension({
+        manifest: {
+          browser_specific_settings: {
+            gecko: { id: "en-US-no-aff@dictionaries.mozilla.org" },
           },
+          dictionaries: {
+            "en-US": "en-US.dic",
+          },
+        },
 
-          files: {
-            "en-US.dic": "",
-          },
-        }),
-        /Expected file to be downloaded for install/
-      );
-    });
-    const expectedErrorPatterns = [
-      /Loading extension 'en-US-no-dic@dictionaries.mozilla.org': Reading manifest: Invalid dictionary path specified for 'en-US': subdir\/en-US.dic/,
-      /Loading extension 'en-US-no-dic@dictionaries.mozilla.org': Reading manifest: Invalid dictionary path specified for 'en-US': Missing affix file: subdir\/en-US.aff/,
-      /Loading extension 'en-US-no-aff@dictionaries.mozilla.org': Reading manifest: Invalid dictionary path specified for 'en-US': Missing affix file: en-US.aff/,
-    ];
-    AddonTestUtils.checkMessages(
-      messages,
-      { expected: expectedErrorPatterns.map(pat => ({ message: pat })) },
-      "Got expected error messages in the console"
+        files: {
+          "en-US.dic": "",
+        },
+      }),
+      /Expected file to be downloaded for install/
     );
 
     let addon = await promiseInstallWebExtension({

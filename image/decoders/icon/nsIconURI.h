@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,13 +7,11 @@
 #ifndef mozilla_image_decoders_icon_nsIconURI_h
 #define mozilla_image_decoders_icon_nsIconURI_h
 
-#include "nsIIPCSerializableURI.h"
 #include "nsIIconURI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsINestedURI.h"
 #include "nsIURIMutator.h"
-#include "nsIURIWithSizeOf.h"
 #include "nsISerializable.h"
 
 #define NS_THIS_ICONURI_IMPLEMENTATION_CID    \
@@ -28,17 +27,13 @@ class Encoding;
 
 class nsMozIconURI final : public nsIMozIconURI,
                            public nsINestedURI,
-                           public nsISerializable,
-                           public nsIIPCSerializableURI,
-                           public nsIURIWithSizeOf {
+                           public nsISerializable {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURI
   NS_DECL_NSIMOZICONURI
   NS_DECL_NSINESTEDURI
   NS_DECL_NSISERIALIZABLE
-  NS_DECL_NSIIPCSERIALIZABLEURI
-  NS_DECL_NSIURIWITHSIZEOF
 
  protected:
   nsMozIconURI();
@@ -107,10 +102,10 @@ class nsMozIconURI final : public nsIMozIconURI,
       return InitFromSpec(aSpec);
     }
 
-    explicit Mutator() = default;
+    explicit Mutator() {}
 
    private:
-    virtual ~Mutator() = default;
+    virtual ~Mutator() {}
 
     friend class nsMozIconURI;
   };

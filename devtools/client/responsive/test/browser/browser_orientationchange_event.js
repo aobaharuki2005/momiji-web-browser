@@ -104,7 +104,7 @@ addRDMTask(TEST_COM_URL, async function ({ ui }) {
   );
 
   info("Check that the viewport orientation values persist after reload");
-  await reloadSelectedTab();
+  await reloadBrowser();
   iframeBrowsingContext = ui.getViewportBrowser().browsingContext.children[0];
 
   is(

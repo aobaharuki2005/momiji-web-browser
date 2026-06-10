@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsTimerImpl_h_
-#define nsTimerImpl_h_
+#ifndef nsTimerImpl_h___
+#define nsTimerImpl_h___
 
 #include "nsITimer.h"
 #include "nsIEventTarget.h"
@@ -216,4 +218,4 @@ class nsTimerManager final : public nsITimerManager {
   ~nsTimerManager() = default;
 };
 
-#endif /* nsTimerImpl_h_ */
+#endif /* nsTimerImpl_h___ */

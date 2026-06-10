@@ -82,9 +82,6 @@ SpeechSynthesisRequestChild::SpeechSynthesisRequestChild(SpeechTaskChild* aTask)
 }
 
 SpeechSynthesisRequestChild::~SpeechSynthesisRequestChild() {
-  if (mTask) {
-    mTask->mActor = nullptr;
-  }
   MOZ_COUNT_DTOR(SpeechSynthesisRequestChild);
 }
 
@@ -151,27 +148,23 @@ SpeechTaskChild::Setup(nsISpeechTaskCallback* aCallback) {
 }
 
 void SpeechTaskChild::Pause() {
-  if (mActor) {
-    mActor->SendPause();
-  }
+  MOZ_ASSERT(mActor);
+  mActor->SendPause();
 }
 
 void SpeechTaskChild::Resume() {
-  if (mActor) {
-    mActor->SendResume();
-  }
+  MOZ_ASSERT(mActor);
+  mActor->SendResume();
 }
 
 void SpeechTaskChild::Cancel() {
-  if (mActor) {
-    mActor->SendCancel();
-  }
+  MOZ_ASSERT(mActor);
+  mActor->SendCancel();
 }
 
 void SpeechTaskChild::ForceEnd() {
-  if (mActor) {
-    mActor->SendForceEnd();
-  }
+  MOZ_ASSERT(mActor);
+  mActor->SendForceEnd();
 }
 
 void SpeechTaskChild::SetAudioOutputVolume(float aVolume) {

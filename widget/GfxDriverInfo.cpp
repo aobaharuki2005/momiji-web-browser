@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -698,7 +699,7 @@ const nsAString& GfxDriverInfo::GetWindowProtocol(WindowProtocol id) {
   case WindowProtocol::id:                      \
     sWindowProtocol[idx]->Assign(u##name##_ns); \
     break;
-#include "mozilla/widget/GfxInfoWindowProtocolDefs.inc"
+#include "mozilla/widget/GfxInfoWindowProtocolDefs.h"
 #undef GFXINFO_WINDOW_PROTOCOL
   }
 
@@ -800,7 +801,7 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id) {
   case DeviceVendor::id:                       \
     sDeviceVendors[idx]->Assign(u##name##_ns); \
     break;
-#include "mozilla/widget/GfxInfoDeviceVendorDefs.inc"
+#include "mozilla/widget/GfxInfoDeviceVendorDefs.h"
 #undef GFXINFO_DEVICE_VENDOR
   }
 
@@ -826,7 +827,7 @@ const nsAString& GfxDriverInfo::GetDriverVendor(DriverVendor id) {
   case DriverVendor::id:                       \
     sDriverVendors[idx]->Assign(u##name##_ns); \
     break;
-#include "mozilla/widget/GfxInfoDriverVendorDefs.inc"
+#include "mozilla/widget/GfxInfoDriverVendorDefs.h"
 #undef GFXINFO_DRIVER_VENDOR
   }
 

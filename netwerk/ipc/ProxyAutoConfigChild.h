@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ProxyAutoConfigChild_h_
-#define ProxyAutoConfigChild_h_
+#ifndef ProxyAutoConfigChild_h__
+#define ProxyAutoConfigChild_h__
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/net/PProxyAutoConfigChild.h"
@@ -80,4 +81,4 @@ class ProxyAutoConfigChild final : public PProxyAutoConfigChild {
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // ProxyAutoConfigChild_h_
+#endif  // ProxyAutoConfigChild_h__

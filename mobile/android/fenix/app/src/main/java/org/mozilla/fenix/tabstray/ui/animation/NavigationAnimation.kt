@@ -10,11 +10,9 @@ import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.scene.Scene
 import androidx.navigationevent.NavigationEvent
-import org.mozilla.fenix.tabstray.navigation.TabManagerNavDestination
 
 /**
  * Value representing the animation curve's spring stiffness.
@@ -30,21 +28,22 @@ private val EnteringTransitionDirection = AnimatedContentTransitionScope.SlideDi
 
 private val LeavingTransitionDirection = AnimatedContentTransitionScope.SlideDirection.End
 
-private typealias TabManagerScene = Scene<TabManagerNavDestination>
-
 /**
  * Animation spec for transitioning from the Tab Manager's root screen to other tab screens,
  * such as Tab Search.
  *
  * This performs a right-to-left transition when navigating to a new screen.
  */
-internal fun defaultTransitionSpec(): AnimatedContentTransitionScope<TabManagerScene>.() -> ContentTransform = {
-    slideIntoContainer(
-        towards = EnteringTransitionDirection,
-        animationSpec = SpringAnimationSpec,
-    ) togetherWith slideOutOfContainer(
-        towards = EnteringTransitionDirection,
-        animationSpec = SpringAnimationSpec,
+internal fun <T : Any> defaultTransitionSpec(): AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
+    ContentTransform(
+        targetContentEnter = slideIntoContainer(
+            towards = EnteringTransitionDirection,
+            animationSpec = SpringAnimationSpec,
+        ),
+        initialContentExit = slideOutOfContainer(
+            towards = EnteringTransitionDirection,
+            animationSpec = SpringAnimationSpec,
+        ),
     )
 }
 
@@ -54,13 +53,16 @@ internal fun defaultTransitionSpec(): AnimatedContentTransitionScope<TabManagerS
  *
  * This performs a left-to-right transition when leaving a screen.
  */
-internal fun popTransitionSpec(): AnimatedContentTransitionScope<TabManagerScene>.() -> ContentTransform = {
-    slideIntoContainer(
-        towards = LeavingTransitionDirection,
-        animationSpec = SpringAnimationSpec,
-    ) togetherWith slideOutOfContainer(
-        towards = LeavingTransitionDirection,
-        animationSpec = SpringAnimationSpec,
+internal fun <T : Any> popTransitionSpec(): AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
+    ContentTransform(
+        targetContentEnter = slideIntoContainer(
+            towards = LeavingTransitionDirection,
+            animationSpec = SpringAnimationSpec,
+        ),
+        initialContentExit = slideOutOfContainer(
+            towards = LeavingTransitionDirection,
+            animationSpec = SpringAnimationSpec,
+        ),
     )
 }
 
@@ -68,11 +70,15 @@ internal fun popTransitionSpec(): AnimatedContentTransitionScope<TabManagerScene
  * Animation spec for transitioning from a screen, such as Tab Search, back to the Tab Manager's
  * root screen via the navigate back gesture.
  *
- * This scales out  the current screen, so the previous screen becomes visible as the user
+ * This scales out the the current screen, so the previous screen becomes visible as the user
  * performs the navigation gesture.
  */
-internal fun defaultPredictivePopTransitionSpec(): AnimatedContentTransitionScope<TabManagerScene>.(
+internal fun <T : Any> defaultPredictivePopTransitionSpec(): AnimatedContentTransitionScope<Scene<T>>.(
     @NavigationEvent.SwipeEdge Int,
-) -> ContentTransform = {
-    fadeIn(initialAlpha = 1f) togetherWith scaleOut(targetScale = 0.7f)
-}
+) -> ContentTransform =
+    {
+        ContentTransform(
+            targetContentEnter = fadeIn(initialAlpha = 1f),
+            initialContentExit = scaleOut(targetScale = 0.7f),
+        )
+    }

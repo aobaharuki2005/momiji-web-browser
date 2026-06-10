@@ -55,6 +55,13 @@ interface SuggestionsStringsProvider {
     fun forSearchEngineSuggestionDescription(): String
 
     /**
+     * Returns the title for the search shortcuts settings.
+     *
+     * @return The localized title string.
+     */
+    fun searchShortcutsSettingsTitle(): String
+
+    /**
      * Returns a localized string that can be used as a title for suggestions from a specific search engine provider.
      * The string will be formatted with the provided [searchEngineName].
      *
@@ -88,11 +95,6 @@ interface SuggestionsStringsProvider {
      * "Firefox Suggest" header.
      */
     val firefoxSuggestHeader: String
-
-    /**
-     * Firefox Suggest Online header
-     */
-    val firefoxSuggestOnlineHeader: String
 }
 
 /**
@@ -182,13 +184,14 @@ class DefaultSuggestionsStringsProvider(
         context.getString(R.string.firefox_suggest_header)
 
     /**
-     * Returns the static string for the "Firefox Suggest Online" header.
+     * Returns the title for the search shortcuts engine settings.
+     * This title is displayed in the UI, typically for a settings section related to search engine shortcuts.
      *
-     * This header is used in the awesomebar to indicate and group suggestions
-     * that are powered by Firefox Suggest Online.
+     * @return The localized title string.
      */
-    override val firefoxSuggestOnlineHeader =
-        context.getString(R.string.firefox_suggest_online_header)
+    override fun searchShortcutsSettingsTitle(): String {
+        return context.getString(R.string.search_shortcuts_engine_settings)
+    }
 
     override fun searchEngineSuggestionProviderTitle(searchEngineName: String): String {
         return context.getString(R.string.search_engine_suggestions_title, searchEngineName)

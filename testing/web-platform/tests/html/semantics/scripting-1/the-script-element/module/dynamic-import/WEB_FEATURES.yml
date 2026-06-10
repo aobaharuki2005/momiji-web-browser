@@ -2,7 +2,3 @@ features:
 - name: base
   files:
   - string-compilation-base-url-*
-- name: js-modules
-  files:
-  - "*"
-  - "!string-compilation-base-url-*"

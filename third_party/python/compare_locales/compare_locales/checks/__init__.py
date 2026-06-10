@@ -8,6 +8,7 @@ from .dtd import DTDChecker
 from .fluent import FluentChecker
 from .properties import PropertiesChecker
 
+
 __all__ = [
     "Checker",
     "EntityPos",

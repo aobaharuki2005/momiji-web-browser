@@ -11,7 +11,6 @@ import androidx.lifecycle.LifecycleRegistry
 import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,16 +20,14 @@ import org.robolectric.RobolectricTestRunner
 class OnSharedPreferenceChangeListenerTest {
 
     private lateinit var sharedPrefs: SharedPreferences
-    private val listenerCalls = mutableListOf<Pair<SharedPreferences, String?>>()
-    private val listener: (SharedPreferences, String?) -> Unit = { prefs, key ->
-        listenerCalls.add(prefs to key)
-    }
+    private lateinit var listener: (SharedPreferences, String?) -> Unit
     private lateinit var owner: LifecycleOwner
     private lateinit var lifecycleRegistry: LifecycleRegistry
 
     @Before
     fun setup() {
         sharedPrefs = mockk(relaxUnitFun = true)
+        listener = mockk(relaxed = true)
         owner = object : LifecycleOwner {
             override val lifecycle: Lifecycle
                 get() = lifecycleRegistry
@@ -55,6 +52,6 @@ class OnSharedPreferenceChangeListenerTest {
         val wrapper = OnSharedPreferenceChangeListener(mockk(), listener)
         wrapper.onSharedPreferenceChanged(sharedPrefs, "key")
 
-        assertEquals(listOf(sharedPrefs to "key"), listenerCalls)
+        verify { listener(sharedPrefs, "key") }
     }
 }

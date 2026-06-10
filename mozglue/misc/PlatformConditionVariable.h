@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,10 +9,7 @@
 
 #include "mozilla/PlatformMutex.h"
 #include "mozilla/TimeStamp.h"
-
-#if defined(XP_WIN)
-#  include "mozilla/Futex.h"
-#elif !defined(__wasi__)
+#if !defined(XP_WIN) && !defined(__wasi__)
 #  include <pthread.h>
 #endif
 
@@ -22,6 +21,8 @@ namespace detail {
 
 class ConditionVariableImpl {
  public:
+  struct PlatformData;
+
   MFBT_API ConditionVariableImpl();
   MFBT_API ~ConditionVariableImpl();
 
@@ -46,10 +47,15 @@ class ConditionVariableImpl {
   ConditionVariableImpl(const ConditionVariableImpl&) = delete;
   ConditionVariableImpl& operator=(const ConditionVariableImpl&) = delete;
 
-#if defined(XP_WIN)
-  Futex mFutex;
-#elif !defined(__wasi__)
-  pthread_cond_t mCond;
+  PlatformData* platformData();
+
+#if !defined(XP_WIN) && !defined(__wasi__)
+  void* platformData_[sizeof(pthread_cond_t) / sizeof(void*)];
+  static_assert(sizeof(pthread_cond_t) / sizeof(void*) != 0 &&
+                    sizeof(pthread_cond_t) % sizeof(void*) == 0,
+                "pthread_cond_t must have pointer alignment");
+#else
+  void* platformData_[4];
 #endif
 };
 

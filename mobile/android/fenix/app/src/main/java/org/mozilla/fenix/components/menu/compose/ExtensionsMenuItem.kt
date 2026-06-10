@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -182,8 +183,8 @@ private fun NumberedChevronBadge(
     Row(
         modifier = Modifier
             .background(
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                shape = RoundedCornerShape(16.dp),
             )
             .padding(
                 start = if (count > 0) 8.dp else 2.dp,
@@ -247,7 +248,7 @@ internal fun WebExtensionMenuItems(
                 iconPainter = extension.icon?.let { icon ->
                     BitmapPainter(image = icon.asImageBitmap())
                 }
-                    ?: painterResource(iconsR.drawable.mozac_ic_extension_fill_24),
+                    ?: painterResource(iconsR.drawable.mozac_ic_web_extension_default_icon),
                 iconTint = when (extension.icon) {
                     null -> MaterialTheme.colorScheme.onSurface
                     else -> Color.Unspecified

@@ -1,17 +1,16 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsXULContentSink_h_
-#define nsXULContentSink_h_
+#ifndef nsXULContentSink_h__
+#define nsXULContentSink_h__
 
-#include "mozilla/Span.h"
 #include "mozilla/WeakPtr.h"
 #include "nsIExpatSink.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIXMLContentSink.h"
 #include "nsNodeInfoManager.h"
-#include "nsTArray.h"
 #include "nsXULElement.h"
 
 class nsIScriptSecurityManager;
@@ -52,7 +51,9 @@ class XULContentSinkImpl final : public nsIXMLContentSink, public nsIExpatSink {
   virtual ~XULContentSinkImpl();
 
   // pseudo-constants
-  nsTArray<char16_t> mText;
+  char16_t* mText;
+  int32_t mTextLength;
+  int32_t mTextSize;
   bool mConstrainSize;
 
   nsresult AddAttributes(const char16_t** aAttributes, const uint32_t aAttrLen,
@@ -73,11 +74,11 @@ class XULContentSinkImpl final : public nsIXMLContentSink, public nsIExpatSink {
   // element.
   nsresult OpenScript(const char16_t** aAttributes, const uint32_t aLineNumber);
 
-  bool IsDataInBuffer() const;
+  static bool IsDataInBuffer(char16_t* aBuffer, int32_t aLength);
 
   // Text management
   nsresult FlushText(bool aCreateTextNode = true);
-  nsresult AddText(mozilla::Span<const char16_t> aNewText);
+  nsresult AddText(const char16_t* aText, int32_t aLength);
 
   RefPtr<nsNodeInfoManager> mNodeInfoManager;
 
@@ -138,4 +139,4 @@ class XULContentSinkImpl final : public nsIXMLContentSink, public nsIExpatSink {
   nsCOMPtr<nsIScriptSecurityManager> mSecMan;
 };
 
-#endif /* nsXULContentSink_h_ */
+#endif /* nsXULContentSink_h__ */

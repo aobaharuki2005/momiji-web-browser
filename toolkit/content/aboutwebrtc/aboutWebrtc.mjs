@@ -321,7 +321,8 @@ class ShowTab extends Control {
   }
 
   onClick() {
-    const globalBrowser = window.browsingContext.topChromeWindow.gBrowser;
+    const globalBrowser =
+      window.ownerGlobal.browsingContext.topChromeWindow.gBrowser;
     for (const tab of globalBrowser.visibleTabs) {
       if (tab.linkedBrowser && tab.linkedBrowser.browserId == this.browserId) {
         globalBrowser.selectedTab = tab;

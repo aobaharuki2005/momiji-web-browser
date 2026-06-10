@@ -9,34 +9,19 @@ add_task(async function test() {
   const now = new Date();
   const host = "mozilla.org";
   const url = `https://${host}/test/`;
-
-  // Wait for the initial kickoff to complete, then pause recalculation to
-  // avoid races between background tasks and assertions.
-  let initSubject = {};
-  PlacesFrecencyRecalculator.observe(
-    initSubject,
-    "test-alternative-frecency-init",
-    ""
-  );
-  await initSubject.promise;
-  PlacesFrecencyRecalculator.observe(
-    null,
-    "test-pause-frecency-recalculation",
-    ""
-  );
-
   await PlacesTestUtils.addVisits([
     {
       url,
       visitDate: now,
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
     {
       url,
       visitDate: new Date(new Date().setDate(now.getDate() - 30)),
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
+  // Temporarily unset recalculation, otherwise the task may flip the recalc
+  // fields before we check them.
+  PlacesUtils.history.shouldStartFrecencyRecalculation = false;
   Assert.equal(
     await PlacesTestUtils.getDatabaseValue("moz_origins", "recalc_frecency", {
       host,
@@ -56,11 +41,6 @@ add_task(async function test() {
     "Alt frecency should be calculated"
   );
 
-  PlacesFrecencyRecalculator.observe(
-    null,
-    "test-resume-frecency-recalculation",
-    ""
-  );
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   let alt_frecency = await PlacesTestUtils.getDatabaseValue(
     "moz_origins",
@@ -112,19 +92,12 @@ add_task(async function test() {
 
   info("Add another page to the same host.");
   const url2 = `https://${host}/second/`;
-
-  PlacesFrecencyRecalculator.observe(
-    null,
-    "test-pause-frecency-recalculation",
-    ""
-  );
-
-  await PlacesTestUtils.addVisits({
-    url: url2,
-    transition: PlacesUtils.history.TRANSITION_TYPED,
-  });
+  await PlacesTestUtils.addVisits(url2);
   info("Remove the first page.");
   await PlacesUtils.history.remove(url);
+  // Temporarily unset recalculation, otherwise the task may flip the recalc
+  // fields before we check them.
+  PlacesUtils.history.shouldStartFrecencyRecalculation = false;
   Assert.equal(
     await PlacesTestUtils.getDatabaseValue("moz_origins", "recalc_frecency", {
       host,
@@ -140,12 +113,6 @@ add_task(async function test() {
     ),
     1,
     "Alt frecency should be calculated"
-  );
-
-  PlacesFrecencyRecalculator.observe(
-    null,
-    "test-resume-frecency-recalculation",
-    ""
   );
 });
 
@@ -181,9 +148,8 @@ add_task(async function test_frecency_decay() {
     {
       url,
       visitDate: new Date(new Date().setDate(now.getDate() - 100)),
-      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
-    { url, visitDate: now, transition: PlacesUtils.history.TRANSITION_TYPED },
+    { url, visitDate: now },
   ]);
   info("Recalculate frecencies.");
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();

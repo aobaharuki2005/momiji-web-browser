@@ -12,13 +12,15 @@ async function createTab() {
 }
 
 function getTelemetryMaxPipCount(resetMax = false) {
-  const max = Glean.pictureinpicture.mostConcurrentPlayers.testGetValue();
+  const scalarData = Services.telemetry.getSnapshotForScalars(
+    "main",
+    resetMax
+  ).parent;
   if (resetMax) {
     PictureInPicture.maxConcurrentPlayerCount =
       PictureInPicture.currentPlayerCount;
-    Services.fog.testResetFOG();
   }
-  return max;
+  return scalarData["pictureinpicture.most_concurrent_players"];
 }
 
 /**

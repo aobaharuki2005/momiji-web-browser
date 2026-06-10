@@ -19,7 +19,7 @@ namespace webrtc {
 class FakeVideoStreamInputStateProvider : public VideoStreamInputStateProvider {
  public:
   FakeVideoStreamInputStateProvider();
-  ~FakeVideoStreamInputStateProvider() override;
+  virtual ~FakeVideoStreamInputStateProvider();
 
   void SetInputState(int input_pixels, int input_fps, int min_pixels_per_frame);
   VideoStreamInputState InputState() override;

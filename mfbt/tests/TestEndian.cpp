@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +7,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
 
-#include <bit>
 #include <stddef.h>
 
 using mozilla::BigEndian;
@@ -14,39 +15,35 @@ using mozilla::NativeEndian;
 
 template <typename T>
 void TestSingleSwap(T aValue, T aSwappedValue) {
-  if constexpr (std::endian::native == std::endian::little) {
-    MOZ_RELEASE_ASSERT(NativeEndian::swapToBigEndian(aValue) == aSwappedValue);
-    MOZ_RELEASE_ASSERT(NativeEndian::swapFromBigEndian(aValue) ==
-                       aSwappedValue);
-    MOZ_RELEASE_ASSERT(NativeEndian::swapToNetworkOrder(aValue) ==
-                       aSwappedValue);
-    MOZ_RELEASE_ASSERT(NativeEndian::swapFromNetworkOrder(aValue) ==
-                       aSwappedValue);
-  } else {
-    MOZ_RELEASE_ASSERT(NativeEndian::swapToLittleEndian(aValue) ==
-                       aSwappedValue);
-    MOZ_RELEASE_ASSERT(NativeEndian::swapFromLittleEndian(aValue) ==
-                       aSwappedValue);
-  }
+#if MOZ_LITTLE_ENDIAN()
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToBigEndian(aValue) == aSwappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromBigEndian(aValue) == aSwappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToNetworkOrder(aValue) == aSwappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromNetworkOrder(aValue) ==
+                     aSwappedValue);
+#else
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToLittleEndian(aValue) == aSwappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromLittleEndian(aValue) ==
+                     aSwappedValue);
+#endif
 }
 
 template <typename T>
 void TestSingleNoSwap(T aValue, T aUnswappedValue) {
-  if constexpr (std::endian::native == std::endian::little) {
-    MOZ_RELEASE_ASSERT(NativeEndian::swapToLittleEndian(aValue) ==
-                       aUnswappedValue);
-    MOZ_RELEASE_ASSERT(NativeEndian::swapFromLittleEndian(aValue) ==
-                       aUnswappedValue);
-  } else {
-    MOZ_RELEASE_ASSERT(NativeEndian::swapToBigEndian(aValue) ==
-                       aUnswappedValue);
-    MOZ_RELEASE_ASSERT(NativeEndian::swapFromBigEndian(aValue) ==
-                       aUnswappedValue);
-    MOZ_RELEASE_ASSERT(NativeEndian::swapToNetworkOrder(aValue) ==
-                       aUnswappedValue);
-    MOZ_RELEASE_ASSERT(NativeEndian::swapFromNetworkOrder(aValue) ==
-                       aUnswappedValue);
-  }
+#if MOZ_LITTLE_ENDIAN()
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToLittleEndian(aValue) ==
+                     aUnswappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromLittleEndian(aValue) ==
+                     aUnswappedValue);
+#else
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToBigEndian(aValue) == aUnswappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromBigEndian(aValue) ==
+                     aUnswappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToNetworkOrder(aValue) ==
+                     aUnswappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromNetworkOrder(aValue) ==
+                     aUnswappedValue);
+#endif
 }
 
 // EndianUtils.h functions are declared as protected in a base class and
@@ -221,78 +218,77 @@ SPECIALIZE_READER(int64_t, readInt64)
 
 template <typename T, size_t Count>
 void TestBulkSwap(const T (&aBytes)[Count]) {
-  if constexpr (std::endian::native == std::endian::little) {
-    TestBulkSwapToSub(Swap, aBytes, copyAndSwapToBigEndian<T>,
+#if MOZ_LITTLE_ENDIAN()
+  TestBulkSwapToSub(Swap, aBytes, copyAndSwapToBigEndian<T>, Reader<T>::readBE);
+  TestBulkSwapFromSub(Swap, aBytes, copyAndSwapFromBigEndian<T>,
                       Reader<T>::readBE);
-    TestBulkSwapFromSub(Swap, aBytes, copyAndSwapFromBigEndian<T>,
-                        Reader<T>::readBE);
-    TestBulkSwapToSub(Swap, aBytes, copyAndSwapToNetworkOrder<T>,
+  TestBulkSwapToSub(Swap, aBytes, copyAndSwapToNetworkOrder<T>,
+                    Reader<T>::readBE);
+  TestBulkSwapFromSub(Swap, aBytes, copyAndSwapFromNetworkOrder<T>,
                       Reader<T>::readBE);
-    TestBulkSwapFromSub(Swap, aBytes, copyAndSwapFromNetworkOrder<T>,
-                        Reader<T>::readBE);
-  } else {
-    TestBulkSwapToSub(Swap, aBytes, copyAndSwapToLittleEndian<T>,
+#else
+  TestBulkSwapToSub(Swap, aBytes, copyAndSwapToLittleEndian<T>,
+                    Reader<T>::readLE);
+  TestBulkSwapFromSub(Swap, aBytes, copyAndSwapFromLittleEndian<T>,
                       Reader<T>::readLE);
-    TestBulkSwapFromSub(Swap, aBytes, copyAndSwapFromLittleEndian<T>,
-                        Reader<T>::readLE);
-  }
+#endif
 }
 
 template <typename T, size_t Count>
 void TestBulkNoSwap(const T (&aBytes)[Count]) {
-  if constexpr (std::endian::native == std::endian::little) {
-    TestBulkSwapToSub(NoSwap, aBytes, copyAndSwapToLittleEndian<T>,
+#if MOZ_LITTLE_ENDIAN()
+  TestBulkSwapToSub(NoSwap, aBytes, copyAndSwapToLittleEndian<T>,
+                    Reader<T>::readLE);
+  TestBulkSwapFromSub(NoSwap, aBytes, copyAndSwapFromLittleEndian<T>,
                       Reader<T>::readLE);
-    TestBulkSwapFromSub(NoSwap, aBytes, copyAndSwapFromLittleEndian<T>,
-                        Reader<T>::readLE);
-  } else {
-    TestBulkSwapToSub(NoSwap, aBytes, copyAndSwapToBigEndian<T>,
+#else
+  TestBulkSwapToSub(NoSwap, aBytes, copyAndSwapToBigEndian<T>,
+                    Reader<T>::readBE);
+  TestBulkSwapFromSub(NoSwap, aBytes, copyAndSwapFromBigEndian<T>,
                       Reader<T>::readBE);
-    TestBulkSwapFromSub(NoSwap, aBytes, copyAndSwapFromBigEndian<T>,
-                        Reader<T>::readBE);
-    TestBulkSwapToSub(NoSwap, aBytes, copyAndSwapToNetworkOrder<T>,
+  TestBulkSwapToSub(NoSwap, aBytes, copyAndSwapToNetworkOrder<T>,
+                    Reader<T>::readBE);
+  TestBulkSwapFromSub(NoSwap, aBytes, copyAndSwapFromNetworkOrder<T>,
                       Reader<T>::readBE);
-    TestBulkSwapFromSub(NoSwap, aBytes, copyAndSwapFromNetworkOrder<T>,
-                        Reader<T>::readBE);
-  }
+#endif
 }
 
 template <typename T, size_t Count>
 void TestBulkInPlaceSwap(const T (&aBytes)[Count]) {
-  if constexpr (std::endian::native == std::endian::little) {
-    TestBulkInPlaceSub(Swap, aBytes, swapToBigEndianInPlace<T>,
-                       Reader<T>::readBE);
-    TestBulkInPlaceSub(Swap, aBytes, swapFromBigEndianInPlace<T>,
-                       Reader<T>::readBE);
-    TestBulkInPlaceSub(Swap, aBytes, swapToNetworkOrderInPlace<T>,
-                       Reader<T>::readBE);
-    TestBulkInPlaceSub(Swap, aBytes, swapFromNetworkOrderInPlace<T>,
-                       Reader<T>::readBE);
-  } else {
-    TestBulkInPlaceSub(Swap, aBytes, swapToLittleEndianInPlace<T>,
-                       Reader<T>::readLE);
-    TestBulkInPlaceSub(Swap, aBytes, swapFromLittleEndianInPlace<T>,
-                       Reader<T>::readLE);
-  }
+#if MOZ_LITTLE_ENDIAN()
+  TestBulkInPlaceSub(Swap, aBytes, swapToBigEndianInPlace<T>,
+                     Reader<T>::readBE);
+  TestBulkInPlaceSub(Swap, aBytes, swapFromBigEndianInPlace<T>,
+                     Reader<T>::readBE);
+  TestBulkInPlaceSub(Swap, aBytes, swapToNetworkOrderInPlace<T>,
+                     Reader<T>::readBE);
+  TestBulkInPlaceSub(Swap, aBytes, swapFromNetworkOrderInPlace<T>,
+                     Reader<T>::readBE);
+#else
+  TestBulkInPlaceSub(Swap, aBytes, swapToLittleEndianInPlace<T>,
+                     Reader<T>::readLE);
+  TestBulkInPlaceSub(Swap, aBytes, swapFromLittleEndianInPlace<T>,
+                     Reader<T>::readLE);
+#endif
 }
 
 template <typename T, size_t Count>
 void TestBulkInPlaceNoSwap(const T (&aBytes)[Count]) {
-  if constexpr (std::endian::native == std::endian::little) {
-    TestBulkInPlaceSub(NoSwap, aBytes, swapToLittleEndianInPlace<T>,
-                       Reader<T>::readLE);
-    TestBulkInPlaceSub(NoSwap, aBytes, swapFromLittleEndianInPlace<T>,
-                       Reader<T>::readLE);
-  } else {
-    TestBulkInPlaceSub(NoSwap, aBytes, swapToBigEndianInPlace<T>,
-                       Reader<T>::readBE);
-    TestBulkInPlaceSub(NoSwap, aBytes, swapFromBigEndianInPlace<T>,
-                       Reader<T>::readBE);
-    TestBulkInPlaceSub(NoSwap, aBytes, swapToNetworkOrderInPlace<T>,
-                       Reader<T>::readBE);
-    TestBulkInPlaceSub(NoSwap, aBytes, swapFromNetworkOrderInPlace<T>,
-                       Reader<T>::readBE);
-  }
+#if MOZ_LITTLE_ENDIAN()
+  TestBulkInPlaceSub(NoSwap, aBytes, swapToLittleEndianInPlace<T>,
+                     Reader<T>::readLE);
+  TestBulkInPlaceSub(NoSwap, aBytes, swapFromLittleEndianInPlace<T>,
+                     Reader<T>::readLE);
+#else
+  TestBulkInPlaceSub(NoSwap, aBytes, swapToBigEndianInPlace<T>,
+                     Reader<T>::readBE);
+  TestBulkInPlaceSub(NoSwap, aBytes, swapFromBigEndianInPlace<T>,
+                     Reader<T>::readBE);
+  TestBulkInPlaceSub(NoSwap, aBytes, swapToNetworkOrderInPlace<T>,
+                     Reader<T>::readBE);
+  TestBulkInPlaceSub(NoSwap, aBytes, swapFromNetworkOrderInPlace<T>,
+                     Reader<T>::readBE);
+#endif
 }
 
 int main() {

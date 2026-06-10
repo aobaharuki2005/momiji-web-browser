@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +8,6 @@
 
 #include "hasht.h"
 #include "mozilla/Logging.h"
-#include "nsCSPParser.h"
 #include "nsICryptoHash.h"
 
 static mozilla::LogModule* GetSriMetadataLog() {
@@ -37,34 +38,23 @@ SRIMetadata::SRIMetadata(const nsACString& aToken)
   // split the token into its components
   mAlgorithm = Substring(aToken, 0, hyphen);
   uint32_t hashStart = hyphen + 1;
-  uint32_t hashEnd = aToken.Length();
   if (hashStart >= aToken.Length()) {
     SRIMETADATAERROR(("SRIMetadata::SRIMetadata, invalid (missing digest)"));
     return;  // invalid metadata
   }
-
   int32_t question = aToken.FindChar('?');
-  if (question != -1) {
+  if (question == -1) {
+    mHashes.AppendElement(
+        Substring(aToken, hashStart, aToken.Length() - hashStart));
+  } else {
     MOZ_ASSERT(question > 0);
     if (static_cast<uint32_t>(question) <= hashStart) {
       SRIMETADATAERROR(
           ("SRIMetadata::SRIMetadata, invalid (options w/o digest)"));
       return;  // invalid metadata
     }
-    hashEnd = question;
+    mHashes.AppendElement(Substring(aToken, hashStart, question - hashStart));
   }
-
-  // The hash must be in valid base64 format as defined by the CSP spec.
-  // https://w3c.github.io/webappsec-subresource-integrity/#grammardef-hash-expression
-  // https://w3c.github.io/webappsec-csp/#grammardef-base64-value
-  if (!nsCSPParser::isValidBase64Value(NS_ConvertUTF8toUTF16(
-          Substring(aToken, hashStart, hashEnd - hashStart)))) {
-    SRIMETADATAERROR(
-        ("SRIMetadata::SRIMetadata, invalid (digest not in base64 format)"));
-    return;  // invalid metadata
-  }
-
-  mHashes.AppendElement(Substring(aToken, hashStart, hashEnd - hashStart));
 
   if (mAlgorithm.EqualsLiteral("sha256")) {
     mAlgorithmType = nsICryptoHash::SHA256;
@@ -192,20 +182,6 @@ bool SRIMetadata::CanTrustBeDelegatedTo(const SRIMetadata& aOther) const {
   }
 
   return true;
-}
-
-size_t SRIMetadata::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
-  size_t bytes = aMallocSizeOf(this);
-
-  for (const auto& hash : mHashes) {
-    bytes += hash.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  }
-
-  bytes += mIntegrityString.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-
-  bytes += mAlgorithm.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-
-  return bytes;
 }
 
 }  // namespace mozilla::dom

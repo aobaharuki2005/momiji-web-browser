@@ -4,6 +4,11 @@
 "use strict";
 
 add_task(async function test_partitioned_principal_to_inherit() {
+  if (!Services.appinfo.sessionHistoryInParent) {
+    ok(true, "sessionHistoryInParent is not enabled, skipping the test.");
+    return;
+  }
+
   // Create a new tab.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -28,6 +33,11 @@ add_task(async function test_partitioned_principal_to_inherit() {
 });
 
 add_task(async function test_partitioned_Principal_to_inherit_in_iframe() {
+  if (!Services.appinfo.sessionHistoryInParent) {
+    ok(true, "sessionHistoryInParent is not enabled, skipping the test.");
+    return;
+  }
+
   // Create a new tab.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -98,6 +108,11 @@ add_task(async function test_partitioned_Principal_to_inherit_in_iframe() {
 });
 
 add_task(async function test_partitioned_Principal_to_inherit_in_ABA_iframe() {
+  if (!Services.appinfo.sessionHistoryInParent) {
+    ok(true, "sessionHistoryInParent is not enabled, skipping the test.");
+    return;
+  }
+
   // Create a new tab.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

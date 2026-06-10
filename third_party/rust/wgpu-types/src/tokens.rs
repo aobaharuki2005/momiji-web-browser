@@ -45,14 +45,7 @@ impl ExperimentalFeatures {
 }
 
 /// Token of the user agreeing to use [`LoadOp::DontCare`](crate::LoadOp::DontCare).
-//
-// Maintenance note: This type MUST NOT implement Default, Deserialize, or anything else which
-// allows safely constructing it. This differs from `ExperimentalFeatures` because it doesn't have
-// an "enabled" flag, because its role is to prevent its container (an enum variant) from being
-// constructed at all. We could change that if necessary (e.g. perhaps for the wgpu trace/player),
-// but if we did, we would have to give `LoadOp::DontCare` a specific fallback behavior when the
-// token is disabled/invalid.
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct LoadOpDontCare {
     // Private to prevent construction outside of the unsafe
     // enabled() function.
@@ -79,7 +72,3 @@ impl LoadOpDontCare {
         Self { _private: () }
     }
 }
-
-static_assertions::assert_not_impl_any!(LoadOpDontCare: Default);
-#[cfg(feature = "serde")]
-static_assertions::assert_not_impl_any!(LoadOpDontCare: serde::Deserialize<'static>);

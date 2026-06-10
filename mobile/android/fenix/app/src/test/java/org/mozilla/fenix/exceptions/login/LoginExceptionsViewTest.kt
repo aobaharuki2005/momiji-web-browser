@@ -17,7 +17,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertIs
 
 @RunWith(RobolectricTestRunner::class)
 class LoginExceptionsViewTest {
@@ -42,8 +41,8 @@ class LoginExceptionsViewTest {
             "Firefox Fenix won’t save passwords for sites listed here.",
             view.binding.exceptionsEmptyMessage.text,
         )
-        assertIs<LoginExceptionsAdapter>(view.binding.exceptionsList.adapter)
-        assertIs<LinearLayoutManager>(view.binding.exceptionsList.layoutManager)
+        assertTrue(view.binding.exceptionsList.adapter is LoginExceptionsAdapter)
+        assertTrue(view.binding.exceptionsList.layoutManager is LinearLayoutManager)
     }
 
     @Test

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set expandtab ts=4 sw=2 sts=2 cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -491,9 +493,12 @@ PRStatus nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc* fd) {
         return PR_FAILURE;
       }
 
-      LOGDEBUG(("socks: trying proxy server, %s:%hu",
-                mInternalProxyAddr.ToString().get(),
-                ntohs(mInternalProxyAddr.inet.port)));
+      if (MOZ_LOG_TEST(gSOCKSLog, LogLevel::Debug)) {
+        char buf[kIPv6CStrBufSize];
+        mInternalProxyAddr.ToStringBuffer(buf, sizeof(buf));
+        LOGDEBUG(("socks: trying proxy server, %s:%hu", buf,
+                  ntohs(mInternalProxyAddr.inet.port)));
+      }
     }
 
     NetAddr proxy = mInternalProxyAddr;

@@ -47,17 +47,14 @@ const errors = [
   error.UnsupportedOperationError,
 ];
 
-const noErrors = [undefined, null, "foo", 42, {}, [], new Date()];
-
 function notok(condition) {
   ok(!condition);
 }
 
 add_task(function test_isError() {
-  for (const noError in noErrors) {
-    info(`Checking ${noError}`);
-    notok(error.isError(noError));
-  }
+  notok(error.isError(null));
+  notok(error.isError([]));
+  notok(error.isError(new Date()));
 
   ok(error.isError(new Components.Exception()));
   ok(error.isError(new Error()));
@@ -69,18 +66,10 @@ add_task(function test_isError() {
   ok(error.isError(new TypeError()));
   ok(error.isError(new URIError()));
 
-  for (const err of errors) {
-    info(`Checking ${err}`);
-    ok(error.isError(new err()));
-  }
+  errors.forEach(err => ok(error.isError(new err())));
 });
 
 add_task(function test_isWebDriverError() {
-  for (const noError in noErrors) {
-    info(`Checking ${noError}`);
-    notok(error.isError(noError));
-  }
-
   notok(error.isWebDriverError(new Components.Exception()));
   notok(error.isWebDriverError(new Error()));
   notok(error.isWebDriverError(new EvalError()));
@@ -90,13 +79,8 @@ add_task(function test_isWebDriverError() {
   notok(error.isWebDriverError(new SyntaxError()));
   notok(error.isWebDriverError(new TypeError()));
   notok(error.isWebDriverError(new URIError()));
-  // A DOMException whose name matches a WebDriverError class
-  notok(error.isWebDriverError(new DOMException("foo", "UnknownError")));
 
-  for (const err of errors) {
-    info(`Checking ${err}`);
-    ok(error.isError(new err()));
-  }
+  errors.forEach(err => ok(error.isWebDriverError(new err())));
 });
 
 add_task(function test_wrap() {

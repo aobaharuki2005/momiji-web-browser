@@ -251,7 +251,6 @@ support-files = [
 ["test_FrameSelection.html"]
 skip-if = [
   "os == 'android'", # bug 1341519, bug 1401090
-  "os == 'win' && wmfme", # bug 1341519 - WMFME intermittently stalls seeks with multi-resolution MSE content
 ]
 
 ["test_HaveMetadataUnbufferedSeek.html"]
@@ -285,8 +284,6 @@ run-if = [
 
 ["test_MediaSource_mp4.html"]
 
-["test_AppendMultipleInitOpusAudio.html"]
-
 ["test_MultipleInitSegments.html"]
 
 ["test_MultipleInitSegments_mp4.html"]
@@ -296,7 +293,6 @@ run-if = [
 ["test_PlayEventsAutoPlaying.html"]
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && ccov",
-  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && ccov",
 ]
 
 ["test_PlayEventsAutoPlaying2.html"]

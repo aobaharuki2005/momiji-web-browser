@@ -15,7 +15,8 @@
 #include <stdint.h>
 
 #include <optional>
-#include <span>
+
+#include "api/array_view.h"
 
 namespace webrtc {
 
@@ -44,8 +45,8 @@ class RmsLevel {
   void Reset();
 
   // Pass each chunk of audio to Analyze() to accumulate the level.
-  void Analyze(std::span<const int16_t> data);
-  void Analyze(std::span<const float> data);
+  void Analyze(ArrayView<const int16_t> data);
+  void Analyze(ArrayView<const float> data);
 
   // If all samples with the given `length` have a magnitude of zero, this is
   // a shortcut to avoid some computation.

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,8 +8,8 @@
  * nsConsoleService class declaration.
  */
 
-#ifndef _nsconsoleservice_h_
-#define _nsconsoleservice_h_
+#ifndef __nsconsoleservice_h__
+#define __nsconsoleservice_h__
 
 #include <cstdint>
 
@@ -70,13 +72,13 @@ class nsConsoleService final : public nsIConsoleService, public nsIObserver {
 
     ~MessageElement();
 
+   private:
+    nsCOMPtr<nsIConsoleMessage> mMessage;
+
     MessageElement(const MessageElement&) = delete;
     MessageElement& operator=(const MessageElement&) = delete;
     MessageElement(MessageElement&&) = delete;
     MessageElement& operator=(MessageElement&&) = delete;
-
-   private:
-    nsCOMPtr<nsIConsoleMessage> mMessage;
   };
 
   ~nsConsoleService();
@@ -107,4 +109,4 @@ class nsConsoleService final : public nsIConsoleService, public nsIObserver {
   mozilla::Mutex mLock;
 };
 
-#endif /* _nsconsoleservice_h_ */
+#endif /* __nsconsoleservice_h__ */

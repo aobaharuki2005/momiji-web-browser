@@ -54,7 +54,8 @@ class SendRunnable : public MIDIBackgroundRunnable {
 StaticMutex midirMIDIPlatformService::gOwnerThreadMutex;
 
 // static
-constinit nsCOMPtr<nsISerialEventTarget> midirMIDIPlatformService::gOwnerThread;
+MOZ_RUNINIT nsCOMPtr<nsISerialEventTarget>
+    midirMIDIPlatformService::gOwnerThread;
 
 midirMIDIPlatformService::midirMIDIPlatformService()
     : mImplementation(nullptr) {
@@ -75,7 +76,7 @@ midirMIDIPlatformService::~midirMIDIPlatformService() {
 void midirMIDIPlatformService::AddPort(const nsString* aId,
                                        const nsString* aName, bool aInput) {
   MIDIPortType type = aInput ? MIDIPortType::Input : MIDIPortType::Output;
-  MIDIPortInfo port(*aId, *aName, u""_ns, u""_ns, type);
+  MIDIPortInfo port(*aId, *aName, u""_ns, u""_ns, static_cast<uint32_t>(type));
   MIDIPlatformService::Get()->AddPortInfo(port);
 }
 
@@ -83,7 +84,7 @@ void midirMIDIPlatformService::AddPort(const nsString* aId,
 void midirMIDIPlatformService::RemovePort(const nsString* aId,
                                           const nsString* aName, bool aInput) {
   MIDIPortType type = aInput ? MIDIPortType::Input : MIDIPortType::Output;
-  MIDIPortInfo port(*aId, *aName, u""_ns, u""_ns, type);
+  MIDIPortInfo port(*aId, *aName, u""_ns, u""_ns, static_cast<uint32_t>(type));
   MIDIPlatformService::Get()->RemovePortInfo(port);
 }
 

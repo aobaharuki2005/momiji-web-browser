@@ -27,7 +27,7 @@ class GlxRenderer : public GlRenderer {
   static GlxRenderer* Create(const char* window_title,
                              size_t width,
                              size_t height);
-  ~GlxRenderer() override;
+  virtual ~GlxRenderer();
 
   void OnFrame(const webrtc::VideoFrame& frame) override;
 

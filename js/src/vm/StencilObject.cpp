@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -23,7 +25,16 @@
 using namespace js;
 
 /*static */ const JSClassOps StencilObject::classOps_ = {
-    .finalize = StencilObject::finalize,
+    nullptr,                  // addProperty
+    nullptr,                  // delProperty
+    nullptr,                  // enumerate
+    nullptr,                  // newEnumerate
+    nullptr,                  // resolve
+    nullptr,                  // mayResolve
+    StencilObject::finalize,  // finalize
+    nullptr,                  // call
+    nullptr,                  // construct
+    nullptr,                  // trace
 };
 
 /*static */ const JSClass StencilObject::class_ = {
@@ -63,7 +74,16 @@ JS::Stencil* StencilObject::stencil() const {
 }
 
 /*static */ const JSClassOps StencilXDRBufferObject::classOps_ = {
-    .finalize = StencilXDRBufferObject::finalize,
+    nullptr,                           // addProperty
+    nullptr,                           // delProperty
+    nullptr,                           // enumerate
+    nullptr,                           // newEnumerate
+    nullptr,                           // resolve
+    nullptr,                           // mayResolve
+    StencilXDRBufferObject::finalize,  // finalize
+    nullptr,                           // call
+    nullptr,                           // construct
+    nullptr,                           // trace
 };
 
 /*static */ const JSClass StencilXDRBufferObject::class_ = {

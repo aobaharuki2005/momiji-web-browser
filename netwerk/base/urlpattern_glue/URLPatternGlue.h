@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef URLPatternGlue_h_
-#define URLPatternGlue_h_
+#ifndef URLPatternGlue_h__
+#define URLPatternGlue_h__
 
 #include "mozilla/net/urlpattern_glue.h"
 #include "nsTHashMap.h"
@@ -14,26 +14,26 @@ extern mozilla::LazyLogModule gUrlPatternLog;
 
 namespace mozilla::net {
 
-UrlPatternInput CreateUrlPatternInput(const nsACString& url);
-UrlPatternInput CreateUrlPatternInput(const UrlPatternInit& init);
+UrlpInput CreateUrlpInput(const nsACString& url);
+UrlpInput CreateUrlpInput(const UrlpInit& init);
 
 MaybeString CreateMaybeString(const nsACString& str, bool valid);
 MaybeString CreateMaybeStringNone();
 
-class UrlPatternComponentResult {
+class UrlpComponentResult {
  public:
-  UrlPatternComponentResult() = default;
-  UrlPatternComponentResult(const UrlPatternComponentResult& aOther)
+  UrlpComponentResult() = default;
+  UrlpComponentResult(const UrlpComponentResult& aOther)
       : mInput(aOther.mInput) {
     for (auto iter = aOther.mGroups.ConstIter(); !iter.Done(); iter.Next()) {
       mGroups.InsertOrUpdate(iter.Key(), iter.Data());
     }
   }
-  UrlPatternComponentResult(
-      UrlPatternComponentResult&& aOther) noexcept  // move constructor
+  UrlpComponentResult(
+      UrlpComponentResult&& aOther) noexcept  // move constructor
       : mInput(std::move(aOther.mInput)), mGroups(std::move(aOther.mGroups)) {}
-  UrlPatternComponentResult& operator=(
-      UrlPatternComponentResult&& aOther) noexcept {  // move assignment
+  UrlpComponentResult& operator=(
+      UrlpComponentResult&& aOther) noexcept {  // move assignment
     if (this != &aOther) {
       mInput = std::move(aOther.mInput);
       mGroups = std::move(aOther.mGroups);
@@ -45,38 +45,37 @@ class UrlPatternComponentResult {
   nsTHashMap<nsCStringHashKey, MaybeString> mGroups;
 };
 
-class UrlPatternResult {
+class UrlpResult {
  public:
-  UrlPatternResult() = default;
-  Maybe<UrlPatternComponentResult> mProtocol;
-  Maybe<UrlPatternComponentResult> mUsername;
-  Maybe<UrlPatternComponentResult> mPassword;
-  Maybe<UrlPatternComponentResult> mHostname;
-  Maybe<UrlPatternComponentResult> mPort;
-  Maybe<UrlPatternComponentResult> mPathname;
-  Maybe<UrlPatternComponentResult> mSearch;
-  Maybe<UrlPatternComponentResult> mHash;
-  CopyableTArray<UrlPatternInput> mInputs;
+  UrlpResult() = default;
+  Maybe<UrlpComponentResult> mProtocol;
+  Maybe<UrlpComponentResult> mUsername;
+  Maybe<UrlpComponentResult> mPassword;
+  Maybe<UrlpComponentResult> mHostname;
+  Maybe<UrlpComponentResult> mPort;
+  Maybe<UrlpComponentResult> mPathname;
+  Maybe<UrlpComponentResult> mSearch;
+  Maybe<UrlpComponentResult> mHash;
+  CopyableTArray<UrlpInput> mInputs;
 };
 
-Maybe<UrlPatternResult> UrlPatternExec(UrlPatternGlue aPattern,
-                                       const UrlPatternInput& aInput,
-                                       Maybe<nsAutoCString> aMaybeBaseUrl,
-                                       bool aIgnoreCase = false);
+Maybe<UrlpResult> UrlpPatternExec(UrlpPattern aPattern, const UrlpInput& aInput,
+                                  Maybe<nsAutoCString> aMaybeBaseUrl,
+                                  bool aIgnoreCase = false);
 
-bool UrlPatternTest(UrlPatternGlue aPattern, const UrlPatternInput& aInput,
-                    Maybe<nsAutoCString> aMaybeBaseUrl,
-                    bool aIgnoreCase = false);
+bool UrlpPatternTest(UrlpPattern aPattern, const UrlpInput& aInput,
+                     Maybe<nsAutoCString> aMaybeBaseUrl,
+                     bool aIgnoreCase = false);
 
-nsAutoCString UrlPatternGetProtocol(const UrlPatternGlue aPattern);
-nsAutoCString UrlPatternGetUsername(const UrlPatternGlue aPattern);
-nsAutoCString UrlPatternGetPassword(const UrlPatternGlue aPattern);
-nsAutoCString UrlPatternGetHostname(const UrlPatternGlue aPattern);
-nsAutoCString UrlPatternGetPort(const UrlPatternGlue aPattern);
-nsAutoCString UrlPatternGetPathname(const UrlPatternGlue aPattern);
-nsAutoCString UrlPatternGetSearch(const UrlPatternGlue aPattern);
-nsAutoCString UrlPatternGetHash(const UrlPatternGlue aPattern);
+nsAutoCString UrlpGetProtocol(const UrlpPattern aPatternWrapper);
+nsAutoCString UrlpGetUsername(const UrlpPattern aPatternWrapper);
+nsAutoCString UrlpGetPassword(const UrlpPattern aPatternWrapper);
+nsAutoCString UrlpGetHostname(const UrlpPattern aPatternWrapper);
+nsAutoCString UrlpGetPort(const UrlpPattern aPatternWrapper);
+nsAutoCString UrlpGetPathname(const UrlpPattern aPatternWrapper);
+nsAutoCString UrlpGetSearch(const UrlpPattern aPatternWrapper);
+nsAutoCString UrlpGetHash(const UrlpPattern aPatternWrapper);
 
 }  // namespace mozilla::net
 
-#endif  // URLPatternGlue_h_
+#endif  // URLPatternGlue_h__

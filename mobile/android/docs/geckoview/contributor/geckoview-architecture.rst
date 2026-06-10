@@ -1,8 +1,8 @@
-.. _geckoview-architecture-overview:
+.. -*- Mode: rst; fill-column: 80; -*-
 
-========================
-GeckoView Architecture
-========================
+=====================
+Architecture overview
+=====================
 
 .. contents:: Table of Contents
    :depth: 2
@@ -27,8 +27,6 @@ apps. Android apps that embed Gecko this way are usually referred to by
 GeckoView powers all currently active Mozilla browsers on Android, like Firefox
 for Android and Firefox Focus.
 
-.. _geckoview-api:
-
 API
 ===
 
@@ -49,8 +47,6 @@ browser (e.g. there is no concept of "tab" in GeckoView).
 The GeckoView API tries to retain as little data as possible, delegating most
 data storage to apps. Notable exceptions to this rule are: permissions,
 extensions and cookies.
-
-.. _view-runtime-and-session:
 
 View, Runtime and Session
 -------------------------
@@ -73,8 +69,6 @@ There are three main classes in the GeckoView API:
   ``GeckoSession`` in the app. Normally, only ``GeckoSession`` s associated to
   a ``GeckoView`` are actually *alive*, i.e. can receive events, fire timers,
   etc.
-
-.. _delegates:
 
 Delegates
 ---------
@@ -136,8 +130,8 @@ the associated ``SurfaceView`` or ``TextureView``. This triggers a few actions
 on the Gecko side:
 
 - The GL Surface is released, and Gecko is notified in
-  :searchfox:`SyncPauseCompositor <mozilla-central/rev/ead7da2d9c5400bc7034ff3f06a030531bd7e5b9:widget/android/nsWindow.cpp#1114>`.
-- The ``<browser>`` associated to the ``GeckoSession`` is :searchfox:`set to inactive <mozilla-central/rev/ead7da2d9c5400bc7034ff3f06a030531bd7e5b9:mobile/android/geckoview/src/main/java/org/mozilla/geckoview/GeckoView.java#553>`,
+  `SyncPauseCompositor <https://searchfox.org/mozilla-central/rev/ead7da2d9c5400bc7034ff3f06a030531bd7e5b9/widget/android/nsWindow.cpp#1114>`_.
+- The ``<browser>`` associated to the ``GeckoSession`` is `set to inactive <https://searchfox.org/mozilla-central/rev/ead7da2d9c5400bc7034ff3f06a030531bd7e5b9/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/GeckoView.java#553>`_,
   which essentially freezes the JavaScript engine.
 
 Apps that do not use ``GeckoView``, because e.g. they cannot use
@@ -253,7 +247,8 @@ default, read Android's CA store to determine root certificates.
 However, GeckoView provides a way to import all third-party CA roots added to
 the Android CA store by setting the `enterpriseRootsEnabled
 <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntimeSettings.Builder.html#enterpriseRootsEnabled(boolean)>`_
-runtime setting to ``true``, this feature is implemented in :searchfox:`EnterpriseRoots <mozilla-central/rev/26a6a38fb515dbab0bb459c40ec4b877477eefef:mobile/android/geckoview/src/main/java/org/mozilla/gecko/EnterpriseRoots.java>`
+runtime setting to ``true``, this feature is implemented in `EnterpriseRoots
+<https://searchfox.org/mozilla-central/rev/26a6a38fb515dbab0bb459c40ec4b877477eefef/mobile/android/geckoview/src/main/java/org/mozilla/gecko/EnterpriseRoots.java>`_
 
 There is not currently any API for an app to manually specify additional CA
 roots, although this might change with `Bug 1522162
@@ -429,7 +424,8 @@ The underlying assumption is that a session that is not visible doesn't have a
 surface associated to it and it's not being used by the user so it shouldn't
 receive high priority status.
 
-The way this is implemented is :searchfox:`by setting <mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0:mobile/android/geckoview/src/main/java/org/mozilla/geckoview/GeckoView.java#114,123>`
+The way this is implemented is `by setting
+<https://searchfox.org/mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/GeckoView.java#114,123>`_
 the ``active`` property on the ``browser`` object to ``false``, which causes
 Gecko to de-prioritize the process, assuming that no other windows in the same
 process have ``active=true``. See also `GeckoDisplay`_.
@@ -448,7 +444,8 @@ priority, `setPriorityHint
 <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.html#setPriorityHint(int)>`_.
 The priority hint is taken into consideration when calculating the
 priority of a process.  Any process that contains either an active session or a
-session with the priority hint :searchfox:`is boosted <mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0:dom/ipc/BrowserParent.cpp#3593>`
+session with the priority hint `is boosted
+<https://searchfox.org/mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0/dom/ipc/BrowserParent.cpp#3593>`_
 to the highest priority.
 
 Shutdown
@@ -465,7 +462,8 @@ Principals
 ----------
 
 In Gecko, a *website* loaded in a session is represented by an abstraction
-called :searchfox:`principal <mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0:caps/nsIPrincipal.idl>`.
+called `principal
+<https://searchfox.org/mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0/caps/nsIPrincipal.idl>`_.
 Principals contain information that is used to determine what permissions have
 been granted to the website instance, what APIs are available to it, which
 container the page is loaded in, is the page in private browsing or not, etc.
@@ -482,8 +480,6 @@ by principal. See also `Setting Permissions`_.
 To learn more about principals see `this talk by Bobby Holley
 <https://www.youtube.com/watch?v=28FPetl5Fl4>`_.
 
-.. _window-model:
-
 Window model
 ------------
 
@@ -499,8 +495,6 @@ Internally, Gecko uses ``window`` s for other things other than
 ``GeckoSession``, so we have to sometime be careful about knowing which windows
 belong to GeckoView and which don't. For example, the background extension page
 is implemented as a ``window`` object that doesn't paint to a surface.
-
-.. _eventdispatcher:
 
 EventDispatcher
 ---------------
@@ -528,8 +522,6 @@ In Java, events are fired in the same thread where the listener was registered,
 which allows us to ensure that events are received in a consistent order and
 data is kept consistent, so that we by and large don't have to worry about
 multi-threaded issues.
-
-.. _jni:
 
 JNI
 ---
@@ -636,7 +628,7 @@ And finally, the Java implementation calls the session delegate.
     });
   }
 
-.. _geckoview-permissions:
+.. _permissions:
 
 Permissions
 -----------
@@ -686,18 +678,24 @@ Implementation
 ~~~~~~~~~~~~~~
 
 The main entry point from Gecko is ``nsIContentPermissionPrompt.prompt``, which
-is handled in the :searchfox:`Permission module <mozilla-central/rev/256f84391cf5d4e3a4d66afbbcd744a5bec48956:mobile/android/components/geckoview/GeckoViewPermission.jsm#21>`
+is handled in the `Permission module
+<https://searchfox.org/mozilla-central/rev/256f84391cf5d4e3a4d66afbbcd744a5bec48956/mobile/android/components/geckoview/GeckoViewPermission.jsm#21>`_
 in the same process where the request is originated.
 
-The permission module calls the child actor :searchfox:`GeckoViewPermission <mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a:mobile/android/actors/GeckoViewPermissionChild.jsm#47>`
-which issues a :searchfox:`GeckoView:ContentPermission <mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a:mobile/android/actors/GeckoViewPermissionChild.jsm#75>`
+The permission module calls the child actor `GeckoViewPermission
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewPermissionChild.jsm#47>`_
+which issues a `GeckoView:ContentPermission
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewPermissionChild.jsm#75>`_
 request to the Java front-end as needed.
 
 Media permissions are requested using a global observer, and therefore are
-handled in a :searchfox:`Process actor <mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a:mobile/android/actors/GeckoViewPermissionProcessChild.jsm#41>`,
+handled in a `Process actor
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewPermissionProcessChild.jsm#41>`_,
 media permissions requests have enough information to redirect the request to
 the corresponding window child actor, with the exception of requests that are
-not associated with a window, which are redirected to the :searchfox:`current active window <mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a:mobile/android/actors/GeckoViewPermissionProcessParent.jsm#28-35>`.
+not associated with a window, which are redirected to the `current active
+window
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewPermissionProcessParent.jsm#28-35>`_.
 
 Setting permissions
 ~~~~~~~~~~~~~~~~~~~
@@ -715,7 +713,8 @@ permission is given to the wrong website.
 Internally, some permissions are only present when a certain override is set,
 e.g. Tracking Protection override permissions are only present when the page
 has been given a TP override. Because the only way to set the value of a
-permission is to get hold of the ``ContentPermission`` object, :searchfox:`we manually insert <mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0:mobile/android/modules/geckoview/GeckoViewNavigation.jsm#605-625>`
+permission is to get hold of the ``ContentPermission`` object, `we manually insert
+<https://searchfox.org/mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0/mobile/android/modules/geckoview/GeckoViewNavigation.jsm#605-625>`_
 a `trackingprotection` permission on every page load.
 
 Autofill Support
@@ -726,16 +725,20 @@ GeckoView supports third-party autofill providers through Android's `autofill fr
 Document tree
 ~~~~~~~~~~~~~
 
-The autofill Java front-end is located in the :searchfox:`Autofill class <mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a:mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#37>`.
+The autofill Java front-end is located in the `Autofill class
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#37>`_.
 GeckoView maintains a virtual tree structure of the current document for each
 ``GeckoSession``.
 
-The virtual tree structure is composed of :searchfox:`Node <mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a:mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#593>`
+The virtual tree structure is composed of `Node
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#593>`_
 objects which are immutable. Data associated to a node, including mutable data
-like the current value, is stored in a separate :searchfox:`NodeData <mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a:mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#171>`
+like the current value, is stored in a separate `NodeData
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#171>`_
 class. Only HTML nodes that are relevant to autofilling are referenced in the
 virtual structure and each node is associated to a root node, e.g. the root
-``<form>`` element. All root nodes are children of the autofill :searchfox:`mRoot <mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a:mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#210>`
+``<form>`` element. All root nodes are children of the autofill `mRoot
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#210>`_
 node, hence making the overall structure a tree rather than a collection of
 trees. Note that the root node is the only node in the virtual structure that
 does not correspond to an actual element on the page.
@@ -746,7 +749,8 @@ Javascript. The autofill framework itself requires integer IDs for nodes, so we
 store a mapping between UUIDs and integer IDs in the associated ``NodeData``
 object. The integer IDs are used only externally, while internally only the
 UUIDs are used. The reason why we use a separate ID structure from the autofill
-framework is that this allows us to :searchfox:`generate UUIDs <mozilla-central/rev/7e34cb7a0094a2f325a0c9db720cec0a2f2aca4f:mobile/android/actors/GeckoViewAutoFillChild.jsm#217-220>`
+framework is that this allows us to `generate UUIDs
+<https://searchfox.org/mozilla-central/rev/7e34cb7a0094a2f325a0c9db720cec0a2f2aca4f/mobile/android/actors/GeckoViewAutoFillChild.jsm#217-220>`_
 directly in the isolated content processes avoiding an IPC roundtrip to the
 main process.
 
@@ -757,7 +761,8 @@ Detecting autofillable nodes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 GeckoView scans every web page for password ``<input>`` elements whenever the
-``pageshow`` event :searchfox:`fires <mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a:mobile/android/actors/GeckoViewAutoFillChild.jsm#74-78>`.
+``pageshow`` event `fires
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewAutoFillChild.jsm#74-78>`_.
 
 It also uses ``DOMFormHasPassword`` and ``DOMInputPasswordAdded`` to detect
 whenever a password element is added to the DOM after the ``pageshow`` event.

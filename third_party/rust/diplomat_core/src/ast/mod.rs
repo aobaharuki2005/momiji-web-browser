@@ -30,9 +30,6 @@ pub use types::{
     StringEncoding, TypeName,
 };
 
-mod functions;
-pub use functions::Function;
-
 pub(crate) mod lifetimes;
 pub use lifetimes::{Lifetime, LifetimeEnv, LifetimeTransitivity, NamedLifetime};
 
@@ -43,10 +40,4 @@ mod idents;
 pub use idents::Ident;
 
 mod docs;
-pub use docs::{
-    DocType, Docs, DocsUrlGenerator, RustLink, RustLinkDisplay,
-    TypeReferenceSyntax as DocsTypeReferenceSyntax,
-};
-
-mod macros;
-pub use macros::{MacroDef, MacroUse, Macros};
+pub use docs::{DocType, Docs, DocsUrlGenerator, RustLink, RustLinkDisplay};

@@ -6,15 +6,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import puppeteerPlugin from '@puppeteer/eslint';
 import stylisticPlugin from '@stylistic/eslint-plugin';
 import {defineConfig, globalIgnores} from 'eslint/config';
 import importPlugin from 'eslint-plugin-import';
 import mocha from 'eslint-plugin-mocha';
 import eslintPrettierPluginRecommended from 'eslint-plugin-prettier/recommended';
+import rulesdir from 'eslint-plugin-rulesdir';
 import tsdoc from 'eslint-plugin-tsdoc';
 import globals from 'globals';
 import typescriptEslint from 'typescript-eslint';
+rulesdir.RULES_DIR = 'tools/eslint/lib';
 
 function getThirdPartyPackages() {
   return fs
@@ -83,8 +84,9 @@ export default defineConfig([
     plugins: {
       mocha,
       '@typescript-eslint': typescriptEslint.plugin,
+      import: importPlugin,
+      rulesdir,
       '@stylistic': stylisticPlugin,
-      '@puppeteer': puppeteerPlugin,
     },
 
     languageOptions: {
@@ -206,17 +208,18 @@ export default defineConfig([
         },
       ],
 
-      'import/enforce-node-protocol-usage': ['error', 'always'],
+      // TODO: enable with next version
+      // 'import/enforce-node-protocol-usage': 'error',
 
-      '@stylistic/function-call-spacing': 'error',
+      '@stylistic/func-call-spacing': 'error',
       '@stylistic/semi': 'error',
 
       // Keeps comments formatted.
-      '@puppeteer/prettier-comments': 'error',
+      'rulesdir/prettier-comments': 'error',
       // Enforces consistent file extension
-      '@puppeteer/extensions': 'error',
+      'rulesdir/extensions': 'error',
       // Enforces license headers on files
-      '@puppeteer/check-license': 'error',
+      'rulesdir/check-license': 'error',
     },
   },
   ...[
@@ -251,7 +254,7 @@ export default defineConfig([
 
     rules: {
       // Enforces clean up of used resources.
-      '@puppeteer/use-using': 'error',
+      'rulesdir/use-using': 'error',
 
       '@typescript-eslint/array-type': [
         'error',
@@ -412,7 +415,6 @@ export default defineConfig([
 
       'mocha/no-pending-tests': 'error',
       'mocha/no-identical-title': 'error',
-      '@puppeteer/no-quirks-mode-set-content': 'error',
     },
   },
 ]);

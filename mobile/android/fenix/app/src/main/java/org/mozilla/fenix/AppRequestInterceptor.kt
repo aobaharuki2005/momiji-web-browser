@@ -22,7 +22,6 @@ import java.lang.ref.WeakReference
 
 class AppRequestInterceptor(
     private val context: Context,
-    private val isPrivateForSession: (EngineSession) -> Boolean = { false },
 ) : RequestInterceptor {
 
     private var navController: WeakReference<NavController>? = null
@@ -49,21 +48,16 @@ class AppRequestInterceptor(
         }
 
         val services = context.components.services
-        return listOf(
-            services.appLinksInterceptor,
-            services.storyUTMRequestInterceptor,
-        ).firstNotNullOfOrNull {
-            it.onLoadRequest(
-                engineSession,
-                uri,
-                lastUri,
-                hasUserGesture,
-                isSameDomain,
-                isRedirect,
-                isDirectNavigation,
-                isSubframeRequest,
-            )
-        }
+        return services.appLinksInterceptor.onLoadRequest(
+            engineSession,
+            uri,
+            lastUri,
+            hasUserGesture,
+            isSameDomain,
+            isRedirect,
+            isDirectNavigation,
+            isSubframeRequest,
+        )
     }
 
     override fun onErrorRequest(
@@ -81,8 +75,6 @@ class AppRequestInterceptor(
             ErrorPage.visitedError.record(ErrorPage.VisitedErrorExtra(errorType = "ERROR_CONTENT_URI_NOT_FOUND"))
         }
 
-        val isPrivate = isPrivateForSession(session)
-
         val errorPageUri = ErrorPages.createUrlEncodedErrorPage(
             context = context,
             errorType = improvedErrorType,
@@ -90,7 +82,6 @@ class AppRequestInterceptor(
             htmlResource = riskLevel.htmlRes,
             titleOverride = { type -> getErrorPageTitle(context, type) },
             descriptionOverride = { type -> getErrorPageDescription(context, type) },
-            isPrivate = isPrivate,
         )
 
         return RequestInterceptor.ErrorResponse(errorPageUri)

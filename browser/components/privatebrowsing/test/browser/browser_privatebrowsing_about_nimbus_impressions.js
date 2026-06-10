@@ -20,7 +20,10 @@ add_task(async function test_experiment_messaging_system_impressions() {
     content: {
       hideDefault: true,
       promoEnabled: true,
+      infoEnabled: true,
+      infoBody: "fluent:about-private-browsing-info-title",
       promoLinkText: "fluent:about-private-browsing-prominent-cta",
+      infoLinkUrl: "http://foo.example.com/%LOCALE%",
       promoButton: {
         action: {
           data: {

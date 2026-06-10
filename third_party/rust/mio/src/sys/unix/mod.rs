@@ -40,7 +40,6 @@ cfg_os_poll! {
     ), path = "selector/kqueue.rs")]
     #[cfg_attr(any(
         mio_unsupported_force_poll_poll,
-        target_os = "aix",
         target_os = "espidf",
         target_os = "fuchsia",
         target_os = "haiku",
@@ -49,8 +48,6 @@ cfg_os_poll! {
         target_os = "nto",
         target_os = "solaris",
         target_os = "vita",
-        target_os = "cygwin",
-        target_os = "wasi",
     ), path = "selector/poll.rs")]
     mod selector;
     pub(crate) use self::selector::*;
@@ -79,7 +76,7 @@ cfg_os_poll! {
         )
     ), path = "waker/kqueue.rs")]
     #[cfg_attr(any(
-        // NOTE: also add to the list for the `pipe` module below.
+        // NOTE: also add to the list list for the `pipe` module below.
         mio_unsupported_force_waker_pipe,
         all(
             // `kqueue(2)` based waker doesn't work with `poll(2)`.
@@ -103,15 +100,11 @@ cfg_os_poll! {
         target_os = "redox",
         target_os = "solaris",
         target_os = "vita",
-        target_os = "cygwin",
-        all(target_os = "wasi", target_env = "p1")
     ), path = "waker/pipe.rs")]
-    #[cfg_attr(all(target_os = "wasi", not(target_env = "p1")), path = "waker/single_threaded.rs")]
     mod waker;
     // NOTE: the `Waker` type is expected in the selector module as the
     // `poll(2)` implementation needs to do some special stuff.
 
-    #[cfg(feature = "os-ext")]
     mod sourcefd;
     #[cfg(feature = "os-ext")]
     pub use self::sourcefd::SourceFd;
@@ -121,7 +114,7 @@ cfg_os_poll! {
 
         pub(crate) mod tcp;
         pub(crate) mod udp;
-        #[cfg(not(any(target_os = "hermit", target_os = "wasi")))]
+        #[cfg(not(target_os = "hermit"))]
         pub(crate) mod uds;
     }
 
@@ -143,7 +136,7 @@ cfg_os_poll! {
                     target_os = "watchos",
                 ),
             ),
-            // NOTE: also add to the list for the `pipe` module below.
+            // NOTE: also add to the list list for the `pipe` module below.
             target_os = "aix",
             target_os = "dragonfly",
             target_os = "haiku",
@@ -154,17 +147,17 @@ cfg_os_poll! {
             target_os = "redox",
             target_os = "solaris",
             target_os = "vita",
-            target_os = "cygwin",
         ),
+        // Hermit doesn't support pipes.
         not(target_os = "hermit"),
-        not(target_os = "wasi"),
     ))]
     pub(crate) mod pipe;
 }
 
 cfg_not_os_poll! {
-    cfg_os_ext! {
+    cfg_any_os_ext! {
         mod sourcefd;
+        #[cfg(feature = "os-ext")]
         pub use self::sourcefd::SourceFd;
     }
 }

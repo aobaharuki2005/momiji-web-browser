@@ -24,24 +24,17 @@ namespace context
 class Token
 {
 public:
-  Token(const Token &)            = delete;
-  Token &operator=(const Token &) = delete;
-  Token(Token &&)                 = delete;
-  Token &operator=(Token &&)      = delete;
-
   bool operator==(const Context &other) const noexcept { return context_ == other; }
 
-  virtual ~Token() noexcept;
+  ~Token() noexcept;
 
+private:
   friend class RuntimeContextStorage;
 
-protected:
   // A constructor that sets the token's Context object to the
   // one that was passed in.
   Token(const Context &context) : context_(context) {}
 
-  // Keep the context_ member as const to ensure the Token is immutable.
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   const Context context_;
 };
 
@@ -55,13 +48,6 @@ protected:
 class OPENTELEMETRY_EXPORT RuntimeContextStorage
 {
 public:
-  RuntimeContextStorage() = default;
-  // Keep RuntimeContextStorage copyable but not movable to preserve the existing API.
-  RuntimeContextStorage(const RuntimeContextStorage &)                = default;
-  RuntimeContextStorage &operator=(const RuntimeContextStorage &)     = default;
-  RuntimeContextStorage(RuntimeContextStorage &&) noexcept            = delete;
-  RuntimeContextStorage &operator=(RuntimeContextStorage &&) noexcept = delete;
-
   /**
    * Return the current context.
    * @return the current context
@@ -82,7 +68,7 @@ public:
    */
   virtual bool Detach(Token &token) noexcept = 0;
 
-  virtual ~RuntimeContextStorage() = default;
+  virtual ~RuntimeContextStorage() {}
 
 protected:
   nostd::unique_ptr<Token> CreateToken(const Context &context) noexcept
@@ -255,42 +241,13 @@ private:
   {
     friend class ThreadLocalContextStorage;
 
-    /**
-     * Limit the max stack depth.
-     * The stack will still work beyond this limit,
-     * counting push() and pop() properly,
-     * but will not record contexts.
-     *
-     * In practice, this should not affect instrumented applications,
-     * the limit is set to 1 million nested scopes.
-     *
-     * The whole reason for this limit to exist is to prevent
-     * compiler warnings like:
-     *   error: argument 1 value ‘18446744073709551615’
-     *   exceeds maximum object size 9223372036854775807
-     *   [-Werror=alloc-size-larger-than=]
-     * on this line of code:
-     *   Context *temp = new Context[new_capacity];
-     * when compiling with gcc and optimizations (-flto).
-     */
-    static constexpr size_t max_capacity_ = 1000000;
-
-    Stack() noexcept                = default;
-    Stack(const Stack &)            = delete;
-    Stack &operator=(const Stack &) = delete;
-    Stack(Stack &&)                 = delete;
-    Stack &operator=(Stack &&)      = delete;
+    Stack() noexcept : size_(0), capacity_(0), base_(nullptr) {}
 
     // Pops the top Context off the stack.
     void Pop() noexcept
     {
       if (size_ == 0)
       {
-        return;
-      }
-      if (size_ > max_capacity_)
-      {
-        size_ -= 1;
         return;
       }
       // Store empty Context before decrementing `size`, to ensure
@@ -321,10 +278,6 @@ private:
       {
         return Context();
       }
-      if (size_ > max_capacity_)
-      {
-        return Context();
-      }
       return base_[size_ - 1];
     }
 
@@ -333,10 +286,6 @@ private:
     void Push(const Context &context) noexcept
     {
       size_++;
-      if (size_ > max_capacity_)
-      {
-        return;
-      }
       if (size_ > capacity_)
       {
         Resize(size_ * 2);
@@ -350,13 +299,7 @@ private:
       size_t old_size = size_ - 1;
       if (new_capacity == 0)
       {
-        // First increase
         new_capacity = 2;
-      }
-      if (new_capacity > max_capacity_)
-      {
-        // Last increase
-        new_capacity = max_capacity_;
       }
       Context *temp = new Context[new_capacity];
       if (base_ != nullptr)
@@ -377,14 +320,14 @@ private:
 
     ~Stack() noexcept { delete[] base_; }
 
-    size_t size_{};
-    size_t capacity_{};
-    Context *base_{nullptr};
+    size_t size_;
+    size_t capacity_;
+    Context *base_;
   };
 
   OPENTELEMETRY_API_SINGLETON Stack &GetStack()
   {
-    static thread_local Stack stack_{};
+    static thread_local Stack stack_ = Stack();
     return stack_;
   }
 };

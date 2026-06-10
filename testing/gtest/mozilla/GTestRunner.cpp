@@ -1,4 +1,5 @@
-/* * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * * This Source Code Form is subject to the terms of the Mozilla Public
  * * License, v. 2.0. If a copy of the MPL was not distributed with this
  * * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -23,7 +24,6 @@ using ::testing::InitGoogleTest;
 using ::testing::TestEventListeners;
 using ::testing::TestInfo;
 using ::testing::TestPartResult;
-using ::testing::TestSuite;
 using ::testing::UnitTest;
 
 namespace mozilla {
@@ -41,10 +41,7 @@ namespace mozilla {
     fprintf(mLogFile, __VA_ARGS__); \
   }
 
-#define MOZ_LOG_ACTION(action, fmt, ...) \
-  MOZ_PRINT("{\"action\":\"" action "\"" fmt "}\n", ##__VA_ARGS__)
-
-// Emit mozlog-compatible structured JSON to stdout (and optionally a log file).
+// See gtest.h for method documentation
 class MozillaPrinter : public EmptyTestEventListener {
  public:
   MozillaPrinter() : mLogFile(nullptr) {
@@ -53,131 +50,48 @@ class MozillaPrinter : public EmptyTestEventListener {
       mLogFile = fopen(path, "w");
     }
   }
-
   virtual void OnTestProgramStart(const UnitTest& /* aUnitTest */) override {
-    MOZ_LOG_ACTION("suite_start",
-                   ",\"source\":\"gtest\",\"name\":\"gtest\",\"tests\":{}");
+    MOZ_PRINT("TEST-INFO | GTest unit test starting\n");
   }
-
   virtual void OnTestProgramEnd(const UnitTest& aUnitTest) override {
-    MOZ_LOG_ACTION("suite_end", ",\"source\":\"gtest\"");
+    MOZ_PRINT("TEST-%s | GTest unit test: %s\n",
+              aUnitTest.Passed() ? "PASS" : "UNEXPECTED-FAIL",
+              aUnitTest.Passed() ? "passed" : "failed");
+    MOZ_PRINT("Skipped: %d\n", aUnitTest.skipped_test_count());
+    MOZ_PRINT("Passed: %d\n", aUnitTest.successful_test_count());
+    MOZ_PRINT("Failed: %d\n", aUnitTest.failed_test_count());
     if (mLogFile) {
       fclose(mLogFile);
       mLogFile = nullptr;
     }
   }
-
-  virtual void OnTestSuiteStart(const TestSuite& aTestSuite) override {
-    nsCString name;
-    JsonEscape(nsDependentCString(aTestSuite.name()), name);
-    MOZ_LOG_ACTION("group_start", ",\"name\":\"%s\"", name.get());
-  }
-
-  virtual void OnTestSuiteEnd(const TestSuite& aTestSuite) override {
-    nsCString name;
-    JsonEscape(nsDependentCString(aTestSuite.name()), name);
-    MOZ_LOG_ACTION("group_end", ",\"name\":\"%s\"", name.get());
-  }
-
   virtual void OnTestStart(const TestInfo& aTestInfo) override {
     mTestInfo = &aTestInfo;
-    nsCString test = TestName(aTestInfo);
-    MOZ_LOG_ACTION("test_start", ",\"test\":\"%s\"", test.get());
+    MOZ_PRINT("TEST-START | %s.%s\n", mTestInfo->test_case_name(),
+              mTestInfo->name());
   }
-
   virtual void OnTestPartResult(
       const TestPartResult& aTestPartResult) override {
-    const char* caseName = mTestInfo ? mTestInfo->test_case_name() : "?";
-    const char* testName = mTestInfo ? mTestInfo->name() : "?";
-    nsCString test;
-    JsonEscape(nsDependentCString(caseName), test);
-    test.Append('.');
-    {
-      nsCString escapedName;
-      JsonEscape(nsDependentCString(testName), escapedName);
-      test.Append(escapedName);
-    }
-    nsCString message;
-    JsonEscape(nsDependentCString(aTestPartResult.summary()), message);
-    if (aTestPartResult.failed()) {
-      nsCString file;
-      if (const char* fileName = aTestPartResult.file_name()) {
-        JsonEscape(nsDependentCString(fileName), file);
-      }
-      MOZ_LOG_ACTION("test_status",
-                     ",\"test\":\"%s\",\"subtest\":\"\","
-                     "\"status\":\"FAIL\",\"expected\":\"PASS\","
-                     "\"message\":\"%s\",\"stack\":\"%s:%i\"",
-                     test.get(), message.get(), file.get(),
-                     aTestPartResult.line_number());
-    } else {
-      MOZ_LOG_ACTION("test_status",
-                     ",\"test\":\"%s\",\"subtest\":\"\","
-                     "\"status\":\"PASS\",\"message\":\"%s\"",
-                     test.get(), message.get());
-    }
+    MOZ_PRINT("TEST-%s | %s.%s | %s @ %s:%i\n",
+              !aTestPartResult.failed() ? "PASS" : "UNEXPECTED-FAIL",
+              mTestInfo ? mTestInfo->test_case_name() : "?",
+              mTestInfo ? mTestInfo->name() : "?", aTestPartResult.summary(),
+              aTestPartResult.file_name(), aTestPartResult.line_number());
   }
-
   virtual void OnTestEnd(const TestInfo& aTestInfo) override {
-    nsCString test = TestName(aTestInfo);
-    if (aTestInfo.result()->Passed()) {
-      MOZ_LOG_ACTION("test_end", ",\"test\":\"%s\",\"status\":\"PASS\"",
-                     test.get());
-    } else if (aTestInfo.result()->Skipped()) {
-      MOZ_LOG_ACTION("test_end", ",\"test\":\"%s\",\"status\":\"FAIL\"",
-                     test.get());
-    } else {
-      MOZ_LOG_ACTION("test_end",
-                     ",\"test\":\"%s\",\"status\":\"FAIL\""
-                     ",\"expected\":\"PASS\"",
-                     test.get());
-    }
+    MOZ_PRINT(
+        "TEST-%s | %s.%s | test completed (time: %" PRIi64 "ms)\n",
+        aTestInfo.result()->Passed()
+            ? "PASS"
+            : (aTestInfo.result()->Skipped() ? "FAIL" : "UNEXPECTED-FAIL"),
+        aTestInfo.test_case_name(), aTestInfo.name(),
+        aTestInfo.result()->elapsed_time());
     MOZ_ASSERT(&aTestInfo == mTestInfo);
     mTestInfo = nullptr;
   }
 
   const TestInfo* mTestInfo;
   FILE* mLogFile;
-
- private:
-  static nsCString TestName(const TestInfo& aTestInfo) {
-    nsCString test;
-    JsonEscape(nsDependentCString(aTestInfo.test_case_name()), test);
-    test.Append('.');
-    nsCString escapedName;
-    JsonEscape(nsDependentCString(aTestInfo.name()), escapedName);
-    test.Append(escapedName);
-    return test;
-  }
-
-  // Escape characters that are special in JSON strings.
-  static void JsonEscape(const nsACString& aInput, nsACString& aOutput) {
-    aOutput.Truncate();
-    for (auto iter = aInput.BeginReading(); iter != aInput.EndReading();
-         ++iter) {
-      char c = *iter;
-      switch (c) {
-        case '"':
-          aOutput.AppendLiteral("\\\"");
-          break;
-        case '\\':
-          aOutput.AppendLiteral("\\\\");
-          break;
-        case '\n':
-          aOutput.AppendLiteral("\\n");
-          break;
-        case '\r':
-          aOutput.AppendLiteral("\\r");
-          break;
-        case '\t':
-          aOutput.AppendLiteral("\\t");
-          break;
-        default:
-          aOutput.Append(c);
-          break;
-      }
-    }
-  }
 };
 
 static void ReplaceGTestLogger() {
@@ -195,7 +109,9 @@ static void ReplaceGTestLogger() {
 int RunGTestFunc(int* argc, char** argv) {
   InitGoogleTest(argc, argv);
 
-  ReplaceGTestLogger();
+  if (getenv("MOZ_TBPL_PARSER")) {
+    ReplaceGTestLogger();
+  }
 
   PR_SetEnv("XPCOM_DEBUG_BREAK=stack-and-abort");
 

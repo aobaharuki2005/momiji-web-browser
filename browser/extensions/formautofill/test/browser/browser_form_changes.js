@@ -18,11 +18,12 @@ const MOCK_STORAGE = [
   },
 ];
 
-function makeAddressComment({ primary, secondary }) {
+function makeAddressComment({ primary, secondary, status }) {
   return JSON.stringify({
     primary,
     secondary,
-    ariaLabel: primary + " " + secondary,
+    status,
+    ariaLabel: primary + " " + secondary + " " + status,
   });
 }
 
@@ -122,9 +123,10 @@ async function checkFormChangeHappened(formId) {
           makeAddressComment({
             primary: address.tel,
             secondary: address.name,
+            status: "Also autofills name, organization",
           })
         ),
-        1,
+        2,
         { checkComment: true }
       );
 
@@ -175,9 +177,10 @@ async function checkFormChangeHappened(formId) {
           makeAddressComment({
             primary: address["address-level2"],
             secondary: address.name,
+            status: "Also autofills name, organization, phone",
           })
         ),
-        1,
+        2,
         { checkComment: true }
       );
 

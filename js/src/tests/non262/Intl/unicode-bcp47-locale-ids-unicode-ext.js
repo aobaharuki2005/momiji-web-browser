@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+
 // Unicode locale extension sequences don't allow keys with a digit as their
 // second character.
 assertThrowsInstanceOf(() => Intl.getCanonicalLocales("en-u-c0"), RangeError);

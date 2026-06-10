@@ -12,9 +12,9 @@
 
 #define JPEG_INTERNALS
 
-#include "../src/jpeglib.h"
+#include "../jpeglib.h"
 #include "../jconfig.h"
-#include "../src/jmorecfg.h"
+#include "../jmorecfg.h"
 #include "jsimd.h"
 
 ;
@@ -66,7 +66,7 @@
 %define RGBX_FILLER_0XFF  1
 
 ; Representation of a single sample (pixel element value).
-; In this SIMD implementation, this must be 'unsigned char'.
+; On this SIMD implementation, this must be 'unsigned char'.
 ;
 
 %define JSAMPLE            byte            ; unsigned char
@@ -75,16 +75,14 @@
 %define _cpp_protection_CENTERJSAMPLE  CENTERJSAMPLE
 
 ; Representation of a DCT frequency coefficient.
-; In this SIMD implementation, this must be 'short'.
+; On this SIMD implementation, this must be 'short'.
 ;
-
 %define JCOEF              word            ; short
 %define SIZEOF_JCOEF       SIZEOF_WORD     ; sizeof(JCOEF)
 
 ; Datatype used for image dimensions.
-; In this SIMD implementation, this must be 'unsigned int'.
+; On this SIMD implementation, this must be 'unsigned int'.
 ;
-
 %define JDIMENSION         dword           ; unsigned int
 %define SIZEOF_JDIMENSION  SIZEOF_DWORD    ; sizeof(JDIMENSION)
 
@@ -103,17 +101,16 @@
 
 ; A forward DCT routine is given a pointer to a work area of type DCTELEM[];
 ; the DCT is to be performed in-place in that buffer.
-; To maximize parallelism, the 'DCTELEM' type is changed to short (originally
-; int).
-
+; To maximize parallelism, Type DCTELEM is changed to short (originally, int).
+;
 %define DCTELEM                 word         ; short
 %define SIZEOF_DCTELEM          SIZEOF_WORD  ; sizeof(DCTELEM)
 
 %define FAST_FLOAT              FP32         ; float
 %define SIZEOF_FAST_FLOAT       SIZEOF_FP32  ; sizeof(FAST_FLOAT)
 
-; To maximize parallelism, the 'MULTIPLIER' type is changed to short.
-
+; To maximize parallelism, Type MULTIPLIER is changed to short.
+;
 %define ISLOW_MULT_TYPE         word         ; must be short
 %define SIZEOF_ISLOW_MULT_TYPE  SIZEOF_WORD  ; sizeof(ISLOW_MULT_TYPE)
 

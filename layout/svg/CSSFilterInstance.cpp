@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,10 +36,10 @@ CSSFilterInstance::CSSFilterInstance(
     const nsIntRect& aTargetBoundsInFilterSpace,
     const gfxMatrix& aFrameSpaceInCSSPxToFilterSpaceTransform)
     : mFilter(aFilter),
+      mShadowFallbackColor(aShadowFallbackColor),
       mTargetBoundsInFilterSpace(aTargetBoundsInFilterSpace),
       mFrameSpaceInCSSPxToFilterSpaceTransform(
-          aFrameSpaceInCSSPxToFilterSpaceTransform),
-      mShadowFallbackColor(aShadowFallbackColor) {}
+          aFrameSpaceInCSSPxToFilterSpaceTransform) {}
 
 nsresult CSSFilterInstance::BuildPrimitives(
     nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
@@ -125,15 +127,15 @@ nsresult CSSFilterInstance::SetAttributesForBrightness(
   ComponentTransferAttributes atts;
 
   // Set transfer functions for RGB.
-  atts.mTypes[kChannelROrRGB] = SVGFEComponentTransferType::Linear;
-  atts.mTypes[kChannelG] = SVGFEComponentTransferType::SameAsR;
-  atts.mTypes[kChannelB] = SVGFEComponentTransferType::SameAsR;
+  atts.mTypes[kChannelROrRGB] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_LINEAR;
+  atts.mTypes[kChannelG] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
+  atts.mTypes[kChannelB] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
   std::array<float, 2> slopeIntercept;
   slopeIntercept[kComponentTransferSlopeIndex] = value;
   slopeIntercept[kComponentTransferInterceptIndex] = intercept;
   atts.mValues[kChannelROrRGB].AppendElements(Span(slopeIntercept));
 
-  atts.mTypes[kChannelA] = SVGFEComponentTransferType::Identity;
+  atts.mTypes[kChannelA] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY;
 
   aDescr.Attributes() = AsVariant(std::move(atts));
   return NS_OK;
@@ -146,15 +148,15 @@ nsresult CSSFilterInstance::SetAttributesForContrast(
   ComponentTransferAttributes atts;
 
   // Set transfer functions for RGB.
-  atts.mTypes[kChannelROrRGB] = SVGFEComponentTransferType::Linear;
-  atts.mTypes[kChannelG] = SVGFEComponentTransferType::SameAsR;
-  atts.mTypes[kChannelB] = SVGFEComponentTransferType::SameAsR;
+  atts.mTypes[kChannelROrRGB] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_LINEAR;
+  atts.mTypes[kChannelG] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
+  atts.mTypes[kChannelB] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
   std::array<float, 2> slopeIntercept;
   slopeIntercept[kComponentTransferSlopeIndex] = value;
   slopeIntercept[kComponentTransferInterceptIndex] = intercept;
   atts.mValues[kChannelROrRGB].AppendElements(Span(slopeIntercept));
 
-  atts.mTypes[kChannelA] = SVGFEComponentTransferType::Identity;
+  atts.mTypes[kChannelA] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY;
 
   aDescr.Attributes() = AsVariant(std::move(atts));
   return NS_OK;
@@ -187,7 +189,7 @@ nsresult CSSFilterInstance::SetAttributesForGrayscale(
     FilterPrimitiveDescription& aDescr) {
   ColorMatrixAttributes atts;
   // Set color matrix type.
-  atts.mType = SVGFEColorMatrixType::Saturate;
+  atts.mType = (uint32_t)SVG_FECOLORMATRIX_TYPE_SATURATE;
 
   // Set color matrix value.
   atts.mValues.AppendElement(1 - ClampFactor(mFilter.AsGrayscale()));
@@ -200,7 +202,7 @@ nsresult CSSFilterInstance::SetAttributesForHueRotate(
     FilterPrimitiveDescription& aDescr) {
   ColorMatrixAttributes atts;
   // Set color matrix type.
-  atts.mType = SVGFEColorMatrixType::HueRotate;
+  atts.mType = (uint32_t)SVG_FECOLORMATRIX_TYPE_HUE_ROTATE;
 
   // Set color matrix value.
   atts.mValues.AppendElement(mFilter.AsHueRotate().ToDegrees());
@@ -218,12 +220,12 @@ nsresult CSSFilterInstance::SetAttributesForInvert(
   std::array<float, 2> invertTableValues = {value, 1 - value};
 
   // Set transfer functions for RGB.
-  atts.mTypes[kChannelROrRGB] = SVGFEComponentTransferType::Table;
-  atts.mTypes[kChannelG] = SVGFEComponentTransferType::SameAsR;
-  atts.mTypes[kChannelB] = SVGFEComponentTransferType::SameAsR;
+  atts.mTypes[kChannelROrRGB] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_TABLE;
+  atts.mTypes[kChannelG] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
+  atts.mTypes[kChannelB] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
   atts.mValues[kChannelROrRGB].AppendElements(Span(invertTableValues));
 
-  atts.mTypes[kChannelA] = SVGFEComponentTransferType::Identity;
+  atts.mTypes[kChannelA] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY;
 
   aDescr.Attributes() = AsVariant(std::move(atts));
   return NS_OK;
@@ -243,7 +245,7 @@ nsresult CSSFilterInstance::SetAttributesForSaturate(
     FilterPrimitiveDescription& aDescr) {
   ColorMatrixAttributes atts;
   // Set color matrix type.
-  atts.mType = SVGFEColorMatrixType::Saturate;
+  atts.mType = (uint32_t)SVG_FECOLORMATRIX_TYPE_SATURATE;
 
   // Set color matrix value.
   atts.mValues.AppendElement(mFilter.AsSaturate());
@@ -256,7 +258,7 @@ nsresult CSSFilterInstance::SetAttributesForSepia(
     FilterPrimitiveDescription& aDescr) {
   ColorMatrixAttributes atts;
   // Set color matrix type.
-  atts.mType = SVGFEColorMatrixType::Sepia;
+  atts.mType = (uint32_t)SVG_FECOLORMATRIX_TYPE_SEPIA;
 
   // Set color matrix value.
   atts.mValues.AppendElement(ClampFactor(mFilter.AsSepia()));

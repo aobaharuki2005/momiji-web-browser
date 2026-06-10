@@ -14,10 +14,10 @@ export class GeckoViewPermissionParent extends GeckoViewActorParent {
       return Promise.resolve(/* granted */ true);
     }
 
-    const granted = await this.eventDispatcher.sendRequestForResult(
-      "GeckoView:AndroidPermission",
-      { perms }
-    );
+    const granted = await this.eventDispatcher.sendRequestForResult({
+      type: "GeckoView:AndroidPermission",
+      perms,
+    });
 
     if (granted) {
       for (const perm of perms) {
@@ -26,13 +26,6 @@ export class GeckoViewPermissionParent extends GeckoViewActorParent {
     }
 
     return granted;
-  }
-
-  async getContentPermission(aData) {
-    return this.eventDispatcher.sendRequestForResult(
-      "GeckoView:ContentPermission",
-      aData
-    );
   }
 
   addCameraPermission() {
@@ -57,20 +50,29 @@ export class GeckoViewPermissionParent extends GeckoViewActorParent {
     debug`receiveMessage ${aMessage.name}`;
 
     switch (aMessage.name) {
-      case "GeckoView:AddCameraPermission": {
+      case "GetAppPermissions": {
+        return this.getAppPermissions(aMessage.data);
+      }
+      case "AddCameraPermission": {
         return this.addCameraPermission();
       }
       case "GeckoView:MediaPermission": {
-        return this.eventDispatcher.sendRequestForResult(
-          "GeckoView:MediaPermission",
-          aMessage.data
-        );
+        return this.eventDispatcher.sendRequestForResult({
+          ...aMessage.data,
+          type: "GeckoView:MediaPermission",
+        });
       }
       case "GeckoView:MediaRecordingStatusChanged": {
-        return this.eventDispatcher.sendRequest(
-          "GeckoView:MediaRecordingStatusChanged",
-          aMessage.data
-        );
+        return this.eventDispatcher.sendRequest({
+          ...aMessage.data,
+          type: "GeckoView:MediaRecordingStatusChanged",
+        });
+      }
+      case "GeckoView:ContentPermission": {
+        return this.eventDispatcher.sendRequestForResult({
+          ...aMessage.data,
+          type: "GeckoView:ContentPermission",
+        });
       }
     }
 

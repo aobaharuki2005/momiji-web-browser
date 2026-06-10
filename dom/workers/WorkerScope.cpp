@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,6 +32,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
 #include "mozilla/StaticAnalysisFunctions.h"
@@ -192,7 +195,7 @@ bool WorkerScriptTimeoutHandler::Call(const char* aExecutionReason) {
 
 namespace workerinternals {
 void NamedWorkerGlobalScopeMixin::GetName(DOMString& aName) const {
-  aName.SetKnownLiveString(mName);
+  aName.AsAString() = mName;
 }
 static const char* GetTimeoutReasonString(Timeout* aTimeout) {
   switch (aTimeout->mReason) {
@@ -283,7 +286,7 @@ WorkerGlobalScopeBase::WorkerGlobalScopeBase(
 
   // In workers, each DETH must have an owner. Because the global scope doesn't
   // have one, let's set it as owner of itself.
-  BindToGlobal(static_cast<nsIGlobalObject*>(this));
+  BindToOwner(static_cast<nsIGlobalObject*>(this));
 }
 
 WorkerGlobalScopeBase::~WorkerGlobalScopeBase() = default;
@@ -569,6 +572,7 @@ already_AddRefed<CacheStorage> WorkerGlobalScope::GetCaches(ErrorResult& aRv) {
   if (!mCacheStorage) {
     mCacheStorage = CacheStorage::CreateOnWorker(cache::DEFAULT_NAMESPACE, this,
                                                  mWorkerPrivate, aRv);
+    mWorkerPrivate->NotifyStorageKeyUsed();
   }
 
   RefPtr<CacheStorage> ref = mCacheStorage;
@@ -883,6 +887,8 @@ already_AddRefed<IDBFactory> WorkerGlobalScope::GetIndexedDB(
     mIndexedDB = indexedDB;
   }
 
+  mWorkerPrivate->NotifyStorageKeyUsed();
+
   return indexedDB.forget();
 }
 
@@ -1015,8 +1021,9 @@ bool WorkerGlobalScope::IsEligibleForMessaging() {
 }
 
 void WorkerGlobalScope::ReportToConsole(
-    uint32_t aErrorFlags, const nsCString& aCategory, PropertiesFile aFile,
-    const nsCString& aMessageName, const nsTArray<nsString>& aParams,
+    uint32_t aErrorFlags, const nsCString& aCategory,
+    nsContentUtils::PropertiesFile aFile, const nsCString& aMessageName,
+    const nsTArray<nsString>& aParams,
     const mozilla::SourceLocation& aLocation) {
   WorkerPrivate::ReportErrorToConsole(aErrorFlags, aCategory, aFile,
                                       aMessageName, aParams, aLocation);

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,7 +20,6 @@
 #include "nsThreadUtils.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
-#  include "mozilla/layers/AndroidHardwareBuffer.h"
 #  include "mozilla/widget/AndroidUiThread.h"
 
 static RefPtr<nsThread> GetUiThread() { return mozilla::GetAndroidUiThread(); }
@@ -137,33 +138,13 @@ bool UiCompositorControllerChild::SetDefaultClearColor(const uint32_t& aColor) {
   return SendDefaultClearColor(aColor);
 }
 
-#ifdef MOZ_WIDGET_ANDROID
-RefPtr<UiCompositorControllerChild::ScreenPixelsPromise>
-UiCompositorControllerChild::RequestScreenPixels(gfx::IntRect aSourceRect,
-                                                 gfx::IntSize aDestSize) {
+bool UiCompositorControllerChild::RequestScreenPixels() {
   if (!mIsOpen) {
-    return ScreenPixelsPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
-                                                __func__);
+    return false;
   }
 
-  // We only support one request at a time. If an old request is still
-  // outstanding when a new request is made, just reject the old request.
-  if (mScreenPixelsPromise) {
-    mScreenPixelsPromise.extract().second->Reject(NS_ERROR_ABORT, __func__);
-  }
-
-  static uint64_t nextRequestId = 0;
-  const uint64_t requestId = nextRequestId++;
-  auto promise = MakeRefPtr<ScreenPixelsPromise::Private>(__func__);
-  // Using synchronous dispatch ensures we are done using the hardware buffer
-  // prior to RecvScreenPixels calling aResolver which in turn will cause the
-  // hardware buffer on the parent side to be released.
-  promise->UseSynchronousTaskDispatch(__func__);
-  mScreenPixelsPromise.emplace(requestId, promise);
-  (void)SendRequestScreenPixels(requestId, aSourceRect, aDestSize);
-  return promise;
+  return SendRequestScreenPixels();
 }
-#endif
 
 bool UiCompositorControllerChild::EnableLayerUpdateNotifications(
     const bool& aEnable) {
@@ -207,16 +188,15 @@ void UiCompositorControllerChild::Destroy() {
   task.Wait();
 }
 
+bool UiCompositorControllerChild::DeallocPixelBuffer(Shmem& aMem) {
+  return DeallocShmem(aMem);
+}
+
 // protected:
 void UiCompositorControllerChild::ActorDestroy(ActorDestroyReason aWhy) {
   mIsOpen = false;
   mParent = nullptr;
 
-#ifdef MOZ_WIDGET_ANDROID
-  if (mScreenPixelsPromise) {
-    mScreenPixelsPromise->second->Reject(NS_ERROR_ABORT, __func__);
-  }
-#endif
   if (mProcessToken) {
     gfx::GPUProcessManager::Get()->NotifyRemoteActorDestroyed(mProcessToken);
     mProcessToken = 0;
@@ -258,39 +238,13 @@ UiCompositorControllerChild::RecvNotifyCompositorScrollUpdate(
 }
 
 mozilla::ipc::IPCResult UiCompositorControllerChild::RecvScreenPixels(
-    uint64_t aRequestId, Maybe<ipc::FileDescriptor>&& aHardwareBuffer,
-    Maybe<ipc::FileDescriptor>&& aAcquireFence,
-    ScreenPixelsResolver&& aResolver) {
+    ipc::Shmem&& aMem, const ScreenIntSize& aSize, bool aNeedsYFlip) {
 #if defined(MOZ_WIDGET_ANDROID)
-  if (!mScreenPixelsPromise || mScreenPixelsPromise->first != aRequestId) {
-    // Response is for an outdated request whose promise will have already been
-    // rejected. Just ignore it.
-    return IPC_OK();
+  if (mWidget) {
+    mWidget->RecvScreenPixels(std::move(aMem), aSize, aNeedsYFlip);
   }
-
-  RefPtr<layers::AndroidHardwareBuffer> hardwareBuffer;
-  if (aHardwareBuffer) {
-    hardwareBuffer =
-        layers::AndroidHardwareBuffer::DeserializeFromFileDescriptor(
-            aHardwareBuffer->TakePlatformHandle());
-  }
-  if (hardwareBuffer && aAcquireFence) {
-    hardwareBuffer->SetAcquireFence(aAcquireFence->TakePlatformHandle());
-  }
-  // Note this is resolved synchronously, ensuring we have finished using the
-  // hardware buffer as soon as this call returns (and importantly before the
-  // aResolver call below).
-  mScreenPixelsPromise.extract().second->Resolve(std::move(hardwareBuffer),
-                                                 __func__);
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
-  // Notify the parent side that it can drop its reference to the hardware
-  // buffer. In theory this could be done as soon as we have called
-  // DeserializeFromFileDescriptor(). However, on certain Exynos devices we have
-  // seen that releasing the original hardware buffer frees the underlying
-  // resource even if a reference obtained via (de)serialization remains alive.
-  // See bug 2017901.
-  aResolver(void_t{});
   return IPC_OK();
 }
 
@@ -367,6 +321,9 @@ void UiCompositorControllerChild::SetCompositorSurfaceManager(
     java::CompositorSurfaceManager::Param aCompositorSurfaceManager) {
   MOZ_ASSERT(!mCompositorSurfaceManager,
              "SetCompositorSurfaceManager must only be called once.");
+  MOZ_ASSERT(mProcessToken != 0,
+             "SetCompositorSurfaceManager must only be called for GPU process "
+             "controllers.");
   mCompositorSurfaceManager = aCompositorSurfaceManager;
 };
 

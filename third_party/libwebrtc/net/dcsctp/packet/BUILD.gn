@@ -13,7 +13,10 @@ group("packet") {
 }
 
 rtc_source_set("bounded_io") {
-  deps = [ "../../../rtc_base:checks" ]
+  deps = [
+    "../../../api:array_view",
+    "../../../rtc_base:checks",
+  ]
   sources = [
     "bounded_byte_reader.h",
     "bounded_byte_writer.h",
@@ -23,6 +26,8 @@ rtc_source_set("bounded_io") {
 rtc_library("tlv_trait") {
   deps = [
     ":bounded_io",
+    "../../../api:array_view",
+    "../../../rtc_base:checks",
     "../../../rtc_base:logging",
   ]
   sources = [
@@ -33,6 +38,7 @@ rtc_library("tlv_trait") {
 
 rtc_source_set("data") {
   deps = [
+    "../../../rtc_base:checks",
     "../../../rtc_base:strong_alias",
     "../common:internal_types",
     "../public:types",
@@ -42,9 +48,9 @@ rtc_source_set("data") {
 
 rtc_library("crc32c") {
   deps = [
-    "//third_party/abseil-cpp/absl/crc:crc32c",
-    "//third_party/abseil-cpp/absl/numeric:bits",
-    "//third_party/abseil-cpp/absl/strings:string_view",
+    "../../../api:array_view",
+    "../../../rtc_base:checks",
+    "//third_party/crc32c",
   ]
   sources = [
     "crc32c.cc",
@@ -55,7 +61,10 @@ rtc_library("crc32c") {
 rtc_library("parameter") {
   deps = [
     ":bounded_io",
+    ":data",
     ":tlv_trait",
+    "../../../api:array_view",
+    "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../../../rtc_base:stringutils",
     "../common:internal_types",
@@ -95,12 +104,16 @@ rtc_library("parameter") {
 
 rtc_library("error_cause") {
   deps = [
-    ":bounded_io",
+    ":data",
     ":parameter",
     ":tlv_trait",
+    "../../../api:array_view",
+    "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../../../rtc_base:stringutils",
     "../common:internal_types",
+    "../common:math",
+    "../packet:bounded_io",
     "../public:types",
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/strings:string_view",
@@ -139,15 +152,18 @@ rtc_library("error_cause") {
 
 rtc_library("chunk") {
   deps = [
-    ":bounded_io",
     ":data",
+    ":error_cause",
     ":parameter",
     ":tlv_trait",
+    "../../../api:array_view",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../../../rtc_base:stringutils",
     "../../../rtc_base:strong_alias",
     "../common:internal_types",
+    "../common:math",
+    "../packet:bounded_io",
     "../public:types",
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/strings:string_view",
@@ -197,6 +213,7 @@ rtc_library("chunk") {
 rtc_library("chunk_validators") {
   deps = [
     ":chunk",
+    "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "//third_party/abseil-cpp/absl/algorithm:container",
   ]
@@ -211,6 +228,7 @@ rtc_library("sctp_packet") {
     ":bounded_io",
     ":chunk",
     ":crc32c",
+    "../../../api:array_view",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../../../rtc_base:stringutils",
@@ -239,6 +257,10 @@ if (rtc_include_tests) {
       ":parameter",
       ":sctp_packet",
       ":tlv_trait",
+      "../../../api:array_view",
+      "../../../rtc_base:buffer",
+      "../../../rtc_base:checks",
+      "../../../rtc_base:gunit_helpers",
       "../../../test:test_support",
       "../common:internal_types",
       "../common:math",

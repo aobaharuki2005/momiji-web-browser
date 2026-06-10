@@ -31,7 +31,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +46,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.FilledButton
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.onboarding.store.OnboardingStore
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -143,7 +143,9 @@ fun ToolbarOnboardingPage(
 
                         Spacer(Modifier.height(34.dp))
 
-                        val state by onboardingStore.stateFlow.collectAsState()
+                        val state by onboardingStore.observeAsState(
+                            initialValue = onboardingStore.state,
+                        ) { state -> state }
 
                         Row(Modifier.width(176.dp), horizontalArrangement = Arrangement.Center) {
                             toolbarOptions?.let {

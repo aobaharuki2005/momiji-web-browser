@@ -607,13 +607,12 @@ async function collectCrashInfo() {
   const crashes = await getCrashManager().getCrashes();
   CrashModuleSet = new Set(
     crashes.map(crash => {
-      let stackInfo = crash.metadata?.StackTraces;
+      const stackInfo = crash.metadata?.StackTraces;
       if (!stackInfo) {
         return null;
       }
-      stackInfo = JSON.parse(stackInfo);
 
-      const crashAddr = parseBigInt(stackInfo.crash_address);
+      const crashAddr = parseBigInt(stackInfo.crash_info?.address);
       if (typeof crashAddr !== "bigint") {
         return null;
       }
@@ -623,8 +622,8 @@ async function collectCrashInfo() {
       // because comparing BigInt with NaN returns false.
       return stackInfo.modules?.find(
         module =>
-          crashAddr >= parseBigInt(module.base_address) &&
-          crashAddr < parseBigInt(module.end_address)
+          crashAddr >= parseBigInt(module.base_addr) &&
+          crashAddr < parseBigInt(module.end_addr)
       )?.filename;
     })
   );

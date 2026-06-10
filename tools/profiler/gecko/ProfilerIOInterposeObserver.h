@@ -24,7 +24,7 @@ class ProfilerIOInterposeObserver final : public IOInterposeObserver {
 
  private:
   ProfilerIOInterposeObserver() = default;
-  virtual ~ProfilerIOInterposeObserver() = default;
+  virtual ~ProfilerIOInterposeObserver() {}
 };
 
 }  // namespace mozilla

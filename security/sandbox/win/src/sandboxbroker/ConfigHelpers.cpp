@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +9,6 @@
 #include <windows.h>
 
 #include "mozilla/Logging.h"
-#include "mozilla/UniquePtrExtensions.h"  // For getter_Transfers()
 #include "mozilla/Vector.h"
 #include "nsExceptionHandler.h"
 #include "nsStringFwd.h"
@@ -218,7 +219,7 @@ static auto AddRulesForKey(HKEY aFontKey, const nsAString& aWindowsUserFontDir,
   return sandbox::SBOX_ALL_OK;
 }
 
-bool UserFontConfigHelper::AddRules(SizeTrackingConfig& aConfig) const {
+void UserFontConfigHelper::AddRules(SizeTrackingConfig& aConfig) const {
   // Always add rule to allow access to windows user specific fonts dir first.
   nsAutoString windowsUserFontDir(mLocalAppData);
   windowsUserFontDir += uR"(\Microsoft\Windows\Fonts\*)"_ns;
@@ -253,9 +254,7 @@ bool UserFontConfigHelper::AddRules(SizeTrackingConfig& aConfig) const {
 
   // We failed to open the registry key, we can't do any more.
   if (!mUserFontKey) {
-    // In the unlikely event we can't open the user font registry key we return
-    // true to apply the stronger sandbox settings.
-    return true;
+    return;
   }
 
   // We don't want the wild-card for comparisons.
@@ -274,9 +273,7 @@ bool UserFontConfigHelper::AddRules(SizeTrackingConfig& aConfig) const {
   if (result == sandbox::SBOX_ERROR_NO_SPACE) {
     CrashReporter::RecordAnnotationCString(
         CrashReporter::Annotation::UserFontRulesExhausted, "inside");
-    // We've run out of room for font rules in the user's directory, so return
-    // false to fall back to weaker sandbox settings to avoid errors.
-    return false;
+    return;
   }
 
   // Finally add rules for fonts outside the user's dir. These are less likely
@@ -291,14 +288,10 @@ bool UserFontConfigHelper::AddRules(SizeTrackingConfig& aConfig) const {
       if (result == sandbox::SBOX_ERROR_NO_SPACE) {
         CrashReporter::RecordAnnotationCString(
             CrashReporter::Annotation::UserFontRulesExhausted, "outside");
-        // We return true here because we don't expect font paths outside the
-        // user's directory to be blocked by the sandbox.
-        return true;
+        return;
       }
     }
   }
-
-  return true;
 }
 
 }  // namespace sandboxing

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,6 +20,7 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/gfx/Point.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsCSSRendering.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
@@ -338,13 +341,13 @@ nsRect SVGIntegrationUtils::ComputePostEffectsInkOverflowRect(
 
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-  // Note: we do not return here for HasNoRefs since we must still handle any
+  // Note: we do not return here for eHasNoRefs since we must still handle any
   // CSS filter functions.
-  // TODO: we should really return an empty rect for HasRefsSomeInvalid since
+  // TODO: we should really return an empty rect for eHasRefsSomeInvalid since
   // in that case we disable painting of the element.
   nsTArray<SVGFilterFrame*> filterFrames;
   if (SVGObserverUtils::GetAndObserveFilters(firstFrame, &filterFrames) ==
-      SVGObserverUtils::ReferenceState::HasRefsSomeInvalid) {
+      SVGObserverUtils::eHasRefsSomeInvalid) {
     return aPreEffectsOverflowRect;
   }
 
@@ -382,7 +385,7 @@ nsRect SVGIntegrationUtils::GetRequiredSourceForInvalidArea(
   nsTArray<SVGFilterFrame*> filterFrames;
   if (!aFrame->StyleEffects()->HasFilters() ||
       SVGObserverUtils::GetFiltersIfObserving(firstFrame, &filterFrames) ==
-          SVGObserverUtils::ReferenceState::HasRefsSomeInvalid) {
+          SVGObserverUtils::eHasRefsSomeInvalid) {
     return aDirtyRect;
   }
 
@@ -919,14 +922,14 @@ void SVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams,
   // sure all applicable ones are set again.
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame);
-  // Note: we do not return here for HasNoRefs since we must still handle any
+  // Note: we do not return here for eHasNoRefs since we must still handle any
   // CSS filter functions.
-  // XXX: Do we need to check for HasRefsSomeInvalid here given that
-  // nsDisplayFilter::BuildLayer returns nullptr for HasRefsSomeInvalid?
-  // Or can we just assert !HasRefsSomeInvalid?
+  // XXX: Do we need to check for eHasRefsSomeInvalid here given that
+  // nsDisplayFilter::BuildLayer returns nullptr for eHasRefsSomeInvalid?
+  // Or can we just assert !eHasRefsSomeInvalid?
   nsTArray<SVGFilterFrame*> filterFrames;
   if (SVGObserverUtils::GetAndObserveFilters(firstFrame, &filterFrames) ==
-      SVGObserverUtils::ReferenceState::HasRefsSomeInvalid) {
+      SVGObserverUtils::eHasRefsSomeInvalid) {
     aCallback(aParams.ctx, aParams.imgParams, nullptr, nullptr);
     return;
   }
@@ -1206,7 +1209,7 @@ already_AddRefed<gfxDrawable> SVGIntegrationUtils::DrawableFromPaintServer(
     gfxFloat scaleY = overrideBounds.Height() / aRenderSize.height;
     gfxMatrix scaleMatrix = gfxMatrix::Scaling(scaleX, scaleY);
     pattern->SetMatrix(scaleMatrix * pattern->GetMatrix());
-    return MakeAndAddRef<gfxPatternDrawable>(pattern, aRenderSize);
+    return do_AddRef(new gfxPatternDrawable(pattern, aRenderSize));
   }
 
   if (aFrame->IsSVGFrame() &&
@@ -1219,9 +1222,9 @@ already_AddRefed<gfxDrawable> SVGIntegrationUtils::DrawableFromPaintServer(
 
   // We don't want to paint into a surface as long as we don't need to, so we
   // set up a drawing callback.
-  auto cb = MakeRefPtr<PaintFrameCallback>(aFrame, aPaintServerSize,
-                                           aRenderSize, aFlags);
-  return MakeAndAddRef<gfxCallbackDrawable>(cb, aRenderSize);
+  RefPtr<gfxDrawingCallback> cb =
+      new PaintFrameCallback(aFrame, aPaintServerSize, aRenderSize, aFlags);
+  return do_AddRef(new gfxCallbackDrawable(cb, aRenderSize));
 }
 
 }  // namespace mozilla

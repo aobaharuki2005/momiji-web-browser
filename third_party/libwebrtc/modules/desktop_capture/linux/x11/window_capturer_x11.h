@@ -14,10 +14,6 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
-// X11 creates a CurrentTime macro, which causes compilation errors when
-// including webrtc::Clock.
-#undef CurrentTime
-
 #include <memory>
 #include <string>
 
@@ -30,7 +26,6 @@
 #include "modules/desktop_capture/linux/x11/window_finder_x11.h"
 #include "modules/desktop_capture/linux/x11/x_atom_cache.h"
 #include "modules/desktop_capture/linux/x11/x_server_pixel_buffer.h"
-#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -69,7 +64,6 @@ class WindowCapturerX11 : public DesktopCapturer,
   Callback* callback_ = nullptr;
 
   scoped_refptr<SharedXDisplay> x_display_;
-  Clock& clock_;
 
   bool has_composite_extension_ = false;
 

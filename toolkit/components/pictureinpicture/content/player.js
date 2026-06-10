@@ -76,13 +76,9 @@ const BOTTOM_RIGHT_QUADRANT = 4;
  * @param {ContentDOMReference} videoRef
  *    A reference to the video element that a Picture-in-Picture window
  *    is being created for
- * @param {boolean} isPipApiRequest
- *    True when this PiP window was requested via the PiP web API
- *    (HTMLVideoElement.requestPictureInPicture()).
- * @returns {{ actor: PictureInPictureParent, setupPromise: Promise<void> }}
  */
-function setupPlayer(id, wgp, videoRef, isPipApiRequest, autoFocus) {
-  return Player.init(id, wgp, videoRef, isPipApiRequest, autoFocus);
+function setupPlayer(id, wgp, videoRef, autoFocus) {
+  Player.init(id, wgp, videoRef, autoFocus);
 }
 
 /**
@@ -223,16 +219,10 @@ let Player = {
    * @param {ContentDOMReference} videoRef
    *   A reference to the video element that a Picture-in-Picture window
    *   is being created for
-   * @param {boolean} isPipApiRequest
-   *   True when this PiP window was requested via the PiP web API
-   *   (HTMLVideoElement.requestPictureInPicture()).
    * @param {boolean} autoFocus
    *   Autofocus the PiP window
-   * @returns {{ actor: PictureInPictureParent, setupPromise: Promise<void> }}
-   *   Return the actor associated with this and the promise from the request
-   *   of setting up the player in the child.
    */
-  init(id, wgp, videoRef, isPipApiRequest, autoFocus) {
+  init(id, wgp, videoRef, autoFocus) {
     this.id = id;
 
     // State for whether or not we are adjusting the time via the scrubber
@@ -261,19 +251,10 @@ let Player = {
     );
     holder.appendChild(browser);
 
-    // dimensions set on the contentWindow so that web content knows the size when it gets opened
-    // otherwise it'll be reported as 0,0 until first resize.
-    const initDimension = {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    };
-
     this.actor =
       browser.browsingContext.currentWindowGlobal.getActor("PictureInPicture");
-    const setupPromise = this.actor.sendQuery("PictureInPicture:SetupPlayer", {
+    this.actor.sendAsyncMessage("PictureInPicture:SetupPlayer", {
       videoRef,
-      isPipApiRequest,
-      initDimension,
     });
 
     PictureInPicture.weakPipToWin.set(this.actor, window);
@@ -399,8 +380,6 @@ let Player = {
     }
 
     this._isInitialized = true;
-
-    return { actor: this.actor, setupPromise };
   },
 
   uninit() {

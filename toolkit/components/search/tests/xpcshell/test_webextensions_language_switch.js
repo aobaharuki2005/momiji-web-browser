@@ -13,7 +13,7 @@ add_setup(async function () {
   Services.locale.requestedLocales = ["en"];
 
   SearchTestUtils.setRemoteSettingsConfig([{ identifier: "unused" }]);
-  await SearchService.init();
+  await Services.search.init();
   await promiseAfterSettings();
 });
 
@@ -43,7 +43,7 @@ add_task(async function test_language_switch_changes_name() {
     }
   );
 
-  let engine = SearchService.getEngineById("engine@tests.mozilla.orgdefault");
+  let engine = Services.search.getEngineById("engine@tests.mozilla.orgdefault");
   Assert.ok(!!engine, "Should have loaded the engine");
   Assert.equal(
     engine.name,
@@ -51,7 +51,10 @@ add_task(async function test_language_switch_changes_name() {
     "Should have loaded the English version of the name"
   );
 
-  await SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
 
   let promiseChanged = TestUtils.topicObserved(
     "browser-search-engine-modified",
@@ -62,7 +65,7 @@ add_task(async function test_language_switch_changes_name() {
 
   await promiseChanged;
 
-  engine = SearchService.getEngineById("engine@tests.mozilla.orgdefault");
+  engine = Services.search.getEngineById("engine@tests.mozilla.orgdefault");
   Assert.ok(!!engine, "Should still be available");
   Assert.equal(
     engine.name,
@@ -71,7 +74,7 @@ add_task(async function test_language_switch_changes_name() {
   );
 
   Assert.equal(
-    (await SearchService.getDefault()).id,
+    (await Services.search.getDefault()).id,
     engine.id,
     "Should have kept the default engine the same"
   );
@@ -86,7 +89,7 @@ add_task(async function test_language_switch_changes_name() {
 
   await promiseChanged;
 
-  engine = SearchService.getEngineById("engine@tests.mozilla.orgdefault");
+  engine = Services.search.getEngineById("engine@tests.mozilla.orgdefault");
   Assert.ok(!!engine, "Should still be available");
   Assert.equal(
     engine.name,
@@ -95,7 +98,7 @@ add_task(async function test_language_switch_changes_name() {
   );
 
   Assert.equal(
-    (await SearchService.getDefault()).id,
+    (await Services.search.getDefault()).id,
     engine.id,
     "Should have kept the default engine the same"
   );

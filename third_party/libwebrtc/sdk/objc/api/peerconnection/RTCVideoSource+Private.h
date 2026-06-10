@@ -40,12 +40,16 @@ NS_ASSUME_NONNULL_BEGIN
         (webrtc::scoped_refptr<webrtc::MediaSourceInterface>)nativeMediaSource
                  type:(RTCMediaSourceType)type NS_UNAVAILABLE;
 
-- (instancetype)
-      initWithFactory:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
-      signalingThread:(webrtc::Thread *)signalingThread
-         workerThread:(webrtc::Thread *)workerThread
-    nativeVideoSource:(webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface>)
-                          nativeVideoSource;
+- (instancetype)initWithFactory:
+                    (RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
+                signalingThread:(webrtc::Thread *)signalingThread
+                   workerThread:(webrtc::Thread *)workerThread;
+
+- (instancetype)initWithFactory:
+                    (RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
+                signalingThread:(webrtc::Thread *)signalingThread
+                   workerThread:(webrtc::Thread *)workerThread
+                   isScreenCast:(BOOL)isScreenCast;
 
 @end
 

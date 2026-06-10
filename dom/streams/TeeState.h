@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -80,12 +82,10 @@ struct TeeState : public nsISupports {
     return aBranch == TeeBranch::Branch1 ? Canceled1() : Canceled2();
   }
 
-  void GetReason1(JSContext* aCx, JS::MutableHandle<JS::Value> aReason,
-                  ErrorResult& aRv) const;
+  JS::Value Reason1() const { return mReason1; }
   void SetReason1(JS::Handle<JS::Value> aReason1) { mReason1 = aReason1; }
 
-  void GetReason2(JSContext* aCx, JS::MutableHandle<JS::Value> aReason,
-                  ErrorResult& aRv) const;
+  JS::Value Reason2() const { return mReason2; }
   void SetReason2(JS::Handle<JS::Value> aReason2) { mReason2 = aReason2; }
 
   void SetReason(TeeBranch aBranch, JS::Handle<JS::Value> aReason) {

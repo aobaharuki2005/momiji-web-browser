@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -10,18 +12,9 @@
 #include "jit/WarpSnapshot.h"
 
 namespace js {
-
-class ObjectFuse;
-
 namespace jit {
 
 class MIRGenerator;
-
-struct ObjectFuseInfo {
-  ObjectFuse* fuse;
-  uint32_t generation;
-  uint32_t propSlot;
-};
 
 // WarpOracle creates a WarpSnapshot data structure that's used by WarpBuilder
 // to generate the MIR graph off-thread.
@@ -67,9 +60,11 @@ class MOZ_STACK_CLASS WarpOracle {
 
   [[nodiscard]] bool snapshotJitZoneStub(JitZone::StubKind kind);
 
-  [[nodiscard]] bool addFuseDependency(RealmFuses::FuseIndex fuseIndex);
-  [[nodiscard]] bool addFuseDependency(RuntimeFuses::FuseIndex fuseIndex);
-  [[nodiscard]] bool addFuseDependency(const ObjectFuseInfo& info);
+  [[nodiscard]] bool addFuseDependency(RealmFuses::FuseIndex fuseIndex,
+                                       bool* stillValid);
+
+  [[nodiscard]] bool addFuseDependency(RuntimeFuses::FuseIndex fuseIndex,
+                                       bool* stillValid);
 
   AbortReasonOr<WarpSnapshot*> createSnapshot();
 

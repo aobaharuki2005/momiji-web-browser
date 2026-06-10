@@ -13,7 +13,8 @@
 
 #include <cstddef>
 #include <memory>
-#include <span>
+
+#include "api/array_view.h"
 
 // Forward declaration.
 struct PFFFT_Setup;
@@ -34,8 +35,8 @@ class Pffft {
     FloatBuffer& operator=(const FloatBuffer&) = delete;
     ~FloatBuffer();
 
-    std::span<const float> GetConstView() const;
-    std::span<float> GetView();
+    ArrayView<const float> GetConstView() const;
+    ArrayView<float> GetView();
 
    private:
     friend class Pffft;
@@ -67,7 +68,7 @@ class Pffft {
   // Creates a buffer of the right size.
   std::unique_ptr<FloatBuffer> CreateBuffer() const;
 
-  // TODO(https://crbug.com/webrtc/9577): Overload with std::span args.
+  // TODO(https://crbug.com/webrtc/9577): Overload with ArrayView args.
   // Computes the forward fast Fourier transform.
   void ForwardTransform(const FloatBuffer& in, FloatBuffer* out, bool ordered);
   // Computes the backward fast Fourier transform.

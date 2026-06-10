@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 import io
+import sys
 import typing
 import warnings
 from abc import ABC, abstractmethod
@@ -15,7 +14,6 @@ from os import PathLike, stat
 from threading import Event, RLock, Thread
 from types import TracebackType
 from typing import (
-    TYPE_CHECKING,
     Any,
     BinaryIO,
     Callable,
@@ -25,10 +23,10 @@ from typing import (
     Generic,
     Iterable,
     List,
-    Literal,
     NamedTuple,
     NewType,
     Optional,
+    Sequence,
     TextIO,
     Tuple,
     Type,
@@ -36,8 +34,14 @@ from typing import (
     Union,
 )
 
-if TYPE_CHECKING:
-    # Can be replaced with `from typing import Self` in Python 3.11+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal  # pragma: no cover
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
     from typing_extensions import Self  # pragma: no cover
 
 from . import filesize, get_console
@@ -102,7 +106,7 @@ class _TrackThread(Thread):
 
 
 def track(
-    sequence: Iterable[ProgressType],
+    sequence: Union[Sequence[ProgressType], Iterable[ProgressType]],
     description: str = "Working...",
     total: Optional[float] = None,
     completed: int = 0,
@@ -121,10 +125,8 @@ def track(
 ) -> Iterable[ProgressType]:
     """Track progress by iterating over a sequence.
 
-    You can also track progress of an iterable, which might require that you additionally specify ``total``.
-
     Args:
-        sequence (Iterable[ProgressType]): Values you wish to iterate over and track progress.
+        sequence (Iterable[ProgressType]): A sequence (must support "len") you wish to iterate over.
         description (str, optional): Description of task show next to progress bar. Defaults to "Working".
         total: (float, optional): Total number of steps. Default is len(sequence).
         completed (int, optional): Number of steps completed so far. Defaults to 0.
@@ -1064,7 +1066,7 @@ class Progress(JupyterMixin):
     Args:
         console (Console, optional): Optional Console instance. Defaults to an internal Console instance writing to stdout.
         auto_refresh (bool, optional): Enable auto refresh. If disabled, you will need to call `refresh()`.
-        refresh_per_second (float, optional): Number of times per second to refresh the progress information. Defaults to 10.
+        refresh_per_second (Optional[float], optional): Number of times per second to refresh the progress information or None to use default (10). Defaults to None.
         speed_estimate_period: (float, optional): Period (in seconds) used to calculate the speed estimate. Defaults to 30.
         transient: (bool, optional): Clear the progress on exit. Defaults to False.
         redirect_stdout: (bool, optional): Enable redirection of stdout, so ``print`` may be used. Defaults to True.
@@ -1172,10 +1174,9 @@ class Progress(JupyterMixin):
 
     def stop(self) -> None:
         """Stop the progress display."""
-        if not self.disable:
-            self.live.stop()
-            if not self.console.is_interactive and not self.console.is_jupyter:
-                self.console.print()
+        self.live.stop()
+        if not self.console.is_interactive and not self.console.is_jupyter:
+            self.console.print()
 
     def __enter__(self) -> Self:
         self.start()
@@ -1191,7 +1192,7 @@ class Progress(JupyterMixin):
 
     def track(
         self,
-        sequence: Iterable[ProgressType],
+        sequence: Union[Iterable[ProgressType], Sequence[ProgressType]],
         total: Optional[float] = None,
         completed: int = 0,
         task_id: Optional[TaskID] = None,
@@ -1200,10 +1201,8 @@ class Progress(JupyterMixin):
     ) -> Iterable[ProgressType]:
         """Track progress by iterating over a sequence.
 
-        You can also track progress of an iterable, which might require that you additionally specify ``total``.
-
         Args:
-            sequence (Iterable[ProgressType]): Values you want to iterate over and track progress.
+            sequence (Sequence[ProgressType]): A sequence of values you want to iterate over and track progress.
             total: (float, optional): Total number of steps. Default is len(sequence).
             completed (int, optional): Number of steps completed so far. Defaults to 0.
             task_id: (TaskID): Task to track. Default is new task.
@@ -1493,7 +1492,7 @@ class Progress(JupyterMixin):
             start (bool, optional): Start the task after reset. Defaults to True.
             total (float, optional): New total steps in task, or None to use current total. Defaults to None.
             completed (int, optional): Number of steps completed. Defaults to 0.
-            visible (bool, optional): Set visible flag if not None.
+            visible (bool, optional): Enable display of the task. Defaults to True.
             description (str, optional): Change task description if not None. Defaults to None.
             **fields (str): Additional data fields required for rendering.
         """

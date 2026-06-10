@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsProperties_h_
-#define nsProperties_h_
+#ifndef nsProperties_h___
+#define nsProperties_h___
 
 #include "nsIProperties.h"
 #include "nsInterfaceHashtable.h"
@@ -23,4 +25,4 @@ class nsProperties final : public nsIProperties, public nsProperties_HashBase {
   ~nsProperties() = default;
 };
 
-#endif /* nsProperties_h_ */
+#endif /* nsProperties_h___ */

@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -8,7 +9,6 @@
 #include <utility>
 
 #include "CFTypeRefPtr.h"
-#include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "GLBlitHelper.h"
 #ifdef XP_MACOSX
@@ -77,8 +77,19 @@ void NativeLayerRemoteMac::AttachExternalImage(
   bool changedIsDRM = mIsDRM != isDRM;
   mIsDRM = isDRM;
 
+  bool isHDR = false;
   MacIOSurface* macIOSurface = texture->GetSurface();
-  mIsHDR = macIOSurface->IsHDRSurface() && gfxPlatform::UseHDR();
+  if (macIOSurface->GetYUVColorSpace() == gfx::YUVColorSpace::BT2020 &&
+      StaticPrefs::gfx_color_management_hdr_video_assume_rec2020_uses_pq()) {
+    // BT2020 colorSpace is a signifier of HDR.
+    isHDR = true;
+  }
+
+  if (macIOSurface->GetColorDepth() == gfx::ColorDepth::COLOR_10) {
+    // 10-bit color is a signifier of HDR.
+    isHDR = true;
+  }
+  mIsHDR = isHDR && StaticPrefs::gfx_color_management_hdr_video();
 
   mDirtyLayerInfo |= changedDisplayRect;
   mSnapshotLayer.mMutatedFrontSurface = true;
@@ -252,8 +263,8 @@ void NativeLayerRemoteMac::FlushDirtyLayerInfoToCommandQueue() {
   if (mDirtyLayerInfo) {
     mCommandQueue->AppendCommand(mozilla::layers::CommandLayerInfo(
         ID, GetPosition(), CurrentSurfaceDisplayRect(), ClipRect(),
-        RoundedClipRect(), GetTransform(), SamplingFilter(),
-        SurfaceIsFlipped()));
+        RoundedClipRect(), GetTransform(),
+        static_cast<int8_t>(SamplingFilter()), SurfaceIsFlipped()));
     mDirtyLayerInfo = false;
   }
 }

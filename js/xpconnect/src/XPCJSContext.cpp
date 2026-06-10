@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -837,12 +839,7 @@ void xpc::SetPrefableCompileOptions(JS::PrefableCompileOptions& options) {
   options.setSourcePragmas(StaticPrefs::javascript_options_source_pragmas())
       .setAsmJS(StaticPrefs::javascript_options_asmjs())
       .setThrowOnAsmJSValidationFailure(
-          StaticPrefs::javascript_options_throw_on_asmjs_validation_failure())
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
-      .setSourcePhaseImports(
-          StaticPrefs::javascript_options_experimental_source_phase_imports())
-#endif
-      ;
+          StaticPrefs::javascript_options_throw_on_asmjs_validation_failure());
 }
 
 void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
@@ -870,8 +867,8 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   //
   // 'Live' prefs are handled by ReloadPrefsCallback below.
 
-  // Note: JS::Prefs are set earlier in startup, in InitJSEngine in
-  // nsXPConnect.cpp.
+  // Note: JS::Prefs are set earlier in startup, in InitializeJS in
+  // XPCOMInit.cpp.
 
   JSContext* cx = xpccx->Context();
 
@@ -1539,10 +1536,7 @@ void XPCJSContext::AfterProcessTask(uint32_t aNewRecursionDepth) {
 
   // Poke the memory telemetry reporter
   if (AppShutdown::GetCurrentShutdownPhase() == ShutdownPhase::NotInShutdown) {
-    RefPtr<MemoryTelemetry> telemetry = MemoryTelemetry::Get();
-    if (telemetry) {
-      telemetry->Poke();
-    }
+    MemoryTelemetry::Get().Poke();
   }
 
   // This exception might have been set if we called an XPCWrappedJS that threw,

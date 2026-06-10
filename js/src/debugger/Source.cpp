@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -53,7 +55,16 @@ using mozilla::Nothing;
 using mozilla::Some;
 
 const JSClassOps DebuggerSource::classOps_ = {
-    .trace = CallTraceMethod<DebuggerSource>,
+    nullptr,                          // addProperty
+    nullptr,                          // delProperty
+    nullptr,                          // enumerate
+    nullptr,                          // newEnumerate
+    nullptr,                          // resolve
+    nullptr,                          // mayResolve
+    nullptr,                          // finalize
+    nullptr,                          // call
+    nullptr,                          // construct
+    CallTraceMethod<DebuggerSource>,  // trace
 };
 
 const JSClass DebuggerSource::class_ = {
@@ -603,8 +614,7 @@ bool DebuggerSource::CallData::getSourceMapURL() {
 }
 
 template <typename Unit>
-static JSScript* ReparseSource(JSContext* cx, Handle<ScriptSourceObject*> sso,
-                               bool asModule) {
+static JSScript* ReparseSource(JSContext* cx, Handle<ScriptSourceObject*> sso) {
   AutoRealm ar(cx, sso);
   ScriptSource* ss = sso->source();
 
@@ -626,25 +636,6 @@ static JSScript* ReparseSource(JSContext* cx, Handle<ScriptSourceObject*> sso,
     return nullptr;
   }
 
-  if (asModule) {
-    if (options.lineno == 0) {
-      JS_ReportErrorASCII(cx, "Module cannot be reparsed with lineNumber == 0");
-      return nullptr;
-    }
-    if (!options.filename()) {
-      JS_ReportErrorASCII(cx, "Module cannot be reparsed without filename");
-      return nullptr;
-    }
-    options.setModule();
-
-    JSObject* module = JS::CompileModule(cx, options, srcBuf);
-    if (!module) {
-      return nullptr;
-    }
-
-    return module->as<ModuleObject>().script();
-  }
-
   return JS::Compile(cx, options, srcBuf);
 }
 
@@ -659,13 +650,11 @@ bool DebuggerSource::CallData::reparse() {
     return false;
   }
 
-  bool asModule = ToBoolean(args.get(0));
-
   RootedScript script(cx);
   if (sourceObject->source()->hasSourceType<mozilla::Utf8Unit>()) {
-    script = ReparseSource<mozilla::Utf8Unit>(cx, sourceObject, asModule);
+    script = ReparseSource<mozilla::Utf8Unit>(cx, sourceObject);
   } else {
-    script = ReparseSource<char16_t>(cx, sourceObject, asModule);
+    script = ReparseSource<char16_t>(cx, sourceObject);
   }
 
   if (!script) {

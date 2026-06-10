@@ -21,8 +21,6 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
-const STATIC_MENUITEM_COUNT = 7;
-
 var gEditItemOverlay = {
   // Array of PlacesTransactions accumulated by internal changes. It can be used
   // to wait for completion.
@@ -546,18 +544,12 @@ var gEditItemOverlay = {
   async _initFolderMenuList(aSelectedFolderGuid) {
     // clean up first
     var menupopup = this._folderMenuList.menupopup;
-    while (menupopup.children.length > STATIC_MENUITEM_COUNT) {
+    while (menupopup.children.length > 6) {
       menupopup.removeChild(menupopup.lastElementChild);
     }
 
-    // The mobile root should always be hidden unless it is selected.
-    let mobileItem = this._element("mobileRootItem");
-    mobileItem.hidden = true;
-
     // Build the static list
     if (!this._staticFoldersListBuilt) {
-      mobileItem.label = PlacesUtils.getString("MobileBookmarksFolderTitle");
-      mobileItem.folderGuid = PlacesUtils.bookmarks.mobileGuid;
       let unfiledItem = this._element("unfiledRootItem");
       unfiledItem.label = PlacesUtils.getString("OtherBookmarksFolderTitle");
       unfiledItem.folderGuid = PlacesUtils.bookmarks.unfiledGuid;
@@ -617,8 +609,7 @@ var gEditItemOverlay = {
     this._folderMenuListListenerAdded = true;
 
     // Hide the folders-separator if no folder is annotated as recently-used
-    this._element("foldersSeparator").hidden =
-      menupopup.children.length <= STATIC_MENUITEM_COUNT;
+    this._element("foldersSeparator").hidden = menupopup.children.length <= 6;
     this._folderMenuList.disabled = this.readOnly;
   },
 
@@ -915,14 +906,11 @@ var gEditItemOverlay = {
       item => item.folderGuid === aFolderGuid
     );
     if (menuItem !== undefined) {
-      menuItem.hidden = false;
       return menuItem;
     }
 
-    if (
-      menupopup.children.length ==
-      STATIC_MENUITEM_COUNT + PlacesUIUtils.maxRecentFolders
-    ) {
+    // 3 special folders + separator + folder-items-count limit
+    if (menupopup.children.length == 4 + PlacesUIUtils.maxRecentFolders) {
       menupopup.removeChild(menupopup.lastElementChild);
     }
 
@@ -937,29 +925,16 @@ var gEditItemOverlay = {
     }
 
     if (aEvent.target.id == "editBMPanel_chooseFolderMenuItem") {
-      // Restore the current parent-folder selection before opening the tree.
-      // "Choose Folder" is only visible while the tree is collapsed.
+      // reset the selection back to where it was and expand the tree
+      // (this menu-item is hidden when the tree is already visible
       let item = this._getFolderMenuItem(
         this._bookmarkState._originalState.parentGuid,
         this._bookmarkState._originalState.title
       );
       this._folderMenuList.selectedItem = item;
-      // Only activate "Choose Folder" for explicit user interaction (click or
-      // Enter from the open popup), not arrow-key cycling. On non-native
-      // menus the popup is "hiding" only for explicit selection; on native
-      // menus (macOS) arrow keys never trigger this command path at all.
-      const menupopup = this._folderMenuList.menupopup;
-      if (menupopup.state == "hiding" || menupopup.isNativeMenu) {
-        if (menupopup.state == "closed") {
-          this.toggleFolderTreeVisibility();
-        } else {
-          menupopup.addEventListener(
-            "popuphidden",
-            () => this.toggleFolderTreeVisibility(),
-            { once: true }
-          );
-        }
-      }
+      // XXXmano HACK: setTimeout 100, otherwise focus goes back to the
+      // menulist right away
+      setTimeout(() => this.toggleFolderTreeVisibility(), 100);
       return;
     }
 
@@ -1102,13 +1077,15 @@ var gEditItemOverlay = {
       await this._rebuildTagsSelectorList();
 
       // This is a no-op if we've added the listener.
-      tagsSelector.addEventListener("command", this);
+      tagsSelector.addEventListener("mousedown", this);
+      tagsSelector.addEventListener("keypress", this);
     } else {
       document.l10n.setAttributes(expander, "bookmark-overlay-tags-expander2");
       tagsSelectorRow.hidden = true;
 
       // This is a no-op if we've removed the listener.
-      tagsSelector.removeEventListener("command", this);
+      tagsSelector.removeEventListener("mousedown", this);
+      tagsSelector.removeEventListener("keypress", this);
     }
   },
 
@@ -1159,6 +1136,23 @@ var gEditItemOverlay = {
   // EventListener
   handleEvent(event) {
     switch (event.type) {
+      case "mousedown":
+        if (event.button == 0) {
+          // Make sure the event is triggered on an item and not the empty space.
+          let item = event.target.closest("richlistbox,richlistitem");
+          if (item.localName == "richlistitem") {
+            this.toggleItemCheckbox(item);
+          }
+        }
+        break;
+      case "keypress":
+        if (event.key == " ") {
+          let item = event.target.currentItem;
+          if (item) {
+            this.toggleItemCheckbox(item);
+          }
+        }
+        break;
       case "unload":
         this.uninitPanel(false);
         break;
@@ -1185,14 +1179,11 @@ var gEditItemOverlay = {
         }
         break;
       case "command":
-        switch (event.currentTarget.id) {
-          case "editBMPanel_folderMenuList":
-            this.onFolderMenuListCommand(event).catch(console.error);
-            return;
-          case "editBMPanel_tagsSelector":
-            this.toggleTagsSelectorItem(event.target);
-            return;
+        if (event.currentTarget.id === "editBMPanel_folderMenuList") {
+          this.onFolderMenuListCommand(event).catch(console.error);
+          return;
         }
+
         switch (event.target.id) {
           case "editBMPanel_foldersExpander":
             this.toggleFolderTreeVisibility();
@@ -1221,16 +1212,24 @@ var gEditItemOverlay = {
     }
   },
 
-  toggleTagsSelectorItem(item) {
+  toggleItemCheckbox(item) {
     // Update the tags field when items are checked/unchecked in the listbox
     let tags = this._getTagsArrayFromTagsInputField();
+
     let curTagIndex = tags.indexOf(item.label);
-    if (item.toggleAttribute("checked")) {
+    let tagsSelector = this._element("tagsSelector");
+    tagsSelector.selectedItem = item;
+
+    if (!item.hasAttribute("checked")) {
+      item.setAttribute("checked", "true");
       if (curTagIndex == -1) {
         tags.push(item.label);
       }
-    } else if (curTagIndex != -1) {
-      tags.splice(curTagIndex, 1);
+    } else {
+      item.removeAttribute("checked");
+      if (curTagIndex != -1) {
+        tags.splice(curTagIndex, 1);
+      }
     }
     this._element("tagsField").value = tags.join(", ");
     this._updateTags();

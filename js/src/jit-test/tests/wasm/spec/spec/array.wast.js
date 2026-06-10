@@ -375,7 +375,7 @@ assert_invalid(
       (array.set \$a (local.get \$a) (i32.const 0) (i64.const 1))
     )
   )`),
-  `immutable array`,
+  `array is immutable`,
 );
 
 // ./test/core/gc/array.wast:302

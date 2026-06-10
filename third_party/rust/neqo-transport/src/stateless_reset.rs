@@ -7,7 +7,7 @@
 //! Stateless Reset Token implementation.
 
 use neqo_common::Decoder;
-use nss::random;
+use neqo_crypto::random;
 
 use crate::Error;
 
@@ -76,7 +76,6 @@ impl AsRef<[u8]> for Token {
 }
 
 #[cfg(test)]
-#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use super::*;
 
@@ -89,7 +88,7 @@ mod tests {
 
     #[test]
     fn random_token() {
-        nss::init().unwrap();
+        neqo_crypto::init().unwrap();
         let token1 = Token::random();
         let token2 = Token::random();
         // With very high probability, two random tokens should be different

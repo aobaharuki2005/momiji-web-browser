@@ -11,6 +11,7 @@ support-files = [
   "missing-sourceuri.json",
   "missing-xpi-search.json",
   "rewrite-search.json",
+  "sync_ping_schema.json",
   "systemaddon-search.json",
   "!/services/common/tests/unit/head_helpers.js",
   "!/toolkit/components/extensions/test/xpcshell/head_sync.js",

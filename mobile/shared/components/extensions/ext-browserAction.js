@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -43,8 +45,9 @@ class BrowserAction extends BrowserActionBase {
     const action = tab
       ? this.getContextData(tab)
       : this.helper.extractProperties(this.globals);
-    this.helper.sendRequest(tabId, "GeckoView:BrowserAction:Update", {
+    this.helper.sendRequest(tabId, {
       action,
+      type: "GeckoView:BrowserAction:Update",
     });
   }
 
@@ -54,8 +57,9 @@ class BrowserAction extends BrowserActionBase {
       : this.triggerClickOrPopup(tab);
     const actionObject = this.getContextData(tab);
     const action = this.helper.extractProperties(actionObject);
-    this.helper.sendRequest(tab.id, "GeckoView:BrowserAction:OpenPopup", {
+    this.helper.sendRequest(tab.id, {
       action,
+      type: "GeckoView:BrowserAction:OpenPopup",
       popupUri,
     });
   }
@@ -74,10 +78,6 @@ class BrowserAction extends BrowserActionBase {
 
   dispatchClick() {
     this.clickDelegate.onClick();
-  }
-
-  isPanelShownBlockingOpenPopup(_window) {
-    return ExtensionActionHelper.isShowingAnyExtensionActionPopup();
   }
 }
 
@@ -198,16 +198,12 @@ this.browserAction = class extends ExtensionAPIPersistent {
               : currentWindow;
 
           if (window !== currentWindow) {
-            // openPopup only supports one window on Android (bug 1795956).
-            // On desktop we restrict support to the currently focused window
-            // only, and use the same error message here (despite the concept
-            // of "window" being unnsupported on Android - bug 1817772).
-            throw new ExtensionError(BrowserActionBase.ERROR_WIN_NOT_FOCUSED);
+            throw new ExtensionError(
+              "Only the current window is supported on Android."
+            );
           }
 
-          if (action.getPopupUrl(window.tab, true)) {
-            action.throwIfOpenPopupIsBlockedByAnyAction(window);
-            // TODO bug 1817809: openPopup works in GeckoView but not in Fenix.
+          if (this.action.getPopupUrl(window.tab, true)) {
             action.openPopup(window.tab, !isHandlingUserInput);
           }
         },

@@ -23,7 +23,9 @@ class OpenBrowserIntentProcessorTest {
     private val activity: HomeActivity = mockk(relaxed = true)
     private val navController: NavController = mockk()
     private val out: Intent = mockk(relaxed = true)
-    private val settings: Settings = mockk()
+    private val settings: Settings = mockk {
+        every { shouldUseComposableToolbar } returns false
+    }
 
     @Test
     fun `do not process blank intents`() {

@@ -15,7 +15,6 @@
 #include <cstdint>
 #include <list>
 #include <memory>
-#include <span>
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
@@ -31,11 +30,11 @@
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/containers/flat_map.h"
-#include "rtc_base/net_helper.h"
 #include "rtc_base/network/received_packet.h"
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/socket.h"
 #include "rtc_base/socket_address.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/weak_ptr.h"
 
 namespace webrtc {
@@ -82,12 +81,13 @@ class TCPPort : public Port {
           bool allow_listen);
 
   // Handles sending using the local TCP socket.
-  int SendTo(std::span<const uint8_t> data,
+  int SendTo(const void* data,
+             size_t size,
              const SocketAddress& addr,
              const AsyncSocketPacketOptions& options,
              bool payload) override;
-  // Accepts incoming TCP connection.
 
+  // Accepts incoming TCP connection.
   void OnNewConnection(AsyncListenSocket* socket,
                        AsyncPacketSocket* new_socket);
 
@@ -124,7 +124,7 @@ class TCPPort : public Port {
   friend class TCPConnection;
 };
 
-class TCPConnection : public Connection {
+class TCPConnection : public Connection, public sigslot::has_slots<> {
  public:
   // Connection is outgoing unless socket is specified
   TCPConnection(const Environment& env,
@@ -133,7 +133,8 @@ class TCPConnection : public Connection {
                 AsyncPacketSocket* socket = nullptr);
   ~TCPConnection() override;
 
-  int Send(std::span<const uint8_t> data,
+  int Send(const void* data,
+           size_t size,
            const AsyncSocketPacketOptions& options) override;
   int GetError() override;
 

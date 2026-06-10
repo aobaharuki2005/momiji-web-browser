@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- tab-width: 8; indent-tabs-mode: nil; js-indent-level: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -62,7 +64,7 @@ function testRealError()
     if (e.fileName.search (/-50447-1\.js$/i) == -1)
       reportCompare('PASS', 'FAIL', "expected fileName to end with '-50447-1.js'");
 
-    reportCompare(58, e.lineNumber,
+    reportCompare(60, e.lineNumber,
 		  "lineNumber property returned unexpected value.");
   }
 
@@ -99,7 +101,7 @@ function test2()
      test file and assumes the path to the test case
      is a subdirectory of the directory containing jsDriver.pl
   */
-  var expectedLine = 106;
+  var expectedLine = 108;
   var expectedFileName = 'non262/extensions/regress-50447-1.js';
   var expectedSource = /\(new InternalError\("msg", "([^"]+)", ([0-9]+)\)\)/;
 
@@ -160,7 +162,7 @@ function test4()
   /* generate an error with only msg and filename properties */
 
 
-  var expectedLine = 165;
+  var expectedLine = 167;
 
   var e = new InternalError ("msg", "file");
   if (Error.prototype.toSource) {

@@ -1,3 +1,5 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -285,12 +287,6 @@ ALL_PROCESSES += [
 
     # ExplorerPatcher (bug 1798707)
     DllBlocklistEntry("explorerpatcher.amd64.dll", ALL_VERSIONS),
-
-    # Idera Delphi DLL (bug 1400169)
-    DllBlocklistEntry("evpComponentsXE.bpl", ALL_VERSIONS),
-
-    # Intuit DLLs (bug 1400169)
-    DllBlocklistEntry("FtuEngine.dll", ALL_VERSIONS),
 ]
 
 ALL_PROCESSES_TESTS += [
@@ -371,11 +367,8 @@ BROWSER_PROCESS += [
     # 123SyncCloud/123CloudStorage shell extension (bug 1996038)
     DllBlocklistEntry("MFCopyHook.dll", ALL_VERSIONS),
 
-    # Print Guard by MWStory (bug 2011909)
-    DllBlocklistEntry("printguard64.dll", (25, 11, 21, 1)),
-
-    # Esafenet (bug 2019298)
-    DllBlocklistEntry("dynamicdll64.dll", ALL_VERSIONS),
+    # SentinalOne product (bug 2005255)
+    DllBlocklistEntry("InProcessClient64.dll", ALL_VERSIONS),
 ]
 
 CHILD_PROCESSES += [
@@ -416,6 +409,12 @@ CHILD_PROCESSES += [
     DllBlocklistEntry("TmUmEvt64.dll", ALL_VERSIONS),
     DllBlocklistEntry("tmmon.dll", ALL_VERSIONS),
     DllBlocklistEntry("TmUmEvt.dll", ALL_VERSIONS),
+
+    # Trellix DLLs that cause content process crashes for 32-bit (bug 2006941)
+    DllBlocklistEntry("fcagff.dll", (11, 12, 0, 483)),
+    
+    # Trellix DLLs that cause content process crashes for 64-bit (bug 2008739)
+    DllBlocklistEntry("fcagff64.dll", (11, 12, 0, 483)),
 ]
 
 GPU_PROCESSES += [

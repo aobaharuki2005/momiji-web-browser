@@ -4,8 +4,6 @@
 
 const DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC =
   "distribution-customization-complete";
-const DISTRIBUTION_PREFERENCES_COMPLETE_TOPIC =
-  "distribution-preferences-complete";
 
 const PREF_CACHED_FILE_EXISTENCE = "distribution.iniFile.exists.value";
 const PREF_CACHED_FILE_APPVERSION = "distribution.iniFile.exists.appversion";
@@ -394,15 +392,6 @@ DistributionCustomizer.prototype = {
       return this._checkCustomizationComplete();
     }
 
-    if (
-      distroID == "MozillaOnline" &&
-      Services.prefs.getBoolPref("distribution.mozillaonline.ignore", false)
-    ) {
-      Glean.distribution.mozillaonlineIgnored.set(true);
-      this.__defineGetter__("_ini", () => null);
-      return this._checkCustomizationComplete();
-    }
-
     let defaults = Services.prefs.getDefaultBranch(null);
 
     // Global really contains info we set as prefs.  They're only
@@ -477,7 +466,50 @@ DistributionCustomizer.prototype = {
       }
     }
 
-    applyPrefsToDefaults(preferences, this._locale);
+    for (let [prefName, prefValue] of preferences) {
+      prefValue = prefValue.replace(/%LOCALE%/g, this._locale);
+      prefValue = prefValue.replace(/%LANGUAGE%/g, this._language);
+      prefValue = parseValue(prefValue);
+      try {
+        if (prefName == "general.useragent.locale") {
+          defaults.setStringPref("intl.locale.requested", prefValue);
+        } else {
+          switch (typeof prefValue) {
+            case "boolean":
+              defaults.setBoolPref(prefName, prefValue);
+              break;
+            case "number":
+              defaults.setIntPref(prefName, prefValue);
+              break;
+            case "string":
+              defaults.setStringPref(prefName, prefValue);
+              break;
+          }
+        }
+      } catch (e) {
+        /* ignore bad prefs and move on */
+      }
+    }
+
+    if (this._ini.getString("Global", "id") == "yandex") {
+      // All yandex distributions have the same distribution ID,
+      // so we're using an internal preference to name them correctly.
+      // This is needed for search to work properly.
+      try {
+        defaults.setStringPref(
+          "distribution.id",
+          defaults
+            .get("extensions.yasearch@yandex.ru.clids.vendor")
+            .replace("firefox", "yandex")
+        );
+      } catch (e) {
+        // Just use the default distribution ID.
+      }
+    }
+
+    let localizedStr = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(
+      Ci.nsIPrefLocalizedString
+    );
 
     let localizablePreferences = new Map();
 
@@ -490,8 +522,57 @@ DistributionCustomizer.prototype = {
       }
     }
 
-    this._localizablePreferences = localizablePreferences;
-    applyPrefsToDefaults(localizablePreferences, this._locale);
+    if (sections["LocalizablePreferences-" + this._language]) {
+      for (let key of this._ini.getKeys(
+        "LocalizablePreferences-" + this._language
+      )) {
+        let value = this._ini.getString(
+          "LocalizablePreferences-" + this._language,
+          key
+        );
+        if (value) {
+          localizablePreferences.set(key, value);
+        } else {
+          // If something was set by Preferences, but it's empty in language,
+          // it should be removed.
+          localizablePreferences.delete(key);
+        }
+      }
+    }
+
+    if (sections["LocalizablePreferences-" + this._locale]) {
+      for (let key of this._ini.getKeys(
+        "LocalizablePreferences-" + this._locale
+      )) {
+        let value = this._ini.getString(
+          "LocalizablePreferences-" + this._locale,
+          key
+        );
+        if (value) {
+          localizablePreferences.set(key, value);
+        } else {
+          // If something was set by Preferences, but it's empty in locale,
+          // it should be removed.
+          localizablePreferences.delete(key);
+        }
+      }
+    }
+
+    for (let [prefName, prefValue] of localizablePreferences) {
+      prefValue = parseValue(prefValue);
+      prefValue = prefValue.replace(/%LOCALE%/g, this._locale);
+      prefValue = prefValue.replace(/%LANGUAGE%/g, this._language);
+      localizedStr.data = "data:text/plain," + prefName + "=" + prefValue;
+      try {
+        defaults.setComplexValue(
+          prefName,
+          Ci.nsIPrefLocalizedString,
+          localizedStr
+        );
+      } catch (e) {
+        /* ignore bad prefs and move on */
+      }
+    }
 
     return this._checkCustomizationComplete();
   },
@@ -537,55 +618,18 @@ DistributionCustomizer.prototype = {
     }
 
     let prefDefaultsApplied = this._prefDefaultsApplied || !this._ini;
-    if (this._customizationsApplied && prefDefaultsApplied) {
+    if (
+      this._customizationsApplied &&
+      this._bookmarksApplied &&
+      prefDefaultsApplied
+    ) {
       Services.obs.notifyObservers(
         null,
-        DISTRIBUTION_PREFERENCES_COMPLETE_TOPIC
+        DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC
       );
-
-      if (this._bookmarksApplied) {
-        Services.obs.notifyObservers(
-          null,
-          DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC
-        );
-      }
     }
   },
 };
-
-function applyPrefsToDefaults(
-  prefs,
-  locale = Services.locale.requestedLocale || "en-US"
-) {
-  let language = locale.split("-")[0];
-  let defaults = Services.prefs.getDefaultBranch(null);
-  for (let [prefName, prefValue] of prefs) {
-    prefValue = parseValue(prefValue);
-    if (typeof prefValue == "string") {
-      prefValue = prefValue.replace(/%LOCALE%/g, locale);
-      prefValue = prefValue.replace(/%LANGUAGE%/g, language);
-    }
-    try {
-      if (prefName == "general.useragent.locale") {
-        defaults.setStringPref("intl.locale.requested", prefValue);
-      } else {
-        switch (typeof prefValue) {
-          case "boolean":
-            defaults.setBoolPref(prefName, prefValue);
-            break;
-          case "number":
-            defaults.setIntPref(prefName, prefValue);
-            break;
-          case "string":
-            defaults.setStringPref(prefName, prefValue);
-            break;
-        }
-      }
-    } catch (e) {
-      /* ignore bad prefs and move on */
-    }
-  }
-}
 
 function parseValue(value) {
   try {
@@ -610,7 +654,6 @@ function enumToObject(UTF8Enumerator) {
 
 export let DistributionManagement = {
   _distributionCustomizer: null,
-  _localizablePreferences: null,
   get BOOKMARK_GUID_PREFIX() {
     return BOOKMARK_GUID_PREFIX;
   },
@@ -633,20 +676,12 @@ export let DistributionManagement = {
         DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC
       );
       this._distributionCustomizer = null;
-    } else if (topic == "intl:requested-locales-changed") {
-      applyPrefsToDefaults(this._localizablePreferences);
     }
   },
 
   applyCustomizations() {
     this._ensureCustomizer();
     this._distributionCustomizer.applyCustomizations();
-    let localizablePreferences =
-      this._distributionCustomizer._localizablePreferences;
-    if (localizablePreferences?.size) {
-      this._localizablePreferences = localizablePreferences;
-      Services.obs.addObserver(this, "intl:requested-locales-changed");
-    }
   },
 
   applyBookmarks() {

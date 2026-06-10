@@ -335,14 +335,15 @@ PurgeTrackerService.prototype = {
     //   * BEHAVIOR_REJECT_FOREIGN
     //   * BEHAVIOR_LIMIT_FOREIGN
     //   * BEHAVIOR_REJECT_TRACKER (ETP)
-    //   * BEHAVIOR_PARTITION_FOREIGN (dFPI)
+    //   * BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN (dFPI)
     let cookieBehavior = Services.cookies.getCookieBehavior(false);
 
     let activeWithCookieBehavior =
       cookieBehavior == Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN ||
       cookieBehavior == Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN ||
       cookieBehavior == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ||
-      cookieBehavior == Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN;
+      cookieBehavior ==
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
 
     if (!activeWithCookieBehavior || !purgeEnabled) {
       lazy.logger.log(
@@ -518,10 +519,8 @@ PurgeTrackerService.prototype = {
 
     lazy.logger.log("Batch finished, queueing next batch.");
     this._firstIteration = false;
-    await new Promise((resolve, reject) => {
-      Services.tm.idleDispatchToMainThread(() => {
-        this.purgeTrackingCookieJars().then(resolve, reject);
-      });
+    Services.tm.idleDispatchToMainThread(() => {
+      this.purgeTrackingCookieJars();
     });
   },
 };

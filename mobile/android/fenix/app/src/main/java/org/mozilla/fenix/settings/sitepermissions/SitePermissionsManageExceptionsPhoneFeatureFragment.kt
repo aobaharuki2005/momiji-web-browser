@@ -28,7 +28,6 @@ import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOW
 import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.R
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -38,11 +37,8 @@ import org.mozilla.fenix.settings.setStartCheckedIndicator
 import org.mozilla.fenix.settings.update
 import org.mozilla.fenix.utils.Settings
 
-/**
- * Settings screen allowing users to configure exceptions from the general behavior of the browser phone permission.
- */
 @SuppressWarnings("TooManyFunctions")
-class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment(), SystemInsetsPaddedFragment {
+class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
 
     private lateinit var radioAllow: RadioButton
     private lateinit var radioBlock: RadioButton

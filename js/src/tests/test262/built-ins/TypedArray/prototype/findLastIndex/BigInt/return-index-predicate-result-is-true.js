@@ -14,12 +14,12 @@ info: |
     c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
     d. If testResult is true, return 𝔽(k).
   ...
-includes: [testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Symbol, TypedArray, array-find-from-last]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg([39n, 3n, 9n]));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA([39n, 3n, 9n]);
   var called = 0;
 
   var result = sample.findLastIndex(function() {

@@ -13,7 +13,6 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.StringReader
-import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class SafelistTest {
@@ -75,8 +74,8 @@ class SafelistTest {
         Assert.assertNull(trie.findNode("abc"))
 
         val foundSafelist = trie.findNode("def") as SafelistTrie
-        assertNotNull(foundSafelist)
-        assertNotNull(foundSafelist.safelist?.findNode("abc"))
+        Assert.assertNotNull(foundSafelist)
+        Assert.assertNotNull(foundSafelist.safelist?.findNode("abc"))
 
         try {
             trie.putSafelist("def", safelist)

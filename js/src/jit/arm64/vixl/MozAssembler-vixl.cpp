@@ -24,7 +24,6 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "jit/arm64/Assembler-arm64.h"
 #include "jit/arm64/vixl/Assembler-vixl.h"
 #include "jit/Label.h"
 
@@ -60,7 +59,6 @@ BufferOffset
 MozBaseAssembler::NextLink(BufferOffset cur)
 {
     Instruction* link = getInstructionAt(cur);
-    MOZ_ASSERT(link->IsPCRelAddressing() || link->IsImmBranch());
     // Raw encoded offset.
     ptrdiff_t offset = link->ImmPCRawOffset();
     // End of the list is encoded as 0.
@@ -218,28 +216,16 @@ void Assembler::b(Instruction* at, int imm19, Condition cond) {
 
 
 BufferOffset Assembler::b(Label* label) {
-  // Prevent nop sequences in branch instructions.
-  js::jit::AutoForbidNops afn(this);
-
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  BufferOffset next = nextInstrOffset(UncondBranchRangeType);
-  BufferOffset actual = b(LinkAndGetInstructionOffsetTo(next, UncondBranchRangeType, label), doc);
-  MOZ_ASSERT_IF(actual.assigned(), next == actual);
-  return actual;
+  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), UncondBranchRangeType, label), doc);
 }
 
 
 BufferOffset Assembler::b(Label* label, Condition cond) {
-  // Prevent nop sequences in branch instructions.
-  js::jit::AutoForbidNops afn(this);
-
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  BufferOffset next = nextInstrOffset(CondBranchRangeType);
-  BufferOffset actual = b(LinkAndGetInstructionOffsetTo(next, CondBranchRangeType, label), cond, doc);
-  MOZ_ASSERT_IF(actual.assigned(), next == actual);
-  return actual;
+  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), CondBranchRangeType, label), cond, doc);
 }
 
 void Assembler::br(Instruction* at, const Register& xn) {
@@ -256,8 +242,8 @@ void Assembler::blr(Instruction* at, const Register& xn) {
 }
 
 
-BufferOffset Assembler::bl(int imm26, const LabelDoc& doc) {
-  return EmitBranch(BL | ImmUncondBranch(imm26), doc);
+void Assembler::bl(int imm26, const LabelDoc& doc) {
+  EmitBranch(BL | ImmUncondBranch(imm26), doc);
 }
 
 
@@ -267,20 +253,14 @@ void Assembler::bl(Instruction* at, int imm26) {
 
 
 void Assembler::bl(Label* label) {
-  // Prevent nop sequences in branch instructions.
-  js::jit::AutoForbidNops afn(this);
-
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  BufferOffset next = nextInstrOffset(UncondBranchRangeType);
-  BufferOffset actual = bl(LinkAndGetInstructionOffsetTo(next, UncondBranchRangeType, label), doc);
-  MOZ_ASSERT_IF(actual.assigned(), next == actual);
-  (void)actual;
+  return bl(LinkAndGetInstructionOffsetTo(nextInstrOffset(), UncondBranchRangeType, label), doc);
 }
 
 
-BufferOffset Assembler::cbz(const Register& rt, int imm19, const LabelDoc& doc) {
-  return EmitBranch(SF(rt) | CBZ | ImmCmpBranch(imm19) | Rt(rt), doc);
+void Assembler::cbz(const Register& rt, int imm19, const LabelDoc& doc) {
+  EmitBranch(SF(rt) | CBZ | ImmCmpBranch(imm19) | Rt(rt), doc);
 }
 
 
@@ -290,20 +270,14 @@ void Assembler::cbz(Instruction* at, const Register& rt, int imm19) {
 
 
 void Assembler::cbz(const Register& rt, Label* label) {
-  // Prevent nop sequences in branch instructions.
-  js::jit::AutoForbidNops afn(this);
-
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  BufferOffset next = nextInstrOffset(CondBranchRangeType);
-  BufferOffset actual = cbz(rt, LinkAndGetInstructionOffsetTo(next, CondBranchRangeType, label), doc);
-  MOZ_ASSERT_IF(actual.assigned(), next == actual);
-  (void)actual;
+  return cbz(rt, LinkAndGetInstructionOffsetTo(nextInstrOffset(), CondBranchRangeType, label), doc);
 }
 
 
-BufferOffset Assembler::cbnz(const Register& rt, int imm19, const LabelDoc& doc) {
-  return EmitBranch(SF(rt) | CBNZ | ImmCmpBranch(imm19) | Rt(rt), doc);
+void Assembler::cbnz(const Register& rt, int imm19, const LabelDoc& doc) {
+  EmitBranch(SF(rt) | CBNZ | ImmCmpBranch(imm19) | Rt(rt), doc);
 }
 
 
@@ -313,21 +287,15 @@ void Assembler::cbnz(Instruction* at, const Register& rt, int imm19) {
 
 
 void Assembler::cbnz(const Register& rt, Label* label) {
-  // Prevent nop sequences in branch instructions.
-  js::jit::AutoForbidNops afn(this);
-
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  BufferOffset next = nextInstrOffset(CondBranchRangeType);
-  BufferOffset actual = cbnz(rt, LinkAndGetInstructionOffsetTo(next, CondBranchRangeType, label), doc);
-  MOZ_ASSERT_IF(actual.assigned(), next == actual);
-  (void)actual;
+  return cbnz(rt, LinkAndGetInstructionOffsetTo(nextInstrOffset(), CondBranchRangeType, label), doc);
 }
 
 
-BufferOffset Assembler::tbz(const Register& rt, unsigned bit_pos, int imm14, const LabelDoc& doc) {
+void Assembler::tbz(const Register& rt, unsigned bit_pos, int imm14, const LabelDoc& doc) {
   VIXL_ASSERT(rt.Is64Bits() || (rt.Is32Bits() && (bit_pos < kWRegSize)));
-  return EmitBranch(TBZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt), doc);
+  EmitBranch(TBZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt), doc);
 }
 
 
@@ -338,21 +306,15 @@ void Assembler::tbz(Instruction* at, const Register& rt, unsigned bit_pos, int i
 
 
 void Assembler::tbz(const Register& rt, unsigned bit_pos, Label* label) {
-  // Prevent nop sequences in branch instructions.
-  js::jit::AutoForbidNops afn(this);
-
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  BufferOffset next = nextInstrOffset(TestBranchRangeType);
-  BufferOffset actual = tbz(rt, bit_pos, LinkAndGetInstructionOffsetTo(next, TestBranchRangeType, label), doc);
-  MOZ_ASSERT_IF(actual.assigned(), next == actual);
-  (void)actual;
+  return tbz(rt, bit_pos, LinkAndGetInstructionOffsetTo(nextInstrOffset(), TestBranchRangeType, label), doc);
 }
 
 
-BufferOffset Assembler::tbnz(const Register& rt, unsigned bit_pos, int imm14, const LabelDoc& doc) {
+void Assembler::tbnz(const Register& rt, unsigned bit_pos, int imm14, const LabelDoc& doc) {
   VIXL_ASSERT(rt.Is64Bits() || (rt.Is32Bits() && (bit_pos < kWRegSize)));
-  return EmitBranch(TBNZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt), doc);
+  EmitBranch(TBNZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt), doc);
 }
 
 
@@ -363,21 +325,15 @@ void Assembler::tbnz(Instruction* at, const Register& rt, unsigned bit_pos, int 
 
 
 void Assembler::tbnz(const Register& rt, unsigned bit_pos, Label* label) {
-  // Prevent nop sequences in branch instructions.
-  js::jit::AutoForbidNops afn(this);
-
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  BufferOffset next = nextInstrOffset(TestBranchRangeType);
-  BufferOffset actual = tbnz(rt, bit_pos, LinkAndGetInstructionOffsetTo(next, TestBranchRangeType, label), doc);
-  MOZ_ASSERT_IF(actual.assigned(), next == actual);
-  (void)actual;
+  return tbnz(rt, bit_pos, LinkAndGetInstructionOffsetTo(nextInstrOffset(), TestBranchRangeType, label), doc);
 }
 
 
-BufferOffset Assembler::adr(const Register& rd, int imm21, const LabelDoc& doc) {
+void Assembler::adr(const Register& rd, int imm21, const LabelDoc& doc) {
   VIXL_ASSERT(rd.Is64Bits());
-  return EmitBranch(ADR | ImmPCRelAddress(imm21) | Rd(rd), doc);
+  EmitBranch(ADR | ImmPCRelAddress(imm21) | Rd(rd), doc);
 }
 
 
@@ -388,21 +344,15 @@ void Assembler::adr(Instruction* at, const Register& rd, int imm21) {
 
 
 void Assembler::adr(const Register& rd, Label* label) {
-  // Prevent nop sequences in address instructions.
-  js::jit::AutoForbidNops afn(this);
-
   // Encode the relative offset from the inserted adr to the label.
   LabelDoc doc = refLabel(label);
-  BufferOffset next = nextInstrOffset();
-  BufferOffset actual = adr(rd, LinkAndGetByteOffsetTo(next, label), doc);
-  MOZ_ASSERT_IF(actual.assigned(), next == actual);
-  (void)actual;
+  return adr(rd, LinkAndGetByteOffsetTo(nextInstrOffset(), label), doc);
 }
 
 
-BufferOffset Assembler::adrp(const Register& rd, int imm21, const LabelDoc& doc) {
+void Assembler::adrp(const Register& rd, int imm21, const LabelDoc& doc) {
   VIXL_ASSERT(rd.Is64Bits());
-  return EmitBranch(ADRP | ImmPCRelAddress(imm21) | Rd(rd), doc);
+  EmitBranch(ADRP | ImmPCRelAddress(imm21) | Rd(rd), doc);
 }
 
 
@@ -413,16 +363,10 @@ void Assembler::adrp(Instruction* at, const Register& rd, int imm21) {
 
 
 void Assembler::adrp(const Register& rd, Label* label) {
-  // Prevent nop sequences in address instructions.
-  js::jit::AutoForbidNops afn(this);
-
   VIXL_ASSERT(AllowPageOffsetDependentCode());
   // Encode the relative offset from the inserted adr to the label.
   LabelDoc doc = refLabel(label);
-  BufferOffset next = nextInstrOffset();
-  BufferOffset actual = adrp(rd, LinkAndGetPageOffsetTo(next, label), doc);
-  MOZ_ASSERT_IF(actual.assigned(), next == actual);
-  (void)actual;
+  return adrp(rd, LinkAndGetPageOffsetTo(nextInstrOffset(), label), doc);
 }
 
 

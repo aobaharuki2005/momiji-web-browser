@@ -73,6 +73,21 @@ export default class SidebarPinsPromo extends MozLitElement {
     this.launcherObserver.observe(window.SidebarController.sidebarMain, {
       attributeFilter: ["expanded"],
     });
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "verticalTabsEnabled",
+      "sidebar.verticalTabs",
+      false,
+      () => this.requestUpdate()
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "dragToPinPromoDismissed",
+      "sidebar.verticalTabs.dragToPinPromo.dismissed",
+      false,
+      () => this.requestUpdate()
+    );
   }
 
   disconnectedCallback() {

@@ -9,9 +9,6 @@ const { PreferencesBackupResource } = ChromeUtils.importESModule(
 const { SearchTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SearchTestUtils.sys.mjs"
 );
-const { SearchService } = ChromeUtils.importESModule(
-  "moz-src:///toolkit/components/search/SearchService.sys.mjs"
-);
 const { SearchUtils } = ChromeUtils.importESModule(
   "moz-src:///toolkit/components/search/SearchUtils.sys.mjs"
 );
@@ -46,7 +43,7 @@ add_setup(async function () {
   Services.locale.availableLocales = ["en-US"];
   Services.locale.requestedLocales = ["en-US"];
 
-  await SearchService.init();
+  await Services.search.init();
 
   await SearchTestUtils.installSearchExtension(
     {
@@ -92,7 +89,7 @@ add_task(async function test_recover_searchEngines_verified() {
   );
 
   let postRecoveryEntry = await preferencesBackupResource.recover(
-    { profileDirName: PathUtils.filename(PathUtils.profileDir) },
+    { profilePath: PathUtils.profileDir },
     recoveryPath,
     destProfilePath
   );
@@ -122,7 +119,7 @@ add_task(async function test_recover_searchEngines_verified() {
     recoveredSearchEngineSettings.metaData.defaultEngineIdHash,
     SearchUtils.getVerificationHash(
       originalSearchEngineSettings.metaData.defaultEngineId,
-      PathUtils.filename(destProfilePath)
+      destProfilePath
     ),
     "defaultEngineIdHash was updated correctly."
   );
@@ -136,7 +133,7 @@ add_task(async function test_recover_searchEngines_verified() {
     recoveredSearchEngineSettings.metaData.privateDefaultEngineIdHash,
     SearchUtils.getVerificationHash(
       originalSearchEngineSettings.metaData.privateDefaultEngineId,
-      PathUtils.filename(destProfilePath)
+      destProfilePath
     ),
     "privateDefaultEngineIdHash was updated correctly."
   );
@@ -165,7 +162,7 @@ add_task(async function test_recover_searchEngines_verified() {
         recoveredEngine._metaData.loadPathHash,
         SearchUtils.getVerificationHash(
           originalEngine._loadPath,
-          PathUtils.filename(destProfilePath)
+          destProfilePath
         ),
         "loadPathHash had the expected value."
       );
@@ -225,7 +222,7 @@ add_task(async function test_recover_searchEngines_unverified() {
   );
 
   let postRecoveryEntry = await preferencesBackupResource.recover(
-    { profileDirName: PathUtils.filename(PathUtils.profileDir) },
+    { profilePath: PathUtils.profileDir },
     recoveryPath,
     destProfilePath
   );

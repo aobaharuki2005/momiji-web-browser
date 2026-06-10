@@ -14,27 +14,23 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Wallpapers
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.core.Action
 import org.mozilla.fenix.compose.snackbar.Snackbar
 import org.mozilla.fenix.compose.snackbar.SnackbarState
-import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
-import org.mozilla.fenix.ext.openToBrowser
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
 
-/**
- * Settings screen allowing users to choose what wallpaper the application should use.
- */
-class WallpaperSettingsFragment : Fragment(), SystemInsetsPaddedFragment {
+class WallpaperSettingsFragment : Fragment() {
     private val appStore by lazy {
         requireComponents.appStore
     }
@@ -64,6 +60,7 @@ class WallpaperSettingsFragment : Fragment(), SystemInsetsPaddedFragment {
 
                     WallpaperSettings(
                         wallpaperGroups = wallpapers.groupByDisplayableCollection(),
+                        defaultWallpaper = Wallpaper.Default,
                         selectedWallpaper = currentWallpaper,
                         loadWallpaperResource = {
                             wallpaperUseCases.loadThumbnail(it)
@@ -77,10 +74,10 @@ class WallpaperSettingsFragment : Fragment(), SystemInsetsPaddedFragment {
                             }
                         },
                         onLearnMoreClick = { url, collectionName ->
-                            findNavController().openToBrowser()
-                            requireComponents.useCases.fenixBrowserUseCases.loadUrlOrSearch(
+                            (activity as HomeActivity).openToBrowserAndLoad(
                                 searchTermOrURL = url,
                                 newTab = true,
+                                from = BrowserDirection.FromWallpaper,
                             )
                             Wallpapers.learnMoreLinkClick.record(
                                 Wallpapers.LearnMoreLinkClickExtra(

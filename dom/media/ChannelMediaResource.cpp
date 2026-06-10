@@ -1,10 +1,9 @@
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ChannelMediaResource.h"
-
-#include <limits>
 
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/HTMLMediaElement.h"
@@ -29,27 +28,6 @@ mozilla::LazyLogModule gMediaResourceLog("MediaResource");
   DDMOZ_LOG(gMediaResourceLog, mozilla::LogLevel::Debug, msg, ##__VA_ARGS__)
 
 namespace mozilla {
-
-namespace {
-
-bool IsContentRangeWithinMediaCacheLimits(int64_t aRangeStart,
-                                          int64_t aRangeEnd,
-                                          int64_t aRangeTotal) {
-  if (!MediaCacheStream::IsOffsetAllowed(aRangeStart) ||
-      !MediaCacheStream::IsOffsetAllowed(aRangeEnd)) {
-    return false;
-  }
-
-  // MediaCache advances to the next write position after consuming a range.
-  if (aRangeEnd == std::numeric_limits<int64_t>::max() ||
-      !MediaCacheStream::IsOffsetAllowed(aRangeEnd + 1)) {
-    return false;
-  }
-
-  return aRangeTotal == -1 || MediaCacheStream::IsOffsetAllowed(aRangeTotal);
-}
-
-}  // namespace
 
 ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
                                            nsIChannel* aChannel, nsIURI* aURI,
@@ -83,8 +61,7 @@ nsresult ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest) {
   AssertIsOnMainThread();
   mLock.NoteOnMainThread();
   if (!mResource) return NS_OK;
-  RefPtr<ChannelMediaResource> resource = mResource;
-  return resource->OnStartRequest(aRequest, mOffset);
+  return mResource->OnStartRequest(aRequest, mOffset);
 }
 
 nsresult ChannelMediaResource::Listener::OnStopRequest(nsIRequest* aRequest,
@@ -92,8 +69,7 @@ nsresult ChannelMediaResource::Listener::OnStopRequest(nsIRequest* aRequest,
   AssertIsOnMainThread();
   mLock.NoteOnMainThread();
   if (!mResource) return NS_OK;
-  RefPtr<ChannelMediaResource> resource = mResource;
-  return resource->OnStopRequest(aRequest, aStatus);
+  return mResource->OnStopRequest(aRequest, aStatus);
 }
 
 nsresult ChannelMediaResource::Listener::OnDataAvailable(
@@ -246,13 +222,6 @@ nsresult ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
       int64_t rangeTotal = 0;
       rv = ParseContentRangeHeader(hc, rangeStart, rangeEnd, rangeTotal);
 
-      if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE) {
-        mCallback->NotifyNetworkError(
-            MediaResult(NS_ERROR_FAILURE, "invalid Content-Range"));
-        CloseChannel();
-        return NS_OK;
-      }
-
       // We received 'Content-Range', so the server accepts range requests.
       bool gotRangeHeader = NS_SUCCEEDED(rv);
 
@@ -291,17 +260,6 @@ nsresult ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
   } else {
     // Not an HTTP channel. Assume data will be sent from position zero.
     startOffset = 0;
-
-    // Pick up the content length the channel reports up front (data:, jar:,
-    // resource:, ...). Without this, the resource is treated as a live
-    // stream of unknown size and demuxers that estimate duration from the
-    // stream length (e.g. CBR mp3 with no Xing/Info header) report
-    // Infinity.
-    int64_t channelLength = -1;
-    if (NS_SUCCEEDED(mChannel->GetContentLength(&channelLength)) &&
-        channelLength >= 0) {
-      length = channelLength;
-    }
   }
 
   // Update principals before OnDataAvailable() putting the data in the cache.
@@ -364,14 +322,6 @@ nsresult ChannelMediaResource::ParseContentRangeHeader(
   aRangeStart = std::get<0>(rangeOrErr.inspect());
   aRangeEnd = std::get<1>(rangeOrErr.inspect());
   aRangeTotal = std::get<2>(rangeOrErr.inspect());
-
-  if (!IsContentRangeWithinMediaCacheLimits(aRangeStart, aRangeEnd,
-                                            aRangeTotal)) {
-    LOG("Rejecting bytes [%" PRId64 "] to [%" PRId64 "] of [%" PRId64
-        "] for decoder[%p] due to media cache limits",
-        aRangeStart, aRangeEnd, aRangeTotal, mCallback.get());
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
 
   LOG("Received bytes [%" PRId64 "] to [%" PRId64 "] of [%" PRId64
       "] for decoder[%p]",
@@ -461,16 +411,7 @@ nsresult ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld,
   // OnChannelRedirect() is followed by OnStartRequest() where we will
   // call mSuspendAgent.Delegate().
   mChannel = aNew;
-  nsresult rv = SetupChannelHeaders(aOffset);
-  if (NS_SUCCEEDED(rv)) {
-    mSuspendAgent.RevokeIfManaged(aOld);
-  } else {
-    nsCString err;
-    GetErrorName(rv, err);
-    LOG("Veto redirect: fail to set up new channel: %s", err.get());
-    mChannel = aOld;
-  }
-  return rv;
+  return SetupChannelHeaders(aOffset);
 }
 
 nsresult ChannelMediaResource::CopySegmentToCache(
@@ -1122,15 +1063,6 @@ void ChannelSuspendAgent::Revoke() {
     mIsChannelSuspended = false;
   }
   mChannel = nullptr;
-}
-
-void ChannelSuspendAgent::RevokeIfManaged(nsIChannel* aChannel) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mChannel != aChannel) {
-    NS_WARNING("Not a managed channel");
-    return;
-  }
-  Revoke();
 }
 
 bool ChannelSuspendAgent::IsSuspended() {

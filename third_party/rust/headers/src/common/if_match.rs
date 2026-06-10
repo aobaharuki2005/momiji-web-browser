@@ -1,7 +1,6 @@
-use http::HeaderValue;
-
 use super::ETag;
-use crate::util::EntityTagRange;
+use util::EntityTagRange;
+use HeaderValue;
 
 /// `If-Match` header, defined in
 /// [RFC7232](https://tools.ietf.org/html/rfc7232#section-3.1)
@@ -32,6 +31,7 @@ use crate::util::EntityTagRange;
 /// # Examples
 ///
 /// ```
+/// # extern crate headers;
 /// use headers::IfMatch;
 ///
 /// let if_match = IfMatch::any();

@@ -2,10 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
 });
 
@@ -37,9 +39,9 @@ this.search = class extends ExtensionAPI {
     return {
       search: {
         async get() {
-          await SearchService.promiseInitialized;
-          let visibleEngines = await SearchService.getVisibleEngines();
-          let defaultEngine = await SearchService.getDefault();
+          await Services.search.promiseInitialized;
+          let visibleEngines = await Services.search.getVisibleEngines();
+          let defaultEngine = await Services.search.getDefault();
           return Promise.all(
             visibleEngines.map(async engine => {
               let favIconUrl = await engine.getIconURL();
@@ -70,11 +72,11 @@ this.search = class extends ExtensionAPI {
         },
 
         async search(searchProperties) {
-          await SearchService.promiseInitialized;
+          await Services.search.promiseInitialized;
           let engine;
 
           if (searchProperties.engine) {
-            engine = SearchService.getEngineByName(searchProperties.engine);
+            engine = Services.search.getEngineByName(searchProperties.engine);
             if (!engine) {
               throw new ExtensionError(
                 `${searchProperties.engine} was not found`
@@ -100,7 +102,7 @@ this.search = class extends ExtensionAPI {
         },
 
         async query(queryProperties) {
-          await SearchService.promiseInitialized;
+          await Services.search.promiseInitialized;
 
           let { tab, where } = getTarget({
             tabId: queryProperties.tabId,

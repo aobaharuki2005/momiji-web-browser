@@ -33,17 +33,11 @@ nsHttpActivityDistributor::ObserveActivity(nsISupports* aHttpChannel,
                                            uint64_t aExtraSizeData,
                                            const nsACString& aExtraStringData) {
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
-  RefPtr<nsHttpActivityDistributor> self(this);
 
-  ObserverArray observers;
-  {
-    MutexAutoLock lock(mLock);
-    observers = mObservers.Clone();
-  }
-  for (size_t i = 0; i < observers.Length(); i++) {
-    (void)observers[i]->ObserveActivity(aHttpChannel, aActivityType,
-                                        aActivitySubtype, aTimestamp,
-                                        aExtraSizeData, aExtraStringData);
+  for (size_t i = 0; i < mObservers.Length(); i++) {
+    (void)mObservers[i]->ObserveActivity(aHttpChannel, aActivityType,
+                                         aActivitySubtype, aTimestamp,
+                                         aExtraSizeData, aExtraStringData);
   }
   return NS_OK;
 }
@@ -54,15 +48,9 @@ nsHttpActivityDistributor::ObserveConnectionActivity(
     bool aIsHttp3, uint32_t aActivityType, uint32_t aActivitySubtype,
     PRTime aTimestamp, const nsACString& aExtraStringData) {
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
-  RefPtr<nsHttpActivityDistributor> self(this);
 
-  ObserverArray observers;
-  {
-    MutexAutoLock lock(mLock);
-    observers = mObservers.Clone();
-  }
-  for (size_t i = 0; i < observers.Length(); i++) {
-    (void)observers[i]->ObserveConnectionActivity(
+  for (size_t i = 0; i < mObservers.Length(); i++) {
+    (void)mObservers[i]->ObserveConnectionActivity(
         aHost, aPort, aSSL, aHasECH, aIsHttp3, aActivityType, aActivitySubtype,
         aTimestamp, aExtraStringData);
   }

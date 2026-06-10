@@ -3,6 +3,12 @@
 
 "use strict";
 
+/* import-globals-from helper-telemetry.js */
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-telemetry.js",
+  this
+);
+
 const DEVICE_A = "Device A";
 const USB_RUNTIME_1 = {
   id: "runtime-id-1",
@@ -36,15 +42,6 @@ const RUNTIME_2_EXTRAS = {
 };
 
 /**
- * Assert that the expected keys are present in actual and have the same value.
- */
-function assertExtras(expected, actual) {
-  for (const [k, v] of Object.entries(expected)) {
-    Assert.equal(v, actual[k], `Key ${k} matches.`);
-  }
-}
-
-/**
  * Check that telemetry events are recorded for USB runtimes when:
  * - adding a device/runtime
  * - removing a device/runtime
@@ -53,35 +50,28 @@ function assertExtras(expected, actual) {
 add_task(async function testUsbRuntimeUpdates() {
   // enable USB devices mocks
   const mocks = new Mocks();
-  Services.fog.testResetFOG();
+  setupTelemetryTest();
 
   const { tab, document } = await openAboutDebugging();
 
-  const sessionId =
-    Glean.devtoolsMain.openAdbgAboutdebugging.testGetValue()[0].extra
-      .session_id;
+  const sessionId = getOpenEventSessionId();
   ok(!isNaN(sessionId), "Open event has a valid session id");
 
   await addUsbRuntime(USB_RUNTIME_1, mocks, document);
 
-  const devEvents = Glean.devtoolsMain.deviceAddedAboutdebugging.testGetValue();
-  Assert.equal(1, devEvents.length);
-  assertExtras(
-    { ...DEVICE_A_EXTRAS, session_id: sessionId },
-    devEvents[0].extra
+  let evts = checkTelemetryEvents(
+    [
+      { method: "device_added", extras: DEVICE_A_EXTRAS },
+      { method: "runtime_added", extras: RUNTIME_1_EXTRAS },
+    ],
+    sessionId
   );
-  const r1Events = Glean.devtoolsMain.runtimeAddedAboutdebugging.testGetValue();
-  Assert.equal(1, r1Events.length);
-  assertExtras(
-    { ...RUNTIME_1_EXTRAS, session_id: sessionId },
-    r1Events[0].extra
-  );
-  Services.fog.testResetFOG();
 
   // Now that a first telemetry event has been logged for RUNTIME_1, retrieve the id
   // generated for telemetry, and check that we keep logging the same id for all events
   // related to runtime 1.
-  const runtime1Id = r1Events[0].extra.runtime_id;
+  const runtime1Id = evts.filter(e => e.method === "runtime_added")[0].extras
+    .runtime_id;
   const runtime1Extras = Object.assign({}, RUNTIME_1_EXTRAS, {
     runtime_id: runtime1Id,
   });
@@ -92,39 +82,27 @@ add_task(async function testUsbRuntimeUpdates() {
 
   await connectToRuntime(USB_RUNTIME_1.deviceName, document);
 
-  const rcEvents =
-    Glean.devtoolsMain.runtimeConnectedAboutdebugging.testGetValue();
-  Assert.equal(1, rcEvents.length);
-  assertExtras(
-    { ...runtime1ConnectedExtras, session_id: sessionId },
-    rcEvents[0].extra
+  checkTelemetryEvents(
+    [
+      { method: "runtime_connected", extras: runtime1ConnectedExtras },
+      { method: "connection_attempt", extras: { status: "start" } },
+      { method: "connection_attempt", extras: { status: "success" } },
+      { method: "select_page", extras: { page_type: "runtime" } },
+    ],
+    sessionId
   );
-  const caEvents =
-    Glean.devtoolsMain.connectionAttemptAboutdebugging.testGetValue();
-  Assert.equal(2, caEvents.length);
-  assertExtras({ status: "start", session_id: sessionId }, caEvents[0].extra);
-  assertExtras({ status: "success", session_id: sessionId }, caEvents[1].extra);
-  let spEvents = Glean.devtoolsMain.selectPageAboutdebugging.testGetValue();
-  Assert.equal(1, spEvents.length);
-  assertExtras(
-    { page_type: "runtime", session_id: sessionId },
-    spEvents[0].extra
-  );
-  Services.fog.testResetFOG();
 
   info("Add a second runtime");
   await addUsbRuntime(USB_RUNTIME_2, mocks, document);
-  const r2Events = Glean.devtoolsMain.runtimeAddedAboutdebugging.testGetValue();
-  Assert.equal(1, r2Events.length);
-  assertExtras(
-    { ...RUNTIME_2_EXTRAS, session_id: sessionId },
-    r2Events[0].extra
+  evts = checkTelemetryEvents(
+    [{ method: "runtime_added", extras: RUNTIME_2_EXTRAS }],
+    sessionId
   );
-  Services.fog.testResetFOG();
 
-  // Similar to what we did for RUNTIME_1, we want to check we reuse the same telemetry id
+  // Similar to what we did for RUNTIME_1,w e want to check we reuse the same telemetry id
   // for all the events related to RUNTIME_2.
-  const runtime2Id = r2Events[0].extra.runtime_id;
+  const runtime2Id = evts.filter(e => e.method === "runtime_added")[0].extras
+    .runtime_id;
   const runtime2Extras = Object.assign({}, RUNTIME_2_EXTRAS, {
     runtime_id: runtime2Id,
   });
@@ -132,36 +110,24 @@ add_task(async function testUsbRuntimeUpdates() {
   info("Remove runtime 1");
   await removeUsbRuntime(USB_RUNTIME_1, mocks, document);
 
-  spEvents = Glean.devtoolsMain.selectPageAboutdebugging.testGetValue();
-  Assert.equal(1, spEvents.length);
-  assertExtras(
-    { page_type: "runtime", session_id: sessionId },
-    spEvents[0].extra
+  checkTelemetryEvents(
+    [
+      { method: "select_page", extras: { page_type: "runtime" } },
+      { method: "runtime_disconnected", extras: runtime1ConnectedExtras },
+      { method: "runtime_removed", extras: runtime1Extras },
+    ],
+    sessionId
   );
-  const rdEvents =
-    Glean.devtoolsMain.runtimeDisconnectedAboutdebugging.testGetValue();
-  Assert.equal(1, rdEvents.length);
-  assertExtras(
-    { ...runtime1ConnectedExtras, session_id: sessionId },
-    rdEvents[0].extra
-  );
-  let rrEvents = Glean.devtoolsMain.runtimeRemovedAboutdebugging.testGetValue();
-  Assert.equal(1, rrEvents.length);
-  assertExtras({ ...runtime1Extras, session_id: sessionId }, rrEvents[0].extra);
-  Services.fog.testResetFOG();
 
   info("Remove runtime 2");
   await removeUsbRuntime(USB_RUNTIME_2, mocks, document);
 
-  rrEvents = Glean.devtoolsMain.runtimeRemovedAboutdebugging.testGetValue();
-  Assert.equal(1, rrEvents.length);
-  assertExtras({ ...runtime2Extras, session_id: sessionId }, rrEvents[0].extra);
-  const drEvents =
-    Glean.devtoolsMain.deviceRemovedAboutdebugging.testGetValue();
-  Assert.equal(1, drEvents.length);
-  assertExtras(
-    { ...DEVICE_A_EXTRAS, session_id: sessionId },
-    drEvents[0].extra
+  checkTelemetryEvents(
+    [
+      { method: "runtime_removed", extras: runtime2Extras },
+      { method: "device_removed", extras: DEVICE_A_EXTRAS },
+    ],
+    sessionId
   );
 
   await removeTab(tab);

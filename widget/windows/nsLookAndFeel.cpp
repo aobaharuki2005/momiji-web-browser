@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -433,7 +434,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_3DSHADOW;
       break;
     case ColorID::Window:
-    case ColorID::MozDialog:
       idx = COLOR_WINDOW;
       break;
     case ColorID::Windowframe:
@@ -460,6 +460,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       break;
     case ColorID::MozHeaderbar:
     case ColorID::MozHeaderbarinactive:
+    case ColorID::MozDialog:
       idx = COLOR_3DFACE;
       break;
     case ColorID::Accentcolor:
@@ -898,8 +899,7 @@ nscolor nsLookAndFeel::GetColorForSysColorIndex(int index) {
 auto nsLookAndFeel::ComputeTitlebarColors() -> TitlebarColors {
   TitlebarColors result;
 
-  // Start with the native / non-accent-in-titlebar colors for light mode, and
-  // non-native colors always for dark mode.
+  // Start with the native / non-accent-in-titlebar colors.
   result.mActiveLight = {GetColorForSysColorIndex(COLOR_ACTIVECAPTION),
                          GetColorForSysColorIndex(COLOR_CAPTIONTEXT),
                          GetColorForSysColorIndex(COLOR_ACTIVEBORDER)};
@@ -907,15 +907,9 @@ auto nsLookAndFeel::ComputeTitlebarColors() -> TitlebarColors {
   result.mInactiveLight = {GetColorForSysColorIndex(COLOR_INACTIVECAPTION),
                            GetColorForSysColorIndex(COLOR_INACTIVECAPTIONTEXT),
                            GetColorForSysColorIndex(COLOR_INACTIVEBORDER)};
-  result.mActiveDark = {*GenericDarkColor(ColorID::Activecaption),
-                        *GenericDarkColor(ColorID::Captiontext),
-                        *GenericDarkColor(ColorID::Activeborder)};
-  result.mInactiveDark = {*GenericDarkColor(ColorID::Inactivecaption),
-                          *GenericDarkColor(ColorID::Inactivecaptiontext),
-                          *GenericDarkColor(ColorID::Inactiveborder)};
 
   if (!mHighContrastOn) {
-    // Use our non-native light colors.
+    // Use our non-native colors.
     result.mActiveLight = {
         GetStandinForNativeColor(ColorID::Activecaption, ColorScheme::Light),
         GetStandinForNativeColor(ColorID::Captiontext, ColorScheme::Light),
@@ -925,12 +919,15 @@ auto nsLookAndFeel::ComputeTitlebarColors() -> TitlebarColors {
         GetStandinForNativeColor(ColorID::Inactivecaptiontext,
                                  ColorScheme::Light),
         GetStandinForNativeColor(ColorID::Inactiveborder, ColorScheme::Light)};
-    if (WinUtils::MicaEnabled()) {
-      // Use transparent titlebar backgrounds when using mica.
-      result.mActiveDark.mBg = result.mActiveLight.mBg =
-          result.mInactiveDark.mBg = result.mInactiveLight.mBg = NS_TRANSPARENT;
-    }
   }
+
+  // Our dark colors are always non-native.
+  result.mActiveDark = {*GenericDarkColor(ColorID::Activecaption),
+                        *GenericDarkColor(ColorID::Captiontext),
+                        *GenericDarkColor(ColorID::Activeborder)};
+  result.mInactiveDark = {*GenericDarkColor(ColorID::Inactivecaption),
+                          *GenericDarkColor(ColorID::Inactivecaptiontext),
+                          *GenericDarkColor(ColorID::Inactiveborder)};
 
   // TODO(bug 1825241): Somehow get notified when this changes? Hopefully the
   // sys color notification is enough.
@@ -954,12 +951,16 @@ auto nsLookAndFeel::ComputeTitlebarColors() -> TitlebarColors {
   result.mAccentInactive = dwmKey.GetValueAsDword(u"AccentColorInactive"_ns);
   result.mAccentInactiveText = GetAccentColorText(result.mAccentInactive);
 
+  if (WinUtils::MicaEnabled()) {
+    // Use transparent titlebar backgrounds when using mica.
+    result.mActiveDark.mBg = result.mActiveLight.mBg =
+        result.mInactiveDark.mBg = result.mInactiveLight.mBg = NS_TRANSPARENT;
+  }
+
   // The ColorPrevalence value is set to 1 when the "Show color on title bar"
   // setting in the Color section of Window's Personalization settings is
-  // turned on. This setting is not supposed to have an effect in high contrast
-  // mode, see bug 2007306.
+  // turned on.
   result.mUseAccent =
-      !mHighContrastOn &&
       dwmKey.GetValueAsDword(u"ColorPrevalence"_ns).valueOr(0) == 1;
   if (!result.mUseAccent) {
     return result;

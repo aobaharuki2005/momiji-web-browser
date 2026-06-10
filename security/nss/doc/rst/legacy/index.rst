@@ -1,5 +1,3 @@
-:orphan:
-
 .. _mozilla_projects_nss_legacy_index:
 
 Legacy documentation
@@ -10,6 +8,7 @@ Legacy documentation
    :glob:
    :hidden:
 
+   getting_started_with_nss/index.rst
    introduction_to_network_security_services/index.rst
    More documentation <more_docs>
 
@@ -32,8 +31,9 @@ Legacy Documentation
    NSS is available under the Mozilla Public License. For information on downloading NSS releases as
    tar files, see :ref:`mozilla_projects_nss_nss_sources_building_testing`.
 
-   If you're a developer and would like to contribute to NSS, you might want to read the document
-   :ref:`mozilla_projects_nss_an_overview_of_nss_internals`.
+   If you're a developer and would like to contribute to NSS, you might want to read the documents
+   :ref:`mozilla_projects_nss_an_overview_of_nss_internals` and
+   :ref:`mozilla_projects_nss_getting_started_with_nss`.
 
    .. rubric:: Background Information
       :name: Background_Information
@@ -49,6 +49,7 @@ Legacy Documentation
       SSL and the steps involved in the SSL handshake.
 
    .. rubric:: Getting Started
+      :name: Getting_Started
 
    :ref:`mozilla_projects_nss_nss_releases`
       This page contains information about the current and past releases of NSS.

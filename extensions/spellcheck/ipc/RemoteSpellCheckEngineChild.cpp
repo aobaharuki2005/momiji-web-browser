@@ -13,17 +13,7 @@ RemoteSpellcheckEngineChild::RemoteSpellcheckEngineChild(
 RemoteSpellcheckEngineChild::~RemoteSpellcheckEngineChild() {
   // null out the owner's SpellcheckEngineChild to prevent state corruption
   // during shutdown
-  if (mOwner) {
-    mOwner->DeleteRemoteEngine();
-  }
-}
-
-void RemoteSpellcheckEngineChild::Destroy() {
-  if (mOwner) {
-    mOwner->DeleteRemoteEngine();
-    mOwner = nullptr;
-  }
-  (void)RemoteSpellcheckEngineChild::Send__delete__(this);
+  mOwner->DeleteRemoteEngine();
 }
 
 RefPtr<GenericPromise> RemoteSpellcheckEngineChild::SetCurrentDictionaries(

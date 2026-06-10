@@ -12,6 +12,7 @@ add_setup(async function () {
         "privacy.bounceTrackingProtection.mode",
         Ci.nsIBounceTrackingProtection.MODE_ENABLED,
       ],
+      ["privacy.bounceTrackingProtection.requireStatefulBounces", true],
       ["privacy.bounceTrackingProtection.bounceTrackingGracePeriodSec", 0],
     ],
   });
@@ -23,7 +24,12 @@ add_setup(async function () {
   Services.fog.testResetFOG();
 });
 
-async function runTest(useDryRunMode) {
+async function runTest(
+  useDryRunMode,
+  requireStatefulBounces = Services.prefs.getBoolPref(
+    "privacy.bounceTrackingProtection.requireStatefulBounces"
+  )
+) {
   await SpecialPowers.pushPrefEnv({
     set: [
       [
@@ -31,6 +37,10 @@ async function runTest(useDryRunMode) {
         useDryRunMode
           ? Ci.nsIBounceTrackingProtection.MODE_ENABLED_DRY_RUN
           : Ci.nsIBounceTrackingProtection.MODE_ENABLED,
+      ],
+      [
+        "privacy.bounceTrackingProtection.requireStatefulBounces",
+        requireStatefulBounces,
       ],
     ],
   });
@@ -70,6 +80,14 @@ async function runTest(useDryRunMode) {
     useDryRunMode ? "true" : "false",
     "The purge should not be a dry run."
   );
+  is(
+    event.extra.require_stateful_bounces,
+    requireStatefulBounces ? "true" : "false",
+    `The purge should be in ${
+      requireStatefulBounces ? "stateful" : "stateless"
+    } mode following the pref configuration.`
+  );
+
   let bounceTimeInt = Number.parseInt(event.extra.bounce_time, 10);
   Assert.greater(bounceTimeInt, 0, "The bounce time should be greater than 0.");
   Assert.less(
@@ -97,4 +115,18 @@ add_task(async function test_purge_event() {
  */
 add_task(async function test_purge_event_dry_run() {
   await runTest(true);
+});
+
+/**
+ * Tests that purge events are recorded correctly in stateful mode.
+ */
+add_task(async function test_purge_event_stateful() {
+  await runTest(false, true);
+});
+
+/**
+ * Tests that purge events are recorded correctly in stateless mode.
+ */
+add_task(async function test_purge_event_stateless() {
+  await runTest(false, false);
 });

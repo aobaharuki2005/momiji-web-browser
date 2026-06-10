@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -82,10 +83,6 @@ var BrowserCommands = {
     return true;
   },
 
-  duplicateTab() {
-    duplicateTabIn(gBrowser.selectedTab, "tab");
-  },
-
   reloadOrDuplicate(aEvent) {
     aEvent = BrowserUtils.getRootEvent(aEvent);
     const accelKeyPressed =
@@ -111,12 +108,98 @@ var BrowserCommands = {
       this.reloadSkipCache();
       return;
     }
-    gBrowser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
+    this.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
   },
 
   reloadSkipCache() {
     // Bypass proxy and cache.
-    gBrowser.reloadWithFlags(kSkipCacheFlags);
+    this.reloadWithFlags(kSkipCacheFlags);
+  },
+
+  reloadWithFlags(reloadFlags) {
+    const unchangedRemoteness = [];
+
+    for (const tab of gBrowser.selectedTabs) {
+      const browser = tab.linkedBrowser;
+      const url = browser.currentURI;
+      const urlSpec = url.spec;
+      // We need to cache the content principal here because the browser will be
+      // reconstructed when the remoteness changes and the content prinicpal will
+      // be cleared after reconstruction.
+      const principal = tab.linkedBrowser.contentPrincipal;
+      if (gBrowser.updateBrowserRemotenessByURL(browser, urlSpec)) {
+        // If the remoteness has changed, the new browser doesn't have any
+        // information of what was loaded before, so we need to load the previous
+        // URL again.
+        if (tab.linkedPanel) {
+          loadBrowserURI(browser, url, principal);
+        } else {
+          // Shift to fully loaded browser and make
+          // sure load handler is instantiated.
+          tab.addEventListener(
+            "SSTabRestoring",
+            () => loadBrowserURI(browser, url, principal),
+            { once: true }
+          );
+          gBrowser._insertBrowser(tab);
+        }
+      } else {
+        unchangedRemoteness.push(tab);
+      }
+    }
+
+    if (!unchangedRemoteness.length) {
+      return;
+    }
+
+    // Reset temporary permissions on the remaining tabs to reload.
+    // This is done here because we only want to reset
+    // permissions on user reload.
+    for (const tab of unchangedRemoteness) {
+      SitePermissions.clearTemporaryBlockPermissions(tab.linkedBrowser);
+      // Also reset DOS mitigations for the basic auth prompt on reload.
+      delete tab.linkedBrowser.authPromptAbuseCounter;
+    }
+    gIdentityHandler.hidePopup();
+    gPermissionPanel.hidePopup();
+
+    if (document.hasValidTransientUserGestureActivation) {
+      reloadFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_USER_ACTIVATION;
+    }
+
+    for (const tab of unchangedRemoteness) {
+      reloadBrowser(tab, reloadFlags);
+    }
+
+    function reloadBrowser(tab) {
+      if (tab.linkedPanel) {
+        const { browsingContext } = tab.linkedBrowser;
+        const { sessionHistory } = browsingContext;
+        if (sessionHistory) {
+          sessionHistory.reload(reloadFlags);
+        } else {
+          browsingContext.reload(reloadFlags);
+        }
+      } else {
+        // Shift to fully loaded browser and make
+        // sure load handler is instantiated.
+        tab.addEventListener(
+          "SSTabRestoring",
+          () => tab.linkedBrowser.browsingContext.reload(reloadFlags),
+          {
+            once: true,
+          }
+        );
+        gBrowser._insertBrowser(tab);
+      }
+    }
+
+    function loadBrowserURI(browser, url, principal) {
+      browser.loadURI(url, {
+        loadFlags: reloadFlags,
+        triggeringPrincipal: principal,
+      });
+    }
   },
 
   stop() {
@@ -150,7 +233,11 @@ var BrowserCommands = {
         if (isInitialPage(homePage)) {
           gBrowser.selectedBrowser.initialPageLoadedFromUserAction = homePage;
         }
-        loadOneOrMoreURIs(homePage);
+        loadOneOrMoreURIs(
+          homePage,
+          Services.scriptSecurityManager.getSystemPrincipal(),
+          null
+        );
         if (isBlankPageURL(homePage)) {
           gURLBar.select();
         } else {
@@ -207,9 +294,7 @@ var BrowserCommands = {
     let werePassedURL = !!url;
     url ??= BROWSER_NEW_TAB_URL;
     let searchClipboard =
-      event?.button == 1 &&
-      Services.prefs.getBoolPref("middlemouse.paste") &&
-      gMiddleClickNewTabUsesPasteboard;
+      gMiddleClickNewTabUsesPasteboard && event?.button == 1;
 
     let relatedToCurrent = false;
     let where = "tab";
@@ -264,38 +349,6 @@ var BrowserCommands = {
   },
 
   openFileWindow() {
-    // The file picker is presented as a sheet attached to its parent
-    // browsingContext's window. When this command is dispatched from a
-    // non-browser chrome window (the macOS hidden menubar window when
-    // all browsers are closed, or auxiliary windows like Library /
-    // About when one of them holds the keyboard focus), we must
-    // redirect the call to a real browser window — otherwise the
-    // sheet either attaches off-screen (hidden window) or to the
-    // wrong window (Library/About). Mirrors openLocation()'s pattern.
-    if (window.location.href != AppConstants.BROWSER_CHROME_URL) {
-      let targetWin = URILoadingHelper.getTargetWindow(window);
-      if (targetWin) {
-        targetWin.focus();
-        targetWin.BrowserCommands.openFileWindow();
-        return;
-      }
-      let newWin = window.openDialog(
-        AppConstants.BROWSER_CHROME_URL,
-        "_blank",
-        "chrome,all,dialog=no",
-        "about:blank"
-      );
-      newWin.addEventListener(
-        "load",
-        () => {
-          newWin.focus();
-          newWin.BrowserCommands.openFileWindow();
-        },
-        { once: true }
-      );
-      return;
-    }
-
     // Get filepicker component.
     try {
       const nsIFilePicker = Ci.nsIFilePicker;
@@ -373,25 +426,6 @@ var BrowserCommands = {
   },
 
   /**
-   * This is part of the Document Picture-in-Picture API.
-   * Close this window and bring the opener tab back to foreground.
-   *
-   * @param event
-   *        Used to determine how close was triggered.
-   */
-  returnToOpenerFromPiP(event) {
-    // Switch to and focus the opener
-    const openerBC = gBrowser.selectedBrowser.browsingContext.opener;
-    const openerBrowser = openerBC.embedderElement;
-    const openerWindow = openerBrowser.documentGlobal;
-    const openerTab = openerWindow.gBrowser.getTabForBrowser(openerBrowser);
-    openerWindow.gBrowser.selectedTab = openerTab;
-    openerWindow.focus();
-
-    this.tryToCloseWindow(event);
-  },
-
-  /**
    * Open the View Source dialog.
    *
    * @param args
@@ -439,9 +473,15 @@ var BrowserCommands = {
       // source in tab expects the new view source browser's remoteness to match
       // that of the original URL, so disable remoteness if necessary for this
       // URL.
-      preferredRemoteType = ChromeUtils.predictRemoteTypeForURI(args.URL, {
-        window,
-      });
+      const oa = E10SUtils.predictOriginAttributes({ window });
+      preferredRemoteType = E10SUtils.getRemoteTypeForURI(
+        args.URL,
+        gMultiProcessBrowser,
+        gFissionBrowser,
+        E10SUtils.DEFAULT_REMOTE_TYPE,
+        null,
+        oa
+      );
     }
 
     // In the case of popups, we need to find a non-popup browser window.
@@ -556,7 +596,9 @@ var BrowserCommands = {
 
   forceEncodingDetection() {
     gBrowser.selectedBrowser.forceEncodingDetection();
-    gBrowser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+    BrowserCommands.reloadWithFlags(
+      Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE
+    );
   },
 
   processCloseRequest() {

@@ -39,6 +39,7 @@ NSS 3.54 release notes
    -  Use ARM Cryptography Extension for SHA256, when available. (`Bug
       1528113 <https://bugzilla.mozilla.org/show_bug.cgi?id=1528113>`__).
 
+.. _certificate_authority_changes:
 
 `Certificate Authority Changes <#certificate_authority_changes>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

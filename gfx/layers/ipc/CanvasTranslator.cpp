@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -49,8 +51,7 @@ UniquePtr<TextureData> CanvasTranslator::CreateTextureData(
   switch (mTextureType) {
     case TextureType::Unknown:
       textureData = BufferTextureData::Create(
-          aSize, aFormat, gfx::ColorSpace2::SRGB, gfx::TransferFunction::SRGB,
-          gfx::BackendType::SKIA, LayersBackend::LAYERS_WR,
+          aSize, aFormat, gfx::BackendType::SKIA, LayersBackend::LAYERS_WR,
           TextureFlags::DEALLOCATE_CLIENT | TextureFlags::REMOTE_TEXTURE,
           allocFlags, nullptr);
       break;
@@ -415,14 +416,17 @@ bool CanvasTranslator::SetDataSurfaceBuffer(
   DataSurfaceBufferWillChange(aId);
 
   // Finally, change the shmem mapping.
-  mDataSurfaceShmems[aId].mShmem = aBufferHandle.Map();
-  if (!mDataSurfaceShmems[aId].mShmem) {
-    // Try clearing out old mappings to see if resource limits were reached.
-    DataSurfaceBufferWillChange(0, false);
-    // Try mapping one last time.
-    mDataSurfaceShmems[aId].mShmem = aBufferHandle.Map();
-    if (!mDataSurfaceShmems[aId].mShmem) {
-      return false;
+  {
+    auto& dataSurfaceShmem = mDataSurfaceShmems[aId];
+    dataSurfaceShmem.mShmem = aBufferHandle.Map();
+    if (!dataSurfaceShmem.mShmem) {
+      // Try clearing out old mappings to see if resource limits were reached.
+      DataSurfaceBufferWillChange(0, false);
+      // Try mapping one last time.
+      dataSurfaceShmem.mShmem = aBufferHandle.Map();
+      if (!dataSurfaceShmem.mShmem) {
+        return false;
+      }
     }
   }
 
@@ -446,10 +450,11 @@ void CanvasTranslator::GetDataSurface(uint32_t aId, uint64_t aSurfaceRef) {
   }
   auto dstSize = dataSurface->GetSize();
   gfx::SurfaceFormat format = dataSurface->GetFormat();
-  auto dstStride = ImageDataSerializer::ComputeRGBStride(format, dstSize.width);
-  Maybe<uint32_t> requiredSize =
+  int32_t dstStride =
+      ImageDataSerializer::ComputeRGBStride(format, dstSize.width);
+  auto requiredSize =
       ImageDataSerializer::ComputeRGBBufferSize(dstSize, format);
-  if (dstStride.isNothing() || requiredSize.isNothing()) {
+  if (requiredSize <= 0) {
     return;
   }
 
@@ -463,12 +468,12 @@ void CanvasTranslator::GetDataSurface(uint32_t aId, uint64_t aSurfaceRef) {
   }
 
   // Try directly reading the data surface into shmem to avoid further copies.
-  if (size_t(requiredSize.value()) > it->second.mShmem.Size()) {
+  if (size_t(requiredSize) > it->second.mShmem.Size()) {
     return;
   }
 
   uint8_t* dst = it->second.mShmem.DataAs<uint8_t>();
-  if (dataSurface->ReadDataInto(dst, dstStride.value())) {
+  if (dataSurface->ReadDataInto(dst, dstStride)) {
     // If reading directly into the shmem, then mark the data surface as the
     // shmem's owner.
     it->second.mOwner = dataSurface;
@@ -484,8 +489,8 @@ void CanvasTranslator::GetDataSurface(uint32_t aId, uint64_t aSurfaceRef) {
     return;
   }
 
-  gfx::SwizzleData(map.GetData(), map.GetStride(), format, dst,
-                   dstStride.value(), format, dstSize);
+  gfx::SwizzleData(map.GetData(), map.GetStride(), format, dst, dstStride,
+                   format, dstSize);
 }
 
 already_AddRefed<gfx::SourceSurface> CanvasTranslator::WaitForSurface(
@@ -794,7 +799,7 @@ bool CanvasTranslator::TranslateRecording() {
     }
 
     if (!success && !HandleExtensionEvent(eventType)) {
-      gfxCriticalNoteOnce << "Failed to play canvas event type: " << eventType;
+      gfxCriticalNote << "Failed to play canvas event type: " << eventType;
 
       if (!mCurrentMemReader.good()) {
         mHeader->readerState = State::Failed;
@@ -1568,36 +1573,11 @@ CanvasTranslator::MaybeRecycleDataSurfaceForSurfaceDescriptor(
   if (usedDescriptor.isSome() && usedDescriptor.ref() == aSurfaceDescriptor) {
     MOZ_ASSERT(usedSurf);
     MOZ_ASSERT(usedWrapper);
+    MOZ_ASSERT(aTextureHost->GetSize() == usedSurf->GetSize());
 
-    auto* bufferTextureHost = aTextureHost->AsBufferTextureHost();
-    if (bufferTextureHost) {
-      if (usedSurf->GetType() == gfx::SurfaceType::DATA_ALIGNED) {
-        // Buffer of DataSourceSurface is owned by DataSourceSurface
-        MOZ_ASSERT(aTextureHost->GetSize() == usedSurf->GetSize());
-        if (aTextureHost->GetSize() == usedSurf->GetSize()) {
-          // Since the data is the same as before, the DataSourceSurfaceWrapper
-          // can be reused.
-          return do_AddRef(usedWrapper);
-        } else {
-          mUsedDataSurfaceForSurfaceDescriptor = nullptr;
-          mUsedWrapperForSurfaceDescriptor = nullptr;
-          mUsedSurfaceDescriptorForSurfaceDescriptor = Nothing();
-        }
-      } else {
-        // Buffer of DataSourceSurface is owned by BufferTextureHost
-        if (bufferTextureHost->GetBuffer() &&
-            bufferTextureHost->GetBuffer() == usedSurf->GetData() &&
-            aTextureHost->GetSize() == usedSurf->GetSize() &&
-            aTextureHost->GetFormat() == usedSurf->GetFormat()) {
-          // Since the data is the same as before, the DataSourceSurfaceWrapper
-          // can be reused.
-          return do_AddRef(usedWrapper);
-        }
-        mUsedDataSurfaceForSurfaceDescriptor = nullptr;
-        mUsedWrapperForSurfaceDescriptor = nullptr;
-        mUsedSurfaceDescriptorForSurfaceDescriptor = Nothing();
-      }
-    }
+    // Since the data is the same as before, the DataSourceSurfaceWrapper can be
+    // reused.
+    return do_AddRef(usedWrapper);
   }
 
   bool isYuvVideo = false;
@@ -1644,6 +1624,7 @@ CanvasTranslator::LookupSourceSurfaceFromSurfaceDescriptor(
   RefPtr<VideoBridgeParent> parent =
       VideoBridgeParent::GetSingleton(sdrd.source());
   if (!parent) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     gfxCriticalNote << "TexUnpackSurface failed to get VideoBridgeParent";
     return nullptr;
   }

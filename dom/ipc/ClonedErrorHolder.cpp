@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -48,8 +50,7 @@ void ClonedErrorHolder::Init(JSContext* aCx, JS::Handle<JSObject*> aError,
                              ErrorResult& aRv) {
   JS::Rooted<JSObject*> stack(aCx);
 
-  JS::BorrowedErrorReport err(aCx);
-  if (JS_ErrorFromException(aCx, aError, err)) {
+  if (JSErrorReport* err = JS_ErrorFromException(aCx, aError)) {
     mType = Type::JSError;
     if (err->message()) {
       mMessage = err->message().c_str();
@@ -173,12 +174,7 @@ static bool ReadStringPair(JSStructuredCloneReader* aReader,
 bool ClonedErrorHolder::WriteStructuredClone(JSContext* aCx,
                                              JSStructuredCloneWriter* aWriter,
                                              StructuredCloneHolder* aHolder) {
-  const auto& data = mStack.BufferData();
-  CheckedUint32 dataSize(data.Size());
-  if (!dataSize.isValid()) {
-    return false;
-  }
-
+  auto& data = mStack.BufferData();
   return JS_WriteUint32Pair(aWriter, SCTAG_DOM_CLONED_ERROR_OBJECT, 0) &&
          WriteStringPair(aWriter, mName, mMessage) &&
          WriteStringPair(aWriter, mFilename, mSourceLine) &&
@@ -187,7 +183,7 @@ bool ClonedErrorHolder::WriteStructuredClone(JSContext* aCx,
          JS_WriteUint32Pair(aWriter, mTokenOffset, mErrorNumber) &&
          JS_WriteUint32Pair(aWriter, uint32_t(mType), uint32_t(mExnType)) &&
          JS_WriteUint32Pair(aWriter, mCode, uint32_t(mResult)) &&
-         JS_WriteUint32Pair(aWriter, dataSize.value(),
+         JS_WriteUint32Pair(aWriter, data.Size(),
                             JS_STRUCTURED_CLONE_VERSION) &&
          data.ForEachDataChunk([&](const char* aData, size_t aSize) {
            return JS_WriteBytes(aWriter, aData, aSize);
@@ -267,7 +263,7 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
   JS::Rooted<JSObject*> stack(aCx);
 
   IgnoredErrorResult rv;
-  mStack.Read(aCx, &stackVal, rv);
+  mStack.Read(xpc::CurrentNativeGlobal(aCx), aCx, &stackVal, rv);
   // Note: We continue even if reading the stack fails, since we can still
   // produce a useful error object even without a stack. That said, if decoding
   // the stack fails, there's a pretty good chance that the rest of the message
@@ -313,8 +309,7 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
 
     if (!mSourceLine.IsVoid()) {
       JS::Rooted<JSObject*> errObj(aCx, &aResult.toObject());
-      JS::BorrowedErrorReport err(aCx);
-      if (JS_ErrorFromException(aCx, errObj, err)) {
+      if (JSErrorReport* err = JS_ErrorFromException(aCx, errObj)) {
         NS_ConvertUTF8toUTF16 sourceLine(mSourceLine);
         // Because this string ends up being consumed as an nsDependentString
         // in nsXPCComponents_Utils::ReportError, this needs to be a null
@@ -325,8 +320,8 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
           // Corrupt data, leave linebuf unset.
         } else if (JS::UniqueTwoByteChars buffer =
                        ToNullTerminatedJSStringBuffer(aCx, sourceLine)) {
-          err.get()->initOwnedLinebuf(buffer.release(), sourceLine.Length(),
-                                      mTokenOffset);
+          err->initOwnedLinebuf(buffer.release(), sourceLine.Length(),
+                                mTokenOffset);
         } else {
           // Just ignore OOM and continue if the string copy failed.
           JS_ClearPendingException(aCx);

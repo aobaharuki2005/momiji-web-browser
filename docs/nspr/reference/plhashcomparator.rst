@@ -1,7 +1,6 @@
 PLHashComparator
 ================
 
-.. _plhashcomparator-syntax:
 
 Syntax
 ------
@@ -14,8 +13,6 @@ Syntax
      const void *v1,
      const void *v2);
 
-
-.. _plhashcomparator-description:
 
 Description
 -----------
@@ -31,16 +28,12 @@ For convenience, two comparator functions are provided.
 numerically.
 
 
-.. _plhashcomparator-remark:
-
 Remark
 ------
 
 The return value of :ref:`PLHashComparator` functions should be of type
 :ref:`PRBool`.
 
-
-.. _plhashcomparator-see-also:
 
 See Also
 --------

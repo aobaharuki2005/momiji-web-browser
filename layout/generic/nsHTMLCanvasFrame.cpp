@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,7 +11,6 @@
 #include "ActiveLayerTracker.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/RenderRootStateManager.h"
@@ -17,6 +18,7 @@
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
 #include "mozilla/webgpu/CanvasContext.h"
 #include "nsDisplayList.h"
+#include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleUtil.h"
 
@@ -262,7 +264,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
       return;
     }
 
-    auto renderer = MakeRefPtr<CanvasRenderer>();
+    RefPtr<CanvasRenderer> renderer = new CanvasRenderer();
     if (!canvas->InitializeCanvasRenderer(aBuilder, renderer)) {
       return;
     }
@@ -284,14 +286,12 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
       aCtx->Multiply(transform);
     }
 
-    const Rect srcRect(surface->GetRect());
-    if (presContext->Type() != nsPresContext::eContext_Print ||
-        !canvas->GetMozPrintCallback() ||
-        !dt.TryToReplaySurface(surface, destRect, srcRect)) {
-      dt.DrawSurface(
-          surface, destRect, srcRect,
-          DrawSurfaceOptions(nsLayoutUtils::GetSamplingFilterForFrame(f)));
-    }
+    const auto& srcRect = surface->GetRect();
+    dt.DrawSurface(
+        surface, destRect,
+        Rect(float(srcRect.X()), float(srcRect.Y()), float(srcRect.Width()),
+             float(srcRect.Height())),
+        DrawSurfaceOptions(nsLayoutUtils::GetSamplingFilterForFrame(f)));
 
     renderer->FireDidTransactionCallback();
     renderer->ResetDirty();

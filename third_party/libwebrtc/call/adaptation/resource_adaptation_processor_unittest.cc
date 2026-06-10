@@ -27,11 +27,11 @@
 #include "call/adaptation/video_stream_input_state_provider.h"
 #include "rtc_base/event.h"
 #include "rtc_base/task_queue_for_test.h"
+#include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "test/create_test_field_trials.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-#include "test/run_loop.h"
 #include "test/wait_until.h"
 
 namespace webrtc {
@@ -141,10 +141,12 @@ class ResourceAdaptationProcessorTest : public ::testing::Test {
     processor_.reset();
   }
 
-  void WaitUntilTaskQueueIdle() { main_thread_.Flush(); }
+  static void WaitUntilTaskQueueIdle() {
+    ASSERT_TRUE(Thread::Current()->ProcessMessages(0));
+  }
 
  protected:
-  test::RunLoop main_thread_;
+  AutoThread main_thread_;
   FakeFrameRateProvider frame_rate_provider_;
   VideoStreamInputStateProvider input_state_provider_;
   scoped_refptr<FakeResource> resource_;
@@ -665,7 +667,7 @@ TEST_F(ResourceAdaptationProcessorTest,
   EXPECT_EQ(2, restrictions_listener_.adaptation_counters().Total());
 
   video_stream_adapter_->SetDegradationPreference(
-      DegradationPreference::MAINTAIN_FRAMERATE_AND_RESOLUTION);
+      DegradationPreference::DISABLED);
 
   // Revert to `other_resource_` when removing `resource_` even though the
   // current degradataion preference is disabled.

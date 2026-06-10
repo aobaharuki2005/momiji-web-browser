@@ -8,11 +8,6 @@ info: |
   22.2.3.27 %TypedArray%.prototype.subarray( begin , end )
 
   ...
-  15. If O.[[ArrayLength]] is auto and end is undefined, then
-      a. Let argumentsList be « buffer, 𝔽(beginByteOffset) ».
-  16. Else,
-      ...
-      f. Let argumentsList be « buffer, 𝔽(beginByteOffset), 𝔽(newLength) ».
   17. Return ? TypedArraySpeciesCreate(O, argumentsList).
 
   22.2.4.7 TypedArraySpeciesCreate ( exemplar, argumentList )
@@ -36,12 +31,12 @@ info: |
   3. If argumentList is a List of a single Number, then
     ...
   4. Return newTypedArray.
-includes: [compareArray.js, testTypedArray.js]
+includes: [testBigIntTypedArray.js]
 features: [BigInt, Symbol.species, TypedArray]
 ---*/
 
-testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
-  var sample = new TA(makeCtorArg([40n, 41n, 42n]));
+testWithBigIntTypedArrayConstructors(function(TA) {
+  var sample = new TA([40n, 41n, 42n]);
   var expectedOffset = TA.BYTES_PER_ELEMENT;
   var result, ctorThis;
 
@@ -54,10 +49,10 @@ testWithBigIntTypedArrayConstructors(function(TA, makeCtorArg) {
 
   sample.subarray(1);
 
-  var expectArgs = sample.buffer.resizable
-    ? [sample.buffer, expectedOffset]
-    : [sample.buffer, expectedOffset, 2];
-  assert.compareArray(result, expectArgs, "Constructor called with arguments");
+  assert.sameValue(result.length, 3, "called with 3 arguments");
+  assert.sameValue(result[0], sample.buffer, "[0] is sample.buffer");
+  assert.sameValue(result[1], expectedOffset, "[1] is the byte offset pos");
+  assert.sameValue(result[2], 2, "[2] is expected length");
 
   assert(
     ctorThis instanceof sample.constructor[Symbol.species],

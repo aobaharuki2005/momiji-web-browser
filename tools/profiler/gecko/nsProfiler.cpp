@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,6 +8,7 @@
 
 #include <fstream>
 #include <limits>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -871,7 +874,7 @@ bool nsProfiler::SendProgressRequest(PendingProfile& aPendingProfile) {
                 aResult.progressProportionValueUnderlyingType())
                     .ToDouble() *
                 100.0,
-            aResult.progressLocation().get(),
+            aResult.progressLocation().Data(),
             unsigned(self->mPendingProfiles.length()),
             pendingProfile ? "including" : "excluding", unsigned(childPid));
         self->LogEvent([&](Json::Value& aEvent) {
@@ -1223,35 +1226,29 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
   mWriter->StartArrayProperty("processes");
 
   // If we have any process exit profiles, add them immediately.
-  if (Vector<ProfileAndAdditionalInformation> exitProfiles =
-          profiler_move_exit_profiles();
+  if (Vector<nsCString> exitProfiles = profiler_move_exit_profiles();
       !exitProfiles.empty()) {
     for (auto& exitProfile : exitProfiles) {
-      const nsCString& profile = exitProfile.mProfile;
-      if (!profile.IsEmpty()) {
-        if (profile[0] == '*') {
+      if (!exitProfile.IsEmpty()) {
+        if (exitProfile[0] == '*') {
           LogEvent([&](Json::Value& aEvent) {
             aEvent.append(
                 Json::StaticString{"Exit non-profile with error message:"});
-            aEvent.append(Json::String(Substring(profile, 1).View()));
+            aEvent.append(exitProfile.Data() + 1);
           });
-        } else if (mWriter->ChunkedWriteFunc().Length() + profile.Length() <
+        } else if (mWriter->ChunkedWriteFunc().Length() + exitProfile.Length() <
                    scLengthAccumulationThreshold) {
-          mWriter->Splice(profile);
-          if (exitProfile.mAdditionalInformation.isSome()) {
-            mProfileGenerationAdditionalInformation->Append(
-                std::move(*exitProfile.mAdditionalInformation));
-          }
+          mWriter->Splice(exitProfile);
           LogEvent([&](Json::Value& aEvent) {
             aEvent.append(Json::StaticString{"Added exit profile with size:"});
-            aEvent.append(Json::Value::UInt64{profile.Length()});
+            aEvent.append(Json::Value::UInt64{exitProfile.Length()});
           });
         } else {
           LogEvent([&](Json::Value& aEvent) {
             aEvent.append(
                 Json::StaticString{"Discarded an exit profile that would make "
                                    "the full profile too big, size:"});
-            aEvent.append(Json::Value::UInt64{profile.Length()});
+            aEvent.append(Json::Value::UInt64{exitProfile.Length()});
           });
         }
       }
@@ -1331,8 +1328,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
                   aEvent.append(Json::StaticString{
                       "Child non-profile from pid, with error message:"});
                   aEvent.append(Json::Value::UInt64(childPid));
-                  aEvent.append(
-                      Json::String(Substring(profileString, 1).View()));
+                  aEvent.append(profileString.Data() + 1);
                 });
                 self->GatheredOOPProfile(childPid, ""_ns, Nothing());
               }

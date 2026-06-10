@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -28,7 +30,7 @@ struct MaxContiguousEnumValue<VibrancyType> {
 
 /**
  * VibrancyManager takes care of updating the vibrant regions of a window.
- * Vibrancy is a visual look that was introduced on macOS starting with 10.10.
+ * Vibrancy is a visual look that was introduced on OS X starting with 10.10.
  * An app declares vibrant window regions to the window server, and the window
  * server will display a blurred rendering of the screen contents from behind
  * the window in these areas, behind the actual window contents. Consequently,
@@ -65,29 +67,9 @@ class VibrancyManager {
   bool UpdateVibrantRegion(VibrancyType aType,
                            const LayoutDeviceIntRegion& aRegion);
 
- 
-  LayoutDeviceIntRegion GetUnionOfVibrantRegions() const;
+  void PrefChanged();
 
-  /**
-   * Check whether the operating system supports vibrancy at all.
-   * You may only create a VibrancyManager instance if this returns true.
-   * @return Whether VibrancyManager can be used on this OS.
-   */
-  static bool SystemSupportsVibrancy();
-
-  /**
-   * Create an NSVisualEffectView for the specified vibrancy type. The return
-   * value is not autoreleased. We return an object of type NSView* because we
-   * compile with an SDK that does not contain a definition for
-   * NSVisualEffectView.
-   * @param aIsContainer Whether this NSView will have child views. This value
-   *                     affects hit testing: Container views will pass through
-   *                     hit testing requests to their children, and leaf views
-   *                     will be transparent to hit testing.
-   */
-  static NSView* CreateEffectView(VibrancyType aType, BOOL aIsContainer = NO);
-
-protected:
+ protected:
   const nsCocoaWindow& mCoordinateConverter;
   NSView* mContainerView;
   EnumeratedArray<VibrancyType, UniquePtr<ViewRegion>> mVibrantRegions;

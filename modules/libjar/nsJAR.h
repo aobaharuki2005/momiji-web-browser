@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -102,7 +103,7 @@ class nsJARItem : public nsIZipEntry {
   explicit nsJARItem(nsZipItem* aZipItem);
 
  private:
-  virtual ~nsJARItem() = default;
+  virtual ~nsJARItem() {}
 
   const uint32_t mSize;     /* size in original file */
   const uint32_t mRealsize; /* inflated size */

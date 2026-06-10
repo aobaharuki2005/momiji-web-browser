@@ -41,51 +41,69 @@ pub trait ArrayLike: Sealed {
     fn as_mut_slice(storage: &mut Self::Storage) -> &mut [MaybeUninit<Self::Item>];
 }
 
-// SAFETY: does not modify the content in storage.
-unsafe impl<T, const N: usize> Sealed for [T; N] {
-    type Storage = [MaybeUninit<T>; N];
+// Use macro since const generics can't be used due to MSRV.
+macro_rules! impl_array {
+    () => {};
+    ($n:literal $($rest:tt)*) => {
+        // SAFETY: does not modify the content in storage.
+        unsafe impl<T> Sealed for [T; $n] {
+            type Storage = [MaybeUninit<T>; $n];
 
-    fn new_storage() -> Self::Storage {
-        // SAFETY: An uninitialized `[MaybeUninit<_>; _]` is valid.
-        unsafe { MaybeUninit::uninit().assume_init() }
-    }
-}
+            fn new_storage() -> Self::Storage {
+                // SAFETY: An uninitialized `[MaybeUninit<_>; _]` is valid.
+                unsafe { MaybeUninit::uninit().assume_init() }
+            }
+        }
 
-impl<T, const N: usize> ArrayLike for [T; N] {
-    type Item = T;
+        impl<T> ArrayLike for [T; $n] {
+            type Item = T;
 
-    fn as_slice(storage: &Self::Storage) -> &[MaybeUninit<T>] {
-        storage
-    }
+            fn as_slice(storage: &Self::Storage) -> &[MaybeUninit<T>] {
+                storage
+            }
 
-    fn as_mut_slice(storage: &mut Self::Storage) -> &mut [MaybeUninit<T>] {
-        storage
-    }
-}
+            fn as_mut_slice(storage: &mut Self::Storage) -> &mut [MaybeUninit<T>] {
+                storage
+            }
+        }
 
-// SAFETY: does not modify the content in storage.
-#[cfg(feature = "read")]
-unsafe impl<T, const N: usize> Sealed for Box<[T; N]> {
-    type Storage = Box<[MaybeUninit<T>; N]>;
-
-    fn new_storage() -> Self::Storage {
-        // SAFETY: An uninitialized `[MaybeUninit<_>; _]` is valid.
-        Box::new(unsafe { MaybeUninit::uninit().assume_init() })
+        impl_array!($($rest)*);
     }
 }
 
 #[cfg(feature = "read")]
-impl<T, const N: usize> ArrayLike for Box<[T; N]> {
-    type Item = T;
+macro_rules! impl_box {
+    () => {};
+    ($n:literal $($rest:tt)*) => {
+        // SAFETY: does not modify the content in storage.
+        unsafe impl<T> Sealed for Box<[T; $n]> {
+            type Storage = Box<[MaybeUninit<T>; $n]>;
 
-    fn as_slice(storage: &Self::Storage) -> &[MaybeUninit<T>] {
-        &storage[..]
-    }
+            fn new_storage() -> Self::Storage {
+                // SAFETY: An uninitialized `[MaybeUninit<_>; _]` is valid.
+                Box::new(unsafe { MaybeUninit::uninit().assume_init() })
+            }
+        }
 
-    fn as_mut_slice(storage: &mut Self::Storage) -> &mut [MaybeUninit<T>] {
-        &mut storage[..]
+        impl<T> ArrayLike for Box<[T; $n]> {
+            type Item = T;
+
+            fn as_slice(storage: &Self::Storage) -> &[MaybeUninit<T>] {
+                &storage[..]
+            }
+
+            fn as_mut_slice(storage: &mut Self::Storage) -> &mut [MaybeUninit<T>] {
+                &mut storage[..]
+            }
+        }
+
+        impl_box!($($rest)*);
     }
 }
+
+impl_array!(0 1 2 3 4 8 16 32 64 128 192);
+#[cfg(feature = "read")]
+impl_box!(0 1 2 3 4 8 16 32 64 128 192);
 
 #[cfg(feature = "read")]
 unsafe impl<T> Sealed for Vec<T> {

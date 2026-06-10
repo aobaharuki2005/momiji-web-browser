@@ -55,8 +55,7 @@ add_task(async function test() {
       selectionCount++;
     },
   });
-  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
-  providersManager.registerProvider(provider);
+  UrlbarProvidersManager.registerProvider(provider);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -73,5 +72,5 @@ add_task(async function test() {
   );
 
   Assert.equal(selectionCount, 6, "Number of elements selected in the view.");
-  providersManager.unregisterProvider(provider);
+  UrlbarProvidersManager.unregisterProvider(provider);
 });

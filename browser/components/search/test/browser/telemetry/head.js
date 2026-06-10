@@ -18,7 +18,6 @@ ChromeUtils.defineESModuleGetters(this, {
     "moz-src:///browser/components/search/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetryUtils:
     "moz-src:///browser/components/search/SearchSERPTelemetry.sys.mjs",
-  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   SearchUITestUtils: "resource://testing-common/SearchUITestUtils.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
@@ -43,21 +42,13 @@ ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   return module;
 });
 
-ChromeUtils.defineLazyGetter(this, "SearchbarTestUtils", () => {
-  const { SearchbarTestUtils: module } = ChromeUtils.importESModule(
-    "resource://testing-common/UrlbarTestUtils.sys.mjs"
-  );
-  module.init(this);
-  return module;
-});
-
 ChromeUtils.defineLazyGetter(this, "searchCounts", () => {
   return Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
 });
 
 ChromeUtils.defineLazyGetter(this, "SEARCH_AD_CLICK_SCALARS", () => {
   const sources = [
-    ...Object.keys(BrowserSearchTelemetry.KNOWN_SEARCH_SOURCES),
+    ...BrowserSearchTelemetry.KNOWN_SEARCH_SOURCES.values(),
     "unknown",
   ];
   return [
@@ -226,18 +217,6 @@ function resetTelemetry() {
   SERPCategorizationRecorder.testReset();
 }
 
-const DEFAULT_IMPRESSION = {
-  provider: "example",
-  tagged: "true",
-  partner_code: "ff",
-  source: "unknown",
-  is_private: "false",
-  is_signed_in: "false",
-  is_shopping_page: "false",
-  shopping_tab_displayed: "false",
-  has_ai_summary: "false",
-};
-
 /**
  * First checks that we get the correct number of recorded Glean impression events
  * and the recorded Glean impression events have the correct keys and values.
@@ -252,18 +231,7 @@ function assertSERPTelemetry(expectedEvents) {
   // Do a deep copy of impressions in case the input is using constants, as
   // we insert impression id into the expected events to make it easier to
   // run Assert.deepEqual() on the expected and actual result.
-  expectedEvents = structuredClone(expectedEvents);
-
-  for (let expectedEvent of expectedEvents) {
-    if (expectedEvent.impression) {
-      expectedEvent.impression = {
-        ...DEFAULT_IMPRESSION,
-        ...expectedEvent.impression,
-      };
-    } else {
-      expectedEvent.impression = { ...DEFAULT_IMPRESSION };
-    }
-  }
+  expectedEvents = JSON.parse(JSON.stringify(expectedEvents));
 
   // A single test might run assertImpressionEvents more than once
   // so the Set needs to be cleared or else the impression event

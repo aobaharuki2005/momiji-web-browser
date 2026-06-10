@@ -37,13 +37,9 @@ add_task(async function tabNotesBasicStorageTests() {
   let updatedValue = "some other note";
 
   let tabNoteCreated = BrowserTestUtils.waitForEvent(tab, "TabNote:Created");
-  let setNote = TabNotes.set(tab, value);
-  let [firstSavedNote, createdEvent] = await Promise.all([
-    setNote,
-    tabNoteCreated,
-  ]);
+  let firstSavedNote = await TabNotes.set(tab, value);
   Assert.ok(firstSavedNote, "TabNotes.set returns the saved tab note");
-  Assert.ok(createdEvent, "tab fired TabNote:Created");
+  Assert.ok(await tabNoteCreated, "observers were notified of TabNote:Created");
   Assert.equal(
     firstSavedNote.canonicalUrl,
     tab.canonicalUrl,
@@ -69,14 +65,10 @@ add_task(async function tabNotesBasicStorageTests() {
   );
 
   let tabNoteEdited = BrowserTestUtils.waitForEvent(tab, "TabNote:Edited");
-  let editNote = TabNotes.set(tab, updatedValue);
+  let editedSavedNote = await TabNotes.set(tab, updatedValue);
 
-  let [editedSavedNote, editedEvent] = await Promise.all([
-    editNote,
-    tabNoteEdited,
-  ]);
   Assert.ok(editedSavedNote, "TabNotes.set returns the updated tab note");
-  Assert.ok(editedEvent, "tab fired TabNote:Edited");
+  Assert.ok(await tabNoteEdited, "observers were notified of TabNote:Edited");
   Assert.equal(
     editedSavedNote.canonicalUrl,
     tab.canonicalUrl,
@@ -101,14 +93,10 @@ add_task(async function tabNotesBasicStorageTests() {
   );
 
   let tabNoteRemoved = BrowserTestUtils.waitForEvent(tab, "TabNote:Removed");
-  let deleteNote = TabNotes.delete(tab);
-  let [wasActuallyDeleted, removedEvent] = await Promise.all([
-    deleteNote,
-    tabNoteRemoved,
-  ]);
-  Assert.ok(removedEvent, "listeners were notified of TabNote:Removed");
+  wasDeleted = await TabNotes.delete(tab);
+  Assert.ok(await tabNoteRemoved, "listeners were notified of TabNote:Removed");
   Assert.ok(
-    wasActuallyDeleted,
+    wasDeleted,
     "TabNotes.delete should return true if something was deleted"
   );
 
@@ -140,21 +128,6 @@ add_task(function tabNotesIsEligible() {
     !TabNotes.isEligible(new FakeTab("not a valid URL")),
     "tab with an unparseable canonical URL is ineligible"
   );
-});
-
-add_task(async function tabNotesCount() {
-  const tab1 = new FakeTab("https://example.com/1");
-  const tab2 = new FakeTab("https://example.com/2");
-
-  Assert.equal(await TabNotes.count(), 0, "should be zero tab notes to start");
-  await TabNotes.set(tab1, "Test note 1");
-  Assert.equal(await TabNotes.count(), 1, "should be one tab note");
-  await TabNotes.set(tab2, "Test note 2");
-  Assert.equal(await TabNotes.count(), 2, "should be two tab notes");
-  await TabNotes.delete(tab2);
-  Assert.equal(await TabNotes.count(), 1, "should be one tab note again");
-  await TabNotes.reset();
-  Assert.equal(await TabNotes.count(), 0, "should be zero tab notes again");
 });
 
 add_task(async function tabNotesSanitizationTests() {

@@ -17,8 +17,9 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
+  // gA11yEventDumpToConsole = true;
   function doPreTest() {
-    waitForImageMapInContent("imagemap").then(doTest);
+    waitForImageMap("imagemap", doTest);
   }
 
   function doTest() {

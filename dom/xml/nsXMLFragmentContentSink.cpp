@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,13 +15,16 @@
 #include "nsContentSink.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
+#include "nsGkAtoms.h"
 #include "nsHashKeys.h"
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIExpatSink.h"
 #include "nsIFragmentContentSink.h"
 #include "nsIScriptError.h"
+#include "nsIXMLContentSink.h"
 #include "nsTArray.h"
+#include "nsTHashtable.h"
 #include "nsXMLContentSink.h"
 
 using namespace mozilla::dom;
@@ -55,6 +60,8 @@ class nsXMLFragmentContentSink : public nsXMLContentSink,
   virtual nsISupports* GetTarget() override;
   NS_IMETHOD DidProcessATokenImpl();
 
+  // nsIXMLContentSink
+
   // nsIFragmentContentSink
   NS_IMETHOD FinishFragmentParsing(DocumentFragment** aFragment) override;
   NS_IMETHOD SetTargetDocument(Document* aDocument) override;
@@ -73,6 +80,8 @@ class nsXMLFragmentContentSink : public nsXMLContentSink,
                                  uint32_t aLineNumber, uint32_t aColumnNumber,
                                  nsIContent** aResult, bool* aAppendContent,
                                  mozilla::dom::FromParser aFromParser) override;
+  virtual nsresult CloseElement(nsIContent* aContent) override;
+
   virtual void MaybeStartLayout(bool aIgnorePendingSheets) override;
 
   // nsContentSink overrides
@@ -95,10 +104,17 @@ class nsXMLFragmentContentSink : public nsXMLContentSink,
   bool mParseError;
 };
 
-nsresult NS_NewXMLFragmentContentSink(nsIFragmentContentSink** aResult) {
-  auto* it = new nsXMLFragmentContentSink();
+static nsresult NewXMLFragmentContentSinkHelper(
+    nsIFragmentContentSink** aResult) {
+  nsXMLFragmentContentSink* it = new nsXMLFragmentContentSink();
+
   NS_ADDREF(*aResult = it);
+
   return NS_OK;
+}
+
+nsresult NS_NewXMLFragmentContentSink(nsIFragmentContentSink** aResult) {
+  return NewXMLFragmentContentSinkHelper(aResult);
 }
 
 nsXMLFragmentContentSink::nsXMLFragmentContentSink() : mParseError(false) {
@@ -163,10 +179,12 @@ nsresult nsXMLFragmentContentSink::CreateElement(
     const char16_t** aAtts, uint32_t aAttsCount,
     mozilla::dom::NodeInfo* aNodeInfo, uint32_t aLineNumber,
     uint32_t aColumnNumber, nsIContent** aResult, bool* aAppendContent,
-    FromParser aFromParser) {
+    FromParser /*aFromParser*/) {
+  // Claim to not be coming from parser, since we don't do any of the
+  // fancy CloseElement stuff.
   nsresult rv = nsXMLContentSink::CreateElement(
       aAtts, aAttsCount, aNodeInfo, aLineNumber, aColumnNumber, aResult,
-      aAppendContent, aFromParser);
+      aAppendContent, NOT_FROM_PARSER);
 
   // When we aren't grabbing all of the content we, never open a doc
   // element, we run into trouble on the first element, so we don't append,
@@ -176,6 +194,21 @@ nsresult nsXMLFragmentContentSink::CreateElement(
   }
 
   return rv;
+}
+
+nsresult nsXMLFragmentContentSink::CloseElement(nsIContent* aContent) {
+  // don't do fancy stuff in nsXMLContentSink
+  if (mPreventScriptExecution && (aContent->IsHTMLElement(nsGkAtoms::script) ||
+                                  aContent->IsSVGElement(nsGkAtoms::script))) {
+    nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aContent);
+    if (sele) {
+      sele->PreventExecution();
+    } else {
+      NS_ASSERTION(nsNameSpaceManager::GetInstance()->mSVGDisabled,
+                   "Script did QI correctly, but wasn't a disabled SVG!");
+    }
+  }
+  return NS_OK;
 }
 
 void nsXMLFragmentContentSink::MaybeStartLayout(bool aIgnorePendingSheets) {}
@@ -243,8 +276,10 @@ nsXMLFragmentContentSink::ReportError(const char16_t* aErrorText,
     mRoot->GetLastChild()->Remove();
   }
 
-  // Clear any buffered-up text we have.
-  mText.ClearAndRetainStorage();
+  // Clear any buffered-up text we have.  It's enough to set the length to 0.
+  // The buffer itself is allocated when we're created and deleted in our
+  // destructor, so don't mess with it.
+  mTextLength = 0;
 
   return NS_OK;
 }

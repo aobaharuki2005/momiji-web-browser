@@ -16,6 +16,9 @@ use std::task::{Context, Poll};
 #[path = "windows/sys.rs"]
 mod imp;
 
+#[cfg(windows)]
+pub(crate) use self::imp::{OsExtraData, OsStorage};
+
 // For building documentation on Unix machines when the `docsrs` flag is set.
 #[cfg(not(windows))]
 #[path = "windows/stub.rs"]
@@ -69,8 +72,7 @@ pub struct CtrlC {
 impl CtrlC {
     /// Receives the next signal notification event.
     ///
-    /// Although this returns `Option<()>`, it will never actually return `None`.
-    /// This was accidentally exposed and would be a breaking change to be removed.
+    /// `None` is returned if no more events can be received by the listener.
     ///
     /// # Examples
     ///
@@ -91,15 +93,13 @@ impl CtrlC {
     /// }
     /// ```
     pub async fn recv(&mut self) -> Option<()> {
-        self.inner.recv().await;
-        Some(())
+        self.inner.recv().await
     }
 
     /// Polls to receive the next signal notification event, outside of an
     /// `async` context.
     ///
-    /// Although this returns `Option<()>`, it will never actually return `None`.
-    /// This was accidentally exposed and would be a breaking change to be removed.
+    /// `None` is returned if no more events can be received.
     ///
     /// # Examples
     ///
@@ -125,7 +125,7 @@ impl CtrlC {
     /// }
     /// ```
     pub fn poll_recv(&mut self, cx: &mut Context<'_>) -> Poll<Option<()>> {
-        self.inner.poll_recv(cx).map(Some)
+        self.inner.poll_recv(cx)
     }
 }
 
@@ -149,8 +149,7 @@ pub struct CtrlBreak {
 impl CtrlBreak {
     /// Receives the next signal notification event.
     ///
-    /// Although this returns `Option<()>`, it will never actually return `None`.
-    /// This was accidentally exposed and would be a breaking change to be removed.
+    /// `None` is returned if no more events can be received by this listener.
     ///
     /// # Examples
     ///
@@ -170,15 +169,13 @@ impl CtrlBreak {
     /// }
     /// ```
     pub async fn recv(&mut self) -> Option<()> {
-        self.inner.recv().await;
-        Some(())
+        self.inner.recv().await
     }
 
     /// Polls to receive the next signal notification event, outside of an
     /// `async` context.
     ///
-    /// Although this returns `Option<()>`, it will never actually return `None`.
-    /// This was accidentally exposed and would be a breaking change to be removed.
+    /// `None` is returned if no more events can be received by this listener.
     ///
     /// # Examples
     ///
@@ -204,7 +201,7 @@ impl CtrlBreak {
     /// }
     /// ```
     pub fn poll_recv(&mut self, cx: &mut Context<'_>) -> Poll<Option<()>> {
-        self.inner.poll_recv(cx).map(Some)
+        self.inner.poll_recv(cx)
     }
 }
 
@@ -278,8 +275,7 @@ pub struct CtrlClose {
 impl CtrlClose {
     /// Receives the next signal notification event.
     ///
-    /// Although this returns `Option<()>`, it will never actually return `None`.
-    /// This was accidentally exposed and would be a breaking change to be removed.
+    /// `None` is returned if no more events can be received by this listener.
     ///
     /// # Examples
     ///
@@ -299,15 +295,13 @@ impl CtrlClose {
     /// }
     /// ```
     pub async fn recv(&mut self) -> Option<()> {
-        self.inner.recv().await;
-        Some(())
+        self.inner.recv().await
     }
 
     /// Polls to receive the next signal notification event, outside of an
     /// `async` context.
     ///
-    /// Although this returns `Option<()>`, it will never actually return `None`.
-    /// This was accidentally exposed and would be a breaking change to be removed.
+    /// `None` is returned if no more events can be received by this listener.
     ///
     /// # Examples
     ///
@@ -333,7 +327,7 @@ impl CtrlClose {
     /// }
     /// ```
     pub fn poll_recv(&mut self, cx: &mut Context<'_>) -> Poll<Option<()>> {
-        self.inner.poll_recv(cx).map(Some)
+        self.inner.poll_recv(cx)
     }
 }
 
@@ -378,8 +372,7 @@ pub struct CtrlShutdown {
 impl CtrlShutdown {
     /// Receives the next signal notification event.
     ///
-    /// Although this returns `Option<()>`, it will never actually return `None`.
-    /// This was accidentally exposed and would be a breaking change to be removed.
+    /// `None` is returned if no more events can be received by this listener.
     ///
     /// # Examples
     ///
@@ -399,15 +392,13 @@ impl CtrlShutdown {
     /// }
     /// ```
     pub async fn recv(&mut self) -> Option<()> {
-        self.inner.recv().await;
-        Some(())
+        self.inner.recv().await
     }
 
     /// Polls to receive the next signal notification event, outside of an
     /// `async` context.
     ///
-    /// Although this returns `Option<()>`, it will never actually return `None`.
-    /// This was accidentally exposed and would be a breaking change to be removed.
+    /// `None` is returned if no more events can be received by this listener.
     ///
     /// # Examples
     ///
@@ -433,7 +424,7 @@ impl CtrlShutdown {
     /// }
     /// ```
     pub fn poll_recv(&mut self, cx: &mut Context<'_>) -> Poll<Option<()>> {
-        self.inner.poll_recv(cx).map(Some)
+        self.inner.poll_recv(cx)
     }
 }
 
@@ -478,8 +469,7 @@ pub struct CtrlLogoff {
 impl CtrlLogoff {
     /// Receives the next signal notification event.
     ///
-    /// Although this returns `Option<()>`, it will never actually return `None`.
-    /// This was accidentally exposed and would be a breaking change to be removed.
+    /// `None` is returned if no more events can be received by this listener.
     ///
     /// # Examples
     ///
@@ -499,15 +489,13 @@ impl CtrlLogoff {
     /// }
     /// ```
     pub async fn recv(&mut self) -> Option<()> {
-        self.inner.recv().await;
-        Some(())
+        self.inner.recv().await
     }
 
     /// Polls to receive the next signal notification event, outside of an
     /// `async` context.
     ///
-    /// Although this returns `Option<()>`, it will never actually return `None`.
-    /// This was accidentally exposed and would be a breaking change to be removed.
+    /// `None` is returned if no more events can be received by this listener.
     ///
     /// # Examples
     ///
@@ -533,6 +521,6 @@ impl CtrlLogoff {
     /// }
     /// ```
     pub fn poll_recv(&mut self, cx: &mut Context<'_>) -> Poll<Option<()>> {
-        self.inner.poll_recv(cx).map(Some)
+        self.inner.poll_recv(cx)
     }
 }

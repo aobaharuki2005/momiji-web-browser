@@ -11,7 +11,9 @@
             "filterType": "exclude"
         },
         "coll_tree": {
-            "filterType": "exclude"
+            "excludelist": [
+                "en_US_POSIX"
+            ]
         },
         "confusables": {
             "filterType": "exclude"
@@ -177,7 +179,6 @@
                 "-/ExemplarCharactersPunctuation",
                 "-/MoreInformation",
                 "-/NumberElements/minimalPairs",
-                "-/calendar/islamic-rgsa",
                 "-/characterLabel",
                 "-/delimiters",
                 "-/fields/mon",
@@ -222,10 +223,7 @@
                 "+/Variants",
                 "+/Types/calendar",
                 "+/Types%short/calendar",
-                "+/localeDisplayPattern",
-
-                "-/Types/calendar/islamic-rgsa",
-                "-/Types/calendar%core/islamic-rgsa"
+                "+/localeDisplayPattern"
             ]
         },
         {

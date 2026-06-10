@@ -5,16 +5,15 @@
 use crate::{
     errors::IPCError,
     messages::{self, Message, HEADER_SIZE},
-    platform::{
-        windows::{create_manual_reset_event, get_last_error, OverlappedOperation},
-        PlatformError,
+    platform::windows::{
+        create_manual_reset_event, get_last_error, OverlappedOperation, PlatformError,
     },
-    ProcessHandle, IO_TIMEOUT,
+    IntoRawAncillaryData, IO_TIMEOUT,
 };
 
-use bytes::{BufMut, BytesMut};
 use std::{
     ffi::{CStr, OsString},
+    io::Error,
     os::windows::io::{
         AsHandle, AsRawHandle, FromRawHandle, IntoRawHandle, OwnedHandle, RawHandle,
     },
@@ -40,46 +39,38 @@ use windows_sys::Win32::{
 };
 
 pub type AncillaryData = OwnedHandle;
+pub type RawAncillaryData = HANDLE;
 
-pub const CONNECTOR_ANCILLARY_DATA_LEN: usize = 1;
+impl IntoRawAncillaryData for AncillaryData {
+    fn into_raw(self) -> RawAncillaryData {
+        self.into_raw_handle() as HANDLE
+    }
+}
 
-const INVALID_ANCILLARY_DATA: usize = 0;
-const HANDLE_SIZE: usize = size_of::<usize>();
-const MAX_HANDLES_PER_MESSAGE: usize = 2;
+// This must match `kInvalidHandle` in `mfbt/UniquePtrExt.h`
+pub const INVALID_ANCILLARY_DATA: RawAncillaryData = 0;
+
+const HANDLE_SIZE: usize = size_of::<HANDLE>();
 
 // We encode handles at the beginning of every transmitted message. This
 // function extracts the handle (if present) and returns it together with
 // the rest of the buffer.
-fn extract_buffer_and_handle(buffer: Vec<u8>) -> Result<(Vec<u8>, Vec<OwnedHandle>), IPCError> {
-    let mut handles = Vec::<OwnedHandle>::new();
-    for i in 0..MAX_HANDLES_PER_MESSAGE {
-        let offset = i * HANDLE_SIZE;
-        let handle_bytes = &buffer[offset..offset + HANDLE_SIZE];
-        let handle_bytes: Result<[u8; HANDLE_SIZE], _> = handle_bytes.try_into();
-        let Ok(handle_bytes) = handle_bytes else {
-            return Err(IPCError::InvalidAncillary);
-        };
-        match usize::from_ne_bytes(handle_bytes) {
-            INVALID_ANCILLARY_DATA => {}
-            handle => handles.push(unsafe { OwnedHandle::from_raw_handle(handle as RawHandle) }),
-        };
-    }
+fn extract_buffer_and_handle(buffer: Vec<u8>) -> Result<(Vec<u8>, Option<OwnedHandle>), IPCError> {
+    let handle_bytes = &buffer[0..HANDLE_SIZE];
+    let data = &buffer[HANDLE_SIZE..];
+    let handle_bytes: Result<[u8; HANDLE_SIZE], _> = handle_bytes.try_into();
+    let Ok(handle_bytes) = handle_bytes else {
+        return Err(IPCError::ParseError);
+    };
+    let handle = match HANDLE::from_ne_bytes(handle_bytes) {
+        INVALID_ANCILLARY_DATA => None,
+        handle => Some(unsafe { OwnedHandle::from_raw_handle(handle as RawHandle) }),
+    };
 
-    let data = &buffer[MAX_HANDLES_PER_MESSAGE * HANDLE_SIZE..];
-
-    Ok((data.to_vec(), handles))
+    Ok((data.to_vec(), handle))
 }
 
 pub type IPCConnectorKey = usize;
-
-#[repr(C)]
-pub struct RawIPCConnector {
-    pub handle: HANDLE,
-}
-
-// SAFETY: Windows HANDLEs are safe to send and share across threads.
-unsafe impl Send for RawIPCConnector {}
-unsafe impl Sync for RawIPCConnector {}
 
 pub struct IPCConnector {
     /// A connected pipe handle
@@ -92,7 +83,7 @@ pub struct IPCConnector {
 }
 
 impl IPCConnector {
-    pub(crate) fn from_handle(handle: OwnedHandle) -> Result<IPCConnector, IPCError> {
+    pub fn from_ancillary(handle: OwnedHandle) -> Result<IPCConnector, IPCError> {
         let event = create_manual_reset_event().map_err(IPCError::CreationFailure)?;
 
         Ok(IPCConnector {
@@ -108,29 +99,14 @@ impl IPCConnector {
     ///
     /// The `ancillary_data` argument must be a valid HANDLE representing the
     /// endpoint of a named pipe.
-    unsafe fn from_raw_handle(handle: HANDLE) -> Result<IPCConnector, IPCError> {
-        IPCConnector::from_handle(OwnedHandle::from_raw_handle(handle as RawHandle))
-    }
-
-    pub fn from_ancillary(
-        ancillary_data: [AncillaryData; CONNECTOR_ANCILLARY_DATA_LEN],
+    pub unsafe fn from_raw_ancillary(
+        ancillary_data: RawAncillaryData,
     ) -> Result<IPCConnector, IPCError> {
-        IPCConnector::from_handle(ancillary_data.into_iter().next().unwrap())
+        IPCConnector::from_ancillary(OwnedHandle::from_raw_handle(ancillary_data as RawHandle))
     }
 
-    /// Create a connector from a raw connector structure holding a HANDLE.
-    ///
-    /// # Safety
-    ///
-    /// The `connector` argument must point to a `RawIPCConnector` object and
-    /// the `handle` field of this structure must be a valid HANDLE representing
-    /// a connected pipe.
-    pub unsafe fn from_raw_connector(connector: RawIPCConnector) -> Result<IPCConnector, IPCError> {
-        IPCConnector::from_raw_handle(connector.handle)
-    }
-
-    pub fn set_process(&mut self, process: ProcessHandle) {
-        self.process = Some(process.0);
+    pub fn set_process(&mut self, process: OwnedHandle) {
+        self.process = Some(process);
     }
 
     pub(crate) fn as_raw(&self) -> HANDLE {
@@ -192,14 +168,10 @@ impl IPCConnector {
 
                 // If the pipe hasn't been created yet loop over and try again
                 if (res == FALSE) && (error != ERROR_FILE_NOT_FOUND) {
-                    return Err(IPCError::ConnectionFailure(
-                        PlatformError::WaitNamedPipeFailed(error),
-                    ));
+                    return Err(IPCError::ConnectionFailure(error));
                 }
             } else {
-                return Err(IPCError::ConnectionFailure(
-                    PlatformError::CreatePipeFailure(error),
-                ));
+                return Err(IPCError::ConnectionFailure(error));
             }
         }
 
@@ -216,47 +188,35 @@ impl IPCConnector {
             )
         };
         if res == FALSE {
-            return Err(IPCError::ConnectionFailure(
-                PlatformError::SetNamedPipeHandleState(get_last_error()),
-            ));
+            return Err(IPCError::ConnectionFailure(get_last_error()));
         }
 
         // SAFETY: We've verified above that the pipe handle is valid
-        unsafe { IPCConnector::from_raw_handle(pipe) }
+        unsafe { IPCConnector::from_raw_ancillary(pipe) }
     }
 
     /// Serialize this connector into a string that can be passed on the
     /// command-line to a child process. This only works for newly
     /// created connectors because they are explicitly created as inheritable.
-    pub fn serialize(&self) -> Result<OsString, IPCError> {
+    pub fn serialize(&self) -> OsString {
         let raw_handle = self.handle.as_raw_handle() as usize;
-        OsString::from_str(raw_handle.to_string().as_ref())
-            .map_err(|_e| IPCError::Serialize(PlatformError::InvalidString))
+        OsString::from_str(raw_handle.to_string().as_ref()).unwrap()
     }
 
     /// Deserialize a connector from an argument passed on the command-line.
     pub fn deserialize(string: &CStr) -> Result<IPCConnector, IPCError> {
-        let string = string
-            .to_str()
-            .map_err(|_e| IPCError::Deserialize(PlatformError::ParseHandle))?;
-        let handle = usize::from_str(string)
-            .map_err(|_e| IPCError::Deserialize(PlatformError::ParseHandle))?;
-
+        let string = string.to_str().map_err(|_e| IPCError::ParseError)?;
+        let handle = usize::from_str(string).map_err(|_e| IPCError::ParseError)?;
         // SAFETY: This is a handle we passed in ourselves.
-        unsafe { IPCConnector::from_raw_handle(handle as HANDLE) }
+        unsafe { IPCConnector::from_raw_ancillary(handle as HANDLE) }
     }
 
-    pub fn into_ancillary(self) -> [AncillaryData; CONNECTOR_ANCILLARY_DATA_LEN] {
-        let handle =
-            Rc::try_unwrap(self.handle).expect("Multiple references to the underlying handle");
-        [handle]
+    pub fn into_ancillary(self) -> AncillaryData {
+        Rc::try_unwrap(self.handle).expect("Multiple references to the underlying handle")
     }
 
-    pub fn into_raw_connector(self) -> RawIPCConnector {
-        let handle =
-            Rc::try_unwrap(self.handle).expect("Multiple references to the underlying handle");
-        let handle = handle.into_raw_handle() as HANDLE;
-        RawIPCConnector { handle }
+    pub fn into_raw_ancillary(self) -> RawAncillaryData {
+        self.into_ancillary().into_raw()
     }
 
     pub fn send_message<T>(&self, message: T) -> Result<(), IPCError>
@@ -272,33 +232,27 @@ impl IPCConnector {
         T: Message,
     {
         let expected_payload_len = message.payload_size();
-        let expected_ancillary_data_len = message.ancillary_data_len();
-        let (header, payload, ancillary_data) = message.encode();
-        let handles_len = ancillary_data.len();
+        let expected_ancillary_data = message.has_ancillary_data();
+        let header = message.header();
+        let (payload, ancillary_data) = message.into_payload();
         assert!(payload.len() == expected_payload_len);
-        assert!(
-            (handles_len == expected_ancillary_data_len)
-                && (handles_len <= MAX_HANDLES_PER_MESSAGE)
-        );
+        assert!(ancillary_data.is_some() == expected_ancillary_data);
 
         // Send the message header
-        OverlappedOperation::send(&self.handle, self.event.as_handle(), header.into())?;
+        OverlappedOperation::send(&self.handle, self.event.as_handle(), header)?;
 
         // Send the message payload plus the optional handles
-        let mut buffer =
-            BytesMut::with_capacity((MAX_HANDLES_PER_MESSAGE * HANDLE_SIZE) + payload.len());
+        let handle = if let Some(handle) = ancillary_data {
+            self.clone_handle(handle)?
+        } else {
+            INVALID_ANCILLARY_DATA
+        };
 
-        for handle in ancillary_data.into_iter() {
-            let handle = self.clone_handle(handle)?;
-            buffer.put_slice(&(handle as usize).to_ne_bytes());
-        }
-        for _i in handles_len..MAX_HANDLES_PER_MESSAGE {
-            buffer.put_slice(&INVALID_ANCILLARY_DATA.to_ne_bytes());
-        }
+        let mut buffer = Vec::<u8>::with_capacity(HANDLE_SIZE + payload.len());
+        buffer.extend(handle.to_ne_bytes());
+        buffer.extend(payload);
 
-        buffer.put_slice(&payload);
-
-        OverlappedOperation::send(&self.handle, self.event.as_handle(), buffer.into())
+        OverlappedOperation::send(&self.handle, self.event.as_handle(), buffer)
     }
 
     pub fn recv_reply<T>(&self) -> Result<T, IPCError>
@@ -306,16 +260,16 @@ impl IPCConnector {
         T: Message,
     {
         let header = self
-            .recv_buffer(HEADER_SIZE)
+            .recv_buffer(messages::HEADER_SIZE)
             .map_err(IPCError::ReceptionFailure)?;
-        let header = messages::Header::decode(header).map_err(IPCError::BadMessage)?;
+        let header = messages::Header::decode(&header).map_err(IPCError::BadMessage)?;
 
         if header.kind != T::kind() {
             return Err(IPCError::UnexpectedMessage(header.kind));
         }
 
         let (buffer, handle) = self.recv(header.size)?;
-        T::decode(buffer, handle).map_err(IPCError::from)
+        T::decode(&buffer, handle).map_err(IPCError::from)
     }
 
     pub(crate) fn sched_recv_header(&self) -> Result<OverlappedOperation, IPCError> {
@@ -326,9 +280,9 @@ impl IPCConnector {
     pub(crate) fn recv(
         &self,
         expected_size: usize,
-    ) -> Result<(Vec<u8>, Vec<AncillaryData>), IPCError> {
+    ) -> Result<(Vec<u8>, Option<AncillaryData>), IPCError> {
         let buffer = self
-            .recv_buffer((MAX_HANDLES_PER_MESSAGE * HANDLE_SIZE) + expected_size)
+            .recv_buffer(HANDLE_SIZE + expected_size)
             .map_err(IPCError::ReceptionFailure)?;
         extract_buffer_and_handle(buffer)
     }
@@ -345,7 +299,7 @@ impl IPCConnector {
         let Some(dst_process) = self.process.as_ref() else {
             return Err(PlatformError::MissingProcessHandle);
         };
-        let mut dst_handle: HANDLE = null_mut();
+        let mut dst_handle: HANDLE = INVALID_ANCILLARY_DATA;
         let res = unsafe {
             DuplicateHandle(
                 GetCurrentProcess(),
@@ -359,7 +313,9 @@ impl IPCConnector {
         };
 
         if res == 0 {
-            return Err(PlatformError::DuplicateHandleFailed(get_last_error()));
+            return Err(PlatformError::CloneHandleFailed(Error::from_raw_os_error(
+                get_last_error() as i32,
+            )));
         }
 
         Ok(dst_handle)

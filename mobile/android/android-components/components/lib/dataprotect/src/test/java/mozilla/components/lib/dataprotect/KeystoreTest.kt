@@ -17,7 +17,6 @@ import java.security.Security
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
-import kotlin.test.assertNotNull
 
 private val DEFAULTPASS = "testit!".toCharArray()
 
@@ -53,7 +52,7 @@ class KeystoreTest {
 
     @Test
     fun workingWithLabel() {
-        val keystore = Keystore("test-labels", true, wrapper = wrapper)
+        val keystore = Keystore("test-labels", true, wrapper)
 
         Assert.assertFalse(keystore.available())
         keystore.generateKey()
@@ -64,7 +63,7 @@ class KeystoreTest {
 
     @Test
     fun createEncryptCipher() {
-        val keystore = Keystore("test-encrypt-ciphers", true, wrapper = wrapper)
+        val keystore = Keystore("test-encrypt-ciphers", true, wrapper)
 
         Assert.assertFalse(keystore.available())
         var caught = false
@@ -82,12 +81,12 @@ class KeystoreTest {
         Assert.assertTrue(keystore.available())
         cipher = keystore.createEncryptCipher()
         Assert.assertEquals(CIPHER_SPEC, cipher.algorithm)
-        assertNotNull(cipher.iv)
+        Assert.assertNotNull(cipher.iv)
     }
 
     @Test
     fun createDecryptCipher() {
-        val keystore = Keystore("test-decrypt-ciphers", true, wrapper = wrapper)
+        val keystore = Keystore("test-decrypt-ciphers", true, wrapper)
         val iv = ByteArray(12)
         rng.nextBytes(iv)
 
@@ -112,16 +111,16 @@ class KeystoreTest {
 
     @Test
     fun testAutoInit() {
-        val keystore = Keystore("test-auto-init", false, wrapper = wrapper)
+        val keystore = Keystore("test-auto-init", false, wrapper)
 
         Assert.assertTrue(keystore.available())
         Assert.assertFalse(keystore.generateKey())
 
         var cipher: Cipher?
         cipher = keystore.createEncryptCipher()
-        assertNotNull(cipher)
+        Assert.assertNotNull(cipher)
         cipher = keystore.createDecryptCipher(ByteArray(12))
-        assertNotNull(cipher)
+        Assert.assertNotNull(cipher)
     }
 
     @Ignore("https://github.com/mozilla-mobile/android-components/issues/4956")
@@ -131,7 +130,7 @@ class KeystoreTest {
 
         var input = "classic plaintext 'hello, world'".toByteArray(StandardCharsets.UTF_8)
         var encrypted = keystore.encryptBytes(input)
-        assertNotNull(encrypted)
+        Assert.assertNotNull(encrypted)
         var output = keystore.decryptBytes(encrypted)
         Assert.assertArrayEquals(input, output)
     }

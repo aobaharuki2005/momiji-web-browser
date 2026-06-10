@@ -9,7 +9,8 @@ Blame
 .. image:: img/blame.png
     :class: border
     :alt: The blame popup
-    :width: 688px
+    :width: 683px
+
 
 .. _searchfox-blame-strip:
 

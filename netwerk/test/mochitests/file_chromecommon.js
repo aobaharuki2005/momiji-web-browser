@@ -1,3 +1,5 @@
+/* eslint-env mozilla/chrome-script */
+
 "use strict";
 
 // eslint-disable-next-line mozilla/use-services

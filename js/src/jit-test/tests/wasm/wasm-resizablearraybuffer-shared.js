@@ -116,7 +116,7 @@ ins.exports.fill(0, 10, 5);
 check(0, 10, 5);
 
 // Try to resize JS way.
-assertEq(rab.grow(65536 * 30), undefined);
+rab.grow(65536 * 30);
 assertEq(rab.byteLength, 30 * 65536);
 ins.exports.fill(30 * 65536 - 10*4, 10, 6);
 check(30 * 65536 - 10 * 4, 10, 6);

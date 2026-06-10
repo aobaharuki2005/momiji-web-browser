@@ -49,7 +49,7 @@ std::string EncodeOptionalBlobs(
   }
 
   std::vector<uint8_t> buffer((reserve_size_bits + 7) / 8);
-  BitBufferWriter writer(buffer);
+  BitBufferWriter writer(buffer.data(), buffer.size());
 
   // Write present bits if all blobs are not present.
   writer.WriteBits(all_blobs_present, 1);
@@ -60,7 +60,7 @@ std::string EncodeOptionalBlobs(
   }
 
   // Byte align the writer.
-  writer.ZeroBits(writer.RemainingBitCount() % 8);
+  writer.ConsumeBits(writer.RemainingBitCount() % 8);
 
   // Write blobs.
   for (const auto& blob : blobs) {

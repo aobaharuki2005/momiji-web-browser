@@ -95,7 +95,7 @@ async function openAboutInference({
   BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, "about:inference");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [{ selectors }], runInPage);
+  await ContentTask.spawn(tab.linkedBrowser, { selectors }, runInPage);
 
   if (runInference) {
     await EngineProcess.destroyMLEngine();

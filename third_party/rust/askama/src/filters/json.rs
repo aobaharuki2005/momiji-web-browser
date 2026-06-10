@@ -1,12 +1,13 @@
 use std::convert::Infallible;
+use std::ops::Deref;
+use std::pin::Pin;
 use std::{fmt, io, str};
 
 use serde::Serialize;
 use serde_json::ser::{CompactFormatter, PrettyFormatter, Serializer};
 
-use super::AsIndent;
+use super::FastWritable;
 use crate::ascii_str::{AsciiChar, AsciiStr};
-use crate::{FastWritable, NO_VALUES, Values};
 
 /// Serialize to JSON (requires `json` feature)
 ///
@@ -100,9 +101,94 @@ struct ToJsonPretty<S, I> {
     indent: I,
 }
 
-impl<S: Serialize> FastWritable for ToJson<S> {
+/// A prefix usable for indenting [prettified JSON data](json_pretty)
+///
+/// ```
+/// # use askama::filters::AsIndent;
+/// assert_eq!(4.as_indent(), "    ");
+/// assert_eq!(" -> ".as_indent(), " -> ");
+/// ```
+pub trait AsIndent {
+    /// Borrow `self` as prefix to use.
+    fn as_indent(&self) -> &str;
+}
+
+impl AsIndent for str {
     #[inline]
-    fn write_into<W: fmt::Write + ?Sized>(&self, f: &mut W, _: &dyn Values) -> crate::Result<()> {
+    fn as_indent(&self) -> &str {
+        self
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl AsIndent for alloc::string::String {
+    #[inline]
+    fn as_indent(&self) -> &str {
+        self
+    }
+}
+
+impl AsIndent for usize {
+    #[inline]
+    fn as_indent(&self) -> &str {
+        spaces(*self)
+    }
+}
+
+impl AsIndent for std::num::Wrapping<usize> {
+    #[inline]
+    fn as_indent(&self) -> &str {
+        spaces(self.0)
+    }
+}
+
+impl AsIndent for std::num::NonZeroUsize {
+    #[inline]
+    fn as_indent(&self) -> &str {
+        spaces(self.get())
+    }
+}
+
+fn spaces(width: usize) -> &'static str {
+    const MAX_SPACES: usize = 16;
+    const SPACES: &str = match str::from_utf8(&[b' '; MAX_SPACES]) {
+        Ok(spaces) => spaces,
+        Err(_) => panic!(),
+    };
+
+    &SPACES[..width.min(SPACES.len())]
+}
+
+#[cfg(feature = "alloc")]
+impl<T: AsIndent + alloc::borrow::ToOwned + ?Sized> AsIndent for alloc::borrow::Cow<'_, T> {
+    #[inline]
+    fn as_indent(&self) -> &str {
+        T::as_indent(self)
+    }
+}
+
+crate::impl_for_ref! {
+    impl AsIndent for T {
+        #[inline]
+        fn as_indent(&self) -> &str {
+            <T>::as_indent(self)
+        }
+    }
+}
+
+impl<T> AsIndent for Pin<T>
+where
+    T: Deref,
+    <T as Deref>::Target: AsIndent,
+{
+    #[inline]
+    fn as_indent(&self) -> &str {
+        self.as_ref().get_ref().as_indent()
+    }
+}
+
+impl<S: Serialize> FastWritable for ToJson<S> {
+    fn write_into<W: fmt::Write + ?Sized>(&self, f: &mut W) -> crate::Result<()> {
         serialize(f, &self.value, CompactFormatter)
     }
 }
@@ -110,13 +196,12 @@ impl<S: Serialize> FastWritable for ToJson<S> {
 impl<S: Serialize> fmt::Display for ToJson<S> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        Ok(self.write_into(f, NO_VALUES)?)
+        Ok(self.write_into(f)?)
     }
 }
 
 impl<S: Serialize, I: AsIndent> FastWritable for ToJsonPretty<S, I> {
-    #[inline]
-    fn write_into<W: fmt::Write + ?Sized>(&self, f: &mut W, _: &dyn Values) -> crate::Result<()> {
+    fn write_into<W: fmt::Write + ?Sized>(&self, f: &mut W) -> crate::Result<()> {
         serialize(
             f,
             &self.value,
@@ -128,10 +213,11 @@ impl<S: Serialize, I: AsIndent> FastWritable for ToJsonPretty<S, I> {
 impl<S: Serialize, I: AsIndent> fmt::Display for ToJsonPretty<S, I> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        Ok(self.write_into(f, NO_VALUES)?)
+        Ok(self.write_into(f)?)
     }
 }
 
+#[inline]
 fn serialize<S, W, F>(dest: &mut W, value: &S, formatter: F) -> Result<(), crate::Error>
 where
     S: Serialize + ?Sized,

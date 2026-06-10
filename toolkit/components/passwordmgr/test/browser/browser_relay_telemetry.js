@@ -93,16 +93,10 @@ add_task(async function test_pref_toggle() {
       url: "about:preferences#privacy",
     },
     async _browser => {
-      const relayIntegrationCheckbox = Services.prefs.getBoolPref(
-        "browser.settings-redesign.enabled",
-        false
-      )
-        ? content.document.querySelector("moz-checkbox#relayIntegration")
-        : content.document.querySelector("checkbox#relayIntegration");
+      const relayIntegrationCheckbox = content.document.querySelector(
+        "checkbox#relayIntegration"
+      );
       relayIntegrationCheckbox.click();
-      if (relayIntegrationCheckbox.updateComplete) {
-        await relayIntegrationCheckbox.updateComplete;
-      }
       relayIntegrationCheckbox.click();
       await assertEvents([
         { object: "pref_change", method: "disabled" },
@@ -136,7 +130,7 @@ add_task(async function test_popup_option_optin_enabled() {
       await notificationShown;
 
       notificationPopup
-        .querySelector("moz-button.popup-notification-primary-button")
+        .querySelector("button.popup-notification-primary-button")
         .click();
 
       await Promise.all([
@@ -206,7 +200,7 @@ add_task(async function test_popup_option_optin_postponed() {
       await notificationShown;
 
       notificationPopup
-        .querySelector("moz-button.popup-notification-secondary-button")
+        .querySelector("button.popup-notification-secondary-button")
         .click();
 
       await notificationHidden;
@@ -417,7 +411,7 @@ add_task(async function test_auth_token_error() {
       await notificationShown;
 
       notificationPopup
-        .querySelector("moz-button.popup-notification-primary-button")
+        .querySelector("button.popup-notification-primary-button")
         .click();
 
       await notificationHidden;

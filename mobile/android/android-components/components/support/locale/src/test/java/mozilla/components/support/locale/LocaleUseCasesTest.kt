@@ -4,29 +4,22 @@
 
 package mozilla.components.support.locale
 
-import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.LocaleAction
 import mozilla.components.browser.state.action.LocaleAction.UpdateLocaleAction
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.support.test.middleware.CaptureActionsMiddleware
+import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.verify
 import java.util.Locale
 
 class LocaleUseCasesTest {
 
-    private val captureActionsMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
     private lateinit var browserStore: BrowserStore
 
     @Before
     fun setup() {
-        browserStore = BrowserStore()
-
-        browserStore = BrowserStore(
-            initialState = BrowserState(),
-            middleware = listOf(captureActionsMiddleware),
-        )
+        browserStore = mock()
     }
 
     @Test
@@ -35,16 +28,14 @@ class LocaleUseCasesTest {
         val locale = Locale.forLanguageTag("MyFavoriteLanguage")
 
         useCases.notifyLocaleChanged(locale)
-        captureActionsMiddleware.assertFirstAction(UpdateLocaleAction::class) { action ->
-            assert(action.locale == locale)
-        }
+
+        verify(browserStore).dispatch(UpdateLocaleAction(locale))
     }
 
     @Test
     fun `WHEN state is restored THEN the browser state locale is restored`() {
         val useCases = LocaleUseCases(browserStore)
         useCases.restore()
-
-        captureActionsMiddleware.findFirstAction(LocaleAction.RestoreLocaleStateAction::class)
+        verify(browserStore).dispatch(LocaleAction.RestoreLocaleStateAction)
     }
 }

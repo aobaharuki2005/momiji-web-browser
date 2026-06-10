@@ -239,11 +239,7 @@ class CommandAction(argparse.Action):
 
             if extra:
                 setattr(command_namespace, name, extra)
-            # A custom parser's parse_known_args may have already
-            # populated the REMAINDER dest (e.g. MozlintParser stashes
-            # unknown args into extra_args). Preserve that value instead
-            # of clobbering it with the default.
-            elif not getattr(command_namespace, name, None):
+            else:
                 setattr(command_namespace, name, options.get("default", []))
         elif extra:
             raise UnrecognizedArgumentError(command, extra)

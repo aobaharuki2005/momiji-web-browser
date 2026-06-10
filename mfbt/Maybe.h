@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -144,7 +146,7 @@ class Maybe_CopyMove_Enabler;
   }
 
 template <typename T>
-class MOZ_TRIVIAL_ABI Maybe_CopyMove_Enabler<T, true, true, true> {
+class Maybe_CopyMove_Enabler<T, true, true, true> {
  public:
   Maybe_CopyMove_Enabler() = default;
 
@@ -163,7 +165,7 @@ class MOZ_TRIVIAL_ABI Maybe_CopyMove_Enabler<T, true, true, true> {
 };
 
 template <typename T>
-class MOZ_TRIVIAL_ABI Maybe_CopyMove_Enabler<T, true, false, true> {
+class Maybe_CopyMove_Enabler<T, true, false, true> {
  public:
   Maybe_CopyMove_Enabler() = default;
 
@@ -271,16 +273,10 @@ struct MaybeStorage<T, false> : MaybeStorageBase<T> {
   }
 };
 
-#ifdef __GNUC__
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wunused-value"
-#endif
 template <typename T>
 struct MaybeStorage<T, true> : MaybeStorageBase<T> {
  protected:
   char mIsSome = false;  // not bool -- guarantees minimal space consumption
-  // Make the padding explicit to help compiler optimization.
-  char padding[alignof(MaybeStorageBase<T>) - sizeof(char)] = {};
 
   constexpr MaybeStorage() = default;
   constexpr explicit MaybeStorage(const T& aVal)
@@ -293,9 +289,6 @@ struct MaybeStorage<T, true> : MaybeStorageBase<T> {
       : MaybeStorageBase<T>{std::in_place, std::forward<Args>(aArgs)...},
         mIsSome{true} {}
 };
-#ifdef __GNUC__
-#  pragma GCC diagnostic pop
-#endif
 
 template <typename T>
 struct IsMaybeImpl : std::false_type {};
@@ -363,9 +356,9 @@ constexpr Maybe<U> Some(T&& aValue);
  *     functions |Some()| and |Nothing()|.
  */
 template <class T>
-class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS MOZ_GSL_OWNER
-    MOZ_EMPTY_BASES Maybe : private detail::MaybeStorage<T>,
-                            public detail::Maybe_CopyMove_Enabler<T> {
+class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS MOZ_GSL_OWNER Maybe
+    : private detail::MaybeStorage<T>,
+      public detail::Maybe_CopyMove_Enabler<T> {
   template <typename, bool, bool, bool>
   friend class detail::Maybe_CopyMove_Enabler;
 
@@ -533,14 +526,14 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS MOZ_GSL_OWNER
 
   /* Returns the contents of this Maybe<T> by pointer. Unsafe unless |isSome()|.
    */
-  constexpr T* ptr();
+  T* ptr();
   constexpr const T* ptr() const;
 
   /*
    * Returns the contents of this Maybe<T> by pointer. If |isNothing()|,
    * returns the default value provided.
    */
-  constexpr T* ptrOr(T* aDefault) {
+  T* ptrOr(T* aDefault) {
     if (isSome()) {
       return ptr();
     }
@@ -559,7 +552,7 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS MOZ_GSL_OWNER
    * returns the value returned from the function or functor provided.
    */
   template <typename F>
-  constexpr T* ptrOrFrom(F&& aFunc) {
+  T* ptrOrFrom(F&& aFunc) {
     if (isSome()) {
       return ptr();
     }
@@ -567,7 +560,7 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS MOZ_GSL_OWNER
   }
 
   template <typename F>
-  constexpr const T* ptrOrFrom(F&& aFunc) const {
+  const T* ptrOrFrom(F&& aFunc) const {
     if (isSome()) {
       return ptr();
     }
@@ -990,7 +983,7 @@ constexpr T Maybe<T>::value() const&& {
 }
 
 template <typename T>
-constexpr T* Maybe<T>::ptr() {
+T* Maybe<T>::ptr() {
   MOZ_RELEASE_ASSERT(isSome());
   return &ref();
 }

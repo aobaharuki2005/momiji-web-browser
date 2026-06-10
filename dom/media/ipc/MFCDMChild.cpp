@@ -103,14 +103,15 @@ void MFCDMChild::EnsureRemote() {
             RefPtr<RemoteMediaManagerChild> manager =
                 RemoteMediaManagerChild::GetSingleton(
                     RemoteMediaIn::UtilityProcess_MFMediaEngineCDM);
-            if (!manager || !manager->CanSend() ||
-                !manager->SendPMFCDMConstructor(this, mKeySystem)) {
+            if (!manager || !manager->CanSend()) {
               LOG("manager not exists or can't send");
               mState = NS_ERROR_NOT_AVAILABLE;
               mRemotePromiseHolder.RejectIfExists(mState, __func__);
               return;
             }
 
+            mIPDLSelfRef = this;
+            MOZ_ALWAYS_TRUE(manager->SendPMFCDMConstructor(this, mKeySystem));
             mState = NS_OK;
             mRemotePromiseHolder.ResolveIfExists(true, __func__);
           },
@@ -471,10 +472,11 @@ mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionClosed(
   return IPC_OK();
 }
 
-void MFCDMChild::ActorDestroy(ActorDestroyReason aWhy) {
+void MFCDMChild::IPDLActorDestroyed() {
   AssertOnManagerThread();
+  mIPDLSelfRef = nullptr;
   if (!mShutdown) {
-    LOG("ActorDestroy, remote process crashed!");
+    LOG("IPDLActorDestroyed, remote process crashed!");
     mState = NS_ERROR_NOT_AVAILABLE;
     if (mProxyCallback) {
       mProxyCallback->OnRemoteProcessCrashed();

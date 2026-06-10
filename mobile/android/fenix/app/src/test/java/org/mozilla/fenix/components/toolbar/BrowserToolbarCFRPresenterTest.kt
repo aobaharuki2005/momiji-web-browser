@@ -14,7 +14,6 @@ import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.test.StandardTestDispatcher
 import mozilla.components.browser.state.action.CookieBannerAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
@@ -24,6 +23,8 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,13 +32,12 @@ import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertNotNull
 import mozilla.components.browser.toolbar.R as toolbarR
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserToolbarCFRPresenterTest {
-
-    private val testDispatcher = StandardTestDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     @get:Rule
     val gleanTestRule = FenixGleanTestRule(testContext)
@@ -49,7 +49,6 @@ class BrowserToolbarCFRPresenterTest {
         val settings: Settings = mockk(relaxed = true) {
             every { shouldShowCookieBannersCFR } returns true
             every { shouldUseCookieBannerPrivateMode } returns true
-            every { cfrPopupsEnabled } returns true
         }
         val presenter = createPresenter(
             isPrivate = true,
@@ -58,7 +57,6 @@ class BrowserToolbarCFRPresenterTest {
         )
 
         presenter.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         assertNotNull(presenter.scope)
 
@@ -68,7 +66,6 @@ class BrowserToolbarCFRPresenterTest {
                 EngineSession.CookieBannerHandlingStatus.HANDLED,
             ),
         )
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify { presenter.showCookieBannersCFR() }
         verify { settings.shouldShowCookieBannersCFR = false }
@@ -98,7 +95,6 @@ class BrowserToolbarCFRPresenterTest {
             every { isSwipeToolbarToSwitchTabsEnabled } returns true
             every { hasShownTabSwipeCFR } returns false
             every { isTabStripEnabled } returns false
-            every { cfrPopupsEnabled } returns true
         }
 
         val presenter = createPresenter(
@@ -108,7 +104,6 @@ class BrowserToolbarCFRPresenterTest {
         )
 
         presenter.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify { presenter.showTabSwipeCFR() }
         verify { settings.hasShownTabSwipeCFR = true }
@@ -135,7 +130,6 @@ class BrowserToolbarCFRPresenterTest {
         )
 
         presenter.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(exactly = 0) { presenter.showTabSwipeCFR() }
         verify(exactly = 0) { settings.hasShownTabSwipeCFR = any() }
@@ -161,7 +155,6 @@ class BrowserToolbarCFRPresenterTest {
         )
 
         presenter.start()
-        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(exactly = 0) { presenter.showTabSwipeCFR() }
         verify(exactly = 0) { settings.hasShownTabSwipeCFR = any() }
@@ -177,7 +170,7 @@ class BrowserToolbarCFRPresenterTest {
             every { getColor(any()) } returns 0
         },
         anchor: View = mockk(relaxed = true),
-        browserStore: BrowserStore = BrowserStore(),
+        browserStore: BrowserStore = mockk(),
         settings: Settings = mockk(relaxed = true) {
             every { openTabsCount } returns 5
             every { shouldShowCookieBannersCFR } returns true
@@ -200,7 +193,6 @@ class BrowserToolbarCFRPresenterTest {
             toolbar = toolbar,
             customTabId = sessionId,
             isPrivate = isPrivate,
-            mainDispatcher = testDispatcher,
         ),
     ) {
         every { showCookieBannersCFR() } just Runs

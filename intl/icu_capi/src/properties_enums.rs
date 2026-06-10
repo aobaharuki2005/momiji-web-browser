@@ -4,6 +4,7 @@
 
 #[diplomat::bridge]
 #[diplomat::abi_rename = "icu4x_{0}_mv1"]
+#[diplomat::attr(auto, namespace = "icu4x")]
 pub mod ffi {
     use icu_properties::props;
 
@@ -12,121 +13,63 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::BidiClass, Struct)]
     #[diplomat::enum_convert(icu_properties::props::BidiClass, needs_wildcard)]
-    #[non_exhaustive]
     pub enum BidiClass {
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::LeftToRight,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::LeftToRight, EnumVariant)]
         LeftToRight = 0,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::RightToLeft,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::RightToLeft, EnumVariant)]
         RightToLeft = 1,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::EuropeanNumber,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::EuropeanNumber, EnumVariant)]
         EuropeanNumber = 2,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::EuropeanSeparator,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::EuropeanSeparator, EnumVariant)]
         EuropeanSeparator = 3,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::EuropeanTerminator,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::EuropeanTerminator, EnumVariant)]
         EuropeanTerminator = 4,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::ArabicNumber,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::ArabicNumber, EnumVariant)]
         ArabicNumber = 5,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::CommonSeparator,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::CommonSeparator, EnumVariant)]
         CommonSeparator = 6,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::ParagraphSeparator,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::ParagraphSeparator, EnumVariant)]
         ParagraphSeparator = 7,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::SegmentSeparator,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::SegmentSeparator, EnumVariant)]
         SegmentSeparator = 8,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::WhiteSpace,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::WhiteSpace, EnumVariant)]
         WhiteSpace = 9,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::OtherNeutral,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::OtherNeutral, EnumVariant)]
         OtherNeutral = 10,
         #[diplomat::rust_link(
             icu::properties::props::BidiClass::LeftToRightEmbedding,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         LeftToRightEmbedding = 11,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::LeftToRightOverride,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::LeftToRightOverride, EnumVariant)]
         LeftToRightOverride = 12,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::ArabicLetter,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::ArabicLetter, EnumVariant)]
         ArabicLetter = 13,
         #[diplomat::rust_link(
             icu::properties::props::BidiClass::RightToLeftEmbedding,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         RightToLeftEmbedding = 14,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::RightToLeftOverride,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::RightToLeftOverride, EnumVariant)]
         RightToLeftOverride = 15,
         #[diplomat::rust_link(
             icu::properties::props::BidiClass::PopDirectionalFormat,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         PopDirectionalFormat = 16,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::NonspacingMark,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::NonspacingMark, EnumVariant)]
         NonspacingMark = 17,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::BoundaryNeutral,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::BoundaryNeutral, EnumVariant)]
         BoundaryNeutral = 18,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::FirstStrongIsolate,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::FirstStrongIsolate, EnumVariant)]
         FirstStrongIsolate = 19,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::LeftToRightIsolate,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::LeftToRightIsolate, EnumVariant)]
         LeftToRightIsolate = 20,
-        #[diplomat::rust_link(
-            icu::properties::props::BidiClass::RightToLeftIsolate,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::BidiClass::RightToLeftIsolate, EnumVariant)]
         RightToLeftIsolate = 21,
         #[diplomat::rust_link(
             icu::properties::props::BidiClass::PopDirectionalIsolate,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         PopDirectionalIsolate = 22,
     }
@@ -172,13 +115,11 @@ pub mod ffi {
             icu_properties::PropertyNamesShortBorrowed::<props::BidiClass>::new().get(self.into())
         }
         #[diplomat::rust_link(icu::properties::props::BidiClass::to_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
         }
         #[diplomat::rust_link(icu::properties::props::BidiClass::from_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {
@@ -212,585 +153,336 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::Script, Struct)]
     #[diplomat::enum_convert(icu_properties::props::Script, needs_wildcard)]
-    #[non_exhaustive]
     pub enum Script {
-        #[diplomat::rust_link(icu::properties::props::Script::Adlam, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Adlam, EnumVariant)]
         Adlam = 167,
-        #[diplomat::rust_link(icu::properties::props::Script::Ahom, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Ahom, EnumVariant)]
         Ahom = 161,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::AnatolianHieroglyphs,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::AnatolianHieroglyphs, EnumVariant)]
         AnatolianHieroglyphs = 156,
-        #[diplomat::rust_link(icu::properties::props::Script::Arabic, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Arabic, EnumVariant)]
         Arabic = 2,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Armenian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Armenian, EnumVariant)]
         Armenian = 3,
-        #[diplomat::rust_link(icu::properties::props::Script::Avestan, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Avestan, EnumVariant)]
         Avestan = 117,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Balinese,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Balinese, EnumVariant)]
         Balinese = 62,
-        #[diplomat::rust_link(icu::properties::props::Script::Bamum, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Bamum, EnumVariant)]
         Bamum = 130,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::BassaVah,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::BassaVah, EnumVariant)]
         BassaVah = 134,
-        #[diplomat::rust_link(icu::properties::props::Script::Batak, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Batak, EnumVariant)]
         Batak = 63,
-        #[diplomat::rust_link(icu::properties::props::Script::Bengali, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Bengali, EnumVariant)]
         Bengali = 4,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::BeriaErfe,
-            AssociatedConstantInStruct
-        )]
-        BeriaErfe = 208,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Bhaiksuki,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Bhaiksuki, EnumVariant)]
         Bhaiksuki = 168,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Bopomofo,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Bopomofo, EnumVariant)]
         Bopomofo = 5,
-        #[diplomat::rust_link(icu::properties::props::Script::Brahmi, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Brahmi, EnumVariant)]
         Brahmi = 65,
-        #[diplomat::rust_link(icu::properties::props::Script::Braille, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Braille, EnumVariant)]
         Braille = 46,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Buginese,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Buginese, EnumVariant)]
         Buginese = 55,
-        #[diplomat::rust_link(icu::properties::props::Script::Buhid, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Buhid, EnumVariant)]
         Buhid = 44,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::CanadianAboriginal,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::CanadianAboriginal, EnumVariant)]
         CanadianAboriginal = 40,
-        #[diplomat::rust_link(icu::properties::props::Script::Carian, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Carian, EnumVariant)]
         Carian = 104,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::CaucasianAlbanian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::CaucasianAlbanian, EnumVariant)]
         CaucasianAlbanian = 159,
-        #[diplomat::rust_link(icu::properties::props::Script::Chakma, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Chakma, EnumVariant)]
         Chakma = 118,
-        #[diplomat::rust_link(icu::properties::props::Script::Cham, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Cham, EnumVariant)]
         Cham = 66,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Cherokee,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Cherokee, EnumVariant)]
         Cherokee = 6,
-        #[diplomat::rust_link(icu::properties::props::Script::Chisoi, AssociatedConstantInStruct)]
-        Chisoi = 209,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Chorasmian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Chorasmian, EnumVariant)]
         Chorasmian = 189,
-        #[diplomat::rust_link(icu::properties::props::Script::Common, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Common, EnumVariant)]
         Common = 0,
-        #[diplomat::rust_link(icu::properties::props::Script::Coptic, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Coptic, EnumVariant)]
         Coptic = 7,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Cuneiform,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Cuneiform, EnumVariant)]
         Cuneiform = 101,
-        #[diplomat::rust_link(icu::properties::props::Script::Cypriot, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Cypriot, EnumVariant)]
         Cypriot = 47,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::CyproMinoan,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::CyproMinoan, EnumVariant)]
         CyproMinoan = 193,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Cyrillic,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Cyrillic, EnumVariant)]
         Cyrillic = 8,
-        #[diplomat::rust_link(icu::properties::props::Script::Deseret, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Deseret, EnumVariant)]
         Deseret = 9,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Devanagari,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Devanagari, EnumVariant)]
         Devanagari = 10,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::DivesAkuru,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::DivesAkuru, EnumVariant)]
         DivesAkuru = 190,
-        #[diplomat::rust_link(icu::properties::props::Script::Dogra, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Dogra, EnumVariant)]
         Dogra = 178,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Duployan,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Duployan, EnumVariant)]
         Duployan = 135,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::EgyptianHieroglyphs,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::EgyptianHieroglyphs, EnumVariant)]
         EgyptianHieroglyphs = 71,
-        #[diplomat::rust_link(icu::properties::props::Script::Elbasan, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Elbasan, EnumVariant)]
         Elbasan = 136,
-        #[diplomat::rust_link(icu::properties::props::Script::Elymaic, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Elymaic, EnumVariant)]
         Elymaic = 185,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Ethiopian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Ethiopian, EnumVariant)]
         Ethiopian = 11,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Georgian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Georgian, EnumVariant)]
         Georgian = 12,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Glagolitic,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Glagolitic, EnumVariant)]
         Glagolitic = 56,
-        #[diplomat::rust_link(icu::properties::props::Script::Gothic, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Gothic, EnumVariant)]
         Gothic = 13,
-        #[diplomat::rust_link(icu::properties::props::Script::Grantha, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Grantha, EnumVariant)]
         Grantha = 137,
-        #[diplomat::rust_link(icu::properties::props::Script::Greek, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Greek, EnumVariant)]
         Greek = 14,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Gujarati,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Gujarati, EnumVariant)]
         Gujarati = 15,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::GunjalaGondi,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::GunjalaGondi, EnumVariant)]
         GunjalaGondi = 179,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Gurmukhi,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Gurmukhi, EnumVariant)]
         Gurmukhi = 16,
-        #[diplomat::rust_link(icu::properties::props::Script::Han, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Han, EnumVariant)]
         Han = 17,
-        #[diplomat::rust_link(icu::properties::props::Script::Hangul, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Hangul, EnumVariant)]
         Hangul = 18,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::HanifiRohingya,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::HanifiRohingya, EnumVariant)]
         HanifiRohingya = 182,
-        #[diplomat::rust_link(icu::properties::props::Script::Hanunoo, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Hanunoo, EnumVariant)]
         Hanunoo = 43,
-        #[diplomat::rust_link(icu::properties::props::Script::Hatran, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Hatran, EnumVariant)]
         Hatran = 162,
-        #[diplomat::rust_link(icu::properties::props::Script::Hebrew, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Hebrew, EnumVariant)]
         Hebrew = 19,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Hiragana,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Hiragana, EnumVariant)]
         Hiragana = 20,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::ImperialAramaic,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::ImperialAramaic, EnumVariant)]
         ImperialAramaic = 116,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Inherited,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Inherited, EnumVariant)]
         Inherited = 1,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::InscriptionalPahlavi,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::InscriptionalPahlavi, EnumVariant)]
         InscriptionalPahlavi = 122,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::InscriptionalParthian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::InscriptionalParthian, EnumVariant)]
         InscriptionalParthian = 125,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Javanese,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Javanese, EnumVariant)]
         Javanese = 78,
-        #[diplomat::rust_link(icu::properties::props::Script::Kaithi, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Kaithi, EnumVariant)]
         Kaithi = 120,
-        #[diplomat::rust_link(icu::properties::props::Script::Kannada, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Kannada, EnumVariant)]
         Kannada = 21,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Katakana,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Katakana, EnumVariant)]
         Katakana = 22,
-        #[diplomat::rust_link(icu::properties::props::Script::Kawi, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Kawi, EnumVariant)]
         Kawi = 198,
-        #[diplomat::rust_link(icu::properties::props::Script::KayahLi, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::KayahLi, EnumVariant)]
         KayahLi = 79,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Kharoshthi,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Kharoshthi, EnumVariant)]
         Kharoshthi = 57,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::KhitanSmallScript,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::KhitanSmallScript, EnumVariant)]
         KhitanSmallScript = 191,
-        #[diplomat::rust_link(icu::properties::props::Script::Khmer, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Khmer, EnumVariant)]
         Khmer = 23,
-        #[diplomat::rust_link(icu::properties::props::Script::Khojki, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Khojki, EnumVariant)]
         Khojki = 157,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Khudawadi,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Khudawadi, EnumVariant)]
         Khudawadi = 145,
-        #[diplomat::rust_link(icu::properties::props::Script::Lao, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Lao, EnumVariant)]
         Lao = 24,
-        #[diplomat::rust_link(icu::properties::props::Script::Latin, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Latin, EnumVariant)]
         Latin = 25,
-        #[diplomat::rust_link(icu::properties::props::Script::Lepcha, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Lepcha, EnumVariant)]
         Lepcha = 82,
-        #[diplomat::rust_link(icu::properties::props::Script::Limbu, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Limbu, EnumVariant)]
         Limbu = 48,
-        #[diplomat::rust_link(icu::properties::props::Script::LinearA, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::LinearA, EnumVariant)]
         LinearA = 83,
-        #[diplomat::rust_link(icu::properties::props::Script::LinearB, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::LinearB, EnumVariant)]
         LinearB = 49,
-        #[diplomat::rust_link(icu::properties::props::Script::Lisu, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Lisu, EnumVariant)]
         Lisu = 131,
-        #[diplomat::rust_link(icu::properties::props::Script::Lycian, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Lycian, EnumVariant)]
         Lycian = 107,
-        #[diplomat::rust_link(icu::properties::props::Script::Lydian, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Lydian, EnumVariant)]
         Lydian = 108,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Mahajani,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Mahajani, EnumVariant)]
         Mahajani = 160,
-        #[diplomat::rust_link(icu::properties::props::Script::Makasar, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Makasar, EnumVariant)]
         Makasar = 180,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Malayalam,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Malayalam, EnumVariant)]
         Malayalam = 26,
-        #[diplomat::rust_link(icu::properties::props::Script::Mandaic, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Mandaic, EnumVariant)]
         Mandaic = 84,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Manichaean,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Manichaean, EnumVariant)]
         Manichaean = 121,
-        #[diplomat::rust_link(icu::properties::props::Script::Marchen, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Marchen, EnumVariant)]
         Marchen = 169,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::MasaramGondi,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::MasaramGondi, EnumVariant)]
         MasaramGondi = 175,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Medefaidrin,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Medefaidrin, EnumVariant)]
         Medefaidrin = 181,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::MeeteiMayek,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::MeeteiMayek, EnumVariant)]
         MeeteiMayek = 115,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::MendeKikakui,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::MendeKikakui, EnumVariant)]
         MendeKikakui = 140,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::MeroiticCursive,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::MeroiticCursive, EnumVariant)]
         MeroiticCursive = 141,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::MeroiticHieroglyphs,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::MeroiticHieroglyphs, EnumVariant)]
         MeroiticHieroglyphs = 86,
-        #[diplomat::rust_link(icu::properties::props::Script::Miao, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Miao, EnumVariant)]
         Miao = 92,
-        #[diplomat::rust_link(icu::properties::props::Script::Modi, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Modi, EnumVariant)]
         Modi = 163,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Mongolian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Mongolian, EnumVariant)]
         Mongolian = 27,
-        #[diplomat::rust_link(icu::properties::props::Script::Mro, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Mro, EnumVariant)]
         Mro = 149,
-        #[diplomat::rust_link(icu::properties::props::Script::Multani, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Multani, EnumVariant)]
         Multani = 164,
-        #[diplomat::rust_link(icu::properties::props::Script::Myanmar, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Myanmar, EnumVariant)]
         Myanmar = 28,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Nabataean,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Nabataean, EnumVariant)]
         Nabataean = 143,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::NagMundari,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::NagMundari, EnumVariant)]
         NagMundari = 199,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Nandinagari,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Nandinagari, EnumVariant)]
         Nandinagari = 187,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Nastaliq,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Nastaliq, EnumVariant)]
         Nastaliq = 200,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::NewTaiLue,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::NewTaiLue, EnumVariant)]
         NewTaiLue = 59,
-        #[diplomat::rust_link(icu::properties::props::Script::Newa, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Newa, EnumVariant)]
         Newa = 170,
-        #[diplomat::rust_link(icu::properties::props::Script::Nko, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Nko, EnumVariant)]
         Nko = 87,
-        #[diplomat::rust_link(icu::properties::props::Script::Nushu, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Nushu, EnumVariant)]
         Nushu = 150,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::NyiakengPuachueHmong,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::NyiakengPuachueHmong, EnumVariant)]
         NyiakengPuachueHmong = 186,
-        #[diplomat::rust_link(icu::properties::props::Script::Ogham, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Ogham, EnumVariant)]
         Ogham = 29,
-        #[diplomat::rust_link(icu::properties::props::Script::OlChiki, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::OlChiki, EnumVariant)]
         OlChiki = 109,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::OldHungarian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::OldHungarian, EnumVariant)]
         OldHungarian = 76,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::OldItalic,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::OldItalic, EnumVariant)]
         OldItalic = 30,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::OldNorthArabian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::OldNorthArabian, EnumVariant)]
         OldNorthArabian = 142,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::OldPermic,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::OldPermic, EnumVariant)]
         OldPermic = 89,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::OldPersian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::OldPersian, EnumVariant)]
         OldPersian = 61,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::OldSogdian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::OldSogdian, EnumVariant)]
         OldSogdian = 184,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::OldSouthArabian,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::OldSouthArabian, EnumVariant)]
         OldSouthArabian = 133,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::OldTurkic,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::OldTurkic, EnumVariant)]
         OldTurkic = 88,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::OldUyghur,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::OldUyghur, EnumVariant)]
         OldUyghur = 194,
-        #[diplomat::rust_link(icu::properties::props::Script::Oriya, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Oriya, EnumVariant)]
         Oriya = 31,
-        #[diplomat::rust_link(icu::properties::props::Script::Osage, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Osage, EnumVariant)]
         Osage = 171,
-        #[diplomat::rust_link(icu::properties::props::Script::Osmanya, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Osmanya, EnumVariant)]
         Osmanya = 50,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::PahawhHmong,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::PahawhHmong, EnumVariant)]
         PahawhHmong = 75,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Palmyrene,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Palmyrene, EnumVariant)]
         Palmyrene = 144,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::PauCinHau,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::PauCinHau, EnumVariant)]
         PauCinHau = 165,
-        #[diplomat::rust_link(icu::properties::props::Script::PhagsPa, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::PhagsPa, EnumVariant)]
         PhagsPa = 90,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Phoenician,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Phoenician, EnumVariant)]
         Phoenician = 91,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::PsalterPahlavi,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::PsalterPahlavi, EnumVariant)]
         PsalterPahlavi = 123,
-        #[diplomat::rust_link(icu::properties::props::Script::Rejang, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Rejang, EnumVariant)]
         Rejang = 110,
-        #[diplomat::rust_link(icu::properties::props::Script::Runic, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Runic, EnumVariant)]
         Runic = 32,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Samaritan,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Samaritan, EnumVariant)]
         Samaritan = 126,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Saurashtra,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Saurashtra, EnumVariant)]
         Saurashtra = 111,
-        #[diplomat::rust_link(icu::properties::props::Script::Sharada, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Sharada, EnumVariant)]
         Sharada = 151,
-        #[diplomat::rust_link(icu::properties::props::Script::Shavian, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Shavian, EnumVariant)]
         Shavian = 51,
-        #[diplomat::rust_link(icu::properties::props::Script::Siddham, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Siddham, EnumVariant)]
         Siddham = 166,
-        #[diplomat::rust_link(icu::properties::props::Script::Sidetic, AssociatedConstantInStruct)]
-        Sidetic = 210,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::SignWriting,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::SignWriting, EnumVariant)]
         SignWriting = 112,
-        #[diplomat::rust_link(icu::properties::props::Script::Sinhala, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Sinhala, EnumVariant)]
         Sinhala = 33,
-        #[diplomat::rust_link(icu::properties::props::Script::Sogdian, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Sogdian, EnumVariant)]
         Sogdian = 183,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::SoraSompeng,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::SoraSompeng, EnumVariant)]
         SoraSompeng = 152,
-        #[diplomat::rust_link(icu::properties::props::Script::Soyombo, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Soyombo, EnumVariant)]
         Soyombo = 176,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Sundanese,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Sundanese, EnumVariant)]
         Sundanese = 113,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::SylotiNagri,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::SylotiNagri, EnumVariant)]
         SylotiNagri = 58,
-        #[diplomat::rust_link(icu::properties::props::Script::Syriac, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Syriac, EnumVariant)]
         Syriac = 34,
-        #[diplomat::rust_link(icu::properties::props::Script::Tagalog, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Tagalog, EnumVariant)]
         Tagalog = 42,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Tagbanwa,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Tagbanwa, EnumVariant)]
         Tagbanwa = 45,
-        #[diplomat::rust_link(icu::properties::props::Script::TaiLe, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::TaiLe, EnumVariant)]
         TaiLe = 52,
-        #[diplomat::rust_link(icu::properties::props::Script::TaiTham, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::TaiTham, EnumVariant)]
         TaiTham = 106,
-        #[diplomat::rust_link(icu::properties::props::Script::TaiViet, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::TaiViet, EnumVariant)]
         TaiViet = 127,
-        #[diplomat::rust_link(icu::properties::props::Script::TaiYo, AssociatedConstantInStruct)]
-        TaiYo = 211,
-        #[diplomat::rust_link(icu::properties::props::Script::Takri, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Takri, EnumVariant)]
         Takri = 153,
-        #[diplomat::rust_link(icu::properties::props::Script::Tamil, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Tamil, EnumVariant)]
         Tamil = 35,
-        #[diplomat::rust_link(icu::properties::props::Script::Tangsa, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Tangsa, EnumVariant)]
         Tangsa = 195,
-        #[diplomat::rust_link(icu::properties::props::Script::Tangut, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Tangut, EnumVariant)]
         Tangut = 154,
-        #[diplomat::rust_link(icu::properties::props::Script::Telugu, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Telugu, EnumVariant)]
         Telugu = 36,
-        #[diplomat::rust_link(icu::properties::props::Script::Thaana, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Thaana, EnumVariant)]
         Thaana = 37,
-        #[diplomat::rust_link(icu::properties::props::Script::Thai, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Thai, EnumVariant)]
         Thai = 38,
-        #[diplomat::rust_link(icu::properties::props::Script::Tibetan, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Tibetan, EnumVariant)]
         Tibetan = 39,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Tifinagh,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Tifinagh, EnumVariant)]
         Tifinagh = 60,
-        #[diplomat::rust_link(icu::properties::props::Script::Tirhuta, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Tirhuta, EnumVariant)]
         Tirhuta = 158,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::TolongSiki,
-            AssociatedConstantInStruct
-        )]
-        TolongSiki = 212,
-        #[diplomat::rust_link(icu::properties::props::Script::Toto, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Toto, EnumVariant)]
         Toto = 196,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Ugaritic,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Ugaritic, EnumVariant)]
         Ugaritic = 53,
-        #[diplomat::rust_link(icu::properties::props::Script::Unknown, AssociatedConstantInStruct)]
-        #[diplomat::attr(auto, default)]
+        #[diplomat::rust_link(icu::properties::props::Script::Unknown, EnumVariant)]
         Unknown = 103,
-        #[diplomat::rust_link(icu::properties::props::Script::Vai, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Vai, EnumVariant)]
         Vai = 99,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::Vithkuqi,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::Vithkuqi, EnumVariant)]
         Vithkuqi = 197,
-        #[diplomat::rust_link(icu::properties::props::Script::Wancho, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Wancho, EnumVariant)]
         Wancho = 188,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::WarangCiti,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::WarangCiti, EnumVariant)]
         WarangCiti = 146,
-        #[diplomat::rust_link(icu::properties::props::Script::Yezidi, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Yezidi, EnumVariant)]
         Yezidi = 192,
-        #[diplomat::rust_link(icu::properties::props::Script::Yi, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::Script::Yi, EnumVariant)]
         Yi = 41,
-        #[diplomat::rust_link(
-            icu::properties::props::Script::ZanabazarSquare,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::Script::ZanabazarSquare, EnumVariant)]
         ZanabazarSquare = 177,
     }
 
@@ -822,13 +514,11 @@ pub mod ffi {
             icu_properties::PropertyNamesShortBorrowed::<props::Script>::new().get(self.into())
         }
         #[diplomat::rust_link(icu::properties::props::Script::to_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u16 {
             self as u16
         }
         #[diplomat::rust_link(icu::properties::props::Script::from_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u16) -> Option<Self> {
             Some(match other {
@@ -843,7 +533,6 @@ pub mod ffi {
                 134 => Self::BassaVah,
                 63 => Self::Batak,
                 4 => Self::Bengali,
-                208 => Self::BeriaErfe,
                 168 => Self::Bhaiksuki,
                 5 => Self::Bopomofo,
                 65 => Self::Brahmi,
@@ -856,7 +545,6 @@ pub mod ffi {
                 118 => Self::Chakma,
                 66 => Self::Cham,
                 6 => Self::Cherokee,
-                209 => Self::Chisoi,
                 189 => Self::Chorasmian,
                 0 => Self::Common,
                 7 => Self::Coptic,
@@ -966,7 +654,6 @@ pub mod ffi {
                 151 => Self::Sharada,
                 51 => Self::Shavian,
                 166 => Self::Siddham,
-                210 => Self::Sidetic,
                 112 => Self::SignWriting,
                 33 => Self::Sinhala,
                 183 => Self::Sogdian,
@@ -980,7 +667,6 @@ pub mod ffi {
                 52 => Self::TaiLe,
                 106 => Self::TaiTham,
                 127 => Self::TaiViet,
-                211 => Self::TaiYo,
                 153 => Self::Takri,
                 35 => Self::Tamil,
                 195 => Self::Tangsa,
@@ -991,7 +677,6 @@ pub mod ffi {
                 39 => Self::Tibetan,
                 60 => Self::Tifinagh,
                 158 => Self::Tirhuta,
-                212 => Self::TolongSiki,
                 196 => Self::Toto,
                 53 => Self::Ugaritic,
                 103 => Self::Unknown,
@@ -1009,36 +694,32 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::HangulSyllableType, Struct)]
     #[diplomat::enum_convert(icu_properties::props::HangulSyllableType, needs_wildcard)]
-    #[non_exhaustive]
     pub enum HangulSyllableType {
         #[diplomat::rust_link(
             icu::properties::props::HangulSyllableType::NotApplicable,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         NotApplicable = 0,
         #[diplomat::rust_link(
             icu::properties::props::HangulSyllableType::LeadingJamo,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         LeadingJamo = 1,
-        #[diplomat::rust_link(
-            icu::properties::props::HangulSyllableType::VowelJamo,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::HangulSyllableType::VowelJamo, EnumVariant)]
         VowelJamo = 2,
         #[diplomat::rust_link(
             icu::properties::props::HangulSyllableType::TrailingJamo,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         TrailingJamo = 3,
         #[diplomat::rust_link(
             icu::properties::props::HangulSyllableType::LeadingVowelSyllable,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         LeadingVowelSyllable = 4,
         #[diplomat::rust_link(
             icu::properties::props::HangulSyllableType::LeadingVowelTrailingSyllable,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         LeadingVowelTrailingSyllable = 5,
     }
@@ -1055,7 +736,6 @@ pub mod ffi {
             icu::properties::props::HangulSyllableType::to_icu4c_value,
             FnInStruct
         )]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
@@ -1064,7 +744,6 @@ pub mod ffi {
             icu::properties::props::HangulSyllableType::from_icu4c_value,
             FnInStruct
         )]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {
@@ -1081,37 +760,18 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::EastAsianWidth, Struct)]
     #[diplomat::enum_convert(icu_properties::props::EastAsianWidth, needs_wildcard)]
-    #[non_exhaustive]
     pub enum EastAsianWidth {
-        #[diplomat::rust_link(
-            icu::properties::props::EastAsianWidth::Neutral,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::EastAsianWidth::Neutral, EnumVariant)]
         Neutral = 0,
-        #[diplomat::rust_link(
-            icu::properties::props::EastAsianWidth::Ambiguous,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::EastAsianWidth::Ambiguous, EnumVariant)]
         Ambiguous = 1,
-        #[diplomat::rust_link(
-            icu::properties::props::EastAsianWidth::Halfwidth,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::EastAsianWidth::Halfwidth, EnumVariant)]
         Halfwidth = 2,
-        #[diplomat::rust_link(
-            icu::properties::props::EastAsianWidth::Fullwidth,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::EastAsianWidth::Fullwidth, EnumVariant)]
         Fullwidth = 3,
-        #[diplomat::rust_link(
-            icu::properties::props::EastAsianWidth::Narrow,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::EastAsianWidth::Narrow, EnumVariant)]
         Narrow = 4,
-        #[diplomat::rust_link(
-            icu::properties::props::EastAsianWidth::Wide,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::EastAsianWidth::Wide, EnumVariant)]
         Wide = 5,
     }
 
@@ -1140,13 +800,11 @@ pub mod ffi {
                 .get(self.into())
         }
         #[diplomat::rust_link(icu::properties::props::EastAsianWidth::to_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
         }
         #[diplomat::rust_link(icu::properties::props::EastAsianWidth::from_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {
@@ -1163,232 +821,103 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::LineBreak, Struct)]
     #[diplomat::enum_convert(icu_properties::props::LineBreak, needs_wildcard)]
-    #[non_exhaustive]
     pub enum LineBreak {
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Unknown,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Unknown, EnumVariant)]
         Unknown = 0,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Ambiguous,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Ambiguous, EnumVariant)]
         Ambiguous = 1,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Alphabetic,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Alphabetic, EnumVariant)]
         Alphabetic = 2,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::BreakBoth,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::BreakBoth, EnumVariant)]
         BreakBoth = 3,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::BreakAfter,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::BreakAfter, EnumVariant)]
         BreakAfter = 4,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::BreakBefore,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::BreakBefore, EnumVariant)]
         BreakBefore = 5,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::MandatoryBreak,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::MandatoryBreak, EnumVariant)]
         MandatoryBreak = 6,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::ContingentBreak,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::ContingentBreak, EnumVariant)]
         ContingentBreak = 7,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::ClosePunctuation,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::ClosePunctuation, EnumVariant)]
         ClosePunctuation = 8,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::CombiningMark,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::CombiningMark, EnumVariant)]
         CombiningMark = 9,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::CarriageReturn,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::CarriageReturn, EnumVariant)]
         CarriageReturn = 10,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Exclamation,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Exclamation, EnumVariant)]
         Exclamation = 11,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::Glue, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::props::LineBreak::Glue, EnumVariant)]
         Glue = 12,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Hyphen,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Hyphen, EnumVariant)]
         Hyphen = 13,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Ideographic,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Ideographic, EnumVariant)]
         Ideographic = 14,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Inseparable,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Inseparable, EnumVariant)]
         Inseparable = 15,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::InfixNumeric,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::InfixNumeric, EnumVariant)]
         InfixNumeric = 16,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::LineFeed,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::LineFeed, EnumVariant)]
         LineFeed = 17,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Nonstarter,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Nonstarter, EnumVariant)]
         Nonstarter = 18,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Numeric,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Numeric, EnumVariant)]
         Numeric = 19,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::OpenPunctuation,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::OpenPunctuation, EnumVariant)]
         OpenPunctuation = 20,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::PostfixNumeric,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::PostfixNumeric, EnumVariant)]
         PostfixNumeric = 21,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::PrefixNumeric,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::PrefixNumeric, EnumVariant)]
         PrefixNumeric = 22,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Quotation,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Quotation, EnumVariant)]
         Quotation = 23,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::ComplexContext,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::ComplexContext, EnumVariant)]
         ComplexContext = 24,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Surrogate,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Surrogate, EnumVariant)]
         Surrogate = 25,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Space,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Space, EnumVariant)]
         Space = 26,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::BreakSymbols,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::BreakSymbols, EnumVariant)]
         BreakSymbols = 27,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::ZWSpace,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::ZWSpace, EnumVariant)]
         ZWSpace = 28,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::NextLine,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::NextLine, EnumVariant)]
         NextLine = 29,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::WordJoiner,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::WordJoiner, EnumVariant)]
         WordJoiner = 30,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::H2, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::props::LineBreak::H2, EnumVariant)]
         H2 = 31,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::H3, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::props::LineBreak::H3, EnumVariant)]
         H3 = 32,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::JL, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::props::LineBreak::JL, EnumVariant)]
         JL = 33,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::JT, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::props::LineBreak::JT, EnumVariant)]
         JT = 34,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::JV, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::props::LineBreak::JV, EnumVariant)]
         JV = 35,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::CloseParenthesis,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::CloseParenthesis, EnumVariant)]
         CloseParenthesis = 36,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::ConditionalJapaneseStarter,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::ConditionalJapaneseStarter, EnumVariant)]
         ConditionalJapaneseStarter = 37,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::HebrewLetter,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::HebrewLetter, EnumVariant)]
         HebrewLetter = 38,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::RegionalIndicator,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::RegionalIndicator, EnumVariant)]
         RegionalIndicator = 39,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::EBase,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::EBase, EnumVariant)]
         EBase = 40,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::EModifier,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::EModifier, EnumVariant)]
         EModifier = 41,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::ZWJ, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::props::LineBreak::ZWJ, EnumVariant)]
         ZWJ = 42,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Aksara,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Aksara, EnumVariant)]
         Aksara = 43,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::AksaraPrebase,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::AksaraPrebase, EnumVariant)]
         AksaraPrebase = 44,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::AksaraStart,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::AksaraStart, EnumVariant)]
         AksaraStart = 45,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::ViramaFinal,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::ViramaFinal, EnumVariant)]
         ViramaFinal = 46,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Virama,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::props::LineBreak::Virama, EnumVariant)]
         Virama = 47,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::UnambiguousHyphen,
-            AssociatedConstantInStruct
-        )]
-        UnambiguousHyphen = 48,
     }
 
     impl LineBreak {
@@ -1414,13 +943,11 @@ pub mod ffi {
             icu_properties::PropertyNamesShortBorrowed::<props::LineBreak>::new().get(self.into())
         }
         #[diplomat::rust_link(icu::properties::props::LineBreak::to_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
         }
         #[diplomat::rust_link(icu::properties::props::LineBreak::from_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {
@@ -1472,7 +999,6 @@ pub mod ffi {
                 45 => Self::AksaraStart,
                 46 => Self::ViramaFinal,
                 47 => Self::Virama,
-                48 => Self::UnambiguousHyphen,
                 _ => return None,
             })
         }
@@ -1480,73 +1006,42 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::GraphemeClusterBreak, Struct)]
     #[diplomat::enum_convert(icu_properties::props::GraphemeClusterBreak, needs_wildcard)]
-    #[non_exhaustive]
     pub enum GraphemeClusterBreak {
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Other,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::Other, EnumVariant)]
         Other = 0,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Control,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::Control, EnumVariant)]
         Control = 1,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::CR, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::CR, EnumVariant)]
         CR = 2,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Extend,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::Extend, EnumVariant)]
         Extend = 3,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::L, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::L, EnumVariant)]
         L = 4,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::LF, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::LF, EnumVariant)]
         LF = 5,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::LV, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::LV, EnumVariant)]
         LV = 6,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::LVT, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::LVT, EnumVariant)]
         LVT = 7,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::T, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::T, EnumVariant)]
         T = 8,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::V, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::V, EnumVariant)]
         V = 9,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::SpacingMark,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::SpacingMark, EnumVariant)]
         SpacingMark = 10,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::Prepend,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::Prepend, EnumVariant)]
         Prepend = 11,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::RegionalIndicator,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::RegionalIndicator, EnumVariant)]
         RegionalIndicator = 12,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::EBase,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::EBase, EnumVariant)]
         EBase = 13,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::EBaseGAZ,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::EBaseGAZ, EnumVariant)]
         EBaseGAZ = 14,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::EModifier,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::EModifier, EnumVariant)]
         EModifier = 15,
-        #[diplomat::rust_link(
-            icu::properties::props::LineBreak::GlueAfterZwj,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::GlueAfterZwj, EnumVariant)]
         GlueAfterZwj = 16,
-        #[diplomat::rust_link(icu::properties::props::LineBreak::ZWJ, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::LineBreak::ZWJ, EnumVariant)]
         ZWJ = 17,
     }
 
@@ -1562,7 +1057,6 @@ pub mod ffi {
             icu::properties::props::GraphemeClusterBreak::to_icu4c_value,
             FnInStruct
         )]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
@@ -1571,7 +1065,6 @@ pub mod ffi {
             icu::properties::props::GraphemeClusterBreak::from_icu4c_value,
             FnInStruct
         )]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {
@@ -1600,113 +1093,52 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::WordBreak, Struct)]
     #[diplomat::enum_convert(icu_properties::props::WordBreak, needs_wildcard)]
-    #[non_exhaustive]
     pub enum WordBreak {
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::Other,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::Other, EnumVariant)]
         Other = 0,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::ALetter,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::ALetter, EnumVariant)]
         ALetter = 1,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::Format,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::Format, EnumVariant)]
         Format = 2,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::Katakana,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::Katakana, EnumVariant)]
         Katakana = 3,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::MidLetter,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::MidLetter, EnumVariant)]
         MidLetter = 4,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::MidNum,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::MidNum, EnumVariant)]
         MidNum = 5,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::Numeric,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::Numeric, EnumVariant)]
         Numeric = 6,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::ExtendNumLet,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::ExtendNumLet, EnumVariant)]
         ExtendNumLet = 7,
-        #[diplomat::rust_link(icu::properties::props::WordBreak::CR, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::CR, EnumVariant)]
         CR = 8,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::Extend,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::Extend, EnumVariant)]
         Extend = 9,
-        #[diplomat::rust_link(icu::properties::props::WordBreak::LF, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::LF, EnumVariant)]
         LF = 10,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::MidNumLet,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::MidNumLet, EnumVariant)]
         MidNumLet = 11,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::Newline,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::Newline, EnumVariant)]
         Newline = 12,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::RegionalIndicator,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::RegionalIndicator, EnumVariant)]
         RegionalIndicator = 13,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::HebrewLetter,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::HebrewLetter, EnumVariant)]
         HebrewLetter = 14,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::SingleQuote,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::SingleQuote, EnumVariant)]
         SingleQuote = 15,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::DoubleQuote,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::DoubleQuote, EnumVariant)]
         DoubleQuote = 16,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::EBase,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::EBase, EnumVariant)]
         EBase = 17,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::EBaseGAZ,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::EBaseGAZ, EnumVariant)]
         EBaseGAZ = 18,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::EModifier,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::EModifier, EnumVariant)]
         EModifier = 19,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::GlueAfterZwj,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::GlueAfterZwj, EnumVariant)]
         GlueAfterZwj = 20,
-        #[diplomat::rust_link(icu::properties::props::WordBreak::ZWJ, AssociatedConstantInStruct)]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::ZWJ, EnumVariant)]
         ZWJ = 21,
-        #[diplomat::rust_link(
-            icu::properties::props::WordBreak::WSegSpace,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::WordBreak::WSegSpace, EnumVariant)]
         WSegSpace = 22,
     }
 
@@ -1733,13 +1165,11 @@ pub mod ffi {
             icu_properties::PropertyNamesShortBorrowed::<props::WordBreak>::new().get(self.into())
         }
         #[diplomat::rust_link(icu::properties::props::WordBreak::to_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
         }
         #[diplomat::rust_link(icu::properties::props::WordBreak::from_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {
@@ -1773,82 +1203,36 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::SentenceBreak, Struct)]
     #[diplomat::enum_convert(icu_properties::props::SentenceBreak, needs_wildcard)]
-    #[non_exhaustive]
     pub enum SentenceBreak {
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::Other,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::Other, EnumVariant)]
         Other = 0,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::ATerm,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::ATerm, EnumVariant)]
         ATerm = 1,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::Close,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::Close, EnumVariant)]
         Close = 2,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::Format,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::Format, EnumVariant)]
         Format = 3,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::Lower,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::Lower, EnumVariant)]
         Lower = 4,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::Numeric,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::Numeric, EnumVariant)]
         Numeric = 5,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::OLetter,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::OLetter, EnumVariant)]
         OLetter = 6,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::Sep,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::Sep, EnumVariant)]
         Sep = 7,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::Sp,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::Sp, EnumVariant)]
         Sp = 8,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::STerm,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::STerm, EnumVariant)]
         STerm = 9,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::Upper,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::Upper, EnumVariant)]
         Upper = 10,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::CR,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::CR, EnumVariant)]
         CR = 11,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::Extend,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::Extend, EnumVariant)]
         Extend = 12,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::LF,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::LF, EnumVariant)]
         LF = 13,
-        #[diplomat::rust_link(
-            icu::properties::props::SentenceBreak::SContinue,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::SentenceBreak::SContinue, EnumVariant)]
         SContinue = 14,
     }
 
@@ -1877,13 +1261,11 @@ pub mod ffi {
                 .get(self.into())
         }
         #[diplomat::rust_link(icu::properties::props::SentenceBreak::to_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
         }
         #[diplomat::rust_link(icu::properties::props::SentenceBreak::from_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {
@@ -1909,296 +1291,193 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass, Struct)]
     #[diplomat::enum_convert(icu_properties::props::CanonicalCombiningClass, needs_wildcard)]
-    #[non_exhaustive]
     pub enum CanonicalCombiningClass {
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::NotReordered,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         NotReordered = 0,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::Overlay,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         Overlay = 1,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::HanReading,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         HanReading = 6,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::Nukta,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::Nukta, EnumVariant)]
         Nukta = 7,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::KanaVoicing,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         KanaVoicing = 8,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::Virama,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         Virama = 9,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC10,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC10, EnumVariant)]
         CCC10 = 10,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC11,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC11, EnumVariant)]
         CCC11 = 11,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC12,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC12, EnumVariant)]
         CCC12 = 12,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC13,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC13, EnumVariant)]
         CCC13 = 13,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC14,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC14, EnumVariant)]
         CCC14 = 14,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC15,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC15, EnumVariant)]
         CCC15 = 15,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC16,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC16, EnumVariant)]
         CCC16 = 16,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC17,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC17, EnumVariant)]
         CCC17 = 17,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC18,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC18, EnumVariant)]
         CCC18 = 18,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC19,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC19, EnumVariant)]
         CCC19 = 19,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC20,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC20, EnumVariant)]
         CCC20 = 20,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC21,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC21, EnumVariant)]
         CCC21 = 21,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC22,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC22, EnumVariant)]
         CCC22 = 22,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC23,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC23, EnumVariant)]
         CCC23 = 23,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC24,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC24, EnumVariant)]
         CCC24 = 24,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC25,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC25, EnumVariant)]
         CCC25 = 25,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC26,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC26, EnumVariant)]
         CCC26 = 26,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC27,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC27, EnumVariant)]
         CCC27 = 27,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC28,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC28, EnumVariant)]
         CCC28 = 28,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC29,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC29, EnumVariant)]
         CCC29 = 29,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC30,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC30, EnumVariant)]
         CCC30 = 30,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC31,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC31, EnumVariant)]
         CCC31 = 31,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC32,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC32, EnumVariant)]
         CCC32 = 32,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC33,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC33, EnumVariant)]
         CCC33 = 33,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC34,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC34, EnumVariant)]
         CCC34 = 34,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC35,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC35, EnumVariant)]
         CCC35 = 35,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC36,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC36, EnumVariant)]
         CCC36 = 36,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC84,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC84, EnumVariant)]
         CCC84 = 84,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::CCC91,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::CCC91, EnumVariant)]
         CCC91 = 91,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::CCC103,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         CCC103 = 103,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::CCC107,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         CCC107 = 107,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::CCC118,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         CCC118 = 118,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::CCC122,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         CCC122 = 122,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::CCC129,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         CCC129 = 129,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::CCC130,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         CCC130 = 130,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::CCC132,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         CCC132 = 132,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::CCC133,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         CCC133 = 133,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::AttachedBelowLeft,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         AttachedBelowLeft = 200,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::AttachedBelow,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         AttachedBelow = 202,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::AttachedAbove,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         AttachedAbove = 214,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::AttachedAboveRight,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         AttachedAboveRight = 216,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::BelowLeft,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         BelowLeft = 218,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::Below,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::Below, EnumVariant)]
         Below = 220,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::BelowRight,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         BelowRight = 222,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::Left,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::Left, EnumVariant)]
         Left = 224,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::Right,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::Right, EnumVariant)]
         Right = 226,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::AboveLeft,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         AboveLeft = 228,
-        #[diplomat::rust_link(
-            icu::properties::props::CanonicalCombiningClass::Above,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::CanonicalCombiningClass::Above, EnumVariant)]
         Above = 230,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::AboveRight,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         AboveRight = 232,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::DoubleBelow,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         DoubleBelow = 233,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::DoubleAbove,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         DoubleAbove = 234,
         #[diplomat::rust_link(
             icu::properties::props::CanonicalCombiningClass::IotaSubscript,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         IotaSubscript = 240,
     }
@@ -2215,7 +1494,6 @@ pub mod ffi {
             icu::properties::props::CanonicalCombiningClass::to_icu4c_value,
             FnInStruct
         )]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
@@ -2224,7 +1502,6 @@ pub mod ffi {
             icu::properties::props::CanonicalCombiningClass::from_icu4c_value,
             FnInStruct
         )]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {
@@ -2293,191 +1570,166 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::IndicSyllabicCategory, Struct)]
     #[diplomat::enum_convert(icu_properties::props::IndicSyllabicCategory, needs_wildcard)]
-    #[non_exhaustive]
     pub enum IndicSyllabicCategory {
-        #[diplomat::rust_link(
-            icu::properties::props::IndicSyllabicCategory::Other,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::IndicSyllabicCategory::Other, EnumVariant)]
         Other = 0,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::Avagraha,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         Avagraha = 1,
-        #[diplomat::rust_link(
-            icu::properties::props::IndicSyllabicCategory::Bindu,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::IndicSyllabicCategory::Bindu, EnumVariant)]
         Bindu = 2,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::BrahmiJoiningNumber,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         BrahmiJoiningNumber = 3,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::CantillationMark,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         CantillationMark = 4,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::Consonant,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         Consonant = 5,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantDead,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantDead = 6,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantFinal,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantFinal = 7,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantHeadLetter,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantHeadLetter = 8,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantInitialPostfixed,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantInitialPostfixed = 9,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantKiller,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantKiller = 10,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantMedial,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantMedial = 11,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantPlaceholder,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantPlaceholder = 12,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantPrecedingRepha,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantPrecedingRepha = 13,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantPrefixed,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantPrefixed = 14,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantSucceedingRepha,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantSucceedingRepha = 15,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantSubjoined,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantSubjoined = 16,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ConsonantWithStacker,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ConsonantWithStacker = 17,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::GeminationMark,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         GeminationMark = 18,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::InvisibleStacker,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         InvisibleStacker = 19,
-        #[diplomat::rust_link(
-            icu::properties::props::IndicSyllabicCategory::Joiner,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::IndicSyllabicCategory::Joiner, EnumVariant)]
         Joiner = 20,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ModifyingLetter,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ModifyingLetter = 21,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::NonJoiner,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         NonJoiner = 22,
-        #[diplomat::rust_link(
-            icu::properties::props::IndicSyllabicCategory::Nukta,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::IndicSyllabicCategory::Nukta, EnumVariant)]
         Nukta = 23,
-        #[diplomat::rust_link(
-            icu::properties::props::IndicSyllabicCategory::Number,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::IndicSyllabicCategory::Number, EnumVariant)]
         Number = 24,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::NumberJoiner,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         NumberJoiner = 25,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::PureKiller,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         PureKiller = 26,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::RegisterShifter,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         RegisterShifter = 27,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::SyllableModifier,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         SyllableModifier = 28,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ToneLetter,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ToneLetter = 29,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ToneMark,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ToneMark = 30,
-        #[diplomat::rust_link(
-            icu::properties::props::IndicSyllabicCategory::Virama,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::IndicSyllabicCategory::Virama, EnumVariant)]
         Virama = 31,
-        #[diplomat::rust_link(
-            icu::properties::props::IndicSyllabicCategory::Visarga,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::IndicSyllabicCategory::Visarga, EnumVariant)]
         Visarga = 32,
-        #[diplomat::rust_link(
-            icu::properties::props::IndicSyllabicCategory::Vowel,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::IndicSyllabicCategory::Vowel, EnumVariant)]
         Vowel = 33,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::VowelDependent,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         VowelDependent = 34,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::VowelIndependent,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         VowelIndependent = 35,
         #[diplomat::rust_link(
             icu::properties::props::IndicSyllabicCategory::ReorderingKiller,
-            AssociatedConstantInStruct
+            EnumVariant
         )]
         ReorderingKiller = 36,
     }
@@ -2494,7 +1746,6 @@ pub mod ffi {
             icu::properties::props::IndicSyllabicCategory::to_icu4c_value,
             FnInStruct
         )]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
@@ -2503,7 +1754,6 @@ pub mod ffi {
             icu::properties::props::IndicSyllabicCategory::from_icu4c_value,
             FnInStruct
         )]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {
@@ -2551,37 +1801,18 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::JoiningType, Struct)]
     #[diplomat::enum_convert(icu_properties::props::JoiningType, needs_wildcard)]
-    #[non_exhaustive]
     pub enum JoiningType {
-        #[diplomat::rust_link(
-            icu::properties::props::JoiningType::NonJoining,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::JoiningType::NonJoining, EnumVariant)]
         NonJoining = 0,
-        #[diplomat::rust_link(
-            icu::properties::props::JoiningType::JoinCausing,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::JoiningType::JoinCausing, EnumVariant)]
         JoinCausing = 1,
-        #[diplomat::rust_link(
-            icu::properties::props::JoiningType::DualJoining,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::JoiningType::DualJoining, EnumVariant)]
         DualJoining = 2,
-        #[diplomat::rust_link(
-            icu::properties::props::JoiningType::LeftJoining,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::JoiningType::LeftJoining, EnumVariant)]
         LeftJoining = 3,
-        #[diplomat::rust_link(
-            icu::properties::props::JoiningType::RightJoining,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::JoiningType::RightJoining, EnumVariant)]
         RightJoining = 4,
-        #[diplomat::rust_link(
-            icu::properties::props::JoiningType::Transparent,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::JoiningType::Transparent, EnumVariant)]
         Transparent = 5,
     }
 
@@ -2608,13 +1839,11 @@ pub mod ffi {
             icu_properties::PropertyNamesShortBorrowed::<props::JoiningType>::new().get(self.into())
         }
         #[diplomat::rust_link(icu::properties::props::JoiningType::to_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
         }
         #[diplomat::rust_link(icu::properties::props::JoiningType::from_icu4c_value, FnInStruct)]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {
@@ -2631,7 +1860,6 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::GeneralCategory, Enum)]
     #[diplomat::enum_convert(icu_properties::props::GeneralCategory)]
-    #[non_exhaustive]
     pub enum GeneralCategory {
         #[diplomat::rust_link(icu::properties::props::GeneralCategory::Unassigned, EnumVariant)]
         Unassigned = 0,
@@ -2768,7 +1996,6 @@ pub mod ffi {
             icu_properties::PropertyNamesShortBorrowed::<props::GeneralCategory>::new()
                 .get(self.into())
         }
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
@@ -2788,7 +2015,6 @@ pub mod ffi {
             Struct,
             hidden
         )]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {
@@ -2936,27 +2162,20 @@ pub mod ffi {
 
     #[diplomat::rust_link(icu::properties::props::VerticalOrientation, Struct)]
     #[diplomat::enum_convert(icu_properties::props::VerticalOrientation, needs_wildcard)]
-    #[non_exhaustive]
     pub enum VerticalOrientation {
-        #[diplomat::rust_link(
-            icu::properties::props::VerticalOrientation::Rotated,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::VerticalOrientaiton::Rotated, EnumVariant)]
         Rotated = 0,
         #[diplomat::rust_link(
-            icu::properties::props::VerticalOrientation::TransformedRotated,
-            AssociatedConstantInStruct
+            icu::properties::props::VerticalOrientaiton::TransformedRotated,
+            EnumVariant
         )]
         TransformedRotated = 1,
         #[diplomat::rust_link(
-            icu::properties::props::VerticalOrientation::TransformedUpright,
-            AssociatedConstantInStruct
+            icu::properties::props::VerticalOrientaiton::TransformedUpright,
+            EnumVariant
         )]
         TransformedUpright = 2,
-        #[diplomat::rust_link(
-            icu::properties::props::VerticalOrientation::Upright,
-            AssociatedConstantInStruct
-        )]
+        #[diplomat::rust_link(icu::properties::props::VerticalOrientaiton::Upright, EnumVariant)]
         Upright = 3,
     }
 
@@ -2986,7 +2205,6 @@ pub mod ffi {
             icu::properties::props::VerticalOrientation::to_icu4c_value,
             FnInStruct
         )]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert to an integer value usable with ICU4C and CodePointMapData
         pub fn to_integer_value(self) -> u8 {
             self as u8
@@ -2995,7 +2213,6 @@ pub mod ffi {
             icu::properties::props::VerticalOrientation::from_icu4c_value,
             FnInStruct
         )]
-        #[diplomat::attr(demo_gen, disable)] // semi-internal, also too many of these
         /// Convert from an integer value from ICU4C or CodePointMapData
         pub fn from_integer_value(other: u8) -> Option<Self> {
             Some(match other {

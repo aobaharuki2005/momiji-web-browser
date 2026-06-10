@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -109,8 +111,7 @@ void DOMSVGTransformList::InternalListLengthWillChange(uint32_t aNewLength) {
 }
 
 SVGTransformList& DOMSVGTransformList::InternalList() const {
-  SVGAnimatedTransformList* alist =
-      Element()->GetExistingAnimatedTransformList();
+  SVGAnimatedTransformList* alist = Element()->GetAnimatedTransformList();
   return IsAnimValList() && alist->mAnimVal ? *alist->mAnimVal
                                             : alist->mBaseVal;
 }
@@ -130,7 +131,7 @@ void DOMSVGTransformList::Clear(ErrorResult& error) {
     mAList->InternalBaseValListWillChangeLengthTo(0);
 
     mItems.Clear();
-    auto* alist = Element()->GetExistingAnimatedTransformList();
+    auto* alist = Element()->GetAnimatedTransformList();
     alist->mBaseVal.Clear();
     alist->mIsBaseSet = false;
   }
@@ -190,8 +191,9 @@ already_AddRefed<DOMSVGTransform> DOMSVGTransformList::InsertItemBefore(
     return nullptr;
   }
 
-  if (LengthNoFlush() >= DOMSVGTransform::MaxListIndex()) {
-    error.ThrowIndexSizeError("List too long");
+  index = std::min(index, LengthNoFlush());
+  if (index >= DOMSVGTransform::MaxListIndex()) {
+    error.ThrowIndexSizeError("Index out of range");
     return nullptr;
   }
 
@@ -213,8 +215,6 @@ already_AddRefed<DOMSVGTransform> DOMSVGTransformList::InsertItemBefore(
       return nullptr;
     }
   }
-
-  index = std::min(index, LengthNoFlush());
 
   AutoChangeTransformListNotifier notifier(this);
   // Now that we know we're inserting, keep animVal list in sync as necessary.

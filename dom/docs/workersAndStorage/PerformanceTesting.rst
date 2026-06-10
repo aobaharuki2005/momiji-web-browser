@@ -4,7 +4,8 @@ Service Worker Performance Tests
 
 Our performance tests are mochitests running in the `mozperftest
 <https://firefox-source-docs.mozilla.org/testing/perfdocs/mozperftest.html>`_
-harness.  Tests reside under :searchfox:`dom/serviceworkers/test/performance`,
+harness.  Tests reside under `dom/serviceworkers/test/performance
+<https://searchfox.org/mozilla-central/source/dom/serviceworkers/test/performance>`_,
 itemized in perftest.toml.  Beyond the standard mochitest machinery,
 performance tests define a ``perfMetadata`` variable at the top level, and call:
 
@@ -22,18 +23,22 @@ They can be run via mach perftest, or as normal mochitests via mach test.
 Adding new tests
 ================
 
-Add files to :searchfox:`perftest.toml <dom/serviceworkers/test/performance/perftest.toml>`
+Add files to `perftest.toml
+<https://searchfox.org/mozilla-central/source/dom/serviceworkers/test/performance/perftest.toml>`_
 as usual for mochitests.
 
-Modify linux.yml, macosx.yml, and windows11.yml under :searchfox:`taskcluster/kinds/perftest`.
-Currently, each test needs to be added individually to the run command (:searchfox:`here <mozilla-central/rev/91cc8848427fdbbeb324e6ca56a0d08d32d3c308:taskcluster/ci/perftest/linux.yml#121-149>`,
+Modify linux.yml, macosx.yml, and windows11.yml under `taskcluster/kinds/perftest
+<https://searchfox.org/mozilla-central/source/taskcluster/kinds/perftest>`_.
+Currently, each test needs to be added individually to the run command (`here
+<https://searchfox.org/mozilla-central/rev/91cc8848427fdbbeb324e6ca56a0d08d32d3c308/taskcluster/ci/perftest/linux.yml#121-149>`_,
 for example).  kind.yml can be ignored–it provides some defaults.
 
-Add your new test to :searchfox:`perfdocs/config.yml <python/mozperftest/perfdocs/config.yml>`.
+Add your new test to `perfdocs/config.yml
+<https://searchfox.org/mozilla-central/source/python/mozperftest/perfdocs/config.yml>`_.
 
 Modify the generated documentation using:
 
-``$ ./mach perfdocs --generate``
+``$ ./mach lint -l perfdocs . --fix --warnings --outgoing``
 
 There's currently a `bug <https://bugzilla.mozilla.org/show_bug.cgi?id=1872613>`_
 which will likely cause the command to fail.  Running it a second time should

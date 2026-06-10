@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.wrapWithProto)
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||!Intl.hasOwnProperty("DurationFormat")||!this.wrapWithProto)
 
 var locale = "en";
 var duration = {years: 123};

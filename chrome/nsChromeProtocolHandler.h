@@ -1,9 +1,10 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsChromeProtocolHandler_h_
-#define nsChromeProtocolHandler_h_
+#ifndef nsChromeProtocolHandler_h___
+#define nsChromeProtocolHandler_h___
 
 #include "nsIProtocolHandler.h"
 #include "nsWeakReference.h"
@@ -24,12 +25,12 @@ class nsChromeProtocolHandler final : public nsIProtocolHandler,
   NS_DECL_NSIPROTOCOLHANDLER
 
   // nsChromeProtocolHandler methods:
-  nsChromeProtocolHandler() = default;
+  nsChromeProtocolHandler() {}
   static nsresult CreateNewURI(const nsACString& aSpec, const char* aCharset,
                                nsIURI* aBaseURI, nsIURI** result);
 
  private:
-  ~nsChromeProtocolHandler() = default;
+  ~nsChromeProtocolHandler() {}
 };
 
-#endif /* nsChromeProtocolHandler_h_ */
+#endif /* nsChromeProtocolHandler_h___ */

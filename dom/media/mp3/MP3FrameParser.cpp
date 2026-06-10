@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -467,9 +469,9 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseXing(BufferReader* aReader,
 }
 
 template <typename T>
-int64_t readAndConvertToInt(BufferReader* aReader) {
-  static_assert(sizeof(T) <= 8);
-  return aReader->ReadType<T>();
+int readAndConvertToInt(BufferReader* aReader) {
+  int value = AssertedCast<int>(aReader->ReadType<T>());
+  return value;
 }
 
 Result<bool, nsresult> FrameParser::VBRHeader::ParseVBRI(
@@ -512,7 +514,7 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseVBRI(
 
       mTOC.reserve(vbriSeekOffsetsTableSize + 1);
 
-      int64_t (*readFunc)(BufferReader*) = nullptr;
+      int (*readFunc)(BufferReader*) = nullptr;
       switch (vbriSeekOffsetsBytesPerEntry) {
         case 1:
           readFunc = &readAndConvertToInt<uint8_t>;
@@ -532,7 +534,7 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseVBRI(
           break;
       }
       for (uint32_t i = 0; readFunc && i < vbriSeekOffsetsTableSize; i++) {
-        int64_t entry = readFunc(aReader);
+        int entry = readFunc(aReader);
         mTOC.push_back(entry * vbriSeekOffsetsScaleFactor);
       }
       MP3LOG(
@@ -570,12 +572,9 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseVBRI(
 }
 
 bool FrameParser::VBRHeader::Parse(BufferReader* aReader, size_t aFrameSize) {
-  auto xing = ParseXing(aReader, aFrameSize);
-  bool rv = xing.isOk() && xing.unwrap();
-  if (!rv) {
-    auto vbri = ParseVBRI(aReader);
-    rv = vbri.isOk() && vbri.unwrap();
-  }
+  auto res = std::make_pair(ParseVBRI(aReader), ParseXing(aReader, aFrameSize));
+  const bool rv = (res.first.isOk() && res.first.unwrap()) ||
+                  (res.second.isOk() && res.second.unwrap());
   if (rv) {
     MP3LOG(
         "VBRHeader::Parse found valid VBR/CBR header: type=%s"
@@ -684,7 +683,7 @@ uint32_t ID3Parser::Parse(BufferReader* aReader) {
   uint32_t size = ParseInternal(aReader);
   if (!size) {
     // next ID3 is invalid, so revert the header.
-    mHeader = std::move(prevHeader);
+    mHeader = prevHeader;
     return size;
   }
 

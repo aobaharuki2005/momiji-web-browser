@@ -33,19 +33,6 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 const TIMEOUT_NO_WINDOW_MANAGER = 5000;
 
 /**
- * @typedef {object} WindowRect
- *
- * @property {number} x
- *     The x-coordinate of the window.
- * @property {number} y
- *     The y-coordinate of the window.
- * @property {number} width
- *     The width of the window.
- * @property {number} height
- *     The height of the window.
- */
-
-/**
  * Provides helpers to interact with Window objects.
  *
  * @class WindowManager
@@ -201,8 +188,8 @@ class WindowManager {
    * @param {number} height
    *     The height of the window.
    *
-   * @returns {Promise<WindowRect>}
-   *     A promise that resolves to the window rect when the window geometry has been adjusted.
+   * @returns {Promise}
+   *     A promise that resolves when the window geometry has been adjusted.
    *
    * @throws {TimeoutError}
    *     Raised if the operating system fails to honor the requested move or resize.
@@ -227,19 +214,22 @@ class WindowManager {
       let posMatches = true;
 
       if (
-        (width !== null && win.outerWidth !== width) ||
-        (height !== null && win.outerHeight !== height)
+        width !== null &&
+        height !== null &&
+        (win.outerWidth !== width || win.outerHeight !== height)
       ) {
         sizeMatches = false;
       }
 
+      // Wayland doesn't support getting the window position.
       if (
-        (x !== null && win.screenX !== x) ||
-        (y !== null && win.screenY !== y)
+        x !== null &&
+        y !== null &&
+        (win.screenX !== x || win.screenY !== y)
       ) {
-        if (lazy.AppInfo.isWayland && !lazy.AppInfo.isHeadless) {
+        if (lazy.AppInfo.isWayland) {
           lazy.logger.info(
-            `Wayland doesn't support setting the window position in headful mode`
+            `Wayland doesn't support setting the window position`
           );
         } else {
           posMatches = false;
@@ -255,14 +245,6 @@ class WindowManager {
       return false;
     }
 
-    if (WindowState.from(win.windowState) !== WindowState.Normal) {
-      await this.restoreWindow(win);
-    }
-
-    lazy.logger.trace(
-      `Setting window geometry to ${width}x${height} @ (${x}, ${y})`
-    );
-
     if (!geometryMatches()) {
       // There might be more than one resize or MozUpdateWindowPos event due
       // to previous geometry changes, such as from restoreWindow(), so
@@ -273,33 +255,17 @@ class WindowManager {
       };
       const promises = [];
 
-      const resize = width !== null || height !== null;
-      if (resize) {
+      if (width !== null && height !== null) {
         promises.push(new lazy.EventPromise(win, "resize", options));
+        win.resizeTo(width, height);
       }
 
-      // Wayland doesn't support setting the window position in headful mode.
-      const move =
-        !(lazy.AppInfo.isWayland && !lazy.AppInfo.isHeadless) &&
-        (x !== null || y !== null);
-
-      if (move) {
+      // Wayland doesn't support setting the window position.
+      if (!lazy.AppInfo.isWayland && x !== null && y !== null) {
         promises.push(
           new lazy.EventPromise(win.windowRoot, "MozUpdateWindowPos", options)
         );
-      }
-
-      if (move && resize) {
-        win.moveResize(
-          x ?? win.screenX,
-          y ?? win.screenY,
-          width ?? win.outerWidth,
-          height ?? win.outerHeight
-        );
-      } else if (move) {
-        win.moveTo(x ?? win.screenX, y ?? win.screenY);
-      } else if (resize) {
-        win.resizeTo(width ?? win.outerWidth, height ?? win.outerHeight);
+        win.moveTo(x, y);
       }
 
       try {
@@ -315,8 +281,6 @@ class WindowManager {
         }
       }
     }
-
-    return this.getWindowRect(win);
   }
 
   /**
@@ -359,24 +323,6 @@ class WindowManager {
     }
 
     return this.#setChromeWindowForBrowsingContext(context);
-  }
-
-  /**
-   * Gets the position and dimensions of the top-level browsing context.
-   *
-   * @param {ChromeWindow} win
-   *     The chrome window to get its rect from.
-   *
-   * @returns {WindowRect}
-   *     An object with the window position and dimension.
-   */
-  getWindowRect(win) {
-    return {
-      x: win.screenX,
-      y: win.screenY,
-      width: win.outerWidth,
-      height: win.outerHeight,
-    };
   }
 
   /**
@@ -451,7 +397,7 @@ class WindowManager {
           await this.focusWindow(openerWindow);
         }
 
-        const chromeWindow = browser.documentGlobal;
+        const chromeWindow = browser.ownerGlobal;
         await this.waitForChromeWindowLoaded(chromeWindow);
 
         return chromeWindow;
@@ -469,29 +415,18 @@ class WindowManager {
   }
 
   /**
-   * Fullscreen the specified window.
+   * Minimize the specified window.
    *
    * @param {window} win
-   *     The window to fullscreen.
+   *     The window to minimize.
    *
-   * @returns {Promise<WindowRect>}
-   *     A promise that resolves to the window rect when the window is fullscreen.
+   * @returns {Promise}
+   *     A promise resolved when the window is minimized, or times out if no window manager is present.
    */
-  async fullscreenWindow(win) {
-    const windowState = WindowState.from(win.windowState);
-
-    if (windowState !== WindowState.Fullscreen) {
-      switch (windowState) {
-        case WindowState.Maximized:
-        case WindowState.Minimized:
-          await this.restoreWindow(win);
-          break;
-      }
-
-      await waitForWindowState(win, () => (win.fullScreen = true));
+  async minimizeWindow(win) {
+    if (WindowState.from(win.windowState) != WindowState.Minimized) {
+      await waitForWindowState(win, () => win.minimize());
     }
-
-    return this.getWindowRect(win);
   }
 
   /**
@@ -500,52 +435,13 @@ class WindowManager {
    * @param {window} win
    *     The window to maximize.
    *
-   * @returns {Promise<WindowRect>}
-   *     A promise that resolves to the window rect when the window is maximized.
+   * @returns {Promise}
+   *     A promise resolved when the window is maximized, or times out if no window manager is present.
    */
   async maximizeWindow(win) {
-    const windowState = WindowState.from(win.windowState);
-
-    if (windowState !== WindowState.Maximized) {
-      // Directly switching into maximize state does not always work.
-      // As such restore the window to normal state first.
-      switch (windowState) {
-        case WindowState.Fullscreen:
-        case WindowState.Minimized:
-          await this.restoreWindow(win);
-          break;
-      }
-
+    if (WindowState.from(win.windowState) != WindowState.Maximized) {
       await waitForWindowState(win, () => win.maximize());
     }
-
-    return this.getWindowRect(win);
-  }
-
-  /**
-   * Minimize the specified window.
-   *
-   * @param {window} win
-   *     The window to minimize.
-   *
-   * @returns {Promise<WindowRect>}
-   *     A promise that resolves to the window rect when the window is minimized.
-   */
-  async minimizeWindow(win) {
-    const windowState = WindowState.from(win.windowState);
-
-    if (windowState !== WindowState.Minimized) {
-      switch (windowState) {
-        case WindowState.Fullscreen:
-        case WindowState.Maximized:
-          await this.restoreWindow(win);
-          break;
-      }
-
-      await waitForWindowState(win, () => win.minimize());
-    }
-
-    return this.getWindowRect(win);
   }
 
   /**
@@ -554,22 +450,32 @@ class WindowManager {
    * @param {window} win
    *     The window to restore.
    *
-   * @returns {Promise<WindowRect>}
-   *     A promise that resolves to the window rect when the window is restored.
+   * @returns {Promise}
+   *     A promise resolved when the window is restored, or times out if no window manager is present.
    */
   async restoreWindow(win) {
-    const windowState = WindowState.from(win.windowState);
-
-    if (windowState !== WindowState.Normal) {
-      const callback =
-        windowState === WindowState.Fullscreen
-          ? () => (win.fullScreen = false)
-          : () => win.restore();
-
-      await waitForWindowState(win, callback);
+    if (WindowState.from(win.windowState) !== WindowState.Normal) {
+      await waitForWindowState(win, () => win.restore());
     }
+  }
 
-    return this.getWindowRect(win);
+  /**
+   * Sets the fullscreen state of the specified window.
+   *
+   * @param {window} win
+   *     The target window.
+   * @param {boolean} enable
+   *     Whether to enter fullscreen (true) or exit fullscreen (false).
+   *
+   * @returns {Promise}
+   *     A promise resolved when the window enters or exits fullscreen mode.
+   */
+  async setFullscreen(win, enable) {
+    const isFullscreen =
+      WindowState.from(win.windowState) === WindowState.Fullscreen;
+    if (enable !== isFullscreen) {
+      await waitForWindowState(win, () => (win.fullScreen = enable));
+    }
   }
 
   /**
@@ -614,7 +520,7 @@ class WindowManager {
   }
 
   #setChromeWindowForBrowsingContext(context) {
-    const chromeWindow = context.top.embedderElement?.documentGlobal;
+    const chromeWindow = context.top.embedderElement?.ownerGlobal;
     if (chromeWindow) {
       return this.#contextToWindowMap.getOrInsert(context.top, chromeWindow);
     }

@@ -48,14 +48,13 @@ add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, URLs[1]);
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    let win1 = browser.documentGlobal;
+    let win1 = browser.ownerGlobal;
     await navigateToViewAndWait(document, "opentabs");
 
     let openTabs = document.querySelector("view-opentabs[name=opentabs]");
     await openTabs.updateComplete;
     await TestUtils.waitForCondition(
-      () => openTabs.viewCards[0].tabList.rowEls.length,
-      "The first view card tab list to have row elements"
+      () => openTabs.viewCards[0].tabList.rowEls.length
     );
     await openTabs.openTabsTarget.readyWindowsPromise;
     let card = openTabs.viewCards[0];

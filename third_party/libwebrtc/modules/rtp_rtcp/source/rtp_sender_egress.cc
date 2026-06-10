@@ -15,12 +15,13 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <span>
 #include <utility>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/call/transport.h"
 #include "api/environment/environment.h"
+#include "api/field_trials_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
@@ -127,7 +128,9 @@ RtpSenderEgress::RtpSenderEgress(const Environment& env,
       rtp_sequence_number_map_(need_rtp_packet_infos_
                                    ? std::make_unique<RtpSequenceNumberMap>(
                                          kRtpSequenceNumberMapMaxEntries)
-                                   : nullptr) {
+                                   : nullptr),
+      use_ntp_time_for_absolute_send_time_(!env_.field_trials().IsDisabled(
+          "WebRTC-UseNtpTimeAbsoluteSendTime")) {
   RTC_DCHECK(worker_queue_);
   if (bitrate_callback_) {
     update_task_ = RepeatingTaskHandle::DelayedStart(worker_queue_,
@@ -226,8 +229,12 @@ void RtpSenderEgress::SendPacket(std::unique_ptr<RtpPacketToSend> packet,
     packet->SetExtension<TransmissionOffset>(kTimestampTicksPerMs * diff.ms());
   }
   if (packet->HasExtension<AbsoluteSendTime>()) {
-    packet->SetExtension<AbsoluteSendTime>(AbsoluteSendTime::To24Bits(
-        env_.clock().ConvertTimestampToNtpTime(now)));
+    if (use_ntp_time_for_absolute_send_time_) {
+      packet->SetExtension<AbsoluteSendTime>(AbsoluteSendTime::To24Bits(
+          env_.clock().ConvertTimestampToNtpTime(now)));
+    } else {
+      packet->SetExtension<AbsoluteSendTime>(AbsoluteSendTime::To24Bits(now));
+    }
   }
   if (packet->HasExtension<TransportSequenceNumber>() &&
       packet->transport_sequence_number()) {
@@ -370,7 +377,7 @@ void RtpSenderEgress::SetTimestampOffset(uint32_t timestamp) {
 }
 
 std::vector<RtpSequenceNumberMap::Info> RtpSenderEgress::GetSentRtpPacketInfos(
-    std::span<const uint16_t> sequence_numbers) const {
+    ArrayView<const uint16_t> sequence_numbers) const {
   RTC_DCHECK_RUN_ON(worker_queue_);
   RTC_DCHECK(!sequence_numbers.empty());
   if (!need_rtp_packet_infos_) {
@@ -410,7 +417,7 @@ RtpSenderEgress::FetchFecPackets() {
 }
 
 void RtpSenderEgress::OnAbortedRetransmissions(
-    std::span<const uint16_t> sequence_numbers) {
+    ArrayView<const uint16_t> sequence_numbers) {
   RTC_DCHECK_RUN_ON(worker_queue_);
   // Mark aborted retransmissions as sent, rather than leaving them in
   // a 'pending' state - otherwise they can not be requested again and
@@ -441,7 +448,7 @@ bool RtpSenderEgress::SendPacketToNetwork(const RtpPacketToSend& packet,
                                           const PacketOptions& options,
                                           const PacedPacketInfo& pacing_info) {
   RTC_DCHECK_RUN_ON(worker_queue_);
-  if (transport_ == nullptr || !transport_->SendRtp(packet.buffer(), options)) {
+  if (transport_ == nullptr || !transport_->SendRtp(packet, options)) {
     RTC_LOG(LS_WARNING) << "Transport failed to send packet.";
     return false;
   }

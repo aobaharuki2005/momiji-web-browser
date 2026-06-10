@@ -438,28 +438,15 @@ export var PageActions = {
   sendPlacedInUrlbarTrigger(buttonNode) {
     lazy.setTimeout(async () => {
       await lazy.ASRouter.waitForInitialized;
-      let win = buttonNode?.documentGlobal;
+      let win = buttonNode?.ownerGlobal;
       if (!win || buttonNode.hidden) {
         return;
       }
-      let trigger = {
-        id: "pageActionInUrlbar",
+      await lazy.ASRouter.sendTriggerMessage({
         browser: win.gBrowser.selectedBrowser,
+        id: "pageActionInUrlbar",
         context: { pageAction: buttonNode.id },
-      };
-      let spec = "";
-      let host = "";
-      try {
-        ({ spec, host } = win.gBrowser.selectedBrowser?.currentURI || {});
-      } catch (e) {}
-      if (spec) {
-        let param = { url: spec };
-        if (host) {
-          param.host = host;
-        }
-        trigger.param = param;
-      }
-      await lazy.ASRouter.sendTriggerMessage(trigger);
+      });
     }, 500);
   },
 
@@ -1215,7 +1202,7 @@ function browserPageActions(obj) {
   if (obj.BrowserPageActions) {
     return obj.BrowserPageActions;
   }
-  return obj.documentGlobal.BrowserPageActions;
+  return obj.ownerGlobal.BrowserPageActions;
 }
 
 /**

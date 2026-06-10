@@ -46,12 +46,12 @@ Code coverage
 
 The light-blue line next to the blame strip shows the `code coverage <https://firefox-source-docs.mozilla.org/tools/code-coverage/index.html>`__ information.
 
-Hovering a pointer over the blame strip shows the coverage information, in the same popup as the blame, which shows how many times the line is hit in the automation.
+Hovering a pointer over the coverage strip shows a coverage popup, which shows how many times the line is hit in the automation.
 
-.. image:: img/blame.png
+.. image:: img/coverage.png
     :class: border
-    :alt: The code coverage information in the blame popup
-    :width: 688px
+    :alt: The code coverage information
+    :width: 589px
 
 Nesting header
 --------------
@@ -59,11 +59,9 @@ Nesting header
 .. image:: img/nesting.png
     :class: border
     :alt: The nesting header
-    :width: 659px
+    :width: 535px
 
 For nesting structures inside a source code, such as namespaces, classes, functions, etc, Searchfox shows a sticky header for the nesting.
-
-The breadcrumbs also becomes a sticky header.
 
 For variable declarations spans across multiple lines in C++ code, the nesting header is shown if it has 10+ lines.
 

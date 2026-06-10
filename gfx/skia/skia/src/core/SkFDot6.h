@@ -13,8 +13,6 @@
 #include "include/private/base/SkMath.h"
 #include "include/private/base/SkTo.h"
 
-#include <limits>
-
 typedef int32_t SkFDot6;
 
 /* This uses the magic number approach suggested here:
@@ -44,8 +42,7 @@ inline SkFDot6 SkScalarRoundToFDot6(SkScalar x, int shift)
 
 #ifdef SK_DEBUG
     constexpr inline SkFDot6 SkIntToFDot6(int x) {
-        SkASSERT(     (std::numeric_limits<SkFDot6>::min() >> 6) <= x &&
-                 x <= (std::numeric_limits<SkFDot6>::max() >> 6));
+        SkASSERT(SkToS16(x) == x);
         return x << 6;
     }
 #else

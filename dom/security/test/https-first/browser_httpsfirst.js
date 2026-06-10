@@ -14,9 +14,9 @@ async function runPrefTest(aURI, aDesc, aAssertURLStartsWith) {
     BrowserTestUtils.startLoadingURIString(browser, aURI);
     await loaded;
 
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       browser,
-      [{ aDesc, aAssertURLStartsWith }],
+      { aDesc, aAssertURLStartsWith },
       function ({ aDesc, aAssertURLStartsWith }) {
         ok(
           content.document.location.href.startsWith(aAssertURLStartsWith),

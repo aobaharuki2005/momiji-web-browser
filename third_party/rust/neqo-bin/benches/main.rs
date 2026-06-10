@@ -12,21 +12,21 @@
 
 use std::{env, hint::black_box, net::SocketAddr, path::PathBuf, str::FromStr as _};
 
-use criterion::{BatchSize, Criterion, Throughput, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, BatchSize, Criterion, Throughput};
 use neqo_bin::{client, server};
 use tokio::runtime::Builder;
 
 struct Benchmark {
-    name: &'static str,
+    name: String,
     num_requests: usize,
     upload_size: usize,
     download_size: usize,
 }
 
 fn transfer(c: &mut Criterion) {
-    nss::init_db(PathBuf::from_str("../test-fixture/db").unwrap()).unwrap();
+    neqo_crypto::init_db(PathBuf::from_str("../test-fixture/db").unwrap()).unwrap();
 
-    let mtu_suffix = env::var("MTU").ok().map(|mtu| format!("/mtu-{mtu}"));
+    let mtu = env::var("MTU").map_or_else(|_| String::new(), |mtu| format!("/mtu-{mtu}"));
     for Benchmark {
         name,
         num_requests,
@@ -34,40 +34,37 @@ fn transfer(c: &mut Criterion) {
         download_size,
     } in [
         Benchmark {
-            name: "1-conn/1-100mb-resp (aka. Download)",
+            name: format!("1-conn/1-100mb-resp{mtu} (aka. Download)"),
             num_requests: 1,
             upload_size: 0,
             download_size: 100 * 1024 * 1024,
         },
         Benchmark {
-            name: "1-conn/10_000-parallel-1b-resp (aka. RPS)",
+            name: format!("1-conn/10_000-parallel-1b-resp{mtu} (aka. RPS)"),
             num_requests: 10_000,
             upload_size: 0,
             download_size: 1,
         },
         Benchmark {
-            name: "1-conn/1-1b-resp (aka. HPS)",
+            name: format!("1-conn/1-1b-resp{mtu} (aka. HPS)"),
             num_requests: 1,
             upload_size: 0,
             download_size: 1,
         },
         Benchmark {
-            name: "1-conn/1-100mb-req (aka. Upload)",
+            name: format!("1-conn/1-100mb-req{mtu} (aka. Upload)"),
             num_requests: 1,
             upload_size: 100 * 1024 * 1024,
             download_size: 0,
         },
     ] {
-        let bench_name = mtu_suffix
-            .as_ref()
-            .map_or_else(|| name.to_string(), |suffix| format!("{name}{suffix}"));
-        let mut group = c.benchmark_group("transfer");
+        let mut group = c.benchmark_group(name);
         group.throughput(if num_requests == 1 {
             Throughput::Bytes((upload_size + download_size) as u64)
         } else {
             Throughput::Elements(num_requests as u64)
         });
-        group.bench_function(&bench_name, |b| {
+        group.bench_function("client", |b| {
             b.to_async(Builder::new_current_thread().enable_all().build().unwrap())
                 .iter_batched(
                     || {

@@ -80,8 +80,6 @@ fn generate_bindings() {
         .allowlist_function("gecko_profiler_.*")
         .allowlist_var("mozilla::profiler::detail::RacyFeatures::sActiveAndFeatures")
         .allowlist_type("mozilla::profiler::detail::RacyFeatures")
-        .allowlist_item("ThreadProfilingFeatures")
-        .rustified_enum("ThreadProfilingFeatures")
         .rustified_enum("mozilla::StackCaptureOptions")
         .rustified_enum("mozilla::MarkerSchema_Location")
         .rustified_enum("mozilla::MarkerSchema_Format")
@@ -98,7 +96,7 @@ fn generate_bindings() {
         // std::vector needs to be converted to an opaque type because, if it's
         // not an opaque type, bindgen can't find its size properly and
         // MarkerSchema's total size reduces. That causes a heap buffer overflow.
-        .opaque_type("std::vector.*")
+        .opaque_type("std::vector")
         .raw_line("pub use self::root::*;")
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.

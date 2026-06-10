@@ -5,16 +5,14 @@
 /**
  * This module exports a tokenizer to be used by the urlbar model.
  * Emitted tokens are objects in the shape { type, value }, where type is one
- * of UrlbarShared.TOKEN_TYPE.
+ * of UrlbarTokenizer.TYPE.
  */
-
-import { UrlbarShared } from "chrome://browser/content/urlbar/UrlbarShared.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
 });
 
@@ -28,7 +26,7 @@ ChromeUtils.defineLazyGetter(lazy, "gFluentStrings", function () {
 
 /**
  * @typedef UrlbarSearchStringTokenData
- * @property {Values<typeof UrlbarShared.TOKEN_TYPE>} type
+ * @property {Values<typeof lazy.UrlbarTokenizer.TYPE>} type
  *   The type of the token.
  * @property {string} value
  *   The value of the token.
@@ -50,6 +48,57 @@ ChromeUtils.defineLazyGetter(lazy, "gFluentStrings", function () {
 let tokenToKeywords = new Map();
 
 export var UrlbarTokenizer = {
+  TYPE: {
+    TEXT: 1,
+    // `looksLikeOrigin()` returned a value for this token that was neither
+    // `LOOKS_LIKE_ORIGIN.NONE` nor `LOOKS_LIKE_ORIGIN.OTHER`. It sure looks
+    // like an origin.
+    POSSIBLE_ORIGIN: 2,
+    POSSIBLE_URL: 3, // Consumers should still check this with a fixup.
+    RESTRICT_HISTORY: 4,
+    RESTRICT_BOOKMARK: 5,
+    RESTRICT_TAG: 6,
+    RESTRICT_OPENPAGE: 7,
+    RESTRICT_SEARCH: 8,
+    RESTRICT_TITLE: 9,
+    RESTRICT_URL: 10,
+    RESTRICT_ACTION: 11,
+    // `looksLikeOrigin()` returned `LOOKS_LIKE_ORIGIN.OTHER` for this token. It
+    // may or may not be an origin.
+    POSSIBLE_ORIGIN_BUT_SEARCH_ALLOWED: 12,
+  },
+
+  // The special characters below can be typed into the urlbar to restrict
+  // the search to a certain category, like history, bookmarks or open pages; or
+  // to force a match on just the title or url.
+  // These restriction characters can be typed alone, or at word boundaries,
+  // provided their meaning cannot be confused, for example # could be present
+  // in a valid url, and thus it should not be interpreted as a restriction.
+  RESTRICT: {
+    HISTORY: "^",
+    BOOKMARK: "*",
+    TAG: "+",
+    OPENPAGE: "%",
+    SEARCH: "?",
+    TITLE: "#",
+    URL: "$",
+    ACTION: ">",
+  },
+
+  // The keys of characters in RESTRICT that will enter search mode.
+  get SEARCH_MODE_RESTRICT() {
+    const keys = [
+      this.RESTRICT.HISTORY,
+      this.RESTRICT.BOOKMARK,
+      this.RESTRICT.OPENPAGE,
+      this.RESTRICT.SEARCH,
+    ];
+    if (lazy.UrlbarPrefs.get("scotchBonnet.enableOverride")) {
+      keys.push(this.RESTRICT.ACTION);
+    }
+    return new Set(keys);
+  },
+
   async loadL10nRestrictKeywords() {
     let l10nKeywords = await lazy.gFluentStrings.formatValues(
       lazy.UrlbarUtils.LOCAL_SEARCH_MODES.map(mode => {
@@ -121,17 +170,16 @@ export var UrlbarTokenizer = {
   isRestrictionToken(token) {
     return (
       token &&
-      token.type >= UrlbarShared.TOKEN_TYPE.RESTRICT_HISTORY &&
-      token.type <= UrlbarShared.TOKEN_TYPE.RESTRICT_URL
+      token.type >= this.TYPE.RESTRICT_HISTORY &&
+      token.type <= this.TYPE.RESTRICT_URL
     );
   },
 };
 
-/** @type {Map<string, Values<typeof UrlbarShared.RESTRICT_TOKENS>>} */
 const CHAR_TO_TYPE_MAP = new Map(
-  Object.entries(UrlbarShared.RESTRICT_TOKENS).map(([type, char]) => [
+  Object.entries(UrlbarTokenizer.RESTRICT).map(([type, char]) => [
     char,
-    UrlbarShared.TOKEN_TYPE[`RESTRICT_${type}`],
+    UrlbarTokenizer.TYPE[`RESTRICT_${type}`],
   ])
 );
 
@@ -175,9 +223,8 @@ function splitString({ searchString, searchMode }) {
 
   const firstToken = tokens[0];
   const isFirstTokenAKeyword =
-    !Object.values(UrlbarShared.RESTRICT_TOKENS).includes(
-      /** @type {Values<typeof UrlbarShared.RESTRICT_TOKENS>} */ (firstToken)
-    ) && lazy.PlacesUtils.keywords.isKeywordFromCache(firstToken);
+    !Object.values(UrlbarTokenizer.RESTRICT).includes(firstToken) &&
+    lazy.PlacesUtils.keywords.isKeywordFromCache(firstToken);
 
   if (hasRestrictionToken || isFirstTokenAKeyword) {
     return tokens;
@@ -214,7 +261,7 @@ function filterTokens(tokens) {
   let filtered = [];
   let restrictions = [];
   const isFirstTokenAKeyword =
-    !Object.values(UrlbarShared.RESTRICT_TOKENS).includes(tokens[0]) &&
+    !Object.values(UrlbarTokenizer.RESTRICT).includes(tokens[0]) &&
     lazy.PlacesUtils.keywords.isKeywordFromCache(tokens[0]);
 
   for (let i = 0; i < tokens.length; ++i) {
@@ -222,8 +269,7 @@ function filterTokens(tokens) {
     let tokenObj = {
       value: token,
       lowerCaseValue: token.toLocaleLowerCase(),
-      /** @type {Values<typeof UrlbarShared.TOKEN_TYPE>} */
-      type: UrlbarShared.TOKEN_TYPE.TEXT,
+      type: UrlbarTokenizer.TYPE.TEXT,
     };
     // For privacy reasons, we don't want to send a data (or other kind of) URI
     // to a search engine. So we want to parse any single long token below.
@@ -246,12 +292,11 @@ function filterTokens(tokens) {
         looksLikeOrigin == lazy.UrlUtils.LOOKS_LIKE_ORIGIN.OTHER &&
         lazy.UrlbarPrefs.get("allowSearchSuggestionsForSimpleOrigins")
       ) {
-        tokenObj.type =
-          UrlbarShared.TOKEN_TYPE.POSSIBLE_ORIGIN_BUT_SEARCH_ALLOWED;
+        tokenObj.type = UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN_BUT_SEARCH_ALLOWED;
       } else if (looksLikeOrigin != lazy.UrlUtils.LOOKS_LIKE_ORIGIN.NONE) {
-        tokenObj.type = UrlbarShared.TOKEN_TYPE.POSSIBLE_ORIGIN;
+        tokenObj.type = UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN;
       } else if (lazy.UrlUtils.looksLikeUrl(token, { requirePath: true })) {
-        tokenObj.type = UrlbarShared.TOKEN_TYPE.POSSIBLE_URL;
+        tokenObj.type = UrlbarTokenizer.TYPE.POSSIBLE_URL;
       }
     }
     filtered.push(tokenObj);
@@ -268,8 +313,8 @@ function filterTokens(tokens) {
       if (r && !(matchingRestrictionFound && typeRestrictionFound)) {
         if (
           [
-            UrlbarShared.TOKEN_TYPE.RESTRICT_TITLE,
-            UrlbarShared.TOKEN_TYPE.RESTRICT_URL,
+            UrlbarTokenizer.TYPE.RESTRICT_TITLE,
+            UrlbarTokenizer.TYPE.RESTRICT_URL,
           ].includes(r.type)
         ) {
           if (!matchingRestrictionFound) {
